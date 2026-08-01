@@ -1,30 +1,46 @@
-# ✒️ Tintenfass — deine Notizen-App
+# ✒️ Tintenfass — deine eigene Notizen-App
 
-**[➜ App direkt öffnen: `index.html`](index.html)** — einfach die Datei im Browser öffnen, fertig.
-Keine Installation, kein Server, keine Anmeldung. Alle Daten bleiben lokal im Browser (`localStorage`).
+**[➜ App öffnen: `index.html`](index.html)** — Datei im Browser öffnen, fertig.
+Keine Installation, kein Server, keine Anmeldung, keine Abhängigkeiten. Eine einzige HTML-Datei,
+komplett eigener Code. Alle Daten bleiben lokal in deinem Browser.
 
-> Sobald GitHub Pages für dieses Repo aktiviert ist (Settings → Pages → Branch wählen),
-> läuft die App auch unter deiner `github.io`-Adresse.
+> Tipp: Aktiviere GitHub Pages (Settings → Pages → Branch wählen), dann läuft die App
+> direkt unter deiner `github.io`-Adresse — auch auf dem Handy.
 
-## Was die App kann
+## Funktionen
 
-Tintenfass vereint die besten Ideen der 20 Notiz-Apps aus diesem Repo in **einer einzigen HTML-Datei** (TiddlyWiki-Prinzip):
+**Schreiben**
+- Markdown-Editor mit Live-Vorschau: Schreiben / Beides (geteilt, synchron scrollend) / Lesen
+- Slash-Menü: `/` am Zeilenanfang öffnet Blöcke (Überschrift, Aufgabe, Tabelle, Code, Datum, Vorlage …)
+- Formatier-Leiste und Kürzel (`Strg+B`, `Strg+I`), Listen führen sich beim Enter selbst fort
+- Fokusmodus und Schreibmaschinenmodus für ablenkungsfreies Schreiben
+- Vorlagen: Notizen mit `#vorlage` erscheinen im Slash-Menü und in der Palette
 
-| Funktion | Vorbild |
-|---|---|
-| **Markdown** mit Live-Vorschau (Schreiben / Beides / Lesen) | MarkText, Zettlr, HedgeDoc |
-| **Wiki-Links** `[[Titel]]` mit Autovervollständigung beim Tippen von `[[` | Foam, SilverBullet |
-| **Rückverweise (Backlinks)** unter jeder Notiz | Logseq, Trilium, Obsidian-Stil |
-| **🕸 Graph-Ansicht** aller Verknüpfungen (klick- und ziehbar) | Logseq |
-| **📅 Tagesnotiz** — Journal per Knopfdruck | Logseq Journals |
-| **#Schlagwörter** direkt im Text, klickbar, mit Tag-Wolke | Memos, Bear |
-| **📓 Notizbücher** zum Ordnen | Joplin |
-| **Aufgaben** `- [ ]` — in der Lesen-Ansicht abhakbar | Joplin, Notesnook |
-| **Befehlspalette** Strg+K — Suche + alle Befehle | Notion, AFFiNE |
-| **Volltextsuche**, Anpinnen, Archiv, Papierkorb | Standard Notes |
-| **Backup**: JSON-Export/-Import, Markdown-Export je Notiz | Standard Notes, Joplin |
-| **Hell-/Dunkelmodus**, folgt anfangs dem System | alle |
-| Komplett **offline**, eine Datei, ~50 kB | TiddlyWiki |
+**Vernetzen**
+- Wiki-Links `[[Titel]]` mit Autovervollständigung beim Tippen
+- Rückverweise (Backlinks) unter jeder Notiz
+- Notiz-Einbettung: `![[Titel]]` zeigt eine Notiz in einer anderen an
+- 🕸 Graph-Ansicht des gesamten Wissensnetzes — klickbar, ziehbar
+
+**Organisieren**
+- 📓 Notizbücher, #Schlagwörter mit Tag-Wolke, Anpinnen, Archiv, Papierkorb
+- 📅 Tagesnotiz als Journal, ⚡ Schnellerfassung direkt über der Liste
+- ☑ Aufgaben-Übersicht: alle offenen `- [ ]` aus allen Notizen an einem Ort, dort abhakbar
+- Volltextsuche mit Operatoren: `tag:projekt`, `nb:Wissen`, `ist:offen`, `ist:gepinnt`
+
+**Sichern & Besitzen**
+- Versionshistorie je Notiz — alte Stände ansehen und wiederherstellen
+- Optionale Verschlüsselung des gesamten Speichers (AES-256-GCM, Passwort nur bei dir)
+- JSON-Backup/-Import, Markdown-Export je Notiz
+- „Als App exportieren": lädt eine eigenständige HTML-Datei mit all deinen Notizen darin herunter —
+  deine komplette App inklusive Daten als eine Datei zum Mitnehmen
+
+**Präsentieren**
+- 🎞 Präsentationsmodus: `---` trennt Folien, Pfeiltasten blättern
+
+**Bedienung**
+- Befehlspalette `Strg+K` — Suche und sämtliche Befehle an einem Ort
+- Hell-/Dunkelmodus (folgt anfangs dem System), voll mobiltauglich, druckbar, offline
 
 ## Tastenkürzel
 
@@ -34,40 +50,20 @@ Tintenfass vereint die besten Ideen der 20 Notiz-Apps aus diesem Repo in **einer
 | `Strg+Alt+N` | Neue Notiz |
 | `Strg+E` | Schreiben ⇄ Lesen |
 | `Strg+B` / `Strg+I` | fett / kursiv |
-| `Esc` | Fenster schließen |
+| `Strg+Umschalt+J` | Fokusmodus |
+| `Strg+Umschalt+G` | Schreibmaschinenmodus |
+| `/` am Zeilenanfang | Slash-Menü |
+| `[[` | Wiki-Link mit Vorschlägen |
+| `Esc` | Fenster/Modus schließen |
 
-## Daten sichern
+## Deine Daten
 
-Die Notizen liegen im `localStorage` **dieses** Browsers. Mit dem ⬇-Knopf unten links lädst du
-jederzeit ein JSON-Backup herunter — und spielst es mit ⬆ wieder ein, auch auf einem anderen Gerät.
-Der Import fügt hinzu und überschreibt nichts.
+Alles liegt im `localStorage` dieses Browsers — nichts verlässt dein Gerät.
+Sichern: ⬇ JSON-Backup (jederzeit wieder einspielbar, auch auf anderen Geräten) oder
+„Als App exportieren" für eine komplette Kopie von App + Notizen in einer Datei.
+Wenn du die Verschlüsselung aktivierst: Das Passwort wird nirgends gespeichert —
+ohne Passwort gibt es keinen Zugriff, also gut merken.
 
 ---
 
-## 📚 Referenzsammlung: 20 quelloffene Notiz-Apps
-
-Der Quellcode der Vorbilder liegt flach geklont (ohne Git-Historie) unter [`PROJECTS/`](PROJECTS/) —
-Übersicht auch als [Uebersicht.html](Uebersicht.html).
-
-| # | Projekt | Beschreibung | Lizenz | GitHub |
-|---|--|--|--|--|
-| 1 | **AppFlowy-IO/AppFlowy** | Notion-Alternative, quelloffen & lokal (Rust/Flutter) | siehe LICENSE | https://github.com/AppFlowy-IO/AppFlowy |
-| 2 | **toeverything/AFFiNE** | Notion + Miro Alternative, Blöcke & Whiteboard | MIT | https://github.com/toeverything/AFFiNE |
-| 3 | **laurent22/joplin** | Notiz- & To-do-App mit Verschlüsselung und Sync | siehe LICENSE | https://github.com/laurent22/joplin |
-| 4 | **logseq/logseq** | Outliner & Wissensdatenbank (lokal, Markdown/Org) | siehe LICENSE.md | https://github.com/logseq/logseq |
-| 5 | **siyuan-note/siyuan** | Notion-artiges PKM, lokal-first (Block-Editor) | siehe LICENSE | https://github.com/siyuan-note/siyuan |
-| 6 | **usememos/memos** | Leichte, selbst-gehostete Notiz-App (Markdown) | siehe LICENSE | https://github.com/usememos/memos |
-| 7 | **outline/outline** | Team-Wiki / Wissensdatenbank | Business Source License 1.1 | https://github.com/outline/outline |
-| 8 | **streetwriters/notesnook** | Ende-zu-Ende verschlüsselte Notiz-App | GPL-3.0-or-later | https://github.com/streetwriters/notesnook |
-| 9 | **marktext/marktext** | Schöner Markdown-Editor (WYSIWYG) | siehe LICENSE | https://github.com/marktext/marktext |
-| 10 | **standardnotes/app** | Verschlüsselte Notizen, plattformübergreifend | siehe LICENSE | https://github.com/standardnotes/app |
-| 11 | **zadam/trilium** | Hierarchische Notizen / persönliches Wiki | AGPL-3.0-only | https://github.com/zadam/trilium |
-| 12 | **codex-team/editor.js** | Block-Editor im Notion-Stil (JS) | Apache-2.0 | https://github.com/codex-team/editor.js |
-| 13 | **nhn/tui.editor** | Markdown-WYSIWYG-Editor (Toast UI) | siehe LICENSE | https://github.com/nhn/tui.editor |
-| 14 | **foambubble/foam** | Vernetztes Notizsystem in VS Code (PKM) | MIT | https://github.com/foambubble/foam |
-| 15 | **Zettlr/Zettlr** | Markdown-Editor für Schreiben & Wissenschaft | GPL-3.0 | https://github.com/Zettlr/Zettlr |
-| 16 | **hedgedoc/hedgedoc** | Kollaborative Markdown-Notizen (Echtzeit) | siehe LICENSE | https://github.com/hedgedoc/hedgedoc |
-| 17 | **Jermolene/TiddlyWiki5** | Persönliches Wiki in einer einzigen Datei | BSD | https://github.com/Jermolene/TiddlyWiki5 |
-| 18 | **anyproto/anytype-ts** | Anytype - lokal-first Notion-Alternative | SEE LICENSE IN LICENSE.md | https://github.com/anyproto/anytype-ts |
-| 19 | **blinko-space/blinko** | Moderne selbst-gehostete Notiz-App | siehe LICENSE | https://github.com/blinko-space/blinko |
-| 20 | **silverbulletmd/silverbullet** | Lokale, erweiterbare Markdown-Notiz-App (PKM) | siehe LICENSE.md | https://github.com/silverbulletmd/silverbullet |
+Der gesamte Code in `index.html` ist eigenständig und gehört dir.

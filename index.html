@@ -56,7 +56,9 @@ input,textarea,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--leit);outline-offset:2px;border-radius:4px}
 
 /* ══════════════ Grundgerüst: 3 Spalten ══════════════ */
-.app{display:grid;grid-template-columns:236px 300px 1fr;height:100dvh}
+.app{display:grid;grid-template-columns:236px 300px 1fr;grid-template-rows:minmax(0,1fr);height:100dvh}
+.liste,.editor{min-height:0}
+.liste-inhalt{min-height:0}
 
 /* ── Seitenleiste („Buchrücken") ── */
 .sidebar{
@@ -210,14 +212,14 @@ input,textarea,select{font:inherit;color:inherit}
 .titel-zeile input:focus{outline:none;border-bottom-color:var(--rand-stark)}
 .titel-zeile input::placeholder{color:var(--tinte-blass)}
 #schreibfeld{
-  flex:1;width:100%;resize:none;border:none;background:none;
+  flex:1;min-height:0;width:100%;resize:none;border:none;background:none;overflow-y:auto;
   padding:var(--s4) var(--s6) var(--s7);
   font-family:var(--mono);font-size:14px;line-height:1.75;color:var(--tinte);
   tab-size:2;
 }
 #schreibfeld:focus{outline:none}
 #schreibfeld::placeholder{color:var(--tinte-blass)}
-.lese-scroll{flex:1;overflow-y:auto;padding:var(--s5) var(--s6) var(--s7);scrollbar-width:thin}
+.lese-scroll{flex:1;min-height:0;overflow-y:auto;padding:var(--s5) var(--s6) var(--s7);scrollbar-width:thin}
 .editor-fuss{
   display:flex;align-items:center;gap:var(--s3);
   padding:var(--s2) var(--s4);border-top:1px solid var(--rand);
@@ -227,6 +229,7 @@ input,textarea,select{font:inherit;color:inherit}
   border:1px solid var(--rand);border-radius:var(--r-klein);background:var(--flaeche);
   padding:4px 8px;font-size:12px;color:var(--tinte-schwach);max-width:160px;
 }
+.editor-fuss .werkzeug{min-width:auto;height:28px}
 .editor-fuss .zaehler{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
 .editor-leer{
   flex:1;display:grid;place-items:center;text-align:center;color:var(--tinte-blass);padding:var(--s5);
@@ -417,7 +420,7 @@ input,textarea,select{font:inherit;color:inherit}
   .app.ansicht-editor .liste{display:none}
   .app:not(.ansicht-editor) .editor{display:none}
   .hamburger{display:inline-grid;place-items:center;min-width:44px;height:44px;font-size:19px;color:var(--tinte-schwach);border-radius:var(--r-klein)}
-  .zurueck{display:inline-grid;place-items:center;min-width:44px;height:38px;color:var(--leit-text);font-weight:700;font-size:14px;border-radius:var(--r-klein)}
+  .zurueck{display:inline-grid;place-items:center;min-width:44px;height:44px;color:var(--leit-text);font-weight:700;font-size:14px;border-radius:var(--r-klein)}
   .liste-kopf{display:flex;gap:var(--s1);align-items:center}
   .suchfeld{flex:1}
   .titel-zeile{padding:var(--s3) var(--s4) 0}
@@ -426,11 +429,132 @@ input,textarea,select{font:inherit;color:inherit}
   .lese-scroll{padding:var(--s4) var(--s4) var(--s7)}
   .modus-split .schreib-seite{display:none}
   .modus-split .lese-seite{display:flex}
-  .werkzeug{min-width:38px;height:40px}
+  .werkzeug,.editor-fuss .werkzeug{min-width:44px;height:44px}
+  .tag-chip{padding:7px 12px}
+  .hub-aufgabe{padding:11px var(--s3) 11px var(--s4)}
 }
 @media (min-width:901px){
   .liste-kopf .hamburger{display:none}
 }
+
+/* ── Schnellerfassung ── */
+.capture{position:relative;margin-top:var(--s2)}
+.capture input{
+  width:100%;padding:9px 12px 9px 32px;border-radius:var(--r-klein);
+  border:1px dashed var(--rand-stark);background:var(--flaeche);font-size:13px;
+  transition:border-color .12s, box-shadow .12s;
+}
+.capture input:focus{outline:none;border-color:var(--akzent);border-style:solid;box-shadow:0 0 0 3px var(--akzent-hell)}
+.capture .blitz{position:absolute;left:10px;top:50%;translate:0 -50%;pointer-events:none;font-size:13px;opacity:.7}
+
+/* ── Aufgaben-Übersicht ── */
+.hub-gruppe{margin-bottom:var(--s3);border:1px solid var(--rand);border-radius:var(--r-klein);background:var(--flaeche);overflow:hidden}
+.hub-kopf{
+  display:flex;align-items:center;gap:var(--s2);width:100%;text-align:left;
+  padding:var(--s2) var(--s3);font-family:var(--serif);font-weight:700;font-size:13.5px;
+}
+.hub-kopf:hover{background:var(--flaeche-2)}
+.hub-kopf .balken{margin-left:auto;display:flex;gap:2px;align-items:center;flex:none}
+.hub-kopf .balken i{display:block;width:9px;height:5px;border-radius:2px;background:var(--rand-stark)}
+.hub-kopf .balken i.voll{background:var(--leit)}
+.hub-kopf .balken b{font-size:10.5px;color:var(--tinte-blass);font-weight:600;margin-left:4px;font-variant-numeric:tabular-nums}
+.hub-aufgabe{
+  display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;
+  padding:6px var(--s3) 6px var(--s4);font-size:13px;border-top:1px solid var(--rand);
+}
+.hub-aufgabe:hover{background:var(--leit-hell)}
+.hub-aufgabe input{flex:none;width:14px;height:14px;accent-color:var(--leit);pointer-events:none;translate:0 2px}
+.karten-aufgaben{display:inline-flex;align-items:center;gap:4px;color:var(--leit-text);font-weight:600}
+.karten-aufgaben .mini{display:inline-block;width:34px;height:4px;border-radius:2px;background:var(--rand-stark);overflow:hidden;vertical-align:middle}
+.karten-aufgaben .mini i{display:block;height:100%;background:var(--leit)}
+
+/* ── Slash-Menü & Trigger-Popup ── */
+.autocomplete .gruppe{
+  padding:6px 12px 2px;font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--tinte-blass);pointer-events:none;
+}
+.autocomplete .eintrag{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:7px 12px;font-size:13px;font-family:var(--sans);font-weight:500;
+}
+.autocomplete .eintrag .ico{width:18px;text-align:center;flex:none;opacity:.8}
+.autocomplete .eintrag .hint{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--tinte-blass);padding-left:10px;flex:none}
+.autocomplete .eintrag.aktiv{background:var(--leit-hell);color:var(--leit-text)}
+.autocomplete{max-height:300px;overflow-y:auto;scrollbar-width:thin}
+
+/* ── Einbettung ![[..]] ── */
+.md .einbettung{
+  border:1px solid var(--rand);border-left:3px solid var(--leit);
+  border-radius:var(--r-klein);background:var(--flaeche);
+  padding:var(--s3) var(--s4);margin-top:.9em;
+}
+.md .einbettung>.eb-titel{
+  font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.6px;
+  text-transform:uppercase;color:var(--leit-text);margin-bottom:6px;cursor:pointer;
+}
+.md .einbettung .md{font-size:.94em}
+.md .eb-warnung{
+  border:1px dashed var(--akzent);border-radius:var(--r-klein);background:var(--akzent-hell);
+  padding:var(--s2) var(--s3);font-size:.85em;font-family:var(--sans);color:var(--tinte-schwach);margin-top:.9em;
+}
+.zmark{height:0;overflow:hidden}
+
+/* ── Fokus- & Schreibmaschinenmodus ── */
+.app.fokus .sidebar,.app.fokus .liste,.app.fokus .editor-kopf,.app.fokus .editor-fuss{
+  opacity:.14;transition:opacity .3s;
+}
+.app.fokus .sidebar:hover,.app.fokus .liste:hover,.app.fokus .editor-kopf:hover,.app.fokus .editor-fuss:hover{opacity:1}
+.app.fokus .titel-zeile,.app.fokus .schreib-seite #schreibfeld{width:100%;max-width:54rem;margin-left:auto;margin-right:auto}
+.app.typewriter #schreibfeld{padding-top:44vh;padding-bottom:44vh}
+
+/* ── Präsentationsmodus ── */
+.buehne{
+  position:fixed;inset:0;z-index:80;background:var(--papier);
+  display:none;flex-direction:column;
+}
+.buehne.offen{display:flex;animation:schleier-rein .2s var(--ease-raus)}
+.buehne .folie-flaeche{flex:1;display:grid;place-items:center;overflow:hidden;padding:4vw 6vw;cursor:pointer}
+.buehne .folie{width:100%;max-width:60rem;max-height:100%;overflow-y:auto;font-size:clamp(17px,2.4vw,26px)}
+.buehne .buehne-fuss{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s2) var(--s4);border-top:1px solid var(--rand);
+  font-size:12.5px;color:var(--tinte-blass);
+}
+.buehne .buehne-fuss .mitte{font-variant-numeric:tabular-nums}
+.buehne button{padding:6px 12px;border-radius:var(--r-klein);color:var(--tinte-schwach)}
+.buehne button:hover{background:var(--flaeche-2);color:var(--tinte)}
+
+/* ── Sperrbildschirm (Tresor) ── */
+.sperre{
+  position:fixed;inset:0;z-index:100;background:var(--ruecken);
+  display:none;align-items:center;justify-content:center;color:var(--ruecken-text);
+}
+.sperre.offen{display:flex}
+.sperre .kern{text-align:center;max-width:320px;padding:var(--s5)}
+.sperre .schloss{font-size:56px;opacity:.35;margin-bottom:var(--s4)}
+.sperre h2{font-family:var(--serif);font-size:22px;color:#fff;margin-bottom:var(--s2)}
+.sperre p{font-size:13px;color:var(--ruecken-blass);margin-bottom:var(--s4)}
+.sperre input{
+  width:100%;padding:11px var(--s4);border-radius:var(--r-klein);
+  border:1px solid var(--ruecken-hell);background:var(--ruecken-hell);color:#fff;
+  font-size:15px;text-align:center;margin-bottom:var(--s3);
+}
+.sperre input:focus{outline:none;border-color:var(--leit)}
+.sperre .fehler-text{color:var(--akzent);font-size:12.5px;min-height:18px;margin-bottom:var(--s2)}
+.sperre .knopf{width:100%}
+
+/* ── Verlauf (Versionen) ── */
+.verlauf-liste{max-height:min(50vh,420px);overflow-y:auto;margin:0 calc(-1*var(--s2)) var(--s4);padding:0 var(--s2)}
+.verlauf-tag{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tinte-blass);margin:var(--s3) 0 var(--s1)}
+.verlauf-eintrag{
+  display:flex;align-items:center;gap:var(--s3);width:100%;text-align:left;
+  padding:var(--s2) var(--s3);border:1px solid var(--rand);border-radius:var(--r-klein);
+  background:var(--flaeche);margin-bottom:var(--s1);
+}
+.verlauf-eintrag:hover{border-color:var(--leit)}
+.verlauf-eintrag .zeit{font-weight:700;font-size:13px;flex:none;font-variant-numeric:tabular-nums}
+.verlauf-eintrag .vorschau-text{font-size:12px;color:var(--tinte-schwach);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.verlauf-eintrag .umfang{font-size:11px;color:var(--tinte-blass);flex:none;font-variant-numeric:tabular-nums}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
@@ -488,6 +612,10 @@ input,textarea,select{font:inherit;color:inherit}
         <input type="search" id="suche" placeholder="Suchen …" autocomplete="off" aria-label="Notizen durchsuchen">
         <button class="leeren" id="sucheLeeren" aria-label="Suche leeren">✕</button>
       </div>
+    </div>
+    <div class="capture" id="captureZeile">
+      <span class="blitz" aria-hidden="true">⚡</span>
+      <input id="captureFeld" placeholder="Schnell notieren … Enter speichert" autocomplete="off" aria-label="Schnellerfassung">
     </div>
     <div class="liste-info">
       <h2 id="listeTitel">Alle Notizen</h2>
@@ -549,10 +677,14 @@ input,textarea,select{font:inherit;color:inherit}
 
       <div class="editor-fuss">
         <select id="nbWahl" aria-label="Notizbuch zuweisen"></select>
-        <button class="werkzeug" id="btnPin" title="Anpinnen" style="min-width:auto;height:28px">📌</button>
-        <button class="werkzeug" id="btnArchiv" title="Archivieren" style="min-width:auto;height:28px">📦</button>
-        <button class="werkzeug" id="btnMdExport" title="Als Markdown-Datei exportieren" style="min-width:auto;height:28px">📄</button>
-        <button class="werkzeug" id="btnLoeschen" title="In den Papierkorb" style="min-width:auto;height:28px">🗑</button>
+        <button class="werkzeug" id="btnPin" title="Anpinnen">📌</button>
+        <button class="werkzeug" id="btnArchiv" title="Archivieren">📦</button>
+        <button class="werkzeug" id="btnVerlauf" title="Versionsverlauf">⏱</button>
+        <button class="werkzeug" id="btnFokus" title="Fokusmodus (Strg+Umschalt+J)">◎</button>
+        <button class="werkzeug" id="btnTypewriter" title="Schreibmaschinenmodus (Strg+Umschalt+G)">⌨</button>
+        <button class="werkzeug" id="btnBuehne" title="Präsentation (Folien mit --- trennen)">🎞</button>
+        <button class="werkzeug" id="btnMdExport" title="Als Markdown-Datei exportieren">📄</button>
+        <button class="werkzeug" id="btnLoeschen" title="In den Papierkorb">🗑</button>
         <span class="zaehler" id="zaehler"></span>
       </div>
     </div>
@@ -586,9 +718,34 @@ input,textarea,select{font:inherit;color:inherit}
   <div class="dialog" role="dialog" id="dialogBox"></div>
 </div>
 
+<!-- ═══ Präsentationsmodus ═══ -->
+<div class="buehne" id="buehne" role="dialog" aria-label="Präsentation">
+  <div class="folie-flaeche" id="folieFlaeche"><article class="md folie" id="folieInhalt"></article></div>
+  <div class="buehne-fuss">
+    <div><button id="folieZurueck" aria-label="Vorherige Folie">‹ Zurück</button>
+    <button id="folieWeiter" aria-label="Nächste Folie">Weiter ›</button></div>
+    <div class="mitte" id="folieZaehler"></div>
+    <div><button id="folieVollbild" title="Vollbild (F)">⛶</button>
+    <button id="folieEnde">Beenden (Esc)</button></div>
+  </div>
+</div>
+
+<!-- ═══ Sperrbildschirm ═══ -->
+<div class="sperre" id="sperre" role="dialog" aria-label="Entsperren">
+  <div class="kern">
+    <div class="schloss" aria-hidden="true">🔒</div>
+    <h2>Tintenfass ist gesperrt</h2>
+    <p>Deine Notizen sind verschlüsselt. Gib dein Passwort ein, um sie zu öffnen.</p>
+    <input type="password" id="sperrePasswort" placeholder="Passwort" autocomplete="current-password" aria-label="Passwort">
+    <div class="fehler-text" id="sperreFehler"></div>
+    <button class="knopf voll" id="sperreOeffnen">Entsperren</button>
+  </div>
+</div>
+
 <div class="autocomplete" id="autocomplete" role="listbox"></div>
 <div class="toast" id="toast" role="status"></div>
-<input type="file" id="importDatei" accept=".json,application/json" hidden>
+<input type="file" id="importDatei" accept=".json,.html,application/json,text/html" hidden>
+<script id="datenInsel" type="application/json">null</script>
 
 <script>
 'use strict';
@@ -622,10 +779,14 @@ function beispielDaten(){
   - [ ] Den 🕸 Graph unten links ansehen
 - Notizen mit #anleitung Schlagwörtern versehen
 - Mit **Strg+K** die Befehlspalette öffnen — von dort erreichst du alles
+- Tippe \`/\` am Zeilenanfang: das **Slash-Menü** fügt Blöcke, Datum und Vorlagen ein
+- Andere Notizen einbetten: \`![[Titel]]\` — so sieht das aus:
+
+![[Wiki-Links]]
 
 ## Wo sind meine Daten?
 
-Alles liegt im \`localStorage\` deines Browsers. Sichere regelmäßig mit dem ⬇-Knopf unten links ein **JSON-Backup** — und spiele es mit ⬆ wieder ein, auch auf einem anderen Gerät.
+Alles liegt im \`localStorage\` deines Browsers. Sichern kannst du dreifach: **⬇ JSON-Backup**, **📄 Markdown je Notiz** oder über die Palette **„Als App exportieren"** — dann bekommst du diese komplette App samt deiner Notizen als eine Datei. Mit **🔒 Tresor** verschlüsselst du alles per Passwort.
 
 > Tipp: Diese Notiz ist angepinnt 📌 — dadurch bleibt sie oben in der Liste. Mehr Kniffe stehen in der Notiz [[Tastenkürzel & Tricks]].`},
     { id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-1, updated:t-1,
@@ -638,6 +799,9 @@ Alles liegt im \`localStorage\` deines Browsers. Sichere regelmäßig mit dem �
 | Strg+Alt+N | Neue Notiz |
 | Strg+E | Schreiben ⇄ Lesen umschalten |
 | Strg+B / Strg+I | **fett** / *kursiv* |
+| Strg+Umschalt+J | Fokusmodus |
+| Strg+Umschalt+G | Schreibmaschinenmodus |
+| / am Zeilenanfang | Slash-Menü (Blöcke, Datum, Vorlagen) |
 | Esc | Fenster schließen |
 
 ## Markdown-Spickzettel
@@ -645,12 +809,34 @@ Alles liegt im \`localStorage\` deines Browsers. Sichere regelmäßig mit dem �
 \`\`\`
 # Überschrift        **fett**   *kursiv*   ~~durch~~   ==Marker==
 - Liste              1. nummeriert         > Zitat
-- [ ] Aufgabe        [[Wiki-Link]]         #schlagwort
+- [ ] Aufgabe        [[Wiki-Link]]         ![[Einbettung]]   #schlagwort
 \`\`\`
 
-## Tagesnotiz
+## Suche mit Operatoren
 
-Der Knopf **📅 Tagesnotiz** öffnet (oder erstellt) die Notiz zum heutigen Datum — perfekt als Journal, wie in Logseq. #anleitung`},
+Im Suchfeld funktionieren \`tag:anleitung\`, \`nb:Wissen\`, \`ist:offen\`, \`ist:angepinnt\`, \`"exakte Phrase"\` und \`-ausschluss\` — beliebig kombinierbar.
+
+## Tagesnotiz, Aufgaben & Verlauf
+
+- **📅 Tagesnotiz** öffnet (oder erstellt) die Notiz zum heutigen Datum — dein Journal.
+- **☑ Aufgaben** in der Seitenleiste sammelt alle offenen \`- [ ]\` aus allen Notizen; dort hakst du sie direkt ab.
+- **⏱ Verlauf** unten im Editor zeigt alte Stände jeder Notiz und stellt sie wieder her.
+- **🎞 Präsentation** macht aus der Notiz Folien — getrennt durch \`---\`. #anleitung`},
+    { id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-3, updated:t-3,
+      title:'Vorlage: Besprechung',
+      body:`#vorlage
+
+## Besprechung am {datum} um {zeit}
+
+**Teilnehmende:** {cursor}
+
+### Themen
+
+-
+
+### Beschlüsse
+
+- [ ] `},
     { id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-2, updated:t-2,
       title:'Wiki-Links',
       body:`Ein **Wiki-Link** verbindet zwei Notizen: einfach \`[[\` tippen, dann schlägt der Editor Titel vor.
@@ -664,23 +850,145 @@ Die 🕸 **Graph-Ansicht** unten links zeichnet das ganze Netz. #anleitung`},
   ]};
 }
 
-function laden(){
-  try{
-    const roh = localStorage.getItem(SPEICHER_KEY);
-    if(roh){ const d = JSON.parse(roh); if(d && Array.isArray(d.notes)) return d; }
-  }catch(e){ console.warn('Laden fehlgeschlagen', e); }
-  return beispielDaten();
-}
-const db = laden();
+/* Unverändertes Original-HTML sofort sichern — Grundlage für den
+   „Als App exportieren"-Selbstexport (Daten-Insel-Prinzip). */
+const ORIGINAL_HTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+const INSEL_REGEX = new RegExp('(<scr' + 'ipt id="datenInsel"[^>]*>)[\\s\\S]*?(</scr' + 'ipt>)');
 
+function normalisieren(d){
+  d.notebooks = Array.isArray(d.notebooks) ? d.notebooks : [];
+  d.notes = Array.isArray(d.notes) ? d.notes : [];
+  d.theme = d.theme || 'auto';
+  d.einstellungen = Object.assign({fokus:false, typewriter:false, syncScroll:true, entwurf:''}, d.einstellungen||{});
+  d.stats = Object.assign({woerter:{}}, d.stats||{});
+  for(const n of d.notes){
+    if(!Array.isArray(n.hist)) n.hist = [];
+    if(!n.tasks) n.tasks = aufgabenZaehlen(n.body||'');
+  }
+  return d;
+}
+/* Aufgabenzeilen fence-bewusst sammeln — exakt nach denselben Regeln wie
+   der Renderer (Code-Zäune ausgenommen, „[ ]" braucht folgenden Text).
+   Alle vier Verbraucher (Zählung, Vorschau-Toggle, Hub, Übersicht) nutzen
+   diesen Scanner, damit ihre Indizes deckungsgleich sind. */
+function aufgabenZeilen(body){
+  const liste = [];
+  let imZaun = false;
+  body.split('\n').forEach((z, i) => {
+    if(!imZaun && /^```\w*\s*$/.test(z)){ imZaun = true; return; }
+    if(imZaun){ if(/^```\s*$/.test(z)) imZaun = false; return; }
+    const m = z.match(/^(\s*(?:[-*+]|\d+[.)])\s+)\[([ xX])\](\s+.*)$/);
+    if(m) liste.push({ zeile: i, vor: m[1], status: m[2], rest: m[3], roh: z });
+  });
+  return liste;
+}
+function aufgabenZaehlen(body){
+  const l = aufgabenZeilen(body);
+  return { total: l.length, done: l.filter(a => a.status !== ' ').length };
+}
+function maxUpdated(d){ return Math.max(0, ...(d.notes||[]).map(n => +n.updated||0)); }
+/* Monotones Aktualitätsmaß: db.geaendert wird bei jedem Speichern hochgezählt
+   und sinkt nie (auch nicht durch Löschen) — anders als maxUpdated. */
+function standStempel(d){
+  return d.tresor ? (+d.geaendert||0) : Math.max(+d.geaendert||0, maxUpdated(d));
+}
+let inselGewann = false;   // beim Start aus der Exportdatei geladen?
+
+function rohLaden(){
+  // localStorage und Daten-Insel vergleichen — die neuere Quelle gewinnt,
+  // damit eine alte Exportdatei niemals frischere Daten überschreibt.
+  let lokal = null, insel = null;
+  try{ const r = localStorage.getItem(SPEICHER_KEY); if(r) lokal = JSON.parse(r); }catch(e){}
+  try{
+    const el = document.getElementById('datenInsel');
+    const t = el && el.textContent.trim();
+    if(t && t !== 'null') insel = JSON.parse(t);
+  }catch(e){}
+  const gueltig = x => x && (Array.isArray(x.notes) || x.tresor);
+  if(gueltig(lokal) && gueltig(insel)){
+    if(standStempel(insel) > standStempel(lokal)){ inselGewann = true; return insel; }
+    return lokal;
+  }
+  return gueltig(lokal) ? lokal : (gueltig(insel) ? insel : null);
+}
+
+/* ── Tresor (optionale Verschlüsselung) ─────────────────────────
+   Architektur: zufälliger AES-256-GCM-Datenschlüssel; aus dem Passwort
+   wird per PBKDF2-SHA-512 ein AES-KW-Schlüssel abgeleitet, der den
+   Datenschlüssel wrappt. Passwortwechsel = nur neu wrappen. */
+const KRYPTO = { dataKey:null, wrapped:null, salt:null, iter:600000, aktiv:false };
+const enc = new TextEncoder(), dec = new TextDecoder();
+const b64 = b => btoa(String.fromCharCode(...new Uint8Array(b)));
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function wrapSchluessel(passwort, salt, iter){
+  const basis = await crypto.subtle.importKey('raw', enc.encode(passwort), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:iter, hash:'SHA-512'},
+    basis, {name:'AES-KW', length:256}, false, ['wrapKey','unwrapKey']);
+}
+async function tresorEinrichten(passwort){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const dataKey = await crypto.subtle.generateKey({name:'AES-GCM', length:256}, true, ['encrypt','decrypt']);
+  const wk = await wrapSchluessel(passwort, salt, KRYPTO.iter);
+  const wrapped = await crypto.subtle.wrapKey('raw', dataKey, wk, 'AES-KW');
+  Object.assign(KRYPTO, { dataKey, wrapped:b64(wrapped), salt:b64(salt), aktiv:true });
+}
+async function containerEntschluesseln(container, passwort){
+  const salt = unb64(container.salt);
+  const iterKandidaten = [ +container.iter||600000, 600000, 100000 ];
+  for(const iter of [...new Set(iterKandidaten)]){
+    try{
+      const wk = await wrapSchluessel(passwort, salt, iter);
+      const dataKey = await crypto.subtle.unwrapKey('raw', unb64(container.wrapped), wk,
+        'AES-KW', {name:'AES-GCM', length:256}, true, ['encrypt','decrypt']);
+      const klar = await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(container.iv)}, dataKey, unb64(container.daten));
+      return { daten: JSON.parse(dec.decode(klar)), dataKey, iter };
+    }catch(e){ /* OperationError = falsches Passwort → nächste Iterationszahl bzw. Fehlschlag */ }
+  }
+  return null;
+}
+async function tresorOeffnen(container, passwort){
+  const erg = await containerEntschluesseln(container, passwort);
+  if(!erg) return null;
+  Object.assign(KRYPTO, { dataKey:erg.dataKey, wrapped:container.wrapped, salt:container.salt, iter:erg.iter, aktiv:true });
+  return erg.daten;
+}
+async function verschluesselterContainer(){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, KRYPTO.dataKey, enc.encode(JSON.stringify(db)));
+  return JSON.stringify({ tresor:1, fmt:1, alg:'aesgcm-pbkdf2sha512', iter:KRYPTO.iter,
+    salt:KRYPTO.salt, wrapped:KRYPTO.wrapped, iv:b64(iv), daten:b64(ct), geaendert:standStempel(db) });
+}
+
+let db = null;
 let speicherTimer = null;
+let letzterContainer = null;   // letzter fertig verschlüsselter Stand (für beforeunload)
+
 function speichern(sofort){
   clearTimeout(speicherTimer);
-  const tu = () => {
+  const tu = async () => {
     try{
-      localStorage.setItem(SPEICHER_KEY, JSON.stringify(db));
+      verlaufSichern(aktive(), false);   // höchstens alle 10 Min. während des Schreibens
+      db.geaendert = Math.max(+db.geaendert||0, Date.now());   // monoton, überlebt Löschen
+      if(KRYPTO.aktiv){
+        const c = await verschluesselterContainer();
+        letzterContainer = c;
+        localStorage.setItem(SPEICHER_KEY, c);
+      } else {
+        localStorage.setItem(SPEICHER_KEY, JSON.stringify(db));
+      }
       zeigeSpeicherStatus('Gespeichert', true);
     }catch(e){
+      if(e && e.name === 'QuotaExceededError'){
+        // Speicher voll → Verläufe halbieren und erneut versuchen
+        for(const n of db.notes) if(n.hist && n.hist.length > 2) n.hist.length = Math.ceil(n.hist.length/2);
+        try{
+          localStorage.setItem(SPEICHER_KEY, KRYPTO.aktiv ? await verschluesselterContainer() : JSON.stringify(db));
+          zeigeSpeicherStatus('Gespeichert (Verlauf gekürzt)', true);
+          return;
+        }catch(e2){ toast('Speicher voll — bitte per ⬇ ein Backup sichern und Notizen ausmisten'); }
+      }
       zeigeSpeicherStatus('Speichern fehlgeschlagen!', false);
       console.error(e);
     }
@@ -731,9 +1039,18 @@ function tagsAus(text){
   for(const m of text.matchAll(/(^|[\s(>])#([\p{L}\p{N}_][\p{L}\p{N}_\-\/]*)/gu)) menge.add(m[2].toLowerCase());
   return menge;
 }
+/* Aus dem Innentext eines [[..]]/![[..]] das Verweisziel bestimmen:
+   Ist der volle Text ein exakter Notiztitel (z. B. „Budget | 2026"),
+   gewinnt er; sonst wird am ersten '|' die Anzeige abgetrennt. */
+function wikiZiel(innen){
+  const roh = innen.trim();
+  if(findeNotizNachTitel(roh)) return roh;
+  const p = roh.indexOf('|');
+  return p >= 0 ? roh.slice(0, p).trim() : roh;
+}
 function wikiZieleAus(text){
   const ziele = new Set();
-  for(const m of text.matchAll(/\[\[([^\[\]|]+?)(?:\|[^\[\]]*)?\]\]/g)) ziele.add(m[1].trim().toLowerCase());
+  for(const m of text.matchAll(/\[\[([^\[\]]+?)\]\]/g)) ziele.add(wikiZiel(m[1]).toLowerCase());
   return ziele;
 }
 function findeNotizNachTitel(titel){
@@ -754,15 +1071,22 @@ function inlineMd(roh){
   let s = escapeHtml(roh);
   // Code-Spans zuerst herauslösen, damit darin nichts formatiert wird
   const codes = [];
-  s = s.replace(/`([^`\n]+)`/g, (_,c) => { codes.push(c); return ` C${codes.length-1} `; });
+  s = s.replace(/`([^`\n]+)`/g, (_,c) => { codes.push(c); return `\x00C${codes.length-1}\x00`; });
   // Bilder & Links
   s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_,alt,url) => `<img src="${escapeAttr(url)}" alt="${escapeAttr(alt)}" loading="lazy">`);
   s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_,txt,url) => `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${txt}</a>`);
-  // Wiki-Links [[Ziel]] / [[Ziel|Anzeige]]
-  s = s.replace(/\[\[([^\[\]|]+?)(?:\|([^\[\]]*))?\]\]/g, (_,ziel,anzeige) => {
-    const zielRein = ziel.trim();
-    const existiert = !!findeNotizNachTitel(zielRein);
-    return `<a class="wiki${existiert?'':' fehlt'}" role="button" tabindex="0" data-wiki="${escapeAttr(zielRein)}" title="${existiert?'Notiz öffnen':'Notiz anlegen'}: ${escapeAttr(zielRein)}">${anzeige ? anzeige.trim() : escapeHtml(zielRein)}</a>`;
+  // Inline-Einbettungen wie normale Wiki-Links behandeln (Block-Embeds nur ganzzeilig)
+  s = s.replace(/!\[\[/g, '[[');
+  // Wiki-Links [[Ziel]] / [[Ziel|Anzeige]] — exakter Titel gewinnt vor |-Trennung
+  s = s.replace(/\[\[([^\[\]]+?)\]\]/g, (_,innen) => {
+    const roh = innen.trim();
+    let ziel = roh, anzeige = null;
+    if(!findeNotizNachTitel(roh)){
+      const p = roh.indexOf('|');
+      if(p >= 0){ ziel = roh.slice(0, p).trim(); anzeige = roh.slice(p+1).trim(); }
+    }
+    const existiert = !!findeNotizNachTitel(ziel);
+    return `<a class="wiki${existiert?'':' fehlt'}" role="button" tabindex="0" data-wiki="${escapeAttr(ziel)}" title="${existiert?'Notiz öffnen':'Notiz anlegen'}: ${escapeAttr(ziel)}">${anzeige !== null ? anzeige : ziel}</a>`;
   });
   // Schlagwörter
   s = s.replace(/(^|[\s(>])#([\p{L}\p{N}_][\p{L}\p{N}_\-\/]*)/gu, (_,vor,tag) => `${vor}<a class="tag-inline" role="button" tabindex="0" data-tag="${escapeAttr(tag.toLowerCase())}">#${tag}</a>`);
@@ -774,11 +1098,54 @@ function inlineMd(roh){
   // Nackte URLs
   s = s.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, (_,vor,url) => `${vor}<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${url}</a>`);
   // Code-Spans zurücksetzen
-  s = s.replace(/ C(\d+) /g, (_,i) => `<code>${escapeHtml(codes[+i])}</code>`);
+  s = s.replace(/\x00C(\d+)\x00/g, (_,i) => `<code>${escapeHtml(codes[+i])}</code>`);
   return s;
 }
 
-function renderMd(quelle){
+/* Einbettung ![[Titel]] / ![[Titel#Abschnitt]] — mit Zyklenschutz über einen
+   Render-Stapel: bei A → B → A erscheint eine Warnbox mit der ganzen Kette.
+   Ein exakter Notiztitel (auch mit '#', z. B. „C# Grundlagen") gewinnt vor
+   der Abschnitts-Trennung. */
+function einbettungRendern(innen, _unused, opts){
+  const tiefe = opts.tiefe || 0;
+  const stapel = opts.stapel || new Set();
+  let titel = innen.trim(), abschnitt = null;
+  if(!findeNotizNachTitel(titel)){
+    const p = titel.lastIndexOf('#');
+    if(p > 0){ abschnitt = titel.slice(p+1).trim(); titel = titel.slice(0, p).trim(); }
+  }
+  const schluessel = titel.toLowerCase();
+  if(stapel.has(schluessel) || tiefe >= 4){
+    const kette = [...stapel, schluessel].join(' → ');
+    return `<div class="eb-warnung">⚠ Zirkuläre oder zu tiefe Einbettung: ${escapeHtml(kette)}</div>`;
+  }
+  const ziel = findeNotizNachTitel(titel);
+  if(!ziel) return `<div class="eb-warnung">⧉ Notiz „${escapeHtml(titel)}" existiert (noch) nicht.</div>`;
+  let inhalt = ziel.body;
+  if(abschnitt){
+    const zeilen = inhalt.split('\n');
+    const gesucht = abschnitt.trim().toLowerCase();
+    let von = -1, tiefeH = 0;
+    for(let j = 0; j < zeilen.length; j++){
+      const h = zeilen[j].match(/^(#{1,4})\s+(.*)$/);
+      if(h && h[2].trim().toLowerCase() === gesucht){ von = j; tiefeH = h[1].length; break; }
+    }
+    if(von < 0) return `<div class="eb-warnung">⧉ Abschnitt „${escapeHtml(abschnitt)}" in „${escapeHtml(titel)}" nicht gefunden.</div>`;
+    let bis = zeilen.length;
+    for(let j = von+1; j < zeilen.length; j++){
+      const h = zeilen[j].match(/^(#{1,4})\s/);
+      if(h && h[1].length <= tiefeH){ bis = j; break; }
+    }
+    inhalt = zeilen.slice(von, bis).join('\n');
+  }
+  const neuerStapel = new Set(stapel); neuerStapel.add(schluessel);
+  const gerendert = renderMd(inhalt, { tiefe: tiefe+1, stapel: neuerStapel });
+  return `<div class="einbettung"><div class="eb-titel" data-wiki="${escapeAttr(titel)}" role="button" tabindex="0" title="Notiz öffnen">⧉ ${escapeHtml(ziel.title)}${abschnitt ? ' › ' + escapeHtml(abschnitt) : ''}</div><div class="md">${gerendert}</div></div>`;
+}
+
+function renderMd(quelle, opts){
+  opts = opts || {};
+  const eingebettet = (opts.tiefe || 0) > 0;
   const zeilen = quelle.split('\n');
   const out = [];
   let i = 0, aufgabenIndex = 0;
@@ -787,6 +1154,11 @@ function renderMd(quelle){
     const z = zeilen[i];
 
     if(/^\s*$/.test(z)){ i++; continue; }
+    if(opts.marken) out.push(`<div class="zmark" data-z="${i}"></div>`);
+
+    // Ganzzeilige Einbettung (Titel/Abschnitt-Trennung passiert in einbettungRendern)
+    const eb = z.match(/^!\[\[([^\[\]]+?)\]\]\s*$/);
+    if(eb){ out.push(einbettungRendern(eb[1], null, opts)); i++; continue; }
 
     // Code-Zaun
     const zaun = z.match(/^```(\w*)\s*$/);
@@ -863,7 +1235,9 @@ function renderMd(quelle){
         }
         if(aufgabe){
           const erledigt = aufgabe[1] !== ' ';
-          teileHtml.push(`<li class="aufgabe${erledigt?' erledigt':''}"><input type="checkbox" data-aufgabe="${aufgabenIndex}" ${erledigt?'checked':''} aria-label="Aufgabe umschalten"><span>${inlineMd(aufgabe[2])}</span>`);
+          // In Einbettungen sind Checkboxen deaktiviert — abgehakt wird an der Quelle
+          const attr = eingebettet ? 'disabled' : `data-aufgabe="${aufgabenIndex}"`;
+          teileHtml.push(`<li class="aufgabe${erledigt?' erledigt':''}"><input type="checkbox" ${attr} ${erledigt?'checked':''} aria-label="Aufgabe umschalten"><span>${inlineMd(aufgabe[2])}</span>`);
           aufgabenIndex++;
         } else {
           teileHtml.push(`<li>${inlineMd(inhalt)}`);
@@ -887,16 +1261,15 @@ function renderMd(quelle){
   return out.join('\n');
 }
 
-/* Aufgaben-Checkbox in der Vorschau → Quelltext umschalten */
+/* Aufgaben-Checkbox in der Vorschau → Quelltext umschalten (fence-bewusst) */
 function aufgabeUmschalten(index){
   const n = aktive(); if(!n) return;
-  let zaehler = -1;
-  n.body = n.body.replace(/^(\s*(?:[-*+]|\d+[.)])\s+)\[([ xX])\]/gm, (ganz, vor, status) => {
-    zaehler++;
-    if(zaehler !== index) return ganz;
-    return vor + (status===' ' ? '[x]' : '[ ]');
-  });
+  const a = aufgabenZeilen(n.body)[index]; if(!a) return;
+  const zeilen = n.body.split('\n');
+  zeilen[a.zeile] = a.vor + (a.status === ' ' ? '[x]' : '[ ]') + a.rest;
+  n.body = zeilen.join('\n');
   n.updated = Date.now();
+  n.tasks = aufgabenZaehlen(n.body);
   $('#schreibfeld').value = n.body;
   speichern();
   renderVorschau(); renderListe();
@@ -906,9 +1279,12 @@ function aufgabeUmschalten(index){
 function zaehle(f){ return db.notes.filter(f).length; }
 
 function renderSeitenleiste(){
+  const offen = db.notes.filter(n => !n.trashed && !n.archived)
+    .reduce((s,n) => s + (n.tasks.total - n.tasks.done), 0);
   const bereiche = [
     {art:'alle',      ico:'🗒', name:'Alle Notizen', anzahl: zaehle(n => !n.trashed && !n.archived)},
     {art:'pins',      ico:'📌', name:'Angepinnt',    anzahl: zaehle(n => n.pinned && !n.trashed && !n.archived)},
+    {art:'aufgaben',  ico:'☑',  name:'Aufgaben',     anzahl: offen},
     {art:'archiv',    ico:'📦', name:'Archiv',       anzahl: zaehle(n => n.archived && !n.trashed)},
     {art:'papierkorb',ico:'🗑', name:'Papierkorb',   anzahl: zaehle(n => n.trashed)},
   ];
@@ -935,6 +1311,51 @@ function renderSeitenleiste(){
 }
 
 /* ── Rendering: Liste ─────────────────────────────────────────── */
+/* Suchoperatoren: tag:x  nb:x  ist:offen|erledigt|aufgabe|angepinnt|archiviert
+   plus "Phrasen in Anführungszeichen" und -Negation. Der Doppelpunkt zählt
+   nur bei bekannten Präfixen als Filter — URLs bleiben normaler Text. */
+function sucheParsen(q){
+  const terme = [];
+  let buf = '', inQuote = false, neg = false;
+  const abschliessen = () => {
+    if(!buf){ neg = false; return; }
+    let filter = 'text', wert = buf;
+    const dp = buf.indexOf(':');
+    if(dp > 0){
+      const pre = buf.slice(0, dp).toLowerCase();
+      if(['tag','nb','ist'].includes(pre)){ filter = pre; wert = buf.slice(dp+1); }
+    }
+    if(wert) terme.push({ filter, wert: wert.toLowerCase().replace(/^#/,''), neg });
+    buf = ''; neg = false;
+  };
+  for(const ch of q.trim()){
+    if(ch === '"'){ inQuote = !inQuote; continue; }
+    if(!inQuote && /\s/.test(ch)){ abschliessen(); continue; }
+    if(!inQuote && ch === '-' && !buf){ neg = true; continue; }
+    buf += ch;
+  }
+  abschliessen();
+  return terme;
+}
+function suchtreffer(n, terme){
+  return terme.every(t => {
+    let ok;
+    if(t.filter === 'tag') ok = tagsAus(n.body).has(t.wert);
+    else if(t.filter === 'nb'){ const nb = notizbuch(n.nb); ok = !!nb && nb.name.toLowerCase().includes(t.wert); }
+    else if(t.filter === 'ist'){
+      const w = t.wert;
+      if(w === 'offen') ok = n.tasks.total > n.tasks.done;
+      else if(w === 'erledigt') ok = n.tasks.total > 0 && n.tasks.done === n.tasks.total;
+      else if(w === 'aufgabe') ok = n.tasks.total > 0;
+      else if(w === 'angepinnt' || w === 'gepinnt') ok = n.pinned;
+      else if(w === 'archiviert') ok = n.archived;
+      else ok = true;
+    }
+    else ok = (n.title + '\n' + n.body).toLowerCase().includes(t.wert);
+    return t.neg ? !ok : ok;
+  });
+}
+
 function gefilterteNotizen(){
   const f = zustand.filter;
   let menge = db.notes.filter(n => {
@@ -943,25 +1364,40 @@ function gefilterteNotizen(){
     if(f.art==='archiv') return n.archived;
     if(n.archived) return false;
     if(f.art==='pins') return n.pinned;
+    if(f.art==='aufgaben') return n.tasks.total > n.tasks.done;
     if(f.art==='nb') return n.nb === f.wert;
     if(f.art==='tag') return tagsAus(n.body).has(f.wert);
     return true;
   });
-  const q = zustand.suche.trim().toLowerCase();
-  if(q){
-    const woerter = q.split(/\s+/);
-    menge = menge.filter(n => {
-      const text = (n.title+'\n'+n.body).toLowerCase();
-      return woerter.every(w => text.includes(w));
-    });
-  }
+  const terme = sucheParsen(zustand.suche);
+  if(terme.length) menge = menge.filter(n => suchtreffer(n, terme));
   menge.sort((a,b) => (b.pinned-a.pinned) || (b.updated-a.updated));
   return menge;
+}
+
+/* Offene Aufgaben einer Notiz mit Zeilenposition (fürs Abhaken aus der Übersicht) */
+function offeneAufgaben(n){
+  return aufgabenZeilen(n.body)
+    .filter(a => a.status === ' ')
+    .map(a => ({ zeile: a.zeile, text: a.rest.trim(), roh: a.roh }));
+}
+function hubAufgabeErledigen(id, zeilenIdx, roh){
+  const n = notiz(id); if(!n) return;
+  const zeilen = n.body.split('\n');
+  // Zeile über Index prüfen, sonst per Rohtext neu lokalisieren (Notiz kann sich geändert haben)
+  const idx = zeilen[zeilenIdx] === roh ? zeilenIdx : zeilen.indexOf(roh);
+  if(idx < 0){ renderListe(); return; }
+  zeilen[idx] = zeilen[idx].replace('[ ]', '[x]');
+  n.body = zeilen.join('\n'); n.updated = Date.now();
+  n.tasks = aufgabenZaehlen(n.body);
+  if(zustand.aktivId === id){ $('#schreibfeld').value = n.body; renderVorschau(); aktualisiereZaehler(); }
+  speichern(); renderSeitenleiste(); renderListe();
 }
 
 function filterTitel(){
   const f = zustand.filter;
   if(f.art==='pins') return 'Angepinnt';
+  if(f.art==='aufgaben') return 'Offene Aufgaben';
   if(f.art==='archiv') return 'Archiv';
   if(f.art==='papierkorb') return 'Papierkorb';
   if(f.art==='nb'){ const nb = notizbuch(f.wert); return nb ? '📓 '+nb.name : 'Notizbuch'; }
@@ -977,9 +1413,35 @@ function schnipsel(body){
 function renderListe(){
   const notizen = gefilterteNotizen();
   $('#listeTitel').textContent = filterTitel();
-  $('#listeAnzahl').textContent = notizen.length === 1 ? '1 Notiz' : `${notizen.length} Notizen`;
   const inhalt = $('#listeInhalt');
+  $('#captureZeile').style.display =
+    ['papierkorb','archiv','aufgaben'].includes(zustand.filter.art) ? 'none' : '';
 
+  // Aufgaben-Übersicht: offene Aufgaben aller Notizen, direkt abhakbar
+  if(zustand.filter.art === 'aufgaben'){
+    const offenGesamt = notizen.reduce((s,n) => s + (n.tasks.total - n.tasks.done), 0);
+    $('#listeAnzahl').textContent = offenGesamt === 1 ? '1 offen' : `${offenGesamt} offen`;
+    if(!notizen.length){
+      inhalt.innerHTML = `<div class="liste-leer"><div class="gross">🎉</div>
+        <p>Alles erledigt!<br>Neue Aufgaben legst du mit <code>- [ ]</code> an.</p></div>`;
+      return;
+    }
+    inhalt.innerHTML = notizen.map(n => {
+      const aufgaben = offeneAufgaben(n);
+      const seg = n.tasks.total <= 8
+        ? Array.from({length:n.tasks.total}, (_,i) => `<i class="${i < n.tasks.done ? 'voll' : ''}"></i>`).join('')
+        : `<span class="mini" style="width:52px;height:5px;border-radius:3px;background:var(--rand-stark);display:inline-block;overflow:hidden"><i style="display:block;height:100%;width:${Math.round(n.tasks.done/n.tasks.total*100)}%;background:var(--leit)"></i></span>`;
+      return `<div class="hub-gruppe">
+        <button class="hub-kopf" data-id="${escapeAttr(n.id)}">${escapeHtml(n.title || 'Ohne Titel')}
+          <span class="balken">${seg}<b>${n.tasks.done}/${n.tasks.total}</b></span></button>
+        ${aufgaben.map(a => `<button class="hub-aufgabe" data-hub="${escapeAttr(n.id)}" data-zeile="${a.zeile}" data-roh="${escapeAttr(a.roh)}">
+          <input type="checkbox" tabindex="-1" aria-hidden="true"><span>${escapeHtml(a.text)}</span></button>`).join('')}
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  $('#listeAnzahl').textContent = notizen.length === 1 ? '1 Notiz' : `${notizen.length} Notizen`;
   if(!notizen.length){
     const istSuche = zustand.suche.trim() !== '';
     inhalt.innerHTML = `<div class="liste-leer">
@@ -989,10 +1451,13 @@ function renderListe(){
   }
   inhalt.innerHTML = notizen.map((n,idx) => {
     const nb = notizbuch(n.nb);
-    return `<button class="notiz-karte" data-id="${n.id}" aria-current="${n.id===zustand.aktivId}" style="animation-delay:${Math.min(idx*18,180)}ms">
+    const aufgabenBadge = n.tasks.total > 0
+      ? `<span class="karten-aufgaben">☑ ${n.tasks.done}/${n.tasks.total}
+         <span class="mini"><i style="width:${Math.round(n.tasks.done/n.tasks.total*100)}%"></i></span></span>` : '';
+    return `<button class="notiz-karte" data-id="${escapeAttr(n.id)}" aria-current="${n.id===zustand.aktivId}" style="animation-delay:${Math.min(idx*18,180)}ms">
       <h3>${n.pinned ? '<span class="pin" aria-label="angepinnt">📌</span>' : ''}${escapeHtml(n.title || 'Ohne Titel')}</h3>
       <p>${escapeHtml(schnipsel(n.body)) || '<em>Leere Notiz</em>'}</p>
-      <div class="meta"><span>${datumKurz(n.updated)}</span>${nb ? `<span class="nb">📓 ${escapeHtml(nb.name)}</span>` : ''}</div>
+      <div class="meta"><span>${datumKurz(n.updated)}</span>${nb ? `<span class="nb">📓 ${escapeHtml(nb.name)}</span>` : ''}${aufgabenBadge}</div>
     </button>`;
   }).join('');
 }
@@ -1019,18 +1484,42 @@ function renderEditor(){
   renderVorschau();
 }
 
+/* Wortzahl auf dem „nackten" Text (Markdown-Syntax herausgerechnet),
+   dazu Lesezeit (200 Wörter/Min.) und die heute geschriebenen Wörter. */
+function wortzahl(body){
+  const nackt = body
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!?\[\[([^\[\]|]+?)(?:\|[^\[\]]*)?\]\]/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*`~=|_-]/g, ' ')
+    .trim();
+  return nackt ? nackt.split(/\s+/).length : 0;
+}
+const wortzahlVorher = new Map();   // pro Notiz, für die Tagesstatistik
 function aktualisiereZaehler(){
   const n = aktive(); if(!n) return;
-  const text = n.body.trim();
-  const woerter = text ? text.split(/\s+/).length : 0;
-  $('#zaehler').textContent = `${woerter} Wörter · ${n.body.length} Zeichen`;
+  const woerter = wortzahl(n.body);
+  const vorher = wortzahlVorher.get(n.id);
+  if(vorher !== undefined && woerter > vorher){
+    const heute = new Date().toISOString().slice(0, 10);
+    db.stats.woerter[heute] = (db.stats.woerter[heute] || 0) + (woerter - vorher);
+  }
+  wortzahlVorher.set(n.id, woerter);
+  const minuten = Math.max(1, Math.ceil(woerter / 200));
+  const heuteWoerter = db.stats.woerter[new Date().toISOString().slice(0, 10)] || 0;
+  $('#zaehler').textContent =
+    `${woerter} Wörter · ${n.body.length} Zeichen · ~${minuten} Min.` +
+    (heuteWoerter ? ` · heute +${heuteWoerter}` : '');
 }
 
 function renderVorschau(){
   const n = aktive(); if(!n) return;
   if(zustand.modus === 'edit') return;   // unsichtbar → sparen
-  $('#vorschau').innerHTML = renderMd(n.body) || '<p style="color:var(--tinte-blass)"><em>Noch kein Inhalt.</em></p>';
+  $('#vorschau').innerHTML = renderMd(n.body, {marken:true}) || '<p style="color:var(--tinte-blass)"><em>Noch kein Inhalt.</em></p>';
   renderBacklinks();
+  syncMarkenLeeren();
+  // Nachladende Bilder verschieben die Marken → nach jedem Load neu vermessen
+  $$('#vorschau img').forEach(img => { if(!img.complete) img.addEventListener('load', syncMarkenLeeren, {once:true}); });
 }
 
 function renderBacklinks(){
@@ -1044,7 +1533,7 @@ function renderBacklinks(){
     quellen.map(q => {
       const idx = q.body.toLowerCase().indexOf('[['+mein);
       const um = idx>=0 ? q.body.slice(Math.max(0,idx-40), idx+mein.length+44).replace(/\n/g,' ') : '';
-      return `<button data-id="${q.id}"><div class="bl-titel">${escapeHtml(q.title||'Ohne Titel')}</div>
+      return `<button data-id="${escapeAttr(q.id)}"><div class="bl-titel">${escapeHtml(q.title||'Ohne Titel')}</div>
         <div class="bl-kontext">… ${escapeHtml(um)} …</div></button>`;
     }).join('');
 }
@@ -1053,6 +1542,8 @@ function renderAlles(){ renderSeitenleiste(); renderListe(); renderEditor(); }
 
 /* ── Aktionen ─────────────────────────────────────────────────── */
 function oeffneNotiz(id, fokusTitel){
+  const vorher = aktive();
+  if(vorher && vorher.id !== id) verlaufSichern(vorher, true);   // Sitzungsende = Revision
   zustand.aktivId = id;
   $('#app').classList.add('ansicht-editor');
   renderListe(); renderEditor();
@@ -1062,7 +1553,7 @@ function oeffneNotiz(id, fokusTitel){
 
 function neueNotiz(titel, body){
   const t = Date.now();
-  const n = { id:neueId(), title:titel||'', body:body||'',
+  const n = { id:neueId(), title:titel||'', body:body||'', hist:[], tasks:aufgabenZaehlen(body||''),
     nb: zustand.filter.art==='nb' ? zustand.filter.wert : null,
     pinned:false, archived:false, trashed:false, created:t, updated:t };
   db.notes.unshift(n);
@@ -1159,36 +1650,129 @@ function importiereBackup(datei){
   const leser = new FileReader();
   leser.onload = () => {
     try{
-      const d = JSON.parse(leser.result);
+      const text = leser.result;
+      let d;
+      if(/^\s*</.test(text)){
+        // Exportierte App-HTML: Daten-Insel herausschneiden
+        const m = INSEL_REGEX.exec(text);
+        if(!m) throw new Error('keine Daten-Insel');
+        d = JSON.parse(m[0].slice(m[1].length, m[0].length - m[2].length));
+      } else {
+        d = JSON.parse(text);
+      }
+      if(d && d.tresor){
+        dialogEingabe('Verschlüsselter Export — Passwort eingeben', 'Passwort', '', 'Entschlüsseln', async pw => {
+          const erg = await containerEntschluesseln(d, pw);
+          if(!erg || !Array.isArray(erg.daten.notes)){ toast('Falsches Passwort oder beschädigte Datei'); return; }
+          importDialog(erg.daten);
+        });
+        return;
+      }
+      importDialog(d);
+    }catch(e){ toast('Import fehlgeschlagen: keine gültige Backup-Datei'); }
+  };
+  leser.readAsText(datei);
+}
+function importDialog(d){
+  try{
       if(!d || !Array.isArray(d.notes)) throw new Error('Format unbekannt');
       dialogBestaetigen('Backup einspielen?',
         `${d.notes.length} Notizen gefunden. Sie werden zu deinen bestehenden ${db.notes.length} Notizen hinzugefügt (nichts wird überschrieben).`,
         'Einspielen', () => {
+          // Notizbücher zuerst mergen → Zuordnung alte→neue Notizbuch-ID
+          const idKarte = {};
+          if(Array.isArray(d.notebooks)){
+            for(const nb of d.notebooks){
+              if(!nb || !nb.name) continue;
+              const passend = db.notebooks.find(x => x.name.toLowerCase()===String(nb.name).toLowerCase());
+              if(passend){ idKarte[nb.id]=passend.id; }
+              else { const nid=neueId(); db.notebooks.push({id:nid,name:String(nb.name)}); idKarte[nb.id]=nid; }
+            }
+          }
           const vorhandene = new Set(db.notes.map(n => n.id));
           let neu = 0;
           for(const n of d.notes){
-            if(vorhandene.has(n.id)) continue;
-            db.notes.push({ id:n.id||neueId(), title:String(n.title||''), body:String(n.body||''),
-              nb:null, pinned:!!n.pinned, archived:!!n.archived, trashed:!!n.trashed,
+            // Fremde IDs nur übernehmen, wenn sie unserem Format entsprechen — sonst neu vergeben
+            const id = (typeof n.id === 'string' && /^[a-z0-9]+$/.test(n.id) && !vorhandene.has(n.id)) ? n.id : neueId();
+            if(vorhandene.has(id)) continue;
+            const body = String(n.body||'');
+            db.notes.push({ id, title:String(n.title||''), body,
+              hist:Array.isArray(n.hist)?n.hist:[], tasks:aufgabenZaehlen(body),
+              nb:(n.nb && idKarte[n.nb]) || null, pinned:!!n.pinned, archived:!!n.archived, trashed:!!n.trashed,
               created:+n.created||Date.now(), updated:+n.updated||Date.now() });
+            vorhandene.add(id);
             neu++;
-          }
-          if(Array.isArray(d.notebooks)){
-            const namen = new Set(db.notebooks.map(nb => nb.name.toLowerCase()));
-            const idKarte = {};
-            for(const nb of d.notebooks){
-              if(!nb || !nb.name) continue;
-              const passend = db.notebooks.find(x => x.name.toLowerCase()===nb.name.toLowerCase());
-              if(passend){ idKarte[nb.id]=passend.id; }
-              else { const nid=neueId(); db.notebooks.push({id:nid,name:String(nb.name)}); idKarte[nb.id]=nid; namen.add(nb.name.toLowerCase()); }
-            }
-            for(const n of d.notes){ if(n.nb && idKarte[n.nb]){ const meine = db.notes.find(x=>x.id===n.id); if(meine) meine.nb=idKarte[n.nb]; } }
           }
           speichern(true); renderAlles(); toast(`${neu} Notizen importiert ⬆`);
         });
-    }catch(e){ toast('Import fehlgeschlagen: keine gültige Backup-Datei'); }
+  }catch(e){ toast('Import fehlgeschlagen: keine gültige Backup-Datei'); }
+}
+
+/* ── Versionsverlauf ──────────────────────────────────────────────
+   Eine Revision pro Schreibsitzung (Notizwechsel) plus höchstens eine
+   alle 10 Minuten; identische Stände werden übersprungen. Ab 20
+   Einträgen fliegen zuerst unbedeutende (≤ 25 Zeichen Differenz). */
+function verlaufSichern(n, erzwungen){
+  if(!n || !Array.isArray(n.hist)) return;
+  const letzte = n.hist[0];
+  if(letzte && letzte.body === n.body && letzte.title === n.title) return;
+  if(!erzwungen){
+    if(letzte && Date.now() - letzte.t < 600000) return;
+    if(!letzte && Date.now() - n.created < 600000) return;
+  }
+  n.hist.unshift({ t: Date.now(), title: n.title, body: n.body });
+  verlaufAusduennen(n.hist);
+}
+function verlaufAusduennen(h){
+  const MAX = 20, SIGNIFIKANT = 25;
+  for(let i = h.length-2; i >= 1 && h.length > MAX; i--){
+    if(Math.abs(h[i].body.length - h[i+1].body.length) <= SIGNIFIKANT) h.splice(i, 1);
+  }
+  while(h.length > MAX) h.splice(h.length-2, 1);
+}
+function verlaufAnzeigen(){
+  const n = aktive(); if(!n) return;
+  verlaufSichern(n, true);
+  if(!n.hist.length){ toast('Noch keine älteren Stände vorhanden'); return; }
+  const heuteJahr = new Date().getFullYear();
+  const proTag = new Map();
+  n.hist.forEach((rev, idx) => {
+    const d = new Date(rev.t);
+    const schluessel = d.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long',
+      year: d.getFullYear()===heuteJahr ? undefined : 'numeric'});
+    if(!proTag.has(schluessel)) proTag.set(schluessel, []);
+    proTag.get(schluessel).push({rev, idx});
+  });
+  const teile = [];
+  for(const [tag, eintraege] of proTag){
+    teile.push(`<div class="verlauf-tag">${escapeHtml(tag)}</div>`);
+    for(const {rev, idx} of eintraege){
+      const zeit = new Date(rev.t).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+      const woerter = rev.body.trim() ? rev.body.trim().split(/\s+/).length : 0;
+      const vorschau = rev.body.replace(/\s+/g,' ').trim().slice(0, 90);
+      teile.push(`<button class="verlauf-eintrag" data-vidx="${idx}">
+        <span class="zeit">${zeit}</span>
+        <span class="vorschau-text">${escapeHtml(vorschau) || '<em>leer</em>'}</span>
+        <span class="umfang">${woerter} W.</span></button>`);
+    }
+  }
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>⏱ Verlauf: ${escapeHtml(n.title || 'Ohne Titel')}</h3>
+    <p>${n.hist.length} gesicherte Stände. Ein Klick stellt den Stand wieder her —
+    der aktuelle Text wird dabei selbst als Version gesichert.</p>
+    <div class="verlauf-liste">${teile.join('')}</div>
+    <div class="reihe"><button class="knopf leer" data-dlg="abbruch">Schließen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    if(e.target.closest('[data-dlg]')){ dialogZu(); return; }
+    const k = e.target.closest('[data-vidx]'); if(!k) return;
+    const rev = n.hist[+k.dataset.vidx]; if(!rev) return;
+    verlaufSichern(n, true);
+    n.title = rev.title; n.body = rev.body; n.updated = Date.now();
+    n.tasks = aufgabenZaehlen(n.body);
+    dialogZu(); speichern(); renderAlles();
+    toast('Version wiederhergestellt ⏱');
   };
-  leser.readAsText(datei);
 }
 
 /* ── Befehlspalette ───────────────────────────────────────────── */
@@ -1202,6 +1786,15 @@ function paletteBefehle(){
     {ico:'⬇', name:'Backup exportieren (JSON)', tue:exportiereBackup},
     {ico:'⬆', name:'Backup importieren', tue:() => $('#importDatei').click()},
     {ico:'📓', name:'Notizbuch anlegen', tue:notizbuchAnlegen},
+    {ico:'☑', name:'Aufgaben-Übersicht öffnen', tue:() => { zustand.filter={art:'aufgaben',wert:null}; $('#app').classList.remove('ansicht-editor'); renderAlles(); }},
+    {ico:'🎞', name:'Präsentation starten (Folien: ---)', tue:buehneStarten},
+    {ico:'◎', name:'Fokusmodus umschalten', tue:fokusUmschalten},
+    {ico:'⌨', name:'Schreibmaschinenmodus umschalten', tue:typewriterUmschalten},
+    {ico:'⏱', name:'Notiz-Verlauf anzeigen', tue:verlaufAnzeigen},
+    {ico:'⧉', name:'Notiz duplizieren', tue:notizDuplizieren},
+    {ico:'📦', name:'Als App exportieren (HTML mit allen Daten)', tue:appExportieren},
+    {ico:'🔒', name:'Tresor: Verschlüsselung', tue:tresorDialog},
+    {ico:'🧹', name:'Papierkorb leeren', tue:papierkorbLeeren},
     {ico:'🗑', name:'Papierkorb anzeigen', tue:() => { zustand.filter={art:'papierkorb',wert:null}; renderAlles(); }},
   ];
 }
@@ -1254,55 +1847,218 @@ function paletteAusfuehren(idx){
   else e.tue();
 }
 
-/* ── Wiki-Link-Autovervollständigung im Editor ────────────────── */
-let acAktiv = 0, acListe = [];
+/* ── Editor-Trigger: [[ Wiki-Links, / Slash-Menü, # Tags ─────────
+   Ein gemeinsamer Scanner; der zuletzt getippte Trigger gewinnt.
+   Fuzzy-Filter mit Diakritika-Normalisierung, Ranking über die
+   längste gemeinsame Teilzeichenkette. */
+const ac = { modus:null, aktiv:0, eintraege:[], start:0, ende:0 };
+
+function suchNorm(s){ return s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase(); }
+function fuzzyTrifft(name, q){
+  if(!q) return true;
+  const n = suchNorm(name), qq = suchNorm(q).replace(/\s+/g,'');
+  try{ return new RegExp(qq.split('').map(escapeRegex).join('.*'), 'i').test(n); }
+  catch(e){ return n.includes(qq); }
+}
+function teilzeichenScore(name, q){
+  const n = suchNorm(name), qq = suchNorm(q);
+  if(!qq) return 0;
+  if(n.includes(qq)) return 1 + qq.length / n.length;
+  let max = 0;
+  for(let a = 0; a < n.length; a++) for(let b = 0; b < qq.length; b++){
+    let l = 0;
+    while(a+l < n.length && b+l < qq.length && n[a+l] === qq[b+l]) l++;
+    if(l > max) max = l;
+  }
+  return max / Math.max(1, n.length) * 0.5;
+}
+function inCodeFence(text){ return ((text.match(/^```/gm) || []).length % 2) === 1; }
+
+/* Slash-Befehle: Zeilen-Präfixe wandeln die aktuelle Zeile um,
+   Text-Schnipsel werden an der Einfügemarke eingesetzt (§ = Cursorziel). */
+function slashBefehle(){
+  const jetzt = new Date();
+  const datum = jetzt.toLocaleDateString('de-DE');
+  const zeit = jetzt.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+  const n0 = aktive();
+  const inVorlage = !!(n0 && tagsAus(n0.body).has('vorlage'));
+  const items = [
+    {g:'Blöcke', ico:'H₁', name:'Überschrift 1', kw:'h1 heading titel', zeile:'# ', hint:'#'},
+    {g:'Blöcke', ico:'H₂', name:'Überschrift 2', kw:'h2 heading', zeile:'## ', hint:'##'},
+    {g:'Blöcke', ico:'H₃', name:'Überschrift 3', kw:'h3 heading', zeile:'### ', hint:'###'},
+    {g:'Blöcke', ico:'☑', name:'Aufgabe', kw:'todo task checkbox haken', zeile:'- [ ] ', hint:'- [ ]'},
+    {g:'Blöcke', ico:'•', name:'Aufzählung', kw:'liste bullet list punkt', zeile:'- ', hint:'-'},
+    {g:'Blöcke', ico:'1.', name:'Nummerierte Liste', kw:'nummer ordered zahl', zeile:'1. ', hint:'1.'},
+    {g:'Blöcke', ico:'❝', name:'Zitat', kw:'quote blockquote', zeile:'> ', hint:'>'},
+    {g:'Blöcke', ico:'‹›', name:'Codeblock', kw:'code fence programm quelltext', text:'```\n§\n```', hint:'```'},
+    {g:'Blöcke', ico:'▦', name:'Tabelle', kw:'table spalten', text:'| Spalte | Spalte |\n|---|---|\n| § |  |', hint:'| |'},
+    {g:'Blöcke', ico:'—', name:'Trennlinie / neue Folie', kw:'hr linie divider slide folie', text:'\n---\n§', hint:'---'},
+    {g:'Blöcke', ico:'🖍', name:'Hervorhebung', kw:'marker highlight mark', text:'==§==', hint:'=='},
+    {g:'Verknüpfen', ico:'⧉', name:'Wiki-Link', kw:'link verweis wiki seite', text:'[[§]]', hint:'[['},
+    {g:'Verknüpfen', ico:'⿻', name:'Notiz einbetten', kw:'embed einbetten transklusion', text:'![[§]]', hint:'![['},
+    {g:'Datum', ico:'📅', name:'Tagesnotiz-Link', kw:'heute today journal tagesnotiz', text:'[[' + heuteTitel() + ']] §', hint:'[[…]]'},
+    {g:'Datum', ico:'🗓', name:'Datum einfügen', kw:'datum date heute', text:(inVorlage ? '{datum}' : datum)+' §', hint:inVorlage?'{datum}':datum},
+    {g:'Datum', ico:'🕐', name:'Uhrzeit einfügen', kw:'zeit time uhr jetzt', text:(inVorlage ? '{zeit}' : zeit)+' §', hint:inVorlage?'{zeit}':zeit},
+  ];
+  for(const v of db.notes.filter(x => !x.trashed && x.title.trim() && tagsAus(x.body).has('vorlage'))){
+    if(v.id === zustand.aktivId) continue;
+    items.push({g:'Vorlagen', ico:'📋', name:v.title, kw:'vorlage template muster', vorlage:v.id, hint:'{…}'});
+  }
+  return items;
+}
+function vorlageText(id){
+  const v = notiz(id); if(!v) return '';
+  const n = aktive();
+  let t = v.body.replace(/(^|\s)#vorlage\b/u, '$1').trim();
+  t = t.replace(/\{datum\}/g, new Date().toLocaleDateString('de-DE'))
+       .replace(/\{zeit\}/g, new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}))
+       .replace(/\{titel\}/g, n ? n.title : '');
+  // Cursor-Sentinel aus der Private-Use-Area — kann im Nutzertext nicht vorkommen,
+  // anders als '§', das in Vorlagen ('§ 19 UStG') legitim sein kann.
+  if(t.includes('{cursor}')) t = t.replace('{cursor}', CURSOR_MARKE);
+  return t;
+}
+const CURSOR_MARKE = '\uE000';
+
+function schliesseAc(){ $('#autocomplete').classList.remove('offen'); ac.modus = null; }
+
 function acPruefen(){
   const feld = $('#schreibfeld');
   const pos = feld.selectionStart;
   const davor = feld.value.slice(0, pos);
-  const m = davor.match(/\[\[([^\[\]\n]{0,40})$/);
+  const zeilenStart = davor.lastIndexOf('\n') + 1;
+  const zp = davor.slice(zeilenStart);
+
+  // Wettbewerb der Trigger: der mit dem größten Startindex (zuletzt getippt) gewinnt
+  const kandidaten = [];
+  const wiki = davor.match(/\[\[([^\[\]\n]{0,60})$/);
+  if(wiki) kandidaten.push({ modus:'wiki', start: pos - wiki[1].length - 2, q: wiki[1] });
+  if(!inCodeFence(davor)){
+    const slash = zp.match(/(?:^|[\s(\["'])\/([\wäöüß\-]{0,30})$/iu);
+    if(slash) kandidaten.push({ modus:'slash', start: zeilenStart + zp.lastIndexOf('/'), q: slash[1] });
+    const tag = zp.match(/(?:^|[\s(>])#([\p{L}\p{N}_\-\/]{1,30})$/u);
+    if(tag) kandidaten.push({ modus:'tag', start: pos - tag[1].length - 1, q: tag[1] });
+  }
+  if(!kandidaten.length){ schliesseAc(); return; }
+  const k = kandidaten.sort((a,b) => b.start - a.start)[0];
+  ac.modus = k.modus; ac.start = k.start; ac.ende = pos; ac.aktiv = 0;
+  ac.eintraege = baueEintraege(k);
+  if(!ac.eintraege.length){ schliesseAc(); return; }
+  acRendern(k);
+}
+
+function baueEintraege(k){
+  if(k.modus === 'slash'){
+    let items = slashBefehle().filter(b => fuzzyTrifft(b.name + ' ' + b.kw, k.q));
+    if(k.q) items.sort((a,b) => teilzeichenScore(b.name+' '+b.kw, k.q) - teilzeichenScore(a.name+' '+a.kw, k.q));
+    return items.slice(0, 14).map(b => ({
+      html: `<span class="ico">${b.ico}</span><span>${escapeHtml(b.name)}</span>${b.hint?`<span class="hint">${escapeHtml(b.hint)}</span>`:''}`,
+      gruppe: b.g, befehl: b,
+    }));
+  }
+  if(k.modus === 'tag'){
+    const alle = new Map();
+    for(const n of db.notes){ if(n.trashed) continue; for(const t of tagsAus(n.body)) alle.set(t, (alle.get(t)||0)+1); }
+    return [...alle.entries()]
+      .filter(([t]) => t !== k.q.toLowerCase() && suchNorm(t).includes(suchNorm(k.q)))
+      .sort((a,b) => b[1]-a[1]).slice(0, 8)
+      .map(([t, anz]) => ({ html:`<span class="ico">#</span><span>${escapeHtml(t)}</span><span class="hint">${anz}×</span>`, tag: t }));
+  }
+  // Wiki: vorhandene Titel (Fuzzy + Aktualitäts-Boost), verwaiste Linkziele, Neuanlage
+  const heute = Date.now();
+  const eintraege = db.notes
+    .filter(n => !n.trashed && n.title.trim() && n.id !== zustand.aktivId && fuzzyTrifft(n.title, k.q))
+    .map(n => ({ titel: n.title,
+      score: teilzeichenScore(n.title, k.q) - Math.log2((heute - n.updated)/86400000 + 1) * 0.04 }))
+    .sort((a,b) => b.score - a.score).slice(0, 6)
+    .map(e => ({ html:`<span class="ico">🗒</span><span>${escapeHtml(e.titel)}</span>`, wiki: e.titel }));
+  const vorhanden = new Set(eintraege.map(e => e.wiki.toLowerCase()));
+  const verwaist = new Set();
+  for(const n of db.notes){ if(n.trashed) continue;
+    for(const z of wikiZieleAus(n.body)) if(!findeNotizNachTitel(z)) verwaist.add(z);
+  }
+  for(const z of verwaist){
+    if(eintraege.length >= 8) break;
+    if(vorhanden.has(z) || !fuzzyTrifft(z, k.q)) continue;
+    eintraege.push({ html:`<span class="ico">↗</span><span class="ac-neu">${escapeHtml(z)} — verlinkt, noch leer</span>`, wiki: z });
+    vorhanden.add(z);
+  }
+  const qRein = k.q.trim();
+  if(qRein && !vorhanden.has(qRein.toLowerCase()) && !findeNotizNachTitel(qRein))
+    eintraege.push({ html:`<span class="ico">＋</span><span class="ac-neu">„${escapeHtml(qRein)}" neu anlegen</span>`, wiki: qRein });
+  return eintraege;
+}
+
+function acRendern(k){
   const box = $('#autocomplete');
-  if(!m){ box.classList.remove('offen'); return; }
-  const q = m[1].toLowerCase();
-  acListe = db.notes
-    .filter(n => !n.trashed && n.title.trim() && n.id!==zustand.aktivId)
-    .filter(n => n.title.toLowerCase().includes(q))
-    .sort((a,b) => b.updated-a.updated)
-    .slice(0,6)
-    .map(n => n.title);
-  if(m[1].trim() && !acListe.some(t => t.toLowerCase()===q)) acListe.push(' NEU:'+m[1].trim());
-  if(!acListe.length){ box.classList.remove('offen'); return; }
-  acAktiv = 0;
-  box.innerHTML = acListe.map((t,i) => t.startsWith(' NEU:')
-    ? `<button class="${i===acAktiv?'aktiv ':''}ac-neu" data-i="${i}">„${escapeHtml(t.slice(5))}" neu anlegen</button>`
-    : `<button class="${i===acAktiv?'aktiv':''}" data-i="${i}">${escapeHtml(t)}</button>`).join('');
-  // Position: grob an der Einfügemarke (gemessen über Spiegel-Element wäre genauer — Feldunterkante reicht)
+  const teile = [];
+  let letzteGruppe = null;
+  ac.eintraege.forEach((e, i) => {
+    if(k.modus === 'slash' && !k.q && e.gruppe !== letzteGruppe){
+      teile.push(`<div class="gruppe">${escapeHtml(e.gruppe)}</div>`);
+      letzteGruppe = e.gruppe;
+    }
+    teile.push(`<button class="eintrag${i===ac.aktiv?' aktiv':''}" data-i="${i}">${e.html}</button>`);
+  });
+  box.innerHTML = teile.join('');
+  const feld = $('#schreibfeld');
   const r = feld.getBoundingClientRect();
+  const davor = feld.value.slice(0, feld.selectionStart);
   const zeilen = davor.split('\n').length;
   const zeilenHoehe = parseFloat(getComputedStyle(feld).lineHeight) || 24;
-  let top = r.top + Math.min(zeilen*zeilenHoehe - feld.scrollTop + 8, r.height - 40);
-  top = Math.max(r.top+8, Math.min(top, innerHeight-220));
-  box.style.left = Math.min(r.left + 40, innerWidth-260) + 'px';
-  box.style.top = top + 'px';
+  // Erst öffnen und die reale Boxgröße messen, dann in den Viewport klammern —
+  // sonst wird das Menü bei flachen Fenstern unten/rechts abgeschnitten.
+  box.style.maxHeight = Math.min(300, innerHeight - 16) + 'px';
   box.classList.add('offen');
+  const bH = box.offsetHeight, bW = box.offsetWidth;
+  let top = r.top + Math.min(zeilen*zeilenHoehe - feld.scrollTop + 8, r.height - 40);
+  top = Math.max(8, Math.min(top, innerHeight - bH - 8));
+  box.style.top = top + 'px';
+  box.style.left = Math.max(8, Math.min(r.left + 40, innerWidth - bW - 8)) + 'px';
 }
-function acEinsetzen(i){
+
+function acMarkieren(){
+  $$('#autocomplete .eintrag').forEach((b,i) => {
+    b.classList.toggle('aktiv', i === ac.aktiv);
+    if(i === ac.aktiv) b.scrollIntoView({block:'nearest'});
+  });
+}
+
+function acAusfuehren(i){
+  const e = ac.eintraege[i]; if(!e) return;
   const feld = $('#schreibfeld');
-  const pos = feld.selectionStart;
-  const davor = feld.value.slice(0,pos);
-  const m = davor.match(/\[\[([^\[\]\n]{0,40})$/);
-  if(!m) return;
-  let titel = acListe[i];
-  if(titel.startsWith(' NEU:')) titel = titel.slice(5);
-  const danach = feld.value.slice(pos);
-  const schliesst = danach.startsWith(']]');
-  const neu = davor.slice(0, m.index) + '[[' + titel + ']]' + (schliesst ? danach.slice(2) : danach);
-  feld.value = neu;
-  const neuePos = m.index + titel.length + 4;
-  feld.setSelectionRange(neuePos, neuePos);
-  $('#autocomplete').classList.remove('offen');
-  feld.dispatchEvent(new Event('input'));
+  if(ac.modus === 'wiki'){
+    const danach = feld.value.slice(ac.ende);
+    const extra = danach.startsWith(']]') ? 2 : 0;
+    feld.setRangeText('[[' + e.wiki + ']]', ac.start, ac.ende + extra, 'end');
+  } else if(ac.modus === 'tag'){
+    feld.setRangeText('#' + e.tag + ' ', ac.start, ac.ende, 'end');
+  } else if(ac.modus === 'slash'){
+    // Erst den getippten /befehl-Teil entfernen, DANN handeln
+    feld.setRangeText('', ac.start, ac.ende, 'end');
+    const b = e.befehl;
+    if(b.zeile){
+      const pos = feld.selectionStart;
+      const start = pos > 0 ? feld.value.lastIndexOf('\n', pos-1) + 1 : 0;
+      let ende = feld.value.indexOf('\n', pos); if(ende < 0) ende = feld.value.length;
+      const rest = feld.value.slice(start, ende)
+        .replace(/^(#{1,4}\s+|(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s+|(?:[-*+]|\d+[.)])\s+|>\s+)/, '');
+      feld.setRangeText(b.zeile + rest, start, ende, 'end');
+    } else {
+      // Fest kodierte Snippets markieren den Cursor mit '§', Vorlagen mit dem
+      // untippbaren Sentinel — so bleibt ein literales '§' in Vorlagen erhalten.
+      const marker = b.vorlage ? CURSOR_MARKE : '§';
+      let text = b.vorlage ? vorlageText(b.vorlage) : b.text;
+      let ziel = text.indexOf(marker);
+      if(ziel >= 0) text = text.slice(0, ziel) + text.slice(ziel+marker.length); else ziel = text.length;
+      const start = feld.selectionStart;
+      feld.setRangeText(text, start, feld.selectionEnd, 'end');
+      feld.setSelectionRange(start + ziel, start + ziel);
+    }
+  }
+  schliesseAc();
   feld.focus();
+  feld.dispatchEvent(new Event('input'));
 }
 
 /* ── Markdown-Werkzeuge (Toolbar) ─────────────────────────────── */
@@ -1316,7 +2072,7 @@ function mdWerkzeug(art){
     if(!auswahl) feld.setSelectionRange(von+l.length, von+l.length+kern.length);
   };
   const zeilenPrefix = (prefix) => {
-    const start = feld.value.lastIndexOf('\n', von-1)+1;
+    const start = von > 0 ? feld.value.lastIndexOf('\n', von-1)+1 : 0;
     const ende = feld.value.indexOf('\n', bis);
     const block = feld.value.slice(start, ende<0?feld.value.length:ende);
     const neu = block.split('\n').map(z => z.startsWith(prefix) ? z.slice(prefix.length) : prefix+z).join('\n');
@@ -1473,6 +2229,288 @@ function graphKnotenBei(e){
   return bester;
 }
 
+/* ── Synchrones Scrollen (geteilte Ansicht) ─────────────────────
+   Zeilenmarken in der Vorschau + lineare Interpolation dazwischen.
+   Die Scroll-Quelle bestimmt die Maus (mouseenter) — das verhindert
+   Rückkopplungsschleifen ganz ohne Timer-Sperren. */
+const sync = { quelle: null, marken: [] };
+function syncMarkenLeeren(){ sync.marken = []; edOffCache = null; }
+function syncMarkenLesen(){
+  if(sync.marken.length) return sync.marken;
+  const scroll = $('.lese-seite .lese-scroll');
+  const basis = scroll.getBoundingClientRect().top - scroll.scrollTop;
+  sync.marken = $$('#vorschau .zmark').map(el => ({
+    z: +el.dataset.z,
+    top: el.getBoundingClientRect().top - basis,
+  })).sort((a,b) => a.z - b.z);
+  return sync.marken;
+}
+
+/* Soft-Wrap-genaue Pixelposition jeder logischen Editor-Zeile: ein
+   verstecktes Spiegel-Div mit identischer Breite/Schrift misst, wo jede
+   Zeile visuell beginnt — feste Zeilenhöhe würde bei Umbruch driften. */
+let edOffCache = null, edSpiegel = null;
+function edZeilenOffsets(){
+  const feld = $('#schreibfeld');
+  if(edOffCache && edOffCache.breite === feld.clientWidth && edOffCache.text === feld.value) return edOffCache.off;
+  if(!edSpiegel){ edSpiegel = document.createElement('div'); edSpiegel.setAttribute('aria-hidden','true'); }
+  const cs = getComputedStyle(feld);
+  const s = edSpiegel.style;
+  s.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;box-sizing:border-box';
+  for(const p of ['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','textTransform','tabSize','paddingLeft','paddingRight'])
+    s[p] = cs[p];
+  s.width = feld.clientWidth + 'px';
+  edSpiegel.textContent = '';
+  const zeilen = feld.value.split('\n');
+  const divs = zeilen.map(z => { const d = document.createElement('div'); d.textContent = z || '​'; edSpiegel.appendChild(d); return d; });
+  if(!edSpiegel.parentNode) document.body.appendChild(edSpiegel);
+  const off = divs.map(d => d.offsetTop);
+  off.push(edSpiegel.scrollHeight);   // Sentinel: Ende
+  edOffCache = { breite: feld.clientWidth, text: feld.value, off };
+  return off;
+}
+function edZeileZuPixel(zeile){
+  const off = edZeilenOffsets();
+  const i = Math.max(0, Math.min(off.length - 2, Math.floor(zeile)));
+  const frac = zeile - i;
+  return off[i] + frac * (off[i+1] - off[i]);
+}
+function edPixelZuZeile(px){
+  const off = edZeilenOffsets();
+  if(px <= 0) return 0;
+  for(let i = 0; i < off.length - 1; i++){
+    if(px < off[i+1]) return i + (px - off[i]) / Math.max(1, off[i+1] - off[i]);
+  }
+  return off.length - 2;
+}
+function padTopVon(feld){ return parseFloat(getComputedStyle(feld).paddingTop) || 0; }
+
+function syncEditorZuVorschau(){
+  if(zustand.modus !== 'split' || !db.einstellungen.syncScroll || sync.quelle !== 'editor') return;
+  const feld = $('#schreibfeld'), ziel = $('.lese-seite .lese-scroll');
+  const marken = syncMarkenLesen();
+  if(!marken.length) return;
+  const padTop = padTopVon(feld);
+  if(feld.scrollTop <= 2){ ziel.scrollTop = 0; return; }
+  if(feld.scrollHeight - feld.scrollTop <= feld.clientHeight + 18){ ziel.scrollTop = ziel.scrollHeight; return; }
+  const zeile = edPixelZuZeile(feld.scrollTop - padTop);
+  let vor = marken[0], nach = null;
+  for(const m of marken){ if(m.z <= zeile) vor = m; else { nach = m; break; } }
+  let pos;
+  if(!nach){
+    const letzteZeile = edZeilenOffsets().length - 2;
+    const spanne = Math.max(1, letzteZeile - vor.z);
+    pos = vor.top + (zeile - vor.z) / spanne * Math.max(0, ziel.scrollHeight - vor.top - ziel.clientHeight);
+  } else {
+    pos = vor.top + (zeile - vor.z) / Math.max(1, nach.z - vor.z) * (nach.top - vor.top);
+  }
+  ziel.scrollTop = Math.floor(pos);
+}
+function syncVorschauZuEditor(){
+  if(zustand.modus !== 'split' || !db.einstellungen.syncScroll || sync.quelle !== 'vorschau') return;
+  const feld = $('#schreibfeld'), quelle = $('.lese-seite .lese-scroll');
+  const marken = syncMarkenLesen();
+  if(!marken.length) return;
+  const padTop = padTopVon(feld);
+  if(quelle.scrollTop <= 2){ feld.scrollTop = 0; return; }
+  if(quelle.scrollHeight - quelle.scrollTop <= quelle.clientHeight + 18){ feld.scrollTop = feld.scrollHeight; return; }
+  let vor = marken[0], nach = null;
+  for(const m of marken){ if(m.top <= quelle.scrollTop) vor = m; else { nach = m; break; } }
+  let zeile;
+  if(!nach) zeile = vor.z + (quelle.scrollTop - vor.top) / 24;
+  else zeile = vor.z + (quelle.scrollTop - vor.top) / Math.max(1, nach.top - vor.top) * (nach.z - vor.z);
+  feld.scrollTop = Math.floor(padTop + edZeileZuPixel(zeile));
+}
+
+/* ── Schreibmaschinen- & Fokusmodus ───────────────────────────── */
+function typewriterScroll(){
+  if(!db || !db.einstellungen.typewriter) return;
+  const feld = $('#schreibfeld');
+  const padTop = padTopVon(feld);
+  const zeile = feld.value.slice(0, feld.selectionStart).split('\n').length - 1;
+  const ziel = padTop + edZeileZuPixel(zeile) - feld.clientHeight * 0.4;
+  if(Math.abs(feld.scrollTop - ziel) > 2){   // Anti-Zitter-Schwelle
+    feld.scrollTop = Math.max(0, ziel);
+  }
+}
+function fokusUmschalten(){
+  db.einstellungen.fokus = !db.einstellungen.fokus;
+  $('#app').classList.toggle('fokus', db.einstellungen.fokus);
+  $('#btnFokus').style.color = db.einstellungen.fokus ? 'var(--leit)' : '';
+  speichern();
+  toast(db.einstellungen.fokus ? 'Fokusmodus an ◎' : 'Fokusmodus aus');
+}
+function typewriterUmschalten(){
+  db.einstellungen.typewriter = !db.einstellungen.typewriter;
+  $('#app').classList.toggle('typewriter', db.einstellungen.typewriter);
+  $('#btnTypewriter').style.color = db.einstellungen.typewriter ? 'var(--leit)' : '';
+  speichern();
+  if(db.einstellungen.typewriter) typewriterScroll();
+  toast(db.einstellungen.typewriter ? 'Schreibmaschinenmodus an ⌨' : 'Schreibmaschinenmodus aus');
+}
+
+/* ── Präsentationsmodus: --- trennt Folien ────────────────────── */
+const buehne = { folien: [], index: 0 };
+function folienBauen(body){
+  const teile = [];
+  let aktuell = [];
+  let inFence = false;
+  for(const z of body.split('\n')){
+    if(/^```/.test(z)) inFence = !inFence;
+    if(!inFence && /^\s*-{3,}\s*$/.test(z)){ teile.push(aktuell.join('\n')); aktuell = []; continue; }
+    aktuell.push(z);
+  }
+  teile.push(aktuell.join('\n'));
+  return teile.map(t => t.trim()).filter(t => t);
+}
+function buehneStarten(){
+  const n = aktive(); if(!n) return;
+  buehne.folien = folienBauen(n.body);
+  if(!buehne.folien.length){ toast('Nichts zu präsentieren — die Notiz ist leer'); return; }
+  // An der Cursorposition starten. Ein Trenner erhöht den Index nur, wenn das
+  // davor liegende Segment Inhalt hatte — konsistent mit folienBauen (filter).
+  const feld = $('#schreibfeld');
+  const davor = n.body.slice(0, feld.selectionStart || 0);
+  let idx = 0, inFence = false, hatInhalt = false;
+  for(const z of davor.split('\n')){
+    if(/^```/.test(z)) inFence = !inFence;
+    if(!inFence && /^\s*-{3,}\s*$/.test(z)){ if(hatInhalt) idx++; hatInhalt = false; continue; }
+    if(z.trim()) hatInhalt = true;
+  }
+  buehne.index = Math.min(idx, buehne.folien.length - 1);
+  $('#buehne').classList.add('offen');
+  folieZeigen();
+}
+function folieZeigen(){
+  $('#folieInhalt').innerHTML = renderMd(buehne.folien[buehne.index] || '');
+  $('#folieZaehler').textContent = `${buehne.index + 1} / ${buehne.folien.length}`;
+}
+function folieWechseln(delta){
+  const neu = Math.max(0, Math.min(buehne.folien.length - 1, buehne.index + delta));
+  if(neu === buehne.index) return;
+  buehne.index = neu;
+  folieZeigen();
+}
+function buehneSchliessen(){
+  $('#buehne').classList.remove('offen');
+  if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+
+/* ── „Als App exportieren": eigenständige HTML-Datei mit Daten ──
+   TiddlyWiki-Prinzip: das beim Laden gesicherte Original-HTML bekommt
+   den aktuellen Datenstand in die Daten-Insel geschrieben. Das einzige
+   nötige Escaping ist "<" zu "<" (verlustfrei, JSON.parse stellt es
+   wieder her) — damit kann kein Script-Endtag im Notiztext die Datei brechen. */
+async function appExportieren(){
+  let daten;
+  if(KRYPTO.aktiv){ daten = await verschluesselterContainer(); }
+  else { daten = JSON.stringify(db); }
+  const insel = daten.replace(/</g, '\\u003C');
+  const html = ORIGINAL_HTML.replace(INSEL_REGEX, (_, a, b) => a + insel + b);
+  const teil = decodeURIComponent((location.pathname.split('/').pop() || '')) || 'tintenfass.html';
+  const name = teil.endsWith('.html') ? teil : 'tintenfass.html';
+  ladeHerunter(name, html, 'text/html');
+  toast(KRYPTO.aktiv ? 'App exportiert — verschlüsselt 🔒' : 'App mit allen Notizen exportiert 📦');
+}
+
+/* ── Notiz duplizieren & Papierkorb leeren ────────────────────── */
+function notizDuplizieren(){
+  const n = aktive(); if(!n) return;
+  const t = Date.now();
+  let titel = n.title || 'Ohne Titel';
+  if(!titel.endsWith('(Kopie)') && !titel.startsWith('(Kopie)')) titel += ' (Kopie)';
+  const kopie = { id:neueId(), title:titel, body:n.body, hist:[], tasks:aufgabenZaehlen(n.body),
+    nb:n.nb, pinned:false, archived:false, trashed:false, created:t, updated:t };
+  db.notes.unshift(kopie);
+  speichern(); renderSeitenleiste();
+  oeffneNotiz(kopie.id);
+  toast('Notiz dupliziert');
+}
+function papierkorbLeeren(){
+  const anzahl = db.notes.filter(n => n.trashed).length;
+  if(!anzahl){ toast('Der Papierkorb ist leer'); return; }
+  dialogBestaetigen('Papierkorb leeren?', `${anzahl} Notiz${anzahl>1?'en werden':' wird'} unwiderruflich gelöscht.`,
+    'Endgültig löschen', () => {
+      db.notes = db.notes.filter(n => !n.trashed);
+      if(zustand.aktivId && !notiz(zustand.aktivId)) zustand.aktivId = null;
+      speichern(true); renderAlles(); toast('Papierkorb geleert');
+    }, true);
+}
+
+/* ── Tresor-Dialoge ───────────────────────────────────────────── */
+function tresorDialog(){
+  if(KRYPTO.aktiv){
+    const box = $('#dialogBox');
+    box.innerHTML = `<h3>🔒 Tresor aktiv</h3>
+      <p>Deine Notizen werden verschlüsselt gespeichert (AES-256-GCM).
+      Nach 10 Minuten ohne Aktivität sperrt sich die App von selbst.</p>
+      <div class="reihe" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="knopf voll" data-t="sperren">Jetzt sperren</button>
+        <button class="knopf leer" data-t="passwort">Passwort ändern</button>
+        <button class="knopf leer" data-t="aus">Verschlüsselung aufheben</button>
+        <button class="knopf leer" data-dlg="abbruch">Schließen</button></div>`;
+    $('#dialogSchleier').classList.add('offen');
+    box.onclick = e => {
+      if(e.target.closest('[data-dlg]')){ dialogZu(); return; }
+      const k = e.target.closest('[data-t]'); if(!k) return;
+      dialogZu();
+      if(k.dataset.t === 'sperren'){ notfallSichern(); location.reload(); }
+      else if(k.dataset.t === 'passwort') tresorPasswortAendern();
+      else tresorAufheben();
+    };
+    return;
+  }
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>🔒 Tresor einrichten</h3>
+    <p><strong>Wichtig:</strong> Das Passwort wird nirgends gespeichert.
+    Vergisst du es, sind die Notizen unwiederbringlich verloren.
+    Ein aktuelles Backup (⬇) vorher schadet nie.</p>
+    <input type="password" id="tresorPw1" placeholder="Passwort" autocomplete="new-password">
+    <div style="height:8px"></div>
+    <input type="password" id="tresorPw2" placeholder="Passwort wiederholen" autocomplete="new-password">
+    <div class="fehler-text" id="tresorFehler" style="color:var(--fehler);font-size:12.5px;min-height:18px;margin:4px 0"></div>
+    <div class="reihe"><button class="knopf leer" data-dlg="abbruch">Abbrechen</button>
+    <button class="knopf voll" data-t="ok">Verschlüsseln</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  setTimeout(() => $('#tresorPw1').focus(), 30);
+  box.onclick = async e => {
+    if(e.target.closest('[data-dlg]')){ dialogZu(); return; }
+    if(!e.target.closest('[data-t]')) return;
+    const p1 = $('#tresorPw1').value, p2 = $('#tresorPw2').value;
+    if(p1.length < 4){ $('#tresorFehler').textContent = 'Mindestens 4 Zeichen.'; return; }
+    if(p1 !== p2){ $('#tresorFehler').textContent = 'Die Passwörter stimmen nicht überein.'; return; }
+    $('#tresorFehler').textContent = 'Richte ein …';
+    await tresorEinrichten(p1);
+    speichern(true);
+    dialogZu();
+    sperrTimerNeu();
+    toast('Tresor aktiv — Notizen werden verschlüsselt 🔒');
+  };
+}
+function tresorPasswortAendern(){
+  dialogEingabe('Neues Tresor-Passwort', 'Neues Passwort', '', 'Ändern', async neu => {
+    if(neu.length < 4){ toast('Mindestens 4 Zeichen'); return; }
+    // Nur den Datenschlüssel neu wrappen — kein Neuverschlüsseln der Notizen
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const wk = await wrapSchluessel(neu, salt, KRYPTO.iter);
+    const wrapped = await crypto.subtle.wrapKey('raw', KRYPTO.dataKey, wk, 'AES-KW');
+    KRYPTO.salt = b64(salt); KRYPTO.wrapped = b64(wrapped);
+    speichern(true);
+    toast('Passwort geändert 🔑');
+  });
+}
+function tresorAufheben(){
+  dialogBestaetigen('Verschlüsselung aufheben?',
+    'Die Notizen werden wieder unverschlüsselt im Browser gespeichert.',
+    'Aufheben', () => {
+      Object.assign(KRYPTO, { dataKey:null, wrapped:null, salt:null, aktiv:false });
+      letzterContainer = null;
+      clearTimeout(sperrTimer);
+      speichern(true);
+      toast('Verschlüsselung aufgehoben');
+    });
+}
+
 /* ── Notizbücher ──────────────────────────────────────────────── */
 function notizbuchAnlegen(){
   dialogEingabe('Neues Notizbuch','Name des Notizbuchs','', 'Anlegen', name => {
@@ -1495,7 +2533,7 @@ function notizbuchMenue(id){
 
 /* ── Farbschema ───────────────────────────────────────────────── */
 function wendeThemeAn(){
-  const t = db.theme;
+  const t = db ? db.theme : 'auto';
   const dunkel = t==='dark' || (t==='auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.dataset.theme = dunkel ? 'dark' : 'light';
 }
@@ -1505,7 +2543,7 @@ function themeWechseln(){
   wendeThemeAn(); speichern();
   toast(db.theme==='dark' ? 'Dunkelmodus 🌙' : 'Hellmodus ☀️');
 }
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(db.theme==='auto') wendeThemeAn(); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(db && db.theme==='auto') wendeThemeAn(); });
 
 /* ── Ereignisse ───────────────────────────────────────────────── */
 // Seitenleiste
@@ -1563,8 +2601,37 @@ $('#sucheLeeren').addEventListener('click', () => {
   renderListe(); $('#suche').focus();
 });
 
-// Liste
+// Schnellerfassung: Enter legt sofort eine Notiz an, Entwurf überlebt Neuladen
+$('#captureFeld').addEventListener('input', e => {
+  if(!db) return;
+  db.einstellungen.entwurf = e.target.value;
+  speichern();
+});
+$('#captureFeld').addEventListener('keydown', e => {
+  if(e.key === 'Escape'){ e.target.blur(); return; }
+  if(e.key !== 'Enter' || !db) return;
+  const text = e.target.value.trim();
+  if(!text) return;
+  e.preventDefault();
+  let body = text;
+  if(zustand.filter.art === 'tag') body += `\n\n#${zustand.filter.wert}`;   // Kontext-Tag
+  const titel = text.split(/\s+/).slice(0, 7).join(' ').slice(0, 60);
+  const t = Date.now();
+  const n = { id:neueId(), title:titel, body, hist:[], tasks:aufgabenZaehlen(body),
+    nb: zustand.filter.art==='nb' ? zustand.filter.wert : null,
+    pinned:false, archived:false, trashed:false, created:t, updated:t };
+  db.notes.unshift(n);
+  e.target.value = '';
+  db.einstellungen.entwurf = '';
+  speichern(); renderSeitenleiste(); renderListe();
+  $('#listeInhalt').scrollTop = 0;
+  toast('Notiz erfasst ⚡');
+});
+
+// Liste (inkl. Aufgaben-Übersicht)
 $('#listeInhalt').addEventListener('click', e => {
+  const hub = e.target.closest('[data-hub]');
+  if(hub){ hubAufgabeErledigen(hub.dataset.hub, +hub.dataset.zeile, hub.dataset.roh); return; }
   const k = e.target.closest('[data-id]'); if(!k) return;
   const n = notiz(k.dataset.id);
   if(n && n.trashed){
@@ -1586,23 +2653,28 @@ $('#titelFeld').addEventListener('keydown', e => {
 $('#schreibfeld').addEventListener('input', e => {
   const n = aktive(); if(!n) return;
   n.body = e.target.value; n.updated = Date.now();
+  n.tasks = aufgabenZaehlen(n.body);
   speichern(); aktualisiereZaehler(); renderListe();
   if(zustand.modus!=='edit') renderVorschau();
   acPruefen();
+  typewriterScroll();
 });
 $('#schreibfeld').addEventListener('keydown', e => {
   const box = $('#autocomplete');
   if(box.classList.contains('offen')){
-    if(e.key==='ArrowDown'){ e.preventDefault(); acAktiv=(acAktiv+1)%acListe.length; acMarkieren(); return; }
-    if(e.key==='ArrowUp'){ e.preventDefault(); acAktiv=(acAktiv-1+acListe.length)%acListe.length; acMarkieren(); return; }
-    if(e.key==='Enter' || e.key==='Tab'){ e.preventDefault(); acEinsetzen(acAktiv); return; }
-    if(e.key==='Escape'){ box.classList.remove('offen'); return; }
+    const n = ac.eintraege.length;
+    if(e.key==='ArrowDown' || (e.key==='Tab' && !e.shiftKey && ac.modus==='slash')){
+      e.preventDefault(); ac.aktiv=(ac.aktiv+1)%n; acMarkieren(); return; }
+    if(e.key==='ArrowUp' || (e.key==='Tab' && e.shiftKey && ac.modus==='slash')){
+      e.preventDefault(); ac.aktiv=(ac.aktiv-1+n)%n; acMarkieren(); return; }
+    if(e.key==='Enter' || (e.key==='Tab' && ac.modus!=='slash')){ e.preventDefault(); acAusfuehren(ac.aktiv); return; }
+    if(e.key==='Escape'){ schliesseAc(); return; }
   }
   // Listen-Weiterführung bei Enter
   if(e.key==='Enter' && !e.shiftKey){
     const feld = e.target;
     const pos = feld.selectionStart;
-    const zeilenStart = feld.value.lastIndexOf('\n', pos-1)+1;
+    const zeilenStart = pos > 0 ? feld.value.lastIndexOf('\n', pos-1)+1 : 0;
     const zeile = feld.value.slice(zeilenStart, pos);
     const m = zeile.match(/^(\s*)([-*+]|\d+[.)])(\s+\[[ xX]\])?\s+(.*)$/);
     if(m){
@@ -1627,14 +2699,11 @@ $('#schreibfeld').addEventListener('keydown', e => {
   }
 });
 $('#schreibfeld').addEventListener('click', () => acPruefen());
-$('#schreibfeld').addEventListener('blur', () => setTimeout(() => $('#autocomplete').classList.remove('offen'), 150));
-function acMarkieren(){
-  $$('#autocomplete button').forEach((b,i) => b.classList.toggle('aktiv', i===acAktiv));
-}
+$('#schreibfeld').addEventListener('blur', () => setTimeout(schliesseAc, 150));
 $('#autocomplete').addEventListener('mousedown', e => {
+  e.preventDefault();   // Fokus/Auswahl im Editor erhalten
   const k = e.target.closest('[data-i]'); if(!k) return;
-  e.preventDefault();
-  acEinsetzen(+k.dataset.i);
+  acAusfuehren(+k.dataset.i);
 });
 
 // Toolbar
@@ -1671,6 +2740,34 @@ $('#btnArchiv').addEventListener('click', () => {
 });
 $('#btnMdExport').addEventListener('click', exportiereMd);
 $('#btnLoeschen').addEventListener('click', () => { const n=aktive(); if(n) inPapierkorb(n.id); });
+$('#btnVerlauf').addEventListener('click', verlaufAnzeigen);
+$('#btnFokus').addEventListener('click', fokusUmschalten);
+$('#btnTypewriter').addEventListener('click', typewriterUmschalten);
+$('#btnBuehne').addEventListener('click', buehneStarten);
+
+// Werkzeugleisten-Klicks dürfen die Textauswahl im Editor nicht zerstören
+$$('.editor-kopf .werkzeug, .editor-fuss .werkzeug').forEach(k =>
+  k.addEventListener('mousedown', e => e.preventDefault()));
+
+// Präsentation
+$('#folieZurueck').addEventListener('click', () => folieWechseln(-1));
+$('#folieWeiter').addEventListener('click', () => folieWechseln(1));
+$('#folieEnde').addEventListener('click', buehneSchliessen);
+$('#folieVollbild').addEventListener('click', () => {
+  if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else document.documentElement.requestFullscreen().catch(() => {});
+});
+$('#folieFlaeche').addEventListener('click', e => {
+  if(e.target.closest('a,button,input')) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  folieWechseln(e.clientX - r.left < r.width/3 ? -1 : 1);
+});
+
+// Synchrones Scrollen: die Scheibe unter der Maus ist die Quelle
+$('.schreib-seite').addEventListener('mouseenter', () => sync.quelle = 'editor');
+$('.lese-seite').addEventListener('mouseenter', () => sync.quelle = 'vorschau');
+$('#schreibfeld').addEventListener('scroll', syncEditorZuVorschau, {passive:true});
+$('.lese-seite .lese-scroll').addEventListener('scroll', syncVorschauZuEditor, {passive:true});
 
 // Vorschau: Wiki-Links, Tags, Aufgaben, Backlinks
 $('.lese-seite').addEventListener('click', e => {
@@ -1746,13 +2843,26 @@ $('#graphSchleier').addEventListener('click', e => { if(e.target===e.currentTarg
     c.width = c.clientWidth*graph.dpr; c.height = c.clientHeight*graph.dpr;
   });
 }
+// Fenstergröße ändert Umbruch und Markenpositionen → Sync-Caches verwerfen
+addEventListener('resize', syncMarkenLeeren);
 
 // Dialog
 $('#dialogSchleier').addEventListener('click', e => { if(e.target===e.currentTarget) dialogZu(); });
 
 // Globale Tastenkürzel
 addEventListener('keydown', e => {
+  // Präsentation hat Vorrang, solange sie offen ist
+  if($('#buehne').classList.contains('offen')){
+    if(e.key==='ArrowRight' || e.key===' ' || e.key==='PageDown'){ e.preventDefault(); folieWechseln(1); return; }
+    if(e.key==='ArrowLeft' || e.key==='PageUp'){ e.preventDefault(); folieWechseln(-1); return; }
+    if(e.key==='Escape'){ e.preventDefault(); buehneSchliessen(); return; }
+    if(e.key.toLowerCase()==='f'){ e.preventDefault(); $('#folieVollbild').click(); return; }
+    return;
+  }
+  if(!db) return;   // Sperrbildschirm aktiv: keine Aktionen, kein Zugriff auf db
   const strg = e.ctrlKey || e.metaKey;
+  if(strg && e.shiftKey && e.key.toLowerCase()==='j'){ e.preventDefault(); fokusUmschalten(); return; }
+  if(strg && e.shiftKey && e.key.toLowerCase()==='g'){ e.preventDefault(); typewriterUmschalten(); return; }
   if(strg && e.key.toLowerCase()==='k'){ e.preventDefault(); oeffnePalette(); return; }
   if(strg && e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); neueNotiz(); return; }
   if(strg && e.key.toLowerCase()==='e' && aktive()){
@@ -1766,21 +2876,80 @@ addEventListener('keydown', e => {
     if($('#paletteSchleier').classList.contains('offen')) schliessePalette();
     else if($('#graphSchleier').classList.contains('offen')) schliesseGraph();
     else if($('#dialogSchleier').classList.contains('offen')) dialogZu();
-    else if($('#autocomplete').classList.contains('offen')) $('#autocomplete').classList.remove('offen');
+    else if($('#autocomplete').classList.contains('offen')) schliesseAc();
     else sbZu();
   }
 });
 
-// Verlassen der Seite: ungespeicherte Änderungen sichern
-addEventListener('beforeunload', () => {
-  if(speicherTimer){ clearTimeout(speicherTimer); localStorage.setItem(SPEICHER_KEY, JSON.stringify(db)); }
-});
+// Verlassen/Verstecken der Seite: ungespeicherte Änderungen sichern
+function notfallSichern(){
+  if(!db) return;
+  const n = aktive();
+  if(n) verlaufSichern(n, true);
+  if(KRYPTO.aktiv){
+    // Verschlüsseln ist asynchron — beim harten Schließen den letzten
+    // fertigen Chiffretext schreiben (Verlust maximal ~0,5 s Tippen).
+    if(speicherTimer && letzterContainer){ clearTimeout(speicherTimer); localStorage.setItem(SPEICHER_KEY, letzterContainer); }
+  } else if(speicherTimer){
+    clearTimeout(speicherTimer);
+    localStorage.setItem(SPEICHER_KEY, JSON.stringify(db));
+  }
+}
+addEventListener('beforeunload', notfallSichern);
+addEventListener('pagehide', notfallSichern);
+document.addEventListener('visibilitychange', () => { if(document.hidden && db) speichern(); });
+
+/* ── Automatische Sperre bei aktivem Tresor (10 Min. Inaktivität) ── */
+let sperrTimer = null;
+function sperrTimerNeu(){
+  if(!KRYPTO.aktiv) return;
+  clearTimeout(sperrTimer);
+  sperrTimer = setTimeout(() => { notfallSichern(); location.reload(); }, 10*60*1000);
+}
+for(const ev of ['mousemove','wheel','keydown','scroll','touchstart','click'])
+  addEventListener(ev, sperrTimerNeu, {passive:true});
 
 /* ── Start ────────────────────────────────────────────────────── */
-wendeThemeAn();
-renderAlles();
-speichern(true);
-zeigeSpeicherStatus('Bereit', false);
+function start(){
+  wendeThemeAn();
+  $('#captureFeld').value = db.einstellungen.entwurf || '';
+  if(db.einstellungen.fokus){ $('#app').classList.add('fokus'); $('#btnFokus').style.color = 'var(--leit)'; }
+  if(db.einstellungen.typewriter){ $('#app').classList.add('typewriter'); $('#btnTypewriter').style.color = 'var(--leit)'; }
+  renderAlles();
+  speichern(true);
+  zeigeSpeicherStatus('Bereit', false);
+  sperrTimerNeu();
+}
+
+(function boot(){
+  const roh = rohLaden();
+  if(roh && roh.tresor){
+    document.title = 'Tintenfass 🔒';
+    const sperre = $('#sperre');
+    sperre.classList.add('offen');
+    $('#app').inert = true;   // Hintergrund für Tab/Klick/Enter unerreichbar
+    const input = $('#sperrePasswort'), fehler = $('#sperreFehler'), knopf = $('#sperreOeffnen');
+    setTimeout(() => input.focus(), 60);
+    const versuchen = async () => {
+      if(!input.value) return;
+      fehler.textContent = ''; knopf.textContent = 'Entsperre …'; knopf.disabled = true;
+      const d = await tresorOeffnen(roh, input.value);
+      knopf.textContent = 'Entsperren'; knopf.disabled = false;
+      if(!d){ fehler.textContent = 'Falsches Passwort.'; input.select(); return; }
+      db = normalisieren(d);
+      sperre.classList.remove('offen');
+      $('#app').inert = false;
+      document.title = 'Tintenfass · Notizen';
+      input.value = '';
+      start();
+    };
+    knopf.addEventListener('click', versuchen);
+    input.addEventListener('keydown', e => { if(e.key==='Enter') versuchen(); });
+  } else {
+    db = normalisieren(roh || beispielDaten());
+    start();
+  }
+})();
 </script>
 </body>
 </html>
