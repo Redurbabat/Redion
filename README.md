@@ -15,6 +15,11 @@ abhängigkeitsfrei neu in einer Datei umgesetzt.
 **Emoji-Symbol pro Seite**, großem Seitentitel und Breadcrumb-Pfad — dazu die rote
 REDNOTEN-Identität als Akzent. Hell- und Dunkelmodus.
 
+**WYSIWYG-Editor wie Notion:** Du schreibst direkt formatiert — `# ` wird sofort zur
+Überschrift, `- ` zur Liste, `[] ` zur abhakbaren Aufgabe, `**text**` zu **fett**. Das
+Slash-Menü (`/`) fügt Blöcke ein. Kein Markdown-Rohtext sichtbar. (Wer lieber Markdown
+tippt, schaltet oben auf „Markdown" um — dasselbe Dokument, roh.)
+
 > Tipp: Aktiviere GitHub Pages (Settings → Pages → Branch wählen), dann läuft die App
 > direkt unter deiner `github.io`-Adresse — auch auf dem Handy.
 

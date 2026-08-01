@@ -281,6 +281,28 @@ input,textarea,select{font:inherit;color:inherit}
 }
 .titel-zeile input:focus{outline:none}
 .titel-zeile input::placeholder{color:var(--tinte-blass)}
+/* WYSIWYG-Live-Editor (Standard, Notion-Stil) */
+.live-editor{
+  flex:1;min-height:0;width:100%;overflow-y:auto;outline:none;
+  padding:var(--s3) max(var(--s6),calc(50% - 460px)) var(--s7);
+  max-width:none;
+}
+.live-editor:empty::before,.live-editor.leer::before{
+  content:attr(data-platzhalter);color:var(--tinte-blass);pointer-events:none;
+}
+.live-editor>*{position:relative}
+/* Block-Hover-Griff (＋ und ⋮⋮) links vom Block */
+.live-editor>*::before{
+  content:"⋮⋮";position:absolute;left:-1.4em;top:.1em;color:var(--tinte-blass);
+  opacity:0;cursor:grab;font-size:.8em;transition:opacity .1s;letter-spacing:-2px;
+  padding:0 4px;user-select:none;
+}
+.live-editor>*:hover::before{opacity:.55}
+.live-editor a.wiki{cursor:pointer}
+.modus-live #schreibfeld{display:none}
+.modus-edit #liveEditor,.modus-split #liveEditor,.modus-vorschau #liveEditor{display:none}
+.modus-live .schreib-seite{display:flex}
+.modus-live #liveEditor{display:block}
 #schreibfeld{
   flex:1;min-height:0;width:100%;resize:none;border:none;background:none;overflow-y:auto;
   padding:var(--s3) max(var(--s6),calc(50% - 460px)) var(--s7);
@@ -641,7 +663,7 @@ input,textarea,select{font:inherit;color:inherit}
 </style>
 </head>
 <body>
-<div class="app modus-edit" id="app">
+<div class="app modus-live" id="app">
 
   <!-- ═══ Seitenleiste ═══ -->
   <aside class="sidebar" id="sidebar" aria-label="Navigation">
@@ -719,9 +741,10 @@ input,textarea,select{font:inherit;color:inherit}
         <div class="rechts">
           <span class="speicher-status" id="speicherStatus"><span class="punkt"></span><span id="speicherText">Bereit</span></span>
           <div class="modus-schalter" role="group" aria-label="Ansichtsmodus">
-            <button data-modus="edit" aria-pressed="true" title="Nur Editor (Strg+E)">Schreiben</button>
+            <button data-modus="live" aria-pressed="true" title="Direkt formatiert bearbeiten (wie Notion)">Bearbeiten</button>
+            <button data-modus="edit" aria-pressed="false" title="Markdown-Rohtext">Markdown</button>
             <button data-modus="split" aria-pressed="false" title="Geteilte Ansicht">Beides</button>
-            <button data-modus="vorschau" aria-pressed="false" title="Nur Vorschau (Strg+E)">Lesen</button>
+            <button data-modus="vorschau" aria-pressed="false" title="Nur Lesen (Strg+E)">Lesen</button>
           </div>
         </div>
       </div>
@@ -736,7 +759,8 @@ input,textarea,select{font:inherit;color:inherit}
 
       <div class="editor-flaeche">
         <div class="schreib-seite">
-          <textarea id="schreibfeld" placeholder="Schreib los … Markdown wird unterstützt: **fett**, [[Wiki-Links]], #tags, - [ ] Aufgaben" spellcheck="true" aria-label="Notizinhalt"></textarea>
+          <div id="liveEditor" class="live-editor md" contenteditable="true" spellcheck="true" aria-label="Seiteninhalt" data-platzhalter="Tippe „/“ für Befehle, oder leg einfach los …"></div>
+          <textarea id="schreibfeld" placeholder="Markdown: **fett**, [[Wiki-Links]], #tags, - [ ] Aufgaben" spellcheck="true" aria-label="Notizinhalt (Markdown)"></textarea>
         </div>
         <div class="lese-seite">
           <div class="lese-scroll">
@@ -1108,7 +1132,7 @@ const zustand = {
   aktivId: null,
   filter: { art:'alle', wert:null },   // alle | pins | archiv | papierkorb | nb | tag
   suche: '',
-  modus: 'edit',                       // edit | split | vorschau
+  modus: 'live',                       // live (WYSIWYG) | edit (Markdown) | split | vorschau
 };
 
 function notiz(id){ return db.notes.find(n => n.id === id) || null; }
@@ -1614,6 +1638,8 @@ function renderEditor(){
 
   if(document.activeElement !== $('#titelFeld')) $('#titelFeld').value = n.title;
   if(document.activeElement !== $('#schreibfeld')) $('#schreibfeld').value = n.body;
+  // Live-Editor neu aufbauen, wenn eine andere Seite geöffnet wird
+  if(zustand.modus === 'live' && liveAktivId !== n.id) liveRendern(n);
 
   // Seiten-Emoji
   $('#seitenIcon').textContent = n.icon || '📄';
@@ -1663,7 +1689,7 @@ function aktualisiereZaehler(){
 
 function renderVorschau(){
   const n = aktive(); if(!n) return;
-  if(zustand.modus === 'edit') return;   // unsichtbar → sparen
+  if(zustand.modus === 'edit' || zustand.modus === 'live') return;   // unsichtbar → sparen
   $('#vorschau').innerHTML = renderMd(n.body, {marken:true}) || '<p style="color:var(--tinte-blass)"><em>Noch kein Inhalt.</em></p>';
   renderBacklinks();
   syncMarkenLeeren();
@@ -1696,12 +1722,14 @@ function zeigeListe(){ zustand.aktivId = null; $('#app').classList.add('ansicht-
 
 function oeffneNotiz(id, fokusTitel){
   const vorher = aktive();
+  if(vorher && vorher.id !== id && liveAktivId === vorher.id && zustand.modus==='live') liveSpeichern();
   if(vorher && vorher.id !== id) verlaufSichern(vorher, true);   // Sitzungsende = Revision
   zustand.aktivId = id;
   zeigeEditor();
   renderSeitenbaum(); renderEditor();
+  const schreibZiel = zustand.modus === 'live' ? '#liveEditor' : '#schreibfeld';
   if(fokusTitel) setTimeout(() => $('#titelFeld').focus(), 30);
-  else if(matchMedia('(min-width:901px)').matches) setTimeout(() => $('#schreibfeld').focus(), 30);
+  else if(matchMedia('(min-width:901px)').matches) setTimeout(() => $(schreibZiel).focus(), 30);
 }
 
 function neueNotiz(titel, body, parent){
@@ -2906,16 +2934,26 @@ $('#autocomplete').addEventListener('mousedown', e => {
 });
 
 // Toolbar
-$$('.werkzeug[data-md]').forEach(k => k.addEventListener('click', () => mdWerkzeug(k.dataset.md)));
+$$('.werkzeug[data-md]').forEach(k => k.addEventListener('mousedown', e => {
+  e.preventDefault();   // Auswahl/Fokus im Live-Editor erhalten
+  if(zustand.modus === 'live'){ if(!liveFormat(k.dataset.md)) mdWerkzeug(k.dataset.md); }
+  else mdWerkzeug(k.dataset.md);
+}));
 
 // Modus-Schalter
 $$('.modus-schalter button').forEach(k => k.addEventListener('click', () => setzeModus(k.dataset.modus)));
 function setzeModus(m){
+  const vorher = zustand.modus;
+  // Beim Verlassen des Live-Modus dessen Stand sichern
+  if(vorher === 'live' && m !== 'live' && aktive()) liveSpeichern();
   zustand.modus = m;
-  $('#app').classList.remove('modus-edit','modus-split','modus-vorschau');
+  $('#app').classList.remove('modus-live','modus-edit','modus-split','modus-vorschau');
   $('#app').classList.add('modus-'+m);
   $$('.modus-schalter button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.modus===m)));
-  if(m!=='edit') renderVorschau();
+  const n = aktive();
+  if(m === 'live' && n){ $('#schreibfeld').value = n.body; liveRendern(n); }
+  else if(m === 'edit' && n){ $('#schreibfeld').value = n.body; }
+  if(m !== 'edit' && m !== 'live') renderVorschau();
 }
 
 // Fußzeile
@@ -3066,7 +3104,7 @@ addEventListener('keydown', e => {
   if(strg && e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); neueNotiz(); return; }
   if(strg && e.key.toLowerCase()==='e' && aktive()){
     e.preventDefault();
-    setzeModus(zustand.modus==='edit' ? 'vorschau' : 'edit');
+    setzeModus((zustand.modus==='live'||zustand.modus==='edit') ? 'vorschau' : 'live');
     return;
   }
   if(strg && e.key.toLowerCase()==='b' && document.activeElement===$('#schreibfeld')){ e.preventDefault(); mdWerkzeug('fett'); return; }
@@ -3107,6 +3145,340 @@ function sperrTimerNeu(){
 }
 for(const ev of ['mousemove','wheel','keydown','scroll','touchstart','click'])
   addEventListener(ev, sperrTimerNeu, {passive:true});
+
+/* ══════════════ WYSIWYG-Live-Editor (Notion-Stil) ══════════════
+   Zeigt den Markdown-Body als formatierte, direkt editierbare Blöcke.
+   Bei jeder Eingabe wird zurück nach Markdown serialisiert und in n.body
+   gespeichert — so bleiben Wiki-Links, Suche, Tresor, Export usw. intakt. */
+
+/* ── HTML → Markdown ── */
+function inlineZuMd(node){
+  let s = '';
+  for(const k of node.childNodes){
+    if(k.nodeType === 3){ s += k.textContent; continue; }
+    if(k.nodeType !== 1) continue;
+    const tag = k.tagName;
+    if(tag === 'BR'){ s += '\n'; continue; }
+    if(k.classList && k.classList.contains('wiki')){ s += '[[' + (k.dataset.wiki || k.textContent) + ']]'; continue; }
+    if(k.classList && k.classList.contains('tag-inline')){ const t = k.textContent.replace(/^#/,''); s += '#'+t; continue; }
+    const innen = inlineZuMd(k);
+    if(tag==='STRONG'||tag==='B') s += '**'+innen+'**';
+    else if(tag==='EM'||tag==='I') s += '*'+innen+'*';
+    else if(tag==='DEL'||tag==='S') s += '~~'+innen+'~~';
+    else if(tag==='MARK') s += '=='+innen+'==';
+    else if(tag==='CODE') s += '`'+innen+'`';
+    else if(tag==='A') s += '['+innen+']('+(k.getAttribute('href')||'')+')';
+    else s += innen;
+  }
+  return s;
+}
+function listeZuMd(el, tiefe){
+  const zeilen = [];
+  const nummeriert = el.tagName === 'OL';
+  let i = 1;
+  for(const li of el.children){
+    if(li.tagName !== 'LI') continue;
+    const einzug = '  '.repeat(tiefe);
+    let marker = nummeriert ? (i+'. ') : '- ';
+    if(li.classList.contains('aufgabe')){
+      const cb = li.querySelector('input[type=checkbox]');
+      marker = '- [' + (cb && cb.checked ? 'x' : ' ') + '] ';
+    }
+    // Direkter Inline-Text des LI (ohne verschachtelte Listen)
+    const klon = li.cloneNode(true);
+    [...klon.querySelectorAll('ul,ol')].forEach(x => x.remove());
+    const txt = inlineZuMd(klon).trim();
+    zeilen.push(einzug + marker + txt);
+    const unter = li.querySelector(':scope > ul, :scope > ol');
+    if(unter) zeilen.push(listeZuMd(unter, tiefe+1));
+    i++;
+  }
+  return zeilen.join('\n');
+}
+function blockZuMd(el){
+  const tag = el.tagName;
+  if(tag==='H1') return '# '+inlineZuMd(el);
+  if(tag==='H2') return '## '+inlineZuMd(el);
+  if(tag==='H3') return '### '+inlineZuMd(el);
+  if(tag==='H4') return '#### '+inlineZuMd(el);
+  if(tag==='UL'||tag==='OL') return listeZuMd(el, 0);
+  if(tag==='BLOCKQUOTE'){
+    return inlineZuMd(el).split('\n').map(z => '> '+z).join('\n');
+  }
+  if(tag==='PRE'){
+    const code = el.querySelector('code');
+    const spr = code && code.dataset.sprache ? code.dataset.sprache : '';
+    return '```'+spr+'\n' + (code ? code.textContent : el.textContent) + '\n```';
+  }
+  if(tag==='HR') return '---';
+  if(el.classList && el.classList.contains('einbettung')){
+    const t = el.querySelector('.eb-titel'); return t ? '![['+(t.dataset.wiki||'')+']]' : '';
+  }
+  if(el.classList && (el.classList.contains('eb-warnung') || el.classList.contains('backlinks') || el.classList.contains('zmark'))) return '';
+  // Absatz (kann mehrere Zeilen via <br> enthalten)
+  return inlineZuMd(el);
+}
+function liveZuMd(root){
+  const teile = [];
+  for(const el of root.children){
+    if(el.nodeType !== 1) continue;
+    if(el.id === 'backlinks') continue;
+    const md = blockZuMd(el);
+    if(md !== '') teile.push(md);
+    else if(el.tagName === 'P' || el.tagName === 'DIV') teile.push('');   // leere Zeile bewahren
+  }
+  return teile.join('\n\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+/* ── Markdown → Live-Editor ── */
+let liveAktivId = null;
+function liveRendern(n){
+  const el = $('#liveEditor');
+  el.innerHTML = renderMd(n.body) || '';
+  el.classList.toggle('leer', !n.body.trim());
+  liveAktivId = n.id;
+}
+/* Serialisieren ohne Re-Render (Cursor bleibt erhalten) */
+let liveTimer = null;
+function liveSpeichern(){
+  const n = aktive(); if(!n) return;
+  n.body = liveZuMd($('#liveEditor'));
+  n.updated = Date.now();
+  n.tasks = aufgabenZaehlen(n.body);
+  $('#schreibfeld').value = n.body;
+  $('#liveEditor').classList.toggle('leer', !n.body.trim());
+  speichern(); renderListe(); aktualisiereZaehler();
+}
+
+/* ── Cursor-Helfer ── */
+function aktuellerBlock(){
+  const sel = getSelection();
+  if(!sel.rangeCount) return null;
+  let node = sel.getRangeAt(0).startContainer;
+  const root = $('#liveEditor');
+  while(node && node.parentNode !== root){ node = node.parentNode; }
+  return (node && node.parentNode === root) ? node : null;
+}
+function cursorAnsEnde(el){
+  const sel = getSelection(), r = document.createRange();
+  r.selectNodeContents(el); r.collapse(false);
+  sel.removeAllRanges(); sel.addRange(r);
+}
+function cursorAnDenAnfang(el){
+  const sel = getSelection(), r = document.createRange();
+  r.selectNodeContents(el); r.collapse(true);
+  sel.removeAllRanges(); sel.addRange(r);
+}
+function textVorCursorImBlock(block){
+  const sel = getSelection(); if(!sel.rangeCount) return '';
+  const r = sel.getRangeAt(0).cloneRange();
+  r.selectNodeContents(block); r.setEnd(sel.getRangeAt(0).startContainer, sel.getRangeAt(0).startOffset);
+  return r.toString();
+}
+
+/* ── Block-Typ wechseln (für Input-Rules & Slash) ── */
+function blockErsetzen(block, neuerTag, opts){
+  opts = opts || {};
+  const neu = document.createElement(neuerTag);
+  if(neuerTag === 'LI'){ /* nicht direkt */ }
+  neu.innerHTML = block.innerHTML || '<br>';
+  block.replaceWith(neu);
+  cursorAnDenAnfang(neu);
+  return neu;
+}
+function inListe(block, art, aufgabe){
+  const liste = document.createElement(art);
+  const li = document.createElement('li');
+  if(aufgabe){ li.className = 'aufgabe'; li.innerHTML = '<input type="checkbox"><span><br></span>'; }
+  else li.innerHTML = block.innerHTML || '<br>';
+  liste.appendChild(li);
+  block.replaceWith(liste);
+  const ziel = aufgabe ? li.querySelector('span') : li;
+  cursorAnDenAnfang(ziel);
+  return liste;
+}
+
+/* Markdown-Kürzel am Blockanfang → Blocktyp (bei Leertaste/Backtick) */
+const LIVE_REGELN = [
+  {re:/^#\s$/,     tue:b => blockErsetzen(b,'H1')},
+  {re:/^##\s$/,    tue:b => blockErsetzen(b,'H2')},
+  {re:/^###\s$/,   tue:b => blockErsetzen(b,'H3')},
+  {re:/^[-*+]\s$/, tue:b => inListe(b,'UL',false)},
+  {re:/^1\.\s$/,   tue:b => inListe(b,'OL',false)},
+  {re:/^\[\]\s$/,  tue:b => inListe(b,'UL',true)},
+  {re:/^\[\s\]\s$/,tue:b => inListe(b,'UL',true)},
+  {re:/^>\s$/,     tue:b => blockErsetzen(b,'BLOCKQUOTE')},
+  {re:/^```$/,     tue:b => { const pre=document.createElement('pre'); const c=document.createElement('code'); c.innerHTML='<br>'; pre.appendChild(c); b.replaceWith(pre); cursorAnDenAnfang(c); return pre; }},
+  {re:/^---$/,     tue:b => { const hr=document.createElement('hr'); const p=document.createElement('p'); p.innerHTML='<br>'; b.replaceWith(hr); hr.after(p); cursorAnDenAnfang(p); return p; }},
+];
+function liveRegelPruefen(){
+  const block = aktuellerBlock();
+  if(!block || block.tagName==='PRE') return false;
+  // nur in Absatz/Überschrift, nicht in Listen
+  const vor = textVorCursorImBlock(block);
+  for(const r of LIVE_REGELN){
+    if(r.re.test(vor)){
+      // getippten Auslöser entfernen, dann umwandeln
+      block.textContent = block.textContent.slice(vor.length);
+      r.tue(block);
+      liveSpeichern();
+      return true;
+    }
+  }
+  return false;
+}
+
+/* ── Live-Slash-Menü (Blocktypen direkt im Editor) ── */
+const LIVE_SLASH = [
+  {g:'Basis', ico:'¶',  name:'Text',              kw:'absatz text paragraph', tue:b=>blockErsetzen(b,'P')},
+  {g:'Basis', ico:'H₁', name:'Überschrift 1',     kw:'h1 titel heading', tue:b=>blockErsetzen(b,'H1')},
+  {g:'Basis', ico:'H₂', name:'Überschrift 2',     kw:'h2 heading', tue:b=>blockErsetzen(b,'H2')},
+  {g:'Basis', ico:'H₃', name:'Überschrift 3',     kw:'h3 heading', tue:b=>blockErsetzen(b,'H3')},
+  {g:'Basis', ico:'☑',  name:'Aufgabe',           kw:'todo task checkbox haken aufgabe', tue:b=>inListe(b,'UL',true)},
+  {g:'Basis', ico:'•',  name:'Aufzählung',        kw:'liste bullet punkt', tue:b=>inListe(b,'UL',false)},
+  {g:'Basis', ico:'1.', name:'Nummerierte Liste', kw:'nummer ordered zahl', tue:b=>inListe(b,'OL',false)},
+  {g:'Basis', ico:'❝',  name:'Zitat',             kw:'quote blockquote', tue:b=>blockErsetzen(b,'BLOCKQUOTE')},
+  {g:'Basis', ico:'‹›', name:'Code',              kw:'code fence programm', tue:b=>{const pre=document.createElement('pre');const c=document.createElement('code');c.innerHTML='<br>';pre.appendChild(c);b.replaceWith(pre);cursorAnDenAnfang(c);}},
+  {g:'Basis', ico:'—',  name:'Trenner',           kw:'hr linie divider strich', tue:b=>{const hr=document.createElement('hr');const p=document.createElement('p');p.innerHTML='<br>';b.replaceWith(hr);hr.after(p);cursorAnDenAnfang(p);}},
+  {g:'Einfügen', ico:'📅', name:'Heutiges Datum',  kw:'datum date heute', tue:b=>{textEinfuegen(new Date().toLocaleDateString('de-DE'));}},
+  {g:'Einfügen', ico:'▦', name:'Tabelle',          kw:'table spalten', tue:b=>{b.textContent='';const md='| Spalte | Spalte |\n|---|---|\n|  |  |';const wrap=document.createElement('div');wrap.innerHTML=renderMd(md);b.replaceWith(...wrap.childNodes);liveSpeichern();liveRendern(aktive());}},
+];
+const liveSlash = { offen:false, aktiv:0, eintraege:[], block:null, start:0 };
+function liveSlashSchliessen(){ liveSlash.offen=false; $('#autocomplete').classList.remove('offen'); }
+function liveSlashPruefen(){
+  const block = aktuellerBlock();
+  if(!block){ liveSlashSchliessen(); return; }
+  const vor = textVorCursorImBlock(block);
+  const m = vor.match(/(?:^|\s)\/([\wäöüß]*)$/);
+  if(!m){ liveSlashSchliessen(); return; }
+  const q = m[1].toLowerCase();
+  liveSlash.eintraege = LIVE_SLASH.filter(e => !q || (e.name+' '+e.kw).toLowerCase().includes(q));
+  if(!liveSlash.eintraege.length){ liveSlashSchliessen(); return; }
+  liveSlash.offen = true; liveSlash.aktiv = 0; liveSlash.block = block; liveSlash.q = m[0].trim();
+  const box = $('#autocomplete');
+  let letzte = null;
+  box.innerHTML = liveSlash.eintraege.map((e,i) => {
+    let vorsatz = '';
+    if(!q && e.g !== letzte){ vorsatz = `<div class="gruppe">${e.g}</div>`; letzte = e.g; }
+    return vorsatz + `<button class="eintrag${i===0?' aktiv':''}" data-ls="${i}"><span class="ico">${e.ico}</span><span>${escapeHtml(e.name)}</span></button>`;
+  }).join('');
+  const sel = getSelection();
+  const rect = sel.rangeCount ? sel.getRangeAt(0).getBoundingClientRect() : block.getBoundingClientRect();
+  const x = rect.left || block.getBoundingClientRect().left;
+  const y = (rect.bottom || block.getBoundingClientRect().bottom);
+  box.style.left = Math.min(x, innerWidth-300) + 'px';
+  box.style.maxHeight = Math.min(320, innerHeight-16) + 'px';
+  box.classList.add('offen');
+  const bH = box.offsetHeight;
+  box.style.top = Math.max(8, Math.min(y+4, innerHeight-bH-8)) + 'px';
+}
+function liveSlashMarkieren(){
+  $$('#autocomplete .eintrag').forEach((b,i) => { b.classList.toggle('aktiv', i===liveSlash.aktiv); if(i===liveSlash.aktiv) b.scrollIntoView({block:'nearest'}); });
+}
+function liveSlashAusfuehren(i){
+  const e = liveSlash.eintraege[i]; const block = liveSlash.block;
+  if(!e || !block){ liveSlashSchliessen(); return; }
+  // getippten "/query" aus dem Block entfernen
+  const vor = textVorCursorImBlock(block);
+  const idx = vor.lastIndexOf('/');
+  if(idx >= 0) block.textContent = block.textContent.slice(0, idx) + block.textContent.slice(vor.length);
+  liveSlashSchliessen();
+  e.tue(block);
+  liveSpeichern();
+}
+function textEinfuegen(text){
+  const sel = getSelection(); if(!sel.rangeCount) return;
+  const r = sel.getRangeAt(0); r.deleteContents();
+  r.insertNode(document.createTextNode(text));
+  r.collapse(false); sel.removeAllRanges(); sel.addRange(r);
+  liveSpeichern();
+}
+
+/* ── Ereignisse des Live-Editors ── */
+document.execCommand && document.execCommand('defaultParagraphSeparator', false, 'p');
+{
+  const el = $('#liveEditor');
+  el.addEventListener('input', () => {
+    if(!liveRegelPruefen()){
+      clearTimeout(liveTimer); liveTimer = setTimeout(liveSpeichern, 300);
+    }
+    liveSlashPruefen();
+  });
+  el.addEventListener('keydown', e => {
+    if(liveSlash.offen){
+      const n = liveSlash.eintraege.length;
+      if(e.key==='ArrowDown'){ e.preventDefault(); liveSlash.aktiv=(liveSlash.aktiv+1)%n; liveSlashMarkieren(); return; }
+      if(e.key==='ArrowUp'){ e.preventDefault(); liveSlash.aktiv=(liveSlash.aktiv-1+n)%n; liveSlashMarkieren(); return; }
+      if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); liveSlashAusfuehren(liveSlash.aktiv); return; }
+      if(e.key==='Escape'){ e.preventDefault(); liveSlashSchliessen(); return; }
+    }
+    const block = aktuellerBlock();
+    // Enter in leerem Listenpunkt → Liste verlassen
+    if(e.key==='Enter' && !e.shiftKey && block && (block.tagName==='UL'||block.tagName==='OL')){
+      const sel = getSelection();
+      let li = sel.anchorNode; while(li && li.tagName!=='LI') li = li.parentNode;
+      if(li && !li.textContent.trim() && !li.querySelector('ul,ol')){
+        e.preventDefault();
+        const p = document.createElement('p'); p.innerHTML='<br>';
+        // Ist es der letzte Punkt? Liste danach teilen
+        if(block.children.length === 1){ block.replaceWith(p); }
+        else { li.remove(); block.after(p); }
+        cursorAnDenAnfang(p); liveSpeichern(); return;
+      }
+    }
+    // Enter im Codeblock → echter Zeilenumbruch statt neuer Block
+    if(e.key==='Enter' && !e.shiftKey && block && block.tagName==='PRE'){
+      e.preventDefault();
+      const sel = getSelection(); const r = sel.getRangeAt(0); r.deleteContents();
+      r.insertNode(document.createTextNode('\n')); r.collapse(false);
+      sel.removeAllRanges(); sel.addRange(r); liveSpeichern(); return;
+    }
+    // Backspace am Anfang einer Überschrift/Zitat → zu Absatz
+    if(e.key==='Backspace' && block && ['H1','H2','H3','H4','BLOCKQUOTE'].includes(block.tagName)){
+      if(textVorCursorImBlock(block) === ''){ e.preventDefault(); blockErsetzen(block,'P'); liveSpeichern(); return; }
+    }
+  });
+  // Wiki-Links/Tags erst beim Verlassen des Editors "hübsch" rendern
+  el.addEventListener('blur', () => {
+    const n = aktive(); if(!n || liveSlash.offen) return;
+    liveSpeichern();
+    if(/\[\[|(?:^|\s)#[\wäöü]/.test(n.body)) liveRendern(n);
+  });
+  // Klicks: Checkbox togglen, Wiki-Links folgen
+  el.addEventListener('click', e => {
+    const cb = e.target.closest('input[type=checkbox]');
+    if(cb){ setTimeout(liveSpeichern, 0); return; }
+    const wiki = e.target.closest('a.wiki');
+    if(wiki){
+      e.preventDefault();
+      const ziel = findeNotizNachTitel(wiki.dataset.wiki);
+      if(ziel) oeffneNotiz(ziel.id); else { neueNotiz(wiki.dataset.wiki,''); toast('Neue Seite ✨'); }
+    }
+  });
+  el.addEventListener('mousedown', e => {
+    // Autocomplete-Klick nicht als Editor-Klick werten
+  });
+}
+$('#autocomplete').addEventListener('mousedown', e => {
+  const k = e.target.closest('[data-ls]');
+  if(k){ e.preventDefault(); liveSlashAusfuehren(+k.dataset.ls); }
+});
+
+/* Inline-Formatierung im Live-Editor über die Werkzeugleiste */
+function liveFormat(art){
+  const map = { fett:'bold', kursiv:'italic', durch:'strikeThrough' };
+  if(map[art]){ document.execCommand(map[art]); liveSpeichern(); return true; }
+  const block = aktuellerBlock();
+  if(art==='h2' && block){ blockErsetzen(block, block.tagName==='H2'?'P':'H2'); liveSpeichern(); return true; }
+  if(art==='liste' && block){ inListe(block,'UL',false); liveSpeichern(); return true; }
+  if(art==='aufgabe' && block){ inListe(block,'UL',true); liveSpeichern(); return true; }
+  if(art==='zitat' && block){ blockErsetzen(block,'BLOCKQUOTE'); liveSpeichern(); return true; }
+  if(art==='marker'){ document.execCommand('hiliteColor','false','#ffe9a8'); liveSpeichern(); return true; }
+  if(art==='wiki'){ textEinfuegen('[[]]'); return true; }
+  if(art==='code'){ document.execCommand('insertHTML', false, '<code>Code</code>'); liveSpeichern(); return true; }
+  return false;
+}
+
 
 /* ── Start ────────────────────────────────────────────────────── */
 function start(){
