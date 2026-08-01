@@ -4,6 +4,9 @@
 Keine Installation, kein Server, keine Anmeldung, keine Abhängigkeiten. Eine einzige HTML-Datei,
 komplett eigener Code. Alle Daten bleiben lokal in deinem Browser.
 
+**▶️ Zum Starten per Doppelklick:** siehe **[START.md](START.md)** — je eine Startdatei für
+Windows (`start-windows.bat`), Mac (`start-mac.command`) und Linux (`start-linux.sh`).
+
 REDNOTEN entstand aus der Analyse von **20 quelloffenen Notiz-Apps** (Quellcode unter
 [`PROJECTS/`](PROJECTS/)): Aus jeder wurden die besten Mechaniken studiert und
 abhängigkeitsfrei neu in einer Datei umgesetzt.
