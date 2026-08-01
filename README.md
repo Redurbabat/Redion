@@ -1,6 +1,53 @@
-# Beste 20 quelloffene Notiz-Apps (Notion-Alternativen)
+# ✒️ Tintenfass — deine Notizen-App
 
-Quellcode flach geklont (ohne Git-Historie) und auf den Kern verschlankt.
+**[➜ App direkt öffnen: `index.html`](index.html)** — einfach die Datei im Browser öffnen, fertig.
+Keine Installation, kein Server, keine Anmeldung. Alle Daten bleiben lokal im Browser (`localStorage`).
+
+> Sobald GitHub Pages für dieses Repo aktiviert ist (Settings → Pages → Branch wählen),
+> läuft die App auch unter deiner `github.io`-Adresse.
+
+## Was die App kann
+
+Tintenfass vereint die besten Ideen der 20 Notiz-Apps aus diesem Repo in **einer einzigen HTML-Datei** (TiddlyWiki-Prinzip):
+
+| Funktion | Vorbild |
+|---|---|
+| **Markdown** mit Live-Vorschau (Schreiben / Beides / Lesen) | MarkText, Zettlr, HedgeDoc |
+| **Wiki-Links** `[[Titel]]` mit Autovervollständigung beim Tippen von `[[` | Foam, SilverBullet |
+| **Rückverweise (Backlinks)** unter jeder Notiz | Logseq, Trilium, Obsidian-Stil |
+| **🕸 Graph-Ansicht** aller Verknüpfungen (klick- und ziehbar) | Logseq |
+| **📅 Tagesnotiz** — Journal per Knopfdruck | Logseq Journals |
+| **#Schlagwörter** direkt im Text, klickbar, mit Tag-Wolke | Memos, Bear |
+| **📓 Notizbücher** zum Ordnen | Joplin |
+| **Aufgaben** `- [ ]` — in der Lesen-Ansicht abhakbar | Joplin, Notesnook |
+| **Befehlspalette** Strg+K — Suche + alle Befehle | Notion, AFFiNE |
+| **Volltextsuche**, Anpinnen, Archiv, Papierkorb | Standard Notes |
+| **Backup**: JSON-Export/-Import, Markdown-Export je Notiz | Standard Notes, Joplin |
+| **Hell-/Dunkelmodus**, folgt anfangs dem System | alle |
+| Komplett **offline**, eine Datei, ~50 kB | TiddlyWiki |
+
+## Tastenkürzel
+
+| Kürzel | Wirkung |
+|---|---|
+| `Strg+K` | Befehlspalette |
+| `Strg+Alt+N` | Neue Notiz |
+| `Strg+E` | Schreiben ⇄ Lesen |
+| `Strg+B` / `Strg+I` | fett / kursiv |
+| `Esc` | Fenster schließen |
+
+## Daten sichern
+
+Die Notizen liegen im `localStorage` **dieses** Browsers. Mit dem ⬇-Knopf unten links lädst du
+jederzeit ein JSON-Backup herunter — und spielst es mit ⬆ wieder ein, auch auf einem anderen Gerät.
+Der Import fügt hinzu und überschreibt nichts.
+
+---
+
+## 📚 Referenzsammlung: 20 quelloffene Notiz-Apps
+
+Der Quellcode der Vorbilder liegt flach geklont (ohne Git-Historie) unter [`PROJECTS/`](PROJECTS/) —
+Übersicht auch als [Uebersicht.html](Uebersicht.html).
 
 | # | Projekt | Beschreibung | Lizenz | GitHub |
 |---|--|--|--|--|
