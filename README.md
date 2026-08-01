@@ -11,6 +11,10 @@ REDNOTEN entstand aus der Analyse von **20 quelloffenen Notiz-Apps** (Quellcode 
 [`PROJECTS/`](PROJECTS/)): Aus jeder wurden die besten Mechaniken studiert und
 abhängigkeitsfrei neu in einer Datei umgesetzt.
 
+**Notion-Stil:** heller, aufgeräumter Look mit **Seitenbaum** (verschachtelte Unterseiten),
+**Emoji-Symbol pro Seite**, großem Seitentitel und Breadcrumb-Pfad — dazu die rote
+REDNOTEN-Identität als Akzent. Hell- und Dunkelmodus.
+
 > Tipp: Aktiviere GitHub Pages (Settings → Pages → Branch wählen), dann läuft die App
 > direkt unter deiner `github.io`-Adresse — auch auf dem Handy.
 

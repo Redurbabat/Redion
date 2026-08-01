@@ -10,37 +10,41 @@
 <style>
 /* ══════════════ Design-Tokens: „Tinte & Papier" ══════════════ */
 :root{
-  /* REDNOTEN — „rotes Notizbuch": warmes Papier, Karmin-Leitfarbe, Bordeaux-Rücken */
-  --papier:#f5f1ea; --flaeche:#fdfaf5; --flaeche-2:#efe8dd;
-  --tinte:#2b2320; --tinte-schwach:#7a6f6a; --tinte-blass:#a99e97;
-  --leit:#c02942; --leit-dunkel:#9c1f34; --leit-hell:#f8e4e7; --leit-text:#a81f38;
+  /* REDNOTEN im Notion-Stil: heller, aufgeräumter Look mit rotem Akzent */
+  --papier:#ffffff; --flaeche:#ffffff; --flaeche-2:#f7f7f5;
+  --tinte:#37352f; --tinte-schwach:#787774; --tinte-blass:#9b9a97;
+  --leit:#c02942; --leit-dunkel:#9c1f34; --leit-hell:#fbeaed; --leit-text:#b3202f;
   --akzent:#c9852e; --akzent-hell:#f7ecd6;
-  --fehler:#b3261e; --fehler-hell:#f9e2df;
-  --rand:#e6ddd0; --rand-stark:#d4c9b8;
-  --ruecken:#2e1116; --ruecken-hell:#431a22; --ruecken-text:#e6d3d3; --ruecken-blass:#a98a8d;
-  --auswahl:rgba(192,41,66,.12);
-  --code-bg:#efe7db;
+  --fehler:#c0392b; --fehler-hell:#fbeae8;
+  --rand:#ececea; --rand-stark:#dcdcd9;
+  --ruecken:#fbfbfa; --ruecken-hell:#ecebe9; --ruecken-text:#5f5e5b; --ruecken-blass:#9b9a97;
+  --auswahl:rgba(192,41,66,.14);
+  --code-bg:#f4f3f1;
+  --sb-marke:#37352f; --sb-titel-fett:#37352f;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
   --r-klein:8px; --r-gross:14px; --r-rund:999px;
   --schatten:0 1px 3px rgba(34,48,60,.08);
   --schatten-hoch:0 12px 40px rgba(18,32,40,.22);
-  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  /* Notion nutzt durchgehend serifenlose Systemschrift */
+  --serif:ui-sans-serif,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
   --ease-raus:cubic-bezier(.22,1,.36,1);
   --ease-rein:cubic-bezier(.55,0,1,.45);
   --ease-feder:cubic-bezier(.34,1.56,.64,1);
 }
 [data-theme="dark"]{
-  --papier:#17110f; --flaeche:#1f1815; --flaeche-2:#291f1b;
-  --tinte:#ece2dd; --tinte-schwach:#a89a92; --tinte-blass:#7a6c64;
-  --leit:#e35d70; --leit-dunkel:#b83f52; --leit-hell:#3a1a1f; --leit-text:#f0899a;
+  /* Notion Dark Mode: warmes Anthrazit, heller Text, roter Akzent */
+  --papier:#191919; --flaeche:#191919; --flaeche-2:#202020;
+  --tinte:#e9e9e7; --tinte-schwach:#9b9a97; --tinte-blass:#6f6f6c;
+  --leit:#e35d70; --leit-dunkel:#b83f52; --leit-hell:#3a1c20; --leit-text:#f0899a;
   --akzent:#e0a94a; --akzent-hell:#3a2c17;
-  --fehler:#e0685c; --fehler-hell:#3d1f1c;
-  --rand:#352824; --rand-stark:#4a3830;
-  --ruecken:#140a0b; --ruecken-hell:#241315; --ruecken-text:#e6cfcf; --ruecken-blass:#8a6d70;
-  --auswahl:rgba(227,93,112,.16);
-  --code-bg:#241b17;
+  --fehler:#e0685c; --fehler-hell:#3a1f1c;
+  --rand:#2f2f2f; --rand-stark:#3d3d3d;
+  --ruecken:#202020; --ruecken-hell:#2c2c2c; --ruecken-text:#9b9a97; --ruecken-blass:#6f6f6c;
+  --auswahl:rgba(227,93,112,.18);
+  --code-bg:#252525;
+  --sb-marke:#e9e9e7; --sb-titel-fett:#e9e9e7;
   --schatten:0 1px 3px rgba(0,0,0,.3);
   --schatten-hoch:0 12px 40px rgba(0,0,0,.55);
 }
@@ -56,10 +60,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--leit);outline-offset:2px;border-radius:4px}
 
-/* ══════════════ Grundgerüst: 3 Spalten ══════════════ */
-.app{display:grid;grid-template-columns:236px 300px 1fr;grid-template-rows:minmax(0,1fr);height:100dvh}
+/* ══════════════ Grundgerüst: Notion-Layout (Sidebar + Inhalt) ══════════════ */
+.app{display:grid;grid-template-columns:260px 1fr;grid-template-rows:minmax(0,1fr);height:100dvh}
 .liste,.editor{min-height:0}
 .liste-inhalt{min-height:0}
+/* Die frühere Notizliste erscheint als Übersichts-Ansicht im Hauptbereich */
+.liste{grid-column:2;grid-row:1;display:none}
+.app.ansicht-liste .liste{display:flex}
+.app.ansicht-liste .editor{display:none}
+.editor{grid-column:2;grid-row:1}
 
 /* ── Seitenleiste („Buchrücken") ── */
 .sidebar{
@@ -67,14 +76,56 @@ input,textarea,select{font:inherit;color:inherit}
   display:flex;flex-direction:column; overflow-y:auto; padding:var(--s4) var(--s3);
   scrollbar-width:thin; scrollbar-color:var(--ruecken-hell) transparent;
 }
-.marke{display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2) var(--s4)}
+.marke{display:flex;align-items:center;gap:var(--s2);padding:2px var(--s1) var(--s3)}
+.marke-text{flex:1;min-width:0}
+.marke-btn{width:28px;height:28px;border-radius:6px;color:var(--ruecken-blass);font-size:15px;flex:none}
+.marke-btn:hover{background:var(--ruecken-hell);color:var(--tinte)}
 .marke .feder{
-  width:34px;height:34px;border-radius:var(--r-klein);
+  width:26px;height:26px;border-radius:6px;
   background:var(--leit); color:#fff; display:grid;place-items:center;
-  font-family:var(--serif); font-size:20px; font-weight:700;
-  box-shadow:inset 0 -3px 0 rgba(0,0,0,.28);
+  font-family:var(--sans); font-size:15px; font-weight:800;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.25); flex:none;
 }
-.marke h1{font-family:var(--serif);font-size:19px;font-weight:700;color:#fff;letter-spacing:.2px}
+.sb-such{
+  display:flex;align-items:center;gap:var(--s2);width:100%;
+  padding:6px var(--s3);margin-bottom:2px;border-radius:6px;
+  color:var(--ruecken-text);font-size:13.5px;font-weight:500;
+  transition:background .1s;
+}
+.sb-such:hover{background:var(--ruecken-hell)}
+.sb-such .lupe{font-size:12px;opacity:.7}
+.sb-such kbd{margin-left:auto;font-family:var(--sans);font-size:11px;color:var(--ruecken-blass);
+  background:var(--ruecken-hell);border-radius:4px;padding:1px 5px}
+/* Seitenbaum */
+.seitenbaum{display:flex;flex-direction:column;gap:1px}
+.baum-zeile{display:flex;align-items:center;border-radius:6px;transition:background .1s;position:relative}
+.baum-zeile:hover{background:var(--ruecken-hell)}
+.baum-zeile[aria-current="true"]{background:var(--ruecken-hell)}
+.baum-zeile[aria-current="true"] .baum-titel{font-weight:600;color:var(--sb-titel-fett)}
+.baum-pfeil{
+  width:20px;height:26px;flex:none;display:grid;place-items:center;
+  color:var(--ruecken-blass);font-size:10px;cursor:pointer;border-radius:4px;
+  transition:transform .12s, background .1s; opacity:0;
+}
+.baum-zeile:hover .baum-pfeil,.baum-pfeil.hat-kinder{opacity:1}
+.baum-pfeil.hat-kinder:hover{background:var(--rand-stark)}
+.baum-pfeil.auf{transform:rotate(90deg)}
+.baum-pfeil.leer{cursor:default;opacity:0!important}
+.baum-haupt{
+  flex:1;min-width:0;display:flex;align-items:center;gap:6px;
+  padding:5px 4px;text-align:left;color:var(--ruecken-text);font-size:13.5px;
+}
+.baum-haupt .baum-icon{font-size:15px;flex:none;line-height:1;width:18px;text-align:center}
+.baum-titel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.baum-akt{
+  display:flex;flex:none;padding-right:4px;gap:1px;opacity:0;transition:opacity .1s;
+}
+.baum-zeile:hover .baum-akt{opacity:1}
+.baum-akt button{width:22px;height:22px;border-radius:4px;color:var(--ruecken-blass);font-size:13px;display:grid;place-items:center}
+.baum-akt button:hover{background:var(--rand-stark);color:var(--tinte)}
+.baum-kinder{display:flex;flex-direction:column;gap:1px}
+.baum-leer{padding:4px 8px;font-size:12px;color:var(--ruecken-blass);font-style:italic}
+.marke h1{font-family:var(--sans);font-size:15px;font-weight:700;color:var(--sb-marke);letter-spacing:.2px}
 .marke small{display:block;font-size:10.5px;color:var(--ruecken-blass);font-family:var(--sans);font-weight:400;letter-spacing:.4px;text-transform:uppercase}
 .sb-aktion{
   display:flex;align-items:center;gap:var(--s2);width:100%;
@@ -92,7 +143,7 @@ input,textarea,select{font:inherit;color:inherit}
 .sb-aktion.primaer:active{box-shadow:inset 0 -1px 0 rgba(0,0,0,.22);transform:translateY(1px)}
 .sb-aktion .ico{width:18px;text-align:center;flex:none;opacity:.85}
 .sb-aktion .anzahl{margin-left:auto;font-size:11px;color:var(--ruecken-blass);font-weight:500;font-variant-numeric:tabular-nums}
-.sb-aktion[aria-current="true"]{background:var(--ruecken-hell);color:#fff}
+.sb-aktion[aria-current="true"]{background:var(--ruecken-hell);color:var(--sb-titel-fett);font-weight:700}
 .sb-aktion[aria-current="true"] .anzahl{color:var(--ruecken-text)}
 .sb-titel{
   display:flex;align-items:center;justify-content:space-between;
@@ -100,29 +151,29 @@ input,textarea,select{font:inherit;color:inherit}
   font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ruecken-blass);
 }
 .sb-titel button{color:var(--ruecken-blass);font-size:15px;line-height:1;padding:2px 6px;border-radius:6px}
-.sb-titel button:hover{color:#fff;background:var(--ruecken-hell)}
+.sb-titel button:hover{color:var(--tinte);background:var(--ruecken-hell)}
 .tagwolke{display:flex;flex-wrap:wrap;gap:6px;padding:var(--s1) var(--s2)}
 .tag-chip{
   font-size:12px;padding:3px 10px;border-radius:var(--r-rund);
   background:var(--ruecken-hell);color:var(--ruecken-text);
   transition:background .12s,color .12s;
 }
-.tag-chip:hover{color:#fff}
+.tag-chip:hover{color:var(--tinte);background:var(--rand-stark)}
 .tag-chip[aria-current="true"]{background:var(--leit);color:#fff}
 .sb-fuss{margin-top:auto;padding-top:var(--s4);display:flex;gap:var(--s1)}
 .sb-fuss button{
   flex:1;padding:8px;border-radius:var(--r-klein);color:var(--ruecken-blass);
   font-size:15px;transition:background .12s,color .12s;
 }
-.sb-fuss button:hover{background:var(--ruecken-hell);color:#fff}
+.sb-fuss button:hover{background:var(--ruecken-hell);color:var(--tinte)}
 .leer-hinweis{padding:2px var(--s2);font-size:12px;color:var(--ruecken-blass);font-style:italic}
 
 /* ── Notizliste ── */
 .liste{
-  background:var(--flaeche-2); border-right:1px solid var(--rand);
-  display:flex;flex-direction:column; min-width:0;
+  background:var(--papier); min-width:0; flex-direction:column;
 }
-.liste-kopf{padding:var(--s3) var(--s3) var(--s2)}
+.app.ansicht-liste .liste{display:flex}
+.liste-kopf{padding:var(--s4) max(var(--s5),calc(50% - 460px)) var(--s2);max-width:100%}
 .suchfeld{position:relative}
 .suchfeld input{
   width:100%;padding:9px 30px 9px 32px;border-radius:var(--r-klein);
@@ -205,23 +256,40 @@ input,textarea,select{font:inherit;color:inherit}
 .modus-vorschau .lese-seite{display:flex}
 .modus-split .schreib-seite,.modus-split .lese-seite{display:flex}
 .modus-split .schreib-seite{border-right:1px solid var(--rand)}
-.titel-zeile{padding:var(--s5) var(--s6) 0;display:flex;align-items:center;gap:var(--s3)}
-.titel-zeile input{
-  flex:1;min-width:0;border:none;background:none;font-family:var(--serif);
-  font-size:26px;font-weight:700;color:var(--tinte);padding:0 0 var(--s2);
-  border-bottom:1px solid transparent;
+/* Notion-Seitenkopf: Breadcrumb, großes Emoji, großer Titel */
+.seiten-kopf{padding:var(--s4) 0 0}
+.breadcrumb{
+  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+  padding:0 max(var(--s6),calc(50% - 460px));
+  font-size:12.5px;color:var(--tinte-blass);min-height:18px;
 }
-.titel-zeile input:focus{outline:none;border-bottom-color:var(--rand-stark)}
+.breadcrumb button{color:var(--tinte-blass);padding:2px 5px;border-radius:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.breadcrumb button:hover{background:var(--flaeche-2);color:var(--tinte-schwach)}
+.breadcrumb .sep{opacity:.5}
+.titel-zeile{
+  padding:6px max(var(--s6),calc(50% - 460px)) 0;width:100%;
+  display:flex;align-items:center;gap:var(--s3);
+}
+.seiten-icon{
+  font-size:40px;line-height:1;flex:none;border-radius:8px;padding:2px 4px;
+  transition:background .1s;
+}
+.seiten-icon:hover{background:var(--flaeche-2)}
+.titel-zeile input{
+  flex:1;min-width:0;border:none;background:none;font-family:var(--sans);
+  font-size:32px;font-weight:800;color:var(--tinte);padding:2px 0;letter-spacing:-.01em;
+}
+.titel-zeile input:focus{outline:none}
 .titel-zeile input::placeholder{color:var(--tinte-blass)}
 #schreibfeld{
   flex:1;min-height:0;width:100%;resize:none;border:none;background:none;overflow-y:auto;
-  padding:var(--s4) var(--s6) var(--s7);
+  padding:var(--s3) max(var(--s6),calc(50% - 460px)) var(--s7);
   font-family:var(--mono);font-size:14px;line-height:1.75;color:var(--tinte);
   tab-size:2;
 }
 #schreibfeld:focus{outline:none}
 #schreibfeld::placeholder{color:var(--tinte-blass)}
-.lese-scroll{flex:1;min-height:0;overflow-y:auto;padding:var(--s5) var(--s6) var(--s7);scrollbar-width:thin}
+.lese-scroll{flex:1;min-height:0;overflow-y:auto;padding:var(--s4) max(var(--s6),calc(50% - 460px)) var(--s7);scrollbar-width:thin}
 .editor-fuss{
   display:flex;align-items:center;gap:var(--s3);
   padding:var(--s2) var(--s4);border-top:1px solid var(--rand);
@@ -399,8 +467,8 @@ input,textarea,select{font:inherit;color:inherit}
 /* Toast */
 .toast{
   position:fixed;bottom:var(--s5);left:50%;translate:-50% 0;z-index:70;
-  background:var(--ruecken);color:#fff;padding:10px var(--s5);
-  border-radius:var(--r-rund);font-size:13px;font-weight:600;
+  background:#2f2f2e;color:#fff;padding:10px var(--s5);
+  border-radius:var(--r-klein);font-size:13px;font-weight:600;
   box-shadow:var(--schatten-hoch);opacity:0;pointer-events:none;
   transition:opacity .2s,translate .25s var(--ease-raus);
 }
@@ -416,11 +484,10 @@ input,textarea,select{font:inherit;color:inherit}
     box-shadow:var(--schatten-hoch);
   }
   .app.sb-offen .sidebar{transform:none}
-  .sb-schleier{position:fixed;inset:0;z-index:45;background:rgba(10,20,24,.4);display:none}
+  .sb-schleier{position:fixed;inset:0;z-index:45;background:rgba(15,15,15,.45);display:none}
   .app.sb-offen .sb-schleier{display:block}
-  .liste{border-right:none}
-  .app.ansicht-editor .liste{display:none}
-  .app:not(.ansicht-editor) .editor{display:none}
+  .liste{border-right:none;grid-column:1;grid-row:1}
+  .editor{grid-column:1;grid-row:1}
   .hamburger{display:inline-grid;place-items:center;min-width:44px;height:44px;font-size:19px;color:var(--tinte-schwach);border-radius:var(--r-klein)}
   .zurueck{display:inline-grid;place-items:center;min-width:44px;height:44px;color:var(--leit-text);font-weight:700;font-size:14px;border-radius:var(--r-klein)}
   .liste-kopf{display:flex;gap:var(--s1);align-items:center}
@@ -528,17 +595,17 @@ input,textarea,select{font:inherit;color:inherit}
 
 /* ── Sperrbildschirm (Tresor) ── */
 .sperre{
-  position:fixed;inset:0;z-index:100;background:var(--ruecken);
-  display:none;align-items:center;justify-content:center;color:var(--ruecken-text);
+  position:fixed;inset:0;z-index:100;background:var(--papier);
+  display:none;align-items:center;justify-content:center;color:var(--tinte);
 }
 .sperre.offen{display:flex}
 .sperre .kern{text-align:center;max-width:320px;padding:var(--s5)}
 .sperre .schloss{font-size:56px;opacity:.35;margin-bottom:var(--s4)}
-.sperre h2{font-family:var(--serif);font-size:22px;color:#fff;margin-bottom:var(--s2)}
-.sperre p{font-size:13px;color:var(--ruecken-blass);margin-bottom:var(--s4)}
+.sperre h2{font-family:var(--sans);font-size:22px;font-weight:700;color:var(--tinte);margin-bottom:var(--s2)}
+.sperre p{font-size:13px;color:var(--tinte-schwach);margin-bottom:var(--s4)}
 .sperre input{
   width:100%;padding:11px var(--s4);border-radius:var(--r-klein);
-  border:1px solid var(--ruecken-hell);background:var(--ruecken-hell);color:#fff;
+  border:1px solid var(--rand-stark);background:var(--flaeche-2);color:var(--tinte);
   font-size:15px;text-align:center;margin-bottom:var(--s3);
 }
 .sperre input:focus{outline:none;border-color:var(--leit)}
@@ -580,17 +647,16 @@ input,textarea,select{font:inherit;color:inherit}
   <aside class="sidebar" id="sidebar" aria-label="Navigation">
     <div class="marke">
       <div class="feder" aria-hidden="true">R</div>
-      <div><h1>REDNOTEN</h1><small>Notizen · lokal</small></div>
+      <div class="marke-text"><h1>REDNOTEN</h1><small>Notizen</small></div>
+      <button id="btnTheme" class="marke-btn" title="Hell/Dunkel umschalten (Strg+K → Thema)" aria-label="Farbschema umschalten">◐</button>
     </div>
 
-    <button class="sb-aktion primaer" id="btnNeu"><span class="ico">＋</span> Neue Notiz</button>
+    <button class="sb-such" id="btnSuche"><span class="lupe" aria-hidden="true">🔍</span> Suchen <kbd>⌘K</kbd></button>
     <button class="sb-aktion" id="btnTagesnotiz"><span class="ico">📅</span> Tagesnotiz</button>
-
-    <div class="sb-titel">Bereiche</div>
     <nav id="bereiche" aria-label="Bereiche"></nav>
 
-    <div class="sb-titel">Notizbücher <button id="btnNbNeu" title="Notizbuch anlegen" aria-label="Notizbuch anlegen">＋</button></div>
-    <nav id="notizbuecher" aria-label="Notizbücher"></nav>
+    <div class="sb-titel">Seiten <button id="btnNeu" title="Neue Seite anlegen" aria-label="Neue Seite">＋</button></div>
+    <nav id="seitenbaum" class="seitenbaum" aria-label="Seiten"></nav>
 
     <div class="sb-titel">Schlagwörter</div>
     <div class="tagwolke" id="tagwolke"></div>
@@ -600,7 +666,6 @@ input,textarea,select{font:inherit;color:inherit}
       <button id="btnPalette" title="Befehlspalette (Strg+K)" aria-label="Befehlspalette">⌘</button>
       <button id="btnExport" title="Backup exportieren (JSON)" aria-label="Backup exportieren">⬇</button>
       <button id="btnImport" title="Backup importieren" aria-label="Backup importieren">⬆</button>
-      <button id="btnTheme" title="Hell/Dunkel umschalten" aria-label="Farbschema umschalten">◐</button>
     </div>
   </aside>
   <div class="sb-schleier" id="sbSchleier"></div>
@@ -639,7 +704,7 @@ input,textarea,select{font:inherit;color:inherit}
 
     <div id="editorInhalt" style="display:none;flex:1;min-height:0;flex-direction:column">
       <div class="editor-kopf" role="toolbar" aria-label="Formatierung">
-        <button class="zurueck" id="btnZurueck">‹ Liste</button>
+        <button class="zurueck" id="btnZurueck">‹ Seiten</button>
         <button class="werkzeug" data-md="fett" title="Fett (Strg+B)"><b>F</b></button>
         <button class="werkzeug" data-md="kursiv" title="Kursiv (Strg+I)"><i>K</i></button>
         <button class="werkzeug" data-md="durch" title="Durchgestrichen"><s>D</s></button>
@@ -661,8 +726,12 @@ input,textarea,select{font:inherit;color:inherit}
         </div>
       </div>
 
-      <div class="titel-zeile">
-        <input id="titelFeld" placeholder="Titel der Notiz …" autocomplete="off" aria-label="Titel">
+      <div class="seiten-kopf">
+        <nav class="breadcrumb" id="breadcrumb" aria-label="Pfad"></nav>
+        <div class="titel-zeile">
+          <button class="seiten-icon" id="seitenIcon" title="Symbol ändern" aria-label="Symbol ändern">📄</button>
+          <input id="titelFeld" placeholder="Ohne Titel" autocomplete="off" aria-label="Titel">
+        </div>
       </div>
 
       <div class="editor-flaeche">
@@ -678,7 +747,7 @@ input,textarea,select{font:inherit;color:inherit}
       </div>
 
       <div class="editor-fuss">
-        <select id="nbWahl" aria-label="Notizbuch zuweisen"></select>
+        <button class="werkzeug" id="btnUnterseite" title="Unterseite hinzufügen">＋ Unterseite</button>
         <button class="werkzeug" id="btnPin" title="Anpinnen">📌</button>
         <button class="werkzeug" id="btnArchiv" title="Archivieren">📦</button>
         <button class="werkzeug" id="btnVerlauf" title="Versionsverlauf">⏱</button>
@@ -861,13 +930,41 @@ function normalisieren(d){
   d.notebooks = Array.isArray(d.notebooks) ? d.notebooks : [];
   d.notes = Array.isArray(d.notes) ? d.notes : [];
   d.theme = d.theme || 'auto';
-  d.einstellungen = Object.assign({fokus:false, typewriter:false, syncScroll:true, entwurf:''}, d.einstellungen||{});
+  d.einstellungen = Object.assign({fokus:false, typewriter:false, syncScroll:true, entwurf:'', eingeklappt:[]}, d.einstellungen||{});
   d.stats = Object.assign({woerter:{}}, d.stats||{});
+
+  // Notizbücher → Seitenhierarchie: jedes Notizbuch wird eine Top-Level-Seite,
+  // seine Notizen werden zu Unterseiten (Notion-Modell, einmalige Migration).
+  const nbSeite = {};
+  if(!d._migriert && d.notebooks.length){
+    for(const nb of d.notebooks){
+      const t = Date.now();
+      const seite = { id:neueId(), title:nb.name, body:'', icon:'📁', parent:null, pos:0,
+        hist:[], tasks:{total:0,done:0}, pinned:false, archived:false, trashed:false, created:t, updated:t };
+      d.notes.push(seite);
+      nbSeite[nb.id] = seite.id;
+    }
+  }
+  let posZaehler = 0;
   for(const n of d.notes){
     if(!Array.isArray(n.hist)) n.hist = [];
     if(!n.tasks) n.tasks = aufgabenZaehlen(n.body||'');
+    if(n.icon === undefined) n.icon = standardIcon(n);
+    if(n.parent === undefined) n.parent = (!d._migriert && n.nb && nbSeite[n.nb]) ? nbSeite[n.nb] : null;
+    if(typeof n.pos !== 'number') n.pos = (posZaehler += 10);
   }
+  d._migriert = true;
+  // Verwaiste parent-Verweise auf null setzen (gelöschte Elternseite)
+  const ids = new Set(d.notes.map(n => n.id));
+  for(const n of d.notes) if(n.parent && !ids.has(n.parent)) n.parent = null;
   return d;
+}
+/* Passendes Standard-Emoji ableiten (Tagesnotiz, Vorlage, sonst Blatt) */
+function standardIcon(n){
+  const b = (n.body||'');
+  if(/^#vorlage\b/m.test(b) || / #vorlage\b/.test(b)) return '📋';
+  if(/^\d{4}-\d{2}-\d{2}/.test(n.title||'') || /(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag),/.test(n.title||'')) return '📅';
+  return '📄';
 }
 /* Aufgabenzeilen fence-bewusst sammeln — exakt nach denselben Regeln wie
    der Renderer (Code-Zäune ausgenommen, „[ ]" braucht folgenden Text).
@@ -1280,26 +1377,43 @@ function aufgabeUmschalten(index){
 /* ── Rendering: Seitenleiste ──────────────────────────────────── */
 function zaehle(f){ return db.notes.filter(f).length; }
 
+/* ── Seitenhierarchie ─────────────────────────────────────────── */
+function kinderVon(id){
+  return db.notes.filter(n => !n.trashed && !n.archived && n.parent === id)
+    .sort((a,b) => (a.pos||0) - (b.pos||0) || (a.created||0) - (b.created||0));
+}
+function topSeiten(){ return kinderVon(null); }
+function pfadVon(id){
+  const pfad = []; let cur = notiz(id), schutz = 0;
+  while(cur && schutz++ < 50){ pfad.unshift(cur); cur = cur.parent ? notiz(cur.parent) : null; }
+  return pfad;
+}
+function istEingeklappt(id){ return (db.einstellungen.eingeklappt || []).includes(id); }
+function klappUm(id){
+  const e = db.einstellungen.eingeklappt || (db.einstellungen.eingeklappt = []);
+  const i = e.indexOf(id);
+  if(i >= 0) e.splice(i, 1); else e.push(id);
+  speichern(); renderSeitenbaum();
+}
+function naechstePos(parent){
+  const k = kinderVon(parent);
+  return k.length ? (k[k.length-1].pos || 0) + 10 : 10;
+}
+
 function renderSeitenleiste(){
   const offen = db.notes.filter(n => !n.trashed && !n.archived)
     .reduce((s,n) => s + (n.tasks.total - n.tasks.done), 0);
   const bereiche = [
-    {art:'alle',      ico:'🗒', name:'Alle Notizen', anzahl: zaehle(n => !n.trashed && !n.archived)},
-    {art:'pins',      ico:'📌', name:'Angepinnt',    anzahl: zaehle(n => n.pinned && !n.trashed && !n.archived)},
-    {art:'aufgaben',  ico:'☑',  name:'Aufgaben',     anzahl: offen},
-    {art:'archiv',    ico:'📦', name:'Archiv',       anzahl: zaehle(n => n.archived && !n.trashed)},
-    {art:'papierkorb',ico:'🗑', name:'Papierkorb',   anzahl: zaehle(n => n.trashed)},
+    {art:'alle',      ico:'🗒', name:'Alle Seiten', anzahl: zaehle(n => !n.trashed && !n.archived)},
+    {art:'aufgaben',  ico:'☑',  name:'Aufgaben',    anzahl: offen},
+    {art:'archiv',    ico:'📦', name:'Archiv',      anzahl: zaehle(n => n.archived && !n.trashed)},
+    {art:'papierkorb',ico:'🗑', name:'Papierkorb',  anzahl: zaehle(n => n.trashed)},
   ];
   $('#bereiche').innerHTML = bereiche.map(b =>
-    `<button class="sb-aktion" data-bereich="${b.art}" aria-current="${zustand.filter.art===b.art}">
+    `<button class="sb-aktion" data-bereich="${b.art}" aria-current="${zustand.filter.art===b.art && !zustand.aktivId}">
        <span class="ico">${b.ico}</span> ${b.name} <span class="anzahl">${b.anzahl}</span></button>`).join('');
 
-  $('#notizbuecher').innerHTML = db.notebooks.length
-    ? db.notebooks.map(nb =>
-      `<button class="sb-aktion" data-nb="${nb.id}" aria-current="${zustand.filter.art==='nb' && zustand.filter.wert===nb.id}">
-         <span class="ico">📓</span> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(nb.name)}</span>
-         <span class="anzahl">${zaehle(n => n.nb===nb.id && !n.trashed && !n.archived)}</span></button>`).join('')
-    : `<div class="leer-hinweis">Noch keine Notizbücher</div>`;
+  renderSeitenbaum();
 
   const alleTags = new Map();
   for(const n of db.notes){ if(n.trashed) continue;
@@ -1310,6 +1424,33 @@ function renderSeitenleiste(){
     ? sortiert.map(([t]) =>
       `<button class="tag-chip" data-tag="${escapeAttr(t)}" aria-current="${zustand.filter.art==='tag' && zustand.filter.wert===t}">#${escapeHtml(t)}</button>`).join('')
     : `<div class="leer-hinweis">Nutze #wörter im Text</div>`;
+}
+
+function seitenZeile(n, tiefe){
+  const kinder = kinderVon(n.id);
+  const auf = kinder.length && !istEingeklappt(n.id);
+  const pfeilKlasse = kinder.length ? (auf ? 'baum-pfeil hat-kinder auf' : 'baum-pfeil hat-kinder') : 'baum-pfeil leer';
+  let html = `<div class="baum-zeile" aria-current="${n.id===zustand.aktivId}" style="padding-left:${tiefe*14}px">
+    <span class="${pfeilKlasse}" data-klapp="${n.id}" aria-hidden="true">▶</span>
+    <button class="baum-haupt" data-oeffne="${escapeAttr(n.id)}" title="${escapeAttr(n.title||'Ohne Titel')}">
+      <span class="baum-icon">${n.icon || '📄'}</span>
+      <span class="baum-titel">${escapeHtml(n.title || 'Ohne Titel')}</span>
+    </button>
+    <span class="baum-akt">
+      <button data-neu-unter="${escapeAttr(n.id)}" title="Unterseite hinzufügen" aria-label="Unterseite">＋</button>
+      <button data-menue="${escapeAttr(n.id)}" title="Menü" aria-label="Menü">⋯</button>
+    </span>
+  </div>`;
+  if(auf){
+    html += `<div class="baum-kinder">${kinder.map(k => seitenZeile(k, tiefe+1)).join('')}</div>`;
+  }
+  return html;
+}
+function renderSeitenbaum(){
+  const top = topSeiten();
+  $('#seitenbaum').innerHTML = top.length
+    ? top.map(n => seitenZeile(n, 0)).join('')
+    : `<div class="baum-leer">Noch keine Seiten — auf ＋ tippen</div>`;
 }
 
 /* ── Rendering: Liste ─────────────────────────────────────────── */
@@ -1452,14 +1593,14 @@ function renderListe(){
     return;
   }
   inhalt.innerHTML = notizen.map((n,idx) => {
-    const nb = notizbuch(n.nb);
+    const eltern = n.parent ? notiz(n.parent) : null;
     const aufgabenBadge = n.tasks.total > 0
       ? `<span class="karten-aufgaben">☑ ${n.tasks.done}/${n.tasks.total}
          <span class="mini"><i style="width:${Math.round(n.tasks.done/n.tasks.total*100)}%"></i></span></span>` : '';
     return `<button class="notiz-karte" data-id="${escapeAttr(n.id)}" aria-current="${n.id===zustand.aktivId}" style="animation-delay:${Math.min(idx*18,180)}ms">
-      <h3>${n.pinned ? '<span class="pin" aria-label="angepinnt">📌</span>' : ''}${escapeHtml(n.title || 'Ohne Titel')}</h3>
-      <p>${escapeHtml(schnipsel(n.body)) || '<em>Leere Notiz</em>'}</p>
-      <div class="meta"><span>${datumKurz(n.updated)}</span>${nb ? `<span class="nb">📓 ${escapeHtml(nb.name)}</span>` : ''}${aufgabenBadge}</div>
+      <h3>${n.pinned ? '<span class="pin" aria-label="angepinnt">📌</span>' : ''}<span class="karte-icon">${n.icon||'📄'}</span> ${escapeHtml(n.title || 'Ohne Titel')}</h3>
+      <p>${escapeHtml(schnipsel(n.body)) || '<em>Leere Seite</em>'}</p>
+      <div class="meta"><span>${datumKurz(n.updated)}</span>${eltern ? `<span class="nb">${eltern.icon||'📄'} ${escapeHtml(eltern.title||'')}</span>` : ''}${aufgabenBadge}</div>
     </button>`;
   }).join('');
 }
@@ -1474,9 +1615,15 @@ function renderEditor(){
   if(document.activeElement !== $('#titelFeld')) $('#titelFeld').value = n.title;
   if(document.activeElement !== $('#schreibfeld')) $('#schreibfeld').value = n.body;
 
-  const wahl = $('#nbWahl');
-  wahl.innerHTML = `<option value="">Kein Notizbuch</option>` +
-    db.notebooks.map(nb => `<option value="${nb.id}" ${n.nb===nb.id?'selected':''}>📓 ${escapeHtml(nb.name)}</option>`).join('');
+  // Seiten-Emoji
+  $('#seitenIcon').textContent = n.icon || '📄';
+
+  // Breadcrumb: Pfad der Elternseiten
+  const pfad = pfadVon(n.id);
+  $('#breadcrumb').innerHTML = pfad.map((p, i) =>
+    (i > 0 ? '<span class="sep">/</span>' : '') +
+    `<button data-crumb="${escapeAttr(p.id)}">${p.icon||'📄'} ${escapeHtml(p.title || 'Ohne Titel')}</button>`
+  ).join('');
 
   $('#btnPin').style.color = n.pinned ? 'var(--akzent)' : '';
   $('#btnPin').title = n.pinned ? 'Pin lösen' : 'Anpinnen';
@@ -1543,35 +1690,43 @@ function renderBacklinks(){
 function renderAlles(){ renderSeitenleiste(); renderListe(); renderEditor(); }
 
 /* ── Aktionen ─────────────────────────────────────────────────── */
+/* Hauptbereich: Editor (offene Seite) oder Liste (Bereich/Filter/Suche) */
+function zeigeEditor(){ $('#app').classList.remove('ansicht-liste'); }
+function zeigeListe(){ zustand.aktivId = null; $('#app').classList.add('ansicht-liste'); }
+
 function oeffneNotiz(id, fokusTitel){
   const vorher = aktive();
   if(vorher && vorher.id !== id) verlaufSichern(vorher, true);   // Sitzungsende = Revision
   zustand.aktivId = id;
-  $('#app').classList.add('ansicht-editor');
-  renderListe(); renderEditor();
+  zeigeEditor();
+  renderSeitenbaum(); renderEditor();
   if(fokusTitel) setTimeout(() => $('#titelFeld').focus(), 30);
   else if(matchMedia('(min-width:901px)').matches) setTimeout(() => $('#schreibfeld').focus(), 30);
 }
 
-function neueNotiz(titel, body){
+function neueNotiz(titel, body, parent){
   const t = Date.now();
-  const n = { id:neueId(), title:titel||'', body:body||'', hist:[], tasks:aufgabenZaehlen(body||''),
-    nb: zustand.filter.art==='nb' ? zustand.filter.wert : null,
+  const p = parent !== undefined ? parent : (aktive() ? null : null);
+  const n = { id:neueId(), title:titel||'', body:body||'', icon:'📄', parent: p||null, pos: naechstePos(p||null),
+    hist:[], tasks:aufgabenZaehlen(body||''),
     pinned:false, archived:false, trashed:false, created:t, updated:t };
   db.notes.unshift(n);
-  if(zustand.filter.art==='archiv'||zustand.filter.art==='papierkorb') zustand.filter={art:'alle',wert:null};
+  if(p){ // Elternseite aufklappen, damit die neue Unterseite sichtbar ist
+    const e = db.einstellungen.eingeklappt || []; const i = e.indexOf(p); if(i>=0) e.splice(i,1);
+  }
   speichern();
   renderSeitenleiste();
   if(zustand.modus==='vorschau') setzeModus('edit');
   oeffneNotiz(n.id, !titel);
   return n;
 }
+function neueSeite(parent){ return neueNotiz('', '', parent || null); }
 
 function tagesnotiz(){
   const titel = heuteTitel();
   const existiert = findeNotizNachTitel(titel);
   if(existiert){ oeffneNotiz(existiert.id); toast('Tagesnotiz geöffnet'); }
-  else { neueNotiz(titel, `## Heute\n\n- [ ] `); toast('Tagesnotiz angelegt 📅'); }
+  else { const n = neueNotiz(titel, `## Heute\n\n- [ ] `, null); n.icon='📅'; speichern(); renderSeitenbaum(); renderEditor(); toast('Tagesnotiz angelegt 📅'); }
 }
 
 function inPapierkorb(id){
@@ -1583,10 +1738,14 @@ function inPapierkorb(id){
       speichern(true); renderAlles(); toast('Notiz gelöscht');
     }, true);
   } else {
-    n.trashed = true; n.updated = Date.now();
-    if(zustand.aktivId===id) zustand.aktivId=null;
-    $('#app').classList.remove('ansicht-editor');
-    speichern(); renderAlles(); toast('In den Papierkorb gelegt 🗑');
+    // Unterseiten mit in den Papierkorb nehmen
+    const zuLoeschen = [id]; const stapel = [id];
+    while(stapel.length){ const cur = stapel.pop(); for(const k of db.notes) if(k.parent===cur && !k.trashed){ zuLoeschen.push(k.id); stapel.push(k.id); } }
+    const now = Date.now();
+    for(const nid of zuLoeschen){ const x = notiz(nid); if(x){ x.trashed = true; x.updated = now; } }
+    if(zuLoeschen.includes(zustand.aktivId)){ zeigeListe(); zustand.filter={art:'alle',wert:null}; }
+    speichern(); renderAlles();
+    toast(zuLoeschen.length>1 ? `Seite + ${zuLoeschen.length-1} Unterseiten in den Papierkorb 🗑` : 'In den Papierkorb gelegt 🗑');
   }
 }
 function wiederherstellen(id){
@@ -1699,13 +1858,19 @@ function importDialog(d){
             if(vorhandene.has(id)) continue;
             const body = String(n.body||'');
             db.notes.push({ id, title:String(n.title||''), body,
+              icon: typeof n.icon==='string' ? n.icon : '📄',
+              parent: typeof n.parent==='string' ? n.parent : ((n.nb && idKarte[n.nb]) || null),
+              pos: typeof n.pos==='number' ? n.pos : 0,
               hist:Array.isArray(n.hist)?n.hist:[], tasks:aufgabenZaehlen(body),
-              nb:(n.nb && idKarte[n.nb]) || null, pinned:!!n.pinned, archived:!!n.archived, trashed:!!n.trashed,
+              pinned:!!n.pinned, archived:!!n.archived, trashed:!!n.trashed,
               created:+n.created||Date.now(), updated:+n.updated||Date.now() });
             vorhandene.add(id);
             neu++;
           }
-          speichern(true); renderAlles(); toast(`${neu} Notizen importiert ⬆`);
+          // Verwaiste parent-Verweise aus dem Import kappen
+          const alleIds = new Set(db.notes.map(x => x.id));
+          for(const x of db.notes) if(x.parent && !alleIds.has(x.parent)) x.parent = null;
+          speichern(true); renderAlles(); toast(`${neu} Seiten importiert ⬆`);
         });
   }catch(e){ toast('Import fehlgeschlagen: keine gültige Backup-Datei'); }
 }
@@ -1781,14 +1946,15 @@ function verlaufAnzeigen(){
 let paletteAktiv = 0;
 function paletteBefehle(){
   return [
-    {ico:'＋', name:'Neue Notiz anlegen', tue:() => neueNotiz()},
+    {ico:'＋', name:'Neue Seite anlegen', tue:() => neueSeite(null)},
+    {ico:'📄', name:'Unterseite zur aktuellen Seite', tue:() => neueSeite(zustand.aktivId || null)},
+    {ico:'😀', name:'Symbol der Seite ändern', tue:() => { if(aktive()) iconWaehler(); else toast('Erst eine Seite öffnen'); }},
     {ico:'📅', name:'Tagesnotiz öffnen', tue:tagesnotiz},
     {ico:'🕸', name:'Graph-Ansicht öffnen', tue:oeffneGraph},
     {ico:'◐', name:'Hell/Dunkel umschalten', tue:themeWechseln},
     {ico:'⬇', name:'Backup exportieren (JSON)', tue:exportiereBackup},
     {ico:'⬆', name:'Backup importieren', tue:() => $('#importDatei').click()},
-    {ico:'📓', name:'Notizbuch anlegen', tue:notizbuchAnlegen},
-    {ico:'☑', name:'Aufgaben-Übersicht öffnen', tue:() => { zustand.filter={art:'aufgaben',wert:null}; $('#app').classList.remove('ansicht-editor'); renderAlles(); }},
+    {ico:'☑', name:'Aufgaben-Übersicht öffnen', tue:() => { zustand.filter={art:'aufgaben',wert:null}; zeigeListe(); renderAlles(); }},
     {ico:'🎞', name:'Präsentation starten (Folien: ---)', tue:buehneStarten},
     {ico:'◎', name:'Fokusmodus umschalten', tue:fokusUmschalten},
     {ico:'⌨', name:'Schreibmaschinenmodus umschalten', tue:typewriterUmschalten},
@@ -1797,7 +1963,7 @@ function paletteBefehle(){
     {ico:'📦', name:'Als App exportieren (HTML mit allen Daten)', tue:appExportieren},
     {ico:'🔒', name:'Tresor: Verschlüsselung', tue:tresorDialog},
     {ico:'🧹', name:'Papierkorb leeren', tue:papierkorbLeeren},
-    {ico:'🗑', name:'Papierkorb anzeigen', tue:() => { zustand.filter={art:'papierkorb',wert:null}; renderAlles(); }},
+    {ico:'🗑', name:'Papierkorb anzeigen', tue:() => { zustand.filter={art:'papierkorb',wert:null}; zeigeListe(); renderAlles(); }},
   ];
 }
 function oeffnePalette(){
@@ -2421,12 +2587,13 @@ function notizDuplizieren(){
   const t = Date.now();
   let titel = n.title || 'Ohne Titel';
   if(!titel.endsWith('(Kopie)') && !titel.startsWith('(Kopie)')) titel += ' (Kopie)';
-  const kopie = { id:neueId(), title:titel, body:n.body, hist:[], tasks:aufgabenZaehlen(n.body),
-    nb:n.nb, pinned:false, archived:false, trashed:false, created:t, updated:t };
+  const kopie = { id:neueId(), title:titel, body:n.body, icon:n.icon||'📄', parent:n.parent||null, pos:naechstePos(n.parent||null),
+    hist:[], tasks:aufgabenZaehlen(n.body),
+    pinned:false, archived:false, trashed:false, created:t, updated:t };
   db.notes.unshift(kopie);
   speichern(); renderSeitenleiste();
   oeffneNotiz(kopie.id);
-  toast('Notiz dupliziert');
+  toast('Seite dupliziert');
 }
 function papierkorbLeeren(){
   const anzahl = db.notes.filter(n => n.trashed).length;
@@ -2513,24 +2680,48 @@ function tresorAufheben(){
     });
 }
 
-/* ── Notizbücher ──────────────────────────────────────────────── */
-function notizbuchAnlegen(){
-  dialogEingabe('Neues Notizbuch','Name des Notizbuchs','', 'Anlegen', name => {
-    db.notebooks.push({id:neueId(), name});
-    speichern(); renderSeitenleiste(); renderEditor(); toast(`Notizbuch „${name}" angelegt 📓`);
-  });
+/* ── Seiten-Menü (Kontextmenü im Baum) ────────────────────────── */
+function seitenMenue(id){
+  const n = notiz(id); if(!n) return;
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>${n.icon||'📄'} ${escapeHtml(n.title||'Ohne Titel')}</h3>
+    <div class="reihe" style="flex-direction:column;align-items:stretch;gap:6px">
+      <button class="knopf leer" data-m="oeffnen" style="text-align:left">📂 Öffnen</button>
+      <button class="knopf leer" data-m="unter" style="text-align:left">＋ Unterseite hinzufügen</button>
+      <button class="knopf leer" data-m="icon" style="text-align:left">😀 Symbol ändern</button>
+      <button class="knopf leer" data-m="umbenennen" style="text-align:left">✏️ Umbenennen</button>
+      <button class="knopf leer" data-m="duplizieren" style="text-align:left">⧉ Duplizieren</button>
+      <button class="knopf leer" data-m="loeschen" style="text-align:left;color:var(--fehler)">🗑 In den Papierkorb</button>
+    </div>
+    <div class="reihe" style="margin-top:var(--s3)"><button class="knopf leer" data-dlg="abbruch">Schließen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    const k = e.target.closest('[data-m],[data-dlg]'); if(!k) return;
+    const m = k.dataset.m; dialogZu();
+    if(m==='oeffnen') oeffneNotiz(id);
+    else if(m==='unter') neueSeite(id);
+    else if(m==='icon'){ oeffneNotiz(id); setTimeout(iconWaehler, 60); }
+    else if(m==='umbenennen') oeffneNotiz(id, true);
+    else if(m==='duplizieren'){ oeffneNotiz(id); notizDuplizieren(); }
+    else if(m==='loeschen') inPapierkorb(id);
+  };
 }
-function notizbuchMenue(id){
-  const nb = notizbuch(id); if(!nb) return;
-  dialogEingabe(`Notizbuch umbenennen — leer lassen + „Löschen" tippen zum Entfernen`, 'Neuer Name', nb.name, 'Übernehmen', wert => {
-    if(wert.toLowerCase()==='löschen'){
-      for(const n of db.notes) if(n.nb===id) n.nb=null;
-      db.notebooks = db.notebooks.filter(x => x.id!==id);
-      if(zustand.filter.art==='nb' && zustand.filter.wert===id) zustand.filter={art:'alle',wert:null};
-      toast('Notizbuch entfernt (Notizen bleiben erhalten)');
-    } else { nb.name = wert; }
-    speichern(); renderAlles();
-  });
+/* Emoji-Auswahl für die aktuelle Seite */
+const ICON_AUSWAHL = ['📄','📝','📅','📋','✅','⭐','🔥','💡','📌','📎','📁','📦','🎯','🚀','🧠','❤️','🎵','🎨','📚','🍎','☕','🌱','🏠','💼','🔧','🧾','📊','🗓️','🔬','🌍','✈️','🎓'];
+function iconWaehler(){
+  const n = aktive(); if(!n) return;
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>Symbol wählen</h3>
+    <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:var(--s3)">
+      ${ICON_AUSWAHL.map(e => `<button class="icon-opt" data-ico="${e}" style="font-size:22px;padding:6px;border-radius:8px">${e}</button>`).join('')}
+    </div>
+    <div class="reihe"><button class="knopf leer" data-dlg="abbruch">Abbrechen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    const k = e.target.closest('[data-ico],[data-dlg]'); if(!k) return;
+    if(k.dataset.ico){ n.icon = k.dataset.ico; n.updated = Date.now(); speichern(); renderSeitenbaum(); renderEditor(); }
+    dialogZu();
+  };
 }
 
 /* ── Farbschema ───────────────────────────────────────────────── */
@@ -2549,9 +2740,9 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if
 
 /* ── Ereignisse ───────────────────────────────────────────────── */
 // Seitenleiste
-$('#btnNeu').addEventListener('click', () => { neueNotiz(); sbZu(); });
+$('#btnNeu').addEventListener('click', () => { neueSeite(null); sbZu(); });
 $('#btnTagesnotiz').addEventListener('click', () => { tagesnotiz(); sbZu(); });
-$('#btnNbNeu').addEventListener('click', notizbuchAnlegen);
+$('#btnSuche').addEventListener('click', () => { oeffnePalette(); sbZu(); });
 $('#btnGraph').addEventListener('click', () => { oeffneGraph(); sbZu(); });
 $('#btnPalette').addEventListener('click', () => { oeffnePalette(); sbZu(); });
 $('#btnExport').addEventListener('click', exportiereBackup);
@@ -2564,23 +2755,26 @@ $('#importDatei').addEventListener('change', e => {
 $('#bereiche').addEventListener('click', e => {
   const k = e.target.closest('[data-bereich]'); if(!k) return;
   zustand.filter = {art:k.dataset.bereich, wert:null};
-  zustand.suche=''; $('#suche').value='';
-  $('#app').classList.remove('ansicht-editor');
+  zustand.suche=''; if($('#suche')) $('#suche').value='';
+  zeigeListe();
   renderAlles(); sbZu();
 });
-$('#notizbuecher').addEventListener('click', e => {
-  const k = e.target.closest('[data-nb]'); if(!k) return;
-  const id = k.dataset.nb;
-  if(zustand.filter.art==='nb' && zustand.filter.wert===id){ notizbuchMenue(id); return; }
-  zustand.filter = {art:'nb', wert:id};
-  $('#app').classList.remove('ansicht-editor');
-  renderAlles(); sbZu();
+// Seitenbaum: öffnen, aufklappen, Unterseite, Menü
+$('#seitenbaum').addEventListener('click', e => {
+  const klapp = e.target.closest('[data-klapp]');
+  if(klapp){ if(kinderVon(klapp.dataset.klapp).length) klappUm(klapp.dataset.klapp); return; }
+  const neu = e.target.closest('[data-neu-unter]');
+  if(neu){ e.stopPropagation(); neueSeite(neu.dataset.neuUnter); sbZu(); return; }
+  const menue = e.target.closest('[data-menue]');
+  if(menue){ e.stopPropagation(); seitenMenue(menue.dataset.menue); return; }
+  const oeff = e.target.closest('[data-oeffne]');
+  if(oeff){ oeffneNotiz(oeff.dataset.oeffne); sbZu(); return; }
 });
 $('#tagwolke').addEventListener('click', e => {
   const k = e.target.closest('[data-tag]'); if(!k) return;
   const t = k.dataset.tag;
   zustand.filter = (zustand.filter.art==='tag' && zustand.filter.wert===t) ? {art:'alle',wert:null} : {art:'tag',wert:t};
-  $('#app').classList.remove('ansicht-editor');
+  zeigeListe();
   renderAlles(); sbZu();
 });
 
@@ -2589,7 +2783,7 @@ function sbAuf(){ $('#app').classList.add('sb-offen'); }
 function sbZu(){ $('#app').classList.remove('sb-offen'); }
 $('#btnHamburger').addEventListener('click', sbAuf);
 $('#sbSchleier').addEventListener('click', sbZu);
-$('#btnZurueck').addEventListener('click', () => $('#app').classList.remove('ansicht-editor'));
+$('#btnZurueck').addEventListener('click', sbAuf);
 
 // Suche
 $('#suche').addEventListener('input', e => {
@@ -2619,15 +2813,15 @@ $('#captureFeld').addEventListener('keydown', e => {
   if(zustand.filter.art === 'tag') body += `\n\n#${zustand.filter.wert}`;   // Kontext-Tag
   const titel = text.split(/\s+/).slice(0, 7).join(' ').slice(0, 60);
   const t = Date.now();
-  const n = { id:neueId(), title:titel, body, hist:[], tasks:aufgabenZaehlen(body),
-    nb: zustand.filter.art==='nb' ? zustand.filter.wert : null,
+  const n = { id:neueId(), title:titel, body, icon:'📄', parent:null, pos:naechstePos(null),
+    hist:[], tasks:aufgabenZaehlen(body),
     pinned:false, archived:false, trashed:false, created:t, updated:t };
   db.notes.unshift(n);
   e.target.value = '';
   db.einstellungen.entwurf = '';
   speichern(); renderSeitenleiste(); renderListe();
   $('#listeInhalt').scrollTop = 0;
-  toast('Notiz erfasst ⚡');
+  toast('Seite erfasst ⚡');
 });
 
 // Liste (inkl. Aufgaben-Übersicht)
@@ -2647,7 +2841,10 @@ $('#listeInhalt').addEventListener('click', e => {
 $('#titelFeld').addEventListener('input', e => {
   const n = aktive(); if(!n) return;
   n.title = e.target.value; n.updated = Date.now();
-  speichern(); renderListe();
+  speichern(); renderListe(); renderSeitenbaum();
+  // Breadcrumb-Titel der aktuellen Seite live nachziehen (ohne Fokusverlust)
+  const crumb = $('#breadcrumb button[data-crumb="'+CSS.escape(n.id)+'"]');
+  if(crumb) crumb.innerHTML = (n.icon||'📄') + ' ' + escapeHtml(n.title || 'Ohne Titel');
 });
 $('#titelFeld').addEventListener('keydown', e => {
   if(e.key==='Enter'){ e.preventDefault(); $('#schreibfeld').focus(); }
@@ -2722,10 +2919,10 @@ function setzeModus(m){
 }
 
 // Fußzeile
-$('#nbWahl').addEventListener('change', e => {
-  const n = aktive(); if(!n) return;
-  n.nb = e.target.value || null; n.updated = Date.now();
-  speichern(); renderSeitenleiste(); renderListe();
+$('#seitenIcon').addEventListener('click', iconWaehler);
+$('#btnUnterseite').addEventListener('click', () => neueSeite(zustand.aktivId || null));
+$('#breadcrumb').addEventListener('click', e => {
+  const k = e.target.closest('[data-crumb]'); if(k) oeffneNotiz(k.dataset.crumb);
 });
 $('#btnPin').addEventListener('click', () => {
   const n = aktive(); if(!n) return;
@@ -2736,7 +2933,7 @@ $('#btnPin').addEventListener('click', () => {
 $('#btnArchiv').addEventListener('click', () => {
   const n = aktive(); if(!n) return;
   n.archived = !n.archived; n.updated = Date.now();
-  if(n.archived){ zustand.aktivId=null; $('#app').classList.remove('ansicht-editor'); }
+  if(n.archived){ zeigeListe(); zustand.filter={art:'alle',wert:null}; }
   speichern(); renderAlles();
   toast(n.archived ? 'Archiviert 📦' : 'Aus dem Archiv geholt');
 });
@@ -2783,7 +2980,7 @@ $('.lese-seite').addEventListener('click', e => {
   const tag = e.target.closest('[data-tag]');
   if(tag){
     zustand.filter = {art:'tag', wert:tag.dataset.tag};
-    $('#app').classList.remove('ansicht-editor');
+    zeigeListe();
     renderAlles();
     return;
   }
@@ -2918,6 +3115,10 @@ function start(){
   if(db.einstellungen.fokus){ $('#app').classList.add('fokus'); $('#btnFokus').style.color = 'var(--leit)'; }
   if(db.einstellungen.typewriter){ $('#app').classList.add('typewriter'); $('#btnTypewriter').style.color = 'var(--leit)'; }
   renderAlles();
+  // Notion-artig: beim Start die erste Seite öffnen (statt leerer Liste)
+  const erste = topSeiten()[0] || db.notes.find(n => !n.trashed && !n.archived);
+  if(erste) oeffneNotiz(erste.id);
+  else zeigeListe();
   speichern(true);
   zeigeSpeicherStatus('Bereit', false);
   sperrTimerNeu();
