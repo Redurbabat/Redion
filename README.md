@@ -1,8 +1,12 @@
-# ✒️ Tintenfass — deine eigene Notizen-App
+# 🔴 REDNOTEN — deine eigene Notizen-App
 
 **[➜ App öffnen: `index.html`](index.html)** — Datei im Browser öffnen, fertig.
 Keine Installation, kein Server, keine Anmeldung, keine Abhängigkeiten. Eine einzige HTML-Datei,
 komplett eigener Code. Alle Daten bleiben lokal in deinem Browser.
+
+REDNOTEN entstand aus der Analyse von **20 quelloffenen Notiz-Apps** (Quellcode unter
+[`PROJECTS/`](PROJECTS/)): Aus jeder wurden die besten Mechaniken studiert und
+abhängigkeitsfrei neu in einer Datei umgesetzt.
 
 > Tipp: Aktiviere GitHub Pages (Settings → Pages → Branch wählen), dann läuft die App
 > direkt unter deiner `github.io`-Adresse — auch auf dem Handy.

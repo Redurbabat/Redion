@@ -4,21 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="Tintenfass — lokale Notizen-App in einer Datei. Markdown, Wiki-Links, Backlinks, Graph, Tags, Notizbücher. Alle Daten bleiben im Browser.">
-<title>Tintenfass · Notizen</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%92%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<meta name="description" content="REDNOTEN — lokale Notizen-App in einer Datei. Markdown, Wiki-Links, Backlinks, Graph, Tags, Notizbücher. Alle Daten bleiben im Browser.">
+<title>REDNOTEN · Notizen</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23c02942'/%3E%3Ctext x='50' y='72' font-size='62' font-family='Georgia,serif' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
 <style>
 /* ══════════════ Design-Tokens: „Tinte & Papier" ══════════════ */
 :root{
-  --papier:#f4f0e8; --flaeche:#fdfbf7; --flaeche-2:#efeadf;
-  --tinte:#22303c; --tinte-schwach:#6b7684; --tinte-blass:#98a1ad;
-  --leit:#0e6e63; --leit-dunkel:#0a544c; --leit-hell:#e0efec; --leit-text:#0c5d54;
-  --akzent:#c77b2b; --akzent-hell:#f7ead8;
-  --fehler:#c0392b; --fehler-hell:#f9e5e2;
-  --rand:#e2dccf; --rand-stark:#cfc7b6;
-  --ruecken:#122e33; --ruecken-hell:#1b4048; --ruecken-text:#c8d8d6; --ruecken-blass:#7e9a98;
-  --auswahl:rgba(14,110,99,.12);
-  --code-bg:#eee9de;
+  /* REDNOTEN — „rotes Notizbuch": warmes Papier, Karmin-Leitfarbe, Bordeaux-Rücken */
+  --papier:#f5f1ea; --flaeche:#fdfaf5; --flaeche-2:#efe8dd;
+  --tinte:#2b2320; --tinte-schwach:#7a6f6a; --tinte-blass:#a99e97;
+  --leit:#c02942; --leit-dunkel:#9c1f34; --leit-hell:#f8e4e7; --leit-text:#a81f38;
+  --akzent:#c9852e; --akzent-hell:#f7ecd6;
+  --fehler:#b3261e; --fehler-hell:#f9e2df;
+  --rand:#e6ddd0; --rand-stark:#d4c9b8;
+  --ruecken:#2e1116; --ruecken-hell:#431a22; --ruecken-text:#e6d3d3; --ruecken-blass:#a98a8d;
+  --auswahl:rgba(192,41,66,.12);
+  --code-bg:#efe7db;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
   --r-klein:8px; --r-gross:14px; --r-rund:999px;
   --schatten:0 1px 3px rgba(34,48,60,.08);
@@ -31,15 +32,15 @@
   --ease-feder:cubic-bezier(.34,1.56,.64,1);
 }
 [data-theme="dark"]{
-  --papier:#131a20; --flaeche:#1a232b; --flaeche-2:#212c36;
-  --tinte:#dae3e7; --tinte-schwach:#8fa0ab; --tinte-blass:#64747f;
-  --leit:#3fb3a2; --leit-dunkel:#2c8579; --leit-hell:#183732; --leit-text:#5ecab9;
-  --akzent:#e0954a; --akzent-hell:#3a2c1a;
-  --fehler:#e06456; --fehler-hell:#3d211d;
-  --rand:#2a3641; --rand-stark:#3b4a57;
-  --ruecken:#0d1418; --ruecken-hell:#15242b; --ruecken-text:#b9cbc9; --ruecken-blass:#68807e;
-  --auswahl:rgba(63,179,162,.16);
-  --code-bg:#232e38;
+  --papier:#17110f; --flaeche:#1f1815; --flaeche-2:#291f1b;
+  --tinte:#ece2dd; --tinte-schwach:#a89a92; --tinte-blass:#7a6c64;
+  --leit:#e35d70; --leit-dunkel:#b83f52; --leit-hell:#3a1a1f; --leit-text:#f0899a;
+  --akzent:#e0a94a; --akzent-hell:#3a2c17;
+  --fehler:#e0685c; --fehler-hell:#3d1f1c;
+  --rand:#352824; --rand-stark:#4a3830;
+  --ruecken:#140a0b; --ruecken-hell:#241315; --ruecken-text:#e6cfcf; --ruecken-blass:#8a6d70;
+  --auswahl:rgba(227,93,112,.16);
+  --code-bg:#241b17;
   --schatten:0 1px 3px rgba(0,0,0,.3);
   --schatten-hoch:0 12px 40px rgba(0,0,0,.55);
 }
@@ -70,7 +71,8 @@ input,textarea,select{font:inherit;color:inherit}
 .marke .feder{
   width:34px;height:34px;border-radius:var(--r-klein);
   background:var(--leit); color:#fff; display:grid;place-items:center;
-  font-size:17px; box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);
+  font-family:var(--serif); font-size:20px; font-weight:700;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.28);
 }
 .marke h1{font-family:var(--serif);font-size:19px;font-weight:700;color:#fff;letter-spacing:.2px}
 .marke small{display:block;font-size:10.5px;color:var(--ruecken-blass);font-family:var(--sans);font-weight:400;letter-spacing:.4px;text-transform:uppercase}
@@ -577,8 +579,8 @@ input,textarea,select{font:inherit;color:inherit}
   <!-- ═══ Seitenleiste ═══ -->
   <aside class="sidebar" id="sidebar" aria-label="Navigation">
     <div class="marke">
-      <div class="feder" aria-hidden="true">✒</div>
-      <div><h1>Tintenfass</h1><small>Notizen · lokal</small></div>
+      <div class="feder" aria-hidden="true">R</div>
+      <div><h1>REDNOTEN</h1><small>Notizen · lokal</small></div>
     </div>
 
     <button class="sb-aktion primaer" id="btnNeu"><span class="ico">＋</span> Neue Notiz</button>
@@ -734,7 +736,7 @@ input,textarea,select{font:inherit;color:inherit}
 <div class="sperre" id="sperre" role="dialog" aria-label="Entsperren">
   <div class="kern">
     <div class="schloss" aria-hidden="true">🔒</div>
-    <h2>Tintenfass ist gesperrt</h2>
+    <h2>REDNOTEN ist gesperrt</h2>
     <p>Deine Notizen sind verschlüsselt. Gib dein Passwort ein, um sie zu öffnen.</p>
     <input type="password" id="sperrePasswort" placeholder="Passwort" autocomplete="current-password" aria-label="Passwort">
     <div class="fehler-text" id="sperreFehler"></div>
@@ -750,13 +752,13 @@ input,textarea,select{font:inherit;color:inherit}
 <script>
 'use strict';
 /* ════════════════════════════════════════════════════════════════
-   Tintenfass — lokale Notizen-App in einer Datei.
+   REDNOTEN — lokale Notizen-App in einer Datei.
    Daten liegen ausschließlich im localStorage dieses Browsers.
    ════════════════════════════════════════════════════════════════ */
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-const SPEICHER_KEY = 'tintenfass.v1';
+const SPEICHER_KEY = 'rednoten.v1';
 
 /* ── Datenhaltung ─────────────────────────────────────────────── */
 function neueId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
@@ -766,15 +768,15 @@ function beispielDaten(){
   const nbId = neueId();
   return { v:1, theme:'auto', notebooks:[{id:nbId,name:'Wissen'}], notes:[
     { id:neueId(), nb:null, pinned:true, archived:false, trashed:false, created:t, updated:t,
-      title:'Willkommen im Tintenfass',
-      body:`Schön, dass du da bist! **Tintenfass** ist deine lokale Notizen-App — eine einzige Datei, keine Cloud, keine Anmeldung. Alles bleibt in *diesem Browser*.
+      title:'Willkommen bei REDNOTEN',
+      body:`Schön, dass du da bist! **REDNOTEN** ist deine lokale Notizen-App — eine einzige Datei, keine Cloud, keine Anmeldung. Alles bleibt in *diesem Browser*.
 
 ## Was du hier kannst
 
 - **Markdown** schreiben — diese Notiz ist ein Beispiel dafür
 - [[Wiki-Links]] zwischen Notizen ziehen (tippe \`[[\` im Editor)
 - Aufgaben anlegen und in der Lesen-Ansicht abhaken:
-  - [x] Tintenfass öffnen
+  - [x] REDNOTEN öffnen
   - [ ] Erste eigene Notiz schreiben
   - [ ] Den 🕸 Graph unten links ansehen
 - Notizen mit #anleitung Schlagwörtern versehen
@@ -791,7 +793,7 @@ Alles liegt im \`localStorage\` deines Browsers. Sichern kannst du dreifach: **�
 > Tipp: Diese Notiz ist angepinnt 📌 — dadurch bleibt sie oben in der Liste. Mehr Kniffe stehen in der Notiz [[Tastenkürzel & Tricks]].`},
     { id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-1, updated:t-1,
       title:'Tastenkürzel & Tricks',
-      body:`Alle Kürzel auf einen Blick. Zurück zur Notiz [[Willkommen im Tintenfass]].
+      body:`Alle Kürzel auf einen Blick. Zurück zur Notiz [[Willkommen bei REDNOTEN]].
 
 | Kürzel | Wirkung |
 |---|---|
@@ -844,7 +846,7 @@ Im Suchfeld funktionieren \`tag:anleitung\`, \`nb:Wissen\`, \`ist:offen\`, \`ist
 - Existiert die Ziel-Notiz, wird der Link grün und öffnet sie per Klick.
 - Existiert sie *nicht*, erscheint er orange gestrichelt — ein Klick legt die Notiz an.
 
-Unter jeder Notiz siehst du in der Lesen-Ansicht die **Rückverweise** (Backlinks): welche anderen Notizen hierher zeigen. Probier es: unten verweist [[Willkommen im Tintenfass]] hierher.
+Unter jeder Notiz siehst du in der Lesen-Ansicht die **Rückverweise** (Backlinks): welche anderen Notizen hierher zeigen. Probier es: unten verweist [[Willkommen bei REDNOTEN]] hierher.
 
 Die 🕸 **Graph-Ansicht** unten links zeichnet das ganze Netz. #anleitung`},
   ]};
@@ -1637,7 +1639,7 @@ function ladeHerunter(name, inhalt, typ){
 }
 function exportiereBackup(){
   const stempel = new Date().toISOString().slice(0,10);
-  ladeHerunter(`tintenfass-backup-${stempel}.json`, JSON.stringify(db,null,2), 'application/json');
+  ladeHerunter(`rednoten-backup-${stempel}.json`, JSON.stringify(db,null,2), 'application/json');
   toast('Backup heruntergeladen ⬇');
 }
 function exportiereMd(){
@@ -2407,8 +2409,8 @@ async function appExportieren(){
   else { daten = JSON.stringify(db); }
   const insel = daten.replace(/</g, '\\u003C');
   const html = ORIGINAL_HTML.replace(INSEL_REGEX, (_, a, b) => a + insel + b);
-  const teil = decodeURIComponent((location.pathname.split('/').pop() || '')) || 'tintenfass.html';
-  const name = teil.endsWith('.html') ? teil : 'tintenfass.html';
+  const teil = decodeURIComponent((location.pathname.split('/').pop() || '')) || 'rednoten.html';
+  const name = teil.endsWith('.html') ? teil : 'rednoten.html';
   ladeHerunter(name, html, 'text/html');
   toast(KRYPTO.aktiv ? 'App exportiert — verschlüsselt 🔒' : 'App mit allen Notizen exportiert 📦');
 }
@@ -2924,7 +2926,7 @@ function start(){
 (function boot(){
   const roh = rohLaden();
   if(roh && roh.tresor){
-    document.title = 'Tintenfass 🔒';
+    document.title = 'REDNOTEN 🔒';
     const sperre = $('#sperre');
     sperre.classList.add('offen');
     $('#app').inert = true;   // Hintergrund für Tab/Klick/Enter unerreichbar
@@ -2939,7 +2941,7 @@ function start(){
       db = normalisieren(d);
       sperre.classList.remove('offen');
       $('#app').inert = false;
-      document.title = 'Tintenfass · Notizen';
+      document.title = 'REDNOTEN · Notizen';
       input.value = '';
       start();
     };
