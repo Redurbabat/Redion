@@ -256,6 +256,30 @@ input,textarea,select{font:inherit;color:inherit}
 .modus-vorschau .lese-seite{display:flex}
 .modus-split .schreib-seite,.modus-split .lese-seite{display:flex}
 .modus-split .schreib-seite{border-right:1px solid var(--rand)}
+/* ── Lokale KI ── */
+.ki-knopf{min-width:auto!important;padding:0 10px!important;font-size:12.5px;font-weight:600;color:var(--leit-text)!important}
+.ki-knopf:hover{background:var(--leit-hell)!important}
+.ki-label{display:block;font-size:11.5px;font-weight:700;color:var(--tinte-blass);
+  text-transform:uppercase;letter-spacing:.6px;margin:var(--s3) 0 4px}
+.ki-liste{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:var(--s2);max-height:120px;overflow:auto}
+.ki-modell{
+  padding:4px 10px;border-radius:var(--r-rund);border:1px solid var(--rand-stark);
+  background:var(--flaeche);font-size:12px;color:var(--tinte-schwach);
+}
+.ki-modell:hover{border-color:var(--leit);color:var(--leit-text)}
+.ki-status{font-size:12.5px;color:var(--tinte-schwach);min-height:20px;margin-bottom:var(--s3);white-space:pre-wrap;line-height:1.5}
+.ki-status.ki-ok{color:var(--leit-text)}
+.ki-status.ki-warn{color:var(--akzent)}
+.ki-status.ki-fehler{color:var(--fehler)}
+.ki-aktionen{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.ki-ausgabe{
+  border:1px solid var(--rand);border-radius:8px;background:var(--flaeche-2);
+  padding:var(--s3);font-size:13.5px;line-height:1.6;white-space:pre-wrap;
+  max-height:min(46vh,340px);overflow-y:auto;margin-bottom:var(--s3);min-height:80px;
+}
+.ki-ausgabe.ki-fehler{color:var(--fehler);font-size:12.5px}
+.ki-warte{color:var(--tinte-blass);font-style:italic}
+
 /* ── Datenbanken: Tabelle · Board · Galerie ── */
 .db-flaeche{
   padding:var(--s2) max(var(--s6),calc(50% - 460px)) var(--s5);
@@ -913,6 +937,8 @@ input,textarea,select{font:inherit;color:inherit}
         <button class="werkzeug" data-md="zitat" title="Zitat">❝</button>
         <button class="werkzeug" data-md="code" title="Code">‹›</button>
         <button class="werkzeug" data-md="wiki" title="Wiki-Link [[…]]">⧉</button>
+        <span class="trenner"></span>
+        <button class="werkzeug ki-knopf" id="btnKi" title="KI (Strg+J) — läuft lokal, kostenlos">🤖 KI</button>
         <div class="rechts">
           <span class="speicher-status" id="speicherStatus"><span class="punkt"></span><span id="speicherText">Bereit</span></span>
           <div class="modus-schalter" role="group" aria-label="Ansichtsmodus">
@@ -1997,13 +2023,19 @@ function dialogEingabe(titel, platzhalter, wert, okText, cb){
   $('#dialogSchleier').classList.add('offen');
   const input = $('#dlgInput');
   setTimeout(() => { input.focus(); input.select(); }, 30);
+  // Erst schließen, dann Rückruf — sonst würde ein im Rückruf geöffneter
+  // Folgedialog sofort wieder zugeklappt.
   box.onclick = e => {
     const k = e.target.closest('[data-dlg]'); if(!k) return;
-    if(k.dataset.dlg==='ok' && input.value.trim()) cb(input.value.trim());
+    const wert = input.value.trim();
+    const ok = k.dataset.dlg==='ok' && wert;
     dialogZu();
+    if(ok) cb(wert);
   };
   input.onkeydown = e => {
-    if(e.key==='Enter' && input.value.trim()){ cb(input.value.trim()); dialogZu(); }
+    if(e.key!=='Enter') return;
+    const wert = input.value.trim(); if(!wert) return;
+    dialogZu(); cb(wert);
   };
 }
 function dialogBestaetigen(titel, text, okText, cb, rot){
@@ -2181,6 +2213,9 @@ function paletteBefehle(){
   return [
     {ico:'＋', name:'Neue Seite anlegen', tue:() => neueSeite(null)},
     {ico:'📄', name:'Unterseite zur aktuellen Seite', tue:() => neueSeite(zustand.aktivId || null)},
+    {ico:'🤖', name:'KI: Text verbessern, übersetzen, zusammenfassen …', tue:kiMenue},
+    {ico:'✍️', name:'KI: frei etwas schreiben lassen', tue:kiSchreiben},
+    {ico:'⚙', name:'KI einrichten (Ollama, lokal & kostenlos)', tue:kiEinstellungen},
     {ico:'😀', name:'Symbol der Seite ändern', tue:() => { if(aktive()) iconWaehler(); else toast('Erst eine Seite öffnen'); }},
     {ico:'🖼', name:'Cover wählen / entfernen', tue:() => { if(aktive()) coverWaehler(); else toast('Erst eine Seite öffnen'); }},
     {ico:'🗂', name:'Datenbank auf dieser Seite anlegen', tue:() => { const n = aktive(); if(!n) toast('Erst eine Seite öffnen'); else if(n.datenbank) toast('Diese Seite ist schon eine Datenbank'); else dbNeu(n); }},
@@ -3168,6 +3203,7 @@ function setzeModus(m){
 }
 
 // Fußzeile
+$('#btnKi').addEventListener('mousedown', e => { e.preventDefault(); kiMenue(); });
 $('#seitenIcon').addEventListener('click', iconWaehler);
 $('#btnIconHinzu').addEventListener('click', iconWaehler);
 $('#btnCoverHinzu').addEventListener('click', () => coverSetzen(COVER_VORLAGEN[Math.floor(Math.random()*COVER_VORLAGEN.length)]));
@@ -3319,6 +3355,7 @@ addEventListener('keydown', e => {
   if(strg && e.shiftKey && e.key.toLowerCase()==='j'){ e.preventDefault(); fokusUmschalten(); return; }
   if(strg && e.shiftKey && e.key.toLowerCase()==='g'){ e.preventDefault(); typewriterUmschalten(); return; }
   if(strg && e.shiftKey && e.key.toLowerCase()==='l'){ e.preventDefault(); themeWechseln(); return; }
+  if(strg && e.key.toLowerCase()==='j' && !e.shiftKey){ e.preventDefault(); kiMenue(); return; }
   if(strg && (e.key.toLowerCase()==='k' || (e.key.toLowerCase()==='p' && !e.shiftKey))){ e.preventDefault(); oeffnePalette(); return; }
   if(strg && e.key.toLowerCase()==='n' && !e.shiftKey){ e.preventDefault(); neueSeite(null); return; }
   if(strg && e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); neueNotiz(); return; }
@@ -3562,6 +3599,8 @@ const LIVE_SLASH = [
   {g:'Basis', ico:'—',  name:'Trenner',           kw:'hr linie divider strich', tue:b=>{const hr=document.createElement('hr');const p=document.createElement('p');p.innerHTML='<br>';b.replaceWith(hr);hr.after(p);cursorAnDenAnfang(p);}},
   {g:'Einfügen', ico:'📅', name:'Heutiges Datum',  kw:'datum date heute', tue:b=>{textEinfuegen(new Date().toLocaleDateString('de-DE'));}},
   {g:'Einfügen', ico:'🗂', name:'Datenbank (Tabelle/Board)', kw:'datenbank database board kanban tabelle galerie', tue:b=>{ const n=aktive(); if(n && !n.datenbank) dbNeu(n); else toast('Diese Seite ist schon eine Datenbank'); }},
+  {g:'KI', ico:'🤖', name:'KI: Text bearbeiten', kw:'ki ai assistent verbessern uebersetzen zusammenfassen', tue:b=>{ setTimeout(kiMenue, 0); }},
+  {g:'KI', ico:'✍️', name:'KI: schreiben lassen', kw:'ki ai schreiben generieren text', tue:b=>{ setTimeout(kiSchreiben, 0); }},
   {g:'Einfügen', ico:'▦', name:'Tabelle',          kw:'table spalten', tue:b=>{b.textContent='';const md='| Spalte | Spalte |\n|---|---|\n|  |  |';const wrap=document.createElement('div');wrap.innerHTML=renderMd(md);b.replaceWith(...wrap.childNodes);liveSpeichern();liveRendern(aktive());}},
 ];
 const liveSlash = { offen:false, aktiv:0, eintraege:[], block:null, start:0 };
@@ -4372,6 +4411,286 @@ function dbAuswahlMenue(rowId, propId, ankerEl){
     }
     ziehKarte = null; ziehArt = null;
     renderDatenbank();
+  });
+}
+
+/* ══════════════ Lokale KI — kostenlos, ohne API-Schlüssel ══════════════
+   Spricht Ollama (http://localhost:11434) oder jeden OpenAI-kompatiblen
+   lokalen Server (LM Studio, llama.cpp, Jan, GPT4All) an. Es verlässt
+   nichts das Gerät: Anfrage geht nur an deinen eigenen Rechner. */
+
+const KI_STANDARD = { server:'http://localhost:11434', modell:'', art:'ollama' };
+function kiKonf(){
+  if(!db.einstellungen.ki) db.einstellungen.ki = { ...KI_STANDARD };
+  return db.einstellungen.ki;
+}
+function kiBasis(){ return (kiKonf().server || KI_STANDARD.server).replace(/\/+$/,''); }
+
+/* Modelle auflisten — Ollama: /api/tags, OpenAI-kompatibel: /v1/models */
+async function kiModelle(){
+  const k = kiKonf();
+  if(k.art === 'ollama'){
+    const r = await fetch(kiBasis() + '/api/tags');
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    return (d.models || []).map(m => m.name || m.model).filter(Boolean);
+  }
+  const r = await fetch(kiBasis() + '/v1/models');
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  return (d.data || []).map(m => m.id).filter(Boolean);
+}
+
+/* Chat mit Streaming. beiStueck(text) wird pro Textstück gerufen. */
+async function kiChat(nachrichten, beiStueck, abbruch){
+  const k = kiKonf();
+  const modell = k.modell || 'llama3.2';
+  const ollama = k.art === 'ollama';
+  const url = kiBasis() + (ollama ? '/api/chat' : '/v1/chat/completions');
+  const body = ollama
+    ? { model: modell, messages: nachrichten, stream: true }
+    : { model: modell, messages: nachrichten, stream: true };
+
+  const antwort = await fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body), signal: abbruch,
+  });
+  if(!antwort.ok){
+    const txt = await antwort.text().catch(() => '');
+    throw new Error(`Server antwortete mit HTTP ${antwort.status}. ${txt.slice(0,200)}`);
+  }
+  const leser = antwort.body.getReader();
+  const dec = new TextDecoder();
+  let puffer = '', gesamt = '';
+  while(true){
+    const { value, done } = await leser.read();
+    if(done) break;
+    puffer += dec.decode(value, { stream:true });
+    const zeilen = puffer.split('\n');
+    puffer = zeilen.pop();                       // letzte, evtl. unvollständige Zeile behalten
+    for(let z of zeilen){
+      z = z.trim(); if(!z) continue;
+      if(z.startsWith('data:')) z = z.slice(5).trim();   // SSE (OpenAI-kompatibel)
+      if(z === '[DONE]') continue;
+      let obj; try{ obj = JSON.parse(z); }catch(e){ continue; }
+      const stueck = ollama
+        ? (obj.message && obj.message.content) || obj.response || ''
+        : (obj.choices && obj.choices[0] && (obj.choices[0].delta?.content ?? obj.choices[0].message?.content)) || '';
+      if(stueck){ gesamt += stueck; if(beiStueck) beiStueck(stueck, gesamt); }
+      if(obj.done === true) break;
+    }
+  }
+  return gesamt;
+}
+
+function kiFehlerText(e){
+  const s = String(e && e.message || e);
+  if(/Failed to fetch|NetworkError|Load failed|ERR_/i.test(s)){
+    return 'Keine Verbindung zur lokalen KI.\n\n' +
+      '1) Läuft Ollama? Im Terminal prüfen: ollama serve\n' +
+      '2) Ist ein Modell da? z. B.: ollama pull llama3.2\n' +
+      '3) Zugriff aus dem Browser erlauben (einmalig, dann Ollama neu starten):\n' +
+      '   Windows (als Administrator): setx OLLAMA_ORIGINS "*" /M\n' +
+      '   macOS: launchctl setenv OLLAMA_ORIGINS "*"\n' +
+      '   Linux: systemctl edit ollama  →  Environment="OLLAMA_ORIGINS=*"\n' +
+      '   Danach Ollama komplett beenden und neu starten.';
+  }
+  return 'Die KI meldete: ' + s;
+}
+
+/* ── Einstellungs-Dialog ── */
+function kiEinstellungen(){
+  const k = kiKonf();
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>🤖 Lokale KI einrichten</h3>
+    <p>Kostenlos und ohne Anmeldung: Die KI läuft auf <b>deinem</b> Rechner.
+    Empfohlen ist <b>Ollama</b> (ollama.com) mit z. B. <code>ollama pull llama3.2</code>.</p>
+    <label class="ki-label">Art des Servers</label>
+    <div class="reihe" style="justify-content:flex-start;gap:6px;margin-bottom:var(--s3)">
+      <button class="knopf leer" data-art="ollama" ${k.art==='ollama'?'style="border-color:var(--leit);color:var(--leit-text)"':''}>Ollama</button>
+      <button class="knopf leer" data-art="openai" ${k.art==='openai'?'style="border-color:var(--leit);color:var(--leit-text)"':''}>OpenAI-kompatibel</button>
+    </div>
+    <label class="ki-label">Adresse des Servers</label>
+    <input type="text" id="kiServer" value="${escapeAttr(k.server||'')}" placeholder="http://localhost:11434">
+    <label class="ki-label">Modell</label>
+    <div class="reihe" style="gap:6px;margin-bottom:var(--s2)">
+      <input type="text" id="kiModell" value="${escapeAttr(k.modell||'')}" placeholder="z. B. llama3.2" style="flex:1;margin:0">
+      <button class="knopf leer" id="kiLaden">Modelle laden</button>
+    </div>
+    <div id="kiListe" class="ki-liste"></div>
+    <div id="kiStatus" class="ki-status"></div>
+    <div class="reihe">
+      <button class="knopf leer" data-dlg="abbruch">Schließen</button>
+      <button class="knopf voll" id="kiTest">Verbindung testen</button>
+    </div>`;
+  $('#dialogSchleier').classList.add('offen');
+
+  const status = (text, art) => {
+    const el = $('#kiStatus');
+    el.textContent = text;
+    el.className = 'ki-status' + (art ? ' ki-' + art : '');
+  };
+  const sichern = () => {
+    k.server = $('#kiServer').value.trim() || KI_STANDARD.server;
+    k.modell = $('#kiModell').value.trim();
+    speichern();
+  };
+  box.onclick = async e => {
+    const art = e.target.closest('[data-art]');
+    if(art){ k.art = art.dataset.art; sichern(); kiEinstellungen(); return; }
+    if(e.target.closest('[data-dlg]')){ sichern(); dialogZu(); return; }
+    if(e.target.id === 'kiLaden'){
+      sichern(); status('Suche Modelle …');
+      try{
+        const liste = await kiModelle();
+        if(!liste.length){ status('Verbunden, aber kein Modell installiert. Hole eines mit: ollama pull llama3.2', 'warn'); return; }
+        $('#kiListe').innerHTML = liste.map(m =>
+          `<button class="ki-modell" data-modell="${escapeAttr(m)}">${escapeHtml(m)}</button>`).join('');
+        status(`${liste.length} Modell${liste.length>1?'e':''} gefunden — eins auswählen.`, 'ok');
+      }catch(err){ status(kiFehlerText(err), 'fehler'); }
+      return;
+    }
+    const mw = e.target.closest('[data-modell]');
+    if(mw){ $('#kiModell').value = mw.dataset.modell; sichern(); status('Modell gewählt: ' + mw.dataset.modell, 'ok'); return; }
+    if(e.target.id === 'kiTest'){
+      sichern();
+      if(!k.modell){ status('Bitte zuerst ein Modell eintragen oder laden.', 'warn'); return; }
+      status('Teste …');
+      try{
+        const a = await kiChat([{role:'user', content:'Antworte nur mit dem Wort: bereit'}], null);
+        status('Verbindung steht ✓  Antwort: ' + (a||'').trim().slice(0,60), 'ok');
+      }catch(err){ status(kiFehlerText(err), 'fehler'); }
+    }
+  };
+}
+
+/* ── KI-Aktionen auf Text ── */
+const KI_AKTIONEN = [
+  { id:'verbessern',  name:'Schreibstil verbessern', anweisung:'Verbessere den folgenden Text sprachlich. Behalte Sprache, Sinn und Format bei. Antworte NUR mit dem überarbeiteten Text.' },
+  { id:'rechtschreibung', name:'Rechtschreibung & Grammatik', anweisung:'Korrigiere Rechtschreibung und Grammatik im folgenden Text. Ändere sonst nichts. Antworte NUR mit dem korrigierten Text.' },
+  { id:'kuerzen',     name:'Kürzer fassen', anweisung:'Fasse den folgenden Text deutlich kürzer, ohne wichtige Inhalte zu verlieren. Antworte NUR mit dem gekürzten Text.' },
+  { id:'verlaengern', name:'Ausführlicher schreiben', anweisung:'Schreibe den folgenden Text ausführlicher und anschaulicher. Antworte NUR mit dem neuen Text.' },
+  { id:'zusammen',    name:'Zusammenfassen', anweisung:'Fasse den folgenden Text in wenigen Stichpunkten zusammen. Antworte NUR mit der Zusammenfassung als Markdown-Liste.' },
+  { id:'einfach',     name:'Einfacher erklären', anweisung:'Erkläre den folgenden Text in einfacher, verständlicher Sprache. Antworte NUR mit dem neuen Text.' },
+  { id:'formell',     name:'Förmlicher Ton', anweisung:'Formuliere den folgenden Text in förmlichem, sachlichem Ton. Antworte NUR mit dem neuen Text.' },
+  { id:'locker',      name:'Lockerer Ton', anweisung:'Formuliere den folgenden Text in lockerem, freundlichem Ton. Antworte NUR mit dem neuen Text.' },
+  { id:'englisch',    name:'Ins Englische übersetzen', anweisung:'Übersetze den folgenden Text ins Englische. Antworte NUR mit der Übersetzung.' },
+  { id:'deutsch',     name:'Ins Deutsche übersetzen', anweisung:'Übersetze den folgenden Text ins Deutsche. Antworte NUR mit der Übersetzung.' },
+  { id:'aufgaben',    name:'Aufgabenliste daraus machen', anweisung:'Leite aus dem folgenden Text eine Aufgabenliste ab. Antworte NUR mit Markdown-Zeilen der Form "- [ ] Aufgabe".' },
+];
+
+function kiAuswahlText(){
+  const sel = getSelection();
+  const t = sel && sel.toString ? sel.toString() : '';
+  if(t.trim()) return { text:t, range: sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null };
+  const n = aktive();
+  return { text: n ? n.body : '', range: null };
+}
+
+let kiLaeuft = null;
+async function kiAktionAusfuehren(aktion, quelle){
+  const k = kiKonf();
+  if(!k.modell){ toast('Bitte zuerst die KI einrichten (Strg+K → KI)'); kiEinstellungen(); return; }
+  const text = (quelle && quelle.text || '').trim();
+  if(!text){ toast('Kein Text vorhanden'); return; }
+
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>🤖 ${escapeHtml(aktion.name)}</h3>
+    <div class="ki-ausgabe" id="kiAusgabe"><span class="ki-warte">Die KI denkt nach …</span></div>
+    <div class="reihe">
+      <button class="knopf leer" id="kiStopp">Abbrechen</button>
+      <button class="knopf leer" id="kiKopieren">Kopieren</button>
+      <button class="knopf voll" id="kiEinsetzen">Einsetzen</button>
+    </div>`;
+  $('#dialogSchleier').classList.add('offen');
+  const ausgabe = $('#kiAusgabe');
+  const abbruch = new AbortController();
+  kiLaeuft = abbruch;
+  let ergebnis = '';
+
+  $('#kiStopp').onclick = () => { abbruch.abort(); dialogZu(); };
+  $('#kiKopieren').onclick = () => {
+    navigator.clipboard.writeText(ergebnis).then(() => toast('Kopiert'), () => toast('Kopieren nicht möglich'));
+  };
+  $('#kiEinsetzen').onclick = () => {
+    if(!ergebnis.trim()) return;
+    dialogZu();
+    kiTextEinsetzen(ergebnis.trim(), quelle);
+  };
+
+  try{
+    await kiChat([
+      { role:'system', content:'Du bist ein präziser Schreibassistent. Antworte immer in der Sprache des Nutzertexts und gib ausschließlich das Ergebnis zurück, ohne Vorrede.' },
+      { role:'user', content: aktion.anweisung + '\n\n---\n' + text },
+    ], (_, gesamt) => { ergebnis = gesamt; ausgabe.textContent = gesamt; ausgabe.scrollTop = ausgabe.scrollHeight; }, abbruch.signal);
+    if(!ergebnis.trim()) ausgabe.innerHTML = '<span class="ki-warte">Die KI hat nichts zurückgegeben.</span>';
+  }catch(err){
+    if(err.name === 'AbortError') return;
+    ausgabe.textContent = kiFehlerText(err);
+    ausgabe.classList.add('ki-fehler');
+  }finally{ kiLaeuft = null; }
+}
+
+function kiTextEinsetzen(text, quelle){
+  const n = aktive(); if(!n) return;
+  if(zustand.modus === 'live'){
+    const ed = $('#liveEditor');
+    ed.focus();
+    if(quelle && quelle.range){
+      const sel = getSelection();
+      sel.removeAllRanges(); sel.addRange(quelle.range);
+      quelle.range.deleteContents();
+    }
+    // Als Markdown gerendert einsetzen (mehrere Blöcke möglich)
+    const huelle = document.createElement('div');
+    huelle.innerHTML = renderMd(text);
+    const blockAktuell = aktuellerBlock();
+    const knoten = [...huelle.childNodes];
+    if(blockAktuell){ knoten.reverse().forEach(kn => blockAktuell.after(kn)); }
+    else knoten.forEach(kn => ed.appendChild(kn));
+    liveSpeichern();
+    liveRendern(aktive());
+  } else {
+    const feld = $('#schreibfeld');
+    const von = feld.selectionStart, bis = feld.selectionEnd;
+    if(von !== bis) feld.setRangeText(text, von, bis, 'end');
+    else feld.setRangeText('\n\n' + text, feld.value.length, feld.value.length, 'end');
+    feld.dispatchEvent(new Event('input'));
+  }
+  toast('Von der KI eingesetzt 🤖');
+}
+
+function kiMenue(){
+  const quelle = kiAuswahlText();
+  const hatAuswahl = !!(quelle.text && getSelection().toString().trim());
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>🤖 KI</h3>
+    <p>${hatAuswahl ? 'Angewendet auf den <b>markierten Text</b>.' : 'Angewendet auf die <b>ganze Seite</b>. Markiere Text für einen Ausschnitt.'}</p>
+    <div class="ki-aktionen">
+      ${KI_AKTIONEN.map(a => `<button class="knopf leer" data-ki="${a.id}" style="text-align:left">${escapeHtml(a.name)}</button>`).join('')}
+    </div>
+    <div class="reihe" style="margin-top:var(--s3)">
+      <button class="knopf leer" data-ki-schreiben="1">✍️ Frei schreiben lassen …</button>
+      <button class="knopf leer" data-ki-setup="1">⚙ Einrichten</button>
+      <button class="knopf leer" data-dlg="abbruch">Schließen</button>
+    </div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    const a = e.target.closest('[data-ki]');
+    if(a){ const akt = KI_AKTIONEN.find(x => x.id === a.dataset.ki); if(akt) kiAktionAusfuehren(akt, quelle); return; }
+    if(e.target.closest('[data-ki-schreiben]')){ kiSchreiben(); return; }
+    if(e.target.closest('[data-ki-setup]')){ kiEinstellungen(); return; }
+    if(e.target.closest('[data-dlg]')) dialogZu();
+  };
+}
+
+function kiSchreiben(){
+  dialogEingabe('✍️ Was soll die KI schreiben?', 'z. B. Gliederung für einen Projektplan', '', 'Schreiben', wunsch => {
+    const n = aktive();
+    kiAktionAusfuehren(
+      { id:'frei', name:'Frei geschrieben',
+        anweisung:'Schreibe auf Deutsch, gut formatiert in Markdown, zum folgenden Wunsch. Antworte NUR mit dem Text:' },
+      { text: wunsch + (n && n.title ? `\n\n(Kontext: Die Seite heißt „${n.title}".)` : ''), range:null });
   });
 }
 
