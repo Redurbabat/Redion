@@ -25,10 +25,24 @@ Klick öffnet das Blockmenü (nach oben/unten, duplizieren, löschen), `＋` fü
 
 **Cover & Symbole:** Jede Seite bekommt ein Emoji-Symbol und ein Cover (12 Farbverläufe).
 
-**🗂 Datenbanken:** Jede Seite kann eine Datenbank sein — mit **Tabelle**, **Board (Kanban)**
-und **Galerie**. Eigenschaften: Text, Auswahl, Datum, Zahl, Kontrollkästchen. Karten lassen
-sich im Board per Drag-and-Drop zwischen Spalten ziehen, Spalten sortieren, Einträge filtern.
-Anlegen über `/` → „Datenbank" oder die Befehlspalette.
+**🗂 Datenbanken:** Jede Seite kann eine Datenbank sein — mit **Tabelle**, **Board (Kanban)**,
+**Galerie**, **Kalender** und **Timeline**. Eigenschaften: Text, Auswahl, Datum, Zahl,
+Kontrollkästchen — dazu **Verknüpfungen** zu anderen Datenbanken, **Rollups** (Anzahl, Summe,
+Mittelwert, Prozent erledigt …) und **Formeln** mit eigenem sicheren Rechner
+(`wenn([Erledigt]; "fertig"; "offen")`, `[Preis] * [Menge]`, `tage(a; b)` …).
+Karten per Drag-and-Drop zwischen Board-Spalten oder Kalendertagen ziehen, sortieren, filtern.
+
+**🤖 Lokale KI — kostenlos, ohne Schlüssel:** REDNOTEN spricht **Ollama** (oder jeden
+OpenAI-kompatiblen lokalen Server wie LM Studio, llama.cpp, Jan) auf deinem eigenen Rechner an.
+Nichts geht ins Internet. 11 Aktionen auf markiertem Text — Stil verbessern, Rechtschreibung,
+kürzen, zusammenfassen, übersetzen, Ton ändern, Aufgabenliste ableiten — plus freies Schreiben.
+Antworten erscheinen live. Einrichten mit `Strg+J` → *Einrichten*.
+
+**🖼 Bilder · 💬 Randnotizen:** Bilder per Auswahl oder Hineinziehen einfügen (werden lokal
+verkleinert, nichts wird hochgeladen). Randnotizen zu markierten Stellen im Seitenpanel.
+
+**📋 Projekt-Doku in der App:** Die Seiten *Aufträge & Fortschritt* (Board mit fertig / offen /
+geht nicht) und *Arbeitsweise* sind direkt in REDNOTEN — jederzeit über die Befehlspalette.
 
 **Darstellung:** Schriftart (Standard / Serif / Monospace) und volle Breite umschaltbar.
 **Favoriten** liegen oben in der Seitenleiste.
