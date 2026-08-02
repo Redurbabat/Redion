@@ -307,7 +307,25 @@ input,textarea,select{font:inherit;color:inherit}
 .ki-status.ki-ok{color:var(--leit-text)}
 .ki-status.ki-warn{color:var(--akzent)}
 .ki-status.ki-fehler{color:var(--fehler)}
+.ki-neben{font-weight:400;text-transform:none;letter-spacing:0;color:var(--tinte-blass)}
 .ki-aktionen{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+
+/* Abgleich: kleiner Anzeiger im Editor-Kopf */
+.sync-status{
+  display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;
+  border:1px solid var(--rand);border-radius:var(--r-rund);background:var(--flaeche);
+  font-size:11.5px;font-weight:600;color:var(--tinte-blass);white-space:nowrap;
+  max-width:150px;overflow:hidden;text-overflow:ellipsis;
+}
+/* muss sein: das eigene display schlägt sonst das eingebaute [hidden] */
+.sync-status[hidden]{display:none}
+.sync-status:hover{border-color:var(--rand-stark);color:var(--tinte-schwach)}
+.sync-status[data-zustand="live"]{color:var(--leit-text);border-color:var(--leit-hell);background:var(--leit-hell)}
+.sync-status[data-zustand="fehler"]{color:var(--fehler);border-color:var(--fehler)}
+.sync-warn{
+  border:1px solid var(--akzent);border-radius:8px;background:var(--flaeche-2);
+  padding:10px var(--s3);font-size:12.5px;line-height:1.55;margin-bottom:var(--s3);
+}
 .ki-ausgabe{
   border:1px solid var(--rand);border-radius:8px;background:var(--flaeche-2);
   padding:var(--s3);font-size:13.5px;line-height:1.6;white-space:pre-wrap;
@@ -999,6 +1017,7 @@ input,textarea,select{font:inherit;color:inherit}
         <button class="werkzeug ki-knopf" id="btnKi" title="KI (Strg+J) — läuft lokal, kostenlos">🤖 KI</button>
         <div class="rechts">
           <span class="speicher-status" id="speicherStatus"><span class="punkt"></span><span id="speicherText">Bereit</span></span>
+          <button class="sync-status" id="syncStatus" hidden title="Abgleich"><span id="syncText">⇅</span></button>
           <div class="modus-schalter" role="group" aria-label="Ansichtsmodus">
             <button data-modus="live" aria-pressed="true" title="Direkt formatiert bearbeiten (wie Notion)">Bearbeiten</button>
             <button data-modus="edit" aria-pressed="false" title="Markdown-Rohtext">Markdown</button>
@@ -1142,7 +1161,7 @@ function beispielDaten(){
   const t = Date.now();
   const nbId = neueId();
   return { v:1, theme:'auto', notebooks:[{id:nbId,name:'Wissen'}], notes:[
-    { id:neueId(), nb:null, pinned:true, archived:false, trashed:false, created:t, updated:t,
+    { beispiel:true, id:neueId(), nb:null, pinned:true, archived:false, trashed:false, created:t, updated:t,
       title:'Willkommen bei REDNOTEN',
       body:`Schön, dass du da bist! **REDNOTEN** ist deine lokale Notizen-App — eine einzige Datei, keine Cloud, keine Anmeldung. Alles bleibt in *diesem Browser*.
 
@@ -1166,7 +1185,7 @@ function beispielDaten(){
 Alles liegt im \`localStorage\` deines Browsers. Sichern kannst du dreifach: **⬇ JSON-Backup**, **📄 Markdown je Notiz** oder über die Palette **„Als App exportieren"** — dann bekommst du diese komplette App samt deiner Notizen als eine Datei. Mit **🔒 Tresor** verschlüsselst du alles per Passwort.
 
 > Tipp: Diese Notiz ist angepinnt 📌 — dadurch bleibt sie oben in der Liste. Mehr Kniffe stehen in der Notiz [[Tastenkürzel & Tricks]].`},
-    { id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-1, updated:t-1,
+    { beispiel:true, id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-1, updated:t-1,
       title:'Tastenkürzel & Tricks',
       body:`Alle Kürzel auf einen Blick. Zurück zur Notiz [[Willkommen bei REDNOTEN]].
 
@@ -1199,7 +1218,7 @@ Im Suchfeld funktionieren \`tag:anleitung\`, \`nb:Wissen\`, \`ist:offen\`, \`ist
 - **☑ Aufgaben** in der Seitenleiste sammelt alle offenen \`- [ ]\` aus allen Notizen; dort hakst du sie direkt ab.
 - **⏱ Verlauf** unten im Editor zeigt alte Stände jeder Notiz und stellt sie wieder her.
 - **🎞 Präsentation** macht aus der Notiz Folien — getrennt durch \`---\`. #anleitung`},
-    { id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-3, updated:t-3,
+    { beispiel:true, id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-3, updated:t-3,
       title:'Vorlage: Besprechung',
       body:`#vorlage
 
@@ -1214,7 +1233,7 @@ Im Suchfeld funktionieren \`tag:anleitung\`, \`nb:Wissen\`, \`ist:offen\`, \`ist
 ### Beschlüsse
 
 - [ ] `},
-    { id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-2, updated:t-2,
+    { beispiel:true, id:neueId(), nb:nbId, pinned:false, archived:false, trashed:false, created:t-2, updated:t-2,
       title:'Wiki-Links',
       body:`Ein **Wiki-Link** verbindet zwei Notizen: einfach \`[[\` tippen, dann schlägt der Editor Titel vor.
 
@@ -1235,6 +1254,17 @@ const INSEL_REGEX = new RegExp('(<scr' + 'ipt id="datenInsel"[^>]*>)[\\s\\S]*?(<
 function normalisieren(d){
   d.notebooks = Array.isArray(d.notebooks) ? d.notebooks : [];
   d.notes = Array.isArray(d.notes) ? d.notes : [];
+  d.bilder = (d.bilder && typeof d.bilder === 'object') ? d.bilder : {};
+  // Grabsteine: id → Löschzeitpunkt. Nötig für den Abgleich — ohne sie
+  // käme eine gelöschte Seite vom nächsten Gerät fröhlich zurück.
+  d.geloescht = (d.geloescht && typeof d.geloescht === 'object') ? d.geloescht : {};
+  // Grabsteine nach einem halben Jahr vergessen — sonst wächst die Liste ewig
+  {
+    const zeiten = Object.values(d.geloescht).map(Number).filter(Number.isFinite)
+      .concat(d.notes.map(n => +n.updated || 0));
+    const grenze = (zeiten.length ? Math.max(...zeiten) : Date.now()) - 180*24*3600*1000;
+    for(const [k, v] of Object.entries(d.geloescht)) if(!((+v||0) > grenze)) delete d.geloescht[k];
+  }
   d.theme = d.theme || 'auto';
   d.einstellungen = Object.assign({fokus:false, typewriter:false, syncScroll:true, entwurf:'',
     eingeklappt:[], schrift:'standard', vollbreite:false}, d.einstellungen||{});
@@ -1386,6 +1416,7 @@ function speichern(sofort){
         localStorage.setItem(SPEICHER_KEY, JSON.stringify(db));
       }
       zeigeSpeicherStatus('Gespeichert', true);
+      syncAnstupsen();
     }catch(e){
       if(e && e.name === 'QuotaExceededError'){
         // Speicher voll → Verläufe halbieren und erneut versuchen
@@ -2064,6 +2095,7 @@ function inPapierkorb(id){
   const n = notiz(id); if(!n) return;
   if(n.trashed){
     dialogBestaetigen('Endgültig löschen?', `„${n.title||'Ohne Titel'}" wird unwiderruflich gelöscht.`, 'Endgültig löschen', () => {
+      grabstein(id);
       db.notes = db.notes.filter(x => x.id!==id);
       if(zustand.aktivId===id) zustand.aktivId=null;
       speichern(true); renderAlles(); toast('Notiz gelöscht');
@@ -2292,6 +2324,8 @@ function paletteBefehle(){
     {ico:'🤖', name:'KI: Text verbessern, übersetzen, zusammenfassen …', tue:kiMenue},
     {ico:'✍️', name:'KI: frei etwas schreiben lassen', tue:kiSchreiben},
     {ico:'⚙', name:'KI einrichten (Ollama, lokal & kostenlos)', tue:kiEinstellungen},
+    {ico:'⇅', name:'Abgleich einrichten (Handy & Laptop, eigener Server)', tue:syncDialog},
+    {ico:'⇅', name:'Jetzt abgleichen', tue:() => syncJetzt(false)},
     {ico:'😀', name:'Symbol der Seite ändern', tue:() => { if(aktive()) iconWaehler(); else toast('Erst eine Seite öffnen'); }},
     {ico:'🖼', name:'Cover wählen / entfernen', tue:() => { if(aktive()) coverWaehler(); else toast('Erst eine Seite öffnen'); }},
     {ico:'🗂', name:'Datenbank auf dieser Seite anlegen', tue:() => { const n = aktive(); if(!n) toast('Erst eine Seite öffnen'); else if(n.datenbank) toast('Diese Seite ist schon eine Datenbank'); else dbNeu(n); }},
@@ -2950,6 +2984,7 @@ function papierkorbLeeren(){
   if(!anzahl){ toast('Der Papierkorb ist leer'); return; }
   dialogBestaetigen('Papierkorb leeren?', `${anzahl} Notiz${anzahl>1?'en werden':' wird'} unwiderruflich gelöscht.`,
     'Endgültig löschen', () => {
+      for(const n of db.notes) if(n.trashed) grabstein(n.id);
       db.notes = db.notes.filter(n => !n.trashed);
       if(zustand.aktivId && !notiz(zustand.aktivId)) zustand.aktivId = null;
       speichern(true); renderAlles(); toast('Papierkorb geleert');
@@ -3283,6 +3318,7 @@ $('#btnKi').addEventListener('mousedown', e => { e.preventDefault(); kiMenue(); 
 $('#btnBild').addEventListener('click', () => $('#bildDatei').click());
 $('#bildDatei').addEventListener('change', e => { if(e.target.files[0]) bildEinfuegen(e.target.files[0]); e.target.value=''; });
 $('#btnKommentare').addEventListener('click', kommentarePanelUmschalten);
+$('#syncStatus').addEventListener('click', syncDialog);
 $('#kommentarPanel').addEventListener('click', e => {
   const n = aktive(); if(!n) return;
   if(e.target.closest('[data-kom-zu]')){ kommentarePanelUmschalten(); return; }
@@ -5236,9 +5272,19 @@ const PROJEKT_AUFTRAEGE = [
   ['Randnotizen (Kommentare)','Fertig','Editor','Seitenpanel; Anker zeigt an, ob die Textstelle noch existiert'],
   ['Bilder einfügen (lokal, ohne Server)','Fertig','Editor','Auswahl oder Hineinziehen; wird verkleinert, Text speichert nur bild:id'],
   ['Seiten im Baum per Drag-and-Drop umsortieren','Fertig','Struktur','Auf eine Seite ziehen = Unterseite; Schutz vor Kreisbezug'],
+  ['Ein Befehl fürs Terminal zum Starten','Fertig','Bedienung','PowerShell, cmd und Mac/Linux — lädt, startet, öffnet den Browser'],
+  ['Eigener Abgleich-Server, kostenlos','Fertig','Abgleich','server.py — nur Python-Standardbibliothek, kein Konto, kein Fremdanbieter'],
+  ['Handy und Laptop sehen dieselben Seiten','Fertig','Abgleich','Raum-Code eingeben, fertig; Server läuft im eigenen WLAN'],
+  ['Zusammenführen ohne Datenverlust','Fertig','Abgleich','Neuere Fassung gewinnt, die unterlegene wandert in den Verlauf'],
+  ['Löschungen bleiben gelöscht','Fertig','Abgleich','Grabsteine — sonst käme die Seite vom nächsten Gerät zurück'],
+  ['Sehen, wer gerade mitschreibt','Fertig','Abgleich','Anzeige im Kopf zählt die anderen im selben Raum'],
+  ['Beitritt ohne doppelte Beispielseiten','Fertig','Abgleich','Ein frisches Gerät wirft seine unberührten Startseiten weg; angefasste bleiben'],
+  ['Weiterschreiben, wenn der Server aus ist','Fertig','Abgleich','Die App merkt sich alles und reicht es nach, sobald er wieder da ist'],
+  ['Zu zweit gleichzeitig an einer Seite','Halb','Abgleich','Änderungen erscheinen in unter einer Sekunde — aber nicht Buchstabe für Buchstabe wie in Google Docs'],
   ['Kalender-/Timeline-Ansicht ausbauen (Wochen, Ressourcen)','Offen','Als Nächstes','Aktuell Monatsraster und Tagesbalken'],
-  ['Echtzeit-Zusammenarbeit mit anderen','Geht nicht','Grenzen','Bräuchte einen Server — widerspricht „alles lokal"'],
-  ['Team-Rechte, Gäste, Freigabe-Links','Geht nicht','Grenzen','Bräuchte Benutzerkonten und einen Server'],
+  ['Team-Rechte, Gäste, Freigabe-Links','Offen','Als Nächstes','Seit ein Server erlaubt ist grundsätzlich möglich — noch nicht gebaut'],
+  ['Abgleich über das offene Internet','Geht nicht','Grenzen','Der Server ist für dein eigenes Netz gedacht; öffentlich bräuchte er Konten, HTTPS und Härtung'],
+  ['Verschlüsselter Abgleich (Tresor über den Server)','Geht nicht','Grenzen','Auf dem Server lägen die Seiten offen — deshalb warnt die App, statt es stillschweigend zu tun'],
 ];
 
 const DOKU_ARBEITSWEISE = `Diese Seite beschreibt, **wie** gearbeitet wird — damit du jeden Schritt nachvollziehen kannst.
@@ -5294,7 +5340,7 @@ Jeder Auftrag durchläuft dieselben sechs Schritte. Nichts wird „ungefähr" ge
 3. **Ursache statt Symptom** — nicht das Sichtbare überkleben, sondern die Wurzel beheben.
 4. **Prüfen** — derselbe Test muss vorher fehlschlagen und nachher bestehen.
 
-### Drei echte Beispiele aus diesem Projekt
+### Fünf echte Beispiele aus diesem Projekt
 
 **Beispiel 1 — Aufgaben in Code-Blöcken wurden mitgezählt.**
 Die Zählung suchte \`- [ ]\` im ganzen Text, die Anzeige übersprang aber Code-Blöcke. Dadurch hakte ein Klick die *falsche* Zeile ab. Lösung: ein einziger gemeinsamer Zeilen-Scanner, den Zählung, Anzeige und Übersicht alle benutzen — damit können sie gar nicht mehr auseinanderlaufen.
@@ -5305,18 +5351,25 @@ Die Zählung suchte \`- [ ]\` im ganzen Text, die Anzeige übersprang aber Code-
 **Beispiel 3 — Eine Formel hätte fremde Funktionen aufrufen können.**
 Beim Formel-Rechner wurde der Funktionsname in einer Liste nachgeschlagen. Namen wie \`constructor\` stecken aber in *jedem* JavaScript-Objekt und wären mitgefunden worden. Lösung: nur noch ausdrücklich eigene Einträge zulassen. Gefunden hat das ein Test, der absichtlich Unsinn eingegeben hat.
 
+**Beispiel 4 — Eine Anzeige ließ sich nicht ausblenden.**
+Der Abgleich-Anzeiger im Kopf sollte verschwinden, wenn der Abgleich aus ist. Er blieb stehen. Ursache: Die eigene Regel \`display:inline-flex\` ist stärker als die eingebaute Regel für versteckte Elemente — die Anweisung „verstecke dich" wurde schlicht überstimmt. Lösung: eine Zeile, die für den versteckten Zustand ausdrücklich \`display:none\` setzt. Gefunden hat es ein Test, der nach dem Ausschalten *nachgesehen* hat, statt es anzunehmen.
+
+**Beispiel 5 — Gelöschte Seiten kamen zurück.**
+Beim Abgleich wurden Löschungen als „Grabstein" mit Zeitstempel gemerkt und nach einem halben Jahr aufgeräumt. Aufgeräumt wurde aber nach der **Uhr des Servers** statt nach den Zeiten in den Daten — bei abweichender Uhr flogen frische Grabsteine sofort raus und das nächste Gerät schob die gelöschte Seite wieder hoch. Lösung: an der jüngsten Zeit *in den Daten* messen. So ist es auch gegen falsch gestellte Uhren unempfindlich.
+
 ### Wenn etwas nicht geht
 
 - **Sagen, dass es nicht geht** — und warum. Kein Beschönigen.
-- Beispiel: Echtzeit-Zusammenarbeit braucht einen Server. Das widerspricht dem Versprechen „alles bleibt auf deinem Gerät". Deshalb steht es unter *Geht nicht*.
-- Wo möglich, wird die nächstbeste erreichbare Lösung angeboten.
+- Beispiel: Der Abgleich-Server ist für dein eigenes Netz gebaut. Ihn offen ins Internet zu stellen bräuchte Konten, HTTPS und Härtung — deshalb steht das unter *Geht nicht*, statt so zu tun, als wäre es sicher.
+- Zweites Beispiel: Läuft der Tresor, liegen die Seiten auf dem Abgleich-Server trotzdem **unverschlüsselt**. Die App sagt das im Einrichten-Fenster deutlich, statt es zu verschweigen.
+- Wo möglich, wird die nächstbeste erreichbare Lösung angeboten. „Zu zweit gleichzeitig schreiben" geht deshalb als *halb*: Änderungen sind in unter einer Sekunde da, aber nicht Buchstabe für Buchstabe.
 
 ## Grundsätze
 
-- **Deine Daten gehören dir** — nichts verlässt dein Gerät, auch die KI läuft bei dir.
-- **Nichts wird gelöscht**, worum du nicht gebeten hast.
+- **Deine Daten gehören dir** — nichts geht zu einem fremden Anbieter. Die KI läuft bei dir, und der Abgleich-Server ist deiner.
+- **Nichts wird gelöscht**, worum du nicht gebeten hast. Auch beim Abgleich nicht: Wo zwei Fassungen kollidieren, wandert die unterlegene in den Verlauf.
 - **Fertig heißt getestet** — nicht „müsste eigentlich gehen".
-- **Ehrlich berichten**, auch wenn das Ergebnis unbequem ist.`;
+- **Ehrlich berichten**, auch wenn das Ergebnis unbequem ist. Halb fertig heißt halb fertig.`;
 
 function dokuAnlegen(still){
   const t = Date.now();
@@ -5325,16 +5378,16 @@ function dokuAnlegen(still){
 
   // 1) Auftragsliste als Datenbank (Board nach Status)
   const seiteA = vorhandenA || { id:neueId(), title:'Aufträge & Fortschritt', body:'', icon:'📋', cover:null,
-    parent:null, pos:naechstePos(null), hist:[], tasks:{total:0,done:0},
+    parent:null, pos:naechstePos(null), hist:[], tasks:{total:0,done:0}, beispiel:true,
     pinned:true, archived:false, trashed:false, created:t, updated:t };
   seiteA.icon = '📋'; seiteA.pinned = true; seiteA.updated = t;
-  seiteA.body = 'Alle Aufträge aus unserem Verlauf — was fertig ist, was noch offen ist und was grundsätzlich nicht geht. Wechsle oben zwischen **Board**, **Tabelle** und **Galerie**.';
+  seiteA.body = 'Alle Aufträge aus unserem Verlauf — was **fertig** ist, was nur **halb** fertig ist, was noch **offen** ist und was grundsätzlich **nicht geht**. Wechsle oben zwischen **Board**, **Tabelle** und **Galerie**.';
   seiteA.datenbank = {
     ansicht:'board', gruppeNach:'status', sortNach:null, sortAb:false,
     props:[
       { id:'titel',  name:'Auftrag', typ:'text' },
-      { id:'status', name:'Status',  typ:'auswahl', optionen:['Fertig','Offen','Geht nicht'] },
-      { id:'bereich',name:'Bereich', typ:'auswahl', optionen:['Grundlage','Aussehen','Editor','Struktur','Datenbanken','KI','Suchen','Sicherheit','Bedienung','Als Nächstes','Grenzen'] },
+      { id:'status', name:'Status',  typ:'auswahl', optionen:['Fertig','Halb','Offen','Geht nicht'] },
+      { id:'bereich',name:'Bereich', typ:'auswahl', optionen:['Grundlage','Aussehen','Editor','Struktur','Datenbanken','KI','Abgleich','Suchen','Sicherheit','Bedienung','Als Nächstes','Grenzen'] },
       { id:'ergebnis',name:'Ergebnis', typ:'text' },
     ],
     rows: PROJEKT_AUFTRAEGE.map(([titel,status,bereich,ergebnis]) => ({
@@ -5345,7 +5398,7 @@ function dokuAnlegen(still){
 
   // 2) Arbeitsweise als normale Seite
   const seiteB = vorhandenB || { id:neueId(), title:'Arbeitsweise', body:'', icon:'🧭', cover:null,
-    parent:null, pos:naechstePos(null), hist:[], tasks:{total:0,done:0},
+    parent:null, pos:naechstePos(null), hist:[], tasks:{total:0,done:0}, beispiel:true,
     pinned:false, archived:false, trashed:false, created:t, updated:t };
   seiteB.icon = '🧭'; seiteB.updated = t;
   seiteB.body = DOKU_ARBEITSWEISE;
@@ -5430,7 +5483,7 @@ function bilderAufraeumen(){
   for(const n of db.notes)
     for(const m of String(n.body||'').matchAll(/\(bild:([a-z0-9]+)\)/g)) benutzt.add(m[1]);
   let weg = 0;
-  for(const id of Object.keys(s)) if(!benutzt.has(id)){ delete s[id]; weg++; }
+  for(const id of Object.keys(s)) if(!benutzt.has(id)){ delete s[id]; grabstein('bild:' + id); weg++; }
   if(weg){ speichern(); toast(`${weg} ungenutzte${weg>1?'':'s'} Bild${weg>1?'er':''} entfernt`); }
   else toast('Keine ungenutzten Bilder');
 }
@@ -5563,6 +5616,354 @@ function seiteVerschieben(quellId, zielId, wohin){
   });
 }
 
+/* ══════════════ Abgleich zwischen Geräten (server.py) ══════════════
+   Kostenlos und ohne Fremdanbieter: Der Server läuft auf deinem eigenen
+   Rechner (python3 server.py). Wer denselben Raum-Code eingibt, sieht
+   dieselben Seiten — Handy, Laptop, oder mehrere Leute gleichzeitig.
+
+   Zusammengeführt wird pro Seite nach Zeitstempel; Löschungen tragen einen
+   Grabstein, damit sie nicht zurückkommen. Kollidiert eine Bearbeitung,
+   wandert die unterlegene Fassung in den Verlauf der Seite — verloren geht
+   also nichts, es ist nur eine Fassung weiter hinten. */
+
+const SYNC_STANDARD = { an:false, server:'', raum:'', name:'' };
+const SYNC = { stand:0, ws:null, wsZu:null, ziehTimer:null, schiebTimer:null,
+               laeuft:false, leute:[], letzterFehler:'', kennung:neueId() };
+
+function syncKonf(){
+  if(!db.einstellungen.sync) db.einstellungen.sync = { ...SYNC_STANDARD };
+  return db.einstellungen.sync;
+}
+/* Leer gelassene Adresse heißt: derselbe Server, der die App ausliefert.
+   Das ist der Normalfall — dann muss man gar nichts eintippen. */
+function syncBasis(){
+  const s = (syncKonf().server || '').trim().replace(/\/+$/, '');
+  if(s) return s;
+  return /^https?:$/.test(location.protocol) ? location.origin : '';
+}
+function syncBereit(){ const k = syncKonf(); return !!(k.an && k.raum && syncBasis()); }
+function syncName(){ return (syncKonf().name || '').trim() || 'Gerät'; }
+
+function grabstein(id){
+  if(!db.geloescht) db.geloescht = {};
+  db.geloescht[id] = Date.now();
+}
+
+/* Fremde Seite auf das eigene Format bringen — ein anderes Gerät kann eine
+   ältere Fassung von REDNOTEN benutzen und Felder noch nicht kennen. */
+function seiteAusgleichen(n){
+  n.title = String(n.title ?? '');
+  n.body  = String(n.body ?? '');
+  if(!Array.isArray(n.hist)) n.hist = [];
+  if(!n.tasks) n.tasks = aufgabenZaehlen(n.body);
+  if(n.icon === undefined) n.icon = standardIcon(n);
+  if(n.cover === undefined) n.cover = null;
+  if(n.parent === undefined) n.parent = null;
+  if(typeof n.pos !== 'number') n.pos = 0;
+  n.updated = +n.updated || 0;
+  n.created = +n.created || n.updated || Date.now();
+  n.trashed = !!n.trashed; n.archived = !!n.archived; n.pinned = !!n.pinned;
+  return n;
+}
+
+/* ── Zusammenführen: fremde Fassung in die eigene einarbeiten ── */
+function syncVerschmelzen(fremd){
+  let veraendert = false, neueSeiten = 0, aktualisiert = 0, entfernt = 0, konflikte = 0;
+
+  // Grabsteine vereinen (jeweils der spätere Zeitpunkt gilt)
+  const graeber = Object.assign({}, db.geloescht || {});
+  for(const [id, zeit] of Object.entries(fremd.geloescht || {})){
+    if((+zeit||0) > (+graeber[id]||0)){ graeber[id] = +zeit||0; veraendert = true; }
+  }
+  db.geloescht = graeber;
+
+  const meine = new Map(db.notes.map(n => [n.id, n]));
+  for(const fremdN of (fremd.notes || [])){
+    if(!fremdN || typeof fremdN !== 'object' || !fremdN.id) continue;
+    if(!/^[a-z0-9]{1,40}$/i.test(String(fremdN.id))) continue;   // nur eigene ID-Form
+    seiteAusgleichen(fremdN);
+    const eigen = meine.get(fremdN.id);
+    if(!eigen){ meine.set(fremdN.id, fremdN); neueSeiten++; veraendert = true; continue; }
+    if((+fremdN.updated||0) > (+eigen.updated||0)){
+      // Unterlegene eigene Fassung in den Verlauf retten, falls sie sich
+      // wirklich unterscheidet — sonst wäre eine Bearbeitung einfach weg.
+      if(String(eigen.body||'') !== String(fremdN.body||'')){
+        if(!Array.isArray(fremdN.hist)) fremdN.hist = Array.isArray(eigen.hist) ? eigen.hist : [];
+        fremdN.hist = fremdN.hist.concat([{ t:+eigen.updated||Date.now(), title:eigen.title, body:eigen.body }]).slice(-30);
+        konflikte++;
+      }
+      meine.set(fremdN.id, fremdN); aktualisiert++; veraendert = true;
+    }
+  }
+  for(const [id, zeit] of Object.entries(graeber)){
+    if(id.startsWith('bild:')) continue;
+    const n = meine.get(id);
+    if(n && (+n.updated||0) <= zeit){ meine.delete(id); entfernt++; veraendert = true; }
+  }
+  db.notes = [...meine.values()];
+
+  // Bilder nur ergänzen; entfernt werden sie ausschließlich per Grabstein
+  if(!db.bilder) db.bilder = {};
+  for(const [id, bild] of Object.entries(fremd.bilder || {})){
+    if(!(id in db.bilder)){ db.bilder[id] = bild; veraendert = true; }
+  }
+  for(const id of Object.keys(db.bilder)) if(('bild:' + id) in graeber){ delete db.bilder[id]; veraendert = true; }
+
+  // Notizbücher (nur aus alten Sicherungen) rein additiv
+  const buecher = new Map((db.notebooks || []).map(b => [b.id, b]));
+  for(const b of (fremd.notebooks || [])) if(b && b.id && !buecher.has(b.id)){ buecher.set(b.id, b); veraendert = true; }
+  db.notebooks = [...buecher.values()];
+
+  if(veraendert){
+    // Verwaiste Elternverweise kappen — die Elternseite kann fremd gelöscht sein
+    const ids = new Set(db.notes.map(n => n.id));
+    for(const n of db.notes) if(n.parent && !ids.has(n.parent)) n.parent = null;
+    if(zustand.aktivId && !ids.has(zustand.aktivId)) zustand.aktivId = null;
+  }
+  return { veraendert, neueSeiten, aktualisiert, entfernt, konflikte };
+}
+
+function syncPaket(){
+  return {
+    absender: SYNC.kennung,
+    notes: db.notes,
+    notebooks: db.notebooks || [],
+    bilder: db.bilder || {},
+    geloescht: db.geloescht || {},
+    geaendert: standStempel(db),
+  };
+}
+
+/* Unberührte Beispiel- und Doku-Seiten wegräumen, bevor ein frisches Gerät
+   einem Raum beitritt, in dem schon etwas steht. Sonst stünde „Willkommen bei
+   REDNOTEN" hinterher doppelt im Baum — einmal je Gerät. Angefasste Seiten
+   bleiben natürlich: dort steckt echte Arbeit drin. */
+function beispielseitenRaeumen(){
+  const weg = db.notes.filter(n => n.beispiel && (+n.updated||0) <= (+n.created||0));
+  if(!weg.length) return 0;
+  const ids = new Set(weg.map(n => n.id));
+  db.notes = db.notes.filter(n => !ids.has(n.id));
+  for(const n of db.notes) if(n.parent && ids.has(n.parent)) n.parent = null;
+  if(ids.has(zustand.aktivId)) zustand.aktivId = null;
+  // Absichtlich ohne Grabstein: Diese Seiten waren nie auf dem Server, und
+  // ein Grabstein würde nur die eigenen IDs betreffen — also nichts nützen.
+  return weg.length;
+}
+
+/* Ein vollständiger Austausch: eigenes hoch, zusammengeführtes zurück. */
+async function syncJetzt(still){
+  if(!syncBereit()){ if(!still) toast('Abgleich ist nicht eingerichtet'); return false; }
+  if(SYNC.laeuft) return false;
+  SYNC.laeuft = true;
+  syncAnzeige('Gleicht ab …');
+  try{
+    // Erster Austausch in diesem Raum: erst nachsehen, was dort schon liegt
+    if(!SYNC.stand){
+      const vorab = await fetch(`${syncBasis()}/sync/${encodeURIComponent(syncKonf().raum)}`);
+      if(vorab.ok){
+        const d = await vorab.json();
+        if(((d.daten || {}).notes || []).length){
+          const weg = beispielseitenRaeumen();
+          if(weg && !still) toast(`Dieser Raum hat schon Inhalt — ${weg} unbenutzte Beispielseite${weg>1?'n':''} entfernt`);
+        }
+      }
+    }
+    const r = await fetch(`${syncBasis()}/sync/${encodeURIComponent(syncKonf().raum)}`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(syncPaket()),
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const antwort = await r.json();
+    SYNC.stand = antwort.stand || 0;
+    SYNC.letzterFehler = '';
+    const erg = syncVerschmelzen(antwort.daten || {});
+    if(erg.veraendert){
+      SYNC.wendetAn = true;
+      speichern(true);
+      renderAlles();
+      if(!still){
+        const teile = [];
+        if(erg.neueSeiten) teile.push(`${erg.neueSeiten} neu`);
+        if(erg.aktualisiert) teile.push(`${erg.aktualisiert} aktualisiert`);
+        if(erg.entfernt) teile.push(`${erg.entfernt} entfernt`);
+        toast('Abgeglichen: ' + (teile.join(', ') || 'nichts Neues'));
+      }
+      if(erg.konflikte) toast(`${erg.konflikte} Seite${erg.konflikte>1?'n wurden':' wurde'} anderswo neuer bearbeitet — deine Fassung liegt im Verlauf`);
+    } else if(!still){
+      toast('Abgeglichen — alles schon gleich');
+    }
+    syncAnzeige('Abgeglichen');
+    return true;
+  }catch(e){
+    SYNC.letzterFehler = String(e && e.message || e);
+    syncAnzeige('Kein Abgleich');
+    if(!still) toast(syncFehlerText(e));
+    return false;
+  }finally{
+    SYNC.laeuft = false;
+    SYNC.wendetAn = false;
+  }
+}
+function syncFehlerText(e){
+  const s = String(e && e.message || e);
+  if(/Failed to fetch|NetworkError|Load failed|ERR_/i.test(s)){
+    return 'Der Abgleich-Server antwortet nicht.\n\n' +
+      'Im Ordner mit index.html starten:\n  python3 server.py\n' +
+      '(Windows: python server.py)\n\n' +
+      'Dann die App über die angezeigte Adresse öffnen, z. B. http://localhost:8080/';
+  }
+  return 'Abgleich fehlgeschlagen: ' + s;
+}
+
+/* Nach dem Speichern gebündelt hochschieben — nicht bei jedem Tastendruck. */
+function syncAnstupsen(){
+  // Nicht zurückschieben, was gerade erst hereinkam — sonst dreht sich
+  // zwischen zwei Geräten eine endlose Schleife.
+  if(SYNC.wendetAn || !syncBereit()) return;
+  clearTimeout(SYNC.schiebTimer);
+  SYNC.schiebTimer = setTimeout(() => syncJetzt(true), 1500);
+}
+
+/* ── Live: WebSocket meldet Änderungen und wer gerade da ist ── */
+function syncWsVerbinden(){
+  syncWsTrennen();
+  if(!syncBereit()) return;
+  const basis = syncBasis().replace(/^http/, 'ws');
+  let ws;
+  try{ ws = new WebSocket(`${basis}/ws/${encodeURIComponent(syncKonf().raum)}`); }
+  catch(e){ return; }
+  SYNC.ws = ws;
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ typ:'hallo', name: syncName() }));
+    syncAnzeige('Verbunden');
+  };
+  ws.onmessage = e => {
+    let m; try{ m = JSON.parse(e.data); }catch(err){ return; }
+    if(m.typ === 'aktualisiert'){
+      if(m.von === SYNC.kennung) return;          // die eigene Änderung kennt man schon
+      clearTimeout(SYNC.ziehTimer);
+      SYNC.ziehTimer = setTimeout(() => syncJetzt(true), 250);
+    } else if(m.typ === 'anwesend'){
+      SYNC.leute = m.leute || [];
+      syncAnzeige();
+    }
+  };
+  ws.onclose = () => {
+    SYNC.ws = null;
+    syncAnzeige();
+    // Sanft wieder verbinden, falls der Server nur kurz weg war
+    if(syncBereit()) SYNC.wsZu = setTimeout(syncWsVerbinden, 4000);
+  };
+  ws.onerror = () => { try{ ws.close(); }catch(err){} };
+}
+function syncWsTrennen(){
+  clearTimeout(SYNC.wsZu); SYNC.wsZu = null;
+  if(SYNC.ws){ const w = SYNC.ws; SYNC.ws = null; w.onclose = null; try{ w.close(); }catch(e){} }
+  SYNC.leute = [];
+}
+function syncStarten(){
+  if(!syncBereit()){ syncAnzeige(); return; }
+  syncJetzt(true).then(() => syncWsVerbinden());
+}
+function syncStoppen(){
+  syncWsTrennen();
+  clearTimeout(SYNC.schiebTimer); clearTimeout(SYNC.ziehTimer);
+  syncAnzeige();
+}
+
+/* ── Anzeige im Kopf ── */
+function syncAnzeige(text){
+  const el = $('#syncStatus'); if(!el) return;
+  const k = syncKonf();
+  if(!k.an || !k.raum){
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  const live = !!(SYNC.ws && SYNC.ws.readyState === 1);
+  const andere = SYNC.leute.filter(n => n !== syncName()).length;
+  el.dataset.zustand = SYNC.letzterFehler ? 'fehler' : live ? 'live' : 'aus';
+  $('#syncText').textContent = andere ? `⇅ ${k.raum} · +${andere}` : `⇅ ${k.raum}`;
+  el.title = (SYNC.letzterFehler ? 'Kein Abgleich: ' + SYNC.letzterFehler
+             : live ? 'Live verbunden' : 'Verbunden, aber ohne Live-Meldungen')
+    + (SYNC.leute.length ? '\nGerade da: ' + SYNC.leute.join(', ') : '')
+    + (text ? '\n' + text : '') + '\nKlicken zum Einrichten';
+}
+
+/* ── Einrichten ── */
+function syncDialog(){
+  const k = syncKonf();
+  const box = $('#dialogBox');
+  const eigenerServer = /^https?:$/.test(location.protocol);
+  box.innerHTML = `<h3>⇅ Abgleich zwischen Geräten</h3>
+    <p>Kostenlos, ohne Konto, ohne Fremdanbieter: Starte im Ordner der App
+    <code>python3 server.py</code> — dann liegen deine Seiten auf <b>deinem</b>
+    Rechner und Handy, Laptop und Tablet sehen dasselbe.</p>
+    ${KRYPTO.aktiv ? `<div class="sync-warn">🔒 <b>Tresor ist an.</b> Auf dem Abgleich-Server
+      liegen die Seiten <b>unverschlüsselt</b>. Nur benutzen, wenn der Server auf einem
+      Gerät läuft, dem du vertraust.</div>` : ''}
+    <label class="ki-label">Raum-Code <span class="ki-neben">— zugleich das Passwort, frei wählbar</span></label>
+    <input type="text" id="syncRaum" value="${escapeAttr(k.raum||'')}" placeholder="z. B. meine-notizen-2026" autocomplete="off">
+    <label class="ki-label">Dein Name <span class="ki-neben">— damit die anderen sehen, wer da ist</span></label>
+    <input type="text" id="syncName" value="${escapeAttr(k.name||'')}" placeholder="z. B. Laptop" autocomplete="off">
+    <label class="ki-label">Serveradresse <span class="ki-neben">— leer = derselbe Server wie die App${eigenerServer?' ('+location.origin+')':''}</span></label>
+    <input type="text" id="syncServer" value="${escapeAttr(k.server||'')}" placeholder="${eigenerServer ? location.origin : 'http://192.168.1.20:8080'}" autocomplete="off">
+    <div id="syncStatusText" class="ki-status"></div>
+    <div class="reihe">
+      <button class="knopf leer" data-sync="aus">Ausschalten</button>
+      <button class="knopf leer" id="syncTest">Testen</button>
+      <button class="knopf voll" data-sync="an">Einschalten</button>
+    </div>`;
+  $('#dialogSchleier').classList.add('offen');
+  setTimeout(() => { const f = $('#syncRaum'); if(f) f.focus(); }, 40);
+
+  const status = (t, art) => {
+    const el = $('#syncStatusText');
+    el.textContent = t; el.className = 'ki-status' + (art ? ' ki-' + art : '');
+  };
+  if(!syncBasis()) status('Die App läuft gerade als Datei (file://). Für den Abgleich bitte über den Server öffnen — oder unten eine Adresse eintragen.', 'warn');
+  else if(SYNC.letzterFehler) status('Zuletzt: ' + SYNC.letzterFehler, 'fehler');
+
+  const uebernehmen = () => {
+    k.raum = ($('#syncRaum').value || '').trim().replace(/[^A-Za-z0-9_-]/g, '').slice(0, 48);
+    k.name = ($('#syncName').value || '').trim().slice(0, 24);
+    k.server = ($('#syncServer').value || '').trim();
+  };
+  box.onclick = async e => {
+    const knopf = e.target.closest('[data-sync]');
+    if(knopf){
+      uebernehmen();
+      if(knopf.dataset.sync === 'aus'){
+        k.an = false; speichern(true); syncStoppen(); dialogZu(); toast('Abgleich ausgeschaltet');
+        return;
+      }
+      if(!k.raum){ status('Bitte einen Raum-Code eintragen.', 'fehler'); return; }
+      if(!syncBasis()){ status('Ohne Serveradresse geht es nicht — trag eine ein.', 'fehler'); return; }
+      k.an = true; speichern(true);
+      dialogZu();
+      SYNC.letzterFehler = '';
+      SYNC.stand = 0;               // neuer Raum → wieder wie ein Beitritt behandeln
+      const ok = await syncJetzt(false);
+      if(ok) syncWsVerbinden();
+      syncAnzeige();
+      return;
+    }
+    if(e.target.id === 'syncTest'){
+      uebernehmen(); speichern();
+      const basis = syncBasis();
+      if(!basis){ status('Erst eine Serveradresse eintragen.', 'fehler'); return; }
+      status('Frage den Server …');
+      try{
+        const r = await fetch(basis + '/hallo');
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if(d.dienst !== 'rednoten') throw new Error('Dort antwortet ein anderer Dienst');
+        status('Server erreichbar ✓ — jetzt einschalten.', 'ok');
+      }catch(err){ status(syncFehlerText(err), 'fehler'); }
+      return;
+    }
+  };
+}
+
 /* ── Start ────────────────────────────────────────────────────── */
 function start(){
   wendeThemeAn();
@@ -5583,6 +5984,8 @@ function start(){
   speichern(true);
   zeigeSpeicherStatus('Bereit', false);
   sperrTimerNeu();
+  syncAnzeige();
+  syncStarten();
 }
 
 (function boot(){

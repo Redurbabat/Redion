@@ -41,6 +41,14 @@ Antworten erscheinen live. Einrichten mit `Strg+J` → *Einrichten*.
 **🖼 Bilder · 💬 Randnotizen:** Bilder per Auswahl oder Hineinziehen einfügen (werden lokal
 verkleinert, nichts wird hochgeladen). Randnotizen zu markierten Stellen im Seitenpanel.
 
+**⇅ Abgleich zwischen deinen Geräten — kostenlos, ohne Konto:** `python3 server.py` startet
+die App **und** einen kleinen Abgleich-Dienst auf deinem eigenen Rechner (nur
+Python-Standardbibliothek, kein Fremdanbieter, keine Installation). Raum-Code eingeben — und
+Handy, Laptop und Tablet sehen dieselben Seiten. Zusammengeführt wird pro Seite nach
+Zeitstempel; kollidiert etwas, wandert die unterlegene Fassung in den Verlauf statt verloren
+zu gehen. Löschungen bleiben gelöscht (Grabsteine). Änderungen erscheinen in unter einer
+Sekunde, und oben steht, wer sonst noch im Raum ist. Anleitung: **[START.md](START.md)**.
+
 **📋 Projekt-Doku in der App:** Die Seiten *Aufträge & Fortschritt* (Board mit fertig / offen /
 geht nicht) und *Arbeitsweise* sind direkt in REDNOTEN — jederzeit über die Befehlspalette.
 
@@ -70,6 +78,13 @@ geht nicht) und *Arbeitsweise* sind direkt in REDNOTEN — jederzeit über die B
 - 📅 Tagesnotiz als Journal, ⚡ Schnellerfassung direkt über der Liste
 - ☑ Aufgaben-Übersicht: alle offenen `- [ ]` aus allen Notizen an einem Ort, dort abhakbar
 - Volltextsuche mit Operatoren: `tag:projekt`, `nb:Wissen`, `ist:offen`, `ist:gepinnt`
+
+**Abgleichen (eigener Server, `server.py`)**
+- Raum-Code statt Konto — wer denselben Code kennt, sieht dieselben Seiten
+- Zusammenführen pro Seite statt Überschreiben; Konflikt = unterlegene Fassung in den Verlauf
+- Grabsteine, damit gelöschte Seiten nicht vom nächsten Gerät zurückkommen
+- Bilder wandern mit; Live-Meldung über WebSocket; Anzeige, wer gerade da ist
+- Fällt der Server aus, schreibt die App unbeirrt weiter und reicht später nach
 
 **Sichern & Besitzen**
 - Versionshistorie je Notiz — alte Stände ansehen und wiederherstellen
@@ -101,7 +116,9 @@ geht nicht) und *Arbeitsweise* sind direkt in REDNOTEN — jederzeit über die B
 
 ## Deine Daten
 
-Alles liegt im `localStorage` dieses Browsers — nichts verlässt dein Gerät.
+Alles liegt im `localStorage` dieses Browsers. Nichts geht zu einem fremden Anbieter —
+schaltest du den Abgleich ein, gehen die Seiten ausschließlich an **deinen eigenen**
+`server.py` (Ordner `rednoten-daten`).
 Sichern: ⬇ JSON-Backup (jederzeit wieder einspielbar, auch auf anderen Geräten) oder
 „Als App exportieren" für eine komplette Kopie von App + Notizen in einer Datei.
 Wenn du die Verschlüsselung aktivierst: Das Passwort wird nirgends gespeichert —
