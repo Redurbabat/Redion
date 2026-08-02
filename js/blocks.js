@@ -434,7 +434,10 @@ const Blocks = (() => {
       case 'columns': case 'columns3': {
         const w = document.createElement('div');
         const n = block.type === 'columns3' ? 3 : (block.spalten || 2);
-        w.style.cssText = `display:grid; grid-template-columns:repeat(${n},1fr); gap:24px; width:100%`;
+        /* Die Spaltenzahl steht als Variable da, damit sie auf schmalen
+           Bildschirmen per CSS auf eine Spalte fallen kann — wie in Notion. */
+        w.className = 'spalten-block';
+        w.style.setProperty('--sp', n);
         Store.childrenOf(block.id).forEach(k => w.appendChild(render(k, tiefe)));
         box.appendChild(w);
         break;

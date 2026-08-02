@@ -39,8 +39,29 @@ const Datenbank = (() => {
     { id:'rollup',     name:'Rollup',           icon:'⤴'  },
     { id:'uid',        name:'Laufende Nummer',  icon:'ID' },
     { id:'button',     name:'Knopf',            icon:'🔘' },
-    { id:'ki',         name:'KI-Feld',          icon:'✨' }
+    { id:'ki',         name:'KI-Feld',          icon:'✨' },
+    /* --- ab hier neu, damit alle 29 Typen aus Teil 7 da sind ------------- */
+    { id:'createdBy',  name:'Erstellt von',     icon:'👤' },
+    { id:'editedBy',   name:'Zuletzt bearbeitet von', icon:'👥' },
+    { id:'place',      name:'Ort',              icon:'📍' },
+    { id:'duration',   name:'Zeitspanne',       icon:'⏱'  },
+    { id:'verify',     name:'Prüfung',          icon:'✔'  },
+    { id:'ki-fassung', name:'KI: Zusammenfassung', icon:'✨' },
+    { id:'ki-sprache', name:'KI: Übersetzung',  icon:'✨' },
+    { id:'ki-worte',   name:'KI: Schlagwörter', icon:'✨' }
   ];
+
+  /* Alle Felder, die die KI selbst füllt — sie teilen sich eine Mechanik. */
+  const KI_TYPEN = ['ki', 'ki-fassung', 'ki-sprache', 'ki-worte'];
+  const KI_AUFTRAG = {
+    'ki':         'Fasse diesen Eintrag in einem kurzen Satz zusammen.',
+    'ki-fassung': 'Fasse diesen Eintrag in einem kurzen Satz zusammen.',
+    'ki-sprache': 'Übersetze den Titel dieses Eintrags ins Englische. Gib nur die Übersetzung zurück.',
+    'ki-worte':   'Nenne drei bis fünf Schlagwörter zu diesem Eintrag, mit Komma getrennt.'
+  };
+
+  /* Felder, die die App selbst füllt und die niemand tippt. */
+  const NUR_LESEN = ['formula','created','edited','rollup','uid','createdBy','editedBy'];
 
   const propTyp = (id) => TYPEN.find(t => t.id === id) || TYPEN[1];
 
@@ -73,19 +94,32 @@ const Datenbank = (() => {
     rollup:   ['ist gleich','ist nicht gleich','größer als','kleiner als','enthält','ist leer','ist nicht leer'],
     uid:      ['ist gleich','größer als','kleiner als'],
     ki:       ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
-    button:   []
+    button:   [],
+    createdBy:['ist','ist nicht','enthält','ist leer','ist nicht leer'],
+    editedBy: ['ist','ist nicht','enthält','ist leer','ist nicht leer'],
+    place:    ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
+    duration: ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich','ist leer','ist nicht leer'],
+    verify:   ['ist geprüft','ist nicht geprüft','ist abgelaufen','ist abgelehnt']
   };
+  /* Die KI-Spalten filtern wie Text. */
+  ['ki-fassung','ki-sprache','ki-worte'].forEach(t => { OPERATOREN[t] = OPERATOREN.ki; });
 
   /* Welche Rollup-Berechnungen gibt es? (Teil 14 der Doku, Kapitel 3.3) */
-  const ROLLUP_ARTEN = ['Original zeigen','Anzahl alle','Eindeutige zählen','Werte zählen','Leere zählen',
-                        'Gefüllte zählen','Summe','Durchschnitt','Median','Minimum','Maximum','Spanne',
-                        'Frühestes Datum','Spätestes Datum','Prozent aktiviert'];
+  /* Die 21 Berechnungsarten aus Teil 4 und Teil 8 der Dokumentation.
+     Dieselbe Liste gilt für Rollups und für die Zeile unter der Spalte. */
+  const ROLLUP_ARTEN = ['Original zeigen','Anzahl alle','Werte zählen','Eindeutige zählen','Leere zählen',
+                        'Gefüllte zählen','Prozent leer','Prozent gefüllt',
+                        'Summe','Durchschnitt','Median','Minimum','Maximum','Spanne',
+                        'Frühestes Datum','Spätestes Datum','Zeitspanne',
+                        'Aktivierte zählen','Nicht aktivierte zählen',
+                        'Prozent aktiviert','Prozent nicht aktiviert'];
 
   /* Welche Berechnungen passen unter eine Spalte? */
   const RECHNUNGEN = {
-    alle:     ['—','Anzahl alle','Werte zählen','Eindeutige zählen','Leere zählen','Gefüllte zählen','Prozent leer','Prozent gefüllt'],
+    alle:     ['—','Anzahl alle','Werte zählen','Eindeutige zählen','Leere zählen','Gefüllte zählen',
+               'Prozent leer','Prozent gefüllt','Original zeigen'],
     number:   ['Summe','Durchschnitt','Median','Minimum','Maximum','Spanne'],
-    checkbox: ['Aktivierte zählen','Nicht aktivierte zählen','Prozent aktiviert'],
+    checkbox: ['Aktivierte zählen','Nicht aktivierte zählen','Prozent aktiviert','Prozent nicht aktiviert'],
     date:     ['Frühestes Datum','Spätestes Datum','Zeitspanne']
   };
 
@@ -138,6 +172,17 @@ const Datenbank = (() => {
     if (def.type === 'title')   return row.text || '';
     if (def.type === 'created') return row.created;
     if (def.type === 'edited')  return row.edited;
+
+    /* Ohne Konten gibt es nur einen Menschen: den, der hier sitzt. Sein Name
+       steht in den Einstellungen und wird beim Anlegen mitgeschrieben. */
+    if (def.type === 'createdBy') return row.erstelltVon || Store.getMeta('nutzer', '') || 'Ich';
+    if (def.type === 'editedBy')  return row.geaendertVon || Store.getMeta('nutzer', '') || 'Ich';
+
+    /* Zeitspanne: gespeichert wird in Minuten, angezeigt als 1 h 30 min */
+    if (def.type === 'duration') {
+      const v = (row.props || {})[key];
+      return v === '' || v == null ? null : Number(v);
+    }
 
     /* Laufende Nummer: die Position in der Sammlung, wie Notions Unique ID */
     if (def.type === 'uid') {
@@ -195,33 +240,7 @@ const Datenbank = (() => {
     const zeilen2 = ids.map(id => Store.getBlock(id)).filter(Boolean);
     const werte = zeilen2.map(z => wert(z, def.zielKey, zielColl));
 
-    const zahlen = werte.map(Formula.zahl).filter(x => !isNaN(x));
-    const art = def.rollup || 'Original zeigen';
-
-    switch (art) {
-      case 'Original zeigen':   return werte.map(w2 => Formula.anzeige(w2)).join(', ');
-      case 'Anzahl alle':       return zeilen2.length;
-      case 'Werte zählen':      return werte.filter(w2 => w2 !== '' && w2 != null).length;
-      case 'Eindeutige zählen': return new Set(werte.map(w2 => Formula.anzeige(w2))).size;
-      case 'Leere zählen':      return werte.filter(w2 => w2 === '' || w2 == null).length;
-      case 'Gefüllte zählen':   return werte.filter(w2 => w2 !== '' && w2 != null).length;
-      case 'Summe':             return zahlen.reduce((a, b) => a + b, 0);
-      case 'Durchschnitt':      return zahlen.length ? +(zahlen.reduce((a, b) => a + b, 0) / zahlen.length).toFixed(2) : 0;
-      case 'Median': {
-        if (!zahlen.length) return 0;
-        const s = zahlen.slice().sort((a, b) => a - b);
-        const m = Math.floor(s.length / 2);
-        return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-      }
-      case 'Minimum':           return zahlen.length ? Math.min(...zahlen) : 0;
-      case 'Maximum':           return zahlen.length ? Math.max(...zahlen) : 0;
-      case 'Spanne':            return zahlen.length ? Math.max(...zahlen) - Math.min(...zahlen) : 0;
-      case 'Frühestes Datum':   return werte.filter(Boolean).sort()[0] || '';
-      case 'Spätestes Datum':   return werte.filter(Boolean).sort().slice(-1)[0] || '';
-      case 'Prozent aktiviert': return werte.length
-                                  ? Math.round(werte.filter(Boolean).length / werte.length * 100) + ' %' : '0 %';
-      default:                  return werte.join(', ');
-    }
+    return zusammenfassen(def.rollup || 'Original zeigen', werte, zeilen2.length);
   };
 
   /** Baut das HTML für eine Zelle. */
@@ -296,13 +315,76 @@ const Datenbank = (() => {
     if (def.type === 'files') {
       const liste = Array.isArray(v) ? v : (v ? [v] : []);
       if (!liste.length) return '<span style="color:var(--text-faint)">—</span>';
-      return liste.map(f => `<span class="tag bg-gray">📎 ${esc(String(f).slice(0, 24))}</span>`).join('');
+      return liste.map(f => {
+        const name = (f && typeof f === 'object') ? (f.name || 'Datei') : String(f);
+        const quelle = (f && typeof f === 'object') ? f.src : String(f);
+        const kurz = esc(name.length > 24 ? name.slice(0, 22) + '…' : name);
+        return quelle
+          ? `<a class="tag bg-gray" href="${esc(quelle)}" target="_blank" rel="noopener" ` +
+            `download="${esc(name)}" title="${esc(name)}">📎 ${kurz}</a>`
+          : `<span class="tag bg-gray">📎 ${kurz}</span>`;
+      }).join('');
     }
 
-    if (def.type === 'ki' && !v)
+    if (KI_TYPEN.includes(def.type) && !v)
       return '<span style="color:var(--text-faint)">✨ leer</span>';
 
+    if (def.type === 'createdBy' || def.type === 'editedBy')
+      return `<span class="tag bg-gray">👤 ${esc(v)}</span>`;
+
+    if (def.type === 'duration') {
+      if (v == null) return '<span style="color:var(--text-faint)">—</span>';
+      return esc(dauerText(v));
+    }
+
+    if (def.type === 'place') {
+      if (!v) return '<span style="color:var(--text-faint)">—</span>';
+      const o = typeof v === 'object' ? v : { name: String(v) };
+      const karte = o.lat != null
+        ? `https://www.openstreetmap.org/?mlat=${o.lat}&mlon=${o.lon}#map=15/${o.lat}/${o.lon}`
+        : 'https://www.openstreetmap.org/search?query=' + encodeURIComponent(o.name || '');
+      return `📍 <a href="${esc(karte)}" target="_blank" rel="noopener" ` +
+             `style="color:var(--accent)">${esc(o.name || '')}</a>`;
+    }
+
+    if (def.type === 'verify') {
+      const o = typeof v === 'object' && v ? v : null;
+      if (!o || !o.stand) return '<span class="tag bg-gray">nicht geprüft</span>';
+      const abgelaufen = o.bis && new Date(o.bis) < new Date();
+      if (abgelaufen)      return `<span class="tag bg-orange" title="bis ${esc(o.bis)}">abgelaufen</span>`;
+      if (o.stand === 'ok') return `<span class="tag bg-green" title="${esc(o.wer || '')}${o.bis ? ' · bis ' + esc(o.bis) : ''}">✔ geprüft</span>`;
+      return '<span class="tag bg-red">abgelehnt</span>';
+    }
+
     return esc(v) || '<span style="color:var(--text-faint)">—</span>';
+  };
+
+  /** 95 → „1 h 35 min" */
+  const dauerText = (min) => {
+    const m = Math.round(Number(min) || 0);
+    if (!m) return '0 min';
+    const h = Math.floor(Math.abs(m) / 60), r = Math.abs(m) % 60;
+    const s = h ? (h + ' h' + (r ? ' ' + r + ' min' : '')) : (r + ' min');
+    return (m < 0 ? '−' : '') + s;
+  };
+
+  /** „1h30", „90", „1:30" → 90 Minuten */
+  const dauerLesen = (text) => {
+    const t = String(text || '').trim().toLowerCase().replace(',', '.');
+    if (!t) return null;
+    const doppel = t.match(/^(\d+)\s*[:.]\s*(\d{1,2})$/);
+    if (doppel) return (+doppel[1]) * 60 + (+doppel[2]);
+    /* „1h30", „1 h 30", „1h 30min" — die Minuten hinter der Stunde zählen mit,
+       auch wenn niemand „min" dazuschreibt. */
+    const beides = t.match(/^([\d.]+)\s*(?:h|std|stunden?)\s*([\d.]+)\s*(?:m|min|minuten?)?$/);
+    if (beides) return Math.round(parseFloat(beides[1]) * 60 + parseFloat(beides[2]));
+    let min = 0, traf = false;
+    const std = t.match(/([\d.]+)\s*(h|std|stunden?)/);
+    if (std) { min += parseFloat(std[1]) * 60; traf = true; }
+    const mi  = t.match(/([\d.]+)\s*(m|min|minuten?)\b/);
+    if (mi)  { min += parseFloat(mi[1]); traf = true; }
+    if (!traf) { const n = parseFloat(t); return isNaN(n) ? null : n; }
+    return Math.round(min);
   };
 
   /* ========================================================================
@@ -325,7 +407,20 @@ const Datenbank = (() => {
     if (op === 'ist aktiviert')       return !!v;
     if (op === 'ist nicht aktiviert') return !v;
 
-    const t = String(v ?? '').toLowerCase();
+    /* Prüfung — geprüft, offen, abgelaufen, abgelehnt */
+    if (op.startsWith('ist geprüft') || op === 'ist nicht geprüft' ||
+        op === 'ist abgelaufen' || op === 'ist abgelehnt') {
+      const o = v && typeof v === 'object' ? v : null;
+      const abgelaufen = !!(o && o.bis && new Date(o.bis) < new Date());
+      if (op === 'ist geprüft')       return !!o && o.stand === 'ok' && !abgelaufen;
+      if (op === 'ist nicht geprüft') return !o || !o.stand;
+      if (op === 'ist abgelaufen')    return abgelaufen;
+      if (op === 'ist abgelehnt')     return !!o && o.stand === 'nein';
+    }
+
+    /* Beim Ort zählt der Name, nicht das ganze Objekt. */
+    const roh = (v && typeof v === 'object' && def.type === 'place') ? (v.name || '') : v;
+    const t = String(roh ?? '').toLowerCase();
     const s = String(z ?? '').toLowerCase();
 
     if (op === 'enthält')       return Array.isArray(v) ? v.some(x => String(x).toLowerCase().includes(s)) : t.includes(s);
@@ -445,44 +540,62 @@ const Datenbank = (() => {
   /* ========================================================================
    * BERECHNUNGEN UNTER DER SPALTE
    * ======================================================================*/
-  const rechne = (art, rows, key, coll) => {
-    const werte = rows.map(r => wert(r, key, coll));
-    const zahlen = werte.map(v => parseFloat(v)).filter(v => !isNaN(v));
-    const gefuellt = werte.filter(v => v != null && v !== '' && !(Array.isArray(v) && !v.length));
+  /**
+   * Die eine Stelle, an der gerechnet wird. Rollups und die Zeile unter
+   * der Spalte benutzen dieselbe Liste und denselben Code — sonst laufen
+   * die beiden auseinander.
+   *
+   * @param art      Name der Berechnung
+   * @param werte    die Rohwerte
+   * @param gesamt   Bezugsgrösse für Prozente (Standard: Anzahl der Werte)
+   */
+  const zusammenfassen = (art, werte, gesamt) => {
+    const n        = gesamt == null ? werte.length : gesamt;
+    const voll     = (v) => v != null && v !== '' && !(Array.isArray(v) && !v.length);
+    const gefuellt = werte.filter(voll);
+    const zahlen   = werte.map(v => parseFloat(v)).filter(v => !isNaN(v));
+    const daten    = gefuellt.map(v => new Date(v)).filter(d => !isNaN(d));
+    const proz     = (x) => n ? Math.round(x / n * 100) + ' %' : '0 %';
+    const tag      = (d) => d.toLocaleDateString('de-DE');
 
     switch (art) {
-      case 'Anzahl alle':        return rows.length;
-      case 'Werte zählen':       return gefuellt.length;
-      case 'Eindeutige zählen':  return new Set(gefuellt.map(String)).size;
-      case 'Leere zählen':       return rows.length - gefuellt.length;
-      case 'Gefüllte zählen':    return gefuellt.length;
-      case 'Prozent leer':       return rows.length ? Math.round((rows.length - gefuellt.length) / rows.length * 100) + '%' : '0%';
-      case 'Prozent gefüllt':    return rows.length ? Math.round(gefuellt.length / rows.length * 100) + '%' : '0%';
-      case 'Summe':              return zahlen.reduce((s, x) => s + x, 0);
-      case 'Durchschnitt':       return zahlen.length ? Math.round(zahlen.reduce((s,x)=>s+x,0) / zahlen.length * 100) / 100 : 0;
+      case 'Original zeigen':         return werte.map(w2 => Formula.anzeige(w2)).filter(Boolean).join(', ');
+      case 'Anzahl alle':             return n;
+      case 'Werte zählen':            return gefuellt.length;
+      case 'Eindeutige zählen':       return new Set(gefuellt.map(v => Formula.anzeige(v))).size;
+      case 'Leere zählen':            return n - gefuellt.length;
+      case 'Gefüllte zählen':         return gefuellt.length;
+      case 'Prozent leer':            return proz(n - gefuellt.length);
+      case 'Prozent gefüllt':         return proz(gefuellt.length);
+      case 'Summe':                   return zahlen.reduce((s, x) => s + x, 0);
+      case 'Durchschnitt':            return zahlen.length
+                                        ? Math.round(zahlen.reduce((s, x) => s + x, 0) / zahlen.length * 100) / 100 : 0;
       case 'Median': {
-        const s = zahlen.slice().sort((a,b)=>a-b);
-        if (!s.length) return 0;
-        const m = Math.floor(s.length/2);
-        return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+        if (!zahlen.length) return 0;
+        const s = zahlen.slice().sort((a, b) => a - b);
+        const m = Math.floor(s.length / 2);
+        return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
       }
-      case 'Minimum':            return zahlen.length ? Math.min(...zahlen) : 0;
-      case 'Maximum':            return zahlen.length ? Math.max(...zahlen) : 0;
-      case 'Spanne':             return zahlen.length ? Math.max(...zahlen) - Math.min(...zahlen) : 0;
-      case 'Aktivierte zählen':      return werte.filter(Boolean).length;
-      case 'Nicht aktivierte zählen':return werte.filter(v => !v).length;
-      case 'Prozent aktiviert':  return rows.length ? Math.round(werte.filter(Boolean).length / rows.length * 100) + '%' : '0%';
-      case 'Frühestes Datum': {
-        const d = gefuellt.map(v => new Date(v)).filter(d => !isNaN(d));
-        return d.length ? new Date(Math.min(...d)).toLocaleDateString('de-DE') : '—';
-      }
-      case 'Spätestes Datum': {
-        const d = gefuellt.map(v => new Date(v)).filter(d => !isNaN(d));
-        return d.length ? new Date(Math.max(...d)).toLocaleDateString('de-DE') : '—';
+      case 'Minimum':                 return zahlen.length ? Math.min(...zahlen) : 0;
+      case 'Maximum':                 return zahlen.length ? Math.max(...zahlen) : 0;
+      case 'Spanne':                  return zahlen.length ? Math.max(...zahlen) - Math.min(...zahlen) : 0;
+      case 'Aktivierte zählen':       return werte.filter(Boolean).length;
+      case 'Nicht aktivierte zählen': return werte.filter(v => !v).length;
+      case 'Prozent aktiviert':       return proz(werte.filter(Boolean).length);
+      case 'Prozent nicht aktiviert': return proz(werte.filter(v => !v).length);
+      case 'Frühestes Datum':         return daten.length ? tag(new Date(Math.min(...daten))) : '—';
+      case 'Spätestes Datum':         return daten.length ? tag(new Date(Math.max(...daten))) : '—';
+      case 'Zeitspanne': {
+        if (daten.length < 2) return daten.length ? '0 Tage' : '—';
+        const t = Math.round((Math.max(...daten) - Math.min(...daten)) / 86400000);
+        return t === 1 ? '1 Tag' : t + ' Tage';
       }
       default: return '';
     }
   };
+
+  const rechne = (art, rows, key, coll) =>
+    zusammenfassen(art, rows.map(r => wert(r, key, coll)), rows.length);
 
   /* ========================================================================
    * RENDERN
@@ -965,11 +1078,11 @@ const Datenbank = (() => {
   /* --- KI-Feld: Notions „AI Autofill", nur lokal --------------------------- */
   const kiFeldFuellen = async (row, key, coll) => {
     const def = coll.schema[key];
-    const auftrag = def.auftrag ||
+    const auftrag = def.auftrag || KI_AUFTRAG[def.type] ||
       'Fasse diesen Eintrag in einem kurzen Satz zusammen.';
 
     const zeileAlsText = Object.keys(coll.schema)
-      .filter(k => k !== key && !['ki','button'].includes(coll.schema[k].type))
+      .filter(k => k !== key && !KI_TYPEN.includes(coll.schema[k].type) && coll.schema[k].type !== 'button')
       .map(k => coll.schema[k].name + ': ' + Formula.anzeige(wert(row, k, coll)))
       .join('\n');
 
@@ -1154,13 +1267,106 @@ const Datenbank = (() => {
     if (def.type === 'relation') { relationWaehlen(row, key, coll); return; }
     if (def.type === 'button')   { knopfInZelle(row, key, coll); return; }
 
-    if (def.type === 'ki') {
+    if (KI_TYPEN.includes(def.type)) {
       kiFeldFuellen(row, key, coll);
       return;
     }
 
-    if (['formula','created','edited','rollup','uid'].includes(def.type)) {
+    if (NUR_LESEN.includes(def.type)) {
       UI.toast('Dieses Feld wird berechnet und kann nicht direkt bearbeitet werden.');
+      return;
+    }
+
+    /* Prüfung — Notions „Verification": geprüft, abgelehnt, mit Frist */
+    if (def.type === 'verify') {
+      const r = td.getBoundingClientRect();
+      const jetzt = wert(row, key, coll) || {};
+      const m = UI.menu(
+        '<div class="grp">Prüfung</div>' +
+        '<button data-p="ok"><span class="mi">✔</span>Geprüft</button>' +
+        '<button data-p="nein"><span class="mi">✖</span>Abgelehnt</button>' +
+        '<button data-p="offen"><span class="mi">○</span>Nicht geprüft</button>' +
+        '<hr><button data-p="frist"><span class="mi">📅</span>Gültig bis …</button>' +
+        (jetzt.wer ? `<div class="grp" style="font-weight:400">zuletzt: ${esc(jetzt.wer)}` +
+                     (jetzt.wann ? ' am ' + esc(String(jetzt.wann).slice(0, 10)) : '') + '</div>' : ''),
+        r.left, r.bottom + 2);
+      m.addEventListener('click', async e => {
+        const b = e.target.closest('button[data-p]');
+        if (!b) return;
+        const wer = Store.getMeta('nutzer', '') || 'Ich';
+        if (b.dataset.p === 'frist') {
+          m.remove();
+          const bis = await UI.frage('Gültig bis (JJJJ-MM-TT)', jetzt.bis || '');
+          if (bis == null) return;
+          Store.setProp(row.id, key, Object.assign({}, jetzt, { bis }));
+        } else if (b.dataset.p === 'offen') {
+          m.remove();
+          Store.setProp(row.id, key, null);
+        } else {
+          m.remove();
+          Store.setProp(row.id, key, {
+            stand: b.dataset.p === 'ok' ? 'ok' : 'nein',
+            wer, wann: Store.now(), bis: jetzt.bis || ''
+          });
+        }
+        App.zeichneSeite();
+      });
+      return;
+    }
+
+    /* Ort — Adresse eintippen, Nominatim sucht die Koordinaten dazu.
+       Kostenlos, ohne Schlüssel; ohne Netz bleibt einfach der Text stehen. */
+    if (def.type === 'place') {
+      const jetzt = wert(row, key, coll);
+      const alt = jetzt && typeof jetzt === 'object' ? jetzt.name : (jetzt || '');
+      const inp = document.createElement('input');
+      inp.value = alt || '';
+      inp.placeholder = 'Adresse oder Ort';
+      inp.style.cssText = 'width:100%; background:var(--bg-input); border:1px solid var(--accent); ' +
+                          'border-radius:3px; padding:3px 5px; outline:none';
+      td.innerHTML = '';
+      td.appendChild(inp);
+      inp.focus(); inp.select();
+      let fertigSchon = false;
+      const fertig = async () => {
+        if (fertigSchon) return; fertigSchon = true;
+        const name = inp.value.trim();
+        if (!name) { Store.setProp(row.id, key, null); td.innerHTML = zelle(row, key, coll); return; }
+        Store.setProp(row.id, key, { name });
+        td.innerHTML = zelle(row, key, coll);
+        const treffer = await ortSuchen(name).catch(() => null);
+        if (treffer) {
+          Store.setProp(row.id, key, { name, lat: treffer.lat, lon: treffer.lon, voll: treffer.name });
+          td.innerHTML = zelle(row, key, coll);
+        }
+      };
+      inp.addEventListener('blur', fertig);
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { fertigSchon = true; td.innerHTML = zelle(row, key, coll); }
+      });
+      return;
+    }
+
+    /* Zeitspanne — „1h30", „90", „1:30" ergeben alle 90 Minuten */
+    if (def.type === 'duration') {
+      const inp = document.createElement('input');
+      const alt = wert(row, key, coll);
+      inp.value = alt == null ? '' : dauerText(alt);
+      inp.placeholder = 'z. B. 1h30 oder 90';
+      inp.style.cssText = 'width:100%; background:var(--bg-input); border:1px solid var(--accent); ' +
+                          'border-radius:3px; padding:3px 5px; outline:none';
+      td.innerHTML = ''; td.appendChild(inp);
+      inp.focus(); inp.select();
+      const fertig = () => {
+        Store.setProp(row.id, key, dauerLesen(inp.value));
+        td.innerHTML = zelle(row, key, coll);
+      };
+      inp.addEventListener('blur', fertig);
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { td.innerHTML = zelle(row, key, coll); }
+      });
       return;
     }
 
@@ -1340,132 +1546,389 @@ const Datenbank = (() => {
   };
 
   /* --- Kalender ----------------------------------------------------------- */
-  const alsKalender = (coll, view, rows) => {
-    /* Der Umschalter für ein Enddatum steht unter dem Kalender. */
-    const w = document.createElement('div');
-    const dk = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
+  /* --- Kalender -----------------------------------------------------------
+   * Drei Stufen wie in Notion Calendar: Tag, Woche, Monat — umschaltbar mit
+   * den Tasten T/D, W und M. Neben der eigenen Datenbank können weitere
+   * Datenbanken als zusätzliche Kalender eingeblendet werden, jede in ihrer
+   * eigenen Farbe, ein- und ausschaltbar und in der Reihenfolge verschiebbar.
+   * ----------------------------------------------------------------------*/
+  const KAL_FARBEN = ['blue','green','orange','purple','pink','red','yellow','brown'];
 
-    if (!dk) {
+  /** Alle Kalender dieser Ansicht: der eigene zuerst, dann die zugeschalteten. */
+  const kalenderQuellen = (coll, view) => {
+    const eigen = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
+    const liste = [{
+      coll, id: coll.id, name: coll.name, dateKey: eigen,
+      endeKey: view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null,
+      farbe: view.farbe || 'blue', an: true, eigen: true
+    }];
+
+    (view.extraDbs || []).forEach((x, i) => {
+      const c = Store.getCollection(x.collectionId);
+      if (!c) return;
+      const dk = x.dateKey && c.schema[x.dateKey]
+        ? x.dateKey : Object.keys(c.schema).find(k => c.schema[k].type === 'date');
+      if (!dk) return;
+      liste.push({
+        coll: c, id: c.id, name: c.name, dateKey: dk,
+        endeKey: x.endeKey && c.schema[x.endeKey] ? x.endeKey : null,
+        farbe: x.farbe || KAL_FARBEN[(i + 1) % KAL_FARBEN.length],
+        an: x.an !== false, eigen: false
+      });
+    });
+    return liste;
+  };
+
+  /** Die Termine einer Quelle für einen bestimmten Tag. */
+  const termineAmTag = (q, tag, rows) => {
+    const zeilen2 = rows || Store.rowsOf(q.id);
+    const t0 = new Date(tag); t0.setHours(0, 0, 0, 0);
+    const treffer = [];
+    zeilen2.forEach(r => {
+      const v = wert(r, q.dateKey, q.coll);
+      if (!v) return;
+      const dv = new Date(v);
+      if (isNaN(dv)) return;
+      const von = new Date(dv); von.setHours(0, 0, 0, 0);
+      let bis = von;
+      if (q.endeKey) {
+        const e2 = new Date(wert(r, q.endeKey, q.coll));
+        if (!isNaN(e2)) { bis = new Date(e2); bis.setHours(0, 0, 0, 0); }
+      }
+      if (t0 < von || t0 > bis) return;
+      treffer.push({
+        row: r, quelle: q,
+        mehrtaegig: bis > von,
+        anfang: t0.getTime() === von.getTime(),
+        ende:   t0.getTime() === bis.getTime(),
+        zeit:   String(v).length > 10 ? String(v).slice(11, 16) : '',
+        stunde: String(v).length > 10 ? parseInt(String(v).slice(11, 13), 10) : null
+      });
+    });
+    return treffer;
+  };
+
+  const terminKnopf = (e, view) => {
+    const ev = document.createElement('div');
+    ev.className = 'ev q-' + e.quelle.farbe +
+      (e.mehrtaegig ? ' lang' : '') +
+      (e.mehrtaegig && e.anfang ? ' anfang' : '') +
+      (e.mehrtaegig && e.ende ? ' ende' : '');
+    ev.textContent = (e.mehrtaegig && !e.anfang ? '· ' : '') +
+                     (e.zeit ? e.zeit + ' ' : '') + (e.row.text || 'Ohne Titel');
+    ev.title = e.quelle.name + ' · ' + (e.row.text || 'Ohne Titel');
+    ev.addEventListener('click', ev2 => {
+      ev2.stopPropagation();
+      view.oeffnenAls === 'voll' ? App.oeffne(e.row.id) : zeilePeek(e.row, e.quelle.coll);
+    });
+    return ev;
+  };
+
+  const alsKalender = (coll, view, rows) => {
+    const w = document.createElement('div');
+    w.className = 'kal-block';
+    const quellen = kalenderQuellen(coll, view).filter(q => q.an);
+
+    if (!quellen.length || !quellen[0].dateKey) {
       w.innerHTML = '<div style="color:var(--text-faint)">Für den Kalender wird eine Datums-Spalte gebraucht.</div>';
       return w;
     }
 
+    const stufe = view.kalStufe || 'monat';
     const stand = view.monat ? new Date(view.monat) : new Date();
-    const jahr = stand.getFullYear(), monat = stand.getMonth();
+    if (isNaN(stand)) stand.setTime(Date.now());
+    const heuteStr = new Date().toDateString();
+    const wsMontag = Einstellungen.wochenstart() === 1;
+
+    /* Die Termine der Fremdkalender holen wir selbst, die eigenen sind
+       schon durch Filter und Sortierung der Ansicht gelaufen. */
+    const zeilenVon = (q) => q.eigen ? rows : Store.rowsOf(q.id);
+
+    const wochenAnfang = (d) => {
+      const x = new Date(d); x.setHours(0, 0, 0, 0);
+      const start = wsMontag ? 1 : 0;
+      x.setDate(x.getDate() - ((x.getDay() - start + 7) % 7));
+      return x;
+    };
+
+    /* --- Kopfzeile ----------------------------------------------------- */
+    const titel = stufe === 'monat'
+      ? stand.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+      : stufe === 'woche'
+        ? (() => { const a = wochenAnfang(stand), b2 = new Date(a); b2.setDate(a.getDate() + 6);
+            return 'KW ' + kalenderwoche(a) + ' · ' + a.toLocaleDateString('de-DE', { day:'numeric', month:'short' }) +
+                   ' – ' + b2.toLocaleDateString('de-DE', { day:'numeric', month:'short', year:'numeric' }); })()
+        : stand.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
     const kopf = document.createElement('div');
-    kopf.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:8px';
+    kopf.className = 'kal-kopf';
     kopf.innerHTML =
-      `<b style="font-size:15px">${stand.toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</b>` +
-      `<span style="flex:1"></span>` +
-      `<button data-m="-1" style="padding:3px 8px;border-radius:4px">‹</button>` +
-      `<button data-m="0"  style="padding:3px 8px;border-radius:4px;font-size:13px">Heute</button>` +
-      `<button data-m="1"  style="padding:3px 8px;border-radius:4px">›</button>`;
+      `<b>${esc(titel)}</b><span style="flex:1"></span>` +
+      '<div class="kal-stufen">' +
+        `<button data-s="tag"${stufe === 'tag' ? ' class="on"' : ''} title="Taste T oder D">Tag</button>` +
+        `<button data-s="woche"${stufe === 'woche' ? ' class="on"' : ''} title="Taste W">Woche</button>` +
+        `<button data-s="monat"${stufe === 'monat' ? ' class="on"' : ''} title="Taste M">Monat</button>` +
+      '</div>' +
+      '<button data-m="-1">‹</button>' +
+      '<button data-m="0" class="heute">Heute</button>' +
+      '<button data-m="1">›</button>';
+
+    const springe = (richtung) => {
+      const d = new Date(stand);
+      if (richtung === 0) return new Date();
+      if (stufe === 'monat') d.setMonth(d.getMonth() + richtung);
+      else if (stufe === 'woche') d.setDate(d.getDate() + 7 * richtung);
+      else d.setDate(d.getDate() + richtung);
+      return d;
+    };
+
     kopf.addEventListener('click', e => {
+      const s = e.target.closest('button[data-s]');
+      if (s) { Store.updateView(view.id, { kalStufe: s.dataset.s }); App.zeichneSeite(); return; }
       const b = e.target.closest('button[data-m]');
       if (!b) return;
-      const d = b.dataset.m === '0' ? new Date() : new Date(jahr, monat + Number(b.dataset.m), 1);
-      Store.updateView(view.id, { monat: d.toISOString() });
+      Store.updateView(view.id, { monat: springe(Number(b.dataset.m)).toISOString() });
       App.zeichneSeite();
     });
     w.appendChild(kopf);
 
-    const g = document.createElement('div');
-    g.className = 'cal';
-    /* Beginnt die Woche am Montag oder am Sonntag? Steht in den Einstellungen. */
-    const wsMontag = Einstellungen.wochenstart() === 1;
-    const tage = wsMontag ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['So','Mo','Di','Mi','Do','Fr','Sa'];
-    tage.forEach(d => {
-      const e = document.createElement('div');
-      e.className = 'dow';
-      e.textContent = d;
-      g.appendChild(e);
-    });
-
-    const ersterTag = new Date(jahr, monat, 1);
-    let start = wsMontag ? ersterTag.getDay() - 1 : ersterTag.getDay();
-    if (start < 0) start = 6;
-    const tageImMonat = new Date(jahr, monat + 1, 0).getDate();
-    const heuteStr = new Date().toDateString();
-
-    for (let i = 0; i < start; i++) {
+    /* --- Eine Tageszelle, wie sie Monat und Woche brauchen -------------- */
+    const tagesZelle = (tag, ausserhalb) => {
       const d = document.createElement('div');
-      d.className = 'day out';
-      g.appendChild(d);
-    }
-
-    for (let t = 1; t <= tageImMonat; t++) {
-      const tag = new Date(jahr, monat, t);
-      const d = document.createElement('div');
-      d.className = 'day' + (tag.toDateString() === heuteStr ? ' today' : '');
-      d.innerHTML = `<div class="n">${t}</div>`;
-
-      /* Ein Eintrag kann über mehrere Tage laufen, wenn es ein Endedatum gibt. */
-      const endeKey = view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null;
-
-      rows.forEach(r => {
-        const v = wert(r, dk, coll);
-        if (!v) return;
-        const dv = new Date(v);
-        if (isNaN(dv)) return;
-        const von = new Date(dv); von.setHours(0,0,0,0);
-        let bis = von;
-        if (endeKey) {
-          const e2 = new Date(wert(r, endeKey, coll));
-          if (!isNaN(e2)) { bis = new Date(e2); bis.setHours(0,0,0,0); }
-        }
-        const heuteTag = new Date(tag); heuteTag.setHours(0,0,0,0);
-        if (heuteTag < von || heuteTag > bis) return;
-
-        const mehrtaegig = bis > von;
-        const ersterTag2 = heuteTag.getTime() === von.getTime();
-        const letzterTag = heuteTag.getTime() === bis.getTime();
-
-        const ev = document.createElement('div');
-        ev.className = 'ev' + (mehrtaegig ? ' lang' : '') +
-                       (mehrtaegig && ersterTag2 ? ' anfang' : '') +
-                       (mehrtaegig && letzterTag ? ' ende' : '');
-        ev.textContent = (mehrtaegig && !ersterTag2 ? '· ' : '') + (r.text || 'Ohne Titel');
-        ev.addEventListener('click', (e2) => {
-          e2.stopPropagation();
-          view.oeffnenAls === 'voll' ? App.oeffne(r.id) : zeilePeek(r, coll);
-        });
-        d.appendChild(ev);
-      });
-
+      d.className = 'day' + (tag.toDateString() === heuteStr ? ' today' : '') +
+                    (ausserhalb ? ' out' : '');
+      d.innerHTML = `<div class="n">${tag.getDate()}</div>`;
+      quellen.forEach(q => termineAmTag(q, tag, zeilenVon(q))
+        .forEach(e => d.appendChild(terminKnopf(e, view))));
       d.addEventListener('dblclick', () => {
-        const iso = tag.toISOString().slice(0, 10);
-        Store.addRow(coll.id, { [dk]: iso });
+        const z = quellen.find(q => q.id === (view.neuIn || quellen[0].id)) || quellen[0];
+        const p = (n) => String(n).padStart(2, '0');
+        Store.addRow(z.id, { [z.dateKey]: tag.getFullYear() + '-' + p(tag.getMonth() + 1) + '-' + p(tag.getDate()) });
         App.zeichneSeite();
       });
-      g.appendChild(d);
+      return d;
+    };
+
+    /* --- Monat ---------------------------------------------------------- */
+    if (stufe === 'monat') {
+      const g = document.createElement('div');
+      g.className = 'cal';
+      (wsMontag ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['So','Mo','Di','Mi','Do','Fr','Sa'])
+        .forEach(n => { const e = document.createElement('div'); e.className = 'dow'; e.textContent = n; g.appendChild(e); });
+
+      const jahr = stand.getFullYear(), monat = stand.getMonth();
+      const erster = new Date(jahr, monat, 1);
+      let vorlauf = wsMontag ? erster.getDay() - 1 : erster.getDay();
+      if (vorlauf < 0) vorlauf = 6;
+      const tageImMonat = new Date(jahr, monat + 1, 0).getDate();
+
+      for (let i = vorlauf; i > 0; i--) g.appendChild(tagesZelle(new Date(jahr, monat, 1 - i), true));
+      for (let t = 1; t <= tageImMonat; t++) g.appendChild(tagesZelle(new Date(jahr, monat, t)));
+      const rest = (7 - ((vorlauf + tageImMonat) % 7)) % 7;
+      for (let i = 1; i <= rest; i++) g.appendChild(tagesZelle(new Date(jahr, monat + 1, i), true));
+      w.appendChild(g);
     }
 
-    w.appendChild(g);
+    /* --- Woche ---------------------------------------------------------- */
+    if (stufe === 'woche') {
+      const g = document.createElement('div');
+      g.className = 'cal woche';
+      const a = wochenAnfang(stand);
+      for (let i = 0; i < 7; i++) {
+        const t = new Date(a); t.setDate(a.getDate() + i);
+        const e = document.createElement('div');
+        e.className = 'dow' + (t.toDateString() === heuteStr ? ' jetzt' : '');
+        e.textContent = t.toLocaleDateString('de-DE', { weekday: 'short' }) + ' ' + t.getDate() + '.';
+        g.appendChild(e);
+      }
+      for (let i = 0; i < 7; i++) {
+        const t = new Date(a); t.setDate(a.getDate() + i);
+        g.appendChild(tagesZelle(t));
+      }
+      w.appendChild(g);
+    }
 
+    /* --- Tag ------------------------------------------------------------ */
+    if (stufe === 'tag') {
+      const g = document.createElement('div');
+      g.className = 'kal-tag';
+      const alle = [];
+      quellen.forEach(q => termineAmTag(q, stand, zeilenVon(q)).forEach(e => alle.push(e)));
+
+      const ganztags = alle.filter(e => e.stunde == null);
+      if (ganztags.length) {
+        const z = document.createElement('div');
+        z.className = 'kt-zeile ganztags';
+        z.innerHTML = '<div class="kt-std">ganztags</div>';
+        const box = document.createElement('div');
+        box.className = 'kt-inhalt';
+        ganztags.forEach(e => box.appendChild(terminKnopf(e, view)));
+        z.appendChild(box);
+        g.appendChild(z);
+      }
+
+      for (let h = 0; h < 24; h++) {
+        const drin = alle.filter(e => e.stunde === h);
+        /* Nachts nur zeigen, was auch belegt ist — sonst scrollt man ewig. */
+        if (!drin.length && (h < 7 || h > 21)) continue;
+        const z = document.createElement('div');
+        z.className = 'kt-zeile';
+        z.innerHTML = `<div class="kt-std">${String(h).padStart(2, '0')}:00</div>`;
+        const box = document.createElement('div');
+        box.className = 'kt-inhalt';
+        drin.forEach(e => box.appendChild(terminKnopf(e, view)));
+        box.addEventListener('dblclick', () => {
+          const q = quellen.find(x => x.id === (view.neuIn || quellen[0].id)) || quellen[0];
+          const p = (n) => String(n).padStart(2, '0');
+          Store.addRow(q.id, { [q.dateKey]: stand.getFullYear() + '-' + p(stand.getMonth() + 1) + '-' +
+                                            p(stand.getDate()) + 'T' + p(h) + ':00' });
+          App.zeichneSeite();
+        });
+        z.appendChild(box);
+        g.appendChild(z);
+      }
+      if (!alle.length) {
+        const leer = document.createElement('div');
+        leer.className = 'db-leer';
+        leer.textContent = 'Nichts an diesem Tag. Doppelklick auf eine Stunde legt einen Eintrag an.';
+        g.appendChild(leer);
+      }
+      w.appendChild(g);
+    }
+
+    /* --- Fuss: Kalenderliste und Zeitraum-Spalte ------------------------ */
+    const alleQuellen = kalenderQuellen(coll, view);
     const datumKeys2 = Object.keys(coll.schema).filter(k =>
       ['date','created','edited'].includes(coll.schema[k].type));
+
     const fuss = document.createElement('div');
     fuss.className = 'cal-fuss';
     fuss.innerHTML =
-      '<span>Doppelklick auf einen Tag legt einen Eintrag an.</span>' +
-      `<button data-a="ende">Zeitraum bis: <b>` +
+      '<span>Doppelklick legt einen Eintrag an · Tasten T, W, M</span>' +
+      `<button data-a="kalender">Kalender: <b>${alleQuellen.filter(q => q.an).length}</b></button>` +
+      '<button data-a="ende">Zeitraum bis: <b>' +
       `${view.endeKey && coll.schema[view.endeKey] ? esc(coll.schema[view.endeKey].name) : 'ein Tag'}</b></button>`;
+
     fuss.addEventListener('click', e => {
-      if (!e.target.closest('[data-a="ende"]')) return;
       const r2 = e.target.getBoundingClientRect();
-      const m = UI.menu('<div class="grp">Enddatum für mehrtägige Einträge</div>' +
-        datumKeys2.map(k => `<button data-e="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
-        '<hr><button data-e="">nur ein Tag</button>', r2.left, r2.bottom + 4);
-      m.addEventListener('click', ev => {
-        const b2 = ev.target.closest('button[data-e]');
-        if (!b2) return;
-        Store.updateView(view.id, { endeKey: b2.dataset.e });
-        m.remove(); App.zeichneSeite();
-      });
+
+      if (e.target.closest('[data-a="ende"]')) {
+        const m = UI.menu('<div class="grp">Enddatum für mehrtägige Einträge</div>' +
+          datumKeys2.map(k => `<button data-e="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
+          '<hr><button data-e="">nur ein Tag</button>', r2.left, r2.bottom + 4);
+        m.addEventListener('click', ev => {
+          const b2 = ev.target.closest('button[data-e]');
+          if (!b2) return;
+          Store.updateView(view.id, { endeKey: b2.dataset.e });
+          m.remove(); App.zeichneSeite();
+        });
+        return;
+      }
+
+      if (e.target.closest('[data-a="kalender"]')) { kalenderListe(r2, coll, view); return; }
     });
     w.appendChild(fuss);
+
+    /* Tastenkürzel T/D, W, M — nur solange dieser Kalender auf der Seite steht
+       und niemand gerade in ein Feld tippt. */
+    if (!w.dataset.tasten) {
+      w.dataset.tasten = '1';
+      const taste = (e) => {
+        if (!document.body.contains(w)) { document.removeEventListener('keydown', taste); return; }
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const z = e.target;
+        if (z && (z.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(z.tagName))) return;
+        const k = e.key.toLowerCase();
+        const neu = (k === 't' || k === 'd') ? 'tag' : k === 'w' ? 'woche' : k === 'm' ? 'monat' : null;
+        if (!neu || neu === stufe) return;
+        e.preventDefault();
+        Store.updateView(view.id, { kalStufe: neu });
+        App.zeichneSeite();
+      };
+      document.addEventListener('keydown', taste);
+    }
+
     return w;
+  };
+
+  /** Welche Datenbanken liegen im Kalender übereinander? */
+  const kalenderListe = (r, coll, view) => {
+    const zeichnen = () => {
+      const liste = kalenderQuellen(coll, view);
+      return '<div class="grp">Kalender in dieser Ansicht</div>' +
+        liste.map((q, i) =>
+          `<button data-t="${i}"><span class="mi">${q.an ? '☑' : '☐'}</span>` +
+          `<span class="kal-punkt bg-${q.farbe}"></span>${esc(q.name)}` +
+          (q.eigen ? '<span class="ms">eigen</span>'
+                   : `<span class="ms"><span data-hoch="${i}">↑</span> <span data-weg="${i}">✕</span></span>`) +
+          '</button>').join('') +
+        '<hr><button data-a="dazu"><span class="mi">＋</span>Weitere Datenbank einblenden</button>' +
+        `<button data-a="neuin"><span class="mi">✚</span>Neue Einträge landen in: ` +
+        `${esc((liste.find(q => q.id === (view.neuIn || liste[0].id)) || liste[0]).name)}</button>`;
+    };
+
+    const m = UI.menu(zeichnen(), r.left - 60, r.bottom + 4);
+
+    m.addEventListener('click', e => {
+      const hoch = e.target.closest('[data-hoch]');
+      if (hoch) {
+        const i = +hoch.dataset.hoch - 1;          /* 0 ist die eigene Datenbank */
+        const x = view.extraDbs || [];
+        if (i > 0) { [x[i - 1], x[i]] = [x[i], x[i - 1]]; Store.updateView(view.id, { extraDbs: x }); }
+        m.innerHTML = zeichnen(); App.zeichneSeite();
+        return;
+      }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) {
+        const x = view.extraDbs || [];
+        x.splice(+weg.dataset.weg - 1, 1);
+        Store.updateView(view.id, { extraDbs: x });
+        m.innerHTML = zeichnen(); App.zeichneSeite();
+        return;
+      }
+      const t = e.target.closest('button[data-t]');
+      if (t) {
+        const i = +t.dataset.t;
+        if (i === 0) { UI.toast('Die eigene Datenbank bleibt sichtbar'); return; }
+        const x = view.extraDbs || [];
+        x[i - 1].an = x[i - 1].an === false;
+        Store.updateView(view.id, { extraDbs: x });
+        m.innerHTML = zeichnen(); App.zeichneSeite();
+        return;
+      }
+
+      if (e.target.closest('[data-a="dazu"]')) {
+        const drin = new Set([coll.id, ...(view.extraDbs || []).map(x => x.collectionId)]);
+        const frei = Object.values(Store.cache.collections).filter(c =>
+          !drin.has(c.id) && Object.values(c.schema).some(d => d.type === 'date'));
+        if (!frei.length) { UI.toast('Keine weitere Datenbank mit Datum gefunden'); return; }
+        m.innerHTML = '<div class="grp">Welche Datenbank?</div>' +
+          frei.map(c => `<button data-c="${c.id}">${esc(c.name || 'Ohne Namen')}</button>`).join('');
+        m.addEventListener('click', ev => {
+          const c = ev.target.closest('button[data-c]');
+          if (!c) return;
+          const x = view.extraDbs || [];
+          x.push({ collectionId: c.dataset.c, an: true,
+                   farbe: KAL_FARBEN[(x.length + 1) % KAL_FARBEN.length] });
+          Store.updateView(view.id, { extraDbs: x });
+          m.remove(); App.zeichneSeite();
+          UI.toast('Kalender eingeblendet');
+        });
+        return;
+      }
+
+      if (e.target.closest('[data-a="neuin"]')) {
+        const liste = kalenderQuellen(coll, view);
+        m.innerHTML = '<div class="grp">Neue Einträge landen in</div>' +
+          liste.map(q => `<button data-n="${q.id}">${esc(q.name)}</button>`).join('');
+        m.addEventListener('click', ev => {
+          const n = ev.target.closest('button[data-n]');
+          if (!n) return;
+          Store.updateView(view.id, { neuIn: n.dataset.n });
+          m.remove(); App.zeichneSeite();
+        });
+      }
+    });
   };
 
   /* --- Zeitstrahl ---------------------------------------------------------
@@ -1594,8 +2057,8 @@ const Datenbank = (() => {
     const warten = Math.max(0, 1100 - (Date.now() - letzteSuche));
     if (warten) await new Promise(r => setTimeout(r, warten));
     letzteSuche = Date.now();
-    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
-                          encodeURIComponent(text2));
+    const r = await KI.holen('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
+                            encodeURIComponent(text2), {}, { versuche: 3, basis: 1200 });
     if (!r.ok) throw new Error('Ortssuche antwortet mit ' + r.status);
     const d = await r.json();
     if (!d.length) return null;
@@ -1966,7 +2429,9 @@ const Datenbank = (() => {
     w.className = 'db-form';
 
     const felder = Object.keys(coll.schema).filter(k =>
-      !['formula','created','edited','rollup','uid','button'].includes(coll.schema[k].type) &&
+      !NUR_LESEN.includes(coll.schema[k].type) &&
+      !KI_TYPEN.includes(coll.schema[k].type) &&
+      coll.schema[k].type !== 'button' &&
       !(view.hidden || []).includes(k));
 
     w.innerHTML =
@@ -1988,23 +2453,53 @@ const Datenbank = (() => {
         (regel ? `<em class="fl-hinweis">nur wenn ${esc(coll.schema[regel.key]?.name || '?')} = ` +
                  `${esc(regel.wert)}</em>` : '') + '</span>';
 
+      /* Die 13 Fragetypen aus Teil 8 — jeder bekommt das Feld, das zu ihm passt. */
       let eingabe;
       if (['select','status'].includes(def.type)) {
         eingabe = document.createElement('select');
         eingabe.innerHTML = '<option value=""></option>' +
           (def.options || []).map(o => `<option>${esc(o.name)}</option>`).join('');
+
+      } else if (def.type === 'multi') {
+        /* Mehrfachauswahl: eine Reihe Kästchen, wie in Notions Formular */
+        eingabe = document.createElement('div');
+        eingabe.className = 'form-mehr';
+        eingabe.innerHTML = (def.options || []).map(o =>
+          `<label class="tag bg-${o.color}"><input type="checkbox" data-o="${esc(o.name)}"> ${esc(o.name)}</label>`
+        ).join('') || '<span style="color:var(--text-faint)">Noch keine Optionen</span>';
+
       } else if (def.type === 'checkbox') {
         eingabe = document.createElement('input');
         eingabe.type = 'checkbox';
-      } else if (def.type === 'date') {
+
+      } else if (def.type === 'files') {
         eingabe = document.createElement('input');
-        eingabe.type = 'date';
-      } else if (def.type === 'number') {
-        eingabe = document.createElement('input');
-        eingabe.type = 'number';
-      } else {
+        eingabe.type = 'file';
+        eingabe.multiple = true;
+
+      } else if (def.type === 'text') {
+        /* Lange Antwort */
+        eingabe = document.createElement('textarea');
+        eingabe.rows = 3;
+        eingabe.placeholder = def.beschreibung || '';
+
+      } else if (def.type === 'person') {
         eingabe = document.createElement('input');
         eingabe.type = 'text';
+        eingabe.setAttribute('list', 'fp-' + k);
+        const namen = [...new Set(Store.rowsOf(coll.id)
+          .map(r => wert(r, k, coll)).filter(Boolean).map(String))];
+        const dl = document.createElement('datalist');
+        dl.id = 'fp-' + k;
+        dl.innerHTML = namen.map(n => `<option>${esc(n)}</option>`).join('');
+        feld.appendChild(dl);
+
+      } else {
+        eingabe = document.createElement('input');
+        eingabe.type = { date:'date', number:'number', url:'url', email:'email',
+                         phone:'tel', duration:'text', place:'text' }[def.type] || 'text';
+        if (def.type === 'duration') eingabe.placeholder = 'z. B. 1h30';
+        if (def.type === 'place')    eingabe.placeholder = 'Adresse oder Ort';
       }
       eingabe.dataset.k = k;
       feld.appendChild(eingabe);
@@ -2092,18 +2587,54 @@ const Datenbank = (() => {
       const props = {};
       let titel = '';
       let fehlt = null;
-      box.querySelectorAll('input[data-k], select[data-k]').forEach(el => {
+      const dateiFelder = [];
+
+      box.querySelectorAll('[data-k]').forEach(el => {
         const k = el.dataset.k;
+        if (!coll.schema[k] || el.tagName === 'DATALIST') return;
         const versteckt = el.closest('.form-feld')?.style.display === 'none';
-        const v = el.type === 'checkbox' ? el.checked : el.value;
-        if (!versteckt && (view.pflicht || []).includes(k) && (v === '' || v === false)) fehlt = coll.schema[k].name;
-        if (coll.schema[k].type === 'title') titel = v;
+        const typ = coll.schema[k].type;
+        let v;
+
+        if (typ === 'multi') {
+          v = [...el.querySelectorAll('input[data-o]:checked')].map(x => x.dataset.o);
+        } else if (typ === 'files') {
+          v = [];
+          if (!versteckt && el.files && el.files.length) dateiFelder.push([k, el.files]);
+        } else if (typ === 'duration') {
+          v = dauerLesen(el.value);
+        } else if (typ === 'place') {
+          v = el.value.trim() ? { name: el.value.trim() } : null;
+        } else {
+          v = el.type === 'checkbox' ? el.checked : el.value;
+        }
+
+        const leer = v === '' || v === false || v == null || (Array.isArray(v) && !v.length);
+        if (!versteckt && (view.pflicht || []).includes(k) && leer &&
+            !(typ === 'files' && dateiFelder.some(d => d[0] === k))) fehlt = coll.schema[k].name;
+        if (typ === 'title') titel = v;
         else props[k] = v;
       });
       if (fehlt) { UI.toast('Bitte „' + fehlt + '" ausfüllen'); return; }
 
       const r = Store.addRow(coll.id, props);
       Store.updateBlock(r.id, { text: titel || 'Ohne Titel' });
+      setTimeout(() => automationenLaufen(r, coll, 'formular-neu'), 0);
+
+      /* Angehängte Dateien bleiben lokal — als Data-URL am Eintrag. */
+      dateiFelder.forEach(([k, dateien]) => {
+        [...dateien].slice(0, 5).forEach(d => {
+          if (d.size > 6 * 1024 * 1024) { UI.toast('„' + d.name + '" ist zu gross (über 6 MB)'); return; }
+          const leser = new FileReader();
+          leser.onload = () => {
+            const alt = (Store.getBlock(r.id).props || {})[k] || [];
+            Store.setProp(r.id, k, [...alt, { name: d.name, src: leser.result }]);
+            App.zeichneSeite();
+          };
+          leser.readAsDataURL(d);
+        });
+      });
+
       UI.toast('Eintrag angelegt');
       App.zeichneSeite();
     });
@@ -2518,7 +3049,7 @@ const Datenbank = (() => {
         coll.schema[key].ziel = (andere.find(c => c.id !== coll.id) || andere[0] || {}).id || '';
       }
       if (t === 'rollup') coll.schema[key].rollup = 'Anzahl alle';
-      if (t === 'ki') coll.schema[key].auftrag = 'Fasse diesen Eintrag in einem kurzen Satz zusammen.';
+      if (KI_TYPEN.includes(t)) coll.schema[key].auftrag = KI_AUFTRAG[t] || KI_AUFTRAG.ki;
       if (t === 'button') coll.schema[key].knopfText = 'Ausführen';
       Store.updateCollection(coll.id, { schema: coll.schema });
       m.remove();
@@ -2548,7 +3079,7 @@ const Datenbank = (() => {
       (['number','formula','rollup'].includes(def.type)
         ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' : '') +
       (def.type === 'uid'      ? '<button data-a="praefix"><span class="mi">ID</span>Vorsilbe setzen</button>' : '') +
-      (def.type === 'ki'       ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
+      (KI_TYPEN.includes(def.type) ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
       '<hr>' +
       '<button data-a="asc"><span class="mi">↑</span>Aufsteigend sortieren</button>' +
       '<button data-a="desc"><span class="mi">↓</span>Absteigend sortieren</button>' +
@@ -3278,12 +3809,17 @@ const Datenbank = (() => {
    * Hier läuft alles im Browser — kein Dienst, keine Wartezeit.
    * ======================================================================*/
   const AUSLOESER = [
-    ['zeile-neu',      'Ein Eintrag wird angelegt'],
-    ['prop-geaendert', 'Eine Eigenschaft ändert sich'],
-    ['prop-wert',      'Eine Eigenschaft bekommt einen bestimmten Wert'],
-    ['zeit-vor',       'Einige Tage vor einem Datum'],
-    ['zeit-nach',      'Einige Tage nach einem Datum']
+    ['zeile-neu',       'Ein Eintrag wird angelegt'],
+    ['prop-geaendert',  'Eine Eigenschaft ändert sich'],
+    ['prop-wert',       'Eine Eigenschaft bekommt einen bestimmten Wert'],
+    ['zeile-geaendert', 'Ein Eintrag wird bearbeitet — egal welches Feld'],
+    ['zeile-weg',       'Ein Eintrag verschwindet aus der Datenbank'],
+    ['formular-neu',    'Über das Formular kommt eine Antwort'],
+    ['zeit-vor',        'Einige Tage vor einem Datum'],
+    ['zeit-nach',       'Einige Tage nach einem Datum']
   ];
+  /* Diese Auslöser hängen an keiner einzelnen Spalte. */
+  const OHNE_SPALTE = ['zeile-neu', 'zeile-geaendert', 'zeile-weg', 'formular-neu'];
   const AKTIONEN = [
     ['setze-prop',   'Eigenschaft setzen'],
     ['ki-fuellen',   'KI-Feld ausfüllen lassen'],
@@ -3376,7 +3912,7 @@ const Datenbank = (() => {
         if (a.an === false) return;
         const w = a.wenn || {};
         if (w.art !== art) return;
-        if (w.art !== 'zeile-neu' && w.key && w.key !== key) return;
+        if (!OHNE_SPALTE.includes(w.art) && w.key && w.key !== key) return;
         if (w.art === 'prop-wert' && String(neuerWert ?? '') !== String(w.wert ?? '')) return;
 
         /* Zusätzliche Bedingungen — alle müssen zutreffen */
@@ -3453,8 +3989,10 @@ const Datenbank = (() => {
             Object.keys(coll.schema).forEach(k2 => {
               paket.werte[coll.schema[k2].name] = Formula.anzeige(wert(row, k2, coll));
             });
-            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                         body: JSON.stringify(paket) })
+            KI.holen(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(paket) },
+                     { versuche: 3, beiWartezeit: (sek, nr) =>
+                         UI.toast('Webhook meldet sich nicht — Versuch ' + (nr + 1) + ' in ' + sek + ' s') })
               .then(() => UI.toast('An den Webhook geschickt'))
               .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message +
                                       ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
@@ -3524,8 +4062,20 @@ const Datenbank = (() => {
       if (c) setTimeout(() => {
         automationenLaufen(r, c, 'prop-geaendert', key, value);
         automationenLaufen(r, c, 'prop-wert', key, value);
+        automationenLaufen(r, c, 'zeile-geaendert', key, value);
       }, 0);
       return erg;
+    };
+
+    /* Wird ein Eintrag weggeworfen, feuert das noch, solange es ihn gibt. */
+    const altTrash = Store.trashBlock;
+    Store.trashBlock = function (id) {
+      const r = Store.getBlock(id);
+      if (r && r.parentTable === 'collection') {
+        const c = Store.getCollection(r.parentId);
+        if (c) { try { automationenLaufen(r, c, 'zeile-weg'); } catch (e) {} }
+      }
+      return altTrash.call(Store, id);
     };
   };
 
@@ -3637,6 +4187,9 @@ const Datenbank = (() => {
       o.querySelector('#awl').style.display = (art0 === 'prop-wert' || zeit) ? '' : 'none';
       o.querySelector('#awl').firstChild.textContent = zeit ? 'wie viele Tage?' : '… mit diesem Wert';
       o.querySelector('#av').placeholder = zeit ? 'z. B. 3' : 'z. B. Erledigt';
+      /* Auslöser, die an keiner Spalte hängen, brauchen auch keine Auswahl */
+      o.querySelector('#ak').closest('label').style.display =
+        OHNE_SPALTE.includes(art0) ? 'none' : '';
       const d = o.querySelector('#ad').value;
       o.querySelector('#adk').style.display =
         ['setze-prop','ki-fuellen','zaehler','wiederholen'].includes(d) ? '' : 'none';
@@ -3802,6 +4355,7 @@ const Datenbank = (() => {
            automationenMenue, automationenLaufen, gewaehlteZeilen,
            relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
            ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
+           rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert };
 })();

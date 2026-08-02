@@ -481,12 +481,26 @@ body[data-font="mono"]  #page{font-family:var(--mono)}
 body[data-small="1"] #page{font-size:14px}
 body[data-small="1"] .b-text .ct{font-size:14px}
 
+/* Spaltenblöcke: die Zahl kommt aus --sp und wird mobil auf 1 gesetzt */
+.spalten-block{display:grid; grid-template-columns:repeat(var(--sp,2),1fr); gap:24px; width:100%}
+
 @media(max-width:820px){
   #sidebar{position:fixed; z-index:500; height:100%; box-shadow:var(--shadow)}
   #page{padding:0 22px 40vh}
   .cover{margin:0 -22px}
   #ai{position:fixed; right:0; top:0; height:100%; z-index:500}
   .blk > .handles{left:-40px}
+}
+
+/* Auf schmalen Bildschirmen stapelt Notion die Spalten untereinander,
+   und die Mehrfachauswahl von Blöcken entfällt. Genauso hier. */
+@media(max-width:700px){
+  .spalten-block{grid-template-columns:1fr; gap:8px}
+  .blk > .handles{display:none}
+  .cal.woche{grid-template-columns:1fr}
+  .cal.woche .day{min-height:auto}
+  #topbar .top-btn.schmal{padding:0 6px}
+  .kt-std{width:58px}
 }
 
 /* ==========================================================================
@@ -937,12 +951,21 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 .form-feld{display:flex; flex-direction:column; gap:5px; font-size:13.5px; color:var(--text-dim)}
 .form-feld em{color:var(--c-red); font-style:normal}
 .form-feld input[type="text"], .form-feld input[type="number"],
-.form-feld input[type="date"], .form-feld select{
+.form-feld input[type="date"], .form-feld input[type="url"],
+.form-feld input[type="email"], .form-feld input[type="tel"],
+.form-feld select, .form-feld textarea{
   padding:9px 11px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:7px; outline:none; color:var(--text); font-size:14px;
+  font-family:inherit; width:100%;
 }
+.form-feld textarea{resize:vertical; min-height:70px; line-height:1.5}
 .form-feld input[type="checkbox"]{width:17px; height:17px; accent-color:var(--accent)}
-.form-feld input:focus, .form-feld select:focus{border-color:var(--accent)}
+.form-feld input[type="file"]{font-size:13px; color:var(--text-dim)}
+.form-feld input:focus, .form-feld select:focus, .form-feld textarea:focus{border-color:var(--accent)}
+/* Mehrfachauswahl im Formular */
+.form-mehr{display:flex; flex-wrap:wrap; gap:7px}
+.form-mehr label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:13px}
+.form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent)}
 .form-fuss{display:flex; gap:10px; align-items:center; margin-top:18px}
 .form-fuss .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:7px; font-weight:500}
 .form-fuss button:not(.prim){font-size:13px; color:var(--text-dim); padding:6px 10px; border-radius:6px; border:1px solid var(--line)}
@@ -1322,6 +1345,44 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .cal .ev.lang.anfang{border-radius:4px 0 0 4px; font-weight:500}
 .cal .ev.lang.ende{border-radius:0 4px 4px 0}
 .cal .ev.lang.anfang.ende{border-radius:4px}
-.cal-fuss{display:flex; align-items:center; gap:12px; margin-top:7px; font-size:12px; color:var(--text-faint)}
-.cal-fuss button{margin-left:auto; font-size:12px; padding:3px 9px; border-radius:5px; border:1px solid var(--line); color:var(--text-dim)}
+.cal-fuss{display:flex; align-items:center; gap:8px; margin-top:7px; font-size:12px; color:var(--text-faint)}
+.cal-fuss button{font-size:12px; padding:3px 9px; border-radius:5px; border:1px solid var(--line); color:var(--text-dim)}
+.cal-fuss button:first-of-type{margin-left:auto}
 .cal-fuss button:hover{background:var(--bg-hover); color:var(--text)}
+
+/* Kalender: Kopfzeile mit Tag / Woche / Monat */
+.kal-kopf{display:flex; align-items:center; gap:6px; margin-bottom:8px}
+.kal-kopf > b{font-size:15px}
+.kal-kopf button{padding:3px 9px; border-radius:5px; font-size:13px; color:var(--text-dim)}
+.kal-kopf button:hover{background:var(--bg-hover); color:var(--text)}
+.kal-stufen{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-right:6px}
+.kal-stufen button{border-radius:0; padding:3px 11px}
+.kal-stufen button.on{background:var(--accent); color:#fff}
+.kal-stufen button.on:hover{background:var(--accent); color:#fff}
+.cal.woche .day{min-height:190px}
+.cal.woche .dow.jetzt{color:var(--accent); font-weight:600}
+/* Farbpunkt je Kalender */
+.kal-punkt{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; flex:0 0 auto}
+.cal .ev.q-green{border-left:3px solid var(--c-green)}
+.cal .ev.q-orange{border-left:3px solid var(--c-orange)}
+.cal .ev.q-purple{border-left:3px solid var(--c-purple)}
+.cal .ev.q-pink{border-left:3px solid var(--c-pink)}
+.cal .ev.q-red{border-left:3px solid var(--c-red)}
+.cal .ev.q-yellow{border-left:3px solid var(--c-yellow)}
+.cal .ev.q-brown{border-left:3px solid var(--c-brown)}
+/* Tagesansicht */
+.kal-tag{border:1px solid var(--line); border-radius:7px; overflow:hidden}
+.kt-zeile{display:flex; border-bottom:1px solid var(--line-soft); min-height:38px}
+.kt-zeile:last-child{border-bottom:none}
+.kt-zeile.ganztags{background:var(--bg-card)}
+.kt-std{width:74px; flex:0 0 auto; padding:8px 10px; font-size:12px; color:var(--text-faint);
+  border-right:1px solid var(--line-soft)}
+.kt-inhalt{flex:1; padding:5px 8px; display:flex; flex-direction:column; gap:3px}
+.kt-inhalt .ev{padding:4px 8px; border-radius:4px; background:var(--bg-card); cursor:pointer; font-size:13px}
+.kt-inhalt .ev:hover{background:var(--bg-hover)}
+.kt-inhalt .ev.q-green{border-left:3px solid var(--c-green)}
+.kt-inhalt .ev.q-orange{border-left:3px solid var(--c-orange)}
+.kt-inhalt .ev.q-purple{border-left:3px solid var(--c-purple)}
+.kt-inhalt .ev.q-blue{border-left:3px solid var(--c-blue)}
+.kt-inhalt .ev.q-pink{border-left:3px solid var(--c-pink)}
+.kt-inhalt .ev.q-red{border-left:3px solid var(--c-red)}

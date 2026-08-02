@@ -491,12 +491,26 @@ body[data-font="mono"]  #page{font-family:var(--mono)}
 body[data-small="1"] #page{font-size:14px}
 body[data-small="1"] .b-text .ct{font-size:14px}
 
+/* Spaltenblöcke: die Zahl kommt aus --sp und wird mobil auf 1 gesetzt */
+.spalten-block{display:grid; grid-template-columns:repeat(var(--sp,2),1fr); gap:24px; width:100%}
+
 @media(max-width:820px){
   #sidebar{position:fixed; z-index:500; height:100%; box-shadow:var(--shadow)}
   #page{padding:0 22px 40vh}
   .cover{margin:0 -22px}
   #ai{position:fixed; right:0; top:0; height:100%; z-index:500}
   .blk > .handles{left:-40px}
+}
+
+/* Auf schmalen Bildschirmen stapelt Notion die Spalten untereinander,
+   und die Mehrfachauswahl von Blöcken entfällt. Genauso hier. */
+@media(max-width:700px){
+  .spalten-block{grid-template-columns:1fr; gap:8px}
+  .blk > .handles{display:none}
+  .cal.woche{grid-template-columns:1fr}
+  .cal.woche .day{min-height:auto}
+  #topbar .top-btn.schmal{padding:0 6px}
+  .kt-std{width:58px}
 }
 
 /* ==========================================================================
@@ -947,12 +961,21 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 .form-feld{display:flex; flex-direction:column; gap:5px; font-size:13.5px; color:var(--text-dim)}
 .form-feld em{color:var(--c-red); font-style:normal}
 .form-feld input[type="text"], .form-feld input[type="number"],
-.form-feld input[type="date"], .form-feld select{
+.form-feld input[type="date"], .form-feld input[type="url"],
+.form-feld input[type="email"], .form-feld input[type="tel"],
+.form-feld select, .form-feld textarea{
   padding:9px 11px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:7px; outline:none; color:var(--text); font-size:14px;
+  font-family:inherit; width:100%;
 }
+.form-feld textarea{resize:vertical; min-height:70px; line-height:1.5}
 .form-feld input[type="checkbox"]{width:17px; height:17px; accent-color:var(--accent)}
-.form-feld input:focus, .form-feld select:focus{border-color:var(--accent)}
+.form-feld input[type="file"]{font-size:13px; color:var(--text-dim)}
+.form-feld input:focus, .form-feld select:focus, .form-feld textarea:focus{border-color:var(--accent)}
+/* Mehrfachauswahl im Formular */
+.form-mehr{display:flex; flex-wrap:wrap; gap:7px}
+.form-mehr label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:13px}
+.form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent)}
 .form-fuss{display:flex; gap:10px; align-items:center; margin-top:18px}
 .form-fuss .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:7px; font-weight:500}
 .form-fuss button:not(.prim){font-size:13px; color:var(--text-dim); padding:6px 10px; border-radius:6px; border:1px solid var(--line)}
@@ -1332,9 +1355,47 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .cal .ev.lang.anfang{border-radius:4px 0 0 4px; font-weight:500}
 .cal .ev.lang.ende{border-radius:0 4px 4px 0}
 .cal .ev.lang.anfang.ende{border-radius:4px}
-.cal-fuss{display:flex; align-items:center; gap:12px; margin-top:7px; font-size:12px; color:var(--text-faint)}
-.cal-fuss button{margin-left:auto; font-size:12px; padding:3px 9px; border-radius:5px; border:1px solid var(--line); color:var(--text-dim)}
+.cal-fuss{display:flex; align-items:center; gap:8px; margin-top:7px; font-size:12px; color:var(--text-faint)}
+.cal-fuss button{font-size:12px; padding:3px 9px; border-radius:5px; border:1px solid var(--line); color:var(--text-dim)}
+.cal-fuss button:first-of-type{margin-left:auto}
 .cal-fuss button:hover{background:var(--bg-hover); color:var(--text)}
+
+/* Kalender: Kopfzeile mit Tag / Woche / Monat */
+.kal-kopf{display:flex; align-items:center; gap:6px; margin-bottom:8px}
+.kal-kopf > b{font-size:15px}
+.kal-kopf button{padding:3px 9px; border-radius:5px; font-size:13px; color:var(--text-dim)}
+.kal-kopf button:hover{background:var(--bg-hover); color:var(--text)}
+.kal-stufen{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-right:6px}
+.kal-stufen button{border-radius:0; padding:3px 11px}
+.kal-stufen button.on{background:var(--accent); color:#fff}
+.kal-stufen button.on:hover{background:var(--accent); color:#fff}
+.cal.woche .day{min-height:190px}
+.cal.woche .dow.jetzt{color:var(--accent); font-weight:600}
+/* Farbpunkt je Kalender */
+.kal-punkt{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; flex:0 0 auto}
+.cal .ev.q-green{border-left:3px solid var(--c-green)}
+.cal .ev.q-orange{border-left:3px solid var(--c-orange)}
+.cal .ev.q-purple{border-left:3px solid var(--c-purple)}
+.cal .ev.q-pink{border-left:3px solid var(--c-pink)}
+.cal .ev.q-red{border-left:3px solid var(--c-red)}
+.cal .ev.q-yellow{border-left:3px solid var(--c-yellow)}
+.cal .ev.q-brown{border-left:3px solid var(--c-brown)}
+/* Tagesansicht */
+.kal-tag{border:1px solid var(--line); border-radius:7px; overflow:hidden}
+.kt-zeile{display:flex; border-bottom:1px solid var(--line-soft); min-height:38px}
+.kt-zeile:last-child{border-bottom:none}
+.kt-zeile.ganztags{background:var(--bg-card)}
+.kt-std{width:74px; flex:0 0 auto; padding:8px 10px; font-size:12px; color:var(--text-faint);
+  border-right:1px solid var(--line-soft)}
+.kt-inhalt{flex:1; padding:5px 8px; display:flex; flex-direction:column; gap:3px}
+.kt-inhalt .ev{padding:4px 8px; border-radius:4px; background:var(--bg-card); cursor:pointer; font-size:13px}
+.kt-inhalt .ev:hover{background:var(--bg-hover)}
+.kt-inhalt .ev.q-green{border-left:3px solid var(--c-green)}
+.kt-inhalt .ev.q-orange{border-left:3px solid var(--c-orange)}
+.kt-inhalt .ev.q-purple{border-left:3px solid var(--c-purple)}
+.kt-inhalt .ev.q-blue{border-left:3px solid var(--c-blue)}
+.kt-inhalt .ev.q-pink{border-left:3px solid var(--c-pink)}
+.kt-inhalt .ev.q-red{border-left:3px solid var(--c-red)}
 
 </style>
 </head>
@@ -1396,7 +1457,10 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
     <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben">Teilen</button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)">✨ KI</button>
     <button class="top-btn schmal" id="btn-komm"    title="Kommentare">💬</button>
-    <button class="top-btn schmal" id="btn-verlauf" title="Versionsverlauf">🕘</button>
+    <button class="top-btn schmal" id="btn-verlauf" title="Aktualisierungen und Versionsverlauf">🕘</button>
+    <button class="top-btn schmal" id="btn-auto"    title="Automationen der Datenbank">⚡</button>
+    <button class="top-btn schmal" id="btn-link"    title="Link zur Seite kopieren">🔗</button>
+    <button class="top-btn schmal" id="btn-lock"    title="Seite gegen Bearbeiten sperren">🔓</button>
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten">☆</button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen">⋯</button>
   </header>
@@ -1623,6 +1687,7 @@ const Store = (() => {
       color: '',
       created: now(),
       edited: now(),
+      erstelltVon: getMeta('nutzer', '') || 'Ich',
       alive: true
     }, patch);
 
@@ -1643,7 +1708,7 @@ const Store = (() => {
   const updateBlock = (id, patch) => {
     const b = cache.blocks[id];
     if (!b) return null;
-    Object.assign(b, patch, { edited: now() });
+    Object.assign(b, patch, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
     save('blocks', b);
     return b;
   };
@@ -1891,6 +1956,26 @@ const Store = (() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return [];
     const out = [];
+
+    /* Suche nach Seiten-ID — Notions Verwaltungssuche. Es zählt sowohl die
+       lange Form 8-4-4-4-12 als auch die Kurzform ohne Bindestriche, und
+       auch eine ganze Seitenadresse, aus der die ID herausgeschnitten wird. */
+    const stueck = needle.match(/[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{6,12}/) ||
+                   (/^[0-9a-f-]+$/.test(needle) ? [needle] : null);
+    const ohne = stueck ? stueck[0].replace(/-/g, '') : '';
+    if (ohne.length >= 12) {
+      const treffer = Object.values(cache.blocks).filter(b =>
+        b.id && b.id.replace(/-/g, '').startsWith(ohne));
+      if (treffer.length) {
+        return treffer.slice(0, 20).map(b => {
+          const seite = seiteVon(b);
+          return { page: seite, treffer: 'Seiten-ID',
+                   snippet: b.id + (b.type !== 'page' ? ' · Block vom Typ ' + b.type : '') +
+                            (b.alive ? '' : ' · im Papierkorb'),
+                   pfad: pfadText(seite.id) };
+        });
+      }
+    }
     const wo = filter.wo || 'alles';
     const grenze = { tag: 1, woche: 7, monat: 30 }[filter.seit];
     const seitDatum = grenze ? Date.now() - grenze * 86400000 : 0;
@@ -1918,6 +2003,16 @@ const Store = (() => {
     });
 
     return out.slice(0, 60);
+  };
+
+  /** Zu welcher Seite gehört ein Block? Klettert nach oben, bis eine da ist. */
+  const seiteVon = (b) => {
+    let cur = b, n = 0;
+    while (cur && n++ < 40) {
+      if (cur.type === 'page') return cur;
+      cur = cur.parentId ? cache.blocks[cur.parentId] : null;
+    }
+    return b;
   };
 
   /** Der Pfad als Text, ohne die Seite selbst — für die Trefferliste. */
@@ -4564,7 +4659,10 @@ const Blocks = (() => {
       case 'columns': case 'columns3': {
         const w = document.createElement('div');
         const n = block.type === 'columns3' ? 3 : (block.spalten || 2);
-        w.style.cssText = `display:grid; grid-template-columns:repeat(${n},1fr); gap:24px; width:100%`;
+        /* Die Spaltenzahl steht als Variable da, damit sie auf schmalen
+           Bildschirmen per CSS auf eine Spalte fallen kann — wie in Notion. */
+        w.className = 'spalten-block';
+        w.style.setProperty('--sp', n);
         Store.childrenOf(block.id).forEach(k => w.appendChild(render(k, tiefe)));
         box.appendChild(w);
         break;
@@ -5902,8 +6000,29 @@ const Datenbank = (() => {
     { id:'rollup',     name:'Rollup',           icon:'⤴'  },
     { id:'uid',        name:'Laufende Nummer',  icon:'ID' },
     { id:'button',     name:'Knopf',            icon:'🔘' },
-    { id:'ki',         name:'KI-Feld',          icon:'✨' }
+    { id:'ki',         name:'KI-Feld',          icon:'✨' },
+    /* --- ab hier neu, damit alle 29 Typen aus Teil 7 da sind ------------- */
+    { id:'createdBy',  name:'Erstellt von',     icon:'👤' },
+    { id:'editedBy',   name:'Zuletzt bearbeitet von', icon:'👥' },
+    { id:'place',      name:'Ort',              icon:'📍' },
+    { id:'duration',   name:'Zeitspanne',       icon:'⏱'  },
+    { id:'verify',     name:'Prüfung',          icon:'✔'  },
+    { id:'ki-fassung', name:'KI: Zusammenfassung', icon:'✨' },
+    { id:'ki-sprache', name:'KI: Übersetzung',  icon:'✨' },
+    { id:'ki-worte',   name:'KI: Schlagwörter', icon:'✨' }
   ];
+
+  /* Alle Felder, die die KI selbst füllt — sie teilen sich eine Mechanik. */
+  const KI_TYPEN = ['ki', 'ki-fassung', 'ki-sprache', 'ki-worte'];
+  const KI_AUFTRAG = {
+    'ki':         'Fasse diesen Eintrag in einem kurzen Satz zusammen.',
+    'ki-fassung': 'Fasse diesen Eintrag in einem kurzen Satz zusammen.',
+    'ki-sprache': 'Übersetze den Titel dieses Eintrags ins Englische. Gib nur die Übersetzung zurück.',
+    'ki-worte':   'Nenne drei bis fünf Schlagwörter zu diesem Eintrag, mit Komma getrennt.'
+  };
+
+  /* Felder, die die App selbst füllt und die niemand tippt. */
+  const NUR_LESEN = ['formula','created','edited','rollup','uid','createdBy','editedBy'];
 
   const propTyp = (id) => TYPEN.find(t => t.id === id) || TYPEN[1];
 
@@ -5936,19 +6055,32 @@ const Datenbank = (() => {
     rollup:   ['ist gleich','ist nicht gleich','größer als','kleiner als','enthält','ist leer','ist nicht leer'],
     uid:      ['ist gleich','größer als','kleiner als'],
     ki:       ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
-    button:   []
+    button:   [],
+    createdBy:['ist','ist nicht','enthält','ist leer','ist nicht leer'],
+    editedBy: ['ist','ist nicht','enthält','ist leer','ist nicht leer'],
+    place:    ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
+    duration: ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich','ist leer','ist nicht leer'],
+    verify:   ['ist geprüft','ist nicht geprüft','ist abgelaufen','ist abgelehnt']
   };
+  /* Die KI-Spalten filtern wie Text. */
+  ['ki-fassung','ki-sprache','ki-worte'].forEach(t => { OPERATOREN[t] = OPERATOREN.ki; });
 
   /* Welche Rollup-Berechnungen gibt es? (Teil 14 der Doku, Kapitel 3.3) */
-  const ROLLUP_ARTEN = ['Original zeigen','Anzahl alle','Eindeutige zählen','Werte zählen','Leere zählen',
-                        'Gefüllte zählen','Summe','Durchschnitt','Median','Minimum','Maximum','Spanne',
-                        'Frühestes Datum','Spätestes Datum','Prozent aktiviert'];
+  /* Die 21 Berechnungsarten aus Teil 4 und Teil 8 der Dokumentation.
+     Dieselbe Liste gilt für Rollups und für die Zeile unter der Spalte. */
+  const ROLLUP_ARTEN = ['Original zeigen','Anzahl alle','Werte zählen','Eindeutige zählen','Leere zählen',
+                        'Gefüllte zählen','Prozent leer','Prozent gefüllt',
+                        'Summe','Durchschnitt','Median','Minimum','Maximum','Spanne',
+                        'Frühestes Datum','Spätestes Datum','Zeitspanne',
+                        'Aktivierte zählen','Nicht aktivierte zählen',
+                        'Prozent aktiviert','Prozent nicht aktiviert'];
 
   /* Welche Berechnungen passen unter eine Spalte? */
   const RECHNUNGEN = {
-    alle:     ['—','Anzahl alle','Werte zählen','Eindeutige zählen','Leere zählen','Gefüllte zählen','Prozent leer','Prozent gefüllt'],
+    alle:     ['—','Anzahl alle','Werte zählen','Eindeutige zählen','Leere zählen','Gefüllte zählen',
+               'Prozent leer','Prozent gefüllt','Original zeigen'],
     number:   ['Summe','Durchschnitt','Median','Minimum','Maximum','Spanne'],
-    checkbox: ['Aktivierte zählen','Nicht aktivierte zählen','Prozent aktiviert'],
+    checkbox: ['Aktivierte zählen','Nicht aktivierte zählen','Prozent aktiviert','Prozent nicht aktiviert'],
     date:     ['Frühestes Datum','Spätestes Datum','Zeitspanne']
   };
 
@@ -6001,6 +6133,17 @@ const Datenbank = (() => {
     if (def.type === 'title')   return row.text || '';
     if (def.type === 'created') return row.created;
     if (def.type === 'edited')  return row.edited;
+
+    /* Ohne Konten gibt es nur einen Menschen: den, der hier sitzt. Sein Name
+       steht in den Einstellungen und wird beim Anlegen mitgeschrieben. */
+    if (def.type === 'createdBy') return row.erstelltVon || Store.getMeta('nutzer', '') || 'Ich';
+    if (def.type === 'editedBy')  return row.geaendertVon || Store.getMeta('nutzer', '') || 'Ich';
+
+    /* Zeitspanne: gespeichert wird in Minuten, angezeigt als 1 h 30 min */
+    if (def.type === 'duration') {
+      const v = (row.props || {})[key];
+      return v === '' || v == null ? null : Number(v);
+    }
 
     /* Laufende Nummer: die Position in der Sammlung, wie Notions Unique ID */
     if (def.type === 'uid') {
@@ -6058,33 +6201,7 @@ const Datenbank = (() => {
     const zeilen2 = ids.map(id => Store.getBlock(id)).filter(Boolean);
     const werte = zeilen2.map(z => wert(z, def.zielKey, zielColl));
 
-    const zahlen = werte.map(Formula.zahl).filter(x => !isNaN(x));
-    const art = def.rollup || 'Original zeigen';
-
-    switch (art) {
-      case 'Original zeigen':   return werte.map(w2 => Formula.anzeige(w2)).join(', ');
-      case 'Anzahl alle':       return zeilen2.length;
-      case 'Werte zählen':      return werte.filter(w2 => w2 !== '' && w2 != null).length;
-      case 'Eindeutige zählen': return new Set(werte.map(w2 => Formula.anzeige(w2))).size;
-      case 'Leere zählen':      return werte.filter(w2 => w2 === '' || w2 == null).length;
-      case 'Gefüllte zählen':   return werte.filter(w2 => w2 !== '' && w2 != null).length;
-      case 'Summe':             return zahlen.reduce((a, b) => a + b, 0);
-      case 'Durchschnitt':      return zahlen.length ? +(zahlen.reduce((a, b) => a + b, 0) / zahlen.length).toFixed(2) : 0;
-      case 'Median': {
-        if (!zahlen.length) return 0;
-        const s = zahlen.slice().sort((a, b) => a - b);
-        const m = Math.floor(s.length / 2);
-        return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-      }
-      case 'Minimum':           return zahlen.length ? Math.min(...zahlen) : 0;
-      case 'Maximum':           return zahlen.length ? Math.max(...zahlen) : 0;
-      case 'Spanne':            return zahlen.length ? Math.max(...zahlen) - Math.min(...zahlen) : 0;
-      case 'Frühestes Datum':   return werte.filter(Boolean).sort()[0] || '';
-      case 'Spätestes Datum':   return werte.filter(Boolean).sort().slice(-1)[0] || '';
-      case 'Prozent aktiviert': return werte.length
-                                  ? Math.round(werte.filter(Boolean).length / werte.length * 100) + ' %' : '0 %';
-      default:                  return werte.join(', ');
-    }
+    return zusammenfassen(def.rollup || 'Original zeigen', werte, zeilen2.length);
   };
 
   /** Baut das HTML für eine Zelle. */
@@ -6159,13 +6276,76 @@ const Datenbank = (() => {
     if (def.type === 'files') {
       const liste = Array.isArray(v) ? v : (v ? [v] : []);
       if (!liste.length) return '<span style="color:var(--text-faint)">—</span>';
-      return liste.map(f => `<span class="tag bg-gray">📎 ${esc(String(f).slice(0, 24))}</span>`).join('');
+      return liste.map(f => {
+        const name = (f && typeof f === 'object') ? (f.name || 'Datei') : String(f);
+        const quelle = (f && typeof f === 'object') ? f.src : String(f);
+        const kurz = esc(name.length > 24 ? name.slice(0, 22) + '…' : name);
+        return quelle
+          ? `<a class="tag bg-gray" href="${esc(quelle)}" target="_blank" rel="noopener" ` +
+            `download="${esc(name)}" title="${esc(name)}">📎 ${kurz}</a>`
+          : `<span class="tag bg-gray">📎 ${kurz}</span>`;
+      }).join('');
     }
 
-    if (def.type === 'ki' && !v)
+    if (KI_TYPEN.includes(def.type) && !v)
       return '<span style="color:var(--text-faint)">✨ leer</span>';
 
+    if (def.type === 'createdBy' || def.type === 'editedBy')
+      return `<span class="tag bg-gray">👤 ${esc(v)}</span>`;
+
+    if (def.type === 'duration') {
+      if (v == null) return '<span style="color:var(--text-faint)">—</span>';
+      return esc(dauerText(v));
+    }
+
+    if (def.type === 'place') {
+      if (!v) return '<span style="color:var(--text-faint)">—</span>';
+      const o = typeof v === 'object' ? v : { name: String(v) };
+      const karte = o.lat != null
+        ? `https://www.openstreetmap.org/?mlat=${o.lat}&mlon=${o.lon}#map=15/${o.lat}/${o.lon}`
+        : 'https://www.openstreetmap.org/search?query=' + encodeURIComponent(o.name || '');
+      return `📍 <a href="${esc(karte)}" target="_blank" rel="noopener" ` +
+             `style="color:var(--accent)">${esc(o.name || '')}</a>`;
+    }
+
+    if (def.type === 'verify') {
+      const o = typeof v === 'object' && v ? v : null;
+      if (!o || !o.stand) return '<span class="tag bg-gray">nicht geprüft</span>';
+      const abgelaufen = o.bis && new Date(o.bis) < new Date();
+      if (abgelaufen)      return `<span class="tag bg-orange" title="bis ${esc(o.bis)}">abgelaufen</span>`;
+      if (o.stand === 'ok') return `<span class="tag bg-green" title="${esc(o.wer || '')}${o.bis ? ' · bis ' + esc(o.bis) : ''}">✔ geprüft</span>`;
+      return '<span class="tag bg-red">abgelehnt</span>';
+    }
+
     return esc(v) || '<span style="color:var(--text-faint)">—</span>';
+  };
+
+  /** 95 → „1 h 35 min" */
+  const dauerText = (min) => {
+    const m = Math.round(Number(min) || 0);
+    if (!m) return '0 min';
+    const h = Math.floor(Math.abs(m) / 60), r = Math.abs(m) % 60;
+    const s = h ? (h + ' h' + (r ? ' ' + r + ' min' : '')) : (r + ' min');
+    return (m < 0 ? '−' : '') + s;
+  };
+
+  /** „1h30", „90", „1:30" → 90 Minuten */
+  const dauerLesen = (text) => {
+    const t = String(text || '').trim().toLowerCase().replace(',', '.');
+    if (!t) return null;
+    const doppel = t.match(/^(\d+)\s*[:.]\s*(\d{1,2})$/);
+    if (doppel) return (+doppel[1]) * 60 + (+doppel[2]);
+    /* „1h30", „1 h 30", „1h 30min" — die Minuten hinter der Stunde zählen mit,
+       auch wenn niemand „min" dazuschreibt. */
+    const beides = t.match(/^([\d.]+)\s*(?:h|std|stunden?)\s*([\d.]+)\s*(?:m|min|minuten?)?$/);
+    if (beides) return Math.round(parseFloat(beides[1]) * 60 + parseFloat(beides[2]));
+    let min = 0, traf = false;
+    const std = t.match(/([\d.]+)\s*(h|std|stunden?)/);
+    if (std) { min += parseFloat(std[1]) * 60; traf = true; }
+    const mi  = t.match(/([\d.]+)\s*(m|min|minuten?)\b/);
+    if (mi)  { min += parseFloat(mi[1]); traf = true; }
+    if (!traf) { const n = parseFloat(t); return isNaN(n) ? null : n; }
+    return Math.round(min);
   };
 
   /* ========================================================================
@@ -6188,7 +6368,20 @@ const Datenbank = (() => {
     if (op === 'ist aktiviert')       return !!v;
     if (op === 'ist nicht aktiviert') return !v;
 
-    const t = String(v ?? '').toLowerCase();
+    /* Prüfung — geprüft, offen, abgelaufen, abgelehnt */
+    if (op.startsWith('ist geprüft') || op === 'ist nicht geprüft' ||
+        op === 'ist abgelaufen' || op === 'ist abgelehnt') {
+      const o = v && typeof v === 'object' ? v : null;
+      const abgelaufen = !!(o && o.bis && new Date(o.bis) < new Date());
+      if (op === 'ist geprüft')       return !!o && o.stand === 'ok' && !abgelaufen;
+      if (op === 'ist nicht geprüft') return !o || !o.stand;
+      if (op === 'ist abgelaufen')    return abgelaufen;
+      if (op === 'ist abgelehnt')     return !!o && o.stand === 'nein';
+    }
+
+    /* Beim Ort zählt der Name, nicht das ganze Objekt. */
+    const roh = (v && typeof v === 'object' && def.type === 'place') ? (v.name || '') : v;
+    const t = String(roh ?? '').toLowerCase();
     const s = String(z ?? '').toLowerCase();
 
     if (op === 'enthält')       return Array.isArray(v) ? v.some(x => String(x).toLowerCase().includes(s)) : t.includes(s);
@@ -6308,44 +6501,62 @@ const Datenbank = (() => {
   /* ========================================================================
    * BERECHNUNGEN UNTER DER SPALTE
    * ======================================================================*/
-  const rechne = (art, rows, key, coll) => {
-    const werte = rows.map(r => wert(r, key, coll));
-    const zahlen = werte.map(v => parseFloat(v)).filter(v => !isNaN(v));
-    const gefuellt = werte.filter(v => v != null && v !== '' && !(Array.isArray(v) && !v.length));
+  /**
+   * Die eine Stelle, an der gerechnet wird. Rollups und die Zeile unter
+   * der Spalte benutzen dieselbe Liste und denselben Code — sonst laufen
+   * die beiden auseinander.
+   *
+   * @param art      Name der Berechnung
+   * @param werte    die Rohwerte
+   * @param gesamt   Bezugsgrösse für Prozente (Standard: Anzahl der Werte)
+   */
+  const zusammenfassen = (art, werte, gesamt) => {
+    const n        = gesamt == null ? werte.length : gesamt;
+    const voll     = (v) => v != null && v !== '' && !(Array.isArray(v) && !v.length);
+    const gefuellt = werte.filter(voll);
+    const zahlen   = werte.map(v => parseFloat(v)).filter(v => !isNaN(v));
+    const daten    = gefuellt.map(v => new Date(v)).filter(d => !isNaN(d));
+    const proz     = (x) => n ? Math.round(x / n * 100) + ' %' : '0 %';
+    const tag      = (d) => d.toLocaleDateString('de-DE');
 
     switch (art) {
-      case 'Anzahl alle':        return rows.length;
-      case 'Werte zählen':       return gefuellt.length;
-      case 'Eindeutige zählen':  return new Set(gefuellt.map(String)).size;
-      case 'Leere zählen':       return rows.length - gefuellt.length;
-      case 'Gefüllte zählen':    return gefuellt.length;
-      case 'Prozent leer':       return rows.length ? Math.round((rows.length - gefuellt.length) / rows.length * 100) + '%' : '0%';
-      case 'Prozent gefüllt':    return rows.length ? Math.round(gefuellt.length / rows.length * 100) + '%' : '0%';
-      case 'Summe':              return zahlen.reduce((s, x) => s + x, 0);
-      case 'Durchschnitt':       return zahlen.length ? Math.round(zahlen.reduce((s,x)=>s+x,0) / zahlen.length * 100) / 100 : 0;
+      case 'Original zeigen':         return werte.map(w2 => Formula.anzeige(w2)).filter(Boolean).join(', ');
+      case 'Anzahl alle':             return n;
+      case 'Werte zählen':            return gefuellt.length;
+      case 'Eindeutige zählen':       return new Set(gefuellt.map(v => Formula.anzeige(v))).size;
+      case 'Leere zählen':            return n - gefuellt.length;
+      case 'Gefüllte zählen':         return gefuellt.length;
+      case 'Prozent leer':            return proz(n - gefuellt.length);
+      case 'Prozent gefüllt':         return proz(gefuellt.length);
+      case 'Summe':                   return zahlen.reduce((s, x) => s + x, 0);
+      case 'Durchschnitt':            return zahlen.length
+                                        ? Math.round(zahlen.reduce((s, x) => s + x, 0) / zahlen.length * 100) / 100 : 0;
       case 'Median': {
-        const s = zahlen.slice().sort((a,b)=>a-b);
-        if (!s.length) return 0;
-        const m = Math.floor(s.length/2);
-        return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+        if (!zahlen.length) return 0;
+        const s = zahlen.slice().sort((a, b) => a - b);
+        const m = Math.floor(s.length / 2);
+        return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
       }
-      case 'Minimum':            return zahlen.length ? Math.min(...zahlen) : 0;
-      case 'Maximum':            return zahlen.length ? Math.max(...zahlen) : 0;
-      case 'Spanne':             return zahlen.length ? Math.max(...zahlen) - Math.min(...zahlen) : 0;
-      case 'Aktivierte zählen':      return werte.filter(Boolean).length;
-      case 'Nicht aktivierte zählen':return werte.filter(v => !v).length;
-      case 'Prozent aktiviert':  return rows.length ? Math.round(werte.filter(Boolean).length / rows.length * 100) + '%' : '0%';
-      case 'Frühestes Datum': {
-        const d = gefuellt.map(v => new Date(v)).filter(d => !isNaN(d));
-        return d.length ? new Date(Math.min(...d)).toLocaleDateString('de-DE') : '—';
-      }
-      case 'Spätestes Datum': {
-        const d = gefuellt.map(v => new Date(v)).filter(d => !isNaN(d));
-        return d.length ? new Date(Math.max(...d)).toLocaleDateString('de-DE') : '—';
+      case 'Minimum':                 return zahlen.length ? Math.min(...zahlen) : 0;
+      case 'Maximum':                 return zahlen.length ? Math.max(...zahlen) : 0;
+      case 'Spanne':                  return zahlen.length ? Math.max(...zahlen) - Math.min(...zahlen) : 0;
+      case 'Aktivierte zählen':       return werte.filter(Boolean).length;
+      case 'Nicht aktivierte zählen': return werte.filter(v => !v).length;
+      case 'Prozent aktiviert':       return proz(werte.filter(Boolean).length);
+      case 'Prozent nicht aktiviert': return proz(werte.filter(v => !v).length);
+      case 'Frühestes Datum':         return daten.length ? tag(new Date(Math.min(...daten))) : '—';
+      case 'Spätestes Datum':         return daten.length ? tag(new Date(Math.max(...daten))) : '—';
+      case 'Zeitspanne': {
+        if (daten.length < 2) return daten.length ? '0 Tage' : '—';
+        const t = Math.round((Math.max(...daten) - Math.min(...daten)) / 86400000);
+        return t === 1 ? '1 Tag' : t + ' Tage';
       }
       default: return '';
     }
   };
+
+  const rechne = (art, rows, key, coll) =>
+    zusammenfassen(art, rows.map(r => wert(r, key, coll)), rows.length);
 
   /* ========================================================================
    * RENDERN
@@ -6828,11 +7039,11 @@ const Datenbank = (() => {
   /* --- KI-Feld: Notions „AI Autofill", nur lokal --------------------------- */
   const kiFeldFuellen = async (row, key, coll) => {
     const def = coll.schema[key];
-    const auftrag = def.auftrag ||
+    const auftrag = def.auftrag || KI_AUFTRAG[def.type] ||
       'Fasse diesen Eintrag in einem kurzen Satz zusammen.';
 
     const zeileAlsText = Object.keys(coll.schema)
-      .filter(k => k !== key && !['ki','button'].includes(coll.schema[k].type))
+      .filter(k => k !== key && !KI_TYPEN.includes(coll.schema[k].type) && coll.schema[k].type !== 'button')
       .map(k => coll.schema[k].name + ': ' + Formula.anzeige(wert(row, k, coll)))
       .join('\n');
 
@@ -7017,13 +7228,106 @@ const Datenbank = (() => {
     if (def.type === 'relation') { relationWaehlen(row, key, coll); return; }
     if (def.type === 'button')   { knopfInZelle(row, key, coll); return; }
 
-    if (def.type === 'ki') {
+    if (KI_TYPEN.includes(def.type)) {
       kiFeldFuellen(row, key, coll);
       return;
     }
 
-    if (['formula','created','edited','rollup','uid'].includes(def.type)) {
+    if (NUR_LESEN.includes(def.type)) {
       UI.toast('Dieses Feld wird berechnet und kann nicht direkt bearbeitet werden.');
+      return;
+    }
+
+    /* Prüfung — Notions „Verification": geprüft, abgelehnt, mit Frist */
+    if (def.type === 'verify') {
+      const r = td.getBoundingClientRect();
+      const jetzt = wert(row, key, coll) || {};
+      const m = UI.menu(
+        '<div class="grp">Prüfung</div>' +
+        '<button data-p="ok"><span class="mi">✔</span>Geprüft</button>' +
+        '<button data-p="nein"><span class="mi">✖</span>Abgelehnt</button>' +
+        '<button data-p="offen"><span class="mi">○</span>Nicht geprüft</button>' +
+        '<hr><button data-p="frist"><span class="mi">📅</span>Gültig bis …</button>' +
+        (jetzt.wer ? `<div class="grp" style="font-weight:400">zuletzt: ${esc(jetzt.wer)}` +
+                     (jetzt.wann ? ' am ' + esc(String(jetzt.wann).slice(0, 10)) : '') + '</div>' : ''),
+        r.left, r.bottom + 2);
+      m.addEventListener('click', async e => {
+        const b = e.target.closest('button[data-p]');
+        if (!b) return;
+        const wer = Store.getMeta('nutzer', '') || 'Ich';
+        if (b.dataset.p === 'frist') {
+          m.remove();
+          const bis = await UI.frage('Gültig bis (JJJJ-MM-TT)', jetzt.bis || '');
+          if (bis == null) return;
+          Store.setProp(row.id, key, Object.assign({}, jetzt, { bis }));
+        } else if (b.dataset.p === 'offen') {
+          m.remove();
+          Store.setProp(row.id, key, null);
+        } else {
+          m.remove();
+          Store.setProp(row.id, key, {
+            stand: b.dataset.p === 'ok' ? 'ok' : 'nein',
+            wer, wann: Store.now(), bis: jetzt.bis || ''
+          });
+        }
+        App.zeichneSeite();
+      });
+      return;
+    }
+
+    /* Ort — Adresse eintippen, Nominatim sucht die Koordinaten dazu.
+       Kostenlos, ohne Schlüssel; ohne Netz bleibt einfach der Text stehen. */
+    if (def.type === 'place') {
+      const jetzt = wert(row, key, coll);
+      const alt = jetzt && typeof jetzt === 'object' ? jetzt.name : (jetzt || '');
+      const inp = document.createElement('input');
+      inp.value = alt || '';
+      inp.placeholder = 'Adresse oder Ort';
+      inp.style.cssText = 'width:100%; background:var(--bg-input); border:1px solid var(--accent); ' +
+                          'border-radius:3px; padding:3px 5px; outline:none';
+      td.innerHTML = '';
+      td.appendChild(inp);
+      inp.focus(); inp.select();
+      let fertigSchon = false;
+      const fertig = async () => {
+        if (fertigSchon) return; fertigSchon = true;
+        const name = inp.value.trim();
+        if (!name) { Store.setProp(row.id, key, null); td.innerHTML = zelle(row, key, coll); return; }
+        Store.setProp(row.id, key, { name });
+        td.innerHTML = zelle(row, key, coll);
+        const treffer = await ortSuchen(name).catch(() => null);
+        if (treffer) {
+          Store.setProp(row.id, key, { name, lat: treffer.lat, lon: treffer.lon, voll: treffer.name });
+          td.innerHTML = zelle(row, key, coll);
+        }
+      };
+      inp.addEventListener('blur', fertig);
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { fertigSchon = true; td.innerHTML = zelle(row, key, coll); }
+      });
+      return;
+    }
+
+    /* Zeitspanne — „1h30", „90", „1:30" ergeben alle 90 Minuten */
+    if (def.type === 'duration') {
+      const inp = document.createElement('input');
+      const alt = wert(row, key, coll);
+      inp.value = alt == null ? '' : dauerText(alt);
+      inp.placeholder = 'z. B. 1h30 oder 90';
+      inp.style.cssText = 'width:100%; background:var(--bg-input); border:1px solid var(--accent); ' +
+                          'border-radius:3px; padding:3px 5px; outline:none';
+      td.innerHTML = ''; td.appendChild(inp);
+      inp.focus(); inp.select();
+      const fertig = () => {
+        Store.setProp(row.id, key, dauerLesen(inp.value));
+        td.innerHTML = zelle(row, key, coll);
+      };
+      inp.addEventListener('blur', fertig);
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { td.innerHTML = zelle(row, key, coll); }
+      });
       return;
     }
 
@@ -7203,132 +7507,389 @@ const Datenbank = (() => {
   };
 
   /* --- Kalender ----------------------------------------------------------- */
-  const alsKalender = (coll, view, rows) => {
-    /* Der Umschalter für ein Enddatum steht unter dem Kalender. */
-    const w = document.createElement('div');
-    const dk = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
+  /* --- Kalender -----------------------------------------------------------
+   * Drei Stufen wie in Notion Calendar: Tag, Woche, Monat — umschaltbar mit
+   * den Tasten T/D, W und M. Neben der eigenen Datenbank können weitere
+   * Datenbanken als zusätzliche Kalender eingeblendet werden, jede in ihrer
+   * eigenen Farbe, ein- und ausschaltbar und in der Reihenfolge verschiebbar.
+   * ----------------------------------------------------------------------*/
+  const KAL_FARBEN = ['blue','green','orange','purple','pink','red','yellow','brown'];
 
-    if (!dk) {
+  /** Alle Kalender dieser Ansicht: der eigene zuerst, dann die zugeschalteten. */
+  const kalenderQuellen = (coll, view) => {
+    const eigen = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
+    const liste = [{
+      coll, id: coll.id, name: coll.name, dateKey: eigen,
+      endeKey: view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null,
+      farbe: view.farbe || 'blue', an: true, eigen: true
+    }];
+
+    (view.extraDbs || []).forEach((x, i) => {
+      const c = Store.getCollection(x.collectionId);
+      if (!c) return;
+      const dk = x.dateKey && c.schema[x.dateKey]
+        ? x.dateKey : Object.keys(c.schema).find(k => c.schema[k].type === 'date');
+      if (!dk) return;
+      liste.push({
+        coll: c, id: c.id, name: c.name, dateKey: dk,
+        endeKey: x.endeKey && c.schema[x.endeKey] ? x.endeKey : null,
+        farbe: x.farbe || KAL_FARBEN[(i + 1) % KAL_FARBEN.length],
+        an: x.an !== false, eigen: false
+      });
+    });
+    return liste;
+  };
+
+  /** Die Termine einer Quelle für einen bestimmten Tag. */
+  const termineAmTag = (q, tag, rows) => {
+    const zeilen2 = rows || Store.rowsOf(q.id);
+    const t0 = new Date(tag); t0.setHours(0, 0, 0, 0);
+    const treffer = [];
+    zeilen2.forEach(r => {
+      const v = wert(r, q.dateKey, q.coll);
+      if (!v) return;
+      const dv = new Date(v);
+      if (isNaN(dv)) return;
+      const von = new Date(dv); von.setHours(0, 0, 0, 0);
+      let bis = von;
+      if (q.endeKey) {
+        const e2 = new Date(wert(r, q.endeKey, q.coll));
+        if (!isNaN(e2)) { bis = new Date(e2); bis.setHours(0, 0, 0, 0); }
+      }
+      if (t0 < von || t0 > bis) return;
+      treffer.push({
+        row: r, quelle: q,
+        mehrtaegig: bis > von,
+        anfang: t0.getTime() === von.getTime(),
+        ende:   t0.getTime() === bis.getTime(),
+        zeit:   String(v).length > 10 ? String(v).slice(11, 16) : '',
+        stunde: String(v).length > 10 ? parseInt(String(v).slice(11, 13), 10) : null
+      });
+    });
+    return treffer;
+  };
+
+  const terminKnopf = (e, view) => {
+    const ev = document.createElement('div');
+    ev.className = 'ev q-' + e.quelle.farbe +
+      (e.mehrtaegig ? ' lang' : '') +
+      (e.mehrtaegig && e.anfang ? ' anfang' : '') +
+      (e.mehrtaegig && e.ende ? ' ende' : '');
+    ev.textContent = (e.mehrtaegig && !e.anfang ? '· ' : '') +
+                     (e.zeit ? e.zeit + ' ' : '') + (e.row.text || 'Ohne Titel');
+    ev.title = e.quelle.name + ' · ' + (e.row.text || 'Ohne Titel');
+    ev.addEventListener('click', ev2 => {
+      ev2.stopPropagation();
+      view.oeffnenAls === 'voll' ? App.oeffne(e.row.id) : zeilePeek(e.row, e.quelle.coll);
+    });
+    return ev;
+  };
+
+  const alsKalender = (coll, view, rows) => {
+    const w = document.createElement('div');
+    w.className = 'kal-block';
+    const quellen = kalenderQuellen(coll, view).filter(q => q.an);
+
+    if (!quellen.length || !quellen[0].dateKey) {
       w.innerHTML = '<div style="color:var(--text-faint)">Für den Kalender wird eine Datums-Spalte gebraucht.</div>';
       return w;
     }
 
+    const stufe = view.kalStufe || 'monat';
     const stand = view.monat ? new Date(view.monat) : new Date();
-    const jahr = stand.getFullYear(), monat = stand.getMonth();
+    if (isNaN(stand)) stand.setTime(Date.now());
+    const heuteStr = new Date().toDateString();
+    const wsMontag = Einstellungen.wochenstart() === 1;
+
+    /* Die Termine der Fremdkalender holen wir selbst, die eigenen sind
+       schon durch Filter und Sortierung der Ansicht gelaufen. */
+    const zeilenVon = (q) => q.eigen ? rows : Store.rowsOf(q.id);
+
+    const wochenAnfang = (d) => {
+      const x = new Date(d); x.setHours(0, 0, 0, 0);
+      const start = wsMontag ? 1 : 0;
+      x.setDate(x.getDate() - ((x.getDay() - start + 7) % 7));
+      return x;
+    };
+
+    /* --- Kopfzeile ----------------------------------------------------- */
+    const titel = stufe === 'monat'
+      ? stand.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+      : stufe === 'woche'
+        ? (() => { const a = wochenAnfang(stand), b2 = new Date(a); b2.setDate(a.getDate() + 6);
+            return 'KW ' + kalenderwoche(a) + ' · ' + a.toLocaleDateString('de-DE', { day:'numeric', month:'short' }) +
+                   ' – ' + b2.toLocaleDateString('de-DE', { day:'numeric', month:'short', year:'numeric' }); })()
+        : stand.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
     const kopf = document.createElement('div');
-    kopf.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:8px';
+    kopf.className = 'kal-kopf';
     kopf.innerHTML =
-      `<b style="font-size:15px">${stand.toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</b>` +
-      `<span style="flex:1"></span>` +
-      `<button data-m="-1" style="padding:3px 8px;border-radius:4px">‹</button>` +
-      `<button data-m="0"  style="padding:3px 8px;border-radius:4px;font-size:13px">Heute</button>` +
-      `<button data-m="1"  style="padding:3px 8px;border-radius:4px">›</button>`;
+      `<b>${esc(titel)}</b><span style="flex:1"></span>` +
+      '<div class="kal-stufen">' +
+        `<button data-s="tag"${stufe === 'tag' ? ' class="on"' : ''} title="Taste T oder D">Tag</button>` +
+        `<button data-s="woche"${stufe === 'woche' ? ' class="on"' : ''} title="Taste W">Woche</button>` +
+        `<button data-s="monat"${stufe === 'monat' ? ' class="on"' : ''} title="Taste M">Monat</button>` +
+      '</div>' +
+      '<button data-m="-1">‹</button>' +
+      '<button data-m="0" class="heute">Heute</button>' +
+      '<button data-m="1">›</button>';
+
+    const springe = (richtung) => {
+      const d = new Date(stand);
+      if (richtung === 0) return new Date();
+      if (stufe === 'monat') d.setMonth(d.getMonth() + richtung);
+      else if (stufe === 'woche') d.setDate(d.getDate() + 7 * richtung);
+      else d.setDate(d.getDate() + richtung);
+      return d;
+    };
+
     kopf.addEventListener('click', e => {
+      const s = e.target.closest('button[data-s]');
+      if (s) { Store.updateView(view.id, { kalStufe: s.dataset.s }); App.zeichneSeite(); return; }
       const b = e.target.closest('button[data-m]');
       if (!b) return;
-      const d = b.dataset.m === '0' ? new Date() : new Date(jahr, monat + Number(b.dataset.m), 1);
-      Store.updateView(view.id, { monat: d.toISOString() });
+      Store.updateView(view.id, { monat: springe(Number(b.dataset.m)).toISOString() });
       App.zeichneSeite();
     });
     w.appendChild(kopf);
 
-    const g = document.createElement('div');
-    g.className = 'cal';
-    /* Beginnt die Woche am Montag oder am Sonntag? Steht in den Einstellungen. */
-    const wsMontag = Einstellungen.wochenstart() === 1;
-    const tage = wsMontag ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['So','Mo','Di','Mi','Do','Fr','Sa'];
-    tage.forEach(d => {
-      const e = document.createElement('div');
-      e.className = 'dow';
-      e.textContent = d;
-      g.appendChild(e);
-    });
-
-    const ersterTag = new Date(jahr, monat, 1);
-    let start = wsMontag ? ersterTag.getDay() - 1 : ersterTag.getDay();
-    if (start < 0) start = 6;
-    const tageImMonat = new Date(jahr, monat + 1, 0).getDate();
-    const heuteStr = new Date().toDateString();
-
-    for (let i = 0; i < start; i++) {
+    /* --- Eine Tageszelle, wie sie Monat und Woche brauchen -------------- */
+    const tagesZelle = (tag, ausserhalb) => {
       const d = document.createElement('div');
-      d.className = 'day out';
-      g.appendChild(d);
-    }
-
-    for (let t = 1; t <= tageImMonat; t++) {
-      const tag = new Date(jahr, monat, t);
-      const d = document.createElement('div');
-      d.className = 'day' + (tag.toDateString() === heuteStr ? ' today' : '');
-      d.innerHTML = `<div class="n">${t}</div>`;
-
-      /* Ein Eintrag kann über mehrere Tage laufen, wenn es ein Endedatum gibt. */
-      const endeKey = view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null;
-
-      rows.forEach(r => {
-        const v = wert(r, dk, coll);
-        if (!v) return;
-        const dv = new Date(v);
-        if (isNaN(dv)) return;
-        const von = new Date(dv); von.setHours(0,0,0,0);
-        let bis = von;
-        if (endeKey) {
-          const e2 = new Date(wert(r, endeKey, coll));
-          if (!isNaN(e2)) { bis = new Date(e2); bis.setHours(0,0,0,0); }
-        }
-        const heuteTag = new Date(tag); heuteTag.setHours(0,0,0,0);
-        if (heuteTag < von || heuteTag > bis) return;
-
-        const mehrtaegig = bis > von;
-        const ersterTag2 = heuteTag.getTime() === von.getTime();
-        const letzterTag = heuteTag.getTime() === bis.getTime();
-
-        const ev = document.createElement('div');
-        ev.className = 'ev' + (mehrtaegig ? ' lang' : '') +
-                       (mehrtaegig && ersterTag2 ? ' anfang' : '') +
-                       (mehrtaegig && letzterTag ? ' ende' : '');
-        ev.textContent = (mehrtaegig && !ersterTag2 ? '· ' : '') + (r.text || 'Ohne Titel');
-        ev.addEventListener('click', (e2) => {
-          e2.stopPropagation();
-          view.oeffnenAls === 'voll' ? App.oeffne(r.id) : zeilePeek(r, coll);
-        });
-        d.appendChild(ev);
-      });
-
+      d.className = 'day' + (tag.toDateString() === heuteStr ? ' today' : '') +
+                    (ausserhalb ? ' out' : '');
+      d.innerHTML = `<div class="n">${tag.getDate()}</div>`;
+      quellen.forEach(q => termineAmTag(q, tag, zeilenVon(q))
+        .forEach(e => d.appendChild(terminKnopf(e, view))));
       d.addEventListener('dblclick', () => {
-        const iso = tag.toISOString().slice(0, 10);
-        Store.addRow(coll.id, { [dk]: iso });
+        const z = quellen.find(q => q.id === (view.neuIn || quellen[0].id)) || quellen[0];
+        const p = (n) => String(n).padStart(2, '0');
+        Store.addRow(z.id, { [z.dateKey]: tag.getFullYear() + '-' + p(tag.getMonth() + 1) + '-' + p(tag.getDate()) });
         App.zeichneSeite();
       });
-      g.appendChild(d);
+      return d;
+    };
+
+    /* --- Monat ---------------------------------------------------------- */
+    if (stufe === 'monat') {
+      const g = document.createElement('div');
+      g.className = 'cal';
+      (wsMontag ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['So','Mo','Di','Mi','Do','Fr','Sa'])
+        .forEach(n => { const e = document.createElement('div'); e.className = 'dow'; e.textContent = n; g.appendChild(e); });
+
+      const jahr = stand.getFullYear(), monat = stand.getMonth();
+      const erster = new Date(jahr, monat, 1);
+      let vorlauf = wsMontag ? erster.getDay() - 1 : erster.getDay();
+      if (vorlauf < 0) vorlauf = 6;
+      const tageImMonat = new Date(jahr, monat + 1, 0).getDate();
+
+      for (let i = vorlauf; i > 0; i--) g.appendChild(tagesZelle(new Date(jahr, monat, 1 - i), true));
+      for (let t = 1; t <= tageImMonat; t++) g.appendChild(tagesZelle(new Date(jahr, monat, t)));
+      const rest = (7 - ((vorlauf + tageImMonat) % 7)) % 7;
+      for (let i = 1; i <= rest; i++) g.appendChild(tagesZelle(new Date(jahr, monat + 1, i), true));
+      w.appendChild(g);
     }
 
-    w.appendChild(g);
+    /* --- Woche ---------------------------------------------------------- */
+    if (stufe === 'woche') {
+      const g = document.createElement('div');
+      g.className = 'cal woche';
+      const a = wochenAnfang(stand);
+      for (let i = 0; i < 7; i++) {
+        const t = new Date(a); t.setDate(a.getDate() + i);
+        const e = document.createElement('div');
+        e.className = 'dow' + (t.toDateString() === heuteStr ? ' jetzt' : '');
+        e.textContent = t.toLocaleDateString('de-DE', { weekday: 'short' }) + ' ' + t.getDate() + '.';
+        g.appendChild(e);
+      }
+      for (let i = 0; i < 7; i++) {
+        const t = new Date(a); t.setDate(a.getDate() + i);
+        g.appendChild(tagesZelle(t));
+      }
+      w.appendChild(g);
+    }
 
+    /* --- Tag ------------------------------------------------------------ */
+    if (stufe === 'tag') {
+      const g = document.createElement('div');
+      g.className = 'kal-tag';
+      const alle = [];
+      quellen.forEach(q => termineAmTag(q, stand, zeilenVon(q)).forEach(e => alle.push(e)));
+
+      const ganztags = alle.filter(e => e.stunde == null);
+      if (ganztags.length) {
+        const z = document.createElement('div');
+        z.className = 'kt-zeile ganztags';
+        z.innerHTML = '<div class="kt-std">ganztags</div>';
+        const box = document.createElement('div');
+        box.className = 'kt-inhalt';
+        ganztags.forEach(e => box.appendChild(terminKnopf(e, view)));
+        z.appendChild(box);
+        g.appendChild(z);
+      }
+
+      for (let h = 0; h < 24; h++) {
+        const drin = alle.filter(e => e.stunde === h);
+        /* Nachts nur zeigen, was auch belegt ist — sonst scrollt man ewig. */
+        if (!drin.length && (h < 7 || h > 21)) continue;
+        const z = document.createElement('div');
+        z.className = 'kt-zeile';
+        z.innerHTML = `<div class="kt-std">${String(h).padStart(2, '0')}:00</div>`;
+        const box = document.createElement('div');
+        box.className = 'kt-inhalt';
+        drin.forEach(e => box.appendChild(terminKnopf(e, view)));
+        box.addEventListener('dblclick', () => {
+          const q = quellen.find(x => x.id === (view.neuIn || quellen[0].id)) || quellen[0];
+          const p = (n) => String(n).padStart(2, '0');
+          Store.addRow(q.id, { [q.dateKey]: stand.getFullYear() + '-' + p(stand.getMonth() + 1) + '-' +
+                                            p(stand.getDate()) + 'T' + p(h) + ':00' });
+          App.zeichneSeite();
+        });
+        z.appendChild(box);
+        g.appendChild(z);
+      }
+      if (!alle.length) {
+        const leer = document.createElement('div');
+        leer.className = 'db-leer';
+        leer.textContent = 'Nichts an diesem Tag. Doppelklick auf eine Stunde legt einen Eintrag an.';
+        g.appendChild(leer);
+      }
+      w.appendChild(g);
+    }
+
+    /* --- Fuss: Kalenderliste und Zeitraum-Spalte ------------------------ */
+    const alleQuellen = kalenderQuellen(coll, view);
     const datumKeys2 = Object.keys(coll.schema).filter(k =>
       ['date','created','edited'].includes(coll.schema[k].type));
+
     const fuss = document.createElement('div');
     fuss.className = 'cal-fuss';
     fuss.innerHTML =
-      '<span>Doppelklick auf einen Tag legt einen Eintrag an.</span>' +
-      `<button data-a="ende">Zeitraum bis: <b>` +
+      '<span>Doppelklick legt einen Eintrag an · Tasten T, W, M</span>' +
+      `<button data-a="kalender">Kalender: <b>${alleQuellen.filter(q => q.an).length}</b></button>` +
+      '<button data-a="ende">Zeitraum bis: <b>' +
       `${view.endeKey && coll.schema[view.endeKey] ? esc(coll.schema[view.endeKey].name) : 'ein Tag'}</b></button>`;
+
     fuss.addEventListener('click', e => {
-      if (!e.target.closest('[data-a="ende"]')) return;
       const r2 = e.target.getBoundingClientRect();
-      const m = UI.menu('<div class="grp">Enddatum für mehrtägige Einträge</div>' +
-        datumKeys2.map(k => `<button data-e="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
-        '<hr><button data-e="">nur ein Tag</button>', r2.left, r2.bottom + 4);
-      m.addEventListener('click', ev => {
-        const b2 = ev.target.closest('button[data-e]');
-        if (!b2) return;
-        Store.updateView(view.id, { endeKey: b2.dataset.e });
-        m.remove(); App.zeichneSeite();
-      });
+
+      if (e.target.closest('[data-a="ende"]')) {
+        const m = UI.menu('<div class="grp">Enddatum für mehrtägige Einträge</div>' +
+          datumKeys2.map(k => `<button data-e="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
+          '<hr><button data-e="">nur ein Tag</button>', r2.left, r2.bottom + 4);
+        m.addEventListener('click', ev => {
+          const b2 = ev.target.closest('button[data-e]');
+          if (!b2) return;
+          Store.updateView(view.id, { endeKey: b2.dataset.e });
+          m.remove(); App.zeichneSeite();
+        });
+        return;
+      }
+
+      if (e.target.closest('[data-a="kalender"]')) { kalenderListe(r2, coll, view); return; }
     });
     w.appendChild(fuss);
+
+    /* Tastenkürzel T/D, W, M — nur solange dieser Kalender auf der Seite steht
+       und niemand gerade in ein Feld tippt. */
+    if (!w.dataset.tasten) {
+      w.dataset.tasten = '1';
+      const taste = (e) => {
+        if (!document.body.contains(w)) { document.removeEventListener('keydown', taste); return; }
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const z = e.target;
+        if (z && (z.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(z.tagName))) return;
+        const k = e.key.toLowerCase();
+        const neu = (k === 't' || k === 'd') ? 'tag' : k === 'w' ? 'woche' : k === 'm' ? 'monat' : null;
+        if (!neu || neu === stufe) return;
+        e.preventDefault();
+        Store.updateView(view.id, { kalStufe: neu });
+        App.zeichneSeite();
+      };
+      document.addEventListener('keydown', taste);
+    }
+
     return w;
+  };
+
+  /** Welche Datenbanken liegen im Kalender übereinander? */
+  const kalenderListe = (r, coll, view) => {
+    const zeichnen = () => {
+      const liste = kalenderQuellen(coll, view);
+      return '<div class="grp">Kalender in dieser Ansicht</div>' +
+        liste.map((q, i) =>
+          `<button data-t="${i}"><span class="mi">${q.an ? '☑' : '☐'}</span>` +
+          `<span class="kal-punkt bg-${q.farbe}"></span>${esc(q.name)}` +
+          (q.eigen ? '<span class="ms">eigen</span>'
+                   : `<span class="ms"><span data-hoch="${i}">↑</span> <span data-weg="${i}">✕</span></span>`) +
+          '</button>').join('') +
+        '<hr><button data-a="dazu"><span class="mi">＋</span>Weitere Datenbank einblenden</button>' +
+        `<button data-a="neuin"><span class="mi">✚</span>Neue Einträge landen in: ` +
+        `${esc((liste.find(q => q.id === (view.neuIn || liste[0].id)) || liste[0]).name)}</button>`;
+    };
+
+    const m = UI.menu(zeichnen(), r.left - 60, r.bottom + 4);
+
+    m.addEventListener('click', e => {
+      const hoch = e.target.closest('[data-hoch]');
+      if (hoch) {
+        const i = +hoch.dataset.hoch - 1;          /* 0 ist die eigene Datenbank */
+        const x = view.extraDbs || [];
+        if (i > 0) { [x[i - 1], x[i]] = [x[i], x[i - 1]]; Store.updateView(view.id, { extraDbs: x }); }
+        m.innerHTML = zeichnen(); App.zeichneSeite();
+        return;
+      }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) {
+        const x = view.extraDbs || [];
+        x.splice(+weg.dataset.weg - 1, 1);
+        Store.updateView(view.id, { extraDbs: x });
+        m.innerHTML = zeichnen(); App.zeichneSeite();
+        return;
+      }
+      const t = e.target.closest('button[data-t]');
+      if (t) {
+        const i = +t.dataset.t;
+        if (i === 0) { UI.toast('Die eigene Datenbank bleibt sichtbar'); return; }
+        const x = view.extraDbs || [];
+        x[i - 1].an = x[i - 1].an === false;
+        Store.updateView(view.id, { extraDbs: x });
+        m.innerHTML = zeichnen(); App.zeichneSeite();
+        return;
+      }
+
+      if (e.target.closest('[data-a="dazu"]')) {
+        const drin = new Set([coll.id, ...(view.extraDbs || []).map(x => x.collectionId)]);
+        const frei = Object.values(Store.cache.collections).filter(c =>
+          !drin.has(c.id) && Object.values(c.schema).some(d => d.type === 'date'));
+        if (!frei.length) { UI.toast('Keine weitere Datenbank mit Datum gefunden'); return; }
+        m.innerHTML = '<div class="grp">Welche Datenbank?</div>' +
+          frei.map(c => `<button data-c="${c.id}">${esc(c.name || 'Ohne Namen')}</button>`).join('');
+        m.addEventListener('click', ev => {
+          const c = ev.target.closest('button[data-c]');
+          if (!c) return;
+          const x = view.extraDbs || [];
+          x.push({ collectionId: c.dataset.c, an: true,
+                   farbe: KAL_FARBEN[(x.length + 1) % KAL_FARBEN.length] });
+          Store.updateView(view.id, { extraDbs: x });
+          m.remove(); App.zeichneSeite();
+          UI.toast('Kalender eingeblendet');
+        });
+        return;
+      }
+
+      if (e.target.closest('[data-a="neuin"]')) {
+        const liste = kalenderQuellen(coll, view);
+        m.innerHTML = '<div class="grp">Neue Einträge landen in</div>' +
+          liste.map(q => `<button data-n="${q.id}">${esc(q.name)}</button>`).join('');
+        m.addEventListener('click', ev => {
+          const n = ev.target.closest('button[data-n]');
+          if (!n) return;
+          Store.updateView(view.id, { neuIn: n.dataset.n });
+          m.remove(); App.zeichneSeite();
+        });
+      }
+    });
   };
 
   /* --- Zeitstrahl ---------------------------------------------------------
@@ -7457,8 +8018,8 @@ const Datenbank = (() => {
     const warten = Math.max(0, 1100 - (Date.now() - letzteSuche));
     if (warten) await new Promise(r => setTimeout(r, warten));
     letzteSuche = Date.now();
-    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
-                          encodeURIComponent(text2));
+    const r = await KI.holen('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
+                            encodeURIComponent(text2), {}, { versuche: 3, basis: 1200 });
     if (!r.ok) throw new Error('Ortssuche antwortet mit ' + r.status);
     const d = await r.json();
     if (!d.length) return null;
@@ -7829,7 +8390,9 @@ const Datenbank = (() => {
     w.className = 'db-form';
 
     const felder = Object.keys(coll.schema).filter(k =>
-      !['formula','created','edited','rollup','uid','button'].includes(coll.schema[k].type) &&
+      !NUR_LESEN.includes(coll.schema[k].type) &&
+      !KI_TYPEN.includes(coll.schema[k].type) &&
+      coll.schema[k].type !== 'button' &&
       !(view.hidden || []).includes(k));
 
     w.innerHTML =
@@ -7851,23 +8414,53 @@ const Datenbank = (() => {
         (regel ? `<em class="fl-hinweis">nur wenn ${esc(coll.schema[regel.key]?.name || '?')} = ` +
                  `${esc(regel.wert)}</em>` : '') + '</span>';
 
+      /* Die 13 Fragetypen aus Teil 8 — jeder bekommt das Feld, das zu ihm passt. */
       let eingabe;
       if (['select','status'].includes(def.type)) {
         eingabe = document.createElement('select');
         eingabe.innerHTML = '<option value=""></option>' +
           (def.options || []).map(o => `<option>${esc(o.name)}</option>`).join('');
+
+      } else if (def.type === 'multi') {
+        /* Mehrfachauswahl: eine Reihe Kästchen, wie in Notions Formular */
+        eingabe = document.createElement('div');
+        eingabe.className = 'form-mehr';
+        eingabe.innerHTML = (def.options || []).map(o =>
+          `<label class="tag bg-${o.color}"><input type="checkbox" data-o="${esc(o.name)}"> ${esc(o.name)}</label>`
+        ).join('') || '<span style="color:var(--text-faint)">Noch keine Optionen</span>';
+
       } else if (def.type === 'checkbox') {
         eingabe = document.createElement('input');
         eingabe.type = 'checkbox';
-      } else if (def.type === 'date') {
+
+      } else if (def.type === 'files') {
         eingabe = document.createElement('input');
-        eingabe.type = 'date';
-      } else if (def.type === 'number') {
-        eingabe = document.createElement('input');
-        eingabe.type = 'number';
-      } else {
+        eingabe.type = 'file';
+        eingabe.multiple = true;
+
+      } else if (def.type === 'text') {
+        /* Lange Antwort */
+        eingabe = document.createElement('textarea');
+        eingabe.rows = 3;
+        eingabe.placeholder = def.beschreibung || '';
+
+      } else if (def.type === 'person') {
         eingabe = document.createElement('input');
         eingabe.type = 'text';
+        eingabe.setAttribute('list', 'fp-' + k);
+        const namen = [...new Set(Store.rowsOf(coll.id)
+          .map(r => wert(r, k, coll)).filter(Boolean).map(String))];
+        const dl = document.createElement('datalist');
+        dl.id = 'fp-' + k;
+        dl.innerHTML = namen.map(n => `<option>${esc(n)}</option>`).join('');
+        feld.appendChild(dl);
+
+      } else {
+        eingabe = document.createElement('input');
+        eingabe.type = { date:'date', number:'number', url:'url', email:'email',
+                         phone:'tel', duration:'text', place:'text' }[def.type] || 'text';
+        if (def.type === 'duration') eingabe.placeholder = 'z. B. 1h30';
+        if (def.type === 'place')    eingabe.placeholder = 'Adresse oder Ort';
       }
       eingabe.dataset.k = k;
       feld.appendChild(eingabe);
@@ -7955,18 +8548,54 @@ const Datenbank = (() => {
       const props = {};
       let titel = '';
       let fehlt = null;
-      box.querySelectorAll('input[data-k], select[data-k]').forEach(el => {
+      const dateiFelder = [];
+
+      box.querySelectorAll('[data-k]').forEach(el => {
         const k = el.dataset.k;
+        if (!coll.schema[k] || el.tagName === 'DATALIST') return;
         const versteckt = el.closest('.form-feld')?.style.display === 'none';
-        const v = el.type === 'checkbox' ? el.checked : el.value;
-        if (!versteckt && (view.pflicht || []).includes(k) && (v === '' || v === false)) fehlt = coll.schema[k].name;
-        if (coll.schema[k].type === 'title') titel = v;
+        const typ = coll.schema[k].type;
+        let v;
+
+        if (typ === 'multi') {
+          v = [...el.querySelectorAll('input[data-o]:checked')].map(x => x.dataset.o);
+        } else if (typ === 'files') {
+          v = [];
+          if (!versteckt && el.files && el.files.length) dateiFelder.push([k, el.files]);
+        } else if (typ === 'duration') {
+          v = dauerLesen(el.value);
+        } else if (typ === 'place') {
+          v = el.value.trim() ? { name: el.value.trim() } : null;
+        } else {
+          v = el.type === 'checkbox' ? el.checked : el.value;
+        }
+
+        const leer = v === '' || v === false || v == null || (Array.isArray(v) && !v.length);
+        if (!versteckt && (view.pflicht || []).includes(k) && leer &&
+            !(typ === 'files' && dateiFelder.some(d => d[0] === k))) fehlt = coll.schema[k].name;
+        if (typ === 'title') titel = v;
         else props[k] = v;
       });
       if (fehlt) { UI.toast('Bitte „' + fehlt + '" ausfüllen'); return; }
 
       const r = Store.addRow(coll.id, props);
       Store.updateBlock(r.id, { text: titel || 'Ohne Titel' });
+      setTimeout(() => automationenLaufen(r, coll, 'formular-neu'), 0);
+
+      /* Angehängte Dateien bleiben lokal — als Data-URL am Eintrag. */
+      dateiFelder.forEach(([k, dateien]) => {
+        [...dateien].slice(0, 5).forEach(d => {
+          if (d.size > 6 * 1024 * 1024) { UI.toast('„' + d.name + '" ist zu gross (über 6 MB)'); return; }
+          const leser = new FileReader();
+          leser.onload = () => {
+            const alt = (Store.getBlock(r.id).props || {})[k] || [];
+            Store.setProp(r.id, k, [...alt, { name: d.name, src: leser.result }]);
+            App.zeichneSeite();
+          };
+          leser.readAsDataURL(d);
+        });
+      });
+
       UI.toast('Eintrag angelegt');
       App.zeichneSeite();
     });
@@ -8381,7 +9010,7 @@ const Datenbank = (() => {
         coll.schema[key].ziel = (andere.find(c => c.id !== coll.id) || andere[0] || {}).id || '';
       }
       if (t === 'rollup') coll.schema[key].rollup = 'Anzahl alle';
-      if (t === 'ki') coll.schema[key].auftrag = 'Fasse diesen Eintrag in einem kurzen Satz zusammen.';
+      if (KI_TYPEN.includes(t)) coll.schema[key].auftrag = KI_AUFTRAG[t] || KI_AUFTRAG.ki;
       if (t === 'button') coll.schema[key].knopfText = 'Ausführen';
       Store.updateCollection(coll.id, { schema: coll.schema });
       m.remove();
@@ -8411,7 +9040,7 @@ const Datenbank = (() => {
       (['number','formula','rollup'].includes(def.type)
         ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' : '') +
       (def.type === 'uid'      ? '<button data-a="praefix"><span class="mi">ID</span>Vorsilbe setzen</button>' : '') +
-      (def.type === 'ki'       ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
+      (KI_TYPEN.includes(def.type) ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
       '<hr>' +
       '<button data-a="asc"><span class="mi">↑</span>Aufsteigend sortieren</button>' +
       '<button data-a="desc"><span class="mi">↓</span>Absteigend sortieren</button>' +
@@ -9141,12 +9770,17 @@ const Datenbank = (() => {
    * Hier läuft alles im Browser — kein Dienst, keine Wartezeit.
    * ======================================================================*/
   const AUSLOESER = [
-    ['zeile-neu',      'Ein Eintrag wird angelegt'],
-    ['prop-geaendert', 'Eine Eigenschaft ändert sich'],
-    ['prop-wert',      'Eine Eigenschaft bekommt einen bestimmten Wert'],
-    ['zeit-vor',       'Einige Tage vor einem Datum'],
-    ['zeit-nach',      'Einige Tage nach einem Datum']
+    ['zeile-neu',       'Ein Eintrag wird angelegt'],
+    ['prop-geaendert',  'Eine Eigenschaft ändert sich'],
+    ['prop-wert',       'Eine Eigenschaft bekommt einen bestimmten Wert'],
+    ['zeile-geaendert', 'Ein Eintrag wird bearbeitet — egal welches Feld'],
+    ['zeile-weg',       'Ein Eintrag verschwindet aus der Datenbank'],
+    ['formular-neu',    'Über das Formular kommt eine Antwort'],
+    ['zeit-vor',        'Einige Tage vor einem Datum'],
+    ['zeit-nach',       'Einige Tage nach einem Datum']
   ];
+  /* Diese Auslöser hängen an keiner einzelnen Spalte. */
+  const OHNE_SPALTE = ['zeile-neu', 'zeile-geaendert', 'zeile-weg', 'formular-neu'];
   const AKTIONEN = [
     ['setze-prop',   'Eigenschaft setzen'],
     ['ki-fuellen',   'KI-Feld ausfüllen lassen'],
@@ -9239,7 +9873,7 @@ const Datenbank = (() => {
         if (a.an === false) return;
         const w = a.wenn || {};
         if (w.art !== art) return;
-        if (w.art !== 'zeile-neu' && w.key && w.key !== key) return;
+        if (!OHNE_SPALTE.includes(w.art) && w.key && w.key !== key) return;
         if (w.art === 'prop-wert' && String(neuerWert ?? '') !== String(w.wert ?? '')) return;
 
         /* Zusätzliche Bedingungen — alle müssen zutreffen */
@@ -9316,8 +9950,10 @@ const Datenbank = (() => {
             Object.keys(coll.schema).forEach(k2 => {
               paket.werte[coll.schema[k2].name] = Formula.anzeige(wert(row, k2, coll));
             });
-            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                         body: JSON.stringify(paket) })
+            KI.holen(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(paket) },
+                     { versuche: 3, beiWartezeit: (sek, nr) =>
+                         UI.toast('Webhook meldet sich nicht — Versuch ' + (nr + 1) + ' in ' + sek + ' s') })
               .then(() => UI.toast('An den Webhook geschickt'))
               .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message +
                                       ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
@@ -9387,8 +10023,20 @@ const Datenbank = (() => {
       if (c) setTimeout(() => {
         automationenLaufen(r, c, 'prop-geaendert', key, value);
         automationenLaufen(r, c, 'prop-wert', key, value);
+        automationenLaufen(r, c, 'zeile-geaendert', key, value);
       }, 0);
       return erg;
+    };
+
+    /* Wird ein Eintrag weggeworfen, feuert das noch, solange es ihn gibt. */
+    const altTrash = Store.trashBlock;
+    Store.trashBlock = function (id) {
+      const r = Store.getBlock(id);
+      if (r && r.parentTable === 'collection') {
+        const c = Store.getCollection(r.parentId);
+        if (c) { try { automationenLaufen(r, c, 'zeile-weg'); } catch (e) {} }
+      }
+      return altTrash.call(Store, id);
     };
   };
 
@@ -9500,6 +10148,9 @@ const Datenbank = (() => {
       o.querySelector('#awl').style.display = (art0 === 'prop-wert' || zeit) ? '' : 'none';
       o.querySelector('#awl').firstChild.textContent = zeit ? 'wie viele Tage?' : '… mit diesem Wert';
       o.querySelector('#av').placeholder = zeit ? 'z. B. 3' : 'z. B. Erledigt';
+      /* Auslöser, die an keiner Spalte hängen, brauchen auch keine Auswahl */
+      o.querySelector('#ak').closest('label').style.display =
+        OHNE_SPALTE.includes(art0) ? 'none' : '';
       const d = o.querySelector('#ad').value;
       o.querySelector('#adk').style.display =
         ['setze-prop','ki-fuellen','zaehler','wiederholen'].includes(d) ? '' : 'none';
@@ -9665,6 +10316,7 @@ const Datenbank = (() => {
            automationenMenue, automationenLaufen, gewaehlteZeilen,
            relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
            ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
+           rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert };
 })();
@@ -11891,13 +12543,19 @@ const Mehrfach = (() => {
   const hat = () => gewaehlt.size > 0;
   const ids = () => [...gewaehlt];
 
+  /* Auf schmalen Bildschirmen gibt es in Notion keine Mehrfachauswahl —
+     dort ist Ziehen zum Markieren dem Scrollen im Weg. */
+  const schmal = () => window.matchMedia('(max-width:700px)').matches;
+
   const waehle = (id, dazu = false) => {
+    if (schmal() && dazu) return;
     if (!dazu) gewaehlt.clear();
     gewaehlt.add(id);
     zeichne();
   };
 
   const bereich = (vonId, bisId) => {
+    if (schmal()) return;
     const alle = [...document.querySelectorAll('.blk')].map(e => e.dataset.bid);
     const a = alle.indexOf(vonId), b = alle.indexOf(bisId);
     if (a < 0 || b < 0) return;
@@ -11975,7 +12633,7 @@ const Mehrfach = (() => {
     });
   };
 
-  return { start, waehle, leeren, hat, ids, bereich };
+  return { start, waehle, leeren, hat, ids, bereich, schmal };
 })();
 window.Mehrfach = Mehrfach;
 
@@ -13102,7 +13760,7 @@ const Galerie = (() => {
     });
 
     const kalView = Store.addView(collectionId, 'calendar', 'Kalender');
-    Store.updateView(kalView.id, { datumKey: 'dt' });
+    Store.updateView(kalView.id, { dateKey: 'dt' });
 
     const wocheView = Store.addView(collectionId, 'chart', 'Wochenreview');
     Store.updateView(wocheView.id, { chartGruppe: 'woche', chartWert: 'score', chartTyp: 'bar' });
@@ -13344,6 +14002,45 @@ const Galerie = (() => {
       Store.updateBlock(r.id, { text: n });
     });
 
+    /* --- Zwölf fertige Ansichten, jede mit gesetztem Filter --------------
+     * Teil 16 der Doku listet sie namentlich auf. Sie entstehen hier gleich
+     * mit, damit nach dem Anlegen nichts mehr eingestellt werden muss.
+     * -------------------------------------------------------------------*/
+    const ansicht = (collectionId, layout, name, patch) => {
+      const v = Store.addView(collectionId, layout, name);
+      if (v && patch) Store.updateView(v.id, patch);
+      return v;
+    };
+    const regel = (key, op, wert) => ({ operator: 'and', rules: [{ key, op, wert: wert ?? '' }] });
+
+    /* Tagesbilanz */
+    ansicht(tag.collectionId, 'calendar', 'Monatsübersicht', { dateKey: 'dt' });
+    ansicht(tag.collectionId, 'chart', 'Score-Verlauf',
+      { chartGruppe: 'dt', chartWert: 'score', chartArt: 'Durchschnitt', chartTyp: 'line', chartStufe: 'tag' });
+    ansicht(tag.collectionId, 'table', 'Nur Trainingstage',
+      { filters: regel('workout', 'ist aktiviert'), sorts: [{ key: 'dt', richtung: 'ab' }] });
+    ansicht(tag.collectionId, 'table', 'Schwache Tage',
+      { filters: regel('quote', 'kleiner als', '50'), sorts: [{ key: 'dt', richtung: 'ab' }] });
+
+    /* Training */
+    ansicht(einheit.collectionId, 'board', 'Nach Art', { groupBy: 'art' });
+    ansicht(einheit.collectionId, 'timeline', 'Trainingsplan', { startKey: 'dt' });
+    ansicht(satz.collectionId, 'table', 'Harte Sätze',
+      { filters: regel('rpe', 'größer oder gleich', '8'), sorts: [{ key: 'volumen', richtung: 'ab' }] });
+    ansicht(satz.collectionId, 'chart', 'Volumen je Übung',
+      { chartGruppe: 'uebRel', chartWert: 'volumen', chartArt: 'Summe', chartTyp: 'bar' });
+
+    /* Ernährung */
+    ansicht(mahlzeit.collectionId, 'board', 'Tagesablauf', { groupBy: 'zeit' });
+    ansicht(mahlzeit.collectionId, 'table', 'Heute gegessen',
+      { filters: regel('dt', 'ist heute'), calc: { kcal: 'Summe' } });
+
+    /* Gewohnheiten */
+    ansicht(habit.collectionId, 'table', 'Offen',
+      { filters: regel('erledigt', 'ist nicht aktiviert'), sorts: [{ key: 'dt', richtung: 'ab' }] });
+    ansicht(habit.collectionId, 'chart', 'Quote je Bereich',
+      { chartGruppe: 'kat', chartWert: 'erledigt', chartArt: 'Prozent aktiviert', chartTyp: 'bar' });
+
     Store.addBlock(p.id, 'h2', { text: 'Wie alles zusammenhängt' });
     ['**Tagesbilanz** ist die Drehscheibe — ein Eintrag je Tag',
      '**Satz-Protokoll** rechnet Volumen und geschätztes 1RM nach Epley',
@@ -13383,6 +14080,196 @@ const Galerie = (() => {
     });
     Store.addView(collectionId, 'timeline', 'Zeitplan');
     Store.addView(collectionId, 'calendar', 'Kalender');
+    return p;
+  };
+
+  /* ========================================================================
+   * MUSIK-APP   (Teil 2, Kapitel 4)
+   * ------------------------------------------------------------------------
+   * Zwei Datenbanken: Song-Bibliothek und Playlists, mit den vier Ansichten
+   * aus der Dokumentation.
+   * ======================================================================*/
+  const musik = () => {
+    const p = Store.addPage(null, { text: 'Musik', icon: '🎵' });
+    Store.addBlock(p.id, 'h1', { text: 'Nach Stimmung sortiert, nicht nach Alphabet' });
+    Store.addBlock(p.id, 'callout', {
+      text: 'Die **Stimmung** ist die wichtigste Spalte. Im Board zieht man einen Song ' +
+            'von 😌 Chill nach 🔥 Power — der Wert ändert sich sofort.',
+      icon: '🎧', color: 'bg-purple'
+    });
+
+    Store.addBlock(p.id, 'h2', { text: '🎵 Song-Bibliothek' });
+    const song = Store.addDatabase(p.id, 'Song-Bibliothek', {
+      title: { name: 'Song', type: 'title' },
+      art: { name: 'Künstler', type: 'text' },
+      genre: { name: 'Genre', type: 'multi', options:
+        opt(['Hip-Hop','orange'],['Rap','red'],['Pop','pink'],['Rock','brown'],['Elektro','purple'],
+            ['Türkisch','yellow'],['Klassik','gray'],['Lofi','blue'],['Workout','green']) },
+      st: { name: 'Stimmung', type: 'select', options:
+        opt(['🔥 Power','red'],['😌 Chill','blue'],['🎯 Fokus','purple'],
+            ['😢 Melancholisch','gray'],['🎉 Party','pink']) },
+      note: { name: 'Bewertung', type: 'select', options:
+        opt(['⭐⭐⭐⭐⭐','green'],['⭐⭐⭐⭐','blue'],['⭐⭐⭐','yellow'],['⭐⭐','orange'],['⭐','red']) },
+      min: { name: 'Länge Min', type: 'number' },
+      jahr: { name: 'Jahr', type: 'number' },
+      fav: { name: 'Favorit', type: 'checkbox' },
+      zuletzt: { name: 'Zuletzt gehört', type: 'date' },
+      link: { name: 'Link', type: 'url' },
+      pl: { name: 'Playlist', type: 'select', options:
+        opt(['🏋️ Gym Power','red'],['🌙 Abends chillen','blue'],
+            ['📚 Lernen & Fokus','purple'],['🚗 Autofahrt','orange']) }
+    }, 'table');
+
+    /* Die vier Ansichten aus der Doku */
+    const board = Store.addView(song.collectionId, 'board', 'Nach Stimmung');
+    Store.updateView(board.id, { groupBy: 'st' });
+    Store.addView(song.collectionId, 'gallery', 'Galerie');
+    const kompakt = Store.addView(song.collectionId, 'list', 'Playlist-Liste');
+    Store.updateView(kompakt.id, { sorts: [{ key: 'pl', richtung: 'auf' }] });
+
+    [['Sirtaki 2.0','Deniz Kaya',['Türkisch','Pop'],'🎉 Party','⭐⭐⭐⭐',3.4,2024,true,'🚗 Autofahrt'],
+     ['Iron Lungs','Bar Bell',['Workout','Rock'],'🔥 Power','⭐⭐⭐⭐⭐',4.1,2023,true,'🏋️ Gym Power'],
+     ['Slow Rain','Mira Lo',['Lofi'],'😌 Chill','⭐⭐⭐⭐',2.8,2022,false,'🌙 Abends chillen'],
+     ['Deep Work','Nocturne',['Klassik','Lofi'],'🎯 Fokus','⭐⭐⭐⭐⭐',18.2,2021,true,'📚 Lernen & Fokus'],
+     ['Letzter Zug','Halbmond',['Rap','Hip-Hop'],'😢 Melancholisch','⭐⭐⭐',3.9,2020,false,'🌙 Abends chillen'],
+     ['Voltage','Kern',['Elektro'],'🔥 Power','⭐⭐⭐⭐',5.2,2025,false,'🏋️ Gym Power']]
+      .forEach(([t, a, g, st, n, m, j, fv, pl], i) => {
+        const r = Store.addRow(song.collectionId, {
+          art: a, genre: g, st, note: n, min: m, jahr: j, fav: fv, pl,
+          zuletzt: inTagen(-i), link: 'https://open.spotify.com/search/' + encodeURIComponent(t)
+        });
+        Store.updateBlock(r.id, { text: t });
+      });
+
+    Store.addBlock(p.id, 'h2', { text: '💿 Playlists' });
+    const pls = Store.addDatabase(p.id, 'Playlists', {
+      title: { name: 'Playlist', type: 'title' },
+      besch: { name: 'Beschreibung', type: 'text' },
+      anzahl: { name: 'Anzahl Songs', type: 'number' },
+      dauer: { name: 'Gesamtdauer Min', type: 'number' },
+      st: { name: 'Stimmung', type: 'select', options:
+        opt(['🔥 Power','red'],['😌 Chill','blue'],['🎯 Fokus','purple'],['🎉 Party','pink']) },
+      anlass: { name: 'Anlass', type: 'multi', options:
+        opt(['Training','red'],['Schlafen','blue'],['Kochen','orange'],
+            ['Lernen','purple'],['Auto','green']) },
+      schnitt: { name: 'Minuten je Song', type: 'formula', formula:
+        'if(empty(prop("Anzahl Songs")) or prop("Anzahl Songs") == 0, 0, ' +
+        'round(prop("Gesamtdauer Min") / prop("Anzahl Songs") * 10) / 10)' }
+    }, 'gallery');
+
+    [['🏋️ Gym Power','Für schwere Sätze',9,43,'🔥 Power',['Training']],
+     ['🌙 Abends chillen','Wenn der Tag ausklingt',6,29,'😌 Chill',['Schlafen','Kochen']],
+     ['📚 Lernen & Fokus','Lange Stücke, kein Gesang',4,76,'🎯 Fokus',['Lernen']],
+     ['🚗 Autofahrt','Mitsingen erlaubt',7,29,'🎉 Party',['Auto']]]
+      .forEach(([t, b2, n, d, st, an]) => {
+        const r = Store.addRow(pls.collectionId, { besch: b2, anzahl: n, dauer: d, st, anlass: an });
+        Store.updateBlock(r.id, { text: t });
+      });
+
+    Store.addBlock(p.id, 'divider', {});
+    ['**Nach Stimmung** ist ein Board — Ziehen ändert die Stimmung sofort',
+     '**Galerie** zeigt Kacheln, gut zum Durchblättern',
+     '**Playlist-Liste** ist die kompakte Liste, nach Playlist sortiert',
+     'Die Playlists rechnen sich die durchschnittliche Songlänge selbst aus']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+    return p;
+  };
+
+  /* ========================================================================
+   * PERSÖNLICHE ANALYSE   (Teil 2, Kapitel 5)
+   * ------------------------------------------------------------------------
+   * Der tägliche Check-in mit 16 Spalten, zwei Ansichten und der
+   * Auswertung, die in der Doku auf der Seite steht.
+   * ======================================================================*/
+  const analyse = () => {
+    const p = Store.addPage(null, { text: 'Persönliche Analyse', icon: '📊' });
+
+    Store.addBlock(p.id, 'callout', {
+      text: 'Jeden Abend eine Zeile ausfüllen — mehr nicht.',
+      icon: '🧭', color: 'bg-blue'
+    });
+    Store.addBlock(p.id, 'h1', { text: '📆 Täglicher Check-in' });
+    Store.addBlock(p.id, 'text', {
+      text: 'Vier Gewohnheiten, ein paar Zahlen. Der Tages-Score zählt die Haken, ' +
+            'die Bewertung entsteht daraus von selbst.'
+    });
+
+    const check = Store.addDatabase(p.id, 'Täglicher Check-in', {
+      title: { name: 'Tag', type: 'title' },
+      dt: { name: 'Datum', type: 'date' },
+      wt: { name: 'Wochentag', type: 'formula', formula: 'formatDate(prop("Datum"), "dddd")' },
+      schlaf: { name: 'Schlaf h', type: 'number' },
+      energie: { name: 'Energie 1-10', type: 'number' },
+      stimmung: { name: 'Stimmung', type: 'select', options:
+        opt(['😄 Super','green'],['🙂 Gut','blue'],['😐 Neutral','gray'],
+            ['😕 Mässig','orange'],['😞 Schlecht','red']) },
+      wasser: { name: 'Wasser L', type: 'number' },
+      schritte: { name: 'Schritte', type: 'number' },
+      training: { name: '🏋️ Training', type: 'checkbox' },
+      essen: { name: '🍽️ Sauber gegessen', type: 'checkbox' },
+      lesen: { name: '📖 Gelesen', type: 'checkbox' },
+      musik: { name: '🎵 Musik bewusst gehört', type: 'checkbox' },
+      schirm: { name: 'Bildschirmzeit h', type: 'number' },
+      score: { name: 'Tages-Score 0-4', type: 'formula', anzeige: 'bar', max: 4, formula:
+        'toNumber(prop("🏋️ Training")) + toNumber(prop("🍽️ Sauber gegessen")) + ' +
+        'toNumber(prop("📖 Gelesen")) + toNumber(prop("🎵 Musik bewusst gehört"))' },
+      bewertung: { name: 'Bewertung', type: 'formula', formula:
+        'if(prop("Tages-Score 0-4") == 4, "🔥 Top-Tag", ' +
+        'if(prop("Tages-Score 0-4") == 3, "👍 Guter Tag", ' +
+        'if(prop("Tages-Score 0-4") >= 1, "😐 Mittel", "❌ Schwacher Tag")))' },
+      notiz: { name: 'Notiz', type: 'text' }
+    }, 'table');
+
+    const nachB = Store.addView(check.collectionId, 'board', 'Nach Bewertung');
+    Store.updateView(nachB.id, { groupBy: 'stimmung' });
+
+    /* Die Beispielwoche aus der Doku */
+    [['Montag',    7.5, 8, '🙂 Gut',    2.4,  9200, 1,1,1,0, 4.0],
+     ['Dienstag',  8.0, 9, '😄 Super',  2.8, 11400, 1,1,1,1, 3.0],
+     ['Mittwoch',  6.0, 6, '😐 Neutral',1.9,  7800, 1,1,1,0, 5.0],
+     ['Donnerstag',7.8, 8, '😄 Super',  2.6, 10500, 1,1,1,1, 3.5],
+     ['Freitag',   7.0, 7, '🙂 Gut',    2.1,  8900, 1,1,1,0, 4.5],
+     ['Samstag',   5.5, 5, '😕 Mässig', 1.4,  6200, 0,1,1,1, 7.5],
+     ['Sonntag',   9.0, 9, '🙂 Gut',    2.2,  5400, 0,1,1,1, 6.0]]
+      .forEach(([name, sch, en, sti, wa, sr, tr, es, le, mu, bi], i) => {
+        const r = Store.addRow(check.collectionId, {
+          dt: inTagen(i - 6), schlaf: sch, energie: en, stimmung: sti, wasser: wa,
+          schritte: sr, training: !!tr, essen: !!es, lesen: !!le, musik: !!mu, schirm: bi
+        });
+        Store.updateBlock(r.id, { text: name });
+      });
+
+    Store.addBlock(p.id, 'divider', {});
+    Store.addBlock(p.id, 'h1', { text: '📊 Auswertung der Woche' });
+
+    Store.addBlock(p.id, 'h2', { text: '🏋️ Training' });
+    ['Fünf von sieben Tagen trainiert — die zwei freien Tage waren Samstag und Sonntag',
+     'Die Tage mit wenig Schlaf hatten auch das kleinste Volumen']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+
+    Store.addBlock(p.id, 'h2', { text: '🍽️ Ernährung' });
+    ['Jeden Tag sauber gegessen — das ist die stabilste Gewohnheit der Woche',
+     'Wasser lag im Schnitt bei 2,2 Litern, an zwei Tagen unter zwei']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+
+    Store.addBlock(p.id, 'h2', { text: '🎵 Musik' });
+    ['An vier Tagen bewusst gehört, immer an Tagen mit hoher Energie']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+
+    Store.addBlock(p.id, 'h2', { text: '🔗 Zusammenhänge, die auffallen' });
+    Store.addBlock(p.id, 'quote', {
+      text: 'Die zwei Tage mit unter 6,5 h Schlaf (Mittwoch und Samstag) sind exakt die zwei ' +
+            'Tage mit der niedrigsten Energie und dem kleinsten Trainingsvolumen.'
+    });
+    Store.addBlock(p.id, 'quote', {
+      text: 'Am Tag mit der höchsten Bildschirmzeit (7,5 h am Samstag) war die Schrittzahl ' +
+            'am niedrigsten.'
+    });
+    Store.addBlock(p.id, 'callout', {
+      text: 'Schlaf vor 23 Uhr priorisieren und die Kalorien um rund 800 kcal pro Tag erhöhen. ' +
+            'Beides zusammen würde das Trainingsvolumen am stärksten heben.',
+      icon: '💡', color: 'bg-yellow'
+    });
     return p;
   };
 
@@ -13445,6 +14332,12 @@ const Galerie = (() => {
     { id: 'fitness', icon: '🏋️', name: 'Fitness-OS',
       text: 'Zehn verknüpfte Datenbanken: Übungen, Sätze, Einheiten, Mahlzeiten, Habits, Körpermasse. Mit Volumen, 1RM und Rollups.',
       quelle: 'Teil 16 der Doku', bauen: fitnessOS },
+    { id: 'musik',   icon: '🎵', name: 'Musik-App',
+      text: 'Song-Bibliothek und Playlists. Board nach Stimmung, Galerie, kompakte Liste — Ziehen ändert die Stimmung sofort.',
+      quelle: 'Teil 2 der Doku', bauen: musik },
+    { id: 'analyse', icon: '📊', name: 'Persönliche Analyse',
+      text: 'Täglicher Check-in mit 16 Spalten, Tages-Score aus vier Gewohnheiten und die fertige Wochenauswertung.',
+      quelle: 'Teil 2 der Doku', bauen: analyse },
     { id: 'projekte',icon: '🚀', name: 'Projekte',
       text: 'Kanban mit Status, Priorität, Fälligkeit und Dringlichkeitszeichen. Dazu Zeitplan und Kalender.',
       quelle: '', bauen: projekte },
@@ -13491,7 +14384,13 @@ const Galerie = (() => {
     });
   };
 
-  return { oeffne, VORLAGEN, habitTracker, fitnessOS };
+  /** Eine Vorlage anlegen, ohne die Galerie zu öffnen. */
+  const bauen = (id) => {
+    const v = VORLAGEN.find(x => x.id === id);
+    return v ? v.bauen() : null;
+  };
+
+  return { oeffne, bauen, VORLAGEN, habitTracker, fitnessOS, musik, analyse };
 })();
 
 window.Galerie = Galerie;
@@ -13535,7 +14434,7 @@ const Status = (() => {
   ]],
 
   ['Teil 2', 'Vier Beispiel-Apps', [
-    ['t', 'Vier fertige Unterseiten: Gym, Kalorien, Musik, persönliche Analyse', 'Gym und Ernährung stecken im Fitness-OS; Musik und Analyse fehlen'],
+    ['f', 'Vier fertige Unterseiten: Gym, Kalorien, Musik, persönliche Analyse', 'alle vier in der Vorlagengalerie'],
     ['f', 'Gym-App aus drei Datenbanken: Übungskatalog, Tagebuch, Satzprotokoll — in der Galerie'],
     ['f', 'Übungskatalog mit Muskelgruppe, Gerät, Schwierigkeit, Ersatzübung'],
     ['f', 'Satzprotokoll: eine Zeile je Satz mit Gewicht, Wiederholungen, RPE, Volumen, 1RM'],
@@ -13576,10 +14475,10 @@ const Status = (() => {
     ['f', 'Rückgängig nimmt eine ganze Mehrschritt-Aktion zurück'],
     ['f', 'Protokollfenster sammelt alles, was die KI angelegt hat'],
     ['f', 'Prompt-Regeln in der Anleitung erklärt'],
-    ['t', 'Sechs Automatisierungs-Auslöser', 'fünf umgesetzt, inklusive Zeitauslöser vor und nach einem Datum'],
-    ['t', 'Automatisierungs-Aktionen', 'sechs umgesetzt; Slack und Webhook brauchen einen Server'],
+    ['f', 'Sechs Automatisierungs-Auslöser', 'alle sechs plus zwei Zeitauslöser vor und nach einem Datum'],
+    ['f', 'Automatisierungs-Aktionen', 'neun umgesetzt, darunter Wiederholen und Fremddatenbank ändern; nur Slack braucht einen Server'],
     ['f', 'Automationen lösen keine Automationen aus'],
-    ['t', '21 Berechnungsarten', '15 umgesetzt, darunter Prozent aktiviert und Zeitspanne'],
+    ['f', '21 Berechnungsarten'],
     ['f', 'Keine Planlimits — alles unbegrenzt und kostenlos'],
     ['f', 'Modellauswahl: Ollama, WebLLM und sechs Anbieter mit eigenem Schlüssel'],
     ['t', 'Quellen einzeln ein- und ausschalten', 'Seitenkontext an oder aus, Wikipedia auf Zuruf']
@@ -13589,7 +14488,7 @@ const Status = (() => {
     ['t', 'Seitenleiste mit 32 Elementen', '20 umgesetzt; Mitglieder, Teamspace-Verwaltung entfallen ohne Server'],
     ['f', 'Abschnitte Privat, Favoriten und Bereiche getrennt darstellen'],
     ['t', 'Bereichs-Zeile mit Pfeil, Plus und Drei-Punkte-Menü', 'Pfeil und Plus da, Bereichsmenü über Einstellungen'],
-    ['t', 'Kopfzeile mit 16 Elementen inklusive Teilen, Stern, Schloss', '11 umgesetzt'],
+    ['t', 'Kopfzeile mit 16 Elementen inklusive Teilen, Stern, Schloss', '14 umgesetzt; Peek-Knöpfe stecken in der Seitenvorschau'],
     ['f', 'Drei-Punkte-Seitenmenü mit über 20 Einträgen'],
     ['f', 'Seitenstil umschalten: Standard, Serif, Mono, kleiner Text, volle Breite'],
     ['f', 'Block-Griff ⋮⋮ links mit vollem Menü; Ziehen verschiebt den Block'],
@@ -13629,7 +14528,7 @@ const Status = (() => {
     ['f', 'Listenfunktionen map, filter, find, some, every, unique, flat'],
     ['f', 'Datumsfunktionen; now() mit Uhrzeit, today() ohne'],
     ['f', 'Verknüpfungen per map(current.prop(...)) auslesen'],
-    ['t', '29 Eigenschaftstypen mit genau einer Titelspalte', '21 Typen umgesetzt'],
+    ['f', '29 Eigenschaftstypen mit genau einer Titelspalte'],
     ['f', 'Verknüpfung einseitig oder wechselseitig, mit Limit eine oder mehrere'],
     ['f', 'Zahl, Formel und Rollup als Zahl, Balken oder Ring anzeigen'],
     ['f', 'Filteroperatoren je Typ'],
@@ -13638,16 +14537,16 @@ const Status = (() => {
 
   ['Teil 8', 'Automationen, Formulare, Diagramme', [
     ['f', 'Automation aus Auslöser und Aktion zusammensetzen'],
-    ['t', '15 Auslöser, 24 Bedingungen, 19 Aktionen', 'fünf Auslöser mit Zeitauslösern, sechs Aktionen, Bedingungen frei kombinierbar'],
+    ['t', '15 Auslöser, 24 Bedingungen, 19 Aktionen', 'acht Auslöser, neun Aktionen, Bedingungen frei kombinierbar'],
     ['f', 'Automationen lösen keine weiteren Automationen aus'],
     ['f', 'Geltungsbereich ganze Datenbank oder eine bestimmte Ansicht'],
     ['f', 'Aktion „Webhook senden" — Adresse in den Einstellungen oder je Automation'],
     ['f', 'Knopf-Block mit mehreren Aktionen in Reihenfolge'],
     ['f', 'Knopf fragt vor dem Ausführen nach, wenn gewünscht'],
-    ['t', 'Formularansicht mit 13 Fragetypen', 'alle passenden Typen ausser Formel, Rollup, Erstellt am'],
+    ['f', 'Formularansicht mit 13 Fragetypen'],
     ['f', 'Bedingte Logik blendet Fragen je nach Antwort ein'],
     ['f', 'Sechs Diagrammtypen: Säule, Balken, Linie, Fläche, Ring, Kennzahl'],
-    ['t', '21 Aggregationen für Diagramme', 'elf umgesetzt: Anzahl, Summe, Durchschnitt, Median, Min, Max, Spanne und mehr'],
+    ['f', '21 Aggregationen für Diagramme'],
     ['f', 'Wiederkehrende Vorlagen täglich bis jährlich'],
     ['o', 'Berechtigungsmatrix mit fünf Rollen', 'ohne Konten gibt es keine Rollen'],
     ['f', 'Keine harten Limits bei Eigenschaften oder Anfragen']
@@ -13655,7 +14554,7 @@ const Status = (() => {
 
   ['Teil 9', 'Offizielle API', [
     ['t', 'REST-Schnittstelle unter /v1/ mit Token', 'die App ruft fremde APIs mit deinem Schlüssel auf; einen eigenen Server hat sie nicht'],
-    ['o', 'Versions-Header und Fehlercode missing_version'],
+    ['t', 'Versions-Header und Fehlercode missing_version', 'Anthropic bekommt anthropic-version mitgeschickt; eigene Version hat diese App nicht'],
     ['t', 'Seiten erstellen, lesen, ändern', 'im Programm über Store statt über HTTP'],
     ['t', 'Einzelnen Eigenschaftswert abrufen', 'Datenbank.wert(zeile, schlüssel, sammlung)'],
     ['f', 'Archivieren und Papierkorb als Zustand am Block'],
@@ -13667,15 +14566,15 @@ const Status = (() => {
     ['f', 'Formel, Rollup, Erstellt am und laufende Nummer sind nur lesbar'],
     ['f', 'Leeren je Typ sauber behandelt'],
     ['t', 'Dateiupload in mehreren Schritten', 'Datei wird direkt als Data-URL abgelegt'],
-    ['o', 'Fehlercodes mit Wiederholung und Backoff']
+    ['f', 'Fehlercodes mit Wiederholung und Backoff']
   ]],
 
   ['Teil 10', 'Kalender, Mail, Agenten', [
     ['o', 'Google- und iCloud-Kalender verbinden', 'bräuchte Konten und einen Server'],
-    ['o', 'Standardkalender festlegen und Kalender sortieren'],
+    ['f', 'Standardkalender festlegen und Kalender sortieren', 'mehrere Datenbanken je Kalender, ein- und ausschaltbar, verschiebbar'],
     ['f', 'Datenbanken mit Datumsfeld als Kalender anzeigen'],
     ['f', 'Mehrtägige Einträge und Zeiträume in Zeitstrahl und Kalender'],
-    ['o', 'Kürzel D/W/M für Tag, Woche, Monat'],
+    ['f', 'Kürzel D/W/M für Tag, Woche, Monat'],
     ['o', 'Mail-Ansichten mit Eigenschaften und Filtern'],
     ['o', 'Automatische Beschriftungen, Bausteine, Schnellantworten'],
     ['o', 'Gmail-Kürzel im Mail-Programm'],
@@ -13692,7 +14591,7 @@ const Status = (() => {
     ['f', 'Suche zeigt nur, was auf diesem Gerät liegt'],
     ['f', 'Suchfilter für Bereich, Typ, Zeitraum und Ort'],
     ['t', 'Unternehmenssuche über verbundene Apps und Web', 'Wikipedia nachschlagen ist eingebaut, kostenlos und ohne Schlüssel'],
-    ['o', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel'],
+    ['t', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel', 'Suche nach Seiten-ID ist da; ohne Konten gibt es keinen Besitzerwechsel'],
     ['o', 'Web Clipper speichert Webseiten in eine Datenbank', 'bräuchte eine Browsererweiterung'],
     ['f', 'Importwege: Einstellungen, Seitenmenü, Datenbank-CSV und Ziehen auf die Seite'],
     ['f', 'Importformate MD, CSV, TSV, XLSX, DOCX, HTML, EPUB'],
@@ -13700,7 +14599,7 @@ const Status = (() => {
     ['f', 'Offline geht immer — die App braucht nie ein Netz'],
     ['f', 'Offline lesen, schreiben, Blöcke anlegen, Haken setzen'],
     ['f', 'Auch Suche und KI laufen offline'],
-    ['t', 'Mobil ohne Spalten und Mehrfachauswahl', 'Oberfläche passt sich an, Spalten bleiben'],
+    ['f', 'Mobil ohne Spalten und Mehrfachauswahl'],
     ['f', 'Wiki mit Besitzer und Prüfvermerk']
   ]],
 
@@ -13786,7 +14685,7 @@ const Status = (() => {
     ['f', 'Tages-Score als Mittelwert mehrerer Kennzahlen'],
     ['f', 'Ampelformel mit Schwellen 80 und 50'],
     ['f', 'Fortschrittsbalken aus repeat("█") und repeat("░")'],
-    ['t', 'Zwölf fertige Ansichten mit gesetzten Filtern', 'die Vorlage bringt die Datenbanken mit, Ansichten legst du dazu']
+    ['f', 'Zwölf fertige Ansichten mit gesetzten Filtern']
   ]]
 
   ];
@@ -13946,6 +14845,72 @@ const KI = (() => {
   const anbieter = (id) => ANBIETER.find(a => a.id === id) || ANBIETER[0];
   const schluessel = (id) => Store.getMeta('api:' + id, '');
 
+  /* ========================================================================
+   * NETZ MIT WIEDERHOLUNG
+   * ------------------------------------------------------------------------
+   * Teil 9 der Doku beschreibt, wie ein Client mit Fehlern umgehen soll:
+   * 429 und 5xx sind vorübergehend, also nach kurzer Pause noch einmal
+   * versuchen und die Pause jedes Mal verdoppeln. Steht im Kopf ein
+   * Retry-After, gilt der. 4xx ausser 429 sind endgültig — da hilft kein
+   * zweiter Versuch, das muss der Mensch richten.
+   * ======================================================================*/
+  const WIEDERHOLBAR = [408, 409, 425, 429, 500, 502, 503, 504];
+
+  const schlafen = (ms) => new Promise(r => setTimeout(r, ms));
+
+  /** Was steckt hinter einem Fehlercode? Klartext statt nackter Zahl. */
+  const FEHLERTEXT = {
+    400: 'Die Anfrage war fehlerhaft (invalid_request).',
+    401: 'Der Schlüssel wurde nicht angenommen (unauthorized). Einstellungen → Schlüssel und APIs.',
+    403: 'Der Zugriff ist gesperrt (restricted_resource).',
+    404: 'Die Adresse gibt es nicht (object_not_found).',
+    409: 'Es gab einen Konflikt (conflict_error) — wird gleich noch einmal versucht.',
+    413: 'Die Anfrage ist zu gross (request_entity_too_large).',
+    429: 'Zu viele Anfragen (rate_limited) — es wird gewartet und neu versucht.',
+    500: 'Beim Anbieter ist etwas schiefgegangen (internal_server_error).',
+    502: 'Der Anbieter ist gerade nicht erreichbar (bad_gateway).',
+    503: 'Der Dienst ist überlastet (service_unavailable).',
+    504: 'Der Anbieter hat zu lange gebraucht (gateway_timeout).'
+  };
+
+  /**
+   * fetch mit Wiederholung. Gibt die Antwort zurück, sobald sie brauchbar ist.
+   * @param {object} opt  versuche, basis (ms), beiWartezeit (Rückmeldung)
+   */
+  const holen = async (url, init = {}, opt = {}) => {
+    const versuche = opt.versuche ?? 4;
+    const basis    = opt.basis ?? 700;
+    let letzter = null;
+
+    for (let i = 0; i < versuche; i++) {
+      let r = null;
+      try {
+        r = await fetch(url, init);
+      } catch (e) {
+        /* Netz ganz weg — das ist ein Fall für einen zweiten Versuch */
+        letzter = e;
+        if (init.signal && init.signal.aborted) throw e;
+        if (i === versuche - 1) break;
+        await schlafen(basis * Math.pow(2, i));
+        continue;
+      }
+
+      if (r.ok || !WIEDERHOLBAR.includes(r.status)) return r;
+
+      letzter = new Error('HTTP ' + r.status + ' — ' + (FEHLERTEXT[r.status] || 'unbekannter Fehler'));
+      if (i === versuche - 1) return r;
+
+      /* Sagt der Anbieter selbst, wie lange gewartet werden soll? */
+      const kopfWarte = parseFloat(r.headers.get('retry-after') || '');
+      const warte = !isNaN(kopfWarte) && kopfWarte > 0
+        ? Math.min(kopfWarte * 1000, 20000)
+        : basis * Math.pow(2, i);
+      if (opt.beiWartezeit) opt.beiWartezeit(Math.round(warte / 100) / 10, i + 1, r.status);
+      await schlafen(warte);
+    }
+    throw letzter || new Error('Die Anfrage hat nicht geklappt.');
+  };
+
   /**
    * Fragt einen Wolken-Anbieter. Streamt Stück für Stück, damit die Antwort
    * genauso erscheint wie bei den lokalen Modellen.
@@ -13975,10 +14940,15 @@ const KI = (() => {
           system: sys ? sys.content : undefined, messages: rest }
       : { model: modell, messages: nachrichten, stream: true };
 
-    const r = await fetch(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper) });
+    const r = await holen(url,
+      { method: 'POST', headers: kopf, body: JSON.stringify(koerper) },
+      { beiWartezeit: (sek, nr, code) =>
+          UI.toast(`${a.name}: ${code} — neuer Versuch ${nr + 1} in ${sek} s`) });
+
     if (!r.ok) {
       const txt = await r.text().catch(() => '');
-      throw new Error(a.name + ' antwortet mit ' + r.status + '. ' + txt.slice(0, 180));
+      throw new Error(a.name + ' antwortet mit ' + r.status + '. ' +
+        (FEHLERTEXT[r.status] || '') + ' ' + txt.slice(0, 180));
     }
 
     const leser = r.body.getReader();
@@ -14689,9 +15659,11 @@ const KI = (() => {
   const wikipedia = async (begriff) => {
     const url = 'https://de.wikipedia.org/api/rest_v1/page/summary/' +
                 encodeURIComponent(begriff.trim().replace(/\s+/g, '_'));
-    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const r = await holen(url, { headers: { 'Accept': 'application/json' } },
+      { versuche: 3, beiWartezeit: (sek, nr) =>
+          UI.toast('Wikipedia antwortet nicht — neuer Versuch ' + (nr + 1) + ' in ' + sek + ' s') });
     if (r.status === 404) return null;
-    if (!r.ok) throw new Error('Wikipedia antwortet mit ' + r.status);
+    if (!r.ok) throw new Error('Wikipedia antwortet mit ' + r.status + '. ' + (FEHLERTEXT[r.status] || ''));
     const d = await r.json();
     return { titel: d.title, text: d.extract, link: d.content_urls?.desktop?.page || '' };
   };
@@ -14805,7 +15777,7 @@ const KI = (() => {
 
   return { start, bindePanel, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
            datenbankBauen, seiteBauen, protokollZeigen, protokoll,
-           ANBIETER, anbieter, wolkeFragen,
+           ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
            datenbankAuswerten, frageKurz, zustand, modellMenue };
 })();
 
@@ -15127,6 +16099,7 @@ const App = (() => {
       '<button data-a="cover"><span class="mi">🖼</span>Cover ändern</button>' +
       '<button data-a="dup"><span class="mi">⧉</span>Duplizieren</button>' +
       '<button data-a="link"><span class="mi">🔗</span>Link kopieren</button>' +
+      '<button data-a="pid"><span class="mi">#</span>Seiten-ID kopieren</button>' +
       '<button data-a="komm"><span class="mi">💬</span>Kommentare</button>' +
       '<hr>' +
       /* Daten */
@@ -15199,6 +16172,10 @@ const App = (() => {
       }
       if (a === 'dup')  { dupliziereSeite(p.id, p.parentId); zeichneBaum(); UI.toast('Seite dupliziert'); }
       if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); }
+      if (a === 'pid') {
+        navigator.clipboard?.writeText(p.id);
+        UI.toast('Seiten-ID kopiert: ' + p.id);
+      }
       if (a === 'komm') Kommentare.panel(p.id);
       if (a === 'export') markdownExport(p);
       if (a === 'import') {
@@ -15465,6 +16442,20 @@ const App = (() => {
       const n = Kommentare.offeneAnzahl(p.id);
       kb.textContent = n ? '💬 ' + n : '💬';
     }
+    /* Schloss zeigt den Zustand, nicht nur die Aktion */
+    const schloss = document.getElementById('btn-lock');
+    if (schloss && p) {
+      schloss.textContent = p.gesperrt ? '🔒' : '🔓';
+      schloss.classList.toggle('on', !!p.gesperrt);
+      schloss.title = p.gesperrt ? 'Seite ist gesperrt — zum Entsperren klicken'
+                                 : 'Seite gegen Bearbeiten sperren';
+    }
+    /* Der Blitz nur dort, wo es auch eine Datenbank gibt */
+    const blitz = document.getElementById('btn-auto');
+    if (blitz && p) {
+      const hatDb = Store.childrenOf(p.id).some(b => b.type === 'database');
+      blitz.style.display = hatDb ? '' : 'none';
+    }
   };
 
   /* ========================================================================
@@ -15475,7 +16466,7 @@ const App = (() => {
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder such" style="width:min(820px,95vw)">' +
-        '<input id="q" placeholder="Seiten und Inhalte durchsuchen …" autocomplete="off">' +
+        '<input id="q" placeholder="Seiten und Inhalte durchsuchen — auch nach Seiten-ID …" autocomplete="off">' +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
             '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -15885,6 +16876,41 @@ const App = (() => {
       if (p) Werkzeuge.teilenMenue(e.currentTarget, p);
     });
     an('btn-verlauf', () => seiteId && Werkzeuge.versionen(Store.getBlock(seiteId)));
+    an('btn-link', () => {
+      if (!seiteId) return;
+      navigator.clipboard?.writeText(location.origin + location.pathname + '#' + seiteId);
+      UI.toast('Link zur Seite kopiert');
+    });
+    an('btn-lock', () => {
+      if (!seiteId) return;
+      const p = Store.getBlock(seiteId);
+      Store.updateBlock(p.id, { gesperrt: !p.gesperrt });
+      zeichneSeite(); zeichneCrumbs();
+      UI.toast(p.gesperrt ? 'Seite ist gesperrt' : 'Bearbeiten wieder erlaubt');
+    });
+    an('btn-auto', (e) => {
+      if (!seiteId) return;
+      const dbs = Store.childrenOf(seiteId).filter(b => b.type === 'database');
+      if (!dbs.length) { UI.toast('Auf dieser Seite gibt es keine Datenbank'); return; }
+      const oeffneAuto = (b) => {
+        const c = Store.getCollection(b.collectionId);
+        const v = Store.getView(b.aktiveView || (c && c.viewIds[0]));
+        if (c) Datenbank.automationenMenue(e.currentTarget, c, v, b);
+      };
+      if (dbs.length === 1) { oeffneAuto(dbs[0]); return; }
+      const r = e.currentTarget.getBoundingClientRect();
+      const m = UI.menu('<div class="grp">Welche Datenbank?</div>' +
+        dbs.map((b, i) => {
+          const c = Store.getCollection(b.collectionId);
+          return `<button data-i="${i}"><span class="mi">⚡</span>${esc(c ? c.name : 'Datenbank')}</button>`;
+        }).join(''), r.left - 140, r.bottom + 6);
+      m.addEventListener('click', ev => {
+        const b2 = ev.target.closest('button[data-i]');
+        if (!b2) return;
+        m.remove();
+        oeffneAuto(dbs[+b2.dataset.i]);
+      });
+    });
     an('btn-fav', () => {
       if (!seiteId) return;
       const p = Store.getBlock(seiteId);

@@ -552,13 +552,19 @@ const Mehrfach = (() => {
   const hat = () => gewaehlt.size > 0;
   const ids = () => [...gewaehlt];
 
+  /* Auf schmalen Bildschirmen gibt es in Notion keine Mehrfachauswahl —
+     dort ist Ziehen zum Markieren dem Scrollen im Weg. */
+  const schmal = () => window.matchMedia('(max-width:700px)').matches;
+
   const waehle = (id, dazu = false) => {
+    if (schmal() && dazu) return;
     if (!dazu) gewaehlt.clear();
     gewaehlt.add(id);
     zeichne();
   };
 
   const bereich = (vonId, bisId) => {
+    if (schmal()) return;
     const alle = [...document.querySelectorAll('.blk')].map(e => e.dataset.bid);
     const a = alle.indexOf(vonId), b = alle.indexOf(bisId);
     if (a < 0 || b < 0) return;
@@ -636,7 +642,7 @@ const Mehrfach = (() => {
     });
   };
 
-  return { start, waehle, leeren, hat, ids, bereich };
+  return { start, waehle, leeren, hat, ids, bereich, schmal };
 })();
 window.Mehrfach = Mehrfach;
 

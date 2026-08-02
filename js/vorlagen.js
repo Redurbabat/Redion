@@ -96,7 +96,7 @@ const Galerie = (() => {
     });
 
     const kalView = Store.addView(collectionId, 'calendar', 'Kalender');
-    Store.updateView(kalView.id, { datumKey: 'dt' });
+    Store.updateView(kalView.id, { dateKey: 'dt' });
 
     const wocheView = Store.addView(collectionId, 'chart', 'Wochenreview');
     Store.updateView(wocheView.id, { chartGruppe: 'woche', chartWert: 'score', chartTyp: 'bar' });
@@ -338,6 +338,45 @@ const Galerie = (() => {
       Store.updateBlock(r.id, { text: n });
     });
 
+    /* --- Zwölf fertige Ansichten, jede mit gesetztem Filter --------------
+     * Teil 16 der Doku listet sie namentlich auf. Sie entstehen hier gleich
+     * mit, damit nach dem Anlegen nichts mehr eingestellt werden muss.
+     * -------------------------------------------------------------------*/
+    const ansicht = (collectionId, layout, name, patch) => {
+      const v = Store.addView(collectionId, layout, name);
+      if (v && patch) Store.updateView(v.id, patch);
+      return v;
+    };
+    const regel = (key, op, wert) => ({ operator: 'and', rules: [{ key, op, wert: wert ?? '' }] });
+
+    /* Tagesbilanz */
+    ansicht(tag.collectionId, 'calendar', 'Monatsübersicht', { dateKey: 'dt' });
+    ansicht(tag.collectionId, 'chart', 'Score-Verlauf',
+      { chartGruppe: 'dt', chartWert: 'score', chartArt: 'Durchschnitt', chartTyp: 'line', chartStufe: 'tag' });
+    ansicht(tag.collectionId, 'table', 'Nur Trainingstage',
+      { filters: regel('workout', 'ist aktiviert'), sorts: [{ key: 'dt', richtung: 'ab' }] });
+    ansicht(tag.collectionId, 'table', 'Schwache Tage',
+      { filters: regel('quote', 'kleiner als', '50'), sorts: [{ key: 'dt', richtung: 'ab' }] });
+
+    /* Training */
+    ansicht(einheit.collectionId, 'board', 'Nach Art', { groupBy: 'art' });
+    ansicht(einheit.collectionId, 'timeline', 'Trainingsplan', { startKey: 'dt' });
+    ansicht(satz.collectionId, 'table', 'Harte Sätze',
+      { filters: regel('rpe', 'größer oder gleich', '8'), sorts: [{ key: 'volumen', richtung: 'ab' }] });
+    ansicht(satz.collectionId, 'chart', 'Volumen je Übung',
+      { chartGruppe: 'uebRel', chartWert: 'volumen', chartArt: 'Summe', chartTyp: 'bar' });
+
+    /* Ernährung */
+    ansicht(mahlzeit.collectionId, 'board', 'Tagesablauf', { groupBy: 'zeit' });
+    ansicht(mahlzeit.collectionId, 'table', 'Heute gegessen',
+      { filters: regel('dt', 'ist heute'), calc: { kcal: 'Summe' } });
+
+    /* Gewohnheiten */
+    ansicht(habit.collectionId, 'table', 'Offen',
+      { filters: regel('erledigt', 'ist nicht aktiviert'), sorts: [{ key: 'dt', richtung: 'ab' }] });
+    ansicht(habit.collectionId, 'chart', 'Quote je Bereich',
+      { chartGruppe: 'kat', chartWert: 'erledigt', chartArt: 'Prozent aktiviert', chartTyp: 'bar' });
+
     Store.addBlock(p.id, 'h2', { text: 'Wie alles zusammenhängt' });
     ['**Tagesbilanz** ist die Drehscheibe — ein Eintrag je Tag',
      '**Satz-Protokoll** rechnet Volumen und geschätztes 1RM nach Epley',
@@ -377,6 +416,196 @@ const Galerie = (() => {
     });
     Store.addView(collectionId, 'timeline', 'Zeitplan');
     Store.addView(collectionId, 'calendar', 'Kalender');
+    return p;
+  };
+
+  /* ========================================================================
+   * MUSIK-APP   (Teil 2, Kapitel 4)
+   * ------------------------------------------------------------------------
+   * Zwei Datenbanken: Song-Bibliothek und Playlists, mit den vier Ansichten
+   * aus der Dokumentation.
+   * ======================================================================*/
+  const musik = () => {
+    const p = Store.addPage(null, { text: 'Musik', icon: '🎵' });
+    Store.addBlock(p.id, 'h1', { text: 'Nach Stimmung sortiert, nicht nach Alphabet' });
+    Store.addBlock(p.id, 'callout', {
+      text: 'Die **Stimmung** ist die wichtigste Spalte. Im Board zieht man einen Song ' +
+            'von 😌 Chill nach 🔥 Power — der Wert ändert sich sofort.',
+      icon: '🎧', color: 'bg-purple'
+    });
+
+    Store.addBlock(p.id, 'h2', { text: '🎵 Song-Bibliothek' });
+    const song = Store.addDatabase(p.id, 'Song-Bibliothek', {
+      title: { name: 'Song', type: 'title' },
+      art: { name: 'Künstler', type: 'text' },
+      genre: { name: 'Genre', type: 'multi', options:
+        opt(['Hip-Hop','orange'],['Rap','red'],['Pop','pink'],['Rock','brown'],['Elektro','purple'],
+            ['Türkisch','yellow'],['Klassik','gray'],['Lofi','blue'],['Workout','green']) },
+      st: { name: 'Stimmung', type: 'select', options:
+        opt(['🔥 Power','red'],['😌 Chill','blue'],['🎯 Fokus','purple'],
+            ['😢 Melancholisch','gray'],['🎉 Party','pink']) },
+      note: { name: 'Bewertung', type: 'select', options:
+        opt(['⭐⭐⭐⭐⭐','green'],['⭐⭐⭐⭐','blue'],['⭐⭐⭐','yellow'],['⭐⭐','orange'],['⭐','red']) },
+      min: { name: 'Länge Min', type: 'number' },
+      jahr: { name: 'Jahr', type: 'number' },
+      fav: { name: 'Favorit', type: 'checkbox' },
+      zuletzt: { name: 'Zuletzt gehört', type: 'date' },
+      link: { name: 'Link', type: 'url' },
+      pl: { name: 'Playlist', type: 'select', options:
+        opt(['🏋️ Gym Power','red'],['🌙 Abends chillen','blue'],
+            ['📚 Lernen & Fokus','purple'],['🚗 Autofahrt','orange']) }
+    }, 'table');
+
+    /* Die vier Ansichten aus der Doku */
+    const board = Store.addView(song.collectionId, 'board', 'Nach Stimmung');
+    Store.updateView(board.id, { groupBy: 'st' });
+    Store.addView(song.collectionId, 'gallery', 'Galerie');
+    const kompakt = Store.addView(song.collectionId, 'list', 'Playlist-Liste');
+    Store.updateView(kompakt.id, { sorts: [{ key: 'pl', richtung: 'auf' }] });
+
+    [['Sirtaki 2.0','Deniz Kaya',['Türkisch','Pop'],'🎉 Party','⭐⭐⭐⭐',3.4,2024,true,'🚗 Autofahrt'],
+     ['Iron Lungs','Bar Bell',['Workout','Rock'],'🔥 Power','⭐⭐⭐⭐⭐',4.1,2023,true,'🏋️ Gym Power'],
+     ['Slow Rain','Mira Lo',['Lofi'],'😌 Chill','⭐⭐⭐⭐',2.8,2022,false,'🌙 Abends chillen'],
+     ['Deep Work','Nocturne',['Klassik','Lofi'],'🎯 Fokus','⭐⭐⭐⭐⭐',18.2,2021,true,'📚 Lernen & Fokus'],
+     ['Letzter Zug','Halbmond',['Rap','Hip-Hop'],'😢 Melancholisch','⭐⭐⭐',3.9,2020,false,'🌙 Abends chillen'],
+     ['Voltage','Kern',['Elektro'],'🔥 Power','⭐⭐⭐⭐',5.2,2025,false,'🏋️ Gym Power']]
+      .forEach(([t, a, g, st, n, m, j, fv, pl], i) => {
+        const r = Store.addRow(song.collectionId, {
+          art: a, genre: g, st, note: n, min: m, jahr: j, fav: fv, pl,
+          zuletzt: inTagen(-i), link: 'https://open.spotify.com/search/' + encodeURIComponent(t)
+        });
+        Store.updateBlock(r.id, { text: t });
+      });
+
+    Store.addBlock(p.id, 'h2', { text: '💿 Playlists' });
+    const pls = Store.addDatabase(p.id, 'Playlists', {
+      title: { name: 'Playlist', type: 'title' },
+      besch: { name: 'Beschreibung', type: 'text' },
+      anzahl: { name: 'Anzahl Songs', type: 'number' },
+      dauer: { name: 'Gesamtdauer Min', type: 'number' },
+      st: { name: 'Stimmung', type: 'select', options:
+        opt(['🔥 Power','red'],['😌 Chill','blue'],['🎯 Fokus','purple'],['🎉 Party','pink']) },
+      anlass: { name: 'Anlass', type: 'multi', options:
+        opt(['Training','red'],['Schlafen','blue'],['Kochen','orange'],
+            ['Lernen','purple'],['Auto','green']) },
+      schnitt: { name: 'Minuten je Song', type: 'formula', formula:
+        'if(empty(prop("Anzahl Songs")) or prop("Anzahl Songs") == 0, 0, ' +
+        'round(prop("Gesamtdauer Min") / prop("Anzahl Songs") * 10) / 10)' }
+    }, 'gallery');
+
+    [['🏋️ Gym Power','Für schwere Sätze',9,43,'🔥 Power',['Training']],
+     ['🌙 Abends chillen','Wenn der Tag ausklingt',6,29,'😌 Chill',['Schlafen','Kochen']],
+     ['📚 Lernen & Fokus','Lange Stücke, kein Gesang',4,76,'🎯 Fokus',['Lernen']],
+     ['🚗 Autofahrt','Mitsingen erlaubt',7,29,'🎉 Party',['Auto']]]
+      .forEach(([t, b2, n, d, st, an]) => {
+        const r = Store.addRow(pls.collectionId, { besch: b2, anzahl: n, dauer: d, st, anlass: an });
+        Store.updateBlock(r.id, { text: t });
+      });
+
+    Store.addBlock(p.id, 'divider', {});
+    ['**Nach Stimmung** ist ein Board — Ziehen ändert die Stimmung sofort',
+     '**Galerie** zeigt Kacheln, gut zum Durchblättern',
+     '**Playlist-Liste** ist die kompakte Liste, nach Playlist sortiert',
+     'Die Playlists rechnen sich die durchschnittliche Songlänge selbst aus']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+    return p;
+  };
+
+  /* ========================================================================
+   * PERSÖNLICHE ANALYSE   (Teil 2, Kapitel 5)
+   * ------------------------------------------------------------------------
+   * Der tägliche Check-in mit 16 Spalten, zwei Ansichten und der
+   * Auswertung, die in der Doku auf der Seite steht.
+   * ======================================================================*/
+  const analyse = () => {
+    const p = Store.addPage(null, { text: 'Persönliche Analyse', icon: '📊' });
+
+    Store.addBlock(p.id, 'callout', {
+      text: 'Jeden Abend eine Zeile ausfüllen — mehr nicht.',
+      icon: '🧭', color: 'bg-blue'
+    });
+    Store.addBlock(p.id, 'h1', { text: '📆 Täglicher Check-in' });
+    Store.addBlock(p.id, 'text', {
+      text: 'Vier Gewohnheiten, ein paar Zahlen. Der Tages-Score zählt die Haken, ' +
+            'die Bewertung entsteht daraus von selbst.'
+    });
+
+    const check = Store.addDatabase(p.id, 'Täglicher Check-in', {
+      title: { name: 'Tag', type: 'title' },
+      dt: { name: 'Datum', type: 'date' },
+      wt: { name: 'Wochentag', type: 'formula', formula: 'formatDate(prop("Datum"), "dddd")' },
+      schlaf: { name: 'Schlaf h', type: 'number' },
+      energie: { name: 'Energie 1-10', type: 'number' },
+      stimmung: { name: 'Stimmung', type: 'select', options:
+        opt(['😄 Super','green'],['🙂 Gut','blue'],['😐 Neutral','gray'],
+            ['😕 Mässig','orange'],['😞 Schlecht','red']) },
+      wasser: { name: 'Wasser L', type: 'number' },
+      schritte: { name: 'Schritte', type: 'number' },
+      training: { name: '🏋️ Training', type: 'checkbox' },
+      essen: { name: '🍽️ Sauber gegessen', type: 'checkbox' },
+      lesen: { name: '📖 Gelesen', type: 'checkbox' },
+      musik: { name: '🎵 Musik bewusst gehört', type: 'checkbox' },
+      schirm: { name: 'Bildschirmzeit h', type: 'number' },
+      score: { name: 'Tages-Score 0-4', type: 'formula', anzeige: 'bar', max: 4, formula:
+        'toNumber(prop("🏋️ Training")) + toNumber(prop("🍽️ Sauber gegessen")) + ' +
+        'toNumber(prop("📖 Gelesen")) + toNumber(prop("🎵 Musik bewusst gehört"))' },
+      bewertung: { name: 'Bewertung', type: 'formula', formula:
+        'if(prop("Tages-Score 0-4") == 4, "🔥 Top-Tag", ' +
+        'if(prop("Tages-Score 0-4") == 3, "👍 Guter Tag", ' +
+        'if(prop("Tages-Score 0-4") >= 1, "😐 Mittel", "❌ Schwacher Tag")))' },
+      notiz: { name: 'Notiz', type: 'text' }
+    }, 'table');
+
+    const nachB = Store.addView(check.collectionId, 'board', 'Nach Bewertung');
+    Store.updateView(nachB.id, { groupBy: 'stimmung' });
+
+    /* Die Beispielwoche aus der Doku */
+    [['Montag',    7.5, 8, '🙂 Gut',    2.4,  9200, 1,1,1,0, 4.0],
+     ['Dienstag',  8.0, 9, '😄 Super',  2.8, 11400, 1,1,1,1, 3.0],
+     ['Mittwoch',  6.0, 6, '😐 Neutral',1.9,  7800, 1,1,1,0, 5.0],
+     ['Donnerstag',7.8, 8, '😄 Super',  2.6, 10500, 1,1,1,1, 3.5],
+     ['Freitag',   7.0, 7, '🙂 Gut',    2.1,  8900, 1,1,1,0, 4.5],
+     ['Samstag',   5.5, 5, '😕 Mässig', 1.4,  6200, 0,1,1,1, 7.5],
+     ['Sonntag',   9.0, 9, '🙂 Gut',    2.2,  5400, 0,1,1,1, 6.0]]
+      .forEach(([name, sch, en, sti, wa, sr, tr, es, le, mu, bi], i) => {
+        const r = Store.addRow(check.collectionId, {
+          dt: inTagen(i - 6), schlaf: sch, energie: en, stimmung: sti, wasser: wa,
+          schritte: sr, training: !!tr, essen: !!es, lesen: !!le, musik: !!mu, schirm: bi
+        });
+        Store.updateBlock(r.id, { text: name });
+      });
+
+    Store.addBlock(p.id, 'divider', {});
+    Store.addBlock(p.id, 'h1', { text: '📊 Auswertung der Woche' });
+
+    Store.addBlock(p.id, 'h2', { text: '🏋️ Training' });
+    ['Fünf von sieben Tagen trainiert — die zwei freien Tage waren Samstag und Sonntag',
+     'Die Tage mit wenig Schlaf hatten auch das kleinste Volumen']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+
+    Store.addBlock(p.id, 'h2', { text: '🍽️ Ernährung' });
+    ['Jeden Tag sauber gegessen — das ist die stabilste Gewohnheit der Woche',
+     'Wasser lag im Schnitt bei 2,2 Litern, an zwei Tagen unter zwei']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+
+    Store.addBlock(p.id, 'h2', { text: '🎵 Musik' });
+    ['An vier Tagen bewusst gehört, immer an Tagen mit hoher Energie']
+      .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
+
+    Store.addBlock(p.id, 'h2', { text: '🔗 Zusammenhänge, die auffallen' });
+    Store.addBlock(p.id, 'quote', {
+      text: 'Die zwei Tage mit unter 6,5 h Schlaf (Mittwoch und Samstag) sind exakt die zwei ' +
+            'Tage mit der niedrigsten Energie und dem kleinsten Trainingsvolumen.'
+    });
+    Store.addBlock(p.id, 'quote', {
+      text: 'Am Tag mit der höchsten Bildschirmzeit (7,5 h am Samstag) war die Schrittzahl ' +
+            'am niedrigsten.'
+    });
+    Store.addBlock(p.id, 'callout', {
+      text: 'Schlaf vor 23 Uhr priorisieren und die Kalorien um rund 800 kcal pro Tag erhöhen. ' +
+            'Beides zusammen würde das Trainingsvolumen am stärksten heben.',
+      icon: '💡', color: 'bg-yellow'
+    });
     return p;
   };
 
@@ -439,6 +668,12 @@ const Galerie = (() => {
     { id: 'fitness', icon: '🏋️', name: 'Fitness-OS',
       text: 'Zehn verknüpfte Datenbanken: Übungen, Sätze, Einheiten, Mahlzeiten, Habits, Körpermasse. Mit Volumen, 1RM und Rollups.',
       quelle: 'Teil 16 der Doku', bauen: fitnessOS },
+    { id: 'musik',   icon: '🎵', name: 'Musik-App',
+      text: 'Song-Bibliothek und Playlists. Board nach Stimmung, Galerie, kompakte Liste — Ziehen ändert die Stimmung sofort.',
+      quelle: 'Teil 2 der Doku', bauen: musik },
+    { id: 'analyse', icon: '📊', name: 'Persönliche Analyse',
+      text: 'Täglicher Check-in mit 16 Spalten, Tages-Score aus vier Gewohnheiten und die fertige Wochenauswertung.',
+      quelle: 'Teil 2 der Doku', bauen: analyse },
     { id: 'projekte',icon: '🚀', name: 'Projekte',
       text: 'Kanban mit Status, Priorität, Fälligkeit und Dringlichkeitszeichen. Dazu Zeitplan und Kalender.',
       quelle: '', bauen: projekte },
@@ -485,7 +720,13 @@ const Galerie = (() => {
     });
   };
 
-  return { oeffne, VORLAGEN, habitTracker, fitnessOS };
+  /** Eine Vorlage anlegen, ohne die Galerie zu öffnen. */
+  const bauen = (id) => {
+    const v = VORLAGEN.find(x => x.id === id);
+    return v ? v.bauen() : null;
+  };
+
+  return { oeffne, bauen, VORLAGEN, habitTracker, fitnessOS, musik, analyse };
 })();
 
 window.Galerie = Galerie;

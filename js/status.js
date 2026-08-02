@@ -34,7 +34,7 @@ const Status = (() => {
   ]],
 
   ['Teil 2', 'Vier Beispiel-Apps', [
-    ['t', 'Vier fertige Unterseiten: Gym, Kalorien, Musik, persönliche Analyse', 'Gym und Ernährung stecken im Fitness-OS; Musik und Analyse fehlen'],
+    ['f', 'Vier fertige Unterseiten: Gym, Kalorien, Musik, persönliche Analyse', 'alle vier in der Vorlagengalerie'],
     ['f', 'Gym-App aus drei Datenbanken: Übungskatalog, Tagebuch, Satzprotokoll — in der Galerie'],
     ['f', 'Übungskatalog mit Muskelgruppe, Gerät, Schwierigkeit, Ersatzübung'],
     ['f', 'Satzprotokoll: eine Zeile je Satz mit Gewicht, Wiederholungen, RPE, Volumen, 1RM'],
@@ -75,10 +75,10 @@ const Status = (() => {
     ['f', 'Rückgängig nimmt eine ganze Mehrschritt-Aktion zurück'],
     ['f', 'Protokollfenster sammelt alles, was die KI angelegt hat'],
     ['f', 'Prompt-Regeln in der Anleitung erklärt'],
-    ['t', 'Sechs Automatisierungs-Auslöser', 'fünf umgesetzt, inklusive Zeitauslöser vor und nach einem Datum'],
-    ['t', 'Automatisierungs-Aktionen', 'sechs umgesetzt; Slack und Webhook brauchen einen Server'],
+    ['f', 'Sechs Automatisierungs-Auslöser', 'alle sechs plus zwei Zeitauslöser vor und nach einem Datum'],
+    ['f', 'Automatisierungs-Aktionen', 'neun umgesetzt, darunter Wiederholen und Fremddatenbank ändern; nur Slack braucht einen Server'],
     ['f', 'Automationen lösen keine Automationen aus'],
-    ['t', '21 Berechnungsarten', '15 umgesetzt, darunter Prozent aktiviert und Zeitspanne'],
+    ['f', '21 Berechnungsarten'],
     ['f', 'Keine Planlimits — alles unbegrenzt und kostenlos'],
     ['f', 'Modellauswahl: Ollama, WebLLM und sechs Anbieter mit eigenem Schlüssel'],
     ['t', 'Quellen einzeln ein- und ausschalten', 'Seitenkontext an oder aus, Wikipedia auf Zuruf']
@@ -88,7 +88,7 @@ const Status = (() => {
     ['t', 'Seitenleiste mit 32 Elementen', '20 umgesetzt; Mitglieder, Teamspace-Verwaltung entfallen ohne Server'],
     ['f', 'Abschnitte Privat, Favoriten und Bereiche getrennt darstellen'],
     ['t', 'Bereichs-Zeile mit Pfeil, Plus und Drei-Punkte-Menü', 'Pfeil und Plus da, Bereichsmenü über Einstellungen'],
-    ['t', 'Kopfzeile mit 16 Elementen inklusive Teilen, Stern, Schloss', '11 umgesetzt'],
+    ['t', 'Kopfzeile mit 16 Elementen inklusive Teilen, Stern, Schloss', '14 umgesetzt; Peek-Knöpfe stecken in der Seitenvorschau'],
     ['f', 'Drei-Punkte-Seitenmenü mit über 20 Einträgen'],
     ['f', 'Seitenstil umschalten: Standard, Serif, Mono, kleiner Text, volle Breite'],
     ['f', 'Block-Griff ⋮⋮ links mit vollem Menü; Ziehen verschiebt den Block'],
@@ -128,7 +128,7 @@ const Status = (() => {
     ['f', 'Listenfunktionen map, filter, find, some, every, unique, flat'],
     ['f', 'Datumsfunktionen; now() mit Uhrzeit, today() ohne'],
     ['f', 'Verknüpfungen per map(current.prop(...)) auslesen'],
-    ['t', '29 Eigenschaftstypen mit genau einer Titelspalte', '21 Typen umgesetzt'],
+    ['f', '29 Eigenschaftstypen mit genau einer Titelspalte'],
     ['f', 'Verknüpfung einseitig oder wechselseitig, mit Limit eine oder mehrere'],
     ['f', 'Zahl, Formel und Rollup als Zahl, Balken oder Ring anzeigen'],
     ['f', 'Filteroperatoren je Typ'],
@@ -137,16 +137,16 @@ const Status = (() => {
 
   ['Teil 8', 'Automationen, Formulare, Diagramme', [
     ['f', 'Automation aus Auslöser und Aktion zusammensetzen'],
-    ['t', '15 Auslöser, 24 Bedingungen, 19 Aktionen', 'fünf Auslöser mit Zeitauslösern, sechs Aktionen, Bedingungen frei kombinierbar'],
+    ['t', '15 Auslöser, 24 Bedingungen, 19 Aktionen', 'acht Auslöser, neun Aktionen, Bedingungen frei kombinierbar'],
     ['f', 'Automationen lösen keine weiteren Automationen aus'],
     ['f', 'Geltungsbereich ganze Datenbank oder eine bestimmte Ansicht'],
     ['f', 'Aktion „Webhook senden" — Adresse in den Einstellungen oder je Automation'],
     ['f', 'Knopf-Block mit mehreren Aktionen in Reihenfolge'],
     ['f', 'Knopf fragt vor dem Ausführen nach, wenn gewünscht'],
-    ['t', 'Formularansicht mit 13 Fragetypen', 'alle passenden Typen ausser Formel, Rollup, Erstellt am'],
+    ['f', 'Formularansicht mit 13 Fragetypen'],
     ['f', 'Bedingte Logik blendet Fragen je nach Antwort ein'],
     ['f', 'Sechs Diagrammtypen: Säule, Balken, Linie, Fläche, Ring, Kennzahl'],
-    ['t', '21 Aggregationen für Diagramme', 'elf umgesetzt: Anzahl, Summe, Durchschnitt, Median, Min, Max, Spanne und mehr'],
+    ['f', '21 Aggregationen für Diagramme'],
     ['f', 'Wiederkehrende Vorlagen täglich bis jährlich'],
     ['o', 'Berechtigungsmatrix mit fünf Rollen', 'ohne Konten gibt es keine Rollen'],
     ['f', 'Keine harten Limits bei Eigenschaften oder Anfragen']
@@ -154,7 +154,7 @@ const Status = (() => {
 
   ['Teil 9', 'Offizielle API', [
     ['t', 'REST-Schnittstelle unter /v1/ mit Token', 'die App ruft fremde APIs mit deinem Schlüssel auf; einen eigenen Server hat sie nicht'],
-    ['o', 'Versions-Header und Fehlercode missing_version'],
+    ['t', 'Versions-Header und Fehlercode missing_version', 'Anthropic bekommt anthropic-version mitgeschickt; eigene Version hat diese App nicht'],
     ['t', 'Seiten erstellen, lesen, ändern', 'im Programm über Store statt über HTTP'],
     ['t', 'Einzelnen Eigenschaftswert abrufen', 'Datenbank.wert(zeile, schlüssel, sammlung)'],
     ['f', 'Archivieren und Papierkorb als Zustand am Block'],
@@ -166,15 +166,15 @@ const Status = (() => {
     ['f', 'Formel, Rollup, Erstellt am und laufende Nummer sind nur lesbar'],
     ['f', 'Leeren je Typ sauber behandelt'],
     ['t', 'Dateiupload in mehreren Schritten', 'Datei wird direkt als Data-URL abgelegt'],
-    ['o', 'Fehlercodes mit Wiederholung und Backoff']
+    ['f', 'Fehlercodes mit Wiederholung und Backoff']
   ]],
 
   ['Teil 10', 'Kalender, Mail, Agenten', [
     ['o', 'Google- und iCloud-Kalender verbinden', 'bräuchte Konten und einen Server'],
-    ['o', 'Standardkalender festlegen und Kalender sortieren'],
+    ['f', 'Standardkalender festlegen und Kalender sortieren', 'mehrere Datenbanken je Kalender, ein- und ausschaltbar, verschiebbar'],
     ['f', 'Datenbanken mit Datumsfeld als Kalender anzeigen'],
     ['f', 'Mehrtägige Einträge und Zeiträume in Zeitstrahl und Kalender'],
-    ['o', 'Kürzel D/W/M für Tag, Woche, Monat'],
+    ['f', 'Kürzel D/W/M für Tag, Woche, Monat'],
     ['o', 'Mail-Ansichten mit Eigenschaften und Filtern'],
     ['o', 'Automatische Beschriftungen, Bausteine, Schnellantworten'],
     ['o', 'Gmail-Kürzel im Mail-Programm'],
@@ -191,7 +191,7 @@ const Status = (() => {
     ['f', 'Suche zeigt nur, was auf diesem Gerät liegt'],
     ['f', 'Suchfilter für Bereich, Typ, Zeitraum und Ort'],
     ['t', 'Unternehmenssuche über verbundene Apps und Web', 'Wikipedia nachschlagen ist eingebaut, kostenlos und ohne Schlüssel'],
-    ['o', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel'],
+    ['t', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel', 'Suche nach Seiten-ID ist da; ohne Konten gibt es keinen Besitzerwechsel'],
     ['o', 'Web Clipper speichert Webseiten in eine Datenbank', 'bräuchte eine Browsererweiterung'],
     ['f', 'Importwege: Einstellungen, Seitenmenü, Datenbank-CSV und Ziehen auf die Seite'],
     ['f', 'Importformate MD, CSV, TSV, XLSX, DOCX, HTML, EPUB'],
@@ -199,7 +199,7 @@ const Status = (() => {
     ['f', 'Offline geht immer — die App braucht nie ein Netz'],
     ['f', 'Offline lesen, schreiben, Blöcke anlegen, Haken setzen'],
     ['f', 'Auch Suche und KI laufen offline'],
-    ['t', 'Mobil ohne Spalten und Mehrfachauswahl', 'Oberfläche passt sich an, Spalten bleiben'],
+    ['f', 'Mobil ohne Spalten und Mehrfachauswahl'],
     ['f', 'Wiki mit Besitzer und Prüfvermerk']
   ]],
 
@@ -285,7 +285,7 @@ const Status = (() => {
     ['f', 'Tages-Score als Mittelwert mehrerer Kennzahlen'],
     ['f', 'Ampelformel mit Schwellen 80 und 50'],
     ['f', 'Fortschrittsbalken aus repeat("█") und repeat("░")'],
-    ['t', 'Zwölf fertige Ansichten mit gesetzten Filtern', 'die Vorlage bringt die Datenbanken mit, Ansichten legst du dazu']
+    ['f', 'Zwölf fertige Ansichten mit gesetzten Filtern']
   ]]
 
   ];

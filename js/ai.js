@@ -81,6 +81,72 @@ const KI = (() => {
   const anbieter = (id) => ANBIETER.find(a => a.id === id) || ANBIETER[0];
   const schluessel = (id) => Store.getMeta('api:' + id, '');
 
+  /* ========================================================================
+   * NETZ MIT WIEDERHOLUNG
+   * ------------------------------------------------------------------------
+   * Teil 9 der Doku beschreibt, wie ein Client mit Fehlern umgehen soll:
+   * 429 und 5xx sind vorübergehend, also nach kurzer Pause noch einmal
+   * versuchen und die Pause jedes Mal verdoppeln. Steht im Kopf ein
+   * Retry-After, gilt der. 4xx ausser 429 sind endgültig — da hilft kein
+   * zweiter Versuch, das muss der Mensch richten.
+   * ======================================================================*/
+  const WIEDERHOLBAR = [408, 409, 425, 429, 500, 502, 503, 504];
+
+  const schlafen = (ms) => new Promise(r => setTimeout(r, ms));
+
+  /** Was steckt hinter einem Fehlercode? Klartext statt nackter Zahl. */
+  const FEHLERTEXT = {
+    400: 'Die Anfrage war fehlerhaft (invalid_request).',
+    401: 'Der Schlüssel wurde nicht angenommen (unauthorized). Einstellungen → Schlüssel und APIs.',
+    403: 'Der Zugriff ist gesperrt (restricted_resource).',
+    404: 'Die Adresse gibt es nicht (object_not_found).',
+    409: 'Es gab einen Konflikt (conflict_error) — wird gleich noch einmal versucht.',
+    413: 'Die Anfrage ist zu gross (request_entity_too_large).',
+    429: 'Zu viele Anfragen (rate_limited) — es wird gewartet und neu versucht.',
+    500: 'Beim Anbieter ist etwas schiefgegangen (internal_server_error).',
+    502: 'Der Anbieter ist gerade nicht erreichbar (bad_gateway).',
+    503: 'Der Dienst ist überlastet (service_unavailable).',
+    504: 'Der Anbieter hat zu lange gebraucht (gateway_timeout).'
+  };
+
+  /**
+   * fetch mit Wiederholung. Gibt die Antwort zurück, sobald sie brauchbar ist.
+   * @param {object} opt  versuche, basis (ms), beiWartezeit (Rückmeldung)
+   */
+  const holen = async (url, init = {}, opt = {}) => {
+    const versuche = opt.versuche ?? 4;
+    const basis    = opt.basis ?? 700;
+    let letzter = null;
+
+    for (let i = 0; i < versuche; i++) {
+      let r = null;
+      try {
+        r = await fetch(url, init);
+      } catch (e) {
+        /* Netz ganz weg — das ist ein Fall für einen zweiten Versuch */
+        letzter = e;
+        if (init.signal && init.signal.aborted) throw e;
+        if (i === versuche - 1) break;
+        await schlafen(basis * Math.pow(2, i));
+        continue;
+      }
+
+      if (r.ok || !WIEDERHOLBAR.includes(r.status)) return r;
+
+      letzter = new Error('HTTP ' + r.status + ' — ' + (FEHLERTEXT[r.status] || 'unbekannter Fehler'));
+      if (i === versuche - 1) return r;
+
+      /* Sagt der Anbieter selbst, wie lange gewartet werden soll? */
+      const kopfWarte = parseFloat(r.headers.get('retry-after') || '');
+      const warte = !isNaN(kopfWarte) && kopfWarte > 0
+        ? Math.min(kopfWarte * 1000, 20000)
+        : basis * Math.pow(2, i);
+      if (opt.beiWartezeit) opt.beiWartezeit(Math.round(warte / 100) / 10, i + 1, r.status);
+      await schlafen(warte);
+    }
+    throw letzter || new Error('Die Anfrage hat nicht geklappt.');
+  };
+
   /**
    * Fragt einen Wolken-Anbieter. Streamt Stück für Stück, damit die Antwort
    * genauso erscheint wie bei den lokalen Modellen.
@@ -110,10 +176,15 @@ const KI = (() => {
           system: sys ? sys.content : undefined, messages: rest }
       : { model: modell, messages: nachrichten, stream: true };
 
-    const r = await fetch(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper) });
+    const r = await holen(url,
+      { method: 'POST', headers: kopf, body: JSON.stringify(koerper) },
+      { beiWartezeit: (sek, nr, code) =>
+          UI.toast(`${a.name}: ${code} — neuer Versuch ${nr + 1} in ${sek} s`) });
+
     if (!r.ok) {
       const txt = await r.text().catch(() => '');
-      throw new Error(a.name + ' antwortet mit ' + r.status + '. ' + txt.slice(0, 180));
+      throw new Error(a.name + ' antwortet mit ' + r.status + '. ' +
+        (FEHLERTEXT[r.status] || '') + ' ' + txt.slice(0, 180));
     }
 
     const leser = r.body.getReader();
@@ -824,9 +895,11 @@ const KI = (() => {
   const wikipedia = async (begriff) => {
     const url = 'https://de.wikipedia.org/api/rest_v1/page/summary/' +
                 encodeURIComponent(begriff.trim().replace(/\s+/g, '_'));
-    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const r = await holen(url, { headers: { 'Accept': 'application/json' } },
+      { versuche: 3, beiWartezeit: (sek, nr) =>
+          UI.toast('Wikipedia antwortet nicht — neuer Versuch ' + (nr + 1) + ' in ' + sek + ' s') });
     if (r.status === 404) return null;
-    if (!r.ok) throw new Error('Wikipedia antwortet mit ' + r.status);
+    if (!r.ok) throw new Error('Wikipedia antwortet mit ' + r.status + '. ' + (FEHLERTEXT[r.status] || ''));
     const d = await r.json();
     return { titel: d.title, text: d.extract, link: d.content_urls?.desktop?.page || '' };
   };
@@ -940,6 +1013,6 @@ const KI = (() => {
 
   return { start, bindePanel, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
            datenbankBauen, seiteBauen, protokollZeigen, protokoll,
-           ANBIETER, anbieter, wolkeFragen,
+           ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
            datenbankAuswerten, frageKurz, zustand, modellMenue };
 })();

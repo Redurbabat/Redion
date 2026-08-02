@@ -177,6 +177,7 @@ const Store = (() => {
       color: '',
       created: now(),
       edited: now(),
+      erstelltVon: getMeta('nutzer', '') || 'Ich',
       alive: true
     }, patch);
 
@@ -197,7 +198,7 @@ const Store = (() => {
   const updateBlock = (id, patch) => {
     const b = cache.blocks[id];
     if (!b) return null;
-    Object.assign(b, patch, { edited: now() });
+    Object.assign(b, patch, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
     save('blocks', b);
     return b;
   };
@@ -445,6 +446,26 @@ const Store = (() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return [];
     const out = [];
+
+    /* Suche nach Seiten-ID — Notions Verwaltungssuche. Es zählt sowohl die
+       lange Form 8-4-4-4-12 als auch die Kurzform ohne Bindestriche, und
+       auch eine ganze Seitenadresse, aus der die ID herausgeschnitten wird. */
+    const stueck = needle.match(/[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{6,12}/) ||
+                   (/^[0-9a-f-]+$/.test(needle) ? [needle] : null);
+    const ohne = stueck ? stueck[0].replace(/-/g, '') : '';
+    if (ohne.length >= 12) {
+      const treffer = Object.values(cache.blocks).filter(b =>
+        b.id && b.id.replace(/-/g, '').startsWith(ohne));
+      if (treffer.length) {
+        return treffer.slice(0, 20).map(b => {
+          const seite = seiteVon(b);
+          return { page: seite, treffer: 'Seiten-ID',
+                   snippet: b.id + (b.type !== 'page' ? ' · Block vom Typ ' + b.type : '') +
+                            (b.alive ? '' : ' · im Papierkorb'),
+                   pfad: pfadText(seite.id) };
+        });
+      }
+    }
     const wo = filter.wo || 'alles';
     const grenze = { tag: 1, woche: 7, monat: 30 }[filter.seit];
     const seitDatum = grenze ? Date.now() - grenze * 86400000 : 0;
@@ -472,6 +493,16 @@ const Store = (() => {
     });
 
     return out.slice(0, 60);
+  };
+
+  /** Zu welcher Seite gehört ein Block? Klettert nach oben, bis eine da ist. */
+  const seiteVon = (b) => {
+    let cur = b, n = 0;
+    while (cur && n++ < 40) {
+      if (cur.type === 'page') return cur;
+      cur = cur.parentId ? cache.blocks[cur.parentId] : null;
+    }
+    return b;
   };
 
   /** Der Pfad als Text, ohne die Seite selbst — für die Trefferliste. */

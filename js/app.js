@@ -313,6 +313,7 @@ const App = (() => {
       '<button data-a="cover"><span class="mi">🖼</span>Cover ändern</button>' +
       '<button data-a="dup"><span class="mi">⧉</span>Duplizieren</button>' +
       '<button data-a="link"><span class="mi">🔗</span>Link kopieren</button>' +
+      '<button data-a="pid"><span class="mi">#</span>Seiten-ID kopieren</button>' +
       '<button data-a="komm"><span class="mi">💬</span>Kommentare</button>' +
       '<hr>' +
       /* Daten */
@@ -385,6 +386,10 @@ const App = (() => {
       }
       if (a === 'dup')  { dupliziereSeite(p.id, p.parentId); zeichneBaum(); UI.toast('Seite dupliziert'); }
       if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); }
+      if (a === 'pid') {
+        navigator.clipboard?.writeText(p.id);
+        UI.toast('Seiten-ID kopiert: ' + p.id);
+      }
       if (a === 'komm') Kommentare.panel(p.id);
       if (a === 'export') markdownExport(p);
       if (a === 'import') {
@@ -651,6 +656,20 @@ const App = (() => {
       const n = Kommentare.offeneAnzahl(p.id);
       kb.textContent = n ? '💬 ' + n : '💬';
     }
+    /* Schloss zeigt den Zustand, nicht nur die Aktion */
+    const schloss = document.getElementById('btn-lock');
+    if (schloss && p) {
+      schloss.textContent = p.gesperrt ? '🔒' : '🔓';
+      schloss.classList.toggle('on', !!p.gesperrt);
+      schloss.title = p.gesperrt ? 'Seite ist gesperrt — zum Entsperren klicken'
+                                 : 'Seite gegen Bearbeiten sperren';
+    }
+    /* Der Blitz nur dort, wo es auch eine Datenbank gibt */
+    const blitz = document.getElementById('btn-auto');
+    if (blitz && p) {
+      const hatDb = Store.childrenOf(p.id).some(b => b.type === 'database');
+      blitz.style.display = hatDb ? '' : 'none';
+    }
   };
 
   /* ========================================================================
@@ -661,7 +680,7 @@ const App = (() => {
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder such" style="width:min(820px,95vw)">' +
-        '<input id="q" placeholder="Seiten und Inhalte durchsuchen …" autocomplete="off">' +
+        '<input id="q" placeholder="Seiten und Inhalte durchsuchen — auch nach Seiten-ID …" autocomplete="off">' +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
             '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -1045,7 +1064,23 @@ const App = (() => {
     an('btn-side', () => document.getElementById('sidebar').classList.toggle('collapsed'));
     an('btn-new', () => neueSeite());
     an('btn-new-bottom', () => neueSeite());
-    an('btn-import', () => Werkzeuge.ordnerLesen());
+    an('btn-import', (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const m = UI.menu(
+        '<div class="grp">Was soll hereinkommen?</div>' +
+        '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
+          '<span class="sub">Markdown, CSV, TSV, HTML, Excel, Word, EPUB</span></button>' +
+        '<button data-i="ordner"><span class="mi">📁</span>Ganzen Ordner einlesen</button>' +
+        '<hr><div class="grp" style="font-weight:400">Oder einfach eine Datei auf die Seite ziehen.</div>',
+        r.right + 6, r.top);
+      m.addEventListener('click', ev => {
+        const b = ev.target.closest('button[data-i]');
+        if (!b) return;
+        m.remove();
+        if (b.dataset.i === 'dateien') Werkzeuge.dateienLesen();
+        else Werkzeuge.ordnerLesen();
+      });
+    });
     an('btn-hilfe', () => Werkzeuge.tastenkuerzel());
     an('btn-back', zurueck);
     an('btn-fwd', vorwaerts);
@@ -1055,6 +1090,41 @@ const App = (() => {
       if (p) Werkzeuge.teilenMenue(e.currentTarget, p);
     });
     an('btn-verlauf', () => seiteId && Werkzeuge.versionen(Store.getBlock(seiteId)));
+    an('btn-link', () => {
+      if (!seiteId) return;
+      navigator.clipboard?.writeText(location.origin + location.pathname + '#' + seiteId);
+      UI.toast('Link zur Seite kopiert');
+    });
+    an('btn-lock', () => {
+      if (!seiteId) return;
+      const p = Store.getBlock(seiteId);
+      Store.updateBlock(p.id, { gesperrt: !p.gesperrt });
+      zeichneSeite(); zeichneCrumbs();
+      UI.toast(p.gesperrt ? 'Seite ist gesperrt' : 'Bearbeiten wieder erlaubt');
+    });
+    an('btn-auto', (e) => {
+      if (!seiteId) return;
+      const dbs = Store.childrenOf(seiteId).filter(b => b.type === 'database');
+      if (!dbs.length) { UI.toast('Auf dieser Seite gibt es keine Datenbank'); return; }
+      const oeffneAuto = (b) => {
+        const c = Store.getCollection(b.collectionId);
+        const v = Store.getView(b.aktiveView || (c && c.viewIds[0]));
+        if (c) Datenbank.automationenMenue(e.currentTarget, c, v, b);
+      };
+      if (dbs.length === 1) { oeffneAuto(dbs[0]); return; }
+      const r = e.currentTarget.getBoundingClientRect();
+      const m = UI.menu('<div class="grp">Welche Datenbank?</div>' +
+        dbs.map((b, i) => {
+          const c = Store.getCollection(b.collectionId);
+          return `<button data-i="${i}"><span class="mi">⚡</span>${esc(c ? c.name : 'Datenbank')}</button>`;
+        }).join(''), r.left - 140, r.bottom + 6);
+      m.addEventListener('click', ev => {
+        const b2 = ev.target.closest('button[data-i]');
+        if (!b2) return;
+        m.remove();
+        oeffneAuto(dbs[+b2.dataset.i]);
+      });
+    });
     an('btn-fav', () => {
       if (!seiteId) return;
       const p = Store.getBlock(seiteId);
