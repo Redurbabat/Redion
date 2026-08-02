@@ -357,6 +357,28 @@ input,textarea,select{font:inherit;color:inherit}
 .db-kachel-neu{display:grid;place-items:center;min-height:110px;color:var(--tinte-blass);font-size:13px;cursor:pointer}
 .db-kachel-neu:hover{background:var(--flaeche-2)}
 .db-hinweis{padding:var(--s4);color:var(--tinte-blass);font-size:13px;background:var(--flaeche-2);border-radius:8px}
+/* Relation · Rollup · Formel */
+.db-rel{display:flex;flex-wrap:wrap;gap:3px;padding:4px;cursor:pointer;min-height:28px;align-items:center}
+.db-relchip{background:var(--leit-hell)!important;color:var(--leit-text)!important;margin:0!important}
+.db-berechnet{display:inline-block;padding:6px;font-size:13px;color:var(--tinte-schwach);font-variant-numeric:tabular-nums}
+.db-berechnet.db-fehler{color:var(--fehler);font-size:11.5px}
+.db-select{
+  width:100%;padding:7px 10px;border:1px solid var(--rand-stark);border-radius:6px;
+  background:var(--flaeche);font-size:13px;margin-bottom:var(--s2);color:var(--tinte);
+}
+.rel-liste{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;margin-bottom:var(--s3)}
+.rel-eintrag{
+  display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:6px;
+  text-align:left;font-size:13px;border:1px solid var(--rand);background:var(--flaeche);
+}
+.rel-eintrag:hover{border-color:var(--leit)}
+.rel-eintrag.aktiv{background:var(--leit-hell);border-color:var(--leit);color:var(--leit-text);font-weight:600}
+.formel-hilfe{
+  font-size:11.5px;color:var(--tinte-blass);line-height:1.7;background:var(--flaeche-2);
+  padding:var(--s2) var(--s3);border-radius:6px;margin:var(--s2) 0;
+}
+.formel-hilfe code{background:var(--code-bg);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:11px}
+
 /* Kalender */
 .kal-kopf{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2)}
 .kal-kopf strong{font-size:14.5px;min-width:150px}
@@ -2213,6 +2235,7 @@ function paletteBefehle(){
   return [
     {ico:'＋', name:'Neue Seite anlegen', tue:() => neueSeite(null)},
     {ico:'📄', name:'Unterseite zur aktuellen Seite', tue:() => neueSeite(zustand.aktivId || null)},
+    {ico:'📋', name:'Aufträge & Arbeitsweise anzeigen (Projekt-Doku)', tue:() => dokuAnlegen()},
     {ico:'🤖', name:'KI: Text verbessern, übersetzen, zusammenfassen …', tue:kiMenue},
     {ico:'✍️', name:'KI: frei etwas schreiben lassen', tue:kiSchreiben},
     {ico:'⚙', name:'KI einrichten (Ollama, lokal & kostenlos)', tue:kiEinstellungen},
@@ -4007,8 +4030,406 @@ function dbZeilen(d){
   return rows;
 }
 
+/* ══════════════ Relations · Rollups · Formeln ══════════════ */
+
+/* ── Sicherer Ausdrucks-Parser (kein eval, kein new Function) ──
+   Grammatik (rekursiver Abstieg):
+     ausdruck   → vergleich
+     vergleich  → summe (('='|'!='|'<'|'>'|'<='|'>=') summe)?
+     summe      → produkt (('+'|'-') produkt)*
+     produkt    → unär (('*'|'/') unär)*
+     unär       → '-'? primär
+     primär     → zahl | text | 'wahr' | 'falsch' | funktion '(' args ')' | '(' ausdruck ')'
+   Feldbezug: eckige Klammern [Name] oder prop("Name")                          */
+function formelTokens(s){
+  const tk = []; let i = 0;
+  const istZiffer = c => c >= '0' && c <= '9';
+  const istBuchst = c => /[\p{L}_]/u.test(c);
+  while(i < s.length){
+    const c = s[i];
+    if(/\s/.test(c)){ i++; continue; }
+    if(c === '"' || c === "'"){
+      const q = c; let t = ''; i++;
+      while(i < s.length && s[i] !== q){ if(s[i] === '\\') i++; t += s[i++]; }
+      i++; tk.push({ t:'text', v:t }); continue;
+    }
+    if(c === '['){
+      let t = ''; i++;
+      while(i < s.length && s[i] !== ']') t += s[i++];
+      i++; tk.push({ t:'feld', v:t.trim() }); continue;
+    }
+    if(istZiffer(c) || (c === '.' && istZiffer(s[i+1]))){
+      let t = ''; while(i < s.length && (istZiffer(s[i]) || s[i] === '.' || s[i] === ',')) t += s[i++];
+      tk.push({ t:'zahl', v: parseFloat(t.replace(',', '.')) }); continue;
+    }
+    if(istBuchst(c)){
+      let t = ''; while(i < s.length && /[\p{L}\p{N}_]/u.test(s[i])) t += s[i++];
+      tk.push({ t:'name', v:t }); continue;
+    }
+    const zwei = s.slice(i, i+2);
+    if(['<=','>=','!=','=='].includes(zwei)){ tk.push({ t:'op', v: zwei === '==' ? '=' : zwei }); i += 2; continue; }
+    if('+-*/()<>=;,'.includes(c)){ tk.push({ t:'op', v:c }); i++; continue; }
+    throw new Error('Unerwartetes Zeichen: ' + c);
+  }
+  return tk;
+}
+const FORMEL_FUNKTIONEN = {
+  wenn:      (b,a,c) => formelWahr(b) ? a : (c === undefined ? '' : c),
+  runden:    (x,n) => { const f = Math.pow(10, +n||0); return Math.round((+x||0)*f)/f; },
+  abs:       x => Math.abs(+x||0),
+  min:       (...a) => Math.min(...a.map(x => +x||0)),
+  max:       (...a) => Math.max(...a.map(x => +x||0)),
+  summe:     (...a) => a.reduce((s,x) => s + (+x||0), 0),
+  laenge:    t => String(t ?? '').length,
+  gross:     t => String(t ?? '').toUpperCase(),
+  klein:     t => String(t ?? '').toLowerCase(),
+  verbinde:  (...a) => a.map(x => String(x ?? '')).join(''),
+  enthaelt:  (t,s) => String(t ?? '').toLowerCase().includes(String(s ?? '').toLowerCase()),
+  heute:     () => isoHeute(),
+  jahr:      d => { const x = ausIso(String(d||'')); return x ? x.getFullYear() : ''; },
+  monat:     d => { const x = ausIso(String(d||'')); return x ? x.getMonth()+1 : ''; },
+  tag:       d => { const x = ausIso(String(d||'')); return x ? x.getDate() : ''; },
+  tage:      (a,b) => tageDazwischen(String(a||''), String(b||'')),
+  zahl:      x => { const v = parseFloat(String(x).replace(',','.')); return isNaN(v) ? 0 : v; },
+  text:      x => String(x ?? ''),
+  nicht:     b => !formelWahr(b),
+  und:       (...a) => a.every(formelWahr),
+  oder:      (...a) => a.some(formelWahr),
+};
+function formelWahr(v){
+  if(typeof v === 'boolean') return v;
+  if(typeof v === 'number') return v !== 0;
+  const s = String(v ?? '').trim().toLowerCase();
+  return s !== '' && s !== '0' && s !== 'falsch' && s !== 'false' && s !== 'nein';
+}
+function formelParser(tokens, feldWert){
+  let i = 0;
+  const schau = () => tokens[i];
+  const istOp = v => schau() && schau().t === 'op' && schau().v === v;
+  const nimm = v => { if(!istOp(v)) throw new Error(`Erwartet: ${v}`); i++; };
+
+  function ausdruck(){ return vergleich(); }
+  function vergleich(){
+    let l = summe();
+    const t = schau();
+    if(t && t.t === 'op' && ['=','!=','<','>','<=','>='].includes(t.v)){
+      i++; const r = summe();
+      const zahlen = (typeof l !== 'string' && typeof r !== 'string') || (!isNaN(+l) && !isNaN(+r));
+      const a = zahlen ? +l : String(l), b = zahlen ? +r : String(r);
+      switch(t.v){
+        case '=':  return a === b;
+        case '!=': return a !== b;
+        case '<':  return a < b;
+        case '>':  return a > b;
+        case '<=': return a <= b;
+        case '>=': return a >= b;
+      }
+    }
+    return l;
+  }
+  function summe(){
+    let l = produkt();
+    while(schau() && schau().t === 'op' && (schau().v === '+' || schau().v === '-')){
+      const op = schau().v; i++;
+      const r = produkt();
+      if(op === '+'){
+        // Text + Text verkettet, sonst rechnen
+        l = (typeof l === 'string' || typeof r === 'string') && (isNaN(+l) || isNaN(+r))
+          ? String(l ?? '') + String(r ?? '') : (+l||0) + (+r||0);
+      } else l = (+l||0) - (+r||0);
+    }
+    return l;
+  }
+  function produkt(){
+    let l = unaer();
+    while(schau() && schau().t === 'op' && (schau().v === '*' || schau().v === '/')){
+      const op = schau().v; i++;
+      const r = unaer();
+      l = op === '*' ? (+l||0) * (+r||0) : ((+r||0) === 0 ? '' : (+l||0) / (+r||0));
+    }
+    return l;
+  }
+  function unaer(){
+    if(istOp('-')){ i++; return -(+unaer()||0); }
+    return primaer();
+  }
+  function primaer(){
+    const t = schau();
+    if(!t) throw new Error('Ausdruck unvollständig');
+    if(t.t === 'zahl'){ i++; return t.v; }
+    if(t.t === 'text'){ i++; return t.v; }
+    if(t.t === 'feld'){ i++; return feldWert(t.v); }
+    if(t.t === 'name'){
+      const name = t.v.toLowerCase(); i++;
+      if(name === 'wahr') return true;
+      if(name === 'falsch') return false;
+      if(istOp('(')){
+        nimm('(');
+        const args = [];
+        if(!istOp(')')){
+          args.push(ausdruck());
+          while(istOp(';') || istOp(',')){ i++; args.push(ausdruck()); }
+        }
+        nimm(')');
+        if(name === 'prop'){ return feldWert(String(args[0] ?? '')); }
+        // Nur eigene Einträge zulassen — sonst fände man ererbte Dinge
+        // wie "constructor" oder "toString" und würde sie aufrufen.
+        if(!Object.prototype.hasOwnProperty.call(FORMEL_FUNKTIONEN, name))
+          throw new Error('Unbekannte Funktion: ' + t.v);
+        return FORMEL_FUNKTIONEN[name](...args);
+      }
+      return feldWert(t.v);          // nackter Name = Feldbezug
+    }
+    if(istOp('(')){ nimm('('); const v = ausdruck(); nimm(')'); return v; }
+    throw new Error('Unerwartet: ' + (t.v ?? ''));
+  }
+  const wert = ausdruck();
+  if(i < tokens.length) throw new Error('Rest im Ausdruck: ' + tokens[i].v);
+  return wert;
+}
+function formelBerechnen(ausdruckText, feldWert){
+  try{ return formelParser(formelTokens(String(ausdruckText||'')), feldWert); }
+  catch(e){ return '⚠ ' + e.message; }
+}
+
+/* ── Werte einer Zeile inkl. Formeln/Rollups (mit Zyklenschutz) ── */
+function dbWert(d, row, prop, tiefe, pfad){
+  tiefe = tiefe || 0; pfad = pfad || new Set();
+  if(!prop) return '';
+  if(prop.typ === 'formel' || prop.typ === 'rollup'){
+    const key = row.id + '|' + prop.id;
+    if(pfad.has(key) || tiefe > 12) return '⚠ Kreisbezug';
+    pfad = new Set(pfad); pfad.add(key);
+  }
+  if(prop.typ === 'formel'){
+    return formelBerechnen(prop.formel, name => {
+      const p2 = d.props.find(x => x.name.toLowerCase() === String(name).toLowerCase() || x.id === name);
+      return p2 ? dbWert(d, row, p2, tiefe+1, pfad) : '';
+    });
+  }
+  if(prop.typ === 'rollup') return rollupWert(d, row, prop, tiefe, pfad);
+  if(prop.typ === 'relation'){
+    const ids = row.werte[prop.id] || [];
+    return Array.isArray(ids) ? ids : [];
+  }
+  const v = row.werte[prop.id];
+  return v === undefined || v === null ? (prop.typ === 'checkbox' ? false : '') : v;
+}
+function zielDb(seiteId){
+  const n = notiz(seiteId);
+  return n && n.datenbank ? n.datenbank : null;
+}
+function rollupWert(d, row, prop, tiefe, pfad){
+  const rel = d.props.find(p => p.id === prop.relation && p.typ === 'relation');
+  if(!rel) return '⚠ keine Verknüpfung';
+  const zd = zielDb(rel.ziel);
+  if(!zd) return '⚠ Ziel fehlt';
+  const zp = zd.props.find(p => p.id === prop.zielProp);
+  if(!zp) return '⚠ Feld fehlt';
+  const ids = row.werte[rel.id] || [];
+  const zeilen = zd.rows.filter(r => ids.includes(r.id));
+  const werte = zeilen.map(r => dbWert(zd, r, zp, (tiefe||0)+1, pfad));
+  const zahlen = werte.map(v => +v).filter(v => !isNaN(v));
+  switch(prop.funktion){
+    case 'anzahl':    return zeilen.length;
+    case 'summe':     return zahlen.reduce((a,b) => a+b, 0);
+    case 'mittel':    return zahlen.length ? Math.round(zahlen.reduce((a,b)=>a+b,0)/zahlen.length*100)/100 : 0;
+    case 'min':       return zahlen.length ? Math.min(...zahlen) : '';
+    case 'max':       return zahlen.length ? Math.max(...zahlen) : '';
+    case 'erledigt':  return werte.filter(v => v === true).length;
+    case 'prozent':   return zeilen.length ? Math.round(werte.filter(v => v === true).length / zeilen.length * 100) + '%' : '0%';
+    default:          return werte.filter(v => v !== '' && v !== false).map(v => String(v)).join(', ');
+  }
+}
+
+/* ── Anzeige der neuen Typen ── */
+function relationTitel(rel, ids){
+  const zd = zielDb(rel.ziel); if(!zd) return [];
+  return (ids||[]).map(id => {
+    const r = zd.rows.find(x => x.id === id);
+    return r ? String(dbWert(zd, r, zd.props[0])) || 'Ohne Titel' : null;
+  }).filter(Boolean);
+}
+function dbZelleSpezial(d, row, p){
+  const id = `${row.id}|${p.id}`;
+  if(p.typ === 'relation'){
+    const titel = relationTitel(p, row.werte[p.id] || []);
+    return `<span class="db-rel" data-rel-menue="${id}">
+      ${titel.length ? titel.map(t => `<span class="db-chip db-relchip">${escapeHtml(t)}</span>`).join('') : '<span class="db-leer">＋ verknüpfen</span>'}
+    </span>`;
+  }
+  const v = dbWert(d, row, p);
+  const fehler = typeof v === 'string' && v.startsWith('⚠');
+  return `<span class="db-berechnet${fehler ? ' db-fehler' : ''}">${escapeHtml(v === true ? '✓' : v === false ? '–' : String(v))}</span>`;
+}
+
+/* ── Relation-Auswahl ── */
+function relationMenue(rowId, propId){
+  const n = aktive(); const d = n.datenbank;
+  const p = d.props.find(x => x.id === propId);
+  const r = d.rows.find(x => x.id === rowId);
+  if(!p || !r) return;
+  const zd = zielDb(p.ziel);
+  const box = $('#dialogBox');
+  if(!zd){
+    box.innerHTML = `<h3>Verknüpfung</h3><p>Die Ziel-Datenbank existiert nicht mehr.</p>
+      <div class="reihe"><button class="knopf leer" data-dlg="abbruch">Schließen</button></div>`;
+    $('#dialogSchleier').classList.add('offen');
+    box.onclick = e => { if(e.target.closest('[data-dlg]')) dialogZu(); };
+    return;
+  }
+  const gewaehlt = new Set(r.werte[p.id] || []);
+  const zeichne = () => {
+    box.innerHTML = `<h3>🔗 ${escapeHtml(p.name)}</h3>
+      <p>Einträge aus „${escapeHtml(notiz(p.ziel).title)}" auswählen:</p>
+      <div class="rel-liste">
+        ${zd.rows.map(zr => {
+          const t = String(dbWert(zd, zr, zd.props[0])) || 'Ohne Titel';
+          return `<button class="rel-eintrag${gewaehlt.has(zr.id)?' aktiv':''}" data-rel-id="${escapeAttr(zr.id)}">
+            <span>${gewaehlt.has(zr.id) ? '☑' : '☐'}</span> ${escapeHtml(t)}</button>`;
+        }).join('') || '<div class="db-hinweis">Diese Datenbank hat noch keine Einträge.</div>'}
+      </div>
+      <div class="reihe"><button class="knopf voll" data-dlg="abbruch">Fertig</button></div>`;
+  };
+  zeichne();
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    const k = e.target.closest('[data-rel-id]');
+    if(k){
+      const id = k.dataset.relId;
+      gewaehlt.has(id) ? gewaehlt.delete(id) : gewaehlt.add(id);
+      r.werte[p.id] = [...gewaehlt];
+      dbSpeichern(); zeichne(); renderDatenbank();
+      return;
+    }
+    if(e.target.closest('[data-dlg]')){ dialogZu(); renderDatenbank(); }
+  };
+}
+
+/* ── Eigenschaften-Dialoge für die neuen Typen ── */
+function propRelationDialog(){
+  const n = aktive(); const d = n.datenbank;
+  const ziele = db.notes.filter(x => !x.trashed && x.datenbank && x.id !== n.id);
+  const box = $('#dialogBox');
+  if(!ziele.length){
+    box.innerHTML = `<h3>🔗 Verknüpfung</h3>
+      <p>Es gibt noch keine zweite Datenbank. Lege zuerst auf einer anderen Seite eine Datenbank an.</p>
+      <div class="reihe"><button class="knopf leer" data-dlg="abbruch">Verstanden</button></div>`;
+    $('#dialogSchleier').classList.add('offen');
+    box.onclick = e => { if(e.target.closest('[data-dlg]')) dialogZu(); };
+    return;
+  }
+  box.innerHTML = `<h3>🔗 Verknüpfung anlegen</h3>
+    <input type="text" id="relName" placeholder="Name der Eigenschaft" value="Verknüpft mit">
+    <p>Mit welcher Datenbank?</p>
+    <div class="reihe" style="flex-direction:column;align-items:stretch;gap:6px">
+      ${ziele.map(z => `<button class="knopf leer" data-ziel="${escapeAttr(z.id)}" style="text-align:left">${z.icon||'🗂'} ${escapeHtml(z.title||'Ohne Titel')}</button>`).join('')}
+    </div>
+    <div class="reihe" style="margin-top:var(--s3)"><button class="knopf leer" data-dlg="abbruch">Abbrechen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    if(e.target.closest('[data-dlg]')){ dialogZu(); return; }
+    const z = e.target.closest('[data-ziel]'); if(!z) return;
+    const name = ($('#relName').value || '').trim() || 'Verknüpft';
+    d.props.push({ id:neueId(), name, typ:'relation', ziel:z.dataset.ziel });
+    dialogZu(); dbSpeichern(); renderDatenbank();
+    toast('Verknüpfung angelegt 🔗');
+  };
+}
+function propRollupDialog(){
+  const n = aktive(); const d = n.datenbank;
+  const relationen = d.props.filter(p => p.typ === 'relation');
+  const box = $('#dialogBox');
+  if(!relationen.length){
+    box.innerHTML = `<h3>Σ Rollup</h3><p>Ein Rollup rechnet über eine Verknüpfung. Lege zuerst eine Verknüpfung an.</p>
+      <div class="reihe"><button class="knopf leer" data-dlg="abbruch">Verstanden</button></div>`;
+    $('#dialogSchleier').classList.add('offen');
+    box.onclick = e => { if(e.target.closest('[data-dlg]')) dialogZu(); };
+    return;
+  }
+  const rel0 = relationen[0];
+  const zd0 = zielDb(rel0.ziel);
+  box.innerHTML = `<h3>Σ Rollup anlegen</h3>
+    <input type="text" id="roName" placeholder="Name" value="Auswertung">
+    <label class="ki-label">Über welche Verknüpfung?</label>
+    <select id="roRel" class="db-select">${relationen.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('')}</select>
+    <label class="ki-label">Welches Feld der verknüpften Einträge?</label>
+    <select id="roProp" class="db-select">${(zd0?zd0.props:[]).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('')}</select>
+    <label class="ki-label">Rechenart</label>
+    <select id="roFn" class="db-select">
+      <option value="anzahl">Anzahl</option><option value="summe">Summe</option>
+      <option value="mittel">Mittelwert</option><option value="min">Kleinster Wert</option>
+      <option value="max">Größter Wert</option><option value="erledigt">Anzahl erledigt</option>
+      <option value="prozent">Prozent erledigt</option><option value="liste">Werte auflisten</option>
+    </select>
+    <div class="reihe" style="margin-top:var(--s3)">
+      <button class="knopf leer" data-dlg="abbruch">Abbrechen</button>
+      <button class="knopf voll" data-ro-ok="1">Anlegen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  $('#roRel').onchange = () => {
+    const r = d.props.find(x => x.id === $('#roRel').value);
+    const zd = r ? zielDb(r.ziel) : null;
+    $('#roProp').innerHTML = (zd?zd.props:[]).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  };
+  box.onclick = e => {
+    if(e.target.closest('[data-dlg]')){ dialogZu(); return; }
+    if(!e.target.closest('[data-ro-ok]')) return;
+    d.props.push({ id:neueId(), name:($('#roName').value||'').trim()||'Auswertung', typ:'rollup',
+      relation:$('#roRel').value, zielProp:$('#roProp').value, funktion:$('#roFn').value });
+    dialogZu(); dbSpeichern(); renderDatenbank();
+    toast('Rollup angelegt Σ');
+  };
+}
+function propFormelDialog(){
+  const n = aktive(); const d = n.datenbank;
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>ƒ Formel anlegen</h3>
+    <input type="text" id="foName" placeholder="Name" value="Berechnet">
+    <label class="ki-label">Formel</label>
+    <input type="text" id="foAusdruck" placeholder='z. B. wenn([Erledigt]; "fertig"; "offen")'>
+    <div class="formel-hilfe">
+      Felder in eckigen Klammern: <code>[Name]</code><br>
+      Rechnen: <code>+ − * / ( )</code> · Vergleiche: <code>= != &lt; &gt; &lt;= &gt;=</code><br>
+      Funktionen: <code>wenn(bed; a; b)</code>, <code>summe(…)</code>, <code>runden(x; n)</code>,
+      <code>min/max</code>, <code>laenge(t)</code>, <code>verbinde(…)</code>, <code>enthaelt(t; s)</code>,
+      <code>heute()</code>, <code>tage(a; b)</code>, <code>jahr/monat/tag(d)</code>,
+      <code>und/oder/nicht(…)</code>
+    </div>
+    <div id="foVorschau" class="ki-status"></div>
+    <div class="reihe">
+      <button class="knopf leer" data-dlg="abbruch">Abbrechen</button>
+      <button class="knopf voll" data-fo-ok="1">Anlegen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  const pruefen = () => {
+    const a = $('#foAusdruck').value;
+    if(!a.trim()){ $('#foVorschau').textContent = ''; return; }
+    const bsp = d.rows[0];
+    const wert = bsp ? formelBerechnen(a, name => {
+      const p2 = d.props.find(x => x.name.toLowerCase() === String(name).toLowerCase());
+      return p2 ? dbWert(d, bsp, p2) : '';
+    }) : '';
+    const fehler = typeof wert === 'string' && wert.startsWith('⚠');
+    $('#foVorschau').textContent = (fehler ? '' : 'Beispielergebnis (erste Zeile): ') + String(wert);
+    $('#foVorschau').className = 'ki-status ' + (fehler ? 'ki-fehler' : 'ki-ok');
+  };
+  $('#foAusdruck').oninput = pruefen;
+  setTimeout(() => $('#foAusdruck').focus(), 30);
+  box.onclick = e => {
+    if(e.target.closest('[data-dlg]')){ dialogZu(); return; }
+    if(!e.target.closest('[data-fo-ok]')) return;
+    const a = $('#foAusdruck').value.trim();
+    if(!a){ toast('Bitte eine Formel eingeben'); return; }
+    d.props.push({ id:neueId(), name:($('#foName').value||'').trim()||'Berechnet', typ:'formel', formel:a });
+    dialogZu(); dbSpeichern(); renderDatenbank();
+    toast('Formel angelegt ƒ');
+  };
+}
+
 /* ── Rendering der drei Ansichten ── */
 function dbZelleHtml(row, p){
+  const nAkt = aktive();
+  if(['relation','rollup','formel'].includes(p.typ) && nAkt && nAkt.datenbank)
+    return dbZelleSpezial(nAkt.datenbank, row, p);
   const v = dbZellenWert(row, p);
   const id = `${row.id}|${p.id}`;
   if(p.typ === 'checkbox')
@@ -4262,11 +4683,20 @@ function dbPropNeu(){
     <input type="text" id="propName" placeholder="Name der Eigenschaft">
     <div class="reihe" style="flex-direction:column;align-items:stretch;gap:6px">
       ${DB_TYPEN.map(t => `<button class="knopf leer" data-typ="${t.t}" style="text-align:left">${escapeHtml(t.name)}</button>`).join('')}
+      <button class="knopf leer" data-spezial="relation" style="text-align:left">🔗 Verknüpfung zu anderer Datenbank</button>
+      <button class="knopf leer" data-spezial="rollup" style="text-align:left">Σ Rollup (über Verknüpfung rechnen)</button>
+      <button class="knopf leer" data-spezial="formel" style="text-align:left">ƒ Formel</button>
     </div>
     <div class="reihe" style="margin-top:var(--s3)"><button class="knopf leer" data-dlg="abbruch">Abbrechen</button></div>`;
   $('#dialogSchleier').classList.add('offen');
   setTimeout(() => $('#propName').focus(), 30);
   box.onclick = e => {
+    const sp = e.target.closest('[data-spezial]');
+    if(sp){ dialogZu();
+      if(sp.dataset.spezial==='relation') propRelationDialog();
+      else if(sp.dataset.spezial==='rollup') propRollupDialog();
+      else propFormelDialog();
+      return; }
     const k = e.target.closest('[data-typ],[data-dlg]'); if(!k) return;
     if(k.dataset.dlg){ dialogZu(); return; }
     const name = ($('#propName').value || '').trim() || DB_TYPEN.find(t=>t.t===k.dataset.typ).name;
@@ -4324,6 +4754,8 @@ function dbAuswahlMenue(rowId, propId, ankerEl){
       dbSpeichern(); renderDatenbank(); return; }
     const m = e.target.closest('[data-zelle-menue]');
     if(m){ const [rid,pid] = m.dataset.zelleMenue.split('|'); dbAuswahlMenue(rid,pid,m); return; }
+    const rm = e.target.closest('[data-rel-menue]');
+    if(rm){ const [rid,pid] = rm.dataset.relMenue.split('|'); relationMenue(rid,pid); return; }
     // Kalender: Monat blättern
     const kn = e.target.closest('[data-kal-nav]');
     if(kn){
@@ -4694,6 +5126,165 @@ function kiSchreiben(){
   });
 }
 
+/* ══════════════ Projekt-Doku: Aufträge & Arbeitsweise ══════════════
+   Legt zwei Seiten in REDNOTEN an: eine Datenbank mit allen Aufträgen
+   (Status: erledigt / teilweise / offen) und eine Seite, die Schritt für
+   Schritt beschreibt, wie gearbeitet und wie Probleme gelöst werden. */
+
+const PROJEKT_AUFTRAEGE = [
+  // [Auftrag, Status, Bereich, Ergebnis]
+  ['20 GitHub-Repos analysieren und auswerten','Fertig','Grundlage','7 Agenten lasen alle 20 Codebasen; Mechaniken extrahiert'],
+  ['Eigene Notizen-App aus den 20 Projekten bauen','Fertig','Grundlage','Eine HTML-Datei, kein Server, kein Konto'],
+  ['Quellcode der 20 Repos im Repo behalten','Fertig','Grundlage','Liegt vollständig unter PROJECTS/ — wird nicht gelöscht'],
+  ['App in REDNOTEN umbenennen + rotes Design','Fertig','Aussehen','Marke, Favicon, Farben, Hell- und Dunkelmodus'],
+  ['Aussehen wie Notion','Fertig','Aussehen','Heller Look, Seitenbaum, großer Titel, Breadcrumb'],
+  ['Schreiben wie in Notion (WYSIWYG)','Fertig','Editor','Direkt formatiert; # wird sofort Überschrift, kein Rohtext'],
+  ['Slash-Menü mit Blöcken','Fertig','Editor','/ öffnet Blockauswahl, gruppiert und durchsuchbar'],
+  ['Blöcke per Drag-and-Drop verschieben','Fertig','Editor','Griff links am Block, mit Einfügemarke und Blockmenü'],
+  ['Seiten mit Unterseiten (Hierarchie)','Fertig','Struktur','Beliebig verschachtelbar, ein-/ausklappbar'],
+  ['Emoji-Symbole und Cover je Seite','Fertig','Struktur','Symbolauswahl und 12 Cover-Verläufe'],
+  ['Favoriten','Fertig','Struktur','Eigener Bereich oben in der Seitenleiste'],
+  ['Datenbanken: Tabelle, Board, Galerie','Fertig','Datenbanken','Mit Eigenschaften, Sortieren, Filtern'],
+  ['Datenbanken: Kalender und Timeline','Fertig','Datenbanken','Monatsraster und Zeitstrahl mit Zoom'],
+  ['Verknüpfungen, Rollups und Formeln','Fertig','Datenbanken','Sicherer Formel-Parser ohne eval, mit Kreisbezug-Schutz'],
+  ['Lokale KI (Ollama), kostenlos ohne Schlüssel','Fertig','KI','11 Textaktionen + freies Schreiben, Antwort wird gestreamt'],
+  ['Volltextsuche mit Operatoren','Fertig','Suchen','tag:, nb:, ist:offen, "Phrasen", -Ausschluss'],
+  ['Verschlüsselung (Tresor) mit Sperrbildschirm','Fertig','Sicherheit','AES-256-GCM, Passwort nur bei dir, Auto-Sperre'],
+  ['Versionsverlauf je Seite','Fertig','Sicherheit','Alte Stände ansehen und wiederherstellen'],
+  ['Sichern: JSON, Markdown, ganze App als Datei','Fertig','Sicherheit','App-Export enthält alle Notizen (Daten-Insel)'],
+  ['Start per Doppelklick (Windows/Mac/Linux)','Fertig','Bedienung','Startdateien + START.md, plus Ein-Zeilen-Befehl fürs Terminal'],
+  ['Diese Auftrags- und Arbeitsweise-Doku','Fertig','Bedienung','Die Seite, die du gerade liest'],
+  ['Kommentare an Blöcken','Offen','Als Nächstes','Randnotizen mit stabilem Anker — in Arbeit'],
+  ['Bilder einfügen (lokal, ohne Server)','Offen','Als Nächstes','Verkleinert speichern, damit der Browser-Speicher reicht'],
+  ['Seiten im Baum per Drag-and-Drop umsortieren','Offen','Als Nächstes','Auf eine Seite ziehen = Unterseite'],
+  ['Echtzeit-Zusammenarbeit mit anderen','Geht nicht','Grenzen','Bräuchte einen Server — widerspricht „alles lokal"'],
+  ['Team-Rechte, Gäste, Freigabe-Links','Geht nicht','Grenzen','Bräuchte Benutzerkonten und einen Server'],
+];
+
+const DOKU_ARBEITSWEISE = `Diese Seite beschreibt, **wie** gearbeitet wird — damit du jeden Schritt nachvollziehen kannst.
+
+## In Kürze
+
+Jeder Auftrag durchläuft dieselben sechs Schritte. Nichts wird „ungefähr" gemacht: Was gebaut wird, wird auch im echten Browser ausprobiert, bevor es als fertig gilt.
+
+## Schritt 1 — Verstehen, was gemeint ist
+
+- Deinen Wunsch in eigene Worte fassen und prüfen, ob er eindeutig ist.
+- Bei zwei sinnvollen Lesarten wird **nachgefragt**, statt zu raten.
+- Beispiel aus diesem Projekt: „alles in einem Repo als Notizen-App" konnte heißen *20 Apps verschmelzen* oder *eine eigene App daraus bauen*. Nachfrage hat das geklärt.
+
+## Schritt 2 — Erst schauen, dann bauen
+
+- Vorhandenen Code lesen, bevor etwas geändert wird.
+- Bei fremden Vorlagen: **alle** mitgelieferten Dateien ansehen — auch PDFs und ZIPs.
+- Für die 20 Projekte liefen 7 Analysen parallel, die den echten Quellcode gelesen haben.
+
+## Schritt 3 — In kleine Aufgaben zerlegen
+
+- Große Wünsche werden in Einzelaufgaben zerschnitten und in einer Liste geführt.
+- Jede Aufgabe hat einen klaren Endzustand („fertig heißt: …").
+- So bleibt sichtbar, was erledigt ist und was noch aussteht — genau wie in der Auftragsliste nebenan.
+
+## Schritt 4 — Bauen
+
+- Kleine, nachvollziehbare Änderungen statt eines großen Wurfs.
+- Bestehendes bleibt heil: Neues wird ergänzt, nicht blind ersetzt.
+- Kommentare im Code erklären das **Warum**, nicht das Offensichtliche.
+
+## Schritt 5 — Prüfen im echten Browser
+
+- Jede Funktion wird mit einem echten Browser automatisch durchgeklickt.
+- Geprüft wird das Ergebnis, nicht die Absicht: *Steht der Text wirklich da? Ist die Notiz nach dem Neuladen noch da?*
+- Zusätzlich: Screenshots ansehen — Code kann fehlerfrei sein und trotzdem falsch aussehen.
+- Erst wenn alles grün ist, gilt etwas als fertig.
+
+## Schritt 6 — Absichern und übergeben
+
+- Änderung mit klarer Beschreibung sichern und hochladen.
+- Ehrlich berichten: Was ist fertig, was fehlt, was geht grundsätzlich nicht.
+
+---
+
+## Wie Probleme gelöst werden
+
+### Ein Fehler taucht auf
+
+1. **Reproduzieren** — den Fehler zuverlässig auslösen. Ein Fehler, den man nicht wiederholen kann, ist nicht verstanden.
+2. **Eingrenzen** — Wo genau bricht es? Zwischenstände ausgeben lassen, statt zu raten.
+3. **Ursache statt Symptom** — nicht das Sichtbare überkleben, sondern die Wurzel beheben.
+4. **Prüfen** — derselbe Test muss vorher fehlschlagen und nachher bestehen.
+
+### Drei echte Beispiele aus diesem Projekt
+
+**Beispiel 1 — Aufgaben in Code-Blöcken wurden mitgezählt.**
+Die Zählung suchte \`- [ ]\` im ganzen Text, die Anzeige übersprang aber Code-Blöcke. Dadurch hakte ein Klick die *falsche* Zeile ab. Lösung: ein einziger gemeinsamer Zeilen-Scanner, den Zählung, Anzeige und Übersicht alle benutzen — damit können sie gar nicht mehr auseinanderlaufen.
+
+**Beispiel 2 — Ein Dialog schloss sich sofort wieder.**
+„KI: frei schreiben" öffnete ein Eingabefeld; danach sollte das Ergebnis-Fenster kommen — blieb aber leer. Ursache: Das Eingabefeld schloss den Dialog **nach** dem Weiterreichen, und erwischte damit das gerade geöffnete neue Fenster. Lösung: erst schließen, dann weiterreichen.
+
+**Beispiel 3 — Eine Formel hätte fremde Funktionen aufrufen können.**
+Beim Formel-Rechner wurde der Funktionsname in einer Liste nachgeschlagen. Namen wie \`constructor\` stecken aber in *jedem* JavaScript-Objekt und wären mitgefunden worden. Lösung: nur noch ausdrücklich eigene Einträge zulassen. Gefunden hat das ein Test, der absichtlich Unsinn eingegeben hat.
+
+### Wenn etwas nicht geht
+
+- **Sagen, dass es nicht geht** — und warum. Kein Beschönigen.
+- Beispiel: Echtzeit-Zusammenarbeit braucht einen Server. Das widerspricht dem Versprechen „alles bleibt auf deinem Gerät". Deshalb steht es unter *Geht nicht*.
+- Wo möglich, wird die nächstbeste erreichbare Lösung angeboten.
+
+## Grundsätze
+
+- **Deine Daten gehören dir** — nichts verlässt dein Gerät, auch die KI läuft bei dir.
+- **Nichts wird gelöscht**, worum du nicht gebeten hast.
+- **Fertig heißt getestet** — nicht „müsste eigentlich gehen".
+- **Ehrlich berichten**, auch wenn das Ergebnis unbequem ist.`;
+
+function dokuAnlegen(still){
+  const t = Date.now();
+  const vorhandenA = db.notes.find(n => !n.trashed && n.title === 'Aufträge & Fortschritt');
+  const vorhandenB = db.notes.find(n => !n.trashed && n.title === 'Arbeitsweise');
+
+  // 1) Auftragsliste als Datenbank (Board nach Status)
+  const seiteA = vorhandenA || { id:neueId(), title:'Aufträge & Fortschritt', body:'', icon:'📋', cover:null,
+    parent:null, pos:naechstePos(null), hist:[], tasks:{total:0,done:0},
+    pinned:true, archived:false, trashed:false, created:t, updated:t };
+  seiteA.icon = '📋'; seiteA.pinned = true; seiteA.updated = t;
+  seiteA.body = 'Alle Aufträge aus unserem Verlauf — was fertig ist, was noch offen ist und was grundsätzlich nicht geht. Wechsle oben zwischen **Board**, **Tabelle** und **Galerie**.';
+  seiteA.datenbank = {
+    ansicht:'board', gruppeNach:'status', sortNach:null, sortAb:false,
+    props:[
+      { id:'titel',  name:'Auftrag', typ:'text' },
+      { id:'status', name:'Status',  typ:'auswahl', optionen:['Fertig','Offen','Geht nicht'] },
+      { id:'bereich',name:'Bereich', typ:'auswahl', optionen:['Grundlage','Aussehen','Editor','Struktur','Datenbanken','KI','Suchen','Sicherheit','Bedienung','Als Nächstes','Grenzen'] },
+      { id:'ergebnis',name:'Ergebnis', typ:'text' },
+    ],
+    rows: PROJEKT_AUFTRAEGE.map(([titel,status,bereich,ergebnis]) => ({
+      id:neueId(), werte:{ titel, status, bereich, ergebnis }
+    })),
+  };
+  if(!vorhandenA) db.notes.unshift(seiteA);
+
+  // 2) Arbeitsweise als normale Seite
+  const seiteB = vorhandenB || { id:neueId(), title:'Arbeitsweise', body:'', icon:'🧭', cover:null,
+    parent:null, pos:naechstePos(null), hist:[], tasks:{total:0,done:0},
+    pinned:false, archived:false, trashed:false, created:t, updated:t };
+  seiteB.icon = '🧭'; seiteB.updated = t;
+  seiteB.body = DOKU_ARBEITSWEISE;
+  seiteB.tasks = aufgabenZaehlen(seiteB.body);
+  if(!vorhandenB) db.notes.unshift(seiteB);
+
+  // Arbeitsweise als Unterseite der Auftragsliste einhängen
+  seiteB.parent = seiteA.id;
+  seiteB.pos = 10;
+
+  speichern(true);
+  if(!still){
+    renderAlles();
+    oeffneNotiz(seiteA.id);
+    toast('Aufträge & Arbeitsweise angelegt 📋');
+  }
+  return seiteA;
+}
+
 /* ── Start ────────────────────────────────────────────────────── */
 function start(){
   wendeThemeAn();
@@ -4703,6 +5294,10 @@ function start(){
   document.documentElement.dataset.schrift = db.einstellungen.schrift || 'standard';
   document.documentElement.dataset.breit = db.einstellungen.vollbreite ? '1' : '';
   renderAlles();
+  // Projekt-Doku bereitstellen (einmalig, still)
+  if(!db.notes.some(n => !n.trashed && n.title === 'Aufträge & Fortschritt')){
+    try{ dokuAnlegen(true); }catch(e){ console.warn('Doku', e); }
+  }
   // Notion-artig: beim Start die erste Seite öffnen (statt leerer Liste)
   const erste = topSeiten()[0] || db.notes.find(n => !n.trashed && !n.archived);
   if(erste) oeffneNotiz(erste.id);
