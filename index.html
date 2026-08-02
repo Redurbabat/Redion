@@ -333,6 +333,58 @@ input,textarea,select{font:inherit;color:inherit}
 .db-kachel-neu{display:grid;place-items:center;min-height:110px;color:var(--tinte-blass);font-size:13px;cursor:pointer}
 .db-kachel-neu:hover{background:var(--flaeche-2)}
 .db-hinweis{padding:var(--s4);color:var(--tinte-blass);font-size:13px;background:var(--flaeche-2);border-radius:8px}
+/* Kalender */
+.kal-kopf{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2)}
+.kal-kopf strong{font-size:14.5px;min-width:150px}
+.kal-kopf button{width:28px;height:28px;border-radius:6px;color:var(--tinte-schwach);font-size:15px}
+.kal-kopf button:hover{background:var(--flaeche-2);color:var(--tinte)}
+.kal-heute-btn{width:auto!important;padding:0 10px;font-size:12px;font-weight:600;border:1px solid var(--rand)}
+.kal-kopf select{border:1px solid var(--rand);border-radius:6px;background:var(--flaeche);padding:4px 8px;font-size:12px;color:var(--tinte-schwach)}
+.kal-wochentage{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:1px}
+.kal-wochentage div{font-size:11px;font-weight:700;color:var(--tinte-blass);text-align:center;padding:4px;text-transform:uppercase}
+.kal-raster{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--rand);border:1px solid var(--rand);border-radius:8px;overflow:hidden}
+.kal-zelle{background:var(--flaeche);min-height:88px;padding:4px;cursor:pointer;transition:background .1s}
+.kal-zelle:hover{background:var(--flaeche-2)}
+.kal-zelle.kal-leer{background:var(--flaeche-2);opacity:.5;cursor:default}
+.kal-zelle.kal-heute{background:var(--leit-hell)}
+.kal-zelle.db-ziel{outline:2px dashed var(--leit);outline-offset:-2px}
+.kal-nr{font-size:11.5px;color:var(--tinte-blass);font-weight:600;margin-bottom:3px}
+.kal-heute .kal-nr{color:var(--leit-text)}
+.kal-eintraege{display:flex;flex-direction:column;gap:2px}
+.kal-eintrag{
+  background:var(--leit);color:#fff;border-radius:4px;padding:2px 6px;font-size:11.5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:grab;
+}
+.kal-eintrag.db-zieht{opacity:.4}
+/* Timeline */
+.tl-kopf{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2);font-size:12.5px;color:var(--tinte-schwach);flex-wrap:wrap}
+.tl-kopf button{width:26px;height:26px;border-radius:6px;border:1px solid var(--rand);color:var(--tinte-schwach)}
+.tl-kopf button:hover{background:var(--flaeche-2);color:var(--tinte)}
+.tl-kopf select{border:1px solid var(--rand);border-radius:6px;background:var(--flaeche);padding:4px 8px;font-size:12px}
+.tl-wrap{overflow-x:auto;border:1px solid var(--rand);border-radius:8px}
+.tl-achse{display:flex;position:sticky;top:0;background:var(--flaeche-2);border-bottom:1px solid var(--rand);z-index:2}
+.tl-tage{display:flex}
+.tl-tag{
+  flex:none;text-align:center;font-size:10.5px;color:var(--tinte-blass);
+  padding:5px 0;border-left:1px solid var(--rand);position:relative;
+}
+.tl-tag.tl-we{background:var(--flaeche-2);filter:brightness(.97)}
+.tl-tag.tl-heute{background:var(--leit-hell);color:var(--leit-text);font-weight:700}
+.tl-monat{position:absolute;top:-1px;left:2px;font-size:9.5px;color:var(--tinte-schwach);font-weight:700}
+.tl-zeilen{display:flex;flex-direction:column}
+.tl-zeile{display:flex;border-bottom:1px solid var(--rand);min-height:34px}
+.tl-zeile:last-child{border-bottom:none}
+.tl-label{
+  width:150px;min-width:150px;flex:none;padding:8px 10px;font-size:12.5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border-right:1px solid var(--rand);background:var(--flaeche);position:sticky;left:0;z-index:1;
+}
+.tl-spur{position:relative;flex:none;min-height:34px}
+.tl-balken{
+  position:absolute;top:6px;height:22px;border:1px solid;border-radius:5px;
+  font-size:11.5px;font-weight:600;padding:0 8px;line-height:20px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;
+}
 
 /* Cover (Farbverlauf über dem Seitenkopf) */
 .cover{
@@ -3983,6 +4035,149 @@ function renderDbGalerie(d){
     <button class="db-kachel db-kachel-neu" data-zeile-neu="1">＋ Neu</button>
   </div>`;
 }
+/* ══════════════ Datenbank-Ansichten: Kalender & Timeline ══════════════
+   Datumsmathematik ohne Bibliothek, deutscher Wochenstart (Montag). */
+
+const WOCHENTAGE = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+const MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+function isoHeute(){ const d = new Date(); return isoVon(d); }
+function isoVon(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function ausIso(s){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+  return m ? new Date(+m[1], +m[2]-1, +m[3]) : null;
+}
+function tagePlus(iso, n){
+  const d = ausIso(iso); if(!d) return iso;
+  d.setDate(d.getDate() + n); return isoVon(d);
+}
+function tageDazwischen(a, b){
+  const x = ausIso(a), y = ausIso(b);
+  if(!x || !y) return 0;
+  return Math.round((y - x) / 86400000);
+}
+/* Montag-basierter Wochentag: Mo=0 … So=6 */
+function wochentagMo(d){ return (d.getDay() + 6) % 7; }
+
+function datumsProps(d){ return d.props.filter(p => p.typ === 'datum'); }
+function kalenderProp(d){
+  return d.props.find(p => p.id === d.datumProp && p.typ === 'datum') || datumsProps(d)[0] || null;
+}
+
+/* ── Kalender (Monatsraster) ── */
+function renderDbKalender(d){
+  const dp = kalenderProp(d);
+  if(!dp) return `<div class="db-hinweis">Für den Kalender wird eine Datums-Eigenschaft gebraucht. Füge eine hinzu (＋ in der Tabelle).</div>`;
+  if(!d.monat) d.monat = isoHeute().slice(0,7);
+  const [jahr, mon] = d.monat.split('-').map(Number);
+  const ersterTag = new Date(jahr, mon-1, 1);
+  const versatz = wochentagMo(ersterTag);                 // Leerfelder vor dem 1.
+  const tageImMonat = new Date(jahr, mon, 0).getDate();
+  const gesamt = Math.ceil((versatz + tageImMonat) / 7) * 7;
+
+  const rows = dbZeilen(d);
+  const proTag = new Map();
+  for(const r of rows){
+    const v = dbZellenWert(r, dp);
+    if(!v) continue;
+    const key = String(v).slice(0,10);
+    if(!proTag.has(key)) proTag.set(key, []);
+    proTag.get(key).push(r);
+  }
+  const heute = isoHeute();
+  const titelProp = d.props[0];
+
+  let zellen = '';
+  for(let i = 0; i < gesamt; i++){
+    const tagNr = i - versatz + 1;
+    if(tagNr < 1 || tagNr > tageImMonat){ zellen += `<div class="kal-zelle kal-leer"></div>`; continue; }
+    const iso = `${jahr}-${String(mon).padStart(2,'0')}-${String(tagNr).padStart(2,'0')}`;
+    const drin = proTag.get(iso) || [];
+    zellen += `<div class="kal-zelle${iso===heute?' kal-heute':''}" data-kal-tag="${iso}">
+      <div class="kal-nr">${tagNr}</div>
+      <div class="kal-eintraege">
+        ${drin.map(r => `<div class="kal-eintrag" draggable="true" data-kal-karte="${r.id}" title="${escapeAttr(String(dbZellenWert(r,titelProp)))}">
+          ${escapeHtml(String(dbZellenWert(r, titelProp)) || 'Ohne Titel')}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+  return `<div class="kal-kopf">
+      <button data-kal-nav="-1" title="Voriger Monat">‹</button>
+      <strong>${MONATE[mon-1]} ${jahr}</strong>
+      <button data-kal-nav="1" title="Nächster Monat">›</button>
+      <button data-kal-nav="0" class="kal-heute-btn">Heute</button>
+      ${datumsProps(d).length > 1 ? `<select data-kal-prop title="Welches Datumsfeld?">
+        ${datumsProps(d).map(p => `<option value="${p.id}" ${p.id===dp.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
+      </select>` : ''}
+    </div>
+    <div class="kal-wochentage">${WOCHENTAGE.map(t => `<div>${t}</div>`).join('')}</div>
+    <div class="kal-raster">${zellen}</div>`;
+}
+
+/* ── Timeline (Balken über Start/Ende) ── */
+function renderDbTimeline(d){
+  const dps = datumsProps(d);
+  if(!dps.length) return `<div class="db-hinweis">Für die Timeline wird mindestens eine Datums-Eigenschaft gebraucht.</div>`;
+  const startP = d.props.find(p => p.id === d.tlStart && p.typ==='datum') || dps[0];
+  const endP   = d.props.find(p => p.id === d.tlEnde && p.typ==='datum') || dps[1] || null;
+  const zoom = d.tlZoom || 26;   // Pixel pro Tag
+
+  const rows = dbZeilen(d).filter(r => dbZellenWert(r, startP));
+  if(!rows.length) return `<div class="db-hinweis">Noch keine Einträge mit Datum in „${escapeHtml(startP.name)}".</div>`;
+
+  let min = null, max = null;
+  const balken = rows.map(r => {
+    const s = String(dbZellenWert(r, startP)).slice(0,10);
+    let e = endP ? String(dbZellenWert(r, endP) || '').slice(0,10) : '';
+    if(!e || tageDazwischen(s,e) < 0) e = s;
+    if(!min || s < min) min = s;
+    if(!max || e > max) max = e;
+    return { r, s, e };
+  });
+  min = tagePlus(min, -2); max = tagePlus(max, 3);
+  const spanne = Math.max(1, tageDazwischen(min, max) + 1);
+
+  let achse = '';
+  for(let i = 0; i < spanne; i++){
+    const iso = tagePlus(min, i);
+    const dt = ausIso(iso);
+    const we = wochentagMo(dt) >= 5;
+    const ersterImMonat = dt.getDate() === 1;
+    achse += `<div class="tl-tag${we?' tl-we':''}${iso===isoHeute()?' tl-heute':''}" style="width:${zoom}px">
+      ${zoom >= 22 ? `<span>${dt.getDate()}</span>` : ''}
+      ${ersterImMonat ? `<b class="tl-monat">${MONATE[dt.getMonth()].slice(0,3)}</b>` : ''}</div>`;
+  }
+  const titelProp = d.props[0];
+  const zeilen = balken.map(({r,s,e}) => {
+    const von = tageDazwischen(min, s);
+    const dauer = Math.max(1, tageDazwischen(s, e) + 1);
+    const gp = d.props.find(p => p.typ === 'auswahl');
+    const farbe = gp ? dbFarbe(dbZellenWert(r, gp), gp) : 'var(--leit)';
+    return `<div class="tl-zeile">
+      <div class="tl-label" title="${escapeAttr(String(dbZellenWert(r,titelProp)))}">${escapeHtml(String(dbZellenWert(r, titelProp)) || 'Ohne Titel')}</div>
+      <div class="tl-spur" style="width:${spanne*zoom}px">
+        <div class="tl-balken" data-tl-karte="${r.id}"
+             style="left:${von*zoom}px;width:${dauer*zoom - 4}px;background:${farbe}22;border-color:${farbe};color:${farbe}">
+          ${escapeHtml(String(dbZellenWert(r, titelProp)) || '')}
+        </div>
+      </div></div>`;
+  }).join('');
+
+  return `<div class="tl-kopf">
+      <span>Zeitstrahl: <b>${escapeHtml(startP.name)}</b>${endP ? ` → <b>${escapeHtml(endP.name)}</b>` : ' (ein Tag je Eintrag)'}</span>
+      <button data-tl-zoom="-1" title="Herauszoomen">−</button>
+      <button data-tl-zoom="1" title="Hineinzoomen">＋</button>
+      ${dps.length > 1 ? `<select data-tl-start title="Startdatum">${dps.map(p => `<option value="${p.id}" ${p.id===startP.id?'selected':''}>Start: ${escapeHtml(p.name)}</option>`).join('')}</select>
+      <select data-tl-ende title="Enddatum"><option value="">Kein Ende</option>${dps.map(p => `<option value="${p.id}" ${endP&&p.id===endP.id?'selected':''}>Ende: ${escapeHtml(p.name)}</option>`).join('')}</select>` : ''}
+    </div>
+    <div class="tl-wrap">
+      <div class="tl-achse"><div class="tl-label"></div><div class="tl-tage">${achse}</div></div>
+      <div class="tl-zeilen">${zeilen}</div>
+    </div>`;
+}
+
 function renderDatenbank(){
   const n = aktive();
   const box = $('#dbFlaeche');
@@ -3993,11 +4188,13 @@ function renderDatenbank(){
   const d = n.datenbank;
   const inhalt = d.ansicht === 'board' ? renderDbBoard(d)
                : d.ansicht === 'galerie' ? renderDbGalerie(d)
+               : d.ansicht === 'kalender' ? renderDbKalender(d)
+               : d.ansicht === 'timeline' ? renderDbTimeline(d)
                : renderDbTabelle(d);
   box.innerHTML = `
     <div class="db-leiste">
       <div class="db-ansichten">
-        ${[['tabelle','▦ Tabelle'],['board','▤ Board'],['galerie','▣ Galerie']].map(([a,t]) =>
+        ${[['tabelle','▦ Tabelle'],['board','▤ Board'],['galerie','▣ Galerie'],['kalender','🗓 Kalender'],['timeline','▭ Timeline']].map(([a,t]) =>
           `<button data-ansicht="${a}" aria-pressed="${d.ansicht===a}">${t}</button>`).join('')}
       </div>
       <input class="db-filter" id="dbFilter" placeholder="Filtern …" value="${escapeAttr(zustand.dbSuche||'')}">
@@ -4088,6 +4285,41 @@ function dbAuswahlMenue(rowId, propId, ankerEl){
       dbSpeichern(); renderDatenbank(); return; }
     const m = e.target.closest('[data-zelle-menue]');
     if(m){ const [rid,pid] = m.dataset.zelleMenue.split('|'); dbAuswahlMenue(rid,pid,m); return; }
+    // Kalender: Monat blättern
+    const kn = e.target.closest('[data-kal-nav]');
+    if(kn){
+      const richtung = +kn.dataset.kalNav;
+      if(richtung === 0) d.monat = isoHeute().slice(0,7);
+      else {
+        const [j,mo] = (d.monat || isoHeute().slice(0,7)).split('-').map(Number);
+        const nd = new Date(j, mo-1+richtung, 1);
+        d.monat = nd.getFullYear() + '-' + String(nd.getMonth()+1).padStart(2,'0');
+      }
+      dbSpeichern(); renderDatenbank(); return;
+    }
+    // Kalender: leeres Tagesfeld → neuer Eintrag mit diesem Datum
+    const kt = e.target.closest('[data-kal-tag]');
+    if(kt && !e.target.closest('[data-kal-karte]')){
+      const dp = kalenderProp(d); if(!dp) return;
+      const werte = {}; for(const p of d.props) werte[p.id] = p.typ === 'checkbox' ? false : '';
+      werte[d.props[0].id] = 'Neuer Eintrag';
+      werte[dp.id] = kt.dataset.kalTag;
+      d.rows.push({ id:neueId(), werte });
+      dbSpeichern(); renderDatenbank(); return;
+    }
+    // Timeline: Zoom
+    const tz = e.target.closest('[data-tl-zoom]');
+    if(tz){
+      d.tlZoom = Math.max(8, Math.min(64, (d.tlZoom || 26) + (+tz.dataset.tlZoom) * 8));
+      dbSpeichern(); renderDatenbank(); return;
+    }
+  });
+  box.addEventListener('change', e => {
+    const n = aktive(); if(!n || !n.datenbank) return;
+    const d = n.datenbank;
+    if(e.target.matches('[data-kal-prop]')){ d.datumProp = e.target.value; dbSpeichern(); renderDatenbank(); }
+    else if(e.target.matches('[data-tl-start]')){ d.tlStart = e.target.value; dbSpeichern(); renderDatenbank(); }
+    else if(e.target.matches('[data-tl-ende]')){ d.tlEnde = e.target.value; dbSpeichern(); renderDatenbank(); }
   });
   box.addEventListener('input', e => {
     const n = aktive(); if(!n || !n.datenbank) return;
@@ -4101,32 +4333,44 @@ function dbAuswahlMenue(rowId, propId, ankerEl){
     if(e.target.id === 'dbFilter'){ zustand.dbSuche = e.target.value; renderDatenbank(); setTimeout(() => { const f=$('#dbFilter'); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } },0); }
   });
   // Board: Karten per Drag & Drop zwischen Spalten
-  let ziehKarte = null;
+  let ziehKarte = null, ziehArt = null;
   box.addEventListener('dragstart', e => {
+    const kal = e.target.closest('[data-kal-karte]');
+    if(kal){ ziehKarte = kal.dataset.kalKarte; ziehArt = 'kalender'; kal.classList.add('db-zieht');
+      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain','karte'); return; }
     const k = e.target.closest('[data-karte]'); if(!k) return;
-    ziehKarte = k.dataset.karte; k.classList.add('db-zieht');
+    ziehKarte = k.dataset.karte; ziehArt = 'board'; k.classList.add('db-zieht');
     e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain','karte');
   });
   box.addEventListener('dragend', e => {
-    $$('.db-karte').forEach(k => k.classList.remove('db-zieht'));
-    $$('.db-spalte').forEach(s => s.classList.remove('db-ziel'));
-    ziehKarte = null;
+    $$('.db-karte,.kal-eintrag').forEach(k => k.classList.remove('db-zieht'));
+    $$('.db-spalte,.kal-zelle').forEach(s => s.classList.remove('db-ziel'));
+    ziehKarte = null; ziehArt = null;
   });
   box.addEventListener('dragover', e => {
     if(!ziehKarte) return;
-    const sp = e.target.closest('[data-spalte]'); if(!sp) return;
+    const ziel = ziehArt === 'kalender' ? e.target.closest('[data-kal-tag]') : e.target.closest('[data-spalte]');
+    if(!ziel) return;
     e.preventDefault();
-    $$('.db-spalte').forEach(s => s.classList.toggle('db-ziel', s === sp));
+    const alle = ziehArt === 'kalender' ? $$('.kal-zelle') : $$('.db-spalte');
+    alle.forEach(s => s.classList.toggle('db-ziel', s === ziel));
   });
   box.addEventListener('drop', e => {
     if(!ziehKarte) return;
-    const sp = e.target.closest('[data-spalte]'); if(!sp) return;
-    e.preventDefault();
     const n = aktive(); const d = n.datenbank;
-    const gp = d.props.find(p => p.id === d.gruppeNach && p.typ === 'auswahl') || d.props.find(p => p.typ === 'auswahl');
     const r = d.rows.find(x => x.id === ziehKarte);
-    if(gp && r){ r.werte[gp.id] = sp.dataset.spalte; dbSpeichern(); }
-    ziehKarte = null;
+    if(ziehArt === 'kalender'){
+      const tag = e.target.closest('[data-kal-tag]'); if(!tag) return;
+      e.preventDefault();
+      const dp = kalenderProp(d);
+      if(dp && r){ r.werte[dp.id] = tag.dataset.kalTag; dbSpeichern(); }
+    } else {
+      const sp = e.target.closest('[data-spalte]'); if(!sp) return;
+      e.preventDefault();
+      const gp = d.props.find(p => p.id === d.gruppeNach && p.typ === 'auswahl') || d.props.find(p => p.typ === 'auswahl');
+      if(gp && r){ r.werte[gp.id] = sp.dataset.spalte; dbSpeichern(); }
+    }
+    ziehKarte = null; ziehArt = null;
     renderDatenbank();
   });
 }
