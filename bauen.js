@@ -1,0 +1,27 @@
+/* ============================================================================
+ * bauen.js — baut notizen-einzeldatei.html
+ * ----------------------------------------------------------------------------
+ * Nimmt index.html, app.css und alle Skripte und schreibt daraus eine
+ * einzige Datei, die man per Doppelklick öffnen oder weitergeben kann.
+ *
+ *   node bauen.js
+ * ==========================================================================*/
+const fs = require('fs');
+const pfad = require('path');
+
+const wurzel = __dirname;
+const lies = (p) => fs.readFileSync(pfad.join(wurzel, p), 'utf8');
+
+let html = lies('index.html');
+
+/* CSS einsetzen */
+html = html.replace('<link rel="stylesheet" href="app.css">',
+  '<style>\n' + lies('app.css') + '\n</style>');
+
+/* Skripte einsetzen — in der Reihenfolge, in der sie im HTML stehen */
+html = html.replace(/<script src="(js\/[^"]+)"><\/script>/g, (_, datei) =>
+  '<script>\n/* ===== ' + datei + ' ===== */\n' + lies(datei) + '\n</script>');
+
+fs.writeFileSync(pfad.join(wurzel, 'notizen-einzeldatei.html'), html);
+const kb = (fs.statSync(pfad.join(wurzel, 'notizen-einzeldatei.html')).size / 1024).toFixed(0);
+console.log('notizen-einzeldatei.html geschrieben — ' + kb + ' KB');

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Notizen — lokale Notion-Alternative. Alle Daten im Browser, KI lokal und kostenlos.">
+<meta name="color-scheme" content="dark light">
+<title>Notizen</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📓</text></svg>">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- =========================================================================
+     SEITENLEISTE
+     ====================================================================== -->
+<aside id="sidebar">
+
+  <div class="side-top">
+    <button class="ws-btn" id="btn-settings" title="Einstellungen (Strg + ,)">
+      <span class="ws-icon">N</span>
+      <span>Notizen</span>
+    </button>
+    <button class="icon-btn" id="btn-theme" title="Hell / Dunkel (Strg + Shift + L)">◐</button>
+    <button class="icon-btn" id="btn-side"  title="Seitenleiste (Strg + \)">‹‹</button>
+  </div>
+
+  <nav class="side-nav">
+    <button class="side-item" id="btn-search">
+      <span>🔍</span><span>Suchen</span><span class="k">Strg P</span>
+    </button>
+    <button class="side-item" id="btn-cmd">
+      <span>⌘</span><span>Befehle</span><span class="k">Strg ⇧ P</span>
+    </button>
+    <button class="side-item" id="btn-home">
+      <span>🏠</span><span>Start</span>
+    </button>
+    <button class="side-item" id="btn-inbox">
+      <span>📥</span><span>Posteingang</span>
+    </button>
+    <button class="side-item" id="btn-new">
+      <span>✚</span><span>Neue Seite</span><span class="k">Strg N</span>
+    </button>
+  </nav>
+
+  <div id="tree"></div>
+
+  <div class="side-fuss">
+    <button class="side-item" id="btn-import"><span>⭱</span><span>Importieren</span></button>
+    <button class="side-item" id="btn-trash"><span>🗑</span><span>Papierkorb</span></button>
+    <button class="side-item" id="btn-hilfe"><span>?</span><span>Tastenkürzel</span><span class="k">Strg /</span></button>
+    <button class="side-item neu" id="btn-new-bottom"><span>✚</span><span>Neue Seite</span></button>
+    <div class="side-hinweis">Alles bleibt auf diesem Gerät.</div>
+  </div>
+</aside>
+
+<!-- =========================================================================
+     HAUPTBEREICH
+     ====================================================================== -->
+<main id="main">
+
+  <header id="topbar">
+    <button class="top-btn schmal" id="btn-back" title="Zurück (Strg + [)">‹</button>
+    <button class="top-btn schmal" id="btn-fwd"  title="Vorwärts (Strg + ])">›</button>
+    <div class="crumb" id="crumb"></div>
+    <div class="spacer"></div>
+    <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)">✨ KI</button>
+    <button class="top-btn schmal" id="btn-komm"    title="Kommentare">💬</button>
+    <button class="top-btn schmal" id="btn-verlauf" title="Versionsverlauf">🕘</button>
+    <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten">☆</button>
+    <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen">⋯</button>
+  </header>
+
+  <div id="scroll">
+    <div id="page"></div>
+  </div>
+
+</main>
+
+<!-- =========================================================================
+     KI-PANEL
+     ====================================================================== -->
+<aside id="ai">
+  <div class="ai-head">
+    <b>✨ KI</b>
+    <button class="model-btn" title="Modell wechseln">
+      <span class="dot"></span><span class="model-name">Suche …</span><span style="opacity:.5">▾</span>
+    </button>
+    <button class="icon-btn" id="ai-clear" title="Neuer Chat">✚</button>
+  </div>
+
+  <div id="chat"></div>
+
+  <div class="ai-foot">
+    <div class="ai-quick">
+      <button data-p="Fasse diese Seite in fünf Stichpunkten zusammen.">Zusammenfassen</button>
+      <button data-p="Leite aus dieser Seite konkrete Aufgaben ab. Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.">Aufgaben</button>
+      <button data-p="Formuliere den Text dieser Seite klarer, ohne den Sinn zu ändern.">Umschreiben</button>
+      <button data-p="Übersetze diese Seite ins Englische.">Übersetzen</button>
+      <button data-p="Mache aus dieser Seite Karteikarten. Je Zeile: Frage :: Antwort.">Karteikarten</button>
+    </div>
+    <textarea id="ai-input" rows="1" placeholder="Frag etwas zu dieser Seite …"></textarea>
+  </div>
+</aside>
+
+<div id="toast"></div>
+
+<!-- Reihenfolge zählt: store und formula zuerst, app zuletzt.
+     Bewusst ohne type="module", damit die Seite auch per Doppelklick
+     direkt von der Festplatte läuft. -->
+<script src="js/store.js"></script>
+<script src="js/formula.js"></script>
+<script src="js/links.js"></script>
+<script src="js/canvas.js"></script>
+<script src="js/blocks.js"></script>
+<script src="js/database.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/notion.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

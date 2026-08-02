@@ -1,26 +1,257 @@
-# Beste 20 quelloffene Notiz-Apps (Notion-Alternativen)
+# Notizen
 
-Quellcode flach geklont (ohne Git-Historie) und auf den Kern verschlankt.
+Eine Notiz- und Datenbank-App im Stil von Notion — **komplett lokal**.
+Kein Konto, kein Server, keine Cloud, keine Abo-Gebühr.
 
-| # | Projekt | Beschreibung | Lizenz | GitHub |
-|---|--|--|--|--|
-| 1 | **AppFlowy-IO/AppFlowy** | Notion-Alternative, quelloffen & lokal (Rust/Flutter) | siehe LICENSE | https://github.com/AppFlowy-IO/AppFlowy |
-| 2 | **toeverything/AFFiNE** | Notion + Miro Alternative, Blöcke & Whiteboard | MIT | https://github.com/toeverything/AFFiNE |
-| 3 | **laurent22/joplin** | Notiz- & To-do-App mit Verschlüsselung und Sync | siehe LICENSE | https://github.com/laurent22/joplin |
-| 4 | **logseq/logseq** | Outliner & Wissensdatenbank (lokal, Markdown/Org) | siehe LICENSE.md | https://github.com/logseq/logseq |
-| 5 | **siyuan-note/siyuan** | Notion-artiges PKM, lokal-first (Block-Editor) | siehe LICENSE | https://github.com/siyuan-note/siyuan |
-| 6 | **usememos/memos** | Leichte, selbst-gehostete Notiz-App (Markdown) | siehe LICENSE | https://github.com/usememos/memos |
-| 7 | **outline/outline** | Team-Wiki / Wissensdatenbank | Business Source License 1.1 | https://github.com/outline/outline |
-| 8 | **streetwriters/notesnook** | Ende-zu-Ende verschlüsselte Notiz-App | GPL-3.0-or-later | https://github.com/streetwriters/notesnook |
-| 9 | **marktext/marktext** | Schöner Markdown-Editor (WYSIWYG) | siehe LICENSE | https://github.com/marktext/marktext |
-| 10 | **standardnotes/app** | Verschlüsselte Notizen, plattformübergreifend | siehe LICENSE | https://github.com/standardnotes/app |
-| 11 | **zadam/trilium** | Hierarchische Notizen / persönliches Wiki | AGPL-3.0-only | https://github.com/zadam/trilium |
-| 12 | **codex-team/editor.js** | Block-Editor im Notion-Stil (JS) | Apache-2.0 | https://github.com/codex-team/editor.js |
-| 13 | **nhn/tui.editor** | Markdown-WYSIWYG-Editor (Toast UI) | siehe LICENSE | https://github.com/nhn/tui.editor |
-| 14 | **foambubble/foam** | Vernetztes Notizsystem in VS Code (PKM) | MIT | https://github.com/foambubble/foam |
-| 15 | **Zettlr/Zettlr** | Markdown-Editor für Schreiben & Wissenschaft | GPL-3.0 | https://github.com/Zettlr/Zettlr |
-| 16 | **hedgedoc/hedgedoc** | Kollaborative Markdown-Notizen (Echtzeit) | siehe LICENSE | https://github.com/hedgedoc/hedgedoc |
-| 17 | **Jermolene/TiddlyWiki5** | Persönliches Wiki in einer einzigen Datei | BSD | https://github.com/Jermolene/TiddlyWiki5 |
-| 18 | **anyproto/anytype-ts** | Anytype - lokal-first Notion-Alternative | SEE LICENSE IN LICENSE.md | https://github.com/anyproto/anytype-ts |
-| 19 | **blinko-space/blinko** | Moderne selbst-gehostete Notiz-App | siehe LICENSE | https://github.com/blinko-space/blinko |
-| 20 | **silverbulletmd/silverbullet** | Lokale, erweiterbare Markdown-Notiz-App (PKM) | siehe LICENSE.md | https://github.com/silverbulletmd/silverbullet |
+Öffnen: `index.html` doppelklicken. Das war die Installation.
+Lieber eine einzige Datei? `notizen-einzeldatei.html` enthält alles.
+
+---
+
+## Der Editor
+
+Alles ist ein Block — Absatz, Überschrift, Unterseite, Datenbank, Whiteboard.
+`/` öffnet das Blockmenü mit **43 Bausteinen** in sechs Gruppen.
+
+| Gruppe | Bausteine |
+|---|---|
+| Grundlegend | Text · Überschrift 1–3 · Aufgabe · Aufzählung · Nummerierung · Toggle · Zitat · Callout · Trennlinie |
+| Datenbank | Tabelle · Board · Liste · Galerie · Kalender |
+| Medien | Bild · Video · Audio · Datei · Lesezeichen · Einbetten |
+| Erweitert | Code · Formel · Einfache Tabelle · Inhaltsverzeichnis · Pfad · Zwei/Drei Spalten · Unterseite · Link zu Seite · Synchronisierter Block · Knopf · HTML |
+| Wissen | Karteikarte · Whiteboard · Diagramm · Rückverweise |
+| KI | Text schreiben · Zusammenfassen · Aufgaben ableiten · Übersetzen · Verbessern |
+
+Beim Tippen wandeln die Markdown-Kürzel sofort um:
+
+```
+#  ##  ###     Überschriften        ```      Codeblock
+-  *  +        Aufzählung           $$       Formel
+1.             Nummerierung         "        Zitat
+[]  [ ]        Aufgabe              ---      Trennlinie
+>              Toggle
+```
+
+Und mitten im Text:
+
+```
+**fett**   *kursiv*   __unterstrichen__   ~~durchgestrichen~~   `code`
+[[Seite]]  #schlagwort  ((Blockverweis))  @heute  @Person  :emoji  $a^2$
+```
+
+**Text markieren** öffnet die schwebende Werkzeugleiste: KI, Umwandeln,
+Fett, Kursiv, Unterstrichen, Durchgestrichen, Code, Formel, Link,
+Kommentar und die zehn Notion-Farben.
+
+---
+
+## Datenbanken
+
+Aufgebaut wie bei Notion: ein Container-Block zeigt auf ein **Schema**,
+das Schema auf beliebig viele **Ansichten**. Eine Zeile ist eine eigene Seite.
+
+**Acht Ansichten** — Tabelle · Board (Drag & Drop) · Liste · Galerie ·
+Kalender · Zeitstrahl · Diagramm · Formular
+
+**21 Eigenschaftstypen** — Titel, Text, Zahl, Auswahl, Mehrfachauswahl,
+Status, Datum, Person, Kontrollkästchen, URL, E-Mail, Telefon, Formel,
+Erstellt am, Zuletzt geändert, Dateien, **Verknüpfung**, **Rollup**,
+**Laufende Nummer**, **Knopf**, **KI-Feld**
+
+Dazu:
+
+- **Filter** mit UND/ODER und typgerechten Operatoren
+- **Sortierung**, **Gruppierung** und **Untergruppierung**
+- **Berechnungen** unter jeder Spalte: Summe, Durchschnitt, Median, Min, Max,
+  Spanne, Anzahl, Prozent gefüllt und mehr
+- **Rollups** über Verknüpfungen — 15 Berechnungsarten
+- **Seitenvorschau** (Side Peek) je Zeile, Rechtsklickmenü mit 10 Aktionen
+- Zeilenhöhe, Kartengrösse, Textumbruch, leere Gruppen, Anzeigegrenze
+- **CSV-Export**
+
+---
+
+## Die Formelsprache
+
+Eine eigene Umsetzung von Notions Formelsprache 2.0 — mit eigenem Tokenizer,
+Parser und Auswerter. Kein `eval()`, eine Formel kann also niemals fremden
+Code ausführen.
+
+Über 90 Funktionen: `if` `ifs` `let` `lets` `empty` · `round` `floor` `ceil`
+`abs` `min` `max` `sum` `mean` `median` `pow` `sqrt` · `format` `length`
+`substring` `contains` `replace` `replaceAll` `lower` `upper` `trim` `split`
+`repeat` `join` · `map` `filter` `find` `some` `every` `at` `first` `last`
+`unique` `sort` · `now` `today` `dateAdd` `dateBetween` `formatDate` `year`
+`month` `week` `day` `hour` `minute`
+
+Der Formeleditor prüft live und zeigt das Ergebnis an der ersten Zeile.
+
+> **Die Falle, an der fast jeder scheitert:** Text wird mit `+` verkettet,
+> **nicht** mit `concat()`. `concat()` ist ausschliesslich für Listen.
+>
+> ```
+> "Woche " + format(week(now()))     ✓
+> concat("Woche ", format(...))      ✗
+> ```
+
+---
+
+## Die Werkzeuge — und woher sie kommen
+
+Diese App ist aus dem Vergleich von zwanzig quelloffenen Notiz-Programmen
+entstanden. Jedes kann eine Sache besonders gut. Diese Sachen sind hier
+nachgebaut — jede an einem Ort, der zu ihr passt:
+
+| Woher die Idee stammt | Was sie kann | Wo sie in dieser App liegt |
+|---|---|---|
+| **Logseq**, **Foam**, **SiYuan** | Tagesjournal | Seitenleiste → Journal · `Strg Shift J` |
+| **Memos**, **Blinko** | Schnellnotizen mit Aktivitäts-Heatmap | Seitenleiste → Schnellnotizen · `Strg Shift M` |
+| **Foam**, **Logseq**, **Anytype** | `[[Links]]`, Rückverweise, Graph | Fusszeile jeder Seite · Seitenleiste → Graph |
+| **Joplin**, **Notesnook**, **TiddlyWiki** | Schlagwörter | `#wort` schreiben · Seitenleiste → Schlagwörter |
+| **SiYuan**, Anki-Verfahren | Karteikarten mit Wiederholungsplan (SM-2) | Block `/karteikarte` · Seitenleiste → Karteikarten |
+| **Outline**, **Trilium**, **Anytype** | Vorlagen | Seitenmenü → Als Vorlage speichern |
+| **Standard Notes**, **Trilium**, **Joplin** | Versionsverlauf | Kopfzeile → 🕘 · Seitenmenü → Versionsverlauf |
+| **Notesnook**, **Standard Notes** | Verschlüsselte Notizen (AES-GCM) | Seitenmenü → Verschlüsseln |
+| **MarkText**, **Zettlr** | Fokus-Modus | Seitenmenü → Fokus · `Strg Shift F` |
+| **HedgeDoc**, Marp | Präsentation aus der Seite | Seitenmenü → Präsentation |
+| **MarkText**, **TUI Editor** | Markdown-Quelltext hin und zurück | Seitenmenü → Markdown-Quelltext |
+| **Zettlr** | Schreibstatistik, Lesezeit, häufige Wörter | Seitenmenü → Statistik |
+| **SilverBullet** | Befehlspalette für alles | `Strg Shift P` |
+| **AFFiNE** | Whiteboard mit Stift, Formen, Haftnotizen | Block `/whiteboard` |
+| **TUI Editor**, Notion Chart | Diagramme | Block `/diagramm` · Datenbank-Ansicht |
+| **AppFlowy** | Kanban-Board | Datenbank-Ansicht Board |
+| **TiddlyWiki** | Alles in einer einzigen HTML-Datei | Einstellungen → Als eine HTML-Datei |
+| **Joplin**, **Zettlr**, **SilverBullet** | Notizen als Markdown-Dateien im Ordner | Einstellungen → In Ordner schreiben / einlesen |
+| **Notesnook** | Erinnerungen | Seitenmenü → Erinnerung |
+| **editor.js** | Blockeditor mit sauberem Datenmodell | das ganze Fundament |
+| **Trilium** | Seite an zweiter Stelle einhängen | Block `/link zu seite` |
+
+Kein einziger fremder Programmcode liegt in diesem Verzeichnis — nur die
+Ideen, neu und einheitlich umgesetzt.
+
+---
+
+## Die KI — lokal und kostenlos
+
+Zwei Wege, umschaltbar wie in Notion. Oben rechts im KI-Panel wählst du das Modell.
+
+| | Ollama | WebLLM |
+|---|---|---|
+| Wo | als Programm auf dem Rechner | direkt im Browser |
+| Installation | einmalig nötig | keine |
+| Geschwindigkeit | **deutlich schneller** | langsamer |
+| Qualität | **besser**, grössere Modelle | ordentlich |
+| Voraussetzung | — | WebGPU (Chrome/Edge ab 113) |
+
+Die App sucht beim Start nach Ollama und listet deine installierten Modelle.
+Läuft Ollama nicht, kannst du eines der sechs WebLLM-Modelle laden — es bleibt
+danach im Browser-Cache.
+
+**Kein Text verlässt deinen Rechner.** Kein API-Schlüssel, keine Abrechnung.
+
+### Ollama einrichten
+
+```bash
+# 1. installieren:  https://ollama.com
+# 2. ein Modell holen
+ollama pull llama3.2
+
+# 3. dem Browser den Zugriff erlauben
+#    Windows
+setx OLLAMA_ORIGINS "*"
+#    macOS
+launchctl setenv OLLAMA_ORIGINS "*"
+#    Linux
+OLLAMA_ORIGINS=* ollama serve
+```
+
+Danach Ollama neu starten und im KI-Panel auf **Erneut nach Ollama suchen** klicken.
+
+---
+
+## Wo die Daten liegen
+
+In **IndexedDB** in deinem Browser. Nach Notions Vorbild in fünf Speichern:
+
+```
+blocks       jeder Inhalt — Absätze, Seiten, Datenbankzeilen
+collections  das Schema einer Datenbank
+views        Layout, Filter, Sortierung, sichtbare Spalten
+meta         Einstellungen
+versions     ältere Fassungen jeder Seite
+```
+
+Weil alles lokal liegt, gehört ein Export dazu:
+**Einstellungen → Sicherung speichern** legt eine JSON-Datei ab,
+**Sicherung laden** holt sie zurück. Einzelne Seiten lassen sich als
+Markdown, HTML oder PDF ausgeben, Datenbanken als CSV, der ganze
+Arbeitsbereich als Ordner voller Markdown-Dateien oder als eine HTML-Datei.
+
+---
+
+## Tastenkürzel
+
+| Kürzel | Wirkung | | Kürzel | Wirkung |
+|---|---|---|---|---|
+| `Strg N` | Neue Seite | | `/` | Blockmenü |
+| `Strg P` | Suchen | | `Strg Alt 0-9` | Blocktyp wechseln |
+| `Strg Shift P` | Befehlspalette | | `Tab` / `Shift Tab` | Ein-/Ausrücken |
+| `Strg F` | Auf der Seite suchen | | `Strg Shift ↑ ↓` | Block verschieben |
+| `Strg [` / `Strg ]` | Zurück / Vorwärts | | `Strg D` | Duplizieren |
+| `Strg Z` / `Strg Y` | Rückgängig / Wiederholen | | `Strg B I U E` | Fett, Kursiv, Unterstrichen, Code |
+| `Strg J` | KI-Panel | | `Strg Shift S` | Durchgestrichen |
+| `Strg \` | Seitenleiste | | `Strg Shift H` | Letzte Farbe |
+| `Strg Shift L` | Hell / Dunkel | | `Strg Alt T` | Alle Toggles auf/zu |
+| `Strg Shift J` | Journal | | `Esc` | Block auswählen |
+| `Strg Shift M` | Schnellnotiz | | `Strg ,` | Einstellungen |
+| `Strg Shift G` | Graph | | `Strg /` | Alle Kürzel anzeigen |
+| `Strg Shift T` | Schlagwörter | | `Strg Shift F` | Fokus-Modus |
+
+---
+
+## Aufbau
+
+```
+index.html        die Oberfläche
+app.css           das Design — die zehn Notion-Farben, hell und dunkel
+bauen.js          baut die Einzeldatei (node bauen.js)
+
+js/store.js       IndexedDB, Datenmodell, Suche, Versionen, Export
+js/formula.js     Tokenizer, Parser und Auswerter der Formelsprache
+js/links.js       [[Links]], Rückverweise, Schlagwörter, Graph
+js/canvas.js      Whiteboard, Diagramme, einfache Tabelle, Mathematik
+js/blocks.js      Blockkatalog, Rendern, Tastatur, Slash-Menü
+js/database.js    Ansichten, Filter, Sortierung, Rollups, Seitenvorschau
+js/tools.js       Befehlspalette, Journal, Vorlagen, Karteikarten, Export
+js/notion.js      Rückgängig, Auswahlleiste, Erwähnungen, Kommentare
+js/ai.js          Ollama und WebLLM mit Modell-Umschalter
+js/app.js         Seitenleiste, Seitenanzeige, Suche, Einstellungen
+```
+
+Bewusst **ohne Build-Schritt und ohne Abhängigkeiten**: reines HTML, CSS und
+JavaScript. Die Skripte laden ohne `type="module"`, damit die Seite auch per
+Doppelklick direkt von der Festplatte läuft — nicht nur über einen Server.
+
+---
+
+## Grenzen
+
+Ehrlich gesagt:
+
+- Die Daten liegen an **einem Browserprofil**. Anderer Browser, anderes Gerät,
+  gelöschte Websitedaten — dann sind sie weg. Deshalb: regelmässig sichern.
+- Hochgeladene Bilder und Dateien werden als Data-URL gespeichert. Über
+  12 MB blockt die App ab, sonst platzt der lokale Speicher.
+- Keine Zusammenarbeit in Echtzeit, kein Teilen über das Netz — das ginge
+  nicht ohne Server. Kommentare und Erwähnungen sind für dich selbst gedacht.
+- Wer das Passwort einer verschlüsselten Seite vergisst, kommt nicht mehr
+  an den Inhalt. Das ist der Sinn der Sache.
+- WebLLM braucht WebGPU. Ohne das bleibt Ollama.
+- Beim allerersten Laden eines WebLLM-Modells wird das Modell aus dem Netz
+  geholt. Danach läuft alles offline.
+
+---
+
+*Gebaut auf Grundlage einer vollständigen Analyse von Notion — Datenmodell,
+Blocktypen, Eigenschaftstypen, Filter-Operatoren, Formelsprache, Tastenkürzel
+und Farbpalette — und dem Vergleich von zwanzig quelloffenen Notiz-Programmen.*
