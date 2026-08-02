@@ -256,6 +256,30 @@ input,textarea,select{font:inherit;color:inherit}
 .modus-vorschau .lese-seite{display:flex}
 .modus-split .schreib-seite,.modus-split .lese-seite{display:flex}
 .modus-split .schreib-seite{border-right:1px solid var(--rand)}
+/* Cover (Farbverlauf über dem Seitenkopf) */
+.cover{
+  position:relative;height:190px;width:100%;flex:none;
+  background-size:cover;background-position:center;
+}
+.cover[hidden]{display:none}
+.cover-akt{
+  position:absolute;right:16px;bottom:12px;display:flex;gap:6px;opacity:0;transition:opacity .12s;
+}
+.cover:hover .cover-akt{opacity:1}
+.cover-akt button{
+  background:var(--flaeche);border:1px solid var(--rand);color:var(--tinte-schwach);
+  padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;box-shadow:var(--schatten);
+}
+.cover-akt button:hover{color:var(--tinte);background:var(--flaeche-2)}
+.app.hat-cover .seiten-kopf{padding-top:0;margin-top:-30px}
+.kopf-knoepfe{
+  display:flex;gap:4px;padding:6px max(var(--s6),calc(50% - 460px)) 0;
+  min-height:30px;opacity:0;transition:opacity .12s;
+}
+.editor:hover .kopf-knoepfe,.kopf-knoepfe:focus-within{opacity:1}
+.soft-btn{color:var(--tinte-blass);padding:4px 8px;font-size:12.5px;border-radius:5px;font-weight:500}
+.soft-btn:hover{background:var(--flaeche-2);color:var(--tinte-schwach)}
+
 /* Notion-Seitenkopf: Breadcrumb, großes Emoji, großer Titel */
 .seiten-kopf{padding:var(--s4) 0 0}
 .breadcrumb{
@@ -291,14 +315,32 @@ input,textarea,select{font:inherit;color:inherit}
   content:attr(data-platzhalter);color:var(--tinte-blass);pointer-events:none;
 }
 .live-editor>*{position:relative}
-/* Block-Hover-Griff (＋ und ⋮⋮) links vom Block */
-.live-editor>*::before{
-  content:"⋮⋮";position:absolute;left:-1.4em;top:.1em;color:var(--tinte-blass);
-  opacity:0;cursor:grab;font-size:.8em;transition:opacity .1s;letter-spacing:-2px;
-  padding:0 4px;user-select:none;
-}
-.live-editor>*:hover::before{opacity:.55}
 .live-editor a.wiki{cursor:pointer}
+/* Schwebender Block-Griff (＋ und ⠿) — wie in Notion */
+.block-griff{
+  position:fixed;z-index:40;display:none;gap:1px;align-items:flex-start;
+}
+.block-griff.sichtbar{display:flex}
+.block-griff button{
+  width:22px;height:24px;display:grid;place-items:center;border-radius:4px;
+  color:var(--tinte-blass);font-size:13px;line-height:1;
+}
+.block-griff button:hover{background:var(--flaeche-2);color:var(--tinte-schwach)}
+.block-griff [data-g="zieh"]{cursor:grab}
+.block-griff [data-g="zieh"]:active{cursor:grabbing}
+.live-editor>.dnd-quelle{opacity:.4}
+.live-editor>.dnd-ziel-oben{box-shadow:0 -2px 0 var(--leit)}
+.live-editor>.dnd-ziel-unten{box-shadow:0 2px 0 var(--leit)}
+/* Schriftart & Breite (Seiteneinstellungen) */
+:root[data-schrift="serif"] .live-editor,:root[data-schrift="serif"] .md,
+:root[data-schrift="serif"] #titelFeld{font-family:Georgia,"Iowan Old Style",serif}
+:root[data-schrift="mono"] .live-editor,:root[data-schrift="mono"] .md,
+:root[data-schrift="mono"] #titelFeld{font-family:var(--mono)}
+:root[data-breit="1"] .live-editor,:root[data-breit="1"] .lese-scroll,
+:root[data-breit="1"] #schreibfeld,:root[data-breit="1"] .titel-zeile,
+:root[data-breit="1"] .breadcrumb,:root[data-breit="1"] .kopf-knoepfe{
+  padding-left:var(--s6);padding-right:var(--s6);
+}
 .modus-live #schreibfeld{display:none}
 .modus-edit #liveEditor,.modus-split #liveEditor,.modus-vorschau #liveEditor{display:none}
 .modus-live .schreib-seite{display:flex}
@@ -677,6 +719,9 @@ input,textarea,select{font:inherit;color:inherit}
     <button class="sb-aktion" id="btnTagesnotiz"><span class="ico">📅</span> Tagesnotiz</button>
     <nav id="bereiche" aria-label="Bereiche"></nav>
 
+    <div class="sb-titel" id="favTitel" style="display:none">Favoriten</div>
+    <nav id="favoriten" aria-label="Favoriten" style="display:none"></nav>
+
     <div class="sb-titel">Seiten <button id="btnNeu" title="Neue Seite anlegen" aria-label="Neue Seite">＋</button></div>
     <nav id="seitenbaum" class="seitenbaum" aria-label="Seiten"></nav>
 
@@ -749,8 +794,19 @@ input,textarea,select{font:inherit;color:inherit}
         </div>
       </div>
 
+      <div class="cover" id="cover" hidden>
+        <div class="cover-akt">
+          <button id="btnCoverWechseln">Cover ändern</button>
+          <button id="btnCoverWeg">Entfernen</button>
+        </div>
+      </div>
+
       <div class="seiten-kopf">
         <nav class="breadcrumb" id="breadcrumb" aria-label="Pfad"></nav>
+        <div class="kopf-knoepfe" id="kopfKnoepfe">
+          <button class="soft-btn" id="btnIconHinzu">😀 Symbol</button>
+          <button class="soft-btn" id="btnCoverHinzu">🖼 Cover hinzufügen</button>
+        </div>
         <div class="titel-zeile">
           <button class="seiten-icon" id="seitenIcon" title="Symbol ändern" aria-label="Symbol ändern">📄</button>
           <input id="titelFeld" placeholder="Ohne Titel" autocomplete="off" aria-label="Titel">
@@ -835,6 +891,12 @@ input,textarea,select{font:inherit;color:inherit}
     <div class="fehler-text" id="sperreFehler"></div>
     <button class="knopf voll" id="sperreOeffnen">Entsperren</button>
   </div>
+</div>
+
+<!-- Schwebender Block-Griff (Drag & Drop / Blockmenü) -->
+<div class="block-griff" id="blockGriff" aria-hidden="true">
+  <button data-g="plus" title="Block darunter einfügen" tabindex="-1">＋</button>
+  <button data-g="zieh" title="Ziehen zum Verschieben · Klick für Menü" draggable="true" tabindex="-1">⠿</button>
 </div>
 
 <div class="autocomplete" id="autocomplete" role="listbox"></div>
@@ -954,7 +1016,8 @@ function normalisieren(d){
   d.notebooks = Array.isArray(d.notebooks) ? d.notebooks : [];
   d.notes = Array.isArray(d.notes) ? d.notes : [];
   d.theme = d.theme || 'auto';
-  d.einstellungen = Object.assign({fokus:false, typewriter:false, syncScroll:true, entwurf:'', eingeklappt:[]}, d.einstellungen||{});
+  d.einstellungen = Object.assign({fokus:false, typewriter:false, syncScroll:true, entwurf:'',
+    eingeklappt:[], schrift:'standard', vollbreite:false}, d.einstellungen||{});
   d.stats = Object.assign({woerter:{}}, d.stats||{});
 
   // Notizbücher → Seitenhierarchie: jedes Notizbuch wird eine Top-Level-Seite,
@@ -974,6 +1037,7 @@ function normalisieren(d){
     if(!Array.isArray(n.hist)) n.hist = [];
     if(!n.tasks) n.tasks = aufgabenZaehlen(n.body||'');
     if(n.icon === undefined) n.icon = standardIcon(n);
+    if(n.cover === undefined) n.cover = null;
     if(n.parent === undefined) n.parent = (!d._migriert && n.nb && nbSeite[n.nb]) ? nbSeite[n.nb] : null;
     if(typeof n.pos !== 'number') n.pos = (posZaehler += 10);
   }
@@ -1438,6 +1502,7 @@ function renderSeitenleiste(){
        <span class="ico">${b.ico}</span> ${b.name} <span class="anzahl">${b.anzahl}</span></button>`).join('');
 
   renderSeitenbaum();
+  renderFavoriten();
 
   const alleTags = new Map();
   for(const n of db.notes){ if(n.trashed) continue;
@@ -1643,6 +1708,13 @@ function renderEditor(){
 
   // Seiten-Emoji
   $('#seitenIcon').textContent = n.icon || '📄';
+
+  // Cover
+  const cov = $('#cover');
+  cov.hidden = !n.cover;
+  $('#app').classList.toggle('hat-cover', !!n.cover);
+  if(n.cover) cov.style.background = n.cover;
+  $('#btnCoverHinzu').style.display = n.cover ? 'none' : '';
 
   // Breadcrumb: Pfad der Elternseiten
   const pfad = pfadVon(n.id);
@@ -1977,6 +2049,9 @@ function paletteBefehle(){
     {ico:'＋', name:'Neue Seite anlegen', tue:() => neueSeite(null)},
     {ico:'📄', name:'Unterseite zur aktuellen Seite', tue:() => neueSeite(zustand.aktivId || null)},
     {ico:'😀', name:'Symbol der Seite ändern', tue:() => { if(aktive()) iconWaehler(); else toast('Erst eine Seite öffnen'); }},
+    {ico:'🖼', name:'Cover wählen / entfernen', tue:() => { if(aktive()) coverWaehler(); else toast('Erst eine Seite öffnen'); }},
+    {ico:'⭐', name:'Zu Favoriten hinzufügen / entfernen', tue:() => { if(aktive()) favUmschalten(); else toast('Erst eine Seite öffnen'); }},
+    {ico:'Aa', name:'Darstellung: Schriftart & Breite', tue:seitenEinstellungen},
     {ico:'📅', name:'Tagesnotiz öffnen', tue:tagesnotiz},
     {ico:'🕸', name:'Graph-Ansicht öffnen', tue:oeffneGraph},
     {ico:'◐', name:'Hell/Dunkel umschalten', tue:themeWechseln},
@@ -2615,7 +2690,8 @@ function notizDuplizieren(){
   const t = Date.now();
   let titel = n.title || 'Ohne Titel';
   if(!titel.endsWith('(Kopie)') && !titel.startsWith('(Kopie)')) titel += ' (Kopie)';
-  const kopie = { id:neueId(), title:titel, body:n.body, icon:n.icon||'📄', parent:n.parent||null, pos:naechstePos(n.parent||null),
+  const kopie = { id:neueId(), title:titel, body:n.body, icon:n.icon||'📄', cover:n.cover||null,
+    parent:n.parent||null, pos:naechstePos(n.parent||null),
     hist:[], tasks:aufgabenZaehlen(n.body),
     pinned:false, archived:false, trashed:false, created:t, updated:t };
   db.notes.unshift(kopie);
@@ -2958,6 +3034,13 @@ function setzeModus(m){
 
 // Fußzeile
 $('#seitenIcon').addEventListener('click', iconWaehler);
+$('#btnIconHinzu').addEventListener('click', iconWaehler);
+$('#btnCoverHinzu').addEventListener('click', () => coverSetzen(COVER_VORLAGEN[Math.floor(Math.random()*COVER_VORLAGEN.length)]));
+$('#btnCoverWechseln').addEventListener('click', coverWaehler);
+$('#btnCoverWeg').addEventListener('click', () => coverSetzen(null));
+$('#favoriten').addEventListener('click', e => {
+  const k = e.target.closest('[data-fav-oeffne]'); if(k){ oeffneNotiz(k.dataset.favOeffne); sbZu(); }
+});
 $('#btnUnterseite').addEventListener('click', () => neueSeite(zustand.aktivId || null));
 $('#breadcrumb').addEventListener('click', e => {
   const k = e.target.closest('[data-crumb]'); if(k) oeffneNotiz(k.dataset.crumb);
@@ -3100,7 +3183,9 @@ addEventListener('keydown', e => {
   const strg = e.ctrlKey || e.metaKey;
   if(strg && e.shiftKey && e.key.toLowerCase()==='j'){ e.preventDefault(); fokusUmschalten(); return; }
   if(strg && e.shiftKey && e.key.toLowerCase()==='g'){ e.preventDefault(); typewriterUmschalten(); return; }
-  if(strg && e.key.toLowerCase()==='k'){ e.preventDefault(); oeffnePalette(); return; }
+  if(strg && e.shiftKey && e.key.toLowerCase()==='l'){ e.preventDefault(); themeWechseln(); return; }
+  if(strg && (e.key.toLowerCase()==='k' || (e.key.toLowerCase()==='p' && !e.shiftKey))){ e.preventDefault(); oeffnePalette(); return; }
+  if(strg && e.key.toLowerCase()==='n' && !e.shiftKey){ e.preventDefault(); neueSeite(null); return; }
   if(strg && e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); neueNotiz(); return; }
   if(strg && e.key.toLowerCase()==='e' && aktive()){
     e.preventDefault();
@@ -3480,12 +3565,217 @@ function liveFormat(art){
 }
 
 
+/* ══════════════ Cover-Bilder (Farbverläufe, ohne externe Bilder) ══════════════ */
+const COVER_VORLAGEN = [
+  'linear-gradient(120deg,#dbeafe,#f5d0fe,#fed7aa)',
+  'linear-gradient(120deg,#a1c4fd,#c2e9fb)',
+  'linear-gradient(120deg,#fbc2eb,#a6c1ee)',
+  'linear-gradient(120deg,#84fab0,#8fd3f4)',
+  'linear-gradient(120deg,#fccb90,#d57eeb)',
+  'linear-gradient(120deg,#e0c3fc,#8ec5fc)',
+  'linear-gradient(120deg,#c02942,#7b1e2b)',
+  'linear-gradient(120deg,#ff9a9e,#fecfef)',
+  'linear-gradient(135deg,#667db6,#0082c8,#0082c8)',
+  'linear-gradient(120deg,#f6d365,#fda085)',
+  'linear-gradient(120deg,#30cfd0,#330867)',
+  'linear-gradient(120deg,#2b2320,#5f5049)',
+];
+function coverSetzen(wert){
+  const n = aktive(); if(!n) return;
+  n.cover = wert; n.updated = Date.now();
+  speichern(); renderEditor();
+}
+function coverWaehler(){
+  const n = aktive(); if(!n) return;
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>Cover wählen</h3>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:var(--s4)">
+      ${COVER_VORLAGEN.map(c => `<button data-cover="${escapeAttr(c)}" style="height:54px;border-radius:8px;background:${c};border:1px solid var(--rand)"></button>`).join('')}
+    </div>
+    <div class="reihe">${n.cover ? '<button class="knopf leer" data-cover-weg="1">Cover entfernen</button>' : ''}
+    <button class="knopf leer" data-dlg="abbruch">Abbrechen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    const c = e.target.closest('[data-cover]');
+    if(c){ coverSetzen(c.dataset.cover); dialogZu(); return; }
+    if(e.target.closest('[data-cover-weg]')){ coverSetzen(null); dialogZu(); return; }
+    if(e.target.closest('[data-dlg]')) dialogZu();
+  };
+}
+
+/* ══════════════ Block-Griff + Drag & Drop im Live-Editor ══════════════
+   Ein schwebender Griff (⋮⋮ / ＋) folgt der Maus über den Blöcken — wie in
+   Notion. Ziehen ordnet Blöcke um, Klick öffnet das Blockmenü. */
+const griff = { block:null, ziehBlock:null };
+function griffPositionieren(block){
+  const g = $('#blockGriff');
+  if(!block || zustand.modus !== 'live'){ g.classList.remove('sichtbar'); griff.block = null; return; }
+  const r = block.getBoundingClientRect();
+  const er = $('#liveEditor').getBoundingClientRect();
+  if(r.bottom < er.top || r.top > er.bottom){ g.classList.remove('sichtbar'); return; }
+  g.style.top = (r.top + 2) + 'px';
+  g.style.left = Math.max(er.left - 4, r.left - 52) + 'px';
+  g.classList.add('sichtbar');
+  griff.block = block;
+}
+function blockUnterPunkt(x, y){
+  const root = $('#liveEditor');
+  for(const el of root.children){
+    if(el.nodeType !== 1 || el.id === 'backlinks') continue;
+    const r = el.getBoundingClientRect();
+    if(y >= r.top - 2 && y <= r.bottom + 2) return el;
+  }
+  return null;
+}
+function markiereZiel(y){
+  const root = $('#liveEditor');
+  let ziel = null, davor = false;
+  for(const el of root.children){
+    if(el.nodeType !== 1) continue;
+    const r = el.getBoundingClientRect();
+    if(y < r.top + r.height/2){ ziel = el; davor = true; break; }
+    ziel = el; davor = false;
+  }
+  $$('.dnd-ziel-oben,.dnd-ziel-unten').forEach(e => e.classList.remove('dnd-ziel-oben','dnd-ziel-unten'));
+  if(ziel) ziel.classList.add(davor ? 'dnd-ziel-oben' : 'dnd-ziel-unten');
+  return { ziel, davor };
+}
+function blockMenue(block){
+  if(!block) return;
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>Block</h3>
+    <div class="reihe" style="flex-direction:column;align-items:stretch;gap:6px">
+      <button class="knopf leer" data-b="hoch" style="text-align:left">↑ Nach oben</button>
+      <button class="knopf leer" data-b="runter" style="text-align:left">↓ Nach unten</button>
+      <button class="knopf leer" data-b="dup" style="text-align:left">⧉ Duplizieren</button>
+      <button class="knopf leer" data-b="text" style="text-align:left">¶ In Text umwandeln</button>
+      <button class="knopf leer" data-b="weg" style="text-align:left;color:var(--fehler)">🗑 Löschen</button>
+    </div>
+    <div class="reihe" style="margin-top:var(--s3)"><button class="knopf leer" data-dlg="abbruch">Schließen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    const k = e.target.closest('[data-b],[data-dlg]'); if(!k) return;
+    const a = k.dataset.b; dialogZu();
+    if(!a || !block.parentNode) return;
+    if(a==='hoch' && block.previousElementSibling) block.previousElementSibling.before(block);
+    else if(a==='runter' && block.nextElementSibling) block.nextElementSibling.after(block);
+    else if(a==='dup') block.after(block.cloneNode(true));
+    else if(a==='text') blockErsetzen(block,'P');
+    else if(a==='weg') block.remove();
+    liveSpeichern();
+    liveRendern(aktive());
+  };
+}
+{
+  const el = $('#liveEditor'), g = $('#blockGriff');
+  el.addEventListener('mousemove', e => {
+    if(griff.ziehBlock) return;
+    griffPositionieren(blockUnterPunkt(e.clientX, e.clientY));
+  });
+  el.addEventListener('mouseleave', e => {
+    if(!griff.ziehBlock && !g.matches(':hover')) setTimeout(() => { if(!g.matches(':hover')) g.classList.remove('sichtbar'); }, 60);
+  });
+  // Ziehen
+  g.querySelector('[data-g="zieh"]').addEventListener('dragstart', e => {
+    if(!griff.block){ e.preventDefault(); return; }
+    griff.ziehBlock = griff.block;
+    griff.ziehBlock.classList.add('dnd-quelle');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', 'block');
+  });
+  g.querySelector('[data-g="zieh"]').addEventListener('dragend', () => {
+    if(griff.ziehBlock) griff.ziehBlock.classList.remove('dnd-quelle');
+    $$('.dnd-ziel-oben,.dnd-ziel-unten').forEach(x => x.classList.remove('dnd-ziel-oben','dnd-ziel-unten'));
+    griff.ziehBlock = null;
+  });
+  el.addEventListener('dragover', e => {
+    if(!griff.ziehBlock) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    markiereZiel(e.clientY);
+  });
+  el.addEventListener('drop', e => {
+    if(!griff.ziehBlock) return;
+    e.preventDefault();
+    const { ziel, davor } = markiereZiel(e.clientY);
+    $$('.dnd-ziel-oben,.dnd-ziel-unten').forEach(x => x.classList.remove('dnd-ziel-oben','dnd-ziel-unten'));
+    const q = griff.ziehBlock;
+    q.classList.remove('dnd-quelle');
+    if(ziel && ziel !== q){ davor ? ziel.before(q) : ziel.after(q); liveSpeichern(); }
+    griff.ziehBlock = null;
+    g.classList.remove('sichtbar');
+  });
+  // Klick auf ⋮⋮ → Menü, auf ＋ → neuer Block darunter
+  g.querySelector('[data-g="zieh"]').addEventListener('click', () => blockMenue(griff.block));
+  g.querySelector('[data-g="plus"]').addEventListener('click', () => {
+    const b = griff.block; if(!b) return;
+    const p = document.createElement('p'); p.innerHTML = '<br>';
+    b.after(p); cursorAnDenAnfang(p); $('#liveEditor').focus(); liveSpeichern();
+  });
+}
+
+/* ══════════════ Schriftart & Vollbreite (Notion-Seiteneinstellungen) ══════════════ */
+function schriftSetzen(art){
+  db.einstellungen.schrift = art;
+  document.documentElement.dataset.schrift = art;
+  speichern();
+  toast(art==='serif' ? 'Serifenschrift' : art==='mono' ? 'Monospace' : 'Standardschrift');
+}
+function vollbreiteUmschalten(){
+  db.einstellungen.vollbreite = !db.einstellungen.vollbreite;
+  document.documentElement.dataset.breit = db.einstellungen.vollbreite ? '1' : '';
+  speichern();
+  toast(db.einstellungen.vollbreite ? 'Volle Breite' : 'Normale Breite');
+}
+function seitenEinstellungen(){
+  const box = $('#dialogBox');
+  const s = db.einstellungen.schrift || 'standard';
+  box.innerHTML = `<h3>Darstellung</h3>
+    <p>Gilt für alle Seiten.</p>
+    <div class="reihe" style="flex-direction:column;align-items:stretch;gap:6px">
+      <button class="knopf leer" data-s="standard" style="text-align:left${s==='standard'?';border-color:var(--leit)':''}">Aa &nbsp; Standard</button>
+      <button class="knopf leer" data-s="serif" style="text-align:left;font-family:Georgia,serif${s==='serif'?';border-color:var(--leit)':''}">Aa &nbsp; Serif</button>
+      <button class="knopf leer" data-s="mono" style="text-align:left;font-family:ui-monospace,monospace${s==='mono'?';border-color:var(--leit)':''}">Aa &nbsp; Monospace</button>
+      <button class="knopf leer" data-breit="1" style="text-align:left">↔ Volle Breite ${db.einstellungen.vollbreite?'✓':''}</button>
+    </div>
+    <div class="reihe" style="margin-top:var(--s3)"><button class="knopf leer" data-dlg="abbruch">Schließen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  box.onclick = e => {
+    const k = e.target.closest('[data-s],[data-breit],[data-dlg]'); if(!k) return;
+    if(k.dataset.s){ schriftSetzen(k.dataset.s); dialogZu(); }
+    else if(k.dataset.breit){ vollbreiteUmschalten(); dialogZu(); }
+    else dialogZu();
+  };
+}
+
+/* ══════════════ Favoriten ══════════════ */
+function favUmschalten(id){
+  const n = notiz(id || zustand.aktivId); if(!n) return;
+  n.fav = !n.fav; n.updated = Date.now();
+  speichern(); renderSeitenleiste(); renderEditor();
+  toast(n.fav ? 'Zu Favoriten hinzugefügt ⭐' : 'Aus Favoriten entfernt');
+}
+function renderFavoriten(){
+  const favs = db.notes.filter(n => n.fav && !n.trashed);
+  const box = $('#favoriten');
+  const titel = $('#favTitel');
+  box.style.display = favs.length ? '' : 'none';
+  titel.style.display = favs.length ? '' : 'none';
+  if(!favs.length) return;
+  box.innerHTML = favs.map(n =>
+    `<button class="sb-aktion" data-fav-oeffne="${escapeAttr(n.id)}">
+       <span class="ico">${n.icon||'📄'}</span>
+       <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(n.title||'Ohne Titel')}</span>
+     </button>`).join('');
+}
+
 /* ── Start ────────────────────────────────────────────────────── */
 function start(){
   wendeThemeAn();
   $('#captureFeld').value = db.einstellungen.entwurf || '';
   if(db.einstellungen.fokus){ $('#app').classList.add('fokus'); $('#btnFokus').style.color = 'var(--leit)'; }
   if(db.einstellungen.typewriter){ $('#app').classList.add('typewriter'); $('#btnTypewriter').style.color = 'var(--leit)'; }
+  document.documentElement.dataset.schrift = db.einstellungen.schrift || 'standard';
+  document.documentElement.dataset.breit = db.einstellungen.vollbreite ? '1' : '';
   renderAlles();
   // Notion-artig: beim Start die erste Seite öffnen (statt leerer Liste)
   const erste = topSeiten()[0] || db.notes.find(n => !n.trashed && !n.archived);
