@@ -292,6 +292,10 @@ const Einstellungen = (() => {
       zeile('Ansichten', '', `<span class="ez-grau">${Object.keys(Store.cache.views).length}</span>`) +
       zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten</span> ` +
             knopf('papierkorb', 'Öffnen')) +
+      zeile('Papierkorb selbst leeren', 'Nach dieser Frist wird endgültig gelöscht — wie Notions 30 Tage',
+            wahl('papierkorbTage', [['30', 'nach 30 Tagen'], ['7', 'nach 7 Tagen'],
+                                    ['90', 'nach 90 Tagen'], ['0', 'nie']],
+                 String(V('papierkorbTage', 30)))) +
       zeile('Alte Versionen aufräumen', 'Behält je Seite die letzten fünf Fassungen',
             knopf('versionen-aufraeumen', 'Aufräumen')) +
       zeile('Speicher dauerhaft anfordern', 'Der Browser räumt die Daten dann nicht von selbst weg',

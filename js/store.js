@@ -435,28 +435,54 @@ const Store = (() => {
    * ------------------------------------------------------------------------
    * Durchsucht Seitentitel UND Inhalt — wie Notions Quick Find.
    * ======================================================================*/
-  const search = (q) => {
+  /**
+   * Durchsucht Titel und Inhalt. Mit filter lässt sich einschränken:
+   *   { wo: 'titel' | 'inhalt' | 'alles', typ: 'seite' | 'datenbank' | 'alles',
+   *     seit: 'tag' | 'woche' | 'monat' | 'alles', ort: <seitenId> }
+   */
+  const search = (q, filter = {}) => {
     const needle = q.trim().toLowerCase();
     if (!needle) return [];
     const out = [];
+    const wo = filter.wo || 'alles';
+    const grenze = { tag: 1, woche: 7, monat: 30 }[filter.seit];
+    const seitDatum = grenze ? Date.now() - grenze * 86400000 : 0;
 
     Object.values(cache.blocks).forEach(b => {
       if (!b.alive) return;
-      if (b.type === 'page' && b.parentTable !== 'collection') {
-        const t = (b.text || '').toLowerCase();
-        if (t.includes(needle)) { out.push({ page: b, treffer: 'Titel', snippet: b.text }); return; }
-        /* Inhalt der Seite durchsuchen */
+      if (b.type !== 'page' || b.parentTable === 'collection') return;
+
+      if (seitDatum && new Date(b.edited || b.created).getTime() < seitDatum) return;
+      if (filter.ort && !pathOf(b.id).some(x => x.id === filter.ort)) return;
+
+      const hatDb = (b.content || []).some(id => cache.blocks[id]?.type === 'database');
+      if (filter.typ === 'datenbank' && !hatDb) return;
+      if (filter.typ === 'seite' && hatDb) return;
+
+      const t = (b.text || '').toLowerCase();
+      if (wo !== 'inhalt' && t.includes(needle)) {
+        out.push({ page: b, treffer: 'Titel', snippet: b.text, pfad: pfadText(b.id) });
+        return;
+      }
+      if (wo !== 'titel') {
         const hit = findInside(b.id, needle, 0);
-        if (hit) out.push({ page: b, treffer: 'Inhalt', snippet: hit });
+        if (hit) out.push({ page: b, treffer: 'Inhalt', snippet: hit, pfad: pfadText(b.id) });
       }
     });
 
-    return out.slice(0, 40);
+    return out.slice(0, 60);
   };
+
+  /** Der Pfad als Text, ohne die Seite selbst — für die Trefferliste. */
+  const pfadText = (id) => pathOf(id).slice(0, -1)
+    .map(p => p.text || 'Ohne Titel').join(' / ');
 
   const findInside = (pageId, needle, tiefe) => {
     if (tiefe > 4) return null;
     for (const kid of childrenOf(pageId)) {
+      /* Unterseiten haben ihren eigenen Treffer — sonst würde die Elternseite
+         mit fremdem Inhalt in der Liste stehen. */
+      if (kid.type === 'page') continue;
       const t = (kid.text || '').toLowerCase();
       if (t.includes(needle)) {
         const i = t.indexOf(needle);
@@ -642,7 +668,7 @@ const Store = (() => {
     setMeta, getMeta, flush,
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen,
-    search, exportAll, importAll, wipe, usage,
+    search, pfadText, exportAll, importAll, wipe, usage,
     speichertNicht: () => nurSpeicher,
     warnungText: () => warnung,
     beiWarnung: (fn) => { warner.add(fn); if (warnung) fn(warnung); },

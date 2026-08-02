@@ -138,16 +138,31 @@ const KI = (() => {
    * @param {Array}  nachrichten  [{role:'user'|'system'|'assistant', content}]
    * @param {Function} beiText    wird für jedes Textstück aufgerufen
    */
+  /**
+   * Bringt die Nachrichten in die Form, die beide Modelle erwarten:
+   * höchstens eine Systemnachricht, und die ganz am Anfang.
+   * Ollama ist da nachsichtig, WebLLM nicht — es warnt sonst mit
+   * „System prompt should always be the first message in messages".
+   */
+  const ordne = (nachrichten) => {
+    const systeme = nachrichten.filter(m => m.role === 'system').map(m => m.content);
+    const rest = nachrichten.filter(m => m.role !== 'system');
+    return systeme.length
+      ? [{ role: 'system', content: systeme.join('\n\n') }, ...rest]
+      : rest;
+  };
+
   const frage = async (nachrichten, beiText) => {
     if (!zustand.modell) throw new Error('Es ist noch kein Modell gewählt.');
+    const n = ordne(nachrichten);
 
     if (zustand.quelle === 'ollama') {
-      for await (const t of ollamaFragen(nachrichten, zustand.modell)) beiText(t);
+      for await (const t of ollamaFragen(n, zustand.modell)) beiText(t);
       return;
     }
 
     if (!zustand.engine) throw new Error('Das Modell ist noch nicht geladen.');
-    for await (const t of webllmFragen(nachrichten)) beiText(t);
+    for await (const t of webllmFragen(n)) beiText(t);
   };
 
   /** Ein Rundruf ohne Streaming — für kurze Aufgaben. */
@@ -360,12 +375,24 @@ const KI = (() => {
     const ziel = schreibe('assistant', '');
     ziel.textContent = '…';
 
-    const nachrichten = [{ role: 'system', content: SYSTEM }];
-    if (mitKontext) {
+    /* WICHTIG: Genau EINE Systemnachricht, und die muss ganz vorne stehen.
+       WebLLM warnt sonst „System prompt should always be the first message"
+       und wirft den Zusatz weg. Deshalb wird der Seiteninhalt in dieselbe
+       Systemnachricht hineingeschrieben, statt eine zweite anzuhängen. */
+    let system = SYSTEM;
+    if (mitKontext && Store.getMeta('kiKontext', true)) {
       const k = seitenKontext();
-      if (k) nachrichten.push({ role: 'system', content: 'Inhalt der geöffneten Seite:\n' + k });
+      if (k) system += '\n\nInhalt der geöffneten Seite:\n' + k;
     }
-    zustand.verlauf.slice(-6).forEach(m => nachrichten.push(m));
+    const laenge = Store.getMeta('kiLaenge', 'normal');
+    if (laenge === 'kurz')  system += '\n\nAntworte knapp, höchstens drei Sätze.';
+    if (laenge === 'lang')  system += '\n\nAntworte ausführlich und gut gegliedert.';
+
+    const nachrichten = [{ role: 'system', content: system }];
+    /* Aus dem Verlauf niemals Systemnachrichten übernehmen */
+    zustand.verlauf.slice(-6)
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .forEach(m => nachrichten.push(m));
     nachrichten.push({ role: 'user', content: text });
 
     let antwort = '';

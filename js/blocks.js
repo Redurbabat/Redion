@@ -270,7 +270,10 @@ const Blocks = (() => {
           'position:absolute; top:8px; right:10px; background:var(--bg-input); ' +
           'border:1px solid var(--line); border-radius:4px; font-size:11.5px; ' +
           'padding:2px 4px; color:var(--text-dim); outline:none; z-index:2';
-        ['Plain Text','JavaScript','TypeScript','Python','HTML','CSS','JSON','SQL','Bash','Java','C++','C#','Go','Rust','PHP','Ruby','Swift','Kotlin','YAML','Markdown']
+        ['Plain Text','JavaScript','TypeScript','JSX','Python','HTML','XML','CSS','SCSS','Less','JSON','YAML','TOML',
+         'SQL','GraphQL','Bash','Shell','PowerShell','Java','C','C++','C#','Go','Rust','Swift','Kotlin','Dart',
+         'PHP','Ruby','Perl','Lua','R','Julia','MATLAB','Haskell','Elixir','Erlang','Clojure','Scala','Objective-C',
+         'Assembly','Docker','Makefile','Nginx','Diff','LaTeX','Markdown']
           .forEach(s => {
             const o = document.createElement('option');
             o.textContent = s;
@@ -280,6 +283,17 @@ const Blocks = (() => {
         sprache.addEventListener('change', () => Store.updateBlock(block.id, { lang: sprache.value }));
         const ct = machText('Code …');
         ct.textContent = block.text || '';   /* im Codeblock kein Inline-HTML */
+
+        /* Eingefärbt anzeigen, solange niemand darin schreibt. */
+        const faerbe = () => {
+          if (document.activeElement === ct) return;
+          const t = Store.getBlock(block.id)?.text || '';
+          ct.innerHTML = Zusatz.einfaerben(t, block.lang || '');
+        };
+        ct.addEventListener('focus', () => { ct.textContent = Store.getBlock(block.id)?.text || ''; });
+        ct.addEventListener('blur', faerbe);
+        sprache.addEventListener('change', () => setTimeout(faerbe, 0));
+        setTimeout(faerbe, 0);
         wrap.appendChild(sprache);
         wrap.appendChild(ct);
         box.appendChild(wrap);
@@ -865,6 +879,20 @@ const Blocks = (() => {
       wurzel.querySelectorAll('.blk').forEach(x => x.style.borderTop = '');
       const ziel = e.target.closest('.blk');
       if (!ziel || !gezogen || ziel.dataset.bid === gezogen) return;
+
+      /* Mit gedrückter Alt-Taste wird kopiert statt verschoben — wie in Notion. */
+      if (e.altKey) {
+        const z = Store.getBlock(ziel.dataset.bid);
+        const daten = Store.baum(gezogen);
+        const eltern = Store.getBlock(z.parentId);
+        const idx = eltern ? eltern.content.indexOf(z.id) : -1;
+        Store.baumEinfuegen(daten, z.parentId, idx);
+        App.zeichneSeite();
+        UI.toast('Block kopiert');
+        gezogen = null;
+        return;
+      }
+
       lege(gezogen, ziel.dataset.bid);
       gezogen = null;
     });
@@ -1079,14 +1107,41 @@ const Blocks = (() => {
     });
 
   /* --- Knopf-Block (Notions Button) -------------------------------------- */
-  const knopfAusfuehren = (block) => {
-    const a = block.aktion || {};
+  const AKTIONS_NAMEN = {
+    block: 'Block einfügen', zeile: 'Datenbankeintrag anlegen',
+    seite: 'Unterseite anlegen', meldung: 'Meldung zeigen', timer: 'Timer'
+  };
+  const knopfAusfuehren = async (block) => {
+    /* Mehrere Aktionen laufen der Reihe nach — Notions Button kann das auch. */
+    const liste = block.aktionen && block.aktionen.length
+      ? block.aktionen
+      : (block.aktion ? [block.aktion] : []);
+
+    if (!liste.length) { knopfEinstellen(block); return; }
+
+    if (block.bestaetigen &&
+        !confirm((block.text || 'Knopf') + ' ausführen?\n\n' +
+                 liste.length + (liste.length === 1 ? ' Aktion' : ' Aktionen'))) return;
+
+    for (const a of liste) eineAktion(block, a);
+    App.zeichneSeite();
+    UI.toast(liste.length === 1 ? 'Ausgeführt' : liste.length + ' Aktionen ausgeführt');
+  };
+
+  const eineAktion = (block, a) => {
+    const datum = (v) => {
+      if (v === 'heute')  return new Date().toISOString().slice(0, 10);
+      if (v === 'morgen') { const t = new Date(); t.setDate(t.getDate() + 1); return t.toISOString().slice(0, 10); }
+      if (v === 'jetzt')  return new Date().toISOString().slice(0, 16);
+      const m = String(v || '').match(/^heute\s*\+\s*(\d+)$/);
+      if (m) { const t = new Date(); t.setDate(t.getDate() + (+m[1])); return t.toISOString().slice(0, 10); }
+      return v;
+    };
+
     if (a.art === 'block') {
       const eltern = Store.getBlock(block.parentId);
       const idx = eltern ? eltern.content.indexOf(block.id) + 1 : -1;
       Store.addBlock(block.parentId, a.blockTyp || 'todo', { text: a.blockText || '' }, idx);
-      App.zeichneSeite();
-      UI.toast('Block eingefügt');
       return;
     }
     if (a.art === 'zeile') {
@@ -1094,22 +1149,41 @@ const Blocks = (() => {
       const c = a.collectionId ? Store.getCollection(a.collectionId) : dbs[0];
       if (!c) { UI.toast('Keine Datenbank gefunden'); return; }
       const titelKey = Object.keys(c.schema).find(k => c.schema[k].type === 'title') || 'title';
-      const r = Store.addRow(c.id, { [titelKey]: a.zeilenText || 'Neuer Eintrag' });
-      Store.updateBlock(r.id, { text: a.zeilenText || 'Neuer Eintrag' });
-      App.zeichneSeite();
-      UI.toast('Eintrag angelegt');
+      const props = {};
+      /* Vorbelegte Felder aus der Einstellung übernehmen */
+      Object.entries(a.felder || {}).forEach(([k, v]) => { props[k] = datum(v); });
+      const r = Store.addRow(c.id, Object.assign(props, { [titelKey]: datum(a.zeilenText) || 'Neuer Eintrag' }));
+      Store.updateBlock(r.id, { text: datum(a.zeilenText) || 'Neuer Eintrag' });
       return;
     }
     if (a.art === 'seite') {
       const p = Store.addPage(App.aktuelleSeite(), { text: a.seitenTitel || 'Neue Seite' });
-      App.zeichneBaum(); App.oeffne(p.id);
+      App.zeichneBaum();
       return;
     }
-    knopfEinstellen(block);
+    if (a.art === 'meldung') { UI.toast(a.text || 'Fertig'); return; }
+
+    /* Timer: erster Klick setzt den Start, der zweite das Ende. */
+    if (a.art === 'timer') {
+      const jetzt = new Date().toISOString().slice(0, 16);
+      if (!block.timerStart) {
+        Store.updateBlock(block.id, { timerStart: jetzt });
+        UI.toast('Timer gestartet um ' + jetzt.slice(11));
+      } else {
+        const min = Math.round((new Date(jetzt) - new Date(block.timerStart)) / 60000);
+        Store.addBlock(block.parentId, 'text',
+          { text: `⏱ ${a.text || 'Zeit'}: ${min} Minuten (${block.timerStart.slice(11)} bis ${jetzt.slice(11)})` });
+        Store.updateBlock(block.id, { timerStart: null });
+        UI.toast(min + ' Minuten festgehalten');
+      }
+      return;
+    }
   };
 
   const knopfEinstellen = (block) => {
-    const a = block.aktion || { art: 'block', blockTyp: 'todo', blockText: '' };
+    const a = (block.aktionen && block.aktionen[0]) || block.aktion ||
+              { art: 'block', blockTyp: 'todo', blockText: '' };
+    const gesammelt = (block.aktionen || (block.aktion ? [block.aktion] : [])).slice();
     const dbs = Object.values(Store.cache.collections);
     const o = document.createElement('div');
     o.className = 'overlay';
@@ -1122,11 +1196,19 @@ const Blocks = (() => {
             `<option value="block"${a.art === 'block' ? ' selected' : ''}>Block einfügen</option>` +
             `<option value="zeile"${a.art === 'zeile' ? ' selected' : ''}>Datenbankeintrag anlegen</option>` +
             `<option value="seite"${a.art === 'seite' ? ' selected' : ''}>Neue Unterseite anlegen</option>` +
+            `<option value="meldung"${a.art === 'meldung' ? ' selected' : ''}>Kurze Meldung zeigen</option>` +
+            `<option value="timer"${a.art === 'timer' ? ' selected' : ''}>Timer starten und stoppen</option>` +
           '</select></label>' +
           '<div id="kdet"></div>' +
+          '<label style="display:flex; gap:10px; align-items:center; margin-top:4px">' +
+            `<input type="checkbox" id="kb2"${block.bestaetigen ? ' checked' : ''} style="width:auto">` +
+            '<span>Vor dem Ausführen nachfragen</span></label>' +
+          '<div id="kliste" class="knopf-liste"></div>' +
         '</div>' +
-        '<div class="fbtns"><button data-a="ok" class="prim">Speichern</button>' +
-        '<button data-a="zu">Abbrechen</button></div>' +
+        '<div class="fbtns">' +
+          '<button data-a="mehr">＋ Weitere Aktion</button>' +
+          '<button data-a="ok" class="prim">Speichern</button>' +
+          '<button data-a="zu">Abbrechen</button></div>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -1143,6 +1225,9 @@ const Blocks = (() => {
           dbs.map(c => `<option value="${c.id}"${a.collectionId === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('') +
           '</select></label><label style="display:block;margin-top:10px">Titel des Eintrags<br>' +
           `<input id="kx" value="${esc(a.zeilenText || '')}"></label>`;
+      } else if (art === 'meldung' || art === 'timer') {
+        det.innerHTML = `<label>${art === 'timer' ? 'Bezeichnung der Zeit' : 'Text der Meldung'}` +
+                        `<br><input id="kx" value="${esc(a.text || '')}"></label>`;
       } else {
         det.innerHTML = `<label>Titel der Seite<br><input id="kx" value="${esc(a.seitenTitel || '')}"></label>`;
       }
@@ -1150,16 +1235,50 @@ const Blocks = (() => {
     zeichneDetail();
     o.querySelector('#ka').addEventListener('change', zeichneDetail);
 
+    const listeZeigen = () => {
+      o.querySelector('#kliste').innerHTML = gesammelt.length
+        ? '<div class="grp">Diese Aktionen laufen nacheinander</div>' +
+          gesammelt.map((x, i) =>
+            `<div class="ka-zeile"><span>${i + 1}.</span>` +
+            `<b>${esc((AKTIONS_NAMEN[x.art] || x.art))}</b>` +
+            `<span class="ez-grau">${esc(x.blockText || x.zeilenText || x.seitenTitel || x.text || '')}</span>` +
+            `<button data-kweg="${i}">✕</button></div>`).join('')
+        : '';
+    };
+    listeZeigen();
+
     o.addEventListener('click', e => {
       if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
-      if (!e.target.closest('[data-a="ok"]')) return;
+
+      const weg = e.target.closest('[data-kweg]');
+      if (weg) { gesammelt.splice(+weg.dataset.kweg, 1); listeZeigen(); return; }
+
+      const mehr = e.target.closest('[data-a="mehr"]');
+      const ok = e.target.closest('[data-a="ok"]');
+      if (!mehr && !ok) return;
+
       const art = o.querySelector('#ka').value;
       const x = o.querySelector('#kx')?.value || '';
       const neu = { art };
       if (art === 'block') { neu.blockTyp = o.querySelector('#kb').value; neu.blockText = x; }
       if (art === 'zeile') { neu.collectionId = o.querySelector('#kc')?.value; neu.zeilenText = x; }
       if (art === 'seite') neu.seitenTitel = x;
-      Store.updateBlock(block.id, { text: o.querySelector('#kt').value, aktion: neu });
+      if (art === 'meldung' || art === 'timer') neu.text = x;
+
+      if (mehr) {
+        gesammelt.push(neu);
+        listeZeigen();
+        if (o.querySelector('#kx')) o.querySelector('#kx').value = '';
+        return;
+      }
+
+      const alle = gesammelt.length ? [...gesammelt, neu] : [neu];
+      Store.updateBlock(block.id, {
+        text: o.querySelector('#kt').value,
+        aktionen: alle,
+        aktion: null,
+        bestaetigen: o.querySelector('#kb2').checked
+      });
       o.remove();
       App.zeichneSeite();
     });

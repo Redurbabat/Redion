@@ -283,6 +283,12 @@ const Formula = (() => {
   /* Die Funktionsbibliothek */
   const F = {
     /* --- Bedingungen ---------------------------------------------------- */
+    /* Notion kennt beide Schreibweisen: „a and b" und „and(a, b)". */
+    and: (a) => a.every(wahr),
+    or:  (a) => a.some(wahr),
+    not: (a) => !wahr(a[0]),
+    xor: (a) => a.filter(wahr).length % 2 === 1,
+
     if:  (a) => wahr(a[0]) ? a[1] : a[2],
     ifs: (a) => {
       for (let i = 0; i + 1 < a.length; i += 2) if (wahr(a[i])) return a[i + 1];
@@ -357,6 +363,12 @@ const Formula = (() => {
     flat: a => (a[0] || []).flat(),
 
     /* --- Datum ----------------------------------------------------------- */
+    /* Wahrheitswert und Datumsbereiche — die letzten Namen aus Teil 7 */
+    boolean:   a => wahr(a[0]),
+    daterange: a => ({ von: alsDatum(a[0]), bis: alsDatum(a[1]) }),
+    datestart: a => (a[0] && a[0].von !== undefined ? a[0].von : alsDatum(a[0])),
+    dateend:   a => (a[0] && a[0].bis !== undefined ? a[0].bis : alsDatum(a[0])),
+
     now:   () => new Date(),
     today: () => { const d = new Date(); d.setHours(0,0,0,0); return d; },
     dateadd: a => {

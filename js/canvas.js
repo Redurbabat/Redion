@@ -292,7 +292,8 @@ const Zusatz = (() => {
    * Datenquelle: entweder eingetippte Zeilen „Name: Wert" oder eine
    * Datenbank auf derselben Seite.
    * ======================================================================*/
-  const CHART_TYPEN = [['bar', 'Balken'], ['column', 'Säulen'], ['line', 'Linie'], ['donut', 'Ring'], ['area', 'Fläche']];
+  const CHART_TYPEN = [['bar', 'Balken'], ['column', 'Säulen'], ['line', 'Linie'], ['donut', 'Ring'],
+                       ['area', 'Fläche'], ['kpi', 'Kennzahl']];
 
   const diagramm = (block) => {
     const w = document.createElement('div');
@@ -370,6 +371,31 @@ const Zusatz = (() => {
 
   const chartSvg = (typ, werte) => {
     const B = 640, H = 260, pad = 34;
+
+    /* Kennzahl: eine grosse Zahl mit Vergleich — Notions „Number" */
+    if (typ === 'kpi') {
+      const summe = werte.reduce((a, v) => a + v.wert, 0);
+      const letzter = werte[werte.length - 1]?.wert ?? 0;
+      const vorletzter = werte[werte.length - 2]?.wert ?? 0;
+      const diff = vorletzter ? Math.round((letzter - vorletzter) / Math.abs(vorletzter) * 100) : 0;
+      const s2 = sv('svg', { viewBox: `0 0 ${B} ${H}`, class: 'chart-svg' });
+      const t1 = sv('text', { x: B / 2, y: 118, 'text-anchor': 'middle', 'font-size': 64,
+                              'font-weight': 700, fill: 'currentColor' });
+      t1.textContent = Formula.anzeige(summe);
+      s2.appendChild(t1);
+      const t2 = sv('text', { x: B / 2, y: 152, 'text-anchor': 'middle', 'font-size': 15,
+                              fill: 'currentColor', opacity: .6 });
+      t2.textContent = 'Summe aus ' + werte.length + (werte.length === 1 ? ' Wert' : ' Werten');
+      s2.appendChild(t2);
+      if (werte.length > 1) {
+        const t3 = sv('text', { x: B / 2, y: 186, 'text-anchor': 'middle', 'font-size': 16,
+                                fill: diff >= 0 ? '#4dab9a' : '#ff7369' });
+        t3.textContent = (diff >= 0 ? '▲ +' : '▼ ') + diff + ' % gegenüber davor';
+        s2.appendChild(t3);
+      }
+      return s2;
+    }
+
     const max = Math.max(...werte.map(v => v.wert), 1);
     const s = sv('svg', { viewBox: `0 0 ${B} ${H}`, class: 'chart-svg', preserveAspectRatio: 'xMidYMid meet' });
 
@@ -520,6 +546,102 @@ const Zusatz = (() => {
     });
     w.appendChild(t);
 
+    /* --- Griffe über den Spalten und neben den Zeilen -------------------- */
+    /* Genau wie in Notion: beim Überfahren erscheinen zwei kleine Griffe.
+       Ein Klick öffnet das Menü für diese Spalte oder diese Zeile. */
+    const gX = document.createElement('div'); gX.className = 'stab-griff x';
+    const gY = document.createElement('div'); gY.className = 'stab-griff y';
+    w.append(gX, gY);
+    let aktivX = 0, aktivY = 0;
+
+    t.addEventListener('mouseover', (e) => {
+      const zelle = e.target.closest('td,th');
+      if (!zelle) return;
+      aktivX = +zelle.dataset.x; aktivY = +zelle.dataset.y;
+      const rz = zelle.getBoundingClientRect();
+      const rw = w.getBoundingClientRect();
+      gX.style.left = (rz.left - rw.left) + 'px';
+      gX.style.width = rz.width + 'px';
+      gX.style.top = '2px';
+      gY.style.top = (rz.top - rw.top) + 'px';
+      gY.style.height = rz.height + 'px';
+      gY.style.left = '2px';
+      gX.classList.add('da'); gY.classList.add('da');
+    });
+    w.addEventListener('mouseleave', () => { gX.classList.remove('da'); gY.classList.remove('da'); });
+
+    const sichern = () => { Store.updateBlock(block.id, { rows }); App.zeichneSeite(); };
+
+    gX.addEventListener('click', () => {
+      const r = gX.getBoundingClientRect();
+      const m = UI.menu(
+        `<div class="grp">Spalte ${aktivX + 1}</div>` +
+        '<button data-a="links"><span class="mi">←</span>Spalte links einfügen</button>' +
+        '<button data-a="rechts"><span class="mi">→</span>Spalte rechts einfügen</button>' +
+        '<button data-a="vor"><span class="mi">⇤</span>Nach links schieben</button>' +
+        '<button data-a="zurueck"><span class="mi">⇥</span>Nach rechts schieben</button>' +
+        `<button data-a="kopfsp"><span class="mi">▤</span>Als Kopfspalte<span class="ms">${kopfSpalte ? 'an' : 'aus'}</span></button>` +
+        '<button data-a="leeren"><span class="mi">␀</span>Inhalt leeren</button>' +
+        '<hr><button data-a="weg"><span class="mi">🗑</span>Spalte löschen</button>',
+        r.left, r.bottom + 6);
+      m.addEventListener('click', e => {
+        const b = e.target.closest('button[data-a]');
+        if (!b) return;
+        const a = b.dataset.a; m.remove();
+        if (a === 'links')  rows.forEach(z => z.splice(aktivX, 0, ''));
+        if (a === 'rechts') rows.forEach(z => z.splice(aktivX + 1, 0, ''));
+        if (a === 'weg' && rows[0].length > 1) rows.forEach(z => z.splice(aktivX, 1));
+        if (a === 'leeren') rows.forEach(z => z[aktivX] = '');
+        if (a === 'vor' && aktivX > 0)
+          rows.forEach(z => z.splice(aktivX - 1, 0, z.splice(aktivX, 1)[0]));
+        if (a === 'zurueck' && aktivX < rows[0].length - 1)
+          rows.forEach(z => z.splice(aktivX + 1, 0, z.splice(aktivX, 1)[0]));
+        if (a === 'kopfsp') { Store.updateBlock(block.id, { kopfSpalte: !kopfSpalte }); App.zeichneSeite(); return; }
+        sichern();
+      });
+    });
+
+    gY.addEventListener('click', () => {
+      const r = gY.getBoundingClientRect();
+      const m = UI.menu(
+        `<div class="grp">Zeile ${aktivY + 1}</div>` +
+        '<button data-a="oben"><span class="mi">↑</span>Zeile darüber einfügen</button>' +
+        '<button data-a="unten"><span class="mi">↓</span>Zeile darunter einfügen</button>' +
+        '<button data-a="hoch"><span class="mi">⇧</span>Nach oben schieben</button>' +
+        '<button data-a="runter"><span class="mi">⇩</span>Nach unten schieben</button>' +
+        `<button data-a="kopf"><span class="mi">▥</span>Als Kopfzeile<span class="ms">${kopf ? 'an' : 'aus'}</span></button>` +
+        '<button data-a="dup"><span class="mi">⧉</span>Zeile duplizieren</button>' +
+        '<button data-a="leeren"><span class="mi">␀</span>Inhalt leeren</button>' +
+        '<hr><button data-a="weg"><span class="mi">🗑</span>Zeile löschen</button>',
+        r.right + 6, r.top);
+      m.addEventListener('click', e => {
+        const b = e.target.closest('button[data-a]');
+        if (!b) return;
+        const a = b.dataset.a; m.remove();
+        const leer = () => new Array(rows[0].length).fill('');
+        if (a === 'oben')   rows.splice(aktivY, 0, leer());
+        if (a === 'unten')  rows.splice(aktivY + 1, 0, leer());
+        if (a === 'weg' && rows.length > 1) rows.splice(aktivY, 1);
+        if (a === 'dup')    rows.splice(aktivY + 1, 0, rows[aktivY].slice());
+        if (a === 'leeren') rows[aktivY] = leer();
+        if (a === 'hoch' && aktivY > 0)
+          rows.splice(aktivY - 1, 0, rows.splice(aktivY, 1)[0]);
+        if (a === 'runter' && aktivY < rows.length - 1)
+          rows.splice(aktivY + 1, 0, rows.splice(aktivY, 1)[0]);
+        if (a === 'kopf') { Store.updateBlock(block.id, { kopfZeile: !kopf }); App.zeichneSeite(); return; }
+        sichern();
+      });
+    });
+
+    /* Rechtsklick in einer Zelle öffnet dasselbe Menü */
+    t.addEventListener('contextmenu', (e) => {
+      const zelle = e.target.closest('td,th');
+      if (!zelle) return;
+      e.preventDefault();
+      aktivX = +zelle.dataset.x; aktivY = +zelle.dataset.y;
+      gY.click();
+    });
+
     const werkzeuge = document.createElement('div');
     werkzeuge.className = 'stab-tools';
     werkzeuge.innerHTML =
@@ -637,7 +759,84 @@ const Zusatz = (() => {
     return w;
   };
 
-  return { whiteboard, diagramm, tabelle, mathe, formelBlock, chartSvg, chartDaten, PALETTE };
+  /* ========================================================================
+   * 5. SYNTAX-EINFÄRBUNG FÜR CODEBLÖCKE
+   * ------------------------------------------------------------------------
+   * Kein fremdes Paket, sondern ein kleiner Zerleger: Kommentare, Texte,
+   * Zahlen, Schlüsselwörter. Deckt die Sprachen ab, die in Notizen
+   * wirklich vorkommen.
+   * ======================================================================*/
+  const SCHLUESSEL = {
+    javascript: 'const let var function return if else for while do switch case break continue new class extends super this typeof instanceof await async try catch finally throw import export default null undefined true false',
+    typescript: 'const let var function return if else for while interface type enum implements public private readonly await async class extends import export null undefined true false',
+    python:     'def class return if elif else for while in not and or is None True False import from as with try except finally raise lambda yield global pass break continue',
+    java:       'public private protected class interface extends implements return if else for while new static final void int double String boolean true false null import package try catch',
+    'c++':      'int double float char void class struct public private return if else for while new delete const static template typename namespace using include true false nullptr',
+    'c#':       'public private class interface var return if else foreach for while new static void string int bool true false null using namespace try catch',
+    go:         'func package import return if else for range var const type struct interface go defer chan map nil true false',
+    rust:       'fn let mut struct enum impl trait pub use mod match if else for while loop return Some None Ok Err true false',
+    php:        'function class return if else foreach for while new public private echo print require include namespace use true false null',
+    ruby:       'def class module return if elsif else unless while do end require attr_accessor true false nil yield',
+    sql:        'select from where group by order having join left right inner outer on as insert into values update set delete create table alter drop index and or not null distinct limit',
+    html:       '',
+    css:        '',
+    json:       'true false null',
+    bash:       'if then else fi for while do done case esac function return export echo cd ls sudo apt npm git',
+    yaml:       'true false null',
+    markdown:   ''
+  };
+
+  const einfaerben = (code, sprache) => {
+    const lang = String(sprache || '').toLowerCase().replace('plain text', '');
+    const roh = esc(code);
+    if (!lang || lang === 'markdown') return roh;
+
+    if (lang === 'html' || lang === 'xml') {
+      return roh
+        .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="c-kom">$1</span>')
+        .replace(/(&lt;\/?)([a-zA-Z][\w-]*)/g, '$1<span class="c-schl">$2</span>')
+        .replace(/([a-zA-Z-]+)=(&quot;[^&]*?&quot;|"[^"]*")/g,
+                 '<span class="c-attr">$1</span>=<span class="c-txt">$2</span>');
+    }
+    if (lang === 'css' || lang === 'scss' || lang === 'less') {
+      return roh
+        .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="c-kom">$1</span>')
+        .replace(/^([^{}\n]+)(\{)/gm, '<span class="c-schl">$1</span>$2')
+        .replace(/([a-z-]+)(\s*:\s*)([^;\n]+)(;)/g,
+                 '<span class="c-attr">$1</span>$2<span class="c-txt">$3</span>$4');
+    }
+
+    const woerter = (SCHLUESSEL[lang] || SCHLUESSEL.javascript).split(' ').filter(Boolean);
+    let out = roh;
+
+    /* Erst Texte und Kommentare wegsichern, damit dort nichts eingefärbt wird */
+    /* Der Platzhalter darf keine Ziffern enthalten — sonst färbt die
+       Zahlen-Regel weiter unten den Platzhalter selbst ein und zerstört ihn.
+       Deshalb steckt der Index in einem Zeichen aus dem privaten Bereich. */
+    const sicher = [];
+    const parke = (treffer, klasse) => {
+      sicher.push('<span class="' + klasse + '">' + treffer + '</span>');
+      return '\u0002' + String.fromCharCode(0xE000 + sicher.length - 1) + '\u0002';
+    };
+
+    out = out
+      .replace(/(&quot;[^&]*?&quot;|'[^'\n]*'|`[^`]*`|"[^"\n]*")/g, m => parke(m, 'c-txt'))
+      .replace(/(\/\/[^\n]*|#[^\n]*|--[^\n]*)/g, m => parke(m, 'c-kom'))
+      .replace(/(\/\*[\s\S]*?\*\/|&quot;&quot;&quot;[\s\S]*?&quot;&quot;&quot;)/g, m => parke(m, 'c-kom'));
+
+    if (woerter.length) {
+      const re = new RegExp('\\b(' + woerter.join('|') + ')\\b', 'g');
+      out = out.replace(re, '<span class="c-schl">$1</span>');
+    }
+    out = out.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="c-zahl">$1</span>');
+    out = out.replace(/([a-zA-Z_][\w]*)(\()/g, '<span class="c-fkt">$1</span>$2');
+
+    return out.replace(/\u0002([\uE000-\uF8FF])\u0002/g,
+      (_, z) => sicher[z.charCodeAt(0) - 0xE000]);
+  };
+
+  return { whiteboard, diagramm, tabelle, mathe, formelBlock, chartSvg, chartDaten,
+           einfaerben, SCHLUESSEL, PALETTE };
 })();
 
 window.Zusatz = Zusatz;

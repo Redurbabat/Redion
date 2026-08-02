@@ -127,10 +127,11 @@ const App = (() => {
     wz.innerHTML = [
       ['journal', '📅', 'Journal', 'Tageseintrag — Strg Shift J'],
       ['memos',   '⚡', 'Schnellnotizen', 'Kurze Gedanken — Strg Shift M'],
-      ['vorlagen','🧩', 'Vorlagen', 'Seiten als Vorlage wiederverwenden'],
+      ['vorlagen','🧩', 'Vorlagen', 'Fertige Aufbauten und eigene Vorlagen'],
       ['graph',   '🕸', 'Graph', 'Wie alles zusammenhängt — Strg Shift G'],
       ['tags',    '🏷', 'Schlagwörter', 'Alle #Schlagwörter — Strg Shift T'],
-      ['lernen',  '🎴', 'Karteikarten', 'Wiederholen nach Plan']
+      ['lernen',  '🎴', 'Karteikarten', 'Wiederholen nach Plan'],
+      ['stand',   '✅', 'Umsetzungsstand', 'Alle 16 Teile der Notion-Doku, Punkt für Punkt']
     ].map(([a, i, n, t]) =>
       `<button class="side-item" data-wz="${a}" title="${t}"><span>${i}</span><span>${n}</span>` +
       (a === 'lernen' ? '<span class="k" id="lz"></span>' : '') + '</button>').join('');
@@ -144,6 +145,7 @@ const App = (() => {
       if (a === 'graph') Links.graph();
       if (a === 'tags') Links.tagRegister();
       if (a === 'lernen') Werkzeuge.lernen();
+      if (a === 'stand') Status.seiteAnlegen();
     });
     baum.appendChild(abschnitt('Werkzeuge'));
     baum.appendChild(wz);
@@ -658,9 +660,24 @@ const App = (() => {
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
-      '<div class="finder">' +
+      '<div class="finder such" style="width:min(820px,95vw)">' +
         '<input id="q" placeholder="Seiten und Inhalte durchsuchen …" autocomplete="off">' +
-        '<div class="res" id="res"></div>' +
+        '<div class="such-filter">' +
+          '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
+            '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
+          '<select id="f-typ"><option value="alles">Alle Seiten</option>' +
+            '<option value="seite">ohne Datenbank</option><option value="datenbank">mit Datenbank</option></select>' +
+          '<select id="f-seit"><option value="alles">Jederzeit</option>' +
+            '<option value="tag">heute geändert</option><option value="woche">diese Woche</option>' +
+            '<option value="monat">dieser Monat</option></select>' +
+          '<select id="f-ort"><option value="">Überall</option>' +
+            Store.rootPages().map(p2 => `<option value="${p2.id}">in ${esc(p2.text || 'Ohne Titel')}</option>`).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="such-koerper">' +
+          '<div class="res" id="res"></div>' +
+          '<div class="such-vorschau" id="vorschau"></div>' +
+        '</div>' +
         '<div class="hint">↑ ↓ auswählen · Enter öffnen · Esc schliessen · Strg Shift P für Befehle</div>' +
       '</div>';
     document.body.appendChild(o);
@@ -681,11 +698,39 @@ const App = (() => {
         `<button data-i="${k}" ${k === i ? 'class="on"' : ''}>` +
           `<span>${t.page.icon || '📄'}</span>` +
           `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
+          (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
           (t.treffer === 'Inhalt' ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
-      res.querySelectorAll('button').forEach(b =>
-        b.addEventListener('click', () => { oeffne(treffer[+b.dataset.i].page.id); o.remove(); }));
+      res.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => { oeffne(treffer[+b.dataset.i].page.id); o.remove(); });
+        b.addEventListener('mouseenter', () => zeigeVorschau(+b.dataset.i));
+      });
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+      zeigeVorschau(i);
+    };
+
+    /* Rechts eine kleine Vorschau der markierten Seite */
+    const zeigeVorschau = (k) => {
+      const v = o.querySelector('#vorschau');
+      if (!v) return;
+      const t = treffer[k];
+      if (!t) { v.innerHTML = ''; return; }
+      const p2 = t.page;
+      const inhalt = Store.childrenOf(p2.id).slice(0, 14).map(b => {
+        if (b.type === 'database') {
+          const c = Store.getCollection(b.collectionId);
+          return `<div class="vs-db">🗂 ${esc(c ? c.name : 'Datenbank')} · ` +
+                 `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`;
+        }
+        if (!b.text) return '';
+        const marke = { h1:'vs-h1', h2:'vs-h2', h3:'vs-h3' }[b.type] || 'vs-t';
+        return `<div class="${marke}">${esc(b.text.slice(0, 120))}</div>`;
+      }).join('');
+      v.innerHTML =
+        `<div class="vs-kopf">${esc(p2.icon || '📄')} <b>${esc(p2.text || 'Ohne Titel')}</b></div>` +
+        `<div class="vs-meta">${esc(Store.pfadText(p2.id) || 'oberste Ebene')} · ` +
+        `zuletzt ${esc(Werkzeuge.zeitKurz(p2.edited))}</div>` +
+        (inhalt || '<div class="vs-t" style="opacity:.5">Diese Seite ist noch leer.</div>');
     };
 
     const zuletzt = () => {
@@ -699,12 +744,21 @@ const App = (() => {
     };
     zuletzt();
 
-    inp.addEventListener('input', () => {
+    const filterLesen = () => ({
+      wo:   o.querySelector('#f-wo').value,
+      typ:  o.querySelector('#f-typ').value,
+      seit: o.querySelector('#f-seit').value,
+      ort:  o.querySelector('#f-ort').value
+    });
+
+    const suchen = () => {
       if (!inp.value.trim()) { zuletzt(); return; }
-      treffer = Store.search(inp.value);
+      treffer = Store.search(inp.value, filterLesen());
       i = 0;
       zeichne();
-    });
+    };
+    inp.addEventListener('input', suchen);
+    o.querySelectorAll('.such-filter select').forEach(s2 => s2.addEventListener('change', suchen));
 
     inp.addEventListener('keydown', e => {
       if (e.key === 'Escape') { o.remove(); return; }

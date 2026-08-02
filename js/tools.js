@@ -64,8 +64,10 @@ const Werkzeuge = (() => {
     c('Navigation', 'Graph aller Seiten', 'Strg Shift G', () => Links.graph());
     c('Navigation', 'Schlagwörter', 'Strg Shift T', () => Links.tagRegister());
     c('Navigation', 'Vorlagen', '', () => vorlagen());
+    c('Navigation', 'Vorlagengalerie', '', () => Galerie.oeffne());
     c('Navigation', 'Karteikarten lernen', '', () => lernen());
     c('Navigation', 'Papierkorb', '', () => App.papierkorb());
+    c('Navigation', 'Umsetzungsstand aller 16 Teile', '', () => Status.seiteAnlegen());
     c('Navigation', 'Zurück', 'Strg [', () => App.zurueck());
     c('Navigation', 'Vorwärts', 'Strg ]', () => App.vorwaerts());
 
@@ -331,6 +333,10 @@ const Werkzeuge = (() => {
   };
 
   const vorlagen = () => {
+    Galerie.oeffne();
+  };
+
+  const vorlagenOrdner = () => {
     const ordner = systemSeite('vorlagen', 'Vorlagen', '🧩');
     App.zeichneBaum();
     App.oeffne(ordner.id);
@@ -1431,10 +1437,26 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
   /* ========================================================================
    * START
    * ======================================================================*/
+  /** Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions 30 Tage). */
+  const papierkorbAufraeumen = () => {
+    const tage = Number(Store.getMeta('papierkorbTage', 30));
+    if (!tage) return;                         /* 0 heisst: nie automatisch */
+    const grenze = Date.now() - tage * 86400000;
+    let weg = 0;
+    Store.trashed().forEach(p => {
+      if (!p.trashedAt) return;
+      if (new Date(p.trashedAt).getTime() > grenze) return;
+      Store.purgeBlock(p.id);
+      weg++;
+    });
+    if (weg) UI.toast(weg + ' Seiten im Papierkorb waren älter als ' + tage + ' Tage und wurden gelöscht');
+  };
+
   const start = () => {
     /* Erinnerungen alle halbe Minute prüfen */
     erinnerungenPruefen();
     setInterval(erinnerungenPruefen, 30000);
+    setTimeout(papierkorbAufraeumen, 3000);
 
     document.addEventListener('keydown', e => {
       const strg = e.ctrlKey || e.metaKey;
@@ -1455,13 +1477,13 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
 
   return {
     start, palette, befehle,
-    journal, journalSeite, schnellnotizen, vorlagen, alsVorlage, vorlageEinfuegen, vorlagenListe,
+    journal, journalSeite, schnellnotizen, vorlagen, vorlagenOrdner, alsVorlage, vorlageEinfuegen, vorlagenListe,
     lernen, karten, faellig, teileKarte,
     versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
     fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, statistik,
     erinnerungSetzen, erinnerungen, ordnerSchreiben, ordnerLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
-    alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz,
+    alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
     wikiUmwandeln, wikiIndex, teilenMenue,
     seitenMenueZusatz, seitenMenueAktion
   };

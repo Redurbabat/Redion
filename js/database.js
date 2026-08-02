@@ -58,9 +58,14 @@ const Datenbank = (() => {
     status:   ['ist','ist nicht','ist leer','ist nicht leer'],
     multi:    ['enthält','enthält nicht','ist leer','ist nicht leer'],
     person:   ['enthält','enthält nicht','ist leer','ist nicht leer'],
-    date:     ['ist','ist vor','ist nach','ist am oder vor','ist am oder nach','ist heute','ist diese Woche','ist dieser Monat','ist leer','ist nicht leer'],
-    created:  ['ist','ist vor','ist nach','ist heute','ist diese Woche','ist dieser Monat'],
-    edited:   ['ist','ist vor','ist nach','ist heute','ist diese Woche','ist dieser Monat'],
+    date:     ['ist','ist vor','ist nach','ist am oder vor','ist am oder nach','ist heute','ist gestern','ist morgen',
+               'ist diese Woche','ist letzte Woche','ist nächste Woche','ist dieser Monat','ist letzter Monat',
+               'ist in den letzten 7 Tagen','ist in den letzten 30 Tagen','ist in den nächsten 7 Tagen',
+               'ist in den nächsten 30 Tagen','liegt in der Vergangenheit','liegt in der Zukunft','ist leer','ist nicht leer'],
+    created:  ['ist','ist vor','ist nach','ist heute','ist gestern','ist diese Woche','ist letzte Woche','ist dieser Monat',
+               'ist in den letzten 7 Tagen','ist in den letzten 30 Tagen'],
+    edited:   ['ist','ist vor','ist nach','ist heute','ist gestern','ist diese Woche','ist letzte Woche','ist dieser Monat',
+               'ist in den letzten 7 Tagen','ist in den letzten 30 Tagen'],
     checkbox: ['ist aktiviert','ist nicht aktiviert'],
     formula:  ['enthält','ist','ist gleich','größer als','kleiner als','ist aktiviert','ist nicht aktiviert','ist leer','ist nicht leer'],
     files:    ['ist leer','ist nicht leer'],
@@ -204,15 +209,21 @@ const Datenbank = (() => {
     if (def.type === 'email' && v)
       return `<a href="mailto:${esc(v)}" style="color:var(--accent)">${esc(v)}</a>`;
 
-    if (def.type === 'number' && v != null) {
-      /* Als Balken anzeigen, wenn gewünscht */
-      if (def.anzeige === 'bar') {
-        const max = def.max || 100;
-        const p = Math.max(0, Math.min(100, (v / max) * 100));
-        return `<div>${v}<div class="bar"><i style="width:${p}%"></i></div></div>`;
+    if ((def.type === 'number' || def.type === 'formula' || def.type === 'rollup') && v != null &&
+        (def.anzeige === 'bar' || def.anzeige === 'ring')) {
+      const max = def.max || 100;
+      const p = Math.max(0, Math.min(100, (Formula.zahl(v) / max) * 100));
+      if (def.anzeige === 'ring') {
+        return '<div class="ring" style="--p:' + p + '">' +
+               '<svg viewBox="0 0 36 36"><circle class="r-bg" cx="18" cy="18" r="15.5"></circle>' +
+               '<circle class="r-an" cx="18" cy="18" r="15.5" ' +
+               'stroke-dasharray="' + (p * 0.974) + ' 100"></circle></svg>' +
+               '<span>' + esc(Formula.anzeige(v)) + '</span></div>';
       }
-      return String(v);
+      return `<div>${esc(Formula.anzeige(v))}<div class="bar"><i style="width:${p}%"></i></div></div>`;
     }
+
+    if (def.type === 'number' && v != null) return String(v);
 
     if (def.type === 'formula') return esc(Formula.anzeige(v));
 
@@ -288,10 +299,35 @@ const Datenbank = (() => {
     if (dv && !isNaN(dv)) {
       const dz = z ? new Date(z) : null;
       const tag = new Date(dv); tag.setHours(0,0,0,0);
-      if (op === 'ist heute')        return tag.getTime() === heute().getTime();
-      if (op === 'ist diese Woche')  { const w = new Date(heute()); w.setDate(w.getDate() - 7); return dv >= w; }
-      if (op === 'ist dieser Monat') return dv.getMonth() === new Date().getMonth() &&
-                                             dv.getFullYear() === new Date().getFullYear();
+      const h = heute();
+      const tage = (n) => { const d = new Date(h); d.setDate(d.getDate() + n); return d; };
+      /* Wochenanfang nach Einstellung (Montag oder Sonntag) */
+      const wocheAb = (versatz) => {
+        const start = Einstellungen.wochenstart();
+        const d = new Date(h);
+        const diff = (d.getDay() - start + 7) % 7;
+        d.setDate(d.getDate() - diff + versatz * 7);
+        return d;
+      };
+      const jetzt = new Date();
+
+      if (op === 'ist heute')    return tag.getTime() === h.getTime();
+      if (op === 'ist gestern')  return tag.getTime() === tage(-1).getTime();
+      if (op === 'ist morgen')   return tag.getTime() === tage(1).getTime();
+      if (op === 'ist diese Woche')   return tag >= wocheAb(0)  && tag < new Date(wocheAb(1));
+      if (op === 'ist letzte Woche')  return tag >= wocheAb(-1) && tag < new Date(wocheAb(0));
+      if (op === 'ist nächste Woche') return tag >= wocheAb(1)  && tag < new Date(wocheAb(2));
+      if (op === 'ist dieser Monat')  return dv.getMonth() === jetzt.getMonth() && dv.getFullYear() === jetzt.getFullYear();
+      if (op === 'ist letzter Monat') {
+        const l = new Date(jetzt.getFullYear(), jetzt.getMonth() - 1, 1);
+        return dv.getMonth() === l.getMonth() && dv.getFullYear() === l.getFullYear();
+      }
+      if (op === 'ist in den letzten 7 Tagen')  return tag >= tage(-7)  && tag <= h;
+      if (op === 'ist in den letzten 30 Tagen') return tag >= tage(-30) && tag <= h;
+      if (op === 'ist in den nächsten 7 Tagen') return tag >= h && tag <= tage(7);
+      if (op === 'ist in den nächsten 30 Tagen')return tag >= h && tag <= tage(30);
+      if (op === 'liegt in der Vergangenheit')  return dv < jetzt;
+      if (op === 'liegt in der Zukunft')        return dv > jetzt;
       if (dz && !isNaN(dz)) {
         if (op === 'ist')             return tag.getTime() === new Date(dz.setHours(0,0,0,0)).getTime();
         if (op === 'ist vor')         return dv <  dz;
@@ -303,15 +339,37 @@ const Datenbank = (() => {
     return true;
   };
 
+  /**
+   * Prüft eine Filtergruppe. Eine Gruppe hat einen Operator und Regeln;
+   * eine Regel kann selbst wieder eine Gruppe sein — beliebig tief.
+   */
+  const gruppeTrifftZu = (row, gruppe, coll, tiefe = 0) => {
+    if (!gruppe || !(gruppe.rules || []).length) return true;
+    if (tiefe > 5) return true;
+    const pruef = (r) => (r.rules !== undefined)
+      ? gruppeTrifftZu(row, r, coll, tiefe + 1)
+      : trifftZu(row, r, coll);
+    return gruppe.operator === 'or'
+      ? gruppe.rules.some(pruef)
+      : gruppe.rules.every(pruef);
+  };
+
+  /** Zählt alle Regeln einer Gruppe, auch die in Untergruppen. */
+  const regelAnzahl = (gruppe) => (gruppe?.rules || []).reduce(
+    (n, r) => n + (r.rules !== undefined ? regelAnzahl(r) : 1), 0);
+
   const gefiltert = (rows, view, coll) => {
     const f = view.filters || { operator:'and', rules:[] };
     if (!f.rules || !f.rules.length) return rows;
-    return rows.filter(r => f.operator === 'or'
-      ? f.rules.some(rg => trifftZu(r, rg, coll))
-      : f.rules.every(rg => trifftZu(r, rg, coll)));
+    return rows.filter(r => gruppeTrifftZu(r, f, coll));
   };
 
   const sortiert = (rows, view, coll) => {
+    /* Ohne eigene Sortierregel gilt die von Hand gezogene Reihenfolge. */
+    if (!(view.sorts || []).length && rows.some(r => r.ordnung != null)) {
+      return rows.slice().sort((a, b) =>
+        (a.ordnung ?? 1e9) - (b.ordnung ?? 1e9) || a.created.localeCompare(b.created));
+    }
     if (!view.sorts || !view.sorts.length) return rows;
     return rows.slice().sort((a, b) => {
       for (const s of view.sorts) {
@@ -407,7 +465,7 @@ const Datenbank = (() => {
       const b = document.createElement('button');
       b.className = 'db-tab' + (id === viewId ? ' on' : '');
       const ico = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
-                    timeline:'▬', chart:'📊', form:'📝' }[v.layout] || '▦';
+                    timeline:'▬', chart:'📊', form:'📝', feed:'📰' }[v.layout] || '▦';
       b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
       b.addEventListener('click', () => {
         if (id === viewId) { ansichtMenue(b, coll, v, block); return; }
@@ -428,7 +486,7 @@ const Datenbank = (() => {
     const tools = document.createElement('div');
     tools.className = 'db-tools';
 
-    const anzahlFilter = (view.filters?.rules || []).length;
+    const anzahlFilter = regelAnzahl(view.filters);
     tools.innerHTML =
       `<button data-a="filter">⚟ Filter${anzahlFilter ? ' (' + anzahlFilter + ')' : ''}</button>` +
       `<button data-a="sort">↕ Sortieren${view.sorts?.length ? ' (' + view.sorts.length + ')' : ''}</button>` +
@@ -436,7 +494,8 @@ const Datenbank = (() => {
       `<button data-a="auto" title="Automationen">⚡${(coll.automationen||[]).length || ''}</button>` +
       `<button data-a="search">🔍</button>` +
       `<button data-a="menu">⋯</button>` +
-      `<button class="new" data-a="new">Neu</button>`;
+      `<button class="new" data-a="new">Neu</button>` +
+      `<button class="new pfeil" data-a="new-menu" title="Mit Vorlage anlegen">▾</button>`;
     kopf.appendChild(tools);
     w.appendChild(kopf);
 
@@ -444,7 +503,8 @@ const Datenbank = (() => {
       const b = e.target.closest('button[data-a]');
       if (!b) return;
       const a = b.dataset.a;
-      if (a === 'new')    { Store.addRow(coll.id, {}); App.zeichneSeite(); }
+      if (a === 'new')      { Store.addRow(coll.id, {}); App.zeichneSeite(); }
+      if (a === 'new-menu') vorlagenMenue(b, coll, view);
       if (a === 'filter') filterMenue(b, coll, view, block);
       if (a === 'sort')   sortMenue(b, coll, view, block);
       if (a === 'props')  eigenschaftenMenue(b, coll, view, block);
@@ -460,8 +520,13 @@ const Datenbank = (() => {
       view.filters.rules.forEach((r, i) => {
         const c = document.createElement('span');
         c.className = 'chip';
-        const name = coll.schema[r.key]?.name || '?';
-        c.innerHTML = `<b>${esc(name)}</b> ${esc(r.op)} ${esc(r.wert ?? '')} <span class="x">✕</span>`;
+        if (r.rules !== undefined) {
+          c.innerHTML = `<b>Gruppe</b> ${r.operator === 'or' ? 'ODER' : 'UND'} · ` +
+                        `${regelAnzahl(r)} Regeln <span class="x">✕</span>`;
+        } else {
+          const name = coll.schema[r.key]?.name || '?';
+          c.innerHTML = `<b>${esc(name)}</b> ${esc(r.op)} ${esc(r.wert ?? '')} <span class="x">✕</span>`;
+        }
         c.querySelector('.x').addEventListener('click', () => {
           view.filters.rules.splice(i, 1);
           Store.updateView(view.id, { filters: view.filters });
@@ -481,6 +546,7 @@ const Datenbank = (() => {
     else if (view.layout === 'timeline') koerper.appendChild(alsZeitstrahl(coll, view, rows));
     else if (view.layout === 'chart')    koerper.appendChild(alsDiagramm(coll, view, rows));
     else if (view.layout === 'form')     koerper.appendChild(alsFormular(coll, view, block));
+    else if (view.layout === 'feed')     koerper.appendChild(alsFeed(coll, view, rows));
     else                                 koerper.appendChild(alsTabelle(coll, view, rows, block));
     w.appendChild(koerper);
 
@@ -497,6 +563,18 @@ const Datenbank = (() => {
     /* Kopf */
     const thead = document.createElement('thead');
     const tr = document.createElement('tr');
+
+    /* Ganz links: Auswahlkästchen für alle Zeilen */
+    const thAus = document.createElement('th');
+    thAus.className = 'th-aus';
+    thAus.innerHTML = '<input type="checkbox" title="Alle auswählen">';
+    thAus.querySelector('input').addEventListener('change', (e) => {
+      const an = e.target.checked;
+      t.querySelectorAll('tbody input.zeilen-aus').forEach(cb => { cb.checked = an; });
+      auswahlAuffrischen();
+    });
+    tr.appendChild(thAus);
+
     sichtbar.forEach(k => {
       const def = coll.schema[k];
       const th = document.createElement('th');
@@ -504,7 +582,20 @@ const Datenbank = (() => {
                      (def.beschreibung ? `<span class="th-info" title="${esc(def.beschreibung)}">ℹ</span>` : '') +
                      '<span class="th-griff" title="Breite ziehen"></span>';
       const breite = (view.breiten || {})[k];
-      if (breite) th.style.width = breite + 'px';
+      if (breite) { th.style.width = breite + 'px'; th.style.minWidth = breite + 'px'; }
+      if ((view.fixiert || []) .includes(k)) th.classList.add('fixiert');
+
+      /* Spalten mit der Maus umsortieren */
+      th.draggable = true;
+      th.addEventListener('dragstart', e => e.dataTransfer.setData('text/spalte', k));
+      th.addEventListener('dragover', e => { e.preventDefault(); th.classList.add('ziel'); });
+      th.addEventListener('dragleave', () => th.classList.remove('ziel'));
+      th.addEventListener('drop', e => {
+        e.preventDefault(); th.classList.remove('ziel');
+        const q = e.dataTransfer.getData('text/spalte');
+        if (!q || q === k) return;
+        spalteEinordnen(coll, q, k);
+      });
       th.addEventListener('click', (e) => {
         if (e.target.classList.contains('th-griff')) return;
         spaltenMenue(th, coll, view, k, block);
@@ -513,17 +604,22 @@ const Datenbank = (() => {
       /* Breite mit der Maus ziehen — wie in Notion */
       th.querySelector('.th-griff').addEventListener('pointerdown', (e) => {
         e.preventDefault(); e.stopPropagation();
+        /* Solange gezogen wird, darf der Browser die Spalte nicht als
+           Drag-and-drop behandeln — sonst kommen keine Bewegungen mehr an. */
+        th.draggable = false;
         const start = e.clientX;
         const b0 = th.getBoundingClientRect().width;
         const zug = (ev) => {
           const b = Math.max(70, Math.min(640, b0 + ev.clientX - start));
           th.style.width = b + 'px';
+          th.style.minWidth = b + 'px';
         };
         const stop = () => {
           removeEventListener('pointermove', zug);
           removeEventListener('pointerup', stop);
           const b = Math.round(th.getBoundingClientRect().width);
           Store.updateView(view.id, { breiten: Object.assign({}, view.breiten, { [k]: b }) });
+          setTimeout(() => { th.draggable = true; }, 0);
         };
         addEventListener('pointermove', zug);
         addEventListener('pointerup', stop);
@@ -549,9 +645,34 @@ const Datenbank = (() => {
       rows.filter(k => k.unterVon === r.id).forEach(k => geordnet.push({ row: k, tiefe: 1 }));
     });
 
-    geordnet.forEach(({ row: r, tiefe }) => {
+    geordnet.forEach(({ row: r, tiefe }, nr) => {
       const zr = document.createElement('tr');
       if (tiefe) zr.classList.add('unterzeile');
+      zr.dataset.rid = r.id;
+      zr.draggable = true;
+
+      /* Auswahl und Nummer */
+      const tdAus = document.createElement('td');
+      tdAus.className = 'td-aus';
+      tdAus.innerHTML = `<span class="zeilen-nr">${nr + 1}</span>` +
+                        `<input type="checkbox" class="zeilen-aus" data-rid="${r.id}">`;
+      tdAus.querySelector('input').addEventListener('change', auswahlAuffrischen);
+      zr.appendChild(tdAus);
+
+      /* Zeilen mit der Maus sortieren */
+      zr.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/zeile', r.id);
+        zr.classList.add('zieht');
+      });
+      zr.addEventListener('dragend', () => zr.classList.remove('zieht'));
+      zr.addEventListener('dragover', e => { e.preventDefault(); zr.classList.add('ziel'); });
+      zr.addEventListener('dragleave', () => zr.classList.remove('ziel'));
+      zr.addEventListener('drop', e => {
+        e.preventDefault(); zr.classList.remove('ziel');
+        const quelle = e.dataTransfer.getData('text/zeile');
+        if (!quelle || quelle === r.id) return;
+        zeileEinordnen(coll, quelle, r.id);
+      });
       zr.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         zeilenMenue({ x: e.clientX, y: e.clientY }, r, coll);
@@ -589,7 +710,7 @@ const Datenbank = (() => {
     /* Zeile hinzufügen */
     const neu = document.createElement('tr');
     const ntd = document.createElement('td');
-    ntd.colSpan = sichtbar.length + 1;
+    ntd.colSpan = sichtbar.length + 2;
     ntd.style.cssText = 'color:var(--text-faint); cursor:pointer';
     ntd.textContent = '+ Neu';
     ntd.addEventListener('click', () => { Store.addRow(coll.id, {}); App.zeichneSeite(); });
@@ -600,6 +721,7 @@ const Datenbank = (() => {
     /* Berechnungen */
     const tfoot = document.createElement('tfoot');
     const ftr = document.createElement('tr');
+    ftr.appendChild(document.createElement('td'));
     sichtbar.forEach(k => {
       const td = document.createElement('td');
       const art = (view.calc || {})[k];
@@ -619,6 +741,98 @@ const Datenbank = (() => {
     box.style.overflowX = 'auto';
     box.appendChild(t);
     return box;
+  };
+
+  /** Welche Zeilen sind gerade angehakt? */
+  const gewaehlteZeilen = () =>
+    [...document.querySelectorAll('input.zeilen-aus:checked')].map(cb => cb.dataset.rid);
+
+  /** Zeigt die Leiste mit den Sammelaktionen, sobald etwas angehakt ist. */
+  const auswahlAuffrischen = () => {
+    const ids = gewaehlteZeilen();
+    document.getElementById('sammelleiste')?.remove();
+    if (!ids.length) return;
+
+    const erste = Store.getBlock(ids[0]);
+    const coll = erste && Store.getCollection(erste.parentId);
+    const l = document.createElement('div');
+    l.id = 'sammelleiste';
+    l.innerHTML =
+      `<span><b>${ids.length}</b> ausgewählt</span>` +
+      '<button data-a="dup">Duplizieren</button>' +
+      '<button data-a="prop">Eigenschaft setzen</button>' +
+      '<button data-a="del">Löschen</button>' +
+      '<button data-a="weg">✕</button>';
+    document.body.appendChild(l);
+
+    l.addEventListener('click', async e => {
+      const b = e.target.closest('button[data-a]');
+      if (!b) return;
+      const a = b.dataset.a;
+      if (a === 'weg') {
+        document.querySelectorAll('input.zeilen-aus').forEach(cb => cb.checked = false);
+        l.remove(); return;
+      }
+      if (a === 'del') {
+        if (!confirm(ids.length + ' Einträge löschen?')) return;
+        ids.forEach(id => Store.trashBlock(id));
+        l.remove(); App.zeichneSeite();
+        UI.toast(ids.length + ' Einträge gelöscht');
+      }
+      if (a === 'dup') {
+        ids.forEach(id => {
+          const r = Store.getBlock(id);
+          if (!r || !coll) return;
+          const k = Store.addRow(coll.id, JSON.parse(JSON.stringify(r.props || {})));
+          Store.updateBlock(k.id, { text: (r.text || '') + ' (Kopie)' });
+        });
+        l.remove(); App.zeichneSeite();
+      }
+      if (a === 'prop' && coll) {
+        const r = b.getBoundingClientRect();
+        const m = UI.menu('<div class="grp">Welche Eigenschaft?</div>' +
+          Object.keys(coll.schema).filter(k => coll.schema[k].type !== 'title')
+            .map(k => `<button data-k="${k}">${esc(coll.schema[k].name)}</button>`).join(''),
+          r.left, r.top - 30);
+        m.addEventListener('click', async ev => {
+          const kb = ev.target.closest('button[data-k]');
+          if (!kb) return;
+          m.remove();
+          const wert2 = await UI.frage('Welcher Wert für „' + coll.schema[kb.dataset.k].name + '"?', '');
+          if (wert2 === null) return;
+          ids.forEach(id => Store.setProp(id, kb.dataset.k, wert2));
+          l.remove(); App.zeichneSeite();
+          UI.toast(ids.length + ' Einträge geändert');
+        });
+      }
+    });
+  };
+
+  /** Eine Zeile vor eine andere schieben — die eigene Reihenfolge merken. */
+  const zeileEinordnen = (coll, quelleId, zielId) => {
+    const alle = Store.rowsOf(coll.id);
+    alle.forEach((r, i) => { if (r.ordnung == null) Store.updateBlock(r.id, { ordnung: i }); });
+    const liste = Store.rowsOf(coll.id).slice().sort((a, b) => (a.ordnung ?? 0) - (b.ordnung ?? 0));
+    const q = liste.findIndex(r => r.id === quelleId);
+    const z = liste.findIndex(r => r.id === zielId);
+    if (q < 0 || z < 0) return;
+    const [weg] = liste.splice(q, 1);
+    liste.splice(z, 0, weg);
+    liste.forEach((r, i) => Store.updateBlock(r.id, { ordnung: i }));
+    App.zeichneSeite();
+  };
+
+  /** Eine Spalte vor eine andere schieben. */
+  const spalteEinordnen = (coll, quelle, ziel) => {
+    const keys = Object.keys(coll.schema);
+    const q = keys.indexOf(quelle), z = keys.indexOf(ziel);
+    if (q < 0 || z < 0) return;
+    keys.splice(q, 1);
+    keys.splice(z, 0, quelle);
+    const neu = {};
+    keys.forEach(k => neu[k] = coll.schema[k]);
+    Store.updateCollection(coll.id, { schema: neu });
+    App.zeichneSeite();
   };
 
   /** Die Sammlung, auf die eine Verknüpfungsspalte zeigt. */
@@ -678,6 +892,99 @@ const Datenbank = (() => {
     App.zeichneSeite();
   };
 
+  /**
+   * Setzt eine Verknüpfung und pflegt die Gegenrichtung.
+   * Ist die Spalte wechselseitig eingerichtet, trägt sie sich auf der
+   * anderen Seite selbst ein und wieder aus — wie in Notion.
+   */
+  const relationSetzen = (row, key, coll, neueIds) => {
+    const def = coll.schema[key];
+    const alt2 = wert(row, key, coll) || [];
+    const grenze = def.limit === 1 ? neueIds.slice(-1) : neueIds;
+    Store.setProp(row.id, key, grenze);
+
+    if (!def.gegen) return;
+    const ziel = Store.getCollection(def.ziel);
+    if (!ziel || !ziel.schema[def.gegen]) return;
+
+    /* Bei den Weggefallenen austragen */
+    alt2.filter(id => !grenze.includes(id)).forEach(id => {
+      const z = Store.getBlock(id);
+      if (!z) return;
+      const liste = (z.props?.[def.gegen] || []).filter(x => x !== row.id);
+      Store.setProp(id, def.gegen, liste);
+    });
+    /* Bei den Neuen eintragen */
+    grenze.filter(id => !alt2.includes(id)).forEach(id => {
+      const z = Store.getBlock(id);
+      if (!z) return;
+      const liste = z.props?.[def.gegen] || [];
+      if (!liste.includes(row.id)) Store.setProp(id, def.gegen, [...liste, row.id]);
+    });
+  };
+
+  /** Richtet eine Verknüpfung ein: Ziel, Gegenrichtung, Limit. */
+  const relationEinrichten = (coll, key) => {
+    const def = coll.schema[key];
+    const alle = Object.values(Store.cache.collections);
+
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(520px,94vw)">' +
+        `<div class="fh">Verknüpfung „${esc(def.name)}"<button class="icon-btn" data-a="zu">✕</button></div>` +
+        '<div style="padding:16px 18px; display:flex; flex-direction:column; gap:13px">' +
+          '<label>Womit verknüpfen?<br><select id="rz">' +
+            alle.map(c => `<option value="${c.id}"${c.id === def.ziel ? ' selected' : ''}>` +
+                          `${esc(c.name)}</option>`).join('') +
+          '</select></label>' +
+          '<label>Wie viele je Zelle?<br><select id="rl">' +
+            `<option value="0"${!def.limit ? ' selected' : ''}>Beliebig viele</option>` +
+            `<option value="1"${def.limit === 1 ? ' selected' : ''}>Nur eine</option>` +
+          '</select></label>' +
+          '<label style="display:flex; gap:10px; align-items:center">' +
+            `<input type="checkbox" id="rg"${def.gegen ? ' checked' : ''} style="width:auto">` +
+            '<span>Wechselseitig — die Gegenseite bekommt eine eigene Spalte</span></label>' +
+          '<div style="font-size:12.5px; color:var(--text-faint); line-height:1.5">' +
+            'Wechselseitig heisst: Trägst du hier etwas ein, steht es auf der anderen Seite ' +
+            'automatisch auch. Rollups brauchen das nicht, funktionieren damit aber sauberer.</div>' +
+        '</div>' +
+        '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      if (!e.target.closest('[data-a="ok"]')) return;
+
+      const zielId = o.querySelector('#rz').value;
+      const limit = +o.querySelector('#rl').value;
+      const wechsel = o.querySelector('#rg').checked;
+
+      def.ziel = zielId;
+      def.limit = limit;
+
+      const ziel = Store.getCollection(zielId);
+      if (wechsel && ziel) {
+        if (!def.gegen || !ziel.schema[def.gegen]) {
+          const gk = Store.uid().slice(0, 5);
+          ziel.schema[gk] = { name: coll.name, type: 'relation', ziel: coll.id, gegen: key, limit: 0 };
+          def.gegen = gk;
+          Store.updateCollection(ziel.id, { schema: ziel.schema });
+        }
+      } else if (!wechsel && def.gegen && ziel) {
+        delete ziel.schema[def.gegen];
+        Store.updateCollection(ziel.id, { schema: ziel.schema });
+        def.gegen = '';
+      }
+
+      Store.updateCollection(coll.id, { schema: coll.schema });
+      o.remove();
+      App.zeichneSeite();
+      UI.toast('Verknüpfung eingerichtet');
+    });
+  };
+
   /* --- Verknüpfungen bearbeiten ------------------------------------------- */
   const relationWaehlen = (row, key, coll) => {
     const def = coll.schema[key];
@@ -725,7 +1032,7 @@ const Datenbank = (() => {
     o.querySelector('#rq').addEventListener('input', e => zeichne(e.target.value));
     o.addEventListener('click', e => {
       if (e.target.closest('[data-a="ok"]') || e.target === o) {
-        Store.setProp(row.id, key, [...gewaehlt]);
+        relationSetzen(row, key, coll, [...gewaehlt]);
         o.remove(); App.zeichneSeite();
         return;
       }
@@ -738,7 +1045,11 @@ const Datenbank = (() => {
       }
       const b = e.target.closest('button[data-z]');
       if (!b) return;
-      gewaehlt.has(b.dataset.z) ? gewaehlt.delete(b.dataset.z) : gewaehlt.add(b.dataset.z);
+      if (gewaehlt.has(b.dataset.z)) gewaehlt.delete(b.dataset.z);
+      else {
+        if (def.limit === 1) gewaehlt.clear();
+        gewaehlt.add(b.dataset.z);
+      }
       zeichne(o.querySelector('#rq').value);
     });
     o.querySelector('#rq').focus();
@@ -1127,6 +1438,58 @@ const Datenbank = (() => {
     return w;
   };
 
+  /* --- Feed: der Zeitstrom, neueste zuerst (Notions Feed-View) ----------- */
+  const alsFeed = (coll, view, rows) => {
+    const w = document.createElement('div');
+    w.className = 'feed';
+
+    const datumKey = view.datumKey && coll.schema[view.datumKey] ? view.datumKey
+      : Object.keys(coll.schema).find(k => ['date','created','edited'].includes(coll.schema[k].type));
+
+    const sortiert2 = rows.slice().sort((a, b) => {
+      const av = datumKey ? wert(a, datumKey, coll) : a.created;
+      const bv = datumKey ? wert(b, datumKey, coll) : b.created;
+      return String(bv || '').localeCompare(String(av || ''));
+    });
+
+    if (!sortiert2.length) {
+      w.innerHTML = '<div class="db-leer">Noch keine Einträge.</div>';
+      return w;
+    }
+
+    sortiert2.forEach(r => {
+      const e = document.createElement('article');
+      e.className = 'feed-eintrag';
+
+      const wann = datumKey ? Formula.anzeige(wert(r, datumKey, coll)) : Werkzeuge.zeitKurz(r.created);
+      const merkmale = Object.keys(coll.schema)
+        .filter(k => k !== datumKey && coll.schema[k].type !== 'title' && !(view.hidden || []).includes(k))
+        .map(k => zelle(r, k, coll))
+        .filter(z => z && !z.includes('—'))
+        .slice(0, 4).join(' ');
+
+      /* Der Anfang des Seiteninhalts als Vorschau */
+      const vorschau = Store.childrenOf(r.id)
+        .map(b => b.text || '').filter(Boolean).join(' ').slice(0, 220);
+
+      e.innerHTML =
+        `<div class="fe-kopf"><b>${esc(r.text || 'Ohne Titel')}</b><span>${esc(wann)}</span></div>` +
+        (merkmale ? `<div class="fe-merkmale">${merkmale}</div>` : '') +
+        (vorschau ? `<div class="fe-text">${esc(vorschau)}${vorschau.length >= 220 ? ' …' : ''}</div>` : '') +
+        `<div class="fe-fuss"><button data-a="oeffnen">Öffnen</button>` +
+        `<button data-a="komm">💬 Kommentar</button></div>`;
+
+      e.addEventListener('click', ev => {
+        if (ev.target.closest('[data-a="komm"]')) { Kommentare.neu(r); return; }
+        if (ev.target.closest('[data-a="oeffnen"]') || ev.target.closest('.fe-kopf'))
+          view.oeffnenAls === 'voll' ? App.oeffne(r.id) : zeilePeek(r, coll);
+      });
+      e.addEventListener('contextmenu', ev => { ev.preventDefault(); zeilenMenue({ x: ev.clientX, y: ev.clientY }, r, coll); });
+      w.appendChild(e);
+    });
+    return w;
+  };
+
   /* --- Diagrammansicht ----------------------------------------------------
    * Notions Chart-View: gruppieren, zusammenfassen, zeichnen.
    * ----------------------------------------------------------------------*/
@@ -1165,7 +1528,7 @@ const Datenbank = (() => {
       `<span class="chart-titel">${esc(coll.name)} — ${esc(coll.schema[gKey].name)}` +
       (mKey ? ' nach ' + esc(coll.schema[mKey].name) : ' (Anzahl)') + '</span>' +
       '<div class="chart-typen">' +
-        [['bar','Balken'],['line','Linie'],['area','Fläche'],['donut','Ring']]
+        [['bar','Balken'],['line','Linie'],['area','Fläche'],['donut','Ring'],['kpi','Kennzahl']]
           .map(([id, n]) => `<button data-ct="${id}"${id === typ ? ' class="on"' : ''}>${n}</button>`).join('') +
       '</div>' +
       '<button data-a="achsen" class="chart-daten">✎ Achsen</button>';
@@ -1238,7 +1601,12 @@ const Datenbank = (() => {
       const feld = document.createElement('label');
       feld.className = 'form-feld';
       const pflicht = (view.pflicht || []).includes(k);
-      feld.innerHTML = `<span>${esc(def.name)}${pflicht ? ' <em>*</em>' : ''}</span>`;
+      const regel = (view.logik || {})[k];
+      feld.dataset.k = k;
+      if (regel) feld.dataset.zeigtWenn = regel.key + '|' + regel.wert;
+      feld.innerHTML = `<span>${esc(def.name)}${pflicht ? ' <em>*</em>' : ''}` +
+        (regel ? `<em class="fl-hinweis">nur wenn ${esc(coll.schema[regel.key]?.name || '?')} = ` +
+                 `${esc(regel.wert)}</em>` : '') + '</span>';
 
       let eingabe;
       if (['select','status'].includes(def.type)) {
@@ -1268,6 +1636,7 @@ const Datenbank = (() => {
     fuss.className = 'form-fuss';
     fuss.innerHTML = `<button class="prim" data-a="senden">${esc(view.formKnopf || 'Absenden')}</button>` +
                      `<button data-a="pflicht">Pflichtfelder</button>` +
+                     `<button data-a="logik">Bedingte Fragen</button>` +
                      `<span class="form-zahl">${Store.rowsOf(coll.id).length} Einträge bisher</span>`;
     w.appendChild(fuss);
 
@@ -1278,7 +1647,52 @@ const Datenbank = (() => {
         ? { formTitel: f.textContent } : { formText: f.textContent });
     });
 
+    /* Bedingte Fragen: erst zeigen, wenn eine andere Antwort passt */
+    const logikPruefen = () => {
+      box.querySelectorAll('.form-feld[data-zeigt-wenn]').forEach(f => {
+        const [k2, w2] = f.dataset.zeigtWenn.split('|');
+        const quelle = box.querySelector(`[data-k="${k2}"]`);
+        const jetzt = quelle ? (quelle.type === 'checkbox' ? String(quelle.checked) : quelle.value) : '';
+        f.style.display = (String(jetzt) === String(w2)) ? '' : 'none';
+      });
+    };
+    box.addEventListener('input', logikPruefen);
+    box.addEventListener('change', logikPruefen);
+    setTimeout(logikPruefen, 0);
+
     fuss.addEventListener('click', e => {
+      if (e.target.closest('[data-a="logik"]')) {
+        const r = e.target.getBoundingClientRect();
+        const m = UI.menu('<div class="grp">Welche Frage soll bedingt sein?</div>' +
+          felder.map(k => `<button data-k="${k}">${esc(coll.schema[k].name)}` +
+            ((view.logik || {})[k] ? '<span class="ms">bedingt</span>' : '') + '</button>').join(''),
+          r.left, r.top - 30);
+        m.addEventListener('click', async ev => {
+          const b2 = ev.target.closest('button[data-k]');
+          if (!b2) return;
+          m.remove();
+          const ziel = b2.dataset.k;
+          view.logik = view.logik || {};
+          if (view.logik[ziel]) { delete view.logik[ziel]; Store.updateView(view.id, { logik: view.logik }); App.zeichneSeite(); return; }
+
+          const m2 = UI.menu('<div class="grp">Zeigen, wenn diese Frage …</div>' +
+            felder.filter(k => k !== ziel)
+              .map(k => `<button data-q="${k}">${esc(coll.schema[k].name)}</button>`).join(''),
+            r.left, r.top - 30);
+          m2.addEventListener('click', async ev2 => {
+            const q = ev2.target.closest('button[data-q]');
+            if (!q) return;
+            m2.remove();
+            const w3 = await UI.frage('… diesen Wert hat', '');
+            if (w3 === null) return;
+            view.logik[ziel] = { key: q.dataset.q, wert: w3 };
+            Store.updateView(view.id, { logik: view.logik });
+            App.zeichneSeite();
+            UI.toast('Bedingte Frage eingerichtet');
+          });
+        });
+        return;
+      }
       if (e.target.closest('[data-a="pflicht"]')) {
         const r = e.target.getBoundingClientRect();
         const m = UI.menu('<div class="grp">Pflichtfelder</div>' + felder.map(k =>
@@ -1298,10 +1712,11 @@ const Datenbank = (() => {
       const props = {};
       let titel = '';
       let fehlt = null;
-      box.querySelectorAll('[data-k]').forEach(el => {
+      box.querySelectorAll('input[data-k], select[data-k]').forEach(el => {
         const k = el.dataset.k;
+        const versteckt = el.closest('.form-feld')?.style.display === 'none';
         const v = el.type === 'checkbox' ? el.checked : el.value;
-        if ((view.pflicht || []).includes(k) && (v === '' || v === false)) fehlt = coll.schema[k].name;
+        if (!versteckt && (view.pflicht || []).includes(k) && (v === '' || v === false)) fehlt = coll.schema[k].name;
         if (coll.schema[k].type === 'title') titel = v;
         else props[k] = v;
       });
@@ -1452,7 +1867,8 @@ const Datenbank = (() => {
       '<div class="grp">Neue Ansicht</div>' +
       [['table','▦','Tabelle'],['board','▤','Board'],['list','☰','Liste'],
        ['gallery','▩','Galerie'],['calendar','📅','Kalender'],
-       ['timeline','▬','Zeitstrahl'],['chart','📊','Diagramm'],['form','📝','Formular']]
+       ['timeline','▬','Zeitstrahl'],['chart','📊','Diagramm'],['form','📝','Formular'],
+       ['feed','📰','Feed']]
         .map(([id,i,n]) => `<button data-l="${id}"><span class="mi">${i}</span>${n}</button>`).join(''),
       r.left, r.bottom + 4);
     m.addEventListener('click', e => {
@@ -1492,59 +1908,153 @@ const Datenbank = (() => {
     });
   };
 
+  /* ------------------------------------------------------------------------
+   * FILTER-EDITOR
+   * ------------------------------------------------------------------------
+   * Notions „Advanced filter": Regeln und Gruppen, UND oder ODER, mehrere
+   * Ebenen tief. Jede Zeile lässt sich einzeln ändern.
+   * ----------------------------------------------------------------------*/
   const filterMenue = (anker, coll, view, block) => {
-    const r = anker.getBoundingClientRect();
-    view.filters = view.filters || { operator:'and', rules:[] };
+    view.filters = view.filters || { operator: 'and', rules: [] };
 
-    const html =
-      '<div class="grp">Filter</div>' +
-      Object.keys(coll.schema).map(k =>
-        `<button data-k="${k}"><span class="mi">${propTyp(coll.schema[k].type).icon}</span>` +
-        `${esc(coll.schema[k].name)}</button>`).join('') +
-      (view.filters.rules.length
-        ? '<hr><button data-a="clear"><span class="mi">✕</span>Alle Filter entfernen</button>' +
-          `<button data-a="op"><span class="mi">⋈</span>Verknüpfung: ${view.filters.operator === 'or' ? 'ODER' : 'UND'}</button>`
-        : '');
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(700px,95vw)">' +
+        '<div class="fh">⚟ Filter<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="filter-baum" id="fb"></div>' +
+        '<div class="fbtns">' +
+          '<button data-a="regel">＋ Regel</button>' +
+          '<button data-a="gruppe">＋ Gruppe</button>' +
+          '<button data-a="leeren">Alle entfernen</button>' +
+          '<button data-a="ok" class="prim">Fertig</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(o);
 
-    const m = UI.menu(html, r.left, r.bottom + 4);
-    m.addEventListener('click', e => {
-      const b = e.target.closest('button');
-      if (!b) return;
+    const keys = Object.keys(coll.schema);
 
-      if (b.dataset.a === 'clear') {
-        view.filters.rules = [];
-        Store.updateView(view.id, { filters: view.filters });
-        m.remove(); App.zeichneSeite(); return;
-      }
-      if (b.dataset.a === 'op') {
-        view.filters.operator = view.filters.operator === 'or' ? 'and' : 'or';
-        Store.updateView(view.id, { filters: view.filters });
-        m.remove(); App.zeichneSeite(); return;
-      }
+    /* Braucht dieser Operator überhaupt einen Wert? */
+    const ohneWert = (op) => /^(ist leer|ist nicht leer|ist aktiviert|ist nicht aktiviert|ist heute|ist gestern|ist morgen|ist diese Woche|ist letzte Woche|ist nächste Woche|ist dieser Monat|ist letzter Monat|ist in den|liegt in der)/.test(op);
 
-      const k = b.dataset.k;
-      if (!k) return;
-      const def = coll.schema[k];
-      const ops = OPERATOREN[def.type] || OPERATOREN.text;
+    const zeichneGruppe = (gruppe, pfad, tiefe) => {
+      const kopf = tiefe === 0 ? '' :
+        `<div class="fg-kopf"><button class="fg-op" data-op="${pfad}">` +
+        `${gruppe.operator === 'or' ? 'ODER' : 'UND'}</button>` +
+        `<span>Gruppe</span>` +
+        `<button data-add-regel="${pfad}">＋ Regel</button>` +
+        `<button data-weg="${pfad}">🗑</button></div>`;
 
-      m.innerHTML = `<div class="grp">${esc(def.name)}</div>` +
-        ops.map(o => `<button data-op="${esc(o)}">${o}</button>`).join('');
+      const zeilen = gruppe.rules.map((r, i) => {
+        const p2 = pfad ? pfad + '.' + i : String(i);
+        if (r.rules !== undefined) return zeichneGruppe(r, p2, tiefe + 1);
 
-      m.addEventListener('click', ev => {
-        const ob = ev.target.closest('button[data-op]');
-        if (!ob) return;
-        const op = ob.dataset.op;
-        let v = '';
-        if (!['ist leer','ist nicht leer','ist aktiviert','ist nicht aktiviert',
-              'ist heute','ist diese Woche','ist dieser Monat'].includes(op)) {
-          v = prompt(`${def.name} ${op} …`, '');
-          if (v === null) { m.remove(); return; }
-        }
-        view.filters.rules.push({ key: k, op, wert: v });
-        Store.updateView(view.id, { filters: view.filters });
-        m.remove();
-        App.zeichneSeite();
+        const def = coll.schema[r.key] || {};
+        const ops = OPERATOREN[def.type] || OPERATOREN.text;
+        return '<div class="fr-zeile">' +
+          (i === 0 ? '<span class="fr-wo">Wenn</span>'
+                   : `<button class="fg-op klein" data-op="${pfad}">` +
+                     `${gruppe.operator === 'or' ? 'oder' : 'und'}</button>`) +
+          `<select data-k="${p2}">` +
+            keys.map(k => `<option value="${k}"${k === r.key ? ' selected' : ''}>` +
+                          `${esc(coll.schema[k].name)}</option>`).join('') +
+          '</select>' +
+          `<select data-o="${p2}">` +
+            ops.map(op => `<option${op === r.op ? ' selected' : ''}>${esc(op)}</option>`).join('') +
+          '</select>' +
+          (ohneWert(r.op) ? '<span class="fr-leer">—</span>'
+            : `<input data-w="${p2}" value="${esc(r.wert ?? '')}" placeholder="Wert">`) +
+          `<button data-weg="${p2}" title="Regel entfernen">✕</button>` +
+        '</div>';
+      }).join('');
+
+      return `<div class="fg" data-tiefe="${tiefe}">${kopf}${zeilen ||
+        '<div class="fg-leer">Noch keine Regel</div>'}</div>`;
+    };
+
+    const hole = (pfad) => {
+      if (pfad === '') return view.filters;
+      let ziel = view.filters;
+      const teile = pfad.split('.');
+      teile.forEach((i, n) => {
+        ziel = n === teile.length - 1 ? ziel.rules[+i] : ziel.rules[+i];
       });
+      return ziel;
+    };
+    const eltern = (pfad) => {
+      const teile = pfad.split('.');
+      const letzte = +teile.pop();
+      let ziel = view.filters;
+      teile.forEach(i => ziel = ziel.rules[+i]);
+      return { gruppe: ziel, index: letzte };
+    };
+
+    const speichern = () => {
+      Store.updateView(view.id, { filters: view.filters });
+      zeichne();
+      App.zeichneSeite();
+    };
+
+    const zeichne = () => {
+      o.querySelector('#fb').innerHTML =
+        `<div class="fg-wurzel"><button class="fg-op" data-op="">` +
+        `${view.filters.operator === 'or' ? 'ODER' : 'UND'}</button>` +
+        `<span>alle Regeln verbinden</span></div>` +
+        zeichneGruppe(view.filters, '', 0);
+    };
+    zeichne();
+
+    o.addEventListener('change', e => {
+      const k = e.target.dataset.k, op = e.target.dataset.o, w = e.target.dataset.w;
+      if (k !== undefined) {
+        const r = hole(k);
+        r.key = e.target.value;
+        const ops = OPERATOREN[coll.schema[r.key].type] || OPERATOREN.text;
+        if (!ops.includes(r.op)) r.op = ops[0];
+        speichern();
+      }
+      if (op !== undefined) { hole(op).op = e.target.value; speichern(); }
+      if (w !== undefined)  { hole(w).wert = e.target.value; speichern(); }
+    });
+
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]') || e.target.closest('[data-a="ok"]')) {
+        o.remove(); return;
+      }
+      const opB = e.target.closest('[data-op]');
+      if (opB) {
+        const g = hole(opB.dataset.op);
+        g.operator = g.operator === 'or' ? 'and' : 'or';
+        speichern(); return;
+      }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) {
+        const { gruppe, index } = eltern(weg.dataset.weg);
+        gruppe.rules.splice(index, 1);
+        speichern(); return;
+      }
+      const addR = e.target.closest('[data-add-regel]');
+      if (addR) {
+        const g = hole(addR.dataset.addRegel);
+        const k = keys[0];
+        g.rules.push({ key: k, op: (OPERATOREN[coll.schema[k].type] || OPERATOREN.text)[0], wert: '' });
+        speichern(); return;
+      }
+      if (e.target.closest('[data-a="regel"]')) {
+        const k = keys[0];
+        view.filters.rules.push({ key: k, op: (OPERATOREN[coll.schema[k].type] || OPERATOREN.text)[0], wert: '' });
+        speichern(); return;
+      }
+      if (e.target.closest('[data-a="gruppe"]')) {
+        const k = keys[0];
+        view.filters.rules.push({ operator: 'or',
+          rules: [{ key: k, op: (OPERATOREN[coll.schema[k].type] || OPERATOREN.text)[0], wert: '' }] });
+        speichern(); return;
+      }
+      if (e.target.closest('[data-a="leeren"]')) {
+        view.filters = { operator: 'and', rules: [] };
+        speichern(); return;
+      }
     });
   };
 
@@ -1634,6 +2144,7 @@ const Datenbank = (() => {
       m.remove();
       App.zeichneSeite();
       if (t === 'rollup') rollupEditor(coll, key);
+      if (t === 'relation') relationEinrichten(coll, key);
     });
   };
 
@@ -1652,9 +2163,10 @@ const Datenbank = (() => {
       (def.type === 'formula'  ? '<button data-a="formula"><span class="mi">∑</span>Formel bearbeiten</button>' : '') +
       (['select','status','multi'].includes(def.type)
         ? '<button data-a="optionen"><span class="mi">⊙</span>Optionen bearbeiten</button>' : '') +
-      (def.type === 'relation' ? '<button data-a="relziel"><span class="mi">⇄</span>Zieldatenbank wählen</button>' : '') +
+      (def.type === 'relation' ? '<button data-a="relein"><span class="mi">⇄</span>Verknüpfung einrichten</button>' : '') +
       (def.type === 'rollup'   ? '<button data-a="rollup"><span class="mi">⤴</span>Rollup einrichten</button>' : '') +
-      (def.type === 'number'   ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' : '') +
+      (['number','formula','rollup'].includes(def.type)
+        ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' : '') +
       (def.type === 'uid'      ? '<button data-a="praefix"><span class="mi">ID</span>Vorsilbe setzen</button>' : '') +
       (def.type === 'ki'       ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
       '<hr>' +
@@ -1663,6 +2175,8 @@ const Datenbank = (() => {
       '<button data-a="filter"><span class="mi">⚟</span>Nach dieser Spalte filtern</button>' +
       '<hr>' +
       `<button data-a="umbruch"><span class="mi">↵</span>Text umbrechen<span class="ms">${umbruchAn ? 'an' : 'aus'}</span></button>` +
+      `<button data-a="fix"><span class="mi">📌</span>Spalte fixieren` +
+        `<span class="ms">${(view.fixiert || []).includes(key) ? 'an' : 'aus'}</span></button>` +
       '<button data-a="links"><span class="mi">←</span>Nach links</button>' +
       '<button data-a="rechts"><span class="mi">→</span>Nach rechts</button>' +
       '<button data-a="hide"><span class="mi">👁</span>In dieser Ansicht ausblenden</button>' +
@@ -1697,16 +2211,18 @@ const Datenbank = (() => {
       if (a === 'rollup')   { m.remove(); rollupEditor(coll, key); return; }
       if (a === 'anzeige') {
         m.innerHTML = '<div class="grp">Anzeigen als</div>' +
-          '<button data-z="zahl">Zahl</button><button data-z="bar">Balken</button>';
+          '<button data-z="zahl">Zahl</button><button data-z="bar">Balken</button>' +
+          '<button data-z="ring">Ring</button>';
         m.addEventListener('click', ev => {
           const z = ev.target.closest('button[data-z]');
           if (!z) return;
-          def.anzeige = z.dataset.z === 'bar' ? 'bar' : '';
+          def.anzeige = z.dataset.z === 'zahl' ? '' : z.dataset.z;
           Store.updateCollection(coll.id, { schema: coll.schema });
           m.remove(); App.zeichneSeite();
         });
         return;
       }
+      if (a === 'relein') { m.remove(); relationEinrichten(coll, key); return; }
       if (a === 'relziel') {
         const alle = Object.values(Store.cache.collections);
         m.innerHTML = '<div class="grp">Zieldatenbank</div>' +
@@ -1751,6 +2267,11 @@ const Datenbank = (() => {
         if (wert2 === null) return;
         view.filters.rules.push({ key, op: ops[0], wert: wert2 });
         Store.updateView(view.id, { filters: view.filters });
+        App.zeichneSeite();
+      }
+      if (a === 'fix') {
+        const fx = view.fixiert || [];
+        Store.updateView(view.id, { fixiert: fx.includes(key) ? fx.filter(x => x !== key) : [...fx, key] });
         App.zeichneSeite();
       }
       if (a === 'umbruch') {
@@ -2146,6 +2667,75 @@ const Datenbank = (() => {
   };
 
   /* ========================================================================
+   * ZEILENVORLAGEN   (Notions „New with template")
+   * ======================================================================*/
+  const vorlagenMenue = (anker, coll, view) => {
+    const liste = coll.vorlagen || [];
+    const r = anker.getBoundingClientRect();
+    const m = UI.menu(
+      '<div class="grp">Neuer Eintrag mit Vorlage</div>' +
+      (liste.length
+        ? liste.map((v, i) =>
+            `<button data-v="${i}"><span class="mi">${esc(v.icon || '🧩')}</span>${esc(v.name)}` +
+            `<span class="ms" data-vweg="${i}">✕</span></button>`).join('')
+        : '<div class="grp" style="font-weight:400">Noch keine Vorlage</div>') +
+      '<hr>' +
+      '<button data-a="leer"><span class="mi">＋</span>Leerer Eintrag</button>' +
+      '<button data-a="neu"><span class="mi">🧩</span>Vorlage aus einem Eintrag anlegen</button>',
+      r.right - 240, r.bottom + 6);
+
+    m.addEventListener('click', async e => {
+      const weg = e.target.closest('[data-vweg]');
+      if (weg) {
+        coll.vorlagen.splice(+weg.dataset.vweg, 1);
+        Store.updateCollection(coll.id, { vorlagen: coll.vorlagen });
+        m.remove(); UI.toast('Vorlage entfernt');
+        return;
+      }
+      const b = e.target.closest('button[data-v], button[data-a]');
+      if (!b) return;
+      m.remove();
+
+      if (b.dataset.a === 'leer') { Store.addRow(coll.id, {}); App.zeichneSeite(); return; }
+
+      if (b.dataset.a === 'neu') {
+        const zeilen = Store.rowsOf(coll.id);
+        if (!zeilen.length) { UI.toast('Erst einen Eintrag anlegen'); return; }
+        const w = UI.menu('<div class="grp">Welcher Eintrag wird zur Vorlage?</div>' +
+          zeilen.slice(0, 30).map(z => `<button data-z="${z.id}">${esc(z.text || 'Ohne Titel')}</button>`).join(''),
+          r.right - 240, r.bottom + 6);
+        w.addEventListener('click', async ev => {
+          const zb = ev.target.closest('button[data-z]');
+          if (!zb) return;
+          w.remove();
+          const z = Store.getBlock(zb.dataset.z);
+          const name = await UI.frage('Name der Vorlage', z.text || 'Vorlage');
+          if (!name) return;
+          coll.vorlagen = coll.vorlagen || [];
+          coll.vorlagen.push({
+            name, icon: '🧩',
+            props: JSON.parse(JSON.stringify(z.props || {})),
+            titel: z.text || '',
+            inhalt: (Store.baum(z.id).kinder || [])
+          });
+          Store.updateCollection(coll.id, { vorlagen: coll.vorlagen });
+          UI.toast('Vorlage gespeichert');
+        });
+        return;
+      }
+
+      /* Aus einer Vorlage anlegen */
+      const v = liste[+b.dataset.v];
+      if (!v) return;
+      const neu2 = Store.addRow(coll.id, JSON.parse(JSON.stringify(v.props || {})));
+      Store.updateBlock(neu2.id, { text: v.titel || v.name });
+      (v.inhalt || []).forEach(k => Store.baumEinfuegen(k, neu2.id));
+      App.zeichneSeite();
+      UI.toast('Eintrag aus Vorlage angelegt');
+    });
+  };
+
+  /* ========================================================================
    * AUTOMATIONEN
    * ------------------------------------------------------------------------
    * Notions Datenbank-Automationen: „Wenn etwas passiert, dann tu das."
@@ -2154,19 +2744,22 @@ const Datenbank = (() => {
   const AUSLOESER = [
     ['zeile-neu',      'Ein Eintrag wird angelegt'],
     ['prop-geaendert', 'Eine Eigenschaft ändert sich'],
-    ['prop-wert',      'Eine Eigenschaft bekommt einen bestimmten Wert']
+    ['prop-wert',      'Eine Eigenschaft bekommt einen bestimmten Wert'],
+    ['zeit-vor',       'Einige Tage vor einem Datum'],
+    ['zeit-nach',      'Einige Tage nach einem Datum']
   ];
   const AKTIONEN = [
     ['setze-prop',   'Eigenschaft setzen'],
     ['ki-fuellen',   'KI-Feld ausfüllen lassen'],
     ['erinnerung',   'Erinnerung anlegen'],
     ['unterseite',   'Unterseite im Eintrag anlegen'],
+    ['zaehler',      'Zähler um eins erhöhen'],
     ['melden',       'Kurze Meldung zeigen']
   ];
 
   let imLauf = false;   /* verhindert, dass Automationen sich gegenseitig auslösen */
 
-  const automationenLaufen = (row, coll, art, key, wert) => {
+  const automationenLaufen = (row, coll, art, key, neuerWert) => {
     if (imLauf || !coll || !(coll.automationen || []).length) return;
     imLauf = true;
     try {
@@ -2175,11 +2768,29 @@ const Datenbank = (() => {
         const w = a.wenn || {};
         if (w.art !== art) return;
         if (w.art !== 'zeile-neu' && w.key && w.key !== key) return;
-        if (w.art === 'prop-wert' && String(wert ?? '') !== String(w.wert ?? '')) return;
+        if (w.art === 'prop-wert' && String(neuerWert ?? '') !== String(w.wert ?? '')) return;
+
+        /* Zusätzliche Bedingungen — alle müssen zutreffen */
+        if ((a.bedingungen || []).length &&
+            !a.bedingungen.every(b => trifftZu(row, b, coll))) return;
+
+        /* Gilt die Automation nur für eine Ansicht? Dann muss die Zeile
+           auch durch deren Filter kommen. */
+        if (a.nurAnsicht) {
+          const v = Store.getView(a.nurAnsicht);
+          if (v && !gruppeTrifftZu(row, v.filters, coll)) return;
+        }
 
         (a.dann || []).forEach(d => {
           if (d.art === 'setze-prop' && d.key) {
-            Store.setProp(row.id, d.key, d.wert ?? '');
+            let v = d.wert ?? '';
+            if (v === 'heute')  v = new Date().toISOString().slice(0, 10);
+            if (v === 'morgen') { const t = new Date(); t.setDate(t.getDate() + 1); v = t.toISOString().slice(0, 10); }
+            if (v === 'jetzt')  v = new Date().toISOString().slice(0, 16);
+            Store.setProp(row.id, d.key, v);
+          }
+          if (d.art === 'zaehler' && d.key) {
+            Store.setProp(row.id, d.key, Formula.zahl(wert(row, d.key, coll)) + 1);
           }
           if (d.art === 'ki-fuellen' && d.key) {
             kiFeldFuellen(row, d.key, coll);
@@ -2205,8 +2816,46 @@ const Datenbank = (() => {
     }
   };
 
+  /**
+   * Zeitauslöser: „drei Tage vor dem Fälligkeitsdatum". Wird beim Start und
+   * danach stündlich geprüft. Jede Zeile löst höchstens einmal je Automation aus.
+   */
+  const zeitAutomationen = () => {
+    Object.values(Store.cache.collections).forEach(coll => {
+      (coll.automationen || []).forEach(a => {
+        if (a.an === false) return;
+        if (a.wenn.art !== 'zeit-vor' && a.wenn.art !== 'zeit-nach') return;
+        const key = a.wenn.key;
+        if (!coll.schema[key]) return;
+        const tage = Number(a.wenn.wert) || 0;
+        const heute2 = new Date(); heute2.setHours(0, 0, 0, 0);
+
+        Store.rowsOf(coll.id).forEach(row => {
+          const v = wert(row, key, coll);
+          if (!v) return;
+          const d = new Date(v);
+          if (isNaN(d)) return;
+          d.setHours(0, 0, 0, 0);
+          const ziel = new Date(d);
+          ziel.setDate(ziel.getDate() + (a.wenn.art === 'zeit-vor' ? -tage : tage));
+          if (ziel.getTime() !== heute2.getTime()) return;
+
+          const gemerkt = row.autoGelaufen || {};
+          const marke = a.id + ':' + heute2.toISOString().slice(0, 10);
+          if (gemerkt[marke]) return;
+          gemerkt[marke] = true;
+          Store.updateBlock(row.id, { autoGelaufen: gemerkt });
+          automationenLaufen(row, coll, a.wenn.art, key);
+        });
+      });
+    });
+  };
+
   /* An die Speicherfunktionen hängen, damit jede Änderung erfasst wird. */
   const automationenEinklinken = () => {
+    setTimeout(zeitAutomationen, 4000);
+    setInterval(zeitAutomationen, 3600000);
+
     const altAddRow = Store.addRow;
     Store.addRow = function (collectionId, props) {
       const r = altAddRow.call(Store, collectionId, props);
@@ -2307,15 +2956,22 @@ const Datenbank = (() => {
           '</select></label>' +
           '<label id="adw">… auf diesen Wert<br><input id="adv" placeholder="z. B. heute"></label>' +
         '</div>' +
-        '<div class="fbtns"><button data-a="ok" class="prim">Anlegen</button>' +
-        '<button data-a="zu">Abbrechen</button></div>' +
+        '<div class="fbtns">' +
+          '<button data-a="bedingung">＋ Bedingung</button>' +
+          '<button data-a="mehr">＋ Weitere Aktion</button>' +
+          '<button data-a="ok" class="prim">Anlegen</button>' +
+          '<button data-a="zu">Abbrechen</button></div>' +
       '</div>';
     document.body.appendChild(o);
 
     const auffrischen = () => {
-      o.querySelector('#awl').style.display = o.querySelector('#aw').value === 'prop-wert' ? '' : 'none';
+      const art0 = o.querySelector('#aw').value;
+      const zeit = art0 === 'zeit-vor' || art0 === 'zeit-nach';
+      o.querySelector('#awl').style.display = (art0 === 'prop-wert' || zeit) ? '' : 'none';
+      o.querySelector('#awl').firstChild.textContent = zeit ? 'wie viele Tage?' : '… mit diesem Wert';
+      o.querySelector('#av').placeholder = zeit ? 'z. B. 3' : 'z. B. Erledigt';
       const d = o.querySelector('#ad').value;
-      o.querySelector('#adk').style.display = ['setze-prop','ki-fuellen'].includes(d) ? '' : 'none';
+      o.querySelector('#adk').style.display = ['setze-prop','ki-fuellen','zaehler'].includes(d) ? '' : 'none';
       o.querySelector('#adw').style.display = ['setze-prop','erinnerung','unterseite','melden'].includes(d) ? '' : 'none';
       o.querySelector('#adv').placeholder = d === 'erinnerung' ? 'in wie vielen Tagen? z. B. 3'
                                           : d === 'melden' ? 'Text der Meldung' : 'Wert';
@@ -2324,16 +2980,37 @@ const Datenbank = (() => {
     o.querySelector('#aw').addEventListener('change', auffrischen);
     o.querySelector('#ad').addEventListener('change', auffrischen);
 
+    const gesammelt = [];
+    const bedingungen = [];
+
     o.addEventListener('click', e => {
       if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
-      if (!e.target.closest('[data-a="ok"]')) return;
+
+      /* Zusätzliche Bedingung aufnehmen */
+      if (e.target.closest('[data-a="bedingung"]')) {
+        const k = o.querySelector('#ak').value;
+        const ops = OPERATOREN[coll.schema[k].type] || OPERATOREN.text;
+        bedingungen.push({ key: k, op: ops[0], wert: o.querySelector('#av').value });
+        UI.toast(bedingungen.length + ' Bedingung(en) — alle müssen zutreffen');
+        return;
+      }
+
+      if (!e.target.closest('[data-a="ok"]') && !e.target.closest('[data-a="mehr"]')) return;
       const d = o.querySelector('#ad').value;
       const dann = { art: d };
-      if (['setze-prop','ki-fuellen'].includes(d)) dann.key = o.querySelector('#adk2').value;
+      if (['setze-prop','ki-fuellen','zaehler'].includes(d)) dann.key = o.querySelector('#adk2').value;
       const wertFeld = o.querySelector('#adv').value;
       if (d === 'setze-prop') dann.wert = wertFeld === 'heute' ? new Date().toISOString().slice(0, 10) : wertFeld;
       if (d === 'erinnerung') dann.tage = wertFeld;
       if (d === 'unterseite' || d === 'melden') dann.text = wertFeld;
+
+      gesammelt.push(dann);
+
+      if (e.target.closest('[data-a="mehr"]')) {
+        UI.toast(gesammelt.length + ' Aktionen gesammelt — noch eine einstellen');
+        o.querySelector('#adv').value = '';
+        return;
+      }
 
       coll.automationen = coll.automationen || [];
       coll.automationen.push({
@@ -2342,11 +3019,13 @@ const Datenbank = (() => {
         an: true,
         wenn: { art: o.querySelector('#aw').value, key: o.querySelector('#ak').value,
                 wert: o.querySelector('#av').value },
-        dann: [dann]
+        bedingungen: bedingungen,
+        dann: gesammelt
       });
       Store.updateCollection(coll.id, { automationen: coll.automationen });
       o.remove();
-      UI.toast('Automation angelegt');
+      UI.toast('Automation mit ' + gesammelt.length +
+               (gesammelt.length === 1 ? ' Aktion angelegt' : ' Aktionen angelegt'));
     });
   };
 
@@ -2418,7 +3097,8 @@ const Datenbank = (() => {
   automationenEinklinken();
 
   return { render, TYPEN, propTyp, wert, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
-           automationenMenue, automationenLaufen,
+           automationenMenue, automationenLaufen, gewaehlteZeilen,
+           relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert };
 })();
