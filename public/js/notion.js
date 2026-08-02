@@ -740,9 +740,20 @@ const Ansichten = (() => {
     App.setzeSeite(null);
     document.getElementById('crumb').innerHTML = '<a>📥 Posteingang</a>';
     wrap.className = '';
+    const nichts = !erinner.length && !kommentare.length;
+
     wrap.innerHTML =
       '<div class="home">' +
         '<h1>📥 Posteingang</h1>' +
+        (nichts
+          ? '<div class="pe-leer">' +
+              '<div class="pe-ico">☑</div>' +
+              '<div class="pe-gross">Du bist auf dem neuesten Stand!</div>' +
+              '<div class="pe-klein">Bei @-Erwähnungen, Kommentaren und Erinnerungen ' +
+              'wirst du hier benachrichtigt</div>' +
+              '<button class="pe-link" data-filter="1">Filter ändern</button>' +
+            '</div>'
+          : '') +
         '<h2>Erinnerungen</h2><div class="home-liste">' +
           (erinner.length ? erinner.slice().sort((a, b) => b.zeit.localeCompare(a.zeit)).map(e =>
             `<button data-open="${e.pageId}"><span>${e.erledigt ? '✅' : '⏰'}</span>` +
@@ -767,10 +778,32 @@ const Ansichten = (() => {
 
     wrap.addEventListener('click', e => {
       const o = e.target.closest('[data-open]');
-      if (o) App.oeffne(o.dataset.open);
+      if (o) { App.oeffne(o.dataset.open); return; }
+      if (e.target.closest('[data-filter]')) posteingangFilter(e.target);
     });
   };
 
-  return { start, posteingang, gruss };
+  /** Was soll im Posteingang auftauchen? */
+  const posteingangFilter = (anker) => {
+    const jetzt = Store.getMeta('posteingangFilter',
+      { erinnerungen: true, kommentare: true, geaendert: true });
+    const r = anker.getBoundingClientRect();
+    const m = UI.menu('<div class="grp">Im Posteingang zeigen</div>' +
+      [['erinnerungen', '⏰ Erinnerungen'], ['kommentare', '💬 Kommentare'],
+       ['geaendert', '📄 Zuletzt geändert']]
+        .map(([id, n]) => `<button data-x="${id}">${n}` +
+          `<span class="ms">${jetzt[id] === false ? 'aus' : 'an'}</span></button>`).join(''),
+      r.left, r.bottom + 6, { titel: 'Filter' });
+    m.addEventListener('click', e => {
+      const b = e.target.closest('[data-x]');
+      if (!b) return;
+      jetzt[b.dataset.x] = jetzt[b.dataset.x] === false;
+      Store.setMeta('posteingangFilter', jetzt);
+      m.remove();
+      posteingang();
+    });
+  };
+
+  return { start, posteingang, posteingangFilter, gruss };
 })();
 window.Ansichten = Ansichten;

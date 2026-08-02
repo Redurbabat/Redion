@@ -353,7 +353,8 @@ const Store = (() => {
     const c = cache.collections[collectionId];
     if (!c) return null;
     const namen = { table:'Tabelle', board:'Board', list:'Liste', gallery:'Galerie',
-                    calendar:'Kalender', timeline:'Zeitstrahl', chart:'Diagramm', form:'Formular' };
+                    calendar:'Kalender', timeline:'Zeitstrahl', chart:'Diagramm', form:'Formular',
+                    feed:'Feed', map:'Karte', dashboard:'Dashboard' };
     const v = {
       id: uid(), collectionId, layout,
       name: name || namen[layout] || 'Ansicht',

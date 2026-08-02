@@ -16,21 +16,38 @@ const Einstellungen = (() => {
   const V = (k, fallback) => Store.getMeta(k, fallback);
   const S = (k, v) => { Store.setMeta(k, v); anwenden(); };
 
-  const BEREICHE = [
-    ['konto',        '👤', 'Mein Konto'],
-    ['allgemein',    '⚙️', 'Einstellungen'],
-    ['benachricht',  '🔔', 'Benachrichtigungen'],
-    ['verbindungen', '🔌', 'Verbindungen'],
-    ['arbeitsplatz', '🏠', 'Arbeitsbereich'],
-    ['bereiche',     '👥', 'Bereiche'],
-    ['sicherheit',   '🛡', 'Sicherheit'],
-    ['daten',        '💾', 'Import und Export'],
-    ['ki',           '✨', 'Künstliche Intelligenz'],
-    ['schluessel',   '🔑', 'Schlüssel und APIs'],
-    ['speicher',     '📦', 'Speicher'],
-    ['abrechnung',   '💳', 'Abrechnung'],
-    ['ueber',        'ℹ️', 'Über diese App']
+  /* Wie in Notion in Abschnitte geordnet, nicht als eine lange Liste. */
+  const GRUPPEN = [
+    ['', [
+      ['konto',        '👤', 'Mein Konto'],
+      ['allgemein',    '⚙️', 'Einstellungen'],
+      ['benachricht',  '🔔', 'Benachrichtigungen'],
+      ['daten',        '⭱', 'Importieren']
+    ]],
+    ['Funktionen', [
+      ['ki',           '✨', 'Künstliche Intelligenz'],
+      ['verbindungen', '🔌', 'Verbindungen'],
+      ['mcp',          '🔗', 'MCP'],
+      ['worker',       '⌨️', 'Worker'],
+      ['verifiziert',  '✔️', 'Verifizierte Seiten'],
+      ['oeffentlich',  '🌐', 'Öffentliche Seiten'],
+      ['emoji',        '😀', 'Emoji']
+    ]],
+    ['Verwaltung', [
+      ['arbeitsplatz', '🏠', 'Arbeitsbereich'],
+      ['analysen',     '📈', 'Analysen'],
+      ['bereiche',     '👥', 'Bereiche'],
+      ['sicherheit',   '🛡', 'Sicherheit'],
+      ['schluessel',   '🔑', 'Schlüssel und APIs']
+    ]],
+    ['Zugriff und Abrechnung', [
+      ['speicher',     '📦', 'Speicher'],
+      ['abrechnung',   '💳', 'Abrechnung'],
+      ['ueber',        'ℹ️', 'Über diese App']
+    ]]
   ];
+
+  const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
 
   /* ========================================================================
    * ANWENDEN — Einstellungen wirken sofort
@@ -39,6 +56,7 @@ const Einstellungen = (() => {
     document.documentElement.dataset.theme = V('theme', 'dark');
     document.body.dataset.schrift = V('schriftgroesse', 'normal');
     document.body.dataset.dichte  = V('dichte', 'normal');
+    document.body.classList.toggle('kontrast', !!V('kontrast', false));
   };
 
   /** Datum so ausgeben, wie es eingestellt ist. */
@@ -85,9 +103,11 @@ const Einstellungen = (() => {
           `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
           `<div><b>${esc(V('arbeitsName', 'Notizen'))}</b>` +
           `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
-          BEREICHE.map(([id, i, n]) =>
-            `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
-            `<span class="mi">${i}</span>${n}</button>`).join('') +
+          GRUPPEN.map(([titel, liste]) =>
+            (titel ? `<div class="einst-grp">${titel}</div>` : '') +
+            liste.map(([id, i, n]) =>
+              `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
+              `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
         '</div>' +
         '<div class="einst-inhalt" id="ei"></div>' +
         '<button class="einst-zu" data-a="zu">✕</button>' +
@@ -171,6 +191,11 @@ const Einstellungen = (() => {
             wahl('datumsformat', ['TT.MM.JJJJ', 'JJJJ-MM-TT', 'MM/TT/JJJJ', 'TT. Monat JJJJ'],
                  V('datumsformat', 'TT.MM.JJJJ'))) +
       zeile('Zeitformat', '', wahl('zeitformat', [['24', '24 Stunden'], ['12', '12 Stunden']], V('zeitformat', '24'))) +
+      zeile('Hoher Kontrast', 'Stärkere Ränder und klarere Farben — leichter zu lesen',
+            schalter('kontrast', V('kontrast', false))) +
+      zeile('Eingabetaste macht eine neue Zeile', 'Gilt für Chat und Kommentare. ' +
+            'Zum Senden dann Strg + Eingabe',
+            schalter('enterZeile', V('enterZeile', false))) +
       zeile('Rechtschreibprüfung', 'Die rote Wellenlinie beim Tippen',
             schalter('rechtschreib', V('rechtschreib', false))) +
       zeile('Seitenleiste', 'Beim Start eingeklappt lassen',
@@ -463,6 +488,159 @@ const Einstellungen = (() => {
       zeile('Speicherplatz', 'So viel, wie dein Browser hergibt', '<span class="ez-grau">gerätabhängig</span>') +
       zeile('Rechnungen', '', '<span class="ez-grau">keine</span>'),
 
+    /* --- MCP ------------------------------------------------------------ */
+    mcp: () => {
+      const server = Store.getMeta('mcp:server', []) || [];
+      const aus = Store.getMeta('mcp:eigenAus', []) || [];
+      return kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
+        'benutzen und eigene anbieten. Diese App kann beides — mit einer Einschränkung, ' +
+        'die unten steht.') +
+      zeile('Fremde Server', 'Werkzeuge, die dein Agent benutzen darf',
+            `<span class="ez-grau">${server.length} eingetragen</span> ` +
+            knopf('mcp-verb', 'Verwalten')) +
+      zeile('Eigene Werkzeuge', 'Der Katalog dieser App im MCP-Format',
+            `<span class="ez-grau">${MCP.eigenerKatalog().length} freigegeben, ` +
+            `${aus.length} abgeschaltet</span> ` + knopf('mcp-verb', 'Ansehen')) +
+      zeile('Freigabeliste', 'Nur mit diesen Adressen wird gesprochen',
+            `<span class="ez-grau">${(MCP.freigegeben().length
+              ? MCP.freigegeben().join(', ') : 'keine Sperre')}</span>`) +
+      zeile('Als Server erreichbar?', 'Ein Browser kann nichts entgegennehmen',
+            '<span class="ez-grau">nur über die Brücke — bruecke.js oder Cloudflare</span>') +
+      zeile('Protokollfassung', '', `<span class="ez-grau">${MCP.VERSION}</span>`);
+    },
+
+    /* --- Öffentliche Seiten --------------------------------------------- */
+    oeffentlich: () => {
+      const seiten = Links.seiten().filter(p2 => p2.oeffentlich);
+      return kopf('Öffentliche Seiten', 'In Notion heisst das „im Web veröffentlichen". ' +
+        'Ohne Server kann diese App keine Seite ins Netz stellen — was sie kann: eine ' +
+        'fertige HTML-Datei erzeugen, die überall läuft, und die ganze App bei ' +
+        'Cloudflare veröffentlichen.') +
+      zeile('Als HTML-Datei ausgeben', 'Eine Seite, die überall aufgeht — ohne diese App',
+            knopf('html-seite', 'Offene Seite ausgeben')) +
+      zeile('Ganzen Arbeitsbereich ausgeben', 'Eine einzige Datei mit allem',
+            knopf('archiv', 'Erzeugen')) +
+      zeile('Zum Veröffentlichen vorgemerkt', 'Diese Seiten kommen beim Ausgeben mit',
+            `<span class="ez-grau">${seiten.length}</span> ` +
+            knopf('oeff-merken', 'Offene Seite vormerken')) +
+      (seiten.length
+        ? seiten.slice(0, 12).map(p2 =>
+            zeile(esc(p2.icon || '📄') + ' ' + esc(p2.text || 'Ohne Titel'), '',
+                  `<button class="ez-knopf" data-tun="oeff-weg:${p2.id}">Entfernen</button>`)).join('')
+        : '') +
+      zeile('Die ganze App im Netz', 'Cloudflare Pages, kostenlos',
+            '<span class="ez-grau">CLOUDFLARE.md im App-Ordner</span>');
+    },
+
+    /* --- Worker ---------------------------------------------------------- */
+    worker: () => {
+      const liste = Agent.worker();
+      return kopf('Worker', 'Kleine Programme, die auf deine Daten losgelassen werden — ' +
+        'in einem eigenen Faden, ohne Zugriff auf die Seite. Notion nennt das seit 2026 ' +
+        '„Worker"; hier läuft es in einem Web Worker mit fünf Sekunden Zeitgrenze.') +
+      zeile('Neuen Worker schreiben', 'JavaScript, bekommt die Zeilen als eingabe',
+            knopf('worker-neu', 'Schreiben')) +
+      zeile('Vorhanden', '', `<span class="ez-grau">${liste.length}</span>`) +
+      (liste.length
+        ? liste.map((w, i) =>
+            zeile('⌨️ ' + esc(w.name), esc((w.code || '').slice(0, 70)) + ' …',
+              `<button class="ez-knopf" data-tun="worker-lauf:${i}">Laufen lassen</button> ` +
+              `<button class="ez-knopf" data-tun="worker-weg:${i}">Löschen</button>`)).join('')
+        : '<div class="ez-grau" style="padding:8px 0">Noch keiner. Ein Worker bekommt ' +
+          '<code>eingabe</code> und gibt mit <code>return</code> etwas zurück.</div>') +
+      zeile('Zeitgrenze', 'Danach wird abgebrochen',
+            wahl('workerZeit', [['5', '5 Sekunden'], ['15', '15 Sekunden'], ['30', '30 Sekunden']],
+                 V('workerZeit', '5'))) +
+      zeile('Was ein Worker darf', 'Rechnen, umformen, zusammenzählen',
+            '<span class="ez-grau">kein DOM, kein Netz, kein Speicherzugriff</span>');
+    },
+
+    /* --- Verifizierte Seiten --------------------------------------------- */
+    verifiziert: () => {
+      const alle = Object.values(Store.cache.blocks)
+        .filter(b2 => b2.type === 'page' && b2.alive !== false && !b2.system);
+      const geprueft = alle.filter(p2 => p2.geprueft);
+      const faellig = geprueft.filter(p2 => p2.gepruefBis && Date.parse(p2.gepruefBis) < Date.now());
+      return kopf('Verifizierte Seiten', 'Eine geprüfte Seite trägt oben ein Häkchen: ' +
+        'jemand hat bestätigt, dass der Inhalt stimmt. Läuft die Prüfung ab, ' +
+        'verschwindet das Häkchen wieder.') +
+      zeile('Offene Seite prüfen', 'Setzt das Häkchen und trägt dich als Prüfer ein',
+            knopf('pruef-setzen', 'Als geprüft markieren')) +
+      zeile('Gültigkeitsdauer', 'Wie lange eine Prüfung hält',
+            wahl('pruefDauer', [['30', 'Ein Monat'], ['90', 'Drei Monate'],
+                                ['180', 'Ein halbes Jahr'], ['0', 'Ohne Ablauf']],
+                 V('pruefDauer', '90'))) +
+      zeile('Geprüft', '', `<span class="ez-grau">${geprueft.length} von ${alle.length}</span>`) +
+      zeile('Abgelaufen', 'Die brauchen einen neuen Blick',
+            `<span class="ez-grau">${faellig.length}</span>` +
+            (faellig.length ? ' ' + knopf('pruef-erneuern', 'Alle erneuern') : '')) +
+      (geprueft.length
+        ? geprueft.slice(0, 12).map(p2 =>
+            zeile((p2.geprueft ? '✔️ ' : '') + esc(p2.text || 'Ohne Titel'),
+              'geprüft von ' + esc(p2.geprueftVon || 'dir') +
+              (p2.gepruefBis ? ' · gültig bis ' + String(p2.gepruefBis).slice(0, 10) : ''),
+              `<button class="ez-knopf" data-tun="pruef-weg:${p2.id}">Häkchen entfernen</button>`)).join('')
+        : '');
+    },
+
+    /* --- Analysen -------------------------------------------------------- */
+    analysen: () => {
+      const bloecke = Object.values(Store.cache.blocks).filter(b2 => b2.alive !== false);
+      const seiten = bloecke.filter(b2 => b2.type === 'page' && !b2.system);
+      const dbs = Object.values(Store.cache.collections);
+      const zeilen2 = dbs.reduce((n, c) => n + Store.rowsOf(c.id).length, 0);
+      const woerter = bloecke.reduce((n, b2) =>
+        n + ((b2.text || '').trim() ? b2.text.trim().split(/\s+/).length : 0), 0);
+      const aufrufe = seiten.reduce((n, p2) => n + (p2.aufrufe || 0), 0);
+      const meist = [...seiten].sort((a, b2) => (b2.aufrufe || 0) - (a.aufrufe || 0)).slice(0, 8);
+      const tage = {};
+      seiten.forEach(p2 => {
+        const t = String(p2.created || '').slice(0, 10);
+        if (t) tage[t] = (tage[t] || 0) + 1;
+      });
+      const letzte = Object.entries(tage).sort().slice(-7);
+      const hoch = Math.max(1, ...letzte.map(x => x[1]));
+
+      return kopf('Analysen', 'Wie viel hier steht und was am meisten benutzt wird. ' +
+        'Alle Zahlen kommen aus diesem Gerät — es wird nichts gemeldet.') +
+      '<div class="an-kacheln">' +
+        [[seiten.length, 'Seiten'], [bloecke.length, 'Blöcke'], [dbs.length, 'Datenbanken'],
+         [zeilen2, 'Zeilen'], [woerter.toLocaleString('de-CH'), 'Wörter'], [aufrufe, 'Aufrufe']]
+          .map(([n, t]) => `<div class="an-kachel"><b>${n}</b><span>${t}</span></div>`).join('') +
+      '</div>' +
+      zeile('Neue Seiten je Tag', 'Die letzten sieben Tage mit Zuwachs',
+            '<div class="an-balken">' +
+            (letzte.length
+              ? letzte.map(([t, n]) =>
+                  `<i style="height:${Math.round(n / hoch * 100)}%" title="${t}: ${n}"></i>`).join('')
+              : '<span class="ez-grau">noch keine</span>') + '</div>') +
+      (meist.length
+        ? '<div class="ez-grp">Meist geöffnet</div>' +
+          meist.map(p2 => zeile(esc(p2.icon || '📄') + ' ' + esc(p2.text || 'Ohne Titel'), '',
+                `<span class="ez-grau">${p2.aufrufe || 0}×</span>`)).join('')
+        : '') +
+      zeile('Als CSV ausgeben', 'Zahlen zum Weiterrechnen',
+            knopf('analysen-csv', 'Herunterladen'));
+    },
+
+    /* --- Emoji ----------------------------------------------------------- */
+    emoji: () => {
+      const eigene = Store.getMeta('emoji:eigene', []) || [];
+      return kopf('Emoji', 'Eigene Bilder als Symbol für Seiten und Datenbanken. ' +
+        'Sie liegen im Browser und werden nirgendwohin geschickt.') +
+      zeile('Eigenes Symbol hinzufügen', 'Bild wählen — wird auf 64 Pixel gebracht',
+            knopf('emoji-neu', 'Bild wählen')) +
+      zeile('Vorhanden', '', `<span class="ez-grau">${eigene.length}</span>`) +
+      (eigene.length
+        ? '<div class="emoji-eigene">' + eigene.map((e, i) =>
+            `<button data-tun="emoji-weg:${i}" title="${esc(e.name)} — klicken zum Entfernen">` +
+            `<img src="${esc(e.bild)}" alt=""></button>`).join('') + '</div>'
+        : '<div class="ez-grau" style="padding:8px 0">Noch keine eigenen Symbole.</div>') +
+      zeile('Emoji-Stil', 'Wie die Standardsymbole gezeichnet werden',
+            wahl('emojiStil', [['system', 'Wie das Betriebssystem'], ['flach', 'Schlicht']],
+                 V('emojiStil', 'system')));
+    },
+
     ueber: () =>
       kopf('Über diese App') +
       '<div class="ez-ueber">' +
@@ -586,6 +764,148 @@ const Einstellungen = (() => {
     if (was === 'spiegel-verb')    { o.remove(); Spiegel.dialog(); return; }
     if (was === 'clipper')         { o.remove(); Clipper.dialog(); return; }
     if (was === 'mcp-verb')        { o.remove(); MCP.dialog(); return; }
+    if (was === 'html-seite') {
+      if (!seite) { UI.toast('Erst eine Seite öffnen'); return; }
+      Werkzeuge.alsHtmlDatei ? Werkzeuge.alsHtmlDatei(seite) : Werkzeuge.teilenMenue(document.body, seite);
+      return;
+    }
+    if (was === 'oeff-merken') {
+      if (!seite) { UI.toast('Erst eine Seite öffnen'); return; }
+      Store.updateBlock(seite.id, { oeffentlich: !seite.oeffentlich });
+      UI.toast(seite.oeffentlich ? 'Nicht mehr vorgemerkt' : 'Vorgemerkt');
+      o.neuZeichnen && o.neuZeichnen();
+      return;
+    }
+    if (was.startsWith('oeff-weg:')) {
+      Store.updateBlock(was.slice(9), { oeffentlich: false });
+      o.neuZeichnen && o.neuZeichnen();
+      return;
+    }
+    /* --- Worker ---------------------------------------------------------- */
+    if (was === 'worker-neu') {
+      const name = await UI.frage('Wie heisst der Worker?', 'Zahlen zusammenzählen');
+      if (!name) return;
+      const code = await UI.frage('JavaScript — bekommt eingabe, gibt etwas zurück',
+        'return eingabe.length + " Zeilen";');
+      if (!code) return;
+      const liste = Agent.worker();
+      liste.push({ name, code });
+      Store.setMeta('agent:worker', liste);
+      o.neuZeichnen && o.neuZeichnen();
+      UI.toast('Worker gemerkt');
+      return;
+    }
+    if (was.startsWith('worker-weg:')) {
+      const liste = Agent.worker().filter((_, i) => i !== +was.slice(11));
+      Store.setMeta('agent:worker', liste);
+      o.neuZeichnen && o.neuZeichnen();
+      return;
+    }
+    if (was.startsWith('worker-lauf:')) {
+      const w = Agent.worker()[+was.slice(12)];
+      if (!w) return;
+      const daten = Object.values(Store.cache.collections)
+        .flatMap(c => Store.rowsOf(c.id).map(r => ({ titel: r.text, ...(r.props || {}) })));
+      try {
+        const raus = await Agent.workerLaufen(w, daten);
+        UI.toast('Ergebnis: ' + JSON.stringify(raus).slice(0, 120));
+      } catch (e) { UI.toast('Der Worker ist gescheitert: ' + e.message); }
+      return;
+    }
+
+    /* --- Verifizierte Seiten --------------------------------------------- */
+    if (was === 'pruef-setzen') {
+      if (!seite) { UI.toast('Erst eine Seite öffnen'); return; }
+      const tage = +Store.getMeta('pruefDauer', '90') || 0;
+      Store.updateBlock(seite.id, {
+        geprueft: true,
+        geprueftVon: Store.getMeta('nutzer', '') || 'Ich',
+        geprueftAm: Store.now(),
+        gepruefBis: tage ? new Date(Date.now() + tage * 86400000).toISOString() : ''
+      });
+      o.neuZeichnen && o.neuZeichnen();
+      App.zeichneSeite();
+      UI.toast('Als geprüft markiert');
+      return;
+    }
+    if (was.startsWith('pruef-weg:')) {
+      Store.updateBlock(was.slice(10), { geprueft: false, gepruefBis: '' });
+      o.neuZeichnen && o.neuZeichnen();
+      App.zeichneSeite();
+      return;
+    }
+    if (was === 'pruef-erneuern') {
+      const tage = +Store.getMeta('pruefDauer', '90') || 0;
+      Object.values(Store.cache.blocks)
+        .filter(p2 => p2.geprueft && p2.gepruefBis && Date.parse(p2.gepruefBis) < Date.now())
+        .forEach(p2 => Store.updateBlock(p2.id, {
+          gepruefBis: tage ? new Date(Date.now() + tage * 86400000).toISOString() : '',
+          geprueftAm: Store.now()
+        }));
+      o.neuZeichnen && o.neuZeichnen();
+      UI.toast('Prüfungen erneuert');
+      return;
+    }
+
+    /* --- Analysen -------------------------------------------------------- */
+    if (was === 'analysen-csv') {
+      const seiten = Object.values(Store.cache.blocks)
+        .filter(b2 => b2.type === 'page' && b2.alive !== false && !b2.system);
+      const zeilen2 = [['Seite', 'Aufrufe', 'Angelegt', 'Zuletzt geändert']]
+        .concat(seiten.map(p2 => [
+          (p2.text || 'Ohne Titel').replace(/"/g, '""'),
+          p2.aufrufe || 0, String(p2.created || '').slice(0, 10),
+          String(p2.edited || '').slice(0, 10)
+        ]));
+      const csv = zeilen2.map(z => z.map(x => `"${x}"`).join(';')).join('\n');
+      const l = document.createElement('a');
+      l.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+      l.download = 'notizen-analysen.csv';
+      l.click();
+      UI.toast('CSV gespeichert');
+      return;
+    }
+
+    if (was === 'emoji-neu') {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.addEventListener('change', async () => {
+        const f = inp.files[0];
+        if (!f) return;
+        if (f.size > 2 * 1024 * 1024) { UI.toast('Bitte ein Bild unter 2 MB'); return; }
+        const bild = await new Promise(ok2 => {
+          const fr = new FileReader();
+          fr.onload = () => {
+            /* Auf 64 Pixel bringen — sonst wird der Speicher voll */
+            const img = new Image();
+            img.onload = () => {
+              const c = document.createElement('canvas');
+              c.width = c.height = 64;
+              const g = c.getContext('2d');
+              g.drawImage(img, 0, 0, 64, 64);
+              ok2(c.toDataURL('image/png'));
+            };
+            img.onerror = () => ok2(fr.result);
+            img.src = fr.result;
+          };
+          fr.readAsDataURL(f);
+        });
+        const l = Store.getMeta('emoji:eigene', []) || [];
+        l.push({ name: f.name.replace(/\.[^.]+$/, ''), bild });
+        Store.setMeta('emoji:eigene', l.slice(0, 60));
+        UI.toast('Symbol hinzugefügt');
+        o.neuZeichnen && o.neuZeichnen();
+      });
+      inp.click();
+      return;
+    }
+    if (was.startsWith('emoji-weg:')) {
+      const l = Store.getMeta('emoji:eigene', []) || [];
+      l.splice(+was.slice(10), 1);
+      Store.setMeta('emoji:eigene', l);
+      o.neuZeichnen && o.neuZeichnen();
+      return;
+    }
     if (was === 'konten')          { o.remove(); Konten.verwalten(); return; }
     if (was === 'rechte-matrix')   { Konten.matrix(); return; }
     if (was === 'freigabe')        { if (seite) { o.remove(); Konten.freigeben(seite.id); } return; }
@@ -711,7 +1031,7 @@ const Einstellungen = (() => {
     }
   };
 
-  return { oeffne, start, anwenden, datum, wochenstart, V, S };
+  return { oeffne, start, anwenden, datum, wochenstart, V, S, GRUPPEN, BEREICHE };
 })();
 
 window.Einstellungen = Einstellungen;

@@ -1,12 +1,14 @@
 @echo off
+chcp 65001 >nul
 REM ===========================================================================
-REM  Notizen lokal starten
+REM  Notizen starten
 REM ---------------------------------------------------------------------------
-REM  Die App laeuft auch per Doppelklick auf index.html. Fuer die Anmeldung bei
-REM  Google braucht es aber eine echte Adresse - dieses Skript liefert sie:
-REM  http://localhost:8080
+REM  Die App laeuft auch per Doppelklick auf  public\index.html.
+REM  Fuer die Anmeldung bei Google und fuer das Installieren als App braucht
+REM  es aber eine echte Adresse - die liefert dieses Skript:
+REM      http://localhost:8080
 REM ===========================================================================
-cd /d "%~dp0"
+cd /d "%~dp0public"
 echo.
 echo   Notizen laeuft gleich unter  http://localhost:8080
 echo   Zum Beenden dieses Fenster schliessen.

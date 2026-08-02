@@ -1,13 +1,27 @@
 # ===========================================================================
-#  wrangler.toml — nur noetig, wenn du von Hand veroeffentlichst
+#  wrangler.toml — Notizen als Cloudflare Worker mit statischen Dateien
 # ---------------------------------------------------------------------------
-#  Wer Cloudflare mit GitHub verbindet, braucht diese Datei nicht.
-#  Wer lieber vom eigenen Rechner hochlaedt:
+#  Cloudflare hat aus dem Repository ein Worker-Projekt gemacht und ruft
+#  beim Veroeffentlichen  npx wrangler deploy  auf. Diese Datei sagt ihm,
+#  was er dabei tun soll:
 #
-#     npm install -g wrangler
-#     wrangler login
-#     wrangler pages deploy . --project-name notizen
+#    main     der Einstiegspunkt. Er beantwortet /api/* selbst und reicht
+#             alles andere an die Dateiablage weiter.
+#    assets   der Ordner "public" mit den Dateien der App. Alles andere -
+#             der Worker selbst, die Anleitungen, die .git-Ablage - bleibt
+#             draussen. Das ist wichtig: die .git-Ablage enthaelt eine Datei
+#             ueber 25 MB, und daran ist der erste Versuch gescheitert.
+#
+#  Von Hand veroeffentlichen geht auch:
+#      npm install -g wrangler
+#      wrangler login
+#      wrangler deploy
 # ===========================================================================
+
 name = "notizen"
-compatibility_date = "2026-01-01"
-pages_build_output_dir = "."
+main = "worker.js"
+compatibility_date = "2025-04-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"

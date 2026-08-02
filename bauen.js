@@ -9,7 +9,7 @@
 const fs = require('fs');
 const pfad = require('path');
 
-const wurzel = __dirname;
+const wurzel = pfad.join(__dirname, 'public');
 const lies = (p) => fs.readFileSync(pfad.join(wurzel, p), 'utf8');
 
 let html = lies('index.html');

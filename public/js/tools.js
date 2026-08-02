@@ -4,7 +4,7 @@
  * Hier steckt alles, was die anderen Notiz-Programme gross gemacht hat —
  * an einem Ort, in einer Oberfläche:
  *
- *   Befehlspalette      SilverBullet      Strg + Shift + P
+ *   Befehlspalette      SilverBullet      Strg + Shift + K
  *   Tagesjournal        Logseq, Foam      Seitenleiste → Journal
  *   Schnellnotizen      Memos, Blinko     Seitenleiste → Schnellnotizen
  *   Vorlagen            Outline, Trilium  Seitenleiste → Vorlagen
@@ -1378,7 +1378,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     const G = [
       ['Allgemein', [
         ['Strg N', 'Neue Seite'], ['Strg P', 'Suchen'], ['Strg K', 'Suchen / Befehle'],
-        ['Strg Shift P', 'Befehlspalette'], ['Strg [', 'Zurück'], ['Strg ]', 'Vorwärts'],
+        ['Strg Shift K', 'Befehlspalette'], ['Strg Shift P', 'Verschieben nach'],
+        ['Strg Alt P', 'Präsentieren'], ['Strg [', 'Zurück'], ['Strg ]', 'Vorwärts'],
         ['Strg \\', 'Seitenleiste'], ['Strg Shift L', 'Hell / Dunkel'], ['Strg ,', 'Einstellungen'],
         ['Strg J', 'KI-Panel'], ['Strg F', 'Auf der Seite suchen'], ['Strg /', 'Diese Übersicht'],
         ['Esc', 'Menü oder Auswahl schliessen']
@@ -1424,18 +1425,14 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     '<hr>' +
     '<button data-a="wz-vorlage"><span class="mi">🧩</span>Als Vorlage speichern</button>' +
     '<button data-a="wz-vorlage-ein"><span class="mi">＋</span>Aus Vorlage einfügen</button>' +
-    '<button data-a="wz-verschieben"><span class="mi">➦</span>Verschieben nach …</button>' +
     '<button data-a="wz-versionen"><span class="mi">🕘</span>Versionsverlauf</button>' +
     `<button data-a="wz-wiki"><span class="mi">📚</span>${p.wiki ? 'Wiki auflösen' : 'In Wiki umwandeln'}</button>` +
     '<button data-a="wz-teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
     '<button data-a="wz-erinnerung"><span class="mi">⏰</span>Erinnerung</button>' +
     '<hr>' +
     `<button data-a="wz-sperren"><span class="mi">🔒</span>${p.locked ? 'Entschlüsseln' : 'Verschlüsseln'}</button>` +
-    `<button data-a="wz-gesperrt"><span class="mi">${p.gesperrt ? '🔓' : '🔏'}</span>` +
-      `${p.gesperrt ? 'Bearbeiten erlauben' : 'Bearbeiten sperren'}</button>` +
     '<hr>' +
     '<button data-a="wz-fokus"><span class="mi">◎</span>Fokus-Modus<span class="ms">Strg Shift F</span></button>' +
-    '<button data-a="wz-praesi"><span class="mi">▶</span>Präsentation</button>' +
     '<button data-a="wz-quelltext"><span class="mi">⌨</span>Markdown-Quelltext</button>' +
     '<button data-a="wz-statistik"><span class="mi">📊</span>Statistik</button>' +
     '<hr>' +
@@ -1633,13 +1630,28 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       /* Hat der Editor die Taste schon behandelt (z. B. Kommentar am Block)? */
       if (e.defaultPrevented) return;
       const k = e.key.toLowerCase();
-      if (e.shiftKey && k === 'p') { e.preventDefault(); palette(); return; }
+      if (e.shiftKey && k === 'p') {
+        e.preventDefault();
+        const p2 = Store.getBlock(App.aktuelleSeite());
+        if (p2) verschiebenNach(p2); else palette();
+        return;
+      }
       if (e.shiftKey && k === 'j') { e.preventDefault(); journal(); return; }
       if (e.shiftKey && k === 'm') { e.preventDefault(); schnellnotizen(); return; }
       if (e.shiftKey && k === 'g') { e.preventDefault(); Links.graph(); return; }
       if (e.shiftKey && k === 't') { e.preventDefault(); Links.tagRegister(); return; }
       if (e.shiftKey && k === 'f') { e.preventDefault(); fokus(); return; }
       if (e.altKey && k === 't')   { e.preventDefault(); alleToggles(); return; }
+      /* Wie bei Notion: Strg+Alt+P präsentiert, Strg+Shift+P verschiebt.
+         Die Palette rückt dafür auf Strg+Shift+K — beides steht in der
+         Kürzelliste. */
+      if (e.altKey && k === 'p')   {
+        e.preventDefault();
+        const p2 = Store.getBlock(App.aktuelleSeite());
+        if (p2) praesentation(p2);
+        return;
+      }
+      if (e.shiftKey && k === 'k') { e.preventDefault(); palette(); return; }
       if (k === '/')               { e.preventDefault(); tastenkuerzel(); return; }
     });
   };

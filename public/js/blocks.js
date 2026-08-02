@@ -809,6 +809,36 @@ const Blocks = (() => {
       if (b.type === 'toc') return;
     });
 
+    /* --- Vorschlagsmodus -------------------------------------------------
+       Ist er für die Seite an, wird beim Verlassen eines Blocks festgehalten,
+       was vorher darinstand — daraus wird ein Vorschlag zum Annehmen oder
+       Verwerfen. Ohne den Modus kostet das nichts: zwei Zeilen Vergleich. */
+    wurzel.addEventListener('focusin', (e) => {
+      const ct = e.target.closest('.ct');
+      if (ct) ct.dataset.vorAlt = ct.textContent;
+    });
+
+    wurzel.addEventListener('focusout', (e) => {
+      const ct = e.target.closest('.ct');
+      if (!ct || ct.dataset.vorAlt === undefined) return;
+      const alt = ct.dataset.vorAlt;
+      const neu = ct.textContent;
+      delete ct.dataset.vorAlt;
+      if (alt === neu) return;
+
+      const seite = Store.getBlock(App.aktuelleSeite());
+      if (!seite || !seite.vorschlagModus) return;
+      const bid = ct.closest('.blk')?.dataset.bid;
+      if (!bid) return;
+
+      const liste = [...(seite.vorschlaege || [])];
+      /* Mehrfaches Tippen im selben Block bleibt ein Vorschlag */
+      const schon = liste.findIndex(v => v.bid === bid);
+      if (schon >= 0) liste[schon] = { ...liste[schon], neu, wann: Store.now() };
+      else liste.push({ bid, alt, neu, von: (Konten.aktiv() || {}).name || 'Ich', wann: Store.now() });
+      Store.updateBlock(seite.id, { vorschlaege: liste });
+    });
+
     /* --- Tasten ---------------------------------------------------------- */
     wurzel.addEventListener('keydown', (e) => {
       const ct = e.target.closest('.ct');
@@ -1518,38 +1548,61 @@ const Blocks = (() => {
     };
     let filter = filterLesen();
 
+    /* Was zuletzt benutzt wurde, steht oben unter „Empfohlen" — so wie in
+       Notion. Nach ein paar Tagen trifft das meistens zu, was man sucht. */
+    const zuletzt = () => (Store.getMeta('slash:zuletzt', []) || [])
+      .map(id => TYPEN.find(t => t.id === id)).filter(Boolean).slice(0, 4);
+
+    const merken = (id) => {
+      const l = [id, ...(Store.getMeta('slash:zuletzt', []) || []).filter(x => x !== id)];
+      Store.setMeta('slash:zuletzt', l.slice(0, 8));
+    };
+
+    const knopf = (t) =>
+      `<button data-t="${t.id}">` +
+        `<span class="mi">${t.icon}</span>` +
+        `<span class="sl-name">${t.name}</span>` +
+        `<span class="sl-gruppe">${esc(t.gruppe)}</span>` +
+        (t.kurz ? `<span class="ms">${t.kurz}</span>` : '') +
+      '</button>';
+
     const bauen = () => {
       const q = filter.toLowerCase().replace(/^\//, '');
       const treffer = TYPEN.filter(t =>
         !q || t.name.toLowerCase().includes(q) || t.cmd.some(c => c.startsWith(q))
       );
 
-      const gruppen = {};
-      treffer.forEach(t => (gruppen[t.gruppe] = gruppen[t.gruppe] || []).push(t));
+      if (!treffer.length)
+        return '<div class="grp">Kein Treffer für „' + esc(q) + '"</div>';
 
       let html = '';
-      if (!treffer.length) {
-        html = '<div class="grp">Kein Treffer für „' + esc(q) + '"</div>';
-      } else {
-        Object.entries(gruppen).forEach(([g, liste]) => {
-          html += `<div class="grp">${g}</div>`;
-          liste.forEach(t => {
-            html += `<button data-t="${t.id}">` +
-                      `<span class="mi">${t.icon}</span>` +
-                      `<span>${t.name}</span>` +
-                      (t.kurz ? `<span class="ms">${t.kurz}</span>` : '') +
-                    `</button>`;
-          });
-        });
+
+      /* Empfohlen nur, solange nichts getippt wurde */
+      if (!q) {
+        const empf = zuletzt();
+        if (empf.length) {
+          html += '<div class="grp">Empfohlen</div>';
+          empf.forEach(t => { html += knopf(t); });
+        }
       }
+
+      const gruppen = {};
+      treffer.forEach(t => (gruppen[t.gruppe] = gruppen[t.gruppe] || []).push(t));
+      Object.entries(gruppen).forEach(([g, liste]) => {
+        html += `<div class="grp">${g}</div>`;
+        liste.forEach(t => { html += knopf(t); });
+      });
       return html;
     };
 
-    const menu = UI.menu(bauen(), rect.left, rect.bottom + 4);
+    const menu = UI.menu(
+      '<div class="sl-liste">' + bauen() + '</div>' +
+      '<div class="sl-fuss">Menü schliessen<span>esc</span></div>',
+      rect.left, rect.bottom + 4);
 
     menu.addEventListener('click', (e) => {
       const b = e.target.closest('button[data-t]');
-      if (b) { schliessen(); umwandelnNachSlash(ct, block, b.dataset.t); }
+      if (b) { merken(b.dataset.t); schliessen(); umwandelnNachSlash(ct, block, b.dataset.t); }
     });
 
     const schliessen = () => {
@@ -1565,7 +1618,7 @@ const Blocks = (() => {
       /* Slash gelöscht? Dann ist das Menü fertig. */
       if (!/\/[^\/]*$/.test(ct.textContent || '')) { schliessen(); return; }
       if (filter === vorher) return;
-      menu.innerHTML = bauen();
+      menu.querySelector('.sl-liste').innerHTML = bauen();
       const erste = menu.querySelector('button[data-t]');
       if (erste) erste.classList.add('on');
     };
@@ -1593,7 +1646,7 @@ const Blocks = (() => {
       if (e.key === 'Enter') {
         e.preventDefault();
         const ziel = aktiv || btns[0];
-        if (ziel) { schliessen(); umwandelnNachSlash(ct, block, ziel.dataset.t); }
+        if (ziel) { merken(ziel.dataset.t); schliessen(); umwandelnNachSlash(ct, block, ziel.dataset.t); }
         return;
       }
       if (e.key === 'Backspace' && !filter) { schliessen(); return; }

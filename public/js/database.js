@@ -48,8 +48,16 @@ const Datenbank = (() => {
     { id:'verify',     name:'Prüfung',          icon:'✔'  },
     { id:'ki-fassung', name:'KI: Zusammenfassung', icon:'✨' },
     { id:'ki-sprache', name:'KI: Übersetzung',  icon:'✨' },
-    { id:'ki-worte',   name:'KI: Schlagwörter', icon:'✨' }
+    { id:'ki-worte',   name:'KI: Schlagwörter', icon:'✨' },
+    /* --- Felder, die an einer Verbindung hängen (Notion: mit ↑-Abzeichen) -- */
+    { id:'gdrive',     name:'Google Drive Datei', icon:'🟢', dienst:'google' },
+    { id:'figma',      name:'Figma Datei',      icon:'🎨', dienst:'figma'  },
+    { id:'githubpr',   name:'GitHub-Pull-Request', icon:'🐙', dienst:'github' },
+    { id:'zendesk',    name:'Zendesk Ticket',   icon:'🎫', dienst:'zendesk' }
   ];
+
+  /* Diese vier zeigen ein verknüpftes Objekt von aussen: {url, titel, zusatz} */
+  const DIENST_TYPEN = ['gdrive', 'figma', 'githubpr', 'zendesk'];
 
   /* Alle Felder, die die KI selbst füllt — sie teilen sich eine Mechanik. */
   const KI_TYPEN = ['ki', 'ki-fassung', 'ki-sprache', 'ki-worte'];
@@ -270,6 +278,15 @@ const Datenbank = (() => {
       const d = new Date(v);
       if (isNaN(d)) return esc(v);
       return esc(Einstellungen.datum(d, def.type !== 'date'));
+    }
+
+    if (DIENST_TYPEN.includes(def.type)) {
+      const o = v && typeof v === 'object' ? v : (v ? { url: v } : null);
+      if (!o || !o.url) return '<span style="color:var(--text-faint)">—</span>';
+      return `<a class="dienst-chip" href="${esc(o.url)}" target="_blank" rel="noopener">` +
+             `<span>${propTyp(def.type).icon}</span>` +
+             `<span class="dc-t">${esc(o.titel || o.url)}</span>` +
+             (o.zusatz ? `<span class="dc-z">${esc(o.zusatz)}</span>` : '') + '</a>';
     }
 
     if (def.type === 'url' && v)
@@ -502,6 +519,12 @@ const Datenbank = (() => {
   const regelAnzahl = (gruppe) => (gruppe?.rules || []).reduce(
     (n, r) => n + (r.rules !== undefined ? regelAnzahl(r) : 1), 0);
 
+  /** Notions Ladelimit: nicht alles auf einmal zeigen. */
+  const begrenzen = (rows, view) => {
+    const n = view.limit === 0 ? 0 : (view.limit || 50);
+    return n && rows.length > n ? rows.slice(0, n) : rows;
+  };
+
   const gefiltert = (rows, view, coll) => {
     const f = view.filters || { operator:'and', rules:[] };
     if (!f.rules || !f.rules.length) return rows;
@@ -532,10 +555,31 @@ const Datenbank = (() => {
     });
   };
 
-  const zeilen = (coll, view) => {
-    const alle = sortiert(gefiltert(Store.rowsOf(coll.id), view, coll), view, coll);
-    return view.limit ? alle.slice(0, view.limit) : alle;
+  /**
+   * Alle Rohzeilen einer Ansicht — die eigene Datenquelle und, falls
+   * eingerichtet, weitere. Notion nennt das seit 2025 „mehrere Datenquellen
+   * in einer Ansicht"; im Menü heisst der Eintrag „Neue Datenquelle".
+   */
+  const rohZeilen = (coll, view) => {
+    let alle = Store.rowsOf(coll.id);
+    (view.extraDbs || []).forEach(x => {
+      const c2 = Store.cache.collections[x.collectionId];
+      if (!c2 || x.an === false) return;
+      alle = alle.concat(Store.rowsOf(c2.id));
+    });
+    /* Archiviertes bleibt draussen, bis man es ausdrücklich sehen will */
+    if (!view.archivZeigen) alle = alle.filter(r => !r.archiviert);
+    return alle;
   };
+
+  const zeilen = (coll, view) => {
+    const alle = sortiert(gefiltert(rohZeilen(coll, view), view, coll), view, coll);
+    return begrenzen(alle, view);
+  };
+
+  /** Wie viele wurden weggelassen? Das gehört dem Menschen gesagt. */
+  const zeilenGesamt = (coll, view) =>
+    sortiert(gefiltert(rohZeilen(coll, view), view, coll), view, coll).length;
 
   /* ========================================================================
    * BERECHNUNGEN UNTER DER SPALTE
@@ -627,7 +671,8 @@ const Datenbank = (() => {
       const b = document.createElement('button');
       b.className = 'db-tab' + (id === viewId ? ' on' : '');
       const ico = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
-                    timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺' }[v.layout] || '▦';
+                    timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺',
+                    dashboard:'🧮' }[v.layout] || '▦';
       b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
       b.addEventListener('click', () => {
         if (id === viewId) { ansichtMenue(b, coll, v, block); return; }
@@ -710,6 +755,7 @@ const Datenbank = (() => {
     else if (view.layout === 'form')     koerper.appendChild(alsFormular(coll, view, block));
     else if (view.layout === 'feed')     koerper.appendChild(alsFeed(coll, view, rows));
     else if (view.layout === 'map')      koerper.appendChild(alsKarte(coll, view, rows));
+    else if (view.layout === 'dashboard') koerper.appendChild(alsDashboard(coll, view, rows));
     else                                 koerper.appendChild(alsTabelle(coll, view, rows, block));
     w.appendChild(koerper);
 
@@ -718,7 +764,12 @@ const Datenbank = (() => {
 
   /* --- Tabelle ------------------------------------------------------------ */
   const alsTabelle = (coll, view, rows, block) => {
-    const sichtbar = Object.keys(coll.schema).filter(k => !(view.hidden || []).includes(k));
+    /* Die Spalten, die Notion beim Einschalten von Unter-Elementen und
+       Abhängigkeiten selbst anlegt, bleiben aus der Tabelle heraus — sie
+       stehen auf der Zeilenseite und im Menü. */
+    const sichtbar = Object.keys(coll.schema)
+      .filter(k => !(view.hidden || []).includes(k))
+      .filter(k => !coll.schema[k].eigen || (view.eigenZeigen || []).includes(k));
 
     const t = document.createElement('table');
     t.className = 'grid h-' + (view.hoehe || 'normal');
@@ -741,7 +792,7 @@ const Datenbank = (() => {
     sichtbar.forEach(k => {
       const def = coll.schema[k];
       const th = document.createElement('th');
-      th.innerHTML = `<span style="opacity:.7">${propTyp(def.type).icon}</span> ${esc(def.name)}` +
+      th.innerHTML = `<span style="opacity:${def.icon ? 1 : .7}">${def.icon || propTyp(def.type).icon}</span> ${esc(def.name)}` +
                      (def.beschreibung ? `<span class="th-info" title="${esc(def.beschreibung)}">ℹ</span>` : '') +
                      '<span class="th-griff" title="Breite ziehen"></span>';
       const breite = (view.breiten || {})[k];
@@ -798,19 +849,31 @@ const Datenbank = (() => {
     thead.appendChild(tr);
     t.appendChild(thead);
 
-    /* Zeilen — Unterelemente hängen unter ihrer Hauptzeile (Notions Sub-items) */
+    /* Zeilen — Unterelemente hängen unter ihrer Hauptzeile (Notions Sub-items).
+       Beliebig tief; jede Elternzeile bekommt einen Schalter zum Auf- und
+       Zuklappen, genau wie in Notion. */
     const tbody = document.createElement('tbody');
     const sichtbareIds = new Set(rows.map(r => r.id));
     const geordnet = [];
+    const kinderVon = (id) => rows.filter(k => k.unterVon === id);
+    const einhaengen = (r, tiefe) => {
+      const kinder = kinderVon(r.id);
+      geordnet.push({ row: r, tiefe, kinder: kinder.length });
+      if (kinder.length && !(view.zu || []).includes(r.id))
+        kinder.forEach(k => einhaengen(k, tiefe + 1));
+    };
     rows.forEach(r => {
       if (r.unterVon && sichtbareIds.has(r.unterVon)) return;
-      geordnet.push({ row: r, tiefe: 0 });
-      rows.filter(k => k.unterVon === r.id).forEach(k => geordnet.push({ row: k, tiefe: 1 }));
+      einhaengen(r, 0);
     });
 
-    geordnet.forEach(({ row: r, tiefe }, nr) => {
+    geordnet.forEach(({ row: r, tiefe, kinder }, nr) => {
       const zr = document.createElement('tr');
       if (tiefe) zr.classList.add('unterzeile');
+      if (r.archiviert) zr.classList.add('archivzeile');
+      /* Bedingte Farbe: die erste zutreffende Regel färbt die Zeile */
+      const farbe = farbeFuerZeile(r, view, coll);
+      if (farbe) zr.classList.add('farbzeile', 'bg-' + farbe);
       zr.dataset.rid = r.id;
       zr.draggable = true;
 
@@ -845,9 +908,29 @@ const Datenbank = (() => {
         const td = document.createElement('td');
         if (def.type === 'title') {
           td.className = 'tt';
-          td.innerHTML = (tiefe ? '<span class="tt-ein">↳</span>' : '') +
-                         `<span class="tt-t">${esc(r.text || 'Ohne Titel')}</span>` +
-                         `<button class="tt-auf" title="In der Vorschau öffnen">⤢ Öffnen</button>`;
+          const zuJetzt = (view.zu || []).includes(r.id);
+          td.innerHTML =
+            (tiefe ? `<span class="tt-ein" style="padding-left:${(tiefe - 1) * 16}px">↳</span>` : '') +
+            (kinder
+              ? `<button class="tt-klapp" title="${zuJetzt ? 'Aufklappen' : 'Zuklappen'}">${zuJetzt ? '▸' : '▾'}</button>`
+              : (coll.unterElemente ? '<span class="tt-klapp leer"></span>' : '')) +
+            (r.archiviert ? '<span class="tt-archiv" title="Archiviert">🗄</span>' : '') +
+            (() => {
+              const b2 = blockiertDurch(r, coll);
+              return b2.length
+                ? `<span class="tt-blockiert" title="Wartet auf: ${esc(b2.map(x => x.text).join(', '))}">⏳</span>`
+                : '';
+            })() +
+            `<span class="tt-t">${esc(r.text || 'Ohne Titel')}</span>` +
+            (kinder ? `<span class="tt-anzahl">${kinder}</span>` : '') +
+            `<button class="tt-auf" title="In der Vorschau öffnen">⤢ Öffnen</button>`;
+          td.querySelector('.tt-klapp:not(.leer)')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const zu = view.zu || [];
+            Store.updateView(view.id,
+              { zu: zu.includes(r.id) ? zu.filter(x => x !== r.id) : [...zu, r.id] });
+            App.zeichneSeite();
+          });
           td.querySelector('.tt-t').addEventListener('click', () => zeilePeek(r, coll));
           td.querySelector('.tt-auf').addEventListener('click', (e) => { e.stopPropagation(); App.oeffne(r.id); });
         } else {
@@ -1261,11 +1344,72 @@ const Datenbank = (() => {
   };
 
   /* --- Zelle bearbeiten --------------------------------------------------- */
+  /* ------------------------------------------------------------------------
+   * FELDER, DIE AN EINER VERBINDUNG HÄNGEN
+   * Google Drive, Figma, GitHub-Pull-Request, Zendesk. Die Adresse wird
+   * eingefügt; ist der Dienst verbunden, holt die App Titel und Zustand
+   * dazu. Ohne Verbindung bleibt die Adresse — das ist ehrlicher als ein
+   * Feld, das ohne Konto gar nichts kann.
+   * ----------------------------------------------------------------------*/
+  const DIENST_HILFE = {
+    gdrive:   ['Google Drive', 'https://drive.google.com/file/d/…/view'],
+    figma:    ['Figma',        'https://figma.com/file/…'],
+    githubpr: ['GitHub',       'https://github.com/besitzer/repo/pull/12'],
+    zendesk:  ['Zendesk',      'https://deinefirma.zendesk.com/agent/tickets/123']
+  };
+
+  const dienstTitelHolen = async (typ, url) => {
+    try {
+      if (typ === 'githubpr') {
+        const m = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
+        if (!m || !Verbindungen.githubToken()) return null;
+        const pr = await Verbindungen.githubRuf(`/repos/${m[1]}/${m[2]}/pulls/${m[3]}`);
+        if (!pr || !pr.title) return null;
+        return { titel: '#' + pr.number + ' ' + pr.title,
+                 zusatz: pr.merged_at ? 'zusammengeführt' : pr.state === 'open' ? 'offen' : 'zu' };
+      }
+      if (typ === 'gdrive') {
+        const m = url.match(/\/d\/([-\w]{10,})/) || url.match(/[?&]id=([-\w]{10,})/);
+        const tok = Verbindungen.googleToken();
+        if (!m || !tok) return null;
+        const d = await Verbindungen.jsonRuf(
+          'https://www.googleapis.com/drive/v3/files/' + m[1] + '?fields=name,mimeType',
+          { headers: { Authorization: 'Bearer ' + tok.token } });
+        if (!d || !d.name) return null;
+        return { titel: d.name, zusatz: (d.mimeType || '').split('.').pop() };
+      }
+    } catch (e) { /* Ohne Verbindung bleibt es bei der Adresse. */ }
+    return null;
+  };
+
+  const dienstFeld = async (td, row, key, coll) => {
+    const def = coll.schema[key];
+    const jetzt = wert(row, key, coll) || {};
+    const [name, beispiel] = DIENST_HILFE[def.type] || ['Dienst', ''];
+    const url = await UI.frage(name + '-Adresse einfügen — z. B. ' + beispiel, jetzt.url || '');
+    if (url === null) return;
+    if (!url.trim()) { Store.setProp(row.id, key, null); App.zeichneSeite(); return; }
+
+    Store.setProp(row.id, key, { url: url.trim(), titel: jetzt.titel || '', zusatz: '' });
+    App.zeichneSeite();
+
+    const dazu = await dienstTitelHolen(def.type, url.trim());
+    if (dazu) {
+      Store.setProp(row.id, key, Object.assign({ url: url.trim() }, dazu));
+      App.zeichneSeite();
+      UI.toast(name + ': ' + dazu.titel);
+    } else if (!jetzt.titel) {
+      const t = await UI.frage('Wie soll die Verknüpfung heissen?', url.split('/').filter(Boolean).pop() || name);
+      if (t) { Store.setProp(row.id, key, { url: url.trim(), titel: t, zusatz: '' }); App.zeichneSeite(); }
+    }
+  };
+
   const zelleBearbeiten = (td, row, key, coll) => {
     const def = coll.schema[key];
 
     if (def.type === 'relation') { relationWaehlen(row, key, coll); return; }
     if (def.type === 'button')   { knopfInZelle(row, key, coll); return; }
+    if (DIENST_TYPEN.includes(def.type)) { dienstFeld(td, row, key, coll); return; }
 
     if (KI_TYPEN.includes(def.type)) {
       kiFeldFuellen(row, key, coll);
@@ -1929,6 +2073,152 @@ const Datenbank = (() => {
         });
       }
     });
+  };
+
+  /* --- Dashboard -----------------------------------------------------------
+   * Notions elfter Ansichtstyp. Kein neues Datenmodell, sondern eine
+   * Zusammenfassung: oben die Kennzahlen, darunter die Verteilung nach
+   * einer Spalte und die letzten Einträge. Was gezeigt wird, stellt man
+   * über „Kacheln" ein.
+   * ------------------------------------------------------------------------*/
+  const alsDashboard = (coll, view, rows) => {
+    const w = document.createElement('div');
+    w.className = 'dash';
+
+    const zahlKeys = Object.keys(coll.schema)
+      .filter(k => ['number','formula','rollup','duration'].includes(coll.schema[k].type));
+    const gruppKeys = Object.keys(coll.schema)
+      .filter(k => ['select','status','multi','checkbox','person'].includes(coll.schema[k].type));
+    const datumKeys = Object.keys(coll.schema)
+      .filter(k => ['date','created','edited'].includes(coll.schema[k].type));
+
+    const kacheln = view.kacheln || [
+      { art: 'anzahl' },
+      ...(zahlKeys.slice(0, 2).map(k => ({ art: 'summe', key: k }))),
+      ...(gruppKeys.slice(0, 1).map(k => ({ art: 'verteilung', key: k })))
+    ];
+
+    /* --- Kennzahlen ------------------------------------------------------ */
+    const oben = document.createElement('div');
+    oben.className = 'dash-zahlen';
+
+    kacheln.filter(k => k.art !== 'verteilung').forEach(k => {
+      const d = document.createElement('div');
+      d.className = 'dash-karte';
+      if (k.art === 'anzahl') {
+        d.innerHTML = `<span class="dz-wert">${rows.length}</span>` +
+                      `<span class="dz-name">Einträge</span>`;
+      } else {
+        const name = coll.schema[k.key]?.name || '?';
+        const art = k.art === 'summe' ? 'Summe' : k.art === 'schnitt' ? 'Durchschnitt' : 'Maximum';
+        const wert2 = zusammenfassen(art, rows.map(r => wert(r, k.key, coll)), rows.length);
+        d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
+                      `<span class="dz-name">${esc(art)} · ${esc(name)}</span>`;
+      }
+      oben.appendChild(d);
+    });
+    if (oben.children.length) w.appendChild(oben);
+
+    /* --- Verteilung ------------------------------------------------------ */
+    kacheln.filter(k => k.art === 'verteilung' && k.key).forEach(k => {
+      const def = coll.schema[k.key];
+      if (!def) return;
+      const zaehler = new Map();
+      rows.forEach(r => {
+        let v = wert(r, k.key, coll);
+        if (Array.isArray(v)) v.forEach(x => zaehler.set(String(x), (zaehler.get(String(x)) || 0) + 1));
+        else {
+          const s2 = def.type === 'checkbox' ? (v ? 'Ja' : 'Nein') : (Formula.anzeige(v) || '(leer)');
+          zaehler.set(s2, (zaehler.get(s2) || 0) + 1);
+        }
+      });
+      const paare = [...zaehler.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+      const hoechst = Math.max(1, ...paare.map(p2 => p2[1]));
+
+      const box = document.createElement('div');
+      box.className = 'dash-block';
+      box.innerHTML = `<h4>Verteilung nach ${esc(def.name)}</h4>` +
+        paare.map(([n, anz]) => {
+          const opt = (def.options || []).find(o => o.name === n);
+          return '<div class="dash-balken">' +
+            `<span class="db-name">${esc(n)}</span>` +
+            `<span class="db-strich"><i class="bg-${opt ? opt.color : 'blue'}" ` +
+            `style="width:${Math.round(anz / hoechst * 100)}%"></i></span>` +
+            `<span class="db-zahl">${anz}</span></div>`;
+        }).join('');
+      w.appendChild(box);
+    });
+
+    /* --- Zuletzt geändert ------------------------------------------------ */
+    const letzte = document.createElement('div');
+    letzte.className = 'dash-block';
+    const sortiertNach = rows.slice().sort((a, b) =>
+      new Date(b.edited || b.created) - new Date(a.edited || a.created)).slice(0, 8);
+    letzte.innerHTML = '<h4>Zuletzt geändert</h4>' +
+      (sortiertNach.length
+        ? sortiertNach.map(r =>
+            `<button class="dash-zeile" data-rid="${r.id}">` +
+            `<span>${esc(r.text || 'Ohne Titel')}</span>` +
+            `<em>${esc(Einstellungen.datum(new Date(r.edited || r.created), true))}</em></button>`).join('')
+        : '<div class="db-leer">Noch keine Einträge.</div>');
+    letzte.addEventListener('click', e => {
+      const b = e.target.closest('[data-rid]');
+      if (b) zeilePeek(Store.getBlock(b.dataset.rid), coll);
+    });
+    w.appendChild(letzte);
+
+    /* --- Nächste Termine ------------------------------------------------- */
+    if (datumKeys.length) {
+      const dk = datumKeys[0];
+      const heute2 = new Date(); heute2.setHours(0, 0, 0, 0);
+      const kommend = rows
+        .map(r => ({ r, d: new Date(wert(r, dk, coll) || 0) }))
+        .filter(x => !isNaN(x.d) && x.d >= heute2)
+        .sort((a, b) => a.d - b.d).slice(0, 6);
+      if (kommend.length) {
+        const t = document.createElement('div');
+        t.className = 'dash-block';
+        t.innerHTML = `<h4>Als Nächstes · ${esc(coll.schema[dk].name)}</h4>` +
+          kommend.map(x => `<button class="dash-zeile" data-rid="${x.r.id}">` +
+            `<span>${esc(x.r.text || 'Ohne Titel')}</span>` +
+            `<em>${x.d.toLocaleDateString('de-DE')}</em></button>`).join('');
+        t.addEventListener('click', e => {
+          const b = e.target.closest('[data-rid]');
+          if (b) zeilePeek(Store.getBlock(b.dataset.rid), coll);
+        });
+        w.appendChild(t);
+      }
+    }
+
+    /* --- Kacheln einstellen ---------------------------------------------- */
+    const fuss = document.createElement('div');
+    fuss.className = 'cal-fuss';
+    fuss.innerHTML = '<span>Ein Überblick über diese Datenbank.</span>' +
+                     '<button data-a="kacheln">Kacheln einstellen</button>';
+    fuss.addEventListener('click', e => {
+      if (!e.target.closest('[data-a="kacheln"]')) return;
+      const r = e.target.getBoundingClientRect();
+      const m = UI.menu(
+        '<div class="grp">Kennzahl hinzufügen</div>' +
+        '<button data-neu="anzahl">Anzahl der Einträge</button>' +
+        zahlKeys.map(k => `<button data-neu="summe:${k}">Summe · ${esc(coll.schema[k].name)}</button>` +
+          `<button data-neu="schnitt:${k}">Durchschnitt · ${esc(coll.schema[k].name)}</button>`).join('') +
+        '<div class="grp">Verteilung</div>' +
+        gruppKeys.map(k => `<button data-neu="verteilung:${k}">Nach ${esc(coll.schema[k].name)}</button>`).join('') +
+        '<hr><button data-neu="leer">Alle Kacheln entfernen</button>',
+        r.left - 160, r.top - 20);
+      m.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-neu]');
+        if (!b) return;
+        const [art, key] = b.dataset.neu.split(':');
+        const liste = art === 'leer' ? [] : [...kacheln, key ? { art, key } : { art }];
+        Store.updateView(view.id, { kacheln: liste });
+        m.remove(); App.zeichneSeite();
+      });
+    });
+    w.appendChild(fuss);
+
+    return w;
   };
 
   /* --- Zeitstrahl ---------------------------------------------------------
@@ -2680,7 +2970,7 @@ const Datenbank = (() => {
       if (def.type === 'title') return;
       const z = document.createElement('div');
       z.className = 'peek-prop';
-      z.innerHTML = `<span class="pp-n">${propTyp(def.type).icon} ${esc(def.name)}</span>` +
+      z.innerHTML = `<span class="pp-n">${def.icon || propTyp(def.type).icon} ${esc(def.name)}</span>` +
                     `<span class="pp-w" data-k="${k}">${zelle(row, k, coll)}</span>`;
       z.querySelector('.pp-w').addEventListener('click', (e) => {
         if (e.target.type === 'checkbox') { Store.setProp(row.id, k, e.target.checked); return; }
@@ -2718,21 +3008,34 @@ const Datenbank = (() => {
       ? anker.getBoundingClientRect()
       : { left: anker.x, bottom: anker.y, right: anker.x, top: anker.y };
 
-    const m = UI.menu(
+    const m = UI.menuMitSuche(
+      '<div class="grp">Seite</div>' +
+      '<button data-a="fav"><span class="mi">☆</span>Zu Favoriten hinzufügen</button>' +
+      '<button data-a="icon"><span class="mi">😀</span>Icon bearbeiten</button>' +
+      '<button data-a="eigen"><span class="mi">☰</span>Eigenschaft bearbeiten<span class="ms">▸</span></button>' +
+      '<hr>' +
       '<button data-a="peek"><span class="mi">◧</span>In der Vorschau öffnen</button>' +
       '<button data-a="voll"><span class="mi">⤢</span>Als ganze Seite öffnen</button>' +
+      '<button data-a="komm"><span class="mi">💬</span>Kommentieren<span class="ms">Strg ⇧ M</span></button>' +
       '<hr>' +
       '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
-      '<button data-a="dup"><span class="mi">⧉</span>Duplizieren</button>' +
+      '<button data-a="dup"><span class="mi">⧉</span>Duplizieren<span class="ms">Strg D</span></button>' +
       '<button data-a="oben"><span class="mi">↑</span>Darüber einfügen</button>' +
       '<button data-a="unten"><span class="mi">↓</span>Darunter einfügen</button>' +
       '<button data-a="unter"><span class="mi">↳</span>Unterelement anlegen</button>' +
+      (coll.abhaengigkeiten
+        ? '<button data-a="blockiert"><span class="mi">↪</span>Blockiert …</button>' +
+          '<button data-a="blockiertvon"><span class="mi">↩</span>Blockiert von …</button>' : '') +
       '<button data-a="link"><span class="mi">🔗</span>Link kopieren</button>' +
       '<button data-a="komm"><span class="mi">💬</span>Kommentar</button>' +
-      '<button data-a="fav"><span class="mi">☆</span>Zu Favoriten</button>' +
       '<hr>' +
-      '<button data-a="del"><span class="mi">🗑</span>Löschen</button>',
-      r.left, r.bottom + 4);
+      `<button data-a="archiv"><span class="mi">🗄</span>${row.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
+      '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Entf</span></button>',
+      r.left, r.bottom + 4,
+      { platzhalter: 'Aktionen filtern …',
+        fuss: 'Zuletzt bearbeitet von <b>' +
+              esc(row.geaendertVon || row.erstelltVon || 'dir') + '</b><br>' +
+              esc(Einstellungen.datum(new Date(row.edited || row.created), true)) });
 
     m.addEventListener('click', async e => {
       const b = e.target.closest('button[data-a]');
@@ -2740,6 +3043,10 @@ const Datenbank = (() => {
       const a = b.dataset.a;
       m.remove();
       if (a === 'peek') zeilePeek(row, coll);
+      if (a === 'icon') UI.emojiWaehlen(anker.getBoundingClientRect ? anker : document.body,
+        (em) => { Store.updateBlock(row.id, { icon: em }); App.zeichneSeite(); });
+      if (a === 'komm') Kommentare.panel(row.id);
+      if (a === 'eigen') { zeilePeek(row, coll); }
       if (a === 'voll') { danach && danach(); App.oeffne(row.id); }
       if (a === 'rename') {
         const n = await UI.frage('Neuer Titel', row.text || '');
@@ -2752,9 +3059,45 @@ const Datenbank = (() => {
       }
       if (a === 'oben' || a === 'unten') { Store.addRow(coll.id, {}); App.zeichneSeite(); }
       if (a === 'unter') {
+        if (!coll.unterElemente) unterElementeAn(coll, true);
         const k = Store.addRow(coll.id, {});
         Store.updateBlock(k.id, { unterVon: row.id, text: 'Unterelement' });
+        /* Auch in den beiden Spalten festhalten, damit Formeln es sehen */
+        const eltern = (row.props || {})[UNTER_KEYS.kinder] || [];
+        Store.setProp(row.id, UNTER_KEYS.kinder, [...eltern, k.id]);
+        Store.setProp(k.id, UNTER_KEYS.eltern, [row.id]);
         App.zeichneSeite();
+      }
+      if (a === 'archiv') {
+        Store.updateBlock(row.id, { archiviert: !row.archiviert });
+        danach && danach();
+        App.zeichneSeite();
+        UI.toast(row.archiviert ? 'Aus dem Archiv geholt' : 'Archiviert — über die Ansicht wieder sichtbar');
+      }
+      if (a === 'blockiert' || a === 'blockiertvon') {
+        const key = a === 'blockiert' ? ABH_KEYS.blockiert : ABH_KEYS.blockiertVon;
+        const jetzt = (row.props || {})[key] || [];
+        const andere = Store.rowsOf(coll.id).filter(z => z.id !== row.id);
+        const m2 = UI.menuMitSuche(
+          andere.map(z => `<button data-z="${z.id}">${esc(z.text || 'Ohne Titel')}` +
+            `<span class="ms">${jetzt.includes(z.id) ? '✓' : ''}</span></button>`).join('') ||
+          '<div class="menu-fuss">Keine andere Zeile da</div>',
+          r.left, r.bottom + 4,
+          { platzhalter: 'Zeile suchen …',
+            kopf: `<div class="grp">${a === 'blockiert' ? 'Blockiert' : 'Blockiert von'}</div>` });
+        m2.addEventListener('click', ev => {
+          const z = ev.target.closest('[data-z]');
+          if (!z) return;
+          const id = z.dataset.z;
+          const neu = jetzt.includes(id) ? jetzt.filter(x => x !== id) : [...jetzt, id];
+          Store.setProp(row.id, key, neu);
+          /* Gegenrichtung mitpflegen */
+          const gegenKey = a === 'blockiert' ? ABH_KEYS.blockiertVon : ABH_KEYS.blockiert;
+          const gegen = (Store.getBlock(id).props || {})[gegenKey] || [];
+          Store.setProp(id, gegenKey,
+            neu.includes(id) ? [...new Set([...gegen, row.id])] : gegen.filter(x => x !== row.id));
+          m2.remove(); App.zeichneSeite();
+        });
       }
       if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + row.id); UI.toast('Link kopiert'); }
       if (a === 'komm') Kommentare.neu(row);
@@ -2772,17 +3115,27 @@ const Datenbank = (() => {
    * MENÜS
    * ======================================================================*/
 
+  /* Elf Ansichtstypen als Kachelraster — genau wie in Notion. */
   const neueAnsicht = (anker, coll, block) => {
     const r = anker.getBoundingClientRect();
     const m = UI.menu(
-      '<div class="grp">Neue Ansicht</div>' +
-      [['table','▦','Tabelle'],['board','▤','Board'],['list','☰','Liste'],
-       ['gallery','▩','Galerie'],['calendar','📅','Kalender'],
-       ['timeline','▬','Zeitstrahl'],['chart','📊','Diagramm'],['form','📝','Formular'],
-       ['feed','📰','Feed'],['map','🗺','Karte']]
-        .map(([id,i,n]) => `<button data-l="${id}"><span class="mi">${i}</span>${n}</button>`).join(''),
+      '<div class="grp">Neue Ansicht hinzufügen</div>' +
+      '<div class="dl-kacheln" style="padding:0 8px 8px; grid-template-columns:repeat(4,1fr)">' +
+      LAYOUTS.map(([id, i, n]) =>
+        `<button data-l="${id}"><span>${i}</span>${n}</button>`).join('') +
+      '</div>' +
+      '<hr><button data-a="quelle"><span class="mi">⛁</span>Neue Datenquelle</button>',
       r.left, r.bottom + 4);
+    m.style.width = '320px';
     m.addEventListener('click', e => {
+      if (e.target.closest('[data-a="quelle"]')) {
+        m.remove();
+        const p = Store.addPage(App.aktuelleSeite(), { text: 'Neue Datenbank' });
+        Store.addDatabase(App.aktuelleSeite(), 'Neue Datenbank', null, 'table');
+        App.zeichneSeite();
+        UI.toast('Neue Datenquelle angelegt');
+        return;
+      }
       const b = e.target.closest('button[data-l]');
       if (!b) return;
       const v = Store.addView(coll.id, b.dataset.l);
@@ -2792,18 +3145,765 @@ const Datenbank = (() => {
     });
   };
 
-  const ansichtMenue = (anker, coll, view, block) => {
+  const LAYOUT_NAMEN = { table:'Tabelle', board:'Board', list:'Liste', gallery:'Galerie',
+    calendar:'Kalender', timeline:'Zeitleiste', chart:'Diagramm', form:'Formular',
+    feed:'Feed', map:'Karte', dashboard:'Dashboard' };
+
+  /** Gruppieren als eigenes kleines Menü — wird von zwei Stellen gebraucht. */
+  /* ========================================================================
+   * LAYOUT-PANEL
+   * ------------------------------------------------------------------------
+   * In Notion fährt rechts eine Leiste herein statt eines Menüs: neun
+   * Kacheln für die Ansichtsart, darunter die Schalter, die zu dieser Art
+   * passen. Genau so hier.
+   * ======================================================================*/
+  const LAYOUTS = [
+    ['table',    '▦', 'Tabelle'],
+    ['board',    '▤', 'Board'],
+    ['timeline', '▬', 'Zeitleiste'],
+    ['calendar', '📅', 'Kalender'],
+    ['list',     '☰', 'Liste'],
+    ['gallery',  '▩', 'Galerie'],
+    ['chart',    '📊', 'Diagramm'],
+    ['feed',     '📰', 'Feed'],
+    ['map',      '🗺', 'Karte'],
+    ['dashboard','🧮', 'Dashboard'],
+    ['form',     '📝', 'Formular']
+  ];
+
+  /** Eine Leiste, die rechts hereinfährt. */
+  const leiste = (titel, inhalt, beiSchliessen) => {
+    document.querySelectorAll('.db-leiste').forEach(x => x.remove());
+    const d = document.createElement('aside');
+    d.className = 'db-leiste';
+    d.innerHTML = `<div class="dl-kopf"><b>${esc(titel)}</b>` +
+                  '<button class="icon-btn" data-a="zu">✕</button></div>' +
+                  '<div class="dl-koerper">' + inhalt + '</div>';
+    document.body.appendChild(d);
+    d.addEventListener('click', e => {
+      if (e.target.closest('[data-a="zu"]')) { d.remove(); beiSchliessen && beiSchliessen(); }
+    });
+    const weg = (e) => {
+      if (!d.contains(e.target) && !e.target.closest('.menu, .overlay')) {
+        d.remove(); document.removeEventListener('mousedown', weg);
+        beiSchliessen && beiSchliessen();
+      }
+    };
+    setTimeout(() => document.addEventListener('mousedown', weg), 60);
+    return d;
+  };
+
+  const schalter = (id, an, text, hinweis) =>
+    `<div class="dl-zeile"><div class="dl-text"><b>${esc(text)}</b>` +
+    (hinweis ? `<span>${esc(hinweis)}</span>` : '') + '</div>' +
+    `<button class="schalter${an ? ' an' : ''}" data-s="${id}"><i></i></button></div>`;
+
+  const layoutPanel = (coll, view, block) => {
+    const zeichne = () => {
+      const inhalt =
+        '<div class="dl-kacheln">' + LAYOUTS.map(([id, ico, n]) =>
+          `<button data-l="${id}" class="${view.layout === id ? 'on' : ''}">` +
+          `<span>${ico}</span>${n}</button>`).join('') + '</div>' +
+
+        schalter('titelZeigen', view.titelZeigen !== false, 'Titel der Datenquelle anzeigen') +
+        (view.layout === 'table'
+          ? schalter('linien', view.linien !== false, 'Vertikale Linien anzeigen') : '') +
+        schalter('seitenIcon', view.seitenIcon !== false, 'Seiten-Icon anzeigen') +
+        schalter('umbruchAlle', !!view.umbruchAlle, 'Zeilenumbruch für alle Inhalte') +
+        `<div class="dl-zeile" data-w="oeffnen"><div class="dl-text"><b>Seiten öffnen als</b></div>` +
+        `<span class="dl-wert">${view.oeffnenAls === 'voll' ? 'Ganze Seite' : 'Seitliche Vorschau'} ▸</span></div>` +
+        `<div class="dl-zeile" data-w="limit"><div class="dl-text"><b>Ladelimit</b>` +
+        '<span>Wie viele Einträge auf einmal</span></div>' +
+        `<span class="dl-wert">${view.limit || 50} ▸</span></div>` +
+        (['board','gallery'].includes(view.layout)
+          ? `<div class="dl-zeile" data-w="karte"><div class="dl-text"><b>Kartengrösse</b></div>` +
+            `<span class="dl-wert">${view.kartenGroesse || 'mittel'} ▸</span></div>` : '') +
+        (view.layout === 'table'
+          ? `<div class="dl-zeile" data-w="hoehe"><div class="dl-text"><b>Zeilenhöhe</b></div>` +
+            `<span class="dl-wert">${view.hoehe || 'normal'} ▸</span></div>` : '');
+
+      const d = leiste('Layout', inhalt);
+
+      d.addEventListener('click', e => {
+        const l = e.target.closest('[data-l]');
+        if (l) {
+          Store.updateView(view.id, { layout: l.dataset.l });
+          App.zeichneSeite();
+          setTimeout(zeichne, 30);
+          return;
+        }
+        const sc = e.target.closest('[data-s]');
+        if (sc) {
+          const k = sc.dataset.s;
+          const jetzt = k === 'umbruchAlle' ? !!view[k] : view[k] !== false;
+          Store.updateView(view.id, { [k]: !jetzt });
+          sc.classList.toggle('an', !jetzt);
+          App.zeichneSeite();
+          return;
+        }
+        const w = e.target.closest('[data-w]');
+        if (!w) return;
+        const r = w.getBoundingClientRect();
+        const art = w.dataset.w;
+
+        const auswahl = {
+          oeffnen: [['peek','Seitliche Vorschau'], ['voll','Ganze Seite']],
+          limit:   [[25,'25'], [50,'50'], [100,'100'], [250,'250'], [0,'alle']],
+          karte:   [['klein','klein'], ['mittel','mittel'], ['gross','gross']],
+          hoehe:   [['kompakt','kompakt'], ['normal','normal'], ['gross','gross']]
+        }[art];
+        const feld = { oeffnen:'oeffnenAls', limit:'limit', karte:'kartenGroesse', hoehe:'hoehe' }[art];
+
+        const m = UI.menu(auswahl.map(([v, n]) =>
+          `<button data-v="${v}">${n}</button>`).join(''), r.left - 140, r.bottom + 4);
+        m.addEventListener('click', ev => {
+          const b = ev.target.closest('button[data-v]');
+          if (!b) return;
+          const wert2 = art === 'limit' ? Number(b.dataset.v) : b.dataset.v;
+          Store.updateView(view.id, { [feld]: wert2 });
+          m.remove(); App.zeichneSeite();
+          setTimeout(zeichne, 30);
+        });
+      });
+    };
+    zeichne();
+  };
+
+  /* ========================================================================
+   * BEDINGTE FARBE
+   * ------------------------------------------------------------------------
+   * Eine Regel färbt die ganze Zeile, wenn eine Bedingung zutrifft. Notion
+   * nennt das „Bedingte Farbe"; in Tabellenprogrammen heisst es bedingte
+   * Formatierung. Die erste Regel, die zutrifft, gewinnt.
+   * ======================================================================*/
+  const FARBWAHL = ['red','orange','yellow','green','blue','purple','pink','brown','gray'];
+
+  const farbregeln = (view) => view.farbregeln || [];
+
+  const farbeFuerZeile = (row, view, coll) => {
+    for (const r of farbregeln(view)) {
+      if (r.an === false) continue;
+      try { if (trifftZu(row, r, coll)) return r.farbe; } catch {}
+    }
+    return '';
+  };
+
+  const farbregelPanel = (coll, view, block) => {
+    const zeichne = () => {
+      const liste = farbregeln(view);
+      const inhalt =
+        '<div class="dl-hinweis">Die erste Regel, die zutrifft, färbt die Zeile.</div>' +
+        (liste.length
+          ? liste.map((r, i) =>
+              `<div class="fr-zeile"><span class="fr-punkt bg-${r.farbe}"></span>` +
+              `<span class="fr-text">${esc(coll.schema[r.key]?.name || '?')} ` +
+              `${esc(r.op)} ${esc(r.wert || '')}</span>` +
+              `<button data-an="${i}">${r.an === false ? '☐' : '☑'}</button>` +
+              `<button data-weg="${i}">🗑</button></div>`).join('')
+          : '<div class="dl-hinweis">Noch keine Regel.</div>') +
+        '<button class="dl-knopf" data-a="neu">＋ Regel hinzufügen</button>';
+
+      const d = leiste('Bedingte Farbe', inhalt);
+
+      d.addEventListener('click', async e => {
+        const an = e.target.closest('[data-an]');
+        if (an) {
+          const l = farbregeln(view);
+          l[+an.dataset.an].an = l[+an.dataset.an].an === false;
+          Store.updateView(view.id, { farbregeln: l });
+          App.zeichneSeite(); setTimeout(zeichne, 20);
+          return;
+        }
+        const weg = e.target.closest('[data-weg]');
+        if (weg) {
+          const l = farbregeln(view);
+          l.splice(+weg.dataset.weg, 1);
+          Store.updateView(view.id, { farbregeln: l });
+          App.zeichneSeite(); setTimeout(zeichne, 20);
+          return;
+        }
+        if (!e.target.closest('[data-a="neu"]')) return;
+
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        const keys = Object.keys(coll.schema);
+        o.innerHTML = '<div class="finder" style="width:min(460px,94vw)">' +
+          '<div class="fh">Neue Farbregel</div>' +
+          '<div style="padding:16px 18px; display:flex; flex-direction:column; gap:12px">' +
+            '<label>Wenn<br><select id="fk">' +
+              keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
+            '</select></label>' +
+            '<label>…<br><select id="fo"></select></label>' +
+            '<label>diesen Wert<br><input id="fw"></label>' +
+            '<label>dann färben<br><div class="fr-farben">' +
+              FARBWAHL.map((c, i) => `<button data-c="${c}" class="bg-${c}` +
+                `${i === 0 ? ' on' : ''}" title="${c}"></button>`).join('') +
+            '</div></label>' +
+          '</div>' +
+          '<div class="fbtns"><button data-a="ok" class="prim">Anlegen</button>' +
+          '<button data-a="zu">Abbrechen</button></div></div>';
+        document.body.appendChild(o);
+
+        let farbe = FARBWAHL[0];
+        const ops = () => {
+          const t = coll.schema[o.querySelector('#fk').value].type;
+          o.querySelector('#fo').innerHTML = (OPERATOREN[t] || OPERATOREN.text)
+            .map(x => `<option>${x}</option>`).join('');
+        };
+        ops();
+        o.querySelector('#fk').addEventListener('change', ops);
+
+        o.addEventListener('click', ev => {
+          const c = ev.target.closest('[data-c]');
+          if (c) {
+            farbe = c.dataset.c;
+            o.querySelectorAll('[data-c]').forEach(x => x.classList.remove('on'));
+            c.classList.add('on');
+            return;
+          }
+          if (ev.target === o || ev.target.closest('[data-a="zu"]')) { o.remove(); return; }
+          if (!ev.target.closest('[data-a="ok"]')) return;
+          const l = farbregeln(view);
+          l.push({ key: o.querySelector('#fk').value, op: o.querySelector('#fo').value,
+                   wert: o.querySelector('#fw').value, farbe, an: true });
+          Store.updateView(view.id, { farbregeln: l });
+          o.remove(); App.zeichneSeite(); setTimeout(zeichne, 20);
+          UI.toast('Farbregel angelegt');
+        });
+      });
+    };
+    zeichne();
+  };
+
+  /** KI-Autofill: welche Spalte soll die KI für alle Zeilen füllen? */
+  const kiAutofillMenue = (anker, coll, view) => {
+    const r = anker.getBoundingClientRect();
+    const kiSpalten = Object.keys(coll.schema).filter(k => KI_TYPEN.includes(coll.schema[k].type));
+    const m = UI.menu(
+      '<div class="grp">KI-Autofill</div>' +
+      (kiSpalten.length
+        ? kiSpalten.map(k => `<button data-k="${k}"><span class="mi">✨</span>` +
+                             `${esc(coll.schema[k].name)} füllen</button>`).join('')
+        : '<div class="grp" style="font-weight:400">Noch keine KI-Spalte. Lege eine ' +
+          'Eigenschaft vom Typ „KI: Zusammenfassung" an.</div>'),
+      r.left - 100, r.bottom + 4);
+    m.addEventListener('click', async ev => {
+      const b = ev.target.closest('button[data-k]');
+      if (!b) return;
+      m.remove();
+      const zeilen2 = zeilen(coll, view).slice(0, 20);
+      UI.toast('Die KI füllt ' + zeilen2.length + ' Zeilen …');
+      for (const row of zeilen2) await kiFeldFuellen(row, b.dataset.k, coll);
+      UI.toast('Fertig');
+    });
+  };
+
+  const gruppierenMenue = (anker, coll, view, block, unter = false) => {
+    const r = anker.getBoundingClientRect();
+    const feld = unter ? 'subGroupBy' : 'groupBy';
+    const m = UI.menu(
+      `<div class="grp">${unter ? 'Untergruppieren' : 'Gruppieren'} nach</div>` +
+      Object.keys(coll.schema)
+        .filter(k => ['select','status','checkbox','multi','person','date','relation']
+                     .includes(coll.schema[k].type))
+        .map(k => `<button data-k="${k}"${view[feld] === k ? ' class="on"' : ''}>` +
+                  `<span class="mi">${propTyp(coll.schema[k].type).icon}</span>` +
+                  `${esc(coll.schema[k].name)}</button>`).join('') +
+      '<hr><button data-k="">Keine Gruppierung</button>',
+      r.left, r.bottom + 4);
+    m.addEventListener('click', ev => {
+      const kb = ev.target.closest('button[data-k]');
+      if (!kb) return;
+      Store.updateView(view.id, { [feld]: kb.dataset.k });
+      m.remove(); App.zeichneSeite();
+    });
+  };
+
+  /**
+   * Datenquellen einer Ansicht. Notion zeigt hier die eigene Quelle, alle
+   * zusätzlichen und den Knopf „Neue Datenquelle".
+   */
+  const quelleMenue = (anker, coll, view, block) => {
+    const r = anker.getBoundingClientRect();
+    const extra = view.extraDbs || [];
+    const zeichnen = () => {
+      const m = UI.menu(
+        '<div class="grp">Datenquellen</div>' +
+        `<button data-q="haupt"><span class="mi">⛁</span>${esc(coll.name)}` +
+          `<span class="ms">${Store.rowsOf(coll.id).length}</span></button>` +
+        extra.map((x, i) => {
+          const c2 = Store.cache.collections[x.collectionId];
+          if (!c2) return '';
+          return `<button data-weg="${i}"><span class="mi">⛁</span>${esc(c2.name)}` +
+                 `<span class="ms">${x.an === false ? 'aus' : Store.rowsOf(c2.id).length} ✕</span></button>`;
+        }).join('') +
+        '<hr>' +
+        '<button data-q="neu"><span class="mi">＋</span>Neue Datenquelle</button>' +
+        '<button data-q="wechseln"><span class="mi">⇄</span>Datenquelle wechseln …</button>' +
+        '<div class="menu-fuss">Zeilen aus allen eingeschalteten Quellen erscheinen ' +
+        'zusammen in dieser Ansicht.</div>',
+        r.left, r.bottom + 4);
+
+      m.addEventListener('click', e => {
+        const weg = e.target.closest('[data-weg]');
+        if (weg) {
+          const i = +weg.dataset.weg;
+          const neu = extra.filter((_, j) => j !== i);
+          Store.updateView(view.id, { extraDbs: neu });
+          m.remove(); App.zeichneSeite();
+          return;
+        }
+        const b = e.target.closest('[data-q]');
+        if (!b) return;
+        if (b.dataset.q === 'haupt') { m.remove(); return; }
+        m.remove();
+
+        const drin = new Set([coll.id, ...extra.map(x => x.collectionId)]);
+        const frei = Object.values(Store.cache.collections).filter(c => !drin.has(c.id));
+
+        if (b.dataset.q === 'neu') {
+          const m2 = UI.menuMitSuche(
+            (frei.length
+              ? frei.map(c => `<button data-c="${c.id}"><span class="mi">⛁</span>${esc(c.name)}</button>`).join('')
+              : '') +
+            '<hr><button data-c="__leer"><span class="mi">＋</span>Leere Datenquelle anlegen</button>',
+            r.left, r.bottom + 4, { platzhalter: 'Datenquelle suchen …', kopf: '<div class="grp">Neue Datenquelle</div>' });
+          m2.addEventListener('click', ev => {
+            const c = ev.target.closest('[data-c]');
+            if (!c) return;
+            m2.remove();
+            let ziel = c.dataset.c;
+            if (ziel === '__leer') {
+              const seite = Store.getBlock(App.aktuelleSeite());
+              const neu = Store.addDatabase(seite ? seite.id : null, 'Neue Datenquelle', null, 'table');
+              ziel = neu.collectionId;
+            }
+            Store.updateView(view.id, { extraDbs: [...extra, { collectionId: ziel, an: true }] });
+            App.zeichneSeite();
+            UI.toast('Datenquelle hinzugefügt');
+          });
+          return;
+        }
+
+        if (b.dataset.q === 'wechseln') {
+          const alle = Object.values(Store.cache.collections);
+          const m2 = UI.menuMitSuche(
+            alle.map(c => `<button data-c="${c.id}"${c.id === coll.id ? ' class="on"' : ''}>` +
+                          `<span class="mi">⛁</span>${esc(c.name)}</button>`).join(''),
+            r.left, r.bottom + 4, { platzhalter: 'Datenquelle suchen …', kopf: '<div class="grp">Quelle wechseln</div>' });
+          m2.addEventListener('click', ev => {
+            const c = ev.target.closest('[data-c]');
+            if (!c || c.dataset.c === coll.id) { m2.remove(); return; }
+            Store.updateView(view.id, { collectionId: c.dataset.c, filters: { operator: 'and', rules: [] }, sorts: [] });
+            m2.remove(); App.zeichneSeite();
+            UI.toast('Ansicht zeigt jetzt: ' + (Store.cache.collections[c.dataset.c] || {}).name);
+          });
+        }
+      });
+    };
+    zeichnen();
+  };
+
+  /* ------------------------------------------------------------------------
+   * WEITERE EINSTELLUNGEN
+   * Notion versteckt hinter „⋯ Weitere Einstellungen" fünf Dinge, die eine
+   * Datenbank von einer Tabelle unterscheiden: Unter-Elemente,
+   * Abhängigkeiten, Verbindungen, Seitenlayout und Aufgaben.
+   * ----------------------------------------------------------------------*/
+
+  /** Die zwei Spalten, die Notion beim Einschalten der Unter-Elemente anlegt. */
+  const UNTER_KEYS = { eltern: 'unterEltern', kinder: 'unterKinder' };
+  const ABH_KEYS   = { blockiert: 'abhBlockiert', blockiertVon: 'abhBlockiertVon' };
+
+  const unterElementeAn = (coll, an) => {
+    if (an) {
+      coll.unterElemente = true;
+      if (!coll.schema[UNTER_KEYS.eltern])
+        coll.schema[UNTER_KEYS.eltern] = { name: 'Übergeordnetes Element', type: 'relation',
+                                           ziel: coll.id, eigen: true };
+      if (!coll.schema[UNTER_KEYS.kinder])
+        coll.schema[UNTER_KEYS.kinder] = { name: 'Untergeordnete Elemente', type: 'relation',
+                                           ziel: coll.id, eigen: true };
+    } else {
+      coll.unterElemente = false;
+    }
+    Store.updateCollection(coll.id, { schema: coll.schema, unterElemente: coll.unterElemente });
+    App.zeichneSeite();
+  };
+
+  const abhaengigkeitenAn = (coll, an) => {
+    if (an) {
+      coll.abhaengigkeiten = true;
+      if (!coll.schema[ABH_KEYS.blockiert])
+        coll.schema[ABH_KEYS.blockiert] = { name: 'Blockiert', type: 'relation', ziel: coll.id, eigen: true };
+      if (!coll.schema[ABH_KEYS.blockiertVon])
+        coll.schema[ABH_KEYS.blockiertVon] = { name: 'Blockiert von', type: 'relation', ziel: coll.id, eigen: true };
+    } else {
+      coll.abhaengigkeiten = false;
+    }
+    Store.updateCollection(coll.id,
+      { schema: coll.schema, abhaengigkeiten: coll.abhaengigkeiten });
+    App.zeichneSeite();
+  };
+
+  /**
+   * Ist eine Zeile blockiert? Notion verschiebt bei „Verschiebung
+   * verwerfen" nichts; hier wird nur gewarnt, wenn eine blockierende
+   * Zeile noch offen ist.
+   */
+  const blockiertDurch = (row, coll) => {
+    if (!coll.abhaengigkeiten) return [];
+    const ids = (row.props || {})[ABH_KEYS.blockiertVon] || [];
+    return ids.map(id => Store.getBlock(id)).filter(z => {
+      if (!z) return false;
+      const st = Object.keys(coll.schema).find(k => coll.schema[k].type === 'status');
+      const hk = Object.keys(coll.schema).find(k => coll.schema[k].type === 'checkbox');
+      if (hk) return !(z.props || {})[hk];
+      if (st) return !/fertig|erledigt|done|abgeschlossen/i.test(String((z.props || {})[st] || ''));
+      return true;
+    });
+  };
+
+  const weitereEinstellungen = (anker, coll, view, block) => {
     const r = anker.getBoundingClientRect();
     const m = UI.menu(
+      '<div class="grp">Weitere Einstellungen</div>' +
+      `<button data-w="unter"><span class="mi">⇥</span>Unter-Elemente` +
+        `<span class="ms">${coll.unterElemente ? 'an' : 'aus'} ▸</span></button>` +
+      `<button data-w="abh"><span class="mi">↪</span>Abhängigkeiten` +
+        `<span class="ms">${coll.abhaengigkeiten ? 'an' : 'aus'} ▸</span></button>` +
+      `<button data-w="verb"><span class="mi">⊞</span>Verbindungen` +
+        `<span class="ms">${(coll.verbindungen || []).length || 'keine'} ▸</span></button>` +
+      '<button data-w="layout"><span class="mi">▤</span>Seitenlayout individuell anpassen<span class="ms">▸</span></button>' +
+      `<button data-w="aufgaben"><span class="mi">☑</span>In Aufgaben umwandeln` +
+        `<span class="ms">${coll.istAufgaben ? 'an' : 'aus'}</span></button>`,
+      r.left, r.bottom + 4);
+
+    m.addEventListener('click', e => {
+      const b = e.target.closest('button[data-w]');
+      if (!b) return;
+      const w = b.dataset.w;
+      m.remove();
+
+      if (w === 'unter')     { unterElementePanel(coll); return; }
+      if (w === 'abh')       { abhaengigkeitenPanel(coll); return; }
+      if (w === 'verb')      { dbVerbindungenMenue(anker, coll); return; }
+      if (w === 'layout')    { seitenLayoutPanel(coll); return; }
+      if (w === 'aufgaben')  { aufgabenPanel(coll); return; }
+    });
+  };
+
+  /** Ein kleiner Erklärkasten mit einem Schalter — wie bei Notion. */
+  const schalterPanel = ({ titel, text, bild, an, anText, ausText, schalten }) => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder we-panel">' +
+        `<div class="fh">${esc(titel)}<button class="icon-btn" data-a="zu">✕</button></div>` +
+        `<div class="we-text">${text}</div>` +
+        (bild ? `<div class="we-bild">${bild}</div>` : '') +
+        `<div class="we-fuss"><button class="we-knopf" data-a="tun">${an ? ausText : anText}</button></div>` +
+      '</div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      if (e.target.closest('[data-a="tun"]')) { o.remove(); schalten(!an); }
+    });
+    return o;
+  };
+
+  const unterElementePanel = (coll) => schalterPanel({
+    titel: 'Unter-Elemente',
+    text: 'Teile Elemente in Schalter auf. Jede Zeile kann Unterzeilen tragen, ' +
+          'die sich auf- und zuklappen lassen.',
+    bild: '<div class="we-baum"><div>▾ <b>Element (übergeordnet)</b></div>' +
+          '<div class="ein">▸ Element (untergeordnet)</div>' +
+          '<div class="ein">▸ Element (untergeordnet)</div></div>',
+    an: !!coll.unterElemente,
+    anText: 'Unter-Elemente aktivieren',
+    ausText: 'Unter-Elemente ausschalten',
+    schalten: (an) => {
+      unterElementeAn(coll, an);
+      UI.toast(an ? 'Unter-Elemente sind an — im Zeilenmenü „Unterelement anlegen"'
+                  : 'Unter-Elemente sind aus');
+    }
+  });
+
+  const abhaengigkeitenPanel = (coll) => schalterPanel({
+    titel: 'Abhängigkeiten',
+    text: 'Halte fest, was worauf wartet. Eine Zeile kann andere <b>blockieren</b> ' +
+          'oder <b>von</b> anderen blockiert werden. Solange etwas Blockierendes ' +
+          'offen ist, warnt die Zeile.',
+    bild: '<div class="we-baum"><div><b>Entwurf schreiben</b> → blockiert</div>' +
+          '<div class="ein">Korrektur lesen</div></div>',
+    an: !!coll.abhaengigkeiten,
+    anText: 'Abhängigkeiten aktivieren',
+    ausText: 'Abhängigkeiten ausschalten',
+    schalten: (an) => {
+      abhaengigkeitenAn(coll, an);
+      UI.toast(an ? 'Zwei Spalten angelegt: Blockiert und Blockiert von' : 'Abhängigkeiten sind aus');
+    }
+  });
+
+  const aufgabenPanel = (coll) => schalterPanel({
+    titel: 'In Aufgaben umwandeln',
+    text: 'Diese Datenbank gilt dann als Aufgabenquelle. Ihre Zeilen erscheinen ' +
+          'unter <b>Meine Apps → Meine Aufgaben</b>, sobald eine Person-Spalte auf ' +
+          'dich zeigt.',
+    an: !!coll.istAufgaben,
+    anText: 'Als Aufgaben führen',
+    ausText: 'Nicht mehr als Aufgaben führen',
+    schalten: (an) => {
+      const s = coll.schema;
+      if (an) {
+        if (!Object.values(s).some(d => d.type === 'status') &&
+            !Object.values(s).some(d => d.type === 'checkbox'))
+          s.aufgFertig = { name: 'Fertig', type: 'checkbox' };
+        if (!Object.values(s).some(d => d.type === 'person'))
+          s.aufgWer = { name: 'Zuständig', type: 'person' };
+        if (!Object.values(s).some(d => d.type === 'date'))
+          s.aufgFrist = { name: 'Frist', type: 'date' };
+      }
+      Store.updateCollection(coll.id, { schema: s, istAufgaben: an });
+      /* Die Aufgabenseite fragt diese Liste ab */
+      const q = Store.getMeta('aufgabenQuellen', null);
+      if (an && q && !q.includes(coll.id)) Store.setMeta('aufgabenQuellen', [...q, coll.id]);
+      if (!an && q) Store.setMeta('aufgabenQuellen', q.filter(x => x !== coll.id));
+      App.zeichneSeite();
+      UI.toast(an ? 'Zeilen erscheinen jetzt unter Meine Aufgaben' : 'Nicht mehr als Aufgaben geführt');
+    }
+  });
+
+  const dbVerbindungenMenue = (anker, coll) => {
+    const r = anker.getBoundingClientRect();
+    const dienste = Verbindungen.DIENSTE || [];
+    const drin = coll.verbindungen || [];
+    const m = UI.menu('<div class="grp">Verbindungen dieser Datenbank</div>' +
+      dienste.map(d => `<button data-v="${d.id}"><span class="mi">${d.icon || '⊞'}</span>` +
+        `${esc(d.name)}<span class="ms">${drin.includes(d.id) ? 'an' : 'aus'}</span></button>`).join('') +
+      '<div class="menu-fuss">Verknüpfte Dienste dürfen Zeilen dieser Datenbank ' +
+      'lesen und schreiben — etwa der GitHub-Spiegel.</div>',
+      r.left, r.bottom + 4);
+    m.addEventListener('click', e => {
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      const id = b.dataset.v;
+      const neu = drin.includes(id) ? drin.filter(x => x !== id) : [...drin, id];
+      Store.updateCollection(coll.id, { verbindungen: neu });
+      m.remove(); App.zeichneSeite();
+    });
+  };
+
+  /** Notions „Seitenlayout individuell anpassen" für die Datensatzseite. */
+  const seitenLayoutPanel = (coll) => {
+    const l = coll.seitenLayout || { breite: 'normal', eigenschaften: 'oben', kommentare: true, rueck: true };
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    const zeichne = () => {
+      o.innerHTML =
+        '<div class="finder we-panel">' +
+          '<div class="fh">Seitenlayout<button class="icon-btn" data-a="zu">✕</button></div>' +
+          '<div class="we-text">So sehen die Seiten dieser Datenbank aus, wenn man ' +
+          'eine Zeile öffnet.</div>' +
+          '<div class="we-liste">' +
+            ['<div class="grp">Breite</div>',
+             ['normal', 'Normal'], ['breit', 'Volle Breite']]
+              .map(x => Array.isArray(x)
+                ? `<button data-b="${x[0]}">${x[1]}<span class="ms">${l.breite === x[0] ? '✓' : ''}</span></button>`
+                : x).join('') +
+            '<div class="grp">Eigenschaften</div>' +
+            [['oben', 'Über dem Inhalt'], ['seite', 'Daneben'], ['zu', 'Eingeklappt']]
+              .map(([id, n]) => `<button data-e="${id}">${n}<span class="ms">${l.eigenschaften === id ? '✓' : ''}</span></button>`).join('') +
+            '<div class="grp">Auf der Seite</div>' +
+            `<button data-s="kommentare">Kommentare<span class="ms">${l.kommentare ? 'an' : 'aus'}</span></button>` +
+            `<button data-s="rueck">Rückverweise<span class="ms">${l.rueck ? 'an' : 'aus'}</span></button>` +
+          '</div>' +
+        '</div>';
+    };
+    zeichne();
+    document.body.appendChild(o);
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const b = e.target.closest('[data-b]'), ei = e.target.closest('[data-e]'), s = e.target.closest('[data-s]');
+      if (b) l.breite = b.dataset.b;
+      if (ei) l.eigenschaften = ei.dataset.e;
+      if (s) l[s.dataset.s] = !l[s.dataset.s];
+      if (!b && !ei && !s) return;
+      Store.updateCollection(coll.id, { seitenLayout: l });
+      zeichne(); App.zeichneSeite();
+    });
+  };
+
+  /** „Datenquellen verwalten" — was gehört dieser Datenbank, wer nutzt sie? */
+  const quellenVerwalten = (anker, coll, view, block) => {
+    const nutzer = Object.values(Store.cache.views)
+      .filter(v => v.collectionId === coll.id ||
+                   (v.extraDbs || []).some(x => x.collectionId === coll.id));
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder we-panel">' +
+        '<div class="fh">Datenquellen verwalten<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="we-liste">' +
+          `<div class="grp">${esc(coll.name)}</div>` +
+          `<button data-a="umben">Umbenennen<span class="ms">${esc(coll.name)}</span></button>` +
+          `<button data-a="zeilen">Zeilen<span class="ms">${Store.rowsOf(coll.id).length}</span></button>` +
+          `<button data-a="spalten">Spalten<span class="ms">${Object.keys(coll.schema).length}</span></button>` +
+          '<div class="grp">Wird verwendet in</div>' +
+          (nutzer.length
+            ? nutzer.map(v => `<button data-v="${v.id}">${esc(v.name || 'Ansicht')}` +
+                `<span class="ms">${LAYOUT_NAMEN[v.layout] || v.layout}</span></button>`).join('')
+            : '<div class="menu-fuss">In keiner Ansicht</div>') +
+          '<div class="grp">Gefahr</div>' +
+          '<button data-a="leeren" class="rot">Alle Zeilen löschen</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', async e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const b = e.target.closest('[data-a]');
+      if (!b) return;
+      if (b.dataset.a === 'umben') {
+        const n = await UI.frage('Name der Datenquelle', coll.name);
+        if (n) { Store.updateCollection(coll.id, { name: n }); o.remove(); App.zeichneSeite(); }
+      }
+      if (b.dataset.a === 'leeren') {
+        if (!confirm('Wirklich alle Zeilen dieser Datenquelle in den Papierkorb legen?')) return;
+        Store.rowsOf(coll.id).forEach(r => Store.trashBlock(r.id));
+        o.remove(); App.zeichneSeite(); UI.toast('Zeilen in den Papierkorb gelegt');
+      }
+    });
+  };
+
+  /**
+   * „Als ganze Seite öffnen" — die Datenbank füllt den Hauptbereich allein,
+   * ohne den Text drumherum. Zurück geht es über die Krume.
+   */
+  const ganzeSeite = (coll, view, block) => {
+    App.zeigeSonder(coll.name || 'Datenbank', (wrap) => {
+      const kopf = document.createElement('h1');
+      kopf.className = 'db-vollkopf';
+      kopf.textContent = (coll.icon ? coll.icon + ' ' : '') + (coll.name || 'Datenbank');
+      wrap.appendChild(kopf);
+      const b2 = block
+        ? Object.assign({}, block, { aktiveView: view.id, voll: true })
+        : { id: 'voll-' + coll.id, collectionId: coll.id, aktiveView: view.id, voll: true };
+      wrap.appendChild(render(b2));
+    });
+  };
+
+  const ansichtMenue = (anker, coll, view, block) => {
+    const r = anker.getBoundingClientRect();
+    const sichtbar = Object.keys(coll.schema).filter(k => !(view.hidden || []).includes(k)).length;
+    const LAY_ICON = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
+                      timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺',
+                      dashboard:'🧮' };
+    const kopfKarte =
+      '<div class="av-karte">' +
+        `<span class="av-ico">${LAY_ICON[view.layout] || '▦'}</span>` +
+        `<input class="av-name" value="${esc(view.name || 'Ansicht')}" spellcheck="false">` +
+        '<button class="av-info" data-info="1" title="Beschreibung">ⓘ</button>' +
+      '</div>' +
+      (view.beschreibung ? `<div class="av-besch">${esc(view.beschreibung)}</div>` : '');
+
+    const m = UI.menuMitSuche(
+      '<div class="grp">Einstellungen ansehen</div>' +
+      `<button data-a="layout"><span class="mi">▦</span>Layout` +
+        `<span class="ms">${LAYOUT_NAMEN[view.layout] || view.layout} ▸</span></button>` +
+      `<button data-a="sichtbar"><span class="mi">👁</span>Sichtbarkeit von Eigenschaften` +
+        `<span class="ms">${sichtbar} ▸</span></button>` +
+      `<button data-a="filter"><span class="mi">⚟</span>Filter` +
+        `<span class="ms">${regelAnzahl(view.filters) || ''} ▸</span></button>` +
+      `<button data-a="sort"><span class="mi">↕</span>Sortierung` +
+        `<span class="ms">${(view.sorts || []).length || ''} ▸</span></button>` +
+      `<button data-a="gruppe"><span class="mi">⊞</span>Gruppieren` +
+        `<span class="ms">${view.groupBy ? esc(coll.schema[view.groupBy]?.name || '') : ''} ▸</span></button>` +
+      `<button data-a="farbe"><span class="mi">🎨</span>Bedingte Farbe` +
+        `<span class="ms">${(view.farbregeln || []).length || ''} ▸</span></button>` +
+      '<button data-a="vlink"><span class="mi">🔗</span>Link zur Ansicht kopieren</button>' +
+      '<hr>' +
+      '<div class="grp">Einstellungen zu Datenquellen</div>' +
+      `<button data-a="quelle"><span class="mi">⛁</span>Quelle<span class="ms">${esc(coll.name)}` +
+        `${(view.extraDbs || []).length ? ' +' + view.extraDbs.length : ''} ▸</span></button>` +
+      '<button data-a="eigen"><span class="mi">☰</span>Eigenschaften bearbeiten<span class="ms">▸</span></button>' +
+      '<button data-a="auto"><span class="mi">⚡</span>Automatisierungen<span class="ms">▸</span></button>' +
+      '<button data-a="kiauto"><span class="mi">✨</span>KI-Autofill<span class="ms">▸</span></button>' +
+      `<button data-a="archiv"><span class="mi">🗄</span>Archivierte Seiten` +
+        `<span class="ms">${view.archivZeigen ? 'sichtbar' : 'versteckt'}</span></button>` +
+      '<button data-a="mehr"><span class="mi">⋯</span>Weitere Einstellungen<span class="ms">▸</span></button>' +
+      '<hr>' +
+      '<button data-a="ganzeseite"><span class="mi">⤢</span>Als ganze Seite öffnen</button>' +
+      '<hr>' +
+      '<button data-a="qverwalten"><span class="mi">⛁</span>Datenquellen verwalten<span class="ms">▸</span></button>' +
+      `<button data-a="dblock"><span class="mi">🔒</span>${coll.gesperrt ? 'Datenbank entsperren' : 'Datenbank sperren'}</button>` +
+      '<hr>' +
       '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
       '<button data-a="dup"><span class="mi">⧉</span>Duplizieren</button>' +
       '<button data-a="lock"><span class="mi">🔒</span>' + (view.locked ? 'Entsperren' : 'Ansicht sperren') + '</button>' +
-      '<hr><button data-a="del"><span class="mi">🗑</span>Ansicht löschen</button>',
-      r.left, r.bottom + 4);
+      '<button data-a="del"><span class="mi">🗑</span>Ansicht löschen</button>',
+      r.left, r.bottom + 4,
+      { platzhalter: 'Einstellung suchen …', breite: '300px',
+        titel: 'Einstellungen', kopf: kopfKarte });
+
+    /* Der ⓘ-Knopf in der Kopfkarte */
+    m.querySelector('[data-info]')?.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const t = await UI.frage('Beschreibung dieser Ansicht', view.beschreibung || '');
+      if (t !== null) { Store.updateView(view.id, { beschreibung: t }); m.remove(); App.zeichneSeite(); }
+    });
+
+    /* Name der Ansicht direkt in der Kopfkarte ändern */
+    const nf = m.querySelector('.av-name');
+    if (nf) {
+      const uebernehmen = () => {
+        const n = nf.value.trim();
+        if (n && n !== view.name) { Store.updateView(view.id, { name: n }); App.zeichneSeite(); }
+      };
+      nf.addEventListener('blur', uebernehmen);
+      nf.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); uebernehmen(); m.remove(); }
+        ev.stopPropagation();
+      });
+    }
+
     m.addEventListener('click', e => {
       const b = e.target.closest('button[data-a]');
       if (!b) return;
       m.remove();
+      const a2 = b.dataset.a;
+      if (a2 === 'layout')   { layoutPanel(coll, view, block); return; }
+      if (a2 === 'sichtbar') { eigenschaftenMenue(anker, coll, view, block); return; }
+      if (a2 === 'filter')   { filterMenue(anker, coll, view, block); return; }
+      if (a2 === 'sort')     { sortMenue(anker, coll, view, block); return; }
+      if (a2 === 'gruppe')   { gruppierenMenue(anker, coll, view, block); return; }
+      if (a2 === 'farbe')    { farbregelPanel(coll, view, block); return; }
+      if (a2 === 'auto')     { automationenMenue(anker, coll, view, block); return; }
+      if (a2 === 'eigen')    { eigenschaftenMenue(anker, coll, view, block); return; }
+      if (a2 === 'kiauto')   { kiAutofillMenue(anker, coll, view); return; }
+      if (a2 === 'quelle')   { m.remove(); quelleMenue(anker, coll, view, block); return; }
+      if (a2 === 'mehr')     { weitereEinstellungen(anker, coll, view, block); return; }
+      if (a2 === 'ganzeseite') { ganzeSeite(coll, view, block); return; }
+
+      if (a2 === 'qverwalten') { quellenVerwalten(anker, coll, view, block); return; }
+      if (a2 === 'archiv') {
+        Store.updateView(view.id, { archivZeigen: !view.archivZeigen });
+        App.zeichneSeite();
+        UI.toast(view.archivZeigen ? 'Archivierte Seiten versteckt' : 'Archivierte Seiten sichtbar');
+        return;
+      }
+      if (a2 === 'dblock') {
+        Store.updateCollection(coll.id, { gesperrt: !coll.gesperrt });
+        App.zeichneSeite();
+        UI.toast(coll.gesperrt ? 'Datenbank entsperrt' : 'Datenbank gesperrt — Aufbau lässt sich nicht mehr ändern');
+        return;
+      }
+      if (a2 === 'vlink') {
+        const link = location.origin + location.pathname + '#' +
+                     (block ? block.id : coll.id) + '/' + view.id;
+        navigator.clipboard?.writeText(link);
+        UI.toast('Link zur Ansicht kopiert');
+        return;
+      }
       if (b.dataset.a === 'rename') {
         const n = prompt('Name der Ansicht', view.name);
         if (n) { Store.updateView(view.id, { name: n }); App.zeichneSeite(); }
@@ -3024,42 +4124,132 @@ const Datenbank = (() => {
     });
   };
 
-  const neueEigenschaft = (anker, coll, block) => {
+  /**
+   * Legt eine Eigenschaft an. `stelle` sagt, an welcher Position sie im
+   * Schema landen soll — Notion nennt das „Links einfügen" und
+   * „Rechts einfügen". Ohne Angabe kommt sie ans Ende.
+   */
+  const eigenschaftAnlegen = async (coll, t, stelle = -1) => {
+    const name = await UI.frage('Name der Eigenschaft', propTyp(t).name);
+    if (!name) return null;
+    const key = Store.uid().slice(0, 5);
+    const def = { name, type: t };
+    if (['select','status','multi'].includes(t)) def.options = [];
+    if (t === 'formula') {
+      const f = await UI.frage('Formel eingeben, z. B.  prop("Zahl") * 2', '');
+      def.formula = f || '';
+    }
+    if (t === 'relation') {
+      const andere = Object.values(Store.cache.collections);
+      def.ziel = (andere.find(c => c.id !== coll.id) || andere[0] || {}).id || '';
+    }
+    if (t === 'rollup') def.rollup = 'Anzahl alle';
+    if (KI_TYPEN.includes(t)) def.auftrag = KI_AUFTRAG[t] || KI_AUFTRAG.ki;
+    if (t === 'button') def.knopfText = 'Ausführen';
+
+    if (stelle < 0) {
+      coll.schema[key] = def;
+    } else {
+      /* Reihenfolge der Schlüssel bestimmt die Spaltenfolge — also neu bauen */
+      const keys = Object.keys(coll.schema);
+      const neu = {};
+      keys.slice(0, stelle).forEach(k => { neu[k] = coll.schema[k]; });
+      neu[key] = def;
+      keys.slice(stelle).forEach(k => { neu[k] = coll.schema[k]; });
+      coll.schema = neu;
+    }
+    Store.updateCollection(coll.id, { schema: coll.schema });
+    App.zeichneSeite();
+    if (t === 'rollup') rollupEditor(coll, key);
+    if (t === 'relation') relationEinrichten(coll, key);
+    return key;
+  };
+
+  /** Typauswahl mit Suche — dieselbe Liste wie beim Ändern eines Typs. */
+  const typWahl = (anker, titel, danach) => {
     const r = anker.getBoundingClientRect();
-    const m = UI.menu(
-      '<div class="grp">Neue Eigenschaft</div>' +
-      TYPEN.filter(t => t.id !== 'title')
-           .map(t => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${t.name}</button>`).join(''),
-      r.left, r.bottom + 4);
+    const html = TYP_GRUPPEN.map(([name, ids]) =>
+      `<div class="grp">${name}</div>` +
+      '<div class="typ-gitter">' +
+        ids.filter(id => TYPEN.some(x => x.id === id)).map(id => {
+          const t = TYPEN.find(x => x.id === id);
+          return `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`;
+        }).join('') +
+      '</div>').join('');
+    const m = UI.menuMitSuche(html, r.left, r.bottom + 4,
+      { platzhalter: 'Typ auswählen …', breite: '340px', kopf: `<div class="grp">${esc(titel)}</div>` });
     m.addEventListener('click', e => {
       const b = e.target.closest('button[data-t]');
       if (!b) return;
-      const t = b.dataset.t;
-      const name = prompt('Name der Eigenschaft', propTyp(t).name);
-      if (!name) { m.remove(); return; }
-      const key = Store.uid().slice(0, 5);
-      coll.schema[key] = { name, type: t };
-      if (['select','status','multi'].includes(t)) coll.schema[key].options = [];
-      if (t === 'formula') {
-        const f = prompt('Formel eingeben, z. B.  prop("Zahl") * 2', '');
-        coll.schema[key].formula = f || '';
-      }
-      if (t === 'relation') {
-        const andere = Object.values(Store.cache.collections);
-        coll.schema[key].ziel = (andere.find(c => c.id !== coll.id) || andere[0] || {}).id || '';
-      }
-      if (t === 'rollup') coll.schema[key].rollup = 'Anzahl alle';
-      if (KI_TYPEN.includes(t)) coll.schema[key].auftrag = KI_AUFTRAG[t] || KI_AUFTRAG.ki;
-      if (t === 'button') coll.schema[key].knopfText = 'Ausführen';
-      Store.updateCollection(coll.id, { schema: coll.schema });
       m.remove();
-      App.zeichneSeite();
-      if (t === 'rollup') rollupEditor(coll, key);
-      if (t === 'relation') relationEinrichten(coll, key);
+      danach(b.dataset.t);
+    });
+    return m;
+  };
+
+  const neueEigenschaft = (anker, coll, block) =>
+    typWahl(anker, 'Neue Eigenschaft', t => eigenschaftAnlegen(coll, t, -1));
+
+  const neueEigenschaftBei = (anker, coll, view, stelle) =>
+    typWahl(anker, stelle === 0 ? 'Links einfügen' : 'Neue Eigenschaft',
+      t => eigenschaftAnlegen(coll, t, stelle));
+
+  /* ------------------------------------------------------------------------
+   * TYP-AUSWAHL
+   * ------------------------------------------------------------------------
+   * Wie in Notion: oben die KI-Felder als eigene Gruppe, darunter alle Typen
+   * in zwei Spalten, mit Suchfeld. Bei über dreissig Typen findet man sonst
+   * nichts mehr.
+   * ----------------------------------------------------------------------*/
+  const TYP_GRUPPEN = [
+    ['KI-Autofill',  ['ki-fassung','ki-sprache','ki-worte','ki']],
+    ['Basis',        ['text','number','select','multi','status','date','person',
+                      'files','checkbox','url','email','phone','duration','place']],
+    ['Rechnen',      ['formula','relation','rollup','uid','button','verify']],
+    ['Automatisch',  ['created','edited','createdBy','editedBy']],
+    ['Verbindungen', ['gdrive','figma','githubpr','zendesk']]
+  ];
+
+  const typMenue = (anker, coll, key) => {
+    const def = coll.schema[key];
+    const r = anker.getBoundingClientRect();
+
+    const html = TYP_GRUPPEN.map(([name, ids]) =>
+      `<div class="grp">${name}</div>` +
+      '<div class="typ-gitter">' +
+        ids.filter(id => TYPEN.some(t => t.id === id)).map(id => {
+          const t = TYPEN.find(x => x.id === id);
+          return `<button data-t="${t.id}" class="${def.type === t.id ? 'on' : ''}">` +
+                 `<span class="mi">${t.icon}</span>${esc(t.name)}</button>`;
+        }).join('') +
+      '</div>').join('');
+
+    const m = UI.menuMitSuche(html, r.left, r.bottom + 2, {
+      platzhalter: 'Typ auswählen …',
+      breite: '340px',
+      fuss: 'Jetzt: <b>' + esc(propTyp(def.type).name) + '</b>'
+    });
+
+    m.addEventListener('click', ev => {
+      const t = ev.target.closest('button[data-t]');
+      if (!t) return;
+      def.type = t.dataset.t;
+      if (['select','status','multi'].includes(def.type) && !def.options) def.options = [];
+      if (def.type === 'formula' && !def.formula) def.formula = '';
+      if (KI_TYPEN.includes(def.type) && !def.auftrag) def.auftrag = KI_AUFTRAG[def.type];
+      Store.updateCollection(coll.id, { schema: coll.schema });
+      m.remove(); App.zeichneSeite();
+      UI.toast('Typ geändert: ' + propTyp(def.type).name);
     });
   };
 
   const spaltenMenue = (anker, coll, view, key, block) => {
+    /* Eine gesperrte Datenbank lässt ihren Aufbau nicht mehr ändern —
+       Werte darf man weiter eintragen. Genau wie bei Notion. */
+    if (coll.gesperrt) {
+      UI.toast('Diese Datenbank ist gesperrt. Über das Ansichtsmenü lässt sie sich entsperren.');
+      return;
+    }
     const r = anker.getBoundingClientRect();
     const def = coll.schema[key];
     const keys = Object.keys(coll.schema);
@@ -3067,10 +4257,16 @@ const Datenbank = (() => {
     const umbruchAn = (view.umbruch || []).includes(key);
 
     const m = UI.menu(
-      `<div class="grp">${esc(def.name)}</div>` +
+      /* Kopf wie bei Notion: Symbol, Namensfeld, ⓘ für die Beschreibung */
+      '<div class="sp-kopf">' +
+        `<button class="sp-icon" data-a="icon" title="Symbol wählen">${def.icon || propTyp(def.type).icon}</button>` +
+        `<input class="sp-name" value="${esc(def.name)}" spellcheck="false" placeholder="Eigenschaftsnamen eingeben …">` +
+        '<button class="sp-info" data-a="beschreibung" title="Beschreibung">ⓘ</button>' +
+      '</div>' +
+      (def.beschreibung ? `<div class="sp-besch">${esc(def.beschreibung)}</div>` : '') +
       '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
-      '<button data-a="type"><span class="mi">⇄</span>Typ ändern</button>' +
-      '<button data-a="beschreibung"><span class="mi">ℹ</span>Beschreibung</button>' +
+      '<button data-a="type"><span class="mi">⇄</span>Typ ändern<span class="ms">' +
+        esc(propTyp(def.type).name) + '</span></button>' +
       (def.type === 'formula'  ? '<button data-a="formula"><span class="mi">∑</span>Formel bearbeiten</button>' : '') +
       (['select','status','multi'].includes(def.type)
         ? '<button data-a="optionen"><span class="mi">⊙</span>Optionen bearbeiten</button>' : '') +
@@ -3084,6 +4280,10 @@ const Datenbank = (() => {
       '<button data-a="asc"><span class="mi">↑</span>Aufsteigend sortieren</button>' +
       '<button data-a="desc"><span class="mi">↓</span>Absteigend sortieren</button>' +
       '<button data-a="filter"><span class="mi">⚟</span>Nach dieser Spalte filtern</button>' +
+      `<button data-a="gruppe"><span class="mi">⊞</span>Gruppe` +
+        `<span class="ms">${view.groupBy === key ? 'an' : 'aus'}</span></button>` +
+      '<button data-a="berechnen"><span class="mi">Σ</span>Berechnen' +
+        `<span class="ms">${esc(((view.calc || {})[key]) || '—')} ▸</span></button>` +
       '<hr>' +
       `<button data-a="umbruch"><span class="mi">↵</span>Text umbrechen<span class="ms">${umbruchAn ? 'an' : 'aus'}</span></button>` +
       `<button data-a="fix"><span class="mi">📌</span>Spalte fixieren` +
@@ -3091,11 +4291,33 @@ const Datenbank = (() => {
       '<button data-a="links"><span class="mi">←</span>Nach links</button>' +
       '<button data-a="rechts"><span class="mi">→</span>Nach rechts</button>' +
       '<button data-a="hide"><span class="mi">👁</span>In dieser Ansicht ausblenden</button>' +
+      '<hr>' +
+      '<button data-a="neulinks"><span class="mi">⇤</span>Links einfügen</button>' +
+      '<button data-a="neurechts"><span class="mi">⇥</span>Rechts einfügen</button>' +
       (def.type !== 'title'
         ? '<hr><button data-a="dup"><span class="mi">⧉</span>Eigenschaft duplizieren</button>' +
           '<button data-a="del"><span class="mi">🗑</span>Eigenschaft löschen</button>'
         : ''),
       r.left, r.bottom + 2);
+
+    /* Der Name lässt sich direkt oben im Menü ändern — wie bei Notion. */
+    const nameFeld = m.querySelector('.sp-name');
+    if (nameFeld) {
+      const uebernehmen = () => {
+        const n = nameFeld.value.trim();
+        if (!n || n === def.name) return;
+        def.name = n;
+        Store.updateCollection(coll.id, { schema: coll.schema });
+        App.zeichneSeite();
+      };
+      nameFeld.addEventListener('blur', uebernehmen);
+      nameFeld.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); uebernehmen(); m.remove(); }
+        if (ev.key === 'Escape') { ev.preventDefault(); m.remove(); }
+        ev.stopPropagation();
+      });
+      setTimeout(() => { nameFeld.focus(); nameFeld.select(); }, 30);
+    }
 
     m.addEventListener('click', async e => {
       const b = e.target.closest('button[data-a]');
@@ -3103,17 +4325,43 @@ const Datenbank = (() => {
       const a = b.dataset.a;
 
       if (a === 'type') {
-        m.innerHTML = '<div class="grp">Typ ändern</div>' +
-          TYPEN.map(t => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${t.name}</button>`).join('');
-        m.addEventListener('click', ev => {
-          const t = ev.target.closest('button[data-t]');
-          if (!t) return;
-          def.type = t.dataset.t;
-          if (['select','status','multi'].includes(def.type) && !def.options) def.options = [];
-          if (def.type === 'formula' && !def.formula) def.formula = '';
+        m.remove();
+        typMenue(anker, coll, key);
+        return;
+      }
+
+      /* Eigenes Symbol für die Spalte */
+      if (a === 'icon') {
+        UI.emojiWaehlen(b, (em) => {
+          def.icon = em;
           Store.updateCollection(coll.id, { schema: coll.schema });
           m.remove(); App.zeichneSeite();
         });
+        return;
+      }
+
+      /* Gruppieren nach genau dieser Spalte — an oder aus */
+      if (a === 'gruppe') {
+        m.remove();
+        const anJetzt = view.groupBy === key;
+        Store.updateView(view.id, { groupBy: anJetzt ? '' : key });
+        App.zeichneSeite();
+        UI.toast(anJetzt ? 'Gruppierung aufgehoben' : 'Gruppiert nach ' + def.name);
+        return;
+      }
+
+      /* Fussrechnung für diese Spalte */
+      if (a === 'berechnen') {
+        m.remove();
+        rechnenMenue(anker, coll, view, key, Store.rowsOf(coll.id));
+        return;
+      }
+
+      /* Neue Eigenschaft links oder rechts daneben */
+      if (a === 'neulinks' || a === 'neurechts') {
+        m.remove();
+        const stelle = idx + (a === 'neurechts' ? 1 : 0);
+        neueEigenschaftBei(anker, coll, view, stelle);
         return;
       }
 
@@ -4356,7 +5604,11 @@ const Datenbank = (() => {
            relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
            ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
            rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN,
+           typMenue, TYP_GRUPPEN, alsDashboard, zeilenGesamt, begrenzen, layoutPanel, farbregelPanel, farbeFuerZeile,
+           farbregeln, gruppierenMenue, kiAutofillMenue, LAYOUTS, leiste,
            kiFeldFuellenFuer: kiFeldFuellen,
            formelEditor, csvExport, csvImport, csvZerlegen,
-           zeilePeek, zeilenMenue, rollupWert };
+           zeilePeek, zeilenMenue, rollupWert,
+           unterElementeAn, abhaengigkeitenAn, blockiertDurch, UNTER_KEYS, ABH_KEYS,
+           weitereEinstellungen, quellenVerwalten, seitenLayoutPanel };
 })();

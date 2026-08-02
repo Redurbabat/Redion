@@ -167,7 +167,7 @@ const Meeting = (() => {
     const jetzt = new Date();
     const p = Store.addPage(App.aktuelleSeite(), {
       text: (ergebnis.titel || 'Besprechung') + ' · ' + jetzt.toLocaleDateString('de-DE'),
-      icon: '🎙'
+      icon: '🎙', besprechung: true
     });
 
     Store.addBlock(p.id, 'callout', {
@@ -469,9 +469,66 @@ const Meeting = (() => {
     });
   };
 
+  /**
+   * Der Besprechungs-Reiter der Seitenleiste. Notion zeigt oben, was ansteht,
+   * darunter die heutigen Notizen — mit einem Weg zum Kalender, wenn keiner
+   * verbunden ist.
+   */
+  const seitenleiste = (baum) => {
+    const abschnitt = (name) => {
+      const d = document.createElement('div');
+      d.className = 'side-section';
+      d.innerHTML = `<span>${name}</span>`;
+      return d;
+    };
+
+    baum.appendChild(abschnitt('Bevorstehend'));
+    const kommend = App.kommendeTermine(5);
+    const oben = document.createElement('div');
+    oben.className = 'wz-block';
+    if (kommend.length) {
+      oben.innerHTML = kommend.map(t =>
+        `<button class="side-item" data-t="${t.id}"><span>📌</span>` +
+        `<span>${esc(t.text)}</span><span class="k">${esc(t.wann)}</span></button>`).join('');
+    } else {
+      oben.innerHTML =
+        '<button class="side-item" data-a="kal"><span>📅</span>' +
+        '<span>Verbinde deinen Kalender</span></button>' +
+        '<div class="side-leer">Dann stehen hier alle Termine und du kannst ' +
+        'für jeden eine Notiz anlegen.</div>';
+    }
+    oben.addEventListener('click', e => {
+      const t = e.target.closest('[data-t]');
+      if (t) { App.oeffne(t.dataset.t); return; }
+      if (e.target.closest('[data-a="kal"]')) Kalender.dialog();
+    });
+    baum.appendChild(oben);
+
+    baum.appendChild(abschnitt('Heute'));
+    const unten = document.createElement('div');
+    unten.className = 'wz-block';
+    /* Alle Seiten, die aus einer Besprechung entstanden sind */
+    const notizen = Object.values(Store.cache.blocks)
+      .filter(b => b.type === 'page' && b.alive !== false && b.besprechung)
+      .sort((a, b) => String(b.created).localeCompare(String(a.created)))
+      .slice(0, 8);
+    unten.innerHTML =
+      '<button class="side-item" data-a="neu"><span>＋</span><span>Neue Meeting-Notiz</span></button>' +
+      (notizen.length
+        ? notizen.map(p => `<button class="side-item" data-p="${p.id}"><span>${p.icon || '🎙'}</span>` +
+            `<span>${esc(p.text || 'Ohne Titel')}</span></button>`).join('')
+        : '<div class="side-leer">Mache dir in deinen Besprechungen Notizen, ohne zu tippen.</div>');
+    unten.addEventListener('click', e => {
+      if (e.target.closest('[data-a="neu"]')) { panel(); return; }
+      const p = e.target.closest('[data-p]');
+      if (p) App.oeffne(p.dataset.p);
+    });
+    baum.appendChild(unten);
+  };
+
   return { starten, stoppen, auswerten, seiteAnlegen, aufgabenDatenbank,
            transkriptText, zeitText, kannZuhoeren, kannAufnehmen,
-           panel, einstellungenDialog, E };
+           panel, einstellungenDialog, seitenleiste, E };
 })();
 
 window.Meeting = Meeting;

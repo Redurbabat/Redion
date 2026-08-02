@@ -89,6 +89,15 @@
     <button class="icon-btn" id="btn-side"  title="Seitenleiste (Strg + \)">‹‹</button>
   </div>
 
+  <!-- Reiterleiste wie in Notion: Start, Chat, Besprechungen, Posteingang, Suchen -->
+  <nav class="side-reiter" id="side-reiter">
+    <button class="sr" data-reiter="start"  title="Start"><span>🏠</span><b>Start</b></button>
+    <button class="sr" data-reiter="chat"   title="Chat mit der KI (Strg + O)"><span>💬</span><b>Chat</b></button>
+    <button class="sr" data-reiter="bespr"  title="Besprechungen"><span>🎙</span><b>Besprechungen</b></button>
+    <button class="sr" data-reiter="inbox"  title="Posteingang"><span>📥</span><b>Posteingang</b></button>
+    <button class="sr" data-reiter="suche"  title="Suchen (Strg + P)"><span>🔍</span><b>Suchen</b></button>
+  </nav>
+
   <nav class="side-nav">
     <button class="side-item" id="btn-search">
       <span>🔍</span><span>Suchen</span><span class="k">Strg P</span>
@@ -113,10 +122,22 @@
     <button class="side-item" id="btn-import"><span>⭱</span><span>Importieren</span></button>
     <button class="side-item" id="btn-trash"><span>🗑</span><span>Papierkorb</span></button>
     <button class="side-item" id="btn-hilfe"><span>?</span><span>Tastenkürzel</span><span class="k">Strg /</span></button>
-    <button class="side-item neu" id="btn-new-bottom"><span>✚</span><span>Neue Seite</span></button>
+    <div class="side-unten">
+      <button class="side-chat" id="btn-neuer-chat"><span>✨</span><span>Neuer Chat</span><span class="k">Strg O</span></button>
+      <button class="side-schreib" id="btn-new-bottom" title="Neue Seite (Strg + N)">✎</button>
+    </div>
     <div class="side-hinweis">Alles bleibt auf diesem Gerät.</div>
   </div>
 </aside>
+
+<!-- =========================================================================
+     LEISTE AM UNTEREN RAND — nur auf dem Telefon, wie in Notions App
+     ====================================================================== -->
+<div id="handy-leiste">
+  <button id="hl-suche" title="Suchen">🔍</button>
+  <button id="hl-ki" class="hl-pille"><span class="hl-av">✨</span><span>KI fragen</span></button>
+  <button id="hl-neu" title="Neue Seite">✎</button>
+</div>
 
 <!-- =========================================================================
      HAUPTBEREICH
@@ -174,7 +195,17 @@
       <button id="ai-seite" title="Die KI baut den Seitenaufbau">📄 Seite aufbauen</button>
       <button id="ai-log" title="Was die KI gebaut hat">🧾 Protokoll</button>
     </div>
-    <textarea id="ai-input" rows="1" placeholder="Frag etwas zu dieser Seite …"></textarea>
+    <textarea id="ai-input" rows="1" placeholder="Mach alles mit KI …"></textarea>
+    <!-- Zeile unter dem Eingabefeld, wie bei Notion -->
+    <div class="ai-leiste">
+      <button id="ai-plus" title="Anhängen und erwähnen">＋</button>
+      <button id="ai-quellen" title="Quellen, Modus und Personalisierung">⚙</button>
+      <button id="ai-faehig" title="Fähigkeiten">🧩</button>
+      <span class="ai-luecke"></span>
+      <button id="ai-modus" title="Standard darf ändern, Fragen nur antworten (Shift + Tab)">Standard</button>
+      <button id="ai-diktat" title="Diktieren">🎤</button>
+      <button id="ai-senden" title="Senden">↑</button>
+    </div>
   </div>
 </aside>
 
@@ -206,6 +237,7 @@
 <script src="js/pwa.js"></script>
 <script src="js/vorlagen.js"></script>
 <script src="js/status.js"></script>
+<script src="js/bibliothek.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/app.js"></script>
 

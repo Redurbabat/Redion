@@ -220,8 +220,151 @@ const KI = (() => {
     laedt: false,
     ollamaModelle: [],
     engine: null,          /* die WebLLM-Instanz */
-    verlauf: []
+    verlauf: [],
+    chatId: '',            /* welcher gespeicherte Chat gerade offen ist */
+    modus: 'standard'      /* 'standard' darf ändern, 'fragen' nur antworten */
   };
+
+  /* ========================================================================
+   * CHATS — GESPEICHERTE UNTERHALTUNGEN
+   * Notion führt sie in der Seitenleiste, nach Tagen gruppiert, jeder
+   * anheftbar. Hier liegen sie im Speicher unter „chats".
+   * ======================================================================*/
+  const chatsLesen  = () => Store.getMeta('chats', []) || [];
+  const chatsSchreiben = (liste) => Store.setMeta('chats', liste.slice(0, 200));
+
+  const chatSichern = () => {
+    if (!zustand.verlauf.length) return;
+    const liste = chatsLesen();
+    const erste = zustand.verlauf.find(m => m.role === 'user');
+    const titel = (erste ? erste.content : 'Chat').slice(0, 60);
+    const jetzt = Store.now();
+    const i = liste.findIndex(c => c.id === zustand.chatId);
+    const eintrag = { id: zustand.chatId || Store.uid(), titel,
+                      verlauf: zustand.verlauf.slice(-40), wann: jetzt,
+                      angeheftet: i >= 0 ? liste[i].angeheftet : false };
+    zustand.chatId = eintrag.id;
+    if (i >= 0) liste[i] = eintrag; else liste.unshift(eintrag);
+    chatsSchreiben(liste);
+  };
+
+  const chatOeffnen = (id) => {
+    const c = chatsLesen().find(x => x.id === id);
+    if (!c) return;
+    zustand.chatId = c.id;
+    zustand.verlauf = [...(c.verlauf || [])];
+    App.kiPanel(true);
+    const feld = document.getElementById('chat');
+    if (feld) {
+      feld.innerHTML = '';
+      zustand.verlauf.forEach(m => schreibe(m.role, m.content));
+    }
+    App.zeichneBaum();
+  };
+
+  const neuerChat = () => {
+    chatSichern();
+    zustand.chatId = '';
+    zustand.verlauf = [];
+    App.kiPanel(true);
+    const feld = document.getElementById('chat');
+    if (feld) feld.innerHTML = '';
+    App.zeichneBaum();
+    document.getElementById('ai-input')?.focus();
+  };
+
+  const chatLoeschen = (id) => {
+    chatsSchreiben(chatsLesen().filter(c => c.id !== id));
+    if (zustand.chatId === id) { zustand.chatId = ''; zustand.verlauf = []; }
+    App.zeichneBaum();
+  };
+
+  const chatAnheften = (id) => {
+    const liste = chatsLesen();
+    const c = liste.find(x => x.id === id);
+    if (!c) return;
+    c.angeheftet = !c.angeheftet;
+    chatsSchreiben(liste);
+    App.zeichneBaum();
+  };
+
+  /** Nach Tagen gruppiert: Heute, Gestern, Diese Woche, Älter. */
+  const MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August',
+                  'September','Oktober','November','Dezember'];
+
+  const chatsGruppiert = () => {
+    const liste = chatsLesen();
+    const heute = new Date(); heute.setHours(0, 0, 0, 0);
+    const tag = 86400000;
+    /* Bis eine Woche zurück nach Tagen, danach nach Monaten — wie bei Notion */
+    const reihe = [];
+    const rein = (name, c) => {
+      let g = reihe.find(x => x[0] === name);
+      if (!g) { g = [name, []]; reihe.push(g); }
+      g[1].push(c);
+    };
+    if (liste.some(c => c.angeheftet)) reihe.push(['Angeheftet', []]);
+    liste.forEach(c => {
+      if (c.angeheftet) { rein('Angeheftet', c); return; }
+      const d = Date.parse(c.wann);
+      if (isNaN(d)) { rein('Älter', c); return; }
+      if (d >= heute.getTime())                rein('Heute', c);
+      else if (d >= heute.getTime() - tag)     rein('Gestern', c);
+      else if (d >= heute.getTime() - 7 * tag) rein('Diese Woche', c);
+      else {
+        const dt = new Date(d);
+        rein(MONATE[dt.getMonth()] + ' ' + dt.getFullYear(), c);
+      }
+    });
+    return reihe.filter(g => g[1].length);
+  };
+
+  /** „vor 3 Monaten" — Notion schreibt es unter jeden Chat. */
+  const wieLange = (wann) => {
+    const d = Date.parse(wann);
+    if (isNaN(d)) return '';
+    const min = Math.floor((Date.now() - d) / 60000);
+    if (min < 60)     return 'vor ' + Math.max(1, min) + ' Min.';
+    if (min < 1440)   return 'vor ' + Math.floor(min / 60) + ' Std.';
+    const tage = Math.floor(min / 1440);
+    if (tage === 1)   return 'gestern';
+    if (tage < 30)    return 'vor ' + tage + ' Tagen';
+    const monate = Math.floor(tage / 30);
+    if (monate < 12)  return 'vor ' + monate + (monate === 1 ? ' Monat' : ' Monaten');
+    const jahre = Math.floor(tage / 365);
+    return 'vor ' + jahre + (jahre === 1 ? ' Jahr' : ' Jahren');
+  };
+
+  /* ========================================================================
+   * FÄHIGKEITEN
+   * Notion nennt sie „Skills": benannte Aufgaben, die die KI kann. Man ruft
+   * sie im Chat mit @ auf oder über das Menü bei markiertem Text.
+   * ======================================================================*/
+  const FAEHIG_START = [
+    { id: 'stil',   icon: '✍️', name: 'Schreibstil verbessern',
+      auftrag: 'Verbessere den Stil des Textes. Behalte Inhalt und Bedeutung genau bei.' },
+    { id: 'korrek', icon: '✅', name: 'Korrekturlesen',
+      auftrag: 'Korrigiere Rechtschreibung, Grammatik und Zeichensetzung. Ändere sonst nichts.' },
+    { id: 'erklaer',icon: '💡', name: 'Erklären',
+      auftrag: 'Erkläre den Text einfach und verständlich, ohne Fachjargon.' },
+    { id: 'format', icon: '✨', name: 'Neu formatieren',
+      auftrag: 'Gliedere den Text sauber mit Überschriften und Listen. Der Inhalt bleibt.' }
+  ];
+
+  const faehigkeiten = () => {
+    const eigene = Store.getMeta('kiFaehigkeiten', null);
+    return eigene === null ? FAEHIG_START : eigene;
+  };
+
+  const faehigkeitSichern = (f) => {
+    const liste = [...faehigkeiten()];
+    const i = liste.findIndex(x => x.id === f.id);
+    if (i >= 0) liste[i] = f; else liste.push(f);
+    Store.setMeta('kiFaehigkeiten', liste);
+  };
+
+  const faehigkeitLoeschen = (id) =>
+    Store.setMeta('kiFaehigkeiten', faehigkeiten().filter(f => f.id !== id));
 
   /* ========================================================================
    * OLLAMA
@@ -691,6 +834,13 @@ const KI = (() => {
     }
     if (Store.getMeta('ki:persoenlich', ''))
       system += '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '');
+    /* Im Modus „Fragen" darf die KI nur antworten, nichts anlegen oder ändern */
+    if (zustand.modus === 'fragen')
+      system += '\n\nWichtig: Du beantwortest nur Fragen. Lege nichts an, ändere nichts ' +
+                'und schlage keine Änderungen vor, um die man dich nicht gebeten hat.';
+    const pers = persona();
+    if (pers.name && pers.name !== 'KI')
+      system += '\n\nDu heisst ' + pers.name + '.';
     const laenge = Store.getMeta('kiLaenge', 'normal');
     if (laenge === 'kurz')  system += '\n\nAntworte knapp, höchstens drei Sätze.';
     if (laenge === 'lang')  system += '\n\nAntworte ausführlich und gut gegliedert.';
@@ -718,6 +868,31 @@ const KI = (() => {
     /* Quellen unter die Antwort */
     const qk = quellenKarte(quellen);
     if (qk && antwort) ziel.appendChild(qk);
+
+    /* Der Chat wandert in die Seitenleiste — wie bei Notion */
+    if (antwort) { chatSichern(); App.zeichneBaum(); }
+
+    /* Zeile mit Aktionen unter der Antwort: kopieren, Daumen */
+    if (antwort) {
+      const tat = document.createElement('div');
+      tat.className = 'msg-tat';
+      tat.innerHTML = '<button data-t="kopie" title="Kopieren">⧉</button>' +
+                      '<button data-t="gut" title="Gute Antwort">👍</button>' +
+                      '<button data-t="schlecht" title="Daneben">👎</button>';
+      tat.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-t]');
+        if (!b) return;
+        if (b.dataset.t === 'kopie') { navigator.clipboard?.writeText(antwort); UI.toast('Antwort kopiert'); }
+        else {
+          b.classList.add('an');
+          const bew = Store.getMeta('kiBewertung', []) || [];
+          bew.push({ wann: Store.now(), gut: b.dataset.t === 'gut', frage: text.slice(0, 80) });
+          Store.setMeta('kiBewertung', bew.slice(-200));
+          UI.toast(b.dataset.t === 'gut' ? 'Gemerkt — danke' : 'Gemerkt. Steht im Protokoll.');
+        }
+      });
+      ziel.appendChild(tat);
+    }
 
     /* Antwort in die Seite übernehmen */
     if (antwort) {
@@ -1233,6 +1408,215 @@ const KI = (() => {
     UI.toast('In die Seite eingefügt');
   };
 
+  /* ========================================================================
+   * PERSONALISIEREN, FÄHIGKEITEN, DIKTAT, SEITENLEISTE
+   * ======================================================================*/
+
+  const GESICHTER = ['✨', '🦉', '🐤', '🦊', '🐙', '🧠', '🤖', '🌱', '🔭', '📎', '🧭', '🪄'];
+
+  const persona = () => Store.getMeta('kiPersona', { name: 'KI', gesicht: '✨' });
+
+  const personalisieren = () => {
+    const p = persona();
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    const zeichne = () => {
+      o.innerHTML =
+        '<div class="finder we-panel">' +
+          '<div class="fh">KI personalisieren<button class="icon-btn" data-a="zu">✕</button></div>' +
+          `<div class="pers-kopf"><div class="pers-gross">${p.gesicht}</div>` +
+            `<input id="pers-name" value="${esc(p.name)}" placeholder="Gib einen Namen ein"></div>` +
+          '<div class="pers-gitter">' +
+            GESICHTER.map(g => `<button data-g="${g}" class="${g === p.gesicht ? 'on' : ''}">${g}</button>`).join('') +
+          '</div>' +
+          '<div class="we-text">Anweisungen: was die KI immer beachten soll.</div>' +
+          `<div class="pers-anw"><textarea id="pers-anw" rows="3" ` +
+            `placeholder="Zum Beispiel: Antworte immer auf Deutsch und knapp.">` +
+            `${esc(Store.getMeta('ki:persoenlich', ''))}</textarea></div>` +
+          '<div class="we-fuss"><button class="we-knopf" data-a="ok">Übernehmen</button></div>' +
+        '</div>';
+    };
+    zeichne();
+    document.body.appendChild(o);
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const g = e.target.closest('[data-g]');
+      if (g) { p.gesicht = g.dataset.g; const n = o.querySelector('#pers-name').value;
+               const a = o.querySelector('#pers-anw').value; zeichne();
+               o.querySelector('#pers-name').value = n; o.querySelector('#pers-anw').value = a; return; }
+      if (e.target.closest('[data-a="ok"]')) {
+        p.name = o.querySelector('#pers-name').value.trim() || 'KI';
+        Store.setMeta('kiPersona', p);
+        Store.setMeta('ki:persoenlich', o.querySelector('#pers-anw').value.trim());
+        o.remove();
+        const kopf = document.querySelector('.ai-head b');
+        if (kopf) kopf.textContent = p.gesicht + ' ' + p.name;
+        App.zeichneBaum();
+        UI.toast('Gemerkt: ' + p.gesicht + ' ' + p.name);
+      }
+    });
+  };
+
+  const faehigkeitenMenue = (anker) => {
+    const r = anker.getBoundingClientRect();
+    const liste = faehigkeiten();
+    const m = UI.menuMitSuche(
+      liste.map(f => `<button data-f="${f.id}"><span class="mi">${f.icon}</span>${esc(f.name)}</button>`).join('') +
+      '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
+      '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>',
+      r.left, r.top - 260,
+      { platzhalter: 'Fähigkeit suchen …', kopf: '<div class="grp">Fähigkeiten</div>',
+        fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.' });
+    m.addEventListener('click', async e => {
+      const b = e.target.closest('[data-f]');
+      if (!b) return;
+      m.remove();
+      if (b.dataset.f === '__neu')  { faehigkeitBearbeiten(); return; }
+      if (b.dataset.f === '__verw') { faehigkeitenVerwalten(); return; }
+      const f = liste.find(x => x.id === b.dataset.f);
+      if (f) senden(f.auftrag);
+    });
+  };
+
+  const faehigkeitBearbeiten = async (vorhanden) => {
+    const name = await UI.frage('Wie heisst die Fähigkeit?', vorhanden ? vorhanden.name : '');
+    if (!name) return;
+    const auftrag = await UI.frage('Was soll die KI dabei tun?',
+      vorhanden ? vorhanden.auftrag : 'Fasse den markierten Text in drei Sätzen zusammen.');
+    if (!auftrag) return;
+    const icon = await UI.frage('Ein Zeichen dafür', vorhanden ? vorhanden.icon : '🧩');
+    faehigkeitSichern({ id: vorhanden ? vorhanden.id : Store.uid().slice(0, 6),
+                        name, auftrag, icon: icon || '🧩' });
+    UI.toast('Fähigkeit gemerkt: ' + name);
+  };
+
+  const faehigkeitenVerwalten = () => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    const zeichne = () => {
+      const liste = faehigkeiten();
+      o.innerHTML =
+        '<div class="finder we-panel">' +
+          `<div class="fh">Fähigkeiten <em>${liste.length}</em>` +
+            '<button class="icon-btn" data-a="zu">✕</button></div>' +
+          '<div class="we-text">Fähigkeiten sind Aufgaben, die die KI kann. Du rufst ' +
+          'sie im Chat mit <b>@</b> auf oder über das Menü bei markiertem Text.</div>' +
+          '<div class="we-liste">' +
+            liste.map(f => `<button data-b="${f.id}"><span>${f.icon}</span>${esc(f.name)}` +
+              `<span class="ms" data-w="${f.id}">löschen</span></button>`).join('') +
+          '</div>' +
+          '<div class="we-fuss"><button class="we-knopf" data-a="neu">Fähigkeit hinzufügen</button></div>' +
+        '</div>';
+    };
+    zeichne();
+    document.body.appendChild(o);
+    o.addEventListener('click', async e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const w = e.target.closest('[data-w]');
+      if (w) { faehigkeitLoeschen(w.dataset.w); zeichne(); return; }
+      if (e.target.closest('[data-a="neu"]')) { await faehigkeitBearbeiten(); zeichne(); return; }
+      const b = e.target.closest('[data-b]');
+      if (b) { await faehigkeitBearbeiten(faehigkeiten().find(f => f.id === b.dataset.b)); zeichne(); }
+    });
+  };
+
+  /** Diktieren über die Spracherkennung des Browsers — kostenlos. */
+  let hoert = null;
+  const diktat = (feld) => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { UI.toast('Dieser Browser kann nicht zuhören. Safari und Chrome können es.'); return; }
+    if (hoert) { hoert.stop(); hoert = null; document.getElementById('ai-diktat')?.classList.remove('an'); return; }
+    hoert = new SR();
+    hoert.lang = 'de-DE';
+    hoert.interimResults = true;
+    hoert.continuous = true;
+    let fest = feld.value;
+    hoert.addEventListener('result', (e) => {
+      let zwischen = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) fest += t; else zwischen += t;
+      }
+      feld.value = (fest + zwischen).trim();
+      feld.dispatchEvent(new Event('input'));
+    });
+    hoert.addEventListener('end', () => {
+      hoert = null;
+      document.getElementById('ai-diktat')?.classList.remove('an');
+    });
+    hoert.start();
+    document.getElementById('ai-diktat')?.classList.add('an');
+    UI.toast('Ich höre zu — nochmal tippen beendet es');
+  };
+
+  /**
+   * Der Chat-Reiter der Seitenleiste: Agenten oben, darunter der Verlauf
+   * nach Tagen gruppiert — so wie Notion es zeigt.
+   */
+  const seitenleiste = (baum) => {
+    const p = persona();
+    const kopf = document.createElement('div');
+    kopf.className = 'side-section';
+    kopf.innerHTML = '<span>KI</span>';
+    baum.appendChild(kopf);
+
+    const agenten = document.createElement('div');
+    agenten.className = 'ki-agenten';
+    agenten.innerHTML =
+      `<button data-a="ki"><span class="ka-bild">${p.gesicht}</span><b>${esc(p.name)}</b></button>` +
+      Agent.eigene().slice(0, 3).map(a =>
+        `<button data-a="${esc(a.id)}"><span class="ka-bild">${a.icon || '🤖'}</span>` +
+        `<b>${esc(a.name)}</b></button>`).join('') +
+      '<button data-a="neu"><span class="ka-bild ka-neu">＋</span><b>Neuer Agent</b></button>';
+    agenten.addEventListener('click', e => {
+      const b = e.target.closest('[data-a]');
+      if (!b) return;
+      if (b.dataset.a === 'ki')  { App.kiPanel(true); return; }
+      if (b.dataset.a === 'neu') { Agent.eigenerDialog(); return; }
+      Agent.panel(b.dataset.a);
+    });
+    baum.appendChild(agenten);
+
+    chatsGruppiert().forEach(([name, chats]) => {
+      const k = document.createElement('div');
+      k.className = 'side-section';
+      k.innerHTML = `<span>${name}</span>`;
+      if (name === 'Heute' || name === 'Angeheftet') {
+        const plus = document.createElement('button');
+        plus.textContent = '+';
+        plus.title = 'Neuer Chat';
+        plus.addEventListener('click', neuerChat);
+        k.appendChild(plus);
+      }
+      baum.appendChild(k);
+
+      const liste = document.createElement('div');
+      liste.className = 'wz-block';
+      liste.innerHTML = chats.map(c =>
+        `<button class="side-item ki-chat${c.id === zustand.chatId ? ' on' : ''}" data-c="${c.id}">` +
+        `<span>💬</span><span class="kc-txt">${esc(c.titel)}` +
+        `<em class="kc-wann">${esc(wieLange(c.wann))}</em></span>` +
+        `<span class="ki-pin" data-pin="${c.id}" title="Anheften">${c.angeheftet ? '📌' : '📍'}</span>` +
+        `<span class="ki-weg" data-weg="${c.id}" title="Löschen">✕</span></button>`).join('');
+      liste.addEventListener('click', e => {
+        const pin = e.target.closest('[data-pin]');
+        if (pin) { e.stopPropagation(); chatAnheften(pin.dataset.pin); return; }
+        const weg = e.target.closest('[data-weg]');
+        if (weg) { e.stopPropagation(); chatLoeschen(weg.dataset.weg); return; }
+        const b = e.target.closest('[data-c]');
+        if (b) chatOeffnen(b.dataset.c);
+      });
+      baum.appendChild(liste);
+    });
+
+    if (!chatsGruppiert().length) {
+      const leer = document.createElement('div');
+      leer.className = 'side-leer';
+      leer.textContent = 'Noch keine Unterhaltung. Unten auf „Neuer Chat".';
+      baum.appendChild(leer);
+    }
+  };
+
   const bindePanel = () => {
     const ta = document.getElementById('ai-input');
     const chat = document.getElementById('chat');
@@ -1245,7 +1629,13 @@ const KI = (() => {
     }
 
     ta.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      /* Steht „Eingabetaste macht eine neue Zeile" an, wird mit Strg+Enter
+         gesendet — das ist Notions Eingabeoption. */
+      const neueZeile = !!Store.getMeta('enterZeile', false);
+      const senderTaste = neueZeile
+        ? (e.key === 'Enter' && (e.ctrlKey || e.metaKey))
+        : (e.key === 'Enter' && !e.shiftKey);
+      if (senderTaste) {
         e.preventDefault();
         const t = ta.value;
         ta.value = '';
@@ -1261,6 +1651,118 @@ const KI = (() => {
     document.querySelectorAll('.ai-quick button[data-p]').forEach(b => {
       b.addEventListener('click', () => senden(b.dataset.p));
     });
+
+    /* --- Die Leiste unter dem Eingabefeld ------------------------------- */
+    const modusKnopf = document.getElementById('ai-modus');
+    const modusZeigen = () => {
+      if (modusKnopf) modusKnopf.textContent = zustand.modus === 'fragen' ? 'Fragen' : 'Standard';
+    };
+    modusZeigen();
+
+    const modusWechseln = () => {
+      zustand.modus = zustand.modus === 'fragen' ? 'standard' : 'fragen';
+      modusZeigen();
+      UI.toast(zustand.modus === 'fragen'
+        ? 'Fragen: die KI antwortet nur, sie ändert nichts'
+        : 'Standard: die KI darf suchen, bauen und ändern');
+    };
+    modusKnopf?.addEventListener('click', (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const m = UI.menu(
+        `<button data-m="standard"><span class="mi">✎</span>Standard` +
+          '<span class="sub">Kann suchen, bearbeiten und mehr</span>' +
+          (zustand.modus === 'standard' ? '<span class="ms">✓</span>' : '') + '</button>' +
+        `<button data-m="fragen"><span class="mi">💬</span>Fragen` +
+          '<span class="sub">Nur Antworten, keine Änderungen</span>' +
+          (zustand.modus === 'fragen' ? '<span class="ms">✓</span>' : '') + '</button>' +
+        '<div class="menu-fuss">Tipp: Mit Shift + Tab durch die Modi wechseln</div>',
+        r.left - 120, r.top - 130);
+      m.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-m]');
+        if (!b) return;
+        zustand.modus = b.dataset.m; modusZeigen(); m.remove();
+      });
+    });
+
+    ta.addEventListener('keydown', e => {
+      if (e.key === 'Tab' && e.shiftKey) { e.preventDefault(); modusWechseln(); }
+    });
+
+    document.getElementById('ai-senden')?.addEventListener('click', () => {
+      const t = ta.value; ta.value = ''; ta.style.height = 'auto'; senden(t);
+    });
+
+    document.getElementById('ai-plus')?.addEventListener('click', (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const m = UI.menu(
+        '<button data-x="datei"><span class="mi">📎</span>Fotos und Dateien hinzufügen</button>' +
+        '<button data-x="erwaehnen"><span class="mi">@</span>Seiten oder Personen erwähnen</button>' +
+        '<button data-x="bild"><span class="mi">🖼</span>Bild erstellen<span class="ms">neu</span></button>',
+        r.left, r.top - 120);
+      m.addEventListener('click', async ev => {
+        const b = ev.target.closest('[data-x]');
+        if (!b) return;
+        m.remove();
+        if (b.dataset.x === 'datei') {
+          const inp = document.createElement('input');
+          inp.type = 'file'; inp.accept = 'image/*,.txt,.md,.csv,.json';
+          inp.addEventListener('change', async () => {
+            const f = inp.files[0]; if (!f) return;
+            if (/^image\//.test(f.type)) { ta.value += `\n[Bild: ${f.name}]`; UI.toast('Bilder kann nur ein Modell mit Augen lesen'); return; }
+            ta.value += '\n\n' + (await f.text()).slice(0, 6000);
+            ta.dispatchEvent(new Event('input'));
+          });
+          inp.click();
+        }
+        if (b.dataset.x === 'erwaehnen') {
+          const seiten = Object.values(Store.cache.blocks)
+            .filter(x => x.type === 'page' && x.alive !== false).slice(0, 60);
+          const m2 = UI.menuMitSuche(
+            seiten.map(p => `<button data-s="${p.id}">${p.icon || '📄'} ${esc(p.text || 'Ohne Titel')}</button>`).join(''),
+            r.left, r.top - 300, { platzhalter: 'Seite suchen …', kopf: '<div class="grp">Erwähnen</div>' });
+          m2.addEventListener('click', ev2 => {
+            const s = ev2.target.closest('[data-s]');
+            if (!s) return;
+            const p = Store.getBlock(s.dataset.s);
+            ta.value += (ta.value ? ' ' : '') + '@' + (p.text || 'Seite');
+            m2.remove(); ta.focus();
+          });
+        }
+        if (b.dataset.x === 'bild') {
+          const was = await UI.frage('Was soll auf dem Bild sein?', '');
+          if (was) senden('Beschreibe ein Bild zu: ' + was +
+            '. Gib dann eine SVG-Zeichnung dazu aus, die ich einfügen kann.');
+        }
+      });
+    });
+
+    document.getElementById('ai-quellen')?.addEventListener('click', (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const q = Kontext.quellen();
+      const anzahl = Object.values(q).filter(Boolean).length;
+      const m = UI.menu(
+        `<button data-y="quellen"><span class="mi">⌥</span>Meine Quellen<span class="ms">${anzahl} ▸</span></button>` +
+        `<button data-y="mcp"><span class="mi">⇄</span>MCP-Server<span class="ms">` +
+          `${(Store.getMeta('mcp:server', []) || []).length} ▸</span></button>` +
+        `<button data-y="modus"><span class="mi">✎</span>Modus` +
+          `<span class="ms">${zustand.modus === 'fragen' ? 'Fragen' : 'Standard'} ▸</span></button>` +
+        '<button data-y="pers"><span class="mi">🎨</span>Personalisieren</button>',
+        r.left, r.top - 160);
+      m.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-y]');
+        if (!b) return;
+        m.remove();
+        if (b.dataset.y === 'quellen') quellenKarte(e.currentTarget);
+        if (b.dataset.y === 'mcp')     Einstellungen.oeffne('mcp');
+        if (b.dataset.y === 'modus')   modusWechseln();
+        if (b.dataset.y === 'pers')    personalisieren();
+      });
+    });
+
+    document.getElementById('ai-faehig')?.addEventListener('click', (e) =>
+      faehigkeitenMenue(e.currentTarget));
+
+    document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
 
     document.getElementById('ai-db')?.addEventListener('click', async () => {
       const auftrag = await UI.frage('Was soll die Datenbank können?',
@@ -1297,5 +1799,8 @@ const KI = (() => {
            quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
            SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
            ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
-           datenbankAuswerten, frageKurz, zustand, modellMenue };
+           datenbankAuswerten, frageKurz, zustand, modellMenue,
+           seitenleiste, neuerChat, chatOeffnen, chatsLesen, chatsGruppiert, chatSichern,
+           chatAnheften, chatLoeschen, faehigkeiten, faehigkeitSichern, faehigkeitLoeschen,
+           faehigkeitenMenue, faehigkeitenVerwalten, personalisieren, persona, diktat, wieLange };
 })();

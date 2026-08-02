@@ -1,7 +1,7 @@
 # Notizen im Netz veröffentlichen — Schritt für Schritt
 
 Ziel: Die App liegt unter einer echten Adresse wie
-`https://notizen.pages.dev`, lässt sich auf dem iPhone installieren, und die
+`https://notizen.<dein-name>.workers.dev`, lässt sich auf dem iPhone installieren, und die
 Anmeldung bei Google funktioniert. Alles kostenlos.
 
 Zeitaufwand beim ersten Mal: etwa zehn Minuten.
@@ -45,29 +45,51 @@ Wähle **Redurbabat/Notizen-** und klicke **Begin setup**.
 
 ### 4. Einstellungen
 
-Hier gibt es nichts zu bauen — die App ist reines HTML, CSS und JavaScript.
-Deshalb bleibt fast alles leer:
+Cloudflare legt heute standardmässig ein **Worker**-Projekt an, kein
+Pages-Projekt. Das ist in Ordnung — das Repository ist dafür eingerichtet.
+Die Vorgaben passen:
 
 | Feld | Wert |
 |---|---|
 | Project name | `notizen` |
 | Production branch | `main` |
-| Framework preset | **None** |
-| Build command | *leer lassen* |
-| Build output directory | `/` |
+| Build command | *leer* |
+| Deploy command | `npx wrangler deploy` |
+| Root directory | `/` |
 
 **Save and Deploy** drücken. Nach etwa einer Minute steht deine Adresse da:
 
 ```
-https://notizen.pages.dev
+https://notizen.<dein-name>.workers.dev
 ```
 
 Ab jetzt gilt: Jeder `git push` veröffentlicht automatisch neu.
 
+> **Wenn der erste Versuch fehlgeschlagen ist:** Das lag daran, dass
+> `wrangler.toml` für Pages geschrieben war und Cloudflare ein Worker-Projekt
+> gebaut hat. Ausserdem hätte Cloudflare die ganze `.git`-Ablage mit
+> ausgeliefert — darin liegt eine Datei über 25 MB, und mehr lässt Cloudflare
+> nicht zu. Beides ist behoben: Die App liegt jetzt im Ordner `public`, und
+> nur dieser Ordner geht ins Netz. Einmal pushen, dann läuft es.
+
+### So ist das Repository aufgebaut
+
+```
+public/          ← das kommt ins Netz
+  index.html
+  app.css
+  js/  icons/  sw.js  manifest.webmanifest  _headers
+worker.js        ← Einstiegspunkt: beantwortet /api/*, liefert sonst public/
+wrangler.toml    ← sagt Cloudflare, was zu tun ist
+functions/       ← die Brücke
+start.bat        ← lokal starten (dient public/ aus)
+oeffnen.bat      ← lokal ohne Server öffnen
+```
+
 ### 5. Eigene Adresse (freiwillig)
 
 Hast du eine eigene Domain, geht sie unter **Custom domains** dazu.
-Ohne Domain reicht `notizen.pages.dev` völlig.
+Ohne Domain reicht `notizen.<dein-name>.workers.dev` völlig.
 
 ---
 
@@ -77,7 +99,7 @@ Die App bringt alles mit, was iOS dafür braucht: Manifest, Symbole,
 Startbilder, Service Worker.
 
 1. **Safari** auf dem iPhone öffnen — Chrome und Firefox können es dort nicht
-2. `https://notizen.pages.dev` aufrufen
+2. `https://notizen.<dein-name>.workers.dev` aufrufen
 3. Unten auf den **Teilen-Knopf** tippen (Quadrat mit Pfeil nach oben)
 4. In der Liste nach unten wischen bis **„Zum Home-Bildschirm"**
 5. Oben rechts **Hinzufügen**
@@ -133,14 +155,15 @@ OAuth-Client-ID → Webanwendung**
 
 Zwei Felder sind wichtig:
 
-**Autorisierte JavaScript-Ursprünge**
+**Autorisierte JavaScript-Ursprünge** — genau die Adresse aus deiner
+Adresszeile, ohne Schrägstrich am Ende:
 ```
-https://notizen.pages.dev
+https://notizen.dein-name.workers.dev
 ```
 
 **Autorisierte Weiterleitungs-URIs**
 ```
-https://notizen.pages.dev/index.html
+https://notizen.dein-name.workers.dev/index.html
 ```
 
 > Läuft die App auch zu Hause über `start.bat`, trag zusätzlich
@@ -213,7 +236,9 @@ Cloudflare.
 
 | Zeichen | Ursache | Abhilfe |
 |---|---|---|
-| Weisse Seite | Falsches Ausgabeverzeichnis | Muss `/` sein, nicht `dist` |
+| Weisse Seite | Falsches Verzeichnis | `wrangler.toml` muss auf `./public` zeigen |
+| Deploy scheitert in Sekunden | `.git` grösser als 25 MB wurde mit ausgeliefert | Behoben — die App liegt in `public` |
+| „It looks like you've run a Workers-specific command in a Pages project" | Alte `wrangler.toml` mit `pages_build_output_dir` | Behoben |
 | `redirect_uri_mismatch` | Adresse steht nicht bei Google | Genau die Adresse aus der Adresszeile eintragen, mit `/index.html` |
 | `access_denied` | Nicht als Testnutzer eingetragen | Zielgruppe → Testnutzer → eigene Adresse |
 | Anmeldefenster geht nicht auf | Pop-up blockiert | Für diese Seite erlauben |
