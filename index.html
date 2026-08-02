@@ -256,6 +256,84 @@ input,textarea,select{font:inherit;color:inherit}
 .modus-vorschau .lese-seite{display:flex}
 .modus-split .schreib-seite,.modus-split .lese-seite{display:flex}
 .modus-split .schreib-seite{border-right:1px solid var(--rand)}
+/* ── Datenbanken: Tabelle · Board · Galerie ── */
+.db-flaeche{
+  padding:var(--s2) max(var(--s6),calc(50% - 460px)) var(--s5);
+  overflow:auto;flex:none;max-height:62vh;
+}
+.app.ist-db .editor-flaeche{flex:1;min-height:120px}
+.db-leiste{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap}
+.db-ansichten{display:flex;gap:2px;background:var(--flaeche-2);padding:2px;border-radius:7px}
+.db-ansichten button{padding:5px 11px;border-radius:5px;font-size:12.5px;font-weight:600;color:var(--tinte-schwach)}
+.db-ansichten button[aria-pressed="true"]{background:var(--flaeche);color:var(--tinte);box-shadow:var(--schatten)}
+.db-filter{
+  padding:6px 10px;border:1px solid var(--rand);border-radius:6px;background:var(--flaeche);
+  font-size:13px;min-width:130px;flex:1;max-width:220px;
+}
+.db-filter:focus{outline:none;border-color:var(--leit)}
+.db-info{font-size:12px;color:var(--tinte-blass);margin-left:auto}
+.db-weg{width:26px;height:26px;border-radius:5px;color:var(--tinte-blass)}
+.db-weg:hover{background:var(--fehler-hell);color:var(--fehler)}
+.db-tabelle-wrap{overflow-x:auto}
+.db-tabelle{border-collapse:collapse;width:100%;font-size:13.5px}
+.db-tabelle th,.db-tabelle td{
+  border:1px solid var(--rand);padding:0;text-align:left;vertical-align:middle;
+}
+.db-tabelle th{
+  background:var(--flaeche-2);font-weight:600;color:var(--tinte-schwach);
+  font-size:12px;padding:7px 10px;cursor:pointer;white-space:nowrap;user-select:none;
+}
+.db-tabelle th:hover{color:var(--tinte)}
+.db-tabelle td{padding:2px 4px}
+.db-tabelle td:has(input[type=checkbox]){text-align:center}
+.db-eingabe{
+  width:100%;border:none;background:none;padding:6px;font-size:13.5px;color:var(--tinte);border-radius:4px;
+}
+.db-eingabe:focus{outline:2px solid var(--leit);outline-offset:-2px}
+.db-tabelle input[type=checkbox]{width:15px;height:15px;accent-color:var(--leit);margin:6px}
+.db-chip{
+  display:inline-block;padding:2px 9px;border-radius:var(--r-rund);
+  font-size:12px;font-weight:600;cursor:pointer;margin:4px;
+}
+.db-leer{display:inline-block;padding:6px;color:var(--tinte-blass);cursor:pointer;font-size:13px}
+.db-plus{width:36px;text-align:center}
+.db-plus button{width:26px;height:26px;border-radius:5px;color:var(--tinte-blass)}
+.db-plus button:hover{background:var(--flaeche-2);color:var(--tinte)}
+.db-neu{
+  display:block;width:100%;text-align:left;padding:8px 10px;margin-top:4px;
+  color:var(--tinte-blass);font-size:13px;border-radius:6px;
+}
+.db-neu:hover{background:var(--flaeche-2);color:var(--tinte-schwach)}
+.db-board{display:flex;gap:var(--s3);align-items:flex-start;overflow-x:auto;padding:0 var(--s3) var(--s2) 0}
+.db-spalte{
+  min-width:230px;max-width:260px;flex:none;background:var(--flaeche-2);
+  border-radius:8px;padding:var(--s2);transition:background .12s;
+}
+.db-spalte.db-ziel{background:var(--leit-hell);outline:2px dashed var(--leit)}
+.db-spalte-kopf{display:flex;align-items:center;gap:6px;margin-bottom:var(--s2)}
+.db-anzahl{font-size:11.5px;color:var(--tinte-blass);font-variant-numeric:tabular-nums}
+.db-karten{display:flex;flex-direction:column;gap:6px;min-height:24px}
+.db-karte{
+  background:var(--flaeche);border:1px solid var(--rand);border-radius:6px;
+  padding:9px 10px;cursor:grab;box-shadow:var(--schatten);
+  display:flex;flex-direction:column;gap:3px;
+}
+.db-karte:active{cursor:grabbing}
+.db-karte.db-zieht{opacity:.4}
+.db-karte strong{font-size:13.5px;font-weight:600}
+.db-mini{font-size:11.5px;color:var(--tinte-blass)}
+.db-galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--s3)}
+.db-kachel{
+  border:1px solid var(--rand);border-radius:8px;overflow:hidden;padding:0 0 10px;
+  background:var(--flaeche);box-shadow:var(--schatten);display:flex;flex-direction:column;
+}
+.db-kachel strong{font-size:13.5px;padding:9px 10px 2px}
+.db-kachel .db-mini{padding:0 10px}
+.db-kachel-kopf{height:64px;background:var(--flaeche-2)}
+.db-kachel-neu{display:grid;place-items:center;min-height:110px;color:var(--tinte-blass);font-size:13px;cursor:pointer}
+.db-kachel-neu:hover{background:var(--flaeche-2)}
+.db-hinweis{padding:var(--s4);color:var(--tinte-blass);font-size:13px;background:var(--flaeche-2);border-radius:8px}
+
 /* Cover (Farbverlauf über dem Seitenkopf) */
 .cover{
   position:relative;height:190px;width:100%;flex:none;
@@ -812,6 +890,8 @@ input,textarea,select{font:inherit;color:inherit}
           <input id="titelFeld" placeholder="Ohne Titel" autocomplete="off" aria-label="Titel">
         </div>
       </div>
+
+      <div class="db-flaeche" id="dbFlaeche" hidden></div>
 
       <div class="editor-flaeche">
         <div class="schreib-seite">
@@ -1727,6 +1807,7 @@ function renderEditor(){
   $('#btnPin').title = n.pinned ? 'Pin lösen' : 'Anpinnen';
   $('#btnArchiv').title = n.archived ? 'Aus Archiv holen' : 'Archivieren';
 
+  renderDatenbank();
   aktualisiereZaehler();
   renderVorschau();
 }
@@ -2050,6 +2131,7 @@ function paletteBefehle(){
     {ico:'📄', name:'Unterseite zur aktuellen Seite', tue:() => neueSeite(zustand.aktivId || null)},
     {ico:'😀', name:'Symbol der Seite ändern', tue:() => { if(aktive()) iconWaehler(); else toast('Erst eine Seite öffnen'); }},
     {ico:'🖼', name:'Cover wählen / entfernen', tue:() => { if(aktive()) coverWaehler(); else toast('Erst eine Seite öffnen'); }},
+    {ico:'🗂', name:'Datenbank auf dieser Seite anlegen', tue:() => { const n = aktive(); if(!n) toast('Erst eine Seite öffnen'); else if(n.datenbank) toast('Diese Seite ist schon eine Datenbank'); else dbNeu(n); }},
     {ico:'⭐', name:'Zu Favoriten hinzufügen / entfernen', tue:() => { if(aktive()) favUmschalten(); else toast('Erst eine Seite öffnen'); }},
     {ico:'Aa', name:'Darstellung: Schriftart & Breite', tue:seitenEinstellungen},
     {ico:'📅', name:'Tagesnotiz öffnen', tue:tagesnotiz},
@@ -2691,6 +2773,7 @@ function notizDuplizieren(){
   let titel = n.title || 'Ohne Titel';
   if(!titel.endsWith('(Kopie)') && !titel.startsWith('(Kopie)')) titel += ' (Kopie)';
   const kopie = { id:neueId(), title:titel, body:n.body, icon:n.icon||'📄', cover:n.cover||null,
+    datenbank: n.datenbank ? JSON.parse(JSON.stringify(n.datenbank)) : undefined,
     parent:n.parent||null, pos:naechstePos(n.parent||null),
     hist:[], tasks:aufgabenZaehlen(n.body),
     pinned:false, archived:false, trashed:false, created:t, updated:t };
@@ -3426,6 +3509,7 @@ const LIVE_SLASH = [
   {g:'Basis', ico:'‹›', name:'Code',              kw:'code fence programm', tue:b=>{const pre=document.createElement('pre');const c=document.createElement('code');c.innerHTML='<br>';pre.appendChild(c);b.replaceWith(pre);cursorAnDenAnfang(c);}},
   {g:'Basis', ico:'—',  name:'Trenner',           kw:'hr linie divider strich', tue:b=>{const hr=document.createElement('hr');const p=document.createElement('p');p.innerHTML='<br>';b.replaceWith(hr);hr.after(p);cursorAnDenAnfang(p);}},
   {g:'Einfügen', ico:'📅', name:'Heutiges Datum',  kw:'datum date heute', tue:b=>{textEinfuegen(new Date().toLocaleDateString('de-DE'));}},
+  {g:'Einfügen', ico:'🗂', name:'Datenbank (Tabelle/Board)', kw:'datenbank database board kanban tabelle galerie', tue:b=>{ const n=aktive(); if(n && !n.datenbank) dbNeu(n); else toast('Diese Seite ist schon eine Datenbank'); }},
   {g:'Einfügen', ico:'▦', name:'Tabelle',          kw:'table spalten', tue:b=>{b.textContent='';const md='| Spalte | Spalte |\n|---|---|\n|  |  |';const wrap=document.createElement('div');wrap.innerHTML=renderMd(md);b.replaceWith(...wrap.childNodes);liveSpeichern();liveRendern(aktive());}},
 ];
 const liveSlash = { offen:false, aktiv:0, eintraege:[], block:null, start:0 };
@@ -3766,6 +3850,285 @@ function renderFavoriten(){
        <span class="ico">${n.icon||'📄'}</span>
        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(n.title||'Ohne Titel')}</span>
      </button>`).join('');
+}
+
+/* ══════════════ Datenbanken (Tabelle · Board · Galerie) ══════════════
+   Eine Seite kann eine Datenbank sein. Alles bleibt lokal im Notiz-Objekt
+   (n.datenbank) und damit in Backup, Tresor und App-Export enthalten. */
+
+const DB_TYPEN = [
+  {t:'text',     name:'Text'},
+  {t:'auswahl',  name:'Auswahl'},
+  {t:'datum',    name:'Datum'},
+  {t:'zahl',     name:'Zahl'},
+  {t:'checkbox', name:'Kontrollkästchen'},
+];
+const DB_FARBEN = ['#c02942','#c9852e','#2f9e6e','#2b7fd4','#7b58c9','#787774'];
+
+function dbNeu(n){
+  n.datenbank = {
+    ansicht: 'tabelle',
+    gruppeNach: 'status',
+    sortNach: null, sortAb: false,
+    props: [
+      { id:'titel',  name:'Name',   typ:'text' },
+      { id:'status', name:'Status', typ:'auswahl', optionen:['Offen','In Arbeit','Fertig'] },
+      { id:'datum',  name:'Datum',  typ:'datum' },
+      { id:'fertig', name:'Erledigt', typ:'checkbox' },
+    ],
+    rows: [
+      { id:neueId(), werte:{ titel:'Erster Eintrag',  status:'Offen',     datum:'', fertig:false } },
+      { id:neueId(), werte:{ titel:'Zweiter Eintrag', status:'In Arbeit', datum:'', fertig:false } },
+      { id:neueId(), werte:{ titel:'Dritter Eintrag', status:'Fertig',    datum:'', fertig:true  } },
+    ],
+  };
+  n.icon = n.icon === '📄' ? '🗂' : n.icon;
+  n.updated = Date.now();
+  speichern(); renderEditor(); renderSeitenbaum();
+  toast('Datenbank angelegt 🗂');
+}
+function dbEntfernen(){
+  const n = aktive(); if(!n || !n.datenbank) return;
+  dialogBestaetigen('Datenbank entfernen?', 'Die Einträge dieser Seite werden gelöscht. Der Seitentext bleibt erhalten.',
+    'Entfernen', () => { delete n.datenbank; n.updated = Date.now(); speichern(); renderEditor(); toast('Datenbank entfernt'); }, true);
+}
+function dbFarbe(wert, prop){
+  const i = (prop.optionen || []).indexOf(wert);
+  return DB_FARBEN[(i < 0 ? 0 : i) % DB_FARBEN.length];
+}
+function dbZellenWert(row, prop){
+  const v = row.werte[prop.id];
+  return v === undefined || v === null ? (prop.typ === 'checkbox' ? false : '') : v;
+}
+function dbZeilen(d){
+  let rows = d.rows.slice();
+  const q = (zustand.dbSuche || '').toLowerCase();
+  if(q) rows = rows.filter(r => Object.values(r.werte).some(v => String(v).toLowerCase().includes(q)));
+  if(d.sortNach){
+    const p = d.props.find(x => x.id === d.sortNach);
+    if(p) rows.sort((a,b) => {
+      let x = dbZellenWert(a,p), y = dbZellenWert(b,p);
+      if(p.typ === 'zahl'){ x = +x||0; y = +y||0; return d.sortAb ? y-x : x-y; }
+      x = String(x); y = String(y);
+      return d.sortAb ? y.localeCompare(x,'de') : x.localeCompare(y,'de');
+    });
+  }
+  return rows;
+}
+
+/* ── Rendering der drei Ansichten ── */
+function dbZelleHtml(row, p){
+  const v = dbZellenWert(row, p);
+  const id = `${row.id}|${p.id}`;
+  if(p.typ === 'checkbox')
+    return `<input type="checkbox" data-zelle="${id}" ${v ? 'checked':''} aria-label="${escapeAttr(p.name)}">`;
+  if(p.typ === 'auswahl')
+    return v ? `<span class="db-chip" data-zelle-menue="${id}" style="background:${dbFarbe(v,p)}22;color:${dbFarbe(v,p)}">${escapeHtml(v)}</span>`
+             : `<span class="db-leer" data-zelle-menue="${id}">–</span>`;
+  if(p.typ === 'datum')
+    return `<input type="date" class="db-eingabe" data-zelle="${id}" value="${escapeAttr(v)}">`;
+  return `<input class="db-eingabe" data-zelle="${id}" value="${escapeAttr(String(v))}" placeholder="${p.id==='titel'?'Ohne Titel':''}">`;
+}
+function renderDbTabelle(d){
+  const rows = dbZeilen(d);
+  return `<div class="db-tabelle-wrap"><table class="db-tabelle">
+    <thead><tr>
+      ${d.props.map(p => `<th data-sort="${p.id}" title="Klicken zum Sortieren">${escapeHtml(p.name)}${d.sortNach===p.id ? (d.sortAb?' ↓':' ↑') : ''}</th>`).join('')}
+      <th class="db-plus"><button data-prop-neu="1" title="Eigenschaft hinzufügen">＋</button></th>
+    </tr></thead>
+    <tbody>
+      ${rows.map(r => `<tr>${d.props.map(p => `<td>${dbZelleHtml(r,p)}</td>`).join('')}
+        <td class="db-plus"><button data-zeile-weg="${r.id}" title="Zeile löschen">✕</button></td></tr>`).join('')}
+    </tbody>
+  </table>
+  <button class="db-neu" data-zeile-neu="1">＋ Neue Zeile</button></div>`;
+}
+function renderDbBoard(d){
+  const gp = d.props.find(p => p.id === d.gruppeNach && p.typ === 'auswahl')
+          || d.props.find(p => p.typ === 'auswahl');
+  if(!gp) return `<div class="db-hinweis">Für das Board wird eine Auswahl-Eigenschaft gebraucht. Füge eine hinzu (＋ in der Tabelle).</div>`;
+  const rows = dbZeilen(d);
+  const spalten = [...(gp.optionen||[]), ''];
+  return `<div class="db-board">${spalten.map(opt => {
+    const drin = rows.filter(r => (dbZellenWert(r,gp) || '') === opt);
+    return `<div class="db-spalte" data-spalte="${escapeAttr(opt)}">
+      <div class="db-spalte-kopf"><span class="db-chip" style="background:${dbFarbe(opt,gp)}22;color:${dbFarbe(opt,gp)}">${escapeHtml(opt || 'Ohne')}</span>
+        <span class="db-anzahl">${drin.length}</span></div>
+      <div class="db-karten">
+        ${drin.map(r => `<div class="db-karte" draggable="true" data-karte="${r.id}">
+          <strong>${escapeHtml(String(dbZellenWert(r, d.props[0])) || 'Ohne Titel')}</strong>
+          ${d.props.slice(1).filter(p => p.id !== gp.id).map(p => {
+            const v = dbZellenWert(r,p);
+            if(p.typ==='checkbox') return v ? `<span class="db-mini">☑ ${escapeHtml(p.name)}</span>` : '';
+            return v ? `<span class="db-mini">${escapeHtml(p.name)}: ${escapeHtml(String(v))}</span>` : '';
+          }).join('')}
+        </div>`).join('')}
+      </div>
+      <button class="db-neu" data-zeile-neu="${escapeAttr(opt)}">＋ Neu</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+function renderDbGalerie(d){
+  const rows = dbZeilen(d);
+  return `<div class="db-galerie">
+    ${rows.map(r => `<div class="db-kachel" data-karte="${r.id}">
+      <div class="db-kachel-kopf" style="background:${dbFarbe(dbZellenWert(r, d.props.find(p=>p.typ==='auswahl')||d.props[0]), d.props.find(p=>p.typ==='auswahl')||d.props[0])}22"></div>
+      <strong>${escapeHtml(String(dbZellenWert(r, d.props[0])) || 'Ohne Titel')}</strong>
+      ${d.props.slice(1).map(p => {
+        const v = dbZellenWert(r,p);
+        if(p.typ==='checkbox') return v ? `<span class="db-mini">☑ ${escapeHtml(p.name)}</span>` : '';
+        return v ? `<span class="db-mini">${escapeHtml(p.name)}: ${escapeHtml(String(v))}</span>` : '';
+      }).join('')}
+    </div>`).join('')}
+    <button class="db-kachel db-kachel-neu" data-zeile-neu="1">＋ Neu</button>
+  </div>`;
+}
+function renderDatenbank(){
+  const n = aktive();
+  const box = $('#dbFlaeche');
+  const istDb = !!(n && n.datenbank);
+  $('#app').classList.toggle('ist-db', istDb);
+  box.hidden = !istDb;
+  if(!istDb) return;
+  const d = n.datenbank;
+  const inhalt = d.ansicht === 'board' ? renderDbBoard(d)
+               : d.ansicht === 'galerie' ? renderDbGalerie(d)
+               : renderDbTabelle(d);
+  box.innerHTML = `
+    <div class="db-leiste">
+      <div class="db-ansichten">
+        ${[['tabelle','▦ Tabelle'],['board','▤ Board'],['galerie','▣ Galerie']].map(([a,t]) =>
+          `<button data-ansicht="${a}" aria-pressed="${d.ansicht===a}">${t}</button>`).join('')}
+      </div>
+      <input class="db-filter" id="dbFilter" placeholder="Filtern …" value="${escapeAttr(zustand.dbSuche||'')}">
+      <span class="db-info">${d.rows.length} Einträge</span>
+      <button class="db-weg" data-db-weg="1" title="Datenbank entfernen">✕</button>
+    </div>
+    ${inhalt}`;
+}
+
+/* ── Bearbeiten ── */
+function dbSpeichern(){ const n = aktive(); if(n){ n.updated = Date.now(); speichern(); } }
+function dbZeileNeu(gruppenWert){
+  const n = aktive(); if(!n || !n.datenbank) return;
+  const d = n.datenbank;
+  const werte = {};
+  for(const p of d.props) werte[p.id] = p.typ === 'checkbox' ? false : '';
+  const gp = d.props.find(p => p.id === d.gruppeNach && p.typ === 'auswahl') || d.props.find(p => p.typ === 'auswahl');
+  if(gp && typeof gruppenWert === 'string' && gruppenWert !== '1') werte[gp.id] = gruppenWert;
+  d.rows.push({ id:neueId(), werte });
+  dbSpeichern(); renderDatenbank();
+}
+function dbPropNeu(){
+  const n = aktive(); if(!n || !n.datenbank) return;
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>Eigenschaft hinzufügen</h3>
+    <input type="text" id="propName" placeholder="Name der Eigenschaft">
+    <div class="reihe" style="flex-direction:column;align-items:stretch;gap:6px">
+      ${DB_TYPEN.map(t => `<button class="knopf leer" data-typ="${t.t}" style="text-align:left">${escapeHtml(t.name)}</button>`).join('')}
+    </div>
+    <div class="reihe" style="margin-top:var(--s3)"><button class="knopf leer" data-dlg="abbruch">Abbrechen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  setTimeout(() => $('#propName').focus(), 30);
+  box.onclick = e => {
+    const k = e.target.closest('[data-typ],[data-dlg]'); if(!k) return;
+    if(k.dataset.dlg){ dialogZu(); return; }
+    const name = ($('#propName').value || '').trim() || DB_TYPEN.find(t=>t.t===k.dataset.typ).name;
+    const p = { id:neueId(), name, typ:k.dataset.typ };
+    if(p.typ === 'auswahl') p.optionen = ['Option A','Option B'];
+    n.datenbank.props.push(p);
+    dialogZu(); dbSpeichern(); renderDatenbank();
+  };
+}
+function dbAuswahlMenue(rowId, propId, ankerEl){
+  const n = aktive(); const d = n.datenbank;
+  const p = d.props.find(x => x.id === propId);
+  const r = d.rows.find(x => x.id === rowId);
+  if(!p || !r) return;
+  const box = $('#dialogBox');
+  box.innerHTML = `<h3>${escapeHtml(p.name)}</h3>
+    <div class="reihe" style="flex-direction:column;align-items:stretch;gap:6px">
+      ${(p.optionen||[]).map(o => `<button class="knopf leer" data-opt="${escapeAttr(o)}" style="text-align:left">
+        <span class="db-chip" style="background:${dbFarbe(o,p)}22;color:${dbFarbe(o,p)}">${escapeHtml(o)}</span></button>`).join('')}
+      <button class="knopf leer" data-opt="" style="text-align:left;color:var(--tinte-blass)">– leer –</button>
+    </div>
+    <input type="text" id="optNeu" placeholder="Neue Option anlegen …" style="margin-top:var(--s3)">
+    <div class="reihe"><button class="knopf leer" data-dlg="abbruch">Schließen</button></div>`;
+  $('#dialogSchleier').classList.add('offen');
+  const uebernehmen = wert => { r.werte[p.id] = wert; dialogZu(); dbSpeichern(); renderDatenbank(); };
+  box.onclick = e => {
+    const k = e.target.closest('[data-opt],[data-dlg]'); if(!k) return;
+    if(k.dataset.dlg !== undefined && k.dataset.opt === undefined){ dialogZu(); return; }
+    uebernehmen(k.dataset.opt);
+  };
+  const feld = $('#optNeu');
+  feld.onkeydown = e => {
+    if(e.key !== 'Enter') return;
+    const wert = feld.value.trim(); if(!wert) return;
+    if(!p.optionen.includes(wert)) p.optionen.push(wert);
+    uebernehmen(wert);
+  };
+}
+{
+  const box = $('#dbFlaeche');
+  box.addEventListener('click', e => {
+    const n = aktive(); if(!n || !n.datenbank) return;
+    const d = n.datenbank;
+    const a = e.target.closest('[data-ansicht]');
+    if(a){ d.ansicht = a.dataset.ansicht; dbSpeichern(); renderDatenbank(); return; }
+    if(e.target.closest('[data-db-weg]')){ dbEntfernen(); return; }
+    if(e.target.closest('[data-prop-neu]')){ dbPropNeu(); return; }
+    const zn = e.target.closest('[data-zeile-neu]');
+    if(zn){ dbZeileNeu(zn.dataset.zeileNeu); return; }
+    const zw = e.target.closest('[data-zeile-weg]');
+    if(zw){ d.rows = d.rows.filter(r => r.id !== zw.dataset.zeileWeg); dbSpeichern(); renderDatenbank(); return; }
+    const s = e.target.closest('[data-sort]');
+    if(s){ const id = s.dataset.sort;
+      if(d.sortNach === id) d.sortAb = !d.sortAb; else { d.sortNach = id; d.sortAb = false; }
+      dbSpeichern(); renderDatenbank(); return; }
+    const m = e.target.closest('[data-zelle-menue]');
+    if(m){ const [rid,pid] = m.dataset.zelleMenue.split('|'); dbAuswahlMenue(rid,pid,m); return; }
+  });
+  box.addEventListener('input', e => {
+    const n = aktive(); if(!n || !n.datenbank) return;
+    const z = e.target.closest('[data-zelle]');
+    if(z){
+      const [rid,pid] = z.dataset.zelle.split('|');
+      const r = n.datenbank.rows.find(x => x.id === rid);
+      if(r){ r.werte[pid] = z.type === 'checkbox' ? z.checked : z.value; dbSpeichern(); }
+      return;
+    }
+    if(e.target.id === 'dbFilter'){ zustand.dbSuche = e.target.value; renderDatenbank(); setTimeout(() => { const f=$('#dbFilter'); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } },0); }
+  });
+  // Board: Karten per Drag & Drop zwischen Spalten
+  let ziehKarte = null;
+  box.addEventListener('dragstart', e => {
+    const k = e.target.closest('[data-karte]'); if(!k) return;
+    ziehKarte = k.dataset.karte; k.classList.add('db-zieht');
+    e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain','karte');
+  });
+  box.addEventListener('dragend', e => {
+    $$('.db-karte').forEach(k => k.classList.remove('db-zieht'));
+    $$('.db-spalte').forEach(s => s.classList.remove('db-ziel'));
+    ziehKarte = null;
+  });
+  box.addEventListener('dragover', e => {
+    if(!ziehKarte) return;
+    const sp = e.target.closest('[data-spalte]'); if(!sp) return;
+    e.preventDefault();
+    $$('.db-spalte').forEach(s => s.classList.toggle('db-ziel', s === sp));
+  });
+  box.addEventListener('drop', e => {
+    if(!ziehKarte) return;
+    const sp = e.target.closest('[data-spalte]'); if(!sp) return;
+    e.preventDefault();
+    const n = aktive(); const d = n.datenbank;
+    const gp = d.props.find(p => p.id === d.gruppeNach && p.typ === 'auswahl') || d.props.find(p => p.typ === 'auswahl');
+    const r = d.rows.find(x => x.id === ziehKarte);
+    if(gp && r){ r.werte[gp.id] = sp.dataset.spalte; dbSpeichern(); }
+    ziehKarte = null;
+    renderDatenbank();
+  });
 }
 
 /* ── Start ────────────────────────────────────────────────────── */

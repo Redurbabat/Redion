@@ -20,6 +20,19 @@ REDNOTEN-Identität als Akzent. Hell- und Dunkelmodus.
 Slash-Menü (`/`) fügt Blöcke ein. Kein Markdown-Rohtext sichtbar. (Wer lieber Markdown
 tippt, schaltet oben auf „Markdown" um — dasselbe Dokument, roh.)
 
+**Blöcke bewegen:** Beim Zeigen auf einen Block erscheint links der Griff — ziehen ordnet um,
+Klick öffnet das Blockmenü (nach oben/unten, duplizieren, löschen), `＋` fügt einen Block ein.
+
+**Cover & Symbole:** Jede Seite bekommt ein Emoji-Symbol und ein Cover (12 Farbverläufe).
+
+**🗂 Datenbanken:** Jede Seite kann eine Datenbank sein — mit **Tabelle**, **Board (Kanban)**
+und **Galerie**. Eigenschaften: Text, Auswahl, Datum, Zahl, Kontrollkästchen. Karten lassen
+sich im Board per Drag-and-Drop zwischen Spalten ziehen, Spalten sortieren, Einträge filtern.
+Anlegen über `/` → „Datenbank" oder die Befehlspalette.
+
+**Darstellung:** Schriftart (Standard / Serif / Monospace) und volle Breite umschaltbar.
+**Favoriten** liegen oben in der Seitenleiste.
+
 > Tipp: Aktiviere GitHub Pages (Settings → Pages → Branch wählen), dann läuft die App
 > direkt unter deiner `github.io`-Adresse — auch auf dem Handy.
 
