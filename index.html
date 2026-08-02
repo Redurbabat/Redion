@@ -118,5 +118,22 @@
 <script src="js/notion.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/app.js"></script>
+
+<!-- Notnagel: Wenn die Skripte fehlen (z. B. weil nur index.html kopiert
+     wurde, ohne den Ordner js), sagt die Seite das laut, statt still
+     nichts zu tun. -->
+<script>
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (typeof App === 'undefined') {
+      document.body.insertAdjacentHTML('afterbegin',
+        '<div class="banner fehler"><span>Die Programmdateien im Ordner ' +
+        '<b>js</b> wurden nicht gefunden. Bitte den ganzen Ordner zusammen halten ' +
+        '&mdash; oder einfach <b>notizen-einzeldatei.html</b> &ouml;ffnen, ' +
+        'da ist alles drin.</span></div>');
+    }
+  }, 1200);
+});
+</script>
 </body>
 </html>

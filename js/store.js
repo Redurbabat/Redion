@@ -29,9 +29,38 @@ const Store = (() => {
   const listeners = new Set();
   const notify = (was) => listeners.forEach(fn => fn(was));
 
+  /* --------------------------------------------------------------------------
+   * NOTBETRIEB
+   * --------------------------------------------------------------------------
+   * IndexedDB ist nicht überall erlaubt: in einer abgeschotteten Vorschau,
+   * im privaten Fenster mancher Browser oder bei gesperrten Websitedaten.
+   * Dann läuft die App trotzdem — nur ohne zu speichern. Besser als eine
+   * Seite, die auf nichts mehr reagiert.
+   * ------------------------------------------------------------------------*/
+  let nurSpeicher = false;
+  let warnung = '';
+  const warner = new Set();
+  const warne = (text) => {
+    warnung = text;
+    warner.forEach(fn => { try { fn(text); } catch {} });
+  };
+
   /* --- Öffnen ------------------------------------------------------------ */
   const open = () => new Promise((ok, fail) => {
-    const req = indexedDB.open(NAME, VERSION);
+    if (!self.indexedDB) { fail(new Error('Dieser Browser stellt keinen lokalen Speicher bereit.')); return; }
+
+    let req;
+    try { req = indexedDB.open(NAME, VERSION); }
+    catch (err) { fail(err); return; }
+
+    /* Ein anderes Fenster hält die alte Fassung offen und blockiert die
+       Umstellung. Ohne diese Meldung würde die App einfach hängen. */
+    req.onblocked = () => fail(new Error(
+      'Eine ältere Fassung der App ist noch in einem anderen Tab offen. ' +
+      'Bitte diesen Tab schliessen und neu laden.'));
+
+    /* Falls der Browser gar nicht antwortet: nach sechs Sekunden aufgeben. */
+    setTimeout(() => { if (!db) fail(new Error('Der lokale Speicher antwortet nicht.')); }, 6000);
 
     req.onupgradeneeded = (e) => {
       const d = e.target.result;
@@ -56,30 +85,42 @@ const Store = (() => {
   });
 
   /* --- Kleine Helfer ----------------------------------------------------- */
+  /* Ohne Datenbank tun alle Schreib- und Lesewege so, als wäre nichts da.
+     Der Cache im Arbeitsspeicher trägt die App dann allein. */
   const tx = (stores, mode) => db.transaction(stores, mode);
 
   const put = (store, val) => new Promise((ok, fail) => {
-    const r = tx([store], 'readwrite').objectStore(store).put(val);
-    r.onsuccess = () => ok(val);
-    r.onerror   = () => fail(r.error);
+    if (!db) return ok(val);
+    try {
+      const r = tx([store], 'readwrite').objectStore(store).put(val);
+      r.onsuccess = () => ok(val);
+      r.onerror   = () => fail(r.error);
+    } catch (err) { fail(err); }
   });
 
   const get = (store, key) => new Promise((ok, fail) => {
+    if (!db) return ok(null);
     const r = tx([store], 'readonly').objectStore(store).get(key);
     r.onsuccess = () => ok(r.result || null);
     r.onerror   = () => fail(r.error);
   });
 
-  const all = (store) => new Promise((ok, fail) => {
-    const r = tx([store], 'readonly').objectStore(store).getAll();
-    r.onsuccess = () => ok(r.result || []);
-    r.onerror   = () => fail(r.error);
+  const all = (store) => new Promise((ok) => {
+    if (!db) return ok([]);
+    try {
+      const r = tx([store], 'readonly').objectStore(store).getAll();
+      r.onsuccess = () => ok(r.result || []);
+      r.onerror   = () => ok([]);
+    } catch (err) { ok([]); }
   });
 
-  const del = (store, key) => new Promise((ok, fail) => {
-    const r = tx([store], 'readwrite').objectStore(store).delete(key);
-    r.onsuccess = () => ok();
-    r.onerror   = () => fail(r.error);
+  const del = (store, key) => new Promise((ok) => {
+    if (!db) return ok();
+    try {
+      const r = tx([store], 'readwrite').objectStore(store).delete(key);
+      r.onsuccess = () => ok();
+      r.onerror   = () => ok();
+    } catch (err) { ok(); }
   });
 
   /* --------------------------------------------------------------------------
@@ -91,7 +132,17 @@ const Store = (() => {
   const cache = { blocks:{}, collections:{}, views:{}, meta:{} };
 
   const load = async () => {
-    await open();
+    try {
+      await open();
+    } catch (err) {
+      /* Kein Speicher — trotzdem weitermachen, nur eben ohne Sichern. */
+      db = null;
+      nurSpeicher = true;
+      warne('Der lokale Speicher ist hier gesperrt: ' + (err.message || err) +
+            ' — die App läuft, sichert aber nichts. Öffne die Datei direkt vom Desktop, ' +
+            'dann bleibt alles erhalten.');
+      return;
+    }
     (await all('blocks')).forEach(b      => cache.blocks[b.id] = b);
     (await all('collections')).forEach(c => cache.collections[c.id] = c);
     (await all('views')).forEach(v       => cache.views[v.id] = v);
@@ -355,7 +406,7 @@ const Store = (() => {
   /* ========================================================================
    * EINSTELLUNGEN
    * ======================================================================*/
-  const setMeta = (k, v) => { cache.meta[k] = v; put('meta', { k, v }); };
+  const setMeta = (k, v) => { cache.meta[k] = v; put('meta', { k, v }).catch(() => {}); };
   const getMeta = (k, fallback = null) => (k in cache.meta ? cache.meta[k] : fallback);
 
   /* --- Schreiben mit Verzögerung ----------------------------------------- */
@@ -370,8 +421,8 @@ const Store = (() => {
   };
 
   const flush = () => {
-    if (!db) return;
-    pending.forEach(({ store, val }) => put(store, val));
+    if (!db) { pending.clear(); return; }
+    pending.forEach(({ store, val }) => put(store, val).catch(() => {}));
     pending.clear();
   };
 
@@ -566,9 +617,11 @@ const Store = (() => {
 
   /** Nur für den Notfall: alles weg. */
   const wipe = async () => {
-    await Promise.all(['blocks','collections','views','meta','versions'].map(s => new Promise(ok => {
-      const r = tx([s], 'readwrite').objectStore(s).clear();
-      r.onsuccess = ok; r.onerror = ok;
+    if (db) await Promise.all(['blocks','collections','views','meta','versions'].map(s => new Promise(ok => {
+      try {
+        const r = tx([s], 'readwrite').objectStore(s).clear();
+        r.onsuccess = ok; r.onerror = ok;
+      } catch (err) { ok(); }
     })));
     cache.blocks = {}; cache.collections = {}; cache.views = {}; cache.meta = {};
   };
@@ -590,6 +643,9 @@ const Store = (() => {
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen,
     search, exportAll, importAll, wipe, usage,
+    speichertNicht: () => nurSpeicher,
+    warnungText: () => warnung,
+    beiWarnung: (fn) => { warner.add(fn); if (warnung) fn(warnung); },
     on: (fn) => listeners.add(fn)
   };
 })();

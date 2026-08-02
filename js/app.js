@@ -70,7 +70,19 @@ const UI = (() => {
     inp.focus(); inp.select();
   });
 
-  return { menu, toast, emojiWaehlen, frage };
+  /** Ein Streifen oben, wenn etwas grundsätzlich klemmt. */
+  const banner = (text, art = 'warn') => {
+    document.getElementById('banner')?.remove();
+    const d = document.createElement('div');
+    d.id = 'banner';
+    d.className = 'banner ' + art;
+    d.innerHTML = `<span>${String(text)}</span><button title="Ausblenden">✕</button>`;
+    d.querySelector('button').addEventListener('click', () => d.remove());
+    document.body.appendChild(d);
+    return d;
+  };
+
+  return { menu, toast, emojiWaehlen, frage, banner };
 })();
 
 
@@ -982,6 +994,26 @@ const App = (() => {
    * START
    * ======================================================================*/
   const start = async () => {
+    /* Jeder Fehler soll sichtbar werden — eine stumme Seite hilft niemandem. */
+    addEventListener('error', (e) => {
+      UI.banner('Es ist ein Fehler aufgetreten: ' + (e.message || e.error) +
+                ' — bitte melde mir diesen Text.', 'fehler');
+    });
+    addEventListener('unhandledrejection', (e) => {
+      UI.banner('Es ist ein Fehler aufgetreten: ' + (e.reason?.message || e.reason) +
+                ' — bitte melde mir diesen Text.', 'fehler');
+    });
+    Store.beiWarnung((text) => UI.banner(text, 'warn'));
+
+    try {
+      await starteWirklich();
+    } catch (err) {
+      UI.banner('Die App konnte nicht starten: ' + (err.message || err), 'fehler');
+      throw err;
+    }
+  };
+
+  const starteWirklich = async () => {
     await Store.load();
 
     document.documentElement.dataset.theme = Store.getMeta('theme', 'dark');
