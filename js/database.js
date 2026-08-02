@@ -196,7 +196,7 @@ const Datenbank = (() => {
       if (!v) return '<span style="color:var(--text-faint)">—</span>';
       const d = new Date(v);
       if (isNaN(d)) return esc(v);
-      return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+      return esc(Einstellungen.datum(d, def.type !== 'date'));
     }
 
     if (def.type === 'url' && v)
@@ -433,6 +433,7 @@ const Datenbank = (() => {
       `<button data-a="filter">⚟ Filter${anzahlFilter ? ' (' + anzahlFilter + ')' : ''}</button>` +
       `<button data-a="sort">↕ Sortieren${view.sorts?.length ? ' (' + view.sorts.length + ')' : ''}</button>` +
       `<button data-a="props">⚙ Eigenschaften</button>` +
+      `<button data-a="auto" title="Automationen">⚡${(coll.automationen||[]).length || ''}</button>` +
       `<button data-a="search">🔍</button>` +
       `<button data-a="menu">⋯</button>` +
       `<button class="new" data-a="new">Neu</button>`;
@@ -447,6 +448,7 @@ const Datenbank = (() => {
       if (a === 'filter') filterMenue(b, coll, view, block);
       if (a === 'sort')   sortMenue(b, coll, view, block);
       if (a === 'props')  eigenschaftenMenue(b, coll, view, block);
+      if (a === 'auto')   automationenMenue(b, coll, view, block);
       if (a === 'search') suchFeld(w, coll, view, block);
       if (a === 'menu')   dbMenue(b, coll, view, block);
     });
@@ -964,7 +966,10 @@ const Datenbank = (() => {
 
     const g = document.createElement('div');
     g.className = 'cal';
-    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
+    /* Beginnt die Woche am Montag oder am Sonntag? Steht in den Einstellungen. */
+    const wsMontag = Einstellungen.wochenstart() === 1;
+    const tage = wsMontag ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    tage.forEach(d => {
       const e = document.createElement('div');
       e.className = 'dow';
       e.textContent = d;
@@ -972,7 +977,7 @@ const Datenbank = (() => {
     });
 
     const ersterTag = new Date(jahr, monat, 1);
-    let start = ersterTag.getDay() - 1;          /* Montag = 0 */
+    let start = wsMontag ? ersterTag.getDay() - 1 : ersterTag.getDay();
     if (start < 0) start = 6;
     const tageImMonat = new Date(jahr, monat + 1, 0).getDate();
     const heuteStr = new Date().toDateString();
@@ -2141,6 +2146,211 @@ const Datenbank = (() => {
   };
 
   /* ========================================================================
+   * AUTOMATIONEN
+   * ------------------------------------------------------------------------
+   * Notions Datenbank-Automationen: „Wenn etwas passiert, dann tu das."
+   * Hier läuft alles im Browser — kein Dienst, keine Wartezeit.
+   * ======================================================================*/
+  const AUSLOESER = [
+    ['zeile-neu',      'Ein Eintrag wird angelegt'],
+    ['prop-geaendert', 'Eine Eigenschaft ändert sich'],
+    ['prop-wert',      'Eine Eigenschaft bekommt einen bestimmten Wert']
+  ];
+  const AKTIONEN = [
+    ['setze-prop',   'Eigenschaft setzen'],
+    ['ki-fuellen',   'KI-Feld ausfüllen lassen'],
+    ['erinnerung',   'Erinnerung anlegen'],
+    ['unterseite',   'Unterseite im Eintrag anlegen'],
+    ['melden',       'Kurze Meldung zeigen']
+  ];
+
+  let imLauf = false;   /* verhindert, dass Automationen sich gegenseitig auslösen */
+
+  const automationenLaufen = (row, coll, art, key, wert) => {
+    if (imLauf || !coll || !(coll.automationen || []).length) return;
+    imLauf = true;
+    try {
+      coll.automationen.forEach(a => {
+        if (a.an === false) return;
+        const w = a.wenn || {};
+        if (w.art !== art) return;
+        if (w.art !== 'zeile-neu' && w.key && w.key !== key) return;
+        if (w.art === 'prop-wert' && String(wert ?? '') !== String(w.wert ?? '')) return;
+
+        (a.dann || []).forEach(d => {
+          if (d.art === 'setze-prop' && d.key) {
+            Store.setProp(row.id, d.key, d.wert ?? '');
+          }
+          if (d.art === 'ki-fuellen' && d.key) {
+            kiFeldFuellen(row, d.key, coll);
+          }
+          if (d.art === 'erinnerung') {
+            const zeit = new Date();
+            zeit.setDate(zeit.getDate() + (Number(d.tage) || 1));
+            const liste = Werkzeuge.erinnerungen();
+            liste.push({ id: Store.uid(), pageId: row.id, zeit: zeit.toISOString().slice(0, 16),
+                         text: row.text || coll.name, erledigt: false });
+            Store.setMeta('erinnerungen', liste);
+          }
+          if (d.art === 'unterseite') {
+            Store.addBlock(row.id, 'text', { text: d.text || '' });
+          }
+          if (d.art === 'melden') {
+            UI.toast('⚡ ' + (d.text || a.name || 'Automation ausgeführt'));
+          }
+        });
+      });
+    } finally {
+      imLauf = false;
+    }
+  };
+
+  /* An die Speicherfunktionen hängen, damit jede Änderung erfasst wird. */
+  const automationenEinklinken = () => {
+    const altAddRow = Store.addRow;
+    Store.addRow = function (collectionId, props) {
+      const r = altAddRow.call(Store, collectionId, props);
+      const c = Store.getCollection(collectionId);
+      if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-neu'), 0);
+      return r;
+    };
+    const altSetProp = Store.setProp;
+    Store.setProp = function (rowId, key, value) {
+      const erg = altSetProp.call(Store, rowId, key, value);
+      const r = Store.getBlock(rowId);
+      const c = r && r.parentTable === 'collection' ? Store.getCollection(r.parentId) : null;
+      if (c) setTimeout(() => {
+        automationenLaufen(r, c, 'prop-geaendert', key, value);
+        automationenLaufen(r, c, 'prop-wert', key, value);
+      }, 0);
+      return erg;
+    };
+  };
+
+  const automationenMenue = (anker, coll, view, block) => {
+    const liste = coll.automationen || [];
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(620px,94vw)">' +
+        `<div class="fh">⚡ Automationen <em>${liste.length}</em>` +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="res" id="al"></div>' +
+        '<div class="fbtns"><button data-a="neu" class="prim">Automation anlegen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const namen = (k) => coll.schema[k]?.name || '?';
+    const zeichne = () => {
+      o.querySelector('#al').innerHTML = (coll.automationen || []).length
+        ? coll.automationen.map((a, i) =>
+            `<div class="auto-zeile">` +
+              `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+              `<div class="auto-text"><b>${esc(a.name || 'Ohne Namen')}</b>` +
+              `<span>Wenn: ${esc((AUSLOESER.find(x => x[0] === a.wenn.art) || [])[1] || '')}` +
+              (a.wenn.key ? ' — ' + esc(namen(a.wenn.key)) : '') +
+              (a.wenn.art === 'prop-wert' ? ' = ' + esc(a.wenn.wert) : '') +
+              ` · Dann: ${a.dann.map(d => esc((AKTIONEN.find(x => x[0] === d.art) || [])[1] || '')).join(', ')}` +
+              `</span></div>` +
+              `<button data-weg="${i}" title="Löschen">🗑</button>` +
+            '</div>').join('')
+        : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
+          'Noch keine Automation. Zum Beispiel: <i>Wenn Status auf „Erledigt" springt, ' +
+          'dann setze das Datum von heute.</i></div>';
+    };
+    zeichne();
+
+    o.addEventListener('click', async e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+
+      const an = e.target.closest('[data-an]');
+      if (an) {
+        const a = coll.automationen[+an.dataset.an];
+        a.an = a.an === false;
+        Store.updateCollection(coll.id, { automationen: coll.automationen });
+        zeichne();
+        return;
+      }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) {
+        coll.automationen.splice(+weg.dataset.weg, 1);
+        Store.updateCollection(coll.id, { automationen: coll.automationen });
+        zeichne();
+        return;
+      }
+      if (e.target.closest('[data-a="neu"]')) { o.remove(); automationBauen(coll); }
+    });
+  };
+
+  const automationBauen = (coll) => {
+    const keys = Object.keys(coll.schema);
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(560px,94vw)">' +
+        '<div class="fh">Neue Automation<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div style="padding:16px 18px; display:flex; flex-direction:column; gap:13px">' +
+          '<label>Name<br><input id="an" value="Neue Automation"></label>' +
+          '<label>Wenn …<br><select id="aw">' +
+            AUSLOESER.map(([id, n]) => `<option value="${id}">${n}</option>`).join('') +
+          '</select></label>' +
+          '<label>… bei dieser Eigenschaft<br><select id="ak">' +
+            keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
+          '</select></label>' +
+          '<label id="awl">… mit diesem Wert<br><input id="av" placeholder="z. B. Erledigt"></label>' +
+          '<hr style="border:none;border-top:1px solid var(--line)">' +
+          '<label>Dann …<br><select id="ad">' +
+            AKTIONEN.map(([id, n]) => `<option value="${id}">${n}</option>`).join('') +
+          '</select></label>' +
+          '<label id="adk">… diese Eigenschaft<br><select id="adk2">' +
+            keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
+          '</select></label>' +
+          '<label id="adw">… auf diesen Wert<br><input id="adv" placeholder="z. B. heute"></label>' +
+        '</div>' +
+        '<div class="fbtns"><button data-a="ok" class="prim">Anlegen</button>' +
+        '<button data-a="zu">Abbrechen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const auffrischen = () => {
+      o.querySelector('#awl').style.display = o.querySelector('#aw').value === 'prop-wert' ? '' : 'none';
+      const d = o.querySelector('#ad').value;
+      o.querySelector('#adk').style.display = ['setze-prop','ki-fuellen'].includes(d) ? '' : 'none';
+      o.querySelector('#adw').style.display = ['setze-prop','erinnerung','unterseite','melden'].includes(d) ? '' : 'none';
+      o.querySelector('#adv').placeholder = d === 'erinnerung' ? 'in wie vielen Tagen? z. B. 3'
+                                          : d === 'melden' ? 'Text der Meldung' : 'Wert';
+    };
+    auffrischen();
+    o.querySelector('#aw').addEventListener('change', auffrischen);
+    o.querySelector('#ad').addEventListener('change', auffrischen);
+
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      if (!e.target.closest('[data-a="ok"]')) return;
+      const d = o.querySelector('#ad').value;
+      const dann = { art: d };
+      if (['setze-prop','ki-fuellen'].includes(d)) dann.key = o.querySelector('#adk2').value;
+      const wertFeld = o.querySelector('#adv').value;
+      if (d === 'setze-prop') dann.wert = wertFeld === 'heute' ? new Date().toISOString().slice(0, 10) : wertFeld;
+      if (d === 'erinnerung') dann.tage = wertFeld;
+      if (d === 'unterseite' || d === 'melden') dann.text = wertFeld;
+
+      coll.automationen = coll.automationen || [];
+      coll.automationen.push({
+        id: Store.uid().slice(0, 6),
+        name: o.querySelector('#an').value,
+        an: true,
+        wenn: { art: o.querySelector('#aw').value, key: o.querySelector('#ak').value,
+                wert: o.querySelector('#av').value },
+        dann: [dann]
+      });
+      Store.updateCollection(coll.id, { automationen: coll.automationen });
+      o.remove();
+      UI.toast('Automation angelegt');
+    });
+  };
+
+  /* ========================================================================
    * CSV EINLESEN
    * ------------------------------------------------------------------------
    * Notions Import für Tabellen: die Kopfzeile wird zum Schema, jede
@@ -2204,7 +2414,11 @@ const Datenbank = (() => {
     inp.click();
   };
 
+  /* Automationen an den Speicher hängen — einmal beim Laden. */
+  automationenEinklinken();
+
   return { render, TYPEN, propTyp, wert, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
+           automationenMenue, automationenLaufen,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert };
 })();

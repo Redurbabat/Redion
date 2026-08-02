@@ -131,6 +131,49 @@ Ideen, neu und einheitlich umgesetzt.
 
 ---
 
+## Einstellungen
+
+Zwölf Bereiche, wie in Notion aufgebaut — links die Bereiche, rechts die Optionen.
+Über **70 Einstellungen**, und jede tut wirklich etwas:
+
+| Bereich | Was drinsteht |
+|---|---|
+| Mein Konto | Name, Symbol, Seiten verschlüsseln, alle Daten löschen |
+| Einstellungen | Hell/Dunkel/System, Schriftgrösse, Zeilenabstand, Startansicht, Wochenbeginn, Datums- und Zeitformat, Rechtschreibprüfung |
+| Benachrichtigungen | Systemmeldungen erlauben, Erinnerungen, fällige Karteikarten |
+| Verbindungen | Ollama, WebLLM, Ordner auf der Festplatte |
+| Arbeitsbereich | Name, Symbol, Startseite, Zahlen, alles ausgeben |
+| Bereiche | Was bei Notion „Teamspaces" heisst — Gruppen in der Seitenleiste |
+| Sicherheit | Verschlüsselung, Schreibschutz, automatische Versionen |
+| Import und Export | JSON, Markdown-Ordner, eine HTML-Datei, PDF |
+| KI | Modell wählen, Kontext, Antwortlänge |
+| Speicher | Belegung, Papierkorb, alte Versionen aufräumen, dauerhafter Speicher |
+| Abrechnung | Kostenlos, für immer — ohne Stufen und ohne Grenzen |
+| Über | Zahlen zur App, alle Tastenkürzel |
+
+## Automationen
+
+Was Notion erst ab dem Business-Plan anbietet, läuft hier im Browser:
+in jeder Datenbank auf **⚡**, dann *wenn … dann …*
+
+- **Wenn**: ein Eintrag entsteht · eine Eigenschaft ändert sich · eine
+  Eigenschaft bekommt einen bestimmten Wert
+- **Dann**: Eigenschaft setzen · KI-Feld ausfüllen lassen · Erinnerung
+  anlegen · Unterseite anlegen · Meldung zeigen
+
+Beispiel: *Wenn Status auf „Erledigt" springt, dann setze das Datum von heute.*
+
+## Wiki und Teilen
+
+**In Wiki umwandeln** macht aus einer Seite das Verzeichnis ihrer Unterseiten —
+mit Besitzer, Änderungsdatum und dem Vermerk „geprüft".
+
+**Teilen** gibt es ohne Server nicht als Freigabe ins Netz, aber in jeder
+Form, die Seite aus der Hand zu geben: Link, Text, Markdown, HTML, PDF,
+alles als eine Datei oder als Ordner voller Markdown-Dateien.
+
+---
+
 ## Die KI — lokal und kostenlos
 
 Zwei Wege, umschaltbar wie in Notion. Oben rechts im KI-Panel wählst du das Modell.
@@ -225,7 +268,8 @@ js/database.js    Ansichten, Filter, Sortierung, Rollups, Seitenvorschau
 js/tools.js       Befehlspalette, Journal, Vorlagen, Karteikarten, Export
 js/notion.js      Rückgängig, Auswahlleiste, Erwähnungen, Kommentare
 js/ai.js          Ollama und WebLLM mit Modell-Umschalter
-js/app.js         Seitenleiste, Seitenanzeige, Suche, Einstellungen
+js/einstellungen.js  der Einstellungsbereich mit zwölf Abschnitten
+js/app.js         Seitenleiste, Seitenanzeige, Suche, Navigation
 ```
 
 Bewusst **ohne Build-Schritt und ohne Abhängigkeiten**: reines HTML, CSS und

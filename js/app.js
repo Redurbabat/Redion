@@ -159,6 +159,24 @@ const App = (() => {
       favs.forEach(p => baum.appendChild(zeile(p, 0)));
     }
 
+    /* Bereiche (bei Notion: Teamspaces) */
+    const bereiche = Store.getMeta('bereiche', []) || [];
+    bereiche.forEach(b => {
+      const drin = Store.rootPages().filter(p => p.bereich === b.id && !p.system);
+      baum.appendChild(abschnitt(b.icon + ' ' + b.name, () => {
+        const p = Store.addPage(null, { text: '', bereich: b.id });
+        zeichneBaum(); oeffne(p.id);
+        setTimeout(() => document.getElementById('title')?.focus(), 60);
+      }));
+      if (!drin.length) {
+        const leer = document.createElement('div');
+        leer.style.cssText = 'padding:6px 14px; font-size:12.5px; color:var(--text-faint)';
+        leer.textContent = 'Noch leer';
+        baum.appendChild(leer);
+      }
+      drin.forEach(p => baum.appendChild(zeile(p, 0)));
+    });
+
     /* Privat */
     const kopf = abschnitt('Privat', () => {
       const p = Store.addPage(null, { text: '' });
@@ -168,7 +186,7 @@ const App = (() => {
     });
     baum.appendChild(kopf);
 
-    const seiten = Store.rootPages().filter(p => !p.system);
+    const seiten = Store.rootPages().filter(p => !p.system && !p.bereich);
     if (!seiten.length) {
       const leer = document.createElement('div');
       leer.style.cssText = 'padding:8px 14px; font-size:13px; color:var(--text-faint)';
@@ -503,7 +521,7 @@ const App = (() => {
     const t = document.createElement('div');
     t.id = 'title';
     t.contentEditable = p.gesperrt ? 'false' : 'true';
-    t.spellcheck = false;
+    t.spellcheck = !!Store.getMeta('rechtschreib', false);
     t.textContent = p.text || '';
     t.addEventListener('input', () => {
       Store.updateBlock(p.id, { text: t.textContent });
@@ -581,6 +599,9 @@ const App = (() => {
       });
       wrap.appendChild(tools);
     }
+
+    /* Wiki-Verzeichnis */
+    if (p.wiki) Werkzeuge.wikiIndex(p, wrap);
 
     /* Blöcke */
     const kinder = Store.childrenOf(p.id);
@@ -782,112 +803,8 @@ const App = (() => {
   /* ========================================================================
    * EINSTELLUNGEN
    * ======================================================================*/
-  const einstellungen = async () => {
-    const u = await Store.usage();
-    const platz = u
-      ? `${(u.benutzt / 1048576).toFixed(1)} MB von etwa ${(u.verfuegbar / 1048576 / 1024).toFixed(1)} GB`
-      : 'unbekannt';
-    const anzahlSeiten = Links.seiten().length;
-    const name = Store.getMeta('nutzer', '');
-
-    const o = document.createElement('div');
-    o.className = 'overlay';
-    o.innerHTML =
-      '<div class="finder" style="width:min(640px,95vw)">' +
-        '<div class="fh">Einstellungen<button class="icon-btn" data-a="zu">✕</button></div>' +
-        '<div class="einst">' +
-
-          '<div class="eb"><b>Konto</b>' +
-            '<div class="ez">Dein Name erscheint bei Kommentaren und Erwähnungen.</div>' +
-            `<input id="nutzer" value="${esc(name)}" placeholder="Dein Name">` +
-          '</div>' +
-
-          '<div class="eb"><b>Erscheinungsbild</b>' +
-            '<div class="ereihe">' +
-              '<button data-a="dark">Dunkel</button>' +
-              '<button data-a="light">Hell</button>' +
-              '<button data-a="system">Wie das System</button>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Deine Daten</b>' +
-            `<div class="ez">${anzahlSeiten} Seiten · ${platz} belegt<br>` +
-            'Alles liegt in diesem Browser. Nichts wird hochgeladen.</div>' +
-            '<div class="ereihe">' +
-              '<button data-a="export">Sicherung speichern</button>' +
-              '<button data-a="import">Sicherung laden</button>' +
-              '<button data-a="wipe" class="warn">Alles löschen</button>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Ordner und Dateien</b>' +
-            '<div class="ez">Alle Seiten als einzelne Markdown-Dateien — so, wie Joplin, ' +
-            'Zettlr und SilverBullet ihre Notizen ablegen.</div>' +
-            '<div class="ereihe">' +
-              '<button data-a="ordner-schreiben">In Ordner schreiben</button>' +
-              '<button data-a="ordner-lesen">Ordner einlesen</button>' +
-              '<button data-a="einzeldatei">Alles als eine HTML-Datei</button>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Künstliche Intelligenz</b>' +
-            '<div class="ez">Zwei Wege, beide kostenlos und lokal:<br>' +
-            '<b>Ollama</b> auf dem Rechner — schneller und besser.<br>' +
-            '<b>WebLLM</b> im Browser — ohne Installation.<br>' +
-            'Das Modell wählst du oben rechts im KI-Panel.</div>' +
-            '<div class="ereihe"><button data-a="ki">KI-Panel öffnen</button></div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Benachrichtigungen</b>' +
-            '<div class="ez">Erinnerungen melden sich in der App. Mit Erlaubnis auch im System.</div>' +
-            '<div class="ereihe"><button data-a="benachr">Benachrichtigungen erlauben</button></div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Tastenkürzel</b>' +
-            '<div class="ez">Über 60 Kürzel — die vollständige Übersicht mit <code>Strg /</code>.</div>' +
-            '<div class="ereihe"><button data-a="kuerzel">Übersicht öffnen</button></div>' +
-          '</div>' +
-
-        '</div>' +
-        '<div class="hint">Notizen — lokal, offline, ohne Konto.</div>' +
-      '</div>';
-    document.body.appendChild(o);
-
-    const nutzerFeld = o.querySelector('#nutzer');
-    nutzerFeld.addEventListener('input', () => Store.setMeta('nutzer', nutzerFeld.value));
-
-    o.addEventListener('click', async e => {
-      const b = e.target.closest('button[data-a]');
-      if (!b) { if (e.target === o) o.remove(); return; }
-      const a = b.dataset.a;
-
-      if (a === 'zu') { o.remove(); return; }
-      if (a === 'dark' || a === 'light') { theme(a); return; }
-      if (a === 'system') {
-        const dunkel = matchMedia('(prefers-color-scheme: dark)').matches;
-        theme(dunkel ? 'dark' : 'light');
-        return;
-      }
-      if (a === 'export') sicherungSpeichern();
-      if (a === 'import') sicherungLaden(() => o.remove());
-      if (a === 'ordner-schreiben') Werkzeuge.ordnerSchreiben();
-      if (a === 'ordner-lesen') Werkzeuge.ordnerLesen();
-      if (a === 'einzeldatei') Werkzeuge.einzelDatei();
-      if (a === 'ki') { o.remove(); kiPanel(true); }
-      if (a === 'kuerzel') { o.remove(); Werkzeuge.tastenkuerzel(); }
-      if (a === 'benachr') {
-        if (!('Notification' in window)) { UI.toast('Dieser Browser kennt keine Benachrichtigungen'); return; }
-        const erg = await Notification.requestPermission();
-        UI.toast(erg === 'granted' ? 'Benachrichtigungen erlaubt' : 'Benachrichtigungen bleiben aus');
-      }
-      if (a === 'wipe') {
-        if (!confirm('Wirklich ALLE Seiten und Datenbanken löschen? Das kann nicht rückgängig gemacht werden.')) return;
-        if (!confirm('Ganz sicher? Am besten vorher eine Sicherung speichern.')) return;
-        await Store.wipe();
-        location.reload();
-      }
-    });
-  };
+  /* Der Einstellungsbereich liegt in einer eigenen Datei. */
+  const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
 
   const sicherungSpeichern = () => {
     const blob = new Blob([Store.exportAll()], { type: 'application/json' });
@@ -1017,6 +934,7 @@ const App = (() => {
     await Store.load();
 
     document.documentElement.dataset.theme = Store.getMeta('theme', 'dark');
+    Einstellungen.anwenden();
 
     if (!Store.rootPages().length) beispielAnlegen();
 
@@ -1028,6 +946,23 @@ const App = (() => {
 
     zeichneBaum();
     oeffne(startSeite);
+
+    /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
+    const wunsch = Store.getMeta('startAnsicht', 'letzte');
+    if (!location.hash) {
+      if (wunsch === 'start') setTimeout(() => Ansichten.start(), 60);
+      if (wunsch === 'posteingang') setTimeout(() => Ansichten.posteingang(), 60);
+      if (wunsch === 'journal') setTimeout(() => Werkzeuge.journal(), 60);
+      if (wunsch === 'seite' && Store.getMeta('startSeite')) {
+        const z = Store.getBlock(Store.getMeta('startSeite'));
+        if (z) oeffne(z.id);
+      }
+    }
+
+    /* Name und Symbol des Arbeitsbereichs */
+    const wsBtn = document.getElementById('btn-settings');
+    wsBtn.querySelector('.ws-icon').textContent = Store.getMeta('arbeitsIcon', 'N');
+    wsBtn.querySelectorAll('span')[1].textContent = Store.getMeta('arbeitsName', 'Notizen');
 
     Blocks.bindeEditor(document.getElementById('page'));
     tasten();
@@ -1041,6 +976,7 @@ const App = (() => {
     Auswahl.start();
     Erwaehnung.start();
     Mehrfach.start();
+    Einstellungen.start();
 
     /* Seitenleiste und Kopfzeile */
     const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
@@ -1060,6 +996,10 @@ const App = (() => {
     an('btn-back', zurueck);
     an('btn-fwd', vorwaerts);
     an('btn-komm', () => seiteId && Kommentare.panel(seiteId));
+    an('btn-teilen', (e) => {
+      const p = Store.getBlock(seiteId);
+      if (p) Werkzeuge.teilenMenue(e.currentTarget, p);
+    });
     an('btn-verlauf', () => seiteId && Werkzeuge.versionen(Store.getBlock(seiteId)));
     an('btn-fav', () => {
       if (!seiteId) return;

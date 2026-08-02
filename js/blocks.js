@@ -180,7 +180,7 @@ const Blocks = (() => {
       const ct = document.createElement('div');
       ct.className = 'ct';
       ct.contentEditable = nurLesen ? 'false' : 'true';
-      ct.spellcheck = false;
+      ct.spellcheck = !!Store.getMeta('rechtschreib', false);
       ct.dataset.ph = ph || t.ph || '';
       ct.innerHTML = inline(block.text || '');
       if (block.color) ct.classList.add(block.color.startsWith('bg-') ? block.color : 't-' + block.color);

@@ -1023,6 +1023,118 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
 html[data-theme="light"] .banner{color:#37352f}
 
+/* ==========================================================================
+   EINSTELLUNGEN
+   ========================================================================== */
+.einst-fenster{
+  width:min(1000px,94vw); height:min(720px,88vh); background:var(--bg-side);
+  border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
+  display:flex; overflow:hidden; position:relative;
+}
+.einst-nav{
+  width:236px; flex:0 0 236px; background:var(--bg); border-right:1px solid var(--line);
+  padding:12px 8px; overflow-y:auto;
+}
+.einst-konto{display:flex; gap:10px; align-items:center; padding:8px 10px 14px}
+.einst-konto .ws-icon{width:30px; height:30px; flex:0 0 30px; font-size:14px}
+.einst-konto b{display:block; font-size:13.5px}
+.einst-konto span{font-size:11.5px; color:var(--text-faint)}
+.einst-nav button{
+  display:flex; align-items:center; gap:9px; width:100%; padding:7px 10px;
+  border-radius:6px; font-size:13.5px; color:var(--text-dim); text-align:left;
+}
+.einst-nav button:hover{background:var(--bg-hover); color:var(--text)}
+.einst-nav button.on{background:var(--bg-hover); color:var(--text); font-weight:500}
+.einst-nav .mi{width:20px; text-align:center; flex:0 0 20px}
+.einst-inhalt{flex:1; overflow-y:auto; padding:26px 30px 40px}
+.einst-inhalt h2{font-size:19px; margin-bottom:6px}
+.ez-unter{font-size:13px; color:var(--text-dim); margin-bottom:16px; line-height:1.6; max-width:60ch}
+.einst-zu{position:absolute; top:12px; right:14px; font-size:15px; color:var(--text-faint);
+          width:28px; height:28px; border-radius:6px}
+.einst-zu:hover{background:var(--bg-hover); color:var(--text)}
+
+.ez-zeile{
+  display:flex; align-items:center; gap:20px; padding:13px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+.ez-text{flex:1; min-width:0}
+.ez-text b{font-size:14px; font-weight:500; display:block}
+.ez-text span{font-size:12.5px; color:var(--text-dim); display:block; margin-top:2px; line-height:1.5}
+.ez-steuer{flex:0 0 auto; display:flex; gap:8px; align-items:center}
+.ez-steuer select, .ez-steuer input{
+  padding:7px 10px; background:var(--bg-input); border:1px solid var(--line);
+  border-radius:7px; outline:none; color:var(--text); font-size:13.5px; min-width:150px;
+}
+.ez-steuer select:focus, .ez-steuer input:focus{border-color:var(--accent)}
+.ez-grau{font-size:13px; color:var(--text-faint)}
+.ez-knopf{padding:6px 12px; border:1px solid var(--line); border-radius:7px; font-size:13.5px}
+.ez-knopf:hover{background:var(--bg-hover)}
+.ez-knopf.warn{border-color:var(--c-red); color:var(--c-red)}
+
+.schalter{
+  width:38px; height:22px; border-radius:11px; background:var(--line);
+  position:relative; transition:background .16s; flex:0 0 38px;
+}
+.schalter i{
+  position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
+  background:var(--text-dim); transition:transform .16s, background .16s; display:block;
+}
+.schalter.an{background:var(--accent)}
+.schalter.an i{transform:translateX(16px); background:#fff}
+
+.ez-plan{
+  background:var(--bg-card); border-radius:9px; padding:16px 18px; margin:6px 0 18px;
+}
+.ez-plan b{font-size:15px; display:block; margin-bottom:5px}
+.ez-plan span{font-size:13px; color:var(--text-dim); line-height:1.6}
+.ez-ueber p{font-size:13.5px; color:var(--text-dim); line-height:1.7; margin-bottom:10px; max-width:64ch}
+
+.bereich-liste{margin:4px 0 14px}
+.bereich-zeile{
+  display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid var(--line);
+  border-radius:8px; margin-bottom:6px; font-size:14px;
+}
+.bereich-zeile .b-ico{font-size:16px}
+.bereich-zeile .ez-grau{margin-left:auto}
+.bereich-zeile button{color:var(--text-faint); padding:2px 6px; border-radius:5px}
+.bereich-zeile button:hover{background:var(--bg-hover); color:var(--c-red)}
+
+/* Schriftgrösse und Dichte aus den Einstellungen */
+body[data-schrift="klein"] #page{font-size:14.5px}
+body[data-schrift="gross"] #page{font-size:17.5px}
+body[data-schrift="klein"] .b-text .ct{font-size:14.5px}
+body[data-schrift="gross"] .b-text .ct{font-size:17.5px}
+body[data-dichte="eng"] .b-text .ct{padding:1px 2px; line-height:1.45}
+body[data-dichte="weit"] .b-text .ct{padding:7px 2px; line-height:1.75}
+
+/* --- Automationen ----------------------------------------------------------- */
+.auto-zeile{display:flex; align-items:center; gap:12px; padding:11px 14px; border-bottom:1px solid var(--line-soft)}
+.auto-text{flex:1; min-width:0}
+.auto-text b{font-size:14px; display:block}
+.auto-text span{font-size:12px; color:var(--text-dim); display:block; margin-top:2px; line-height:1.5}
+.auto-zeile > button[data-weg]{color:var(--text-faint); padding:3px 7px; border-radius:5px}
+.auto-zeile > button[data-weg]:hover{background:var(--bg-hover); color:var(--c-red)}
+
+/* --- Wiki und Teilen --------------------------------------------------------- */
+.wiki{border:1px solid var(--line); border-radius:9px; margin:6px 0 20px; overflow:hidden}
+.wiki-kopf{display:flex; align-items:center; gap:12px; padding:11px 14px; background:var(--bg-card)}
+.wiki-kopf b{font-size:14px}
+.wiki-kopf span{font-size:12.5px; color:var(--text-dim); flex:1}
+.wiki-kopf button{font-size:13px; color:var(--accent); padding:4px 9px; border-radius:6px}
+.wiki-kopf button:hover{background:var(--bg-hover)}
+table.wiki-tab{width:100%; border-collapse:collapse; font-size:14px}
+table.wiki-tab th{
+  text-align:left; font-weight:400; font-size:12px; color:var(--text-faint);
+  padding:7px 14px; border-bottom:1px solid var(--line);
+}
+table.wiki-tab td{padding:9px 14px; border-bottom:1px solid var(--line-soft)}
+table.wiki-tab tr:hover td{background:var(--bg-hover); cursor:pointer}
+table.wiki-tab .w-t{font-weight:500}
+.w-pruef{font-size:12px; padding:2px 9px; border-radius:11px; border:1px solid var(--line); color:var(--text-dim)}
+.w-pruef.ja{background:var(--b-green); color:var(--c-green); border-color:transparent}
+.wiki-leer{padding:20px 14px; color:var(--text-faint); font-size:14px}
+.teilen-hinweis{padding:8px 12px; font-size:11.5px; color:var(--text-faint); line-height:1.5; max-width:250px}
+
 </style>
 </head>
 <body>
@@ -1080,6 +1192,7 @@ html[data-theme="light"] .banner{color:#37352f}
     <button class="top-btn schmal" id="btn-fwd"  title="Vorwärts (Strg + ])">›</button>
     <div class="crumb" id="crumb"></div>
     <div class="spacer"></div>
+    <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben">Teilen</button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)">✨ KI</button>
     <button class="top-btn schmal" id="btn-komm"    title="Kommentare">💬</button>
     <button class="top-btn schmal" id="btn-verlauf" title="Versionsverlauf">🕘</button>
@@ -3742,7 +3855,7 @@ const Blocks = (() => {
       const ct = document.createElement('div');
       ct.className = 'ct';
       ct.contentEditable = nurLesen ? 'false' : 'true';
-      ct.spellcheck = false;
+      ct.spellcheck = !!Store.getMeta('rechtschreib', false);
       ct.dataset.ph = ph || t.ph || '';
       ct.innerHTML = inline(block.text || '');
       if (block.color) ct.classList.add(block.color.startsWith('bg-') ? block.color : 't-' + block.color);
@@ -5154,7 +5267,7 @@ const Datenbank = (() => {
       if (!v) return '<span style="color:var(--text-faint)">—</span>';
       const d = new Date(v);
       if (isNaN(d)) return esc(v);
-      return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+      return esc(Einstellungen.datum(d, def.type !== 'date'));
     }
 
     if (def.type === 'url' && v)
@@ -5391,6 +5504,7 @@ const Datenbank = (() => {
       `<button data-a="filter">⚟ Filter${anzahlFilter ? ' (' + anzahlFilter + ')' : ''}</button>` +
       `<button data-a="sort">↕ Sortieren${view.sorts?.length ? ' (' + view.sorts.length + ')' : ''}</button>` +
       `<button data-a="props">⚙ Eigenschaften</button>` +
+      `<button data-a="auto" title="Automationen">⚡${(coll.automationen||[]).length || ''}</button>` +
       `<button data-a="search">🔍</button>` +
       `<button data-a="menu">⋯</button>` +
       `<button class="new" data-a="new">Neu</button>`;
@@ -5405,6 +5519,7 @@ const Datenbank = (() => {
       if (a === 'filter') filterMenue(b, coll, view, block);
       if (a === 'sort')   sortMenue(b, coll, view, block);
       if (a === 'props')  eigenschaftenMenue(b, coll, view, block);
+      if (a === 'auto')   automationenMenue(b, coll, view, block);
       if (a === 'search') suchFeld(w, coll, view, block);
       if (a === 'menu')   dbMenue(b, coll, view, block);
     });
@@ -5922,7 +6037,10 @@ const Datenbank = (() => {
 
     const g = document.createElement('div');
     g.className = 'cal';
-    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
+    /* Beginnt die Woche am Montag oder am Sonntag? Steht in den Einstellungen. */
+    const wsMontag = Einstellungen.wochenstart() === 1;
+    const tage = wsMontag ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    tage.forEach(d => {
       const e = document.createElement('div');
       e.className = 'dow';
       e.textContent = d;
@@ -5930,7 +6048,7 @@ const Datenbank = (() => {
     });
 
     const ersterTag = new Date(jahr, monat, 1);
-    let start = ersterTag.getDay() - 1;          /* Montag = 0 */
+    let start = wsMontag ? ersterTag.getDay() - 1 : ersterTag.getDay();
     if (start < 0) start = 6;
     const tageImMonat = new Date(jahr, monat + 1, 0).getDate();
     const heuteStr = new Date().toDateString();
@@ -7099,6 +7217,211 @@ const Datenbank = (() => {
   };
 
   /* ========================================================================
+   * AUTOMATIONEN
+   * ------------------------------------------------------------------------
+   * Notions Datenbank-Automationen: „Wenn etwas passiert, dann tu das."
+   * Hier läuft alles im Browser — kein Dienst, keine Wartezeit.
+   * ======================================================================*/
+  const AUSLOESER = [
+    ['zeile-neu',      'Ein Eintrag wird angelegt'],
+    ['prop-geaendert', 'Eine Eigenschaft ändert sich'],
+    ['prop-wert',      'Eine Eigenschaft bekommt einen bestimmten Wert']
+  ];
+  const AKTIONEN = [
+    ['setze-prop',   'Eigenschaft setzen'],
+    ['ki-fuellen',   'KI-Feld ausfüllen lassen'],
+    ['erinnerung',   'Erinnerung anlegen'],
+    ['unterseite',   'Unterseite im Eintrag anlegen'],
+    ['melden',       'Kurze Meldung zeigen']
+  ];
+
+  let imLauf = false;   /* verhindert, dass Automationen sich gegenseitig auslösen */
+
+  const automationenLaufen = (row, coll, art, key, wert) => {
+    if (imLauf || !coll || !(coll.automationen || []).length) return;
+    imLauf = true;
+    try {
+      coll.automationen.forEach(a => {
+        if (a.an === false) return;
+        const w = a.wenn || {};
+        if (w.art !== art) return;
+        if (w.art !== 'zeile-neu' && w.key && w.key !== key) return;
+        if (w.art === 'prop-wert' && String(wert ?? '') !== String(w.wert ?? '')) return;
+
+        (a.dann || []).forEach(d => {
+          if (d.art === 'setze-prop' && d.key) {
+            Store.setProp(row.id, d.key, d.wert ?? '');
+          }
+          if (d.art === 'ki-fuellen' && d.key) {
+            kiFeldFuellen(row, d.key, coll);
+          }
+          if (d.art === 'erinnerung') {
+            const zeit = new Date();
+            zeit.setDate(zeit.getDate() + (Number(d.tage) || 1));
+            const liste = Werkzeuge.erinnerungen();
+            liste.push({ id: Store.uid(), pageId: row.id, zeit: zeit.toISOString().slice(0, 16),
+                         text: row.text || coll.name, erledigt: false });
+            Store.setMeta('erinnerungen', liste);
+          }
+          if (d.art === 'unterseite') {
+            Store.addBlock(row.id, 'text', { text: d.text || '' });
+          }
+          if (d.art === 'melden') {
+            UI.toast('⚡ ' + (d.text || a.name || 'Automation ausgeführt'));
+          }
+        });
+      });
+    } finally {
+      imLauf = false;
+    }
+  };
+
+  /* An die Speicherfunktionen hängen, damit jede Änderung erfasst wird. */
+  const automationenEinklinken = () => {
+    const altAddRow = Store.addRow;
+    Store.addRow = function (collectionId, props) {
+      const r = altAddRow.call(Store, collectionId, props);
+      const c = Store.getCollection(collectionId);
+      if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-neu'), 0);
+      return r;
+    };
+    const altSetProp = Store.setProp;
+    Store.setProp = function (rowId, key, value) {
+      const erg = altSetProp.call(Store, rowId, key, value);
+      const r = Store.getBlock(rowId);
+      const c = r && r.parentTable === 'collection' ? Store.getCollection(r.parentId) : null;
+      if (c) setTimeout(() => {
+        automationenLaufen(r, c, 'prop-geaendert', key, value);
+        automationenLaufen(r, c, 'prop-wert', key, value);
+      }, 0);
+      return erg;
+    };
+  };
+
+  const automationenMenue = (anker, coll, view, block) => {
+    const liste = coll.automationen || [];
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(620px,94vw)">' +
+        `<div class="fh">⚡ Automationen <em>${liste.length}</em>` +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="res" id="al"></div>' +
+        '<div class="fbtns"><button data-a="neu" class="prim">Automation anlegen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const namen = (k) => coll.schema[k]?.name || '?';
+    const zeichne = () => {
+      o.querySelector('#al').innerHTML = (coll.automationen || []).length
+        ? coll.automationen.map((a, i) =>
+            `<div class="auto-zeile">` +
+              `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+              `<div class="auto-text"><b>${esc(a.name || 'Ohne Namen')}</b>` +
+              `<span>Wenn: ${esc((AUSLOESER.find(x => x[0] === a.wenn.art) || [])[1] || '')}` +
+              (a.wenn.key ? ' — ' + esc(namen(a.wenn.key)) : '') +
+              (a.wenn.art === 'prop-wert' ? ' = ' + esc(a.wenn.wert) : '') +
+              ` · Dann: ${a.dann.map(d => esc((AKTIONEN.find(x => x[0] === d.art) || [])[1] || '')).join(', ')}` +
+              `</span></div>` +
+              `<button data-weg="${i}" title="Löschen">🗑</button>` +
+            '</div>').join('')
+        : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
+          'Noch keine Automation. Zum Beispiel: <i>Wenn Status auf „Erledigt" springt, ' +
+          'dann setze das Datum von heute.</i></div>';
+    };
+    zeichne();
+
+    o.addEventListener('click', async e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+
+      const an = e.target.closest('[data-an]');
+      if (an) {
+        const a = coll.automationen[+an.dataset.an];
+        a.an = a.an === false;
+        Store.updateCollection(coll.id, { automationen: coll.automationen });
+        zeichne();
+        return;
+      }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) {
+        coll.automationen.splice(+weg.dataset.weg, 1);
+        Store.updateCollection(coll.id, { automationen: coll.automationen });
+        zeichne();
+        return;
+      }
+      if (e.target.closest('[data-a="neu"]')) { o.remove(); automationBauen(coll); }
+    });
+  };
+
+  const automationBauen = (coll) => {
+    const keys = Object.keys(coll.schema);
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(560px,94vw)">' +
+        '<div class="fh">Neue Automation<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div style="padding:16px 18px; display:flex; flex-direction:column; gap:13px">' +
+          '<label>Name<br><input id="an" value="Neue Automation"></label>' +
+          '<label>Wenn …<br><select id="aw">' +
+            AUSLOESER.map(([id, n]) => `<option value="${id}">${n}</option>`).join('') +
+          '</select></label>' +
+          '<label>… bei dieser Eigenschaft<br><select id="ak">' +
+            keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
+          '</select></label>' +
+          '<label id="awl">… mit diesem Wert<br><input id="av" placeholder="z. B. Erledigt"></label>' +
+          '<hr style="border:none;border-top:1px solid var(--line)">' +
+          '<label>Dann …<br><select id="ad">' +
+            AKTIONEN.map(([id, n]) => `<option value="${id}">${n}</option>`).join('') +
+          '</select></label>' +
+          '<label id="adk">… diese Eigenschaft<br><select id="adk2">' +
+            keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
+          '</select></label>' +
+          '<label id="adw">… auf diesen Wert<br><input id="adv" placeholder="z. B. heute"></label>' +
+        '</div>' +
+        '<div class="fbtns"><button data-a="ok" class="prim">Anlegen</button>' +
+        '<button data-a="zu">Abbrechen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const auffrischen = () => {
+      o.querySelector('#awl').style.display = o.querySelector('#aw').value === 'prop-wert' ? '' : 'none';
+      const d = o.querySelector('#ad').value;
+      o.querySelector('#adk').style.display = ['setze-prop','ki-fuellen'].includes(d) ? '' : 'none';
+      o.querySelector('#adw').style.display = ['setze-prop','erinnerung','unterseite','melden'].includes(d) ? '' : 'none';
+      o.querySelector('#adv').placeholder = d === 'erinnerung' ? 'in wie vielen Tagen? z. B. 3'
+                                          : d === 'melden' ? 'Text der Meldung' : 'Wert';
+    };
+    auffrischen();
+    o.querySelector('#aw').addEventListener('change', auffrischen);
+    o.querySelector('#ad').addEventListener('change', auffrischen);
+
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      if (!e.target.closest('[data-a="ok"]')) return;
+      const d = o.querySelector('#ad').value;
+      const dann = { art: d };
+      if (['setze-prop','ki-fuellen'].includes(d)) dann.key = o.querySelector('#adk2').value;
+      const wertFeld = o.querySelector('#adv').value;
+      if (d === 'setze-prop') dann.wert = wertFeld === 'heute' ? new Date().toISOString().slice(0, 10) : wertFeld;
+      if (d === 'erinnerung') dann.tage = wertFeld;
+      if (d === 'unterseite' || d === 'melden') dann.text = wertFeld;
+
+      coll.automationen = coll.automationen || [];
+      coll.automationen.push({
+        id: Store.uid().slice(0, 6),
+        name: o.querySelector('#an').value,
+        an: true,
+        wenn: { art: o.querySelector('#aw').value, key: o.querySelector('#ak').value,
+                wert: o.querySelector('#av').value },
+        dann: [dann]
+      });
+      Store.updateCollection(coll.id, { automationen: coll.automationen });
+      o.remove();
+      UI.toast('Automation angelegt');
+    });
+  };
+
+  /* ========================================================================
    * CSV EINLESEN
    * ------------------------------------------------------------------------
    * Notions Import für Tabellen: die Kopfzeile wird zum Schema, jede
@@ -7162,7 +7485,11 @@ const Datenbank = (() => {
     inp.click();
   };
 
+  /* Automationen an den Speicher hängen — einmal beim Laden. */
+  automationenEinklinken();
+
   return { render, TYPEN, propTyp, wert, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
+           automationenMenue, automationenLaufen,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert };
 })();
@@ -8401,7 +8728,98 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
   };
 
   /* ========================================================================
-   * 16. KLEINIGKEITEN
+   * 16. WIKI   (Notions „In Wiki umwandeln")
+   * ------------------------------------------------------------------------
+   * Eine Seite wird zum Verzeichnis ihrer Unterseiten — mit Besitzer und
+   * dem Vermerk, ob der Inhalt geprüft ist.
+   * ======================================================================*/
+  const wikiUmwandeln = (p) => {
+    Store.updateBlock(p.id, { wiki: !p.wiki, icon: p.wiki ? (p.icon || '📄') : '📚' });
+    App.zeichneSeite(); App.zeichneBaum();
+    UI.toast(p.wiki ? 'Wieder eine normale Seite' : 'In ein Wiki umgewandelt');
+  };
+
+  const wikiIndex = (p, wrap) => {
+    const kinder = Store.childrenOf(p.id).filter(k => k.type === 'page');
+
+    const d = document.createElement('div');
+    d.className = 'wiki';
+    d.innerHTML =
+      '<div class="wiki-kopf"><b>📚 Wiki</b>' +
+      `<span>${kinder.length} Seiten · ${kinder.filter(k => k.geprueft).length} geprüft</span>` +
+      '<button data-a="neu">＋ Seite</button></div>' +
+      (kinder.length
+        ? '<table class="wiki-tab"><tr><th>Seite</th><th>Besitzer</th><th>Zuletzt geändert</th><th>Geprüft</th></tr>' +
+          kinder.map(k =>
+            `<tr data-id="${k.id}">` +
+              `<td class="w-t">${esc(k.icon || '📄')} ${esc(k.text || 'Ohne Titel')}</td>` +
+              `<td>${esc(k.besitzer || Store.getMeta('nutzer', 'Ich'))}</td>` +
+              `<td>${esc(zeitKurz(k.edited))}</td>` +
+              `<td><button class="w-pruef${k.geprueft ? ' ja' : ''}" data-pruef="${k.id}">` +
+              `${k.geprueft ? '✓ geprüft' : 'prüfen'}</button></td>` +
+            '</tr>').join('') + '</table>'
+        : '<div class="wiki-leer">Noch keine Unterseiten. Lege die erste an.</div>');
+
+    d.addEventListener('click', e => {
+      if (e.target.closest('[data-a="neu"]')) {
+        const k = Store.addPage(p.id, { text: '' });
+        Store.updateBlock(p.id, { aufgeklappt: true });
+        App.zeichneBaum(); App.oeffne(k.id);
+        return;
+      }
+      const pr = e.target.closest('[data-pruef]');
+      if (pr) {
+        const k = Store.getBlock(pr.dataset.pruef);
+        Store.updateBlock(k.id, { geprueft: !k.geprueft, besitzer: Store.getMeta('nutzer', 'Ich') });
+        App.zeichneSeite();
+        return;
+      }
+      const tr = e.target.closest('tr[data-id]');
+      if (tr) App.oeffne(tr.dataset.id);
+    });
+    wrap.appendChild(d);
+  };
+
+  /* ========================================================================
+   * 17. TEILEN   (Notions „Share")
+   * ------------------------------------------------------------------------
+   * Ohne Server gibt es niemanden, dem man etwas freigeben könnte — dafür
+   * jede Form, die Seite aus der Hand zu geben.
+   * ======================================================================*/
+  const teilenMenue = (anker, p) => {
+    const r = anker.getBoundingClientRect();
+    const m = UI.menu(
+      '<div class="grp">Diese Seite weitergeben</div>' +
+      '<button data-a="link"><span class="mi">🔗</span>Link kopieren</button>' +
+      '<button data-a="text"><span class="mi">⎘</span>Als Text kopieren</button>' +
+      '<button data-a="md"><span class="mi">⭳</span>Als Markdown speichern</button>' +
+      '<button data-a="html"><span class="mi">🌐</span>Als HTML-Seite speichern</button>' +
+      '<button data-a="pdf"><span class="mi">🖨</span>Drucken oder als PDF</button>' +
+      '<hr>' +
+      '<button data-a="alles"><span class="mi">📦</span>Alles als eine HTML-Datei</button>' +
+      '<button data-a="ordner"><span class="mi">📁</span>Alles als Markdown-Ordner</button>' +
+      '<hr>' +
+      '<div class="teilen-hinweis">Es gibt keinen Server und kein Konto — ' +
+      'deshalb auch keine Freigabe ins Netz. Weitergeben heisst hier: eine Datei erzeugen.</div>',
+      r.right - 240, r.bottom + 6);
+
+    m.addEventListener('click', e => {
+      const b = e.target.closest('button[data-a]');
+      if (!b) return;
+      m.remove();
+      const a = b.dataset.a;
+      if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); }
+      if (a === 'text') { navigator.clipboard?.writeText(alsMarkdown(p)); UI.toast('Text kopiert'); }
+      if (a === 'md') App.markdownExport(p);
+      if (a === 'html') htmlExport(p);
+      if (a === 'pdf') drucken(p);
+      if (a === 'alles') einzelDatei();
+      if (a === 'ordner') ordnerSchreiben();
+    });
+  };
+
+  /* ========================================================================
+   * 18. KLEINIGKEITEN
    * ======================================================================*/
   const alleToggles = () => {
     const bloecke = document.querySelectorAll('.b-toggle');
@@ -8465,6 +8883,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     '<button data-a="wz-vorlage-ein"><span class="mi">＋</span>Aus Vorlage einfügen</button>' +
     '<button data-a="wz-verschieben"><span class="mi">➦</span>Verschieben nach …</button>' +
     '<button data-a="wz-versionen"><span class="mi">🕘</span>Versionsverlauf</button>' +
+    `<button data-a="wz-wiki"><span class="mi">📚</span>${p.wiki ? 'Wiki auflösen' : 'In Wiki umwandeln'}</button>` +
+    '<button data-a="wz-teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
     '<button data-a="wz-erinnerung"><span class="mi">⏰</span>Erinnerung</button>' +
     '<hr>' +
     `<button data-a="wz-sperren"><span class="mi">🔒</span>${p.locked ? 'Entschlüsseln' : 'Verschlüsseln'}</button>` +
@@ -8486,6 +8906,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       'wz-vorlage-ein': () => vorlageEinfuegen(p),
       'wz-verschieben': () => verschiebenNach(p),
       'wz-versionen': () => versionen(p),
+      'wz-wiki': () => wikiUmwandeln(p),
+      'wz-teilen': () => teilenMenue(document.getElementById('btn-page-menu'), p),
       'wz-erinnerung': () => erinnerungSetzen(p),
       'wz-sperren': () => p.locked ? entsperren(p) : sperren(p),
       'wz-gesperrt': () => {
@@ -8539,6 +8961,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     erinnerungSetzen, erinnerungen, ordnerSchreiben, ordnerLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz,
+    wikiUmwandeln, wikiIndex, teilenMenue,
     seitenMenueZusatz, seitenMenueAktion
   };
 })();
@@ -9314,6 +9737,504 @@ window.Ansichten = Ansichten;
 
 </script>
 <script>
+/* ===== js/einstellungen.js ===== */
+/* ============================================================================
+ * einstellungen.js — Der Einstellungsbereich
+ * ----------------------------------------------------------------------------
+ * Nach Notions Vorbild aufgebaut: links die Bereiche, rechts die Optionen.
+ * Was bei Notion nur mit Konto und Server geht (Mitglieder, Abrechnung,
+ * SSO), steht hier als das da, was es lokal bedeutet — ehrlich benannt,
+ * nicht weggelassen.
+ * ==========================================================================*/
+
+const Einstellungen = (() => {
+
+  const esc = (s) => String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* Alles, was hier eingestellt wird, liegt in meta. */
+  const V = (k, fallback) => Store.getMeta(k, fallback);
+  const S = (k, v) => { Store.setMeta(k, v); anwenden(); };
+
+  const BEREICHE = [
+    ['konto',        '👤', 'Mein Konto'],
+    ['allgemein',    '⚙️', 'Einstellungen'],
+    ['benachricht',  '🔔', 'Benachrichtigungen'],
+    ['verbindungen', '🔌', 'Verbindungen'],
+    ['arbeitsplatz', '🏠', 'Arbeitsbereich'],
+    ['bereiche',     '👥', 'Bereiche'],
+    ['sicherheit',   '🛡', 'Sicherheit'],
+    ['daten',        '💾', 'Import und Export'],
+    ['ki',           '✨', 'Künstliche Intelligenz'],
+    ['speicher',     '📦', 'Speicher'],
+    ['abrechnung',   '💳', 'Abrechnung'],
+    ['ueber',        'ℹ️', 'Über diese App']
+  ];
+
+  /* ========================================================================
+   * ANWENDEN — Einstellungen wirken sofort
+   * ======================================================================*/
+  const anwenden = () => {
+    document.documentElement.dataset.theme = V('theme', 'dark');
+    document.body.dataset.schrift = V('schriftgroesse', 'normal');
+    document.body.dataset.dichte  = V('dichte', 'normal');
+  };
+
+  /** Datum so ausgeben, wie es eingestellt ist. */
+  const datum = (wert, mitZeit = false) => {
+    if (!wert) return '';
+    const d = new Date(wert);
+    if (isNaN(d)) return String(wert);
+    const t = String(d.getDate()).padStart(2, '0');
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const j = d.getFullYear();
+    const form = V('datumsformat', 'TT.MM.JJJJ');
+    let s = form === 'JJJJ-MM-TT' ? `${j}-${m}-${t}`
+          : form === 'MM/TT/JJJJ' ? `${m}/${t}/${j}`
+          : form === 'TT. Monat JJJJ'
+            ? `${d.getDate()}. ${['Januar','Februar','März','April','Mai','Juni','Juli','August',
+                'September','Oktober','November','Dezember'][d.getMonth()]} ${j}`
+            : `${t}.${m}.${j}`;
+    if (mitZeit) {
+      const st = d.getHours(), mi = String(d.getMinutes()).padStart(2, '0');
+      s += V('zeitformat', '24') === '12'
+        ? ` ${((st + 11) % 12) + 1}:${mi} ${st < 12 ? 'vorm.' : 'nachm.'}`
+        : ` ${String(st).padStart(2, '0')}:${mi}`;
+    }
+    return s;
+  };
+
+  /** Beginnt die Woche am Montag? Der Kalender richtet sich danach. */
+  const wochenstart = () => (V('wochenstart', 'montag') === 'sonntag' ? 0 : 1);
+
+  /* ========================================================================
+   * DER DIALOG
+   * ======================================================================*/
+  let offenerBereich = 'allgemein';
+
+  const oeffne = (bereich) => {
+    offenerBereich = bereich || offenerBereich;
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="einst-fenster">' +
+        '<div class="einst-nav">' +
+          `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
+          `<div><b>${esc(V('arbeitsName', 'Notizen'))}</b>` +
+          `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
+          BEREICHE.map(([id, i, n]) =>
+            `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
+            `<span class="mi">${i}</span>${n}</button>`).join('') +
+        '</div>' +
+        '<div class="einst-inhalt" id="ei"></div>' +
+        '<button class="einst-zu" data-a="zu">✕</button>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const zeichne = () => {
+      o.querySelector('#ei').innerHTML = inhalt(offenerBereich);
+      o.querySelectorAll('.einst-nav button').forEach(b =>
+        b.classList.toggle('on', b.dataset.b === offenerBereich));
+      binde(o);
+    };
+    zeichne();
+
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const b = e.target.closest('.einst-nav button[data-b]');
+      if (b) { offenerBereich = b.dataset.b; zeichne(); }
+    });
+    o.neuZeichnen = zeichne;
+  };
+
+  /* --- Bausteine ---------------------------------------------------------- */
+  const zeile = (titel, beschreibung, steuerung) =>
+    `<div class="ez-zeile"><div class="ez-text"><b>${titel}</b>` +
+    (beschreibung ? `<span>${beschreibung}</span>` : '') + '</div>' +
+    `<div class="ez-steuer">${steuerung}</div></div>`;
+
+  const wahl = (schluessel, werte, jetzt) =>
+    `<select data-set="${schluessel}">` +
+    werte.map(w => {
+      const [wert, name] = Array.isArray(w) ? w : [w, w];
+      return `<option value="${esc(wert)}"${wert === jetzt ? ' selected' : ''}>${esc(name)}</option>`;
+    }).join('') + '</select>';
+
+  const schalter = (schluessel, an) =>
+    `<button class="schalter${an ? ' an' : ''}" data-toggle="${schluessel}"><i></i></button>`;
+
+  const knopf = (aktion, text, klasse = '') =>
+    `<button class="ez-knopf ${klasse}" data-tun="${aktion}">${text}</button>`;
+
+  const feld = (schluessel, wert, platzhalter = '') =>
+    `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
+
+  const kopf = (titel, unter) =>
+    `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
+
+  /* ========================================================================
+   * DIE EINZELNEN BEREICHE
+   * ======================================================================*/
+  const inhalt = (b) => ({
+    konto: () =>
+      kopf('Mein Konto', 'Diese App kennt kein Konto und keinen Server. Dein Name steht nur hier ' +
+           'im Browser und erscheint bei Kommentaren und Erwähnungen.') +
+      zeile('Name', 'So wirst du in Kommentaren genannt', feld('nutzer', V('nutzer', ''), 'Dein Name')) +
+      zeile('Symbol', 'Kürzel oben in der Seitenleiste', feld('arbeitsIcon', V('arbeitsIcon', 'N'))) +
+      zeile('E-Mail', 'Wird nicht gebraucht — es gibt keine Anmeldung',
+            '<span class="ez-grau">keine nötig</span>') +
+      zeile('Passwort', 'Einzelne Seiten lassen sich verschlüsseln',
+            knopf('seite-sperren', 'Seite verschlüsseln')) +
+      zeile('Angemeldete Geräte', 'Nichts wird übertragen, es gibt keine Sitzungen',
+            '<span class="ez-grau">nur dieses Gerät</span>') +
+      zeile('Konto löschen', 'Entfernt alle Daten aus diesem Browser',
+            knopf('alles-loeschen', 'Alle Daten löschen', 'warn')),
+
+    allgemein: () =>
+      kopf('Einstellungen') +
+      zeile('Erscheinungsbild', 'Hell, dunkel oder wie das System',
+            wahl('theme', [['dark', 'Dunkel'], ['light', 'Hell'], ['system', 'Wie das System']], V('theme', 'dark'))) +
+      zeile('Schriftgrösse', 'Gilt für den ganzen Text',
+            wahl('schriftgroesse', [['klein', 'Klein'], ['normal', 'Normal'], ['gross', 'Gross']], V('schriftgroesse', 'normal'))) +
+      zeile('Zeilenabstand', 'Enger oder luftiger',
+            wahl('dichte', [['eng', 'Eng'], ['normal', 'Normal'], ['weit', 'Weit']], V('dichte', 'normal'))) +
+      zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest',
+            wahl('startAnsicht', [['letzte', 'Zuletzt geöffnete Seite'], ['start', 'Startseite'],
+                                  ['journal', 'Heutiges Journal'], ['posteingang', 'Posteingang']],
+                 V('startAnsicht', 'letzte'))) +
+      zeile('Woche beginnt am', 'Gilt für Kalender und Kalenderwochen',
+            wahl('wochenstart', [['montag', 'Montag'], ['sonntag', 'Sonntag']], V('wochenstart', 'montag'))) +
+      zeile('Datumsformat', 'Wie Datumsangaben geschrieben werden',
+            wahl('datumsformat', ['TT.MM.JJJJ', 'JJJJ-MM-TT', 'MM/TT/JJJJ', 'TT. Monat JJJJ'],
+                 V('datumsformat', 'TT.MM.JJJJ'))) +
+      zeile('Zeitformat', '', wahl('zeitformat', [['24', '24 Stunden'], ['12', '12 Stunden']], V('zeitformat', '24'))) +
+      zeile('Rechtschreibprüfung', 'Die rote Wellenlinie beim Tippen',
+            schalter('rechtschreib', V('rechtschreib', false))) +
+      zeile('Seitenleiste', 'Beim Start eingeklappt lassen',
+            schalter('seiteZu', V('seiteZu', false))) +
+      zeile('Sprache', 'Diese App gibt es bisher nur auf Deutsch',
+            '<span class="ez-grau">Deutsch</span>'),
+
+    benachricht: () =>
+      kopf('Benachrichtigungen', 'Erinnerungen melden sich, solange die App offen ist. ' +
+           'Mit Erlaubnis auch als Systemmeldung.') +
+      zeile('Systemmeldungen', 'Erlaubnis des Browsers einholen',
+            knopf('benachr-erlauben',
+                  ('Notification' in window && Notification.permission === 'granted')
+                    ? 'Bereits erlaubt' : 'Erlauben')) +
+      zeile('Erinnerungen in der App', 'Der Streifen unten am Bildschirm',
+            schalter('erinnernInApp', V('erinnernInApp', true))) +
+      zeile('Karteikarten', 'Beim Start melden, wenn Karten fällig sind',
+            schalter('kartenMelden', V('kartenMelden', true))) +
+      zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter(e => !e.erledigt).length} offen</span>`) +
+      zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
+
+    verbindungen: () =>
+      kopf('Verbindungen', 'Diese App verbindet sich mit nichts im Netz — ausser mit dem, ' +
+           'was auf deinem eigenen Rechner läuft.') +
+      zeile('Ollama', 'Lokale KI auf diesem Rechner',
+            `<span class="ez-grau">${KI.zustand.quelle === 'ollama' ? 'verbunden' : 'nicht gefunden'}</span> ` +
+            knopf('ollama-suchen', 'Erneut suchen')) +
+      zeile('WebLLM', 'KI direkt im Browser',
+            `<span class="ez-grau">${'gpu' in navigator ? 'möglich' : 'kein WebGPU'}</span>`) +
+      zeile('Ordner auf der Festplatte', 'Notizen als Markdown-Dateien ablegen',
+            knopf('ordner-schreiben', 'Ordner wählen')) +
+      zeile('Kalender, Mail, Slack, Drive', 'Bräuchten ein Konto und einen Server',
+            '<span class="ez-grau">nicht vorgesehen</span>') +
+      zeile('Was hinausgeht', '',
+            '<span class="ez-grau">nichts — kein Netzverkehr ausser dem WebLLM-Modell beim ersten Laden</span>'),
+
+    arbeitsplatz: () =>
+      kopf('Arbeitsbereich') +
+      zeile('Name', 'Steht oben in der Seitenleiste', feld('arbeitsName', V('arbeitsName', 'Notizen'))) +
+      zeile('Symbol', 'Ein Buchstabe oder ein Emoji', feld('arbeitsIcon', V('arbeitsIcon', 'N'))) +
+      zeile('Seiten', '', `<span class="ez-grau">${Links.seiten().length}</span>`) +
+      zeile('Datenbanken', '', `<span class="ez-grau">${Object.keys(Store.cache.collections).length}</span>`) +
+      zeile('Startseite festlegen', 'Welche Seite die Startseite ist',
+            knopf('startseite-waehlen', 'Seite wählen')) +
+      zeile('Alles als Website ausgeben', 'Eine HTML-Datei mit allen Seiten',
+            knopf('einzeldatei', 'Erzeugen')) +
+      zeile('Arbeitsbereich löschen', 'Alle Seiten und Datenbanken',
+            knopf('alles-loeschen', 'Alles löschen', 'warn')),
+
+    bereiche: () => {
+      const liste = V('bereiche', []) || [];
+      return kopf('Bereiche', 'Was bei Notion „Teamspaces" heisst: Gruppen für deine Seiten. ' +
+                  'Jede Seite kann einem Bereich zugeordnet werden, die Seitenleiste sortiert danach.') +
+        '<div class="bereich-liste">' +
+        (liste.length ? liste.map(b =>
+          `<div class="bereich-zeile"><span class="b-ico">${esc(b.icon)}</span>` +
+          `<b>${esc(b.name)}</b>` +
+          `<span class="ez-grau">${Links.seiten().filter(p => p.bereich === b.id).length} Seiten</span>` +
+          `<button data-bereich-weg="${b.id}">🗑</button></div>`).join('')
+          : '<div class="ez-grau" style="padding:10px 0">Noch keine Bereiche angelegt.</div>') +
+        '</div>' +
+        zeile('Neuen Bereich anlegen', 'Zum Beispiel „Arbeit", „Privat", „Studium"',
+              knopf('bereich-neu', 'Bereich anlegen')) +
+        zeile('Seite einem Bereich zuordnen', 'Geht auch im Seitenmenü',
+              knopf('bereich-zuordnen', 'Seite zuordnen'));
+    },
+
+    sicherheit: () =>
+      kopf('Sicherheit', 'Alles liegt auf diesem Gerät. Es gibt niemanden, dem man etwas freigeben müsste.') +
+      zeile('Seiten verschlüsseln', 'AES-256 mit Passwort, je Seite einzeln',
+            knopf('seite-sperren', 'Offene Seite verschlüsseln')) +
+      zeile('Verschlüsselte Seiten', '',
+            `<span class="ez-grau">${Links.seiten().filter(p => p.locked).length}</span>`) +
+      zeile('Gegen Bearbeiten sperren', 'Schutz vor versehentlichem Tippen',
+            knopf('seite-schreibschutz', 'Offene Seite sperren')) +
+      zeile('Automatische Versionen', 'Beim Seitenwechsel eine Fassung sichern',
+            schalter('autoVersionen', V('autoVersionen', true))) +
+      zeile('Fremdes Teilen', 'Ohne Server nicht möglich — und damit auch kein Leck',
+            '<span class="ez-grau">nicht vorhanden</span>') +
+      zeile('Datenschutz', '',
+            '<span class="ez-grau">kein Konto, keine Anmeldung, keine Übertragung</span>'),
+
+    daten: () =>
+      kopf('Import und Export') +
+      zeile('Sicherung speichern', 'Alles als eine JSON-Datei', knopf('export-json', 'Speichern')) +
+      zeile('Sicherung laden', 'Ersetzt den jetzigen Inhalt', knopf('import-json', 'Laden')) +
+      zeile('Markdown-Ordner schreiben', 'Je Seite eine .md-Datei, Unterseiten in Unterordnern',
+            knopf('ordner-schreiben', 'Ordner wählen')) +
+      zeile('Markdown-Ordner einlesen', 'Legt aus jeder Datei eine Seite an',
+            knopf('ordner-lesen', 'Ordner wählen')) +
+      zeile('Als eine HTML-Datei', 'Zum Weitergeben und Archivieren', knopf('einzeldatei', 'Erzeugen')) +
+      zeile('Offene Seite als Markdown', '', knopf('seite-md', 'Speichern')) +
+      zeile('Offene Seite als HTML', '', knopf('seite-html', 'Speichern')) +
+      zeile('Offene Seite drucken oder als PDF', '', knopf('seite-pdf', 'Drucken')) +
+      zeile('Automatische Sicherung', 'Beim Schliessen an eine Sicherung erinnern',
+            schalter('sicherungErinnern', V('sicherungErinnern', false))),
+
+    ki: () =>
+      kopf('Künstliche Intelligenz', 'Beide Wege sind kostenlos und laufen auf deinem Rechner. ' +
+           'Kein Schlüssel, keine Abrechnung, kein Text, der hinausgeht.') +
+      zeile('Aktives Modell', '', `<span class="ez-grau">${esc(KI.zustand.modell || 'keins')}</span> ` +
+            knopf('ki-modell', 'Wechseln')) +
+      zeile('Ollama', 'Schneller und besser, einmalige Installation nötig',
+            `<span class="ez-grau">${KI.zustand.quelle === 'ollama' ? 'läuft' : 'nicht gefunden'}</span> ` +
+            knopf('ollama-suchen', 'Suchen')) +
+      zeile('WebLLM', 'Ohne Installation, dafür langsamer',
+            knopf('ki-modell', 'Modell laden')) +
+      zeile('Seiteninhalt mitgeben', 'Die KI sieht die offene Seite als Zusammenhang',
+            schalter('kiKontext', V('kiKontext', true))) +
+      zeile('Antwortlänge', '', wahl('kiLaenge', [['kurz', 'Kurz'], ['normal', 'Normal'], ['lang', 'Ausführlich']],
+            V('kiLaenge', 'normal'))) +
+      zeile('KI-Felder in Datenbanken', 'Spaltentyp „KI-Feld" füllt sich selbst',
+            '<span class="ez-grau">verfügbar</span>'),
+
+    speicher: () =>
+      kopf('Speicher', 'Alles liegt in IndexedDB in diesem Browserprofil.') +
+      '<div id="speicher-zahlen" class="ez-grau" style="padding:4px 0 14px">wird gemessen …</div>' +
+      zeile('Blöcke', '', `<span class="ez-grau">${Object.keys(Store.cache.blocks).length}</span>`) +
+      zeile('Datenbanken', '', `<span class="ez-grau">${Object.keys(Store.cache.collections).length}</span>`) +
+      zeile('Ansichten', '', `<span class="ez-grau">${Object.keys(Store.cache.views).length}</span>`) +
+      zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten</span> ` +
+            knopf('papierkorb', 'Öffnen')) +
+      zeile('Alte Versionen aufräumen', 'Behält je Seite die letzten fünf Fassungen',
+            knopf('versionen-aufraeumen', 'Aufräumen')) +
+      zeile('Speicher dauerhaft anfordern', 'Der Browser räumt die Daten dann nicht von selbst weg',
+            knopf('speicher-sichern', 'Anfordern')),
+
+    abrechnung: () =>
+      kopf('Abrechnung') +
+      '<div class="ez-plan"><b>Kostenlos, für immer</b>' +
+      '<span>Keine Stufen, kein Abo, keine Begrenzung auf Blöcke, Gäste oder Dateigrössen. ' +
+      'Diese App läuft auf deinem Rechner — es entstehen keine Kosten, die jemand abrechnen könnte.</span></div>' +
+      zeile('Plan', '', '<span class="ez-grau">Alles enthalten</span>') +
+      zeile('Mitglieder', '', '<span class="ez-grau">du</span>') +
+      zeile('KI-Guthaben', 'Lokale Modelle rechnen nicht ab', '<span class="ez-grau">unbegrenzt</span>') +
+      zeile('Speicherplatz', 'So viel, wie dein Browser hergibt', '<span class="ez-grau">gerätabhängig</span>') +
+      zeile('Rechnungen', '', '<span class="ez-grau">keine</span>'),
+
+    ueber: () =>
+      kopf('Über diese App') +
+      '<div class="ez-ueber">' +
+      '<p>Eine Notiz- und Datenbank-App im Stil von Notion — vollständig lokal.</p>' +
+      '<p>Gebaut auf einer Analyse von Notion (Datenmodell, Blocktypen, Eigenschaften, ' +
+      'Filter, Formelsprache, Tastenkürzel, Farben) und dem Vergleich von zwanzig ' +
+      'quelloffenen Notiz-Programmen.</p>' +
+      '</div>' +
+      zeile('Bausteine', '', `<span class="ez-grau">${Blocks.TYPEN.length}</span>`) +
+      zeile('Eigenschaftstypen', '', `<span class="ez-grau">${Datenbank.TYPEN.length}</span>`) +
+      zeile('Ansichten', '', '<span class="ez-grau">8</span>') +
+      zeile('Formelfunktionen', '', '<span class="ez-grau">über 90</span>') +
+      zeile('Tastenkürzel', '', knopf('kuerzel', 'Alle anzeigen')) +
+      zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>')
+  }[b] || (() => kopf('Unbekannt')))();
+
+  /* ========================================================================
+   * BEDIENUNG
+   * ======================================================================*/
+  const binde = (o) => {
+    /* Auswahlfelder und Textfelder */
+    o.querySelectorAll('[data-set]').forEach(el => {
+      el.addEventListener('change', () => {
+        let wert = el.value;
+        if (el.dataset.set === 'theme' && wert === 'system')
+          wert = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        S(el.dataset.set, wert);
+        App.zeichneSeite(); App.zeichneBaum();
+      });
+      if (el.tagName === 'INPUT') el.addEventListener('input', () => {
+        S(el.dataset.set, el.value);
+        kopfzeileAuffrischen();
+      });
+    });
+
+    /* Schalter */
+    o.querySelectorAll('[data-toggle]').forEach(b => {
+      b.addEventListener('click', () => {
+        const k = b.dataset.toggle;
+        const neu = !V(k, k === 'erinnernInApp' || k === 'kartenMelden' || k === 'kiKontext' || k === 'autoVersionen');
+        S(k, neu);
+        b.classList.toggle('an', neu);
+        if (k === 'rechtschreib') App.zeichneSeite();
+      });
+    });
+
+    /* Bereiche löschen */
+    o.querySelectorAll('[data-bereich-weg]').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.bereichWeg;
+        S('bereiche', (V('bereiche', []) || []).filter(x => x.id !== id));
+        Links.seiten().filter(p => p.bereich === id).forEach(p => Store.updateBlock(p.id, { bereich: '' }));
+        App.zeichneBaum();
+        o.neuZeichnen();
+      });
+    });
+
+    /* Knöpfe */
+    o.querySelectorAll('[data-tun]').forEach(b =>
+      b.addEventListener('click', () => tun(b.dataset.tun, o)));
+
+    /* Speicherplatz nachreichen */
+    const zahlen = o.querySelector('#speicher-zahlen');
+    if (zahlen) Store.usage().then(u => {
+      zahlen.textContent = u
+        ? `${(u.benutzt / 1048576).toFixed(1)} MB benutzt von etwa ` +
+          `${(u.verfuegbar / 1073741824).toFixed(1)} GB, die der Browser erlaubt`
+        : 'Der Browser sagt nicht, wie viel Platz belegt ist.';
+    });
+  };
+
+  const kopfzeileAuffrischen = () => {
+    const btn = document.querySelector('#btn-settings');
+    if (!btn) return;
+    btn.querySelector('.ws-icon').textContent = V('arbeitsIcon', 'N');
+    btn.querySelectorAll('span')[1].textContent = V('arbeitsName', 'Notizen');
+  };
+
+  const tun = async (was, o) => {
+    const seite = App.aktuelleSeite() ? Store.getBlock(App.aktuelleSeite()) : null;
+
+    const karte = {
+      'benachr-erlauben': async () => {
+        if (!('Notification' in window)) { UI.toast('Dieser Browser kennt keine Benachrichtigungen'); return; }
+        const erg = await Notification.requestPermission();
+        UI.toast(erg === 'granted' ? 'Benachrichtigungen erlaubt' : 'Bleiben aus');
+        o.neuZeichnen();
+      },
+      'erinnerungen-zeigen': () => { o.remove(); Ansichten.posteingang(); },
+      'ollama-suchen': async () => { UI.toast('Suche nach Ollama …'); await KI.start(); o.neuZeichnen(); },
+      'ki-modell': () => { o.remove(); App.kiPanel(true); setTimeout(() => KI.modellMenue(), 200); },
+      'ordner-schreiben': () => Werkzeuge.ordnerSchreiben(),
+      'ordner-lesen': () => { o.remove(); Werkzeuge.ordnerLesen(); },
+      'einzeldatei': () => Werkzeuge.einzelDatei(),
+      'export-json': () => App.sicherungSpeichern(),
+      'import-json': () => App.sicherungLaden(() => o.remove()),
+      'seite-md': () => seite && App.markdownExport(seite),
+      'seite-html': () => seite && Werkzeuge.htmlExport(seite),
+      'seite-pdf': () => { o.remove(); if (seite) Werkzeuge.drucken(seite); },
+      'seite-sperren': () => { o.remove(); if (seite) Werkzeuge.sperren(seite); },
+      'seite-schreibschutz': () => {
+        if (!seite) return;
+        Store.updateBlock(seite.id, { gesperrt: !seite.gesperrt });
+        App.zeichneSeite();
+        UI.toast(seite.gesperrt ? 'Bearbeiten wieder erlaubt' : 'Seite gegen Bearbeiten gesperrt');
+      },
+      'papierkorb': () => { o.remove(); App.papierkorb(); },
+      'kuerzel': () => { o.remove(); Werkzeuge.tastenkuerzel(); },
+      'startseite-waehlen': () => {
+        o.remove();
+        Blocks.seitenPicker('Welche Seite soll die Startseite sein?', (id) => {
+          Store.setMeta('startSeite', id);
+          Store.setMeta('startAnsicht', 'seite');
+          UI.toast('Startseite gesetzt');
+        });
+      },
+      'bereich-neu': async () => {
+        const name = await UI.frage('Name des Bereichs', 'Arbeit');
+        if (!name) return;
+        const icon = await UI.frage('Ein Symbol dafür', '💼');
+        const liste = V('bereiche', []) || [];
+        liste.push({ id: Store.uid().slice(0, 6), name, icon: icon || '📁' });
+        S('bereiche', liste);
+        App.zeichneBaum();
+        o.neuZeichnen();
+      },
+      'bereich-zuordnen': () => {
+        const liste = V('bereiche', []) || [];
+        if (!liste.length) { UI.toast('Erst einen Bereich anlegen'); return; }
+        o.remove();
+        Blocks.seitenPicker('Welche Seite soll zugeordnet werden?', (id) => {
+          const m = UI.menu('<div class="grp">In welchen Bereich?</div>' +
+            liste.map(b => `<button data-b="${b.id}"><span class="mi">${esc(b.icon)}</span>${esc(b.name)}</button>`).join('') +
+            '<hr><button data-b="">Keinem Bereich</button>', innerWidth / 2 - 120, 160);
+          m.addEventListener('click', e => {
+            const b = e.target.closest('button[data-b]');
+            if (!b) return;
+            Store.updateBlock(id, { bereich: b.dataset.b });
+            m.remove(); App.zeichneBaum();
+            UI.toast('Zugeordnet');
+          });
+        });
+      },
+      'versionen-aufraeumen': async () => {
+        let weg = 0;
+        for (const p of Links.seiten()) {
+          const v = await Store.versionen(p.id);
+          for (const alt of v.slice(5)) { await Store.versionLoeschen(alt.id); weg++; }
+        }
+        UI.toast(weg + ' alte Fassungen entfernt');
+      },
+      'speicher-sichern': async () => {
+        if (!navigator.storage?.persist) { UI.toast('Der Browser kann das nicht'); return; }
+        const ok = await navigator.storage.persist();
+        UI.toast(ok ? 'Der Speicher ist jetzt dauerhaft' : 'Der Browser hat abgelehnt');
+      },
+      'alles-loeschen': async () => {
+        if (!confirm('Wirklich ALLE Seiten und Datenbanken löschen?')) return;
+        if (!confirm('Ganz sicher? Am besten vorher eine Sicherung speichern.')) return;
+        await Store.wipe();
+        location.reload();
+      }
+    };
+    if (karte[was]) await karte[was]();
+  };
+
+  /* ========================================================================
+   * WAS BEIM START GILT
+   * ======================================================================*/
+  const start = () => {
+    anwenden();
+    if (V('seiteZu', false)) document.getElementById('sidebar').classList.add('collapsed');
+
+    /* Fällige Karteikarten melden */
+    if (V('kartenMelden', true)) {
+      const n = Werkzeuge.faellig().length;
+      if (n) setTimeout(() => UI.toast('🎴 ' + n + ' Karteikarten sind fällig'), 1800);
+    }
+  };
+
+  return { oeffne, start, anwenden, datum, wochenstart, V, S };
+})();
+
+window.Einstellungen = Einstellungen;
+
+</script>
+<script>
 /* ===== js/ai.js ===== */
 /* ============================================================================
  * ai.js — Die lokale KI
@@ -9973,6 +10894,24 @@ const App = (() => {
       favs.forEach(p => baum.appendChild(zeile(p, 0)));
     }
 
+    /* Bereiche (bei Notion: Teamspaces) */
+    const bereiche = Store.getMeta('bereiche', []) || [];
+    bereiche.forEach(b => {
+      const drin = Store.rootPages().filter(p => p.bereich === b.id && !p.system);
+      baum.appendChild(abschnitt(b.icon + ' ' + b.name, () => {
+        const p = Store.addPage(null, { text: '', bereich: b.id });
+        zeichneBaum(); oeffne(p.id);
+        setTimeout(() => document.getElementById('title')?.focus(), 60);
+      }));
+      if (!drin.length) {
+        const leer = document.createElement('div');
+        leer.style.cssText = 'padding:6px 14px; font-size:12.5px; color:var(--text-faint)';
+        leer.textContent = 'Noch leer';
+        baum.appendChild(leer);
+      }
+      drin.forEach(p => baum.appendChild(zeile(p, 0)));
+    });
+
     /* Privat */
     const kopf = abschnitt('Privat', () => {
       const p = Store.addPage(null, { text: '' });
@@ -9982,7 +10921,7 @@ const App = (() => {
     });
     baum.appendChild(kopf);
 
-    const seiten = Store.rootPages().filter(p => !p.system);
+    const seiten = Store.rootPages().filter(p => !p.system && !p.bereich);
     if (!seiten.length) {
       const leer = document.createElement('div');
       leer.style.cssText = 'padding:8px 14px; font-size:13px; color:var(--text-faint)';
@@ -10317,7 +11256,7 @@ const App = (() => {
     const t = document.createElement('div');
     t.id = 'title';
     t.contentEditable = p.gesperrt ? 'false' : 'true';
-    t.spellcheck = false;
+    t.spellcheck = !!Store.getMeta('rechtschreib', false);
     t.textContent = p.text || '';
     t.addEventListener('input', () => {
       Store.updateBlock(p.id, { text: t.textContent });
@@ -10395,6 +11334,9 @@ const App = (() => {
       });
       wrap.appendChild(tools);
     }
+
+    /* Wiki-Verzeichnis */
+    if (p.wiki) Werkzeuge.wikiIndex(p, wrap);
 
     /* Blöcke */
     const kinder = Store.childrenOf(p.id);
@@ -10596,112 +11538,8 @@ const App = (() => {
   /* ========================================================================
    * EINSTELLUNGEN
    * ======================================================================*/
-  const einstellungen = async () => {
-    const u = await Store.usage();
-    const platz = u
-      ? `${(u.benutzt / 1048576).toFixed(1)} MB von etwa ${(u.verfuegbar / 1048576 / 1024).toFixed(1)} GB`
-      : 'unbekannt';
-    const anzahlSeiten = Links.seiten().length;
-    const name = Store.getMeta('nutzer', '');
-
-    const o = document.createElement('div');
-    o.className = 'overlay';
-    o.innerHTML =
-      '<div class="finder" style="width:min(640px,95vw)">' +
-        '<div class="fh">Einstellungen<button class="icon-btn" data-a="zu">✕</button></div>' +
-        '<div class="einst">' +
-
-          '<div class="eb"><b>Konto</b>' +
-            '<div class="ez">Dein Name erscheint bei Kommentaren und Erwähnungen.</div>' +
-            `<input id="nutzer" value="${esc(name)}" placeholder="Dein Name">` +
-          '</div>' +
-
-          '<div class="eb"><b>Erscheinungsbild</b>' +
-            '<div class="ereihe">' +
-              '<button data-a="dark">Dunkel</button>' +
-              '<button data-a="light">Hell</button>' +
-              '<button data-a="system">Wie das System</button>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Deine Daten</b>' +
-            `<div class="ez">${anzahlSeiten} Seiten · ${platz} belegt<br>` +
-            'Alles liegt in diesem Browser. Nichts wird hochgeladen.</div>' +
-            '<div class="ereihe">' +
-              '<button data-a="export">Sicherung speichern</button>' +
-              '<button data-a="import">Sicherung laden</button>' +
-              '<button data-a="wipe" class="warn">Alles löschen</button>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Ordner und Dateien</b>' +
-            '<div class="ez">Alle Seiten als einzelne Markdown-Dateien — so, wie Joplin, ' +
-            'Zettlr und SilverBullet ihre Notizen ablegen.</div>' +
-            '<div class="ereihe">' +
-              '<button data-a="ordner-schreiben">In Ordner schreiben</button>' +
-              '<button data-a="ordner-lesen">Ordner einlesen</button>' +
-              '<button data-a="einzeldatei">Alles als eine HTML-Datei</button>' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Künstliche Intelligenz</b>' +
-            '<div class="ez">Zwei Wege, beide kostenlos und lokal:<br>' +
-            '<b>Ollama</b> auf dem Rechner — schneller und besser.<br>' +
-            '<b>WebLLM</b> im Browser — ohne Installation.<br>' +
-            'Das Modell wählst du oben rechts im KI-Panel.</div>' +
-            '<div class="ereihe"><button data-a="ki">KI-Panel öffnen</button></div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Benachrichtigungen</b>' +
-            '<div class="ez">Erinnerungen melden sich in der App. Mit Erlaubnis auch im System.</div>' +
-            '<div class="ereihe"><button data-a="benachr">Benachrichtigungen erlauben</button></div>' +
-          '</div>' +
-
-          '<div class="eb"><b>Tastenkürzel</b>' +
-            '<div class="ez">Über 60 Kürzel — die vollständige Übersicht mit <code>Strg /</code>.</div>' +
-            '<div class="ereihe"><button data-a="kuerzel">Übersicht öffnen</button></div>' +
-          '</div>' +
-
-        '</div>' +
-        '<div class="hint">Notizen — lokal, offline, ohne Konto.</div>' +
-      '</div>';
-    document.body.appendChild(o);
-
-    const nutzerFeld = o.querySelector('#nutzer');
-    nutzerFeld.addEventListener('input', () => Store.setMeta('nutzer', nutzerFeld.value));
-
-    o.addEventListener('click', async e => {
-      const b = e.target.closest('button[data-a]');
-      if (!b) { if (e.target === o) o.remove(); return; }
-      const a = b.dataset.a;
-
-      if (a === 'zu') { o.remove(); return; }
-      if (a === 'dark' || a === 'light') { theme(a); return; }
-      if (a === 'system') {
-        const dunkel = matchMedia('(prefers-color-scheme: dark)').matches;
-        theme(dunkel ? 'dark' : 'light');
-        return;
-      }
-      if (a === 'export') sicherungSpeichern();
-      if (a === 'import') sicherungLaden(() => o.remove());
-      if (a === 'ordner-schreiben') Werkzeuge.ordnerSchreiben();
-      if (a === 'ordner-lesen') Werkzeuge.ordnerLesen();
-      if (a === 'einzeldatei') Werkzeuge.einzelDatei();
-      if (a === 'ki') { o.remove(); kiPanel(true); }
-      if (a === 'kuerzel') { o.remove(); Werkzeuge.tastenkuerzel(); }
-      if (a === 'benachr') {
-        if (!('Notification' in window)) { UI.toast('Dieser Browser kennt keine Benachrichtigungen'); return; }
-        const erg = await Notification.requestPermission();
-        UI.toast(erg === 'granted' ? 'Benachrichtigungen erlaubt' : 'Benachrichtigungen bleiben aus');
-      }
-      if (a === 'wipe') {
-        if (!confirm('Wirklich ALLE Seiten und Datenbanken löschen? Das kann nicht rückgängig gemacht werden.')) return;
-        if (!confirm('Ganz sicher? Am besten vorher eine Sicherung speichern.')) return;
-        await Store.wipe();
-        location.reload();
-      }
-    });
-  };
+  /* Der Einstellungsbereich liegt in einer eigenen Datei. */
+  const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
 
   const sicherungSpeichern = () => {
     const blob = new Blob([Store.exportAll()], { type: 'application/json' });
@@ -10831,6 +11669,7 @@ const App = (() => {
     await Store.load();
 
     document.documentElement.dataset.theme = Store.getMeta('theme', 'dark');
+    Einstellungen.anwenden();
 
     if (!Store.rootPages().length) beispielAnlegen();
 
@@ -10842,6 +11681,23 @@ const App = (() => {
 
     zeichneBaum();
     oeffne(startSeite);
+
+    /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
+    const wunsch = Store.getMeta('startAnsicht', 'letzte');
+    if (!location.hash) {
+      if (wunsch === 'start') setTimeout(() => Ansichten.start(), 60);
+      if (wunsch === 'posteingang') setTimeout(() => Ansichten.posteingang(), 60);
+      if (wunsch === 'journal') setTimeout(() => Werkzeuge.journal(), 60);
+      if (wunsch === 'seite' && Store.getMeta('startSeite')) {
+        const z = Store.getBlock(Store.getMeta('startSeite'));
+        if (z) oeffne(z.id);
+      }
+    }
+
+    /* Name und Symbol des Arbeitsbereichs */
+    const wsBtn = document.getElementById('btn-settings');
+    wsBtn.querySelector('.ws-icon').textContent = Store.getMeta('arbeitsIcon', 'N');
+    wsBtn.querySelectorAll('span')[1].textContent = Store.getMeta('arbeitsName', 'Notizen');
 
     Blocks.bindeEditor(document.getElementById('page'));
     tasten();
@@ -10855,6 +11711,7 @@ const App = (() => {
     Auswahl.start();
     Erwaehnung.start();
     Mehrfach.start();
+    Einstellungen.start();
 
     /* Seitenleiste und Kopfzeile */
     const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
@@ -10874,6 +11731,10 @@ const App = (() => {
     an('btn-back', zurueck);
     an('btn-fwd', vorwaerts);
     an('btn-komm', () => seiteId && Kommentare.panel(seiteId));
+    an('btn-teilen', (e) => {
+      const p = Store.getBlock(seiteId);
+      if (p) Werkzeuge.teilenMenue(e.currentTarget, p);
+    });
     an('btn-verlauf', () => seiteId && Werkzeuge.versionen(Store.getBlock(seiteId)));
     an('btn-fav', () => {
       if (!seiteId) return;

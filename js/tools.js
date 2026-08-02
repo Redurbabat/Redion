@@ -1229,7 +1229,98 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
   };
 
   /* ========================================================================
-   * 16. KLEINIGKEITEN
+   * 16. WIKI   (Notions „In Wiki umwandeln")
+   * ------------------------------------------------------------------------
+   * Eine Seite wird zum Verzeichnis ihrer Unterseiten — mit Besitzer und
+   * dem Vermerk, ob der Inhalt geprüft ist.
+   * ======================================================================*/
+  const wikiUmwandeln = (p) => {
+    Store.updateBlock(p.id, { wiki: !p.wiki, icon: p.wiki ? (p.icon || '📄') : '📚' });
+    App.zeichneSeite(); App.zeichneBaum();
+    UI.toast(p.wiki ? 'Wieder eine normale Seite' : 'In ein Wiki umgewandelt');
+  };
+
+  const wikiIndex = (p, wrap) => {
+    const kinder = Store.childrenOf(p.id).filter(k => k.type === 'page');
+
+    const d = document.createElement('div');
+    d.className = 'wiki';
+    d.innerHTML =
+      '<div class="wiki-kopf"><b>📚 Wiki</b>' +
+      `<span>${kinder.length} Seiten · ${kinder.filter(k => k.geprueft).length} geprüft</span>` +
+      '<button data-a="neu">＋ Seite</button></div>' +
+      (kinder.length
+        ? '<table class="wiki-tab"><tr><th>Seite</th><th>Besitzer</th><th>Zuletzt geändert</th><th>Geprüft</th></tr>' +
+          kinder.map(k =>
+            `<tr data-id="${k.id}">` +
+              `<td class="w-t">${esc(k.icon || '📄')} ${esc(k.text || 'Ohne Titel')}</td>` +
+              `<td>${esc(k.besitzer || Store.getMeta('nutzer', 'Ich'))}</td>` +
+              `<td>${esc(zeitKurz(k.edited))}</td>` +
+              `<td><button class="w-pruef${k.geprueft ? ' ja' : ''}" data-pruef="${k.id}">` +
+              `${k.geprueft ? '✓ geprüft' : 'prüfen'}</button></td>` +
+            '</tr>').join('') + '</table>'
+        : '<div class="wiki-leer">Noch keine Unterseiten. Lege die erste an.</div>');
+
+    d.addEventListener('click', e => {
+      if (e.target.closest('[data-a="neu"]')) {
+        const k = Store.addPage(p.id, { text: '' });
+        Store.updateBlock(p.id, { aufgeklappt: true });
+        App.zeichneBaum(); App.oeffne(k.id);
+        return;
+      }
+      const pr = e.target.closest('[data-pruef]');
+      if (pr) {
+        const k = Store.getBlock(pr.dataset.pruef);
+        Store.updateBlock(k.id, { geprueft: !k.geprueft, besitzer: Store.getMeta('nutzer', 'Ich') });
+        App.zeichneSeite();
+        return;
+      }
+      const tr = e.target.closest('tr[data-id]');
+      if (tr) App.oeffne(tr.dataset.id);
+    });
+    wrap.appendChild(d);
+  };
+
+  /* ========================================================================
+   * 17. TEILEN   (Notions „Share")
+   * ------------------------------------------------------------------------
+   * Ohne Server gibt es niemanden, dem man etwas freigeben könnte — dafür
+   * jede Form, die Seite aus der Hand zu geben.
+   * ======================================================================*/
+  const teilenMenue = (anker, p) => {
+    const r = anker.getBoundingClientRect();
+    const m = UI.menu(
+      '<div class="grp">Diese Seite weitergeben</div>' +
+      '<button data-a="link"><span class="mi">🔗</span>Link kopieren</button>' +
+      '<button data-a="text"><span class="mi">⎘</span>Als Text kopieren</button>' +
+      '<button data-a="md"><span class="mi">⭳</span>Als Markdown speichern</button>' +
+      '<button data-a="html"><span class="mi">🌐</span>Als HTML-Seite speichern</button>' +
+      '<button data-a="pdf"><span class="mi">🖨</span>Drucken oder als PDF</button>' +
+      '<hr>' +
+      '<button data-a="alles"><span class="mi">📦</span>Alles als eine HTML-Datei</button>' +
+      '<button data-a="ordner"><span class="mi">📁</span>Alles als Markdown-Ordner</button>' +
+      '<hr>' +
+      '<div class="teilen-hinweis">Es gibt keinen Server und kein Konto — ' +
+      'deshalb auch keine Freigabe ins Netz. Weitergeben heisst hier: eine Datei erzeugen.</div>',
+      r.right - 240, r.bottom + 6);
+
+    m.addEventListener('click', e => {
+      const b = e.target.closest('button[data-a]');
+      if (!b) return;
+      m.remove();
+      const a = b.dataset.a;
+      if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); }
+      if (a === 'text') { navigator.clipboard?.writeText(alsMarkdown(p)); UI.toast('Text kopiert'); }
+      if (a === 'md') App.markdownExport(p);
+      if (a === 'html') htmlExport(p);
+      if (a === 'pdf') drucken(p);
+      if (a === 'alles') einzelDatei();
+      if (a === 'ordner') ordnerSchreiben();
+    });
+  };
+
+  /* ========================================================================
+   * 18. KLEINIGKEITEN
    * ======================================================================*/
   const alleToggles = () => {
     const bloecke = document.querySelectorAll('.b-toggle');
@@ -1293,6 +1384,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     '<button data-a="wz-vorlage-ein"><span class="mi">＋</span>Aus Vorlage einfügen</button>' +
     '<button data-a="wz-verschieben"><span class="mi">➦</span>Verschieben nach …</button>' +
     '<button data-a="wz-versionen"><span class="mi">🕘</span>Versionsverlauf</button>' +
+    `<button data-a="wz-wiki"><span class="mi">📚</span>${p.wiki ? 'Wiki auflösen' : 'In Wiki umwandeln'}</button>` +
+    '<button data-a="wz-teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
     '<button data-a="wz-erinnerung"><span class="mi">⏰</span>Erinnerung</button>' +
     '<hr>' +
     `<button data-a="wz-sperren"><span class="mi">🔒</span>${p.locked ? 'Entschlüsseln' : 'Verschlüsseln'}</button>` +
@@ -1314,6 +1407,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       'wz-vorlage-ein': () => vorlageEinfuegen(p),
       'wz-verschieben': () => verschiebenNach(p),
       'wz-versionen': () => versionen(p),
+      'wz-wiki': () => wikiUmwandeln(p),
+      'wz-teilen': () => teilenMenue(document.getElementById('btn-page-menu'), p),
       'wz-erinnerung': () => erinnerungSetzen(p),
       'wz-sperren': () => p.locked ? entsperren(p) : sperren(p),
       'wz-gesperrt': () => {
@@ -1367,6 +1462,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     erinnerungSetzen, erinnerungen, ordnerSchreiben, ordnerLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz,
+    wikiUmwandeln, wikiIndex, teilenMenue,
     seitenMenueZusatz, seitenMenueAktion
   };
 })();
