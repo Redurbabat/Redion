@@ -1050,6 +1050,11 @@ const App = (() => {
     Erwaehnung.start();
     Mehrfach.start();
     Einstellungen.start();
+    Mail.kuerzelStart();
+    Clipper.start();
+    Agent.start();
+    MCP.start();
+    PWA.start();
 
     /* Seitenleiste und Kopfzeile */
     const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
@@ -1221,4 +1226,4 @@ const App = (() => {
 })();
 
 /* Los geht's */
-window.addEventListener('DOMContentLoaded', () => App.start());
+window.addEventListener('DOMContentLoaded', () => { if (!window.__nurBote) App.start(); });

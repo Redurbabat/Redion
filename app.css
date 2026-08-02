@@ -1386,3 +1386,235 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .kt-inhalt .ev.q-blue{border-left:3px solid var(--c-blue)}
 .kt-inhalt .ev.q-pink{border-left:3px solid var(--c-pink)}
 .kt-inhalt .ev.q-red{border-left:3px solid var(--c-red)}
+
+/* ==========================================================================
+   VERBINDUNGEN, KONTEN UND KALENDER
+   ========================================================================== */
+.verb-karte{border:1px solid var(--line); border-radius:9px; padding:14px 16px; margin:12px 0}
+.verb-kopf{display:flex; align-items:center; gap:9px; font-size:15px; margin-bottom:6px}
+.verb-kopf > span:first-child{font-size:18px}
+.verb-status{margin-left:auto; font-size:12px; color:var(--text-faint);
+  border:1px solid var(--line); border-radius:20px; padding:2px 10px}
+.verb-status.an{color:var(--c-green); border-color:var(--c-green)}
+.verb-text{font-size:13px; color:var(--text-dim); line-height:1.55; margin-bottom:10px}
+.verb-karte label{display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:9px}
+.verb-karte input{width:100%; margin-top:4px; padding:8px 11px; background:var(--bg-input);
+  border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:13.5px}
+.verb-karte input:focus{border-color:var(--accent)}
+.verb-knoepfe{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
+.verb-knoepfe button{font-size:13px; padding:6px 13px; border-radius:6px;
+  border:1px solid var(--line); color:var(--text-dim)}
+.verb-knoepfe button:hover{background:var(--bg-hover); color:var(--text)}
+.verb-profil{font-size:13px; color:var(--c-green); margin:4px 0 9px}
+.verb-warn{background:var(--b-yellow); color:var(--c-yellow); border-radius:8px;
+  padding:11px 14px; font-size:13px; line-height:1.55; margin:12px 0}
+.verb-hilfe{margin-top:10px; font-size:12.5px; color:var(--text-dim)}
+.verb-hilfe summary{cursor:pointer; color:var(--accent)}
+.verb-hilfe ol{margin:8px 0 0 18px; line-height:1.7}
+.verb-hilfe code{background:var(--bg-card); padding:1px 5px; border-radius:4px; font-size:12px}
+.verb-hilfe p{margin-top:8px; line-height:1.55}
+
+/* Konten und Freigaben */
+.frei-zeile{display:flex; align-items:center; gap:11px; padding:9px 16px;
+  border-bottom:1px solid var(--line-soft)}
+.frei-zeile:last-child{border-bottom:none}
+.frei-kreis{width:30px; height:30px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:13px; font-weight:600; color:#fff; flex:0 0 auto}
+.frei-name{flex:1; display:flex; flex-direction:column; min-width:0}
+.frei-name b{font-size:14px; font-weight:500}
+.frei-name span{font-size:12px; color:var(--text-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.frei-zeile select{padding:5px 8px; background:var(--bg-input); border:1px solid var(--line);
+  border-radius:6px; color:var(--text); font-size:13px; outline:none}
+.frei-zeile button{padding:4px 8px; border-radius:5px; color:var(--text-dim); font-size:13px}
+.frei-zeile button:hover{background:var(--bg-hover); color:var(--text)}
+.frei-erbt{font-size:11px; color:var(--text-faint); border:1px solid var(--line);
+  border-radius:20px; padding:1px 8px}
+
+/* Rechte-Matrix */
+.rechte-matrix{width:100%; border-collapse:collapse; font-size:13px; margin-top:12px}
+.rechte-matrix th{padding:9px 6px; border-bottom:1px solid var(--line); font-size:12px;
+  color:var(--text-dim); font-weight:500; text-align:center; line-height:1.5}
+.rechte-matrix th:first-child{text-align:left}
+.rechte-matrix td{padding:9px 6px; border-bottom:1px solid var(--line-soft); text-align:center}
+.rechte-matrix td:first-child{text-align:left; color:var(--text-dim)}
+.rechte-hinweis{margin-top:14px; font-size:12.5px; color:var(--text-faint); line-height:1.6;
+  background:var(--bg-card); border-radius:8px; padding:11px 14px}
+
+/* Kalender-Abos */
+.abo-liste{border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:8px 0 10px}
+.abo-zeile{display:flex; align-items:center; gap:11px; padding:8px 12px;
+  border-bottom:1px solid var(--line-soft)}
+.abo-zeile:last-child{border-bottom:none}
+.abo-zeile button{padding:4px 9px; border-radius:5px; color:var(--text-dim); font-size:13px}
+.abo-zeile button:hover{background:var(--bg-hover); color:var(--text)}
+
+/* Mail */
+.mail-kuerzel{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:6px 14px; font-size:12.5px; color:var(--text-dim); margin:4px 0 10px}
+.mail-kuerzel div{display:flex; align-items:center; gap:9px}
+.mail-kuerzel kbd{background:var(--bg-card); border:1px solid var(--line); border-radius:4px;
+  padding:1px 7px; font:12px var(--mono); color:var(--text); min-width:26px; text-align:center}
+tr.mail-jetzt > td{background:var(--b-blue) !important}
+tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+
+/* Web Clipper */
+.clip-zieh{display:flex; justify-content:center; padding:16px; background:var(--bg-card);
+  border-radius:8px; margin:6px 0}
+.clip-knopf{display:inline-block; background:var(--accent); color:#fff; padding:9px 20px;
+  border-radius:7px; font-size:14px; font-weight:500; text-decoration:none; cursor:grab}
+.clip-knopf:active{cursor:grabbing}
+
+/* ==========================================================================
+   KI — QUELLEN, AGENT, BESPRECHUNG
+   ========================================================================== */
+.ki-quellschalter{display:flex; flex-wrap:wrap; gap:5px; padding:0 0 8px}
+.ki-quellschalter button{font-size:11.5px; padding:3px 9px; border-radius:20px;
+  border:1px solid var(--line); color:var(--text-faint); background:none}
+.ki-quellschalter button.an{border-color:var(--accent); color:var(--accent);
+  background:var(--b-blue)}
+.ki-quellschalter button:hover{color:var(--text)}
+
+.ki-quellen{margin-top:9px; border-top:1px solid var(--line); padding-top:7px}
+.kq-kopf{font-size:11px; color:var(--text-faint); margin-bottom:4px; text-transform:uppercase;
+  letter-spacing:.04em}
+.kq-zeile{display:flex; align-items:center; gap:8px; width:100%; padding:4px 6px;
+  border-radius:5px; font-size:12px; color:var(--text-dim); text-align:left}
+.kq-zeile:hover{background:var(--bg-hover); color:var(--text)}
+.kq-titel{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.kq-art{color:var(--text-faint); font-size:11px; flex:0 0 auto}
+.kq-zeit{color:var(--text-faint); font-size:11px; flex:0 0 auto}
+.ki-antwortknoepfe{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+.ki-antwortknoepfe button{font-size:12px; color:var(--accent); padding:3px 9px;
+  border-radius:5px; border:1px solid var(--line)}
+.ki-antwortknoepfe button:hover{background:var(--bg-hover)}
+
+/* Agent */
+.agent-typen{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:8px; margin-bottom:12px}
+.agent-karte{display:flex; flex-direction:column; gap:3px; padding:10px 12px; text-align:left;
+  border:1px solid var(--line); border-radius:8px; background:none}
+.agent-karte:hover{background:var(--bg-hover)}
+.agent-karte.on{border-color:var(--accent); background:var(--b-blue)}
+.agent-ico{font-size:19px}
+.agent-karte b{font-size:13.5px; font-weight:500}
+.agent-karte span{font-size:11.5px; color:var(--text-faint); line-height:1.45}
+.agent-karte em{font-size:11px; color:var(--text-faint); font-style:normal; margin-top:2px}
+#aa, #mtx{width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line);
+  border-radius:8px; outline:none; color:var(--text); font:14px/1.55 inherit; resize:vertical}
+#aa:focus, #mtx:focus{border-color:var(--accent)}
+.agent-schritt{border-bottom:1px solid var(--line-soft); padding:9px 16px}
+.as-kopf{display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:4px}
+.as-nr{width:19px; height:19px; border-radius:50%; background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:11px; flex:0 0 auto}
+.as-gedanke{color:var(--text-faint); font-size:12px; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap}
+.as-erg{font-size:12.5px; color:var(--text-dim); line-height:1.55; padding-left:27px;
+  max-height:150px; overflow:auto}
+.agent-laeuft{padding:22px; text-align:center; color:var(--text-faint); font-size:14px}
+.agent-fehler{padding:16px; color:var(--c-red); font-size:13.5px}
+.agent-fertig{padding:13px 16px; background:var(--b-green); border-radius:8px; margin:10px 16px}
+.agent-fertig b{display:block; font-size:12px; color:var(--c-green); margin-bottom:5px;
+  text-transform:uppercase; letter-spacing:.04em}
+.agent-fertig div{font-size:13.5px; line-height:1.6}
+.agent-fertig button{margin-top:9px; font-size:12px; color:var(--c-red); padding:3px 9px;
+  border-radius:5px; border:1px solid var(--line)}
+.lauf{border-bottom:1px solid var(--line-soft)}
+.lauf summary{padding:10px 16px; cursor:pointer; font-size:13.5px; display:flex;
+  align-items:center; gap:8px}
+.lauf summary em{margin-left:auto; font-size:11.5px; color:var(--text-faint); font-style:normal}
+.wz-liste{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:4px;
+  margin-top:5px; max-height:150px; overflow:auto; border:1px solid var(--line);
+  border-radius:7px; padding:8px}
+.wz-w{display:flex !important; align-items:center; gap:7px; font-size:12.5px; margin:0 !important}
+
+/* Besprechung */
+.meet-text{padding:0 18px}
+.meet-vorschau{background:var(--bg-card); border-radius:8px; padding:13px 15px; font-size:13.5px;
+  line-height:1.65; max-height:38vh; overflow:auto}
+.meet-ok{background:var(--b-green); color:var(--c-green); border-radius:7px; padding:9px 13px;
+  font-size:13px; margin:8px 0}
+.meet-warn{background:var(--b-yellow); color:var(--c-yellow); border-radius:7px; padding:9px 13px;
+  font-size:13px; margin:8px 0; line-height:1.55}
+.meet-laeuft{display:flex; align-items:center; gap:11px; font-size:15px; padding:8px 0}
+.meet-laeuft span:last-child{font-size:13px; color:var(--text-faint)}
+.meet-punkt{width:11px; height:11px; border-radius:50%; background:var(--c-red);
+  animation:pulsen 1.4s infinite}
+@keyframes pulsen{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* MCP */
+.mcp-wz{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:4px;
+  max-height:170px; overflow:auto; border:1px solid var(--line); border-radius:7px;
+  padding:9px; margin:6px 0 10px}
+.mcp-katalog{margin:0; padding:16px 18px; max-height:60vh; overflow:auto; font:12px/1.55 var(--mono);
+  background:var(--bg-input); color:var(--text-dim); white-space:pre-wrap}
+.ez-lang{width:100%; padding:8px 11px; background:var(--bg-input); border:1px solid var(--line);
+  border-radius:7px; outline:none; color:var(--text); font:13.5px/1.55 inherit; resize:vertical}
+
+/* ==========================================================================
+   TELEFON UND APP-BETRIEB
+   --------------------------------------------------------------------------
+   Auf dem iPhone laeuft die App ohne Adresszeile. Dann muss sie selbst um
+   die Kerbe und den Streifen unten herumzeichnen — dafuer gibt es die
+   safe-area-Werte. Und die Seitenleiste wird zur Schublade.
+   ========================================================================== */
+:root{ --vh: 1vh; }
+
+@media(max-width:700px){
+  html, body{ height:calc(var(--vh, 1vh) * 100); overflow:hidden; }
+
+  /* Rand um Kerbe und Streifen */
+  #topbar{ padding-top:env(safe-area-inset-top);
+           height:calc(46px + env(safe-area-inset-top)); }
+  #sidebar{ padding-top:env(safe-area-inset-top);
+            padding-bottom:env(safe-area-inset-bottom); }
+  #page{ padding-left:max(18px, env(safe-area-inset-left));
+         padding-right:max(18px, env(safe-area-inset-right));
+         padding-bottom:calc(30vh + env(safe-area-inset-bottom)); }
+  #ai{ padding-bottom:env(safe-area-inset-bottom); }
+
+  /* Die Seitenleiste als Schublade */
+  #sidebar{ transform:translateX(-102%); transition:transform .22s ease;
+            width:min(85vw, 320px); z-index:600; }
+  body.side-offen #sidebar{ transform:none; }
+  #side-schatten{ position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:590;
+                  animation:einblenden .18s ease; }
+  @keyframes einblenden{ from{opacity:0} to{opacity:1} }
+  #main{ margin-left:0 !important; width:100% !important; }
+  #side-griff{ display:none; }
+
+  /* Fingerfreundliche Groessen */
+  .top-btn{ min-width:38px; height:36px; }
+  .side-item{ padding:11px 14px; font-size:15px; }
+  .menu button{ padding:11px 14px; font-size:14.5px; }
+  .blk .ct{ font-size:16px; }        /* unter 16px zoomt iOS beim Tippen hinein */
+  input, textarea, select{ font-size:16px !important; }
+  .finder{ width:96vw !important; max-height:88vh; }
+  .fbtns{ flex-wrap:wrap; }
+  .fbtns button{ flex:1 1 auto; min-height:42px; }
+
+  /* Das KI-Fenster nimmt das ganze Telefon ein */
+  #ai{ width:100% !important; }
+  .ai-quick{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+  .ai-quick button{ flex:0 0 auto; }
+
+  /* Tabellen laufen seitlich weiter, statt zu zerbrechen */
+  .db{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .grid{ min-width:560px; }
+  .board{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .agent-typen{ grid-template-columns:1fr 1fr; }
+}
+
+/* Der Menue-Knopf erscheint nur auf dem Telefon */
+.nur-telefon{ display:none; }
+@media(max-width:700px){ .nur-telefon{ display:inline-flex; } }
+
+/* Als installierte App: kein Textmarkieren beim langen Tippen auf Knoepfe */
+@media(display-mode: standalone){
+  button, .side-item, .top-btn{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  body{ overscroll-behavior:none; }
+}
+
+.pwa-schritte{ margin:8px 0 0 18px; line-height:1.9; font-size:13.5px; color:var(--text-dim); }
+.pwa-schritte b{ color:var(--text); }
+.banner.info{ background:var(--b-blue); color:var(--c-blue); }
+.banner.info{background:var(--b-blue); color:var(--c-blue)}

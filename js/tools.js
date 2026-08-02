@@ -982,19 +982,42 @@ const Werkzeuge = (() => {
     }
   };
 
+  /** Einzelne Dateien einlesen — jedes Format, das die App kennt. */
+  const dateienLesen = () => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.docx,.epub,image/*';
+    inp.multiple = true;
+    inp.addEventListener('change', async () => {
+      let n = 0;
+      for (const f of inp.files) {
+        const name = f.name.toLowerCase();
+        try {
+          if (/\.(xlsx|xlsm|docx|epub)$/i.test(name)) {
+            const erg = await Einlesen.datei(f, null);
+            if (erg) { UI.toast(f.name + ': ' + erg.hinweis); n++; continue; }
+          }
+          const text = await f.text();
+          if (/\.(html|htm)$/i.test(name)) {
+            const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '🌐' });
+            ausHtml(p2.id, text);
+          } else if (/\.(csv|tsv)$/i.test(name)) {
+            const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
+            Einlesen.alsDatenbank(p2.id, p2.text, Datenbank.csvZerlegen(text.replace(/^﻿/, '')));
+          } else {
+            await mdDateiAnlegen(f.name, text, null);
+          }
+          n++;
+        } catch (err) { UI.banner(f.name + ': ' + err.message, 'fehler'); }
+      }
+      App.zeichneBaum();
+      UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
+    });
+    inp.click();
+  };
+
   const ordnerLesen = async () => {
-    if (!window.showDirectoryPicker) {
-      /* Fallback: einzelne Dateien auswählen */
-      const inp = document.createElement('input');
-      inp.type = 'file'; inp.accept = '.md,.markdown,.txt'; inp.multiple = true;
-      inp.addEventListener('change', async () => {
-        let n = 0;
-        for (const f of inp.files) { await mdDateiAnlegen(f.name, await f.text(), null); n++; }
-        App.zeichneBaum(); UI.toast(n + ' Dateien eingelesen');
-      });
-      inp.click();
-      return;
-    }
+    if (!window.showDirectoryPicker) { dateienLesen(); return; }
     try {
       const ordner = await window.showDirectoryPicker();
       let n = 0;
@@ -1501,6 +1524,17 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
           continue;
         }
 
+        /* Excel, Word und EPUB laufen über den eigenen ZIP-Leser */
+        if (/\.(xlsx|xlsm|docx|epub)$/i.test(name)) {
+          try {
+            const erg = await Einlesen.datei(f, seite);
+            if (erg) { UI.toast(f.name + ': ' + erg.hinweis); continue; }
+          } catch (err) {
+            UI.banner(f.name + ' liess sich nicht lesen: ' + err.message, 'fehler');
+            continue;
+          }
+        }
+
         const text = await f.text();
 
         if (name.endsWith('.csv') || name.endsWith('.tsv')) {
@@ -1616,7 +1650,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     lernen, karten, faellig, teileKarte,
     versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
     fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
-    erinnerungSetzen, erinnerungen, ordnerSchreiben, ordnerLesen, einzelDatei,
+    erinnerungSetzen, erinnerungen, ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
     wikiUmwandeln, wikiIndex, teilenMenue,

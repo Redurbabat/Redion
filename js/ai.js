@@ -583,8 +583,69 @@ const KI = (() => {
 
   const SYSTEM =
     'Du bist ein Assistent in einer lokalen Notizen-App. Du antwortest auf Deutsch, ' +
-    'knapp und klar. Wenn dir der Inhalt einer Seite mitgegeben wird, beziehst du dich darauf. ' +
-    'Keine Floskeln, keine Wiederholung der Frage. Wenn du etwas nicht weisst, sagst du es.';
+    'knapp und klar. Wenn dir Ausschnitte aus dem Arbeitsbereich mitgegeben werden, ' +
+    'beziehst du dich ausschliesslich darauf und erfindest nichts dazu. ' +
+    'Steht die Antwort nicht in den Ausschnitten, sagst du das offen. ' +
+    'Keine Floskeln, keine Wiederholung der Frage.';
+
+  /* ------------------------------------------------------------------------
+   * QUELLENKARTE
+   * ------------------------------------------------------------------------
+   * Eine Antwort aus dem Arbeitsbereich ohne Quellen ist wertlos — man kann
+   * sie nicht prüfen. Deshalb steht unter jeder Antwort, woher sie stammt,
+   * anklickbar und mit dem Datum der letzten Änderung.
+   * ----------------------------------------------------------------------*/
+  const quellenKarte = (quellen) => {
+    if (!quellen || !quellen.length) return null;
+    const d = document.createElement('div');
+    d.className = 'ki-quellen';
+    d.innerHTML = '<div class="kq-kopf">Quellen · ' + quellen.length + '</div>' +
+      quellen.map(q =>
+        `<button class="kq-zeile" data-q="${q.id}">` +
+        `<span class="kq-titel">${esc(q.titel)}</span>` +
+        `<span class="kq-art">${esc(q.art || '')}</span>` +
+        (q.geaendert ? `<span class="kq-zeit">${esc(String(q.geaendert).slice(0, 10))}</span>` : '') +
+        '</button>').join('');
+    d.addEventListener('click', e => {
+      const b = e.target.closest('[data-q]');
+      if (!b) return;
+      const z = Store.getBlock(b.dataset.q);
+      if (!z) { UI.toast('Diese Seite gibt es nicht mehr'); return; }
+      z.parentTable === 'collection'
+        ? Datenbank.zeilePeek(z, Store.getCollection(z.parentId))
+        : App.oeffne(z.id);
+    });
+    return d;
+  };
+
+  /** Die Quellen-Schalter über dem Eingabefeld. */
+  const quellenLeiste = () => {
+    const q = Kontext.quellen();
+    const NAMEN = [
+      ['aktuelleSeite',  '📄 Diese Seite'],
+      ['arbeitsbereich', '🗂 Arbeitsbereich'],
+      ['datenbanken',    '▦ Datenbanken'],
+      ['verbindungen',   '🔌 Verbundenes'],
+      ['web',            '🌐 Web']
+    ];
+    const d = document.createElement('div');
+    d.className = 'ki-quellschalter';
+    d.innerHTML = NAMEN.map(([k, n]) =>
+      `<button data-qs="${k}" class="${q[k] ? 'an' : ''}">${n}</button>`).join('');
+    d.addEventListener('click', e => {
+      const b = e.target.closest('[data-qs]');
+      if (!b) return;
+      const jetzt = Kontext.quellen()[b.dataset.qs];
+      if (b.dataset.qs === 'web' && !jetzt && Store.getMeta('ki:webFragen', true)) {
+        if (!confirm('Für Websuche wird Wikipedia angefragt. Dabei verlässt dein Suchbegriff ' +
+                     'den Rechner. Einschalten?')) return;
+      }
+      Kontext.quelleSetzen(b.dataset.qs, !jetzt);
+      b.classList.toggle('an', !jetzt);
+      UI.toast((!jetzt ? 'An: ' : 'Aus: ') + b.textContent);
+    });
+    return d;
+  };
 
   const senden = async (text, mitKontext = true) => {
     if (!text.trim()) return;
@@ -604,11 +665,32 @@ const KI = (() => {
        WebLLM warnt sonst „System prompt should always be the first message"
        und wirft den Zusatz weg. Deshalb wird der Seiteninhalt in dieselbe
        Systemnachricht hineingeschrieben, statt eine zweite anzuhängen. */
+    /* Die Kontext-Schicht sucht die passenden Stellen heraus und prüft
+       dabei, was der angemeldete Mensch überhaupt lesen darf. */
     let system = SYSTEM;
+    let quellen = [];
     if (mitKontext && Store.getMeta('kiKontext', true)) {
-      const k = seitenKontext();
-      if (k) system += '\n\nInhalt der geöffneten Seite:\n' + k;
+      ziel.textContent = 'Sucht im Arbeitsbereich …';
+      const k = Kontext.bauenFuerFrage(text, { anzahl: 6 });
+      quellen = k.quellen;
+      if (!k.leer) system += '\n\nDas hier steht in seinem Arbeitsbereich dazu:\n\n' + k.text;
+      else system += '\n\nIm Arbeitsbereich wurde nichts Passendes gefunden. Sag das offen, ' +
+                     'statt etwas zu erfinden.';
+
+      /* Websuche nur, wenn sie eingeschaltet ist — und nur zusätzlich. */
+      if (Kontext.quellen().web) {
+        try {
+          const begriff = text.split(/[?.!]/)[0].slice(0, 60);
+          const w = await wikipedia(begriff);
+          if (w) {
+            system += '\n\nAus der Wikipedia zu „' + w.titel + '":\n' + w.text;
+            quellen.push({ id: '', titel: w.titel, art: 'Wikipedia', link: w.link });
+          }
+        } catch {}
+      }
     }
+    if (Store.getMeta('ki:persoenlich', ''))
+      system += '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '');
     const laenge = Store.getMeta('kiLaenge', 'normal');
     if (laenge === 'kurz')  system += '\n\nAntworte knapp, höchstens drei Sätze.';
     if (laenge === 'lang')  system += '\n\nAntworte ausführlich und gut gegliedert.';
@@ -632,6 +714,10 @@ const KI = (() => {
     } catch (e) {
       ziel.textContent = '⚠ ' + e.message;
     }
+
+    /* Quellen unter die Antwort */
+    const qk = quellenKarte(quellen);
+    if (qk && antwort) ziel.appendChild(qk);
 
     /* Antwort in die Seite übernehmen */
     if (antwort) {
@@ -716,6 +802,55 @@ const KI = (() => {
   };
 
   /** Baut aus einer Beschreibung eine echte Datenbank. */
+  /**
+   * Baut aus einem fertigen Plan eine echte Datenbank.
+   * Wird von der KI-Antwort benutzt und vom Agenten — deshalb steht sie
+   * für sich und nicht mitten in der Chat-Funktion.
+   */
+  const datenbankBauenAus = (plan, seiteId) => {
+    const schema = {};
+    let titelGesetzt = false;
+    (plan.spalten || []).slice(0, 12).forEach((sp, i) => {
+      const roh = String(sp.typ || 'text').toLowerCase();
+      const istTitel = roh.startsWith('titel') || roh === 'title';
+      const typ = TYP_KARTE[roh] || (istTitel ? 'title' : 'text');
+      const key = istTitel && !titelGesetzt ? 'title' : 'k' + i;
+      if (istTitel) titelGesetzt = true;
+      schema[key] = { name: sp.name || 'Spalte ' + (i + 1), type: istTitel ? 'title' : typ };
+      if (['select','multi','status'].includes(schema[key].type)) {
+        const farben = ['gray','blue','green','yellow','orange','red','purple','pink','brown'];
+        schema[key].options = (sp.optionen || []).slice(0, 12)
+          .map((n, j) => ({ name: String(n), color: farben[j % farben.length] }));
+      }
+      if (schema[key].type === 'formula' && sp.formel) schema[key].formula = sp.formel;
+    });
+    if (!titelGesetzt) schema.title = { name: 'Name', type: 'title' };
+
+    const { collectionId, block } = Store.addDatabase(
+      seiteId || App.aktuelleSeite(), plan.name || 'Neue Datenbank', schema, plan.layout || 'table');
+    if (plan.icon) Store.updateCollection(collectionId, { icon: plan.icon });
+
+    const nachName = {};
+    Object.entries(schema).forEach(([k, d]) => nachName[d.name.toLowerCase()] = k);
+    let zeilen = 0;
+    (plan.zeilen || []).slice(0, 30).forEach(z => {
+      const props = {};
+      let titelWert = '';
+      Object.entries(z).forEach(([n, v]) => {
+        const k = nachName[String(n).toLowerCase()];
+        if (!k) return;
+        if (k === 'title') titelWert = String(v);
+        else props[k] = v;
+      });
+      const r = Store.addRow(collectionId, props);
+      Store.updateBlock(r.id, { text: titelWert || 'Ohne Titel' });
+      zeilen++;
+    });
+
+    return { collectionId, blockId: block.id, schema,
+             spalten: Object.keys(schema).length, zeilen };
+  };
+
   const datenbankBauen = async (auftrag) => {
     App.kiPanel(true);
     const seite = App.aktuelleSeite();
@@ -751,43 +886,10 @@ const KI = (() => {
       return;
     }
 
-    /* Schema übersetzen */
-    const schema = {};
-    let titelGesetzt = false;
-    plan.spalten.slice(0, 12).forEach((sp, i) => {
-      const typ = TYP_KARTE[String(sp.typ || 'text').toLowerCase()] ||
-                  (String(sp.typ).toLowerCase().startsWith('titel') ? 'title' : 'text');
-      const istTitel = String(sp.typ || '').toLowerCase().startsWith('titel') ||
-                       String(sp.typ || '').toLowerCase() === 'title';
-      const key = istTitel && !titelGesetzt ? 'title' : 'k' + i;
-      if (istTitel) titelGesetzt = true;
-      schema[key] = { name: sp.name || 'Spalte ' + (i + 1), type: istTitel ? 'title' : typ };
-      if (['select','multi','status'].includes(schema[key].type)) {
-        const farben = ['gray','blue','green','yellow','orange','red','purple','pink','brown'];
-        schema[key].options = (sp.optionen || []).slice(0, 12)
-          .map((n, j) => ({ name: String(n), color: farben[j % farben.length] }));
-      }
-    });
-    if (!titelGesetzt) schema.title = { name: 'Name', type: 'title' };
-
-    const { collectionId, block } = Store.addDatabase(seite, plan.name || 'Neue Datenbank', schema, 'table');
-    if (plan.icon) Store.updateCollection(collectionId, { icon: plan.icon });
-
-    /* Zeilen übernehmen */
-    const nachName = {};
-    Object.entries(schema).forEach(([k, d]) => nachName[d.name.toLowerCase()] = k);
-    (plan.zeilen || []).slice(0, 30).forEach(z => {
-      const props = {};
-      let titelWert = '';
-      Object.entries(z).forEach(([n, v]) => {
-        const k = nachName[String(n).toLowerCase()];
-        if (!k) return;
-        if (k === 'title') titelWert = String(v);
-        else props[k] = v;
-      });
-      const r = Store.addRow(collectionId, props);
-      Store.updateBlock(r.id, { text: titelWert || 'Ohne Titel' });
-    });
+    const gebaut = datenbankBauenAus(plan, seite);
+    const collectionId = gebaut.collectionId;
+    const block = { id: gebaut.blockId };
+    const schema = gebaut.schema;
 
     merkeSchritt('Datenbank „' + (plan.name || 'Neu') + '" mit ' +
                  Object.keys(schema).length + ' Spalten und ' +
@@ -962,9 +1064,185 @@ const KI = (() => {
   /* ========================================================================
    * PANEL AUFBAUEN
    * ======================================================================*/
+  /* ========================================================================
+   * SCHREIBASSISTENT
+   * ------------------------------------------------------------------------
+   * Die Befehle, die in Notion direkt im Editor sitzen. Sie arbeiten mit dem
+   * markierten Text, sonst mit der ganzen Seite.
+   * ======================================================================*/
+  const SCHREIB_BEFEHLE = [
+    { id:'weiter',    icon:'✒️', name:'Weiterschreiben',
+      auftrag:'Schreib den Text sinnvoll weiter. Gleiche Stimme, gleicher Ton, keine Wiederholung.' },
+    { id:'besser',    icon:'✨', name:'Text verbessern',
+      auftrag:'Mach den Text klarer und flüssiger, ohne den Sinn zu verändern.' },
+    { id:'kuerzer',   icon:'✂️', name:'Kürzer machen',
+      auftrag:'Kürze den Text auf das Wesentliche. Höchstens die Hälfte.' },
+    { id:'laenger',   icon:'📏', name:'Länger machen',
+      auftrag:'Führe den Text weiter aus, mit Beispielen. Nichts erfinden, was widerspricht.' },
+    { id:'einfach',   icon:'🧒', name:'Einfacher erklären',
+      auftrag:'Erklär denselben Inhalt so, dass ihn jemand ohne Vorwissen versteht.' },
+    { id:'ton-formell', icon:'🎩', name:'Ton: förmlich',
+      auftrag:'Schreib den Text förmlich und sachlich um, in der Sie-Form.' },
+    { id:'ton-locker',  icon:'😊', name:'Ton: locker',
+      auftrag:'Schreib den Text locker und freundlich um, in der Du-Form.' },
+    { id:'ton-direkt',  icon:'🎯', name:'Ton: direkt',
+      auftrag:'Schreib den Text kurz und direkt um. Keine Höflichkeitsfloskeln.' },
+    { id:'recht',     icon:'📝', name:'Rechtschreibung',
+      auftrag:'Korrigiere Rechtschreibung, Zeichensetzung und Grammatik. Sonst nichts ändern.' },
+    { id:'fassen',    icon:'📋', name:'Zusammenfassen',
+      auftrag:'Fasse den Text in höchstens fünf Stichpunkten zusammen.' },
+    { id:'uebersetzen', icon:'🌍', name:'Übersetzen',
+      auftrag:'Übersetze den Text ins Englische.', frage:'In welche Sprache?' },
+    { id:'ideen',     icon:'💡', name:'Ideen sammeln',
+      auftrag:'Sammle zehn Ideen zum Thema. Je Zeile eine, ohne Nummerierung.' },
+    { id:'gliedern',  icon:'🗂', name:'Gliederung bauen',
+      auftrag:'Mach aus dem Text eine Gliederung mit Überschriften und Stichpunkten.' },
+    { id:'tabelle',   icon:'▦', name:'Tabelle daraus machen',
+      auftrag:'Mach aus dem Text eine Tabelle. Antworte als Markdown-Tabelle mit Kopfzeile.' },
+    { id:'aufgaben',  icon:'☑', name:'Aufgaben ableiten',
+      auftrag:'Leite konkrete Aufgaben ab. Je Zeile eine, beginnend mit einem Verb.' },
+    { id:'fragen',    icon:'❓', name:'Rückfragen finden',
+      auftrag:'Nenne fünf Fragen, die dieser Text offen lässt.' }
+  ];
+
+  /** Der markierte Text — oder, wenn nichts markiert ist, die ganze Seite. */
+  const arbeitsText = () => {
+    const sel = String(getSelection() || '').trim();
+    if (sel.length > 3) return { text: sel, teil: true };
+    return { text: seitenKontext(), teil: false };
+  };
+
+  const schreibMenue = (anker2) => {
+    const r = anker2
+      ? anker2.getBoundingClientRect()
+      : { left: innerWidth / 2 - 130, bottom: 120 };
+    const m = UI.menu(
+      '<div class="grp">Schreiben und bearbeiten</div>' +
+      SCHREIB_BEFEHLE.map(b =>
+        `<button data-sb="${b.id}"><span class="mi">${b.icon}</span>${b.name}</button>`).join(''),
+      r.left - 40, (r.bottom || 100) + 6);
+
+    m.addEventListener('click', async e => {
+      const b = e.target.closest('[data-sb]');
+      if (!b) return;
+      m.remove();
+      const befehl = SCHREIB_BEFEHLE.find(x => x.id === b.dataset.sb);
+      if (!befehl) return;
+      let auftrag = befehl.auftrag;
+      if (befehl.frage) {
+        const antwort = await UI.frage(befehl.frage, 'Englisch');
+        if (!antwort) return;
+        auftrag = 'Übersetze den Text ins ' + antwort + '.';
+      }
+      await schreibLauf(befehl, auftrag);
+    });
+  };
+
+  const schreibLauf = async (befehl, auftrag) => {
+    const quelle = arbeitsText();
+    if (!quelle.text.trim()) { UI.toast('Es gibt noch keinen Text.'); return; }
+
+    App.kiPanel(true);
+    schreibe('user', befehl.icon + ' ' + befehl.name + (quelle.teil ? ' (Markierung)' : ' (ganze Seite)'));
+    const ziel = schreibe('assistant', '');
+    ziel.textContent = '…';
+
+    const system = SYSTEM + '\n\n' + auftrag +
+      '\n\nGib NUR den fertigen Text zurück, ohne Einleitung, ohne Anführungszeichen.' +
+      (Store.getMeta('ki:persoenlich', '')
+        ? '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '') : '');
+
+    let antwort = '';
+    try {
+      await frage([{ role: 'system', content: system },
+                   { role: 'user', content: quelle.text.slice(0, 9000) }], t => {
+        antwort += t;
+        ziel.textContent = antwort;
+        document.getElementById('chat').scrollTop = 1e9;
+      });
+    } catch (e) { ziel.textContent = '⚠ ' + e.message; return; }
+
+    const leiste = document.createElement('div');
+    leiste.className = 'ki-antwortknoepfe';
+    leiste.innerHTML =
+      '<button data-a="ersetzen">Markierung ersetzen</button>' +
+      '<button data-a="darunter">Darunter einfügen</button>' +
+      '<button data-a="kopieren">Kopieren</button>' +
+      '<button data-a="nochmal">Noch einmal</button>';
+    leiste.addEventListener('click', async e => {
+      const b = e.target.closest('button[data-a]');
+      if (!b) return;
+      if (b.dataset.a === 'kopieren') { navigator.clipboard?.writeText(antwort); UI.toast('Kopiert'); }
+      if (b.dataset.a === 'nochmal')  { schreibLauf(befehl, auftrag); }
+      if (b.dataset.a === 'darunter') { alsBloeckeEinfuegen(antwort); }
+      if (b.dataset.a === 'ersetzen') {
+        const sel = getSelection();
+        if (sel && sel.rangeCount && String(sel).trim()) {
+          const bereich = sel.getRangeAt(0);
+          bereich.deleteContents();
+          bereich.insertNode(document.createTextNode(antwort));
+          const blk = sel.anchorNode?.parentElement?.closest?.('.blk');
+          const ct = blk?.querySelector('.ct');
+          if (blk && ct) Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+          UI.toast('Ersetzt');
+        } else { alsBloeckeEinfuegen(antwort); }
+      }
+    });
+    ziel.appendChild(leiste);
+  };
+
+  /** Antworttext als richtige Blöcke ablegen — inklusive Markdown-Tabellen. */
+  const alsBloeckeEinfuegen = (text) => {
+    const zeilen = String(text || '').split('\n');
+    const seite = App.aktuelleSeite();
+    let tabelle = null;
+
+    /* Eine angefangene Tabelle abschliessen, bevor etwas anderes kommt. */
+    const tabelleAbschliessen = () => {
+      if (!tabelle) return;
+      Store.addBlock(seite, 'table', { rows: tabelle.rows, kopfZeile: true });
+      tabelle = null;
+    };
+
+    zeilen.forEach(roh => {
+      const z = roh.trim();
+      if (!z) { tabelleAbschliessen(); return; }
+
+      if (/^\|.*\|$/.test(z)) {
+        const zellen = z.split('|').slice(1, -1).map(x => x.trim());
+        if (zellen.every(c => /^:?-{2,}:?$/.test(c))) return;   /* Trennzeile */
+        if (!tabelle) { tabelle = { rows: [] }; }
+        tabelle.rows.push(zellen);
+        return;
+      }
+      tabelleAbschliessen();
+
+      let typ = 'text', t = z;
+      if (/^#{1}\s/.test(t))      { typ = 'h1'; t = t.replace(/^#\s/, ''); }
+      else if (/^#{2}\s/.test(t)) { typ = 'h2'; t = t.replace(/^##\s/, ''); }
+      else if (/^#{3}\s/.test(t)) { typ = 'h3'; t = t.replace(/^###\s/, ''); }
+      else if (/^[-*•]\s/.test(t)){ typ = 'bullet'; t = t.replace(/^[-*•]\s/, ''); }
+      else if (/^\d+\.\s/.test(t)){ typ = 'number'; t = t.replace(/^\d+\.\s/, ''); }
+      else if (/^>\s/.test(t))    { typ = 'quote'; t = t.replace(/^>\s/, ''); }
+      else if (/^\[[ x]\]\s/i.test(t)) { typ = 'todo'; t = t.replace(/^\[[ x]\]\s/i, ''); }
+      Store.addBlock(seite, typ, { text: t });
+    });
+    tabelleAbschliessen();
+
+    App.zeichneSeite();
+    UI.toast('In die Seite eingefügt');
+  };
+
   const bindePanel = () => {
     const ta = document.getElementById('ai-input');
     const chat = document.getElementById('chat');
+
+    /* Die Quellen-Schalter kommen über das Eingabefeld — man soll sehen,
+       woraus die KI gerade schöpfen darf, bevor man tippt. */
+    const fuss = document.querySelector('.ai-foot');
+    if (fuss && !fuss.querySelector('.ki-quellschalter')) {
+      fuss.insertBefore(quellenLeiste(), fuss.querySelector('.ai-quick'));
+    }
 
     ta.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -994,6 +1272,9 @@ const KI = (() => {
       if (auftrag) seiteBauen(auftrag);
     });
     document.getElementById('ai-log')?.addEventListener('click', () => protokollZeigen());
+    document.getElementById('ai-agent')?.addEventListener('click', () => Agent.panel());
+    document.getElementById('ai-meeting')?.addEventListener('click', () => Meeting.panel());
+    document.getElementById('ai-schreiben')?.addEventListener('click', (e) => schreibMenue(e.currentTarget));
 
     document.getElementById('ai-wiki')?.addEventListener('click', async () => {
       const vorschlag = getSelection().toString().trim() ||
@@ -1012,7 +1293,9 @@ const KI = (() => {
   };
 
   return { start, bindePanel, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
-           datenbankBauen, seiteBauen, protokollZeigen, protokoll,
+           datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
+           quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
+           SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
            ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
            datenbankAuswerten, frageKurz, zustand, modellMenue };
 })();

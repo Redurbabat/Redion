@@ -192,20 +192,44 @@ const Einstellungen = (() => {
       zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter(e => !e.erledigt).length} offen</span>`) +
       zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
 
-    verbindungen: () =>
-      kopf('Verbindungen', 'Diese App verbindet sich mit nichts im Netz — ausser mit dem, ' +
-           'was auf deinem eigenen Rechner läuft.') +
+    verbindungen: () => {
+      const z = Verbindungen.zustand();
+      return kopf('Verbindungen', 'Ohne Verbindung läuft alles auf diesem Rechner. Wer will, ' +
+           'kann eigene Konten anschliessen — die Schlüssel bleiben in diesem Browser und ' +
+           'gehen nur an den jeweiligen Dienst.') +
       zeile('Ollama', 'Lokale KI auf diesem Rechner',
             `<span class="ez-grau">${KI.zustand.quelle === 'ollama' ? 'verbunden' : 'nicht gefunden'}</span> ` +
             knopf('ollama-suchen', 'Erneut suchen')) +
       zeile('WebLLM', 'KI direkt im Browser',
             `<span class="ez-grau">${'gpu' in navigator ? 'möglich' : 'kein WebGPU'}</span>`) +
+
+      kopf('Verbundene Dienste', '') +
+      zeile('Google', 'Kalender und Gmail — braucht eine eigene Client-ID, kostenlos',
+            `<span class="ez-grau">${z.google.verbunden
+              ? 'verbunden' + (z.google.profil ? ' als ' + esc(z.google.profil.email) : '')
+              : (z.google.id ? 'Client-ID da, nicht angemeldet' : 'nicht eingerichtet')}</span> ` +
+            knopf('verbindungen', 'Einrichten')) +
+      zeile('Kalender', 'Google, iCloud und jede ICS-Adresse',
+            `<span class="ez-grau">${z.ics.anzahl} Abos</span> ` + knopf('kalender-verb', 'Öffnen')) +
+      zeile('Mail', 'Gmail holen, beschriften, beantworten — oder EML-Dateien einlesen',
+            knopf('mail-verb', 'Öffnen')) +
+      zeile('GitHub und Jira', 'Issues und Vorgänge als gespiegelte Datenbank',
+            `<span class="ez-grau">${z.github.verbunden ? 'GitHub verbunden' : 'nicht verbunden'}` +
+            `</span> ` + knopf('spiegel-verb', 'Öffnen')) +
+      zeile('MCP-Server', 'Fremde Werkzeuge für die KI',
+            `<span class="ez-grau">${(Store.getMeta('mcp:server', []) || []).length} eingetragen</span> ` +
+            knopf('mcp-verb', 'Öffnen')) +
+      zeile('Web Clipper', 'Webseiten sammeln — ohne Browsererweiterung',
+            knopf('clipper', 'Einrichten')) +
       zeile('Ordner auf der Festplatte', 'Notizen als Markdown-Dateien ablegen',
             knopf('ordner-schreiben', 'Ordner wählen')) +
-      zeile('Kalender, Mail, Slack, Drive', 'Bräuchten ein Konto und einen Server',
-            '<span class="ez-grau">nicht vorgesehen</span>') +
-      zeile('Was hinausgeht', '',
-            '<span class="ez-grau">nichts — kein Netzverkehr ausser dem WebLLM-Modell beim ersten Laden</span>'),
+      zeile('Brücke', 'Für Dienste, die den Browser nicht direkt heranlassen',
+            `<span class="ez-grau">${z.bruecke ? 'eingetragen' : 'keine'}</span> ` +
+            knopf('verbindungen', 'Eintragen')) +
+      zeile('Anmeldung möglich?', 'Google lässt sie nur von einer echten Adresse zu',
+            `<span class="ez-grau">${z.adresse ? 'ja — ' + esc(location.origin)
+              : 'nein — als Datei geöffnet, start.bat benutzen'}</span>`);
+    },
 
     arbeitsplatz: () =>
       kopf('Arbeitsbereich') +
@@ -248,10 +272,28 @@ const Einstellungen = (() => {
             knopf('seite-schreibschutz', 'Offene Seite sperren')) +
       zeile('Automatische Versionen', 'Beim Seitenwechsel eine Fassung sichern',
             schalter('autoVersionen', V('autoVersionen', true))) +
-      zeile('Fremdes Teilen', 'Ohne Server nicht möglich — und damit auch kein Leck',
-            '<span class="ez-grau">nicht vorhanden</span>') +
+      kopf('Konten und Rollen', 'Fünf Rollen wie in Notion. Ehrlich gesagt: ohne eigenen ' +
+           'Server ist das eine Absprache, kein Schloss — wer die Daten im Browser hat, ' +
+           'kommt an alles heran. Die Anmeldung über Google liefert immerhin eine ' +
+           'geprüfte Identität.') +
+      zeile('Konten', 'Von Hand angelegt oder über Google angemeldet',
+            `<span class="ez-grau">${Konten.alle().length} · angemeldet als ` +
+            `${esc(Konten.aktiv().name)}</span> ` + knopf('konten', 'Verwalten')) +
+      zeile('Berechtigungsmatrix', 'Was darf welche Rolle?',
+            knopf('rechte-matrix', 'Ansehen')) +
+      zeile('Freigabe dieser Seite', 'Wer darf lesen, kommentieren, bearbeiten',
+            knopf('freigabe', 'Öffnen')) +
+      zeile('Standardrolle', 'Gilt für Seiten ohne eigene Freigabe',
+            wahl('rolleStandard', Konten.ROLLEN.map(r => [r.id, r.icon + ' ' + r.name]),
+                 V('rolleStandard', 'voll'))) +
+      zeile('Anmeldung über Google', 'Liefert geprüften Namen und geprüfte E-Mail',
+            `<span class="ez-grau">${Verbindungen.googleProfil()
+              ? esc(Verbindungen.googleProfil().email) : 'nicht angemeldet'}</span> ` +
+            knopf('verbindungen', 'Einrichten')) +
+      zeile('SAML SSO und Nutzerbereitstellung', 'Braucht einen Identitätsanbieter und einen Server',
+            '<span class="ez-grau">nicht möglich ohne Server</span>') +
       zeile('Datenschutz', '',
-            '<span class="ez-grau">kein Konto, keine Anmeldung, keine Übertragung</span>'),
+            '<span class="ez-grau">alles im Browser; nur was du verbindest, geht hinaus</span>'),
 
     daten: () =>
       kopf('Import und Export') +
@@ -261,6 +303,9 @@ const Einstellungen = (() => {
             knopf('ordner-schreiben', 'Ordner wählen')) +
       zeile('Markdown-Ordner einlesen', 'Legt aus jeder Datei eine Seite an',
             knopf('ordner-lesen', 'Ordner wählen')) +
+      zeile('Dateien einlesen', 'Markdown, Text, CSV, TSV, HTML, Excel (.xlsx), Word (.docx), EPUB — ' +
+            'Excel wird zur Datenbank, EPUB zu einem Wiki mit Kapiteln',
+            knopf('dateien-lesen', 'Dateien wählen')) +
       zeile('Als eine HTML-Datei', 'Zum Weitergeben und Archivieren', knopf('einzeldatei', 'Erzeugen')) +
       zeile('Offene Seite als Markdown', '', knopf('seite-md', 'Speichern')) +
       zeile('Offene Seite als HTML', '', knopf('seite-html', 'Speichern')) +
@@ -283,7 +328,64 @@ const Einstellungen = (() => {
       zeile('Antwortlänge', '', wahl('kiLaenge', [['kurz', 'Kurz'], ['normal', 'Normal'], ['lang', 'Ausführlich']],
             V('kiLaenge', 'normal'))) +
       zeile('KI-Felder in Datenbanken', 'Spaltentyp „KI-Feld" füllt sich selbst',
-            '<span class="ez-grau">verfügbar</span>'),
+            '<span class="ez-grau">verfügbar</span>') +
+
+      /* --- Quellen: was darf die KI überhaupt sehen? ------------------- */
+      kopf('Quellen', 'Die KI weiss nichts über deinen Arbeitsbereich. Sie bekommt die ' +
+           'passenden Ausschnitte gereicht — und zwar nur aus den Quellen, die hier ' +
+           'eingeschaltet sind. Jede Antwort nennt danach ihre Quellen.') +
+      zeile('Die offene Seite', 'Was gerade auf dem Bildschirm steht',
+            schalter('q:aktuelleSeite', Kontext.quellen().aktuelleSeite)) +
+      zeile('Arbeitsbereich', 'Alle Seiten, die du lesen darfst',
+            schalter('q:arbeitsbereich', Kontext.quellen().arbeitsbereich)) +
+      zeile('Datenbanken', 'Auch Mails, Termine und gespiegelte Einträge',
+            schalter('q:datenbanken', Kontext.quellen().datenbanken)) +
+      zeile('Verbundene Dienste', 'Was über Verbindungen hereingeholt wurde',
+            schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
+      zeile('Websuche', 'Wikipedia nachschlagen — dabei verlässt der Suchbegriff den Rechner',
+            schalter('q:web', Kontext.quellen().web)) +
+      zeile('Vor jeder Webanfrage nachfragen', 'Sicherheitshalber einmal bestätigen',
+            schalter('ki:webFragen', V('ki:webFragen', true))) +
+
+      /* --- Gedächtnis --------------------------------------------------- */
+      kopf('Gedächtnis', 'Die KI erinnert sich nicht wie ein Mensch. Sie findet wieder, ' +
+           'was du gespeichert hast. Der Suchindex ist dieses Gedächtnis.') +
+      zeile('Suchindex', 'Wird bei Bedarf neu gebaut',
+            `<span class="ez-grau">${Kontext.holen().anzahl} Einträge</span> ` +
+            knopf('index-neu', 'Neu bauen')) +
+      zeile('Echte Vektoren', 'Genauere Suche über einen Anbieter — kostet ein paar Cent, ' +
+            'braucht einen Schlüssel bei Gemini oder OpenAI',
+            schalter('ki:embeddings', V('ki:embeddings', false)) + ' ' +
+            knopf('emb-bauen', 'Berechnen')) +
+      zeile('Anbieter für Vektoren', '',
+            wahl('ki:embAnbieter', [['gemini', 'Google Gemini'], ['openai', 'OpenAI']],
+                 V('ki:embAnbieter', 'gemini'))) +
+      zeile('Dauerhafte Anweisungen', 'Gilt für jede Antwort und jeden Agenten',
+            `<textarea data-set="ki:persoenlich" rows="3" class="ez-lang" ` +
+            `placeholder="z. B. Antworte immer auf Deutsch. Fasse lange Antworten am Ende ` +
+            `kurz zusammen.">${esc(V('ki:persoenlich', ''))}</textarea>`) +
+
+      /* --- Agenten und Besprechungen ------------------------------------ */
+      kopf('Agenten und Besprechungen', '') +
+      zeile('Agenten', 'Vier feste Typen plus eigene mit eigenen Rechten',
+            `<span class="ez-grau">${Agent.alle().length} vorhanden</span> ` +
+            knopf('agent-verwalten', 'Verwalten')) +
+      zeile('Workers', 'Eigener Code als Werkzeug, läuft abgeschottet',
+            `<span class="ez-grau">${Agent.worker().length}</span> ` +
+            knopf('agent-worker', 'Bearbeiten')) +
+      zeile('Besprechungsnotizen', 'Aufnehmen, mitschreiben, auswerten',
+            `<span class="ez-grau">${Meeting.kannZuhoeren() ? 'Mitschreiben geht' : 'nur Aufnahme'}` +
+            `</span> ` + knopf('meet-einst', 'Einstellungen')) +
+
+      /* --- Datenschutz --------------------------------------------------- */
+      kopf('Datenschutz', '') +
+      zeile('Daten zur Verbesserung freigeben', 'Es gibt niemanden, an den etwas ginge',
+            '<span class="ez-grau">aus — dauerhaft</span>') +
+      zeile('Wohin dein Text geht', '',
+            '<span class="ez-grau">' +
+            (KI.zustand.quelle === 'wolke'
+              ? 'an ' + (KI.anbieter(KI.zustand.anbieter).name) + ' — dein Schlüssel, dein Konto'
+              : 'nirgendwohin — das Modell läuft auf diesem Rechner') + '</span>'),
 
     schluessel: () => {
       const zeilen = KI.ANBIETER.map(a => {
@@ -400,7 +502,23 @@ const Einstellungen = (() => {
     o.querySelectorAll('[data-toggle]').forEach(b => {
       b.addEventListener('click', () => {
         const k = b.dataset.toggle;
-        const neu = !V(k, k === 'erinnernInApp' || k === 'kartenMelden' || k === 'kiKontext' || k === 'autoVersionen');
+
+        /* Die Quellen der KI liegen zusammen in einem Eintrag, nicht einzeln */
+        if (k.startsWith('q:')) {
+          const name = k.slice(2);
+          const jetzt = Kontext.quellen()[name];
+          if (name === 'web' && !jetzt && V('ki:webFragen', true) &&
+              !confirm('Für die Websuche wird Wikipedia angefragt. Dabei verlässt dein ' +
+                       'Suchbegriff den Rechner. Einschalten?')) return;
+          Kontext.quelleSetzen(name, !jetzt);
+          b.classList.toggle('an', !jetzt);
+          document.querySelectorAll('.ki-quellschalter [data-qs="' + name + '"]')
+            .forEach(x => x.classList.toggle('an', !jetzt));
+          return;
+        }
+
+        const neu = !V(k, k === 'erinnernInApp' || k === 'kartenMelden' ||
+                          k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
         S(k, neu);
         b.classList.toggle('an', neu);
         if (k === 'rechtschreib') App.zeichneSeite();
@@ -442,6 +560,36 @@ const Einstellungen = (() => {
   const tun = async (was, o) => {
     const seite = App.aktuelleSeite() ? Store.getBlock(App.aktuelleSeite()) : null;
 
+    if (was === 'index-neu') {
+      const ix = Kontext.bauen();
+      UI.toast('Suchindex neu gebaut: ' + ix.anzahl + ' Einträge');
+      o.neuZeichnen && o.neuZeichnen();
+      return;
+    }
+    if (was === 'emb-bauen') {
+      if (!V('ki:embeddings', false)) { UI.toast('Erst „Echte Vektoren" einschalten'); return; }
+      UI.toast('Vektoren werden berechnet …');
+      try {
+        const e = await Kontext.embeddingsBauen((n, g) => {
+          if (n % 40 === 0) UI.toast(n + ' von ' + g + ' berechnet');
+        });
+        UI.toast('Fertig: ' + e.neu + ' neu, ' + e.gesamt + ' gespeichert');
+      } catch (err) { UI.banner('Vektoren: ' + err.message, 'warn'); }
+      return;
+    }
+    if (was === 'agent-verwalten') { o.remove(); Agent.eigenerDialog(); return; }
+    if (was === 'agent-worker')    { o.remove(); Agent.workerDialog(); return; }
+    if (was === 'meet-einst')      { Meeting.einstellungenDialog(); return; }
+    if (was === 'verbindungen')    { o.remove(); Verbindungen.dialog(); return; }
+    if (was === 'kalender-verb')   { o.remove(); Kalender.dialog(); return; }
+    if (was === 'mail-verb')       { o.remove(); Mail.dialog(); return; }
+    if (was === 'spiegel-verb')    { o.remove(); Spiegel.dialog(); return; }
+    if (was === 'clipper')         { o.remove(); Clipper.dialog(); return; }
+    if (was === 'mcp-verb')        { o.remove(); MCP.dialog(); return; }
+    if (was === 'konten')          { o.remove(); Konten.verwalten(); return; }
+    if (was === 'rechte-matrix')   { Konten.matrix(); return; }
+    if (was === 'freigabe')        { if (seite) { o.remove(); Konten.freigeben(seite.id); } return; }
+
     if (was.startsWith('pruefen:')) {
       const id = was.slice(8);
       UI.toast('Frage ' + KI.anbieter(id).name + ' …');
@@ -475,6 +623,7 @@ const Einstellungen = (() => {
       'ki-modell': () => { o.remove(); App.kiPanel(true); setTimeout(() => KI.modellMenue(), 200); },
       'ordner-schreiben': () => Werkzeuge.ordnerSchreiben(),
       'ordner-lesen': () => { o.remove(); Werkzeuge.ordnerLesen(); },
+      'dateien-lesen': () => { o.remove(); Werkzeuge.dateienLesen(); },
       'einzeldatei': () => Werkzeuge.einzelDatei(),
       'export-json': () => App.sicherungSpeichern(),
       'import-json': () => App.sicherungLaden(() => o.remove()),

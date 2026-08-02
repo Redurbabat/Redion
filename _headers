@@ -1,0 +1,28 @@
+# ===========================================================================
+#  Kopfzeilen fuer Cloudflare Pages
+# ---------------------------------------------------------------------------
+#  Cloudflare liest diese Datei von selbst. Sie legt fest, was der Browser
+#  darf und wie lange er Dateien behalten soll.
+# ===========================================================================
+
+/*
+  # Nicht in fremde Seiten einbetten lassen
+  X-Frame-Options: SAMEORIGIN
+  # Der Browser soll den Dateityp nicht raten
+  X-Content-Type-Options: nosniff
+  # Beim Weggehen keine Adresse verraten
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Kamera und Standort braucht diese App nicht; Mikrofon nur fuer Besprechungen
+  Permissions-Policy: camera=(), geolocation=(), microphone=(self)
+
+/js/*
+  Cache-Control: public, max-age=300, must-revalidate
+
+/app.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/index.html
+  Cache-Control: no-cache
+
+/notizen-einzeldatei.html
+  Cache-Control: public, max-age=3600

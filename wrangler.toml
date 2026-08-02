@@ -1,0 +1,13 @@
+# ===========================================================================
+#  wrangler.toml — nur noetig, wenn du von Hand veroeffentlichst
+# ---------------------------------------------------------------------------
+#  Wer Cloudflare mit GitHub verbindet, braucht diese Datei nicht.
+#  Wer lieber vom eigenen Rechner hochlaedt:
+#
+#     npm install -g wrangler
+#     wrangler login
+#     wrangler pages deploy . --project-name notizen
+# ===========================================================================
+name = "notizen"
+compatibility_date = "2026-01-01"
+pages_build_output_dir = "."

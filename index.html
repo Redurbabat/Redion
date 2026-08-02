@@ -2,12 +2,76 @@
 <html lang="de" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
 <meta name="description" content="Notizen — lokale Notion-Alternative. Alle Daten im Browser, KI lokal und kostenlos.">
 <meta name="color-scheme" content="dark light">
 <title>Notizen</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📓</text></svg>">
+
+<!-- ==========================================================================
+     ALS APP INSTALLIERBAR
+     Auf dem iPhone: Safari öffnen, Teilen-Knopf, „Zum Home-Bildschirm".
+     Danach startet sie ohne Adresszeile, mit eigenem Symbol und offline.
+     ========================================================================== -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#191a1e" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+
+<!-- Apple hört auf eigene Angaben — ohne die bleibt die Adresszeile stehen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Notizen">
+<meta name="format-detection" content="telephone=no">
+
+<!-- Startbilder. iPhone 13 Pro Max zuerst, dann die anderen Grössen. -->
+<link rel="apple-touch-startup-image" href="icons/start-iphone-13-pro-max.png"
+      media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="icons/start-iphone-15-pro-max.png"
+      media="(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="icons/start-iphone-13.png"
+      media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="icons/start-iphone-15.png"
+      media="(device-width:393px) and (device-height:852px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="icons/start-iphone-x.png"
+      media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="icons/start-iphone-xs-max.png"
+      media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="icons/start-iphone-xr.png"
+      media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2)">
+
 <link rel="stylesheet" href="app.css">
+
+<!-- =========================================================================
+     ANMELDE-FENSTER
+     Wenn Google die Anmeldung zurückschickt, landet der Schlüssel hier im
+     Adresszeilen-Anhang. Dieses Fenster ist dann nur der Bote: es reicht den
+     Schlüssel an das Hauptfenster weiter und schliesst sich. Die App selbst
+     wird gar nicht erst geladen.
+     ====================================================================== -->
+<script>
+(function () {
+  var h = location.hash || '';
+  if (!window.opener || !/[#&](access_token|error)=/.test(h)) return;
+  var p = new URLSearchParams(h.replace(/^#/, ''));
+  var d = { art: 'oauth-antwort' };
+  p.forEach(function (v, k) { d[k] = v; });
+  if (p.get('error')) d.fehler = p.get('error_description') || p.get('error');
+  try { window.opener.postMessage(d, location.origin); } catch (e) {}
+  window.__nurBote = true;
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.innerHTML =
+      '<div style="font:15px system-ui;padding:40px;text-align:center">' +
+      (d.fehler ? 'Google meldet: ' + d.fehler : 'Fertig. Dieses Fenster kann zu.') + '</div>';
+  });
+  setTimeout(function () { window.close(); }, d.fehler ? 3000 : 250);
+})();
+</script>
 </head>
 <body>
 
@@ -102,6 +166,9 @@
       <button data-p="Formuliere den Text dieser Seite klarer, ohne den Sinn zu ändern.">Umschreiben</button>
       <button data-p="Übersetze diese Seite ins Englische.">Übersetzen</button>
       <button data-p="Mache aus dieser Seite Karteikarten. Je Zeile: Frage :: Antwort.">Karteikarten</button>
+      <button id="ai-schreiben" title="Schreiben und bearbeiten — 16 Befehle">✒️ Schreiben</button>
+      <button id="ai-agent" title="Mehrstufige Aufgaben">🤖 Agent</button>
+      <button id="ai-meeting" title="Aufnehmen, mitschreiben, auswerten">🎙 Besprechung</button>
       <button id="ai-wiki" title="Kostenlos, ohne Schlüssel">📖 Nachschlagen</button>
       <button id="ai-db" title="Die KI legt eine echte Datenbank an">🗂 Datenbank bauen</button>
       <button id="ai-seite" title="Die KI baut den Seitenaufbau">📄 Seite aufbauen</button>
@@ -126,6 +193,17 @@
 <script src="js/notion.js"></script>
 <script src="js/einstellungen.js"></script>
 <script src="js/import.js"></script>
+<script src="js/konten.js"></script>
+<script src="js/verbindungen.js"></script>
+<script src="js/kalender.js"></script>
+<script src="js/spiegel.js"></script>
+<script src="js/mail.js"></script>
+<script src="js/clipper.js"></script>
+<script src="js/ki-kontext.js"></script>
+<script src="js/agent.js"></script>
+<script src="js/meeting.js"></script>
+<script src="js/mcp.js"></script>
+<script src="js/pwa.js"></script>
 <script src="js/vorlagen.js"></script>
 <script src="js/status.js"></script>
 <script src="js/ai.js"></script>

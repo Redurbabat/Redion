@@ -69,9 +69,9 @@ const Status = (() => {
 
   ['Teil 4', 'KI und Planvergleich', [
     ['f', 'Arbeitsbereiche strikt trennen — die KI sieht nur diesen einen'],
-    ['t', 'KI baut Seiten, Datenbanken, Verknüpfungen, Rollups und Formeln', 'Seiten und Datenbanken mit Spalten, Optionen und Beispielzeilen; Verknüpfungen legst du selbst an'],
+    ['f', 'KI baut Seiten, Datenbanken, Verknüpfungen, Rollups und Formeln', 'auch über den Agenten mit Werkzeugen'],
     ['f', 'Jeden KI-Schritt protokollieren — mit Rückgängig je Schritt'],
-    ['t', 'Ergebniskarte mit Kopieren, Einfügen, Rückgängig', 'Einfügen und Rückgängig vorhanden, keine Daumen'],
+    ['f', 'Ergebniskarte mit Kopieren, Einfügen, Rückgängig', 'dazu Ersetzen und Noch einmal'],
     ['f', 'Rückgängig nimmt eine ganze Mehrschritt-Aktion zurück'],
     ['f', 'Protokollfenster sammelt alles, was die KI angelegt hat'],
     ['f', 'Prompt-Regeln in der Anleitung erklärt'],
@@ -81,7 +81,7 @@ const Status = (() => {
     ['f', '21 Berechnungsarten'],
     ['f', 'Keine Planlimits — alles unbegrenzt und kostenlos'],
     ['f', 'Modellauswahl: Ollama, WebLLM und sechs Anbieter mit eigenem Schlüssel'],
-    ['t', 'Quellen einzeln ein- und ausschalten', 'Seitenkontext an oder aus, Wikipedia auf Zuruf']
+    ['f', 'Quellen einzeln ein- und ausschalten', 'fünf Schalter: Seite, Arbeitsbereich, Datenbanken, Verbundenes, Web']
   ]],
 
   ['Teil 5', 'Jeder Button', [
@@ -148,12 +148,12 @@ const Status = (() => {
     ['f', 'Sechs Diagrammtypen: Säule, Balken, Linie, Fläche, Ring, Kennzahl'],
     ['f', '21 Aggregationen für Diagramme'],
     ['f', 'Wiederkehrende Vorlagen täglich bis jährlich'],
-    ['o', 'Berechtigungsmatrix mit fünf Rollen', 'ohne Konten gibt es keine Rollen'],
+    ['t', 'Berechtigungsmatrix mit fünf Rollen', 'alle fünf Rollen wirken in Oberfläche und KI-Suche; ohne Server ist es eine Absprache, kein Schloss'],
     ['f', 'Keine harten Limits bei Eigenschaften oder Anfragen']
   ]],
 
   ['Teil 9', 'Offizielle API', [
-    ['t', 'REST-Schnittstelle unter /v1/ mit Token', 'die App ruft fremde APIs mit deinem Schlüssel auf; einen eigenen Server hat sie nicht'],
+    ['t', 'REST-Schnittstelle unter /v1/ mit Token', 'die App ruft fremde APIs auf und beantwortet MCP-Anfragen; eine eigene REST-Schnittstelle bräuchte einen Server'],
     ['t', 'Versions-Header und Fehlercode missing_version', 'Anthropic bekommt anthropic-version mitgeschickt; eigene Version hat diese App nicht'],
     ['t', 'Seiten erstellen, lesen, ändern', 'im Programm über Store statt über HTTP'],
     ['t', 'Einzelnen Eigenschaftswert abrufen', 'Datenbank.wert(zeile, schlüssel, sammlung)'],
@@ -170,29 +170,29 @@ const Status = (() => {
   ]],
 
   ['Teil 10', 'Kalender, Mail, Agenten', [
-    ['o', 'Google- und iCloud-Kalender verbinden', 'bräuchte Konten und einen Server'],
+    ['f', 'Google- und iCloud-Kalender verbinden', 'Google über die Schnittstelle, iCloud über den veröffentlichten Kalender'],
     ['f', 'Standardkalender festlegen und Kalender sortieren', 'mehrere Datenbanken je Kalender, ein- und ausschaltbar, verschiebbar'],
     ['f', 'Datenbanken mit Datumsfeld als Kalender anzeigen'],
     ['f', 'Mehrtägige Einträge und Zeiträume in Zeitstrahl und Kalender'],
     ['f', 'Kürzel D/W/M für Tag, Woche, Monat'],
-    ['o', 'Mail-Ansichten mit Eigenschaften und Filtern'],
-    ['o', 'Automatische Beschriftungen, Bausteine, Schnellantworten'],
-    ['o', 'Gmail-Kürzel im Mail-Programm'],
-    ['t', 'Vier Agententypen', 'eine lokale KI, kein Agentensystem'],
-    ['o', 'Eigene Agenten mit eigenen Berechtigungen'],
-    ['o', 'Agentenkonfiguration mit Wissen, Auslösern und Guthaben'],
+    ['f', 'Mail-Ansichten mit Eigenschaften und Filtern'],
+    ['f', 'Automatische Beschriftungen, Bausteine, Schnellantworten'],
+    ['f', 'Gmail-Kürzel im Mail-Programm', 'vierzehn Kürzel: j k o u e # r a l I U s /'],
+    ['f', 'Vier Agententypen', 'Assistent, Rechercheur, Redakteur, Datenbank-Baumeister'],
+    ['f', 'Eigene Agenten mit eigenen Berechtigungen'],
+    ['f', 'Agentenkonfiguration mit Wissen, Auslösern und Guthaben'],
     ['f', 'Schreibaktionen erfordern eine Bestätigung durch dich'],
-    ['o', 'Workers als eigener Code, aufrufbar als Werkzeug'],
-    ['o', 'MCP in beide Richtungen']
+    ['f', 'Workers als eigener Code, aufrufbar als Werkzeug', 'läuft im Web Worker, ohne Zugriff auf Seite und Daten'],
+    ['t', 'MCP in beide Richtungen', 'Client läuft; als Server beantwortet die App jede Anfrage, kann aber nichts entgegennehmen — dafür braucht es die Brücke']
   ]],
 
   ['Teil 11', 'Suche, Import, Offline, Wiki', [
     ['f', 'Suche über Strg+P, Seitensuche getrennt über Strg+F'],
     ['f', 'Suche zeigt nur, was auf diesem Gerät liegt'],
     ['f', 'Suchfilter für Bereich, Typ, Zeitraum und Ort'],
-    ['t', 'Unternehmenssuche über verbundene Apps und Web', 'Wikipedia nachschlagen ist eingebaut, kostenlos und ohne Schlüssel'],
+    ['f', 'Unternehmenssuche über verbundene Apps und Web', 'ein Index über Seiten, Datenbanken, Mail, Termine und Spiegel; dazu Wikipedia'],
     ['t', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel', 'Suche nach Seiten-ID ist da; ohne Konten gibt es keinen Besitzerwechsel'],
-    ['o', 'Web Clipper speichert Webseiten in eine Datenbank', 'bräuchte eine Browsererweiterung'],
+    ['f', 'Web Clipper speichert Webseiten in eine Datenbank', 'als Lesezeichen-Schnipsel, ohne Erweiterung'],
     ['f', 'Importwege: Einstellungen, Seitenmenü, Datenbank-CSV und Ziehen auf die Seite'],
     ['f', 'Importformate MD, CSV, TSV, XLSX, DOCX, HTML, EPUB'],
     ['f', 'Nach dem Import Eigenschaftstypen prüfen und Verknüpfungen nachbauen'],
@@ -221,18 +221,18 @@ const Status = (() => {
   ]],
 
   ['Teil 13', 'Integrationen und Sicherheit', [
-    ['t', '13 Verbindungskategorien modellieren', 'Einstellungen → Schlüssel und APIs führt sechs KI-Anbieter, Notion und Webhook'],
+    ['f', '13 Verbindungskategorien modellieren', 'Google, GitHub, Jira, Kalender-Abos, MCP, Webhook, sechs KI-Anbieter, Clipper, Ordner'],
     ['f', 'Verzeichnis der Verbindungen mit Fähigkeiten und Hinweis, was kostenlos ist'],
-    ['o', 'Gespiegelte Datenbanken aus Jira oder GitHub'],
-    ['o', 'MCP-Werkzeuge einzeln aktivierbar'],
+    ['f', 'Gespiegelte Datenbanken aus Jira oder GitHub'],
+    ['f', 'MCP-Werkzeuge einzeln aktivierbar'],
     ['f', 'Vor jeder Schreibaktion eine Bestätigung verlangen'],
-    ['o', 'Verwaltungsfreigabe für zugelassene Server'],
+    ['f', 'Verwaltungsfreigabe für zugelassene Server'],
     ['f', 'Vorlagengalerie mit sechs fertigen Aufbauten plus eigenen Vorlagen'],
     ['f', 'Daten verschlüsselt ablegen — AES-256 je Seite'],
     ['f', 'Datenort: dein Gerät, nichts verlässt es'],
-    ['t', 'Protokoll der Ereignisse', 'Versionsverlauf statt Prüfprotokoll'],
-    ['o', 'SAML SSO und Nutzerbereitstellung', 'es gibt keine Konten'],
-    ['t', 'Freigabekontrollen für Gäste und Web', 'Teilen heisst hier: Datei erzeugen'],
+    ['t', 'Protokoll der Ereignisse', 'Versionsverlauf, KI-Protokoll und Agentenläufe'],
+    ['t', 'SAML SSO und Nutzerbereitstellung', 'Anmeldung über Google liefert eine geprüfte Identität; SAML selbst braucht einen Identitätsanbieter und einen Server'],
+    ['t', 'Freigabekontrollen für Gäste und Web', 'Rollen je Seite und je Konto; Veröffentlichen über Cloudflare Pages'],
     ['f', 'Seiten sind immer offline verfügbar'],
     ['f', 'Strg+P für die Schnellsuche, Link kopieren im Seitenmenü']
   ]],

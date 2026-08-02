@@ -4356,6 +4356,7 @@ const Datenbank = (() => {
            relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
            ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
            rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN,
+           kiFeldFuellenFuer: kiFeldFuellen,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert };
 })();
