@@ -94,6 +94,43 @@ const Datenbank = (() => {
    * ======================================================================*/
 
   /** Liefert den Rohwert einer Spalte für eine Zeile. */
+  /* ------------------------------------------------------------------------
+   * Verknüpfungen in Formeln
+   * ------------------------------------------------------------------------
+   * Ein Seitenbezug sieht für die Formel wie sein Titel aus, merkt sich aber
+   * die ID. Damit funktioniert beides:
+   *     join(prop("Aufgaben"), ", ")                    → Titel
+   *     map(prop("Aufgaben"), current.prop("Kosten"))   → Werte der Zielzeile
+   * ----------------------------------------------------------------------*/
+  let formelTiefe = 0;
+
+  const seitenBezug = (id, name) => ({
+    __seite: id, name,
+    toString() { return this.name; },
+    valueOf()  { return this.name; }
+  });
+
+  const seitenListe = (ids) => (ids || []).map(id => {
+    const b = Store.getBlock(id);
+    return seitenBezug(id, b ? (b.text || 'Ohne Titel') : 'Gelöscht');
+  });
+
+  /** Liest eine Eigenschaft einer verknüpften Zeile — current.prop("…"). */
+  const fremdWert = (el, name) => {
+    const id = typeof el === 'string' ? el : (el && (el.__seite || el.id));
+    const z = id && Store.getBlock(id);
+    if (!z) return null;
+    const zc = z.parentTable === 'collection' ? Store.getCollection(z.parentId) : null;
+    if (!zc) return name.toLowerCase() === 'titel' || name.toLowerCase() === 'name'
+      ? (z.text || '') : null;
+    const k = Object.keys(zc.schema).find(x => zc.schema[x].name === name) ||
+              (/^(titel|name|title)$/i.test(name)
+                 ? Object.keys(zc.schema).find(x => zc.schema[x].type === 'title') : null);
+    if (!k) return null;
+    const v = wert(z, k, zc);
+    return zc.schema[k].type === 'relation' ? seitenListe(v) : v;
+  };
+
   const wert = (row, key, coll) => {
     const def = coll.schema[key];
     if (!def) return null;
@@ -118,11 +155,23 @@ const Datenbank = (() => {
     if (def.type === 'rollup') return rollupWert(row, def, coll);
 
     if (def.type === 'formula') {
-      const r = Formula.run(def.formula || '', (name) => {
-        const k = Object.keys(coll.schema).find(x => coll.schema[x].name === name);
-        return k ? wert(row, k, coll) : null;
-      });
-      return r.ok ? r.wert : '⚠ ' + (r.fehler || 'Fehler');
+      if (formelTiefe > 12) throw new Error('Die Formel dreht sich im Kreis');
+      formelTiefe++;
+      try {
+        const r = Formula.run(def.formula || '',
+          (name) => {
+            const k = Object.keys(coll.schema).find(x => coll.schema[x].name === name);
+            if (!k) return null;
+            /* Verknüpfungen kommen als Seitenbezüge herein: sie zeigen ihren
+               Titel an und lassen sich mit current.prop("…") weiterlesen. */
+            if (coll.schema[k].type === 'relation') return seitenListe(wert(row, k, coll));
+            return wert(row, k, coll);
+          },
+          fremdWert);
+        return r.ok ? r.wert : '⚠ ' + (r.fehler || 'Fehler');
+      } catch (e) {
+        return '⚠ ' + e.message;
+      } finally { formelTiefe--; }
     }
 
     const v = (row.props || {})[key];
@@ -465,7 +514,7 @@ const Datenbank = (() => {
       const b = document.createElement('button');
       b.className = 'db-tab' + (id === viewId ? ' on' : '');
       const ico = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
-                    timeline:'▬', chart:'📊', form:'📝', feed:'📰' }[v.layout] || '▦';
+                    timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺' }[v.layout] || '▦';
       b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
       b.addEventListener('click', () => {
         if (id === viewId) { ansichtMenue(b, coll, v, block); return; }
@@ -547,6 +596,7 @@ const Datenbank = (() => {
     else if (view.layout === 'chart')    koerper.appendChild(alsDiagramm(coll, view, rows));
     else if (view.layout === 'form')     koerper.appendChild(alsFormular(coll, view, block));
     else if (view.layout === 'feed')     koerper.appendChild(alsFeed(coll, view, rows));
+    else if (view.layout === 'map')      koerper.appendChild(alsKarte(coll, view, rows));
     else                                 koerper.appendChild(alsTabelle(coll, view, rows, block));
     w.appendChild(koerper);
 
@@ -689,6 +739,8 @@ const Datenbank = (() => {
           td.querySelector('.tt-auf').addEventListener('click', (e) => { e.stopPropagation(); App.oeffne(r.id); });
         } else {
           td.innerHTML = zelle(r, k, coll);
+          td.tabIndex = 0;
+          td.dataset.zelle = r.id + '|' + k;
           if ((view.umbruch || []).includes(k)) td.classList.add('umbruch');
           td.addEventListener('click', (e) => {
             if (e.target.type === 'checkbox') {
@@ -736,6 +788,46 @@ const Datenbank = (() => {
     ftr.appendChild(document.createElement('td'));
     tfoot.appendChild(ftr);
     t.appendChild(tfoot);
+
+    /* Mit Pfeilen von Zelle zu Zelle, Enter bearbeitet, Tab geht weiter —
+       so, wie man es aus Tabellen kennt. */
+    t.addEventListener('keydown', (e) => {
+      const td = e.target.closest('td[data-zelle]');
+      if (!td) return;
+      const zeilenListe = [...t.querySelectorAll('tbody tr')];
+      const zr2 = td.parentElement;
+      const spalten = [...zr2.querySelectorAll('td[data-zelle]')];
+      const y = zeilenListe.indexOf(zr2);
+      const x = spalten.indexOf(td);
+
+      const springe = (dy, dx) => {
+        const zeile2 = zeilenListe[y + dy];
+        if (!zeile2) return;
+        const felder = [...zeile2.querySelectorAll('td[data-zelle]')];
+        const ziel = felder[Math.max(0, Math.min(felder.length - 1, x + dx))];
+        if (ziel) { ziel.focus(); e.preventDefault(); }
+      };
+
+      if (e.key === 'ArrowRight') springe(0, 1);
+      if (e.key === 'ArrowLeft')  springe(0, -1);
+      if (e.key === 'ArrowDown')  springe(1, 0);
+      if (e.key === 'ArrowUp')    springe(-1, 0);
+      if (e.key === 'Tab')        { e.preventDefault(); springe(0, e.shiftKey ? -1 : 1); }
+      if (e.key === 'Enter' || e.key === 'F2') {
+        e.preventDefault();
+        const [rid, key] = td.dataset.zelle.split('|');
+        const zeile3 = Store.getBlock(rid);
+        if (zeile3) zelleBearbeiten(td, zeile3, key, coll);
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        const [rid, key] = td.dataset.zelle.split('|');
+        if (!['formula','created','edited','rollup','uid'].includes(coll.schema[key]?.type)) {
+          Store.setProp(rid, key, '');
+          App.zeichneSeite();
+        }
+      }
+    });
 
     const box = document.createElement('div');
     box.style.overflowX = 'auto';
@@ -1154,7 +1246,9 @@ const Datenbank = (() => {
       /* Die Sammelspalte für leere Werte nur zeigen, wenn wirklich etwas drin ist */
       if (g === '(Leer)' && !drin.length) return;
       /* Leere Gruppen ausblenden — ausser der Nutzer will sie sehen */
-      if (!drin.length && !view.leereGruppen) return;
+      /* Notion zeigt bei Auswahl- und Status-Spalten alle Optionen als Spalte,
+         auch die leeren. Wer sie loswerden will, schaltet sie im Menü aus. */
+      if (!drin.length && view.leereGruppen === false) return;
       const col = document.createElement('div');
       col.className = 'col k-' + (view.kartenGroesse || 'mittel');
       const opt = (def.options || []).find(o => o.name === g);
@@ -1247,6 +1341,7 @@ const Datenbank = (() => {
 
   /* --- Kalender ----------------------------------------------------------- */
   const alsKalender = (coll, view, rows) => {
+    /* Der Umschalter für ein Enddatum steht unter dem Kalender. */
     const w = document.createElement('div');
     const dk = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
 
@@ -1305,16 +1400,36 @@ const Datenbank = (() => {
       d.className = 'day' + (tag.toDateString() === heuteStr ? ' today' : '');
       d.innerHTML = `<div class="n">${t}</div>`;
 
+      /* Ein Eintrag kann über mehrere Tage laufen, wenn es ein Endedatum gibt. */
+      const endeKey = view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null;
+
       rows.forEach(r => {
         const v = wert(r, dk, coll);
         if (!v) return;
         const dv = new Date(v);
         if (isNaN(dv)) return;
-        if (dv.toDateString() !== tag.toDateString()) return;
+        const von = new Date(dv); von.setHours(0,0,0,0);
+        let bis = von;
+        if (endeKey) {
+          const e2 = new Date(wert(r, endeKey, coll));
+          if (!isNaN(e2)) { bis = new Date(e2); bis.setHours(0,0,0,0); }
+        }
+        const heuteTag = new Date(tag); heuteTag.setHours(0,0,0,0);
+        if (heuteTag < von || heuteTag > bis) return;
+
+        const mehrtaegig = bis > von;
+        const ersterTag2 = heuteTag.getTime() === von.getTime();
+        const letzterTag = heuteTag.getTime() === bis.getTime();
+
         const ev = document.createElement('div');
-        ev.className = 'ev';
-        ev.textContent = r.text || 'Ohne Titel';
-        ev.addEventListener('click', () => App.oeffne(r.id));
+        ev.className = 'ev' + (mehrtaegig ? ' lang' : '') +
+                       (mehrtaegig && ersterTag2 ? ' anfang' : '') +
+                       (mehrtaegig && letzterTag ? ' ende' : '');
+        ev.textContent = (mehrtaegig && !ersterTag2 ? '· ' : '') + (r.text || 'Ohne Titel');
+        ev.addEventListener('click', (e2) => {
+          e2.stopPropagation();
+          view.oeffnenAls === 'voll' ? App.oeffne(r.id) : zeilePeek(r, coll);
+        });
         d.appendChild(ev);
       });
 
@@ -1327,10 +1442,29 @@ const Datenbank = (() => {
     }
 
     w.appendChild(g);
-    const hinweis = document.createElement('div');
-    hinweis.style.cssText = 'font-size:12px; color:var(--text-faint); margin-top:6px';
-    hinweis.textContent = 'Doppelklick auf einen Tag legt einen Eintrag an.';
-    w.appendChild(hinweis);
+
+    const datumKeys2 = Object.keys(coll.schema).filter(k =>
+      ['date','created','edited'].includes(coll.schema[k].type));
+    const fuss = document.createElement('div');
+    fuss.className = 'cal-fuss';
+    fuss.innerHTML =
+      '<span>Doppelklick auf einen Tag legt einen Eintrag an.</span>' +
+      `<button data-a="ende">Zeitraum bis: <b>` +
+      `${view.endeKey && coll.schema[view.endeKey] ? esc(coll.schema[view.endeKey].name) : 'ein Tag'}</b></button>`;
+    fuss.addEventListener('click', e => {
+      if (!e.target.closest('[data-a="ende"]')) return;
+      const r2 = e.target.getBoundingClientRect();
+      const m = UI.menu('<div class="grp">Enddatum für mehrtägige Einträge</div>' +
+        datumKeys2.map(k => `<button data-e="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
+        '<hr><button data-e="">nur ein Tag</button>', r2.left, r2.bottom + 4);
+      m.addEventListener('click', ev => {
+        const b2 = ev.target.closest('button[data-e]');
+        if (!b2) return;
+        Store.updateView(view.id, { endeKey: b2.dataset.e });
+        m.remove(); App.zeichneSeite();
+      });
+    });
+    w.appendChild(fuss);
     return w;
   };
 
@@ -1438,6 +1572,192 @@ const Datenbank = (() => {
     return w;
   };
 
+  /* --- Karte: OpenStreetMap, kostenlos und ohne Schlüssel ----------------
+   * Kein fremdes Kartenpaket: die Kacheln kommen direkt von openstreetmap.org,
+   * die Umrechnung von Länge und Breite auf Kacheln steht unten.
+   * Orte werden über Nominatim gesucht (ebenfalls kostenlos) und danach in
+   * der Zeile gespeichert, damit dieselbe Adresse nie zweimal gesucht wird.
+   * ----------------------------------------------------------------------*/
+  const KACHEL = 256;
+
+  const nachKachel = (lat, lon, z) => {
+    const n = Math.pow(2, z);
+    const x = (lon + 180) / 360 * n;
+    const rad = lat * Math.PI / 180;
+    const y = (1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2 * n;
+    return { x, y };
+  };
+
+  /** Sucht eine Adresse — höchstens eine Anfrage je Sekunde, so will es Nominatim. */
+  let letzteSuche = 0;
+  const ortSuchen = async (text2) => {
+    const warten = Math.max(0, 1100 - (Date.now() - letzteSuche));
+    if (warten) await new Promise(r => setTimeout(r, warten));
+    letzteSuche = Date.now();
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
+                          encodeURIComponent(text2));
+    if (!r.ok) throw new Error('Ortssuche antwortet mit ' + r.status);
+    const d = await r.json();
+    if (!d.length) return null;
+    return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon), name: d[0].display_name };
+  };
+
+  const alsKarte = (coll, view, rows) => {
+    const w = document.createElement('div');
+    w.className = 'karte-w';
+
+    const ortKeys = Object.keys(coll.schema).filter(k =>
+      ['text','title','select'].includes(coll.schema[k].type));
+    const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortKeys[0];
+
+    if (!ortKey) {
+      w.innerHTML = '<div class="db-leer">Für die Karte braucht es eine Textspalte mit Orten.</div>';
+      return w;
+    }
+
+    /* Was ist schon bekannt? */
+    const punkte = rows.map(r => {
+      const g = (r.geo || {})[ortKey];
+      return g ? { row: r, lat: g.lat, lon: g.lon } : null;
+    }).filter(Boolean);
+
+    const offen = rows.filter(r => !(r.geo || {})[ortKey] &&
+                                   String(wert(r, ortKey, coll) || '').trim());
+
+    const kopf = document.createElement('div');
+    kopf.className = 'karte-kopf';
+    kopf.innerHTML =
+      `<span>${punkte.length} auf der Karte</span>` +
+      (offen.length ? `<button data-a="suchen">${offen.length} Orte nachschlagen</button>` : '') +
+      '<button data-a="spalte">Ortsspalte: <b>' + esc(coll.schema[ortKey].name) + '</b></button>' +
+      '<span class="karte-quelle">Karten © OpenStreetMap — kostenlos, ohne Schlüssel</span>';
+    w.appendChild(kopf);
+
+    const flaeche = document.createElement('div');
+    flaeche.className = 'karte';
+    w.appendChild(flaeche);
+
+    /* Mittelpunkt und Zoom */
+    let z = view.zoom || 5;
+    let mitte = punkte.length
+      ? { lat: punkte.reduce((a, p) => a + p.lat, 0) / punkte.length,
+          lon: punkte.reduce((a, p) => a + p.lon, 0) / punkte.length }
+      : { lat: 51.0, lon: 10.0 };
+
+    const male = () => {
+      const b = flaeche.clientWidth || 700, h = 420;
+      flaeche.innerHTML = '';
+      flaeche.style.height = h + 'px';
+
+      const m = nachKachel(mitte.lat, mitte.lon, z);
+      const linksOben = { x: m.x - b / 2 / KACHEL, y: m.y - h / 2 / KACHEL };
+      const n = Math.pow(2, z);
+
+      for (let dx = -1; dx <= Math.ceil(b / KACHEL); dx++) {
+        for (let dy = -1; dy <= Math.ceil(h / KACHEL); dy++) {
+          const tx = Math.floor(linksOben.x) + dx;
+          const ty = Math.floor(linksOben.y) + dy;
+          if (ty < 0 || ty >= n) continue;
+          const bild = document.createElement('img');
+          bild.className = 'kachel';
+          bild.loading = 'lazy';
+          bild.src = `https://tile.openstreetmap.org/${z}/${((tx % n) + n) % n}/${ty}.png`;
+          bild.style.left = ((tx - linksOben.x) * KACHEL) + 'px';
+          bild.style.top  = ((ty - linksOben.y) * KACHEL) + 'px';
+          bild.addEventListener('error', () => { bild.style.opacity = '0'; });
+          flaeche.appendChild(bild);
+        }
+      }
+
+      punkte.forEach(p => {
+        const k = nachKachel(p.lat, p.lon, z);
+        const x = (k.x - linksOben.x) * KACHEL;
+        const y = (k.y - linksOben.y) * KACHEL;
+        if (x < -40 || y < -40 || x > b + 40 || y > h + 40) return;
+        const nadel = document.createElement('button');
+        nadel.className = 'nadel';
+        nadel.style.left = x + 'px';
+        nadel.style.top = y + 'px';
+        nadel.innerHTML = '<span class="n-punkt"></span><span class="n-text">' +
+                          esc(p.row.text || 'Ohne Titel') + '</span>';
+        nadel.addEventListener('click', () => zeilePeek(p.row, coll));
+        flaeche.appendChild(nadel);
+      });
+
+      const werkzeuge = document.createElement('div');
+      werkzeuge.className = 'karte-zoom';
+      werkzeuge.innerHTML = '<button data-z="1">+</button><button data-z="-1">−</button>';
+      werkzeuge.addEventListener('click', e => {
+        const b2 = e.target.closest('[data-z]');
+        if (!b2) return;
+        z = Math.max(2, Math.min(18, z + (+b2.dataset.z)));
+        Store.updateView(view.id, { zoom: z });
+        male();
+      });
+      flaeche.appendChild(werkzeuge);
+    };
+
+    /* Ziehen verschiebt die Karte */
+    let zieht = false, zx = 0, zy = 0;
+    flaeche.addEventListener('pointerdown', e => {
+      if (e.target.closest('.nadel, .karte-zoom')) return;
+      zieht = true; zx = e.clientX; zy = e.clientY;
+      flaeche.setPointerCapture(e.pointerId);
+    });
+    flaeche.addEventListener('pointermove', e => {
+      if (!zieht) return;
+      const n = Math.pow(2, z);
+      mitte.lon -= (e.clientX - zx) / KACHEL / n * 360;
+      const dLat = (e.clientY - zy) / KACHEL / n * 360;
+      mitte.lat = Math.max(-85, Math.min(85, mitte.lat + dLat * Math.cos(mitte.lat * Math.PI / 180)));
+      zx = e.clientX; zy = e.clientY;
+      male();
+    });
+    flaeche.addEventListener('pointerup', () => { zieht = false; });
+
+    setTimeout(male, 0);
+
+    kopf.addEventListener('click', async e => {
+      if (e.target.closest('[data-a="spalte"]')) {
+        const r = e.target.getBoundingClientRect();
+        const m = UI.menu('<div class="grp">Welche Spalte enthält den Ort?</div>' +
+          ortKeys.map(k => `<button data-k="${k}">${esc(coll.schema[k].name)}</button>`).join(''),
+          r.left, r.bottom + 4);
+        m.addEventListener('click', ev => {
+          const k = ev.target.closest('button[data-k]');
+          if (!k) return;
+          Store.updateView(view.id, { ortKey: k.dataset.k });
+          m.remove(); App.zeichneSeite();
+        });
+        return;
+      }
+      if (!e.target.closest('[data-a="suchen"]')) return;
+
+      UI.toast(offen.length + ' Orte werden nachgeschlagen — das dauert etwa ' + offen.length + ' Sekunden');
+      let n = 0;
+      for (const r of offen) {
+        const txt = String(wert(r, ortKey, coll) || '').trim();
+        try {
+          const g = await ortSuchen(txt);
+          if (g) {
+            const geo = Object.assign({}, r.geo || {});
+            geo[ortKey] = { lat: g.lat, lon: g.lon, name: g.name };
+            Store.updateBlock(r.id, { geo });
+            n++;
+          }
+        } catch (err) {
+          UI.banner('Ortssuche nicht möglich: ' + err.message +
+                    ' — offline oder vom Browser blockiert.', 'warn');
+          break;
+        }
+      }
+      UI.toast(n + ' Orte gefunden');
+      App.zeichneSeite();
+    });
+
+    return w;
+  };
+
   /* --- Feed: der Zeitstrom, neueste zuerst (Notions Feed-View) ----------- */
   const alsFeed = (coll, view, rows) => {
     const w = document.createElement('div');
@@ -1511,22 +1831,69 @@ const Datenbank = (() => {
       return w;
     }
 
+    /* Datumsstufe: Tag, Woche, Monat, Quartal oder Jahr — wie in Notion */
+    const stufe = view.chartStufe || 'monat';
+    const alsStufe = (roh) => {
+      const d = new Date(roh);
+      if (isNaN(d)) return String(roh);
+      const j = d.getFullYear();
+      if (stufe === 'tag')     return d.toISOString().slice(0, 10);
+      if (stufe === 'woche')   {
+        const start = Einstellungen.wochenstart();
+        const t = new Date(d);
+        t.setDate(t.getDate() - ((t.getDay() - start + 7) % 7));
+        return t.toISOString().slice(0, 10) + ' (KW)';
+      }
+      if (stufe === 'quartal') return j + ' Q' + (Math.floor(d.getMonth() / 3) + 1);
+      if (stufe === 'jahr')    return String(j);
+      return d.toISOString().slice(0, 7);
+    };
+
+    /* Zusammenfassen — nicht nur Summe */
+    const art = view.chartArt || (mKey ? 'Summe' : 'Anzahl');
     const map = new Map();
     rows.forEach(r => {
       let k = wert(r, gKey, coll);
       if (Array.isArray(k)) k = k.join(', ');
-      if (coll.schema[gKey].type === 'date' && k) k = String(k).slice(0, 7);
+      if (['date','created','edited'].includes(coll.schema[gKey].type) && k) k = alsStufe(k);
       const name = (k === '' || k == null || k === false) ? '(leer)' : String(k);
       const v = mKey ? Formula.zahl(wert(r, mKey, coll)) : 1;
-      map.set(name, (map.get(name) || 0) + (isNaN(v) ? 0 : v));
+      if (!map.has(name)) map.set(name, []);
+      map.get(name).push(isNaN(v) ? 0 : v);
     });
-    const werte = [...map.entries()].map(([name, w2]) => ({ name, wert: w2 }));
+
+    const fasseZusammen = (liste) => {
+      switch (art) {
+        case 'Anzahl':        return liste.length;
+        case 'Summe':         return liste.reduce((a, b) => a + b, 0);
+        case 'Durchschnitt':  return liste.length ? +(liste.reduce((a, b) => a + b, 0) / liste.length).toFixed(2) : 0;
+        case 'Median': {
+          if (!liste.length) return 0;
+          const so = liste.slice().sort((a, b) => a - b);
+          const m2 = Math.floor(so.length / 2);
+          return so.length % 2 ? so[m2] : (so[m2 - 1] + so[m2]) / 2;
+        }
+        case 'Minimum':          return liste.length ? Math.min(...liste) : 0;
+        case 'Maximum':          return liste.length ? Math.max(...liste) : 0;
+        case 'Spanne':           return liste.length ? Math.max(...liste) - Math.min(...liste) : 0;
+        case 'Eindeutige zählen':return new Set(liste).size;
+        case 'Gefüllte zählen':  return liste.filter(x => x !== 0).length;
+        case 'Leere zählen':     return liste.filter(x => x === 0).length;
+        case 'Prozent gefüllt':  return liste.length ? Math.round(liste.filter(x => x !== 0).length / liste.length * 100) : 0;
+        default:                 return liste.reduce((a, b) => a + b, 0);
+      }
+    };
+
+    const werte = [...map.entries()]
+      .map(([name, liste]) => ({ name, wert: fasseZusammen(liste) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     const leiste = document.createElement('div');
     leiste.className = 'chart-head';
     leiste.innerHTML =
       `<span class="chart-titel">${esc(coll.name)} — ${esc(coll.schema[gKey].name)}` +
-      (mKey ? ' nach ' + esc(coll.schema[mKey].name) : ' (Anzahl)') + '</span>' +
+      (mKey ? ' · ' + art + ' von ' + esc(coll.schema[mKey].name) : ' · ' + art) +
+      (['date','created','edited'].includes(coll.schema[gKey].type) ? ' je ' + stufe : '') + '</span>' +
       '<div class="chart-typen">' +
         [['bar','Balken'],['line','Linie'],['area','Fläche'],['donut','Ring'],['kpi','Kennzahl']]
           .map(([id, n]) => `<button data-ct="${id}"${id === typ ? ' class="on"' : ''}>${n}</button>`).join('') +
@@ -1541,16 +1908,29 @@ const Datenbank = (() => {
       const r = e.target.getBoundingClientRect();
       const m = UI.menu(
         '<div class="grp">Gruppieren nach</div>' +
-        gruppierbar.map(k => `<button data-g="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
+        gruppierbar.map(k => `<button data-g="${k}">${esc(coll.schema[k].name)}` +
+          (k === gKey ? '<span class="ms">✓</span>' : '') + '</button>').join('') +
+        '<div class="grp">Zeitstufe (bei Datum)</div>' +
+        ['tag','woche','monat','quartal','jahr'].map(x =>
+          `<button data-s="${x}">${x}${x === stufe ? '<span class="ms">✓</span>' : ''}</button>`).join('') +
         '<div class="grp">Werte</div>' +
         '<button data-m="">Anzahl der Einträge</button>' +
-        messbar.map(k => `<button data-m="${k}">Summe von ${esc(coll.schema[k].name)}</button>`).join(''),
+        messbar.map(k => `<button data-m="${k}">${esc(coll.schema[k].name)}` +
+          (k === mKey ? '<span class="ms">✓</span>' : '') + '</button>').join('') +
+        '<div class="grp">Zusammenfassen</div>' +
+        ['Anzahl','Summe','Durchschnitt','Median','Minimum','Maximum','Spanne',
+         'Eindeutige zählen','Gefüllte zählen','Leere zählen','Prozent gefüllt'].map(x =>
+          `<button data-art="${esc(x)}">${x}${x === art ? '<span class="ms">✓</span>' : ''}</button>`).join(''),
         r.left, r.bottom + 4);
       m.addEventListener('click', ev => {
         const g = ev.target.closest('button[data-g]');
         const mm = ev.target.closest('button[data-m]');
+        const st = ev.target.closest('button[data-s]');
+        const ar = ev.target.closest('button[data-art]');
         if (g) Store.updateView(view.id, { chartGruppe: g.dataset.g });
         else if (mm) Store.updateView(view.id, { chartWert: mm.dataset.m });
+        else if (st) Store.updateView(view.id, { chartStufe: st.dataset.s });
+        else if (ar) Store.updateView(view.id, { chartArt: ar.dataset.art });
         else return;
         m.remove(); App.zeichneSeite();
       });
@@ -1868,7 +2248,7 @@ const Datenbank = (() => {
       [['table','▦','Tabelle'],['board','▤','Board'],['list','☰','Liste'],
        ['gallery','▩','Galerie'],['calendar','📅','Kalender'],
        ['timeline','▬','Zeitstrahl'],['chart','📊','Diagramm'],['form','📝','Formular'],
-       ['feed','📰','Feed']]
+       ['feed','📰','Feed'],['map','🗺','Karte']]
         .map(([id,i,n]) => `<button data-l="${id}"><span class="mi">${i}</span>${n}</button>`).join(''),
       r.left, r.bottom + 4);
     m.addEventListener('click', e => {
@@ -2447,7 +2827,7 @@ const Datenbank = (() => {
       `<button data-a="oeffnen"><span class="mi">◧</span>Einträge öffnen als` +
         `<span class="ms">${view.oeffnenAls === 'voll' ? 'Seite' : 'Vorschau'}</span></button>` +
       `<button data-a="kartengroesse"><span class="mi">▩</span>Kartengrösse<span class="ms">${view.kartenGroesse || 'mittel'}</span></button>` +
-      `<button data-a="leere"><span class="mi">␀</span>Leere Gruppen<span class="ms">${view.leereGruppen ? 'zeigen' : 'aus'}</span></button>` +
+      `<button data-a="leere"><span class="mi">␀</span>Leere Gruppen<span class="ms">${view.leereGruppen === false ? 'aus' : 'zeigen'}</span></button>` +
       `<button data-a="limit"><span class="mi">≡</span>Höchstens anzeigen<span class="ms">${view.limit || 'alle'}</span></button>` +
       '<hr>' +
       '<button data-a="link"><span class="mi">🔗</span>Link zur Ansicht kopieren</button>' +
@@ -2537,7 +2917,7 @@ const Datenbank = (() => {
         App.zeichneSeite();
       }
       if (a === 'leere') {
-        Store.updateView(view.id, { leereGruppen: !view.leereGruppen });
+        Store.updateView(view.id, { leereGruppen: view.leereGruppen === false });
         App.zeichneSeite();
       }
       if (a === 'link') {
@@ -2576,6 +2956,7 @@ const Datenbank = (() => {
         <div style="padding:10px 18px; font-size:12px; color:var(--text-dim); border-top:1px solid var(--line)">
           Spalten: ${spalten.map(s => `<code style="cursor:pointer" class="fxp">prop("${esc(s)}")</code>`).join(' ')}
           <br><br>Text wird mit <b>+</b> verkettet, nicht mit concat(). concat() ist nur für Listen.
+          <br>Durch eine Verknüpfung lesen: <code>map(prop("Aufgaben"), current.prop("Kosten")).sum()</code>
         </div>
         <div style="padding:12px 18px; display:flex; gap:8px; justify-content:flex-end;
           border-top:1px solid var(--line)">
@@ -2596,8 +2977,10 @@ const Datenbank = (() => {
       if (erste) {
         const r = Formula.run(ta.value, (name) => {
           const k = Object.keys(coll.schema).find(x => coll.schema[x].name === name);
-          return k ? wert(erste, k, coll) : null;
-        });
+          if (!k) return null;
+          if (coll.schema[k].type === 'relation') return seitenListe(wert(erste, k, coll));
+          return wert(erste, k, coll);
+        }, fremdWert);
         out.style.color = r.ok ? 'var(--c-green)' : 'var(--c-red)';
         out.textContent = r.ok ? '✓ Beispiel: ' + Formula.anzeige(r.wert) : '⚠ ' + r.fehler;
       } else {
@@ -2669,6 +3052,41 @@ const Datenbank = (() => {
   /* ========================================================================
    * ZEILENVORLAGEN   (Notions „New with template")
    * ======================================================================*/
+  /** Platzhalter in Vorlagen: heute, morgen, jetzt, {datum} … */
+  const platzhalter = (v) => {
+    if (typeof v !== 'string') return v;
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    const iso = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    if (v === 'heute')  return iso;
+    if (v === 'jetzt')  return iso + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+    if (v === 'morgen') { const t = new Date(d); t.setDate(t.getDate() + 1);
+      return t.getFullYear() + '-' + p(t.getMonth() + 1) + '-' + p(t.getDate()); }
+    return v
+      .replace(/\{datum\}/g, d.toLocaleDateString('de-DE'))
+      .replace(/\{tag\}/g,   d.toLocaleDateString('de-DE', { weekday: 'long' }))
+      .replace(/\{monat\}/g, d.toLocaleDateString('de-DE', { month: 'long' }))
+      .replace(/\{jahr\}/g,  String(d.getFullYear()))
+      .replace(/\{woche\}/g, 'KW ' + kalenderwoche(d));
+  };
+
+  const kalenderwoche = (d) => {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+    const jahresstart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - jahresstart) / 86400000 + 1) / 7);
+  };
+
+  /** Einen Eintrag aus einer Vorlage anlegen — auch die Unterseiten kommen mit. */
+  const ausVorlage = (coll, v) => {
+    const props = JSON.parse(JSON.stringify(v.props || {}));
+    Object.keys(props).forEach(k => { props[k] = platzhalter(props[k]); });
+    const z = Store.addRow(coll.id, props);
+    Store.updateBlock(z.id, { text: platzhalter(v.titel || v.name) });
+    (v.inhalt || []).forEach(k => Store.baumEinfuegen(k, z.id));
+    return z;
+  };
+
   const vorlagenMenue = (anker, coll, view) => {
     const liste = coll.vorlagen || [];
     const r = anker.getBoundingClientRect();
@@ -2677,6 +3095,8 @@ const Datenbank = (() => {
       (liste.length
         ? liste.map((v, i) =>
             `<button data-v="${i}"><span class="mi">${esc(v.icon || '🧩')}</span>${esc(v.name)}` +
+            (v.wdh && v.wdh.art ? '<span class="ms" style="right:52px" title="wiederholt sich">🔁</span>' : '') +
+            `<span class="ms" style="right:28px" data-vwdh="${i}" title="Wiederholung">⏱</span>` +
             `<span class="ms" data-vweg="${i}">✕</span></button>`).join('')
         : '<div class="grp" style="font-weight:400">Noch keine Vorlage</div>') +
       '<hr>' +
@@ -2692,6 +3112,9 @@ const Datenbank = (() => {
         m.remove(); UI.toast('Vorlage entfernt');
         return;
       }
+      const wdh = e.target.closest('[data-vwdh]');
+      if (wdh) { m.remove(); wiederholungEinstellen(coll, +wdh.dataset.vwdh); return; }
+
       const b = e.target.closest('button[data-v], button[data-a]');
       if (!b) return;
       m.remove();
@@ -2727,11 +3150,124 @@ const Datenbank = (() => {
       /* Aus einer Vorlage anlegen */
       const v = liste[+b.dataset.v];
       if (!v) return;
-      const neu2 = Store.addRow(coll.id, JSON.parse(JSON.stringify(v.props || {})));
-      Store.updateBlock(neu2.id, { text: v.titel || v.name });
-      (v.inhalt || []).forEach(k => Store.baumEinfuegen(k, neu2.id));
+      ausVorlage(coll, v);
       App.zeichneSeite();
       UI.toast('Eintrag aus Vorlage angelegt');
+    });
+  };
+
+  /* ------------------------------------------------------------------------
+   * Wiederkehrende Vorlagen — Notions „Repeat" an einer Datenbankvorlage.
+   * Die Vorlage legt sich in einem festen Takt selbst an. Geprüft wird beim
+   * Start und danach stündlich; jede Periode kommt höchstens einmal dran.
+   * ----------------------------------------------------------------------*/
+  const WDH_ARTEN = [
+    ['',             'Nicht wiederholen'],
+    ['taeglich',     'Jeden Tag'],
+    ['wochentags',   'Montag bis Freitag'],
+    ['woechentlich', 'Jede Woche'],
+    ['monatlich',    'Jeden Monat'],
+    ['jaehrlich',    'Jedes Jahr']
+  ];
+  const WOCHENTAGE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
+  const wdhPeriode = (art, d) => {
+    const p = (n) => String(n).padStart(2, '0');
+    if (art === 'jaehrlich')    return String(d.getFullYear());
+    if (art === 'monatlich')    return d.getFullYear() + '-' + p(d.getMonth() + 1);
+    if (art === 'woechentlich') return d.getFullYear() + '-KW' + p(kalenderwoche(d));
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  };
+
+  const wiederholungEinstellen = (coll, i) => {
+    const v = (coll.vorlagen || [])[i];
+    if (!v) return;
+    const w = v.wdh || {};
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(460px,94vw)">' +
+        `<div class="fh">🔁 Wiederholung — ${esc(v.name)}` +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div style="padding:16px 18px; display:flex; flex-direction:column; gap:13px">' +
+          '<label>Takt<br><select id="wa">' +
+            WDH_ARTEN.map(([id, n]) =>
+              `<option value="${id}"${(w.art || '') === id ? ' selected' : ''}>${n}</option>`).join('') +
+          '</select></label>' +
+          '<label id="wtl">Wochentag<br><select id="wt">' +
+            WOCHENTAGE.map((n, k) =>
+              `<option value="${k}"${String(w.tag) === String(k) ? ' selected' : ''}>${n}</option>`).join('') +
+          '</select></label>' +
+          '<label id="wml">Tag im Monat<br><input id="wm" type="number" min="1" max="28" ' +
+            `value="${w.tag != null ? esc(String(w.tag)) : 1}"></label>` +
+          '<label>Ab welcher Uhrzeit<br><input id="ws" type="number" min="0" max="23" ' +
+            `value="${w.stunde != null ? esc(String(w.stunde)) : 6}"></label>` +
+          '<div style="font-size:13px;color:var(--text-faint);line-height:1.5">' +
+            'Im Titel und in Textfeldern der Vorlage funktionieren <b>{datum}</b>, <b>{tag}</b>, ' +
+            '<b>{woche}</b>, <b>{monat}</b> und <b>{jahr}</b>. In Datumsfeldern ' +
+            '<b>heute</b>, <b>morgen</b> und <b>jetzt</b>.<br>' +
+            'Geprüft wird, während die App offen ist — verpasste Tage werden beim nächsten ' +
+            'Öffnen nachgeholt.</div>' +
+        '</div>' +
+        '<div class="fbtns"><button data-a="ok" class="prim">Sichern</button>' +
+          '<button data-a="jetzt">Einmal jetzt anlegen</button>' +
+          '<button data-a="zu">Abbrechen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const auffrischen = () => {
+      const a = o.querySelector('#wa').value;
+      o.querySelector('#wtl').style.display = a === 'woechentlich' ? '' : 'none';
+      o.querySelector('#wml').style.display = a === 'monatlich' ? '' : 'none';
+    };
+    auffrischen();
+    o.querySelector('#wa').addEventListener('change', auffrischen);
+
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      if (e.target.closest('[data-a="jetzt"]')) {
+        ausVorlage(coll, v); o.remove(); App.zeichneSeite();
+        UI.toast('Eintrag aus Vorlage angelegt'); return;
+      }
+      if (!e.target.closest('[data-a="ok"]')) return;
+      const art = o.querySelector('#wa').value;
+      if (!art) { delete v.wdh; }
+      else {
+        v.wdh = {
+          art,
+          tag: art === 'woechentlich' ? +o.querySelector('#wt').value
+             : art === 'monatlich'    ? +o.querySelector('#wm').value : null,
+          stunde: +o.querySelector('#ws').value || 0,
+          zuletzt: (v.wdh || {}).zuletzt || null
+        };
+      }
+      Store.updateCollection(coll.id, { vorlagen: coll.vorlagen });
+      o.remove();
+      UI.toast(art ? 'Wiederholung eingestellt' : 'Wiederholung ausgeschaltet');
+    });
+  };
+
+  const vorlagenLaufen = () => {
+    const jetzt = new Date();
+    Object.values(Store.cache.collections).forEach(coll => {
+      let geaendert = false;
+      (coll.vorlagen || []).forEach(v => {
+        const w = v.wdh;
+        if (!w || !w.art) return;
+        if (jetzt.getHours() < (w.stunde || 0)) return;
+        if (w.art === 'wochentags' && (jetzt.getDay() === 0 || jetzt.getDay() === 6)) return;
+        if (w.art === 'woechentlich' && w.tag != null && jetzt.getDay() !== +w.tag) return;
+        if (w.art === 'monatlich' && w.tag && jetzt.getDate() !== +w.tag) return;
+        const p = wdhPeriode(w.art, jetzt);
+        if (w.zuletzt === p) return;
+        w.zuletzt = p;
+        geaendert = true;
+        ausVorlage(coll, v);
+      });
+      if (geaendert) {
+        Store.updateCollection(coll.id, { vorlagen: coll.vorlagen });
+        UI.toast('🔁 Wiederkehrender Eintrag angelegt');
+      }
     });
   };
 
@@ -2754,10 +3290,83 @@ const Datenbank = (() => {
     ['erinnerung',   'Erinnerung anlegen'],
     ['unterseite',   'Unterseite im Eintrag anlegen'],
     ['zaehler',      'Zähler um eins erhöhen'],
+    ['wiederholen',  'Nächsten Termin dieser Aufgabe anlegen'],
+    ['fremd-setzen', 'Einträge einer anderen Datenbank ändern'],
+    ['webhook',      'An eine Webadresse schicken'],
     ['melden',       'Kurze Meldung zeigen']
   ];
 
+  /** „1 Woche", „3 Tage", „monatlich", „14" — alles wird zu einem Datumssprung. */
+  const naechstesDatum = (basis, takt) => {
+    const d = new Date(basis);
+    if (isNaN(d)) return null;
+    const t = String(takt || '1 Woche').toLowerCase();
+    const n = parseInt(t.replace(/[^0-9]/g, ''), 10) || 1;
+    /* Der 31. plus ein Monat ist der 30. — nicht der 1. des übernächsten. */
+    const monateDazu = (anzahl) => {
+      const tagImMonat = d.getDate();
+      d.setDate(1);
+      d.setMonth(d.getMonth() + anzahl);
+      const letzter = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      d.setDate(Math.min(tagImMonat, letzter));
+    };
+    if (/jahr/.test(t))       monateDazu(12 * n);
+    else if (/monat/.test(t)) monateDazu(n);
+    else if (/woche/.test(t)) d.setDate(d.getDate() + 7 * n);
+    else if (/werktag/.test(t)) {
+      let offen = n;
+      while (offen > 0) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) offen--; }
+    }
+    else d.setDate(d.getDate() + n);
+    const p = (x) => String(x).padStart(2, '0');
+    const kurz = String(basis).length <= 10;
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+           (kurz ? '' : 'T' + p(d.getHours()) + ':' + p(d.getMinutes()));
+  };
+
   let imLauf = false;   /* verhindert, dass Automationen sich gegenseitig auslösen */
+  let wdhZaehler = 0;   /* Notbremse gegen Ketten, die sich selbst nachlegen */
+
+  /**
+   * Einträge einer anderen Datenbank ändern — Notions „Edit pages in".
+   * Wahlweise alle, die durch den Filter einer Ansicht kommen, oder alle,
+   * die einer Regel entsprechen. Höchstens 500 auf einmal.
+   */
+  const fremdSetzen = (d, row, coll) => {
+    const ziel = Store.getCollection(d.ziel);
+    if (!ziel) { UI.toast('Die Zieldatenbank gibt es nicht mehr'); return 0; }
+    let zeilen = Store.rowsOf(ziel.id);
+
+    if (d.ansicht) {
+      const v = Store.getView(d.ansicht);
+      if (v) zeilen = zeilen.filter(z => gruppeTrifftZu(z, v.filters, ziel));
+    }
+    if (d.filterKey && ziel.schema[d.filterKey]) {
+      zeilen = zeilen.filter(z => trifftZu(z, {
+        key: d.filterKey,
+        op: d.filterOp || (OPERATOREN[ziel.schema[d.filterKey].type] || OPERATOREN.text)[0],
+        wert: d.filterWert
+      }, ziel));
+    }
+    if (d.nurVerknuepft && row) {
+      const rel = Object.keys(ziel.schema).find(k =>
+        ziel.schema[k].type === 'relation' && ziel.schema[k].collectionId === (coll || {}).id);
+      if (rel) zeilen = zeilen.filter(z => (z.props?.[rel] || []).includes(row.id));
+    }
+
+    zeilen = zeilen.slice(0, 500);
+    if (!ziel.schema[d.zielKey]) { UI.toast('Die Zieleigenschaft gibt es nicht mehr'); return 0; }
+
+    zeilen.forEach(z => {
+      let v = platzhalter(d.wert ?? '');
+      if (v === '{titel}')  v = (row && row.text) || '';
+      if (v === '{leer}')   v = '';
+      if (ziel.schema[d.zielKey].type === 'checkbox') v = v === 'true' || v === 'ja' || v === true;
+      if (ziel.schema[d.zielKey].type === 'number')   v = Formula.zahl(v);
+      Store.setProp(z.id, d.zielKey, v);
+    });
+    return zeilen.length;
+  };
 
   const automationenLaufen = (row, coll, art, key, neuerWert) => {
     if (imLauf || !coll || !(coll.automationen || []).length) return;
@@ -2806,8 +3415,49 @@ const Datenbank = (() => {
           if (d.art === 'unterseite') {
             Store.addBlock(row.id, 'text', { text: d.text || '' });
           }
+          /* Wiederkehrende Aufgabe: der erledigte Eintrag bleibt stehen,
+             daneben entsteht der nächste Termin. */
+          if (d.art === 'wiederholen') {
+            if (wdhZaehler++ > 30) { UI.toast('Wiederholung gestoppt — zu viele auf einmal'); return; }
+            const dk = d.key || Object.keys(coll.schema).find(k2 => coll.schema[k2].type === 'date');
+            const alt = dk ? String(wert(row, dk, coll) || '') : '';
+            const neuDatum = naechstesDatum(alt || new Date().toISOString().slice(0, 10), d.text);
+            if (!neuDatum) { UI.toast('Kein Datum zum Weiterzählen gefunden'); return; }
+            const props = JSON.parse(JSON.stringify(row.props || {}));
+            if (dk) props[dk] = neuDatum;
+            /* Das Feld, das die Automation ausgelöst hat, wird zurückgesetzt —
+               sonst wäre der neue Eintrag sofort wieder erledigt. */
+            if (key && coll.schema[key]) {
+              props[key] = coll.schema[key].type === 'checkbox' ? false : '';
+            }
+            Object.keys(props).forEach(k2 => {
+              const typ = coll.schema[k2] && coll.schema[k2].type;
+              if (typ === 'formula' || typ === 'rollup' || typ === 'created' || typ === 'edited') delete props[k2];
+            });
+            const neu3 = Store.addRow(coll.id, props);
+            Store.updateBlock(neu3.id, { text: row.text || '' });
+            UI.toast('🔁 Nächster Termin: ' + neuDatum.slice(0, 10));
+          }
+          /* Einträge einer anderen Datenbank ändern — Notions „Edit pages in". */
+          if (d.art === 'fremd-setzen' && d.ziel) {
+            const n = fremdSetzen(d, row, coll);
+            if (n) UI.toast(n + (n === 1 ? ' Eintrag geändert' : ' Einträge geändert'));
+          }
           if (d.art === 'melden') {
             UI.toast('⚡ ' + (d.text || a.name || 'Automation ausgeführt'));
+          }
+          if (d.art === 'webhook') {
+            const url = d.text || Store.getMeta('api:webhook', '');
+            if (!url) { UI.toast('Keine Webhook-Adresse hinterlegt'); return; }
+            const paket = { datenbank: coll.name, eintrag: row.text || '', zeit: Store.now(), werte: {} };
+            Object.keys(coll.schema).forEach(k2 => {
+              paket.werte[coll.schema[k2].name] = Formula.anzeige(wert(row, k2, coll));
+            });
+            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify(paket) })
+              .then(() => UI.toast('An den Webhook geschickt'))
+              .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message +
+                                      ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
           }
         });
       });
@@ -2855,6 +3505,9 @@ const Datenbank = (() => {
   const automationenEinklinken = () => {
     setTimeout(zeitAutomationen, 4000);
     setInterval(zeitAutomationen, 3600000);
+    setTimeout(vorlagenLaufen, 5000);
+    setInterval(vorlagenLaufen, 1800000);
+    setInterval(() => { wdhZaehler = 0; }, 3000);
 
     const altAddRow = Store.addRow;
     Store.addRow = function (collectionId, props) {
@@ -2955,6 +3608,20 @@ const Datenbank = (() => {
             keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
           '</select></label>' +
           '<label id="adw">… auf diesen Wert<br><input id="adv" placeholder="z. B. heute"></label>' +
+          '<div id="afz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
+               'padding:12px; display:none; flex-direction:column; gap:11px">' +
+            '<label>In welcher Datenbank<br><select id="afd">' +
+              Object.values(Store.cache.collections)
+                .map(c => `<option value="${c.id}">${esc(c.name || 'Ohne Namen')}</option>`).join('') +
+            '</select></label>' +
+            '<label>Diese Eigenschaft setzen<br><select id="afk"></select></label>' +
+            '<label>… auf diesen Wert<br><input id="afv" placeholder="Wert · {titel} · {leer} · heute"></label>' +
+            '<label>Nur bei Einträgen, wo …<br>' +
+              '<select id="aff"><option value="">alle Einträge</option></select> ' +
+              '<input id="affv" placeholder="Wert" style="margin-top:5px"></label>' +
+            '<label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
+              '<input type="checkbox" id="afr"> nur Einträge, die mit diesem hier verknüpft sind</label>' +
+          '</div>' +
         '</div>' +
         '<div class="fbtns">' +
           '<button data-a="bedingung">＋ Bedingung</button>' +
@@ -2971,11 +3638,33 @@ const Datenbank = (() => {
       o.querySelector('#awl').firstChild.textContent = zeit ? 'wie viele Tage?' : '… mit diesem Wert';
       o.querySelector('#av').placeholder = zeit ? 'z. B. 3' : 'z. B. Erledigt';
       const d = o.querySelector('#ad').value;
-      o.querySelector('#adk').style.display = ['setze-prop','ki-fuellen','zaehler'].includes(d) ? '' : 'none';
-      o.querySelector('#adw').style.display = ['setze-prop','erinnerung','unterseite','melden'].includes(d) ? '' : 'none';
-      o.querySelector('#adv').placeholder = d === 'erinnerung' ? 'in wie vielen Tagen? z. B. 3'
-                                          : d === 'melden' ? 'Text der Meldung' : 'Wert';
+      o.querySelector('#adk').style.display =
+        ['setze-prop','ki-fuellen','zaehler','wiederholen'].includes(d) ? '' : 'none';
+      o.querySelector('#adk').firstChild.textContent =
+        d === 'wiederholen' ? '… welches Datum weitergezählt wird' : '… diese Eigenschaft';
+      o.querySelector('#adw').style.display =
+        ['setze-prop','erinnerung','unterseite','melden','webhook','wiederholen'].includes(d) ? '' : 'none';
+      o.querySelector('#adv').placeholder =
+        d === 'erinnerung'  ? 'in wie vielen Tagen? z. B. 3'
+        : d === 'melden'    ? 'Text der Meldung'
+        : d === 'webhook'   ? 'Adresse — leer nimmt die aus den Einstellungen'
+        : d === 'wiederholen' ? 'Takt: 1 Woche · 3 Tage · 1 Monat · 5 Werktage'
+        : 'Wert';
+      o.querySelector('#afz').style.display = d === 'fremd-setzen' ? 'flex' : 'none';
     };
+
+    /* Die Auswahl der Zieleigenschaften hängt an der gewählten Datenbank. */
+    const zielFelder = () => {
+      const z = Store.getCollection(o.querySelector('#afd').value);
+      const ks = z ? Object.keys(z.schema) : [];
+      o.querySelector('#afk').innerHTML =
+        ks.map(k => `<option value="${k}">${esc(z.schema[k].name)}</option>`).join('');
+      o.querySelector('#aff').innerHTML = '<option value="">alle Einträge</option>' +
+        ks.map(k => `<option value="${k}">${esc(z.schema[k].name)} …</option>`).join('');
+    };
+    if (o.querySelector('#afd').options.length) zielFelder();
+    o.querySelector('#afd').addEventListener('change', zielFelder);
+
     auffrischen();
     o.querySelector('#aw').addEventListener('change', auffrischen);
     o.querySelector('#ad').addEventListener('change', auffrischen);
@@ -2998,11 +3687,24 @@ const Datenbank = (() => {
       if (!e.target.closest('[data-a="ok"]') && !e.target.closest('[data-a="mehr"]')) return;
       const d = o.querySelector('#ad').value;
       const dann = { art: d };
-      if (['setze-prop','ki-fuellen','zaehler'].includes(d)) dann.key = o.querySelector('#adk2').value;
+      if (['setze-prop','ki-fuellen','zaehler','wiederholen'].includes(d)) dann.key = o.querySelector('#adk2').value;
       const wertFeld = o.querySelector('#adv').value;
       if (d === 'setze-prop') dann.wert = wertFeld === 'heute' ? new Date().toISOString().slice(0, 10) : wertFeld;
       if (d === 'erinnerung') dann.tage = wertFeld;
-      if (d === 'unterseite' || d === 'melden') dann.text = wertFeld;
+      if (d === 'unterseite' || d === 'melden' || d === 'webhook' || d === 'wiederholen') dann.text = wertFeld;
+      if (d === 'fremd-setzen') {
+        const zc = Store.getCollection(o.querySelector('#afd').value);
+        dann.ziel    = o.querySelector('#afd').value;
+        dann.zielKey = o.querySelector('#afk').value;
+        dann.wert    = o.querySelector('#afv').value;
+        dann.filterKey  = o.querySelector('#aff').value || null;
+        dann.filterWert = o.querySelector('#affv').value;
+        if (dann.filterKey && zc) {
+          const typ = zc.schema[dann.filterKey].type;
+          dann.filterOp = (OPERATOREN[typ] || OPERATOREN.text)[0];
+        }
+        dann.nurVerknuepft = o.querySelector('#afr').checked;
+      }
 
       gesammelt.push(dann);
 
@@ -3099,6 +3801,7 @@ const Datenbank = (() => {
   return { render, TYPEN, propTyp, wert, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
            automationenMenue, automationenLaufen, gewaehlteZeilen,
            relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
+           ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert };
 })();

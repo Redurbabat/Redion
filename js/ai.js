@@ -37,8 +37,113 @@ const KI = (() => {
     { id:'gemma-2-2b-it-q4f16_1-MLC',          name:'Gemma 2 · 2B',     groesse:'~1,6 GB', hinweis:'Kompakt' }
   ];
 
+  /* ------------------------------------------------------------------------
+   * WOLKEN-ANBIETER
+   * ------------------------------------------------------------------------
+   * Alle sprechen dieselbe Sprache wie OpenAI. Der Schlüssel gehört dir und
+   * bleibt in diesem Browser — er wird nur an den jeweiligen Anbieter
+   * geschickt, an sonst niemanden.
+   *
+   * „frei" heisst: es gibt ein kostenloses Kontingent ohne Kreditkarte.
+   * ----------------------------------------------------------------------*/
+  const ANBIETER = [
+    { id:'groq',       name:'Groq',        frei:true,
+      url:'https://api.groq.com/openai/v1/chat/completions',
+      modelle:['llama-3.3-70b-versatile','llama-3.1-8b-instant','gemma2-9b-it'],
+      woher:'console.groq.com/keys',
+      hinweis:'Kostenloses Kontingent, sehr schnell' },
+    { id:'openrouter', name:'OpenRouter',  frei:true,
+      url:'https://openrouter.ai/api/v1/chat/completions',
+      modelle:['meta-llama/llama-3.3-70b-instruct:free','google/gemma-2-9b-it:free',
+               'mistralai/mistral-7b-instruct:free'],
+      woher:'openrouter.ai/keys',
+      hinweis:'Modelle mit :free kosten nichts' },
+    { id:'gemini',     name:'Google Gemini', frei:true,
+      url:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      modelle:['gemini-2.0-flash','gemini-2.0-flash-lite'],
+      woher:'aistudio.google.com/apikey',
+      hinweis:'Kostenloses Kontingent je Tag' },
+    { id:'openai',     name:'OpenAI',      frei:false,
+      url:'https://api.openai.com/v1/chat/completions',
+      modelle:['gpt-4o-mini','gpt-4o'],
+      woher:'platform.openai.com/api-keys',
+      hinweis:'Kostenpflichtig' },
+    { id:'anthropic',  name:'Anthropic',   frei:false,
+      url:'https://api.anthropic.com/v1/messages',
+      modelle:['claude-3-5-haiku-latest','claude-sonnet-4-5'],
+      woher:'console.anthropic.com/settings/keys',
+      hinweis:'Kostenpflichtig · eigenes Nachrichtenformat' },
+    { id:'eigen',      name:'Eigener Server', frei:true,
+      url:'', modelle:[], woher:'',
+      hinweis:'Jede Adresse, die wie OpenAI antwortet — auch LM Studio oder llama.cpp' }
+  ];
+
+  const anbieter = (id) => ANBIETER.find(a => a.id === id) || ANBIETER[0];
+  const schluessel = (id) => Store.getMeta('api:' + id, '');
+
+  /**
+   * Fragt einen Wolken-Anbieter. Streamt Stück für Stück, damit die Antwort
+   * genauso erscheint wie bei den lokalen Modellen.
+   */
+  const wolkeFragen = async function* (nachrichten, modell) {
+    const a = anbieter(zustand.anbieter);
+    const key = schluessel(a.id);
+    const url = a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url;
+    if (!url) throw new Error('Für diesen Anbieter fehlt die Adresse.');
+    if (!key && a.id !== 'eigen') throw new Error('Es ist noch kein Schlüssel hinterlegt. Einstellungen → Schlüssel.');
+
+    /* Anthropic spricht ein eigenes Format */
+    const istAnthropic = a.id === 'anthropic';
+    const kopf = { 'Content-Type': 'application/json' };
+    if (istAnthropic) {
+      kopf['x-api-key'] = key;
+      kopf['anthropic-version'] = '2023-06-01';
+      kopf['anthropic-dangerous-direct-browser-access'] = 'true';
+    } else if (key) {
+      kopf['Authorization'] = 'Bearer ' + key;
+    }
+
+    const sys = nachrichten.find(m => m.role === 'system');
+    const rest = nachrichten.filter(m => m.role !== 'system');
+    const koerper = istAnthropic
+      ? { model: modell, max_tokens: 2000, stream: true,
+          system: sys ? sys.content : undefined, messages: rest }
+      : { model: modell, messages: nachrichten, stream: true };
+
+    const r = await fetch(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper) });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      throw new Error(a.name + ' antwortet mit ' + r.status + '. ' + txt.slice(0, 180));
+    }
+
+    const leser = r.body.getReader();
+    const dec = new TextDecoder();
+    let puffer = '';
+    while (true) {
+      const { done, value } = await leser.read();
+      if (done) break;
+      puffer += dec.decode(value, { stream: true });
+      const zeilen = puffer.split('\n');
+      puffer = zeilen.pop();
+      for (const z of zeilen) {
+        const t = z.trim();
+        if (!t.startsWith('data:')) continue;
+        const rohdaten = t.slice(5).trim();
+        if (rohdaten === '[DONE]') return;
+        try {
+          const d = JSON.parse(rohdaten);
+          const stueck = istAnthropic
+            ? (d.delta && d.delta.text) || ''
+            : (d.choices && d.choices[0] && d.choices[0].delta && d.choices[0].delta.content) || '';
+          if (stueck) yield stueck;
+        } catch {}
+      }
+    }
+  };
+
   const zustand = {
-    quelle: 'ollama',      /* 'ollama' oder 'webllm' */
+    quelle: 'ollama',      /* 'ollama', 'webllm' oder 'wolke' */
+    anbieter: 'groq',
     modell: '',
     bereit: false,
     laedt: false,
@@ -161,6 +266,11 @@ const KI = (() => {
       return;
     }
 
+    if (zustand.quelle === 'wolke') {
+      for await (const t of wolkeFragen(n, zustand.modell)) beiText(t);
+      return;
+    }
+
     if (!zustand.engine) throw new Error('Das Modell ist noch nicht geladen.');
     for await (const t of webllmFragen(n)) beiText(t);
   };
@@ -181,6 +291,18 @@ const KI = (() => {
   const start = async () => {
     const gemerkt = Store.getMeta('ki', null);
 
+    /* Zuletzt ein Wolken-Modell benutzt und der Schlüssel liegt noch da? */
+    if (gemerkt && gemerkt.quelle === 'wolke' &&
+        (schluessel(gemerkt.anbieter) || gemerkt.anbieter === 'eigen')) {
+      zustand.quelle = 'wolke';
+      zustand.anbieter = gemerkt.anbieter;
+      zustand.modell = gemerkt.modell;
+      zustand.bereit = true;
+      status('ok', kurzName(zustand.modell));
+      zeichneModellKnopf();
+      return;
+    }
+
     const da = await ollamaPruefen();
     if (da) {
       zustand.quelle = 'ollama';
@@ -200,6 +322,7 @@ const KI = (() => {
   };
 
   const kurzName = (id) => {
+    if (zustand.quelle === 'wolke') return String(id).split('/').pop().replace(':free', '');
     const w = WEB_MODELLE.find(m => m.id === id);
     if (w) return w.name;
     return id.replace(':latest', '');
@@ -252,7 +375,27 @@ const KI = (() => {
               `<span>${esc(m.name)}<span class="sub">${m.groesse} · ${m.hinweis}</span></span></button>`;
     });
 
-    html += '<hr><button data-q="check"><span class="mi">⟳</span>Erneut nach Ollama suchen</button>';
+    /* Wolken-Anbieter — nur die zeigen, für die ein Schlüssel hinterlegt ist */
+    const mitSchluessel = ANBIETER.filter(a =>
+      schluessel(a.id) || (a.id === 'eigen' && Store.getMeta('api:eigenUrl', '')));
+    if (mitSchluessel.length) {
+      html += '<hr><div class="grp">Über deinen eigenen Schlüssel</div>';
+      mitSchluessel.forEach(a => {
+        const modelle = a.id === 'eigen'
+          ? [Store.getMeta('api:eigenModell', 'lokal')]
+          : a.modelle;
+        modelle.forEach(mo => {
+          const an = zustand.quelle === 'wolke' && zustand.anbieter === a.id && zustand.modell === mo;
+          html += `<button data-q="wolke" data-a="${a.id}" data-m="${esc(mo)}" ${an ? 'class="on"' : ''}>` +
+                  `<span class="mi">${an ? '✓' : '☁'}</span>` +
+                  `<span>${esc(mo.split('/').pop())}` +
+                  `<span class="sub">${esc(a.name)}${a.frei ? ' · kostenloses Kontingent' : ''}</span></span></button>`;
+        });
+      });
+    }
+
+    html += '<hr><button data-q="check"><span class="mi">⟳</span>Erneut nach Ollama suchen</button>' +
+            '<button data-q="schluessel"><span class="mi">🔑</span>Schlüssel hinterlegen …</button>';
 
     const m = UI.menu(html, Math.max(10, r.right - 300), r.bottom + 6);
 
@@ -261,11 +404,22 @@ const KI = (() => {
       if (!b) return;
 
       if (b.dataset.q === 'check') { m.remove(); start(); UI.toast('Suche nach Ollama …'); return; }
+      if (b.dataset.q === 'schluessel') { m.remove(); Einstellungen.oeffne('schluessel'); return; }
 
       m.remove();
       zustand.quelle = b.dataset.q;
       zustand.modell = b.dataset.m;
-      Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell });
+      if (b.dataset.q === 'wolke') zustand.anbieter = b.dataset.a;
+      Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell, anbieter: zustand.anbieter });
+
+      if (zustand.quelle === 'wolke') {
+        zustand.bereit = true;
+        status('ok', kurzName(zustand.modell));
+        zeichneModellKnopf();
+        melde('Jetzt antwortet ' + anbieter(zustand.anbieter).name + '. ' +
+              'Dein Schlüssel und dein Text gehen dabei an diesen Anbieter.');
+        return;
+      }
 
       if (zustand.quelle === 'ollama') {
         zustand.bereit = true;
@@ -456,6 +610,257 @@ const KI = (() => {
     await senden(auftrag, !['ai-edit', 'ai-improve', 'ai-translate'].includes(art));
   };
 
+  /* ========================================================================
+   * DIE KI BAUT MIT
+   * ------------------------------------------------------------------------
+   * Notion lässt die KI Seiten und Datenbanken anlegen. Hier ebenso — nur
+   * lokal. Das Modell antwortet in JSON, die App baut daraus echte Objekte
+   * und schreibt jeden Schritt ins Protokoll, damit man ihn zurücknehmen kann.
+   * ======================================================================*/
+  const protokoll = [];
+
+  const merkeSchritt = (was, ids) => {
+    protokoll.push({ zeit: Store.now(), was, ids });
+    if (protokoll.length > 40) protokoll.shift();
+  };
+
+  const JSON_HOLEN = (text) => {
+    const anfang = text.indexOf('{');
+    const ende = text.lastIndexOf('}');
+    if (anfang < 0 || ende < anfang) return null;
+    try { return JSON.parse(text.slice(anfang, ende + 1)); } catch { }
+    /* Manche Modelle setzen Kommentare oder Kommas zu viel */
+    try {
+      return JSON.parse(text.slice(anfang, ende + 1)
+        .replace(/\/\/[^\n]*/g, '').replace(/,\s*([}\]])/g, '$1'));
+    } catch { return null; }
+  };
+
+  const TYP_KARTE = {
+    text:'text', zahl:'number', number:'number', auswahl:'select', select:'select',
+    mehrfach:'multi', multi:'multi', status:'status', datum:'date', date:'date',
+    person:'person', kontrollkästchen:'checkbox', checkbox:'checkbox', url:'url',
+    email:'email', 'e-mail':'email', telefon:'phone', phone:'phone', formel:'formula',
+    formula:'formula', dateien:'files', files:'files'
+  };
+
+  /** Baut aus einer Beschreibung eine echte Datenbank. */
+  const datenbankBauen = async (auftrag) => {
+    App.kiPanel(true);
+    const seite = App.aktuelleSeite();
+    if (!seite) { melde('Erst eine Seite öffnen.'); return; }
+
+    schreibe('user', 'Datenbank bauen: ' + auftrag);
+    const ziel = schreibe('assistant', '');
+    ziel.textContent = 'Entwerfe die Datenbank …';
+
+    const anweisung =
+      'Du entwirfst eine Datenbank. Antworte AUSSCHLIESSLICH mit JSON, ohne Text davor oder danach, ' +
+      'in genau dieser Form:\n' +
+      '{"name":"Titel","icon":"📋","spalten":[{"name":"Aufgabe","typ":"titel"},' +
+      '{"name":"Status","typ":"auswahl","optionen":["Offen","Erledigt"]},' +
+      '{"name":"Fällig","typ":"datum"},{"name":"Aufwand","typ":"zahl"}],' +
+      '"zeilen":[{"Aufgabe":"Beispiel","Status":"Offen","Fällig":"2026-08-10","Aufwand":2}]}\n' +
+      'Erlaubte Typen: titel, text, zahl, auswahl, mehrfach, status, datum, person, ' +
+      'kontrollkästchen, url, email, telefon, dateien. Genau eine Spalte hat den Typ titel. ' +
+      'Höchstens zehn Spalten und fünf Beispielzeilen. Alles auf Deutsch.';
+
+    let roh = '';
+    try {
+      await frage([{ role: 'system', content: anweisung },
+                   { role: 'user', content: auftrag }], t => {
+        roh += t;
+        ziel.textContent = 'Entwerfe die Datenbank … ' + roh.length + ' Zeichen';
+      });
+    } catch (e) { ziel.textContent = '⚠ ' + e.message; return; }
+
+    const plan = JSON_HOLEN(roh);
+    if (!plan || !Array.isArray(plan.spalten)) {
+      ziel.textContent = 'Das Modell hat kein brauchbares JSON geliefert. Antwort war:\n\n' + roh.slice(0, 600);
+      return;
+    }
+
+    /* Schema übersetzen */
+    const schema = {};
+    let titelGesetzt = false;
+    plan.spalten.slice(0, 12).forEach((sp, i) => {
+      const typ = TYP_KARTE[String(sp.typ || 'text').toLowerCase()] ||
+                  (String(sp.typ).toLowerCase().startsWith('titel') ? 'title' : 'text');
+      const istTitel = String(sp.typ || '').toLowerCase().startsWith('titel') ||
+                       String(sp.typ || '').toLowerCase() === 'title';
+      const key = istTitel && !titelGesetzt ? 'title' : 'k' + i;
+      if (istTitel) titelGesetzt = true;
+      schema[key] = { name: sp.name || 'Spalte ' + (i + 1), type: istTitel ? 'title' : typ };
+      if (['select','multi','status'].includes(schema[key].type)) {
+        const farben = ['gray','blue','green','yellow','orange','red','purple','pink','brown'];
+        schema[key].options = (sp.optionen || []).slice(0, 12)
+          .map((n, j) => ({ name: String(n), color: farben[j % farben.length] }));
+      }
+    });
+    if (!titelGesetzt) schema.title = { name: 'Name', type: 'title' };
+
+    const { collectionId, block } = Store.addDatabase(seite, plan.name || 'Neue Datenbank', schema, 'table');
+    if (plan.icon) Store.updateCollection(collectionId, { icon: plan.icon });
+
+    /* Zeilen übernehmen */
+    const nachName = {};
+    Object.entries(schema).forEach(([k, d]) => nachName[d.name.toLowerCase()] = k);
+    (plan.zeilen || []).slice(0, 30).forEach(z => {
+      const props = {};
+      let titelWert = '';
+      Object.entries(z).forEach(([n, v]) => {
+        const k = nachName[String(n).toLowerCase()];
+        if (!k) return;
+        if (k === 'title') titelWert = String(v);
+        else props[k] = v;
+      });
+      const r = Store.addRow(collectionId, props);
+      Store.updateBlock(r.id, { text: titelWert || 'Ohne Titel' });
+    });
+
+    merkeSchritt('Datenbank „' + (plan.name || 'Neu') + '" mit ' +
+                 Object.keys(schema).length + ' Spalten und ' +
+                 (plan.zeilen || []).length + ' Zeilen', [block.id]);
+
+    App.zeichneSeite();
+    ziel.innerHTML = '';
+    ziel.textContent = '✓ „' + (plan.name || 'Datenbank') + '" angelegt: ' +
+                       Object.keys(schema).length + ' Spalten, ' +
+                       (plan.zeilen || []).length + ' Beispielzeilen.';
+    const leiste = document.createElement('div');
+    leiste.style.cssText = 'margin-top:8px; display:flex; gap:8px';
+    leiste.innerHTML = '<button class="ez-knopf" data-a="weg">Rückgängig</button>' +
+                       '<button class="ez-knopf" data-a="log">Protokoll</button>';
+    leiste.addEventListener('click', e => {
+      if (e.target.closest('[data-a="weg"]')) {
+        Store.trashBlock(block.id); Store.purgeBlock(block.id);
+        App.zeichneSeite(); UI.toast('Wieder entfernt');
+      }
+      if (e.target.closest('[data-a="log"]')) protokollZeigen();
+    });
+    ziel.appendChild(leiste);
+  };
+
+  /** Baut eine ganze Seite mit Überschriften und Blöcken. */
+  const seiteBauen = async (auftrag) => {
+    App.kiPanel(true);
+    const seite = App.aktuelleSeite();
+    if (!seite) { melde('Erst eine Seite öffnen.'); return; }
+
+    schreibe('user', 'Seite aufbauen: ' + auftrag);
+    const ziel = schreibe('assistant', '');
+    ziel.textContent = 'Baue die Seite …';
+
+    const anweisung =
+      'Du baust den Aufbau einer Notizseite. Antworte AUSSCHLIESSLICH mit JSON:\n' +
+      '{"titel":"...","icon":"📄","bloecke":[{"typ":"h1","text":"..."},{"typ":"text","text":"..."},' +
+      '{"typ":"bullet","text":"..."},{"typ":"todo","text":"..."},{"typ":"callout","text":"..."},' +
+      '{"typ":"quote","text":"..."},{"typ":"divider"}]}\n' +
+      'Höchstens 25 Blöcke. Alles auf Deutsch.';
+
+    let roh = '';
+    try {
+      await frage([{ role: 'system', content: anweisung }, { role: 'user', content: auftrag }],
+                  t => { roh += t; ziel.textContent = 'Baue die Seite … ' + roh.length + ' Zeichen'; });
+    } catch (e) { ziel.textContent = '⚠ ' + e.message; return; }
+
+    const plan = JSON_HOLEN(roh);
+    if (!plan || !Array.isArray(plan.bloecke)) {
+      ziel.textContent = 'Kein brauchbares JSON. Antwort war:\n\n' + roh.slice(0, 600);
+      return;
+    }
+
+    const erlaubt = ['h1','h2','h3','text','bullet','number','todo','quote','callout','divider','code'];
+    const neueIds = [];
+    plan.bloecke.slice(0, 30).forEach(b => {
+      const typ = erlaubt.includes(b.typ) ? b.typ : 'text';
+      const n = Store.addBlock(seite, typ, { text: b.text || '' });
+      neueIds.push(n.id);
+    });
+    if (plan.titel && !Store.getBlock(seite).text) Store.updateBlock(seite, { text: plan.titel });
+    if (plan.icon) Store.updateBlock(seite, { icon: plan.icon });
+
+    merkeSchritt('Seitenaufbau mit ' + neueIds.length + ' Blöcken', neueIds);
+    App.zeichneSeite(); App.zeichneBaum();
+    ziel.textContent = '✓ ' + neueIds.length + ' Blöcke eingefügt.';
+  };
+
+  /** Das Protokoll: was die KI gebaut hat, mit Rückgängig je Schritt. */
+  const protokollZeigen = () => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(620px,94vw)">' +
+        `<div class="fh">✨ Was die KI gebaut hat <em>${protokoll.length}</em>` +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="res">' +
+          (protokoll.length ? protokoll.slice().reverse().map((p, i) =>
+            `<div class="komm"><div class="komm-txt">${esc(p.was)}</div>` +
+            `<div class="komm-fuss">${esc(Werkzeuge.zeitKurz(p.zeit))}` +
+            `<button data-weg="${protokoll.length - 1 - i}">Rückgängig</button></div></div>`).join('')
+          : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
+            'Noch nichts. Die KI kann Datenbanken und Seitenaufbauten anlegen — ' +
+            'frag sie im Panel danach.</div>') +
+        '</div></div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const weg = e.target.closest('[data-weg]');
+      if (!weg) return;
+      const p = protokoll[+weg.dataset.weg];
+      (p.ids || []).forEach(id => { Store.trashBlock(id); Store.purgeBlock(id); });
+      protokoll.splice(+weg.dataset.weg, 1);
+      o.remove(); App.zeichneSeite(); protokollZeigen();
+      UI.toast('Zurückgenommen');
+    });
+  };
+
+  /* ========================================================================
+   * WIKIPEDIA NACHSCHLAGEN
+   * ------------------------------------------------------------------------
+   * Kostenlos, ohne Schlüssel, und die einzige Stelle, an der diese App von
+   * sich aus ins Netz greift. Gut, wenn das lokale Modell etwas nicht weiss.
+   * ======================================================================*/
+  const wikipedia = async (begriff) => {
+    const url = 'https://de.wikipedia.org/api/rest_v1/page/summary/' +
+                encodeURIComponent(begriff.trim().replace(/\s+/g, '_'));
+    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error('Wikipedia antwortet mit ' + r.status);
+    const d = await r.json();
+    return { titel: d.title, text: d.extract, link: d.content_urls?.desktop?.page || '' };
+  };
+
+  /** Schlägt nach und schreibt das Ergebnis in den Chat — mit Knopf zum Einfügen. */
+  const nachschlagen = async (begriff) => {
+    App.kiPanel(true);
+    schreibe('user', 'Nachschlagen: ' + begriff);
+    const ziel = schreibe('assistant', '');
+    ziel.textContent = 'Schaue bei Wikipedia nach …';
+    try {
+      const t = await wikipedia(begriff);
+      if (!t) { ziel.textContent = 'Zu „' + begriff + '" gibt es keinen Artikel.'; return; }
+      ziel.textContent = t.text;
+      const leiste = document.createElement('div');
+      leiste.style.cssText = 'margin-top:8px; display:flex; gap:8px; flex-wrap:wrap';
+      leiste.innerHTML =
+        '<button class="ez-knopf" data-a="ein">In die Seite einfügen</button>' +
+        (t.link ? `<a class="ez-knopf" href="${t.link}" target="_blank" rel="noopener">Artikel öffnen</a>` : '');
+      leiste.addEventListener('click', e => {
+        if (!e.target.closest('[data-a="ein"]')) return;
+        const seite = App.aktuelleSeite();
+        if (!seite) return;
+        Store.addBlock(seite, 'quote', { text: t.text });
+        Store.addBlock(seite, 'text', { text: 'Quelle: [' + t.titel + '](' + t.link + ')' });
+        App.zeichneSeite();
+        UI.toast('Eingefügt');
+      });
+      ziel.appendChild(leiste);
+    } catch (err) {
+      ziel.textContent = '⚠ ' + err.message + ' — ohne Netz geht das Nachschlagen nicht.';
+    }
+  };
+
   /** Aus der Auswahlleiste heraus: die markierte Stelle an die KI geben. */
   const frageMitAuswahl = (auswahl) => {
     const ta = document.getElementById('ai-input');
@@ -502,8 +907,26 @@ const KI = (() => {
       ta.style.height = Math.min(160, ta.scrollHeight) + 'px';
     });
 
-    document.querySelectorAll('.ai-quick button').forEach(b => {
+    document.querySelectorAll('.ai-quick button[data-p]').forEach(b => {
       b.addEventListener('click', () => senden(b.dataset.p));
+    });
+
+    document.getElementById('ai-db')?.addEventListener('click', async () => {
+      const auftrag = await UI.frage('Was soll die Datenbank können?',
+        'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');
+      if (auftrag) datenbankBauen(auftrag);
+    });
+    document.getElementById('ai-seite')?.addEventListener('click', async () => {
+      const auftrag = await UI.frage('Worum geht es auf der Seite?', '');
+      if (auftrag) seiteBauen(auftrag);
+    });
+    document.getElementById('ai-log')?.addEventListener('click', () => protokollZeigen());
+
+    document.getElementById('ai-wiki')?.addEventListener('click', async () => {
+      const vorschlag = getSelection().toString().trim() ||
+                        (Store.getBlock(App.aktuelleSeite())?.text || '');
+      const begriff = await UI.frage('Was soll ich nachschlagen?', vorschlag);
+      if (begriff) nachschlagen(begriff);
     });
 
     document.getElementById('ai-clear').addEventListener('click', () => {
@@ -515,6 +938,8 @@ const KI = (() => {
     melde('Alles läuft lokal. Kein Text verlässt deinen Rechner.');
   };
 
-  return { start, bindePanel, senden, blockAktion, frageMitAuswahl,
+  return { start, bindePanel, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+           datenbankBauen, seiteBauen, protokollZeigen, protokoll,
+           ANBIETER, anbieter, wolkeFragen,
            datenbankAuswerten, frageKurz, zustand, modellMenue };
 })();

@@ -67,6 +67,7 @@ const Blocks = (() => {
     { id:'page',       name:'Unterseite',        icon:'📄', gruppe:'Erweitert', cmd:['seite','page','unterseite'], kurz:'Ctrl+Alt+9' },
     { id:'pageref',    name:'Link zu Seite',     icon:'↗',  gruppe:'Erweitert', cmd:['link zu seite','verweis','klon','pageref'] },
     { id:'synced',     name:'Synchronisierter Block', icon:'⇄', gruppe:'Erweitert', cmd:['synced','synchron','spiegel'] },
+    { id:'linkeddb',   name:'Verknüpfte Ansicht', icon:'⧉', gruppe:'Datenbank', cmd:['verknuepfte ansicht','linked','ansicht einer datenbank'] },
     { id:'button',     name:'Knopf',             icon:'🔘', gruppe:'Erweitert', cmd:['button','knopf','vorlagenknopf'] },
     { id:'html',       name:'HTML',              icon:'</>',gruppe:'Erweitert', cmd:['html'] },
 
@@ -83,6 +84,70 @@ const Blocks = (() => {
     { id:'ai-translate',name:'KI: Übersetzen',       icon:'✨', gruppe:'KI', cmd:['uebersetzen','translate'] },
     { id:'ai-improve', name:'KI: Text verbessern',   icon:'✨', gruppe:'KI', cmd:['verbessern','umschreiben','improve'] }
   ];
+
+  /* ========================================================================
+   * EINBETTUNGEN
+   * ------------------------------------------------------------------------
+   * In Notion hat jeder Dienst einen eigenen Eintrag im Slash-Menü, obwohl
+   * darunter immer derselbe Einbettungsblock steckt. Genauso hier: der Dienst
+   * merkt sich nur, wie die normale Adresse in eine Einbettungsadresse
+   * umgeschrieben wird. Alles ohne Schlüssel und ohne fremden Dienst.
+   * ======================================================================*/
+  const DIENSTE = [
+    { id:'youtube',    name:'YouTube',       icon:'▶',  hinweis:'youtube.com/watch?v=…',
+      um: u => { const m = u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{6,})/);
+                 return m ? 'https://www.youtube.com/embed/' + m[1] : u; } },
+    { id:'vimeo',      name:'Vimeo',         icon:'▶',  hinweis:'vimeo.com/123456',
+      um: u => { const m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+                 return m ? 'https://player.vimeo.com/video/' + m[1] : u; } },
+    { id:'maps',       name:'Google Maps',   icon:'🗺', hinweis:'Adresse oder Maps-Link',
+      um: u => /^https?:/.test(u)
+             ? (u.includes('output=embed') ? u : u + (u.includes('?') ? '&' : '?') + 'output=embed')
+             : 'https://www.google.com/maps?q=' + encodeURIComponent(u) + '&output=embed' },
+    { id:'drive',      name:'Google Drive',  icon:'📁', hinweis:'drive.google.com/file/d/…',
+      um: u => u.replace(/\/(view|edit)(\?.*)?$/, '/preview') },
+    { id:'gdocs',      name:'Google Docs',   icon:'📝', hinweis:'docs.google.com/document/d/…',
+      um: u => u.replace(/\/edit(\?.*)?$/, '/preview') },
+    { id:'figma',      name:'Figma',         icon:'🎨', hinweis:'figma.com/file/…',
+      um: u => u.includes('figma.com/embed') ? u
+             : 'https://www.figma.com/embed?embed_host=share&url=' + encodeURIComponent(u) },
+    { id:'miro',       name:'Miro',          icon:'🧲', hinweis:'miro.com/app/board/…',
+      um: u => u.replace('/app/board/', '/app/live-embed/') },
+    { id:'excalidraw', name:'Excalidraw',    icon:'✏',  hinweis:'excalidraw.com/#json=…', um: u => u },
+    { id:'loom',       name:'Loom',          icon:'🎥', hinweis:'loom.com/share/…',
+      um: u => u.replace('/share/', '/embed/') },
+    { id:'spotify',    name:'Spotify',       icon:'🎧', hinweis:'open.spotify.com/track/…',
+      um: u => u.replace(/open\.spotify\.com\/(?!embed)/, 'open.spotify.com/embed/') },
+    { id:'soundcloud', name:'SoundCloud',    icon:'🔊', hinweis:'soundcloud.com/…',
+      um: u => u.includes('w.soundcloud.com') ? u
+             : 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(u) },
+    { id:'twitter',    name:'X (Twitter)',   icon:'𝕏',  hinweis:'x.com/name/status/…',
+      um: u => { const m = u.match(/status\/(\d+)/);
+                 return m ? 'https://platform.twitter.com/embed/Tweet.html?id=' + m[1] : u; } },
+    { id:'gist',       name:'GitHub Gist',   icon:'🐙', hinweis:'gist.github.com/…',
+      um: u => u.replace(/\/?$/, '').replace(/\.pibb$/, '') + '.pibb' },
+    { id:'codepen',    name:'CodePen',       icon:'🖊', hinweis:'codepen.io/name/pen/…',
+      um: u => u.replace('/pen/', '/embed/') },
+    { id:'typeform',   name:'Typeform',      icon:'📋', hinweis:'form.typeform.com/to/…', um: u => u },
+    { id:'canva',      name:'Canva',         icon:'🖼', hinweis:'canva.com/design/…',
+      um: u => u.includes('embed') ? u : u.replace(/\/view.*$/, '/view?embed') },
+    { id:'pdf',        name:'PDF',           icon:'📕', hinweis:'Adresse einer PDF-Datei', um: u => u }
+  ];
+
+  DIENSTE.forEach(d => TYPEN.push({
+    id: 'embed-' + d.id, name: d.name, icon: d.icon, gruppe: 'Einbetten',
+    cmd: [d.id, d.name.toLowerCase(), 'einbetten ' + d.id]
+  }));
+
+  const dienst = (id) => DIENSTE.find(d => d.id === id);
+
+  /** Aus einer normalen Adresse die Adresse machen, die im Rahmen läuft. */
+  const einbettungsAdresse = (dienstId, url) => {
+    const d = dienst(dienstId);
+    const u = String(url || '').trim();
+    if (!d) return u;
+    try { return d.um(u); } catch { return u; }
+  };
 
   const typ = (id) => TYPEN.find(t => t.id === id) || TYPEN[0];
 
@@ -339,6 +404,33 @@ const Blocks = (() => {
         box.appendChild(Datenbank.render(block));
         break;
 
+      /* Verknüpfte Ansicht: zeigt eine Datenbank, die woanders lebt.
+         Eigene Filter und Sortierung, dieselben Daten — wie in Notion. */
+      case 'linkeddb': {
+        const w = document.createElement('div');
+        w.style.width = '100%';
+        if (!block.collectionId || !Store.getCollection(block.collectionId)) {
+          const b2 = document.createElement('button');
+          b2.className = 'sy-waehl';
+          b2.textContent = '⧉ Welche Datenbank soll hier erscheinen?';
+          b2.addEventListener('click', () => datenbankWaehlen(block));
+          w.appendChild(b2);
+        } else {
+          const hinweis = document.createElement('div');
+          hinweis.className = 'linked-kopf';
+          const c = Store.getCollection(block.collectionId);
+          hinweis.innerHTML = `⧉ Verknüpfte Ansicht von <b>${esc(c.name)}</b>` +
+                              '<button data-a="andere">andere wählen</button>';
+          hinweis.addEventListener('click', e => {
+            if (e.target.closest('[data-a="andere"]')) datenbankWaehlen(block);
+          });
+          w.appendChild(hinweis);
+          w.appendChild(Datenbank.render(block));
+        }
+        box.appendChild(w);
+        break;
+      }
+
       case 'columns': case 'columns3': {
         const w = document.createElement('div');
         const n = block.type === 'columns3' ? 3 : (block.spalten || 2);
@@ -542,15 +634,20 @@ const Blocks = (() => {
       const feld = document.createElement('div');
       feld.style.cssText = 'display:flex; gap:8px; padding:12px 14px; background:var(--bg-card); ' +
                            'border-radius:6px; align-items:center';
-      const info = { image:'Bild-URL', video:'Video-URL', audio:'Audio-URL',
+      const d = block.dienst ? dienst(block.dienst) : null;
+      const info = d ? d.hinweis : { image:'Bild-URL', video:'Video-URL', audio:'Audio-URL',
                      file:'Datei-URL', bookmark:'Adresse der Webseite', embed:'Einbettungs-URL' }[block.type];
-      feld.innerHTML = `<span style="font-size:16px">${typ(block.type).icon}</span>`;
+      feld.innerHTML = `<span style="font-size:16px">${d ? d.icon : typ(block.type).icon}</span>`;
       const inp = document.createElement('input');
-      inp.placeholder = info + ' einfügen und Enter drücken';
+      inp.placeholder = (d ? d.name + ': ' + info : info) + ' einfügen und Enter drücken';
       inp.style.cssText = 'flex:1; background:none; border:none; outline:none; font-size:14px';
       inp.addEventListener('keydown', e => {
         if (e.key === 'Enter' && inp.value.trim()) {
-          Store.updateBlock(block.id, { src: inp.value.trim() });
+          const roh = inp.value.trim();
+          Store.updateBlock(block.id, {
+            src: block.dienst ? einbettungsAdresse(block.dienst, roh) : roh,
+            quelle: roh
+          });
           App.zeichneSeite();
         }
       });
@@ -599,6 +696,14 @@ const Blocks = (() => {
       f.setAttribute('allowfullscreen', '');
       f.setAttribute('referrerpolicy', 'no-referrer');
       w.appendChild(f);
+      /* Manche Seiten verbieten den Rahmen. Dann hilft der Weg zum Original. */
+      const q = block.quelle || block.src;
+      const zeile = document.createElement('div');
+      zeile.style.cssText = 'font-size:12px; color:var(--text-dim); padding:3px 2px';
+      zeile.innerHTML = (block.dienst ? esc(dienst(block.dienst)?.name || '') + ' · ' : '') +
+        `<a href="${esc(q)}" target="_blank" rel="noopener" style="color:var(--text-dim)">` +
+        'Original öffnen ↗</a>';
+      w.appendChild(zeile);
     }
 
     /* Beschriftung */
@@ -868,15 +973,25 @@ const Blocks = (() => {
       const blk = e.target.closest('.blk');
       if (blk) { blk.style.opacity = ''; blk.draggable = false; }
     });
+    /* Die Hilfslinie zeigt, wo der Block landet: oberhalb oder unterhalb. */
+    let untenAblegen = false;
     wurzel.addEventListener('dragover', (e) => {
       e.preventDefault();
       const blk = e.target.closest('.blk');
-      wurzel.querySelectorAll('.blk').forEach(x => x.style.borderTop = '');
-      if (blk && blk.dataset.bid !== gezogen) blk.style.borderTop = '2px solid var(--accent)';
+      wurzel.querySelectorAll('.blk').forEach(x => {
+        x.style.borderTop = ''; x.style.borderBottom = '';
+      });
+      if (!blk || blk.dataset.bid === gezogen) return;
+      const r = blk.getBoundingClientRect();
+      untenAblegen = (e.clientY - r.top) > r.height / 2;
+      if (untenAblegen) blk.style.borderBottom = '2px solid var(--accent)';
+      else blk.style.borderTop = '2px solid var(--accent)';
     });
     wurzel.addEventListener('drop', (e) => {
       e.preventDefault();
-      wurzel.querySelectorAll('.blk').forEach(x => x.style.borderTop = '');
+      wurzel.querySelectorAll('.blk').forEach(x => {
+        x.style.borderTop = ''; x.style.borderBottom = '';
+      });
       const ziel = e.target.closest('.blk');
       if (!ziel || !gezogen || ziel.dataset.bid === gezogen) return;
 
@@ -893,7 +1008,7 @@ const Blocks = (() => {
         return;
       }
 
-      lege(gezogen, ziel.dataset.bid);
+      lege(gezogen, ziel.dataset.bid, untenAblegen);
       gezogen = null;
     });
   };
@@ -941,6 +1056,13 @@ const Blocks = (() => {
       return;
     }
 
+    /* Einbettungen sind alle derselbe Block, nur mit gemerktem Dienst */
+    if (neuerTyp.startsWith('embed-')) {
+      Store.updateBlock(id, { type: 'embed', dienst: neuerTyp.slice(6), text: '', src: null });
+      App.zeichneSeite();
+      return;
+    }
+
     /* KI-Blöcke lösen eine Aktion aus, statt einen Typ zu setzen */
     if (neuerTyp.startsWith('ai-')) {
       KI.blockAktion(neuerTyp, b);
@@ -976,6 +1098,7 @@ const Blocks = (() => {
     /* Zwei Typen fragen direkt nach ihrem Ziel */
     if (neuerTyp === 'pageref') { App.zeichneSeite(); seiteWaehlen(Store.getBlock(id)); return; }
     if (neuerTyp === 'synced')  { App.zeichneSeite(); quelleWaehlen(Store.getBlock(id)); return; }
+    if (neuerTyp === 'linkeddb'){ App.zeichneSeite(); datenbankWaehlen(Store.getBlock(id)); return; }
     if (neuerTyp === 'button')  { App.zeichneSeite(); knopfEinstellen(Store.getBlock(id)); return; }
 
     App.zeichneSeite(id, 'ende');
@@ -1022,14 +1145,14 @@ const Blocks = (() => {
     App.zeichneSeite(b.id, 'ende');
   };
 
-  const lege = (quelleId, zielId) => {
+  const lege = (quelleId, zielId, danach = false) => {
     const q = Store.getBlock(quelleId), z = Store.getBlock(zielId);
     if (!q || !z) return;
     const qe = Store.getBlock(q.parentId), ze = Store.getBlock(z.parentId);
     if (!qe || !ze) return;
     qe.content = qe.content.filter(x => x !== quelleId);
     Store.updateBlock(qe.id, { content: qe.content });
-    const zi = ze.content.indexOf(zielId);
+    const zi = ze.content.indexOf(zielId) + (danach ? 1 : 0);
     ze.content.splice(zi, 0, quelleId);
     Store.updateBlock(ze.id, { content: ze.content });
     Store.updateBlock(quelleId, { parentId: ze.id });
@@ -1094,6 +1217,25 @@ const Blocks = (() => {
     inp.focus();
   };
 
+  /** Welche vorhandene Datenbank soll die verknüpfte Ansicht zeigen? */
+  const datenbankWaehlen = (block) => {
+    const alle = Object.values(Store.cache.collections);
+    if (!alle.length) { UI.toast('Es gibt noch keine Datenbank'); return; }
+    const m = UI.menu('<div class="grp">Verknüpfte Ansicht von …</div>' +
+      alle.map(c => `<button data-c="${c.id}"><span class="mi">${esc(c.icon || '🗂')}</span>` +
+                    `${esc(c.name)}<span class="ms">${Store.rowsOf(c.id).length}</span></button>`).join(''),
+      innerWidth / 2 - 140, 150);
+    m.addEventListener('click', e => {
+      const b = e.target.closest('button[data-c]');
+      if (!b) return;
+      m.remove();
+      /* Eine eigene Ansicht anlegen, damit Filter hier unabhängig bleiben */
+      const v = Store.addView(b.dataset.c, 'table', 'Verknüpft');
+      Store.updateBlock(block.id, { collectionId: b.dataset.c, aktiveView: v.id, verknuepft: true });
+      App.zeichneSeite();
+    });
+  };
+
   const seiteWaehlen = (block) =>
     seitenPicker('Auf welche Seite soll der Verweis zeigen?', (id) => {
       Store.updateBlock(block.id, { ziel: id });
@@ -1109,7 +1251,8 @@ const Blocks = (() => {
   /* --- Knopf-Block (Notions Button) -------------------------------------- */
   const AKTIONS_NAMEN = {
     block: 'Block einfügen', zeile: 'Datenbankeintrag anlegen',
-    seite: 'Unterseite anlegen', meldung: 'Meldung zeigen', timer: 'Timer'
+    seite: 'Unterseite anlegen', meldung: 'Meldung zeigen', timer: 'Timer',
+    aendern: 'Einträge ändern', oeffnen: 'Seite öffnen'
   };
   const knopfAusfuehren = async (block) => {
     /* Mehrere Aktionen laufen der Reihe nach — Notions Button kann das auch. */
@@ -1163,6 +1306,23 @@ const Blocks = (() => {
     }
     if (a.art === 'meldung') { UI.toast(a.text || 'Fertig'); return; }
 
+    /* Notions „Edit pages in": alle Einträge, die zum Filter passen, ändern. */
+    if (a.art === 'aendern') {
+      const n = Datenbank.fremdSetzen({
+        ziel: a.collectionId, zielKey: a.zielKey, wert: datum(a.wert),
+        filterKey: a.filterKey, filterOp: a.filterOp, filterWert: a.filterWert
+      }, null, null);
+      UI.toast(n + (n === 1 ? ' Eintrag geändert' : ' Einträge geändert'));
+      return;
+    }
+
+    /* Zu einer Seite springen — Notions „Open page". */
+    if (a.art === 'oeffnen') {
+      if (a.seiteId && Store.getBlock(a.seiteId)) App.oeffne(a.seiteId);
+      else UI.toast('Die Seite gibt es nicht mehr');
+      return;
+    }
+
     /* Timer: erster Klick setzt den Start, der zweite das Ende. */
     if (a.art === 'timer') {
       const jetzt = new Date().toISOString().slice(0, 16);
@@ -1198,6 +1358,8 @@ const Blocks = (() => {
             `<option value="seite"${a.art === 'seite' ? ' selected' : ''}>Neue Unterseite anlegen</option>` +
             `<option value="meldung"${a.art === 'meldung' ? ' selected' : ''}>Kurze Meldung zeigen</option>` +
             `<option value="timer"${a.art === 'timer' ? ' selected' : ''}>Timer starten und stoppen</option>` +
+            `<option value="aendern"${a.art === 'aendern' ? ' selected' : ''}>Einträge einer Datenbank ändern</option>` +
+            `<option value="oeffnen"${a.art === 'oeffnen' ? ' selected' : ''}>Eine Seite öffnen</option>` +
           '</select></label>' +
           '<div id="kdet"></div>' +
           '<label style="display:flex; gap:10px; align-items:center; margin-top:4px">' +
@@ -1228,6 +1390,38 @@ const Blocks = (() => {
       } else if (art === 'meldung' || art === 'timer') {
         det.innerHTML = `<label>${art === 'timer' ? 'Bezeichnung der Zeit' : 'Text der Meldung'}` +
                         `<br><input id="kx" value="${esc(a.text || '')}"></label>`;
+      } else if (art === 'aendern') {
+        det.innerHTML =
+          '<label>Datenbank<br><select id="kc">' +
+            dbs.map(c => `<option value="${c.id}"${a.collectionId === c.id ? ' selected' : ''}>` +
+                         `${esc(c.name || 'Ohne Namen')}</option>`).join('') +
+          '</select></label>' +
+          '<label style="display:block;margin-top:10px">Diese Eigenschaft setzen<br>' +
+            '<select id="kzk"></select></label>' +
+          '<label style="display:block;margin-top:10px">… auf diesen Wert<br>' +
+            `<input id="kx" value="${esc(a.wert || '')}" placeholder="Wert · heute · morgen · {leer}"></label>` +
+          '<label style="display:block;margin-top:10px">Nur bei Einträgen, wo …<br>' +
+            '<select id="kfk"><option value="">alle Einträge</option></select>' +
+            `<input id="kfv" value="${esc(a.filterWert || '')}" placeholder="Wert" style="margin-top:5px"></label>`;
+        const felder = () => {
+          const c = Store.getCollection(det.querySelector('#kc').value);
+          const ks = c ? Object.keys(c.schema) : [];
+          det.querySelector('#kzk').innerHTML = ks.map(k =>
+            `<option value="${k}"${a.zielKey === k ? ' selected' : ''}>${esc(c.schema[k].name)}</option>`).join('');
+          det.querySelector('#kfk').innerHTML = '<option value="">alle Einträge</option>' + ks.map(k =>
+            `<option value="${k}"${a.filterKey === k ? ' selected' : ''}>${esc(c.schema[k].name)} …</option>`).join('');
+        };
+        if (dbs.length) felder();
+        det.querySelector('#kc')?.addEventListener('change', felder);
+      } else if (art === 'oeffnen') {
+        const seiten = Object.values(Store.cache.blocks)
+          .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
+          .sort((x, y) => (x.text || '').localeCompare(y.text || ''));
+        det.innerHTML = '<label>Welche Seite<br><select id="kseite">' +
+          seiten.slice(0, 400).map(p =>
+            `<option value="${p.id}"${a.seiteId === p.id ? ' selected' : ''}>` +
+            `${esc(p.text || 'Ohne Titel')}</option>`).join('') +
+          '</select></label>';
       } else {
         det.innerHTML = `<label>Titel der Seite<br><input id="kx" value="${esc(a.seitenTitel || '')}"></label>`;
       }
@@ -1264,6 +1458,19 @@ const Blocks = (() => {
       if (art === 'zeile') { neu.collectionId = o.querySelector('#kc')?.value; neu.zeilenText = x; }
       if (art === 'seite') neu.seitenTitel = x;
       if (art === 'meldung' || art === 'timer') neu.text = x;
+      if (art === 'aendern') {
+        neu.collectionId = o.querySelector('#kc')?.value;
+        neu.zielKey      = o.querySelector('#kzk')?.value;
+        neu.wert         = x;
+        neu.filterKey    = o.querySelector('#kfk')?.value || null;
+        neu.filterWert   = o.querySelector('#kfv')?.value || '';
+        const c2 = Store.getCollection(neu.collectionId);
+        if (neu.filterKey && c2) {
+          const t2 = c2.schema[neu.filterKey].type;
+          neu.filterOp = (Datenbank.OPERATOREN[t2] || Datenbank.OPERATOREN.text)[0];
+        }
+      }
+      if (art === 'oeffnen') neu.seiteId = o.querySelector('#kseite')?.value;
 
       if (mehr) {
         gesammelt.push(neu);
@@ -1293,7 +1500,17 @@ const Blocks = (() => {
     /* Der Filter kommt aus dem tatsächlichen Text — nicht aus mitgezählten
        Tastendrücken. Sonst gehen schnell getippte Zeichen verloren. */
     const filterLesen = () => {
-      const m = (ct.textContent || '').match(/\/([^\/]*)$/);
+      /* Nur bis zum Schreibzeiger lesen. Wer mitten in einer Zeile / tippt,
+         soll nicht den Rest des Satzes als Suchwort bekommen. */
+      let bis = ct.textContent || '';
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount && ct.contains(sel.anchorNode)) {
+        const r = sel.getRangeAt(0).cloneRange();
+        r.selectNodeContents(ct);
+        r.setEnd(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset);
+        bis = r.toString();
+      }
+      const m = bis.match(/\/([^\/]*)$/);
       return m ? m[1] : '';
     };
     let filter = filterLesen();
@@ -1506,6 +1723,7 @@ const Blocks = (() => {
   return {
     TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc,
     cursorAnsEnde, slashMenue, einfuegenAmEnde, dupliziere, verschiebe,
-    blockVerschiebenNach, seitenPicker, blockMenue
+    blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
+    DIENSTE, einbettungsAdresse
   };
 })();

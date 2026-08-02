@@ -104,6 +104,19 @@ const Werkzeuge = (() => {
     c('Ansicht', 'Seitenleiste ein- oder ausblenden', 'Strg \\', () =>
       document.getElementById('sidebar').classList.toggle('collapsed'));
     c('Ansicht', 'KI-Panel', 'Strg J', () => App.kiPanel());
+    c('KI', 'Datenbank von der KI bauen lassen', '', async () => {
+      const a = await UI.frage('Was soll die Datenbank können?', '');
+      if (a) KI.datenbankBauen(a);
+    });
+    c('KI', 'Seitenaufbau von der KI', '', async () => {
+      const a = await UI.frage('Worum geht es auf der Seite?', '');
+      if (a) KI.seiteBauen(a);
+    });
+    c('KI', 'Nachschlagen bei Wikipedia', '', async () => {
+      const a = await UI.frage('Was soll ich nachschlagen?', '');
+      if (a) KI.nachschlagen(a);
+    });
+    c('KI', 'Protokoll: was die KI gebaut hat', '', () => KI.protokollZeigen());
     c('Ansicht', 'Alle Toggles öffnen oder schliessen', 'Strg Alt T', () => alleToggles());
     c('Ansicht', 'Tastenkürzel anzeigen', 'Strg /', () => tastenkuerzel());
 
@@ -1452,7 +1465,129 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     if (weg) UI.toast(weg + ' Seiten im Papierkorb waren älter als ' + tage + ' Tage und wurden gelöscht');
   };
 
+  /* ========================================================================
+   * DATEIEN AUF DIE SEITE ZIEHEN
+   * ------------------------------------------------------------------------
+   * Markdown, Text, CSV, TSV, HTML und Bilder — einfach fallen lassen.
+   * ======================================================================*/
+  const ziehenUndAblegen = () => {
+    const bereich = document.getElementById('scroll');
+
+    bereich.addEventListener('dragover', e => {
+      if (!e.dataTransfer?.types?.includes('Files')) return;
+      e.preventDefault();
+      bereich.classList.add('ablegen');
+    });
+    bereich.addEventListener('dragleave', e => {
+      if (e.target === bereich) bereich.classList.remove('ablegen');
+    });
+
+    bereich.addEventListener('drop', async e => {
+      if (!e.dataTransfer?.files?.length) return;
+      e.preventDefault();
+      bereich.classList.remove('ablegen');
+      const seite = App.aktuelleSeite();
+      if (!seite) { UI.toast('Erst eine Seite öffnen'); return; }
+
+      for (const f of e.dataTransfer.files) {
+        const name = f.name.toLowerCase();
+
+        if (f.type.startsWith('image/')) {
+          if (f.size > 12 * 1024 * 1024) { UI.toast(f.name + ' ist grösser als 12 MB'); continue; }
+          const daten = await new Promise(ok => {
+            const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(f);
+          });
+          Store.addBlock(seite, 'image', { src: daten, caption: f.name });
+          continue;
+        }
+
+        const text = await f.text();
+
+        if (name.endsWith('.csv') || name.endsWith('.tsv')) {
+          const zeilen = Datenbank.csvZerlegen(text.replace(/^﻿/, ''));
+          if (zeilen.length < 2) { UI.toast(f.name + ' enthält keine Tabelle'); continue; }
+          const kopf2 = zeilen[0].map(x => String(x).trim());
+          const schema = { title: { name: kopf2[0] || 'Name', type: 'title' } };
+          const karte = ['title'];
+          kopf2.slice(1).forEach((n, i) => {
+            const k = 's' + i;
+            schema[k] = { name: n || 'Spalte ' + (i + 2), type: 'text' };
+            karte.push(k);
+          });
+          const { collectionId } = Store.addDatabase(seite, f.name.replace(/\.(csv|tsv)$/i, ''), schema, 'table');
+          zeilen.slice(1).forEach(z => {
+            const props = {};
+            karte.forEach((k, i) => { if (k !== 'title') props[k] = z[i] ?? ''; });
+            const r = Store.addRow(collectionId, props);
+            Store.updateBlock(r.id, { text: z[0] || 'Ohne Titel' });
+          });
+          UI.toast(f.name + ': ' + (zeilen.length - 1) + ' Einträge als Datenbank angelegt');
+          continue;
+        }
+
+        if (name.endsWith('.html') || name.endsWith('.htm')) {
+          ausHtml(seite, text);
+          UI.toast(f.name + ' eingelesen');
+          continue;
+        }
+
+        if (name.endsWith('.md') || name.endsWith('.markdown') || name.endsWith('.txt')) {
+          const p2 = Store.addPage(seite, { text: f.name.replace(/\.(md|markdown|txt)$/i, ''), icon: '📄' });
+          ausMarkdown(p2, text);
+          UI.toast(f.name + ' als Unterseite angelegt');
+          continue;
+        }
+
+        /* Alles andere als Datei anhängen */
+        if (f.size <= 12 * 1024 * 1024) {
+          const daten = await new Promise(ok => {
+            const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(f);
+          });
+          Store.addBlock(seite, 'file', { src: daten, text: f.name });
+        } else UI.toast(f.name + ' ist grösser als 12 MB');
+      }
+      App.zeichneSeite();
+      App.zeichneBaum();
+    });
+  };
+
+  /** HTML in Blöcke übersetzen — für Ziehen und Ablegen und den Import. */
+  const ausHtml = (seiteId, html) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const raus = (knoten) => {
+      knoten.childNodes.forEach(n => {
+        if (n.nodeType !== 1) return;
+        const tag = n.tagName.toLowerCase();
+        const txt = (n.textContent || '').trim();
+        if (['h1','h2','h3','h4','h5','h6'].includes(tag) && txt) {
+          Store.addBlock(seiteId, tag === 'h1' ? 'h1' : tag === 'h2' ? 'h2' : 'h3', { text: txt });
+        } else if (tag === 'p' && txt) {
+          Store.addBlock(seiteId, 'text', { text: txt });
+        } else if (tag === 'li' && txt) {
+          Store.addBlock(seiteId, n.parentElement?.tagName === 'OL' ? 'number' : 'bullet', { text: txt });
+        } else if (tag === 'blockquote' && txt) {
+          Store.addBlock(seiteId, 'quote', { text: txt });
+        } else if (tag === 'pre') {
+          Store.addBlock(seiteId, 'code', { text: n.textContent || '' });
+        } else if (tag === 'hr') {
+          Store.addBlock(seiteId, 'divider');
+        } else if (tag === 'img' && n.getAttribute('src')) {
+          Store.addBlock(seiteId, 'image', { src: n.getAttribute('src'), caption: n.getAttribute('alt') || '' });
+        } else if (tag === 'table') {
+          const rows = [...n.querySelectorAll('tr')].map(tr =>
+            [...tr.querySelectorAll('th,td')].map(td => (td.textContent || '').trim()));
+          if (rows.length) Store.addBlock(seiteId, 'table', { rows, kopfZeile: true });
+        } else {
+          raus(n);
+        }
+      });
+    };
+    raus(doc.body);
+  };
+
   const start = () => {
+    ziehenUndAblegen();
+
     /* Erinnerungen alle halbe Minute prüfen */
     erinnerungenPruefen();
     setInterval(erinnerungenPruefen, 30000);
@@ -1480,7 +1615,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     journal, journalSeite, schnellnotizen, vorlagen, vorlagenOrdner, alsVorlage, vorlageEinfuegen, vorlagenListe,
     lernen, karten, faellig, teileKarte,
     versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
-    fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, statistik,
+    fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
     erinnerungSetzen, erinnerungen, ordnerSchreiben, ordnerLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,

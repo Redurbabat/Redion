@@ -602,7 +602,14 @@ const Mehrfach = (() => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         const p = Store.getBlock(App.aktuelleSeite());
-        if (p) { gewaehlt = new Set((p.content || [])); zeichne(); }
+        if (!p) return;
+        /* Erst der eigene Block, dann die Geschwister, dann die ganze Seite —
+           genau die Stufen, die Notion durchläuft. */
+        const alle = new Set(p.content || []);
+        if (gewaehlt.size === 0) { gewaehlt = new Set([p.content[0]]); }
+        else if (gewaehlt.size < alle.size) { gewaehlt = alle; }
+        else { gewaehlt = alle; UI.toast('Alle Blöcke dieser Seite ausgewählt'); }
+        zeichne();
         return;
       }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {

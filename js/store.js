@@ -231,7 +231,8 @@ const Store = (() => {
     const b = cache.blocks[id];
     if (!b) return;
     (b.content || []).forEach(purgeBlock);
-    if (b.collectionId) {
+    /* Eine verknüpfte Ansicht zeigt fremde Daten — die bleiben bestehen. */
+    if (b.collectionId && !b.verknuepft) {
       const c = cache.collections[b.collectionId];
       if (c) {
         rowsOf(b.collectionId).forEach(r => { delete cache.blocks[r.id]; del('blocks', r.id); });

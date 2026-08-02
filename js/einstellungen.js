@@ -26,6 +26,7 @@ const Einstellungen = (() => {
     ['sicherheit',   '🛡', 'Sicherheit'],
     ['daten',        '💾', 'Import und Export'],
     ['ki',           '✨', 'Künstliche Intelligenz'],
+    ['schluessel',   '🔑', 'Schlüssel und APIs'],
     ['speicher',     '📦', 'Speicher'],
     ['abrechnung',   '💳', 'Abrechnung'],
     ['ueber',        'ℹ️', 'Über diese App']
@@ -284,6 +285,54 @@ const Einstellungen = (() => {
       zeile('KI-Felder in Datenbanken', 'Spaltentyp „KI-Feld" füllt sich selbst',
             '<span class="ez-grau">verfügbar</span>'),
 
+    schluessel: () => {
+      const zeilen = KI.ANBIETER.map(a => {
+        const wert = V('api:' + a.id, '');
+        const gesetzt = !!wert;
+        return zeile(
+          a.name + (a.frei ? ' <em class="frei">kostenloses Kontingent</em>' : ''),
+          a.hinweis + (a.woher ? ' · Schlüssel holen: <b>' + a.woher + '</b>' : ''),
+          `<input type="password" data-set="api:${a.id}" value="${esc(wert)}" ` +
+          `placeholder="${a.id === 'eigen' ? 'nicht nötig' : 'Schlüssel einfügen'}" autocomplete="off">` +
+          (gesetzt ? '<button class="ez-knopf" data-tun="pruefen:' + a.id + '">Prüfen</button>' : ''));
+      }).join('');
+
+      return kopf('Schlüssel und APIs',
+        'Hier hinterlegst du eigene Zugänge. Alles bleibt in diesem Browser und geht nur an ' +
+        'den jeweiligen Anbieter — nie an mich, nie an sonst jemanden. ' +
+        'Die App läuft auch ganz ohne Schlüssel: Ollama und WebLLM brauchen keinen.') +
+
+        '<div class="ez-plan"><b>Erst das Kostenlose</b><span>' +
+        'Ohne jeden Schlüssel: <b>Ollama</b> auf dem Rechner und <b>WebLLM</b> im Browser. ' +
+        'Mit kostenlosem Kontingent und eigenem Schlüssel: <b>Groq</b>, <b>OpenRouter</b> ' +
+        '(Modelle mit <code>:free</code>) und <b>Google Gemini</b>. ' +
+        'Danach erscheinen die Modelle oben rechts im KI-Panel zur Auswahl.' +
+        '</span></div>' +
+
+        '<h3 class="ez-h3">Sprachmodelle</h3>' + zeilen +
+
+        zeile('Adresse des eigenen Servers', 'Alles, was wie OpenAI antwortet — LM Studio, llama.cpp, vLLM',
+              feld('api:eigenUrl', V('api:eigenUrl', ''), 'http://localhost:1234/v1/chat/completions')) +
+        zeile('Modellname beim eigenen Server', '', feld('api:eigenModell', V('api:eigenModell', ''), 'z. B. local-model')) +
+
+        '<h3 class="ez-h3">Weitere Dienste</h3>' +
+        zeile('Notion', 'Für den Import aus einem echten Notion-Arbeitsbereich. ' +
+              'Schlüssel holen: <b>notion.so/my-integrations</b>',
+              feld('api:notion', V('api:notion', ''), 'secret_… oder ntn_…')) +
+        zeile('Webhook-Adresse', 'Automationen können hier etwas hinschicken — Zapier, Make, n8n, eigener Server',
+              feld('api:webhook', V('api:webhook', ''), 'https://…')) +
+        zeile('Wetterdienst', 'Open-Meteo braucht keinen Schlüssel und ist kostenlos',
+              '<span class="ez-grau">kein Schlüssel nötig</span>') +
+        zeile('Karten', 'OpenStreetMap braucht keinen Schlüssel und ist kostenlos',
+              '<span class="ez-grau">kein Schlüssel nötig</span>') +
+        zeile('Wikipedia', 'Nachschlagen ohne Schlüssel, direkt aus der KI heraus',
+              '<span class="ez-grau">kein Schlüssel nötig</span>') +
+
+        '<div class="ez-warnung">Ein Schlüssel im Browser ist bequem, aber nicht geheim: ' +
+        'Wer an dieses Browserprofil kommt, kann ihn auslesen. Nimm deshalb Schlüssel mit ' +
+        'engem Rahmen und lösche sie, wenn du sie nicht mehr brauchst.</div>';
+    },
+
     speicher: () =>
       kopf('Speicher', 'Alles liegt in IndexedDB in diesem Browserprofil.') +
       '<div id="speicher-zahlen" class="ez-grau" style="padding:4px 0 14px">wird gemessen …</div>' +
@@ -392,6 +441,27 @@ const Einstellungen = (() => {
 
   const tun = async (was, o) => {
     const seite = App.aktuelleSeite() ? Store.getBlock(App.aktuelleSeite()) : null;
+
+    if (was.startsWith('pruefen:')) {
+      const id = was.slice(8);
+      UI.toast('Frage ' + KI.anbieter(id).name + ' …');
+      try {
+        const alt4 = { quelle: KI.zustand.quelle, anbieter: KI.zustand.anbieter, modell: KI.zustand.modell };
+        KI.zustand.quelle = 'wolke';
+        KI.zustand.anbieter = id;
+        KI.zustand.modell = id === 'eigen'
+          ? Store.getMeta('api:eigenModell', 'lokal') : KI.anbieter(id).modelle[0];
+        let antwort = '';
+        for await (const t of KI.wolkeFragen(
+          [{ role: 'user', content: 'Antworte nur mit dem Wort: bereit' }], KI.zustand.modell)) antwort += t;
+        UI.toast(antwort.trim() ? '✓ ' + KI.anbieter(id).name + ' antwortet: ' + antwort.trim().slice(0, 40)
+                                : 'Antwort war leer');
+        KI.zustand.bereit = true;
+      } catch (err) {
+        UI.banner(KI.anbieter(id).name + ' meldet: ' + err.message, 'fehler');
+      }
+      return;
+    }
 
     const karte = {
       'benachr-erlauben': async () => {

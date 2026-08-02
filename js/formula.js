@@ -502,8 +502,18 @@ const Formula = (() => {
       case 'call': {
         const n = knoten.name;
 
-        /* prop() greift auf die Zeile zu */
+        /* prop() greift auf die Zeile zu.
+         * Mit zwei Argumenten — geschrieben als current.prop("Feld") —
+         * greift es auf eine verknüpfte Zeile zu. So liest eine Formel
+         * durch eine Verknüpfung hindurch, genau wie in Notion:
+         *   map(prop("Aufgaben"), current.prop("Kosten")).sum()          */
         if (n === 'prop') {
+          if (knoten.args.length >= 2) {
+            const el   = evaluate(knoten.args[0], ctx);
+            const feld = text(evaluate(knoten.args[1], ctx));
+            if (!ctx.fremd) throw new Error('Hier lassen sich keine verknüpften Zeilen lesen');
+            return ctx.fremd(el, feld);
+          }
           const feld = evaluate(knoten.args[0], ctx);
           return ctx.props(text(feld));
         }
@@ -573,14 +583,16 @@ const Formula = (() => {
    * Wertet eine Formel aus.
    * @param {string} src        die Formel als Text
    * @param {Function} propFn   liefert den Wert einer Spalte: name => wert
+   * @param {Function} [fremdFn] liefert den Wert einer verknüpften Zeile:
+   *                            (element, name) => wert
    * @returns {{ok:boolean, wert:*, fehler:string}}
    */
-  const run = (src, propFn) => {
+  const run = (src, propFn, fremdFn) => {
     if (!src || !src.trim()) return { ok: true, wert: '' };
     try {
       let baum = cache.get(src);
       if (!baum) { baum = parse(tokenize(src)); cache.set(src, baum); }
-      const wert = evaluate(baum, { props: propFn, vars: {} });
+      const wert = evaluate(baum, { props: propFn, fremd: fremdFn, vars: {} });
       return { ok: true, wert };
     } catch (e) {
       return { ok: false, wert: '', fehler: e.message };
