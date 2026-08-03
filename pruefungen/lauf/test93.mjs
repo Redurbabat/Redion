@@ -155,7 +155,7 @@ p('Die Nachfrage-Grenze liegt über dem, was ehrliches Warten braucht',
 console.log('\n4 · Am echten Server');
 
 const { starte } = await import('../../server/pruefserver.js');
-const srv = await starte(8791);
+const srv = await starte(8800);   /* 8791 gehört test69 — geteilte Ports werden flockig */
 
 /* Ein Konto, ein Bereich, eine veröffentlichte Seite mit Passwort. */
 await srv.ablage.setze('konten', { id: 'k1', mail: 'a@b.ch', name: 'A', angelegt: new Date().toISOString() });
@@ -207,7 +207,65 @@ p('Ein anderer Leser kommt trotzdem mit dem richtigen Passwort durch',
 const stand = await fetch(srv.adresse + '/api/stand');
 gleich('Der Server selbst antwortet weiter', stand.status, 200);
 
+/* ========================================================================= *
+ * 5 · SICHERHEITSKOPFZEILEN (D3)
+ * ---------------------------------------------------------------------------
+ * `oeffentlich/_headers` setzt sie für die DATEIEN der App — Cloudflare Pages
+ * liest das von selbst. Für die Antworten des Arbeiters gilt es nicht, und
+ * dazu gehört ausgerechnet `/s/:schluessel`: die einzige Seite dieser App,
+ * die ein FREMDER Browser darstellt. Sie bekam bisher keine einzige.
+ * ========================================================================= */
+console.log('\n5 · Was der Browser bei einer Antwort darf');
+
+const kopfVon = (a) => Object.fromEntries([...a.headers].map(([k, v]) => [k.toLowerCase(), v]));
+
+const seite = await ruf('richtig', '8.8.8.8');
+await seite.text();
+const kS = kopfVon(seite);
+
+gleich('Die veröffentlichte Seite kommt durch', seite.status, 200);
+p('Sie hat eine CSP', !!kS['content-security-policy'], JSON.stringify(kS['content-security-policy']));
+
+/* DER TEIL, DER ZÄHLT. `sauber()` auf dem Server arbeitet mit regulären
+   Ausdrücken statt mit einem Parser — und ein Ausdruck ist leichter zu
+   überlisten. Falls dort je etwas durchkommt, hält diese Zeile es auf. */
+p('Skripte sind auf der veröffentlichten Seite ganz abgeschaltet',
+  /default-src 'none'/.test(kS['content-security-policy'] || '') &&
+  !/script-src[^;]*unsafe/.test(kS['content-security-policy'] || ''),
+  kS['content-security-policy']);
+
+/* Und die Gegenrichtung: die Seite muss trotzdem funktionieren. Eine CSP,
+   die das eigene Aussehen abschaltet, wird beim ersten Blick wieder
+   ausgebaut — sie muss so streng sein, wie es die Seite verträgt, und keinen
+   Strich strenger. */
+p('Ihr eigenes Aussehen darf sie behalten',
+  /style-src[^;]*unsafe-inline/.test(kS['content-security-policy'] || ''));
+p('Bilder aus dem Inhalt dürfen geladen werden',
+  /img-src[^;]*data:/.test(kS['content-security-policy'] || ''));
+p('Das Passwortfeld darf zurückschicken',
+  /form-action 'self'/.test(kS['content-security-policy'] || ''));
+p('Niemand darf die Seite in seine eigene einbetten',
+  /frame-ancestors 'none'/.test(kS['content-security-policy'] || '') &&
+  kS['x-frame-options'] === 'DENY');
+
+gleich('Der Dateityp wird nicht geraten', kS['x-content-type-options'], 'nosniff');
+gleich('Die Adresse wird beim Weggehen nicht verraten', kS['referrer-policy'], 'no-referrer');
+
+/* Die JSON-Antworten brauchen keine CSP — dort gibt es nichts darzustellen.
+   Eine CSP auf einer JSON-Antwort ist Zierde, und Zierde in einer
+   Sicherheitszeile macht die echten unglaubwürdig. */
+const kA = kopfVon(await fetch(srv.adresse + '/api/stand'));
+gleich('Auch die Schnittstelle lässt den Typ nicht raten',
+  kA['x-content-type-options'], 'nosniff');
+gleich('Aber sie bekommt keine CSP — dort gibt es nichts darzustellen',
+  kA['content-security-policy'], undefined);
+
+/* Und nichts überschreiben, was der Kern selbst gesetzt hat. Eine Hülle, die
+   vorhandene Zeilen ersetzt, könnte eine bewusste Regel still austauschen. */
+const gesperrtKopf = kopfVon(await ruf('wiederFalsch', '5.5.5.5'));
+p('Die Sperre behält ihr Retry-After', !!gesperrtKopf['retry-after']);
+
 await srv.stopp();
 
-console.log(`\n  Suite 58 — Die Bremse: ${ok} ok, ${weg} offen`);
+console.log(`\n  Suite 58 — Bremse und Kopfzeilen: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

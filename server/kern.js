@@ -63,6 +63,7 @@ export { erlaubteAdressen, rueckAdresse } from './sicherheit/cors.js';
 import { erlaubteAdressen, rueckAdresse, mitCors } from './sicherheit/cors.js';
 import { seitenSchluessel, istGesperrt, zaehleFehlversuch, bremseLoesen,
          herkunft, GRENZEN } from './sicherheit/bremse.js';
+import { mitSicherheitsKopf } from './sicherheit/kopfzeilen.js';
 
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
 export const gleich = (a, b) => {
@@ -254,7 +255,7 @@ const beantworteRoh = async (a, ablage, umwelt = {}) => {
  * Datei — und nicht sechsunddreissig, von denen er eine übersieht.
  */
 export const beantworte = async (a, ablage, umwelt = {}) =>
-  mitCors(await beantworteRoh(a, ablage, umwelt), a, umwelt);
+  mitSicherheitsKopf(mitCors(await beantworteRoh(a, ablage, umwelt), a, umwelt));
 
 /* ==========================================================================
  * 6 · KONTO UND ANMELDUNG

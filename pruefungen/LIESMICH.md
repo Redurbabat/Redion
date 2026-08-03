@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**64 Läufe, 2670 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**65 Läufe, 2694 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
@@ -137,7 +137,8 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 90 | ein Anführungszeichen im Text darf kein Attribut werden |
 | 91 | der Säuberer hängt — Adressen in Links und Rahmen, HTML aus Mails |
 | 92 | der Anmeldeschlüssel geht nur an geprüfte Ursprünge · CORS |
-| 93 | die Bremse — wie oft jemand ein Passwort probieren darf |
+| 93 | die Bremse — wie oft jemand ein Passwort probieren darf · Kopfzeilen |
+| 94 | die CSP der veröffentlichten Seite hält wirklich (im Browser) |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt

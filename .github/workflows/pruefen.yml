@@ -61,13 +61,13 @@ jobs:
       # zwölf Minuten auf ihre Meldung warten.
       - name: Anmeldeschlüssel und CORS prüfen
         run: node pruefungen/lauf/test92.mjs
-      - name: Die Bremse prüfen
+      - name: Die Bremse und die Kopfzeilen prüfen
         run: node pruefungen/lauf/test93.mjs
 
   pruefen:
     name: Alle Prüfläufe
     runs-on: ubuntu-latest
-    # 64 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
+    # 65 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
     # rund 12 Minuten. Die Pause ist kein Leerlauf: ohne sie werden die Läufe
     # flockig, weil Ports und IndexedDB einen Moment brauchen. Das Zeitfenster
     # ist grosszügig, weil ein Runner langsamer sein kann als dieser Rechner.
