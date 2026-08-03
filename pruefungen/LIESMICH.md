@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**66 Läufe, 2748 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**67 Läufe, 2766 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
@@ -66,6 +66,14 @@ Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
   `verbinden/konten.js` prüfte es seit jeher. Zwei Empfänger derselben Sorte,
   einer richtig, einer nicht — dasselbe Muster wie die zwanzig halben `esc`.
   → `test92.mjs`
+- **Die Sicherung enthielt den Versionsverlauf nicht** — obwohl die Doku ihn
+  ausdrücklich aufzählt. Wer sie auf einem neuen Rechner einspielte, bekam
+  seine Seiten zurück und keinen einzigen Verlauf. Und das Einspielen räumte
+  nur den Zwischenspeicher: die alten Seiten kamen **beim nächsten Neuladen
+  zurück** und lagen zwischen den eingespielten. Das ist die schlimmste Sorte
+  Fehler, die diese App haben kann — sie sieht aus wie ein geglückter Vorgang.
+  Geprüft war bisher, dass der Export *läuft*, nicht dass der Bestand danach
+  derselbe ist. → `test96.mjs` vergleicht ihn Feld für Feld.
 - **Niemand hatte je einen alten Bestand geöffnet.** `test85` prüfte die
   *Beschreibung* der Umzüge — wie viele Fassungen es gibt, welche Fächer
   dazukamen. Den Fall selbst, dass jemand die App nach Monaten wieder öffnet
@@ -149,6 +157,7 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 93 | die Bremse — wie oft jemand ein Passwort probieren darf · Kopfzeilen |
 | 94 | die CSP der veröffentlichten Seite hält wirklich (im Browser) |
 | 95 | ein Bestand aus jeder alten Fassung überlebt den Umzug |
+| 96 | die Sicherung hält, was sie verspricht — Rundlauf Feld für Feld |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt

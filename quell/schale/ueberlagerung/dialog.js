@@ -38,9 +38,62 @@ const Dialog = (() => {
     inp.focus(); inp.select();
   });
 
-  /** Ein Streifen oben, wenn etwas grundsätzlich klemmt. */
+  /**
+   * Die Frage mit mehreren Antworten — für Entscheidungen, die niemand
+   * stillschweigend treffen darf.
+   *
+   * WARUM ES DIESE FUNKTION GIBT. `CLAUDE.md` sagt: nichts löschen ohne
+   * Rückfrage. Bis hierher gab es dafür kein Werkzeug ausser `confirm()` —
+   * und das kennt nur ja und nein. Eine Entscheidung wie „ersetzen oder
+   * dazulegen" ist aber keine Ja-Nein-Frage: beide Antworten sind richtig,
+   * je nachdem was der Mensch vorhat, und die falsche kostet Daten.
+   *
+   * Deshalb bekommt jeder Knopf einen eigenen **Hinweis** darunter. Wer
+   * „Ersetzen" liest, soll nicht raten müssen, was mit dem übrigen Bestand
+   * geschieht — es steht daneben.
+   *
+   * @param {{titel:string, text:string, knoepfe:Array<{id,text,hinweis}>}} opt
+   * @returns {Promise<string>} die `id` des gewählten Knopfes, '' beim Abbruch
+   *
+   * Abbrechen liefert `''` und nicht `null`: eine Kennung ist immer eine
+   * Zeichenkette, und wer `if (!wahl) return;` schreibt, deckt beide Fälle.
+   */
+  const wahl = ({ titel, text, knoepfe = [] }) => new Promise(ok => {
+    const esc = (s) => String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  return { frage };
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(540px,94vw)">' +
+        `<div class="fh">${esc(titel)}</div>` +
+        '<div style="padding:16px 18px; font-size:14px; line-height:1.6; white-space:pre-wrap">' +
+          esc(text) + '</div>' +
+        '<div class="wahl-knoepfe">' +
+        knoepfe.map((k, i) =>
+          `<button data-w="${esc(k.id)}"${i === 0 ? ' class="prim"' : ''}>` +
+          `<b>${esc(k.text)}</b>` +
+          (k.hinweis ? `<span>${esc(k.hinweis)}</span>` : '') +
+          '</button>').join('') +
+        '</div></div>';
+    document.body.appendChild(o);
+
+    const fertig = (wert) => { o.remove(); document.removeEventListener('keydown', beiTaste); ok(wert); };
+    const beiTaste = (e) => { if (e.key === 'Escape') fertig(''); };
+
+    o.addEventListener('click', e => {
+      const k = e.target.closest('[data-w]');
+      if (k) { fertig(k.dataset.w); return; }
+      /* Auf den Hintergrund klicken heisst abbrechen — nicht die erste
+         Antwort wählen. Bei einer Frage, die Daten kostet, ist die
+         versehentliche Wahl das, was es zu verhindern gilt. */
+      if (e.target === o) fertig('');
+    });
+    document.addEventListener('keydown', beiTaste);
+    o.querySelector('[data-w]')?.focus();
+  });
+
+  return { frage, wahl };
 })();
 
 window.Dialog = Dialog;

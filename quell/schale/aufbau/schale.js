@@ -1144,13 +1144,21 @@ const App = (() => {
   /* Der Einstellungsbereich liegt in einer eigenen Datei. */
   const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
 
-  const sicherungSpeichern = () => {
+  const sicherungSpeichern = async () => {
+    /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
+       Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
+    const stand = await Store.exportVorbereiten();
     const blob = new Blob([Store.exportAll()], { type: 'application/json' });
     const l = document.createElement('a');
     l.href = URL.createObjectURL(blob);
     l.download = 'notizen-sicherung-' + new Date().toISOString().slice(0, 10) + '.json';
     l.click();
-    UI.toast('Sicherung gespeichert');
+    /* Sagen, was drin ist — und vor allem, was nicht. Ein bekannter Mangel,
+       der benannt ist, ist kein stiller Verlust. */
+    UI.toast(stand.dateien
+      ? 'Sicherung gespeichert — ohne die ' + stand.dateien + ' Datei(en), die ' +
+        'nur auf diesem Gerät liegen'
+      : 'Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
   };
 
   const sicherungLaden = (danach) => {
@@ -1158,11 +1166,49 @@ const App = (() => {
     inp.type = 'file'; inp.accept = '.json';
     inp.addEventListener('change', async () => {
       const f = inp.files[0]; if (!f) return;
+      const text = await f.text();
+
+      /* WAS SOLL GESCHEHEN? Vorher gab es diese Frage nicht, und das Ergebnis
+         war keines von beidem: die Sicherung überschrieb den Zwischenspeicher
+         und liess die Ablage stehen. Nach dem nächsten Neuladen lagen die
+         alten Seiten wieder zwischen den eingespielten. Es sah aus wie ein
+         geglückter Vorgang — die schlimmste Sorte Fehler, die diese App
+         haben kann.
+
+         `CLAUDE.md`: nichts löschen ohne Rückfrage. Also wird gefragt. */
+      let vorschau = {};
+      try { vorschau = JSON.parse(text); } catch {
+        alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
+        return;
+      }
+      const wieViele = Object.keys(vorschau.blocks || {}).length;
+      const jetzt = Object.keys(Store.cache.blocks || {}).length;
+
+      const wahl = await Dialog.wahl({
+        titel: 'Sicherung einspielen',
+        text: 'Die Datei enthält ' + wieViele + ' Blöcke' +
+              (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
+                ' Fassungen aus dem Verlauf' : '') + '. ' +
+              'In diesem Bestand liegen gerade ' + jetzt + ' Blöcke.' +
+              (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
+        knoepfe: [
+          { id: 'ersetzen', text: 'Ersetzen',
+            hinweis: 'Der Bestand sieht danach aus wie die Sicherung. Was ' +
+                     'nicht darin steht, wird gelöscht.' },
+          { id: 'zusammenfuehren', text: 'Dazulegen',
+            hinweis: 'Nichts wird gelöscht. Bei gleicher Kennung gewinnt die ' +
+                     'Sicherung.' },
+          { id: '', text: 'Abbrechen' }
+        ]
+      });
+      if (!wahl) return;
+
       try {
-        await Store.importAll(await f.text());
+        const erg = await Store.importAll(text, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
-        UI.toast('Sicherung geladen');
+        UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                 (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : ''));
       } catch (err) { alert('Konnte nicht geladen werden: ' + err.message); }
     });
     inp.click();

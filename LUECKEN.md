@@ -239,16 +239,38 @@ Der Umzug war richtig gebaut. Bis hierher war das aber eine Annahme.
 
 ### Noch offen in Etappe 1
 
-- [ ] **E2 · Export → Neuanfang → Import, mit echtem Vergleich.** Der
-  JSON-Export soll verlustfrei sein. Geprüft ist bisher, dass er *läuft* —
-  nicht, dass der Bestand danach **derselbe** ist. Der Vergleich muss Feld für
-  Feld gehen, sonst ist er die Zusicherung, die man am ehesten glaubt und am
-  wenigsten geprüft hat.
+- [x] **E2 · Export → Neuanfang → Import** — erledigt, und es waren **drei**
+  Befunde:
+
+  1. **Der Versionsverlauf war nie dabei.** `exportAll` nahm vier der neun
+     Fächer mit. Die Doku zählt `versions` ausdrücklich auf. Nachgestellt:
+     zwei Fassungen vor dem Export, **null** danach. Jetzt drin.
+  2. **Der Import räumte nur den Zwischenspeicher.** Die alten Seiten kamen
+     beim nächsten Neuladen zurück und lagen zwischen den eingespielten — es
+     sah aus wie ein geglückter Vorgang. Jetzt löscht „ersetzen" wirklich,
+     auch von der Platte.
+  3. **`importAll` traf die Entscheidung still.** Jetzt muss der Mensch
+     wählen: **Ersetzen** oder **Dazulegen**, mit dem Hinweis dabei, was
+     jeweils geschieht. Ohne Angabe geschieht nichts — auch bei einem
+     Tippfehler im Aufruf.
+
+  **Dateien bleiben aussen vor**, aber jetzt steht es in der Datei: `dateien`
+  und `stuecke` halten Blobs, und `JSON.stringify` macht daraus `{}` — sie
+  wären scheinbar dabei und in Wahrheit leer, was schlimmer ist als zu fehlen.
+  Die Sicherung nennt im Feld `fehlt`, was nicht drin ist, und die Oberfläche
+  sagt es beim Speichern. → **E6**
+
+- [ ] **E6 · Anhänge in die Sicherung** — braucht eine Antwort auf die Frage,
+  was bei einem 500-MB-Video geschieht. Base64 in derselben JSON-Datei geht
+  dafür nicht.
 - [ ] **E3 · Papierkorb: was ist wirklich wiederherstellbar?** Und was wird
   beim endgültigen Löschen mitgenommen — Versionen, Dateien, Kommentare?
-- [ ] **E4 · `VERSIONEN_MAX: 200`** — was passiert mit der 201. Fassung? Wenn
-  die älteste stillschweigend wegfällt, ist das vertretbar; es muss nur
-  jemand einmal nachgesehen haben.
+- [ ] **E4 · `VERSIONEN_MAX: 200` wird nirgends benutzt.** Nachgesehen:
+  `versionSpeichern` schneidet hart bei `slice(30)`. Die Konstante verspricht
+  200, der Code hält 30. Immerhin in der richtigen Richtung — `versionen()`
+  sortiert neueste zuerst, es fallen also die ältesten weg und nicht die
+  neuesten. Zu entscheiden ist nur, welche Zahl gilt; danach muss die andere
+  Stelle nachziehen.
 - [ ] **E5 · Zwei Fenster, dieselbe Ablage.** `onblocked` meldet sich mit
   einem Satz — geprüft ist er nicht.
 

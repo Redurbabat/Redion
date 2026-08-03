@@ -650,30 +650,154 @@ const Store = (() => {
    * Weil alles lokal liegt, gehört ein Export dazu. Sonst hängen die Daten
    * an genau einem Browserprofil.
    * ======================================================================*/
-  const exportAll = () => JSON.stringify({
-    version: VERSION,
-    exportiert: now(),
-    blocks: cache.blocks,
-    collections: cache.collections,
-    views: cache.views,
-    meta: cache.meta
-  }, null, 2);
+  /**
+   * Der ganze Bestand als eine Datei.
+   *
+   * WAS HIER FEHLTE, und was es kostete: die Sicherung nahm vier der neun
+   * Fächer mit — `blocks`, `collections`, `views`, `meta`. Nicht dabei waren
+   * `versions`, `dateien` und `stuecke`. Wer seine Sicherung auf einem neuen
+   * Rechner einspielte, bekam seine Seiten zurück **und keinen einzigen
+   * Versionsverlauf**. Nachgestellt und bestätigt: eine Fassung vor dem
+   * Export, null danach.
+   *
+   * Dass es niemandem auffiel, liegt in der Natur der Sache — man merkt das
+   * Fehlen eines Verlaufs erst, wenn man ihn braucht, und dann ist die alte
+   * Ablage längst weg.
+   *
+   * `versions` ist jetzt dabei. Es ist reines JSON und kostet nichts.
+   *
+   * `dateien` und `stuecke` sind es NICHT, und das ist eine Entscheidung
+   * statt eines Versehens: dort liegen Blobs. `JSON.stringify` macht aus
+   * einem Blob `{}` — sie wären also scheinbar dabei und in Wahrheit leer,
+   * und das ist schlimmer als zu fehlen. Sie brauchen einen eigenen Weg
+   * (Base64 oder ein ZIP), und der braucht eine Antwort auf die Frage, was
+   * bei einem 500-MB-Video geschieht. Bis dahin **sagt die Sicherung, was
+   * sie nicht enthält** — im Feld `fehlt`, und die Oberfläche zeigt es an.
+   * Ein bekannter Mangel, der benannt ist, ist kein stiller Verlust.
+   */
+  const exportAll = () => {
+    const dateienDa = zaehlerDateien();
+    return JSON.stringify({
+      version: VERSION,
+      exportiert: now(),
+      /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
+      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions'],
+      fehlt: dateienDa
+        ? ['dateien', 'stuecke']
+        : [],
+      hinweis: dateienDa
+        ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
+          'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
+          'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
+        : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+      blocks: cache.blocks,
+      collections: cache.collections,
+      views: cache.views,
+      meta: cache.meta,
+      versions: exportVersionen
+    }, null, 2);
+  };
 
-  const importAll = async (json) => {
+  /* Der Verlauf wird beim Sichern eingelesen — er liegt bewusst nicht im
+     Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
+  let exportVersionen = [];
+  let exportDateien = 0;
+  const zaehlerDateien = () => exportDateien;
+
+  /** Vor dem Sichern aufrufen: holt, was nicht im Zwischenspeicher liegt. */
+  const exportVorbereiten = async () => {
+    exportVersionen = await all('versions').catch(() => []);
+    exportDateien = (await all('dateien').catch(() => [])).length;
+    return { versionen: exportVersionen.length, dateien: exportDateien };
+  };
+
+  /**
+   * Eine Sicherung einspielen.
+   *
+   * @param {string} json
+   * @param {'ersetzen'|'zusammenfuehren'} art
+   *
+   * HIER LAG DER ZWEITE FEHLER, und er war der unangenehmere. Die alte
+   * Fassung schrieb die Sicherung über den Zwischenspeicher und liess die
+   * Ablage stehen. Wer eine Sicherung in einen nicht leeren Bestand
+   * einspielte, sah danach genau das Richtige — **bis zum Neuladen.** Dann
+   * kamen alle alten Seiten zurück und lagen zwischen den eingespielten.
+   * Nachgestellt und bestätigt: die „GEISTERSEITE" war nach dem Neuladen
+   * wieder da.
+   *
+   * Das ist die schlimmste Sorte Fehler, die diese App haben kann: sie sieht
+   * aus wie ein geglückter Vorgang.
+   *
+   * Jetzt muss der Mensch sagen, was er will — und beides tut wirklich, was
+   * es verspricht:
+   *
+   *   ersetzen         die Ablage sieht danach aus wie die Sicherung.
+   *                    Was nicht darin steht, wird gelöscht — auch auf der
+   *                    Platte.
+   *   zusammenfuehren  die Sicherung kommt dazu. Nichts wird gelöscht;
+   *                    bei gleicher Kennung gewinnt die Sicherung.
+   *
+   * Es gibt bewusst KEINE Vorgabe. `CLAUDE.md`: nichts löschen ohne
+   * Rückfrage. Wer `importAll(json)` ohne Angabe ruft, bekommt einen Fehler
+   * mit der Frage — und nicht die stille Entscheidung von jemand anderem.
+   */
+  const importAll = async (json, art) => {
     const d = JSON.parse(json);
     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
-    cache.blocks      = d.blocks      || {};
-    cache.collections = d.collections || {};
-    cache.views       = d.views       || {};
-    cache.meta        = d.meta        || {};
-    /* Alles neu schreiben */
+    if (art !== 'ersetzen' && art !== 'zusammenfuehren')
+      throw new Error('Beim Einspielen muss feststehen, was geschehen soll: ' +
+                      '„ersetzen" wirft weg, was nicht in der Sicherung steht, ' +
+                      '„zusammenfuehren" legt sie dazu. Ohne Angabe wird nichts getan.');
+
+    const neu = {
+      blocks:      d.blocks      || {},
+      collections: d.collections || {},
+      views:       d.views       || {},
+      meta:        d.meta        || {}
+    };
+
+    if (art === 'ersetzen') {
+      /* Was in der Ablage steht und nicht in der Sicherung, muss weg — sonst
+         ist es kein Ersetzen, sondern ein Zusammenführen, das sich als
+         Ersetzen ausgibt. Und zwar von der PLATTE, nicht nur aus dem
+         Zwischenspeicher: genau daran hing der Fehler. */
+      for (const [fach, schluessel] of
+           [['blocks', 'id'], ['collections', 'id'], ['views', 'id']]) {
+        const vorhanden = await all(fach).catch(() => []);
+        for (const satz of vorhanden)
+          if (!neu[fach][satz[schluessel]]) await del(fach, satz[schluessel]);
+      }
+      const metaVorhanden = await all('meta').catch(() => []);
+      for (const m of metaVorhanden)
+        if (!(m.k in neu.meta)) await del('meta', m.k);
+
+      cache.blocks = neu.blocks; cache.collections = neu.collections;
+      cache.views = neu.views;   cache.meta = neu.meta;
+    } else {
+      /* Zusammenführen: nichts wegwerfen, die Sicherung sticht bei gleicher
+         Kennung. */
+      Object.assign(cache.blocks, neu.blocks);
+      Object.assign(cache.collections, neu.collections);
+      Object.assign(cache.views, neu.views);
+      Object.assign(cache.meta, neu.meta);
+    }
+
     await Promise.all([
       ...Object.values(cache.blocks).map(b      => put('blocks', b)),
       ...Object.values(cache.collections).map(c => put('collections', c)),
       ...Object.values(cache.views).map(v       => put('views', v)),
       ...Object.entries(cache.meta).map(([k,v]) => put('meta', { k, v }))
     ]);
+
+    /* Der Verlauf, falls die Sicherung ihn mitbringt. Ältere Sicherungen
+       haben ihn nicht — die sind deshalb nicht kaputt, nur älter. */
+    if (Array.isArray(d.versions))
+      await Promise.all(d.versions.map(v => put('versions', v)));
+
     notify('import');
+    return { bloecke: Object.keys(cache.blocks).length,
+             versionen: Array.isArray(d.versions) ? d.versions.length : 0,
+             fehlt: d.fehlt || [] };
   };
 
   /* ========================================================================
@@ -876,7 +1000,7 @@ const Store = (() => {
     setMeta, getMeta, flush,
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen,
-    search, pfadText, exportAll, importAll, wipe, usage,
+    search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
     vorratPut, vorratHolen, vorratWeg, vorratAlle,
