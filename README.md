@@ -1,10 +1,58 @@
-# Notizen
+# Redion
 
-Eine Notiz- und Datenbank-App im Stil von Notion — **komplett lokal**.
-Kein Konto, kein Server, keine Cloud, keine Abo-Gebühr.
+Eine Notiz- und Datenbank-App im Stil von Notion — **die Daten gehören dem
+Gerät**. Kein Konto nötig, kein Server nötig, keine Abo-Gebühr.
 
 Öffnen: `index.html` doppelklicken. Das war die Installation.
 Lieber eine einzige Datei? `redion-einzeldatei.html` enthält alles.
+
+Ein Server ist möglich und kostet nichts — dann gibt es Abgleich zwischen
+zwei Geräten, Rechte, die wirklich sperren, und Seiten, die man weitergeben
+kann. Siehe `SERVER-EINRICHTEN.md`.
+
+---
+
+## Der Aufbau
+
+```
+index.html            was der Browser lädt
+quell/
+  start.js            der einzige Einstiegspunkt
+  kern/               kennt keinen Bereich
+    ablage/           IndexedDB, Formen, Umzüge, Befehle
+    zustand/          Verlauf (Rückgängig/Wiederholen)
+    ereignisse/       Bus, Arten, Protokoll
+    abgleich/         Maschine, Zusammenführen
+    zugang/           Sitzung, Rechte, Rollen
+    sicherheit/       Krypto, Säubern, Prüfen
+    helfer/           Kennungen, Datum, Objekte, Bremse, Melder, Tempo
+    einstellung/      Konstanten, Schalter, App
+  register/           die elf Kataloge — hier ändert man EINE Datei
+  schale/             Aufbau, Überlagerungen, Stil
+  bereiche/           editor, datenbanken, wissen, ki, verbinden, dateien,
+                      vorlagen, kommentare, erwähnungen, seiten, planen,
+                      einstellungen, hilfe
+oeffentlich/          Icons, Manifest, Favicon
+server/               der freiwillige Server (Cloudflare Workers + D1)
+doku/                 wie es innen aussieht
+```
+
+**Die drei Regeln, die das tragen:**
+
+1. Ein Bereich benutzt nur `kern/` und `register/` — nie einen anderen
+   Bereich. Braucht er etwas von drüben, geht es über den Ereignisbus oder
+   das Gemeinsame wandert nach `kern/`.
+2. Ein neuer Bereich = **zwei Einträge**: `register/module.js` und
+   `register/navigation.js`. Sonst nichts.
+3. Neue Blockart, neue Ansicht, neuer Spaltentyp, neuer Befehl, neues
+   Tastenkürzel = **ein Objekt** in der passenden `register/`-Datei. Die
+   Oberfläche zeichnet sich daraus.
+
+Es gibt keinen Bauschritt. Die Dateien werden als gewöhnliche Skripte
+geladen — genau deshalb läuft die App auch direkt von der Festplatte, ohne
+Server und ohne Werkzeugkette. `node bauen.js` fasst alles zu
+`redion-einzeldatei.html` zusammen; das ist eine Bequemlichkeit, keine
+Voraussetzung.
 
 ---
 

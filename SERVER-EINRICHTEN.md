@@ -156,6 +156,43 @@ bekommen hat, welche Marke wann benutzt wurde. Das ist das Protokoll, und es
 liegt bewusst dort und nicht auf dem Gerät — ein Protokoll, das der Besitzer
 selbst löschen kann, ist keines.
 
+---
+
+## Rechte je Spalte
+
+Eine Freigabe sagt „diese Seite ja". Manchmal ist das zu grob: die
+Personalliste soll das Team sehen, die Gehaltsspalte nicht.
+
+Im Spaltenmenü einer Datenbank steht dafür **„Rechte für diese Spalte"**. Je
+Person drei Stufen: *sehen und ändern · nur sehen · gar nicht.* Ein Eintrag
+für „alle anderen" ist die Grundregel, ein persönlicher sticht ihn.
+
+Geprüft wird das **auf dem Server**, nicht im Browser: beim Herunterladen
+wirft er die gesperrten Werte heraus, beim Hochladen dreht er unerlaubte
+Änderungen zurück und sagt, welche. Der Rest der Zeile geht durch.
+
+Zwei Grenzen, damit nichts Falsches erwartet wird:
+
+- Der **Besitzer** des Bereichs ist immer aussen vor. Wer sich selbst
+  aussperren kann, hat kein Rechtesystem, sondern eine Falle.
+- Es gilt für **geteilte** Seiten. Verschlüsselte kann der Server nicht
+  filtern — er sieht nur Zufall. Dort hat aber ohnehin nur einer den
+  Schlüssel.
+
+---
+
+## Wenn zwei Geräte dasselbe ändern
+
+Der Abgleich wirft nichts weg. Er merkt sich, wie ein Satz aussah, als beide
+Geräte ihn gleich sahen, und kann deshalb unterscheiden, wer was geändert
+hat: verschiedene Spalten gehen beide durch, verschiedene Stellen im selben
+Absatz auch, und angehängte Blöcke bleiben beide stehen.
+
+Nur wenn beide **dieselbe Stelle verschieden** gesetzt haben, gibt es kein
+automatisches Richtig. Dann meldet Redion es und zeigt beide Fassungen
+nebeneinander — Befehlspalette → **„Zwei Fassungen — offene Konflikte"**. Bis
+dort eine Wahl steht, gilt auf jedem Gerät die eigene Fassung.
+
 **Token liegen nie im Klartext** in der Datenbank, nur als Fingerabdruck. Wer
 die Datenbank in die Hand bekommt, kann sich damit trotzdem nicht anmelden.
 

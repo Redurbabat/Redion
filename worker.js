@@ -12,7 +12,7 @@
  *                     kommt die Startseite — dann funktionieren auch
  *                     Adressen wie /irgendwas, ohne dass etwas kaputtgeht.
  *
- * Die Dateien selbst (index.html, app.css, js/…, icons/…) liefert Cloudflare
+ * Die Dateien selbst (index.html, quell/…, oeffentlich/…) liefert Cloudflare
  * direkt aus, ohne diesen Code auch nur anzufassen. Er läuft nur für die
  * beiden Fälle oben.
  * ==========================================================================*/

@@ -36,7 +36,14 @@ Die Reihenfolge folgt der Arbeit, nicht der Wichtigkeit.
 20. [Notions eigene Schreibweisen](#20-notions-eigene-schreibweisen)
 21. [Ein Protokoll statt drei](#21-ein-protokoll-statt-drei)
 22. [Dateien in Stücken](#22-dateien-in-stücken)
-23. [Was Redion bewusst nicht tut](#23-was-redion-bewusst-nicht-tut)
+23. [Ein eigener Server — freiwillig, kostenlos](#23-ein-eigener-server--freiwillig-kostenlos)
+24. [Zusammenführen statt Überschreiben](#24-zusammenführen-statt-überschreiben)
+25. [Rechte bis auf die einzelne Spalte](#25-rechte-bis-auf-die-einzelne-spalte)
+26. [Probelauf: erst zeigen, dann tun](#26-probelauf-erst-zeigen-dann-tun)
+27. [Prüfsätze: was stimmen soll, festhalten](#27-prüfsätze-was-stimmen-soll-festhalten)
+28. [Vorlagen, die ein Update bekommen können](#28-vorlagen-die-ein-update-bekommen-können)
+29. [Vorberechnete Werte, mit sichtbarem Stand](#29-vorberechnete-werte-mit-sichtbarem-stand)
+30. [Was Redion bewusst nicht tut](#30-was-redion-bewusst-nicht-tut)
 
 ---
 
@@ -676,27 +683,285 @@ Unfug.
 
 ---
 
-## 23. Was Redion bewusst nicht tut
+## 23. Ein eigener Server — freiwillig, kostenlos
 
-Damit die Liste ehrlich bleibt:
+Lange war der Satz „es gibt keinen Server" hier das stärkste Argument: keine
+Kosten, keine Abhängigkeit, kein Ort, an dem fremde Augen sitzen. Der Satz
+gilt weiter — nur ist er jetzt eine **Wahl** und keine Grenze mehr.
 
-- **Keine Zusammenarbeit in Echtzeit.** Ohne Server gibt es niemanden, mit
-  dem man gleichzeitig schreiben könnte. Kommentare, Erwähnungen und
-  Vorschläge gibt es — aber für einen Menschen an einem Gerät.
-- **Keine Freigabe ins Netz.** Weitergeben heisst hier: eine Datei erzeugen.
-- **Rechte sind eine Absprache, kein Schloss.** Es gibt Konten, fünf Rollen
-  und eine Matrix, und sie wirken in der Oberfläche. Aber wer den Browser
-  aufmacht, kommt an alles heran. Ein echtes Schloss braucht einen Ort, an
-  den der Besitzer selbst nicht herankommt — und den gibt es hier nicht.
-- **Keine Anmeldung über SAML, kein Besitzerwechsel.** Beides setzt fremde
-  Konten und einen Server voraus.
-- **MCP nur in eine Richtung.** Als Client läuft es; Anfragen entgegennehmen
-  kann die App nicht, dafür bräuchte es eine offene Verbindung von aussen.
-- **Kein Abo, keine Grenzen.** Auch keine Serverdienste, die eines
-  bräuchten — Slack-Nachrichten etwa laufen nur über einen Webhook, den man
-  selbst einträgt.
+Wer den Server einrichtet (zehn Minuten, `SERVER-EINRICHTEN.md`), bekommt
+vier Dinge, die ohne ihn nicht gehen: dieselben Notizen auf Rechner und
+Telefon, Rechte die wirklich sperren, eine Seite die man jemandem schicken
+kann, und eine Schnittstelle von aussen. Wer ihn nicht einrichtet, verliert
+nichts von dem, was vorher da war.
+
+Was der Server **nicht** sieht: private Seiten. Die werden auf dem Gerät
+verschlüsselt (AES-GCM 256, Schlüssel über PBKDF2 mit 310 000 Runden) und
+verlassen es nur so. Was er sieht: was ausdrücklich geteilt oder
+veröffentlicht wird — anders kann er keine Rechte prüfen und keinem fremden
+Browser eine Seite zeigen. Deshalb steht genau dieser Satz beim Teilen über
+dem Schalter und nicht in einer Fussnote.
+
+Und er kostet nichts: Cloudflare Workers erlauben 100 000 Anfragen am Tag,
+D1 fünf Gigabyte. Zwei Geräte mit einem Abgleich alle zwei Minuten brauchen
+rund 1 500 — ein Sechzigstel. Eine Kreditkarte verlangt Cloudflare beim
+kostenlosen Tarif nicht.
 
 ---
 
-*Diese Datei gehört zur Sammlung in `Notion-Doku`. Die anderen sieben Teile
+## 24. Zusammenführen statt Überschreiben
+
+Das ist der Punkt, an dem die meisten Abgleiche unehrlich werden.
+
+Zwei Geräte ändern dieselbe Seite. Der übliche Weg: wer zuletzt gespeichert
+hat, gewinnt. Der andere verliert seine Arbeit — **still**, ohne eine Zeile
+Hinweis. Man merkt es Tage später, wenn überhaupt, und sucht dann beim
+Falschen.
+
+Redion merkt sich zusätzlich den **letzten gemeinsamen Stand**: wie ein Satz
+aussah, als beide Geräte ihn gleich sahen. Damit lässt sich sagen, wer was
+geändert hat — und nicht nur, wer später dran war:
+
+- **feldweise** — A ändert den Status, B die Priorität: beides bleibt.
+- **wortweise** — A schreibt am Anfang des Absatzes, B am Ende: beides
+  bleibt. Der Vergleich läuft über die längste gemeinsame Wortfolge, mit
+  abgeschnittenen gleichen Anfängen und Enden; 1200 Wörter brauchen dafür
+  weniger als eine Sekunde.
+- **listenweise** — A hängt einen Block an, B löscht einen anderen: beides
+  bleibt, und die Reihenfolge stimmt danach noch. Hat nur einer umsortiert,
+  gilt seine Reihenfolge.
+
+Zeitstempel sind nie ein Konflikt — dort gewinnt einfach der spätere. Bei
+allem anderen, wo beide **dieselbe Stelle verschieden** gesetzt haben, gibt
+es kein automatisches Richtig. Das landet in einer Liste mit beiden
+Fassungen nebeneinander und einer Wahl. Bis jemand entscheidet, gilt auf
+jedem Gerät die eigene Fassung: die eigene Arbeit zu sehen ist das
+Erwartbare. Verworfen wird nichts.
+
+Notion hat davon nichts — dort ist der Server die einzige Wahrheit, und
+offline geändert wird ohnehin kaum etwas.
+
+**Zwei Fehler kamen beim Bauen ans Licht**, beide aus derselben Familie:
+
+1. Geholte Sätze lagen nur im Arbeitsspeicher und wurden nie geschrieben.
+   Nach dem Neuladen waren sie weg — und weil die Abgleichsmarke schon
+   weitergerückt war, kamen sie **nie wieder**.
+2. Ein neuer Block änderte die Reihenfolge der Elternseite, ohne sie als
+   geändert zu markieren. Das andere Gerät bekam den Block, aber nie die
+   Seite, auf der er stehen sollte: er lag im Speicher und war **nirgends zu
+   sehen**.
+
+Beides sind Datenverluste, die niemand bemerkt. Deshalb stehen sie hier.
+
+---
+
+## 25. Rechte bis auf die einzelne Spalte
+
+Notions kleinste Einheit ist die Seite: entweder jemand sieht sie oder
+nicht. Oft ist das zu grob. Die Personalliste soll das Team sehen — die
+Gehaltsspalte nicht.
+
+Hier gibt es je Spalte und Person drei Stufen: **sehen und ändern · nur
+sehen · gar nicht.** Ein Eintrag für „alle anderen" gilt als Grundregel, ein
+persönlicher sticht ihn.
+
+Wichtig ist, **wo** das geprüft wird: auf dem Server. Beim Herunterladen
+wirft er die Werte gesperrter Spalten heraus — sie verlassen ihn nicht.
+Beim Hochladen dreht er unerlaubte Änderungen auf den alten Wert zurück und
+sagt, welche. Der Rest der Zeile geht trotzdem durch: eine erlaubte Änderung
+wegen einer unerlaubten zu verlieren wäre unnötig hart.
+
+Die Oberfläche macht davor nur die Höflichkeit: eine Spalte, die man nicht
+ändern darf, lässt sich gar nicht erst ändern, statt dass es beim nächsten
+Abgleich stillschweigend zurückgenommen wird.
+
+Zwei ehrliche Grenzen: der **Besitzer** eines Bereichs ist immer aussen vor —
+wer sich selbst aus seinen eigenen Daten aussperren kann, hat kein
+Rechtesystem, sondern eine Falle. Und es gilt für **geteilte** Seiten;
+verschlüsselte kann der Server nicht filtern, weil er nur Zufall sieht.
+Dort hat aber ohnehin nur einer den Schlüssel.
+
+---
+
+## 26. Probelauf: erst zeigen, dann tun
+
+Eine Spalte zu löschen dauert eine Sekunde. Dass damit vier Formeln
+kaputtgehen, zwei Ansichten ihren Filter verlieren und 312 Werte weg sind,
+merkt man erst danach — und der Papierkorb hilft nicht, weil er Seiten kennt
+und keine Spalten.
+
+Notion fragt an dieser Stelle „Wirklich löschen?". Das ist die falsche Frage.
+Die richtige ist: **was geht dabei kaputt?**
+
+Redion antwortet darauf, bevor es passiert. Der Probelauf zählt echt nach —
+nicht geschätzt, sondern gerade eben ausgezählt:
+
+- wie viele Zeilen in dieser Spalte einen Wert haben, mit Beispielen
+- welche Formeln sie beim Namen nennen, auch in **anderen** Datenbanken
+  (eine Formel darf über `findRows` und `sumWhere` in fremde Tabellen greifen)
+- welche Rollups mit ihr rechnen und welche Gegenspalten ins Leere zeigen
+- welche Ansichten danach filtern, sortieren, gruppieren oder auswerten
+- welche Automationen und Knöpfe sie anfassen
+
+Sechs Vorhaben sind abgedeckt: **Spalte löschen · Typ ändern · umbenennen ·
+Seite löschen · Ansicht löschen · Automation trocken laufen lassen.**
+
+Beim Typwechsel wird jeder einzelne Wert probeweise umgewandelt: *„3 von 12
+Werten passen nicht in den neuen Typ und werden leer"* — mit Auflistung,
+welche. Beim Umbenennen sagt er, ob überhaupt eine Formel den alten Namen
+kennt; wenn nicht, heisst es kurz *„Umbenennen ist gefahrlos"*. Beim
+trockenen Lauf einer Automation steht, wie viele Zeilen die Bedingungen
+erfüllen und was überschrieben würde — und darunter der Satz, dass nichts
+davon geschehen ist.
+
+Der Knopf heisst dann nicht „OK", sondern **„Trotzdem tun"**. Und wenn nichts
+dranhängt, fragt er gar nicht erst — eine leere, unbenutzte Spalte
+verschwindet ohne Zwischenfrage.
+
+---
+
+## 27. Prüfsätze: was stimmen soll, festhalten
+
+Eine Formel zu ändern ist billig. Sie kaputtzumachen auch. Der Unterschied
+fällt oft erst Wochen später auf, wenn eine Zahl komisch aussieht — und dann
+weiss niemand mehr, welche der zwölf Änderungen seither es war.
+
+Die Notion-KI nennt in ihrer eigenen Liste den Grund, warum es das nirgends
+gibt: *„Tests sind ein Softwarekonzept; es müsste so einfach werden, dass
+normale Nutzer es verstehen."*
+
+Deshalb heisst hier nichts „Test" oder „Assertion". Ein **Prüfsatz** ist ein
+Satz in zwei Hälften:
+
+> **Wenn** Betrag = 100 und Land = „CH"
+> **dann** ist MwSt gleich 8.1
+
+Und der wichtigste Weg dorthin geht gar nicht über ein Formular. Man nimmt
+eine Zeile, bei der es stimmt, klickt sie mit der rechten Maustaste an und
+wählt **„Diesen Fall festhalten"**. Redion liest ab, welche Spalten die
+Formel überhaupt nennt, schreibt nur diese ab, rechnet das Ergebnis aus und
+macht daraus den Prüfsatz. Wer nie ein Formular ausfüllen will, muss es auch
+nicht.
+
+Geprüft wird immer an einer **erfundenen Zeile**, die nur für den Augenblick
+der Prüfung existiert. Ein Prüfsatz kann deshalb nichts kaputtmachen —
+schlimmstenfalls ist er selbst falsch.
+
+Drei Stellen, an denen das etwas nützt:
+
+- **Sofort**, im Prüfsatz-Fenster: „3 von 12 stimmen nicht mehr", jeweils mit
+  dem, was stattdessen herauskam.
+- **Im Gesundheitsbericht**, zusammen mit verwaisten Seiten und kaputten
+  Verknüpfungen — und dort weit oben, weil es der einzige Befund ist, den ein
+  Mensch selbst gesetzt hat.
+- **Im Probelauf**, bevor eine Spalte gelöscht oder umgestellt wird: *„2
+  Prüfsätze prüfen genau das hier — du hast selbst festgehalten, dass es so
+  stimmen soll."*
+
+Auch Automationen lassen sich so festnageln: *„Wenn Betrag = 5000, dann
+greift ‚Grosse melden'"* — und daneben der Gegensatz, dass sie bei 10 eben
+nicht greift. Beides läuft trocken; keine Zeile wird angefasst.
+
+---
+
+## 28. Vorlagen, die ein Update bekommen können
+
+Das Problem ist in jedem Notion-Workspace zu besichtigen: man setzt ein
+Template ein, arbeitet ein Jahr damit, dann kommt eine bessere Fassung
+heraus — und man kann sie **nur neu kopieren.** Danach stehen zwei Seiten da:
+die neue, die leer ist, und die alte, in der die Arbeit steckt. Meistens
+bleibt die alte, und die Verbesserung bekommt niemand.
+
+Hier hat jede Vorlage eine **Fassungsnummer**, und eine eingesetzte Seite
+merkt sich, aus welcher Vorlage und welcher Fassung sie stammt. Kommt eine
+neue Fassung, sagt Redion es — im Gesundheitsbericht und in einem eigenen
+Fenster — und kann den Weg dorthin anwenden.
+
+Zwei Regeln machen das erst benutzbar:
+
+1. **Nur hinzufügen, nie ersetzen.** Ein Migrationsschritt darf eine Spalte
+   anlegen, eine Formel setzen, eine Auswahloption oder eine Ansicht
+   dazustellen. Er darf nichts löschen und **keine einzige Zeile ändern.**
+   Wer sich darauf nicht verlassen kann, drückt nie auf „Anwenden".
+2. **Was schon da ist, bleibt.** Hat jemand die Spalte selbst angelegt oder
+   die Formel angepasst, wird sie in Ruhe gelassen und im Bericht als „war
+   schon da" aufgeführt. Zweimal anwenden ändert deshalb nichts, und der
+   eigene Name einer Spalte überlebt jedes Update.
+
+Vor dem Anwenden steht jeder Schritt einzeln da — mit dem **Warum**, nicht
+nur dem Was: *„Ein Kreuz reicht nicht — man sieht erst, dass etwas überfällig
+ist, wenn man nachrechnet."*
+
+Die Datenbank wird über ihren **Namen** gesucht, nicht über eine gemerkte
+Kennung. So bekommt auch eine duplizierte oder verschobene Seite das Update.
+Wer eine Datenbank umbenannt hat, bekommt einen ehrlichen Hinweis statt einer
+stillen Fehlanwendung: *„Die Datenbank ‚Aufgaben' ist hier nicht mehr zu
+finden — dieser Schritt muss von Hand gemacht werden."*
+
+---
+
+## 29. Vorberechnete Werte, mit sichtbarem Stand
+
+Grosse Datenbanken mit Formeln und Rollups werden zäh, und man erfährt
+nirgends, warum. Redion hat dagegen zwei Mittel, und der Unterschied
+zwischen ihnen ist der Punkt:
+
+- Der **Formelspeicher** rechnet jede Formel einmal je Datenstand und wirft
+  alles weg, sobald sich etwas ändert. Nach einem Neuladen ist er leer. Er
+  macht ein *Neuzeichnen* billig.
+- Der **Vorrat** rechnet auf Wunsch einmal und behält das Ergebnis über
+  Änderungen und über das Neuladen hinweg. Er macht das *Öffnen* einer
+  grossen Datenbank billig — und nimmt dafür in Kauf, dass ein Wert eine
+  Weile veraltet ist.
+
+Das Zweite ist ein Handel, kein Geschenk. Deshalb ist es nirgends von selbst
+an, und deshalb steht der Stand **über der Tabelle**, nicht in einer
+Einstellung:
+
+> ❄ Gerechnet vor 4 Minuten · 300 Werte in 18 ms · **12 Änderungen seither**
+> · Alle 15 Minuten · [Neu rechnen] [Ausschalten]
+
+Ein Zwischenspeicher, den man nicht sieht, ist eine Falle: irgendwann steht
+eine Zahl da, die nicht mehr stimmt, und niemand weiss warum.
+
+Wie viele Änderungen es seither gab, wird **nachgezählt** statt mitgezählt —
+über die Zeitstempel der Zeilen. Ein Zähler, der an einem Ereignis hängt,
+wird irgendwann falsch: er verpasst einen Weg, über den auch geschrieben
+wird, und zeigt dann beruhigende Nullen.
+
+Redion sagt auch, wann sich das *nicht* lohnt: *„40 Zeilen sind zu wenig.
+Unter 120 kostet das Verwalten mehr, als das Rechnen spart."* Und wenn es
+sich lohnt, sagt es warum: *„150 Zeilen mit zwei gerechneten Spalten — das
+sind 300 Rechnungen bei jedem Öffnen."*
+
+**Ein Fehler kam dabei ans Licht**, und zwar einer, der viel weiter reichte:
+`updateCollection` und `updateView` haben nie einen Zeitstempel gesetzt. Für
+den Abgleich hiess das, eine Schemaänderung sei *nie geschehen* — eine neue
+Spalte, ein umbenanntes Feld, ein anderer Filter kamen auf dem zweiten Gerät
+nie an. Die Zeilen wanderten, ihre Spalten nicht. Das sieht aus wie verlorene
+Daten und war nur ein fehlender Zeitstempel.
+
+---
+
+## 30. Was Redion bewusst nicht tut
+
+Damit die Liste ehrlich bleibt:
+
+- **Keine Zusammenarbeit in Echtzeit.** Zwei Menschen können nacheinander an
+  derselben Seite arbeiten, und der Abgleich führt beides zusammen — aber
+  der Kursor des anderen ist nicht zu sehen, und ein gemeinsames Tippen im
+  selben Absatz gibt es nicht.
+- **Rechte sperren nur mit Server.** Ohne ihn wirken sie in der Oberfläche,
+  aber wer den Browser aufmacht, kommt an alles heran. Ein echtes Schloss
+  braucht einen Ort, an den der Besitzer selbst nicht herankommt — und den
+  gibt es erst mit dem Server.
+- **Keine Anmeldung über SAML, kein Besitzerwechsel.** Beides setzt eine
+  Organisation voraus, die es hier nicht gibt.
+- **Kein Abo, keine Grenzen.** Und auch keine Dienste, die eines bräuchten —
+  Slack-Nachrichten etwa laufen über einen Webhook, den man selbst einträgt.
+- **Keine Suche in Bildern und Tonspuren.** Kein OCR, keine Transkripte.
+
+---
+
+*Diese Datei gehört zur Sammlung in `Notion-Doku`. Die anderen Teile
 beschreiben Notion, dieser hier beschreibt, was daraus geworden ist.*

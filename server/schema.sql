@@ -92,3 +92,19 @@ CREATE TABLE IF NOT EXISTS marken (
   benutzt  TEXT
 );
 CREATE INDEX IF NOT EXISTS marken_konto ON marken(kontoId);
+
+/* Rechte bis auf die einzelne Spalte. Eine Freigabe sagt „diese Seite ja",
+   ein Feldrecht sagt „diese Seite ja, aber das Gehalt nicht".
+   rolle: voll (sehen und ändern) · lesen (nur sehen) · kein (gar nicht).
+   kontoId '*' gilt für alle, ein eigener Eintrag sticht ihn. */
+CREATE TABLE IF NOT EXISTS feldrechte (
+  bereich   TEXT,
+  sammlung  TEXT,
+  feld      TEXT,
+  kontoId   TEXT,
+  rolle     TEXT,
+  von       TEXT,
+  wann      TEXT,
+  PRIMARY KEY (bereich, sammlung, feld, kontoId)
+);
+CREATE INDEX IF NOT EXISTS feldrechte_slg ON feldrechte(bereich, sammlung);

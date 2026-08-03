@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "checkJs": false,
+    "baseUrl": ".",
+    "paths": {
+      "@kern/*":     ["quell/kern/*"],
+      "@register/*": ["quell/register/*"],
+      "@schale/*":   ["quell/schale/*"],
+      "@bereiche/*": ["quell/bereiche/*"]
+    }
+  },
+  "include": ["quell/**/*.js", "server/**/*.js", "bauen.js", "worker.js"],
+  "exclude": ["node_modules", "redion-einzeldatei.html"]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "redion",
+  "version": "2026.8.3",
+  "description": "Redion — Notizen, Datenbanken und Formeln, die auf dem eigenen Gerät liegen",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "bauen": "node bauen.js",
+    "pruefen": "node pruefungen/alle.js",
+    "server": "node server/pruefserver.js 8790",
+    "veroeffentlichen": "npx wrangler deploy"
+  },
+  "keywords": ["notizen", "datenbank", "formeln", "local-first", "offline"],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "playwright": "^1.47.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

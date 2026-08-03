@@ -7,7 +7,7 @@
 #
 #    main     der Einstiegspunkt. Er beantwortet /api/* selbst und reicht
 #             alles andere an die Dateiablage weiter.
-#    assets   der Ordner "public" mit den Dateien der App. Alles andere -
+#    assets   die Projektwurzel mit den Dateien der App. Alles andere -
 #             der Worker selbst, die Anleitungen, die .git-Ablage - bleibt
 #             draussen. Das ist wichtig: die .git-Ablage enthaelt eine Datei
 #             ueber 25 MB, und daran ist der erste Versuch gescheitert.
@@ -23,7 +23,7 @@ main = "worker.js"
 compatibility_date = "2025-04-01"
 
 [assets]
-directory = "./public"
+directory = "./"
 binding = "ASSETS"
 
 # ===========================================================================

@@ -1,0 +1,8 @@
+# Was nie ins Repository gehört
+.env
+node_modules/
+.wrangler/
+.DS_Store
+Thumbs.db
+_to_delete/
+_alt/

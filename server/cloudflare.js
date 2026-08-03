@@ -58,7 +58,7 @@ const ohneDatenbank = () => new Response(JSON.stringify({
 
 /** Gehört dieser Pfad dem Server? */
 export const istServerWeg = (pfad) =>
-  /^\/(konto|sync|freigabe|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/.test(pfad) ||
+  /^\/(konto|sync|freigabe|feldrecht|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/.test(pfad) ||
   /^\/v1\//.test(pfad) || pfad === '/api/stand';
 
 export const bedienen = async (request, env, ctx) => {

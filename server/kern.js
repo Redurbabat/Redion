@@ -216,6 +216,7 @@ export const beantworte = async (a, ablage, umwelt = {}) => {
 
     if (t[0] === 'sync')     return await syncWeg(a, ablage, wer, t, m, k, kopf);
     if (t[0] === 'freigabe') return await freigabeWeg(a, ablage, wer, t, m, k);
+    if (t[0] === 'feldrecht') return await feldrechtWeg(a, ablage, wer, t, m, k);
     if (t[0] === 'veroeffentlichen') return await veroeffentlichenWeg(a, ablage, wer, t, m, k, umwelt);
     if (t[0] === 'bereich')  return await bereichWeg(a, ablage, wer, t, m, k);
     if (t[0] === 'protokoll')return await protokollWeg(a, ablage, wer, t, m, suche);
@@ -507,11 +508,18 @@ const syncWeg = async (a, ablage, wer, t, m, k, kopf) => {
       { geaendertNach: seit || undefined, sortiere: 'geaendert', grenze: Number(k.grenze) || 500 });
 
     /* Wer nicht alles darf, bekommt auch nicht alles. Geprüft wird je Seite. */
+    const besitzer = wer.konto.id === bereich.besitzer;
     const raus = [];
     for (const s of alle) {
-      if (meine === 'voll') { raus.push(s); continue; }
-      const r = await rolleAuf(ablage, bereichId, s.seite || s.id, wer.konto.id);
-      if (darf(r, 'lesen')) raus.push(s);
+      let nimm = s;
+      if (meine !== 'voll') {
+        const r = await rolleAuf(ablage, bereichId, s.seite || s.id, wer.konto.id);
+        if (!darf(r, 'lesen')) continue;
+      }
+      /* Und dann noch die einzelnen Spalten — die Seite darf er sehen,
+         das Gehalt darin womöglich nicht. */
+      if (!besitzer) nimm = await feldFilter(ablage, bereichId, wer.konto.id, s);
+      raus.push(nimm);
     }
 
     const neueste = raus.length ? raus[raus.length - 1].geaendert : seit;
@@ -533,7 +541,7 @@ const syncWeg = async (a, ablage, wer, t, m, k, kopf) => {
     if (liste.length > 500) return fehler(413, 'zu_viel',
       'Höchstens 500 Sätze auf einmal — sonst wird die Antwort zu gross.');
 
-    const angenommen = [], abgelehnt = [];
+    const angenommen = [], abgelehnt = [], angepasst = [];
     for (const s of liste) {
       if (!s || !s.id) { abgelehnt.push({ id: s && s.id, grund: 'ohne Kennung' }); continue; }
 
@@ -557,9 +565,22 @@ const syncWeg = async (a, ablage, wer, t, m, k, kopf) => {
           continue;
         }
       }
+      /* Spalten, die er nicht ändern darf, kommen auf ihren alten Wert
+         zurück — der Rest der Zeile geht trotzdem durch. Alles abzulehnen
+         hiesse, eine erlaubte Änderung wegen einer unerlaubten zu verlieren. */
+      let daten = String(s.daten ?? '');
+      if (wer.konto.id !== bereich.besitzer) {
+        const sch = await feldSchutz(ablage, bereichId, wer.konto.id, s, alt);
+        if (sch.zurueck.length) {
+          daten = sch.daten;
+          angepasst.push({ id: s.id, felder: sch.zurueck,
+            grund: 'Spalten ohne Schreibrecht: ' + sch.zurueck.join(', ') });
+        }
+      }
+
       await ablage.setze('saetze', {
         id: s.id, bereich: bereichId, tabelle: String(s.tabelle || 'blocks'),
-        daten: String(s.daten ?? ''), verschluesselt: s.verschluesselt ? 1 : 0,
+        daten, verschluesselt: s.verschluesselt ? 1 : 0,
         seite: String(s.seite || s.id), version: neueVersion,
         geaendert: s.geaendert || jetzt(), geloescht: s.geloescht ? 1 : 0,
         vonGeraet: geraet
@@ -571,7 +592,7 @@ const syncWeg = async (a, ablage, wer, t, m, k, kopf) => {
       await notieren(ablage, { bereich: bereichId, kontoId: wer.konto.id, art: 'sync',
         text: angenommen.length + ' Sätze abgeglichen', objekt: geraet });
 
-    return antwort(200, { angenommen: angenommen.length, abgelehnt,
+    return antwort(200, { angenommen: angenommen.length, abgelehnt, angepasst,
       marke: jetzt() }, { 'Access-Control-Allow-Origin': '*' });
   }
 
@@ -666,6 +687,147 @@ const bereichWeg = async (a, ablage, wer, t, m, k) => {
 /* ==========================================================================
  * 9 · FREIGABEN — hier wird aus der Absprache ein Schloss
  * ========================================================================*/
+/* ==========================================================================
+ * 9b · RECHTE BIS AUF DIE EINZELNE SPALTE
+ * --------------------------------------------------------------------------
+ * Idee 21 der 10000×-Liste. Eine Freigabe sagt „diese Seite ja". Oft ist das
+ * zu grob: die Personalliste soll das Team sehen, das Gehalt nicht.
+ *
+ * Zwei Dinge sind dabei wichtig und stehen deshalb hier und nicht in einer
+ * Fussnote:
+ *
+ *   1. Geprüft wird auf dem Server, nicht in der Oberfläche. Eine Spalte,
+ *      die nur im Browser ausgeblendet ist, ist keine Sperre — die Daten
+ *      lägen trotzdem im Speicher des Geräts.
+ *
+ *   2. Das geht nur bei Klartext. Was verschlüsselt hochgeht, kann der
+ *      Server nicht filtern; er sieht nur einen Haufen Zufall. Dort ist es
+ *      aber auch kein Problem, denn den Schlüssel hat ohnehin nur einer.
+ *      Feldrechte greifen also genau da, wo geteilt wird — und dort greifen
+ *      sie wirklich.
+ *
+ * Der Besitzer eines Bereichs ist immer aussen vor. Wer sich selbst aus
+ * seinen eigenen Daten aussperren kann, hat kein Rechtesystem, sondern eine
+ * Falle.
+ * ========================================================================*/
+
+/** Welche Spaltenrechte gelten für diesen Menschen in dieser Sammlung? */
+export const feldRechte = async (ablage, bereichId, sammlung, kontoId) => {
+  if (!sammlung) return {};
+  const alle = await ablage.finde('feldrechte', { bereich: bereichId, sammlung });
+  const karte = {};
+  /* Erst die allgemeine Regel, dann die persönliche — die sticht. */
+  alle.forEach(f => { if (f.kontoId === '*') karte[f.feld] = f.rolle; });
+  alle.forEach(f => { if (f.kontoId === kontoId) karte[f.feld] = f.rolle; });
+  return karte;
+};
+
+/** Aus einem Satz die Spalten entfernen, die dieser Mensch nicht sehen darf. */
+export const feldFilter = async (ablage, bereichId, kontoId, s) => {
+  if (s.verschluesselt || s.tabelle !== 'blocks') return s;
+  let satz;
+  try { satz = JSON.parse(s.daten); } catch { return s; }
+  if (!satz || satz.parentTable !== 'collection' || !satz.props) return s;
+
+  const karte = await feldRechte(ablage, bereichId, satz.parentId, kontoId);
+  const weg = Object.keys(karte).filter(f => karte[f] === 'kein' && f in satz.props);
+  if (!weg.length) return s;
+
+  weg.forEach(f => { delete satz.props[f]; });
+  /* Der Empfänger erfährt, DASS etwas fehlt — sonst hält er eine
+     unvollständige Zeile für eine vollständige und schreibt sie zurück. */
+  satz.feldrechteWeg = weg;
+  return { ...s, daten: JSON.stringify(satz) };
+};
+
+/**
+ * Schreibversuche auf gesperrte Spalten zurückdrehen.
+ * @returns {{daten:string, zurueck:string[]}}
+ */
+export const feldSchutz = async (ablage, bereichId, kontoId, s, alt) => {
+  if (s.verschluesselt || s.tabelle !== 'blocks') return { daten: s.daten, zurueck: [] };
+  let satz;
+  try { satz = JSON.parse(s.daten); } catch { return { daten: s.daten, zurueck: [] }; }
+  if (!satz || satz.parentTable !== 'collection' || !satz.props)
+    return { daten: s.daten, zurueck: [] };
+
+  const karte = await feldRechte(ablage, bereichId, satz.parentId, kontoId);
+  const gesperrt = Object.keys(karte).filter(f => karte[f] !== 'voll');
+  if (!gesperrt.length) return { daten: s.daten, zurueck: [] };
+
+  let alterSatz = null;
+  if (alt && !alt.verschluesselt) { try { alterSatz = JSON.parse(alt.daten); } catch {} }
+  const alteProps = (alterSatz && alterSatz.props) || {};
+
+  const zurueck = [];
+  gesperrt.forEach(f => {
+    const neuW = JSON.stringify(satz.props[f] ?? null);
+    const altW = JSON.stringify(alteProps[f] ?? null);
+    if (neuW === altW) return;
+    if (f in alteProps) satz.props[f] = alteProps[f];
+    else delete satz.props[f];
+    zurueck.push(f);
+  });
+  if (!zurueck.length) return { daten: s.daten, zurueck: [] };
+  return { daten: JSON.stringify(satz), zurueck };
+};
+
+const feldrechtWeg = async (a, ablage, wer, t, m, k) => {
+  const bereichId = String(k.bereich || (a.suche && a.suche.bereich) || '');
+  const bereich = await ablage.hole('bereiche', { id: bereichId });
+  if (!bereich) return fehler(404, 'object_not_found', 'Diesen Bereich gibt es nicht.');
+  const meine = await rolleAuf(ablage, bereichId, '*', wer.konto.id);
+
+  if (m === 'POST') {
+    if (!darf(meine, 'rechte')) return fehler(403, 'restricted_resource',
+      'Spaltenrechte vergeben darf nur, wer Vollzugriff auf den Bereich hat.');
+    const sammlung = String(k.sammlung || '');
+    const feld     = String(k.feld || '');
+    if (!sammlung || !feld) return fehler(400, 'validation_error',
+      'Es fehlt die Sammlung oder die Spalte.');
+    const rolle = String(k.rolle || 'lesen');
+    if (!['voll', 'lesen', 'kein'].includes(rolle)) return fehler(400, 'validation_error',
+      'Für Spalten gibt es nur: voll, lesen, kein.');
+
+    let zielId = String(k.konto || '*');
+    if (zielId !== '*') {
+      const ziel = (await ablage.finde('konten', { mail: zielId }))[0] ||
+                   await ablage.hole('konten', { id: zielId });
+      if (!ziel) return fehler(404, 'object_not_found', 'Dieses Konto gibt es nicht.');
+      zielId = ziel.id;
+      if (zielId === bereich.besitzer) return fehler(400, 'validation_error',
+        'Dem Besitzer kann man keine Spalte wegnehmen.');
+    }
+
+    if (k.entfernen)
+      await ablage.weg('feldrechte', { bereich: bereichId, sammlung, feld, kontoId: zielId });
+    else
+      await ablage.setze('feldrechte', { bereich: bereichId, sammlung, feld,
+        kontoId: zielId, rolle, von: wer.konto.id, wann: jetzt() });
+
+    await notieren(ablage, { bereich: bereichId, kontoId: wer.konto.id, art: 'rechte',
+      text: 'Spalte ' + feld + ' in ' + sammlung + ' für ' +
+            (zielId === '*' ? 'alle' : zielId) + ': ' + (k.entfernen ? 'aufgehoben' : rolle),
+      objekt: sammlung });
+    return antwort(200, { ok: true, rolle }, { 'Access-Control-Allow-Origin': '*' });
+  }
+
+  if (m === 'GET') {
+    if (!darf(meine, 'lesen')) return fehler(403, 'restricted_resource', 'Kein Leserecht.');
+    const sammlung = String((a.suche && a.suche.sammlung) || k.sammlung || '');
+    const liste = sammlung
+      ? await ablage.finde('feldrechte', { bereich: bereichId, sammlung })
+      : await ablage.finde('feldrechte', { bereich: bereichId });
+    /* Und gleich mitliefern, was für den Fragenden selbst gilt. */
+    const meins = sammlung
+      ? await feldRechte(ablage, bereichId, sammlung, wer.konto.id) : {};
+    return antwort(200, { feldrechte: liste, meins, besitzer: bereich.besitzer },
+      { 'Access-Control-Allow-Origin': '*' });
+  }
+
+  return fehler(405, 'invalid_request', 'Hier geht nur GET und POST.');
+};
+
 const freigabeWeg = async (a, ablage, wer, t, m, k) => {
   /* Bei GET steht der Bereich in der Adresse, bei POST im Körper. */
   const bereichId = String(k.bereich || (a.suche && a.suche.bereich) || '');
@@ -1157,6 +1319,6 @@ const mcpWeg = async (a, ablage, wer, m, k) => {
 };
 
 /* Damit der Worker und die Prüfungen dieselben Namen benutzen. */
-export const _intern = { kontoWeg, syncWeg, freigabeWeg, bereichWeg, v1Weg, mcpWeg,
+export const _intern = { kontoWeg, syncWeg, freigabeWeg, feldrechtWeg, bereichWeg, v1Weg, mcpWeg,
                          oeffentlichZeigen, htmlSeite, MCP_WERKZEUGE, oauthProfil,
                          sitzungGeben };
