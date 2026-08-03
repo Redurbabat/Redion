@@ -85,11 +85,25 @@ unsichtbar — sie stünde im Register und käme in keinem Menü an.
 
 ```
 schale/
-├─ aufbau/          schale.js (Routing, Seitenmenü, Suche, Start) ·
-│                   seitenleiste.js · reiter.js
+├─ aufbau/          schale.js         Routing, Seitenmenü, Suche, Start,
+│                                     und das Zusammensetzen
+│                   seitenleiste.js   die linke Leiste
+│                   kopfleiste.js     Cover, Symbol, Titel, Werkzeugzeile,
+│                                     Pfadleiste
+│                   inhaltsflaeche.js Blöcke, Rückverweise, Streifen
+│                   reiter.js         Reiter, geteilte Ansicht
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
 └─ stil/            das Aussehen
 ```
+
+Die drei Zeichner kennen `App` nicht. Sie bekommen, was sie von drüben
+brauchen, über `binde({ … })` in `App.start()` — und ein Prüflauf sieht
+nach, dass im Quelltext keiner von ihnen `App.` sagt. `schale.js` entscheidet
+nur noch, **was** gezeichnet wird; das **wie** liegt nebenan.
+
+Ein Rückgabewert, den man kennen muss: `Kopfleiste.zeichne` sagt `false`,
+wenn danach Schluss ist — bei einer verschlüsselten Seite. Wer ihn übergeht,
+zeigt verschlüsselten Inhalt an.
 
 `UI.toast`, `UI.menu` und `UI.frage` stehen an ein paar hundert Stellen.
 Diese Aufrufe umzuschreiben wäre viel Arbeit für keinen Gewinn und ein hohes
@@ -238,8 +252,9 @@ still, und im Melder nachlesbar.
 
 ## Prüfen
 
-`npm run pruefen` — fünf Läufe unter `pruefungen/` und `server/`, 248 einzelne
-Prüfungen. Sie laufen über echtes Chromium gegen die echte App, nicht gegen
+`npm run pruefen` — sechs Läufe unter `pruefungen/` und `server/`, 313
+einzelne Prüfungen. Sie laufen ausserdem bei jedem Push von selbst
+(`.github/workflows/pruefen.yml`). Sie laufen über echtes Chromium gegen die echte App, nicht gegen
 Attrappen.
 
 Sie liegen **im Repository**, und das ist der Punkt: vorher standen sie unter

@@ -359,6 +359,71 @@ await p.waitForTimeout(200);
 pruef('Eine echte Seite verdrängt die Sonderseite',
       await p.evaluate(() => !!document.getElementById('title')), true);
 
+/* ======================================================================== *
+ * 10 · OHNE APP
+ * Derselbe Nachweis wie bei der Seitenleiste: die beiden Dateien dürfen `App`
+ * nicht kennen. Sonst ist die Aufteilung nur eine neue Datei und keine neue
+ * Grenze — und `schale.js` bliebe die Datei, die man für alles aufmachen muss.
+ * ======================================================================== */
+console.log('\n--- Ohne App ---');
+
+pruef('Die Kopfleiste steht als eigener Name',
+      await p.evaluate(() => typeof Kopfleiste !== 'undefined'), true);
+pruef('Die Inhaltsfläche auch',
+      await p.evaluate(() => typeof Inhaltsflaeche !== 'undefined'), true);
+pruef('Und App setzt sie nur zusammen',
+      await p.evaluate(() => typeof App.zeichneSeite === 'function'), true);
+
+const nurCode = (text) => text
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
+  .replace(/'(?:[^'\\]|\\.)*'/g, "''")
+  .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+  .replace(/`(?:[^`\\]|\\.)*`/g, '``');
+
+for (const datei of ['kopfleiste.js', 'inhaltsflaeche.js']) {
+  const quelle = nurCode(fs.readFileSync(
+    path.join(WURZELORDNER, 'quell/schale/aufbau', datei), 'utf8'));
+  pruef(datei + ' ruft App an keiner Stelle', /\bApp\s*\./.test(quelle), false);
+}
+pruef('Und die Prüfung würde es merken',
+      /\bApp\s*\./.test(nurCode('x = App.zeichneSeite()')), true);
+
+/* Der Kopf zeichnet sich mit Attrappen — und sagt bei einer verschlüsselten
+   Seite `false`. Dieser Rückgabewert ist die Sperre; wer ihn übersieht, zeigt
+   verschlüsselten Inhalt an. */
+const ohneApp = await p.evaluate(() => {
+  Kopfleiste.binde({
+    zeichneSeite: () => {}, zeichneBaum: () => {}, kiPanel: () => {},
+    oeffne: () => {}, aktuelleSeite: () => null, sonder: () => null
+  });
+  const kasten = document.createElement('div');
+  const offen = Kopfleiste.zeichne(kasten, { id: 'x', text: 'Attrappe', icon: '🧪' });
+  const kasten2 = document.createElement('div');
+  const zu = Kopfleiste.zeichne(kasten2, { id: 'y', text: 'Geheim', locked: true });
+  return {
+    offen, teile: [...kasten.children].map(e => e.id ? '#' + e.id : e.className),
+    zu, zuTeile: [...kasten2.children].map(e => e.id ? '#' + e.id : e.className)
+  };
+});
+pruef('Der Kopf entsteht ohne App',        ohneApp.teile, ['pg-icon', '#title', 'pg-tools']);
+pruef('Und sagt: es geht weiter',          ohneApp.offen, true);
+pruef('Bei verschlüsselt sagt er: Schluss', ohneApp.zu, false);
+pruef('Und hängt keine Werkzeugzeile an',
+      ohneApp.zuTeile.includes('pg-tools'), false);
+
+/* Und wieder die echten Teile, damit die App danach normal weiterläuft. */
+await p.evaluate(() => {
+  Kopfleiste.binde({
+    zeichneSeite: App.zeichneSeite, zeichneBaum: Seitenleiste.zeichne,
+    kiPanel: App.kiPanel, oeffne: App.oeffne, aktuelleSeite: App.aktuelleSeite,
+    sonder: () => null
+  });
+  App.zeichneSeite();
+});
+pruef('Mit den echten Teilen läuft sie weiter',
+      await p.evaluate(() => !!document.getElementById('title')), true);
+
 /* ======================================================================== */
 console.log(`\n${ok}/${ok + bad} bestanden`);
 console.log(fehler.length ? 'JS-Fehler:\n' + fehler.join('\n') : 'Keine JS-Fehler.');

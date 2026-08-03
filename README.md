@@ -335,7 +335,7 @@ npm run pruefen seiten    nur die, deren Name das enthält
 node bauen.js      die Einzeldatei neu bauen
 ```
 
-Fünf Läufe, 248 einzelne Prüfungen, über echtes Chromium gegen die echte App
+Sechs Läufe, 313 einzelne Prüfungen, über echtes Chromium gegen die echte App
 — keine Attrappen. Sie liegen unter `pruefungen/` und `server/`.
 
 Playwright ist eine **devDependency**: sie wird zum Prüfen gebraucht, nie zum
