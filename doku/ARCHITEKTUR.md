@@ -93,13 +93,24 @@ schale/
 │                   inhaltsflaeche.js Blöcke, Rückverweise, Streifen
 │                   reiter.js         Reiter, geteilte Ansicht
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
-└─ stil/            marken.css    die drei Schriften
-                    dunkel.css    die Farben — der Normalfall
-                    hell.css      nur, was im Hellmodus anders ist
-                    grund.css     Grundelemente und Farbklassen
-                    aufbau.css    das Gerüst
-                    bausteine.css die Bausteine
+└─ stil/            marken.css        die drei Schriften
+                    dunkel.css        die Farben — der Normalfall
+                    hell.css          nur, was im Hellmodus anders ist
+                    grund.css         Grundelemente und Farbklassen
+                    aufbau.css        das Gerüst
+                    datenbanken.css   der Rahmen einer Datenbank
+                    ki.css            das KI-Panel
+                    werkzeuge.css     Menüs, Dialoge, Graph, Karteikarten
+                    ansichten.css     Zeitstrahl, Diagramm, Formular
+                    einstellungen.css Einstellungen und Verbindungen
+                    bausteine.css     der Rest
 ```
+
+Die sechs hinteren sind **zusammenhängende Ausschnitte** aus dem früheren
+`bausteine.css`, keine thematisch zusammengesuchten. Das ist gemessen und
+nicht vorsichtig: 33 Selektoren stehen in mehr als einem Themenblock
+(`#sidebar`, `.db`, `#ai`, `#page`, `.karte`). Wer sie thematisch zusammenzieht,
+sortiert um — und dreht bei genau diesen um, wer gegen wen gewinnt.
 
 Die Reihenfolge der sechs Stilblätter in `index.html` zählt. Dunkel steht in
 `:root` und gilt immer; `hell.css` überschreibt nur, wenn am `html` das

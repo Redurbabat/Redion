@@ -458,23 +458,19 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 
 </style>
 <style>
-/* ===== quell/schale/stil/bausteine.css ===== */
+/* ===== quell/schale/stil/datenbanken.css ===== */
 /* ============================================================================
- * bausteine.css — die Bausteine selbst
+ * datenbanken.css — die Datenbank selbst
  * ----------------------------------------------------------------------------
- * Der grosse Rest: Datenbanken in allen zwölf Ansichten, das KI-Panel,
- * Menüs, Dialoge, Einstellungen, Verbindungen, die Telefon-Oberfläche, die
- * Kreuztabelle, die Barrierefreiheit.
+ * Der Rahmen einer Datenbank: Kopfzeile, Reiter, Werkzeugleiste, die Tabelle,
+ * das Board, die Gruppen. Was in JEDER Ansicht gleich aussieht.
  *
- * Diese Datei ist immer noch die grösste der sechs, und das ist in Ordnung:
- * sie ist nach Bereichen gegliedert, und jeder Bereich hat sein eigenes
- * Banner. Wer eine Farbe ändern will, sucht ab jetzt nicht mehr hier,
- * sondern in `dunkel.css` oder `hell.css` — das war der Punkt der Übung.
- *
- * Ein paar Regeln hier tragen `html[data-theme="…"]` vor sich her. Die
- * gehören bewusst NICHT nach hell.css oder dunkel.css: sie betreffen einen
- * einzelnen Baustein und nicht das Thema. Wer sie verschiebt, sucht sie
- * später bei dem Baustein, zu dem sie gehören.
+ * Die einzelnen Ansichten — Zeitstrahl, Diagramm, Formular, Seitenvorschau —
+ * stehen in ansichten.css, die Kreuztabelle weiter hinten in bausteine.css. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
  * ==========================================================================*/
 
 /* ==========================================================================
@@ -571,6 +567,25 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 }
 .cal .ev:hover{background:var(--bg-hover)}
 
+
+</style>
+<style>
+/* ===== quell/schale/stil/ki.css ===== */
+/* ============================================================================
+ * ki.css — das KI-Panel am rechten Rand
+ * ----------------------------------------------------------------------------
+ * Der Chat, die Schnellbefehle, die Eingabezeile.
+ *
+ * Was die KI sonst noch an Oberfläche hat — Quellen, Agent, Besprechung —
+ * liegt weiter hinten in bausteine.css und bleibt dort: davor stehen die
+ * Einstellungen, und die teilen sich mit dem KI-Teil zwei Selektoren
+ * (.cal.woche .day und .kt-std). Zusammenziehen hiesse umsortieren. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
+
 /* ==========================================================================
    KI-PANEL
    ========================================================================== */
@@ -650,6 +665,22 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   #topbar .top-btn.schmal{padding:0 6px}
   .kt-std{width:58px}
 }
+
+
+</style>
+<style>
+/* ===== quell/schale/stil/werkzeuge.css ===== */
+/* ============================================================================
+ * werkzeuge.css — Werkzeuge, Verknüpfungen, Notion-Bedienelemente
+ * ----------------------------------------------------------------------------
+ * Der grösste zusammenhängende Brocken: Menüs, Dialoge, Overlays, der
+ * Graph, die Karteikarten, das Journal, die Schnellnotizen, die
+ * Auswahlleiste, die Kommentare — alles, was über der Seite schwebt. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
 
 /* ==========================================================================
    ERWEITERUNGEN — Werkzeuge, Verknüpfungen, Notion-Bedienelemente
@@ -1037,6 +1068,22 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .home-zahlen{grid-template-columns:repeat(2,1fr)}
 }
 
+
+</style>
+<style>
+/* ===== quell/schale/stil/ansichten.css ===== */
+/* ============================================================================
+ * ansichten.css — Zeitstrahl, Diagramm, Formular, Seitenvorschau
+ * ----------------------------------------------------------------------------
+ * Die Ansichten einer Datenbank, die nicht Tabelle oder Board sind. Sie
+ * stehen getrennt, weil sie zusammen fast zweihundert Zeilen sind und weil
+ * man beim Ändern einer Ansicht selten die anderen meint. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
+
 /* ==========================================================================
    DATENBANK — Zeitstrahl, Diagramm, Formular, Seitenvorschau
    ========================================================================== */
@@ -1205,6 +1252,25 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner.warn{background:var(--b-yellow); color:var(--text)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
 html[data-theme="light"] .banner{color:#37352f}
+
+
+</style>
+<style>
+/* ===== quell/schale/stil/einstellungen.css ===== */
+/* ============================================================================
+ * einstellungen.css — Einstellungen, Verbindungen, Konten, Kalender
+ * ----------------------------------------------------------------------------
+ * Der Einstellungsbereich mit seinen zwölf Abschnitten, dazu alles, was mit
+ * Verbindungen nach draussen zu tun hat: Konten, Kalender, die Wolke.
+ *
+ * Beide Abschnitte lagen im Original direkt hintereinander und bleiben
+ * zusammen — sie gehören auch inhaltlich zusammen: was man einmal einrichtet
+ * und danach selten wieder anfasst. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
 
 /* ==========================================================================
    EINSTELLUNGEN
@@ -1633,6 +1699,29 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .clip-knopf{display:inline-block; background:var(--accent); color:#fff; padding:9px 20px;
   border-radius:7px; font-size:14px; font-weight:500; text-decoration:none; cursor:grab}
 .clip-knopf:active{cursor:grabbing}
+
+
+</style>
+<style>
+/* ===== quell/schale/stil/bausteine.css ===== */
+/* ============================================================================
+ * bausteine.css — was übrig bleibt
+ * ----------------------------------------------------------------------------
+ * Nach A3 und seinem zweiten Durchgang stehen hier noch: die restliche
+ * KI-Oberfläche (Quellen, Agent, Besprechung), der Telefonbetrieb, die
+ * Bibliothek, die Reiterleiste, das Blatt von unten, die Kreuztabelle, die
+ * Pflege, die Barrierefreiheit, das Datenmodell und die Sperre.
+ *
+ * Warum das nicht weiter zerlegt ist: die Abschnitte sind thematisch
+ * verzahnt. Eine Messung über alle Selektoren hat 33 gefunden, die in mehr
+ * als einem Themenblock stehen — #sidebar, .db, #ai, #page, .karte,
+ * #handy-leiste und andere. Sie thematisch zusammenzuziehen hiesse
+ * umsortieren, und Umsortieren dreht bei genau diesen Selektoren um, wer
+ * gegen wen gewinnt. Ein Umzug, der das Aussehen ändert, ist kein Umzug.
+ *
+ * Wer hier weiter aufteilen will, fängt mit dieser Messung an und nicht mit
+ * dem Editor.
+ * ==========================================================================*/
 
 /* ==========================================================================
    KI — QUELLEN, AGENT, BESPRECHUNG

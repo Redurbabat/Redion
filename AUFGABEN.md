@@ -74,7 +74,7 @@ prüfen die Seitenanzeige**, und alle vierzehn liefen nach dem Schnitt durch.
 
 ### ~~A3 — Das Stilblatt aufteilen~~ · erledigt
 
-Sechs Dateien in `quell/schale/stil/`:
+Elf Dateien in `quell/schale/stil/`, aus einer mit 3155 Zeilen:
 
 | Datei | Zeilen | Was |
 |---|--:|---|
@@ -83,7 +83,20 @@ Sechs Dateien in `quell/schale/stil/`:
 | `hell.css` | 35 | nur, was im Hellmodus anders ist |
 | `grund.css` | 48 | Grundelemente und die zwanzig Farbklassen |
 | `aufbau.css` | 239 | das Gerüst: Seitenleiste und Hauptbereich |
-| `bausteine.css` | 2838 | die Bausteine selbst |
+| `datenbanken.css` | 109 | der Rahmen einer Datenbank |
+| `ki.css` | 96 | das KI-Panel |
+| `werkzeuge.css` | 399 | Menüs, Dialoge, Graph, Karteikarten |
+| `ansichten.css` | 182 | Zeitstrahl, Diagramm, Formular, Seitenvorschau |
+| `einstellungen.css` | 444 | Einstellungen, Verbindungen, Konten |
+| `bausteine.css` | 1682 | der Rest |
+
+**Warum nicht weiter?** Weil es gemessen wurde: 33 Selektoren stehen in mehr
+als einem Themenblock — `#sidebar`, `.db`, `#ai`, `#page`, `.karte`,
+`#handy-leiste`. Thematisch zusammenziehen hiesse umsortieren, und
+Umsortieren dreht bei genau diesen um, wer gegen wen gewinnt. Deshalb ist
+jede der sechs neuen Dateien ein **zusammenhängender** Ausschnitt, kein
+zusammengesuchter. Wer weiter aufteilen will, fängt mit dieser Messung an
+und nicht mit dem Editor.
 
 **Belegt** mit einem Vergleich der berechneten Werte vor und nach dem
 Schnitt: 74 CSS-Variablen (beide Themen) und 56 Element/Thema-Kombinationen
@@ -103,6 +116,17 @@ HTML-Säuberung. `test87` prüft das jetzt.
 immer; `hell.css` überschreibt nur. Wer in `dunkel.css` eine Variable
 ergänzt, muss sie auch in `hell.css` ergänzen — sonst zeigt der Hellmodus an
 dieser einen Stelle den dunklen Wert, und das merkt nur, wer hell arbeitet.
+
+**Und der Fehler, den ich beim zweiten Durchgang selbst gebaut habe**, weil
+er sich wiederholen wird: ein Schnitt landete mitten in einem Kommentar-Banner.
+Die neue Datei fing mit `KI-PANEL` und einem herrenlosen `*/` an. CSS bricht
+dabei nicht ab — es räumt auf: der Parser überliest alles bis zum nächsten
+abgeschlossenen Block und **verschluckt dabei die erste echte Regel**. `#ai`
+verlor sein `display:none`, das KI-Panel stand offen im Fenster. Keine Datei
+war kaputt, keine Klammer unausgeglichen, keine Meldung erschien. Gefunden
+hat es nur der Vergleich der berechneten Werte — 58 Unterschiede.
+`test87` prüft jetzt auf herrenlose Kommentarenden; die Klammernprüfung
+allein hätte es **nicht** gefunden (nachgestellt und belegt).
 
 ### A4 — Die Bereiche in `dienst` und `ansicht` trennen
 

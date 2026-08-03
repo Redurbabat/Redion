@@ -15,7 +15,7 @@
  * unten ist der Schalter dafür.
  * ==========================================================================*/
 
-const VERSION = 'notizen-v7';
+const VERSION = 'notizen-v8';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -119,6 +119,11 @@ const GRUNDSTOCK = [
   './quell/schale/stil/hell.css',
   './quell/schale/stil/grund.css',
   './quell/schale/stil/aufbau.css',
+  './quell/schale/stil/datenbanken.css',
+  './quell/schale/stil/ki.css',
+  './quell/schale/stil/werkzeuge.css',
+  './quell/schale/stil/ansichten.css',
+  './quell/schale/stil/einstellungen.css',
   './quell/schale/stil/bausteine.css',
   './oeffentlich/manifest.webmanifest',
   './oeffentlich/favicon.ico',

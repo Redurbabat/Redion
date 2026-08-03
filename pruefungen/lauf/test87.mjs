@@ -170,8 +170,9 @@ p('schale.js bindet alle drei',
  * ========================================================================= */
 console.log('\n— Die sechs Stilblätter —');
 
-const STILE = ['marken.css', 'dunkel.css', 'hell.css', 'grund.css',
-               'aufbau.css', 'bausteine.css'];
+const STILE = ['marken.css', 'dunkel.css', 'hell.css', 'grund.css', 'aufbau.css',
+               'datenbanken.css', 'ki.css', 'werkzeuge.css', 'ansichten.css',
+               'einstellungen.css', 'bausteine.css'];
 const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
 const verlinkt = [...html.matchAll(/<link rel="stylesheet" href="quell\/schale\/stil\/([^"]+)">/g)]
   .map(m => m[1]);
@@ -204,6 +205,42 @@ STILE.forEach(datei => {
 /* Gegenprobe wie oben: findet die Prüfung einen übriggebliebenen <link>? */
 p('Und die Prüfung würde einen übrigen <link> merken',
   /<link rel="stylesheet"/.test('<link rel="stylesheet" href="x.css">'));
+
+/* ------------------------------------------------------------------------ *
+ * Jede Stildatei muss heile Kommentare haben — und das ist keine
+ * Schönheitsfrage.
+ *
+ * Beim Aufteilen landete ein Schnitt einmal MITTEN in einem Banner. Die
+ * neue Datei fing damit an:
+ *
+ *     KI-PANEL
+ *     ========================================================== * /
+ *     #ai{ … display:none … }
+ *
+ * Ein herrenloses Kommentarende, davor Text ohne Klammer. CSS bricht dabei
+ * nicht ab, es RÄUMT AUF: der Parser überliest alles bis zum nächsten
+ * abgeschlossenen Block — und verschluckt dabei die erste echte Regel.
+ * `#ai` verlor sein `display:none`, das KI-Panel stand von da an offen im
+ * Fenster, und keine Datei war kaputt, keine Meldung erschien, keine
+ * Klammer war unausgeglichen. Nur das Bild stimmte nicht mehr.
+ * ------------------------------------------------------------------------ */
+STILE.forEach(datei => {
+  const t = _lies(_dazu(WURZEL, 'quell/schale/stil', datei), 'utf8');
+  const auf = (t.match(/\/\*/g) || []).length;
+  const zu  = (t.match(/\*\//g) || []).length;
+  p(datei + ': Kommentare gehen auf und wieder zu', auf === zu, `${auf} auf, ${zu} zu`);
+
+  /* Und kein `*/` bevor irgendein `/*` kam — genau das war der Fall. */
+  const ersteAuf = t.indexOf('/*');
+  const ersteZu  = t.indexOf('*/');
+  p(datei + ': kein herrenloses Kommentarende am Anfang',
+    ersteZu < 0 || (ersteAuf >= 0 && ersteAuf < ersteZu));
+
+  /* Klammern: fällt eine ganze Regel weg, merkt man es hier. */
+  const ohne = t.replace(/\/\*[\s\S]*?\*\//g, ' ');
+  p(datei + ': geschweifte Klammern sind ausgeglichen',
+    (ohne.match(/\{/g) || []).length === (ohne.match(/\}/g) || []).length);
+});
 
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);
