@@ -177,5 +177,126 @@ p('… und lässt den Servicearbeiter in Ruhe',
     "navigator.serviceWorker.addEventListener('message', f)"
       .replace(/navigator\.serviceWorker\.addEventListener/g, 'ARBEITER_addEventListener')));
 
-console.log(`\n  Suite 57 — Anmeldeschlüssel: ${ok} ok, ${weg} offen`);
+/* ========================================================================= *
+ * 3 · CORS — eine Regel statt sechsunddreissig
+ * ---------------------------------------------------------------------------
+ * `kern.js` setzte an 36 Stellen einzeln `Access-Control-Allow-Origin: '*'`.
+ * Die Begründung dort stimmte zur Hälfte: bei `*` schickt der Browser keine
+ * Zugangsdaten mit, und dieser Server nimmt seinen Schlüssel aus einer
+ * Kopfzeile. Eine fremde Seite kann also keine angemeldete Anfrage stellen.
+ *
+ * Nicht abgedeckt war alles, was OHNE Schlüssel antwortet: `/api/stand` nennt
+ * die Zahl der Konten, `/s/:schluessel` liefert eine veröffentlichte Seite,
+ * und der Gerätecode-Weg gibt nach Freigabe einen Sitzungsschlüssel heraus.
+ * ========================================================================= */
+console.log('\n3 · Wer darf von aussen lesen?');
+
+let mitCors = null, erlaubterUrsprung = null;
+try {
+  const m = await import('../../server/sicherheit/cors.js');
+  mitCors = m.mitCors; erlaubterUrsprung = m.erlaubterUrsprung;
+} catch { /* die Datei gibt es noch nicht — die Prüfungen melden es */ }
+
+p('Es gibt eine Stelle, die über CORS entscheidet', !!mitCors && !!erlaubterUrsprung);
+
+if (mitCors && erlaubterUrsprung) {
+  const PROD = { ADRESSE: 'https://redion.example' };
+  const anfrageVon = (ursprung) => ({ kopf: ursprung ? { origin: ursprung } : {} });
+  const antwortMitStern = () => ({ status: 200, kopf: { 'Access-Control-Allow-Origin': '*' } });
+  const kopfVon = (ursprung, umwelt) =>
+    mitCors(antwortMitStern(), anfrageVon(ursprung), umwelt).kopf['Access-Control-Allow-Origin'];
+
+  gleich('Die eigene App darf lesen — und bekommt ihren Ursprung, nicht den Stern',
+    kopfVon('https://redion.example', PROD), 'https://redion.example');
+  gleich('Eine fremde Seite bekommt gar keine Erlaubnis',
+    kopfVon('https://boese.example', PROD), undefined);
+  gleich('localhost bleibt beim Entwickeln erlaubt',
+    kopfVon('http://localhost:5500', PROD), 'http://localhost:5500');
+
+  /* OHNE eingetragene Adresse bleibt der Stern. Wer die App gerade von der
+     Festplatte startet, soll nicht an einer Sperre scheitern, die er noch
+     gar nicht einrichten konnte — eine Sicherheitsregel, die die erste
+     Inbetriebnahme bricht, wird ausgebaut statt benutzt. */
+  gleich('Ohne eingetragene Adresse bleibt es beim Stern',
+    kopfVon('https://irgendwo.example', {}), '*');
+
+  /* Ohne Herkunft im Kopf ist es kein Browser oder derselbe Ursprung —
+     beides braucht keine CORS-Zeile. */
+  gleich('Ohne Herkunft im Kopf gibt es keine Zeile', kopfVon('', PROD), undefined);
+
+  /* DIE ZEILE, DIE MAN AM HÄUFIGSTEN VERGISST. Sobald die Antwort von der
+     Herkunft abhängt, muss `Vary: Origin` dazu — sonst liefert ein
+     Zwischenspeicher die Antwort für Herkunft A an Herkunft B aus. Das fällt
+     erst unter Last auf und ist dann kaum zu finden. */
+  gleich('Bei geprüfter Herkunft steht Vary: Origin dabei',
+    mitCors(antwortMitStern(), anfrageVon('https://redion.example'), PROD).kopf.Vary, 'Origin');
+  gleich('Beim Stern braucht es kein Vary',
+    mitCors(antwortMitStern(), anfrageVon('https://x.example'), {}).kopf.Vary, undefined);
+
+  /* Was der Kern nicht nach draussen geben wollte, gibt auch diese Stelle
+     nicht nach draussen. Eine Hülle, die Zeilen HINZUFÜGT, wäre gefährlicher
+     als gar keine. */
+  const ohneZeile = mitCors({ status: 200, kopf: { 'Content-Type': 'text/html' } },
+    anfrageVon('https://redion.example'), PROD);
+  gleich('Eine Antwort ohne CORS-Zeile bekommt keine dazu',
+    'Access-Control-Allow-Origin' in ohneZeile.kopf, false);
+
+  gleich('Eine Unterdomäne, die nur so aussieht, darf nicht',
+    erlaubterUrsprung('https://redion.example.boese.example', PROD), '');
+}
+
+/* Und der Quelltext-Beleg: die 36 Stellen dürfen bleiben, aber es muss eine
+   Hülle geben, durch die sie hinausgehen. */
+p('beantworte() geht durch die CORS-Hülle',
+  /export const beantworte[\s\S]{0,200}mitCors\(/.test(server));
+
+/* ========================================================================= *
+ * 4 · DERSELBE FALL ÜBER ECHTES HTTP
+ * ---------------------------------------------------------------------------
+ * Abschnitt 3 fragt die Funktion. Dieser fragt den Server. Der Unterschied
+ * ist der ganze Punkt: die Funktion kann richtig rechnen und trotzdem nie
+ * gerufen werden. Genau das war beim Anmeldefenster der Fall — die Prüfung
+ * stand da, die Verdrahtung fehlte.
+ * ========================================================================= */
+console.log('\n4 · Und derselbe Fall über echtes HTTP');
+
+const { starte } = await import('../../server/pruefserver.js');
+const srv = await starte(8793, { umwelt: { ADRESSE: 'https://redion.example' } });
+
+const holeMit = async (herkunft) => {
+  const a = await fetch(srv.adresse + '/api/stand',
+    herkunft ? { headers: { Origin: herkunft } } : {});
+  await a.text();
+  return { erlaubt: a.headers.get('access-control-allow-origin'),
+           vary: a.headers.get('vary'), status: a.status };
+};
+
+const eigene = await holeMit('https://redion.example');
+gleich('Die eigene App bekommt ihren Ursprung zurück',
+  eigene.erlaubt, 'https://redion.example');
+gleich('… mit Vary: Origin', eigene.vary, 'Origin');
+
+const fremde = await holeMit('https://boese.example');
+gleich('Eine fremde Seite bekommt keine Erlaubnis', fremde.erlaubt, null);
+p('… die Antwort selbst kommt trotzdem — CORS sperrt den Leser, nicht den Server',
+  fremde.status === 200);
+
+/* Auch die Vorabfrage (OPTIONS) muss mitziehen. Sie wird gern vergessen,
+   weil sie im Alltag unsichtbar ist — und dann scheitert jede PATCH-Anfrage
+   der eigenen App mit einer Meldung, die nach etwas ganz anderem aussieht. */
+const vorab = await fetch(srv.adresse + '/bereich/liste',
+  { method: 'OPTIONS', headers: { Origin: 'https://redion.example' } });
+await vorab.text();
+gleich('Auch die Vorabfrage antwortet mit dem geprüften Ursprung',
+  vorab.headers.get('access-control-allow-origin'), 'https://redion.example');
+
+const vorabFremd = await fetch(srv.adresse + '/bereich/liste',
+  { method: 'OPTIONS', headers: { Origin: 'https://boese.example' } });
+await vorabFremd.text();
+gleich('Eine fremde Vorabfrage bekommt nichts',
+  vorabFremd.headers.get('access-control-allow-origin'), null);
+
+await srv.stopp();
+
+console.log(`\n  Suite 57 — Anmeldeschlüssel und CORS: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

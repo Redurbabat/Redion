@@ -55,46 +55,12 @@ export const antwort = (status, koerper, kopf = {}) => ({
 export const fehler = (status, code, text) =>
   antwort(status, { object: 'error', status, code, message: text });
 
-/* ---------------------------------------------------------------------------
- * ERLAUBTE RÜCKSPRUNG-ADRESSEN
- * ---------------------------------------------------------------------------
- * Der Anmeldevorgang bekommt eine Adresse mit, zu der er danach zurückkehrt
- * (`?zurueck=…`). Sie kam bisher ungeprüft aus der Adresszeile — und aus ihr
- * wird `redirect_uri` für GitHub und Google gebaut.
- *
- * WAS DAS BEDEUTET: die Anbieter prüfen `redirect_uri` gegen ihre eigene
- * Liste, das ist das eine Netz. Aber ein Wert, der ungeprüft durch den
- * Vorgang läuft und am Ende bestimmt, wohin ein Sitzungsschlüssel geht, darf
- * nicht auf ein fremdes Netz vertrauen. Wer die Liste beim Anbieter einmal
- * weit einstellt — ein Platzhalter für Unterdomänen genügt —, hat sonst hier
- * ein Loch, das niemand mehr sieht.
- *
- * Erlaubt ist deshalb nur, was der Server selbst als seine Adresse kennt
- * (`ADRESSE`), dazu ausdrücklich eingetragene weitere (`ADRESSEN`, mit
- * Komma), und beim Entwickeln `localhost`.
- * ------------------------------------------------------------------------ */
-export const erlaubteAdressen = (umwelt = {}) => {
-  const roh = [umwelt.ADRESSE, ...(String(umwelt.ADRESSEN || '').split(','))]
-    .map(x => String(x || '').trim().replace(/\/+$/, ''))
-    .filter(Boolean);
-  const raus = [];
-  for (const a of roh) { try { raus.push(new URL(a).origin); } catch { /* unbrauchbar */ } }
-  return [...new Set(raus)];
-};
-
-/**
- * Ist diese Rücksprung-Adresse erlaubt?
- * @returns {string} die Adresse ohne Schrägstrich am Ende — oder '' wenn nicht
- */
-export const rueckAdresse = (wert, umwelt = {}) => {
-  const roh = String(wert || '').trim();
-  if (!roh) return '';
-  let ursprung;
-  try { ursprung = new URL(roh).origin; } catch { return ''; }
-  /* Beim Entwickeln läuft die App auf einem anderen Port als der Server. */
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(ursprung)) return roh.replace(/\/+$/, '');
-  return erlaubteAdressen(umwelt).includes(ursprung) ? roh.replace(/\/+$/, '') : '';
-};
+/* Die Adressprüfung ist nach `sicherheit/cors.js` gewandert — sie gehört zur
+   Frage „wer darf von aussen", und dort steht sie jetzt vollständig. Hier
+   bleibt sie als Name stehen, weil der Anmeldeweg unten sie braucht und weil
+   Prüfläufe sie von hier holen. */
+export { erlaubteAdressen, rueckAdresse } from './sicherheit/cors.js';
+import { erlaubteAdressen, rueckAdresse, mitCors } from './sicherheit/cors.js';
 
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
 export const gleich = (a, b) => {
@@ -214,11 +180,17 @@ export const notieren = async (ablage, { bereich, kontoId, art, text, objekt }) 
 const teile = (pfad) => String(pfad).replace(/^\/+|\/+$/g, '').split('/');
 
 /**
+ * Der Beantworter selbst. Er setzt weiterhin an rund drei Dutzend Stellen
+ * `Access-Control-Allow-Origin: '*'` — das heisst dort aber nur noch „diese
+ * Antwort ist für die App von aussen gedacht". WELCHER Ursprung sie lesen
+ * darf, entscheidet `sicherheit/cors.js` beim Hinausgehen. Eine Regel an
+ * einer Stelle statt an sechsunddreissig.
+ *
  * @param {object} a       { methode, pfad, kopf, koerper, suche }
  * @param {object} ablage  eine Ablage aus ablage.js
  * @param {object} umwelt  { GITHUB_ID, GITHUB_GEHEIM, GOOGLE_ID, …, holen }
  */
-export const beantworte = async (a, ablage, umwelt = {}) => {
+const beantworteRoh = async (a, ablage, umwelt = {}) => {
   const m = String(a.methode || 'GET').toUpperCase();
   const t = teile(a.pfad || '/');
   const kopf = a.kopf || {};
@@ -270,6 +242,17 @@ export const beantworte = async (a, ablage, umwelt = {}) => {
     return fehler(500, 'internal_server_error', e.message || String(e));
   }
 };
+
+/**
+ * Der Eingang nach aussen — und das einzige Tor für die CORS-Zeile.
+ *
+ * Der Umweg über eine Hülle statt einer Änderung an 36 Stellen ist Absicht:
+ * die 36 bleiben lesbar als „nach draussen gedacht", und die Entscheidung,
+ * wer draussen ist, steht an einem Ort. Wer sie ändern will, ändert eine
+ * Datei — und nicht sechsunddreissig, von denen er eine übersieht.
+ */
+export const beantworte = async (a, ablage, umwelt = {}) =>
+  mitCors(await beantworteRoh(a, ablage, umwelt), a, umwelt);
 
 /* ==========================================================================
  * 6 · KONTO UND ANMELDUNG
