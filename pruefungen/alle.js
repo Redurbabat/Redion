@@ -39,6 +39,8 @@ const LAEUFE = [
     was: 'Die App am Server, mit zwei Geräten' },
   { name: 'seitenleiste', datei: 'pruefungen/seitenleiste.mjs', browser: true,
     was: 'Abschnitte, Reihenfolge, Klappen, Reiter, Baum, Register' },
+  { name: 'seite',        datei: 'pruefungen/seite.mjs',        browser: true,
+    was: 'Kopf, Werkzeugzeile, Blöcke, Pfadleiste, Streifen' },
   { name: 'einzeldatei',  datei: 'pruefungen/einzeldatei.mjs',  browser: true,
     was: 'Was man weitergibt: startet sie, ist alles drin, säubert sie' }
 ];
