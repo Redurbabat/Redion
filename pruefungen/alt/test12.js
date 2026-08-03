@@ -1,0 +1,30 @@
+const WURZEL = require('path').resolve(__dirname, '../..');
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1500, height: 950 } });
+  const f=[]; p.on('pageerror',e=>f.push('PAGEERROR: '+e.message));
+  p.on('console',m=>{if(m.type()==='error'&&!/11434|CONNECTION_REFUSED/.test(m.text()))f.push('CONSOLE: '+m.text());});
+  await p.goto('file://' + WURZEL + '/index.html');
+  await p.waitForTimeout(1500);
+  await p.click('[data-wz="stand"]');
+  await p.waitForTimeout(2500);
+  const titel = await p.locator('#title').textContent();
+  const h2 = await p.locator('#page .b-h2').count();
+  const todos = await p.locator('#page .b-todo').count();
+  const fertig = await p.locator('#page .b-todo.done').count();
+  const zahlen = await p.evaluate(() => Status.zaehle());
+  console.log('Titel:', titel);
+  console.log('Abschnitte (Teile + Ausblick):', h2);
+  console.log('Aufgaben gesamt:', todos, '| abgehakt:', fertig);
+  console.log('Zählung:', JSON.stringify(zahlen));
+  console.log('Fehler:', f.length ? f.join(' | ') : 'keine');
+  await p.screenshot({ path: '/tmp/schau-9-stand.png' });
+  // Persistenz
+  await p.evaluate(() => Store.flush());
+  await p.waitForTimeout(600);
+  await p.reload();
+  await p.waitForTimeout(1600);
+  console.log('Nach Neuladen noch da:', await p.locator('#page .b-todo').count() > 100);
+  await b.close();
+})();

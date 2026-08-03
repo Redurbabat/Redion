@@ -110,17 +110,25 @@ Mocks. Stand: sieben Läufe, 342 Prüfungen. Sie laufen ausserdem bei jedem
 Push von selbst über `.github/workflows/pruefen.yml`.
 
 ```
-npm run pruefen              # alles, mit Pause zwischen den Browserläufen
-npm run pruefen seiten       # nur die Läufe, deren Name das enthält
-node pruefungen/seitenleiste.mjs   # ein einzelner Lauf
-node bauen.js                # die Einzeldatei neu bauen
+npm run pruefen                   # alles (~35 min)
+npm run pruefen -- --schnell      # ohne die zwei Messläufe
+npm run pruefen -- 33 85 86       # nur diese drei
+npm run pruefen -- server         # nur die Serverläufe
+node pruefungen/lauf/test87.mjs   # ein einzelner Lauf
+node bauen.js                     # die Einzeldatei neu bauen
 ```
 
-Es stand hier einmal „53 Prüfläufe unter `/tmp/test*.mjs`". Die liegen auf
-genau einem Rechner, in einem Ordner, den das System leeren darf — wer das
-Repository frisch auscheckt, hat sie nicht. Ein Prüfnetz, das nur an einem Ort
-hängt, ist beim ersten Umzug keines mehr. Wer die 53 noch hat: sie gehören
-nach `pruefungen/`.
+Die Einzelheiten stehen in `pruefungen/LIESMICH.md` — welcher Lauf welchen
+Bereich abdeckt, und warum diese Läufe mehr wert sind, als sie aussehen: sie
+sind nicht beim Bauen entstanden, sondern beim Kaputtmachen.
+
+Es stand hier einmal „53 Prüfläufe unter `/tmp/test*.mjs`". Genau das war das
+Problem: ein Prüfnetz, das nur an einem Ort hängt, ist beim ersten Umzug
+keines mehr. Jetzt liegen sie im Repository, wo sie jeder bekommt.
+
+`test87.mjs` ist der einzige ohne Browser — er prüft, was zwischen zwei
+Dateien steht und in keinem Verhalten auftaucht. 80 Millisekunden. Bei einer
+Änderung an Rechten, an `sw.js` oder an den Zeichnern zuerst der.
 
 **Die Regel:** nach jeder Änderung laufen mindestens die betroffenen Läufe,
 vor jedem Commit ein breiter Querschnitt. Ein grüner Lauf ist die einzige

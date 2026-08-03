@@ -1,97 +1,108 @@
+#!/usr/bin/env node
 /* ============================================================================
  * pruefungen/alle.js — alle Prüfläufe nacheinander
  * ----------------------------------------------------------------------------
- * `package.json` hat diesen Weg schon immer versprochen (`npm run pruefen`),
- * nur gab es den Ordner nicht. Die Läufe lagen unter `/tmp` auf genau einem
- * Rechner und waren damit für jeden anderen weg — auch für den, der das
- * Repository frisch auscheckt. Ein Prüfnetz, das nur an einem Ort hängt, ist
- * beim ersten Umzug keines mehr.
+ *     node pruefungen/alle.js              alles
+ *     node pruefungen/alle.js 33 85 86     nur diese
+ *     node pruefungen/alle.js server       nur die Serverläufe
+ *     node pruefungen/alle.js --schnell    ohne die langsamen Messläufe
+ *     node pruefungen/alle.js --alt        auch die alten aus pruefungen/alt
  *
- *   npm run pruefen              alles
- *   npm run pruefen seiten       nur die Läufe, deren Name das enthält
+ * Zwei Dinge, die nicht offensichtlich sind und sonst eine Stunde kosten:
  *
- * Zwei Dinge macht diese Datei, die man von Hand vergisst:
+ *   1. **Drei Sekunden Pause zwischen den Läufen.** Ohne sie werden sie
+ *      flockig: Playwright braucht einen Moment, um Ports freizugeben, und
+ *      IndexedDB hält die Datenbank kurz gesperrt. Ein Lauf, der einzeln
+ *      grün ist und in der Reihe rot, ist fast immer das — nicht ein Fehler
+ *      im Code.
  *
- *   1. ZWISCHEN ZWEI BROWSERLÄUFEN DREI SEKUNDEN PAUSE. Ohne sie werden sie
- *      flockig — der Port des vorigen Laufs ist noch belegt, und IndexedDB
- *      hält seine Sperre einen Moment länger als der Browser lebt. Das sieht
- *      dann aus wie ein Fehler im Code und ist keiner, was schlimmer ist:
- *      man sucht an der falschen Stelle.
- *   2. AM ENDE EINE ZAHL. Ein Lauf, der durchgelaufen ist, sagt nichts. Erst
- *      „4 von 4 Läufen grün" ist eine Aussage.
- *
- * Der Rückgabewert ist 0 nur dann, wenn jeder einzelne Lauf 0 war.
+ *   2. **Jeder Lauf ist ein eigener Prozess.** Sie teilen nichts, und ein
+ *      Absturz reisst die anderen nicht mit. Dafür dauert das Ganze länger;
+ *      das ist der Preis dafür, dass ein rotes Ergebnis wirklich etwas
+ *      bedeutet.
  * ==========================================================================*/
 
-const { spawnSync } = require('node:child_process');
-const path = require('node:path');
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
-const WURZEL = path.dirname(__dirname);
+const HIER  = __dirname;
+const LAUF  = path.join(HIER, 'lauf');
+const ALT   = path.join(HIER, 'alt');
 
-/* `browser: true` heisst: dieser Lauf startet Chromium und braucht danach
-   seine Pause. Die reinen Serverläufe brauchen sie nicht. */
-const LAEUFE = [
-  /* Zuerst, weil er in Millisekunden fertig ist: wenn Oberfläche und Server
-     bei den Rechten auseinanderlaufen, will man das wissen, bevor man
-     dreissig Sekunden auf Browserläufe wartet. */
-  { name: 'rollen',       datei: 'pruefungen/rollen.mjs',      browser: false,
-    was: 'Rechte: Oberfläche und Server müssen dasselbe sagen' },
-  { name: 'servercheck',  datei: 'server/servercheck.mjs',     browser: false,
-    was: 'Der Server von unten: Anmeldung, Abgleich, Rechte' },
-  { name: 'server-rechte', datei: 'server/test75.mjs',         browser: false,
-    was: 'Rechte als Schloss, Veröffentlichen, /v1/, MCP' },
-  { name: 'server-app',   datei: 'server/test76.mjs',          browser: true,
-    was: 'Die App am Server, mit zwei Geräten' },
-  { name: 'seitenleiste', datei: 'pruefungen/seitenleiste.mjs', browser: true,
-    was: 'Abschnitte, Reihenfolge, Klappen, Reiter, Baum, Register' },
-  { name: 'seite',        datei: 'pruefungen/seite.mjs',        browser: true,
-    was: 'Kopf, Werkzeugzeile, Blöcke, Pfadleiste, Streifen' },
-  { name: 'einzeldatei',  datei: 'pruefungen/einzeldatei.mjs',  browser: true,
-    was: 'Was man weitergibt: startet sie, ist alles drin, säubert sie' }
-];
+/* Läufe, die messen statt zu prüfen — sie dauern lang und sagen nichts
+   über richtig oder falsch. Bei --schnell bleiben sie aussen vor. */
+const LANGSAM = ['test73.js', 'test74.js'];
 
-const filter = process.argv[2];
-const dran = filter
-  ? LAEUFE.filter(l => l.name.includes(filter) || l.datei.includes(filter))
-  : LAEUFE;
+const argumente = process.argv.slice(2);
+const schnell  = argumente.includes('--schnell');
+const auchAlt  = argumente.includes('--alt');
+const nurServer = argumente.includes('server');
+const zahlen   = argumente.filter(a => /^\d+$/.test(a));
 
-if (!dran.length) {
-  console.error('Kein Lauf passt auf „' + filter + '". Vorhanden: ' +
-                LAEUFE.map(l => l.name).join(', '));
+const nummer = (name) => {
+  const m = name.match(/^test(\d*)\./);
+  return m ? Number(m[1] || 1) : 0;
+};
+
+const sammeln = (ordner) => fs.existsSync(ordner)
+  ? fs.readdirSync(ordner).filter(f => /\.(js|mjs)$/.test(f)).sort((a, b) => nummer(a) - nummer(b))
+  : [];
+
+let dateien = sammeln(LAUF).map(f => ({ ordner: LAUF, datei: f }));
+if (auchAlt) dateien = dateien.concat(sammeln(ALT).map(f => ({ ordner: ALT, datei: f })));
+
+if (zahlen.length)
+  dateien = dateien.filter(x => zahlen.includes(String(nummer(x.datei))));
+if (nurServer)
+  dateien = dateien.filter(x => /^(servercheck|test7[5-9]|test8[0-6])/.test(x.datei));
+if (schnell)
+  dateien = dateien.filter(x => !LANGSAM.includes(x.datei));
+
+if (!dateien.length) {
+  console.log('Nichts gefunden. Liegt pruefungen/lauf/ an seinem Platz?');
   process.exit(1);
 }
 
-const schlafe = (ms) => {
-  /* Absichtlich blockierend: die Läufe sollen nacheinander gehen, nicht
-     nebeneinander. Genau das ist ja der Grund für die Pause. */
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-};
+console.log('');
+console.log('  ' + dateien.length + ' Prüfläufe' + (schnell ? ' (ohne die Messläufe)' : ''));
+console.log('  ' + '─'.repeat(60));
 
+const warten = (ms) => spawnSync(process.execPath, ['-e', `setTimeout(()=>{},${ms})`], { timeout: ms + 2000 });
+
+let gut = 0, schlecht = 0;
 const gescheitert = [];
-let letzterWarBrowser = false;
+const t0 = Date.now();
 
-dran.forEach((lauf, nr) => {
-  if (letzterWarBrowser && lauf.browser) {
-    console.log('\n   … drei Sekunden Pause, damit Port und IndexedDB frei werden');
-    schlafe(3000);
+dateien.forEach(({ ordner, datei }, i) => {
+  const r = spawnSync(process.execPath, [path.join(ordner, datei)],
+    { encoding: 'utf8', timeout: 420000, cwd: path.resolve(HIER, '..') });
+
+  const text = (r.stdout || '') + (r.stderr || '');
+  const zeile = (text.match(/\d+\/\d+ bestanden|\d+ ok, \d+ offen/g) || []).pop() || '';
+  const rot   = (text.match(/^❌|✗ /gm) || []).length;
+  const heil  = rot === 0 && r.status === 0;
+
+  if (heil) { gut++; console.log('  ✅ ' + datei.padEnd(18) + zeile); }
+  else {
+    schlecht++;
+    gescheitert.push(datei);
+    console.log('  ❌ ' + datei.padEnd(18) + (zeile || 'abgebrochen'));
+    (text.match(/^(❌|  ✗ ).*/gm) || []).slice(0, 4).forEach(z => console.log('       ' + z.trim()));
   }
 
-  console.log('\n════════════════════════════════════════════════════════════');
-  console.log(`  ${nr + 1}/${dran.length}  ${lauf.name} — ${lauf.was}`);
-  console.log('════════════════════════════════════════════════════════════');
-
-  const a = spawnSync(process.execPath, [lauf.datei], { cwd: WURZEL, stdio: 'inherit' });
-  if (a.status !== 0) gescheitert.push(lauf.name);
-  letzterWarBrowser = lauf.browser;
+  /* Die Pause, ohne die sie flockig werden. */
+  if (i < dateien.length - 1) warten(3000);
 });
 
-console.log('\n════════════════════════════════════════════════════════════');
+const dauer = Math.round((Date.now() - t0) / 1000);
+console.log('  ' + '─'.repeat(60));
+console.log('  ' + gut + ' grün, ' + schlecht + ' rot — ' +
+            Math.floor(dauer / 60) + ' min ' + (dauer % 60) + ' s');
 if (gescheitert.length) {
-  console.log(`  ${dran.length - gescheitert.length}/${dran.length} Läufe grün` +
-              ` — gescheitert: ${gescheitert.join(', ')}`);
-} else {
-  console.log(`  ${dran.length}/${dran.length} Läufe grün`);
+  console.log('');
+  console.log('  Noch einmal einzeln:');
+  gescheitert.forEach(f => console.log('    node pruefungen/lauf/' + f));
 }
-console.log('════════════════════════════════════════════════════════════');
-
-process.exit(gescheitert.length ? 1 : 0);
+console.log('');
+process.exit(schlecht ? 1 : 0);

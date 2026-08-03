@@ -252,14 +252,22 @@ still, und im Melder nachlesbar.
 
 ## Prüfen
 
-`npm run pruefen` — sieben Läufe unter `pruefungen/` und `server/`, 342
-einzelne Prüfungen. Sie laufen ausserdem bei jedem Push von selbst
-(`.github/workflows/pruefen.yml`). Sie laufen über echtes Chromium gegen die echte App, nicht gegen
-Attrappen.
+`npm run pruefen` — die Läufe liegen in `pruefungen/lauf/`, die Übersicht in
+`pruefungen/LIESMICH.md`. Sie gehen über echtes Chromium gegen die echte App,
+nicht gegen Attrappen, und laufen bei jedem Push von selbst
+(`.github/workflows/pruefen.yml`).
 
 Sie liegen **im Repository**, und das ist der Punkt: vorher standen sie unter
 `/tmp` auf einem einzigen Rechner. Wer das Projekt auscheckte, hatte die Regel
 „erst grün, dann fertig", aber nicht das Mittel, sie einzuhalten.
+
+Einer kommt ohne Browser aus: `test87.mjs` prüft, was zwischen zwei Dateien
+steht und deshalb in keinem Verhalten auftaucht — keine rohen Steuerzeichen im
+Quelltext, dieselben Rechte in Oberfläche und Server, und dass
+`seitenleiste.js`, `kopfleiste.js` und `inhaltsflaeche.js` den Namen `App`
+nicht mehr nennen. Er braucht 80 Millisekunden und zeigt damit, worauf A4
+hinauswill: reine Logik ohne DOM lässt sich in Millisekunden prüfen statt in
+Sekunden.
 
 Die Regel beim Umbauen: **ein Umzug, der Verhalten ändert, ist kein Umzug.**
 Erst verschieben und grün werden, dann ändern. Wer beides in einem Schritt

@@ -329,21 +329,31 @@ einen Server.
 ## Prüfen
 
 ```
-npm install        einmalig — holt Playwright für die Läufe im Browser
-npm run pruefen    alle Läufe
-npm run pruefen seiten    nur die, deren Name das enthält
-node bauen.js      die Einzeldatei neu bauen
+npm install                      einmalig — holt Playwright
+npx playwright install chromium  einmalig — holt den Browser
+npm run pruefen                  alle Läufe (~35 min)
+npm run pruefen -- --schnell     ohne die zwei Messläufe
+npm run pruefen -- 33 85 86      nur diese drei
+node pruefungen/lauf/test87.mjs  ein einzelner Lauf
+node bauen.js                    die Einzeldatei neu bauen
 ```
 
-Sieben Läufe, 342 einzelne Prüfungen. Sie liegen unter `pruefungen/` und
-`server/` und laufen bei jedem Push auch von selbst
-(`.github/workflows/pruefen.yml`).
+Sie liegen unter `pruefungen/lauf/` und laufen über echtes Chromium gegen die
+echte App — keine Attrappen, keine Mocks, keine nachgebauten Speicher. Welcher
+Lauf welchen Bereich abdeckt, steht in `pruefungen/LIESMICH.md`.
 
-Die meisten gehen über echtes Chromium gegen die echte App — keine Attrappen.
-Zwei brauchen keinen Browser: `rollen` vergleicht die Rechte in Oberfläche und
-Server und ist nach 80 Millisekunden fertig, `servercheck` und `server-rechte`
-sprechen nur mit dem Server. Deshalb stehen die schnellen vorn: wenn die Rechte
-auseinanderlaufen, will man das wissen, bevor man auf die Browserläufe wartet.
+Diese Läufe sind nicht beim Bauen entstanden, sondern **beim Kaputtmachen**.
+Fast jeder hat einen echten Fehler gefunden, den kein Mensch beim Durchklicken
+bemerkt hätte — Sätze, die der Abgleich nur in den Arbeitsspeicher schrieb und
+die nach dem Neuladen nie wiederkamen; ein „Kein Zugriff", das die Rechtezeile
+löschte statt sie zu speichern, womit aus einem Riegel ein Loch wurde.
+
+`test87.mjs` ist der einzige ohne Browser: er prüft, was zwischen zwei Dateien
+steht und deshalb in keinem Verhalten auftaucht — keine rohen Steuerzeichen im
+Quelltext, dieselben Rechte in Oberfläche und Server, und dass die Zeichner
+`App` nicht kennen. 80 Millisekunden.
+
+Sie laufen auch bei jedem Push von selbst (`.github/workflows/pruefen.yml`).
 
 Playwright ist eine **devDependency**: sie wird zum Prüfen gebraucht, nie zum
 Laufen. Wer die App nur benutzt, braucht kein npm und kein Node.

@@ -3,11 +3,11 @@
 **Stand: 3. August 2026** · 7 Prüfläufe im Repository grün (342 Prüfungen) ·
 516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
 
-> **Zu den Prüfläufen.** Es hiess hier „53 Prüfläufe grün". Die lagen unter
-> `/tmp` auf genau einem Rechner und sind in keinem Auscheckvorgang enthalten;
-> im Repository standen drei, und keiner davon war lauffähig. Seit `A1` gibt
-> es `pruefungen/` mit `npm run pruefen`. Wer die 53 noch hat: sie gehören
-> hierher, dann steht die Zahl wieder.
+> **Zu den Prüfläufen.** Sie lagen unter `/tmp` auf genau einem Rechner und
+> waren in keinem Auscheckvorgang enthalten; im Repository standen drei, und
+> keiner davon war lauffähig. Jetzt liegen sie alle in `pruefungen/lauf/`,
+> laufen über `npm run pruefen` und bei jedem Push von selbst. Die Übersicht,
+> welcher Lauf welchen Bereich abdeckt, steht in `pruefungen/LIESMICH.md`.
 
 Diese Datei ist die Arbeitsliste. Sie ist nach **Reihenfolge** sortiert, nicht
 nach Wichtigkeit: was oben steht, macht das darunter leichter.
