@@ -239,10 +239,10 @@ festgehalten, damit niemand sie noch einmal „repariert".
 | CORS in Produktion einschränken | **✅ repariert** | `server/sicherheit/cors.js`, eine Stelle statt 36 → `test92` |
 | Serverseitige Rechte durchsetzen | **✅** | `test80`–`test84` |
 | Keine geheimen Schlüssel im Frontend | **✅** | der KI-Schlüssel wird eingetippt und bleibt im Browser |
-| Eingaben validieren | **◐** | teilweise; kein durchgehender Prüfpunkt → **D1** |
+| Eingaben validieren | **◐** | vorhanden, aber je Route. Nachgemessen **kein Loch**: Rollen fallen zu, Längen sind begrenzt → **D1** ist Ordnung, nicht Sicherheit |
 | Rate Limiting für Login und öffentliche Seiten | **✅ repariert** | `server/sicherheit/bremse.js` → `test93` |
 | Sichere Security Headers | **✅ repariert** | `server/sicherheit/kopfzeilen.js` → `test93`, `test94` |
-| Keine sensiblen Daten in Logs | **?** | noch nicht durchgesehen → **D4** |
+| Keine sensiblen Daten in Logs | **✅ repariert** | Server hat **keine** `console`-Zeile; der 500er gab aber `e.message` nach draussen → `test93` |
 
 - [x] **D2 · Rate Limiting** — erledigt. **Nicht überall gleich:** gerechnet
   statt geraten, wo es überhaupt nötig ist. Der Gerätecode hat 32⁸ ≈ 1,1·10¹²
@@ -280,8 +280,34 @@ festgehalten, damit niemand sie noch einmal „repariert".
 - [ ] **D3b · Die 562 Stilattribute in Klassen überführen** — erst danach ist
   eine CSP für die App selbst mehr als Zierde. Grosse, rein mechanische Arbeit;
   eigener Schritt, weil sie kein Verhalten ändert.
-- [ ] **D1 · Ein Prüfpunkt für Eingaben** — heute an jeder Route einzeln.
-- [ ] **D4 · Logs durchsehen**
+- [x] **D4 · Logs durchsehen** — erledigt. Gemessen: der Server hat **keine
+  einzige** `console.*`-Zeile, und die acht in der App berühren nichts
+  Geheimes. Das Protokoll (`notieren`) hält Namen, Titel und Rechte fest —
+  das ist sein Zweck.
+
+  **Der Befund lag woanders:** `fehler(500, …, e.message)` gab die Meldung
+  einer unerwarteten Ausnahme ungeprüft an den Aufrufer. Eine D1-Meldung nennt
+  Tabellen und Spalten, eine JS-Meldung Feldnamen — und was sonst in einer
+  Ausnahme steckt, weiss man vorher nicht.
+
+  Zwei Regeln standen dabei gegeneinander: *„keine sensiblen Daten nach
+  draussen"* und `CLAUDE.md`s *„keine stillen Fehlschläge"*. Aufgelöst über
+  eine **Kennung**: der Mensch bekommt einen Satz und eine kurze Zeichenfolge,
+  der Betreiber findet darunter die Einzelheiten in `wrangler tail`. Nur für
+  den 500er — 401, 404, 410 und 429 sagen weiterhin im Klartext, was los ist.
+  Ein Fehler, mit dem gerechnet wurde, ist keine Ausnahme, sondern eine
+  Antwort.
+
+- [ ] **D1 · Ein Prüfpunkt für Eingaben** — **kein Sicherheitsloch.**
+  Nachgemessen ist die Prüfung überall da, sie steht nur je Route statt an
+  einem Ort: Längen sind mit `.slice()` begrenzt, Rollen werden zweimal
+  gegen die erlaubte Liste geprüft, und `darf()` fällt bei einer unbekannten
+  Rolle auf `kein` zurück — es **sperrt** im Zweifel, statt durchzulassen.
+  `test93` Abschnitt 7 hält diese Richtung fest, denn genau die lässt sich
+  beim Umbauen lautlos umdrehen.
+
+  Was offen bleibt, ist Ordnung: die Prüfungen an einem Ort zu bündeln.
+  Ein Umzug ohne Verhaltensänderung — eigener Schritt, wie E3.
 
 ---
 

@@ -265,7 +265,94 @@ gleich('Aber sie bekommt keine CSP — dort gibt es nichts darzustellen',
 const gesperrtKopf = kopfVon(await ruf('wiederFalsch', '5.5.5.5'));
 p('Die Sperre behält ihr Retry-After', !!gesperrtKopf['retry-after']);
 
-await srv.stopp();
+/* ========================================================================= *
+ * 6 · WAS BEI EINEM UNERWARTETEN FEHLER NACH DRAUSSEN GEHT (D4)
+ * ---------------------------------------------------------------------------
+ * Dort stand `fehler(500, …, e.message)` — die Meldung der Ausnahme ging
+ * ungeprüft an den Aufrufer. Bequem beim Entwickeln, im Betrieb verrät es den
+ * Innenbau: eine D1-Meldung nennt Tabellen und Spalten, eine JS-Meldung nennt
+ * Feldnamen. Was sonst noch in einer Ausnahme steckt, weiss man vorher nicht
+ * — das ist das Wesen einer unerwarteten Ausnahme.
+ *
+ * Zwei Regeln stehen hier gegeneinander, und beide gelten: „keine sensiblen
+ * Daten nach draussen" und „keine stillen Fehlschläge, was nicht geht sagt
+ * warum". Die Auflösung ist eine Kennung.
+ * ========================================================================= */
+console.log('\n6 · Ein unerwarteter Fehler verrät nichts');
 
-console.log(`\n  Suite 58 — Bremse und Kopfzeilen: ${ok} ok, ${weg} offen`);
+/* Eine Ablage, die beim Nachschlagen umfällt — und zwar mit einer Meldung,
+   die etwas Verräterisches enthält. */
+const kaputt = ablageSpeicher();
+await kaputt.einrichten();
+const echtesHole = kaputt.hole.bind(kaputt);
+kaputt.hole = async (tabelle, wo) => {
+  if (tabelle === 'bereiche') throw new Error(
+    'D1_ERROR: no such column: geheim_spalte in tabelle bereiche');
+  return echtesHole(tabelle, wo);
+};
+
+/* Eine ECHTE Sitzung, sonst antwortet die Anmeldeprüfung mit 401, bevor die
+   Route überhaupt drankommt — und der Abschnitt prüfte nur, dass ein
+   ungültiges Token abgewiesen wird. Das tut er woanders schon. */
+const tok2 = 'sit_pruefung_500';
+await kaputt.setze('konten', { id: 'k9', mail: 'x@y.ch', name: 'X' });
+await kaputt.setze('sitzungen', { token: await abdruck(tok2), kontoId: 'k9',
+  bis: new Date(Date.now() + 86400000).toISOString() });
+
+const srv2 = await starte(8802, { ablage: kaputt });
+const stillerFehler = await fetch(srv2.adresse + '/bereich/gibtesnicht', {
+  headers: { Authorization: 'Bearer ' + tok2 } });
+const text500 = await stillerFehler.text();
+
+/* Ob es wirklich der 500er-Weg war — sonst prüft der Abschnitt nichts. */
+p('Der Fehler kommt als 500 an', stillerFehler.status === 500,
+  stillerFehler.status + ': ' + text500.slice(0, 90));
+
+if (stillerFehler.status === 500) {
+  p('Die innere Meldung geht NICHT nach draussen',
+    !/D1_ERROR|geheim_spalte|no such column/.test(text500), text500.slice(0, 120));
+  p('Aber es bleibt nicht stumm — es kommt ein Satz',
+    /schiefgegangen/.test(text500), text500.slice(0, 120));
+  p('… mit einer Kennung, unter der man es wiederfindet',
+    /Kennung [0-9a-f]{4,}/.test(text500), text500.slice(0, 160));
+}
+
+/* Und die Gegenprobe: erwartbare Fehler sagen weiterhin im Klartext, was
+   los ist. Ein Fehler, mit dem gerechnet wurde, ist keine Ausnahme, sondern
+   eine Antwort — den zu verschweigen wäre der andere Fehler. */
+const ohneToken = await fetch(srv2.adresse + '/bereich/liste');
+const t401 = await ohneToken.text();
+p('Ein erwartbarer Fehler sagt weiterhin im Klartext, was los ist',
+  ohneToken.status === 401 && t401.length > 20 && !/Kennung/.test(t401),
+  ohneToken.status + ': ' + t401.slice(0, 90));
+
+await srv2.stopp();
+
+/* ========================================================================= *
+ * 7 · ROLLEN FALLEN ZU, NICHT AUF (D1)
+ * ---------------------------------------------------------------------------
+ * Die Muss-Liste nennt „Eingaben validieren". Nachgemessen ist die Prüfung
+ * da — sie steht nur an jeder Route einzeln statt an einem Ort. Das ist
+ * Ordnung, nicht Sicherheit.
+ *
+ * Was wirklich zählt, ist die Richtung des Zweifels: eine unbekannte Rolle
+ * muss SPERREN, nicht durchlassen. Diese eine Zeile lässt sich beim Umbauen
+ * lautlos umdrehen, und niemand merkt es — deshalb steht sie hier.
+ * ========================================================================= */
+console.log('\n7 · Eine unbekannte Rolle sperrt');
+
+const { darf, ROLLEN } = await import('../../server/kern.js');
+
+gleich('voll darf Rechte ändern', darf('voll', 'rechte'), true);
+gleich('lesen darf nicht bearbeiten', darf('lesen', 'bearbeiten'), false);
+gleich('Eine erfundene Rolle darf gar nichts', darf('superchef', 'lesen'), false);
+gleich('Eine leere Rolle darf gar nichts', darf('', 'lesen'), false);
+gleich('undefined darf gar nichts', darf(undefined, 'lesen'), false);
+gleich('null darf gar nichts', darf(null, 'lesen'), false);
+p('Es gibt genau die fünf Rollen aus der Doku',
+  JSON.stringify(Object.keys(ROLLEN).sort()) ===
+  JSON.stringify(['edit', 'kein', 'komm', 'lesen', 'voll']),
+  Object.keys(ROLLEN).join(', '));
+
+console.log(`\n  Suite 58 — Bremse, Kopfzeilen, Fehler und Rollen: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);
