@@ -46,19 +46,33 @@ const http = require('http');
   ok('Manifest: Farben gesetzt', !!man.theme_color && !!man.background_color);
   ok('Manifest: Abkürzungen', (man.shortcuts || []).length >= 3);
 
-  /* Symbolgrössen wirklich prüfen */
-  const { execSync } = require('child_process');
-  const groesse = execSync(`python3 -c "
-from PIL import Image
-import json
-r={}
-for g in [180,192,512]:
-    im=Image.open('${WURZEL}/oeffentlich/icons/icon-%d.png'%g); r[g]=list(im.size)+[im.mode]
-print(json.dumps(r))"`).toString().trim();
-  console.log('   Symbolgrössen:', groesse);
-  const gr = JSON.parse(groesse);
+  /* Symbolgrössen wirklich prüfen.
+     Hier stand ein Aufruf von `python3 -c "from PIL import Image …"`. Das lief
+     genau auf dem Rechner, auf dem Pillow zufällig installiert war — überall
+     sonst brach der ganze Lauf ab, bevor eine einzige der 40 Prüfungen
+     durchkam. Ein fehlgeschlagenes execSync wirft; es gab kein try darum.
+
+     Ein PNG sagt seine Masse selbst, und zwar an einer festen Stelle: nach
+     der 8 Byte langen Signatur folgt der IHDR-Block, dort stehen ab Byte 16
+     Breite und Höhe als 32-Bit-Zahlen, Byte 24 ist die Bittiefe und 25 die
+     Farbart. Das sind zwölf Zeilen und keine Abhängigkeit. */
+  const pngMasse = (datei) => {
+    const b = fs.readFileSync(datei);
+    const signatur = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    if (b.length < 26 || !b.subarray(0, 8).equals(signatur)) return null;
+    if (b.subarray(12, 16).toString('latin1') !== 'IHDR') return null;
+    return { breite: b.readUInt32BE(16), hoehe: b.readUInt32BE(20),
+             tiefe: b[24], farbart: b[25] };
+  };
+
+  const gr = {};
+  [180, 192, 512].forEach(g => {
+    gr[g] = pngMasse(WURZEL + '/oeffentlich/icons/icon-' + g + '.png');
+  });
+  console.log('   Symbolgrössen:', JSON.stringify(gr));
+  ok('Symbole sind lesbare PNG', [180, 192, 512].every(g => gr[g]));
   ok('Symbole haben die richtige Grösse',
-     gr['180'][0] === 180 && gr['192'][0] === 192 && gr['512'][0] === 512);
+     [180, 192, 512].every(g => gr[g] && gr[g].breite === g && gr[g].hoehe === g));
 
   /* --- 2) Kopfzeilen im HTML ------------------------------------------ */
   const html = fs.readFileSync(WURZEL + '/index.html', 'utf8');

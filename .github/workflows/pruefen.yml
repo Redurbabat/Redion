@@ -56,10 +56,11 @@ jobs:
   pruefen:
     name: Alle Prüfläufe
     runs-on: ubuntu-latest
-    # 57 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
-    # rund 35 Minuten. Die Pause ist kein Leerlauf: ohne sie werden die Läufe
-    # flockig, weil Ports und IndexedDB einen Moment brauchen.
-    timeout-minutes: 50
+    # 58 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
+    # rund 12 Minuten. Die Pause ist kein Leerlauf: ohne sie werden die Läufe
+    # flockig, weil Ports und IndexedDB einen Moment brauchen. Das Zeitfenster
+    # ist grosszügig, weil ein Runner langsamer sein kann als dieser Rechner.
+    timeout-minutes: 40
 
     steps:
       - name: Quelltext holen
@@ -83,8 +84,10 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       # Die Einzeldatei wird aus den Quellen gebaut, bevor geprüft wird.
-      # pruefungen/einzeldatei.mjs prüft sie — und würde sonst eine alte
-      # Fassung prüfen und grün melden, obwohl die Quellen schon weiter sind.
+      # test74.js prüft sie — und würde sonst eine alte Fassung prüfen und
+      # grün melden, obwohl die Quellen längst weiter sind. Genau dieser Fall
+      # ist schon einmal eingetreten: in der weitergegebenen Einzeldatei
+      # fehlte die komplette HTML-Säuberung, und niemandem fiel es auf.
       - name: Einzeldatei bauen
         run: node bauen.js
 

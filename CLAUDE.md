@@ -106,11 +106,11 @@ Liste, damit die App offline vollständig ist.
 
 Die Prüfläufe liegen **im Repository**, unter `pruefungen/` und `server/`.
 Sie laufen über echtes Chromium gegen die echte App — keine Attrappen, keine
-Mocks. Stand: sieben Läufe, 342 Prüfungen. Sie laufen ausserdem bei jedem
+Mocks. Stand: 58 Läufe, rund 2330 Prüfungen. Sie laufen ausserdem bei jedem
 Push von selbst über `.github/workflows/pruefen.yml`.
 
 ```
-npm run pruefen                   # alles (~35 min)
+npm run pruefen                   # alles (~12 min)
 npm run pruefen -- --schnell      # ohne die zwei Messläufe
 npm run pruefen -- 33 85 86       # nur diese drei
 npm run pruefen -- server         # nur die Serverläufe

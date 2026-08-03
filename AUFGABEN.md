@@ -1,6 +1,6 @@
 # Was noch offen ist
 
-**Stand: 3. August 2026** · 7 Prüfläufe im Repository grün (342 Prüfungen) ·
+**Stand: 3. August 2026** · 58 Prüfläufe im Repository grün (rund 2330 Prüfungen) ·
 516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
 
 > **Zu den Prüfläufen.** Sie lagen unter `/tmp` auf genau einem Rechner und
@@ -26,9 +26,13 @@ sonst wieder in denselben Klumpen läuft.
 ### ~~A1 — Die Seitenleiste herauslösen~~ · erledigt
 
 Liegt in `quell/schale/aufbau/seitenleiste.js`, 704 Zeilen. `schale.js` ist
-von 2600 auf 1993 Zeilen geschrumpft. Der Prüflauf `pruefungen/seitenleiste.mjs`
-lief vor und nach dem Umzug mit demselben Ergebnis — das war der Punkt der
-Übung, nicht die neue Datei.
+von 2600 auf 1993 Zeilen geschrumpft.
+
+Belegt hat es am Ende nicht der Lauf, der dafür geschrieben wurde, sondern
+die 57 aus `pruefungen/lauf/`: **elf davon prüfen die Seitenleiste**, und sie
+liefen nach dem Umzug unverändert durch. Das ist die bessere Aussage — ein
+Lauf, den man für einen Umzug schreibt, kann dieselbe blinde Stelle haben wie
+der Umzug.
 
 **Was an der Aufgabenstellung nicht stimmte**, für den nächsten, der so etwas
 schneidet:
@@ -64,6 +68,9 @@ Gegenteiliges: `gesperrt` ist nur der Schreibschutz.
 Nebenbei gefunden: der JSDoc-Block von `zeichneSeite` stand über
 `streifenZeichnen`, fünfzig Zeilen von seiner Funktion entfernt. Steht wieder
 an seinem Platz.
+
+Auch hier haben es am Ende die gelieferten Läufe belegt: **vierzehn davon
+prüfen die Seitenanzeige**, und alle vierzehn liefen nach dem Schnitt durch.
 
 ### A3 — Das Stilblatt aufteilen
 

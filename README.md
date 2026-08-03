@@ -331,7 +331,7 @@ einen Server.
 ```
 npm install                      einmalig — holt Playwright
 npx playwright install chromium  einmalig — holt den Browser
-npm run pruefen                  alle Läufe (~35 min)
+npm run pruefen                  alle Läufe (~12 min)
 npm run pruefen -- --schnell     ohne die zwei Messläufe
 npm run pruefen -- 33 85 86      nur diese drei
 node pruefungen/lauf/test87.mjs  ein einzelner Lauf

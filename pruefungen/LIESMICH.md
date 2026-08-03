@@ -1,12 +1,12 @@
 # Die Prüfläufe
 
-**57 Läufe, rund 2600 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**58 Läufe, rund 2330 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
 ```
-node pruefungen/alle.js              alles                    (~35 min)
-node pruefungen/alle.js --schnell    ohne die Messläufe       (~30 min)
+node pruefungen/alle.js              alles                    (~12 min)
+node pruefungen/alle.js --schnell    ohne die Messläufe       (~11 min)
 node pruefungen/alle.js 33 85 86     nur diese drei
 node pruefungen/alle.js server       nur die Serverläufe
 node pruefungen/alle.js --alt        auch die alten aus alt/
