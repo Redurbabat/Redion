@@ -85,11 +85,25 @@ unsichtbar — sie stünde im Register und käme in keinem Menü an.
 
 ```
 schale/
-├─ aufbau/          schale.js (Routing, Seitenmenü, Suche, Start) ·
-│                   seitenleiste.js · reiter.js
+├─ aufbau/          schale.js         Routing, Seitenmenü, Suche, Start,
+│                                     und das Zusammensetzen
+│                   seitenleiste.js   die linke Leiste
+│                   kopfleiste.js     Cover, Symbol, Titel, Werkzeugzeile,
+│                                     Pfadleiste
+│                   inhaltsflaeche.js Blöcke, Rückverweise, Streifen
+│                   reiter.js         Reiter, geteilte Ansicht
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
 └─ stil/            das Aussehen
 ```
+
+Die drei Zeichner kennen `App` nicht. Sie bekommen, was sie von drüben
+brauchen, über `binde({ … })` in `App.start()` — und ein Prüflauf sieht
+nach, dass im Quelltext keiner von ihnen `App.` sagt. `schale.js` entscheidet
+nur noch, **was** gezeichnet wird; das **wie** liegt nebenan.
+
+Ein Rückgabewert, den man kennen muss: `Kopfleiste.zeichne` sagt `false`,
+wenn danach Schluss ist — bei einer verschlüsselten Seite. Wer ihn übergeht,
+zeigt verschlüsselten Inhalt an.
 
 `UI.toast`, `UI.menu` und `UI.frage` stehen an ein paar hundert Stellen.
 Diese Aufrufe umzuschreiben wäre viel Arbeit für keinen Gewinn und ein hohes
@@ -238,13 +252,22 @@ still, und im Melder nachlesbar.
 
 ## Prüfen
 
-`npm run pruefen` — fünf Läufe unter `pruefungen/` und `server/`, 248 einzelne
-Prüfungen. Sie laufen über echtes Chromium gegen die echte App, nicht gegen
-Attrappen.
+`npm run pruefen` — die Läufe liegen in `pruefungen/lauf/`, die Übersicht in
+`pruefungen/LIESMICH.md`. Sie gehen über echtes Chromium gegen die echte App,
+nicht gegen Attrappen, und laufen bei jedem Push von selbst
+(`.github/workflows/pruefen.yml`).
 
 Sie liegen **im Repository**, und das ist der Punkt: vorher standen sie unter
 `/tmp` auf einem einzigen Rechner. Wer das Projekt auscheckte, hatte die Regel
 „erst grün, dann fertig", aber nicht das Mittel, sie einzuhalten.
+
+Einer kommt ohne Browser aus: `test87.mjs` prüft, was zwischen zwei Dateien
+steht und deshalb in keinem Verhalten auftaucht — keine rohen Steuerzeichen im
+Quelltext, dieselben Rechte in Oberfläche und Server, und dass
+`seitenleiste.js`, `kopfleiste.js` und `inhaltsflaeche.js` den Namen `App`
+nicht mehr nennen. Er braucht 80 Millisekunden und zeigt damit, worauf A4
+hinauswill: reine Logik ohne DOM lässt sich in Millisekunden prüfen statt in
+Sekunden.
 
 Die Regel beim Umbauen: **ein Umzug, der Verhalten ändert, ist kein Umzug.**
 Erst verschieben und grün werden, dann ändern. Wer beides in einem Schritt

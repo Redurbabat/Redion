@@ -34,10 +34,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # Zuerst das, was in Sekunden fertig ist. Wenn die Rechte in Oberfläche und
+  # Server auseinanderlaufen oder ein Steuerzeichen roh im Quelltext steht,
+  # will man das nach zwanzig Sekunden wissen und nicht nach einer halben
+  # Stunde. Der lange Lauf startet trotzdem parallel — dies ist eine frühe
+  # Antwort, kein Tor.
+  # ---------------------------------------------------------------------------
+  schnell:
+    name: Quelltext (ohne Browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Quelltext prüfen
+        run: node pruefungen/lauf/test87.mjs
+
   pruefen:
     name: Alle Prüfläufe
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 58 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
+    # rund 12 Minuten. Die Pause ist kein Leerlauf: ohne sie werden die Läufe
+    # flockig, weil Ports und IndexedDB einen Moment brauchen. Das Zeitfenster
+    # ist grosszügig, weil ein Runner langsamer sein kann als dieser Rechner.
+    timeout-minutes: 40
 
     steps:
       - name: Quelltext holen
@@ -61,8 +84,10 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       # Die Einzeldatei wird aus den Quellen gebaut, bevor geprüft wird.
-      # pruefungen/einzeldatei.mjs prüft sie — und würde sonst eine alte
-      # Fassung prüfen und grün melden, obwohl die Quellen schon weiter sind.
+      # test74.js prüft sie — und würde sonst eine alte Fassung prüfen und
+      # grün melden, obwohl die Quellen längst weiter sind. Genau dieser Fall
+      # ist schon einmal eingetreten: in der weitergegebenen Einzeldatei
+      # fehlte die komplette HTML-Säuberung, und niemandem fiel es auf.
       - name: Einzeldatei bauen
         run: node bauen.js
 
@@ -91,6 +116,13 @@ jobs:
       - name: Was liegengeblieben ist
         if: failure()
         run: |
-          echo "Gescheiterte Läufe stehen im Protokoll des vorigen Schrittes."
-          echo "Einzeln nachstellen:  npm run pruefen <name>"
-          echo "Vorhanden: servercheck, server-rechte, server-app, seitenleiste, einzeldatei"
+          echo "Gescheiterte Läufe stehen im Protokoll des vorigen Schrittes —"
+          echo "alle.js nennt sie am Ende noch einmal einzeln."
+          echo ""
+          echo "Nachstellen:"
+          echo "  node pruefungen/lauf/test<nr>.js     ein einzelner Lauf"
+          echo "  npm run pruefen -- 33 85 86          nur diese drei"
+          echo "  npm run pruefen -- server            nur die Serverläufe"
+          echo ""
+          echo "Ein Lauf, der einzeln grün ist und in der Reihe rot, ist fast"
+          echo "immer die fehlende Pause und kein Fehler im Code."

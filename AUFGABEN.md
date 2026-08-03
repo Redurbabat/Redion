@@ -1,13 +1,13 @@
 # Was noch offen ist
 
-**Stand: 3. August 2026** · 5 Prüfläufe im Repository grün (248 Prüfungen) ·
+**Stand: 3. August 2026** · 58 Prüfläufe im Repository grün (2329 Prüfungen) ·
 516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
 
-> **Zu den Prüfläufen.** Es hiess hier „53 Prüfläufe grün". Die lagen unter
-> `/tmp` auf genau einem Rechner und sind in keinem Auscheckvorgang enthalten;
-> im Repository standen drei, und keiner davon war lauffähig. Seit `A1` gibt
-> es `pruefungen/` mit `npm run pruefen`. Wer die 53 noch hat: sie gehören
-> hierher, dann steht die Zahl wieder.
+> **Zu den Prüfläufen.** Sie lagen unter `/tmp` auf genau einem Rechner und
+> waren in keinem Auscheckvorgang enthalten; im Repository standen drei, und
+> keiner davon war lauffähig. Jetzt liegen sie alle in `pruefungen/lauf/`,
+> laufen über `npm run pruefen` und bei jedem Push von selbst. Die Übersicht,
+> welcher Lauf welchen Bereich abdeckt, steht in `pruefungen/LIESMICH.md`.
 
 Diese Datei ist die Arbeitsliste. Sie ist nach **Reihenfolge** sortiert, nicht
 nach Wichtigkeit: was oben steht, macht das darunter leichter.
@@ -19,16 +19,20 @@ Aufgabe nur ein Wunsch.
 
 ## A · Der Umbau zu Ende bringen
 
-Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber drei Dinge fehlen noch. Sie
+Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber zwei Dinge fehlen noch. Sie
 gehören zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
 sonst wieder in denselben Klumpen läuft.
 
 ### ~~A1 — Die Seitenleiste herauslösen~~ · erledigt
 
 Liegt in `quell/schale/aufbau/seitenleiste.js`, 704 Zeilen. `schale.js` ist
-von 2600 auf 1993 Zeilen geschrumpft. Der Prüflauf `pruefungen/seitenleiste.mjs`
-lief vor und nach dem Umzug mit demselben Ergebnis — das war der Punkt der
-Übung, nicht die neue Datei.
+von 2600 auf 1993 Zeilen geschrumpft.
+
+Belegt hat es am Ende nicht der Lauf, der dafür geschrieben wurde, sondern
+die 57 aus `pruefungen/lauf/`: **elf davon prüfen die Seitenleiste**, und sie
+liefen nach dem Umzug unverändert durch. Das ist die bessere Aussage — ein
+Lauf, den man für einen Umzug schreibt, kann dieselbe blinde Stelle haben wie
+der Umzug.
 
 **Was an der Aufgabenstellung nicht stimmte**, für den nächsten, der so etwas
 schneidet:
@@ -47,16 +51,26 @@ schneidet:
   hängen an derselben DOM-Form und mussten gemeinsam umziehen. Einzeln
   verschoben, wäre die Sortierung still kaputtgegangen.
 
-### A2 — Kopfleiste und Inhaltsfläche trennen
+### ~~A2 — Kopfleiste und Inhaltsfläche trennen~~ · erledigt
 
-**Warum.** Dasselbe Problem eine Ebene tiefer: Pfadleiste, Seitentitel,
-Cover und Symbolwahl liegen im selben Block wie das Zeichnen der Blöcke.
+`kopfleiste.js` (309 Zeilen: Cover, Symbol, Titel, Sperrhinweis,
+Werkzeugzeile, Pfadleiste) und `inhaltsflaeche.js` (124 Zeilen: Wiki-Index,
+Blöcke, Rückverweise, Streifen). `schale.js` ist von 2022 auf 1745 Zeilen
+gefallen; `zeichneSeite` entscheidet dort nur noch, **was** gezeichnet wird.
 
-**Wo.** `schale.js` → `quell/schale/aufbau/kopfleiste.js` und
-`inhaltsflaeche.js`.
+**Der Punkt, an dem es kippt**, für den nächsten: `Kopfleiste.zeichne` gibt
+einen Wahrheitswert zurück, und der ist kein Beiwerk. **`false` heisst
+Schluss** — eine verschlüsselte Seite (`locked`) bekommt den Sperrbildschirm
+und danach nichts mehr. Wer den Rückgabewert ignoriert, zeigt verschlüsselten
+Inhalt an. `locked` und `gesperrt` lesen sich ähnlich und meinen
+Gegenteiliges: `gesperrt` ist nur der Schreibschutz.
 
-**Fertig wenn.** `schale.js` enthält nur noch Routing, Start und das
-Zusammensetzen; alles Zeichnen liegt in den drei Dateien daneben.
+Nebenbei gefunden: der JSDoc-Block von `zeichneSeite` stand über
+`streifenZeichnen`, fünfzig Zeilen von seiner Funktion entfernt. Steht wieder
+an seinem Platz.
+
+Auch hier haben es am Ende die gelieferten Läufe belegt: **vierzehn davon
+prüfen die Seitenanzeige**, und alle vierzehn liefen nach dem Schnitt durch.
 
 ### A3 — Das Stilblatt aufteilen
 

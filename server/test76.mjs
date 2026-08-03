@@ -150,7 +150,14 @@ const geschrieben = await A.p.evaluate(async () => {
     title: { name: 'Titel', type: 'title' }, n: { name: 'Zahl', type: 'number' } });
   const c = Store.getCollection(db.collectionId);
   Store.addRow(c.id, { title: 'Erste Aufgabe', n: 42 });
-  await new Promise(r => setTimeout(r, 300));
+  /* Hier stand `await new Promise(r => setTimeout(r, 300))`. Das war eine
+     Wette gegen die eigene Schreibbremse der Ablage: die schreibt erst nach
+     KONSTANTEN.SCHREIB_PAUSE_MS = 400 ms Ruhe. 300 ist weniger als 400 —
+     der Lauf ging also nur dann gut, wenn zufällig etwas anderes vorher
+     einen Schreibvorgang auslöste. Genau so entsteht ein Lauf, der allein
+     grün ist und im Verbund rot, und man sucht den Fehler im Code.
+     `Store.flush()` schreibt sofort und wartet nicht auf eine Zahl. */
+  Store.flush();
   const erg = await Wolke.abgleichen();
   return { seite: s.id, coll: c.id, ...erg };
 });

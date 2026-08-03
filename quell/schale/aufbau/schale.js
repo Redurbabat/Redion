@@ -592,96 +592,6 @@ const App = (() => {
    * Der Cover-Wähler. Aufbau wie in Notions App: oben Entfernen · Titel ·
    * Schliessen, darunter Reiter, darunter Gruppen mit Kacheln.
    */
-  const COVER_GRUPPEN = [
-    ['Farbe und Gradient', [
-      '#e03e3e', '#ffdc49', '#2eaadc', '#f7f3ee',
-      'linear-gradient(160deg,#7fd4d0,#e8c9b0)', 'linear-gradient(160deg,#ff2d78,#ff7bb0)',
-      'linear-gradient(160deg,#e8845a,#e03e3e)', 'linear-gradient(160deg,#cfe3ee,#e8b9a8)',
-      'linear-gradient(140deg,#2b6cb0,#e03e3e)', 'linear-gradient(140deg,#6d5bd0,#e255a1)',
-      'linear-gradient(140deg,#c9a89a,#529cca)'
-    ]],
-    ['Verläufe und Flächen', [
-      'linear-gradient(120deg,#2eaadc,#9a6dd7)', 'linear-gradient(120deg,#ffa344,#ff7369)',
-      'linear-gradient(120deg,#4dab9a,#529cca)', 'linear-gradient(120deg,#37352f,#787774)',
-      'linear-gradient(200deg,#529cca,#4dab9a)', 'linear-gradient(200deg,#ffdc49,#4dab9a)',
-      '#9a6dd7', '#4dab9a'
-    ]],
-    ['Papier und Struktur', [
-      'repeating-linear-gradient(45deg,#3a3a38,#3a3a38 6px,#403f3c 6px,#403f3c 12px)',
-      'repeating-linear-gradient(90deg,#2f4858,#2f4858 4px,#33506080 4px,#33506080 8px)',
-      'radial-gradient(circle at 30% 30%,#6b8f9c,#2f4858)',
-      'radial-gradient(circle at 70% 20%,#c9b8a8,#6b5b4d)',
-      'conic-gradient(from 200deg,#4dab9a,#529cca,#9a6dd7,#4dab9a)',
-      'conic-gradient(from 20deg,#ffa344,#e03e3e,#9a6dd7,#ffa344)'
-    ]]
-  ];
-
-  const coverWaehlen = (p) => {
-    let reiter = 'galerie';
-    const o = document.createElement('div');
-    o.className = 'overlay cover-overlay';
-    document.body.appendChild(o);
-
-    const zeichne = () => {
-      o.innerHTML =
-        '<div class="cover-blatt">' +
-          '<div class="cb-kopf">' +
-            '<button class="cb-links" data-a="weg">Entfernen</button>' +
-            '<b>Seiten-Cover</b>' +
-            '<button class="cb-rechts" data-a="zu">Schliessen</button>' +
-          '</div>' +
-          '<div class="cb-reiter">' +
-            [['galerie', 'Galerie'], ['hoch', 'Hochladen'], ['link', 'Link']]
-              .map(([id, n]) => `<button data-r="${id}" class="${reiter === id ? 'on' : ''}">${n}</button>`).join('') +
-          '</div>' +
-          '<div class="cb-inhalt">' +
-            (reiter === 'galerie'
-              ? COVER_GRUPPEN.map(([name, liste]) =>
-                  `<div class="cb-grp">${esc(name)}</div>` +
-                  '<div class="cover-gitter">' +
-                    liste.map(f => `<button data-c="${esc(f)}" style="background:${f}"` +
-                      `${p.cover === f ? ' class="on"' : ''}></button>`).join('') +
-                  '</div>').join('')
-              : reiter === 'hoch'
-                ? '<div class="cb-mitte"><button class="cb-knopf" data-a="bild">Bild wählen</button>' +
-                  '<div class="cb-hinweis">Bis 6 MB. Das Bild bleibt auf diesem Gerät.</div></div>'
-                : '<div class="cb-mitte"><input id="cb-link" placeholder="https://…">' +
-                  '<button class="cb-knopf" data-a="linkok">Übernehmen</button>' +
-                  '<div class="cb-hinweis">Die Adresse eines Bildes im Netz.</div></div>') +
-          '</div>' +
-        '</div>';
-    };
-    zeichne();
-
-    o.addEventListener('click', e => {
-      const r = e.target.closest('[data-r]');
-      if (r) { reiter = r.dataset.r; zeichne(); return; }
-      const c = e.target.closest('[data-c]');
-      if (c) { Store.updateBlock(p.id, { cover: c.dataset.c }); o.remove(); zeichneSeite(); return; }
-      if (e.target.closest('[data-a="weg"]')) {
-        Store.updateBlock(p.id, { cover: '' }); o.remove(); zeichneSeite(); return;
-      }
-      if (e.target.closest('[data-a="linkok"]')) {
-        const v = o.querySelector('#cb-link').value.trim();
-        if (v) { Store.updateBlock(p.id, { cover: v }); o.remove(); zeichneSeite(); }
-        return;
-      }
-      if (e.target.closest('[data-a="bild"]')) {
-        const inp = document.createElement('input');
-        inp.type = 'file'; inp.accept = 'image/*';
-        inp.addEventListener('change', () => {
-          const f = inp.files[0]; if (!f) return;
-          if (f.size > 6 * 1024 * 1024) { UI.toast('Bitte ein Bild unter 6 MB'); return; }
-          const rd = new FileReader();
-          rd.onload = () => { Store.updateBlock(p.id, { cover: rd.result }); o.remove(); zeichneSeite(); };
-          rd.readAsDataURL(f);
-        });
-        inp.click();
-        return;
-      }
-      if (e.target.closest('[data-a="zu"]') || e.target === o) o.remove();
-    });
-  };
 
   const dupliziereSeite = (id, zielEltern) => {
     const daten = Store.baum(id);
@@ -723,57 +633,22 @@ const App = (() => {
     document.getElementById('scroll').scrollTop = 0;
   };
 
+
+  /* ========================================================================
+   * SEITE ZEICHNEN — das Zusammensetzen
+   * ------------------------------------------------------------------------
+   * Was hier steht, ist nur noch die Entscheidung, WAS gezeichnet wird:
+   * eine Sonderansicht, gar nichts, oder eine echte Seite. Das WIE liegt in
+   * `kopfleiste.js` und `inhaltsflaeche.js`.
+   *
+   * Der Rückgabewert von `Kopfleiste.zeichne` ist der wichtige Teil: false
+   * heisst, die Seite ist verschlüsselt und danach kommt nichts mehr.
+   * ======================================================================*/
   /**
    * Zeichnet die offene Seite neu.
    * @param {string} fokus  ID des Blocks, der danach den Cursor bekommt
    * @param {string} wo     'ende' setzt den Cursor ans Textende
    */
-  /* ------------------------------------------------------------------------
-   * INHALTS-STREIFEN AM RECHTEN RAND
-   * ------------------------------------------------------------------------
-   * Notion zeigt neben jeder längeren Seite ein paar kurze Striche — einen
-   * je Überschrift. Wer darüberfährt, sieht die Namen; ein Klick springt hin.
-   * Ab drei Überschriften lohnt es sich, darunter wäre es nur Zierde.
-   * ----------------------------------------------------------------------*/
-  const streifenZeichnen = () => {
-    document.getElementById('rand-toc')?.remove();
-    const seite = seiteId ? Store.getBlock(seiteId) : null;
-    if (!seite) return;
-
-    const kopfzeilen = Store.childrenOf(seite.id)
-      .filter(b => ['h1', 'h2', 'h3'].includes(b.type) && (b.text || '').trim());
-    if (kopfzeilen.length < 3) return;
-
-    const d = document.createElement('div');
-    d.id = 'rand-toc';
-    d.innerHTML = kopfzeilen.map(b =>
-      `<button data-bid="${b.id}" class="rt-${b.type}" title="${esc(b.text)}">` +
-      `<i></i><span>${esc(b.text)}</span></button>`).join('');
-    document.getElementById('main').appendChild(d);
-
-    d.addEventListener('click', e => {
-      const b = e.target.closest('[data-bid]');
-      if (!b) return;
-      const el = document.querySelector(`[data-bid="${b.dataset.bid}"]`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
-    /* Der Strich, bei dem man gerade steht, wird hervorgehoben. */
-    const scroll = document.getElementById('scroll');
-    const mitlaufen = () => {
-      if (!document.body.contains(d)) { scroll.removeEventListener('scroll', mitlaufen); return; }
-      let jetzt = null;
-      kopfzeilen.forEach(b => {
-        const el = document.querySelector(`.blk[data-bid="${b.id}"]`);
-        if (el && el.getBoundingClientRect().top < 140) jetzt = b.id;
-      });
-      d.querySelectorAll('button').forEach(x =>
-        x.classList.toggle('jetzt', x.dataset.bid === jetzt));
-    };
-    scroll.addEventListener('scroll', mitlaufen, { passive: true });
-    mitlaufen();
-  };
-
   const zeichneSeite = (fokus = null, wo = 'anfang') => {
     const wrap = document.getElementById('page');
 
@@ -790,11 +665,7 @@ const App = (() => {
     const p = seiteId ? Store.getBlock(seiteId) : null;
 
     if (!p) {
-      wrap.innerHTML =
-        '<div style="padding:22vh 0; text-align:center; color:var(--text-faint)">' +
-        '<div style="font-size:44px; margin-bottom:14px">📓</div>' +
-        '<div style="font-size:17px; margin-bottom:6px">Noch keine Seite geöffnet</div>' +
-        '<div style="font-size:14px">Links auf <b>+</b> klicken oder <b>Strg + N</b> drücken</div></div>';
+      Inhaltsflaeche.leer(wrap);
       zeichneCrumbs();
       return;
     }
@@ -804,125 +675,9 @@ const App = (() => {
     document.body.dataset.small = p.small ? '1' : '';
     wrap.innerHTML = '';
 
-    /* Cover */
-    if (p.cover) {
-      const c = document.createElement('div');
-      c.className = 'cover';
-      c.style.background = p.cover.startsWith('#') || p.cover.startsWith('linear')
-        ? p.cover : `url(${p.cover}) center/cover`;
-      wrap.appendChild(c);
-    }
+    if (!Kopfleiste.zeichne(wrap, p)) { zeichneCrumbs(); return; }
 
-    /* Symbol */
-    const ico = document.createElement('div');
-    ico.className = 'pg-icon';
-    ico.textContent = p.icon || '📄';
-    ico.addEventListener('click', () => UI.emojiWaehlen(ico, (e) => {
-      Store.updateBlock(p.id, { icon: e });
-      zeichneSeite(); zeichneBaum();
-    }));
-    wrap.appendChild(ico);
-
-    /* Titel */
-    const t = document.createElement('div');
-    t.id = 'title';
-    t.contentEditable = p.gesperrt ? 'false' : 'true';
-    t.spellcheck = !!Store.getMeta('rechtschreib', false);
-    t.textContent = p.text || '';
-    t.addEventListener('input', () => {
-      Store.updateBlock(p.id, { text: t.textContent });
-      zeichneBaum();
-    });
-    t.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const erste = Store.childrenOf(p.id)[0];
-        if (erste) {
-          const ct = document.querySelector(`[data-bid="${erste.id}"] .ct`);
-          if (ct) ct.focus();
-        } else {
-          const b = Store.addBlock(p.id, 'text');
-          zeichneSeite(b.id);
-        }
-      }
-    });
-    wrap.appendChild(t);
-
-    /* Hinweis bei gesperrter Seite */
-    if (p.gesperrt) {
-      const h = document.createElement('div');
-      h.className = 'sperrhinweis';
-      h.innerHTML = '🔏 Diese Seite ist gegen Bearbeiten gesperrt. ' +
-                    '<button data-a="auf">Bearbeiten erlauben</button>';
-      h.addEventListener('click', e => {
-        if (e.target.closest('[data-a="auf"]')) {
-          Store.updateBlock(p.id, { gesperrt: false }); zeichneSeite();
-        }
-      });
-      wrap.appendChild(h);
-    }
-
-    /* Verschlüsselte Seite: nur der Sperrbildschirm */
-    if (p.locked) {
-      Werkzeuge.sperrAnsicht(p, wrap);
-      zeichneCrumbs();
-      return;
-    }
-
-    /* Werkzeugzeile */
-    if (!p.ohneTools) {
-      const tools = document.createElement('div');
-      tools.className = 'pg-tools';
-      tools.innerHTML =
-        '<button data-a="cover">🖼 Cover</button>' +
-        '<button data-a="wide">' + (p.wide ? '↹ Normale Breite' : '↔ Volle Breite') + '</button>' +
-        '<button data-a="font">🅰 Schrift</button>' +
-        '<button data-a="vorlage">🧩 Vorlage</button>' +
-        '<button data-a="ai">✨ Mit KI</button>';
-      tools.addEventListener('click', e => {
-        const b = e.target.closest('button[data-a]');
-        if (!b) return;
-        const a = b.dataset.a;
-        if (a === 'cover') coverWaehlen(p);
-        if (a === 'wide') { Store.updateBlock(p.id, { wide: !p.wide }); zeichneSeite(); }
-        if (a === 'vorlage') Werkzeuge.vorlageEinfuegen(p);
-        if (a === 'font') {
-          const r = b.getBoundingClientRect();
-          const m = UI.menu(
-            '<button data-f="default">Standard</button>' +
-            '<button data-f="serif">Serif</button>' +
-            '<button data-f="mono">Monospace</button>' +
-            '<hr><button data-f="small">Kleiner Text an/aus</button>', r.left, r.bottom + 4);
-          m.addEventListener('click', ev => {
-            const f = ev.target.closest('button[data-f]');
-            if (!f) return;
-            if (f.dataset.f === 'small') Store.updateBlock(p.id, { small: !p.small });
-            else Store.updateBlock(p.id, { font: f.dataset.f });
-            m.remove(); zeichneSeite();
-          });
-        }
-        if (a === 'ai') kiPanel(true);
-      });
-      wrap.appendChild(tools);
-    }
-
-    /* Wiki-Verzeichnis */
-    if (p.wiki) Werkzeuge.wikiIndex(p, wrap);
-
-    /* Blöcke */
-    const kinder = Store.childrenOf(p.id);
-    if (!kinder.length && !p.gesperrt) {
-      const b = Store.addBlock(p.id, 'text');
-      kinder.push(b);
-    }
-    let nr = 0;
-    kinder.forEach(b => {
-      if (b.type === 'number') { nr++; b.nr = nr; } else nr = 0;
-      wrap.appendChild(Blocks.render(b));
-    });
-
-    /* Rückverweise unter der Seite */
-    if (!p.ohneRueck) Links.fusszeile(p, wrap);
+    Inhaltsflaeche.zeichne(wrap, p);
 
     zeichneCrumbs();
     streifenZeichnen();
@@ -934,46 +689,13 @@ const App = (() => {
     }
   };
 
-  const zeichneCrumbs = () => {
-    const c = document.getElementById('crumb');
-    if (sonder) { c.innerHTML = '<a>' + esc(sonder.titel) + '</a>'; return; }
-    if (!seiteId) { c.innerHTML = ''; return; }
-    /* „Pfadnavigation anzeigen" — aus zeigt nur die Seite selbst */
-    const jetzt = Store.getBlock(seiteId);
-    const pfad = jetzt && jetzt.pfad === false ? [jetzt] : Store.pathOf(seiteId);
-    c.innerHTML = pfad.map((p, i) =>
-      `<a data-id="${p.id}">${p.icon || ''} ${esc(p.text || 'Ohne Titel')}</a>` +
-      (i < pfad.length - 1 ? '<span class="sep">/</span>' : '')).join('');
-    c.querySelectorAll('a').forEach(a =>
-      a.addEventListener('click', () => oeffne(a.dataset.id)));
+  /* Weiterreichungen. `zeichneCrumbs` steht an sechs Stellen in dieser Datei,
+     `coverWaehlen` im Seitenmenü — die Namen bleiben, wo sie sind. */
+  const zeichneCrumbs    = ()  => Kopfleiste.pfad();
+  const coverWaehlen     = (p) => Kopfleiste.coverWaehlen(p);
+  const streifenZeichnen = ()  => Inhaltsflaeche.streifen();
 
-    /* Stern und Kommentarzähler in der Kopfzeile */
-    const p = Store.getBlock(seiteId);
-    const stern = document.getElementById('btn-fav');
-    if (stern && p) {
-      stern.textContent = p.favorite ? '★' : '☆';
-      stern.classList.toggle('on', !!p.favorite);
-    }
-    const kb = document.getElementById('btn-komm');
-    if (kb && p) {
-      const n = Kommentare.offeneAnzahl(p.id);
-      kb.textContent = n ? '💬 ' + n : '💬';
-    }
-    /* Schloss zeigt den Zustand, nicht nur die Aktion */
-    const schloss = document.getElementById('btn-lock');
-    if (schloss && p) {
-      schloss.textContent = p.gesperrt ? '🔒' : '🔓';
-      schloss.classList.toggle('on', !!p.gesperrt);
-      schloss.title = p.gesperrt ? 'Seite ist gesperrt — zum Entsperren klicken'
-                                 : 'Seite gegen Bearbeiten sperren';
-    }
-    /* Der Blitz nur dort, wo es auch eine Datenbank gibt */
-    const blitz = document.getElementById('btn-auto');
-    if (blitz && p) {
-      const hatDb = Store.childrenOf(p.id).some(b => b.type === 'database');
-      blitz.style.display = hatDb ? '' : 'none';
-    }
-  };
+
 
   /* ========================================================================
    * SUCHE
@@ -1698,6 +1420,13 @@ const App = (() => {
     Seitenleiste.binde({
       oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
     });
+    Kopfleiste.binde({
+      zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
+      /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
+         der Schale, und die Pfadleiste muss den jeweils aktuellen sehen. */
+      sonder: () => sonder
+    });
+    Inhaltsflaeche.binde({ aktuelleSeite });
 
     /* Jeder Fehler soll sichtbar werden — eine stumme Seite hilft niemandem. */
     addEventListener('error', (e) => {
