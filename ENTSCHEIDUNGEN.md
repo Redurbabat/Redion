@@ -214,3 +214,56 @@ Schritt — und `CLAUDE.md` sagt, warum man das nicht tut.
 `still: true` — sie löschte endgültig und sagte nichts. Sie läuft jetzt mit
 `still: false`. Eine Einstellung, der jemand einmal zugestimmt hat, rechtfertigt
 nicht, dass er nicht erfährt, wann sie zugreift.
+
+---
+
+## E8 · Ausdünnen statt Abschneiden beim Versionsverlauf
+
+**Die Frage, wie sie in `LUECKEN.md` stand:** `VERSIONEN_MAX` sagt 200,
+`versionSpeichern` hält 30 — welche Zahl gilt?
+
+**Warum das die falsche Frage war.** Eine Fassung entsteht alle vier Minuten,
+solange jemand an einer Seite arbeitet. Ein Nachmittag sind dreissig davon.
+Ein Verlauf, der die neuesten dreissig behält, reicht nach diesem Nachmittag
+**zwei Stunden** zurück — die Fassung von letzter Woche ist weg, und zwar
+still. In der Liste stehen dreissig Einträge; es sieht vollständig aus.
+
+Bei 200 wäre es dasselbe eine Stufe später: ein paar Tage intensiver Arbeit,
+und der Monat davor ist verschwunden. Eine reine Zahl kann das nicht lösen,
+weil sie alle Fassungen gleich behandelt — die von vor zehn Minuten und die
+von vor einem halben Jahr.
+
+**Die drei Wege, die zur Wahl standen.**
+
+*Nach Zeit begrenzen*, wie Notion es tut (7/30/90 Tage je Tarif). Passt dort,
+weil dort ein Server den Platz hat. Hier steht der Verlauf in IndexedDB mit
+einer Quote, und eine Seite, an der jemand einen Monat lang täglich arbeitet,
+sammelt dabei Tausende Fassungen an. Eine Zeitgrenze ohne Zahlgrenze ist auf
+einem Gerät keine Grenze.
+
+*Die Zahl erhöhen.* Verschiebt das Problem und kostet das Siebenfache an
+Platz für einen Verlauf, der immer noch keine Tiefe hat.
+
+*Ausdünnen* — der gewählte Weg, und der, den Sicherungswerkzeuge seit jeher
+gehen: nicht alle Fassungen sind gleich viel wert. Die von heute braucht man
+fein aufgelöst, die von vor einem Jahr braucht man überhaupt. Also: die
+jüngsten zwölf vollständig, dann eine je Tag für dreissig Tage, dann eine je
+Monat, darüber die harte Grenze 200.
+
+Die Zahlen stehen in `konstanten.js` und werden zum ersten Mal auch gelesen.
+Sie sind nicht heilig: zwölf ist etwa eine Stunde feiner Auflösung, dreissig
+Tage decken den Zeitraum ab, in dem man „was war da vorher?" tatsächlich
+fragt.
+
+**Von Hand gesicherte Fassungen bleiben immer, auch über der Grenze.** Wer
+zweihundertmal selbst auf „Fassung sichern" gedrückt hat, hat zweihundertmal
+eine Absicht gehabt. Die still wegzuräumen, weil eine Zahl im Weg steht, wäre
+genau das, was diese App nicht tun darf. Die Grenze greift deshalb nur nach
+automatischen Fassungen.
+
+**Und der Knopf.** „Alte Versionen aufräumen" hielt sich an keine der beiden
+Zahlen, sondern an eine dritte: `slice(5)`. Ohne Rückfrage, endgültig, ein
+Klick. Er ist jetzt dieselbe Regel, sofort statt beim nächsten Speichern
+angewandt — und er fragt, mit der Zahl, um die es geht. Ein Knopf, der
+fünfundzwanzig Fassungen löscht, ohne die Zahl zu nennen, ist kein
+Aufräumknopf.

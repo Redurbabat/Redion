@@ -320,15 +320,25 @@ const Store = (() => {
    * und stösst danach `purgeAnhaenge` an. Geht dabei etwas schief, sagt es
    * das über den Melder — still schlucken wäre das, was den Fehler überhaupt
    * erst so lange verborgen hat.
+   *
+   * NACHEINANDER, NICHT AUF EINMAL. Der erste Wurf stand hier als
+   * `Promise.all(...)`. Bei einer Seite mit fünfhundert Blöcken sind das
+   * tausend Transaktionen gleichzeitig — die Ablage arbeitet sie ab, aber
+   * alles andere wartet mit. Nachweisbar wurde es an den Prüfläufen: nach
+   * dieser Änderung fiel in jedem Durchlauf ein anderer um, immer mit einer
+   * abgelaufenen Wartezeit. Ein Aufräumen im Hintergrund darf den
+   * Vordergrund nicht anhalten; eine Kette ist hier schneller als ein
+   * Schwarm.
    */
   const purgeBlock = (id) => {
     const gesammelt = [];
     purgeTief(id, gesammelt);
     if (!gesammelt.length) return;
     notify('purge');
-    Promise.all(gesammelt.map(x => purgeAnhaenge(x)))
-      .catch(err => { if (typeof Melder !== 'undefined')
-        Melder.fehler('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
+    (async () => {
+      for (const x of gesammelt) await purgeAnhaenge(x);
+    })().catch(err => { if (typeof Melder !== 'undefined')
+      Melder.fehler('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
   };
 
   /** Der eigentliche Abstieg. Sammelt, was danach noch aufzuräumen ist. */
@@ -1044,6 +1054,82 @@ const Store = (() => {
    * Liegt bewusst nicht im Cache: alte Fassungen holt sich der Verlauf
    * erst, wenn ihn jemand öffnet.
    * ======================================================================*/
+  /**
+   * Welche Fassungen dürfen gehen? Reine Rechnung, ohne Ablage und ohne
+   * Oberfläche — damit ein Prüflauf sie mit einer erfundenen Liste füttern
+   * kann, statt zwei Stunden lang zu tippen.
+   *
+   * WAS HIER VORHER STAND, war `slice(30)`: behalte die neuesten dreissig,
+   * wirf den Rest weg. Das klingt vernünftig und ist es nicht. Eine Fassung
+   * entsteht alle vier Minuten; wer einen Nachmittag an einer Seite arbeitet,
+   * erzeugt dreissig davon. Am Abend steht ein Verlauf mit dreissig
+   * Einträgen da — und reicht **zwei Stunden** zurück. Die Fassung von
+   * letzter Woche, wegen der man einen Verlauf überhaupt hat, war still weg.
+   *
+   * Die Regel jetzt, von neu nach alt:
+   *
+   *   1. Die jüngsten `FASSUNGEN_FRISCH` bleiben unangetastet — beim
+   *      Rückgängigmachen von heute will niemand Lücken.
+   *   2. Für die nächsten `FASSUNGEN_TAGE` Tage bleibt **eine je Tag**.
+   *   3. Danach bleibt **eine je Monat**.
+   *   4. Was von Hand gesichert wurde, bleibt immer. Dort hat ein Mensch auf
+   *      einen Knopf gedrückt; das ist eine Absicht und kein Zwischenstand.
+   *   5. Über allem die harte Obergrenze `VERSIONEN_MAX`. Greift sie, gehen
+   *      die ältesten automatischen zuerst.
+   *
+   * Derselbe Platz, ein Verlauf, der zurückreicht.
+   *
+   * @param {Array<{id,zeit,anlass}>} liste neueste zuerst
+   * @returns {string[]} die Kennungen, die weg dürfen
+   */
+  const fassungenAusduennen = (liste, grenzen = {}) => {
+    const K = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN : {};
+    const frisch = grenzen.frisch ?? K.FASSUNGEN_FRISCH ?? 12;
+    const tage   = grenzen.tage   ?? K.FASSUNGEN_TAGE   ?? 30;
+    const max    = grenzen.max    ?? K.VERSIONEN_MAX    ?? 200;
+
+    const sortiert = [...(liste || [])]
+      .filter(v => v && v.id)
+      .sort((a, b) => String(b.zeit || '').localeCompare(String(a.zeit || '')));
+
+    const weg = new Set();
+    const gesehen = new Set();
+    const jetzt = sortiert.length ? new Date(sortiert[0].zeit).getTime() : Date.now();
+    const vonHand = (v) => v.anlass && v.anlass !== 'automatisch';
+
+    sortiert.forEach((v, i) => {
+      if (i < frisch) return;                       /* 1. */
+      if (vonHand(v)) return;                       /* 4. */
+
+      const wann = new Date(v.zeit);
+      if (isNaN(wann.getTime())) return;            /* kaputte Zeit: nicht anfassen */
+      const alterTage = (jetzt - wann.getTime()) / 86400000;
+
+      /* Der Eimer, in den diese Fassung fällt: ein Tag, oder ein Monat. */
+      const eimer = alterTage <= tage
+        ? 'T' + v.zeit.slice(0, 10)
+        : 'M' + v.zeit.slice(0, 7);
+
+      if (gesehen.has(eimer)) weg.add(v.id);
+      else gesehen.add(eimer);                      /* 2. und 3. */
+    });
+
+    /* 5. Die harte Grenze. Sie greift erst, wenn das Ausdünnen nicht reicht —
+       etwa wenn jemand jahrelang jeden Tag an derselben Seite schreibt.
+       Sie greift aber NUR nach automatischen Fassungen. Wer zweihundertmal
+       selbst auf „Fassung sichern" gedrückt hat, hat zweihundertmal eine
+       Absicht gehabt; die still wegzuräumen, weil eine Zahl im Weg steht,
+       wäre genau das, was diese App nicht tun darf. */
+    const bleibt = sortiert.filter(v => !weg.has(v.id));
+    if (bleibt.length > max) {
+      let zuViel = bleibt.length - max;
+      for (let i = bleibt.length - 1; i >= 0 && zuViel > 0; i--)
+        if (!vonHand(bleibt[i])) { weg.add(bleibt[i].id); zuViel--; }
+    }
+
+    return [...weg];
+  };
+
   const versionSpeichern = async (pageId, anlass = 'automatisch') => {
     const p = cache.blocks[pageId];
     if (!p) return null;
@@ -1054,9 +1140,7 @@ const Store = (() => {
       daten: baum(pageId)
     };
     await put('versions', v);
-    /* Nur die letzten 30 Fassungen je Seite behalten */
-    const alle = await versionen(pageId);
-    for (const alt of alle.slice(30)) await del('versions', alt.id);
+    for (const id of fassungenAusduennen(await versionen(pageId))) await del('versions', id);
     return v;
   };
 
@@ -1170,7 +1254,7 @@ const Store = (() => {
     addRow, rowsOf, setProp,
     setMeta, getMeta, flush,
     baum, baumEinfuegen, kinderLeeren,
-    versionSpeichern, versionen, versionLoeschen,
+    versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
     search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,

@@ -504,7 +504,9 @@ const Einstellungen = (() => {
             wahl('papierkorbTage', [['30', 'nach 30 Tagen'], ['7', 'nach 7 Tagen'],
                                     ['90', 'nach 90 Tagen'], ['0', 'nie']],
                  String(V('papierkorbTage', 30)))) +
-      zeile('Alte Versionen aufräumen', 'Behält je Seite die letzten fünf Fassungen',
+      zeile('Alte Versionen aufräumen',
+            'Dünnt aus statt abzuschneiden: die jüngsten bleiben, danach eine je Tag, ' +
+            'danach eine je Monat. Von Hand gesicherte bleiben alle',
             knopf('versionen-aufraeumen', 'Aufräumen')) +
       zeile('Speicher dauerhaft anfordern', 'Der Browser räumt die Daten dann nicht von selbst weg',
             knopf('speicher-sichern', 'Anfordern')),
@@ -1030,13 +1032,29 @@ const Einstellungen = (() => {
           });
         });
       },
+      /**
+       * HIER STAND `v.slice(5)`. Ein Knopf, der ohne Rückfrage fünf Fassungen
+       * je Seite behielt und alle übrigen endgültig löschte — bei einer Seite
+       * mit dreissig Fassungen also fünfundzwanzig, unwiederbringlich, mit
+       * einem Klick. Das war eine dritte Zahl neben `slice(30)` und
+       * `VERSIONEN_MAX: 200`, und die schärfste von allen.
+       *
+       * Jetzt wendet der Knopf dieselbe Regel an wie das Speichern, nur
+       * sofort statt beim nächsten Mal: ausdünnen, nicht abschneiden. Und er
+       * fragt vorher — mit der Zahl, um die es geht.
+       */
       'versionen-aufraeumen': async () => {
-        let weg = 0;
+        const opfer = [];
         for (const p of Links.seiten()) {
           const v = await Store.versionen(p.id);
-          for (const alt of v.slice(5)) { await Store.versionLoeschen(alt.id); weg++; }
+          Store.fassungenAusduennen(v).forEach(id => opfer.push(id));
         }
-        UI.toast(weg + ' alte Fassungen entfernt');
+        if (!opfer.length) { UI.toast('Der Verlauf ist schon aufgeräumt — nichts zu tun'); return; }
+        if (!confirm(`${opfer.length} alte Fassungen endgültig löschen? ` +
+                     'Behalten werden die jüngsten, danach eine je Tag und eine je Monat. ' +
+                     'Von Hand gesicherte Fassungen bleiben alle.')) return;
+        for (const id of opfer) await Store.versionLoeschen(id);
+        UI.toast(opfer.length + ' alte Fassungen entfernt');
       },
       'speicher-sichern': async () => {
         if (!navigator.storage?.persist) { UI.toast('Der Browser kann das nicht'); return; }

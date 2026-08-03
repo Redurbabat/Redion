@@ -305,12 +305,30 @@ Der Umzug war richtig gebaut. Bis hierher war das aber eine Annahme.
   kein Inhalt, sondern das Gedächtnis darüber, dass beide Geräte den Satz
   einmal gleich sahen. Wer ihn mitnimmt, holt sich die gelöschte Seite beim
   nächsten Abgleich vom anderen Gerät zurück.
-- [ ] **E4 · `VERSIONEN_MAX: 200` wird nirgends benutzt.** Nachgesehen:
-  `versionSpeichern` schneidet hart bei `slice(30)`. Die Konstante verspricht
-  200, der Code hält 30. Immerhin in der richtigen Richtung — `versionen()`
-  sortiert neueste zuerst, es fallen also die ältesten weg und nicht die
-  neuesten. Zu entscheiden ist nur, welche Zahl gilt; danach muss die andere
-  Stelle nachziehen.
+- [x] **E4 · Der Versionsverlauf** — erledigt, und die Frage war falsch
+  gestellt. Es waren **drei** Zahlen, nicht zwei: `VERSIONEN_MAX: 200` (von
+  niemandem gelesen), `slice(30)` im Speichern, `slice(5)` im Aufräumknopf.
+
+  Beim Nachmessen zeigte sich, dass „welche Zahl gilt" nicht der Punkt ist.
+  Eine Fassung entsteht **alle vier Minuten** (`versionAutomatisch`). Wer
+  einen Nachmittag an einer Seite arbeitet, erzeugt dreissig davon — und ein
+  hartes `slice(30)` wirft dabei still die Fassung von letzter Woche weg,
+  also genau die, wegen der man einen Verlauf hat. Am Abend stehen dreissig
+  Einträge in der Liste, und sie reichen **zwei Stunden** zurück. Es sieht
+  aus, als sei alles da.
+
+  Jetzt wird **ausgedünnt statt abgeschnitten**: die jüngsten zwölf bleiben
+  vollständig, danach eine je Tag (dreissig Tage), danach eine je Monat, und
+  darüber die harte Grenze 200. Von Hand gesicherte Fassungen bleiben immer —
+  dort hat ein Mensch auf einen Knopf gedrückt, und auch die Grenze holt sie
+  nicht. Derselbe Platz, ein Verlauf, der zurückreicht. → **E8** in
+  `ENTSCHEIDUNGEN.md`.
+
+  Dabei der schärfste der drei Schnitte: **„Alte Versionen aufräumen" behielt
+  fünf Fassungen je Seite** und löschte alle übrigen — ohne Rückfrage,
+  endgültig, mit einem Klick. Bei einer Seite mit dreissig Fassungen also
+  fünfundzwanzig. Er wendet jetzt dieselbe Regel an und fragt vorher, mit der
+  Zahl, um die es geht. `test98.mjs`, 23 Prüfungen.
 - [ ] **E5 · Zwei Fenster, dieselbe Ablage.** `onblocked` meldet sich mit
   einem Satz — geprüft ist er nicht.
 
