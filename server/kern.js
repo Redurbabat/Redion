@@ -55,6 +55,47 @@ export const antwort = (status, koerper, kopf = {}) => ({
 export const fehler = (status, code, text) =>
   antwort(status, { object: 'error', status, code, message: text });
 
+/* ---------------------------------------------------------------------------
+ * ERLAUBTE RÜCKSPRUNG-ADRESSEN
+ * ---------------------------------------------------------------------------
+ * Der Anmeldevorgang bekommt eine Adresse mit, zu der er danach zurückkehrt
+ * (`?zurueck=…`). Sie kam bisher ungeprüft aus der Adresszeile — und aus ihr
+ * wird `redirect_uri` für GitHub und Google gebaut.
+ *
+ * WAS DAS BEDEUTET: die Anbieter prüfen `redirect_uri` gegen ihre eigene
+ * Liste, das ist das eine Netz. Aber ein Wert, der ungeprüft durch den
+ * Vorgang läuft und am Ende bestimmt, wohin ein Sitzungsschlüssel geht, darf
+ * nicht auf ein fremdes Netz vertrauen. Wer die Liste beim Anbieter einmal
+ * weit einstellt — ein Platzhalter für Unterdomänen genügt —, hat sonst hier
+ * ein Loch, das niemand mehr sieht.
+ *
+ * Erlaubt ist deshalb nur, was der Server selbst als seine Adresse kennt
+ * (`ADRESSE`), dazu ausdrücklich eingetragene weitere (`ADRESSEN`, mit
+ * Komma), und beim Entwickeln `localhost`.
+ * ------------------------------------------------------------------------ */
+export const erlaubteAdressen = (umwelt = {}) => {
+  const roh = [umwelt.ADRESSE, ...(String(umwelt.ADRESSEN || '').split(','))]
+    .map(x => String(x || '').trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  const raus = [];
+  for (const a of roh) { try { raus.push(new URL(a).origin); } catch { /* unbrauchbar */ } }
+  return [...new Set(raus)];
+};
+
+/**
+ * Ist diese Rücksprung-Adresse erlaubt?
+ * @returns {string} die Adresse ohne Schrägstrich am Ende — oder '' wenn nicht
+ */
+export const rueckAdresse = (wert, umwelt = {}) => {
+  const roh = String(wert || '').trim();
+  if (!roh) return '';
+  let ursprung;
+  try { ursprung = new URL(roh).origin; } catch { return ''; }
+  /* Beim Entwickeln läuft die App auf einem anderen Port als der Server. */
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(ursprung)) return roh.replace(/\/+$/, '');
+  return erlaubteAdressen(umwelt).includes(ursprung) ? roh.replace(/\/+$/, '') : '';
+};
+
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
 export const gleich = (a, b) => {
   const x = String(a ?? ''), y = String(b ?? '');
@@ -309,7 +350,15 @@ const kontoWeg = async (a, ablage, umwelt, t, m, k, kopf, suche) => {
   /* --- OAuth: den Menschen zum Anbieter schicken ----------------------- */
   if (was === 'oauth' && t[2] && !t[3]) {
     const anbieter = t[2];
-    const zurueck = String(suche.zurueck || umwelt.ADRESSE || '');
+    /* Geprüft, nicht übernommen — siehe `rueckAdresse` oben. Eine Adresse,
+       die nicht auf der Liste steht, wird nicht stillschweigend durch die
+       eigene ersetzt: dann liefe der Mensch in eine Anmeldung, die woanders
+       endet als erwartet, ohne dass es jemand sagt. */
+    const zurueck = rueckAdresse(suche.zurueck || umwelt.ADRESSE, umwelt);
+    if (!zurueck) return fehler(400, 'adresse_nicht_erlaubt',
+      'Diese Rücksprung-Adresse steht nicht auf der Liste des Servers. ' +
+      'Erlaubt sind ' + (erlaubteAdressen(umwelt).join(', ') || '(noch keine)') +
+      ' — einzutragen als ADRESSE oder ADRESSEN.');
     const staat = kennung();
     await ablage.setze('marken', { wert: await abdruck(staat), art: 'oauth-staat',
       kontoId: '', bereich: '', name: anbieter, rechte: zurueck, angelegt: jetzt(),
@@ -438,14 +487,31 @@ const sitzungGeben = async (ablage, kontoId, geraet, weiterZu) => {
   if (weiterZu) {
     /* Der Schlüssel darf nicht in der Adresse stehen — sonst landet er im
        Verlauf und in jedem Protokoll dazwischen. Deshalb eine kleine Seite,
-       die ihn an das wartende Fenster weitergibt. */
+       die ihn an das wartende Fenster weitergibt.
+     *
+     * HIER STAND `postMessage(…, "*")`, UND DAS WAR EIN LOCH. Der Stern heisst
+     * „an jeden Ursprung". Wer eine eigene Seite baut, die dieses Fenster
+     * öffnet, ist `opener` — und bekommt den Sitzungsschlüssel geliefert,
+     * ohne je ein Passwort gesehen zu haben. Es braucht dafür keinen Fehler
+     * beim Anbieter und keine manipulierte Adresse; es genügt, das Fenster
+     * aufzumachen.
+     *
+     * Jetzt geht die Nachricht an genau einen Ursprung, und das ist der, den
+     * der Server vorher als erlaubt geprüft hat. Ein fremdes `opener`-Fenster
+     * bekommt sie nicht — der Browser stellt sie gar nicht erst zu. */
+    let zielUrsprung;
+    try { zielUrsprung = new URL(weiterZu).origin; } catch { zielUrsprung = ''; }
+    if (!zielUrsprung) return fehler(400, 'adresse_nicht_erlaubt',
+      'Ohne gültige Rücksprung-Adresse wird kein Schlüssel ausgeliefert.');
+
     const seite = '<!doctype html><meta charset="utf-8"><title>Angemeldet</title>' +
       '<style>body{font:15px system-ui;padding:44px;text-align:center;' +
       'background:#191a1e;color:#e8e8ea}</style>' +
       '<p>Angemeldet. Dieses Fenster kann zu.</p><script>' +
       'try{opener&&opener.postMessage(' +
-      JSON.stringify({ art: 'redion-anmeldung', token: roh }) +
-      ',"*")}catch(e){}setTimeout(function(){window.close()},300);</script>';
+      JSON.stringify({ art: 'redion-anmeldung', token: roh }) + ',' +
+      JSON.stringify(zielUrsprung) +
+      ')}catch(e){}setTimeout(function(){window.close()},300);</script>';
     return { status: 200,
              kopf: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
              koerper: seite };
