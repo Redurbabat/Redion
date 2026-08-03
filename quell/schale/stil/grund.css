@@ -1,0 +1,47 @@
+/* ============================================================================
+ * grund.css — die Grundelemente und die Farbklassen
+ * ----------------------------------------------------------------------------
+ * Was für alles gilt, bevor irgendein Baustein anfängt: die Randregel für
+ * jedes Element, Körper und Schrift, Knöpfe und Eingabefelder, die Auswahl,
+ * die Rollbalken — und die zwanzig Farbklassen, mit denen Text und
+ * Hintergrund eingefärbt werden.
+ *
+ * Die Hintergrundklassen heissen `bg-*` und nicht `b-*`: `b-` gehört den
+ * Blockarten (`b-text`, `b-h1`, `b-callout`). Wer das vertauscht, färbt
+ * Blöcke ein, die er nicht gemeint hat.
+ * ==========================================================================*/
+
+/* --- Farbklassen ---------------------------------------------------------- */
+.t-default{color:var(--c-default)} .t-gray{color:var(--c-gray)}
+.t-brown{color:var(--c-brown)}     .t-orange{color:var(--c-orange)}
+.t-yellow{color:var(--c-yellow)}   .t-green{color:var(--c-green)}
+.t-blue{color:var(--c-blue)}       .t-purple{color:var(--c-purple)}
+.t-pink{color:var(--c-pink)}       .t-red{color:var(--c-red)}
+
+/* Hintergrundfarben heissen bg-*, damit sie nicht mit den Blockklassen
+   b-text, b-h1, b-callout … kollidieren. */
+.bg-gray{background:var(--b-gray)}     .bg-brown{background:var(--b-brown)}
+.bg-orange{background:var(--b-orange)} .bg-yellow{background:var(--b-yellow)}
+.bg-green{background:var(--b-green)}   .bg-blue{background:var(--b-blue)}
+.bg-purple{background:var(--b-purple)} .bg-pink{background:var(--b-pink)}
+.bg-red{background:var(--b-red)}
+[class*="bg-"]{border-radius:3px; padding:0 2px}
+
+/* --- Grundlayout ---------------------------------------------------------- */
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font:16px/1.5 var(--font);
+  display:flex; overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit; color:inherit; background:none; border:none; cursor:pointer}
+input,textarea,select{font:inherit; color:inherit}
+::selection{background:#2eaadc55}
+
+/* Scrollbars dezent wie in Notion */
+::-webkit-scrollbar{width:10px; height:10px}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px; border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--text-faint)}
+::-webkit-scrollbar-track{background:transparent}

@@ -19,8 +19,8 @@ Aufgabe nur ein Wunsch.
 
 ## A · Der Umbau zu Ende bringen
 
-Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber zwei Dinge fehlen noch. Sie
-gehören zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
+Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber eines fehlt noch. Es
+gehört zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
 sonst wieder in denselben Klumpen läuft.
 
 ### ~~A1 — Die Seitenleiste herauslösen~~ · erledigt
@@ -72,22 +72,37 @@ an seinem Platz.
 Auch hier haben es am Ende die gelieferten Läufe belegt: **vierzehn davon
 prüfen die Seitenanzeige**, und alle vierzehn liefen nach dem Schnitt durch.
 
-### A3 — Das Stilblatt aufteilen
+### ~~A3 — Das Stilblatt aufteilen~~ · erledigt
 
-**Warum.** `quell/schale/stil/bausteine.css` hat 177 KB in einer Datei. Wer
-eine Farbe ändern will, sucht.
+Sechs Dateien in `quell/schale/stil/`:
 
-**Wo.** Ziel:
-`marken.css` (Farben, Abstände, Schrift als Variablen) ·
-`grund.css` (Grundelemente) · `hell.css` · `dunkel.css` ·
-`aufbau.css` (Layout) · `bausteine.css` (Komponenten).
+| Datei | Zeilen | Was |
+|---|--:|---|
+| `marken.css` | 17 | die drei Schriften |
+| `dunkel.css` | 54 | die Farben — **der Normalfall**, nicht der Sonderfall |
+| `hell.css` | 35 | nur, was im Hellmodus anders ist |
+| `grund.css` | 48 | Grundelemente und die zwanzig Farbklassen |
+| `aufbau.css` | 239 | das Gerüst: Seitenleiste und Hauptbereich |
+| `bausteine.css` | 2838 | die Bausteine selbst |
 
-**Wie.** Erst die `:root`-Variablen und die Thema-Blöcke herausziehen — die
-lassen sich sauber trennen. Der Rest wandert nach Zuständigkeit.
+**Belegt** mit einem Vergleich der berechneten Werte vor und nach dem
+Schnitt: 74 CSS-Variablen (beide Themen) und 56 Element/Thema-Kombinationen
+— **0 Unterschiede**. Dazu die 58 Läufe, davon neun mit
+`getComputedStyle`-Stichproben.
 
-**Fertig wenn.** Sechs Dateien, `index.html` lädt sie in dieser Reihenfolge,
-`bauen.js` fügt alle ein, die App sieht unverändert aus (Prüflauf mit
-Bildvergleich oder mindestens `getComputedStyle`-Stichproben).
+**Der Fund, ohne den A3 die Einzeldatei zerlegt hätte:** `bauen.js` ersetzte
+den `<link rel="stylesheet">` **ohne `g`-Flag**, also nur den ersten. Solange
+es ein Stilblatt gab, fiel das nicht auf. Ab dem zweiten hätte
+`redion-einzeldatei.html` fünf tote `<link>` behalten — und ein `<link>` auf
+`quell/schale/stil/…` geht ins Leere, sobald die Datei allein irgendwo liegt.
+Sie wäre gestartet und unfertig gewesen: die halbe Gestaltung fehlt, und
+nichts meldet einen Fehler. Dieselbe Sorte Fehler wie die fehlende
+HTML-Säuberung. `test87` prüft das jetzt.
+
+**Was beim nächsten Mal zu beachten ist:** Dunkel steht in `:root` und gilt
+immer; `hell.css` überschreibt nur. Wer in `dunkel.css` eine Variable
+ergänzt, muss sie auch in `hell.css` ergänzen — sonst zeigt der Hellmodus an
+dieser einen Stelle den dunklen Wert, und das merkt nur, wer hell arbeitet.
 
 ### A4 — Die Bereiche in `dienst` und `ansicht` trennen
 

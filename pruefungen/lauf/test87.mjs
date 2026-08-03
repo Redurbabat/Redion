@@ -160,5 +160,50 @@ p('schale.js bindet alle drei',
   ['Seitenleiste.binde', 'Kopfleiste.binde', 'Inhaltsflaeche.binde']
     .every(n => schale.includes(n)));
 
+/* ========================================================================= *
+ * 4 · DIE STILBLÄTTER SIND VOLLSTÄNDIG EINGEHÄNGT
+ * Seit A3 sind es sechs statt einem. `bauen.js` ersetzte den <link> ohne
+ * g-Flag, also nur den ERSTEN — mit sechs Stilblättern hätte die Einzeldatei
+ * fünf tote <link> behalten. Sie wäre gestartet und unfertig gewesen: die
+ * halbe Gestaltung fehlt, und nichts meldet einen Fehler. Genau wie bei der
+ * fehlenden HTML-Säuberung merkt man so etwas nicht beim Durchklicken.
+ * ========================================================================= */
+console.log('\n— Die sechs Stilblätter —');
+
+const STILE = ['marken.css', 'dunkel.css', 'hell.css', 'grund.css',
+               'aufbau.css', 'bausteine.css'];
+const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
+const verlinkt = [...html.matchAll(/<link rel="stylesheet" href="quell\/schale\/stil\/([^"]+)">/g)]
+  .map(m => m[1]);
+
+p('index.html lädt alle sechs, in der richtigen Folge',
+  JSON.stringify(verlinkt) === JSON.stringify(STILE), verlinkt.join(', '));
+
+STILE.forEach(datei => {
+  const voll = _dazu(WURZEL, 'quell/schale/stil', datei);
+  let da = true;
+  try { _lies(voll); } catch { da = false; }
+  p(datei + ' liegt an seinem Platz', da);
+});
+
+const sw = _lies(_dazu(WURZEL, 'sw.js'), 'utf8');
+p('sw.js kennt alle sechs — sonst fehlen sie offline',
+  STILE.every(d => sw.includes('quell/schale/stil/' + d)),
+  STILE.filter(d => !sw.includes('quell/schale/stil/' + d)).join(', '));
+
+/* Und der eigentliche Punkt: in der Einzeldatei müssen alle sechs als
+   <style> stehen und kein einziger <link> übrig sein. */
+const einzel = _lies(_dazu(WURZEL, 'redion-einzeldatei.html'), 'utf8');
+p('Die Einzeldatei hat kein <link rel="stylesheet"> mehr',
+  !/<link rel="stylesheet"/.test(einzel));
+STILE.forEach(datei => {
+  p(datei + ' steckt eingebettet in der Einzeldatei',
+    einzel.includes('/* ===== quell/schale/stil/' + datei + ' ===== */'));
+});
+
+/* Gegenprobe wie oben: findet die Prüfung einen übriggebliebenen <link>? */
+p('Und die Prüfung würde einen übrigen <link> merken',
+  /<link rel="stylesheet"/.test('<link rel="stylesheet" href="x.css">'));
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

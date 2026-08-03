@@ -315,7 +315,9 @@ quell/bereiche/wissen/verweise.js         [[Links]], Rückverweise, Graph
 quell/bereiche/ki/dienst.js               Ollama und WebLLM mit Umschalter
 quell/schale/aufbau/schale.js             Routing, Seitenmenü, Suche, Start
 quell/schale/aufbau/seitenleiste.js       die linke Leiste
-quell/schale/stil/bausteine.css           das Design, hell und dunkel
+quell/schale/stil/dunkel.css              die Farben (der Normalfall)
+quell/schale/stil/hell.css                was im Hellmodus anders ist
+quell/schale/stil/bausteine.css           die Bausteine — der grosse Rest
 bauen.js                                  baut die Einzeldatei (node bauen.js)
 ```
 
