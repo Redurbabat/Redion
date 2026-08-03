@@ -15,7 +15,7 @@
  * unten ist der Schalter dafür.
  * ==========================================================================*/
 
-const VERSION = 'notizen-v10';
+const VERSION = 'notizen-v11';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -52,6 +52,7 @@ const GRUNDSTOCK = [
   './quell/schale/ueberlagerung/hinweis.js',
   './quell/schale/ueberlagerung/dialog.js',
   './quell/schale/ueberlagerung/ui.js',
+  './quell/kern/ablage/nachbarn.js',
   './quell/kern/ablage/indexdb.js',
   './quell/bereiche/datenbanken/formeln/laufzeit.js',
   './quell/bereiche/wissen/verweise.js',

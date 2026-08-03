@@ -39,7 +39,7 @@
 import { fileURLToPath as _alsPfad } from 'node:url';
 import { dirname as _ordner, resolve as _loese, join as _dazu, relative as _relativ,
          extname as _endung } from 'node:path';
-import { readFileSync as _lies, readdirSync as _liste } from 'node:fs';
+import { readFileSync as _lies, readdirSync as _liste, existsSync as _da } from 'node:fs';
 import { ROLLEN as SERVER, darf as serverDarf } from '../../server/kern.js';
 
 const WURZEL = _loese(_ordner(_alsPfad(import.meta.url)), '../..');
@@ -422,6 +422,65 @@ const inListe = [...listeRoh.matchAll(/'([a-z_]+)'/g)].map(x => x[1]);
 const fehlenInListe = Object.keys(inDatei).filter(t => !inListe.includes(t));
 p('TABELLEN kennt jede Tabelle des Schemas', fehlenInListe.length === 0,
   fehlenInListe.join(', '));
+
+/* ========================================================================= *
+ * KEIN GLOBALER NAME ZWEIMAL
+ * ---------------------------------------------------------------------------
+ * Diese App hat keinen Bauschritt: jede Datei wird als gewöhnliches
+ * `<script src>` geladen, und jedes Modul ist ein globaler Name. Damit gilt
+ * eine Regel, die sonst niemand kennt — **zwei Dateien dürfen nicht denselben
+ * Namen deklarieren.** Ein zweites `const Fenster = …` wirft beim Laden
+ * „Identifier 'Fenster' has already been declared", und zwar in der Datei,
+ * die als ZWEITE kommt. Die stirbt dann vollständig; alles, was sie können
+ * sollte, fehlt einfach.
+ *
+ * Genau das ist beim Bauen von `nachbarn.js` passiert: der Name `Fenster`
+ * war schon von `schale/aufbau/reiter.js` belegt (den Reitern). Die Folge
+ * war nicht etwa eine Fehlermeldung an der richtigen Stelle, sondern ein
+ * `Fenster.gemerkt is not a function` mitten in der Seitenleiste — ein
+ * Fehlerbild, das nirgends auf die Ursache zeigt.
+ *
+ * Achtzig Millisekunden, und diese Sorte Fehler kann nicht mehr passieren.
+ * ========================================================================= */
+console.log('\n8 · Jeder globale Name gehört genau einer Datei');
+
+const htmlQuelle = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
+const skripte = [...htmlQuelle.matchAll(/<script src="(quell\/[^"]+)"/g)].map(m => m[1]);
+p('index.html lädt Skripte, die gefunden werden', skripte.length > 50, `${skripte.length}`);
+
+const wemGehoert = new Map();
+const doppelt = [];
+for (const rel of skripte) {
+  const pfad = _dazu(WURZEL, rel);
+  if (!_da(pfad)) { doppelt.push(rel + ' — Datei fehlt'); continue; }
+  const inhalt = _lies(pfad, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
+  /* Nur Deklarationen am Zeilenanfang — alles Eingerückte steht in einer
+     Funktion und ist damit nicht global. */
+  for (const m of inhalt.matchAll(/^(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/gm)) {
+    const name = m[1];
+    if (wemGehoert.has(name) && wemGehoert.get(name) !== rel)
+      doppelt.push(`${name}: ${wemGehoert.get(name)} und ${rel}`);
+    else wemGehoert.set(name, rel);
+  }
+}
+p('Kein globaler Name wird zweimal deklariert', doppelt.length === 0,
+  doppelt.slice(0, 4).join(' · '));
+console.log(`    (${wemGehoert.size} globale Namen über ${skripte.length} Dateien)`);
+
+/* Und die Gegenrichtung, damit die Prüfung nicht aus Versehen nichts misst:
+   sie muss die bekannten Namen auch wirklich finden. */
+p('Der Ausdruck findet die grossen Module',
+  ['Store', 'App', 'Nachbarn', 'Saeubern'].every(n => wemGehoert.has(n)),
+  ['Store', 'App', 'Nachbarn', 'Saeubern'].filter(n => !wemGehoert.has(n)).join(', '));
+
+/* Jede geladene Datei muss auch im sw.js stehen, sonst fehlt sie offline —
+   und `.catch(() => {})` beim Ablegen verschluckt genau das stillschweigend. */
+const swQuelle = _lies(_dazu(WURZEL, 'sw.js'), 'utf8');
+const nichtImSw = skripte.filter(s => !swQuelle.includes(s));
+p('Jede Datei aus index.html steht auch im sw.js', nichtImSw.length === 0,
+  nichtImSw.slice(0, 3).join(', '));
 
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

@@ -33,7 +33,26 @@ const KONSTANTEN = Object.freeze({
   STUECK:           1024 * 1024,        /* Stückgrösse beim Hochladen */
   KLEIN:            256 * 1024,         /* Darunter ohne Stückelung — der
                                            Apparat kostet mehr als er spart */
-  VERSIONEN_MAX:    200,                /* Fassungen je Seite */
+  /* --- Der Versionsverlauf ------------------------------------------------
+     Diese Zahl stand hier und wurde von niemandem gelesen: `versionSpeichern`
+     schnitt hart bei `slice(30)`, der Aufräumknopf bei `slice(5)`. Drei
+     Zahlen, drei Meinungen, und die Konstante war die einzige, an die sich
+     niemand hielt.
+
+     Die eigentliche Frage war aber nicht 30 gegen 200. Eine Fassung entsteht
+     alle vier Minuten (`versionAutomatisch`). Wer einen Nachmittag an einer
+     Seite arbeitet, erzeugt dreissig davon — und ein hartes `slice(30)` wirft
+     dabei still die Fassung von letzter Woche weg, also genau die, wegen der
+     man einen Verlauf hat. Es sieht aus, als sei alles da: dreissig Einträge
+     stehen in der Liste. Sie reichen nur zwei Stunden zurück.
+
+     Deshalb wird jetzt AUSGEDÜNNT statt abgeschnitten: die jüngsten bleiben
+     vollständig, danach eine je Tag, danach eine je Monat. Derselbe Platz,
+     ein Verlauf, der zurückreicht. Von Hand gesicherte Fassungen bleiben
+     immer — dort hat ein Mensch auf einen Knopf gedrückt. */
+  VERSIONEN_MAX:    200,                /* Fassungen je Seite, harte Obergrenze */
+  FASSUNGEN_FRISCH:  12,                /* so viele bleiben unangetastet */
+  FASSUNGEN_TAGE:    30,                /* danach: eine je Tag, so viele Tage */
 
   /* --- Abgleich ---------------------------------------------------------- */
   ABGLEICH_TAKT_MS: 120000,        /* Alle zwei Minuten. Bei zwei Geräten sind
