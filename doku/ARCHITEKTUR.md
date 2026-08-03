@@ -85,7 +85,8 @@ unsichtbar — sie stünde im Register und käme in keinem Menü an.
 
 ```
 schale/
-├─ aufbau/          Layout, Routing, Seitenleiste
+├─ aufbau/          schale.js (Routing, Seitenmenü, Suche, Start) ·
+│                   seitenleiste.js · reiter.js
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
 └─ stil/            das Aussehen
 ```
@@ -237,8 +238,13 @@ still, und im Melder nachlesbar.
 
 ## Prüfen
 
-52 Prüfläufe, rund 2500 einzelne Prüfungen. Sie laufen über echtes Chromium
-gegen die echte App, nicht gegen Attrappen.
+`npm run pruefen` — fünf Läufe unter `pruefungen/` und `server/`, 248 einzelne
+Prüfungen. Sie laufen über echtes Chromium gegen die echte App, nicht gegen
+Attrappen.
+
+Sie liegen **im Repository**, und das ist der Punkt: vorher standen sie unter
+`/tmp` auf einem einzigen Rechner. Wer das Projekt auscheckte, hatte die Regel
+„erst grün, dann fertig", aber nicht das Mittel, sie einzuhalten.
 
 Die Regel beim Umbauen: **ein Umzug, der Verhalten ändert, ist kein Umzug.**
 Erst verschieben und grün werden, dann ändern. Wer beides in einem Schritt
@@ -251,10 +257,14 @@ es war.
 
 Ehrlich, damit die Liste nützlich bleibt:
 
-- Die **Seitenleiste** nimmt Einträge aus `register/navigation.js` entgegen,
-  liegt aber noch in `schale/aufbau/schale.js`. Die eingebauten Abschnitte
-  zeichnet sie weiterhin selbst; erst die physische Trennung in
-  `seitenleiste.js` macht daraus eine Datei, die man allein lesen kann.
+- Die **Seitenleiste** liegt seit A1 in `schale/aufbau/seitenleiste.js` und
+  ruft `App` nirgends mehr; was sie von dort braucht, bekommt sie über
+  `Seitenleiste.binde({ … })` in `App.start()` gereicht. `App.zeichneBaum`
+  bleibt als Name bestehen und reicht dorthin weiter — er steht an 51 Stellen
+  im Projekt. Offen bleibt: die eingebauten Abschnitte zeichnet sie weiterhin
+  selbst, und von `register/navigation.js` liest sie nur den Platz `'unten'`
+  und dort nur die von aussen angemeldeten Einträge. `'oben'` und `'baum'`
+  wertet niemand aus.
 - Die **Bereiche** sind noch nicht überall in `dienst` und `ansicht`
   getrennt. `datenbanken/steuerung.js` ist mit über 400 KB der grösste
   Brocken.

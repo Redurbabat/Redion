@@ -1,11 +1,20 @@
 /* Die App am Server: anmelden, abgleichen, verschlüsseln — mit zwei Geräten */
-import { createRequire } from 'node:module';
-const { chromium } = createRequire('/tmp/')('playwright');
-import { starte } from '/tmp/notizen/server/pruefserver.js';
-import { kennung, abdruck } from '/tmp/notizen/server/kern.js';
+/* Playwright kam früher über createRequire('/tmp/') aus einem Ordner neben dem
+   Projekt. Es steht als devDependency in der package.json und liegt damit in
+   node_modules — der gewöhnliche Import ist der richtige Weg. Ebenso die
+   Serverpfade: neben sich statt fest auf /tmp/notizen/. */
+import { chromium } from 'playwright';
+import { starte } from './pruefserver.js';
+import { kennung, abdruck } from './kern.js';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/* Die Wurzel des Repositories — eine Ebene über server/. Dort liegen
+   index.html, quell/ und oeffentlich/. Früher stand hier '/tmp/notizen/public',
+   ein Ordner, den es in diesem Repository gar nicht gibt. */
+const WURZELORDNER = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
 let ok = 0, bad = 0;
 const pruef = (n, ist, soll) => {
@@ -42,7 +51,7 @@ const alles = http.createServer(async (req, res) => {
     return;
   }
 
-  let pf = path.join('/tmp/notizen/public', u.pathname === '/' ? 'index.html' : u.pathname);
+  let pf = path.join(WURZELORDNER, u.pathname === '/' ? 'index.html' : u.pathname);
   if (!fs.existsSync(pf) || fs.statSync(pf).isDirectory()) { res.writeHead(404); res.end(''); return; }
   res.writeHead(200, { 'Content-Type': TYP[path.extname(pf)] || 'application/octet-stream' });
   res.end(fs.readFileSync(pf));

@@ -1,7 +1,13 @@
 # Was noch offen ist
 
-**Stand: 3. August 2026** · 53 Prüfläufe grün · 516 fertig, 8 teilweise, 0 offen
-in der Anforderungsliste
+**Stand: 3. August 2026** · 5 Prüfläufe im Repository grün (248 Prüfungen) ·
+516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
+
+> **Zu den Prüfläufen.** Es hiess hier „53 Prüfläufe grün". Die lagen unter
+> `/tmp` auf genau einem Rechner und sind in keinem Auscheckvorgang enthalten;
+> im Repository standen drei, und keiner davon war lauffähig. Seit `A1` gibt
+> es `pruefungen/` mit `npm run pruefen`. Wer die 53 noch hat: sie gehören
+> hierher, dann steht die Zahl wieder.
 
 Diese Datei ist die Arbeitsliste. Sie ist nach **Reihenfolge** sortiert, nicht
 nach Wichtigkeit: was oben steht, macht das darunter leichter.
@@ -13,28 +19,33 @@ Aufgabe nur ein Wunsch.
 
 ## A · Der Umbau zu Ende bringen
 
-Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber vier Dinge fehlen noch. Sie
+Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber drei Dinge fehlen noch. Sie
 gehören zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
 sonst wieder in denselben Klumpen läuft.
 
-### A1 — Die Seitenleiste herauslösen
+### ~~A1 — Die Seitenleiste herauslösen~~ · erledigt
 
-**Warum.** `quell/schale/aufbau/schale.js` hat 2500 Zeilen, davon rund 600
-Seitenleiste. Sie nimmt inzwischen Einträge aus `register/navigation.js`
-entgegen, zeichnet ihre eingebauten Abschnitte aber selbst — und liegt
-mitten in der Datei, die auch Routing und Seitenaufbau enthält.
+Liegt in `quell/schale/aufbau/seitenleiste.js`, 704 Zeilen. `schale.js` ist
+von 2600 auf 1993 Zeilen geschrumpft. Der Prüflauf `pruefungen/seitenleiste.mjs`
+lief vor und nach dem Umzug mit demselben Ergebnis — das war der Punkt der
+Übung, nicht die neue Datei.
 
-**Wo.** `schale.js`, `ABSCHNITTE` bis `woerterZaehlen` (rund Zeile 84–700).
-Ziel: `quell/schale/aufbau/seitenleiste.js`.
+**Was an der Aufgabenstellung nicht stimmte**, für den nächsten, der so etwas
+schneidet:
 
-**Wie.** Die Funktionen greifen auf App-Internes zu (`reiter`,
-`anpassModus`, `seiteId`, `esc`, `oeffne`, `zeichneReiter`). Sauberer Weg:
-`Seitenleiste.binde({ oeffne, aktuelleSeite, zeichneReiter, … })` in
-`App.start()`, danach `zeichneBaum` → `Seitenleiste.zeichne()`.
-
-**Fertig wenn.** `seitenleiste.js` existiert, `schale.js` ist um ~600 Zeilen
-kürzer, alle Prüfläufe grün, und ein neuer Prüflauf zeigt, dass die
-Seitenleiste ohne App-Zugriff gezeichnet werden kann.
+- Die Schnittkante ist **76–682**, nicht 84–700. `woerterZaehlen` gehört
+  schon zum Seitenmenü, nicht zur Seitenleiste.
+- `reiter`, `anpassModus` und `zeichneReiter` sind **im Block selbst**
+  definiert und wandern mit; sie waren nie Einspeisungen. Eingespeist werden
+  müssen dafür `kuerzlich`, `kommendeTermine`, `seitenMenue`, `suche` und
+  `papierkorb`, die hier nicht genannt waren.
+- Der eigentliche Kopplungspunkt stand gar nicht in der Aufgabe:
+  **`App.zeichneBaum` wird an 51 Stellen ausserhalb gerufen** und an 26
+  weiteren in `schale.js` selbst. Der Name musste bleiben — jetzt reicht er
+  nur noch weiter, wie `UI` es für `Menue`/`Hinweis`/`Dialog` tut.
+- `ordne`, der `setTimeout(…, 0)` am Ende von `zeichne` und `abschnitt()`
+  hängen an derselben DOM-Form und mussten gemeinsam umziehen. Einzeln
+  verschoben, wäre die Sortierung still kaputtgegangen.
 
 ### A2 — Kopfleiste und Inhaltsfläche trennen
 

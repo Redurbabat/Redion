@@ -15,7 +15,7 @@
  * unten ist der Schalter dafür.
  * ==========================================================================*/
 
-const VERSION = 'notizen-v4';
+const VERSION = 'notizen-v5';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -109,6 +109,7 @@ const GRUNDSTOCK = [
   './quell/bereiche/verbinden/ansicht/wolke.js',
   './quell/bereiche/wissen/bibliothek.js',
   './quell/bereiche/ki/dienst.js',
+  './quell/schale/aufbau/seitenleiste.js',
   './quell/schale/aufbau/schale.js',
   './quell/start.js',
   './quell/schale/stil/bausteine.css',

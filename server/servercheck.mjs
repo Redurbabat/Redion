@@ -1,4 +1,10 @@
-import { starte } from '/tmp/notizen/server/pruefserver.js';
+/* Der Server von unten: Lebenszeichen, Anmeldung per Gerätecode, Abgleich */
+
+/* Der Pfad war einmal fest auf /tmp/notizen/ verdrahtet — dem Ordner, in dem
+   dieser Lauf zufällig entstanden ist. Auf jedem anderen Rechner brach er
+   damit schon beim Import ab, bevor eine einzige Prüfung lief. Jetzt zeigt er
+   neben sich, und der Lauf läuft überall, wo das Repository liegt. */
+import { starte } from './pruefserver.js';
 
 let ok = 0, bad = 0;
 const pruef = (n, ist, soll) => {
@@ -39,7 +45,7 @@ pruef('Noch nicht freigegeben: 202', wartet.status, 202);
 /* Ein Konto von Hand anlegen (im Betrieb macht das OAuth) */
 await s.ablage.setze('konten', { id: 'k1', mail: 'red@beispiel.ch', name: 'Redur',
   bild: '', herkunft: 'test', angelegt: new Date().toISOString(), gesperrt: 0 });
-const { kennung, abdruck } = await import('/tmp/notizen/server/kern.js');
+const { kennung, abdruck } = await import('./kern.js');
 const roh = 'sit_' + kennung();
 await s.ablage.setze('sitzungen', { token: await abdruck(roh), kontoId: 'k1',
   geraet: 'Erstes Gerät', angelegt: new Date().toISOString(),

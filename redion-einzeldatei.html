@@ -4747,7 +4747,7 @@ const Saeubern = (() => {
 
   /** Ist diese Adresse harmlos? */
   const adresseOk = (wert) => {
-    const w = String(wert || '').replace(/[ -\s]+/g, '');
+    const w = String(wert || '').replace(/[\x00-\x1f\s]+/g, '');
     if (!w) return false;
     if (BOESE_ADRESSE.test(w)) return false;
     /* data: nur für Bilder — alles andere ist ein Versteck für Code. */
@@ -4843,7 +4843,7 @@ const Saeubern = (() => {
 
   /** Ein Dateiname ohne Wege darin — verhindert ../../ beim Export. */
   const dateiname = (s) => String(s ?? 'ohne-namen')
-    .replace(/[\/\\:*?"<>| -]/g, '-')
+    .replace(/[\/\\:*?"<>|\x00-\x1f]/g, '-')
     .replace(/^\.+/, '')
     .slice(0, 120) || 'ohne-namen';
 
@@ -14184,12 +14184,12 @@ const Datenbank = (() => {
       const z = schluessel(r, zk);
       const s = sk ? schluessel(r, sk) : 'Wert';
       const v = wk ? wert(r, wk, coll) : 1;
-      (zellen[z + ' ' + s] = zellen[z + ' ' + s] || []).push(v);
+      (zellen[z + '\u0000' + s] = zellen[z + '\u0000' + s] || []).push(v);
     });
 
-    const zelleWert = (z, s) => pivotRechne(art, zellen[z + ' ' + s] || []);
-    const zeileSumme = (z) => pivotRechne(art, spaltenNamen.flatMap(s => zellen[z + ' ' + s] || []));
-    const spalteSumme = (s) => pivotRechne(art, zeilenNamen.flatMap(z => zellen[z + ' ' + s] || []));
+    const zelleWert = (z, s) => pivotRechne(art, zellen[z + '\u0000' + s] || []);
+    const zeileSumme = (z) => pivotRechne(art, spaltenNamen.flatMap(s => zellen[z + '\u0000' + s] || []));
+    const spalteSumme = (s) => pivotRechne(art, zeilenNamen.flatMap(z => zellen[z + '\u0000' + s] || []));
     const gesamt = pivotRechne(art, Object.values(zellen).flat());
 
     const zeig = (v, z, s) => {
@@ -14214,7 +14214,7 @@ const Datenbank = (() => {
     const koerper = zeilenNamen.map(z => {
       const tds = spaltenNamen.map(s => {
         const v = zelleWert(z, s);
-        const leer = !(zellen[z + ' ' + s] || []).length;
+        const leer = !(zellen[z + '\u0000' + s] || []).length;
         return `<td${leer ? ' class="pv-null"' : ''}` +
                (leer ? '' : ` data-z="${esc(z)}" data-s="${esc(s)}" class="pv-klick"`) +
                `>${leer ? '' : esc(zeig(v, z, s))}</td>`;
@@ -41799,7 +41799,7 @@ const Probelauf = (() => {
       if (c.id === coll.id) return;
       Object.values(c.schema || {}).forEach(d => {
         if (d.type === 'formula' && String(d.formula || '').includes(name) &&
-            String(d.formula || '').includes(coll.name || ' '))
+            String(d.formula || '').includes(coll.name || '\u0000'))
           raus.formeln.push({ wo: c.name || 'Datenbank', was: d.name, text: d.formula });
         if (d.type === 'rollup' && (d.rollupProp === key || d.eigenschaft === key)) {
           const rel = c.schema[d.relation];
@@ -46720,81 +46720,80 @@ const KI = (() => {
 
 </script>
 <script>
-/* ===== quell/schale/aufbau/schale.js ===== */
+/* ===== quell/schale/aufbau/seitenleiste.js ===== */
 /* ============================================================================
- * app.js — Die Anwendung
+ * schale/aufbau/seitenleiste.js — die linke Leiste, für sich allein
  * ----------------------------------------------------------------------------
- * Hält alles zusammen: Seitenleiste, Seitenanzeige, Suche, Tastenkürzel,
- * Einstellungen, Papierkorb, Sicherung, Navigation.
+ * Sie lag bis hierher mitten in `schale.js`, zwischen Routing, Seitenmenü,
+ * Suche und Start. Das ist die Datei, in der alles zusammenläuft — und genau
+ * deshalb war sie der falsche Ort: wer an der Seitenleiste etwas ändern
+ * wollte, musste 2600 Zeilen aufmachen und hoffen, die richtige Stelle zu
+ * treffen.
+ *
+ * Hier steht jetzt alles, was die Leiste ausmacht, und sonst nichts:
+ *
+ *   ABSCHNITTE          welche es gibt, ein- und ausblendbar wie bei Notion
+ *   die Reihenfolge     umsortierbar — Notion kann das nicht
+ *   das Auf- und Zuklappen, je Abschnitt gemerkt
+ *   die Reiter          Start · Chat · Besprechungen, am PC und am Telefon
+ *   zeichne()           der Baum: Werkzeuge, Agenten, Kürzlich, Favoriten,
+ *                       Bereiche, Privat, Meine Apps und was das Register
+ *                       beisteuert
+ *
+ * WAS DARAN LEICHT SCHIEFGEHT
+ *
+ * 1. `ordne`, das `setTimeout(…, 0)` am Ende von `zeichne` und `abschnitt()`
+ *    gehören zusammen. Die ersten beiden arbeiten auf dem **fertigen** DOM und
+ *    lesen den Namen aus `span.firstChild.textContent` — also aus genau der
+ *    Form, die `abschnitt()` erzeugt. Wer eines davon ändert, ändert alle
+ *    drei, sonst bricht die Sortierung still.
+ *
+ * 2. Diese Datei ruft `App` nicht. Was sie von dort braucht, bekommt sie über
+ *    `binde({ … })` gereicht — einmal in `App.start()`, vor dem ersten
+ *    Zeichnen. Das ist kein Selbstzweck: solange die Leiste `App` kennt und
+ *    `App` die Leiste, lässt sich keines von beiden allein prüfen.
+ *
+ * 3. `App.zeichneBaum` bleibt als Name bestehen — er steht an über fünfzig
+ *    Stellen im Projekt. Er reicht nur noch hierher weiter, genau wie `UI` es
+ *    für `Menue`, `Hinweis` und `Dialog` tut.
  * ==========================================================================*/
 
-/* ==========================================================================
- * KLEINE OBERFLÄCHENHELFER
- * ========================================================================*/
+const Seitenleiste = (() => {
 
-
-/* ==========================================================================
- * DIE ANWENDUNG
- * ========================================================================*/
-const App = (() => {
-
-  let seiteId = null;
-  const esc = (s) => String(s ?? '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
-
-  const aktuelleSeite = () => seiteId;
-  const setzeSeite = (id) => { seiteId = id; };
-
-  /* --- Navigationsverlauf (Strg + [ und Strg + ]) ------------------------ */
-  const rueck = [], vor = [];
-  let navSperre = false;
-
-  const zurueck = () => {
-    if (!rueck.length) { UI.toast('Kein Schritt zurück'); return; }
-    const id = rueck.pop();
-    if (seiteId) vor.push(seiteId);
-    navSperre = true; oeffne(id); navSperre = false;
-  };
-  const vorwaerts = () => {
-    if (!vor.length) { UI.toast('Kein Schritt vorwärts'); return; }
-    const id = vor.pop();
-    if (seiteId) rueck.push(seiteId);
-    navSperre = true; oeffne(id); navSperre = false;
-  };
+  /* Eigenes `esc` statt eingespeistem — so hält es auch `aufbau/reiter.js`.
+     Drei Zeilen doppelt sind billiger als eine Abhängigkeit mehr. */
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   /* ------------------------------------------------------------------------
-   * Was zuletzt offen war — Notions „Kürzlich verwendet".
+   * WAS VON AUSSEN KOMMT
+   * Sieben Dinge braucht die Leiste, die ihr nicht gehören: das Öffnen einer
+   * Seite, die aktuelle Seite, die Listen „Kürzlich" und „Kommende Termine",
+   * das Seitenmenü, die Suche und den Papierkorb. Sie kommen über `binde`.
+   *
+   * Fehlt eines, sagt der Fehler, was fehlt und wohin es gehört. Ein
+   * `undefined is not a function` mitten im Zeichnen hätte niemandem gesagt,
+   * dass jemand `binde` vergessen hat.
    * ----------------------------------------------------------------------*/
-  const kuerzlichMerken = (id) => {
-    const b = Store.getBlock(id);
-    if (!b || b.type !== 'page' || b.parentTable === 'collection') return;
-    const l = [id, ...(Store.getMeta('kuerzlich', []) || []).filter(x => x !== id)];
-    Store.setMeta('kuerzlich', l.slice(0, 12));
+  let gebunden = {};
+
+  const braucht = (name) => (...args) => {
+    const fn = gebunden[name];
+    if (typeof fn !== 'function') {
+      throw new Error('Die Seitenleiste wurde ohne „' + name + '" gebunden. ' +
+        'Seitenleiste.binde({ … }) gehört an den Anfang von App.start(), vor das erste Zeichnen.');
+    }
+    return fn(...args);
   };
 
-  const kuerzlich = () => (Store.getMeta('kuerzlich', []) || [])
-    .map(id => Store.getBlock(id))
-    .filter(b => b && b.alive && b.type === 'page' && b.parentTable !== 'collection')
-    .slice(0, 6);
+  const binde = (teile) => { gebunden = Object.assign({}, gebunden, teile || {}); };
 
-  /** Die nächsten Termine aus allen Termin-Datenbanken. */
-  const kommendeTermine = (wieViele = 3) => {
-    const raus = [];
-    const heute = new Date(); heute.setHours(0, 0, 0, 0);
-    const grenze = new Date(heute); grenze.setDate(grenze.getDate() + 30);
-    Object.values(Store.cache.collections).forEach(c => {
-      const dk = Object.keys(c.schema || {}).find(k => c.schema[k].type === 'date');
-      if (!dk) return;
-      Store.rowsOf(c.id).forEach(r => {
-        const v = Datenbank.wert(r, dk, c);
-        if (!v) return;
-        const d = new Date(v);
-        if (isNaN(d) || d < heute || d > grenze) return;
-        raus.push({ id: r.id, text: r.text || 'Ohne Titel', d,
-                    wann: d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) });
-      });
-    });
-    return raus.sort((a, b) => a.d - b.d).slice(0, wieViele);
-  };
+  const oeffne          = braucht('oeffne');
+  const aktuelleSeite   = braucht('aktuelleSeite');
+  const kuerzlich       = braucht('kuerzlich');
+  const kommendeTermine = braucht('kommendeTermine');
+  const seitenMenue     = braucht('seitenMenue');
+  const suche           = braucht('suche');
+  const papierkorb      = braucht('papierkorb');
 
   /* ========================================================================
    * SEITENLEISTE
@@ -47333,7 +47332,7 @@ const App = (() => {
   const zeile = (p, tiefe) => {
     const w = document.createElement('div');
     const r = document.createElement('div');
-    r.className = 'row' + (p.id === seiteId ? ' on' : '');
+    r.className = 'row' + (p.id === aktuelleSeite() ? ' on' : '');
     r.draggable = true;
 
     const kinder = Store.childrenOf(p.id).filter(k => k.type === 'page' && !k.archiviert);
@@ -47403,6 +47402,129 @@ const App = (() => {
     }
     return w;
   };
+
+  /* ------------------------------------------------------------------------
+   * Die öffentliche Fläche. `zeichne` heisst hier so, wie es heisst — der
+   * alte Name `zeichneBaum` lebt in `App` weiter und reicht hierher.
+   * `reiter()` liest, `reiter('chat')` setzt; es zeichnet dabei bewusst
+   * nicht, weil die Aufrufstellen das schon selbst tun.
+   * ----------------------------------------------------------------------*/
+  return {
+    binde,
+    zeichne: zeichneBaum,
+    zeichneReiter,
+    handyLeiste,
+    reiterWechseln,
+    reiter: (id) => { if (id !== undefined) reiter = id; return reiter; },
+    ABSCHNITTE,
+    abschnittAn,
+    abschnittSchalten,
+    abschnitteAnpassen,
+    abschnitteGeordnet
+  };
+})();
+
+window.Seitenleiste = Seitenleiste;
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/schale.js ===== */
+/* ============================================================================
+ * app.js — Die Anwendung
+ * ----------------------------------------------------------------------------
+ * Hält alles zusammen: Seitenleiste, Seitenanzeige, Suche, Tastenkürzel,
+ * Einstellungen, Papierkorb, Sicherung, Navigation.
+ * ==========================================================================*/
+
+/* ==========================================================================
+ * KLEINE OBERFLÄCHENHELFER
+ * ========================================================================*/
+
+
+/* ==========================================================================
+ * DIE ANWENDUNG
+ * ========================================================================*/
+const App = (() => {
+
+  let seiteId = null;
+  const esc = (s) => String(s ?? '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+
+  const aktuelleSeite = () => seiteId;
+  const setzeSeite = (id) => { seiteId = id; };
+
+  /* --- Navigationsverlauf (Strg + [ und Strg + ]) ------------------------ */
+  const rueck = [], vor = [];
+  let navSperre = false;
+
+  const zurueck = () => {
+    if (!rueck.length) { UI.toast('Kein Schritt zurück'); return; }
+    const id = rueck.pop();
+    if (seiteId) vor.push(seiteId);
+    navSperre = true; oeffne(id); navSperre = false;
+  };
+  const vorwaerts = () => {
+    if (!vor.length) { UI.toast('Kein Schritt vorwärts'); return; }
+    const id = vor.pop();
+    if (seiteId) rueck.push(seiteId);
+    navSperre = true; oeffne(id); navSperre = false;
+  };
+
+  /* ------------------------------------------------------------------------
+   * Was zuletzt offen war — Notions „Kürzlich verwendet".
+   * ----------------------------------------------------------------------*/
+  const kuerzlichMerken = (id) => {
+    const b = Store.getBlock(id);
+    if (!b || b.type !== 'page' || b.parentTable === 'collection') return;
+    const l = [id, ...(Store.getMeta('kuerzlich', []) || []).filter(x => x !== id)];
+    Store.setMeta('kuerzlich', l.slice(0, 12));
+  };
+
+  const kuerzlich = () => (Store.getMeta('kuerzlich', []) || [])
+    .map(id => Store.getBlock(id))
+    .filter(b => b && b.alive && b.type === 'page' && b.parentTable !== 'collection')
+    .slice(0, 6);
+
+  /** Die nächsten Termine aus allen Termin-Datenbanken. */
+  const kommendeTermine = (wieViele = 3) => {
+    const raus = [];
+    const heute = new Date(); heute.setHours(0, 0, 0, 0);
+    const grenze = new Date(heute); grenze.setDate(grenze.getDate() + 30);
+    Object.values(Store.cache.collections).forEach(c => {
+      const dk = Object.keys(c.schema || {}).find(k => c.schema[k].type === 'date');
+      if (!dk) return;
+      Store.rowsOf(c.id).forEach(r => {
+        const v = Datenbank.wert(r, dk, c);
+        if (!v) return;
+        const d = new Date(v);
+        if (isNaN(d) || d < heute || d > grenze) return;
+        raus.push({ id: r.id, text: r.text || 'Ohne Titel', d,
+                    wann: d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) });
+      });
+    });
+    return raus.sort((a, b) => a.d - b.d).slice(0, wieViele);
+  };
+
+  /* ========================================================================
+   * DIE SEITENLEISTE — sie liegt jetzt nebenan
+   * ------------------------------------------------------------------------
+   * Rund 600 Zeilen standen hier: Abschnitte, Reihenfolge, Klappen, Reiter,
+   * der Baum. Sie liegen in `schale/aufbau/seitenleiste.js`.
+   *
+   * Was hier bleibt, sind Weiterreichungen — und zwar aus einem Grund, nicht
+   * aus Bequemlichkeit: `zeichneBaum` steht an über fünfzig Stellen im
+   * Projekt und an sechsundzwanzig weiteren in dieser Datei. Diese Aufrufe
+   * alle umzuschreiben wäre viel Arbeit für keinen Gewinn und ein hohes
+   * Risiko — jede übersehene Stelle wäre ein Fehler, den erst ein Mensch
+   * findet. Genau so hält es `UI` für `Menue`, `Hinweis` und `Dialog`.
+   * ======================================================================*/
+  const zeichneBaum        = ()   => Seitenleiste.zeichne();
+  const zeichneReiter      = ()   => Seitenleiste.zeichneReiter();
+  const handyLeiste        = ()   => Seitenleiste.handyLeiste();
+  const reiterWechseln     = (id) => Seitenleiste.reiterWechseln(id);
+  const abschnitteAnpassen = ()   => Seitenleiste.abschnitteAnpassen();
+  const abschnittAn        = (id) => Seitenleiste.abschnittAn(id);
+  const abschnittSchalten  = (id) => Seitenleiste.abschnittSchalten(id);
+  const ABSCHNITTE         = Seitenleiste.ABSCHNITTE;
 
   /* ========================================================================
    * DAS SEITENMENÜ (⋯) — der vollständige Notion-Umfang
@@ -49001,6 +49123,13 @@ const App = (() => {
    * START
    * ======================================================================*/
   const start = async () => {
+    /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
+       Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
+       es `zeichneBaum`, und das läuft dann schon nach drüben. */
+    Seitenleiste.binde({
+      oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
+    });
+
     /* Jeder Fehler soll sichtbar werden — eine stumme Seite hilft niemandem. */
     addEventListener('error', (e) => {
       UI.banner('Es ist ein Fehler aufgetreten: ' + (e.message || e.error) +
@@ -49122,7 +49251,7 @@ const App = (() => {
     seitenleisteBreite();
     an('btn-new', () => neueSeite());
     an('btn-new-bottom', () => neueSeite());
-    an('btn-neuer-chat', () => { reiter = 'chat'; zeichneBaum(); KI.neuerChat(); });
+    an('btn-neuer-chat', () => { Seitenleiste.reiter('chat'); zeichneBaum(); KI.neuerChat(); });
 
     /* Leiste am unteren Rand — nur auf dem Telefon sichtbar */
     /* --- Die untere Leiste am Telefon --------------------------------
@@ -49132,16 +49261,16 @@ const App = (() => {
      * gibt. Der Kreis in der Mitte bleibt die KI.
      * ---------------------------------------------------------------- */
     an('hl-start', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           reiter = 'start'; zeichneBaum(); Ansichten.start(); handyLeiste(); });
+                           Seitenleiste.reiter('start'); zeichneBaum(); Ansichten.start(); handyLeiste(); });
     an('hl-chat',  () => { PWA.schubladeZu && PWA.schubladeZu();
-                           reiter = 'chat'; zeichneBaum(); handyLeiste();
+                           Seitenleiste.reiter('chat'); zeichneBaum(); handyLeiste();
                            if (PWA.schubladeAuf) PWA.schubladeAuf(); });
     an('hl-bespr', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           reiter = 'bespr'; zeichneBaum(); handyLeiste();
+                           Seitenleiste.reiter('bespr'); zeichneBaum(); handyLeiste();
                            if (PWA.schubladeAuf) PWA.schubladeAuf(); });
     an('hl-ki', () => kiPanel(true));
     an('hl-inbox', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           reiter = 'start'; Ansichten.posteingang(); handyLeiste(); });
+                           Seitenleiste.reiter('start'); Ansichten.posteingang(); handyLeiste(); });
     an('btn-suche-handy', () => suche());
     an('btn-neu-handy',   () => neueSeite());
     handyLeiste();
@@ -49152,7 +49281,9 @@ const App = (() => {
       if (!b) return;
       /* Zweiter Klick auf denselben Reiter öffnet seine Einstellungen —
          genau wie bei Notion beim Home-Reiter. */
-      if (b.dataset.reiter === reiter && reiter === 'start') { abschnitteAnpassen(); return; }
+      if (b.dataset.reiter === Seitenleiste.reiter() && Seitenleiste.reiter() === 'start') {
+        abschnitteAnpassen(); return;
+      }
       reiterWechseln(b.dataset.reiter);
     });
     an('btn-import', (e) => {
