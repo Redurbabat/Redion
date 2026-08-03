@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**58 Läufe, 2329 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**59 Läufe, 2440 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
@@ -94,6 +94,7 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 85 | der Kern: Helfer, Sicherheit, Formen, Umzüge, Ereignisse |
 | 86 | die elf Register |
 | 87 | der Quelltext selbst — ohne Browser, in Millisekunden |
+| 88 | die Datenbank-Logik in Node — ohne document, ohne window |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt

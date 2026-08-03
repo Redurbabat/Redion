@@ -1,6 +1,6 @@
 # Was noch offen ist
 
-**Stand: 3. August 2026** · 58 Prüfläufe im Repository grün (2329 Prüfungen) ·
+**Stand: 3. August 2026** · 59 Prüfläufe im Repository grün (2440 Prüfungen) ·
 516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
 
 > **Zu den Prüfläufen.** Sie lagen unter `/tmp` auf genau einem Rechner und
@@ -19,8 +19,10 @@ Aufgabe nur ein Wunsch.
 
 ## A · Der Umbau zu Ende bringen
 
-Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber eines fehlt noch. Es
-gehört zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
+Der Aufbau steht (`doku/ARCHITEKTUR.md`). A1 bis A3 sind durch, A4 für den
+grössten Bereich — die Datenbanken — auch. Was bleibt, sind die übrigen
+Bereiche. Sie
+gehören zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
 sonst wieder in denselben Klumpen läuft.
 
 ### ~~A1 — Die Seitenleiste herauslösen~~ · erledigt
@@ -74,7 +76,7 @@ prüfen die Seitenanzeige**, und alle vierzehn liefen nach dem Schnitt durch.
 
 ### ~~A3 — Das Stilblatt aufteilen~~ · erledigt
 
-Sechs Dateien in `quell/schale/stil/`:
+Elf Dateien in `quell/schale/stil/`, aus einer mit 3155 Zeilen:
 
 | Datei | Zeilen | Was |
 |---|--:|---|
@@ -83,7 +85,20 @@ Sechs Dateien in `quell/schale/stil/`:
 | `hell.css` | 35 | nur, was im Hellmodus anders ist |
 | `grund.css` | 48 | Grundelemente und die zwanzig Farbklassen |
 | `aufbau.css` | 239 | das Gerüst: Seitenleiste und Hauptbereich |
-| `bausteine.css` | 2838 | die Bausteine selbst |
+| `datenbanken.css` | 109 | der Rahmen einer Datenbank |
+| `ki.css` | 96 | das KI-Panel |
+| `werkzeuge.css` | 399 | Menüs, Dialoge, Graph, Karteikarten |
+| `ansichten.css` | 182 | Zeitstrahl, Diagramm, Formular, Seitenvorschau |
+| `einstellungen.css` | 444 | Einstellungen, Verbindungen, Konten |
+| `bausteine.css` | 1682 | der Rest |
+
+**Warum nicht weiter?** Weil es gemessen wurde: 33 Selektoren stehen in mehr
+als einem Themenblock — `#sidebar`, `.db`, `#ai`, `#page`, `.karte`,
+`#handy-leiste`. Thematisch zusammenziehen hiesse umsortieren, und
+Umsortieren dreht bei genau diesen um, wer gegen wen gewinnt. Deshalb ist
+jede der sechs neuen Dateien ein **zusammenhängender** Ausschnitt, kein
+zusammengesuchter. Wer weiter aufteilen will, fängt mit dieser Messung an
+und nicht mit dem Editor.
 
 **Belegt** mit einem Vergleich der berechneten Werte vor und nach dem
 Schnitt: 74 CSS-Variablen (beide Themen) und 56 Element/Thema-Kombinationen
@@ -104,23 +119,52 @@ immer; `hell.css` überschreibt nur. Wer in `dunkel.css` eine Variable
 ergänzt, muss sie auch in `hell.css` ergänzen — sonst zeigt der Hellmodus an
 dieser einen Stelle den dunklen Wert, und das merkt nur, wer hell arbeitet.
 
-### A4 — Die Bereiche in `dienst` und `ansicht` trennen
+**Und der Fehler, den ich beim zweiten Durchgang selbst gebaut habe**, weil
+er sich wiederholen wird: ein Schnitt landete mitten in einem Kommentar-Banner.
+Die neue Datei fing mit `KI-PANEL` und einem herrenlosen `*/` an. CSS bricht
+dabei nicht ab — es räumt auf: der Parser überliest alles bis zum nächsten
+abgeschlossenen Block und **verschluckt dabei die erste echte Regel**. `#ai`
+verlor sein `display:none`, das KI-Panel stand offen im Fenster. Keine Datei
+war kaputt, keine Klammer unausgeglichen, keine Meldung erschien. Gefunden
+hat es nur der Vergleich der berechneten Werte — 58 Unterschiede.
+`test87` prüft jetzt auf herrenlose Kommentarenden; die Klammernprüfung
+allein hätte es **nicht** gefunden (nachgestellt und belegt).
+
+### A4 — Die Bereiche in `dienst` und `ansicht` trennen · **Datenbanken erledigt**
 
 **Warum.** Das ist die eigentliche Regel des Aufbaus: reine Logik ohne DOM
-lässt sich prüfen, ohne einen Browser zu starten. Heute geht fast jeder
-Prüflauf über Chromium — das dauert und macht die Läufe flockig.
+lässt sich prüfen, ohne einen Browser zu starten.
 
-**Wo.** Der Reihe nach, grösste zuerst:
+**Erledigt: `datenbanken`.** `dienst.js` (1022 Zeilen) trägt die
+Eigenschaftstypen, das Lesen eines Wertes, Filtern, Sortieren, Gruppieren und
+die Berechnungen. `steuerung.js` fiel von 8658 auf 7784 Zeilen und zeigt nur
+noch.
+
+Das „fertig wenn" ist wörtlich erfüllt und belegt: `pruefungen/lauf/test88.mjs`
+lädt `dienst.js` in Node — ohne `document`, ohne `window` — und rechnet 38
+Prüfungen durch. **In 47 Millisekunden.** Zum Vergleich: ein Browserlauf
+braucht zwölf Sekunden.
+
+**Dass der Schnitt sauber ging, war nicht Glück, sondern gemessen:** über alle
+Namen gezählt braucht der Logikteil **nichts** aus dem Rest, während der Rest
+16 Namen von dort holt. Die Abhängigkeit läuft nur in eine Richtung. Wäre es
+andersherum auch nur an einer Stelle gewesen, hätten sich die beiden nicht
+trennen lassen, ohne Verhalten zu ändern. Wer den nächsten Bereich schneidet,
+fängt mit dieser Messung an.
+
+Drei Kleinigkeiten waren nötig: `esc` kam aus `Blocks` — einem Modul, das
+zeichnet; die zwei Zeilen stehen jetzt in `dienst.js`. `window.Tempo` wurde zu
+`typeof Tempo !== 'undefined'`, wie CLAUDE.md es ohnehin vorschreibt. Und die
+Datei hängt sich nur dann an ein Fenster, wenn es eines gibt.
+
+**Offen — der Reihe nach, grösste zuerst:**
 
 | Datei | Grösse | Ziel |
 |---|--:|---|
-| `bereiche/datenbanken/steuerung.js` | 400 KB | `dienst.js` (filtern, sortieren, rechnen, Rollups) + `ansicht/` (Tabelle, Board, Kalender, …) |
 | `bereiche/wissen/werkzeuge.js` | 100 KB | `graph/`, `karteikarten/`, `journal/`, `schlagwoerter/`, `befehle` ins Register |
 | `bereiche/hilfe/wissensseiten.js` | 170 KB | ist fast nur Text — nach `doku/` verschieben und beim Bauen einlesen |
 | `bereiche/editor/ansicht/editor.js` | 115 KB | `dienst.js` (Blockoperationen) + `ansicht/` (Zeichnen) |
-
-**Fertig wenn.** Für mindestens `datenbanken` gilt: `dienst.js` lässt sich in
-Node laden und prüfen, ohne dass ein `document` existiert.
+| `bereiche/datenbanken/steuerung.js` | 7784 Zeilen | die Ansichten einzeln: Tabelle, Board, Kalender, Zeitstrahl |
 
 ---
 

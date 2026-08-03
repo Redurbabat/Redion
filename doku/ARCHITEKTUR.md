@@ -93,13 +93,24 @@ schale/
 │                   inhaltsflaeche.js Blöcke, Rückverweise, Streifen
 │                   reiter.js         Reiter, geteilte Ansicht
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
-└─ stil/            marken.css    die drei Schriften
-                    dunkel.css    die Farben — der Normalfall
-                    hell.css      nur, was im Hellmodus anders ist
-                    grund.css     Grundelemente und Farbklassen
-                    aufbau.css    das Gerüst
-                    bausteine.css die Bausteine
+└─ stil/            marken.css        die drei Schriften
+                    dunkel.css        die Farben — der Normalfall
+                    hell.css          nur, was im Hellmodus anders ist
+                    grund.css         Grundelemente und Farbklassen
+                    aufbau.css        das Gerüst
+                    datenbanken.css   der Rahmen einer Datenbank
+                    ki.css            das KI-Panel
+                    werkzeuge.css     Menüs, Dialoge, Graph, Karteikarten
+                    ansichten.css     Zeitstrahl, Diagramm, Formular
+                    einstellungen.css Einstellungen und Verbindungen
+                    bausteine.css     der Rest
 ```
+
+Die sechs hinteren sind **zusammenhängende Ausschnitte** aus dem früheren
+`bausteine.css`, keine thematisch zusammengesuchten. Das ist gemessen und
+nicht vorsichtig: 33 Selektoren stehen in mehr als einem Themenblock
+(`#sidebar`, `.db`, `#ai`, `#page`, `.karte`). Wer sie thematisch zusammenzieht,
+sortiert um — und dreht bei genau diesen um, wer gegen wen gewinnt.
 
 Die Reihenfolge der sechs Stilblätter in `index.html` zählt. Dunkel steht in
 `:root` und gilt immer; `hell.css` überschreibt nur, wenn am `html` das
@@ -137,6 +148,17 @@ bereiche/<name>/
 ├─ ansicht/       zeichnet
 └─ daten.js       Kataloge und Beispielinhalte (falls nötig)
 ```
+
+**`datenbanken` ist der erste Bereich, bei dem das wirklich stimmt.** Und die
+Probe darauf ist nicht die Ordnerstruktur, sondern ein Prüflauf: `dienst.js`
+lädt in Node, ohne `document` und ohne `window`. Was das nicht schafft, ist
+nur der Form nach getrennt.
+
+Ob ein Schnitt überhaupt möglich ist, entscheidet die **Richtung der
+Abhängigkeit**, und die zählt man ab, bevor man schneidet: bei `datenbanken`
+brauchte der Logikteil nichts aus der Oberfläche, die Oberfläche aber 16 Namen
+aus der Logik. Nur deshalb ging es ohne Verhaltensänderung. Läuft es an einer
+einzigen Stelle in beide Richtungen, ist der Bereich noch nicht so weit.
 
 Das ist der Teil, der noch läuft: einige Bereiche sind schon so aufgeteilt,
 andere liegen noch als eine Datei da. Der Umbau geht Bereich für Bereich —
@@ -272,13 +294,21 @@ Sie liegen **im Repository**, und das ist der Punkt: vorher standen sie unter
 `/tmp` auf einem einzigen Rechner. Wer das Projekt auscheckte, hatte die Regel
 „erst grün, dann fertig", aber nicht das Mittel, sie einzuhalten.
 
-Einer kommt ohne Browser aus: `test87.mjs` prüft, was zwischen zwei Dateien
-steht und deshalb in keinem Verhalten auftaucht — keine rohen Steuerzeichen im
-Quelltext, dieselben Rechte in Oberfläche und Server, und dass
-`seitenleiste.js`, `kopfleiste.js` und `inhaltsflaeche.js` den Namen `App`
-nicht mehr nennen. Er braucht 80 Millisekunden und zeigt damit, worauf A4
-hinauswill: reine Logik ohne DOM lässt sich in Millisekunden prüfen statt in
-Sekunden.
+Zwei kommen ohne Browser aus, und sie sind zusammen in einer Zehntelsekunde
+fertig:
+
+- `test87.mjs` prüft, was zwischen zwei Dateien steht und deshalb in keinem
+  Verhalten auftaucht — keine rohen Steuerzeichen im Quelltext, dieselben
+  Rechte in Oberfläche und Server, dass die Zeichner den Namen `App` nicht
+  mehr nennen, dass alle Stilblätter eingehängt sind, und dass das Manifest
+  auf Adressen zeigt, die es wirklich gibt.
+- `test88.mjs` lädt `bereiche/datenbanken/dienst.js` in Node — ohne
+  `document`, ohne `window` — und rechnet Filtern, Sortieren, Gruppieren und
+  die Spaltenberechnungen durch. 38 Prüfungen in 47 Millisekunden, wo ein
+  Browserlauf zwölf Sekunden braucht.
+
+Das ist der Sinn von A4: was rechnet, soll sich prüfen lassen, ohne dass etwas
+gezeichnet wird.
 
 Die Regel beim Umbauen: **ein Umzug, der Verhalten ändert, ist kein Umzug.**
 Erst verschieben und grün werden, dann ändern. Wer beides in einem Schritt

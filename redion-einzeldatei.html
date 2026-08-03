@@ -458,23 +458,19 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 
 </style>
 <style>
-/* ===== quell/schale/stil/bausteine.css ===== */
+/* ===== quell/schale/stil/datenbanken.css ===== */
 /* ============================================================================
- * bausteine.css — die Bausteine selbst
+ * datenbanken.css — die Datenbank selbst
  * ----------------------------------------------------------------------------
- * Der grosse Rest: Datenbanken in allen zwölf Ansichten, das KI-Panel,
- * Menüs, Dialoge, Einstellungen, Verbindungen, die Telefon-Oberfläche, die
- * Kreuztabelle, die Barrierefreiheit.
+ * Der Rahmen einer Datenbank: Kopfzeile, Reiter, Werkzeugleiste, die Tabelle,
+ * das Board, die Gruppen. Was in JEDER Ansicht gleich aussieht.
  *
- * Diese Datei ist immer noch die grösste der sechs, und das ist in Ordnung:
- * sie ist nach Bereichen gegliedert, und jeder Bereich hat sein eigenes
- * Banner. Wer eine Farbe ändern will, sucht ab jetzt nicht mehr hier,
- * sondern in `dunkel.css` oder `hell.css` — das war der Punkt der Übung.
- *
- * Ein paar Regeln hier tragen `html[data-theme="…"]` vor sich her. Die
- * gehören bewusst NICHT nach hell.css oder dunkel.css: sie betreffen einen
- * einzelnen Baustein und nicht das Thema. Wer sie verschiebt, sucht sie
- * später bei dem Baustein, zu dem sie gehören.
+ * Die einzelnen Ansichten — Zeitstrahl, Diagramm, Formular, Seitenvorschau —
+ * stehen in ansichten.css, die Kreuztabelle weiter hinten in bausteine.css. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
  * ==========================================================================*/
 
 /* ==========================================================================
@@ -571,6 +567,25 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 }
 .cal .ev:hover{background:var(--bg-hover)}
 
+
+</style>
+<style>
+/* ===== quell/schale/stil/ki.css ===== */
+/* ============================================================================
+ * ki.css — das KI-Panel am rechten Rand
+ * ----------------------------------------------------------------------------
+ * Der Chat, die Schnellbefehle, die Eingabezeile.
+ *
+ * Was die KI sonst noch an Oberfläche hat — Quellen, Agent, Besprechung —
+ * liegt weiter hinten in bausteine.css und bleibt dort: davor stehen die
+ * Einstellungen, und die teilen sich mit dem KI-Teil zwei Selektoren
+ * (.cal.woche .day und .kt-std). Zusammenziehen hiesse umsortieren. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
+
 /* ==========================================================================
    KI-PANEL
    ========================================================================== */
@@ -650,6 +665,22 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   #topbar .top-btn.schmal{padding:0 6px}
   .kt-std{width:58px}
 }
+
+
+</style>
+<style>
+/* ===== quell/schale/stil/werkzeuge.css ===== */
+/* ============================================================================
+ * werkzeuge.css — Werkzeuge, Verknüpfungen, Notion-Bedienelemente
+ * ----------------------------------------------------------------------------
+ * Der grösste zusammenhängende Brocken: Menüs, Dialoge, Overlays, der
+ * Graph, die Karteikarten, das Journal, die Schnellnotizen, die
+ * Auswahlleiste, die Kommentare — alles, was über der Seite schwebt. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
 
 /* ==========================================================================
    ERWEITERUNGEN — Werkzeuge, Verknüpfungen, Notion-Bedienelemente
@@ -1037,6 +1068,22 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .home-zahlen{grid-template-columns:repeat(2,1fr)}
 }
 
+
+</style>
+<style>
+/* ===== quell/schale/stil/ansichten.css ===== */
+/* ============================================================================
+ * ansichten.css — Zeitstrahl, Diagramm, Formular, Seitenvorschau
+ * ----------------------------------------------------------------------------
+ * Die Ansichten einer Datenbank, die nicht Tabelle oder Board sind. Sie
+ * stehen getrennt, weil sie zusammen fast zweihundert Zeilen sind und weil
+ * man beim Ändern einer Ansicht selten die anderen meint. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
+
 /* ==========================================================================
    DATENBANK — Zeitstrahl, Diagramm, Formular, Seitenvorschau
    ========================================================================== */
@@ -1205,6 +1252,25 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner.warn{background:var(--b-yellow); color:var(--text)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
 html[data-theme="light"] .banner{color:#37352f}
+
+
+</style>
+<style>
+/* ===== quell/schale/stil/einstellungen.css ===== */
+/* ============================================================================
+ * einstellungen.css — Einstellungen, Verbindungen, Konten, Kalender
+ * ----------------------------------------------------------------------------
+ * Der Einstellungsbereich mit seinen zwölf Abschnitten, dazu alles, was mit
+ * Verbindungen nach draussen zu tun hat: Konten, Kalender, die Wolke.
+ *
+ * Beide Abschnitte lagen im Original direkt hintereinander und bleiben
+ * zusammen — sie gehören auch inhaltlich zusammen: was man einmal einrichtet
+ * und danach selten wieder anfasst. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
 
 /* ==========================================================================
    EINSTELLUNGEN
@@ -1633,6 +1699,29 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .clip-knopf{display:inline-block; background:var(--accent); color:#fff; padding:9px 20px;
   border-radius:7px; font-size:14px; font-weight:500; text-decoration:none; cursor:grab}
 .clip-knopf:active{cursor:grabbing}
+
+
+</style>
+<style>
+/* ===== quell/schale/stil/bausteine.css ===== */
+/* ============================================================================
+ * bausteine.css — was übrig bleibt
+ * ----------------------------------------------------------------------------
+ * Nach A3 und seinem zweiten Durchgang stehen hier noch: die restliche
+ * KI-Oberfläche (Quellen, Agent, Besprechung), der Telefonbetrieb, die
+ * Bibliothek, die Reiterleiste, das Blatt von unten, die Kreuztabelle, die
+ * Pflege, die Barrierefreiheit, das Datenmodell und die Sperre.
+ *
+ * Warum das nicht weiter zerlegt ist: die Abschnitte sind thematisch
+ * verzahnt. Eine Messung über alle Selektoren hat 33 gefunden, die in mehr
+ * als einem Themenblock stehen — #sidebar, .db, #ai, #page, .karte,
+ * #handy-leiste und andere. Sie thematisch zusammenzuziehen hiesse
+ * umsortieren, und Umsortieren dreht bei genau diesen Selektoren um, wer
+ * gegen wen gewinnt. Ein Umzug, der das Aussehen ändert, ist kein Umzug.
+ *
+ * Wer hier weiter aufteilen will, fängt mit dieser Messung an und nicht mit
+ * dem Editor.
+ * ==========================================================================*/
 
 /* ==========================================================================
    KI — QUELLEN, AGENT, BESPRECHUNG
@@ -13083,23 +13172,52 @@ const Blocks = (() => {
 
 </script>
 <script>
-/* ===== quell/bereiche/datenbanken/steuerung.js ===== */
+/* ===== quell/bereiche/datenbanken/dienst.js ===== */
 /* ============================================================================
- * database.js — Datenbanken
+ * bereiche/datenbanken/dienst.js — was eine Datenbank rechnet, ohne sie zu zeigen
  * ----------------------------------------------------------------------------
- * Eine Datenbank besteht aus drei Teilen, genau wie bei Notion:
+ * Die Eigenschaftstypen, das Lesen eines Wertes, Filtern, Sortieren,
+ * Gruppieren und die Berechnungen unter einer Spalte. 930 Zeilen, die vorher
+ * am Anfang von `steuerung.js` standen — zwischen 7700 Zeilen Oberfläche.
  *
- *   block      type 'database'  – der sichtbare Container auf der Seite
- *   collection                  – das Schema: welche Spalten gibt es
- *   views                       – Layout, Filter, Sortierung, sichtbare Spalten
+ * DER PUNKT DIESER DATEI IST, WAS SIE NICHT TUT: sie fasst das Dokument nicht
+ * an. Kein `document`, kein `createElement`, kein `innerHTML`. Damit lässt
+ * sie sich in Node laden und prüfen, ohne einen Browser zu starten — und ein
+ * Prüflauf, der in achtzig Millisekunden fertig ist statt in zwölf Sekunden,
+ * wird auch wirklich gelaufen.
  *
- * Eine Zeile ist ein Block vom Typ 'page' mit parentTable 'collection'.
- * Dadurch kann jede Zeile eine eigene Seite mit eigenem Inhalt haben.
+ * DASS DAS GING, WAR NICHT SELBSTVERSTÄNDLICH, und es wurde nachgerechnet
+ * statt gehofft: über alle Namen gezählt braucht dieser Teil **nichts** aus
+ * dem Rest der Datei, während der Rest sechzehn Namen von hier holt. Die
+ * Abhängigkeit läuft nur in eine Richtung. Wäre es andersherum auch nur an
+ * einer Stelle gewesen, hätte man die beiden nicht trennen können, ohne
+ * Verhalten zu ändern.
+ *
+ * DREI DINGE, DIE DAFÜR NÖTIG WAREN:
+ *
+ * 1. `esc` kam aus `Blocks` — einem Modul, das zeichnet. Eine Datei, die
+ *    nichts zeigen will, soll nicht am Editor hängen; die zwei Zeilen stehen
+ *    jetzt hier. Wortgleich, damit sich nichts an der Ausgabe ändert.
+ *
+ * 2. `window.Tempo` wurde zu `typeof Tempo !== 'undefined'`. Das ist keine
+ *    Geschmacksfrage: CLAUDE.md schreibt es vor, weil die Module dieser App
+ *    gewöhnliche `const` auf oberster Ebene sind und nicht an `window`
+ *    hängen. Und ohne `window` gibt es in Node kein Laden.
+ *
+ * 3. Am Ende hängt sich die Datei nur dann an `window`, wenn es eines gibt.
+ *
+ * WAS SIE WEITERHIN BRAUCHT, und das ist in Ordnung: `Store` für die Zeilen,
+ * `Register` für die Typenliste, `Formula` zum Rechnen, `Datum` für Daten,
+ * `Tempo` für den Formelspeicher. Alles Module ohne Oberfläche — ein Prüflauf
+ * kann sie laden oder eine Attrappe hinstellen.
  * ==========================================================================*/
 
-const Datenbank = (() => {
+const DatenbankDienst = (() => {
 
-  const esc = Blocks.esc;
+  /* Wortgleich mit `Blocks.esc`. Die Verdopplung ist der Preis dafür, dass
+     diese Datei den Editor nicht kennt — zwei Zeilen gegen eine Abhängigkeit. */
+  const esc = (s) => String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   /* ========================================================================
    * DIE EIGENSCHAFTSTYPEN
@@ -13475,7 +13593,7 @@ const Datenbank = (() => {
     if (def.type === 'formula') {
       /* Gerechnet wird über den Formelspeicher: derselbe Wert für dieselbe
          Zeile wird nur einmal je Datenstand ausgerechnet. */
-      if (window.Tempo && !formelTiefe)
+      if (typeof Tempo !== 'undefined' && !formelTiefe)
         return Tempo.hole(row, key, coll, () => formelRechnen(row, key, coll, def));
       return formelRechnen(row, key, coll, def);
     }
@@ -14029,6 +14147,128 @@ const Datenbank = (() => {
 
   const rechne = (art, rows, key, coll) =>
     zusammenfassen(art, rows.map(r => wert(r, key, coll)), rows.length);
+
+  return { esc,
+           DIENST_TYPEN,
+           FARBEN,
+           KI_AUFTRAG,
+           KI_TYPEN,
+           MUSTER_VORLAGEN,
+           NUR_LESEN,
+           OPERATOREN,
+           RECHNUNGEN,
+           ROLLUP_ARTEN,
+           TYPEN,
+           ansichtOrdnung,
+           begrenzen,
+           dauerLesen,
+           dauerText,
+           formelRechnen,
+           formelTiefe,
+           formelUmgebung,
+           fremdWert,
+           gefiltert,
+           gruppeTrifftZu,
+           hatRegeln,
+           heute,
+           propTyp,
+           pruefeWert,
+           pruefeZeile,
+           rechne,
+           regelAnzahl,
+           rohZeilen,
+           rollupListe,
+           rollupWert,
+           seitenBezug,
+           seitenListe,
+           sortiert,
+           spaltenLauf,
+           trifftZu,
+           wert,
+           zeilen,
+           zeilenGesamt,
+           zelle,
+           zusammenfassen };
+})();
+
+/* Nur, wenn es ein Fenster gibt. In Node gibt es keines — und genau das ist
+   der Zweck dieser Datei. */
+if (typeof window !== 'undefined') window.DatenbankDienst = DatenbankDienst;
+
+</script>
+<script>
+/* ===== quell/bereiche/datenbanken/steuerung.js ===== */
+/* ============================================================================
+ * database.js — Datenbanken
+ * ----------------------------------------------------------------------------
+ * Eine Datenbank besteht aus drei Teilen, genau wie bei Notion:
+ *
+ *   block      type 'database'  – der sichtbare Container auf der Seite
+ *   collection                  – das Schema: welche Spalten gibt es
+ *   views                       – Layout, Filter, Sortierung, sichtbare Spalten
+ *
+ * Eine Zeile ist ein Block vom Typ 'page' mit parentTable 'collection'.
+ * Dadurch kann jede Zeile eine eigene Seite mit eigenem Inhalt haben.
+ * ==========================================================================*/
+
+/* ----------------------------------------------------------------------------
+ * SEIT A4: was diese Datei RECHNET, steht nebenan in dienst.js — die
+ * Eigenschaftstypen, das Lesen eines Wertes, Filtern, Sortieren, Gruppieren
+ * und die Berechnungen. Hier steht nur noch, was etwas ZEIGT.
+ *
+ * Die Namen werden hereingeholt statt umgeschrieben. Das ist dieselbe
+ * Entscheidung wie bei `UI` → `Menue`/`Hinweis`/`Dialog` und bei
+ * `App.zeichneBaum`: die siebentausend Zeilen darunter rufen `wert`,
+ * `zelle`, `trifftZu` und die anderen an hunderten Stellen. Sie alle
+ * umzuschreiben wäre viel Arbeit für keinen Gewinn und ein hohes Risiko —
+ * jede übersehene Stelle wäre ein Fehler, den erst ein Mensch findet.
+ * -------------------------------------------------------------------------- */
+
+const Datenbank = (() => {
+
+  const {
+    esc,
+    DIENST_TYPEN,
+    FARBEN,
+    KI_AUFTRAG,
+    KI_TYPEN,
+    MUSTER_VORLAGEN,
+    NUR_LESEN,
+    OPERATOREN,
+    RECHNUNGEN,
+    ROLLUP_ARTEN,
+    TYPEN,
+    ansichtOrdnung,
+    begrenzen,
+    dauerLesen,
+    dauerText,
+    formelRechnen,
+    formelTiefe,
+    formelUmgebung,
+    fremdWert,
+    gefiltert,
+    gruppeTrifftZu,
+    hatRegeln,
+    heute,
+    propTyp,
+    pruefeWert,
+    pruefeZeile,
+    rechne,
+    regelAnzahl,
+    rohZeilen,
+    rollupListe,
+    rollupWert,
+    seitenBezug,
+    seitenListe,
+    sortiert,
+    spaltenLauf,
+    trifftZu,
+    wert,
+    zeilen,
+    zeilenGesamt,
+    zelle,
+    zusammenfassen
+  } = DatenbankDienst;
 
   /* ========================================================================
    * RENDERN

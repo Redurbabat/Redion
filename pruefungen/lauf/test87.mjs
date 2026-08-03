@@ -170,8 +170,9 @@ p('schale.js bindet alle drei',
  * ========================================================================= */
 console.log('\n— Die sechs Stilblätter —');
 
-const STILE = ['marken.css', 'dunkel.css', 'hell.css', 'grund.css',
-               'aufbau.css', 'bausteine.css'];
+const STILE = ['marken.css', 'dunkel.css', 'hell.css', 'grund.css', 'aufbau.css',
+               'datenbanken.css', 'ki.css', 'werkzeuge.css', 'ansichten.css',
+               'einstellungen.css', 'bausteine.css'];
 const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
 const verlinkt = [...html.matchAll(/<link rel="stylesheet" href="quell\/schale\/stil\/([^"]+)">/g)]
   .map(m => m[1]);
@@ -204,6 +205,114 @@ STILE.forEach(datei => {
 /* Gegenprobe wie oben: findet die Prüfung einen übriggebliebenen <link>? */
 p('Und die Prüfung würde einen übrigen <link> merken',
   /<link rel="stylesheet"/.test('<link rel="stylesheet" href="x.css">'));
+
+/* ------------------------------------------------------------------------ *
+ * Jede Stildatei muss heile Kommentare haben — und das ist keine
+ * Schönheitsfrage.
+ *
+ * Beim Aufteilen landete ein Schnitt einmal MITTEN in einem Banner. Die
+ * neue Datei fing damit an:
+ *
+ *     KI-PANEL
+ *     ========================================================== * /
+ *     #ai{ … display:none … }
+ *
+ * Ein herrenloses Kommentarende, davor Text ohne Klammer. CSS bricht dabei
+ * nicht ab, es RÄUMT AUF: der Parser überliest alles bis zum nächsten
+ * abgeschlossenen Block — und verschluckt dabei die erste echte Regel.
+ * `#ai` verlor sein `display:none`, das KI-Panel stand von da an offen im
+ * Fenster, und keine Datei war kaputt, keine Meldung erschien, keine
+ * Klammer war unausgeglichen. Nur das Bild stimmte nicht mehr.
+ * ------------------------------------------------------------------------ */
+STILE.forEach(datei => {
+  const t = _lies(_dazu(WURZEL, 'quell/schale/stil', datei), 'utf8');
+  const auf = (t.match(/\/\*/g) || []).length;
+  const zu  = (t.match(/\*\//g) || []).length;
+  p(datei + ': Kommentare gehen auf und wieder zu', auf === zu, `${auf} auf, ${zu} zu`);
+
+  /* Und kein `*/` bevor irgendein `/*` kam — genau das war der Fall. */
+  const ersteAuf = t.indexOf('/*');
+  const ersteZu  = t.indexOf('*/');
+  p(datei + ': kein herrenloses Kommentarende am Anfang',
+    ersteZu < 0 || (ersteAuf >= 0 && ersteAuf < ersteZu));
+
+  /* Klammern: fällt eine ganze Regel weg, merkt man es hier. */
+  const ohne = t.replace(/\/\*[\s\S]*?\*\//g, ' ');
+  p(datei + ': geschweifte Klammern sind ausgeglichen',
+    (ohne.match(/\{/g) || []).length === (ohne.match(/\}/g) || []).length);
+});
+
+/* ========================================================================= *
+ * 5 · DAS MANIFEST ZEIGT AUF ETWAS, DAS ES GIBT
+ *
+ * Hier lag eine weisse Seite begraben, und zwar eine, die kein Browserlauf
+ * finden konnte: das Manifest liegt in oeffentlich/, seine Angaben waren aber
+ * relativ geschrieben. Relative Adressen in einem Manifest lösen sich gegen
+ * DEN ORT DES MANIFESTS auf, nicht gegen die Wurzel der Seite. Aus
+ * "start_url": "./index.html" wurde damit /oeffentlich/index.html — eine
+ * Adresse, die es nicht gibt.
+ *
+ * Die Folge sah man erst auf dem Telefon: die installierte App startete auf
+ * einer 404 und zeigte eine weisse Fläche. Und weil "scope": "./" auf
+ * /oeffentlich/ zeigte, lag die App unter / ausserhalb ihres eigenen
+ * Geltungsbereichs — deshalb bot der Browser das Installieren nicht richtig
+ * an. Im Browser am Rechner fiel nichts davon auf: dort ruft man index.html
+ * direkt auf und das Manifest wird nur gelesen, nicht befolgt.
+ * ========================================================================= */
+console.log('\n— Das Manifest —');
+
+const manifestPfad = 'oeffentlich/manifest.webmanifest';
+const manifest = JSON.parse(_lies(_dazu(WURZEL, manifestPfad), 'utf8'));
+
+/* So, wie der Browser es täte: gegen den Ort des Manifests auflösen. */
+const BASIS = new URL(manifestPfad, 'https://beispiel.test/');
+const aufloesen = (wert) => new URL(wert, BASIS).pathname;
+
+/* Und dann nachsehen, ob unter dieser Adresse wirklich eine Datei liegt. */
+const gibtEs = (pfad) => {
+  try { _lies(_dazu(WURZEL, pfad.replace(/^\//, ''))); return true; } catch { return false; }
+};
+
+const start = aufloesen(manifest.start_url);
+const bereich = aufloesen(manifest.scope);
+p('start_url zeigt auf eine Datei, die es gibt', gibtEs(start), start);
+p('scope umfasst die start_url', start.startsWith(bereich), `${start} liegt nicht unter ${bereich}`);
+p('scope ist die Wurzel und nicht oeffentlich/', bereich === '/', bereich);
+
+const kaputteIcons = manifest.icons
+  .map(i => aufloesen(i.src))
+  .filter(pf => !gibtEs(pf));
+p('Jedes Symbol im Manifest liegt an seinem Platz', kaputteIcons.length === 0,
+  kaputteIcons.join(', '));
+
+const kaputteWege = [
+  ...(manifest.shortcuts || []).map(s => s.url),
+  manifest.share_target?.action
+].filter(Boolean).map(aufloesen).filter(pf => !gibtEs(pf.split('#')[0]));
+p('Abkürzungen und Teilen-Ziel zeigen ins Volle', kaputteWege.length === 0,
+  kaputteWege.join(', '));
+
+/* Gegenprobe: würde die Prüfung den alten Zustand merken? */
+p('Und die Prüfung würde den alten Fehler merken',
+  new URL('./index.html', BASIS).pathname === '/oeffentlich/index.html' &&
+  !gibtEs('/oeffentlich/index.html'));
+
+/* Die Startbilder fürs iPhone: jede Datei muss da sein UND die Masse haben,
+   die in ihrer Medienabfrage stehen. Passt das nicht auf das Pixel genau,
+   übergeht Safari das Bild wortlos. */
+const kopf = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
+const startbilder = [...kopf.matchAll(
+  /href="(oeffentlich\/icons\/start-[^"]+)"\s*\n?\s*media="\(device-width:(\d+)px\)\s*and\s*\(device-height:(\d+)px\)\s*and\s*\(-webkit-device-pixel-ratio:(\d+)\)"/g)];
+
+p('Es sind Startbilder eingetragen', startbilder.length >= 5, String(startbilder.length));
+
+startbilder.forEach(([, datei, br, ho, dpr]) => {
+  const roh = _lies(_dazu(WURZEL, datei));
+  const breite = roh.readUInt32BE(16), hoehe = roh.readUInt32BE(20);
+  const sollB = Number(br) * Number(dpr), sollH = Number(ho) * Number(dpr);
+  p(datei.split('/').pop() + ` misst ${sollB}×${sollH}`,
+    breite === sollB && hoehe === sollH, `${breite}×${hoehe}`);
+});
 
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);
