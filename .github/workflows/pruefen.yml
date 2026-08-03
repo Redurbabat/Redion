@@ -1,0 +1,96 @@
+# ============================================================================
+# Prüfläufe bei jedem Push und jedem Pull Request
+# ----------------------------------------------------------------------------
+# CLAUDE.md sagt: ein grüner Lauf ist die einzige Aussage darüber, dass etwas
+# fertig ist. Bisher musste jeder daran denken, sie selbst zu starten — und
+# wer es vergisst, merkt es nie, weil ein vergessener Lauf genauso aussieht
+# wie ein bestandener: nämlich nach nichts.
+#
+# Hier laufen sie von selbst, auf einem Rechner, der nichts von diesem Projekt
+# weiss. Das ist der eigentliche Wert: die Läufe lagen jahrelang unter /tmp und
+# gingen davon aus, dass drumherum schon alles da ist. Ein frischer Container
+# beweist das Gegenteil oder eben nicht.
+#
+# Kein Bauschritt für die App selbst — die bleibt reines HTML, CSS und
+# JavaScript und läuft per Doppelklick. Node und Playwright werden hier nur
+# zum Prüfen geholt.
+# ============================================================================
+
+name: Prüfläufe
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+  # Von Hand startbar, wenn man einen Lauf wiederholen will
+  workflow_dispatch:
+
+# Ein neuer Push auf denselben Zweig bricht den vorigen Lauf ab. Ohne das
+# stauen sich bei mehreren Commits hintereinander Läufe, deren Ergebnis
+# niemanden mehr interessiert.
+concurrency:
+  group: pruefen-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruefen:
+    name: Alle Prüfläufe
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Quelltext holen
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Kein `npm ci` — es gibt zwar eine package-lock.json, aber nur eine
+      # einzige devDependency. `npm install` ist hier ehrlicher: es zeigt
+      # sofort, wenn die Sperrdatei und die package.json auseinanderlaufen.
+      - name: Playwright holen
+        run: npm install --no-audit --no-fund
+
+      # --with-deps holt die Systembibliotheken mit, die Chromium auf einem
+      # nackten Ubuntu braucht. Ohne sie startet der Browser mit einer
+      # Meldung, die nach einem Fehler im Prüflauf aussieht und keiner ist.
+      - name: Chromium holen
+        run: npx playwright install --with-deps chromium
+
+      # Die Einzeldatei wird aus den Quellen gebaut, bevor geprüft wird.
+      # pruefungen/einzeldatei.mjs prüft sie — und würde sonst eine alte
+      # Fassung prüfen und grün melden, obwohl die Quellen schon weiter sind.
+      - name: Einzeldatei bauen
+        run: node bauen.js
+
+      # Wenn `bauen.js` etwas anderes herausbekommt als das, was im
+      # Repository liegt, hat jemand die Quellen geändert und die Einzeldatei
+      # nicht nachgezogen. Das ist kein Fehler im Code, aber einer in dem,
+      # was man weitergibt — und genau der fällt sonst nie auf.
+      - name: Ist die Einzeldatei nachgezogen?
+        run: |
+          if ! git diff --quiet -- redion-einzeldatei.html; then
+            echo "::error::redion-einzeldatei.html ist nicht auf dem Stand der Quellen."
+            echo "Bitte 'node bauen.js' laufen lassen und das Ergebnis mit committen."
+            git diff --stat -- redion-einzeldatei.html
+            exit 1
+          fi
+          echo "Die Einzeldatei ist auf dem Stand der Quellen."
+
+      - name: Prüfläufe
+        run: npm run pruefen
+
+      # Wenn etwas schiefging, ist der Bildschirm des Browsers das Erste,
+      # was man sehen will. Playwright legt nichts von selbst ab; die Läufe
+      # tun es auch nicht — deshalb bleibt hier nur das Protokoll, und das
+      # steht ohnehin schon oben. Der Schritt ist trotzdem da, damit der
+      # Ort bekannt ist, an dem Bilder später landen würden.
+      - name: Was liegengeblieben ist
+        if: failure()
+        run: |
+          echo "Gescheiterte Läufe stehen im Protokoll des vorigen Schrittes."
+          echo "Einzeln nachstellen:  npm run pruefen <name>"
+          echo "Vorhanden: servercheck, server-rechte, server-app, seitenleiste, einzeldatei"
