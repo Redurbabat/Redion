@@ -15,14 +15,35 @@
   # Kamera und Standort braucht diese App nicht; Mikrofon nur fuer Besprechungen
   Permissions-Policy: camera=(), geolocation=(), microphone=(self)
 
-/js/*
-  Cache-Control: public, max-age=300, must-revalidate
+# ---------------------------------------------------------------------------
+#  Die Regeln unten zeigten auf /js/*, /app.css und /notizen-einzeldatei.html.
+#  Keinen dieser Wege gibt es noch: der Code liegt in /quell/, die Stilblätter
+#  auch, und die Einzeldatei heisst redion-einzeldatei.html. Regeln, die auf
+#  nichts zeigen, tun nichts — und man merkt es nie, weil eine Kopfzeile, die
+#  ausbleibt, genauso aussieht wie eine, die nie gebraucht wurde.
+# ---------------------------------------------------------------------------
 
-/app.css
+/quell/*
   Cache-Control: public, max-age=300, must-revalidate
 
 /index.html
   Cache-Control: no-cache
 
-/notizen-einzeldatei.html
+# Der Arbeiter muss IMMER frisch geholt werden. Wird er zwischengespeichert,
+# behält das Gerät seine alte Dateiliste — und damit eine App, die aus einem
+# Speicher lebt, den es so nicht mehr gibt. Genau daran scheitern die meisten
+# Aktualisierungen einer installierten Web-App.
+/sw.js
+  Cache-Control: no-cache
+
+# Das Manifest ändert sich selten, aber wenn es sich ändert, hängt daran, ob
+# die App überhaupt startet. Also kurz halten.
+/oeffentlich/manifest.webmanifest
+  Cache-Control: public, max-age=300, must-revalidate
+
+# Symbole und Startbilder ändern sich fast nie und tragen ihre Grösse im Namen.
+/oeffentlich/icons/*
+  Cache-Control: public, max-age=604800
+
+/redion-einzeldatei.html
   Cache-Control: public, max-age=3600
