@@ -300,29 +300,46 @@ Arbeitsbereich als Ordner voller Markdown-Dateien oder als eine HTML-Datei.
 
 ---
 
-## Aufbau
+## Wo was liegt
+
+Der Aufbau steht oben unter „Der Aufbau"; ausführlich in
+`doku/ARCHITEKTUR.md`. Die grössten Brocken, falls man nur einen Namen sucht:
 
 ```
-index.html        die Oberfläche
-app.css           das Design — die zehn Notion-Farben, hell und dunkel
-bauen.js          baut die Einzeldatei (node bauen.js)
-
-js/store.js       IndexedDB, Datenmodell, Suche, Versionen, Export
-js/formula.js     Tokenizer, Parser und Auswerter der Formelsprache
-js/links.js       [[Links]], Rückverweise, Schlagwörter, Graph
-js/canvas.js      Whiteboard, Diagramme, einfache Tabelle, Mathematik
-js/blocks.js      Blockkatalog, Rendern, Tastatur, Slash-Menü
-js/database.js    Ansichten, Filter, Sortierung, Rollups, Seitenvorschau
-js/tools.js       Befehlspalette, Journal, Vorlagen, Karteikarten, Export
-js/notion.js      Rückgängig, Auswahlleiste, Erwähnungen, Kommentare
-js/ai.js          Ollama und WebLLM mit Modell-Umschalter
-js/einstellungen.js  der Einstellungsbereich mit zwölf Abschnitten
-js/app.js         Seitenleiste, Seitenanzeige, Suche, Navigation
+quell/kern/ablage/indexdb.js              IndexedDB, Datenmodell, Suche, Versionen
+quell/bereiche/datenbanken/steuerung.js   Ansichten, Filter, Sortierung, Rollups
+quell/bereiche/datenbanken/formeln/laufzeit.js   Tokenizer, Parser, Auswerter
+quell/bereiche/editor/ansicht/editor.js   Blockkatalog, Rendern, Tastatur, Slash
+quell/bereiche/wissen/werkzeuge.js        Palette, Journal, Vorlagen, Karteikarten
+quell/bereiche/wissen/verweise.js         [[Links]], Rückverweise, Graph
+quell/bereiche/ki/dienst.js               Ollama und WebLLM mit Umschalter
+quell/schale/aufbau/schale.js             Routing, Seitenmenü, Suche, Start
+quell/schale/aufbau/seitenleiste.js       die linke Leiste
+quell/schale/stil/bausteine.css           das Design, hell und dunkel
+bauen.js                                  baut die Einzeldatei (node bauen.js)
 ```
 
-Bewusst **ohne Build-Schritt und ohne Abhängigkeiten**: reines HTML, CSS und
-JavaScript. Die Skripte laden ohne `type="module"`, damit die Seite auch per
-Doppelklick direkt von der Festplatte läuft — nicht nur über einen Server.
+Bewusst **ohne Build-Schritt und ohne Abhängigkeiten im Browsercode**: reines
+HTML, CSS und JavaScript. Die Skripte laden ohne `type="module"`, damit die
+Seite auch per Doppelklick direkt von der Festplatte läuft — nicht nur über
+einen Server.
+
+---
+
+## Prüfen
+
+```
+npm install        einmalig — holt Playwright für die Läufe im Browser
+npm run pruefen    alle Läufe
+npm run pruefen seiten    nur die, deren Name das enthält
+node bauen.js      die Einzeldatei neu bauen
+```
+
+Fünf Läufe, 248 einzelne Prüfungen, über echtes Chromium gegen die echte App
+— keine Attrappen. Sie liegen unter `pruefungen/` und `server/`.
+
+Playwright ist eine **devDependency**: sie wird zum Prüfen gebraucht, nie zum
+Laufen. Wer die App nur benutzt, braucht kein npm und kein Node.
 
 ---
 

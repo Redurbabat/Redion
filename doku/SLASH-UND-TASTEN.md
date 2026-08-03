@@ -258,4 +258,6 @@ Alt+Umschalt+Klick zur Blockauswahl.
 
 - `https://www.notion.com/help/keyboard-shortcuts` — die offizielle Referenz
 - Notion-KI im laufenden Notion, Runde 8, mit eigener Liste des Unbelegbaren
-- Eigene Prüfung: `/tmp/test39.js`, 22 von 22
+- Eigene Prüfung: früher `/tmp/test39.js`, 22 von 22 — dieser Lauf liegt nicht
+  im Repository und ist damit für jeden ausser dem einen Rechner weg. Was im
+  Repository steht, läuft über `npm run pruefen`.

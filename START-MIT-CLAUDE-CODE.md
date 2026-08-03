@@ -124,8 +124,11 @@ git reset --hard HEAD~1      den letzten Commit zurücknehmen
 Und die Prüfläufe sagen dir, ob es wieder geht:
 
 ```
-node /tmp/test85.mjs
+npm run pruefen
 ```
+
+Beim ersten Mal einmalig `npm install` — das holt Playwright, mit dem die
+Läufe einen echten Browser starten. Sonst braucht das Projekt nichts.
 
 ---
 

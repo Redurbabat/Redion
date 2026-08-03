@@ -104,14 +104,22 @@ Liste, damit die App offline vollständig ist.
 
 ## Wie geprüft wird
 
-53 Prüfläufe unter `/tmp/test*.js` und `/tmp/test*.mjs`, dazu
-`servercheck.mjs`. Sie laufen über echtes Chromium gegen die echte App —
-keine Attrappen, keine Mocks.
+Die Prüfläufe liegen **im Repository**, unter `pruefungen/` und `server/`.
+Sie laufen über echtes Chromium gegen die echte App — keine Attrappen, keine
+Mocks. Stand: fünf Läufe, 248 Prüfungen.
 
 ```
-node /tmp/test85.mjs      # ein einzelner Lauf
-node bauen.js             # die Einzeldatei neu bauen
+npm run pruefen              # alles, mit Pause zwischen den Browserläufen
+npm run pruefen seiten       # nur die Läufe, deren Name das enthält
+node pruefungen/seitenleiste.mjs   # ein einzelner Lauf
+node bauen.js                # die Einzeldatei neu bauen
 ```
+
+Es stand hier einmal „53 Prüfläufe unter `/tmp/test*.mjs`". Die liegen auf
+genau einem Rechner, in einem Ordner, den das System leeren darf — wer das
+Repository frisch auscheckt, hat sie nicht. Ein Prüfnetz, das nur an einem Ort
+hängt, ist beim ersten Umzug keines mehr. Wer die 53 noch hat: sie gehören
+nach `pruefungen/`.
 
 **Die Regel:** nach jeder Änderung laufen mindestens die betroffenen Läufe,
 vor jedem Commit ein breiter Querschnitt. Ein grüner Lauf ist die einzige

@@ -342,6 +342,95 @@ await p.evaluate(() => document.querySelector('#tree .anpass-fertig').click());
 pruef('Nach Erledigt steht der Baum wieder da',
       await p.evaluate(() => document.querySelectorAll('#tree [data-wz]').length), 7);
 
+/* ======================================================================== *
+ * 10 · OHNE APP
+ * Das ist der Punkt des ganzen Umzugs, und deshalb steht er als eigener
+ * Abschnitt hier: die Leiste muss sich zeichnen lassen, ohne dass `App`
+ * beteiligt ist. Solange sie `App` kennt und `App` sie, lässt sich keines
+ * von beiden allein prüfen — und dann ist die Trennung nur eine neue Datei
+ * und keine neue Grenze.
+ * ======================================================================== */
+console.log('\n--- Ohne App ---');
+
+pruef('Die Seitenleiste steht als eigener Name',
+      await p.evaluate(() => typeof Seitenleiste !== 'undefined'), true);
+pruef('Und App reicht den alten Namen nur weiter',
+      await p.evaluate(() => typeof App.zeichneBaum === 'function'), true);
+
+/* Der einfachste und härteste Nachweis: im Quelltext steht `App.` nicht —
+   im Code wohlgemerkt. In Kommentaren und in der Fehlermeldung von `binde`
+   steht der Name sehr wohl, und das ist richtig so: dort erklärt er, wo die
+   Bindung herkommt. Deshalb werden Kommentare und Zeichenketten vorher
+   weggenommen. Ohne das prüfte der Lauf die Prosa und nicht das Programm. */
+const nurCode = (text) => text
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')          /* Blockkommentare */
+  .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')      /* Zeilenkommentare, ohne https:// */
+  .replace(/'(?:[^'\\]|\\.)*'/g, "''")        /* Zeichenketten, einfach */
+  .replace(/"(?:[^"\\]|\\.)*"/g, '""')        /* Zeichenketten, doppelt */
+  .replace(/`(?:[^`\\]|\\.)*`/g, '``');       /* Schablonen */
+
+const quelle = nurCode(fs.readFileSync(
+  path.join(WURZELORDNER, 'quell/schale/aufbau/seitenleiste.js'), 'utf8'));
+pruef('Die Datei ruft App an keiner Stelle', /\bApp\s*\./.test(quelle), false);
+/* Gegenprobe: die Prüfung findet App überhaupt, wenn es dasteht. Ohne sie
+   könnte der Ausdruck kaputt sein und immer „nein" sagen. */
+pruef('Und die Prüfung würde es merken', /\bApp\s*\./.test(nurCode('x = App.zeichneBaum()')), true);
+
+/* Jetzt mit lauter Attrappen zeichnen. Kommt der Baum trotzdem zustande,
+   hängt er wirklich nicht mehr an App. */
+const ohneApp = await p.evaluate(() => {
+  Seitenleiste.binde({
+    oeffne:          () => {},
+    aktuelleSeite:   () => null,
+    kuerzlich:       () => [],
+    kommendeTermine: () => [],
+    seitenMenue:     () => {},
+    suche:           () => {},
+    papierkorb:      () => {}
+  });
+  Seitenleiste.zeichne();
+  const baum = document.getElementById('tree');
+  return {
+    kinder:     baum.childElementCount,
+    werkzeuge:  baum.querySelectorAll('[data-wz]').length,
+    apps:       baum.querySelectorAll('[data-app]').length,
+    zeilen:     baum.querySelectorAll('.row').length,
+    markiert:   baum.querySelectorAll('.row.on').length
+  };
+});
+pruef('Der Baum entsteht auch mit Attrappen', ohneApp.kinder > 0, true);
+pruef('Mit allen sieben Werkzeugen',          ohneApp.werkzeuge, 7);
+pruef('Und allen zwanzig Apps',               ohneApp.apps, 20);
+pruef('Und den Seiten',                       ohneApp.zeilen > 0, true);
+/* Die Attrappe sagt „keine Seite offen" — also darf keine Zeile markiert
+   sein. Wäre trotzdem eine markiert, käme die Auskunft von woanders her. */
+pruef('Was die Attrappe sagt, gilt auch',     ohneApp.markiert, 0);
+
+/* Fehlt eine Bindung, muss der Fehler sagen, welche und wohin sie gehört.
+   Ein „undefined is not a function" mitten im Zeichnen sagt das nicht. */
+const meldung = await p.evaluate(() => {
+  Seitenleiste.binde({ aktuelleSeite: null });
+  try { Seitenleiste.zeichne(); return null; } catch (e) { return e.message; }
+});
+pruef('Eine fehlende Bindung nennt ihren Namen', /aktuelleSeite/.test(meldung || ''), true);
+pruef('Und sagt, wohin sie gehört',             /App\.start/.test(meldung || ''), true);
+
+/* Und wieder zurück auf die echten Teile. */
+const wiederEcht = await p.evaluate(() => {
+  Seitenleiste.binde({
+    oeffne: App.oeffne, aktuelleSeite: App.aktuelleSeite, kuerzlich: App.kuerzlich,
+    kommendeTermine: App.kommendeTermine, seitenMenue: App.seitenMenue,
+    suche: App.suche, papierkorb: App.papierkorb
+  });
+  App.zeichneBaum();
+  return {
+    werkzeuge: document.querySelectorAll('#tree [data-wz]').length,
+    markiert:  document.querySelectorAll('#tree .row.on').length
+  };
+});
+pruef('Mit den echten Teilen ist die Leiste wieder normal', wiederEcht.werkzeuge, 7);
+pruef('Und die offene Seite wieder markiert',               wiederEcht.markiert, 1);
+
 /* ======================================================================== */
 console.log(`\n${ok}/${ok + bad} bestanden`);
 console.log(fehler.length ? 'JS-Fehler:\n' + fehler.join('\n') : 'Keine JS-Fehler.');
