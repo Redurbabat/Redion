@@ -2574,6 +2574,7 @@ const App = (() => {
     Eingang.start();
     Api.start();
     Protokoll.start();
+    Wolke.start();
     Blocks.auswahlEinklinken();
     Rundgang.vielleichtStarten();
 

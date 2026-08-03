@@ -25,3 +25,22 @@ compatibility_date = "2025-04-01"
 [assets]
 directory = "./public"
 binding = "ASSETS"
+
+# ===========================================================================
+#  D1 — die Datenbank fuer Konten, Abgleich und Rechte
+# ---------------------------------------------------------------------------
+#  Diese vier Zeilen sind auskommentiert, weil die database_id bei jedem
+#  anders ist. Sie entsteht mit
+#
+#      npx wrangler d1 create redion
+#
+#  und wird dann hier eingetragen. Ohne sie laeuft der Worker trotzdem —
+#  er sagt dann bei /api/stand, dass die Datenbank fehlt, und Redion
+#  arbeitet weiter rein auf dem Geraet.
+#
+#  Die ganze Anleitung steht in SERVER-EINRICHTEN.md.
+# ===========================================================================
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "redion"
+# database_id = "hier-die-eigene-einsetzen"

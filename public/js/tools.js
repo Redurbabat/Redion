@@ -153,6 +153,9 @@ const Werkzeuge = (() => {
     c('Daten', 'Interne Befehle und Transaktionen', '', () => Transaktion.dialog());
     c('Daten', 'Protokoll: was wann geschehen ist', '', () => Protokoll.dialog());
     c('Daten', 'Dateien in Stücken verwalten', '', () => Dateien.dialog());
+    c('Daten', 'Wolke: anmelden und abgleichen', '', () => WolkeFenster.dialog());
+    if (p) c('Seite', 'Teilen und veröffentlichen (Wolke)', '', () =>
+      WolkeFenster.teilenFenster(p.id));
     c('Navigation', 'Was Redion kann', '', () => Rundgang.uebersicht());
     c('Navigation', 'Führung starten', '', () => Rundgang.start());
     c('Daten', 'Erweiterungen', '', () => Erweiterung.dialog());

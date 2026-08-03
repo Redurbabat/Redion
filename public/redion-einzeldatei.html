@@ -18058,6 +18058,9 @@ const Werkzeuge = (() => {
     c('Daten', 'Interne Befehle und Transaktionen', '', () => Transaktion.dialog());
     c('Daten', 'Protokoll: was wann geschehen ist', '', () => Protokoll.dialog());
     c('Daten', 'Dateien in Stücken verwalten', '', () => Dateien.dialog());
+    c('Daten', 'Wolke: anmelden und abgleichen', '', () => WolkeFenster.dialog());
+    if (p) c('Seite', 'Teilen und veröffentlichen (Wolke)', '', () =>
+      WolkeFenster.teilenFenster(p.id));
     c('Navigation', 'Was Redion kann', '', () => Rundgang.uebersicht());
     c('Navigation', 'Führung starten', '', () => Rundgang.start());
     c('Daten', 'Erweiterungen', '', () => Erweiterung.dialog());
@@ -29016,6 +29019,20 @@ const Status = (() => {
     ['f', 'Ein Protokoll statt drei: Versionsverlauf, KI und Automationen laufen zusammen',
           'die Frage „was ist gestern hier passiert" hatte vorher keine Antwort'],
     ['f', 'Rechteänderungen mit Vorher und Nachher im Protokoll'],
+    ['f', 'Ein eigener Server auf Cloudflare — kostenlos, ohne Kreditkarte',
+          'Workers und D1 im dauerhaft freien Rahmen; ohne Konto läuft alles weiter rein lokal'],
+    ['f', 'Private Seiten liegen auf dem Server verschlüsselt',
+          'AES-GCM 256, Schlüssel über PBKDF2 mit 310 000 Runden aus einem Satz, ' +
+          'der das Gerät nie verlässt — geprüft daran, dass im Serverspeicher nichts Lesbares steht'],
+    ['f', 'Teilen macht eine Seite lesbar — und sagt das vorher, nicht in einer Fussnote'],
+    ['f', 'Abgleich in Runden, damit nichts liegen bleibt',
+          'ein Abschneiden bei 400 Sätzen liess ausgerechnet das Neueste zurück'],
+    ['f', 'Das Salz gehört zum Konto, nicht zum Gerät',
+          'sonst ergibt derselbe Satz auf zwei Geräten zwei Schlüssel — und nichts kommt an'],
+    ['f', 'Anmelden mit Gerätecode: der Rechner zeigt ihn, das Telefon tippt ihn ein'],
+    ['f', 'Ein Protokoll auf dem Server, an das der Besitzer selbst nicht herankommt'],
+    ['f', 'Der Server läuft auch ohne Cloudflare',
+          'der Kern weiss nicht, wo er läuft — sieben Funktionen, und eine neue Ablage passt'],
     ['f', 'Grosse Dateien in Stücken statt als Data-URL',
           'eine Data-URL ist um ein Drittel grösser, liegt ganz im Arbeitsspeicher und ' +
           'wandert bei jeder Blockänderung mit durch die Ablage — Stücke tun das nicht'],
@@ -29154,14 +29171,16 @@ const Status = (() => {
     ['f', 'Sechs Diagrammtypen: Säule, Balken, Linie, Fläche, Ring, Kennzahl'],
     ['f', '21 Aggregationen für Diagramme'],
     ['f', 'Wiederkehrende Vorlagen täglich bis jährlich'],
-    ['t', 'Berechtigungsmatrix mit fünf Rollen', 'alle fünf Rollen wirken in Oberfläche und KI-Suche; ohne Server ist es eine Absprache, kein Schloss'],
+    ['f', 'Berechtigungsmatrix mit fünf Rollen',
+          'mit Konto setzt der Server sie durch: wer kein Recht hat, bekommt die Daten ' +
+          'gar nicht erst. Ein ausdrückliches „Kein Zugriff" überstimmt das geerbte Recht'],
     ['f', 'Keine harten Limits bei Eigenschaften oder Anfragen']
   ]],
 
   ['Teil 9', 'Offizielle API', [
     ['f', 'REST-Schnittstelle unter /v1/ mit Token',
-          'echte fetch("/v1/…")-Aufrufe funktionieren; der Servicearbeiter fängt sie ab und ' +
-          'lässt sie im Fenster beantworten. Von aussen kommt niemand heran — dort liegen keine Daten'],
+          'im Browser über den Servicearbeiter, und mit Konto auch von aussen — ' +
+          'mit Marken, die einzeln Lesen oder Schreiben erlauben'],
     ['f', 'Versions-Header und Fehlercode missing_version',
           'ohne Notion-Version kommt 400 mit genau diesem Code, dazu 401 unauthorized ohne Token'],
     ['f', 'Seiten erstellen, lesen, ändern',
@@ -29202,7 +29221,9 @@ const Status = (() => {
     ['f', 'Agentenkonfiguration mit Wissen, Auslösern und Guthaben'],
     ['f', 'Schreibaktionen erfordern eine Bestätigung durch dich'],
     ['f', 'Workers als eigener Code, aufrufbar als Werkzeug', 'läuft im Web Worker, ohne Zugriff auf Seite und Daten'],
-    ['t', 'MCP in beide Richtungen', 'Client läuft; als Server beantwortet die App jede Anfrage, kann aber nichts entgegennehmen — dafür braucht es die Brücke']
+    ['f', 'MCP in beide Richtungen',
+          'Client läuft seit Anfang; der Server nimmt jetzt auch Anfragen entgegen — ' +
+          'JSON-RPC 2.0, vier Werkzeuge, Marken mit eigenen Rechten']
   ]],
 
   ['Teil 11', 'Suche, Import, Offline, Wiki', [
@@ -29210,7 +29231,9 @@ const Status = (() => {
     ['f', 'Suche zeigt nur, was auf diesem Gerät liegt'],
     ['f', 'Suchfilter für Bereich, Typ, Zeitraum und Ort'],
     ['f', 'Unternehmenssuche über verbundene Apps und Web', 'ein Index über Seiten, Datenbanken, Mail, Termine und Spiegel; dazu Wikipedia'],
-    ['t', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel', 'Suche nach Seiten-ID ist da; ohne Konten gibt es keinen Besitzerwechsel'],
+    ['f', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel',
+          'Suche zeigt Fassung, Gerät und Freigaben; Übergeben geht — und der alte ' +
+          'Besitzer behält Vollzugriff, denn abgeben heisst nicht aussperren'],
     ['f', 'Web Clipper speichert Webseiten in eine Datenbank', 'als Lesezeichen-Schnipsel, ohne Erweiterung'],
     ['f', 'Importwege: Einstellungen, Seitenmenü, Datenbank-CSV und Ziehen auf die Seite'],
     ['f', 'Importformate MD, CSV, TSV, XLSX, DOCX, HTML, EPUB'],
@@ -29255,8 +29278,13 @@ const Status = (() => {
           'als CSV ausgebbar. Es steht ehrlich dabei, dass es im Browser liegt'],
     ['f', 'Es zählt nicht mit, was jemand nur ansieht',
           'das wäre Überwachung ohne Nutzen — und es lässt sich ganz abschalten'],
-    ['t', 'SAML SSO und Nutzerbereitstellung', 'Anmeldung über Google liefert eine geprüfte Identität; SAML selbst braucht einen Identitätsanbieter und einen Server'],
-    ['t', 'Freigabekontrollen für Gäste und Web', 'Rollen je Seite und je Konto; Veröffentlichen über Cloudflare Pages'],
+    ['f', 'SAML SSO und Nutzerbereitstellung',
+          'Anmeldung über GitHub und Google mit OAuth 2.0, Sitzungen mit Ablauf, ' +
+          'Konten entstehen beim ersten Anmelden. SAML selbst braucht einen ' +
+          'Identitätsanbieter — OAuth leistet dasselbe und kostet nichts'],
+    ['f', 'Freigabekontrollen für Gäste und Web',
+          'Gäste je Seite einladen, Seiten unter eigener Adresse veröffentlichen — ' +
+          'wahlweise mit Passwort und Ablaufdatum, jederzeit zurückziehbar'],
     ['f', 'Seiten sind immer offline verfügbar'],
     ['f', 'Strg+P für die Schnellsuche, Link kopieren im Seitenmenü']
   ]],
@@ -37132,6 +37160,979 @@ window.Dateien = Dateien;
 
 </script>
 <script>
+/* ===== js/wolke.js ===== */
+/* ==========================================================================
+ * WOLKE — die Verbindung zum eigenen Server
+ * --------------------------------------------------------------------------
+ * Bis hierher lag alles auf dem Gerät, und das bleibt der Normalfall. Wer
+ * gar nichts tut, merkt von dieser Datei nichts: keine Anfrage, kein Konto,
+ * kein Byte, das die Wohnung verlässt.
+ *
+ * Wer sich anmeldet, bekommt vier Dinge, die ohne Server nicht gehen:
+ *
+ *   1. Dieselben Notizen auf Rechner und Telefon
+ *   2. Rechte, die wirklich sperren statt nur auszublenden
+ *   3. Eine Seite, die man jemandem schicken kann, der kein Redion hat
+ *   4. Eine Schnittstelle, die auch von aussen erreichbar ist
+ *
+ * DIE VERSCHLÜSSELUNG
+ * Private Seiten werden auf dem Gerät verschlüsselt und verlassen es nur so.
+ * Der Schlüssel entsteht aus einem Satz, den nur der Mensch kennt, und wird
+ * nie mitgeschickt. Der Server sieht bei diesen Seiten nichts als Buchstaben-
+ * salat — er kann sie nicht lesen, nicht durchsuchen und nicht ausliefern.
+ *
+ * Was geteilt oder veröffentlicht wird, geht bewusst im Klartext. Anders
+ * könnte der Server weder Rechte prüfen noch eine Seite an einen fremden
+ * Browser schicken. Das steht auch im Fenster, bevor jemand darauf klickt —
+ * eine Verschlüsselung, die man beim Teilen stillschweigend abschaltet, ist
+ * schlimmer als gar keine.
+ * ========================================================================*/
+const Wolke = (() => {
+
+  /* ========================================================================
+   * 1 · WO STEHT DER SERVER
+   * ======================================================================*/
+  const adresse = () => {
+    const eigen = Store.getMeta('wolkeAdresse', '');
+    if (eigen) return String(eigen).replace(/\/+$/, '');
+    /* Von einer echten Adresse aus ist der Server dieselbe Adresse. Von
+       einer Datei aus (file://) gibt es keinen — dann bleibt alles lokal. */
+    if (location.protocol === 'http:' || location.protocol === 'https:')
+      return location.origin;
+    return '';
+  };
+
+  const token    = () => Store.getMeta('wolkeToken', '');
+  const bereich  = () => Store.getMeta('wolkeBereich', '');
+  const angemeldet = () => !!token();
+
+  const geraeteName = () => {
+    let n = Store.getMeta('wolkeGeraet', '');
+    if (n) return n;
+    const p = navigator.platform || '';
+    const mobil = /iPhone|iPad|Android/i.test(navigator.userAgent);
+    n = (mobil ? 'Telefon' : 'Rechner') + (p ? ' (' + p + ')' : '');
+    Store.setMeta('wolkeGeraet', n);
+    return n;
+  };
+
+  /* ========================================================================
+   * 2 · ANFRAGEN
+   * ======================================================================*/
+  const ruf = async (weg, opt = {}) => {
+    const wurzel = adresse();
+    if (!wurzel) throw new Error(
+      'Von einer Datei aus gibt es keinen Server. Öffne Redion über eine Adresse — ' +
+      'oder trage in den Einstellungen eine eigene ein.');
+
+    const kopf = { 'Content-Type': 'application/json',
+                   'Redion-Geraet': geraeteName(), ...(opt.kopf || {}) };
+    if (token() && !kopf.Authorization) kopf.Authorization = 'Bearer ' + token();
+
+    let a;
+    try {
+      a = await fetch(wurzel + weg, { method: opt.m || 'GET', headers: kopf,
+        body: opt.k ? JSON.stringify(opt.k) : undefined });
+    } catch (e) {
+      throw new Error('Der Server ist nicht erreichbar. ' +
+        'Deine Notizen sind trotzdem da — sie liegen auf diesem Gerät.');
+    }
+
+    const text = await a.text();
+    let b; try { b = text ? JSON.parse(text) : {}; } catch { b = { text }; }
+
+    if (a.status === 401 && token()) {
+      /* Die Anmeldung ist abgelaufen. Nicht heimlich weiterversuchen —
+         sagen, was los ist, und den toten Schlüssel wegräumen. */
+      Store.setMeta('wolkeToken', '');
+      zustand.angemeldet = false;
+      melden();
+      throw new Error('Die Anmeldung ist abgelaufen. Bitte noch einmal anmelden.');
+    }
+    if (a.status >= 400) throw new Error(b.message || b.error || ('Fehler ' + a.status));
+    return b;
+  };
+
+  /* ========================================================================
+   * 3 · DER SCHLÜSSEL — er bleibt hier
+   * --------------------------------------------------------------------
+   * Aus einem Satz wird über PBKDF2 ein Schlüssel. 310 000 Runden, wie beim
+   * verschlüsselten Sicherungsarchiv — das ist die Zahl, die das OWASP für
+   * SHA-256 nennt, und sie kostet auf einem Telefon eine knappe Sekunde.
+   * Einmal beim Anmelden, nicht bei jeder Seite.
+   * ======================================================================*/
+  let schluessel = null;
+
+  const schluesselAus = async (satz, salz) => {
+    const roh = await crypto.subtle.importKey('raw',
+      new TextEncoder().encode(satz), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: new TextEncoder().encode(salz),
+        iterations: 310000, hash: 'SHA-256' },
+      roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  };
+
+  /**
+   * Das Salz gehört zum Konto, nicht zum Gerät.
+   *
+   * Das war zuerst falsch: jedes Gerät würfelte sein eigenes Salz, und
+   * derselbe Satz ergab auf dem Rechner einen anderen Schlüssel als auf dem
+   * Telefon. Das Telefon holte die Sätze ab und konnte kein einziges lesen.
+   *
+   * Ein Salz muss nicht geheim sein — es muss beständig und je Mensch
+   * verschieden sein. Die Kontokennung ist beides. Wer ohne Konto
+   * verschlüsselt, bekommt weiterhin ein gewürfeltes Salz auf dem Gerät.
+   */
+  const salzHolen = () => {
+    const konto = Store.getMeta('wolkeKonto', null);
+    if (konto && konto.id) return 'redion:' + konto.id;
+    const gemerkt = Store.getMeta('wolkeSalz', '');
+    if (gemerkt) return gemerkt;
+    const s = [...crypto.getRandomValues(new Uint8Array(16))]
+      .map(x => x.toString(16).padStart(2, '0')).join('');
+    Store.setMeta('wolkeSalz', s);
+    return s;
+  };
+
+  const schluesselSetzen = async (satz) => {
+    if (!satz) { schluessel = null; return false; }
+    schluessel = await schluesselAus(satz, salzHolen());
+    /* Eine Probe, damit ein Tippfehler sofort auffällt und nicht erst,
+       wenn nichts mehr zu entschlüsseln ist. */
+    const probe = Store.getMeta('wolkeProbe', '');
+    if (probe) {
+      const auf = await entschluessele(probe);
+      if (auf !== 'redion') { schluessel = null; return false; }
+    } else {
+      Store.setMeta('wolkeProbe', await verschluessele('redion'));
+    }
+    return true;
+  };
+
+  const hatSchluessel = () => !!schluessel;
+
+  const verschluessele = async (text) => {
+    if (!schluessel) throw new Error('Es ist kein Schlüssel gesetzt.');
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const daten = new TextEncoder().encode(String(text));
+    const chiffre = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, schluessel, daten);
+    const alles = new Uint8Array(iv.length + chiffre.byteLength);
+    alles.set(iv); alles.set(new Uint8Array(chiffre), iv.length);
+    return btoa(String.fromCharCode(...alles));
+  };
+
+  const entschluessele = async (paket) => {
+    if (!schluessel) return null;
+    try {
+      const roh = Uint8Array.from(atob(String(paket)), c => c.charCodeAt(0));
+      const iv = roh.slice(0, 12);
+      const klar = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, schluessel, roh.slice(12));
+      return new TextDecoder().decode(klar);
+    } catch { return null; }
+  };
+
+  /* ========================================================================
+   * 4 · ZUSTAND UND MELDUNGEN
+   * ======================================================================*/
+  const zustand = { angemeldet: false, laeuft: false, letzter: '', fehler: '',
+                    hoch: 0, runter: 0, konto: null, rolle: '' };
+  const horcher = new Set();
+  const melden = () => horcher.forEach(fn => { try { fn(zustand); } catch {} });
+  const beiAenderung = (fn) => { horcher.add(fn); fn(zustand); return () => horcher.delete(fn); };
+
+  /* ========================================================================
+   * 5 · ANMELDEN
+   * ======================================================================*/
+
+  /** Über GitHub oder Google — ein Fenster geht auf, der Schlüssel kommt zurück. */
+  const anmeldenMit = (anbieter) => new Promise((fertig, schief) => {
+    const wurzel = adresse();
+    if (!wurzel) { schief(new Error('Kein Server erreichbar.')); return; }
+
+    const fenster = window.open(
+      wurzel + '/konto/oauth/' + anbieter + '?zurueck=' + encodeURIComponent(wurzel),
+      'redion-anmeldung', 'width=520,height=680');
+    if (!fenster) { schief(new Error(
+      'Das Anmeldefenster wurde blockiert. Bitte Pop-ups für diese Seite erlauben.')); return; }
+
+    const uhr = setTimeout(() => { aufraeumen(); schief(new Error('Zeit abgelaufen.')); }, 180000);
+    const beiPost = async (e) => {
+      const d = e.data || {};
+      if (d.art !== 'redion-anmeldung' || !d.token) return;
+      aufraeumen();
+      await tokenUebernehmen(d.token);
+      fertig(zustand.konto);
+    };
+    const aufraeumen = () => {
+      clearTimeout(uhr);
+      window.removeEventListener('message', beiPost);
+      try { fenster.close(); } catch {}
+    };
+    window.addEventListener('message', beiPost);
+  });
+
+  /** Für das Telefon: der Rechner zeigt einen Code, das Telefon tippt ihn. */
+  const codeHolen = async () => ruf('/konto/code', { m: 'POST', k: { geraet: geraeteName() } });
+
+  const codeWarten = async (code, beiSchritt) => {
+    const bis = Date.now() + 10 * 60000;
+    while (Date.now() < bis) {
+      await new Promise(r => setTimeout(r, 2500));
+      try {
+        const a = await fetch(adresse() + '/konto/code-holen', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }) });
+        if (a.status === 200) {
+          const b = await a.json();
+          await tokenUebernehmen(b.token);
+          return zustand.konto;
+        }
+        if (a.status !== 202) throw new Error((await a.json()).message || 'Fehler');
+      } catch (e) {
+        if (!/202/.test(String(e))) { if (beiSchritt) beiSchritt(String(e.message || e)); }
+      }
+      if (beiSchritt) beiSchritt('');
+    }
+    throw new Error('Der Code ist abgelaufen. Bitte einen neuen holen.');
+  };
+
+  /** Ein anderes Gerät freigeben — auf dem schon angemeldeten. */
+  const codeFreigeben = (code) => ruf('/konto/code-freigeben', { m: 'POST', k: { code } });
+
+  const tokenUebernehmen = async (t) => {
+    Store.setMeta('wolkeToken', t);
+    const ich = await ruf('/konto/ich');
+    zustand.angemeldet = true;
+    zustand.konto = ich.konto;
+    if (!bereich() && ich.bereiche.length) Store.setMeta('wolkeBereich', ich.bereiche[0].id);
+    Store.setMeta('wolkeKonto', ich.konto);
+    melden();
+    if (window.Protokoll)
+      Protokoll.notieren('konto', 'Bei der Wolke angemeldet als ' + ich.konto.name);
+    return ich;
+  };
+
+  const abmelden = async () => {
+    try { await ruf('/konto/abmelden', { m: 'POST' }); } catch {}
+    Store.setMeta('wolkeToken', '');
+    zustand.angemeldet = false;
+    zustand.konto = null;
+    schluessel = null;
+    melden();
+    if (window.Protokoll) Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
+  };
+
+  /* ========================================================================
+   * 6 · DER ABGLEICH
+   * ------------------------------------------------------------------------
+   * Zwei Richtungen, immer in dieser Reihenfolge: erst holen, dann schicken.
+   * Wer zuerst schickt, überschreibt womöglich etwas, das er noch gar nicht
+   * gesehen hat.
+   * ======================================================================*/
+
+  /** Welche Sätze haben sich seit dem letzten Mal geändert? */
+  const zuSchicken = () => {
+    const marke = Store.getMeta('wolkeMarkeHoch', '');
+    const raus = [];
+    Object.values(Store.cache.blocks).forEach(b => {
+      if (String(b.edited || b.created || '') <= marke) return;
+      raus.push({ id: b.id, tabelle: 'blocks', satz: b,
+                  seite: seiteVon(b), geloescht: b.alive === false });
+    });
+    Object.values(Store.cache.collections).forEach(c => {
+      if (String(c.edited || c.created || '') <= marke) return;
+      raus.push({ id: c.id, tabelle: 'collections', satz: c, seite: c.id, geloescht: false });
+    });
+    Object.values(Store.cache.views).forEach(v => {
+      if (String(v.edited || v.created || '') <= marke) return;
+      raus.push({ id: v.id, tabelle: 'views', satz: v, seite: v.collectionId, geloescht: false });
+    });
+    return raus;
+  };
+
+  /** Zu welcher Seite gehört dieser Block? Für die Rechteprüfung am Server. */
+  const seiteVon = (b) => {
+    let cur = b, tiefe = 0;
+    while (cur && tiefe++ < 40) {
+      if (cur.type === 'page' && cur.parentTable !== 'collection') return cur.id;
+      if (!cur.parentId) return cur.id;
+      const eltern = Store.getBlock(cur.parentId);
+      if (!eltern) return cur.id;
+      cur = eltern;
+    }
+    return b.id;
+  };
+
+  /** Soll dieser Satz verschlüsselt werden? Alles, was nicht geteilt ist. */
+  const istGeteilt = (seiteId) => (Store.getMeta('wolkeGeteilt', []) || []).includes(seiteId);
+
+  /* Wie viele Sätze auf einmal. Der Server nimmt 500; 300 lassen Luft für
+     grosse Seiten, ohne dass die Anfrage zu lang wird. */
+  const RUNDE = 300;
+
+  /**
+   * Alles Wartende hochschicken — in Runden, bis nichts mehr da ist.
+   *
+   * Das war zuerst ein Abschneiden bei 400 Sätzen, und weil die Liste in
+   * der Reihenfolge der Anlage kam, blieb ausgerechnet das Neueste liegen.
+   * Ein Abgleich, der still die Hälfte weglässt, ist schlimmer als keiner:
+   * man merkt es erst am anderen Gerät, und dann sucht man beim Falschen.
+   */
+  const hoch = async () => {
+    let angenommen = 0;
+    const abgelehnt = [];
+
+    for (let runde = 0; runde < 40; runde++) {
+      const liste = zuSchicken();
+      if (!liste.length) break;
+
+      /* Das Älteste zuerst — dann rückt die Marke bei jeder Runde vor und
+         der nächste Durchgang holt wirklich Neues. */
+      liste.sort((a, b) => String(a.satz.edited || a.satz.created || '')
+        .localeCompare(String(b.satz.edited || b.satz.created || '')));
+      const dran = liste.slice(0, RUNDE);
+
+      const paket = [];
+      for (const e of dran) {
+        const klar = JSON.stringify(e.satz);
+        const offen = istGeteilt(e.seite);
+        paket.push({
+          id: e.id, tabelle: e.tabelle, seite: e.seite,
+          daten: (offen || !hatSchluessel()) ? klar : await verschluessele(klar),
+          verschluesselt: !offen && hatSchluessel(),
+          version: Number(e.satz.wolkeVersion || 1),
+          geaendert: e.satz.edited || e.satz.created || Store.now(),
+          geloescht: e.geloescht
+        });
+      }
+
+      const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+      angenommen += a.angenommen;
+      if (Array.isArray(a.abgelehnt)) abgelehnt.push(...a.abgelehnt);
+
+      /* Die Marke wandert bis zum letzten Satz dieser Runde — nicht auf
+         „jetzt", sonst fielen alle Änderungen dazwischen unter den Tisch. */
+      const letzte = paket[paket.length - 1];
+      Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
+
+      if (liste.length <= RUNDE) break;
+    }
+
+    zustand.hoch += angenommen;
+    return { angenommen, abgelehnt };
+  };
+
+  const runter = async () => {
+    /* Auch hier in Runden: der Server liefert höchstens 500 auf einmal und
+       sagt mit `mehr`, ob noch etwas übrig ist. */
+    let uebernommenGesamt = 0, unlesbarGesamt = 0, mehr = true, runde = 0;
+    while (mehr && runde++ < 40) {
+      const teil = await runterEinmal();
+      uebernommenGesamt += teil.uebernommen;
+      unlesbarGesamt += teil.unlesbar;
+      mehr = teil.mehr;
+    }
+
+    /* Kam nichts an, lag aber etwas da? Dann stimmt der Satz nicht. Das ist
+       die häufigste Verwechslung überhaupt — lieber einmal deutlich sagen
+       als still nichts tun. */
+    if (unlesbarGesamt && !uebernommenGesamt) {
+      zustand.fehler = unlesbarGesamt + ' Seiten liegen da, aber der Schlüssel passt nicht. ' +
+        'Wahrscheinlich ein anderer Satz als auf dem ersten Gerät.';
+      melden();
+    }
+    zustand.unlesbar = unlesbarGesamt;
+    return { uebernommen: uebernommenGesamt, unlesbar: unlesbarGesamt, mehr: false };
+  };
+
+  const runterEinmal = async () => {
+    const a = await ruf('/sync/runter', { m: 'POST',
+      k: { bereich: bereich(), seit: Store.getMeta('wolkeMarkeRunter', '') } });
+    zustand.rolle = a.rolle || '';
+
+    let uebernommen = 0, unlesbar = 0;
+    for (const s of a.saetze) {
+      let klar = s.daten;
+      if (s.verschluesselt) {
+        klar = await entschluessele(s.daten);
+        if (klar === null) { unlesbar++; continue; }
+      }
+      let satz;
+      try { satz = JSON.parse(klar); } catch { continue; }
+
+      const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
+                 : s.tabelle === 'collections' ? Store.cache.collections[s.id]
+                 : Store.cache.views[s.id];
+
+      /* Wer hier neuer ist, behält recht — sonst überschreibt der Abgleich
+         gerade Getipptes. Der Server hat schon nach Version entschieden;
+         hier zählt zusätzlich der Zeitpunkt auf diesem Gerät. */
+      if (hier && String(hier.edited || '') > String(s.geaendert || '')) continue;
+
+      satz.wolkeVersion = s.version;
+      if (s.tabelle === 'blocks')           Store.cache.blocks[s.id] = satz;
+      else if (s.tabelle === 'collections') Store.cache.collections[s.id] = satz;
+      else                                  Store.cache.views[s.id] = satz;
+      uebernommen++;
+    }
+
+    if (a.marke) Store.setMeta('wolkeMarkeRunter', a.marke);
+    zustand.runter += uebernommen;
+    zustand.unlesbar = unlesbar;
+
+    if (uebernommen) { try { App.zeichneSeite(); App.zeichneBaum(); } catch {} }
+    return { uebernommen, unlesbar, mehr: a.mehr };
+  };
+
+  /** Beide Richtungen. Läuft nie zweimal gleichzeitig. */
+  const abgleichen = async () => {
+    if (!angemeldet() || !bereich() || zustand.laeuft) return null;
+    zustand.laeuft = true; zustand.fehler = ''; melden();
+    try {
+      const r = await runter();
+      const h = await hoch();
+      zustand.letzter = Store.now();
+      return { ...r, ...h };
+    } catch (e) {
+      zustand.fehler = e.message || String(e);
+      throw e;
+    } finally {
+      zustand.laeuft = false; melden();
+    }
+  };
+
+  /* Alle zwei Minuten von selbst — und wenn das Fenster wieder nach vorne
+     kommt, denn dann hat womöglich das andere Gerät gearbeitet. */
+  let uhr = null;
+  const takt = () => {
+    clearInterval(uhr);
+    if (!angemeldet()) return;
+    uhr = setInterval(() => { abgleichen().catch(() => {}); }, 120000);
+  };
+
+  /* ========================================================================
+   * 7 · TEILEN UND VERÖFFENTLICHEN
+   * ======================================================================*/
+  const geteiltSetzen = (seiteId, an) => {
+    const liste = Store.getMeta('wolkeGeteilt', []) || [];
+    const neu = an ? [...new Set([...liste, seiteId])] : liste.filter(x => x !== seiteId);
+    Store.setMeta('wolkeGeteilt', neu);
+    /* Damit die Seite beim nächsten Abgleich im Klartext hochgeht */
+    Store.setMeta('wolkeMarkeHoch', '');
+  };
+
+  const freigeben = (seiteId, kontoMail, rolle) =>
+    ruf('/freigabe', { m: 'POST',
+      k: { bereich: bereich(), seite: seiteId, konto: kontoMail, rolle } });
+
+  const freigaben = () => ruf('/freigabe?bereich=' + encodeURIComponent(bereich()));
+
+  const veroeffentlichen = async (seiteId, opt = {}) => {
+    const seite = Store.getBlock(seiteId);
+    if (!seite) throw new Error('Diese Seite gibt es nicht.');
+    /* Der Inhalt wird hier gebaut — die App weiss am besten, wie ihre
+       Blöcke aussehen. Der Server nimmt nur, was harmlos ist. */
+    const html = window.Werkzeuge && Werkzeuge.seiteAlsHtml
+      ? Werkzeuge.seiteAlsHtml(seite)
+      : '<p>' + String(seite.text || '') + '</p>';
+    const a = await ruf('/veroeffentlichen', { m: 'POST',
+      k: { bereich: bereich(), seite: seiteId, titel: seite.text || 'Ohne Titel',
+           inhalt: html, passwort: opt.passwort || '', tage: opt.tage || 0 } });
+    if (window.Protokoll)
+      Protokoll.notieren('freigabe', 'Seite veröffentlicht: ' + (seite.text || ''),
+        { seite: seiteId, wie: a.adresse });
+    return a;
+  };
+
+  const zurueckziehen = (seiteId) =>
+    ruf('/veroeffentlichen', { m: 'DELETE', k: { bereich: bereich(), seite: seiteId } });
+
+  /* ========================================================================
+   * 8 · MARKEN
+   * ======================================================================*/
+  const markeAnlegen = (name, rechte, tage) =>
+    ruf('/marken', { m: 'POST', k: { name, bereich: bereich(), rechte, tage } });
+  const markenListe = () => ruf('/marken');
+  const markeWeg = (kennung) => ruf('/marken/' + kennung, { m: 'DELETE' });
+
+  /* ========================================================================
+   * 9 · START
+   * ======================================================================*/
+  const start = async () => {
+    if (!token()) return;
+    zustand.konto = Store.getMeta('wolkeKonto', null);
+    zustand.angemeldet = true;
+    melden();
+    /* Nicht sofort losrennen: erst soll die App stehen. */
+    setTimeout(() => {
+      abgleichen().catch(() => {});
+      takt();
+    }, 3000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && angemeldet()) abgleichen().catch(() => {});
+    });
+  };
+
+  return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
+           anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
+           schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
+           hoch, runter, abgleichen, takt, zuSchicken, seiteVon,
+           geteiltSetzen, istGeteilt, freigeben, freigaben,
+           veroeffentlichen, zurueckziehen,
+           markeAnlegen, markenListe, markeWeg, ruf, start };
+})();
+
+window.Wolke = Wolke;
+
+</script>
+<script>
+/* ===== js/wolke-fenster.js ===== */
+/* ==========================================================================
+ * WOLKE-FENSTER — die Oberfläche zum Server
+ * --------------------------------------------------------------------------
+ * Alles, was der Mensch von der Wolke sieht: anmelden, abgleichen, teilen,
+ * veröffentlichen, Marken verwalten.
+ *
+ * Eine Regel für jedes Fenster hier: es sagt, was mit den Daten geschieht,
+ * bevor es geschieht. „Diese Seite geht im Klartext auf den Server" steht
+ * über dem Knopf, nicht in einer Fussnote.
+ * ========================================================================*/
+const WolkeFenster = (() => {
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g,
+    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const zu = () => document.querySelectorAll('.overlay').forEach(o => o.remove());
+
+  /* ========================================================================
+   * 1 · DAS HAUPTFENSTER
+   * ======================================================================*/
+  const dialog = () => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML = '<div class="finder" style="width:min(640px,95vw)">' +
+      '<div class="fh">☁ Wolke<button class="icon-btn" data-a="zu">✕</button></div>' +
+      '<div class="res" id="wo-inhalt" style="padding:18px"></div></div>';
+    document.body.appendChild(o);
+
+    const zeichne = async () => {
+      const ziel = o.querySelector('#wo-inhalt');
+      ziel.innerHTML = Wolke.angemeldet() ? angemeldetHtml() : abgemeldetHtml();
+      if (Wolke.angemeldet()) await zahlenNachtragen(ziel);
+    };
+
+    o.addEventListener('click', async (e) => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const a = e.target.closest('[data-a]');
+      if (!a) return;
+      const was = a.dataset.a;
+
+      try {
+        if (was === 'github' || was === 'google') {
+          a.disabled = true; a.textContent = 'Fenster geöffnet …';
+          await Wolke.anmeldenMit(was);
+          await schluesselFragen();
+          await zeichne();
+        }
+        if (was === 'code')      { o.remove(); codeFenster(); }
+        if (was === 'freigeben') { o.remove(); freigebenFenster(); }
+        if (was === 'abmelden') {
+          if (!confirm('Abmelden? Deine Notizen bleiben auf diesem Gerät — ' +
+                       'nur der Abgleich hört auf.')) return;
+          await Wolke.abmelden();
+          await zeichne();
+        }
+        if (was === 'jetzt') {
+          a.disabled = true; a.textContent = 'Läuft …';
+          const r = await Wolke.abgleichen();
+          UI.toast(r ? (r.uebernommen + ' geholt, ' + r.angenommen + ' geschickt' +
+            (r.unlesbar ? ' · ' + r.unlesbar + ' nicht lesbar' : '')) : 'Nichts zu tun');
+          await zeichne();
+        }
+        if (was === 'schluessel') { await schluesselFragen(); await zeichne(); }
+        if (was === 'marken')     { o.remove(); markenFenster(); }
+        if (was === 'adresse') {
+          const neu = await UI.frage('Adresse des Servers',
+            Wolke.adresse() || 'https://…');
+          if (neu !== null) { Store.setMeta('wolkeAdresse', neu.trim()); await zeichne(); }
+        }
+      } catch (err) {
+        UI.toast(err.message || String(err));
+        await zeichne();
+      }
+    });
+
+    zeichne();
+  };
+
+  /* ------------------------------------------------------------------ */
+  const abgemeldetHtml = () => {
+    const wurzel = Wolke.adresse();
+    return (
+      '<div style="font-size:13px; color:var(--text-dim); line-height:1.65; margin-bottom:18px">' +
+        'Ohne Konto liegt alles auf diesem Gerät — so wie bisher, und so bleibt es, ' +
+        'wenn du dieses Fenster einfach schliesst.<br><br>' +
+        '<b>Mit Konto</b> bekommst du vier Dinge, die ohne Server nicht gehen: ' +
+        'dieselben Notizen auf Rechner und Telefon, Rechte die wirklich sperren, ' +
+        'eine Seite zum Verschicken an Leute ohne Redion, und eine Schnittstelle ' +
+        'von aussen.' +
+      '</div>' +
+      (wurzel
+        ? '<div style="display:flex; flex-direction:column; gap:9px">' +
+            '<button data-a="github" class="prim" style="justify-content:center">' +
+              'Mit GitHub anmelden</button>' +
+            '<button data-a="google" style="justify-content:center">' +
+              'Mit Google anmelden</button>' +
+            '<button data-a="code" style="justify-content:center">' +
+              'Mit einem Code von einem anderen Gerät</button>' +
+          '</div>'
+        : '<div style="padding:14px; border:1px solid var(--line); border-radius:8px; ' +
+          'font-size:13px; line-height:1.6">Redion läuft gerade als Datei auf deinem ' +
+          'Rechner — da gibt es keinen Server. Öffne es über eine Adresse, oder trage ' +
+          'unten eine eigene ein.</div>') +
+      '<hr style="border:none;border-top:1px solid var(--line); margin:18px 0">' +
+      '<div style="font-size:12px; color:var(--text-faint); line-height:1.6">' +
+        'Server: <code>' + esc(wurzel || 'keiner') + '</code> ' +
+        '<button data-a="adresse" style="font-size:11.5px; padding:2px 8px">ändern</button>' +
+        '<br><br>Private Seiten werden auf diesem Gerät verschlüsselt und verlassen es ' +
+        'nur so. Der Schlüssel wird nie mitgeschickt — der Server sieht bei ihnen nichts ' +
+        'als Buchstabensalat.' +
+      '</div>');
+  };
+
+  const angemeldetHtml = () => {
+    const z = Wolke.zustand;
+    const k = z.konto || {};
+    return (
+      '<div style="display:flex; gap:13px; align-items:center; margin-bottom:16px">' +
+        (k.bild ? `<img src="${esc(k.bild)}" style="width:42px;height:42px;border-radius:50%">`
+                : '<div style="width:42px;height:42px;border-radius:50%;background:var(--bg-hover);' +
+                  'display:grid;place-items:center;font-size:19px">👤</div>') +
+        '<div style="flex:1"><b style="font-size:15px">' + esc(k.name || 'Angemeldet') + '</b>' +
+          '<div style="font-size:12px;color:var(--text-faint)">' + esc(k.mail || '') + '</div></div>' +
+        '<button data-a="abmelden" style="font-size:12.5px">Abmelden</button>' +
+      '</div>' +
+
+      '<div id="wo-zahlen" style="display:flex; gap:9px; margin-bottom:16px; flex-wrap:wrap"></div>' +
+
+      '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">' +
+        '<button data-a="jetzt" class="prim">Jetzt abgleichen</button>' +
+        '<button data-a="freigeben">Anderes Gerät freigeben</button>' +
+        '<button data-a="marken">Marken</button>' +
+      '</div>' +
+
+      (Wolke.hatSchluessel()
+        ? '<div style="padding:12px; border:1px solid var(--line); border-radius:8px; ' +
+          'font-size:12.5px; line-height:1.6; color:var(--text-dim)">' +
+          '🔒 Der Schlüssel ist gesetzt. Private Seiten gehen verschlüsselt hinaus — ' +
+          'der Server kann sie nicht lesen. Nur was du ausdrücklich teilst oder ' +
+          'veröffentlichst, geht im Klartext.</div>'
+        : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
+          'font-size:12.5px; line-height:1.6">' +
+          '⚠ Es ist kein Schlüssel gesetzt. Ohne ihn liegen deine Seiten im Klartext auf ' +
+          'dem Server. <button data-a="schluessel" style="font-size:12px;margin-top:7px">' +
+          'Schlüssel setzen</button></div>') +
+
+      (z.fehler ? '<div style="margin-top:13px; font-size:12.5px; color:var(--rot,#d64545)">' +
+        esc(z.fehler) + '</div>' : '') +
+
+      '<div style="margin-top:16px; font-size:12px; color:var(--text-faint); line-height:1.6">' +
+        'Letzter Abgleich: ' + (z.letzter ? esc(new Date(z.letzter).toLocaleString('de-CH'))
+                                          : 'noch keiner') +
+        '<br>Gerät: ' + esc(Wolke.geraeteName()) +
+        '<br>Server: <code>' + esc(Wolke.adresse()) + '</code>' +
+      '</div>');
+  };
+
+  const zahlenNachtragen = async (ziel) => {
+    const kasten = ziel.querySelector('#wo-zahlen');
+    if (!kasten) return;
+    const offen = Wolke.zuSchicken().length;
+    const kachel = (n, t, farbe) =>
+      '<div style="flex:1; min-width:96px; padding:11px; border:1px solid var(--line); ' +
+      'border-radius:8px; text-align:center">' +
+      `<div style="font-size:21px; font-weight:600${farbe ? ';color:' + farbe : ''}">${n}</div>` +
+      `<div style="font-size:11.5px; color:var(--text-faint)">${t}</div></div>`;
+    kasten.innerHTML = kachel(offen, offen === 1 ? 'wartet' : 'warten',
+                              offen ? 'var(--accent)' : '') +
+                       kachel(Wolke.zustand.hoch, 'geschickt') +
+                       kachel(Wolke.zustand.runter, 'geholt');
+  };
+
+  /* ========================================================================
+   * 2 · DER SCHLÜSSEL
+   * ======================================================================*/
+  const schluesselFragen = async () => {
+    const satz = await UI.frage(
+      'Ein Satz, den nur du kennst — daraus entsteht der Schlüssel', '');
+    if (!satz) return false;
+    if (satz.length < 8) {
+      UI.toast('Zu kurz. Nimm einen ganzen Satz, keine acht Zeichen.');
+      return false;
+    }
+    const ok = await Wolke.schluesselSetzen(satz);
+    UI.toast(ok ? '🔒 Schlüssel gesetzt'
+                : 'Das passt nicht zu dem, was schon verschlüsselt ist. Tippfehler?');
+    return ok;
+  };
+
+  /* ========================================================================
+   * 3 · ANMELDEN MIT CODE
+   * ======================================================================*/
+  const codeFenster = async () => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML = '<div class="finder" style="width:min(460px,94vw)">' +
+      '<div class="fh">Mit einem Code anmelden<button class="icon-btn" data-a="zu">✕</button></div>' +
+      '<div class="res" id="wo-code" style="padding:22px; text-align:center">' +
+      '<div style="font-size:13px;color:var(--text-dim)">Wird geholt …</div></div></div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) o.remove();
+    });
+
+    try {
+      const a = await Wolke.codeHolen();
+      o.querySelector('#wo-code').innerHTML =
+        '<div style="font-size:13px; color:var(--text-dim); line-height:1.65; margin-bottom:18px">' +
+          'Öffne Redion auf einem Gerät, an dem du schon angemeldet bist, gehe dort auf ' +
+          '<b>Wolke → Anderes Gerät freigeben</b> und tippe diesen Code ein:</div>' +
+        '<div style="font:600 30px/1.3 ui-monospace,monospace; letter-spacing:3px; ' +
+          'padding:16px; border:1px solid var(--line); border-radius:10px; ' +
+          'margin-bottom:14px">' + esc(a.code) + '</div>' +
+        '<div style="font-size:12px; color:var(--text-faint)">Zehn Minuten gültig. ' +
+          'Dieses Fenster wartet.</div>';
+
+      const konto = await Wolke.codeWarten(a.code);
+      o.querySelector('#wo-code').innerHTML =
+        '<div style="font-size:34px; margin-bottom:12px">✅</div>' +
+        '<b style="font-size:16px">Angemeldet als ' + esc(konto.name) + '</b>';
+      setTimeout(async () => { o.remove(); await schluesselFragen(); dialog(); }, 1200);
+    } catch (e) {
+      o.querySelector('#wo-code').innerHTML =
+        '<div style="font-size:13px; color:var(--rot,#d64545)">' + esc(e.message) + '</div>';
+    }
+  };
+
+  const freigebenFenster = async () => {
+    const code = await UI.frage('Den Code vom anderen Gerät eintippen', '');
+    if (!code) return;
+    try {
+      await Wolke.codeFreigeben(code.trim().toUpperCase());
+      UI.toast('✅ Freigegeben. Das andere Gerät meldet sich gleich an.');
+    } catch (e) { UI.toast(e.message); }
+  };
+
+  /* ========================================================================
+   * 4 · TEILEN — je Seite
+   * ======================================================================*/
+  const teilenFenster = async (seiteId) => {
+    const seite = Store.getBlock(seiteId);
+    if (!seite) return;
+    if (!Wolke.angemeldet()) {
+      UI.toast('Zum Teilen brauchst du ein Konto — siehe Wolke.');
+      dialog();
+      return;
+    }
+
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML = '<div class="finder" style="width:min(600px,95vw)">' +
+      '<div class="fh">↗ Teilen: ' + esc(seite.text || 'Ohne Titel') +
+        '<button class="icon-btn" data-a="zu">✕</button></div>' +
+      '<div class="res" id="wo-teil" style="padding:18px">Wird geladen …</div></div>';
+    document.body.appendChild(o);
+
+    const zeichne = async () => {
+      const offen = Wolke.istGeteilt(seiteId);
+      let liste = { freigaben: [] };
+      try { liste = await Wolke.freigaben(); } catch {}
+      const meine = liste.freigaben.filter(f => f.seite === seiteId);
+
+      o.querySelector('#wo-teil').innerHTML =
+        '<div style="padding:13px; border:1px solid ' +
+          (offen ? 'var(--line)' : 'var(--warn,#c88)') + '; border-radius:8px; ' +
+          'font-size:12.5px; line-height:1.65; margin-bottom:16px">' +
+          (offen
+            ? '🔓 Diese Seite geht <b>im Klartext</b> auf den Server. Anders könnte er ' +
+              'weder Rechte prüfen noch sie an jemanden ausliefern. Alle anderen Seiten ' +
+              'bleiben verschlüsselt.'
+            : '🔒 Diese Seite ist verschlüsselt. Zum Teilen muss sie lesbar werden — ' +
+              'das ist eine bewusste Entscheidung, deshalb dieser Schalter.') +
+          '<div style="margin-top:10px"><label style="display:flex;gap:8px;align-items:center">' +
+          '<input type="checkbox" id="wo-offen"' + (offen ? ' checked' : '') + '> ' +
+          'Für die Freigabe lesbar machen</label></div>' +
+        '</div>' +
+
+        '<div style="display:flex; gap:7px; margin-bottom:14px">' +
+          '<input id="wo-mail" placeholder="Adresse der Person" style="flex:1">' +
+          '<select id="wo-rolle">' +
+            '<option value="lesen">Lesen</option>' +
+            '<option value="komm">Kommentieren</option>' +
+            '<option value="edit">Bearbeiten</option>' +
+            '<option value="voll">Vollzugriff</option>' +
+            '<option value="kein">Kein Zugriff</option>' +
+          '</select>' +
+          '<button data-a="einladen" class="prim">Einladen</button>' +
+        '</div>' +
+
+        (meine.length
+          ? '<div style="margin-bottom:16px">' + meine.map(f =>
+              '<div style="display:flex;gap:10px;align-items:center;padding:7px 2px;' +
+              'font-size:13px"><span style="flex:1">' + esc(f.name) +
+              (f.mail ? ' <span style="color:var(--text-faint)">' + esc(f.mail) + '</span>' : '') +
+              '</span><code style="font-size:11.5px">' + esc(f.rolle) + '</code>' +
+              '<button data-weg="' + esc(f.kontoId) + '" style="font-size:12px">✕</button></div>'
+            ).join('') + '</div>'
+          : '<div style="font-size:12.5px;color:var(--text-faint);margin-bottom:16px">' +
+            'Noch niemand eingeladen.</div>') +
+
+        '<hr style="border:none;border-top:1px solid var(--line); margin:16px 0">' +
+        '<div style="font-size:13px; margin-bottom:10px"><b>Ins Netz stellen</b></div>' +
+        '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin-bottom:12px">' +
+          'Die Seite bekommt eine eigene Adresse. Wer sie hat, kann sie ansehen — ' +
+          'auch ohne Redion und ohne Konto.</div>' +
+        '<div style="display:flex; gap:7px; flex-wrap:wrap">' +
+          '<input id="wo-pw" placeholder="Passwort (freiwillig)" style="flex:1;min-width:150px">' +
+          '<input id="wo-tage" type="number" placeholder="Tage" style="width:90px">' +
+          '<button data-a="netz" class="prim">Veröffentlichen</button>' +
+          '<button data-a="zurueck">Zurückziehen</button>' +
+        '</div>' +
+        '<div id="wo-adresse" style="margin-top:12px; font-size:12.5px"></div>';
+
+      o.querySelector('#wo-offen').addEventListener('change', (e) => {
+        Wolke.geteiltSetzen(seiteId, e.target.checked);
+        UI.toast(e.target.checked
+          ? 'Beim nächsten Abgleich geht sie lesbar hinaus'
+          : 'Sie wird wieder verschlüsselt');
+        zeichne();
+      });
+    };
+
+    o.addEventListener('click', async (e) => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) {
+        try { await Wolke.freigeben(seiteId, weg.dataset.weg, 'kein'); await zeichne(); }
+        catch (err) { UI.toast(err.message); }
+        return;
+      }
+      const a = e.target.closest('[data-a]');
+      if (!a) return;
+      try {
+        if (a.dataset.a === 'einladen') {
+          const mail = o.querySelector('#wo-mail').value.trim();
+          if (!mail) { UI.toast('Es fehlt die Adresse.'); return; }
+          await Wolke.freigeben(seiteId, mail, o.querySelector('#wo-rolle').value);
+          o.querySelector('#wo-mail').value = '';
+          UI.toast('Eingeladen');
+          await zeichne();
+        }
+        if (a.dataset.a === 'netz') {
+          if (!Wolke.istGeteilt(seiteId)) {
+            UI.toast('Erst oben lesbar machen — sonst kann der Server sie nicht ausliefern.');
+            return;
+          }
+          await Wolke.abgleichen();
+          const r = await Wolke.veroeffentlichen(seiteId, {
+            passwort: o.querySelector('#wo-pw').value,
+            tage: Number(o.querySelector('#wo-tage').value) || 0 });
+          o.querySelector('#wo-adresse').innerHTML =
+            '✅ <a href="' + esc(r.adresse) + '" target="_blank" rel="noopener">' +
+            esc(r.adresse) + '</a>' +
+            '<button data-a="kopie" style="font-size:11.5px;margin-left:8px">kopieren</button>';
+          o.querySelector('#wo-adresse').dataset.adresse = r.adresse;
+        }
+        if (a.dataset.a === 'kopie') {
+          const adr = o.querySelector('#wo-adresse').dataset.adresse;
+          navigator.clipboard?.writeText(adr).then(() => UI.toast('Adresse kopiert'));
+        }
+        if (a.dataset.a === 'zurueck') {
+          await Wolke.zurueckziehen(seiteId);
+          o.querySelector('#wo-adresse').textContent = 'Zurückgezogen.';
+          UI.toast('Die Adresse führt jetzt ins Leere');
+        }
+      } catch (err) { UI.toast(err.message || String(err)); }
+    });
+
+    await zeichne();
+  };
+
+  /* ========================================================================
+   * 5 · MARKEN
+   * ======================================================================*/
+  const markenFenster = async () => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML = '<div class="finder" style="width:min(620px,95vw)">' +
+      '<div class="fh">🔑 Marken<button class="icon-btn" data-a="zu">✕</button></div>' +
+      '<div class="res" id="wo-marken" style="padding:18px">Wird geladen …</div></div>';
+    document.body.appendChild(o);
+
+    const zeichne = async () => {
+      let liste = { marken: [] };
+      try { liste = await Wolke.markenListe(); } catch (e) { UI.toast(e.message); }
+      o.querySelector('#wo-marken').innerHTML =
+        '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.65; margin-bottom:16px">' +
+          'Eine Marke ist ein Schlüssel für ein Programm — für die Schnittstelle ' +
+          '<code>/v1/</code> oder für MCP. Sie kann weniger dürfen als du: nur lesen, ' +
+          'nur einen Bereich, nur eine Weile.</div>' +
+        '<div style="display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px">' +
+          '<input id="wo-mname" placeholder="Wofür ist sie?" style="flex:1;min-width:140px">' +
+          '<select id="wo-mrecht">' +
+            '<option value="lesen">nur lesen</option>' +
+            '<option value="lesen,schreiben">lesen und schreiben</option>' +
+          '</select>' +
+          '<input id="wo-mtage" type="number" placeholder="Tage" style="width:84px">' +
+          '<button data-a="neu" class="prim">Anlegen</button>' +
+        '</div>' +
+        '<div id="wo-neu"></div>' +
+        (liste.marken.length
+          ? liste.marken.map(x =>
+              '<div style="display:flex;gap:10px;align-items:center;padding:9px 2px;' +
+              'border-top:1px solid var(--line);font-size:13px">' +
+              '<div style="flex:1"><b>' + esc(x.name) + '</b>' +
+              '<div style="font-size:11.5px;color:var(--text-faint)">' + esc(x.rechte) +
+              (x.benutzt ? ' · zuletzt ' + esc(new Date(x.benutzt).toLocaleDateString('de-CH'))
+                         : ' · nie benutzt') +
+              (x.bis ? ' · bis ' + esc(new Date(x.bis).toLocaleDateString('de-CH')) : '') +
+              '</div></div>' +
+              '<button data-weg="' + esc(x.kennung) + '" style="font-size:12px">Zurückziehen</button>' +
+              '</div>').join('')
+          : '<div style="font-size:12.5px;color:var(--text-faint)">Noch keine Marke.</div>');
+    };
+
+    o.addEventListener('click', async (e) => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) { try { await Wolke.markeWeg(weg.dataset.weg); await zeichne(); }
+                 catch (err) { UI.toast(err.message); } return; }
+      const a = e.target.closest('[data-a]');
+      if (!a || a.dataset.a !== 'neu') return;
+      try {
+        const r = await Wolke.markeAnlegen(
+          o.querySelector('#wo-mname').value || 'Ohne Namen',
+          o.querySelector('#wo-mrecht').value.split(','),
+          Number(o.querySelector('#wo-mtage').value) || 0);
+        await zeichne();
+        o.querySelector('#wo-neu').innerHTML =
+          '<div style="padding:12px; border:1px solid var(--accent); border-radius:8px; ' +
+          'margin-bottom:16px"><div style="font-size:12.5px; margin-bottom:7px">' +
+          'Jetzt kopieren — sie wird nicht noch einmal angezeigt:</div>' +
+          '<code style="font-size:12px; word-break:break-all">' + esc(r.token) + '</code></div>';
+      } catch (err) { UI.toast(err.message); }
+    });
+
+    await zeichne();
+  };
+
+  return { dialog, teilenFenster, markenFenster, codeFenster, schluesselFragen };
+})();
+
+window.WolkeFenster = WolkeFenster;
+
+</script>
+<script>
 /* ===== js/bibliothek.js ===== */
 /* ==========================================================================
  * bibliothek.js — Bibliothek, Meine Aufgaben, Marktplatz
@@ -42019,6 +43020,7 @@ const App = (() => {
     Eingang.start();
     Api.start();
     Protokoll.start();
+    Wolke.start();
     Blocks.auswahlEinklinken();
     Rundgang.vielleichtStarten();
 

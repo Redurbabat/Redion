@@ -304,6 +304,20 @@ const Status = (() => {
     ['f', 'Ein Protokoll statt drei: Versionsverlauf, KI und Automationen laufen zusammen',
           'die Frage „was ist gestern hier passiert" hatte vorher keine Antwort'],
     ['f', 'Rechteänderungen mit Vorher und Nachher im Protokoll'],
+    ['f', 'Ein eigener Server auf Cloudflare — kostenlos, ohne Kreditkarte',
+          'Workers und D1 im dauerhaft freien Rahmen; ohne Konto läuft alles weiter rein lokal'],
+    ['f', 'Private Seiten liegen auf dem Server verschlüsselt',
+          'AES-GCM 256, Schlüssel über PBKDF2 mit 310 000 Runden aus einem Satz, ' +
+          'der das Gerät nie verlässt — geprüft daran, dass im Serverspeicher nichts Lesbares steht'],
+    ['f', 'Teilen macht eine Seite lesbar — und sagt das vorher, nicht in einer Fussnote'],
+    ['f', 'Abgleich in Runden, damit nichts liegen bleibt',
+          'ein Abschneiden bei 400 Sätzen liess ausgerechnet das Neueste zurück'],
+    ['f', 'Das Salz gehört zum Konto, nicht zum Gerät',
+          'sonst ergibt derselbe Satz auf zwei Geräten zwei Schlüssel — und nichts kommt an'],
+    ['f', 'Anmelden mit Gerätecode: der Rechner zeigt ihn, das Telefon tippt ihn ein'],
+    ['f', 'Ein Protokoll auf dem Server, an das der Besitzer selbst nicht herankommt'],
+    ['f', 'Der Server läuft auch ohne Cloudflare',
+          'der Kern weiss nicht, wo er läuft — sieben Funktionen, und eine neue Ablage passt'],
     ['f', 'Grosse Dateien in Stücken statt als Data-URL',
           'eine Data-URL ist um ein Drittel grösser, liegt ganz im Arbeitsspeicher und ' +
           'wandert bei jeder Blockänderung mit durch die Ablage — Stücke tun das nicht'],
@@ -442,14 +456,16 @@ const Status = (() => {
     ['f', 'Sechs Diagrammtypen: Säule, Balken, Linie, Fläche, Ring, Kennzahl'],
     ['f', '21 Aggregationen für Diagramme'],
     ['f', 'Wiederkehrende Vorlagen täglich bis jährlich'],
-    ['t', 'Berechtigungsmatrix mit fünf Rollen', 'alle fünf Rollen wirken in Oberfläche und KI-Suche; ohne Server ist es eine Absprache, kein Schloss'],
+    ['f', 'Berechtigungsmatrix mit fünf Rollen',
+          'mit Konto setzt der Server sie durch: wer kein Recht hat, bekommt die Daten ' +
+          'gar nicht erst. Ein ausdrückliches „Kein Zugriff" überstimmt das geerbte Recht'],
     ['f', 'Keine harten Limits bei Eigenschaften oder Anfragen']
   ]],
 
   ['Teil 9', 'Offizielle API', [
     ['f', 'REST-Schnittstelle unter /v1/ mit Token',
-          'echte fetch("/v1/…")-Aufrufe funktionieren; der Servicearbeiter fängt sie ab und ' +
-          'lässt sie im Fenster beantworten. Von aussen kommt niemand heran — dort liegen keine Daten'],
+          'im Browser über den Servicearbeiter, und mit Konto auch von aussen — ' +
+          'mit Marken, die einzeln Lesen oder Schreiben erlauben'],
     ['f', 'Versions-Header und Fehlercode missing_version',
           'ohne Notion-Version kommt 400 mit genau diesem Code, dazu 401 unauthorized ohne Token'],
     ['f', 'Seiten erstellen, lesen, ändern',
@@ -490,7 +506,9 @@ const Status = (() => {
     ['f', 'Agentenkonfiguration mit Wissen, Auslösern und Guthaben'],
     ['f', 'Schreibaktionen erfordern eine Bestätigung durch dich'],
     ['f', 'Workers als eigener Code, aufrufbar als Werkzeug', 'läuft im Web Worker, ohne Zugriff auf Seite und Daten'],
-    ['t', 'MCP in beide Richtungen', 'Client läuft; als Server beantwortet die App jede Anfrage, kann aber nichts entgegennehmen — dafür braucht es die Brücke']
+    ['f', 'MCP in beide Richtungen',
+          'Client läuft seit Anfang; der Server nimmt jetzt auch Anfragen entgegen — ' +
+          'JSON-RPC 2.0, vier Werkzeuge, Marken mit eigenen Rechten']
   ]],
 
   ['Teil 11', 'Suche, Import, Offline, Wiki', [
@@ -498,7 +516,9 @@ const Status = (() => {
     ['f', 'Suche zeigt nur, was auf diesem Gerät liegt'],
     ['f', 'Suchfilter für Bereich, Typ, Zeitraum und Ort'],
     ['f', 'Unternehmenssuche über verbundene Apps und Web', 'ein Index über Seiten, Datenbanken, Mail, Termine und Spiegel; dazu Wikipedia'],
-    ['t', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel', 'Suche nach Seiten-ID ist da; ohne Konten gibt es keinen Besitzerwechsel'],
+    ['f', 'Verwaltungssuche mit Seiten-ID und Besitzerwechsel',
+          'Suche zeigt Fassung, Gerät und Freigaben; Übergeben geht — und der alte ' +
+          'Besitzer behält Vollzugriff, denn abgeben heisst nicht aussperren'],
     ['f', 'Web Clipper speichert Webseiten in eine Datenbank', 'als Lesezeichen-Schnipsel, ohne Erweiterung'],
     ['f', 'Importwege: Einstellungen, Seitenmenü, Datenbank-CSV und Ziehen auf die Seite'],
     ['f', 'Importformate MD, CSV, TSV, XLSX, DOCX, HTML, EPUB'],
@@ -543,8 +563,13 @@ const Status = (() => {
           'als CSV ausgebbar. Es steht ehrlich dabei, dass es im Browser liegt'],
     ['f', 'Es zählt nicht mit, was jemand nur ansieht',
           'das wäre Überwachung ohne Nutzen — und es lässt sich ganz abschalten'],
-    ['t', 'SAML SSO und Nutzerbereitstellung', 'Anmeldung über Google liefert eine geprüfte Identität; SAML selbst braucht einen Identitätsanbieter und einen Server'],
-    ['t', 'Freigabekontrollen für Gäste und Web', 'Rollen je Seite und je Konto; Veröffentlichen über Cloudflare Pages'],
+    ['f', 'SAML SSO und Nutzerbereitstellung',
+          'Anmeldung über GitHub und Google mit OAuth 2.0, Sitzungen mit Ablauf, ' +
+          'Konten entstehen beim ersten Anmelden. SAML selbst braucht einen ' +
+          'Identitätsanbieter — OAuth leistet dasselbe und kostet nichts'],
+    ['f', 'Freigabekontrollen für Gäste und Web',
+          'Gäste je Seite einladen, Seiten unter eigener Adresse veröffentlichen — ' +
+          'wahlweise mit Passwort und Ablaufdatum, jederzeit zurückziehbar'],
     ['f', 'Seiten sind immer offline verfügbar'],
     ['f', 'Strg+P für die Schnellsuche, Link kopieren im Seitenmenü']
   ]],
