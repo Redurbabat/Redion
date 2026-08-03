@@ -246,6 +246,51 @@ const zweimal = await seite.evaluate(async ([d]) => {
 p('Ein zweites Aufräumen tut nichts und stolpert nicht', zweimal === '', zweimal);
 
 /* ========================================================================= *
+ * 3b · GELÖSCHT UND 400 MILLISEKUNDEN SPÄTER WIEDER DA
+ * ---------------------------------------------------------------------------
+ * An über einem Dutzend Stellen steht `Store.trashBlock(b.id);
+ * Store.purgeBlock(b.id);` — sofort und endgültig löschen, ohne Umweg über
+ * den Papierkorb. `trashBlock` legt den Block dabei in den Schreibstapel,
+ * `purgeBlock` löscht ihn von der Platte, und 400 ms später schreibt der
+ * Stapel ihn **wieder hin**.
+ *
+ * Im Zwischenspeicher war er weg, auf der Platte lag er weiter, und beim
+ * nächsten Laden kam er zurück — mit `alive: false`. Seit der Papierkorb
+ * auch Blöcke zeigt, stünde er dort sogar sichtbar: etwas, das jemand
+ * endgültig gelöscht hat, ist am nächsten Tag wieder da.
+ *
+ * Geprüft wird an der PLATTE, nicht am Zwischenspeicher — im Speicher war
+ * der Block die ganze Zeit korrekt weg, und genau daran hat es niemand
+ * gemerkt.
+ * ========================================================================= */
+console.log('\n3b · Sofort gelöscht bleibt gelöscht — auch auf der Platte');
+
+const auferstehung = await seite.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Sofort weg' });
+  await Store.flush();
+  /* Genau die Reihenfolge aus dem Editor: erst in den Papierkorb, dann
+     endgültig — beides im selben Wimpernschlag. */
+  Store.trashBlock(s.id);
+  Store.purgeBlock(s.id);
+  await Store.flush();
+  await new Promise(f => setTimeout(f, 700));      /* die Schreibpause abwarten */
+
+  const aufPlatte = await new Promise(ok => {
+    const req = indexedDB.open('notizen');
+    req.onsuccess = () => {
+      const r = req.result.transaction(['blocks'], 'readonly').objectStore('blocks').get(s.id);
+      r.onsuccess = () => ok(!!r.result);
+      r.onerror   = () => ok('Lesefehler');
+    };
+    req.onerror = () => ok('Öffnungsfehler');
+  });
+  return { imSpeicher: !!Store.getBlock(s.id), aufPlatte };
+});
+gleich('Im Zwischenspeicher weg — das war schon immer so', auferstehung.imSpeicher, false);
+p('Und auf der Platte auch', auferstehung.aufPlatte === false,
+  'der ausstehende Schreibvorgang aus trashBlock holte ihn zurück — beim nächsten Laden stand er wieder da');
+
+/* ========================================================================= *
  * 4 · DIE FRIST — EINE AUFRÄUMUNG, NICHT ZWEI
  * ========================================================================= */
 console.log('\n4 · Die Frist läuft ab, und zwar für alles');

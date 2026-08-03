@@ -109,7 +109,27 @@ const Store = (() => {
       if (!d.objectStoreNames.contains('vorrat')) d.createObjectStore('vorrat', { keyPath: 'id' });
     };
 
-    req.onsuccess = () => { db = req.result; ok(db); };
+    req.onsuccess = () => {
+      db = req.result;
+      /* DIE ANDERE HÄLFTE VON `onblocked`, UND SIE FEHLTE.
+         `onblocked` sagt dem NEUEN Fenster, dass ein altes im Weg steht.
+         Niemand sagte dem alten Fenster, dass es im Weg steht — es hielt
+         seine Verbindung offen, und das neue kam nie durch. Der Mensch sah
+         in einem Tab „bitte den anderen schliessen" und im anderen eine
+         App, die sich nichts anmerken liess.
+
+         Jetzt tritt das alte Fenster zurück: Verbindung zu, ein Satz, der
+         sagt was los ist. Weitergearbeitet wird hier nicht mehr — die
+         Ablage ist zu, und Weiterschreiben ginge nur noch in den
+         Arbeitsspeicher, also ins Nichts. */
+      db.onversionchange = () => {
+        try { db.close(); } catch {}
+        db = null;
+        warne('Ein anderes Fenster hat eine neuere Fassung der App geöffnet. ' +
+              'Dieses Fenster hat die Ablage freigegeben — bitte neu laden.');
+      };
+      ok(db);
+    };
     req.onerror   = () => fail(req.error);
   });
 
@@ -201,6 +221,12 @@ const Store = (() => {
       try { Umzuege.laufen(); }
       catch (e) { if (typeof Melder !== 'undefined') Melder.fehler('Ablage', 'Umzug: ' + e.message, e); }
     }
+
+    /* Erst jetzt den Draht zu den anderen Fenstern anschliessen — vorher
+       gäbe es nichts, in das eine fremde Änderung eingetragen werden
+       könnte, und die erste Nachricht liefe ins Leere. */
+    if (typeof Nachbarn !== 'undefined' && Nachbarn.start())
+      Nachbarn.beiNachricht(fremdeNachricht);
 
     if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined')
       Ereignisse.melde(ARTEN.ablageGeladen, { blocks: Object.keys(cache.blocks).length });
@@ -332,21 +358,50 @@ const Store = (() => {
    */
   const purgeBlock = (id) => {
     const gesammelt = [];
-    purgeTief(id, gesammelt);
+    const geloescht = [];
+    purgeTief(id, gesammelt, geloescht);
     if (!gesammelt.length) return;
     notify('purge');
     (async () => {
+      /* Ein Löschen läuft nicht über `save()` und damit nicht über `flush()` —
+         es muss den anderen Fenstern eigens gesagt werden, sonst zeigten sie
+         eine Seite weiter an, die es nicht mehr gibt, und schrieben sie beim
+         nächsten Anlass zurück.
+
+         Und zwar erst, wenn die Ablage es wirklich getan hat: meldete man
+         vorher, läse das Fenster drüben den Satz noch einmal ein und
+         behielte ihn. */
+      await Promise.all(geloescht);
+      meldeAnAndereFenster('geaendert', gesammelt.map(x => 'blocks:' + x));
       for (const x of gesammelt) await purgeAnhaenge(x);
     })().catch(err => { if (typeof Melder !== 'undefined')
       Melder.fehler('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
   };
 
+  /**
+   * Einen ausstehenden Schreibvorgang zurücknehmen.
+   *
+   * DAS FEHLTE, UND ES HOLTE GELÖSCHTES ZURÜCK. `save()` schreibt nicht
+   * sofort, sondern nach 400 ms Ruhe. An über einem Dutzend Stellen steht
+   * `Store.trashBlock(b.id); Store.purgeBlock(b.id);` — sofort und
+   * endgültig löschen, ohne Umweg über den Papierkorb. `trashBlock` legt
+   * den Block dabei in den Stapel, `purgeBlock` löscht ihn von der Platte,
+   * und 400 ms später schreibt der Stapel ihn **wieder hin**.
+   *
+   * Im Zwischenspeicher war er weg, auf der Platte lag er weiter — und beim
+   * nächsten Laden kam er zurück, mit `alive: false`. Seit der Papierkorb
+   * auch Blöcke zeigt, würde er dort sogar auftauchen: eine Seite, die
+   * jemand endgültig gelöscht hat, steht am nächsten Tag wieder da.
+   */
+  const vergissAusstehendes = (store, id) => pending.delete(store + ':' + id);
+
   /** Der eigentliche Abstieg. Sammelt, was danach noch aufzuräumen ist. */
-  const purgeTief = (id, gesammelt) => {
+  const purgeTief = (id, gesammelt, geloescht = []) => {
     const b = cache.blocks[id];
     if (!b) return;
     gesammelt.push(id);
-    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt));
+    vergissAusstehendes('blocks', id);
+    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt, geloescht));
     /* Eine verknüpfte Ansicht zeigt fremde Daten — die bleiben bestehen. */
     if (b.collectionId && !b.verknuepft) {
       const c = cache.collections[b.collectionId];
@@ -355,11 +410,16 @@ const Store = (() => {
            Seite. Sie hier zu vergessen wäre derselbe Fehler eine Ebene
            tiefer, und die Ebene sieht niemand. */
         rowsOf(b.collectionId).forEach(r => {
-          gesammelt.push(r.id); delete cache.blocks[r.id]; del('blocks', r.id);
+          gesammelt.push(r.id); vergissAusstehendes('blocks', r.id);
+          delete cache.blocks[r.id]; geloescht.push(del('blocks', r.id));
         });
-        (c.viewIds || []).forEach(v => { delete cache.views[v]; del('views', v); });
+        (c.viewIds || []).forEach(v => {
+          vergissAusstehendes('views', v);
+          delete cache.views[v]; geloescht.push(del('views', v));
+        });
+        vergissAusstehendes('collections', b.collectionId);
         delete cache.collections[b.collectionId];
-        del('collections', b.collectionId);
+        geloescht.push(del('collections', b.collectionId));
         /* Die vorberechneten Werte dieser Datenbank sind ohne sie sinnlos. */
         vorratWeg(b.collectionId).catch(() => {});
       }
@@ -367,7 +427,7 @@ const Store = (() => {
     const p = cache.blocks[b.parentId];
     if (p) { p.content = p.content.filter(x => x !== id); elternGeaendert(p); }
     delete cache.blocks[id];
-    del('blocks', id);
+    geloescht.push(del('blocks', id));
   };
 
   /**
@@ -692,6 +752,81 @@ const Store = (() => {
   const setMeta = (k, v) => { cache.meta[k] = v; put('meta', { k, v }).catch(() => {}); };
   const getMeta = (k, fallback = null) => (k in cache.meta ? cache.meta[k] : fallback);
 
+  /* ========================================================================
+   * ZWEI FENSTER, EINE ABLAGE
+   * ------------------------------------------------------------------------
+   * Zwei Tabs mit Redion teilen sich **eine** IndexedDB, aber jeder hält
+   * seinen eigenen Zwischenspeicher — gefüllt einmal beim Laden und danach
+   * nie wieder nachgesehen. Daraus folgte:
+   *
+   *   Tab A ändert eine Seite. Tab B weiss davon nichts. Sobald B irgendetwas
+   *   an dieser Seite tut, schreibt es seinen alten Stand darüber. Die
+   *   Änderung aus A ist weg — ohne Meldung, ohne Konflikt, ohne Spur.
+   *
+   * Es braucht kein Missgeschick dafür. Zwei Tabs offen zu haben ist der
+   * Normalfall, und der Verlust fällt erst Tage später auf, wenn niemand
+   * mehr weiss, woher er kommt.
+   *
+   * Der Draht liegt in `nachbarn.js` und kennt keine Blöcke. Hier steht, was
+   * mit einer Nachricht geschieht: die genannten Sätze werden **von der
+   * Platte neu gelesen** — nicht aus der Nachricht übernommen. Die Platte
+   * ist die Wahrheit; eine Nachricht könnte veraltet sein, wenn zwei
+   * Änderungen sich überholen.
+   * ======================================================================*/
+  const meldeAnAndereFenster = (art, schluessel) => {
+    if (typeof Nachbarn === 'undefined' || !Nachbarn.offen()) return;
+    Nachbarn.sende({ art, schluessel });
+  };
+
+  /* Sammelt kurz, statt bei jeder Nachricht einzeln zu lesen: zwanzig
+     Tastendrücke drüben sind hier ein Nachlesen, nicht zwanzig. */
+  let fremdWartend = new Set();
+  let fremdTimer = null;
+
+  const fremdesEintragen = async () => {
+    fremdTimer = null;
+    const dran = [...fremdWartend];
+    fremdWartend.clear();
+    if (!db || !dran.length) return;
+
+    let geaendert = 0;
+    for (const schluessel of dran) {
+      const trenn = schluessel.indexOf(':');
+      const fach = schluessel.slice(0, trenn);
+      const id   = schluessel.slice(trenn + 1);
+      if (!['blocks', 'collections', 'views', 'meta'].includes(fach)) continue;
+      try {
+        const satz = await get(fach, fach === 'meta' ? id : id);
+        if (fach === 'meta') {
+          if (satz) cache.meta[satz.k] = satz.v; else delete cache.meta[id];
+        } else if (satz) {
+          cache[fach][id] = satz;
+        } else {
+          delete cache[fach][id];
+        }
+        geaendert++;
+      } catch { /* ein Satz weniger ist kein Grund, die übrigen fallenzulassen */ }
+    }
+    /* `fremd` und nicht `save`: die Oberfläche soll unterscheiden können,
+       ob sie selbst etwas getan hat oder ob es von drüben kam. Beim eigenen
+       Tun zeichnet sie ohnehin; hier ist sie ahnungslos und muss es
+       erfahren. */
+    if (geaendert) notify('fremd');
+  };
+
+  const fremdeNachricht = (n) => {
+    if (!n) return;
+    if (n.art === 'alles') {
+      /* „Alles löschen" oder eine eingespielte Sicherung drüben. Einzelne
+         Sätze nachzulesen hilft dann nicht — der ganze Bestand ist ein
+         anderer. Die Oberfläche erfährt es und entscheidet selbst. */
+      notify('fremd-alles');
+      return;
+    }
+    (n.schluessel || []).forEach(k => fremdWartend.add(k));
+    if (!fremdTimer) fremdTimer = setTimeout(fremdesEintragen, 120);
+  };
+
   /* --- Schreiben mit Verzögerung ----------------------------------------- */
   /* Beim Tippen soll nicht jeder Tastendruck eine Transaktion auslösen.     */
   const pending = new Map();
@@ -704,10 +839,68 @@ const Store = (() => {
       (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400);
   };
 
+  /**
+   * Schreibt alles Angesammelte raus — und sagt es danach den anderen
+   * Fenstern.
+   *
+   * EINE TRANSAKTION FÜR ALLES, NICHT EINE JE SATZ. Hier stand
+   * `pending.forEach(… put(store, val) …)`, und jedes `put` öffnete seine
+   * eigene Transaktion. Beim ersten Start legt die App die Wissensseiten an;
+   * dann liegen knapp zweitausend Sätze im Stapel, und daraus wurden
+   * zweitausend Transaktionen. Gemessen: nach einer Sekunde waren 1881 von
+   * 1973 durch — die übrigen 92 standen noch an.
+   *
+   * Solange niemand darauf wartete, fiel es nicht auf. Es fiel in dem
+   * Moment auf, in dem die Meldung an die anderen Fenster darauf warten
+   * musste: sie kam nie. Ein Fehler, den erst die nächste Funktion sichtbar
+   * macht — die Sorte, die man ohne den Anlass nie findet.
+   *
+   * EIN SCHLECHTER SATZ DARF DEN STAPEL NICHT MITREISSEN. IndexedDB bricht
+   * eine Transaktion ab, sobald ein Schreibfehler unbehandelt bleibt — mit
+   * zweitausend Sätzen in einer Transaktion hiesse das: ein unmöglicher
+   * Satz, und die anderen 1999 sind auch weg. Deshalb bekommt jede einzelne
+   * Anfrage ihr eigenes `onerror`, das den Abbruch verhindert. Der schlechte
+   * Satz geht verloren, die guten kommen an.
+   */
   const flush = () => {
     if (!db) { pending.clear(); return; }
-    pending.forEach(({ store, val }) => put(store, val).catch(() => {}));
+    const schluessel = [...pending.keys()];
+    const posten = [...pending.values()];
     pending.clear();
+    if (!posten.length) return;
+
+    let fertig;
+    try {
+      const faecher = [...new Set(posten.map(x => x.store))];
+      const t = tx(faecher, 'readwrite');
+      posten.forEach(({ store, val }) => {
+        try {
+          const r = t.objectStore(store).put(val);
+          r.onerror = (e) => {
+            e.preventDefault();          /* nicht den ganzen Stapel abbrechen */
+            if (typeof Melder !== 'undefined')
+              Melder.warnung('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
+          };
+        } catch (err) {
+          if (typeof Melder !== 'undefined')
+            Melder.warnung('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
+        }
+      });
+      fertig = new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });
+    } catch (err) {
+      /* Geht die Sammeltransaktion gar nicht auf, lieber einzeln als nicht:
+         ein langsamer Weg ist besser als ein verlorener Stapel. */
+      fertig = Promise.all(posten.map(({ store, val }) => put(store, val).catch(() => {})));
+    }
+
+    /* Und die anderen Fenster wissen es jetzt auch. Siehe `nachbarn.js`:
+       ohne diese Zeile hält jedes Fenster seinen eigenen Stand für die
+       Wahrheit und schreibt ihn beim nächsten Anlass über den fremden.
+       ERST WENN ES WIRKLICH AUF DER PLATTE STEHT. Der erste Wurf meldete
+       sofort — das Fenster drüben las nach, fand noch nichts und schloss
+       daraus, der Satz sei gelöscht. Eine Meldung über eine Änderung, die es
+       noch nicht gibt, ist schlimmer als gar keine. */
+    fertig.then(() => meldeAnAndereFenster('geaendert', schluessel));
   };
 
   /* Vor dem Schließen des Tabs alles rausschreiben. */
@@ -959,6 +1152,10 @@ const Store = (() => {
       await Promise.all(d.versions.map(v => put('versions', v)));
 
     notify('import');
+    /* Nach einer eingespielten Sicherung ist der ganze Bestand ein anderer.
+       Einzelne Sätze nachzulesen hülfe den anderen Fenstern nichts — sie
+       müssen von vorn anfangen. */
+    meldeAnAndereFenster('alles', []);
     return { bloecke: Object.keys(cache.blocks).length,
              versionen: Array.isArray(d.versions) ? d.versions.length : 0,
              fehlt: d.fehlt || [] };
@@ -1178,6 +1375,7 @@ const Store = (() => {
       } catch (err) { ok(); }
     })));
     cache.blocks = {}; cache.collections = {}; cache.views = {}; cache.meta = {};
+    meldeAnAndereFenster('alles', []);
   };
 
   /* ========================================================================

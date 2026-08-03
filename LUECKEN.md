@@ -329,8 +329,52 @@ Der Umzug war richtig gebaut. Bis hierher war das aber eine Annahme.
   endgültig, mit einem Klick. Bei einer Seite mit dreissig Fassungen also
   fünfundzwanzig. Er wendet jetzt dieselbe Regel an und fragt vorher, mit der
   Zahl, um die es geht. `test98.mjs`, 23 Prüfungen.
-- [ ] **E5 · Zwei Fenster, dieselbe Ablage.** `onblocked` meldet sich mit
-  einem Satz — geprüft ist er nicht.
+- [x] **E5 · Zwei Fenster, dieselbe Ablage** — erledigt, und der ungeprüfte
+  Satz war der harmlose Teil.
+
+  **Der stille Überschreiber.** Zwei Tabs teilen sich **eine** IndexedDB,
+  aber jeder hält seinen eigenen Zwischenspeicher — gefüllt einmal beim
+  Laden und danach nie wieder nachgesehen. Es gab weder `BroadcastChannel`
+  noch ein `storage`-Ereignis noch `onversionchange`; die Fenster wussten
+  buchstäblich nichts voneinander. Tab A ändert eine Seite, Tab B hat die
+  alte Fassung noch im Speicher, und sobald B irgendetwas daran tut,
+  schreibt es seinen alten Stand darüber. **Ohne Meldung, ohne Konflikt,
+  ohne Spur** — und zwei Tabs offen zu haben ist der Normalfall.
+
+  Neu: `quell/kern/ablage/nachbarn.js`, der Draht zwischen den Fenstern.
+  Gemeldet wird **erst, wenn es auf der Platte steht**; nachgelesen wird von
+  der Platte und nicht aus der Nachricht. Die Oberfläche frischt immer auf,
+  zeichnet aber nicht, während jemand tippt.
+
+  **`onversionchange` fehlte ganz** — die andere Hälfte von `onblocked`. Das
+  neue Fenster erfuhr, dass ein altes im Weg steht; dem alten sagte es
+  niemand, und so kam das neue nie durch.
+
+  **Drei weitere Befunde auf dem Weg**, alle unabhängig von zwei Fenstern:
+
+  1. **`flush()` öffnete eine Transaktion je Satz.** Beim ersten Start sind
+     das knapp zweitausend. Gemessen: nach einer Sekunde waren 1881 von 1973
+     durch. Aufgefallen ist es erst, als die Meldung darauf warten musste —
+     ein Fehler, den erst die nächste Funktion sichtbar macht. Jetzt eine
+     Transaktion für den ganzen Stapel, mit eigenem `onerror` je Satz, damit
+     ein unmöglicher Satz nicht die anderen 1999 mitreisst.
+  2. **Gelöscht und 400 ms später wieder da.** An über einem Dutzend Stellen
+     steht `trashBlock(id); purgeBlock(id);`. `trashBlock` legt den Block in
+     den Schreibstapel, `purgeBlock` löscht ihn von der Platte — und der
+     Stapel schreibt ihn wieder hin. Im Speicher weg, auf der Platte da, beim
+     nächsten Laden zurück. Seit der Papierkorb auch Blöcke zeigt, stünde er
+     dort sichtbar. Jetzt nimmt das Löschen den ausstehenden Schreibvorgang
+     mit.
+  3. **Ein doppelter globaler Name tötet die zweite Datei.** Beim Bauen hiess
+     das Modul zuerst `Fenster` — der Name gehört den Reitern. Die Folge war
+     kein Hinweis an der richtigen Stelle, sondern
+     `Fenster.gemerkt is not a function` in der Seitenleiste. `test87` prüft
+     das jetzt für alle 95 Dateien in achtzig Millisekunden, dazu: jede in
+     `index.html` geladene Datei muss auch im `sw.js` stehen.
+
+  `test99.mjs`, 23 Prüfungen mit zwei echten Fenstern in **einem** Kontext —
+  zwei Kontexte hätten getrennte Ablagen und wären grün, ohne etwas zu
+  beweisen.
 
 ---
 

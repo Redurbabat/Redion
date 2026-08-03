@@ -267,3 +267,45 @@ Klick. Er ist jetzt dieselbe Regel, sofort statt beim nächsten Speichern
 angewandt — und er fragt, mit der Zahl, um die es geht. Ein Knopf, der
 fünfundzwanzig Fassungen löscht, ohne die Zahl zu nennen, ist kein
 Aufräumknopf.
+
+---
+
+## E9 · Zwei Fenster: auffrischen ja, zusammenführen nein
+
+**Die Lage.** Zwei Tabs, eine IndexedDB, zwei getrennte Zwischenspeicher. Der
+Verlust entstand nicht beim Lesen, sondern beim Schreiben: das Fenster mit dem
+älteren Stand schrieb ihn über den frischeren.
+
+**Was gebaut wurde und was nicht.** Gebaut ist das **Auffrischen**: was drüben
+auf die Platte geht, wird hier nachgelesen. Nicht gebaut ist das
+**Zusammenführen**. Wenn zwei Menschen gleichzeitig denselben Absatz tippen,
+gewinnt der spätere Schreibvorgang — wie in jedem Editor ohne Server.
+
+Das ist eine bewusste Grenze und keine Lücke. Für echtes gleichzeitiges
+Schreiben braucht es CRDTs oder eine Serverrunde; beides steht in
+`kern/abgleich/` für den Fall zwischen zwei **Geräten** schon bereit, und
+beides wäre zwischen zwei Tabs desselben Browsers ein Apparat für einen Fall,
+den es kaum gibt. Der Fall, den es gibt, ist der andere: zwei Fenster, zwei
+verschiedene Seiten, und eines wirft die Arbeit des anderen weg, weil es sie
+nie gesehen hat. Genau der ist jetzt zu.
+
+**Warum nicht aus der Nachricht übernommen wird.** Die Nachricht könnte den
+Satz mitschicken; das wäre eine Runde schneller. Sie wäre aber auch veraltet,
+sobald zwei Änderungen sich überholen. Nachgelesen wird deshalb von der
+Platte: sie ist die Wahrheit, die Nachricht ist nur der Anlass.
+
+**Warum erst nach dem Schreiben gemeldet wird.** Der erste Wurf meldete
+sofort. Das Fenster drüben las nach, fand noch nichts — und schloss daraus,
+der Satz sei gelöscht. Eine Meldung über eine Änderung, die es noch nicht
+gibt, ist schlimmer als gar keine.
+
+**Warum beim Tippen nicht gezeichnet wird.** Der Zwischenspeicher wird immer
+aufgefrischt; daran hängt, dass nichts überschrieben wird. Gezeichnet wird
+nur, wenn niemand in einem Feld steht. Sonst springt mitten im Satz der
+Schreibzeiger — und eine Reparatur, die beim Tippen stört, wird wieder
+ausgebaut, egal wie richtig sie ist.
+
+**`onversionchange`: die Verbindung wird freigegeben, nicht gehalten.** Das
+alte Fenster arbeitet danach nicht weiter, sondern sagt es. Weiterschreiben
+ginge nur noch in den Arbeitsspeicher, also ins Nichts — und ein Fenster, das
+so tut als ob, ist die teuerste Art, Daten zu verlieren.

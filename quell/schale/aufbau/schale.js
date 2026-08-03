@@ -1600,6 +1600,42 @@ const App = (() => {
     zeichneBaum();
     oeffne(startSeite);
 
+    /* ----------------------------------------------------------------------
+       WAS DAS ANDERE FENSTER GEÄNDERT HAT
+       ----------------------------------------------------------------------
+       `kern/ablage/nachbarn.js` hält den Draht, `indexdb.js` trägt fremde
+       Sätze in den Zwischenspeicher ein. Was fehlt, ist das Sichtbarmachen —
+       und das gehört hierher, weil der Kern die Oberfläche nicht kennt.
+
+       DAS NEUZEICHNEN HAT EINE BEDINGUNG. Wer gerade tippt, verliert beim
+       Neuzeichnen den Schreibzeiger und mitten im Satz den Faden. Deshalb
+       wird der Zwischenspeicher IMMER aufgefrischt — daran hängt, dass
+       nichts überschrieben wird —, gezeichnet aber nur, wenn niemand
+       schreibt. Der Rest kommt beim nächsten Klick von selbst.
+
+       Die Reihenfolge ist Absicht: erst der Baum (billig, fast immer
+       sichtbar), dann die Seite. */
+    const schreibtGerade = () => {
+      const a = document.activeElement;
+      if (!a) return false;
+      return a.isContentEditable || a.tagName === 'INPUT' || a.tagName === 'TEXTAREA';
+    };
+
+    Store.on((was) => {
+      if (was !== 'fremd' && was !== 'fremd-alles') return;
+      if (was === 'fremd-alles') {
+        /* Drüben wurde eine Sicherung eingespielt oder alles gelöscht. Was
+           hier im Speicher liegt, ist danach nicht mehr derselbe Bestand —
+           und einzelne Sätze nachzulesen hilft nicht. Ehrlicher ist die
+           Bitte, neu zu laden, als eine Oberfläche, die halb stimmt. */
+        UI.toast('Ein anderes Fenster hat den ganzen Bestand ausgetauscht — bitte neu laden');
+        return;
+      }
+      if (schreibtGerade()) return;
+      zeichneBaum();
+      zeichneSeite();
+    });
+
     /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
     const wunsch = Store.getMeta('startAnsicht', 'letzte');
     if (!location.hash) {
