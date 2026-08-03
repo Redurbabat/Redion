@@ -10675,7 +10675,7 @@ const Blocks = (() => {
    * HILFEN
    * ======================================================================*/
   const esc = (s) => String(s ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
   /** Wandelt gespeicherten Text in Anzeige-HTML um (Fett, Kursiv, Code, Links). */
   const inline = (s) => {
@@ -13217,7 +13217,7 @@ const DatenbankDienst = (() => {
   /* Wortgleich mit `Blocks.esc`. Die Verdopplung ist der Preis dafür, dass
      diese Datei den Editor nicht kennt — zwei Zeilen gegen eine Abhängigkeit. */
   const esc = (s) => String(s ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
   /* ========================================================================
    * DIE EIGENSCHAFTSTYPEN
@@ -24738,7 +24738,7 @@ const Kommentare = (() => {
     });
   };
 
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   return { alle, offeneAnzahl, neu, panel, antworten, antwortWeg, reagieren,
            erwaehnt, mitErwaehnungen, anMich, finde, REAKTIONEN };
@@ -24884,7 +24884,7 @@ window.Mehrfach = Mehrfach;
 
 const Ansichten = (() => {
 
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   const gruss = () => {
     const h = new Date().getHours();
@@ -31376,7 +31376,7 @@ window.MCP = MCP;
 const PWA = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ------------------------------------------------------------------------
    * WAS FÜR EIN GERÄT IST DAS?
@@ -33772,7 +33772,7 @@ window.Wissen = Wissen;
 const Pflege = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * 1. GESUNDHEITSBERICHT
@@ -34331,7 +34331,7 @@ window.Pflege = Pflege;
 const Schema = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * 1. DAS DATENMODELL
@@ -34841,7 +34841,7 @@ window.Krypto = Krypto;
 const KiBau = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * ANTWORT AUSPACKEN
@@ -35312,7 +35312,7 @@ window.KiBau = KiBau;
 const Fenster = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * REITER
@@ -35704,7 +35704,7 @@ window.Fenster = Fenster;
 const Aussehen = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * FARBSCHEMATA
@@ -36026,7 +36026,7 @@ window.Aussehen = Aussehen;
 const Vergleich = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * BAUM FLACH MACHEN
@@ -37025,7 +37025,7 @@ window.Austausch = Austausch;
 const Tempo = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * 1. FORMELSPEICHER
@@ -37321,7 +37321,7 @@ window.Tempo = Tempo;
 const Plan = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   const tagText = (d) => new Date(d).toLocaleDateString('de-DE',
     { weekday: 'short', day: '2-digit', month: 'short' });
@@ -37724,7 +37724,7 @@ window.Plan = Plan;
 const Erweiterung = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * SPEICHER
@@ -38157,7 +38157,7 @@ window.Erweiterung = Erweiterung;
 const Eingang = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   const TAKTE = [
     ['aus',        'nur von Hand'],
@@ -38565,7 +38565,7 @@ window.Eingang = Eingang;
 const Rundgang = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * DIE SCHRITTE
@@ -47194,7 +47194,7 @@ const Seitenleiste = (() => {
 
   /* Eigenes `esc` statt eingespeistem — so hält es auch `aufbau/reiter.js`.
      Drei Zeilen doppelt sind billiger als eine Abhängigkeit mehr. */
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ------------------------------------------------------------------------
    * WAS VON AUSSEN KOMMT
@@ -47895,7 +47895,8 @@ window.Seitenleiste = Seitenleiste;
 
 const Kopfleiste = (() => {
 
-  const esc = (s) => String(s ?? '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+  const esc = (s) => String(s ?? '')
+    .replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
 
   let gebunden = {};
 
@@ -48199,7 +48200,8 @@ window.Kopfleiste = Kopfleiste;
 
 const Inhaltsflaeche = (() => {
 
-  const esc = (s) => String(s ?? '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+  const esc = (s) => String(s ?? '')
+    .replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
 
   let gebunden = {};
 
@@ -48319,7 +48321,8 @@ window.Inhaltsflaeche = Inhaltsflaeche;
 const App = (() => {
 
   let seiteId = null;
-  const esc = (s) => String(s ?? '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+  const esc = (s) => String(s ?? '')
+    .replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
 
   const aktuelleSeite = () => seiteId;
   const setzeSeite = (id) => { seiteId = id; };

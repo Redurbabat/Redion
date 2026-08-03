@@ -160,6 +160,19 @@ brauchte der Logikteil nichts aus der Oberfläche, die Oberfläche aber 16 Namen
 aus der Logik. Nur deshalb ging es ohne Verhaltensänderung. Läuft es an einer
 einzigen Stelle in beide Richtungen, ist der Bereich noch nicht so weit.
 
+**Und manchmal sagt die Messung: es geht gar nicht.** Bei `wissen` wurde vor
+dem Schnitt gezählt, und alle vierzehn Abschnitte von `werkzeuge.js` fassen das
+Dokument an, zwischen 7 und 47 Mal. Dort gibt es keine Logikhälfte; ein Schnitt
+hätte mitten durch eine Zeichenfunktion gehen müssen. Der ehrliche Ertrag war
+dann eine kleine `wissen/dienst.js` mit den neun Stellen, die wirklich nur
+rechnen — die unscharfe Suche der Befehlspalette, das Wiederholungsverfahren
+der Karteikarten, Markdown hin und zurück, die Zahlen der Statistik.
+
+Das ist kein schlechteres Ergebnis, sondern ein anderes: es sind genau die
+Stellen, bei denen man sich fragt, ob sie richtig rechnen. Wer statt zu messen
+die Struktur erzwingt, bekommt zwei Dateien, die zusammen dasselbe tun, und
+einen Prüflauf weniger, als er glaubt zu haben.
+
 Das ist der Teil, der noch läuft: einige Bereiche sind schon so aufgeteilt,
 andere liegen noch als eine Datei da. Der Umbau geht Bereich für Bereich —
 und jeder Schritt endet mit grünen Prüfläufen, sonst ist es kein Umbau,
@@ -306,6 +319,15 @@ fertig:
   `document`, ohne `window` — und rechnet Filtern, Sortieren, Gruppieren und
   die Spaltenberechnungen durch. 38 Prüfungen in 47 Millisekunden, wo ein
   Browserlauf zwölf Sekunden braucht.
+- `test89.mjs` tut dasselbe für `bereiche/wissen/dienst.js`: 98 Prüfungen in
+  60 Millisekunden. Die meisten davon liessen sich in einem Browser gar nicht
+  stellen — ob eine dreimal gewusste Karteikarte in fünfzehn Tagen wiederkommt,
+  kann man nicht abwarten.
+- `test90.mjs` prüft eine Grenze statt einer Rechnung: dass ein
+  Anführungszeichen im Text des Nutzers kein HTML-Attribut wird. Zwanzig der
+  fünfzig `esc`-Funktionen liessen es durch; an 41 Stellen landet ihr Ergebnis
+  in einem Attribut. Ein Knopf namens `" onfocus="…" autofocus="` bekam so
+  einen echten Ereignis-Handler, ohne dass ein `<script>` im Spiel war.
 
 Das ist der Sinn von A4: was rechnet, soll sich prüfen lassen, ohne dass etwas
 gezeichnet wird.

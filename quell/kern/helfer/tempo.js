@@ -19,7 +19,7 @@
 const Tempo = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ========================================================================
    * 1. FORMELSPEICHER

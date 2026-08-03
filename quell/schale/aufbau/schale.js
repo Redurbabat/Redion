@@ -16,7 +16,8 @@
 const App = (() => {
 
   let seiteId = null;
-  const esc = (s) => String(s ?? '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+  const esc = (s) => String(s ?? '')
+    .replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
 
   const aktuelleSeite = () => seiteId;
   const setzeSeite = (id) => { seiteId = id; };

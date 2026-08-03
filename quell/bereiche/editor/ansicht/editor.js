@@ -102,7 +102,7 @@ const Blocks = (() => {
    * HILFEN
    * ======================================================================*/
   const esc = (s) => String(s ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
   /** Wandelt gespeicherten Text in Anzeige-HTML um (Fett, Kursiv, Code, Links). */
   const inline = (s) => {

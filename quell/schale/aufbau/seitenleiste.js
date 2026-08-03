@@ -39,7 +39,7 @@ const Seitenleiste = (() => {
 
   /* Eigenes `esc` statt eingespeistem — so hält es auch `aufbau/reiter.js`.
      Drei Zeilen doppelt sind billiger als eine Abhängigkeit mehr. */
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   /* ------------------------------------------------------------------------
    * WAS VON AUSSEN KOMMT

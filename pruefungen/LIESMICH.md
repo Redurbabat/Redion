@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**59 Läufe, 2440 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**61 Läufe, 2553 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
@@ -36,6 +36,16 @@ Diese Läufe sind nicht beim Bauen entstanden, sondern **beim Kaputtmachen**.
 Fast jeder von ihnen hat mindestens einen echten Fehler gefunden, den kein
 Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
 
+- **Ein Anführungszeichen im Text wurde zu einem Attribut.** Zwanzig der
+  fünfzig `esc`-Funktionen ersetzten `&`, `<` und `>`, aber nicht `"`. An 41
+  Stellen landet ihr Ergebnis in einem Attribut — `<input value="${esc(…)}">`.
+  Wer einen Knopf `" onfocus="…" autofocus="` nennt, schliesst damit `value`
+  und schreibt zwei eigene Attribute dahinter. Kein `<script>`, das ein
+  Säuberer erkennen würde; ein gültiges `onfocus`, das der Browser ausführt.
+  Nachgestellt und bestätigt: der Handler lief. Gefunden wurde es nicht durch
+  Suchen nach Lücken, sondern beim Herauslösen von `wissen/dienst.js` — dort
+  fiel auf, dass die eine Datei ein `"` ersetzt und die Nachbardatei nicht.
+  → `test90.mjs` prüft das Verhalten, `test87.mjs` verhindert den Rückfall.
 - Der Abgleich schrieb geholte Sätze nur in den Arbeitsspeicher, nie auf die
   Platte. Nach dem Neuladen waren sie weg — und weil die Abgleichsmarke schon
   weitergerückt war, kamen sie **nie wieder**.
@@ -96,6 +106,7 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 87 | der Quelltext selbst — ohne Browser, in Millisekunden |
 | 88 | die Datenbank-Logik in Node — ohne document, ohne window |
 | 89 | die Werkzeug-Logik in Node — unscharfe Suche, SM-2, Markdown, Statistik |
+| 90 | ein Anführungszeichen im Text darf kein Attribut werden |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt

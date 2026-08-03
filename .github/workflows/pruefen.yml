@@ -60,7 +60,7 @@ jobs:
   pruefen:
     name: Alle Prüfläufe
     runs-on: ubuntu-latest
-    # 58 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
+    # 61 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
     # rund 12 Minuten. Die Pause ist kein Leerlauf: ohne sie werden die Läufe
     # flockig, weil Ports und IndexedDB einen Moment brauchen. Das Zeitfenster
     # ist grosszügig, weil ein Runner langsamer sein kann als dieser Rechner.

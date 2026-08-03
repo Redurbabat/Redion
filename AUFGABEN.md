@@ -194,6 +194,42 @@ Zeichenfunktion.
 
 ---
 
+### A5 — Den Säuberer aufhängen
+
+**Was auffiel.** `quell/kern/sicherheit/saeubern.js` ist 162 Zeilen lang, hat
+`html`, `nurText`, `alsText`, `alsAttribut`, `adresse`, `adresseOk` und
+`dateiname`, ist über `test85` mit 13 Prüfungen belegt — und **wird von keiner
+einzigen Stelle der App aufgerufen.** Der einzige Ort, an dem `Saeubern.`
+überhaupt steht, ist sein eigener Prüflauf. Ein Sicherheitsnetz, das niemand
+aufgehängt hat.
+
+Die App säubert stattdessen mit fünfzig eigenen `esc`-Funktionen, einer pro
+Modul. Genau daran hing der Fehler, den `test90` jetzt festhält: zwanzig davon
+liessen das Anführungszeichen durch. Das ist repariert, aber die Ursache bleibt
+— fünfzig Kopien einer Sicherheitsfunktion sind fünfzig Gelegenheiten, eine
+davon halb zu schreiben. `test87` fängt heute den einen bekannten Fall ab;
+mehr kann eine Textsuche nicht.
+
+**Wie.** Nicht in einem Zug. Die drei Stellen zuerst, an denen fremder Text
+hereinkommt und nicht bloss eigener Text zurückkommt: `dateien/einlesen.js`
+(HTML- und Markdown-Import), `verbinden/clipper.js` (was der Clipper von einer
+Webseite mitbringt) und `verbinden/eingang.js` (was über die Schnittstelle
+hereinkommt). Dort `Saeubern.html` statt eines eigenen `esc`, und für jede
+Stelle ein Prüflauf nach dem Vorbild von `test90`.
+
+Danach — und erst danach — kann `esc` aus den Modulen verschwinden und durch
+`Saeubern.alsText` ersetzt werden. Das sind fünfzig Dateien und eine reine
+Fleissarbeit; sie ändert kein Verhalten und gehört deshalb in einen eigenen
+Schritt, nicht neben eine inhaltliche Änderung.
+
+**Fertig wenn.** `Saeubern` steht an den drei Eingängen, jeder mit einem
+Prüflauf, der ohne die Säuberung rot wird. Belegt, nicht behauptet: bei
+`test90` wurde das nachgestellt, indem die Reparatur zurückgedreht und der
+Lauf erneut gestartet wurde — acht Prüfungen wurden rot. Ein Lauf, der nicht
+rot werden kann, prüft nichts.
+
+---
+
 ## B · Was inhaltlich noch aussteht
 
 Aus `doku/NOTION-10000X-BESSER.md`, die acht Punkte, die als „teilweise"

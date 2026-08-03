@@ -215,7 +215,7 @@ const Kommentare = (() => {
     });
   };
 
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   return { alle, offeneAnzahl, neu, panel, antworten, antwortWeg, reagieren,
            erwaehnt, mitErwaehnungen, anMich, finde, REAKTIONEN };
