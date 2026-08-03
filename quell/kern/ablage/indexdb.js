@@ -1032,21 +1032,35 @@ const Store = (() => {
    * sie nicht enthält** — im Feld `fehlt`, und die Oberfläche zeigt es an.
    * Ein bekannter Mangel, der benannt ist, ist kein stiller Verlust.
    */
-  const exportAll = () => {
+  /**
+   * @param {boolean} [mitAnhaengen] true, wenn der Aufrufer die Anhänge
+   *        daneben legt — also beim `.redion`-Archiv. Dann darf die Sicherung
+   *        nicht länger behaupten, sie fehlten.
+   *
+   * Die Felder `enthaelt`, `fehlt` und `hinweis` sind kein Beiwerk. Eine
+   * Sicherung, die nicht sagt, was sie auslässt, ist die gefährlichste Sorte:
+   * man merkt es erst, wenn man sie braucht.
+   */
+  const exportAll = (mitAnhaengen = false) => {
     const dateienDa = zaehlerDateien();
+    const fehlenAnhaenge = dateienDa && !mitAnhaengen;
     return JSON.stringify({
       version: VERSION,
       exportiert: now(),
       /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
-      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions'],
-      fehlt: dateienDa
+      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
+        .concat(mitAnhaengen && dateienDa ? ['dateien', 'stuecke'] : []),
+      fehlt: fehlenAnhaenge
         ? ['dateien', 'stuecke']
         : [],
-      hinweis: dateienDa
+      hinweis: fehlenAnhaenge
         ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
           'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
           'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
-        : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+        : dateienDa
+          ? 'Vollständig: die ' + dateienDa + ' Datei(en) liegen im Ordner ' +
+            '„dateien" desselben Archivs.'
+          : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
       blocks: cache.blocks,
       collections: cache.collections,
       views: cache.views,

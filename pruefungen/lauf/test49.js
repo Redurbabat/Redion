@@ -18,7 +18,7 @@ const pruef = (n, ist, soll) => {
 
   /* --- ZIP-Packer ------------------------------------------------------ */
   const zip = await p.evaluate(async () => {
-    const blob = Austausch.zipSchreiben([
+    const blob = await Austausch.zipSchreiben([
       { name: 'a.txt', inhalt: 'Hallo Welt' },
       { name: 'ordner/b.txt', inhalt: 'Zweite Datei' }
     ]);
@@ -51,7 +51,7 @@ const pruef = (n, ist, soll) => {
     Store.addRow(c.id, { title: 'Januar', wert: 1000 });
     Store.addRow(c.id, { title: 'Februar', wert: 1500 });
 
-    const blob = Austausch.alsWord(Store.getBlock(s.id));
+    const blob = await Austausch.alsWord(Store.getBlock(s.id));
     const gelesen = await Einlesen.zipLesen(await blob.arrayBuffer());
     const doc = await gelesen.text('word/document.xml');
     return { seite: s.id, coll: c.id,
@@ -79,7 +79,7 @@ const pruef = (n, ist, soll) => {
   const excel = await p.evaluate(async () => {
     const c = Store.getCollection(Object.keys(Store.cache.collections)
       .find(id => Store.cache.collections[id].name === 'Zahlen'));
-    const blob = Austausch.datenbankAlsExcel(c);
+    const blob = await Austausch.datenbankAlsExcel(c);
     const gelesen = await Einlesen.zipLesen(await blob.arrayBuffer());
     const blatt = await gelesen.text('xl/worksheets/sheet1.xml');
     const mappe = await gelesen.text('xl/workbook.xml');
@@ -104,7 +104,7 @@ const pruef = (n, ist, soll) => {
 
   /* Alle Datenbanken auf einmal */
   const alles = await p.evaluate(async () => {
-    const blob = Austausch.allesAlsExcel();
+    const blob = await Austausch.allesAlsExcel();
     const zurueck = await Einlesen.xlsxLesen(await blob.arrayBuffer());
     return zurueck.length;
   });
@@ -212,7 +212,7 @@ const pruef = (n, ist, soll) => {
 
   /* --- Notion-Export-ZIP ----------------------------------------------- */
   const notionZip = await p.evaluate(async () => {
-    const blob = Austausch.zipSchreiben([
+    const blob = await Austausch.zipSchreiben([
       { name: 'Export/Meine Seite 1234567890abcdef1234567890abcdef.md',
         inhalt: '# Meine Seite\n\nEin Absatz aus Notion.' },
       { name: 'Export/Unterbereich abcdef1234567890abcdef1234567890/Tabelle 0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f.csv',
