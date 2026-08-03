@@ -55,6 +55,13 @@ export const antwort = (status, koerper, kopf = {}) => ({
 export const fehler = (status, code, text) =>
   antwort(status, { object: 'error', status, code, message: text });
 
+/* Die Adressprüfung ist nach `sicherheit/cors.js` gewandert — sie gehört zur
+   Frage „wer darf von aussen", und dort steht sie jetzt vollständig. Hier
+   bleibt sie als Name stehen, weil der Anmeldeweg unten sie braucht und weil
+   Prüfläufe sie von hier holen. */
+export { erlaubteAdressen, rueckAdresse } from './sicherheit/cors.js';
+import { erlaubteAdressen, rueckAdresse, mitCors } from './sicherheit/cors.js';
+
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
 export const gleich = (a, b) => {
   const x = String(a ?? ''), y = String(b ?? '');
@@ -173,11 +180,17 @@ export const notieren = async (ablage, { bereich, kontoId, art, text, objekt }) 
 const teile = (pfad) => String(pfad).replace(/^\/+|\/+$/g, '').split('/');
 
 /**
+ * Der Beantworter selbst. Er setzt weiterhin an rund drei Dutzend Stellen
+ * `Access-Control-Allow-Origin: '*'` — das heisst dort aber nur noch „diese
+ * Antwort ist für die App von aussen gedacht". WELCHER Ursprung sie lesen
+ * darf, entscheidet `sicherheit/cors.js` beim Hinausgehen. Eine Regel an
+ * einer Stelle statt an sechsunddreissig.
+ *
  * @param {object} a       { methode, pfad, kopf, koerper, suche }
  * @param {object} ablage  eine Ablage aus ablage.js
  * @param {object} umwelt  { GITHUB_ID, GITHUB_GEHEIM, GOOGLE_ID, …, holen }
  */
-export const beantworte = async (a, ablage, umwelt = {}) => {
+const beantworteRoh = async (a, ablage, umwelt = {}) => {
   const m = String(a.methode || 'GET').toUpperCase();
   const t = teile(a.pfad || '/');
   const kopf = a.kopf || {};
@@ -229,6 +242,17 @@ export const beantworte = async (a, ablage, umwelt = {}) => {
     return fehler(500, 'internal_server_error', e.message || String(e));
   }
 };
+
+/**
+ * Der Eingang nach aussen — und das einzige Tor für die CORS-Zeile.
+ *
+ * Der Umweg über eine Hülle statt einer Änderung an 36 Stellen ist Absicht:
+ * die 36 bleiben lesbar als „nach draussen gedacht", und die Entscheidung,
+ * wer draussen ist, steht an einem Ort. Wer sie ändern will, ändert eine
+ * Datei — und nicht sechsunddreissig, von denen er eine übersieht.
+ */
+export const beantworte = async (a, ablage, umwelt = {}) =>
+  mitCors(await beantworteRoh(a, ablage, umwelt), a, umwelt);
 
 /* ==========================================================================
  * 6 · KONTO UND ANMELDUNG
@@ -309,7 +333,15 @@ const kontoWeg = async (a, ablage, umwelt, t, m, k, kopf, suche) => {
   /* --- OAuth: den Menschen zum Anbieter schicken ----------------------- */
   if (was === 'oauth' && t[2] && !t[3]) {
     const anbieter = t[2];
-    const zurueck = String(suche.zurueck || umwelt.ADRESSE || '');
+    /* Geprüft, nicht übernommen — siehe `rueckAdresse` oben. Eine Adresse,
+       die nicht auf der Liste steht, wird nicht stillschweigend durch die
+       eigene ersetzt: dann liefe der Mensch in eine Anmeldung, die woanders
+       endet als erwartet, ohne dass es jemand sagt. */
+    const zurueck = rueckAdresse(suche.zurueck || umwelt.ADRESSE, umwelt);
+    if (!zurueck) return fehler(400, 'adresse_nicht_erlaubt',
+      'Diese Rücksprung-Adresse steht nicht auf der Liste des Servers. ' +
+      'Erlaubt sind ' + (erlaubteAdressen(umwelt).join(', ') || '(noch keine)') +
+      ' — einzutragen als ADRESSE oder ADRESSEN.');
     const staat = kennung();
     await ablage.setze('marken', { wert: await abdruck(staat), art: 'oauth-staat',
       kontoId: '', bereich: '', name: anbieter, rechte: zurueck, angelegt: jetzt(),
@@ -438,14 +470,31 @@ const sitzungGeben = async (ablage, kontoId, geraet, weiterZu) => {
   if (weiterZu) {
     /* Der Schlüssel darf nicht in der Adresse stehen — sonst landet er im
        Verlauf und in jedem Protokoll dazwischen. Deshalb eine kleine Seite,
-       die ihn an das wartende Fenster weitergibt. */
+       die ihn an das wartende Fenster weitergibt.
+     *
+     * HIER STAND `postMessage(…, "*")`, UND DAS WAR EIN LOCH. Der Stern heisst
+     * „an jeden Ursprung". Wer eine eigene Seite baut, die dieses Fenster
+     * öffnet, ist `opener` — und bekommt den Sitzungsschlüssel geliefert,
+     * ohne je ein Passwort gesehen zu haben. Es braucht dafür keinen Fehler
+     * beim Anbieter und keine manipulierte Adresse; es genügt, das Fenster
+     * aufzumachen.
+     *
+     * Jetzt geht die Nachricht an genau einen Ursprung, und das ist der, den
+     * der Server vorher als erlaubt geprüft hat. Ein fremdes `opener`-Fenster
+     * bekommt sie nicht — der Browser stellt sie gar nicht erst zu. */
+    let zielUrsprung;
+    try { zielUrsprung = new URL(weiterZu).origin; } catch { zielUrsprung = ''; }
+    if (!zielUrsprung) return fehler(400, 'adresse_nicht_erlaubt',
+      'Ohne gültige Rücksprung-Adresse wird kein Schlüssel ausgeliefert.');
+
     const seite = '<!doctype html><meta charset="utf-8"><title>Angemeldet</title>' +
       '<style>body{font:15px system-ui;padding:44px;text-align:center;' +
       'background:#191a1e;color:#e8e8ea}</style>' +
       '<p>Angemeldet. Dieses Fenster kann zu.</p><script>' +
       'try{opener&&opener.postMessage(' +
-      JSON.stringify({ art: 'redion-anmeldung', token: roh }) +
-      ',"*")}catch(e){}setTimeout(function(){window.close()},300);</script>';
+      JSON.stringify({ art: 'redion-anmeldung', token: roh }) + ',' +
+      JSON.stringify(zielUrsprung) +
+      ')}catch(e){}setTimeout(function(){window.close()},300);</script>';
     return { status: 200,
              kopf: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
              koerper: seite };

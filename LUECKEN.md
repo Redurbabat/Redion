@@ -222,6 +222,39 @@ nach `AUSSEHEN.md` und ist ein eigener Arbeitsgang in Blöcken zu zwanzig.
 
 ---
 
+---
+
+## Teil D — Die Muss-Regeln Sicherheit aus dem Auftrag
+
+Zeile für Zeile geprüft. **Drei waren bereits erfüllt** — das gehört
+festgehalten, damit niemand sie noch einmal „repariert".
+
+| Muss-Regel | Stand | Beleg |
+|---|:--:|---|
+| Tokens nie im Klartext speichern | **✅ war schon** | `abdruck()` (SHA-256) in `sitzungGeben`; die Spalte heisst nur `token` |
+| Öffentliche Passwörter nie im Klartext | **✅ war schon** | `passwort: await abdruck(…)` beim Anlegen, Vergleich hasht die Eingabe |
+| Zeitkonstanter Vergleich | **✅ war schon** | `gleich()` in `server/kern.js` |
+| HTML säubern | **✅** | `Saeubern` hängt seit A5 an sechs Stellen |
+| Keine ungeprüften Redirects nach OAuth | **✅ repariert** | `rueckAdresse()`; `postMessage` an genau einen Ursprung → `test92` |
+| CORS in Produktion einschränken | **✅ repariert** | `server/sicherheit/cors.js`, eine Stelle statt 36 → `test92` |
+| Serverseitige Rechte durchsetzen | **✅** | `test80`–`test84` |
+| Keine geheimen Schlüssel im Frontend | **✅** | der KI-Schlüssel wird eingetippt und bleibt im Browser |
+| Eingaben validieren | **◐** | teilweise; kein durchgehender Prüfpunkt → **D1** |
+| Rate Limiting für Login und öffentliche Seiten | **✗** | → **D2** |
+| Sichere Security Headers | **✗** | kein CSP, kein `X-Content-Type-Options` → **D3** |
+| Keine sensiblen Daten in Logs | **?** | noch nicht durchgesehen → **D4** |
+
+- [ ] **D2 · Rate Limiting** — Login und `/s/:schluessel`. Cloudflare KV zählt,
+  wie der Auftrag es vorsieht. Ohne Server (`ablageSpeicher`) im Arbeitsspeicher.
+- [ ] **D3 · Security Headers** — `Content-Security-Policy`,
+  `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` für die
+  veröffentlichten Seiten. *Vorsicht:* eine CSP, die `inline` verbietet, bricht
+  die App — sie besteht aus `innerHTML`. Erst messen, dann setzen.
+- [ ] **D1 · Ein Prüfpunkt für Eingaben** — heute an jeder Route einzeln.
+- [ ] **D4 · Logs durchsehen**
+
+---
+
 ## Die Reihenfolge, in der ich das abarbeite
 
 1. **B1** If/Else in Aktionsketten — die grösste offene Lücke aus Teil 2

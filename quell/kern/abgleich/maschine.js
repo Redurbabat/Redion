@@ -192,8 +192,20 @@ const Wolke = (() => {
     if (!fenster) { schief(new Error(
       'Das Anmeldefenster wurde blockiert. Bitte Pop-ups für diese Seite erlauben.')); return; }
 
+    /* Von wem eine Nachricht kommen DARF: nur vom Server, den wir gefragt
+       haben. Diese Prüfung fehlte, und ohne sie durfte jede Seite — auch ein
+       eingebetteter Rahmen — einen Schlüssel hereinreichen. Die App hätte ihn
+       genommen, und von da an wären die Notizen des Menschen in den Bestand
+       eines Fremden geflossen. Nicht gestohlen, sondern hineingeschoben; das
+       ist die Richtung, die man leichter übersieht und die mehr kostet.
+       In `bereiche/verbinden/konten.js` stand diese Zeile schon — hier nicht.
+       Dieselbe Sorte Loch wie die zwanzig halben `esc`. */
+    let serverUrsprung;
+    try { serverUrsprung = new URL(wurzel).origin; } catch { serverUrsprung = ''; }
+
     const uhr = setTimeout(() => { aufraeumen(); schief(new Error('Zeit abgelaufen.')); }, 180000);
     const beiPost = async (e) => {
+      if (!serverUrsprung || e.origin !== serverUrsprung) return;
       const d = e.data || {};
       if (d.art !== 'redion-anmeldung' || !d.token) return;
       aufraeumen();

@@ -122,6 +122,42 @@ Diese Geheimnisse liegen bei Cloudflare, nicht im Repository — deshalb
 
 ---
 
+## Schritt 4b — Die eigene Adresse eintragen · **wichtig**
+
+Der Server muss wissen, unter welcher Adresse seine App liegt. Zwei Dinge
+hängen daran, und beide sind Sicherheitsfragen:
+
+- **Wohin nach dem Anmelden zurückgesprungen wird.** Diese Adresse bestimmt
+  am Ende, wohin der Sitzungsschlüssel geliefert wird. Sie kam früher
+  ungeprüft aus der Adresszeile.
+- **Wer den Server von aussen lesen darf** (CORS). Vorher durfte das jede
+  Seite im Netz — auch bei den Antworten, die ohne Anmeldung kommen.
+
+```
+npx wrangler secret put ADRESSE
+```
+
+Eintragen: die Adresse, unter der Redion läuft, ohne Schrägstrich am Ende —
+zum Beispiel `https://notizen.deine-domain.workers.dev`.
+
+Wer die App unter mehreren Adressen erreicht (etwa eine `.pages.dev` und eine
+eigene Domäne), trägt die weiteren mit Komma dazu ein:
+
+```
+npx wrangler secret put ADRESSEN
+```
+
+> **Solange `ADRESSE` fehlt, bleibt der Server bei „jeder darf lesen".** Das
+> ist Absicht — wer gerade zum ersten Mal veröffentlicht, soll nicht an einer
+> Sperre scheitern, die er noch gar nicht einrichten konnte. Es heisst aber
+> auch: **ohne diesen Schritt ist der Server nicht fertig eingerichtet.**
+> `localhost` bleibt immer erlaubt, damit das Entwickeln funktioniert.
+
+Ohne eingetragene Adresse lehnt die Anmeldung über GitHub oder Google mit
+einer Meldung ab, die sagt, was zu tun ist — sie scheitert nicht stumm.
+
+---
+
 ## Schritt 5 — In Redion anmelden
 
 In Redion: **Befehlspalette → „Wolke: anmelden und abgleichen"**.

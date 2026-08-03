@@ -57,6 +57,15 @@ Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
   Ursprung der Seite: aus dem Rahmen heraus war `parent` erreichbar. Ein
   Anhang, den niemand anklickt, führte Code aus, sobald die Vorschau aufging.
   → `test91.mjs`
+- **Der Anmeldeschlüssel ging an jeden Ursprung.** Der Server schickte ihn mit
+  `opener.postMessage(…, "*")` — wer eine eigene Seite baut, die das
+  Anmeldefenster öffnet, ist `opener` und bekommt ihn geliefert. Und die
+  Gegenrichtung fehlte auch: `abgleich/maschine.js` prüfte nicht, von wem eine
+  Nachricht kam, also durfte jede Seite einen Schlüssel *hereinreichen* — die
+  Notizen wären in den Bestand eines Fremden geflossen. Auffällig daran:
+  `verbinden/konten.js` prüfte es seit jeher. Zwei Empfänger derselben Sorte,
+  einer richtig, einer nicht — dasselbe Muster wie die zwanzig halben `esc`.
+  → `test92.mjs`
 - Der Abgleich schrieb geholte Sätze nur in den Arbeitsspeicher, nie auf die
   Platte. Nach dem Neuladen waren sie weg — und weil die Abgleichsmarke schon
   weitergerückt war, kamen sie **nie wieder**.
@@ -119,6 +128,7 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 89 | die Werkzeug-Logik in Node — unscharfe Suche, SM-2, Markdown, Statistik |
 | 90 | ein Anführungszeichen im Text darf kein Attribut werden |
 | 91 | der Säuberer hängt — Adressen in Links und Rahmen, HTML aus Mails |
+| 92 | der Anmeldeschlüssel geht nur an geprüfte Ursprünge · CORS |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt
