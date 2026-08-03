@@ -215,6 +215,45 @@ dort. Die übrigen 33:
 
 ---
 
+---
+
+## Teil E — Etappe 1: die lokale App stabil machen
+
+Priorität 3 des Auftrags. Zuerst die Frage, die die Abschlussregel stellt:
+**wo kann jemand unbemerkt Daten verlieren?**
+
+### E1 · Der Umzug einer alten Ablage · **geprüft**
+
+Der Fall, in dem Datenverlust am ehesten passiert: jemand hat die App vor
+Monaten benutzt und öffnet sie nach einer Aktualisierung. `test85` prüfte die
+**Beschreibung** der Umzüge — den Katalog. Den Fall selbst hatte nie ein Lauf
+durchgespielt.
+
+`test95.mjs` legt jetzt für **jede der fünf Fassungen** eine echte Ablage an,
+schreibt Seite, Text, Häkchen, Reihenfolge und Einstellung hinein, lässt die
+App darauf los und sieht nach. Alles überlebt, und danach lässt sich
+weiterschreiben. Dazu der Fall andersherum: eine Ablage, die **neuer** ist als
+die App — sie wird nicht zurückgestuft, und die App bleibt nicht leer stehen.
+
+Der Umzug war richtig gebaut. Bis hierher war das aber eine Annahme.
+
+### Noch offen in Etappe 1
+
+- [ ] **E2 · Export → Neuanfang → Import, mit echtem Vergleich.** Der
+  JSON-Export soll verlustfrei sein. Geprüft ist bisher, dass er *läuft* —
+  nicht, dass der Bestand danach **derselbe** ist. Der Vergleich muss Feld für
+  Feld gehen, sonst ist er die Zusicherung, die man am ehesten glaubt und am
+  wenigsten geprüft hat.
+- [ ] **E3 · Papierkorb: was ist wirklich wiederherstellbar?** Und was wird
+  beim endgültigen Löschen mitgenommen — Versionen, Dateien, Kommentare?
+- [ ] **E4 · `VERSIONEN_MAX: 200`** — was passiert mit der 201. Fassung? Wenn
+  die älteste stillschweigend wegfällt, ist das vertretbar; es muss nur
+  jemand einmal nachgesehen haben.
+- [ ] **E5 · Zwei Fenster, dieselbe Ablage.** `onblocked` meldet sich mit
+  einem Satz — geprüft ist er nicht.
+
+---
+
 ## Was diese Liste **nicht** enthält
 
 Das Aussehen. Die 270 Screenshots sind noch nicht durchgegangen; das gehört
