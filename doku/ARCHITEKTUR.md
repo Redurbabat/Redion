@@ -252,7 +252,7 @@ still, und im Melder nachlesbar.
 
 ## Prüfen
 
-`npm run pruefen` — sechs Läufe unter `pruefungen/` und `server/`, 313
+`npm run pruefen` — sieben Läufe unter `pruefungen/` und `server/`, 342
 einzelne Prüfungen. Sie laufen ausserdem bei jedem Push von selbst
 (`.github/workflows/pruefen.yml`). Sie laufen über echtes Chromium gegen die echte App, nicht gegen
 Attrappen.

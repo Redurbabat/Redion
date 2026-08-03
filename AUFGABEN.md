@@ -1,6 +1,6 @@
 # Was noch offen ist
 
-**Stand: 3. August 2026** · 6 Prüfläufe im Repository grün (313 Prüfungen) ·
+**Stand: 3. August 2026** · 7 Prüfläufe im Repository grün (342 Prüfungen) ·
 516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
 
 > **Zu den Prüfläufen.** Es hiess hier „53 Prüfläufe grün". Die lagen unter

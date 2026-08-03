@@ -335,8 +335,15 @@ npm run pruefen seiten    nur die, deren Name das enthält
 node bauen.js      die Einzeldatei neu bauen
 ```
 
-Sechs Läufe, 313 einzelne Prüfungen, über echtes Chromium gegen die echte App
-— keine Attrappen. Sie liegen unter `pruefungen/` und `server/`.
+Sieben Läufe, 342 einzelne Prüfungen. Sie liegen unter `pruefungen/` und
+`server/` und laufen bei jedem Push auch von selbst
+(`.github/workflows/pruefen.yml`).
+
+Die meisten gehen über echtes Chromium gegen die echte App — keine Attrappen.
+Zwei brauchen keinen Browser: `rollen` vergleicht die Rechte in Oberfläche und
+Server und ist nach 80 Millisekunden fertig, `servercheck` und `server-rechte`
+sprechen nur mit dem Server. Deshalb stehen die schnellen vorn: wenn die Rechte
+auseinanderlaufen, will man das wissen, bevor man auf die Browserläufe wartet.
 
 Playwright ist eine **devDependency**: sie wird zum Prüfen gebraucht, nie zum
 Laufen. Wer die App nur benutzt, braucht kein npm und kein Node.

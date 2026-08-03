@@ -31,6 +31,11 @@ const WURZEL = path.dirname(__dirname);
 /* `browser: true` heisst: dieser Lauf startet Chromium und braucht danach
    seine Pause. Die reinen Serverläufe brauchen sie nicht. */
 const LAEUFE = [
+  /* Zuerst, weil er in Millisekunden fertig ist: wenn Oberfläche und Server
+     bei den Rechten auseinanderlaufen, will man das wissen, bevor man
+     dreissig Sekunden auf Browserläufe wartet. */
+  { name: 'rollen',       datei: 'pruefungen/rollen.mjs',      browser: false,
+    was: 'Rechte: Oberfläche und Server müssen dasselbe sagen' },
   { name: 'servercheck',  datei: 'server/servercheck.mjs',     browser: false,
     was: 'Der Server von unten: Anmeldung, Abgleich, Rechte' },
   { name: 'server-rechte', datei: 'server/test75.mjs',         browser: false,
