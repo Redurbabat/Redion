@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**58 Läufe, rund 2330 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**58 Läufe, 2329 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
