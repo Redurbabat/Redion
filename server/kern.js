@@ -242,7 +242,34 @@ const beantworteRoh = async (a, ablage, umwelt = {}) => {
 
     return fehler(404, 'object_not_found', 'Diesen Weg gibt es nicht: /' + t.join('/'));
   } catch (e) {
-    return fehler(500, 'internal_server_error', e.message || String(e));
+    /* HIER GING `e.message` UNGEPRÜFT NACH DRAUSSEN. Das ist bequem beim
+       Entwickeln und verrät im Betrieb den Innenbau: eine D1-Meldung nennt
+       Tabellen und Spalten, eine JS-Meldung nennt Feldnamen, und was sonst
+       noch in einer Ausnahme steckt, weiss man vorher nicht — das ist ja das
+       Wesen einer unerwarteten Ausnahme.
+     *
+     * ZWEI REGELN STEHEN HIER GEGENEINANDER, und beide gelten:
+     *   · „keine sensiblen Daten nach draussen"  (der Auftrag)
+     *   · „keine stillen Fehlschläge. Was nicht geht, sagt warum." (CLAUDE.md)
+     *
+     * Eine nackte 500 ohne Erklärung würde die zweite verletzen. Deshalb eine
+     * KENNUNG: der Mensch bekommt einen Satz und eine kurze Zeichenfolge, der
+     * Betreiber findet unter derselben Zeichenfolge die Einzelheiten in
+     * `wrangler tail`. Damit ist der Fehler nachverfolgbar, ohne dass der
+     * Innenbau an jeden geht, der eine kaputte Anfrage schickt.
+     *
+     * Das gilt nur für den 500er. Alles Erwartbare — 401, 404, 410, 429 —
+     * sagt weiterhin im Klartext, was los ist. Ein Fehler, mit dem gerechnet
+     * wurde, ist keine Ausnahme, sondern eine Antwort. */
+    const kennzeichen = kennung().slice(0, 8);
+    try {
+      console.error('[' + kennzeichen + '] ' + String(a.methode || '?') + ' ' +
+                    String(a.pfad || '?'), (e && e.stack) || e);
+    } catch { /* kein Protokoll erreichbar — dann eben nicht */ }
+    return fehler(500, 'internal_server_error',
+      'Da ist etwas schiefgegangen, womit niemand gerechnet hat. Die Anfrage ' +
+      'wurde nicht ausgeführt. Kennung ' + kennzeichen + ' — damit findet ' +
+      'sich die Stelle im Serverprotokoll wieder.');
   }
 };
 
