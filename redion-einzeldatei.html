@@ -3394,6 +3394,18 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    background:var(--accent); width:0; transition:width .15s linear }
 .da-fortschritt span{ font-size:11.5px; color:var(--text-faint) }
 
+/* Die Frage mit mehreren Antworten. Jeder Knopf trägt seinen Hinweis mit —
+   bei einer Entscheidung, die Daten kostet, soll niemand raten müssen, was
+   hinter der Beschriftung steckt. */
+.wahl-knoepfe{display:flex; flex-direction:column; gap:8px; padding:4px 18px 18px}
+.wahl-knoepfe button{display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+                     text-align:left; padding:11px 14px; border:1px solid var(--line);
+                     border-radius:8px; background:var(--bg-card); color:var(--text)}
+.wahl-knoepfe button:hover{background:var(--bg-hover)}
+.wahl-knoepfe button.prim{border-color:var(--akzent)}
+.wahl-knoepfe button b{font-size:14.5px; font-weight:600}
+.wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
+
 </style>
 
 <!-- =========================================================================
@@ -7266,9 +7278,62 @@ const Dialog = (() => {
     inp.focus(); inp.select();
   });
 
-  /** Ein Streifen oben, wenn etwas grundsätzlich klemmt. */
+  /**
+   * Die Frage mit mehreren Antworten — für Entscheidungen, die niemand
+   * stillschweigend treffen darf.
+   *
+   * WARUM ES DIESE FUNKTION GIBT. `CLAUDE.md` sagt: nichts löschen ohne
+   * Rückfrage. Bis hierher gab es dafür kein Werkzeug ausser `confirm()` —
+   * und das kennt nur ja und nein. Eine Entscheidung wie „ersetzen oder
+   * dazulegen" ist aber keine Ja-Nein-Frage: beide Antworten sind richtig,
+   * je nachdem was der Mensch vorhat, und die falsche kostet Daten.
+   *
+   * Deshalb bekommt jeder Knopf einen eigenen **Hinweis** darunter. Wer
+   * „Ersetzen" liest, soll nicht raten müssen, was mit dem übrigen Bestand
+   * geschieht — es steht daneben.
+   *
+   * @param {{titel:string, text:string, knoepfe:Array<{id,text,hinweis}>}} opt
+   * @returns {Promise<string>} die `id` des gewählten Knopfes, '' beim Abbruch
+   *
+   * Abbrechen liefert `''` und nicht `null`: eine Kennung ist immer eine
+   * Zeichenkette, und wer `if (!wahl) return;` schreibt, deckt beide Fälle.
+   */
+  const wahl = ({ titel, text, knoepfe = [] }) => new Promise(ok => {
+    const esc = (s) => String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  return { frage };
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(540px,94vw)">' +
+        `<div class="fh">${esc(titel)}</div>` +
+        '<div style="padding:16px 18px; font-size:14px; line-height:1.6; white-space:pre-wrap">' +
+          esc(text) + '</div>' +
+        '<div class="wahl-knoepfe">' +
+        knoepfe.map((k, i) =>
+          `<button data-w="${esc(k.id)}"${i === 0 ? ' class="prim"' : ''}>` +
+          `<b>${esc(k.text)}</b>` +
+          (k.hinweis ? `<span>${esc(k.hinweis)}</span>` : '') +
+          '</button>').join('') +
+        '</div></div>';
+    document.body.appendChild(o);
+
+    const fertig = (wert) => { o.remove(); document.removeEventListener('keydown', beiTaste); ok(wert); };
+    const beiTaste = (e) => { if (e.key === 'Escape') fertig(''); };
+
+    o.addEventListener('click', e => {
+      const k = e.target.closest('[data-w]');
+      if (k) { fertig(k.dataset.w); return; }
+      /* Auf den Hintergrund klicken heisst abbrechen — nicht die erste
+         Antwort wählen. Bei einer Frage, die Daten kostet, ist die
+         versehentliche Wahl das, was es zu verhindern gilt. */
+      if (e.target === o) fertig('');
+    });
+    document.addEventListener('keydown', beiTaste);
+    o.querySelector('[data-w]')?.focus();
+  });
+
+  return { frage, wahl };
 })();
 
 window.Dialog = Dialog;
@@ -7607,26 +7672,100 @@ const Store = (() => {
     save('blocks', b);
   };
 
-  /** Löscht endgültig — samt aller Kinder. Danach ist nichts mehr zu retten. */
+  /**
+   * Löscht endgültig — samt aller Kinder. Danach ist nichts mehr zu retten.
+   *
+   * DAS WAR LANGE NICHT WAHR. Der Block ging, die Zeilen gingen, die
+   * Ansichten gingen — der **Versionsverlauf** und die **Anhänge** blieben
+   * liegen. Wer eine Seite endgültig löschte, weil niemand sie mehr sehen
+   * sollte, liess bis zu dreissig Fassungen davon auf der Platte zurück, mit
+   * vollem Text; ein angehängtes Video blieb vollständig da, ohne einen Weg,
+   * es je wieder zu sehen oder loszuwerden.
+   *
+   * Beides hängt nicht am Cache, sondern in eigenen Fächern der Ablage, und
+   * beides wird nur über einen Index gefunden. Deshalb ist das Aufräumen
+   * unvermeidlich asynchron — `purgeBlock` selbst muss synchron bleiben, es
+   * hat über hundert Aufrufstellen und wird mitten im Zeichnen gerufen.
+   * Der Weg dazwischen: der Aufruf sammelt beim Absteigen alle Kennungen ein
+   * und stösst danach `purgeAnhaenge` an. Geht dabei etwas schief, sagt es
+   * das über den Melder — still schlucken wäre das, was den Fehler überhaupt
+   * erst so lange verborgen hat.
+   */
   const purgeBlock = (id) => {
+    const gesammelt = [];
+    purgeTief(id, gesammelt);
+    if (!gesammelt.length) return;
+    notify('purge');
+    Promise.all(gesammelt.map(x => purgeAnhaenge(x)))
+      .catch(err => { if (typeof Melder !== 'undefined')
+        Melder.fehler('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
+  };
+
+  /** Der eigentliche Abstieg. Sammelt, was danach noch aufzuräumen ist. */
+  const purgeTief = (id, gesammelt) => {
     const b = cache.blocks[id];
     if (!b) return;
-    (b.content || []).forEach(purgeBlock);
+    gesammelt.push(id);
+    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt));
     /* Eine verknüpfte Ansicht zeigt fremde Daten — die bleiben bestehen. */
     if (b.collectionId && !b.verknuepft) {
       const c = cache.collections[b.collectionId];
       if (c) {
-        rowsOf(b.collectionId).forEach(r => { delete cache.blocks[r.id]; del('blocks', r.id); });
+        /* Auch eine Zeile kann Fassungen und Anhänge haben — sie ist eine
+           Seite. Sie hier zu vergessen wäre derselbe Fehler eine Ebene
+           tiefer, und die Ebene sieht niemand. */
+        rowsOf(b.collectionId).forEach(r => {
+          gesammelt.push(r.id); delete cache.blocks[r.id]; del('blocks', r.id);
+        });
         (c.viewIds || []).forEach(v => { delete cache.views[v]; del('views', v); });
         delete cache.collections[b.collectionId];
         del('collections', b.collectionId);
+        /* Die vorberechneten Werte dieser Datenbank sind ohne sie sinnlos. */
+        vorratWeg(b.collectionId).catch(() => {});
       }
     }
     const p = cache.blocks[b.parentId];
     if (p) { p.content = p.content.filter(x => x !== id); elternGeaendert(p); }
     delete cache.blocks[id];
     del('blocks', id);
-    notify('purge');
+  };
+
+  /**
+   * Was ausser dem Block selbst zu ihm gehört: seine Fassungen, seine
+   * Dateien und deren Stücke.
+   *
+   * Zweimal gerufen tut es beim zweiten Mal nichts — das ist Absicht. Der
+   * Papierkorb ruft es nach dem Löschen noch einmal nach, und ein Aufräumen,
+   * das beim zweiten Anlauf etwas kaputtmacht, wäre schlimmer als eines, das
+   * einmal zu wenig läuft.
+   *
+   * Der Abgleichsstand (`basis`) bleibt bewusst stehen. Er ist kein Inhalt,
+   * sondern das Gedächtnis darüber, dass beide Geräte diesen Satz einmal
+   * gleich sahen — erst dadurch kann ein Abgleich „hier gelöscht" von „hier
+   * nie gehabt" unterscheiden. Wer ihn mitnimmt, holt sich die Seite beim
+   * nächsten Abgleich vom anderen Gerät zurück.
+   */
+  const purgeAnhaenge = async (id, hinweis = {}) => {
+    for (const v of await versionen(id)) await del('versions', v.id);
+
+    const dateien = await new Promise((ok2) => {
+      if (!db || !db.objectStoreNames.contains('dateien')) return ok2([]);
+      try {
+        const r = tx(['dateien'], 'readonly').objectStore('dateien').index('block').getAll(id);
+        r.onsuccess = () => ok2(r.result || []);
+        r.onerror   = () => ok2([]);
+      } catch { ok2([]); }
+    });
+    /* Manche Blockarten merken sich die Datei am Block statt umgekehrt.
+       Beide Wege werden gegangen, doppelt gelöscht wird nichts. */
+    const kennungen = new Set(dateien.map(d => d.id));
+    const b = cache.blocks[id];
+    [hinweis.datei, b && b.dateiId, b && b.datei].forEach(x => { if (x) kennungen.add(x); });
+
+    for (const dateiId of kennungen) {
+      for (const st of await stueckeVon(dateiId)) await del('stuecke', st.id);
+      await del('dateien', dateiId);
+    }
   };
 
   /** Die lebenden Kindblöcke in der richtigen Reihenfolge. */
@@ -7655,6 +7794,86 @@ const Store = (() => {
   const trashed = () => Object.values(cache.blocks)
     .filter(b => !b.alive && b.type === 'page')
     .sort((a, b) => (b.trashedAt || '').localeCompare(a.trashedAt || ''));
+
+  /**
+   * Was ausser Seiten noch im Papierkorb liegt — Absätze, Bilder, Aufgaben.
+   *
+   * WARUM ES DAS BRAUCHT. `Strg`+`Umschalt`+`Rücktaste` legt einen Block weg
+   * und meldet „Block in den Papierkorb". Der Papierkorb zeigte nur Seiten;
+   * der Block stand auf `alive: false`, war aus der Elternliste heraus und
+   * damit an keiner Oberfläche mehr erreichbar. Rückgängig holte ihn zurück,
+   * solange das Fenster offen blieb — nach einem Neuladen nicht mehr.
+   *
+   * Verloren war er nie: er lag die ganze Zeit auf der Platte. Das ist
+   * schlimmer als weg, nicht besser — es sah aus wie Absicht.
+   *
+   * Eine Datenbankzeile ist eine Seite (`addRow` setzt `type: 'page'`) und
+   * steht deshalb schon bei `trashed()`. Hier darf sie nicht noch einmal
+   * auftauchen, sonst stünde sie zweimal im Papierkorb.
+   */
+  const papierkorbBloecke = () => Object.values(cache.blocks)
+    .filter(b => !b.alive && b.type !== 'page')
+    .sort((a, b) => (b.trashedAt || '').localeCompare(a.trashedAt || ''));
+
+  /**
+   * Räumt den Papierkorb nach der eingestellten Frist auf — wie Notions
+   * dreissig Tage.
+   *
+   * ES GAB DAS ZWEIMAL. Einmal in `bereiche/wissen/werkzeuge.js`, einmal in
+   * `bereiche/einstellungen/pflege.js`. Die zweite las `geloeschtAm` und
+   * `papierkorbFrist` — **zwei Namen, die im ganzen Quelltext niemand
+   * schreibt**. Sie lief beim Start und danach täglich und fand jedes Mal
+   * nichts; ihr Knopf „Papierkorb jetzt leeren" antwortete seit jeher
+   * „Nichts ist alt genug". Zwei Fassungen derselben Sache sind nicht
+   * doppelt sicher, sondern eine richtige und eine, die niemand prüft.
+   *
+   * Jetzt steht sie im Kern, weil sie in den Kern gehört: sie handelt von
+   * der Ablage, nicht von einem Bereich. Beide Bereiche reichen nur durch —
+   * und keiner ruft mehr in den anderen hinein.
+   *
+   * ─── DIE SCHONFRIST ───────────────────────────────────────────────────────
+   *
+   * Weggelegte Blöcke waren bis heute unsichtbar. Sie jetzt sichtbar zu
+   * machen heisst auch: ihnen laufen jetzt Fristen ab. Ein Bestand, in dem
+   * seit zwei Jahren still Blöcke liegen, wäre beim ersten Start nach dieser
+   * Änderung um sie ärmer — gelöscht, bevor irgendjemand sie je zu sehen
+   * bekam. Genau das darf nicht passieren.
+   *
+   * Deshalb merkt sich die App den Tag, an dem der Papierkorb anfing, alles
+   * zu zeigen. Für Blöcke zählt die Frist ab diesem Tag, nicht ab dem Tag
+   * des Weglegens. Für Seiten bleibt es beim Weglegen — die waren immer
+   * sichtbar, und ihre Frist jetzt zu verlängern wäre eine zweite Änderung.
+   */
+  const papierkorbAufraeumen = async () => {
+    const tage = Number(getMeta('papierkorbTage', 30));
+    if (!tage) return 0;                       /* 0 heisst: nie automatisch */
+    const grenze = Date.now() - tage * 86400000;
+
+    let sichtbarSeit = getMeta('papierkorbSichtbarSeit', '');
+    if (!sichtbarSeit) { sichtbarSeit = now(); setMeta('papierkorbSichtbarSeit', sichtbarSeit); }
+    const abDann = new Date(sichtbarSeit).getTime() || 0;
+
+    const wann = (b) => new Date(b.trashedAt).getTime();
+    const faellig = [
+      ...trashed().filter(s => s.trashedAt && wann(s) < grenze),
+      ...papierkorbBloecke().filter(b => b.trashedAt && Math.max(wann(b), abDann) < grenze)
+    ];
+    faellig.forEach(x => purgeBlock(x.id));
+    return faellig.length;
+  };
+
+  /** Was in den nächsten drei Tagen verschwindet — für den Hinweis im Papierkorb. */
+  const papierkorbBaldWeg = () => {
+    const tage = Number(getMeta('papierkorbTage', 30));
+    if (!tage) return [];
+    const grenze = Date.now() - (tage - 3) * 86400000;
+    const abDann = new Date(getMeta('papierkorbSichtbarSeit', '') || 0).getTime() || 0;
+    return [
+      ...trashed().filter(s => s.trashedAt && new Date(s.trashedAt).getTime() < grenze),
+      ...papierkorbBloecke().filter(b => b.trashedAt &&
+        Math.max(new Date(b.trashedAt).getTime(), abDann) < grenze)
+    ];
+  };
 
   const favorites = () => Object.values(cache.blocks)
     .filter(b => b.type === 'page' && b.alive && b.favorite);
@@ -7955,30 +8174,154 @@ const Store = (() => {
    * Weil alles lokal liegt, gehört ein Export dazu. Sonst hängen die Daten
    * an genau einem Browserprofil.
    * ======================================================================*/
-  const exportAll = () => JSON.stringify({
-    version: VERSION,
-    exportiert: now(),
-    blocks: cache.blocks,
-    collections: cache.collections,
-    views: cache.views,
-    meta: cache.meta
-  }, null, 2);
+  /**
+   * Der ganze Bestand als eine Datei.
+   *
+   * WAS HIER FEHLTE, und was es kostete: die Sicherung nahm vier der neun
+   * Fächer mit — `blocks`, `collections`, `views`, `meta`. Nicht dabei waren
+   * `versions`, `dateien` und `stuecke`. Wer seine Sicherung auf einem neuen
+   * Rechner einspielte, bekam seine Seiten zurück **und keinen einzigen
+   * Versionsverlauf**. Nachgestellt und bestätigt: eine Fassung vor dem
+   * Export, null danach.
+   *
+   * Dass es niemandem auffiel, liegt in der Natur der Sache — man merkt das
+   * Fehlen eines Verlaufs erst, wenn man ihn braucht, und dann ist die alte
+   * Ablage längst weg.
+   *
+   * `versions` ist jetzt dabei. Es ist reines JSON und kostet nichts.
+   *
+   * `dateien` und `stuecke` sind es NICHT, und das ist eine Entscheidung
+   * statt eines Versehens: dort liegen Blobs. `JSON.stringify` macht aus
+   * einem Blob `{}` — sie wären also scheinbar dabei und in Wahrheit leer,
+   * und das ist schlimmer als zu fehlen. Sie brauchen einen eigenen Weg
+   * (Base64 oder ein ZIP), und der braucht eine Antwort auf die Frage, was
+   * bei einem 500-MB-Video geschieht. Bis dahin **sagt die Sicherung, was
+   * sie nicht enthält** — im Feld `fehlt`, und die Oberfläche zeigt es an.
+   * Ein bekannter Mangel, der benannt ist, ist kein stiller Verlust.
+   */
+  const exportAll = () => {
+    const dateienDa = zaehlerDateien();
+    return JSON.stringify({
+      version: VERSION,
+      exportiert: now(),
+      /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
+      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions'],
+      fehlt: dateienDa
+        ? ['dateien', 'stuecke']
+        : [],
+      hinweis: dateienDa
+        ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
+          'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
+          'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
+        : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+      blocks: cache.blocks,
+      collections: cache.collections,
+      views: cache.views,
+      meta: cache.meta,
+      versions: exportVersionen
+    }, null, 2);
+  };
 
-  const importAll = async (json) => {
+  /* Der Verlauf wird beim Sichern eingelesen — er liegt bewusst nicht im
+     Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
+  let exportVersionen = [];
+  let exportDateien = 0;
+  const zaehlerDateien = () => exportDateien;
+
+  /** Vor dem Sichern aufrufen: holt, was nicht im Zwischenspeicher liegt. */
+  const exportVorbereiten = async () => {
+    exportVersionen = await all('versions').catch(() => []);
+    exportDateien = (await all('dateien').catch(() => [])).length;
+    return { versionen: exportVersionen.length, dateien: exportDateien };
+  };
+
+  /**
+   * Eine Sicherung einspielen.
+   *
+   * @param {string} json
+   * @param {'ersetzen'|'zusammenfuehren'} art
+   *
+   * HIER LAG DER ZWEITE FEHLER, und er war der unangenehmere. Die alte
+   * Fassung schrieb die Sicherung über den Zwischenspeicher und liess die
+   * Ablage stehen. Wer eine Sicherung in einen nicht leeren Bestand
+   * einspielte, sah danach genau das Richtige — **bis zum Neuladen.** Dann
+   * kamen alle alten Seiten zurück und lagen zwischen den eingespielten.
+   * Nachgestellt und bestätigt: die „GEISTERSEITE" war nach dem Neuladen
+   * wieder da.
+   *
+   * Das ist die schlimmste Sorte Fehler, die diese App haben kann: sie sieht
+   * aus wie ein geglückter Vorgang.
+   *
+   * Jetzt muss der Mensch sagen, was er will — und beides tut wirklich, was
+   * es verspricht:
+   *
+   *   ersetzen         die Ablage sieht danach aus wie die Sicherung.
+   *                    Was nicht darin steht, wird gelöscht — auch auf der
+   *                    Platte.
+   *   zusammenfuehren  die Sicherung kommt dazu. Nichts wird gelöscht;
+   *                    bei gleicher Kennung gewinnt die Sicherung.
+   *
+   * Es gibt bewusst KEINE Vorgabe. `CLAUDE.md`: nichts löschen ohne
+   * Rückfrage. Wer `importAll(json)` ohne Angabe ruft, bekommt einen Fehler
+   * mit der Frage — und nicht die stille Entscheidung von jemand anderem.
+   */
+  const importAll = async (json, art) => {
     const d = JSON.parse(json);
     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
-    cache.blocks      = d.blocks      || {};
-    cache.collections = d.collections || {};
-    cache.views       = d.views       || {};
-    cache.meta        = d.meta        || {};
-    /* Alles neu schreiben */
+    if (art !== 'ersetzen' && art !== 'zusammenfuehren')
+      throw new Error('Beim Einspielen muss feststehen, was geschehen soll: ' +
+                      '„ersetzen" wirft weg, was nicht in der Sicherung steht, ' +
+                      '„zusammenfuehren" legt sie dazu. Ohne Angabe wird nichts getan.');
+
+    const neu = {
+      blocks:      d.blocks      || {},
+      collections: d.collections || {},
+      views:       d.views       || {},
+      meta:        d.meta        || {}
+    };
+
+    if (art === 'ersetzen') {
+      /* Was in der Ablage steht und nicht in der Sicherung, muss weg — sonst
+         ist es kein Ersetzen, sondern ein Zusammenführen, das sich als
+         Ersetzen ausgibt. Und zwar von der PLATTE, nicht nur aus dem
+         Zwischenspeicher: genau daran hing der Fehler. */
+      for (const [fach, schluessel] of
+           [['blocks', 'id'], ['collections', 'id'], ['views', 'id']]) {
+        const vorhanden = await all(fach).catch(() => []);
+        for (const satz of vorhanden)
+          if (!neu[fach][satz[schluessel]]) await del(fach, satz[schluessel]);
+      }
+      const metaVorhanden = await all('meta').catch(() => []);
+      for (const m of metaVorhanden)
+        if (!(m.k in neu.meta)) await del('meta', m.k);
+
+      cache.blocks = neu.blocks; cache.collections = neu.collections;
+      cache.views = neu.views;   cache.meta = neu.meta;
+    } else {
+      /* Zusammenführen: nichts wegwerfen, die Sicherung sticht bei gleicher
+         Kennung. */
+      Object.assign(cache.blocks, neu.blocks);
+      Object.assign(cache.collections, neu.collections);
+      Object.assign(cache.views, neu.views);
+      Object.assign(cache.meta, neu.meta);
+    }
+
     await Promise.all([
       ...Object.values(cache.blocks).map(b      => put('blocks', b)),
       ...Object.values(cache.collections).map(c => put('collections', c)),
       ...Object.values(cache.views).map(v       => put('views', v)),
       ...Object.entries(cache.meta).map(([k,v]) => put('meta', { k, v }))
     ]);
+
+    /* Der Verlauf, falls die Sicherung ihn mitbringt. Ältere Sicherungen
+       haben ihn nicht — die sind deshalb nicht kaputt, nur älter. */
+    if (Array.isArray(d.versions))
+      await Promise.all(d.versions.map(v => put('versions', v)));
+
     notify('import');
+    return { bloecke: Object.keys(cache.blocks).length,
+             versionen: Array.isArray(d.versions) ? d.versions.length : 0,
+             fehlt: d.fehlt || [] };
   };
 
   /* ========================================================================
@@ -8096,9 +8439,25 @@ const Store = (() => {
 
   const versionLoeschen = (id) => del('versions', id);
 
-  /** Nur für den Notfall: alles weg. */
+  /**
+   * Nur für den Notfall: alles weg.
+   *
+   * DAS WAR NICHT ALLES. Hier stand eine Liste von fünf Fächern —
+   * `blocks`, `collections`, `views`, `meta`, `versions`. Es gibt neun. Nicht
+   * geleert wurden `dateien`, `stuecke`, `basis` und `vorrat`, also
+   * ausgerechnet das, was am meisten Platz belegt: **die Anhänge**. Wer
+   * zweimal bestätigte, ALLE Seiten und Datenbanken zu löschen, bekam eine
+   * leere App und behielt jedes hochgeladene Bild und jedes Video auf der
+   * Platte — unsichtbar, unerreichbar, und nicht mehr loszuwerden.
+   *
+   * Dieselbe Sorte Fehler wie beim endgültigen Löschen eine Zeile weiter
+   * oben, und aus demselben Grund: eine feste Liste, die beim Anbau eines
+   * Fachs niemand nachgezogen hat. Deshalb steht hier jetzt keine Liste
+   * mehr, sondern die Frage an die Ablage selbst — ein neues Fach ist damit
+   * von sich aus dabei.
+   */
   const wipe = async () => {
-    if (db) await Promise.all(['blocks','collections','views','meta','versions'].map(s => new Promise(ok => {
+    if (db) await Promise.all([...db.objectStoreNames].map(s => new Promise(ok => {
       try {
         const r = tx([s], 'readwrite').objectStore(s).clear();
         r.onsuccess = ok; r.onerror = ok;
@@ -8174,6 +8533,7 @@ const Store = (() => {
   return {
     load, uid, now, cache,
     addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
+    purgeAnhaenge, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
     addPage, rootPages, trashed, favorites, pathOf,
     addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
     rohSetzen,
@@ -8181,7 +8541,7 @@ const Store = (() => {
     setMeta, getMeta, flush,
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen,
-    search, pfadText, exportAll, importAll, wipe, usage,
+    search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
     vorratPut, vorratHolen, vorratWeg, vorratAlle,
@@ -23950,19 +24310,26 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
   /* ========================================================================
    * START
    * ======================================================================*/
-  /** Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions 30 Tage). */
-  const papierkorbAufraeumen = () => {
-    const tage = Number(Store.getMeta('papierkorbTage', 30));
-    if (!tage) return;                         /* 0 heisst: nie automatisch */
-    const grenze = Date.now() - tage * 86400000;
-    let weg = 0;
-    Store.trashed().forEach(p => {
-      if (!p.trashedAt) return;
-      if (new Date(p.trashedAt).getTime() > grenze) return;
-      Store.purgeBlock(p.id);
-      weg++;
-    });
-    if (weg) UI.toast(weg + ' Seiten im Papierkorb waren älter als ' + tage + ' Tage und wurden gelöscht');
+  /**
+   * Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions
+   * 30 Tage). Die Frist selbst steht in `kern/ablage` — hier reicht nur
+   * noch der Name durch, weil er zur öffentlichen Fläche dieses Bereichs
+   * gehört und aussen gerufen wird.
+   *
+   * Vorher rechnete diese Fassung die Frist selbst, und in
+   * `bereiche/einstellungen/pflege.js` stand eine zweite, die auf zwei
+   * Feldnamen zeigte, die es nie gab. Die eine räumte, die andere fand nie
+   * etwas — und beide räumten nur Seiten, nie die weggelegten Blöcke.
+   *
+   * Aufgeräumt wird nur noch an einer Stelle. Gemeldet wird hier: eine
+   * Zahl, die niemand sieht, ist keine Aufräumung, sondern ein Verschwinden.
+   */
+  const papierkorbAufraeumen = async () => {
+    const weg = await Store.papierkorbAufraeumen();
+    if (weg) UI.toast(weg + (weg === 1 ? ' Ding war' : ' Dinge waren') +
+                      ' zu lange im Papierkorb und wurde' + (weg === 1 ? '' : 'n') +
+                      ' endgültig gelöscht');
+    return weg;
   };
 
   /* ========================================================================
@@ -24113,7 +24480,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     /* Erinnerungen alle halbe Minute prüfen */
     erinnerungenPruefen();
     setInterval(erinnerungenPruefen, 30000);
-    setTimeout(papierkorbAufraeumen, 3000);
+    /* Den Papierkorb stösst `Pflege.start()` an — einmal nach dem Start und
+       danach täglich. Hier stand dasselbe noch einmal, drei Sekunden früher.
+       Zwei Zeitgeber für dieselbe Arbeit sind kein doppelter Boden: sie
+       sorgen dafür, dass man beim Suchen den falschen findet. */
 
     document.addEventListener('keydown', e => {
       const strg = e.ctrlKey || e.metaKey;
@@ -25678,8 +26048,13 @@ const Einstellungen = (() => {
       zeile('Blöcke', '', `<span class="ez-grau">${Object.keys(Store.cache.blocks).length}</span>`) +
       zeile('Datenbanken', '', `<span class="ez-grau">${Object.keys(Store.cache.collections).length}</span>`) +
       zeile('Ansichten', '', `<span class="ez-grau">${Object.keys(Store.cache.views).length}</span>`) +
-      zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten</span> ` +
-            knopf('papierkorb', 'Öffnen')) +
+      /* „N Seiten" stimmte nur zur Hälfte: daneben lagen weggelegte Blöcke,
+         die niemand zählte und niemand zeigte. Wer hier eine Zahl liest,
+         soll wissen, wie viel wirklich im Papierkorb liegt. */
+      zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten` +
+            ((Store.papierkorbBloecke ? Store.papierkorbBloecke().length : 0)
+              ? `, ${Store.papierkorbBloecke().length} Blöcke` : '') +
+            '</span> ' + knopf('papierkorb', 'Öffnen')) +
       zeile('Papierkorb selbst leeren', 'Nach dieser Frist wird endgültig gelöscht — wie Notions 30 Tage',
             wahl('papierkorbTage', [['30', 'nach 30 Tagen'], ['7', 'nach 7 Tagen'],
                                     ['90', 'nach 90 Tagen'], ['0', 'nie']],
@@ -34246,27 +34621,33 @@ const Pflege = (() => {
 
   /* ========================================================================
    * 3. PAPIERKORB RÄUMT SELBST AUF
+   * ------------------------------------------------------------------------
+   * Hier stand einmal eine eigene Fassung davon. Sie las `geloeschtAm` und
+   * `papierkorbFrist` — zwei Namen, die im ganzen Quelltext niemand schreibt;
+   * das Feld heisst `trashedAt`, die Einstellung `papierkorbTage`. Sie lief
+   * beim Start und danach täglich und fand jedes Mal nichts. Ihr Knopf
+   * „Papierkorb jetzt leeren" antwortete seit jeher „Nichts ist alt genug".
+   *
+   * Aufgefallen ist es nie, weil daneben eine zweite Fassung in
+   * `bereiche/wissen/werkzeuge.js` lief, die es richtig machte. Zwei
+   * Fassungen derselben Sache sind nicht doppelt sicher, sondern eine
+   * richtige und eine, die niemand prüft.
+   *
+   * Jetzt steht die Frist in `kern/ablage` — sie handelt von der Ablage,
+   * nicht von einem Bereich. Was hier bleibt, ist die Meldung an den
+   * Menschen; die gehört an die Oberfläche und nicht in den Kern.
    * ======================================================================*/
-  const papierkorbAufraeumen = ({ still = true } = {}) => {
-    const frist = Store.getMeta('papierkorbFrist', 30);
-    if (!frist || frist === 'nie') return 0;
-    const grenze = new Date(Date.now() - Number(frist) * 86400000);
-    const alt = Object.values(Store.cache.blocks).filter(x =>
-      !x.alive && x.geloeschtAm && new Date(x.geloeschtAm) < grenze);
-    alt.forEach(x => Store.purgeBlock(x.id));
-    if (alt.length && !still)
-      UI.toast(alt.length + ' Dinge nach ' + frist + ' Tagen endgültig gelöscht');
-    return alt.length;
+  const papierkorbAufraeumen = async ({ still = true } = {}) => {
+    const anzahl = await Store.papierkorbAufraeumen();
+    if (anzahl && !still)
+      UI.toast(anzahl + (anzahl === 1 ? ' Ding war' : ' Dinge waren') +
+               ' zu lange im Papierkorb und wurde' + (anzahl === 1 ? '' : 'n') +
+               ' endgültig gelöscht');
+    return anzahl;
   };
 
   /** Was verschwindet demnächst? Für den Hinweis im Papierkorb. */
-  const baldWeg = () => {
-    const frist = Store.getMeta('papierkorbFrist', 30);
-    if (!frist || frist === 'nie') return [];
-    const grenze = new Date(Date.now() - (Number(frist) - 3) * 86400000);
-    return Object.values(Store.cache.blocks).filter(x =>
-      !x.alive && x.geloeschtAm && new Date(x.geloeschtAm) < grenze);
-  };
+  const baldWeg = () => Store.papierkorbBaldWeg();
 
   /* ========================================================================
    * 4. FEHLERLISTE
@@ -34379,7 +34760,7 @@ const Pflege = (() => {
       '</div>';
     document.body.appendChild(o);
 
-    o.addEventListener('click', e => {
+    o.addEventListener('click', async e => {
       if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (a === 'gesund')    { o.remove(); gesundheit(); }
@@ -34387,8 +34768,11 @@ const Pflege = (() => {
       if (a === 'sichern')   { o.remove(); Einstellungen.sicherungSchreiben
                                 ? Einstellungen.sicherungSchreiben() : Werkzeuge.einzelDatei(); }
       if (a === 'papier') {
-        const n = papierkorbAufraeumen({ still: false });
-        UI.toast(n ? n + ' endgültig gelöscht' : 'Nichts ist alt genug — nichts gelöscht');
+        /* Das `await` ist nicht Zierde: ohne es stand hier eine Zusage über
+           ein Versprechen statt über eine Zahl, und die Meldung hätte
+           „[object Promise] endgültig gelöscht" gelautet. */
+        const n = await papierkorbAufraeumen({ still: false });
+        if (!n) UI.toast('Nichts ist alt genug — nichts gelöscht');
       }
       if (a === 'reparieren') {
         const g = bestandPruefen();
@@ -34415,9 +34799,12 @@ const Pflege = (() => {
       try { fehlerMerken(e.reason?.message || String(e.reason), 'Versprechen'); } catch {}
     });
 
-    /* Papierkorb einmal nach dem Start und danach täglich */
-    setTimeout(() => papierkorbAufraeumen(), 8000);
-    setInterval(() => papierkorbAufraeumen(), 86400000);
+    /* Papierkorb einmal nach dem Start und danach täglich.
+       `still: false` ist kein Detail: was hier endgültig gelöscht wird, ist
+       endgültig gelöscht. Das darf der Mensch erfahren, auch wenn er es
+       eingestellt hat — sonst verschwindet etwas, und niemand hat es gesagt. */
+    setTimeout(() => papierkorbAufraeumen({ still: false }), 8000);
+    setInterval(() => papierkorbAufraeumen({ still: false }), 86400000);
   };
 
   return { start, gesundheit, befund, dubletten, dublettenDialog,
@@ -49434,6 +49821,25 @@ const App = (() => {
     o.className = 'overlay';
     document.body.appendChild(o);
 
+    /* Ein weggelegter Block ist keine Seite und hat keinen Titel — er hat
+       einen Anfang. Für die Liste ist der Anfang der Name, und dazu, woher
+       er kam: ohne die Herkunft steht dort dreimal „Text" und niemand weiss,
+       welches davon zurückzuholen ist. */
+    const blockName = (b) => {
+      const roh = String(b.text || '').replace(/\s+/g, ' ').trim();
+      /* `Register.bloecke` ist kein Feld, sondern ein Katalog mit `eines(id)`.
+         Der Unterschied kostet hier nichts und im Betrieb einen Absturz
+         mitten im Zeichnen — deshalb steht der richtige Name jetzt da und
+         nicht der geratene. */
+      const art = (typeof Register !== 'undefined' && Register.bloecke &&
+                   (Register.bloecke.eines(b.type) || {}).name) || b.type;
+      return roh ? (roh.length > 60 ? roh.slice(0, 60) + '…' : roh) : art;
+    };
+    const blockHer = (b) => {
+      const e = b.parentId ? Store.getBlock(b.parentId) : null;
+      return e ? (e.text || 'Ohne Titel') : 'unbekannte Seite';
+    };
+
     const zeichne = () => {
       const alle = Store.trashed();
       let liste = alle;
@@ -49441,6 +49847,17 @@ const App = (() => {
       if (filterVon) liste = liste.filter(p => (p.geaendertVon || p.erstelltVon || 'Ich') === filterVon);
       if (filterOrt) liste = liste.filter(p => (p.parentId || '') === filterOrt);
       if (filterBereich) liste = liste.filter(p => (p.bereich || '') === filterBereich);
+
+      /* Weggelegte Blöcke. Bis hierher zeigte sie niemand: `Strg`+`Umschalt`+
+         `Rücktaste` meldete „Block in den Papierkorb" und legte ihn an einen
+         Ort, den es nicht gab. Er lag auf der Platte und war an keiner
+         Oberfläche mehr zu erreichen — das ist schlimmer als gelöscht,
+         weil es aussieht wie Absicht. */
+      let bloecke = Store.papierkorbBloecke ? Store.papierkorbBloecke() : [];
+      if (suche) bloecke = bloecke.filter(b =>
+        (blockName(b) + ' ' + blockHer(b)).toLowerCase().includes(suche.toLowerCase()));
+      if (filterVon) bloecke = bloecke.filter(b => (b.geaendertVon || b.erstelltVon || 'Ich') === filterVon);
+      if (filterOrt) bloecke = bloecke.filter(b => (b.parentId || '') === filterOrt);
 
       const chip = (id, text, an) =>
         `<button class="pk-chip${an ? ' on' : ''}" data-f="${id}">${text}<span>⌄</span></button>`;
@@ -49470,7 +49887,8 @@ const App = (() => {
                 '<div class="grp">Papierkorb</div>'
               : '') +
             (liste.length
-              ? liste.map(p =>
+              ? (bloecke.length ? '<div class="grp">Seiten</div>' : '') +
+                liste.map(p =>
                   `<button data-id="${p.id}">` +
                   `<span>${p.icon || '📄'}</span>` +
                   `<span style="flex:1">${esc(p.text || 'Ohne Titel')}` +
@@ -49479,11 +49897,32 @@ const App = (() => {
                   '<span class="pk-tat" data-a="restore-wo" title="An anderer Stelle wiederherstellen">↳</span>' +
                   '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
                   '</button>').join('')
-              : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`) +
+              : (bloecke.length ? ''
+                 : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`)) +
+            (bloecke.length
+              ? '<div class="grp">Blöcke</div>' +
+                bloecke.map(b =>
+                  `<button data-id="${b.id}">` +
+                  '<span>🧩</span>' +
+                  `<span style="flex:1">${esc(blockName(b))}` +
+                  `<span class="snip">aus „${esc(blockHer(b))}" · gelöscht ` +
+                  `${esc(Werkzeuge.zeitKurz(b.trashedAt))}</span></span>` +
+                  '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
+                  '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
+                  '</button>').join('')
+              : '') +
           '</div>' +
-          '<div class="hint pk-hint">Nachdem eine Seite 30 Tage lang im Papierkorb war, wird sie ' +
-          'automatisch gelöscht. Endgültig gelöschte Seiten lassen sich nicht zurückholen.' +
-          (alle.length ? '<button class="pk-alle" data-a="alle">Papierkorb leeren</button>' : '') +
+          /* Die Frist steht in den Einstellungen und nicht fest bei 30 — hier
+             stand jahrelang „30 Tage", auch wenn jemand 7 eingestellt hatte.
+             Eine Zusage, die von der Einstellung abweicht, ist schlimmer als
+             gar keine: sie wird geglaubt. */
+          '<div class="hint pk-hint">' + (() => {
+            const t = Number(Store.getMeta('papierkorbTage', 30));
+            return t ? `Nach ${t} Tagen im Papierkorb wird endgültig gelöscht. `
+                     : 'Automatisch gelöscht wird nichts — so ist es eingestellt. ';
+          })() + 'Endgültig Gelöschtes lässt sich nicht zurückholen.' +
+          (alle.length + bloecke.length
+            ? '<button class="pk-alle" data-a="alle">Papierkorb leeren</button>' : '') +
           '</div>' +
         '</div>';
 
@@ -49532,9 +49971,14 @@ const App = (() => {
       }
 
       if (e.target.closest('[data-a="alle"]')) {
-        if (!confirm('Alles im Papierkorb endgültig löschen?')) return;
+        const bl = Store.papierkorbBloecke ? Store.papierkorbBloecke() : [];
+        const n = Store.trashed().length + bl.length;
+        if (!confirm(`${n} ${n === 1 ? 'Ding' : 'Dinge'} endgültig löschen? ` +
+                     'Mit ihnen gehen ihre Fassungen und Anhänge. ' +
+                     'Das lässt sich nicht rückgängig machen.')) return;
         Store.trashed().forEach(p => Store.purgeBlock(p.id));
-        zeichne(); zeichneBaum(); UI.toast('Papierkorb geleert');
+        bl.forEach(b => Store.purgeBlock(b.id));
+        zeichne(); zeichneBaum(); App.zeichneSeite(); UI.toast('Papierkorb geleert');
         return;
       }
 
@@ -49560,14 +50004,27 @@ const App = (() => {
           wohin(id, () => { zeichne(); zeichneBaum(); });
           return;
         }
-        Store.restoreBlock(id); zeichne(); zeichneBaum(); UI.toast('Wiederhergestellt'); return;
+        Store.restoreBlock(id); zeichne(); zeichneBaum();
+        /* Ein Block kommt auf einer Seite zurück, nicht im Baum. Ohne das
+           Neuzeichnen stünde er wieder in der Ablage und nicht auf dem
+           Bildschirm — und wer nichts sieht, klickt noch einmal. */
+        App.zeichneSeite();
+        UI.toast('Wiederhergestellt'); return;
       }
       if (s && s.dataset.a === 'restore-wo') { wohin(id, () => { zeichne(); zeichneBaum(); }); return; }
       if (s && s.dataset.a === 'purge') {
-        if (!confirm('Endgültig löschen? Das lässt sich nicht rückgängig machen.')) return;
-        Store.purgeBlock(id); zeichne(); UI.toast('Endgültig gelöscht'); return;
+        const w = Store.getBlock(id);
+        if (!confirm((w && w.type !== 'page' ? 'Diesen Block' : 'Das') +
+                     ' endgültig löschen? Mit ihm gehen seine Fassungen und Anhänge. ' +
+                     'Das lässt sich nicht rückgängig machen.')) return;
+        Store.purgeBlock(id); zeichne(); App.zeichneSeite(); UI.toast('Endgültig gelöscht'); return;
       }
-      Store.restoreBlock(id); o.remove(); oeffne(id);
+      /* Klick auf die Zeile selbst: zurückholen und hingehen. Bei einem
+         Block ist „hin" nicht der Block — der ist keine Seite und liesse
+         sich nicht öffnen —, sondern die Seite, auf der er wieder steht. */
+      const w2 = Store.getBlock(id);
+      Store.restoreBlock(id); o.remove();
+      oeffne(w2 && w2.type !== 'page' ? (w2.parentId || id) : id);
     });
 
     zeichne();
@@ -49579,13 +50036,21 @@ const App = (() => {
   /* Der Einstellungsbereich liegt in einer eigenen Datei. */
   const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
 
-  const sicherungSpeichern = () => {
+  const sicherungSpeichern = async () => {
+    /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
+       Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
+    const stand = await Store.exportVorbereiten();
     const blob = new Blob([Store.exportAll()], { type: 'application/json' });
     const l = document.createElement('a');
     l.href = URL.createObjectURL(blob);
     l.download = 'notizen-sicherung-' + new Date().toISOString().slice(0, 10) + '.json';
     l.click();
-    UI.toast('Sicherung gespeichert');
+    /* Sagen, was drin ist — und vor allem, was nicht. Ein bekannter Mangel,
+       der benannt ist, ist kein stiller Verlust. */
+    UI.toast(stand.dateien
+      ? 'Sicherung gespeichert — ohne die ' + stand.dateien + ' Datei(en), die ' +
+        'nur auf diesem Gerät liegen'
+      : 'Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
   };
 
   const sicherungLaden = (danach) => {
@@ -49593,11 +50058,49 @@ const App = (() => {
     inp.type = 'file'; inp.accept = '.json';
     inp.addEventListener('change', async () => {
       const f = inp.files[0]; if (!f) return;
+      const text = await f.text();
+
+      /* WAS SOLL GESCHEHEN? Vorher gab es diese Frage nicht, und das Ergebnis
+         war keines von beidem: die Sicherung überschrieb den Zwischenspeicher
+         und liess die Ablage stehen. Nach dem nächsten Neuladen lagen die
+         alten Seiten wieder zwischen den eingespielten. Es sah aus wie ein
+         geglückter Vorgang — die schlimmste Sorte Fehler, die diese App
+         haben kann.
+
+         `CLAUDE.md`: nichts löschen ohne Rückfrage. Also wird gefragt. */
+      let vorschau = {};
+      try { vorschau = JSON.parse(text); } catch {
+        alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
+        return;
+      }
+      const wieViele = Object.keys(vorschau.blocks || {}).length;
+      const jetzt = Object.keys(Store.cache.blocks || {}).length;
+
+      const wahl = await Dialog.wahl({
+        titel: 'Sicherung einspielen',
+        text: 'Die Datei enthält ' + wieViele + ' Blöcke' +
+              (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
+                ' Fassungen aus dem Verlauf' : '') + '. ' +
+              'In diesem Bestand liegen gerade ' + jetzt + ' Blöcke.' +
+              (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
+        knoepfe: [
+          { id: 'ersetzen', text: 'Ersetzen',
+            hinweis: 'Der Bestand sieht danach aus wie die Sicherung. Was ' +
+                     'nicht darin steht, wird gelöscht.' },
+          { id: 'zusammenfuehren', text: 'Dazulegen',
+            hinweis: 'Nichts wird gelöscht. Bei gleicher Kennung gewinnt die ' +
+                     'Sicherung.' },
+          { id: '', text: 'Abbrechen' }
+        ]
+      });
+      if (!wahl) return;
+
       try {
-        await Store.importAll(await f.text());
+        const erg = await Store.importAll(text, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
-        UI.toast('Sicherung geladen');
+        UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                 (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : ''));
       } catch (err) { alert('Konnte nicht geladen werden: ' + err.message); }
     });
     inp.click();

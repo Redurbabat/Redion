@@ -999,6 +999,25 @@ const App = (() => {
     o.className = 'overlay';
     document.body.appendChild(o);
 
+    /* Ein weggelegter Block ist keine Seite und hat keinen Titel — er hat
+       einen Anfang. Für die Liste ist der Anfang der Name, und dazu, woher
+       er kam: ohne die Herkunft steht dort dreimal „Text" und niemand weiss,
+       welches davon zurückzuholen ist. */
+    const blockName = (b) => {
+      const roh = String(b.text || '').replace(/\s+/g, ' ').trim();
+      /* `Register.bloecke` ist kein Feld, sondern ein Katalog mit `eines(id)`.
+         Der Unterschied kostet hier nichts und im Betrieb einen Absturz
+         mitten im Zeichnen — deshalb steht der richtige Name jetzt da und
+         nicht der geratene. */
+      const art = (typeof Register !== 'undefined' && Register.bloecke &&
+                   (Register.bloecke.eines(b.type) || {}).name) || b.type;
+      return roh ? (roh.length > 60 ? roh.slice(0, 60) + '…' : roh) : art;
+    };
+    const blockHer = (b) => {
+      const e = b.parentId ? Store.getBlock(b.parentId) : null;
+      return e ? (e.text || 'Ohne Titel') : 'unbekannte Seite';
+    };
+
     const zeichne = () => {
       const alle = Store.trashed();
       let liste = alle;
@@ -1006,6 +1025,17 @@ const App = (() => {
       if (filterVon) liste = liste.filter(p => (p.geaendertVon || p.erstelltVon || 'Ich') === filterVon);
       if (filterOrt) liste = liste.filter(p => (p.parentId || '') === filterOrt);
       if (filterBereich) liste = liste.filter(p => (p.bereich || '') === filterBereich);
+
+      /* Weggelegte Blöcke. Bis hierher zeigte sie niemand: `Strg`+`Umschalt`+
+         `Rücktaste` meldete „Block in den Papierkorb" und legte ihn an einen
+         Ort, den es nicht gab. Er lag auf der Platte und war an keiner
+         Oberfläche mehr zu erreichen — das ist schlimmer als gelöscht,
+         weil es aussieht wie Absicht. */
+      let bloecke = Store.papierkorbBloecke ? Store.papierkorbBloecke() : [];
+      if (suche) bloecke = bloecke.filter(b =>
+        (blockName(b) + ' ' + blockHer(b)).toLowerCase().includes(suche.toLowerCase()));
+      if (filterVon) bloecke = bloecke.filter(b => (b.geaendertVon || b.erstelltVon || 'Ich') === filterVon);
+      if (filterOrt) bloecke = bloecke.filter(b => (b.parentId || '') === filterOrt);
 
       const chip = (id, text, an) =>
         `<button class="pk-chip${an ? ' on' : ''}" data-f="${id}">${text}<span>⌄</span></button>`;
@@ -1035,7 +1065,8 @@ const App = (() => {
                 '<div class="grp">Papierkorb</div>'
               : '') +
             (liste.length
-              ? liste.map(p =>
+              ? (bloecke.length ? '<div class="grp">Seiten</div>' : '') +
+                liste.map(p =>
                   `<button data-id="${p.id}">` +
                   `<span>${p.icon || '📄'}</span>` +
                   `<span style="flex:1">${esc(p.text || 'Ohne Titel')}` +
@@ -1044,11 +1075,32 @@ const App = (() => {
                   '<span class="pk-tat" data-a="restore-wo" title="An anderer Stelle wiederherstellen">↳</span>' +
                   '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
                   '</button>').join('')
-              : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`) +
+              : (bloecke.length ? ''
+                 : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`)) +
+            (bloecke.length
+              ? '<div class="grp">Blöcke</div>' +
+                bloecke.map(b =>
+                  `<button data-id="${b.id}">` +
+                  '<span>🧩</span>' +
+                  `<span style="flex:1">${esc(blockName(b))}` +
+                  `<span class="snip">aus „${esc(blockHer(b))}" · gelöscht ` +
+                  `${esc(Werkzeuge.zeitKurz(b.trashedAt))}</span></span>` +
+                  '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
+                  '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
+                  '</button>').join('')
+              : '') +
           '</div>' +
-          '<div class="hint pk-hint">Nachdem eine Seite 30 Tage lang im Papierkorb war, wird sie ' +
-          'automatisch gelöscht. Endgültig gelöschte Seiten lassen sich nicht zurückholen.' +
-          (alle.length ? '<button class="pk-alle" data-a="alle">Papierkorb leeren</button>' : '') +
+          /* Die Frist steht in den Einstellungen und nicht fest bei 30 — hier
+             stand jahrelang „30 Tage", auch wenn jemand 7 eingestellt hatte.
+             Eine Zusage, die von der Einstellung abweicht, ist schlimmer als
+             gar keine: sie wird geglaubt. */
+          '<div class="hint pk-hint">' + (() => {
+            const t = Number(Store.getMeta('papierkorbTage', 30));
+            return t ? `Nach ${t} Tagen im Papierkorb wird endgültig gelöscht. `
+                     : 'Automatisch gelöscht wird nichts — so ist es eingestellt. ';
+          })() + 'Endgültig Gelöschtes lässt sich nicht zurückholen.' +
+          (alle.length + bloecke.length
+            ? '<button class="pk-alle" data-a="alle">Papierkorb leeren</button>' : '') +
           '</div>' +
         '</div>';
 
@@ -1097,9 +1149,14 @@ const App = (() => {
       }
 
       if (e.target.closest('[data-a="alle"]')) {
-        if (!confirm('Alles im Papierkorb endgültig löschen?')) return;
+        const bl = Store.papierkorbBloecke ? Store.papierkorbBloecke() : [];
+        const n = Store.trashed().length + bl.length;
+        if (!confirm(`${n} ${n === 1 ? 'Ding' : 'Dinge'} endgültig löschen? ` +
+                     'Mit ihnen gehen ihre Fassungen und Anhänge. ' +
+                     'Das lässt sich nicht rückgängig machen.')) return;
         Store.trashed().forEach(p => Store.purgeBlock(p.id));
-        zeichne(); zeichneBaum(); UI.toast('Papierkorb geleert');
+        bl.forEach(b => Store.purgeBlock(b.id));
+        zeichne(); zeichneBaum(); App.zeichneSeite(); UI.toast('Papierkorb geleert');
         return;
       }
 
@@ -1125,14 +1182,27 @@ const App = (() => {
           wohin(id, () => { zeichne(); zeichneBaum(); });
           return;
         }
-        Store.restoreBlock(id); zeichne(); zeichneBaum(); UI.toast('Wiederhergestellt'); return;
+        Store.restoreBlock(id); zeichne(); zeichneBaum();
+        /* Ein Block kommt auf einer Seite zurück, nicht im Baum. Ohne das
+           Neuzeichnen stünde er wieder in der Ablage und nicht auf dem
+           Bildschirm — und wer nichts sieht, klickt noch einmal. */
+        App.zeichneSeite();
+        UI.toast('Wiederhergestellt'); return;
       }
       if (s && s.dataset.a === 'restore-wo') { wohin(id, () => { zeichne(); zeichneBaum(); }); return; }
       if (s && s.dataset.a === 'purge') {
-        if (!confirm('Endgültig löschen? Das lässt sich nicht rückgängig machen.')) return;
-        Store.purgeBlock(id); zeichne(); UI.toast('Endgültig gelöscht'); return;
+        const w = Store.getBlock(id);
+        if (!confirm((w && w.type !== 'page' ? 'Diesen Block' : 'Das') +
+                     ' endgültig löschen? Mit ihm gehen seine Fassungen und Anhänge. ' +
+                     'Das lässt sich nicht rückgängig machen.')) return;
+        Store.purgeBlock(id); zeichne(); App.zeichneSeite(); UI.toast('Endgültig gelöscht'); return;
       }
-      Store.restoreBlock(id); o.remove(); oeffne(id);
+      /* Klick auf die Zeile selbst: zurückholen und hingehen. Bei einem
+         Block ist „hin" nicht der Block — der ist keine Seite und liesse
+         sich nicht öffnen —, sondern die Seite, auf der er wieder steht. */
+      const w2 = Store.getBlock(id);
+      Store.restoreBlock(id); o.remove();
+      oeffne(w2 && w2.type !== 'page' ? (w2.parentId || id) : id);
     });
 
     zeichne();
@@ -1144,13 +1214,21 @@ const App = (() => {
   /* Der Einstellungsbereich liegt in einer eigenen Datei. */
   const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
 
-  const sicherungSpeichern = () => {
+  const sicherungSpeichern = async () => {
+    /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
+       Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
+    const stand = await Store.exportVorbereiten();
     const blob = new Blob([Store.exportAll()], { type: 'application/json' });
     const l = document.createElement('a');
     l.href = URL.createObjectURL(blob);
     l.download = 'notizen-sicherung-' + new Date().toISOString().slice(0, 10) + '.json';
     l.click();
-    UI.toast('Sicherung gespeichert');
+    /* Sagen, was drin ist — und vor allem, was nicht. Ein bekannter Mangel,
+       der benannt ist, ist kein stiller Verlust. */
+    UI.toast(stand.dateien
+      ? 'Sicherung gespeichert — ohne die ' + stand.dateien + ' Datei(en), die ' +
+        'nur auf diesem Gerät liegen'
+      : 'Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
   };
 
   const sicherungLaden = (danach) => {
@@ -1158,11 +1236,49 @@ const App = (() => {
     inp.type = 'file'; inp.accept = '.json';
     inp.addEventListener('change', async () => {
       const f = inp.files[0]; if (!f) return;
+      const text = await f.text();
+
+      /* WAS SOLL GESCHEHEN? Vorher gab es diese Frage nicht, und das Ergebnis
+         war keines von beidem: die Sicherung überschrieb den Zwischenspeicher
+         und liess die Ablage stehen. Nach dem nächsten Neuladen lagen die
+         alten Seiten wieder zwischen den eingespielten. Es sah aus wie ein
+         geglückter Vorgang — die schlimmste Sorte Fehler, die diese App
+         haben kann.
+
+         `CLAUDE.md`: nichts löschen ohne Rückfrage. Also wird gefragt. */
+      let vorschau = {};
+      try { vorschau = JSON.parse(text); } catch {
+        alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
+        return;
+      }
+      const wieViele = Object.keys(vorschau.blocks || {}).length;
+      const jetzt = Object.keys(Store.cache.blocks || {}).length;
+
+      const wahl = await Dialog.wahl({
+        titel: 'Sicherung einspielen',
+        text: 'Die Datei enthält ' + wieViele + ' Blöcke' +
+              (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
+                ' Fassungen aus dem Verlauf' : '') + '. ' +
+              'In diesem Bestand liegen gerade ' + jetzt + ' Blöcke.' +
+              (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
+        knoepfe: [
+          { id: 'ersetzen', text: 'Ersetzen',
+            hinweis: 'Der Bestand sieht danach aus wie die Sicherung. Was ' +
+                     'nicht darin steht, wird gelöscht.' },
+          { id: 'zusammenfuehren', text: 'Dazulegen',
+            hinweis: 'Nichts wird gelöscht. Bei gleicher Kennung gewinnt die ' +
+                     'Sicherung.' },
+          { id: '', text: 'Abbrechen' }
+        ]
+      });
+      if (!wahl) return;
+
       try {
-        await Store.importAll(await f.text());
+        const erg = await Store.importAll(text, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
-        UI.toast('Sicherung geladen');
+        UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                 (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : ''));
       } catch (err) { alert('Konnte nicht geladen werden: ' + err.message); }
     });
     inp.click();

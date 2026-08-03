@@ -176,3 +176,41 @@ Kopfzeile trifft sie nur, was wirklich über einen Server geht.
 
 **Offen als D3b:** die 562 Stilattribute in Klassen überführen. Erst danach ist
 eine CSP für die App mehr als Zierde.
+
+---
+
+## E7 · Die Schonfrist beim Sichtbarmachen des Papierkorbs
+
+**Die Lage.** Weggelegte Blöcke waren bis jetzt unsichtbar: `trashed()` zeigte
+nur Seiten, und beide Aufräumungen liefen über `trashed()`. Ein Block, den
+jemand vor zwei Jahren mit `Strg`+`Umschalt`+`Rücktaste` weggelegt hat, liegt
+also noch da — mit einem `trashedAt` von damals.
+
+Sichtbar machen heisst: er kommt in die Liste. Es heisst aber auch, dass die
+Aufräumung ihn jetzt findet. Bei der voreingestellten Frist von 30 Tagen wäre
+er acht Sekunden nach dem ersten Start endgültig gelöscht — **bevor ihn je
+jemand zu sehen bekam**. Der Auftrag endet mit dem Satz: *Redion darf niemals
+so gebaut werden, dass Nutzer ihre Daten unbemerkt verlieren.* Das wäre genau
+das, und ausgerechnet als Nebenwirkung einer Reparatur, die Daten retten soll.
+
+**Die beiden Wege, die zur Wahl standen.**
+
+*Die Fristen zurücksetzen* — jedem weggelegten Block ein neues `trashedAt`
+geben. Einfach, und falsch: es schreibt eine Unwahrheit in die Daten. Der
+Block wurde nicht heute weggelegt, und im Papierkorb stünde „gelöscht vor
+einem Moment" für etwas, das zwei Jahre alt ist. Wer das später liest, hält
+es für die Wahrheit.
+
+*Einen Stichtag merken* — `papierkorbSichtbarSeit` wird beim ersten Lauf der
+neuen Aufräumung einmal gesetzt. Für Blöcke gilt `max(trashedAt, Stichtag)`.
+Das ist der gewählte Weg: die Daten bleiben, wie sie sind, und die Frist zählt
+ab dem Tag, an dem sie überhaupt zu sehen waren.
+
+**Für Seiten gilt der Stichtag nicht.** Sie waren immer sichtbar, ihre Frist
+lief immer. Sie jetzt mitzuverlängern wäre eine zweite Änderung im selben
+Schritt — und `CLAUDE.md` sagt, warum man das nicht tut.
+
+**Nebenbei entschieden: die Meldung.** Die Aufräumung beim Start lief mit
+`still: true` — sie löschte endgültig und sagte nichts. Sie läuft jetzt mit
+`still: false`. Eine Einstellung, der jemand einmal zugestimmt hat, rechtfertigt
+nicht, dass er nicht erfährt, wann sie zugreift.

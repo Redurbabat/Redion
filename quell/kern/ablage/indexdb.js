@@ -302,26 +302,100 @@ const Store = (() => {
     save('blocks', b);
   };
 
-  /** Löscht endgültig — samt aller Kinder. Danach ist nichts mehr zu retten. */
+  /**
+   * Löscht endgültig — samt aller Kinder. Danach ist nichts mehr zu retten.
+   *
+   * DAS WAR LANGE NICHT WAHR. Der Block ging, die Zeilen gingen, die
+   * Ansichten gingen — der **Versionsverlauf** und die **Anhänge** blieben
+   * liegen. Wer eine Seite endgültig löschte, weil niemand sie mehr sehen
+   * sollte, liess bis zu dreissig Fassungen davon auf der Platte zurück, mit
+   * vollem Text; ein angehängtes Video blieb vollständig da, ohne einen Weg,
+   * es je wieder zu sehen oder loszuwerden.
+   *
+   * Beides hängt nicht am Cache, sondern in eigenen Fächern der Ablage, und
+   * beides wird nur über einen Index gefunden. Deshalb ist das Aufräumen
+   * unvermeidlich asynchron — `purgeBlock` selbst muss synchron bleiben, es
+   * hat über hundert Aufrufstellen und wird mitten im Zeichnen gerufen.
+   * Der Weg dazwischen: der Aufruf sammelt beim Absteigen alle Kennungen ein
+   * und stösst danach `purgeAnhaenge` an. Geht dabei etwas schief, sagt es
+   * das über den Melder — still schlucken wäre das, was den Fehler überhaupt
+   * erst so lange verborgen hat.
+   */
   const purgeBlock = (id) => {
+    const gesammelt = [];
+    purgeTief(id, gesammelt);
+    if (!gesammelt.length) return;
+    notify('purge');
+    Promise.all(gesammelt.map(x => purgeAnhaenge(x)))
+      .catch(err => { if (typeof Melder !== 'undefined')
+        Melder.fehler('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
+  };
+
+  /** Der eigentliche Abstieg. Sammelt, was danach noch aufzuräumen ist. */
+  const purgeTief = (id, gesammelt) => {
     const b = cache.blocks[id];
     if (!b) return;
-    (b.content || []).forEach(purgeBlock);
+    gesammelt.push(id);
+    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt));
     /* Eine verknüpfte Ansicht zeigt fremde Daten — die bleiben bestehen. */
     if (b.collectionId && !b.verknuepft) {
       const c = cache.collections[b.collectionId];
       if (c) {
-        rowsOf(b.collectionId).forEach(r => { delete cache.blocks[r.id]; del('blocks', r.id); });
+        /* Auch eine Zeile kann Fassungen und Anhänge haben — sie ist eine
+           Seite. Sie hier zu vergessen wäre derselbe Fehler eine Ebene
+           tiefer, und die Ebene sieht niemand. */
+        rowsOf(b.collectionId).forEach(r => {
+          gesammelt.push(r.id); delete cache.blocks[r.id]; del('blocks', r.id);
+        });
         (c.viewIds || []).forEach(v => { delete cache.views[v]; del('views', v); });
         delete cache.collections[b.collectionId];
         del('collections', b.collectionId);
+        /* Die vorberechneten Werte dieser Datenbank sind ohne sie sinnlos. */
+        vorratWeg(b.collectionId).catch(() => {});
       }
     }
     const p = cache.blocks[b.parentId];
     if (p) { p.content = p.content.filter(x => x !== id); elternGeaendert(p); }
     delete cache.blocks[id];
     del('blocks', id);
-    notify('purge');
+  };
+
+  /**
+   * Was ausser dem Block selbst zu ihm gehört: seine Fassungen, seine
+   * Dateien und deren Stücke.
+   *
+   * Zweimal gerufen tut es beim zweiten Mal nichts — das ist Absicht. Der
+   * Papierkorb ruft es nach dem Löschen noch einmal nach, und ein Aufräumen,
+   * das beim zweiten Anlauf etwas kaputtmacht, wäre schlimmer als eines, das
+   * einmal zu wenig läuft.
+   *
+   * Der Abgleichsstand (`basis`) bleibt bewusst stehen. Er ist kein Inhalt,
+   * sondern das Gedächtnis darüber, dass beide Geräte diesen Satz einmal
+   * gleich sahen — erst dadurch kann ein Abgleich „hier gelöscht" von „hier
+   * nie gehabt" unterscheiden. Wer ihn mitnimmt, holt sich die Seite beim
+   * nächsten Abgleich vom anderen Gerät zurück.
+   */
+  const purgeAnhaenge = async (id, hinweis = {}) => {
+    for (const v of await versionen(id)) await del('versions', v.id);
+
+    const dateien = await new Promise((ok2) => {
+      if (!db || !db.objectStoreNames.contains('dateien')) return ok2([]);
+      try {
+        const r = tx(['dateien'], 'readonly').objectStore('dateien').index('block').getAll(id);
+        r.onsuccess = () => ok2(r.result || []);
+        r.onerror   = () => ok2([]);
+      } catch { ok2([]); }
+    });
+    /* Manche Blockarten merken sich die Datei am Block statt umgekehrt.
+       Beide Wege werden gegangen, doppelt gelöscht wird nichts. */
+    const kennungen = new Set(dateien.map(d => d.id));
+    const b = cache.blocks[id];
+    [hinweis.datei, b && b.dateiId, b && b.datei].forEach(x => { if (x) kennungen.add(x); });
+
+    for (const dateiId of kennungen) {
+      for (const st of await stueckeVon(dateiId)) await del('stuecke', st.id);
+      await del('dateien', dateiId);
+    }
   };
 
   /** Die lebenden Kindblöcke in der richtigen Reihenfolge. */
@@ -350,6 +424,86 @@ const Store = (() => {
   const trashed = () => Object.values(cache.blocks)
     .filter(b => !b.alive && b.type === 'page')
     .sort((a, b) => (b.trashedAt || '').localeCompare(a.trashedAt || ''));
+
+  /**
+   * Was ausser Seiten noch im Papierkorb liegt — Absätze, Bilder, Aufgaben.
+   *
+   * WARUM ES DAS BRAUCHT. `Strg`+`Umschalt`+`Rücktaste` legt einen Block weg
+   * und meldet „Block in den Papierkorb". Der Papierkorb zeigte nur Seiten;
+   * der Block stand auf `alive: false`, war aus der Elternliste heraus und
+   * damit an keiner Oberfläche mehr erreichbar. Rückgängig holte ihn zurück,
+   * solange das Fenster offen blieb — nach einem Neuladen nicht mehr.
+   *
+   * Verloren war er nie: er lag die ganze Zeit auf der Platte. Das ist
+   * schlimmer als weg, nicht besser — es sah aus wie Absicht.
+   *
+   * Eine Datenbankzeile ist eine Seite (`addRow` setzt `type: 'page'`) und
+   * steht deshalb schon bei `trashed()`. Hier darf sie nicht noch einmal
+   * auftauchen, sonst stünde sie zweimal im Papierkorb.
+   */
+  const papierkorbBloecke = () => Object.values(cache.blocks)
+    .filter(b => !b.alive && b.type !== 'page')
+    .sort((a, b) => (b.trashedAt || '').localeCompare(a.trashedAt || ''));
+
+  /**
+   * Räumt den Papierkorb nach der eingestellten Frist auf — wie Notions
+   * dreissig Tage.
+   *
+   * ES GAB DAS ZWEIMAL. Einmal in `bereiche/wissen/werkzeuge.js`, einmal in
+   * `bereiche/einstellungen/pflege.js`. Die zweite las `geloeschtAm` und
+   * `papierkorbFrist` — **zwei Namen, die im ganzen Quelltext niemand
+   * schreibt**. Sie lief beim Start und danach täglich und fand jedes Mal
+   * nichts; ihr Knopf „Papierkorb jetzt leeren" antwortete seit jeher
+   * „Nichts ist alt genug". Zwei Fassungen derselben Sache sind nicht
+   * doppelt sicher, sondern eine richtige und eine, die niemand prüft.
+   *
+   * Jetzt steht sie im Kern, weil sie in den Kern gehört: sie handelt von
+   * der Ablage, nicht von einem Bereich. Beide Bereiche reichen nur durch —
+   * und keiner ruft mehr in den anderen hinein.
+   *
+   * ─── DIE SCHONFRIST ───────────────────────────────────────────────────────
+   *
+   * Weggelegte Blöcke waren bis heute unsichtbar. Sie jetzt sichtbar zu
+   * machen heisst auch: ihnen laufen jetzt Fristen ab. Ein Bestand, in dem
+   * seit zwei Jahren still Blöcke liegen, wäre beim ersten Start nach dieser
+   * Änderung um sie ärmer — gelöscht, bevor irgendjemand sie je zu sehen
+   * bekam. Genau das darf nicht passieren.
+   *
+   * Deshalb merkt sich die App den Tag, an dem der Papierkorb anfing, alles
+   * zu zeigen. Für Blöcke zählt die Frist ab diesem Tag, nicht ab dem Tag
+   * des Weglegens. Für Seiten bleibt es beim Weglegen — die waren immer
+   * sichtbar, und ihre Frist jetzt zu verlängern wäre eine zweite Änderung.
+   */
+  const papierkorbAufraeumen = async () => {
+    const tage = Number(getMeta('papierkorbTage', 30));
+    if (!tage) return 0;                       /* 0 heisst: nie automatisch */
+    const grenze = Date.now() - tage * 86400000;
+
+    let sichtbarSeit = getMeta('papierkorbSichtbarSeit', '');
+    if (!sichtbarSeit) { sichtbarSeit = now(); setMeta('papierkorbSichtbarSeit', sichtbarSeit); }
+    const abDann = new Date(sichtbarSeit).getTime() || 0;
+
+    const wann = (b) => new Date(b.trashedAt).getTime();
+    const faellig = [
+      ...trashed().filter(s => s.trashedAt && wann(s) < grenze),
+      ...papierkorbBloecke().filter(b => b.trashedAt && Math.max(wann(b), abDann) < grenze)
+    ];
+    faellig.forEach(x => purgeBlock(x.id));
+    return faellig.length;
+  };
+
+  /** Was in den nächsten drei Tagen verschwindet — für den Hinweis im Papierkorb. */
+  const papierkorbBaldWeg = () => {
+    const tage = Number(getMeta('papierkorbTage', 30));
+    if (!tage) return [];
+    const grenze = Date.now() - (tage - 3) * 86400000;
+    const abDann = new Date(getMeta('papierkorbSichtbarSeit', '') || 0).getTime() || 0;
+    return [
+      ...trashed().filter(s => s.trashedAt && new Date(s.trashedAt).getTime() < grenze),
+      ...papierkorbBloecke().filter(b => b.trashedAt &&
+        Math.max(new Date(b.trashedAt).getTime(), abDann) < grenze)
+    ];
+  };
 
   const favorites = () => Object.values(cache.blocks)
     .filter(b => b.type === 'page' && b.alive && b.favorite);
@@ -650,30 +804,154 @@ const Store = (() => {
    * Weil alles lokal liegt, gehört ein Export dazu. Sonst hängen die Daten
    * an genau einem Browserprofil.
    * ======================================================================*/
-  const exportAll = () => JSON.stringify({
-    version: VERSION,
-    exportiert: now(),
-    blocks: cache.blocks,
-    collections: cache.collections,
-    views: cache.views,
-    meta: cache.meta
-  }, null, 2);
+  /**
+   * Der ganze Bestand als eine Datei.
+   *
+   * WAS HIER FEHLTE, und was es kostete: die Sicherung nahm vier der neun
+   * Fächer mit — `blocks`, `collections`, `views`, `meta`. Nicht dabei waren
+   * `versions`, `dateien` und `stuecke`. Wer seine Sicherung auf einem neuen
+   * Rechner einspielte, bekam seine Seiten zurück **und keinen einzigen
+   * Versionsverlauf**. Nachgestellt und bestätigt: eine Fassung vor dem
+   * Export, null danach.
+   *
+   * Dass es niemandem auffiel, liegt in der Natur der Sache — man merkt das
+   * Fehlen eines Verlaufs erst, wenn man ihn braucht, und dann ist die alte
+   * Ablage längst weg.
+   *
+   * `versions` ist jetzt dabei. Es ist reines JSON und kostet nichts.
+   *
+   * `dateien` und `stuecke` sind es NICHT, und das ist eine Entscheidung
+   * statt eines Versehens: dort liegen Blobs. `JSON.stringify` macht aus
+   * einem Blob `{}` — sie wären also scheinbar dabei und in Wahrheit leer,
+   * und das ist schlimmer als zu fehlen. Sie brauchen einen eigenen Weg
+   * (Base64 oder ein ZIP), und der braucht eine Antwort auf die Frage, was
+   * bei einem 500-MB-Video geschieht. Bis dahin **sagt die Sicherung, was
+   * sie nicht enthält** — im Feld `fehlt`, und die Oberfläche zeigt es an.
+   * Ein bekannter Mangel, der benannt ist, ist kein stiller Verlust.
+   */
+  const exportAll = () => {
+    const dateienDa = zaehlerDateien();
+    return JSON.stringify({
+      version: VERSION,
+      exportiert: now(),
+      /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
+      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions'],
+      fehlt: dateienDa
+        ? ['dateien', 'stuecke']
+        : [],
+      hinweis: dateienDa
+        ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
+          'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
+          'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
+        : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+      blocks: cache.blocks,
+      collections: cache.collections,
+      views: cache.views,
+      meta: cache.meta,
+      versions: exportVersionen
+    }, null, 2);
+  };
 
-  const importAll = async (json) => {
+  /* Der Verlauf wird beim Sichern eingelesen — er liegt bewusst nicht im
+     Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
+  let exportVersionen = [];
+  let exportDateien = 0;
+  const zaehlerDateien = () => exportDateien;
+
+  /** Vor dem Sichern aufrufen: holt, was nicht im Zwischenspeicher liegt. */
+  const exportVorbereiten = async () => {
+    exportVersionen = await all('versions').catch(() => []);
+    exportDateien = (await all('dateien').catch(() => [])).length;
+    return { versionen: exportVersionen.length, dateien: exportDateien };
+  };
+
+  /**
+   * Eine Sicherung einspielen.
+   *
+   * @param {string} json
+   * @param {'ersetzen'|'zusammenfuehren'} art
+   *
+   * HIER LAG DER ZWEITE FEHLER, und er war der unangenehmere. Die alte
+   * Fassung schrieb die Sicherung über den Zwischenspeicher und liess die
+   * Ablage stehen. Wer eine Sicherung in einen nicht leeren Bestand
+   * einspielte, sah danach genau das Richtige — **bis zum Neuladen.** Dann
+   * kamen alle alten Seiten zurück und lagen zwischen den eingespielten.
+   * Nachgestellt und bestätigt: die „GEISTERSEITE" war nach dem Neuladen
+   * wieder da.
+   *
+   * Das ist die schlimmste Sorte Fehler, die diese App haben kann: sie sieht
+   * aus wie ein geglückter Vorgang.
+   *
+   * Jetzt muss der Mensch sagen, was er will — und beides tut wirklich, was
+   * es verspricht:
+   *
+   *   ersetzen         die Ablage sieht danach aus wie die Sicherung.
+   *                    Was nicht darin steht, wird gelöscht — auch auf der
+   *                    Platte.
+   *   zusammenfuehren  die Sicherung kommt dazu. Nichts wird gelöscht;
+   *                    bei gleicher Kennung gewinnt die Sicherung.
+   *
+   * Es gibt bewusst KEINE Vorgabe. `CLAUDE.md`: nichts löschen ohne
+   * Rückfrage. Wer `importAll(json)` ohne Angabe ruft, bekommt einen Fehler
+   * mit der Frage — und nicht die stille Entscheidung von jemand anderem.
+   */
+  const importAll = async (json, art) => {
     const d = JSON.parse(json);
     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
-    cache.blocks      = d.blocks      || {};
-    cache.collections = d.collections || {};
-    cache.views       = d.views       || {};
-    cache.meta        = d.meta        || {};
-    /* Alles neu schreiben */
+    if (art !== 'ersetzen' && art !== 'zusammenfuehren')
+      throw new Error('Beim Einspielen muss feststehen, was geschehen soll: ' +
+                      '„ersetzen" wirft weg, was nicht in der Sicherung steht, ' +
+                      '„zusammenfuehren" legt sie dazu. Ohne Angabe wird nichts getan.');
+
+    const neu = {
+      blocks:      d.blocks      || {},
+      collections: d.collections || {},
+      views:       d.views       || {},
+      meta:        d.meta        || {}
+    };
+
+    if (art === 'ersetzen') {
+      /* Was in der Ablage steht und nicht in der Sicherung, muss weg — sonst
+         ist es kein Ersetzen, sondern ein Zusammenführen, das sich als
+         Ersetzen ausgibt. Und zwar von der PLATTE, nicht nur aus dem
+         Zwischenspeicher: genau daran hing der Fehler. */
+      for (const [fach, schluessel] of
+           [['blocks', 'id'], ['collections', 'id'], ['views', 'id']]) {
+        const vorhanden = await all(fach).catch(() => []);
+        for (const satz of vorhanden)
+          if (!neu[fach][satz[schluessel]]) await del(fach, satz[schluessel]);
+      }
+      const metaVorhanden = await all('meta').catch(() => []);
+      for (const m of metaVorhanden)
+        if (!(m.k in neu.meta)) await del('meta', m.k);
+
+      cache.blocks = neu.blocks; cache.collections = neu.collections;
+      cache.views = neu.views;   cache.meta = neu.meta;
+    } else {
+      /* Zusammenführen: nichts wegwerfen, die Sicherung sticht bei gleicher
+         Kennung. */
+      Object.assign(cache.blocks, neu.blocks);
+      Object.assign(cache.collections, neu.collections);
+      Object.assign(cache.views, neu.views);
+      Object.assign(cache.meta, neu.meta);
+    }
+
     await Promise.all([
       ...Object.values(cache.blocks).map(b      => put('blocks', b)),
       ...Object.values(cache.collections).map(c => put('collections', c)),
       ...Object.values(cache.views).map(v       => put('views', v)),
       ...Object.entries(cache.meta).map(([k,v]) => put('meta', { k, v }))
     ]);
+
+    /* Der Verlauf, falls die Sicherung ihn mitbringt. Ältere Sicherungen
+       haben ihn nicht — die sind deshalb nicht kaputt, nur älter. */
+    if (Array.isArray(d.versions))
+      await Promise.all(d.versions.map(v => put('versions', v)));
+
     notify('import');
+    return { bloecke: Object.keys(cache.blocks).length,
+             versionen: Array.isArray(d.versions) ? d.versions.length : 0,
+             fehlt: d.fehlt || [] };
   };
 
   /* ========================================================================
@@ -791,9 +1069,25 @@ const Store = (() => {
 
   const versionLoeschen = (id) => del('versions', id);
 
-  /** Nur für den Notfall: alles weg. */
+  /**
+   * Nur für den Notfall: alles weg.
+   *
+   * DAS WAR NICHT ALLES. Hier stand eine Liste von fünf Fächern —
+   * `blocks`, `collections`, `views`, `meta`, `versions`. Es gibt neun. Nicht
+   * geleert wurden `dateien`, `stuecke`, `basis` und `vorrat`, also
+   * ausgerechnet das, was am meisten Platz belegt: **die Anhänge**. Wer
+   * zweimal bestätigte, ALLE Seiten und Datenbanken zu löschen, bekam eine
+   * leere App und behielt jedes hochgeladene Bild und jedes Video auf der
+   * Platte — unsichtbar, unerreichbar, und nicht mehr loszuwerden.
+   *
+   * Dieselbe Sorte Fehler wie beim endgültigen Löschen eine Zeile weiter
+   * oben, und aus demselben Grund: eine feste Liste, die beim Anbau eines
+   * Fachs niemand nachgezogen hat. Deshalb steht hier jetzt keine Liste
+   * mehr, sondern die Frage an die Ablage selbst — ein neues Fach ist damit
+   * von sich aus dabei.
+   */
   const wipe = async () => {
-    if (db) await Promise.all(['blocks','collections','views','meta','versions'].map(s => new Promise(ok => {
+    if (db) await Promise.all([...db.objectStoreNames].map(s => new Promise(ok => {
       try {
         const r = tx([s], 'readwrite').objectStore(s).clear();
         r.onsuccess = ok; r.onerror = ok;
@@ -869,6 +1163,7 @@ const Store = (() => {
   return {
     load, uid, now, cache,
     addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
+    purgeAnhaenge, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
     addPage, rootPages, trashed, favorites, pathOf,
     addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
     rohSetzen,
@@ -876,7 +1171,7 @@ const Store = (() => {
     setMeta, getMeta, flush,
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen,
-    search, pfadText, exportAll, importAll, wipe, usage,
+    search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
     vorratPut, vorratHolen, vorratWeg, vorratAlle,

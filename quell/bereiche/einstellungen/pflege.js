@@ -374,27 +374,33 @@ const Pflege = (() => {
 
   /* ========================================================================
    * 3. PAPIERKORB RÄUMT SELBST AUF
+   * ------------------------------------------------------------------------
+   * Hier stand einmal eine eigene Fassung davon. Sie las `geloeschtAm` und
+   * `papierkorbFrist` — zwei Namen, die im ganzen Quelltext niemand schreibt;
+   * das Feld heisst `trashedAt`, die Einstellung `papierkorbTage`. Sie lief
+   * beim Start und danach täglich und fand jedes Mal nichts. Ihr Knopf
+   * „Papierkorb jetzt leeren" antwortete seit jeher „Nichts ist alt genug".
+   *
+   * Aufgefallen ist es nie, weil daneben eine zweite Fassung in
+   * `bereiche/wissen/werkzeuge.js` lief, die es richtig machte. Zwei
+   * Fassungen derselben Sache sind nicht doppelt sicher, sondern eine
+   * richtige und eine, die niemand prüft.
+   *
+   * Jetzt steht die Frist in `kern/ablage` — sie handelt von der Ablage,
+   * nicht von einem Bereich. Was hier bleibt, ist die Meldung an den
+   * Menschen; die gehört an die Oberfläche und nicht in den Kern.
    * ======================================================================*/
-  const papierkorbAufraeumen = ({ still = true } = {}) => {
-    const frist = Store.getMeta('papierkorbFrist', 30);
-    if (!frist || frist === 'nie') return 0;
-    const grenze = new Date(Date.now() - Number(frist) * 86400000);
-    const alt = Object.values(Store.cache.blocks).filter(x =>
-      !x.alive && x.geloeschtAm && new Date(x.geloeschtAm) < grenze);
-    alt.forEach(x => Store.purgeBlock(x.id));
-    if (alt.length && !still)
-      UI.toast(alt.length + ' Dinge nach ' + frist + ' Tagen endgültig gelöscht');
-    return alt.length;
+  const papierkorbAufraeumen = async ({ still = true } = {}) => {
+    const anzahl = await Store.papierkorbAufraeumen();
+    if (anzahl && !still)
+      UI.toast(anzahl + (anzahl === 1 ? ' Ding war' : ' Dinge waren') +
+               ' zu lange im Papierkorb und wurde' + (anzahl === 1 ? '' : 'n') +
+               ' endgültig gelöscht');
+    return anzahl;
   };
 
   /** Was verschwindet demnächst? Für den Hinweis im Papierkorb. */
-  const baldWeg = () => {
-    const frist = Store.getMeta('papierkorbFrist', 30);
-    if (!frist || frist === 'nie') return [];
-    const grenze = new Date(Date.now() - (Number(frist) - 3) * 86400000);
-    return Object.values(Store.cache.blocks).filter(x =>
-      !x.alive && x.geloeschtAm && new Date(x.geloeschtAm) < grenze);
-  };
+  const baldWeg = () => Store.papierkorbBaldWeg();
 
   /* ========================================================================
    * 4. FEHLERLISTE
@@ -507,7 +513,7 @@ const Pflege = (() => {
       '</div>';
     document.body.appendChild(o);
 
-    o.addEventListener('click', e => {
+    o.addEventListener('click', async e => {
       if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (a === 'gesund')    { o.remove(); gesundheit(); }
@@ -515,8 +521,11 @@ const Pflege = (() => {
       if (a === 'sichern')   { o.remove(); Einstellungen.sicherungSchreiben
                                 ? Einstellungen.sicherungSchreiben() : Werkzeuge.einzelDatei(); }
       if (a === 'papier') {
-        const n = papierkorbAufraeumen({ still: false });
-        UI.toast(n ? n + ' endgültig gelöscht' : 'Nichts ist alt genug — nichts gelöscht');
+        /* Das `await` ist nicht Zierde: ohne es stand hier eine Zusage über
+           ein Versprechen statt über eine Zahl, und die Meldung hätte
+           „[object Promise] endgültig gelöscht" gelautet. */
+        const n = await papierkorbAufraeumen({ still: false });
+        if (!n) UI.toast('Nichts ist alt genug — nichts gelöscht');
       }
       if (a === 'reparieren') {
         const g = bestandPruefen();
@@ -543,9 +552,12 @@ const Pflege = (() => {
       try { fehlerMerken(e.reason?.message || String(e.reason), 'Versprechen'); } catch {}
     });
 
-    /* Papierkorb einmal nach dem Start und danach täglich */
-    setTimeout(() => papierkorbAufraeumen(), 8000);
-    setInterval(() => papierkorbAufraeumen(), 86400000);
+    /* Papierkorb einmal nach dem Start und danach täglich.
+       `still: false` ist kein Detail: was hier endgültig gelöscht wird, ist
+       endgültig gelöscht. Das darf der Mensch erfahren, auch wenn er es
+       eingestellt hat — sonst verschwindet etwas, und niemand hat es gesagt. */
+    setTimeout(() => papierkorbAufraeumen({ still: false }), 8000);
+    setInterval(() => papierkorbAufraeumen({ still: false }), 86400000);
   };
 
   return { start, gesundheit, befund, dubletten, dublettenDialog,

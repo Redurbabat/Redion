@@ -1577,19 +1577,26 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
   /* ========================================================================
    * START
    * ======================================================================*/
-  /** Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions 30 Tage). */
-  const papierkorbAufraeumen = () => {
-    const tage = Number(Store.getMeta('papierkorbTage', 30));
-    if (!tage) return;                         /* 0 heisst: nie automatisch */
-    const grenze = Date.now() - tage * 86400000;
-    let weg = 0;
-    Store.trashed().forEach(p => {
-      if (!p.trashedAt) return;
-      if (new Date(p.trashedAt).getTime() > grenze) return;
-      Store.purgeBlock(p.id);
-      weg++;
-    });
-    if (weg) UI.toast(weg + ' Seiten im Papierkorb waren älter als ' + tage + ' Tage und wurden gelöscht');
+  /**
+   * Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions
+   * 30 Tage). Die Frist selbst steht in `kern/ablage` — hier reicht nur
+   * noch der Name durch, weil er zur öffentlichen Fläche dieses Bereichs
+   * gehört und aussen gerufen wird.
+   *
+   * Vorher rechnete diese Fassung die Frist selbst, und in
+   * `bereiche/einstellungen/pflege.js` stand eine zweite, die auf zwei
+   * Feldnamen zeigte, die es nie gab. Die eine räumte, die andere fand nie
+   * etwas — und beide räumten nur Seiten, nie die weggelegten Blöcke.
+   *
+   * Aufgeräumt wird nur noch an einer Stelle. Gemeldet wird hier: eine
+   * Zahl, die niemand sieht, ist keine Aufräumung, sondern ein Verschwinden.
+   */
+  const papierkorbAufraeumen = async () => {
+    const weg = await Store.papierkorbAufraeumen();
+    if (weg) UI.toast(weg + (weg === 1 ? ' Ding war' : ' Dinge waren') +
+                      ' zu lange im Papierkorb und wurde' + (weg === 1 ? '' : 'n') +
+                      ' endgültig gelöscht');
+    return weg;
   };
 
   /* ========================================================================
@@ -1740,7 +1747,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     /* Erinnerungen alle halbe Minute prüfen */
     erinnerungenPruefen();
     setInterval(erinnerungenPruefen, 30000);
-    setTimeout(papierkorbAufraeumen, 3000);
+    /* Den Papierkorb stösst `Pflege.start()` an — einmal nach dem Start und
+       danach täglich. Hier stand dasselbe noch einmal, drei Sekunden früher.
+       Zwei Zeitgeber für dieselbe Arbeit sind kein doppelter Boden: sie
+       sorgen dafür, dass man beim Suchen den falschen findet. */
 
     document.addEventListener('keydown', e => {
       const strg = e.ctrlKey || e.metaKey;
