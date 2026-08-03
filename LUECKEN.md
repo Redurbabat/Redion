@@ -240,12 +240,25 @@ festgehalten, damit niemand sie noch einmal „repariert".
 | Serverseitige Rechte durchsetzen | **✅** | `test80`–`test84` |
 | Keine geheimen Schlüssel im Frontend | **✅** | der KI-Schlüssel wird eingetippt und bleibt im Browser |
 | Eingaben validieren | **◐** | teilweise; kein durchgehender Prüfpunkt → **D1** |
-| Rate Limiting für Login und öffentliche Seiten | **✗** | → **D2** |
+| Rate Limiting für Login und öffentliche Seiten | **✅ repariert** | `server/sicherheit/bremse.js` → `test93` |
 | Sichere Security Headers | **✗** | kein CSP, kein `X-Content-Type-Options` → **D3** |
 | Keine sensiblen Daten in Logs | **?** | noch nicht durchgesehen → **D4** |
 
-- [ ] **D2 · Rate Limiting** — Login und `/s/:schluessel`. Cloudflare KV zählt,
-  wie der Auftrag es vorsieht. Ohne Server (`ablageSpeicher`) im Arbeitsspeicher.
+- [x] **D2 · Rate Limiting** — erledigt. **Nicht überall gleich:** gerechnet
+  statt geraten, wo es überhaupt nötig ist. Der Gerätecode hat 32⁸ ≈ 1,1·10¹²
+  Möglichkeiten, der Seitenschlüssel 48 Bit — beide kann man nicht
+  durchprobieren. Das **Passwort einer öffentlichen Seite** wählt ein Mensch,
+  und das fällt in Sekunden. Dort zieht die Bremse (10 Versuche / 10 Minuten),
+  beim Codeanfordern nur gegen das Vollschreiben (30 / Stunde).
+  Gezählt werden **nur Fehlversuche** — sonst sperrte sich eine viel gelesene
+  Seite selbst. Und ohne erkennbare Herkunft wird **pro Seite** gezählt, nicht
+  global: ein gemeinsamer Zähler wäre keine Sicherheit, sondern eine
+  Selbstsperre. Gespeichert in einer eigenen Tabelle `bremse`, per
+  `CREATE TABLE IF NOT EXISTS` rückwärtskompatibel.
+  *Dabei gefunden:* das Schema steht **zweimal** — in `schema.sql` und als
+  Zeichenkette in `ablage.js`, weil ein Cloudflare-Arbeiter keine Datei lesen
+  kann. Die beiden waren identisch, aber unbewacht. `test87` vergleicht sie
+  jetzt Spalte für Spalte.
 - [ ] **D3 · Security Headers** — `Content-Security-Policy`,
   `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` für die
   veröffentlichten Seiten. *Vorsicht:* eine CSP, die `inline` verbietet, bricht

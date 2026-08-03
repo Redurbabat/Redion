@@ -108,3 +108,24 @@ CREATE TABLE IF NOT EXISTS feldrechte (
   PRIMARY KEY (bereich, sammlung, feld, kontoId)
 );
 CREATE INDEX IF NOT EXISTS feldrechte_slg ON feldrechte(bereich, sammlung);
+
+/* --------------------------------------------------------------------------
+   Die Bremse: wie oft jemand etwas versucht hat.
+
+   Sie steht als eigene Tabelle da und nicht bei den `marken`, weil sie etwas
+   anderes ist: eine Marke ist ein Recht mit Ablaufdatum, ein Bremseintrag ist
+   eine Zählung ohne jeden Wert. Der Unterschied zählt beim Aufräumen — die
+   Bremse darf jederzeit weggeworfen werden, eine Marke nicht.
+
+   Gezählt werden nur FEHLVERSUCHE. Zählte man jeden Aufruf, sperrte sich eine
+   viel gelesene öffentliche Seite von selbst.
+
+   `CREATE TABLE IF NOT EXISTS` — ein bestehender Bestand bekommt die Tabelle
+   beim nächsten Einspielen dazu und verliert nichts.
+   -------------------------------------------------------------------------- */
+CREATE TABLE IF NOT EXISTS bremse (
+  schluessel TEXT PRIMARY KEY,
+  treffer    INTEGER DEFAULT 0,
+  seit       TEXT
+);
+CREATE INDEX IF NOT EXISTS bremse_seit ON bremse(seit);

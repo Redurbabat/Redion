@@ -106,7 +106,7 @@ Liste, damit die App offline vollständig ist.
 
 Die Prüfläufe liegen **im Repository**, unter `pruefungen/` und `server/`.
 Sie laufen über echtes Chromium gegen die echte App — keine Attrappen, keine
-Mocks. Stand: 62 Läufe, 2597 Prüfungen. Sie laufen ausserdem bei jedem
+Mocks. Stand: 64 Läufe, 2670 Prüfungen. Sie laufen ausserdem bei jedem
 Push von selbst über `.github/workflows/pruefen.yml`.
 
 ```

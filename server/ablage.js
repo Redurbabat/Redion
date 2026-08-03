@@ -129,19 +129,36 @@ CREATE TABLE IF NOT EXISTS feldrechte (
   PRIMARY KEY (bereich, sammlung, feld, kontoId)
 );
 CREATE INDEX IF NOT EXISTS feldrechte_slg ON feldrechte(bereich, sammlung);
+
+/* Die Bremse: wie oft jemand etwas versucht hat.
+
+   Sie steht als eigene Tabelle da und nicht bei den Marken, weil sie etwas
+   anderes ist: eine Marke ist ein Recht mit Ablaufdatum, ein Bremseintrag ist
+   eine Zaehlung ohne jeden Wert. Der Unterschied zaehlt beim Aufraeumen — die
+   Bremse darf jederzeit weggeworfen werden, eine Marke nicht.
+
+   Gezaehlt werden nur FEHLVERSUCHE. Zaehlte man jeden Aufruf, sperrte sich
+   eine viel gelesene oeffentliche Seite von selbst. */
+CREATE TABLE IF NOT EXISTS bremse (
+  schluessel TEXT PRIMARY KEY,
+  treffer    INTEGER DEFAULT 0,
+  seit       TEXT
+);
+CREATE INDEX IF NOT EXISTS bremse_seit ON bremse(seit);
 `;
 
 /* Die Tabellen, die der Kern kennt — alles andere wird abgewiesen. */
 export const TABELLEN = ['konten', 'sitzungen', 'bereiche', 'saetze',
                          'freigaben', 'oeffentlich', 'protokoll', 'marken',
-                         'feldrechte'];
+                         'feldrechte', 'bremse'];
 
 /* Der Primärschlüssel je Tabelle. 'saetze' und 'freigaben' sind zusammengesetzt. */
 const SCHLUESSEL = {
   konten: ['id'], sitzungen: ['token'], bereiche: ['id'],
   saetze: ['bereich', 'id'], freigaben: ['bereich', 'seite', 'kontoId'],
   oeffentlich: ['schluessel'], protokoll: ['id'], marken: ['wert'],
-  feldrechte: ['bereich', 'sammlung', 'feld', 'kontoId']
+  feldrechte: ['bereich', 'sammlung', 'feld', 'kontoId'],
+  bremse: ['schluessel']
 };
 
 /* ==========================================================================

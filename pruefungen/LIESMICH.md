@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**62 Läufe, 2597 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**64 Läufe, 2670 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
@@ -66,6 +66,14 @@ Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
   `verbinden/konten.js` prüfte es seit jeher. Zwei Empfänger derselben Sorte,
   einer richtig, einer nicht — dasselbe Muster wie die zwanzig halben `esc`.
   → `test92.mjs`
+- **Das Schema stand zweimal, unbewacht.** `server/schema.sql` legt die
+  Tabellen an, `server/ablage.js` trägt dieselben noch einmal als Zeichenkette
+  — nötig, weil ein Cloudflare-Arbeiter keine Datei lesen kann. Die beiden
+  waren identisch, aber nichts hielt sie so. Wer eine Spalte nur in
+  `schema.sql` ergänzt, bekommt einen Server, der lokal läuft und in der Wolke
+  eine Spalte weniger hat — und das fällt erst auf, wenn jemand sie braucht.
+  Beim Anlegen der Bremse ist genau das passiert. → `test87.mjs` vergleicht sie
+  jetzt Spalte für Spalte.
 - Der Abgleich schrieb geholte Sätze nur in den Arbeitsspeicher, nie auf die
   Platte. Nach dem Neuladen waren sie weg — und weil die Abgleichsmarke schon
   weitergerückt war, kamen sie **nie wieder**.
@@ -129,12 +137,14 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 90 | ein Anführungszeichen im Text darf kein Attribut werden |
 | 91 | der Säuberer hängt — Adressen in Links und Rahmen, HTML aus Mails |
 | 92 | der Anmeldeschlüssel geht nur an geprüfte Ursprünge · CORS |
+| 93 | die Bremse — wie oft jemand ein Passwort probieren darf |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt
 trotzdem auf.
 
-**Drei Läufe starten keinen Browser** — 87, 88 und 89. Zusammen sind sie in
+**Fünf Läufe starten keinen Browser** — 87, 88, 89, 92 und 93.
+(92 und 93 starten einen HTTP-Server, aber keinen Browser.) Zusammen sind sie in
 einer Fünftelsekunde fertig und stehen deshalb in der CI als eigener,
 vorgezogener Auftrag. Sie sind verschieden gebaut:
 

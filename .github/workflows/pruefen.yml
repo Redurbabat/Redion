@@ -56,11 +56,18 @@ jobs:
         run: node pruefungen/lauf/test88.mjs
       - name: Werkzeug-Logik prüfen
         run: node pruefungen/lauf/test89.mjs
+      # 92 und 93 starten zwar einen HTTP-Server, aber keinen Browser — sie
+      # sind in einer halben Sekunde durch. Sicherheitsbefunde sollen nicht
+      # zwölf Minuten auf ihre Meldung warten.
+      - name: Anmeldeschlüssel und CORS prüfen
+        run: node pruefungen/lauf/test92.mjs
+      - name: Die Bremse prüfen
+        run: node pruefungen/lauf/test93.mjs
 
   pruefen:
     name: Alle Prüfläufe
     runs-on: ubuntu-latest
-    # 63 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
+    # 64 Läufe, jeder ein eigener Prozess, drei Sekunden Pause dazwischen —
     # rund 12 Minuten. Die Pause ist kein Leerlauf: ohne sie werden die Läufe
     # flockig, weil Ports und IndexedDB einen Moment brauchen. Das Zeitfenster
     # ist grosszügig, weil ein Runner langsamer sein kann als dieser Rechner.

@@ -363,5 +363,65 @@ p('Der Sucher findet die Definitionen überhaupt',
 p('Kein Modul hat ein esc ohne "-Schutz', ohneSchutz.length === 0,
   ohneSchutz.slice(0, 5).join(', '));
 
+/* ---------------------------------------------------------------------------
+ * DAS SCHEMA STEHT ZWEIMAL — UND MUSS ZWEIMAL GLEICH SEIN
+ * ---------------------------------------------------------------------------
+ * `server/schema.sql` legt die Tabellen in D1 an. `server/ablage.js` trägt
+ * dieselben noch einmal als Zeichenkette, weil ein Cloudflare-Arbeiter keine
+ * Datei lesen kann — er muss das Schema mitbringen.
+ *
+ * Die Doppelung ist also nicht Nachlässigkeit, sondern nötig. Ungesichert ist
+ * sie trotzdem gefährlich, und zwar auf die stillste Art: wer eine Spalte nur
+ * in `schema.sql` ergänzt, bekommt einen Server, der lokal läuft und in der
+ * Wolke eine Spalte weniger hat. Das fällt erst auf, wenn jemand sie braucht
+ * — und dann sieht es nach einem Fehler an ganz anderer Stelle aus.
+ *
+ * Beim Anlegen der Bremse war genau das passiert: `bremse` stand zuerst nur
+ * in `schema.sql`. Die Prüfung hier hat es gefunden, bevor es jemand merkte.
+ * Nachgemessen war der Rest zu diesem Zeitpunkt vollständig gleich — die
+ * beiden Kopien waren also nicht auseinandergelaufen, sie waren nur nicht
+ * bewacht.
+ * ------------------------------------------------------------------------ */
+console.log('\n— Die zwei Schemata —');
+
+const schemaDatei = _lies(_dazu(WURZEL, 'server/schema.sql'), 'utf8');
+const ablageJs = _lies(_dazu(WURZEL, 'server/ablage.js'), 'utf8');
+const ausJs = (ablageJs.match(/`([\s\S]*?CREATE TABLE[\s\S]*?)`;/) || [, ''])[1];
+
+const tabellenVon = (text) =>
+  [...text.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)\s*\(([\s\S]*?)\n\);/g)]
+    .reduce((o, x) => {
+      o[x[1]] = x[2].split('\n').map(z => z.trim().replace(/,$/, ''))
+        .filter(z => z && !z.startsWith('/*') && !z.startsWith('*'));
+      return o;
+    }, {});
+
+const inDatei = tabellenVon(schemaDatei);
+const inJs = tabellenVon(ausJs);
+
+/* Zuerst: findet der Ausdruck überhaupt etwas? Eine Prüfung, die auf zwei
+   leeren Listen „gleich" meldet, ist schlimmer als gar keine. */
+p('Der Ausdruck findet die Tabellen in schema.sql', Object.keys(inDatei).length >= 9);
+p('… und die in ablage.js', Object.keys(inJs).length >= 9);
+
+const nurDatei = Object.keys(inDatei).filter(t => !inJs[t]);
+const nurJs = Object.keys(inJs).filter(t => !inDatei[t]);
+p('Keine Tabelle nur in schema.sql', nurDatei.length === 0, nurDatei.join(', '));
+p('Keine Tabelle nur in ablage.js', nurJs.length === 0, nurJs.join(', '));
+
+const anders = Object.keys(inDatei).filter(t =>
+  inJs[t] && JSON.stringify(inDatei[t]) !== JSON.stringify(inJs[t]));
+p('Alle Tabellen haben in beiden dieselben Spalten', anders.length === 0,
+  anders.map(t => t + ': ' + inDatei[t].filter(x => !inJs[t].includes(x)).join('|')).join(' · '));
+
+/* Und die Liste, gegen die der Kern prüft, muss dieselben Namen kennen —
+   eine Tabelle, die im Schema steht und in TABELLEN fehlt, wird vom Server
+   abgewiesen, obwohl sie da ist. */
+const listeRoh = (ablageJs.match(/export const TABELLEN = \[([\s\S]*?)\];/) || [, ''])[1];
+const inListe = [...listeRoh.matchAll(/'([a-z_]+)'/g)].map(x => x[1]);
+const fehlenInListe = Object.keys(inDatei).filter(t => !inListe.includes(t));
+p('TABELLEN kennt jede Tabelle des Schemas', fehlenInListe.length === 0,
+  fehlenInListe.join(', '));
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

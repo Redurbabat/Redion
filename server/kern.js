@@ -61,6 +61,8 @@ export const fehler = (status, code, text) =>
    Prüfläufe sie von hier holen. */
 export { erlaubteAdressen, rueckAdresse } from './sicherheit/cors.js';
 import { erlaubteAdressen, rueckAdresse, mitCors } from './sicherheit/cors.js';
+import { seitenSchluessel, istGesperrt, zaehleFehlversuch, bremseLoesen,
+         herkunft, GRENZEN } from './sicherheit/bremse.js';
 
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
 export const gleich = (a, b) => {
@@ -217,7 +219,7 @@ const beantworteRoh = async (a, ablage, umwelt = {}) => {
     }
 
     /* --- Öffentliche Seiten: das Einzige ohne Token --------------------- */
-    if (t[0] === 's' && t[1]) return await oeffentlichZeigen(ablage, t[1], suche);
+    if (t[0] === 's' && t[1]) return await oeffentlichZeigen(ablage, t[1], suche, a);
 
     /* --- Anmeldung ------------------------------------------------------ */
     if (t[0] === 'konto') return await kontoWeg(a, ablage, umwelt, t, m, k, kopf, suche);
@@ -292,6 +294,25 @@ const kontoWeg = async (a, ablage, umwelt, t, m, k, kopf, suche) => {
 
   /* --- Gerätecode: der Rechner fragt nach einem Code ------------------- */
   if (was === 'code' && m === 'POST') {
+    /* Diese Bremse steht NICHT gegen das Erraten — 32^8 Möglichkeiten erraten
+       auch dreissig Versuche in der Stunde nicht. Sie steht gegen das
+       Vollschreiben: jeder Aufruf legt einen Satz an, und ohne Grenze schreibt
+       jemand die Ablage in einer Nacht voll. Deshalb pro Herkunft und
+       grosszügig — ein Mensch fordert einen Code an, vielleicht dreimal.
+
+       OHNE ERKENNBARE HERKUNFT wird nicht gebremst. Ein gemeinsamer Zähler
+       für alle wäre keine Sicherheit, sondern eine Selbstsperre: der erste,
+       der es übertreibt, schlösse jeden weiteren aus. */
+    const woher = herkunft(a);
+    if (woher) {
+      const sperre = await istGesperrt(ablage, 'code:' + woher, GRENZEN.codeNeu);
+      if (sperre.gesperrt) return antwort(429, { object: 'error', status: 429,
+        code: 'zu_viele_versuche',
+        message: 'Zu viele Codes in kurzer Zeit. In ' +
+                 Math.ceil(sperre.wiederIn / 60) + ' Minuten geht es wieder.' },
+        { 'Retry-After': String(sperre.wiederIn), 'Access-Control-Allow-Origin': '*' });
+      await zaehleFehlversuch(ablage, 'code:' + woher, GRENZEN.codeNeu);
+    }
     const code = codeKurz();
     const satz = { wert: await abdruck(code), art: 'geraetecode', kontoId: '',
                    bereich: '', name: String(k.geraet || 'Unbekanntes Gerät').slice(0, 60),
@@ -949,7 +970,7 @@ const freigabeWeg = async (a, ablage, wer, t, m, k) => {
  * anders geht es nicht, wenn ihn ein fremder Browser darstellen soll. Das
  * steht auch so im Fenster, bevor jemand darauf klickt.
  * ========================================================================*/
-const oeffentlichZeigen = async (ablage, schluessel, suche) => {
+const oeffentlichZeigen = async (ablage, schluessel, suche, anfrage = {}) => {
   const s = await ablage.hole('oeffentlich', { schluessel });
   if (!s) return { status: 404,
     kopf: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -962,13 +983,43 @@ const oeffentlichZeigen = async (ablage, schluessel, suche) => {
       '<p>Die Freigabe für diese Seite ist abgelaufen.</p>') };
 
   if (s.passwort) {
+    /* HIER GEHÖRT DIE BREMSE HIN und nirgends sonst so dringend. Der
+       Seitenschlüssel hat 48 Bit und der Gerätecode 32^8 — beide kann man
+       nicht durchprobieren. Ein Passwort, das ein Mensch gewählt hat, schon:
+       „sommer2026" fällt in Sekunden, wenn man beliebig oft raten darf.
+
+       Erst NACHSEHEN, dann prüfen, dann erst zählen. Wer zuerst zählt und
+       dann nachsieht, verbraucht dem Menschen einen Versuch dafür, dass er
+       gesperrt ist — und die Sperre verlängert sich, während er wartet. */
+    const bremsSchluessel = seitenSchluessel(schluessel, anfrage);
+    const sperre = await istGesperrt(ablage, bremsSchluessel, GRENZEN.passwort);
+    if (sperre.gesperrt) return { status: 429,
+      kopf: { 'Content-Type': 'text/html; charset=utf-8',
+              'Retry-After': String(sperre.wiederIn) },
+      koerper: htmlSeite('Zu viele Versuche',
+        '<p>Für diese Seite wurden zu viele Passwörter probiert.</p>' +
+        '<p>In ' + Math.ceil(sperre.wiederIn / 60) + ' Minuten geht es wieder.</p>') };
+
     const gegeben = await abdruck(String(suche.pw || ''));
-    if (!gleich(gegeben, s.passwort)) return { status: 401,
-      kopf: { 'Content-Type': 'text/html; charset=utf-8' },
-      koerper: htmlSeite('Passwort nötig',
-        '<form><p>Diese Seite ist mit einem Passwort geschützt.</p>' +
-        '<input name="pw" type="password" placeholder="Passwort" autofocus>' +
-        '<button>Ansehen</button></form>') };
+    if (!gleich(gegeben, s.passwort)) {
+      const stand = await zaehleFehlversuch(ablage, bremsSchluessel, GRENZEN.passwort);
+      return { status: 401,
+        kopf: { 'Content-Type': 'text/html; charset=utf-8' },
+        koerper: htmlSeite('Passwort nötig',
+          '<form><p>Diese Seite ist mit einem Passwort geschützt.</p>' +
+          '<input name="pw" type="password" placeholder="Passwort" autofocus>' +
+          '<button>Ansehen</button>' +
+          /* Die Zahl offen dazuschreiben. Wer sein eigenes Passwort sucht,
+             soll sehen, dass es knapp wird — und nicht überrascht vor einer
+             Sperre stehen, die er nicht kommen sah. */
+          (stand.rest <= 3
+            ? '<p style="color:#e03e3e">Noch ' + stand.rest + ' Versuche.</p>'
+            : '') +
+          '</form>') };
+    }
+    /* Geglückt: die Zählung ist erledigt. Sonst summierten sich die Fehltritte
+       von gestern zu einer Sperre von morgen. */
+    await bremseLoesen(ablage, bremsSchluessel);
   }
 
   await ablage.setze('oeffentlich', { ...s, aufrufe: (Number(s.aufrufe) || 0) + 1 });
