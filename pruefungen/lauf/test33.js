@@ -333,7 +333,20 @@ const { chromium } = require('playwright');
 
   p.once('dialog', d => d.accept('Neu'));
   await p.evaluate(() => document.querySelector('.menu button[data-t="text"]').click());
+  /* Die 500 ms bleiben — sie sind hier nicht nur eine Wartezeit, sondern
+     lassen das vorige Fenster verschwinden. Wer sie durch ein
+     `waitForSelector('.overlay input')` ERSETZT, trifft genau dieses alte
+     Fenster und füllt das falsche Feld; der Lauf war damit auch einzeln rot.
+
+     Dahinter kommt ein Netz für den langsamen Rechner: ist das neue Fenster
+     nach 500 ms noch nicht da, wird gewartet statt aufgegeben. Ohne das
+     greift der Notnagel `p.once('dialog', …)`, die Spalte heisst „Neu", und
+     genau eine Prüfung scheitert — die nach der Position —, während die
+     nächste („eine Spalte mehr") grün bleibt. Ein Fehlerbild, das nach einem
+     Fehler im Code aussieht und keiner ist. */
   await p.waitForTimeout(500);
+  await p.waitForFunction(() => !!document.querySelector('.overlay input'),
+                          null, { timeout: 8000 }).catch(() => {});
   await p.evaluate(() => {
     const i = document.querySelector('.overlay input');
     if (i) { i.value = 'Dazwischen'; document.querySelector('.overlay [data-a="ok"]').click(); }

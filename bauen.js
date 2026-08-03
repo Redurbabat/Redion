@@ -14,9 +14,14 @@ const lies = (p) => fs.readFileSync(pfad.join(wurzel, p), 'utf8');
 
 let html = lies('index.html');
 
-/* CSS einsetzen */
-html = html.replace(/<link rel="stylesheet" href="([^"]+)">/,
-  (_, datei) => '<style>\n' + lies(datei) + '\n</style>');
+/* Stilblätter einsetzen — ALLE, in der Reihenfolge, in der sie im HTML stehen.
+   Hier fehlte das g: solange es nur ein Stilblatt gab, fiel das nicht auf.
+   Ab dem zweiten hätte die Einzeldatei die übrigen als <link> behalten — und
+   ein <link> auf quell/schale/stil/… geht ins Leere, sobald die Datei allein
+   irgendwo liegt. Sie hätte gestartet und wäre unfertig gewesen: die halbe
+   Gestaltung fehlt, aber nichts meldet einen Fehler. */
+html = html.replace(/<link rel="stylesheet" href="([^"]+)">/g,
+  (_, datei) => '<style>\n/* ===== ' + datei + ' ===== */\n' + lies(datei) + '\n</style>');
 
 /* Skripte einsetzen — in der Reihenfolge, in der sie im HTML stehen */
 html = html.replace(/<script src="(quell\/[^"]+)"><\/script>/g, (_, datei) =>

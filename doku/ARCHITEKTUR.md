@@ -93,8 +93,19 @@ schale/
 │                   inhaltsflaeche.js Blöcke, Rückverweise, Streifen
 │                   reiter.js         Reiter, geteilte Ansicht
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
-└─ stil/            das Aussehen
+└─ stil/            marken.css    die drei Schriften
+                    dunkel.css    die Farben — der Normalfall
+                    hell.css      nur, was im Hellmodus anders ist
+                    grund.css     Grundelemente und Farbklassen
+                    aufbau.css    das Gerüst
+                    bausteine.css die Bausteine
 ```
+
+Die Reihenfolge der sechs Stilblätter in `index.html` zählt. Dunkel steht in
+`:root` und gilt immer; `hell.css` überschreibt nur, wenn am `html` das
+Merkmal `data-theme="light"` steht. Wer in `dunkel.css` eine Variable ergänzt,
+muss sie auch in `hell.css` ergänzen — sonst zeigt der Hellmodus dort den
+dunklen Wert, und das merkt nur, wer hell arbeitet.
 
 Die drei Zeichner kennen `App` nicht. Sie bekommen, was sie von drüben
 brauchen, über `binde({ … })` in `App.start()` — und ein Prüflauf sieht

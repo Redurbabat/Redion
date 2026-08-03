@@ -1,0 +1,34 @@
+/* ============================================================================
+ * hell.css — was im Hellmodus anders ist
+ * ----------------------------------------------------------------------------
+ * Nur die Abweichungen von `dunkel.css`. Was hier nicht steht, bleibt so,
+ * wie es dort steht — deshalb ist diese Datei kürzer als die andere und
+ * darf es auch sein.
+ *
+ * Die höhere Genauigkeit (`html[data-theme="light"]` statt `:root`) ist
+ * der Grund, warum die Reihenfolge der Dateien hier nicht kippt: dieser
+ * Block gewinnt gegen `:root`, egal wann er geladen wurde.
+ * ==========================================================================*/
+
+/* --- Hellmodus ------------------------------------------------------------ */
+html[data-theme="light"]{
+  --bg:        #ffffff;
+  --bg-side:   #fbfbfa;
+  --bg-card:   #f7f7f5;
+  --bg-hover:  #efefee;
+  --bg-input:  #f1f1ef;
+  --line:      #e9e9e7;
+  --line-soft: #f1f1ef;
+  --text:      #37352f;
+  --text-dim:  #787774;
+  --text-faint:#9b9a97;
+  --shadow:    0 8px 28px rgba(15,15,15,.12);
+
+  --c-default:#37352f; --c-gray:#787774; --c-brown:#9f6b53; --c-orange:#d9730d;
+  --c-yellow:#cb912f;  --c-green:#448361; --c-blue:#337ea9;  --c-purple:#9065b0;
+  --c-pink:#c14c8a;    --c-red:#d44c47;
+
+  --b-gray:#f1f1ef; --b-brown:#f4eeee; --b-orange:#faebdd; --b-yellow:#fbf3db;
+  --b-green:#edf3ec; --b-blue:#e7f3f8; --b-purple:#f6f3f9; --b-pink:#faf1f5;
+  --b-red:#fdebec;
+}

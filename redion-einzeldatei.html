@@ -45,16 +45,47 @@
 <link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-xr.png"
       media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2)">
 
+<!-- Die Reihenfolge zählt: Schriften, dann die Farben für Dunkel (der
+     Normalfall), dann was im Hellmodus anders ist, dann die Grundelemente,
+     das Gerüst und zuletzt die Bausteine. Wer eine Zeile verschiebt,
+     verschiebt, wer gegen wen gewinnt. -->
 <style>
+/* ===== quell/schale/stil/marken.css ===== */
 /* ============================================================================
- * app.css — Das Design-System
+ * marken.css — die Schriften
  * ----------------------------------------------------------------------------
- * Die zehn Notion-Farben, die Typografie und das Layout.
- * Alle Werte liegen als CSS-Variablen vor, damit Hell- und Dunkelmodus
- * denselben Code teilen.
+ * Die drei Schriftfamilien, und sonst nichts. Sie stehen vor den Farben,
+ * weil sie mit dem Thema nichts zu tun haben: Hell und Dunkel teilen sie.
+ *
+ * Wer die Schrift der ganzen App ändern will, ändert sie hier — und nur
+ * hier. Vorher lagen diese drei Zeilen zwischen sechsunddreissig Farbwerten
+ * in einer Datei mit 3155 Zeilen.
  * ==========================================================================*/
 
-/* --- Dunkelmodus (Standard) ---------------------------------------------- */
+:root{
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
+  --mono: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: Lyon-Text, Georgia, ui-serif, serif;
+}
+
+</style>
+<style>
+/* ===== quell/schale/stil/dunkel.css ===== */
+/* ============================================================================
+ * dunkel.css — die Farben im Dunkelmodus (der Normalfall)
+ * ----------------------------------------------------------------------------
+ * ACHTUNG, das ist die Stelle, an der man sich vertut: Dunkel ist hier kein
+ * Sonderfall, sondern der VORGABEWERT. Diese Werte stehen in `:root` und
+ * gelten immer — `hell.css` überschreibt sie nur dann, wenn am `html`
+ * das Merkmal `data-theme="light"` steht.
+ *
+ * Wer hier eine Variable ergänzt, muss sie deshalb auch in `hell.css`
+ * ergänzen. Sonst zeigt der Hellmodus an dieser einen Stelle den dunklen
+ * Wert, und das fällt erst jemandem auf, der hell arbeitet.
+ *
+ * Die zehn Text- und die zehn Hintergrundfarben sind die aus Notion.
+ * ==========================================================================*/
+
 :root{
   --bg:            #191919;
   --bg-side:       #202020;
@@ -92,11 +123,22 @@
   --b-purple:  #443f57;
   --b-pink:    #533b4c;
   --b-red:     #594141;
-
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
-  --mono: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-  --serif: Lyon-Text, Georgia, ui-serif, serif;
 }
+
+</style>
+<style>
+/* ===== quell/schale/stil/hell.css ===== */
+/* ============================================================================
+ * hell.css — was im Hellmodus anders ist
+ * ----------------------------------------------------------------------------
+ * Nur die Abweichungen von `dunkel.css`. Was hier nicht steht, bleibt so,
+ * wie es dort steht — deshalb ist diese Datei kürzer als die andere und
+ * darf es auch sein.
+ *
+ * Die höhere Genauigkeit (`html[data-theme="light"]` statt `:root`) ist
+ * der Grund, warum die Reihenfolge der Dateien hier nicht kippt: dieser
+ * Block gewinnt gegen `:root`, egal wann er geladen wurde.
+ * ==========================================================================*/
 
 /* --- Hellmodus ------------------------------------------------------------ */
 html[data-theme="light"]{
@@ -120,6 +162,22 @@ html[data-theme="light"]{
   --b-green:#edf3ec; --b-blue:#e7f3f8; --b-purple:#f6f3f9; --b-pink:#faf1f5;
   --b-red:#fdebec;
 }
+
+</style>
+<style>
+/* ===== quell/schale/stil/grund.css ===== */
+/* ============================================================================
+ * grund.css — die Grundelemente und die Farbklassen
+ * ----------------------------------------------------------------------------
+ * Was für alles gilt, bevor irgendein Baustein anfängt: die Randregel für
+ * jedes Element, Körper und Schrift, Knöpfe und Eingabefelder, die Auswahl,
+ * die Rollbalken — und die zwanzig Farbklassen, mit denen Text und
+ * Hintergrund eingefärbt werden.
+ *
+ * Die Hintergrundklassen heissen `bg-*` und nicht `b-*`: `b-` gehört den
+ * Blockarten (`b-text`, `b-h1`, `b-callout`). Wer das vertauscht, färbt
+ * Blöcke ein, die er nicht gemeint hat.
+ * ==========================================================================*/
 
 /* --- Farbklassen ---------------------------------------------------------- */
 .t-default{color:var(--c-default)} .t-gray{color:var(--c-gray)}
@@ -155,6 +213,22 @@ input,textarea,select{font:inherit; color:inherit}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px; border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-faint)}
 ::-webkit-scrollbar-track{background:transparent}
+
+</style>
+<style>
+/* ===== quell/schale/stil/aufbau.css ===== */
+/* ============================================================================
+ * aufbau.css — das Gerüst: Seitenleiste und Hauptbereich
+ * ----------------------------------------------------------------------------
+ * Wo die grossen Flächen liegen und wie breit sie sind — die Seitenleiste
+ * links, der Hauptbereich rechts, die Kopfzeile darüber, die Seite darin.
+ * Alles, was man verschiebt, wenn man das Fenster anders einteilen will.
+ *
+ * Was NICHT hierher gehört: wie ein einzelner Baustein aussieht. Eine
+ * Datenbanktabelle, ein Menü, ein Dialog — das steht in `bausteine.css`.
+ * Die Grenze ist die Frage: verschwindet das Ding, wenn ich es weglasse,
+ * oder verrutscht die halbe App?
+ * ==========================================================================*/
 
 /* ==========================================================================
    SEITENLEISTE
@@ -381,6 +455,27 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .finder .res .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
 .finder .res .snip{display:block; font-size:12px; color:var(--text-dim); margin-top:2px}
 .finder .hint{padding:8px 14px; font-size:11.5px; color:var(--text-faint); border-top:1px solid var(--line)}
+
+</style>
+<style>
+/* ===== quell/schale/stil/bausteine.css ===== */
+/* ============================================================================
+ * bausteine.css — die Bausteine selbst
+ * ----------------------------------------------------------------------------
+ * Der grosse Rest: Datenbanken in allen zwölf Ansichten, das KI-Panel,
+ * Menüs, Dialoge, Einstellungen, Verbindungen, die Telefon-Oberfläche, die
+ * Kreuztabelle, die Barrierefreiheit.
+ *
+ * Diese Datei ist immer noch die grösste der sechs, und das ist in Ordnung:
+ * sie ist nach Bereichen gegliedert, und jeder Bereich hat sein eigenes
+ * Banner. Wer eine Farbe ändern will, sucht ab jetzt nicht mehr hier,
+ * sondern in `dunkel.css` oder `hell.css` — das war der Punkt der Übung.
+ *
+ * Ein paar Regeln hier tragen `html[data-theme="…"]` vor sich her. Die
+ * gehören bewusst NICHT nach hell.css oder dunkel.css: sie betreffen einen
+ * einzelnen Baustein und nicht das Thema. Wer sie verschiebt, sucht sie
+ * später bei dem Baustein, zu dem sie gehören.
+ * ==========================================================================*/
 
 /* ==========================================================================
    DATENBANKEN
