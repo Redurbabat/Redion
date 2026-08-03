@@ -128,23 +128,41 @@ hat es nur der Vergleich der berechneten Werte — 58 Unterschiede.
 `test87` prüft jetzt auf herrenlose Kommentarenden; die Klammernprüfung
 allein hätte es **nicht** gefunden (nachgestellt und belegt).
 
-### A4 — Die Bereiche in `dienst` und `ansicht` trennen
+### A4 — Die Bereiche in `dienst` und `ansicht` trennen · **Datenbanken erledigt**
 
 **Warum.** Das ist die eigentliche Regel des Aufbaus: reine Logik ohne DOM
-lässt sich prüfen, ohne einen Browser zu starten. Heute geht fast jeder
-Prüflauf über Chromium — das dauert und macht die Läufe flockig.
+lässt sich prüfen, ohne einen Browser zu starten.
 
-**Wo.** Der Reihe nach, grösste zuerst:
+**Erledigt: `datenbanken`.** `dienst.js` (1022 Zeilen) trägt die
+Eigenschaftstypen, das Lesen eines Wertes, Filtern, Sortieren, Gruppieren und
+die Berechnungen. `steuerung.js` fiel von 8658 auf 7784 Zeilen und zeigt nur
+noch.
+
+Das „fertig wenn" ist wörtlich erfüllt und belegt: `pruefungen/lauf/test88.mjs`
+lädt `dienst.js` in Node — ohne `document`, ohne `window` — und rechnet 38
+Prüfungen durch. **In 47 Millisekunden.** Zum Vergleich: ein Browserlauf
+braucht zwölf Sekunden.
+
+**Dass der Schnitt sauber ging, war nicht Glück, sondern gemessen:** über alle
+Namen gezählt braucht der Logikteil **nichts** aus dem Rest, während der Rest
+16 Namen von dort holt. Die Abhängigkeit läuft nur in eine Richtung. Wäre es
+andersherum auch nur an einer Stelle gewesen, hätten sich die beiden nicht
+trennen lassen, ohne Verhalten zu ändern. Wer den nächsten Bereich schneidet,
+fängt mit dieser Messung an.
+
+Drei Kleinigkeiten waren nötig: `esc` kam aus `Blocks` — einem Modul, das
+zeichnet; die zwei Zeilen stehen jetzt in `dienst.js`. `window.Tempo` wurde zu
+`typeof Tempo !== 'undefined'`, wie CLAUDE.md es ohnehin vorschreibt. Und die
+Datei hängt sich nur dann an ein Fenster, wenn es eines gibt.
+
+**Offen — der Reihe nach, grösste zuerst:**
 
 | Datei | Grösse | Ziel |
 |---|--:|---|
-| `bereiche/datenbanken/steuerung.js` | 400 KB | `dienst.js` (filtern, sortieren, rechnen, Rollups) + `ansicht/` (Tabelle, Board, Kalender, …) |
 | `bereiche/wissen/werkzeuge.js` | 100 KB | `graph/`, `karteikarten/`, `journal/`, `schlagwoerter/`, `befehle` ins Register |
 | `bereiche/hilfe/wissensseiten.js` | 170 KB | ist fast nur Text — nach `doku/` verschieben und beim Bauen einlesen |
 | `bereiche/editor/ansicht/editor.js` | 115 KB | `dienst.js` (Blockoperationen) + `ansicht/` (Zeichnen) |
-
-**Fertig wenn.** Für mindestens `datenbanken` gilt: `dienst.js` lässt sich in
-Node laden und prüfen, ohne dass ein `document` existiert.
+| `bereiche/datenbanken/steuerung.js` | 7784 Zeilen | die Ansichten einzeln: Tabelle, Board, Kalender, Zeitstrahl |
 
 ---
 
