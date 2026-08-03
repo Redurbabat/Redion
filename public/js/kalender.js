@@ -203,7 +203,7 @@ const Kalender = (() => {
     const ortKey  = Object.keys(coll.schema).find(k => coll.schema[k].type === 'place') ||
                     Object.keys(coll.schema).find(k => /ort|location/i.test(coll.schema[k].name));
 
-    const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Notizen//DE',
+    const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Redion//DE',
                     'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
                     'X-WR-CALNAME:' + maskieren(coll.name)];
 
@@ -422,7 +422,7 @@ const Kalender = (() => {
 
     const koerper = {
       summary: row.text || 'Ohne Titel',
-      description: 'Aus Notizen übernommen',
+      description: 'Aus Redion übernommen',
       start: ganz ? { date: start } : { dateTime: new Date(start).toISOString() },
       end:   ganz ? { date: gEnde } : { dateTime: new Date(gEnde).toISOString() }
     };

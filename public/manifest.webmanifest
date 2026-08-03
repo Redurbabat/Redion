@@ -1,7 +1,7 @@
 {
-  "name": "Notizen",
-  "short_name": "Notizen",
-  "description": "Notizen, Datenbanken, Kalender, Mail und KI — alles im Browser, alles auf deinem Gerät.",
+  "name": "Redion",
+  "short_name": "Redion",
+  "description": "Redion — Seiten, Datenbanken, Kalender, Mail und KI. Alles im Browser, alles auf deinem Gerät.",
   "lang": "de",
   "dir": "ltr",
   "start_url": "./index.html",

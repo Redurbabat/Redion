@@ -85,7 +85,7 @@ const PWA = (() => {
       angebot = null;
       Store.setMeta('pwa:installiert', true);
       document.getElementById('btn-install')?.remove();
-      UI.toast('Fertig — Notizen liegt jetzt als App auf dem Gerät.');
+      UI.toast('Fertig — Redion liegt jetzt als App auf dem Gerät.');
     });
   };
 
@@ -140,7 +140,7 @@ const PWA = (() => {
               '<li>In der Liste nach unten wischen bis <b>„Zum Home-Bildschirm"</b></li>' +
               '<li>Oben rechts auf <b>Hinzufügen</b></li>' +
             '</ol>' +
-            '<div class="verb-text" style="margin-top:10px">Danach liegt Notizen als eigenes ' +
+            '<div class="verb-text" style="margin-top:10px">Danach liegt Redion als eigenes ' +
             'Symbol auf dem Bildschirm, startet ohne Adresszeile und läuft auch ohne Netz. ' +
             'Deine Daten bleiben im App-Speicher.</div>' +
             (istSafari() ? '' :
@@ -221,7 +221,212 @@ const PWA = (() => {
     document.getElementById('side-schatten')?.remove();
   };
 
+  /* ------------------------------------------------------------------------
+   * FORMATLEISTE ÜBER DER TASTATUR
+   * ------------------------------------------------------------------------
+   * Auf dem Telefon gibt es keine Tastenkürzel und keine Blockgriffe. Notion
+   * löst das mit einer Leiste über der Tastatur. Genauso hier: sie erscheint,
+   * sobald man in einen Block tippt, und verschwindet, wenn man fertig ist.
+   * --------------------------------------------------------------------- */
+  const tastenleiste = () => {
+    const leiste = document.getElementById('tastenleiste');
+    if (!leiste) return;
+    let aktiv = null;                       /* das Feld, in dem geschrieben wird */
+
+    const zeigen = (feld) => {
+      if (!istTelefon()) return;
+      aktiv = feld;
+      leiste.hidden = false;
+      document.body.classList.add('schreibt');
+    };
+    const verstecken = () => {
+      leiste.hidden = true;
+      document.body.classList.remove('schreibt');
+      aktiv = null;
+    };
+
+    document.addEventListener('focusin', (e) => {
+      const ct = e.target.closest('.blk [contenteditable], #title');
+      if (ct) zeigen(ct); else if (!e.target.closest('#tastenleiste')) verstecken();
+    });
+    document.addEventListener('focusout', (e) => {
+      /* Ein Klick auf die Leiste selbst darf sie nicht schliessen */
+      setTimeout(() => {
+        if (!document.activeElement ||
+            !document.activeElement.closest('.blk [contenteditable], #title, #tastenleiste'))
+          verstecken();
+      }, 120);
+    });
+
+    /* mousedown statt click: so verliert das Textfeld den Fokus nicht */
+    leiste.addEventListener('mousedown', (e) => e.preventDefault());
+    leiste.addEventListener('touchstart', (e) => {
+      if (e.target.closest('button')) e.preventDefault();
+    }, { passive: false });
+
+    leiste.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-t]');
+      if (!b) return;
+      const was = b.dataset.t;
+      const feld = aktiv;
+      if (was === 'fertig') { feld && feld.blur(); verstecken(); return; }
+      if (!feld) return;
+      feld.focus();
+
+      const blk = feld.closest('.blk');
+      const block = blk ? Store.getBlock(blk.dataset.bid) : null;
+
+      /* Text einsetzen, wo der Schreibzeiger steht */
+      const einsetzen = (txt) => document.execCommand('insertText', false, txt);
+
+      if (was === 'plus') {
+        if (!block) return;
+        const eltern = Store.getBlock(block.parentId);
+        const idx = eltern ? eltern.content.indexOf(block.id) + 1 : -1;
+        const neu = Store.addBlock(block.parentId, 'text', {}, idx);
+        App.zeichneSeite(neu.id);
+        return;
+      }
+      if (was === 'slash') { einsetzen('/');
+        feld.dispatchEvent(new InputEvent('input', { bubbles: true }));
+        setTimeout(() => Blocks.slashMenue(feld, block), 30); return; }
+      if (was === 'fett')   { einsetzenUm(feld, '**'); return; }
+      if (was === 'kursiv') { einsetzenUm(feld, '*');  return; }
+      if (was === 'unter')  { einsetzenUm(feld, '__'); return; }
+      if (was === 'code')   { einsetzenUm(feld, '`');  return; }
+      if (was === 'link') {
+        const u = prompt('Adresse für den Link:');
+        if (!u) return;
+        const t = (getSelection().toString() || u);
+        einsetzen('[' + t + '](' + u + ')');
+        return;
+      }
+      if (was === 'todo' && block) {
+        Store.updateBlock(block.id, { type: block.type === 'todo' ? 'text' : 'todo' });
+        App.zeichneSeite(block.id, 'ende');
+        return;
+      }
+      if ((was === 'rein' || was === 'raus') && block) {
+        feld.dispatchEvent(new KeyboardEvent('keydown',
+          { key: 'Tab', shiftKey: was === 'raus', bubbles: true, cancelable: true }));
+        return;
+      }
+    });
+  };
+
+  /** Setzt Zeichen um die Auswahl — dieselbe Wirkung wie Strg+B am Rechner. */
+  const einsetzenUm = (feld, zeichen) => {
+    const sel = getSelection();
+    const txt = sel && sel.toString();
+    if (txt) document.execCommand('insertText', false, zeichen + txt + zeichen);
+    else {
+      document.execCommand('insertText', false, zeichen + zeichen);
+      /* Schreibzeiger in die Mitte stellen */
+      const r = sel.getRangeAt(0);
+      r.setStart(r.startContainer, Math.max(0, r.startOffset - zeichen.length));
+      r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+    }
+    feld.dispatchEvent(new InputEvent('input', { bubbles: true }));
+  };
+
+  /* ------------------------------------------------------------------------
+   * LANGES DRÜCKEN UND WISCHEN
+   * ------------------------------------------------------------------------
+   * Am Telefon gibt es keine Griffe neben den Blöcken — Notion ersetzt sie
+   * durch langes Drücken. Und in Listen wischt man: nach rechts abhaken,
+   * nach links archivieren. Beides mit Rückgängig.
+   * --------------------------------------------------------------------- */
+  const beruehrung = () => {
+    let halten = null, startX = 0, startY = 0, gezogen = null, verschoben = 0;
+
+    const aufraeumen = () => {
+      clearTimeout(halten); halten = null;
+      if (gezogen) { gezogen.style.transform = ''; gezogen.style.opacity = ''; gezogen = null; }
+      verschoben = 0;
+    };
+
+    document.addEventListener('touchstart', (e) => {
+      if (!istTelefon() || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+
+      /* Langes Drücken auf einem Block öffnet sein Menü */
+      const blk = e.target.closest('.blk');
+      if (blk && !e.target.closest('#tastenleiste, .handles')) {
+        halten = setTimeout(() => {
+          const b = Store.getBlock(blk.dataset.bid);
+          if (!b) return;
+          const griff = blk.querySelector('.handles button[data-act="menu"]');
+          if (navigator.vibrate) navigator.vibrate(12);
+          Blocks.blockMenue(griff || blk, b);
+          halten = null;
+        }, 500);
+      }
+
+      /* Wischen auf einer Aufgabe oder Datenbankzeile */
+      const zeile = e.target.closest('tbody tr[data-rid], .blk.b-todo, .liste-zeile[data-rid]');
+      if (zeile && !e.target.closest('input, [contenteditable]')) gezogen = zeile;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!istTelefon() || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX, dy = t.clientY - startY;
+      /* Sobald der Finger wandert, ist es kein langes Drücken mehr */
+      if (halten && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) { clearTimeout(halten); halten = null; }
+      if (!gezogen) return;
+      if (Math.abs(dy) > Math.abs(dx)) { aufraeumen(); return; }   /* senkrecht = scrollen */
+      verschoben = Math.max(-120, Math.min(120, dx));
+      gezogen.style.transform = 'translateX(' + verschoben + 'px)';
+      gezogen.style.opacity = String(1 - Math.abs(verschoben) / 260);
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+      if (halten) { clearTimeout(halten); halten = null; }
+      if (!gezogen) return;
+      const el = gezogen, weg = verschoben;
+      el.style.transition = 'transform .18s ease, opacity .18s ease';
+      el.style.transform = ''; el.style.opacity = '';
+      setTimeout(() => { el.style.transition = ''; }, 200);
+      gezogen = null; verschoben = 0;
+      if (Math.abs(weg) < 70) return;
+
+      /* Nach rechts: abhaken. Nach links: archivieren. */
+      const rid = el.dataset.rid;
+      if (rid) {
+        const row = Store.getBlock(rid);
+        if (!row) return;
+        if (weg < 0) {
+          Store.updateBlock(rid, { archiviert: !row.archiviert });
+          App.zeichneSeite();
+          UI.toast(row.archiviert ? 'Zurückgeholt' : 'Archiviert — nochmal wischen holt es zurück');
+        } else {
+          /* Erste Kontrollkästchen-Spalte umschalten */
+          const coll = Store.getCollection(row.parentId);
+          const k = coll && Object.keys(coll.schema).find(x => coll.schema[x].type === 'checkbox');
+          if (!k) { UI.toast('Hier gibt es nichts zum Abhaken'); return; }
+          Store.setProp(rid, k, !(row.props || {})[k]);
+          App.zeichneSeite();
+          UI.toast((row.props || {})[k] ? 'Häkchen weg' : '✓ Abgehakt');
+        }
+        return;
+      }
+      const b = el.dataset.bid && Store.getBlock(el.dataset.bid);
+      if (b && b.type === 'todo') {
+        if (weg > 0) { Store.updateBlock(b.id, { checked: !b.checked }); App.zeichneSeite();
+                       UI.toast(b.checked ? 'Häkchen weg' : '✓ Erledigt'); }
+        else { Store.trashBlock(b.id); App.zeichneSeite();
+               UI.toast('Gelöscht — im Papierkorb'); }
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', aufraeumen, { passive: true });
+  };
+
   const telefonOberflaeche = () => {
+    tastenleiste();
+    beruehrung();
     /* Knopf zum Aufklappen in die Kopfzeile */
     if (!document.getElementById('btn-menu')) {
       const b = document.createElement('button');
@@ -301,17 +506,58 @@ const PWA = (() => {
     UI.toast('Geteiltes gespeichert');
   };
 
+  /* ------------------------------------------------------------------------
+   * VERBINDUNGSANZEIGE
+   * ------------------------------------------------------------------------
+   * Redion braucht das Netz nur für KI, Karten und Webhooks. Trotzdem soll
+   * man sehen, woran man ist: ein Streifen, wenn die Verbindung weg ist,
+   * und die ehrliche Auskunft, was jetzt trotzdem geht.
+   * ---------------------------------------------------------------------- */
+  const NUR_MIT_NETZ = ['KI-Antworten aus der Wolke', 'Karten von OpenStreetMap',
+                        'Webhooks und E-Mail', 'Kalender-Abgleich', 'Wikipedia'];
+
+  const verbindungAnzeigen = (drin) => {
+    document.getElementById('offline-streifen')?.remove();
+    if (drin) return;
+    const d = document.createElement('div');
+    d.id = 'offline-streifen';
+    d.innerHTML = '<span>⚡ Ohne Verbindung — alles Eigene läuft weiter</span>' +
+                  '<button data-a="was">Was geht jetzt nicht?</button>' +
+                  '<button data-a="zu" title="Ausblenden">✕</button>';
+    d.addEventListener('click', e => {
+      if (e.target.closest('[data-a="zu"]')) { d.remove(); return; }
+      if (!e.target.closest('[data-a="was"]')) return;
+      const r = e.target.getBoundingClientRect();
+      UI.menu('<div class="grp">Braucht eine Verbindung</div>' +
+        NUR_MIT_NETZ.map(x => `<button><span class="mi">⚠</span>${x}</button>`).join('') +
+        '<hr><div class="grp">Läuft weiter</div>' +
+        ['Schreiben und Lesen', 'Datenbanken, Filter, Formeln', 'Suche und Vorlagen',
+         'Sicherung als Datei', 'Automationen im Gerät']
+          .map(x => `<button><span class="mi">✓</span>${x}</button>`).join(''),
+        Math.max(10, r.left - 120), r.bottom + 6);
+    });
+    document.body.appendChild(d);
+  };
+
+  const verbindungUeberwachen = () => {
+    verbindungAnzeigen(navigator.onLine);
+    addEventListener('online',  () => { verbindungAnzeigen(true);  UI.toast('Verbindung ist wieder da'); });
+    addEventListener('offline', () => { verbindungAnzeigen(false); });
+  };
+
   const start = () => {
     workerAnmelden();
     angebotAnnehmen();
     telefonOberflaeche();
+    verbindungUeberwachen();
     setTimeout(() => { abkuerzung(); geteiltes(); }, 500);
     /* Auf dem iPhone gibt es kein Angebot vom Browser — also selbst anbieten. */
     if (istApple() && !istInstalliert()) setTimeout(knopfZeigen, 1500);
   };
 
-  return { start, installieren, anleitung, istInstalliert, istApple, istTelefon,
-           schubladeAuf, schubladeZu, knopfZeigen };
+  return { start, installieren, anleitung, istInstalliert, istApple, istTelefon, tastenleiste,
+           schubladeAuf, schubladeZu, knopfZeigen,
+           verbindungAnzeigen, verbindungUeberwachen, NUR_MIT_NETZ };
 })();
 
 window.PWA = PWA;

@@ -4,7 +4,7 @@ Eine Notiz- und Datenbank-App im Stil von Notion — **komplett lokal**.
 Kein Konto, kein Server, keine Cloud, keine Abo-Gebühr.
 
 Öffnen: `index.html` doppelklicken. Das war die Installation.
-Lieber eine einzige Datei? `notizen-einzeldatei.html` enthält alles.
+Lieber eine einzige Datei? `redion-einzeldatei.html` enthält alles.
 
 ---
 

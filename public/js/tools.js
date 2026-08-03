@@ -67,6 +67,9 @@ const Werkzeuge = (() => {
     c('Navigation', 'Vorlagengalerie', '', () => Galerie.oeffne());
     c('Navigation', 'Karteikarten lernen', '', () => lernen());
     c('Navigation', 'Papierkorb', '', () => App.papierkorb());
+    c('Planen', 'Tagesplan', '', () => Plan.tagesplan());
+    c('Planen', 'Wochenrückblick', '', () => Plan.wochenrueckblick());
+    c('Planen', 'Zurückgestelltes ansehen', '', () => Plan.uebersicht());
     c('Navigation', 'Umsetzungsstand aller 16 Teile', '', () => Status.seiteAnlegen());
     c('Navigation', 'Zurück', 'Strg [', () => App.zurueck());
     c('Navigation', 'Vorwärts', 'Strg ]', () => App.vorwaerts());
@@ -91,6 +94,8 @@ const Werkzeuge = (() => {
       c('Seite', 'Markdown-Quelltext', '', () => quelltext(p));
       c('Seite', 'Schreibstatistik', '', () => statistik(p));
       c('Seite', 'Erinnerung setzen', '', () => erinnerungSetzen(p));
+      c('Seite', 'Auf später zurückstellen', '', () =>
+        Plan.menue(document.getElementById('btn-page-menu') || document.body, p.id));
       c('Seite', 'Als Markdown speichern', '', () => App.markdownExport(p));
       c('Seite', 'Als HTML speichern', '', () => htmlExport(p));
       c('Seite', 'Drucken / als PDF', 'Strg P', () => drucken(p));
@@ -126,8 +131,71 @@ const Werkzeuge = (() => {
     c('Daten', 'Alles in einen Ordner schreiben', '', () => ordnerSchreiben());
     c('Daten', 'Ordner mit Markdown einlesen', '', () => ordnerLesen());
     c('Daten', 'Alles als eine HTML-Datei', '', () => einzelDatei());
+    c('Daten', 'Aus Trello, Evernote, Obsidian oder Notion einlesen', '', () => Austausch.dialog());
+    if (p) c('Daten', 'Diese Seite als Word-Datei (.docx)', '', () => {
+      Austausch.alsWord(p); UI.toast('Word-Datei erzeugt'); });
+    c('Daten', 'Alle Datenbanken als Excel-Mappe (.xlsx)', '', () => Austausch.allesAlsExcel());
+    if (p) c('Seite', 'Fassungen vergleichen', '', () => Vergleich.dialog(p));
+
+    c('Ansicht', 'Aussehen: Farben, Schrift, Tastenkürzel', '', () => Aussehen.dialog());
+    c('Ansicht', 'Tempo messen', '', () => Tempo.dialog());
+    c('Ansicht', 'Neuer Reiter', 'Strg T', () => Fenster.neuerReiter());
+    c('Ansicht', 'Reiter schliessen', 'Strg W', () => Fenster.schliessen(Fenster.aktiv()));
+    c('Ansicht', 'Geteilte Ansicht ein oder aus', 'Strg Alt S', () =>
+      Fenster.geteilt() ? Fenster.teilenAus() : Fenster.teilen());
+    c('Ansicht', 'Datenmodell ansehen', '', () => Schema.ansicht());
+    c('Ansicht', 'Kennzahlen-Tafel', '', () => Schema.tafel());
+    c('Daten', 'Gesundheitsbericht und Erste Hilfe', '', () => Pflege.ersteHilfe());
+    c('Daten', 'Verschlüsselte Sicherung', '', () => Krypto.dialog());
+    c('Daten', 'Notion-Wissen öffnen', '', () => Wissen.oeffnen());
+    c('Daten', 'Notion-Formate übersetzen', '', () => NotionFormat.dialog());
+    c('Daten', 'Schnittstelle /v1/ und Token', '', () => Api.dialog());
+    c('Daten', 'Interne Befehle und Transaktionen', '', () => Transaktion.dialog());
+    c('Daten', 'Protokoll: was wann geschehen ist', '', () => Protokoll.dialog());
+    c('Daten', 'Dateien in Stücken verwalten', '', () => Dateien.dialog());
+    c('Navigation', 'Was Redion kann', '', () => Rundgang.uebersicht());
+    c('Navigation', 'Führung starten', '', () => Rundgang.start());
+    c('Daten', 'Erweiterungen', '', () => Erweiterung.dialog());
+    c('Daten', 'Was hereinkommt — Eingänge von aussen', '', () => Eingang.dialog());
+    /* Was Erweiterungen selbst angemeldet haben */
+    (Erweiterung.angemeldet.befehle || []).forEach(x =>
+      c('Erweiterungen', x.titel, '', () => { try { x.fn(); } catch (e) { UI.toast(e.message); } }));
 
     return b;
+  };
+
+  /* ------------------------------------------------------------------------
+   * BEFEHLSPALETTE — unscharfe Suche und Gedächtnis
+   * ------------------------------------------------------------------------
+   * Notions Palette sucht wörtlich: „umb" findet „Umbenennen" nicht. Hier
+   * zählen die Buchstaben in der richtigen Reihenfolge, und was man oft
+   * benutzt, steht oben.
+   * ---------------------------------------------------------------------- */
+  const unscharf = (text, suche) => {
+    const t = text.toLowerCase(), q = suche.toLowerCase();
+    if (!q) return 0;
+    if (t === q) return 1000;
+    if (t.startsWith(q)) return 800 - t.length;
+    const wort = t.indexOf(' ' + q);
+    if (wort >= 0) return 600 - t.length;
+    if (t.includes(q)) return 400 - t.length;
+    /* Buchstabe für Buchstabe: alle in der richtigen Reihenfolge? */
+    let i = 0, punkte = 0, letzte = -2;
+    for (const c of q) {
+      const stelle = t.indexOf(c, i);
+      if (stelle < 0) return -1;
+      punkte += (stelle === letzte + 1) ? 8 : 2;      /* zusammenhängend zählt mehr */
+      letzte = stelle;
+      i = stelle + 1;
+    }
+    return punkte;
+  };
+
+  const oftBenutzt = () => Store.getMeta('paletteOft', {}) || {};
+  const merkeBefehl = (name) => {
+    const m = oftBenutzt();
+    m[name] = (m[name] || 0) + 1;
+    Store.setMeta('paletteOft', m);
   };
 
   const palette = () => {
@@ -143,7 +211,10 @@ const Werkzeuge = (() => {
     document.body.appendChild(o);
 
     const inp = o.querySelector('#cq'), res = o.querySelector('#cr');
-    let treffer = liste, i = 0;
+    const oft = oftBenutzt();
+    /* Ohne Eingabe: die meistbenutzten zuerst, sonst die Reihenfolge der Liste */
+    const anfang = [...liste].sort((a, b) => (oft[b.name] || 0) - (oft[a.name] || 0));
+    let treffer = anfang, i = 0;
 
     const zeichne = () => {
       let g = '';
@@ -158,13 +229,28 @@ const Werkzeuge = (() => {
     };
     zeichne();
 
-    const fuehreAus = (t) => { o.remove(); setTimeout(() => t.fn(), 10); };
+    const fuehreAus = (t) => { o.remove(); merkeBefehl(t.name); setTimeout(() => t.fn(), 10); };
 
     inp.addEventListener('input', () => {
-      const q = inp.value.toLowerCase().trim();
-      treffer = !q ? liste : liste.filter(t =>
-        (t.gruppe + ' ' + t.name).toLowerCase().includes(q) ||
-        q.split(' ').every(w => (t.name).toLowerCase().includes(w)));
+      const q = inp.value.trim();
+      if (!q) { treffer = anfang; i = 0; zeichne(); return; }
+      /* Befehle unscharf bewerten */
+      const bewertet = liste.map(t => {
+        const p1 = unscharf(t.name, q);
+        const p2 = unscharf(t.gruppe + ' ' + t.name, q);
+        const punkte = Math.max(p1, p2 - 40);
+        return punkte < 0 ? null : { t, punkte: punkte + Math.min(60, (oft[t.name] || 0) * 12) };
+      }).filter(Boolean).sort((a, b) => b.punkte - a.punkte).map(x => x.t);
+
+      /* Und die Seiten, die so heissen — wie in Notions Schnellsuche */
+      const seiten = q.length < 2 ? [] : Object.values(Store.cache.blocks)
+        .filter(x => x.alive !== false && x.type === 'page' && unscharf(x.text || '', q) > 0)
+        .sort((a, b) => unscharf(b.text || '', q) - unscharf(a.text || '', q))
+        .slice(0, 6)
+        .map(x => ({ gruppe: 'Seiten', name: (x.icon || '📄') + ' ' + (x.text || 'Ohne Titel'),
+                     kurz: '', fn: () => App.oeffne(x.id) }));
+
+      treffer = [...bewertet.slice(0, 40), ...seiten];
       i = 0; zeichne();
     });
     inp.addEventListener('keydown', e => {
@@ -478,22 +564,31 @@ const Werkzeuge = (() => {
               `<span>${esc(v.icon)}</span>` +
               `<span style="flex:1">${esc(v.titel)}` +
                 `<span class="snip">${esc(new Date(v.zeit).toLocaleString('de-DE'))} · ${esc(v.anlass)}</span></span>` +
+              `<span class="pth" data-vgl="${v.id}" style="color:var(--text-dim);cursor:pointer" ` +
+                `title="Diese Fassung mit dem jetzigen Stand vergleichen">Vergleichen</span>` +
               `<span class="pth" data-a="zurueck" style="color:var(--accent);cursor:pointer">Wiederherstellen</span>` +
             '</button>').join('')
           : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
             'Noch keine gespeicherten Fassungen. Die App legt beim Bearbeiten automatisch welche an.</div>') +
         '</div>' +
-        '<div class="fbtns"><button data-a="jetzt" class="prim">Jetzige Fassung sichern</button></div>' +
+        '<div class="fbtns">' +
+          '<button data-a="vergleich">⇄ Vergleichen</button>' +
+          '<button data-a="jetzt" class="prim">Jetzige Fassung sichern</button></div>' +
       '</div>';
     document.body.appendChild(o);
 
     o.addEventListener('click', async e => {
       if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      if (e.target.closest('[data-a="vergleich"]')) {
+        o.remove(); Vergleich.dialog(p); return;
+      }
       if (e.target.closest('[data-a="jetzt"]')) {
         await Store.versionSpeichern(p.id, 'von Hand');
         o.remove(); UI.toast('Fassung gesichert'); versionen(p);
         return;
       }
+      const vgl = e.target.closest('[data-vgl]');
+      if (vgl) { o.remove(); Vergleich.dialog(p, vgl.dataset.vgl); return; }
       const b = e.target.closest('button[data-v]');
       if (!b) return;
       const v = liste.find(x => x.id === b.dataset.v);
@@ -752,7 +847,39 @@ const Werkzeuge = (() => {
     let imCode = false, codeText = [], codeLang = '';
     const zeilen = text.split('\n');
 
+    /* --- Markdown-Tabellen -------------------------------------------------
+     * | Kopf | Kopf |
+     * |------|------|
+     * | Wert | Wert |
+     * wird zu einem echten Tabellenblock. Ohne das landet jede Tabelle als
+     * Textwüste aus Strichen — und die halbe Dokumentation besteht daraus.
+     * -------------------------------------------------------------------- */
+    const istTabellenzeile = (z) => /^\s*\|.*\|\s*$/.test(z);
+    const istTrenner = (z) => /^\s*\|[\s:|-]+\|\s*$/.test(z) && /-/.test(z);
+    const zellen = (z) => z.trim().replace(/^\||\|$/g, '').split('|').map(x => x.trim());
+
+    let tabelle = null;   /* sammelt die Zeilen der laufenden Tabelle */
+    const tabelleAbschliessen = () => {
+      if (!tabelle) return;
+      if (tabelle.length) {
+        const breite = Math.max(...tabelle.map(r => r.length));
+        const rows = tabelle.map(r => { const k = r.slice();
+          while (k.length < breite) k.push(''); return k; });
+        Store.addBlock(p.id, 'table', { rows, kopfZeile: true });
+      }
+      tabelle = null;
+    };
+
     zeilen.forEach(roh => {
+      /* Tabellen zuerst — sie laufen über mehrere Zeilen */
+      if (!imCode && istTabellenzeile(roh)) {
+        if (istTrenner(roh)) { if (!tabelle) tabelle = []; return; }
+        if (!tabelle) tabelle = [];
+        tabelle.push(zellen(roh));
+        return;
+      }
+      if (tabelle) tabelleAbschliessen();
+
       const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab):([^>]+)-->$/);
       if (platz && alteDbs[platz[1]]) { Store.baumEinfuegen(alteDbs[platz[1]], p.id); return; }
 
@@ -784,6 +911,7 @@ const Werkzeuge = (() => {
       Store.addBlock(p.id, 'text', { text: z });
     });
     if (imCode && codeText.length) Store.addBlock(p.id, 'code', { text: codeText.join('\n'), lang: codeLang });
+    tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
   };
 
   const quelltext = (p) => {
@@ -887,6 +1015,40 @@ const Werkzeuge = (() => {
    * ======================================================================*/
   const erinnerungen = () => Store.getMeta('erinnerungen', []) || [];
 
+  /* ------------------------------------------------------------------------
+   * BENACHRICHTIGUNGEN
+   * ------------------------------------------------------------------------
+   * Notions Automationen können eine Benachrichtigung an bis zu 20 Personen
+   * schicken. Hier gibt es einen Menschen — also landet sie im Posteingang,
+   * dort wo auch Erinnerungen und Kommentare stehen.
+   * --------------------------------------------------------------------- */
+  const meldungen = () => Store.getMeta('meldungen', []) || [];
+
+  const posteingangMelden = (m) => {
+    const liste = meldungen();
+    liste.unshift({
+      id: Store.uid(), text: m.text || '', quelle: m.quelle || '',
+      seite: m.seite || '', art: m.art || 'hinweis',
+      wann: new Date().toISOString(), gelesen: false
+    });
+    Store.setMeta('meldungen', liste.slice(0, 200));
+    /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt */
+    try { UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung')); } catch {}
+    /* Und, falls erlaubt, als echte Benachrichtigung des Geräts */
+    try {
+      if (window.Notification && Notification.permission === 'granted')
+        new Notification(m.text || 'Redion', { body: m.quelle || '', tag: 'redion' });
+    } catch {}
+    return liste[0];
+  };
+
+  const meldungGelesen = (id) => {
+    const liste = meldungen().map(x => x.id === id ? { ...x, gelesen: true } : x);
+    Store.setMeta('meldungen', liste);
+  };
+
+  const meldungenLeeren = () => Store.setMeta('meldungen', []);
+
   const erinnerungSetzen = (p) => {
     const jetzt = new Date(Date.now() + 60 * 60 * 1000);
     const vorgabe = jetzt.toISOString().slice(0, 16);
@@ -940,7 +1102,7 @@ const Werkzeuge = (() => {
       UI.toast('⏰ ' + e.text);
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          const n = new Notification('Erinnerung: ' + e.text, { body: 'In deinen Notizen', tag: e.id });
+          const n = new Notification('Erinnerung: ' + e.text, { body: 'In Redion', tag: e.id });
           n.onclick = () => { window.focus(); App.oeffne(e.pageId); };
         } catch {}
       }
@@ -1075,7 +1237,7 @@ const Werkzeuge = (() => {
 `<!doctype html>
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Notizen — Archiv</title>
+<title>Redion — Archiv</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
@@ -1100,7 +1262,7 @@ img{max-width:100%;border-radius:4px}
 .tag{background:#454b4e;padding:1px 7px;border-radius:3px;font-size:12.5px}
 @media(max-width:760px){body{flex-direction:column}#s{width:100%;height:180px}}
 </style></head><body>
-<div id="s"><h1>📓 Notizen</h1><input id="q" placeholder="Suchen …"><div id="nav"></div></div>
+<div id="s"><h1>📓 Redion</h1><input id="q" placeholder="Suchen …"><div id="nav"></div></div>
 <div id="m"></div>
 <script>
 const D = ${JSON.stringify(daten)};
@@ -1338,6 +1500,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       '<button data-a="md"><span class="mi">⭳</span>Als Markdown speichern</button>' +
       '<button data-a="html"><span class="mi">🌐</span>Als HTML-Seite speichern</button>' +
       '<button data-a="pdf"><span class="mi">🖨</span>Drucken oder als PDF</button>' +
+      '<button data-a="word"><span class="mi">📘</span>Als Word-Datei (.docx)</button>' +
+      '<button data-a="excel"><span class="mi">📗</span>Datenbanken als Excel (.xlsx)</button>' +
       '<hr>' +
       '<button data-a="alles"><span class="mi">📦</span>Alles als eine HTML-Datei</button>' +
       '<button data-a="ordner"><span class="mi">📁</span>Alles als Markdown-Ordner</button>' +
@@ -1356,6 +1520,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       if (a === 'md') App.markdownExport(p);
       if (a === 'html') htmlExport(p);
       if (a === 'pdf') drucken(p);
+      if (a === 'word')  { Austausch.alsWord(p); UI.toast('Word-Datei erzeugt'); }
+      if (a === 'excel') { Austausch.allesAlsExcel(); }
       if (a === 'alles') einzelDatei();
       if (a === 'ordner') ordnerSchreiben();
     });
@@ -1374,6 +1540,136 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     App.zeichneSeite();
   };
 
+  /* ========================================================================
+   * FORMEL-BIBLIOTHEK — eigene Funktionen
+   * ------------------------------------------------------------------------
+   * Notions Formelsprache hat kein LAMBDA: Logik, die man mehrfach braucht,
+   * muss man mehrfach hinschreiben — und läuft dann in die 15-Ebenen-Grenze.
+   * Hier definiert man sie einmal und ruft sie überall auf.
+   * ======================================================================*/
+  const BEISPIELE = [
+    { name: 'istWerktag',  params: ['d'],
+      koerper: 'not isWeekend(d)', beschreibung: 'Fällt das Datum auf Montag bis Freitag?' },
+    { name: 'alter',       params: ['geburtstag'],
+      koerper: 'dateBetween(today(), geburtstag, "years")', beschreibung: 'Alter in Jahren' },
+    { name: 'restTage',    params: ['faellig'],
+      koerper: 'dateBetween(faellig, today(), "days")', beschreibung: 'Tage bis zur Frist' },
+    { name: 'ampel',       params: ['tage'],
+      koerper: 'ifs(tage < 0, "🔴", tage <= 3, "🟡", "🟢")', beschreibung: 'Farbe nach Resttagen' },
+    { name: 'mitMwst',     params: ['netto'],
+      koerper: 'roundTo(netto * 1.081, 2)', beschreibung: 'Schweizer Mehrwertsteuer aufschlagen' },
+    { name: 'balken',      params: ['anteil'],
+      koerper: 'let(n, round(anteil * 10), repeat("█", n) + repeat("░", 10 - n))',
+      beschreibung: 'Fortschrittsbalken aus einem Anteil zwischen 0 und 1' }
+  ];
+
+  const formelBibliothekLesen = () => Store.getMeta('formelBibliothek', []) || [];
+
+  /** Beim Start einlesen, damit die Funktionen sofort in Formeln gelten. */
+  const formelBibliothekAnwenden = () => {
+    const kaputt = Formula.setzeBibliothek(formelBibliothekLesen());
+    if (kaputt.length) UI.banner('Eigene Formelfunktion nicht lesbar: ' + kaputt.join(' · '), 'warn');
+    return kaputt;
+  };
+
+  const formelBibliothek = () => {
+    let liste = formelBibliothekLesen().slice();
+
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(720px,95vw)">' +
+        '<div class="fh">∑ Eigene Formelfunktionen<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="dl-hinweis" style="padding:10px 18px">' +
+          'Einmal hier definiert, überall nutzbar — auch ineinander. ' +
+          'Notion hat das nicht: dort muss dieselbe Logik in jeder Formel stehen.' +
+        '</div>' +
+        '<div class="res" id="fb-liste" style="max-height:52vh"></div>' +
+        '<div class="fbtns">' +
+          '<button data-a="neu">＋ Funktion</button>' +
+          '<button data-a="beispiele">Beispiele einfügen</button>' +
+          '<button data-a="ok" class="prim">Speichern</button>' +
+          '<button data-a="zu">Schliessen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const zeichne = () => {
+      o.querySelector('#fb-liste').innerHTML = liste.length
+        ? liste.map((f, i) =>
+            '<div class="fb-zeile" data-i="' + i + '">' +
+              '<div class="fb-kopf">' +
+                `<input class="fb-name" value="${esc(f.name || '')}" placeholder="name">` +
+                `<span class="fb-klammer">(</span>` +
+                `<input class="fb-params" value="${esc((f.params || []).join(', '))}" placeholder="a, b">` +
+                `<span class="fb-klammer">) =</span>` +
+                `<button data-weg="${i}" title="Löschen">🗑</button>` +
+              '</div>' +
+              `<textarea class="fb-koerper" rows="2" spellcheck="false" ` +
+                `placeholder="Formel — die Parameter stehen als Namen zur Verfügung">${esc(f.koerper || '')}</textarea>` +
+              `<input class="fb-besch" value="${esc(f.beschreibung || '')}" placeholder="Wozu ist sie gut?">` +
+              '<div class="fb-probe"></div>' +
+            '</div>').join('')
+        : '<div style="padding:22px; color:var(--text-faint); font-size:14px; text-align:center">' +
+          'Noch keine eigene Funktion. „Beispiele einfügen" zeigt sechs nützliche.</div>';
+      pruefen();
+    };
+
+    /* Nach jeder Änderung wird jede Funktion geparst und, wenn sie ohne
+       Parameter auskommt, gleich einmal ausgerechnet. */
+    const einsammeln = () => {
+      liste = [...o.querySelectorAll('.fb-zeile')].map(z => ({
+        name: z.querySelector('.fb-name').value.trim(),
+        params: z.querySelector('.fb-params').value.split(',').map(x => x.trim()).filter(Boolean),
+        koerper: z.querySelector('.fb-koerper').value.trim(),
+        beschreibung: z.querySelector('.fb-besch').value.trim()
+      })).filter(f => f.name);
+      return liste;
+    };
+
+    const pruefen = () => {
+      o.querySelectorAll('.fb-zeile').forEach(z => {
+        const koerper = z.querySelector('.fb-koerper').value.trim();
+        const feld = z.querySelector('.fb-probe');
+        if (!koerper) { feld.textContent = ''; return; }
+        const c = Formula.check(koerper);
+        if (!c.ok) { feld.className = 'fb-probe schlecht'; feld.textContent = '⚠ ' + c.fehler; return; }
+        feld.className = 'fb-probe gut';
+        feld.textContent = '✓ lesbar';
+      });
+    };
+
+    o.addEventListener('input', pruefen);
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) {
+        if (!e.target.closest('[data-a="ok"]')) { o.remove(); return; }
+      }
+      const weg = e.target.closest('[data-weg]');
+      if (weg) { einsammeln(); liste.splice(+weg.dataset.weg, 1); zeichne(); return; }
+      if (e.target.closest('[data-a="neu"]')) {
+        einsammeln();
+        liste.push({ name: '', params: [], koerper: '', beschreibung: '' });
+        zeichne(); return;
+      }
+      if (e.target.closest('[data-a="beispiele"]')) {
+        einsammeln();
+        BEISPIELE.forEach(b => { if (!liste.some(f => f.name === b.name)) liste.push({ ...b }); });
+        zeichne(); return;
+      }
+      if (e.target.closest('[data-a="ok"]')) {
+        einsammeln();
+        Store.setMeta('formelBibliothek', liste);
+        const kaputt = formelBibliothekAnwenden();
+        o.remove();
+        UI.toast(kaputt.length
+          ? liste.length + ' gespeichert, ' + kaputt.length + ' mit Fehler'
+          : liste.length + ' eigene Funktionen stehen jetzt in jeder Formel bereit');
+        App.zeichneSeite();
+      }
+    });
+
+    zeichne();
+  };
+
   const tastenkuerzel = () => {
     const G = [
       ['Allgemein', [
@@ -1382,10 +1678,18 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         ['Strg Alt P', 'Präsentieren'], ['Strg [', 'Zurück'], ['Strg ]', 'Vorwärts'],
         ['Strg \\', 'Seitenleiste'], ['Strg Shift L', 'Hell / Dunkel'], ['Strg ,', 'Einstellungen'],
         ['Strg J', 'KI-Panel'], ['Strg F', 'Auf der Seite suchen'], ['Strg /', 'Diese Übersicht'],
+        ['Strg L', 'Link zur Seite kopieren'], ['Strg Shift U', 'Eine Ebene nach oben'],
+        ['Strg +', 'Schrift grösser'], ['Strg −', 'Schrift kleiner'], ['Strg 0', 'Schrift zurücksetzen'],
+        ['Strg Shift D', 'Seite verdoppeln'], ['Strg Shift Y', 'An- und abheften'],
+        ['Strg Shift N', 'Unterseite hier anlegen'], ['Strg Shift B', 'Papierkorb'],
+        ['Strg Shift O', 'Was Redion kann'],
         ['Esc', 'Menü oder Auswahl schliessen']
       ]],
       ['Blöcke', [
-        ['/', 'Blockmenü'], ['Strg Alt 0-9', 'Blocktyp wechseln'], ['Tab', 'Einrücken'],
+        ['/', 'Blockmenü'],
+        ['Strg Shift 0-9', 'Blocktyp wechseln (wie Notion auf Windows)'],
+        ['Strg Alt 0-9', 'Blocktyp wechseln (wie Notion auf dem Mac)'],
+        ['Strg Shift E', 'Formelblock'], ['Tab', 'Einrücken'],
         ['Shift Tab', 'Ausrücken'], ['Strg D', 'Duplizieren'], ['Strg Shift ↑ ↓', 'Verschieben'],
         ['Strg Alt T', 'Alle Toggles auf/zu'], ['Strg Enter', 'Abhaken oder öffnen'],
         ['Shift Enter', 'Zeilenumbruch im Block'], ['Esc', 'Block auswählen']
@@ -1395,27 +1699,104 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         ['Strg Shift S', 'Durchgestrichen'], ['Strg E', 'Code'], ['Strg Shift H', 'Letzte Farbe'],
         ['Strg K', 'Link setzen (bei Auswahl)']
       ]],
+      /* Diese Kürzel wandeln beim Tippen um, sobald das Leerzeichen kommt —
+         genau wie Notions „Markdown style". Sie stehen im Blockkatalog als
+         md-Feld und sind deshalb hier keine Behauptung, sondern eine Liste. */
+      ['Markdown beim Tippen', [
+        ['# ␣', 'Überschrift 1'], ['## ␣', 'Überschrift 2'], ['### ␣', 'Überschrift 3'],
+        ['- ␣ oder * ␣', 'Aufzählung'], ['1. ␣', 'Nummerierte Liste'],
+        ['[] ␣', 'Aufgabe'], ['> ␣', 'Toggle'], ['" ␣', 'Zitat'],
+        ['--- ␣', 'Trennlinie'], ['``` ␣', 'Codeblock'], ['$$ ␣', 'Formelblock'],
+        ['**Text**', 'Fett'], ['*Text*', 'Kursiv'], ['`Text`', 'Code'],
+        ['~~Text~~', 'Durchgestrichen'], ['__Text__', 'Unterstrichen']
+      ]],
       ['Verknüpfen', [
         ['[[', 'Seite verlinken'], ['@', 'Seite, Datum oder Person erwähnen'],
         ['#', 'Schlagwort'], ['((', 'Blockverweis'], [':', 'Emoji']
+      ]],
+      ['Einen einzelnen Block', [
+        ['Strg Pos1', 'Zum ersten Block der Seite'],
+        ['Strg Ende', 'Zum letzten Block'],
+        ['Strg Shift C', 'Link auf genau diesen Block'],
+        ['Strg Shift ⌫', 'Block sofort in den Papierkorb'],
+        ['Strg Shift Enter', 'Unterseite rechts daneben öffnen'],
+        ['Strg /', 'Blocktyp ändern'],
+        ['Rechtsklick', 'Blockmenü'],
+        ['Entf bei Auswahl', 'Block löschen']
       ]],
       ['Werkzeuge', [
         ['Strg Shift J', 'Tagesjournal'], ['Strg Shift M', 'Schnellnotiz'],
         ['Strg Shift G', 'Graph'], ['Strg Shift T', 'Schlagwörter'],
         ['Strg Shift F', 'Fokus-Modus'], ['Strg Z', 'Rückgängig'], ['Strg Y', 'Wiederholen']
+      ]],
+      ['Fenster — hat Notion nur in der Desktop-App', [
+        ['Strg T', 'Neuer Reiter'], ['Strg W', 'Reiter schliessen'],
+        ['Strg Tab', 'Nächster Reiter'], ['Strg Shift Tab', 'Vorheriger Reiter'],
+        ['Strg 1 … 9', 'Direkt zu diesem Reiter'],
+        ['Strg Alt S', 'Geteilte Ansicht ein oder aus'],
+        ['Shift Klick', 'Seitenlink rechts öffnen']
+      ]],
+      ['Mehrere Blöcke auf einmal', [
+        ['Esc', 'Block auswählen — und beim zweiten Mal wieder freigeben'],
+        ['Shift ↑ ↓', 'Auswahl vergrössern'],
+        ['↑ ↓', 'Auswahl verschieben'],
+        ['Strg A', 'Alle Blöcke der Seite'],
+        ['Shift Klick', 'Von hier bis dorthin'],
+        ['Strg Klick', 'Einzelnen dazu oder weg'],
+        ['Strg C', 'Als Markdown kopieren'],
+        ['Strg X', 'Ausschneiden'],
+        ['Strg V', 'Wieder einfügen'],
+        ['Strg D', 'Alle duplizieren'],
+        ['Entf', 'Alle in den Papierkorb'],
+        ['Tab', 'Alle einrücken'],
+        ['Shift Tab', 'Alle ausrücken'],
+        ['Strg Shift ↑ ↓', 'Alle verschieben'],
+        ['Strg Shift 0-9', 'Alle umwandeln'],
+        ['Leertaste', 'Öffnen, auf- und zuklappen, abhaken'],
+        ['Strg Shift Enter', 'Seite rechts daneben öffnen'],
+        ['Enter', 'Wieder in den Text']
+      ]],
+      ['In Tabellen', [
+        ['↑ ↓ ← →', 'Von Zelle zu Zelle'], ['Enter oder F2', 'Zelle bearbeiten'],
+        ['Tab', 'Nächste Zelle'], ['Shift Tab', 'Vorherige Zelle'],
+        ['Pos1 / Ende', 'An den Rand der Zeile'],
+        ['Strg Pos1 / Ende', 'An den Rand der Tabelle'],
+        ['Leertaste', 'Zeile in der Vorschau'],
+        ['Strg Enter', 'Zeile als ganze Seite'],
+        ['Strg Shift Enter', 'Zeile rechts daneben'],
+        ['Shift Enter', 'Neue Zeile darunter'],
+        ['Entf', 'Zelle leeren'],
+        ['Strg D', 'Von oben nach unten füllen'],
+        ['Strg R', 'Von links nach rechts füllen'],
+        ['Rechtsklick', 'Zeilenmenü']
+      ]],
+      ['Im Kalender', [
+        ['T oder D', 'Tagesansicht'], ['W', 'Wochenansicht'], ['M', 'Monatsansicht'],
+        ['Doppelklick', 'Termin an dieser Stelle anlegen']
+      ]],
+      ['Am Telefon', [
+        ['Lange drücken', 'Blockmenü'], ['Nach rechts wischen', 'Abhaken'],
+        ['Nach links wischen', 'Archivieren oder löschen'],
+        ['Leiste über der Tastatur', 'Formatieren ohne Menü']
       ]]
     ];
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder" style="width:min(760px,95vw)">' +
-        '<div class="fh">Tastenkürzel<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="fh">Tastenkürzel' +
+          `<em>${G.reduce((n, [, l]) => n + l.length, 0)}</em>` +
+          '<button class="icon-btn" data-a="umlegen" title="Kürzel umbelegen">✎</button>' +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
         '<div class="kuerzel">' + G.map(([g, liste]) =>
           `<div class="kb"><div class="grp">${g}</div>` + liste.map(([k, w]) =>
             `<div class="kz"><code>${esc(k)}</code><span>${esc(w)}</span></div>`).join('') + '</div>').join('') +
         '</div></div>';
     document.body.appendChild(o);
-    o.addEventListener('click', e => { if (e.target === o || e.target.closest('[data-a="zu"]')) o.remove(); });
+    o.addEventListener('click', e => {
+      if (e.target.closest('[data-a="umlegen"]')) { o.remove(); Aussehen.dialog(); return; }
+      if (e.target === o || e.target.closest('[data-a="zu"]')) o.remove();
+    });
   };
 
   /* ========================================================================
@@ -1662,7 +2043,9 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     lernen, karten, faellig, teileKarte,
     versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
     fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
-    erinnerungSetzen, erinnerungen, ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
+    formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
+    erinnerungSetzen, erinnerungen, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+    ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
     wikiUmwandeln, wikiIndex, teilenMenue,

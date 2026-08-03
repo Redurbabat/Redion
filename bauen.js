@@ -1,5 +1,5 @@
 /* ============================================================================
- * bauen.js — baut notizen-einzeldatei.html
+ * bauen.js — baut redion-einzeldatei.html
  * ----------------------------------------------------------------------------
  * Nimmt index.html, app.css und alle Skripte und schreibt daraus eine
  * einzige Datei, die man per Doppelklick öffnen oder weitergeben kann.
@@ -22,6 +22,6 @@ html = html.replace('<link rel="stylesheet" href="app.css">',
 html = html.replace(/<script src="(js\/[^"]+)"><\/script>/g, (_, datei) =>
   '<script>\n/* ===== ' + datei + ' ===== */\n' + lies(datei) + '\n</script>');
 
-fs.writeFileSync(pfad.join(wurzel, 'notizen-einzeldatei.html'), html);
-const kb = (fs.statSync(pfad.join(wurzel, 'notizen-einzeldatei.html')).size / 1024).toFixed(0);
-console.log('notizen-einzeldatei.html geschrieben — ' + kb + ' KB');
+fs.writeFileSync(pfad.join(wurzel, 'redion-einzeldatei.html'), html);
+const kb = (fs.statSync(pfad.join(wurzel, 'redion-einzeldatei.html')).size / 1024).toFixed(0);
+console.log('redion-einzeldatei.html geschrieben — ' + kb + ' KB');

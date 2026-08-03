@@ -147,8 +147,20 @@ const Konten = (() => {
     const b = Store.getBlock(seiteId);
     if (!b) return;
     const fr = Object.assign({}, b.freigaben || {});
+    const vorher = fr[kontoId] || null;
     if (rolleId) fr[kontoId] = rolleId; else delete fr[kontoId];
     Store.updateBlock(seiteId, { freigaben: fr });
+    /* Eine Rechteänderung ist genau die Art Ereignis, die man später
+       nachschlagen will — deshalb ins Protokoll, mit Vorher und Nachher. */
+    if (window.Protokoll && vorher !== (rolleId || null)) {
+      const wer = kontoId === '*' ? 'alle'
+        : ((alle().find(k => k.id === kontoId) || {}).name || kontoId);
+      Protokoll.notieren('rechte',
+        'Rechte an „' + (b.text || 'Ohne Titel') + '" für ' + wer + ': ' +
+        (vorher ? rolle(vorher).name : 'nichts') + ' → ' +
+        (rolleId ? rolle(rolleId).name : 'nichts'),
+        { seite: seiteId, id: seiteId });
+    }
   };
 
   /* ------------------------------------------------------------------------

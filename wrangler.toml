@@ -1,5 +1,5 @@
 # ===========================================================================
-#  wrangler.toml — Notizen als Cloudflare Worker mit statischen Dateien
+#  wrangler.toml — Redion als Cloudflare Worker mit statischen Dateien
 # ---------------------------------------------------------------------------
 #  Cloudflare hat aus dem Repository ein Worker-Projekt gemacht und ruft
 #  beim Veroeffentlichen  npx wrangler deploy  auf. Diese Datei sagt ihm,

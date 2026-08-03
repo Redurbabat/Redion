@@ -410,10 +410,13 @@ const Zusatz = (() => {
         const x2 = cx + Math.cos(winkel + teil) * ra, y2 = cy + Math.sin(winkel + teil) * ra;
         const x3 = cx + Math.cos(winkel + teil) * ri, y3 = cy + Math.sin(winkel + teil) * ri;
         const x4 = cx + Math.cos(winkel) * ri, y4 = cy + Math.sin(winkel) * ri;
-        s.appendChild(sv('path', {
+        const st = sv('path', {
           d: `M${x1} ${y1} A${ra} ${ra} 0 ${gross} 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 ${gross} 0 ${x4} ${y4} Z`,
-          fill: PALETTE[i % PALETTE.length]
-        }));
+          fill: PALETTE[i % PALETTE.length], class: 'ch-teil'
+        });
+        st.dataset.i = i;
+        st.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
+        s.appendChild(st);
         winkel += teil;
       });
       const t = sv('text', { x: cx, y: cy + 6, 'text-anchor': 'middle', 'font-size': 20, fill: 'currentColor' });
@@ -451,17 +454,29 @@ const Zusatz = (() => {
         stroke: PALETTE[0], 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round'
       }));
       punkte.forEach((p, i) => {
-        s.appendChild(sv('circle', { cx: p[0], cy: p[1], r: 4, fill: PALETTE[0] }));
+        const c = sv('circle', { cx: p[0], cy: p[1], r: 4, fill: PALETTE[0], class: 'ch-teil' });
+        c.dataset.i = i;
+        c.appendChild(sv('title')).textContent = werte[i].name + ': ' + Formula.anzeige(werte[i].wert);
+        s.appendChild(c);
       });
     } else {
       werte.forEach((v, i) => {
         const h = (H - pad * 2) * (v.wert / max);
         if (typ === 'bar' || typ === 'column') {
-          s.appendChild(sv('rect', {
+          const rc = sv('rect', {
             x: pad + feld * i + feld * 0.16, y: H - pad - h,
             width: feld * 0.68, height: Math.max(1, h),
-            fill: PALETTE[i % PALETTE.length], rx: 3
-          }));
+            fill: PALETTE[i % PALETTE.length], rx: 3, class: 'ch-teil'
+          });
+          rc.dataset.i = i;
+          rc.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
+          s.appendChild(rc);
+          /* Der Wert über dem Balken — Notion zeigt ihn nur beim Überfahren. */
+          const wt = sv('text', { x: pad + feld * i + feld * 0.5, y: Math.max(12, H - pad - h - 5),
+                                  'text-anchor': 'middle', 'font-size': 10.5,
+                                  fill: 'currentColor', opacity: .75 });
+          wt.textContent = Formula.anzeige(v.wert);
+          s.appendChild(wt);
         }
       });
     }

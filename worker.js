@@ -31,11 +31,30 @@ export default {
     /* --- Ein kurzer Lebenszeichen-Punkt, praktisch zum Nachsehen -------- */
     if (url.pathname === '/api/status') {
       return Response.json({
-        app: 'Notizen',
+        app: 'Redion',
         stand: 'läuft',
         bruecke: '/api/bruecke?ziel=https://…',
         hinweis: 'Alle Daten liegen im Browser des Besuchers, nicht hier.'
       }, { headers: { 'Access-Control-Allow-Origin': '*' } });
+    }
+
+    /* --- Die Schnittstelle /v1/ ----------------------------------------
+     * Sie wird im Browser beantwortet, nicht hier: die Daten liegen dort.
+     * Wer sie von aussen aufruft, soll das aber erfahren, statt die
+     * Startseite als JSON-Antwort zu bekommen und zu rätseln, warum das
+     * kein gültiges JSON ist.
+     *
+     * Ein GET aus dem Browser selbst kommt hier gar nicht an — der
+     * Servicearbeiter fängt es vorher ab und fragt das offene Fenster.
+     * ------------------------------------------------------------------ */
+    if (url.pathname.startsWith('/v1/')) {
+      return Response.json({
+        object: 'error', status: 503, code: 'service_unavailable',
+        message: 'Redion beantwortet /v1/ im Browser des Besuchers, nicht auf dem Server. ' +
+                 'Ein fetch("/v1/…") aus einer offenen Redion-Seite funktioniert; ' +
+                 'ein Aufruf von aussen nicht — dort liegen keine Daten.',
+        hinweis: 'Das ist Absicht: die Notizen bleiben auf dem Gerät.'
+      }, { status: 503, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
 
     /* --- Alles andere kommt aus der Dateiablage ------------------------- */

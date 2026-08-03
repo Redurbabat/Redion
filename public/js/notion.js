@@ -466,17 +466,103 @@ const Kommentare = (() => {
 
   const offeneAnzahl = (pageId) => alle(pageId).filter(x => !x.k.erledigt).length;
 
-  const neu = (block, zitat = '') => {
-    const text = prompt('Kommentar' + (zitat ? ' zu „' + zitat.slice(0, 40) + '"' : ''));
+  const neu = async (block, zitat = '') => {
+    const text = await UI.frage('Kommentar' + (zitat ? ' zu „' + zitat.slice(0, 40) + '"' : ''), '');
     if (!text) return;
     const liste = block.kommentare ? block.kommentare.slice() : [];
     liste.push({
       id: Store.uid(), text, zitat: zitat.slice(0, 120),
-      autor: Store.getMeta('nutzer', 'Ich'), zeit: Store.now(), erledigt: false
+      autor: Store.getMeta('nutzer', 'Ich'), zeit: Store.now(), erledigt: false,
+      antworten: [], reaktionen: {}
     });
     Store.updateBlock(block.id, { kommentare: liste });
     App.zeichneSeite();
     UI.toast('Kommentar hinzugefügt');
+  };
+
+  /* ------------------------------------------------------------------------
+   * ANTWORTEN, REAKTIONEN, ERWÄHNUNGEN
+   * ------------------------------------------------------------------------
+   * Notion hat Threads mit Antworten und Emoji-Reaktionen. Bisher war hier
+   * jeder Kommentar für sich allein — das holt es nach.
+   * ---------------------------------------------------------------------- */
+  const REAKTIONEN = ['👍', '🎉', '👀', '❤️', '🤔', '✅'];
+
+  /** Einen Kommentar in seiner Liste finden. */
+  const finde = (blockId, kommId) => {
+    const b = Store.getBlock(blockId);
+    if (!b) return null;
+    const liste = (b.kommentare || []).slice();
+    const i = liste.findIndex(x => x.id === kommId);
+    return i < 0 ? null : { block: b, liste, i, komm: liste[i] };
+  };
+
+  const antworten = async (blockId, kommId) => {
+    const f = finde(blockId, kommId);
+    if (!f) return false;
+    const text = await UI.frage('Antwort auf „' + String(f.komm.text).slice(0, 40) + '"', '');
+    if (!text) return false;
+    f.komm.antworten = (f.komm.antworten || []).concat([{
+      id: Store.uid(), text, autor: Store.getMeta('nutzer', 'Ich'), zeit: Store.now()
+    }]);
+    Store.updateBlock(blockId, { kommentare: f.liste });
+    return true;
+  };
+
+  const antwortWeg = (blockId, kommId, antwortId) => {
+    const f = finde(blockId, kommId);
+    if (!f) return false;
+    f.komm.antworten = (f.komm.antworten || []).filter(a => a.id !== antwortId);
+    Store.updateBlock(blockId, { kommentare: f.liste });
+    return true;
+  };
+
+  /** Eine Reaktion an- oder abwählen. */
+  const reagieren = (blockId, kommId, emoji) => {
+    const f = finde(blockId, kommId);
+    if (!f) return null;
+    const wer = Store.getMeta('nutzer', 'Ich');
+    const r = Object.assign({}, f.komm.reaktionen || {});
+    const leute = (r[emoji] || []).slice();
+    const i = leute.indexOf(wer);
+    if (i >= 0) leute.splice(i, 1); else leute.push(wer);
+    if (leute.length) r[emoji] = leute; else delete r[emoji];
+    f.komm.reaktionen = r;
+    Store.updateBlock(blockId, { kommentare: f.liste });
+    return r;
+  };
+
+  /** Wer wird in einem Kommentar erwähnt? @Name oder @@Seitentitel. */
+  const erwaehnt = (text) => {
+    const raus = [];
+    String(text || '').replace(/@([A-Za-zÄÖÜäöüß0-9_.\-]{2,})/g, (_, n) => { raus.push(n); return _; });
+    return [...new Set(raus)];
+  };
+
+  /** Erwähnungen als Link auf die gleichnamige Seite anzeigen. */
+  const mitErwaehnungen = (text) =>
+    esc(text).replace(/@([A-Za-zÄÖÜäöüß0-9_.\-]{2,})/g, (ganz, n) => {
+      const seite = Object.values(Store.cache.blocks).find(b =>
+        b.alive !== false && b.type === 'page' &&
+        String(b.text || '').toLowerCase() === n.toLowerCase());
+      return seite
+        ? `<a class="komm-erw" data-seite="${seite.id}">@${esc(n)}</a>`
+        : `<span class="komm-erw tot">@${esc(n)}</span>`;
+    });
+
+  /** Alle Kommentare, in denen jemand vorkommt — für den Posteingang. */
+  const anMich = () => {
+    const wer = String(Store.getMeta('nutzer', 'Ich')).toLowerCase();
+    const raus = [];
+    Object.values(Store.cache.blocks).forEach(b => {
+      if (b.alive === false) return;
+      (b.kommentare || []).forEach(k => {
+        if (k.erledigt) return;
+        if (erwaehnt(k.text).some(n => n.toLowerCase() === wer))
+          raus.push({ block: b, k });
+      });
+    });
+    return raus;
   };
 
   const panel = (pageId) => {
@@ -491,23 +577,68 @@ const Kommentare = (() => {
           (liste.length ? liste.map(({ block, k }) =>
             `<div class="komm ${k.erledigt ? 'fertig' : ''}" data-b="${block.id}" data-k="${k.id}">` +
               (k.zitat ? `<div class="komm-zitat">„${esc(k.zitat)}"</div>` : '') +
-              `<div class="komm-txt">${esc(k.text)}</div>` +
+              `<div class="komm-txt">${mitErwaehnungen(k.text)}</div>` +
+              /* Reaktionen — angeklickte sind hervorgehoben */
+              '<div class="komm-reak">' + REAKTIONEN.map(r => {
+                const n = ((k.reaktionen || {})[r] || []).length;
+                return `<button data-r="${r}" class="${n ? 'an' : ''}" ` +
+                       `title="${n ? ((k.reaktionen || {})[r] || []).join(', ') : 'Reagieren'}">` +
+                       `${r}${n ? ' ' + n : ''}</button>`;
+              }).join('') + '</div>' +
               `<div class="komm-fuss">${esc(k.autor)} · ${esc(Werkzeuge.zeitKurz(k.zeit))}` +
+                `<button data-a="antwort">Antworten</button>` +
                 `<button data-a="springen">Zur Stelle</button>` +
                 `<button data-a="fertig">${k.erledigt ? 'Wieder öffnen' : 'Erledigt'}</button>` +
                 `<button data-a="del">Löschen</button></div>` +
+              /* Der Faden darunter */
+              ((k.antworten || []).length
+                ? '<div class="komm-faden">' + k.antworten.map(a =>
+                    `<div class="komm-antwort" data-antwort="${a.id}">` +
+                    `<div class="komm-txt">${mitErwaehnungen(a.text)}</div>` +
+                    `<div class="komm-fuss">${esc(a.autor)} · ${esc(Werkzeuge.zeitKurz(a.zeit))}` +
+                    '<button data-a="antwort-weg">Löschen</button></div></div>').join('') +
+                  '</div>'
+                : '') +
             '</div>').join('')
           : '<div style="padding:18px; color:var(--text-faint); font-size:14px">Noch keine Kommentare. ' +
-            'Text markieren und auf 💬 klicken.</div>') +
+            'Text markieren und auf 💬 klicken. Mit <b>@Name</b> verweist du auf eine Seite.</div>') +
         '</div></div>';
     document.body.appendChild(o);
 
     o.addEventListener('click', e => {
       if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      /* Erwähnung öffnet die Seite */
+      const erw = e.target.closest('.komm-erw[data-seite]');
+      if (erw) { o.remove(); App.oeffne(erw.dataset.seite); return; }
+
       const box = e.target.closest('.komm');
       if (!box) return;
       const block = Store.getBlock(box.dataset.b);
       if (!block) return;
+
+      /* Reaktion */
+      const r = e.target.closest('[data-r]');
+      if (r) {
+        reagieren(block.id, box.dataset.k, r.dataset.r);
+        o.remove(); panel(pageId);
+        return;
+      }
+      /* Antworten */
+      if (e.target.closest('[data-a="antwort"]')) {
+        antworten(block.id, box.dataset.k).then(gut => {
+          if (!gut) return;
+          o.remove(); panel(pageId); App.zeichneSeite();
+        });
+        return;
+      }
+      const aw = e.target.closest('[data-a="antwort-weg"]');
+      if (aw) {
+        const zeile = e.target.closest('[data-antwort]');
+        antwortWeg(block.id, box.dataset.k, zeile.dataset.antwort);
+        o.remove(); panel(pageId);
+        return;
+      }
+
       const liste2 = (block.kommentare || []).slice();
       const idx = liste2.findIndex(x => x.id === box.dataset.k);
       if (e.target.closest('[data-a="fertig"]')) {
@@ -531,7 +662,8 @@ const Kommentare = (() => {
 
   const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  return { alle, offeneAnzahl, neu, panel };
+  return { alle, offeneAnzahl, neu, panel, antworten, antwortWeg, reagieren,
+           erwaehnt, mitErwaehnungen, anMich, finde, REAKTIONEN };
 })();
 window.Kommentare = Kommentare;
 
@@ -730,8 +862,11 @@ const Ansichten = (() => {
 
   const posteingang = () => {
     const erinner = Werkzeuge.erinnerungen();
+    const meld = Werkzeuge.meldungen();
     const kommentare = [];
     Links.seiten().forEach(p => Kommentare.alle(p.id).forEach(k => kommentare.push({ seite: p, ...k })));
+    /* Was direkt an mich gerichtet ist — @Name in einem offenen Kommentar */
+    const anMich = Kommentare.anMich();
     const geaendert = Object.values(Store.cache.blocks)
       .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
       .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 8);
@@ -740,7 +875,7 @@ const Ansichten = (() => {
     App.setzeSeite(null);
     document.getElementById('crumb').innerHTML = '<a>📥 Posteingang</a>';
     wrap.className = '';
-    const nichts = !erinner.length && !kommentare.length;
+    const nichts = !erinner.length && !kommentare.length && !meld.length && !anMich.length;
 
     wrap.innerHTML =
       '<div class="home">' +
@@ -752,6 +887,28 @@ const Ansichten = (() => {
               '<div class="pe-klein">Bei @-Erwähnungen, Kommentaren und Erinnerungen ' +
               'wirst du hier benachrichtigt</div>' +
               '<button class="pe-link" data-filter="1">Filter ändern</button>' +
+            '</div>'
+          : '') +
+        /* Direkt an mich gerichtet — steht ganz oben, wie in Notion */
+        (anMich.length
+          ? '<h2>An dich gerichtet</h2><div class="home-liste">' +
+            anMich.map(m =>
+              `<button data-open="${m.block.parentId}" data-komm="${m.k.id}">` +
+              '<span>@</span>' +
+              `<span style="flex:1">${esc(m.k.text)}` +
+              `<em style="opacity:.6"> — ${esc(m.k.autor || 'jemand')}</em></span>` +
+              `<span style="opacity:.5">${Werkzeuge.zeitKurz(m.k.zeit)}</span></button>`).join('') +
+            '</div>'
+          : '') +
+        /* Was Automationen gemeldet haben — Notions „Send notification to" */
+        (meld.length
+          ? '<h2>Benachrichtigungen</h2><div class="home-liste">' +
+            meld.slice(0, 30).map(m =>
+              `<button data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
+              `<span>${m.gelesen ? '🔕' : '🔔'}</span>` +
+              `<span style="flex:1">${esc(m.text)}` +
+              (m.quelle ? `<em style="opacity:.6"> — ${esc(m.quelle)}</em>` : '') + '</span>' +
+              `<span style="opacity:.5">${Werkzeuge.zeitKurz(m.wann)}</span></button>`).join('') +
             '</div>'
           : '') +
         '<h2>Erinnerungen</h2><div class="home-liste">' +
@@ -777,8 +934,12 @@ const Ansichten = (() => {
       '</div>';
 
     wrap.addEventListener('click', e => {
+      /* Eine Benachrichtigung gilt als gelesen, sobald man sie antippt */
+      const m = e.target.closest('[data-meld]');
+      if (m) Werkzeuge.meldungGelesen(m.dataset.meld);
       const o = e.target.closest('[data-open]');
       if (o) { App.oeffne(o.dataset.open); return; }
+      if (m) { posteingang(); return; }
       if (e.target.closest('[data-filter]')) posteingangFilter(e.target);
     });
   };

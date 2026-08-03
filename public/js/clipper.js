@@ -166,7 +166,7 @@ window.open('${ziel}#clip='+encodeURIComponent(JSON.stringify(p)),'_blank');
           '<div class="verb-text">Zieh den Knopf in deine Lesezeichenleiste. ' +
             'Ist sie nicht sichtbar: <b>Strg + Umschalt + B</b>.</div>' +
           `<div class="clip-zieh"><a class="clip-knopf" href="${schnipsel()}" ` +
-            'onclick="return false" draggable="true">✂️ In Notizen sammeln</a></div>' +
+            'onclick="return false" draggable="true">✂️ In Redion sammeln</a></div>' +
           '<div class="verb-text" style="margin-top:10px">Klappt das Ziehen nicht, ' +
             'geht es auch von Hand: neues Lesezeichen anlegen und als Adresse den Text ' +
             'unten einfügen.</div>' +

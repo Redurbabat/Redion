@@ -170,12 +170,25 @@ const UI = (() => {
   };
 
   let toastTimer = null;
-  const toast = (text) => {
+  /**
+   * Eine kurze Meldung.
+   * @param {string} text
+   * @param {number} dauer  wie lange sie stehen bleibt — für laufende
+   *                        Arbeiten (ein Upload) länger, sonst 2,6 Sekunden
+   * @returns ein Griff mit setzen() und weg(), damit eine laufende Meldung
+   *          sich fortschreiben lässt, statt zehnmal neu zu erscheinen
+   */
+  const toast = (text, dauer) => {
     const t = document.getElementById('toast');
     t.textContent = text;
     t.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+    toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
+    return {
+      set textContent(v) { if (t.classList.contains('show')) t.textContent = v; },
+      get textContent() { return t.textContent; },
+      remove() { clearTimeout(toastTimer); t.classList.remove('show'); }
+    };
   };
 
   /** Die Emoji-Auswahl mit Suchfeld liegt in notion.js. */
@@ -219,7 +232,7 @@ const UI = (() => {
     return d;
   };
 
-  return { menu, menuMitSuche, toast, emojiWaehlen, frage, banner };
+  return { menu, menuMitSuche, toast, emojiWaehlen, frage, banner, amTelefon };
 })();
 
 
@@ -307,6 +320,27 @@ const App = (() => {
 
   const abschnittAn = (id) => !(Store.getMeta('sidebarAus', []) || []).includes(id);
 
+  /** Die Abschnitte in der selbst gewählten Reihenfolge. Notion lässt sie
+      nur ein- und ausblenden, nicht umsortieren. */
+  const abschnitteGeordnet = () => {
+    const folge = Store.getMeta('sidebarFolge', null);
+    if (!Array.isArray(folge) || !folge.length) return ABSCHNITTE;
+    const nach = [];
+    folge.forEach(id => { const a = ABSCHNITTE.find(x => x[0] === id); if (a) nach.push(a); });
+    ABSCHNITTE.forEach(a => { if (!nach.includes(a)) nach.push(a); });
+    return nach;
+  };
+
+  const abschnittSchieben = (id, richtung) => {
+    const folge = abschnitteGeordnet().map(x => x[0]);
+    const i = folge.indexOf(id);
+    const j = i + richtung;
+    if (i < 0 || j < 0 || j >= folge.length) return;
+    [folge[i], folge[j]] = [folge[j], folge[i]];
+    Store.setMeta('sidebarFolge', folge);
+    zeichneBaum();
+  };
+
   const abschnittSchalten = (id) => {
     const aus = Store.getMeta('sidebarAus', []) || [];
     Store.setMeta('sidebarAus', aus.includes(id) ? aus.filter(x => x !== id) : [...aus, id]);
@@ -329,9 +363,34 @@ const App = (() => {
     leiste.querySelectorAll('.sr').forEach(b => {
       b.classList.toggle('on', b.dataset.reiter === reiter);
     });
+    /* Die untere Leiste am Telefon zeigt dieselben Bereiche — sie muss
+       mitgehen, sonst stimmt an einem der beiden Orte die Markierung nicht. */
+    if (typeof handyLeiste === 'function') handyLeiste();
   };
 
   let reiter = 'start';
+
+  /**
+   * Die untere Leiste am Telefon markieren und den Punkt am Posteingang
+   * setzen. Wird bei jedem Wechsel und nach jedem Zeichnen aufgerufen —
+   * eine Leiste, die nicht zeigt, wo man ist, ist nur eine Knopfreihe.
+   */
+  const handyLeiste = () => {
+    const l = document.getElementById('handy-leiste');
+    if (!l) return;
+    const karte = { start: 'hl-start', chat: 'hl-chat', bespr: 'hl-bespr' };
+    l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
+    const aktiv = document.getElementById(karte[reiter] || 'hl-start');
+    if (aktiv) aktiv.classList.add('an');
+    /* Ein Punkt, wenn im Posteingang etwas Ungelesenes liegt */
+    const punkt = l.querySelector('.hl-punkt');
+    if (punkt) {
+      let offen = 0;
+      try { offen = (Werkzeuge.meldungen ? Werkzeuge.meldungen() : [])
+                      .filter(m => !m.gelesen).length; } catch {}
+      punkt.hidden = !offen;
+    }
+  };
 
   const reiterWechseln = (id) => {
     reiter = id;
@@ -356,13 +415,31 @@ const App = (() => {
       kopf.className = 'side-section';
       kopf.innerHTML = '<span>Abschnitte anpassen</span>';
       baum.appendChild(kopf);
-      ABSCHNITTE.forEach(([id, name]) => {
+      const geordnet = abschnitteGeordnet();
+      geordnet.forEach(([id, name], nr) => {
         const z = document.createElement('button');
         z.className = 'side-item anpass' + (abschnittAn(id) ? '' : ' aus');
-        z.innerHTML = `<span>${abschnittAn(id) ? '👁' : '🚫'}</span><span>${name}</span>`;
-        z.addEventListener('click', () => abschnittSchalten(id));
+        z.innerHTML = `<span>${abschnittAn(id) ? '👁' : '🚫'}</span><span>${name}</span>` +
+          '<span class="anpass-pfeile">' +
+            (nr > 0 ? '<i data-hoch="1" title="nach oben">⌃</i>' : '') +
+            (nr < geordnet.length - 1 ? '<i data-runter="1" title="nach unten">⌄</i>' : '') +
+          '</span>';
+        z.addEventListener('click', (ev) => {
+          if (ev.target.closest('[data-hoch]'))   { ev.stopPropagation(); abschnittSchieben(id, -1); return; }
+          if (ev.target.closest('[data-runter]')) { ev.stopPropagation(); abschnittSchieben(id, 1); return; }
+          abschnittSchalten(id);
+        });
         baum.appendChild(z);
       });
+      const zurueck = document.createElement('button');
+      zurueck.className = 'side-item anpass';
+      zurueck.innerHTML = '<span>↺</span><span>Reihenfolge zurücksetzen</span>';
+      zurueck.addEventListener('click', () => {
+        Store.setMeta('sidebarFolge', null);
+        zeichneBaum();
+        UI.toast('Reihenfolge zurückgesetzt');
+      });
+      baum.appendChild(zurueck);
       const nam = document.createElement('button');
       nam.className = 'side-item anpass';
       nam.innerHTML = `<span>🏷</span><span>Tab-Namen ${tabNamen() ? 'ausblenden' : 'einblenden'}</span>`;
@@ -534,6 +611,19 @@ const App = (() => {
       ['bib',       '📚', 'Bibliothek',     'Alle Seiten, sortierbar'],
       ['aufgaben',  '☑',  'Meine Aufgaben', 'Was dir zugewiesen ist'],
       ['markt',     '🛍', 'Marktplatz',     'Fertige Vorlagen'],
+      ['wissen',    '📖', 'Notion-Wissen',  'Alles über Notion und Redion, in acht Teilen'],
+      ['pflege',    '🧰', 'Erste Hilfe',    'Prüfen, reparieren, sichern'],
+      ['modell',    '🗺', 'Datenmodell',    'Alle Datenbanken und ihre Verknüpfungen'],
+      ['kennzahl',  '📊', 'Kennzahlen',     'Zahlen aus mehreren Datenbanken'],
+      ['krypto',    '🔐', 'Passwort',       'Verschlüsselte Sicherung und Sperre'],
+      ['aussehen',  '🎨', 'Aussehen',       'Farben, Schrift und Tastenkürzel'],
+      ['tempo',     '⏱', 'Tempo',          'Wie schnell gezeichnet und gerechnet wird'],
+      ['kann',      '⭐', 'Was Redion kann','Alles auf einen Blick, mit Führung'],
+      ['erweitern', '🧩', 'Erweiterungen',  'Eigene Befehle, Knöpfe und Formeln'],
+      ['eingang',   '📨', 'Was hereinkommt','Daten von aussen abholen und einwerfen'],
+      ['tagesplan', '☀',  'Tagesplan',      'Was heute ansteht'],
+      ['woche',     '📅', 'Wochenrückblick','Was lief, was blieb liegen'],
+      ['spaeter',   '⏰', 'Zurückgestellt', 'Was später wieder hochkommt'],
       ['hilfe',     '？', 'Hilfe',          'Tastenkürzel — Strg /'],
       ['papier',    '🗑', 'Papierkorb',     'Gelöschte Seiten']
     ].map(([a, i, n, t]) =>
@@ -561,10 +651,61 @@ const App = (() => {
       if (a === 'bib')      Bibliothek.oeffne();
       if (a === 'aufgaben') Bibliothek.aufgaben();
       if (a === 'markt')    Werkzeuge.vorlagen();
+      if (a === 'wissen')   Wissen.oeffnen();
+      if (a === 'pflege')   Pflege.ersteHilfe();
+      if (a === 'modell')   Schema.ansicht();
+      if (a === 'kennzahl') Schema.tafel();
+      if (a === 'krypto')   Krypto.dialog();
+      if (a === 'aussehen') Aussehen.dialog();
+      if (a === 'tempo')    Tempo.dialog();
+      if (a === 'kann')      Rundgang.uebersicht();
+      if (a === 'erweitern') Erweiterung.dialog();
+      if (a === 'eingang')   Eingang.dialog();
+      if (a === 'tagesplan') Plan.tagesplan();
+      if (a === 'woche')     Plan.wochenrueckblick();
+      if (a === 'spaeter')   Plan.uebersicht();
       if (a === 'hilfe')    Werkzeuge.tastenkuerzel();
       if (a === 'papier')   papierkorb();
     });
     baum.appendChild(apps);
+    /* Die selbst gewählte Reihenfolge der Abschnitte anwenden */
+    abschnitteOrdnen(baum);
+    /* Erweiterungsknöpfe wieder anhängen — zeichneBaum leert den Baum */
+    if (window.Erweiterung && Erweiterung.knoepfeAnhaengen) Erweiterung.knoepfeAnhaengen();
+  };
+
+  /**
+   * Ordnet die fertig gezeichneten Abschnitte um.
+   * Ein Abschnitt ist seine Überschrift plus alles bis zur nächsten. Was vor
+   * der ersten Überschrift steht, gehört zu „Werkzeuge".
+   */
+  const abschnitteOrdnen = (baum) => {
+    const folge = Store.getMeta('sidebarFolge', null);
+    if (!Array.isArray(folge) || !folge.length) return;
+
+    const nachName = {};
+    ABSCHNITTE.forEach(([id, name]) => { nachName[name] = id; });
+
+    const teile = [];
+    let jetzt = { id: 'werkzeuge', nodes: [] };
+    [...baum.children].forEach(el => {
+      if (el.classList.contains('side-section')) {
+        const name = (el.querySelector('span')?.firstChild?.textContent || '').trim();
+        if (jetzt.nodes.length) teile.push(jetzt);
+        jetzt = { id: nachName[name] || ('x-' + name), nodes: [el] };
+        return;
+      }
+      jetzt.nodes.push(el);
+    });
+    if (jetzt.nodes.length) teile.push(jetzt);
+    if (teile.length < 2) return;
+
+    const rang = (id) => {
+      const i = folge.indexOf(id);
+      return i < 0 ? 500 : i;
+    };
+    teile.sort((a, b) => rang(a.id) - rang(b.id));
+    teile.forEach(t => t.nodes.forEach(n => baum.appendChild(n)));
   };
 
   /** Welche Abschnitte sind zugeklappt? Notion merkt sich das je Abschnitt. */
@@ -574,6 +715,57 @@ const App = (() => {
     const zu = Store.getMeta('sidebarZu', []) || [];
     Store.setMeta('sidebarZu', zu.includes(name) ? zu.filter(x => x !== name) : [...zu, name]);
     zeichneBaum();
+  };
+
+  /** Vom sichtbaren Namen zurück auf den Schlüssel in ABSCHNITTE. */
+  const abschnittId = (name) => (ABSCHNITTE.find(([, n]) => n === name) || [])[0] || null;
+
+  /**
+   * Das ⋯-Menü eines Abschnitts. Was hier steht, muss auch etwas tun —
+   * ein Menüpunkt, der nur da ist, damit es ihn gibt, ist schlimmer als
+   * gar keiner.
+   */
+  const abschnittMenue = (anker, name) => {
+    document.querySelectorAll('.menu').forEach(m => m.remove());
+    const id = abschnittId(name);
+    const zu = abschnittZu(name);
+    const folge = abschnitteGeordnet().map(x => x[0]);
+    const i = id ? folge.indexOf(id) : -1;
+
+    const r = anker.getBoundingClientRect();
+    const m = document.createElement('div');
+    m.className = 'menu';
+    m.style.cssText = `position:fixed; left:${Math.min(r.left, innerWidth - 230)}px; ` +
+                      `top:${r.bottom + 4}px; z-index:1400; min-width:210px`;
+    m.innerHTML =
+      `<button data-a="klappen"><span class="mi">${zu ? '⌄' : '›'}</span>` +
+        `${zu ? 'Aufklappen' : 'Zuklappen'}</button>` +
+      '<button data-a="alleZu"><span class="mi">⌃</span>Alle Abschnitte zuklappen</button>' +
+      '<button data-a="alleAuf"><span class="mi">⌄</span>Alle aufklappen</button>' +
+      (id ? '<hr>' +
+        `<button data-a="hoch"${i <= 0 ? ' disabled' : ''}><span class="mi">↑</span>Weiter nach oben</button>` +
+        `<button data-a="runter"${i < 0 || i >= folge.length - 1 ? ' disabled' : ''}>` +
+          '<span class="mi">↓</span>Weiter nach unten</button>' +
+        '<button data-a="aus"><span class="mi">🚫</span>Diesen Abschnitt ausblenden</button>' : '') +
+      '<hr>' +
+      '<button data-a="anpassen"><span class="mi">⚙</span>Abschnitte anpassen</button>';
+    document.body.appendChild(m);
+
+    m.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-a]');
+      if (!b || b.disabled) return;
+      const a = b.dataset.a;
+      m.remove();
+      if (a === 'klappen') abschnittKlappen(name);
+      if (a === 'alleZu')  { Store.setMeta('sidebarZu', ABSCHNITTE.map(x => x[1])); zeichneBaum(); }
+      if (a === 'alleAuf') { Store.setMeta('sidebarZu', []); zeichneBaum(); }
+      if (a === 'hoch')    abschnittSchieben(id, -1);
+      if (a === 'runter')  abschnittSchieben(id, 1);
+      if (a === 'aus')     { abschnittSchalten(id); UI.toast(name + ' ausgeblendet'); }
+      if (a === 'anpassen') abschnitteAnpassen();
+    });
+    setTimeout(() => document.addEventListener('click',
+      () => m.remove(), { once: true }), 0);
   };
 
   const abschnitt = (name, beiPlus, beiZahnrad) => {
@@ -596,6 +788,21 @@ const App = (() => {
       b.addEventListener('click', beiPlus);
       d.appendChild(b);
     }
+    /* --- Das Drei-Punkte-Menü des Abschnitts -------------------------
+     * Bisher gab es zum Abschnitt nur den Pfeil und das Plus; alles
+     * andere — ausblenden, umsortieren — lag im Anpassmodus versteckt.
+     * Notion hat an jedem Abschnitt ein eigenes ⋯. Das holt es nach und
+     * legt gleich das dazu, was hier wirklich nützlich ist: alles
+     * zuklappen, und ein Weg zur Anpassliste.
+     * ---------------------------------------------------------------- */
+    const punkte = document.createElement('button');
+    punkte.textContent = '⋯';
+    punkte.title = 'Mehr zu diesem Abschnitt';
+    punkte.addEventListener('click', (e) => {
+      e.stopPropagation();
+      abschnittMenue(punkte, name);
+    });
+    d.appendChild(punkte);
     return d;
   };
 
@@ -968,6 +1175,14 @@ const App = (() => {
       schalterZeile('wz-gesperrt', '🔒', 'Seite sperren', p.gesperrt) +
       '<button data-a="mitki"><span class="mi">✨</span>Mit KI verwenden<span class="ms">▸</span></button>' +
       '<hr>' +
+      /* Auf dem Telefon ist die Kopfzeile schmal wie in Notion: nur ☰, ‹,
+         Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar. */
+      (UI.amTelefon()
+        ? '<button data-a="teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
+          '<button data-a="verlauf"><span class="mi">🕘</span>Versionsverlauf</button>' +
+          '<button data-a="kopf-komm"><span class="mi">💬</span>Kommentare</button>' +
+          '<button data-a="auto"><span class="mi">⚡</span>Automationen</button><hr>'
+        : '') +
       `<button data-a="fav"><span class="mi">${p.favorite ? '★' : '☆'}</span>` +
       `${p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten'}</button>` +
       '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
@@ -1107,6 +1322,11 @@ const App = (() => {
 
       if (Werkzeuge.seitenMenueAktion(a, p)) return;
 
+      /* Die vier, die auf dem Telefon aus der Kopfzeile hierher gewandert sind */
+      if (a === 'teilen')    { Werkzeuge.teilenMenue(anker, p); return; }
+      if (a === 'verlauf')   { Werkzeuge.versionen(p); return; }
+      if (a === 'kopf-komm') { document.getElementById('btn-komm')?.click(); return; }
+      if (a === 'auto')      { document.getElementById('btn-auto')?.click(); return; }
       if (a === 'fav')   { Store.updateBlock(p.id, { favorite: !p.favorite }); zeichneBaum(); }
       if (a === 'klein') { Store.updateBlock(p.id, { small: !p.small }); zeichneSeite(); }
       if (a === 'breit') { Store.updateBlock(p.id, { wide: !p.wide }); zeichneSeite(); }
@@ -1284,6 +1504,7 @@ const App = (() => {
     location.hash = id || '';
     zeichneBaum();
     zeichneSeite();
+    if (window.Fenster) Fenster.gemerkt(id);
     document.getElementById('scroll').scrollTop = 0;
   };
 
@@ -1547,7 +1768,7 @@ const App = (() => {
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder such" style="width:min(820px,95vw)">' +
-        '<input id="q" placeholder="Seiten und Inhalte durchsuchen — auch nach Seiten-ID …" autocomplete="off">' +
+        '<input id="q" placeholder="Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;" autocomplete="off">' +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
             '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -1564,7 +1785,9 @@ const App = (() => {
           '<div class="res" id="res"></div>' +
           '<div class="such-vorschau" id="vorschau"></div>' +
         '</div>' +
-        '<div class="hint">↑ ↓ auswählen · Enter öffnen · Esc schliessen · Strg Shift P für Befehle</div>' +
+        '<div class="hint">↑ ↓ auswählen · Enter öffnen · Esc schliessen · ' +
+          'Befehle: <code>typ:seite</code> <code>in:Projekte</code> <code>nach:2026-01</code> ' +
+          '<code>tag:wichtig</code> <code>titel:Wort</code> <code>"genauer Satz"</code></div>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -1637,9 +1860,82 @@ const App = (() => {
       ort:  o.querySelector('#f-ort').value
     });
 
+    /* ------------------------------------------------------------------
+     * ABFRAGESPRACHE
+     * ------------------------------------------------------------------
+     * Notions Suche kennt nur Wörter. Hier lassen sich Bedingungen davor
+     * schreiben, wie in einer Suchmaschine:
+     *
+     *   typ:seite        nur Seiten ohne Datenbank
+     *   typ:datenbank    nur Seiten mit Datenbank
+     *   in:Projekte      nur unterhalb dieser Seite
+     *   nach:2026-01     nur seit diesem Datum geändert
+     *   vor:2026-08      nur davor
+     *   tag:wichtig      trägt dieses Schlagwort
+     *   titel:Rechnung   nur im Titel
+     *   "genauer Satz"   muss wörtlich vorkommen
+     * ---------------------------------------------------------------- */
+    const abfrageLesen = (roh) => {
+      const f = { wo: 'alles', typ: 'alles', seit: 'alles', ort: '' };
+      const woerter = [], genau = [];
+      let nach = null, vor = null, tag = null;
+
+      /* Zuerst die Ausdrücke in Anführungszeichen herausnehmen */
+      const ohneGenau = roh.replace(/"([^"]+)"/g, (_, t) => { genau.push(t); return ' '; });
+
+      ohneGenau.split(/\s+/).filter(Boolean).forEach(w => {
+        const m = w.match(/^(typ|in|nach|vor|tag|titel|inhalt):(.+)$/i);
+        if (!m) { woerter.push(w); return; }
+        const [, schluessel, wert] = m;
+        const k = schluessel.toLowerCase();
+        if (k === 'typ')    f.typ = /daten/i.test(wert) ? 'datenbank' : 'seite';
+        if (k === 'titel')  { f.wo = 'titel';  woerter.push(wert); }
+        if (k === 'inhalt') { f.wo = 'inhalt'; woerter.push(wert); }
+        if (k === 'in') {
+          const ziel = Store.rootPages().find(p2 =>
+            (p2.text || '').toLowerCase().startsWith(wert.toLowerCase()));
+          if (ziel) f.ort = ziel.id;
+        }
+        if (k === 'nach') nach = wert;
+        if (k === 'vor')  vor  = wert;
+        if (k === 'tag')  tag  = wert.toLowerCase();
+      });
+
+      return { f, text: woerter.join(' '), genau, nach, vor, tag,
+               hatBefehl: woerter.length !== ohneGenau.split(/\s+/).filter(Boolean).length ||
+                          genau.length > 0 };
+    };
+
     const suchen = () => {
-      if (!inp.value.trim()) { zuletzt(); return; }
-      treffer = Store.search(inp.value, filterLesen());
+      const roh = inp.value;
+      if (!roh.trim()) { zuletzt(); return; }
+
+      const q = abfrageLesen(roh);
+      /* Die Filterleiste hat Vorrang, wenn sie ausdrücklich gesetzt wurde */
+      const handFilter = filterLesen();
+      const filter = {
+        wo:   handFilter.wo   !== 'alles' ? handFilter.wo   : q.f.wo,
+        typ:  handFilter.typ  !== 'alles' ? handFilter.typ  : q.f.typ,
+        seit: handFilter.seit,
+        ort:  handFilter.ort  || q.f.ort
+      };
+
+      /* Ohne freie Wörter suchen wir mit den Ausdrücken in Anführungszeichen —
+         sonst käme die rohe Eingabe samt Anführungszeichen in die Suche. */
+      const suchtext = q.text || q.genau.join(' ') || roh;
+      treffer = Store.search(suchtext, filter);
+
+      /* Nachfiltern, was Store.search nicht kennt */
+      if (q.genau.length) treffer = treffer.filter(t => {
+        const text = ((t.page.text || '') + ' ' + (t.snippet || '')).toLowerCase();
+        return q.genau.every(g => text.includes(g.toLowerCase()));
+      });
+      if (q.nach) treffer = treffer.filter(t => (t.page.edited || '') >= q.nach);
+      if (q.vor)  treffer = treffer.filter(t => (t.page.edited || '') <= q.vor + '￿');
+      if (q.tag)  treffer = treffer.filter(t =>
+        Store.childrenOf(t.page.id).some(b => (b.text || '').toLowerCase().includes('#' + q.tag)) ||
+        (t.page.text || '').toLowerCase().includes('#' + q.tag));
+
       i = 0;
       zeichne();
     };
@@ -1703,6 +1999,59 @@ const App = (() => {
   /* ========================================================================
    * PAPIERKORB
    * ======================================================================*/
+  /** Wohin soll das Wiederhergestellte? Notion legt es immer an den alten Ort. */
+  const wohin = (id, fertig) => {
+    const b = Store.getBlock(id);
+    if (!b) return;
+    const kandidaten = Object.values(Store.cache.blocks)
+      .filter(x => x.alive !== false && x.type === 'page' && x.id !== id)
+      .sort((a, c) => (a.text || '').localeCompare(c.text || '', 'de'))
+      .slice(0, 200);
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(560px,94vw)">' +
+        `<div class="fh">↳ „${esc(b.text || 'Ohne Titel')}" wohin?` +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<input id="wo-q" placeholder="Seite suchen …" autocomplete="off">' +
+        '<div class="res" id="wo-r">' +
+          '<button data-ziel=""><span>🏠</span><span style="flex:1">Ganz oben, als eigene Seite</span></button>' +
+          kandidaten.map(x => `<button data-ziel="${x.id}"><span>${x.icon || '📄'}</span>` +
+            `<span style="flex:1">${esc(x.text || 'Ohne Titel')}` +
+            `<span class="snip">${esc(Store.pfadText ? Store.pfadText(x.id) : '')}</span></span></button>`).join('') +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(o);
+    const inp = o.querySelector('#wo-q');
+    setTimeout(() => inp.focus(), 40);
+    inp.addEventListener('input', () => {
+      const q = inp.value.toLowerCase();
+      o.querySelectorAll('#wo-r button[data-ziel]').forEach(btn => {
+        btn.style.display = !q || btn.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      const z = e.target.closest('[data-ziel]');
+      if (!z) return;
+      const ziel = z.dataset.ziel;
+      Store.restoreBlock(id);
+      /* An den neuen Ort hängen */
+      const alt = Store.getBlock(Store.getBlock(id).parentId);
+      if (alt) Store.updateBlock(alt.id, { content: (alt.content || []).filter(x => x !== id) });
+      Store.updateBlock(id, { parentId: ziel || null });
+      if (ziel) {
+        const neuEltern = Store.getBlock(ziel);
+        if (neuEltern && !(neuEltern.content || []).includes(id))
+          Store.updateBlock(ziel, { content: [...(neuEltern.content || []), id] });
+      }
+      o.remove();
+      UI.toast(ziel ? 'Wiederhergestellt unter „' + (Store.getBlock(ziel).text || 'Seite') + '"'
+                    : 'Ganz oben wiederhergestellt');
+      if (fertig) fertig();
+    });
+  };
+
   const papierkorb = () => {
     /* Wie bei Notion: Suchfeld oben, drei Filterknöpfe, je Zeile ein Pfeil
        zum Zurückholen und ein Eimer zum endgültigen Löschen. */
@@ -1754,6 +2103,7 @@ const App = (() => {
                   `<span style="flex:1">${esc(p.text || 'Ohne Titel')}` +
                   `<span class="snip">gelöscht ${esc(Werkzeuge.zeitKurz(p.trashedAt))}</span></span>` +
                   '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
+                  '<span class="pk-tat" data-a="restore-wo" title="An anderer Stelle wiederherstellen">↳</span>' +
                   '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
                   '</button>').join('')
               : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`) +
@@ -1827,7 +2177,19 @@ const App = (() => {
       const b = e.target.closest('button[data-id]');
       if (!b) return;
       const id = b.dataset.id;
-      if (s && s.dataset.a === 'restore') { Store.restoreBlock(id); zeichne(); zeichneBaum(); UI.toast('Wiederhergestellt'); return; }
+      if (s && s.dataset.a === 'restore') {
+        /* Ist der alte Ort selbst im Papierkorb, käme die Seite nicht zurück —
+           Notion sagt in dem Fall nichts und man sucht ewig. */
+        const b2 = Store.getBlock(id);
+        const eltern = b2 && b2.parentId ? Store.getBlock(b2.parentId) : null;
+        if (eltern && eltern.alive === false) {
+          UI.toast('Der alte Ort liegt selbst im Papierkorb — wähle einen neuen');
+          wohin(id, () => { zeichne(); zeichneBaum(); });
+          return;
+        }
+        Store.restoreBlock(id); zeichne(); zeichneBaum(); UI.toast('Wiederhergestellt'); return;
+      }
+      if (s && s.dataset.a === 'restore-wo') { wohin(id, () => { zeichne(); zeichneBaum(); }); return; }
       if (s && s.dataset.a === 'purge') {
         if (!confirm('Endgültig löschen? Das lässt sich nicht rückgängig machen.')) return;
         Store.purgeBlock(id); zeichne(); UI.toast('Endgültig gelöscht'); return;
@@ -1876,6 +2238,17 @@ const App = (() => {
 
   const theme = (was) => {
     const neu = was || (document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+    /* Mit einem eigenen Farbschema heisst „umschalten": zum passenden
+       Gegenstück wechseln, nicht das Schema übergehen. */
+    if (window.Aussehen) {
+      const jetzt = Aussehen.einstellung();
+      const s = Aussehen.SCHEMATA.find(x => x.id === jetzt.schema);
+      if (s && s.grund !== neu) {
+        const gegen = Aussehen.SCHEMATA.find(x => x.grund === neu &&
+          (neu === 'light' ? x.id === 'hell' : x.id === 'standard'));
+        if (gegen) Aussehen.setzen({ schema: gegen.id });
+      }
+    }
     document.documentElement.dataset.theme = neu;
     Store.setMeta('theme', neu);
   };
@@ -1915,6 +2288,49 @@ const App = (() => {
     return p;
   };
 
+  /* ------------------------------------------------------------------------
+   * BREITE DER SEITENLEISTE
+   * ---------------------------------------------------------------------- */
+  const seitenleisteBreite = () => {
+    const side = document.getElementById('sidebar');
+    if (!side || side.querySelector('.side-griff')) return;
+    const gespeichert = Number(Store.getMeta('seiteBreite', 0));
+    const setze = (px) => {
+      const b = Math.max(180, Math.min(460, px));
+      side.style.width = b + 'px';
+      side.style.flexBasis = b + 'px';
+      document.documentElement.style.setProperty('--side-w', b + 'px');
+      return b;
+    };
+    if (gespeichert) setze(gespeichert);
+
+    const griff = document.createElement('div');
+    griff.className = 'side-griff';
+    griff.title = 'Breite ziehen — Doppelklick setzt zurück';
+    side.appendChild(griff);
+
+    griff.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const start = e.clientX;
+      const b0 = side.getBoundingClientRect().width;
+      document.body.classList.add('zieht-seite');
+      const zug = (ev) => setze(b0 + ev.clientX - start);
+      const stop = () => {
+        removeEventListener('pointermove', zug);
+        removeEventListener('pointerup', stop);
+        document.body.classList.remove('zieht-seite');
+        Store.setMeta('seiteBreite', Math.round(side.getBoundingClientRect().width));
+      };
+      addEventListener('pointermove', zug);
+      addEventListener('pointerup', stop);
+    });
+    griff.addEventListener('dblclick', () => {
+      setze(260);
+      Store.setMeta('seiteBreite', 260);
+      UI.toast('Breite zurückgesetzt');
+    });
+  };
+
   /* ========================================================================
    * TASTENKÜRZEL
    * ======================================================================*/
@@ -1923,6 +2339,30 @@ const App = (() => {
       const strg = e.ctrlKey || e.metaKey;
       if (!strg) return;
       const k = e.key.toLowerCase();
+
+      /* Selbst belegte Kürzel haben Vorrang vor den eingebauten. Wer nichts
+         umbelegt hat, merkt davon nichts — dann greift die Liste unten. */
+      if (window.Aussehen && Object.keys(Aussehen.eigene()).length) {
+        const tu = { suche, palette: () => Werkzeuge.palette(), neu: () => neueSeite(),
+                     ki: () => kiPanel(), chat: () => KI.neuerChat && KI.neuerChat(),
+                     seitenleiste: () => document.getElementById('sidebar').classList.toggle('collapsed'),
+                     zurueck, vor: vorwaerts, hell: () => theme(),
+                     hilfe: () => Werkzeuge.tastenkuerzel(),
+                     einstellung: () => einstellungen(),
+                     teilen: () => Fenster.geteilt() ? Fenster.teilenAus() : Fenster.teilen(),
+                     reiterNeu: () => Fenster.neuerReiter(),
+                     reiterZu: () => Fenster.schliessen(Fenster.aktiv()) };
+        for (const id of Object.keys(Aussehen.eigene())) {
+          if (tu[id] && Aussehen.ist(id, e)) { e.preventDefault(); tu[id](); return; }
+        }
+        /* Ein eingebautes Kürzel, das jemand woandershin gelegt hat, darf
+           an seiner alten Stelle nichts mehr auslösen. */
+        const belegt = Object.keys(Aussehen.eigene());
+        const jetzt = Aussehen.alsText(e).toLowerCase();
+        const kollision = Aussehen.KUERZEL.find(([id, , std]) =>
+          belegt.includes(id) && std.toLowerCase() === jetzt);
+        if (kollision) return;
+      }
 
       if (k === 'n' && !e.shiftKey) { e.preventDefault(); neueSeite(); return; }
       /* Strg+Alt+P gehört der Präsentation, nicht der Suche */
@@ -1936,8 +2376,91 @@ const App = (() => {
       if (k === ']') { e.preventDefault(); vorwaerts(); return; }
       if (k === 'f' && !e.shiftKey) { e.preventDefault(); seitenSuche(); return; }
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); Verlauf.zurueck(); return; }
-      if ((k === 'y') || (e.shiftKey && k === 'z')) { e.preventDefault(); Verlauf.vor(); return; }
+      /* Strg+Y ist Wiederholen — Strg+Umschalt+Y gehört den Favoriten,
+         deshalb hier ausdrücklich ohne Umschalt. */
+      if ((k === 'y' && !e.shiftKey) || (e.shiftKey && k === 'z')) {
+        e.preventDefault(); Verlauf.vor(); return;
+      }
       if (e.shiftKey && k === 'h') { e.preventDefault(); Auswahl.letzteFarbeAnwenden(); return; }
+
+      /* --- Was Notion sonst noch belegt ---------------------------------- */
+
+      /* Strg+L: Adresse dieser Seite kopieren */
+      if (k === 'l' && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        navigator.clipboard?.writeText(location.origin + location.pathname + '#' + aktuelleSeite());
+        UI.toast('Link zur Seite kopiert');
+        return;
+      }
+      /* Strg+Umschalt+U: eine Ebene nach oben in der Seitenhierarchie */
+      if (e.shiftKey && k === 'u') {
+        e.preventDefault();
+        const b = Store.getBlock(aktuelleSeite());
+        const eltern = b && b.parentId && Store.getBlock(b.parentId);
+        if (eltern) oeffne(eltern.id);
+        else UI.toast('Diese Seite liegt schon ganz oben');
+        return;
+      }
+      /* Strg+Alt+T: alle Toggles der Seite auf- oder zuklappen */
+      if (e.altKey && k === 't') { e.preventDefault(); Blocks.alleToggles(); return; }
+
+      /* --- Fünf, die an der Seite selbst hängen --------------------------
+       * Sie standen bisher nur in Menüs. Bewusst nur Buchstaben, die noch
+       * frei sind: Umschalt+F gehört dem Fokus-Modus, Umschalt+P dem
+       * Verschieben, Umschalt+G dem Graphen. Ein Kürzel, das ein anderes
+       * überdeckt, ist kein Gewinn, sondern ein Fehler.
+       * ------------------------------------------------------------------ */
+      /* Strg+Umschalt+D: diese Seite verdoppeln */
+      if (e.shiftKey && k === 'd') {
+        e.preventDefault();
+        const b = Store.getBlock(aktuelleSeite());
+        if (b) dupliziereSeite(b);
+        return;
+      }
+      /* Strg+Umschalt+Y: an- und abheften */
+      if (e.shiftKey && k === 'y') {
+        e.preventDefault();
+        const b = Store.getBlock(aktuelleSeite());
+        if (!b) return;
+        Store.updateBlock(b.id, { favorite: !b.favorite });
+        zeichneBaum();
+        UI.toast(b.favorite ? 'Zu den Favoriten' : 'Von den Favoriten genommen');
+        return;
+      }
+      /* Strg+Umschalt+N: eine Unterseite hier anlegen */
+      if (e.shiftKey && k === 'n') {
+        e.preventDefault();
+        const b = Store.getBlock(aktuelleSeite());
+        const p = Store.addPage(b ? b.id : null, { text: '' });
+        zeichneBaum();
+        oeffne(p.id);
+        return;
+      }
+      /* Strg+Umschalt+B: Papierkorb */
+      if (e.shiftKey && k === 'b') { e.preventDefault(); papierkorb(); return; }
+      /* Strg+Umschalt+O: Übersicht „Was Redion kann" */
+      if (e.shiftKey && k === 'o') {
+        e.preventDefault();
+        if (window.Rundgang) Rundgang.uebersicht();
+        return;
+      }
+      /* Strg + Plus / Minus / 0: Textgrösse — Notion zoomt, wir vergrössern
+         die Schrift, weil das im Browser dasselbe Ziel erreicht. */
+      if (!e.shiftKey && (k === '+' || k === '-' || k === '0') && !e.altKey) {
+        const stufen = ['klein', 'normal', 'gross'];
+        const jetzt = Store.getMeta('schriftgroesse', 'normal');
+        let neu = jetzt;
+        if (k === '+') neu = stufen[Math.min(2, stufen.indexOf(jetzt) + 1)];
+        if (k === '-') neu = stufen[Math.max(0, stufen.indexOf(jetzt) - 1)];
+        if (k === '0') neu = 'normal';
+        if (neu !== jetzt) {
+          e.preventDefault();
+          Store.setMeta('schriftgroesse', neu);
+          Einstellungen.anwenden();
+          UI.toast('Schrift: ' + neu);
+        }
+        return;
+      }
     });
 
     /* Esc schliesst Menüs und Overlays */
@@ -1976,10 +2499,29 @@ const App = (() => {
   const starteWirklich = async () => {
     await Store.load();
 
+    /* Ist eine Sperre eingerichtet, geht ohne Passwort nichts weiter. */
+    await Krypto.startPruefen();
+
+    /* Die App hiess früher „Notizen" und heisst jetzt Redion. Wer den Namen
+       nie selbst geändert hat, bekommt den neuen — wer einen eigenen gesetzt
+       hat, behält ihn. */
+    if (Store.getMeta('arbeitsName', '') === 'Notizen') Store.setMeta('arbeitsName', 'Redion');
+
     document.documentElement.dataset.theme = Store.getMeta('theme', 'dark');
+    Aussehen.start();
     Einstellungen.anwenden();
 
     if (!Store.rootPages().length) beispielAnlegen();
+
+    /* Das gesammelte Notion-Wissen als echte Seiten — beim ersten Start
+       angelegt, danach nur noch, wenn der Text neuer geworden ist. */
+    Wissen.sicherstellen();
+
+    /* Eigene Formelfunktionen bereitstellen, bevor die erste Seite rechnet */
+    Werkzeuge.formelBibliothekAnwenden();
+
+    /* Fehler sammeln, Papierkorb nach Frist aufräumen */
+    Pflege.start();
 
     const ausHash = location.hash.slice(1).split(':')[0];
     const startSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash
@@ -2005,7 +2547,7 @@ const App = (() => {
     /* Name und Symbol des Arbeitsbereichs */
     const wsBtn = document.getElementById('btn-settings');
     wsBtn.querySelector('.ws-icon').textContent = Store.getMeta('arbeitsIcon', 'N');
-    wsBtn.querySelectorAll('span')[1].textContent = Store.getMeta('arbeitsName', 'Notizen');
+    wsBtn.querySelectorAll('span')[1].textContent = Store.getMeta('arbeitsName', 'Redion');
 
     Blocks.bindeEditor(document.getElementById('page'));
     tasten();
@@ -2025,6 +2567,15 @@ const App = (() => {
     Agent.start();
     MCP.start();
     PWA.start();
+    Fenster.start();
+    Tempo.start();
+    Plan.start();
+    Erweiterung.start();
+    Eingang.start();
+    Api.start();
+    Protokoll.start();
+    Blocks.auswahlEinklinken();
+    Rundgang.vielleichtStarten();
 
     /* Seitenleiste und Kopfzeile */
     const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
@@ -2037,14 +2588,35 @@ const App = (() => {
     an('btn-settings', einstellungen);
     an('btn-theme', () => theme());
     an('btn-side', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+
+    /* Breite der Seitenleiste ziehen — Notion kann das, aber merkt sie sich
+       nicht je Gerät; hier bleibt sie gespeichert. */
+    seitenleisteBreite();
     an('btn-new', () => neueSeite());
     an('btn-new-bottom', () => neueSeite());
     an('btn-neuer-chat', () => { reiter = 'chat'; zeichneBaum(); KI.neuerChat(); });
 
     /* Leiste am unteren Rand — nur auf dem Telefon sichtbar */
-    an('hl-suche', () => suche());
+    /* --- Die untere Leiste am Telefon --------------------------------
+     * Sie zeigt jetzt dieselben vier Bereiche wie die Reiterleiste am PC:
+     * Start, Chats, Besprechungen, Posteingang. Bisher kam man an drei
+     * davon nur über die Schublade — man musste also wissen, dass es sie
+     * gibt. Der Kreis in der Mitte bleibt die KI.
+     * ---------------------------------------------------------------- */
+    an('hl-start', () => { PWA.schubladeZu && PWA.schubladeZu();
+                           reiter = 'start'; zeichneBaum(); Ansichten.start(); handyLeiste(); });
+    an('hl-chat',  () => { PWA.schubladeZu && PWA.schubladeZu();
+                           reiter = 'chat'; zeichneBaum(); handyLeiste();
+                           if (PWA.schubladeAuf) PWA.schubladeAuf(); });
+    an('hl-bespr', () => { PWA.schubladeZu && PWA.schubladeZu();
+                           reiter = 'bespr'; zeichneBaum(); handyLeiste();
+                           if (PWA.schubladeAuf) PWA.schubladeAuf(); });
     an('hl-ki', () => kiPanel(true));
-    an('hl-neu', () => { PWA.schubladeZu && PWA.schubladeZu(); neueSeite(); });
+    an('hl-inbox', () => { PWA.schubladeZu && PWA.schubladeZu();
+                           reiter = 'start'; Ansichten.posteingang(); handyLeiste(); });
+    an('btn-suche-handy', () => suche());
+    an('btn-neu-handy',   () => neueSeite());
+    handyLeiste();
 
     /* Reiterleiste oben in der Seitenleiste */
     document.getElementById('side-reiter')?.addEventListener('click', (e) => {
@@ -2062,13 +2634,16 @@ const App = (() => {
         '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
           '<span class="sub">Markdown, CSV, TSV, HTML, Excel, Word, EPUB</span></button>' +
         '<button data-i="ordner"><span class="mi">📁</span>Ganzen Ordner einlesen</button>' +
+        '<hr><button data-i="werkzeug"><span class="mi">⭱</span>Aus einem anderen Werkzeug' +
+          '<span class="sub">Trello, Evernote, Obsidian, Notion-Export, Asana</span></button>' +
         '<hr><div class="grp" style="font-weight:400">Oder einfach eine Datei auf die Seite ziehen.</div>',
         r.right + 6, r.top);
       m.addEventListener('click', ev => {
         const b = ev.target.closest('button[data-i]');
         if (!b) return;
         m.remove();
-        if (b.dataset.i === 'dateien') Werkzeuge.dateienLesen();
+        if (b.dataset.i === 'dateien')      Werkzeuge.dateienLesen();
+        else if (b.dataset.i === 'werkzeug') Austausch.dialog();
         else Werkzeuge.ordnerLesen();
       });
     });
@@ -2154,7 +2729,7 @@ const App = (() => {
     const p = Store.addPage(null, { text: 'Willkommen', icon: '👋' });
     const b = (typ, text, extra) => Store.addBlock(p.id, typ, Object.assign({ text }, extra || {}));
 
-    b('h1', 'Willkommen in deinen Notizen');
+    b('h1', 'Willkommen in Redion');
     b('text', 'Alles hier liegt **lokal** in deinem Browser. Kein Konto, kein Server, keine Cloud.');
     b('callout', 'Tippe irgendwo `/` — dann öffnet sich das Blockmenü mit allen Bausteinen.', { icon: '💡' });
 

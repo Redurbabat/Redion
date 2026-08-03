@@ -658,6 +658,185 @@ const Galerie = (() => {
     return p;
   };
 
+
+  /* ========================================================================
+   * BAUPLAN — zeigt, was Redion mehr kann als Notion
+   * ------------------------------------------------------------------------
+   * Ein echtes Bauprojekt: Aufgaben mit Abhängigkeiten, ein Board mit Bahnen,
+   * eine Kreuztabelle über Gewerk × Status und ein Zeitstrahl mit Pfeilen.
+   * Wer diese Vorlage anlegt, sieht in einer Minute alles Wesentliche.
+   * ======================================================================*/
+  const bauplan = () => {
+    const p = Store.addPage(null, { text: 'Bauplan', icon: '🏗' });
+    Store.addBlock(p.id, 'h1', { text: 'Ein Projekt, sechs Blickwinkel' });
+    Store.addBlock(p.id, 'callout', {
+      text: 'Dieselben zwölf Aufgaben — einmal als **Zeitstrahl mit Abhängigkeitspfeilen**, ' +
+            'einmal als **Board mit Bahnen**, einmal als **Kreuztabelle**. ' +
+            'Alle drei kann Notion so nicht.',
+      icon: '🏗', color: 'bg-orange'
+    });
+
+    const { collectionId } = Store.addDatabase(p.id, 'Bauaufgaben', {
+      title:  { name: 'Aufgabe',  type: 'title' },
+      von:    { name: 'Start',    type: 'date' },
+      bis:    { name: 'Ende',     type: 'date' },
+      gewerk: { name: 'Gewerk',   type: 'select', options:
+                opt(['Rohbau','brown'],['Ausbau','blue'],['Technik','purple'],['Aussen','green']) },
+      st:     { name: 'Status',   type: 'status', options:
+                opt(['Offen','gray'],['In Arbeit','yellow'],['Fertig','green']) },
+      kosten: { name: 'Kosten',   type: 'number' },
+      vor:    { name: 'Hängt ab von', type: 'relation', ziel: null }
+    }, 'timeline');
+
+    /* Selbstverknüpfung — daraus entstehen die Pfeile im Zeitstrahl */
+    const c = Store.getCollection(collectionId);
+    c.schema.vor.ziel = collectionId;
+    c.schema.vor.limit = 0;
+    /* Statusübergänge: rückwärts von Fertig auf Offen ist nicht vorgesehen */
+    c.schema.st.uebergaenge = { 'Offen': ['In Arbeit'],
+                                'In Arbeit': ['Fertig', 'Offen'],
+                                'Fertig': ['In Arbeit'] };
+    Store.updateCollection(collectionId, { schema: c.schema });
+
+    const ids = {};
+    [['Baugrube',      'Rohbau',  -20, -14, 'Fertig',    18000, null],
+     ['Fundament',     'Rohbau',  -13,  -6, 'Fertig',    32000, 'Baugrube'],
+     ['Mauerwerk',     'Rohbau',   -5,   8, 'In Arbeit', 46000, 'Fundament'],
+     ['Dachstuhl',     'Rohbau',    9,  16, 'Offen',     28000, 'Mauerwerk'],
+     ['Fenster',       'Ausbau',   17,  22, 'Offen',     19000, 'Dachstuhl'],
+     ['Elektro',       'Technik',  18,  27, 'Offen',     14000, 'Dachstuhl'],
+     ['Sanitär',       'Technik',  18,  25, 'Offen',     16000, 'Dachstuhl'],
+     ['Estrich',       'Ausbau',   28,  32, 'Offen',      9000, 'Elektro'],
+     ['Innenputz',     'Ausbau',   33,  40, 'Offen',     12000, 'Estrich'],
+     ['Böden',         'Ausbau',   41,  47, 'Offen',     15000, 'Innenputz'],
+     ['Aussenanlage',  'Aussen',   41,  52, 'Offen',     11000, 'Innenputz'],
+     ['Abnahme',       'Aussen',   53,  54, 'Offen',         0, 'Böden']]
+      .forEach(([t, gewerk, a, b, st, kosten, vorher]) => {
+        const r = Store.addRow(collectionId, {
+          gewerk, st, kosten, von: inTagen(a), bis: inTagen(b),
+          vor: vorher && ids[vorher] ? [ids[vorher]] : []
+        });
+        Store.updateBlock(r.id, { text: t });
+        ids[t] = r.id;
+      });
+
+    /* Der Zeitstrahl weiss, welche Spalten er nehmen soll */
+    const zs = Object.values(Store.cache.views).find(v => v.collectionId === collectionId);
+    Store.updateView(zs.id, { name: 'Zeitstrahl', startKey: 'von', endeKey: 'bis',
+                              abhKey: 'vor', zoom: 'monat', limit: 0 });
+
+    const board = Store.addView(collectionId, 'board', 'Board mit Bahnen');
+    Store.updateView(board.id, { groupBy: 'st', bahnKey: 'gewerk', limit: 0 });
+
+    const pivot = Store.addView(collectionId, 'pivot', 'Kosten je Gewerk');
+    Store.updateView(pivot.id, { pivotZeile: 'gewerk', pivotSpalte: 'st',
+                                 pivotWert: 'kosten', pivotArt: 'summe', limit: 0 });
+
+    const tab = Store.addView(collectionId, 'table', 'Nach Gewerk gruppiert');
+    Store.updateView(tab.id, { groupBy: 'gewerk', calc: { kosten: 'Summe' }, limit: 0 });
+
+    const kal = Store.addView(collectionId, 'calendar', 'Kalender');
+    Store.updateView(kal.id, { dateKey: 'von', endeKey: 'bis', limit: 0 });
+
+    const diagramm = Store.addView(collectionId, 'chart', 'Kosten als Diagramm');
+    Store.updateView(diagramm.id, { chartGruppe: 'gewerk', chartWert: 'kosten',
+                                    chartArt: 'Summe', chartTyp: 'bar', limit: 0 });
+
+    Store.addBlock(p.id, 'h2', { text: 'Was hier zu sehen ist' });
+    [['Zeitstrahl', 'Die Pfeile kommen aus der Spalte „Hängt ab von". Zieh einen Balken — ' +
+                    'die Daten ändern sich mit.'],
+     ['Board mit Bahnen', 'Status läuft waagrecht, Gewerk senkrecht. Eine Karte in eine ' +
+                          'andere Bahn ziehen ändert beide Werte.'],
+     ['Kosten je Gewerk', 'Kreuztabelle. Ein Klick in eine Zelle zeigt die Aufgaben dahinter.'],
+     ['Nach Gewerk gruppiert', 'Jede Gruppe hat ihre eigene Kostensumme.'],
+     ['Status', 'Von „Fertig" direkt zurück auf „Offen" geht nicht — nur über ' +
+                '„In Arbeit". Das ist eine Prüfregel, kein Zufall.']]
+      .forEach(([a, b]) => Store.addBlock(p.id, 'bullet', { text: '**' + a + '** — ' + b }));
+
+    return p;
+  };
+
+  /* ========================================================================
+   * REDAKTIONSPLAN — Formular, Automation und Wiedervorlage
+   * ======================================================================*/
+  const redaktion = () => {
+    const p = Store.addPage(null, { text: 'Redaktionsplan', icon: '✍' });
+    Store.addBlock(p.id, 'h1', { text: 'Von der Idee bis zum Beitrag' });
+    Store.addBlock(p.id, 'callout', {
+      text: 'Ideen kommen über das **Formular** herein. Wird eine auf „In Arbeit" gesetzt, ' +
+            'trägt eine **Automation** das heutige Datum ein und hängt einen Kommentar an.',
+      icon: '✍', color: 'bg-blue'
+    });
+
+    const { collectionId } = Store.addDatabase(p.id, 'Beiträge', {
+      title:  { name: 'Titel',    type: 'title' },
+      art:    { name: 'Art',      type: 'select', options:
+                opt(['Artikel','blue'],['Video','red'],['Newsletter','green'],['Kurznotiz','gray']) },
+      st:     { name: 'Status',   type: 'status', options:
+                opt(['Idee','gray'],['In Arbeit','yellow'],['Prüfen','purple'],['Veröffentlicht','green']) },
+      wann:   { name: 'Geplant',  type: 'date' },
+      start:  { name: 'Begonnen', type: 'date' },
+      woerter:{ name: 'Wörter',   type: 'number' },
+      notiz:  { name: 'Worum geht es?', type: 'text' },
+      tempo:  { name: 'Wörter je Tag', type: 'formula', formula:
+        'if(empty(prop("Begonnen")) or prop("Wörter") == 0, "—", ' +
+        'format(roundTo(prop("Wörter") / max(1, dateBetween(now(), prop("Begonnen"), "days")), 0)) + " / Tag")' }
+    }, 'board');
+
+    [['Warum Notion langsam wird', 'Artikel',    'In Arbeit',   3, -4, 1400],
+     ['Formeln, die keiner kennt', 'Artikel',    'Idee',       10, null,   0],
+     ['Zehn Minuten Aufräumen',    'Video',      'Prüfen',      1, -9,  600],
+     ['Was diesen Monat kam',      'Newsletter', 'Veröffentlicht', -2, -12, 900],
+     ['Kurz notiert: Tastenkürzel','Kurznotiz',  'Idee',       14, null,   0]]
+      .forEach(([t, art, st, tage, begonnen, woerter]) => {
+        const r = Store.addRow(collectionId, {
+          art, st, woerter, wann: inTagen(tage),
+          start: begonnen === null ? '' : inTagen(begonnen)
+        });
+        Store.updateBlock(r.id, { text: t });
+      });
+
+    const c = Store.getCollection(collectionId);
+    c.automationen = [{
+      id: 'redak1', name: 'Wenn es losgeht', an: true,
+      wenn: { art: 'prop-wert', key: 'st', wert: 'In Arbeit' },
+      bedingungen: [],
+      dann: [
+        { art: 'setze-prop', key: 'start', wert: 'heute' },
+        { art: 'kommentar', text: 'Angefangen: {titel}' }
+      ]
+    }];
+    Store.updateCollection(collectionId, { automationen: c.automationen });
+
+    const board = Object.values(Store.cache.views).find(v => v.collectionId === collectionId);
+    Store.updateView(board.id, { name: 'Board', groupBy: 'st', bahnKey: 'art', limit: 0 });
+
+    const kal = Store.addView(collectionId, 'calendar', 'Kalender');
+    Store.updateView(kal.id, { dateKey: 'wann', limit: 0 });
+
+    const form = Store.addView(collectionId, 'form', 'Ideen einreichen');
+    Store.updateView(form.id, {
+      formTitel: 'Hast du eine Idee?',
+      formText: 'Kurz beschreiben — der Rest kommt später.',
+      formKnopf: 'Idee einreichen',
+      formDankTitel: 'Notiert!',
+      formDankText: 'Die Idee steht jetzt auf dem Board unter „Idee".',
+      pflicht: ['title'],
+      hidden: ['start', 'woerter', 'tempo'],
+      limit: 0
+    });
+
+    Store.addBlock(p.id, 'h2', { text: 'Zum Ausprobieren' });
+    [['Formular „Ideen einreichen"', 'Etwas eintragen und abschicken — es erscheint eine ' +
+                                     'Danke-Seite, und die Idee steht auf dem Board.'],
+     ['Eine Karte auf „In Arbeit" ziehen', 'Die Automation setzt das Datum und hängt einen ' +
+                                           'Kommentar an. Im Blitz-Menü steht der Laufverlauf.'],
+     ['Spalte „Wörter je Tag"', 'Eine Formel mit roundTo und max — beides hat Notion nicht.']]
+      .forEach(([a, b]) => Store.addBlock(p.id, 'bullet', { text: '**' + a + '** — ' + b }));
+
+    return p;
+  };
+
   /* ========================================================================
    * DIE GALERIE
    * ======================================================================*/
@@ -685,7 +864,15 @@ const Galerie = (() => {
       quelle: '', bauen: wissen },
     { id: 'woche',   icon: '🗓', name: 'Wochenplan',
       text: 'Sieben Toggle-Überschriften, eine je Wochentag, heute schon aufgeklappt.',
-      quelle: '', bauen: wochenplan }
+      quelle: '', bauen: wochenplan },
+    { id: 'bauplan', icon: '🏗', name: 'Bauplan',
+      text: 'Zwölf Aufgaben mit Abhängigkeiten — als Zeitstrahl mit Pfeilen, Board mit Bahnen, ' +
+            'Kreuztabelle und gruppierter Tabelle. Zeigt in einer Minute, was Notion nicht kann.',
+      quelle: 'zeigt die Redion-Besonderheiten', bauen: bauplan },
+    { id: 'redaktion', icon: '✍', name: 'Redaktionsplan',
+      text: 'Ideen kommen über ein Formular herein, eine Automation stempelt den Beginn und ' +
+            'schreibt einen Kommentar. Mit Bahnen-Board und eigener Tempoformel.',
+      quelle: 'Formular, Automation, Kommentar', bauen: redaktion }
   ];
 
   const oeffne = () => {

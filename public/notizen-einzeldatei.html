@@ -1621,14 +1621,29 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   #ai{ padding-bottom:env(safe-area-inset-bottom); }
 
   /* Die Seitenleiste als Schublade */
-  #sidebar{ transform:translateX(-102%); transition:transform .22s ease;
-            width:min(85vw, 320px); z-index:600; }
+  /* Wichtig: die Seitenleiste muss aus dem Fluss heraus.
+     Weiter oben steht `#sidebar{position:relative}` — ohne das hier bliebe
+     sie ein Flex-Element und nähme 260 px Breite weg, obwohl sie
+     hinausgeschoben ist. Genau daran lag der leere Streifen links. */
+  #sidebar{ position:fixed; left:0; top:0; height:100%;
+            transform:translateX(-102%); transition:transform .22s ease;
+            width:min(85vw, 320px); z-index:600; flex:0 0 auto; }
   body.side-offen #sidebar{ transform:none; }
   #side-schatten{ position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:590;
                   animation:einblenden .18s ease; }
   @keyframes einblenden{ from{opacity:0} to{opacity:1} }
   #main{ margin-left:0 !important; width:100% !important; }
   #side-griff{ display:none; }
+
+  /* Die Kopfzeile wie in Notion auf dem Telefon: ☰, ‹, Titel, ⋯.
+     Alles andere liegt im ⋯-Menü — sonst quetschen sich zwölf Knöpfe
+     in 428 Pixel und der Titel verschwindet. */
+  #btn-fwd, #btn-teilen, #btn-ai, #btn-komm, #btn-verlauf,
+  #btn-auto, #btn-link, #btn-lock, #btn-fav{ display:none; }
+  #topbar{ gap:2px; padding-left:6px; padding-right:6px; }
+  #crumb{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis;
+          white-space:nowrap; font-size:15px; font-weight:500; }
+  #topbar .spacer{ display:none; }
 
   /* Fingerfreundliche Groessen */
   .top-btn{ min-width:38px; height:36px; }
@@ -3372,8 +3387,10 @@ const Formula = (() => {
     if (v === null || v === undefined) return '';
     if (v instanceof Date) return v.toISOString().slice(0, 10);
     if (typeof v === 'boolean') return v ? 'true' : 'false';
-    if (Array.isArray(v)) return v.join(', ');
+    if (Array.isArray(v)) return v.map(text).join(', ');
     if (typeof v === 'number') return String(Math.round(v * 1e10) / 1e10);
+    /* Eine Gruppe aus groupBy liest sich als „Schlüssel (Anzahl)" */
+    if (typeof v === 'object' && v.__gruppe) return v.schluessel + ' (' + v.eintraege.length + ')';
     return String(v);
   };
 
@@ -3391,6 +3408,44 @@ const Formula = (() => {
   };
 
   const TAG_MS = 86400000;
+
+  /* ---------------------------------------------------------------------- *
+   * ZEITZONEN — das, was Notion nicht hat
+   *
+   * `zonenWand` liefert ein Datum, dessen örtliche Felder (Jahr, Monat, Tag,
+   * Stunde …) genau die Wanduhrzeit in der gewünschten Zone zeigen. Damit
+   * lässt sich formatieren, ohne eine Bibliothek zu laden.
+   * `alsInstant` geht den Weg zurück: es nimmt Wanduhrzeit in einer Zone und
+   * sucht den echten Zeitpunkt dazu. Zweimal nachjustieren reicht auch an den
+   * beiden Tagen im Jahr, an denen die Uhr umgestellt wird.
+   * ---------------------------------------------------------------------- */
+  const zonenWand = (d, zone) => {
+    if (!zone) return d;
+    try {
+      const s = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }).format(d);
+      const g = new Date(s.replace(' ', 'T'));
+      return isNaN(g.getTime()) ? d : g;
+    } catch { return d; }
+  };
+
+  const alsInstant = (d, zone) => {
+    if (!zone) return d;
+    let t = d.getTime();
+    for (let i = 0; i < 2; i++) {
+      const versatz = zonenWand(new Date(t), zone).getTime() - t;
+      t = d.getTime() - versatz;
+    }
+    return new Date(t);
+  };
+
+  /* Werktage: Montag bis Freitag. Wochenenden zählen nicht mit. */
+  const istWochenende = (d) => d.getDay() === 0 || d.getDay() === 6;
+
+  /* Kennzeichen für die Gruppen, die groupBy zurückgibt */
+  const GRUPPE = '__gruppe';
 
   /* Die Funktionsbibliothek */
   const F = {
@@ -3527,8 +3582,211 @@ const Formula = (() => {
       const jahresanfang = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
       return Math.ceil((((t - jahresanfang) / TAG_MS) + 1) / 7);
     },
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Datum
+     * Notion hat weder Werktage noch Feiertage noch Zeitzonen. Hier sind sie.
+     * ==================================================================== */
+
+    /** Fällt das Datum auf Samstag oder Sonntag? */
+    isweekend: a => { const d = alsDatum(a[0]); return d ? istWochenende(d) : false; },
+    /** Montag bis Freitag? */
+    isworkday: a => { const d = alsDatum(a[0]); return d ? !istWochenende(d) : false; },
+
+    /**
+     * businessDaysBetween(a, b) — Werktage zwischen zwei Daten.
+     * Der Starttag zählt nicht mit, der Zieltag schon — wie man rechnet,
+     * wenn man sagt „drei Arbeitstage ab heute".
+     */
+    businessdaysbetween: a => {
+      const von = alsDatum(a[0]), bis = alsDatum(a[1]);
+      if (!von || !bis) return 0;
+      const rueckwaerts = bis < von;
+      let x = new Date(Math.min(von, bis)); x.setHours(0,0,0,0);
+      const ende = new Date(Math.max(von, bis)); ende.setHours(0,0,0,0);
+      let n = 0, sicher = 0;
+      while (x < ende && sicher++ < 40000) {
+        x = new Date(x.getTime() + TAG_MS);
+        if (!istWochenende(x)) n++;
+      }
+      return rueckwaerts ? -n : n;
+    },
+
+    /** addBusinessDays(datum, n) — n Werktage dazuzählen (n darf negativ sein). */
+    addbusinessdays: a => {
+      const d = alsDatum(a[0]); if (!d) return null;
+      let n = Math.trunc(zahl(a[1]));
+      const schritt = n < 0 ? -TAG_MS : TAG_MS;
+      let x = new Date(d.getTime()), sicher = 0;
+      while (n !== 0 && sicher++ < 40000) {
+        x = new Date(x.getTime() + schritt);
+        if (!istWochenende(x)) n += n > 0 ? -1 : 1;
+      }
+      return x;
+    },
+
+    /** Anfang und Ende von Tag, Woche, Monat, Quartal, Jahr. */
+    startofday:  a => { const d = alsDatum(a[0]); if (!d) return null; const x = new Date(d); x.setHours(0,0,0,0); return x; },
+    endofday:    a => { const d = alsDatum(a[0]); if (!d) return null; const x = new Date(d); x.setHours(23,59,59,999); return x; },
+    startofweek: a => { const d = alsDatum(a[0]); if (!d) return null;
+      const x = new Date(d); x.setHours(0,0,0,0);
+      x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; },   /* Montag */
+    endofweek:   a => { const d = alsDatum(a[0]); if (!d) return null;
+      const x = new Date(d); x.setHours(23,59,59,999);
+      x.setDate(x.getDate() + (6 - ((x.getDay() + 6) % 7))); return x; },
+    startofmonth: a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), d.getMonth(), 1); },
+    endofmonth:   a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999); },
+    startofquarter: a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1); },
+    endofquarter:   a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3 + 3, 0, 23, 59, 59, 999); },
+    startofyear:  a => { const d = alsDatum(a[0]); if (!d) return null; return new Date(d.getFullYear(), 0, 1); },
+    endofyear:    a => { const d = alsDatum(a[0]); if (!d) return null; return new Date(d.getFullYear(), 11, 31, 23, 59, 59, 999); },
+    quarter:      a => { const d = alsDatum(a[0]); return d ? Math.floor(d.getMonth() / 3) + 1 : 0; },
+    daysinmonth:  a => { const d = alsDatum(a[0]); return d ? new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() : 0; },
+    isleapyear:   a => { const d = alsDatum(a[0]); if (!d) return false;
+      const j = d.getFullYear(); return (j % 4 === 0 && j % 100 !== 0) || j % 400 === 0; },
+
+    /**
+     * convertTimezone(datum, vonZone, nachZone)
+     * Liest das Datum als Wanduhrzeit in `vonZone` und gibt die Wanduhrzeit
+     * in `nachZone` zurück. Zonennamen wie "Europe/Zurich", "UTC", "Asia/Istanbul".
+     */
+    converttimezone: a => {
+      const d = alsDatum(a[0]); if (!d) return null;
+      const von = a.length > 1 ? text(a[1]) : '';
+      const nach = a.length > 2 ? text(a[2]) : text(a[1] || '');
+      return zonenWand(alsInstant(d, von), nach);
+    },
+    /** timezoneOffset(datum, zone) — Abstand zur Weltzeit in Minuten. */
+    timezoneoffset: a => {
+      const d = alsDatum(a[0]); if (!d) return 0;
+      const zone = text(a[1] || 'UTC');
+      return Math.round((zonenWand(d, zone).getTime() - zonenWand(d, 'UTC').getTime()) / 60000);
+    },
+
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Zufall
+     * Notion schreibt ausdrücklich, dass es kein random() gibt. Hier gibt es eins.
+     * ==================================================================== */
+    random: () => Math.random(),
+    randombetween: a => {
+      const u = Math.ceil(Math.min(zahl(a[0]), zahl(a[1])));
+      const o = Math.floor(Math.max(zahl(a[0]), zahl(a[1])));
+      return o < u ? u : u + Math.floor(Math.random() * (o - u + 1));
+    },
+    /** randomItem(liste) — ein zufälliger Eintrag, z. B. die Karteikarte des Tages. */
+    randomitem: a => {
+      const l = Array.isArray(a[0]) ? a[0] : (a[0] == null ? [] : [a[0]]);
+      return l.length ? l[Math.floor(Math.random() * l.length)] : null;
+    },
+    /** shuffle(liste) — zufällige Reihenfolge. */
+    shuffle: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : []).slice();
+      for (let i = l.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [l[i], l[j]] = [l[j], l[i]];
+      }
+      return l;
+    },
+
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Listen und Statistik
+     * ==================================================================== */
+    groupkey:   a => (a[0] && a[0][GRUPPE]) ? a[0].schluessel : null,
+    groupitems: a => (a[0] && a[0][GRUPPE]) ? a[0].eintraege : [],
+    groupcount: a => (a[0] && a[0][GRUPPE]) ? a[0].eintraege.length : 0,
+
+    /** Standardabweichung und Varianz — für Auswertungen, die Notion nicht hat. */
+    stddev: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : a).map(zahl).filter(isFinite);
+      if (l.length < 2) return 0;
+      const m = l.reduce((x, y) => x + y, 0) / l.length;
+      return Math.sqrt(l.reduce((s, x) => s + (x - m) ** 2, 0) / (l.length - 1));
+    },
+    variance: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : a).map(zahl).filter(isFinite);
+      if (l.length < 2) return 0;
+      const m = l.reduce((x, y) => x + y, 0) / l.length;
+      return l.reduce((s, x) => s + (x - m) ** 2, 0) / (l.length - 1);
+    },
+    /** percentile(liste, 0.9) — der Wert, unter dem 90 % liegen. */
+    percentile: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : []).map(zahl).filter(isFinite).sort((x, y) => x - y);
+      if (!l.length) return 0;
+      const p = Math.min(1, Math.max(0, zahl(a[1])));
+      const i = (l.length - 1) * p, u = Math.floor(i), o = Math.ceil(i);
+      return u === o ? l[u] : l[u] + (l[o] - l[u]) * (i - u);
+    },
+    /** clamp(wert, min, max) — auf einen Bereich begrenzen. */
+    clamp: a => Math.min(Math.max(zahl(a[0]), zahl(a[1])), zahl(a[2])),
+    /** roundTo(zahl, stellen) — auf n Nachkommastellen runden. */
+    roundto: a => { const f = Math.pow(10, Math.trunc(zahl(a[1]))); return Math.round(zahl(a[0]) * f) / f; },
+
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Text
+     * ==================================================================== */
+    padstart: a => text(a[0]).padStart(Math.trunc(zahl(a[1])), text(a[2] || ' ')),
+    padend:   a => text(a[0]).padEnd(Math.trunc(zahl(a[1])), text(a[2] || ' ')),
+    startswith: a => text(a[0]).startsWith(text(a[1])),
+    endswith:   a => text(a[0]).endsWith(text(a[1])),
+    capitalize: a => { const s = text(a[0]); return s ? s[0].toUpperCase() + s.slice(1) : ''; },
+    titlecase:  a => text(a[0]).replace(/\S+/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase()),
+    /** slug("Mein Titel!") -> "mein-titel" — für Adressen und Dateinamen. */
+    slug: a => text(a[0]).toLowerCase()
+      .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+    /** initials("Redur Babat") -> "RB" */
+    initials: a => text(a[0]).split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase()).join(''),
+    wordcount: a => (text(a[0]).match(/\S+/g) || []).length,
+    truncate: a => { const s = text(a[0]), n = Math.trunc(zahl(a[1]));
+      return s.length <= n ? s : s.slice(0, Math.max(0, n - 1)) + '…'; },
+
+    /**
+     * formatNumber(zahl, art, stellen) — die letzte Funktion, die Notion hat
+     * und die hier gefehlt hat. Notions Beispiel:
+     *   formatNumber(prop("Number"), "usd", 0)
+     * Die Doku nennt nur "usd"; hier sind die gängigen Arten dabei.
+     */
+    formatnumber: a => {
+      const n = zahl(a[0]);
+      if (!isFinite(n)) return '';
+      const art = text(a[1] || 'number').toLowerCase();
+      const stellen = a.length > 2 ? Math.max(0, Math.min(20, zahl(a[2]))) : undefined;
+
+      const WAEHRUNG = {
+        usd: ['USD', 'en-US'], eur: ['EUR', 'de-DE'], chf: ['CHF', 'de-CH'],
+        gbp: ['GBP', 'en-GB'], jpy: ['JPY', 'ja-JP'], try: ['TRY', 'tr-TR'],
+        cad: ['CAD', 'en-CA'], aud: ['AUD', 'en-AU'], cny: ['CNY', 'zh-CN']
+      };
+      const opt = {};
+      if (stellen !== undefined) { opt.minimumFractionDigits = stellen; opt.maximumFractionDigits = stellen; }
+
+      try {
+        if (WAEHRUNG[art]) {
+          const [w, loc] = WAEHRUNG[art];
+          return new Intl.NumberFormat(loc, { style: 'currency', currency: w, ...opt }).format(n);
+        }
+        if (art === 'percent' || art === 'prozent')
+          return new Intl.NumberFormat('de-CH', { style: 'percent', ...opt }).format(n);
+        if (art === 'commas' || art === 'tausender')
+          return new Intl.NumberFormat('de-CH', { useGrouping: true, ...opt }).format(n);
+        if (art === 'plain' || art === 'schlicht')
+          return new Intl.NumberFormat('de-CH', { useGrouping: false, ...opt }).format(n);
+        /* Eine Zahl als Muster: formatNumber(3.14159, 2) → 3.14 */
+        if (/^[0-9]+$/.test(art))
+          return n.toFixed(Math.min(20, Number(art)));
+        return new Intl.NumberFormat('de-CH', opt).format(n);
+      } catch { return String(n); }
+    },
+
     formatdate: a => {
-      const d = alsDatum(a[0]); if (!d) return '';
+      let d = alsDatum(a[0]); if (!d) return '';
+      /* Drittes Argument: Zeitzone. Notion kann das nicht — wir schon.
+         formatDate(now(), "DD.MM.YYYY HH:mm", "Asia/Istanbul") */
+      if (a.length > 2 && text(a[2])) d = zonenWand(d, text(a[2]));
       const f = text(a[1] || 'YYYY-MM-DD');
       const zwei = n => String(n).padStart(2, '0');
       const tage  = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
@@ -3679,7 +3937,117 @@ const Formula = (() => {
           if (n === 'every')  return arr.every((e,i) => wahr(mit(e,i)));
         }
 
+        /* ================================================================ *
+         * ÜBER NOTION HINAUS — Listen falten, sortieren, gruppieren
+         * Auch das sind Sonderformen: der Ausdruck darf erst laufen, wenn
+         * `current`, `index` und bei reduce auch `acc` gesetzt sind.
+         * ================================================================ */
+        if (['reduce', 'sortby', 'groupby'].includes(n)) {
+          const liste = evaluate(knoten.args[0], ctx);
+          const arr = Array.isArray(liste) ? liste : (liste == null ? [] : [liste]);
+
+          if (n === 'reduce') {
+            /* reduce(liste, start, ausdruck) — im Ausdruck stehen acc und current */
+            let acc = evaluate(knoten.args[1], ctx);
+            const ausdruck = knoten.args[2];
+            arr.forEach((el, i) => {
+              acc = evaluate(ausdruck, { ...ctx, vars: { ...ctx.vars, acc, current: el, index: i } });
+            });
+            return acc;
+          }
+
+          const schluessel = (el, i) =>
+            evaluate(knoten.args[1], { ...ctx, vars: { ...ctx.vars, current: el, index: i } });
+
+          if (n === 'sortby') {
+            const paare = arr.map((el, i) => ({ el, k: schluessel(el, i) }));
+            const absteigend = knoten.args[2] !== undefined && wahr(evaluate(knoten.args[2], ctx));
+            paare.sort((a, b) => {
+              const x = a.k, y = b.k;
+              const zahlen = !isNaN(parseFloat(x)) && !isNaN(parseFloat(y));
+              const v = zahlen ? zahl(x) - zahl(y) : text(x).localeCompare(text(y), 'de');
+              return absteigend ? -v : v;
+            });
+            return paare.map(p => p.el);
+          }
+
+          /* groupBy — gibt eine Liste von Gruppen zurück.
+             Auslesen mit groupKey(), groupItems(), groupCount(). */
+          const karte = new Map();
+          arr.forEach((el, i) => {
+            const k = text(schluessel(el, i));
+            if (!karte.has(k)) karte.set(k, []);
+            karte.get(k).push(el);
+          });
+          return [...karte.entries()].map(([k, v]) =>
+            ({ [GRUPPE]: true, schluessel: k, eintraege: v }));
+        }
+
+        /* ================================================================ *
+         * ÜBER NOTION HINAUS — Abfragen über eine ANDERE Datenbank
+         * Notion braucht dafür zwingend eine Verknüpfung. Hier reicht der
+         * Name der Datenbank. In der Bedingung steht `current` für die Zeile.
+         *   sumWhere("Rechnungen", current.prop("Kunde") == prop("Name"), current.prop("Betrag"))
+         * ================================================================ */
+        if (['findrows','rows','countwhere','sumwhere','firstwhere','lastwhere','maxwhere','minwhere'].includes(n)) {
+          if (!ctx.db) throw new Error('Hier lassen sich keine anderen Datenbanken lesen');
+          const name = text(evaluate(knoten.args[0], ctx));
+          const alle = ctx.db(name);
+          if (!alle) throw new Error(`Datenbank nicht gefunden: ${name}`);
+
+          const bedingung = knoten.args[1];
+          const passt = bedingung === undefined ? alle : alle.filter((el, i) =>
+            wahr(evaluate(bedingung, { ...ctx, vars: { ...ctx.vars, current: el, index: i } })));
+
+          if (n === 'findrows' || n === 'rows') return passt;
+          if (n === 'countwhere') return passt.length;
+          if (n === 'firstwhere') return passt.length ? passt[0] : null;
+          if (n === 'lastwhere')  return passt.length ? passt[passt.length - 1] : null;
+
+          const werte = passt.map((el, i) => knoten.args[2] === undefined ? 1
+            : zahl(evaluate(knoten.args[2], { ...ctx, vars: { ...ctx.vars, current: el, index: i } })));
+          if (n === 'sumwhere') return werte.reduce((a, b) => a + b, 0);
+          if (n === 'maxwhere') return werte.length ? Math.max(...werte) : 0;
+          if (n === 'minwhere') return werte.length ? Math.min(...werte) : 0;
+        }
+
         const args = knoten.args.map(x => evaluate(x, ctx));
+
+        /* ================================================================ *
+         * ÜBER NOTION HINAUS — die Zeile im Verhältnis zu den anderen
+         * Notion-Formeln sehen nur ihre eigene Zeile. Diese hier sehen die
+         * Ansicht: ihre Nummer darin, die Zeile davor, die laufende Summe,
+         * den Rang. Das ist der grösste einzelne Unterschied zu Notion.
+         * ================================================================ */
+        if (['rownumber','runningcount','previous','next','runningsum','runningmax','runningmin',
+             'rank','percentoftotal','total','average','rowcount','delta'].includes(n)) {
+          const z = ctx.zeile;
+          if (!z) throw new Error('Das geht nur in einer Datenbankspalte');
+          const i = z.index();
+          if (n === 'rownumber' || n === 'runningcount') return i + 1;
+          if (n === 'rowcount') return z.anzahl();
+
+          const spalte = z.spalte(text(args[0] ?? ''));
+          if (n === 'previous') return i > 0 ? spalte[i - 1] : null;
+          if (n === 'next')     return i + 1 < spalte.length ? spalte[i + 1] : null;
+          if (n === 'delta')    return i > 0 ? zahl(spalte[i]) - zahl(spalte[i - 1]) : 0;
+
+          const bisHier = spalte.slice(0, i + 1).map(zahl).filter(x => isFinite(x));
+          if (n === 'runningsum') return bisHier.reduce((a, b) => a + b, 0);
+          if (n === 'runningmax') return bisHier.length ? Math.max(...bisHier) : 0;
+          if (n === 'runningmin') return bisHier.length ? Math.min(...bisHier) : 0;
+
+          const alleZahlen = spalte.map(zahl).filter(x => isFinite(x));
+          const summe = alleZahlen.reduce((a, b) => a + b, 0);
+          if (n === 'total')   return summe;
+          if (n === 'average') return alleZahlen.length ? summe / alleZahlen.length : 0;
+          if (n === 'percentoftotal') return summe === 0 ? 0 : zahl(spalte[i]) / summe;
+          if (n === 'rank') {
+            const meiner = zahl(spalte[i]);
+            const absteigend = args[1] === undefined ? true : wahr(args[1]);
+            return 1 + alleZahlen.filter(x => absteigend ? x > meiner : x < meiner).length;
+          }
+        }
 
         if (F[n]) return F[n](args);
         throw new Error(`Unbekannte Funktion: ${n}()`);
@@ -3699,12 +4067,19 @@ const Formula = (() => {
    *                            (element, name) => wert
    * @returns {{ok:boolean, wert:*, fehler:string}}
    */
-  const run = (src, propFn, fremdFn) => {
+  const run = (src, propFn, fremdFn, umgebung) => {
     if (!src || !src.trim()) return { ok: true, wert: '' };
     try {
       let baum = cache.get(src);
       if (!baum) { baum = parse(tokenize(src)); cache.set(src, baum); }
-      const wert = evaluate(baum, { props: propFn, fremd: fremdFn, vars: {} });
+      const wert = evaluate(baum, {
+        props: propFn, fremd: fremdFn, vars: {},
+        /* zeile: { index(), anzahl(), spalte(name) } — für rowNumber, previous,
+           runningSum, rank … · db: name => Liste der Zeilen einer anderen
+           Datenbank — für findRows, sumWhere, countWhere … */
+        zeile: umgebung && umgebung.zeile,
+        db:    umgebung && umgebung.db
+      });
       return { ok: true, wert };
     } catch (e) {
       return { ok: false, wert: '', fehler: e.message };
@@ -5140,20 +5515,20 @@ const Blocks = (() => {
    * ======================================================================*/
   const TYPEN = [
     /* --- Grundlegende Blöcke ------------------------------------------- */
-    { id:'text',    name:'Text',              icon:'¶',  gruppe:'Grundlegend', cmd:['text','absatz','p'],            kurz:'Ctrl+Alt+0', ph:'Tippe etwas, oder drücke / für Befehle' },
-    { id:'h1',      name:'Überschrift 1',     icon:'H₁', gruppe:'Grundlegend', cmd:['h1','ueberschrift1','titel'],   kurz:'Ctrl+Alt+1', md:'#',    ph:'Überschrift 1' },
-    { id:'h2',      name:'Überschrift 2',     icon:'H₂', gruppe:'Grundlegend', cmd:['h2','ueberschrift2'],           kurz:'Ctrl+Alt+2', md:'##',   ph:'Überschrift 2' },
-    { id:'h3',      name:'Überschrift 3',     icon:'H₃', gruppe:'Grundlegend', cmd:['h3','ueberschrift3'],           kurz:'Ctrl+Alt+3', md:'###',  ph:'Überschrift 3' },
-    { id:'todo',    name:'Aufgabenliste',     icon:'☑',  gruppe:'Grundlegend', cmd:['todo','aufgabe','checkbox'],    kurz:'Ctrl+Alt+4', md:['[]','[ ]'], ph:'Aufgabe' },
-    { id:'bullet',  name:'Aufzählungsliste',  icon:'•',  gruppe:'Grundlegend', cmd:['bullet','liste','aufzaehlung'], kurz:'Ctrl+Alt+5', md:['-','*','+'], ph:'Listenpunkt' },
-    { id:'number',  name:'Nummerierte Liste', icon:'1.', gruppe:'Grundlegend', cmd:['number','nummeriert'],          kurz:'Ctrl+Alt+6', md:'1.',   ph:'Listenpunkt' },
-    { id:'toggle',  name:'Toggle-Liste',      icon:'▸',  gruppe:'Grundlegend', cmd:['toggle','einklappbar'],         kurz:'Ctrl+Alt+7', md:'>',    ph:'Toggle' },
+    { id:'text',    name:'Text',              icon:'¶',  gruppe:'Grundlegend', cmd:['text','absatz','p','plain'],    kurz:'Ctrl+Shift+0', ph:'Tippe etwas, oder drücke / für Befehle' },
+    { id:'h1',      name:'Überschrift 1',     icon:'H₁', gruppe:'Grundlegend', cmd:['h1','ueberschrift1','titel','#'], kurz:'Ctrl+Shift+1', md:'#',    ph:'Überschrift 1' },
+    { id:'h2',      name:'Überschrift 2',     icon:'H₂', gruppe:'Grundlegend', cmd:['h2','ueberschrift2','##'],      kurz:'Ctrl+Shift+2', md:'##',   ph:'Überschrift 2' },
+    { id:'h3',      name:'Überschrift 3',     icon:'H₃', gruppe:'Grundlegend', cmd:['h3','ueberschrift3','###'],     kurz:'Ctrl+Shift+3', md:'###',  ph:'Überschrift 3' },
+    { id:'todo',    name:'Aufgabenliste',     icon:'☑',  gruppe:'Grundlegend', cmd:['todo','aufgabe','checkbox'],    kurz:'Ctrl+Shift+4', md:['[]','[ ]'], ph:'Aufgabe' },
+    { id:'bullet',  name:'Aufzählungsliste',  icon:'•',  gruppe:'Grundlegend', cmd:['bullet','liste','aufzaehlung'], kurz:'Ctrl+Shift+5', md:['-','*','+'], ph:'Listenpunkt' },
+    { id:'number',  name:'Nummerierte Liste', icon:'1.', gruppe:'Grundlegend', cmd:['number','nummeriert','num'],    kurz:'Ctrl+Shift+6', md:'1.',   ph:'Listenpunkt' },
+    { id:'toggle',  name:'Toggle-Liste',      icon:'▸',  gruppe:'Grundlegend', cmd:['toggle','einklappbar'],         kurz:'Ctrl+Shift+7', md:'>',    ph:'Toggle' },
     { id:'toggle-h1', name:'Toggle-Überschrift 1', icon:'▸H₁', gruppe:'Grundlegend', cmd:['toggle h1','einklappbare ueberschrift 1'] },
     { id:'toggle-h2', name:'Toggle-Überschrift 2', icon:'▸H₂', gruppe:'Grundlegend', cmd:['toggle h2','einklappbare ueberschrift 2'] },
     { id:'toggle-h3', name:'Toggle-Überschrift 3', icon:'▸H₃', gruppe:'Grundlegend', cmd:['toggle h3','einklappbare ueberschrift 3'] },
     { id:'quote',   name:'Zitat',             icon:'❝',  gruppe:'Grundlegend', cmd:['quote','zitat'],                md:'"',    ph:'Zitat' },
     { id:'callout', name:'Callout',           icon:'💡', gruppe:'Grundlegend', cmd:['callout','hinweis'],            ph:'Hinweis' },
-    { id:'divider', name:'Trennlinie',        icon:'—',  gruppe:'Grundlegend', cmd:['divider','trennlinie','hr'],    md:['---','***','___'] },
+    { id:'divider', name:'Trennlinie',        icon:'—',  gruppe:'Grundlegend', cmd:['divider','trennlinie','hr','div'], md:['---','***','___'] },
 
     /* --- Datenbanken ---------------------------------------------------- */
     { id:'db-table',    name:'Tabelle',    icon:'▦', gruppe:'Datenbank', cmd:['tabelle','table','datenbank'] },
@@ -5166,23 +5541,23 @@ const Blocks = (() => {
     { id:'image',    name:'Bild',       icon:'🖼', gruppe:'Medien', cmd:['bild','image','foto'] },
     { id:'video',    name:'Video',      icon:'🎬', gruppe:'Medien', cmd:['video'] },
     { id:'audio',    name:'Audio',      icon:'🔊', gruppe:'Medien', cmd:['audio','ton'] },
-    { id:'file',     name:'Datei',      icon:'📎', gruppe:'Medien', cmd:['datei','file','anhang'] },
-    { id:'bookmark', name:'Lesezeichen',icon:'🔖', gruppe:'Medien', cmd:['bookmark','lesezeichen','link'] },
+    { id:'file',     name:'Datei',      icon:'📎', gruppe:'Medien', cmd:['datei','file','anhang','pdf'] },
+    { id:'bookmark', name:'Lesezeichen',icon:'🔖', gruppe:'Medien', cmd:['bookmark','lesezeichen','link','book'] },
     { id:'embed',    name:'Einbetten',  icon:'⧉',  gruppe:'Medien', cmd:['embed','einbetten','iframe'] },
 
     /* --- Erweitert -------------------------------------------------------- */
-    { id:'code',       name:'Code',              icon:'⌨',  gruppe:'Erweitert', cmd:['code'], kurz:'Ctrl+Alt+8', md:'```', ph:'Code' },
-    { id:'equation',   name:'Formel',            icon:'∑',  gruppe:'Erweitert', cmd:['formel','equation','math','latex'], md:'$$', ph:'E = mc^2' },
+    { id:'code',       name:'Code',              icon:'⌨',  gruppe:'Erweitert', cmd:['code'], kurz:'Ctrl+Shift+8', md:'```', ph:'Code' },
+    { id:'equation',   name:'Formel',            icon:'∑',  gruppe:'Erweitert', cmd:['formel','equation','math','latex'], kurz:'Ctrl+Shift+E', md:'$$', ph:'E = mc^2' },
     { id:'table',      name:'Einfache Tabelle',  icon:'⊞',  gruppe:'Erweitert', cmd:['tabelle einfach','simple table','raster'] },
     { id:'toc',        name:'Inhaltsverzeichnis',icon:'≡',  gruppe:'Erweitert', cmd:['inhaltsverzeichnis','toc'] },
-    { id:'breadcrumb', name:'Pfad',              icon:'⌂',  gruppe:'Erweitert', cmd:['pfad','breadcrumb'] },
+    { id:'breadcrumb', name:'Pfad',              icon:'⌂',  gruppe:'Erweitert', cmd:['pfad','breadcrumb','bread'] },
     { id:'columns',    name:'Zwei Spalten',      icon:'⫿',  gruppe:'Erweitert', cmd:['spalten','columns'] },
     { id:'columns3',   name:'Drei Spalten',      icon:'⫼',  gruppe:'Erweitert', cmd:['dreispalten','columns3'] },
-    { id:'page',       name:'Unterseite',        icon:'📄', gruppe:'Erweitert', cmd:['seite','page','unterseite'], kurz:'Ctrl+Alt+9' },
+    { id:'page',       name:'Unterseite',        icon:'📄', gruppe:'Erweitert', cmd:['seite','page','unterseite'], kurz:'Ctrl+Shift+9' },
     { id:'pageref',    name:'Link zu Seite',     icon:'↗',  gruppe:'Erweitert', cmd:['link zu seite','verweis','klon','pageref'] },
     { id:'synced',     name:'Synchronisierter Block', icon:'⇄', gruppe:'Erweitert', cmd:['synced','synchron','spiegel'] },
     { id:'linkeddb',   name:'Verknüpfte Ansicht', icon:'⧉', gruppe:'Datenbank', cmd:['verknuepfte ansicht','linked','ansicht einer datenbank'] },
-    { id:'button',     name:'Knopf',             icon:'🔘', gruppe:'Erweitert', cmd:['button','knopf','vorlagenknopf'] },
+    { id:'button',     name:'Knopf',             icon:'🔘', gruppe:'Erweitert', cmd:['button','knopf','vorlagenknopf','template'] },
     { id:'html',       name:'HTML',              icon:'</>',gruppe:'Erweitert', cmd:['html'] },
 
     /* --- Wissen ------------------------------------------------------------ */
@@ -5196,7 +5571,36 @@ const Blocks = (() => {
     { id:'ai-summary', name:'KI: Zusammenfassen',    icon:'✨', gruppe:'KI', cmd:['zusammenfassen','summary'] },
     { id:'ai-todo',    name:'KI: Aufgaben ableiten', icon:'✨', gruppe:'KI', cmd:['aufgaben','actionitems'] },
     { id:'ai-translate',name:'KI: Übersetzen',       icon:'✨', gruppe:'KI', cmd:['uebersetzen','translate'] },
-    { id:'ai-improve', name:'KI: Text verbessern',   icon:'✨', gruppe:'KI', cmd:['verbessern','umschreiben','improve'] }
+    { id:'ai-improve', name:'KI: Text verbessern',   icon:'✨', gruppe:'KI', cmd:['verbessern','umschreiben','improve'] },
+
+    /* --- Aktionen -------------------------------------------------------
+     * Notions Slash-Menü kann mehr als Blöcke einfügen: es kann den Block
+     * auch umwandeln, färben, duplizieren, verschieben und löschen, und es
+     * kann Erwähnungen, Daten und Emoji einfügen. Diese Einträge legen
+     * nichts an — sie tun etwas. Deshalb tragen sie `aktion`.
+     * ------------------------------------------------------------------ */
+    { id:'a-turn',    name:'Umwandeln in …',        icon:'⇄', gruppe:'Aktionen', aktion:'turn',
+      cmd:['turn','umwandeln','wechseln'] },
+    { id:'a-color',   name:'Farbe ändern',          icon:'🎨', gruppe:'Aktionen', aktion:'color',
+      cmd:['color','farbe','highlight','hintergrund','blue','blau','rot','red','gruen','green','gelb','yellow'] },
+    { id:'a-default', name:'Farbe entfernen',       icon:'▢', gruppe:'Aktionen', aktion:'default',
+      cmd:['default','standard','farbe entfernen'] },
+    { id:'a-dup',     name:'Block duplizieren',     icon:'⧉', gruppe:'Aktionen', aktion:'dup',
+      kurz:'Ctrl+D', cmd:['duplicate','duplizieren','kopieren'] },
+    { id:'a-moveto',  name:'Verschieben nach …',    icon:'➦', gruppe:'Aktionen', aktion:'moveto',
+      cmd:['moveto','verschieben','move'] },
+    { id:'a-del',     name:'Block löschen',         icon:'🗑', gruppe:'Aktionen', aktion:'del',
+      kurz:'Entf', cmd:['delete','loeschen','entfernen'] },
+    { id:'a-mention', name:'Person oder Seite erwähnen', icon:'@', gruppe:'Aktionen', aktion:'mention',
+      kurz:'@', cmd:['mention','erwaehnen','erwaehnung'] },
+    { id:'a-date',    name:'Datum einfügen',        icon:'📆', gruppe:'Aktionen', aktion:'date',
+      kurz:'@Datum', cmd:['date','datum','heute','today'] },
+    { id:'a-remind',  name:'Erinnerung',            icon:'⏰', gruppe:'Aktionen', aktion:'remind',
+      kurz:'@remind', cmd:['reminder','remind','erinnerung'] },
+    { id:'a-emoji',   name:'Emoji',                 icon:'🙂', gruppe:'Aktionen', aktion:'emoji',
+      kurz:':', cmd:['emoji','smiley'] },
+    { id:'a-komm',    name:'Kommentar',             icon:'💬', gruppe:'Aktionen', aktion:'komm',
+      kurz:'Ctrl+Shift+M', cmd:['comment','kommentar'] }
   ];
 
   /* ========================================================================
@@ -6042,7 +6446,53 @@ const Blocks = (() => {
         return;
       }
 
-      /* Strg+Alt+Ziffer: Blocktyp wechseln */
+      /* Blocktyp wechseln.
+         Notion belegt das auf Windows mit Strg+Umschalt+Ziffer und auf dem
+         Mac mit Cmd+Wahl+Ziffer. Hier gehen beide — und weil Umschalt+Ziffer
+         auf deutschen Tastaturen ein Sonderzeichen liefert (Umschalt+1 = !),
+         wird auch e.code ausgewertet. */
+      const zifferAus = (ev) => {
+        if (/^[0-9]$/.test(ev.key)) return ev.key;
+        const m = /^Digit([0-9])$/.exec(ev.code || '');
+        return m ? m[1] : null;
+      };
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && zifferAus(e)) {
+        e.preventDefault();
+        const ziel = { '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
+                       '6':'number','7':'toggle','8':'code','9':'page' }[zifferAus(e)];
+        if (ziel === 'page') {
+          const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
+          Store.trashBlock(b.id);
+          App.zeichneSeite();
+          App.oeffne(p.id);
+        } else if (ziel) umwandeln(b.id, ziel);
+        return;
+      }
+
+      /* Strg+Umschalt+E: Formelblock — wie in Notion */
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        umwandeln(b.id, 'equation');
+        return;
+      }
+
+      /* Strg+Alt+T: alle Toggles auf dieser Seite auf- oder zuklappen */
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        alleToggles();
+        return;
+      }
+
+      /* Strg+/: den Blocktyp dieses Blocks ändern — Notions „Blöcke bearbeiten" */
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
+        if (griff) { blockMenue(griff, b);
+          setTimeout(() => document.querySelector('.menu button[data-a="turn"]')?.click(), 0); }
+        return;
+      }
+
+      /* Strg+Alt+Ziffer: Blocktyp wechseln (Mac-Belegung) */
       if ((e.ctrlKey || e.metaKey) && e.altKey && /^[0-9]$/.test(e.key)) {
         e.preventDefault();
         const ziel = { '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
@@ -6716,7 +7166,13 @@ const Blocks = (() => {
 
     menu.addEventListener('click', (e) => {
       const b = e.target.closest('button[data-t]');
-      if (b) { merken(b.dataset.t); schliessen(); umwandelnNachSlash(ct, block, b.dataset.t); }
+      if (!b) return;
+      merken(b.dataset.t);
+      schliessen();
+      const t = TYPEN.find(x => x.id === b.dataset.t);
+      /* Aktionen legen keinen Block an — sie tun etwas mit diesem hier. */
+      if (t && t.aktion) { slashAktion(ct, block, t.aktion); return; }
+      umwandelnNachSlash(ct, block, b.dataset.t);
     });
 
     const schliessen = () => {
@@ -6776,6 +7232,50 @@ const Blocks = (() => {
     ct.textContent = (ct.textContent || '').replace(/\/[^\/]*$/, '');
     Store.updateBlock(block.id, { text: ct.textContent });
     umwandeln(block.id, typId);
+  };
+
+  /**
+   * Die Aktionen aus dem Slash-Menü: /turn, /color, /duplicate, /moveto,
+   * /delete, /mention, /date, /reminder, /emoji, /comment.
+   * Notion hat sie alle; sie legen keinen Block an, sondern greifen zu.
+   */
+  const slashAktion = (ct, block, was) => {
+    /* Den getippten Befehl aus dem Text nehmen, bevor irgendetwas passiert */
+    ct.textContent = (ct.textContent || '').replace(/\/[^\/]*$/, '');
+    Store.updateBlock(block.id, { text: ct.textContent });
+    const b = Store.getBlock(block.id) || block;
+    const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
+
+    if (was === 'turn' || was === 'color') {
+      /* Beide öffnen dasselbe Untermenü wie am Blockgriff — kein zweiter Weg,
+         der auseinanderlaufen könnte. */
+      if (!griff) { UI.toast('Der Block ist gerade nicht sichtbar'); return; }
+      blockMenue(griff, b);
+      setTimeout(() => {
+        const m = document.querySelector('.menu');
+        const knopf = m && m.querySelector(`button[data-a="${was}"]`);
+        if (knopf) knopf.click();
+      }, 0);
+      return;
+    }
+    if (was === 'default') { Store.updateBlock(b.id, { color: '' }); App.zeichneSeite(b.id, 'ende'); return; }
+    if (was === 'dup')     { dupliziere(b); return; }
+    if (was === 'moveto')  { blockVerschiebenNach(b); return; }
+    if (was === 'del')     { Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite(); return; }
+    if (was === 'komm')    { Kommentare.neu(b); return; }
+
+    /* Erwähnung, Datum, Erinnerung und Emoji schreiben ihr Zeichen und
+       lassen dann das Menü aufgehen, das ohnehin daran hängt. */
+    const zeichen = { mention: '@', date: '@', remind: '@remind ', emoji: ':' }[was];
+    if (!zeichen) return;
+    ct.textContent = (ct.textContent || '') + zeichen;
+    Store.updateBlock(b.id, { text: ct.textContent });
+    App.zeichneSeite(b.id, 'ende');
+    setTimeout(() => {
+      const feld = document.querySelector(`.blk[data-bid="${b.id}"] [contenteditable]`);
+      if (feld) { feld.focus(); cursorAnsEnde(feld);
+                  feld.dispatchEvent(new InputEvent('input', { bubbles: true })); }
+    }, 30);
   };
 
   /* ========================================================================
@@ -6880,6 +7380,29 @@ const Blocks = (() => {
   };
 
   /** Einen Block auf eine andere Seite verschieben. */
+  /**
+   * Alle Toggles der Seite auf einmal auf- oder zuklappen (Strg+Alt+T).
+   * Ist mindestens eines zu, gehen alle auf; sind alle offen, gehen alle zu —
+   * genauso verhält sich Notion.
+   */
+  const alleToggles = () => {
+    const seite = Store.getBlock(App.aktuelleSeite());
+    if (!seite) return;
+    const gefunden = [];
+    const gehe = (id) => {
+      const x = Store.getBlock(id);
+      if (!x) return;
+      if (x.type === 'toggle' || x.toggleKopf) gefunden.push(x);
+      (x.content || []).forEach(gehe);
+    };
+    (seite.content || []).forEach(gehe);
+    if (!gefunden.length) { UI.toast('Auf dieser Seite gibt es keine Toggles'); return; }
+    const auf = gefunden.some(x => !x.open);
+    gefunden.forEach(x => Store.updateBlock(x.id, { open: auf }));
+    App.zeichneSeite();
+    UI.toast(auf ? gefunden.length + ' Toggles geöffnet' : gefunden.length + ' Toggles geschlossen');
+  };
+
   const blockVerschiebenNach = (b) => {
     seitenPicker('Auf welche Seite verschieben?', (zielId) => {
       const daten = Store.baum(b.id);
@@ -6892,7 +7415,7 @@ const Blocks = (() => {
 
   return {
     TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc,
-    cursorAnsEnde, slashMenue, einfuegenAmEnde, dupliziere, verschiebe,
+    cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe,
     blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
     DIENSTE, einbettungsAdresse
   };
@@ -6982,16 +7505,21 @@ const Datenbank = (() => {
   const OPERATOREN = {
     text:     ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
     title:    ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
-    url:      ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
-    email:    ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
-    phone:    ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
+    /* Notion behandelt URL, E-Mail und Telefon genau wie Text — mit allen
+       acht Bedingungen. Beleg: Notion-API-Referenz „Filter data source
+       entries", Rich-Text-Filter. */
+    url:      ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
+    email:    ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
+    phone:    ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
     number:   ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich','ist leer','ist nicht leer'],
     select:   ['ist','ist nicht','ist leer','ist nicht leer'],
     status:   ['ist','ist nicht','ist leer','ist nicht leer'],
     multi:    ['enthält','enthält nicht','ist leer','ist nicht leer'],
     person:   ['enthält','enthält nicht','ist leer','ist nicht leer'],
     date:     ['ist','ist vor','ist nach','ist am oder vor','ist am oder nach','ist heute','ist gestern','ist morgen',
-               'ist diese Woche','ist letzte Woche','ist nächste Woche','ist dieser Monat','ist letzter Monat',
+               'ist diese Woche','ist letzte Woche','ist nächste Woche',
+               'ist dieser Monat','ist letzter Monat','ist nächster Monat',
+               'ist dieses Jahr','ist letztes Jahr','ist nächstes Jahr',
                'ist in den letzten 7 Tagen','ist in den letzten 30 Tagen','ist in den nächsten 7 Tagen',
                'ist in den nächsten 30 Tagen','liegt in der Vergangenheit','liegt in der Zukunft','ist leer','ist nicht leer'],
     created:  ['ist','ist vor','ist nach','ist heute','ist gestern','ist diese Woche','ist letzte Woche','ist dieser Monat',
@@ -7002,8 +7530,11 @@ const Datenbank = (() => {
     formula:  ['enthält','ist','ist gleich','größer als','kleiner als','ist aktiviert','ist nicht aktiviert','ist leer','ist nicht leer'],
     files:    ['ist leer','ist nicht leer'],
     relation: ['enthält','enthält nicht','ist leer','ist nicht leer'],
-    rollup:   ['ist gleich','ist nicht gleich','größer als','kleiner als','enthält','ist leer','ist nicht leer'],
-    uid:      ['ist gleich','größer als','kleiner als'],
+    rollup:   ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich',
+               'enthält','enthält nicht','ist vor','ist nach','ist leer','ist nicht leer'],
+    /* Die laufende Nummer ist eine Zahl und filtert wie eine. Notion nennt
+       für ID keine Leer-Bedingungen — die Nummer ist ja nie leer. */
+    uid:      ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich'],
     ki:       ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
     button:   [],
     createdBy:['ist','ist nicht','enthält','ist leer','ist nicht leer'],
@@ -7076,6 +7607,82 @@ const Datenbank = (() => {
     return zc.schema[k].type === 'relation' ? seitenListe(v) : v;
   };
 
+  /* Läuft gerade eine Spaltenabfrage? Schützt vor Formeln, die sich selbst
+     über runningSum() oder rank() aufrufen würden. */
+  const spaltenLauf = new Set();
+
+  /**
+   * Baut die Umgebung, die eine Formel über ihre eigene Zeile hinausschauen
+   * lässt. Zwei Dinge stehen darin:
+   *
+   *   zeile — wo diese Zeile in der Ansicht steht (`index`), wie viele es
+   *           sind (`anzahl`) und alle Werte einer Spalte in Ansichtsreihen-
+   *           folge (`spalte`). Daraus entstehen rowNumber(), previous(),
+   *           next(), runningSum(), rank(), percentOfTotal() …
+   *   db    — die Zeilen einer ANDEREN Datenbank, über ihren Namen gefunden.
+   *           Daraus entstehen findRows(), countWhere(), sumWhere() …
+   *
+   * Beides kann Notion nicht. Dort braucht jede Auswertung über die Zeile
+   * hinaus eine Verknüpfung und ein Rollup.
+   */
+  const formelUmgebung = (row, coll) => {
+    let zwischen = null;
+    const reihen = () => {
+      if (zwischen) return zwischen;
+      if (ansichtOrdnung && ansichtOrdnung.collId === coll.id) {
+        const liste = ansichtOrdnung.ids.map(id => Store.getBlock(id)).filter(Boolean);
+        if (liste.some(r => r.id === row.id)) return (zwischen = liste);
+      }
+      return (zwischen = Store.rowsOf(coll.id));
+    };
+    const schluesselVon = (name) =>
+      Object.keys(coll.schema).find(x => coll.schema[x].name === name) ||
+      (/^(titel|name|title)$/i.test(name)
+        ? Object.keys(coll.schema).find(x => coll.schema[x].type === 'title') : null);
+
+    return {
+      zeile: {
+        index:  () => Math.max(0, reihen().findIndex(r => r.id === row.id)),
+        anzahl: () => reihen().length,
+        spalte: (name) => {
+          const k = schluesselVon(name);
+          if (!k) throw new Error(`Spalte nicht gefunden: ${name}`);
+          const marke = coll.id + ':' + k;
+          if (spaltenLauf.has(marke))
+            throw new Error('Diese Formel bezieht sich auf sich selbst');
+          spaltenLauf.add(marke);
+          let selbst = null;
+          try {
+            const werte = reihen().map(r => {
+              try {
+                const v = wert(r, k, coll);
+                /* Formula.run fängt den Fehler selbst ab und gibt ihn als Text
+                   zurück — deshalb hier auf den Text schauen, nicht auf throw. */
+                if (typeof v === 'string' && /sich selbst/.test(v))
+                  selbst = new Error('Diese Formel bezieht sich auf sich selbst');
+                return v;
+              } catch (e) {
+                if (/sich selbst/.test(e.message)) selbst = e;
+                return null;
+              }
+            });
+            /* Wenn die Spalte sich selbst gefragt hat, ist das keine Null,
+               sondern ein Fehler — sonst stünde stillschweigend 0 da. */
+            if (selbst) throw selbst;
+            return werte;
+          } finally { spaltenLauf.delete(marke); }
+        }
+      },
+      db: (name) => {
+        const gesucht = String(name).trim().toLowerCase();
+        const c = Object.values(Store.cache.collections)
+          .find(x => (x.name || '').trim().toLowerCase() === gesucht);
+        if (!c) return null;
+        return Store.rowsOf(c.id).map(r => seitenBezug(r.id, r.text || 'Ohne Titel'));
+      }
+    };
+  };
+
   const wert = (row, key, coll) => {
     const def = coll.schema[key];
     if (!def) return null;
@@ -7123,7 +7730,7 @@ const Datenbank = (() => {
             if (coll.schema[k].type === 'relation') return seitenListe(wert(row, k, coll));
             return wert(row, k, coll);
           },
-          fremdWert);
+          fremdWert, formelUmgebung(row, coll));
         return r.ok ? r.wert : '⚠ ' + (r.fehler || 'Fehler');
       } catch (e) {
         return '⚠ ' + e.message;
@@ -7392,6 +7999,15 @@ const Datenbank = (() => {
       if (op === 'ist in den nächsten 30 Tagen')return tag >= h && tag <= tage(30);
       if (op === 'liegt in der Vergangenheit')  return dv < jetzt;
       if (op === 'liegt in der Zukunft')        return dv > jetzt;
+      /* Die drei, die Notions API kennt und uns noch fehlten:
+         past_year, next_month, next_year. */
+      if (op === 'ist letztes Jahr')  return dv.getFullYear() === jetzt.getFullYear() - 1;
+      if (op === 'ist dieses Jahr')   return dv.getFullYear() === jetzt.getFullYear();
+      if (op === 'ist nächstes Jahr') return dv.getFullYear() === jetzt.getFullYear() + 1;
+      if (op === 'ist nächster Monat') {
+        const n = new Date(jetzt.getFullYear(), jetzt.getMonth() + 1, 1);
+        return dv.getMonth() === n.getMonth() && dv.getFullYear() === n.getFullYear();
+      }
       if (dz && !isNaN(dz)) {
         if (op === 'ist')             return tag.getTime() === new Date(dz.setHours(0,0,0,0)).getTime();
         if (op === 'ist vor')         return dv <  dz;
@@ -7475,9 +8091,19 @@ const Datenbank = (() => {
     return alle;
   };
 
+  /**
+   * Die zuletzt gezeichnete Reihenfolge einer Ansicht.
+   * Formeln wie rowNumber(), previous(), runningSum() und rank() brauchen sie:
+   * sie müssen wissen, wo diese Zeile in der Ansicht steht und was davor kam.
+   * Notion kann das nicht — dort sieht eine Formel nur ihre eigene Zeile.
+   */
+  let ansichtOrdnung = null;
+
   const zeilen = (coll, view) => {
     const alle = sortiert(gefiltert(rohZeilen(coll, view), view, coll), view, coll);
-    return begrenzen(alle, view);
+    const sicht = begrenzen(alle, view);
+    ansichtOrdnung = { collId: coll.id, ids: sicht.map(r => r.id) };
+    return sicht;
   };
 
   /** Wie viele wurden weggelassen? Das gehört dem Menschen gesagt. */
@@ -8492,7 +9118,22 @@ const Datenbank = (() => {
     }
 
     const def = coll.schema[gk];
-    const gruppen = [...(def.options || []).map(o => o.name), '(Leer)'];
+    let gruppen = [...(def.options || []).map(o => o.name), '(Leer)'];
+
+    /* Wie sollen die Gruppen selbst sortiert sein? Notion bietet dafür
+       manuell (= Reihenfolge der Optionen), alphabetisch auf- und absteigend
+       sowie nach Anzahl. „(Leer)" bleibt immer hinten. */
+    const wieViele = (g) => rows.filter(r => (wert(r, gk, coll) || '(Leer)') === g).length;
+    const art = view.gruppeSort || 'manuell';
+    if (art !== 'manuell') {
+      const leer = gruppen.filter(g => g === '(Leer)');
+      gruppen = gruppen.filter(g => g !== '(Leer)');
+      if (art === 'alphabetisch')      gruppen.sort((a, b) => a.localeCompare(b, 'de'));
+      if (art === 'alphabetisch-ab')   gruppen.sort((a, b) => b.localeCompare(a, 'de'));
+      if (art === 'anzahl')            gruppen.sort((a, b) => wieViele(b) - wieViele(a));
+      if (art === 'anzahl-auf')        gruppen.sort((a, b) => wieViele(a) - wieViele(b));
+      gruppen = gruppen.concat(leer);
+    }
 
     gruppen.forEach(g => {
       const drin = rows.filter(r => (wert(r, gk, coll) || '(Leer)') === g);
@@ -11509,6 +12150,9 @@ const Datenbank = (() => {
       `<button data-a="oeffnen"><span class="mi">◧</span>Einträge öffnen als` +
         `<span class="ms">${view.oeffnenAls === 'voll' ? 'Seite' : 'Vorschau'}</span></button>` +
       `<button data-a="kartengroesse"><span class="mi">▩</span>Kartengrösse<span class="ms">${view.kartenGroesse || 'mittel'}</span></button>` +
+      `<button data-a="gsort"><span class="mi">↕</span>Gruppen sortieren` +
+        `<span class="ms">${({manuell:'manuell','alphabetisch':'A → Z','alphabetisch-ab':'Z → A',
+          anzahl:'meiste zuerst','anzahl-auf':'wenigste zuerst'})[view.gruppeSort || 'manuell']}</span></button>` +
       `<button data-a="leere"><span class="mi">␀</span>Leere Gruppen<span class="ms">${view.leereGruppen === false ? 'aus' : 'zeigen'}</span></button>` +
       `<button data-a="limit"><span class="mi">≡</span>Höchstens anzeigen<span class="ms">${view.limit || 'alle'}</span></button>` +
       '<hr>' +
@@ -11602,6 +12246,12 @@ const Datenbank = (() => {
         Store.updateView(view.id, { leereGruppen: view.leereGruppen === false });
         App.zeichneSeite();
       }
+      if (a === 'gsort') {
+        const folge = ['manuell', 'alphabetisch', 'alphabetisch-ab', 'anzahl', 'anzahl-auf'];
+        const i = folge.indexOf(view.gruppeSort || 'manuell');
+        Store.updateView(view.id, { gruppeSort: folge[(i + 1) % folge.length] });
+        App.zeichneSeite();
+      }
       if (a === 'link') {
         navigator.clipboard?.writeText(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + view.id);
         UI.toast('Link zur Ansicht kopiert');
@@ -11639,6 +12289,53 @@ const Datenbank = (() => {
           Spalten: ${spalten.map(s => `<code style="cursor:pointer" class="fxp">prop("${esc(s)}")</code>`).join(' ')}
           <br><br>Text wird mit <b>+</b> verkettet, nicht mit concat(). concat() ist nur für Listen.
           <br>Durch eine Verknüpfung lesen: <code>map(prop("Aufgaben"), current.prop("Kosten")).sum()</code>
+          <details style="margin-top:10px">
+            <summary style="cursor:pointer">Was hier mehr geht als in Notion</summary>
+            <div style="margin-top:8px; line-height:1.9">
+              <b>Die Zeile im Verhältnis zu den anderen</b> — Notion kann das nicht:<br>
+              <code class="fxp">rowNumber()</code> <code class="fxp">previous("Betrag")</code>
+              <code class="fxp">next("Betrag")</code> <code class="fxp">delta("Betrag")</code>
+              <code class="fxp">runningSum("Betrag")</code> <code class="fxp">rank("Punkte")</code>
+              <code class="fxp">percentOfTotal("Betrag")</code> <code class="fxp">total("Betrag")</code>
+              <code class="fxp">average("Betrag")</code> <code class="fxp">rowCount()</code><br>
+              <b>Eine andere Datenbank fragen</b> — ohne Verknüpfung:<br>
+              <code class="fxp">countWhere("Rechnungen", current.prop("Kunde") == prop("Name"))</code><br>
+              <code class="fxp">sumWhere("Rechnungen", current.prop("Kunde") == prop("Name"), current.prop("Betrag"))</code><br>
+              <code class="fxp">findRows("Rechnungen", current.prop("Offen"))</code>
+              <code class="fxp">firstWhere</code> <code class="fxp">lastWhere</code>
+              <code class="fxp">maxWhere</code> <code class="fxp">minWhere</code><br>
+              <b>Zufall</b> — Notion hat kein random():<br>
+              <code class="fxp">random()</code> <code class="fxp">randomBetween(1, 6)</code>
+              <code class="fxp">randomItem(prop("Karten"))</code> <code class="fxp">shuffle(prop("Karten"))</code><br>
+              <b>Werktage, Zeiträume, Zeitzonen</b>:<br>
+              <code class="fxp">businessDaysBetween(a, b)</code> <code class="fxp">addBusinessDays(d, 5)</code>
+              <code class="fxp">isWeekend(d)</code> <code class="fxp">isWorkday(d)</code>
+              <code class="fxp">startOfWeek(d)</code> <code class="fxp">endOfWeek(d)</code>
+              <code class="fxp">startOfMonth(d)</code> <code class="fxp">endOfMonth(d)</code>
+              <code class="fxp">startOfQuarter(d)</code> <code class="fxp">endOfQuarter(d)</code>
+              <code class="fxp">startOfYear(d)</code> <code class="fxp">endOfYear(d)</code>
+              <code class="fxp">quarter(d)</code> <code class="fxp">daysInMonth(d)</code>
+              <code class="fxp">isLeapYear(d)</code>
+              <code class="fxp">convertTimezone(d, "UTC", "Europe/Zurich")</code>
+              <code class="fxp">timezoneOffset(d, "Europe/Zurich")</code><br>
+              <b>Listen falten und gruppieren</b>:<br>
+              <code class="fxp">reduce(liste, 0, acc + current)</code>
+              <code class="fxp">sortBy(liste, current)</code>
+              <code class="fxp">groupBy(liste, current)</code>
+              <code class="fxp">groupKey(current)</code> <code class="fxp">groupItems(current)</code>
+              <code class="fxp">groupCount(current)</code><br>
+              <b>Statistik und Text</b>:<br>
+              <code class="fxp">stdDev(liste)</code> <code class="fxp">variance(liste)</code>
+              <code class="fxp">percentile(liste, 0.9)</code> <code class="fxp">clamp(x, 0, 10)</code>
+              <code class="fxp">roundTo(x, 2)</code> <code class="fxp">padStart("7", 3, "0")</code>
+              <code class="fxp">padEnd</code> <code class="fxp">startsWith</code>
+              <code class="fxp">endsWith</code> <code class="fxp">capitalize</code>
+              <code class="fxp">titleCase</code> <code class="fxp">slug</code>
+              <code class="fxp">initials</code> <code class="fxp">wordCount</code>
+              <code class="fxp">truncate(text, 20)</code> <code class="fxp">xor(a, b)</code>
+              <code class="fxp">boolean(x)</code>
+            </div>
+          </details>
         </div>
         <div style="padding:12px 18px; display:flex; gap:8px; justify-content:flex-end;
           border-top:1px solid var(--line)">
@@ -11662,7 +12359,7 @@ const Datenbank = (() => {
           if (!k) return null;
           if (coll.schema[k].type === 'relation') return seitenListe(wert(erste, k, coll));
           return wert(erste, k, coll);
-        }, fremdWert);
+        }, fremdWert, formelUmgebung(erste, coll));
         out.style.color = r.ok ? 'var(--c-green)' : 'var(--c-red)';
         out.textContent = r.ok ? '✓ Beispiel: ' + Formula.anzeige(r.wert) : '⚠ ' + r.fehler;
       } else {
@@ -12513,7 +13210,7 @@ const Datenbank = (() => {
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert,
            unterElementeAn, abhaengigkeitenAn, blockiertDurch, UNTER_KEYS, ABH_KEYS,
-           weitereEinstellungen, quellenVerwalten, seitenLayoutPanel };
+           weitereEinstellungen, quellenVerwalten, seitenLayoutPanel, dbMenue };
 })();
 
 </script>
@@ -13903,10 +14600,15 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         ['Strg Alt P', 'Präsentieren'], ['Strg [', 'Zurück'], ['Strg ]', 'Vorwärts'],
         ['Strg \\', 'Seitenleiste'], ['Strg Shift L', 'Hell / Dunkel'], ['Strg ,', 'Einstellungen'],
         ['Strg J', 'KI-Panel'], ['Strg F', 'Auf der Seite suchen'], ['Strg /', 'Diese Übersicht'],
+        ['Strg L', 'Link zur Seite kopieren'], ['Strg Shift U', 'Eine Ebene nach oben'],
+        ['Strg +', 'Schrift grösser'], ['Strg −', 'Schrift kleiner'], ['Strg 0', 'Schrift zurücksetzen'],
         ['Esc', 'Menü oder Auswahl schliessen']
       ]],
       ['Blöcke', [
-        ['/', 'Blockmenü'], ['Strg Alt 0-9', 'Blocktyp wechseln'], ['Tab', 'Einrücken'],
+        ['/', 'Blockmenü'],
+        ['Strg Shift 0-9', 'Blocktyp wechseln (wie Notion auf Windows)'],
+        ['Strg Alt 0-9', 'Blocktyp wechseln (wie Notion auf dem Mac)'],
+        ['Strg Shift E', 'Formelblock'], ['Tab', 'Einrücken'],
         ['Shift Tab', 'Ausrücken'], ['Strg D', 'Duplizieren'], ['Strg Shift ↑ ↓', 'Verschieben'],
         ['Strg Alt T', 'Alle Toggles auf/zu'], ['Strg Enter', 'Abhaken oder öffnen'],
         ['Shift Enter', 'Zeilenumbruch im Block'], ['Esc', 'Block auswählen']
@@ -22450,9 +23152,37 @@ const Status = (() => {
     ['f', 'Zeilen-Kontextmenü mit Sammelbearbeitung, Sammellöschen, Einfügen darüber und darunter']
   ]],
 
+  ['Teil 6b', 'Die Oberfläche am PC und am Telefon', [
+    ['f', 'Seitenleiste am PC: Arbeitsbereich, Suche, KI, Start, Posteingang, Einstellungen, Bereiche, unten Vorlagen/Importieren/Papierkorb/Neue Seite'],
+    ['f', 'Kopfzeile am PC: Zurück, Vorwärts, Pfad, Teilen, Kommentare, Verlauf, Favorit, ⋯'],
+    ['f', 'Seitenkopf: Cover mit Ändern und Neu positionieren, Symbol, Titel, Eigenschaften'],
+    ['f', 'Blockgriffe ⋮⋮ und + links neben jedem Block, nur beim Überfahren'],
+    ['f', 'Datenbankleiste: Reiter, +, Filter, Sortieren, Suchen, Automationen, ⋯, blauer Knopf Neu mit ▾'],
+    ['f', 'Am Telefon beginnt der Inhalt ganz links und füllt die Breite',
+          'die Seitenleiste liegt jetzt fest darüber statt im Fluss — das war ein echter Fehler'],
+    ['f', 'Kopfzeile am Telefon nur ☰, ‹, Seitentitel und ⋯ — wie in Notion'],
+    ['f', 'Teilen, Versionsverlauf, Kommentare und Automationen wandern am Telefon ins ⋯-Menü'],
+    ['f', 'Untere Leiste am Telefon: Suche, Pille „KI fragen", Neue Seite'],
+    ['f', 'Menüs fahren am Telefon als Blatt von unten hoch, mit Griff und rotem Löschen'],
+    ['f', 'Blockgriffe sind am Telefon aus, wie in Notion'],
+    ['f', 'Die Schublade fährt mit ☰ auf und schliesst beim Tippen daneben'],
+    ['t', 'Untere Tab-Leiste mit Start, Chats, Besprechungen, Posteingang',
+          'bei uns über die Schublade statt als eigene Leiste']
+  ]],
+
   ['Teil 6', 'Tastenkürzel und Einstellungen', [
-    ['t', '160 Tastenkürzel', 'über 70 umgesetzt, alle wichtigen dabei'],
-    ['f', 'Strg+Alt+0 bis 9 wandeln Blöcke um'],
+    ['t', '160 Tastenkürzel', 'über 80 umgesetzt; gegen Notions Hilfeseite abgeglichen'],
+    ['f', 'Strg+Umschalt+0 bis 9 wandeln Blöcke um — Notions Windows-Belegung',
+          'auch auf deutscher Tastatur, weil zusätzlich event.code gelesen wird'],
+    ['f', 'Strg+Alt+0 bis 9 gehen weiter — Notions Mac-Belegung'],
+    ['f', 'Strg+Umschalt+E setzt einen Formelblock'],
+    ['f', 'Strg+/ wandelt den Block um, Strg+L kopiert den Seitenlink'],
+    ['f', 'Strg+Umschalt+U geht eine Ebene in der Seitenhierarchie nach oben'],
+    ['f', 'Strg + und Strg − und Strg 0 ändern die Schriftgrösse'],
+    ['f', 'Alle 41 Slash-Wörter aus Notions Hilfeseite finden etwas',
+          'geprüft: text, plain, page, bullet, num, todo, toggle, div, quote, h1, #, … bis default'],
+    ['f', 'Elf Aktionen im Slash-Menü: turn, color, default, duplicate, moveto, delete, mention, date, reminder, emoji, comment'],
+    ['o', 'Strg+R und Strg+D füllen mehrere Tabellenzellen nach rechts und unten'],
     ['f', 'Strg+P und Strg+K öffnen die Suche'],
     ['f', 'Strg+[ zurück, Strg+] vorwärts, Strg+\\ Seitenleiste, Strg+Shift+L Hell/Dunkel'],
     ['f', 'Speichern ist unnötig — alles sichert automatisch'],
@@ -22470,7 +23200,9 @@ const Status = (() => {
   ]],
 
   ['Teil 7', 'Formelsprache und Filter', [
-    ['f', 'Alle in der Doku genannten Formelfunktionen laufen — 84 plus Methodenschreibweise'],
+    ['f', 'Alle 99 Merkmale der offiziellen Notion-Formelreferenz laufen',
+          'gemessen: 99/99 — 85 Funktionen in der Tabelle, dazu Sonderformen und Operatoren'],
+    ['f', 'formatNumber mit Währung, Prozent, Tausendertrennung und Stellenzahl'],
     ['f', 'Text mit + verketten, concat() nur für Listen'],
     ['f', 'Operatoren inklusive and, or, not, empty(), current und Fragezeichen-Doppelpunkt'],
     ['f', 'if, ifs, empty, equal, unequal, let und lets'],
@@ -22483,8 +23215,48 @@ const Status = (() => {
           '33 Typen in fünf Gruppen, dazu Google Drive, Figma, GitHub-Pull-Request und Zendesk'],
     ['f', 'Verknüpfung einseitig oder wechselseitig, mit Limit eine oder mehrere'],
     ['f', 'Zahl, Formel und Rollup als Zahl, Balken oder Ring anzeigen'],
-    ['f', 'Filteroperatoren je Typ'],
-    ['f', 'Filtergruppen mit UND/ODER, mehrere Ebenen tief']
+    ['f', 'Filteroperatoren je Typ — gegen Notions API-Referenz abgeglichen',
+          'URL, E-Mail und Telefon mit allen acht Textbedingungen; ID mit allen sechs Zahlenvergleichen'],
+    ['f', 'Datumsfilter inklusive letztes, dieses und nächstes Jahr sowie nächster Monat'],
+    ['f', 'Alle 21 Berechnungsarten unter der Spalte, passend je Eigenschaftstyp'],
+    ['f', 'Gruppen sortieren: manuell, A→Z, Z→A, meiste zuerst, wenigste zuerst',
+          'nach Anzahl kann Notion nicht'],
+    ['f', 'Filtergruppen mit UND/ODER, mehrere Ebenen tief'],
+    ['o', 'Verschachtelte Rollup-Filter any / every / none mit eigener Unterbedingung'],
+
+    /* --- Automationen: gegen Notions Hilfeseiten abgeglichen ------------- */
+    ['f', 'Auslöser „Seite hinzugefügt" und „Eigenschaft bearbeitet" wie in Notion',
+          'dazu sechs Auslöser, die Notion nicht hat'],
+    ['f', 'Aktionen Eigenschaft bearbeiten, Seiten bearbeiten in, Webhook senden'],
+    ['f', 'Knopf: Blöcke einfügen mit Position, Seite anlegen in, Seiten bearbeiten in, öffnen, Bestätigung'],
+    ['o', 'Wiederkehrender Auslöser „Alle X um HH:MM, ab …, bis …" mit Zeitzone'],
+    ['o', 'Aktion „Variablen festlegen" für alle folgenden Aktionen'],
+    ['o', 'Aktion „Seite anlegen in" auch als Automation, nicht nur am Knopf'],
+    ['o', 'Aktionen „Benachrichtigung senden" und „E-Mail senden"'],
+    ['o', 'Mehrere Auslöser mit „einer reicht" und „alle müssen"'],
+
+    /* --- Was über Notion hinausgeht ------------------------------------- */
+    ['f', 'Die Zeile im Verhältnis zu den anderen: rowNumber, previous, next, delta',
+          'Notion kann das nicht — dort sieht eine Formel nur ihre eigene Zeile'],
+    ['f', 'Laufende Summe, laufendes Maximum und Minimum: runningSum, runningMax, runningMin'],
+    ['f', 'Rang, Anteil am Gesamtwert, Gesamtsumme und Durchschnitt der Ansicht',
+          'rank, percentOfTotal, total, average, rowCount'],
+    ['f', 'Abfragen über eine ANDERE Datenbank ohne Verknüpfung',
+          'findRows, countWhere, sumWhere, firstWhere, lastWhere, maxWhere, minWhere'],
+    ['f', 'Zufall: random, randomBetween, randomItem, shuffle',
+          'Notion schreibt ausdrücklich, dass es kein random() hat'],
+    ['f', 'Werktage: businessDaysBetween, addBusinessDays, isWeekend, isWorkday'],
+    ['f', 'Zeiträume: startOf/endOf für Tag, Woche, Monat, Quartal und Jahr, quarter, daysInMonth, isLeapYear'],
+    ['f', 'Zeitzonen: convertTimezone, timezoneOffset, formatDate mit Zonenangabe'],
+    ['f', 'Listen falten und gruppieren: reduce, sortBy, groupBy mit groupKey/groupItems/groupCount'],
+    ['f', 'Statistik: stdDev, variance, percentile, clamp, roundTo'],
+    ['f', 'Text: padStart, padEnd, startsWith, endsWith, capitalize, titleCase, slug, initials, wordCount, truncate'],
+    ['f', 'Schutz vor Formeln, die sich selbst über runningSum oder rank aufrufen',
+          'wird sofort gemeldet statt stillschweigend 0 zu zeigen'],
+    ['f', 'Keine 15-Ebenen-Grenze wie bei Notion — es wird lokal gerechnet'],
+    ['o', 'Eigene Funktionen definieren (def istWerktag(d) = …)'],
+    ['o', 'Pivot-Ansicht: Zeilen × Spalten × Werte mit Zwischensummen'],
+    ['o', 'Datenvalidierung: required, unique, Regex, Statusübergangsregeln']
   ]],
 
   ['Teil 8', 'Automationen, Formulare, Diagramme', [
@@ -25238,7 +26010,7 @@ const UI = (() => {
     return d;
   };
 
-  return { menu, menuMitSuche, toast, emojiWaehlen, frage, banner };
+  return { menu, menuMitSuche, toast, emojiWaehlen, frage, banner, amTelefon };
 })();
 
 
@@ -25987,6 +26759,14 @@ const App = (() => {
       schalterZeile('wz-gesperrt', '🔒', 'Seite sperren', p.gesperrt) +
       '<button data-a="mitki"><span class="mi">✨</span>Mit KI verwenden<span class="ms">▸</span></button>' +
       '<hr>' +
+      /* Auf dem Telefon ist die Kopfzeile schmal wie in Notion: nur ☰, ‹,
+         Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar. */
+      (UI.amTelefon()
+        ? '<button data-a="teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
+          '<button data-a="verlauf"><span class="mi">🕘</span>Versionsverlauf</button>' +
+          '<button data-a="kopf-komm"><span class="mi">💬</span>Kommentare</button>' +
+          '<button data-a="auto"><span class="mi">⚡</span>Automationen</button><hr>'
+        : '') +
       `<button data-a="fav"><span class="mi">${p.favorite ? '★' : '☆'}</span>` +
       `${p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten'}</button>` +
       '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
@@ -26126,6 +26906,11 @@ const App = (() => {
 
       if (Werkzeuge.seitenMenueAktion(a, p)) return;
 
+      /* Die vier, die auf dem Telefon aus der Kopfzeile hierher gewandert sind */
+      if (a === 'teilen')    { Werkzeuge.teilenMenue(anker, p); return; }
+      if (a === 'verlauf')   { Werkzeuge.versionen(p); return; }
+      if (a === 'kopf-komm') { document.getElementById('btn-komm')?.click(); return; }
+      if (a === 'auto')      { document.getElementById('btn-auto')?.click(); return; }
       if (a === 'fav')   { Store.updateBlock(p.id, { favorite: !p.favorite }); zeichneBaum(); }
       if (a === 'klein') { Store.updateBlock(p.id, { small: !p.small }); zeichneSeite(); }
       if (a === 'breit') { Store.updateBlock(p.id, { wide: !p.wide }); zeichneSeite(); }
@@ -26957,6 +27742,44 @@ const App = (() => {
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); Verlauf.zurueck(); return; }
       if ((k === 'y') || (e.shiftKey && k === 'z')) { e.preventDefault(); Verlauf.vor(); return; }
       if (e.shiftKey && k === 'h') { e.preventDefault(); Auswahl.letzteFarbeAnwenden(); return; }
+
+      /* --- Was Notion sonst noch belegt ---------------------------------- */
+
+      /* Strg+L: Adresse dieser Seite kopieren */
+      if (k === 'l' && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        navigator.clipboard?.writeText(location.origin + location.pathname + '#' + aktuelleSeite());
+        UI.toast('Link zur Seite kopiert');
+        return;
+      }
+      /* Strg+Umschalt+U: eine Ebene nach oben in der Seitenhierarchie */
+      if (e.shiftKey && k === 'u') {
+        e.preventDefault();
+        const b = Store.getBlock(aktuelleSeite());
+        const eltern = b && b.parentId && Store.getBlock(b.parentId);
+        if (eltern) oeffne(eltern.id);
+        else UI.toast('Diese Seite liegt schon ganz oben');
+        return;
+      }
+      /* Strg+Alt+T: alle Toggles der Seite auf- oder zuklappen */
+      if (e.altKey && k === 't') { e.preventDefault(); Blocks.alleToggles(); return; }
+      /* Strg + Plus / Minus / 0: Textgrösse — Notion zoomt, wir vergrössern
+         die Schrift, weil das im Browser dasselbe Ziel erreicht. */
+      if (!e.shiftKey && (k === '+' || k === '-' || k === '0') && !e.altKey) {
+        const stufen = ['klein', 'normal', 'gross'];
+        const jetzt = Store.getMeta('schriftgroesse', 'normal');
+        let neu = jetzt;
+        if (k === '+') neu = stufen[Math.min(2, stufen.indexOf(jetzt) + 1)];
+        if (k === '-') neu = stufen[Math.max(0, stufen.indexOf(jetzt) - 1)];
+        if (k === '0') neu = 'normal';
+        if (neu !== jetzt) {
+          e.preventDefault();
+          Store.setMeta('schriftgroesse', neu);
+          Einstellungen.anwenden();
+          UI.toast('Schrift: ' + neu);
+        }
+        return;
+      }
     });
 
     /* Esc schliesst Menüs und Overlays */

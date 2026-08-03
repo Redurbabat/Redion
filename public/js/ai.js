@@ -475,6 +475,13 @@ const KI = (() => {
     if (!zustand.modell) throw new Error('Es ist noch kein Modell gewählt.');
     const n = ordne(nachrichten);
 
+    /* Ins Protokoll — ohne den Inhalt der Frage. Was jemand die KI fragt,
+       gehört ihm; dass er sie gefragt hat und mit welchem Modell, gehört
+       in die Nachvollziehbarkeit. */
+    if (window.Protokoll)
+      Protokoll.notieren('ki', 'KI gefragt (' + (zustand.quelle || 'lokal') + ')',
+        { wie: zustand.modell || '' });
+
     if (zustand.quelle === 'ollama') {
       for await (const t of ollamaFragen(n, zustand.modell)) beiText(t);
       return;
@@ -725,7 +732,7 @@ const KI = (() => {
   };
 
   const SYSTEM =
-    'Du bist ein Assistent in einer lokalen Notizen-App. Du antwortest auf Deutsch, ' +
+    'Du bist der Assistent in Redion, einer lokalen Notion-App. Du antwortest auf Deutsch, ' +
     'knapp und klar. Wenn dir Ausschnitte aus dem Arbeitsbereich mitgegeben werden, ' +
     'beziehst du dich ausschliesslich darauf und erfindest nichts dazu. ' +
     'Steht die Antwort nicht in den Ausschnitten, sagst du das offen. ' +

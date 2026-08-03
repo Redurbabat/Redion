@@ -26,20 +26,20 @@ const Blocks = (() => {
    * ======================================================================*/
   const TYPEN = [
     /* --- Grundlegende Blöcke ------------------------------------------- */
-    { id:'text',    name:'Text',              icon:'¶',  gruppe:'Grundlegend', cmd:['text','absatz','p'],            kurz:'Ctrl+Alt+0', ph:'Tippe etwas, oder drücke / für Befehle' },
-    { id:'h1',      name:'Überschrift 1',     icon:'H₁', gruppe:'Grundlegend', cmd:['h1','ueberschrift1','titel'],   kurz:'Ctrl+Alt+1', md:'#',    ph:'Überschrift 1' },
-    { id:'h2',      name:'Überschrift 2',     icon:'H₂', gruppe:'Grundlegend', cmd:['h2','ueberschrift2'],           kurz:'Ctrl+Alt+2', md:'##',   ph:'Überschrift 2' },
-    { id:'h3',      name:'Überschrift 3',     icon:'H₃', gruppe:'Grundlegend', cmd:['h3','ueberschrift3'],           kurz:'Ctrl+Alt+3', md:'###',  ph:'Überschrift 3' },
-    { id:'todo',    name:'Aufgabenliste',     icon:'☑',  gruppe:'Grundlegend', cmd:['todo','aufgabe','checkbox'],    kurz:'Ctrl+Alt+4', md:['[]','[ ]'], ph:'Aufgabe' },
-    { id:'bullet',  name:'Aufzählungsliste',  icon:'•',  gruppe:'Grundlegend', cmd:['bullet','liste','aufzaehlung'], kurz:'Ctrl+Alt+5', md:['-','*','+'], ph:'Listenpunkt' },
-    { id:'number',  name:'Nummerierte Liste', icon:'1.', gruppe:'Grundlegend', cmd:['number','nummeriert'],          kurz:'Ctrl+Alt+6', md:'1.',   ph:'Listenpunkt' },
-    { id:'toggle',  name:'Toggle-Liste',      icon:'▸',  gruppe:'Grundlegend', cmd:['toggle','einklappbar'],         kurz:'Ctrl+Alt+7', md:'>',    ph:'Toggle' },
+    { id:'text',    name:'Text',              icon:'¶',  gruppe:'Grundlegend', cmd:['text','absatz','p','plain'],    kurz:'Ctrl+Shift+0', ph:'Tippe etwas, oder drücke / für Befehle' },
+    { id:'h1',      name:'Überschrift 1',     icon:'H₁', gruppe:'Grundlegend', cmd:['h1','ueberschrift1','titel','#'], kurz:'Ctrl+Shift+1', md:'#',    ph:'Überschrift 1' },
+    { id:'h2',      name:'Überschrift 2',     icon:'H₂', gruppe:'Grundlegend', cmd:['h2','ueberschrift2','##'],      kurz:'Ctrl+Shift+2', md:'##',   ph:'Überschrift 2' },
+    { id:'h3',      name:'Überschrift 3',     icon:'H₃', gruppe:'Grundlegend', cmd:['h3','ueberschrift3','###'],     kurz:'Ctrl+Shift+3', md:'###',  ph:'Überschrift 3' },
+    { id:'todo',    name:'Aufgabenliste',     icon:'☑',  gruppe:'Grundlegend', cmd:['todo','aufgabe','checkbox'],    kurz:'Ctrl+Shift+4', md:['[]','[ ]'], ph:'Aufgabe' },
+    { id:'bullet',  name:'Aufzählungsliste',  icon:'•',  gruppe:'Grundlegend', cmd:['bullet','liste','aufzaehlung'], kurz:'Ctrl+Shift+5', md:['-','*','+'], ph:'Listenpunkt' },
+    { id:'number',  name:'Nummerierte Liste', icon:'1.', gruppe:'Grundlegend', cmd:['number','nummeriert','num'],    kurz:'Ctrl+Shift+6', md:'1.',   ph:'Listenpunkt' },
+    { id:'toggle',  name:'Toggle-Liste',      icon:'▸',  gruppe:'Grundlegend', cmd:['toggle','einklappbar'],         kurz:'Ctrl+Shift+7', md:'>',    ph:'Toggle' },
     { id:'toggle-h1', name:'Toggle-Überschrift 1', icon:'▸H₁', gruppe:'Grundlegend', cmd:['toggle h1','einklappbare ueberschrift 1'] },
     { id:'toggle-h2', name:'Toggle-Überschrift 2', icon:'▸H₂', gruppe:'Grundlegend', cmd:['toggle h2','einklappbare ueberschrift 2'] },
     { id:'toggle-h3', name:'Toggle-Überschrift 3', icon:'▸H₃', gruppe:'Grundlegend', cmd:['toggle h3','einklappbare ueberschrift 3'] },
     { id:'quote',   name:'Zitat',             icon:'❝',  gruppe:'Grundlegend', cmd:['quote','zitat'],                md:'"',    ph:'Zitat' },
     { id:'callout', name:'Callout',           icon:'💡', gruppe:'Grundlegend', cmd:['callout','hinweis'],            ph:'Hinweis' },
-    { id:'divider', name:'Trennlinie',        icon:'—',  gruppe:'Grundlegend', cmd:['divider','trennlinie','hr'],    md:['---','***','___'] },
+    { id:'divider', name:'Trennlinie',        icon:'—',  gruppe:'Grundlegend', cmd:['divider','trennlinie','hr','div'], md:['---','***','___'] },
 
     /* --- Datenbanken ---------------------------------------------------- */
     { id:'db-table',    name:'Tabelle',    icon:'▦', gruppe:'Datenbank', cmd:['tabelle','table','datenbank'] },
@@ -52,23 +52,23 @@ const Blocks = (() => {
     { id:'image',    name:'Bild',       icon:'🖼', gruppe:'Medien', cmd:['bild','image','foto'] },
     { id:'video',    name:'Video',      icon:'🎬', gruppe:'Medien', cmd:['video'] },
     { id:'audio',    name:'Audio',      icon:'🔊', gruppe:'Medien', cmd:['audio','ton'] },
-    { id:'file',     name:'Datei',      icon:'📎', gruppe:'Medien', cmd:['datei','file','anhang'] },
-    { id:'bookmark', name:'Lesezeichen',icon:'🔖', gruppe:'Medien', cmd:['bookmark','lesezeichen','link'] },
+    { id:'file',     name:'Datei',      icon:'📎', gruppe:'Medien', cmd:['datei','file','anhang','pdf'] },
+    { id:'bookmark', name:'Lesezeichen',icon:'🔖', gruppe:'Medien', cmd:['bookmark','lesezeichen','link','book'] },
     { id:'embed',    name:'Einbetten',  icon:'⧉',  gruppe:'Medien', cmd:['embed','einbetten','iframe'] },
 
     /* --- Erweitert -------------------------------------------------------- */
-    { id:'code',       name:'Code',              icon:'⌨',  gruppe:'Erweitert', cmd:['code'], kurz:'Ctrl+Alt+8', md:'```', ph:'Code' },
-    { id:'equation',   name:'Formel',            icon:'∑',  gruppe:'Erweitert', cmd:['formel','equation','math','latex'], md:'$$', ph:'E = mc^2' },
+    { id:'code',       name:'Code',              icon:'⌨',  gruppe:'Erweitert', cmd:['code'], kurz:'Ctrl+Shift+8', md:'```', ph:'Code' },
+    { id:'equation',   name:'Formel',            icon:'∑',  gruppe:'Erweitert', cmd:['formel','equation','math','latex'], kurz:'Ctrl+Shift+E', md:'$$', ph:'E = mc^2' },
     { id:'table',      name:'Einfache Tabelle',  icon:'⊞',  gruppe:'Erweitert', cmd:['tabelle einfach','simple table','raster'] },
     { id:'toc',        name:'Inhaltsverzeichnis',icon:'≡',  gruppe:'Erweitert', cmd:['inhaltsverzeichnis','toc'] },
-    { id:'breadcrumb', name:'Pfad',              icon:'⌂',  gruppe:'Erweitert', cmd:['pfad','breadcrumb'] },
+    { id:'breadcrumb', name:'Pfad',              icon:'⌂',  gruppe:'Erweitert', cmd:['pfad','breadcrumb','bread'] },
     { id:'columns',    name:'Zwei Spalten',      icon:'⫿',  gruppe:'Erweitert', cmd:['spalten','columns'] },
     { id:'columns3',   name:'Drei Spalten',      icon:'⫼',  gruppe:'Erweitert', cmd:['dreispalten','columns3'] },
-    { id:'page',       name:'Unterseite',        icon:'📄', gruppe:'Erweitert', cmd:['seite','page','unterseite'], kurz:'Ctrl+Alt+9' },
+    { id:'page',       name:'Unterseite',        icon:'📄', gruppe:'Erweitert', cmd:['seite','page','unterseite'], kurz:'Ctrl+Shift+9' },
     { id:'pageref',    name:'Link zu Seite',     icon:'↗',  gruppe:'Erweitert', cmd:['link zu seite','verweis','klon','pageref'] },
     { id:'synced',     name:'Synchronisierter Block', icon:'⇄', gruppe:'Erweitert', cmd:['synced','synchron','spiegel'] },
     { id:'linkeddb',   name:'Verknüpfte Ansicht', icon:'⧉', gruppe:'Datenbank', cmd:['verknuepfte ansicht','linked','ansicht einer datenbank'] },
-    { id:'button',     name:'Knopf',             icon:'🔘', gruppe:'Erweitert', cmd:['button','knopf','vorlagenknopf'] },
+    { id:'button',     name:'Knopf',             icon:'🔘', gruppe:'Erweitert', cmd:['button','knopf','vorlagenknopf','template'] },
     { id:'html',       name:'HTML',              icon:'</>',gruppe:'Erweitert', cmd:['html'] },
 
     /* --- Wissen ------------------------------------------------------------ */
@@ -82,7 +82,36 @@ const Blocks = (() => {
     { id:'ai-summary', name:'KI: Zusammenfassen',    icon:'✨', gruppe:'KI', cmd:['zusammenfassen','summary'] },
     { id:'ai-todo',    name:'KI: Aufgaben ableiten', icon:'✨', gruppe:'KI', cmd:['aufgaben','actionitems'] },
     { id:'ai-translate',name:'KI: Übersetzen',       icon:'✨', gruppe:'KI', cmd:['uebersetzen','translate'] },
-    { id:'ai-improve', name:'KI: Text verbessern',   icon:'✨', gruppe:'KI', cmd:['verbessern','umschreiben','improve'] }
+    { id:'ai-improve', name:'KI: Text verbessern',   icon:'✨', gruppe:'KI', cmd:['verbessern','umschreiben','improve'] },
+
+    /* --- Aktionen -------------------------------------------------------
+     * Notions Slash-Menü kann mehr als Blöcke einfügen: es kann den Block
+     * auch umwandeln, färben, duplizieren, verschieben und löschen, und es
+     * kann Erwähnungen, Daten und Emoji einfügen. Diese Einträge legen
+     * nichts an — sie tun etwas. Deshalb tragen sie `aktion`.
+     * ------------------------------------------------------------------ */
+    { id:'a-turn',    name:'Umwandeln in …',        icon:'⇄', gruppe:'Aktionen', aktion:'turn',
+      cmd:['turn','umwandeln','wechseln'] },
+    { id:'a-color',   name:'Farbe ändern',          icon:'🎨', gruppe:'Aktionen', aktion:'color',
+      cmd:['color','farbe','highlight','hintergrund','blue','blau','rot','red','gruen','green','gelb','yellow'] },
+    { id:'a-default', name:'Farbe entfernen',       icon:'▢', gruppe:'Aktionen', aktion:'default',
+      cmd:['default','standard','farbe entfernen'] },
+    { id:'a-dup',     name:'Block duplizieren',     icon:'⧉', gruppe:'Aktionen', aktion:'dup',
+      kurz:'Ctrl+D', cmd:['duplicate','duplizieren','kopieren'] },
+    { id:'a-moveto',  name:'Verschieben nach …',    icon:'➦', gruppe:'Aktionen', aktion:'moveto',
+      cmd:['moveto','verschieben','move'] },
+    { id:'a-del',     name:'Block löschen',         icon:'🗑', gruppe:'Aktionen', aktion:'del',
+      kurz:'Entf', cmd:['delete','loeschen','entfernen'] },
+    { id:'a-mention', name:'Person oder Seite erwähnen', icon:'@', gruppe:'Aktionen', aktion:'mention',
+      kurz:'@', cmd:['mention','erwaehnen','erwaehnung'] },
+    { id:'a-date',    name:'Datum einfügen',        icon:'📆', gruppe:'Aktionen', aktion:'date',
+      kurz:'@Datum', cmd:['date','datum','heute','today'] },
+    { id:'a-remind',  name:'Erinnerung',            icon:'⏰', gruppe:'Aktionen', aktion:'remind',
+      kurz:'@remind', cmd:['reminder','remind','erinnerung'] },
+    { id:'a-emoji',   name:'Emoji',                 icon:'🙂', gruppe:'Aktionen', aktion:'emoji',
+      kurz:':', cmd:['emoji','smiley'] },
+    { id:'a-komm',    name:'Kommentar',             icon:'💬', gruppe:'Aktionen', aktion:'komm',
+      kurz:'Ctrl+Shift+M', cmd:['comment','kommentar'] }
   ];
 
   /* ========================================================================
@@ -348,18 +377,54 @@ const Blocks = (() => {
         sprache.addEventListener('change', () => Store.updateBlock(block.id, { lang: sprache.value }));
         const ct = machText('Code …');
         ct.textContent = block.text || '';   /* im Codeblock kein Inline-HTML */
+        if (block.zeilenUm) ct.classList.add('umbruch');
+
+        /* Zeilennummern — Notion hat sie nicht, ab zwanzig Zeilen Code
+           sucht man sich ohne sie die Stelle mühsam zusammen. */
+        const nummern = document.createElement('div');
+        nummern.className = 'code-nr';
+        const zaehleNummern = () => {
+          const t = Store.getBlock(block.id)?.text || '';
+          const n = Math.max(1, t.split('\n').length);
+          nummern.innerHTML = Array.from({ length: n }, (_, i) => `<i>${i + 1}</i>`).join('');
+        };
+        const nrAn = block.zeilennr !== false;
+        if (nrAn) wrap.classList.add('mit-nr');
 
         /* Eingefärbt anzeigen, solange niemand darin schreibt. */
         const faerbe = () => {
+          zaehleNummern();
           if (document.activeElement === ct) return;
           const t = Store.getBlock(block.id)?.text || '';
           ct.innerHTML = Zusatz.einfaerben(t, block.lang || '');
         };
         ct.addEventListener('focus', () => { ct.textContent = Store.getBlock(block.id)?.text || ''; });
         ct.addEventListener('blur', faerbe);
+        ct.addEventListener('input', zaehleNummern);
         sprache.addEventListener('change', () => setTimeout(faerbe, 0));
         setTimeout(faerbe, 0);
+
+        /* Werkzeuge oben rechts: kopieren, Nummern, Umbruch */
+        const werk = document.createElement('div');
+        werk.className = 'code-werk';
+        werk.innerHTML =
+          '<button data-a="kopieren" title="Code kopieren">⧉</button>' +
+          `<button data-a="nr" title="Zeilennummern" class="${nrAn ? 'an' : ''}">№</button>` +
+          `<button data-a="um" title="Lange Zeilen umbrechen" class="${block.zeilenUm ? 'an' : ''}">↩</button>`;
+        werk.addEventListener('click', e => {
+          const b2 = e.target.closest('button[data-a]');
+          if (!b2) return;
+          if (b2.dataset.a === 'kopieren') {
+            navigator.clipboard?.writeText(Store.getBlock(block.id)?.text || '');
+            UI.toast('Code kopiert'); return;
+          }
+          if (b2.dataset.a === 'nr') { Store.updateBlock(block.id, { zeilennr: !nrAn }); App.zeichneSeite(); return; }
+          if (b2.dataset.a === 'um') { Store.updateBlock(block.id, { zeilenUm: !block.zeilenUm }); App.zeichneSeite(); }
+        });
+
         wrap.appendChild(sprache);
+        wrap.appendChild(werk);
+        if (nrAn) wrap.appendChild(nummern);
         wrap.appendChild(ct);
         box.appendChild(wrap);
         break;
@@ -395,6 +460,7 @@ const Blocks = (() => {
                           'display:flex; align-items:center; gap:8px';
         a.innerHTML = `<span style="font-size:18px">${block.icon || '📄'}</span>` +
                       `<span style="border-bottom:1px solid var(--line)">${esc(block.text || 'Ohne Titel')}</span>`;
+        a.dataset.seite = block.id;
         a.addEventListener('click', () => App.oeffne(block.id));
         box.appendChild(a);
         break;
@@ -452,6 +518,7 @@ const Blocks = (() => {
           a.innerHTML = `<span style="font-size:17px">${ziel.icon || '📄'}</span>` +
                         `<span class="pr-t">${esc(ziel.text || 'Ohne Titel')}</span>` +
                         `<span class="pr-i" title="Verweis — die Seite liegt woanders">↗</span>`;
+          a.dataset.seite = ziel.id;
           a.addEventListener('click', () => App.oeffne(ziel.id));
         } else {
           a.innerHTML = '<span class="pr-i">↗</span><span style="color:var(--text-faint)">Seite auswählen …</span>';
@@ -473,9 +540,42 @@ const Blocks = (() => {
           b.textContent = 'Quelle wählen …';
           b.addEventListener('click', () => quelleWaehlen(block));
           w.appendChild(b);
+        } else if (block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
+          /* Ein Spiegel, der sich selbst enthält, würde endlos zeichnen. */
+          w.innerHTML = '<div class="sy-kopf sy-warn">⇄ Diese Quelle enthält den Spiegel selbst — ' +
+                        'das würde sich endlos wiederholen.</div>';
+          const b = document.createElement('button');
+          b.className = 'sy-waehl';
+          b.textContent = 'Andere Quelle wählen …';
+          b.addEventListener('click', () => quelleWaehlen(block));
+          w.appendChild(b);
         } else {
-          w.innerHTML = `<div class="sy-kopf">⇄ synchron mit „${esc(quelle.text || 'Seite')}"</div>`;
+          const kopien = Object.values(Store.cache.blocks)
+            .filter(b2 => b2.type === 'synced' && b2.quelle === block.quelle && b2.alive).length;
+          w.innerHTML =
+            `<div class="sy-kopf">⇄ synchron mit „${esc(quelle.text || 'Seite')}"` +
+            `<span class="sy-zahl" title="So viele Stellen zeigen denselben Inhalt">${kopien} ×</span>` +
+            '<button data-a="sy-quelle" title="Zur Quelle springen">↗</button>' +
+            '<button data-a="sy-neu" title="Andere Quelle wählen">⇄</button>' +
+            '<button data-a="sy-los" title="Verbindung lösen — der Inhalt bleibt als eigene Kopie">⛓</button>' +
+            '</div>';
           Store.childrenOf(quelle.id).forEach(k => w.appendChild(render(k, tiefe + 1)));
+          w.querySelector('.sy-kopf').addEventListener('click', e => {
+            const b2 = e.target.closest('button[data-a]');
+            if (!b2) return;
+            if (b2.dataset.a === 'sy-quelle') { App.oeffne(quelle.type === 'page' ? quelle.id : quelle.parentId); return; }
+            if (b2.dataset.a === 'sy-neu')    { quelleWaehlen(block); return; }
+            if (b2.dataset.a === 'sy-los') {
+              /* Inhalt echt kopieren, danach ist es ein normaler Absatzblock. */
+              const eltern = block.parentId;
+              const nach = Store.childrenOf(eltern).findIndex(x => x.id === block.id);
+              Store.childrenOf(quelle.id).forEach((k, i) =>
+                Store.baumEinfuegen(Store.baum(k.id), eltern, nach + 1 + i));
+              Store.trashBlock(block.id);
+              UI.toast('Verbindung gelöst — der Inhalt steht jetzt eigenständig hier');
+              App.zeichneSeite();
+            }
+          });
         }
         box.appendChild(w);
         break;
@@ -628,6 +728,28 @@ const Blocks = (() => {
   };
 
   /* --- Medienblöcke ------------------------------------------------------- */
+  /** Steckt der Spiegelblock selbst irgendwo in der Quelle? Dann bricht es. */
+  const quelleImInneren = (quelleId, blockId, tiefe = 0) => {
+    if (tiefe > 8) return true;
+    return Store.childrenOf(quelleId).some(k =>
+      k.id === blockId ||
+      (k.type === 'synced' && k.quelle === blockId) ||
+      quelleImInneren(k.id, blockId, tiefe + 1));
+  };
+
+  /** Ein Bild gross ansehen — Klick schliesst wieder. */
+  const bildGross = (src, text) => {
+    const o = document.createElement('div');
+    o.className = 'overlay bild-voll';
+    o.innerHTML = `<img src="${esc(src)}" alt="">` +
+                  (text ? `<div class="bv-text">${esc(text)}</div>` : '');
+    o.addEventListener('click', () => o.remove());
+    document.addEventListener('keydown', function esc2(e) {
+      if (e.key === 'Escape') { o.remove(); document.removeEventListener('keydown', esc2); }
+    });
+    document.body.appendChild(o);
+  };
+
   const medienBlock = (block) => {
     const w = document.createElement('div');
     w.style.width = '100%';
@@ -665,9 +787,56 @@ const Blocks = (() => {
     }
 
     if (block.type === 'image') {
+      /* Grösse und Ausrichtung — Notion kann nur ziehen, hier gibt es
+         zusätzlich feste Stufen und eine Ausrichtung je Bild. */
+      const rahmen = document.createElement('div');
+      rahmen.className = 'bild-rahmen aus-' + (block.ausricht || 'links');
       const i = document.createElement('img');
-      i.src = block.src; i.alt = block.text || '';
-      w.appendChild(i);
+      i.src = block.src; i.alt = block.caption || block.text || '';
+      i.style.width = (block.breite || 100) + '%';
+      i.addEventListener('click', () => bildGross(block.src, block.caption));
+      rahmen.appendChild(i);
+
+      const werk = document.createElement('div');
+      werk.className = 'bild-werk';
+      werk.innerHTML =
+        [['25','S'],['50','M'],['75','L'],['100','Voll']].map(([b2, n]) =>
+          `<button data-b="${b2}" class="${String(block.breite || 100) === b2 ? 'an' : ''}">${n}</button>`).join('') +
+        '<span class="bw-trenn"></span>' +
+        [['links','⭰'],['mitte','⭤'],['rechts','⭲']].map(([a2, ic]) =>
+          `<button data-aus="${a2}" class="${(block.ausricht || 'links') === a2 ? 'an' : ''}">${ic}</button>`).join('') +
+        '<span class="bw-trenn"></span><button data-a="voll" title="Gross ansehen">⛶</button>';
+      werk.addEventListener('click', e => {
+        const b2 = e.target.closest('button');
+        if (!b2) return;
+        if (b2.dataset.b)    { Store.updateBlock(block.id, { breite: +b2.dataset.b }); App.zeichneSeite(); return; }
+        if (b2.dataset.aus)  { Store.updateBlock(block.id, { ausricht: b2.dataset.aus }); App.zeichneSeite(); return; }
+        if (b2.dataset.a === 'voll') bildGross(block.src, block.caption);
+      });
+      rahmen.appendChild(werk);
+
+      /* Rechter Rand zum Ziehen */
+      const griff = document.createElement('span');
+      griff.className = 'bild-griff';
+      griff.addEventListener('pointerdown', ev => {
+        ev.preventDefault();
+        const start = ev.clientX;
+        const b0 = i.getBoundingClientRect().width;
+        const ganz = rahmen.getBoundingClientRect().width || 1;
+        const zug = (e2) => {
+          const proz = Math.max(10, Math.min(100, (b0 + (e2.clientX - start)) / ganz * 100));
+          i.style.width = proz + '%';
+        };
+        const stop = () => {
+          removeEventListener('pointermove', zug);
+          removeEventListener('pointerup', stop);
+          Store.updateBlock(block.id, { breite: Math.round(parseFloat(i.style.width)) });
+        };
+        addEventListener('pointermove', zug);
+        addEventListener('pointerup', stop);
+      });
+      rahmen.appendChild(griff);
+      w.appendChild(rahmen);
     } else if (block.type === 'video') {
       const v = document.createElement('video');
       v.src = block.src; v.controls = true; v.style.maxWidth = '100%';
@@ -677,12 +846,41 @@ const Blocks = (() => {
       a.src = block.src; a.controls = true; a.style.width = '100%';
       w.appendChild(a);
     } else if (block.type === 'file') {
-      const a = document.createElement('a');
-      a.href = block.src; a.target = '_blank'; a.download = '';
-      a.style.cssText = 'display:flex; gap:10px; padding:12px 14px; background:var(--bg-card); ' +
-                        'border-radius:6px; color:var(--text); text-decoration:none; align-items:center';
-      a.innerHTML = `<span>📎</span><span>${esc(block.text || block.src)}</span>`;
-      w.appendChild(a);
+      const istPdf = /\.pdf(\?|$)/i.test(block.src) || /^data:application\/pdf/i.test(block.src);
+      const zeile = document.createElement('div');
+      zeile.className = 'datei-zeile';
+      zeile.innerHTML =
+        `<span>${istPdf ? '📕' : '📎'}</span>` +
+        `<a href="${esc(block.src)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>` +
+        (istPdf ? `<button data-a="pdf">${block.pdfAuf ? 'Vorschau zu' : 'Vorschau'}</button>` : '');
+      zeile.addEventListener('click', e => {
+        if (!e.target.closest('[data-a="pdf"]')) return;
+        Store.updateBlock(block.id, { pdfAuf: !block.pdfAuf });
+        App.zeichneSeite();
+      });
+      w.appendChild(zeile);
+      /* PDF gleich hier ansehen — Notion zeigt nur einen Anhang zum Laden. */
+      if (istPdf && block.pdfAuf) {
+        const rahmen = document.createElement('div');
+        rahmen.className = 'pdf-rahmen';
+        const f = document.createElement('iframe');
+        f.src = block.src;
+        f.title = block.text || 'PDF';
+        rahmen.appendChild(f);
+        const fuss = document.createElement('div');
+        fuss.className = 'pdf-fuss';
+        fuss.innerHTML = '<button data-h="420">klein</button><button data-h="700">gross</button>' +
+                         `<a href="${esc(block.src)}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
+        fuss.addEventListener('click', e => {
+          const b2 = e.target.closest('button[data-h]');
+          if (!b2) return;
+          Store.updateBlock(block.id, { pdfHoehe: +b2.dataset.h });
+          App.zeichneSeite();
+        });
+        rahmen.style.height = (block.pdfHoehe || 420) + 'px';
+        w.appendChild(rahmen);
+        w.appendChild(fuss);
+      }
     } else if (block.type === 'bookmark') {
       const a = document.createElement('a');
       a.href = block.src; a.target = '_blank'; a.rel = 'noopener';
@@ -726,13 +924,44 @@ const Blocks = (() => {
     const inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = { image:'image/*', video:'video/*', audio:'audio/*' }[block.type] || '*/*';
-    inp.addEventListener('change', () => {
+    inp.addEventListener('change', async () => {
       const f = inp.files[0];
       if (!f) return;
-      if (f.size > 12 * 1024 * 1024) {
-        UI.toast('Die Datei ist größer als 12 MB. Das würde den lokalen Speicher sprengen.');
+
+      /* --- Grosse Dateien gehen in Stücken --------------------------------
+       * Bis 12 MB war früher Schluss, weil eine Data-URL vollständig im
+       * Arbeitsspeicher liegt und beim Kodieren um ein Drittel wächst. In
+       * Stücken abgelegt geht es bis 500 MB — und der Block trägt dann nur
+       * noch die Kennung, nicht die Datei selbst.
+       * ------------------------------------------------------------------ */
+      if (window.Dateien && Dateien.lohntSich(f.size)) {
+        if (f.size > Dateien.GRENZE) {
+          UI.toast('Die Datei ist grösser als ' +
+                   Dateien.groesseText(Dateien.GRENZE) + '. So viel hält der Browser nicht.');
+          return;
+        }
+        const melder = UI.toast('Wird abgelegt … 0 %', 60000);
+        try {
+          const satz = await Dateien.ablegen(f, { blockId: block.id,
+            beiFortschritt: (anteil) => {
+              if (melder && melder.textContent !== undefined)
+                melder.textContent = 'Wird abgelegt … ' + Math.round(anteil * 100) + ' %';
+            } });
+          const url = await Dateien.adresse(satz.id);
+          Store.updateBlock(block.id, { src: url, dateiId: satz.id, text: f.name });
+          if (melder && melder.remove) melder.remove();
+          App.zeichneSeite();
+          UI.toast('„' + f.name + '" abgelegt (' + Dateien.groesseText(f.size) +
+                   ' in ' + satz.teile + ' Stücken)');
+        } catch (e) {
+          if (melder && melder.remove) melder.remove();
+          UI.toast('Ging nicht: ' + e.message);
+        }
         return;
       }
+
+      /* Kleine Dateien gehen weiter den kurzen Weg — für ein Bild von 40 KB
+         wäre der Apparat oben Unfug. */
       const r = new FileReader();
       r.onload = () => {
         Store.updateBlock(block.id, { src: r.result, text: f.name });
@@ -745,29 +974,95 @@ const Blocks = (() => {
   };
 
   /* --- Inhaltsverzeichnis ------------------------------------------------- */
+  /* Inhaltsverzeichnis — Redion sucht die Überschriften auf der ganzen Seite,
+     also auch in Toggles, Spalten und Callouts, nimmt Toggle-Überschriften mit,
+     kann durchnummerieren und hebt hervor, wo man gerade steht. Notions
+     Verzeichnis kennt nur die oberste Ebene. */
+  const TOC_STUFEN = { h1: 1, h2: 2, h3: 3, 'toggle-h1': 1, 'toggle-h2': 2, 'toggle-h3': 3 };
+
+  const ueberschriftenDerSeite = (seitenId) => {
+    const gefunden = [];
+    const lauf = (id, tiefe) => {
+      if (tiefe > 6) return;
+      Store.childrenOf(id).forEach(k => {
+        if (k.type === 'page') return;              /* Unterseiten haben ihr eigenes */
+        if (TOC_STUFEN[k.type]) gefunden.push({ block: k, stufe: TOC_STUFEN[k.type] });
+        if (['toggle','toggle-h1','toggle-h2','toggle-h3','callout','columns','columns3',
+             'column','quote'].includes(k.type) || k.type === 'spalte')
+          lauf(k.id, tiefe + 1);
+      });
+    };
+    lauf(seitenId, 0);
+    return gefunden;
+  };
+
   const inhaltsverzeichnis = (block) => {
     const d = document.createElement('div');
-    d.className = 'ct';
+    d.className = 'ct toc-liste';
     const seite = Store.getBlock(block.parentId);
-    const kinder = seite ? Store.childrenOf(seite.id) : [];
-    const stufen = { h1: 'lvl1', h2: 'lvl2', h3: 'lvl3' };
-    let leer = true;
-    kinder.forEach(k => {
-      if (!stufen[k.type]) return;
-      leer = false;
+    const liste = seite ? ueberschriftenDerSeite(seite.id) : [];
+    const nummern = block.tocNummern === true;
+
+    if (!liste.length) {
+      d.innerHTML = '<span style="color:var(--text-faint); font-size:14px">' +
+                    'Noch keine Überschriften auf dieser Seite</span>';
+      return d;
+    }
+
+    const zaehler = [0, 0, 0];
+    liste.forEach(({ block: k, stufe }) => {
       const a = document.createElement('a');
-      a.className = stufen[k.type];
-      a.textContent = k.text || 'Ohne Titel';
+      a.className = 'lvl' + stufe;
+      a.dataset.ziel = k.id;
+      let text = k.text || 'Ohne Titel';
+      if (nummern) {
+        zaehler[stufe - 1]++;
+        for (let i = stufe; i < 3; i++) zaehler[i] = 0;
+        text = zaehler.slice(0, stufe).join('.') + '  ' + text;
+      }
+      a.textContent = text;
       a.addEventListener('click', () => {
         const ziel = document.querySelector(`[data-bid="${k.id}"]`);
-        if (ziel) ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (ziel) {
+          ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          ziel.classList.add('hebe-hervor');
+          setTimeout(() => ziel.classList.remove('hebe-hervor'), 1400);
+        }
       });
       d.appendChild(a);
     });
-    if (leer) {
-      d.innerHTML = '<span style="color:var(--text-faint); font-size:14px">' +
-                    'Noch keine Überschriften auf dieser Seite</span>';
-    }
+
+    const zeile = document.createElement('div');
+    zeile.className = 'toc-fuss';
+    zeile.innerHTML = `<button data-a="nr">${nummern ? '✓ ' : ''}Nummerieren</button>` +
+                      `<span>${liste.length} Überschriften</span>`;
+    zeile.addEventListener('click', e => {
+      if (!e.target.closest('[data-a="nr"]')) return;
+      Store.updateBlock(block.id, { tocNummern: !nummern });
+      App.zeichneSeite();
+    });
+    d.appendChild(zeile);
+
+    /* Mitlaufende Markierung: welche Überschrift steht gerade oben? */
+    setTimeout(() => {
+      const scroller = d.closest('#main') || document.querySelector('#main') || window;
+      const merken = () => {
+        if (!document.body.contains(d)) {
+          (scroller.removeEventListener || window.removeEventListener).call(scroller, 'scroll', merken);
+          return;
+        }
+        let aktiv = null;
+        liste.forEach(({ block: k }) => {
+          const el = document.querySelector(`[data-bid="${k.id}"]`);
+          if (el && el.getBoundingClientRect().top < 140) aktiv = k.id;
+        });
+        d.querySelectorAll('a').forEach(a =>
+          a.classList.toggle('jetzt', a.dataset.ziel === aktiv));
+      };
+      (scroller.addEventListener || window.addEventListener).call(scroller, 'scroll', merken, { passive: true });
+      merken();
+    }, 0);
+
     return d;
   };
 
@@ -928,7 +1223,53 @@ const Blocks = (() => {
         return;
       }
 
-      /* Strg+Alt+Ziffer: Blocktyp wechseln */
+      /* Blocktyp wechseln.
+         Notion belegt das auf Windows mit Strg+Umschalt+Ziffer und auf dem
+         Mac mit Cmd+Wahl+Ziffer. Hier gehen beide — und weil Umschalt+Ziffer
+         auf deutschen Tastaturen ein Sonderzeichen liefert (Umschalt+1 = !),
+         wird auch e.code ausgewertet. */
+      const zifferAus = (ev) => {
+        if (/^[0-9]$/.test(ev.key)) return ev.key;
+        const m = /^Digit([0-9])$/.exec(ev.code || '');
+        return m ? m[1] : null;
+      };
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && zifferAus(e)) {
+        e.preventDefault();
+        const ziel = { '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
+                       '6':'number','7':'toggle','8':'code','9':'page' }[zifferAus(e)];
+        if (ziel === 'page') {
+          const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
+          Store.trashBlock(b.id);
+          App.zeichneSeite();
+          App.oeffne(p.id);
+        } else if (ziel) umwandeln(b.id, ziel);
+        return;
+      }
+
+      /* Strg+Umschalt+E: Formelblock — wie in Notion */
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        umwandeln(b.id, 'equation');
+        return;
+      }
+
+      /* Strg+Alt+T: alle Toggles auf dieser Seite auf- oder zuklappen */
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        alleToggles();
+        return;
+      }
+
+      /* Strg+/: den Blocktyp dieses Blocks ändern — Notions „Blöcke bearbeiten" */
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
+        if (griff) { blockMenue(griff, b);
+          setTimeout(() => document.querySelector('.menu button[data-a="turn"]')?.click(), 0); }
+        return;
+      }
+
+      /* Strg+Alt+Ziffer: Blocktyp wechseln (Mac-Belegung) */
       if ((e.ctrlKey || e.metaKey) && e.altKey && /^[0-9]$/.test(e.key)) {
         e.preventDefault();
         const ziel = { '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
@@ -959,6 +1300,51 @@ const Blocks = (() => {
         return;
       }
 
+      /* --- Zum ersten und zum letzten Block der Seite --------------------
+       * Notion springt mit Strg+Pos1 an den Anfang des Dokuments. Ohne das
+       * scrollt man bei einer langen Seite mit dem Rad, obwohl die Hand
+       * schon auf der Tastatur liegt.
+       * ------------------------------------------------------------------ */
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'Home' || e.key === 'End')) {
+        const alle = [...wurzel.querySelectorAll('.ct')];
+        if (!alle.length) return;
+        e.preventDefault();
+        cursorAnsEnde(e.key === 'Home' ? alle[0] : alle[alle.length - 1]);
+        return;
+      }
+
+      /* Strg + Umschalt + C: Link auf genau diesen Block */
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        const adr = location.href.split('#')[0] + '#block=' + b.id;
+        navigator.clipboard.writeText(adr)
+          .then(() => UI.toast('Link auf diesen Block kopiert'))
+          .catch(() => UI.toast('Link: ' + adr));
+        return;
+      }
+
+      /* Strg + Umschalt + Rücktaste: den ganzen Block weg, ohne Rückfrage */
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Backspace') {
+        e.preventDefault();
+        const eltern = Store.getBlock(b.parentId);
+        const idx = eltern ? eltern.content.indexOf(b.id) : -1;
+        const vorher = idx > 0 ? Store.getBlock(eltern.content[idx - 1]) : null;
+        Store.trashBlock(b.id);
+        App.zeichneSeite(vorher ? vorher.id : null, 'ende');
+        UI.toast('Block in den Papierkorb');
+        return;
+      }
+
+      /* Strg + Umschalt + Enter: eine Seite rechts daneben öffnen */
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
+        const ziel = b.type === 'page' ? b.id : (b.type === 'pageref' ? b.ziel : null);
+        if (ziel && window.Fenster) {
+          e.preventDefault();
+          Fenster.teilen(ziel, 'quer');
+          return;
+        }
+      }
+
       /* Inline-Formatierung */
       if ((e.ctrlKey || e.metaKey) && !e.altKey) {
         const k = e.key.toLowerCase();
@@ -969,6 +1355,27 @@ const Blocks = (() => {
         if (e.shiftKey && k === 's') { e.preventDefault(); umschliesse('~~'); return; }
         if (k === 'd') { e.preventDefault(); dupliziere(b); return; }
       }
+    });
+
+    /* --- Rechtsklick öffnet dasselbe Menü wie der Griff -------------------
+     * Notion hat auf dem Desktop ein Kontextmenü; bei uns kam man bisher nur
+     * über den Griff dorthin. Innerhalb von Text lassen wir das Menü des
+     * Browsers stehen — dort will man Rechtschreibung und Einfügen.
+     * -------------------------------------------------------------------- */
+    wurzel.addEventListener('contextmenu', (e) => {
+      if (e.shiftKey) return;                       /* Umschalt = Browsermenü */
+      const blk = e.target.closest('.blk');
+      if (!blk) return;
+      const imText = e.target.closest('[contenteditable]');
+      const auswahl = String(getSelection() || '');
+      if (imText && auswahl) return;                /* Text markiert: Browsermenü */
+      const b = Store.getBlock(blk.dataset.bid);
+      if (!b) return;
+      e.preventDefault();
+      const anker = { getBoundingClientRect: () => ({
+        left: e.clientX, right: e.clientX, top: e.clientY, bottom: e.clientY,
+        width: 0, height: 0, x: e.clientX, y: e.clientY }) };
+      blockMenue(anker, b);
     });
 
     /* --- Klick auf die Griffe -------------------------------------------- */
@@ -1285,7 +1692,10 @@ const Blocks = (() => {
   const AKTIONS_NAMEN = {
     block: 'Block einfügen', zeile: 'Datenbankeintrag anlegen',
     seite: 'Unterseite anlegen', meldung: 'Meldung zeigen', timer: 'Timer',
-    aendern: 'Einträge ändern', oeffnen: 'Seite öffnen'
+    aendern: 'Einträge ändern', oeffnen: 'Seite öffnen',
+    /* Die vier, die Notions Knöpfe haben und unsere noch nicht hatten */
+    webhook: 'An eine Webadresse schicken', mail: 'E-Mail senden',
+    benachricht: 'Benachrichtigung senden', variablen: 'Variablen festlegen'
   };
   const knopfAusfuehren = async (block) => {
     /* Mehrere Aktionen laufen der Reihe nach — Notions Button kann das auch. */
@@ -1299,10 +1709,19 @@ const Blocks = (() => {
         !confirm((block.text || 'Knopf') + ' ausführen?\n\n' +
                  liste.length + (liste.length === 1 ? ' Aktion' : ' Aktionen'))) return;
 
+    knopfVars = {};
     for (const a of liste) eineAktion(block, a);
     App.zeichneSeite();
     UI.toast(liste.length === 1 ? 'Ausgeführt' : liste.length + ' Aktionen ausgeführt');
   };
+
+  /* Variablen, die ein Knopf setzt, gelten für alle folgenden Aktionen
+     desselben Klicks — als {{name}}. Wie in Notion. */
+  let knopfVars = {};
+  const mitKnopfVars = (v) => typeof v === 'string'
+    ? v.replace(/\{\{\s*([A-Za-zÄÖÜäöüß0-9_]+)\s*\}\}/g,
+                (_, n) => (n in knopfVars ? String(knopfVars[n]) : ''))
+    : v;
 
   const eineAktion = (block, a) => {
     const datum = (v) => {
@@ -1313,6 +1732,50 @@ const Blocks = (() => {
       if (m) { const t = new Date(); t.setDate(t.getDate() + (+m[1])); return t.toISOString().slice(0, 10); }
       return v;
     };
+
+    /* --- Variablen festlegen ------------------------------------------ */
+    if (a.art === 'variablen') {
+      (a.vars || []).forEach(v => {
+        if (!v || !v.name) return;
+        const r = Formula.run(mitKnopfVars(v.formel || ''), () => null);
+        knopfVars[v.name] = r.ok ? Formula.anzeige(r.wert) : '';
+      });
+      return;
+    }
+
+    /* --- An eine Webadresse schicken ----------------------------------- */
+    if (a.art === 'webhook') {
+      const url = mitKnopfVars(a.text || '') || Store.getMeta('webhookUrl', '');
+      if (!url) { UI.toast('Keine Adresse hinterlegt'); return; }
+      KI.holen(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quelle: 'Redion', knopf: block.text || '',
+                               seite: App.aktuelleSeite(), wann: new Date().toISOString(),
+                               variablen: knopfVars }) })
+        .then(() => UI.toast('An den Webhook geschickt'))
+        .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message, 'warn'));
+      return;
+    }
+
+    /* --- Benachrichtigung ---------------------------------------------- */
+    if (a.art === 'benachricht') {
+      Werkzeuge.posteingangMelden({
+        text: mitKnopfVars(a.text || '') || (block.text || 'Knopf gedrückt'),
+        quelle: 'Knopf', seite: App.aktuelleSeite(), art: 'knopf' });
+      return;
+    }
+
+    /* --- E-Mail --------------------------------------------------------- */
+    if (a.art === 'mail') {
+      const betreff = mitKnopfVars(a.betreff || '') || (block.text || 'Redion');
+      const koerper = mitKnopfVars(a.text || '');
+      const an = mitKnopfVars(a.an || '');
+      if (window.Mail && Mail.senden)
+        Mail.senden({ an, betreff, text: koerper }).catch(e => UI.toast('Mail: ' + e.message));
+      else
+        location.href = 'mailto:' + encodeURIComponent(an) +
+          '?subject=' + encodeURIComponent(betreff) + '&body=' + encodeURIComponent(koerper);
+      return;
+    }
 
     if (a.art === 'block') {
       const eltern = Store.getBlock(block.parentId);
@@ -1393,6 +1856,10 @@ const Blocks = (() => {
             `<option value="timer"${a.art === 'timer' ? ' selected' : ''}>Timer starten und stoppen</option>` +
             `<option value="aendern"${a.art === 'aendern' ? ' selected' : ''}>Einträge einer Datenbank ändern</option>` +
             `<option value="oeffnen"${a.art === 'oeffnen' ? ' selected' : ''}>Eine Seite öffnen</option>` +
+            `<option value="variablen"${a.art === 'variablen' ? ' selected' : ''}>Variablen festlegen</option>` +
+            `<option value="benachricht"${a.art === 'benachricht' ? ' selected' : ''}>Benachrichtigung senden</option>` +
+            `<option value="mail"${a.art === 'mail' ? ' selected' : ''}>E-Mail senden</option>` +
+            `<option value="webhook"${a.art === 'webhook' ? ' selected' : ''}>An eine Webadresse schicken</option>` +
           '</select></label>' +
           '<div id="kdet"></div>' +
           '<label style="display:flex; gap:10px; align-items:center; margin-top:4px">' +
@@ -1455,6 +1922,24 @@ const Blocks = (() => {
             `<option value="${p.id}"${a.seiteId === p.id ? ' selected' : ''}>` +
             `${esc(p.text || 'Ohne Titel')}</option>`).join('') +
           '</select></label>';
+      } else if (art === 'variablen') {
+        det.innerHTML = '<label>Je Zeile: <code>name = Formel</code>. ' +
+          'Später als <code>{{name}}</code> einsetzbar.<br>' +
+          `<textarea id="kvars" rows="4" spellcheck="false">${
+            esc((a.vars || []).map(v => v.name + ' = ' + v.formel).join('\n'))}</textarea></label>`;
+      } else if (art === 'benachricht') {
+        det.innerHTML = `<label>Text der Benachrichtigung<br>` +
+          `<input id="kx" value="${esc(a.text || '')}" placeholder="Erledigt: {{name}}"></label>`;
+      } else if (art === 'mail') {
+        det.innerHTML =
+          `<label>An<br><input id="kmail-an" value="${esc(a.an || '')}" placeholder="name@beispiel.ch"></label>` +
+          `<label style="display:block;margin-top:10px">Betreff<br>` +
+            `<input id="kmail-b" value="${esc(a.betreff || '')}"></label>` +
+          `<label style="display:block;margin-top:10px">Nachricht<br>` +
+            `<textarea id="kmail-t" rows="3">${esc(a.text || '')}</textarea></label>`;
+      } else if (art === 'webhook') {
+        det.innerHTML = `<label>Adresse<br><input id="kx" value="${esc(a.text || '')}" ` +
+          `placeholder="https://… — leer nimmt die aus den Einstellungen"></label>`;
       } else {
         det.innerHTML = `<label>Titel der Seite<br><input id="kx" value="${esc(a.seitenTitel || '')}"></label>`;
       }
@@ -1504,6 +1989,19 @@ const Blocks = (() => {
         }
       }
       if (art === 'oeffnen') neu.seiteId = o.querySelector('#kseite')?.value;
+      if (art === 'variablen') {
+        neu.vars = (o.querySelector('#kvars')?.value || '').split('\n')
+          .map(z => z.trim()).filter(Boolean)
+          .map(z => { const i = z.indexOf('=');
+            return i < 0 ? null : { name: z.slice(0, i).trim(), formel: z.slice(i + 1).trim() }; })
+          .filter(x => x && x.name);
+      }
+      if (art === 'benachricht' || art === 'webhook') neu.text = o.querySelector('#kx')?.value || '';
+      if (art === 'mail') {
+        neu.an      = o.querySelector('#kmail-an')?.value || '';
+        neu.betreff = o.querySelector('#kmail-b')?.value || '';
+        neu.text    = o.querySelector('#kmail-t')?.value || '';
+      }
 
       if (mehr) {
         gesammelt.push(neu);
@@ -1602,7 +2100,13 @@ const Blocks = (() => {
 
     menu.addEventListener('click', (e) => {
       const b = e.target.closest('button[data-t]');
-      if (b) { merken(b.dataset.t); schliessen(); umwandelnNachSlash(ct, block, b.dataset.t); }
+      if (!b) return;
+      merken(b.dataset.t);
+      schliessen();
+      const t = TYPEN.find(x => x.id === b.dataset.t);
+      /* Aktionen legen keinen Block an — sie tun etwas mit diesem hier. */
+      if (t && t.aktion) { slashAktion(ct, block, t.aktion); return; }
+      umwandelnNachSlash(ct, block, b.dataset.t);
     });
 
     const schliessen = () => {
@@ -1664,6 +2168,50 @@ const Blocks = (() => {
     umwandeln(block.id, typId);
   };
 
+  /**
+   * Die Aktionen aus dem Slash-Menü: /turn, /color, /duplicate, /moveto,
+   * /delete, /mention, /date, /reminder, /emoji, /comment.
+   * Notion hat sie alle; sie legen keinen Block an, sondern greifen zu.
+   */
+  const slashAktion = (ct, block, was) => {
+    /* Den getippten Befehl aus dem Text nehmen, bevor irgendetwas passiert */
+    ct.textContent = (ct.textContent || '').replace(/\/[^\/]*$/, '');
+    Store.updateBlock(block.id, { text: ct.textContent });
+    const b = Store.getBlock(block.id) || block;
+    const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
+
+    if (was === 'turn' || was === 'color') {
+      /* Beide öffnen dasselbe Untermenü wie am Blockgriff — kein zweiter Weg,
+         der auseinanderlaufen könnte. */
+      if (!griff) { UI.toast('Der Block ist gerade nicht sichtbar'); return; }
+      blockMenue(griff, b);
+      setTimeout(() => {
+        const m = document.querySelector('.menu');
+        const knopf = m && m.querySelector(`button[data-a="${was}"]`);
+        if (knopf) knopf.click();
+      }, 0);
+      return;
+    }
+    if (was === 'default') { Store.updateBlock(b.id, { color: '' }); App.zeichneSeite(b.id, 'ende'); return; }
+    if (was === 'dup')     { dupliziere(b); return; }
+    if (was === 'moveto')  { blockVerschiebenNach(b); return; }
+    if (was === 'del')     { Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite(); return; }
+    if (was === 'komm')    { Kommentare.neu(b); return; }
+
+    /* Erwähnung, Datum, Erinnerung und Emoji schreiben ihr Zeichen und
+       lassen dann das Menü aufgehen, das ohnehin daran hängt. */
+    const zeichen = { mention: '@', date: '@', remind: '@remind ', emoji: ':' }[was];
+    if (!zeichen) return;
+    ct.textContent = (ct.textContent || '') + zeichen;
+    Store.updateBlock(b.id, { text: ct.textContent });
+    App.zeichneSeite(b.id, 'ende');
+    setTimeout(() => {
+      const feld = document.querySelector(`.blk[data-bid="${b.id}"] [contenteditable]`);
+      if (feld) { feld.focus(); cursorAnsEnde(feld);
+                  feld.dispatchEvent(new InputEvent('input', { bubbles: true })); }
+    }, 30);
+  };
+
   /* ========================================================================
    * BLOCK-HANDLE-MENÜ
    * ======================================================================*/
@@ -1677,6 +2225,8 @@ const Blocks = (() => {
     const html =
       '<button data-a="turn"><span class="mi">⇄</span>Umwandeln in<span class="ms">▸</span></button>' +
       '<button data-a="color"><span class="mi">🎨</span>Farbe<span class="ms">▸</span></button>' +
+      (b.type === 'callout'
+        ? '<button data-a="ruficon"><span class="mi">😀</span>Symbol des Hinweises</button>' : '') +
       '<button data-a="ai"><span class="mi">✨</span>Mit KI bearbeiten</button>' +
       '<button data-a="komm"><span class="mi">💬</span>Kommentar<span class="ms">Ctrl+Shift+M</span></button>' +
       '<hr>' +
@@ -1751,6 +2301,14 @@ const Blocks = (() => {
         UI.toast('Ausgeschnitten');
       }
       if (a === 'komm') Kommentare.neu(b);
+      /* Callout: eigenes Symbol wählen — Notion kann das, wir bisher nicht */
+      if (a === 'ruficon') {
+        UI.emojiWaehlen(anker, (sym) => {
+          Store.updateBlock(b.id, { icon: sym });
+          App.zeichneSeite();
+        });
+        return;
+      }
       if (a === 'karte') {
         const t = b.text || '';
         Store.updateBlock(b.id, { type: 'flashcard', text: t.includes('::') ? t : t + ' :: ' });
@@ -1766,6 +2324,29 @@ const Blocks = (() => {
   };
 
   /** Einen Block auf eine andere Seite verschieben. */
+  /**
+   * Alle Toggles der Seite auf einmal auf- oder zuklappen (Strg+Alt+T).
+   * Ist mindestens eines zu, gehen alle auf; sind alle offen, gehen alle zu —
+   * genauso verhält sich Notion.
+   */
+  const alleToggles = () => {
+    const seite = Store.getBlock(App.aktuelleSeite());
+    if (!seite) return;
+    const gefunden = [];
+    const gehe = (id) => {
+      const x = Store.getBlock(id);
+      if (!x) return;
+      if (x.type === 'toggle' || x.toggleKopf) gefunden.push(x);
+      (x.content || []).forEach(gehe);
+    };
+    (seite.content || []).forEach(gehe);
+    if (!gefunden.length) { UI.toast('Auf dieser Seite gibt es keine Toggles'); return; }
+    const auf = gefunden.some(x => !x.open);
+    gefunden.forEach(x => Store.updateBlock(x.id, { open: auf }));
+    App.zeichneSeite();
+    UI.toast(auf ? gefunden.length + ' Toggles geöffnet' : gefunden.length + ' Toggles geschlossen');
+  };
+
   const blockVerschiebenNach = (b) => {
     seitenPicker('Auf welche Seite verschieben?', (zielId) => {
       const daten = Store.baum(b.id);
@@ -1776,10 +2357,328 @@ const Blocks = (() => {
     });
   };
 
+  /* ========================================================================
+   * MEHRERE BLÖCKE AUF EINMAL
+   * ------------------------------------------------------------------------
+   * In Notion drückt man Esc und hat den Block ausgewählt; mit Umschalt und
+   * den Pfeilen wächst die Auswahl, und dann gilt alles für alle: löschen,
+   * duplizieren, umwandeln, einrücken, verschieben, kopieren.
+   *
+   * Bisher galt hier jede Taste immer nur für den Block unter dem Cursor.
+   * Wer zehn Absätze in Listenpunkte verwandeln wollte, musste zehnmal
+   * dasselbe tun. Das holt es nach — und bringt gleich fünfzehn Kürzel mit,
+   * die sonst ins Leere gingen.
+   *
+   * Die Auswahl lebt nur im Fenster, nicht in der Datenbank: sie ist ein
+   * Zustand der Bedienung, kein Inhalt.
+   * ---------------------------------------------------------------------- */
+  let ausgewaehlt = [];        /* Block-IDs in Reihenfolge der Seite */
+  let ankerId = null;          /* von hier aus wächst die Auswahl */
+  let ablage = null;           /* ausgeschnittene oder kopierte Blöcke */
+
+  /** Alle sichtbaren Blöcke der Seite, von oben nach unten. */
+  const sichtbareBloecke = () =>
+    [...document.querySelectorAll('#page .blk[data-bid]')].map(el => el.dataset.bid);
+
+  const auswahlZeigen = () => {
+    document.querySelectorAll('#page .blk.gewaehlt')
+      .forEach(el => el.classList.remove('gewaehlt'));
+    ausgewaehlt.forEach(id => {
+      const el = document.querySelector(`#page .blk[data-bid="${id}"]`);
+      if (el) el.classList.add('gewaehlt');
+    });
+    let leiste = document.getElementById('auswahl-leiste');
+    if (ausgewaehlt.length < 2) { if (leiste) leiste.remove(); return; }
+    if (!leiste) {
+      leiste = document.createElement('div');
+      leiste.id = 'auswahl-leiste';
+      document.body.appendChild(leiste);
+      leiste.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-a]');
+        if (!a) return;
+        if (a.dataset.a === 'weg')  auswahlLoeschen();
+        if (a.dataset.a === 'dup')  auswahlDuplizieren();
+        if (a.dataset.a === 'kopie') auswahlKopieren();
+        if (a.dataset.a === 'typ')  auswahlTypMenue(a);
+        if (a.dataset.a === 'zu')   auswahlLeeren();
+      });
+    }
+    leiste.innerHTML =
+      `<b>${ausgewaehlt.length} Blöcke</b>` +
+      '<button data-a="typ">Umwandeln ▾</button>' +
+      '<button data-a="dup" title="Strg D">Duplizieren</button>' +
+      '<button data-a="kopie" title="Strg C">Kopieren</button>' +
+      '<button data-a="weg" class="rot" title="Entf">Löschen</button>' +
+      '<button data-a="zu" title="Esc">✕</button>';
+  };
+
+  const auswahlSetzen = (ids) => {
+    const reihe = sichtbareBloecke();
+    ausgewaehlt = reihe.filter(id => ids.includes(id));
+    auswahlZeigen();
+  };
+  const auswahlLeeren = () => { ausgewaehlt = []; ankerId = null; auswahlZeigen(); };
+
+  /** Vom Anker bis hierhin — wie Umschalt+Klick in einer Dateiliste. */
+  const auswahlBis = (id) => {
+    const reihe = sichtbareBloecke();
+    const a = reihe.indexOf(ankerId), b2 = reihe.indexOf(id);
+    if (a < 0 || b2 < 0) return;
+    auswahlSetzen(reihe.slice(Math.min(a, b2), Math.max(a, b2) + 1));
+  };
+
+  const auswahlBloecke = () => ausgewaehlt.map(Store.getBlock).filter(Boolean);
+
+  const auswahlLoeschen = () => {
+    const n = ausgewaehlt.length;
+    if (!n) return;
+    /* Über die Seite zurückholbar: erst in den Papierkorb, nicht endgültig */
+    ausgewaehlt.forEach(id => Store.trashBlock(id));
+    auswahlLeeren();
+    App.zeichneSeite();
+    UI.toast(n + (n === 1 ? ' Block in den Papierkorb' : ' Blöcke in den Papierkorb'));
+  };
+
+  const auswahlDuplizieren = () => {
+    const liste = auswahlBloecke();
+    if (!liste.length) return;
+    liste.slice().reverse().forEach(b => dupliziere(b));
+    const n = liste.length;
+    auswahlLeeren();
+    App.zeichneSeite();
+    UI.toast(n + (n === 1 ? ' Block dupliziert' : ' Blöcke dupliziert'));
+  };
+
+  /** Die Auswahl als Markdown — so lässt sie sich überall einfügen. */
+  const auswahlAlsText = () => auswahlBloecke().map(b => {
+    const marke = { h1: '# ', h2: '## ', h3: '### ', bullet: '- ', number: '1. ',
+      todo: b.checked ? '- [x] ' : '- [ ] ', quote: '> ', toggle: '> ',
+      callout: '> 💡 ' }[b.type] || '';
+    if (b.type === 'divider') return '---';
+    if (b.type === 'code') return '```' + (b.lang || '') + '\n' + (b.text || '') + '\n```';
+    return marke + (b.text || '');
+  }).join('\n');
+
+  const auswahlKopieren = async () => {
+    const t = auswahlAlsText();
+    ablage = auswahlBloecke().map(b => Store.baum(b.id));
+    try { await navigator.clipboard.writeText(t); } catch {}
+    UI.toast(ausgewaehlt.length + ' Blöcke kopiert');
+  };
+
+  const auswahlSchneiden = async () => {
+    await auswahlKopieren();
+    const n = ausgewaehlt.length;
+    ausgewaehlt.forEach(id => Store.trashBlock(id));
+    auswahlLeeren();
+    App.zeichneSeite();
+    UI.toast(n + ' Blöcke ausgeschnitten');
+  };
+
+  const auswahlEinfuegen = () => {
+    if (!ablage || !ablage.length) return false;
+    const ziel = App.aktuelleSeite();
+    ablage.forEach(d => Store.baumEinfuegen(d, ziel));
+    App.zeichneSeite();
+    UI.toast(ablage.length + ' Blöcke eingefügt');
+    return true;
+  };
+
+  /* Bei mehreren Blöcken wird der Typ direkt gesetzt statt über umwandeln():
+     das würde für jeden Block die Seite neu zeichnen und den Cursor
+     hineinsetzen — bei zwanzig Blöcken zwanzigmal. */
+  const EINFACHE_TYPEN = ['text','h1','h2','h3','todo','bullet','number',
+                          'toggle','quote','callout','code'];
+  const auswahlUmwandeln = (typId) => {
+    const n = ausgewaehlt.length;
+    if (!n) return;
+    if (!EINFACHE_TYPEN.includes(typId)) {
+      /* Alles andere braucht die volle Behandlung — dann eben einzeln */
+      ausgewaehlt.forEach(id => umwandeln(id, typId));
+      auswahlLeeren();
+      return;
+    }
+    ausgewaehlt.forEach(id => Store.updateBlock(id, { type: typId }));
+    App.zeichneSeite();
+    setTimeout(auswahlZeigen, 0);
+    UI.toast(n + ' Blöcke umgewandelt');
+  };
+
+  const auswahlTypMenue = (anker) => {
+    const r = anker.getBoundingClientRect();
+    const m = document.createElement('div');
+    m.className = 'menu';
+    m.style.cssText = `position:fixed; left:${Math.max(8, r.left)}px; ` +
+                      `bottom:${window.innerHeight - r.top + 6}px; z-index:1400`;
+    m.innerHTML = TYPEN.filter(t => ['text','h1','h2','h3','todo','bullet','number',
+                                     'toggle','quote','callout','code'].includes(t.id))
+      .map(t => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`).join('');
+    document.body.appendChild(m);
+    const weg = () => m.remove();
+    m.addEventListener('click', e => {
+      const b2 = e.target.closest('[data-t]');
+      if (b2) auswahlUmwandeln(b2.dataset.t);
+      weg();
+    });
+    setTimeout(() => document.addEventListener('click', weg, { once: true }), 0);
+  };
+
+  const auswahlEinruecken = (raus) => {
+    auswahlBloecke().forEach(b => raus ? ausruecken(b) : einruecken(b));
+    App.zeichneSeite();
+    setTimeout(auswahlZeigen, 0);
+  };
+
+  const auswahlVerschieben = (richtung) => {
+    const liste = auswahlBloecke();
+    if (!liste.length) return;
+    /* Nach oben von oben her, nach unten von unten her — sonst überholen
+       sich die Blöcke gegenseitig. */
+    (richtung < 0 ? liste : liste.slice().reverse()).forEach(b => verschiebe(b, richtung));
+    App.zeichneSeite();
+    setTimeout(auswahlZeigen, 0);
+  };
+
+  /* --- Die Tasten, die nur bei aktiver Auswahl gelten -------------------- */
+  const auswahlTaste = (e) => {
+    if (!ausgewaehlt.length) return false;
+    const reihe = sichtbareBloecke();
+    const k = e.key;
+    const strg = e.ctrlKey || e.metaKey;
+
+    if (k === 'Escape') { e.preventDefault(); auswahlLeeren(); return true; }
+
+    if (k === 'ArrowDown' || k === 'ArrowUp') {
+      e.preventDefault();
+      if (strg && e.shiftKey) { auswahlVerschieben(k === 'ArrowUp' ? -1 : 1); return true; }
+      const letzte = ausgewaehlt[k === 'ArrowUp' ? 0 : ausgewaehlt.length - 1];
+      const i = reihe.indexOf(letzte) + (k === 'ArrowUp' ? -1 : 1);
+      if (i < 0 || i >= reihe.length) return true;
+      if (e.shiftKey) auswahlBis(reihe[i]);
+      else { ankerId = reihe[i]; auswahlSetzen([reihe[i]]); }
+      return true;
+    }
+
+    if (strg && k.toLowerCase() === 'a') {
+      e.preventDefault();
+      ankerId = reihe[0];
+      auswahlSetzen(reihe);
+      return true;
+    }
+    if (strg && k.toLowerCase() === 'c') { e.preventDefault(); auswahlKopieren(); return true; }
+    if (strg && k.toLowerCase() === 'x') { e.preventDefault(); auswahlSchneiden(); return true; }
+    if (strg && k.toLowerCase() === 'v') { e.preventDefault(); auswahlEinfuegen(); return true; }
+    if (strg && k.toLowerCase() === 'd') { e.preventDefault(); auswahlDuplizieren(); return true; }
+
+    if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); auswahlLoeschen(); return true; }
+
+    if (k === 'Tab') { e.preventDefault(); auswahlEinruecken(e.shiftKey); return true; }
+
+    if (k === 'Enter') {
+      e.preventDefault();
+      const erste = document.querySelector(`#page .blk[data-bid="${ausgewaehlt[0]}"] .ct`);
+      auswahlLeeren();
+      if (erste) cursorAnsEnde(erste);
+      return true;
+    }
+
+    /* Leertaste öffnet — bei einer Seite die Seite, bei einem Toggle
+       das Toggle. Notion macht es genauso. */
+    if (k === ' ' || k === 'Spacebar') {
+      e.preventDefault();
+      const b2 = Store.getBlock(ausgewaehlt[0]);
+      if (!b2) return true;
+      if (b2.type === 'page')          { auswahlLeeren(); App.oeffne(b2.id); }
+      else if (b2.type === 'pageref' && b2.ziel) { auswahlLeeren(); App.oeffne(b2.ziel); }
+      else if (b2.type === 'toggle' || b2.toggleKopf) {
+        ausgewaehlt.forEach(id => {
+          const x = Store.getBlock(id);
+          if (x && (x.type === 'toggle' || x.toggleKopf)) Store.updateBlock(id, { open: !x.open });
+        });
+        App.zeichneSeite();
+        setTimeout(auswahlZeigen, 0);
+      }
+      else if (b2.type === 'todo') {
+        ausgewaehlt.forEach(id => {
+          const x = Store.getBlock(id);
+          if (x && x.type === 'todo') Store.updateBlock(id, { checked: !x.checked });
+        });
+        App.zeichneSeite();
+        setTimeout(auswahlZeigen, 0);
+      }
+      return true;
+    }
+
+    /* Strg + Umschalt + Enter: die erste ausgewählte Seite rechts öffnen */
+    if (strg && e.shiftKey && k === 'Enter') {
+      const b2 = Store.getBlock(ausgewaehlt[0]);
+      const ziel = b2 && (b2.type === 'page' ? b2.id : (b2.type === 'pageref' ? b2.ziel : null));
+      if (ziel && window.Fenster) { e.preventDefault(); auswahlLeeren(); Fenster.teilen(ziel, 'quer'); }
+      return true;
+    }
+
+    /* Blocktyp für alle auf einmal — dieselben Ziffern wie im Einzelfall */
+    const ziffer = /^[0-9]$/.test(k) ? k : (/^Digit([0-9])$/.exec(e.code || '') || [])[1];
+    if (strg && (e.shiftKey || e.altKey) && ziffer) {
+      e.preventDefault();
+      const ziel = { '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
+                     '6':'number','7':'toggle','8':'code' }[ziffer];
+      if (ziel) auswahlUmwandeln(ziel);
+      return true;
+    }
+    return false;
+  };
+
+  /**
+   * Einklinken. Wird von App einmal aufgerufen; ein zweiter Aufruf tut nichts.
+   */
+  let auswahlBereit = false;
+  const auswahlEinklinken = () => {
+    if (auswahlBereit) return;
+    auswahlBereit = true;
+
+    document.addEventListener('keydown', (e) => {
+      if (auswahlTaste(e)) return;
+      /* Esc im Text wählt den Block aus — Notions Einstieg in die Auswahl */
+      if (e.key === 'Escape' && !ausgewaehlt.length) {
+        const ct = document.activeElement && document.activeElement.closest
+          ? document.activeElement.closest('.ct') : null;
+        const blk = ct && ct.closest('.blk');
+        if (blk && blk.dataset.bid && !document.querySelector('.overlay, .menu')) {
+          ct.blur();
+          ankerId = blk.dataset.bid;
+          auswahlSetzen([blk.dataset.bid]);
+        }
+      }
+    }, true);
+
+    /* Umschalt- und Strg-Klick auf einen Block */
+    document.addEventListener('click', (e) => {
+      const blk = e.target.closest('#page .blk[data-bid]');
+      if (!blk) { if (ausgewaehlt.length && !e.target.closest('#auswahl-leiste, .menu')) auswahlLeeren(); return; }
+      if (e.shiftKey && ankerId) { e.preventDefault(); auswahlBis(blk.dataset.bid); return; }
+      if ((e.ctrlKey || e.metaKey) && ausgewaehlt.length) {
+        e.preventDefault();
+        const id = blk.dataset.bid;
+        auswahlSetzen(ausgewaehlt.includes(id)
+          ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
+        return;
+      }
+      if (ausgewaehlt.length) auswahlLeeren();
+    }, true);
+  };
+
   return {
     TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc,
-    cursorAnsEnde, slashMenue, einfuegenAmEnde, dupliziere, verschiebe,
+    cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe,
     blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
-    DIENSTE, einbettungsAdresse
+    knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
+    DIENSTE, einbettungsAdresse,
+    /* Mehrfachauswahl */
+    auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
+    auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
+    auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,
+    auswahlAlsText, auswahlTaste, sichtbareBloecke,
+    auswahl: () => ausgewaehlt.slice()
   };
 })();

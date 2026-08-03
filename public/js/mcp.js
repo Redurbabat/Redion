@@ -86,7 +86,7 @@ const MCP = (() => {
     const r = await ruf(s, 'initialize', {
       protocolVersion: VERSION,
       capabilities: { tools: {}, resources: {} },
-      clientInfo: { name: 'Notizen', version: '1.0' }
+      clientInfo: { name: 'Redion', version: '1.0' }
     });
     s.name = s.name || r?.serverInfo?.name || 'MCP-Server';
     s.serverVersion = r?.serverInfo?.version || '';
@@ -166,7 +166,7 @@ const MCP = (() => {
     if (anfrage.method === 'initialize') return antwort({
       protocolVersion: VERSION,
       capabilities: { tools: { listChanged: false } },
-      serverInfo: { name: 'Notizen', version: '1.0' }
+      serverInfo: { name: 'Redion', version: '1.0' }
     });
 
     if (anfrage.method === 'tools/list') return antwort({ tools: eigenerKatalog() });

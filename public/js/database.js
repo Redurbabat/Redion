@@ -28,6 +28,10 @@ const Datenbank = (() => {
     { id:'date',       name:'Datum',            icon:'📅' },
     { id:'person',     name:'Person',           icon:'👤' },
     { id:'checkbox',   name:'Kontrollkästchen', icon:'☑'  },
+    /* Zwei Typen, die Notion nicht hat und die jeder mit Zahl plus
+       Anzeige-Einstellung nachbaut — hier gleich richtig. */
+    { id:'sterne',     name:'Bewertung',        icon:'★'  },
+    { id:'prozent',    name:'Fortschritt',      icon:'▰'  },
     { id:'url',        name:'URL',              icon:'🔗' },
     { id:'email',      name:'E-Mail',           icon:'✉'  },
     { id:'phone',      name:'Telefon',          icon:'☎'  },
@@ -79,16 +83,21 @@ const Datenbank = (() => {
   const OPERATOREN = {
     text:     ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
     title:    ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
-    url:      ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
-    email:    ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
-    phone:    ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
+    /* Notion behandelt URL, E-Mail und Telefon genau wie Text — mit allen
+       acht Bedingungen. Beleg: Notion-API-Referenz „Filter data source
+       entries", Rich-Text-Filter. */
+    url:      ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
+    email:    ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
+    phone:    ['enthält','enthält nicht','ist','ist nicht','beginnt mit','endet mit','ist leer','ist nicht leer'],
     number:   ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich','ist leer','ist nicht leer'],
     select:   ['ist','ist nicht','ist leer','ist nicht leer'],
     status:   ['ist','ist nicht','ist leer','ist nicht leer'],
     multi:    ['enthält','enthält nicht','ist leer','ist nicht leer'],
     person:   ['enthält','enthält nicht','ist leer','ist nicht leer'],
     date:     ['ist','ist vor','ist nach','ist am oder vor','ist am oder nach','ist heute','ist gestern','ist morgen',
-               'ist diese Woche','ist letzte Woche','ist nächste Woche','ist dieser Monat','ist letzter Monat',
+               'ist diese Woche','ist letzte Woche','ist nächste Woche',
+               'ist dieser Monat','ist letzter Monat','ist nächster Monat',
+               'ist dieses Jahr','ist letztes Jahr','ist nächstes Jahr',
                'ist in den letzten 7 Tagen','ist in den letzten 30 Tagen','ist in den nächsten 7 Tagen',
                'ist in den nächsten 30 Tagen','liegt in der Vergangenheit','liegt in der Zukunft','ist leer','ist nicht leer'],
     created:  ['ist','ist vor','ist nach','ist heute','ist gestern','ist diese Woche','ist letzte Woche','ist dieser Monat',
@@ -99,8 +108,16 @@ const Datenbank = (() => {
     formula:  ['enthält','ist','ist gleich','größer als','kleiner als','ist aktiviert','ist nicht aktiviert','ist leer','ist nicht leer'],
     files:    ['ist leer','ist nicht leer'],
     relation: ['enthält','enthält nicht','ist leer','ist nicht leer'],
-    rollup:   ['ist gleich','ist nicht gleich','größer als','kleiner als','enthält','ist leer','ist nicht leer'],
-    uid:      ['ist gleich','größer als','kleiner als'],
+    /* Notion filtert Rollups auf zwei Weisen: über den zusammengefassten Wert
+       und — bei Listen — über jedes einzelne Element mit any/every/none.
+       Beides steht hier. */
+    rollup:   ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich',
+               'enthält','enthält nicht','ist vor','ist nach','ist leer','ist nicht leer',
+               'irgendeiner ist','irgendeiner enthält','irgendeiner ist grösser','irgendeiner ist kleiner',
+               'irgendeiner ist leer','alle sind','alle enthalten','keiner ist','keiner enthält'],
+    /* Die laufende Nummer ist eine Zahl und filtert wie eine. Notion nennt
+       für ID keine Leer-Bedingungen — die Nummer ist ja nie leer. */
+    uid:      ['ist gleich','ist nicht gleich','größer als','kleiner als','größer oder gleich','kleiner oder gleich'],
     ki:       ['enthält','enthält nicht','ist','ist leer','ist nicht leer'],
     button:   [],
     createdBy:['ist','ist nicht','enthält','ist leer','ist nicht leer'],
@@ -173,6 +190,197 @@ const Datenbank = (() => {
     return zc.schema[k].type === 'relation' ? seitenListe(v) : v;
   };
 
+  /* Läuft gerade eine Spaltenabfrage? Schützt vor Formeln, die sich selbst
+     über runningSum() oder rank() aufrufen würden. */
+  const spaltenLauf = new Set();
+
+  /* ========================================================================
+   * PRÜFREGELN — was Notion nicht hat
+   * ------------------------------------------------------------------------
+   * Notion lässt jeden Wert zu: leere Pflichtfelder, doppelte Rechnungs-
+   * nummern, kaputte E-Mail-Adressen. Das ist die meistgenannte Lücke gleich
+   * nach Pivot. Hier bekommt jede Spalte Regeln, und ein falscher Wert wird
+   * gar nicht erst geschrieben — mit einer Erklärung, warum.
+   *
+   * Regeln je Spalte (alle freiwillig):
+   *   pflicht     – darf nicht leer sein
+   *   eindeutig   – darf in dieser Datenbank nur einmal vorkommen
+   *   muster      – regulärer Ausdruck, dem der Text entsprechen muss
+   *   min / max   – Zahlenbereich
+   *   regel       – eine Formel, die wahr ergeben muss
+   *   regelText   – was dem Menschen gesagt wird, wenn sie nicht zutrifft
+   * ======================================================================*/
+  const MUSTER_VORLAGEN = [
+    ['', 'Kein Muster'],
+    ['^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$', 'E-Mail-Adresse'],
+    ['^\\+?[0-9 ()/-]{6,}$',               'Telefonnummer'],
+    ['^https?://\\S+$',                    'Webadresse'],
+    ['^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$',  'IBAN'],
+    ['^[0-9]{4}$',                         'Vierstellige Zahl'],
+    ['^[A-Z]{2,4}-[0-9]{1,6}$',            'Kennzeichen wie RE-1234']
+  ];
+
+  /** Hat diese Spalte überhaupt Regeln? */
+  const hatRegeln = (def) => !!(def && (def.pflicht || def.eindeutig || def.muster ||
+    (def.uebergaenge && Object.keys(def.uebergaenge).length) ||
+    (def.regelMin !== undefined && def.regelMin !== '') ||
+    (def.regelMax !== undefined && def.regelMax !== '') || def.regel));
+
+  /**
+   * Prüft einen Wert gegen die Regeln seiner Spalte.
+   * @returns {{ok:boolean, fehler?:string}}
+   */
+  const pruefeWert = (coll, key, row, neuerWert) => {
+    const def = coll && coll.schema && coll.schema[key];
+    if (!def || !hatRegeln(def)) return { ok: true };
+    const name = def.name || 'Diese Spalte';
+    const leer = neuerWert === null || neuerWert === undefined || neuerWert === '' ||
+                 (Array.isArray(neuerWert) && !neuerWert.length);
+
+    if (def.pflicht && leer)
+      return { ok: false, fehler: `„${name}" darf nicht leer bleiben.` };
+
+    if (!leer && def.eindeutig) {
+      const meiner = String(neuerWert).trim().toLowerCase();
+      const doppelt = Store.rowsOf(coll.id).some(r =>
+        r.id !== (row && row.id) &&
+        String((r.props || {})[key] ?? '').trim().toLowerCase() === meiner);
+      if (doppelt) return { ok: false, fehler: `„${neuerWert}" gibt es in „${name}" schon.` };
+    }
+
+    if (!leer && def.muster) {
+      try {
+        if (!new RegExp(def.muster).test(String(neuerWert)))
+          return { ok: false, fehler: def.musterText ||
+            `„${neuerWert}" passt nicht zum Muster von „${name}".` };
+      } catch { /* kaputtes Muster blockiert nichts */ }
+    }
+
+    if (!leer && (def.type === 'number' || def.type === 'duration')) {
+      const z = Number(neuerWert);
+      if (isFinite(z)) {
+        if (def.regelMin !== undefined && def.regelMin !== '' && z < Number(def.regelMin))
+          return { ok: false, fehler: `„${name}" darf nicht kleiner als ${def.regelMin} sein.` };
+        if (def.regelMax !== undefined && def.regelMax !== '' && z > Number(def.regelMax))
+          return { ok: false, fehler: `„${name}" darf nicht grösser als ${def.regelMax} sein.` };
+      }
+    }
+
+    /* Statusübergänge: von welchem Wert darf man zu welchem?
+       Notion lässt jeden Sprung zu — hier steht in „uebergaenge" je Wert,
+       welche Nachfolger erlaubt sind. Ein leerer Eintrag heisst: alles. */
+    if (!leer && def.uebergaenge && (def.type === 'status' || def.type === 'select')) {
+      const alt2 = String((row && row.props ? row.props[key] : '') ?? '').trim();
+      const neu2 = String(neuerWert).trim();
+      if (alt2 && alt2 !== neu2) {
+        const erlaubt = def.uebergaenge[alt2];
+        if (Array.isArray(erlaubt) && erlaubt.length && !erlaubt.includes(neu2))
+          return { ok: false, fehler:
+            `Von „${alt2}" darf „${name}" nur auf ${erlaubt.map(x => '„' + x + '"').join(' oder ')} ` +
+            `springen — nicht auf „${neu2}".` };
+      }
+    }
+
+    /* Die freie Regel als Formel — sie sieht die Zeile MIT dem neuen Wert,
+       damit man „wenn Status = Fertig, dann muss Abschlussdatum stehen"
+       schreiben kann. */
+    if (def.regel && row) {
+      const probe = { ...row, props: { ...(row.props || {}), [key]: neuerWert } };
+      const r = Formula.run(def.regel, (n) => {
+        const k2 = Object.keys(coll.schema).find(x => coll.schema[x].name === n);
+        if (!k2) return null;
+        if (coll.schema[k2].type === 'relation') return seitenListe(wert(probe, k2, coll));
+        return wert(probe, k2, coll);
+      }, fremdWert, formelUmgebung(probe, coll));
+      if (r.ok && !Formula.wahr(r.wert))
+        return { ok: false, fehler: def.regelText || `„${name}": die Regel trifft nicht zu.` };
+    }
+
+    return { ok: true };
+  };
+
+  /** Prüft eine ganze Zeile — für den Bericht und vor dem Import. */
+  const pruefeZeile = (coll, row) => {
+    const fehler = [];
+    Object.keys(coll.schema).forEach(k => {
+      const r = pruefeWert(coll, k, row, (row.props || {})[k]);
+      if (!r.ok) fehler.push(r.fehler);
+    });
+    return fehler;
+  };
+
+  /**
+   * Baut die Umgebung, die eine Formel über ihre eigene Zeile hinausschauen
+   * lässt. Zwei Dinge stehen darin:
+   *
+   *   zeile — wo diese Zeile in der Ansicht steht (`index`), wie viele es
+   *           sind (`anzahl`) und alle Werte einer Spalte in Ansichtsreihen-
+   *           folge (`spalte`). Daraus entstehen rowNumber(), previous(),
+   *           next(), runningSum(), rank(), percentOfTotal() …
+   *   db    — die Zeilen einer ANDEREN Datenbank, über ihren Namen gefunden.
+   *           Daraus entstehen findRows(), countWhere(), sumWhere() …
+   *
+   * Beides kann Notion nicht. Dort braucht jede Auswertung über die Zeile
+   * hinaus eine Verknüpfung und ein Rollup.
+   */
+  const formelUmgebung = (row, coll) => {
+    let zwischen = null;
+    const reihen = () => {
+      if (zwischen) return zwischen;
+      if (ansichtOrdnung && ansichtOrdnung.collId === coll.id) {
+        const liste = ansichtOrdnung.ids.map(id => Store.getBlock(id)).filter(Boolean);
+        if (liste.some(r => r.id === row.id)) return (zwischen = liste);
+      }
+      return (zwischen = Store.rowsOf(coll.id));
+    };
+    const schluesselVon = (name) =>
+      Object.keys(coll.schema).find(x => coll.schema[x].name === name) ||
+      (/^(titel|name|title)$/i.test(name)
+        ? Object.keys(coll.schema).find(x => coll.schema[x].type === 'title') : null);
+
+    return {
+      zeile: {
+        index:  () => Math.max(0, reihen().findIndex(r => r.id === row.id)),
+        anzahl: () => reihen().length,
+        spalte: (name) => {
+          const k = schluesselVon(name);
+          if (!k) throw new Error(`Spalte nicht gefunden: ${name}`);
+          const marke = coll.id + ':' + k;
+          if (spaltenLauf.has(marke))
+            throw new Error('Diese Formel bezieht sich auf sich selbst');
+          spaltenLauf.add(marke);
+          let selbst = null;
+          try {
+            const werte = reihen().map(r => {
+              try {
+                const v = wert(r, k, coll);
+                /* Formula.run fängt den Fehler selbst ab und gibt ihn als Text
+                   zurück — deshalb hier auf den Text schauen, nicht auf throw. */
+                if (typeof v === 'string' && /sich selbst/.test(v))
+                  selbst = new Error('Diese Formel bezieht sich auf sich selbst');
+                return v;
+              } catch (e) {
+                if (/sich selbst/.test(e.message)) selbst = e;
+                return null;
+              }
+            });
+            /* Wenn die Spalte sich selbst gefragt hat, ist das keine Null,
+               sondern ein Fehler — sonst stünde stillschweigend 0 da. */
+            if (selbst) throw selbst;
+            return werte;
+          } finally { spaltenLauf.delete(marke); }
+        }
+      },
+      db: (name) => {
+        const gesucht = String(name).trim().toLowerCase();
+        const c = Object.values(Store.cache.collections)
+          .find(x => (x.name || '').trim().toLowerCase() === gesucht);
+        if (!c) return null;
+        return Store.rowsOf(c.id).map(r => seitenBezug(r.id, r.text || 'Ohne Titel'));
+      }
+    };
+  };
+
   const wert = (row, key, coll) => {
     const def = coll.schema[key];
     if (!def) return null;
@@ -208,6 +416,25 @@ const Datenbank = (() => {
     if (def.type === 'rollup') return rollupWert(row, def, coll);
 
     if (def.type === 'formula') {
+      /* Gerechnet wird über den Formelspeicher: derselbe Wert für dieselbe
+         Zeile wird nur einmal je Datenstand ausgerechnet. */
+      if (window.Tempo && !formelTiefe)
+        return Tempo.hole(row, key, coll, () => formelRechnen(row, key, coll, def));
+      return formelRechnen(row, key, coll, def);
+    }
+
+    const v = (row.props || {})[key];
+    if (def.type === 'number')   return v === '' || v == null ? null : Number(v);
+    if (def.type === 'sterne' || def.type === 'prozent')
+      return v === '' || v == null ? 0 : Number(v);
+    if (def.type === 'checkbox') return !!v;
+    if (def.type === 'multi')    return Array.isArray(v) ? v : (v ? String(v).split(',').map(s=>s.trim()) : []);
+    return v ?? '';
+  };
+
+  /** Die eigentliche Formelrechnung — ohne Speicher davor. */
+  const formelRechnen = (row, key, coll, def) => {
+    {
       if (formelTiefe > 12) throw new Error('Die Formel dreht sich im Kreis');
       formelTiefe++;
       try {
@@ -220,18 +447,12 @@ const Datenbank = (() => {
             if (coll.schema[k].type === 'relation') return seitenListe(wert(row, k, coll));
             return wert(row, k, coll);
           },
-          fremdWert);
+          fremdWert, formelUmgebung(row, coll));
         return r.ok ? r.wert : '⚠ ' + (r.fehler || 'Fehler');
       } catch (e) {
         return '⚠ ' + e.message;
       } finally { formelTiefe--; }
     }
-
-    const v = (row.props || {})[key];
-    if (def.type === 'number')   return v === '' || v == null ? null : Number(v);
-    if (def.type === 'checkbox') return !!v;
-    if (def.type === 'multi')    return Array.isArray(v) ? v : (v ? String(v).split(',').map(s=>s.trim()) : []);
-    return v ?? '';
   };
 
   /**
@@ -251,6 +472,21 @@ const Datenbank = (() => {
     return zusammenfassen(def.rollup || 'Original zeigen', werte, zeilen2.length);
   };
 
+  /**
+   * Die Einzelwerte hinter einem Rollup, unzusammengefasst.
+   * Notions Rollup-Filter „any / every / none" arbeiten darauf: nicht auf
+   * der Summe, sondern auf jedem Element der Liste.
+   */
+  const rollupListe = (row, def, coll) => {
+    const relDef = coll.schema[def.relation];
+    if (!relDef || relDef.type !== 'relation') return [];
+    const zielColl = Store.getCollection(relDef.ziel);
+    if (!zielColl) return [];
+    return (wert(row, def.relation, coll) || [])
+      .map(id => Store.getBlock(id)).filter(Boolean)
+      .map(z => wert(z, def.zielKey, zielColl));
+  };
+
   /** Baut das HTML für eine Zelle. */
   const zelle = (row, key, coll) => {
     const def = coll.schema[key];
@@ -258,6 +494,22 @@ const Datenbank = (() => {
 
     if (def.type === 'checkbox')
       return `<input type="checkbox" ${v ? 'checked' : ''} data-k="${key}" style="accent-color:var(--accent);cursor:pointer">`;
+
+    /* Bewertung: fünf Sterne, anklickbar. Notion hat den Typ nicht. */
+    if (def.type === 'sterne') {
+      const n = Math.max(0, Math.min(5, Math.round(Formula.zahl(v))));
+      return '<span class="sterne" data-k="' + key + '">' +
+        [1,2,3,4,5].map(i =>
+          `<i data-n="${i}" class="${i <= n ? 'an' : ''}">★</i>`).join('') +
+        '</span>';
+    }
+
+    /* Fortschritt: Balken mit Prozentzahl. */
+    if (def.type === 'prozent') {
+      const n = Math.max(0, Math.min(100, Math.round(Formula.zahl(v))));
+      return '<span class="proz"><i style="width:' + n + '%"></i>' +
+             '<b>' + n + ' %</b></span>';
+    }
 
     if (def.type === 'select' || def.type === 'status') {
       if (!v) return '<span style="color:var(--text-faint)">—</span>';
@@ -293,6 +545,25 @@ const Datenbank = (() => {
       return `<a href="${esc(v)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(v)}</a>`;
     if (def.type === 'email' && v)
       return `<a href="mailto:${esc(v)}" style="color:var(--accent)">${esc(v)}</a>`;
+
+    /* Farbskala und Heatmap — Notion hat keine bedingte Formatierung.
+       Die Zelle wird nach ihrem Platz zwischen dem kleinsten und dem
+       grössten Wert der Spalte eingefärbt: rot unten, grün oben. */
+    if ((def.type === 'number' || def.type === 'formula' || def.type === 'rollup') && v != null &&
+        (def.anzeige === 'skala' || def.anzeige === 'heat')) {
+      const z = Formula.zahl(v);
+      const alle = Store.rowsOf(coll.id).map(r2 => Formula.zahl(wert(r2, key, coll)))
+        .filter(x => isFinite(x));
+      const min = alle.length ? Math.min(...alle) : 0;
+      const max = alle.length ? Math.max(...alle) : 1;
+      const t = max === min ? 0.5 : (z - min) / (max - min);
+      /* Von Rot (0°) über Gelb (55°) nach Grün (135°) */
+      const ton = Math.round(t * 135);
+      const stil = def.anzeige === 'heat'
+        ? `background:hsl(${ton} 62% 42% / .55)`
+        : `box-shadow:inset 3px 0 0 hsl(${ton} 65% 48%); padding-left:8px`;
+      return `<span class="zell-skala" style="${stil}">${esc(Formula.anzeige(v))}</span>`;
+    }
 
     if ((def.type === 'number' || def.type === 'formula' || def.type === 'rollup') && v != null &&
         (def.anzeige === 'bar' || def.anzeige === 'ring')) {
@@ -415,9 +686,37 @@ const Datenbank = (() => {
     const def = coll.schema[regel.key];
     if (!def) return true;
     const op = regel.op;
-    const z = regel.wert;
+    /* Notion vergleicht nur mit einem festen Wert. Redion kann eine Spalte
+       auch mit einer anderen Spalte derselben Zeile vergleichen — etwa
+       „Ende ist vor Start" oder „Ist-Kosten sind grösser als Budget". */
+    const z = (regel.vergleich === 'feld' && regel.wertKey && coll.schema[regel.wertKey])
+      ? wert(row, regel.wertKey, coll)
+      : regel.wert;
 
     const leer = v == null || v === '' || (Array.isArray(v) && !v.length);
+
+    /* --- Rollup: any / every / none ---------------------------------------
+     * Notions verschachtelte Rollup-Filter. Sie sehen nicht auf die Summe,
+     * sondern auf jeden Einzelwert hinter der Verknüpfung.
+     * -------------------------------------------------------------------- */
+    if (def.type === 'rollup' &&
+        /^(irgendeiner|alle|keiner)\b/.test(op)) {
+      const liste = rollupListe(row, def, coll).map(x =>
+        Array.isArray(x) ? x.join(', ') : x);
+      const suche = String(z ?? '').toLowerCase();
+      const einzeln = (x) => {
+        const t = String(Formula.anzeige(x) ?? '').toLowerCase();
+        if (/leer$/.test(op))              return x == null || x === '';
+        if (/grösser$/.test(op))           return Formula.zahl(x) > Formula.zahl(z);
+        if (/kleiner$/.test(op))           return Formula.zahl(x) < Formula.zahl(z);
+        if (/enthält$|enthalten$/.test(op)) return t.includes(suche);
+        return t === suche;                /* „ist" und „sind" */
+      };
+      if (!liste.length) return op.startsWith('keiner') || op.startsWith('alle');
+      if (op.startsWith('irgendeiner')) return liste.some(einzeln);
+      if (op.startsWith('alle'))        return liste.every(einzeln);
+      if (op.startsWith('keiner'))      return !liste.some(einzeln);
+    }
 
     if (op === 'ist leer')        return leer;
     if (op === 'ist nicht leer')  return !leer;
@@ -489,6 +788,15 @@ const Datenbank = (() => {
       if (op === 'ist in den nächsten 30 Tagen')return tag >= h && tag <= tage(30);
       if (op === 'liegt in der Vergangenheit')  return dv < jetzt;
       if (op === 'liegt in der Zukunft')        return dv > jetzt;
+      /* Die drei, die Notions API kennt und uns noch fehlten:
+         past_year, next_month, next_year. */
+      if (op === 'ist letztes Jahr')  return dv.getFullYear() === jetzt.getFullYear() - 1;
+      if (op === 'ist dieses Jahr')   return dv.getFullYear() === jetzt.getFullYear();
+      if (op === 'ist nächstes Jahr') return dv.getFullYear() === jetzt.getFullYear() + 1;
+      if (op === 'ist nächster Monat') {
+        const n = new Date(jetzt.getFullYear(), jetzt.getMonth() + 1, 1);
+        return dv.getMonth() === n.getMonth() && dv.getFullYear() === n.getFullYear();
+      }
       if (dz && !isNaN(dz)) {
         if (op === 'ist')             return tag.getTime() === new Date(dz.setHours(0,0,0,0)).getTime();
         if (op === 'ist vor')         return dv <  dz;
@@ -538,9 +846,23 @@ const Datenbank = (() => {
         (a.ordnung ?? 1e9) - (b.ordnung ?? 1e9) || a.created.localeCompare(b.created));
     }
     if (!view.sorts || !view.sorts.length) return rows;
+    /* Nach einer Formel sortieren, ohne dafür eine Spalte anzulegen —
+       Notion verlangt dort immer eine echte Formel-Eigenschaft. */
+    const formelWert = (r, s) => {
+      try {
+        const res = Formula.run(s.formel, (n) => {
+          const k = Object.keys(coll.schema).find(x => coll.schema[x].name === n || x === n);
+          return k ? wert(r, k, coll) : null;
+        }, null, formelUmgebung(r, coll));
+        const v = res && typeof res === 'object' && 'wert' in res ? (res.ok ? res.wert : null) : res;
+        return v instanceof Date ? v.getTime() : v;
+      } catch (e) { return null; }
+    };
     return rows.slice().sort((a, b) => {
       for (const s of view.sorts) {
-        let x = wert(a, s.key, coll), y = wert(b, s.key, coll);
+        let x, y;
+        if (s.formel) { x = formelWert(a, s); y = formelWert(b, s); }
+        else { x = wert(a, s.key, coll); y = wert(b, s.key, coll); }
         if (x instanceof Date) x = x.getTime();
         if (y instanceof Date) y = y.getTime();
         if (typeof x === 'string' && typeof y === 'string') {
@@ -572,9 +894,19 @@ const Datenbank = (() => {
     return alle;
   };
 
+  /**
+   * Die zuletzt gezeichnete Reihenfolge einer Ansicht.
+   * Formeln wie rowNumber(), previous(), runningSum() und rank() brauchen sie:
+   * sie müssen wissen, wo diese Zeile in der Ansicht steht und was davor kam.
+   * Notion kann das nicht — dort sieht eine Formel nur ihre eigene Zeile.
+   */
+  let ansichtOrdnung = null;
+
   const zeilen = (coll, view) => {
     const alle = sortiert(gefiltert(rohZeilen(coll, view), view, coll), view, coll);
-    return begrenzen(alle, view);
+    const sicht = begrenzen(alle, view);
+    ansichtOrdnung = { collId: coll.id, ids: sicht.map(r => r.id) };
+    return sicht;
   };
 
   /** Wie viele wurden weggelassen? Das gehört dem Menschen gesagt. */
@@ -746,7 +1078,13 @@ const Datenbank = (() => {
 
     /* --- Der eigentliche Inhalt ------------------------------------------ */
     const koerper = document.createElement('div');
-    if (view.layout === 'board')         koerper.appendChild(alsBoard(coll, view, rows));
+    /* Tabelle, Liste und Galerie können gruppiert werden — mit eigener
+       Berechnungszeile je Gruppe. Board bringt seine Gruppierung selbst mit. */
+    if (view.groupBy && coll.schema[view.groupBy] &&
+        ['table','list','gallery',undefined,''].includes(view.layout)) {
+      koerper.appendChild(alsGruppiert(coll, view, rows, block));
+    }
+    else if (view.layout === 'board')     koerper.appendChild(alsBoard(coll, view, rows));
     else if (view.layout === 'list')     koerper.appendChild(alsListe(coll, view, rows));
     else if (view.layout === 'gallery')  koerper.appendChild(alsGalerie(coll, view, rows));
     else if (view.layout === 'calendar') koerper.appendChild(alsKalender(coll, view, rows));
@@ -756,13 +1094,410 @@ const Datenbank = (() => {
     else if (view.layout === 'feed')     koerper.appendChild(alsFeed(coll, view, rows));
     else if (view.layout === 'map')      koerper.appendChild(alsKarte(coll, view, rows));
     else if (view.layout === 'dashboard') koerper.appendChild(alsDashboard(coll, view, rows));
+    else if (view.layout === 'pivot')    koerper.appendChild(alsPivot(coll, view, rows));
+    /* Am Telefon ist eine seitlich scrollende Tabelle unbrauchbar. Notion
+       zeigt dort Karten. Wer die Tabelle will, schaltet sie im Menü an. */
+    else if (UI.amTelefon() && view.handyTabelle !== true)
+                                         koerper.appendChild(alsHandyKarten(coll, view, rows));
     else                                 koerper.appendChild(alsTabelle(coll, view, rows, block));
     w.appendChild(koerper);
 
     return w;
   };
 
+  /* ========================================================================
+   * PIVOT — Kreuztabelle
+   * ------------------------------------------------------------------------
+   * Genau das, was Notion nicht hat und was in der Lückenliste an zweiter
+   * Stelle steht: Zeilenfeld × Spaltenfeld × Wertefeld, mit Zwischensummen,
+   * Gesamtsumme und Prozentwerten.
+   *
+   *   view.pivotZeile   – nach welcher Eigenschaft die Zeilen gruppiert werden
+   *   view.pivotSpalte  – nach welcher die Spalten (leer = nur eine Spalte)
+   *   view.pivotWert    – welche Eigenschaft zusammengerechnet wird
+   *   view.pivotArt     – summe | schnitt | anzahl | eindeutig | min | max | median
+   *   view.pivotProzent – aus | zeile | spalte | gesamt
+   * ======================================================================*/
+  const PIVOT_ARTEN = [
+    ['summe',    'Summe'],      ['schnitt',  'Durchschnitt'],
+    ['anzahl',   'Anzahl'],     ['eindeutig','Anzahl verschieden'],
+    ['min',      'Minimum'],    ['max',      'Maximum'],
+    ['median',   'Median']
+  ];
+
+  const pivotRechne = (art, werte) => {
+    const z = werte.map(Formula.zahl).filter(x => isFinite(x));
+    if (art === 'anzahl')    return werte.length;
+    if (art === 'eindeutig') return new Set(werte.map(x => Formula.anzeige(x))).size;
+    if (!z.length) return 0;
+    if (art === 'summe')   return z.reduce((a, b) => a + b, 0);
+    if (art === 'schnitt') return z.reduce((a, b) => a + b, 0) / z.length;
+    if (art === 'min')     return Math.min(...z);
+    if (art === 'max')     return Math.max(...z);
+    if (art === 'median') {
+      const s = z.slice().sort((a, b) => a - b), m = Math.floor(s.length / 2);
+      return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+    }
+    return 0;
+  };
+
+  const alsPivot = (coll, view, rows) => {
+    const w = document.createElement('div');
+    w.className = 'pivot-wrap';
+
+    const keys = Object.keys(coll.schema);
+    const zk = view.pivotZeile  || keys.find(k => ['select','status','text','person','date'].includes(coll.schema[k].type)) || keys[0];
+    const sk = view.pivotSpalte || '';
+    const wk = view.pivotWert   || keys.find(k => coll.schema[k].type === 'number') || '';
+    const art = view.pivotArt || (wk ? 'summe' : 'anzahl');
+    const proz = view.pivotProzent || 'aus';
+
+    /* Der Kopf mit den vier Auswahlfeldern — wie eine Pivot-Tabelle in Excel */
+    const feld = (id, wert, leerText) =>
+      `<select data-p="${id}"><option value="">${leerText}</option>` +
+      keys.map(k => `<option value="${k}"${wert === k ? ' selected' : ''}>` +
+        esc(coll.schema[k].name) + '</option>').join('') + '</select>';
+
+    const kopf = document.createElement('div');
+    kopf.className = 'pivot-kopf';
+    kopf.innerHTML =
+      '<label>Zeilen ' + feld('zeile', zk, '— wählen —') + '</label>' +
+      '<label>Spalten ' + feld('spalte', sk, 'keine') + '</label>' +
+      '<label>Werte ' + feld('wert', wk, 'nur zählen') + '</label>' +
+      '<label>Rechnung <select data-p="art">' +
+        PIVOT_ARTEN.map(([id, n]) => `<option value="${id}"${art === id ? ' selected' : ''}>${n}</option>`).join('') +
+      '</select></label>' +
+      '<label>Prozent <select data-p="prozent">' +
+        [['aus','aus'],['zeile','von der Zeile'],['spalte','von der Spalte'],['gesamt','vom Gesamt']]
+          .map(([id, n]) => `<option value="${id}"${proz === id ? ' selected' : ''}>${n}</option>`).join('') +
+      '</select></label>' +
+      '<button data-p="csv" title="Als CSV ausgeben">⭳ CSV</button>';
+    w.appendChild(kopf);
+
+    kopf.addEventListener('change', e => {
+      const s = e.target.closest('[data-p]');
+      if (!s) return;
+      const feldName = { zeile: 'pivotZeile', spalte: 'pivotSpalte', wert: 'pivotWert',
+                         art: 'pivotArt', prozent: 'pivotProzent' }[s.dataset.p];
+      if (!feldName) return;
+      Store.updateView(view.id, { [feldName]: s.value });
+      App.zeichneSeite();
+    });
+
+    if (!zk) {
+      w.innerHTML += '<div class="pivot-leer">Wähle oben, wonach die Zeilen gruppiert werden sollen.</div>';
+      return w;
+    }
+
+    /* --- Gruppieren ------------------------------------------------------ */
+    const schluessel = (r, k) => {
+      if (!k) return '';
+      const v = wert(r, k, coll);
+      if (v === null || v === undefined || v === '' ||
+          (Array.isArray(v) && !v.length)) return '(leer)';
+      if (coll.schema[k].type === 'date' && v) {
+        const d = new Date(v);
+        if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      }
+      return Formula.anzeige(v);
+    };
+
+    const zeilenNamen = [...new Set(rows.map(r => schluessel(r, zk)))].sort((a, b) => a.localeCompare(b, 'de'));
+    const spaltenNamen = sk
+      ? [...new Set(rows.map(r => schluessel(r, sk)))].sort((a, b) => a.localeCompare(b, 'de'))
+      : ['Wert'];
+
+    const zellen = {};   /* "zeile|spalte" -> Liste der Werte */
+    rows.forEach(r => {
+      const z = schluessel(r, zk);
+      const s = sk ? schluessel(r, sk) : 'Wert';
+      const v = wk ? wert(r, wk, coll) : 1;
+      (zellen[z + ' ' + s] = zellen[z + ' ' + s] || []).push(v);
+    });
+
+    const zelleWert = (z, s) => pivotRechne(art, zellen[z + ' ' + s] || []);
+    const zeileSumme = (z) => pivotRechne(art, spaltenNamen.flatMap(s => zellen[z + ' ' + s] || []));
+    const spalteSumme = (s) => pivotRechne(art, zeilenNamen.flatMap(z => zellen[z + ' ' + s] || []));
+    const gesamt = pivotRechne(art, Object.values(zellen).flat());
+
+    const zeig = (v, z, s) => {
+      if (proz === 'aus') return Werkzeuge.zahlKurz ? Werkzeuge.zahlKurz(v) : rund(v);
+      const bezug = proz === 'zeile' ? zeileSumme(z) : proz === 'spalte' ? spalteSumme(s) : gesamt;
+      if (!bezug) return '0 %';
+      return (Math.round(v / bezug * 1000) / 10).toString().replace('.', ',') + ' %';
+    };
+    const rund = (v) => {
+      const n = Math.round(v * 100) / 100;
+      return String(n).replace('.', ',');
+    };
+
+    /* --- Zeichnen -------------------------------------------------------- */
+    const t = document.createElement('table');
+    t.className = 'pivot';
+    const kopfZeile = ['<tr><th class="pv-ecke">' +
+      esc(coll.schema[zk].name) + (sk ? ' ╲ ' + esc(coll.schema[sk].name) : '') + '</th>'];
+    spaltenNamen.forEach(s => kopfZeile.push('<th>' + esc(s) + '</th>'));
+    kopfZeile.push('<th class="pv-summe">Gesamt</th></tr>');
+
+    const koerper = zeilenNamen.map(z => {
+      const tds = spaltenNamen.map(s => {
+        const v = zelleWert(z, s);
+        const leer = !(zellen[z + ' ' + s] || []).length;
+        return `<td${leer ? ' class="pv-null"' : ''}` +
+               (leer ? '' : ` data-z="${esc(z)}" data-s="${esc(s)}" class="pv-klick"`) +
+               `>${leer ? '' : esc(zeig(v, z, s))}</td>`;
+      }).join('');
+      return `<tr><th class="pv-zeile">${esc(z)}</th>${tds}` +
+             `<td class="pv-summe">${esc(zeig(zeileSumme(z), z, null))}</td></tr>`;
+    }).join('');
+
+    const fuss = '<tr class="pv-fuss"><th>Gesamt</th>' +
+      spaltenNamen.map(s => `<td>${esc(zeig(spalteSumme(s), null, s))}</td>`).join('') +
+      `<td class="pv-summe">${esc(proz === 'aus' ? rund(gesamt) : '100 %')}</td></tr>`;
+
+    t.innerHTML = '<thead>' + kopfZeile.join('') + '</thead><tbody>' + koerper + fuss + '</tbody>';
+    w.appendChild(t);
+
+    /* Hineinschauen: welche Zeilen stecken in dieser Zelle? */
+    t.addEventListener('click', e => {
+      const td = e.target.closest('td[data-z]');
+      if (!td) return;
+      const z = td.dataset.z, s2 = td.dataset.s;
+      const drin = rows.filter(r => schluessel(r, zk) === z && (!sk || schluessel(r, sk) === s2));
+      drilldown(coll, view, z + (sk ? ' × ' + s2 : ''), drin,
+        (PIVOT_ARTEN.find(x => x[0] === art) || [])[1] +
+        (wk ? ' von „' + coll.schema[wk].name + '": ' : ': ') +
+        Formula.anzeige(Math.round(zelleWert(z, s2) * 100) / 100));
+    });
+
+    const fussZeile = document.createElement('div');
+    fussZeile.className = 'pivot-fuss';
+    fussZeile.textContent = zeilenNamen.length + ' Zeilen × ' + spaltenNamen.length +
+      ' Spalten aus ' + rows.length + ' Einträgen · ' +
+      (PIVOT_ARTEN.find(x => x[0] === art) || [])[1] +
+      (wk ? ' von „' + coll.schema[wk].name + '"' : '');
+    w.appendChild(fussZeile);
+
+    /* CSV — damit die Kreuztabelle in Excel weiterlebt */
+    kopf.querySelector('[data-p="csv"]').addEventListener('click', () => {
+      const zeilenCsv = [[coll.schema[zk].name, ...spaltenNamen, 'Gesamt']];
+      zeilenNamen.forEach(z => zeilenCsv.push([z,
+        ...spaltenNamen.map(s => zeig(zelleWert(z, s), z, s)), zeig(zeileSumme(z), z, null)]));
+      zeilenCsv.push(['Gesamt', ...spaltenNamen.map(s => zeig(spalteSumme(s), null, s)),
+                      proz === 'aus' ? rund(gesamt) : '100 %']);
+      const csv = zeilenCsv.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(';')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = (coll.name || 'Pivot') + '.csv';
+      a.click();
+      UI.toast('Kreuztabelle als CSV gespeichert');
+    });
+
+    return w;
+  };
+
+  /* ------------------------------------------------------------------------
+   * TABELLE AM TELEFON: KARTEN STATT SPALTEN
+   * ------------------------------------------------------------------------
+   * Auf 428 Pixeln passt keine Tabelle. Notion zeigt am Handy eine Liste,
+   * in der jeder Eintrag als Karte steht: Titel gross, darunter die
+   * sichtbaren Eigenschaften als Paare. Antippen öffnet die Zeile.
+   * --------------------------------------------------------------------- */
+  const alsHandyKarten = (coll, view, rows) => {
+    const w = document.createElement('div');
+    w.className = 'hk-liste';
+
+    const titelKey = Object.keys(coll.schema).find(k => coll.schema[k].type === 'title');
+    const sichtbar = Object.keys(coll.schema)
+      .filter(k => k !== titelKey)
+      .filter(k => !(view.hidden || []).includes(k))
+      .filter(k => !coll.schema[k].eigen || (view.eigenZeigen || []).includes(k))
+      .slice(0, 4);
+
+    if (!rows.length) {
+      w.innerHTML = '<div class="hk-leer">Noch keine Einträge. Unten auf „Neu" tippen.</div>';
+      return w;
+    }
+
+    rows.forEach(r => {
+      const k = document.createElement('div');
+      k.className = 'hk-karte';
+      k.dataset.rid = r.id;
+      const farbe = farbeFuerZeile(r, view, coll);
+      if (farbe) k.classList.add('bg-' + farbe);
+      if (r.archiviert) k.classList.add('hk-archiv');
+
+      k.innerHTML =
+        `<div class="hk-titel">${r.icon ? `<span>${esc(r.icon)}</span>` : ''}` +
+        `${esc(r.text || 'Ohne Titel')}</div>` +
+        (sichtbar.length
+          ? '<div class="hk-felder">' + sichtbar.map(key => {
+              const inhalt = zelle(r, key, coll);
+              if (!inhalt || /^<span style="color:var\(--text-faint\)">—<\/span>$/.test(inhalt)) return '';
+              return `<div class="hk-feld"><span class="hk-name">${esc(coll.schema[key].name)}</span>` +
+                     `<span class="hk-wert">${inhalt}</span></div>`;
+            }).join('') + '</div>'
+          : '');
+      w.appendChild(k);
+    });
+
+    w.addEventListener('click', (e) => {
+      /* Kontrollkästchen direkt in der Karte schalten, sonst Zeile öffnen */
+      const box = e.target.closest('input[type="checkbox"][data-k]');
+      const karte = e.target.closest('.hk-karte');
+      if (!karte) return;
+      if (box) { Store.setProp(karte.dataset.rid, box.dataset.k, box.checked); return; }
+      zeilePeek(Store.getBlock(karte.dataset.rid), coll);
+    });
+
+    return w;
+  };
+
   /* --- Tabelle ------------------------------------------------------------ */
+  /* ========================================================================
+   * GRUPPIERTE ANSICHT
+   * ------------------------------------------------------------------------
+   * Notion gruppiert Tabellen, Listen und Galerien nach einer Eigenschaft.
+   * Redion kann zusätzlich:
+   *   · Datumsspalten in Zeitabschnitte legen (Tag, Woche, Monat, Quartal,
+   *     Jahr) statt jeden einzelnen Tag zur eigenen Gruppe zu machen,
+   *   · Zahlenspalten in Stufen zerlegen,
+   *   · und zeigt in jeder Gruppenüberschrift die Summe der Gruppe.
+   * ======================================================================*/
+  const ZEIT_STUFEN = [['tag','Tag'],['woche','Woche'],['monat','Monat'],
+                       ['quartal','Quartal'],['jahr','Jahr']];
+
+  /** Der Gruppenschlüssel einer Zeile — bei Datum je nach Zeitstufe. */
+  const gruppeVon = (r, gk, coll, view) => {
+    const def = coll.schema[gk] || {};
+    const v = wert(r, gk, coll);
+    if (v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length))
+      return ['(Leer)'];
+    if (['date','created','edited'].includes(def.type)) {
+      const d = new Date(v);
+      if (isNaN(d)) return ['(Leer)'];
+      const stufe = view.gruppeZeit || 'monat';
+      if (stufe === 'tag')   return [d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })];
+      if (stufe === 'woche') {
+        const mo = new Date(d); mo.setDate(mo.getDate() - ((mo.getDay() + 6) % 7));
+        return ['KW ' + kalenderWoche(d) + ' · ' + mo.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' })];
+      }
+      if (stufe === 'quartal') return ['Q' + (Math.floor(d.getMonth() / 3) + 1) + ' ' + d.getFullYear()];
+      if (stufe === 'jahr')    return [String(d.getFullYear())];
+      return [d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })];
+    }
+    if (def.type === 'number') {
+      const n = Number(v);
+      if (isNaN(n)) return ['(Leer)'];
+      const st = Number(view.gruppeStufe) || 0;
+      if (!st) return [Formula.anzeige(n)];
+      const u = Math.floor(n / st) * st;
+      return [Formula.anzeige(u) + ' – ' + Formula.anzeige(u + st)];
+    }
+    if (def.type === 'checkbox') return [v === true || v === 'true' ? 'Erledigt' : 'Offen'];
+    if (Array.isArray(v)) return v.map(x => String(x && x.name ? x.name : x));
+    return [String(v)];
+  };
+
+  /** Alle Gruppen einer Ansicht, in der gewünschten Reihenfolge. */
+  const gruppenListe = (coll, view, rows) => {
+    const gk  = view.groupBy;
+    const def = coll.schema[gk] || {};
+    const topf = new Map();
+    rows.forEach(r => gruppeVon(r, gk, coll, view).forEach(g => {
+      if (!topf.has(g)) topf.set(g, []);
+      topf.get(g).push(r);
+    }));
+
+    let namen;
+    if ((def.options || []).length && !['date','created','edited','number'].includes(def.type)) {
+      namen = def.options.map(o => o.name).filter(n => view.leereGruppen !== false || topf.has(n));
+      [...topf.keys()].forEach(k => { if (!namen.includes(k) && k !== '(Leer)') namen.push(k); });
+    } else {
+      namen = [...topf.keys()].filter(k => k !== '(Leer)');
+      if (['date','created','edited'].includes(def.type)) {
+        /* Zeitgruppen nach dem frühesten Datum sortieren, nicht alphabetisch */
+        const ersteZeit = (g) => Math.min(...topf.get(g).map(r => {
+          const d = new Date(wert(r, gk, coll)); return isNaN(d) ? Infinity : d.getTime(); }));
+        namen.sort((a, b) => ersteZeit(a) - ersteZeit(b));
+      } else if (def.type === 'number') {
+        namen.sort((a, b) => parseFloat(String(a).replace(/[^\d.,-]/g, '').replace(',', '.')) -
+                             parseFloat(String(b).replace(/[^\d.,-]/g, '').replace(',', '.')));
+      } else namen.sort((a, b) => a.localeCompare(b, 'de'));
+    }
+
+    const art = view.gruppeSort || 'manuell';
+    if (art === 'alphabetisch')    namen.sort((a, b) => a.localeCompare(b, 'de'));
+    if (art === 'alphabetisch-ab') namen.sort((a, b) => b.localeCompare(a, 'de'));
+    if (art === 'anzahl')          namen.sort((a, b) => (topf.get(b) || []).length - (topf.get(a) || []).length);
+    if (art === 'anzahl-auf')      namen.sort((a, b) => (topf.get(a) || []).length - (topf.get(b) || []).length);
+    if (topf.has('(Leer)')) namen.push('(Leer)');
+
+    return namen.map(n => ({
+      name: n, rows: topf.get(n) || [],
+      farbe: ((def.options || []).find(o => o.name === n) || {}).color || null
+    }));
+  };
+
+  const alsGruppiert = (coll, view, rows, block) => {
+    const w = document.createElement('div');
+    w.className = 'tgruppen';
+    const gk = view.groupBy;
+    const gruppen = gruppenListe(coll, view, rows);
+    const zu = view.zuGruppen || [];
+
+    /* Die Berechnung, die in der Überschrift stehen soll: die erste
+       eingestellte Spaltenberechnung — so wie Notion es zeigt. */
+    const calcKey = Object.keys(view.calc || {}).find(k => (view.calc || {})[k] &&
+                                                           (view.calc || {})[k] !== '—');
+
+    gruppen.forEach(g => {
+      if (!g.rows.length && view.leereGruppen === false) return;
+      const kasten = document.createElement('div');
+      kasten.className = 'tg';
+      const offen = !zu.includes(g.name);
+      const kopf = document.createElement('div');
+      kopf.className = 'tg-kopf';
+      kopf.innerHTML = `<span class="tg-pfeil">${offen ? '▾' : '▸'}</span>` +
+        `<span class="tag bg-${g.farbe || 'gray'}">${esc(g.name)}</span>` +
+        `<em>${g.rows.length}</em>` +
+        (calcKey
+          ? `<span class="tg-summe">${esc(coll.schema[calcKey].name)}: ` +
+            `${esc(rechne(view.calc[calcKey], g.rows, calcKey, coll))}</span>` : '') +
+        '<button class="tg-neu" title="Eintrag in dieser Gruppe">+</button>';
+      kopf.addEventListener('click', e => {
+        if (e.target.closest('.tg-neu')) {
+          const vor = {};
+          const def = coll.schema[gk];
+          if (g.name !== '(Leer)' && ['select','status','text'].includes(def.type)) vor[gk] = g.name;
+          if (def.type === 'checkbox') vor[gk] = g.name === 'Erledigt';
+          Store.addRow(coll.id, vor); App.zeichneSeite(); return;
+        }
+        const liste = [...(view.zuGruppen || [])];
+        const i = liste.indexOf(g.name);
+        if (i >= 0) liste.splice(i, 1); else liste.push(g.name);
+        Store.updateView(view.id, { zuGruppen: liste });
+        App.zeichneSeite();
+      });
+      kasten.appendChild(kopf);
+
+      if (offen) {
+        const inhalt =
+          view.layout === 'list'    ? alsListe(coll, view, g.rows) :
+          view.layout === 'gallery' ? alsGalerie(coll, view, g.rows) :
+          (UI.amTelefon() && view.handyTabelle !== true)
+            ? alsHandyKarten(coll, view, g.rows)
+            : alsTabelle(coll, view, g.rows, block);
+        inhalt.classList.add('tg-inhalt');
+        kasten.appendChild(inhalt);
+      }
+      w.appendChild(kasten);
+    });
+
+    if (!gruppen.length) w.innerHTML = '<div class="db-leer">Noch keine Einträge.</div>';
+    return w;
+  };
+
   const alsTabelle = (coll, view, rows, block) => {
     /* Die Spalten, die Notion beim Einschalten von Unter-Elementen und
        Abhängigkeiten selbst anlegt, bleiben aus der Tabelle heraus — sie
@@ -933,6 +1668,11 @@ const Datenbank = (() => {
           });
           td.querySelector('.tt-t').addEventListener('click', () => zeilePeek(r, coll));
           td.querySelector('.tt-auf').addEventListener('click', (e) => { e.stopPropagation(); App.oeffne(r.id); });
+          /* Auch die Titelspalte gehört zur Tastaturnavigation. Bisher fing
+             die Reise erst bei der zweiten Spalte an — man kam mit dem Pfeil
+             nach links nie bis zum Namen der Zeile. */
+          td.tabIndex = 0;
+          td.dataset.zelle = r.id + '|title';
         } else {
           td.innerHTML = zelle(r, k, coll);
           td.tabIndex = 0;
@@ -941,6 +1681,16 @@ const Datenbank = (() => {
           td.addEventListener('click', (e) => {
             if (e.target.type === 'checkbox') {
               Store.setProp(r.id, k, e.target.checked);
+              return;
+            }
+            /* Sterne direkt in der Zelle setzen — nochmal auf denselben
+               Stern tippt die Bewertung wieder weg. */
+            const stern = e.target.closest('.sterne i[data-n]');
+            if (stern) {
+              const n = Number(stern.dataset.n);
+              const jetzt = Formula.zahl(wert(r, k, coll));
+              Store.setProp(r.id, k, jetzt === n ? 0 : n);
+              App.zeichneSeite();
               return;
             }
             if (e.target.classList.contains('zellen-knopf')) { knopfInZelle(r, k, coll); return; }
@@ -985,6 +1735,10 @@ const Datenbank = (() => {
     tfoot.appendChild(ftr);
     t.appendChild(tfoot);
 
+    /* Lange Tabellen fensterweise zeichnen — erst wenn die Tabelle im
+       Dokument steht, sonst gibt es noch keine Masse. */
+    if (window.Tempo) setTimeout(() => Tempo.fensterweise(t), 0);
+
     /* Mit Pfeilen von Zelle zu Zelle, Enter bearbeitet, Tab geht weiter —
        so, wie man es aus Tabellen kennt. */
     t.addEventListener('keydown', (e) => {
@@ -1009,19 +1763,120 @@ const Datenbank = (() => {
       if (e.key === 'ArrowDown')  springe(1, 0);
       if (e.key === 'ArrowUp')    springe(-1, 0);
       if (e.key === 'Tab')        { e.preventDefault(); springe(0, e.shiftKey ? -1 : 1); }
+      /* Pos1 und Ende springen an den Rand der Zeile, mit Strg an den Rand
+         der Tabelle — dasselbe, was man aus jeder Tabellenkalkulation kennt. */
+      if (e.key === 'Home') {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          const erste = zeilenListe[0]?.querySelectorAll('td[data-zelle]')[0];
+          if (erste) erste.focus();
+        } else spalten[0]?.focus();
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          const letzteZeile = zeilenListe[zeilenListe.length - 1];
+          const felder = letzteZeile ? [...letzteZeile.querySelectorAll('td[data-zelle]')] : [];
+          felder[felder.length - 1]?.focus();
+        } else spalten[spalten.length - 1]?.focus();
+      }
+
+      /* --- Die Zeile als Seite ------------------------------------------
+       * In Notion öffnet die Leertaste die Zeile in der Vorschau und
+       * Strg+Enter als ganze Seite. Bisher musste man dafür zur Maus
+       * greifen und den kleinen Öffnen-Knopf treffen.
+       * ------------------------------------------------------------------ */
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        const rid = td.dataset.zelle.split('|')[0];
+        const zeile4 = Store.getBlock(rid);
+        if (zeile4) zeilePeek(zeile4, coll);
+        return;
+      }
+      /* Erst die engere Bedingung prüfen — sonst fängt Strg+Enter das
+         Strg+Umschalt+Enter mit ab und die geteilte Ansicht bliebe tot. */
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        if (window.Fenster) Fenster.teilen(td.dataset.zelle.split('|')[0], 'quer');
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        App.oeffne(td.dataset.zelle.split('|')[0]);
+        return;
+      }
+      /* Umschalt+Enter legt eine Zeile darunter an */
+      if (e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        const neu = Store.addRow(coll.id, {});
+        App.zeichneSeite();
+        setTimeout(() => {
+          const z = document.querySelector(`td[data-zelle^="${neu.id}|"]`);
+          if (z) z.focus();
+        }, 60);
+        return;
+      }
       if (e.key === 'Enter' || e.key === 'F2') {
         e.preventDefault();
         const [rid, key] = td.dataset.zelle.split('|');
         const zeile3 = Store.getBlock(rid);
-        if (zeile3) zelleBearbeiten(td, zeile3, key, coll);
+        if (!zeile3) return;
+        /* Die Titelspalte ist keine gewöhnliche Zelle: dort steht der Name
+           der Zeile samt Klappknopf. Enter öffnet sie deshalb. */
+        if (key === 'title') zeilePeek(zeile3, coll);
+        else zelleBearbeiten(td, zeile3, key, coll);
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        e.preventDefault();
         const [rid, key] = td.dataset.zelle.split('|');
+        if (key === 'title') return;      /* der Name geht so nicht weg */
+        e.preventDefault();
         if (!['formula','created','edited','rollup','uid'].includes(coll.schema[key]?.type)) {
           Store.setProp(rid, key, '');
           App.zeichneSeite();
         }
+      }
+
+      /* --- Strg+D und Strg+R: ausfüllen ---------------------------------
+       * Notions einzige Datenbank-Tastenkürzel, die uns noch fehlten.
+       * Strg+D nimmt den Wert dieser Zelle und schreibt ihn in dieselbe
+       * Spalte aller Zeilen darunter — oder, wenn Zeilen ausgewählt sind,
+       * genau in diese. Strg+R holt den Wert aus der Spalte links.
+       * ---------------------------------------------------------------- */
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D' ||
+                                       e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        const [rid, key] = td.dataset.zelle.split('|');
+        /* „title" steht nicht in props, sondern als Text am Block — beim
+           Ausfüllen wird sie deshalb übersprungen statt still verfälscht. */
+        const gesperrt = (k) => k === 'title' ||
+          ['formula','created','edited','rollup','uid','createdBy','editedBy']
+          .includes(coll.schema[k]?.type);
+
+        if (e.key.toLowerCase() === 'r') {
+          const links = spalten[x - 1];
+          if (!links) { UI.toast('Links steht keine Spalte'); return; }
+          const linkerKey = links.dataset.zelle.split('|')[1];
+          if (gesperrt(key)) { UI.toast('Diese Spalte rechnet selbst'); return; }
+          Store.setProp(rid, key, (Store.getBlock(rid).props || {})[linkerKey] ?? '');
+          App.zeichneSeite();
+          UI.toast('Von links übernommen');
+          return;
+        }
+
+        if (gesperrt(key)) { UI.toast('Diese Spalte rechnet selbst'); return; }
+        const quelle = (Store.getBlock(rid).props || {})[key] ?? '';
+        const gewaehlt = gewaehlteZeilen();
+        const ziele = gewaehlt.length
+          ? gewaehlt.filter(id => id !== rid)
+          : zeilenListe.slice(y + 1).map(tr => tr.dataset.rid).filter(Boolean);
+        if (!ziele.length) { UI.toast('Darunter steht keine Zeile'); return; }
+        let gesetzt = 0;
+        ziele.forEach(id => { const vor = JSON.stringify((Store.getBlock(id).props || {})[key]);
+          Store.setProp(id, key, quelle);
+          if (JSON.stringify((Store.getBlock(id).props || {})[key]) !== vor) gesetzt++; });
+        App.zeichneSeite();
+        UI.toast(gesetzt + ' Zellen ausgefüllt' +
+          (gesetzt < ziele.length ? ' — ' + (ziele.length - gesetzt) + ' von einer Regel abgelehnt' : ''));
       }
     });
 
@@ -1405,6 +2260,8 @@ const Datenbank = (() => {
   };
 
   const zelleBearbeiten = (td, row, key, coll) => {
+    /* Sterne werden angeklickt, nicht getippt. */
+    if (coll.schema[key] && coll.schema[key].type === 'sterne') return;
     const def = coll.schema[key];
 
     if (def.type === 'relation') { relationWaehlen(row, key, coll); return; }
@@ -1575,6 +2432,27 @@ const Datenbank = (() => {
   };
 
   /* --- Board -------------------------------------------------------------- */
+  /** Bildquelle einer Zeile für die Kartenvorschau — Datei-, Bild- oder URL-Spalte. */
+  const kartenBild = (r, coll, view) => {
+    if (view.bildKey === '') return null;
+    const kandidaten = view.bildKey && coll.schema[view.bildKey]
+      ? [view.bildKey]
+      : Object.keys(coll.schema).filter(k => ['files','url','text'].includes(coll.schema[k].type));
+    for (const k of kandidaten) {
+      const v = (r.props || {})[k];
+      const liste = Array.isArray(v) ? v : (v ? [v] : []);
+      for (const x of liste) {
+        const u = typeof x === 'string' ? x : (x && (x.url || x.src)) || '';
+        if (/^(https?:|data:image|blob:)/i.test(u) &&
+            (/\.(png|jpe?g|gif|webp|svg|avif)(\?|$)/i.test(u) || /^data:image/i.test(u) || /^blob:/.test(u)))
+          return u;
+      }
+    }
+    /* Sonst: das erste Bild im Seiteninhalt der Zeile */
+    const kind = Store.childrenOf(r.id).find(b => b.type === 'image' && b.props && b.props.src);
+    return kind ? kind.props.src : null;
+  };
+
   const alsBoard = (coll, view, rows) => {
     const w = document.createElement('div');
     w.className = 'board';
@@ -1588,8 +2466,73 @@ const Datenbank = (() => {
       return w;
     }
 
+    /* Bahnen (Swimlanes): eine zweite Gruppierung quer zum Board.
+       Notion hat das nicht — dort geht immer nur eine Achse. */
+    const bahnKey = view.bahnKey && coll.schema[view.bahnKey] && view.bahnKey !== gk
+      ? view.bahnKey : null;
+    if (bahnKey) {
+      const bd = coll.schema[bahnKey];
+      let werteB = [];
+      if ((bd.options || []).length) werteB = bd.options.map(o => o.name);
+      else werteB = [...new Set(rows.map(r => String(wert(r, bahnKey, coll) ?? '')).filter(Boolean))]
+                    .sort((a, b) => a.localeCompare(b, 'de'));
+      werteB.push('(Leer)');
+
+      const aussen = document.createElement('div');
+      aussen.className = 'bahnen';
+      werteB.forEach(bw => {
+        const drin = rows.filter(r => (String(wert(r, bahnKey, coll) ?? '') || '(Leer)') === bw);
+        if (!drin.length && (bw === '(Leer)' || view.leereGruppen === false)) return;
+        const bahn = document.createElement('div');
+        bahn.className = 'bahn';
+        const zu = (view.bahnenZu || []).includes(bw);
+        bahn.innerHTML = `<div class="bahn-kopf" data-bahn="${esc(bw)}">` +
+          `<span class="bahn-pfeil">${zu ? '▸' : '▾'}</span>` +
+          `<b>${esc(bahnKey ? coll.schema[bahnKey].name + ': ' : '')}${esc(bw)}</b>` +
+          `<em>${drin.length}</em></div>`;
+        if (!zu) bahn.appendChild(boardSpalten(coll, view, drin, gk, bahnKey, bw));
+        aussen.appendChild(bahn);
+      });
+      aussen.addEventListener('click', e => {
+        const k = e.target.closest('[data-bahn]');
+        if (!k) return;
+        const liste = [...(view.bahnenZu || [])];
+        const i = liste.indexOf(k.dataset.bahn);
+        if (i >= 0) liste.splice(i, 1); else liste.push(k.dataset.bahn);
+        Store.updateView(view.id, { bahnenZu: liste });
+        App.zeichneSeite();
+      });
+      w.className = '';
+      w.appendChild(aussen);
+      return w;
+    }
+
+    w.appendChild(boardSpalten(coll, view, rows, gk, null, null));
+    return w;
+  };
+
+  /** Die Spalten eines Boards — einmal für das ganze Board oder je Bahn. */
+  const boardSpalten = (coll, view, rows, gk, bahnKey, bahnWert) => {
+    const w = document.createElement('div');
+    w.className = 'board';
+
     const def = coll.schema[gk];
-    const gruppen = [...(def.options || []).map(o => o.name), '(Leer)'];
+    let gruppen = [...(def.options || []).map(o => o.name), '(Leer)'];
+
+    /* Wie sollen die Gruppen selbst sortiert sein? Notion bietet dafür
+       manuell (= Reihenfolge der Optionen), alphabetisch auf- und absteigend
+       sowie nach Anzahl. „(Leer)" bleibt immer hinten. */
+    const wieViele = (g) => rows.filter(r => (wert(r, gk, coll) || '(Leer)') === g).length;
+    const art = view.gruppeSort || 'manuell';
+    if (art !== 'manuell') {
+      const leer = gruppen.filter(g => g === '(Leer)');
+      gruppen = gruppen.filter(g => g !== '(Leer)');
+      if (art === 'alphabetisch')      gruppen.sort((a, b) => a.localeCompare(b, 'de'));
+      if (art === 'alphabetisch-ab')   gruppen.sort((a, b) => b.localeCompare(a, 'de'));
+      if (art === 'anzahl')            gruppen.sort((a, b) => wieViele(b) - wieViele(a));
+      if (art === 'anzahl-auf')        gruppen.sort((a, b) => wieViele(a) - wieViele(b));
+      gruppen = gruppen.concat(leer);
+    }
 
     gruppen.forEach(g => {
       const drin = rows.filter(r => (wert(r, gk, coll) || '(Leer)') === g);
@@ -1616,7 +2559,10 @@ const Datenbank = (() => {
           const z = zelle(r, k, coll);
           if (z && !z.includes('—')) meta += `<span class="mv">${z}</span>`;
         });
-        c.innerHTML = `<div>${esc(r.text || 'Ohne Titel')}</div>` + (meta ? `<div class="meta">${meta}</div>` : '');
+        const bild = view.bild === false ? null : kartenBild(r, coll, view);
+        c.innerHTML =
+          (bild ? `<div class="kbild ${esc(view.bildPasst || 'deckt')}"><img src="${esc(bild)}" alt="" loading="lazy"></div>` : '') +
+          `<div>${esc(r.text || 'Ohne Titel')}</div>` + (meta ? `<div class="meta">${meta}</div>` : '');
         c.addEventListener('click', () => view.oeffnenAls === 'voll' ? App.oeffne(r.id) : zeilePeek(r, coll));
         c.addEventListener('contextmenu', e => { e.preventDefault(); zeilenMenue({ x: e.clientX, y: e.clientY }, r, coll); });
         c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', r.id));
@@ -1627,7 +2573,9 @@ const Datenbank = (() => {
       add.textContent = '+ Neu';
       add.style.cssText = 'width:100%; text-align:left; padding:6px; color:var(--text-faint); font-size:13.5px; border-radius:5px';
       add.addEventListener('click', () => {
-        Store.addRow(coll.id, g === '(Leer)' ? {} : { [gk]: g });
+        const vor = g === '(Leer)' ? {} : { [gk]: g };
+        if (bahnKey && bahnWert && bahnWert !== '(Leer)') vor[bahnKey] = bahnWert;
+        Store.addRow(coll.id, vor);
         App.zeichneSeite();
       });
       col.appendChild(add);
@@ -1638,7 +2586,11 @@ const Datenbank = (() => {
         e.preventDefault();
         col.style.outline = '';
         const id = e.dataTransfer.getData('text/plain');
-        if (id) { Store.setProp(id, gk, g === '(Leer)' ? '' : g); App.zeichneSeite(); }
+        if (!id) return;
+        Store.setProp(id, gk, g === '(Leer)' ? '' : g);
+        /* Über eine Bahn gezogen heisst: auch die zweite Gruppierung ändern. */
+        if (bahnKey && bahnWert) Store.setProp(id, bahnKey, bahnWert === '(Leer)' ? '' : bahnWert);
+        App.zeichneSeite();
       });
 
       w.appendChild(col);
@@ -1680,8 +2632,11 @@ const Datenbank = (() => {
         const z = zelle(r, k, coll);
         if (z && !z.includes('—')) meta += `<span class="mv">${z}</span>`;
       });
-      c.innerHTML = `<div style="font-weight:500; margin-bottom:6px">${esc(r.text || 'Ohne Titel')}</div>` +
-                    `<div class="meta">${meta}</div>`;
+      const bild = view.bild === false ? null : kartenBild(r, coll, view);
+      c.innerHTML =
+        (bild ? `<div class="kbild ${esc(view.bildPasst || 'deckt')}"><img src="${esc(bild)}" alt="" loading="lazy"></div>` : '') +
+        `<div style="font-weight:500; margin-bottom:6px">${esc(r.text || 'Ohne Titel')}</div>` +
+        `<div class="meta">${meta}</div>`;
       c.addEventListener('click', () => view.oeffnenAls === 'voll' ? App.oeffne(r.id) : zeilePeek(r, coll));
       c.addEventListener('contextmenu', e => { e.preventDefault(); zeilenMenue({ x: e.clientX, y: e.clientY }, r, coll); });
       w.appendChild(c);
@@ -1836,14 +2791,40 @@ const Datenbank = (() => {
     });
     w.appendChild(kopf);
 
+    /* --- Alle Termine aller eingeschalteten Kalender, mit Zeitraum ------- */
+    const alleTermine = () => {
+      const liste = [];
+      quellen.forEach(q => zeilenVon(q).forEach(r => {
+        const v = wert(r, q.dateKey, q.coll);
+        if (!v) return;
+        const d = new Date(v);
+        if (isNaN(d)) return;
+        const von = new Date(d); von.setHours(0, 0, 0, 0);
+        let bis = new Date(von);
+        if (q.endeKey) {
+          const e2 = new Date(wert(r, q.endeKey, q.coll));
+          if (!isNaN(e2)) { bis = new Date(e2); bis.setHours(0, 0, 0, 0); }
+        }
+        if (bis < von) bis = new Date(von);
+        liste.push({
+          row: r, quelle: q, von, bis, mehrtaegig: bis > von,
+          zeit:   String(v).length > 10 ? String(v).slice(11, 16) : '',
+          stunde: String(v).length > 10 ? parseInt(String(v).slice(11, 13), 10) : null,
+          minute: String(v).length > 10 ? parseInt(String(v).slice(14, 16), 10) || 0 : 0
+        });
+      }));
+      return liste;
+    };
+    const termine = alleTermine();
+
     /* --- Eine Tageszelle, wie sie Monat und Woche brauchen -------------- */
-    const tagesZelle = (tag, ausserhalb) => {
+    const tagesZelle = (tag, ausserhalb, ohneLange) => {
       const d = document.createElement('div');
       d.className = 'day' + (tag.toDateString() === heuteStr ? ' today' : '') +
                     (ausserhalb ? ' out' : '');
       d.innerHTML = `<div class="n">${tag.getDate()}</div>`;
       quellen.forEach(q => termineAmTag(q, tag, zeilenVon(q))
-        .forEach(e => d.appendChild(terminKnopf(e, view))));
+        .forEach(e => { if (!(ohneLange && e.mehrtaegig)) d.appendChild(terminKnopf(e, view)); }));
       d.addEventListener('dblclick', () => {
         const z = quellen.find(q => q.id === (view.neuIn || quellen[0].id)) || quellen[0];
         const p = (n) => String(n).padStart(2, '0');
@@ -1853,43 +2834,169 @@ const Datenbank = (() => {
       return d;
     };
 
+    /* Mehrtägige Termine einer Woche in Spuren legen, damit sich nichts
+       überdeckt — das ist der durchgehende Balken, den Notion nicht zeichnet. */
+    const spurenDerWoche = (wochenStart) => {
+      const wEnde = new Date(wochenStart); wEnde.setDate(wochenStart.getDate() + 6);
+      const drin = termine.filter(e => e.mehrtaegig && e.bis >= wochenStart && e.von <= wEnde)
+        .sort((a, b) => a.von - b.von || b.bis - a.bis);
+      const spuren = [];
+      drin.forEach(e => {
+        const a = Math.max(0, Math.round((e.von - wochenStart) / 86400000));
+        const b2 = Math.min(6, Math.round((e.bis - wochenStart) / 86400000));
+        let s = spuren.findIndex(sp => sp.every(x => x.b < a || x.a > b2));
+        if (s < 0) { spuren.push([]); s = spuren.length - 1; }
+        spuren[s].push({ a, b: b2, e });
+      });
+      return spuren;
+    };
+
+    const balkenWoche = (wochenStart, spuren) => {
+      const lage = document.createElement('div');
+      lage.className = 'cw-balken';
+      spuren.forEach((sp, si) => sp.forEach(({ a, b: b2, e }) => {
+        const bar = document.createElement('div');
+        bar.className = 'cw-bar q-' + e.quelle.farbe +
+          (e.von >= wochenStart ? ' anfang' : '') +
+          (e.bis <= new Date(wochenStart.getTime() + 6 * 86400000) ? ' ende' : '');
+        bar.style.left  = (a / 7 * 100) + '%';
+        bar.style.width = ((b2 - a + 1) / 7 * 100) + '%';
+        bar.style.top   = (si * 20) + 'px';
+        bar.textContent = (e.von < wochenStart ? '◂ ' : '') + (e.row.text || 'Ohne Titel');
+        bar.title = e.quelle.name + ' · ' + (e.row.text || 'Ohne Titel') + ' · ' +
+                    e.von.toLocaleDateString('de-DE') + ' – ' + e.bis.toLocaleDateString('de-DE');
+        bar.addEventListener('click', ev => {
+          ev.stopPropagation();
+          view.oeffnenAls === 'voll' ? App.oeffne(e.row.id) : zeilePeek(e.row, e.quelle.coll);
+        });
+        lage.appendChild(bar);
+      }));
+      return lage;
+    };
+
     /* --- Monat ---------------------------------------------------------- */
     if (stufe === 'monat') {
       const g = document.createElement('div');
-      g.className = 'cal';
+      g.className = 'cal-monat';
+      const namen = document.createElement('div');
+      namen.className = 'cal-dow';
       (wsMontag ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['So','Mo','Di','Mi','Do','Fr','Sa'])
-        .forEach(n => { const e = document.createElement('div'); e.className = 'dow'; e.textContent = n; g.appendChild(e); });
+        .forEach(n => { const e = document.createElement('div'); e.className = 'dow'; e.textContent = n; namen.appendChild(e); });
+      g.appendChild(namen);
 
       const jahr = stand.getFullYear(), monat = stand.getMonth();
       const erster = new Date(jahr, monat, 1);
-      let vorlauf = wsMontag ? erster.getDay() - 1 : erster.getDay();
-      if (vorlauf < 0) vorlauf = 6;
-      const tageImMonat = new Date(jahr, monat + 1, 0).getDate();
+      const start = wochenAnfang(erster);
+      const letzter = new Date(jahr, monat + 1, 0);
+      const wochen = Math.ceil((((letzter - start) / 86400000) + 1) / 7);
 
-      for (let i = vorlauf; i > 0; i--) g.appendChild(tagesZelle(new Date(jahr, monat, 1 - i), true));
-      for (let t = 1; t <= tageImMonat; t++) g.appendChild(tagesZelle(new Date(jahr, monat, t)));
-      const rest = (7 - ((vorlauf + tageImMonat) % 7)) % 7;
-      for (let i = 1; i <= rest; i++) g.appendChild(tagesZelle(new Date(jahr, monat + 1, i), true));
+      for (let wi = 0; wi < wochen; wi++) {
+        const wa = new Date(start); wa.setDate(start.getDate() + wi * 7);
+        const spuren = spurenDerWoche(wa);
+        const reihe = document.createElement('div');
+        reihe.className = 'cal-woche';
+        const tage = document.createElement('div');
+        tage.className = 'cal';
+        for (let i = 0; i < 7; i++) {
+          const t = new Date(wa); t.setDate(wa.getDate() + i);
+          const z = tagesZelle(t, t.getMonth() !== monat, true);
+          if (spuren.length) z.style.paddingTop = (5 + spuren.length * 20) + 'px';
+          tage.appendChild(z);
+        }
+        reihe.appendChild(tage);
+        if (spuren.length) reihe.appendChild(balkenWoche(wa, spuren));
+        g.appendChild(reihe);
+      }
       w.appendChild(g);
     }
 
-    /* --- Woche ---------------------------------------------------------- */
+    /* --- Woche: echtes Stundenraster wie in Notion Calendar -------------- */
     if (stufe === 'woche') {
-      const g = document.createElement('div');
-      g.className = 'cal woche';
       const a = wochenAnfang(stand);
-      for (let i = 0; i < 7; i++) {
-        const t = new Date(a); t.setDate(a.getDate() + i);
-        const e = document.createElement('div');
-        e.className = 'dow' + (t.toDateString() === heuteStr ? ' jetzt' : '');
-        e.textContent = t.toLocaleDateString('de-DE', { weekday: 'short' }) + ' ' + t.getDate() + '.';
-        g.appendChild(e);
+      const tage7 = Array.from({ length: 7 }, (_, i) => {
+        const t = new Date(a); t.setDate(a.getDate() + i); return t;
+      });
+      const g = document.createElement('div');
+      g.className = 'kw';
+
+      /* Kopf */
+      const kw = document.createElement('div');
+      kw.className = 'kw-kopf';
+      kw.innerHTML = '<div class="kw-ecke"></div>' + tage7.map(t =>
+        `<div class="kw-tag${t.toDateString() === heuteStr ? ' jetzt' : ''}">` +
+        `${t.toLocaleDateString('de-DE', { weekday: 'short' })} <b>${t.getDate()}.</b></div>`).join('');
+      g.appendChild(kw);
+
+      /* Ganztägige Termine und Balken über die Woche */
+      const spuren = spurenDerWoche(a);
+      const oben = document.createElement('div');
+      oben.className = 'kw-ganz';
+      oben.innerHTML = '<div class="kw-ecke">ganztags</div>';
+      const gzFlaeche = document.createElement('div');
+      gzFlaeche.className = 'kw-gz-flaeche';
+      tage7.forEach(t => {
+        const z = document.createElement('div');
+        z.className = 'kw-gz';
+        termine.filter(e => !e.mehrtaegig && e.stunde == null &&
+                            e.von.toDateString() === t.toDateString())
+          .forEach(e => z.appendChild(terminKnopf(e, view)));
+        gzFlaeche.appendChild(z);
+      });
+      if (spuren.length) {
+        const lage = balkenWoche(a, spuren);
+        lage.style.top = '2px';
+        gzFlaeche.appendChild(lage);
+        gzFlaeche.style.paddingTop = (spuren.length * 20 + 2) + 'px';
       }
-      for (let i = 0; i < 7; i++) {
-        const t = new Date(a); t.setDate(a.getDate() + i);
-        g.appendChild(tagesZelle(t));
+      oben.appendChild(gzFlaeche);
+      g.appendChild(oben);
+
+      /* Stundenraster */
+      const koerper = document.createElement('div');
+      koerper.className = 'kw-koerper';
+      const mitZeit = termine.filter(e => e.stunde != null && !e.mehrtaegig);
+      const belegt = new Set(mitZeit.map(e => e.stunde));
+      const vonStd = Math.min(7, ...(belegt.size ? [...belegt] : [7]));
+      const bisStd = Math.max(21, ...(belegt.size ? [...belegt] : [21]));
+      for (let h = vonStd; h <= bisStd; h++) {
+        const z = document.createElement('div');
+        z.className = 'kw-zeile';
+        z.innerHTML = `<div class="kw-ecke">${String(h).padStart(2, '0')}:00</div>`;
+        tage7.forEach(t => {
+          const zelle2 = document.createElement('div');
+          zelle2.className = 'kw-zelle' + (t.toDateString() === heuteStr ? ' heute' : '');
+          mitZeit.filter(e => e.stunde === h && e.von.toDateString() === t.toDateString())
+            .sort((x, y) => x.minute - y.minute)
+            .forEach(e => zelle2.appendChild(terminKnopf(e, view)));
+          zelle2.addEventListener('dblclick', () => {
+            const q = quellen.find(x => x.id === (view.neuIn || quellen[0].id)) || quellen[0];
+            const p = (n) => String(n).padStart(2, '0');
+            Store.addRow(q.id, { [q.dateKey]: t.getFullYear() + '-' + p(t.getMonth() + 1) + '-' +
+                                              p(t.getDate()) + 'T' + p(h) + ':00' });
+            App.zeichneSeite();
+          });
+          z.appendChild(zelle2);
+        });
+        koerper.appendChild(z);
       }
+      g.appendChild(koerper);
       w.appendChild(g);
+
+      /* Jetzt-Linie */
+      const nun = new Date();
+      if (nun >= a && nun < new Date(a.getTime() + 7 * 86400000) &&
+          nun.getHours() >= vonStd && nun.getHours() <= bisStd) {
+        setTimeout(() => {
+          const zeilen2 = koerper.querySelectorAll('.kw-zeile');
+          const idx = nun.getHours() - vonStd;
+          const z = zeilen2[idx];
+          if (!z) return;
+          const linie = document.createElement('div');
+          linie.className = 'kw-jetzt';
+          linie.style.top = (nun.getMinutes() / 60 * 100) + '%';
+          z.appendChild(linie);
+        }, 0);
+      }
     }
 
     /* --- Tag ------------------------------------------------------------ */
@@ -2022,6 +3129,43 @@ const Datenbank = (() => {
         m.innerHTML = zeichnen(); App.zeichneSeite();
         return;
       }
+      /* Testlauf — Notion hat keinen. Er läuft auf der ersten Zeile und
+         sagt hinterher, was passiert ist. */
+      const test = e.target.closest('[data-test]');
+      if (test) {
+        const a = coll.automationen[+test.dataset.test];
+        const zeile = Store.rowsOf(coll.id)[0];
+        if (!zeile) { UI.toast('Für einen Testlauf braucht es mindestens eine Zeile'); return; }
+        const vorher = JSON.stringify(zeile.props || {});
+        const artT = a.wenn.art === 'wiederkehrend' ? 'wiederkehrend' : a.wenn.art;
+        automationenLaufen(zeile, coll, artT, a.wenn.key,
+          a.wenn.art === 'prop-wert' ? a.wenn.wert : undefined);
+        setTimeout(() => {
+          const nachher = JSON.stringify(Store.getBlock(zeile.id).props || {});
+          UI.toast(vorher === nachher
+            ? 'Testlauf: nichts verändert — prüfe Auslöser und Bedingungen'
+            : 'Testlauf: „' + (zeile.text || 'Zeile') + '" wurde geändert');
+          zeichne();
+        }, 400);
+        return;
+      }
+
+      /* Laufverlauf ansehen */
+      const verl = e.target.closest('[data-verlauf]');
+      if (verl) {
+        const a = coll.automationen[+verl.dataset.verlauf];
+        const liste = a.verlauf || [];
+        UI.menu('<div class="grp">Laufverlauf — ' + esc(a.name || '') + '</div>' +
+          (liste.length
+            ? liste.slice(0, 30).map(l =>
+                '<button><span class="mi">' + (l.fehler ? '⚠' : '✓') + '</span>' +
+                esc(Werkzeuge.zeitKurz(l.wann)) + ' — ' + esc(l.zeile || '(ohne Zeile)') +
+                '<span class="ms">' + esc((l.aktionen || []).join(', ')) + '</span></button>').join('')
+            : '<button disabled>Noch nie gelaufen</button>'),
+          verl.getBoundingClientRect().left - 220, verl.getBoundingClientRect().bottom + 4);
+        return;
+      }
+
       const weg = e.target.closest('[data-weg]');
       if (weg) {
         const x = view.extraDbs || [];
@@ -2223,7 +3367,35 @@ const Datenbank = (() => {
 
   /* --- Zeitstrahl ---------------------------------------------------------
    * Notions Timeline: jede Zeile ein Balken auf einer Zeitachse.
+   * Redion kann dazu, was Notion nicht kann:
+   *   · fünf Zoomstufen (Tag bis Jahr) statt der drei von Notion,
+   *   · Abhängigkeitspfeile zwischen den Balken, wenn es eine Verknüpfung
+   *     auf dieselbe Datenbank gibt („hängt ab von"),
+   *   · Balken mit der Maus schieben und am rechten Rand länger ziehen,
+   *   · eine feste Namensspalte links wie in einem Projektplan.
    * ----------------------------------------------------------------------*/
+  const ZS_STUFEN = [
+    ['tag',     'Tag',     42],
+    ['woche',   'Woche',   15],
+    ['monat',   'Monat',    5],
+    ['quartal', 'Quartal',  2],
+    ['jahr',    'Jahr',   0.8]
+  ];
+  const ZS_ZEILE = 32;      /* Höhe einer Zeile in Pixeln */
+  const ZS_KOPF  = 34;      /* Höhe der Zeitleiste oben   */
+
+  /** Tagesbeginn als eigenes Datum — ohne die Uhrzeit der Vorlage. */
+  const zsTag = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+
+  /** Schreibt ein verschobenes Datum zurück und behält die Uhrzeit bei. */
+  const zsSchreibe = (row, key, neu, alt) => {
+    const roh = String(alt || '');
+    const zeit = roh.length > 10 ? roh.slice(10, 16) : '';   /* "T08:30" */
+    const p = (n) => String(n).padStart(2, '0');
+    Store.setProp(row.id, key,
+      neu.getFullYear() + '-' + p(neu.getMonth() + 1) + '-' + p(neu.getDate()) + zeit);
+  };
+
   const alsZeitstrahl = (coll, view, rows) => {
     const w = document.createElement('div');
     w.className = 'zeitstrahl';
@@ -2238,12 +3410,20 @@ const Datenbank = (() => {
       return w;
     }
 
+    /* Verknüpfungen auf dieselbe Datenbank taugen als Abhängigkeit. */
+    const abhKeys = Object.keys(coll.schema).filter(k =>
+      coll.schema[k].type === 'relation' && coll.schema[k].ziel === coll.id);
+    const abhKey = view.abhKey === '' ? null
+      : (view.abhKey && coll.schema[view.abhKey] ? view.abhKey : abhKeys[0] || null);
+
     const eintraege = rows.map(r => {
-      const a = new Date(wert(r, startKey, coll));
-      const b = endeKey ? new Date(wert(r, endeKey, coll)) : new Date(a);
+      const rohA = wert(r, startKey, coll);
+      const a = new Date(rohA);
+      const rohB = endeKey ? wert(r, endeKey, coll) : rohA;
+      const b = new Date(rohB);
       if (isNaN(a)) return null;
-      if (isNaN(b) || b < a) b.setTime(a.getTime());
-      return { row: r, von: a, bis: b };
+      const bis = (isNaN(b) || b < a) ? new Date(a) : b;
+      return { row: r, von: zsTag(a), bis: zsTag(bis), rohA, rohB };
     }).filter(Boolean);
 
     if (!eintraege.length) {
@@ -2251,78 +3431,241 @@ const Datenbank = (() => {
       return w;
     }
 
-    const minD = new Date(Math.min(...eintraege.map(e => e.von)));
-    const maxD = new Date(Math.max(...eintraege.map(e => e.bis)));
-    minD.setDate(minD.getDate() - 2);
-    maxD.setDate(maxD.getDate() + 3);
-    const spanne = Math.max(1, (maxD - minD) / 86400000);
+    const stufeId = view.zoom && ZS_STUFEN.some(s => s[0] === view.zoom) ? view.zoom : 'monat';
+    const stufe   = ZS_STUFEN.find(s => s[0] === stufeId);
+    const px      = stufe[2];                       /* Pixel je Tag */
 
-    /* Massstab: Monatsbeschriftungen */
-    const kopf = document.createElement('div');
-    kopf.className = 'zs-kopf';
-    const monate = [];
+    const minD = zsTag(new Date(Math.min(...eintraege.map(e => e.von))));
+    const maxD = zsTag(new Date(Math.max(...eintraege.map(e => e.bis))));
+    minD.setDate(minD.getDate() - (px > 8 ? 2 : 10));
+    maxD.setDate(maxD.getDate() + (px > 8 ? 3 : 14));
+    const tage   = Math.max(1, Math.round((maxD - minD) / 86400000));
+    const breiteG = tage * px;
+    const xVon   = (d) => Math.round((zsTag(d) - minD) / 86400000 * px);
+
+    eintraege.sort((a, b) => a.von - b.von || String(a.row.text || '').localeCompare(String(b.row.text || ''), 'de'));
+    const platz = {};
+    eintraege.forEach((e, i) => { platz[e.row.id] = i; });
+
+    /* ---- Kopfzeile: je nach Zoomstufe Tage, Wochen, Monate oder Jahre ---- */
+    const marken = [];
     const lauf = new Date(minD);
-    lauf.setDate(1);
-    while (lauf <= maxD) {
-      const von = Math.max(0, (lauf - minD) / 86400000);
-      monate.push({ text: lauf.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' }), pos: von / spanne * 100 });
-      lauf.setMonth(lauf.getMonth() + 1);
+    if (stufeId === 'tag') {
+      while (lauf <= maxD) {
+        marken.push({ x: xVon(lauf), text: lauf.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
+                      wochenende: lauf.getDay() === 0 || lauf.getDay() === 6 });
+        lauf.setDate(lauf.getDate() + 1);
+      }
+    } else if (stufeId === 'woche') {
+      while (lauf.getDay() !== 1) lauf.setDate(lauf.getDate() - 1);
+      while (lauf <= maxD) {
+        marken.push({ x: xVon(lauf), text: 'KW ' + kalenderWoche(lauf) });
+        lauf.setDate(lauf.getDate() + 7);
+      }
+    } else if (stufeId === 'monat' || stufeId === 'quartal') {
+      lauf.setDate(1);
+      while (lauf <= maxD) {
+        marken.push({ x: xVon(lauf),
+          text: stufeId === 'monat'
+            ? lauf.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })
+            : 'Q' + (Math.floor(lauf.getMonth() / 3) + 1) + ' ' + lauf.getFullYear() });
+        lauf.setMonth(lauf.getMonth() + (stufeId === 'monat' ? 1 : 3));
+      }
+    } else {
+      lauf.setMonth(0, 1);
+      while (lauf <= maxD) {
+        marken.push({ x: xVon(lauf), text: String(lauf.getFullYear()) });
+        lauf.setFullYear(lauf.getFullYear() + 1);
+      }
     }
-    kopf.innerHTML = monate.map(m =>
-      `<span style="left:${m.pos}%">${esc(m.text)}</span>`).join('');
-    w.appendChild(kopf);
 
-    /* Heute-Markierung */
-    const jetzt = new Date();
-    if (jetzt >= minD && jetzt <= maxD) {
-      const linie = document.createElement('div');
-      linie.className = 'zs-heute';
-      linie.style.left = ((jetzt - minD) / 86400000 / spanne * 100) + '%';
-      linie.title = 'Heute';
-      w.appendChild(linie);
-    }
+    /* ---- Gerüst ---------------------------------------------------------- */
+    const leiste = document.createElement('div');
+    leiste.className = 'zs-leiste';
+    leiste.innerHTML =
+      '<div class="zs-zoom">' + ZS_STUFEN.map(([id, n]) =>
+        `<button data-zoom="${id}"${id === stufeId ? ' class="an"' : ''}>${n}</button>`).join('') + '</div>' +
+      `<span class="zs-info">${eintraege.length} Einträge · ${tage} Tage` +
+        (abhKey ? ' · Pfeile aus „' + esc(coll.schema[abhKey].name) + '"' : '') + '</span>' +
+      '<button data-a="heute">Heute</button>' +
+      '<button data-a="felder">Felder</button>';
+    w.appendChild(leiste);
 
-    eintraege.sort((a, b) => a.von - b.von).forEach((e, i) => {
-      const zeile = document.createElement('div');
-      zeile.className = 'zs-zeile';
-      const links = ((e.von - minD) / 86400000) / spanne * 100;
-      const breite = Math.max(2.5, ((e.bis - e.von) / 86400000 + 1) / spanne * 100);
-      const farbe = FARBEN[i % FARBEN.length];
-      zeile.innerHTML =
-        `<div class="zs-balken bg-${farbe}" style="left:${links}%; width:${breite}%" ` +
+    const raster = document.createElement('div');
+    raster.className = 'zs-raster';
+
+    const namen = document.createElement('div');
+    namen.className = 'zs-namen';
+    namen.innerHTML = `<div class="zs-namkopf" style="height:${ZS_KOPF}px"></div>` +
+      eintraege.map(e =>
+        `<div class="zs-name" style="height:${ZS_ZEILE}px" data-rid="${e.row.id}" ` +
+        `title="${esc(e.row.text || 'Ohne Titel')}">${esc(e.row.text || 'Ohne Titel')}</div>`).join('');
+    raster.appendChild(namen);
+
+    const scroll = document.createElement('div');
+    scroll.className = 'zs-scroll';
+    const flaeche = document.createElement('div');
+    flaeche.className = 'zs-flaeche';
+    flaeche.style.width  = breiteG + 'px';
+    flaeche.style.height = (ZS_KOPF + eintraege.length * ZS_ZEILE + 8) + 'px';
+
+    /* Kopf + Gitterlinien */
+    let html = `<div class="zs-kopf" style="height:${ZS_KOPF}px">` +
+      marken.map(m => `<span style="left:${m.x}px">${esc(m.text)}</span>`).join('') +
+      marken.map(m => `<i class="zs-gitter${m.wochenende ? ' we' : ''}" style="left:${m.x}px"></i>`).join('') +
+      '</div>';
+
+    /* Heute-Linie */
+    const jetzt = zsTag(new Date());
+    if (jetzt >= minD && jetzt <= maxD)
+      html += `<div class="zs-heute" style="left:${xVon(jetzt)}px; top:${ZS_KOPF - 6}px"></div>`;
+
+    /* Balken */
+    const balkenBreite = (e) => Math.max(px < 4 ? 6 : 22, ((e.bis - e.von) / 86400000 + 1) * px);
+    eintraege.forEach((e, i) => {
+      const links  = xVon(e.von);
+      const breite = balkenBreite(e);
+      const farbe  = FARBEN[i % FARBEN.length];
+      html += `<div class="zs-balken bg-${farbe}" data-rid="${e.row.id}" ` +
+        `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
         `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
         (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
-        esc(e.row.text || 'Ohne Titel') + '</div>';
-      zeile.querySelector('.zs-balken').addEventListener('click', () => zeilePeek(e.row, coll));
-      w.appendChild(zeile);
+        `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
+        (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
+    });
+    flaeche.innerHTML = html;
+
+    /* ---- Abhängigkeitspfeile -------------------------------------------- */
+    if (abhKey) {
+      const linien = [];
+      eintraege.forEach(e => {
+        const vor = e.row.props && e.row.props[abhKey];
+        (Array.isArray(vor) ? vor : (vor ? [vor] : [])).forEach(id => {
+          const q = eintraege.find(x => x.row.id === id);
+          if (!q) return;
+          const y1 = ZS_KOPF + platz[q.row.id] * ZS_ZEILE + ZS_ZEILE / 2;
+          const y2 = ZS_KOPF + platz[e.row.id] * ZS_ZEILE + ZS_ZEILE / 2;
+          const x1 = xVon(q.von) + balkenBreite(q);
+          const x2 = xVon(e.von);
+          const mx = Math.max(x1 + 9, x2 - 9);
+          linien.push(`<path d="M ${x1} ${y1} H ${mx} V ${y2} H ${x2 - 5}" ` +
+            'fill="none" stroke="var(--text-faint)" stroke-width="1.4" marker-end="url(#zs-spitze)"/>');
+        });
+      });
+      if (linien.length) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'zs-pfeile');
+        svg.setAttribute('width', breiteG);
+        svg.setAttribute('height', ZS_KOPF + eintraege.length * ZS_ZEILE + 8);
+        svg.innerHTML =
+          '<defs><marker id="zs-spitze" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" ' +
+          'markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--text-faint)"/></marker></defs>' +
+          linien.join('');
+        flaeche.appendChild(svg);
+      }
+    }
+
+    scroll.appendChild(flaeche);
+    raster.appendChild(scroll);
+    w.appendChild(raster);
+
+    /* Erst nach dem Einhängen scrollen: zum heutigen Tag */
+    setTimeout(() => {
+      if (jetzt >= minD && jetzt <= maxD)
+        scroll.scrollLeft = Math.max(0, xVon(jetzt) - scroll.clientWidth / 3);
+    }, 0);
+
+    /* ---- Schieben und Verlängern ---------------------------------------- */
+    let zieh = null;
+    flaeche.addEventListener('mousedown', ev => {
+      const b = ev.target.closest('.zs-balken');
+      if (!b || ev.button !== 0) return;
+      const e = eintraege.find(x => x.row.id === b.dataset.rid);
+      if (!e) return;
+      zieh = { b, e, x0: ev.clientX, links0: parseFloat(b.style.left), breit0: parseFloat(b.style.width),
+               art: ev.target.classList.contains('zs-griff') ? 'ende' : 'schieben', bewegt: false };
+      window.addEventListener('mousemove', beiBewegung);
+      window.addEventListener('mouseup', beiLoslassen);
+      ev.preventDefault();
+    });
+    const beiBewegung = (ev) => {
+      if (!zieh) return;
+      const d = ev.clientX - zieh.x0;
+      if (Math.abs(d) > 3) zieh.bewegt = true;
+      if (zieh.art === 'ende') zieh.b.style.width = Math.max(px, zieh.breit0 + d) + 'px';
+      else zieh.b.style.left = (zieh.links0 + d) + 'px';
+    };
+    const beiLoslassen = () => {
+      if (!zieh) return;
+      const z = zieh; zieh = null;
+      window.removeEventListener('mousemove', beiBewegung);
+      window.removeEventListener('mouseup', beiLoslassen);
+      if (!z.bewegt) { zeilePeek(z.e.row, coll); return; }
+      const tageVerschoben = Math.round((parseFloat(z.b.style.left) - z.links0) / px);
+      const tageLaenger    = Math.round((parseFloat(z.b.style.width) - z.breit0) / px);
+      if (z.art === 'schieben' && tageVerschoben) {
+        const nv = new Date(z.e.von); nv.setDate(nv.getDate() + tageVerschoben);
+        zsSchreibe(z.e.row, startKey, nv, z.e.rohA);
+        if (endeKey) {
+          const nb = new Date(z.e.bis); nb.setDate(nb.getDate() + tageVerschoben);
+          zsSchreibe(z.e.row, endeKey, nb, z.e.rohB);
+        }
+      } else if (z.art === 'ende' && tageLaenger && endeKey) {
+        const nb = new Date(z.e.bis); nb.setDate(nb.getDate() + tageLaenger);
+        if (nb < z.e.von) nb.setTime(z.e.von.getTime());
+        zsSchreibe(z.e.row, endeKey, nb, z.e.rohB);
+      }
+      App.zeichneSeite();
+    };
+    namen.addEventListener('click', ev => {
+      const n = ev.target.closest('[data-rid]');
+      if (!n) return;
+      const e = eintraege.find(x => x.row.id === n.dataset.rid);
+      if (e) view.oeffnenAls === 'voll' ? App.oeffne(e.row.id) : zeilePeek(e.row, coll);
     });
 
-    /* Umschalter für die Datumsfelder */
-    const fuss = document.createElement('div');
-    fuss.className = 'zs-fuss';
-    fuss.innerHTML =
-      `<span>Start: <b>${esc(coll.schema[startKey].name)}</b></span>` +
-      `<span>Ende: <b>${endeKey ? esc(coll.schema[endeKey].name) : 'wie Start'}</b></span>` +
-      '<button data-a="felder">Datumsfelder wählen</button>';
-    fuss.addEventListener('click', e => {
-      if (!e.target.closest('[data-a="felder"]')) return;
-      const r = e.target.getBoundingClientRect();
+    /* ---- Leiste ---------------------------------------------------------- */
+    leiste.addEventListener('click', ev => {
+      const z = ev.target.closest('[data-zoom]');
+      if (z) { Store.updateView(view.id, { zoom: z.dataset.zoom }); App.zeichneSeite(); return; }
+      if (ev.target.closest('[data-a="heute"]')) {
+        scroll.scrollLeft = Math.max(0, xVon(new Date()) - scroll.clientWidth / 3); return;
+      }
+      if (!ev.target.closest('[data-a="felder"]')) return;
+      const r = ev.target.getBoundingClientRect();
       const m = UI.menu('<div class="grp">Startdatum</div>' +
-        datumKeys.map(k => `<button data-s="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
+        datumKeys.map(k => `<button data-s="${k}">${k === startKey ? '✓ ' : ''}${esc(coll.schema[k].name)}</button>`).join('') +
         '<div class="grp">Enddatum</div>' +
-        datumKeys.map(k => `<button data-e="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
-        '<button data-e="">— kein Enddatum</button>', r.left, r.bottom + 4);
-      m.addEventListener('click', ev => {
-        const s = ev.target.closest('button[data-s]');
-        const en = ev.target.closest('button[data-e]');
-        if (s) Store.updateView(view.id, { startKey: s.dataset.s });
+        datumKeys.map(k => `<button data-e="${k}">${k === endeKey ? '✓ ' : ''}${esc(coll.schema[k].name)}</button>`).join('') +
+        '<button data-e="">— kein Enddatum</button>' +
+        (abhKeys.length
+          ? '<div class="grp">Abhängigkeit (Pfeile)</div>' +
+            abhKeys.map(k => `<button data-ab="${k}">${k === abhKey ? '✓ ' : ''}${esc(coll.schema[k].name)}</button>`).join('') +
+            '<button data-ab="">— keine Pfeile</button>'
+          : '<div class="grp">Abhängigkeit</div><div class="mhinweis">Dafür braucht es eine ' +
+            'Verknüpfung dieser Datenbank auf sich selbst.</div>'),
+        r.left, r.bottom + 4);
+      m.addEventListener('click', ev2 => {
+        const s  = ev2.target.closest('button[data-s]');
+        const en = ev2.target.closest('button[data-e]');
+        const ab = ev2.target.closest('button[data-ab]');
+        if (s)       Store.updateView(view.id, { startKey: s.dataset.s });
         else if (en) Store.updateView(view.id, { endeKey: en.dataset.e });
+        else if (ab) Store.updateView(view.id, { abhKey: ab.dataset.ab });
         else return;
         m.remove(); App.zeichneSeite();
       });
     });
-    w.appendChild(fuss);
     return w;
+  };
+
+  /** ISO-Kalenderwoche — für die Wochen-Zoomstufe. */
+  const kalenderWoche = (d) => {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() + 3 - ((x.getDay() + 6) % 7));
+    const ersterDo = new Date(x.getFullYear(), 0, 4);
+    ersterDo.setDate(ersterDo.getDate() + 3 - ((ersterDo.getDay() + 6) % 7));
+    return 1 + Math.round((x - ersterDo) / 604800000);
   };
 
   /* --- Karte: OpenStreetMap, kostenlos und ohne Schlüssel ----------------
@@ -2604,12 +3947,16 @@ const Datenbank = (() => {
 
     /* Zusammenfassen — nicht nur Summe */
     const art = view.chartArt || (mKey ? 'Summe' : 'Anzahl');
-    const map = new Map();
-    rows.forEach(r => {
+    /* Zu welcher Gruppe gehört eine Zeile? Wird auch zum Hineinschauen gebraucht. */
+    const gruppeNamen = (r) => {
       let k = wert(r, gKey, coll);
       if (Array.isArray(k)) k = k.join(', ');
       if (['date','created','edited'].includes(coll.schema[gKey].type) && k) k = alsStufe(k);
-      const name = (k === '' || k == null || k === false) ? '(leer)' : String(k);
+      return [(k === '' || k == null || k === false) ? '(leer)' : String(k)];
+    };
+    const map = new Map();
+    rows.forEach(r => {
+      const name = gruppeNamen(r)[0];
       const v = mKey ? Formula.zahl(wert(r, mKey, coll)) : 1;
       if (!map.has(name)) map.set(name, []);
       map.get(name).push(isNaN(v) ? 0 : v);
@@ -2705,10 +4052,78 @@ const Datenbank = (() => {
     const legende = document.createElement('div');
     legende.className = 'chart-legende';
     legende.innerHTML = werte.map((v, i) =>
-      `<span><i style="background:${Zusatz.PALETTE[i % Zusatz.PALETTE.length]}"></i>` +
+      `<span data-i="${i}"><i style="background:${Zusatz.PALETTE[i % Zusatz.PALETTE.length]}"></i>` +
       `${esc(v.name)} <b>${Formula.anzeige(v.wert)}</b></span>`).join('');
     w.appendChild(legende);
+
+    /* Hineinschauen: ein Klick auf Balken, Segment oder Legende zeigt die
+       Zeilen, aus denen die Zahl kommt. Notions Diagramme sind stumm. */
+    const hinein = (i) => {
+      const name = (werte[i] || {}).name;
+      if (name === undefined) return;
+      const drin = rows.filter(r => gruppeNamen(r).includes(name));
+      drilldown(coll, view, name, drin,
+        coll.schema[gKey].name + ' = ' + name +
+        (mKey ? ' · ' + art + ' von ' + coll.schema[mKey].name + ': ' +
+                Formula.anzeige(werte[i].wert) : ''));
+    };
+    flaeche.addEventListener('click', e => {
+      const t = e.target.closest('[data-i]');
+      if (t) hinein(+t.dataset.i);
+    });
+    legende.addEventListener('click', e => {
+      const t = e.target.closest('[data-i]');
+      if (t) hinein(+t.dataset.i);
+    });
     return w;
+  };
+
+  /* Ein Fenster mit genau den Zeilen hinter einer Zahl. */
+  const drilldown = (coll, view, titel, zeilen2, untertitel) => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    const keys = Object.keys(coll.schema).slice(0, 5);
+    o.innerHTML =
+      '<div class="finder" style="width:min(820px,95vw)">' +
+        `<div class="fh">🔎 ${esc(String(titel))} <em>${zeilen2.length}</em>` +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        (untertitel ? `<div class="dl-hinweis" style="padding:8px 18px">${esc(untertitel)}</div>` : '') +
+        '<div class="res dd-liste">' +
+          (zeilen2.length
+            ? '<table class="grid dd-tab"><thead><tr>' +
+              keys.map(k => `<th>${esc(coll.schema[k].name)}</th>`).join('') +
+              '</tr></thead><tbody>' +
+              zeilen2.map(r => `<tr data-rid="${r.id}">` +
+                keys.map(k => `<td>${zelle(r, k, coll)}</td>`).join('') + '</tr>').join('') +
+              '</tbody></table>'
+            : '<div class="pf-gut">Hinter dieser Zahl steht keine einzelne Zeile.</div>') +
+        '</div>' +
+        '<div class="fbtns">' +
+          '<button data-a="csv">Diese Auswahl als CSV</button>' +
+          '<button data-a="zu" class="prim">Schliessen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+      if (e.target.closest('[data-a="csv"]')) {
+        const kopf = Object.keys(coll.schema).map(k => coll.schema[k].name);
+        const zeilenText = zeilen2.map(r => Object.keys(coll.schema).map(k => {
+          const v = wert(r, k, coll);
+          const t = Array.isArray(v) ? v.map(x => (x && x.name) || x).join(', ') : Formula.anzeige(v);
+          return /[",;\n]/.test(String(t ?? '')) ? '"' + String(t).replace(/"/g, '""') + '"' : (t ?? '');
+        }).join(','));
+        const blob = new Blob(['\ufeff' + [kopf.join(','), ...zeilenText].join('\n')],
+                              { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (coll.name || 'Auswahl') + ' — ' + String(titel).replace(/[\\/:*?"<>|]/g, '-') + '.csv';
+        a.click();
+        UI.toast('CSV gespeichert');
+        return;
+      }
+      const tr = e.target.closest('[data-rid]');
+      if (tr) { o.remove(); zeilePeek(Store.getBlock(tr.dataset.rid), coll); }
+    });
   };
 
   /* --- Formularansicht ----------------------------------------------------
@@ -2802,7 +4217,11 @@ const Datenbank = (() => {
     fuss.innerHTML = `<button class="prim" data-a="senden">${esc(view.formKnopf || 'Absenden')}</button>` +
                      `<button data-a="pflicht">Pflichtfelder</button>` +
                      `<button data-a="logik">Bedingte Fragen</button>` +
-                     `<span class="form-zahl">${Store.rowsOf(coll.id).length} Einträge bisher</span>`;
+                     `<button data-a="knopftext">Knopftext</button>` +
+                     `<button data-a="dank">Danke-Seite</button>` +
+                     `<button data-a="formlink">🔗 Link</button>` +
+                     `<span class="form-zahl">${Store.rowsOf(coll.id).length} Einträge · ` +
+                       `${Number(view.formAnzahl) || 0} über das Formular</span>`;
     w.appendChild(fuss);
 
     w.addEventListener('input', e => {
@@ -2825,7 +4244,51 @@ const Datenbank = (() => {
     box.addEventListener('change', logikPruefen);
     setTimeout(logikPruefen, 0);
 
-    fuss.addEventListener('click', e => {
+    fuss.addEventListener('click', async e => {
+      if (e.target.closest('[data-a="knopftext"]')) {
+        const t = await UI.frage('Was soll auf dem Knopf stehen?', view.formKnopf || 'Absenden');
+        if (t !== null) { Store.updateView(view.id, { formKnopf: t || 'Absenden' }); App.zeichneSeite(); }
+        return;
+      }
+      if (e.target.closest('[data-a="dank"]')) {
+        const r2 = e.target.getBoundingClientRect();
+        const m2 = UI.menu(
+          '<div class="grp">Nach dem Absenden</div>' +
+          '<button data-d="titel"><span class="mi">✎</span>Überschrift ändern' +
+            `<span class="ms">${esc(view.formDankTitel || 'Danke!')}</span></button>` +
+          '<button data-d="text"><span class="mi">✎</span>Text ändern</button>' +
+          `<button data-d="nochmal"><span class="mi">${view.formNochmal === false ? '☐' : '☑'}</span>` +
+            'Knopf „Noch eine Antwort"</button>' +
+          '<hr><button data-d="null"><span class="mi">↺</span>Zähler zurücksetzen' +
+            `<span class="ms">${Number(view.formAnzahl) || 0}</span></button>`,
+          r2.left, r2.top - 30);
+        m2.addEventListener('click', async ev => {
+          const d = ev.target.closest('button[data-d]');
+          if (!d) return;
+          m2.remove();
+          if (d.dataset.d === 'titel') {
+            const t = await UI.frage('Überschrift der Danke-Seite', view.formDankTitel || 'Danke!');
+            if (t !== null) Store.updateView(view.id, { formDankTitel: t });
+          }
+          if (d.dataset.d === 'text') {
+            const t = await UI.frage('Text der Danke-Seite',
+              view.formDankText || 'Deine Antwort ist angekommen.');
+            if (t !== null) Store.updateView(view.id, { formDankText: t });
+          }
+          if (d.dataset.d === 'nochmal')
+            Store.updateView(view.id, { formNochmal: view.formNochmal === false });
+          if (d.dataset.d === 'null') Store.updateView(view.id, { formAnzahl: 0 });
+          App.zeichneSeite();
+        });
+        return;
+      }
+      if (e.target.closest('[data-a="formlink"]')) {
+        const link = location.origin + location.pathname + '#' +
+                     (block ? block.id : coll.id) + '/' + view.id;
+        navigator.clipboard?.writeText(link);
+        UI.toast('Link zum Formular kopiert — ohne Server gilt er auf diesem Gerät');
+        return;
+      }
       if (e.target.closest('[data-a="logik"]')) {
         const r = e.target.getBoundingClientRect();
         const m = UI.menu('<div class="grp">Welche Frage soll bedingt sein?</div>' +
@@ -2881,7 +4344,12 @@ const Datenbank = (() => {
 
       box.querySelectorAll('[data-k]').forEach(el => {
         const k = el.dataset.k;
-        if (!coll.schema[k] || el.tagName === 'DATALIST') return;
+        if (!coll.schema[k]) return;
+        /* Nur echte Eingabefelder — die Beschriftung trägt denselben Schlüssel,
+           hat aber keinen Wert. Ohne diese Zeile hielt jedes Pflichtfeld die
+           ganze Antwort auf. */
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) &&
+            !el.classList.contains('form-mehr')) return;
         const versteckt = el.closest('.form-feld')?.style.display === 'none';
         const typ = coll.schema[k].type;
         let v;
@@ -2925,8 +4393,37 @@ const Datenbank = (() => {
         });
       });
 
-      UI.toast('Eintrag angelegt');
-      App.zeichneSeite();
+      /* Danke-Seite statt nur einer Meldung — Notion zeigt hier eine
+         Bestätigung mit eigenem Text und der Wahl, noch einmal zu antworten. */
+      const zahl = (Number(view.formAnzahl) || 0) + 1;
+      Store.updateView(view.id, { formAnzahl: zahl });
+      w.innerHTML =
+        '<div class="form-danke">' +
+          '<div class="fd-haken">✓</div>' +
+          `<div class="fd-gross" contenteditable="true" data-fd="titel">` +
+            `${esc(view.formDankTitel || 'Danke!')}</div>` +
+          `<div class="fd-text" contenteditable="true" data-fd="text">` +
+            `${esc(view.formDankText || 'Deine Antwort ist angekommen.')}</div>` +
+          '<div class="fd-knoepfe">' +
+            (view.formNochmal === false ? ''
+              : '<button data-a="nochmal" class="prim">Noch eine Antwort</button>') +
+            '<button data-a="ansehen">Antworten ansehen</button>' +
+          '</div>' +
+          `<div class="fd-zahl">${zahl} ${zahl === 1 ? 'Antwort' : 'Antworten'} über dieses Formular</div>` +
+        '</div>';
+      w.addEventListener('input', ev => {
+        const f = ev.target.closest('[data-fd]');
+        if (!f) return;
+        Store.updateView(view.id, f.dataset.fd === 'titel'
+          ? { formDankTitel: f.textContent } : { formDankText: f.textContent });
+      });
+      w.addEventListener('click', ev => {
+        if (ev.target.closest('[data-a="nochmal"]')) { App.zeichneSeite(); return; }
+        if (ev.target.closest('[data-a="ansehen"]')) {
+          drilldown(coll, view, 'Alle Antworten', Store.rowsOf(coll.id).filter(x => !x.archiviert),
+                    zahl + ' über dieses Formular');
+        }
+      });
     });
 
     return w;
@@ -3168,6 +4665,8 @@ const Datenbank = (() => {
     ['feed',     '📰', 'Feed'],
     ['map',      '🗺', 'Karte'],
     ['dashboard','🧮', 'Dashboard'],
+    /* Notions grösste Lücke, hier als eigene Ansicht: Zeilen × Spalten × Werte */
+    ['pivot',    '⊞', 'Pivot'],
     ['form',     '📝', 'Formular']
   ];
 
@@ -3839,6 +5338,7 @@ const Datenbank = (() => {
       '<hr>' +
       '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
       '<button data-a="dup"><span class="mi">⧉</span>Duplizieren</button>' +
+      '<button data-a="vorlage"><span class="mi">🔖</span>Ansichtsvorlagen<span class="ms">▸</span></button>' +
       '<button data-a="lock"><span class="mi">🔒</span>' + (view.locked ? 'Entsperren' : 'Ansicht sperren') + '</button>' +
       '<button data-a="del"><span class="mi">🗑</span>Ansicht löschen</button>',
       r.left, r.bottom + 4,
@@ -3910,12 +5410,87 @@ const Datenbank = (() => {
       }
       if (b.dataset.a === 'dup') {
         const v = Store.addView(coll.id, view.layout, view.name + ' Kopie');
-        Store.updateView(v.id, { filters: JSON.parse(JSON.stringify(view.filters)),
-                                 sorts: [...view.sorts], hidden: [...(view.hidden||[])] });
+        Store.updateView(v.id, ansichtKopie(view));
+        UI.toast('Ansicht dupliziert — alle Einstellungen übernommen');
         App.zeichneSeite();
       }
+      if (b.dataset.a === 'vorlage') { ansichtVorlagen(anker, coll, view); return; }
       if (b.dataset.a === 'lock') { Store.updateView(view.id, { locked: !view.locked }); App.zeichneSeite(); }
       if (b.dataset.a === 'del')  { Store.removeView(view.id); App.zeichneSeite(); }
+    });
+  };
+
+  /** Alle Einstellungen einer Ansicht — ohne das, was zur Ansicht selbst gehört. */
+  const ANSICHT_EIGEN = ['id','collectionId','name','created'];
+  const ansichtKopie = (view) => {
+    const k = {};
+    Object.keys(view).forEach(f => {
+      if (ANSICHT_EIGEN.includes(f)) return;
+      k[f] = (view[f] && typeof view[f] === 'object') ? JSON.parse(JSON.stringify(view[f])) : view[f];
+    });
+    return k;
+  };
+
+  /* Ansichtsvorlagen: eine fertig eingerichtete Ansicht bekommt einen Namen
+     und lässt sich auf jede andere Datenbank anwenden. Notion kennt nur
+     Seitenvorlagen, keine Ansichtsvorlagen. */
+  const ansichtVorlagen = (anker, coll, view) => {
+    const r = anker.getBoundingClientRect();
+    const liste = Store.getMeta('ansichtVorlagen', []) || [];
+    const m = UI.menu(
+      '<div class="grp">Gespeicherte Ansichten</div>' +
+      (liste.length
+        ? liste.map((v, i) => `<button data-v="${i}"><span class="mi">🔖</span>${esc(v.name)}` +
+            `<span class="ms">${LAYOUT_NAMEN[v.daten.layout] || v.daten.layout}</span></button>`).join('')
+        : '<div class="mhinweis">Noch keine Ansichtsvorlage gespeichert.</div>') +
+      '<hr><button data-a="neu"><span class="mi">＋</span>Diese Ansicht als Vorlage speichern</button>' +
+      (liste.length ? '<button data-a="weg"><span class="mi">🗑</span>Eine Vorlage löschen</button>' : ''),
+      r.left, r.bottom + 4);
+
+    m.addEventListener('click', async e => {
+      const v = e.target.closest('[data-v]');
+      const a = e.target.closest('[data-a]');
+      if (v) {
+        const vor = liste[+v.dataset.v];
+        const neu = Store.addView(coll.id, vor.daten.layout || 'table', vor.name);
+        /* Nur Einstellungen übernehmen, deren Spalten es hier auch gibt. */
+        const d = JSON.parse(JSON.stringify(vor.daten));
+        const gibt = (k) => !k || !!coll.schema[k];
+        if (!gibt(d.groupBy))  d.groupBy = '';
+        if (!gibt(d.bahnKey))  d.bahnKey = '';
+        if (!gibt(d.startKey)) delete d.startKey;
+        if (!gibt(d.endeKey))  delete d.endeKey;
+        d.sorts   = (d.sorts || []).filter(s => s.formel || gibt(s.key));
+        d.hidden  = (d.hidden || []).filter(gibt);
+        d.calc    = Object.fromEntries(Object.entries(d.calc || {}).filter(([k]) => gibt(k)));
+        d.filters = { operator: (d.filters || {}).operator || 'and',
+                      rules: ((d.filters || {}).rules || []).filter(x => x.rules || gibt(x.key)) };
+        delete d.extraDbs;
+        Store.updateView(neu.id, d);
+        m.remove(); App.zeichneSeite();
+        UI.toast('Ansicht „' + vor.name + '" angelegt');
+        return;
+      }
+      if (a && a.dataset.a === 'neu') {
+        m.remove();
+        const n = await UI.frage('Name der Ansichtsvorlage', view.name || 'Ansicht');
+        if (!n) return;
+        liste.push({ name: n, daten: ansichtKopie(view) });
+        Store.setMeta('ansichtVorlagen', liste);
+        UI.toast('Ansichtsvorlage „' + n + '" gespeichert');
+        return;
+      }
+      if (a && a.dataset.a === 'weg') {
+        m.innerHTML = '<div class="grp">Welche Vorlage löschen?</div>' +
+          liste.map((v2, i) => `<button data-del="${i}">🗑 ${esc(v2.name)}</button>`).join('');
+        m.addEventListener('click', ev => {
+          const d = ev.target.closest('[data-del]');
+          if (!d) return;
+          liste.splice(+d.dataset.del, 1);
+          Store.setMeta('ansichtVorlagen', liste);
+          m.remove(); UI.toast('Vorlage gelöscht');
+        });
+      }
     });
   };
 
@@ -3937,6 +5512,8 @@ const Datenbank = (() => {
         '<div class="fbtns">' +
           '<button data-a="regel">＋ Regel</button>' +
           '<button data-a="gruppe">＋ Gruppe</button>' +
+          '<button data-a="vorlagen">🔖 Vorlagen</button>' +
+          '<button data-a="kifilter">✨ KI</button>' +
           '<button data-a="leeren">Alle entfernen</button>' +
           '<button data-a="ok" class="prim">Fertig</button>' +
         '</div>' +
@@ -3973,8 +5550,19 @@ const Datenbank = (() => {
           `<select data-o="${p2}">` +
             ops.map(op => `<option${op === r.op ? ' selected' : ''}>${esc(op)}</option>`).join('') +
           '</select>' +
-          (ohneWert(r.op) ? '<span class="fr-leer">—</span>'
-            : `<input data-w="${p2}" value="${esc(r.wert ?? '')}" placeholder="Wert">`) +
+          (ohneWert(r.op)
+            ? '<span class="fr-leer">—</span>'
+            : r.vergleich === 'feld'
+              ? `<select data-wk="${p2}" class="fr-feld">` +
+                  keys.filter(k => k !== r.key).map(k =>
+                    `<option value="${k}"${k === r.wertKey ? ' selected' : ''}>` +
+                    `${esc(coll.schema[k].name)}</option>`).join('') +
+                '</select>'
+              : `<input data-w="${p2}" value="${esc(r.wert ?? '')}" placeholder="Wert">`) +
+          (ohneWert(r.op) ? ''
+            : `<button data-vgl="${p2}" class="fr-vgl${r.vergleich === 'feld' ? ' an' : ''}" ` +
+              `title="${r.vergleich === 'feld' ? 'Vergleicht mit einer anderen Spalte' : 'Fester Wert — klicken für Spaltenvergleich'}">` +
+              `${r.vergleich === 'feld' ? '⇄' : '＝'}</button>`) +
           `<button data-weg="${p2}" title="Regel entfernen">✕</button>` +
         '</div>';
       }).join('');
@@ -4026,6 +5614,8 @@ const Datenbank = (() => {
       }
       if (op !== undefined) { hole(op).op = e.target.value; speichern(); }
       if (w !== undefined)  { hole(w).wert = e.target.value; speichern(); }
+      const wk = e.target.dataset.wk;
+      if (wk !== undefined) { hole(wk).wertKey = e.target.value; speichern(); }
     });
 
     o.addEventListener('click', e => {
@@ -4036,6 +5626,18 @@ const Datenbank = (() => {
       if (opB) {
         const g = hole(opB.dataset.op);
         g.operator = g.operator === 'or' ? 'and' : 'or';
+        speichern(); return;
+      }
+      const vgl = e.target.closest('[data-vgl]');
+      if (vgl) {
+        const r2 = hole(vgl.dataset.vgl);
+        if (r2.vergleich === 'feld') { r2.vergleich = 'wert'; }
+        else {
+          r2.vergleich = 'feld';
+          if (!r2.wertKey || r2.wertKey === r2.key)
+            r2.wertKey = keys.find(k => k !== r2.key && coll.schema[k].type === coll.schema[r2.key]?.type) ||
+                         keys.find(k => k !== r2.key) || '';
+        }
         speichern(); return;
       }
       const weg = e.target.closest('[data-weg]');
@@ -4066,37 +5668,121 @@ const Datenbank = (() => {
         view.filters = { operator: 'and', rules: [] };
         speichern(); return;
       }
+      if (e.target.closest('[data-a="kifilter"]')) { o.remove(); KiBau.filterSchreiben(coll, view); return; }
+      /* Filtervorlagen — Notion hat das nicht: einmal gebaute Filter
+         bekommen einen Namen und lassen sich überall wieder anwenden. */
+      if (e.target.closest('[data-a="vorlagen"]')) {
+        const r2 = e.target.getBoundingClientRect();
+        const liste = Store.getMeta('filterVorlagen', []) || [];
+        const passend = liste.filter(v => !v.collId || v.collId === coll.id);
+        const m = UI.menu(
+          '<div class="grp">Gespeicherte Filter</div>' +
+          (passend.length ? passend.map((v, i) =>
+            `<button data-v="${liste.indexOf(v)}"><span class="mi">🔖</span>${esc(v.name)}` +
+            `<span class="ms">${regelAnzahl(v.filters)}</span></button>`).join('')
+            : '<div class="mhinweis">Noch keine Vorlage gespeichert.</div>') +
+          '<hr><button data-a2="neu"><span class="mi">＋</span>Diesen Filter speichern</button>' +
+          (passend.length ? '<button data-a2="weg"><span class="mi">🗑</span>Eine Vorlage löschen</button>' : ''),
+          r2.left, r2.top - 10);
+        m.addEventListener('click', async ev => {
+          const v = ev.target.closest('[data-v]');
+          const a3 = ev.target.closest('[data-a2]');
+          if (v) {
+            view.filters = JSON.parse(JSON.stringify(liste[+v.dataset.v].filters));
+            m.remove(); speichern(); return;
+          }
+          if (a3 && a3.dataset.a2 === 'neu') {
+            m.remove();
+            const n = await UI.frage('Name der Filtervorlage', '');
+            if (!n) return;
+            liste.push({ name: n, collId: coll.id, filters: JSON.parse(JSON.stringify(view.filters)) });
+            Store.setMeta('filterVorlagen', liste);
+            UI.toast('Filtervorlage „' + n + '" gespeichert');
+            return;
+          }
+          if (a3 && a3.dataset.a2 === 'weg') {
+            m.innerHTML = '<div class="grp">Welche Vorlage löschen?</div>' +
+              passend.map(v2 => `<button data-del="${liste.indexOf(v2)}">🗑 ${esc(v2.name)}</button>`).join('');
+            m.addEventListener('click', ev2 => {
+              const d = ev2.target.closest('[data-del]');
+              if (!d) return;
+              liste.splice(+d.dataset.del, 1);
+              Store.setMeta('filterVorlagen', liste);
+              m.remove(); UI.toast('Vorlage gelöscht');
+            });
+          }
+        });
+        return;
+      }
     });
   };
 
+  /* Mehrstufige Sortierung wie in Notion — dazu, was Notion nicht kann:
+     nach einer Formel sortieren, ohne dafür eine Spalte anzulegen. */
   const sortMenue = (anker, coll, view, block) => {
     const r = anker.getBoundingClientRect();
-    const html =
-      '<div class="grp">Sortieren nach</div>' +
-      Object.keys(coll.schema).map(k =>
-        `<button data-k="${k}"><span class="mi">${propTyp(coll.schema[k].type).icon}</span>` +
-        `${esc(coll.schema[k].name)}</button>`).join('') +
-      (view.sorts?.length ? '<hr><button data-a="clear">Sortierung entfernen</button>' : '');
+    const m = UI.menu('', r.left, r.bottom + 4);
+    m.style.minWidth = '270px';
 
-    const m = UI.menu(html, r.left, r.bottom + 4);
-    m.addEventListener('click', e => {
+    const zeichne = () => {
+      const sorts = view.sorts || [];
+      m.innerHTML =
+        '<div class="grp">Sortierung</div>' +
+        (sorts.length
+          ? sorts.map((s, i) =>
+              '<div class="so-zeile">' +
+                `<span class="so-nr">${i + 1}</span>` +
+                `<span class="so-name">${s.formel ? 'ƒ ' + esc(s.formel.slice(0, 22)) : esc(coll.schema[s.key]?.name || s.key)}</span>` +
+                `<button data-dir="${i}" title="Richtung wechseln">${s.richtung === 'ab' ? '↓' : '↑'}</button>` +
+                (i > 0 ? `<button data-hoch="${i}" title="nach oben">⌃</button>` : '') +
+                `<button data-weg="${i}" title="Entfernen">✕</button>` +
+              '</div>').join('')
+          : '<div class="mhinweis">Noch keine Sortierung — es gilt die gezogene Reihenfolge.</div>') +
+        '<hr><div class="grp">Ebene hinzufügen</div>' +
+        Object.keys(coll.schema).map(k =>
+          `<button data-k="${k}"><span class="mi">${propTyp(coll.schema[k].type).icon}</span>` +
+          `${esc(coll.schema[k].name)}</button>`).join('') +
+        '<hr><button data-a="formel"><span class="mi">ƒ</span>Nach Formel sortieren …</button>' +
+        (sorts.length ? '<button data-a="clear"><span class="mi">✕</span>Sortierung entfernen</button>' : '');
+    };
+    zeichne();
+
+    const sichern = (neu) => {
+      Store.updateView(view.id, { sorts: neu });
+      view.sorts = neu;
+      zeichne();
+      App.zeichneSeite();
+    };
+
+    m.addEventListener('click', async e => {
       const b = e.target.closest('button');
       if (!b) return;
-      if (b.dataset.a === 'clear') {
-        Store.updateView(view.id, { sorts: [] });
-        m.remove(); App.zeichneSeite(); return;
+      const sorts = [...(view.sorts || [])];
+
+      if (b.dataset.dir !== undefined) {
+        const i = +b.dataset.dir;
+        sorts[i] = { ...sorts[i], richtung: sorts[i].richtung === 'ab' ? 'auf' : 'ab' };
+        sichern(sorts); return;
       }
-      const k = b.dataset.k;
-      if (!k) return;
-      m.innerHTML = '<div class="grp">Richtung</div>' +
-        '<button data-d="auf">↑ Aufsteigend</button>' +
-        '<button data-d="ab">↓ Absteigend</button>';
-      m.addEventListener('click', ev => {
-        const d = ev.target.closest('button[data-d]');
-        if (!d) return;
-        Store.updateView(view.id, { sorts: [{ key: k, richtung: d.dataset.d }] });
-        m.remove(); App.zeichneSeite();
-      });
+      if (b.dataset.hoch !== undefined) {
+        const i = +b.dataset.hoch;
+        [sorts[i - 1], sorts[i]] = [sorts[i], sorts[i - 1]];
+        sichern(sorts); return;
+      }
+      if (b.dataset.weg !== undefined) { sorts.splice(+b.dataset.weg, 1); sichern(sorts); return; }
+      if (b.dataset.a === 'clear') { sichern([]); return; }
+      if (b.dataset.a === 'formel') {
+        const f = await UI.frage('Formel — jede Zeile wird damit gerechnet und danach sortiert',
+                                 'prop("Name")');
+        if (!f) return;
+        sorts.push({ formel: f, richtung: 'auf' });
+        sichern(sorts); return;
+      }
+      if (b.dataset.k) {
+        if (sorts.some(s => s.key === b.dataset.k)) { UI.toast('Diese Spalte ist schon dabei'); return; }
+        sorts.push({ key: b.dataset.k, richtung: 'auf' });
+        sichern(sorts); return;
+      }
     });
   };
 
@@ -4204,7 +5890,8 @@ const Datenbank = (() => {
   const TYP_GRUPPEN = [
     ['KI-Autofill',  ['ki-fassung','ki-sprache','ki-worte','ki']],
     ['Basis',        ['text','number','select','multi','status','date','person',
-                      'files','checkbox','url','email','phone','duration','place']],
+                      'files','checkbox','sterne','prozent','url','email','phone',
+                      'duration','place']],
     ['Rechnen',      ['formula','relation','rollup','uid','button','verify']],
     ['Automatisch',  ['created','edited','createdBy','editedBy']],
     ['Verbindungen', ['gdrive','figma','githubpr','zendesk']]
@@ -4243,6 +5930,139 @@ const Datenbank = (() => {
     });
   };
 
+  /**
+   * Der Dialog für die Prüfregeln einer Spalte.
+   * Zeigt am Ende, wie viele bestehende Zeilen die neuen Regeln verletzen —
+   * damit man nicht blind eine Regel setzt, gegen die die halbe Datenbank
+   * verstösst.
+   */
+  const regelnDialog = (coll, key) => {
+    const def = coll.schema[key];
+    const zahl = ['number', 'duration'].includes(def.type);
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML =
+      '<div class="finder" style="width:min(560px,94vw)">' +
+        `<div class="fh">✔ Prüfregeln für „${esc(def.name)}"` +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div style="padding:16px 18px; display:flex; flex-direction:column; gap:13px">' +
+          '<label style="display:flex; gap:9px; align-items:center">' +
+            `<input type="checkbox" id="rp"${def.pflicht ? ' checked' : ''}> ` +
+            'Pflichtfeld — darf nicht leer bleiben</label>' +
+          '<label style="display:flex; gap:9px; align-items:center">' +
+            `<input type="checkbox" id="re"${def.eindeutig ? ' checked' : ''}> ` +
+            'Eindeutig — jeder Wert nur einmal in dieser Datenbank</label>' +
+          (zahl
+            ? '<div style="display:flex; gap:10px">' +
+                `<label style="flex:1">Kleinster Wert<br><input id="rmin" type="number" value="${def.regelMin ?? ''}"></label>` +
+                `<label style="flex:1">Grösster Wert<br><input id="rmax" type="number" value="${def.regelMax ?? ''}"></label>` +
+              '</div>'
+            : '<label>Muster, dem der Text entsprechen muss<br>' +
+                '<select id="rmv">' + MUSTER_VORLAGEN.map(([w, n]) =>
+                  `<option value="${esc(w)}"${def.muster === w ? ' selected' : ''}>${n}</option>`).join('') +
+                '</select>' +
+                `<input id="rm" value="${esc(def.muster || '')}" placeholder="eigener regulärer Ausdruck" style="margin-top:6px">` +
+                `<input id="rmt" value="${esc(def.musterText || '')}" placeholder="Was soll dastehen, wenn es nicht passt?" style="margin-top:6px">` +
+              '</label>') +
+          /* Statusübergänge — Notion kennt sie nicht: dort darf jeder Wert
+             auf jeden anderen springen. */
+          ((def.type === 'status' || def.type === 'select') && (def.options || []).length
+            ? '<div class="ue-block"><b>Erlaubte Übergänge</b>' +
+              '<div class="ue-hinweis">Je Wert: worauf darf er springen? Nichts angehakt ' +
+              'heisst: alles erlaubt.</div>' +
+              def.options.map(o2 =>
+                `<div class="ue-zeile"><span class="tag bg-${o2.color || 'gray'}">${esc(o2.name)}</span>` +
+                '<span class="ue-pfeil">→</span>' +
+                def.options.filter(z => z.name !== o2.name).map(z =>
+                  `<label class="ue-w"><input type="checkbox" data-von="${esc(o2.name)}" ` +
+                  `data-nach="${esc(z.name)}"` +
+                  (((def.uebergaenge || {})[o2.name] || []).includes(z.name) ? ' checked' : '') +
+                  `> ${esc(z.name)}</label>`).join('') +
+                '</div>').join('') +
+              '</div>'
+            : '') +
+          '<label>Freie Regel als Formel — sie muss wahr ergeben<br>' +
+            `<input id="rr" value="${esc(def.regel || '')}" ` +
+              'placeholder=\'if(prop("Status") == "Fertig", not empty(prop("Abschluss")), true)\'>' +
+            `<input id="rrt" value="${esc(def.regelText || '')}" placeholder="Erklärung, wenn die Regel nicht zutrifft" style="margin-top:6px">` +
+          '</label>' +
+          '<div id="rbericht" style="font-size:13px; color:var(--text-dim)"></div>' +
+        '</div>' +
+        '<div class="fbtns">' +
+          '<button data-a="pruefen">Bestehende Zeilen prüfen</button>' +
+          '<button data-a="weg">Alle Regeln entfernen</button>' +
+          '<button data-a="ok" class="prim">Speichern</button>' +
+          '<button data-a="zu">Abbrechen</button></div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    const lesen = () => ({
+      pflicht:   o.querySelector('#rp').checked,
+      eindeutig: o.querySelector('#re').checked,
+      muster:    o.querySelector('#rm') ? o.querySelector('#rm').value.trim() : '',
+      musterText:o.querySelector('#rmt') ? o.querySelector('#rmt').value.trim() : '',
+      regelMin:  o.querySelector('#rmin') ? o.querySelector('#rmin').value : '',
+      regelMax:  o.querySelector('#rmax') ? o.querySelector('#rmax').value : '',
+      regel:     o.querySelector('#rr').value.trim(),
+      regelText: o.querySelector('#rrt').value.trim(),
+      uebergaenge: (() => {
+        const u = {};
+        o.querySelectorAll('[data-von]').forEach(cb => {
+          if (!cb.checked) return;
+          (u[cb.dataset.von] = u[cb.dataset.von] || []).push(cb.dataset.nach);
+        });
+        return Object.keys(u).length ? u : undefined;
+      })()
+    });
+
+    if (o.querySelector('#rmv')) o.querySelector('#rmv').addEventListener('change', (e) => {
+      if (e.target.value) o.querySelector('#rm').value = e.target.value;
+    });
+
+    o.addEventListener('click', e => {
+      if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
+
+      if (e.target.closest('[data-a="pruefen"]')) {
+        const probe = { ...def, ...lesen() };
+        const alt = coll.schema[key];
+        coll.schema[key] = probe;
+        const schlecht = Store.rowsOf(coll.id)
+          .map(r => ({ r, f: pruefeWert(coll, key, r, (r.props || {})[key]) }))
+          .filter(x => !x.f.ok);
+        coll.schema[key] = alt;
+        o.querySelector('#rbericht').innerHTML = schlecht.length
+          ? `⚠ <b>${schlecht.length}</b> von ${Store.rowsOf(coll.id).length} Zeilen verstossen dagegen:<br>` +
+            schlecht.slice(0, 6).map(x => '· ' + esc(x.r.text || 'Ohne Titel') + ' — ' + esc(x.f.fehler)).join('<br>') +
+            (schlecht.length > 6 ? `<br>… und ${schlecht.length - 6} weitere` : '')
+          : '✅ Alle ' + Store.rowsOf(coll.id).length + ' Zeilen halten die Regeln ein.';
+        return;
+      }
+
+      if (e.target.closest('[data-a="weg"]')) {
+        ['pflicht','eindeutig','muster','musterText','regelMin','regelMax','regel',
+         'regelText','uebergaenge'].forEach(k2 => delete coll.schema[key][k2]);
+        Store.updateCollection(coll.id, { schema: coll.schema });
+        o.remove(); App.zeichneSeite(); UI.toast('Regeln entfernt');
+        return;
+      }
+
+      if (e.target.closest('[data-a="ok"]')) {
+        Object.assign(coll.schema[key], lesen());
+        /* Leere Angaben wieder wegräumen, damit hatRegeln() stimmt */
+        ['muster','musterText','regel','regelText','regelMin','regelMax','uebergaenge']
+          .forEach(k2 => {
+            if (coll.schema[key][k2] === '' || coll.schema[key][k2] === undefined)
+              delete coll.schema[key][k2];
+          });
+        if (!coll.schema[key].pflicht)   delete coll.schema[key].pflicht;
+        if (!coll.schema[key].eindeutig) delete coll.schema[key].eindeutig;
+        Store.updateCollection(coll.id, { schema: coll.schema });
+        o.remove(); App.zeichneSeite();
+        UI.toast(hatRegeln(coll.schema[key]) ? 'Prüfregeln gespeichert' : 'Keine Regeln gesetzt');
+      }
+    });
+  };
+
   const spaltenMenue = (anker, coll, view, key, block) => {
     /* Eine gesperrte Datenbank lässt ihren Aufbau nicht mehr ändern —
        Werte darf man weiter eintragen. Genau wie bei Notion. */
@@ -4276,6 +6096,12 @@ const Datenbank = (() => {
         ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' : '') +
       (def.type === 'uid'      ? '<button data-a="praefix"><span class="mi">ID</span>Vorsilbe setzen</button>' : '') +
       (KI_TYPEN.includes(def.type) ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
+      (!['formula','rollup','created','edited','createdBy','editedBy','uid','button'].includes(def.type)
+        ? `<button data-a="regeln"><span class="mi">✔</span>Prüfregeln` +
+          `<span class="ms">${hatRegeln(def) ? 'an' : 'aus'}</span></button>` +
+          `<button data-a="standard"><span class="mi">↦</span>Standardwert` +
+          `<span class="ms">${def.standard ? esc(String(def.standard)).slice(0, 12) : 'keiner'}</span></button>`
+        : '') +
       '<hr>' +
       '<button data-a="asc"><span class="mi">↑</span>Aufsteigend sortieren</button>' +
       '<button data-a="desc"><span class="mi">↓</span>Absteigend sortieren</button>' +
@@ -4368,10 +6194,26 @@ const Datenbank = (() => {
       /* Untermenüs */
       if (a === 'optionen') { m.remove(); optionenEditor(coll, key); return; }
       if (a === 'rollup')   { m.remove(); rollupEditor(coll, key); return; }
+      if (a === 'regeln') { m.remove(); regelnDialog(coll, key); return; }
+      if (a === 'standard') {
+        m.remove();
+        const jetzt = def.standard ?? '';
+        const neu = prompt('Standardwert für neue Zeilen in „' + def.name + '"\n' +
+          'Erlaubt sind auch heute, morgen, jetzt, {datum}, {tag}, {monat}, {jahr}, {woche}.\n' +
+          'Leer lassen entfernt ihn.', jetzt);
+        if (neu === null) return;
+        if (neu === '') delete coll.schema[key].standard;
+        else coll.schema[key].standard = neu;
+        Store.updateCollection(coll.id, { schema: coll.schema });
+        UI.toast(neu ? 'Standardwert gesetzt' : 'Standardwert entfernt');
+        return;
+      }
       if (a === 'anzeige') {
         m.innerHTML = '<div class="grp">Anzeigen als</div>' +
           '<button data-z="zahl">Zahl</button><button data-z="bar">Balken</button>' +
-          '<button data-z="ring">Ring</button>';
+          '<button data-z="ring">Ring</button>' +
+          '<button data-z="skala">Farbstreifen</button>' +
+          '<button data-z="heat">Heatmap</button>';
         m.addEventListener('click', ev => {
           const z = ev.target.closest('button[data-z]');
           if (!z) return;
@@ -4606,13 +6448,33 @@ const Datenbank = (() => {
       `<button data-a="oeffnen"><span class="mi">◧</span>Einträge öffnen als` +
         `<span class="ms">${view.oeffnenAls === 'voll' ? 'Seite' : 'Vorschau'}</span></button>` +
       `<button data-a="kartengroesse"><span class="mi">▩</span>Kartengrösse<span class="ms">${view.kartenGroesse || 'mittel'}</span></button>` +
+      (UI.amTelefon()
+        ? `<button data-a="handytab"><span class="mi">▦</span>Am Telefon als` +
+          `<span class="ms">${view.handyTabelle ? 'Tabelle' : 'Karten'}</span></button>` : '') +
+      (view.layout === 'board'
+        ? `<button data-a="bahnen"><span class="mi">≡</span>Bahnen (zweite Achse)` +
+          `<span class="ms">${view.bahnKey && coll.schema[view.bahnKey] ? esc(coll.schema[view.bahnKey].name) : 'aus'}</span></button>` : '') +
+      (['board','gallery'].includes(view.layout)
+        ? `<button data-a="kbild"><span class="mi">🖼</span>Kartenbild` +
+          `<span class="ms">${view.bild === false ? 'aus' : (view.bildKey ? esc(coll.schema[view.bildKey]?.name || '') : 'automatisch')}</span></button>` : '') +
+      (view.groupBy && ['date','created','edited'].includes(coll.schema[view.groupBy]?.type)
+        ? `<button data-a="gzeit"><span class="mi">📅</span>Zeitabschnitt` +
+          `<span class="ms">${(ZEIT_STUFEN.find(s => s[0] === (view.gruppeZeit || 'monat')) || [])[1]}</span></button>` : '') +
+      (view.groupBy && coll.schema[view.groupBy]?.type === 'number'
+        ? `<button data-a="gstufe"><span class="mi">⇳</span>Zahlenstufe` +
+          `<span class="ms">${view.gruppeStufe || 'einzeln'}</span></button>` : '') +
+      `<button data-a="gsort"><span class="mi">↕</span>Gruppen sortieren` +
+        `<span class="ms">${({manuell:'manuell','alphabetisch':'A → Z','alphabetisch-ab':'Z → A',
+          anzahl:'meiste zuerst','anzahl-auf':'wenigste zuerst'})[view.gruppeSort || 'manuell']}</span></button>` +
       `<button data-a="leere"><span class="mi">␀</span>Leere Gruppen<span class="ms">${view.leereGruppen === false ? 'aus' : 'zeigen'}</span></button>` +
       `<button data-a="limit"><span class="mi">≡</span>Höchstens anzeigen<span class="ms">${view.limit || 'alle'}</span></button>` +
       '<hr>' +
       '<button data-a="link"><span class="mi">🔗</span>Link zur Ansicht kopieren</button>' +
       '<button data-a="csv"><span class="mi">⭳</span>Als CSV exportieren</button>' +
+      '<button data-a="xlsx"><span class="mi">📗</span>Als Excel-Mappe (.xlsx)</button>' +
       '<button data-a="csvin"><span class="mi">⭱</span>CSV einlesen</button>' +
       '<button data-a="ai"><span class="mi">✨</span>Mit KI auswerten</button>' +
+      '<button data-a="dubletten"><span class="mi">⧉</span>Dubletten finden</button>' +
       '<hr><button data-a="del"><span class="mi">🗑</span>Datenbank löschen</button>',
       r.left - 120, r.bottom + 4);
 
@@ -4625,7 +6487,8 @@ const Datenbank = (() => {
         const feld = a === 'group' ? 'groupBy' : 'subGroupBy';
         m.innerHTML = `<div class="grp">${a === 'group' ? 'Gruppieren' : 'Untergruppieren'} nach</div>` +
           Object.keys(coll.schema)
-            .filter(k => ['select','status','checkbox','multi','person','date'].includes(coll.schema[k].type))
+            .filter(k => ['select','status','checkbox','multi','person','date','created',
+                          'edited','number','text','formula'].includes(coll.schema[k].type))
             .map(k => `<button data-k="${k}">${esc(coll.schema[k].name)}</button>`).join('') +
           '<hr><button data-k="">Keine</button>';
         m.addEventListener('click', ev => {
@@ -4644,6 +6507,67 @@ const Datenbank = (() => {
           const h = ev.target.closest('button[data-h]');
           if (!h) return;
           Store.updateView(view.id, { hoehe: h.dataset.h });
+          m.remove(); App.zeichneSeite();
+        });
+        return;
+      }
+
+      if (a === 'bahnen') {
+        m.innerHTML = '<div class="grp">Bahnen — zweite Gruppierung</div>' +
+          Object.keys(coll.schema)
+            .filter(k => ['select','status','person','checkbox','multi','text'].includes(coll.schema[k].type))
+            .map(k => `<button data-b="${k}">${k === view.bahnKey ? '✓ ' : ''}${esc(coll.schema[k].name)}</button>`).join('') +
+          '<hr><button data-b="">Keine Bahnen</button>';
+        m.addEventListener('click', ev => {
+          const b2 = ev.target.closest('button[data-b]');
+          if (!b2) return;
+          Store.updateView(view.id, { bahnKey: b2.dataset.b });
+          m.remove(); App.zeichneSeite();
+        });
+        return;
+      }
+
+      if (a === 'kbild') {
+        m.innerHTML = '<div class="grp">Kartenbild</div>' +
+          '<button data-bi="auto">Automatisch suchen</button>' +
+          Object.keys(coll.schema).filter(k => ['files','url','text'].includes(coll.schema[k].type))
+            .map(k => `<button data-bi="${k}">${k === view.bildKey ? '✓ ' : ''}${esc(coll.schema[k].name)}</button>`).join('') +
+          '<hr><button data-bi="aus">Kein Bild</button>' +
+          `<button data-bp="${view.bildPasst === 'passt' ? 'deckt' : 'passt'}">` +
+            `Darstellung: ${view.bildPasst === 'passt' ? 'ganz zeigen' : 'füllend'}</button>`;
+        m.addEventListener('click', ev => {
+          const bi = ev.target.closest('button[data-bi]');
+          const bp = ev.target.closest('button[data-bp]');
+          if (bi) Store.updateView(view.id, bi.dataset.bi === 'aus' ? { bild: false }
+            : { bild: true, bildKey: bi.dataset.bi === 'auto' ? '' : bi.dataset.bi });
+          else if (bp) Store.updateView(view.id, { bildPasst: bp.dataset.bp });
+          else return;
+          m.remove(); App.zeichneSeite();
+        });
+        return;
+      }
+
+      if (a === 'gzeit') {
+        m.innerHTML = '<div class="grp">Datum gruppieren nach</div>' +
+          ZEIT_STUFEN.map(([id, n]) =>
+            `<button data-z="${id}">${id === (view.gruppeZeit || 'monat') ? '✓ ' : ''}${n}</button>`).join('');
+        m.addEventListener('click', ev => {
+          const z = ev.target.closest('button[data-z]');
+          if (!z) return;
+          Store.updateView(view.id, { gruppeZeit: z.dataset.z });
+          m.remove(); App.zeichneSeite();
+        });
+        return;
+      }
+
+      if (a === 'gstufe') {
+        m.innerHTML = '<div class="grp">Zahlen in Stufen</div>' +
+          [0, 5, 10, 25, 100, 1000].map(n =>
+            `<button data-st="${n}">${n ? 'je ' + n : 'jeder Wert einzeln'}</button>`).join('');
+        m.addEventListener('click', ev => {
+          const s2 = ev.target.closest('button[data-st]');
+          if (!s2) return;
+          Store.updateView(view.id, { gruppeStufe: +s2.dataset.st });
           m.remove(); App.zeichneSeite();
         });
         return;
@@ -4699,11 +6623,23 @@ const Datenbank = (() => {
         Store.updateView(view.id, { leereGruppen: view.leereGruppen === false });
         App.zeichneSeite();
       }
+      if (a === 'handytab') {
+        Store.updateView(view.id, { handyTabelle: !view.handyTabelle });
+        App.zeichneSeite();
+      }
+      if (a === 'dubletten') { m.remove(); Pflege.dublettenDialog(coll); return; }
+      if (a === 'gsort') {
+        const folge = ['manuell', 'alphabetisch', 'alphabetisch-ab', 'anzahl', 'anzahl-auf'];
+        const i = folge.indexOf(view.gruppeSort || 'manuell');
+        Store.updateView(view.id, { gruppeSort: folge[(i + 1) % folge.length] });
+        App.zeichneSeite();
+      }
       if (a === 'link') {
         navigator.clipboard?.writeText(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + view.id);
         UI.toast('Link zur Ansicht kopiert');
       }
       if (a === 'csv') csvExport(coll, view);
+      if (a === 'xlsx') { Austausch.datenbankAlsExcel(coll); UI.toast('Excel-Mappe erzeugt'); }
       if (a === 'csvin') csvImport(coll);
       if (a === 'ai')  KI.datenbankAuswerten(coll, view);
       if (a === 'del') {
@@ -4715,7 +6651,71 @@ const Datenbank = (() => {
     });
   };
 
+  /**
+   * Rückt eine Formel lesbar ein: nach jeder öffnenden Klammer eine Ebene
+   * tiefer, nach jedem Komma eine neue Zeile. Text in Anführungszeichen
+   * bleibt unangetastet. Notion hat dafür nichts.
+   */
+  const formelEinruecken = (src) => {
+    let aus = '', tiefe = 0, imText = false, anf = '';
+    const zeilenumbruch = () => { aus += '\n' + '  '.repeat(tiefe); };
+    for (let i = 0; i < src.length; i++) {
+      const c = src[i];
+      if (imText) { aus += c; if (c === anf && src[i - 1] !== '\\') imText = false; continue; }
+      if (c === '"' || c === "'") { imText = true; anf = c; aus += c; continue; }
+      if (c === '(') { tiefe++; aus += c; zeilenumbruch(); continue; }
+      if (c === ')') { tiefe = Math.max(0, tiefe - 1); zeilenumbruch(); aus += c; continue; }
+      if (c === ',') { aus += c; zeilenumbruch(); continue; }
+      if (/\s/.test(c)) { if (!/\s$/.test(aus)) aus += ' '; continue; }
+      aus += c;
+    }
+    return aus.split('\n').map(z => z.replace(/\s+$/, '')).filter(z => z.trim()).join('\n');
+  };
+
+  /**
+   * Zerlegt eine Formel in ihre Teilausdrücke — jede vollständige Klammer
+   * und die ganze Formel. So sieht man, was jeder Baustein für sich ergibt.
+   */
+  const teilausdruecke = (src) => {
+    const raus = [];
+    let imText = false, anf = '';
+    const stapel = [];
+    for (let i = 0; i < src.length; i++) {
+      const c = src[i];
+      if (imText) { if (c === anf && src[i - 1] !== '\\') imText = false; continue; }
+      if (c === '"' || c === "'") { imText = true; anf = c; continue; }
+      if (c === '(') {
+        /* Den Funktionsnamen davor mitnehmen, damit „sum(…)" dasteht */
+        let j = i - 1;
+        while (j >= 0 && /[A-Za-zÄÖÜäöüß0-9_.]/.test(src[j])) j--;
+        stapel.push(j + 1);
+      }
+      if (c === ')') {
+        const von = stapel.pop();
+        if (von !== undefined) {
+          const t = src.slice(von, i + 1).trim();
+          if (t.length > 3 && !raus.includes(t)) raus.push(t);
+        }
+      }
+    }
+    const ganz = src.trim();
+    if (ganz && !raus.includes(ganz)) raus.push(ganz);
+    return raus.slice(-25);        /* die letzten 25 reichen zum Verstehen */
+  };
+
   /* --- Formel-Editor ------------------------------------------------------ */
+  /** Was für ein Wert ist das? Für die Anzeige im Formeleditor. */
+  const typName = (v) => {
+    if (v === null || v === undefined || v === '') return 'leer';
+    if (v instanceof Date) return 'Datum';
+    if (typeof v === 'boolean') return 'Ja/Nein';
+    if (typeof v === 'number') return Number.isInteger(v) ? 'Zahl (ganz)' : 'Zahl';
+    if (Array.isArray(v)) return 'Liste mit ' + v.length + (v.length === 1 ? ' Eintrag' : ' Einträgen');
+    if (typeof v === 'object') return 'Objekt';
+    if (typeof v === 'string' && v.startsWith('⚠')) return 'Fehler';
+    return 'Text (' + String(v).length + ' Zeichen)';
+  };
+
   const formelEditor = (coll, key) => {
     const def = coll.schema[key];
     const spalten = Object.values(coll.schema).map(s => s.name);
@@ -4736,9 +6736,60 @@ const Datenbank = (() => {
           Spalten: ${spalten.map(s => `<code style="cursor:pointer" class="fxp">prop("${esc(s)}")</code>`).join(' ')}
           <br><br>Text wird mit <b>+</b> verkettet, nicht mit concat(). concat() ist nur für Listen.
           <br>Durch eine Verknüpfung lesen: <code>map(prop("Aufgaben"), current.prop("Kosten")).sum()</code>
+          <details style="margin-top:10px">
+            <summary style="cursor:pointer">Was hier mehr geht als in Notion</summary>
+            <div style="margin-top:8px; line-height:1.9">
+              <b>Die Zeile im Verhältnis zu den anderen</b> — Notion kann das nicht:<br>
+              <code class="fxp">rowNumber()</code> <code class="fxp">previous("Betrag")</code>
+              <code class="fxp">next("Betrag")</code> <code class="fxp">delta("Betrag")</code>
+              <code class="fxp">runningSum("Betrag")</code> <code class="fxp">rank("Punkte")</code>
+              <code class="fxp">percentOfTotal("Betrag")</code> <code class="fxp">total("Betrag")</code>
+              <code class="fxp">average("Betrag")</code> <code class="fxp">rowCount()</code><br>
+              <b>Eine andere Datenbank fragen</b> — ohne Verknüpfung:<br>
+              <code class="fxp">countWhere("Rechnungen", current.prop("Kunde") == prop("Name"))</code><br>
+              <code class="fxp">sumWhere("Rechnungen", current.prop("Kunde") == prop("Name"), current.prop("Betrag"))</code><br>
+              <code class="fxp">findRows("Rechnungen", current.prop("Offen"))</code>
+              <code class="fxp">firstWhere</code> <code class="fxp">lastWhere</code>
+              <code class="fxp">maxWhere</code> <code class="fxp">minWhere</code><br>
+              <b>Zufall</b> — Notion hat kein random():<br>
+              <code class="fxp">random()</code> <code class="fxp">randomBetween(1, 6)</code>
+              <code class="fxp">randomItem(prop("Karten"))</code> <code class="fxp">shuffle(prop("Karten"))</code><br>
+              <b>Werktage, Zeiträume, Zeitzonen</b>:<br>
+              <code class="fxp">businessDaysBetween(a, b)</code> <code class="fxp">addBusinessDays(d, 5)</code>
+              <code class="fxp">isWeekend(d)</code> <code class="fxp">isWorkday(d)</code>
+              <code class="fxp">startOfWeek(d)</code> <code class="fxp">endOfWeek(d)</code>
+              <code class="fxp">startOfMonth(d)</code> <code class="fxp">endOfMonth(d)</code>
+              <code class="fxp">startOfQuarter(d)</code> <code class="fxp">endOfQuarter(d)</code>
+              <code class="fxp">startOfYear(d)</code> <code class="fxp">endOfYear(d)</code>
+              <code class="fxp">quarter(d)</code> <code class="fxp">daysInMonth(d)</code>
+              <code class="fxp">isLeapYear(d)</code>
+              <code class="fxp">convertTimezone(d, "UTC", "Europe/Zurich")</code>
+              <code class="fxp">timezoneOffset(d, "Europe/Zurich")</code><br>
+              <b>Listen falten und gruppieren</b>:<br>
+              <code class="fxp">reduce(liste, 0, acc + current)</code>
+              <code class="fxp">sortBy(liste, current)</code>
+              <code class="fxp">groupBy(liste, current)</code>
+              <code class="fxp">groupKey(current)</code> <code class="fxp">groupItems(current)</code>
+              <code class="fxp">groupCount(current)</code><br>
+              <b>Statistik und Text</b>:<br>
+              <code class="fxp">stdDev(liste)</code> <code class="fxp">variance(liste)</code>
+              <code class="fxp">percentile(liste, 0.9)</code> <code class="fxp">clamp(x, 0, 10)</code>
+              <code class="fxp">roundTo(x, 2)</code> <code class="fxp">padStart("7", 3, "0")</code>
+              <code class="fxp">padEnd</code> <code class="fxp">startsWith</code>
+              <code class="fxp">endsWith</code> <code class="fxp">capitalize</code>
+              <code class="fxp">titleCase</code> <code class="fxp">slug</code>
+              <code class="fxp">initials</code> <code class="fxp">wordCount</code>
+              <code class="fxp">truncate(text, 20)</code> <code class="fxp">xor(a, b)</code>
+              <code class="fxp">boolean(x)</code>
+            </div>
+          </details>
         </div>
         <div style="padding:12px 18px; display:flex; gap:8px; justify-content:flex-end;
           border-top:1px solid var(--line)">
+          <button id="fxki" style="padding:7px 14px; border-radius:6px; margin-right:auto">✨ KI schreiben lassen</button>
+          <button id="fxerkl" style="padding:7px 14px; border-radius:6px">✨ Erklären</button>
+          <button id="fxfmt" style="padding:7px 14px; border-radius:6px">Formatieren</button>
+          <button id="fxsteps" style="padding:7px 14px; border-radius:6px">Zwischenergebnisse</button>
           <button id="fxc" style="padding:7px 14px; border-radius:6px">Abbrechen</button>
           <button id="fxs" style="padding:7px 14px; border-radius:6px; background:var(--accent); color:#fff">Speichern</button>
         </div>
@@ -4748,9 +6799,29 @@ const Datenbank = (() => {
     const ta  = overlay.querySelector('#fx');
     const out = overlay.querySelector('#fxout');
 
+    /* Namen, die in der Formel stehen, aber keine Spalte sind. Notion zeigt
+       dafür einen Fehler; hier bleibt die Formel gültig — sie rechnet dann
+       mit „leer" —, aber der Editor sagt es wenigstens. */
+    const unbekannteSpalten = (src) => {
+      const namen = new Set();
+      String(src || '').replace(/prop\s*\(\s*(["'])([^"']*)\1\s*\)/g, (_, q, n) => {
+        if (!spalten.includes(n)) namen.add(n);
+        return _;
+      });
+      return [...namen];
+    };
+
     const pruefe = () => {
       const c = Formula.check(ta.value);
       if (!c.ok) { out.style.color = 'var(--c-red)'; out.textContent = '⚠ ' + c.fehler; return; }
+      const fehlend = unbekannteSpalten(ta.value);
+      if (fehlend.length) {
+        out.style.color = 'var(--c-orange)';
+        out.textContent = '⚠ Diese Spalte gibt es nicht: ' +
+          fehlend.map(n => '„' + n + '"').join(', ') +
+          ' — die Formel rechnet damit als wäre sie leer.';
+        return;
+      }
       /* Mit der ersten Zeile testen, damit man das Ergebnis sieht */
       const erste = Store.rowsOf(coll.id)[0];
       if (erste) {
@@ -4759,9 +6830,12 @@ const Datenbank = (() => {
           if (!k) return null;
           if (coll.schema[k].type === 'relation') return seitenListe(wert(erste, k, coll));
           return wert(erste, k, coll);
-        }, fremdWert);
+        }, fremdWert, formelUmgebung(erste, coll));
         out.style.color = r.ok ? 'var(--c-green)' : 'var(--c-red)';
-        out.textContent = r.ok ? '✓ Beispiel: ' + Formula.anzeige(r.wert) : '⚠ ' + r.fehler;
+        /* Notion sagt nie, was für ein Wert herauskommt. Hier steht es dabei. */
+        out.textContent = r.ok
+          ? '✓ ' + typName(r.wert) + ' · Beispiel: ' + Formula.anzeige(r.wert)
+          : '⚠ ' + r.fehler;
       } else {
         out.style.color = 'var(--c-green)';
         out.textContent = '✓ Formel ist gültig';
@@ -4777,6 +6851,62 @@ const Datenbank = (() => {
       ta.focus();
       pruefe();
     }));
+
+    /* ------------------------------------------------------------------
+     * FORMEL-WERKSTATT
+     * Zwei Dinge, die Notion nicht hat: eine Formel lesbar einrücken, und
+     * Schritt für Schritt zeigen, was jeder Teilausdruck ergibt.
+     * ---------------------------------------------------------------- */
+    overlay.querySelector('#fxfmt').addEventListener('click', () => {
+      ta.value = formelEinruecken(ta.value);
+      pruefe();
+      UI.toast('Formel eingerückt');
+    });
+
+    /* Die KI schreibt — geprüft wird trotzdem hier, an einer echten Zeile. */
+    overlay.querySelector('#fxki').addEventListener('click', () => {
+      KiBau.formelSchreiben(coll, key, ta.value, (neu) => {
+        ta.value = neu;
+        pruefe();
+        UI.toast('Formel übernommen — noch nicht gespeichert');
+      });
+    });
+    overlay.querySelector('#fxerkl').addEventListener('click', () => {
+      if (!ta.value.trim()) { UI.toast('Erst eine Formel schreiben'); return; }
+      KiBau.formelErklaeren(coll, ta.value);
+    });
+
+    overlay.querySelector('#fxsteps').addEventListener('click', () => {
+      const erste = Store.rowsOf(coll.id)[0];
+      if (!erste) { UI.toast('Für Zwischenergebnisse braucht es eine Zeile'); return; }
+      const propFn = (name) => {
+        const k = Object.keys(coll.schema).find(x => coll.schema[x].name === name);
+        if (!k) return null;
+        if (coll.schema[k].type === 'relation') return seitenListe(wert(erste, k, coll));
+        return wert(erste, k, coll);
+      };
+      const teile = teilausdruecke(ta.value);
+      const zeilen = teile.map(t => {
+        const r = Formula.run(t, propFn, fremdWert, formelUmgebung(erste, coll));
+        return { t, wert: r.ok ? Formula.anzeige(r.wert) : '⚠ ' + r.fehler, ok: r.ok };
+      });
+      const o2 = document.createElement('div');
+      o2.className = 'overlay';
+      o2.innerHTML = '<div class="finder" style="width:min(720px,95vw)">' +
+        `<div class="fh">Zwischenergebnisse an „${esc(erste.text || 'erster Zeile')}"` +
+        '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        '<div class="res" style="max-height:60vh">' +
+        (zeilen.length
+          ? zeilen.map(z => '<div class="fx-schritt">' +
+              `<code>${esc(z.t)}</code>` +
+              `<span class="${z.ok ? 'gut' : 'schlecht'}">${esc(z.wert)}</span></div>`).join('')
+          : '<div style="padding:20px; color:var(--text-faint)">Nichts zum Zerlegen.</div>') +
+        '</div></div>';
+      document.body.appendChild(o2);
+      o2.addEventListener('click', e => {
+        if (e.target === o2 || e.target.closest('[data-a="zu"]')) o2.remove();
+      });
+    });
 
     overlay.querySelector('#fxc').addEventListener('click', () => overlay.remove());
     overlay.querySelector('#fxs').addEventListener('click', () => {
@@ -5064,10 +7194,188 @@ const Datenbank = (() => {
     ['zeile-weg',       'Ein Eintrag verschwindet aus der Datenbank'],
     ['formular-neu',    'Über das Formular kommt eine Antwort'],
     ['zeit-vor',        'Einige Tage vor einem Datum'],
-    ['zeit-nach',       'Einige Tage nach einem Datum']
+    ['zeit-nach',       'Einige Tage nach einem Datum'],
+    /* Notions dritter Auslösertyp: „Every {frequency}". Er hängt an keiner
+       Spalte und an keiner Änderung, sondern nur an der Uhr. */
+    ['wiederkehrend',   'Wiederkehrend nach Zeitplan'],
+    /* --- Sechs, die an etwas anderem hängen als an einer Spalte --------
+     * Der Filter einer Ansicht ist eine Zustandsgrenze: eine Zeile ist
+     * drin oder draussen. Interessant ist der Übergang — „ist gerade
+     * hereingekommen" sagt mehr als „hat den Status geändert".
+     * ------------------------------------------------------------------ */
+    ['ansicht-rein',    'Ein Eintrag kommt neu in eine Ansicht'],
+    ['ansicht-raus',    'Ein Eintrag fällt aus einer Ansicht heraus'],
+    ['kommentar-neu',   'Jemand schreibt einen Kommentar'],
+    ['erwaehnung',      'Jemand wird im Kommentar erwähnt'],
+    ['datei-neu',       'Eine Datei wird angehängt'],
+    ['zeile-zurueck',   'Ein Eintrag kommt aus dem Papierkorb zurück']
   ];
   /* Diese Auslöser hängen an keiner einzelnen Spalte. */
-  const OHNE_SPALTE = ['zeile-neu', 'zeile-geaendert', 'zeile-weg', 'formular-neu'];
+  const OHNE_SPALTE = ['zeile-neu', 'zeile-geaendert', 'zeile-weg', 'formular-neu',
+                       'wiederkehrend', 'ansicht-rein', 'ansicht-raus',
+                       'kommentar-neu', 'erwaehnung', 'zeile-zurueck'];
+
+  /* ------------------------------------------------------------------------
+   * BEDINGUNGEN
+   * ------------------------------------------------------------------------
+   * Bisher konnte man an eine Automation Filterregeln hängen — „Status ist
+   * Fertig". Das beantwortet aber nur Fragen über den Zustand, nie über die
+   * Veränderung: „war das Feld vorher leer?", „ist die Zahl gewachsen?",
+   * „hat sich überhaupt etwas geändert?". Genau daran scheitern in Notion
+   * die meisten Automationen — sie feuern auch, wenn derselbe Wert nochmal
+   * geschrieben wird.
+   *
+   * Deshalb hier ein benannter Katalog. Eine Bedingung mit `art` wird von
+   * dieser Liste beantwortet; eine ohne `art` bleibt eine gewöhnliche
+   * Filterregel. Alte Automationen laufen also unverändert weiter.
+   *
+   * Spalte  = braucht eine Spalte      Zahl = braucht eine Zahl
+   * Text    = braucht einen Text       —    = braucht nichts
+   * ---------------------------------------------------------------------- */
+  const BEDINGUNGEN = [
+    /* Was mit dem Wert geschehen ist */
+    ['wert-leer',        'Die Eigenschaft ist jetzt leer',              'spalte'],
+    ['wert-gefuellt',    'Die Eigenschaft ist jetzt gefüllt',           'spalte'],
+    ['war-leer',         'Sie war vorher leer',                         'spalte'],
+    ['wirklich-anders',  'Der Wert hat sich wirklich geändert',         'spalte'],
+    ['wert-gewachsen',   'Die Zahl ist grösser als vorher',             'spalte'],
+    ['wert-gefallen',    'Die Zahl ist kleiner als vorher',             'spalte'],
+    ['wert-ist',         'Der Wert ist genau …',                        'spalte,text'],
+    ['wert-enthaelt',    'Der Wert enthält …',                          'spalte,text'],
+    ['wert-groesser',    'Die Zahl ist grösser als …',                  'spalte,zahl'],
+    ['wert-kleiner',     'Die Zahl ist kleiner als …',                  'spalte,zahl'],
+    /* Was für ein Eintrag es ist */
+    ['zeile-jung',       'Der Eintrag ist jünger als … Tage',           'zahl'],
+    ['zeile-alt',        'Der Eintrag ist älter als … Tage',            'zahl'],
+    ['zeile-gesperrt',   'Der Eintrag ist gesperrt',                    ''],
+    ['zeile-inhalt',     'Der Eintrag hat Inhalt auf seiner Seite',     ''],
+    ['zeile-kommentare', 'Am Eintrag hängt mindestens ein Kommentar',   ''],
+    ['zeile-archiviert', 'Der Eintrag ist archiviert',                  ''],
+    ['formel-wahr',      'Eine freie Formel ergibt „wahr"',             'formel'],
+    ['in-ansicht',       'Der Eintrag steht in der Ansicht …',          'ansicht'],
+    /* Wann es geschieht */
+    ['heute-werktag',    'Heute ist ein Werktag',                       ''],
+    ['heute-wochenende', 'Heute ist Wochenende',                        ''],
+    ['wochentag',        'Heute ist ein bestimmter Wochentag',          'wochentag'],
+    ['uhrzeit-zwischen', 'Die Uhrzeit liegt zwischen … und …',          'zeitspanne'],
+    ['datum-vergangen',  'Das Datum in der Spalte liegt zurück',        'spalte'],
+    ['hoechstens',       'Diese Automation lief heute höchstens … mal', 'zahl']
+  ];
+  /* WOCHENTAGE steht schon weiter oben — hier wird dieselbe Liste benutzt. */
+
+  /**
+   * Beantwortet eine benannte Bedingung.
+   * ctx trägt das, was eine reine Zustandsprüfung nicht wissen kann:
+   * den alten Wert, die betroffene Spalte und die Automation selbst.
+   */
+  const bedingungTrifft = (b, row, coll, ctx) => {
+    ctx = ctx || {};
+    const k = b.key || ctx.key;
+    const hier = () => (k && row && coll.schema[k]) ? wert(row, k, coll) : null;
+    const leer = (v) => v === null || v === undefined || v === '' ||
+                        (Array.isArray(v) && !v.length);
+    const zahl = (v) => (window.Formula ? Formula.zahl(v) : (Number(v) || 0));
+    const jetzt = new Date();
+
+    switch (b.art) {
+      case 'wert-leer':       return leer(hier());
+      case 'wert-gefuellt':   return !leer(hier());
+      case 'war-leer':        return leer(ctx.alterWert);
+      case 'wirklich-anders': return JSON.stringify(ctx.alterWert ?? null) !==
+                                     JSON.stringify(hier() ?? null);
+      case 'wert-gewachsen':  return zahl(hier()) > zahl(ctx.alterWert);
+      case 'wert-gefallen':   return zahl(hier()) < zahl(ctx.alterWert);
+      case 'wert-ist':        return String(hier() ?? '') === String(b.wert ?? '');
+      case 'wert-enthaelt':   return String(hier() ?? '').toLowerCase()
+                                     .includes(String(b.wert ?? '').toLowerCase());
+      case 'wert-groesser':   return zahl(hier()) > zahl(b.wert);
+      case 'wert-kleiner':    return zahl(hier()) < zahl(b.wert);
+
+      case 'zeile-jung': {
+        if (!row || !row.created) return false;
+        return (jetzt - new Date(row.created)) / 86400000 < (Number(b.wert) || 1);
+      }
+      case 'zeile-alt': {
+        if (!row || !row.created) return false;
+        return (jetzt - new Date(row.created)) / 86400000 > (Number(b.wert) || 1);
+      }
+      case 'zeile-gesperrt':   return !!(row && row.gesperrt);
+      case 'zeile-inhalt':     return !!(row && (row.content || []).length);
+      case 'zeile-kommentare': return !!(row && (row.kommentare || []).length);
+      case 'zeile-archiviert': return !!(row && row.archiviert);
+
+      case 'formel-wahr': {
+        if (!window.Formula || !row) return false;
+        const r = Formula.run(String(b.wert || ''), (name) => {
+          const k2 = Object.keys(coll.schema).find(x => coll.schema[x].name === name);
+          return k2 ? wert(row, k2, coll) : null;
+        }, fremdWert, formelUmgebung(row, coll));
+        return r.ok && !!r.wert && r.wert !== 'false' && r.wert !== 0;
+      }
+      case 'in-ansicht': {
+        const v = Store.getView(b.wert);
+        return !!v && !!row && gruppeTrifftZu(row, v.filters, coll);
+      }
+
+      case 'heute-werktag':    return jetzt.getDay() !== 0 && jetzt.getDay() !== 6;
+      case 'heute-wochenende': return jetzt.getDay() === 0 || jetzt.getDay() === 6;
+      case 'wochentag':        return WOCHENTAGE[jetzt.getDay()] === String(b.wert || '');
+      case 'uhrzeit-zwischen': {
+        const min = jetzt.getHours() * 60 + jetzt.getMinutes();
+        const alsMin = (s) => {
+          const [h, m] = String(s || '').split(':').map(x => parseInt(x, 10) || 0);
+          return h * 60 + m;
+        };
+        const von = alsMin(b.von || '08:00'), bis = alsMin(b.bis || '18:00');
+        /* Über Mitternacht hinaus: 22:00–06:00 soll auch gelten */
+        return von <= bis ? (min >= von && min <= bis) : (min >= von || min <= bis);
+      }
+      case 'datum-vergangen': {
+        const v = hier();
+        if (!v) return false;
+        const d = new Date(v);
+        return !isNaN(d) && d < jetzt;
+      }
+      case 'hoechstens': {
+        const heute = jetzt.toISOString().slice(0, 10);
+        const a = ctx.automation || {};
+        const gezaehlt = (a.verlauf || [])
+          .filter(x => String(x.wann || '').slice(0, 10) === heute).length;
+        return gezaehlt < (Number(b.wert) || 1);
+      }
+      default: return true;
+    }
+  };
+
+  /** Eine Bedingung als Satz — für die Liste und für den Prüfbericht. */
+  const bedingungText = (b) => {
+    const e = BEDINGUNGEN.find(x => x[0] === b.art);
+    if (!e) return '';
+    let t = e[1];
+    if (b.art === 'uhrzeit-zwischen')
+      return `Die Uhrzeit liegt zwischen ${b.von || '08:00'} und ${b.bis || '18:00'}`;
+    if (String(b.wert ?? '') !== '') t = t.replace('…', String(b.wert));
+    return t;
+  };
+
+  /** Alle Bedingungen einer Automation prüfen — benannte und Filterregeln. */
+  const bedingungenTreffen = (a, row, coll, ctx) =>
+    (a.bedingungen || []).every(b => b && b.art
+      ? bedingungTrifft(b, row, coll, Object.assign({ automation: a }, ctx))
+      : trifftZu(row, b, coll));
+
+  /* Die Takte für den wiederkehrenden Auslöser. Notion nennt in seiner Hilfe
+     nur „every day, week, month, and so on" — hier sind sie ausgeschrieben. */
+  const TAKTE = [
+    ['stuendlich', 'Stündlich'],
+    ['taeglich',   'Täglich'],
+    ['werktags',   'An Werktagen'],
+    ['woechentlich','Wöchentlich'],
+    ['zweiwoechentlich', 'Alle zwei Wochen'],
+    ['monatlich',  'Monatlich'],
+    ['quartal',    'Vierteljährlich'],
+    ['jaehrlich',  'Jährlich']
+  ];
   const AKTIONEN = [
     ['setze-prop',   'Eigenschaft setzen'],
     ['ki-fuellen',   'KI-Feld ausfüllen lassen'],
@@ -5077,7 +7385,19 @@ const Datenbank = (() => {
     ['wiederholen',  'Nächsten Termin dieser Aufgabe anlegen'],
     ['fremd-setzen', 'Einträge einer anderen Datenbank ändern'],
     ['webhook',      'An eine Webadresse schicken'],
-    ['melden',       'Kurze Meldung zeigen']
+    ['melden',       'Kurze Meldung zeigen'],
+    /* --- Die vier, die Notion hat und uns fehlten --------------------- */
+    ['variablen',    'Variablen festlegen'],
+    ['neue-zeile',   'Seite in einer Datenbank anlegen'],
+    ['benachricht',  'Benachrichtigung senden'],
+    ['mail',         'E-Mail senden'],
+    /* --- Sechs weitere, die Notion in seiner Liste führt ---------------- */
+    ['archivieren',  'Eintrag archivieren'],
+    ['loeschen',     'Eintrag in den Papierkorb'],
+    ['leeren',       'Eigenschaft leeren'],
+    ['duplizieren',  'Eintrag duplizieren'],
+    ['kommentar',    'Kommentar an den Eintrag'],
+    ['zurueckstellen','Eintrag auf später zurückstellen']
   ];
 
   /** „1 Woche", „3 Tage", „monatlich", „14" — alles wird zu einem Datumssprung. */
@@ -5152,20 +7472,62 @@ const Datenbank = (() => {
     return zeilen.length;
   };
 
-  const automationenLaufen = (row, coll, art, key, neuerWert) => {
+  /* Der Laufverlauf wird gebündelt gesichert — sonst schreibt jede Aktion
+     die ganze Sammlung neu. */
+  let verlaufTimer = null;
+  const verlaufSichern = (coll) => {
+    clearTimeout(verlaufTimer);
+    verlaufTimer = setTimeout(() => {
+      try { Store.updateCollection(coll.id, { automationen: coll.automationen }); } catch {}
+    }, 900);
+  };
+
+  const automationenLaufen = (row, coll, art, key, neuerWert, ctx) => {
     if (imLauf || !coll || !(coll.automationen || []).length) return;
+    ctx = ctx || {};
     imLauf = true;
     try {
       coll.automationen.forEach(a => {
         if (a.an === false) return;
-        const w = a.wenn || {};
-        if (w.art !== art) return;
-        if (!OHNE_SPALTE.includes(w.art) && w.key && w.key !== key) return;
-        if (w.art === 'prop-wert' && String(neuerWert ?? '') !== String(w.wert ?? '')) return;
 
-        /* Zusätzliche Bedingungen — alle müssen zutreffen */
+        /* --- Mehrere Auslöser -------------------------------------------
+         * Notion kennt „wenn einer davon eintritt" und „wenn alle eintreten".
+         * Bei „alle" müssen sie innerhalb von rund drei Sekunden passieren —
+         * genau die Regel, die Notions Hilfe nennt.
+         * -------------------------------------------------------------- */
+        const alleAusloeser = [a.wenn || {}, ...(a.weitereWenn || [])];
+        const passt = (w) => {
+          if (w.art !== art) return false;
+          if (!OHNE_SPALTE.includes(w.art) && w.key && w.key !== key) return false;
+          if (w.art === 'prop-wert' && String(neuerWert ?? '') !== String(w.wert ?? '')) return false;
+          /* Die Ansichts-Auslöser gelten je Ansicht — sonst würde eine
+             Automation für „Diese Woche" auch bei „Alle" feuern. */
+          if ((w.art === 'ansicht-rein' || w.art === 'ansicht-raus') &&
+              w.ansicht && w.ansicht !== ctx.ansicht) return false;
+          /* Eine Datei-Automation darf an einer Spalte hängen */
+          if (w.art === 'datei-neu' && w.key && w.key !== key) return false;
+          return true;
+        };
+        const getroffen = alleAusloeser.findIndex(passt);
+        if (getroffen < 0) return;
+
+        if ((a.weitereWenn || []).length && a.wennModus === 'alle') {
+          a.gefeuert = a.gefeuert || {};
+          const jetztMs = new Date().getTime();
+          a.gefeuert[getroffen] = jetztMs;
+          /* Zu alte Treffer zählen nicht mehr mit */
+          Object.keys(a.gefeuert).forEach(i => {
+            if (jetztMs - a.gefeuert[i] > 3000) delete a.gefeuert[i];
+          });
+          if (Object.keys(a.gefeuert).length < alleAusloeser.length) return;
+          a.gefeuert = {};
+        }
+
+        /* Zusätzliche Bedingungen — alle müssen zutreffen.
+           Benannte Bedingungen dürfen auch nach dem alten Wert fragen. */
         if ((a.bedingungen || []).length &&
-            !a.bedingungen.every(b => trifftZu(row, b, coll))) return;
+            !bedingungenTreffen(a, row, coll,
+              { key, alterWert: ctx.alterWert, neuerWert })) return;
 
         /* Gilt die Automation nur für eine Ansicht? Dann muss die Zeile
            auch durch deren Filter kommen. */
@@ -5174,13 +7536,108 @@ const Datenbank = (() => {
           if (v && !gruppeTrifftZu(row, v.filters, coll)) return;
         }
 
+        /* --- Laufverlauf ------------------------------------------------
+         * Notion hat weder Protokoll noch Testlauf; wenn eine Automation
+         * nicht läuft, steht man im Dunkeln. Hier wird jeder Lauf notiert:
+         * wann, für welche Zeile, mit welchen Aktionen und welchem Fehler.
+         * -------------------------------------------------------------- */
+        const laufNotiz = { wann: new Date().toISOString(),
+                            zeile: (row && row.text) || '', aktionen: [], fehler: '' };
+        const notieren = () => {
+          a.verlauf = [laufNotiz, ...(a.verlauf || [])].slice(0, 100);
+          verlaufSichern(coll);
+          /* Und einmal ins gemeinsame Protokoll, damit man nicht in jeder
+             Datenbank einzeln nachsehen muss, was heute gelaufen ist. */
+          if (window.Protokoll)
+            Protokoll.notieren('automation',
+              'Automation „' + (a.name || 'Ohne Namen') + '" in „' + (coll.name || 'Datenbank') + '"',
+              { seite: row && row.id, id: a.id,
+                wie: (laufNotiz.zeile ? 'für „' + laufNotiz.zeile + '"' : '') });
+        };
+
+        /* Variablen, die eine Aktion setzt, stehen allen folgenden zur
+           Verfügung — als {{name}} in jedem Textfeld. Genau wie Notions
+           „Define variables". */
+        const vars = {};
+        const mitVars = (v) => typeof v === 'string'
+          ? v.replace(/\{\{\s*([A-Za-zÄÖÜäöüß0-9_]+)\s*\}\}/g,
+                      (_, n) => (n in vars ? String(vars[n]) : ''))
+          : v;
+
+        /* Wie oft läuft diese Aktion? Notion kennt nur „einmal je Zeile".
+           Hier darf eine Aktion auch über die verknüpften Zeilen laufen
+           oder mehrfach wiederholt werden. */
         (a.dann || []).forEach(d => {
+          /* --- Bedingung an der einzelnen Aktion — das „sonst" von
+                 Notions Automationen, das es dort nicht gibt ------------- */
+          if (d.wenn && d.wenn.key) {
+            const ok2 = gruppeTrifftZu(row, { operator: 'and', rules: [{
+              key: d.wenn.key,
+              op:  d.wenn.op || (OPERATOREN[coll.schema[d.wenn.key]?.type] || OPERATOREN.text)[0],
+              wert: mitVars(d.wenn.wert) }] }, coll);
+            if (d.wenn.umkehren ? ok2 : !ok2) return;
+          }
+          /* --- Variablen festlegen ---------------------------------- */
+          if (d.art === 'variablen') {
+            (d.vars || []).forEach(v => {
+              if (!v || !v.name) return;
+              const r = Formula.run(mitVars(v.formel || ''), (name) => {
+                const k2 = Object.keys(coll.schema).find(x => coll.schema[x].name === name);
+                return k2 ? wert(row, k2, coll) : null;
+              }, fremdWert, formelUmgebung(row, coll));
+              vars[v.name] = r.ok ? Formula.anzeige(r.wert) : '';
+            });
+          }
           if (d.art === 'setze-prop' && d.key) {
-            let v = d.wert ?? '';
+            let v = mitVars(d.wert ?? '');
             if (v === 'heute')  v = new Date().toISOString().slice(0, 10);
             if (v === 'morgen') { const t = new Date(); t.setDate(t.getDate() + 1); v = t.toISOString().slice(0, 10); }
             if (v === 'jetzt')  v = new Date().toISOString().slice(0, 16);
             Store.setProp(row.id, d.key, v);
+          }
+
+          /* --- Seite in einer Datenbank anlegen — Notions „Add page to" -- */
+          if (d.art === 'neue-zeile') {
+            const ziel = Store.getCollection(d.zielDb);
+            if (!ziel) { UI.toast('Zieldatenbank nicht gefunden'); return; }
+            const props = {};
+            (d.felder || []).forEach(fz => {
+              if (!fz.key) return;
+              props[fz.key] = platzhalter(mitVars(String(fz.wert ?? ''))
+                .replace(/\{titel\}/g, row.text || ''));
+            });
+            const neu = Store.addRow(ziel.id, props);
+            const titel = platzhalter(mitVars(String(d.titel || '{titel}'))
+              .replace(/\{titel\}/g, row.text || ''));
+            Store.updateBlock(neu.id, { text: titel });
+            UI.toast('Neue Seite in „' + (ziel.name || 'Datenbank') + '"');
+          }
+
+          /* --- Benachrichtigung — bei uns in den Posteingang ------------- */
+          if (d.art === 'benachricht') {
+            const text = platzhalter(mitVars(String(d.text || ''))
+              .replace(/\{titel\}/g, row.text || '')) || (row.text || coll.name);
+            Werkzeuge.posteingangMelden({
+              text, quelle: coll.name || 'Automation', seite: row.id, art: 'automation'
+            });
+          }
+
+          /* --- E-Mail senden -------------------------------------------- */
+          if (d.art === 'mail') {
+            const betreff = platzhalter(mitVars(String(d.betreff || ''))
+              .replace(/\{titel\}/g, row.text || '')) || (row.text || 'Redion');
+            const koerper = platzhalter(mitVars(String(d.text || ''))
+              .replace(/\{titel\}/g, row.text || ''));
+            if (window.Mail && Mail.senden) {
+              Mail.senden({ an: mitVars(d.an || ''), betreff, text: koerper })
+                .catch(err => UI.toast('Mail: ' + err.message));
+            } else {
+              /* Ohne Mail-Anbindung öffnet sich das Mailprogramm — besser
+                 als stillschweigend nichts zu tun. */
+              location.href = 'mailto:' + encodeURIComponent(mitVars(d.an || '')) +
+                '?subject=' + encodeURIComponent(betreff) +
+                '&body=' + encodeURIComponent(koerper);
+            }
           }
           if (d.art === 'zaehler' && d.key) {
             Store.setProp(row.id, d.key, Formula.zahl(wert(row, d.key, coll)) + 1);
@@ -5230,14 +7687,52 @@ const Datenbank = (() => {
           if (d.art === 'melden') {
             UI.toast('⚡ ' + (d.text || a.name || 'Automation ausgeführt'));
           }
+
+          /* --- Die sechs neuen Aktionen ------------------------------- */
+          if (d.art === 'archivieren') {
+            Store.updateBlock(row.id, { archiviert: true, archiviertAm: Store.now() });
+          }
+          if (d.art === 'loeschen') {
+            Store.trashBlock(row.id);
+          }
+          if (d.art === 'leeren' && d.key) {
+            Store.setProp(row.id, d.key, coll.schema[d.key]?.type === 'multi' ? [] : '');
+          }
+          if (d.art === 'duplizieren') {
+            const kopie = Store.addRow(coll.id, { ...(row.props || {}) });
+            Store.updateBlock(kopie.id, { text: (row.text || '') + ' (Kopie)' });
+          }
+          if (d.art === 'kommentar') {
+            const text = platzhalter(mitVars(String(d.text || 'Von einer Automation'))
+              .replace(/\{titel\}/g, row.text || ''));
+            const liste2 = (Store.getBlock(row.id).kommentare || []).slice();
+            liste2.push({ id: Store.uid(), text, zitat: '', autor: a.name || 'Automation',
+                          zeit: Store.now(), erledigt: false, antworten: [], reaktionen: {} });
+            Store.updateBlock(row.id, { kommentare: liste2 });
+          }
+          if (d.art === 'zurueckstellen' && window.Plan) {
+            const tage = parseInt(String(mitVars(d.wert ?? d.text ?? '1')), 10) || 1;
+            const bis = new Date(); bis.setDate(bis.getDate() + tage); bis.setHours(9, 0, 0, 0);
+            Plan.zurueckstellen(row.id, bis, a.name || 'Automation');
+          }
           if (d.art === 'webhook') {
             const url = d.text || Store.getMeta('api:webhook', '');
             if (!url) { UI.toast('Keine Webhook-Adresse hinterlegt'); return; }
-            const paket = { datenbank: coll.name, eintrag: row.text || '', zeit: Store.now(), werte: {} };
+            const paket = { datenbank: coll.name, eintrag: row.text || '', zeit: Store.now(),
+                            eintragId: row.id, automation: a.name || '', werte: {} };
             Object.keys(coll.schema).forEach(k2 => {
               paket.werte[coll.schema[k2].name] = Formula.anzeige(wert(row, k2, coll));
             });
-            KI.holen(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            /* Anmeldung am Webhook — Notion schickt gar keine mit. Der
+               Schlüssel steht in den Einstellungen und bleibt im Gerät. */
+            const kopf = { 'Content-Type': 'application/json' };
+            const art  = Store.getMeta('webhookAuthArt', 'keine');
+            const wert2 = Store.getMeta('api:webhookAuth', '');
+            if (wert2 && art === 'bearer')  kopf.Authorization = 'Bearer ' + wert2;
+            if (wert2 && art === 'basic')   kopf.Authorization = 'Basic ' + btoa(wert2);
+            if (wert2 && art === 'kopf')    kopf[Store.getMeta('webhookAuthName', 'X-Api-Key')] = wert2;
+            if (wert2 && art === 'geheim')  paket.geheimnis = wert2;
+            KI.holen(url, { method: 'POST', headers: kopf,
                             body: JSON.stringify(paket) },
                      { versuche: 3, beiWartezeit: (sek, nr) =>
                          UI.toast('Webhook meldet sich nicht — Versuch ' + (nr + 1) + ' in ' + sek + ' s') })
@@ -5245,7 +7740,9 @@ const Datenbank = (() => {
               .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message +
                                       ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
           }
+          laufNotiz.aktionen.push((AKTIONEN.find(x => x[0] === d.art) || [])[1] || d.art);
         });
+        notieren();
       });
     } finally {
       imLauf = false;
@@ -5256,7 +7753,141 @@ const Datenbank = (() => {
    * Zeitauslöser: „drei Tage vor dem Fälligkeitsdatum". Wird beim Start und
    * danach stündlich geprüft. Jede Zeile löst höchstens einmal je Automation aus.
    */
+  /**
+   * Wann war der letzte fällige Zeitpunkt eines Taktes vor „jetzt"?
+   * Gibt eine Marke zurück wie „2026-08-02T09" — läuft die Automation schon
+   * unter dieser Marke, passiert nichts mehr. So läuft sie genau einmal je
+   * Takt, egal wie oft die App geöffnet wird.
+   */
+  /* ------------------------------------------------------------------------
+   * ZEITZONEN
+   * ------------------------------------------------------------------------
+   * „Jeden Montag um 09:00" heisst: 09:00 wo? Bisher galt immer die Uhr des
+   * Geräts — wer auf Reisen ist oder im Team über Länder hinweg arbeitet,
+   * bekam den Lauf zur falschen Stunde. Jetzt darf jede wiederkehrende
+   * Automation ihre eigene Zone haben.
+   *
+   * Der Trick: aus einem Zeitpunkt die Wanduhrzeit der Zielzone lesen und
+   * daraus ein neues Datum bauen. Dessen Ortsgetter liefern dann genau die
+   * Zahlen der Zielzone — Sommerzeit inbegriffen, weil Intl das rechnet.
+   * ---------------------------------------------------------------------- */
+  const inZone = (d, zone) => {
+    if (!zone) return new Date(d);
+    try {
+      const f = new Intl.DateTimeFormat('en-CA', {
+        timeZone: zone, hourCycle: 'h23', year: 'numeric', month: '2-digit',
+        day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const t = {};
+      f.formatToParts(d).forEach(x => { t[x.type] = x.value; });
+      return new Date(+t.year, +t.month - 1, +t.day, +t.hour, +t.minute, +t.second);
+    } catch { return new Date(d); }   /* unbekannte Zone: lieber Gerätezeit als gar nichts */
+  };
+
+  /** Die Zonen, die der Browser kennt — sonst eine kurze, ehrliche Liste. */
+  const ZONEN = () => {
+    try {
+      if (Intl.supportedValuesOf) return Intl.supportedValuesOf('timeZone');
+    } catch {}
+    return ['Europe/Zurich', 'Europe/Berlin', 'Europe/Vienna', 'Europe/London',
+            'Europe/Istanbul', 'America/New_York', 'America/Chicago',
+            'America/Los_Angeles', 'Asia/Dubai', 'Asia/Kolkata',
+            'Asia/Shanghai', 'Asia/Tokyo', 'Australia/Sydney', 'UTC'];
+  };
+  const eigeneZone = () => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }
+    catch { return ''; }
+  };
+
+  const taktMarke = (takt, uhr, jetzt, zone) => {
+    const [hh, mm] = String(uhr || '09:00').split(':').map(x => parseInt(x, 10) || 0);
+    const p = (n) => String(n).padStart(2, '0');
+    const d = inZone(jetzt, zone);
+
+    if (takt === 'stuendlich') {
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours());
+    }
+    /* Alle anderen Takte haben eine feste Uhrzeit am Tag. Ist sie heute
+       noch nicht erreicht, zählt der Tag davor. */
+    const heuteFaellig = new Date(d); heuteFaellig.setHours(hh, mm, 0, 0);
+    const bezug = d >= heuteFaellig ? new Date(d) : new Date(d.getTime() - 86400000);
+    bezug.setHours(0, 0, 0, 0);
+    const tag = bezug.getFullYear() + '-' + p(bezug.getMonth() + 1) + '-' + p(bezug.getDate());
+
+    if (takt === 'taeglich') return tag;
+    if (takt === 'werktags') {
+      /* Am Wochenende läuft nichts — die Marke bleibt die vom Freitag */
+      const w = bezug.getDay();
+      if (w === 0 || w === 6) return null;
+      return tag;
+    }
+    if (takt === 'woechentlich' || takt === 'zweiwoechentlich') {
+      const t = new Date(Date.UTC(bezug.getFullYear(), bezug.getMonth(), bezug.getDate()));
+      t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+      const jahresstart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+      const kw = Math.ceil(((t - jahresstart) / 86400000 + 1) / 7);
+      if (takt === 'zweiwoechentlich' && kw % 2 === 1) return null;
+      return t.getUTCFullYear() + '-KW' + p(kw);
+    }
+    if (takt === 'monatlich')  return bezug.getFullYear() + '-' + p(bezug.getMonth() + 1);
+    if (takt === 'quartal')    return bezug.getFullYear() + '-Q' + (Math.floor(bezug.getMonth() / 3) + 1);
+    if (takt === 'jaehrlich')  return String(bezug.getFullYear());
+    return tag;
+  };
+
+  /**
+   * Der wiederkehrende Auslöser — Notions „Every {frequency}".
+   * Er hängt an keiner Änderung, sondern an der Uhr, und läuft für jede
+   * Zeile im Wirkungsbereich: ganze Datenbank oder eine bestimmte Ansicht.
+   */
+  const wiederkehrendeAutomationen = () => {
+    const jetzt = new Date();
+    Object.values(Store.cache.collections).forEach(coll => {
+      let veraendert = false;
+      (coll.automationen || []).forEach(a => {
+        if (a.an === false || !a.wenn || a.wenn.art !== 'wiederkehrend') return;
+        const w = a.wenn;
+
+        /* Ab- und Enddatum beachten — in derselben Zone wie der Takt,
+           sonst endet ein Zeitplan in Tokio nach Zürcher Kalender. */
+        const jetztZ = inZone(jetzt, w.zone);
+        if (w.ab  && jetztZ < new Date(w.ab)) return;
+        if (w.bis && jetztZ > new Date(w.bis + 'T23:59:59')) return;
+
+        /* Die Zone steht in der Marke mit drin: wer sie umstellt, bekommt
+           den nächsten Lauf in der neuen Zone, statt einen zu verlieren.
+           Erst prüfen, dann anhängen — sonst würde aus „kein Lauf heute"
+           die Marke „null@Europe/Zurich" und die Automation liefe doch. */
+        const roh = taktMarke(w.takt || 'taeglich', w.uhr, jetzt, w.zone);
+        if (!roh) return;
+        const marke = roh + (w.zone ? '@' + w.zone : '');
+        if (a.zuletzt === marke) return;
+
+        /* Auf welche Zeilen wirkt sie? */
+        let zeilenListe = Store.rowsOf(coll.id).filter(r => !r.archiviert);
+        if (a.nurAnsicht) {
+          const v = Store.getView(a.nurAnsicht);
+          if (v) zeilenListe = zeilenListe.filter(r => gruppeTrifftZu(r, v.filters, coll));
+        }
+        if ((a.bedingungen || []).length)
+          zeilenListe = zeilenListe.filter(r => bedingungenTreffen(a, r, coll, {}));
+
+        a.zuletzt = marke;
+        veraendert = true;
+
+        /* Ohne Zeilen läuft die Automation trotzdem einmal — für Aktionen,
+           die keine Zeile brauchen, etwa „Seite anlegen in". */
+        const ziel = zeilenListe.length ? zeilenListe : [null];
+        ziel.slice(0, 500).forEach(r => {
+          if (r) automationenLaufen(r, coll, 'wiederkehrend', null);
+          else   automationenLaufen({ id: null, text: coll.name, props: {} }, coll, 'wiederkehrend', null);
+        });
+      });
+      if (veraendert) Store.updateCollection(coll.id, { automationen: coll.automationen });
+    });
+  };
+
   const zeitAutomationen = () => {
+    wiederkehrendeAutomationen();
     Object.values(Store.cache.collections).forEach(coll => {
       (coll.automationen || []).forEach(a => {
         if (a.an === false) return;
@@ -5290,13 +7921,27 @@ const Datenbank = (() => {
   /* An die Speicherfunktionen hängen, damit jede Änderung erfasst wird. */
   const automationenEinklinken = () => {
     setTimeout(zeitAutomationen, 4000);
+    /* Stündlich reicht für Tages- und Wochentakte; der Stundentakt braucht
+       einen engeren Puls, deshalb zusätzlich alle fünf Minuten. */
     setInterval(zeitAutomationen, 3600000);
+    setInterval(wiederkehrendeAutomationen, 300000);
     setTimeout(vorlagenLaufen, 5000);
     setInterval(vorlagenLaufen, 1800000);
     setInterval(() => { wdhZaehler = 0; }, 3000);
 
     const altAddRow = Store.addRow;
     Store.addRow = function (collectionId, props) {
+      /* Standardwerte je Spalte — Notion kann das nur über Vorlagen. */
+      const c0 = Store.getCollection(collectionId);
+      if (c0) {
+        const mit = Object.assign({}, props || {});
+        Object.entries(c0.schema).forEach(([k, d]) => {
+          if (d.standard === undefined || d.standard === '') return;
+          if (mit[k] !== undefined && mit[k] !== '') return;
+          mit[k] = platzhalter(String(d.standard));
+        });
+        props = mit;
+      }
       const r = altAddRow.call(Store, collectionId, props);
       const c = Store.getCollection(collectionId);
       if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-neu'), 0);
@@ -5304,14 +7949,118 @@ const Datenbank = (() => {
     };
     const altSetProp = Store.setProp;
     Store.setProp = function (rowId, key, value) {
+      /* Erst prüfen, dann schreiben. Ein Wert, der gegen eine Regel
+         verstösst, kommt gar nicht erst in die Datenbank — und der Mensch
+         erfährt, warum. Wer das nicht will, schaltet es in den
+         Einstellungen auf „nur warnen". */
+      const zeile = Store.getBlock(rowId);
+      const samml = zeile && zeile.parentTable === 'collection'
+        ? Store.getCollection(zeile.parentId) : null;
+
+      /* Gesperrt heisst gesperrt: eine gesperrte Zeile nimmt keine Werte an.
+         Automationen dürfen weiter schreiben — sonst stünde die Sperre auch
+         Aufräumarbeiten im Weg. */
+      if (zeile && zeile.gesperrt && !imLauf) {
+        try { UI.toast('🔒 Diese Zeile ist gesperrt'); } catch {}
+        return zeile;
+      }
+
+      if (samml && !imLauf) {
+        const pr = pruefeWert(samml, key, zeile, value);
+        if (!pr.ok) {
+          const streng = Store.getMeta('regelnStreng', true) !== false;
+          try { UI.toast((streng ? '⛔ ' : '⚠ ') + pr.fehler); } catch {}
+          if (streng) return zeile;
+        }
+      }
+
+      /* --- Vor dem Schreiben merken, was danach anders sein könnte ------
+       * Für „kommt in eine Ansicht" reicht der Zustand nachher nicht; man
+       * braucht das Vorher. Gemessen wird nur, wenn es solche Automationen
+       * überhaupt gibt — sonst kostet jede Zuweisung unnötig Filterläufe.
+       * ---------------------------------------------------------------- */
+      const alterWert = zeile ? zeile.props?.[key] : undefined;
+      const wachen = samml ? (samml.automationen || []).filter(a =>
+        a.an !== false && a.wenn &&
+        (a.wenn.art === 'ansicht-rein' || a.wenn.art === 'ansicht-raus') &&
+        a.wenn.ansicht) : [];
+      const vorher = {};
+      wachen.forEach(a => {
+        const v = Store.getView(a.wenn.ansicht);
+        if (v && zeile) vorher[a.wenn.ansicht] = gruppeTrifftZu(zeile, v.filters, samml);
+      });
+      const dateiVorher = Array.isArray(alterWert) ? alterWert.length : 0;
+
       const erg = altSetProp.call(Store, rowId, key, value);
       const r = Store.getBlock(rowId);
       const c = r && r.parentTable === 'collection' ? Store.getCollection(r.parentId) : null;
       if (c) setTimeout(() => {
-        automationenLaufen(r, c, 'prop-geaendert', key, value);
-        automationenLaufen(r, c, 'prop-wert', key, value);
-        automationenLaufen(r, c, 'zeile-geaendert', key, value);
+        automationenLaufen(r, c, 'prop-geaendert', key, value, { alterWert });
+        automationenLaufen(r, c, 'prop-wert', key, value, { alterWert });
+        automationenLaufen(r, c, 'zeile-geaendert', key, value, { alterWert });
+
+        /* Eine Datei ist dazugekommen */
+        if ((c.schema[key] || {}).type === 'files' &&
+            Array.isArray(value) && value.length > dateiVorher)
+          automationenLaufen(r, c, 'datei-neu', key, value, { alterWert });
+
+        /* Grenzübertritt in eine Ansicht — in beide Richtungen */
+        const gesehen = {};
+        wachen.forEach(a => {
+          const vid = a.wenn.ansicht;
+          if (gesehen[vid]) return;
+          gesehen[vid] = true;
+          const v = Store.getView(vid);
+          if (!v) return;
+          const nachher = gruppeTrifftZu(r, v.filters, c);
+          if (nachher === !!vorher[vid]) return;
+          automationenLaufen(r, c, nachher ? 'ansicht-rein' : 'ansicht-raus',
+                             key, value, { alterWert, ansicht: vid });
+        });
       }, 0);
+      return erg;
+    };
+
+    /* --- Kommentare und Erwähnungen ----------------------------------
+     * Kommentare landen über updateBlock in der Zeile — egal ob als neuer
+     * Faden, als Antwort oder aus einer Automation heraus. Ein Blick auf
+     * die Länge der Liste genügt, um „da ist einer dazugekommen" zu sehen.
+     * ---------------------------------------------------------------- */
+    const altUpdate = Store.updateBlock;
+    Store.updateBlock = function (id, patch) {
+      let vorherAnzahl = -1, alteIds = null;
+      if (patch && patch.kommentare) {
+        const alt = Store.getBlock(id);
+        if (alt && alt.parentTable === 'collection') {
+          vorherAnzahl = (alt.kommentare || []).length;
+          alteIds = new Set((alt.kommentare || []).map(k => k.id));
+        }
+      }
+      const erg = altUpdate.call(Store, id, patch);
+      if (vorherAnzahl >= 0 && patch.kommentare.length > vorherAnzahl) {
+        const r = Store.getBlock(id);
+        const c = r ? Store.getCollection(r.parentId) : null;
+        const neuKomm = patch.kommentare.find(k => !alteIds.has(k.id)) || {};
+        if (c) setTimeout(() => {
+          automationenLaufen(r, c, 'kommentar-neu', null, neuKomm.text || '',
+                             { kommentar: neuKomm });
+          if (/@[\wÄÖÜäöüß]/.test(String(neuKomm.text || '')))
+            automationenLaufen(r, c, 'erwaehnung', null, neuKomm.text || '',
+                               { kommentar: neuKomm });
+        }, 0);
+      }
+      return erg;
+    };
+
+    /* Aus dem Papierkorb zurück — der Gegenpol zu „zeile-weg". */
+    const altRestore = Store.restoreBlock;
+    Store.restoreBlock = function (id) {
+      const erg = altRestore.call(Store, id);
+      const r = Store.getBlock(id);
+      if (r && r.parentTable === 'collection') {
+        const c = Store.getCollection(r.parentId);
+        if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-zurueck'), 0);
+      }
       return erg;
     };
 
@@ -5336,7 +8085,9 @@ const Datenbank = (() => {
         `<div class="fh">⚡ Automationen <em>${liste.length}</em>` +
           '<button class="icon-btn" data-a="zu">✕</button></div>' +
         '<div class="res" id="al"></div>' +
-        '<div class="fbtns"><button data-a="neu" class="prim">Automation anlegen</button></div>' +
+        '<div class="fbtns">' +
+          '<button data-a="kiauto">✨ Von der KI bauen lassen</button>' +
+          '<button data-a="neu" class="prim">Automation anlegen</button></div>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -5350,8 +8101,20 @@ const Datenbank = (() => {
               `<span>Wenn: ${esc((AUSLOESER.find(x => x[0] === a.wenn.art) || [])[1] || '')}` +
               (a.wenn.key ? ' — ' + esc(namen(a.wenn.key)) : '') +
               (a.wenn.art === 'prop-wert' ? ' = ' + esc(a.wenn.wert) : '') +
+              (a.wenn.ansicht ? ' — ' + esc((Store.getView(a.wenn.ansicht) || {}).name || 'Ansicht') : '') +
+              (a.wenn.zone ? ' · ' + esc(a.wenn.zone.replace(/_/g, ' ')) : '') +
+              /* Bedingungen sichtbar machen — sonst rätselt man, warum eine
+                 Automation nicht läuft, obwohl der Auslöser stimmt. */
+              ((a.bedingungen || []).length
+                ? ' · Nur wenn: ' + esc(a.bedingungen.map(b => b && b.art
+                    ? bedingungText(b)
+                    : `${namen(b.key)} ${b.op} ${b.wert}`).join(' und ')) : '') +
               ` · Dann: ${a.dann.map(d => esc((AKTIONEN.find(x => x[0] === d.art) || [])[1] || '')).join(', ')}` +
               `</span></div>` +
+              `<button data-test="${i}" title="Einmal probeweise laufen lassen">▶</button>` +
+              `<button data-verlauf="${i}" title="Laufverlauf">🕘` +
+              ((a.verlauf || []).length ? `<span class="ms">${a.verlauf.length}</span>` : '') +
+              '</button>' +
               `<button data-weg="${i}" title="Löschen">🗑</button>` +
             '</div>').join('')
         : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
@@ -5378,6 +8141,7 @@ const Datenbank = (() => {
         zeichne();
         return;
       }
+      if (e.target.closest('[data-a="kiauto"]')) { o.remove(); KiBau.automationSchreiben(coll); return; }
       if (e.target.closest('[data-a="neu"]')) { o.remove(); automationBauen(coll); }
     });
   };
@@ -5398,6 +8162,33 @@ const Datenbank = (() => {
             keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
           '</select></label>' +
           '<label id="awl">… mit diesem Wert<br><input id="av" placeholder="z. B. Erledigt"></label>' +
+          /* Zeitplan — nur beim wiederkehrenden Auslöser sichtbar */
+          '<div id="azp" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
+               'padding:12px; flex-direction:column; gap:11px">' +
+            '<label>Wie oft<br><select id="azt">' +
+              TAKTE.map(([id, n]) => `<option value="${id}">${n}</option>`).join('') +
+            '</select></label>' +
+            '<label>Um welche Uhrzeit<br><input id="azu" type="time" value="09:00"></label>' +
+            '<label>Ab wann (leer = sofort)<br><input id="aza" type="date"></label>' +
+            '<label>Bis wann (leer = ohne Ende)<br><input id="azb" type="date"></label>' +
+            '<label>Nur für diese Ansicht<br><select id="azv">' +
+              '<option value="">alle Einträge der Datenbank</option>' +
+              Object.values(Store.cache.views).filter(v => v.collectionId === coll.id)
+                .map(v => `<option value="${v.id}">${esc(v.name || 'Ansicht')}</option>`).join('') +
+            '</select></label>' +
+            /* Zeitzone — „09:00 wo?" ist keine Kleinigkeit, sobald jemand
+               reist oder ein Team über Länder verteilt arbeitet. */
+            '<label>In welcher Zeitzone<br><select id="azz">' +
+              ZONEN().map(z => `<option value="${esc(z)}"${z === eigeneZone() ? ' selected' : ''}>` +
+                               `${esc(z.replace(/_/g, ' '))}</option>`).join('') +
+            '</select><span style="font-size:12px;color:var(--text-dim)">' +
+              'Sommerzeit wird mitgerechnet.</span></label>' +
+          '</div>' +
+          /* Welche Ansicht ist gemeint? — für „kommt rein" und „fällt raus" */
+          '<label id="aavl" style="display:none">… bei dieser Ansicht<br><select id="aav">' +
+            Object.values(Store.cache.views).filter(v => v.collectionId === coll.id)
+              .map(v => `<option value="${v.id}">${esc(v.name || 'Ansicht')}</option>`).join('') +
+          '</select></label>' +
           '<hr style="border:none;border-top:1px solid var(--line)">' +
           '<label>Dann …<br><select id="ad">' +
             AKTIONEN.map(([id, n]) => `<option value="${id}">${n}</option>`).join('') +
@@ -5406,6 +8197,55 @@ const Datenbank = (() => {
             keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
           '</select></label>' +
           '<label id="adw">… auf diesen Wert<br><input id="adv" placeholder="z. B. heute"></label>' +
+          /* Bedingung nur für diese eine Aktion — Notions Automationen
+             können das nicht, dort gilt jede Bedingung für alle Aktionen. */
+          '<div class="ab-wenn"><label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
+            '<input type="checkbox" id="adwenn"> nur wenn eine Bedingung stimmt</label>' +
+            '<div id="adwenn2" style="display:none; gap:7px; margin-top:8px; flex-wrap:wrap">' +
+              '<select id="adwk">' + keys.map(k =>
+                `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') + '</select>' +
+              '<select id="adwo"></select>' +
+              '<input id="adwv" placeholder="Wert" style="flex:1;min-width:110px">' +
+              '<label style="display:flex;gap:6px;align-items:center;font-size:12.5px">' +
+                '<input type="checkbox" id="adwn" style="width:auto"> umkehren (sonst-Fall)</label>' +
+            '</div></div>' +
+          /* Variablen festlegen — je Zeile ein Name und eine Formel */
+          '<div id="avz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
+               'padding:12px; flex-direction:column; gap:8px">' +
+            '<div style="font-size:12.5px; color:var(--text-dim)">Je Zeile: ' +
+              '<code>name = Formel</code>. In späteren Aktionen einsetzbar als ' +
+              '<code>{{name}}</code>.</div>' +
+            '<textarea id="avt" spellcheck="false" rows="4" ' +
+              'placeholder="tage = dateBetween(prop(&quot;Fällig&quot;), today(), &quot;days&quot;)&#10;' +
+              'stufe = if(tage &lt; 0, &quot;überfällig&quot;, &quot;offen&quot;)"></textarea>' +
+          '</div>' +
+          /* Seite in einer Datenbank anlegen */
+          '<div id="anz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
+               'padding:12px; flex-direction:column; gap:11px">' +
+            '<label>In welcher Datenbank<br><select id="and">' +
+              Object.values(Store.cache.collections)
+                .map(c => `<option value="${c.id}">${esc(c.name || 'Ohne Namen')}</option>`).join('') +
+            '</select></label>' +
+            '<label>Titel der neuen Seite<br><input id="ant" value="{titel}" ' +
+              'placeholder="{titel} · {datum} · {{variable}}"></label>' +
+            '<label>Eigenschaft setzen (frei lassen, wenn nicht nötig)<br>' +
+              '<select id="ank"></select>' +
+              '<input id="anv" placeholder="Wert · heute · {titel} · {{variable}}" style="margin-top:5px"></label>' +
+          '</div>' +
+          /* Benachrichtigung */
+          '<div id="abz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
+               'padding:12px; flex-direction:column; gap:11px">' +
+            '<label>Text der Benachrichtigung<br><input id="abt" ' +
+              'placeholder="{titel} ist überfällig"></label>' +
+          '</div>' +
+          /* E-Mail */
+          '<div id="amz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
+               'padding:12px; flex-direction:column; gap:11px">' +
+            '<label>An<br><input id="ama" placeholder="name@beispiel.ch"></label>' +
+            '<label>Betreff<br><input id="amb" placeholder="{titel}"></label>' +
+            '<label>Nachricht<br><textarea id="amt" rows="3" ' +
+              'placeholder="Hallo,&#10;{titel} braucht deine Aufmerksamkeit."></textarea></label>' +
+          '</div>' +
           '<div id="afz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
                'padding:12px; display:none; flex-direction:column; gap:11px">' +
             '<label>In welcher Datenbank<br><select id="afd">' +
@@ -5419,6 +8259,46 @@ const Datenbank = (() => {
               '<input id="affv" placeholder="Wert" style="margin-top:5px"></label>' +
             '<label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
               '<input type="checkbox" id="afr"> nur Einträge, die mit diesem hier verknüpft sind</label>' +
+          '</div>' +
+          /* --- Bedingungen für die ganze Automation ---------------------
+           * Der Katalog beantwortet Fragen über die Veränderung, nicht nur
+           * über den Zustand: „war vorher leer", „hat sich wirklich
+           * geändert", „ist gewachsen". Genau daran scheitern in Notion
+           * die meisten Automationen.
+           * ------------------------------------------------------------ */
+          '<hr style="border:none;border-top:1px solid var(--line)">' +
+          '<div style="border:1px solid var(--line); border-radius:6px; padding:12px; ' +
+               'display:flex; flex-direction:column; gap:9px">' +
+            '<div style="font-size:12.5px; color:var(--text-dim)">Bedingungen gelten für ' +
+              'die ganze Automation — es müssen alle zutreffen.</div>' +
+            '<select id="abda">' +
+              '<option value="">Filterregel aus Spalte und Wert von oben</option>' +
+              '<optgroup label="Was mit dem Wert geschehen ist">' +
+                BEDINGUNGEN.slice(0, 10).map(([id, n]) =>
+                  `<option value="${id}">${esc(n)}</option>`).join('') +
+              '</optgroup><optgroup label="Was für ein Eintrag es ist">' +
+                BEDINGUNGEN.slice(10, 18).map(([id, n]) =>
+                  `<option value="${id}">${esc(n)}</option>`).join('') +
+              '</optgroup><optgroup label="Wann es geschieht">' +
+                BEDINGUNGEN.slice(18).map(([id, n]) =>
+                  `<option value="${id}">${esc(n)}</option>`).join('') +
+              '</optgroup>' +
+            '</select>' +
+            '<div id="abdf" style="display:flex; gap:7px; flex-wrap:wrap">' +
+              '<select id="abdk" style="display:none">' + keys.map(k =>
+                `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') + '</select>' +
+              '<input id="abdw" placeholder="Wert" style="flex:1;min-width:110px;display:none">' +
+              '<select id="abdv" style="display:none">' +
+                Object.values(Store.cache.views).filter(v => v.collectionId === coll.id)
+                  .map(v => `<option value="${v.id}">${esc(v.name || 'Ansicht')}</option>`).join('') +
+              '</select>' +
+              '<select id="abdt" style="display:none">' +
+                WOCHENTAGE.map(t => `<option>${t}</option>`).join('') + '</select>' +
+              '<input id="abdz1" type="time" value="08:00" style="display:none">' +
+              '<input id="abdz2" type="time" value="18:00" style="display:none">' +
+            '</div>' +
+            '<div id="abdl" style="font-size:12.5px; color:var(--text-dim)">' +
+              'Noch keine Bedingung.</div>' +
           '</div>' +
         '</div>' +
         '<div class="fbtns">' +
@@ -5438,20 +8318,78 @@ const Datenbank = (() => {
       /* Auslöser, die an keiner Spalte hängen, brauchen auch keine Auswahl */
       o.querySelector('#ak').closest('label').style.display =
         OHNE_SPALTE.includes(art0) ? 'none' : '';
+      /* Der Zeitplan gehört nur zum wiederkehrenden Auslöser */
+      const wdh = art0 === 'wiederkehrend';
+      o.querySelector('#azp').style.display = wdh ? 'flex' : 'none';
+      if (wdh) o.querySelector('#awl').style.display = 'none';
+      /* Die Ansichtsauswahl gehört nur zu den beiden Grenzauslösern */
+      const anAnsicht = art0 === 'ansicht-rein' || art0 === 'ansicht-raus';
+      o.querySelector('#aavl').style.display = anAnsicht ? '' : 'none';
+      if (anAnsicht) o.querySelector('#awl').style.display = 'none';
+      /* Eine Datei-Automation darf sich auf eine Dateispalte beschränken */
+      if (art0 === 'datei-neu') {
+        o.querySelector('#ak').closest('label').style.display = '';
+        o.querySelector('#awl').style.display = 'none';
+      }
+
+      /* Welche Felder braucht die gewählte Bedingung? */
+      const bArt = o.querySelector('#abda').value;
+      const eintrag = BEDINGUNGEN.find(x => x[0] === bArt);
+      const braucht = eintrag ? eintrag[2].split(',').filter(Boolean) : ['spalte', 'text'];
+      const zeig = (id, an) => { o.querySelector(id).style.display = an ? '' : 'none'; };
+      zeig('#abdk', !bArt || braucht.includes('spalte'));
+      zeig('#abdw', !bArt || braucht.includes('text') || braucht.includes('zahl') ||
+                    braucht.includes('formel'));
+      zeig('#abdv', braucht.includes('ansicht'));
+      zeig('#abdt', braucht.includes('wochentag'));
+      zeig('#abdz1', braucht.includes('zeitspanne'));
+      zeig('#abdz2', braucht.includes('zeitspanne'));
+      o.querySelector('#abdw').placeholder =
+        braucht.includes('zahl')   ? 'Zahl, z. B. 3'
+        : braucht.includes('formel') ? 'z. B. prop("Kosten") > 1000'
+        : 'Wert';
       const d = o.querySelector('#ad').value;
       o.querySelector('#adk').style.display =
-        ['setze-prop','ki-fuellen','zaehler','wiederholen'].includes(d) ? '' : 'none';
+        ['setze-prop','ki-fuellen','zaehler','wiederholen','leeren'].includes(d) ? '' : 'none';
       o.querySelector('#adk').firstChild.textContent =
         d === 'wiederholen' ? '… welches Datum weitergezählt wird' : '… diese Eigenschaft';
       o.querySelector('#adw').style.display =
-        ['setze-prop','erinnerung','unterseite','melden','webhook','wiederholen'].includes(d) ? '' : 'none';
+        ['setze-prop','erinnerung','unterseite','melden','webhook','wiederholen',
+         'kommentar','zurueckstellen'].includes(d) ? '' : 'none';
       o.querySelector('#adv').placeholder =
         d === 'erinnerung'  ? 'in wie vielen Tagen? z. B. 3'
         : d === 'melden'    ? 'Text der Meldung'
         : d === 'webhook'   ? 'Adresse — leer nimmt die aus den Einstellungen'
         : d === 'wiederholen' ? 'Takt: 1 Woche · 3 Tage · 1 Monat · 5 Werktage'
+        : d === 'kommentar' ? 'Text des Kommentars — {titel} setzt den Namen ein'
+        : d === 'zurueckstellen' ? 'in wie vielen Tagen? z. B. 7'
         : 'Wert';
+      /* Bedingung an der Aktion */
+      const wennAn = o.querySelector('#adwenn').checked;
+      o.querySelector('#adwenn2').style.display = wennAn ? 'flex' : 'none';
+      if (wennAn) {
+        const wk = o.querySelector('#adwk').value;
+        const ops = OPERATOREN[coll.schema[wk]?.type] || OPERATOREN.text;
+        const sel = o.querySelector('#adwo');
+        const alt3 = sel.value;
+        sel.innerHTML = ops.map(x => `<option>${esc(x)}</option>`).join('');
+        if (ops.includes(alt3)) sel.value = alt3;
+      }
       o.querySelector('#afz').style.display = d === 'fremd-setzen' ? 'flex' : 'none';
+      o.querySelector('#avz').style.display = d === 'variablen'   ? 'flex' : 'none';
+      o.querySelector('#anz').style.display = d === 'neue-zeile'  ? 'flex' : 'none';
+      o.querySelector('#abz').style.display = d === 'benachricht' ? 'flex' : 'none';
+      o.querySelector('#amz').style.display = d === 'mail'        ? 'flex' : 'none';
+      if (d === 'neue-zeile') zielFelderNeu();
+    };
+
+    /* Die Eigenschaftsliste für „Seite anlegen in" hängt an der Zieldatenbank */
+    const zielFelderNeu = () => {
+      const c = Store.getCollection(o.querySelector('#and').value);
+      const sel = o.querySelector('#ank');
+      sel.innerHTML = '<option value="">— keine Eigenschaft setzen —</option>' +
+        (c ? Object.keys(c.schema).filter(k => !['title','formula','rollup','created','edited','uid'].includes(c.schema[k].type))
+              .map(k => `<option value="${k}">${esc(c.schema[k].name)}</option>`).join('') : '');
     };
 
     /* Die Auswahl der Zieleigenschaften hängt an der gewählten Datenbank. */
@@ -5465,10 +8403,14 @@ const Datenbank = (() => {
     };
     if (o.querySelector('#afd').options.length) zielFelder();
     o.querySelector('#afd').addEventListener('change', zielFelder);
+    o.querySelector('#and').addEventListener('change', zielFelderNeu);
 
     auffrischen();
     o.querySelector('#aw').addEventListener('change', auffrischen);
     o.querySelector('#ad').addEventListener('change', auffrischen);
+    o.querySelector('#adwenn').addEventListener('change', auffrischen);
+    o.querySelector('#adwk').addEventListener('change', auffrischen);
+    o.querySelector('#abda').addEventListener('change', auffrischen);
 
     const gesammelt = [];
     const bedingungen = [];
@@ -5478,9 +8420,30 @@ const Datenbank = (() => {
 
       /* Zusätzliche Bedingung aufnehmen */
       if (e.target.closest('[data-a="bedingung"]')) {
-        const k = o.querySelector('#ak').value;
-        const ops = OPERATOREN[coll.schema[k].type] || OPERATOREN.text;
-        bedingungen.push({ key: k, op: ops[0], wert: o.querySelector('#av').value });
+        const bArt = o.querySelector('#abda').value;
+        if (!bArt) {
+          /* Wie bisher: eine gewöhnliche Filterregel aus Spalte und Wert */
+          const k = o.querySelector('#ak').value;
+          const ops = OPERATOREN[coll.schema[k].type] || OPERATOREN.text;
+          bedingungen.push({ key: k, op: ops[0], wert: o.querySelector('#av').value });
+        } else {
+          const eintrag = BEDINGUNGEN.find(x => x[0] === bArt) || ['', '', ''];
+          const braucht = eintrag[2].split(',').filter(Boolean);
+          const b = { art: bArt };
+          if (braucht.includes('spalte'))     b.key  = o.querySelector('#abdk').value;
+          if (braucht.includes('text') || braucht.includes('zahl') ||
+              braucht.includes('formel'))     b.wert = o.querySelector('#abdw').value;
+          if (braucht.includes('ansicht'))    b.wert = o.querySelector('#abdv').value;
+          if (braucht.includes('wochentag'))  b.wert = o.querySelector('#abdt').value;
+          if (braucht.includes('zeitspanne')) {
+            b.von = o.querySelector('#abdz1').value;
+            b.bis = o.querySelector('#abdz2').value;
+          }
+          bedingungen.push(b);
+        }
+        o.querySelector('#abdl').textContent = bedingungen.map(b =>
+          b.art ? bedingungText(b)
+                : `${(coll.schema[b.key] || {}).name || b.key} ${b.op} ${b.wert}`).join('  ·  ');
         UI.toast(bedingungen.length + ' Bedingung(en) — alle müssen zutreffen');
         return;
       }
@@ -5492,7 +8455,38 @@ const Datenbank = (() => {
       const wertFeld = o.querySelector('#adv').value;
       if (d === 'setze-prop') dann.wert = wertFeld === 'heute' ? new Date().toISOString().slice(0, 10) : wertFeld;
       if (d === 'erinnerung') dann.tage = wertFeld;
-      if (d === 'unterseite' || d === 'melden' || d === 'webhook' || d === 'wiederholen') dann.text = wertFeld;
+      if (d === 'unterseite' || d === 'melden' || d === 'webhook' || d === 'wiederholen' ||
+          d === 'kommentar' || d === 'zurueckstellen') dann.text = wertFeld;
+      if (d === 'zurueckstellen') dann.wert = wertFeld;
+
+      /* Die Bedingung dieser einen Aktion */
+      if (o.querySelector('#adwenn').checked) {
+        dann.wenn = { key: o.querySelector('#adwk').value,
+                      op:  o.querySelector('#adwo').value,
+                      wert: o.querySelector('#adwv').value,
+                      umkehren: o.querySelector('#adwn').checked };
+      }
+
+      /* --- Die vier neuen Aktionen ---------------------------------- */
+      if (d === 'variablen') {
+        dann.vars = (o.querySelector('#avt').value || '').split('\n')
+          .map(z => z.trim()).filter(Boolean)
+          .map(z => { const i = z.indexOf('=');
+            return i < 0 ? null : { name: z.slice(0, i).trim(), formel: z.slice(i + 1).trim() }; })
+          .filter(x => x && x.name);
+      }
+      if (d === 'neue-zeile') {
+        dann.zielDb = o.querySelector('#and').value;
+        dann.titel  = o.querySelector('#ant').value || '{titel}';
+        const fk = o.querySelector('#ank').value;
+        dann.felder = fk ? [{ key: fk, wert: o.querySelector('#anv').value }] : [];
+      }
+      if (d === 'benachricht') dann.text = o.querySelector('#abt').value;
+      if (d === 'mail') {
+        dann.an      = o.querySelector('#ama').value;
+        dann.betreff = o.querySelector('#amb').value;
+        dann.text    = o.querySelector('#amt').value;
+      }
       if (d === 'fremd-setzen') {
         const zc = Store.getCollection(o.querySelector('#afd').value);
         dann.ziel    = o.querySelector('#afd').value;
@@ -5520,8 +8514,20 @@ const Datenbank = (() => {
         id: Store.uid().slice(0, 6),
         name: o.querySelector('#an').value,
         an: true,
-        wenn: { art: o.querySelector('#aw').value, key: o.querySelector('#ak').value,
-                wert: o.querySelector('#av').value },
+        wenn: o.querySelector('#aw').value === 'wiederkehrend'
+          ? { art: 'wiederkehrend',
+              takt: o.querySelector('#azt').value,
+              uhr:  o.querySelector('#azu').value || '09:00',
+              zone: o.querySelector('#azz').value || '',
+              ab:   o.querySelector('#aza').value || '',
+              bis:  o.querySelector('#azb').value || '' }
+          : { art: o.querySelector('#aw').value, key: o.querySelector('#ak').value,
+              wert: o.querySelector('#av').value,
+              ansicht: (o.querySelector('#aw').value === 'ansicht-rein' ||
+                        o.querySelector('#aw').value === 'ansicht-raus')
+                       ? o.querySelector('#aav').value : undefined },
+        nurAnsicht: o.querySelector('#aw').value === 'wiederkehrend'
+          ? (o.querySelector('#azv').value || null) : null,
         bedingungen: bedingungen,
         dann: gesammelt
       });
@@ -5603,12 +8609,18 @@ const Datenbank = (() => {
            automationenMenue, automationenLaufen, gewaehlteZeilen,
            relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
            ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
-           rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN,
+           rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN, TAKTE,
+           wiederkehrendeAutomationen, taktMarke, inZone, ZONEN, eigeneZone,
+           BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
+           pruefeWert, pruefeZeile, hatRegeln, regelnDialog, MUSTER_VORLAGEN,
+           alsPivot, pivotRechne, PIVOT_ARTEN, formelEinruecken, teilausdruecke,
+           ansichtKopie, ansichtVorlagen, gruppenListe, gruppeVon, ZEIT_STUFEN, ZS_STUFEN, kartenBild,
+           typName, drilldown,
            typMenue, TYP_GRUPPEN, alsDashboard, zeilenGesamt, begrenzen, layoutPanel, farbregelPanel, farbeFuerZeile,
            farbregeln, gruppierenMenue, kiAutofillMenue, LAYOUTS, leiste,
            kiFeldFuellenFuer: kiFeldFuellen,
            formelEditor, csvExport, csvImport, csvZerlegen,
            zeilePeek, zeilenMenue, rollupWert,
            unterElementeAn, abhaengigkeitenAn, blockiertDurch, UNTER_KEYS, ABH_KEYS,
-           weitereEinstellungen, quellenVerwalten, seitenLayoutPanel };
+           weitereEinstellungen, quellenVerwalten, seitenLayoutPanel, dbMenue };
 })();

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<meta name="description" content="Notizen — lokale Notion-Alternative. Alle Daten im Browser, KI lokal und kostenlos.">
+<meta name="description" content="Redion — unser eigenes Notion. Alle Daten im Browser, KI lokal und kostenlos.">
 <meta name="color-scheme" content="dark light">
-<title>Notizen</title>
+<title>Redion</title>
 
 <!-- ==========================================================================
      ALS APP INSTALLIERBAR
@@ -26,7 +26,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Notizen">
+<meta name="apple-mobile-web-app-title" content="Redion">
 <meta name="format-detection" content="telephone=no">
 
 <!-- Startbilder. iPhone 13 Pro Max zuerst, dann die anderen Grössen. -->
@@ -75,15 +75,18 @@
 </head>
 <body>
 
+<!-- Für die Tastatur: der kürzeste Weg an der Seitenleiste vorbei -->
+<a href="#page" id="zum-inhalt">Zum Inhalt springen</a>
+
 <!-- =========================================================================
      SEITENLEISTE
      ====================================================================== -->
-<aside id="sidebar">
+<aside id="sidebar" role="navigation" aria-label="Seitenleiste">
 
   <div class="side-top">
     <button class="ws-btn" id="btn-settings" title="Einstellungen (Strg + ,)">
       <span class="ws-icon">N</span>
-      <span>Notizen</span>
+      <span>Redion</span>
     </button>
     <button class="icon-btn" id="btn-theme" title="Hell / Dunkel (Strg + Shift + L)">◐</button>
     <button class="icon-btn" id="btn-side"  title="Seitenleiste (Strg + \)">‹‹</button>
@@ -133,21 +136,42 @@
 <!-- =========================================================================
      LEISTE AM UNTEREN RAND — nur auf dem Telefon, wie in Notions App
      ====================================================================== -->
-<div id="handy-leiste">
-  <button id="hl-suche" title="Suchen">🔍</button>
-  <button id="hl-ki" class="hl-pille"><span class="hl-av">✨</span><span>KI fragen</span></button>
-  <button id="hl-neu" title="Neue Seite">✎</button>
+<div id="handy-leiste" role="tablist" aria-label="Hauptbereiche">
+  <button id="hl-start" role="tab" title="Start"><span>🏠</span><b>Start</b></button>
+  <button id="hl-chat"  role="tab" title="Chats"><span>💬</span><b>Chats</b></button>
+  <button id="hl-ki" class="hl-pille" title="KI fragen"><span class="hl-av">✨</span><b>KI</b></button>
+  <button id="hl-bespr" role="tab" title="Besprechungen"><span>🎙</span><b>Termine</b></button>
+  <button id="hl-inbox" role="tab" title="Posteingang"><span>📥</span><b>Eingang</b><i class="hl-punkt" hidden></i></button>
+</div>
+
+<!-- Formatleiste über der Tastatur — erscheint beim Schreiben auf dem Telefon -->
+<div id="tastenleiste" role="toolbar" aria-label="Formatieren" hidden>
+  <button data-t="plus"   title="Block einfügen">＋</button>
+  <button data-t="slash"  title="Blockmenü">/</button>
+  <button data-t="fett"   title="Fett"><b>B</b></button>
+  <button data-t="kursiv" title="Kursiv"><i>I</i></button>
+  <button data-t="unter"  title="Unterstrichen"><u>U</u></button>
+  <button data-t="code"   title="Code">&lt;/&gt;</button>
+  <button data-t="link"   title="Link">🔗</button>
+  <button data-t="todo"   title="Aufgabe">☑</button>
+  <button data-t="raus"   title="Ausrücken">⇤</button>
+  <button data-t="rein"   title="Einrücken">⇥</button>
+  <button data-t="fertig" title="Tastatur schliessen">⌄</button>
 </div>
 
 <!-- =========================================================================
      HAUPTBEREICH
      ====================================================================== -->
-<main id="main">
+<main id="main" role="main">
 
-  <header id="topbar">
+  <header id="topbar" role="toolbar" aria-label="Seitenwerkzeuge">
     <button class="top-btn schmal" id="btn-back" title="Zurück (Strg + [)">‹</button>
     <button class="top-btn schmal" id="btn-fwd"  title="Vorwärts (Strg + ])">›</button>
     <div class="crumb" id="crumb"></div>
+    <!-- Nur am Telefon: Suchen und Neu wandern in die Kopfzeile, weil unten
+         die vier Bereiche stehen. Am PC sind sie in der Seitenleiste. -->
+    <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen">🔍</button>
+    <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite">✎</button>
     <div class="spacer"></div>
     <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben">Teilen</button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)">✨ KI</button>
@@ -161,7 +185,7 @@
   </header>
 
   <div id="scroll">
-    <div id="page"></div>
+    <div id="page" role="document" tabindex="-1"></div>
   </div>
 
 </main>
@@ -237,6 +261,25 @@
 <script src="js/pwa.js"></script>
 <script src="js/vorlagen.js"></script>
 <script src="js/status.js"></script>
+<script src="js/wissen.js"></script>
+<script src="js/pflege.js"></script>
+<script src="js/schema.js"></script>
+<script src="js/krypto.js"></script>
+<script src="js/kibau.js"></script>
+<script src="js/fenster.js"></script>
+<script src="js/aussehen.js"></script>
+<script src="js/vergleich.js"></script>
+<script src="js/austausch.js"></script>
+<script src="js/tempo.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/erweiterung.js"></script>
+<script src="js/eingang.js"></script>
+<script src="js/rundgang.js"></script>
+<script src="js/notionformat.js"></script>
+<script src="js/api.js"></script>
+<script src="js/transaktion.js"></script>
+<script src="js/protokoll.js"></script>
+<script src="js/dateien.js"></script>
 <script src="js/bibliothek.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/app.js"></script>
@@ -251,7 +294,7 @@ window.addEventListener('load', () => {
       document.body.insertAdjacentHTML('afterbegin',
         '<div class="banner fehler"><span>Die Programmdateien im Ordner ' +
         '<b>js</b> wurden nicht gefunden. Bitte den ganzen Ordner zusammen halten ' +
-        '&mdash; oder einfach <b>notizen-einzeldatei.html</b> &ouml;ffnen, ' +
+        '&mdash; oder einfach <b>redion-einzeldatei.html</b> &ouml;ffnen, ' +
         'da ist alles drin.</span></div>');
     }
   }, 1200);

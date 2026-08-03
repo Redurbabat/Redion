@@ -22,7 +22,7 @@
 const Store = (() => {
 
   const NAME = 'notizen';
-  const VERSION = 2;
+  const VERSION = 3;
   let db = null;
 
   /* Alle Änderungen laufen durch save(), das merkt sich Beobachter. */
@@ -77,6 +77,19 @@ const Store = (() => {
       if (!d.objectStoreNames.contains('versions')) {
         const v = d.createObjectStore('versions', { keyPath: 'id' });
         v.createIndex('page', 'pageId');
+      }
+      /* Version 3: Dateien in Stücken.
+         Eine Data-URL liegt vollständig im Arbeitsspeicher und wird beim
+         Base64-Kodieren um ein Drittel größer. Ein Video von 300 MB ist so
+         nicht zu machen. Blobs in Stücken schon: jedes Stück liegt einzeln
+         in der Ablage, geladen wird nur, was gerade gebraucht wird. */
+      if (!d.objectStoreNames.contains('dateien')) {
+        const f = d.createObjectStore('dateien', { keyPath: 'id' });
+        f.createIndex('block', 'blockId');
+      }
+      if (!d.objectStoreNames.contains('stuecke')) {
+        const st = d.createObjectStore('stuecke', { keyPath: 'id' });
+        st.createIndex('datei', 'dateiId');
       }
     };
 
@@ -685,6 +698,33 @@ const Store = (() => {
     cache.blocks = {}; cache.collections = {}; cache.views = {}; cache.meta = {};
   };
 
+  /* ========================================================================
+   * DATEIEN IN STÜCKEN
+   * ------------------------------------------------------------------------
+   * Der rohe Zugang zur Ablage. Was daraus gemacht wird — hochladen in
+   * Schritten, wieder zusammensetzen, aufräumen — steht in dateien.js.
+   * Hier steht nur, wie ein Stück hinein- und wieder herauskommt.
+   * ======================================================================*/
+  const dateiPut   = (satz) => put('dateien', satz);
+  const dateiHolen = (id)   => get('dateien', id);
+  const dateiWeg   = (id)   => del('dateien', id);
+  const dateiAlle  = ()     => all('dateien');
+
+  const stueckPut   = (satz) => put('stuecke', satz);
+  const stueckHolen = (id)   => get('stuecke', id);
+  const stueckWeg   = (id)   => del('stuecke', id);
+
+  /** Alle Stücke einer Datei, in der richtigen Reihenfolge. */
+  const stueckeVon = (dateiId) => new Promise((ok2) => {
+    if (!db || !db.objectStoreNames.contains('stuecke')) return ok2([]);
+    try {
+      const r = tx(['stuecke'], 'readonly').objectStore('stuecke')
+        .index('datei').getAll(dateiId);
+      r.onsuccess = () => ok2((r.result || []).sort((a, b) => a.nr - b.nr));
+      r.onerror   = () => ok2([]);
+    } catch { ok2([]); }
+  });
+
   /* Wie viel Platz belegt die App? */
   const usage = async () => {
     if (!navigator.storage || !navigator.storage.estimate) return null;
@@ -702,6 +742,8 @@ const Store = (() => {
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen,
     search, pfadText, exportAll, importAll, wipe, usage,
+    dateiPut, dateiHolen, dateiWeg, dateiAlle,
+    stueckPut, stueckHolen, stueckWeg, stueckeVon,
     speichertNicht: () => nurSpeicher,
     warnungText: () => warnung,
     beiWarnung: (fn) => { warner.add(fn); if (warnung) fn(warnung); },

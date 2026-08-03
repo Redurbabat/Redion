@@ -260,8 +260,10 @@ const Formula = (() => {
     if (v === null || v === undefined) return '';
     if (v instanceof Date) return v.toISOString().slice(0, 10);
     if (typeof v === 'boolean') return v ? 'true' : 'false';
-    if (Array.isArray(v)) return v.join(', ');
+    if (Array.isArray(v)) return v.map(text).join(', ');
     if (typeof v === 'number') return String(Math.round(v * 1e10) / 1e10);
+    /* Eine Gruppe aus groupBy liest sich als „Schlüssel (Anzahl)" */
+    if (typeof v === 'object' && v.__gruppe) return v.schluessel + ' (' + v.eintraege.length + ')';
     return String(v);
   };
 
@@ -279,6 +281,44 @@ const Formula = (() => {
   };
 
   const TAG_MS = 86400000;
+
+  /* ---------------------------------------------------------------------- *
+   * ZEITZONEN — das, was Notion nicht hat
+   *
+   * `zonenWand` liefert ein Datum, dessen örtliche Felder (Jahr, Monat, Tag,
+   * Stunde …) genau die Wanduhrzeit in der gewünschten Zone zeigen. Damit
+   * lässt sich formatieren, ohne eine Bibliothek zu laden.
+   * `alsInstant` geht den Weg zurück: es nimmt Wanduhrzeit in einer Zone und
+   * sucht den echten Zeitpunkt dazu. Zweimal nachjustieren reicht auch an den
+   * beiden Tagen im Jahr, an denen die Uhr umgestellt wird.
+   * ---------------------------------------------------------------------- */
+  const zonenWand = (d, zone) => {
+    if (!zone) return d;
+    try {
+      const s = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }).format(d);
+      const g = new Date(s.replace(' ', 'T'));
+      return isNaN(g.getTime()) ? d : g;
+    } catch { return d; }
+  };
+
+  const alsInstant = (d, zone) => {
+    if (!zone) return d;
+    let t = d.getTime();
+    for (let i = 0; i < 2; i++) {
+      const versatz = zonenWand(new Date(t), zone).getTime() - t;
+      t = d.getTime() - versatz;
+    }
+    return new Date(t);
+  };
+
+  /* Werktage: Montag bis Freitag. Wochenenden zählen nicht mit. */
+  const istWochenende = (d) => d.getDay() === 0 || d.getDay() === 6;
+
+  /* Kennzeichen für die Gruppen, die groupBy zurückgibt */
+  const GRUPPE = '__gruppe';
 
   /* Die Funktionsbibliothek */
   const F = {
@@ -415,8 +455,211 @@ const Formula = (() => {
       const jahresanfang = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
       return Math.ceil((((t - jahresanfang) / TAG_MS) + 1) / 7);
     },
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Datum
+     * Notion hat weder Werktage noch Feiertage noch Zeitzonen. Hier sind sie.
+     * ==================================================================== */
+
+    /** Fällt das Datum auf Samstag oder Sonntag? */
+    isweekend: a => { const d = alsDatum(a[0]); return d ? istWochenende(d) : false; },
+    /** Montag bis Freitag? */
+    isworkday: a => { const d = alsDatum(a[0]); return d ? !istWochenende(d) : false; },
+
+    /**
+     * businessDaysBetween(a, b) — Werktage zwischen zwei Daten.
+     * Der Starttag zählt nicht mit, der Zieltag schon — wie man rechnet,
+     * wenn man sagt „drei Arbeitstage ab heute".
+     */
+    businessdaysbetween: a => {
+      const von = alsDatum(a[0]), bis = alsDatum(a[1]);
+      if (!von || !bis) return 0;
+      const rueckwaerts = bis < von;
+      let x = new Date(Math.min(von, bis)); x.setHours(0,0,0,0);
+      const ende = new Date(Math.max(von, bis)); ende.setHours(0,0,0,0);
+      let n = 0, sicher = 0;
+      while (x < ende && sicher++ < 40000) {
+        x = new Date(x.getTime() + TAG_MS);
+        if (!istWochenende(x)) n++;
+      }
+      return rueckwaerts ? -n : n;
+    },
+
+    /** addBusinessDays(datum, n) — n Werktage dazuzählen (n darf negativ sein). */
+    addbusinessdays: a => {
+      const d = alsDatum(a[0]); if (!d) return null;
+      let n = Math.trunc(zahl(a[1]));
+      const schritt = n < 0 ? -TAG_MS : TAG_MS;
+      let x = new Date(d.getTime()), sicher = 0;
+      while (n !== 0 && sicher++ < 40000) {
+        x = new Date(x.getTime() + schritt);
+        if (!istWochenende(x)) n += n > 0 ? -1 : 1;
+      }
+      return x;
+    },
+
+    /** Anfang und Ende von Tag, Woche, Monat, Quartal, Jahr. */
+    startofday:  a => { const d = alsDatum(a[0]); if (!d) return null; const x = new Date(d); x.setHours(0,0,0,0); return x; },
+    endofday:    a => { const d = alsDatum(a[0]); if (!d) return null; const x = new Date(d); x.setHours(23,59,59,999); return x; },
+    startofweek: a => { const d = alsDatum(a[0]); if (!d) return null;
+      const x = new Date(d); x.setHours(0,0,0,0);
+      x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; },   /* Montag */
+    endofweek:   a => { const d = alsDatum(a[0]); if (!d) return null;
+      const x = new Date(d); x.setHours(23,59,59,999);
+      x.setDate(x.getDate() + (6 - ((x.getDay() + 6) % 7))); return x; },
+    startofmonth: a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), d.getMonth(), 1); },
+    endofmonth:   a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999); },
+    startofquarter: a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1); },
+    endofquarter:   a => { const d = alsDatum(a[0]); if (!d) return null;
+      return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3 + 3, 0, 23, 59, 59, 999); },
+    startofyear:  a => { const d = alsDatum(a[0]); if (!d) return null; return new Date(d.getFullYear(), 0, 1); },
+    endofyear:    a => { const d = alsDatum(a[0]); if (!d) return null; return new Date(d.getFullYear(), 11, 31, 23, 59, 59, 999); },
+    quarter:      a => { const d = alsDatum(a[0]); return d ? Math.floor(d.getMonth() / 3) + 1 : 0; },
+    daysinmonth:  a => { const d = alsDatum(a[0]); return d ? new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() : 0; },
+    isleapyear:   a => { const d = alsDatum(a[0]); if (!d) return false;
+      const j = d.getFullYear(); return (j % 4 === 0 && j % 100 !== 0) || j % 400 === 0; },
+
+    /**
+     * convertTimezone(datum, vonZone, nachZone)
+     * Liest das Datum als Wanduhrzeit in `vonZone` und gibt die Wanduhrzeit
+     * in `nachZone` zurück. Zonennamen wie "Europe/Zurich", "UTC", "Asia/Istanbul".
+     */
+    converttimezone: a => {
+      const d = alsDatum(a[0]); if (!d) return null;
+      const von = a.length > 1 ? text(a[1]) : '';
+      const nach = a.length > 2 ? text(a[2]) : text(a[1] || '');
+      return zonenWand(alsInstant(d, von), nach);
+    },
+    /** timezoneOffset(datum, zone) — Abstand zur Weltzeit in Minuten. */
+    timezoneoffset: a => {
+      const d = alsDatum(a[0]); if (!d) return 0;
+      const zone = text(a[1] || 'UTC');
+      return Math.round((zonenWand(d, zone).getTime() - zonenWand(d, 'UTC').getTime()) / 60000);
+    },
+
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Zufall
+     * Notion schreibt ausdrücklich, dass es kein random() gibt. Hier gibt es eins.
+     * ==================================================================== */
+    random: () => Math.random(),
+    randombetween: a => {
+      const u = Math.ceil(Math.min(zahl(a[0]), zahl(a[1])));
+      const o = Math.floor(Math.max(zahl(a[0]), zahl(a[1])));
+      return o < u ? u : u + Math.floor(Math.random() * (o - u + 1));
+    },
+    /** randomItem(liste) — ein zufälliger Eintrag, z. B. die Karteikarte des Tages. */
+    randomitem: a => {
+      const l = Array.isArray(a[0]) ? a[0] : (a[0] == null ? [] : [a[0]]);
+      return l.length ? l[Math.floor(Math.random() * l.length)] : null;
+    },
+    /** shuffle(liste) — zufällige Reihenfolge. */
+    shuffle: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : []).slice();
+      for (let i = l.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [l[i], l[j]] = [l[j], l[i]];
+      }
+      return l;
+    },
+
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Listen und Statistik
+     * ==================================================================== */
+    groupkey:   a => (a[0] && a[0][GRUPPE]) ? a[0].schluessel : null,
+    groupitems: a => (a[0] && a[0][GRUPPE]) ? a[0].eintraege : [],
+    groupcount: a => (a[0] && a[0][GRUPPE]) ? a[0].eintraege.length : 0,
+
+    /** Standardabweichung und Varianz — für Auswertungen, die Notion nicht hat. */
+    stddev: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : a).map(zahl).filter(isFinite);
+      if (l.length < 2) return 0;
+      const m = l.reduce((x, y) => x + y, 0) / l.length;
+      return Math.sqrt(l.reduce((s, x) => s + (x - m) ** 2, 0) / (l.length - 1));
+    },
+    variance: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : a).map(zahl).filter(isFinite);
+      if (l.length < 2) return 0;
+      const m = l.reduce((x, y) => x + y, 0) / l.length;
+      return l.reduce((s, x) => s + (x - m) ** 2, 0) / (l.length - 1);
+    },
+    /** percentile(liste, 0.9) — der Wert, unter dem 90 % liegen. */
+    percentile: a => {
+      const l = (Array.isArray(a[0]) ? a[0] : []).map(zahl).filter(isFinite).sort((x, y) => x - y);
+      if (!l.length) return 0;
+      const p = Math.min(1, Math.max(0, zahl(a[1])));
+      const i = (l.length - 1) * p, u = Math.floor(i), o = Math.ceil(i);
+      return u === o ? l[u] : l[u] + (l[o] - l[u]) * (i - u);
+    },
+    /** clamp(wert, min, max) — auf einen Bereich begrenzen. */
+    clamp: a => Math.min(Math.max(zahl(a[0]), zahl(a[1])), zahl(a[2])),
+    /** roundTo(zahl, stellen) — auf n Nachkommastellen runden. */
+    roundto: a => { const f = Math.pow(10, Math.trunc(zahl(a[1]))); return Math.round(zahl(a[0]) * f) / f; },
+
+    /* ==================================================================== *
+     * ÜBER NOTION HINAUS — Text
+     * ==================================================================== */
+    padstart: a => text(a[0]).padStart(Math.trunc(zahl(a[1])), text(a[2] || ' ')),
+    padend:   a => text(a[0]).padEnd(Math.trunc(zahl(a[1])), text(a[2] || ' ')),
+    startswith: a => text(a[0]).startsWith(text(a[1])),
+    endswith:   a => text(a[0]).endsWith(text(a[1])),
+    capitalize: a => { const s = text(a[0]); return s ? s[0].toUpperCase() + s.slice(1) : ''; },
+    titlecase:  a => text(a[0]).replace(/\S+/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase()),
+    /** slug("Mein Titel!") -> "mein-titel" — für Adressen und Dateinamen. */
+    slug: a => text(a[0]).toLowerCase()
+      .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+    /** initials("Redur Babat") -> "RB" */
+    initials: a => text(a[0]).split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase()).join(''),
+    wordcount: a => (text(a[0]).match(/\S+/g) || []).length,
+    truncate: a => { const s = text(a[0]), n = Math.trunc(zahl(a[1]));
+      return s.length <= n ? s : s.slice(0, Math.max(0, n - 1)) + '…'; },
+
+    /**
+     * formatNumber(zahl, art, stellen) — die letzte Funktion, die Notion hat
+     * und die hier gefehlt hat. Notions Beispiel:
+     *   formatNumber(prop("Number"), "usd", 0)
+     * Die Doku nennt nur "usd"; hier sind die gängigen Arten dabei.
+     */
+    formatnumber: a => {
+      const n = zahl(a[0]);
+      if (!isFinite(n)) return '';
+      const art = text(a[1] || 'number').toLowerCase();
+      const stellen = a.length > 2 ? Math.max(0, Math.min(20, zahl(a[2]))) : undefined;
+
+      const WAEHRUNG = {
+        usd: ['USD', 'en-US'], eur: ['EUR', 'de-DE'], chf: ['CHF', 'de-CH'],
+        gbp: ['GBP', 'en-GB'], jpy: ['JPY', 'ja-JP'], try: ['TRY', 'tr-TR'],
+        cad: ['CAD', 'en-CA'], aud: ['AUD', 'en-AU'], cny: ['CNY', 'zh-CN']
+      };
+      const opt = {};
+      if (stellen !== undefined) { opt.minimumFractionDigits = stellen; opt.maximumFractionDigits = stellen; }
+
+      try {
+        if (WAEHRUNG[art]) {
+          const [w, loc] = WAEHRUNG[art];
+          return new Intl.NumberFormat(loc, { style: 'currency', currency: w, ...opt }).format(n);
+        }
+        if (art === 'percent' || art === 'prozent')
+          return new Intl.NumberFormat('de-CH', { style: 'percent', ...opt }).format(n);
+        if (art === 'commas' || art === 'tausender')
+          return new Intl.NumberFormat('de-CH', { useGrouping: true, ...opt }).format(n);
+        if (art === 'plain' || art === 'schlicht')
+          return new Intl.NumberFormat('de-CH', { useGrouping: false, ...opt }).format(n);
+        /* Eine Zahl als Muster: formatNumber(3.14159, 2) → 3.14 */
+        if (/^[0-9]+$/.test(art))
+          return n.toFixed(Math.min(20, Number(art)));
+        return new Intl.NumberFormat('de-CH', opt).format(n);
+      } catch { return String(n); }
+    },
+
     formatdate: a => {
-      const d = alsDatum(a[0]); if (!d) return '';
+      let d = alsDatum(a[0]); if (!d) return '';
+      /* Drittes Argument: Zeitzone. Notion kann das nicht — wir schon.
+         formatDate(now(), "DD.MM.YYYY HH:mm", "Asia/Istanbul") */
+      if (a.length > 2 && text(a[2])) d = zonenWand(d, text(a[2]));
       const f = text(a[1] || 'YYYY-MM-DD');
       const zwei = n => String(n).padStart(2, '0');
       const tage  = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
@@ -455,6 +698,40 @@ const Formula = (() => {
   };
 
   /* Der eigentliche Auswerter */
+  /* ------------------------------------------------------------------------
+   * EIGENE FUNKTIONEN
+   * ------------------------------------------------------------------------
+   * Notions Formelsprache hat kein LAMBDA und keine Möglichkeit, Logik einmal
+   * zu benennen und wiederzuverwenden — das ist Punkt 7 der Lückenliste.
+   * Hier gibt es eine kleine Bibliothek: Name, Parameter, Rumpf. Der Rumpf
+   * wird einmal geparst und dann wie jede andere Funktion aufgerufen.
+   * --------------------------------------------------------------------- */
+  let EIGENE = {};
+
+  /**
+   * @param {Array} liste  [{ name, params:['a','b'], koerper:'…', beschreibung }]
+   * @returns {Array} die Namen, deren Rumpf nicht lesbar war
+   */
+  const setzeBibliothek = (liste) => {
+    EIGENE = {};
+    const kaputt = [];
+    (liste || []).forEach(f => {
+      if (!f || !f.name) return;
+      try {
+        EIGENE[String(f.name).toLowerCase()] = {
+          params: (f.params || []).map(x => String(x)),
+          baum: parse(tokenize(f.koerper || '')),
+          beschreibung: f.beschreibung || ''
+        };
+      } catch (e) { kaputt.push(f.name + ': ' + e.message); }
+    });
+    cache.clear();          /* alte Bäume könnten alte Namen enthalten */
+    return kaputt;
+  };
+
+  const bibliothek = () => Object.entries(EIGENE).map(([n, f]) =>
+    ({ name: n, params: f.params, beschreibung: f.beschreibung }));
+
   const evaluate = (knoten, ctx) => {
     switch (knoten.k) {
       case 'num':  return knoten.v;
@@ -567,7 +844,132 @@ const Formula = (() => {
           if (n === 'every')  return arr.every((e,i) => wahr(mit(e,i)));
         }
 
+        /* ================================================================ *
+         * ÜBER NOTION HINAUS — Listen falten, sortieren, gruppieren
+         * Auch das sind Sonderformen: der Ausdruck darf erst laufen, wenn
+         * `current`, `index` und bei reduce auch `acc` gesetzt sind.
+         * ================================================================ */
+        if (['reduce', 'sortby', 'groupby'].includes(n)) {
+          const liste = evaluate(knoten.args[0], ctx);
+          const arr = Array.isArray(liste) ? liste : (liste == null ? [] : [liste]);
+
+          if (n === 'reduce') {
+            /* reduce(liste, start, ausdruck) — im Ausdruck stehen acc und current */
+            let acc = evaluate(knoten.args[1], ctx);
+            const ausdruck = knoten.args[2];
+            arr.forEach((el, i) => {
+              acc = evaluate(ausdruck, { ...ctx, vars: { ...ctx.vars, acc, current: el, index: i } });
+            });
+            return acc;
+          }
+
+          const schluessel = (el, i) =>
+            evaluate(knoten.args[1], { ...ctx, vars: { ...ctx.vars, current: el, index: i } });
+
+          if (n === 'sortby') {
+            const paare = arr.map((el, i) => ({ el, k: schluessel(el, i) }));
+            const absteigend = knoten.args[2] !== undefined && wahr(evaluate(knoten.args[2], ctx));
+            paare.sort((a, b) => {
+              const x = a.k, y = b.k;
+              const zahlen = !isNaN(parseFloat(x)) && !isNaN(parseFloat(y));
+              const v = zahlen ? zahl(x) - zahl(y) : text(x).localeCompare(text(y), 'de');
+              return absteigend ? -v : v;
+            });
+            return paare.map(p => p.el);
+          }
+
+          /* groupBy — gibt eine Liste von Gruppen zurück.
+             Auslesen mit groupKey(), groupItems(), groupCount(). */
+          const karte = new Map();
+          arr.forEach((el, i) => {
+            const k = text(schluessel(el, i));
+            if (!karte.has(k)) karte.set(k, []);
+            karte.get(k).push(el);
+          });
+          return [...karte.entries()].map(([k, v]) =>
+            ({ [GRUPPE]: true, schluessel: k, eintraege: v }));
+        }
+
+        /* ================================================================ *
+         * ÜBER NOTION HINAUS — Abfragen über eine ANDERE Datenbank
+         * Notion braucht dafür zwingend eine Verknüpfung. Hier reicht der
+         * Name der Datenbank. In der Bedingung steht `current` für die Zeile.
+         *   sumWhere("Rechnungen", current.prop("Kunde") == prop("Name"), current.prop("Betrag"))
+         * ================================================================ */
+        if (['findrows','rows','countwhere','sumwhere','firstwhere','lastwhere','maxwhere','minwhere'].includes(n)) {
+          if (!ctx.db) throw new Error('Hier lassen sich keine anderen Datenbanken lesen');
+          const name = text(evaluate(knoten.args[0], ctx));
+          const alle = ctx.db(name);
+          if (!alle) throw new Error(`Datenbank nicht gefunden: ${name}`);
+
+          const bedingung = knoten.args[1];
+          const passt = bedingung === undefined ? alle : alle.filter((el, i) =>
+            wahr(evaluate(bedingung, { ...ctx, vars: { ...ctx.vars, current: el, index: i } })));
+
+          if (n === 'findrows' || n === 'rows') return passt;
+          if (n === 'countwhere') return passt.length;
+          if (n === 'firstwhere') return passt.length ? passt[0] : null;
+          if (n === 'lastwhere')  return passt.length ? passt[passt.length - 1] : null;
+
+          const werte = passt.map((el, i) => knoten.args[2] === undefined ? 1
+            : zahl(evaluate(knoten.args[2], { ...ctx, vars: { ...ctx.vars, current: el, index: i } })));
+          if (n === 'sumwhere') return werte.reduce((a, b) => a + b, 0);
+          if (n === 'maxwhere') return werte.length ? Math.max(...werte) : 0;
+          if (n === 'minwhere') return werte.length ? Math.min(...werte) : 0;
+        }
+
+        /* ================================================================ *
+         * EIGENE FUNKTIONEN — Notion hat kein LAMBDA
+         * Einmal im Bestand definiert, in jeder Formel nutzbar:
+         *     istWerktag(d) = not isWeekend(d)
+         *     alter(g)      = dateBetween(today(), g, "years")
+         * ================================================================ */
+        if (EIGENE[n]) {
+          const f = EIGENE[n];
+          if ((ctx.tiefe || 0) > 20) throw new Error(`Eigene Funktion ${n}() ruft sich endlos selbst auf`);
+          const werte = knoten.args.map(x => evaluate(x, ctx));
+          const neueVars = { ...ctx.vars };
+          f.params.forEach((pn, i) => { neueVars[pn] = werte[i]; });
+          return evaluate(f.baum, { ...ctx, vars: neueVars, tiefe: (ctx.tiefe || 0) + 1 });
+        }
+
         const args = knoten.args.map(x => evaluate(x, ctx));
+
+        /* ================================================================ *
+         * ÜBER NOTION HINAUS — die Zeile im Verhältnis zu den anderen
+         * Notion-Formeln sehen nur ihre eigene Zeile. Diese hier sehen die
+         * Ansicht: ihre Nummer darin, die Zeile davor, die laufende Summe,
+         * den Rang. Das ist der grösste einzelne Unterschied zu Notion.
+         * ================================================================ */
+        if (['rownumber','runningcount','previous','next','runningsum','runningmax','runningmin',
+             'rank','percentoftotal','total','average','rowcount','delta'].includes(n)) {
+          const z = ctx.zeile;
+          if (!z) throw new Error('Das geht nur in einer Datenbankspalte');
+          const i = z.index();
+          if (n === 'rownumber' || n === 'runningcount') return i + 1;
+          if (n === 'rowcount') return z.anzahl();
+
+          const spalte = z.spalte(text(args[0] ?? ''));
+          if (n === 'previous') return i > 0 ? spalte[i - 1] : null;
+          if (n === 'next')     return i + 1 < spalte.length ? spalte[i + 1] : null;
+          if (n === 'delta')    return i > 0 ? zahl(spalte[i]) - zahl(spalte[i - 1]) : 0;
+
+          const bisHier = spalte.slice(0, i + 1).map(zahl).filter(x => isFinite(x));
+          if (n === 'runningsum') return bisHier.reduce((a, b) => a + b, 0);
+          if (n === 'runningmax') return bisHier.length ? Math.max(...bisHier) : 0;
+          if (n === 'runningmin') return bisHier.length ? Math.min(...bisHier) : 0;
+
+          const alleZahlen = spalte.map(zahl).filter(x => isFinite(x));
+          const summe = alleZahlen.reduce((a, b) => a + b, 0);
+          if (n === 'total')   return summe;
+          if (n === 'average') return alleZahlen.length ? summe / alleZahlen.length : 0;
+          if (n === 'percentoftotal') return summe === 0 ? 0 : zahl(spalte[i]) / summe;
+          if (n === 'rank') {
+            const meiner = zahl(spalte[i]);
+            const absteigend = args[1] === undefined ? true : wahr(args[1]);
+            return 1 + alleZahlen.filter(x => absteigend ? x > meiner : x < meiner).length;
+          }
+        }
 
         if (F[n]) return F[n](args);
         throw new Error(`Unbekannte Funktion: ${n}()`);
@@ -587,12 +989,19 @@ const Formula = (() => {
    *                            (element, name) => wert
    * @returns {{ok:boolean, wert:*, fehler:string}}
    */
-  const run = (src, propFn, fremdFn) => {
+  const run = (src, propFn, fremdFn, umgebung) => {
     if (!src || !src.trim()) return { ok: true, wert: '' };
     try {
       let baum = cache.get(src);
       if (!baum) { baum = parse(tokenize(src)); cache.set(src, baum); }
-      const wert = evaluate(baum, { props: propFn, fremd: fremdFn, vars: {} });
+      const wert = evaluate(baum, {
+        props: propFn, fremd: fremdFn, vars: {},
+        /* zeile: { index(), anzahl(), spalte(name) } — für rowNumber, previous,
+           runningSum, rank … · db: name => Liste der Zeilen einer anderen
+           Datenbank — für findRows, sumWhere, countWhere … */
+        zeile: umgebung && umgebung.zeile,
+        db:    umgebung && umgebung.db
+      });
       return { ok: true, wert };
     } catch (e) {
       return { ok: false, wert: '', fehler: e.message };
@@ -612,5 +1021,11 @@ const Formula = (() => {
     return text(wert);
   };
 
-  return { run, check, anzeige, text, zahl, wahr, F };
+  /** Der Baum zu einer Formel — für Werkzeuge, die daran arbeiten wollen. */
+  const baumVon = (src) => parse(tokenize(src));
+
+  return { run, check, anzeige, text, zahl, wahr, F, setzeBibliothek, bibliothek,
+           baumVon, tokenize, parse };
 })();
+
+window.Formula = Formula;

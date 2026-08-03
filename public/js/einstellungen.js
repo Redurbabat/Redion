@@ -57,6 +57,13 @@ const Einstellungen = (() => {
     document.body.dataset.schrift = V('schriftgroesse', 'normal');
     document.body.dataset.dichte  = V('dichte', 'normal');
     document.body.classList.toggle('kontrast', !!V('kontrast', false));
+    /* Barrierefreiheit: ruhige Darstellung, leichteres Lesen, hoher Kontrast */
+    document.body.dataset.bewegung = V('bewegung', 'normal');
+    document.body.dataset.lesen    = V('lesen', 'normal');
+    document.body.dataset.kontrast = V('kontrast', false) ? 'hoch' : 'normal';
+    /* Das eigene Farbschema hat das letzte Wort — sonst würde die Zeile
+       oben es bei jedem Anwenden wieder auf hell oder dunkel zurückdrehen. */
+    if (window.Aussehen) Aussehen.anwenden();
   };
 
   /** Datum so ausgeben, wie es eingestellt ist. */
@@ -101,7 +108,7 @@ const Einstellungen = (() => {
       '<div class="einst-fenster">' +
         '<div class="einst-nav">' +
           `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
-          `<div><b>${esc(V('arbeitsName', 'Notizen'))}</b>` +
+          `<div><b>${esc(V('arbeitsName', 'Redion'))}</b>` +
           `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
           GRUPPEN.map(([titel, liste]) =>
             (titel ? `<div class="einst-grp">${titel}</div>` : '') +
@@ -193,6 +200,10 @@ const Einstellungen = (() => {
       zeile('Zeitformat', '', wahl('zeitformat', [['24', '24 Stunden'], ['12', '12 Stunden']], V('zeitformat', '24'))) +
       zeile('Hoher Kontrast', 'Stärkere Ränder und klarere Farben — leichter zu lesen',
             schalter('kontrast', V('kontrast', false))) +
+      zeile('Ruhige Darstellung', 'Keine Animationen und Übergänge',
+            wahl('bewegung', [['normal', 'Normal'], ['ruhig', 'Ruhig']], V('bewegung', 'normal'))) +
+      zeile('Leichter lesen', 'Mehr Zeilenabstand, weitere Buchstaben, schmalere Zeilen',
+            wahl('lesen', [['normal', 'Normal'], ['leicht', 'Leichter']], V('lesen', 'normal'))) +
       zeile('Eingabetaste macht eine neue Zeile', 'Gilt für Chat und Kommentare. ' +
             'Zum Senden dann Strg + Eingabe',
             schalter('enterZeile', V('enterZeile', false))) +
@@ -258,7 +269,7 @@ const Einstellungen = (() => {
 
     arbeitsplatz: () =>
       kopf('Arbeitsbereich') +
-      zeile('Name', 'Steht oben in der Seitenleiste', feld('arbeitsName', V('arbeitsName', 'Notizen'))) +
+      zeile('Name', 'Steht oben in der Seitenleiste', feld('arbeitsName', V('arbeitsName', 'Redion'))) +
       zeile('Symbol', 'Ein Buchstabe oder ein Emoji', feld('arbeitsIcon', V('arbeitsIcon', 'N'))) +
       zeile('Seiten', '', `<span class="ez-grau">${Links.seiten().length}</span>`) +
       zeile('Datenbanken', '', `<span class="ez-grau">${Object.keys(Store.cache.collections).length}</span>`) +
@@ -448,6 +459,22 @@ const Einstellungen = (() => {
               feld('api:notion', V('api:notion', ''), 'secret_… oder ntn_…')) +
         zeile('Webhook-Adresse', 'Automationen können hier etwas hinschicken — Zapier, Make, n8n, eigener Server',
               feld('api:webhook', V('api:webhook', ''), 'https://…')) +
+        /* Anmeldung am Webhook — Notion schickt gar keine mit, viele Dienste
+           weisen deshalb jede Anfrage ab. */
+        zeile('Webhook-Anmeldung', 'Wie sich Redion beim Webhook ausweist',
+              '<select data-set="webhookAuthArt">' +
+              [['keine', 'ohne Anmeldung'],
+               ['bearer', 'Bearer-Schlüssel im Kopf'],
+               ['basic', 'Basic (name:passwort)'],
+               ['kopf', 'eigener Kopfzeilenname'],
+               ['geheim', 'Geheimnis im Datenpaket']]
+                .map(([id, n]) => `<option value="${id}"` +
+                  (V('webhookAuthArt', 'keine') === id ? ' selected' : '') + `>${n}</option>`).join('') +
+              '</select>') +
+        zeile('Schlüssel oder Passwort für den Webhook', 'Bleibt im Browser und geht nur an diese eine Adresse',
+              feld('api:webhookAuth', V('api:webhookAuth', ''), 'Schlüssel')) +
+        zeile('Name der Kopfzeile', 'Nur bei „eigener Kopfzeilenname"',
+              feld('webhookAuthName', V('webhookAuthName', 'X-Api-Key'), 'X-Api-Key')) +
         zeile('Wetterdienst', 'Open-Meteo braucht keinen Schlüssel und ist kostenlos',
               '<span class="ez-grau">kein Schlüssel nötig</span>') +
         zeile('Karten', 'OpenStreetMap braucht keinen Schlüssel und ist kostenlos',
@@ -651,8 +678,11 @@ const Einstellungen = (() => {
       '</div>' +
       zeile('Bausteine', '', `<span class="ez-grau">${Blocks.TYPEN.length}</span>`) +
       zeile('Eigenschaftstypen', '', `<span class="ez-grau">${Datenbank.TYPEN.length}</span>`) +
-      zeile('Ansichten', '', '<span class="ez-grau">8</span>') +
-      zeile('Formelfunktionen', '', '<span class="ez-grau">über 90</span>') +
+      zeile('Ansichten', '', `<span class="ez-grau">${Datenbank.LAYOUTS.length}</span>`) +
+      zeile('Formelfunktionen', '', '<span class="ez-grau">über 130</span>') +
+      zeile('Eigene Formelfunktionen',
+            'Einmal definieren, in jeder Formel nutzen — Notion kann das nicht',
+            knopf('formelbib', 'Bibliothek öffnen')) +
       zeile('Tastenkürzel', '', knopf('kuerzel', 'Alle anzeigen')) +
       zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>')
   }[b] || (() => kopf('Unbekannt')))();
@@ -732,7 +762,7 @@ const Einstellungen = (() => {
     const btn = document.querySelector('#btn-settings');
     if (!btn) return;
     btn.querySelector('.ws-icon').textContent = V('arbeitsIcon', 'N');
-    btn.querySelectorAll('span')[1].textContent = V('arbeitsName', 'Notizen');
+    btn.querySelectorAll('span')[1].textContent = V('arbeitsName', 'Redion');
   };
 
   const tun = async (was, o) => {
@@ -959,6 +989,7 @@ const Einstellungen = (() => {
       },
       'papierkorb': () => { o.remove(); App.papierkorb(); },
       'kuerzel': () => { o.remove(); Werkzeuge.tastenkuerzel(); },
+      'formelbib': () => { o.remove(); Werkzeuge.formelBibliothek(); },
       'startseite-waehlen': () => {
         o.remove();
         Blocks.seitenPicker('Welche Seite soll die Startseite sein?', (id) => {
