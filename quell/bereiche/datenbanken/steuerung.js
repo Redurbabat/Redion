@@ -1193,12 +1193,12 @@ const Datenbank = (() => {
       const z = schluessel(r, zk);
       const s = sk ? schluessel(r, sk) : 'Wert';
       const v = wk ? wert(r, wk, coll) : 1;
-      (zellen[z + ' ' + s] = zellen[z + ' ' + s] || []).push(v);
+      (zellen[z + '\u0000' + s] = zellen[z + '\u0000' + s] || []).push(v);
     });
 
-    const zelleWert = (z, s) => pivotRechne(art, zellen[z + ' ' + s] || []);
-    const zeileSumme = (z) => pivotRechne(art, spaltenNamen.flatMap(s => zellen[z + ' ' + s] || []));
-    const spalteSumme = (s) => pivotRechne(art, zeilenNamen.flatMap(z => zellen[z + ' ' + s] || []));
+    const zelleWert = (z, s) => pivotRechne(art, zellen[z + '\u0000' + s] || []);
+    const zeileSumme = (z) => pivotRechne(art, spaltenNamen.flatMap(s => zellen[z + '\u0000' + s] || []));
+    const spalteSumme = (s) => pivotRechne(art, zeilenNamen.flatMap(z => zellen[z + '\u0000' + s] || []));
     const gesamt = pivotRechne(art, Object.values(zellen).flat());
 
     const zeig = (v, z, s) => {
@@ -1223,7 +1223,7 @@ const Datenbank = (() => {
     const koerper = zeilenNamen.map(z => {
       const tds = spaltenNamen.map(s => {
         const v = zelleWert(z, s);
-        const leer = !(zellen[z + ' ' + s] || []).length;
+        const leer = !(zellen[z + '\u0000' + s] || []).length;
         return `<td${leer ? ' class="pv-null"' : ''}` +
                (leer ? '' : ` data-z="${esc(z)}" data-s="${esc(s)}" class="pv-klick"`) +
                `>${leer ? '' : esc(zeig(v, z, s))}</td>`;
