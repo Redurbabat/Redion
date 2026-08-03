@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**61 Läufe, 2553 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**62 Läufe, 2597 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
@@ -46,6 +46,17 @@ Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
   Suchen nach Lücken, sondern beim Herauslösen von `wissen/dienst.js` — dort
   fiel auf, dass die eine Datei ein `"` ersetzt und die Nachbardatei nicht.
   → `test90.mjs` prüft das Verhalten, `test87.mjs` verhindert den Rückfall.
+- **Ein losgelöstes Element schützt nicht.** `verbinden/mail.js` warf das
+  Markup einer fremden Mail weg, indem es sie einem `div` zuwies, das nie in
+  die Seite kam, und danach nur den Text las. Nur feuert `<img src=x
+  onerror=…>` beim Zuweisen — auch losgelöst. Nachgemessen: `div.innerHTML`
+  führt aus, `template.innerHTML` und `DOMParser` nicht. → `test91.mjs`
+- **„Ist das ein PDF?" entschied die Endung.** `javascript:alert(1)//.pdf`
+  bestand die Prüfung — die zwei Schrägstriche sind in JavaScript ein
+  Kommentar. Der Anhang landete dann in einem `<iframe src>`, und der läuft im
+  Ursprung der Seite: aus dem Rahmen heraus war `parent` erreichbar. Ein
+  Anhang, den niemand anklickt, führte Code aus, sobald die Vorschau aufging.
+  → `test91.mjs`
 - Der Abgleich schrieb geholte Sätze nur in den Arbeitsspeicher, nie auf die
   Platte. Nach dem Neuladen waren sie weg — und weil die Abgleichsmarke schon
   weitergerückt war, kamen sie **nie wieder**.
@@ -107,6 +118,7 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 88 | die Datenbank-Logik in Node — ohne document, ohne window |
 | 89 | die Werkzeug-Logik in Node — unscharfe Suche, SM-2, Markdown, Statistik |
 | 90 | ein Anführungszeichen im Text darf kein Attribut werden |
+| 91 | der Säuberer hängt — Adressen in Links und Rahmen, HTML aus Mails |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt

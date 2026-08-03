@@ -194,39 +194,64 @@ Zeichenfunktion.
 
 ---
 
-### A5 — Den Säuberer aufhängen
+### A5 — Den Säuberer aufhängen · **Adressen und Mail-HTML erledigt**
 
 **Was auffiel.** `quell/kern/sicherheit/saeubern.js` ist 162 Zeilen lang, hat
 `html`, `nurText`, `alsText`, `alsAttribut`, `adresse`, `adresseOk` und
-`dateiname`, ist über `test85` mit 13 Prüfungen belegt — und **wird von keiner
+`dateiname`, ist über `test85` mit 13 Prüfungen belegt — und **wurde von keiner
 einzigen Stelle der App aufgerufen.** Der einzige Ort, an dem `Saeubern.`
-überhaupt steht, ist sein eigener Prüflauf. Ein Sicherheitsnetz, das niemand
+überhaupt stand, war sein eigener Prüflauf. Ein Sicherheitsnetz, das niemand
 aufgehängt hat.
 
-Die App säubert stattdessen mit fünfzig eigenen `esc`-Funktionen, einer pro
-Modul. Genau daran hing der Fehler, den `test90` jetzt festhält: zwanzig davon
-liessen das Anführungszeichen durch. Das ist repariert, aber die Ursache bleibt
-— fünfzig Kopien einer Sicherheitsfunktion sind fünfzig Gelegenheiten, eine
-davon halb zu schreiben. `test87` fängt heute den einen bekannten Fall ab;
-mehr kann eine Textsuche nicht.
+**Beim Aufhängen kamen zwei Löcher heraus**, die vorher niemand gesucht hatte.
+Beide wurden im Browser bestätigt, bevor eine Zeile geändert wurde.
 
-**Wie.** Nicht in einem Zug. Die drei Stellen zuerst, an denen fremder Text
-hereinkommt und nicht bloss eigener Text zurückkommt: `dateien/einlesen.js`
-(HTML- und Markdown-Import), `verbinden/clipper.js` (was der Clipper von einer
-Webseite mitbringt) und `verbinden/eingang.js` (was über die Schnittstelle
-hereinkommt). Dort `Saeubern.html` statt eines eigenen `esc`, und für jede
-Stelle ein Prüflauf nach dem Vorbild von `test90`.
+*Ein losgelöstes Element schützt nicht.* In `verbinden/mail.js` stand zweimal
+`d.innerHTML = <HTML einer fremden Mail>` mit einem `div`, das nie in die Seite
+kam — die Absicht war, das Markup wegzuwerfen und nur den Text zu behalten. Nur
+feuert `<img src=x onerror=…>` beim Zuweisen, auch losgelöst. Nachgemessen:
+`div.innerHTML` führt aus, `template.innerHTML` und `DOMParser` nicht. Genau
+deshalb benutzt `Saeubern.nurText` ein `<template>`.
 
-Danach — und erst danach — kann `esc` aus den Modulen verschwinden und durch
-`Saeubern.alsText` ersetzt werden. Das sind fünfzig Dateien und eine reine
-Fleissarbeit; sie ändert kein Verhalten und gehört deshalb in einen eigenen
-Schritt, nicht neben eine inhaltliche Änderung.
+*„Ist das ein PDF?" entscheidet die Endung.* `javascript:alert(1)//.pdf`
+besteht die Prüfung in `editor.js` — die zwei Schrägstriche sind in JavaScript
+ein Kommentar. Und ein `<iframe src="javascript:…">` läuft **im Ursprung der
+Seite**: im Versuch war aus dem Rahmen heraus `parent` erreichbar, also alle
+Notizen und der KI-Schlüssel. Ein Anhang, den niemand anklickt, führte damit
+Code aus, sobald die Vorschau aufging.
 
-**Fertig wenn.** `Saeubern` steht an den drei Eingängen, jeder mit einem
-Prüflauf, der ohne die Säuberung rot wird. Belegt, nicht behauptet: bei
-`test90` wurde das nachgestellt, indem die Reparatur zurückgedreht und der
-Lauf erneut gestartet wurde — acht Prüfungen wurden rot. Ein Lauf, der nicht
-rot werden kann, prüft nichts.
+**Die Prüfung sitzt beim Zeichnen, nicht am Eingang** — anders, als hier
+ursprünglich stand. Der Vorschlag lautete: an die drei Eingänge (Import,
+Clipper, Schnittstelle). Nachgesehen sind es mehr — `bookmark`- und
+`file`-Blöcke entstehen ausserdem beim Abgleich mit dem Server, beim Einlesen
+einer Redion-Datei und über `/v1/`. Eine Prüfung pro Eingang hätte man vier Mal
+schreiben und beim fünften vergessen müssen. Beim Zeichnen gibt es dagegen
+genau sechs Stellen, an denen eine Adresse ins Dokument kommt, und die decken
+alle Eingänge zugleich ab — auch die, die es noch nicht gibt.
+
+Zwei neue Funktionen in `Saeubern`, weil die Regel nicht überall dieselbe ist:
+`anhangAdresse` für etwas, das ein Mensch anklickt (sperrt `javascript:` und
+Verwandte, lässt **jedes** `data:` durch — ein Anhang liegt als
+`data:application/zip` im Speicher, weil es keinen Server gibt, auf den man ihn
+legen könnte), und `rahmenAdresse` für einen `<iframe>` (nur `http(s)`, `blob:`
+oder `data:application/pdf`).
+
+**Nichts wird weggeworfen.** Eine gesperrte Adresse bleibt sichtbar und sagt,
+warum sie nicht anklickbar ist.
+
+`pruefungen/lauf/test91.mjs`, 38 Prüfungen. Mit zurückgedrehten Aufrufstellen
+werden 12 davon rot.
+
+**Offen — der zweite Teil.** Die Ursache bleibt: fünfzig `esc`-Kopien sind
+fünfzig Gelegenheiten, eine davon halb zu schreiben. `test87` fängt heute den
+einen bekannten Fall ab (fehlendes `"`); mehr kann eine Textsuche nicht. `esc`
+durch `Saeubern.alsText` zu ersetzen sind fünfzig Dateien und reine
+Fleissarbeit — sie ändert kein Verhalten und gehört deshalb in einen eigenen
+Schritt.
+
+Ebenfalls offen: `Saeubern.html` wird weiterhin nirgends gerufen. Es gibt heute
+keine Stelle, die fremdes HTML als HTML anzeigt — `ausHtml` nimmt nur Text und
+Bildadressen. Wenn eine dazukommt, ist `Saeubern.html` dafür da.
 
 ---
 

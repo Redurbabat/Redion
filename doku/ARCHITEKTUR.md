@@ -328,6 +328,25 @@ fertig:
   fünfzig `esc`-Funktionen liessen es durch; an 41 Stellen landet ihr Ergebnis
   in einem Attribut. Ein Knopf namens `" onfocus="…" autofocus="` bekam so
   einen echten Ereignis-Handler, ohne dass ein `<script>` im Spiel war.
+- `test91.mjs` prüft die zweite Grenze: dass eine Adresse aus einem Block kein
+  Code wird. Ein `<iframe src="javascript:…">` läuft im Ursprung dieser Seite —
+  aus dem Rahmen heraus war `parent` erreichbar.
+
+**Wo eine Grenze sitzt, ist eine Entscheidung.** Bei den Adressen sitzt sie
+**beim Zeichnen**, nicht am Eingang, und das war eine Korrektur an
+`AUFGABEN.md`: `bookmark`- und `file`-Blöcke entstehen beim Import, über den
+Clipper, über `/v1/`, beim Abgleich mit dem Server und beim Einlesen einer
+Redion-Datei. Eine Prüfung pro Eingang hätte man fünf Mal schreiben und beim
+sechsten vergessen müssen. Beim Zeichnen gibt es genau sechs Stellen, an denen
+eine Adresse ins Dokument kommt — und die decken jeden Eingang zugleich ab,
+auch die, die es noch nicht gibt.
+
+Die Regel ist dabei nicht überall dieselbe, deshalb hat `Saeubern` zwei
+Funktionen statt einer: `anhangAdresse` für etwas, das ein Mensch anklickt, und
+`rahmenAdresse` für einen `<iframe>`. Die erste lässt **jedes** `data:` durch —
+ein Anhang liegt als `data:application/zip` im Speicher, weil es keinen Server
+gibt, auf den man ihn legen könnte. Wer dort die strengere Regel nimmt, wirft
+jeden Anhang weg.
 
 Das ist der Sinn von A4: was rechnet, soll sich prüfen lassen, ohne dass etwas
 gezeichnet wird.

@@ -1710,7 +1710,18 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         } else if (tag === 'hr') {
           Store.addBlock(seiteId, 'divider');
         } else if (tag === 'img' && n.getAttribute('src')) {
-          Store.addBlock(seiteId, 'image', { src: n.getAttribute('src'), caption: n.getAttribute('alt') || '' });
+          /* Die einzige Stelle in `ausHtml`, an der etwas anderes als Text aus
+             dem fremden Dokument übernommen wird. `Saeubern.adresse` lässt
+             http(s) und `data:image/…` durch und wirft `javascript:` weg. Ein
+             `<img>` führt eine solche Adresse zwar nicht aus — aber der Wert
+             bleibt gespeichert, und was morgen daraus liest, weiss niemand. */
+          const bildSrc = Saeubern.adresse(n.getAttribute('src'));
+          if (bildSrc)
+            Store.addBlock(seiteId, 'image', { src: bildSrc, caption: n.getAttribute('alt') || '' });
+          else
+            Store.addBlock(seiteId, 'text',
+              { text: '⚠ Bild ausgelassen — die Adresse war kein Verweis: ' +
+                      String(n.getAttribute('src')).slice(0, 120) });
         } else if (tag === 'table') {
           const rows = [...n.querySelectorAll('tr')].map(tr =>
             [...tr.querySelectorAll('th,td')].map(td => (td.textContent || '').trim()));

@@ -2861,6 +2861,14 @@ td .proz i{ flex:0 0 auto; }
 .datei-zeile button{font-size:12px; border:1px solid var(--line); border-radius:5px;
                     padding:3px 9px; color:var(--text-dim)}
 .datei-zeile button:hover{background:var(--bg-hover)}
+
+/* Eine Adresse, die Redion nicht öffnet: der Name bleibt stehen, damit man
+   sieht, was dort liegt — aber ohne Verweis und sichtbar anders. Ein Anhang,
+   der einfach verschwände, wäre schlimmer als einer, der sich erklärt. */
+.datei-gesperrt{flex:1; color:var(--text-dim); cursor:help}
+.einbett-gesperrt{padding:12px 14px; border:1px dashed var(--line); border-radius:6px;
+                  color:var(--text-dim); font-size:13px; line-height:1.5;
+                  overflow-wrap:anywhere}
 .pdf-rahmen{margin-top:6px; border:1px solid var(--line); border-radius:6px; overflow:hidden}
 .pdf-rahmen iframe{width:100%; height:100%; border:0; display:block}
 .pdf-fuss{display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-faint); padding:4px 2px}
@@ -5025,13 +5033,75 @@ const Saeubern = (() => {
    */
   const adresse = (wert) => adresseOk(wert) ? String(wert).trim() : '';
 
+  /* --------------------------------------------------------------------------
+   * ZWEI ADRESSEN, DIE `adresse` NICHT ABDECKT
+   * --------------------------------------------------------------------------
+   * `adresse` lässt `data:` nur für Bilder durch. Für einen Anhang ist das zu
+   * streng: die App hat keinen Server, auf den sie eine Datei legen könnte,
+   * also liegt jeder Anhang als `data:application/pdf`, `data:application/zip`
+   * oder `data:text/csv` im Speicher. Wer dort `adresse` nimmt, wirft jeden
+   * Anhang weg — und „nichts wegwerfen, was nach Inhalt aussieht" ist keine
+   * Nebenregel dieses Projekts.
+   *
+   * Für einen Rahmen ist `adresse` dagegen zu grosszügig. Ein `<iframe>` mit
+   * `src="javascript:…"` läuft **im Ursprung der Seite**, mit vollem Zugriff
+   * auf alle Notizen und den KI-Schlüssel. Nachgestellt und bestätigt: aus dem
+   * Rahmen heraus war `parent` erreichbar.
+   *
+   * Und genau dorthin führte ein Weg, den man nicht sieht: ob ein Anhang als
+   * PDF vorgeführt wird, entscheidet in `editor.js` allein die **Endung**.
+   * `javascript:…//.pdf` sieht für diese Prüfung wie ein PDF aus — die zwei
+   * Schrägstriche sind in JavaScript der Beginn eines Kommentars, der Rest der
+   * Adresse also blosse Zierde. Ein Anhang, den niemand anklickt, führte damit
+   * Code aus, sobald die Vorschau aufging.
+   * ----------------------------------------------------------------------- */
+
+  /**
+   * Für ein Ziel, das ein Mensch anklickt: Link, Lesezeichen, Anhang.
+   *
+   * ES WIRD DAS SCHEMA GELESEN, NICHT NACH WÖRTERN GESUCHT. Der erste Versuch
+   * hier prüfte, ob irgendwo vorne „javascript" steht — und sperrte damit eine
+   * Datei namens `javascriptbuch.pdf`, ein `filezilla-handbuch.pdf` und ein
+   * `about-uns.html`. Eine Sicherheitsprüfung, die Anhänge verschluckt, ist
+   * kein Gewinn: sie tauscht einen seltenen Angriff gegen einen täglichen
+   * Datenverlust. Gefährlich ist nur, was **vor dem Doppelpunkt** steht.
+   */
+  const anhangAdresse = (wert) => {
+    const roh = String(wert || '').trim();
+    if (!roh) return '';
+    /* Leerraum und Steuerzeichen weg, bevor das Schema gelesen wird:
+       `java\nscript:` ist für den Browser dasselbe wie `javascript:`. */
+    const ohneLeer = roh.replace(/[\s\x00-\x1f]/g, '');
+    const m = ohneLeer.match(/^([a-z][a-z0-9+.-]*):/i);
+    if (!m) return roh;                    /* kein Schema → relativ, harmlos */
+    const schema = m[1].toLowerCase();
+    if (['javascript', 'vbscript', 'file', 'about'].includes(schema)) return '';
+    /* `data:` ja — jeder Anhang liegt so im Speicher. Nur nicht als HTML und
+       nicht als SVG: beides kann Code tragen. */
+    if (schema === 'data' && /^data:(text\/html|image\/svg)/i.test(ohneLeer)) return '';
+    return roh;
+  };
+
+  /** Für einen Rahmen. Streng, weil er im Ursprung der Seite läuft. */
+  const rahmenAdresse = (wert) => {
+    const w = String(wert || '').replace(/[\x00-\x1f\s]/g, '');
+    if (!w) return '';
+    /* Positivliste, wie oben bei den Tags: erlaubt ist, was aufgezählt ist.
+       Ein PDF darf hinein, weil die Vorschau genau dafür da ist. */
+    if (/^https?:\/\//i.test(w)) return String(wert).trim();
+    if (/^blob:/i.test(w)) return String(wert).trim();
+    if (/^data:application\/pdf[;,]/i.test(w)) return String(wert).trim();
+    return '';
+  };
+
   /** Ein Dateiname ohne Wege darin — verhindert ../../ beim Export. */
   const dateiname = (s) => String(s ?? 'ohne-namen')
     .replace(/[\/\\:*?"<>|\x00-\x1f]/g, '-')
     .replace(/^\.+/, '')
     .slice(0, 120) || 'ohne-namen';
 
-  return { html, nurText, alsText, alsAttribut, adresse, adresseOk, dateiname,
+  return { html, nurText, alsText, alsAttribut, adresse, adresseOk,
+           anhangAdresse, rahmenAdresse, dateiname,
            TAGS, RAUS_MIT_INHALT, ATTRIBUTE };
 })();
 
@@ -11333,13 +11403,24 @@ const Blocks = (() => {
       a.src = block.src; a.controls = true; a.style.width = '100%';
       w.appendChild(a);
     } else if (block.type === 'file') {
+      /* `istPdf` schaut nur auf die Endung — die entscheidet, ob eine Vorschau
+         angeboten wird. Das genügt für die Frage „welches Symbol zeige ich",
+         aber nicht als Erlaubnis, die Adresse in einen Rahmen zu setzen:
+         `javascript:…//.pdf` besteht diese Prüfung. Deshalb geht jede Adresse
+         hier durch Saeubern, und zwar durch die zum Ort passende. */
       const istPdf = /\.pdf(\?|$)/i.test(block.src) || /^data:application\/pdf/i.test(block.src);
+      const zielAdresse = Saeubern.anhangAdresse(block.src);
+      const rahmenSrc = Saeubern.rahmenAdresse(block.src);
       const zeile = document.createElement('div');
       zeile.className = 'datei-zeile';
       zeile.innerHTML =
         `<span>${istPdf ? '📕' : '📎'}</span>` +
-        `<a href="${esc(block.src)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>` +
-        (istPdf ? `<button data-a="pdf">${block.pdfAuf ? 'Vorschau zu' : 'Vorschau'}</button>` : '');
+        (zielAdresse
+          ? `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>`
+          /* Kein stiller Fehlschlag: der Name bleibt stehen und sagt, warum
+             er nicht anklickbar ist. Wegwerfen tun wir hier nichts. */
+          : `<span class="datei-gesperrt" title="Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.">${esc(block.text || block.caption || 'Datei')} ⚠</span>`) +
+        (istPdf && rahmenSrc ? `<button data-a="pdf">${block.pdfAuf ? 'Vorschau zu' : 'Vorschau'}</button>` : '');
       zeile.addEventListener('click', e => {
         if (!e.target.closest('[data-a="pdf"]')) return;
         Store.updateBlock(block.id, { pdfAuf: !block.pdfAuf });
@@ -11347,17 +11428,17 @@ const Blocks = (() => {
       });
       w.appendChild(zeile);
       /* PDF gleich hier ansehen — Notion zeigt nur einen Anhang zum Laden. */
-      if (istPdf && block.pdfAuf) {
+      if (istPdf && rahmenSrc && block.pdfAuf) {
         const rahmen = document.createElement('div');
         rahmen.className = 'pdf-rahmen';
         const f = document.createElement('iframe');
-        f.src = block.src;
+        f.src = rahmenSrc;
         f.title = block.text || 'PDF';
         rahmen.appendChild(f);
         const fuss = document.createElement('div');
         fuss.className = 'pdf-fuss';
         fuss.innerHTML = '<button data-h="420">klein</button><button data-h="700">gross</button>' +
-                         `<a href="${esc(block.src)}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
+                         `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
         fuss.addEventListener('click', e => {
           const b2 = e.target.closest('button[data-h]');
           if (!b2) return;
@@ -11369,28 +11450,47 @@ const Blocks = (() => {
         w.appendChild(fuss);
       }
     } else if (block.type === 'bookmark') {
-      const a = document.createElement('a');
-      a.href = block.src; a.target = '_blank'; a.rel = 'noopener';
+      /* Ein Lesezeichen wird angeklickt — also die Anhang-Regel. Die Adresse
+         BLEIBT unter dem Titel lesbar, auch wenn sie gesperrt ist: sonst wäre
+         der Block leer und niemand wüsste, was dort einmal stand. */
+      const ziel = Saeubern.anhangAdresse(block.src);
+      const a = document.createElement(ziel ? 'a' : 'div');
+      if (ziel) { a.href = ziel; a.target = '_blank'; a.rel = 'noopener'; }
+      else a.title = 'Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.';
       a.style.cssText = 'display:block; padding:14px 16px; border:1px solid var(--line); ' +
                         'border-radius:6px; color:var(--text); text-decoration:none';
       let host = block.src;
       try { host = new URL(block.src).hostname.replace('www.',''); } catch {}
-      a.innerHTML = `<div style="font-weight:500; margin-bottom:3px">${esc(block.text || host)}</div>` +
+      a.innerHTML = `<div style="font-weight:500; margin-bottom:3px">${esc(block.text || host)}${ziel ? '' : ' ⚠'}</div>` +
                     `<div style="font-size:12.5px; color:var(--text-dim)">${esc(block.src)}</div>`;
       w.appendChild(a);
     } else if (block.type === 'embed') {
-      const f = document.createElement('iframe');
-      f.src = block.src;
-      f.setAttribute('allowfullscreen', '');
-      f.setAttribute('referrerpolicy', 'no-referrer');
-      w.appendChild(f);
+      /* Der Rahmen läuft im Ursprung dieser Seite. Hier gilt die strenge
+         Regel: http(s), blob: oder ein PDF — sonst gar kein Rahmen. */
+      const rahmenSrc = Saeubern.rahmenAdresse(block.src);
+      if (rahmenSrc) {
+        const f = document.createElement('iframe');
+        f.src = rahmenSrc;
+        f.setAttribute('allowfullscreen', '');
+        f.setAttribute('referrerpolicy', 'no-referrer');
+        w.appendChild(f);
+      } else {
+        const hinweis = document.createElement('div');
+        hinweis.className = 'einbett-gesperrt';
+        hinweis.textContent = 'Diese Einbettung wird nicht geöffnet: ' +
+          (block.src ? String(block.src).slice(0, 120) : '(ohne Adresse)') +
+          ' — ein Rahmen läuft im Ursprung dieser Seite, deshalb kommen dort nur ' +
+          'Web-Adressen hinein.';
+        w.appendChild(hinweis);
+      }
       /* Manche Seiten verbieten den Rahmen. Dann hilft der Weg zum Original. */
-      const q = block.quelle || block.src;
+      const q = Saeubern.anhangAdresse(block.quelle || block.src);
       const zeile = document.createElement('div');
       zeile.style.cssText = 'font-size:12px; color:var(--text-dim); padding:3px 2px';
       zeile.innerHTML = (block.dienst ? esc(dienst(block.dienst)?.name || '') + ' · ' : '') +
-        `<a href="${esc(q)}" target="_blank" rel="noopener" style="color:var(--text-dim)">` +
-        'Original öffnen ↗</a>';
+        (q ? `<a href="${esc(q)}" target="_blank" rel="noopener" style="color:var(--text-dim)">` +
+             'Original öffnen ↗</a>'
+           : '<span>kein Verweis zum Original</span>');
       w.appendChild(zeile);
     }
 
@@ -23983,7 +24083,18 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         } else if (tag === 'hr') {
           Store.addBlock(seiteId, 'divider');
         } else if (tag === 'img' && n.getAttribute('src')) {
-          Store.addBlock(seiteId, 'image', { src: n.getAttribute('src'), caption: n.getAttribute('alt') || '' });
+          /* Die einzige Stelle in `ausHtml`, an der etwas anderes als Text aus
+             dem fremden Dokument übernommen wird. `Saeubern.adresse` lässt
+             http(s) und `data:image/…` durch und wirft `javascript:` weg. Ein
+             `<img>` führt eine solche Adresse zwar nicht aus — aber der Wert
+             bleibt gespeichert, und was morgen daraus liest, weiss niemand. */
+          const bildSrc = Saeubern.adresse(n.getAttribute('src'));
+          if (bildSrc)
+            Store.addBlock(seiteId, 'image', { src: bildSrc, caption: n.getAttribute('alt') || '' });
+          else
+            Store.addBlock(seiteId, 'text',
+              { text: '⚠ Bild ausgelassen — die Adresse war kein Verweis: ' +
+                      String(n.getAttribute('src')).slice(0, 120) });
         } else if (tag === 'table') {
           const rows = [...n.querySelectorAll('tr')].map(tr =>
             [...tr.querySelectorAll('th,td')].map(td => (td.textContent || '').trim()));
@@ -28318,9 +28429,16 @@ const Mail = (() => {
       if (klar) return klar;
     }
     if (teil.mimeType === 'text/html' && teil.body?.data) {
-      const d = document.createElement('div');
-      d.innerHTML = entpacke(teil.body.data);
-      return (d.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+      /* HIER STAND `d.innerHTML = …` MIT EINEM LOSGELÖSTEN div, und das war
+         der Fehler: „losgelöst" schützt nicht. Ein `<img src=x onerror=…>`
+         aus einer fremden Mail feuert beim Zuweisen, auch wenn das Element
+         nie in der Seite landet — nachgestellt und bestätigt. Der Text wurde
+         danach zwar nur gelesen, aber da war der Code längst gelaufen.
+         `Saeubern.nurText` benutzt ein <template>, und dessen Inhalt ist
+         träge: dort feuert nichts. Nebenbei fällt der Inhalt von <style>
+         und <script> weg, der vorher als Text in der Notiz landete. */
+      return Saeubern.nurText(entpacke(teil.body.data))
+        .replace(/\n{3,}/g, '\n\n').trim();
     }
     return '';
   };
@@ -28425,11 +28543,11 @@ const Mail = (() => {
       inhalt = koerper.replace(/=\n/g, '')
         .replace(/=([0-9A-F]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
     }
-    if (/text\/html/i.test(kopfe['content-type'] || '')) {
-      const d = document.createElement('div');
-      d.innerHTML = inhalt;
-      inhalt = (d.textContent || '').trim();
-    }
+    /* Dieselbe Stelle noch einmal, für den Weg über die Brücke statt über
+       Gmail. Sie wäre beim ersten Blick fast durchgerutscht: derselbe Fehler,
+       zwei Bildschirmseiten weiter unten. */
+    if (/text\/html/i.test(kopfe['content-type'] || ''))
+      inhalt = Saeubern.nurText(inhalt);
 
     const d = kopfe.date ? new Date(kopfe.date) : null;
     return {

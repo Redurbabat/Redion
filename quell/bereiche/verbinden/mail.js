@@ -100,9 +100,16 @@ const Mail = (() => {
       if (klar) return klar;
     }
     if (teil.mimeType === 'text/html' && teil.body?.data) {
-      const d = document.createElement('div');
-      d.innerHTML = entpacke(teil.body.data);
-      return (d.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+      /* HIER STAND `d.innerHTML = …` MIT EINEM LOSGELÖSTEN div, und das war
+         der Fehler: „losgelöst" schützt nicht. Ein `<img src=x onerror=…>`
+         aus einer fremden Mail feuert beim Zuweisen, auch wenn das Element
+         nie in der Seite landet — nachgestellt und bestätigt. Der Text wurde
+         danach zwar nur gelesen, aber da war der Code längst gelaufen.
+         `Saeubern.nurText` benutzt ein <template>, und dessen Inhalt ist
+         träge: dort feuert nichts. Nebenbei fällt der Inhalt von <style>
+         und <script> weg, der vorher als Text in der Notiz landete. */
+      return Saeubern.nurText(entpacke(teil.body.data))
+        .replace(/\n{3,}/g, '\n\n').trim();
     }
     return '';
   };
@@ -207,11 +214,11 @@ const Mail = (() => {
       inhalt = koerper.replace(/=\n/g, '')
         .replace(/=([0-9A-F]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
     }
-    if (/text\/html/i.test(kopfe['content-type'] || '')) {
-      const d = document.createElement('div');
-      d.innerHTML = inhalt;
-      inhalt = (d.textContent || '').trim();
-    }
+    /* Dieselbe Stelle noch einmal, für den Weg über die Brücke statt über
+       Gmail. Sie wäre beim ersten Blick fast durchgerutscht: derselbe Fehler,
+       zwei Bildschirmseiten weiter unten. */
+    if (/text\/html/i.test(kopfe['content-type'] || ''))
+      inhalt = Saeubern.nurText(inhalt);
 
     const d = kopfe.date ? new Date(kopfe.date) : null;
     return {

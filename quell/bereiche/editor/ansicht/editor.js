@@ -760,13 +760,24 @@ const Blocks = (() => {
       a.src = block.src; a.controls = true; a.style.width = '100%';
       w.appendChild(a);
     } else if (block.type === 'file') {
+      /* `istPdf` schaut nur auf die Endung — die entscheidet, ob eine Vorschau
+         angeboten wird. Das genügt für die Frage „welches Symbol zeige ich",
+         aber nicht als Erlaubnis, die Adresse in einen Rahmen zu setzen:
+         `javascript:…//.pdf` besteht diese Prüfung. Deshalb geht jede Adresse
+         hier durch Saeubern, und zwar durch die zum Ort passende. */
       const istPdf = /\.pdf(\?|$)/i.test(block.src) || /^data:application\/pdf/i.test(block.src);
+      const zielAdresse = Saeubern.anhangAdresse(block.src);
+      const rahmenSrc = Saeubern.rahmenAdresse(block.src);
       const zeile = document.createElement('div');
       zeile.className = 'datei-zeile';
       zeile.innerHTML =
         `<span>${istPdf ? '📕' : '📎'}</span>` +
-        `<a href="${esc(block.src)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>` +
-        (istPdf ? `<button data-a="pdf">${block.pdfAuf ? 'Vorschau zu' : 'Vorschau'}</button>` : '');
+        (zielAdresse
+          ? `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>`
+          /* Kein stiller Fehlschlag: der Name bleibt stehen und sagt, warum
+             er nicht anklickbar ist. Wegwerfen tun wir hier nichts. */
+          : `<span class="datei-gesperrt" title="Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.">${esc(block.text || block.caption || 'Datei')} ⚠</span>`) +
+        (istPdf && rahmenSrc ? `<button data-a="pdf">${block.pdfAuf ? 'Vorschau zu' : 'Vorschau'}</button>` : '');
       zeile.addEventListener('click', e => {
         if (!e.target.closest('[data-a="pdf"]')) return;
         Store.updateBlock(block.id, { pdfAuf: !block.pdfAuf });
@@ -774,17 +785,17 @@ const Blocks = (() => {
       });
       w.appendChild(zeile);
       /* PDF gleich hier ansehen — Notion zeigt nur einen Anhang zum Laden. */
-      if (istPdf && block.pdfAuf) {
+      if (istPdf && rahmenSrc && block.pdfAuf) {
         const rahmen = document.createElement('div');
         rahmen.className = 'pdf-rahmen';
         const f = document.createElement('iframe');
-        f.src = block.src;
+        f.src = rahmenSrc;
         f.title = block.text || 'PDF';
         rahmen.appendChild(f);
         const fuss = document.createElement('div');
         fuss.className = 'pdf-fuss';
         fuss.innerHTML = '<button data-h="420">klein</button><button data-h="700">gross</button>' +
-                         `<a href="${esc(block.src)}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
+                         `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
         fuss.addEventListener('click', e => {
           const b2 = e.target.closest('button[data-h]');
           if (!b2) return;
@@ -796,28 +807,47 @@ const Blocks = (() => {
         w.appendChild(fuss);
       }
     } else if (block.type === 'bookmark') {
-      const a = document.createElement('a');
-      a.href = block.src; a.target = '_blank'; a.rel = 'noopener';
+      /* Ein Lesezeichen wird angeklickt — also die Anhang-Regel. Die Adresse
+         BLEIBT unter dem Titel lesbar, auch wenn sie gesperrt ist: sonst wäre
+         der Block leer und niemand wüsste, was dort einmal stand. */
+      const ziel = Saeubern.anhangAdresse(block.src);
+      const a = document.createElement(ziel ? 'a' : 'div');
+      if (ziel) { a.href = ziel; a.target = '_blank'; a.rel = 'noopener'; }
+      else a.title = 'Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.';
       a.style.cssText = 'display:block; padding:14px 16px; border:1px solid var(--line); ' +
                         'border-radius:6px; color:var(--text); text-decoration:none';
       let host = block.src;
       try { host = new URL(block.src).hostname.replace('www.',''); } catch {}
-      a.innerHTML = `<div style="font-weight:500; margin-bottom:3px">${esc(block.text || host)}</div>` +
+      a.innerHTML = `<div style="font-weight:500; margin-bottom:3px">${esc(block.text || host)}${ziel ? '' : ' ⚠'}</div>` +
                     `<div style="font-size:12.5px; color:var(--text-dim)">${esc(block.src)}</div>`;
       w.appendChild(a);
     } else if (block.type === 'embed') {
-      const f = document.createElement('iframe');
-      f.src = block.src;
-      f.setAttribute('allowfullscreen', '');
-      f.setAttribute('referrerpolicy', 'no-referrer');
-      w.appendChild(f);
+      /* Der Rahmen läuft im Ursprung dieser Seite. Hier gilt die strenge
+         Regel: http(s), blob: oder ein PDF — sonst gar kein Rahmen. */
+      const rahmenSrc = Saeubern.rahmenAdresse(block.src);
+      if (rahmenSrc) {
+        const f = document.createElement('iframe');
+        f.src = rahmenSrc;
+        f.setAttribute('allowfullscreen', '');
+        f.setAttribute('referrerpolicy', 'no-referrer');
+        w.appendChild(f);
+      } else {
+        const hinweis = document.createElement('div');
+        hinweis.className = 'einbett-gesperrt';
+        hinweis.textContent = 'Diese Einbettung wird nicht geöffnet: ' +
+          (block.src ? String(block.src).slice(0, 120) : '(ohne Adresse)') +
+          ' — ein Rahmen läuft im Ursprung dieser Seite, deshalb kommen dort nur ' +
+          'Web-Adressen hinein.';
+        w.appendChild(hinweis);
+      }
       /* Manche Seiten verbieten den Rahmen. Dann hilft der Weg zum Original. */
-      const q = block.quelle || block.src;
+      const q = Saeubern.anhangAdresse(block.quelle || block.src);
       const zeile = document.createElement('div');
       zeile.style.cssText = 'font-size:12px; color:var(--text-dim); padding:3px 2px';
       zeile.innerHTML = (block.dienst ? esc(dienst(block.dienst)?.name || '') + ' · ' : '') +
-        `<a href="${esc(q)}" target="_blank" rel="noopener" style="color:var(--text-dim)">` +
-        'Original öffnen ↗</a>';
+        (q ? `<a href="${esc(q)}" target="_blank" rel="noopener" style="color:var(--text-dim)">` +
+             'Original öffnen ↗</a>'
+           : '<span>kein Verweis zum Original</span>');
       w.appendChild(zeile);
     }
 

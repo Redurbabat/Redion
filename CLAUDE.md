@@ -106,7 +106,7 @@ Liste, damit die App offline vollständig ist.
 
 Die Prüfläufe liegen **im Repository**, unter `pruefungen/` und `server/`.
 Sie laufen über echtes Chromium gegen die echte App — keine Attrappen, keine
-Mocks. Stand: 61 Läufe, 2553 Prüfungen. Sie laufen ausserdem bei jedem
+Mocks. Stand: 62 Läufe, 2597 Prüfungen. Sie laufen ausserdem bei jedem
 Push von selbst über `.github/workflows/pruefen.yml`.
 
 ```
@@ -136,7 +136,17 @@ Bei einer Änderung an Rechten, an `sw.js` oder an den Zeichnern zuerst die.
 Bei einem neuen Lauf gehört dazu die Gegenprobe: den Fehler von Hand wieder
 einbauen und schauen, ob er rot wird. Bei `test90` blieben so zwei Abschnitte
 auffällig grün — sie zeichneten die Stelle gar nicht, die sie zu prüfen
-vorgaben. Ohne die Gegenprobe wären sie als Beleg durchgegangen.
+vorgaben. Bei `test91` waren es zwei weitere: die Nutzlast schrieb auf
+`window`, im Rahmen ausgeführt ist das aber der Rahmen selbst. Der Code lief,
+schrieb ins falsche Fenster, und „nichts ist gelaufen" blieb grün. Ohne die
+Gegenprobe wären alle vier als Beleg durchgegangen.
+
+**Zu einer Sperre gehört die Gegenprobe in die andere Richtung.** Was soll
+weiterhin durchkommen? Die erste Fassung von `Saeubern.anhangAdresse` suchte
+nach dem Wort „javascript" statt nach dem Schema und sperrte damit eine Datei
+namens `javascriptbuch.pdf`. Eine Prüfung, die Anhänge verschluckt, tauscht
+einen seltenen Angriff gegen einen täglichen Datenverlust — und das ist kein
+Gewinn, sondern ein anderer Fehler.
 
 **Die Regel:** nach jeder Änderung laufen mindestens die betroffenen Läufe,
 vor jedem Commit ein breiter Querschnitt. Ein grüner Lauf ist die einzige
