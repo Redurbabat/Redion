@@ -263,8 +263,48 @@ Der Umzug war richtig gebaut. Bis hierher war das aber eine Annahme.
 - [ ] **E6 · Anhänge in die Sicherung** — braucht eine Antwort auf die Frage,
   was bei einem 500-MB-Video geschieht. Base64 in derselben JSON-Datei geht
   dafür nicht.
-- [ ] **E3 · Papierkorb: was ist wirklich wiederherstellbar?** Und was wird
-  beim endgültigen Löschen mitgenommen — Versionen, Dateien, Kommentare?
+- [x] **E3 · Papierkorb** — erledigt, und es waren **vier** Befunde. Der
+  Papierkorb hat zwei Versprechen zu halten; beide stimmten nicht.
+
+  1. **„Block in den Papierkorb" — und dann nirgends.**
+     `Strg`+`Umschalt`+`Rücktaste` legte einen Block weg und meldete genau
+     das. `trashed()` filterte `type === 'page'`; der Block stand auf
+     `alive: false`, war aus der Elternliste heraus und an **keiner**
+     Oberfläche mehr erreichbar. Rückgängig holte ihn zurück, solange das
+     Fenster offen blieb — nach einem Neuladen nicht mehr. Verloren war er
+     nie: er lag die ganze Zeit auf der Platte. Das ist schlimmer als weg,
+     nicht besser — es sah aus wie Absicht. Jetzt zeigt der Papierkorb eine
+     zweite Gruppe **Blöcke**, mit Anfang, Herkunftsseite und Datum.
+  2. **„Endgültig gelöscht" liess den Verlauf liegen.** `purgeBlock` nahm
+     Kinder, Datenbank, Zeilen und Ansichten mit — nicht die **Fassungen**.
+     Wer eine Seite löschte, weil sie niemand mehr sehen sollte, liess bis
+     zu dreissig Fassungen davon zurück, mit vollem Text.
+  3. **Und die Anhänge auch.** `dateien` und `stuecke` blieben stehen. Ein
+     Video von 300 MB blieb nach dem endgültigen Löschen vollständig da,
+     ohne einen Weg, es je wieder zu sehen oder loszuwerden.
+  4. **`papierkorbAufraeumen` gab es zweimal — eine davon tot.** Die Fassung
+     in `pflege.js` las `geloeschtAm` und `papierkorbFrist`; **beide Namen
+     schreibt im ganzen Quelltext niemand** (es heisst `trashedAt` und
+     `papierkorbTage`). Sie lief beim Start und danach täglich und fand jedes
+     Mal nichts; ihr Knopf „Papierkorb jetzt leeren" antwortete seit jeher
+     „Nichts ist alt genug". Aufgefallen ist es nie, weil daneben eine
+     zweite Fassung in `werkzeuge.js` lief, die es richtig machte. Beide
+     räumten ausserdem nur Seiten — weggelegten Blöcken lief nie eine Frist
+     ab. Jetzt steht die Frist **einmal**, im Kern.
+
+  **Was die Reparatur nicht tun durfte:** Sobald weggelegte Blöcke sichtbar
+  werden, laufen ihnen auch Fristen ab — ein Bestand mit zwei Jahren stiller
+  Blöcke wäre acht Sekunden nach dem Start um sie ärmer gewesen, gelöscht
+  bevor sie je jemand zu sehen bekam. Deshalb zählt für Blöcke die Frist ab
+  dem Tag, an dem der Papierkorb anfing sie zu zeigen. Siehe **E7** in
+  `ENTSCHEIDUNGEN.md`. `test97.mjs`, 34 Prüfungen.
+
+  **Kommentare** hängen nicht am Block, sondern in eigenen Sätzen mit
+  eigener Kennung; sie gehen den Weg über den Abgleich und sind hier nicht
+  betroffen. Der **Abgleichsstand** (`basis`) bleibt bewusst stehen — er ist
+  kein Inhalt, sondern das Gedächtnis darüber, dass beide Geräte den Satz
+  einmal gleich sahen. Wer ihn mitnimmt, holt sich die gelöschte Seite beim
+  nächsten Abgleich vom anderen Gerät zurück.
 - [ ] **E4 · `VERSIONEN_MAX: 200` wird nirgends benutzt.** Nachgesehen:
   `versionSpeichern` schneidet hart bei `slice(30)`. Die Konstante verspricht
   200, der Code hält 30. Immerhin in der richtigen Richtung — `versionen()`

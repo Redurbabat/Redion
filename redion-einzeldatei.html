@@ -7672,26 +7672,100 @@ const Store = (() => {
     save('blocks', b);
   };
 
-  /** Löscht endgültig — samt aller Kinder. Danach ist nichts mehr zu retten. */
+  /**
+   * Löscht endgültig — samt aller Kinder. Danach ist nichts mehr zu retten.
+   *
+   * DAS WAR LANGE NICHT WAHR. Der Block ging, die Zeilen gingen, die
+   * Ansichten gingen — der **Versionsverlauf** und die **Anhänge** blieben
+   * liegen. Wer eine Seite endgültig löschte, weil niemand sie mehr sehen
+   * sollte, liess bis zu dreissig Fassungen davon auf der Platte zurück, mit
+   * vollem Text; ein angehängtes Video blieb vollständig da, ohne einen Weg,
+   * es je wieder zu sehen oder loszuwerden.
+   *
+   * Beides hängt nicht am Cache, sondern in eigenen Fächern der Ablage, und
+   * beides wird nur über einen Index gefunden. Deshalb ist das Aufräumen
+   * unvermeidlich asynchron — `purgeBlock` selbst muss synchron bleiben, es
+   * hat über hundert Aufrufstellen und wird mitten im Zeichnen gerufen.
+   * Der Weg dazwischen: der Aufruf sammelt beim Absteigen alle Kennungen ein
+   * und stösst danach `purgeAnhaenge` an. Geht dabei etwas schief, sagt es
+   * das über den Melder — still schlucken wäre das, was den Fehler überhaupt
+   * erst so lange verborgen hat.
+   */
   const purgeBlock = (id) => {
+    const gesammelt = [];
+    purgeTief(id, gesammelt);
+    if (!gesammelt.length) return;
+    notify('purge');
+    Promise.all(gesammelt.map(x => purgeAnhaenge(x)))
+      .catch(err => { if (typeof Melder !== 'undefined')
+        Melder.fehler('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
+  };
+
+  /** Der eigentliche Abstieg. Sammelt, was danach noch aufzuräumen ist. */
+  const purgeTief = (id, gesammelt) => {
     const b = cache.blocks[id];
     if (!b) return;
-    (b.content || []).forEach(purgeBlock);
+    gesammelt.push(id);
+    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt));
     /* Eine verknüpfte Ansicht zeigt fremde Daten — die bleiben bestehen. */
     if (b.collectionId && !b.verknuepft) {
       const c = cache.collections[b.collectionId];
       if (c) {
-        rowsOf(b.collectionId).forEach(r => { delete cache.blocks[r.id]; del('blocks', r.id); });
+        /* Auch eine Zeile kann Fassungen und Anhänge haben — sie ist eine
+           Seite. Sie hier zu vergessen wäre derselbe Fehler eine Ebene
+           tiefer, und die Ebene sieht niemand. */
+        rowsOf(b.collectionId).forEach(r => {
+          gesammelt.push(r.id); delete cache.blocks[r.id]; del('blocks', r.id);
+        });
         (c.viewIds || []).forEach(v => { delete cache.views[v]; del('views', v); });
         delete cache.collections[b.collectionId];
         del('collections', b.collectionId);
+        /* Die vorberechneten Werte dieser Datenbank sind ohne sie sinnlos. */
+        vorratWeg(b.collectionId).catch(() => {});
       }
     }
     const p = cache.blocks[b.parentId];
     if (p) { p.content = p.content.filter(x => x !== id); elternGeaendert(p); }
     delete cache.blocks[id];
     del('blocks', id);
-    notify('purge');
+  };
+
+  /**
+   * Was ausser dem Block selbst zu ihm gehört: seine Fassungen, seine
+   * Dateien und deren Stücke.
+   *
+   * Zweimal gerufen tut es beim zweiten Mal nichts — das ist Absicht. Der
+   * Papierkorb ruft es nach dem Löschen noch einmal nach, und ein Aufräumen,
+   * das beim zweiten Anlauf etwas kaputtmacht, wäre schlimmer als eines, das
+   * einmal zu wenig läuft.
+   *
+   * Der Abgleichsstand (`basis`) bleibt bewusst stehen. Er ist kein Inhalt,
+   * sondern das Gedächtnis darüber, dass beide Geräte diesen Satz einmal
+   * gleich sahen — erst dadurch kann ein Abgleich „hier gelöscht" von „hier
+   * nie gehabt" unterscheiden. Wer ihn mitnimmt, holt sich die Seite beim
+   * nächsten Abgleich vom anderen Gerät zurück.
+   */
+  const purgeAnhaenge = async (id, hinweis = {}) => {
+    for (const v of await versionen(id)) await del('versions', v.id);
+
+    const dateien = await new Promise((ok2) => {
+      if (!db || !db.objectStoreNames.contains('dateien')) return ok2([]);
+      try {
+        const r = tx(['dateien'], 'readonly').objectStore('dateien').index('block').getAll(id);
+        r.onsuccess = () => ok2(r.result || []);
+        r.onerror   = () => ok2([]);
+      } catch { ok2([]); }
+    });
+    /* Manche Blockarten merken sich die Datei am Block statt umgekehrt.
+       Beide Wege werden gegangen, doppelt gelöscht wird nichts. */
+    const kennungen = new Set(dateien.map(d => d.id));
+    const b = cache.blocks[id];
+    [hinweis.datei, b && b.dateiId, b && b.datei].forEach(x => { if (x) kennungen.add(x); });
+
+    for (const dateiId of kennungen) {
+      for (const st of await stueckeVon(dateiId)) await del('stuecke', st.id);
+      await del('dateien', dateiId);
+    }
   };
 
   /** Die lebenden Kindblöcke in der richtigen Reihenfolge. */
@@ -7720,6 +7794,86 @@ const Store = (() => {
   const trashed = () => Object.values(cache.blocks)
     .filter(b => !b.alive && b.type === 'page')
     .sort((a, b) => (b.trashedAt || '').localeCompare(a.trashedAt || ''));
+
+  /**
+   * Was ausser Seiten noch im Papierkorb liegt — Absätze, Bilder, Aufgaben.
+   *
+   * WARUM ES DAS BRAUCHT. `Strg`+`Umschalt`+`Rücktaste` legt einen Block weg
+   * und meldet „Block in den Papierkorb". Der Papierkorb zeigte nur Seiten;
+   * der Block stand auf `alive: false`, war aus der Elternliste heraus und
+   * damit an keiner Oberfläche mehr erreichbar. Rückgängig holte ihn zurück,
+   * solange das Fenster offen blieb — nach einem Neuladen nicht mehr.
+   *
+   * Verloren war er nie: er lag die ganze Zeit auf der Platte. Das ist
+   * schlimmer als weg, nicht besser — es sah aus wie Absicht.
+   *
+   * Eine Datenbankzeile ist eine Seite (`addRow` setzt `type: 'page'`) und
+   * steht deshalb schon bei `trashed()`. Hier darf sie nicht noch einmal
+   * auftauchen, sonst stünde sie zweimal im Papierkorb.
+   */
+  const papierkorbBloecke = () => Object.values(cache.blocks)
+    .filter(b => !b.alive && b.type !== 'page')
+    .sort((a, b) => (b.trashedAt || '').localeCompare(a.trashedAt || ''));
+
+  /**
+   * Räumt den Papierkorb nach der eingestellten Frist auf — wie Notions
+   * dreissig Tage.
+   *
+   * ES GAB DAS ZWEIMAL. Einmal in `bereiche/wissen/werkzeuge.js`, einmal in
+   * `bereiche/einstellungen/pflege.js`. Die zweite las `geloeschtAm` und
+   * `papierkorbFrist` — **zwei Namen, die im ganzen Quelltext niemand
+   * schreibt**. Sie lief beim Start und danach täglich und fand jedes Mal
+   * nichts; ihr Knopf „Papierkorb jetzt leeren" antwortete seit jeher
+   * „Nichts ist alt genug". Zwei Fassungen derselben Sache sind nicht
+   * doppelt sicher, sondern eine richtige und eine, die niemand prüft.
+   *
+   * Jetzt steht sie im Kern, weil sie in den Kern gehört: sie handelt von
+   * der Ablage, nicht von einem Bereich. Beide Bereiche reichen nur durch —
+   * und keiner ruft mehr in den anderen hinein.
+   *
+   * ─── DIE SCHONFRIST ───────────────────────────────────────────────────────
+   *
+   * Weggelegte Blöcke waren bis heute unsichtbar. Sie jetzt sichtbar zu
+   * machen heisst auch: ihnen laufen jetzt Fristen ab. Ein Bestand, in dem
+   * seit zwei Jahren still Blöcke liegen, wäre beim ersten Start nach dieser
+   * Änderung um sie ärmer — gelöscht, bevor irgendjemand sie je zu sehen
+   * bekam. Genau das darf nicht passieren.
+   *
+   * Deshalb merkt sich die App den Tag, an dem der Papierkorb anfing, alles
+   * zu zeigen. Für Blöcke zählt die Frist ab diesem Tag, nicht ab dem Tag
+   * des Weglegens. Für Seiten bleibt es beim Weglegen — die waren immer
+   * sichtbar, und ihre Frist jetzt zu verlängern wäre eine zweite Änderung.
+   */
+  const papierkorbAufraeumen = async () => {
+    const tage = Number(getMeta('papierkorbTage', 30));
+    if (!tage) return 0;                       /* 0 heisst: nie automatisch */
+    const grenze = Date.now() - tage * 86400000;
+
+    let sichtbarSeit = getMeta('papierkorbSichtbarSeit', '');
+    if (!sichtbarSeit) { sichtbarSeit = now(); setMeta('papierkorbSichtbarSeit', sichtbarSeit); }
+    const abDann = new Date(sichtbarSeit).getTime() || 0;
+
+    const wann = (b) => new Date(b.trashedAt).getTime();
+    const faellig = [
+      ...trashed().filter(s => s.trashedAt && wann(s) < grenze),
+      ...papierkorbBloecke().filter(b => b.trashedAt && Math.max(wann(b), abDann) < grenze)
+    ];
+    faellig.forEach(x => purgeBlock(x.id));
+    return faellig.length;
+  };
+
+  /** Was in den nächsten drei Tagen verschwindet — für den Hinweis im Papierkorb. */
+  const papierkorbBaldWeg = () => {
+    const tage = Number(getMeta('papierkorbTage', 30));
+    if (!tage) return [];
+    const grenze = Date.now() - (tage - 3) * 86400000;
+    const abDann = new Date(getMeta('papierkorbSichtbarSeit', '') || 0).getTime() || 0;
+    return [
+      ...trashed().filter(s => s.trashedAt && new Date(s.trashedAt).getTime() < grenze),
+      ...papierkorbBloecke().filter(b => b.trashedAt &&
+        Math.max(new Date(b.trashedAt).getTime(), abDann) < grenze)
+    ];
+  };
 
   const favorites = () => Object.values(cache.blocks)
     .filter(b => b.type === 'page' && b.alive && b.favorite);
@@ -8285,9 +8439,25 @@ const Store = (() => {
 
   const versionLoeschen = (id) => del('versions', id);
 
-  /** Nur für den Notfall: alles weg. */
+  /**
+   * Nur für den Notfall: alles weg.
+   *
+   * DAS WAR NICHT ALLES. Hier stand eine Liste von fünf Fächern —
+   * `blocks`, `collections`, `views`, `meta`, `versions`. Es gibt neun. Nicht
+   * geleert wurden `dateien`, `stuecke`, `basis` und `vorrat`, also
+   * ausgerechnet das, was am meisten Platz belegt: **die Anhänge**. Wer
+   * zweimal bestätigte, ALLE Seiten und Datenbanken zu löschen, bekam eine
+   * leere App und behielt jedes hochgeladene Bild und jedes Video auf der
+   * Platte — unsichtbar, unerreichbar, und nicht mehr loszuwerden.
+   *
+   * Dieselbe Sorte Fehler wie beim endgültigen Löschen eine Zeile weiter
+   * oben, und aus demselben Grund: eine feste Liste, die beim Anbau eines
+   * Fachs niemand nachgezogen hat. Deshalb steht hier jetzt keine Liste
+   * mehr, sondern die Frage an die Ablage selbst — ein neues Fach ist damit
+   * von sich aus dabei.
+   */
   const wipe = async () => {
-    if (db) await Promise.all(['blocks','collections','views','meta','versions'].map(s => new Promise(ok => {
+    if (db) await Promise.all([...db.objectStoreNames].map(s => new Promise(ok => {
       try {
         const r = tx([s], 'readwrite').objectStore(s).clear();
         r.onsuccess = ok; r.onerror = ok;
@@ -8363,6 +8533,7 @@ const Store = (() => {
   return {
     load, uid, now, cache,
     addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
+    purgeAnhaenge, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
     addPage, rootPages, trashed, favorites, pathOf,
     addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
     rohSetzen,
@@ -24139,19 +24310,26 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
   /* ========================================================================
    * START
    * ======================================================================*/
-  /** Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions 30 Tage). */
-  const papierkorbAufraeumen = () => {
-    const tage = Number(Store.getMeta('papierkorbTage', 30));
-    if (!tage) return;                         /* 0 heisst: nie automatisch */
-    const grenze = Date.now() - tage * 86400000;
-    let weg = 0;
-    Store.trashed().forEach(p => {
-      if (!p.trashedAt) return;
-      if (new Date(p.trashedAt).getTime() > grenze) return;
-      Store.purgeBlock(p.id);
-      weg++;
-    });
-    if (weg) UI.toast(weg + ' Seiten im Papierkorb waren älter als ' + tage + ' Tage und wurden gelöscht');
+  /**
+   * Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions
+   * 30 Tage). Die Frist selbst steht in `kern/ablage` — hier reicht nur
+   * noch der Name durch, weil er zur öffentlichen Fläche dieses Bereichs
+   * gehört und aussen gerufen wird.
+   *
+   * Vorher rechnete diese Fassung die Frist selbst, und in
+   * `bereiche/einstellungen/pflege.js` stand eine zweite, die auf zwei
+   * Feldnamen zeigte, die es nie gab. Die eine räumte, die andere fand nie
+   * etwas — und beide räumten nur Seiten, nie die weggelegten Blöcke.
+   *
+   * Aufgeräumt wird nur noch an einer Stelle. Gemeldet wird hier: eine
+   * Zahl, die niemand sieht, ist keine Aufräumung, sondern ein Verschwinden.
+   */
+  const papierkorbAufraeumen = async () => {
+    const weg = await Store.papierkorbAufraeumen();
+    if (weg) UI.toast(weg + (weg === 1 ? ' Ding war' : ' Dinge waren') +
+                      ' zu lange im Papierkorb und wurde' + (weg === 1 ? '' : 'n') +
+                      ' endgültig gelöscht');
+    return weg;
   };
 
   /* ========================================================================
@@ -24302,7 +24480,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     /* Erinnerungen alle halbe Minute prüfen */
     erinnerungenPruefen();
     setInterval(erinnerungenPruefen, 30000);
-    setTimeout(papierkorbAufraeumen, 3000);
+    /* Den Papierkorb stösst `Pflege.start()` an — einmal nach dem Start und
+       danach täglich. Hier stand dasselbe noch einmal, drei Sekunden früher.
+       Zwei Zeitgeber für dieselbe Arbeit sind kein doppelter Boden: sie
+       sorgen dafür, dass man beim Suchen den falschen findet. */
 
     document.addEventListener('keydown', e => {
       const strg = e.ctrlKey || e.metaKey;
@@ -25867,8 +26048,13 @@ const Einstellungen = (() => {
       zeile('Blöcke', '', `<span class="ez-grau">${Object.keys(Store.cache.blocks).length}</span>`) +
       zeile('Datenbanken', '', `<span class="ez-grau">${Object.keys(Store.cache.collections).length}</span>`) +
       zeile('Ansichten', '', `<span class="ez-grau">${Object.keys(Store.cache.views).length}</span>`) +
-      zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten</span> ` +
-            knopf('papierkorb', 'Öffnen')) +
+      /* „N Seiten" stimmte nur zur Hälfte: daneben lagen weggelegte Blöcke,
+         die niemand zählte und niemand zeigte. Wer hier eine Zahl liest,
+         soll wissen, wie viel wirklich im Papierkorb liegt. */
+      zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten` +
+            ((Store.papierkorbBloecke ? Store.papierkorbBloecke().length : 0)
+              ? `, ${Store.papierkorbBloecke().length} Blöcke` : '') +
+            '</span> ' + knopf('papierkorb', 'Öffnen')) +
       zeile('Papierkorb selbst leeren', 'Nach dieser Frist wird endgültig gelöscht — wie Notions 30 Tage',
             wahl('papierkorbTage', [['30', 'nach 30 Tagen'], ['7', 'nach 7 Tagen'],
                                     ['90', 'nach 90 Tagen'], ['0', 'nie']],
@@ -34435,27 +34621,33 @@ const Pflege = (() => {
 
   /* ========================================================================
    * 3. PAPIERKORB RÄUMT SELBST AUF
+   * ------------------------------------------------------------------------
+   * Hier stand einmal eine eigene Fassung davon. Sie las `geloeschtAm` und
+   * `papierkorbFrist` — zwei Namen, die im ganzen Quelltext niemand schreibt;
+   * das Feld heisst `trashedAt`, die Einstellung `papierkorbTage`. Sie lief
+   * beim Start und danach täglich und fand jedes Mal nichts. Ihr Knopf
+   * „Papierkorb jetzt leeren" antwortete seit jeher „Nichts ist alt genug".
+   *
+   * Aufgefallen ist es nie, weil daneben eine zweite Fassung in
+   * `bereiche/wissen/werkzeuge.js` lief, die es richtig machte. Zwei
+   * Fassungen derselben Sache sind nicht doppelt sicher, sondern eine
+   * richtige und eine, die niemand prüft.
+   *
+   * Jetzt steht die Frist in `kern/ablage` — sie handelt von der Ablage,
+   * nicht von einem Bereich. Was hier bleibt, ist die Meldung an den
+   * Menschen; die gehört an die Oberfläche und nicht in den Kern.
    * ======================================================================*/
-  const papierkorbAufraeumen = ({ still = true } = {}) => {
-    const frist = Store.getMeta('papierkorbFrist', 30);
-    if (!frist || frist === 'nie') return 0;
-    const grenze = new Date(Date.now() - Number(frist) * 86400000);
-    const alt = Object.values(Store.cache.blocks).filter(x =>
-      !x.alive && x.geloeschtAm && new Date(x.geloeschtAm) < grenze);
-    alt.forEach(x => Store.purgeBlock(x.id));
-    if (alt.length && !still)
-      UI.toast(alt.length + ' Dinge nach ' + frist + ' Tagen endgültig gelöscht');
-    return alt.length;
+  const papierkorbAufraeumen = async ({ still = true } = {}) => {
+    const anzahl = await Store.papierkorbAufraeumen();
+    if (anzahl && !still)
+      UI.toast(anzahl + (anzahl === 1 ? ' Ding war' : ' Dinge waren') +
+               ' zu lange im Papierkorb und wurde' + (anzahl === 1 ? '' : 'n') +
+               ' endgültig gelöscht');
+    return anzahl;
   };
 
   /** Was verschwindet demnächst? Für den Hinweis im Papierkorb. */
-  const baldWeg = () => {
-    const frist = Store.getMeta('papierkorbFrist', 30);
-    if (!frist || frist === 'nie') return [];
-    const grenze = new Date(Date.now() - (Number(frist) - 3) * 86400000);
-    return Object.values(Store.cache.blocks).filter(x =>
-      !x.alive && x.geloeschtAm && new Date(x.geloeschtAm) < grenze);
-  };
+  const baldWeg = () => Store.papierkorbBaldWeg();
 
   /* ========================================================================
    * 4. FEHLERLISTE
@@ -34568,7 +34760,7 @@ const Pflege = (() => {
       '</div>';
     document.body.appendChild(o);
 
-    o.addEventListener('click', e => {
+    o.addEventListener('click', async e => {
       if (e.target === o || e.target.closest('[data-a="zu"]')) { o.remove(); return; }
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (a === 'gesund')    { o.remove(); gesundheit(); }
@@ -34576,8 +34768,11 @@ const Pflege = (() => {
       if (a === 'sichern')   { o.remove(); Einstellungen.sicherungSchreiben
                                 ? Einstellungen.sicherungSchreiben() : Werkzeuge.einzelDatei(); }
       if (a === 'papier') {
-        const n = papierkorbAufraeumen({ still: false });
-        UI.toast(n ? n + ' endgültig gelöscht' : 'Nichts ist alt genug — nichts gelöscht');
+        /* Das `await` ist nicht Zierde: ohne es stand hier eine Zusage über
+           ein Versprechen statt über eine Zahl, und die Meldung hätte
+           „[object Promise] endgültig gelöscht" gelautet. */
+        const n = await papierkorbAufraeumen({ still: false });
+        if (!n) UI.toast('Nichts ist alt genug — nichts gelöscht');
       }
       if (a === 'reparieren') {
         const g = bestandPruefen();
@@ -34604,9 +34799,12 @@ const Pflege = (() => {
       try { fehlerMerken(e.reason?.message || String(e.reason), 'Versprechen'); } catch {}
     });
 
-    /* Papierkorb einmal nach dem Start und danach täglich */
-    setTimeout(() => papierkorbAufraeumen(), 8000);
-    setInterval(() => papierkorbAufraeumen(), 86400000);
+    /* Papierkorb einmal nach dem Start und danach täglich.
+       `still: false` ist kein Detail: was hier endgültig gelöscht wird, ist
+       endgültig gelöscht. Das darf der Mensch erfahren, auch wenn er es
+       eingestellt hat — sonst verschwindet etwas, und niemand hat es gesagt. */
+    setTimeout(() => papierkorbAufraeumen({ still: false }), 8000);
+    setInterval(() => papierkorbAufraeumen({ still: false }), 86400000);
   };
 
   return { start, gesundheit, befund, dubletten, dublettenDialog,
@@ -49623,6 +49821,25 @@ const App = (() => {
     o.className = 'overlay';
     document.body.appendChild(o);
 
+    /* Ein weggelegter Block ist keine Seite und hat keinen Titel — er hat
+       einen Anfang. Für die Liste ist der Anfang der Name, und dazu, woher
+       er kam: ohne die Herkunft steht dort dreimal „Text" und niemand weiss,
+       welches davon zurückzuholen ist. */
+    const blockName = (b) => {
+      const roh = String(b.text || '').replace(/\s+/g, ' ').trim();
+      /* `Register.bloecke` ist kein Feld, sondern ein Katalog mit `eines(id)`.
+         Der Unterschied kostet hier nichts und im Betrieb einen Absturz
+         mitten im Zeichnen — deshalb steht der richtige Name jetzt da und
+         nicht der geratene. */
+      const art = (typeof Register !== 'undefined' && Register.bloecke &&
+                   (Register.bloecke.eines(b.type) || {}).name) || b.type;
+      return roh ? (roh.length > 60 ? roh.slice(0, 60) + '…' : roh) : art;
+    };
+    const blockHer = (b) => {
+      const e = b.parentId ? Store.getBlock(b.parentId) : null;
+      return e ? (e.text || 'Ohne Titel') : 'unbekannte Seite';
+    };
+
     const zeichne = () => {
       const alle = Store.trashed();
       let liste = alle;
@@ -49630,6 +49847,17 @@ const App = (() => {
       if (filterVon) liste = liste.filter(p => (p.geaendertVon || p.erstelltVon || 'Ich') === filterVon);
       if (filterOrt) liste = liste.filter(p => (p.parentId || '') === filterOrt);
       if (filterBereich) liste = liste.filter(p => (p.bereich || '') === filterBereich);
+
+      /* Weggelegte Blöcke. Bis hierher zeigte sie niemand: `Strg`+`Umschalt`+
+         `Rücktaste` meldete „Block in den Papierkorb" und legte ihn an einen
+         Ort, den es nicht gab. Er lag auf der Platte und war an keiner
+         Oberfläche mehr zu erreichen — das ist schlimmer als gelöscht,
+         weil es aussieht wie Absicht. */
+      let bloecke = Store.papierkorbBloecke ? Store.papierkorbBloecke() : [];
+      if (suche) bloecke = bloecke.filter(b =>
+        (blockName(b) + ' ' + blockHer(b)).toLowerCase().includes(suche.toLowerCase()));
+      if (filterVon) bloecke = bloecke.filter(b => (b.geaendertVon || b.erstelltVon || 'Ich') === filterVon);
+      if (filterOrt) bloecke = bloecke.filter(b => (b.parentId || '') === filterOrt);
 
       const chip = (id, text, an) =>
         `<button class="pk-chip${an ? ' on' : ''}" data-f="${id}">${text}<span>⌄</span></button>`;
@@ -49659,7 +49887,8 @@ const App = (() => {
                 '<div class="grp">Papierkorb</div>'
               : '') +
             (liste.length
-              ? liste.map(p =>
+              ? (bloecke.length ? '<div class="grp">Seiten</div>' : '') +
+                liste.map(p =>
                   `<button data-id="${p.id}">` +
                   `<span>${p.icon || '📄'}</span>` +
                   `<span style="flex:1">${esc(p.text || 'Ohne Titel')}` +
@@ -49668,11 +49897,32 @@ const App = (() => {
                   '<span class="pk-tat" data-a="restore-wo" title="An anderer Stelle wiederherstellen">↳</span>' +
                   '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
                   '</button>').join('')
-              : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`) +
+              : (bloecke.length ? ''
+                 : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`)) +
+            (bloecke.length
+              ? '<div class="grp">Blöcke</div>' +
+                bloecke.map(b =>
+                  `<button data-id="${b.id}">` +
+                  '<span>🧩</span>' +
+                  `<span style="flex:1">${esc(blockName(b))}` +
+                  `<span class="snip">aus „${esc(blockHer(b))}" · gelöscht ` +
+                  `${esc(Werkzeuge.zeitKurz(b.trashedAt))}</span></span>` +
+                  '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
+                  '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
+                  '</button>').join('')
+              : '') +
           '</div>' +
-          '<div class="hint pk-hint">Nachdem eine Seite 30 Tage lang im Papierkorb war, wird sie ' +
-          'automatisch gelöscht. Endgültig gelöschte Seiten lassen sich nicht zurückholen.' +
-          (alle.length ? '<button class="pk-alle" data-a="alle">Papierkorb leeren</button>' : '') +
+          /* Die Frist steht in den Einstellungen und nicht fest bei 30 — hier
+             stand jahrelang „30 Tage", auch wenn jemand 7 eingestellt hatte.
+             Eine Zusage, die von der Einstellung abweicht, ist schlimmer als
+             gar keine: sie wird geglaubt. */
+          '<div class="hint pk-hint">' + (() => {
+            const t = Number(Store.getMeta('papierkorbTage', 30));
+            return t ? `Nach ${t} Tagen im Papierkorb wird endgültig gelöscht. `
+                     : 'Automatisch gelöscht wird nichts — so ist es eingestellt. ';
+          })() + 'Endgültig Gelöschtes lässt sich nicht zurückholen.' +
+          (alle.length + bloecke.length
+            ? '<button class="pk-alle" data-a="alle">Papierkorb leeren</button>' : '') +
           '</div>' +
         '</div>';
 
@@ -49721,9 +49971,14 @@ const App = (() => {
       }
 
       if (e.target.closest('[data-a="alle"]')) {
-        if (!confirm('Alles im Papierkorb endgültig löschen?')) return;
+        const bl = Store.papierkorbBloecke ? Store.papierkorbBloecke() : [];
+        const n = Store.trashed().length + bl.length;
+        if (!confirm(`${n} ${n === 1 ? 'Ding' : 'Dinge'} endgültig löschen? ` +
+                     'Mit ihnen gehen ihre Fassungen und Anhänge. ' +
+                     'Das lässt sich nicht rückgängig machen.')) return;
         Store.trashed().forEach(p => Store.purgeBlock(p.id));
-        zeichne(); zeichneBaum(); UI.toast('Papierkorb geleert');
+        bl.forEach(b => Store.purgeBlock(b.id));
+        zeichne(); zeichneBaum(); App.zeichneSeite(); UI.toast('Papierkorb geleert');
         return;
       }
 
@@ -49749,14 +50004,27 @@ const App = (() => {
           wohin(id, () => { zeichne(); zeichneBaum(); });
           return;
         }
-        Store.restoreBlock(id); zeichne(); zeichneBaum(); UI.toast('Wiederhergestellt'); return;
+        Store.restoreBlock(id); zeichne(); zeichneBaum();
+        /* Ein Block kommt auf einer Seite zurück, nicht im Baum. Ohne das
+           Neuzeichnen stünde er wieder in der Ablage und nicht auf dem
+           Bildschirm — und wer nichts sieht, klickt noch einmal. */
+        App.zeichneSeite();
+        UI.toast('Wiederhergestellt'); return;
       }
       if (s && s.dataset.a === 'restore-wo') { wohin(id, () => { zeichne(); zeichneBaum(); }); return; }
       if (s && s.dataset.a === 'purge') {
-        if (!confirm('Endgültig löschen? Das lässt sich nicht rückgängig machen.')) return;
-        Store.purgeBlock(id); zeichne(); UI.toast('Endgültig gelöscht'); return;
+        const w = Store.getBlock(id);
+        if (!confirm((w && w.type !== 'page' ? 'Diesen Block' : 'Das') +
+                     ' endgültig löschen? Mit ihm gehen seine Fassungen und Anhänge. ' +
+                     'Das lässt sich nicht rückgängig machen.')) return;
+        Store.purgeBlock(id); zeichne(); App.zeichneSeite(); UI.toast('Endgültig gelöscht'); return;
       }
-      Store.restoreBlock(id); o.remove(); oeffne(id);
+      /* Klick auf die Zeile selbst: zurückholen und hingehen. Bei einem
+         Block ist „hin" nicht der Block — der ist keine Seite und liesse
+         sich nicht öffnen —, sondern die Seite, auf der er wieder steht. */
+      const w2 = Store.getBlock(id);
+      Store.restoreBlock(id); o.remove();
+      oeffne(w2 && w2.type !== 'page' ? (w2.parentId || id) : id);
     });
 
     zeichne();

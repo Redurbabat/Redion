@@ -493,8 +493,13 @@ const Einstellungen = (() => {
       zeile('Blöcke', '', `<span class="ez-grau">${Object.keys(Store.cache.blocks).length}</span>`) +
       zeile('Datenbanken', '', `<span class="ez-grau">${Object.keys(Store.cache.collections).length}</span>`) +
       zeile('Ansichten', '', `<span class="ez-grau">${Object.keys(Store.cache.views).length}</span>`) +
-      zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten</span> ` +
-            knopf('papierkorb', 'Öffnen')) +
+      /* „N Seiten" stimmte nur zur Hälfte: daneben lagen weggelegte Blöcke,
+         die niemand zählte und niemand zeigte. Wer hier eine Zahl liest,
+         soll wissen, wie viel wirklich im Papierkorb liegt. */
+      zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten` +
+            ((Store.papierkorbBloecke ? Store.papierkorbBloecke().length : 0)
+              ? `, ${Store.papierkorbBloecke().length} Blöcke` : '') +
+            '</span> ' + knopf('papierkorb', 'Öffnen')) +
       zeile('Papierkorb selbst leeren', 'Nach dieser Frist wird endgültig gelöscht — wie Notions 30 Tage',
             wahl('papierkorbTage', [['30', 'nach 30 Tagen'], ['7', 'nach 7 Tagen'],
                                     ['90', 'nach 90 Tagen'], ['0', 'nie']],
