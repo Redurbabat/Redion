@@ -130,7 +130,7 @@ hat es nur der Vergleich der berechneten Werte — 58 Unterschiede.
 `test87` prüft jetzt auf herrenlose Kommentarenden; die Klammernprüfung
 allein hätte es **nicht** gefunden (nachgestellt und belegt).
 
-### A4 — Die Bereiche in `dienst` und `ansicht` trennen · **Datenbanken erledigt**
+### A4 — Die Bereiche in `dienst` und `ansicht` trennen · **Datenbanken und Wissen erledigt**
 
 **Warum.** Das ist die eigentliche Regel des Aufbaus: reine Logik ohne DOM
 lässt sich prüfen, ohne einen Browser zu starten.
@@ -157,14 +157,101 @@ zeichnet; die zwei Zeilen stehen jetzt in `dienst.js`. `window.Tempo` wurde zu
 `typeof Tempo !== 'undefined'`, wie CLAUDE.md es ohnehin vorschreibt. Und die
 Datei hängt sich nur dann an ein Fenster, wenn es eines gibt.
 
+**Erledigt: `wissen` — aber anders, als hier stand.** Die Annahme oben lautete,
+jede grosse Datei liesse sich wie `steuerung.js` in eine rechnende und eine
+zeichnende Hälfte teilen. Für `werkzeuge.js` wurde das vor dem Schnitt
+gemessen, und es stimmt nicht: **alle vierzehn Abschnitte fassen das Dokument
+an, zwischen 7 und 47 Mal.** Es gibt dort keine rechnende Hälfte.
+
+Also wurde nicht geschnitten, sondern gesucht — nach den Stellen, die wirklich
+nur rechnen. Es sind neun, sie stehen in `wissen/dienst.js` (228 Zeilen), und
+sie haben eine Gemeinsamkeit: es sind genau die Stellen, bei denen man sich
+fragt, ob sie richtig rechnen. Findet „umb" das „Umbenennen"? Kommt eine
+dreimal gewusste Karteikarte in fünfzehn Tagen wieder? Kommt eine
+Markdown-Tabelle am Dateiende noch an? `pruefungen/lauf/test89.mjs` beantwortet
+98 solche Fragen in 60 Millisekunden — die meisten davon liessen sich in einem
+Browser gar nicht stellen, weil man auf den Termin einer Karteikarte nicht
+warten kann.
+
+`werkzeuge.js` fiel von 1972 auf 1777 Zeilen. Eine Stelle wurde dabei nicht
+bloss verschoben, sondern getrennt: `statistik()` rechnete und zeichnete in
+einem Zug; die Zahlen stehen jetzt in `statistikZahlen()`, das Fenster blieb
+drüben.
+
+**Die Lehre für die nächsten drei:** erst messen, ob es eine Logikhälfte
+überhaupt gibt. Wo keine ist, ist der ehrliche Ertrag eine kleine `dienst.js`
+mit den prüfbaren Kernen — und nicht ein erzwungener Schnitt quer durch eine
+Zeichenfunktion.
+
 **Offen — der Reihe nach, grösste zuerst:**
 
 | Datei | Grösse | Ziel |
 |---|--:|---|
-| `bereiche/wissen/werkzeuge.js` | 100 KB | `graph/`, `karteikarten/`, `journal/`, `schlagwoerter/`, `befehle` ins Register |
 | `bereiche/hilfe/wissensseiten.js` | 170 KB | ist fast nur Text — nach `doku/` verschieben und beim Bauen einlesen |
-| `bereiche/editor/ansicht/editor.js` | 115 KB | `dienst.js` (Blockoperationen) + `ansicht/` (Zeichnen) |
+| `bereiche/editor/ansicht/editor.js` | 115 KB | gemessen: `BLOCK-OPERATIONEN` fasst das Dokument 59 Mal an, ist also **keine** reine Logik. Prüfbare Kerne: `inline`, `einbettungsAdresse`, `ueberschriftenDerSeite`, `mitKnopfVars` |
 | `bereiche/datenbanken/steuerung.js` | 7784 Zeilen | die Ansichten einzeln: Tabelle, Board, Kalender, Zeitstrahl |
+| `bereiche/wissen/werkzeuge.js` | 1777 Zeilen | die Oberfläche selbst: `graph/`, `journal/`, `schlagwoerter/`, `befehle` ins Register |
+
+---
+
+### A5 — Den Säuberer aufhängen · **Adressen und Mail-HTML erledigt**
+
+**Was auffiel.** `quell/kern/sicherheit/saeubern.js` ist 162 Zeilen lang, hat
+`html`, `nurText`, `alsText`, `alsAttribut`, `adresse`, `adresseOk` und
+`dateiname`, ist über `test85` mit 13 Prüfungen belegt — und **wurde von keiner
+einzigen Stelle der App aufgerufen.** Der einzige Ort, an dem `Saeubern.`
+überhaupt stand, war sein eigener Prüflauf. Ein Sicherheitsnetz, das niemand
+aufgehängt hat.
+
+**Beim Aufhängen kamen zwei Löcher heraus**, die vorher niemand gesucht hatte.
+Beide wurden im Browser bestätigt, bevor eine Zeile geändert wurde.
+
+*Ein losgelöstes Element schützt nicht.* In `verbinden/mail.js` stand zweimal
+`d.innerHTML = <HTML einer fremden Mail>` mit einem `div`, das nie in die Seite
+kam — die Absicht war, das Markup wegzuwerfen und nur den Text zu behalten. Nur
+feuert `<img src=x onerror=…>` beim Zuweisen, auch losgelöst. Nachgemessen:
+`div.innerHTML` führt aus, `template.innerHTML` und `DOMParser` nicht. Genau
+deshalb benutzt `Saeubern.nurText` ein `<template>`.
+
+*„Ist das ein PDF?" entscheidet die Endung.* `javascript:alert(1)//.pdf`
+besteht die Prüfung in `editor.js` — die zwei Schrägstriche sind in JavaScript
+ein Kommentar. Und ein `<iframe src="javascript:…">` läuft **im Ursprung der
+Seite**: im Versuch war aus dem Rahmen heraus `parent` erreichbar, also alle
+Notizen und der KI-Schlüssel. Ein Anhang, den niemand anklickt, führte damit
+Code aus, sobald die Vorschau aufging.
+
+**Die Prüfung sitzt beim Zeichnen, nicht am Eingang** — anders, als hier
+ursprünglich stand. Der Vorschlag lautete: an die drei Eingänge (Import,
+Clipper, Schnittstelle). Nachgesehen sind es mehr — `bookmark`- und
+`file`-Blöcke entstehen ausserdem beim Abgleich mit dem Server, beim Einlesen
+einer Redion-Datei und über `/v1/`. Eine Prüfung pro Eingang hätte man vier Mal
+schreiben und beim fünften vergessen müssen. Beim Zeichnen gibt es dagegen
+genau sechs Stellen, an denen eine Adresse ins Dokument kommt, und die decken
+alle Eingänge zugleich ab — auch die, die es noch nicht gibt.
+
+Zwei neue Funktionen in `Saeubern`, weil die Regel nicht überall dieselbe ist:
+`anhangAdresse` für etwas, das ein Mensch anklickt (sperrt `javascript:` und
+Verwandte, lässt **jedes** `data:` durch — ein Anhang liegt als
+`data:application/zip` im Speicher, weil es keinen Server gibt, auf den man ihn
+legen könnte), und `rahmenAdresse` für einen `<iframe>` (nur `http(s)`, `blob:`
+oder `data:application/pdf`).
+
+**Nichts wird weggeworfen.** Eine gesperrte Adresse bleibt sichtbar und sagt,
+warum sie nicht anklickbar ist.
+
+`pruefungen/lauf/test91.mjs`, 38 Prüfungen. Mit zurückgedrehten Aufrufstellen
+werden 12 davon rot.
+
+**Offen — der zweite Teil.** Die Ursache bleibt: fünfzig `esc`-Kopien sind
+fünfzig Gelegenheiten, eine davon halb zu schreiben. `test87` fängt heute den
+einen bekannten Fall ab (fehlendes `"`); mehr kann eine Textsuche nicht. `esc`
+durch `Saeubern.alsText` zu ersetzen sind fünfzig Dateien und reine
+Fleissarbeit — sie ändert kein Verhalten und gehört deshalb in einen eigenen
+Schritt.
+
+Ebenfalls offen: `Saeubern.html` wird weiterhin nirgends gerufen. Es gibt heute
+keine Stelle, die fremdes HTML als HTML anzeigt — `ausHtml` nimmt nur Text und
+Bildadressen. Wenn eine dazukommt, ist `Saeubern.html` dafür da.
 
 ---
 

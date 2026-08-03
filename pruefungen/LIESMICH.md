@@ -1,6 +1,6 @@
 # Die Prüfläufe
 
-**59 Läufe, 2440 einzelne Prüfungen.** Sie laufen über echtes Chromium
+**62 Läufe, 2597 einzelne Prüfungen.** Sie laufen über echtes Chromium
 gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
 Speicher.
 
@@ -36,6 +36,27 @@ Diese Läufe sind nicht beim Bauen entstanden, sondern **beim Kaputtmachen**.
 Fast jeder von ihnen hat mindestens einen echten Fehler gefunden, den kein
 Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
 
+- **Ein Anführungszeichen im Text wurde zu einem Attribut.** Zwanzig der
+  fünfzig `esc`-Funktionen ersetzten `&`, `<` und `>`, aber nicht `"`. An 41
+  Stellen landet ihr Ergebnis in einem Attribut — `<input value="${esc(…)}">`.
+  Wer einen Knopf `" onfocus="…" autofocus="` nennt, schliesst damit `value`
+  und schreibt zwei eigene Attribute dahinter. Kein `<script>`, das ein
+  Säuberer erkennen würde; ein gültiges `onfocus`, das der Browser ausführt.
+  Nachgestellt und bestätigt: der Handler lief. Gefunden wurde es nicht durch
+  Suchen nach Lücken, sondern beim Herauslösen von `wissen/dienst.js` — dort
+  fiel auf, dass die eine Datei ein `"` ersetzt und die Nachbardatei nicht.
+  → `test90.mjs` prüft das Verhalten, `test87.mjs` verhindert den Rückfall.
+- **Ein losgelöstes Element schützt nicht.** `verbinden/mail.js` warf das
+  Markup einer fremden Mail weg, indem es sie einem `div` zuwies, das nie in
+  die Seite kam, und danach nur den Text las. Nur feuert `<img src=x
+  onerror=…>` beim Zuweisen — auch losgelöst. Nachgemessen: `div.innerHTML`
+  führt aus, `template.innerHTML` und `DOMParser` nicht. → `test91.mjs`
+- **„Ist das ein PDF?" entschied die Endung.** `javascript:alert(1)//.pdf`
+  bestand die Prüfung — die zwei Schrägstriche sind in JavaScript ein
+  Kommentar. Der Anhang landete dann in einem `<iframe src>`, und der läuft im
+  Ursprung der Seite: aus dem Rahmen heraus war `parent` erreichbar. Ein
+  Anhang, den niemand anklickt, führte Code aus, sobald die Vorschau aufging.
+  → `test91.mjs`
 - Der Abgleich schrieb geholte Sätze nur in den Arbeitsspeicher, nie auf die
   Platte. Nach dem Neuladen waren sie weg — und weil die Abgleichsmarke schon
   weitergerückt war, kamen sie **nie wieder**.
@@ -95,19 +116,37 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 86 | die elf Register |
 | 87 | der Quelltext selbst — ohne Browser, in Millisekunden |
 | 88 | die Datenbank-Logik in Node — ohne document, ohne window |
+| 89 | die Werkzeug-Logik in Node — unscharfe Suche, SM-2, Markdown, Statistik |
+| 90 | ein Anführungszeichen im Text darf kein Attribut werden |
+| 91 | der Säuberer hängt — Adressen in Links und Rahmen, HTML aus Mails |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt
 trotzdem auf.
 
-`test87.mjs` ist der einzige, der **keinen Browser** startet. Er prüft, was
-zwischen zwei Dateien steht und deshalb in keinem Verhalten auftaucht: dass
-kein Steuerzeichen roh im Quelltext steht (in der Einzeldatei macht der
-HTML-Parser U+FFFD daraus und reisst den ganzen Skriptblock mit — so fehlte
-dort einmal die komplette HTML-Säuberung), dass die Rechtetabellen in
-Oberfläche und Server übereinstimmen, und dass die drei Zeichner aus A1/A2
-`App` nicht mehr kennen. Er ist nach 80 Millisekunden fertig und steht
-deshalb in der CI als eigener, vorgezogener Auftrag.
+**Drei Läufe starten keinen Browser** — 87, 88 und 89. Zusammen sind sie in
+einer Fünftelsekunde fertig und stehen deshalb in der CI als eigener,
+vorgezogener Auftrag. Sie sind verschieden gebaut:
+
+`test87.mjs` liest den Quelltext, ohne ihn auszuführen. Er prüft, was zwischen
+zwei Dateien steht und deshalb in keinem Verhalten auftaucht: dass kein
+Steuerzeichen roh im Quelltext steht (in der Einzeldatei macht der HTML-Parser
+U+FFFD daraus und reisst den ganzen Skriptblock mit — so fehlte dort einmal die
+komplette HTML-Säuberung), dass die Rechtetabellen in Oberfläche und Server
+übereinstimmen, und dass die drei Zeichner aus A1/A2 `App` nicht mehr kennen.
+
+`test88.mjs` und `test89.mjs` führen je eine `dienst.js` wirklich aus — mit
+Attrappen statt `Store`, ohne `document` und **ohne `window`**. Dass das geht,
+ist der ganze Zweck dieser beiden Dateien: sie rechnen, sie zeigen nichts.
+Beide prüfen Dinge, die im Browser gar nicht prüfbar wären. `test89` etwa
+fragt, ob eine dreimal gewusste Karteikarte in fünfzehn Tagen wiederkommt —
+darauf zu warten ist kein Prüflauf.
+
+Beim Schreiben von `test89` fiel die vierstufige Notenskala auf: die Knöpfe
+heissen „Nochmal, Schwer, Gut, Leicht", also 1 bis 4, und deshalb steht in der
+Datei `(4 - note)` statt SuperMemos `(5 - q)`. Wer den Lauf für die fünfstufige
+Skala schreibt, bekommt 16 statt 15 heraus und hält die richtige Rechnung für
+einen Fehler. Es kostete eine Viertelstunde, das nachzusehen statt zu ändern.
 
 ---
 

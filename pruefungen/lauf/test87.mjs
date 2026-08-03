@@ -314,5 +314,54 @@ startbilder.forEach(([, datei, br, ho, dpr]) => {
     breite === sollB && hoehe === sollH, `${breite}×${hoehe}`);
 });
 
+/* ---------------------------------------------------------------------------
+ * JEDES esc MUSS AUCH DAS ANFÜHRUNGSZEICHEN ERSETZEN
+ * ---------------------------------------------------------------------------
+ * Fünfzig Module haben ihr eigenes `esc` — das ist die Folge davon, dass es
+ * keine Bauschritte gibt und jede Datei für sich stehen soll. Zwanzig davon
+ * ersetzten `&`, `<` und `>`, aber nicht `"`. Das ist harmlos zwischen zwei
+ * Marken und ein Loch in einem Attribut:
+ *
+ *     `<input value="${esc(block.text)}">`
+ *
+ * Eine Beschriftung wie `" onfocus="…" autofocus="` schliesst dann `value`
+ * und schreibt zwei eigene Attribute dahinter. Der Browser sieht kein
+ * `<script>`, sondern ein gültiges `onfocus` — und führt es aus. In einer App
+ * ohne Server heisst das: Zugriff auf alle Notizen und auf den KI-Schlüssel,
+ * ausgelöst von einer eingelesenen Datei oder einer geteilten Seite.
+ * Was das im Browser anrichtet, prüft test90. Hier steht die Vorbeugung: eine
+ * neue Datei mit einem halben `esc` fällt beim nächsten Push auf, nicht erst,
+ * wenn jemand ein Anführungszeichen tippt.
+ *
+ * DIE MESSUNG DAZU WAR SELBST EINMAL FALSCH und das gehört zur Prüfung: der
+ * erste Ausdruck endete bei `[\s\S]{0,400}?;` — und das erste Semikolon steht
+ * mitten in der Definition, nämlich in `'&amp;'`. Ergebnis: „0 von 50 Dateien
+ * geschützt", obwohl es dreissig waren. Ein Semikolon in einer Zeichenkette
+ * ist kein Ende einer Anweisung. Deshalb wird hier bis zum Semikolon am
+ * ZEILENENDE gesucht.
+ * ------------------------------------------------------------------------ */
+console.log('\n— Jedes esc ersetzt auch das Anführungszeichen —');
+
+const escDef = /const esc\s*=\s*\(\w+\)\s*=>[\s\S]{0,400}?;\s*$/m;
+
+const alleQuellen = [];
+(function sammle(ordner) {
+  for (const eintrag of _liste(_dazu(WURZEL, ordner), { withFileTypes: true })) {
+    const rein = ordner + '/' + eintrag.name;
+    if (eintrag.isDirectory()) sammle(rein);
+    else if (eintrag.name.endsWith('.js')) alleQuellen.push(rein);
+  }
+})('quell');
+
+const ohneSchutz = alleQuellen.filter(datei => {
+  const treffer = escDef.exec(_lies(_dazu(WURZEL, datei), 'utf8'));
+  return treffer && !treffer[0].includes('&quot;');
+});
+
+p('Der Sucher findet die Definitionen überhaupt',
+  alleQuellen.filter(d => escDef.test(_lies(_dazu(WURZEL, d), 'utf8'))).length >= 40);
+p('Kein Modul hat ein esc ohne "-Schutz', ohneSchutz.length === 0,
+  ohneSchutz.slice(0, 5).join(', '));
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

@@ -153,13 +153,75 @@ const Saeubern = (() => {
    */
   const adresse = (wert) => adresseOk(wert) ? String(wert).trim() : '';
 
+  /* --------------------------------------------------------------------------
+   * ZWEI ADRESSEN, DIE `adresse` NICHT ABDECKT
+   * --------------------------------------------------------------------------
+   * `adresse` lässt `data:` nur für Bilder durch. Für einen Anhang ist das zu
+   * streng: die App hat keinen Server, auf den sie eine Datei legen könnte,
+   * also liegt jeder Anhang als `data:application/pdf`, `data:application/zip`
+   * oder `data:text/csv` im Speicher. Wer dort `adresse` nimmt, wirft jeden
+   * Anhang weg — und „nichts wegwerfen, was nach Inhalt aussieht" ist keine
+   * Nebenregel dieses Projekts.
+   *
+   * Für einen Rahmen ist `adresse` dagegen zu grosszügig. Ein `<iframe>` mit
+   * `src="javascript:…"` läuft **im Ursprung der Seite**, mit vollem Zugriff
+   * auf alle Notizen und den KI-Schlüssel. Nachgestellt und bestätigt: aus dem
+   * Rahmen heraus war `parent` erreichbar.
+   *
+   * Und genau dorthin führte ein Weg, den man nicht sieht: ob ein Anhang als
+   * PDF vorgeführt wird, entscheidet in `editor.js` allein die **Endung**.
+   * `javascript:…//.pdf` sieht für diese Prüfung wie ein PDF aus — die zwei
+   * Schrägstriche sind in JavaScript der Beginn eines Kommentars, der Rest der
+   * Adresse also blosse Zierde. Ein Anhang, den niemand anklickt, führte damit
+   * Code aus, sobald die Vorschau aufging.
+   * ----------------------------------------------------------------------- */
+
+  /**
+   * Für ein Ziel, das ein Mensch anklickt: Link, Lesezeichen, Anhang.
+   *
+   * ES WIRD DAS SCHEMA GELESEN, NICHT NACH WÖRTERN GESUCHT. Der erste Versuch
+   * hier prüfte, ob irgendwo vorne „javascript" steht — und sperrte damit eine
+   * Datei namens `javascriptbuch.pdf`, ein `filezilla-handbuch.pdf` und ein
+   * `about-uns.html`. Eine Sicherheitsprüfung, die Anhänge verschluckt, ist
+   * kein Gewinn: sie tauscht einen seltenen Angriff gegen einen täglichen
+   * Datenverlust. Gefährlich ist nur, was **vor dem Doppelpunkt** steht.
+   */
+  const anhangAdresse = (wert) => {
+    const roh = String(wert || '').trim();
+    if (!roh) return '';
+    /* Leerraum und Steuerzeichen weg, bevor das Schema gelesen wird:
+       `java\nscript:` ist für den Browser dasselbe wie `javascript:`. */
+    const ohneLeer = roh.replace(/[\s\x00-\x1f]/g, '');
+    const m = ohneLeer.match(/^([a-z][a-z0-9+.-]*):/i);
+    if (!m) return roh;                    /* kein Schema → relativ, harmlos */
+    const schema = m[1].toLowerCase();
+    if (['javascript', 'vbscript', 'file', 'about'].includes(schema)) return '';
+    /* `data:` ja — jeder Anhang liegt so im Speicher. Nur nicht als HTML und
+       nicht als SVG: beides kann Code tragen. */
+    if (schema === 'data' && /^data:(text\/html|image\/svg)/i.test(ohneLeer)) return '';
+    return roh;
+  };
+
+  /** Für einen Rahmen. Streng, weil er im Ursprung der Seite läuft. */
+  const rahmenAdresse = (wert) => {
+    const w = String(wert || '').replace(/[\x00-\x1f\s]/g, '');
+    if (!w) return '';
+    /* Positivliste, wie oben bei den Tags: erlaubt ist, was aufgezählt ist.
+       Ein PDF darf hinein, weil die Vorschau genau dafür da ist. */
+    if (/^https?:\/\//i.test(w)) return String(wert).trim();
+    if (/^blob:/i.test(w)) return String(wert).trim();
+    if (/^data:application\/pdf[;,]/i.test(w)) return String(wert).trim();
+    return '';
+  };
+
   /** Ein Dateiname ohne Wege darin — verhindert ../../ beim Export. */
   const dateiname = (s) => String(s ?? 'ohne-namen')
     .replace(/[\/\\:*?"<>|\x00-\x1f]/g, '-')
     .replace(/^\.+/, '')
     .slice(0, 120) || 'ohne-namen';
 
-  return { html, nurText, alsText, alsAttribut, adresse, adresseOk, dateiname,
+  return { html, nurText, alsText, alsAttribut, adresse, adresseOk,
+           anhangAdresse, rahmenAdresse, dateiname,
            TAGS, RAUS_MIT_INHALT, ATTRIBUTE };
 })();
 

@@ -24,7 +24,8 @@
 
 const Inhaltsflaeche = (() => {
 
-  const esc = (s) => String(s ?? '').replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
+  const esc = (s) => String(s ?? '')
+    .replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]));
 
   let gebunden = {};
 

@@ -22,17 +22,14 @@
 
 const Werkzeuge = (() => {
 
-  const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  /* SEIT A4: was hier gerechnet wird, steht nebenan in dienst.js — die
+     unscharfe Suche, das Wiederholungsverfahren, Markdown hin und zurück,
+     die Zahlen der Statistik. Die Namen werden hereingeholt statt
+     umgeschrieben, damit keine der Aufrufstellen darunter angefasst werden
+     muss. Dieselbe Entscheidung wie bei `Datenbank` und bei `UI`. */
+  const { esc, heute, WOCHENTAG, MONAT, datumLang, unscharf, zeitKurz, planen,
+          alsMarkdown, ausMarkdown, statistikZahlen, sauber, istUnter } = WissenDienst;
 
-  const heute = () => new Date().toISOString().slice(0, 10);
-  const WOCHENTAG = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-  const MONAT = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-
-  const datumLang = (iso) => {
-    const d = new Date(iso + 'T12:00:00');
-    return `${WOCHENTAG[d.getDay()]}, ${d.getDate()}. ${MONAT[d.getMonth()]} ${d.getFullYear()}`;
-  };
 
   /** Legt eine Systemseite an oder findet sie wieder (Journal, Vorlagen …). */
   const systemSeite = (schluessel, titel, icon) => {
@@ -186,25 +183,6 @@ const Werkzeuge = (() => {
    * zählen die Buchstaben in der richtigen Reihenfolge, und was man oft
    * benutzt, steht oben.
    * ---------------------------------------------------------------------- */
-  const unscharf = (text, suche) => {
-    const t = text.toLowerCase(), q = suche.toLowerCase();
-    if (!q) return 0;
-    if (t === q) return 1000;
-    if (t.startsWith(q)) return 800 - t.length;
-    const wort = t.indexOf(' ' + q);
-    if (wort >= 0) return 600 - t.length;
-    if (t.includes(q)) return 400 - t.length;
-    /* Buchstabe für Buchstabe: alle in der richtigen Reihenfolge? */
-    let i = 0, punkte = 0, letzte = -2;
-    for (const c of q) {
-      const stelle = t.indexOf(c, i);
-      if (stelle < 0) return -1;
-      punkte += (stelle === letzte + 1) ? 8 : 2;      /* zusammenhängend zählt mehr */
-      letzte = stelle;
-      i = stelle + 1;
-    }
-    return punkte;
-  };
 
   const oftBenutzt = () => Store.getMeta('paletteOft', {}) || {};
   const merkeBefehl = (name) => {
@@ -405,16 +383,6 @@ const Werkzeuge = (() => {
     });
   };
 
-  const zeitKurz = (iso) => {
-    if (!iso) return '';
-    const d = new Date(iso), j = new Date();
-    const gleich = d.toDateString() === j.toDateString();
-    const uhr = d.toTimeString().slice(0, 5);
-    if (gleich) return 'Heute ' + uhr;
-    const gestern = new Date(j); gestern.setDate(j.getDate() - 1);
-    if (d.toDateString() === gestern.toDateString()) return 'Gestern ' + uhr;
-    return d.toLocaleDateString('de-DE') + ' ' + uhr;
-  };
 
   /* ========================================================================
    * 4. VORLAGEN   (Outline, Trilium, Anytype)
@@ -473,23 +441,6 @@ const Werkzeuge = (() => {
     return karten().filter(k => !k.sr || !k.sr.faellig || new Date(k.sr.faellig).getTime() <= jetzt);
   };
 
-  /** SM-2 in kurz: leichter beantwortet = längerer Abstand. */
-  const planen = (k, note) => {
-    const sr = Object.assign({ ease: 2.5, intervall: 0, wdh: 0 }, k.sr || {});
-    if (note < 3) { sr.wdh = 0; sr.intervall = note === 1 ? 0 : 1; }
-    else {
-      sr.wdh++;
-      sr.intervall = sr.wdh === 1 ? 1 : sr.wdh === 2 ? 6 : Math.round(sr.intervall * sr.ease);
-      sr.ease = Math.max(1.3, sr.ease + (0.1 - (4 - note) * (0.08 + (4 - note) * 0.02)));
-    }
-    const d = new Date();
-    if (sr.intervall === 0) d.setMinutes(d.getMinutes() + 10);
-    else d.setDate(d.getDate() + sr.intervall);
-    sr.faellig = d.toISOString();
-    sr.zuletzt = Store.now();
-    Store.updateBlock(k.id, { sr });
-    return sr;
-  };
 
   const lernen = () => {
     const stapel = faellig();
@@ -829,111 +780,6 @@ const Werkzeuge = (() => {
    * Die Seite als reiner Text — und zurück. Datenbanken bleiben dabei
    * unangetastet, sie stehen als Platzhalter drin.
    * ======================================================================*/
-  const alsMarkdown = (p) => {
-    const zeilen = [];
-    const raus = (id, tiefe) => {
-      Store.childrenOf(id).forEach(b => {
-        const ein = '  '.repeat(tiefe);
-        if (b.type === 'database') { zeilen.push(`<!--db:${b.id}-->`); return; }
-        if (b.type === 'whiteboard') { zeilen.push(`<!--wb:${b.id}-->`); return; }
-        if (b.type === 'chart') { zeilen.push(`<!--chart:${b.id}-->`); return; }
-        if (b.type === 'table') { zeilen.push(`<!--tab:${b.id}-->`); return; }
-        if (b.type === 'divider') { zeilen.push('---'); return; }
-        if (b.type === 'code') { zeilen.push('```' + (b.lang || '')); zeilen.push(b.text || ''); zeilen.push('```'); return; }
-        if (b.type === 'equation') { zeilen.push('$$' + (b.text || '') + '$$'); return; }
-        if (b.type === 'image') { zeilen.push(`![${b.caption || ''}](${b.src || ''})`); return; }
-        if (b.type === 'page') { zeilen.push(`${ein}[[${b.text || 'Ohne Titel'}]]`); return; }
-        const marke = {
-          h1: '# ', h2: '## ', h3: '### ', bullet: '- ', number: '1. ',
-          todo: b.checked ? '- [x] ' : '- [ ] ', quote: '> ', toggle: '> ',
-          callout: '> 💡 ', flashcard: '?? '
-        }[b.type] || '';
-        zeilen.push(ein + marke + (b.text || ''));
-        raus(b.id, tiefe + 1);
-      });
-    };
-    raus(p.id, 0);
-    return zeilen.join('\n');
-  };
-
-  /** Markdown zurück in Blöcke. Vorhandene Datenbanken werden erkannt. */
-  const ausMarkdown = (p, text) => {
-    const alteDbs = {};
-    Store.childrenOf(p.id).forEach(b => {
-      if (['database','whiteboard','chart','table'].includes(b.type)) alteDbs[b.id] = Store.baum(b.id);
-    });
-
-    Store.kinderLeeren(p.id);
-
-    let imCode = false, codeText = [], codeLang = '';
-    const zeilen = text.split('\n');
-
-    /* --- Markdown-Tabellen -------------------------------------------------
-     * | Kopf | Kopf |
-     * |------|------|
-     * | Wert | Wert |
-     * wird zu einem echten Tabellenblock. Ohne das landet jede Tabelle als
-     * Textwüste aus Strichen — und die halbe Dokumentation besteht daraus.
-     * -------------------------------------------------------------------- */
-    const istTabellenzeile = (z) => /^\s*\|.*\|\s*$/.test(z);
-    const istTrenner = (z) => /^\s*\|[\s:|-]+\|\s*$/.test(z) && /-/.test(z);
-    const zellen = (z) => z.trim().replace(/^\||\|$/g, '').split('|').map(x => x.trim());
-
-    let tabelle = null;   /* sammelt die Zeilen der laufenden Tabelle */
-    const tabelleAbschliessen = () => {
-      if (!tabelle) return;
-      if (tabelle.length) {
-        const breite = Math.max(...tabelle.map(r => r.length));
-        const rows = tabelle.map(r => { const k = r.slice();
-          while (k.length < breite) k.push(''); return k; });
-        Store.addBlock(p.id, 'table', { rows, kopfZeile: true });
-      }
-      tabelle = null;
-    };
-
-    zeilen.forEach(roh => {
-      /* Tabellen zuerst — sie laufen über mehrere Zeilen */
-      if (!imCode && istTabellenzeile(roh)) {
-        if (istTrenner(roh)) { if (!tabelle) tabelle = []; return; }
-        if (!tabelle) tabelle = [];
-        tabelle.push(zellen(roh));
-        return;
-      }
-      if (tabelle) tabelleAbschliessen();
-
-      const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab):([^>]+)-->$/);
-      if (platz && alteDbs[platz[1]]) { Store.baumEinfuegen(alteDbs[platz[1]], p.id); return; }
-
-      if (roh.trim().startsWith('```')) {
-        if (imCode) {
-          Store.addBlock(p.id, 'code', { text: codeText.join('\n'), lang: codeLang });
-          imCode = false; codeText = []; codeLang = '';
-        } else { imCode = true; codeLang = roh.trim().slice(3).trim(); }
-        return;
-      }
-      if (imCode) { codeText.push(roh); return; }
-
-      const z = roh.trim();
-      if (!z) return;
-      if (/^(---|\*\*\*|___)$/.test(z)) { Store.addBlock(p.id, 'divider'); return; }
-      if (/^\$\$(.*)\$\$$/.test(z)) { Store.addBlock(p.id, 'equation', { text: z.slice(2, -2) }); return; }
-      const bild = z.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
-      if (bild) { Store.addBlock(p.id, 'image', { src: bild[2], caption: bild[1] }); return; }
-
-      const m = z.match(/^(#{1,3})\s+(.*)$/);
-      if (m) { Store.addBlock(p.id, ['h1','h2','h3'][m[1].length - 1], { text: m[2] }); return; }
-      const todo = z.match(/^[-*+]\s+\[([ xX])\]\s+(.*)$/);
-      if (todo) { Store.addBlock(p.id, 'todo', { text: todo[2], checked: todo[1].toLowerCase() === 'x' }); return; }
-      if (/^[-*+]\s+/.test(z)) { Store.addBlock(p.id, 'bullet', { text: z.replace(/^[-*+]\s+/, '') }); return; }
-      if (/^\d+\.\s+/.test(z)) { Store.addBlock(p.id, 'number', { text: z.replace(/^\d+\.\s+/, '') }); return; }
-      if (/^>\s*💡\s*/.test(z)) { Store.addBlock(p.id, 'callout', { text: z.replace(/^>\s*💡\s*/, ''), icon: '💡' }); return; }
-      if (/^>\s+/.test(z)) { Store.addBlock(p.id, 'quote', { text: z.replace(/^>\s+/, '') }); return; }
-      if (/^\?\?\s+/.test(z)) { Store.addBlock(p.id, 'flashcard', { text: z.replace(/^\?\?\s+/, '') }); return; }
-      Store.addBlock(p.id, 'text', { text: z });
-    });
-    if (imCode && codeText.length) Store.addBlock(p.id, 'code', { text: codeText.join('\n'), lang: codeLang });
-    tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
-  };
 
   const quelltext = (p) => {
     const md = alsMarkdown(p);
@@ -975,34 +821,8 @@ const Werkzeuge = (() => {
    * 11. SCHREIBSTATISTIK   (Zettlr)
    * ======================================================================*/
   const statistik = (p) => {
-    const sammle = (id, tiefe = 0) => {
-      let t = '';
-      Store.childrenOf(id).forEach(b => { t += ' ' + (b.text || ''); t += sammle(b.id, tiefe + 1); });
-      return t;
-    };
-    const text = ((p.text || '') + ' ' + sammle(p.id)).trim();
-    const woerter = text.split(/\s+/).filter(Boolean);
-    const saetze = text.split(/[.!?]+\s/).filter(x => x.trim().length > 1);
-    const zeichen = text.length;
-    const lesezeit = Math.max(1, Math.round(woerter.length / 200));
-    const sprechzeit = Math.max(1, Math.round(woerter.length / 130));
-    const blockAnzahl = (function zaehl(id) {
-      let n = 0; Store.childrenOf(id).forEach(b => { n += 1 + zaehl(b.id); }); return n;
-    })(p.id);
-
-    const stop = new Set(('der die das und oder aber ich du er sie es wir ihr in im an auf für mit von zu ist sind ' +
-      'war waren ein eine einen einem eines dem den des nicht auch als wie wenn dann noch nur schon so bei um am').split(' '));
-    const haeufig = {};
-    woerter.forEach(w => {
-      const k = w.toLowerCase().replace(/[^\wäöüß-]/g, '');
-      if (k.length < 4 || stop.has(k)) return;
-      haeufig[k] = (haeufig[k] || 0) + 1;
-    });
-    const top = Object.entries(haeufig).sort((a, b) => b[1] - a[1]).slice(0, 12);
-
-    /* Ganzer Arbeitsbereich */
-    const alleW = Object.values(Store.cache.blocks)
-      .filter(b => b.alive).reduce((n, b) => n + (b.text || '').split(/\s+/).filter(Boolean).length, 0);
+    const { woerter, zeichen, saetze, blockAnzahl, lesezeit, sprechzeit,
+            top, alleW } = statistikZahlen(p);
 
     const o = document.createElement('div');
     o.className = 'overlay';
@@ -1011,8 +831,8 @@ const Werkzeuge = (() => {
         '<div class="fh">Statistik <em>' + esc(p.text || 'Ohne Titel') + '</em>' +
           '<button class="icon-btn" data-a="zu">✕</button></div>' +
         '<div class="stat-gitter">' +
-          kachel(woerter.length, 'Wörter') + kachel(zeichen, 'Zeichen') +
-          kachel(saetze.length, 'Sätze') + kachel(blockAnzahl, 'Blöcke') +
+          kachel(woerter, 'Wörter') + kachel(zeichen, 'Zeichen') +
+          kachel(saetze, 'Sätze') + kachel(blockAnzahl, 'Blöcke') +
           kachel(lesezeit + ' min', 'Lesezeit') + kachel(sprechzeit + ' min', 'Vorlesezeit') +
         '</div>' +
         (top.length
@@ -1233,7 +1053,6 @@ const Werkzeuge = (() => {
     return p;
   };
 
-  const sauber = (s) => String(s).replace(/[\/\\:*?"<>|]/g, '-').slice(0, 80).trim() || 'Seite';
   const lade = (blob, name) => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = name; a.click();
@@ -1426,14 +1245,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     inp.focus();
   };
 
-  const istUnter = (id, moeglicherElter) => {
-    let cur = Store.getBlock(id), n = 0;
-    while (cur && n++ < 50) {
-      if (cur.parentId === moeglicherElter) return true;
-      cur = cur.parentId ? Store.getBlock(cur.parentId) : null;
-    }
-    return false;
-  };
 
   const verschiebe = (p, zielId) => {
     const alt = Store.getBlock(p.parentId);
@@ -1899,7 +1710,18 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         } else if (tag === 'hr') {
           Store.addBlock(seiteId, 'divider');
         } else if (tag === 'img' && n.getAttribute('src')) {
-          Store.addBlock(seiteId, 'image', { src: n.getAttribute('src'), caption: n.getAttribute('alt') || '' });
+          /* Die einzige Stelle in `ausHtml`, an der etwas anderes als Text aus
+             dem fremden Dokument übernommen wird. `Saeubern.adresse` lässt
+             http(s) und `data:image/…` durch und wirft `javascript:` weg. Ein
+             `<img>` führt eine solche Adresse zwar nicht aus — aber der Wert
+             bleibt gespeichert, und was morgen daraus liest, weiss niemand. */
+          const bildSrc = Saeubern.adresse(n.getAttribute('src'));
+          if (bildSrc)
+            Store.addBlock(seiteId, 'image', { src: bildSrc, caption: n.getAttribute('alt') || '' });
+          else
+            Store.addBlock(seiteId, 'text',
+              { text: '⚠ Bild ausgelassen — die Adresse war kein Verweis: ' +
+                      String(n.getAttribute('src')).slice(0, 120) });
         } else if (tag === 'table') {
           const rows = [...n.querySelectorAll('tr')].map(tr =>
             [...tr.querySelectorAll('th,td')].map(td => (td.textContent || '').trim()));

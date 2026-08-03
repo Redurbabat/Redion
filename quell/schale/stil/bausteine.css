@@ -1155,6 +1155,14 @@ td .proz i{ flex:0 0 auto; }
 .datei-zeile button{font-size:12px; border:1px solid var(--line); border-radius:5px;
                     padding:3px 9px; color:var(--text-dim)}
 .datei-zeile button:hover{background:var(--bg-hover)}
+
+/* Eine Adresse, die Redion nicht öffnet: der Name bleibt stehen, damit man
+   sieht, was dort liegt — aber ohne Verweis und sichtbar anders. Ein Anhang,
+   der einfach verschwände, wäre schlimmer als einer, der sich erklärt. */
+.datei-gesperrt{flex:1; color:var(--text-dim); cursor:help}
+.einbett-gesperrt{padding:12px 14px; border:1px dashed var(--line); border-radius:6px;
+                  color:var(--text-dim); font-size:13px; line-height:1.5;
+                  overflow-wrap:anywhere}
 .pdf-rahmen{margin-top:6px; border:1px solid var(--line); border-radius:6px; overflow:hidden}
 .pdf-rahmen iframe{width:100%; height:100%; border:0; display:block}
 .pdf-fuss{display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-faint); padding:4px 2px}

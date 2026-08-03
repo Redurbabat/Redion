@@ -42,7 +42,7 @@ const DatenbankDienst = (() => {
   /* Wortgleich mit `Blocks.esc`. Die Verdopplung ist der Preis dafür, dass
      diese Datei den Editor nicht kennt — zwei Zeilen gegen eine Abhängigkeit. */
   const esc = (s) => String(s ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
   /* ========================================================================
    * DIE EIGENSCHAFTSTYPEN

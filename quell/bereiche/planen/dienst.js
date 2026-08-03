@@ -17,7 +17,7 @@
 const Plan = (() => {
 
   const esc = (s) => String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   const tagText = (d) => new Date(d).toLocaleDateString('de-DE',
     { weekday: 'short', day: '2-digit', month: 'short' });

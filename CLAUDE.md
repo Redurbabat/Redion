@@ -106,7 +106,7 @@ Liste, damit die App offline vollständig ist.
 
 Die Prüfläufe liegen **im Repository**, unter `pruefungen/` und `server/`.
 Sie laufen über echtes Chromium gegen die echte App — keine Attrappen, keine
-Mocks. Stand: 59 Läufe, 2440 Prüfungen. Sie laufen ausserdem bei jedem
+Mocks. Stand: 62 Läufe, 2597 Prüfungen. Sie laufen ausserdem bei jedem
 Push von selbst über `.github/workflows/pruefen.yml`.
 
 ```
@@ -126,9 +126,27 @@ Es stand hier einmal „53 Prüfläufe unter `/tmp/test*.mjs`". Genau das war da
 Problem: ein Prüfnetz, das nur an einem Ort hängt, ist beim ersten Umzug
 keines mehr. Jetzt liegen sie im Repository, wo sie jeder bekommt.
 
-`test87.mjs` ist der einzige ohne Browser — er prüft, was zwischen zwei
-Dateien steht und in keinem Verhalten auftaucht. 80 Millisekunden. Bei einer
-Änderung an Rechten, an `sw.js` oder an den Zeichnern zuerst der.
+**Drei Läufe brauchen keinen Browser** und sind zusammen in einer
+Fünftelsekunde fertig: `test87.mjs` liest den Quelltext, ohne ihn auszuführen
+(Steuerzeichen, Rechtetabellen, `sw.js`, Stilblätter, Manifest, `esc`).
+`test88.mjs` und `test89.mjs` führen je eine `dienst.js` mit Attrappen aus.
+Bei einer Änderung an Rechten, an `sw.js` oder an den Zeichnern zuerst die.
+
+**Ein grüner Lauf beweist erst dann etwas, wenn er auch rot werden kann.**
+Bei einem neuen Lauf gehört dazu die Gegenprobe: den Fehler von Hand wieder
+einbauen und schauen, ob er rot wird. Bei `test90` blieben so zwei Abschnitte
+auffällig grün — sie zeichneten die Stelle gar nicht, die sie zu prüfen
+vorgaben. Bei `test91` waren es zwei weitere: die Nutzlast schrieb auf
+`window`, im Rahmen ausgeführt ist das aber der Rahmen selbst. Der Code lief,
+schrieb ins falsche Fenster, und „nichts ist gelaufen" blieb grün. Ohne die
+Gegenprobe wären alle vier als Beleg durchgegangen.
+
+**Zu einer Sperre gehört die Gegenprobe in die andere Richtung.** Was soll
+weiterhin durchkommen? Die erste Fassung von `Saeubern.anhangAdresse` suchte
+nach dem Wort „javascript" statt nach dem Schema und sperrte damit eine Datei
+namens `javascriptbuch.pdf`. Eine Prüfung, die Anhänge verschluckt, tauscht
+einen seltenen Angriff gegen einen täglichen Datenverlust — und das ist kein
+Gewinn, sondern ein anderer Fehler.
 
 **Die Regel:** nach jeder Änderung laufen mindestens die betroffenen Läufe,
 vor jedem Commit ein breiter Querschnitt. Ein grüner Lauf ist die einzige
