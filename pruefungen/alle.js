@@ -38,7 +38,9 @@ const LAEUFE = [
   { name: 'server-app',   datei: 'server/test76.mjs',          browser: true,
     was: 'Die App am Server, mit zwei Geräten' },
   { name: 'seitenleiste', datei: 'pruefungen/seitenleiste.mjs', browser: true,
-    was: 'Abschnitte, Reihenfolge, Klappen, Reiter, Baum, Register' }
+    was: 'Abschnitte, Reihenfolge, Klappen, Reiter, Baum, Register' },
+  { name: 'einzeldatei',  datei: 'pruefungen/einzeldatei.mjs',  browser: true,
+    was: 'Was man weitergibt: startet sie, ist alles drin, säubert sie' }
 ];
 
 const filter = process.argv[2];
