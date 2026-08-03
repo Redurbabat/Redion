@@ -127,3 +127,52 @@ Der ehrliche Eintrag in `LUECKEN.md` lautet deshalb nicht „54 fehlen",
 sondern „54 fehlen, davon gehen ohne Server nur die mit persönlichem
 Schlüssel". Welche das sind, ist noch nicht durchgezählt — das gehört vor das
 Bauen, nicht danach.
+
+---
+
+## E6 · Keine CSP für die App selbst — und kein `<meta>` dafür
+
+**Was stand wo.** Die Muss-Liste des Auftrags verlangt „sichere Security
+Headers". `LUECKEN.md` hatte dazu vermerkt: *„Vorsicht: eine CSP, die `inline`
+verbietet, bricht die App — sie besteht aus `innerHTML`."*
+
+**Nachgemessen, bevor entschieden wurde.** Der Vermerk war fast richtig, aber
+aus dem falschen Grund: `innerHTML` allein ist für eine CSP kein Problem —
+`script-src` betrifft `<script>`-Tags, `javascript:` und `eval`, nicht das
+Einsetzen von Markup. Die echten Hindernisse sind andere:
+
+| | Anzahl | verlangt |
+|---|--:|---|
+| `style="…"`-Attribute | **562** | `style-src 'unsafe-inline'` |
+| Inline-`<script>` in `index.html` | 2 | `script-src 'unsafe-inline'` |
+| `new Function` (`erweiterungen.js`, `ki/agenten.js`) | 2 Stellen | `'unsafe-eval'` |
+| fremde Adressen (KI-Anbieter, Google, GitHub, Wikipedia, Ollama …) | 20+ | `connect-src`, nie vollständig |
+
+**Gewählt.** Die App bekommt **keine** CSP. Eine mit `'unsafe-inline'
+'unsafe-eval'` ist keine Sicherheitsmassnahme, sondern eine Zeile, die wie eine
+aussieht — und das ist schlechter als keine, weil sie beim nächsten Blick für
+erledigt gehalten wird.
+
+Die beiden `new Function` sind ausserdem **Absicht**: dort läuft, was der
+Mensch selbst als Erweiterung oder Agent geschrieben hat. Das ist der Zweck
+dieser Stellen. Eine CSP, die sie verbietet, würde eine Funktion abschalten,
+nicht eine Lücke.
+
+Was die App **doch** bekommt: `X-Content-Type-Options`, `Referrer-Policy`,
+`X-Frame-Options`, `Permissions-Policy` — die stehen schon in
+`oeffentlich/_headers` und kosten nichts.
+
+**Und die veröffentlichte Seite bekommt die strenge CSP**, weil sie sie
+verträgt: sie braucht kein einziges Skript. `default-src 'none'`. Genau dort
+ist sie am meisten wert — es ist die einzige Seite, die ein fremder Browser
+darstellt, und `sauber()` auf dem Server arbeitet mit regulären Ausdrücken
+statt mit einem Parser.
+
+**Kein `<meta http-equiv="Content-Security-Policy">`.** Es gälte auch für
+`file://`. Redion läuft per Doppelklick auf `index.html` — das ist der Kern der
+Sache, nicht eine Vorliebe. Eine CSP im Dokument würde diesen Weg mitregeln,
+und zwar dort, wo es keinen Server gibt, der sie anpassen könnte. Als
+Kopfzeile trifft sie nur, was wirklich über einen Server geht.
+
+**Offen als D3b:** die 562 Stilattribute in Klassen überführen. Erst danach ist
+eine CSP für die App mehr als Zierde.

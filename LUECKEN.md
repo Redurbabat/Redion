@@ -240,16 +240,46 @@ festgehalten, damit niemand sie noch einmal „repariert".
 | Serverseitige Rechte durchsetzen | **✅** | `test80`–`test84` |
 | Keine geheimen Schlüssel im Frontend | **✅** | der KI-Schlüssel wird eingetippt und bleibt im Browser |
 | Eingaben validieren | **◐** | teilweise; kein durchgehender Prüfpunkt → **D1** |
-| Rate Limiting für Login und öffentliche Seiten | **✗** | → **D2** |
-| Sichere Security Headers | **✗** | kein CSP, kein `X-Content-Type-Options` → **D3** |
+| Rate Limiting für Login und öffentliche Seiten | **✅ repariert** | `server/sicherheit/bremse.js` → `test93` |
+| Sichere Security Headers | **✅ repariert** | `server/sicherheit/kopfzeilen.js` → `test93`, `test94` |
 | Keine sensiblen Daten in Logs | **?** | noch nicht durchgesehen → **D4** |
 
-- [ ] **D2 · Rate Limiting** — Login und `/s/:schluessel`. Cloudflare KV zählt,
-  wie der Auftrag es vorsieht. Ohne Server (`ablageSpeicher`) im Arbeitsspeicher.
-- [ ] **D3 · Security Headers** — `Content-Security-Policy`,
-  `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` für die
-  veröffentlichten Seiten. *Vorsicht:* eine CSP, die `inline` verbietet, bricht
-  die App — sie besteht aus `innerHTML`. Erst messen, dann setzen.
+- [x] **D2 · Rate Limiting** — erledigt. **Nicht überall gleich:** gerechnet
+  statt geraten, wo es überhaupt nötig ist. Der Gerätecode hat 32⁸ ≈ 1,1·10¹²
+  Möglichkeiten, der Seitenschlüssel 48 Bit — beide kann man nicht
+  durchprobieren. Das **Passwort einer öffentlichen Seite** wählt ein Mensch,
+  und das fällt in Sekunden. Dort zieht die Bremse (10 Versuche / 10 Minuten),
+  beim Codeanfordern nur gegen das Vollschreiben (30 / Stunde).
+  Gezählt werden **nur Fehlversuche** — sonst sperrte sich eine viel gelesene
+  Seite selbst. Und ohne erkennbare Herkunft wird **pro Seite** gezählt, nicht
+  global: ein gemeinsamer Zähler wäre keine Sicherheit, sondern eine
+  Selbstsperre. Gespeichert in einer eigenen Tabelle `bremse`, per
+  `CREATE TABLE IF NOT EXISTS` rückwärtskompatibel.
+  *Dabei gefunden:* das Schema steht **zweimal** — in `schema.sql` und als
+  Zeichenkette in `ablage.js`, weil ein Cloudflare-Arbeiter keine Datei lesen
+  kann. Die beiden waren identisch, aber unbewacht. `test87` vergleicht sie
+  jetzt Spalte für Spalte.
+- [x] **D3 · Security Headers** — erledigt, **aber nicht überall**, und das
+  war das Ergebnis der Messung statt einer Annahme.
+
+  *Die veröffentlichte Seite bekommt eine strenge CSP.* Sie ist die einzige
+  Seite dieser App, die ein **fremder** Browser darstellt, und sie braucht kein
+  einziges Skript: `default-src 'none'`. Das ist das zweite Netz für `sauber()`
+  auf dem Server — der arbeitet mit **regulären Ausdrücken** statt mit einem
+  Parser, weil ein Cloudflare-Arbeiter kein DOM hat. `test94` stellt genau den
+  Fall nach: ein Skript wird nach dem Säubern von Hand hineingelegt, und der
+  Browser meldet *„Refused to execute inline script"*.
+
+  *Die App selbst bekommt keine CSP.* Gemessen: **562** `style="…"`-Attribute,
+  2 Inline-`<script>`, `new Function` in `erweiterungen.js` und `ki/agenten.js`
+  — dort läuft **absichtlich**, was der Mensch selbst geschrieben hat —, und
+  über zwanzig fremde Adressen, die der Mensch selbst erweitern kann. Eine CSP
+  mit `'unsafe-inline' 'unsafe-eval'` ist keine CSP, sondern eine Zeile, die so
+  aussieht. → **D3b**
+
+- [ ] **D3b · Die 562 Stilattribute in Klassen überführen** — erst danach ist
+  eine CSP für die App selbst mehr als Zierde. Grosse, rein mechanische Arbeit;
+  eigener Schritt, weil sie kein Verhalten ändert.
 - [ ] **D1 · Ein Prüfpunkt für Eingaben** — heute an jeder Route einzeln.
 - [ ] **D4 · Logs durchsehen**
 
