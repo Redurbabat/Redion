@@ -8541,21 +8541,35 @@ const Store = (() => {
    * sie nicht enthält** — im Feld `fehlt`, und die Oberfläche zeigt es an.
    * Ein bekannter Mangel, der benannt ist, ist kein stiller Verlust.
    */
-  const exportAll = () => {
+  /**
+   * @param {boolean} [mitAnhaengen] true, wenn der Aufrufer die Anhänge
+   *        daneben legt — also beim `.redion`-Archiv. Dann darf die Sicherung
+   *        nicht länger behaupten, sie fehlten.
+   *
+   * Die Felder `enthaelt`, `fehlt` und `hinweis` sind kein Beiwerk. Eine
+   * Sicherung, die nicht sagt, was sie auslässt, ist die gefährlichste Sorte:
+   * man merkt es erst, wenn man sie braucht.
+   */
+  const exportAll = (mitAnhaengen = false) => {
     const dateienDa = zaehlerDateien();
+    const fehlenAnhaenge = dateienDa && !mitAnhaengen;
     return JSON.stringify({
       version: VERSION,
       exportiert: now(),
       /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
-      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions'],
-      fehlt: dateienDa
+      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
+        .concat(mitAnhaengen && dateienDa ? ['dateien', 'stuecke'] : []),
+      fehlt: fehlenAnhaenge
         ? ['dateien', 'stuecke']
         : [],
-      hinweis: dateienDa
+      hinweis: fehlenAnhaenge
         ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
           'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
           'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
-        : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+        : dateienDa
+          ? 'Vollständig: die ' + dateienDa + ' Datei(en) liegen im Ordner ' +
+            '„dateien" desselben Archivs.'
+          : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
       blocks: cache.blocks,
       collections: cache.collections,
       views: cache.views,
@@ -20866,7 +20880,9 @@ const Datenbank = (() => {
         UI.toast('Link zur Ansicht kopiert');
       }
       if (a === 'csv') csvExport(coll, view);
-      if (a === 'xlsx') { Austausch.datenbankAlsExcel(coll); UI.toast('Excel-Mappe erzeugt'); }
+      if (a === 'xlsx') { Austausch.datenbankAlsExcel(coll)
+        .then(() => UI.toast('Excel-Mappe erzeugt'))
+        .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message)); }
       if (a === 'csvin') csvImport(coll);
       if (a === 'ai')  KI.datenbankAuswerten(coll, view);
       if (a === 'del') {
@@ -23284,8 +23300,10 @@ const Werkzeuge = (() => {
     c('Daten', 'Alles als eine HTML-Datei', '', () => einzelDatei());
     c('Daten', 'Aus Trello, Evernote, Obsidian oder Notion einlesen', '', () => Austausch.dialog());
     if (p) c('Daten', 'Diese Seite als Word-Datei (.docx)', '', () => {
-      Austausch.alsWord(p); UI.toast('Word-Datei erzeugt'); });
-    c('Daten', 'Alle Datenbanken als Excel-Mappe (.xlsx)', '', () => Austausch.allesAlsExcel());
+      Austausch.alsWord(p).then(() => UI.toast('Word-Datei erzeugt'))
+        .catch(e => UI.toast('Die Word-Datei kam nicht zustande: ' + e.message)); });
+    c('Daten', 'Alle Datenbanken als Excel-Mappe (.xlsx)', '', () => Austausch.allesAlsExcel()
+      .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message)));
     if (p) c('Seite', 'Fassungen vergleichen', '', () => Vergleich.dialog(p));
 
     c('Ansicht', 'Aussehen: Farben, Schrift, Tastenkürzel', '', () => Aussehen.dialog());
@@ -24506,8 +24524,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       if (a === 'md') App.markdownExport(p);
       if (a === 'html') htmlExport(p);
       if (a === 'pdf') drucken(p);
-      if (a === 'word')  { Austausch.alsWord(p); UI.toast('Word-Datei erzeugt'); }
-      if (a === 'excel') { Austausch.allesAlsExcel(); }
+      if (a === 'word')  { Austausch.alsWord(p).then(() => UI.toast('Word-Datei erzeugt'))
+        .catch(e => UI.toast('Die Word-Datei kam nicht zustande: ' + e.message)); }
+      if (a === 'excel') { Austausch.allesAlsExcel()
+        .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message)); }
       if (a === 'alles') einzelDatei();
       if (a === 'ordner') ordnerSchreiben();
     });
@@ -27148,6 +27168,83 @@ const Einlesen = (() => {
     return { namen: [...dateien.keys()], holen, text };
   };
 
+  /**
+   * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
+   *
+   * WARUM ES BEIDE GIBT. `zipLesen` bekommt einen ArrayBuffer — das ganze
+   * Archiv liegt dann im Speicher. Für eine Word-Datei ist das richtig und
+   * einfach. Für eine Redion-Sicherung mit einem Video darin ist es das
+   * Ende: `await datei.arrayBuffer()` auf ein halbes Gigabyte bringt ein
+   * Telefon zu Fall.
+   *
+   * Ein ZIP kommt einem dabei entgegen. Sein Inhaltsverzeichnis steht am
+   * ENDE; man liest die letzten paar Kilobyte, weiss danach, wo jeder
+   * Eintrag anfängt und wie lang er ist — und holt sich nur den, den man
+   * gerade braucht. `blob.slice` schneidet, ohne zu lesen.
+   *
+   * Zurück kommt deshalb ein **Blob** je Eintrag und kein Byte-Feld: wer ihn
+   * weiterreicht, ohne ihn anzusehen, hat ihn nie im Speicher gehabt.
+   */
+  const zipLesenAusBlob = async (blob) => {
+    const ende = new DataView(await blob.slice(Math.max(0, blob.size - 65558)).arrayBuffer());
+
+    let eocd = -1;
+    for (let i = ende.byteLength - 22; i >= 0; i--)
+      if (ende.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error('Das ist kein gültiges ZIP-Archiv.');
+
+    const anzahl = ende.getUint16(eocd + 10, true);
+    const vzGroesse = ende.getUint32(eocd + 12, true);
+    const vzStart = ende.getUint32(eocd + 16, true);
+
+    const vz = new DataView(await blob.slice(vzStart, vzStart + vzGroesse).arrayBuffer());
+    const vzBytes = new Uint8Array(vz.buffer);
+    const dateien = new Map();
+    let zeiger = 0;
+
+    for (let n = 0; n < anzahl; n++) {
+      if (zeiger + 46 > vz.byteLength || vz.getUint32(zeiger, true) !== 0x02014b50) break;
+      const methode    = vz.getUint16(zeiger + 10, true);
+      const gepackt    = vz.getUint32(zeiger + 20, true);
+      const nameLaenge = vz.getUint16(zeiger + 28, true);
+      const extra      = vz.getUint16(zeiger + 30, true);
+      const kommentar  = vz.getUint16(zeiger + 32, true);
+      const offset     = vz.getUint32(zeiger + 42, true);
+      const name = new TextDecoder().decode(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+      dateien.set(name, { methode, gepackt, offset });
+      zeiger += 46 + nameLaenge + extra + kommentar;
+    }
+
+    /* Die Längen der Zusatzfelder stehen am lokalen Kopf noch einmal, und
+       zwar oft anders als im Verzeichnis. Wer das Verzeichnis glaubt, liest
+       um ein paar Byte verschoben — und bekommt Daten, die fast stimmen. */
+    const alsBlob = async (name) => {
+      const e = dateien.get(name);
+      if (!e) return null;
+      const k = new DataView(await blob.slice(e.offset, e.offset + 30).arrayBuffer());
+      const lokalName  = k.getUint16(26, true);
+      const lokalExtra = k.getUint16(28, true);
+      const start = e.offset + 30 + lokalName + lokalExtra;
+      const roh = blob.slice(start, start + e.gepackt);
+      if (e.methode === 0) return roh;
+      if (e.methode !== 8) throw new Error('Diese Packmethode kennt der Browser nicht.');
+      if (!self.DecompressionStream) throw new Error('Dieser Browser kann kein ZIP entpacken.');
+      const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return await new Response(strom).blob();
+    };
+
+    const holen = async (name) => {
+      const b = await alsBlob(name);
+      return b ? new Uint8Array(await b.arrayBuffer()) : null;
+    };
+    const text = async (name) => {
+      const b = await alsBlob(name);
+      return b ? await b.text() : null;
+    };
+
+    return { namen: [...dateien.keys()], alsBlob, holen, text };
+  };
+
   const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
 
   /* ========================================================================
@@ -27378,7 +27475,7 @@ const Einlesen = (() => {
     return null;
   };
 
-  return { zipLesen, xlsxLesen, docxLesen, epubLesen, alsDatenbank, datei };
+  return { zipLesen, zipLesenAusBlob, xlsxLesen, docxLesen, epubLesen, alsDatenbank, datei };
 })();
 
 window.Einlesen = Einlesen;
@@ -37274,10 +37371,46 @@ const Austausch = (() => {
   };
 
   /**
-   * @param dateien [{ name, inhalt }] — inhalt als Zeichenkette oder Uint8Array
-   * @returns Blob
+   * Dieselbe Prüfsumme, aber häppchenweise — für einen Blob, der nicht in den
+   * Arbeitsspeicher passt.
+   *
+   * WARUM ES DAS BRAUCHT. `crc32` will alle Bytes auf einmal. Bei einem Video
+   * von 500 MB heisst das 500 MB im Arbeitsspeicher, nur um eine Zahl
+   * auszurechnen — auf einem Telefon der sichere Absturz. Ein Blob liegt beim
+   * Browser auf der Platte; wer ihn scheibchenweise liest, braucht nie mehr
+   * als eine Scheibe.
+   *
+   * Die Prüfsumme ist ihrer Natur nach fortlaufend, das kommt uns entgegen:
+   * Byte für Byte, ohne zu wissen, wie viele noch kommen.
    */
-  const zipSchreiben = (dateien) => {
+  const SCHEIBE = 1024 * 1024;
+  const crc32Strom = async (blob, beiFortschritt) => {
+    if (!crcTafel) crc32(new Uint8Array(0));       /* Tafel einmal bauen */
+    let c = 0xFFFFFFFF;
+    for (let von = 0; von < blob.size; von += SCHEIBE) {
+      const bis = Math.min(von + SCHEIBE, blob.size);
+      const teil = new Uint8Array(await blob.slice(von, bis).arrayBuffer());
+      for (let i = 0; i < teil.length; i++) c = crcTafel[(c ^ teil[i]) & 0xFF] ^ (c >>> 8);
+      if (beiFortschritt) beiFortschritt(bis / blob.size);
+    }
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  };
+
+  /* Ein ZIP der alten Bauart zählt Grössen und Versätze in 32 Bit. Darüber
+     braucht es ZIP64 — das ist ein anderes Format, kein grösseres Feld.
+     Hier wird deshalb ehrlich abgebrochen statt still etwas Kaputtes
+     geschrieben, das erst beim Auspacken auffällt. */
+  const ZIP_GRENZE = 0xFFFFFFFF;
+
+  /**
+   * @param dateien [{ name, inhalt }] — inhalt als Zeichenkette, Uint8Array
+   *                oder **Blob**. Ein Blob wird nie ganz eingelesen: seine
+   *                Prüfsumme entsteht scheibchenweise, und in das Archiv
+   *                wandert er als Blob, den der Browser selbst verwaltet.
+   * @param {(name:string, anteil:number)=>void} [beiFortschritt]
+   * @returns {Promise<Blob>}
+   */
+  const zipSchreiben = async (dateien, beiFortschritt) => {
     const enc = new TextEncoder();
     const teile = [];
     const verzeichnis = [];
@@ -37286,10 +37419,23 @@ const Austausch = (() => {
     const schreibe32 = (a, i, w) => { a[i] = w & 255; a[i+1] = (w>>>8) & 255; a[i+2] = (w>>>16) & 255; a[i+3] = (w>>>24) & 255; };
     const schreibe16 = (a, i, w) => { a[i] = w & 255; a[i+1] = (w>>>8) & 255; };
 
-    dateien.forEach(d => {
+    for (const d of dateien) {
       const name = enc.encode(d.name);
-      const inhalt = typeof d.inhalt === 'string' ? enc.encode(d.inhalt) : d.inhalt;
-      const summe = crc32(inhalt);
+      const istBlob = typeof Blob !== 'undefined' && d.inhalt instanceof Blob;
+      const inhalt = istBlob ? d.inhalt
+                   : typeof d.inhalt === 'string' ? enc.encode(d.inhalt)
+                   : d.inhalt;
+      const laenge = istBlob ? inhalt.size : inhalt.length;
+
+      if (laenge > ZIP_GRENZE)
+        throw new Error('„' + d.name + '" ist grösser als 4 GB. Ein ZIP dieser ' +
+                        'Bauart kann das nicht — die Datei bleibt lieber aussen ' +
+                        'vor, als in einem Archiv zu stehen, das sich nicht ' +
+                        'öffnen lässt.');
+
+      const summe = istBlob
+        ? await crc32Strom(inhalt, (a) => beiFortschritt && beiFortschritt(d.name, a))
+        : crc32(inhalt);
 
       const kopf = new Uint8Array(30 + name.length);
       schreibe32(kopf, 0, 0x04034b50);
@@ -37299,8 +37445,8 @@ const Austausch = (() => {
       schreibe16(kopf, 10, 0);         /* Uhrzeit           */
       schreibe16(kopf, 12, 0x21);      /* Datum: 1. Jan 1980 */
       schreibe32(kopf, 14, summe);
-      schreibe32(kopf, 18, inhalt.length);
-      schreibe32(kopf, 22, inhalt.length);
+      schreibe32(kopf, 18, laenge);
+      schreibe32(kopf, 22, laenge);
       schreibe16(kopf, 26, name.length);
       schreibe16(kopf, 28, 0);
       kopf.set(name, 30);
@@ -37315,15 +37461,20 @@ const Austausch = (() => {
       schreibe16(eintrag, 12, 0);
       schreibe16(eintrag, 14, 0x21);
       schreibe32(eintrag, 16, summe);
-      schreibe32(eintrag, 20, inhalt.length);
-      schreibe32(eintrag, 24, inhalt.length);
+      schreibe32(eintrag, 20, laenge);
+      schreibe32(eintrag, 24, laenge);
       schreibe16(eintrag, 28, name.length);
       schreibe32(eintrag, 42, versatz);
       eintrag.set(name, 46);
       verzeichnis.push(eintrag);
 
-      versatz += kopf.length + inhalt.length;
-    });
+      versatz += kopf.length + laenge;
+      if (versatz > ZIP_GRENZE)
+        throw new Error('Diese Sicherung wird grösser als 4 GB. Ein ZIP dieser ' +
+                        'Bauart kann das nicht. Sichere die Anhänge in zwei ' +
+                        'Schritten, statt ein Archiv zu bekommen, das sich ' +
+                        'nicht öffnen lässt.');
+    }
 
     const vzGroesse = verzeichnis.reduce((n, e) => n + e.length, 0);
     const ende = new Uint8Array(22);
@@ -37417,7 +37568,7 @@ const Austausch = (() => {
     return raus.join('');
   };
 
-  const alsWord = (seite) => {
+  const alsWord = async (seite) => {
     const inhalt =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
@@ -37482,7 +37633,7 @@ const Austausch = (() => {
       { name: 'word/numbering.xml', inhalt: nummern }
     ];
 
-    const blob = zipSchreiben(dateien);
+    const blob = await zipSchreiben(dateien);
     laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
     return blob;
   };
@@ -37516,7 +37667,7 @@ const Austausch = (() => {
   /**
    * @param blaetter [{ name, zeilen }]
    */
-  const alsExcel = (blaetter, dateiname) => {
+  const alsExcel = async (blaetter, dateiname) => {
     const sicher = (n, i) => String(n || ('Blatt' + (i + 1)))
       .replace(/[\\/:*?[\]]/g, ' ').slice(0, 31) || ('Blatt' + (i + 1));
 
@@ -37568,7 +37719,7 @@ const Austausch = (() => {
     ].concat(blaetter.map((b, i) =>
       ({ name: `xl/worksheets/sheet${i + 1}.xml`, inhalt: blattXml(b.zeilen) })));
 
-    const blob = zipSchreiben(dateien);
+    const blob = await zipSchreiben(dateien);
     laden(blob, (dateiname || 'Redion') + '.xlsx');
     return blob;
   };
@@ -50475,29 +50626,196 @@ const App = (() => {
   /* Der Einstellungsbereich liegt in einer eigenen Datei. */
   const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
 
+  /**
+   * Die Sicherung schreiben.
+   *
+   * ZWEI FORMATE, UND DAS IST ABSICHT.
+   *
+   *   ohne Anhänge → `.json`, wie bisher. Lesbar, klein, in jedem Editor zu
+   *                  öffnen. Für einen Bestand aus Text ist das genau richtig.
+   *   mit Anhängen → `.redion`, ein ZIP: `daten.json` plus einen Ordner
+   *                  `dateien/` mit den Anhängen unter ihren echten Namen.
+   *
+   * WARUM NICHT IMMER ZIP. Wer nur Text hat, soll seine Sicherung aufmachen
+   * und lesen können. Ein Archiv um eine einzige JSON-Datei ist eine Hürde
+   * ohne Gegenwert.
+   *
+   * WARUM DIE ANHÄNGE UNTER IHREN ECHTEN NAMEN LIEGEN. Ein `.redion` ist ein
+   * gewöhnliches ZIP. Wer es in zehn Jahren öffnet — mit irgendeinem
+   * Packprogramm, ohne Redion —, findet darin seine Bilder und Videos, jedes
+   * mit seinem Namen. Das ist der eigentliche Sinn einer Sicherung: sie muss
+   * die App überleben, die sie geschrieben hat.
+   *
+   * WARUM DAS 500-MB-VIDEO DURCHGEHT. Kein Anhang wird je ganz in den
+   * Arbeitsspeicher geholt. Die Stücke liegen als Blob in der Ablage,
+   * `Dateien.alsBlob` reiht sie aneinander, ohne sie zu lesen, und der
+   * ZIP-Packer rechnet die Prüfsumme scheibchenweise. Was durch den Speicher
+   * geht, ist immer nur ein Megabyte.
+   */
   const sicherungSpeichern = async () => {
     /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
        Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
     const stand = await Store.exportVorbereiten();
-    const blob = new Blob([Store.exportAll()], { type: 'application/json' });
-    const l = document.createElement('a');
-    l.href = URL.createObjectURL(blob);
-    l.download = 'notizen-sicherung-' + new Date().toISOString().slice(0, 10) + '.json';
-    l.click();
-    /* Sagen, was drin ist — und vor allem, was nicht. Ein bekannter Mangel,
-       der benannt ist, ist kein stiller Verlust. */
-    UI.toast(stand.dateien
-      ? 'Sicherung gespeichert — ohne die ' + stand.dateien + ' Datei(en), die ' +
-        'nur auf diesem Gerät liegen'
-      : 'Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
+    const heute = new Date().toISOString().slice(0, 10);
+
+    if (!stand.dateien) {
+      const blob = new Blob([Store.exportAll()], { type: 'application/json' });
+      const l = document.createElement('a');
+      l.href = URL.createObjectURL(blob);
+      l.download = 'redion-sicherung-' + heute + '.json';
+      l.click();
+      UI.toast('Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
+      return;
+    }
+
+    UI.toast(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
+    try {
+      const saetze = await Store.dateiAlle();
+      const eintraege = [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
+      const belegt = new Set(['daten.json']);
+
+      for (const satz of saetze) {
+        const inhalt = await Dateien.alsBlob(satz.id);
+        if (!inhalt) continue;             /* angefangener Upload ohne Stücke */
+        /* Zwei Bilder dürfen „foto.jpg" heissen. Im Archiv darf ein Name nur
+           einmal vorkommen, sonst überschreibt das Auspacken das eine mit dem
+           anderen — still, wie immer bei dieser Sorte Fehler. */
+        const roh = String(satz.name || 'Datei').replace(/[\\/:*?"<>|]/g, '-');
+        let name = 'dateien/' + roh;
+        if (belegt.has(name)) {
+          const punkt = roh.lastIndexOf('.');
+          const stamm = punkt > 0 ? roh.slice(0, punkt) : roh;
+          const endung = punkt > 0 ? roh.slice(punkt) : '';
+          let n = 2;
+          while (belegt.has('dateien/' + stamm + '-' + n + endung)) n++;
+          name = 'dateien/' + stamm + '-' + n + endung;
+        }
+        belegt.add(name);
+        eintraege.push({ name, inhalt, kennung: satz.id });
+      }
+
+      /* Die Zuordnung Name → Kennung gehört in die Sicherung, sonst weiss
+         beim Einspielen niemand, welcher Block welches Bild meint. */
+      const karte = {};
+      eintraege.filter(e => e.kennung).forEach(e => { karte[e.name] = e.kennung; });
+      eintraege.push({ name: 'dateien.json', inhalt: JSON.stringify({
+        version: 1, saetze, zuordnung: karte }, null, 2) });
+
+      const blob = await Austausch.zipSchreiben(eintraege,
+        (name, anteil) => { if (anteil >= 1) UI.toast('Gesichert: ' + name.replace('dateien/', '')); });
+      const l = document.createElement('a');
+      l.href = URL.createObjectURL(blob);
+      l.download = 'redion-sicherung-' + heute + '.redion';
+      l.click();
+      UI.toast('Sicherung gespeichert — mit ' + (eintraege.length - 2) + ' Anhang/Anhängen');
+    } catch (err) {
+      /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
+         hat, ist schlechter dran als jemand, der es weiss. */
+      alert('Die Sicherung kam nicht zustande: ' + err.message +
+            '\n\nEs wurde nichts geschrieben.');
+    }
+  };
+
+  /**
+   * Die Anhänge aus einem `.redion` zurück in die Ablage.
+   *
+   * MIT DEN ALTEN KENNUNGEN, und das ist der ganze Punkt. Ein Block zeigt
+   * über die Kennung auf seine Datei. Legte man die Anhänge als neue Uploads
+   * ab, bekäme jeder eine frische Kennung — die Bilder wären da und keiner
+   * fände sie. Deshalb werden Dateisatz und Stücke von Hand geschrieben,
+   * statt den bequemen Weg über `Dateien.ablegen` zu nehmen.
+   *
+   * In Stücke zerlegt wird wieder, weil die Ablage es so hält: `blob.slice`
+   * schneidet, ohne zu lesen — auch bei einem halben Gigabyte.
+   */
+  const anhaengeEinspielen = async (zip, art) => {
+    const roh = await zip.text('dateien.json');
+    if (!roh) return 0;
+    let karte;
+    try { karte = JSON.parse(roh); } catch { return 0; }
+
+    const STUECK = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.STUECK : 1024 * 1024;
+    const nachName = {};
+    Object.entries(karte.zuordnung || {}).forEach(([name, id]) => { nachName[id] = name; });
+
+    let wieViele = 0;
+    for (const satz of (karte.saetze || [])) {
+      const name = nachName[satz.id];
+      if (!name) continue;
+      const roh2 = await zip.alsBlob(name);
+      if (!roh2) continue;
+      /* `alsBlob` hat die Bytes nie gelesen — hier bleibt es dabei. Der Typ
+         kommt aus dem Dateisatz, nicht aus dem Archiv: ein ZIP kennt keine
+         Medientypen, und ohne ihn zeigt der Browser ein Bild als Download. */
+      const blob = roh2.type === (satz.typ || '') ? roh2
+                 : new Blob([roh2], { type: satz.typ || 'application/octet-stream' });
+
+      /* Alte Stücke derselben Kennung zuerst weg — sonst lägen beim
+         Dazulegen zwei Fassungen übereinander und die Datei wäre doppelt
+         so lang wie sie sein sollte. */
+      for (const alt of await Store.stueckeVon(satz.id)) await Store.stueckWeg(alt.id);
+
+      const teile = Math.max(1, Math.ceil(blob.size / STUECK));
+      for (let nr = 0; nr < teile; nr++) {
+        const von = nr * STUECK;
+        await Store.stueckPut({ id: satz.id + ':' + nr, dateiId: satz.id, nr,
+                                blob: blob.slice(von, Math.min(von + STUECK, blob.size)) });
+      }
+      await Store.dateiPut(Object.assign({}, satz, {
+        teile, angekommen: teile, zustand: 'fertig', groesse: blob.size }));
+      wieViele++;
+    }
+
+    /* ERSETZEN heisst: der Bestand sieht danach aus wie die Sicherung. Für
+       die Anhänge gilt das nur, wenn die Sicherung sie überhaupt abdeckt —
+       und genau das tut sie hier, sonst gäbe es keine `dateien.json`.
+       Anhänge, die in ihr nicht vorkommen, gehören zu Seiten, die es jetzt
+       auch nicht mehr gibt; sie blieben sonst für immer unerreichbar liegen.
+
+       Bei einer `.json`-Sicherung geschieht das ausdrücklich NICHT: die sagt
+       selbst, dass sie die Anhänge nicht enthält. Etwas wegzuwerfen, weil es
+       in einer Datei fehlt, die zugibt, es nicht zu kennen, wäre die
+       schlimmste Art von Datenverlust. */
+    if (art === 'ersetzen') {
+      const gehoertDazu = new Set((karte.saetze || []).map(s => s.id));
+      for (const alt of await Store.dateiAlle()) {
+        if (gehoertDazu.has(alt.id)) continue;
+        for (const st of await Store.stueckeVon(alt.id)) await Store.stueckWeg(st.id);
+        await Store.dateiWeg(alt.id);
+      }
+    }
+    return wieViele;
   };
 
   const sicherungLaden = (danach) => {
     const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = '.json';
+    inp.type = 'file'; inp.accept = '.json,.redion,.zip';
     inp.addEventListener('change', async () => {
       const f = inp.files[0]; if (!f) return;
-      const text = await f.text();
+
+      /* Ein `.redion` ist ein ZIP mit `daten.json` darin. Erkannt wird es am
+         Inhalt und nicht an der Endung: eine umbenannte Datei ist deswegen
+         nicht kaputt, und eine `.json`, die in Wahrheit ein ZIP ist, wäre
+         sonst „keine Sicherung". */
+      let zip = null, text = '';
+      const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
+      if (istZip) {
+        try {
+          zip = await Einlesen.zipLesenAusBlob(f);
+          text = await zip.text('daten.json') || '';
+        } catch (e) {
+          alert('Dieses Archiv liess sich nicht öffnen: ' + e.message);
+          return;
+        }
+        if (!text) {
+          alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
+                'Redion-Sicherung.');
+          return;
+        }
+      } else {
+        text = await f.text();
+      }
 
       /* WAS SOLL GESCHEHEN? Vorher gab es diese Frage nicht, und das Ergebnis
          war keines von beidem: die Sicherung überschrieb den Zwischenspeicher
@@ -50536,10 +50854,16 @@ const App = (() => {
 
       try {
         const erg = await Store.importAll(text, wahl);
+        /* Die Anhänge NACH den Blöcken. Andersherum stünden die Dateien in
+           der Ablage und würden beim „Ersetzen" gleich wieder mit gelöscht —
+           `ersetzen` räumt weg, was nicht in der Sicherung steht. */
+        let anhaenge = 0;
+        if (zip) anhaenge = await anhaengeEinspielen(zip, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
         UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
-                 (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : ''));
+                 (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
+                 (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : ''));
       } catch (err) { alert('Konnte nicht geladen werden: ' + err.message); }
     });
     inp.click();

@@ -260,9 +260,48 @@ Der Umzug war richtig gebaut. Bis hierher war das aber eine Annahme.
   Die Sicherung nennt im Feld `fehlt`, was nicht drin ist, und die Oberfläche
   sagt es beim Speichern. → **E6**
 
-- [ ] **E6 · Anhänge in die Sicherung** — braucht eine Antwort auf die Frage,
-  was bei einem 500-MB-Video geschieht. Base64 in derselben JSON-Datei geht
-  dafür nicht.
+- [x] **E6 · Anhänge in die Sicherung** — erledigt. Die Antwort auf das
+  500-MB-Video heisst **`.redion`**, ein gewöhnliches ZIP:
+
+  | | |
+  |---|---|
+  | `daten.json` | der Bestand, wie bisher |
+  | `dateien.json` | welcher Anhang zu welcher Kennung gehört |
+  | `dateien/…` | die Anhänge, **unter ihren echten Namen** |
+
+  **Nichts geht je ganz durch den Arbeitsspeicher.** Die Stücke liegen als
+  Blob in der Ablage, `Dateien.alsBlob` reiht sie aneinander ohne sie zu
+  lesen, der Packer rechnet die Prüfsumme scheibchenweise, und der neue
+  Leser `zipLesenAusBlob` holt sich über das Inhaltsverzeichnis am Ende
+  genau den Eintrag, den er braucht. Durch den Speicher geht immer nur ein
+  Megabyte.
+
+  **Zwei Formate mit Absicht:** ohne Anhänge weiterhin `.json` — wer nur
+  Text hat, soll seine Sicherung aufmachen und lesen können. Ein Archiv um
+  eine einzige JSON-Datei ist eine Hürde ohne Gegenwert.
+
+  **Die echten Dateinamen** sind der eigentliche Punkt: wer das Archiv in
+  zehn Jahren mit irgendeinem Packprogramm öffnet, ohne Redion, findet
+  darin seine Bilder und Videos. Eine Sicherung muss die App überleben, die
+  sie geschrieben hat. Gleiche Namen werden durchnummeriert — sonst
+  überschriebe das Auspacken das eine mit dem anderen, still.
+
+  **Beim Einspielen behalten die Anhänge ihre alten Kennungen.** Legte man
+  sie als neue Uploads ab, wären die Bilder da und kein Block fände sie.
+
+  **Was beim „Ersetzen" weggeht und was nicht:** ein `.redion` deckt die
+  Anhänge ab, also räumt es auch fremde weg. Eine `.json` sagt selbst, dass
+  sie die Anhänge nicht kennt — und was sie nicht kennt, darf sie nicht
+  löschen. → **E10** in `ENTSCHEIDUNGEN.md`
+
+  **Über 4 GB wird abgelehnt statt kaputt geschrieben.** Ein ZIP dieser
+  Bauart zählt in 32 Bit; darüber braucht es ZIP64, ein anderes Format. Der
+  Satz nennt die Datei beim Namen und sagt, warum das besser ist.
+
+  `test100.mjs`, 27 Prüfungen — mit echten Bytes: anlegen, sichern, alles
+  löschen, zurückspielen, Byte für Byte vergleichen.
+
+**Damit ist Etappe 1 abgeschlossen: E1 bis E6.**
 - [x] **E3 · Papierkorb** — erledigt, und es waren **vier** Befunde. Der
   Papierkorb hat zwei Versprechen zu halten; beide stimmten nicht.
 

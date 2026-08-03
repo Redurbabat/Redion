@@ -1214,29 +1214,196 @@ const App = (() => {
   /* Der Einstellungsbereich liegt in einer eigenen Datei. */
   const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
 
+  /**
+   * Die Sicherung schreiben.
+   *
+   * ZWEI FORMATE, UND DAS IST ABSICHT.
+   *
+   *   ohne Anhänge → `.json`, wie bisher. Lesbar, klein, in jedem Editor zu
+   *                  öffnen. Für einen Bestand aus Text ist das genau richtig.
+   *   mit Anhängen → `.redion`, ein ZIP: `daten.json` plus einen Ordner
+   *                  `dateien/` mit den Anhängen unter ihren echten Namen.
+   *
+   * WARUM NICHT IMMER ZIP. Wer nur Text hat, soll seine Sicherung aufmachen
+   * und lesen können. Ein Archiv um eine einzige JSON-Datei ist eine Hürde
+   * ohne Gegenwert.
+   *
+   * WARUM DIE ANHÄNGE UNTER IHREN ECHTEN NAMEN LIEGEN. Ein `.redion` ist ein
+   * gewöhnliches ZIP. Wer es in zehn Jahren öffnet — mit irgendeinem
+   * Packprogramm, ohne Redion —, findet darin seine Bilder und Videos, jedes
+   * mit seinem Namen. Das ist der eigentliche Sinn einer Sicherung: sie muss
+   * die App überleben, die sie geschrieben hat.
+   *
+   * WARUM DAS 500-MB-VIDEO DURCHGEHT. Kein Anhang wird je ganz in den
+   * Arbeitsspeicher geholt. Die Stücke liegen als Blob in der Ablage,
+   * `Dateien.alsBlob` reiht sie aneinander, ohne sie zu lesen, und der
+   * ZIP-Packer rechnet die Prüfsumme scheibchenweise. Was durch den Speicher
+   * geht, ist immer nur ein Megabyte.
+   */
   const sicherungSpeichern = async () => {
     /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
        Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
     const stand = await Store.exportVorbereiten();
-    const blob = new Blob([Store.exportAll()], { type: 'application/json' });
-    const l = document.createElement('a');
-    l.href = URL.createObjectURL(blob);
-    l.download = 'notizen-sicherung-' + new Date().toISOString().slice(0, 10) + '.json';
-    l.click();
-    /* Sagen, was drin ist — und vor allem, was nicht. Ein bekannter Mangel,
-       der benannt ist, ist kein stiller Verlust. */
-    UI.toast(stand.dateien
-      ? 'Sicherung gespeichert — ohne die ' + stand.dateien + ' Datei(en), die ' +
-        'nur auf diesem Gerät liegen'
-      : 'Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
+    const heute = new Date().toISOString().slice(0, 10);
+
+    if (!stand.dateien) {
+      const blob = new Blob([Store.exportAll()], { type: 'application/json' });
+      const l = document.createElement('a');
+      l.href = URL.createObjectURL(blob);
+      l.download = 'redion-sicherung-' + heute + '.json';
+      l.click();
+      UI.toast('Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
+      return;
+    }
+
+    UI.toast(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
+    try {
+      const saetze = await Store.dateiAlle();
+      const eintraege = [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
+      const belegt = new Set(['daten.json']);
+
+      for (const satz of saetze) {
+        const inhalt = await Dateien.alsBlob(satz.id);
+        if (!inhalt) continue;             /* angefangener Upload ohne Stücke */
+        /* Zwei Bilder dürfen „foto.jpg" heissen. Im Archiv darf ein Name nur
+           einmal vorkommen, sonst überschreibt das Auspacken das eine mit dem
+           anderen — still, wie immer bei dieser Sorte Fehler. */
+        const roh = String(satz.name || 'Datei').replace(/[\\/:*?"<>|]/g, '-');
+        let name = 'dateien/' + roh;
+        if (belegt.has(name)) {
+          const punkt = roh.lastIndexOf('.');
+          const stamm = punkt > 0 ? roh.slice(0, punkt) : roh;
+          const endung = punkt > 0 ? roh.slice(punkt) : '';
+          let n = 2;
+          while (belegt.has('dateien/' + stamm + '-' + n + endung)) n++;
+          name = 'dateien/' + stamm + '-' + n + endung;
+        }
+        belegt.add(name);
+        eintraege.push({ name, inhalt, kennung: satz.id });
+      }
+
+      /* Die Zuordnung Name → Kennung gehört in die Sicherung, sonst weiss
+         beim Einspielen niemand, welcher Block welches Bild meint. */
+      const karte = {};
+      eintraege.filter(e => e.kennung).forEach(e => { karte[e.name] = e.kennung; });
+      eintraege.push({ name: 'dateien.json', inhalt: JSON.stringify({
+        version: 1, saetze, zuordnung: karte }, null, 2) });
+
+      const blob = await Austausch.zipSchreiben(eintraege,
+        (name, anteil) => { if (anteil >= 1) UI.toast('Gesichert: ' + name.replace('dateien/', '')); });
+      const l = document.createElement('a');
+      l.href = URL.createObjectURL(blob);
+      l.download = 'redion-sicherung-' + heute + '.redion';
+      l.click();
+      UI.toast('Sicherung gespeichert — mit ' + (eintraege.length - 2) + ' Anhang/Anhängen');
+    } catch (err) {
+      /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
+         hat, ist schlechter dran als jemand, der es weiss. */
+      alert('Die Sicherung kam nicht zustande: ' + err.message +
+            '\n\nEs wurde nichts geschrieben.');
+    }
+  };
+
+  /**
+   * Die Anhänge aus einem `.redion` zurück in die Ablage.
+   *
+   * MIT DEN ALTEN KENNUNGEN, und das ist der ganze Punkt. Ein Block zeigt
+   * über die Kennung auf seine Datei. Legte man die Anhänge als neue Uploads
+   * ab, bekäme jeder eine frische Kennung — die Bilder wären da und keiner
+   * fände sie. Deshalb werden Dateisatz und Stücke von Hand geschrieben,
+   * statt den bequemen Weg über `Dateien.ablegen` zu nehmen.
+   *
+   * In Stücke zerlegt wird wieder, weil die Ablage es so hält: `blob.slice`
+   * schneidet, ohne zu lesen — auch bei einem halben Gigabyte.
+   */
+  const anhaengeEinspielen = async (zip, art) => {
+    const roh = await zip.text('dateien.json');
+    if (!roh) return 0;
+    let karte;
+    try { karte = JSON.parse(roh); } catch { return 0; }
+
+    const STUECK = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.STUECK : 1024 * 1024;
+    const nachName = {};
+    Object.entries(karte.zuordnung || {}).forEach(([name, id]) => { nachName[id] = name; });
+
+    let wieViele = 0;
+    for (const satz of (karte.saetze || [])) {
+      const name = nachName[satz.id];
+      if (!name) continue;
+      const roh2 = await zip.alsBlob(name);
+      if (!roh2) continue;
+      /* `alsBlob` hat die Bytes nie gelesen — hier bleibt es dabei. Der Typ
+         kommt aus dem Dateisatz, nicht aus dem Archiv: ein ZIP kennt keine
+         Medientypen, und ohne ihn zeigt der Browser ein Bild als Download. */
+      const blob = roh2.type === (satz.typ || '') ? roh2
+                 : new Blob([roh2], { type: satz.typ || 'application/octet-stream' });
+
+      /* Alte Stücke derselben Kennung zuerst weg — sonst lägen beim
+         Dazulegen zwei Fassungen übereinander und die Datei wäre doppelt
+         so lang wie sie sein sollte. */
+      for (const alt of await Store.stueckeVon(satz.id)) await Store.stueckWeg(alt.id);
+
+      const teile = Math.max(1, Math.ceil(blob.size / STUECK));
+      for (let nr = 0; nr < teile; nr++) {
+        const von = nr * STUECK;
+        await Store.stueckPut({ id: satz.id + ':' + nr, dateiId: satz.id, nr,
+                                blob: blob.slice(von, Math.min(von + STUECK, blob.size)) });
+      }
+      await Store.dateiPut(Object.assign({}, satz, {
+        teile, angekommen: teile, zustand: 'fertig', groesse: blob.size }));
+      wieViele++;
+    }
+
+    /* ERSETZEN heisst: der Bestand sieht danach aus wie die Sicherung. Für
+       die Anhänge gilt das nur, wenn die Sicherung sie überhaupt abdeckt —
+       und genau das tut sie hier, sonst gäbe es keine `dateien.json`.
+       Anhänge, die in ihr nicht vorkommen, gehören zu Seiten, die es jetzt
+       auch nicht mehr gibt; sie blieben sonst für immer unerreichbar liegen.
+
+       Bei einer `.json`-Sicherung geschieht das ausdrücklich NICHT: die sagt
+       selbst, dass sie die Anhänge nicht enthält. Etwas wegzuwerfen, weil es
+       in einer Datei fehlt, die zugibt, es nicht zu kennen, wäre die
+       schlimmste Art von Datenverlust. */
+    if (art === 'ersetzen') {
+      const gehoertDazu = new Set((karte.saetze || []).map(s => s.id));
+      for (const alt of await Store.dateiAlle()) {
+        if (gehoertDazu.has(alt.id)) continue;
+        for (const st of await Store.stueckeVon(alt.id)) await Store.stueckWeg(st.id);
+        await Store.dateiWeg(alt.id);
+      }
+    }
+    return wieViele;
   };
 
   const sicherungLaden = (danach) => {
     const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = '.json';
+    inp.type = 'file'; inp.accept = '.json,.redion,.zip';
     inp.addEventListener('change', async () => {
       const f = inp.files[0]; if (!f) return;
-      const text = await f.text();
+
+      /* Ein `.redion` ist ein ZIP mit `daten.json` darin. Erkannt wird es am
+         Inhalt und nicht an der Endung: eine umbenannte Datei ist deswegen
+         nicht kaputt, und eine `.json`, die in Wahrheit ein ZIP ist, wäre
+         sonst „keine Sicherung". */
+      let zip = null, text = '';
+      const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
+      if (istZip) {
+        try {
+          zip = await Einlesen.zipLesenAusBlob(f);
+          text = await zip.text('daten.json') || '';
+        } catch (e) {
+          alert('Dieses Archiv liess sich nicht öffnen: ' + e.message);
+          return;
+        }
+        if (!text) {
+          alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
+                'Redion-Sicherung.');
+          return;
+        }
+      } else {
+        text = await f.text();
+      }
 
       /* WAS SOLL GESCHEHEN? Vorher gab es diese Frage nicht, und das Ergebnis
          war keines von beidem: die Sicherung überschrieb den Zwischenspeicher
@@ -1275,10 +1442,16 @@ const App = (() => {
 
       try {
         const erg = await Store.importAll(text, wahl);
+        /* Die Anhänge NACH den Blöcken. Andersherum stünden die Dateien in
+           der Ablage und würden beim „Ersetzen" gleich wieder mit gelöscht —
+           `ersetzen` räumt weg, was nicht in der Sicherung steht. */
+        let anhaenge = 0;
+        if (zip) anhaenge = await anhaengeEinspielen(zip, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
         UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
-                 (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : ''));
+                 (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
+                 (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : ''));
       } catch (err) { alert('Konnte nicht geladen werden: ' + err.message); }
     });
     inp.click();

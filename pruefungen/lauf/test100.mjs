@@ -1,0 +1,336 @@
+/* Suite 65 — Die Sicherung nimmt die Anhänge mit
+ * ----------------------------------------------------------------------------
+ * Der letzte offene Punkt aus Etappe 1. `test96` hat vor zwei Schritten
+ * festgehalten, was fehlt:
+ *
+ *   „`dateien` und `stuecke` halten Blobs. `JSON.stringify` macht daraus `{}`
+ *    — sie wären scheinbar dabei und in Wahrheit leer, was schlimmer ist als
+ *    zu fehlen."
+ *
+ * Seither sagte die Sicherung wenigstens, dass sie die Anhänge auslässt. Ein
+ * benannter Mangel ist kein stiller Verlust — aber ein Mangel bleibt er.
+ *
+ * ─── DIE FRAGE, DIE E6 OFFEN HIELT ──────────────────────────────────────────
+ *
+ * Was geschieht bei einem Video von 500 MB? Base64 in derselben JSON-Datei
+ * geht nicht: es wird um ein Drittel grösser und liegt vollständig im
+ * Arbeitsspeicher, zusammen mit der Zeichenkette, die daraus wird. Auf einem
+ * Telefon ist das der sichere Absturz.
+ *
+ * ─── DIE ANTWORT: `.redion`, EIN GEWÖHNLICHES ZIP ───────────────────────────
+ *
+ *   daten.json      der Bestand, wie bisher
+ *   dateien.json    welcher Anhang zu welcher Kennung gehört
+ *   dateien/…       die Anhänge, unter ihren echten Namen
+ *
+ * Nichts davon geht je ganz durch den Arbeitsspeicher. Die Stücke liegen als
+ * Blob in der Ablage, `Dateien.alsBlob` reiht sie aneinander, ohne sie zu
+ * lesen, der Packer rechnet die Prüfsumme scheibchenweise, und der Leser
+ * holt sich über das Inhaltsverzeichnis am Ende genau den Eintrag, den er
+ * braucht. Was durch den Speicher geht, ist immer nur ein Megabyte.
+ *
+ * Dass die Anhänge unter ihren echten Namen liegen, ist Absicht: wer das
+ * Archiv in zehn Jahren mit irgendeinem Packprogramm öffnet, findet seine
+ * Bilder. Eine Sicherung muss die App überleben, die sie geschrieben hat.
+ *
+ * ─── WAS DIESER LAUF PRÜFT ──────────────────────────────────────────────────
+ *
+ * Den Rundlauf mit echten Bytes: Anhang anlegen, sichern, alles löschen,
+ * zurückspielen, Byte für Byte vergleichen. Dazu die beiden Richtungen, in
+ * denen es schiefgehen kann — dass beim Ersetzen zu viel weggeht, und dass
+ * bei einer `.json`-Sicherung überhaupt etwas weggeht.
+ *
+ *   node pruefungen/lauf/test100.mjs
+ * ==========================================================================*/
+import { chromium } from 'playwright';
+import { fileURLToPath as _alsPfad } from 'node:url';
+import { dirname as _ordner, resolve as _loese, join as _dazu } from 'node:path';
+import { readFileSync as _lies, existsSync as _da } from 'node:fs';
+import { createServer } from 'node:http';
+
+const WURZEL = _loese(_ordner(_alsPfad(import.meta.url)), '../..');
+const PORT = 8815;
+
+let ok = 0, weg = 0;
+const p = (n, b, extra = '') => { if (b) { ok++; console.log('  ✓ ' + n); }
+  else { weg++; console.log('  ✗ ' + n + (extra ? ' — ' + extra : '')); } };
+const gleich = (n, ist, soll) =>
+  p(n, JSON.stringify(ist) === JSON.stringify(soll),
+    `ist=${JSON.stringify(ist)} soll=${JSON.stringify(soll)}`);
+
+const TYP = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+              '.css': 'text/css; charset=utf-8', '.json': 'application/json',
+              '.webmanifest': 'application/manifest+json', '.png': 'image/png',
+              '.ico': 'image/x-icon' };
+const server = createServer((a, b) => {
+  const rein = decodeURIComponent(a.url.split('?')[0]);
+  const pfad = _dazu(WURZEL, rein === '/' ? 'index.html' : rein.slice(1));
+  if (!pfad.startsWith(WURZEL) || !_da(pfad)) { b.writeHead(404); b.end(); return; }
+  b.writeHead(200, { 'Content-Type': TYP[pfad.slice(pfad.lastIndexOf('.'))] || 'application/octet-stream' });
+  b.end(_lies(pfad));
+});
+await new Promise(f => server.listen(PORT, f));
+
+const browser = await chromium.launch();
+const kontext = await browser.newContext();
+const seite = await kontext.newPage();
+const fehler = [];
+seite.on('pageerror', e => fehler.push(e.message));
+
+await seite.goto(`http://localhost:${PORT}/index.html`);
+await seite.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'undefined' &&
+                                  typeof Austausch !== 'undefined' && typeof Einlesen !== 'undefined',
+                            null, { timeout: 20000 });
+
+const neu = await seite.evaluate(() => ({
+  packer: typeof Austausch.zipSchreiben === 'function',
+  leser:  typeof Einlesen.zipLesenAusBlob === 'function'
+}));
+p('Der Packer ist da', neu.packer);
+p('Der Leser für grosse Archive ist da (zipLesenAusBlob)', neu.leser);
+if (!neu.leser) {
+  console.log('\n  (Alles Weitere braucht Einlesen.zipLesenAusBlob.)');
+  console.log(`\n  Suite 65 — Anhänge in der Sicherung: ${ok} ok, ${weg} offen`);
+  await browser.close(); server.close(); process.exit(1);
+}
+
+/* ========================================================================= *
+ * 1 · DER PACKER NIMMT EINEN BLOB, OHNE IHN ZU LESEN
+ * ========================================================================= */
+console.log('\n1 · Ein Blob kommt heil durch den Packer');
+
+/* MIT NETZ. Dreht man die Blob-Behandlung im Packer zurück, entsteht ein
+   Archiv mit unsinnigen Längenangaben, und das Lesen wirft. Ein Lauf, der
+   daran stirbt, ist rot — sagt aber nicht, WAS fehlt. Also wird der Fehler
+   hier zur Aussage gemacht statt zum Absturz. */
+const rundZip = await seite.evaluate(async () => {
+ try {
+  /* Vier Megabyte mit einem Muster darin — gross genug, dass die
+     Prüfsumme über mehrere Scheiben läuft, klein genug für einen Prüflauf. */
+  const gross = new Uint8Array(4 * 1024 * 1024);
+  for (let i = 0; i < gross.length; i++) gross[i] = (i * 7 + 13) & 255;
+  const blob = new Blob([gross]);
+
+  const archiv = await Austausch.zipSchreiben([
+    { name: 'daten.json', inhalt: JSON.stringify({ hallo: 'welt' }) },
+    { name: 'dateien/gross.bin', inhalt: blob }
+  ]);
+
+  const zip = await Einlesen.zipLesenAusBlob(archiv);
+  const zurueck = new Uint8Array(await (await zip.alsBlob('dateien/gross.bin')).arrayBuffer());
+
+  let gleich = zurueck.length === gross.length;
+  if (gleich) for (let i = 0; i < gross.length; i++)
+    if (zurueck[i] !== gross[i]) { gleich = false; break; }
+
+  return { namen: zip.namen, text: await zip.text('daten.json'),
+           laenge: zurueck.length, gleich, archivGroesse: archiv.size };
+ } catch (e) {
+   return { namen: [], text: '', laenge: -1, gleich: false, archivGroesse: -1,
+            fehler: e.message };
+ }
+});
+
+if (rundZip.fehler) console.log('    (Der Packer warf: ' + rundZip.fehler.slice(0, 110) + ')');
+gleich('Beide Einträge stehen im Archiv', rundZip.namen,
+       ['daten.json', 'dateien/gross.bin']);
+gleich('Die JSON kommt unverändert zurück', rundZip.text, '{"hallo":"welt"}');
+gleich('Der Blob hat dieselbe Länge', rundZip.laenge, 4 * 1024 * 1024);
+p('… und denselben Inhalt, Byte für Byte', rundZip.gleich,
+  'ein Archiv, das fast stimmt, ist schlimmer als eines, das fehlt');
+p('Das Archiv ist so gross wie sein Inhalt (ungepackt)',
+  rundZip.archivGroesse > 4 * 1024 * 1024 && rundZip.archivGroesse < 4.1 * 1024 * 1024,
+  String(rundZip.archivGroesse));
+
+/* Die Gegenrichtung: ein Archiv aus lauter kleinen Texten muss weiterhin
+   gehen — Word und Excel gehen denselben Weg. */
+const kleinKram = await seite.evaluate(async () => {
+  const a = await Austausch.zipSchreiben([
+    { name: 'a.txt', inhalt: 'eins' },
+    { name: 'b/c.txt', inhalt: 'zwei' }
+  ]);
+  const z = await Einlesen.zipLesen(await a.arrayBuffer());
+  return [await z.text('a.txt'), await z.text('b/c.txt')];
+});
+gleich('Der alte Leser kann das neue Archiv auch', kleinKram, ['eins', 'zwei']);
+
+/* ========================================================================= *
+ * 2 · DER RUNDLAUF MIT EINEM ECHTEN ANHANG
+ * ========================================================================= */
+console.log('\n2 · Anhang sichern, alles löschen, zurückspielen');
+
+const rund = await seite.evaluate(async () => {
+  /* Einen Anhang so ablegen, wie es die App tut. */
+  const bytes = new Uint8Array(300 * 1024);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 5) & 255;
+  const datei = new File([bytes], 'ferien.jpg', { type: 'image/jpeg' });
+
+  const s = Store.addPage(null, { text: 'Seite mit Bild' });
+  const b = Store.addBlock(s.id, 'image', { text: 'ferien.jpg' });
+  const satz = await Dateien.ablegen(datei, { blockId: b.id, name: 'ferien.jpg' });
+  await Store.flush();
+
+  /* Und ein zweites mit demselben Namen — im Archiv darf ein Name nur
+     einmal vorkommen, sonst überschreibt das Auspacken das eine mit dem
+     anderen. */
+  const zwei = await Dateien.ablegen(new File([bytes.slice(0, 1000)], 'ferien.jpg',
+    { type: 'image/jpeg' }), { blockId: b.id, name: 'ferien.jpg' });
+  await Store.flush();
+
+  return { seiteId: s.id, blockId: b.id, dateiId: satz.id, zweiteId: zwei.id,
+           groesse: satz.groesse };
+});
+gleich('Der Anhang liegt in der Ablage', rund.groesse, 300 * 1024);
+
+/* Das Archiv bauen — genau wie `sicherungSpeichern` es tut. */
+const archiv = await seite.evaluate(async () => {
+  const stand = await Store.exportVorbereiten();
+  const saetze = await Store.dateiAlle();
+  const eintraege = [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
+  const belegt = new Set(['daten.json']);
+  for (const satz of saetze) {
+    const inhalt = await Dateien.alsBlob(satz.id);
+    if (!inhalt) continue;
+    const roh = String(satz.name || 'Datei').replace(/[\\/:*?"<>|]/g, '-');
+    let name = 'dateien/' + roh;
+    if (belegt.has(name)) {
+      const punkt = roh.lastIndexOf('.');
+      const stamm = punkt > 0 ? roh.slice(0, punkt) : roh;
+      const endung = punkt > 0 ? roh.slice(punkt) : '';
+      let n = 2;
+      while (belegt.has('dateien/' + stamm + '-' + n + endung)) n++;
+      name = 'dateien/' + stamm + '-' + n + endung;
+    }
+    belegt.add(name);
+    eintraege.push({ name, inhalt, kennung: satz.id });
+  }
+  const karte = {};
+  eintraege.filter(e => e.kennung).forEach(e => { karte[e.name] = e.kennung; });
+  eintraege.push({ name: 'dateien.json', inhalt: JSON.stringify({
+    version: 1, saetze, zuordnung: karte }, null, 2) });
+
+  const blob = await Austausch.zipSchreiben(eintraege);
+  window.__archiv = blob;                       /* für den nächsten Schritt */
+  const zip = await Einlesen.zipLesenAusBlob(blob);
+  const daten = JSON.parse(await zip.text('daten.json'));
+  return { namen: zip.namen, dateienDa: stand.dateien,
+           enthaelt: daten.enthaelt, fehlt: daten.fehlt, hinweis: daten.hinweis };
+});
+
+gleich('Die Sicherung kennt zwei Anhänge', archiv.dateienDa, 2);
+p('Beide liegen unter ihrem echten Namen im Archiv',
+  archiv.namen.includes('dateien/ferien.jpg') && archiv.namen.includes('dateien/ferien-2.jpg'),
+  JSON.stringify(archiv.namen));
+p('Die Zuordnung liegt daneben', archiv.namen.includes('dateien.json'));
+p('Die Sicherung behauptet nicht mehr, die Anhänge zu vermissen',
+  archiv.enthaelt.includes('dateien') && archiv.fehlt.length === 0,
+  JSON.stringify({ enthaelt: archiv.enthaelt, fehlt: archiv.fehlt }));
+p('… und sagt, wo sie liegen', /Ordner/.test(archiv.hinweis || ''), archiv.hinweis);
+
+/* Jetzt alles weg — und zurück. */
+const zurueck = await seite.evaluate(async ([dateiId, zweiteId]) => {
+  const vorher = new Uint8Array(await (await Dateien.alsBlob(dateiId)).arrayBuffer());
+
+  await Store.wipe();
+  const leer = { dateien: (await Store.dateiAlle()).length,
+                 bloecke: Object.keys(Store.cache.blocks).length };
+
+  const zip = await Einlesen.zipLesenAusBlob(window.__archiv);
+  await Store.importAll(await zip.text('daten.json'), 'ersetzen');
+
+  /* Derselbe Weg wie in `anhaengeEinspielen`. */
+  const karte = JSON.parse(await zip.text('dateien.json'));
+  const nachName = {};
+  Object.entries(karte.zuordnung).forEach(([name, id]) => { nachName[id] = name; });
+  const STUECK = KONSTANTEN.STUECK;
+  for (const satz of karte.saetze) {
+    const name = nachName[satz.id];
+    const roh = await zip.alsBlob(name);
+    if (!roh) continue;
+    const blob = new Blob([roh], { type: satz.typ });
+    for (const alt of await Store.stueckeVon(satz.id)) await Store.stueckWeg(alt.id);
+    const teile = Math.max(1, Math.ceil(blob.size / STUECK));
+    for (let nr = 0; nr < teile; nr++)
+      await Store.stueckPut({ id: satz.id + ':' + nr, dateiId: satz.id, nr,
+        blob: blob.slice(nr * STUECK, Math.min((nr + 1) * STUECK, blob.size)) });
+    await Store.dateiPut(Object.assign({}, satz, {
+      teile, angekommen: teile, zustand: 'fertig', groesse: blob.size }));
+  }
+
+  const wieder = await Dateien.alsBlob(dateiId);
+  const nachher = wieder ? new Uint8Array(await wieder.arrayBuffer()) : new Uint8Array(0);
+  let identisch = nachher.length === vorher.length;
+  if (identisch) for (let i = 0; i < vorher.length; i++)
+    if (vorher[i] !== nachher[i]) { identisch = false; break; }
+
+  const satzZwei = await Store.dateiHolen(zweiteId);
+  return { leer, identisch, laenge: nachher.length,
+           zweiteDa: !!satzZwei, zweiteGroesse: satzZwei ? satzZwei.groesse : -1,
+           typ: wieder ? wieder.type : '' };
+}, [rund.dateiId, rund.zweiteId]);
+
+gleich('Nach dem Löschen ist wirklich nichts mehr da', zurueck.leer,
+       { dateien: 0, bloecke: 0 });
+p('Der Anhang ist zurück, Byte für Byte identisch', zurueck.identisch,
+  `${zurueck.laenge} statt ${300 * 1024} Byte`);
+gleich('Auch der zweite mit demselben Namen', zurueck.zweiteDa, true);
+gleich('… und mit seiner eigenen Grösse', zurueck.zweiteGroesse, 1000);
+gleich('Der Medientyp überlebt — sonst wäre aus dem Bild ein Download geworden',
+       zurueck.typ, 'image/jpeg');
+
+/* ========================================================================= *
+ * 3 · DIE BEIDEN RICHTUNGEN, IN DENEN ES SCHIEFGEHT
+ * ========================================================================= */
+console.log('\n3 · Was beim Ersetzen weggehen darf — und was nicht');
+
+const quelle = _lies(_dazu(WURZEL, 'quell/schale/aufbau/schale.js'), 'utf8');
+p('Beim Ersetzen räumt der Import fremde Anhänge weg',
+  /art === 'ersetzen'[\s\S]{0,600}dateiWeg/.test(quelle));
+p('Die Anhänge kommen NACH den Blöcken',
+  quelle.indexOf('Store.importAll(text, wahl)') < quelle.indexOf('anhaengeEinspielen(zip'),
+  'andersherum löscht „ersetzen" sie gleich wieder mit');
+
+/* Eine `.json`-Sicherung sagt selbst, dass sie die Anhänge nicht kennt.
+   Etwas wegzuwerfen, weil es in einer Datei fehlt, die zugibt es nicht zu
+   kennen, wäre die schlimmste Art von Datenverlust. */
+const jsonSchont = await seite.evaluate(async () => {
+  const bytes = new Uint8Array(2048);
+  const b = Store.addBlock(Store.addPage(null, { text: 'X' }).id, 'image', {});
+  const satz = await Dateien.ablegen(new File([bytes], 'bleibt.png', { type: 'image/png' }),
+    { blockId: b.id });
+  await Store.flush();
+  const json = Store.exportAll();            /* ohne Anhänge — wie die .json */
+  await Store.importAll(json, 'ersetzen');
+  return { nochDa: !!(await Store.dateiHolen(satz.id)),
+           sagtEs: /NICHT/.test(JSON.parse(json).hinweis || '') };
+});
+p('Eine .json-Sicherung lässt die Anhänge in Ruhe', jsonSchont.nochDa,
+  'sie kennt sie nicht — und was sie nicht kennt, darf sie nicht löschen');
+p('… und sagt ausdrücklich, dass sie sie nicht enthält', jsonSchont.sagtEs);
+
+/* ========================================================================= *
+ * 4 · WAS ZU GROSS IST, WIRD GESAGT UND NICHT GESCHRIEBEN
+ * ========================================================================= */
+console.log('\n4 · Über vier Gigabyte: ein Satz statt eines kaputten Archivs');
+
+const zuGross = await seite.evaluate(async () => {
+  /* Ein Blob, der eine Grösse BEHAUPTET, die er nicht hat — echte 4 GB
+     anzulegen würde den Prüflauf sprengen und nichts weiter beweisen. */
+  const luegner = { size: 5 * 1024 * 1024 * 1024, slice: () => new Blob([]) };
+  Object.setPrototypeOf(luegner, Blob.prototype);
+  try {
+    await Austausch.zipSchreiben([{ name: 'riesig.mov', inhalt: luegner }]);
+    return '';
+  } catch (e) { return e.message; }
+});
+p('Ein zu grosser Anhang wird abgelehnt', /4 GB/.test(zuGross), zuGross.slice(0, 80));
+p('… mit einem Satz, der den Namen nennt', /riesig\.mov/.test(zuGross));
+p('… und erklärt, warum das besser ist', /öffnen lässt/.test(zuGross));
+
+p('Kein JS-Fehler in der Konsole', fehler.length === 0, fehler.slice(0, 2).join(' · '));
+
+await browser.close();
+server.close();
+
+console.log(`\n  Suite 65 — Anhänge in der Sicherung: ${ok} ok, ${weg} offen`);
+process.exit(weg ? 1 : 0);

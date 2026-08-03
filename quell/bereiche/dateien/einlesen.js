@@ -77,6 +77,83 @@ const Einlesen = (() => {
     return { namen: [...dateien.keys()], holen, text };
   };
 
+  /**
+   * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
+   *
+   * WARUM ES BEIDE GIBT. `zipLesen` bekommt einen ArrayBuffer — das ganze
+   * Archiv liegt dann im Speicher. Für eine Word-Datei ist das richtig und
+   * einfach. Für eine Redion-Sicherung mit einem Video darin ist es das
+   * Ende: `await datei.arrayBuffer()` auf ein halbes Gigabyte bringt ein
+   * Telefon zu Fall.
+   *
+   * Ein ZIP kommt einem dabei entgegen. Sein Inhaltsverzeichnis steht am
+   * ENDE; man liest die letzten paar Kilobyte, weiss danach, wo jeder
+   * Eintrag anfängt und wie lang er ist — und holt sich nur den, den man
+   * gerade braucht. `blob.slice` schneidet, ohne zu lesen.
+   *
+   * Zurück kommt deshalb ein **Blob** je Eintrag und kein Byte-Feld: wer ihn
+   * weiterreicht, ohne ihn anzusehen, hat ihn nie im Speicher gehabt.
+   */
+  const zipLesenAusBlob = async (blob) => {
+    const ende = new DataView(await blob.slice(Math.max(0, blob.size - 65558)).arrayBuffer());
+
+    let eocd = -1;
+    for (let i = ende.byteLength - 22; i >= 0; i--)
+      if (ende.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error('Das ist kein gültiges ZIP-Archiv.');
+
+    const anzahl = ende.getUint16(eocd + 10, true);
+    const vzGroesse = ende.getUint32(eocd + 12, true);
+    const vzStart = ende.getUint32(eocd + 16, true);
+
+    const vz = new DataView(await blob.slice(vzStart, vzStart + vzGroesse).arrayBuffer());
+    const vzBytes = new Uint8Array(vz.buffer);
+    const dateien = new Map();
+    let zeiger = 0;
+
+    for (let n = 0; n < anzahl; n++) {
+      if (zeiger + 46 > vz.byteLength || vz.getUint32(zeiger, true) !== 0x02014b50) break;
+      const methode    = vz.getUint16(zeiger + 10, true);
+      const gepackt    = vz.getUint32(zeiger + 20, true);
+      const nameLaenge = vz.getUint16(zeiger + 28, true);
+      const extra      = vz.getUint16(zeiger + 30, true);
+      const kommentar  = vz.getUint16(zeiger + 32, true);
+      const offset     = vz.getUint32(zeiger + 42, true);
+      const name = new TextDecoder().decode(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+      dateien.set(name, { methode, gepackt, offset });
+      zeiger += 46 + nameLaenge + extra + kommentar;
+    }
+
+    /* Die Längen der Zusatzfelder stehen am lokalen Kopf noch einmal, und
+       zwar oft anders als im Verzeichnis. Wer das Verzeichnis glaubt, liest
+       um ein paar Byte verschoben — und bekommt Daten, die fast stimmen. */
+    const alsBlob = async (name) => {
+      const e = dateien.get(name);
+      if (!e) return null;
+      const k = new DataView(await blob.slice(e.offset, e.offset + 30).arrayBuffer());
+      const lokalName  = k.getUint16(26, true);
+      const lokalExtra = k.getUint16(28, true);
+      const start = e.offset + 30 + lokalName + lokalExtra;
+      const roh = blob.slice(start, start + e.gepackt);
+      if (e.methode === 0) return roh;
+      if (e.methode !== 8) throw new Error('Diese Packmethode kennt der Browser nicht.');
+      if (!self.DecompressionStream) throw new Error('Dieser Browser kann kein ZIP entpacken.');
+      const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return await new Response(strom).blob();
+    };
+
+    const holen = async (name) => {
+      const b = await alsBlob(name);
+      return b ? new Uint8Array(await b.arrayBuffer()) : null;
+    };
+    const text = async (name) => {
+      const b = await alsBlob(name);
+      return b ? await b.text() : null;
+    };
+
+    return { namen: [...dateien.keys()], alsBlob, holen, text };
+  };
+
   const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
 
   /* ========================================================================
@@ -307,7 +384,7 @@ const Einlesen = (() => {
     return null;
   };
 
-  return { zipLesen, xlsxLesen, docxLesen, epubLesen, alsDatenbank, datei };
+  return { zipLesen, zipLesenAusBlob, xlsxLesen, docxLesen, epubLesen, alsDatenbank, datei };
 })();
 
 window.Einlesen = Einlesen;

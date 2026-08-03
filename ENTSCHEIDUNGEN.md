@@ -309,3 +309,60 @@ ausgebaut, egal wie richtig sie ist.
 alte Fenster arbeitet danach nicht weiter, sondern sagt es. Weiterschreiben
 ginge nur noch in den Arbeitsspeicher, also ins Nichts — und ein Fenster, das
 so tut als ob, ist die teuerste Art, Daten zu verlieren.
+
+---
+
+## E10 · `.redion` — und was eine Sicherung löschen darf
+
+**Die Frage aus `LUECKEN.md`:** was geschieht bei einem 500-MB-Video?
+
+**Was nicht ging.** Base64 in derselben JSON-Datei. Es wird um ein Drittel
+grösser, liegt vollständig im Arbeitsspeicher, und die Zeichenkette, die
+daraus wird, noch einmal daneben. Auf einem Telefon ist das der sichere
+Absturz — und zwar mitten in dem Vorgang, der Daten retten soll.
+
+**Der gewählte Weg: ein gewöhnliches ZIP.** Kein eigenes Format, kein
+Kunststück. Ein ZIP kommt einem entgegen: sein Inhaltsverzeichnis steht am
+Ende, jeder Eintrag hat einen Versatz und eine Länge, und `blob.slice`
+schneidet ohne zu lesen. Beim Schreiben wie beim Lesen geht immer nur ein
+Megabyte durch den Arbeitsspeicher.
+
+**Zwei Formate, nicht eines.** Ohne Anhänge bleibt es bei `.json`. Wer nur
+Text hat, soll seine Sicherung in einem Editor öffnen und lesen können; ein
+Archiv um eine einzige JSON-Datei ist eine Hürde ohne Gegenwert. Erst wenn
+Anhänge da sind, gibt es einen Grund für die Verpackung — und dann auch
+einen guten.
+
+**Die Anhänge liegen unter ihren echten Namen**, nicht unter ihren
+Kennungen. Das ist die wichtigste Entscheidung hier. Wer das Archiv in zehn
+Jahren öffnet — mit irgendeinem Packprogramm, ohne Redion, vielleicht ohne
+dass es Redion noch gibt —, findet darin `dateien/ferien.jpg` und nicht
+`dateien/9f3c-…`. Eine Sicherung, die nur die App lesen kann, die sie
+geschrieben hat, ist eine halbe Sicherung.
+
+Gleiche Namen werden durchnummeriert. Zwei Bilder dürfen „foto.jpg" heissen;
+im Archiv darf ein Name nur einmal vorkommen, sonst überschreibt das
+Auspacken das eine mit dem anderen — still, wie immer bei dieser Sorte.
+
+**Beim Einspielen behalten die Anhänge ihre alten Kennungen.** Deshalb
+werden Dateisatz und Stücke von Hand geschrieben, statt den bequemen Weg
+über `Dateien.ablegen` zu nehmen: der vergäbe neue Kennungen, und die Bilder
+wären da, ohne dass ein Block sie fände.
+
+**Und was eine Sicherung löschen darf.** „Ersetzen" heisst: der Bestand
+sieht danach aus wie die Sicherung. Für die Anhänge gilt das nur, wenn die
+Sicherung sie überhaupt abdeckt.
+
+* `.redion` → deckt sie ab, also gehen fremde Anhänge weg. Sie gehörten zu
+  Seiten, die es jetzt auch nicht mehr gibt, und lägen sonst für immer
+  unerreichbar herum.
+* `.json` → sagt in ihrem eigenen Feld `fehlt`, dass sie die Anhänge nicht
+  enthält. **Sie werden nicht angefasst.** Etwas wegzuwerfen, weil es in
+  einer Datei fehlt, die zugibt es nicht zu kennen, wäre die schlimmste Art
+  von Datenverlust, die dieser App einfallen könnte.
+
+**Über 4 GB: ein Satz statt eines kaputten Archivs.** Ein ZIP dieser Bauart
+zählt Grössen und Versätze in 32 Bit; darüber braucht es ZIP64, und das ist
+ein anderes Format, kein grösseres Feld. Hier wird deshalb abgebrochen, mit
+dem Namen der Datei und dem Grund. Ein Archiv, das erst beim Auspacken
+auffällt, ist schlimmer als eine Sicherung, die nicht zustande kam.

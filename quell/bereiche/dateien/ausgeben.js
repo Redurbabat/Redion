@@ -47,10 +47,46 @@ const Austausch = (() => {
   };
 
   /**
-   * @param dateien [{ name, inhalt }] — inhalt als Zeichenkette oder Uint8Array
-   * @returns Blob
+   * Dieselbe Prüfsumme, aber häppchenweise — für einen Blob, der nicht in den
+   * Arbeitsspeicher passt.
+   *
+   * WARUM ES DAS BRAUCHT. `crc32` will alle Bytes auf einmal. Bei einem Video
+   * von 500 MB heisst das 500 MB im Arbeitsspeicher, nur um eine Zahl
+   * auszurechnen — auf einem Telefon der sichere Absturz. Ein Blob liegt beim
+   * Browser auf der Platte; wer ihn scheibchenweise liest, braucht nie mehr
+   * als eine Scheibe.
+   *
+   * Die Prüfsumme ist ihrer Natur nach fortlaufend, das kommt uns entgegen:
+   * Byte für Byte, ohne zu wissen, wie viele noch kommen.
    */
-  const zipSchreiben = (dateien) => {
+  const SCHEIBE = 1024 * 1024;
+  const crc32Strom = async (blob, beiFortschritt) => {
+    if (!crcTafel) crc32(new Uint8Array(0));       /* Tafel einmal bauen */
+    let c = 0xFFFFFFFF;
+    for (let von = 0; von < blob.size; von += SCHEIBE) {
+      const bis = Math.min(von + SCHEIBE, blob.size);
+      const teil = new Uint8Array(await blob.slice(von, bis).arrayBuffer());
+      for (let i = 0; i < teil.length; i++) c = crcTafel[(c ^ teil[i]) & 0xFF] ^ (c >>> 8);
+      if (beiFortschritt) beiFortschritt(bis / blob.size);
+    }
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  };
+
+  /* Ein ZIP der alten Bauart zählt Grössen und Versätze in 32 Bit. Darüber
+     braucht es ZIP64 — das ist ein anderes Format, kein grösseres Feld.
+     Hier wird deshalb ehrlich abgebrochen statt still etwas Kaputtes
+     geschrieben, das erst beim Auspacken auffällt. */
+  const ZIP_GRENZE = 0xFFFFFFFF;
+
+  /**
+   * @param dateien [{ name, inhalt }] — inhalt als Zeichenkette, Uint8Array
+   *                oder **Blob**. Ein Blob wird nie ganz eingelesen: seine
+   *                Prüfsumme entsteht scheibchenweise, und in das Archiv
+   *                wandert er als Blob, den der Browser selbst verwaltet.
+   * @param {(name:string, anteil:number)=>void} [beiFortschritt]
+   * @returns {Promise<Blob>}
+   */
+  const zipSchreiben = async (dateien, beiFortschritt) => {
     const enc = new TextEncoder();
     const teile = [];
     const verzeichnis = [];
@@ -59,10 +95,23 @@ const Austausch = (() => {
     const schreibe32 = (a, i, w) => { a[i] = w & 255; a[i+1] = (w>>>8) & 255; a[i+2] = (w>>>16) & 255; a[i+3] = (w>>>24) & 255; };
     const schreibe16 = (a, i, w) => { a[i] = w & 255; a[i+1] = (w>>>8) & 255; };
 
-    dateien.forEach(d => {
+    for (const d of dateien) {
       const name = enc.encode(d.name);
-      const inhalt = typeof d.inhalt === 'string' ? enc.encode(d.inhalt) : d.inhalt;
-      const summe = crc32(inhalt);
+      const istBlob = typeof Blob !== 'undefined' && d.inhalt instanceof Blob;
+      const inhalt = istBlob ? d.inhalt
+                   : typeof d.inhalt === 'string' ? enc.encode(d.inhalt)
+                   : d.inhalt;
+      const laenge = istBlob ? inhalt.size : inhalt.length;
+
+      if (laenge > ZIP_GRENZE)
+        throw new Error('„' + d.name + '" ist grösser als 4 GB. Ein ZIP dieser ' +
+                        'Bauart kann das nicht — die Datei bleibt lieber aussen ' +
+                        'vor, als in einem Archiv zu stehen, das sich nicht ' +
+                        'öffnen lässt.');
+
+      const summe = istBlob
+        ? await crc32Strom(inhalt, (a) => beiFortschritt && beiFortschritt(d.name, a))
+        : crc32(inhalt);
 
       const kopf = new Uint8Array(30 + name.length);
       schreibe32(kopf, 0, 0x04034b50);
@@ -72,8 +121,8 @@ const Austausch = (() => {
       schreibe16(kopf, 10, 0);         /* Uhrzeit           */
       schreibe16(kopf, 12, 0x21);      /* Datum: 1. Jan 1980 */
       schreibe32(kopf, 14, summe);
-      schreibe32(kopf, 18, inhalt.length);
-      schreibe32(kopf, 22, inhalt.length);
+      schreibe32(kopf, 18, laenge);
+      schreibe32(kopf, 22, laenge);
       schreibe16(kopf, 26, name.length);
       schreibe16(kopf, 28, 0);
       kopf.set(name, 30);
@@ -88,15 +137,20 @@ const Austausch = (() => {
       schreibe16(eintrag, 12, 0);
       schreibe16(eintrag, 14, 0x21);
       schreibe32(eintrag, 16, summe);
-      schreibe32(eintrag, 20, inhalt.length);
-      schreibe32(eintrag, 24, inhalt.length);
+      schreibe32(eintrag, 20, laenge);
+      schreibe32(eintrag, 24, laenge);
       schreibe16(eintrag, 28, name.length);
       schreibe32(eintrag, 42, versatz);
       eintrag.set(name, 46);
       verzeichnis.push(eintrag);
 
-      versatz += kopf.length + inhalt.length;
-    });
+      versatz += kopf.length + laenge;
+      if (versatz > ZIP_GRENZE)
+        throw new Error('Diese Sicherung wird grösser als 4 GB. Ein ZIP dieser ' +
+                        'Bauart kann das nicht. Sichere die Anhänge in zwei ' +
+                        'Schritten, statt ein Archiv zu bekommen, das sich ' +
+                        'nicht öffnen lässt.');
+    }
 
     const vzGroesse = verzeichnis.reduce((n, e) => n + e.length, 0);
     const ende = new Uint8Array(22);
@@ -190,7 +244,7 @@ const Austausch = (() => {
     return raus.join('');
   };
 
-  const alsWord = (seite) => {
+  const alsWord = async (seite) => {
     const inhalt =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
@@ -255,7 +309,7 @@ const Austausch = (() => {
       { name: 'word/numbering.xml', inhalt: nummern }
     ];
 
-    const blob = zipSchreiben(dateien);
+    const blob = await zipSchreiben(dateien);
     laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
     return blob;
   };
@@ -289,7 +343,7 @@ const Austausch = (() => {
   /**
    * @param blaetter [{ name, zeilen }]
    */
-  const alsExcel = (blaetter, dateiname) => {
+  const alsExcel = async (blaetter, dateiname) => {
     const sicher = (n, i) => String(n || ('Blatt' + (i + 1)))
       .replace(/[\\/:*?[\]]/g, ' ').slice(0, 31) || ('Blatt' + (i + 1));
 
@@ -341,7 +395,7 @@ const Austausch = (() => {
     ].concat(blaetter.map((b, i) =>
       ({ name: `xl/worksheets/sheet${i + 1}.xml`, inhalt: blattXml(b.zeilen) })));
 
-    const blob = zipSchreiben(dateien);
+    const blob = await zipSchreiben(dateien);
     laden(blob, (dateiname || 'Redion') + '.xlsx');
     return blob;
   };

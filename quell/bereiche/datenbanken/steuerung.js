@@ -5785,7 +5785,9 @@ const Datenbank = (() => {
         UI.toast('Link zur Ansicht kopiert');
       }
       if (a === 'csv') csvExport(coll, view);
-      if (a === 'xlsx') { Austausch.datenbankAlsExcel(coll); UI.toast('Excel-Mappe erzeugt'); }
+      if (a === 'xlsx') { Austausch.datenbankAlsExcel(coll)
+        .then(() => UI.toast('Excel-Mappe erzeugt'))
+        .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message)); }
       if (a === 'csvin') csvImport(coll);
       if (a === 'ai')  KI.datenbankAuswerten(coll, view);
       if (a === 'del') {

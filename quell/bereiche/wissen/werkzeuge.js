@@ -130,8 +130,10 @@ const Werkzeuge = (() => {
     c('Daten', 'Alles als eine HTML-Datei', '', () => einzelDatei());
     c('Daten', 'Aus Trello, Evernote, Obsidian oder Notion einlesen', '', () => Austausch.dialog());
     if (p) c('Daten', 'Diese Seite als Word-Datei (.docx)', '', () => {
-      Austausch.alsWord(p); UI.toast('Word-Datei erzeugt'); });
-    c('Daten', 'Alle Datenbanken als Excel-Mappe (.xlsx)', '', () => Austausch.allesAlsExcel());
+      Austausch.alsWord(p).then(() => UI.toast('Word-Datei erzeugt'))
+        .catch(e => UI.toast('Die Word-Datei kam nicht zustande: ' + e.message)); });
+    c('Daten', 'Alle Datenbanken als Excel-Mappe (.xlsx)', '', () => Austausch.allesAlsExcel()
+      .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message)));
     if (p) c('Seite', 'Fassungen vergleichen', '', () => Vergleich.dialog(p));
 
     c('Ansicht', 'Aussehen: Farben, Schrift, Tastenkürzel', '', () => Aussehen.dialog());
@@ -1352,8 +1354,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       if (a === 'md') App.markdownExport(p);
       if (a === 'html') htmlExport(p);
       if (a === 'pdf') drucken(p);
-      if (a === 'word')  { Austausch.alsWord(p); UI.toast('Word-Datei erzeugt'); }
-      if (a === 'excel') { Austausch.allesAlsExcel(); }
+      if (a === 'word')  { Austausch.alsWord(p).then(() => UI.toast('Word-Datei erzeugt'))
+        .catch(e => UI.toast('Die Word-Datei kam nicht zustande: ' + e.message)); }
+      if (a === 'excel') { Austausch.allesAlsExcel()
+        .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message)); }
       if (a === 'alles') einzelDatei();
       if (a === 'ordner') ordnerSchreiben();
     });
