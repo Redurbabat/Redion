@@ -1,6 +1,6 @@
 # Was noch offen ist
 
-**Stand: 3. August 2026** · 58 Prüfläufe im Repository grün (2329 Prüfungen) ·
+**Stand: 3. August 2026** · 59 Prüfläufe im Repository grün (2440 Prüfungen) ·
 516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
 
 > **Zu den Prüfläufen.** Sie lagen unter `/tmp` auf genau einem Rechner und
@@ -19,8 +19,10 @@ Aufgabe nur ein Wunsch.
 
 ## A · Der Umbau zu Ende bringen
 
-Der Aufbau steht (`doku/ARCHITEKTUR.md`), aber eines fehlt noch. Es
-gehört zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
+Der Aufbau steht (`doku/ARCHITEKTUR.md`). A1 bis A3 sind durch, A4 für den
+grössten Bereich — die Datenbanken — auch. Was bleibt, sind die übrigen
+Bereiche. Sie
+gehören zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
 sonst wieder in denselben Klumpen läuft.
 
 ### ~~A1 — Die Seitenleiste herauslösen~~ · erledigt
