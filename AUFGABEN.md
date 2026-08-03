@@ -130,7 +130,7 @@ hat es nur der Vergleich der berechneten Werte — 58 Unterschiede.
 `test87` prüft jetzt auf herrenlose Kommentarenden; die Klammernprüfung
 allein hätte es **nicht** gefunden (nachgestellt und belegt).
 
-### A4 — Die Bereiche in `dienst` und `ansicht` trennen · **Datenbanken erledigt**
+### A4 — Die Bereiche in `dienst` und `ansicht` trennen · **Datenbanken und Wissen erledigt**
 
 **Warum.** Das ist die eigentliche Regel des Aufbaus: reine Logik ohne DOM
 lässt sich prüfen, ohne einen Browser zu starten.
@@ -157,14 +157,40 @@ zeichnet; die zwei Zeilen stehen jetzt in `dienst.js`. `window.Tempo` wurde zu
 `typeof Tempo !== 'undefined'`, wie CLAUDE.md es ohnehin vorschreibt. Und die
 Datei hängt sich nur dann an ein Fenster, wenn es eines gibt.
 
+**Erledigt: `wissen` — aber anders, als hier stand.** Die Annahme oben lautete,
+jede grosse Datei liesse sich wie `steuerung.js` in eine rechnende und eine
+zeichnende Hälfte teilen. Für `werkzeuge.js` wurde das vor dem Schnitt
+gemessen, und es stimmt nicht: **alle vierzehn Abschnitte fassen das Dokument
+an, zwischen 7 und 47 Mal.** Es gibt dort keine rechnende Hälfte.
+
+Also wurde nicht geschnitten, sondern gesucht — nach den Stellen, die wirklich
+nur rechnen. Es sind neun, sie stehen in `wissen/dienst.js` (228 Zeilen), und
+sie haben eine Gemeinsamkeit: es sind genau die Stellen, bei denen man sich
+fragt, ob sie richtig rechnen. Findet „umb" das „Umbenennen"? Kommt eine
+dreimal gewusste Karteikarte in fünfzehn Tagen wieder? Kommt eine
+Markdown-Tabelle am Dateiende noch an? `pruefungen/lauf/test89.mjs` beantwortet
+98 solche Fragen in 60 Millisekunden — die meisten davon liessen sich in einem
+Browser gar nicht stellen, weil man auf den Termin einer Karteikarte nicht
+warten kann.
+
+`werkzeuge.js` fiel von 1972 auf 1777 Zeilen. Eine Stelle wurde dabei nicht
+bloss verschoben, sondern getrennt: `statistik()` rechnete und zeichnete in
+einem Zug; die Zahlen stehen jetzt in `statistikZahlen()`, das Fenster blieb
+drüben.
+
+**Die Lehre für die nächsten drei:** erst messen, ob es eine Logikhälfte
+überhaupt gibt. Wo keine ist, ist der ehrliche Ertrag eine kleine `dienst.js`
+mit den prüfbaren Kernen — und nicht ein erzwungener Schnitt quer durch eine
+Zeichenfunktion.
+
 **Offen — der Reihe nach, grösste zuerst:**
 
 | Datei | Grösse | Ziel |
 |---|--:|---|
-| `bereiche/wissen/werkzeuge.js` | 100 KB | `graph/`, `karteikarten/`, `journal/`, `schlagwoerter/`, `befehle` ins Register |
 | `bereiche/hilfe/wissensseiten.js` | 170 KB | ist fast nur Text — nach `doku/` verschieben und beim Bauen einlesen |
-| `bereiche/editor/ansicht/editor.js` | 115 KB | `dienst.js` (Blockoperationen) + `ansicht/` (Zeichnen) |
+| `bereiche/editor/ansicht/editor.js` | 115 KB | gemessen: `BLOCK-OPERATIONEN` fasst das Dokument 59 Mal an, ist also **keine** reine Logik. Prüfbare Kerne: `inline`, `einbettungsAdresse`, `ueberschriftenDerSeite`, `mitKnopfVars` |
 | `bereiche/datenbanken/steuerung.js` | 7784 Zeilen | die Ansichten einzeln: Tabelle, Board, Kalender, Zeitstrahl |
+| `bereiche/wissen/werkzeuge.js` | 1777 Zeilen | die Oberfläche selbst: `graph/`, `journal/`, `schlagwoerter/`, `befehle` ins Register |
 
 ---
 

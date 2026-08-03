@@ -95,19 +95,35 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 86 | die elf Register |
 | 87 | der Quelltext selbst — ohne Browser, in Millisekunden |
 | 88 | die Datenbank-Logik in Node — ohne document, ohne window |
+| 89 | die Werkzeug-Logik in Node — unscharfe Suche, SM-2, Markdown, Statistik |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt
 trotzdem auf.
 
-`test87.mjs` ist der einzige, der **keinen Browser** startet. Er prüft, was
-zwischen zwei Dateien steht und deshalb in keinem Verhalten auftaucht: dass
-kein Steuerzeichen roh im Quelltext steht (in der Einzeldatei macht der
-HTML-Parser U+FFFD daraus und reisst den ganzen Skriptblock mit — so fehlte
-dort einmal die komplette HTML-Säuberung), dass die Rechtetabellen in
-Oberfläche und Server übereinstimmen, und dass die drei Zeichner aus A1/A2
-`App` nicht mehr kennen. Er ist nach 80 Millisekunden fertig und steht
-deshalb in der CI als eigener, vorgezogener Auftrag.
+**Drei Läufe starten keinen Browser** — 87, 88 und 89. Zusammen sind sie in
+einer Fünftelsekunde fertig und stehen deshalb in der CI als eigener,
+vorgezogener Auftrag. Sie sind verschieden gebaut:
+
+`test87.mjs` liest den Quelltext, ohne ihn auszuführen. Er prüft, was zwischen
+zwei Dateien steht und deshalb in keinem Verhalten auftaucht: dass kein
+Steuerzeichen roh im Quelltext steht (in der Einzeldatei macht der HTML-Parser
+U+FFFD daraus und reisst den ganzen Skriptblock mit — so fehlte dort einmal die
+komplette HTML-Säuberung), dass die Rechtetabellen in Oberfläche und Server
+übereinstimmen, und dass die drei Zeichner aus A1/A2 `App` nicht mehr kennen.
+
+`test88.mjs` und `test89.mjs` führen je eine `dienst.js` wirklich aus — mit
+Attrappen statt `Store`, ohne `document` und **ohne `window`**. Dass das geht,
+ist der ganze Zweck dieser beiden Dateien: sie rechnen, sie zeigen nichts.
+Beide prüfen Dinge, die im Browser gar nicht prüfbar wären. `test89` etwa
+fragt, ob eine dreimal gewusste Karteikarte in fünfzehn Tagen wiederkommt —
+darauf zu warten ist kein Prüflauf.
+
+Beim Schreiben von `test89` fiel die vierstufige Notenskala auf: die Knöpfe
+heissen „Nochmal, Schwer, Gut, Leicht", also 1 bis 4, und deshalb steht in der
+Datei `(4 - note)` statt SuperMemos `(5 - q)`. Wer den Lauf für die fünfstufige
+Skala schreibt, bekommt 16 statt 15 heraus und hält die richtige Rechnung für
+einen Fehler. Es kostete eine Viertelstunde, das nachzusehen statt zu ändern.
 
 ---
 

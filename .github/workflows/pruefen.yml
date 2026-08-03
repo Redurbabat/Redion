@@ -42,7 +42,7 @@ jobs:
   # Antwort, kein Tor.
   # ---------------------------------------------------------------------------
   schnell:
-    name: Quelltext (ohne Browser)
+    name: Quelltext und Logik (ohne Browser)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -52,6 +52,10 @@ jobs:
           node-version: '20'
       - name: Quelltext prüfen
         run: node pruefungen/lauf/test87.mjs
+      - name: Datenbank-Logik prüfen
+        run: node pruefungen/lauf/test88.mjs
+      - name: Werkzeug-Logik prüfen
+        run: node pruefungen/lauf/test89.mjs
 
   pruefen:
     name: Alle Prüfläufe
