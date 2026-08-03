@@ -33,6 +33,17 @@ const pruef = (n, ist, soll) => {
   await p.mouse.move(kasten.x + 70, kasten.y, { steps: 8 });
   await p.mouse.up();
   await p.waitForTimeout(300);
+  /* Netz für den langsamen Rechner. Mit den 300 ms allein war dieser Lauf
+     flockig: einmal grün, beim nächsten Mal „Breiter gezogen ist=false" —
+     bei unverändertem Code, nachgewiesen an zwei Reihen mit demselben
+     Stilblatt. Das Ziehen wird beim Loslassen gespeichert, und wenn der
+     Rechner gerade beschäftigt ist, ist die Breite nach 300 ms noch nicht
+     gesetzt. Die Zahl bleibt stehen, dahinter wird auf die Wirkung gewartet
+     statt auf die Uhr. Schlägt das Ziehen wirklich fehl, ist der Lauf auch
+     nach acht Sekunden rot — das Netz macht ihn nicht nachsichtiger. */
+  await p.waitForFunction(
+    () => document.getElementById('sidebar').getBoundingClientRect().width > 300,
+    null, { timeout: 8000 }).catch(() => {});
   const gezogen = await p.evaluate(() => ({
     breite: Math.round(document.getElementById('sidebar').getBoundingClientRect().width),
     gemerkt: Store.getMeta('seiteBreite', 0)
