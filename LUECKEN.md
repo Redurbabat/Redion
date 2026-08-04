@@ -25,7 +25,7 @@ Zeichen:
 
 ## Stand
 
-**Stand: 4. August 2026 · 73 Prüfläufe grün**
+**Stand: 4. August 2026 · 75 Prüfläufe grün**
 
 Redion ist bereits stark in: local-first · Offline-Nutzung · blockbasierter
 Editor · Datenbanken · Formeln · lokale KI · Versionen · Papierkorb ·
@@ -36,11 +36,10 @@ Die grössten aktuellen Lücken:
 ```txt
 1. TypeScript-Migration: Grundlage steht, der Bestand ist noch JavaScript
 2. Doku muss die neue Richtung zeigen
-3. .redion-Format braucht eigene Doku
-4. Cloudflare/R2/Sync sind noch nicht produktionsreif
-5. Nicht alle Notion-Funktionen sind erreicht
-6. Mobile/iPhone braucht gezielte Prüfung
-7. Tabellenkalkulation fehlt ganz (L31/L32)
+3. Cloudflare/R2/Sync sind noch nicht produktionsreif
+4. Nicht alle Notion-Funktionen sind erreicht
+5. Mobile/iPhone braucht gezielte Prüfung
+6. Tabellenkalkulation fehlt ganz (L31/L32)
 ```
 
 ---
@@ -113,25 +112,18 @@ Die Einzeldatei und die Offline-Nutzung bleiben erhalten.
 
 ## L3 · `.redion`-Formatdokumentation
 
-**Stand** — ◐ `.redion` existiert und funktioniert, aber ohne eigene Doku.
+**Stand** — ✅ vorhanden: `doku/REDION-FORMAT.md`.
 
-**Was fehlt**
+Enthält: warum zwei Formate · Aufbau des Archivs · `daten.json` ·
+`dateien.json` · Dateinamen- und Kennungsregeln · die zwei Einspielarten und
+warum es keine Vorgabe gibt · die drei ZIP-Grenzen · ZIP64 beim Lesen · die
+verschlüsselte Sicherung · wie man ein `.redion` ohne Redion öffnet.
 
-```txt
-doku/REDION-FORMAT.md
-Format-Version · Manifest
-daten.json-Struktur · dateien.json-Struktur
-Dateinamen-Regeln · ID-Regeln
-Import-Regeln · Lösch-Regeln · Fehlerfälle
-4-GB-Grenze · ZIP64-Entscheidung · Kompatibilität
-```
+**Was noch fehlt** — ein eigenes Formatkennzeichen in `daten.json` (heute
+wird am Vorhandensein der Datei im Archiv erkannt) und eine Prüfsumme über
+den Inhalt als Ganzes; das ZIP prüft nur jeden Eintrag einzeln per CRC32.
 
-**Warum wichtig**
-
-Backup ist eine Vertrauensfunktion. Nutzer und spätere Entwickler müssen
-verstehen, was gesichert wird — auch in zehn Jahren, auch ohne Redion.
-
-**Status** — ⏳ geplant, sehr hohe Priorität.
+**Status** — ✅ erledigt, zwei kleine Punkte offen.
 
 ---
 
@@ -655,42 +647,33 @@ Schmutz in der Datenbank und muss dort von Hand aufgeräumt werden.
 
 ---
 
-## L36 · Die verschlüsselte Sicherung ist ein zweites, ärmeres Format
+## L36 · Die verschlüsselte Sicherung — behoben
 
-**Stand** — ⚠ sie sichert weniger, als sie verspricht, und sagt es nicht.
+**Stand** — ✅ behoben. Sie schreibt jetzt dasselbe wie der Hauptweg.
 
-Neben `Store.exportAll()` (das `.json` und `.redion` schreibt) gibt es einen
-zweiten Weg in `quell/kern/sicherheit/krypto.js`: `bestandSammeln()` für die
-verschlüsselte Sicherung. Beide heissen „Sicherung", beide sind über die
-Oberfläche erreichbar — und sie enthalten nicht dasselbe.
+Vier Befunde auf einem Weg, gefunden beim Schreiben von
+`doku/REDION-FORMAT.md`:
 
-| | `.json` / `.redion` | `.verschluesselt.json` |
-|---|---|---|
-| `blocks` `collections` `views` `meta` | ✅ | ✅ |
-| `versions` (Verlauf) | ✅ | ✗ |
-| Anhänge | ✅ | ✗ |
-| `enthaelt` / `fehlt` / `hinweis` | ✅ | ✗ |
+```txt
+1  kein versions, keine Anhänge — und kein fehlt/hinweis, das es sagt
+2  der Dialog sagte "ersetzt", der Code führte zusammen
+3  das Eingespielte ging nur in den Zwischenspeicher; Store.alles gibt es
+   nicht, der Aufruf war ein stiller Leerlauf, und 900 ms später lud die
+   Seite neu und las den alten Bestand — gemeldet wurde ein Erfolg
+4  verschlüsseln scheiterte ab etwa 128 KB (Spread in fromCharCode),
+   an drei Stellen dieselbe Zeile
+```
 
-Die letzte Zeile ist die schlimme. `fehlt` und `hinweis` wurden erfunden,
-damit eine unvollständige Sicherung das selbst sagt — genau diese Felder
-fehlen dort, wo etwas fehlt.
+Behoben: `bestandSammeln` benutzt `Store.exportAll()`, das Einspielen läuft
+über `Store.importAll` mit ausdrücklicher Angabe, und Base64 gibt es nur
+noch einmal — in `quell/kern/helfer/bytes.js`.
 
-**Dazu ein zweiter Befund.** Der Wiederherstellen-Dialog sagt:
+**Gehalten von** `test104.mjs` (20) und `test87` Punkt 9.
 
-> Der jetzige Bestand wird davor als Datei gesichert und dann **ersetzt**.
-
-Der Code dahinter macht `Object.assign(Store.cache.blocks, p.blocks)` —
-das ist ein Zusammenführen, kein Ersetzen. Wer eine Sicherung einspielt, um
-einen kaputten Stand loszuwerden, hat den kaputten Stand danach immer noch.
-Der Hauptweg fragt an derselben Stelle ausdrücklich nach („Ersetzen" gegen
-„Dazulegen") und hält beide Zusagen ein.
-
-**Warum wichtig** — Priorität 1 aus `CLAUDE.md` §46: Daten sicher. Eine
-Sicherung, die stillschweigend weniger enthält als erwartet, ist die
-gefährlichste Sorte; ein Dialog, der etwas anderes zusagt als der Code tut,
-ist die zweitgefährlichste.
-
-**Status** — ⏳ sehr hohe Priorität. Siehe `AUFGABEN.md` Phase 3, C4.
+**Was daran offen bleibt** — eine verschlüsselte Sicherung trägt weiterhin
+keine Anhänge; sie ist eine `.json`, und Blobs passen dort nicht hinein.
+Neu ist, dass sie das selbst sagt. Ein verschlüsseltes `.redion` wäre der
+nächste Schritt und ist noch nicht entschieden.
 
 ---
 
@@ -701,8 +684,6 @@ ist die zweitgefährlichste.
 ```txt
 L1  TypeScript
 L2  Doku auf die neue Richtung bringen
-L3  .redion-Formatdoku
-L36 Verschlüsselte Sicherung: weniger drin als versprochen
 L5  R2-Dateispeicher planen
 L7  Sync-Konflikte vor Cloud-Sync
 L28 Typecheck

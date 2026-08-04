@@ -158,12 +158,20 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 94 | die CSP der veröffentlichten Seite hält wirklich (im Browser) |
 | 95 | ein Bestand aus jeder alten Fassung überlebt den Umzug |
 | 96 | die Sicherung hält, was sie verspricht — Rundlauf Feld für Feld |
+| 97 | der Papierkorb: was wiederherstellbar ist, was endgültig mitgeht |
+| 98 | der Versionsverlauf wird ausgedünnt, nicht abgeschnitten |
+| 99 | zwei Fenster auf derselben Ablage |
+| 100 | die Anhänge kommen mit — `.redion`, mit echten Bytes |
+| 101 | Eingabegrenzen am Server |
+| 102 | Markenrechte an allen neun Torwegen |
+| 103 | die Grenzen des ZIP-Packers — ohne Browser |
+| 104 | die verschlüsselte Sicherung |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt
 trotzdem auf.
 
-**Fünf Läufe starten keinen Browser** — 87, 88, 89, 92 und 93.
+**Sechs Läufe starten keinen Browser** — 87, 88, 89, 92, 93 und 103.
 (92 und 93 starten einen HTTP-Server, aber keinen Browser.) Zusammen sind sie in
 einer Fünftelsekunde fertig und stehen deshalb in der CI als eigener,
 vorgezogener Auftrag. Sie sind verschieden gebaut:
@@ -187,6 +195,65 @@ heissen „Nochmal, Schwer, Gut, Leicht", also 1 bis 4, und deshalb steht in der
 Datei `(4 - note)` statt SuperMemos `(5 - q)`. Wer den Lauf für die fünfstufige
 Skala schreibt, bekommt 16 statt 15 heraus und hält die richtige Rechnung für
 einen Fehler. Es kostete eine Viertelstunde, das nachzusehen statt zu ändern.
+
+---
+
+## Die vier Läufe, die man nicht abschwächen darf
+
+Ein Prüflauf lässt sich immer grün machen, indem man weniger von ihm
+verlangt. Bei den meisten fällt das auf. Bei diesen vier nicht — sie prüfen
+Dinge, die im Betrieb erst dann auffallen, wenn es zu spät ist.
+
+### `test96` und `test100` — die Sicherung
+
+`test96` vergleicht den Bestand **Feld für Feld** über den Rundlauf hinweg.
+`test100` tut dasselbe für Anhänge, und zwar **mit echten Bytes**: ein
+Anhang wird angelegt, gesichert, alles gelöscht, zurückgespielt und Byte für
+Byte verglichen.
+
+Die Versuchung ist, statt der Bytes die Grösse zu vergleichen oder statt
+aller Felder nur den Text. Beides wäre schneller und beides würde genau die
+Fehler durchlassen, für die es diese Läufe gibt: ein Anhang, der
+scheinbar da ist und leer, ist schlimmer als einer, der fehlt.
+
+`test100` prüft ausserdem **beide Richtungen**: dass beim „Ersetzen" nicht
+zu viel weggeht, und dass bei einer `.json`-Sicherung (ohne Anhänge) die
+vorhandenen Anhänge **nicht** gelöscht werden. Die zweite Richtung ist die
+wichtigere — sie hält fest, dass eine unvollständige Sicherung nicht zum
+Datenverlust wird.
+
+### `test103` — die Grenzen des ZIP-Packers
+
+Drei Grenzen, alle drei im Format festgeschrieben: 4 GB je Datei, 4 GB je
+Archiv, **65 535 Einträge**. Die dritte hatte lange keine Prüfung und
+scheiterte deshalb still — ein Archiv mit 70 000 Einträgen nannte im
+Schlusssatz 4 464 und sah gesund aus.
+
+Der Lauf prüft ausdrücklich **beide** Seiten der Grenze: 65 535 gehen durch,
+65 536 werden abgelehnt. Wer nur die eine Richtung prüft, baut sich die
+nächste Fehlermeldung an der falschen Stelle.
+
+### `test104` — die verschlüsselte Sicherung
+
+Hier waren vier Fehler auf einmal, und der ernsteste war: das Eingespielte
+ging nur in den Zwischenspeicher, die Seite lud 900 ms später neu, und der
+Erfolg wurde trotzdem gemeldet.
+
+Deshalb prüft dieser Lauf **an `Store.cache` vorbei** — er öffnet IndexedDB
+selbst und sieht nach, was wirklich geschrieben wurde. Wer das auf
+`Store.getBlock` umstellt, weil es kürzer ist, hat genau die Prüfung
+entfernt, für die der Lauf existiert.
+
+### Und `test87`, Punkt 9
+
+`btoa(String.fromCharCode(...bytes))` sprengt ab etwa 128 000 Bytes den
+Aufrufstapel. Diese Zeile stand an drei Stellen — alle drei
+Verschlüsselung, also alle drei mit viel Text. Es gibt jetzt eine Fassung in
+`kern/helfer/bytes.js`, und `test87` verbietet eine vierte.
+
+Das ist eine Quelltextprüfung und keine Verhaltensprüfung — mit Absicht.
+Verhalten liesse sich nur dort prüfen, wo die Funktion von aussen aufrufbar
+ist, und im Abgleich ist sie das nicht.
 
 ---
 

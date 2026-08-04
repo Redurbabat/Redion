@@ -223,6 +223,60 @@ Auspacken fertig.
 
 ---
 
+## Die verschlüsselte Sicherung
+
+Es gibt einen zweiten Weg, in `quell/kern/sicherheit/krypto.js`: die
+**verschlüsselte Sicherung** (`…​.verschluesselt.json`, AES-GCM 256, Schlüssel
+über PBKDF2-SHA256 mit 310 000 Runden und zufälligem Salz). Erreichbar über
+den Sicherheitsdialog.
+
+Sie schreibt **denselben Inhalt** wie eine `.json` — `bestandSammeln()` ruft
+`Store.exportAll()` auf, es gibt nur eine Quelle. Zusätzlich stehen `art` und
+`fassung` darin, damit Dateien aus älteren Fassungen weiter gelesen werden.
+
+```jsonc
+{
+  "art": "redion-verschluesselt",
+  "fassung": 1,
+  "runden": 310000,
+  "salz": "…base64…",
+  "iv": "…base64…",
+  "inhalt": "…base64…"     // die verschlüsselte daten.json
+}
+```
+
+**Ohne das Passwort gibt es keine Wiederherstellung.** Es wird nirgends
+gespeichert und nirgends hingeschickt. Das ist der Zweck und nicht ein
+Versehen — aber es heisst, dass ein vergessenes Passwort dasselbe bedeutet
+wie eine gelöschte Datei.
+
+**Was sie nicht kann:** Anhänge. Sie ist eine JSON-Datei, und Blobs passen
+dort nicht hinein. Neu ist, dass sie es selbst sagt — über `fehlt` und
+`hinweis`, dieselben Felder wie oben. Ein verschlüsseltes `.redion` ist noch
+nicht entschieden.
+
+### Was hier vier Mal schiefging
+
+Der Vollständigkeit halber, weil es zeigt, wonach man bei Sicherungen sucht:
+
+1. Sie schrieb ein **eigenes, ärmeres Format** — ohne Verlauf, ohne Anhänge
+   und ohne `fehlt`/`hinweis`, die genau dafür da sind.
+2. Der Wiederherstellen-Dialog sagte „ersetzt", der Code führte über
+   `Object.assign` **zusammen**.
+3. Das Eingespielte ging **nur in den Zwischenspeicher**. Der Aufruf, der es
+   hätte schreiben sollen, zeigte auf eine Funktion, die es nicht gibt —
+   abgesichert und deshalb stumm. 900 ms später lud die Seite neu und las den
+   alten Bestand. Gemeldet wurde ein Erfolg.
+4. Verschlüsseln **scheiterte ab etwa 128 KB**, weil
+   `btoa(String.fromCharCode(...bytes))` den Aufrufstapel sprengt — also
+   genau dann, wenn der Bestand gross genug ist, dass sich das Sichern lohnt.
+
+Alle vier behoben, gehalten von `pruefungen/lauf/test104.mjs`. Base64 gibt es
+seither nur einmal, in `quell/kern/helfer/bytes.js`; `test87` verbietet eine
+zweite Fassung.
+
+---
+
 ## Was noch fehlt
 
 - Ein **Formatkennzeichen** in `daten.json`, das die Datei als Redion-Sicherung
@@ -230,42 +284,7 @@ Auspacken fertig.
   erkannt — das genügt in der Praxis, ist aber schwächer als ein eigenes Feld.
 - Eine **Prüfsumme** über `daten.json`. Das ZIP prüft jeden Eintrag einzeln
   per CRC32; über den Inhalt der Sicherung als Ganzes gibt es nichts.
----
-
-## Das zweite Format — und warum es eines zu viel ist
-
-Neben dem hier beschriebenen Weg gibt es einen zweiten, in
-`quell/kern/sicherheit/krypto.js`: die **verschlüsselte Sicherung**
-(`…​.verschluesselt.json`, AES-GCM über PBKDF2-SHA256, 310 000 Runden).
-Erreichbar über den Sicherheitsdialog.
-
-Sie schreibt ein **anderes** Format:
-
-| | `.json` / `.redion` | `.verschluesselt.json` |
-|---|---|---|
-| Kennzeichen | `version` | `art` + `fassung` |
-| Zeitstempel | `exportiert` | `wann` |
-| `blocks` `collections` `views` `meta` | ✅ | ✅ |
-| `versions` (Verlauf) | ✅ | ✗ |
-| Anhänge | ✅ (im `.redion`) | ✗ |
-| `enthaelt` / `fehlt` / `hinweis` | ✅ | ✗ |
-
-Die letzten drei Zeilen zusammen sind das Problem. Der Verlauf und die
-Anhänge fehlen — und es gibt kein Feld, das das sagt. Genau dafür wurden
-`fehlt` und `hinweis` erfunden; an dieser Stelle sind sie nicht angekommen.
-
-Es ist derselbe Befund wie an einem Dutzend Stellen zuvor: nicht etwas
-vergessen, sondern etwas an einer Stelle getan und an der Nachbarstelle
-nicht.
-
-**Bis das behoben ist, gilt:** eine verschlüsselte Sicherung ist eine
-Sicherung des Textbestands, nicht des ganzen Bestands. Wer Anhänge oder den
-Verlauf mitsichern will, braucht zusätzlich eine `.redion`.
-
-Nachverfolgt in `LUECKEN.md` L36 und `AUFGABEN.md` Phase 3, C4.
-
----
-
-## Was noch fehlt (Fortsetzung)
-
-- **Verschlüsselte** Sicherungen decken nur den Textbestand ab — siehe oben.
+- Ein **verschlüsseltes `.redion`**. Heute deckt die verschlüsselte Sicherung
+  nur den Textbestand ab — siehe oben.
+- **ZIP64**, falls jemand mehr als 65 535 Anhänge oder mehr als 4 GB sichern
+  will. Bis dahin gilt: eine ehrliche Meldung statt eines kaputten Archivs.

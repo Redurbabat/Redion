@@ -26,8 +26,12 @@ const Krypto = (() => {
   const enc = new TextEncoder();
   const dec = new TextDecoder();
 
-  const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
-  const ausB64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  /* Aus `kern/helfer/bytes.js`. Hier stand vorher die Fassung mit dem
+     Spread, die ab etwa 128 000 Bytes den Aufrufstapel sprengte — also genau
+     dann, wenn der Bestand gross genug war, dass sich das Sichern lohnt.
+     Dort steht, warum es nur noch eine Fassung davon gibt. */
+  const b64 = (buf) => Bytes.alsB64(buf);
+  const ausB64 = (s) => Bytes.ausB64(s);
 
   const RUNDEN = 310000;   /* OWASP-Empfehlung für PBKDF2-SHA256 */
 
@@ -124,14 +128,35 @@ const Krypto = (() => {
   /* ========================================================================
    * SICHERUNG
    * ======================================================================*/
-  const bestandSammeln = () => JSON.stringify({
-    art: 'redion-sicherung', fassung: 1, wann: new Date().toISOString(),
-    blocks: Store.cache.blocks, collections: Store.cache.collections,
-    views: Store.cache.views, meta: Store.cache.meta
-  });
+  /**
+   * Der Bestand als JSON — **dasselbe**, was der Hauptweg schreibt.
+   *
+   * WARUM NICHT MEHR EIGENS GESAMMELT. Vorher stand hier ein zweites Format:
+   * `blocks`, `collections`, `views`, `meta` — und sonst nichts. Es fehlten
+   * der Versionsverlauf und, ohne ein Wort darüber, die Anhänge. Zwei
+   * Sicherungswege hiessen „Sicherung" und enthielten nicht dasselbe; wer den
+   * verschlüsselten nahm, verlor seinen Verlauf, ohne es zu erfahren.
+   *
+   * `exportAll` trägt `enthaelt`, `fehlt` und `hinweis` — genau die Felder,
+   * die eine unvollständige Sicherung dazu bringen, das selbst zu sagen.
+   * Genau die fehlten hier.
+   *
+   * `art` und `fassung` bleiben zusätzlich stehen, damit Sicherungen, die
+   * schon geschrieben wurden, weiter erkannt werden. Eine Datei, die jemand
+   * vor einem Jahr angelegt hat, ist kein Altlastenproblem — sie ist der
+   * Zweck der Übung.
+   */
+  const bestandSammeln = async () => {
+    /* Holt den Verlauf aus der Ablage; er liegt bewusst nicht im
+       Zwischenspeicher. Ohne diesen Aufruf wäre `versions` leer — still. */
+    if (Store.exportVorbereiten) await Store.exportVorbereiten();
+    const d = JSON.parse(Store.exportAll());
+    return JSON.stringify(Object.assign(
+      { art: 'redion-sicherung', fassung: 1, wann: d.exportiert }, d), null, 2);
+  };
 
   const sicherungSchreiben = async (passwort) => {
-    const roh = bestandSammeln();
+    const roh = await bestandSammeln();
     const inhalt = passwort ? await verschluesseln(roh, passwort) : roh;
     const name = 'redion-sicherung-' + new Date().toISOString().slice(0, 10) +
                  (passwort ? '.verschluesselt.json' : '.json');
@@ -143,15 +168,53 @@ const Krypto = (() => {
     return name;
   };
 
-  /** Liest eine Sicherung ein — verschlüsselt oder nicht. */
+  /**
+   * Liest eine Sicherung — verschlüsselt oder nicht.
+   *
+   * Erkannt werden beide Bauarten: die mit `art: 'redion-sicherung'` aus
+   * diesem Weg und die mit `version` aus dem Hauptweg. Eine `.json`, die
+   * jemand über „Sicherung speichern" angelegt hat, ist eine Sicherung — sie
+   * hier abzulehnen, weil ihr ein Feld fehlt, wäre eine Schikane gegen den
+   * eigenen Nutzer.
+   */
   const sicherungLesen = async (text, passwort) => {
     let roh = text;
     if (text.trim().startsWith('{') && text.includes('redion-verschluesselt'))
       roh = await entschluesseln(text, passwort);
     const p = JSON.parse(roh);
-    if (p.art !== 'redion-sicherung') throw new Error('Das ist keine Redion-Sicherung');
+    if (p.art !== 'redion-sicherung' && !p.blocks)
+      throw new Error('Das ist keine Redion-Sicherung');
     return p;
   };
+
+  /**
+   * Eine gelesene Sicherung wirklich einspielen.
+   *
+   * WAS VORHER GESCHAH, UND WARUM ES DER SCHLIMMSTE FALL WAR. An dieser
+   * Stelle standen vier `Object.assign` auf `Store.cache`, gefolgt von
+   * `Store.alles && Store.alles()`. Diese Funktion gibt es nicht; der Aufruf
+   * war abgesichert und deshalb ein stiller Leerlauf. Nichts ging in die
+   * Ablage. Neunhundert Millisekunden später lud die Seite neu, las aus der
+   * Ablage — und dort stand unverändert der alte Bestand.
+   *
+   * Die Wiederherstellung wurde als geglückt gemeldet und war eine Sekunde
+   * später verschwunden. Wer sie brauchte, brauchte sie meistens dringend.
+   *
+   * Dazu kam, dass `Object.assign` zusammenführt. Der Dialog sagte „und dann
+   * ersetzt" — zwei verschiedene Dinge, und der Nutzer las das eine und
+   * bekam das andere.
+   *
+   * Beides erledigt jetzt `Store.importAll`: es schreibt in die Ablage, es
+   * kennt „ersetzen" und „zusammenfuehren", und es lehnt jede andere Angabe
+   * ab. Es ist derselbe Weg, den die Sicherung ohne Passwort schon immer
+   * genommen hat — es gibt keinen Grund, warum die mit Passwort einen
+   * eigenen bräuchte.
+   *
+   * @param {string} text  die gelesene (bereits entschlüsselte) Sicherung
+   * @param {'ersetzen'|'zusammenfuehren'} art
+   */
+  const sicherungEinspielen = async (text, art) =>
+    Store.importAll(typeof text === 'string' ? text : JSON.stringify(text), art);
 
   /** Wie viele Dinge stecken in einer Sicherung? Für die Vorschau. */
   const sicherungZahlen = (p) => ({
@@ -233,14 +296,21 @@ const Krypto = (() => {
         const ok = await UI.frage('Sicherung einlesen?',
           `Sie enthält ${z.bloecke} Blöcke, ${z.datenbanken} Datenbanken und ` +
           `${z.ansichten} Ansichten vom ${new Date(z.wann).toLocaleString('de-DE')}. ` +
-          'Der jetzige Bestand wird davor als Datei gesichert und dann ersetzt.');
+          'Der jetzige Bestand wird davor als Datei gesichert und dann ersetzt: ' +
+          'was nicht in der Sicherung steht, wird gelöscht.' +
+          (p.hinweis ? '\n\n' + p.hinweis : ''));
         if (!ok) return;
         await sicherungSchreiben(null);              /* Netz unter dem Seil */
-        Object.assign(Store.cache.blocks, p.blocks);
-        Object.assign(Store.cache.collections, p.collections);
-        Object.assign(Store.cache.views, p.views);
-        Object.assign(Store.cache.meta, p.meta);
-        Store.alles && Store.alles();
+        /* „ersetzen", weil genau das oben zugesagt wurde. Und über
+           `Store.importAll`, weil es in die Ablage schreibt — vorher ging
+           das Eingespielte beim Neuladen neunhundert Millisekunden später
+           wieder verloren, und gemeldet wurde trotzdem ein Erfolg. */
+        try {
+          await sicherungEinspielen(JSON.stringify(p), 'ersetzen');
+        } catch (err) {
+          UI.banner('Einspielen fehlgeschlagen: ' + err.message, 'fehler');
+          return;
+        }
         o.remove();
         UI.toast('Eingelesen — die Seite wird neu geladen');
         setTimeout(() => location.reload(), 900);
@@ -271,7 +341,8 @@ const Krypto = (() => {
 
   return { verschluesseln, entschluesseln, sperreAn, sperreEinrichten, sperreAus,
            passwortStimmt, sperrschirm, startPruefen, dialog,
-           sicherungSchreiben, sicherungLesen, sicherungZahlen, bestandSammeln };
+           sicherungSchreiben, sicherungLesen, sicherungZahlen, bestandSammeln,
+           sicherungEinspielen };
 })();
 
 window.Krypto = Krypto;

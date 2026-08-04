@@ -155,13 +155,16 @@ const Wolke = (() => {
     const chiffre = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, schluessel, daten);
     const alles = new Uint8Array(iv.length + chiffre.byteLength);
     alles.set(iv); alles.set(new Uint8Array(chiffre), iv.length);
-    return btoa(String.fromCharCode(...alles));
+    /* Aus `kern/helfer/bytes.js`. Der Spread sprengte hier ab etwa 128 000
+       Bytes den Aufrufstapel — bei einem Abgleichpaket mit einem grösseren
+       Seitenbaum ist das schnell erreicht. */
+    return Bytes.alsB64(alles);
   };
 
   const entschluessele = async (paket) => {
     if (!schluessel) return null;
     try {
-      const roh = Uint8Array.from(atob(String(paket)), c => c.charCodeAt(0));
+      const roh = Bytes.ausB64(paket);
       const iv = roh.slice(0, 12);
       const klar = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, schluessel, roh.slice(12));
       return new TextDecoder().decode(klar);

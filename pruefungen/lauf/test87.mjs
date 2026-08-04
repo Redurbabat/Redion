@@ -482,5 +482,42 @@ const nichtImSw = skripte.filter(s => !swQuelle.includes(s));
 p('Jede Datei aus index.html steht auch im sw.js', nichtImSw.length === 0,
   nichtImSw.slice(0, 3).join(', '));
 
+/* ========================================================================= *
+ * 9 · KEINE VIERTE FASSUNG VON BASE64
+ * ---------------------------------------------------------------------------
+ * `btoa(String.fromCharCode(...bytes))` sieht harmlos aus und ist es für
+ * kleine Puffer auch. Der Spread reicht jedes Byte als eigenen
+ * Aufruf-Parameter weiter; ab etwa 128 000 Bytes ist der Aufrufstapel voll.
+ *
+ * Diese Zeile stand an drei Stellen — in der verschlüsselten Sicherung, in
+ * der Seitensperre und im Abgleich. Also an genau den drei Stellen, an denen
+ * verschlüsselt wird, und damit an genau den drei Stellen, an denen die
+ * Datenmenge gross ist. Wer genug Notizen hatte, dass sich das Sichern
+ * lohnte, konnte nicht sichern; die Meldung sprach dabei von Aufrufstapeln
+ * und nicht von Grössen.
+ *
+ * Es gibt jetzt eine Fassung in `kern/helfer/bytes.js`. Diese Prüfung hält
+ * fest, dass keine vierte danebenwächst — der wiederkehrende Befund dieses
+ * Projekts ist nicht „etwas vergessen", sondern „an einer Stelle getan und
+ * an der Nachbarstelle nicht".
+ * ========================================================================= */
+console.log('\n9 · Base64 gibt es nur an einer Stelle');
+
+const HELFER = 'quell/kern/helfer/bytes.js';
+const mitSpread = [];
+for (const s of skripte) {
+  if (s === HELFER) continue;
+  const quelle = nurCode(_lies(_dazu(WURZEL, s), 'utf8'));
+  if (/fromCharCode\s*\(\s*\.\.\./.test(quelle)) mitSpread.push(s);
+}
+p('Niemand baut Base64 mit dem Spread', mitSpread.length === 0,
+  mitSpread.join(', '));
+
+/* Gegenprobe: der Helfer existiert und wird auch geladen. Eine Prüfung, die
+   nur verbietet, ohne dass es eine Alternative gibt, treibt den nächsten
+   Bearbeiter erst recht in die Wiederholung. */
+p('Der Helfer für Base64 wird geladen', skripte.includes(HELFER),
+  skripte.filter(s => s.includes('bytes')).join(', '));
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

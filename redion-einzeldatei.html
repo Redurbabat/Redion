@@ -4367,6 +4367,75 @@ window.Objekte = Objekte;
 
 </script>
 <script>
+/* ===== quell/kern/helfer/bytes.js ===== */
+/* ============================================================================
+ * kern/helfer/bytes.js — Bytes nach Base64 und zurück
+ * ----------------------------------------------------------------------------
+ * Zwei Handgriffe, die für sich genommen langweilig sind und an drei Stellen
+ * dieselbe Falle aufgestellt hatten:
+ *
+ *   alsB64(buf)   Bytes → Base64-Zeichenkette
+ *   ausB64(text)  Base64-Zeichenkette → Bytes
+ *
+ * DIE FALLE. Die naheliegende Fassung lautet
+ *
+ *     btoa(String.fromCharCode(...new Uint8Array(buf)))
+ *
+ * und ist für kleine Puffer richtig. Der Spread reicht jedes einzelne Byte
+ * als eigenen Aufruf-Parameter weiter; ab etwa 128 000 Bytes ist der
+ * Aufrufstapel voll und der Browser wirft `Maximum call stack size exceeded`.
+ *
+ * Das war kein Randfall. Diese Fassung stand in der verschlüsselten
+ * Sicherung, in der Seitensperre und im Abgleich — also genau dort, wo etwas
+ * verschlüsselt wird, und damit genau dort, wo die Datenmenge gross ist. Wer
+ * genug Notizen hatte, dass sich das Sichern lohnt, konnte nicht sichern. Die
+ * Meldung sprach dabei von Aufrufstapeln und nicht von Grössen, sodass auch
+ * niemand darauf kam, woran es lag.
+ *
+ * WARUM HIER UND NICHT DREIMAL. Dreimal dieselbe kleine Funktion ist genau
+ * das Muster, an dem sich dieses Projekt immer wieder verschluckt: an einer
+ * Stelle repariert, an der Nachbarstelle nicht. Eine Fassung, ein Ort.
+ * `pruefungen/lauf/test87.mjs` hält fest, dass keine vierte entsteht.
+ * ==========================================================================*/
+
+const Bytes = (() => {
+
+  /* Weit unter jeder Browsergrenze und gross genug, dass die Schleife nicht
+     ins Gewicht fällt: bei 4 MB sind das 128 Durchläufe. */
+  const SCHEIBE = 32768;
+
+  /**
+   * Bytes als Base64.
+   * @param {ArrayBuffer|Uint8Array} buf
+   * @returns {string}
+   */
+  const alsB64 = (buf) => {
+    const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < bytes.length; i += SCHEIBE)
+      s += String.fromCharCode.apply(null, bytes.subarray(i, i + SCHEIBE));
+    return btoa(s);
+  };
+
+  /**
+   * Base64 zurück in Bytes.
+   *
+   * `Uint8Array.from` mit einer Abbildung hat das Stapelproblem nicht — es
+   * ruft die Funktion je Zeichen auf, statt alle Zeichen auf einmal zu
+   * übergeben. Diese Richtung war deshalb nie kaputt und bleibt, wie sie war.
+   *
+   * @param {string} text
+   * @returns {Uint8Array}
+   */
+  const ausB64 = (text) => Uint8Array.from(atob(String(text)), c => c.charCodeAt(0));
+
+  return { alsB64, ausB64, SCHEIBE };
+})();
+
+window.Bytes = Bytes;
+
+</script>
+<script>
 /* ===== quell/kern/helfer/bremse.js ===== */
 /* ============================================================================
  * kern/helfer/bremse.js — nicht bei jedem Tastendruck alles neu machen
@@ -23804,8 +23873,12 @@ const Werkzeuge = (() => {
       roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   };
 
-  const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
-  const vonB64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  /* Aus `kern/helfer/bytes.js`. Vorher stand hier die Fassung mit dem Spread:
+     ab etwa 128 000 Bytes sprengt sie den Aufrufstapel — und das ist die
+     Grösse einer längeren Seite, also genau der Fall, für den das Sperren
+     gedacht ist. */
+  const b64 = (buf) => Bytes.alsB64(buf);
+  const vonB64 = (s) => Bytes.ausB64(s);
 
   const sperren = async (p) => {
     if (!crypto.subtle) { alert('Verschlüsselung braucht einen sicheren Kontext (https oder lokale Datei).'); return; }
@@ -35666,8 +35739,12 @@ const Krypto = (() => {
   const enc = new TextEncoder();
   const dec = new TextDecoder();
 
-  const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
-  const ausB64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  /* Aus `kern/helfer/bytes.js`. Hier stand vorher die Fassung mit dem
+     Spread, die ab etwa 128 000 Bytes den Aufrufstapel sprengte — also genau
+     dann, wenn der Bestand gross genug war, dass sich das Sichern lohnt.
+     Dort steht, warum es nur noch eine Fassung davon gibt. */
+  const b64 = (buf) => Bytes.alsB64(buf);
+  const ausB64 = (s) => Bytes.ausB64(s);
 
   const RUNDEN = 310000;   /* OWASP-Empfehlung für PBKDF2-SHA256 */
 
@@ -35764,14 +35841,35 @@ const Krypto = (() => {
   /* ========================================================================
    * SICHERUNG
    * ======================================================================*/
-  const bestandSammeln = () => JSON.stringify({
-    art: 'redion-sicherung', fassung: 1, wann: new Date().toISOString(),
-    blocks: Store.cache.blocks, collections: Store.cache.collections,
-    views: Store.cache.views, meta: Store.cache.meta
-  });
+  /**
+   * Der Bestand als JSON — **dasselbe**, was der Hauptweg schreibt.
+   *
+   * WARUM NICHT MEHR EIGENS GESAMMELT. Vorher stand hier ein zweites Format:
+   * `blocks`, `collections`, `views`, `meta` — und sonst nichts. Es fehlten
+   * der Versionsverlauf und, ohne ein Wort darüber, die Anhänge. Zwei
+   * Sicherungswege hiessen „Sicherung" und enthielten nicht dasselbe; wer den
+   * verschlüsselten nahm, verlor seinen Verlauf, ohne es zu erfahren.
+   *
+   * `exportAll` trägt `enthaelt`, `fehlt` und `hinweis` — genau die Felder,
+   * die eine unvollständige Sicherung dazu bringen, das selbst zu sagen.
+   * Genau die fehlten hier.
+   *
+   * `art` und `fassung` bleiben zusätzlich stehen, damit Sicherungen, die
+   * schon geschrieben wurden, weiter erkannt werden. Eine Datei, die jemand
+   * vor einem Jahr angelegt hat, ist kein Altlastenproblem — sie ist der
+   * Zweck der Übung.
+   */
+  const bestandSammeln = async () => {
+    /* Holt den Verlauf aus der Ablage; er liegt bewusst nicht im
+       Zwischenspeicher. Ohne diesen Aufruf wäre `versions` leer — still. */
+    if (Store.exportVorbereiten) await Store.exportVorbereiten();
+    const d = JSON.parse(Store.exportAll());
+    return JSON.stringify(Object.assign(
+      { art: 'redion-sicherung', fassung: 1, wann: d.exportiert }, d), null, 2);
+  };
 
   const sicherungSchreiben = async (passwort) => {
-    const roh = bestandSammeln();
+    const roh = await bestandSammeln();
     const inhalt = passwort ? await verschluesseln(roh, passwort) : roh;
     const name = 'redion-sicherung-' + new Date().toISOString().slice(0, 10) +
                  (passwort ? '.verschluesselt.json' : '.json');
@@ -35783,15 +35881,53 @@ const Krypto = (() => {
     return name;
   };
 
-  /** Liest eine Sicherung ein — verschlüsselt oder nicht. */
+  /**
+   * Liest eine Sicherung — verschlüsselt oder nicht.
+   *
+   * Erkannt werden beide Bauarten: die mit `art: 'redion-sicherung'` aus
+   * diesem Weg und die mit `version` aus dem Hauptweg. Eine `.json`, die
+   * jemand über „Sicherung speichern" angelegt hat, ist eine Sicherung — sie
+   * hier abzulehnen, weil ihr ein Feld fehlt, wäre eine Schikane gegen den
+   * eigenen Nutzer.
+   */
   const sicherungLesen = async (text, passwort) => {
     let roh = text;
     if (text.trim().startsWith('{') && text.includes('redion-verschluesselt'))
       roh = await entschluesseln(text, passwort);
     const p = JSON.parse(roh);
-    if (p.art !== 'redion-sicherung') throw new Error('Das ist keine Redion-Sicherung');
+    if (p.art !== 'redion-sicherung' && !p.blocks)
+      throw new Error('Das ist keine Redion-Sicherung');
     return p;
   };
+
+  /**
+   * Eine gelesene Sicherung wirklich einspielen.
+   *
+   * WAS VORHER GESCHAH, UND WARUM ES DER SCHLIMMSTE FALL WAR. An dieser
+   * Stelle standen vier `Object.assign` auf `Store.cache`, gefolgt von
+   * `Store.alles && Store.alles()`. Diese Funktion gibt es nicht; der Aufruf
+   * war abgesichert und deshalb ein stiller Leerlauf. Nichts ging in die
+   * Ablage. Neunhundert Millisekunden später lud die Seite neu, las aus der
+   * Ablage — und dort stand unverändert der alte Bestand.
+   *
+   * Die Wiederherstellung wurde als geglückt gemeldet und war eine Sekunde
+   * später verschwunden. Wer sie brauchte, brauchte sie meistens dringend.
+   *
+   * Dazu kam, dass `Object.assign` zusammenführt. Der Dialog sagte „und dann
+   * ersetzt" — zwei verschiedene Dinge, und der Nutzer las das eine und
+   * bekam das andere.
+   *
+   * Beides erledigt jetzt `Store.importAll`: es schreibt in die Ablage, es
+   * kennt „ersetzen" und „zusammenfuehren", und es lehnt jede andere Angabe
+   * ab. Es ist derselbe Weg, den die Sicherung ohne Passwort schon immer
+   * genommen hat — es gibt keinen Grund, warum die mit Passwort einen
+   * eigenen bräuchte.
+   *
+   * @param {string} text  die gelesene (bereits entschlüsselte) Sicherung
+   * @param {'ersetzen'|'zusammenfuehren'} art
+   */
+  const sicherungEinspielen = async (text, art) =>
+    Store.importAll(typeof text === 'string' ? text : JSON.stringify(text), art);
 
   /** Wie viele Dinge stecken in einer Sicherung? Für die Vorschau. */
   const sicherungZahlen = (p) => ({
@@ -35873,14 +36009,21 @@ const Krypto = (() => {
         const ok = await UI.frage('Sicherung einlesen?',
           `Sie enthält ${z.bloecke} Blöcke, ${z.datenbanken} Datenbanken und ` +
           `${z.ansichten} Ansichten vom ${new Date(z.wann).toLocaleString('de-DE')}. ` +
-          'Der jetzige Bestand wird davor als Datei gesichert und dann ersetzt.');
+          'Der jetzige Bestand wird davor als Datei gesichert und dann ersetzt: ' +
+          'was nicht in der Sicherung steht, wird gelöscht.' +
+          (p.hinweis ? '\n\n' + p.hinweis : ''));
         if (!ok) return;
         await sicherungSchreiben(null);              /* Netz unter dem Seil */
-        Object.assign(Store.cache.blocks, p.blocks);
-        Object.assign(Store.cache.collections, p.collections);
-        Object.assign(Store.cache.views, p.views);
-        Object.assign(Store.cache.meta, p.meta);
-        Store.alles && Store.alles();
+        /* „ersetzen", weil genau das oben zugesagt wurde. Und über
+           `Store.importAll`, weil es in die Ablage schreibt — vorher ging
+           das Eingespielte beim Neuladen neunhundert Millisekunden später
+           wieder verloren, und gemeldet wurde trotzdem ein Erfolg. */
+        try {
+          await sicherungEinspielen(JSON.stringify(p), 'ersetzen');
+        } catch (err) {
+          UI.banner('Einspielen fehlgeschlagen: ' + err.message, 'fehler');
+          return;
+        }
         o.remove();
         UI.toast('Eingelesen — die Seite wird neu geladen');
         setTimeout(() => location.reload(), 900);
@@ -35911,7 +36054,8 @@ const Krypto = (() => {
 
   return { verschluesseln, entschluesseln, sperreAn, sperreEinrichten, sperreAus,
            passwortStimmt, sperrschirm, startPruefen, dialog,
-           sicherungSchreiben, sicherungLesen, sicherungZahlen, bestandSammeln };
+           sicherungSchreiben, sicherungLesen, sicherungZahlen, bestandSammeln,
+           sicherungEinspielen };
 })();
 
 window.Krypto = Krypto;
@@ -45156,13 +45300,16 @@ const Wolke = (() => {
     const chiffre = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, schluessel, daten);
     const alles = new Uint8Array(iv.length + chiffre.byteLength);
     alles.set(iv); alles.set(new Uint8Array(chiffre), iv.length);
-    return btoa(String.fromCharCode(...alles));
+    /* Aus `kern/helfer/bytes.js`. Der Spread sprengte hier ab etwa 128 000
+       Bytes den Aufrufstapel — bei einem Abgleichpaket mit einem grösseren
+       Seitenbaum ist das schnell erreicht. */
+    return Bytes.alsB64(alles);
   };
 
   const entschluessele = async (paket) => {
     if (!schluessel) return null;
     try {
-      const roh = Uint8Array.from(atob(String(paket)), c => c.charCodeAt(0));
+      const roh = Bytes.ausB64(paket);
       const iv = roh.slice(0, 12);
       const klar = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, schluessel, roh.slice(12));
       return new TextDecoder().decode(klar);

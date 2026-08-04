@@ -42,7 +42,7 @@ leichter.
 
 ## Aktueller Stand
 
-**Stand: 4. August 2026 · 73 Prüfläufe grün**
+**Stand: 4. August 2026 · 75 Prüfläufe grün**
 
 Redion kann bereits:
 
@@ -163,7 +163,7 @@ gebraucht und wiegt ein Vielfaches von allem anderen.
 
 ---
 
-## Phase 3 · Backup und `.redion`
+## Phase 3 · Backup und `.redion` · **erledigt**
 
 ### ~~C1 — `.redion`-Format dokumentieren~~ · erledigt
 
@@ -202,72 +202,64 @@ abgelehnt.
 
 ---
 
-### C4 — Die verschlüsselte Sicherung auf denselben Stand bringen
+### ~~C4 — Die verschlüsselte Sicherung auf denselben Stand bringen~~ · erledigt
 
-**Ziel**
+Vier Befunde auf einem Weg, gefunden beim Schreiben von `REDION-FORMAT.md`.
 
-Eine verschlüsselte Sicherung enthält dasselbe wie eine `.redion` — oder sagt
-selbst, was ihr fehlt.
+**1 · Sie sicherte weniger und sagte es nicht.** `bestandSammeln()` schrieb
+ein eigenes Format ohne `versions`, ohne Anhänge — und ohne
+`enthaelt`/`fehlt`/`hinweis`, die genau dafür erfunden wurden. Jetzt benutzt
+sie `Store.exportAll()`, denselben Weg wie die Sicherung ohne Passwort.
+`art` und `fassung` bleiben zusätzlich stehen, damit ältere Dateien weiter
+gelesen werden.
 
-**Warum**
+**2 · Der Dialog sagte „ersetzt", der Code führte zusammen.**
+`Object.assign` legt dazu. Jetzt läuft beides über `Store.importAll` mit
+ausdrücklicher Angabe.
 
-Es gibt zwei Wege, die beide „Sicherung" heissen, und sie enthalten nicht
-dasselbe. `quell/kern/sicherheit/krypto.js` schreibt weder den Verlauf noch
-die Anhänge — **und trägt kein `fehlt`/`hinweis`**, das es sagen würde. Genau
-dafür wurden diese Felder erfunden.
+**3 · Das Eingespielte wurde nie geschrieben.** Die vier `Object.assign`
+fassten nur `Store.cache` an; danach stand `Store.alles && Store.alles()` —
+**diese Funktion gibt es nicht**, der Aufruf war ein stiller Leerlauf.
+Neunhundert Millisekunden später lud die Seite neu, las aus der Ablage und
+fand dort unverändert den alten Bestand. Die Wiederherstellung wurde als
+geglückt gemeldet und war eine Sekunde später weg. Wer sie brauchte, brauchte
+sie meistens dringend.
 
-Dazu ein zweiter Befund: der Wiederherstellen-Dialog sagt „und dann ersetzt",
-der Code macht `Object.assign` — ein Zusammenführen. Wer eine Sicherung
-einspielt, um einen kaputten Stand loszuwerden, hat ihn danach immer noch.
+**4 · Verschlüsseln scheiterte ab etwa 128 KB.**
+`btoa(String.fromCharCode(...bytes))` reicht jedes Byte als eigenen
+Aufruf-Parameter weiter; darüber ist der Aufrufstapel voll. Ein Bestand aus
+ein paar Dutzend Seiten liegt über der Grenze — wer genug hatte, dass sich
+das Sichern lohnt, konnte nicht sichern. Die Meldung sprach dabei von
+Aufrufstapeln und nicht von Grössen.
 
-**Dateien**
+Dieselbe Zeile stand an **drei** Stellen: verschlüsselte Sicherung,
+Seitensperre (`wissen/werkzeuge.js`), Abgleich (`kern/abgleich/maschine.js`)
+— also an genau den drei Stellen, an denen verschlüsselt wird und die
+Datenmenge gross ist. Es gibt jetzt eine Fassung in
+`quell/kern/helfer/bytes.js`; `test87` verbietet eine vierte.
 
-```txt
-quell/kern/sicherheit/krypto.js
-pruefungen/lauf/test104.mjs      (neu)
-doku/REDION-FORMAT.md
-```
-
-**Fertig wenn**
-
-- die verschlüsselte Sicherung `enthaelt`, `fehlt` und `hinweis` trägt
-- der Verlauf mitkommt **oder** als fehlend benannt wird
-- die Anhänge mitkommen **oder** als fehlend benannt werden
-- der Dialog und der Code dasselbe sagen — entweder wirklich ersetzen oder
-  „dazulegen" schreiben
-- ein Prüflauf beides hält
-
-**Priorität** — sehr hoch. `CLAUDE.md` §46, Priorität 1: Daten sicher.
+**Gehalten von** `pruefungen/lauf/test104.mjs` (20 Prüfungen) und `test87`
+(Punkt 9). Gegengeprüft: die alte Fassung wieder eingesetzt, beide Läufe
+wurden rot an genau den Stellen, die sie halten sollen.
 
 ---
 
-### C2 — Backup-Tests schützen
+### ~~C2 — Backup-Tests schützen~~ · erledigt
 
-**Ziel**
+`pruefungen/LIESMICH.md` hat einen neuen Abschnitt: **„Die vier Läufe, die
+man nicht abschwächen darf"** — `test96`, `test100`, `test103`, `test104`
+und `test87` Punkt 9. Zu jedem steht dort, *was* er hält und *wodurch* man
+ihn versehentlich entschärfen würde.
 
-Die Backup-Prüfungen dürfen nicht versehentlich abgeschwächt werden.
+Nachgesehen statt behauptet: `test100` vergleicht wirklich Byte für Byte
+(„Der Anhang ist zurück, Byte für Byte identisch") und prüft wirklich beide
+Richtungen — „Beim Ersetzen räumt der Import fremde Anhänge weg" und „Eine
+.json-Sicherung lässt die Anhänge in Ruhe". Die zweite ist die wichtigere:
+sie hält fest, dass eine unvollständige Sicherung nicht zum Datenverlust
+wird.
 
-**Dateien**
-
-```txt
-pruefungen/lauf/test100.mjs
-pruefungen/LIESMICH.md
-```
-
-**Fertig wenn**
-
-- dokumentiert ist, was `test100` schützt
-- `.redion`-Import/Export weiter **echte Bytes** vergleicht
-- der JSON-Import weiterhin keine Anhänge löscht
-
-**Tests**
-
-```
-node pruefungen/lauf/test100.mjs
-npm run pruefen -- --schnell
-```
-
-**Priorität** — hoch.
+Die Übersichtstabelle in `LIESMICH.md` reichte nur bis Lauf 96; sie steht
+jetzt bis 104.
 
 ---
 

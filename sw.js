@@ -28,6 +28,7 @@ const GRUNDSTOCK = [
   './quell/kern/helfer/kennungen.js',
   './quell/kern/helfer/datum.js',
   './quell/kern/helfer/objekte.js',
+  './quell/kern/helfer/bytes.js',
   './quell/kern/helfer/bremse.js',
   './quell/kern/ereignisse/arten.js',
   './quell/kern/einstellung/app.js',
