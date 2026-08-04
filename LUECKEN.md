@@ -63,18 +63,27 @@ doku/TYPESCRIPT-MIGRATION.md   TS-0 bis TS-10
 TypeScript in GitHub Actions   im schnellen Job, vor allem anderen
 ```
 
+**Dazu seit TS-3**
+
+```txt
+tsconfig.bauen.json     src/kern/*.ts  →  quell/*.js
+npm run bauen:ts
+src/global.d.ts         Typen ohne import (module: none)
+src/kern/helfer/kennungen.ts    die erste migrierte Datei
+test105.mjs             erzeugtes .js gegen seine .ts-Quelle
+```
+
+Der Weg von `.ts` nach `.js` ist entschieden: das erzeugte JavaScript wird
+mitversioniert und landet unter dem Pfad, den `index.html` und `sw.js`
+ohnehin laden. Ein Bauschritt für den Entwickler, keiner für den Nutzer —
+die App startet weiterhin per Doppelklick.
+
 **Was fehlt**
 
 ```txt
-erste migrierte Kernmodule (TS-3: Kennungen, Datum, Objekte, Saeubern)
+die übrigen kleinen Helfer (datum, objekte, bremse, melder, saeubern, bytes)
 und alles danach bis TS-10
 ```
-
-`noEmit` heisst: TypeScript beschreibt heute Daten, es führt sie nicht aus.
-Sobald mit TS-3 der erste ausführbare Code umzieht, braucht es einen Weg von
-`.ts` nach `.js` — ohne dass die App dadurch einen Pflicht-Bauschritt
-bekommt. Die zwei zulässigen Wege stehen in `doku/TYPESCRIPT-MIGRATION.md`;
-entschieden wird zu Beginn von TS-3.
 
 **Warum wichtig**
 
@@ -558,38 +567,64 @@ Materiallisten · Projektkosten · Finanzplanung · Lernfortschritt · Inventar.
 
 ## L32 · Excel-Funktionen
 
-**Stand** — ◐ 158 Formelfunktionen vorhanden, aber **ohne deutsche
-Excel-Namen** und ohne die Suchfunktionen.
+**Stand** — ◐ **37 von 63 des Startpakets laufen bereits — keine einzige
+unter ihrem deutschen Namen.**
 
-**Was fehlt — Startpaket**
+Gemessen am 4. August 2026 (Register geladen, Laufzeit geladen, Namen
+abgeglichen — `doku/EXCEL-IN-REDION-RECHERCHE.md`):
+
+| | |
+|---|--:|
+| Funktionen im Register | 158 |
+| davon ohne Implementierung | 0 |
+| Startpaket abgedeckt | **37 / 63** |
+| davon unter deutschem Namen erreichbar | **0** |
+
+Wer aus Excel kommt und `=SUMME(A1:A10)` tippt, bekommt einen Fehler. `sum`
+hätte funktioniert. Es fehlen also nicht 63 Funktionen, sondern **26
+Funktionen und 37 Namen**.
+
+**Was schon da ist**
 
 ```txt
-Mathematik  SUMME PRODUKT MITTELWERT MIN MAX ANZAHL ANZAHL2 ABS
-            POTENZ WURZEL REST RUNDEN ABRUNDEN AUFRUNDEN GANZZAHL
-Logik       WENN WENNS UND ODER NICHT WENNFEHLER
-Datum       HEUTE JETZT DATUM ZEIT JAHR MONAT TAG WOCHENTAG KALENDERWOCHE
-Text        LÄNGE LINKS RECHTS TEIL GLÄTTEN SÄUBERN GROSS KLEIN SUCHEN
-            FINDEN WECHSELN ERSETZEN TEXT WERT TEXTKETTE TEXTVERKETTEN
-Info        ISTZAHL ISTTEXT ISTLEER ISTFEHLER
+Mathematik  10/15   sum average min max abs sqrt mod round floor ceil
+Logik        5/6    if ifs and or not
+Datum        7/9    today now date year month day week
+Text        11/16   length slice trim upper lower replaceall replace
+                    format tonumber concat join
+Info         1/4    empty
+Suche        3/13   match sort unique
 ```
 
-**Was fehlt — Suche und Verweise**
+**Was fehlt**
 
 ```txt
-ZÄHLENWENN(S) · SUMMEWENN(S) · MITTELWERTWENN(S)
-SVERWEIS · WVERWEIS · XVERWEIS · INDEX · VERGLEICH
-FILTER · SORTIEREN · EINDEUTIG
+Mathematik     PRODUKT ANZAHL ANZAHL2 POTENZ GANZZAHL
+Logik          WENNFEHLER
+Datum          ZEIT WOCHENTAG
+Text           LINKS RECHTS SÄUBERN SUCHEN FINDEN
+Info           ISTZAHL ISTTEXT ISTFEHLER
+Suche/Verweis  ZÄHLENWENN(S) SUMMEWENN(S) MITTELWERTWENN(S)
+               SVERWEIS WVERWEIS XVERWEIS INDEX FILTER
 ```
 
-**Warum wichtig**
+**Suche/Verweis ist mit 3 von 13 die schwächste Gruppe** — und genau sie
+trägt in Excel die eigentliche Arbeit.
 
-Das Startpaket deckt rund achtzig Prozent der alltäglichen Rechnungen ab. Die
-Suchfunktionen sind der Grund, warum viele bei Excel bleiben.
+**Zwei Dinge stehen nicht im Weg** — beide nachgesehen: der Zerteiler kennt
+Umlaute schon (`/[A-Za-zÄÖÜäöüß_]/`), und Namen werden vor dem Nachschlagen
+kleingeschrieben. Ein Alias ist eine Zeile.
+
+**Eine Frage ist vorher zu entscheiden** — Excel hat echte Fehlerwerte
+(`#WERT!`, `#DIV/0!`), Redion meldet Text. `WENNFEHLER` und `ISTFEHLER`
+brauchen einen Fehlerwert im Datenmodell; das ist eine Änderung an der
+Laufzeit, keine neue Funktion.
 
 **Wichtig** — dieselbe sichere Formelsprache, kein zweiter Auswerter, kein
 `eval()`. Siehe `ENTSCHEIDUNGEN.md` E11 und E24.
 
-**Status** — ⏳ geplant, hohe Priorität.
+**Status** — ⏳ hohe Priorität. Die 37 Namen sind der billigste grosse
+Gewinn im ganzen Plan.
 
 ---
 

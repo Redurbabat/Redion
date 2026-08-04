@@ -337,7 +337,36 @@ GitHub Actions. Der ausführliche Weg — die Phasen TS-0 bis TS-10, die Regeln
 beim Umziehen einer Datei und die Frage, wann ein Bauschritt nötig wird —
 steht in **`doku/TYPESCRIPT-MIGRATION.md`**.
 
-Als Nächstes TS-3: die kleinen DOM-freien Kernhelfer.
+**Nachtrag vom 4. August 2026 — wie `.ts` zu `.js` wird.** Mit TS-3 zieht
+erstmals ausführbarer Code um, und damit stellte sich die Frage, die `noEmit`
+bis dahin offenlassen konnte. Entschieden: **das erzeugte JavaScript wird
+mitversioniert.**
+
+```txt
+src/kern/helfer/kennungen.ts      Quelle
+        ↓  npm run bauen:ts
+quell/kern/helfer/kennungen.js    wird geladen, wird mitcommittet
+```
+
+`tsconfig.bauen.json` bildet `rootDir: src` auf `outDir: quell` ab — die
+Datei landet dort, wo `index.html` und `sw.js` sie ohnehin laden. Keine der
+beiden musste geändert werden. **Ein Bauschritt für den Entwickler, keiner
+für den Nutzer.**
+
+`module: none` verbietet `import`/`export`; sonst entstünde ein ES-Modul, und
+das liefe von `file://` nicht. Migrierte Dateien bekommen ihre Typen deshalb
+aus `src/global.d.ts`.
+
+*Nicht gewählt:* Vite oder ein Bündler als Pflicht. Beides wäre bequemer zu
+schreiben und würde die eine Regel brechen, die nicht verhandelbar ist.
+
+*Der Preis:* zwei Dateien mit demselben Inhalt können auseinanderdriften.
+Dagegen `pruefungen/lauf/test105.mjs` (vergleicht Zeichen für Zeichen mit
+einer frischen Ausgabe) und ein „ERZEUGT — NICHT VON HAND ÄNDERN" ganz oben
+in jeder erzeugten Datei.
+
+Als Nächstes der Rest von TS-3: `datum`, `objekte`, `bremse`, `melder`,
+`saeubern`, `bytes`.
 
 ---
 
@@ -951,6 +980,37 @@ Excel 1:1 ist zu gross, zu komplex, schwer testbar und verwässert, was
 Redion ist. Achtzig Prozent des Alltags decken rund sechzig Funktionen ab —
 Grundrechnen, Logik, Datum, Text, Information, dazu die Suchfunktionen
 (`SVERWEIS`, `XVERWEIS`, `INDEX`/`VERGLEICH`, `SUMMEWENNS`).
+
+**Nachtrag vom 4. August 2026 — nachgemessen, und das Ergebnis dreht die
+Reihenfolge um.**
+
+Diese Entscheidung ging davon aus, dass rund sechzig Excel-Funktionen zu
+bauen sind. Gemessen (Register geladen, Laufzeit geladen, Namen abgeglichen —
+`doku/EXCEL-IN-REDION-RECHERCHE.md`):
+
+```txt
+158  Funktionen im Register, davon 0 ohne Implementierung
+ 37  von 63 Funktionen des Startpakets sind bereits da und laufen
+  0  davon sind unter ihrem deutschen Namen erreichbar
+```
+
+Wer aus Excel kommt und `=SUMME(A1:A10)` tippt, bekommt einen Fehler. `sum`
+hätte funktioniert.
+
+Es fehlen also nicht 63 Funktionen, sondern **26 Funktionen und 37 Namen** —
+und die Namen sind fast umsonst zu haben: der Zerteiler kennt Umlaute schon
+(`/[A-Za-zÄÖÜäöüß_]/`), und Namen werden vor dem Nachschlagen
+kleingeschrieben. Ein Alias ist eine Zeile.
+
+**Also zuerst die Namen, dann die Funktionen.** Die schwächste Gruppe ist
+Suche/Verweis mit 3 von 13 — und genau sie trägt in Excel die eigentliche
+Arbeit. Sie kommt als Zweites.
+
+Eine Frage ist **vor** dem Bauen zu entscheiden: Excel hat echte Fehlerwerte
+(`#WERT!`, `#DIV/0!`), Redion meldet Text. `WENNFEHLER` und `ISTFEHLER`
+brauchen einen Fehlerwert im Datenmodell — eine Änderung an der Laufzeit,
+keine neue Funktion. Wird sie später entschieden, wird `WENNFEHLER` zweimal
+gebaut.
 
 **Folgen**
 

@@ -8,6 +8,7 @@
     "bauen": "node bauen.js",
     "pruefen": "node pruefungen/alle.js",
     "typecheck": "tsc --noEmit",
+    "bauen:ts": "tsc -p tsconfig.bauen.json",
     "server": "node server/pruefserver.js 8790",
     "veroeffentlichen": "npx wrangler deploy"
   },

@@ -1,0 +1,46 @@
+{
+  "//": [
+    "tsconfig.bauen.json — der einzige Ort, an dem TypeScript etwas erzeugt",
+    "",
+    "WARUM ES DIESE ZWEITE DATEI GIBT. `tsconfig.json` prüft nur (`noEmit`).",
+    "Ab Phase TS-3 zieht ausführbarer Code um, und der muss als gewöhnliches",
+    "JavaScript in `quell/` landen — sonst startet die App nicht mehr per",
+    "Doppelklick auf index.html, und genau das ist die eine Regel, die nicht",
+    "verhandelbar ist (CLAUDE.md §6, doku/TYPESCRIPT-MIGRATION.md).",
+    "",
+    "WIE. `rootDir` zeigt auf src/, `outDir` auf quell/. Aus",
+    "`src/kern/helfer/kennungen.ts` wird also `quell/kern/helfer/kennungen.js`",
+    "— genau der Pfad, den index.html und sw.js ohnehin schon laden. Weder",
+    "index.html noch sw.js noch bauen.js müssen etwas davon wissen.",
+    "",
+    "WARUM `module: none`. Die App lädt Skripte über <script src>, nicht als",
+    "Module. Eine Datei mit `import`/`export` würde als ES-Modul ausgegeben",
+    "und liefe von file:// gar nicht. `none` verbietet beides schon beim",
+    "Prüfen — der Fehler kommt beim Bauen und nicht erst im Browser.",
+    "",
+    "Die Folge davon: migrierte Dateien holen sich Typen nicht per `import`,",
+    "sondern über `src/global.d.ts`. Das ist der Preis dafür, dass die App",
+    "ohne Bauschritt startet — und er ist ihn wert.",
+    "",
+    "Das erzeugte .js wird mitversioniert. `pruefungen/lauf/test105.mjs`",
+    "prüft, dass es zur .ts-Datei passt: wer das .js von Hand ändert,",
+    "verliert die Änderung beim nächsten Bauen, und das soll auffallen,",
+    "bevor es passiert."
+  ],
+
+  "extends": "./tsconfig.json",
+
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "none",
+    "moduleResolution": "Classic",
+    "isolatedModules": false,
+    "verbatimModuleSyntax": false,
+    "removeComments": false,
+    "newLine": "lf",
+    "rootDir": "src",
+    "outDir": "quell"
+  },
+
+  "include": ["src/global.d.ts", "src/kern/**/*.ts"]
+}

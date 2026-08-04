@@ -36,19 +36,54 @@ zusammenpasst; er ändert nichts.
 Daten, es führt sie nicht aus. Das ist eine bewusste Reihenfolge, keine
 Auslassung: erst muss beschrieben sein, was da ist, bevor es umzieht.
 
-**Wann sich das ändern darf:** ab Phase TS-3, wenn erstmals ausführbarer
-`.ts`-Code umzieht, braucht es einen Weg von `.ts` nach `.js`. Dafür gibt es
-zwei Möglichkeiten, und beide sind zulässig:
+**Ab TS-3 gibt es einen zweiten Weg — entschieden am 4. August 2026.**
 
-| Weg | Was er bedeutet |
-|---|---|
-| **Erzeugtes JS wird mitversioniert** | `tsc` schreibt `.js` neben `.ts`, beides liegt im Repository, `index.html` lädt wie bisher. Kein Bauschritt für den Nutzer, ein Bauschritt für den Entwickler. |
-| **`bauen.js` erweitern** | Der bestehende Bündler ruft `tsc` mit auf. Nur nötig, wenn die Einzeldatei betroffen ist. |
+Sobald ausführbarer `.ts`-Code umzieht, muss daraus `.js` werden. Gewählt:
+**das erzeugte JavaScript wird mitversioniert.**
 
-Was **nicht** zulässig ist: ein Zustand, in dem `index.html` ohne
-vorherigen `npm run build` nicht mehr startet. Die Entscheidung zwischen den
-zwei Wegen fällt zu Beginn von TS-3 und wird dann hier eingetragen — nicht
-vorher geraten.
+```
+src/kern/helfer/kennungen.ts      die Quelle, wird bearbeitet
+        ↓  npm run bauen:ts       (tsc -p tsconfig.bauen.json)
+quell/kern/helfer/kennungen.js    wird geladen, wird mitcommittet
+```
+
+`tsconfig.bauen.json` bildet `rootDir: src` auf `outDir: quell` ab. Die
+Datei landet also genau dort, wo `index.html` und `sw.js` sie ohnehin schon
+laden — **keine der beiden Dateien muss geändert werden**, und `bauen.js`
+auch nicht.
+
+Ein Bauschritt für den Entwickler, keiner für den Nutzer. Die App startet
+weiterhin per Doppelklick.
+
+**`module: none`, also kein `import`.** Die App lädt Skripte über
+`<script src>`. Eine `.ts`-Datei mit `import`/`export` würde als ES-Modul
+ausgegeben und liefe von `file://` gar nicht. `none` verbietet beides schon
+beim Bauen — der Fehler kommt sofort und nicht erst im Browser.
+
+Die Folge: migrierte Dateien holen ihre Typen nicht per `import`, sondern
+aus **`src/global.d.ts`**. Dort stehen auch die Module aus `quell/`, die
+noch nicht umgezogen sind — als `any`, weil über sie wirklich nichts bekannt
+ist. Diese Liste soll schrumpfen; jeder Eintrag, der verschwindet, ist eine
+Datei, die umgezogen ist.
+
+**Der Preis, und wie er bezahlt wird.** Zwei Dateien mit demselben Inhalt
+driften auseinander: wer das `.js` bearbeitet — weil es das ist, was im
+Browser läuft, weil die Fehlermeldung dorthin zeigt —, verliert seine
+Änderung beim nächsten Bauen. Wortlos.
+
+Dagegen zwei Dinge:
+
+1. **`pruefungen/lauf/test105.mjs`** gibt frisch nach `/tmp` aus und
+   vergleicht Zeichen für Zeichen mit dem, was im Repository liegt. Läuft
+   auch in der CI, im schnellen Auftrag.
+2. Jede migrierte Datei trägt **ganz oben** „ERZEUGT — NICHT VON HAND
+   ÄNDERN" samt Pfad zur Quelle. Der Prüflauf kontrolliert, dass die Warnung
+   da ist.
+
+Dieselbe Falle stand schon einmal in diesem Projekt: `redion-einzeldatei.html`
+wurde aus den Quellen gebaut, jemand änderte die Quellen und zog die
+Einzeldatei nicht nach — und in der weitergegebenen Datei fehlte die
+komplette HTML-Säuberung. Niemandem fiel es auf.
 
 **Vite** ist erlaubt (CLAUDE.md §52.4), aber bis heute nicht eingeführt und
 für die Phasen TS-0 bis TS-2 auch nicht nötig. **React** ist ausdrücklich
@@ -61,19 +96,33 @@ nur nach einer eigenen, geschriebenen Entscheidung.
 
 ```txt
 src/
+├─ global.d.ts        Typen für migrierte Dateien (kein `import` erlaubt)
 ├─ core/
-│  └─ types/          ← hier steht heute alles
+│  └─ types/          die zentralen Typen — werden nie ausgegeben
+├─ kern/              migrierter Code → wird nach quell/ ausgegeben
+│  └─ helfer/
+│     └─ kennungen.ts
 ├─ registry/
 ├─ areas/
-├─ app/
-└─ tests/
+└─ app/
 
-quell/                ← der bestehende Code. Bleibt unangetastet,
-                        bis eine Phase ihn ausdrücklich abholt.
+quell/                der bestehende Code. Bleibt unangetastet, bis eine
+                      Phase ihn abholt — und ist zugleich das Ziel für das
+                      erzeugte JavaScript.
 ```
 
-`tsconfig.json` prüft **nur** `src/**/*.ts`. `quell/`, `server/`,
-`pruefungen/` und `bauen.js` sind ausgeschlossen. Das ist kein Aufschieben:
+**Zwei Sorten `.ts` unter `src/`, und der Unterschied zählt:**
+
+| | wird geprüft | wird ausgegeben | darf `import` |
+|---|---|---|---|
+| `src/core/types/` | ✅ | ✗ | ✅ |
+| `src/kern/…` | ✅ | ✅ → `quell/` | ✗ |
+
+`tsconfig.json` prüft alles unter `src/`. `tsconfig.bauen.json` gibt nur
+`src/kern/**` aus.
+
+`quell/` (soweit nicht erzeugt), `server/`, `pruefungen/` und `bauen.js`
+sind vom Typecheck ausgeschlossen. Das ist kein Aufschieben:
 gewöhnliches JavaScript ohne Module mitzuprüfen ergäbe hunderte Meldungen
 über Dinge, die absichtlich so sind — und eine Liste, die niemand liest,
 findet nichts.
@@ -89,7 +138,7 @@ Die Nummern sind die aus `CLAUDE.md` §52.16. Der Stand hier ist der wahre.
 | **TS-0** | Analyse: Struktur lesen, grosse Dateien finden, Import/Export/Backup finden, Testlage prüfen | ✅ erledigt |
 | **TS-1** | Werkzeuge: `typescript`, `tsconfig.json`, `npm run typecheck` | ✅ erledigt |
 | **TS-2** | Zentrale Typen unter `src/core/types/` | ✅ erledigt |
-| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Entprellen, Fehler, Säubern | offen |
+| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Entprellen, Fehler, Säubern | ◐ begonnen — `kennungen.ts` steht, der Rest folgt |
 | **TS-4** | `.redion`, ZIP, Dateien, Export/Import — mit Tests | offen |
 | **TS-5** | Die IndexedDB-Schicht. Sehr vorsichtig. | offen |
 | **TS-6** | Die Register | offen |
@@ -123,7 +172,7 @@ Export mit echten Bytes nachgewiesen sind.
 | `block.ts` | `Block`, `Zeile`, `Seite`, `Fassung` |
 | `datenbank.ts` | `Sammlung`, `Schema`, `Spalte`, `Ansicht`, Filter, Sortierung |
 | `datei.ts` | `Datei`, `Stueck`, `Uploadzustand` |
-| `sicherung.ts` | `Sicherung`, `Sicherungskopf`, `Einspielart`, `Einspielbericht` |
+| `sicherung.ts` | `Sicherung`, `Sicherungskopf`, `Dateienkarte`, `RedionPaket`, `Einspielart`, `Einspielbericht` |
 | `ablage.ts` | `FAECHER` (alle neun), `Speicherort`, `Speicherlage` |
 | `index.ts` | eine Tür für alles davon |
 
@@ -149,12 +198,13 @@ Geräten von Nutzern liegen. Also: erst nachsehen, dann tippen.
 **1. Eine Datei pro Schritt, mit grünem Prüflauf davor und danach.**
 
 ```
+npm run bauen:ts                  falls die Datei unter src/kern/ liegt
 npm run typecheck
 npm run pruefen -- --schnell
 node bauen.js
 ```
 
-Alle drei. `bauen.js` ist nicht optional — die Einzeldatei ist ein
+Alle vier. `bauen.js` ist nicht optional — die Einzeldatei ist ein
 Auslieferungsweg, und sie bricht anders als die App.
 
 **2. `any` ist erlaubt, aber nur an der Grenze.**

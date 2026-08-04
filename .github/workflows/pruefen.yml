@@ -72,6 +72,11 @@ jobs:
       # Braucht keinen Browser: Node 20 bringt Blob und TextEncoder mit.
       - name: Die Grenzen des ZIP-Packers prüfen
         run: node pruefungen/lauf/test103.mjs
+      # Passt das erzeugte JavaScript unter quell/ noch zu seinem .ts unter
+      # src/? Dieselbe Frage wie bei redion-einzeldatei.html, und dieselbe
+      # Sorte Fehler, wenn niemand sie stellt.
+      - name: Erzeugtes JavaScript gegen die Quellen prüfen
+        run: node pruefungen/lauf/test105.mjs
       # 92 und 93 starten zwar einen HTTP-Server, aber keinen Browser — sie
       # sind in einer halben Sekunde durch. Sicherheitsbefunde sollen nicht
       # zwölf Minuten auf ihre Meldung warten.

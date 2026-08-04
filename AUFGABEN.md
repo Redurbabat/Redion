@@ -265,65 +265,63 @@ jetzt bis 104.
 
 ## Phase 4 · Speicher und Datenmodell
 
-### D1 — Speicher-Typen definieren
+### ~~D1 — Speicher-Typen definieren~~ · erledigt
 
-**Ziel**
+`src/core/types/ablage.ts`: `FAECHER` mit allen neun Fächern —
+`blocks · collections · views · meta · versions · dateien · stuecke ·
+basis · vorrat` —, dazu `Speicherort` (browser/ordner/server) und
+`Speicherlage`.
 
-Die IndexedDB-Fächer typisieren.
-
-**Dateien**
-
-```txt
-src/core/types/storage.ts
-quell/kern/ablage/indexdb.js
-doku/ARCHITEKTUR.md
-```
-
-**Fertig wenn** Typen existieren für:
-
-```txt
-blocks · collections · views · meta · versions
-dateien · stuecke · basis · vorrat
-```
-
-**Tests**
-
-```
-npm run typecheck
-npm run pruefen -- --schnell
-```
-
-**Priorität** — hoch.
+Die Liste steht ausdrücklich als **eine** Liste. Jede Stelle, die über alle
+Fächer läuft — Sicherung, `wipe()`, das Aufräumen des Papierkorbs —, ist
+genau so lange richtig, wie sie alle neun kennt. Das war schon zweimal der
+Fehler: `wipe()` leerte fünf von neun, und die Papierkorb-Reinigung lief an
+zwei Stellen unterschiedlich.
 
 ---
 
-### D2 — Kleine DOM-freie Helfer migrieren
+### D2 — Kleine DOM-freie Helfer migrieren · ◐ begonnen
 
-**Ziel**
+**Der Weg steht.** Die Frage, die `doku/TYPESCRIPT-MIGRATION.md` offen
+liess — wie kommt `.ts` nach `.js`, ohne dass die App einen Pflicht-Bauschritt
+bekommt —, ist entschieden:
 
-Mit sicheren kleinen Dateien anfangen.
-
-**Warum**
-
-Nicht mit Editor oder Datenbanken anfangen — dort ist das Risiko am höchsten.
-
-**Geeignete Kandidaten**
-
-```txt
-Kennungen · Datum · Objekt-Helfer · Ergebnis-Typ
-Datei-Metadaten · Backup-Manifest
+```
+src/kern/helfer/kennungen.ts      die Quelle
+        ↓  npm run bauen:ts
+quell/kern/helfer/kennungen.js    wird geladen, wird mitcommittet
 ```
 
-**Nicht anfangen mit**
+`tsconfig.bauen.json` bildet `rootDir: src` auf `outDir: quell` ab. Die
+Datei landet genau dort, wo `index.html` und `sw.js` sie schon laden —
+**keine der beiden musste geändert werden**, `bauen.js` auch nicht. Ein
+Bauschritt für den Entwickler, keiner für den Nutzer.
+
+`module: none` verbietet `import`/`export` schon beim Bauen; eine migrierte
+Datei bekommt ihre Typen aus `src/global.d.ts`. Sonst entstünde ein ES-Modul,
+und das liefe von `file://` nicht.
+
+**Erste Datei: `kennungen.ts`** — mit Absicht die kleinste. Keine Berührung
+mit DOM oder Ablage, acht Funktionen. Verhalten nachweislich unverändert:
+alt und neu nebeneinander geladen und über 36 Vergleiche geprüft (alle acht
+Funktionen, dazu Form und Länge der drei Zufallsformen) — keine Abweichung.
+
+**Gehalten von** `pruefungen/lauf/test105.mjs`: gibt frisch nach `/tmp` aus
+und vergleicht Zeichen für Zeichen mit dem, was im Repository liegt.
+Gegengeprüft — eine Zeile von Hand ins `.js` geschrieben, und der Lauf nennt
+die Datei beim Namen. Läuft auch in der CI.
+
+**Noch offen** — die übrigen Kandidaten:
 
 ```txt
-editor.js · steuerung.js · indexdb.js komplett
-bauen.js · server/kern.js
+datum.js · objekte.js · bremse.js · melder.js · saeubern.js · bytes.js
 ```
 
-**Fertig wenn** die Helfer in TypeScript existieren, **keine
-Verhaltensänderung** eingetreten ist, der Typecheck läuft und alle Prüfläufe
-grün sind.
+**Nicht anfangen mit** `editor.js` · `steuerung.js` · `indexdb.js` ·
+`bauen.js` · `server/kern.js`.
+
+**Fertig wenn** alle sechs migriert sind, keine Verhaltensänderung
+eingetreten ist, der Typecheck läuft und alle Prüfläufe grün sind.
 
 **Priorität** — hoch.
 
@@ -460,28 +458,30 @@ Redion soll Excel-**Probleme** lösen, nicht Excel klonen — siehe
 `ENTSCHEIDUNGEN.md` E24. Bevor eine einzige Tabellenfunktion gebaut wird,
 muss klar sein, welche Fälle sie abdecken soll.
 
-### X1 — Recherche schreiben
+### ~~X1 — Recherche schreiben~~ · erledigt
 
-**Ziel**
+`doku/EXCEL-IN-REDION-RECHERCHE.md`.
 
-Festhalten, welche Excel-Fälle Redion wirklich lösen muss.
-
-**Dateien**
+**Und das Ergebnis dreht die Reihenfolge um.** Diese Phase ging davon aus,
+dass rund sechzig Funktionen zu bauen sind. Gemessen — Register geladen,
+Laufzeit geladen, Namen abgeglichen:
 
 ```txt
-doku/EXCEL-IN-REDION-RECHERCHE.md
+158  Funktionen im Register, davon 0 ohne Implementierung
+ 37  von 63 des Startpakets sind bereits da und laufen
+  0  davon sind unter ihrem deutschen Namen erreichbar
 ```
 
-**Fertig wenn** darin steht: die häufigsten Alltagsfälle (Budget, Rechnungen,
-Materiallisten, Projektkosten, Lernfortschritt, Inventar) · welche Funktionen
-sie brauchen · was Redion davon schon kann · was der Formelsprache fehlt ·
-was der Datenmodellierung fehlt · was **nicht** gebaut wird
+Wer aus Excel kommt und `=SUMME(A1:A10)` tippt, bekommt einen Fehler. `sum`
+hätte funktioniert.
 
-**Priorität** — hoch, vor X2.
+Es fehlen also **26 Funktionen und 37 Namen** — und die Namen sind fast
+umsonst: der Zerteiler kennt Umlaute schon (`/[A-Za-zÄÖÜäöüß_]/`), und Namen
+werden vor dem Nachschlagen kleingeschrieben. Ein Alias ist eine Zeile.
 
 ---
 
-### X2 — Funktionsnamen und Aliase
+### X2 — Die 37 deutschen Namen zuerst, dann die 26 fehlenden Funktionen
 
 **Ziel**
 
@@ -498,23 +498,43 @@ eigenen Fehlern — siehe E24.
 ```txt
 quell/register/formeln.js
 quell/bereiche/datenbanken/formeln/laufzeit.js
+pruefungen/lauf/test106.mjs   (neu)
 ```
 
-**Fertig wenn** das Startpaket steht:
+**Schritt 1 — die 37 Namen.** Aliastabelle, kein neuer Code. Macht aus 0 %
+deutscher Abdeckung 59 %.
 
 ```txt
-Mathematik  SUMME PRODUKT MITTELWERT MIN MAX ANZAHL ANZAHL2 ABS
-            POTENZ WURZEL REST RUNDEN ABRUNDEN AUFRUNDEN GANZZAHL
-Logik       WENN WENNS UND ODER NICHT WENNFEHLER
-Datum       HEUTE JETZT DATUM ZEIT JAHR MONAT TAG WOCHENTAG KALENDERWOCHE
-Text        LÄNGE LINKS RECHTS TEIL GLÄTTEN SÄUBERN GROSS KLEIN SUCHEN
-            FINDEN WECHSELN ERSETZEN TEXT WERT TEXTKETTE TEXTVERKETTEN
-Info        ISTZAHL ISTTEXT ISTLEER ISTFEHLER
+SUMME→sum · MITTELWERT→average · MIN · MAX · ABS · WURZEL→sqrt · REST→mod
+RUNDEN→round · ABRUNDEN→floor · AUFRUNDEN→ceil
+WENN→if · WENNS→ifs · UND→and · ODER→or · NICHT→not
+HEUTE→today · JETZT→now · DATUM→date · JAHR→year · MONAT→month · TAG→day
+KALENDERWOCHE→week
+LÄNGE→length · TEIL→slice · GLÄTTEN→trim · GROSS→upper · KLEIN→lower
+WECHSELN→replaceall · ERSETZEN→replace · TEXT→format · WERT→tonumber
+TEXTKETTE→concat · TEXTVERKETTEN→join
+ISTLEER→empty · VERGLEICH→match · SORTIEREN→sort · EINDEUTIG→unique
 ```
 
-Jede mit englischem Alias, Beschreibung, Beispiel und Prüflauf.
+**Schritt 2 — die 16 kleinen fehlenden.**
 
-**Priorität** — hoch.
+```txt
+PRODUKT · ANZAHL · ANZAHL2 · POTENZ · GANZZAHL · WENNFEHLER · ZEIT
+WOCHENTAG · LINKS · RECHTS · SÄUBERN · SUCHEN · FINDEN · ISTZAHL
+ISTTEXT · ISTFEHLER
+```
+
+**Vorher zu entscheiden:** Excel hat echte Fehlerwerte (`#WERT!`, `#DIV/0!`),
+Redion meldet Text. `WENNFEHLER` und `ISTFEHLER` brauchen einen Fehlerwert im
+Datenmodell — eine Änderung an der Laufzeit, keine neue Funktion. Wird das
+später entschieden, wird `WENNFEHLER` zweimal gebaut.
+
+**Fertig wenn** jeder Name im Register steht (damit die Suche im Formeleditor
+ihn findet), eine Beschreibung und ein Beispiel hat und ein Prüflauf beide
+Schreibweisen gegeneinander hält.
+
+**Priorität** — hoch. Schritt 1 ist der billigste grosse Gewinn im ganzen
+Plan.
 
 ---
 
