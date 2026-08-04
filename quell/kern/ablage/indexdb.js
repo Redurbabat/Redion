@@ -233,10 +233,10 @@ const Store = (() => {
   };
 
   /* --- IDs --------------------------------------------------------------- */
-  /* Kennungen kommen aus kern/helfer/kennungen.js — dieselbe Form an jeder
+  /* Kennungen kommen aus core/helpers/ids.js — dieselbe Form an jeder
      Stelle. Der Rückfall greift nur, wenn diese Datei allein geladen wird. */
-  const uid = () => (typeof Kennungen !== 'undefined')
-    ? Kennungen.lang()
+  const uid = () => (typeof Ids !== 'undefined')
+    ? Ids.long()
     : (crypto.randomUUID ? crypto.randomUUID()
        : 'x'.replace(/x/g, () => Math.random().toString(36).slice(2) + Date.now().toString(36)));
 

@@ -1,5 +1,5 @@
 /* ============================================================================
- * src/core/types/ablage.ts — die Fächer der Ablage und die drei Speicherorte
+ * src/core/types/storage.ts — die Fächer der Ablage und die drei Speicherorte
  * ----------------------------------------------------------------------------
  * Neun Fächer in IndexedDB, abgelesen aus `quell/kern/ablage/indexdb.js`
  * (Zeilen 71–109). Die Liste ist vollständig und muss es bleiben: jede
@@ -10,10 +10,14 @@
  * und die Papierkorb-Reinigung lief an zwei Stellen unterschiedlich. Der
  * wiederkehrende Befund dieses Projekts ist nicht „etwas vergessen", sondern
  * „an einer Stelle getan und an der Nachbarstelle nicht".
+ *
+ * SPRACHE. Typnamen englisch (E27). Die **Werte** sind die echten Fachnamen
+ * aus IndexedDB — `dateien`, `stuecke`, `vorrat` heissen dort so. Sie zu
+ * übersetzen hiesse, die Ablage umzubauen.
  * ==========================================================================*/
 
 /** Alle neun Fächer der Ablage. Wer über Fächer läuft, läuft über diese Liste. */
-export const FAECHER = [
+export const STORES = [
   'blocks',
   'collections',
   'views',
@@ -25,7 +29,7 @@ export const FAECHER = [
   'vorrat'
 ] as const;
 
-export type FachName = (typeof FAECHER)[number];
+export type StoreKey = (typeof STORES)[number];
 
 /**
  * Wo die Daten liegen.
@@ -39,11 +43,11 @@ export type FachName = (typeof FAECHER)[number];
  * um seine Notizen zu öffnen, hat keine lokale App. Beide Sorgen sind
  * berechtigt, und keine lässt sich mit einem einzigen Modus bedienen.
  */
-export type Speicherort = 'browser' | 'ordner' | 'server';
+export type StorageLocation = 'browser' | 'ordner' | 'server';
 
 /** Was der Nutzer über seinen Speicher wissen muss, ohne nachzufragen. */
-export interface Speicherlage {
-  ort: Speicherort;
+export interface StorageInfo {
+  ort: StorageLocation;
   /** Belegt in Bytes, soweit der Browser es sagt. `null`, wenn er schweigt. */
   belegt: number | null;
   /** Zugeteilt in Bytes. `null`, wenn unbekannt. */

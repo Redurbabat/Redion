@@ -86,13 +86,18 @@ ein Experimentierplatz für unnötige Dependencies
 
 3. Sprache und Stil
 
-Code, Kommentare und Dokumentation bleiben in der bestehenden Projektsprache.
+Es gibt zwei Sprachen, und sie sind sauber getrennt. Die vollständige Regel
+steht in ENTSCHEIDUNGEN.md unter E27; hier das Wichtigste:
 
-Aktueller Stil:
+Deutsch für alles, was ein Mensch liest — Nutzertexte, Fehlermeldungen,
+Kommentare, Dokumentation.
 
-Deutsch für Nutzertexte
+Englisch für neuen TypeScript-Code — Ordner, Dateien, Variablen, Funktionen,
+Klassen, Interfaces, Typen, Enums, Tests.
 
-deutsche Dateinamen/Ordnernamen, wo bereits vorhanden
+Der bestehende Bestand unter quell/ ist deutsch benannt und bleibt es. Er
+wird nicht massenhaft umbenannt, sondern nur dort, wo eine Datei ohnehin
+migriert wird.
 
 klare, einfache Benennungen
 
@@ -1548,31 +1553,9 @@ Architekturregeln eingehalten.
 
 51. Wichtigster Satz
 
-Redion darf lieber langsamer neue Funktionen bekommen, als jemals Nutzerdaten zu verlieren.Ja, verstehe. Du meinst:
+Redion darf lieber langsamer neue Funktionen bekommen, als jemals Nutzerdaten zu verlieren.
 
-Ja, verstanden: Du willst Redion langfristig komplett auf TypeScript bringen — ähnlich professionell wie BABAT-RED.
-
-Dann muss die CLAUDE.md anders formuliert werden. Nicht mehr:
-
-TypeScript-Zwang vermeiden
-
-sondern:
-
-TypeScript ist das Ziel.
-Migration aber schrittweise und sicher.
-
-Wichtig: Redion ist aktuell klassisches HTML/CSS/JavaScript ohne Build-Pflicht. Wenn du komplett TypeScript wie BABAT-RED willst, dann ändert sich die Strategie:
-
-Redion alt = direkte HTML/JS-App
-Redion neu = TypeScript-App mit Build-System
-
-Das ist möglich, aber Claude darf es nicht in einem riesigen Umbau auf einmal machen.
-
-
-
-Abschnitt für CLAUDE.md: TypeScript-Ziel
-
-Kopiere diesen Abschnitt in deine CLAUDE.md und ersetze dort den alten Teil, wo steht, dass kein TypeScript-Zwang entstehen soll.
+---
 
 # 52. TypeScript-Ziel und Code-Stil
 
@@ -2226,20 +2209,3 @@ Alten JavaScript-Code nur anfassen, wenn nötig oder im Rahmen einer geplanten M
 52.19 Wichtigster TypeScript-Satz
 
 Redion soll vollständig TypeScript werden, aber niemals auf Kosten von Datenverlust, kaputtem Backup oder zerstörter Offline-Nutzung.
-
-
----
-
-# Was bedeutet das praktisch?
-
-Dein Ziel ist jetzt:
-
-```txt
-Redion TypeScript Edition
-
-Also sollte Claude Code nicht mehr weiter große neue JavaScript-Dateien schreiben, sondern:
-
-erst TypeScript-Grundlage bauen
-dann Module migrieren
-dann alte JS-Struktur langsam ersetzen
-

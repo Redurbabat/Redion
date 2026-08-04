@@ -1,5 +1,5 @@
 /* ============================================================================
- * src/core/types/sicherung.ts — was in einer Sicherung steht
+ * src/core/types/backup.ts — was in einer Sicherung steht
  * ----------------------------------------------------------------------------
  * Die wichtigste Datei dieses Ordners. Alles andere beschreibt Daten im
  * Betrieb; hier steht, was übrig bleibt, wenn das Gerät nicht mehr da ist.
@@ -10,15 +10,20 @@
  * keine Anhänge tragen: Blobs passen nicht in JSON. Sie ist deshalb nicht
  * kaputt, aber sie ist unvollständig, und das muss sie selbst sagen.
  * Vollständig wird sie erst als `.redion` (ein ZIP mit JSON und Anhängen).
+ *
+ * SPRACHE. Typnamen englisch (E27). Die Feldnamen stehen wörtlich so in
+ * jeder bereits geschriebenen Sicherungsdatei — `enthaelt`, `fehlt`,
+ * `hinweis`, `exportiert`, `zuordnung`, `saetze`. Sie umzubenennen würde
+ * jede vorhandene Sicherung unlesbar machen. Sie bleiben deutsch.
  * ==========================================================================*/
 
-import type { FileId, ISODateTime } from './basis.js';
-import type { Block, Fassung } from './block.js';
-import type { Ansicht, Sammlung } from './datenbank.js';
-import type { Datei } from './datei.js';
+import type { FileId, ISODateTime } from './id.js';
+import type { RedionBlock, RedionVersion } from './block.js';
+import type { RedionDatabase, RedionView } from './database.js';
+import type { RedionFile } from './file.js';
 
 /** Die Fächer, die eine Sicherung tragen kann. */
-export type Fach =
+export type StoreName =
   | 'blocks'
   | 'collections'
   | 'views'
@@ -28,7 +33,7 @@ export type Fach =
   | 'stuecke';
 
 /** Ein Eintrag aus dem Fach `meta`: Schlüssel und Wert. */
-export interface MetaSatz {
+export interface MetaEntry {
   k: string;
   v: unknown;
 }
@@ -37,48 +42,32 @@ export interface MetaSatz {
  * Der Kopf jeder Sicherung — das, was ein Einleser **nachsehen** kann,
  * statt zu raten.
  */
-export interface Sicherungskopf {
+export interface RedionPackageManifest {
   /** Die Fassung des Formats, nicht die der App. */
   version: number;
   exportiert: ISODateTime;
   /** Welche Fächer wirklich drin sind. */
-  enthaelt: Fach[];
+  enthaelt: StoreName[];
   /** Welche Fächer fehlen. Leer heisst vollständig. */
-  fehlt: Fach[];
+  fehlt: StoreName[];
   /** Ein Satz im Klartext für den Menschen, der die Datei ansieht. */
   hinweis: string;
 }
 
 /**
- * Eine JSON-Sicherung.
+ * Eine vollständige Sicherung — der Inhalt von `daten.json`.
  *
  * Anhänge fehlen hier immer, wenn `fehlt` sie nennt — die Blöcke, die auf
  * sie zeigen, sind trotzdem enthalten. Beim Einspielen darf das kein
  * stiller Verlust werden: `hinweis` gehört dem Nutzer gezeigt.
  */
-export interface Sicherung extends Sicherungskopf {
-  blocks: Block[];
-  collections: Sammlung[];
-  views: Ansicht[];
-  meta: MetaSatz[];
-  versions: Fassung[];
+export interface RedionPackageData extends RedionPackageManifest {
+  blocks: RedionBlock[];
+  collections: RedionDatabase[];
+  views: RedionView[];
+  meta: MetaEntry[];
+  versions: RedionVersion[];
 }
-
-/**
- * Was beim Einspielen mit vorhandenen Daten geschieht. Genau zwei Werte —
- * abgelesen aus `importAll` in `quell/kern/ablage/indexdb.js:1115`.
- *
- * `'ersetzen'` wirft weg, was nicht in der Sicherung steht.
- * `'zusammenfuehren'` löscht nichts; bei gleicher Kennung gewinnt die
- * Sicherung.
- *
- * **Es gibt bewusst keine Vorgabe.** `importAll` lehnt jeden anderen Wert ab,
- * auch einen leeren — ohne Angabe geschieht nichts. Das ist die Regel „nichts
- * löschen ohne Rückfrage" an der Stelle, an der sie am meisten zählt: eine
- * Vorgabe würde irgendwann durchrutschen, und beim Einspielen einer Sicherung
- * ist „irgendwann" einmal zu viel.
- */
-export type Einspielart = 'ersetzen' | 'zusammenfuehren';
 
 /* ---------------------------------------------------------------------------
  * Das `.redion`-Paket
@@ -94,10 +83,10 @@ export type Einspielart = 'ersetzen' | 'zusammenfuehren';
  * diese Karte wüsste beim Einspielen niemand mehr, welcher Block welches Bild
  * meint.
  */
-export interface Dateienkarte {
+export interface RedionFileMap {
   version: number;
   /** Die Kopfsätze aller Anhänge. Die Stücke stecken im Archiv, nicht hier. */
-  saetze: Datei[];
+  saetze: RedionFile[];
   /** Archivname (`'dateien/foto-2.jpg'`) → Kennung der Datei. */
   zuordnung: Record<string, FileId>;
 }
@@ -106,8 +95,8 @@ export interface Dateienkarte {
  * Ein `.redion` — ein gewöhnliches ZIP mit fester Aufteilung.
  *
  * ```txt
- * daten.json      die vollständige Sicherung (siehe `Sicherung`)
- * dateien.json    die Zuordnung (siehe `Dateienkarte`)
+ * daten.json      die vollständige Sicherung
+ * dateien.json    die Zuordnung
  * dateien/…       die Anhänge, unter ihren echten Namen
  * ```
  *
@@ -115,10 +104,28 @@ export interface Dateienkarte {
  * 500-MB-Video kommt nie ganz in den Arbeitsspeicher. Gelesen und geschrieben
  * wird scheibchenweise.
  */
-export interface RedionPaket {
-  daten: Sicherung;
-  dateien: Dateienkarte;
+export interface RedionPackage {
+  daten: RedionPackageData;
+  dateien: RedionFileMap;
 }
+
+/**
+ * Was beim Einspielen mit vorhandenen Daten geschieht. Genau zwei Werte —
+ * abgelesen aus `importAll` in `quell/kern/ablage/indexdb.js:1115`.
+ *
+ * `'ersetzen'` wirft weg, was nicht in der Sicherung steht.
+ * `'zusammenfuehren'` löscht nichts; bei gleicher Kennung gewinnt die
+ * Sicherung.
+ *
+ * **Es gibt bewusst keine Vorgabe.** `importAll` lehnt jeden anderen Wert ab,
+ * auch einen leeren — ohne Angabe geschieht nichts. Das ist die Regel „nichts
+ * löschen ohne Rückfrage" an der Stelle, an der sie am meisten zählt: eine
+ * Vorgabe würde irgendwann durchrutschen, und beim Einspielen einer Sicherung
+ * ist „irgendwann" einmal zu viel.
+ *
+ * Die Werte sind deutsch, weil `importAll` sie so entgegennimmt.
+ */
+export type ImportMode = 'ersetzen' | 'zusammenfuehren';
 
 /**
  * Was `importAll` zurückgibt — abgelesen aus
@@ -130,9 +137,9 @@ export interface RedionPaket {
  * Nutzer danach in der Seitenleiste zählen kann — und eine Meldung, die sich
  * nicht nachzählen lässt, ist schlimmer als eine unschöne.
  */
-export interface Einspielbericht {
+export interface ImportReport {
   bloecke: number;
   versionen: number;
   /** Was die Sicherung selbst als fehlend angibt — meist die Anhänge. */
-  fehlt: Fach[];
+  fehlt: StoreName[];
 }

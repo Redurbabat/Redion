@@ -57,12 +57,12 @@ const alleTs = (ordner, gesammelt = []) => {
   return gesammelt;
 };
 
-const quellen = alleTs(_dazu(WURZEL, 'src/kern'));
+const quellen = alleTs(_dazu(WURZEL, 'src/core/helpers'));
 
 console.log('\n1 · Jede migrierte Datei hat ihr erzeugtes Gegenstück');
 
 p('Es gibt migrierte Dateien', quellen.length > 0,
-  'src/kern/ ist leer — dann prüft dieser Lauf nichts');
+  'src/core/helpers/ ist leer — dann prüft dieser Lauf nichts');
 
 for (const ts of quellen) {
   const rel = _rel(_dazu(WURZEL, 'src'), ts).replace(/\.ts$/, '.js');

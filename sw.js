@@ -25,7 +25,7 @@ const GRUNDSTOCK = [
   './quell/kern/ereignisse/bus.js',
   './quell/kern/einstellung/konstanten.js',
   './quell/kern/helfer/melder.js',
-  './quell/kern/helfer/kennungen.js',
+  './quell/core/helpers/ids.js',
   './quell/kern/helfer/datum.js',
   './quell/kern/helfer/objekte.js',
   './quell/kern/helfer/bytes.js',

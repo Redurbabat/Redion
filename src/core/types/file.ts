@@ -1,5 +1,5 @@
 /* ============================================================================
- * src/core/types/datei.ts — Anhänge und ihre Stücke
+ * src/core/types/file.ts — Anhänge und ihre Stücke
  * ----------------------------------------------------------------------------
  * Eine Datei liegt nicht am Stück in der Ablage. Sie wird in Stücke zerlegt
  * (`quell/bereiche/dateien/ablage.js`), weil ein einzelner grosser Blob drei
@@ -10,10 +10,14 @@
  * WARUM DAS HIER STEHT. Anhänge sind der Teil von Redion, bei dem ein Fehler
  * am unauffälligsten ist: die Blöcke sind alle da, die Sicherung sieht
  * vollständig aus — und die Bilder fehlen. Genau dafür trägt die Sicherung
- * das Feld `fehlt` (siehe `sicherung.ts`).
+ * das Feld `fehlt` (siehe `backup.ts`).
+ *
+ * SPRACHE. Typnamen englisch (E27); die Feldnamen `groesse`, `typ`, `teile`,
+ * `angekommen`, `zustand`, `angelegt`, `fertigAm` stehen so in der Ablage und
+ * bleiben deshalb deutsch — sie zu übersetzen wäre eine Datenmigration.
  * ==========================================================================*/
 
-import type { BlockId, FileId, ISODateTime } from './basis.js';
+import type { BlockId, FileId, ISODateTime } from './id.js';
 
 /**
  * Wie weit ein Upload ist.
@@ -23,10 +27,10 @@ import type { BlockId, FileId, ISODateTime } from './basis.js';
  * Stücke liegen in der Ablage — und erst dann darf die Datei als Anhang
  * gelten.
  */
-export type Uploadzustand = 'wartet' | 'laeuft' | 'fertig';
+export type UploadState = 'wartet' | 'laeuft' | 'fertig';
 
 /** Der Kopfsatz einer Datei. Die Nutzdaten stehen in den Stücken. */
-export interface Datei {
+export interface RedionFile {
   id: FileId;
   name: string;
   /** Grösse in Bytes, wie sie der Browser gemeldet hat. */
@@ -39,7 +43,7 @@ export interface Datei {
   teile: number;
   /** Wie viele Stücke angekommen sind. Fertig ist erst `angekommen === teile`. */
   angekommen: number;
-  zustand: Uploadzustand;
+  zustand: UploadState;
   angelegt: ISODateTime;
   /** Wann der Upload abgeschlossen wurde. `null`, solange er läuft. */
   fertigAm: ISODateTime | null;
@@ -52,7 +56,7 @@ export interface Datei {
  * Schönheitsfehler, sondern Absicht — so lassen sich alle Stücke einer Datei
  * über einen Schlüsselbereich finden, ohne einen zweiten Index zu führen.
  */
-export interface Stueck {
+export interface FileChunk {
   /** `${dateiId}:${nr}` */
   id: string;
   dateiId: FileId;

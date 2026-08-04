@@ -337,21 +337,24 @@ GitHub Actions. Der ausführliche Weg — die Phasen TS-0 bis TS-10, die Regeln
 beim Umziehen einer Datei und die Frage, wann ein Bauschritt nötig wird —
 steht in **`doku/TYPESCRIPT-MIGRATION.md`**.
 
-**Nachtrag vom 4. August 2026 — wie `.ts` zu `.js` wird.** Mit TS-3 zieht
-erstmals ausführbarer Code um, und damit stellte sich die Frage, die `noEmit`
-bis dahin offenlassen konnte. Entschieden: **das erzeugte JavaScript wird
+**Wie `.ts` zu `.js` wird.** Sobald ausführbarer Code umzieht, muss daraus
+JavaScript werden. Entschieden: **das erzeugte JavaScript wird
 mitversioniert.**
 
 ```txt
-src/kern/helfer/kennungen.ts      Quelle
+src/core/helpers/ids.ts      Quelle
         ↓  npm run bauen:ts
-quell/kern/helfer/kennungen.js    wird geladen, wird mitcommittet
+quell/core/helpers/ids.js    wird geladen, wird mitcommittet
 ```
 
-`tsconfig.bauen.json` bildet `rootDir: src` auf `outDir: quell` ab — die
-Datei landet dort, wo `index.html` und `sw.js` sie ohnehin laden. Keine der
-beiden musste geändert werden. **Ein Bauschritt für den Entwickler, keiner
-für den Nutzer.**
+`tsconfig.bauen.json` bildet `rootDir: src` auf `outDir: quell` ab.
+**Ein Bauschritt für den Entwickler, keiner für den Nutzer** — die App startet
+weiterhin per Doppelklick.
+
+Sein `include` zeigt bewusst auf `src/core/helpers/**` und **nicht** auf
+`src/core/**`: die Typdateien dürfen nicht ausgegeben werden. Sie benutzen
+`import`/`export`, was `module: none` verbietet — der Fehler käme also beim
+Bauen und nicht erst im Browser, aber besser ist, er kommt gar nicht.
 
 `module: none` verbietet `import`/`export`; sonst entstünde ein ES-Modul, und
 das liefe von `file://` nicht. Migrierte Dateien bekommen ihre Typen deshalb
@@ -365,8 +368,12 @@ Dagegen `pruefungen/lauf/test105.mjs` (vergleicht Zeichen für Zeichen mit
 einer frischen Ausgabe) und ein „ERZEUGT — NICHT VON HAND ÄNDERN" ganz oben
 in jeder erzeugten Datei.
 
-Als Nächstes der Rest von TS-3: `datum`, `objekte`, `bremse`, `melder`,
-`saeubern`, `bytes`.
+**Sprache.** Neuer TypeScript-Code ist englisch — siehe **E27**. Die
+Zielstruktur in `CLAUDE.md` §52.3 war das immer schon; erst E27 macht daraus
+eine Regel statt eines Beispiels.
+
+Als Nächstes der Rest der kleinen Helfer: Datum, Objekte, Bremse, Melder,
+Säubern, Bytes.
 
 ---
 
@@ -981,75 +988,64 @@ Redion ist. Achtzig Prozent des Alltags decken rund sechzig Funktionen ab —
 Grundrechnen, Logik, Datum, Text, Information, dazu die Suchfunktionen
 (`SVERWEIS`, `XVERWEIS`, `INDEX`/`VERGLEICH`, `SUMMEWENNS`).
 
-**Nachtrag vom 4. August 2026 — nachgemessen, und das Ergebnis dreht die
-Reihenfolge um.**
+**Der Stand, gemessen**
 
-Diese Entscheidung ging davon aus, dass rund sechzig Excel-Funktionen zu
-bauen sind. Gemessen (Register geladen, Laufzeit geladen, Namen abgeglichen —
-`doku/EXCEL-IN-REDION-RECHERCHE.md`):
+Die Annahme war, rund sechzig Excel-Funktionen seien zu bauen. Nachgemessen
+(Register geladen, Laufzeit geladen, Namen abgeglichen —
+`doku/EXCEL-IN-REDION-RECHERCHE.md`) sieht es anders aus:
 
 ```txt
 158  Funktionen im Register, davon 0 ohne Implementierung
- 37  von 63 Funktionen des Startpakets sind bereits da und laufen
-  0  davon sind unter ihrem deutschen Namen erreichbar
+ 61  von 63 des Excel-Startpakets laufen unter deutschem Namen
+  2  fehlen mit Absicht (WENNFEHLER, ISTFEHLER — siehe unten)
 ```
 
-Wer aus Excel kommt und `=SUMME(A1:A10)` tippt, bekommt einen Fehler. `sum`
-hätte funktioniert.
+Es fehlten nie 63 Funktionen. Es fehlten Namen — und die kosten fast nichts,
+weil der Zerteiler Umlaute schon kennt und Namen vor dem Nachschlagen
+kleingeschrieben werden.
 
-Es fehlen also nicht 63 Funktionen, sondern **26 Funktionen und 37 Namen** —
-und die Namen sind fast umsonst zu haben: der Zerteiler kennt Umlaute schon
-(`/[A-Za-zÄÖÜäöüß_]/`), und Namen werden vor dem Nachschlagen
-kleingeschrieben. Ein Alias ist eine Zeile.
+Offen bleibt der **Spreadsheet-Block selbst**: Zellen, A1-Bezüge, Bereiche,
+Neuberechnung, Zirkelbezüge. Die Funktionen dafür stehen bereit.
 
-**Also zuerst die Namen, dann die Funktionen.** Die schwächste Gruppe ist
-Suche/Verweis mit 3 von 13 — und genau sie trägt in Excel die eigentliche
-Arbeit. Sie kommt als Zweites.
+**Drei Regeln, die beim Bauen entstanden sind**
 
-Eine Frage ist **vor** dem Bauen zu entscheiden: Excel hat echte Fehlerwerte
-(`#WERT!`, `#DIV/0!`), Redion meldet Text. `WENNFEHLER` und `ISTFEHLER`
-brauchen einen Fehlerwert im Datenmodell — eine Änderung an der Laufzeit,
-keine neue Funktion. Wird sie später entschieden, wird `WENNFEHLER` zweimal
-gebaut.
-
-**Nachtrag 2 — wie ein Alias richtig gebaut wird.**
-
-Der erste Versuch schrieb die deutschen Namen als Zeiger in die
-Funktionstabelle (`F.summe = F.sum`). Das war falsch, und der Grund ist
-allgemein genug, um hier zu stehen:
-
+**1 · Ein Zweitname wird am Anfang aufgelöst, nicht am Ende eingehängt.**
 `evaluate` behandelt dreizehn Namen besonders, **bevor** es in die
-Funktionstabelle schaut — `if`, `ifs`, `let`, `map`, `filter`, `find`,
-`some`, `every`, `reduce`, `sortBy` und weitere. Sie werten ihre Argumente
-faul aus oder greifen auf die Zeile zu. Diese Sonderbehandlung hängt am
-**Namen**. Ein Alias, der nur in der Funktionstabelle steht, läuft daran
-vorbei.
+Funktionstabelle schaut — darunter `if` und `ifs`, die ihre Zweige faul
+auswerten. Ein Alias, der nur in der Tabelle steht, läuft daran vorbei:
 
 ```txt
 if(true, 1, teuer())      rechnet teuer() nicht
 WENN(true, 1, teuer())    rechnete es
 ```
 
-Beide gaben `1` zurück. Ein Prüflauf, der Ergebnisse vergleicht, sieht das
-nicht.
+Beide gaben `1` zurück. Deshalb wird der deutsche Name jetzt ganz zu Beginn
+der Auswertung auf den englischen zurückgeführt; danach gilt jede
+Sonderbehandlung für beide Schreibweisen von selbst.
 
-**Die Regel daraus:** Ein Zweitname wird ganz am Anfang der Auswertung auf
-seinen Erstnamen zurückgeführt, nicht am Ende in die Funktionstabelle
-gehängt. Danach gibt es im ganzen Auswerter nur einen Namen je Funktion, und
-jede Sonderbehandlung gilt für beide Schreibweisen von selbst — auch jede,
-die später dazukommt.
+**2 · Ein Zweitname wird gegen feste Werte geprüft, nicht gegen die
+Gegenseite.** Elf der ersten siebenunddreissig Zuordnungen waren nach
+Namensähnlichkeit gemacht und rechneten etwas anderes als Excel:
 
-Das gilt für die deutschen Excel-Namen und für jeden weiteren Zweitnamen,
-der noch kommt.
+```txt
+                          zeigte auf     tat            Excel
+WECHSELN("a.b.c";".";"-") replaceall     "-----"        "a-b-c"
+TEIL("Redion";2;3)        slice          "d"            "edi"
+VERGLEICH(…)              match          ["Genf"]       die Stelle
+TAG("2026-08-04")         day            2 (Wochentag)  4
+REST(-7;3)                mod            -1             2
+RUNDEN(-2,5)              round          -2             -3
+```
 
-**Nachtrag 3 — kein WENNFEHLER, solange es keine Fehlerwerte gibt.**
+`WECHSELN` zeigt es am schärfsten: `replaceall` nimmt einen regulären
+Ausdruck, also trifft der Punkt jedes Zeichen. Der Prüflauf fand es nicht,
+weil er den deutschen Namen mit dem verglich, worauf er zeigt — bei einer
+falschen Zuordnung rechnen beide Seiten dasselbe Verkehrte. Geprüft wird
+seither gegen **nachgeschlagene Werte**: `TEIL("Redion";2;3)` ist `"edi"`,
+und das steht so im Lauf.
 
-Ein früherer Nachtrag sagte, die Fehlerwert-Frage müsse entschieden werden,
-„sonst wird WENNFEHLER zweimal gebaut". Nachgemessen ist die Lage schärfer:
-**WENNFEHLER lässt sich heute überhaupt nicht ehrlich bauen.**
-
-Redions Laufzeit ist **abwehrend** gebaut. Sie erzeugt keine Fehlerwerte,
-sondern sichere Vorgaben:
+**3 · Kein WENNFEHLER, solange es keine Fehlerwerte gibt.** Redions Laufzeit
+ist **abwehrend** gebaut und erzeugt gar keine Fehlerwerte:
 
 ```txt
 1 / 0          →  0
@@ -1057,70 +1053,16 @@ WURZEL(-1)     →  0
 WERT("abc")    →  0
 ```
 
-Excels WENNFEHLER fängt genau das, was hier gar nicht entsteht — `#DIV/0!`,
-`#WERT!`, `#NV`. Ein WENNFEHLER in Redion fienge also **nichts von dem**,
-wofür man es kennt. Es sähe aus wie Excels und wäre etwas anderes: die
-schlimmste Sorte Funktion, weil man ihr nicht ansieht, dass sie nicht tut,
-was sie verspricht.
+Excels `WENNFEHLER` fängt `#DIV/0!`, `#WERT!`, `#NV` — hier gäbe es nichts zu
+fangen. Es sähe aus wie Excels und wäre etwas anderes.
 
-**Entscheidung:** `WENNFEHLER` und `ISTFEHLER` kommen **nicht**, bis
-entschieden ist, ob Redion echte Fehlerwerte bekommt. Die vierzehn übrigen
-Funktionen des Startpakets sind davon unabhängig und sind gebaut.
-
-**Was echte Fehlerwerte kosten würden.** Sie sind keine neue Funktion,
-sondern eine Änderung am Rechnen selbst: `1/0` müsste einen Fehlerwert
-liefern statt `0`, und der müsste durch jede Rechnung durchgereicht werden.
-Das ändert das Ergebnis **bestehender Formelspalten in bestehenden
-Datenbanken** — wo heute `0` steht, stünde dann ein Fehler. Das ist kein
-Formelthema mehr, sondern Priorität 1 (§46): es berührt Daten, die auf
-Geräten von Nutzern liegen, und braucht eine eigene Entscheidung mit
-Migrationsgedanken.
-
-Festgehalten wird der heutige Zustand von `pruefungen/lauf/test106.mjs`,
-Abschnitt 4d — damit er eine Entscheidung bleibt und nicht zu einer Lücke
-wird, die jemand aus Versehen füllt.
-
-**Nachtrag 4 — gleicher Name ist nicht gleiche Bedeutung.**
-
-Der teuerste Fehler dieser Arbeit, und er verstösst gegen eine Regel, die
-seit E21 dasteht: **nachsehen statt raten.**
-
-Elf der ersten siebenunddreissig Zuordnungen waren nach **Namensähnlichkeit**
-gemacht. Sie rechneten deshalb etwas anderes als Excel:
-
-```txt
-                          zeigte auf     tat                    Excel
-TEIL("Redion";2;3)        slice          "d"                    "edi"
-TEXTKETTE("a";"b")        concat         ["a","b"]              "ab"
-TEXTVERKETTEN("-";"a";"b") join          "-"                    "a-b"
-DATUM(2026;8;4)           date           1                      2026-08-04
-ERSETZEN("Redion";1;3;"XX") replace      "Redion"               "XXion"
-WECHSELN("a.b.c";".";"-") replaceall     "-----"                "a-b-c"
-TEXT(1234,5;"0.00")       format         "1234.5"               "1234.50"
-VERGLEICH(…)              match          ["Genf"]               die Stelle
-TAG("2026-08-04")         day            2 (Wochentag)          4
-REST(-7;3)                mod            -1                     2
-RUNDEN(-2,5)              round          -2                     -3
-```
-
-`WECHSELN` ist das lehrreichste: `replaceall` nimmt einen **regulären
-Ausdruck**. Bei „a.b.c" mit Suchtext „." trifft der Punkt jedes Zeichen —
-heraus kam „-----". Für Suchtexte ohne Sonderzeichen wäre es nie aufgefallen.
-
-**Warum der Prüflauf es nicht fand.** Er verglich den deutschen Namen mit
-dem, worauf er zeigt. Zeigt der Name auf die verkehrte Funktion, rechnen
-**beide Seiten dasselbe Verkehrte**, und der Vergleich ist zufrieden. Ein
-solcher Vergleich kann nur einen *fehlenden* Zweitnamen finden, niemals einen
-*falschen*.
-
-**Die Regel daraus:** Ein Zweitname wird gegen **feste erwartete Werte**
-geprüft, nicht gegen die Gegenseite. Was ein Name in der fremden Anwendung
-bedeutet, wird nachgeschlagen und als Zahl in den Prüflauf geschrieben —
-`TEIL("Redion";2;3)` ist `"edi"`, und das steht so dort.
-
-Die englischen Namen behalten alle ihre bisherige Bedeutung: `replace` bleibt
-regulärer Ausdruck, `concat` bleibt für Listen, `day` bleibt der Wochentag.
-Jede bestehende Formel in jedem Bestand hängt daran.
+Echte Fehlerwerte wären keine neue Funktion, sondern eine Änderung am
+Rechnen selbst, und sie änderten das Ergebnis **bestehender Formelspalten in
+bestehenden Datenbanken**: wo heute `0` steht, stünde ein Fehler. Das ist
+Priorität 1 (§46) und braucht eine eigene Entscheidung mit
+Migrationsgedanken. `test106` Abschnitt 4d hält den Zustand fest, damit er
+eine Entscheidung bleibt und nicht zu einer Lücke wird, die jemand aus
+Versehen füllt.
 
 **Folgen**
 
@@ -1217,3 +1159,101 @@ Eine Bibliothek einbauen, weil sie den ersten Prototyp schneller macht.
 **Status**
 
 Entschieden. Ergänzt `CLAUDE.md` §6 und §52.5.
+
+---
+
+## E27 · Code-Sprache — Deutsch für Menschen, Englisch für Code
+
+**Problem**
+
+Es gab keine Regel, und deshalb widersprachen sich die Vorgaben:
+
+```txt
+CLAUDE.md §3   „deutsche Dateinamen/Ordnernamen"
+CLAUDE.md §52  Zielstruktur englisch — RedionBlock, core/storage/indexedDb.ts
+README.md      Typenliste englisch — RedionBlock, RedionFile
+src/           src/core/ (englisch) neben src/kern/ (deutsch)
+```
+
+Wer neuen TypeScript-Code schrieb, konnte jede der beiden Seiten belegen. Die
+ersten sieben Typdateien wurden deshalb deutsch benannt — mit Verweis auf §3,
+obwohl §52 und die README das Gegenteil vorgaben.
+
+**Entscheidung**
+
+```txt
+Englisch    Ordnernamen · Dateinamen · Variablen · Funktionen · Klassen
+            Interfaces · Typen · Enums · Testnamen
+
+Deutsch     alle Texte, die ein Mensch liest
+```
+
+Deutsch bleibt also: App-Texte · Knöpfe · Fehlermeldungen für Nutzer ·
+README · CLAUDE.md · AUFGABEN.md · ENTSCHEIDUNGEN.md · LUECKEN.md ·
+Kommentare im Code.
+
+Beispiele:
+
+```txt
+Gut                          Nicht neu verwenden
+createPage()                 seiteErstellen()
+saveBackup()                 sicherungSpeichern()
+restoreWorkspace()           arbeitsbereichWiederherstellen()
+validateFormula()            formelPruefen()
+calculateRollup()
+importRedionPackage()
+```
+
+**Warum**
+
+Ein Projekt mit zwei Namenswelten zwingt bei jeder Datei zu einer
+Entscheidung, die niemand treffen sollte. Englisch ist die Sprache, in der
+TypeScript, seine Bibliotheken und jedes Beispiel geschrieben sind — deutsche
+Bezeichner daneben lesen sich wie eine Übersetzung, die auf halbem Weg
+aufgehört hat.
+
+Umgekehrt ist Deutsch die Sprache der Nutzer und der Erklärungen. Ein
+Kommentar auf Englisch wäre hier kein Gewinn, sondern eine zweite Hürde.
+
+**Die zwei Grenzen**
+
+**1 · Bestehender deutscher Code wird nicht massenhaft umbenannt.** Unter
+`quell/` liegen 96 Dateien. Sie umzubenennen wäre ein Umbau ohne fachlichen
+Gewinn und mit jedem Risiko. Eine Umbenennung ist nur erlaubt, wenn eine
+Datei ohnehin im Rahmen der geplanten Migration umzieht — und dann gemessen:
+`ids.ts` hatte fünfzehn Aufrufe in drei Dateien, das war vertretbar. Bei
+hundert Aufrufern wäre die Antwort anders gewesen.
+
+**2 · Feldnamen gespeicherter Daten bleiben, wie sie sind.** Das ist die
+wichtigere Grenze. `RedionBlock` heisst englisch, aber seine Felder heissen
+weiter `created`, `edited`, `erstelltVon`, `alive`, `parentTable` — denn so
+stehen sie in IndexedDB auf den Geräten von Nutzern.
+
+Ein Feldname im Typ, der nicht dem gespeicherten Feld entspricht, ist keine
+Übersetzung, sondern eine **falsche Behauptung**. Sie umzubenennen wäre eine
+Datenmigration, keine Namensfrage.
+
+`CLAUDE.md` §52.8 zeigte genau diesen Fehler: dort standen `createdAt`,
+`updatedAt`, `properties` und `deleted` — Felder, die es nie gab. Das
+Beispiel war nie gegen die Ablage geprüft (E21) und ist inzwischen
+korrigiert.
+
+**Folgen**
+
+- Neue `.ts`-Dateien tragen englische Namen.
+- `src/kern/` gibt es nicht mehr; alles Neue liegt unter `src/core/`.
+- Die sieben Typdateien heissen `id.ts`, `block.ts`, `database.ts`,
+  `file.ts`, `backup.ts`, `storage.ts`, `index.ts`.
+- `Ergebnis<T>` heisst `Result<T>`, `Kennungen` heisst `Ids`.
+
+**Nicht tun**
+
+- Bezeichner unter `quell/` massenhaft übersetzen
+- Feldnamen gespeicherter Daten übersetzen
+- Nutzertexte oder Kommentare auf Englisch umstellen
+- die Projektdokumentation auf Englisch umstellen
+
+**Status**
+
+Entschieden und umgesetzt für `src/`. `quell/` bleibt deutsch, bis eine
+Datei ohnehin migriert wird.

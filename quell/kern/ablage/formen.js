@@ -25,8 +25,8 @@
 const Formen = (() => {
 
   const jetzt = () => new Date().toISOString();
-  const kennung = () => (typeof Kennungen !== 'undefined')
-    ? Kennungen.lang()
+  const kennung = () => (typeof Ids !== 'undefined')
+    ? Ids.long()
     : (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
 
   /* ========================================================================

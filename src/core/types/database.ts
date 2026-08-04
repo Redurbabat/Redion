@@ -1,17 +1,21 @@
 /* ============================================================================
- * src/core/types/datenbank.ts — Sammlungen, Schemata, Ansichten
+ * src/core/types/database.ts — Datenbanken, Schemata, Ansichten
  * ----------------------------------------------------------------------------
- * Eine Sammlung hält die Spalten (`schema`) und weiss, welche Ansichten es
+ * Eine Datenbank hält die Spalten (`schema`) und weiss, welche Ansichten es
  * auf sie gibt. Die Zeilen stehen nicht darin — sie liegen als Blöcke im
  * Fach `blocks` und zeigen über `parentId` hierher zurück. Das ist der
- * Grund, warum eine Sammlung zu löschen und ihre Zeilen stehen zu lassen
+ * Grund, warum eine Datenbank zu löschen und ihre Zeilen stehen zu lassen
  * technisch möglich ist und fachlich ein Datenverlust wäre.
  *
  * Die zwölf Ansichtsarten stammen aus `quell/register/ansichten.js` und sind
  * dort **nachgesehen**, nicht geraten (ENTSCHEIDUNGEN.md E21).
+ *
+ * SPRACHE. Typnamen englisch (E27); Feldnamen so, wie sie in der Ablage
+ * stehen — `groupBy` und `hidden` sind dort schon englisch, `pivotZeile` und
+ * `richtung` sind deutsch. Beides bleibt, wie es gespeichert ist.
  * ==========================================================================*/
 
-import type { CollectionId, ISODateTime, ViewId } from './basis.js';
+import type { CollectionId, ISODateTime, ViewId } from './id.js';
 
 /**
  * Eine Spalte im Schema.
@@ -21,14 +25,14 @@ import type { CollectionId, ISODateTime, ViewId } from './basis.js';
  * Laufzeit erweitern (`Register.eigenschaften.melde`), und ein Typ, der das
  * verbietet, wäre falsch statt streng.
  */
-export interface Spalte {
+export interface Column {
   name: string;
   type: string;
   /** Bei `select` und `status`: die erlaubten Werte samt Farbe. */
   options?: Array<{ name: string; color?: string }>;
   /** Bei `formula`: der Ausdruck. Wird nie mit `eval` ausgewertet. */
   formel?: string;
-  /** Bei `relation`: die Sammlung am anderen Ende. */
+  /** Bei `relation`: die Datenbank am anderen Ende. */
   zielCollection?: CollectionId;
   /** Bei `rollup`: worüber gerechnet wird. */
   rollupRelation?: string;
@@ -36,11 +40,11 @@ export interface Spalte {
   rollupArt?: string;
 }
 
-/** Das Schema einer Sammlung: Spaltenschlüssel → Spalte. */
-export type Schema = Record<string, Spalte>;
+/** Das Schema einer Datenbank: Spaltenschlüssel → Spalte. */
+export type Schema = Record<string, Column>;
 
 /** Eine Datenbank. */
-export interface Sammlung {
+export interface RedionDatabase {
   id: CollectionId;
   name: string;
   icon: string;
@@ -50,7 +54,7 @@ export interface Sammlung {
 }
 
 /** Die zwölf Ansichtsarten aus `Register.ansichten`. */
-export type Ansichtsart =
+export type ViewLayout =
   | 'table'
   | 'board'
   | 'timeline'
@@ -65,7 +69,7 @@ export type Ansichtsart =
   | 'form';
 
 /** Eine einzelne Filterbedingung. */
-export interface Filterregel {
+export interface FilterRule {
   key: string;
   /** Der Vergleich — `'ist'`, `'enthaelt'`, `'leer'`, … */
   op: string;
@@ -79,31 +83,31 @@ export interface Filterregel {
  * „A und (B oder C)" nicht ausdrücken — und genau das ist der Filter, den
  * Nutzer als Erstes bauen wollen.
  */
-export interface Filtergruppe {
+export interface FilterGroup {
   operator: 'and' | 'or';
-  rules: Array<Filterregel | Filtergruppe>;
+  rules: Array<FilterRule | FilterGroup>;
 }
 
 /** Unterscheidet Regel und Gruppe, ohne zu raten. */
-export const istGruppe = (r: Filterregel | Filtergruppe): r is Filtergruppe =>
-  typeof (r as Filtergruppe).operator === 'string' &&
-  Array.isArray((r as Filtergruppe).rules);
+export const isFilterGroup = (r: FilterRule | FilterGroup): r is FilterGroup =>
+  typeof (r as FilterGroup).operator === 'string' &&
+  Array.isArray((r as FilterGroup).rules);
 
 /** Eine Sortierung — entweder nach Spalte oder nach freier Formel. */
-export interface Sortierung {
+export interface SortRule {
   key?: string;
   formel?: string;
   richtung: 'auf' | 'ab';
 }
 
-/** Eine Ansicht auf eine Sammlung. */
-export interface Ansicht {
+/** Eine Ansicht auf eine Datenbank. */
+export interface RedionView {
   id: ViewId;
   collectionId: CollectionId;
   name: string;
-  layout: Ansichtsart;
-  filters: Filtergruppe;
-  sorts: Sortierung[];
+  layout: ViewLayout;
+  filters: FilterGroup;
+  sorts: SortRule[];
   /** Spaltenschlüssel, nach dem gruppiert wird. Leer heisst: nicht gruppiert. */
   groupBy: string;
   /** Spaltenschlüssel, die ausgeblendet sind. */

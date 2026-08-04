@@ -95,7 +95,7 @@ const Pruefen = (() => {
 
   const kennung = (v) => {
     if (leer(v)) return schlecht('Ohne Kennung geht nichts.');
-    if (typeof Kennungen !== 'undefined' && !Kennungen.gueltig(v))
+    if (typeof Ids !== 'undefined' && !Ids.isValid(v))
       return schlecht('Das sieht nicht nach einer Kennung aus.');
     return gut();
   };

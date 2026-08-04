@@ -1,7 +1,7 @@
 /* ============================================================================
  * src/core/types/index.ts — eine Tür für alle Typen
  * ----------------------------------------------------------------------------
- * Wer Typen braucht, holt sie hier: `import type { Block } from
+ * Wer Typen braucht, holt sie hier: `import type { RedionBlock } from
  * '../types/index.js'`. Das hält die Importzeilen im übrigen Code kurz und
  * sorgt dafür, dass ein umbenannter Dateiname nicht durch das halbe Projekt
  * wandert.
@@ -19,44 +19,44 @@ export type {
   CollectionId,
   ViewId,
   FileId,
-  Ergebnis,
-  Erledigt
-} from './basis.js';
-export { gelungen, gescheitert } from './basis.js';
+  Result,
+  Done
+} from './id.js';
+export { ok, err } from './id.js';
 
 export type {
-  Block,
-  Zeile,
-  Seite,
-  Fassung,
-  ElternTabelle,
-  Eigenschaftswerte
+  RedionBlock,
+  RedionRow,
+  RedionPage,
+  RedionVersion,
+  ParentTable,
+  PropertyValues
 } from './block.js';
 
 export type {
-  Sammlung,
+  RedionDatabase,
+  RedionView,
   Schema,
-  Spalte,
-  Ansicht,
-  Ansichtsart,
-  Filterregel,
-  Filtergruppe,
-  Sortierung
-} from './datenbank.js';
-export { istGruppe } from './datenbank.js';
+  Column,
+  ViewLayout,
+  FilterRule,
+  FilterGroup,
+  SortRule
+} from './database.js';
+export { isFilterGroup } from './database.js';
 
-export type { Datei, Stueck, Uploadzustand } from './datei.js';
+export type { RedionFile, FileChunk, UploadState } from './file.js';
 
 export type {
-  Sicherung,
-  Sicherungskopf,
-  Fach,
-  MetaSatz,
-  Dateienkarte,
-  RedionPaket,
-  Einspielart,
-  Einspielbericht
-} from './sicherung.js';
+  RedionPackageData,
+  RedionPackageManifest,
+  RedionPackage,
+  RedionFileMap,
+  StoreName,
+  MetaEntry,
+  ImportMode,
+  ImportReport
+} from './backup.js';
 
-export type { FachName, Speicherort, Speicherlage } from './ablage.js';
-export { FAECHER } from './ablage.js';
+export type { StoreKey, StorageLocation, StorageInfo } from './storage.js';
+export { STORES } from './storage.js';

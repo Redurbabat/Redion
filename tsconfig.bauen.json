@@ -9,7 +9,7 @@
     "verhandelbar ist (CLAUDE.md §6, doku/TYPESCRIPT-MIGRATION.md).",
     "",
     "WIE. `rootDir` zeigt auf src/, `outDir` auf quell/. Aus",
-    "`src/kern/helfer/kennungen.ts` wird also `quell/kern/helfer/kennungen.js`",
+    "`src/core/helpers/ids.ts` wird also `quell/core/helpers/ids.js`",
     "— genau der Pfad, den index.html und sw.js ohnehin schon laden. Weder",
     "index.html noch sw.js noch bauen.js müssen etwas davon wissen.",
     "",
@@ -42,5 +42,5 @@
     "outDir": "quell"
   },
 
-  "include": ["src/global.d.ts", "src/kern/**/*.ts"]
+  "include": ["src/global.d.ts", "src/core/helpers/**/*.ts"]
 }

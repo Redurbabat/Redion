@@ -1,7 +1,9 @@
 /* ============================================================================
- * src/core/types/basis.ts — die Kennungen und der Ergebnistyp
+ * src/core/types/id.ts — die Kennungen und der Ergebnistyp
  * ----------------------------------------------------------------------------
  * Die kleinsten Bausteine. Alles Weitere hängt daran.
+ *
+ * SPRACHE. Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27.
  *
  * WARUM EIGENE NAMEN FÜR ZEICHENKETTEN. `BlockId` und `FileId` sind beide
  * `string` — der Unterschied kostet zur Laufzeit nichts und beim Lesen
@@ -15,7 +17,7 @@
  * umgehen muss, wird umgangen.
  * ==========================================================================*/
 
-/** Eine Kennung, wie `Kennungen.lang()` sie erzeugt. */
+/** Eine Kennung, wie `Ids.long()` sie erzeugt. */
 export type ID = string;
 
 /** Ein Zeitpunkt als ISO-Zeichenkette, so wie `Store.now()` ihn schreibt. */
@@ -37,22 +39,24 @@ export type FileId = ID;
  * merkt es erst im Betrieb.
  *
  * `CLAUDE.md` §52.12 nennt genau das: lieber
- * `{ ok: false, fehler: 'Die Datei ist grösser als 4 GB.' }` als ein
+ * `{ ok: false, error: 'Die Datei ist grösser als 4 GB.' }` als ein
  * geworfener Fehler, den niemand liest.
  *
+ * Die **Meldung** in `error` ist deutsch — sie geht an einen Menschen.
+ *
  * @example
- * const e = await sicherungSchreiben();
- * if (!e.ok) { UI.toast(e.fehler); return; }
- * laden(e.wert);
+ * const r = await writeBackup();
+ * if (!r.ok) { UI.toast(r.error); return; }
+ * load(r.value);
  */
-export type Ergebnis<T> =
-  | { ok: true; wert: T }
-  | { ok: false; fehler: string; code?: string };
+export type Result<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string; code?: string };
 
 /** Kurz für den häufigen Fall „hat geklappt, es gibt nichts zurückzugeben". */
-export type Erledigt = Ergebnis<void>;
+export type Done = Result<void>;
 
-export const gelungen = <T>(wert: T): Ergebnis<T> => ({ ok: true, wert });
+export const ok = <T>(value: T): Result<T> => ({ ok: true, value });
 
-export const gescheitert = <T>(fehler: string, code?: string): Ergebnis<T> =>
-  code === undefined ? { ok: false, fehler } : { ok: false, fehler, code };
+export const err = <T>(error: string, code?: string): Result<T> =>
+  code === undefined ? { ok: false, error } : { ok: false, error, code };

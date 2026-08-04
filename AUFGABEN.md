@@ -24,881 +24,280 @@ Welche Tests müssen laufen?
 
 ## Grundregel
 
-Jede Aufgabe braucht:
+Jede Aufgabe braucht: **Ziel · Warum · Dateien · Fertig wenn · Tests ·
+Priorität.**
 
-```txt
-Ziel
-Warum
-Dateien
-Fertig wenn
-Tests
-Priorität
-```
-
-Aufgaben sind nach Reihenfolge sortiert. Was oben steht, macht das darunter
-leichter.
+Die Phasen stehen in der Reihenfolge, in der sie einander leichter machen.
+Was **erledigt** ist, bleibt mit zwei bis fünf Zeilen stehen — damit man
+sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ---
 
 ## Aktueller Stand
 
-**Stand: 4. August 2026 · 75 Prüfläufe grün**
+**4. August 2026 · 78 Prüfläufe grün**
 
-Redion kann bereits:
+Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
+speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
+Excel-Namen) · lokale KI · Versionen · Papierkorb · `.json`- und
+`.redion`-Sicherung mit Anhängen · grosse Dateien stückweise.
 
-- lokal starten
-- offline arbeiten
-- Seiten und Blöcke speichern
-- Datenbanken verwenden
-- Formeln ausführen
-- lokale KI vorbereiten und nutzen
-- Versionen speichern
-- Papierkorb nutzen
-- JSON exportieren und importieren
-- `.redion` mit Anhängen sichern
-- große Dateien stückweise behandeln
-- Tests ausführen
-
-**Wichtigste aktuelle Grenze:**
+**Die drei wichtigsten offenen Punkte**
 
 ```txt
-Redion ist noch nicht TypeScript.
-Die Grundlage steht (Typecheck, zentrale Typen); der Bestand unter quell/
-ist weiterhin JavaScript. Nächster Schritt: TS-3, die kleinen Kernhelfer.
+1. Die TypeScript-Migration selbst — die Grundlage steht, quell/ ist noch JS
+2. Der Spreadsheet-Block — die Funktionen sind da, die Tabelle fehlt
+3. Cloudflare, Konto und Sync sind nicht produktionsreif
 ```
 
 ---
 
-## Phase 1 · Ordnung und Projektsteuerung · **erledigt**
+## Phase 1 · Ordnung und Dokumentation · **erledigt**
 
-Die drei Steuerdateien haben jetzt klar getrennte Rollen. Vorher erzählten sie
-vor allem, was gefunden wurde; jetzt sagen sie, was gilt, was offen ist und
-was als Nächstes kommt.
+Die fünf Steuerdateien sagen jetzt dasselbe.
 
-### ~~A1 — Entscheidungen neu ordnen~~ · erledigt
+Vorher widersprachen sie sich: `CLAUDE.md` §3 verlangte deutsche Dateinamen,
+§52 gab die Zielstruktur englisch vor, die README ebenfalls. Wer neuen Code
+schrieb, konnte beide Seiten belegen — und schrieb deshalb zuerst deutsch.
 
-`ENTSCHEIDUNGEN.md` trägt jetzt E1–E17 als langfristige Produkt- und
-Architekturentscheidungen, dazu E18–E23 als die Regeln, die beim Bauen
-entstanden sind — darunter die Markenregel, die CSP-Entscheidung wegen
-`file://` und die Schonfrist beim Papierkorb.
+**Erledigt**
 
-### ~~A2 — Aufgaben neu ordnen~~ · erledigt
+- `ENTSCHEIDUNGEN.md`: **E27 · Code-Sprache** neu · E24 von 196 auf 132
+  Zeilen konsolidiert (vier Nachträge, von denen einer einen früheren
+  widerrief, sind zu geltenden Regeln geworden)
+- `AUFGABEN.md`: diese Datei, zehn Phasen mit ehrlichem Stand
+- `LUECKEN.md`: nach Priorität statt nach Nummer
+- `CLAUDE.md`: neuer Abschnitt zur Code-Sprache · §3 präzisiert · 39 Zeilen
+  unredigierter Chat-Text entfernt
+- `README.md`: Code-Stil um die Sprachregel ergänzt
 
-Diese Datei: Phasen statt Historie, TypeScript als eigene Phase, Cloudflare
-später eingeordnet.
-
-### ~~A3 — Lücken neu ordnen~~ · erledigt
-
-`LUECKEN.md` trägt jetzt L1–L30 nach Bereichen, mit den gemessenen Zahlen als
-Anhang und einer Zeile je erledigtem Punkt statt der ausführlichen Befunde.
+**Fertig wenn** — alles erfüllt: TypeScript-Ziel klar · Code-Sprache klar ·
+`.redion` klar · Excel-Ziel klar · Cloudflare als optional klar.
 
 ---
 
 ## Phase 2 · TypeScript-Grundlage · **erledigt**
 
-Siehe `ENTSCHEIDUNGEN.md` E6 und E7: TypeScript ja, React nicht automatisch,
-und die Nutzung per Doppelklick bleibt erhalten.
+```txt
+typescript@5.9.3        devDependency
+tsconfig.json           strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes
+npm run typecheck       tsc --noEmit
+npm run bauen:ts        tsc -p tsconfig.bauen.json
+src/core/types/         sieben Dateien
+doku/TYPESCRIPT-MIGRATION.md
+GitHub Actions          Typecheck im schnellen Auftrag
+```
 
-Der ausführliche Plan steht jetzt in **`doku/TYPESCRIPT-MIGRATION.md`** —
-die Phasen TS-0 bis TS-10, die Regeln beim Umziehen einer Datei und die
-Frage, wann ein Bauschritt nötig wird und wann nicht.
+**`noEmit` ist die Kernentscheidung.** Es entsteht kein JavaScript und damit
+kein Bauschritt, den jemand vergessen kann — die App startet weiterhin per
+Doppelklick. Für ausführbaren Code gibt es `tsconfig.bauen.json`, das nach
+`quell/` ausgibt; das Erzeugnis wird mitversioniert.
 
-**Zwei Abweichungen vom ursprünglichen Entwurf**, beide bewusst:
+Gegengeprüft: ein absichtlich falscher Typ macht den Lauf rot (`TS2740`). Ein
+Typecheck, der grün ist, weil er keine Datei findet, sagt nichts.
 
-1. **Die Namen sind deutsch.** Der Entwurf nannte `RedionBlock`,
-   `RedionDatabase`, `database.ts`, `file.ts`. Die Projektregel aus
-   `CLAUDE.md` verlangt deutsche Namen, und der gesamte Bestand unter
-   `quell/` hält sie ein. Zwei Namenswelten nebeneinander wären genau der
-   Fehler, der sich durch dieses Projekt zieht: an einer Stelle so, an der
-   Nachbarstelle anders. Also `Block`, `Sammlung`, `Ansicht`, `Datei`,
-   `Sicherung` — und die Dateien heissen entsprechend.
-2. **`result.ts` gibt es nicht.** `Ergebnis<T>` steht in `basis.ts`, weil
-   es zu den Grundbausteinen gehört und sonst eine Datei mit vier Zeilen
-   entstanden wäre.
+---
 
-### ~~B1 — TypeScript technisch vorbereiten~~ · erledigt
+## Phase 3 · Backup und `.redion` dokumentieren · **erledigt**
 
-`typescript@5.9.3` als `devDependency`, `npm run typecheck` (`tsc --noEmit`),
-`tsconfig.json` mit `strict` **plus** `noUncheckedIndexedAccess`,
-`exactOptionalPropertyTypes` und `useUnknownInCatchVariables`.
+`doku/REDION-FORMAT.md` — Aufbau des Archivs · `daten.json` ·
+`dateien.json` · Dateinamen- und Kennungsregeln · die zwei Einspielarten und
+warum es keine Vorgabe gibt · die Grenzen · wie man ein `.redion` ohne
+Redion öffnet.
 
-Geprüft ist auch das Gegenteil: ein absichtlich falscher Typ wurde
-eingesetzt und der Lauf wurde rot (`TS2740`). Ein Typecheck, der nur grün
-sein kann, weil er keine Datei findet, sagt nichts.
+`pruefungen/LIESMICH.md` beschreibt die fünf Läufe, die man nicht abschwächen
+darf, und **wodurch** man sie versehentlich entschärfen würde.
 
-**`noEmit` steht auf `true`.** Es entsteht kein JavaScript und damit kein
-Bauschritt, den jemand vergessen kann. Nachgewiesen: `node bauen.js`
-schreibt `redion-einzeldatei.html` byteweise unverändert — keine
-App-Funktion ist berührt.
-
-### ~~B2 — Zentrale Redion-Typen anlegen~~ · erledigt
-
-Sieben Dateien unter `src/core/types/`:
+**Dabei gefunden und behoben** — drei Fehler, die alle still waren:
 
 ```txt
-basis.ts        ID · ISODateTime · BlockId … FileId · Ergebnis<T>
-block.ts        Block · Zeile · Seite · Fassung
-datenbank.ts    Sammlung · Schema · Spalte · Ansicht · Filter · Sortierung
-datei.ts        Datei · Stueck · Uploadzustand
-sicherung.ts    Sicherung · Sicherungskopf · Dateienkarte · RedionPaket
-ablage.ts       FAECHER (alle neun) · Speicherort · Speicherlage
-index.ts        eine Tür für alles davon
+ein ZIP mit 70 000 Einträgen nannte 4 464 und sah gesund aus
+ein fremdes ZIP64-Archiv importierte als „0 Anhänge", ohne Fehler
+die verschlüsselte Wiederherstellung meldete Erfolg und warf die Daten weg
 ```
 
-Jedes Feld ist aus dem laufenden Code **abgelesen** — `addBlock` in
-`quell/kern/ablage/indexdb.js:255`, `quell/bereiche/dateien/ablage.js` für
-die Anhänge, `quell/register/ansichten.js` für die zwölf Ansichtsarten,
-`sicherungSpeichern` in `quell/schale/aufbau/schale.js` für den Aufbau des
-`.redion`. Das ist E21 angewandt: nachsehen statt raten.
+Gehalten von `test103` (14) und `test104` (20).
 
-### ~~B3 — Migrationsdokument schreiben~~ · erledigt
-
-`doku/TYPESCRIPT-MIGRATION.md`.
-
-### ~~B4 — Typecheck in GitHub Actions~~ · erledigt
-
-Im Job „Quelltext und Logik (ohne Browser)", vor den übrigen Prüfungen.
-Die Pakete kommen mit `--ignore-scripts` herein: Chromium wird dort nicht
-gebraucht und wiegt ein Vielfaches von allem anderen.
+**Offen: ZIP64.** Die heutige Regel ist eine ehrliche Fehlermeldung statt
+eines kaputten Archivs. Siehe `LUECKEN.md`.
 
 ---
 
-## Phase 3 · Backup und `.redion` · **erledigt**
-
-### ~~C1 — `.redion`-Format dokumentieren~~ · erledigt
-
-`doku/REDION-FORMAT.md`. Beschreibt: warum zwei Formate · Aufbau des Archivs ·
-`daten.json` · `dateien.json` · die Namensregel bei gleichnamigen Anhängen ·
-die zwei Einspielarten und warum es keine Vorgabe gibt · die drei ZIP-Grenzen ·
-ZIP64 beim Lesen · wie man ein `.redion` ohne Redion öffnet · was noch fehlt.
-
-Beim Schreiben ist aufgefallen, dass es ein **zweites** Sicherungsformat gibt
-— siehe C4.
-
----
-
-### ~~C3 — ZIP64-Entscheidung vorbereiten~~ · erledigt
-
-Die drei Grenzen stehen jetzt in `doku/REDION-FORMAT.md`, ZIP64 bleibt als
-Lücke markiert (`LUECKEN.md` L4), und es wird weiterhin kein kaputtes Archiv
-geschrieben.
-
-**Dabei kam eine vierte Grenze heraus, die es gar nicht geben sollte.** Zwei
-Grenzen (4 GB je Datei, 4 GB je Archiv) hatten seit jeher eine Prüfung mit
-einer verständlichen Meldung. Die dritte — **65 535 Einträge, ein 16-Bit-Feld**
-— hatte keine und scheiterte still: 65 536 Einträge wurden im Schlusssatz zu
-`0`, 70 000 zu `4 464`. Das Archiv liess sich öffnen, sah gesund aus und zeigte
-einen Bruchteil.
-
-Auf der Leseseite war es schlimmer. Ein fremdes ZIP64-Archiv liess
-`zipLesenAusBlob` **null Dateien und keinen Fehler** melden — wer eine
-Sicherung mit 70 000 Anhängen einspielte, sah „0 Anhänge" und hatte keinen
-Grund zu zweifeln.
-
-Beides behoben, gehalten von `pruefungen/lauf/test103.mjs` (14 Prüfungen).
-Erkannt wird ZIP64 am Wegweiser `0x07064b50`, nicht an den Platzhaltern —
-sonst würde ein gültiges Archiv mit genau 65 535 Einträgen fälschlich
-abgelehnt.
-
----
-
-### ~~C4 — Die verschlüsselte Sicherung auf denselben Stand bringen~~ · erledigt
-
-Vier Befunde auf einem Weg, gefunden beim Schreiben von `REDION-FORMAT.md`.
-
-**1 · Sie sicherte weniger und sagte es nicht.** `bestandSammeln()` schrieb
-ein eigenes Format ohne `versions`, ohne Anhänge — und ohne
-`enthaelt`/`fehlt`/`hinweis`, die genau dafür erfunden wurden. Jetzt benutzt
-sie `Store.exportAll()`, denselben Weg wie die Sicherung ohne Passwort.
-`art` und `fassung` bleiben zusätzlich stehen, damit ältere Dateien weiter
-gelesen werden.
-
-**2 · Der Dialog sagte „ersetzt", der Code führte zusammen.**
-`Object.assign` legt dazu. Jetzt läuft beides über `Store.importAll` mit
-ausdrücklicher Angabe.
-
-**3 · Das Eingespielte wurde nie geschrieben.** Die vier `Object.assign`
-fassten nur `Store.cache` an; danach stand `Store.alles && Store.alles()` —
-**diese Funktion gibt es nicht**, der Aufruf war ein stiller Leerlauf.
-Neunhundert Millisekunden später lud die Seite neu, las aus der Ablage und
-fand dort unverändert den alten Bestand. Die Wiederherstellung wurde als
-geglückt gemeldet und war eine Sekunde später weg. Wer sie brauchte, brauchte
-sie meistens dringend.
-
-**4 · Verschlüsseln scheiterte ab etwa 128 KB.**
-`btoa(String.fromCharCode(...bytes))` reicht jedes Byte als eigenen
-Aufruf-Parameter weiter; darüber ist der Aufrufstapel voll. Ein Bestand aus
-ein paar Dutzend Seiten liegt über der Grenze — wer genug hatte, dass sich
-das Sichern lohnt, konnte nicht sichern. Die Meldung sprach dabei von
-Aufrufstapeln und nicht von Grössen.
-
-Dieselbe Zeile stand an **drei** Stellen: verschlüsselte Sicherung,
-Seitensperre (`wissen/werkzeuge.js`), Abgleich (`kern/abgleich/maschine.js`)
-— also an genau den drei Stellen, an denen verschlüsselt wird und die
-Datenmenge gross ist. Es gibt jetzt eine Fassung in
-`quell/kern/helfer/bytes.js`; `test87` verbietet eine vierte.
-
-**Gehalten von** `pruefungen/lauf/test104.mjs` (20 Prüfungen) und `test87`
-(Punkt 9). Gegengeprüft: die alte Fassung wieder eingesetzt, beide Läufe
-wurden rot an genau den Stellen, die sie halten sollen.
-
----
-
-### ~~C2 — Backup-Tests schützen~~ · erledigt
-
-`pruefungen/LIESMICH.md` hat einen neuen Abschnitt: **„Die vier Läufe, die
-man nicht abschwächen darf"** — `test96`, `test100`, `test103`, `test104`
-und `test87` Punkt 9. Zu jedem steht dort, *was* er hält und *wodurch* man
-ihn versehentlich entschärfen würde.
-
-Nachgesehen statt behauptet: `test100` vergleicht wirklich Byte für Byte
-(„Der Anhang ist zurück, Byte für Byte identisch") und prüft wirklich beide
-Richtungen — „Beim Ersetzen räumt der Import fremde Anhänge weg" und „Eine
-.json-Sicherung lässt die Anhänge in Ruhe". Die zweite ist die wichtigere:
-sie hält fest, dass eine unvollständige Sicherung nicht zum Datenverlust
-wird.
-
-Die Übersichtstabelle in `LIESMICH.md` reichte nur bis Lauf 96; sie steht
-jetzt bis 104.
-
----
-
-## Phase 4 · Speicher und Datenmodell
-
-### ~~D1 — Speicher-Typen definieren~~ · erledigt
-
-`src/core/types/ablage.ts`: `FAECHER` mit allen neun Fächern —
-`blocks · collections · views · meta · versions · dateien · stuecke ·
-basis · vorrat` —, dazu `Speicherort` (browser/ordner/server) und
-`Speicherlage`.
-
-Die Liste steht ausdrücklich als **eine** Liste. Jede Stelle, die über alle
-Fächer läuft — Sicherung, `wipe()`, das Aufräumen des Papierkorbs —, ist
-genau so lange richtig, wie sie alle neun kennt. Das war schon zweimal der
-Fehler: `wipe()` leerte fünf von neun, und die Papierkorb-Reinigung lief an
-zwei Stellen unterschiedlich.
-
----
-
-### D2 — Kleine DOM-freie Helfer migrieren · ◐ begonnen
-
-**Der Weg steht.** Die Frage, die `doku/TYPESCRIPT-MIGRATION.md` offen
-liess — wie kommt `.ts` nach `.js`, ohne dass die App einen Pflicht-Bauschritt
-bekommt —, ist entschieden:
-
-```
-src/kern/helfer/kennungen.ts      die Quelle
-        ↓  npm run bauen:ts
-quell/kern/helfer/kennungen.js    wird geladen, wird mitcommittet
-```
-
-`tsconfig.bauen.json` bildet `rootDir: src` auf `outDir: quell` ab. Die
-Datei landet genau dort, wo `index.html` und `sw.js` sie schon laden —
-**keine der beiden musste geändert werden**, `bauen.js` auch nicht. Ein
-Bauschritt für den Entwickler, keiner für den Nutzer.
-
-`module: none` verbietet `import`/`export` schon beim Bauen; eine migrierte
-Datei bekommt ihre Typen aus `src/global.d.ts`. Sonst entstünde ein ES-Modul,
-und das liefe von `file://` nicht.
-
-**Erste Datei: `kennungen.ts`** — mit Absicht die kleinste. Keine Berührung
-mit DOM oder Ablage, acht Funktionen. Verhalten nachweislich unverändert:
-alt und neu nebeneinander geladen und über 36 Vergleiche geprüft (alle acht
-Funktionen, dazu Form und Länge der drei Zufallsformen) — keine Abweichung.
-
-**Gehalten von** `pruefungen/lauf/test105.mjs`: gibt frisch nach `/tmp` aus
-und vergleicht Zeichen für Zeichen mit dem, was im Repository liegt.
-Gegengeprüft — eine Zeile von Hand ins `.js` geschrieben, und der Lauf nennt
-die Datei beim Namen. Läuft auch in der CI.
-
-**Noch offen** — die übrigen Kandidaten:
-
-```txt
-datum.js · objekte.js · bremse.js · melder.js · saeubern.js · bytes.js
-```
-
-**Nicht anfangen mit** `editor.js` · `steuerung.js` · `indexdb.js` ·
-`bauen.js` · `server/kern.js`.
-
-**Fertig wenn** alle sechs migriert sind, keine Verhaltensänderung
-eingetreten ist, der Typecheck läuft und alle Prüfläufe grün sind.
-
-**Priorität** — hoch.
-
----
-
-## Phase 5 · Aufräumarbeiten am Bestand
-
-Zwei Umbauten, die noch aus der ersten Etappe offen sind. Beide sind Umzüge
-ohne Verhaltensänderung — genau die Art Arbeit, die vor der TypeScript-
-Migration Ordnung schafft.
-
-### A4-Rest — Die übrigen Bereiche in `dienst` und `ansicht` trennen
-
-**Ziel**
-
-Reine Logik ohne DOM lässt sich prüfen, ohne einen Browser zu starten.
-
-**Stand**
-
-`datenbanken` und `wissen` sind geschnitten. `test88` (Datenbank-Logik) und
-`test89` (Werkzeug-Logik) laufen ohne Browser in Millisekunden — ein
-Browserlauf braucht zwölf Sekunden.
-
-**Warum es beim nächsten Bereich anders aussehen kann**
-
-Bei `wissen` war die Annahme falsch, jede grosse Datei liesse sich in eine
-rechnende und eine zeichnende Hälfte teilen: alle vierzehn Abschnitte fassen
-das Dokument an. Herausgelöst wurden deshalb nur die neun Stellen, die
-wirklich nur rechnen.
-
-**Erst messen, dann schneiden:** über alle Namen zählen, in welche Richtung
-die Abhängigkeit läuft. Bei `datenbanken` brauchte der Logikteil **nichts**
-aus dem Rest, der Rest aber 16 Namen von dort. Wäre es auch nur an einer
-Stelle andersherum gewesen, hätte sich nichts trennen lassen, ohne Verhalten
-zu ändern.
-
-**Fertig wenn** für den nächsten Bereich gemessen ist, ob ein Schnitt
-überhaupt geht — und er entweder sauber vollzogen oder mit Begründung
-verworfen wurde.
-
-**Priorität** — mittel.
-
----
-
-### A5-Rest — Die `esc`-Kopien durch `Saeubern.alsText` ersetzen
-
-**Ziel**
-
-Eine Stelle, die Text sicher macht, statt rund fünfzig Kopien derselben vier
-Zeilen.
-
-**Stand**
-
-Adressen und Mail-HTML gehen bereits durch `Saeubern`. Die verbliebenen
-`esc`-Kopien nicht.
-
-**Warum**
-
-Beim Messen kam heraus: 30 von 50 Kopien waren korrekt, die übrigen nicht —
-und genau das ist das Muster, das sich durch diese Session zieht: an einer
-Stelle getan, an der benachbarten nicht.
-
-**Dateien**
-
-```txt
-quell/kern/sicherheit/saeubern.js
-und die aufrufenden Bereiche
-```
-
-**Tests**
-
-```
-node pruefungen/lauf/test87.mjs
-npm run pruefen -- --schnell
-```
-
-**Priorität** — mittel.
-
----
-
-## Phase 6 · README und öffentliche Darstellung
-
-### E1 — README kürzen und schärfen
-
-**Ziel**
-
-Die README soll klar sein und nicht zu lang.
-
-**Stand**
-
-Die README wurde neu geschrieben und erklärt local-first, Schnellstart,
-Funktionen und Cloud bereits gut. Offen ist die **Länge**: aktuell 1484
-Zeilen.
-
-**Fertig wenn**
-
-- die README auf etwa 300–600 Zeilen kommt, höchstens 1000
-- Was ist Redion? · local-first · Schnellstart · Funktionen · `.redion` ·
-  Cloud optional · TypeScript-Ziel · Tests · Grenzen weiterhin vorkommen
-- Ausführliches nach `doku/` wandert statt gelöscht zu werden
-
-**Priorität** — hoch.
-
----
-
-### E2 — Die alte JavaScript-Aussage nachziehen
-
-**Ziel**
-
-Kein Dokument soll mehr so klingen, als wäre TypeScript unerwünscht.
-
-**Wo es steht**
-
-Nicht mehr in der README — dort wurde es bereits entfernt. Es steht in
-**`CLAUDE.md:1564`**:
-
-> Redion ist aktuell klassisches HTML/CSS/JavaScript ohne Build-Pflicht.
-
-**Neue Formulierung**
-
-```txt
-Redion läuft weiterhin einfach lokal.
-Redion wird schrittweise auf TypeScript migriert.
-Die Nutzung per index.html und redion-einzeldatei.html bleibt erhalten.
-```
-
-**Priorität** — hoch.
-
----
-
-## Phase 6b · Excel-Recherche und Entscheidung
-
-Redion soll Excel-**Probleme** lösen, nicht Excel klonen — siehe
-`ENTSCHEIDUNGEN.md` E24. Bevor eine einzige Tabellenfunktion gebaut wird,
-muss klar sein, welche Fälle sie abdecken soll.
-
-### ~~X1 — Recherche schreiben~~ · erledigt
+## Phase 4 · Excel-Recherche und Tabellenkern planen · **erledigt**
 
 `doku/EXCEL-IN-REDION-RECHERCHE.md`.
 
-**Und das Ergebnis dreht die Reihenfolge um.** Diese Phase ging davon aus,
-dass rund sechzig Funktionen zu bauen sind. Gemessen — Register geladen,
-Laufzeit geladen, Namen abgeglichen:
+**Das Ergebnis drehte die Reihenfolge um.** Angenommen waren rund sechzig zu
+bauende Funktionen. Gemessen:
 
 ```txt
 158  Funktionen im Register, davon 0 ohne Implementierung
- 37  von 63 des Startpakets sind bereits da und laufen
-  0  davon sind unter ihrem deutschen Namen erreichbar
+ 37  des Excel-Startpakets liefen bereits — keine unter deutschem Namen
 ```
 
-Wer aus Excel kommt und `=SUMME(A1:A10)` tippt, bekommt einen Fehler. `sum`
-hätte funktioniert.
+Es fehlten also nicht Funktionen, sondern **Namen**. Heute laufen 61 von 63
+unter deutschem Namen; die zwei fehlenden fehlen mit Absicht
+(`ENTSCHEIDUNGEN.md` E24, Regel 3).
 
-Es fehlen also **26 Funktionen und 37 Namen** — und die Namen sind fast
-umsonst: der Zerteiler kennt Umlaute schon (`/[A-Za-zÄÖÜäöüß_]/`), und Namen
-werden vor dem Nachschlagen kleingeschrieben. Ein Alias ist eine Zeile.
+VBA und Makros sind ausgeschlossen (E25), grosse Abhängigkeiten nur nach
+Prüfung (E26).
 
 ---
 
-### X2 — Deutsche Excel-Namen · ◐ Schritt 1 erledigt
+## Phase 5 · Erste TypeScript-Typen · ◐ **grösstenteils erledigt**
 
-**Schritt 1 — die 37 Namen · erledigt.**
-
-Die Aliase stehen in `quell/bereiche/datenbanken/formeln/laufzeit.js` als
-**Namenstabelle**, die ganz zu Beginn der Auswertung greift. Beschrieben
-stehen sie in `quell/register/formeln.js`, damit die Suche im Formeleditor
-sie findet — sonst gäbe es sie und niemand entdeckte sie.
-
-**Der erste Wurf war falsch, und das gehört hierhin.** Er schrieb
-`F.summe = F.sum` — Zeiger auf dieselben Funktionen, scheinbar sauber.
-`evaluate` behandelt aber dreizehn Namen besonders, **bevor** es in `F`
-schaut, darunter `if` und `ifs` mit ihrer faulen Auswertung. Ein Alias, der
-nur in `F` steht, läuft daran vorbei:
+Sieben Dateien unter `src/core/types/`, alle aus dem laufenden Code
+**gemessen** und seit Phase 1 englisch benannt (E27):
 
 ```txt
-if(true, 1, teuer())      rechnete teuer() nicht
-WENN(true, 1, teuer())    rechnete es
+id.ts        ID · ISODateTime · BlockId … FileId · Result<T> · Done
+block.ts     RedionBlock · RedionRow · RedionPage · RedionVersion
+database.ts  RedionDatabase · RedionView · Schema · Column · Filter · Sort
+file.ts      RedionFile · FileChunk · UploadState
+backup.ts    RedionPackageData · RedionPackageManifest · RedionPackage · ImportMode
+storage.ts   STORES (alle neun) · StorageLocation · StorageInfo
+index.ts     eine Tür für alles davon
 ```
 
-Beide gaben `1` zurück — und deshalb fiel es nicht auf: der Prüflauf verglich
-Ergebnisse, und die waren gleich. Ein Zweig mit `prop()` hätte in einer
-Umgebung ohne Verknüpfung geworfen, obwohl er nicht genommen wurde, und
-`WENNFEHLER` liesse sich so gar nicht bauen.
+**Typnamen englisch, Feldnamen nicht.** `RedionBlock` trägt weiter
+`created`, `edited`, `erstelltVon`, `alive`, `parentTable` — so stehen sie in
+IndexedDB. Ein Feldname, der nicht dem gespeicherten Feld entspricht, wäre
+keine Übersetzung, sondern eine falsche Behauptung.
 
-Jetzt wird der deutsche Name **vor** allem anderen auf den englischen
-zurückgeführt. Danach gibt es im ganzen Auswerter nur noch einen Namen je
-Funktion, und jede Sonderbehandlung — die heutigen dreizehn und jede spätere
-— gilt für beide Schreibweisen von selbst.
+### 5a — `spreadsheet.ts` und `formula.ts`
 
-`MIN`, `MAX` und `ABS` brauchten keinen Alias (gleicher Name in beiden
-Sprachen), haben aber jetzt eine Beschreibung: sie standen unbeschrieben
-unter „Sonstiges", und wer aus Excel kommt, sucht genau nach ihnen.
+**Ziel** — die Typen für den Tabellenkern, bevor er gebaut wird.
 
-**Gehalten von** `pruefungen/lauf/test106.mjs` (78 Prüfungen). Er prüft nicht,
-ob ein Name *antwortet*, sondern ob er **dasselbe rechnet** wie sein
-englisches Gegenstück — ein Alias, der leicht anders rechnet, ist schlimmer
-als keiner, weil er richtig aussieht. Dazu die Gegenrichtung: alle englischen
-Namen rechnen weiter (ein Alias, der das Original verdrängt, hätte jede
-bestehende Formel in jedem Bestand gebrochen).
+**Fertig wenn** vorhanden: `Workbook` · `Sheet` · `Cell` · `Range` ·
+`FormulaResult`
 
-Er prüft ausserdem, dass der **nicht genommene Zweig nicht rechnet** — die
-Eigenschaft, die der erste Wurf verletzte und die kein Ergebnisvergleich
-findet.
+**Wichtig** — erst messen, was der bestehende Formelauswerter wirklich
+zurückgibt, dann tippen. `FormulaResult` muss die abwehrende Laufzeit
+abbilden (`1/0 → 0`), nicht Excels Fehlerwerte, solange die Entscheidung
+darüber offen ist.
 
-Gegengeprüft: die Namenstabelle wieder aus der Auswertung genommen, und 39
-von 80 Prüfungen wurden rot. Dass es 39 sind und nicht 3, ist der Beweis,
-dass die Tabelle jetzt der einzige Weg ist — es liegt keine zweite Fassung
-mehr daneben.
+**Tests** — `npm run typecheck`
 
-**Schritt 2 — die 16 kleinen fehlenden · 14 erledigt, 2 bewusst nicht.**
-
-Gebaut:
-
-```txt
-PRODUKT · ANZAHL · ANZAHL2 · POTENZ · GANZZAHL · ZEIT · WOCHENTAG
-LINKS · RECHTS · SÄUBERN · SUCHEN · FINDEN · ISTZAHL · ISTTEXT
-```
-
-**Dabei kam ein Fehler in Schritt 1 heraus.** `ABRUNDEN` zeigte auf `floor`,
-`AUFRUNDEN` auf `ceil`. Für positive Zahlen stimmt das — deshalb fiel es
-nicht auf. Excel rundet aber **zur Null hin** und **von der Null weg**:
-
-```txt
-                 Excel    floor/ceil
-ABRUNDEN(-2,5)     -2         -3
-AUFRUNDEN(-2,1)    -3         -2
-```
-
-Wer eine Ausgabenliste mit negativen Beträgen rundet, bekommt sonst je Zeile
-einen Rappen Unterschied — die Sorte Fehler, die man erst in der Summe sieht
-und dann nicht mehr findet. Behoben mit eigenen `rounddown`/`roundup`;
-`GANZZAHL` ist jetzt der Name für das, was `floor` tut. `floor` und `ceil`
-behalten ihre mathematische Bedeutung, und der Prüflauf hält beide Seiten.
-
-**`FINDEN` heisst intern `findtext`.** `find` ist die Listenfunktion und wird
-in `evaluate` besonders behandelt — ein `F.find` wäre davon verdeckt worden
-und nie aufgerufen. Nachgesehen statt geraten: geprüft, dass `F.find = …`
-tatsächlich wirkungslos bleibt.
-
-**Nicht gebaut: `WENNFEHLER` und `ISTFEHLER` — mit Absicht.**
-
-Redions Laufzeit ist abwehrend gebaut und erzeugt gar keine Fehlerwerte:
-`1/0` ist `0`, `WERT("abc")` ist `0`. Excels WENNFEHLER fängt `#DIV/0!` und
-`#WERT!` — hier gäbe es nichts zu fangen. Es sähe aus wie Excels und wäre
-etwas anderes.
-
-Echte Fehlerwerte wären keine neue Funktion, sondern eine Änderung am Rechnen
-selbst — und sie änderten das Ergebnis **bestehender Formelspalten in
-bestehenden Datenbanken**. Das ist Priorität 1 und braucht eine eigene
-Entscheidung. Siehe `ENTSCHEIDUNGEN.md` E24, Nachtrag 3.
-
-`test106` Abschnitt 4d hält den Zustand fest, damit er eine Entscheidung
-bleibt und nicht zu einer Lücke wird, die jemand aus Versehen füllt.
-
-**Stand: `test106` hat 111 Prüfungen.**
-
-**Priorität** — der Rest von X2 ist erledigt; als Nächstes X3.
+**Priorität** — hoch, vor Phase 7.
 
 ---
 
-### ~~X3 — Suche und Verweise~~ · erledigt
+## Phase 6 · Erste sichere Migrationen · ◐ **begonnen**
 
-`ZÄHLENWENN(S)` · `SUMMEWENN(S)` · `MITTELWERTWENN(S)` · `SVERWEIS` ·
-`WVERWEIS` · `XVERWEIS` · `INDEX` · `FILTER` — dazu `VERGLEICH`, das vorher
-falsch zeigte.
+Nur kleine, DOM-freie Helfer. **Nicht zuerst:** `editor.js` ·
+`steuerung.js` · `indexdb.js` · `bauen.js` · `server/kern.js`.
 
-**Die Bedingungssprache.** Excel schreibt Bedingungen als Text:
-`ZÄHLENWENN(Betrag; ">100")`. Das ist eine eigene kleine Sprache — `>`, `>=`,
-`<`, `<=`, `<>`, `=`, dazu `*` und `?`. Redion versteht sie, obwohl es mit
-`filter(liste, current > 100)` einen mächtigeren eigenen Weg hätte: wer diese
-Funktionen sucht, kommt aus Excel und tippt, was er kennt. Eine Funktion, die
-`ZÄHLENWENN` heisst und etwas anderes verlangt, ist eine Falle mit vertrautem
-Namen.
+### ~~6a — Kennungen~~ · erledigt
 
-Kein `eval`, kein regulärer Ausdruck aus Nutzertext ohne Maskierung: das
-Muster wird Zeichen für Zeichen gebaut und alles ausser `*` und `?` maskiert.
+`src/core/helpers/ids.ts` → `quell/core/helpers/ids.js`.
 
-**Ungleich lange Listen brechen nichts.** In Excel ist das ein Fehler; hier
-wird gekürzt. Eine Sicherung oder ein Import kann Listen verschiedener Länge
-liefern, und ein Absturz mitten in einer Ansicht ist die schlechtere Antwort.
+Erste Datei mit vollständig englischer Schnittstelle: aus `Kennungen.lang()`
+wurde `Ids.long()`. Vertretbar, weil gemessen nur **fünfzehn Aufrufe in drei
+Dateien** — nicht die verbotene Massenumbenennung, sondern der Fall „im
+Rahmen einer geplanten Migration".
 
-**Gehalten von** `pruefungen/lauf/test107.mjs` (44 Prüfungen).
+Verhalten nachweislich unverändert; `test85` prüft alle acht Funktionen,
+`test105` hält `.ts` und erzeugtes `.js` zusammen.
 
----
+### 6b — Die übrigen kleinen Helfer
 
-### Der teuerste Fehler dieser Phase — elf falsche Zuordnungen
+**Ziel** — Datum · Objekte · Bremse · Melder · Säubern · Bytes nach
+`src/core/helpers/`.
 
-Beim Bauen von X3 kam heraus, dass **elf** der siebenunddreissig Zuordnungen
-aus X2 nach Namensähnlichkeit gemacht waren statt nach Bedeutung:
+**Warum** — sie sind klein, DOM-frei und einzeln testbar. Jede migrierte
+Datei nimmt einen Eintrag aus der `any`-Liste in `src/global.d.ts`.
 
-```txt
-                          zeigte auf    tat              Excel
-TEIL("Redion";2;3)        slice         "d"              "edi"
-TEXTKETTE("a";"b")        concat        ["a","b"]        "ab"
-TEXTVERKETTEN("-";"a";"b") join         "-"              "a-b"
-DATUM(2026;8;4)           date          1                2026-08-04
-ERSETZEN("Redion";1;3;"XX") replace     "Redion"         "XXion"
-WECHSELN("a.b.c";".";"-") replaceall    "-----"          "a-b-c"
-TEXT(1234,5;"0.00")       format        "1234.5"         "1234.50"
-VERGLEICH(…)              match         ["Genf"]         die Stelle
-TAG("2026-08-04")         day           2 (Wochentag)    4
-REST(-7;3)                mod           -1               2
-RUNDEN(-2,5)              round         -2               -3
-```
+**Fertig wenn** je Datei: englischer Name · Verhalten unverändert ·
+`npm run bauen:ts` erzeugt das `.js` · `index.html` und `sw.js` nachgezogen ·
+alle Läufe grün.
 
-**Warum der Prüflauf sie nicht fand.** Er verglich den deutschen Namen mit
-dem, worauf er zeigt. Zeigt der Name auf die verkehrte Funktion, rechnen
-beide Seiten dasselbe Verkehrte — und der Vergleich ist zufrieden. Ein
-solcher Vergleich findet nur einen *fehlenden* Zweitnamen, nie einen
-*falschen*.
+**Achtung** — `Saeubern` hat deutlich mehr Aufrufer als `Kennungen`. Vor dem
+Umbenennen der Schnittstelle **zählen**; bei zu vielen Aufrufern bleibt der
+öffentliche Name vorerst.
 
-Alle elf haben jetzt eigene Funktionen mit Excel-Bedeutung; die englischen
-Namen behalten ihre bisherige, weil bestehende Formeln daran hängen.
-`test106` Abschnitt 4e prüft gegen **feste erwartete Werte** statt gegen die
-Gegenseite. Die Regel steht in `ENTSCHEIDUNGEN.md` E24, Nachtrag 4.
-
-**Nebenbefund:** `namen()` meldete neun Funktionen nicht, die `evaluate`
-sehr wohl kann (`map`, `filter`, `find`, `some`, `every`, `let`, `lets`,
-`findIndex`, `prop`). Die Vervollständigung im Formeleditor bot sie deshalb
-nie an, und `abgleich()` hätte jede Beschreibung dafür als „Versprechen ohne
-Funktion" gemeldet. Behoben.
-
-**Stand: `test106` 168 Prüfungen, `test107` 44.**
-
----
-
-## Phase 6c · Spreadsheet-MVP
-
-### X4 — Der Tabellenblock
-
-**Ziel**
-
-Ein Block, in dem man rechnet.
-
-**Warum**
-
-Der Unterschied zu einer Datenbank: eine Datenbank hat ein Schema, eine
-Tabelle hat Zellen. Beides wird gebraucht.
-
-**Dateien**
-
-```txt
-quell/register/bloecke.js          neue Blockart
-quell/bereiche/tabelle/dienst.js   reine Logik, ohne DOM
-quell/bereiche/tabelle/ansicht.js  das Zeichnen
-```
-
-**Fertig wenn**
-
-- Zellen, Zeilen, Spalten
-- Bezüge `A1`, `B2` und Bereiche `A1:C10`
-- Formeln in Zellen
-- automatische Neuberechnung
-- Abhängigkeiten zwischen Zellen
-- **Zirkelbezüge werden erkannt und benannt**, nicht als Absturz
-- Fehlerwerte wie `#WERT!` statt stiller `NaN`
-- die Logik lässt sich in Node prüfen, ohne Browser
-
-**Regel** — der Bereich `tabelle` benutzt `kern/` und `register/`, nicht
-`bereiche/datenbanken` (`CLAUDE.md` Regel 1).
+**Tests** — `npm run typecheck` · `npm run bauen:ts` · `test105` · `test87` ·
+`node bauen.js`
 
 **Priorität** — hoch.
 
 ---
 
-### X5 — Spreadsheet-Ansicht für Datenbanken
+## Phase 7 · Spreadsheet-MVP
 
-**Ziel**
+**Der Stand ist besser als erwartet:** alle elf Funktionen, die für den
+ersten Wurf vorgesehen waren, rechnen bereits —
+`SUMME` `MITTELWERT` `MIN` `MAX` `ANZAHL` `WENN` `UND` `ODER` `HEUTE`
+`JETZT` `TEXT`. Es fehlt der **Block**, nicht die Rechenkraft.
 
-Eine Datenbank soll sich anfassen lassen wie eine Tabelle.
+### 7a — Der Spreadsheet-Block
 
-**Fertig wenn** vorhanden: Kopieren und Einfügen über mehrere Zellen ·
-Masseneingabe · Ausfüllen nach unten · Tastaturbedienung wie erwartet
+**Ziel** — ein Block mit einem echten Zellraster.
+
+**Fertig wenn** — Block im Register · kleine Tabelle anzeigen · Zellen
+bearbeiten · `A1`-Bezüge · Bereiche `A1:C10` · automatische Neuberechnung ·
+Zirkelbezüge erkennen und melden · Fehlerwerte anzeigen
+
+**Warum es ein eigener Block ist** — Excel und Redions Datenbanken sind zwei
+verschiedene Werkzeuge: dort die Zelle, hier die Zeile als Seite. Ein
+Spreadsheet-Block ist ein Block wie jeder andere und passt ohne Sonderfall in
+Editor, Sicherung und `.redion`.
+
+**Vorher zu entscheiden** — Fehlerwerte. Ohne sie kann der Block keine
+anzeigen; mit ihnen ändert sich das Ergebnis bestehender Formelspalten.
+Siehe `ENTSCHEIDUNGEN.md` E24, Regel 3.
+
+**Priorität** — hoch, nach Phase 5a.
+
+### 7b — Spreadsheet-Ansicht für Datenbanken
+
+Tabellenansicht mit Copy/Paste und Masseneingabe — das Excel-Gefühl auf
+vorhandenen Daten.
+
+**Priorität** — mittel, nach 7a.
+
+---
+
+## Phase 8 · CSV/XLSX Import und Export
+
+**Teilweise vorhanden:** CSV rein und raus gibt es in den Datenbanken,
+einfaches XLSX-Lesen und -Schreiben in `bereiche/dateien/`.
+
+**Reihenfolge** — CSV-Vorschau vor dem Übernehmen · XLSX-Export mit mehreren
+Blättern · XLSX-Import mit Typerkennung · ODS später prüfen
+
+**Fertig wenn** — ein Rundlauf mit echten Bytes: exportieren, löschen,
+importieren, vergleichen.
 
 **Priorität** — mittel.
 
 ---
 
-## Phase 6d · Analyse
+## Phase 9 · Cloudflare, Konto und Sync
 
-### X6 — Bedingte Formatierung
+**G1 — Konto-Modus.** Ohne Konto nutzen · Konto anlegen · anmelden ·
+abmelden · lokal bleiben · lokal + Sync wählen · Cloud-Arbeitsbereich ·
+Konto löschen · alles exportieren.
+**Regel:** lokale Daten werden **nie** ohne ausdrückliche Zustimmung
+hochgeladen (E1).
 
-Datenbalken · Farbskalen · Zeilenfarbe per Formel · Symbolregeln · Duplikate
-markieren · leere Werte · überfällige Werte. Siehe `LUECKEN.md` L15.
+**G2 — R2 für Dateien.** Bucket-Struktur · Upload · Download ·
+Rechteprüfung · `.redion` und Anhänge in R2.
+**Regel:** grosse Dateien gehören nicht in D1 (E2).
 
-**Priorität** — mittel.
+**G3 — Sync-Konflikte.** Prüfläufe für: zwei Geräte · Änderung offline ·
+derselbe Block geändert · Konflikt wird sichtbar · keine Daten verloren ·
+Anhänge bleiben mit ihren Blöcken verbunden.
 
----
-
-### X7 — Diagramme erweitern
-
-Vorhanden sind `chart` und `dashboard`. Es fehlen: Ringdiagramm · Histogramm ·
-Wasserfall · Pareto · Boxplot · Treemap · Radar · Kombination · KPI-Karte ·
-Fortschrittsanzeige.
-
-**Priorität** — mittel.
-
----
-
-### X8 — CSV und XLSX
-
-CSV rein und raus gibt es. Offen: XLSX-Import, XLSX-Export, ODS später.
-
-**Vorbehalt** — XLSX ist ein ZIP mit XML. Der ZIP-Teil ist gebaut
-(`Ausgeben.zipSchreiben`, `Einlesen.zipLesenAusBlob`). Für den XML-Teil gilt
-E26: erst prüfen, ob es ohne grosse Abhängigkeit geht.
-
-**Priorität** — mittel.
+**Priorität** — G3 **vor** echtem Cloud-Sync.
 
 ---
 
-## Phase 7 · Notion-ähnliche Funktionen
+## Phase 10 · Mobile und iPhone
 
-### F1 — Formelfunktionen vollständig beschreiben
+Fokus: iPhone 13 Pro Max, Safari.
 
-**Ziel**
-
-Alle Formelfunktionen sollen im Editor erklärt werden.
-
-**Warum**
-
-Die Laufzeit kennt 158 Funktionen, beschrieben sind 34. Die übrigen 129
-erscheinen als Gruppe „Sonstiges", ohne Argumentliste, ohne Erklärung, ohne
-Beispiel. Eine Funktion, die niemand findet, ist fast wie nicht vorhanden.
-
-**Dateien**
-
-```txt
-quell/register/formeln.js
-```
-
-**Fertig wenn** jede Funktion Signatur, Beschreibung und Beispiel hat und der
-Editor keine bekannte Funktion mehr unter „Sonstiges" zeigt.
-
-**Tests**
-
-Die Gegenprobe ist schon da: `Register.formeln.abgleich()` meldet beide
-Richtungen — `ohneFunktion` ist bereits 0, `ohneBeschreibung` ist 129. Ein
-eigener Prüflauf dafür **fehlt noch** und gehört zu dieser Aufgabe.
-
-```
-npm run pruefen -- --schnell
-```
-
-**Priorität** — mittel.
-
----
-
-### F2 — Fehlende Blocktypen prüfen
-
-**Ziel**
-
-Die Blocktypen Zeile für Zeile gegen die Notion-Liste prüfen.
-
-**Warum**
-
-Gemessen: 97 gegen 58. Unklar ist, welche wirklich fehlen und welche nur
-anders heissen.
-
-**Dateien**
-
-```txt
-LUECKEN.md
-quell/register/bloecke.js
-```
-
-**Fertig wenn** die Liste durchgegangen ist, fehlende Blöcke benannt und nach
-Nutzen sortiert sind und **keine doppelten Blockarten erfunden** wurden.
-
-**Priorität** — mittel.
-
----
-
-### F3 — Automationen erweitern
-
-**Ziel**
-
-If/Else und Schleifen in Aktionsketten.
-
-**Dateien**
-
-```txt
-quell/bereiche/editor/ansicht/editor.js
-quell/register/befehle.js
-quell/bereiche/datenbanken/dienst.js
-```
-
-**Fertig wenn** es die Aktionen `wenn`, `sonst` und `fuerJede` gibt, mit
-Vorschau und Prüflauf.
-
-**Priorität** — mittel.
-
----
-
-## Phase 8 · Cloudflare, Konto und Sync
-
-### G1 — Konto-Modus planen
-
-**Ziel**
-
-Das Konto bleibt optional (siehe E1 und E2 in `ENTSCHEIDUNGEN.md`).
-
-**Dateien**
-
-```txt
-SERVER-EINRICHTEN.md
-CLOUDFLARE.md
-server/
-```
-
-**Fertig wenn** der Nutzer wählen kann: nur lokal · lokal + Backup ·
-lokal + Sync · Cloud-Arbeitsbereich
-
-**Priorität** — mittel.
-
----
-
-### G2 — R2-Dateispeicher planen
-
-**Ziel**
-
-Große Dateien und `.redion`-Backups gehören nach R2, nicht nach D1.
-
-**Dateien**
-
-```txt
-CLOUDFLARE.md
-server/
-doku/REDION-FORMAT.md
-```
-
-**Fertig wenn** Bucket-Struktur, Rechteprüfung, Upload-Limits und
-Download-Regeln beschrieben sind.
-
-**Priorität** — mittel.
-
----
-
-### G3 — Sync-Konflikte testen
-
-**Ziel**
-
-Sync darf keine Daten verlieren.
-
-**Dateien**
-
-```txt
-server/
-quell/kern/abgleich/
-pruefungen/
-```
-
-**Fertig wenn** es Prüfläufe gibt für: zwei Geräte · zwei Tabs · Änderung
-offline · späterer Abgleich · Konflikt · Löschung · Datei-Anhang
-
-**Priorität** — hoch, sobald Cloud-Sync aktiv gebaut wird.
-
----
-
-## Phase 9 · Mobile und iPhone
-
-### H1 — iPhone-Ansicht verbessern
-
-**Ziel**
-
-Redion soll auf dem iPhone gut nutzbar sein.
-
-**Fokus**
-
-```txt
-iPhone 13 Pro Max · Safari · PWA · Touch
-Bottom Sheets · Editor ohne Tastaturprobleme
-```
-
-**Fertig wenn** die Seitenleiste auf dem Handy gut funktioniert, das Blockmenü
-touchfreundlich ist, Datenbanken horizontal nutzbar sind, Dialoge nicht aus
-dem Bildschirm laufen und Dateiimport/-export verständlich ist.
+Touch-Editor · mobile Datenbankansicht · mobile Spreadsheet-Ansicht ·
+Dateiimport und -export mobil · PWA · Tastatur · Offline-Hinweise.
 
 **Priorität** — mittel.
 
@@ -906,43 +305,48 @@ dem Bildschirm laufen und Dateiimport/-export verständlich ist.
 
 ## Dauerhafte Regeln
 
-Nach jeder wichtigen Änderung:
+**Nach jeder Codeänderung**
 
 ```
 npm run pruefen -- --schnell
 node bauen.js
 ```
 
-Bei Speicher, Backup, Import oder Export zusätzlich:
+**Bei Backup, Import oder Export**
 
 ```
 node pruefungen/lauf/test100.mjs
 ```
 
-Bei Architektur oder Sicherheit:
+**Bei Architektur oder Sicherheit**
 
 ```
 node pruefungen/lauf/test87.mjs
 ```
 
-**Keine Änderung darf:**
+**Bei TypeScript**
 
-- Datenverlust riskieren
-- das Backup schwächen
-- die Offline-Nutzung brechen
-- `redion-einzeldatei.html` kaputtmachen
-- private Daten ungefragt hochladen
+```
+npm run typecheck
+npm run bauen:ts          wenn eine Datei unter src/core/helpers/ liegt
+node pruefungen/lauf/test105.mjs
+```
+
+**Vor jedem Push** die volle Runde: `npm run pruefen`.
 
 ---
 
-## Wo alles steht
+## Fünf Regeln, die aus Fehlern entstanden sind
 
-```txt
-quell/kern/        Ablage, Sicherheit, Abgleich, Helfer — ohne DOM
-quell/register/    die Kataloge: Blöcke, Ansichten, Formeln, Tasten …
-quell/schale/      Gerüst und Stil
-quell/bereiche/    die Fachbereiche
-server/            Cloudflare Worker und Prüfserver
-pruefungen/lauf/   die Prüfläufe
-doku/              die ausführliche Dokumentation
-```
+1. **Nachsehen statt raten.** Kataloge werden geladen und befragt,
+   Schnittstellen nachgeschlagen. Der teuerste wiederkehrende Fehler war,
+   eine Schnittstelle aus dem Gedächtnis zu schreiben.
+2. **Ein Zweitname wird gegen feste Werte geprüft**, nicht gegen die
+   Gegenseite — sonst rechnen beide Seiten dasselbe Verkehrte.
+3. **Die Nachbarstelle prüfen.** Der häufigste Befund war nie „etwas
+   vergessen", sondern „an einer Stelle getan und an der Nachbarstelle
+   nicht".
+4. **Jede Reparatur gegenprüfen:** zurückdrehen, rot sehen, wieder
+   einsetzen. Sonst weiss niemand, ob der Lauf die Sache wirklich hält.
+5. **Feldnamen gespeicherter Daten sind keine Namensfrage**, sondern eine
+   Migrationsfrage.

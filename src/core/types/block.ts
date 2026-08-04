@@ -6,13 +6,25 @@
  * statt an einem Block. Das ist keine schöne Theorie, sondern die Form, die
  * `quell/kern/ablage/indexdb.js` tatsächlich schreibt (`addBlock`, Zeile 255).
  *
- * ABGESCHRIEBEN, NICHT ERFUNDEN. Diese Typen sind aus dem laufenden Code
- * gemessen, nicht aus dem Gedächtnis geschrieben (ENTSCHEIDUNGEN.md E21).
- * Wer hier etwas ändert, ändert eine Behauptung über Daten, die auf den
- * Geräten von Nutzern liegen — und die lässt sich nicht zurücknehmen.
+ * ─── TYPNAMEN ENGLISCH, FELDNAMEN NICHT ─────────────────────────────────────
+ *
+ * Das ist die wichtigste Regel dieser Datei. `ENTSCHEIDUNGEN.md` E27 macht
+ * neue Typnamen englisch — `RedionBlock` statt `Block`. Die **Feldnamen**
+ * bleiben, wie sie in der Ablage stehen: `created`, `edited`, `erstelltVon`,
+ * `alive`, `parentTable`.
+ *
+ * Warum: diese Felder beschreiben Bytes, die auf den Geräten von Nutzern
+ * liegen. Ein Feldname im Typ, der nicht dem gespeicherten Feld entspricht,
+ * ist keine Übersetzung, sondern eine **falsche Behauptung** — und sie
+ * umzubenennen wäre eine Datenmigration, keine Namensfrage.
+ *
+ * `CLAUDE.md` §52.8 zeigte hier einmal `createdAt`, `updatedAt`, `properties`
+ * und `deleted` — Felder, die es nicht gibt. Dieses Beispiel war nie gegen die
+ * Ablage geprüft. Deshalb steht in diesem Ordner nur, was `addBlock`
+ * wirklich schreibt (ENTSCHEIDUNGEN.md E21: nachsehen statt raten).
  * ==========================================================================*/
 
-import type { BlockId, CollectionId, ISODateTime, PageId } from './basis.js';
+import type { BlockId, CollectionId, ISODateTime, PageId } from './id.js';
 
 /**
  * Woran ein Block hängt.
@@ -22,7 +34,7 @@ import type { BlockId, CollectionId, ISODateTime, PageId } from './basis.js';
  * Ohne dieses Feld müsste jeder Leser raten, in welchem Fach die Kennung
  * unter `parentId` nachzuschlagen ist.
  */
-export type ElternTabelle = 'block' | 'collection';
+export type ParentTable = 'block' | 'collection';
 
 /**
  * Ein Block, so wie er in der Ablage liegt.
@@ -30,7 +42,7 @@ export type ElternTabelle = 'block' | 'collection';
  * `alive` ist der Papierkorb: `false` heisst gelöscht, aber wiederherstellbar.
  * Erst `purge` entfernt den Satz wirklich (ENTSCHEIDUNGEN.md E19).
  */
-export interface Block {
+export interface RedionBlock {
   id: BlockId;
   /** Der Bezeichner aus `Register.bloecke` — `'text'`, `'page'`, `'todo'`, … */
   type: string;
@@ -38,10 +50,11 @@ export interface Block {
   /** Kennungen der Kindblöcke, in Reihenfolge. Keine Objekte, nur Kennungen. */
   content: BlockId[];
   parentId: BlockId | CollectionId | null;
-  parentTable: ElternTabelle;
+  parentTable: ParentTable;
   color: string;
   created: ISODateTime;
   edited: ISODateTime;
+  /** Deutsch, weil das Feld in der Ablage so heisst. Siehe Kopf dieser Datei. */
   erstelltVon: string;
   alive: boolean;
 
@@ -51,27 +64,24 @@ export interface Block {
   /** Bei Datenbankblöcken: welche Sammlung gezeigt wird. */
   collectionId?: CollectionId;
   /** Bei Datenbankblöcken: welche Ansicht zuletzt offen war. */
-  aktiveView?: ViewIdBezug;
+  aktiveView?: string;
   /** Bei Anhangblöcken: die Datei in der Ablage. */
   dateiId?: string;
   /** Ab wann der Block im Papierkorb sichtbar ist — Grundlage der Schonfrist. */
   papierkorbSichtbarSeit?: ISODateTime;
 }
 
-/** Nur ein Alias, damit `block.ts` nicht auf `datenbank.ts` zeigen muss. */
-type ViewIdBezug = string;
-
 /**
  * Eine Datenbankzeile.
  *
- * Dieselbe Tabelle wie `Block`, dieselbe Ablage — aber `parentTable` ist
- * `'collection'`, und die Werte der Spalten stehen unter `props`.
+ * Dieselbe Tabelle wie `RedionBlock`, dieselbe Ablage — aber `parentTable`
+ * ist `'collection'`, und die Werte der Spalten stehen unter `props`.
  */
-export interface Zeile extends Block {
+export interface RedionRow extends RedionBlock {
   type: 'page';
   parentTable: 'collection';
   parentId: CollectionId;
-  props: Eigenschaftswerte;
+  props: PropertyValues;
 }
 
 /**
@@ -83,16 +93,16 @@ export interface Zeile extends Block {
  * behaupten, jeder Leser wisse, welcher Fall vorliegt. `unknown` zwingt zum
  * Nachsehen — und das Nachsehen ist hier die richtige Arbeit.
  */
-export type Eigenschaftswerte = Record<string, unknown>;
+export type PropertyValues = Record<string, unknown>;
 
 /** Eine Seite — ein Block, der Kinder trägt und in der Seitenleiste steht. */
-export interface Seite extends Block {
+export interface RedionPage extends RedionBlock {
   type: 'page';
   id: PageId;
 }
 
 /** Ein Eintrag im Versionsverlauf einer Seite. */
-export interface Fassung {
+export interface RedionVersion {
   id: string;
   pageId: PageId;
   zeit: ISODateTime;
@@ -101,5 +111,5 @@ export interface Fassung {
   titel: string;
   icon: string;
   /** Der vollständige Teilbaum zum Zeitpunkt der Aufnahme. */
-  daten: Block[];
+  daten: RedionBlock[];
 }

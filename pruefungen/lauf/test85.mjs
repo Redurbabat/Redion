@@ -57,14 +57,14 @@ p('Sie ist eingefroren',         r.fest === 'seite.angelegt', r.fest);
 
 console.log('\n— Kennungen —');
 r = await seite.evaluate(() => {
-  const a = Kennungen.lang(), b = Kennungen.lang();
-  return { verschieden: a !== b, gueltig: Kennungen.gueltig(a),
-    ohne: Kennungen.ohneStriche(a).length,
-    hinUndZurueck: Kennungen.mitStrichen(Kennungen.ohneStriche(a)) === a,
-    gleich: Kennungen.gleich(a, Kennungen.ohneStriche(a).toUpperCase()),
-    kurz: Kennungen.kurz(5).length,
-    lesbar: /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789-]+$/.test(Kennungen.lesbar()),
-    ausAdresse: Kennungen.ausAdresse('https://x.ch/seite-' + Kennungen.ohneStriche(a)) === a };
+  const a = Ids.long(), b = Ids.long();
+  return { verschieden: a !== b, gueltig: Ids.isValid(a),
+    ohne: Ids.withoutDashes(a).length,
+    hinUndZurueck: Ids.withDashes(Ids.withoutDashes(a)) === a,
+    gleich: Ids.equal(a, Ids.withoutDashes(a).toUpperCase()),
+    kurz: Ids.short(5).length,
+    lesbar: /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789-]+$/.test(Ids.readable()),
+    ausAdresse: Ids.fromUrl('https://x.ch/seite-' + Ids.withoutDashes(a)) === a };
 });
 p('Zwei Kennungen sind verschieden', r.verschieden && r.gueltig, JSON.stringify(r));
 p('Mit und ohne Striche ist dasselbe', r.ohne === 32 && r.hinUndZurueck && r.gleich, JSON.stringify(r));
