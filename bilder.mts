@@ -118,7 +118,7 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
 
       const k = document.createElement('div');
       k.id = 'bildkasten';
-      k.style.cssText = 'position:fixed; inset:0; z-index:9999; background:var(--bg);' +
+      k.style.cssText = 'position:fixed; inset:0; z-index:600; background:var(--bg);' +
                         'padding:24px 20px; overflow:auto';
       k.innerHTML = '<div id="bildinhalt" style="max-width:900px;margin:0 auto">' +
         '<h1 style="font:700 30px var(--font);color:var(--text);margin:0 0 16px">Haushalt</h1></div>';
@@ -133,6 +133,42 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
     }
   },
 
+  einlesen: {
+    titel: 'Die Frage vor dem Einlesen',
+    bauen: () => {
+      const w = window as any;
+      const seite = Object.values(Store.cache.blocks).find((b: any) => b.type === 'page' && b.alive) as any;
+      const blk = Store.addBlock(seite.id, 'spreadsheet', { text: 'Haushalt' });
+      const bl = w.Spreadsheet.neueMappe('Haushalt').blaetter[0];
+      [['Posten', 'Jan'], ['Miete', '1450'], ['Strom', '98,4']].forEach((z: string[], i: number) =>
+        z.forEach((v: string, s: number) =>
+          w.Spreadsheet.setze(bl, String.fromCharCode(65 + s) + (i + 1), v)));
+      blk.mappe = { id: 'm', name: 'Haushalt', blaetter: [bl], aktiv: bl.id,
+                    erstellt: '', geaendert: '' };
+
+      const k = document.createElement('div');
+      k.id = 'bildkasten';
+      k.style.cssText = 'position:fixed; inset:0; z-index:600; background:var(--bg); padding:24px 20px';
+      k.innerHTML = '<div id="bildinhalt" style="max-width:900px;margin:0 auto">' +
+        '<h1 style="font:700 30px var(--font);color:var(--text);margin:0 0 16px">Haushalt</h1></div>';
+      document.body.appendChild(k);
+      document.getElementById('bildinhalt')!.appendChild(w.SpreadsheetView.zeichne(blk));
+
+      /* Die Frage, die vor dem Einlesen steht — nachgebaut mit denselben
+         Worten, damit das Bild zeigt, was ein Mensch wirklich sieht. */
+      setTimeout(() => Dialog.wahl({
+        titel: 'Einlesen: Haushalt-2026.xlsx · Blatt „Januar" von 3',
+        text: '42 Zeilen × 5 Spalten\n\nPosten · Jan · Feb · Mär\n' +
+              'Miete · 1450 · 1450 · 1450\nStrom · 98,4 · 104,2 · 91,75\n…',
+        knoepfe: [
+          { id: 'a1', text: 'Ab A1 einlesen', hinweis: '6 gefüllte Zellen werden überschrieben' },
+          { id: 'hier', text: 'Ab C4 einlesen', hinweis: '0 gefüllte Zellen werden überschrieben' },
+          { id: '', text: 'Abbrechen', hinweis: 'Es wird nichts verändert' }
+        ]
+      }), 200);
+    }
+  },
+
   tabelleLeer: {
     titel: 'Der leere Zustand',
     bauen: () => {
@@ -141,7 +177,7 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
       const blk = Store.addBlock(seite.id, 'spreadsheet', { text: 'Neu' });
       const k = document.createElement('div');
       k.id = 'bildkasten';
-      k.style.cssText = 'position:fixed; inset:0; z-index:9999; background:var(--bg);' +
+      k.style.cssText = 'position:fixed; inset:0; z-index:600; background:var(--bg);' +
                         'padding:24px 20px; overflow:auto';
       k.innerHTML = '<div id="bildinhalt" style="max-width:900px;margin:0 auto">' +
         '<h1 style="font:700 30px var(--font);color:var(--text);margin:0 0 16px">Neue Tabelle</h1></div>';

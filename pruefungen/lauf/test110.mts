@@ -49,9 +49,11 @@ laden('quell/core/spreadsheet/address.js');
 laden('quell/register/formeln.js');
 laden('quell/bereiche/datenbanken/formeln/laufzeit.js');
 laden('quell/core/spreadsheet/engine.js');
+laden('quell/core/spreadsheet/csv.js');
 
 const CellRefs = (globalThis as any).CellRefs;
 const Spreadsheet = (globalThis as any).Spreadsheet;
+const Csv = (globalThis as any).Csv;
 
 /* ==========================================================================
  * 1 · ADRESSEN
@@ -454,6 +456,90 @@ console.log('\n11 · Sortieren');
   Spreadsheet.sortiere(b, 1, 0, 2, true);
   gleich('Nach Zahl aufsteigend — und Leeres steht unten',
     [1, 2, 3].map(z => Spreadsheet.wert(b, 'B' + z)), [3, 10, '']);
+}
+
+
+/* ==========================================================================
+ * 12 · CSV — DER ZERLEGER, DESSEN FEHLER IN DEN RANDFÄLLEN SITZEN
+ * ------------------------------------------------------------------------
+ * `Datenbank.csvZerlegen` gibt es seit langem und ist für Datenbanken
+ * richtig. Für eine Tabelle hat er zwei Eigenschaften, die DATEN ZERSTÖREN,
+ * und beide stehen hier als Gegenprobe.
+ *
+ * **Er trennt bei Komma UND Semikolon gleichzeitig.** Eine deutsche Datei
+ * benutzt das Semikolon zum Trennen und das Komma als Dezimalzeichen:
+ *
+ *     Miete;1450,50;Januar
+ *
+ * Daraus werden dort fünf Felder statt drei, und aus `1450,50` werden `1450`
+ * und `50`. Der Betrag ist weg, und es sieht nicht nach einem Fehler aus —
+ * es sieht nach zwei Spalten mehr aus.
+ *
+ * **Er wirft leere Zeilen weg.** In einer Datenbank ist eine leere Zeile
+ * nichts. In einer Tabelle rutscht alles darunter um eins hoch, und jede
+ * Formel, die auf `A12` zeigte, meint danach etwas anderes.
+ * ========================================================================*/
+console.log('\n12 · CSV lesen und schreiben');
+
+gleich('Semikolon wird als Trenner erkannt',
+  Csv.erkenneTrenner('Miete;1450,50;Januar'), ';');
+gleich('Komma auch, wenn es die Datei so meint',
+  Csv.erkenneTrenner('a,b,c\n1,2,3'), ',');
+gleich('Tabulator auch', Csv.erkenneTrenner('a\tb\tc'), '\t');
+
+/* DER FALL, AN DEM DER ALTE ZERLEGER SCHEITERT. */
+gleich('Deutsche Zahlen bleiben ganz',
+  Csv.zerlege('Miete;1450,50;Januar'), [['Miete', '1450,50', 'Januar']]);
+
+/* Ein Komma IM Anführungszeichen darf beim Zählen nicht mitreden — sonst
+   entscheidet sich eine Datei voller Namen regelmässig falsch. */
+gleich('Ein Komma im Namen zählt nicht als Trenner',
+  Csv.erkenneTrenner('"Meier, Hans";"Müller, Eva";3'), ';');
+gleich('… und wird auch nicht getrennt',
+  Csv.zerlege('"Meier, Hans";42'), [['Meier, Hans', '42']]);
+
+gleich('Anführungszeichen im Anführungszeichen',
+  Csv.zerlege('"Er sagte ""hallo""";2'), [['Er sagte "hallo"', '2']]);
+gleich('Zeilenumbruch im Feld bleibt drin',
+  Csv.zerlege('"Zeile 1\nZeile 2";x'), [['Zeile 1\nZeile 2', 'x']]);
+gleich('Windows-Umbrüche', Csv.zerlege('a;b\r\nc;d'), [['a', 'b'], ['c', 'd']]);
+gleich('Das BOM aus Excel verschwindet', Csv.zerlege('﻿Name;Wert'), [['Name', 'Wert']]);
+
+/* DIE ZWEITE STELLE, an der der alte Zerleger Daten verschiebt. */
+gleich('Eine leere Zeile MITTENDRIN bleibt eine Zeile',
+  Csv.zerlege('a;b\n;\nc;d'), [['a', 'b'], ['', ''], ['c', 'd']]);
+gleich('Leere Zeilen am ENDE fallen weg',
+  Csv.zerlege('a;b\nc;d\n\n\n'), [['a', 'b'], ['c', 'd']]);
+gleich('Die letzte Zeile ohne Umbruch geht nicht verloren',
+  Csv.zerlege('a;b\nSumme;42'), [['a', 'b'], ['Summe', '42']]);
+gleich('Leerer Text ergibt nichts', Csv.zerlege(''), []);
+
+/* Schreiben — und der Rundlauf, der beides zugleich prüft. */
+gleich('Ein Feld mit Trenner bekommt Anführungszeichen',
+  Csv.schreibe([['Meier; Hans', '42']]), '"Meier; Hans";42');
+gleich('Ein Anführungszeichen wird verdoppelt',
+  Csv.schreibe([['sagte "ja"']]), '"sagte ""ja"""');
+p('Vor der Datei steht das BOM — sonst liest Excel Müller als MÃ¼ller',
+  Csv.mitBom('a;b').charCodeAt(0) === 0xFEFF);
+
+{
+  /* DER RUNDLAUF. Genau das, was `AUFGABEN.md` Phase 8 verlangt:
+     schreiben, einlesen, vergleichen — und zwar mit den Zeichen, die
+     wehtun. */
+  const drin = [
+    ['Posten', 'Betrag', 'Bemerkung'],
+    ['Miete', '1450,50', 'Meier; Hans'],
+    ['Strom', '98,40', 'sagte "ja"'],
+    ['', '', ''],
+    ['Zeile\nmit Umbruch', '0', ''],
+    ['Summe', '1548,90', '']
+  ];
+  gleich('Rundlauf: geschrieben und wieder eingelesen ist dasselbe',
+    Csv.zerlege(Csv.schreibe(drin)), drin);
+  gleich('… auch mit BOM davor',
+    Csv.zerlege(Csv.mitBom(Csv.schreibe(drin))), drin);
+  gleich('… und mit Tabulator statt Semikolon',
+    Csv.zerlege(Csv.schreibe(drin, '\t'), '\t'), drin);
 }
 
 console.log(`\n  Suite 74 — Der Tabellenkern: ${ok} ok, ${weg} offen`);

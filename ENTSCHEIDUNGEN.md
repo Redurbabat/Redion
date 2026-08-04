@@ -1451,3 +1451,39 @@ diesem Projekt: **lieber sichtbar nichts als unsichtbar etwas Falsches.**
 
 Beschlossen und umgesetzt. `test110` prüft den Kern ohne Browser (111 Punkte),
 `test111` den Block im Browser (60 Punkte, darunter hell/dunkel und 390 px).
+
+
+---
+
+## E30 · Redion bleibt blau
+
+**Frage.** `redion-ui-design-system` nennt Rot und Orange als Redions
+Markenfarben (`--redion-primary: #ef4444`). Der Code sagt seit jeher etwas
+anderes: `--accent: #2eaadc` — Notions Blau, dazu die zehn Notion-Farben für
+Text und Hintergrund.
+
+Das ist kein Detail. Es ist die Frage, wie Redion aussieht.
+
+**Beschluss.** Es bleibt Blau. Von Redur am 4. August 2026 entschieden.
+
+**Warum das hier steht und nicht nur im Gespräch.** Der Widerspruch stand
+schwarz auf weiss in zwei Dokumenten, die beide gelten. Wer in drei Monaten
+die Skill liest und den Code sieht, hält eines von beidem für einen Fehler und
+„repariert" es. Dann ist die halbe App rot, die andere Hälfte blau, und
+niemand weiss mehr, was gewollt war.
+
+**Was das für neue Oberflächen heisst.** Alles Farbige kommt aus
+`var(--accent)` und den `--c-*`-Werten in `dunkel.css` und `hell.css`. Kein
+roher Farbwert in einem Bauteil-Stilblatt — nicht weil es hässlich wäre,
+sondern weil es im jeweils anderen Modus falsch aussieht, und zwar erst dann,
+wenn jemand dort arbeitet.
+
+**Was bliebe, wenn sich das je ändert.** Genau zwei Dateien: `dunkel.css` und
+`hell.css`. Jedes Bauteil, das `var(--accent)` benutzt, zieht mit. Das ist der
+Grund, warum die Regel „keine rohen Farbwerte" mehr ist als Ordnungsliebe —
+sie hält diese Entscheidung umkehrbar.
+
+**Status**
+
+Entschieden. Der Abschnitt „Farben" in `redion-ui-design-system` ist damit für
+Redion überstimmt; die übrigen Abschnitte der Skill gelten unverändert.

@@ -1018,7 +1018,10 @@ const SpreadsheetView = (() => {
                Ende sieht in jedem anderen Programm nach einem Fehler aus. */
             return raus.slice(0, letzteVolle);
         };
-        const alsCsv = () => alsZeilen().map(z => z.map(v => /[";\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v).join(';')).join('\r\n');
+        /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
+           auch einliest. Zwei eigene Regeln fürs Anführen liefen auseinander,
+           und dann öffnet die eigene Datei sich selbst nicht mehr richtig. */
+        const alsCsv = () => Csv.schreibe(alsZeilen(), ';');
         const gibAus = (art) => {
             const name = (blatt.name || block.mappe.name || 'Tabelle').replace(/[\\/:*?"<>|]/g, '-');
             if (art === 'xlsx') {
@@ -1029,7 +1032,7 @@ const SpreadsheetView = (() => {
             }
             /* CSV mit Semikolon und BOM: so öffnet Excel im deutschen Sprachraum
                die Datei richtig, statt alles in eine Spalte zu legen. */
-            const blob = new Blob(['﻿' + alsCsv()], { type: 'text/csv;charset=utf-8' });
+            const blob = new Blob([Csv.mitBom(alsCsv())], { type: 'text/csv;charset=utf-8' });
             if (typeof Austausch !== 'undefined' && Austausch.laden)
                 Austausch.laden(blob, name + '.csv');
             else {
@@ -1039,6 +1042,120 @@ const SpreadsheetView = (() => {
                 a.click();
                 setTimeout(() => URL.revokeObjectURL(a.href), 1000);
             }
+        };
+        /* ======================================================================
+         * EINLESEN
+         * --------------------------------------------------------------------
+         * DAS LOCH, DAS DAS AUSGEBEN AUFGEMACHT HAT. „Als Excel speichern" ohne
+         * „Excel öffnen" ist ein Rundlauf, der nicht rundläuft.
+         *
+         * ─── UND WARUM ERST GEFRAGT WIRD ──────────────────────────────────────
+         *
+         * Einlesen überschreibt Zellen. `redion-mobile-ux` sagt zum Import:
+         * *Datei wählen → Vorschau → Ziel wählen → Import starten → Ergebnis.
+         * Nie direkt alles übernehmen.* Und die oberste Regel dieses Projekts
+         * heisst: keine Datenverluste.
+         *
+         * Also steht vor dem Übernehmen eine Frage, und die sagt **nachgezählt**,
+         * was passieren wird: wie viele Zeilen und Spalten kommen, und wie viele
+         * gefüllte Zellen dabei überschrieben werden. „Bist du sicher?" ist keine
+         * Frage — „37 gefüllte Zellen werden überschrieben" ist eine.
+         * ====================================================================*/
+        const einlesen = () => {
+            const eingang = document.createElement('input');
+            eingang.type = 'file';
+            eingang.accept = '.csv,.tsv,.txt,.xlsx,.xlsm';
+            eingang.style.display = 'none';
+            document.body.appendChild(eingang);
+            eingang.addEventListener('change', async () => {
+                const datei = eingang.files && eingang.files[0];
+                eingang.remove();
+                if (!datei)
+                    return;
+                let zeilen = [];
+                let quelle = datei.name;
+                try {
+                    if (/\.(xlsx|xlsm)$/i.test(datei.name)) {
+                        if (typeof Einlesen === 'undefined')
+                            throw new Error('Der Excel-Leser ist nicht geladen.');
+                        const blaetter = await Einlesen.xlsxLesen(await datei.arrayBuffer());
+                        if (!blaetter || !blaetter.length)
+                            throw new Error('In dieser Datei steckt kein Tabellenblatt.');
+                        /* Nur das erste Blatt — mehrere Blätter je Block gibt es noch
+                           nicht, und es stillschweigend zu verschlucken wäre schlimmer,
+                           als es zu sagen. */
+                        zeilen = blaetter[0].zeilen || [];
+                        quelle = datei.name + (blaetter.length > 1
+                            ? ' · Blatt „' + (blaetter[0].name || '1') + '" von ' + blaetter.length : '');
+                    }
+                    else {
+                        zeilen = Csv.zerlege(await datei.text());
+                    }
+                }
+                catch (e) {
+                    if (typeof UI !== 'undefined' && UI.toast)
+                        UI.toast('Die Datei liess sich nicht lesen: ' + (e && e.message ? e.message : e));
+                    return;
+                }
+                if (!zeilen.length) {
+                    if (typeof UI !== 'undefined' && UI.toast)
+                        UI.toast('Die Datei ist leer.');
+                    return;
+                }
+                const breite = zeilen.reduce((m, z) => Math.max(m, z.length), 0);
+                const start = R.lies(gewaehlt) || { zeile: 0, spalte: 0 };
+                /* NACHGEZÄHLT, nicht geschätzt: wie viele gefüllte Zellen fallen
+                   weg, wenn ab hier eingelesen wird? */
+                const zaehleUeberschrieben = (vonZ, vonS) => {
+                    let n = 0;
+                    for (let z = 0; z < zeilen.length; z++)
+                        for (let s = 0; s < zeilen[z].length; s++) {
+                            const alt = blatt.zellen[R.schreibe(vonZ + z, vonS + s)];
+                            if (alt && alt.wert !== '' && alt.wert !== undefined)
+                                n++;
+                        }
+                    return n;
+                };
+                const gefuellt = Object.keys(blatt.zellen)
+                    .filter(a => { const c = blatt.zellen[a]; return c && c.wert !== '' && c.wert !== undefined; }).length;
+                const vorschau = zeilen.slice(0, 3)
+                    .map(z => z.slice(0, 4).map(v => String(v).slice(0, 14)).join(' · ')).join('\n');
+                const knoepfe = [
+                    { id: 'a1', text: 'Ab A1 einlesen',
+                        hinweis: gefuellt ? zaehleUeberschrieben(0, 0) + ' gefüllte Zellen werden überschrieben'
+                            : 'Das Blatt ist leer — nichts geht verloren' }
+                ];
+                if (gewaehlt !== 'A1')
+                    knoepfe.push({ id: 'hier', text: 'Ab ' + gewaehlt + ' einlesen',
+                        hinweis: zaehleUeberschrieben(start.zeile, start.spalte) +
+                            ' gefüllte Zellen werden überschrieben' });
+                knoepfe.push({ id: '', text: 'Abbrechen', hinweis: 'Es wird nichts verändert' });
+                const antwort = typeof Dialog !== 'undefined'
+                    ? await Dialog.wahl({
+                        titel: 'Einlesen: ' + quelle,
+                        text: zeilen.length + ' Zeilen × ' + breite + ' Spalten\n\n' + vorschau +
+                            (zeilen.length > 3 ? '\n…' : ''),
+                        knoepfe
+                    })
+                    : 'a1';
+                if (!antwort)
+                    return;
+                const vonZ = antwort === 'hier' ? start.zeile : 0;
+                const vonS = antwort === 'hier' ? start.spalte : 0;
+                /* Das Blatt wächst mit dem, was hineinkommt — sonst fällt der Rest
+                   der Datei lautlos weg, und das ist genau die Sorte Verlust, die
+                   niemand bemerkt. */
+                if (vonZ + zeilen.length > blatt.zeilen)
+                    blatt.zeilen = vonZ + zeilen.length;
+                if (vonS + breite > blatt.spalten)
+                    blatt.spalten = vonS + breite;
+                zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) => K.setze(blatt, R.schreibe(vonZ + z, vonS + sp), wert)));
+                gewaehlt = anker = R.schreibe(vonZ, vonS);
+                rechneUndZeichne();
+                if (typeof UI !== 'undefined' && UI.toast)
+                    UI.toast(zeilen.length + ' Zeilen eingelesen');
+            });
+            eingang.click();
         };
         /* Eine Stelle für beides: die Leiste am Rechner und das Blatt am
            Telefon rufen dasselbe auf. Zwei Kopien liefen auseinander, und die
@@ -1126,7 +1243,8 @@ const SpreadsheetView = (() => {
                 if (typeof Menue === 'undefined')
                     return;
                 const r = b.getBoundingClientRect();
-                const m = Menue.menu('<button data-a="xlsx"><span class="mi">📊</span>Als Excel speichern</button>' +
+                const m = Menue.menu('<button data-a="oeffnen"><span class="mi">📂</span>Excel oder CSV öffnen</button><hr>' +
+                    '<button data-a="xlsx"><span class="mi">📊</span>Als Excel speichern</button>' +
                     '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button><hr>' +
                     '<button data-a="zeilen"><span class="mi">⬇</span>20 Zeilen anhängen</button>' +
                     '<button data-a="spalten"><span class="mi">➡</span>5 Spalten anhängen</button><hr>' +
@@ -1137,6 +1255,8 @@ const SpreadsheetView = (() => {
                         return;
                     m.remove();
                     document.querySelectorAll('.menu-grund').forEach(g => g.remove());
+                    if (t.dataset.a === 'oeffnen')
+                        return einlesen();
                     if (t.dataset.a === 'xlsx')
                         return gibAus('xlsx');
                     if (t.dataset.a === 'csv')

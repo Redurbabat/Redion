@@ -314,6 +314,118 @@ p('… und bei ### erst recht',
   zahlen.g2.vorgelesen);
 
 /* ========================================================================= *
+ * 4c · DER RUNDLAUF MIT ECHTEN BYTES
+ * ------------------------------------------------------------------------
+ * `AUFGABEN.md` Phase 8 sagt, wann Import und Export fertig sind: **„ein
+ * Rundlauf mit echten Bytes: exportieren, löschen, importieren,
+ * vergleichen."** Nicht: die Funktion gibt einen Text zurück, der plausibel
+ * aussieht.
+ *
+ * Also wird hier wirklich eine .xlsx gebaut — mit ZIP, CRC32 und den vier
+ * Beipackzetteln, die das Format verlangt —, wieder auseinandergenommen und
+ * Zelle für Zelle verglichen. Geht dabei etwas verloren, fällt es hier auf
+ * und nicht bei jemandem, der seine Tabelle wiederhaben will.
+ * ========================================================================= */
+console.log('\n4c · Ausgeben und wieder einlesen');
+
+const rundlauf = await seite.evaluate(async () => {
+  const w = window as any;
+
+  /* Ein Blatt mit genau den Zeichen, die wehtun: Semikolon im Feld,
+     Anführungszeichen, deutsches Komma, Umlaut, leere Zeile. */
+  const bl = w.Spreadsheet.neuesBlatt('Rundlauf', 20, 5);
+  const drin = [
+    ['Posten', 'Betrag', 'Wer'],
+    ['Miete', '1450,5', 'Meier; Hans'],
+    ['Strom', '98,4', 'sagte "ja"'],
+    ['', '', ''],
+    ['Müller & Söhne', '0', 'Ümlaut']
+  ];
+  drin.forEach((zeile, z) => zeile.forEach((wert, sp) =>
+    w.Spreadsheet.setze(bl, String.fromCharCode(65 + sp) + (z + 1), wert)));
+
+  const alsZeilen = (): string[][] => {
+    const raus: string[][] = [];
+    for (let z = 0; z < 5; z++) {
+      const eine: string[] = [];
+      for (let s = 0; s < 3; s++) {
+        const c = bl.zellen[String.fromCharCode(65 + s) + (z + 1)];
+        const v = c ? c.wert : '';
+        eine.push(v === '' || v === undefined || v === null ? '' : String(v));
+      }
+      raus.push(eine);
+    }
+    return raus;
+  };
+  const vorher = alsZeilen();
+
+  /* --- CSV: schreiben und mit demselben Modul wieder lesen --- */
+  const csvText = w.Csv.mitBom(w.Csv.schreibe(vorher, ';'));
+  const csvZurueck = w.Csv.zerlege(csvText);
+
+  /* --- XLSX: echte Bytes durch zipSchreiben und wieder heraus --- */
+  const blob = await w.Austausch.zipSchreiben([
+    { name: '[Content_Types].xml', inhalt:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+      '</Types>' },
+    { name: '_rels/.rels', inhalt:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>' },
+    { name: 'xl/workbook.xml', inhalt:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<sheets><sheet name="Rundlauf" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+    { name: 'xl/_rels/workbook.xml.rels', inhalt:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+      '</Relationships>' },
+    { name: 'xl/worksheets/sheet1.xml', inhalt: w.Austausch.blattXml(vorher) }
+  ]);
+
+  const bytes = blob.size;
+  const blaetter = await w.Einlesen.xlsxLesen(await blob.arrayBuffer());
+  const xlsxZurueck = (blaetter[0]?.zeilen || []).map((z: any[]) =>
+    [0, 1, 2].map(i => (z[i] === undefined || z[i] === null) ? '' : String(z[i])));
+
+  return { vorher, csvZurueck, xlsxZurueck, bytes, blattName: blaetter[0]?.name };
+}) as any;
+
+/* Vergleich mit dem, was Excel wirklich zurückgibt: eine Zahl kommt als
+   Zahl zurück, `1450,5` also als `1450.5`. Das ist richtig so und muss beim
+   Vergleich berücksichtigt werden — sonst prüft der Test seine eigene
+   Erwartung statt der Sache. */
+const alsZahlText = (z: string[][]) => z.map(r => r.map(v => {
+  const n = Number(String(v).replace(',', '.'));
+  return (v !== '' && isFinite(n)) ? String(n) : v;
+}));
+
+gleich('CSV: der Rundlauf ergibt Zeile für Zeile dasselbe',
+  rundlauf.csvZurueck, rundlauf.vorher);
+p('XLSX: es sind wirklich Bytes entstanden', rundlauf.bytes > 400, rundlauf.bytes + ' Bytes');
+gleich('XLSX: der Blattname übersteht es', rundlauf.blattName, 'Rundlauf');
+gleich('XLSX: der Rundlauf ergibt Zeile für Zeile dasselbe',
+  rundlauf.xlsxZurueck, alsZahlText(rundlauf.vorher));
+
+/* Und die drei Zeichen, an denen so ein Rundlauf sonst scheitert. */
+p('Das Semikolon im Feld hat überlebt',
+  JSON.stringify(rundlauf.csvZurueck).includes('Meier; Hans'));
+p('Das Anführungszeichen im Feld auch',
+  JSON.stringify(rundlauf.csvZurueck).includes('sagte \\"ja\\"'));
+p('Und der Umlaut', JSON.stringify(rundlauf.xlsxZurueck).includes('Ümlaut'));
+p('Die leere Zeile ist noch an ihrer Stelle',
+  rundlauf.csvZurueck[3] && rundlauf.csvZurueck[3].every((x: string) => x === ''),
+  JSON.stringify(rundlauf.csvZurueck[3]));
+
+/* ========================================================================= *
  * 5 · DER NEUSTART
  * ------------------------------------------------------------------------
  * Nicht „steht es im Zwischenspeicher", sondern: neue Seite, neuer

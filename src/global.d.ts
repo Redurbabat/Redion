@@ -94,3 +94,34 @@ declare const Austausch: any;
  * `window`; wer `window.App` schreibt, bekommt `undefined`.
  */
 declare const App: any;
+
+
+/**
+ * Das Einlesen aus `quell/bereiche/dateien/einlesen.js`.
+ *
+ * `xlsxLesen(puffer)` gibt `[{ name, zeilen }]` zurück — eine echte .xlsx
+ * wird dort samt ZIP, gemeinsamen Texten und Blattnamen auseinandergenommen.
+ * Der Tabellenblock liest darüber ein, statt einen zweiten ZIP-Leser zu
+ * schreiben.
+ */
+declare const Einlesen: any;
+
+/**
+ * Die Dialoge aus `quell/schale/ueberlagerung/dialog.js`.
+ *
+ * `Dialog.wahl({ titel, text, knoepfe })` gibt die Kennung des gewählten
+ * Knopfes zurück, `''` beim Abbruch — Abbrechen ist dort bewusst keine
+ * Antwort, sondern das Gegenteil einer. Der Tabellenblock fragt damit vor
+ * dem Einlesen, weil Einlesen vorhandene Zellen überschreibt.
+ */
+declare const Dialog: any;
+
+/**
+ * Die kleinen Rückmeldungen aus `quell/schale/ueberlagerung/ui.js`.
+ *
+ * `UI.toast(text)` — eine kurze Meldung, die von selbst verschwindet. Für
+ * Erfolg und für alles, was der Mensch wissen soll, ohne dass er etwas
+ * entscheiden muss. Wie `Store` ein gewöhnliches `const` auf oberster Ebene
+ * und nicht auf `window`; deshalb der `typeof`-Wächter an der Aufrufstelle.
+ */
+declare const UI: any;
