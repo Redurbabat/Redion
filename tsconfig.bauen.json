@@ -42,5 +42,25 @@
     "outDir": "quell"
   },
 
-  "include": ["src/global.d.ts", "src/core/helpers/**/*.ts"]
+  "//include": [
+    "Die Liste ist bewusst eine Aufzählung und kein `src/core/**`.",
+    "",
+    "`src/core/types/` darf hier NICHT hinein: diese Dateien beschreiben nur",
+    "und benutzen `import`/`export`. Mit `module: none` würden sie entweder",
+    "als ES-Modul ausgegeben — und liefen von file:// nicht — oder gar nicht",
+    "erst durchgehen. Sie werden von `tsconfig.json` geprüft und geben nichts",
+    "aus; das ist ihre Rolle.",
+    "",
+    "Wer einen neuen Ordner unter src/core/ anlegt, trägt ihn hier ein.",
+    "`pruefungen/lauf/test105.mjs` erinnert daran: es sucht ausführbaren",
+    "TypeScript-Code unter src/core/ und meldet jeden Ordner, der hier fehlt.",
+    "Ohne diese Erinnerung entstünde die stille Fassung des Fehlers — eine",
+    "Datei, die niemand baut, deren erzeugtes .js also nie entsteht oder",
+    "veraltet, und die trotzdem geladen wird."
+  ],
+  "include": [
+    "src/global.d.ts",
+    "src/core/helpers/**/*.ts",
+    "src/core/security/**/*.ts"
+  ]
 }

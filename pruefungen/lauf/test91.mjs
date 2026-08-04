@@ -24,7 +24,7 @@
  *     template.innerHTML  → nichts
  *     DOMParser           → nichts
  *
- * `Saeubern.nurText` benutzt ein `<template>`. Genau deshalb.
+ * `Sanitize.textOnly` benutzt ein `<template>`. Genau deshalb.
  *
  * ─── 2. „IST DAS EIN PDF?" ENTSCHEIDET DIE ENDUNG ───────────────────────────
  *
@@ -92,7 +92,7 @@ const fehler = [];
 seite.on('pageerror', e => fehler.push(e.message));
 
 await seite.goto(`http://localhost:${PORT}/index.html`);
-await seite.waitForFunction(() => typeof App !== 'undefined' && typeof Saeubern !== 'undefined',
+await seite.waitForFunction(() => typeof App !== 'undefined' && typeof Sanitize !== 'undefined',
                             null, { timeout: 20000 });
 
 /* ========================================================================= *
@@ -100,8 +100,8 @@ await seite.waitForFunction(() => typeof App !== 'undefined' && typeof Saeubern 
  * ========================================================================= */
 console.log('\n1 · anhangAdresse und rahmenAdresse');
 
-const anhang = (u) => seite.evaluate(x => Saeubern.anhangAdresse(x), u);
-const rahmen = (u) => seite.evaluate(x => Saeubern.rahmenAdresse(x), u);
+const anhang = (u) => seite.evaluate(x => Sanitize.attachmentUrl(x), u);
+const rahmen = (u) => seite.evaluate(x => Sanitize.frameUrl(x), u);
 
 gleich('javascript: kommt nicht in einen Link', await anhang('javascript:alert(1)'), '');
 gleich('… auch nicht mit angehängter Endung',
@@ -296,7 +296,7 @@ const mailErgebnis = await seite.evaluate(async () => {
                  'onerror="window.__mail.push(\'gelaufen\')">' +
                  '<style>p{color:red}</style><script>window.__mail.push("skript")<\/script>' +
                  '<p>Tschüss</p>';
-  const text = Saeubern.nurText(giftig);
+  const text = Sanitize.textOnly(giftig);
   await new Promise(f => setTimeout(f, 700));
   return { text, gelaufen: window.__mail };
 });
@@ -332,15 +332,113 @@ const quellen = {
   werkzeuge: _lies(_dazu(WURZEL, 'quell/bereiche/wissen/werkzeuge.js'), 'utf8')
 };
 
-p('editor.js ruft Saeubern', /Saeubern\.(anhang|rahmen)Adresse/.test(quellen.editor));
-p('mail.js ruft Saeubern.nurText', /Saeubern\.nurText/.test(quellen.mail));
-p('werkzeuge.js prüft die Bildadresse', /Saeubern\.adresse/.test(quellen.werkzeuge));
+p('editor.js ruft Sanitize', /Sanitize\.(attachmentUrl|frameUrl)/.test(quellen.editor));
+p('mail.js ruft Sanitize.textOnly', /Sanitize\.textOnly/.test(quellen.mail));
+p('werkzeuge.js prüft die Bildadresse', /Sanitize\.url/.test(quellen.werkzeuge));
 
 /* Und das alte Muster darf nirgends mehr stehen: ein losgelöstes div, dem
    fremdes HTML zugewiesen wird. */
 const altesMuster = /createElement\('div'\);?\s*\n?\s*\w+\.innerHTML\s*=\s*(inhalt|entpacke)/;
 p('Kein `div.innerHTML = <fremdes HTML>` mehr in mail.js',
   !altesMuster.test(quellen.mail));
+
+/* ========================================================================= *
+ * 6 · DIE POSITIVLISTE GEGEN EINE SAMMLUNG VON ANGRIFFEN
+ * ---------------------------------------------------------------------------
+ * Die Abschnitte davor prüfen, dass der Säuberer an der richtigen Stelle
+ * hängt. Hier geht es um ihn selbst: hält die Positivliste, was sie
+ * verspricht — und lässt sie dabei gewöhnliches HTML in Ruhe?
+ *
+ * Beides gehört zusammen. Ein Säuberer, der alles wegwirft, ist sicher und
+ * unbrauchbar; der teurere Fehler ist nicht der durchgelassene Angriff,
+ * sondern der Absatz, der beim Import verschwindet. Deshalb stehen hier
+ * beide Sorten Eingaben.
+ *
+ * Entstanden beim Umzug nach `core/security/sanitize.ts`: dort wurden alte
+ * und neue Fassung über diese Liste geschickt und Zeichen für Zeichen
+ * verglichen. Der Vergleich ist mit der alten Fassung vergangen — die Liste
+ * bleibt, weil sie das eigentlich Wertvolle daran war.
+ * ========================================================================= */
+console.log('\n6 · Die Positivliste gegen eine Sammlung von Angriffen');
+
+const angriffe = await seite.evaluate(() => {
+  const BOESE = [
+    '<script>alert(1)</script>',
+    '<p>vor</p><script>alert(1)</script><p>nach</p>',
+    '<img src=x onerror="alert(1)">',
+    '<img src="x" ONERROR="alert(1)">',
+    '<div onclick="alert(1)">klick</div>',
+    '<a href="javascript:alert(1)">x</a>',
+    '<a href="JaVaScRiPt:alert(1)">x</a>',
+    '<a href="java\nscript:alert(1)">x</a>',
+    '<a href="  javascript:alert(1)">x</a>',
+    '<a href="vbscript:msgbox(1)">x</a>',
+    '<a href="file:///etc/passwd">x</a>',
+    '<a href="about:blank">x</a>',
+    '<a href="data:text/html,<script>alert(1)</script>">x</a>',
+    '<iframe src="javascript:alert(1)"></iframe>',
+    '<iframe srcdoc="<script>alert(1)</script>"></iframe>',
+    '<object data="x"></object><embed src="y">',
+    '<form action="x"><input name="a"></form>',
+    '<button formaction="javascript:alert(1)">x</button>',
+    '<svg><script>alert(1)</script></svg>',
+    '<svg onload="alert(1)"></svg>',
+    '<style>body{display:none}</style>',
+    '<link rel="stylesheet" href="x.css">',
+    '<meta http-equiv="refresh" content="0;url=x">',
+    '<base href="https://boese.example/">',
+    '<p style="background:url(javascript:alert(1))">x</p>',
+    '<p style="width:expression(alert(1))">x</p>',
+    '<a xlink:href="javascript:alert(1)">x</a>',
+    '<template><p>versteckt</p></template>',
+    '<frameset><frame src="x"></frameset>',
+    '<applet code="x"></applet>'
+  ];
+
+  /* Gefährlich ist, was AUSGEFÜHRT wird. `javascript:` als blosser Text in
+     einem <p> sind Buchstaben auf dem Bildschirm — deshalb steht im Ausdruck
+     ein `=` davor: nur im Attribut zählt es. */
+  const GEFAEHRLICH =
+    /<script|<iframe|<object|<embed|<style|<link|<meta|<base|<svg|<form|<applet|<frame|\son\w+\s*=|=\s*["']?\s*(javascript|vbscript|file|about):|srcdoc=|formaction=|xlink:href=/i;
+
+  const durch = [];
+  for (const b of BOESE) {
+    const r = String(Sanitize.html(b));
+    if (GEFAEHRLICH.test(r)) durch.push(b + '  ->  ' + r);
+  }
+
+  /* Die Gegenprobe: gewöhnliches HTML muss ankommen. Ohne sie wäre ein
+     Säuberer, der schlicht '' zurückgibt, in allem oben grün. */
+  const HARMLOS = [
+    ['<p>Text mit <b>fett</b> und <i>kursiv</i></p>', ['<b>', '<i>', 'fett']],
+    ['<h1>Titel</h1><ul><li>eins</li></ul>',          ['<h1>', '<li>', 'eins']],
+    ['<a href="https://example.org" title="hin">L</a>', ['href="https://example.org"', 'title="hin"']],
+    ['<img src="data:image/png;base64,iVBORw0KGgo=" alt="B">', ['<img', 'alt="B"']],
+    ['<table><tr><td colspan="2">1</td></tr></table>', ['<td', 'colspan="2"']],
+    ['<section><p>im unbekannten Tag</p></section>',   ['im unbekannten Tag']],
+    ['<blockquote><pre><code>const a = 1;</code></pre></blockquote>', ['<code>', 'const a = 1;']],
+    ['<p style="color:red">Stil</p>',                  ['style="color:red"']]
+  ];
+  const verloren = [];
+  for (const [ein, muss] of HARMLOS) {
+    const r = String(Sanitize.html(ein));
+    const fehlt = muss.filter(m => !r.includes(m));
+    if (fehlt.length) verloren.push(ein + '  ->  ' + r + '   (fehlt: ' + fehlt.join(', ') + ')');
+  }
+
+  /* Und ein Link nach draussen bekommt seinen Riegel. */
+  const blank = String(Sanitize.html('<a href="https://x.ch" target="_blank">x</a>'));
+
+  return { geprueft: BOESE.length, durch, verloren,
+           blankHatNoopener: /rel="noopener noreferrer"/.test(blank) };
+});
+
+p('Kein Angriff kommt durch die Positivliste',
+  angriffe.durch.length === 0, angriffe.durch.slice(0, 3).join('  |  '));
+p('Und es wurden wirklich welche geprüft', angriffe.geprueft >= 30, String(angriffe.geprueft));
+p('Gewöhnliches HTML bleibt vollständig',
+  angriffe.verloren.length === 0, angriffe.verloren.slice(0, 2).join('  |  '));
+p('target="_blank" bekommt rel="noopener noreferrer"', angriffe.blankHatNoopener);
 
 p('Kein JS-Fehler in der Konsole', fehler.length === 0, fehler.slice(0, 2).join(' · '));
 

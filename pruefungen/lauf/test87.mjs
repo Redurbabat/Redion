@@ -472,8 +472,8 @@ console.log(`    (${wemGehoert.size} globale Namen über ${skripte.length} Datei
 /* Und die Gegenrichtung, damit die Prüfung nicht aus Versehen nichts misst:
    sie muss die bekannten Namen auch wirklich finden. */
 p('Der Ausdruck findet die grossen Module',
-  ['Store', 'App', 'Nachbarn', 'Saeubern'].every(n => wemGehoert.has(n)),
-  ['Store', 'App', 'Nachbarn', 'Saeubern'].filter(n => !wemGehoert.has(n)).join(', '));
+  ['Store', 'App', 'Nachbarn', 'Sanitize'].every(n => wemGehoert.has(n)),
+  ['Store', 'App', 'Nachbarn', 'Sanitize'].filter(n => !wemGehoert.has(n)).join(', '));
 
 /* Jede geladene Datei muss auch im sw.js stehen, sonst fehlt sie offline —
    und `.catch(() => {})` beim Ablegen verschluckt genau das stillschweigend. */

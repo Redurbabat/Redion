@@ -43,13 +43,15 @@ Formeln · lokale KI · Versionen · Papierkorb · `.json`- und
 ✅ src/core/types/ — sieben Dateien, englisch, aus dem Code gemessen
 ✅ src/core/helpers/ — sechs Laufzeitdateien:
    ids · date · objects · bytes · throttle · reporter
-✗  die übrigen 91 Dateien unter quell/
+✅ src/core/security/sanitize.ts — der Säuberer
+✗  die übrigen 90 Dateien unter quell/
 ```
 
-**Was fehlt zuerst** — `Saeubern`. Der einzige der kleinen Helfer, an dem
-Sicherheitsverhalten hängt: Aufrufer zählen, XSS-Prüfungen vor und nach dem
-Umzug. `Tempo` gehört **nicht** mehr in diese Reihe — es greift vierzehnmal
-ins DOM und wandert erst mit der Trennung von `dienst` und `ansicht`.
+**Die kleinen, DOM-freien Helfer sind durch.** Was jetzt kommt, ist eine
+andere Grössenordnung: `.redion` und ZIP (TS-4), dann die Ablage (TS-5).
+
+`Tempo` gehört **nicht** in diese Reihe — es greift vierzehnmal ins DOM und
+wandert erst mit der Trennung von `dienst` und `ansicht`.
 
 **Warum wichtig** — ohne Typen bleiben Datenmodell, Backup, Import/Export,
 Dateien, Sync, Rechte und Cloudflare Bereiche, in denen ein Tippfehler erst
@@ -71,9 +73,10 @@ und dann gemessen: `ids.ts` hatte fünfzehn Aufrufe in drei Dateien.
 
 **Was fehlt** — bei jeder künftigen Migration die Aufrufer **zählen**, bevor
 die Schnittstelle umbenannt wird. Gemessen bisher: `Kennungen` 15 · `Datum` 1
-· `Objekte` 0 · `Bytes` 6 · `Bremse` 0 · `Melder` 17. Alle sechs waren
-deshalb erlaubt. `Saeubern` hat deutlich mehr — dort wird die Antwort
-voraussichtlich anders ausfallen.
+· `Objekte` 0 · `Bytes` 6 · `Bremse` 0 · `Melder` 17 · `Saeubern` 10. Alle
+sieben lagen in derselben Grössenordnung und waren deshalb erlaubt. Die
+Grenze ist nicht die Zahl allein: bei `Saeubern` kamen drei Prüfungen dazu,
+die den **Quelltext** lesen (`test91`), und die mussten mitgezogen werden.
 
 **Status** — ⏳ Regel gilt, Umsetzung wandert mit der Migration.
 

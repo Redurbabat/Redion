@@ -164,19 +164,19 @@ p('sofort() holt die letzte Eingabe nach', r.nachSofort === 11, String(r.nachSof
 
 console.log('\n— Säubern —');
 r = await seite.evaluate(() => ({
-  skript: Saeubern.html('<p>gut</p><script>alert(1)</script>'),
-  onclick: Saeubern.html('<a href="/x" onclick="böse()">Text</a>'),
-  jsAdresse: Saeubern.html('<a href="javascript:alert(1)">Text</a>'),
-  dataBild: Saeubern.html('<img src="data:image/png;base64,AAA">'),
-  dataText: Saeubern.html('<img src="data:text/html,<script>">'),
-  iframe: Saeubern.html('<div>a<iframe src="x"></iframe>b</div>'),
-  unbekannt: Saeubern.html('<section><p>bleibt</p></section>'),
-  blank: Saeubern.html('<a href="https://x.ch" target="_blank">x</a>'),
-  nurText: Saeubern.nurText('<h1>Titel</h1><script>weg</script><p>Text</p>'),
-  esc: Saeubern.alsText('<b>&"'),
-  datei: Saeubern.dateiname('../../etc/passwd'),
-  adrGut: Saeubern.adresse('https://x.ch'),
-  adrBoese: Saeubern.adresse('javascript:x')
+  skript: Sanitize.html('<p>gut</p><script>alert(1)</script>'),
+  onclick: Sanitize.html('<a href="/x" onclick="böse()">Text</a>'),
+  jsAdresse: Sanitize.html('<a href="javascript:alert(1)">Text</a>'),
+  dataBild: Sanitize.html('<img src="data:image/png;base64,AAA">'),
+  dataText: Sanitize.html('<img src="data:text/html,<script>">'),
+  iframe: Sanitize.html('<div>a<iframe src="x"></iframe>b</div>'),
+  unbekannt: Sanitize.html('<section><p>bleibt</p></section>'),
+  blank: Sanitize.html('<a href="https://x.ch" target="_blank">x</a>'),
+  nurText: Sanitize.textOnly('<h1>Titel</h1><script>weg</script><p>Text</p>'),
+  esc: Sanitize.escapeText('<b>&"'),
+  datei: Sanitize.fileName('../../etc/passwd'),
+  adrGut: Sanitize.url('https://x.ch'),
+  adrBoese: Sanitize.url('javascript:x')
 }));
 p('Skript fliegt samt Inhalt raus', !/alert/.test(r.skript) && /gut/.test(r.skript), r.skript);
 p('onclick verschwindet',          !/onclick/.test(r.onclick) && /href/.test(r.onclick), r.onclick);

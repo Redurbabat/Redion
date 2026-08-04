@@ -1726,11 +1726,11 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
           Store.addBlock(seiteId, 'divider');
         } else if (tag === 'img' && n.getAttribute('src')) {
           /* Die einzige Stelle in `ausHtml`, an der etwas anderes als Text aus
-             dem fremden Dokument übernommen wird. `Saeubern.adresse` lässt
+             dem fremden Dokument übernommen wird. `Sanitize.url` lässt
              http(s) und `data:image/…` durch und wirft `javascript:` weg. Ein
              `<img>` führt eine solche Adresse zwar nicht aus — aber der Wert
              bleibt gespeichert, und was morgen daraus liest, weiss niemand. */
-          const bildSrc = Saeubern.adresse(n.getAttribute('src'));
+          const bildSrc = Sanitize.url(n.getAttribute('src'));
           if (bildSrc)
             Store.addBlock(seiteId, 'image', { src: bildSrc, caption: n.getAttribute('alt') || '' });
           else

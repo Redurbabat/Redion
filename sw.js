@@ -34,7 +34,7 @@ const GRUNDSTOCK = [
   './quell/kern/einstellung/app.js',
   './quell/kern/einstellung/schalter.js',
   './quell/kern/zugang/rollen.js',
-  './quell/kern/sicherheit/saeubern.js',
+  './quell/core/security/sanitize.js',
   './quell/kern/sicherheit/pruefen.js',
   './quell/kern/ablage/formen.js',
   './quell/kern/ablage/umzuege.js',

@@ -57,12 +57,41 @@ const alleTs = (ordner, gesammelt = []) => {
   return gesammelt;
 };
 
-const quellen = alleTs(_dazu(WURZEL, 'src/core/helpers'));
+/* Alles unter src/core/ AUSSER types/. Die Typen beschreiben nur und geben
+   nichts aus — sie gehören nicht hierher.
+
+   Vorher stand hier `src/core/helpers`, und das war die stille Fassung des
+   Fehlers, den dieser Lauf verhindern soll: der erste Ordner daneben
+   (`security/`) wäre ungeprüft geblieben. Sein erzeugtes .js hätte veralten
+   können, ohne dass irgendwo etwas rot wird — und darin liegt ausgerechnet
+   die HTML-Säuberung. */
+const ausfuehrbar = (ordner) => {
+  const wurzel = _dazu(WURZEL, ordner);
+  if (!_da(wurzel)) return [];
+  return _liesOrdner(wurzel)
+    .filter(n => n !== 'types')
+    .map(n => _dazu(wurzel, n))
+    .filter(v => _stat(v).isDirectory())
+    .flatMap(v => alleTs(v));
+};
+
+const quellen = ausfuehrbar('src/core');
 
 console.log('\n1 · Jede migrierte Datei hat ihr erzeugtes Gegenstück');
 
 p('Es gibt migrierte Dateien', quellen.length > 0,
-  'src/core/helpers/ ist leer — dann prüft dieser Lauf nichts');
+  'unter src/core/ liegt nichts Ausführbares — dann prüft dieser Lauf nichts');
+
+/* Und der Ordner muss auch gebaut werden. Eine Datei, die zwar dasteht, aber
+   in `tsconfig.bauen.json` nicht eingeschlossen ist, wird nie erzeugt — und
+   ihr veraltetes .js läuft weiter, während die Quelle davonzieht. */
+const bauplan = _lies(_dazu(WURZEL, 'tsconfig.bauen.json'), 'utf8');
+const ordnerOhneBauplan = [...new Set(quellen.map(
+  ts => _rel(_dazu(WURZEL, 'src/core'), ts).split(/[\\/]/)[0]))]
+  .filter(o => !bauplan.includes('src/core/' + o + '/**/*.ts'));
+p('Jeder Ordner unter src/core/ steht in tsconfig.bauen.json',
+  ordnerOhneBauplan.length === 0,
+  ordnerOhneBauplan.join(', ') + ' — sonst wird dort nichts erzeugt');
 
 for (const ts of quellen) {
   const rel = _rel(_dazu(WURZEL, 'src'), ts).replace(/\.ts$/, '.js');

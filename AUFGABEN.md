@@ -257,9 +257,32 @@ Form eines Datensatzes, den `all()` nach aussen gibt.
 und fällt damit nicht unter „kleine, DOM-freie Helfer". Es gehört zu dem
 Schritt, der die Bereiche in `dienst` und `ansicht` trennt.
 
-### 6d — Säubern
+### ~~6d — Säubern~~ · erledigt
 
-**Ziel** — `Saeubern` nach `src/core/helpers/sanitize.ts`.
+`src/core/security/sanitize.ts` → `quell/core/security/sanitize.js`.
+Zehn Aufrufe in drei Dateien, siebzehn in Prüfläufen. Aus `Saeubern` wurde
+`Sanitize`.
+
+**Nicht unter `helpers/`, sondern unter `security/`** — weil es kein Helfer
+ist. Was hier schiefgeht, ist fremder Code im Ursprung der Seite, mit Zugriff
+auf alle Notizen und den KI-Schlüssel.
+
+**Das machte zwei Erweiterungen nötig, und die zweite war die wichtigere.**
+`tsconfig.bauen.json` schloss nur `src/core/helpers/**` ein, und `test105`
+sah auch nur dort nach. Ein neuer Ordner wäre also gebaut worden, ohne dass
+irgendetwas ihn prüft — oder gar nicht gebaut worden, während sein veraltetes
+`.js` weiterläuft. `test105` sieht jetzt alles unter `src/core/` ausser den
+Typen **und meldet jeden Ordner, der im Bauplan fehlt**.
+
+**Verhalten gemessen** — 362 Vergleiche zwischen alter und neuer Fassung,
+beide in derselben Browserseite geladen, kein Unterschied. Die Sammlung von
+dreissig Angriffen daraus steht jetzt dauerhaft in `test91` Abschnitt 6, samt
+Gegenprobe: gewöhnliches HTML muss vollständig ankommen. Ein Säuberer, der
+alles wegwirft, wäre sonst in allem grün.
+
+---
+
+## Phase 6 ist damit abgeschlossen.
 
 **Warum** — sie sind klein, DOM-frei und einzeln testbar. Jede migrierte
 Datei nimmt einen Eintrag aus der `any`-Liste in `src/global.d.ts`.

@@ -766,8 +766,8 @@ const Blocks = (() => {
          `javascript:…//.pdf` besteht diese Prüfung. Deshalb geht jede Adresse
          hier durch Saeubern, und zwar durch die zum Ort passende. */
       const istPdf = /\.pdf(\?|$)/i.test(block.src) || /^data:application\/pdf/i.test(block.src);
-      const zielAdresse = Saeubern.anhangAdresse(block.src);
-      const rahmenSrc = Saeubern.rahmenAdresse(block.src);
+      const zielAdresse = Sanitize.attachmentUrl(block.src);
+      const rahmenSrc = Sanitize.frameUrl(block.src);
       const zeile = document.createElement('div');
       zeile.className = 'datei-zeile';
       zeile.innerHTML =
@@ -810,7 +810,7 @@ const Blocks = (() => {
       /* Ein Lesezeichen wird angeklickt — also die Anhang-Regel. Die Adresse
          BLEIBT unter dem Titel lesbar, auch wenn sie gesperrt ist: sonst wäre
          der Block leer und niemand wüsste, was dort einmal stand. */
-      const ziel = Saeubern.anhangAdresse(block.src);
+      const ziel = Sanitize.attachmentUrl(block.src);
       const a = document.createElement(ziel ? 'a' : 'div');
       if (ziel) { a.href = ziel; a.target = '_blank'; a.rel = 'noopener'; }
       else a.title = 'Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.';
@@ -824,7 +824,7 @@ const Blocks = (() => {
     } else if (block.type === 'embed') {
       /* Der Rahmen läuft im Ursprung dieser Seite. Hier gilt die strenge
          Regel: http(s), blob: oder ein PDF — sonst gar kein Rahmen. */
-      const rahmenSrc = Saeubern.rahmenAdresse(block.src);
+      const rahmenSrc = Sanitize.frameUrl(block.src);
       if (rahmenSrc) {
         const f = document.createElement('iframe');
         f.src = rahmenSrc;
@@ -841,7 +841,7 @@ const Blocks = (() => {
         w.appendChild(hinweis);
       }
       /* Manche Seiten verbieten den Rahmen. Dann hilft der Weg zum Original. */
-      const q = Saeubern.anhangAdresse(block.quelle || block.src);
+      const q = Sanitize.attachmentUrl(block.quelle || block.src);
       const zeile = document.createElement('div');
       zeile.style.cssText = 'font-size:12px; color:var(--text-dim); padding:3px 2px';
       zeile.innerHTML = (block.dienst ? esc(dienst(block.dienst)?.name || '') + ' · ' : '') +

@@ -105,10 +105,10 @@ const Mail = (() => {
          aus einer fremden Mail feuert beim Zuweisen, auch wenn das Element
          nie in der Seite landet — nachgestellt und bestätigt. Der Text wurde
          danach zwar nur gelesen, aber da war der Code längst gelaufen.
-         `Saeubern.nurText` benutzt ein <template>, und dessen Inhalt ist
+         `Sanitize.textOnly` benutzt ein <template>, und dessen Inhalt ist
          träge: dort feuert nichts. Nebenbei fällt der Inhalt von <style>
          und <script> weg, der vorher als Text in der Notiz landete. */
-      return Saeubern.nurText(entpacke(teil.body.data))
+      return Sanitize.textOnly(entpacke(teil.body.data))
         .replace(/\n{3,}/g, '\n\n').trim();
     }
     return '';
@@ -218,7 +218,7 @@ const Mail = (() => {
        Gmail. Sie wäre beim ersten Blick fast durchgerutscht: derselbe Fehler,
        zwei Bildschirmseiten weiter unten. */
     if (/text\/html/i.test(kopfe['content-type'] || ''))
-      inhalt = Saeubern.nurText(inhalt);
+      inhalt = Sanitize.textOnly(inhalt);
 
     const d = kopfe.date ? new Date(kopfe.date) : null;
     return {

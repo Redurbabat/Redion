@@ -102,13 +102,15 @@ src/
 ├─ global.d.ts        Typen für migrierte Dateien (kein `import` erlaubt)
 ├─ core/
 │  ├─ types/          die zentralen Typen — werden nie ausgegeben
-│  └─ helpers/        migrierter Code → wird nach quell/ ausgegeben
-│     ├─ ids.ts
-│     ├─ date.ts
-│     ├─ objects.ts
-│     ├─ bytes.ts
-│     ├─ throttle.ts
-│     └─ reporter.ts
+│  ├─ helpers/        migrierter Code → wird nach quell/ ausgegeben
+│  │  ├─ ids.ts
+│  │  ├─ date.ts
+│  │  ├─ objects.ts
+│  │  ├─ bytes.ts
+│  │  ├─ throttle.ts
+│  │  └─ reporter.ts
+│  └─ security/
+│     └─ sanitize.ts
 ├─ registry/
 ├─ areas/
 └─ app/
@@ -116,6 +118,22 @@ src/
 quell/                der bestehende Code. Bleibt unangetastet, bis eine
                       Phase ihn abholt — und ist zugleich das Ziel für das
                       erzeugte JavaScript.
+```
+
+**Ein neuer Ordner unter `src/core/` braucht zwei Einträge**, sonst entsteht
+still ein Loch:
+
+```txt
+tsconfig.bauen.json   "include": [… "src/core/<neu>/**/*.ts"]
+```
+
+Fehlt er dort, wird nichts erzeugt — und das alte `.js` läuft weiter, während
+die Quelle davonzieht. `pruefungen/lauf/test105.mjs` sucht deshalb
+ausführbaren TypeScript-Code unter ganz `src/core/` (ohne `types/`) und meldet
+jeden Ordner, der im Bauplan fehlt. Es ist die Erinnerung an den Eintrag, den
+man beim zweiten Ordner vergisst.
+
+```txt
 ```
 
 **Zwei Sorten `.ts` unter `src/`, und der Unterschied zählt:**
@@ -150,7 +168,7 @@ Die Nummern sind die aus `CLAUDE.md` §52.16. Der Stand hier ist der wahre.
 | **TS-0** | Analyse: Struktur lesen, grosse Dateien finden, Import/Export/Backup finden, Testlage prüfen | ✅ erledigt |
 | **TS-1** | Werkzeuge: `typescript`, `tsconfig.json`, `npm run typecheck` | ✅ erledigt |
 | **TS-2** | Zentrale Typen unter `src/core/types/` | ✅ erledigt |
-| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Bytes, Bremse, Melder, Säubern | ◐ sechs von sieben — nur `Saeubern` fehlt noch |
+| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Bytes, Bremse, Melder, Säubern | ✅ erledigt — sieben Dateien |
 | **TS-4** | `.redion`, ZIP, Dateien, Export/Import — mit Tests | offen |
 | **TS-5** | Die IndexedDB-Schicht. Sehr vorsichtig. | offen |
 | **TS-6** | Die Register | offen |
