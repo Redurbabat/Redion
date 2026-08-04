@@ -61,3 +61,36 @@ declare const Pflege: any;
  * der Aufrufstelle.
  */
 declare const Formula: any;
+
+/**
+ * Die Menüs aus `quell/schale/ueberlagerung/menue.js`.
+ *
+ * `Menue.menu(html, x, y, opt)` öffnet ein Menü und macht daraus **am
+ * Telefon von allein ein Blatt, das von unten hochfährt** — mit Wischen zum
+ * Schliessen und Einträgen in Karten. Deshalb geht der Tabellenblock für
+ * seine Kopfmenüs hierüber und schreibt keine eigene Touch-Bedienung: die
+ * gäbe es dann zweimal, und die zweite wäre die schlechtere.
+ */
+declare const Menue: any;
+
+/**
+ * Das Ein- und Ausgeben aus `quell/bereiche/dateien/ausgeben.js`.
+ *
+ * Wichtig ist hier `alsExcel(blaetter, name)`: eine echte .xlsx entsteht dort
+ * bereits samt ZIP, CRC32 und den vier Beipackzetteln, die das Format
+ * verlangt. Der Tabellenblock reicht seine Zeilen dorthin weiter, statt das
+ * ein zweites Mal zu schreiben — zwei ZIP-Schreiber pflegt man einmal und
+ * vergisst den anderen.
+ */
+declare const Austausch: any;
+
+
+/**
+ * Die App-Schale aus `quell/schale/aufbau/schale.js`.
+ *
+ * Braucht hier nur, wer im Browser darauf wartet, dass sie fertig gestartet
+ * ist — die Prüfläufe und `bilder.mts` tun genau das. Wie `Store` ist sie
+ * ein gewöhnliches `const` auf oberster Ebene und steht **nicht** auf
+ * `window`; wer `window.App` schreibt, bekommt `undefined`.
+ */
+declare const App: any;

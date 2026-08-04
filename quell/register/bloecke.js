@@ -64,6 +64,12 @@ Register.bloecke = (() => {
     { id:'code',       name:'Code',              icon:'⌨',  gruppe:'Erweitert', cmd:['code'], kurz:'Ctrl+Shift+8', md:'```', ph:'Code' },
     { id:'equation',   name:'Formel',            icon:'∑',  gruppe:'Erweitert', cmd:['formel','equation','math','latex'], kurz:'Ctrl+Shift+E', md:'$$', ph:'E = mc^2' },
     { id:'table',      name:'Einfache Tabelle',  icon:'⊞',  gruppe:'Erweitert', cmd:['tabelle einfach','simple table','raster'] },
+    /* Der Tabellenblock rechnet — im Unterschied zur einfachen Tabelle
+       darueber, die nur Text in Kaestchen haelt. Deshalb steht er bei den
+       Datenbanken und nicht bei den Erweiterungen: wer hier landet, sucht
+       eine Rechnung. */
+    { id:'spreadsheet', name:'Kalkulationstabelle', icon:'🧮', gruppe:'Datenbank',
+      cmd:['kalkulation','spreadsheet','excel','rechnen','tabelle rechnen','summe'] },
     { id:'toc',        name:'Inhaltsverzeichnis',icon:'≡',  gruppe:'Erweitert', cmd:['inhaltsverzeichnis','toc'] },
     { id:'breadcrumb', name:'Pfad',              icon:'⌂',  gruppe:'Erweitert', cmd:['pfad','breadcrumb','bread'] },
     { id:'columns',    name:'Zwei Spalten',      icon:'⫿',  gruppe:'Erweitert', cmd:['spalten','columns'] },

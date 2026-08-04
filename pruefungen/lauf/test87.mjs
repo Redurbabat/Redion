@@ -162,33 +162,86 @@ p('schale.js bindet alle drei',
 
 /* ========================================================================= *
  * 4 · DIE STILBLÄTTER SIND VOLLSTÄNDIG EINGEHÄNGT
- * Seit A3 sind es sechs statt einem. `bauen.js` ersetzte den <link> ohne
- * g-Flag, also nur den ERSTEN — mit sechs Stilblättern hätte die Einzeldatei
- * fünf tote <link> behalten. Sie wäre gestartet und unfertig gewesen: die
- * halbe Gestaltung fehlt, und nichts meldet einen Fehler. Genau wie bei der
- * fehlenden HTML-Säuberung merkt man so etwas nicht beim Durchklicken.
+ * Seit A3 ist es nicht mehr eines, sondern ein Ordner voll. `bauen.js`
+ * ersetzte den <link> ohne g-Flag, also nur den ERSTEN — mit mehreren
+ * Stilblättern hätte die Einzeldatei die übrigen als tote <link> behalten.
+ * Sie wäre gestartet und unfertig gewesen: die halbe Gestaltung fehlt, und
+ * nichts meldet einen Fehler. Genau wie bei der fehlenden HTML-Säuberung
+ * merkt man so etwas nicht beim Durchklicken.
  * ========================================================================= */
-console.log('\n— Die sechs Stilblätter —');
+console.log('\n— Die Stilblätter —');
 
-const STILE = ['marken.css', 'dunkel.css', 'hell.css', 'grund.css', 'aufbau.css',
-               'datenbanken.css', 'ki.css', 'werkzeuge.css', 'ansichten.css',
-               'einstellungen.css', 'bausteine.css'];
+/* ------------------------------------------------------------------------ *
+ * Hier stand bis eben eine Liste von Hand:
+ *
+ *     const STILE = ['marken.css', 'dunkel.css', … , 'bausteine.css'];
+ *     p('… in der richtigen Folge', JSON.stringify(verlinkt) === JSON.stringify(STILE));
+ *
+ * Sie ging rot, als tabelle.css dazukam — bei völlig richtiger Arbeit. Das
+ * ist der schlimmste Fehlschlag, den eine Prüfung haben kann: sie bestraft
+ * das Richtige. Wer das zweimal erlebt, ändert beim dritten Mal die Liste,
+ * ohne hinzusehen — und dann fängt sie auch den echten Fehler nicht mehr.
+ * Dieselbe Lehre wie beim fest eingetragenen Pfad in test87 und beim auf
+ * `notizen-v11` festgenagelten Vergleich in test99.
+ *
+ * Also prüft sie ab jetzt die REGEL statt der Liste. Die Liste kommt vom
+ * Ordner; die Regel ist die Kaskade, und die ist der eigentliche Grund,
+ * warum die Folge überhaupt zählt:
+ *
+ *     Stufe 0  marken · dunkel · hell   die Werte  (--bg, --accent …)
+ *     Stufe 1  grund · aufbau           das Gerüst (Körper, Raster)
+ *     Stufe 2  alle Bauteile            untereinander egal
+ *     Stufe 3  bausteine                zuletzt, es überschreibt Bauteile
+ *
+ * Ein neues Bauteil-Stilblatt braucht damit keine Änderung mehr an dieser
+ * Datei — ein an die falsche Stelle gehängtes aber sehr wohl.
+ * ------------------------------------------------------------------------ */
+const STIL_ORDNER = _dazu(WURZEL, 'quell/schale/stil');
+const STILE = _liste(STIL_ORDNER).filter(n => n.endsWith('.css')).sort();
+
+const STUFE = { 'marken.css': 0, 'dunkel.css': 0, 'hell.css': 0,
+                'grund.css': 1, 'aufbau.css': 1,
+                'bausteine.css': 3 };
+const stufeVon = d => (d in STUFE ? STUFE[d] : 2);
+
 const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
 const verlinkt = [...html.matchAll(/<link rel="stylesheet" href="quell\/schale\/stil\/([^"]+)">/g)]
   .map(m => m[1]);
 
-p('index.html lädt alle sechs, in der richtigen Folge',
-  JSON.stringify(verlinkt) === JSON.stringify(STILE), verlinkt.join(', '));
+/* Nichts vergessen: jedes Blatt auf der Platte hängt auch drin. Genau das
+   ist der Fehler, der beim Anlegen einer neuen Datei passiert. */
+const nichtVerlinkt = STILE.filter(d => !verlinkt.includes(d));
+p('index.html lädt jedes Stilblatt aus dem Ordner (' + STILE.length + ')',
+  nichtVerlinkt.length === 0, 'fehlt: ' + nichtVerlinkt.join(', '));
 
-STILE.forEach(datei => {
-  const voll = _dazu(WURZEL, 'quell/schale/stil', datei);
-  let da = true;
-  try { _lies(voll); } catch { da = false; }
-  p(datei + ' liegt an seinem Platz', da);
-});
+/* Und umgekehrt: kein toter <link> auf eine Datei, die es nicht mehr gibt. */
+const totLink = verlinkt.filter(d => !STILE.includes(d));
+p('und kein <link> auf ein Blatt, das es nicht gibt',
+  totLink.length === 0, totLink.join(', '));
+
+/* Die Kaskade: die Stufe darf nie zurückspringen. */
+const stufen = verlinkt.map(stufeVon);
+const rueckwaerts = verlinkt
+  .map((d, i) => (i > 0 && stufen[i] < stufen[i - 1]) ? `${verlinkt[i - 1]} vor ${d}` : null)
+  .filter(Boolean);
+p('Werte, dann Gerüst, dann Bauteile, dann bausteine.css',
+  rueckwaerts.length === 0, rueckwaerts.join(' · '));
+
+/* Innerhalb der Werte-Stufe zählt die Folge doch genau: marken setzt die
+   Namen, dunkel den Normalfall, hell überschreibt ihn. Umgedreht wäre die
+   App im Hellmodus dunkel — und nur dort. */
+const werte = verlinkt.filter(d => stufeVon(d) === 0);
+p('marken.css, dann dunkel.css, dann hell.css',
+  JSON.stringify(werte) === JSON.stringify(['marken.css', 'dunkel.css', 'hell.css']),
+  werte.join(', '));
+
+/* Gegenprobe: merkt die Regel eine verdrehte Folge überhaupt? Ohne sie wäre
+   ein durchgerutschter Vergleich für immer grün. */
+p('Und die Prüfung würde eine verdrehte Folge merken',
+  stufeVon('marken.css') < stufeVon('bausteine.css'));
 
 const sw = _lies(_dazu(WURZEL, 'sw.js'), 'utf8');
-p('sw.js kennt alle sechs — sonst fehlen sie offline',
+p('sw.js kennt jedes Blatt — sonst fehlen sie offline',
   STILE.every(d => sw.includes('quell/schale/stil/' + d)),
   STILE.filter(d => !sw.includes('quell/schale/stil/' + d)).join(', '));
 

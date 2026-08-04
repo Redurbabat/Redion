@@ -531,6 +531,13 @@ const Blocks = (() => {
         box.appendChild(Zusatz.tabelle(block));
         break;
 
+      /* Die Kalkulationstabelle. Sie zeichnet sich selbst und rechnet mit
+         `core/spreadsheet` — der Editor weiss davon nichts weiter, als dass
+         er sie einhaengt. */
+      case 'spreadsheet':
+        if (typeof SpreadsheetView !== 'undefined') box.appendChild(SpreadsheetView.zeichne(block));
+        break;
+
       case 'whiteboard':
         box.appendChild(Zusatz.whiteboard(block));
         break;

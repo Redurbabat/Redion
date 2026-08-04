@@ -46,7 +46,8 @@ Excel-Namen) · lokale KI · Versionen · Papierkorb · `.json`- und
 
 ```txt
 1. Die TypeScript-Migration selbst — die Grundlage steht, quell/ ist noch JS
-2. Der Spreadsheet-Block — die Funktionen sind da, die Tabelle fehlt
+2. ~~Der Spreadsheet-Block — die Funktionen sind da, die Tabelle fehlt~~
+   · **erledigt**, siehe Phase 7a und `ENTSCHEIDUNGEN.md` E29
 3. Cloudflare, Konto und Sync sind nicht produktionsreif
 ```
 
@@ -425,13 +426,31 @@ ersten Wurf vorgesehen waren, rechnen bereits —
 `SUMME` `MITTELWERT` `MIN` `MAX` `ANZAHL` `WENN` `UND` `ODER` `HEUTE`
 `JETZT` `TEXT`. Es fehlt der **Block**, nicht die Rechenkraft.
 
-### 7a — Der Spreadsheet-Block
+### ~~7a — Der Spreadsheet-Block~~ · **erledigt**
 
 **Ziel** — ein Block mit einem echten Zellraster.
 
-**Fertig wenn** — Block im Register · kleine Tabelle anzeigen · Zellen
-bearbeiten · `A1`-Bezüge · Bereiche `A1:C10` · automatische Neuberechnung ·
-Zirkelbezüge erkennen und melden · Fehlerwerte anzeigen
+**Fertig wenn** — ~~Block im Register~~ · ~~kleine Tabelle anzeigen~~ ·
+~~Zellen bearbeiten~~ · ~~`A1`-Bezüge~~ · ~~Bereiche `A1:C10`~~ ·
+~~automatische Neuberechnung~~ · ~~Zirkelbezüge erkennen und melden~~ ·
+~~Fehlerwerte anzeigen~~
+
+**Und darüber hinaus, weil ein Tabellenblock ohne sie keiner ist:** Zeilen und
+Spalten einfügen und löschen mit nachgezogenen Bezügen · Ausfüllen über den
+Anfasser · Sortieren · Spaltenbreiten · Ausgabe als `.xlsx` und CSV ·
+Bedienung mit der Tastatur.
+
+**Wo es steht** — `src/core/spreadsheet/{address,engine}.ts` (rechnet, kennt
+keinen Bildschirm) · `src/bereiche/spreadsheet/ansicht.ts` (zeichnet, rechnet
+nicht) · `quell/schale/stil/tabelle.css` · `DESIGN-TABELLE.md`.
+
+**Was es hält** — `test110` (Kern ohne Browser, 111 Punkte) · `test111`
+(Browser, 60 Punkte: Neustart, Speichern, Tastatur, hell und dunkel gemessen,
+390 px gemessen).
+
+**Was bewusst offen blieb** — mehrere Blätter je Block · Diagramme ·
+`#DIV/0!` und `#ZAHL!` · Ziehauswahl am Telefon. Die Gründe stehen in
+`ENTSCHEIDUNGEN.md` E29.
 
 **Warum es ein eigener Block ist** — Excel und Redions Datenbanken sind zwei
 verschiedene Werkzeuge: dort die Zelle, hier die Zeile als Seite. Ein

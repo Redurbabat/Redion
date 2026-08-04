@@ -95,11 +95,31 @@ const Spreadsheet = (() => {
    * Entscheidung: die Formelsprache kennt auch `bedingung ? a : b`, und dort
    * steht ebenfalls ein Doppelpunkt. In einer Tabelle ist der Bereich die
    * erwartete Bedeutung, und Excel schreibt ihn nie mit Leerzeichen.
+   *
+   * ─── WARUM HIER KEIN `\b` MEHR STEHT ────────────────────────────────────
+   *
+   * Es stand eines, und es hat das Dollarzeichen abgeschnitten. `\b` verlangt
+   * eine Wortgrenze — `$` ist kein Wortzeichen, also passte die Grenze nicht
+   * VOR das `$`, sondern erst dahinter. Aus `=$A$1` wurde deshalb:
+   *
+   *     $A$1  →  $prop("A1")        ← das führende $ blieb einfach stehen
+   *
+   * Ein `$` mitten in der Formel, das die Laufzeit nicht kennt. Feste Bezüge
+   * haben also nie funktioniert, und beim Ausfüllen war es schlimmer als ein
+   * Absturz: `$A$1` wanderte mit, obwohl es genau das nicht sollte — eine
+   * ganze Spalte rechnete still gegen die falsche Zelle.
+   *
+   * Der Rückblick statt `\b` leistet dasselbe für Buchstaben und schliesst
+   * das `$` mit ein. Und er hält weiterhin die wissenschaftliche Schreibweise
+   * heraus: in `2e6` steht vor dem `e` eine Ziffer.
    */
+  const ADRESSE = '\\$?[A-Za-z]{1,3}\\$?[0-9]{1,7}';
+  const NICHT_DAVOR = '(?<![A-Za-z0-9_$.])';
+
   const TEILE = new RegExp([
     '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\')',
-    '(\\$?[A-Za-z]{1,3}\\$?[0-9]{1,7}:\\$?[A-Za-z]{1,3}\\$?[0-9]{1,7})',
-    '(\\b\\$?[A-Za-z]{1,3}\\$?[0-9]{1,7}\\b(?!\\s*\\())'
+    '(' + NICHT_DAVOR + ADRESSE + ':' + ADRESSE + ')',
+    '(' + NICHT_DAVOR + ADRESSE + '\\b(?!\\s*\\())'
   ].join('|'), 'g');
 
   const ohneDollar = (s: string): string => s.replace(/\$/g, '').toUpperCase();
@@ -312,6 +332,20 @@ const Spreadsheet = (() => {
    * Zahlen werden erkannt, damit `12` eine Zahl wird und nicht der Text
    * „12" — sonst rechnet `=SUMME(A1:A2)` mit Text und ergibt 0. Das deutsche
    * Komma zählt dabei mit: wer `1,5` tippt, meint eineinhalb.
+   *
+   * DREI DINGE, DIE EINE TABELLE KÖNNEN MUSS UND DIE HIER GEFEHLT HABEN:
+   *
+   * **Leeren wirft die Gestaltung nicht weg.** `delete blatt.zellen[a]` hat
+   * mit dem Inhalt auch Fett, Ausrichtung und Währung gelöscht. Wer eine
+   * Spalte formatiert, die Zahlen probeweise löscht und neu tippt, stand
+   * wieder am Anfang. Excel trennt beides, und zwar aus genau diesem Grund.
+   *
+   * **WAHR und FALSCH sind Wahrheitswerte**, keine Wörter. Sonst ergibt
+   * `=WENN(A1; …)` über einem getippten „WAHR" immer den Sonst-Zweig, und
+   * niemand sieht warum.
+   *
+   * **Ein führendes `'` erzwingt Text.** Postleitzahl `'0815`, Telefonnummer,
+   * Artikelnummer — überall dort, wo die führende Null zum Wert gehört.
    */
   const setze = (blatt: any, adresse: unknown, eingabe: unknown): any => {
     const A = adressen();
@@ -322,18 +356,327 @@ const Spreadsheet = (() => {
     const roh = eingabe === null || eingabe === undefined ? '' : String(eingabe);
     const vorher = blatt.zellen[a] || {};
 
-    if (roh === '') { delete blatt.zellen[a]; return null; }
+    if (roh === '') {
+      /* Inhalt weg, Gestaltung bleibt — und nur wenn auch keine Gestaltung
+         da ist, verschwindet der Eintrag ganz. Sonst füllte sich das Blatt
+         mit leeren Zellen, und die Sicherung wüchse ohne einen Inhalt. */
+      const stil = (vorher as any).stil;
+      if (stil && Object.keys(stil).length) { blatt.zellen[a] = { wert: '', stil }; return blatt.zellen[a]; }
+      delete blatt.zellen[a];
+      return null;
+    }
 
     if (roh.startsWith('=')) {
       blatt.zellen[a] = { ...vorher, formel: roh, wert: vorher.wert ?? '' };
-    } else {
-      const alsZahl = roh.trim().replace(',', '.');
-      const zahl = /^-?\d+(\.\d+)?$/.test(alsZahl) ? Number(alsZahl) : null;
-      const neu = { ...vorher, wert: zahl === null ? roh : zahl };
-      delete (neu as any).formel;
-      blatt.zellen[a] = neu;
+      return blatt.zellen[a];
     }
+
+    const neu: any = { ...vorher };
+    delete neu.formel;
+
+    if (roh.startsWith("'")) {                       /* erzwungener Text */
+      neu.wert = roh.slice(1);
+      neu.text = true;
+    } else {
+      delete neu.text;
+      const oben = roh.trim().toUpperCase();
+      if (oben === 'WAHR' || oben === 'TRUE') neu.wert = true;
+      else if (oben === 'FALSCH' || oben === 'FALSE') neu.wert = false;
+      else {
+        const alsZahl = roh.trim().replace(',', '.');
+        const zahl = /^-?\d+(\.\d+)?$/.test(alsZahl) ? Number(alsZahl) : null;
+        neu.wert = zahl === null ? roh : zahl;
+      }
+    }
+    blatt.zellen[a] = neu;
     return blatt.zellen[a];
+  };
+
+  /* ==========================================================================
+   * 5 · BEZÜGE VERSCHIEBEN
+   * --------------------------------------------------------------------------
+   * Eine Funktion, zwei Anwender — und deshalb steht sie hier und nicht
+   * zweimal in der Oberfläche:
+   *
+   *   · **Ausfüllen.** Wer `=A1+B1` aus C1 nach C2 zieht, erwartet `=A2+B2`.
+   *     Das ist der ganze Sinn eines relativen Bezugs.
+   *   · **Zeile oder Spalte einfügen und löschen.** Wird über Zeile 5 etwas
+   *     eingeschoben, muss `=SUMME(A1:A9)` zu `=SUMME(A1:A10)` werden. Sonst
+   *     rechnet die Tabelle ab dem Einfügen still falsch — und das ist die
+   *     schlimmste Sorte Fehler, die eine Tabelle haben kann: sie sieht
+   *     weiterhin richtig aus.
+   *
+   * `$` HEISST NUR BEIM AUSFÜLLEN ETWAS. Beim Einfügen einer Zeile wandert
+   * auch `$A$1` mit — es zeigt weiterhin auf dieselbe Zelle, und die ist
+   * jetzt woanders. Excel macht es genauso, und wer es anders macht, bekommt
+   * beim ersten Einfügen falsche Summen.
+   *
+   * Fällt ein Bezug beim Löschen weg, wird die ganze Formel `=#BEZUG!` —
+   * nicht heimlich eine Zelle daneben. Ein sichtbarer Fehler ist ein Fehler,
+   * den jemand behebt.
+   * ========================================================================*/
+
+  /** Eine Adresse mit ihren `$`-Marken zerlegt. */
+  const teileAdresse = (roh: string): {
+    absS: boolean; spalte: string; absZ: boolean; zeile: number;
+  } | null => {
+    const m = String(roh).match(/^(\$?)([A-Za-z]{1,3})(\$?)([0-9]{1,7})$/);
+    if (!m) return null;
+    return { absS: m[1] === '$', spalte: String(m[2]).toUpperCase(),
+             absZ: m[3] === '$', zeile: Number(m[4]) };
+  };
+
+  const KAPUTT = '#BEZUG!';
+
+  /**
+   * Der gemeinsame Weg: jede Adresse in der Formel durch `wandle` schicken.
+   * Gibt `wandle` `null` zurück, ist die ganze Formel hin.
+   */
+  const bezuegeUm = (
+    formel: unknown,
+    wandle: (t: { absS: boolean; spalte: string; absZ: boolean; zeile: number }) => string | null
+  ): string => {
+    const roh = String(formel ?? '');
+    if (!roh.startsWith('=')) return roh;
+    let kaputt = false;
+
+    const eine = (stueck: string): string => {
+      const t = teileAdresse(stueck);
+      if (!t) return stueck;
+      const raus = wandle(t);
+      if (raus === null) { kaputt = true; return KAPUTT; }
+      return raus;
+    };
+
+    const neu = roh.slice(1).replace(TEILE, (_ganz, text, bereich, zelle) => {
+      if (text !== undefined) return text;
+      if (bereich !== undefined) return bereich.split(':').map(eine).join(':');
+      return eine(zelle);
+    });
+
+    return kaputt ? '=' + KAPUTT : '=' + neu;
+  };
+
+  /** Relativ verschieben — für das Ausfüllen. `$` bleibt stehen. */
+  const verschiebe = (formel: unknown, dz: number, ds: number): string =>
+    bezuegeUm(formel, (t) => {
+      const A = adressen();
+      if (!A) return null;
+      const spalte = t.absS ? A.textZuSpalte(t.spalte) : A.textZuSpalte(t.spalte) + ds;
+      const zeile = t.absZ ? t.zeile - 1 : t.zeile - 1 + dz;
+      if (spalte < 0 || zeile < 0) return null;
+      const txt = A.spalteZuText(spalte);
+      if (!txt) return null;
+      return (t.absS ? '$' : '') + txt + (t.absZ ? '$' : '') + (zeile + 1);
+    });
+
+  /**
+   * Nach einem Einfügen oder Löschen nachziehen.
+   *
+   * @param art    'zeile' oder 'spalte'
+   * @param bei    ab welchem Index (0-basiert)
+   * @param anzahl positiv = eingefügt, negativ = gelöscht
+   */
+  const bezuegeNachEingriff = (
+    formel: unknown, art: 'zeile' | 'spalte', bei: number, anzahl: number
+  ): string =>
+    bezuegeUm(formel, (t) => {
+      const A = adressen();
+      if (!A) return null;
+      let spalte = A.textZuSpalte(t.spalte);
+      let zeile = t.zeile - 1;
+      if (spalte < 0 || zeile < 0) return null;
+
+      const wert = art === 'zeile' ? zeile : spalte;
+      let neu = wert;
+      if (anzahl > 0) {
+        if (wert >= bei) neu = wert + anzahl;
+      } else {
+        const weg = -anzahl;
+        if (wert >= bei && wert < bei + weg) return null;   /* stand in der gelöschten Zeile */
+        if (wert >= bei + weg) neu = wert - weg;
+      }
+      if (art === 'zeile') zeile = neu; else spalte = neu;
+
+      const txt = A.spalteZuText(spalte);
+      if (!txt || zeile < 0) return null;
+      return (t.absS ? '$' : '') + txt + (t.absZ ? '$' : '') + (zeile + 1);
+    });
+
+  /* ==========================================================================
+   * 6 · ZEILEN UND SPALTEN
+   * --------------------------------------------------------------------------
+   * Die Zellen eines Blattes liegen unter ihrer Adresse — beim Einfügen muss
+   * also jede betroffene Zelle umziehen, und zwar **von hinten nach vorn**.
+   * Andersherum überschreibt der Umzug von Zeile 5 die Zeile 6, bevor die
+   * selbst umgezogen ist. Ein Fehler, den man erst bei drei Zeilen bemerkt.
+   * ========================================================================*/
+
+  const eingriff = (blatt: any, art: 'zeile' | 'spalte', bei: number, anzahl: number): boolean => {
+    const A = adressen();
+    if (!blatt || !blatt.zellen || !A || !anzahl) return false;
+    const weg = anzahl < 0 ? -anzahl : 0;
+
+    const alt = blatt.zellen as Record<string, any>;
+    const neu: Record<string, any> = {};
+
+    for (const adresse of Object.keys(alt)) {
+      const l = A.lies(adresse);
+      if (!l) continue;
+      let z = l.zeile, s = l.spalte;
+      const wert = art === 'zeile' ? z : s;
+
+      if (weg) {
+        if (wert >= bei && wert < bei + weg) continue;        /* fällt weg */
+        if (wert >= bei + weg) { if (art === 'zeile') z -= weg; else s -= weg; }
+      } else if (wert >= bei) {
+        if (art === 'zeile') z += anzahl; else s += anzahl;
+      }
+
+      /* JEDE Formel wird nachgezogen, auch die einer Zelle, die selbst
+         stehen bleibt: `=A9` in B1 muss nach dem Einfügen `=A10` heissen,
+         obwohl B1 sich nicht bewegt hat. */
+      const zelle = alt[adresse];
+      if (zelle && zelle.formel)
+        zelle.formel = bezuegeNachEingriff(zelle.formel, art, bei, anzahl);
+      neu[A.schreibe(z, s)] = zelle;
+    }
+
+    blatt.zellen = neu;
+    if (art === 'zeile') blatt.zeilen = Math.max(1, (blatt.zeilen || 0) + anzahl);
+    else blatt.spalten = Math.max(1, (blatt.spalten || 0) + anzahl);
+    return true;
+  };
+
+  const zeileEinfuegen  = (blatt: any, bei: number, anzahl = 1): boolean => eingriff(blatt, 'zeile', bei, Math.max(1, anzahl));
+  const zeileLoeschen   = (blatt: any, bei: number, anzahl = 1): boolean => eingriff(blatt, 'zeile', bei, -Math.max(1, anzahl));
+  const spalteEinfuegen = (blatt: any, bei: number, anzahl = 1): boolean => eingriff(blatt, 'spalte', bei, Math.max(1, anzahl));
+  const spalteLoeschen  = (blatt: any, bei: number, anzahl = 1): boolean => eingriff(blatt, 'spalte', bei, -Math.max(1, anzahl));
+
+  /* ==========================================================================
+   * 7 · AUSFÜLLEN
+   * --------------------------------------------------------------------------
+   * Der Anfasser unten rechts an der Auswahl verspricht das. Ein Anfasser,
+   * der nichts tut, ist schlimmer als keiner — deshalb steht das hier und
+   * nicht auf der Liste für später.
+   *
+   * Drei Fälle, in dieser Reihenfolge:
+   *   1. **Formel** — mitverschoben (`=A1` wird `=A2`)
+   *   2. **Zwei Zahlen oder mehr** — die Schrittweite fortgesetzt: 2, 4 → 6, 8
+   *   3. **Alles andere** — wiederholt
+   *
+   * Bei Fall 2 zählt der Abstand des LETZTEN Paars. `1, 2, 4` füllt mit 6, 8 —
+   * eine Tabelle rät keine Potenzreihe.
+   */
+  const fuelle = (
+    blatt: any, von: { vonZ: number; bisZ: number; vonS: number; bisS: number },
+    bisZeile: number, bisSpalte: number
+  ): number => {
+    const A = adressen();
+    if (!blatt || !A) return 0;
+
+    const runter = bisZeile > von.bisZ;
+    const rechts = bisSpalte > von.bisS;
+    if (!runter && !rechts) return 0;
+
+    const quelle: string[] = [];
+    let gefuellt = 0;
+
+    const eineReihe = (fest: number, laenge: number, alsZeile: boolean,
+                       vonI: number, bisI: number, zielBis: number): void => {
+      quelle.length = 0;
+      for (let i = vonI; i <= bisI; i++)
+        quelle.push(alsZeile ? A.schreibe(i, fest) : A.schreibe(fest, i));
+
+      /* Die Zahlenreihe, falls es eine ist. */
+      const zahlen = quelle.map(a => {
+        const zelle = blatt.zellen[a];
+        return zelle && typeof zelle.wert === 'number' && !zelle.formel ? zelle.wert : null;
+      });
+      const alleZahlen = zahlen.length > 1 && zahlen.every(z => z !== null);
+      const schritt = alleZahlen
+        ? (zahlen[zahlen.length - 1] as number) - (zahlen[zahlen.length - 2] as number) : 0;
+
+      for (let i = bisI + 1; i <= zielBis; i++) {
+        const ziel = alsZeile ? A.schreibe(i, fest) : A.schreibe(fest, i);
+        const abstand = i - bisI;
+        const vorbild = quelle[(abstand - 1) % laenge] || '';
+        const zelleV = blatt.zellen[vorbild];
+
+        if (alleZahlen) {
+          blatt.zellen[ziel] = { ...(zelleV || {}),
+            wert: (zahlen[zahlen.length - 1] as number) + schritt * abstand };
+          delete blatt.zellen[ziel].formel;
+        } else if (zelleV && zelleV.formel) {
+          const dz = alsZeile ? i - (A.lies(vorbild) as any).zeile : 0;
+          const ds = alsZeile ? 0 : i - (A.lies(vorbild) as any).spalte;
+          blatt.zellen[ziel] = { ...zelleV, formel: verschiebe(zelleV.formel, dz, ds) };
+        } else if (zelleV) {
+          blatt.zellen[ziel] = { ...zelleV };
+        } else {
+          delete blatt.zellen[ziel];
+        }
+        gefuellt++;
+      }
+    };
+
+    if (runter) {
+      const laenge = von.bisZ - von.vonZ + 1;
+      for (let s = von.vonS; s <= von.bisS; s++)
+        eineReihe(s, laenge, true, von.vonZ, von.bisZ, bisZeile);
+      if (bisZeile + 1 > (blatt.zeilen || 0)) blatt.zeilen = bisZeile + 1;
+    }
+    if (rechts) {
+      const laenge = von.bisS - von.vonS + 1;
+      for (let z = von.vonZ; z <= von.bisZ; z++)
+        eineReihe(z, laenge, false, von.vonS, von.bisS, bisSpalte);
+      if (bisSpalte + 1 > (blatt.spalten || 0)) blatt.spalten = bisSpalte + 1;
+    }
+    return gefuellt;
+  };
+
+  /* ==========================================================================
+   * 8 · SORTIEREN
+   * --------------------------------------------------------------------------
+   * Nach einer Spalte, über einen Zeilenbereich. Formeln wandern **nicht**
+   * mit angepassten Bezügen — eine sortierte Formel zeigt danach auf ihre
+   * neue Nachbarschaft, und das ist auch in Excel so. Wer Formeln sortiert,
+   * weiss meist selbst nicht, was er erwartet; wer Zahlen sortiert, schon.
+   * ========================================================================*/
+  const sortiere = (blatt: any, spalte: number, vonZ: number, bisZ: number, ab = true): boolean => {
+    const A = adressen();
+    if (!blatt || !A || bisZ <= vonZ) return false;
+    const breite = blatt.spalten || 0;
+
+    const zeilen: any[][] = [];
+    for (let z = vonZ; z <= bisZ; z++) {
+      const eine: any[] = [];
+      for (let s = 0; s < breite; s++) eine.push(blatt.zellen[A.schreibe(z, s)] || null);
+      zeilen.push(eine);
+    }
+
+    const schluessel = (r: any[]): any => (r[spalte] ? r[spalte].wert : '');
+    zeilen.sort((x, y) => {
+      const a = schluessel(x), b = schluessel(y);
+      const leerA = a === '' || a === null || a === undefined;
+      const leerB = b === '' || b === null || b === undefined;
+      if (leerA && leerB) return 0;
+      if (leerA) return 1;                       /* Leeres immer nach unten */
+      if (leerB) return -1;
+      if (typeof a === 'number' && typeof b === 'number') return ab ? a - b : b - a;
+      const va = String(a), vb = String(b);
+      return ab ? va.localeCompare(vb, 'de') : vb.localeCompare(va, 'de');
+    });
+
+    zeilen.forEach((eine, i) => {
+      const z = vonZ + i;
+      for (let s = 0; s < breite; s++) {
+        const ziel = A.schreibe(z, s);
+        if (eine[s]) blatt.zellen[ziel] = eine[s];
+        else delete blatt.zellen[ziel];
+      }
+    });
+    return true;
   };
 
   /** Was in der Zelle steht — für die Anzeige. */
@@ -351,7 +694,10 @@ const Spreadsheet = (() => {
   };
 
   return { uebersetze, graphVon, zirkel, reihenfolge, rechne,
-           neuesBlatt, neueMappe, setze, wert, eingabe, alsFehlerwert };
+           neuesBlatt, neueMappe, setze, wert, eingabe, alsFehlerwert,
+           verschiebe, bezuegeNachEingriff,
+           zeileEinfuegen, zeileLoeschen, spalteEinfuegen, spalteLoeschen,
+           fuelle, sortiere };
 })();
 
 (window as any).Spreadsheet = Spreadsheet;

@@ -2388,3 +2388,53 @@ doku/TYPESCRIPT-MIGRATION.md und beginnt dort, wo ein Fehler nichts kostet.
 
 Nicht: einen Bauschritt für die App einführen. Das bleibt verboten (§6). Die
 zwei Wege oben kommen ohne aus, und genau deshalb sind es diese zwei.
+
+
+================================================================================
+# 55. Bilder machen, nicht nur Code lesen
+================================================================================
+
+Beide Gestaltungs-Skills (`redion-ui-design-system`, `redion-mobile-ux`) sagen
+denselben Satz, und er ist der wichtigste in beiden:
+
+    Öffne die Seite wirklich, statt nur den Code zu lesen.
+
+    node bilder.mjs                  alle Ansichten, Rechner und Telefon
+    node bilder.mjs tabelle          nur die Tabelle
+    node bilder.mjs tabelle handy    nur die Tabelle am Telefon
+
+Die Bilder landen in `bilder/` und werden nicht mitversioniert.
+
+55.1 Warum das keine Kür ist
+
+Beim Tabellenblock fand das Hinsehen vier Fehler, die KEINE Prüfung hatte —
+und zwei davon konnte keine Prüfung haben, weil sie nur mit Augen sichtbar
+sind:
+
+  · Eine abgeschnittene Zahl zeigte eine ANDERE Zahl. `634.2166666667` stand
+    als `34.2166666667` da. Beide Zahlen sind gültig; kein Prüflauf konnte
+    ahnen, dass die zweite falsch ist.
+  · Die Ausrichtungsknöpfe `⟨ ≡ ⟩` sahen auf dem Bildschirm aus wie Klammern.
+  · Ein zweiter Fokusrahmen zog eine blaue Linie durchs Bild, die nichts
+    bedeutete.
+  · Am Telefon stand die halbe Werkzeugleiste ausserhalb des Bildes — darunter
+    der Weg zu „Als Excel speichern".
+
+55.2 Und die Lehre daraus für Prüfungen
+
+Die erste Prüfung gegen die abgeschnittene Zahl mass `scrollWidth` gegen
+`clientWidth`. Gemessen ergab das für eine 21-stellige Zahl in einer 109 px
+breiten Zelle: 109 gegen 109.
+
+Der Grund ist Flexbox — der Text ist ein anonymes Flex-Element und wird
+GESTAUCHT statt überzustehen. Es gibt gar keinen überstehenden Inhalt zu
+messen; abgeschnitten wird trotzdem.
+
+Eine Prüfung, die immer „passt schon" sagt, ist keine Prüfung. Wer eine neue
+schreibt, prüft zuerst, ob sie überhaupt rot werden KANN.
+
+55.3 Nach jeder Änderung ein Bild
+
+Redur will die Bilder direkt im Gespräch sehen — nach jeder Gestaltungs-
+änderung und nach jeder neuen Sache. Das ist keine Höflichkeit, sondern der
+kürzeste Weg zu den vier Fehlern oben.

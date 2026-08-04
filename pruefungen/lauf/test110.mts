@@ -277,5 +277,184 @@ p('Die Kennungen bleiben', zurueck.blaetter[0].id === b0.id);
    Mappe beim Speichern etwas verloren, das beim Rechnen wieder entsteht. */
 gleich('Es war nichts nachzurechnen', r2.geaendert, []);
 
+
+/* ==========================================================================
+ * 8 · EINE ZELLE LEEREN WIRFT DIE GESTALTUNG NICHT WEG
+ * ------------------------------------------------------------------------
+ * `setze(…, '')` hat den ganzen Eintrag gelöscht — mit Fett, Ausrichtung
+ * und Währung. Wer eine Spalte formatiert, die Zahlen probeweise löscht und
+ * neu tippt, stand wieder am Anfang und wusste nicht, warum.
+ * ========================================================================*/
+console.log('\n8 · Leeren behält die Gestaltung');
+
+{
+  const b = Spreadsheet.neuesBlatt();
+  Spreadsheet.setze(b, 'A1', '12');
+  b.zellen['A1'].stil = { fett: true, format: { art: 'waehrung', stellen: 2 } };
+  Spreadsheet.setze(b, 'A1', '');
+  p('Die Zelle ist noch da', !!b.zellen['A1']);
+  p('… ohne Inhalt', b.zellen['A1'] && b.zellen['A1'].wert === '');
+  p('… aber mit Fett', !!(b.zellen['A1'] && b.zellen['A1'].stil && b.zellen['A1'].stil.fett));
+
+  /* Eine Zelle OHNE Gestaltung verschwindet weiterhin ganz — sonst füllt
+     sich das Blatt mit leeren Einträgen und die Sicherung wächst ohne
+     einen einzigen Inhalt. */
+  Spreadsheet.setze(b, 'B1', '5');
+  Spreadsheet.setze(b, 'B1', '');
+  p('Eine Zelle ohne Gestaltung verschwindet ganz', !b.zellen['B1']);
+
+  /* Wahrheitswerte und erzwungener Text. */
+  Spreadsheet.setze(b, 'C1', 'WAHR');
+  p('WAHR ist ein Wahrheitswert', b.zellen['C1'].wert === true);
+  Spreadsheet.setze(b, 'C2', 'falsch');
+  p('falsch auch, ohne Rücksicht auf Gross und Klein', b.zellen['C2'].wert === false);
+  Spreadsheet.setze(b, 'C3', "'0815");
+  p('Ein führendes Hochkomma erzwingt Text', b.zellen['C3'].wert === '0815');
+  Spreadsheet.setze(b, 'C4', '0815');
+  p('… ohne Hochkomma wäre es die Zahl 815', b.zellen['C4'].wert === 815);
+}
+
+/* ==========================================================================
+ * 9 · BEZÜGE WANDERN MIT
+ * ------------------------------------------------------------------------
+ * DIE STELLE, AN DER EINE TABELLE STILL FALSCH RECHNET. Wird über Zeile 5
+ * etwas eingefügt und `=SUMME(A1:A9)` bleibt stehen, fehlt ab sofort eine
+ * Zeile in jeder Summe. Nichts stürzt ab, nichts leuchtet rot — die Zahl
+ * ist einfach falsch, und niemand merkt es, weil sie plausibel aussieht.
+ * ========================================================================*/
+console.log('\n9 · Bezüge nach Einfügen, Löschen und Ausfüllen');
+
+/* ZUERST: dass der Zerleger das Dollarzeichen überhaupt sieht. Er sah es
+   nicht — `\b` passt nicht vor ein `$`, also blieb es draussen stehen und
+   `=$A$1` wurde zu `$prop("A1")`. Feste Bezüge gab es damit nie, und beim
+   Ausfüllen wanderte `$A$1` mit, statt stehen zu bleiben. */
+gleich('Ein fester Bezug wird ganz gelesen',
+  Spreadsheet.uebersetze('=$A$1').quelle, 'prop("A1")');
+gleich('… auch halb fest', Spreadsheet.uebersetze('=$A1+A$2').quelle, 'prop("A1")+prop("A2")');
+gleich('… und als Bereich', Spreadsheet.uebersetze('=SUMME($A$1:$A$2)').quelle,
+  'SUMME(prop("A1"), prop("A2"))');
+gleich('Die wissenschaftliche Schreibweise bleibt eine Zahl',
+  Spreadsheet.uebersetze('=2e6+A1').quelle, '2e6+prop("A1")');
+
+gleich('Ausfüllen nach unten verschiebt mit', Spreadsheet.verschiebe('=A1+B1', 1, 0), '=A2+B2');
+gleich('… nach rechts ebenso', Spreadsheet.verschiebe('=A1+A2', 0, 1), '=B1+B2');
+gleich('$ hält die Spalte fest', Spreadsheet.verschiebe('=$A1', 0, 2), '=$A1');
+gleich('$ hält die Zeile fest', Spreadsheet.verschiebe('=A$1', 3, 0), '=A$1');
+gleich('Beides fest heisst gar nicht bewegen', Spreadsheet.verschiebe('=$A$1', 5, 5), '=$A$1');
+gleich('Ein Bereich wandert ganz', Spreadsheet.verschiebe('=SUMME(A1:A3)', 1, 0), '=SUMME(A2:A4)');
+gleich('Über den Rand hinaus wird die Formel #BEZUG!',
+  Spreadsheet.verschiebe('=A1', -1, 0), '=#BEZUG!');
+gleich('Eine Zeichenkette bleibt unangetastet',
+  Spreadsheet.verschiebe('="A1 ist leer"', 1, 0), '="A1 ist leer"');
+gleich('Ein Funktionsname ist kein Bezug',
+  Spreadsheet.verschiebe('=SUMME(A1)', 1, 0), '=SUMME(A2)');
+gleich('Ein Wert ohne = wird nicht angefasst', Spreadsheet.verschiebe('A1', 1, 0), 'A1');
+
+gleich('Zeile eingefügt: der Bereich wächst',
+  Spreadsheet.bezuegeNachEingriff('=SUMME(A1:A9)', 'zeile', 4, 1), '=SUMME(A1:A10)');
+gleich('… und ein fester Bezug wandert MIT',
+  Spreadsheet.bezuegeNachEingriff('=$A$9', 'zeile', 4, 1), '=$A$10');
+gleich('Zeile gelöscht: der Bereich schrumpft',
+  Spreadsheet.bezuegeNachEingriff('=SUMME(A1:A9)', 'zeile', 4, -1), '=SUMME(A1:A8)');
+gleich('Zeigt eine Formel auf die gelöschte Zeile, wird sie #BEZUG!',
+  Spreadsheet.bezuegeNachEingriff('=A5*2', 'zeile', 4, -1), '=#BEZUG!');
+gleich('Spalte eingefügt: die Buchstaben rücken',
+  Spreadsheet.bezuegeNachEingriff('=B1+C1', 'spalte', 1, 1), '=C1+D1');
+
+{
+  /* Und jetzt am ganzen Blatt, nicht nur am Text. */
+  const b = Spreadsheet.neuesBlatt();
+  Spreadsheet.setze(b, 'A1', '1');
+  Spreadsheet.setze(b, 'A2', '2');
+  Spreadsheet.setze(b, 'A3', '3');
+  Spreadsheet.setze(b, 'B1', '=SUMME(A1:A3)');
+  Spreadsheet.rechne(b);
+  gleich('Vorher: die Summe stimmt', Spreadsheet.wert(b, 'B1'), 6);
+
+  Spreadsheet.zeileEinfuegen(b, 1);        /* eine Zeile über der zweiten */
+  Spreadsheet.setze(b, 'A2', '10');
+  Spreadsheet.rechne(b);
+  gleich('Die Zahlen sind mitgezogen', Spreadsheet.wert(b, 'A3'), 2);
+  gleich('Der Bereich hat sich geweitet', Spreadsheet.eingabe(b, 'B1'), '=SUMME(A1:A4)');
+  gleich('Und die neue Zahl zählt mit', Spreadsheet.wert(b, 'B1'), 16);
+
+  Spreadsheet.zeileLoeschen(b, 1);
+  Spreadsheet.rechne(b);
+  gleich('Nach dem Löschen wieder wie vorher', Spreadsheet.wert(b, 'B1'), 6);
+  gleich('… und der Bereich auch', Spreadsheet.eingabe(b, 'B1'), '=SUMME(A1:A3)');
+}
+
+{
+  /* Die Falle beim Einfügen: von vorn nach hinten kopiert überschreibt
+     Zeile 5 die Zeile 6, bevor die selbst umgezogen ist. */
+  const b = Spreadsheet.neuesBlatt();
+  for (let z = 0; z < 5; z++) Spreadsheet.setze(b, 'A' + (z + 1), String(z + 1));
+  Spreadsheet.zeileEinfuegen(b, 0);
+  gleich('Beim Einfügen geht keine Zeile verloren',
+    [1, 2, 3, 4, 5].map(z => Spreadsheet.wert(b, 'A' + (z + 1))), [1, 2, 3, 4, 5]);
+  p('… und die erste Zeile ist leer', Spreadsheet.wert(b, 'A1') === '');
+}
+
+/* ==========================================================================
+ * 10 · DER ANFASSER HÄLT, WAS ER VERSPRICHT
+ * ------------------------------------------------------------------------
+ * `DESIGN-TABELLE.md` nennt das Quadrat unten rechts „das Zeichen, an dem
+ * ein Mensch die Tabelle als Tabelle erkennt". Ein Zeichen, das nichts tut,
+ * ist eine Lüge in der Oberfläche.
+ * ========================================================================*/
+console.log('\n10 · Ausfüllen');
+
+{
+  const b = Spreadsheet.neuesBlatt();
+  Spreadsheet.setze(b, 'A1', '2');
+  Spreadsheet.setze(b, 'A2', '4');
+  Spreadsheet.fuelle(b, { vonZ: 0, bisZ: 1, vonS: 0, bisS: 0 }, 5, 0);
+  gleich('Zwei Zahlen setzen die Reihe fort',
+    [2, 3, 4, 5].map(z => Spreadsheet.wert(b, 'A' + (z + 1))), [6, 8, 10, 12]);
+
+  const c = Spreadsheet.neuesBlatt();
+  Spreadsheet.setze(c, 'A1', 'Montag');
+  Spreadsheet.fuelle(c, { vonZ: 0, bisZ: 0, vonS: 0, bisS: 0 }, 2, 0);
+  gleich('Ein einzelner Text wird wiederholt',
+    [1, 2].map(z => Spreadsheet.wert(c, 'A' + (z + 1))), ['Montag', 'Montag']);
+
+  const d = Spreadsheet.neuesBlatt();
+  Spreadsheet.setze(d, 'A1', '3');
+  Spreadsheet.setze(d, 'A2', '4');
+  Spreadsheet.setze(d, 'B1', '=A1*2');
+  Spreadsheet.fuelle(d, { vonZ: 0, bisZ: 0, vonS: 1, bisS: 1 }, 1, 1);
+  gleich('Eine Formel wird mitverschoben', Spreadsheet.eingabe(d, 'B2'), '=A2*2');
+  Spreadsheet.rechne(d);
+  gleich('… und rechnet dann auch richtig', Spreadsheet.wert(d, 'B2'), 8);
+
+  /* Ausfüllen darf das Blatt wachsen lassen — sonst fällt der Rest weg. */
+  const e = Spreadsheet.neuesBlatt('T', 3, 3);
+  Spreadsheet.setze(e, 'A1', '1');
+  Spreadsheet.fuelle(e, { vonZ: 0, bisZ: 0, vonS: 0, bisS: 0 }, 9, 0);
+  p('Das Blatt wächst beim Ausfüllen mit', e.zeilen >= 10, String(e.zeilen));
+}
+
+/* ==========================================================================
+ * 11 · SORTIEREN
+ * ========================================================================*/
+console.log('\n11 · Sortieren');
+
+{
+  const b = Spreadsheet.neuesBlatt();
+  [['Birne', '3'], ['Apfel', '10'], ['Citrone', '']].forEach(([n, z], i) => {
+    Spreadsheet.setze(b, 'A' + (i + 1), n);
+    Spreadsheet.setze(b, 'B' + (i + 1), z);
+  });
+  Spreadsheet.sortiere(b, 0, 0, 2, true);
+  gleich('Nach Text aufsteigend',
+    [1, 2, 3].map(z => Spreadsheet.wert(b, 'A' + z)), ['Apfel', 'Birne', 'Citrone']);
+  gleich('Die ganze Zeile geht mit',
+    [1, 2].map(z => Spreadsheet.wert(b, 'B' + z)), [10, 3]);
+
+  Spreadsheet.sortiere(b, 1, 0, 2, true);
+  gleich('Nach Zahl aufsteigend — und Leeres steht unten',
+    [1, 2, 3].map(z => Spreadsheet.wert(b, 'B' + z)), [3, 10, '']);
+}
+
 console.log(`\n  Suite 74 — Der Tabellenkern: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

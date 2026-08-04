@@ -448,3 +448,23 @@ Passwörter nur als Abdruck · zeitkonstanter Vergleich · HTML gesäubert · ke
 ungeprüften Weiterleitungen nach OAuth · CORS eingeschränkt · serverseitige
 Rechte · keine geheimen Schlüssel im Frontend · Eingaben begrenzt · Bremse ·
 Kopfzeilen · keine sensiblen Daten in Logs.
+
+**Der Tabellenblock** — gefunden beim Bauen, alle mit einem Prüflauf dahinter.
+
+| | was es war | hält es |
+|---|---|---|
+| T1 | Feste Bezüge gab es nicht: `\b` passt nicht vor `$`, aus `=$A$1` wurde `$prop("A1")` — beim Ausfüllen wanderte `$A$1` mit, statt stehen zu bleiben | `test110` |
+| T2 | Eine zu lange Zahl wurde vorne abgeschnitten und zeigte damit **eine andere Zahl** (`634.21…` als `34.21…`) | `test111` |
+| T3 | Das blosse Öffnen einer Seite schrieb in die Ablage: neues `edited`, ein Schritt im Rückgängig-Stapel. Beim Abgleich hätte das nur-angesehene Gerät gegen die echte Änderung gewonnen | `test111` |
+| T4 | Jedes Neuzeichnen hängte einen `mouseup` ans Dokument, den nichts abhängte | `test111` |
+| T5 | `Entf` löschte mit dem Inhalt auch Fett, Ausrichtung und Währung | `test110` |
+| T6 | Am Telefon stand die halbe Werkzeugleiste ausserhalb des Bildes — darunter der Weg zu „Als Excel speichern" — und das Eingabefeld war auf null Pixel gequetscht | `test111` |
+| T7 | Am Telefon war jede Spalte zu schmal für einen Betrag: bei 16 px Schrift stand bei jedem `1’450.00 CHF` ein `###` | `test111` |
+| T8 | Das Raster hatte keinen sichtbaren Fokus — mit der Tastatur sprang man hinein, und nichts änderte sich | `test111` |
+| T9 | Ein Fehlerwert stand ohne Erklärung da: `#NAME?` und sonst nichts | `test111` |
+
+**Und ein Fehler an einer Prüfung**, der schlimmer ist als die neun oben: die
+erste Prüfung gegen T2 mass `scrollWidth` gegen `clientWidth` und bekam für
+eine 21-stellige Zahl in 109 px: 109 gegen 109. Flexbox staucht den Text,
+statt ihn überstehen zu lassen — es gibt gar keinen überstehenden Inhalt.
+Die Prüfung hätte für immer grün gesagt.

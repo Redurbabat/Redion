@@ -15,7 +15,7 @@
  * unten ist der Schalter dafür.
  * ==========================================================================*/
 
-const VERSION = 'notizen-v13';
+const VERSION = 'notizen-v14';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -60,6 +60,7 @@ const GRUNDSTOCK = [
   './quell/bereiche/datenbanken/formeln/laufzeit.js',
   './quell/bereiche/wissen/verweise.js',
   './quell/bereiche/bloecke/arten/zeichenflaeche.js',
+  './quell/bereiche/spreadsheet/ansicht.js',
   './quell/bereiche/editor/ansicht/editor.js',
   './quell/bereiche/datenbanken/dienst.js',
   './quell/bereiche/datenbanken/steuerung.js',
@@ -130,6 +131,7 @@ const GRUNDSTOCK = [
   './quell/schale/stil/werkzeuge.css',
   './quell/schale/stil/ansichten.css',
   './quell/schale/stil/einstellungen.css',
+  './quell/schale/stil/tabelle.css',
   './quell/schale/stil/bausteine.css',
   './oeffentlich/manifest.webmanifest',
   './oeffentlich/favicon.ico',

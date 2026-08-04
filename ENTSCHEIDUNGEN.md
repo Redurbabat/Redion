@@ -1369,3 +1369,85 @@ Ausgabe, kein Quelltext, und `test105` hält es ohnehin an seiner `.ts`.
 Beschlossen. Durchgesetzt für alles Neue ab sofort; das Verzeichnis in
 `test109.ts` hält den Bestand fest und ist zugleich die Fortschrittsanzeige
 der Migration.
+
+
+---
+
+## E29 · Der Tabellenblock — was er ist und was er bewusst nicht ist
+
+**Frage.** Redion hat Datenbanken mit Formeln. Wozu dann ein zweiter Ort, an
+dem gerechnet wird — und wie weit soll er gehen?
+
+**Beschluss.**
+
+Eine Datenbank und eine Tabelle beantworten verschiedene Fragen. In einer
+Datenbank hat jede Zeile dieselbe Form: Spalte „Preis", Spalte „Datum", und
+eine Formel gilt für die ganze Spalte. In einer Tabelle steht in `C7` etwas
+anderes als in `C8`, und genau das ist ihr Zweck — ein Haushaltsplan, ein
+Angebot, eine schnelle Rechnung nebenher. Wer das in einer Datenbank versucht,
+legt für drei Zahlen ein Schema an.
+
+Der Block liegt deshalb daneben und nicht darin.
+
+**Es gibt keine zweite Formelmaschine.** Eine Zellformel wird in die Sprache
+übersetzt, die `formeln/laufzeit.js` seit jeher spricht:
+
+```txt
+=SUMME(A1:A3)   →   SUMME(prop("A1"), prop("A2"), prop("A3"))
+```
+
+158 Funktionen, 262 Registereinträge, ein Zerleger, an dem heute alles hängt.
+Eine zweite Maschine hiesse: jede Verbesserung zweimal, jeder Fehler an einer
+Stelle behoben und an der anderen nicht. Übersetzen kostet dreissig Zeilen.
+
+**Der Kern kennt keinen Bildschirm.** `src/core/spreadsheet/` rechnet, kennt
+Adressen, Abhängigkeiten und Zirkelbezüge — und hat kein `document`. Das ist
+der Grund, warum `test110` in Sekunden läuft statt in Minuten, und warum ein
+Rechenfehler auffällt, bevor irgendeine Oberfläche existiert.
+
+**Was der Block kann**
+
+Rechnen mit allen 158 Funktionen · Zirkelbezüge erkennen und benennen ·
+Zeilen und Spalten einfügen und löschen, mit nachgezogenen Bezügen ·
+Ausfüllen (Zahlenreihe, Formel, Wiederholung) · Sortieren · Spaltenbreiten ·
+Fett, Kursiv, Ausrichtung, Währung, Prozent · Kopieren und Einfügen als
+Tabulatortext, also mit Excel in beide Richtungen · Ausgabe als echte `.xlsx`
+und als CSV · Tastaturbedienung wie in einem Tabellenprogramm.
+
+**Was er bewusst nicht kann**
+
+*Mehrere Blätter je Block.* Die Datenstruktur trägt sie (`mappe.blaetter`),
+die Oberfläche zeigt eines. Zwei Blätter brauchen Reiter, blattübergreifende
+Bezüge (`Blatt2!A1`) und eine Antwort darauf, was beim Löschen eines Blattes
+mit den Bezügen darauf geschieht. Das ist ein eigener Schritt, kein Detail.
+
+*Diagramme.* Ein Diagramm ist ein eigener Block, kein Teil der Tabelle.
+
+*`#DIV/0!` und `#ZAHL!`.* Die Laufzeit rechnet abwehrend: `1/0` ergibt 0. Sie
+meldet nichts, also kann der Kern nichts weiterreichen. Dafür bräuchte
+`laufzeit.js` einen `FormulaErrorMode` — der Typ steht schon da. Ein halber
+Fehlerwert wäre schlimmer als keiner: er sähe aus wie Excel und wäre es an
+der nächsten Zelle nicht mehr.
+
+*Ziehauswahl am Telefon.* Der Anfasser hängt an `mousemove`; am Finger würde
+das Ziehen zum Rollen. Er ist dort deshalb ausgeblendet, und Ausfüllen liegt
+im Format-Blatt. `redion-mobile-ux` stellt die komplexe Ziehauswahl
+ausdrücklich zurück — ein Anfasser, der beim Anfassen nichts tut, wäre
+schlimmer als keiner.
+
+**Die eine Regel, die über allem steht**
+
+**Eine Zahl, die nicht in ihre Spalte passt, darf keine andere Zahl sein.**
+
+Rechtsbündiger Text wird vorne abgeschnitten. Aus `634.2166666667` wurde auf
+dem Bildschirm `34.2166666667` — vollständig aussehend, plausibel, falsch.
+Der Block schreibt die Zahl deshalb erst kürzer (`634.216667`, voller Wert im
+Titel) und zeigt `###`, wenn nicht einmal die Grössenordnung hineingeht.
+
+Das ist kein Schönheitsfehler-Fix. Es ist derselbe Grundsatz wie überall in
+diesem Projekt: **lieber sichtbar nichts als unsichtbar etwas Falsches.**
+
+**Status**
+
+Beschlossen und umgesetzt. `test110` prüft den Kern ohne Browser (111 Punkte),
+`test111` den Block im Browser (60 Punkte, darunter hell/dunkel und 390 px).
