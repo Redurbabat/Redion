@@ -115,10 +115,25 @@ p('Jedes Fenster hat eine eigene Kennung', draht.kennung !== kennungB,
   `${draht.kennung} / ${kennungB}`);
 
 /* Ein Fenster darf sich nicht selbst hören — sonst läse es jede eigene
-   Änderung sofort wieder von der Platte zurück. */
+   Änderung sofort wieder von der Platte zurück.
+   ---------------------------------------------------------------------------
+   HIER STAND EINE FLOCKE, und sie war teuer: gezählt wurde vorher **jede**
+   Nachricht, die in diesem Viertelsekundenfenster ankam. B hat aus den
+   Schritten davor aber noch Schreibvorgänge in der Warteschlange und meldet
+   sie verspätet — etwa jeder dritte Lauf war deshalb rot, obwohl der Filter
+   tadellos arbeitete.
+
+   Nachgemessen mit einer Probe, die mitschreibt, WER gesendet hat: in jedem
+   roten Fall trug die Nachricht B's Kennung und einen fremden Blockschlüssel.
+   Nie die eigene. Der Filter in `nachbarn.js` hat nie versagt.
+
+   Gezählt wird jetzt das, was die Prüfung im Namen trägt: Nachrichten **von
+   mir selbst**. Was der Nachbar sagt, darf ankommen — das ist der Sinn der
+   ganzen Einrichtung. */
 const selbstgespraech = await A.evaluate(async () => {
+  const meine = Nachbarn.kennung();
   let gehoert = 0;
-  const ab = Nachbarn.beiNachricht(() => gehoert++);
+  const ab = Nachbarn.beiNachricht((n) => { if (n && n.von === meine) gehoert++; });
   Nachbarn.sende({ art: 'geaendert', schluessel: ['blocks:egal'] });
   await new Promise(f => setTimeout(f, 250));
   ab();

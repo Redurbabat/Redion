@@ -70,18 +70,18 @@ Register.module = (() => {
 
   /**
    * Einen Bereich aufmachen.
-   * Gibt es ihn nicht, passiert nichts — und es steht im Melder, warum.
+   * Gibt es ihn nicht, passiert nichts — und es steht im Reporter, warum.
    * Ein stiller Fehlschlag hier sähe aus wie ein toter Knopf.
    */
   const oeffne = (id) => {
     const m = eines(id);
     if (!m) {
-      if (typeof Melder !== 'undefined') Melder.warnung('Register', 'Bereich unbekannt: ' + id);
+      if (typeof Reporter !== 'undefined') Reporter.warn('Register', 'Bereich unbekannt: ' + id);
       return false;
     }
     try { m.oeffnen(); return true; }
     catch (e) {
-      if (typeof Melder !== 'undefined') Melder.fehler('Register', 'Bereich ' + id + ': ' + e.message, e);
+      if (typeof Reporter !== 'undefined') Reporter.error('Register', 'Bereich ' + id + ': ' + e.message, e);
       return false;
     }
   };

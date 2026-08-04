@@ -49,12 +49,12 @@ Register.vorlagen = (() => {
   const bauen = (id) => {
     const v = eines(id);
     if (!v) {
-      if (typeof Melder !== 'undefined') Melder.warnung('Register/vorlagen', 'Unbekannt: ' + id);
+      if (typeof Reporter !== 'undefined') Reporter.warn('Register/vorlagen', 'Unbekannt: ' + id);
       return null;
     }
     try { return (typeof Galerie !== 'undefined') ? Galerie.bauen(id) : (v.bauen && v.bauen()); }
     catch (e) {
-      if (typeof Melder !== 'undefined') Melder.fehler('Register/vorlagen', id + ': ' + e.message, e);
+      if (typeof Reporter !== 'undefined') Reporter.error('Register/vorlagen', id + ': ' + e.message, e);
       return null;
     }
   };

@@ -321,7 +321,17 @@ const pruef = (n, ist, soll) => {
   pruef('Stundenmarke trägt die Ortsstunde', marken.stunde, '2026-08-03T07');
   pruef('Samstag hat keine Werktagsmarke', marken.wochenende, null);
 
-  /* Eine wiederkehrende Automation mit Zone läuft genau einmal je Takt */
+  /* Eine wiederkehrende Automation mit Zone läuft genau einmal je Takt.
+     ---------------------------------------------------------------------
+     HIER STAND EINE FLOCKE, die genau einmal pro Stunde zuschlug: der Takt
+     ist `stuendlich`, die Marke also `JJJJ-MM-TTThh`. Fiel der Stundenwechsel
+     zwischen die beiden Aufrufe, war die Marke eine andere — die Automation
+     lief zu Recht ein zweites Mal, und die Prüfung meldete einen Fehler, den
+     es nicht gab. Ein Lauf um 12:59:59 war rot, derselbe Lauf um 12:30 grün.
+
+     Geprüft wird jetzt die Regel selbst: **ein Lauf je Marke.** Wechselt die
+     Marke unterwegs, sind zwei Läufe richtig — und die Prüfung sagt das,
+     statt zu scheitern. */
   const wdh = await p.evaluate(async (x) => {
     const c = Store.getCollection(x.coll);
     c.automationen = [{ id: 'w1', name: 'Jeden Tag', an: true,
@@ -330,17 +340,21 @@ const pruef = (n, ist, soll) => {
     Store.updateCollection(c.id, { automationen: c.automationen });
     Store.rowsOf(c.id).forEach(z => Store.setProp(z.id, 'zahl', 0));
     await new Promise(r => setTimeout(r, 400));
+    const markeVorher = Datenbank.taktMarke('stuendlich', '00:00', new Date(), 'UTC');
     Datenbank.wiederkehrendeAutomationen();
     await new Promise(r => setTimeout(r, 500));
     const nach1 = Store.rowsOf(c.id)[0].props.zahl;
     Datenbank.wiederkehrendeAutomationen();      /* derselbe Takt — nichts */
     await new Promise(r => setTimeout(r, 400));
     const nach2 = Store.rowsOf(c.id)[0].props.zahl;
+    const markeNachher = Datenbank.taktMarke('stuendlich', '00:00', new Date(), 'UTC');
     const marke = Store.getCollection(c.id).automationen[0].zuletzt;
-    return { nach1, nach2, marke, mitZone: /@UTC$/.test(marke || '') };
+    return { nach1, nach2, marke, mitZone: /@UTC$/.test(marke || ''),
+             stundeGewechselt: markeVorher !== markeNachher };
   }, auf);
   pruef('Wiederkehrend läuft einmal',    wdh.nach1, 1);
-  pruef('Und im selben Takt kein zweites Mal', wdh.nach2, 1);
+  pruef('Und im selben Takt kein zweites Mal', wdh.nach2,
+        wdh.stundeGewechselt ? 2 : 1);
   pruef('Die Marke trägt die Zone',      wdh.mitZone, true);
 
   /* --- 8 · Der Dialog zeigt alles Neue ---------------------------------- */

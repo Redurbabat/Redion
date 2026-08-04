@@ -206,11 +206,11 @@ const Store = (() => {
     if (typeof Formen !== 'undefined') {
       try {
         const b = Formen.zustand(true);
-        if (b && b.geheilt && typeof Melder !== 'undefined')
-          Melder.info('Ablage', b.geheilt + ' von ' + b.geprueft +
+        if (b && b.geheilt && typeof Reporter !== 'undefined')
+          Reporter.info('Ablage', b.geheilt + ' von ' + b.geprueft +
                       ' Sätzen ergänzt', b.stellen);
       } catch (e) {
-        if (typeof Melder !== 'undefined') Melder.fehler('Ablage', 'Selbstheilung: ' + e.message, e);
+        if (typeof Reporter !== 'undefined') Reporter.error('Ablage', 'Selbstheilung: ' + e.message, e);
       }
     }
 
@@ -219,7 +219,7 @@ const Store = (() => {
        jemand nachtragen — einmal, hier, und nie wieder. */
     if (typeof Umzuege !== 'undefined') {
       try { Umzuege.laufen(); }
-      catch (e) { if (typeof Melder !== 'undefined') Melder.fehler('Ablage', 'Umzug: ' + e.message, e); }
+      catch (e) { if (typeof Reporter !== 'undefined') Reporter.error('Ablage', 'Umzug: ' + e.message, e); }
     }
 
     /* Erst jetzt den Draht zu den anderen Fenstern anschliessen — vorher
@@ -344,7 +344,7 @@ const Store = (() => {
    * hat über hundert Aufrufstellen und wird mitten im Zeichnen gerufen.
    * Der Weg dazwischen: der Aufruf sammelt beim Absteigen alle Kennungen ein
    * und stösst danach `purgeAnhaenge` an. Geht dabei etwas schief, sagt es
-   * das über den Melder — still schlucken wäre das, was den Fehler überhaupt
+   * das über den Reporter — still schlucken wäre das, was den Fehler überhaupt
    * erst so lange verborgen hat.
    *
    * NACHEINANDER, NICHT AUF EINMAL. Der erste Wurf stand hier als
@@ -374,8 +374,8 @@ const Store = (() => {
       await Promise.all(geloescht);
       meldeAnAndereFenster('geaendert', gesammelt.map(x => 'blocks:' + x));
       for (const x of gesammelt) await purgeAnhaenge(x);
-    })().catch(err => { if (typeof Melder !== 'undefined')
-      Melder.fehler('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
+    })().catch(err => { if (typeof Reporter !== 'undefined')
+      Reporter.error('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
   };
 
   /**
@@ -878,12 +878,12 @@ const Store = (() => {
           const r = t.objectStore(store).put(val);
           r.onerror = (e) => {
             e.preventDefault();          /* nicht den ganzen Stapel abbrechen */
-            if (typeof Melder !== 'undefined')
-              Melder.warnung('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
+            if (typeof Reporter !== 'undefined')
+              Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
           };
         } catch (err) {
-          if (typeof Melder !== 'undefined')
-            Melder.warnung('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
+          if (typeof Reporter !== 'undefined')
+            Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
         }
       });
       fertig = new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });

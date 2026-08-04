@@ -129,35 +129,37 @@ p('Gruppieren',                   JSON.stringify(r.gruppiert) === '["a","b"]');
 console.log('\n— Bremse —');
 r = await seite.evaluate(async () => {
   let n = 0;
-  const b = Bremse.nachlauf(() => n++, 50);
+  const b = Throttle.debounce(() => n++, 50);
   b(); b(); b();
   const sofort = n;
   await new Promise(r2 => setTimeout(r2, 120));
   const nach = n;
 
   let m = 0;
-  const t = Bremse.takt(() => m++, 60);
+  const t = Throttle.throttle(() => m++, 60);
   t(); t(); t();
   const taktSofort = m;
   await new Promise(r2 => setTimeout(r2, 120));
 
   let e = 0;
-  const einmal = Bremse.einmal(() => ++e);
+  const einmal = Throttle.once(() => ++e);
   einmal(); einmal();
 
   let g = 0;
-  const gem = Bremse.gemerkt((x) => { g++; return x * 2; });
+  const gem = Throttle.memoize((x) => { g++; return x * 2; });
   gem(3); gem(3); gem(4);
 
-  const b2 = Bremse.nachlauf(() => n += 10, 5000);
-  b2(); b2.sofort();
+  const b2 = Throttle.debounce(() => n += 10, 5000);
+  b2(); b2.flush();
 
-  return { sofort, nach, taktSofort, m, e, g, nachSofort: n };
+  return { sofort, nach, taktSofort, m, e, g, nachSofort: n,
+           alterNameWeg: typeof Bremse === 'undefined' };
 });
 p('Nachlauf wartet und läuft einmal', r.sofort === 0 && r.nach === 1, JSON.stringify(r));
 p('Takt lässt den ersten sofort durch', r.taktSofort === 1 && r.m === 2, JSON.stringify(r));
 p('einmal() rechnet einmal',      r.e === 1, String(r.e));
 p('gemerkt() rechnet je Eingabe einmal', r.g === 2, String(r.g));
+p('Der alte Name Bremse ist weg',  r.alterNameWeg === true);
 p('sofort() holt die letzte Eingabe nach', r.nachSofort === 11, String(r.nachSofort));
 
 console.log('\n— Säubern —');
@@ -298,16 +300,23 @@ p('Der Steckbrief sagt, wo es läuft',
 
 console.log('\n— Melder —');
 r = await seite.evaluate(() => {
-  Melder.leeren();
-  Melder.info('Probe', 'etwas geschah');
-  Melder.warnung('Probe', 'etwas hakte');
-  const wert = Melder.behuetet('Probe', () => { throw new Error('absicht'); }, 'ersatz')();
-  return { anzahl: Melder.alles().length, zahlen: Melder.zahlen(),
-           wert, text: Melder.alsText().split('\n').length };
+  Reporter.clear();
+  Reporter.info('Probe', 'etwas geschah');
+  Reporter.warn('Probe', 'etwas hakte');
+  const wert = Reporter.guarded('Probe', () => { throw new Error('absicht'); }, 'ersatz')();
+  return { anzahl: Reporter.all().length, zahlen: Reporter.counts(),
+           wert, text: Reporter.toText().split('\n').length,
+           /* Die Stufennamen bleiben deutsch — sie sind Werte, keine
+              Bezeichner, und stehen so in der ausgegebenen Datei. */
+           stufenDeutsch: JSON.stringify(Reporter.LEVELS),
+           alterNameWeg: typeof Melder === 'undefined' };
 });
 p('Der Melder sammelt',            r.anzahl === 3, JSON.stringify(r.zahlen));
 p('behuetet gibt den Ersatz zurück', r.wert === 'ersatz', String(r.wert));
 p('Und alles lässt sich ausgeben', r.text === 3, String(r.text));
+p('Die Stufen heissen weiter deutsch',
+  r.stufenDeutsch === '["spur","info","warnung","fehler"]', r.stufenDeutsch);
+p('Der alte Name Melder ist weg',  r.alterNameWeg === true);
 
 await browser.close();
 if (fehler.length) { console.log('\nJS-Fehler:'); fehler.forEach(f => console.log('  ' + f)); }

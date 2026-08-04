@@ -106,7 +106,9 @@ src/
 │     ├─ ids.ts
 │     ├─ date.ts
 │     ├─ objects.ts
-│     └─ bytes.ts
+│     ├─ bytes.ts
+│     ├─ throttle.ts
+│     └─ reporter.ts
 ├─ registry/
 ├─ areas/
 └─ app/
@@ -148,7 +150,7 @@ Die Nummern sind die aus `CLAUDE.md` §52.16. Der Stand hier ist der wahre.
 | **TS-0** | Analyse: Struktur lesen, grosse Dateien finden, Import/Export/Backup finden, Testlage prüfen | ✅ erledigt |
 | **TS-1** | Werkzeuge: `typescript`, `tsconfig.json`, `npm run typecheck` | ✅ erledigt |
 | **TS-2** | Zentrale Typen unter `src/core/types/` | ✅ erledigt |
-| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Bytes, Entprellen, Melder, Säubern, Tempo | ◐ vier von acht — `ids` `date` `objects` `bytes` stehen |
+| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Bytes, Bremse, Melder, Säubern | ◐ sechs von sieben — nur `Saeubern` fehlt noch |
 | **TS-4** | `.redion`, ZIP, Dateien, Export/Import — mit Tests | offen |
 | **TS-5** | Die IndexedDB-Schicht. Sehr vorsichtig. | offen |
 | **TS-6** | Die Register | offen |

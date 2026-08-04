@@ -138,7 +138,7 @@ const Umzuege = (() => {
       let n = 0;
       try { n = u.lauf() || 0; }
       catch (e) {
-        if (typeof Melder !== 'undefined') Melder.fehler('Umzug ' + u.id, e.message, e);
+        if (typeof Reporter !== 'undefined') Reporter.error('Umzug ' + u.id, e.message, e);
         return;                     /* nicht als gelaufen merken — beim nächsten Start nochmal */
       }
       geaendert += n;
@@ -148,8 +148,8 @@ const Umzuege = (() => {
 
     if (neu.length) {
       Store.setMeta(GEMERKT, [...schon, ...neu]);
-      if (typeof Melder !== 'undefined')
-        Melder.info('Umzuege', neu.length + ' Umzug/Umzüge gelaufen, ' +
+      if (typeof Reporter !== 'undefined')
+        Reporter.info('Umzuege', neu.length + ' Umzug/Umzüge gelaufen, ' +
                     geaendert + ' Sätze ergänzt', bericht);
     }
     return { gelaufen: bericht, geaendert };

@@ -87,8 +87,8 @@ const Schalter = (() => {
     const e = eigene();
     e[name] = !!wert;
     if (typeof Store !== 'undefined') Store.setMeta(SCHLUESSEL, e);
-    if (typeof Melder !== 'undefined')
-      Melder.info('Schalter', name + ' ist jetzt ' + (wert ? 'an' : 'aus'));
+    if (typeof Reporter !== 'undefined')
+      Reporter.info('Schalter', name + ' ist jetzt ' + (wert ? 'an' : 'aus'));
     return true;
   };
 

@@ -235,9 +235,31 @@ wäre bequem und würde genau deshalb dafür sorgen, dass niemand die
 Aufrufstellen nachzieht — bis der Alias eines Tages verschwindet und es still
 bricht.
 
-### 6c — Die letzten vier kleinen Helfer
+### ~~6c — Bremse und Melder~~ · erledigt
 
-**Ziel** — Bremse · Melder · Säubern · Tempo nach `src/core/helpers/`.
+`throttle.ts` · `reporter.ts` → `quell/core/helpers/`.
+
+| Modul | in `quell/` | in Prüfläufen | Schnittstelle |
+|---|--:|--:|---|
+| `Bremse` | 0 | 5 | → `Throttle` |
+| `Melder` | 17 (10 Dateien) | 6 | → `Reporter` |
+
+**Verhalten gemessen:** 17 bzw. 22 Abläufe verglichen, kein Unterschied. Bei
+den Bremsen mit einer **gefälschten Uhr** für beide Fassungen — sonst hinge
+das Ergebnis am Rechner und nicht am Code.
+
+**Zwei Dinge blieben absichtlich deutsch:** die Stufennamen `spur` `info`
+`warnung` `fehler` (sie stehen so in der ausgegebenen Protokolldatei) und die
+Feldnamen eines Eintrags (`stufe` `wo` `text` `daten` `wann`) — sie sind die
+Form eines Datensatzes, den `all()` nach aussen gibt.
+
+**`Tempo` ist ausgesetzt**, nicht vergessen: es greift vierzehnmal ins DOM
+und fällt damit nicht unter „kleine, DOM-freie Helfer". Es gehört zu dem
+Schritt, der die Bereiche in `dienst` und `ansicht` trennt.
+
+### 6d — Säubern
+
+**Ziel** — `Saeubern` nach `src/core/helpers/sanitize.ts`.
 
 **Warum** — sie sind klein, DOM-frei und einzeln testbar. Jede migrierte
 Datei nimmt einen Eintrag aus der `any`-Liste in `src/global.d.ts`.

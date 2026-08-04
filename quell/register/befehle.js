@@ -64,8 +64,8 @@ Register.befehle = (() => {
         const teil = fn();
         if (Array.isArray(teil)) raus.push(...teil);
       } catch (e) {
-        if (typeof Melder !== 'undefined')
-          Melder.warnung('Register/befehle', 'Ein Lieferant hat versagt: ' + e.message, e);
+        if (typeof Reporter !== 'undefined')
+          Reporter.warn('Register/befehle', 'Ein Lieferant hat versagt: ' + e.message, e);
       }
     });
     return raus.filter(b => !b.zeigen || (() => {

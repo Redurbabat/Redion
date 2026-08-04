@@ -460,7 +460,7 @@ const Seitenleiste = (() => {
           z.innerHTML = `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span>`;
           z.addEventListener('click', () => {
             try { x.tun(); }
-            catch (e) { if (typeof Melder !== 'undefined') Melder.fehler('Seitenleiste', e.message, e); }
+            catch (e) { if (typeof Reporter !== 'undefined') Reporter.error('Seitenleiste', e.message, e); }
           });
           kasten.appendChild(z);
         });

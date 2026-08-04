@@ -36,4 +36,14 @@ type ISODateTime = string;
  * schrumpfen.
  */
 declare const Store: any;
-declare const Melder: any;
+
+/**
+ * Die Bestandspflege. `reporter.ts` reicht Fehler dorthin weiter — aber nur,
+ * wenn es sie gibt: sie liegt unter `quell/bereiche/`, wird später geladen
+ * und fehlt in Prüfläufen, die nur den Kern hochfahren. Deshalb steht an der
+ * Aufrufstelle ein `typeof`-Wächter und hier ein `any`.
+ *
+ * `Melder` stand bis zum Umzug hier. Er ist jetzt `reporter.ts` und braucht
+ * keine Zusage mehr — genau der Zweck dieser Liste.
+ */
+declare const Pflege: any;

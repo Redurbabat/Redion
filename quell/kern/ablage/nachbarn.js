@@ -53,7 +53,7 @@ const Nachbarn = (() => {
   const austeilen = (nachricht) => {
     if (!nachricht || nachricht.von === meine) return;
     hoerer.forEach(fn => { try { fn(nachricht); } catch (err) {
-      if (typeof Melder !== 'undefined') Melder.fehler('nachbarn', 'Ein Zuhörer ist gestolpert', err);
+      if (typeof Reporter !== 'undefined') Reporter.error('nachbarn', 'Ein Zuhörer ist gestolpert', err);
     } });
   };
 
@@ -92,8 +92,8 @@ const Nachbarn = (() => {
       /* Kein stiller Fehlschlag: ein Kanal, der nicht mehr sendet, heisst,
          dass zwei Fenster wieder blind nebeneinander schreiben. Das gehört
          gemeldet, auch wenn es nichts sofort kaputtmacht. */
-      if (typeof Melder !== 'undefined')
-        Melder.warnung('nachbarn', 'Die anderen Fenster sind nicht erreichbar', err);
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('nachbarn', 'Die anderen Fenster sind nicht erreichbar', err);
     }
     return false;
   };
