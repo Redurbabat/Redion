@@ -1318,9 +1318,35 @@ const Formula = (() => {
         }
         if (op === '-') return zahl(l) - zahl(r);
         if (op === '*') return zahl(l) * zahl(r);
-        if (op === '/') return zahl(r) === 0 ? 0 : zahl(l) / zahl(r);
-        if (op === '%') return zahl(r) === 0 ? 0 : zahl(l) % zahl(r);
-        if (op === '^') return Math.pow(zahl(l), zahl(r));
+        /* ─── TEILEN DURCH NULL: ZWEI ANTWORTEN, JE NACH FRAGESTELLER ────────
+         *
+         * In einer DATENBANK ist `0` richtig. Eine Spalte „Umsatz pro Kunde"
+         * über einer Zeile ohne Kunden soll keine Fehlermeldung zeigen — sie
+         * soll leer oder null sein und die Liste nicht rot färben. So rechnet
+         * diese Maschine seit jeher, und daran hängen bestehende Spalten.
+         *
+         * In einer TABELLE ist `0` falsch. Wer `=A1/B1` schreibt und B1 leer
+         * lässt, bekäme eine Null, die aussieht wie ein Ergebnis. Excel zeigt
+         * `#DIV/0!`, und zwar genau deswegen: die Zahl ist nicht null,
+         * sondern es gibt keine.
+         *
+         * `ctx.streng` entscheidet. Gesetzt wird es nur vom Tabellenkern
+         * (`umgebung.streng`); jede bestehende Datenbankformel läuft
+         * unverändert weiter — das war die Bedingung dafür, diese Datei
+         * überhaupt anzufassen. */
+        if (op === '/') {
+          if (zahl(r) === 0) { if (ctx.streng) throw new Error('#DIV/0!'); return 0; }
+          return zahl(l) / zahl(r);
+        }
+        if (op === '%') {
+          if (zahl(r) === 0) { if (ctx.streng) throw new Error('#DIV/0!'); return 0; }
+          return zahl(l) % zahl(r);
+        }
+        if (op === '^') {
+          const pot = Math.pow(zahl(l), zahl(r));
+          if (ctx.streng && !isFinite(pot)) throw new Error('#ZAHL!');
+          return pot;
+        }
 
         if (op === '==') return typeof l === typeof r ? l === r : text(l) === text(r);
         if (op === '!=') return typeof l === typeof r ? l !== r : text(l) !== text(r);
@@ -1533,7 +1559,35 @@ const Formula = (() => {
           }
         }
 
-        if (F[n]) return F[n](args);
+        /* ─── WAS IM STRENGEN MODUS KEINE ZAHL IST ───────────────────────────
+         *
+         * `sqrt` klemmt sein Argument bei null ab (`Math.max(0, …)`), damit
+         * eine Datenbankspalte nicht `NaN` zeigt. Für eine Tabelle ist das
+         * die falsche Antwort: `=WURZEL(-1)` ergibt dort keine Null, sondern
+         * `#ZAHL!`. Dasselbe für den Logarithmus von null oder weniger.
+         *
+         * Geprüft wird VOR dem Aufruf, weil die Funktion selbst das Problem
+         * schon weggerechnet hat — hinterher ist nichts mehr zu sehen. */
+        if (F[n]) {
+          /* NUR FÜR FUNKTIONEN, DIE ES GIBT — und das ist keine Kleinigkeit.
+             Der erste Entwurf prüfte davor, und damit ergab `=LOG(0)` ein
+             `#ZAHL!`. `LOG` gibt es in Redion aber gar nicht (es heisst
+             `LOG10`), und die richtige Antwort wäre `#NAME?` gewesen. Eine
+             Prüfung, die einen Tippfehler als Rechenfehler ausgibt, schickt
+             den Menschen an die falsche Stelle. */
+          if (ctx.streng) {
+            if (n === 'sqrt' && zahl(args[0]) < 0) throw new Error('#ZAHL!');
+            if ((n === 'ln' || n === 'log10' || n === 'log2') && zahl(args[0]) <= 0)
+              throw new Error('#ZAHL!');
+          }
+          const erg = F[n](args);
+          /* Und der Auffangnetz-Fall: alles, was trotzdem als NaN oder
+             Unendlich herauskommt, ist in einer Tabelle `#ZAHL!` und keine
+             Zahl, die man weiterrechnen sollte. */
+          if (ctx.streng && typeof erg === 'number' && !isFinite(erg))
+            throw new Error('#ZAHL!');
+          return erg;
+        }
         throw new Error(`Unbekannte Funktion: ${n}()`);
       }
     }
@@ -1562,7 +1616,11 @@ const Formula = (() => {
            runningSum, rank … · db: name => Liste der Zeilen einer anderen
            Datenbank — für findRows, sumWhere, countWhere … */
         zeile: umgebung && umgebung.zeile,
-        db:    umgebung && umgebung.db
+        db:    umgebung && umgebung.db,
+        /* Der strenge Modus — siehe die zwei Stellen oben. Ohne ihn rechnet
+           diese Maschine wie immer; das ist die Zusicherung, unter der sie
+           angefasst wurde. */
+        streng: !!(umgebung && umgebung.streng)
       });
       return { ok: true, wert };
     } catch (e) {

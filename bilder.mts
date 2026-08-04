@@ -133,6 +133,42 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
     }
   },
 
+  fehler: {
+    titel: 'Fehlerwerte, die sagen was los ist',
+    bauen: () => {
+      const w = window as any;
+      const seite = Object.values(Store.cache.blocks).find((b: any) => b.type === 'page' && b.alive) as any;
+      const blk = Store.addBlock(seite.id, 'spreadsheet', { text: 'Fehler' });
+      const bl = w.Spreadsheet.neueMappe('Fehler').blaetter[0];
+      const daten = [
+        ['Was', 'Formel', 'Ergebnis'],
+        ['Geteilt durch null', '=A1/B9', '=A2/B9'],
+        ['Wurzel aus minus', '=WURZEL(-1)', '=WURZEL(-1)'],
+        ['Funktion falsch geschrieben', '=LOG(10)', '=LOG(10)'],
+        ['Zwei Zellen im Kreis', '=C6', '=C5'],
+        ['Zu grosser Bereich', '', '=SUMME(A1:ZZ99999)'],
+        ['Geht auf', '=10/4', '=10/4']
+      ];
+      daten.forEach((z: string[], i: number) => z.forEach((v: string, s: number) =>
+        w.Spreadsheet.setze(bl, String.fromCharCode(65 + s) + (i + 1), v)));
+      ['A1', 'B1', 'C1'].forEach(a => { bl.zellen[a].stil = { fett: true, ausrichtung: 'mitte' }; });
+      bl.breiten = { 0: 210, 1: 150, 2: 130 };
+      blk.mappe = { id: 'f', name: 'Fehler', blaetter: [bl], aktiv: bl.id, erstellt: '', geaendert: '' };
+
+      const k = document.createElement('div');
+      k.id = 'bildkasten';
+      k.style.cssText = 'position:fixed; inset:0; z-index:600; background:var(--bg); padding:24px 20px; overflow:auto';
+      k.innerHTML = '<div id="bildinhalt" style="max-width:900px;margin:0 auto">' +
+        '<h1 style="font:700 30px var(--font);color:var(--text);margin:0 0 16px">Fehlerwerte</h1></div>';
+      document.body.appendChild(k);
+      document.getElementById('bildinhalt')!.appendChild(w.SpreadsheetView.zeichne(blk));
+      setTimeout(() => {
+        const z = k.querySelector('[data-a="C2"]');
+        if (z) z.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      }, 150);
+    }
+  },
+
   blaetter: {
     titel: 'Mehrere Blätter',
     bauen: () => {

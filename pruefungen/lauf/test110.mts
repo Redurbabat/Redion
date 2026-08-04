@@ -226,16 +226,60 @@ Spreadsheet.rechne(fehl);
 gleich('Unbekannte Funktion ergibt #NAME?', Spreadsheet.wert(fehl, 'A1'), '#NAME?');
 gleich('Ein zu grosser Bereich ergibt #BEZUG!', Spreadsheet.wert(fehl, 'A2'), '#BEZUG!');
 
-/* Die ehrliche Lücke: die Laufzeit rechnet abwehrend, also kann dieser Kern
-   #DIV/0! nicht liefern. Das steht so im Kopf von engine.ts, und diese
-   Prüfung hält es fest — damit niemand glaubt, es sei schon da. */
-const abwehr = Spreadsheet.neuesBlatt();
-Spreadsheet.setze(abwehr, 'A1', '=1/0');
-Spreadsheet.rechne(abwehr);
-gleich('1/0 ergibt heute 0 und nicht #DIV/0!', Spreadsheet.wert(abwehr, 'A1'), 0);
-p('Und der Kern sagt selbst, dass das eine Lücke ist',
-  /#DIV\/0!` und `#ZAHL!` gibt es noch nicht/.test(
-    lies(dazu(WURZEL, 'src/core/spreadsheet/engine.ts'), 'utf8')));
+/* ─── HIER STAND EINE LÜCKE, UND SIE IST ZU ────────────────────────────────
+ *
+ * Bis E31 hielt diese Stelle fest, dass `=1/0` in einer Tabelle **0** ergibt.
+ * Nicht aus Nachlässigkeit: die Formelmaschine rechnet abwehrend, weil eine
+ * Datenbankspalte „Umsatz pro Kunde" über einer Zeile ohne Kunden keine
+ * Fehlermeldung zeigen soll.
+ *
+ * Für eine Tabelle ist das falsch. Wer `=A1/B1` schreibt und B1 leer lässt,
+ * bekäme eine Null, die aussieht wie ein Ergebnis — und das ist dieselbe
+ * Sorte Fehler wie die abgeschnittene Zahl: still, plausibel, falsch.
+ *
+ * `laufzeit.js` hat jetzt einen strengen Modus, und nur der Tabellenkern
+ * schaltet ihn ein. Die Prüfung darunter ist die wichtigere: die Datenbank
+ * rechnet unverändert weiter.
+ * ------------------------------------------------------------------------*/
+const streng = Spreadsheet.neuesBlatt();
+Spreadsheet.setze(streng, 'A1', '=1/0');
+Spreadsheet.setze(streng, 'A2', '=10/2');
+Spreadsheet.setze(streng, 'A3', '=WURZEL(-1)');
+Spreadsheet.setze(streng, 'A4', '=WURZEL(9)');
+Spreadsheet.setze(streng, 'A5', '=5%0');
+Spreadsheet.setze(streng, 'A6', '=LN(0)');
+Spreadsheet.setze(streng, 'A7', '=LOG(0)');
+Spreadsheet.rechne(streng);
+gleich('Geteilt durch null ergibt #DIV/0!', Spreadsheet.wert(streng, 'A1'), '#DIV/0!');
+gleich('… geteilt durch etwas anderes weiterhin die Zahl', Spreadsheet.wert(streng, 'A2'), 5);
+gleich('Die Wurzel aus einer negativen Zahl ergibt #ZAHL!', Spreadsheet.wert(streng, 'A3'), '#ZAHL!');
+gleich('… aus einer positiven weiterhin die Zahl', Spreadsheet.wert(streng, 'A4'), 3);
+gleich('Modulo null ergibt #DIV/0!', Spreadsheet.wert(streng, 'A5'), '#DIV/0!');
+gleich('Der Logarithmus von null ergibt #ZAHL!', Spreadsheet.wert(streng, 'A6'), '#ZAHL!');
+/* UND EIN FEHLER, DEN ICH BEIM BAUEN SELBST GEMACHT HABE. Die erste Fassung
+   prüfte das Argument, BEVOR sie nachsah, ob es die Funktion überhaupt gibt.
+   `LOG` gibt es in Redion nicht (es heisst `LOG10`) — heraus kam `#ZAHL!`,
+   also ein Rechenfehler für einen Tippfehler. Das schickt den Menschen an
+   die falsche Stelle: er sucht in seinen Zahlen statt in seiner Schreibweise. */
+gleich('Ein Tippfehler im Funktionsnamen bleibt #NAME? und wird nicht #ZAHL!',
+  Spreadsheet.wert(streng, 'A7'), '#NAME?');
+
+/* UND DIE PRÜFUNG, AUF DIE ES WIRKLICH ANKOMMT. Der strenge Modus darf keine
+   einzige bestehende Datenbankformel verändern — das war die Bedingung
+   dafür, eine Datei mit 158 Funktionen überhaupt anzufassen. Hier läuft
+   dieselbe Formel ohne `streng`, also genau so, wie eine Datenbankspalte
+   sie rechnet. */
+const Formula = (globalThis as any).Formula;
+gleich('Ohne strengen Modus ergibt 1/0 weiterhin 0',
+  Formula.run('1/0', () => 0), { ok: true, wert: 0 });
+gleich('… und WURZEL(-1) weiterhin 0',
+  Formula.run('WURZEL(-1)', () => 0), { ok: true, wert: 0 });
+/* Gemessen am Stand VOR der Änderung, nicht vermutet: `LN(0)` ergab dort 0,
+   weil die Laufzeit ihr Argument abklemmt. Genau das muss so bleiben. */
+gleich('… und LN(0) weiterhin 0', Formula.run('LN(0)', () => 0), { ok: true, wert: 0 });
+p('Ein Fehlerwert der Laufzeit wird durchgereicht, nicht neu erfunden',
+  Spreadsheet.alsFehlerwert('#DIV/0!') === '#DIV/0!');
+gleich('… und alles andere bleibt #WERT!', Spreadsheet.alsFehlerwert('irgendwas'), '#WERT!');
 
 /* ==========================================================================
  * 6 · DER GRAPH

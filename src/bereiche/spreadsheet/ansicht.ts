@@ -118,7 +118,9 @@ const SpreadsheetView = (() => {
     '#WERT!':  'Die Formel liess sich nicht lesen. Meist fehlt eine Klammer oder ein ' +
                'Semikolon zwischen zwei Werten.',
     '#ZAHL!':  'Das Ergebnis ist keine Zahl mehr — zu gross, zu klein, oder die Wurzel ' +
-               'aus einer negativen Zahl.'
+               'aus einer negativen Zahl.',
+    '#DIV/0!': 'Hier wird durch null geteilt. Meist ist die Zelle im Nenner noch leer — ' +
+               'eine leere Zelle zählt als null.'
   };
   const erklaere = (wert: unknown): string =>
     (typeof wert === 'string' && FEHLER_TEXT[wert]) || '';

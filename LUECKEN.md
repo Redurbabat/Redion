@@ -468,3 +468,14 @@ erste Prüfung gegen T2 mass `scrollWidth` gegen `clientWidth` und bekam für
 eine 21-stellige Zahl in 109 px: 109 gegen 109. Flexbox staucht den Text,
 statt ihn überstehen zu lassen — es gibt gar keinen überstehenden Inhalt.
 Die Prüfung hätte für immer grün gesagt.
+
+**Der Tabellenblock, zweite Runde** — Einlesen, mehrere Blätter, Fehlerwerte.
+
+| | was es war | hält es |
+|---|---|---|
+| T10 | Der Block konnte „Als Excel speichern", aber nicht öffnen — ein Rundlauf, der nicht rundläuft | `test111` |
+| T11 | Der vorhandene CSV-Zerleger trennt bei Komma UND Semikolon: aus `Miete;1450,50;Januar` werden fünf Felder statt drei, und der Betrag ist weg | `test110` |
+| T12 | … und er wirft leere Zeilen weg, wodurch in einer Tabelle alles darunter um eins hochrutscht | `test110` |
+| T13 | `'Mein Blatt'!A1` wurde als Zeichenkette gelesen — heraus kam `'Mein Blatt'!prop("A1")` | `test110` |
+| T14 | `=1/0` ergab 0. In einer Datenbank richtig, in einer Tabelle eine Null, die aussieht wie ein Ergebnis | `test110` |
+| T15 | Beim Prüfen des Arguments wurde nicht nachgesehen, ob es die Funktion gibt: `=LOG(0)` ergab `#ZAHL!` statt `#NAME?` — ein Rechenfehler für einen Tippfehler | `test110` |

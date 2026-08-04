@@ -40,15 +40,22 @@
  *     #NAME?    unbekannte Funktion
  *     #WERT!    die Formel liess sich nicht zerlegen
  *
- * **`#DIV/0!` und `#ZAHL!` gibt es noch nicht**, und das ist mit Absicht
- * hier festgehalten statt vorgetäuscht. Die Laufzeit rechnet abwehrend:
- * `1/0` ergibt 0, `WURZEL(-1)` ergibt 0 — sie *meldet* nichts, also kann
- * dieser Kern nichts weiterreichen. Dafür bräuchte `laufzeit.js` einen
- * `FormulaErrorMode` (der Typ steht schon da), und das ist ein eigener
- * Schritt an einer Datei, die 158 Funktionen trägt.
+ *     #DIV/0!   geteilt durch null
+ *     #ZAHL!    kein Ergebnis, das eine Zahl ist
  *
- * Ein halber Fehlerwert wäre schlimmer als keiner: er sähe aus wie Excel und
- * wäre es an der nächsten Zelle nicht mehr.
+ * DIE LETZTEN BEIDEN GAB ES LANGE NICHT, und der Grund ist lehrreich: die
+ * Laufzeit rechnet abwehrend. `1/0` ergibt dort 0, `WURZEL(-1)` ergibt 0 —
+ * sie *meldet* nichts, also konnte dieser Kern nichts weiterreichen.
+ *
+ * Für eine Datenbank ist das richtig. Eine Spalte „Umsatz pro Kunde" über
+ * einer Zeile ohne Kunden soll keine Fehlermeldung zeigen. Für eine Tabelle
+ * ist es falsch: wer `=A1/B1` schreibt und B1 leer lässt, bekäme eine Null,
+ * die aussieht wie ein Ergebnis.
+ *
+ * `laufzeit.js` kennt deshalb seit E31 einen **strengen Modus**
+ * (`umgebung.streng`), und nur dieser Kern schaltet ihn ein. Jede bestehende
+ * Datenbankformel rechnet unverändert weiter — das war die Bedingung dafür,
+ * eine Datei mit 158 Funktionen überhaupt anzufassen.
  *
  * SPRACHE. Namen englisch, Erklärungen deutsch — E27. Neu und damit von
  * Anfang an TypeScript — E28.
@@ -322,9 +329,17 @@ const Spreadsheet = (() => {
     /* ==========================================================================
      * 3 · RECHNEN
      * ========================================================================*/
-    /** Aus einer Fehlermeldung der Laufzeit den passenden Excel-Wert machen. */
+    /**
+     * Aus einer Fehlermeldung der Laufzeit den passenden Excel-Wert machen.
+     *
+     * Ein Fehlerwert, den die Laufzeit im strengen Modus selbst schon so nennt
+     * (`#DIV/0!`, `#ZAHL!`), wird durchgereicht statt übersetzt. Zweimal
+     * denselben Namen zu vergeben, wäre zwei Stellen, die auseinanderlaufen.
+     */
     const alsFehlerwert = (satz) => {
         const s = String(satz ?? '');
+        if (/^#[A-Z/0-9]+[!?]$/.test(s.trim()))
+            return s.trim();
         if (/Unbekannte Funktion/i.test(s))
             return '#NAME?';
         return '#WERT!';
@@ -420,7 +435,12 @@ const Spreadsheet = (() => {
                 neu = '#BEZUG!';
             else {
                 blattFehlt = false;
-                const e = F.run(quelle, hole);
+                /* STRENG — das ist der Unterschied zwischen einer Datenbankspalte
+                   und einer Tabellenzelle. In der Datenbank ist `1/0` gleich 0 und
+                   soll keine Liste rot färben; in einer Tabelle ist es `#DIV/0!`,
+                   weil dort keine Zahl ist und nicht die Null. `laufzeit.js` kann
+                   beides, seit es `umgebung.streng` gibt. */
+                const e = F.run(quelle, hole, null, { streng: true });
                 neu = blattFehlt ? '#BEZUG!' : (e.ok ? e.wert : alsFehlerwert(e.fehler));
             }
             if (zelle.wert !== neu) {

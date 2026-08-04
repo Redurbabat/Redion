@@ -1501,3 +1501,62 @@ sie hält diese Entscheidung umkehrbar.
 
 Entschieden. Der Abschnitt „Farben" in `redion-ui-design-system` ist damit für
 Redion überstimmt; die übrigen Abschnitte der Skill gelten unverändert.
+
+
+---
+
+## E31 · Ein strenger Modus für die Formelmaschine
+
+**Frage.** `=1/0` ergibt in Redion **0**. Für eine Datenbankspalte ist das
+richtig, für eine Tabellenzelle falsch. Beides gleichzeitig geht nicht — oder
+doch?
+
+**Der Konflikt, ausgeschrieben.**
+
+In einer Datenbank steht eine Formel in einer *Spalte* und gilt für jede
+Zeile. „Umsatz pro Kunde" über einer Zeile ohne Kunden soll keine
+Fehlermeldung zeigen: die Liste würde rot, obwohl nichts kaputt ist. `0` oder
+leer ist dort die freundliche und die richtige Antwort.
+
+In einer Tabelle steht eine Formel in *einer* Zelle, und der Mensch sieht sie
+an. Wer `=A1/B1` schreibt und B1 leer lässt, bekäme eine Null, die aussieht
+wie ein Ergebnis. Das ist dieselbe Sorte Fehler wie eine abgeschnittene Zahl:
+still, plausibel, falsch. Excel zeigt seit dreissig Jahren `#DIV/0!`, und zwar
+genau deswegen — die Zahl ist nicht null, es gibt keine.
+
+**Beschluss.** `laufzeit.js` bekommt einen **strengen Modus**, eingeschaltet
+über `umgebung.streng`. Nur der Tabellenkern schaltet ihn ein.
+
+```txt
+locker (Datenbank)          streng (Tabelle)
+─────────────────────────   ─────────────────────────
+1/0        →  0             1/0        →  #DIV/0!
+5%0        →  0             5%0        →  #DIV/0!
+WURZEL(-1) →  0             WURZEL(-1) →  #ZAHL!
+LN(0)      →  0             LN(0)      →  #ZAHL!
+2^99999    →  Infinity      2^99999    →  #ZAHL!
+```
+
+**Die Bedingung, unter der die Datei angefasst wurde.** `laufzeit.js` trägt
+158 Funktionen, 262 Registereinträge und jede bestehende Datenbankformel.
+Keine einzige darf sich anders verhalten. Deshalb ist der strenge Modus
+*ausgeschaltet*, solange ihn niemand einschaltet — und `test110` prüft
+ausdrücklich die Gegenrichtung: `1/0` ohne `streng` ergibt weiterhin 0. Das
+ist dort die wichtigere Prüfung.
+
+**Ein Fehler beim Bauen, der hier festgehalten gehört.** Die erste Fassung
+prüfte das Argument, *bevor* sie nachsah, ob es die Funktion überhaupt gibt.
+`=LOG(0)` ergab damit `#ZAHL!` — `LOG` gibt es in Redion aber nicht, es heisst
+`LOG10`. Ein Rechenfehler für einen Tippfehler schickt den Menschen an die
+falsche Stelle: er sucht in seinen Zahlen statt in seiner Schreibweise. Jetzt
+wird erst nachgesehen, dann geurteilt.
+
+**Was das für `src/core/types/formula.ts` heisst.** Der dort seit langem
+stehende `FormulaErrorCode` ist nicht mehr nur eine Absicht. Alle sieben
+Excel-Fehlerwerte sind jetzt erreichbar; `#NV`, `#NULL!` und `#LEER!` erzeugt
+der Kern weiterhin nicht, weil er sie nicht sicher weiss.
+
+**Status**
+
+Beschlossen und umgesetzt. Damit ist die letzte in E29 genannte Lücke am
+Tabellenblock geschlossen.
