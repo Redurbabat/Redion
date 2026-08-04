@@ -502,8 +502,16 @@ lautlos. Genau hier verliert Notion die Leute, die wirklich Daten haben.
 - ~~XLSX-Export~~ — echte `.xlsx` aus dem Tabellenblock und aus jeder
   Datenbank.
 - ~~XLSX-Import~~ — in den Tabellenblock, über `Einlesen.xlsxLesen`.
-- **Offen:** XLSX-Import mit Typerkennung in eine Datenbank (heute wird
-  Text angelegt) · Export mit mehreren Blättern aus einer Mappe · ODS.
+- ~~Typerkennung beim Import in eine Datenbank~~ — `core/import/spaltentyp.ts`
+  erkennt Zahl, Datum, Ja/Nein und Auswahl aus den Werten selbst. Die Regel
+  dabei: **lieber Text als falsch.** Eine Spalte wird nur dann eine
+  Zahlenspalte, wenn JEDER gefüllte Wert eine Zahl ist — ein einziges
+  „k. A." in vierhundert Zeilen macht sie zur Textspalte. Eine Zahlenspalte,
+  die einen Wert verschluckt, ist schlimmer als eine Textspalte, die keinen
+  verschluckt.
+- **Offen:** XLSX direkt in eine Datenbank (heute geht XLSX in den
+  Tabellenblock, CSV in beides) · Export mit mehreren Blättern aus einer
+  Mappe · ODS.
 
 **~~Fertig wenn~~ — ein Rundlauf mit echten Bytes: exportieren, löschen,
 importieren, vergleichen.** Erledigt: `test111` baut eine echte `.xlsx`

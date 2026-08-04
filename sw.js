@@ -15,7 +15,7 @@
  * unten ist der Schalter dafür.
  * ==========================================================================*/
 
-const VERSION = 'notizen-v16';
+const VERSION = 'notizen-v17';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -38,6 +38,7 @@ const GRUNDSTOCK = [
   './quell/core/spreadsheet/address.js',
   './quell/core/spreadsheet/engine.js',
   './quell/core/spreadsheet/csv.js',
+  './quell/core/import/spaltentyp.js',
   './quell/kern/sicherheit/pruefen.js',
   './quell/kern/ablage/formen.js',
   './quell/kern/ablage/umzuege.js',

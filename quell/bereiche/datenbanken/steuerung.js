@@ -7793,10 +7793,21 @@ const Datenbank = (() => {
          Spalten ins Schema zu schreiben hiesse: wer abbricht, hat trotzdem
          neue Spalten. */
       const plan = kopf.map((name, i) => {
-        if (i === 0) return { name, key: titelKey, neu: false, titel: true };
+        if (i === 0) return { name, key: titelKey, neu: false, titel: true, typ: 'title' };
         const k = Object.keys(coll.schema).find(
           x => String(coll.schema[x].name).toLowerCase() === String(name).toLowerCase());
-        return k ? { name, key: k, neu: false } : { name, key: null, neu: true };
+        if (k) return { name, key: k, neu: false, typ: coll.schema[k].type };
+
+        /* WELCHE SORTE die neue Spalte wird, statt „alles ist Text". Eine
+           Textspalte rechnet nicht: die Summe ergibt 0, Sortieren sortiert
+           alphabetisch (`100` vor `20`), und „grösser als" hat nichts zu
+           vergleichen. Der Mensch merkt das an der falschen Summe und nicht
+           am Import. Geraten wird vorsichtig — ein einziger Text in der
+           Spalte, und sie bleibt Text. */
+        const spaltenWerte = zeilen.slice(1).map(z => z[i]);
+        const erkannt = (typeof Spaltentyp !== 'undefined')
+          ? Spaltentyp.erkenne(spaltenWerte) : { typ: 'text', optionen: [] };
+        return { name, key: null, neu: true, typ: erkannt.typ, optionen: erkannt.optionen };
       });
       const neueSpalten = plan.filter(x => x.neu);
       const getroffen = plan.filter(x => !x.neu && !x.titel);
@@ -7815,8 +7826,9 @@ const Datenbank = (() => {
                   '„' + kopf[0] + '" wird der Titel\n' +
                   getroffen.length + ' Spalten passen zu vorhandenen' +
                   (neueSpalten.length
-                    ? '\n' + neueSpalten.length + ' Spalten werden NEU angelegt: ' +
-                      neueSpalten.map(x => x.name).join(', ')
+                    ? '\n' + neueSpalten.length + ' Spalten werden NEU angelegt:\n' +
+                      neueSpalten.map(x => '   ' + x.name + ' — ' +
+                        (typeof Spaltentyp !== 'undefined' ? Spaltentyp.name(x.typ) : 'Text')).join('\n')
                     : '\nEs wird keine neue Spalte angelegt') +
                   '\n\n' + vorschau + (zeilen.length > 4 ? '\n…' : ''),
             knoepfe: [
@@ -7831,14 +7843,30 @@ const Datenbank = (() => {
       plan.forEach((x, i) => {
         if (!x.neu) return;
         x.key = Store.uid().slice(0, 5);
-        coll.schema[x.key] = { name: x.name || 'Spalte ' + (i + 1), type: 'text' };
+        const def = { name: x.name || 'Spalte ' + (i + 1), type: x.typ || 'text' };
+        /* Eine Auswahlspalte braucht ihre Möglichkeiten, sonst ist sie eine
+           Auswahl ohne Auswahl. Die Farben nimmt sie der Reihe nach — das
+           ist besser als alles grau und billiger als eine Frage mehr. */
+        if (def.type === 'select') {
+          const farben = ['blue', 'green', 'orange', 'purple', 'pink', 'yellow', 'brown', 'red', 'gray'];
+          def.options = (x.optionen || []).map((o, j) => ({ name: o, color: farben[j % farben.length] }));
+        }
+        coll.schema[x.key] = def;
       });
       Store.updateCollection(coll.id, { schema: coll.schema });
 
       let n = 0;
       zeilen.slice(1).forEach(z => {
         const props = {};
-        plan.forEach((x, i) => { if (x.key !== titelKey) props[x.key] = z[i] ?? ''; });
+        plan.forEach((x, i) => {
+          if (x.key === titelKey) return;
+          /* Der Wert wird in die erkannte Sorte gebracht — sonst stünde in
+             einer Zahlenspalte der Text `1450,50`, und die Summe wäre
+             wieder 0. Genau das war der Anlass. */
+          props[x.key] = (typeof Spaltentyp !== 'undefined')
+            ? Spaltentyp.wandle(z[i] ?? '', x.typ || 'text')
+            : (z[i] ?? '');
+        });
         const r = Store.addRow(coll.id, props);
         Store.updateBlock(r.id, { text: z[0] || 'Ohne Titel' });
         n++;

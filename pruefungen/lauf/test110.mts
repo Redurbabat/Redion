@@ -50,10 +50,12 @@ laden('quell/register/formeln.js');
 laden('quell/bereiche/datenbanken/formeln/laufzeit.js');
 laden('quell/core/spreadsheet/engine.js');
 laden('quell/core/spreadsheet/csv.js');
+laden('quell/core/import/spaltentyp.js');
 
 const CellRefs = (globalThis as any).CellRefs;
 const Spreadsheet = (globalThis as any).Spreadsheet;
 const Csv = (globalThis as any).Csv;
+const Spaltentyp = (globalThis as any).Spaltentyp;
 
 /* ==========================================================================
  * 1 · ADRESSEN
@@ -700,6 +702,70 @@ gleich('Ein Blattname wird abgetrennt',
 gleich('… und wieder angehängt, mit Anführungszeichen wo nötig',
   Spreadsheet.mitBlatt('Mein Blatt', 'A1'), "'Mein Blatt'!A1");
 gleich('… ohne, wo keine nötig sind', Spreadsheet.mitBlatt('Januar', 'A1'), 'Januar!A1');
+
+
+/* ==========================================================================
+ * 14 · WELCHE SORTE SPALTE IST DAS?
+ * ------------------------------------------------------------------------
+ * Beim Einlesen wurde bisher JEDE Spalte als Text angelegt. Das sieht beim
+ * Ansehen richtig aus und ist es beim Rechnen nicht: eine Summe über einer
+ * Textspalte ergibt 0, Sortieren sortiert alphabetisch (`100` vor `20`), und
+ * ein Filter „grösser als" hat nichts zu vergleichen. Der Mensch merkt es an
+ * der falschen Summe, nicht am Import.
+ *
+ * DIE REGEL LAUTET: LIEBER TEXT ALS FALSCH. Eine Spalte wird nur dann eine
+ * Zahlenspalte, wenn JEDER gefüllte Wert eine Zahl ist. Ein einziges „k. A."
+ * in vierhundert Zeilen macht sie zur Textspalte — eine Zahlenspalte, die
+ * einen Wert verschluckt, ist schlimmer als eine Textspalte, die keinen
+ * verschluckt.
+ * ========================================================================*/
+console.log('\n14 · Spaltentypen erkennen');
+
+const typVon = (w: unknown[]) => Spaltentyp.erkenne(w).typ;
+
+gleich('Lauter Zahlen ergeben eine Zahlenspalte', typVon(['1', '2', '3']), 'number');
+gleich('… auch mit deutschem Komma', typVon(['1450,50', '98,4']), 'number');
+gleich('… auch mit Schweizer Hochkomma', typVon(["1'450.50", "22'400"]), 'number');
+gleich('… auch mit Tausenderpunkt', typVon(['1.450,50', '2.300,00']), 'number');
+gleich('… auch mit Währung dahinter', typVon(['1450.50 CHF', '98.40 CHF']), 'number');
+gleich('Prozent wird zum Anteil', Spaltentyp.wandle('12,5%', 'number'), 0.125);
+
+/* DIE WICHTIGSTE PRÜFUNG DES GANZEN ABSCHNITTS. */
+gleich('EIN einziger Text macht die ganze Spalte zu Text',
+  typVon(['1', '2', 'k. A.', '4']), 'text');
+gleich('Leere Zellen zählen dabei nicht mit',
+  typVon(['1', '', '3', '']), 'number');
+gleich('Eine ganz leere Spalte bleibt Text', typVon(['', '', '']), 'text');
+
+gleich('Datumsangaben deutsch', typVon(['4.8.2026', '31.12.2025']), 'date');
+gleich('… und nach ISO', typVon(['2026-08-04', '2025-12-31']), 'date');
+gleich('Ja und Nein', typVon(['ja', 'nein', 'ja']), 'checkbox');
+gleich('… auch als x und leer', typVon(['x', 'x', '1']), 'checkbox');
+
+/* AUSWAHL — aber nur, wenn es wirklich eine ist. */
+gleich('Wenige Werte, jeder mehrfach: eine Auswahl',
+  typVon(['Offen', 'Erledigt', 'Offen', 'Erledigt', 'Offen', 'Erledigt']), 'select');
+gleich('Lauter verschiedene Namen sind keine Auswahl',
+  typVon(['Meier', 'Huber', 'Studio Nord', 'Werkstatt Kern', 'Café Lindenhof']), 'text');
+gleich('Ein langer Satz auch nicht',
+  typVon(['Das hier ist ein ganzer Satz und keine Auswahlmöglichkeit mehr, wirklich nicht',
+          'Das hier ist ein ganzer Satz und keine Auswahlmöglichkeit mehr, wirklich nicht',
+          'Das hier ist ein ganzer Satz und keine Auswahlmöglichkeit mehr, wirklich nicht']), 'text');
+
+/* Die Ecken, an denen so etwas kippt. */
+gleich('Ein Datum ist keine Zahl', typVon(['4.8.2026']), 'date');
+gleich('Eine Postleitzahl mit führender Null bleibt … eine Zahl',
+  typVon(['0815', '1234']), 'number');
+p('… und wer sie als Text braucht, sieht am Anteil, dass es knapp war',
+  Spaltentyp.erkenne(['0815', '1234']).gefuellt === 2);
+
+/* Umwandeln */
+gleich('Umwandeln macht aus 1450,50 die Zahl', Spaltentyp.wandle('1450,50', 'number'), 1450.5);
+gleich('… aus 4.8.2026 ein ISO-Datum', Spaltentyp.wandle('4.8.2026', 'date'), '2026-08-04');
+gleich('… aus ja ein Ja', Spaltentyp.wandle('ja', 'checkbox'), true);
+gleich('… und aus etwas Unlesbarem den Text selbst',
+  Spaltentyp.wandle('k. A.', 'number'), 'k. A.');
+gleich('Die Sorten heissen auf Deutsch', Spaltentyp.name('number'), 'Zahl');
 
 console.log(`\n  Suite 74 — Der Tabellenkern: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

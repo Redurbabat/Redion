@@ -337,7 +337,9 @@ const csvDb = await seite.evaluate(() => {
     fragtVorher: /Dialog\.wahl/.test(String(Datenbank.csvImport)),
     nimmtCsv: /Csv\.zerlege/.test(String(Datenbank.csvImport)),
     spaetAnlegen: String(Datenbank.csvImport).indexOf('Dialog.wahl') <
-                  String(Datenbank.csvImport).lastIndexOf('updateCollection')
+                  String(Datenbank.csvImport).lastIndexOf('updateCollection'),
+    erkenntTypen: /Spaltentyp\.erkenne/.test(String(Datenbank.csvImport)),
+    wandeltWerte: /Spaltentyp\.wandle/.test(String(Datenbank.csvImport))
   };
 }) as any;
 
@@ -350,6 +352,9 @@ p('… und fragt vor dem Einlesen', csvDb.fragtVorher);
 /* WER ABBRICHT, DARF KEINE NEUEN SPALTEN BEHALTEN. Der erste Entwurf legte
    sie an, bevor gefragt wurde — und beim Abbrechen standen sie trotzdem da. */
 p('… und legt neue Spalten erst NACH der Antwort an', csvDb.spaetAnlegen);
+p('… und erkennt die Sorte der neuen Spalten, statt alles Text zu nennen',
+  csvDb.erkenntTypen);
+p('… und wandelt die Werte auch wirklich um', csvDb.wandeltWerte);
 
 /* ========================================================================= *
  * 6 · AM TELEFON
