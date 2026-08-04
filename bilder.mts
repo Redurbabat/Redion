@@ -133,6 +133,56 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
     }
   },
 
+  blaetter: {
+    titel: 'Mehrere Blätter',
+    bauen: () => {
+      const w = window as any;
+      const seite = Object.values(Store.cache.blocks).find((b: any) => b.type === 'page' && b.alive) as any;
+      const blk = Store.addBlock(seite.id, 'spreadsheet', { text: 'Jahr 2026' });
+      const mappe = w.Spreadsheet.neueMappe('Jahr 2026');
+      const jan = mappe.blaetter[0];
+      jan.name = 'Januar';
+      const feb = w.Spreadsheet.neuesBlatt('Februar');
+      const jahr = w.Spreadsheet.neuesBlatt('Jahr gesamt');
+      mappe.blaetter.push(feb, jahr);
+
+      [['Posten', 'Betrag'], ['Miete', '1450'], ['Strom', '98,4'],
+       ['Einkauf', '612,3'], ['Summe', '=SUMME(B2:B4)']]
+        .forEach((z: string[], i: number) => z.forEach((v: string, s: number) =>
+          w.Spreadsheet.setze(jan, String.fromCharCode(65 + s) + (i + 1), v)));
+      [['Posten', 'Betrag'], ['Miete', '1450'], ['Strom', '104,2'],
+       ['Einkauf', '588,9'], ['Summe', '=SUMME(B2:B4)']]
+        .forEach((z: string[], i: number) => z.forEach((v: string, s: number) =>
+          w.Spreadsheet.setze(feb, String.fromCharCode(65 + s) + (i + 1), v)));
+      [['Monat', 'Summe'], ['Januar', '=Januar!B5'], ['Februar', '=Februar!B5'],
+       ['Zusammen', '=SUMME(B2:B3)'], ['Schnitt', '=MITTELWERT(B2:B3)']]
+        .forEach((z: string[], i: number) => z.forEach((v: string, s: number) =>
+          w.Spreadsheet.setze(jahr, String.fromCharCode(65 + s) + (i + 1), v)));
+
+      [jan, feb, jahr].forEach((b: any) => {
+        ['A1', 'B1'].forEach(a => { if (b.zellen[a]) b.zellen[a].stil = { fett: true, ausrichtung: 'mitte' }; });
+        ['A5', 'B5'].forEach(a => { if (b.zellen[a]) b.zellen[a].stil = Object.assign({}, b.zellen[a].stil, { fett: true }); });
+        b.breiten = { 0: 130 };
+      });
+      jahr.zellen['B4'].stil = { fett: true, format: { art: 'waehrung', stellen: 2, waehrung: 'CHF' } };
+
+      mappe.aktiv = jahr.id;
+      blk.mappe = mappe;
+
+      const k = document.createElement('div');
+      k.id = 'bildkasten';
+      k.style.cssText = 'position:fixed; inset:0; z-index:600; background:var(--bg); padding:24px 20px; overflow:auto';
+      k.innerHTML = '<div id="bildinhalt" style="max-width:900px;margin:0 auto">' +
+        '<h1 style="font:700 30px var(--font);color:var(--text);margin:0 0 16px">Jahr 2026</h1></div>';
+      document.body.appendChild(k);
+      document.getElementById('bildinhalt')!.appendChild(w.SpreadsheetView.zeichne(blk));
+      setTimeout(() => {
+        const z = k.querySelector('[data-a="B4"]');
+        if (z) z.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      }, 150);
+    }
+  },
+
   einlesen: {
     titel: 'Die Frage vor dem Einlesen',
     bauen: () => {

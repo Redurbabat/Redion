@@ -271,6 +271,60 @@
   z-index: 5;
 }
 
+/* --- Die Blattreiter ------------------------------------------------------
+   Unten, wie in jedem Tabellenprogramm — dort sucht man sie, und am Telefon
+   sind sie in Daumenreichweite. Bei einem einzigen Blatt sind sie weg: ein
+   einzelner Reiter über einer einzelnen Tabelle erklärt nichts und kostet in
+   jedem Block, den je jemand angelegt hat, eine Zeile Höhe. */
+.tbl-reiter {
+  display: flex; align-items: stretch; gap: 2px;
+  padding: 4px 6px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-card);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tbl-reiter::-webkit-scrollbar { display: none; }
+.tbl-reiter.einzeln { padding: 0 6px; }
+.tbl-reiter.einzeln .tbl-reiter-eins { display: none; }
+/* Der Plus-Knopf bleibt auch bei einem Blatt — sonst gäbe es keinen Weg zum
+   zweiten, und eine Funktion ohne Weg dorthin gibt es nicht. */
+.tbl-reiter.einzeln .tbl-reiter-plus { opacity: .55; }
+
+.tbl-reiter-eins {
+  flex: 0 0 auto;
+  border: 0; background: transparent;
+  color: var(--text-dim);
+  font: 12px var(--font);
+  padding: 5px 12px;
+  border-radius: 5px 5px 0 0;
+  cursor: pointer;
+  max-width: 160px;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.tbl-reiter-eins:hover { background: var(--bg-hover); color: var(--text); }
+.tbl-reiter-eins.aktiv {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  /* Die Linie unter dem aktiven Reiter ist das eine Zeichen, das sagt: DIESES
+     Blatt liegt oben. Ein blosser Farbwechsel wäre bei zehn Reitern nicht
+     genug — man sucht dann. */
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.tbl-reiter-eins:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.tbl-reiter-plus {
+  flex: 0 0 auto;
+  border: 0; background: transparent;
+  color: var(--text-dim);
+  font: 16px var(--font);
+  width: 28px; border-radius: 5px;
+  cursor: pointer;
+}
+.tbl-reiter-plus:hover { background: var(--bg-hover); color: var(--text); }
+.tbl-reiter-plus:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
 /* --- Fusszeile ------------------------------------------------------------
    Sagt, was gerade gilt: Auswahl, Summe, Zirkelbezüge. Eine Meldung, die man
    suchen muss, ist keine. */
@@ -327,6 +381,11 @@
 
   .tbl-adresse { min-width: 48px; }
   .tbl-fuss { font-size: 11px; gap: 10px; }
+
+  /* Reiter am Finger: 44 px hoch, und die Schrift so gross, dass man den
+     Namen lesen kann, ohne heranzuzoomen. */
+  .tbl-reiter-eins { padding: 12px 14px; font-size: 14px; min-height: 44px; }
+  .tbl-reiter-plus { width: 44px; min-height: 44px; font-size: 20px; }
 
   /* ------------------------------------------------------------------------
    * ZWEI ZEILEN STATT EINER — und das ist kein Feinschliff.

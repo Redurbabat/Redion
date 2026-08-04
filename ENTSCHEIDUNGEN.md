@@ -1416,10 +1416,24 @@ und als CSV · Tastaturbedienung wie in einem Tabellenprogramm.
 
 **Was er bewusst nicht kann**
 
-*Mehrere Blätter je Block.* Die Datenstruktur trägt sie (`mappe.blaetter`),
-die Oberfläche zeigt eines. Zwei Blätter brauchen Reiter, blattübergreifende
-Bezüge (`Blatt2!A1`) und eine Antwort darauf, was beim Löschen eines Blattes
-mit den Bezügen darauf geschieht. Das ist ein eigener Schritt, kein Detail.
+*~~Mehrere Blätter je Block.~~* **Nachgereicht.** Es war als eigener Schritt
+angekündigt und ist es auch geworden — mit den drei Antworten, die dazu
+gehören:
+
+- **Gerechnet wird die Mappe, nicht das Blatt.** `rechneMappe` baut einen
+  Graphen über alle Blätter, mit vollen Namen als Knoten (`Januar!A1`).
+  Blattweise gerechnet hinge das Ergebnis an der Reihenfolge der Blätter, und
+  ein Zirkelbezug über zwei Blätter fiele gar nicht auf — jedes Blatt für
+  sich ist ja kreisfrei.
+- **Umbenennen zieht jede Formel nach.** Ohne das zeigt danach alles ins
+  Leere, sofort und überall. Genau deshalb gilt Umbenennen in manchen
+  Programmen als gefährlich: dort wird es nicht nachgezogen, und man merkt es
+  an der dritten Summe.
+- **Löschen sagt vorher nachgezählt, was kaputtgeht.** Wie viele Formeln auf
+  anderen Blättern hierher zeigen — die stehen woanders, man sieht sie gerade
+  nicht, und sie werden gleich alle `#BEZUG!`. Ein fehlendes Blatt ergibt
+  `#BEZUG!` und nicht 0: still als Null zu rechnen wäre die schlimmere
+  Antwort, denn dann stimmte die Summe nicht und sähe richtig aus.
 
 *Diagramme.* Ein Diagramm ist ein eigener Block, kein Teil der Tabelle.
 

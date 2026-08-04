@@ -542,5 +542,120 @@ p('Vor der Datei steht das BOM — sonst liest Excel Müller als MÃ¼ller',
     Csv.zerlege(Csv.schreibe(drin, '\t'), '\t'), drin);
 }
 
+
+/* ==========================================================================
+ * 13 · MEHRERE BLÄTTER
+ * ------------------------------------------------------------------------
+ * `Januar!A1` darf auf `Februar!B2` zeigen. Daraus folgt mehr, als es
+ * aussieht:
+ *
+ * **Gerechnet wird die MAPPE, nicht das Blatt.** Blatt für Blatt hinge das
+ * Ergebnis an der Reihenfolge der Blätter — und ein Zirkelbezug über zwei
+ * Blätter fiele gar nicht auf, weil jedes Blatt für sich kreisfrei ist.
+ *
+ * **Jeder Knoten trägt seinen Blattnamen.** Sonst hiessen `Januar!A1` und
+ * `Februar!A1` im Graphen beide `A1`, würden zusammengelegt, und ein Blatt
+ * rechnete mit dem Wert des anderen. Das ist die Art Fehler, die erst beim
+ * zweiten Blatt entsteht und dann überall falsch ist.
+ *
+ * **Ein fehlendes Blatt ist `#BEZUG!` und nicht 0.** Wer ein Blatt löscht,
+ * auf das eine Summe zeigt, soll das sehen. Still als Null zu rechnen wäre
+ * die schlimmere Antwort: die Summe stimmte nicht und sähe richtig aus.
+ * ========================================================================*/
+console.log('\n13 · Mehrere Blätter');
+
+gleich('Ein Bezug mit Blattnamen wird gelesen',
+  Spreadsheet.uebersetze('=Januar!A1').quelle, 'prop("Januar!A1")');
+gleich('… auch mit Leerzeichen im Namen',
+  Spreadsheet.uebersetze("='Mein Blatt'!A1").quelle, 'prop("Mein Blatt!A1")');
+gleich('Ein Bereich mit Blattnamen wird ausgeschrieben',
+  Spreadsheet.uebersetze('=SUMME(Januar!A1:A2)').quelle,
+  'SUMME(prop("Januar!A1"), prop("Januar!A2"))');
+gleich('Ohne Blattnamen gilt das eigene Blatt',
+  Spreadsheet.uebersetze('=A1', 'Februar').quelle, 'prop("Februar!A1")');
+gleich('… und der Blattname steht dann auch beim Gelesenen',
+  Spreadsheet.uebersetze('=A1+Januar!B2', 'Februar').liest,
+  ['Februar!A1', 'Januar!B2']);
+
+/* DIE STELLE, AN DER SO EIN AUSDRUCK SONST STOLPERT. `A1!=B1` ist ein
+   Vergleich und kein Blattname — der Zerleger muss den Versuch zurücknehmen. */
+gleich('`A1!=B1` bleibt ein Vergleich und wird kein Blattname',
+  Spreadsheet.uebersetze('=A1!=B1').quelle, 'prop("A1")!=prop("B1")');
+gleich('Ein Bereich über zwei Blätter wird gemeldet, nicht geraten',
+  Spreadsheet.uebersetze('=SUMME(Januar!A1:Februar!A2)').fehler !== null, true);
+
+{
+  /* Und jetzt an einer echten Mappe. */
+  const mappe = Spreadsheet.neueMappe('Jahr');
+  const jan = mappe.blaetter[0];
+  jan.name = 'Januar';
+  const feb = Spreadsheet.neuesBlatt('Februar');
+  mappe.blaetter.push(feb);
+
+  Spreadsheet.setze(jan, 'A1', '100');
+  Spreadsheet.setze(jan, 'A2', '50');
+  Spreadsheet.setze(feb, 'A1', '=SUMME(Januar!A1:A2)');
+  Spreadsheet.setze(feb, 'A2', '=A1*2');
+
+  const erg = Spreadsheet.rechneMappe(mappe);
+  p('Die Mappe rechnet ohne Fehler', erg.fehler === null, String(erg.fehler));
+  gleich('Februar liest aus Januar', Spreadsheet.wert(feb, 'A1'), 150);
+  gleich('… und rechnet damit weiter', Spreadsheet.wert(feb, 'A2'), 300);
+  gleich('Januar bleibt unangetastet', Spreadsheet.wert(jan, 'A1'), 100);
+
+  /* Ein Zirkelbezug ÜBER ZWEI BLÄTTER — das, was blattweises Rechnen
+     niemals findet. */
+  Spreadsheet.setze(jan, 'B1', '=Februar!B1+1');
+  Spreadsheet.setze(feb, 'B1', '=Januar!B1+1');
+  const kreis = Spreadsheet.rechneMappe(mappe);
+  gleich('Ein Kreis über zwei Blätter wird gefunden',
+    kreis.zirkel.sort(), ['Februar!B1', 'Januar!B1']);
+  gleich('… und beide Zellen bekommen #BEZUG!',
+    [Spreadsheet.wert(jan, 'B1'), Spreadsheet.wert(feb, 'B1')], ['#BEZUG!', '#BEZUG!']);
+
+  /* Das Blatt löschen, auf das gezeigt wird. */
+  Spreadsheet.setze(jan, 'B1', '');
+  Spreadsheet.setze(feb, 'B1', '');
+  mappe.blaetter = [jan];
+  const ohne = Spreadsheet.rechneMappe({ blaetter: [feb] });
+  gleich('Zeigt eine Formel auf ein fehlendes Blatt, steht #BEZUG! da',
+    Spreadsheet.wert(feb, 'A1'), '#BEZUG!');
+  p('… und nicht still eine 0', Spreadsheet.wert(feb, 'A1') !== 0);
+  p('Gerechnet wurde trotzdem ohne Absturz', ohne.fehler === null);
+}
+
+{
+  /* Eine Mappe mit EINEM Blatt muss weiterhin unqualifizierte Namen
+     melden — sonst hiessen die Zirkelbezüge in jeder alten Tabelle
+     plötzlich anders. */
+  const b = Spreadsheet.neuesBlatt();
+  Spreadsheet.setze(b, 'A1', '=B1');
+  Spreadsheet.setze(b, 'B1', '=A1');
+  const erg = Spreadsheet.rechne(b);
+  gleich('Bei einem Blatt heissen die Kreise weiterhin A1 und B1',
+    erg.zirkel, ['A1', 'B1']);
+}
+
+/* UMBENENNEN — und warum es ohne Nachziehen gefährlich wäre: nach dem
+   Umbenennen zeigt sonst jede Formel ins Leere, sofort und überall. */
+gleich('Beim Umbenennen wandert der Blattname mit',
+  Spreadsheet.blattUmbenannt('=SUMME(Januar!A1:A9)', 'Januar', 'Jan'), '=SUMME(Jan!A1:A9)');
+gleich('… auch bei einem Namen mit Leerzeichen',
+  Spreadsheet.blattUmbenannt("='Mein Blatt'!A1", 'Mein Blatt', 'Deins'), '=Deins!A1');
+gleich('… und bekommt Anführungszeichen, wenn der neue Name welche braucht',
+  Spreadsheet.blattUmbenannt('=Jan!A1', 'Jan', 'Der Januar'), "='Der Januar'!A1");
+gleich('Ein anderes Blatt bleibt unberührt',
+  Spreadsheet.blattUmbenannt('=Februar!A1', 'Januar', 'Jan'), '=Februar!A1');
+gleich('Ein Bezug ohne Blattnamen bleibt ohne',
+  Spreadsheet.blattUmbenannt('=A1+B2', 'Januar', 'Jan'), '=A1+B2');
+gleich('Ein Text, der zufällig so heisst, bleibt Text',
+  Spreadsheet.blattUmbenannt('="Januar!A1"', 'Januar', 'Jan'), '="Januar!A1"');
+
+gleich('Ein Blattname wird abgetrennt',
+  Spreadsheet.trenneBlatt("'Mein Blatt'!A1"), { blatt: 'Mein Blatt', adresse: 'A1' });
+gleich('… und wieder angehängt, mit Anführungszeichen wo nötig',
+  Spreadsheet.mitBlatt('Mein Blatt', 'A1'), "'Mein Blatt'!A1");
+gleich('… ohne, wo keine nötig sind', Spreadsheet.mitBlatt('Januar', 'A1'), 'Januar!A1');
+
 console.log(`\n  Suite 74 — Der Tabellenkern: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

@@ -109,11 +109,69 @@ const Spreadsheet = (() => {
      */
     const ADRESSE = '\\$?[A-Za-z]{1,3}\\$?[0-9]{1,7}';
     const NICHT_DAVOR = '(?<![A-Za-z0-9_$.])';
+    /**
+     * Der Blattname vor dem Ausrufezeichen: `Januar!A1` oder `'Mein Blatt'!A1`.
+     *
+     * MIT ANFÜHRUNGSZEICHEN, SOBALD EIN LEERZEICHEN DRIN IST — so wie in Excel,
+     * und aus demselben Grund: ohne sie liesse sich `SUMME(Mein Blatt!A1)` nicht
+     * eindeutig lesen.
+     *
+     * Und was hier ausdrücklich NICHT schiefgeht: `A1!=B1`. Der Zerleger
+     * probiert `A1!` als Blattnamen, findet dahinter kein `=B1`, das wie eine
+     * Adresse aussieht, nimmt den Versuch zurück und liest `A1` allein. Danach
+     * beginnt der nächste Versuch bei `B1`. Das ist kein Zufall, sondern das,
+     * was ein regulärer Ausdruck beim Zurücksetzen tut — geprüft wird es
+     * trotzdem, in `test110`.
+     */
+    const BLATT = '(?:\'[^\']+\'|[A-Za-z_\\u00C0-\\u024F][A-Za-z0-9_\\u00C0-\\u024F]*)!';
+    /* DIE ZEICHENKETTE BLEIBT VORN — aber sie lässt einen Blattnamen durch.
+       Ein einfach angeführter Text sieht genauso aus wie ein Blattname mit
+       Leerzeichen: `'Mein Blatt'`. Stand der Zeichenketten-Zweig ungeschützt
+       zuerst, wurde aus `='Mein Blatt'!A1` ein `'Mein Blatt'!prop("A1")` —
+       der Blattname blieb als Text stehen, und die Laufzeit sah ein `!`
+       (also „nicht") vor einer Klammer.
+  
+       Der Rückwärtsblick löst es genau dort, wo der Unterschied liegt: ein
+       Text, hinter dem sofort `!` und eine Adresse folgen, ist kein Text.
+       Vorn bleibt der Zweig trotzdem, denn `="A1 ist leer"` darf weiterhin
+       nichts nachschlagen. */
     const TEILE = new RegExp([
-        '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\')',
-        '(' + NICHT_DAVOR + ADRESSE + ':' + ADRESSE + ')',
-        '(' + NICHT_DAVOR + ADRESSE + '\\b(?!\\s*\\())'
+        '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\'(?!\\s*!\\s*\\$?[A-Za-z]))',
+        '(' + NICHT_DAVOR + '(?:' + BLATT + ')?' + ADRESSE + ':(?:' + BLATT + ')?' + ADRESSE + ')',
+        '(' + NICHT_DAVOR + '(?:' + BLATT + ')?' + ADRESSE + '\\b(?!\\s*\\())'
     ].join('|'), 'g');
+    /** `'Mein Blatt'!A1` → `{ blatt: 'Mein Blatt', adresse: 'A1' }`. */
+    const trenneBlatt = (stueck) => {
+        const i = stueck.lastIndexOf('!');
+        if (i < 0)
+            return { blatt: '', adresse: stueck };
+        let name = stueck.slice(0, i);
+        if (name.startsWith('\'') && name.endsWith('\''))
+            name = name.slice(1, -1);
+        return { blatt: name, adresse: stueck.slice(i + 1) };
+    };
+    /**
+     * Der SCHLÜSSEL — wie eine Zelle intern heisst: `Mein Blatt!A1`, ohne
+     * Anführungszeichen.
+     *
+     * Er ist bewusst nicht dasselbe wie das, was in einer Formel steht. In der
+     * Formel braucht ein Name mit Leerzeichen Anführungszeichen, sonst liesse
+     * er sich nicht lesen. Als Schlüssel im Graphen wären sie eine Fehlerquelle
+     * mehr: `'Mein Blatt'!A1` und `Mein Blatt!A1` wären zwei verschiedene
+     * Zellen, und je nachdem, wie die Formel geschrieben war, führe der eine
+     * oder der andere Eintrag ins Leere.
+     *
+     * Eine Sache, ein Name. Das Anführen gehört zur Schreibweise, nicht zur
+     * Sache.
+     */
+    const schluessel = (blatt, adresse) => blatt ? blatt + '!' + adresse : adresse;
+    /** Und für die Formel — mit Anführungszeichen, wenn der Name welche braucht. */
+    const mitBlatt = (blatt, adresse) => {
+        if (!blatt)
+            return adresse;
+        return (/^[A-Za-z_\u00C0-\u024F][A-Za-z0-9_\u00C0-\u024F]*$/.test(blatt)
+            ? blatt : '\'' + blatt + '\'') + '!' + adresse;
+    };
     const ohneDollar = (s) => s.replace(/\$/g, '').toUpperCase();
     /**
      * Aus einer Tabellenformel eine Formel für `laufzeit.js` machen.
@@ -124,7 +182,7 @@ const Spreadsheet = (() => {
      * zerlegen, laufen auseinander, und dann rechnet die Tabelle etwas
      * anderes, als der Graph glaubt.
      */
-    const uebersetze = (formel) => {
+    const uebersetze = (formel, eigenesBlatt = '') => {
         const roh = String(formel ?? '').trim().replace(/^=/, '');
         if (!roh)
             return { quelle: '', liest: [], fehler: null };
@@ -133,11 +191,28 @@ const Spreadsheet = (() => {
             return { quelle: '', liest: [], fehler: 'CellRefs fehlt' };
         const liest = [];
         let fehler = null;
+        /* Jeder gelesene Name ist VOLL QUALIFIZIERT: `Januar!A1`, auch wenn in
+           der Formel nur `A1` steht. Sonst hiessen zwei Zellen auf zwei
+           Blättern gleich, und der Abhängigkeitsgraph legte sie zusammen — eine
+           Tabelle rechnete dann mit dem Wert der anderen. */
+        const voll = (blatt, adresse) => schluessel(blatt || eigenesBlatt, adresse);
         const quelle = roh.replace(TEILE, (ganz, text, bereich, zelle) => {
             if (text !== undefined)
                 return text; /* 1 · unangetastet */
             if (bereich !== undefined) { /* 2 · ausschreiben */
-                const sauber = bereich.split(':').map(ohneDollar).join(':');
+                const [links, rechts] = bereich.split(/:(?![^']*')/).length === 2
+                    ? bereich.split(/:(?![^']*')/) : [bereich, ''];
+                const a = trenneBlatt(String(links));
+                const b = trenneBlatt(String(rechts));
+                /* `Januar!A1:A9` — der Blattname steht nur vorn und gilt für beide.
+                   `Januar!A1:Februar!A9` gibt es nicht: ein Bereich liegt auf einem
+                   Blatt. Excel sagt dazu dasselbe. */
+                if (b.blatt && a.blatt && b.blatt !== a.blatt) {
+                    fehler = 'Ein Bereich kann nicht über zwei Blätter gehen';
+                    return ganz;
+                }
+                const wo = a.blatt || b.blatt;
+                const sauber = ohneDollar(a.adresse) + ':' + ohneDollar(b.adresse);
                 const erg = A.zellenIn(sauber);
                 if (erg.zuGross) {
                     fehler = 'Der Bereich ' + sauber + ' ist zu gross';
@@ -147,32 +222,40 @@ const Spreadsheet = (() => {
                     fehler = 'Der Bereich ' + sauber + ' ergibt keine Zellen';
                     return ganz;
                 }
-                erg.adressen.forEach((a) => liest.push(a));
-                return erg.adressen.map((a) => 'prop("' + a + '")').join(', ');
+                erg.adressen.forEach((x) => liest.push(voll(wo, x)));
+                return erg.adressen.map((x) => 'prop("' + voll(wo, x) + '")').join(', ');
             }
-            const sauber = ohneDollar(zelle); /* 3 · einzelne Zelle */
+            const t = trenneBlatt(zelle); /* 3 · einzelne Zelle */
+            const sauber = ohneDollar(t.adresse);
             if (!A.gueltig(sauber))
                 return ganz;
-            liest.push(sauber);
-            return 'prop("' + sauber + '")';
+            const name = voll(t.blatt, sauber);
+            liest.push(name);
+            return 'prop("' + name + '")';
         });
         return { quelle, liest: [...new Set(liest)], fehler };
     };
     /* ==========================================================================
      * 2 · DER ABHÄNGIGKEITSGRAPH
      * ========================================================================*/
-    /** Aus den Zellen eines Blattes den Graphen bauen. */
-    const graphVon = (zellen) => {
+    /**
+     * Aus den Zellen eines Blattes den Graphen bauen.
+     *
+     * @param blattName  wenn gesetzt, heissen die Knoten `Januar!A1` statt `A1`
+     *                   — nötig, sobald mehr als ein Blatt im Spiel ist
+     */
+    const graphVon = (zellen, blattName = '') => {
         const liest = {};
         const gelesenVon = {};
         for (const adresse of Object.keys(zellen || {})) {
             const zelle = zellen[adresse];
             if (!zelle || !zelle.formel)
                 continue;
-            const { liest: quellen } = uebersetze(zelle.formel);
-            liest[adresse] = quellen;
+            const { liest: quellen } = uebersetze(zelle.formel, blattName);
+            const ich = schluessel(blattName, adresse);
+            liest[ich] = quellen;
             for (const q of quellen)
-                (gelesenVon[q] = gelesenVon[q] || []).push(adresse);
+                (gelesenVon[q] = gelesenVon[q] || []).push(ich);
         }
         return { liest, gelesenVon };
     };
@@ -250,59 +333,117 @@ const Spreadsheet = (() => {
      * Ein Blatt neu rechnen. Verändert die Zellen an Ort und Stelle und sagt,
      * was sich geändert hat.
      */
-    const rechne = (blatt) => {
+    /**
+     * Eine ganze Mappe rechnen — alle Blätter zusammen, in einem Durchgang.
+     *
+     * ─── WARUM NICHT BLATT FÜR BLATT ───────────────────────────────────────
+     *
+     * Weil `Januar!A1` auf `Februar!B2` zeigen darf und umgekehrt. Rechnete man
+     * Blatt für Blatt, hinge das Ergebnis an der Reihenfolge der Blätter — und
+     * ein Zirkelbezug über zwei Blätter fiele gar nicht auf, weil jedes Blatt
+     * für sich kreisfrei ist.
+     *
+     * Also: ein Graph über alle Blätter, mit vollen Namen als Knoten
+     * (`Januar!A1`), eine Tiefensuche, eine Reihenfolge.
+     */
+    const rechneMappe = (mappe) => {
         const t0 = (typeof performance !== 'undefined' && performance.now)
             ? performance.now() : 0;
         const F = maschine();
         if (!F)
             return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Formula fehlt' };
-        if (!blatt || !blatt.zellen)
-            return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Kein Blatt' };
-        const zellen = blatt.zellen;
-        const { liest } = graphVon(zellen);
+        const blaetter = (mappe && mappe.blaetter) || [];
+        if (!blaetter.length)
+            return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Keine Blätter' };
+        /* Mit nur einem Blatt bleiben die Knoten unqualifiziert (`A1` statt
+           `Tabelle 1!A1`). Das ist kein Sonderfall aus Bequemlichkeit: eine
+           Mappe, die vor den Blattreitern gespeichert wurde, hat Formeln ohne
+           Blattnamen, und ihre gemeldeten Zirkelbezüge sollen weiterhin `A1`
+           heissen und nicht plötzlich anders. */
+        const einzeln = blaetter.length === 1;
+        const nameVon = (b, i) => einzeln ? '' : String(b.name || ('Blatt ' + (i + 1)));
+        /* Ein Nachschlagewerk über alle Blätter: voller Name → Zelle. */
+        const wo = {};
+        blaetter.forEach((b, i) => { wo[nameVon(b, i)] = (b && b.zellen) || {}; });
+        let liest = {};
+        blaetter.forEach((b, i) => {
+            const teil = graphVon((b && b.zellen) || {}, nameVon(b, i));
+            liest = Object.assign(liest, teil.liest);
+        });
         const imKreis = zirkel(liest);
         const kreisMenge = new Set(imKreis);
         const geaendert = [];
+        const zelleZu = (voll) => {
+            const t = trenneBlatt(voll);
+            const tafel = wo[t.blatt] || (einzeln ? wo[''] : null);
+            return tafel ? tafel[String(t.adresse).toUpperCase()] : null;
+        };
         /* Zellen im Kreis zuerst — damit alles, was sie liest, den Fehlerwert
            sieht und nicht einen alten Wert von gestern. */
-        for (const adresse of imKreis) {
-            const zelle = zellen[adresse];
+        for (const name of imKreis) {
+            const zelle = zelleZu(name);
             if (!zelle)
                 continue;
             if (zelle.wert !== '#BEZUG!') {
                 zelle.wert = '#BEZUG!';
-                geaendert.push(adresse);
+                geaendert.push(name);
             }
         }
-        /* Der Nachschlager: eine Adresse, ein Zellwert. Eine leere Zelle ist
+        /* Der Nachschlager: ein voller Name, ein Zellwert. Eine leere Zelle ist
            nicht `undefined`, sondern 0 — sonst ergäbe `=SUMME(A1:A9)` über einer
-           halb gefüllten Spalte nichts statt der Summe der gefüllten. */
+           halb gefüllten Spalte nichts statt der Summe der gefüllten.
+    
+           Zeigt eine Formel auf ein Blatt, das es nicht (mehr) gibt, ist das
+           nicht 0, sondern `#BEZUG!`. Ein gelöschtes Blatt still als Null zu
+           rechnen wäre die schlimmere Antwort: die Summe stimmte dann nicht und
+           sähe richtig aus. */
+        let blattFehlt = false;
         const hole = (name) => {
-            const zelle = zellen[String(name).toUpperCase()];
+            const t = trenneBlatt(String(name));
+            if (t.blatt && !(t.blatt in wo)) {
+                blattFehlt = true;
+                return 0;
+            }
+            const zelle = zelleZu(String(name));
             if (!zelle)
                 return 0;
             return zelle.wert === undefined || zelle.wert === null ? 0 : zelle.wert;
         };
-        for (const adresse of reihenfolge(liest, kreisMenge)) {
-            const zelle = zellen[adresse];
+        for (const name of reihenfolge(liest, kreisMenge)) {
+            const zelle = zelleZu(name);
             if (!zelle || !zelle.formel)
                 continue;
-            const { quelle, fehler } = uebersetze(zelle.formel);
+            const eigenes = trenneBlatt(name).blatt;
+            const { quelle, fehler } = uebersetze(zelle.formel, eigenes);
             let neu;
             if (fehler)
                 neu = '#BEZUG!';
             else {
+                blattFehlt = false;
                 const e = F.run(quelle, hole);
-                neu = e.ok ? e.wert : alsFehlerwert(e.fehler);
+                neu = blattFehlt ? '#BEZUG!' : (e.ok ? e.wert : alsFehlerwert(e.fehler));
             }
             if (zelle.wert !== neu) {
                 zelle.wert = neu;
-                geaendert.push(adresse);
+                geaendert.push(name);
             }
         }
         const dauer = ((typeof performance !== 'undefined' && performance.now)
             ? performance.now() : 0) - t0;
         return { geaendert, zirkel: imKreis, dauer: Math.round(dauer), fehler: null };
+    };
+    /**
+     * Ein einzelnes Blatt rechnen.
+     *
+     * Bleibt, weil es der häufige Fall ist und weil alles, was es schon
+     * aufruft, weiterlaufen soll. Es reicht an `rechneMappe` durch — eine
+     * zweite Rechenschleife daneben liefe irgendwann auseinander, und dann
+     * rechnete ein Blatt allein anders als dasselbe Blatt in seiner Mappe.
+     */
+    const rechne = (blatt) => {
+        if (!blatt || !blatt.zellen)
+            return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Kein Blatt' };
+        return rechneMappe({ blaetter: [blatt] });
     };
     /* ==========================================================================
      * 4 · BLÄTTER UND MAPPEN
@@ -498,6 +639,35 @@ const Spreadsheet = (() => {
             return null;
         return (t.absS ? '$' : '') + txt + (t.absZ ? '$' : '') + (zeile + 1);
     });
+    /**
+     * Ein Blatt wurde umbenannt — jede Formel nachziehen.
+     *
+     * OHNE DAS ZEIGT NACH DEM UMBENENNEN ALLES INS LEERE, sofort und überall.
+     * Das ist der Grund, warum Umbenennen in manchen Programmen als gefährlich
+     * gilt: dort wird es nicht nachgezogen, und man merkt es erst an der
+     * dritten Summe.
+     *
+     * Angefasst wird nur der Blattname; Adresse und `$` bleiben, wie sie sind.
+     */
+    const blattUmbenannt = (formel, alt, neu) => {
+        const roh = String(formel ?? '');
+        if (!roh.startsWith('=') || !alt || alt === neu)
+            return roh;
+        const raus = roh.slice(1).replace(TEILE, (_ganz, text, bereich, zelle) => {
+            if (text !== undefined)
+                return text;
+            const stueck = bereich !== undefined ? bereich : zelle;
+            const teile = String(stueck).split(/:(?![^']*')/);
+            const neuTeile = teile.map((t) => {
+                const g = trenneBlatt(t);
+                if (g.blatt !== alt)
+                    return t;
+                return mitBlatt(neu, g.adresse);
+            });
+            return neuTeile.join(':');
+        });
+        return '=' + raus;
+    };
     /* ==========================================================================
      * 6 · ZEILEN UND SPALTEN
      * --------------------------------------------------------------------------
@@ -693,7 +863,8 @@ const Spreadsheet = (() => {
             return String(zelle.formel);
         return zelle.wert === undefined || zelle.wert === null ? '' : String(zelle.wert);
     };
-    return { uebersetze, graphVon, zirkel, reihenfolge, rechne,
+    return { uebersetze, graphVon, zirkel, reihenfolge, rechne, rechneMappe,
+        trenneBlatt, mitBlatt, schluessel, blattUmbenannt,
         neuesBlatt, neueMappe, setze, wert, eingabe, alsFehlerwert,
         verschiebe, bezuegeNachEingriff,
         zeileEinfuegen, zeileLoeschen, spalteEinfuegen, spalteLoeschen,

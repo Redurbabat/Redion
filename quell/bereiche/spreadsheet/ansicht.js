@@ -145,7 +145,13 @@ const SpreadsheetView = (() => {
         const hatteMappe = !!(block.mappe && block.mappe.blaetter && block.mappe.blaetter.length);
         if (!hatteMappe)
             block.mappe = K.neueMappe(block.text || 'Tabelle');
-        const blatt = block.mappe.blaetter[0];
+        /* WELCHES BLATT GERADE OFFEN IST, steht in der Mappe und nicht hier —
+           so überlebt es das Neuzeichnen und den Neustart. Zeigt `aktiv` auf ein
+           Blatt, das es nicht mehr gibt, wird es das erste: eine Mappe ohne
+           sichtbares Blatt wäre eine leere Fläche ohne Erklärung. */
+        let blatt = block.mappe.blaetter.find((b) => b.id === block.mappe.aktiv)
+            || block.mappe.blaetter[0];
+        block.mappe.aktiv = blatt.id;
         if (!blatt.breiten)
             blatt.breiten = {};
         /* Die Auswahl lebt hier, nicht im DOM — sie überlebt jedes Neuzeichnen. */
@@ -186,7 +192,10 @@ const SpreadsheetView = (() => {
          * sonst unterschiede sich der Stand bei jedem Rechnen von sich selbst,
          * und die Prüfung wäre keine.
          * ====================================================================*/
-        const standVon = () => JSON.stringify(blatt);
+        /* Verglichen wird die GANZE Mappe. Mit einem Blatt allein bliebe eine
+           Änderung auf einem anderen Blatt ungespeichert — und zwar genau die,
+           die eine blattübergreifende Formel gerade ausgelöst hat. */
+        const standVon = () => JSON.stringify(block.mappe.blaetter);
         let letzterStand = hatteMappe ? standVon() : '';
         const sichere = () => {
             const jetzt = standVon();
@@ -266,7 +275,18 @@ const SpreadsheetView = (() => {
         feld.append(spaltenKopf, koerper);
         const fuss = document.createElement('div');
         fuss.className = 'tbl-fuss';
-        w.append(kopf, feld, fuss);
+        /* ======================================================================
+         * DIE BLATTREITER
+         * --------------------------------------------------------------------
+         * Unten, wie in jedem Tabellenprogramm. Oben wären sie über der
+         * Bearbeitungszeile und damit über dem, was man liest; unten sind sie
+         * dort, wo man sie sucht — und am Telefon in Daumenreichweite.
+         * ====================================================================*/
+        const reiter = document.createElement('div');
+        reiter.className = 'tbl-reiter';
+        reiter.setAttribute('role', 'tablist');
+        reiter.setAttribute('aria-label', 'Blätter');
+        w.append(kopf, feld, reiter, fuss);
         /* ======================================================================
          * ZEICHNEN
          * ====================================================================*/
@@ -542,9 +562,62 @@ const SpreadsheetView = (() => {
                 b.classList.toggle('on', !!an);
             });
         };
-        const alles = () => { spaltenZeichnen(); koerperZeichnen(); fussZeichnen(); kopfZeichnen(); };
+        /* ----------------------------------------------------------------------
+         * DIE REITER ZEICHNEN
+         * --------------------------------------------------------------------
+         * Bei EINEM Blatt bleiben sie unsichtbar. Ein einzelner Reiter über
+         * einer einzelnen Tabelle erklärt nichts und kostet eine Zeile Höhe in
+         * jedem Block, den jemals jemand angelegt hat.
+         * ------------------------------------------------------------------*/
+        const reiterZeichnen = () => {
+            const viele = block.mappe.blaetter.length > 1;
+            reiter.classList.toggle('einzeln', !viele);
+            reiter.innerHTML = '';
+            block.mappe.blaetter.forEach((b) => {
+                const r = document.createElement('button');
+                r.className = 'tbl-reiter-eins' + (b.id === blatt.id ? ' aktiv' : '');
+                r.dataset.blatt = b.id;
+                r.setAttribute('role', 'tab');
+                r.setAttribute('aria-selected', b.id === blatt.id ? 'true' : 'false');
+                r.textContent = b.name || 'Ohne Namen';
+                r.title = viele ? b.name + ' — Doppelklick zum Umbenennen' : b.name;
+                reiter.appendChild(r);
+            });
+            const plus = document.createElement('button');
+            plus.className = 'tbl-reiter-plus';
+            plus.dataset.a = 'neu';
+            plus.textContent = '+';
+            plus.title = 'Neues Blatt';
+            plus.setAttribute('aria-label', 'Neues Blatt');
+            reiter.appendChild(plus);
+        };
+        const zuBlatt = (id) => {
+            const neu = block.mappe.blaetter.find((b) => b.id === id);
+            if (!neu || neu.id === blatt.id)
+                return;
+            blatt = neu;
+            if (!blatt.breiten)
+                blatt.breiten = {};
+            block.mappe.aktiv = blatt.id;
+            /* Die Auswahl gehört zum Blatt, nicht zur Mappe — beim Wechseln fängt
+               sie oben links an, wie in jedem Tabellenprogramm. */
+            gewaehlt = anker = 'A1';
+            feld.scrollTop = 0;
+            sichere();
+            alles();
+        };
+        const alles = () => {
+            spaltenZeichnen();
+            koerperZeichnen();
+            fussZeichnen();
+            kopfZeichnen();
+            reiterZeichnen();
+        };
         const rechneUndZeichne = () => {
-            const erg = K.rechne(blatt);
+            /* Die MAPPE rechnen, nicht das Blatt: `Januar!A1` darf auf
+               `Februar!B2` zeigen, und ein Kreis über zwei Blätter fiele beim
+               blattweisen Rechnen gar nicht auf. */
+            const erg = K.rechneMappe(block.mappe);
             zirkel = erg.zirkel || [];
             sichere();
             alles();
@@ -1273,6 +1346,167 @@ const SpreadsheetView = (() => {
             }
             stilSetzen(a);
         });
+        /* ======================================================================
+         * DIE REITER BEDIENEN
+         * --------------------------------------------------------------------
+         * Klicken wechselt · Doppelklick benennt um · Rechtsklick oder langer
+         * Druck öffnet das Menü · `+` legt an.
+         *
+         * DAS LÖSCHEN IST DIE STELLE, AN DER MAN AUFPASSEN MUSS. Ein Blatt zu
+         * löschen, auf das Formeln zeigen, macht diese Formeln kaputt — und zwar
+         * auf einem ANDEREN Blatt, das man gerade nicht sieht. Deshalb wird
+         * vorher nachgezählt und gesagt, wie viele es sind.
+         * ====================================================================*/
+        const blattMenue = (b, x, y) => {
+            if (typeof Menue === 'undefined')
+                return;
+            const m = Menue.menu('<button data-a="um"><span class="mi">✏️</span>Umbenennen</button>' +
+                '<button data-a="kopie"><span class="mi">⧉</span>Verdoppeln</button><hr>' +
+                (block.mappe.blaetter.length > 1
+                    ? '<button data-a="del"><span class="mi">🗑</span>Blatt „' + esc(b.name) + '" löschen</button>'
+                    : '<button data-a="" disabled><span class="mi">🗑</span>Das letzte Blatt bleibt</button>'), x, y, { titel: b.name });
+            m.addEventListener('click', async (ev) => {
+                const t = ev.target.closest('button');
+                if (!t || !t.dataset.a)
+                    return;
+                const a = t.dataset.a;
+                m.remove();
+                document.querySelectorAll('.menu-grund').forEach(g => g.remove());
+                if (a === 'um')
+                    return umbenennen(b);
+                if (a === 'kopie') {
+                    const kopie = JSON.parse(JSON.stringify(b));
+                    kopie.id = (typeof Ids !== 'undefined') ? Ids.short(8)
+                        : 'x' + Math.random().toString(36).slice(2, 10);
+                    kopie.name = freierName(b.name + ' Kopie');
+                    block.mappe.blaetter.push(kopie);
+                    zuBlatt(kopie.id);
+                    return;
+                }
+                if (a === 'del') {
+                    /* NACHGEZÄHLT: wie viele Formeln auf ANDEREN Blättern zeigen
+                       hierher? Sie stehen woanders, man sieht sie gerade nicht, und
+                       sie werden gleich alle `#BEZUG!`. */
+                    let betroffen = 0;
+                    block.mappe.blaetter.forEach((andere) => {
+                        if (andere.id === b.id)
+                            return;
+                        Object.keys(andere.zellen || {}).forEach(adr => {
+                            const z = andere.zellen[adr];
+                            if (z && z.formel && K.uebersetze(z.formel, andere.name).liest
+                                .some((n) => K.trenneBlatt(n).blatt === b.name))
+                                betroffen++;
+                        });
+                    });
+                    const gefuellt = Object.keys(b.zellen || {}).length;
+                    const antwort = typeof Dialog !== 'undefined'
+                        ? await Dialog.wahl({
+                            titel: 'Blatt „' + b.name + '" löschen?',
+                            text: gefuellt + ' gefüllte Zellen' +
+                                (betroffen ? '\n\n' + betroffen + ' Formeln auf anderen Blättern zeigen hierher. ' +
+                                    'Sie zeigen danach ins Leere und stehen als #BEZUG! da.'
+                                    : '\n\nKeine Formel auf einem anderen Blatt zeigt hierher.'),
+                            knoepfe: [
+                                { id: '', text: 'Behalten', hinweis: 'Es wird nichts verändert' },
+                                { id: 'ja', text: 'Löschen', hinweis: gefuellt + ' Zellen gehen verloren' }
+                            ]
+                        })
+                        : 'ja';
+                    if (antwort !== 'ja')
+                        return;
+                    const i = block.mappe.blaetter.indexOf(b);
+                    block.mappe.blaetter.splice(i, 1);
+                    const naechstes = block.mappe.blaetter[Math.max(0, i - 1)];
+                    blatt = naechstes;
+                    block.mappe.aktiv = naechstes.id;
+                    gewaehlt = anker = 'A1';
+                    rechneUndZeichne();
+                }
+            });
+        };
+        /** Ein Name, den es noch nicht gibt — sonst zeigen zwei Blätter auf eins. */
+        const freierName = (wunsch) => {
+            const belegt = new Set(block.mappe.blaetter.map((b) => b.name));
+            if (!belegt.has(wunsch))
+                return wunsch;
+            for (let i = 2; i < 999; i++)
+                if (!belegt.has(wunsch + ' ' + i))
+                    return wunsch + ' ' + i;
+            return wunsch + ' ' + Date.now();
+        };
+        const umbenennen = async (b) => {
+            if (typeof Dialog === 'undefined')
+                return;
+            const neu = await Dialog.frage('Blatt umbenennen', b.name);
+            if (!neu || neu === b.name)
+                return;
+            /* Kein `!` im Namen: er steht in jeder Formel vor dem Ausrufezeichen,
+               und ein zweites darin wäre nicht mehr eindeutig zu lesen. */
+            const sauber = String(neu).replace(/[!'"]/g, '').trim().slice(0, 40);
+            if (!sauber)
+                return;
+            const alt = b.name;
+            b.name = freierName(sauber);
+            /* JEDE FORMEL AUF JEDEM BLATT NACHZIEHEN. Ohne das zeigt nach dem
+               Umbenennen alles ins Leere — und zwar sofort und überall. */
+            block.mappe.blaetter.forEach((andere) => {
+                Object.keys(andere.zellen || {}).forEach(adr => {
+                    const z = andere.zellen[adr];
+                    if (z && z.formel)
+                        z.formel = K.blattUmbenannt(z.formel, alt, b.name);
+                });
+            });
+            rechneUndZeichne();
+        };
+        reiter.addEventListener('click', (e) => {
+            const ziel = e.target;
+            if (ziel.dataset && ziel.dataset.a === 'neu') {
+                const neu = K.neuesBlatt(freierName('Tabelle ' + (block.mappe.blaetter.length + 1)));
+                block.mappe.blaetter.push(neu);
+                zuBlatt(neu.id);
+                return;
+            }
+            const r = ziel.closest('.tbl-reiter-eins');
+            if (r && r.dataset.blatt)
+                zuBlatt(r.dataset.blatt);
+        });
+        reiter.addEventListener('dblclick', (e) => {
+            const r = e.target.closest('.tbl-reiter-eins');
+            if (!r || !r.dataset.blatt)
+                return;
+            const b = block.mappe.blaetter.find((x) => x.id === r.dataset.blatt);
+            if (b)
+                umbenennen(b);
+        });
+        reiter.addEventListener('contextmenu', (e) => {
+            const r = e.target.closest('.tbl-reiter-eins');
+            if (!r || !r.dataset.blatt)
+                return;
+            e.preventDefault();
+            const b = block.mappe.blaetter.find((x) => x.id === r.dataset.blatt);
+            if (b)
+                blattMenue(b, e.clientX, e.clientY);
+        });
+        /* Am Telefon gibt es keine rechte Maustaste — ein langer Druck tut es. */
+        let reiterUhr = 0;
+        reiter.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            const r = e.target.closest('.tbl-reiter-eins');
+            if (!t || !r || !r.dataset.blatt)
+                return;
+            const x = t.clientX, y = t.clientY, id = r.dataset.blatt;
+            reiterUhr = window.setTimeout(() => {
+                const b = block.mappe.blaetter.find((z) => z.id === id);
+                if (b)
+                    blattMenue(b, x, y);
+            }, 500);
+        }, { passive: true });
+        const reiterLos = () => { if (reiterUhr) {
+            clearTimeout(reiterUhr);
+            reiterUhr = 0;
+        } };
+        reiter.addEventListener('touchend', reiterLos);
+        reiter.addEventListener('touchmove', reiterLos, { passive: true });
         /* --- Erster Aufbau ---------------------------------------------------- */
         rechneUndZeichne();
         /* EINMAL NACH DEM EINHÄNGEN, aus zwei Gründen auf einmal:

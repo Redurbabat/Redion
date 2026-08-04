@@ -465,6 +465,103 @@ gleich('… und A3 bleibt 42', nachgerechnet.a3, 42);
 await zweite.close();
 
 /* ========================================================================= *
+ * 5b · DIE BLATTREITER
+ * ------------------------------------------------------------------------
+ * Drei Dinge, die man beim Zeichnen falsch machen kann und die keine
+ * Kernprüfung findet:
+ *
+ *   · **Welches Blatt offen ist, muss den Neustart überleben.** Steht es nur
+ *     in einer Variablen der Ansicht, springt die Tabelle bei jedem Öffnen
+ *     zurück auf das erste — und wer auf Blatt 7 arbeitet, sucht es jedes Mal.
+ *   · **Bei EINEM Blatt sind die Reiter unsichtbar.** Ein einzelner Reiter
+ *     über einer einzelnen Tabelle erklärt nichts und kostet in jedem Block
+ *     eine Zeile Höhe.
+ *   · **Der Plus-Knopf bleibt trotzdem sichtbar** — sonst gäbe es keinen Weg
+ *     zum zweiten Blatt, und eine Funktion ohne Weg dorthin gibt es nicht.
+ * ========================================================================= */
+console.log('\n5b · Blattreiter');
+
+const reiter = await seite.evaluate(async () => {
+  const w = window as any;
+  const blk = Store.getBlock(w.__blockId);
+  const kasten = document.getElementById('pruef-tabelle')!;
+
+  const zeichne = () => {
+    kasten.innerHTML = '';
+    kasten.appendChild(w.SpreadsheetView.zeichne(Store.getBlock(w.__blockId)));
+  };
+
+  /* Mit einem Blatt: keine Reiter, aber ein Plus. */
+  zeichne();
+  const einzeln = {
+    sichtbar: kasten.querySelectorAll('.tbl-reiter-eins').length,
+    versteckt: (kasten.querySelector('.tbl-reiter') as HTMLElement).classList.contains('einzeln'),
+    plus: !!kasten.querySelector('.tbl-reiter-plus')
+  };
+
+  /* Ein zweites Blatt, das aus dem ersten liest. */
+  blk.mappe.blaetter[0].name = 'Januar';
+  const feb = w.Spreadsheet.neuesBlatt('Februar');
+  blk.mappe.blaetter.push(feb);
+  w.Spreadsheet.setze(feb, 'A1', '=SUMME(Januar!A1:A2)');
+  blk.mappe.aktiv = feb.id;
+  Store.updateBlock(blk.id, { mappe: blk.mappe });
+  zeichne();
+  await new Promise(f => setTimeout(f, 60));
+
+  const viele = {
+    anzahl: kasten.querySelectorAll('.tbl-reiter-eins').length,
+    namen: [...kasten.querySelectorAll('.tbl-reiter-eins')].map(x => x.textContent),
+    aktiv: (kasten.querySelector('.tbl-reiter-eins.aktiv') as HTMLElement)?.textContent,
+    /* Februar!A1 muss die Summe aus Januar zeigen — A1 ist 10, A2 ist 32. */
+    a1: (kasten.querySelector('[data-a="A1"]') as HTMLElement)?.textContent
+  };
+
+  /* Auf Januar klicken. */
+  const ersterReiter = kasten.querySelector('.tbl-reiter-eins') as HTMLElement;
+  ersterReiter.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await new Promise(f => setTimeout(f, 60));
+  const nachWechsel = {
+    aktiv: (kasten.querySelector('.tbl-reiter-eins.aktiv') as HTMLElement)?.textContent,
+    a1: (kasten.querySelector('[data-a="A1"]') as HTMLElement)?.textContent,
+    gemerkt: Store.getBlock(w.__blockId).mappe.aktiv === blk.mappe.blaetter[0].id
+  };
+
+  /* Umbenennen — und die Formel auf dem anderen Blatt muss mitwandern. */
+  blk.mappe.blaetter.forEach((b: any) => {
+    Object.keys(b.zellen).forEach(a => {
+      const z = b.zellen[a];
+      if (z.formel) z.formel = w.Spreadsheet.blattUmbenannt(z.formel, 'Januar', 'Jan');
+    });
+  });
+  blk.mappe.blaetter[0].name = 'Jan';
+  const erg = w.Spreadsheet.rechneMappe(blk.mappe);
+
+  return { einzeln, viele, nachWechsel,
+           formelNachher: feb.zellen.A1.formel,
+           wertNachher: feb.zellen.A1.wert,
+           kreise: erg.zirkel.length };
+}) as any;
+
+gleich('Mit einem Blatt ist kein Reiter zu sehen', reiter.einzeln.sichtbar, 1);
+p('… die Leiste ist als „einzeln" gekennzeichnet', reiter.einzeln.versteckt);
+p('… der Plus-Knopf bleibt trotzdem da', reiter.einzeln.plus);
+
+gleich('Mit zwei Blättern stehen zwei Reiter da', reiter.viele.anzahl, 2);
+gleich('… mit ihren Namen', reiter.viele.namen, ['Januar', 'Februar']);
+gleich('Der aktive ist markiert', reiter.viele.aktiv, 'Februar');
+gleich('Februar rechnet mit Januars Zahlen', reiter.viele.a1, '42');
+
+gleich('Ein Klick wechselt das Blatt', reiter.nachWechsel.aktiv, 'Januar');
+gleich('… und zeigt dessen Inhalt', reiter.nachWechsel.a1, '10');
+p('… und die Mappe merkt sich, welches offen ist', reiter.nachWechsel.gemerkt);
+
+gleich('Beim Umbenennen wandert die Formel mit',
+  reiter.formelNachher, '=SUMME(Jan!A1:A2)');
+gleich('… und rechnet weiterhin richtig', reiter.wertNachher, 42);
+gleich('Kein Blatt liest sich versehentlich selbst', reiter.kreise, 0);
+
+/* ========================================================================= *
  * 6 · DIE TASTATUR
  * ========================================================================= */
 console.log('\n6 · Tastatur');

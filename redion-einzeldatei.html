@@ -1977,6 +1977,60 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   z-index: 5;
 }
 
+/* --- Die Blattreiter ------------------------------------------------------
+   Unten, wie in jedem Tabellenprogramm — dort sucht man sie, und am Telefon
+   sind sie in Daumenreichweite. Bei einem einzigen Blatt sind sie weg: ein
+   einzelner Reiter über einer einzelnen Tabelle erklärt nichts und kostet in
+   jedem Block, den je jemand angelegt hat, eine Zeile Höhe. */
+.tbl-reiter {
+  display: flex; align-items: stretch; gap: 2px;
+  padding: 4px 6px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-card);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tbl-reiter::-webkit-scrollbar { display: none; }
+.tbl-reiter.einzeln { padding: 0 6px; }
+.tbl-reiter.einzeln .tbl-reiter-eins { display: none; }
+/* Der Plus-Knopf bleibt auch bei einem Blatt — sonst gäbe es keinen Weg zum
+   zweiten, und eine Funktion ohne Weg dorthin gibt es nicht. */
+.tbl-reiter.einzeln .tbl-reiter-plus { opacity: .55; }
+
+.tbl-reiter-eins {
+  flex: 0 0 auto;
+  border: 0; background: transparent;
+  color: var(--text-dim);
+  font: 12px var(--font);
+  padding: 5px 12px;
+  border-radius: 5px 5px 0 0;
+  cursor: pointer;
+  max-width: 160px;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.tbl-reiter-eins:hover { background: var(--bg-hover); color: var(--text); }
+.tbl-reiter-eins.aktiv {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  /* Die Linie unter dem aktiven Reiter ist das eine Zeichen, das sagt: DIESES
+     Blatt liegt oben. Ein blosser Farbwechsel wäre bei zehn Reitern nicht
+     genug — man sucht dann. */
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.tbl-reiter-eins:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.tbl-reiter-plus {
+  flex: 0 0 auto;
+  border: 0; background: transparent;
+  color: var(--text-dim);
+  font: 16px var(--font);
+  width: 28px; border-radius: 5px;
+  cursor: pointer;
+}
+.tbl-reiter-plus:hover { background: var(--bg-hover); color: var(--text); }
+.tbl-reiter-plus:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
 /* --- Fusszeile ------------------------------------------------------------
    Sagt, was gerade gilt: Auswahl, Summe, Zirkelbezüge. Eine Meldung, die man
    suchen muss, ist keine. */
@@ -2033,6 +2087,11 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 
   .tbl-adresse { min-width: 48px; }
   .tbl-fuss { font-size: 11px; gap: 10px; }
+
+  /* Reiter am Finger: 44 px hoch, und die Schrift so gross, dass man den
+     Namen lesen kann, ohne heranzuzoomen. */
+  .tbl-reiter-eins { padding: 12px 14px; font-size: 14px; min-height: 44px; }
+  .tbl-reiter-plus { width: 44px; min-height: 44px; font-size: 20px; }
 
   /* ------------------------------------------------------------------------
    * ZWEI ZEILEN STATT EINER — und das ist kein Feinschliff.
@@ -6161,11 +6220,69 @@ const Spreadsheet = (() => {
      */
     const ADRESSE = '\\$?[A-Za-z]{1,3}\\$?[0-9]{1,7}';
     const NICHT_DAVOR = '(?<![A-Za-z0-9_$.])';
+    /**
+     * Der Blattname vor dem Ausrufezeichen: `Januar!A1` oder `'Mein Blatt'!A1`.
+     *
+     * MIT ANFÜHRUNGSZEICHEN, SOBALD EIN LEERZEICHEN DRIN IST — so wie in Excel,
+     * und aus demselben Grund: ohne sie liesse sich `SUMME(Mein Blatt!A1)` nicht
+     * eindeutig lesen.
+     *
+     * Und was hier ausdrücklich NICHT schiefgeht: `A1!=B1`. Der Zerleger
+     * probiert `A1!` als Blattnamen, findet dahinter kein `=B1`, das wie eine
+     * Adresse aussieht, nimmt den Versuch zurück und liest `A1` allein. Danach
+     * beginnt der nächste Versuch bei `B1`. Das ist kein Zufall, sondern das,
+     * was ein regulärer Ausdruck beim Zurücksetzen tut — geprüft wird es
+     * trotzdem, in `test110`.
+     */
+    const BLATT = '(?:\'[^\']+\'|[A-Za-z_\\u00C0-\\u024F][A-Za-z0-9_\\u00C0-\\u024F]*)!';
+    /* DIE ZEICHENKETTE BLEIBT VORN — aber sie lässt einen Blattnamen durch.
+       Ein einfach angeführter Text sieht genauso aus wie ein Blattname mit
+       Leerzeichen: `'Mein Blatt'`. Stand der Zeichenketten-Zweig ungeschützt
+       zuerst, wurde aus `='Mein Blatt'!A1` ein `'Mein Blatt'!prop("A1")` —
+       der Blattname blieb als Text stehen, und die Laufzeit sah ein `!`
+       (also „nicht") vor einer Klammer.
+  
+       Der Rückwärtsblick löst es genau dort, wo der Unterschied liegt: ein
+       Text, hinter dem sofort `!` und eine Adresse folgen, ist kein Text.
+       Vorn bleibt der Zweig trotzdem, denn `="A1 ist leer"` darf weiterhin
+       nichts nachschlagen. */
     const TEILE = new RegExp([
-        '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\')',
-        '(' + NICHT_DAVOR + ADRESSE + ':' + ADRESSE + ')',
-        '(' + NICHT_DAVOR + ADRESSE + '\\b(?!\\s*\\())'
+        '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\'(?!\\s*!\\s*\\$?[A-Za-z]))',
+        '(' + NICHT_DAVOR + '(?:' + BLATT + ')?' + ADRESSE + ':(?:' + BLATT + ')?' + ADRESSE + ')',
+        '(' + NICHT_DAVOR + '(?:' + BLATT + ')?' + ADRESSE + '\\b(?!\\s*\\())'
     ].join('|'), 'g');
+    /** `'Mein Blatt'!A1` → `{ blatt: 'Mein Blatt', adresse: 'A1' }`. */
+    const trenneBlatt = (stueck) => {
+        const i = stueck.lastIndexOf('!');
+        if (i < 0)
+            return { blatt: '', adresse: stueck };
+        let name = stueck.slice(0, i);
+        if (name.startsWith('\'') && name.endsWith('\''))
+            name = name.slice(1, -1);
+        return { blatt: name, adresse: stueck.slice(i + 1) };
+    };
+    /**
+     * Der SCHLÜSSEL — wie eine Zelle intern heisst: `Mein Blatt!A1`, ohne
+     * Anführungszeichen.
+     *
+     * Er ist bewusst nicht dasselbe wie das, was in einer Formel steht. In der
+     * Formel braucht ein Name mit Leerzeichen Anführungszeichen, sonst liesse
+     * er sich nicht lesen. Als Schlüssel im Graphen wären sie eine Fehlerquelle
+     * mehr: `'Mein Blatt'!A1` und `Mein Blatt!A1` wären zwei verschiedene
+     * Zellen, und je nachdem, wie die Formel geschrieben war, führe der eine
+     * oder der andere Eintrag ins Leere.
+     *
+     * Eine Sache, ein Name. Das Anführen gehört zur Schreibweise, nicht zur
+     * Sache.
+     */
+    const schluessel = (blatt, adresse) => blatt ? blatt + '!' + adresse : adresse;
+    /** Und für die Formel — mit Anführungszeichen, wenn der Name welche braucht. */
+    const mitBlatt = (blatt, adresse) => {
+        if (!blatt)
+            return adresse;
+        return (/^[A-Za-z_\u00C0-\u024F][A-Za-z0-9_\u00C0-\u024F]*$/.test(blatt)
+            ? blatt : '\'' + blatt + '\'') + '!' + adresse;
+    };
     const ohneDollar = (s) => s.replace(/\$/g, '').toUpperCase();
     /**
      * Aus einer Tabellenformel eine Formel für `laufzeit.js` machen.
@@ -6176,7 +6293,7 @@ const Spreadsheet = (() => {
      * zerlegen, laufen auseinander, und dann rechnet die Tabelle etwas
      * anderes, als der Graph glaubt.
      */
-    const uebersetze = (formel) => {
+    const uebersetze = (formel, eigenesBlatt = '') => {
         const roh = String(formel ?? '').trim().replace(/^=/, '');
         if (!roh)
             return { quelle: '', liest: [], fehler: null };
@@ -6185,11 +6302,28 @@ const Spreadsheet = (() => {
             return { quelle: '', liest: [], fehler: 'CellRefs fehlt' };
         const liest = [];
         let fehler = null;
+        /* Jeder gelesene Name ist VOLL QUALIFIZIERT: `Januar!A1`, auch wenn in
+           der Formel nur `A1` steht. Sonst hiessen zwei Zellen auf zwei
+           Blättern gleich, und der Abhängigkeitsgraph legte sie zusammen — eine
+           Tabelle rechnete dann mit dem Wert der anderen. */
+        const voll = (blatt, adresse) => schluessel(blatt || eigenesBlatt, adresse);
         const quelle = roh.replace(TEILE, (ganz, text, bereich, zelle) => {
             if (text !== undefined)
                 return text; /* 1 · unangetastet */
             if (bereich !== undefined) { /* 2 · ausschreiben */
-                const sauber = bereich.split(':').map(ohneDollar).join(':');
+                const [links, rechts] = bereich.split(/:(?![^']*')/).length === 2
+                    ? bereich.split(/:(?![^']*')/) : [bereich, ''];
+                const a = trenneBlatt(String(links));
+                const b = trenneBlatt(String(rechts));
+                /* `Januar!A1:A9` — der Blattname steht nur vorn und gilt für beide.
+                   `Januar!A1:Februar!A9` gibt es nicht: ein Bereich liegt auf einem
+                   Blatt. Excel sagt dazu dasselbe. */
+                if (b.blatt && a.blatt && b.blatt !== a.blatt) {
+                    fehler = 'Ein Bereich kann nicht über zwei Blätter gehen';
+                    return ganz;
+                }
+                const wo = a.blatt || b.blatt;
+                const sauber = ohneDollar(a.adresse) + ':' + ohneDollar(b.adresse);
                 const erg = A.zellenIn(sauber);
                 if (erg.zuGross) {
                     fehler = 'Der Bereich ' + sauber + ' ist zu gross';
@@ -6199,32 +6333,40 @@ const Spreadsheet = (() => {
                     fehler = 'Der Bereich ' + sauber + ' ergibt keine Zellen';
                     return ganz;
                 }
-                erg.adressen.forEach((a) => liest.push(a));
-                return erg.adressen.map((a) => 'prop("' + a + '")').join(', ');
+                erg.adressen.forEach((x) => liest.push(voll(wo, x)));
+                return erg.adressen.map((x) => 'prop("' + voll(wo, x) + '")').join(', ');
             }
-            const sauber = ohneDollar(zelle); /* 3 · einzelne Zelle */
+            const t = trenneBlatt(zelle); /* 3 · einzelne Zelle */
+            const sauber = ohneDollar(t.adresse);
             if (!A.gueltig(sauber))
                 return ganz;
-            liest.push(sauber);
-            return 'prop("' + sauber + '")';
+            const name = voll(t.blatt, sauber);
+            liest.push(name);
+            return 'prop("' + name + '")';
         });
         return { quelle, liest: [...new Set(liest)], fehler };
     };
     /* ==========================================================================
      * 2 · DER ABHÄNGIGKEITSGRAPH
      * ========================================================================*/
-    /** Aus den Zellen eines Blattes den Graphen bauen. */
-    const graphVon = (zellen) => {
+    /**
+     * Aus den Zellen eines Blattes den Graphen bauen.
+     *
+     * @param blattName  wenn gesetzt, heissen die Knoten `Januar!A1` statt `A1`
+     *                   — nötig, sobald mehr als ein Blatt im Spiel ist
+     */
+    const graphVon = (zellen, blattName = '') => {
         const liest = {};
         const gelesenVon = {};
         for (const adresse of Object.keys(zellen || {})) {
             const zelle = zellen[adresse];
             if (!zelle || !zelle.formel)
                 continue;
-            const { liest: quellen } = uebersetze(zelle.formel);
-            liest[adresse] = quellen;
+            const { liest: quellen } = uebersetze(zelle.formel, blattName);
+            const ich = schluessel(blattName, adresse);
+            liest[ich] = quellen;
             for (const q of quellen)
-                (gelesenVon[q] = gelesenVon[q] || []).push(adresse);
+                (gelesenVon[q] = gelesenVon[q] || []).push(ich);
         }
         return { liest, gelesenVon };
     };
@@ -6302,59 +6444,117 @@ const Spreadsheet = (() => {
      * Ein Blatt neu rechnen. Verändert die Zellen an Ort und Stelle und sagt,
      * was sich geändert hat.
      */
-    const rechne = (blatt) => {
+    /**
+     * Eine ganze Mappe rechnen — alle Blätter zusammen, in einem Durchgang.
+     *
+     * ─── WARUM NICHT BLATT FÜR BLATT ───────────────────────────────────────
+     *
+     * Weil `Januar!A1` auf `Februar!B2` zeigen darf und umgekehrt. Rechnete man
+     * Blatt für Blatt, hinge das Ergebnis an der Reihenfolge der Blätter — und
+     * ein Zirkelbezug über zwei Blätter fiele gar nicht auf, weil jedes Blatt
+     * für sich kreisfrei ist.
+     *
+     * Also: ein Graph über alle Blätter, mit vollen Namen als Knoten
+     * (`Januar!A1`), eine Tiefensuche, eine Reihenfolge.
+     */
+    const rechneMappe = (mappe) => {
         const t0 = (typeof performance !== 'undefined' && performance.now)
             ? performance.now() : 0;
         const F = maschine();
         if (!F)
             return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Formula fehlt' };
-        if (!blatt || !blatt.zellen)
-            return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Kein Blatt' };
-        const zellen = blatt.zellen;
-        const { liest } = graphVon(zellen);
+        const blaetter = (mappe && mappe.blaetter) || [];
+        if (!blaetter.length)
+            return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Keine Blätter' };
+        /* Mit nur einem Blatt bleiben die Knoten unqualifiziert (`A1` statt
+           `Tabelle 1!A1`). Das ist kein Sonderfall aus Bequemlichkeit: eine
+           Mappe, die vor den Blattreitern gespeichert wurde, hat Formeln ohne
+           Blattnamen, und ihre gemeldeten Zirkelbezüge sollen weiterhin `A1`
+           heissen und nicht plötzlich anders. */
+        const einzeln = blaetter.length === 1;
+        const nameVon = (b, i) => einzeln ? '' : String(b.name || ('Blatt ' + (i + 1)));
+        /* Ein Nachschlagewerk über alle Blätter: voller Name → Zelle. */
+        const wo = {};
+        blaetter.forEach((b, i) => { wo[nameVon(b, i)] = (b && b.zellen) || {}; });
+        let liest = {};
+        blaetter.forEach((b, i) => {
+            const teil = graphVon((b && b.zellen) || {}, nameVon(b, i));
+            liest = Object.assign(liest, teil.liest);
+        });
         const imKreis = zirkel(liest);
         const kreisMenge = new Set(imKreis);
         const geaendert = [];
+        const zelleZu = (voll) => {
+            const t = trenneBlatt(voll);
+            const tafel = wo[t.blatt] || (einzeln ? wo[''] : null);
+            return tafel ? tafel[String(t.adresse).toUpperCase()] : null;
+        };
         /* Zellen im Kreis zuerst — damit alles, was sie liest, den Fehlerwert
            sieht und nicht einen alten Wert von gestern. */
-        for (const adresse of imKreis) {
-            const zelle = zellen[adresse];
+        for (const name of imKreis) {
+            const zelle = zelleZu(name);
             if (!zelle)
                 continue;
             if (zelle.wert !== '#BEZUG!') {
                 zelle.wert = '#BEZUG!';
-                geaendert.push(adresse);
+                geaendert.push(name);
             }
         }
-        /* Der Nachschlager: eine Adresse, ein Zellwert. Eine leere Zelle ist
+        /* Der Nachschlager: ein voller Name, ein Zellwert. Eine leere Zelle ist
            nicht `undefined`, sondern 0 — sonst ergäbe `=SUMME(A1:A9)` über einer
-           halb gefüllten Spalte nichts statt der Summe der gefüllten. */
+           halb gefüllten Spalte nichts statt der Summe der gefüllten.
+    
+           Zeigt eine Formel auf ein Blatt, das es nicht (mehr) gibt, ist das
+           nicht 0, sondern `#BEZUG!`. Ein gelöschtes Blatt still als Null zu
+           rechnen wäre die schlimmere Antwort: die Summe stimmte dann nicht und
+           sähe richtig aus. */
+        let blattFehlt = false;
         const hole = (name) => {
-            const zelle = zellen[String(name).toUpperCase()];
+            const t = trenneBlatt(String(name));
+            if (t.blatt && !(t.blatt in wo)) {
+                blattFehlt = true;
+                return 0;
+            }
+            const zelle = zelleZu(String(name));
             if (!zelle)
                 return 0;
             return zelle.wert === undefined || zelle.wert === null ? 0 : zelle.wert;
         };
-        for (const adresse of reihenfolge(liest, kreisMenge)) {
-            const zelle = zellen[adresse];
+        for (const name of reihenfolge(liest, kreisMenge)) {
+            const zelle = zelleZu(name);
             if (!zelle || !zelle.formel)
                 continue;
-            const { quelle, fehler } = uebersetze(zelle.formel);
+            const eigenes = trenneBlatt(name).blatt;
+            const { quelle, fehler } = uebersetze(zelle.formel, eigenes);
             let neu;
             if (fehler)
                 neu = '#BEZUG!';
             else {
+                blattFehlt = false;
                 const e = F.run(quelle, hole);
-                neu = e.ok ? e.wert : alsFehlerwert(e.fehler);
+                neu = blattFehlt ? '#BEZUG!' : (e.ok ? e.wert : alsFehlerwert(e.fehler));
             }
             if (zelle.wert !== neu) {
                 zelle.wert = neu;
-                geaendert.push(adresse);
+                geaendert.push(name);
             }
         }
         const dauer = ((typeof performance !== 'undefined' && performance.now)
             ? performance.now() : 0) - t0;
         return { geaendert, zirkel: imKreis, dauer: Math.round(dauer), fehler: null };
+    };
+    /**
+     * Ein einzelnes Blatt rechnen.
+     *
+     * Bleibt, weil es der häufige Fall ist und weil alles, was es schon
+     * aufruft, weiterlaufen soll. Es reicht an `rechneMappe` durch — eine
+     * zweite Rechenschleife daneben liefe irgendwann auseinander, und dann
+     * rechnete ein Blatt allein anders als dasselbe Blatt in seiner Mappe.
+     */
+    const rechne = (blatt) => {
+        if (!blatt || !blatt.zellen)
+            return { geaendert: [], zirkel: [], dauer: 0, fehler: 'Kein Blatt' };
+        return rechneMappe({ blaetter: [blatt] });
     };
     /* ==========================================================================
      * 4 · BLÄTTER UND MAPPEN
@@ -6550,6 +6750,35 @@ const Spreadsheet = (() => {
             return null;
         return (t.absS ? '$' : '') + txt + (t.absZ ? '$' : '') + (zeile + 1);
     });
+    /**
+     * Ein Blatt wurde umbenannt — jede Formel nachziehen.
+     *
+     * OHNE DAS ZEIGT NACH DEM UMBENENNEN ALLES INS LEERE, sofort und überall.
+     * Das ist der Grund, warum Umbenennen in manchen Programmen als gefährlich
+     * gilt: dort wird es nicht nachgezogen, und man merkt es erst an der
+     * dritten Summe.
+     *
+     * Angefasst wird nur der Blattname; Adresse und `$` bleiben, wie sie sind.
+     */
+    const blattUmbenannt = (formel, alt, neu) => {
+        const roh = String(formel ?? '');
+        if (!roh.startsWith('=') || !alt || alt === neu)
+            return roh;
+        const raus = roh.slice(1).replace(TEILE, (_ganz, text, bereich, zelle) => {
+            if (text !== undefined)
+                return text;
+            const stueck = bereich !== undefined ? bereich : zelle;
+            const teile = String(stueck).split(/:(?![^']*')/);
+            const neuTeile = teile.map((t) => {
+                const g = trenneBlatt(t);
+                if (g.blatt !== alt)
+                    return t;
+                return mitBlatt(neu, g.adresse);
+            });
+            return neuTeile.join(':');
+        });
+        return '=' + raus;
+    };
     /* ==========================================================================
      * 6 · ZEILEN UND SPALTEN
      * --------------------------------------------------------------------------
@@ -6745,7 +6974,8 @@ const Spreadsheet = (() => {
             return String(zelle.formel);
         return zelle.wert === undefined || zelle.wert === null ? '' : String(zelle.wert);
     };
-    return { uebersetze, graphVon, zirkel, reihenfolge, rechne,
+    return { uebersetze, graphVon, zirkel, reihenfolge, rechne, rechneMappe,
+        trenneBlatt, mitBlatt, schluessel, blattUmbenannt,
         neuesBlatt, neueMappe, setze, wert, eingabe, alsFehlerwert,
         verschiebe, bezuegeNachEingriff,
         zeileEinfuegen, zeileLoeschen, spalteEinfuegen, spalteLoeschen,
@@ -14140,7 +14370,13 @@ const SpreadsheetView = (() => {
         const hatteMappe = !!(block.mappe && block.mappe.blaetter && block.mappe.blaetter.length);
         if (!hatteMappe)
             block.mappe = K.neueMappe(block.text || 'Tabelle');
-        const blatt = block.mappe.blaetter[0];
+        /* WELCHES BLATT GERADE OFFEN IST, steht in der Mappe und nicht hier —
+           so überlebt es das Neuzeichnen und den Neustart. Zeigt `aktiv` auf ein
+           Blatt, das es nicht mehr gibt, wird es das erste: eine Mappe ohne
+           sichtbares Blatt wäre eine leere Fläche ohne Erklärung. */
+        let blatt = block.mappe.blaetter.find((b) => b.id === block.mappe.aktiv)
+            || block.mappe.blaetter[0];
+        block.mappe.aktiv = blatt.id;
         if (!blatt.breiten)
             blatt.breiten = {};
         /* Die Auswahl lebt hier, nicht im DOM — sie überlebt jedes Neuzeichnen. */
@@ -14181,7 +14417,10 @@ const SpreadsheetView = (() => {
          * sonst unterschiede sich der Stand bei jedem Rechnen von sich selbst,
          * und die Prüfung wäre keine.
          * ====================================================================*/
-        const standVon = () => JSON.stringify(blatt);
+        /* Verglichen wird die GANZE Mappe. Mit einem Blatt allein bliebe eine
+           Änderung auf einem anderen Blatt ungespeichert — und zwar genau die,
+           die eine blattübergreifende Formel gerade ausgelöst hat. */
+        const standVon = () => JSON.stringify(block.mappe.blaetter);
         let letzterStand = hatteMappe ? standVon() : '';
         const sichere = () => {
             const jetzt = standVon();
@@ -14261,7 +14500,18 @@ const SpreadsheetView = (() => {
         feld.append(spaltenKopf, koerper);
         const fuss = document.createElement('div');
         fuss.className = 'tbl-fuss';
-        w.append(kopf, feld, fuss);
+        /* ======================================================================
+         * DIE BLATTREITER
+         * --------------------------------------------------------------------
+         * Unten, wie in jedem Tabellenprogramm. Oben wären sie über der
+         * Bearbeitungszeile und damit über dem, was man liest; unten sind sie
+         * dort, wo man sie sucht — und am Telefon in Daumenreichweite.
+         * ====================================================================*/
+        const reiter = document.createElement('div');
+        reiter.className = 'tbl-reiter';
+        reiter.setAttribute('role', 'tablist');
+        reiter.setAttribute('aria-label', 'Blätter');
+        w.append(kopf, feld, reiter, fuss);
         /* ======================================================================
          * ZEICHNEN
          * ====================================================================*/
@@ -14537,9 +14787,62 @@ const SpreadsheetView = (() => {
                 b.classList.toggle('on', !!an);
             });
         };
-        const alles = () => { spaltenZeichnen(); koerperZeichnen(); fussZeichnen(); kopfZeichnen(); };
+        /* ----------------------------------------------------------------------
+         * DIE REITER ZEICHNEN
+         * --------------------------------------------------------------------
+         * Bei EINEM Blatt bleiben sie unsichtbar. Ein einzelner Reiter über
+         * einer einzelnen Tabelle erklärt nichts und kostet eine Zeile Höhe in
+         * jedem Block, den jemals jemand angelegt hat.
+         * ------------------------------------------------------------------*/
+        const reiterZeichnen = () => {
+            const viele = block.mappe.blaetter.length > 1;
+            reiter.classList.toggle('einzeln', !viele);
+            reiter.innerHTML = '';
+            block.mappe.blaetter.forEach((b) => {
+                const r = document.createElement('button');
+                r.className = 'tbl-reiter-eins' + (b.id === blatt.id ? ' aktiv' : '');
+                r.dataset.blatt = b.id;
+                r.setAttribute('role', 'tab');
+                r.setAttribute('aria-selected', b.id === blatt.id ? 'true' : 'false');
+                r.textContent = b.name || 'Ohne Namen';
+                r.title = viele ? b.name + ' — Doppelklick zum Umbenennen' : b.name;
+                reiter.appendChild(r);
+            });
+            const plus = document.createElement('button');
+            plus.className = 'tbl-reiter-plus';
+            plus.dataset.a = 'neu';
+            plus.textContent = '+';
+            plus.title = 'Neues Blatt';
+            plus.setAttribute('aria-label', 'Neues Blatt');
+            reiter.appendChild(plus);
+        };
+        const zuBlatt = (id) => {
+            const neu = block.mappe.blaetter.find((b) => b.id === id);
+            if (!neu || neu.id === blatt.id)
+                return;
+            blatt = neu;
+            if (!blatt.breiten)
+                blatt.breiten = {};
+            block.mappe.aktiv = blatt.id;
+            /* Die Auswahl gehört zum Blatt, nicht zur Mappe — beim Wechseln fängt
+               sie oben links an, wie in jedem Tabellenprogramm. */
+            gewaehlt = anker = 'A1';
+            feld.scrollTop = 0;
+            sichere();
+            alles();
+        };
+        const alles = () => {
+            spaltenZeichnen();
+            koerperZeichnen();
+            fussZeichnen();
+            kopfZeichnen();
+            reiterZeichnen();
+        };
         const rechneUndZeichne = () => {
-            const erg = K.rechne(blatt);
+            /* Die MAPPE rechnen, nicht das Blatt: `Januar!A1` darf auf
+               `Februar!B2` zeigen, und ein Kreis über zwei Blätter fiele beim
+               blattweisen Rechnen gar nicht auf. */
+            const erg = K.rechneMappe(block.mappe);
             zirkel = erg.zirkel || [];
             sichere();
             alles();
@@ -15268,6 +15571,167 @@ const SpreadsheetView = (() => {
             }
             stilSetzen(a);
         });
+        /* ======================================================================
+         * DIE REITER BEDIENEN
+         * --------------------------------------------------------------------
+         * Klicken wechselt · Doppelklick benennt um · Rechtsklick oder langer
+         * Druck öffnet das Menü · `+` legt an.
+         *
+         * DAS LÖSCHEN IST DIE STELLE, AN DER MAN AUFPASSEN MUSS. Ein Blatt zu
+         * löschen, auf das Formeln zeigen, macht diese Formeln kaputt — und zwar
+         * auf einem ANDEREN Blatt, das man gerade nicht sieht. Deshalb wird
+         * vorher nachgezählt und gesagt, wie viele es sind.
+         * ====================================================================*/
+        const blattMenue = (b, x, y) => {
+            if (typeof Menue === 'undefined')
+                return;
+            const m = Menue.menu('<button data-a="um"><span class="mi">✏️</span>Umbenennen</button>' +
+                '<button data-a="kopie"><span class="mi">⧉</span>Verdoppeln</button><hr>' +
+                (block.mappe.blaetter.length > 1
+                    ? '<button data-a="del"><span class="mi">🗑</span>Blatt „' + esc(b.name) + '" löschen</button>'
+                    : '<button data-a="" disabled><span class="mi">🗑</span>Das letzte Blatt bleibt</button>'), x, y, { titel: b.name });
+            m.addEventListener('click', async (ev) => {
+                const t = ev.target.closest('button');
+                if (!t || !t.dataset.a)
+                    return;
+                const a = t.dataset.a;
+                m.remove();
+                document.querySelectorAll('.menu-grund').forEach(g => g.remove());
+                if (a === 'um')
+                    return umbenennen(b);
+                if (a === 'kopie') {
+                    const kopie = JSON.parse(JSON.stringify(b));
+                    kopie.id = (typeof Ids !== 'undefined') ? Ids.short(8)
+                        : 'x' + Math.random().toString(36).slice(2, 10);
+                    kopie.name = freierName(b.name + ' Kopie');
+                    block.mappe.blaetter.push(kopie);
+                    zuBlatt(kopie.id);
+                    return;
+                }
+                if (a === 'del') {
+                    /* NACHGEZÄHLT: wie viele Formeln auf ANDEREN Blättern zeigen
+                       hierher? Sie stehen woanders, man sieht sie gerade nicht, und
+                       sie werden gleich alle `#BEZUG!`. */
+                    let betroffen = 0;
+                    block.mappe.blaetter.forEach((andere) => {
+                        if (andere.id === b.id)
+                            return;
+                        Object.keys(andere.zellen || {}).forEach(adr => {
+                            const z = andere.zellen[adr];
+                            if (z && z.formel && K.uebersetze(z.formel, andere.name).liest
+                                .some((n) => K.trenneBlatt(n).blatt === b.name))
+                                betroffen++;
+                        });
+                    });
+                    const gefuellt = Object.keys(b.zellen || {}).length;
+                    const antwort = typeof Dialog !== 'undefined'
+                        ? await Dialog.wahl({
+                            titel: 'Blatt „' + b.name + '" löschen?',
+                            text: gefuellt + ' gefüllte Zellen' +
+                                (betroffen ? '\n\n' + betroffen + ' Formeln auf anderen Blättern zeigen hierher. ' +
+                                    'Sie zeigen danach ins Leere und stehen als #BEZUG! da.'
+                                    : '\n\nKeine Formel auf einem anderen Blatt zeigt hierher.'),
+                            knoepfe: [
+                                { id: '', text: 'Behalten', hinweis: 'Es wird nichts verändert' },
+                                { id: 'ja', text: 'Löschen', hinweis: gefuellt + ' Zellen gehen verloren' }
+                            ]
+                        })
+                        : 'ja';
+                    if (antwort !== 'ja')
+                        return;
+                    const i = block.mappe.blaetter.indexOf(b);
+                    block.mappe.blaetter.splice(i, 1);
+                    const naechstes = block.mappe.blaetter[Math.max(0, i - 1)];
+                    blatt = naechstes;
+                    block.mappe.aktiv = naechstes.id;
+                    gewaehlt = anker = 'A1';
+                    rechneUndZeichne();
+                }
+            });
+        };
+        /** Ein Name, den es noch nicht gibt — sonst zeigen zwei Blätter auf eins. */
+        const freierName = (wunsch) => {
+            const belegt = new Set(block.mappe.blaetter.map((b) => b.name));
+            if (!belegt.has(wunsch))
+                return wunsch;
+            for (let i = 2; i < 999; i++)
+                if (!belegt.has(wunsch + ' ' + i))
+                    return wunsch + ' ' + i;
+            return wunsch + ' ' + Date.now();
+        };
+        const umbenennen = async (b) => {
+            if (typeof Dialog === 'undefined')
+                return;
+            const neu = await Dialog.frage('Blatt umbenennen', b.name);
+            if (!neu || neu === b.name)
+                return;
+            /* Kein `!` im Namen: er steht in jeder Formel vor dem Ausrufezeichen,
+               und ein zweites darin wäre nicht mehr eindeutig zu lesen. */
+            const sauber = String(neu).replace(/[!'"]/g, '').trim().slice(0, 40);
+            if (!sauber)
+                return;
+            const alt = b.name;
+            b.name = freierName(sauber);
+            /* JEDE FORMEL AUF JEDEM BLATT NACHZIEHEN. Ohne das zeigt nach dem
+               Umbenennen alles ins Leere — und zwar sofort und überall. */
+            block.mappe.blaetter.forEach((andere) => {
+                Object.keys(andere.zellen || {}).forEach(adr => {
+                    const z = andere.zellen[adr];
+                    if (z && z.formel)
+                        z.formel = K.blattUmbenannt(z.formel, alt, b.name);
+                });
+            });
+            rechneUndZeichne();
+        };
+        reiter.addEventListener('click', (e) => {
+            const ziel = e.target;
+            if (ziel.dataset && ziel.dataset.a === 'neu') {
+                const neu = K.neuesBlatt(freierName('Tabelle ' + (block.mappe.blaetter.length + 1)));
+                block.mappe.blaetter.push(neu);
+                zuBlatt(neu.id);
+                return;
+            }
+            const r = ziel.closest('.tbl-reiter-eins');
+            if (r && r.dataset.blatt)
+                zuBlatt(r.dataset.blatt);
+        });
+        reiter.addEventListener('dblclick', (e) => {
+            const r = e.target.closest('.tbl-reiter-eins');
+            if (!r || !r.dataset.blatt)
+                return;
+            const b = block.mappe.blaetter.find((x) => x.id === r.dataset.blatt);
+            if (b)
+                umbenennen(b);
+        });
+        reiter.addEventListener('contextmenu', (e) => {
+            const r = e.target.closest('.tbl-reiter-eins');
+            if (!r || !r.dataset.blatt)
+                return;
+            e.preventDefault();
+            const b = block.mappe.blaetter.find((x) => x.id === r.dataset.blatt);
+            if (b)
+                blattMenue(b, e.clientX, e.clientY);
+        });
+        /* Am Telefon gibt es keine rechte Maustaste — ein langer Druck tut es. */
+        let reiterUhr = 0;
+        reiter.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            const r = e.target.closest('.tbl-reiter-eins');
+            if (!t || !r || !r.dataset.blatt)
+                return;
+            const x = t.clientX, y = t.clientY, id = r.dataset.blatt;
+            reiterUhr = window.setTimeout(() => {
+                const b = block.mappe.blaetter.find((z) => z.id === id);
+                if (b)
+                    blattMenue(b, x, y);
+            }, 500);
+        }, { passive: true });
+        const reiterLos = () => { if (reiterUhr) {
+            clearTimeout(reiterUhr);
+            reiterUhr = 0;
+        } };
+        reiter.addEventListener('touchend', reiterLos);
+        reiter.addEventListener('touchmove', reiterLos, { passive: true });
         /* --- Erster Aufbau ---------------------------------------------------- */
         rechneUndZeichne();
         /* EINMAL NACH DEM EINHÄNGEN, aus zwei Gründen auf einmal:
