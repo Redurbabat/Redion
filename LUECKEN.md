@@ -40,6 +40,7 @@ Die grössten aktuellen Lücken:
 4. Cloudflare/R2/Sync sind noch nicht produktionsreif
 5. Nicht alle Notion-Funktionen sind erreicht
 6. Mobile/iPhone braucht gezielte Prüfung
+7. Tabellenkalkulation fehlt ganz (L31/L32)
 ```
 
 ---
@@ -507,6 +508,129 @@ Anhänge kontrollieren · Widerruf
 
 ---
 
+## L31 · Tabellenkalkulation (Spreadsheet)
+
+**Stand** — ✗ fehlt.
+
+Redion hat Datenbanken mit Formeln, aber **keine Tabelle mit Zellen**. Das
+sind zwei verschiedene Dinge: eine Datenbank hat ein Schema, eine Tabelle hat
+`A1`.
+
+**Was fehlt**
+
+```txt
+Spreadsheet-Block · Spreadsheet-Ansicht für Datenbanken
+Zellen · Zeilen · Spalten
+Zellbezüge A1/B2 · Bereiche A1:C10
+Formeln in Zellen · automatische Neuberechnung
+Abhängigkeiten zwischen Zellen · Zirkelbezüge erkennen
+Fehlerwerte statt stiller NaN
+Kopieren/Einfügen über mehrere Zellen · Masseneingabe · Ausfüllen
+```
+
+**Warum wichtig**
+
+Die Fälle, für die Menschen Excel öffnen: Budget · Rechnungen ·
+Materiallisten · Projektkosten · Finanzplanung · Lernfortschritt · Inventar.
+
+**Abgrenzung** — Redion löst Excel-Probleme, klont Excel nicht. Siehe
+`ENTSCHEIDUNGEN.md` E24.
+
+**Status** — ⏳ geplant, hohe Priorität. `AUFGABEN.md` Phase 6c.
+
+---
+
+## L32 · Excel-Funktionen
+
+**Stand** — ◐ 158 Formelfunktionen vorhanden, aber **ohne deutsche
+Excel-Namen** und ohne die Suchfunktionen.
+
+**Was fehlt — Startpaket**
+
+```txt
+Mathematik  SUMME PRODUKT MITTELWERT MIN MAX ANZAHL ANZAHL2 ABS
+            POTENZ WURZEL REST RUNDEN ABRUNDEN AUFRUNDEN GANZZAHL
+Logik       WENN WENNS UND ODER NICHT WENNFEHLER
+Datum       HEUTE JETZT DATUM ZEIT JAHR MONAT TAG WOCHENTAG KALENDERWOCHE
+Text        LÄNGE LINKS RECHTS TEIL GLÄTTEN SÄUBERN GROSS KLEIN SUCHEN
+            FINDEN WECHSELN ERSETZEN TEXT WERT TEXTKETTE TEXTVERKETTEN
+Info        ISTZAHL ISTTEXT ISTLEER ISTFEHLER
+```
+
+**Was fehlt — Suche und Verweise**
+
+```txt
+ZÄHLENWENN(S) · SUMMEWENN(S) · MITTELWERTWENN(S)
+SVERWEIS · WVERWEIS · XVERWEIS · INDEX · VERGLEICH
+FILTER · SORTIEREN · EINDEUTIG
+```
+
+**Warum wichtig**
+
+Das Startpaket deckt rund achtzig Prozent der alltäglichen Rechnungen ab. Die
+Suchfunktionen sind der Grund, warum viele bei Excel bleiben.
+
+**Wichtig** — dieselbe sichere Formelsprache, kein zweiter Auswerter, kein
+`eval()`. Siehe `ENTSCHEIDUNGEN.md` E11 und E24.
+
+**Status** — ⏳ geplant, hohe Priorität.
+
+---
+
+## L33 · XLSX und ODS
+
+**Stand** — ✗ XLSX-Import und -Export fehlen; CSV gibt es.
+
+**Was schon da ist** — der ZIP-Teil: `Ausgeben.zipSchreiben` schreibt,
+`Einlesen.zipLesenAusBlob` liest ohne alles in den Speicher zu ziehen. Ein
+XLSX ist ein ZIP mit XML darin, und `Einlesen.xlsxLesen` liest bereits
+einfache Mappen.
+
+**Was fehlt** — XLSX schreiben mit mehreren Blättern · Zellformatierung ·
+Formeln · bedingte Formatierung · ODS rein und raus
+
+**Vorbehalt** — für den XML-Teil gilt `ENTSCHEIDUNGEN.md` E26: erst prüfen,
+ob es ohne grosse Abhängigkeit geht. Was hereinkommt, landet in der
+Einzeldatei und auf dem Telefon.
+
+**Status** — ⏳ später.
+
+---
+
+## L34 · Was-wäre-wenn: Zielwertsuche, Szenarien, Solver
+
+**Stand** — ✗ fehlt vollständig.
+
+**Was fehlt**
+
+```txt
+Zielwertsuche   Zielwert eingeben, veränderbare Zelle wählen
+Szenarien       Best Case · Normal Case · Worst Case vergleichen
+Solver einfach  Ziel maximieren oder minimieren, mit Nebenbedingungen
+```
+
+**Warum** — Finanzplanung, Preisberechnung, Sparziele, Budgetoptimierung.
+
+**Status** — ⏳ später. Setzt L31 voraus.
+
+---
+
+## L35 · Import-Assistent (Power-Query-ähnlich)
+
+**Stand** — ✗ fehlt.
+
+**Was fehlt** — CSV bereinigen · Spalten umbenennen · Typen erkennen · Werte
+ersetzen · Duplikate entfernen · leere Zeilen entfernen · Spalten teilen ·
+Spalten zusammenführen · mehrere Dateien kombinieren · Vorschau vor dem
+Übernehmen
+
+**Warum** — fremde Daten kommen selten sauber. Ohne Assistent landet der
+Schmutz in der Datenbank und muss dort von Hand aufgeräumt werden.
+
+**Status** — ⏳ später.
+
+---
+
 ## Zusammenfassung nach Priorität
 
 **Sehr hoch**
@@ -531,6 +655,8 @@ L13 Automationen
 L23 Agenten-Sicherheit
 L25 Mobile und iPhone
 L27 Dokumentationsstruktur
+L31 Tabellenkalkulation
+L32 Excel-Funktionen
 ```
 
 **Mittel**
@@ -556,6 +682,9 @@ L20 OCR und Audio-Suche
 L21 Screenreader
 L22 Erweiterungen und Marktplatz
 L30 öffentliche Seiten, SEO, Demo
+L33 XLSX und ODS
+L34 Zielwertsuche, Szenarien, Solver
+L35 Import-Assistent
 ```
 
 ---

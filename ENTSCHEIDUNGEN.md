@@ -901,3 +901,144 @@ Integrationen zählen, ohne zu prüfen, ob sie ohne Server überhaupt gehen.
 **Status**
 
 Entschieden.
+
+---
+
+# Entscheidungen aus der Funktionsplanung
+
+Die folgenden Einträge kommen aus der vollständigen Funktionsplanung
+(MUSS / SOLL / KANN / BESSER NICHT). Sie beantworten die Frage, die sich
+sonst bei jeder einzelnen Tabellenfunktion neu stellt.
+
+---
+
+## E24 · Excel-Probleme lösen, Excel nicht klonen
+
+**Problem**
+
+Redion soll Tabellenkalkulation können: Budget, Rechnungen, Materiallisten,
+Projektkosten, Lernfortschritt, Inventar. Der naheliegende Weg wäre, Excel
+nachzubauen.
+
+**Entscheidung**
+
+Redion löst **Excel-Probleme**, klont **nicht Excel**.
+
+Gebaut wird:
+
+```txt
+Spreadsheet-Block
+Spreadsheet-Ansicht für Datenbanken
+Zellen, Zeilen, Spalten
+Zellbezüge A1/B2 und Bereiche A1:C10
+Formeln in Zellen mit automatischer Neuberechnung
+Abhängigkeiten zwischen Zellen, Zirkelbezüge erkennen
+deutsche Funktionsnamen mit englischen Aliasen
+CSV rein und raus, XLSX später
+```
+
+Nicht gebaut: der vollständige Funktionsumfang von Excel, seine
+Oberflächenlogik, seine Dateiformat-Eigenheiten.
+
+**Warum**
+
+Excel 1:1 ist zu gross, zu komplex, schwer testbar und verwässert, was
+Redion ist. Achtzig Prozent des Alltags decken rund sechzig Funktionen ab —
+Grundrechnen, Logik, Datum, Text, Information, dazu die Suchfunktionen
+(`SVERWEIS`, `XVERWEIS`, `INDEX`/`VERGLEICH`, `SUMMEWENNS`).
+
+**Folgen**
+
+Der Tabellenkern ist ein **Bereich** wie jeder andere und hält sich an E8:
+er benutzt `kern/` und `register/`, nicht die Datenbanken direkt. Neue
+Funktionen werden im Register eingetragen (E9) und laufen über dieselbe
+sichere Formelsprache wie die Datenbankformeln (E11) — **kein `eval()`**,
+kein zweiter Auswerter.
+
+**Nicht tun**
+
+- eine zweite Formelsprache neben der bestehenden aufbauen
+- Excel-Dateiformat-Kanten nachbilden, die niemand braucht
+- Funktionen zählen statt Fälle lösen
+
+**Status**
+
+Entschieden. Reihenfolge siehe `AUFGABEN.md` Phase 4 bis 9.
+
+---
+
+## E25 · Keine Makros, kein VBA
+
+**Problem**
+
+Wer Excel ersetzen will, stösst auf Makros. Sie sind der Grund, warum viele
+Tabellen überhaupt automatisiert sind.
+
+**Entscheidung**
+
+Redion baut **keine** Makrosprache und führt **keinen** fremden Code aus.
+Stattdessen: die sicheren Redion-Automationen — `wenn`, `sonst`, `fuerJede`,
+Eigenschaft setzen, Erinnerung, Unterseite, KI-Feld, Knopf — mit Vorschau,
+Protokoll und Fehleranzeige.
+
+**Warum**
+
+Makros sind seit dreissig Jahren einer der verlässlichsten Wege, sich einen
+Schädling einzufangen. Fremder Code in einer Datei, die man per Mail
+bekommt, lässt sich nicht sinnvoll einsperren. Für eine App, die local-first
+ist und dem Nutzer gehört, wäre das der teuerste mögliche Kompromiss.
+
+**Folgen**
+
+Was eine Automation kann, steht im Register und ist damit auf- und
+abzählbar. Was sie nicht kann, kann sie auch nicht heimlich.
+
+**Nicht tun**
+
+`eval()`, `Function()`, importierte Skripte, „nur für Fortgeschrittene"
+freigeschaltete Codefelder.
+
+**Status**
+
+Entschieden. Dauerhafte Sicherheitsregel, verwandt mit E11 und E12.
+
+---
+
+## E26 · Grosse Abhängigkeiten nur nach Prüfung
+
+**Problem**
+
+Für Tabellen, XLSX, Diagramme und OCR gibt es fertige Bibliotheken. Jede
+davon ist verlockend und jede ist gross.
+
+**Entscheidung**
+
+Eine neue Abhängigkeit kommt nur herein, wenn **alle fünf** Punkte stimmen:
+
+```txt
+echter Nutzen, keine kleine Alternative
+offline nutzbar
+Lizenz passt
+Tests vorhanden
+Grösse vertretbar für die Einzeldatei und fürs Telefon
+```
+
+**Warum**
+
+`redion-einzeldatei.html` ist kein Nebenprodukt, sondern die Form, in der
+Redion ohne alles läuft. Jede Abhängigkeit landet dort. Und was auf dem
+Schreibtisch schnell ist, kann auf einem iPhone unbenutzbar sein.
+
+**Folgen**
+
+Für Node, Prüfläufe und den Bauschritt gelten diese Punkte nicht — dort ist
+`playwright` längst richtig. Es geht um Code, der **im Browser des Nutzers**
+landet.
+
+**Nicht tun**
+
+Eine Bibliothek einbauen, weil sie den ersten Prototyp schneller macht.
+
+**Status**
+
+Entschieden. Ergänzt `CLAUDE.md` §6 und §52.5.

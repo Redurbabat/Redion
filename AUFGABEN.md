@@ -492,6 +492,169 @@ Die Nutzung per index.html und redion-einzeldatei.html bleibt erhalten.
 
 ---
 
+## Phase 6b · Excel-Recherche und Entscheidung
+
+Redion soll Excel-**Probleme** lösen, nicht Excel klonen — siehe
+`ENTSCHEIDUNGEN.md` E24. Bevor eine einzige Tabellenfunktion gebaut wird,
+muss klar sein, welche Fälle sie abdecken soll.
+
+### X1 — Recherche schreiben
+
+**Ziel**
+
+Festhalten, welche Excel-Fälle Redion wirklich lösen muss.
+
+**Dateien**
+
+```txt
+doku/EXCEL-IN-REDION-RECHERCHE.md
+```
+
+**Fertig wenn** darin steht: die häufigsten Alltagsfälle (Budget, Rechnungen,
+Materiallisten, Projektkosten, Lernfortschritt, Inventar) · welche Funktionen
+sie brauchen · was Redion davon schon kann · was der Formelsprache fehlt ·
+was der Datenmodellierung fehlt · was **nicht** gebaut wird
+
+**Priorität** — hoch, vor X2.
+
+---
+
+### X2 — Funktionsnamen und Aliase
+
+**Ziel**
+
+Deutsche Excel-Namen mit englischen Aliasen, in **einem** Register.
+
+**Warum**
+
+Die Formelsprache gibt es schon (`register/formeln.js`, sicherer Parser ohne
+`eval()`). Ein zweiter Auswerter für Tabellen wäre ein zweites Regelwerk mit
+eigenen Fehlern — siehe E24.
+
+**Dateien**
+
+```txt
+quell/register/formeln.js
+quell/bereiche/datenbanken/formeln/laufzeit.js
+```
+
+**Fertig wenn** das Startpaket steht:
+
+```txt
+Mathematik  SUMME PRODUKT MITTELWERT MIN MAX ANZAHL ANZAHL2 ABS
+            POTENZ WURZEL REST RUNDEN ABRUNDEN AUFRUNDEN GANZZAHL
+Logik       WENN WENNS UND ODER NICHT WENNFEHLER
+Datum       HEUTE JETZT DATUM ZEIT JAHR MONAT TAG WOCHENTAG KALENDERWOCHE
+Text        LÄNGE LINKS RECHTS TEIL GLÄTTEN SÄUBERN GROSS KLEIN SUCHEN
+            FINDEN WECHSELN ERSETZEN TEXT WERT TEXTKETTE TEXTVERKETTEN
+Info        ISTZAHL ISTTEXT ISTLEER ISTFEHLER
+```
+
+Jede mit englischem Alias, Beschreibung, Beispiel und Prüflauf.
+
+**Priorität** — hoch.
+
+---
+
+### X3 — Suche und Verweise
+
+**Ziel**
+
+Die Funktionen, wegen derer Menschen bei Excel bleiben.
+
+**Fertig wenn** vorhanden: `ZÄHLENWENN(S)` · `SUMMEWENN(S)` ·
+`MITTELWERTWENN(S)` · `SVERWEIS` · `WVERWEIS` · `XVERWEIS` · `INDEX` ·
+`VERGLEICH` · `FILTER` · `SORTIEREN` · `EINDEUTIG`
+
+**Priorität** — hoch.
+
+---
+
+## Phase 6c · Spreadsheet-MVP
+
+### X4 — Der Tabellenblock
+
+**Ziel**
+
+Ein Block, in dem man rechnet.
+
+**Warum**
+
+Der Unterschied zu einer Datenbank: eine Datenbank hat ein Schema, eine
+Tabelle hat Zellen. Beides wird gebraucht.
+
+**Dateien**
+
+```txt
+quell/register/bloecke.js          neue Blockart
+quell/bereiche/tabelle/dienst.js   reine Logik, ohne DOM
+quell/bereiche/tabelle/ansicht.js  das Zeichnen
+```
+
+**Fertig wenn**
+
+- Zellen, Zeilen, Spalten
+- Bezüge `A1`, `B2` und Bereiche `A1:C10`
+- Formeln in Zellen
+- automatische Neuberechnung
+- Abhängigkeiten zwischen Zellen
+- **Zirkelbezüge werden erkannt und benannt**, nicht als Absturz
+- Fehlerwerte wie `#WERT!` statt stiller `NaN`
+- die Logik lässt sich in Node prüfen, ohne Browser
+
+**Regel** — der Bereich `tabelle` benutzt `kern/` und `register/`, nicht
+`bereiche/datenbanken` (`CLAUDE.md` Regel 1).
+
+**Priorität** — hoch.
+
+---
+
+### X5 — Spreadsheet-Ansicht für Datenbanken
+
+**Ziel**
+
+Eine Datenbank soll sich anfassen lassen wie eine Tabelle.
+
+**Fertig wenn** vorhanden: Kopieren und Einfügen über mehrere Zellen ·
+Masseneingabe · Ausfüllen nach unten · Tastaturbedienung wie erwartet
+
+**Priorität** — mittel.
+
+---
+
+## Phase 6d · Analyse
+
+### X6 — Bedingte Formatierung
+
+Datenbalken · Farbskalen · Zeilenfarbe per Formel · Symbolregeln · Duplikate
+markieren · leere Werte · überfällige Werte. Siehe `LUECKEN.md` L15.
+
+**Priorität** — mittel.
+
+---
+
+### X7 — Diagramme erweitern
+
+Vorhanden sind `chart` und `dashboard`. Es fehlen: Ringdiagramm · Histogramm ·
+Wasserfall · Pareto · Boxplot · Treemap · Radar · Kombination · KPI-Karte ·
+Fortschrittsanzeige.
+
+**Priorität** — mittel.
+
+---
+
+### X8 — CSV und XLSX
+
+CSV rein und raus gibt es. Offen: XLSX-Import, XLSX-Export, ODS später.
+
+**Vorbehalt** — XLSX ist ein ZIP mit XML. Der ZIP-Teil ist gebaut
+(`Ausgeben.zipSchreiben`, `Einlesen.zipLesenAusBlob`). Für den XML-Teil gilt
+E26: erst prüfen, ob es ohne grosse Abhängigkeit geht.
+
+**Priorität** — mittel.
+
+---
+
 ## Phase 7 · Notion-ähnliche Funktionen
 
 ### F1 — Formelfunktionen vollständig beschreiben
