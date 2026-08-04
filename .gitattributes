@@ -1,0 +1,39 @@
+# ============================================================================
+# .gitattributes — Zeilenenden, ein für alle Mal
+# ----------------------------------------------------------------------------
+# WARUM ES DIESE DATEI GIBT, und zwar aus einem gemessenen Anlass:
+#
+# Auf dem Windows-Rechner standen 309 Dateien als geändert da. Nachgezählt:
+#
+#     309 files changed, 60304 insertions(+), 60304 deletions(-)
+#     309 files changed,     0 insertions(+),     0 deletions(-)   <- ohne CR
+#
+# Also **kein einziges Zeichen Inhalt** — nur CRLF gegen LF. Git hielt das
+# trotzdem für Arbeit, und deshalb schlug jedes `git merge --ff-only` fehl:
+# „hier liegt eigene Arbeit im Weg". Der Ordner blieb wochenlang stehen, das
+# Hochladen ging nicht, und die Meldung zeigte auf ein Problem, das es nicht
+# gab.
+#
+# Ab hier bestimmt diese Datei die Zeilenenden, und nicht mehr die Einstellung
+# des jeweiligen Rechners. Im Verzeichnis steht immer LF; was ein Editor unter
+# Windows daraus macht, ist ihm überlassen und wird nicht mehr gemeldet.
+# ============================================================================
+
+# Alles, was Text ist, liegt im Verzeichnis mit LF.
+* text=auto eol=lf
+
+# Ausser dem hier: eine .bat mit LF führt Windows nicht zuverlässig aus.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Und was binär ist, wird nicht angefasst — eine PNG mit „reparierten"
+# Zeilenenden ist kaputt.
+*.png  binary
+*.ico  binary
+*.jpg  binary
+*.webp binary
+*.zip  binary
+*.docx binary
+*.xlsx binary
+*.bundle binary
