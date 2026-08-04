@@ -541,11 +541,31 @@ hochgeladen (E1).
 Rechteprüfung · `.redion` und Anhänge in R2.
 **Regel:** grosse Dateien gehören nicht in D1 (E2).
 
-**G3 — Sync-Konflikte.** Prüfläufe für: zwei Geräte · Änderung offline ·
-derselbe Block geändert · Konflikt wird sichtbar · keine Daten verloren ·
-Anhänge bleiben mit ihren Blöcken verbunden.
+**~~G3 — Sync-Konflikte.~~** ◐ **grösstenteils erledigt** — `test113`,
+52 Punkte, ohne Browser.
 
-**Priorität** — G3 **vor** echtem Cloud-Sync.
+Geprüft: ~~derselbe Block geändert~~ · ~~Konflikt wird sichtbar~~ ·
+~~keine Daten verloren~~ (sieben Fälle, jeder gegen dieselbe Frage: *steht
+am Ende die eine oder die andere Fassung da — oder ist ein Konflikt
+gemeldet?*) · ~~die Ausgangsschlange~~.
+
+**Der Fund dabei, und er ist der Grund für diese Reihenfolge:** `zuSchicken`
+filtert mit `edited <= marke`, und die Marke wandert nach jeder Runde auf den
+Zeitstempel des letzten gesendeten Satzes. Lägen zwei Sätze in **derselben
+Millisekunde** und fiele der Schnitt der Runde zwischen sie, wäre der zweite
+ab sofort ausgeschlossen — für immer. Er stünde auf dem Gerät und käme nie in
+der Wolke an. Kein Fehler, keine Meldung.
+
+Von Hand passiert das nie; beim Einfügen aus Excel, beim CSV-Import und bei
+Vorlagen entstehen Sätze in Reihe. Eine Runde zerschneidet jetzt keine
+Millisekunde mehr.
+
+**Noch offen:** „Änderung offline" und „Anhänge bleiben verbunden" brauchen
+einen Lauf gegen einen echten Server — und Anhänge gehen heute gar nicht mit
+(das ist G2). `test113` hält beides ausdrücklich fest, damit niemand seine
+Bilder für abgeglichen hält.
+
+**Priorität** — der Rest von G3 **vor** echtem Cloud-Sync.
 
 ---
 

@@ -345,9 +345,33 @@ const Wolke = (() => {
 
       /* Das Älteste zuerst — dann rückt die Marke bei jeder Runde vor und
          der nächste Durchgang holt wirklich Neues. */
-      liste.sort((a, b) => String(a.satz.edited || a.satz.created || '')
-        .localeCompare(String(b.satz.edited || b.satz.created || '')));
-      const dran = liste.slice(0, RUNDE);
+      const zeitVon = (e) => String(e.satz.edited || e.satz.created || '');
+      liste.sort((a, b) => zeitVon(a).localeCompare(zeitVon(b)));
+
+      /* ─── EINE MILLISEKUNDE WIRD NIE ZERSCHNITTEN ─────────────────────────
+       *
+       * DIE STELLE, AN DER STILL ETWAS NIE ANKOMMT. Die Marke wandert unten
+       * auf den Zeitstempel des letzten gesendeten Satzes, und `zuSchicken`
+       * filtert mit `edited <= marke`. Lägen zwei Sätze in DERSELBEN
+       * Millisekunde und fiele der Schnitt zwischen sie, wäre der zweite ab
+       * sofort ausgeschlossen — für immer. Er stünde auf diesem Gerät da und
+       * käme nie in der Wolke an. Kein Fehler, keine Meldung, nichts.
+       *
+       * Von Hand passiert das nie: dreihundert Sätze in einer Millisekunde
+       * schreibt kein Mensch. Beim Einfügen aus Excel, beim CSV-Import und
+       * bei Vorlagen entstehen sie in Reihe — und genau die sind es, die
+       * jemand hinterher vermisst.
+       *
+       * Also nimmt die Runde alles mit, was denselben Zeitstempel trägt wie
+       * ihr letzter Satz. Sie wird dadurch gelegentlich grösser als RUNDE.
+       * Das ist der richtige Preis: lieber ein Paket zu gross als ein Satz
+       * zu wenig. */
+      let bis = Math.min(RUNDE, liste.length);
+      if (bis < liste.length) {
+        const grenze = zeitVon(liste[bis - 1]);
+        while (bis < liste.length && zeitVon(liste[bis]) === grenze) bis++;
+      }
+      const dran = liste.slice(0, bis);
 
       const paket = [];
       for (const e of dran) {
@@ -383,7 +407,7 @@ const Wolke = (() => {
       const letzte = paket[paket.length - 1];
       Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
 
-      if (liste.length <= RUNDE) break;
+      if (liste.length <= dran.length) break;
     }
 
     zustand.hoch += angenommen;
