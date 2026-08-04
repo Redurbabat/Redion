@@ -52,10 +52,30 @@ const Formula = (() => {
         continue;
       }
 
-      /* Zahl */
+      /* Zahl — mit wissenschaftlicher Schreibweise.
+         --------------------------------------------------------------------
+         Der Exponent fehlte, und der Fehler war die stille Sorte: `2e6` las
+         sich als Zahl `2` und einen Namen `e6`, und der Name fiel hinten
+         weg. Herausgekommen ist **2** statt zwei Millionen — ohne Meldung.
+         Dabei kann `Formula.zahl("2e6")` es längst und liefert 2000000;
+         dieselbe Datei widersprach sich also selbst, je nachdem ob die Zahl
+         in einer Formel stand oder aus einer Spalte kam.
+
+         Der Exponent wird nur genommen, wenn wirklich einer dasteht: nach
+         `e` darf ein Vorzeichen kommen, danach muss mindestens eine Ziffer
+         folgen. Sonst bliebe `2e` eine 2 mit einem verschluckten Buchstaben
+         — wieder still. */
       if (istZiffer(c) || (c === '.' && istZiffer(src[i+1]))) {
         let s = '';
         while (i < src.length && (istZiffer(src[i]) || src[i] === '.')) s += src[i++];
+        if (src[i] === 'e' || src[i] === 'E') {
+          const vorzeichen = (src[i+1] === '+' || src[i+1] === '-') ? 1 : 0;
+          if (istZiffer(src[i + 1 + vorzeichen])) {
+            s += src[i++];                              /* e */
+            if (vorzeichen) s += src[i++];              /* + oder - */
+            while (i < src.length && istZiffer(src[i])) s += src[i++];
+          }
+        }
         out.push({ t: 'num', v: parseFloat(s) });
         continue;
       }
@@ -73,6 +93,24 @@ const Formula = (() => {
       if (['==','!=','>=','<=','&&','||'].includes(zwei)) {
         out.push({ t: 'op', v: zwei }); i += 2; continue;
       }
+
+      /* Das Semikolon ist dasselbe wie das Komma.
+         --------------------------------------------------------------------
+         In deutschem Excel trennt ein Semikolon die Argumente, und genau so
+         steht es in `register/formeln.js`: die Signaturen lauten `(a; b; …)`,
+         die Beispiele `SUMME(1; 2; 3)`. Der Zerleger kannte das Zeichen aber
+         gar nicht — es fiel unten unter „unbekanntes Zeichen überspringen",
+         aus `SUMME(1; 2; 3)` wurde `SUMME(1 2 3)`, und der Mensch las
+         „`)` erwartet".
+
+         Nachgemessen: von 41 Beispielen im Formeleditor liefen 30 nicht,
+         und zwölf davon nur deshalb. Die deutschen Namen waren gebaut
+         worden, das deutsche Trennzeichen nicht — dieselbe Hälfte-Arbeit,
+         die dieses Projekt immer wieder findet.
+
+         Es wird als Komma weitergereicht, damit der Parser nichts davon
+         wissen muss. */
+      if (c === ';') { out.push({ t: 'op', v: ',' }); i++; continue; }
 
       /* Der Punkt gehört dazu, sonst funktioniert liste.map(...) nicht.
        * Zahlen wie 3.14 sind oben schon abgefangen. */
@@ -1532,8 +1570,18 @@ const Formula = (() => {
     }
   };
 
-  /** Prüft eine Formel, ohne sie auf echte Daten loszulassen. */
+  /**
+   * Prüft eine Formel, ohne sie auf echte Daten loszulassen.
+   *
+   * Die leere Formel ist in Ordnung — genau wie in `run`. Vorher meldete
+   * `check('')` „Unerwartetes Zeichen in der Formel", während `run('')`
+   * zufrieden war: wer sein Formelfeld leerte, bekam eine Fehlermeldung für
+   * etwas, das die Maschine anstandslos rechnet. Zwei Antworten auf dieselbe
+   * Frage sind schlimmer als eine falsche, weil man ihnen nicht ansieht,
+   * welche gilt.
+   */
   const check = (src) => {
+    if (!src || !src.trim()) return { ok: true };
     try { parse(tokenize(src)); return { ok: true }; }
     catch (e) { return { ok: false, fehler: e.message }; }
   };

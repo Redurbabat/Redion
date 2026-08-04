@@ -484,5 +484,72 @@ const a = Register.formeln.abgleich();
 p('Keine Beschreibung ohne Funktion', a.ohneFunktion.length === 0,
   a.ohneFunktion.slice(0, 6).join(', '));
 
+/* ==========================================================================
+ * 6 · JEDES BEISPIEL IM FORMELEDITOR RECHNET AUCH
+ * --------------------------------------------------------------------------
+ * Abschnitt 5 prüft die Namen. Das Beispiel ist die zweite Zusage, und sie
+ * war die gebrochene: von 41 Beispielen liefen 30 nicht.
+ *
+ * Zwölf davon nur wegen eines Zeichens. Die Signaturen stehen in deutscher
+ * Excel-Schreibweise — `(a; b; …)` — und die Beispiele auch: `SUMME(1; 2; 3)`.
+ * Der Zerleger kannte das Semikolon aber gar nicht. Es fiel unter
+ * „unbekanntes Zeichen überspringen", aus `SUMME(1; 2; 3)` wurde
+ * `SUMME(1 2 3)`, und der Mensch las „`)` erwartet". Die deutschen NAMEN
+ * waren gebaut worden, das deutsche TRENNZEICHEN nicht.
+ *
+ * Nicht jedes Beispiel kann hier rechnen: `rowNumber()` und Geschwister
+ * brauchen eine Zeile, `countWhere` eine zweite Datenbank. Die sagen das
+ * auch — und genau diese zwei Sätze sind erlaubt. Alles andere ist ein
+ * Versprechen, das beim Tippen bricht.
+ * ======================================================================== */
+console.log('\n6 · Jedes Beispiel im Formeleditor rechnet auch');
+
+const ERLAUBTE_FEHLER = [
+  'Das geht nur in einer Datenbankspalte',
+  'Hier lassen sich keine anderen Datenbanken lesen'
+];
+
+const mitBeispiel = Register.formeln.alle().filter(f => f.beispiel);
+const kaputt = [];
+for (const f of mitBeispiel) {
+  /* Manche Beispiele tragen das Ergebnis mit: „REST(-7; 3) → 2". Für den
+     Lauf zählt der Teil davor. */
+  const quelle = String(f.beispiel).split('→')[0].trim();
+  const e = Formula.run(quelle, () => undefined);
+  if (!e.ok && !ERLAUBTE_FEHLER.some(z => String(e.fehler).includes(z)))
+    kaputt.push(f.name + ': ' + quelle + '  →  ' + e.fehler);
+}
+p('Es wurden wirklich Beispiele geprüft', mitBeispiel.length >= 40,
+  String(mitBeispiel.length));
+p('Kein Beispiel scheitert am Zerleger', kaputt.length === 0,
+  kaputt.slice(0, 5).join(' | '));
+
+/* Und das Zeichen selbst, damit die Ursache benannt bleibt und nicht nur
+   ihre Folgen geprüft werden. */
+const semi = Formula.run('SUMME(1; 2; 3)', () => undefined);
+const komma = Formula.run('SUMME(1, 2, 3)', () => undefined);
+p('Semikolon und Komma trennen gleich',
+  semi.ok && komma.ok && semi.wert === 6 && komma.wert === 6,
+  JSON.stringify({ semi, komma }));
+
+/* Wissenschaftliche Schreibweise: `2e6` war still zu 2 geworden — die Zahl
+   wurde gelesen, der Exponent als Name verschluckt. */
+const exp = ['1e3', '2e6', '1.5e2', '1e-3', '1E3']
+  .map(f => ({ f, ...Formula.run(f, () => undefined) }));
+p('Wissenschaftliche Schreibweise rechnet',
+  JSON.stringify(exp.map(x => x.wert)) === JSON.stringify([1000, 2000000, 150, 0.001, 1000]),
+  JSON.stringify(exp.map(x => [x.f, x.wert])));
+p('Und die Formel sagt dasselbe wie die Umwandlung',
+  Formula.run('2e6', () => undefined).wert === Formula.zahl('2e6'));
+/* Die Gegenprobe: `2e` ist keine Zahl mit Exponent und darf keine werden. */
+p('Ein `e` ohne Ziffern dahinter bleibt kein Exponent',
+  Formula.run('2e', () => undefined).wert === 2,
+  JSON.stringify(Formula.run('2e', () => undefined)));
+
+/* Die leere Formel: run() war zufrieden, check() meldete einen Fehler. */
+p('Die leere Formel gilt beiden als in Ordnung',
+  Formula.check('').ok === true && Formula.run('', () => undefined).ok === true,
+  JSON.stringify({ check: Formula.check(''), run: Formula.run('', () => undefined) }));
+
 console.log(`\n  Suite 71 — Deutsche Excel-Namen: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

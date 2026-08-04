@@ -15,7 +15,7 @@
  * unten ist der Schalter dafür.
  * ==========================================================================*/
 
-const VERSION = 'notizen-v11';
+const VERSION = 'notizen-v12';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -141,9 +141,17 @@ const GRUNDSTOCK = [
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const c = await caches.open(ABLAGE);
-    /* Einzeln, damit eine fehlende Datei nicht alles scheitern lässt */
+    /* Einzeln, damit eine fehlende Datei nicht alles scheitern lässt — aber
+       nicht lautlos. Vorher stand hier `.catch(() => {})`, und damit war eine
+       halb abgelegte App von einer ganzen nicht zu unterscheiden. */
+    const misslungen = [];
     await Promise.all(GRUNDSTOCK.map(u =>
-      c.add(new Request(u, { cache: 'reload' })).catch(() => {})));
+      c.add(new Request(u, { cache: 'reload' })).catch(() => misslungen.push(u))));
+    if (misslungen.length) {
+      console.warn('[sw] ' + misslungen.length + ' von ' + GRUNDSTOCK.length +
+        ' Dateien liessen sich nicht ablegen — offline fehlen sie:\n  ' +
+        misslungen.join('\n  '));
+    }
     self.skipWaiting();
   })());
 });
@@ -232,10 +240,30 @@ self.addEventListener('fetch', (e) => {
     const frisch = await netz;
     if (frisch) return frisch;
 
-    /* Weder Speicher noch Netz: wenigstens die Startseite zeigen. */
-    const start = await c.match('./index.html');
-    return start || new Response('Offline und nichts gespeichert.',
-      { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    /* Weder Speicher noch Netz.
+       ----------------------------------------------------------------------
+       HIER LAG EIN FEHLER, DER SICH ALS ETWAS ANDERES AUSGAB. Die Startseite
+       wurde für JEDE Anfrage zurückgegeben — auch für ein fehlendes Skript.
+       Der Browser bekam damit auf `<script src="…/wissensseiten.js">` eine
+       Antwort mit Status 200 und HTML darin, versuchte HTML als JavaScript
+       auszuführen und scheiterte. Die Datei galt als geladen, war es aber
+       nicht: `Wissen` blieb undefiniert, und weiter oben in `schale.js`
+       stand dann „Wissen is not defined" — ein Name, der mit der Ursache
+       nichts zu tun hat.
+
+       Genau so ist es einmal gemeldet worden: Seitenleiste da, Inhalt leer,
+       eine Meldung, die in die falsche Richtung zeigt. Eine Ersatzantwort,
+       die nicht zur Frage passt, ist schlimmer als gar keine.
+
+       Die Startseite ist nur für eine **Navigation** die richtige Antwort —
+       also wenn jemand die App aufruft. Für Skripte, Stilblätter und Bilder
+       ist die ehrliche Antwort ein Fehler. */
+    if (anfrage.mode === 'navigate') {
+      const start = await c.match('./index.html');
+      if (start) return start;
+    }
+    return new Response('Offline und nichts gespeichert: ' + u.pathname,
+      { status: 504, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
   })());
 });
 

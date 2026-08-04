@@ -307,8 +307,19 @@ const sw   = _lies(_dazu(WURZEL, 'sw.js'), 'utf8');
 p('index.html lädt nachbarn.js', /kern\/ablage\/nachbarn\.js/.test(html));
 p('… und vor indexdb.js', html.indexOf('kern/ablage/nachbarn.js') < html.indexOf('kern/ablage/indexdb.js'));
 p('sw.js kennt sie auch — sonst fehlt sie offline', /kern\/ablage\/nachbarn\.js/.test(sw));
-p('Die Fassung im sw.js wurde hochgezählt', /notizen-v11/.test(sw),
-  'sonst räumt activate die alte Ablage nicht weg und die Datei fehlt');
+/* Die Fassungsnummer stand hier als `notizen-v11` wörtlich drin — und wurde
+   damit beim nächsten Hochzählen rot, obwohl genau das richtig war. Eine
+   Prüfung, die eine Zahl festnagelt, prüft nicht die Regel, sondern den Tag,
+   an dem sie geschrieben wurde. Dieselbe Sorte wie der fest verdrahtete Pfad
+   in test87.
+
+   Die Regel lautet: `nachbarn.js` kam in Fassung 11 dazu, also muss die
+   Fassung **mindestens** 11 sein. Später hochzählen ist erlaubt und nötig;
+   zurückfallen oder gar nicht zählen nicht. */
+const fassung = Number((sw.match(/notizen-v(\d+)/) || [])[1]);
+p('Die Fassung im sw.js wurde hochgezählt', fassung >= 11,
+  'gefunden: ' + (fassung || 'keine') +
+  ' — sonst räumt activate die alte Ablage nicht weg und die Datei fehlt');
 
 p('Kein JS-Fehler in der Konsole', fehler.length === 0, fehler.slice(0, 3).join(' · '));
 

@@ -168,6 +168,19 @@ Fehlt: serverseitige Prüfung vollständig · öffentliche Seiten sicher
 trennen · private Anhänge nicht mitliefern · Feldrechte · Kommentarrechte ·
 Widerruf testen.
 
+## L8b · Der Service Worker und die ehrliche Ersatzantwort
+
+**Stand** — ✅ behoben, aber der Gedanke gilt weiter.
+
+Der Arbeiter gab die Startseite für **jede** unbeantwortbare Anfrage zurück,
+auch für ein Skript. Der Browser bekam Status 200 mit HTML, führte HTML als
+JavaScript aus, und die Meldung nannte am Ende einen Namen, der mit der
+Ursache nichts zu tun hatte („Wissen is not defined").
+
+**Was bleibt** — jede Ersatzantwort in diesem Projekt daraufhin ansehen, ob
+sie zur Frage passt. Eine Antwort in der falschen Form ist schlimmer als
+keine: sie sieht wie Erfolg aus.
+
 ## L9 · 129 Formelfunktionen ohne Beschreibung
 
 **Stand** — ◐ 158 Funktionen, **129 ohne Beschreibung**.

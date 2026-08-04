@@ -171,6 +171,27 @@ const http = require('http');
   ok('API-Aufrufe bleiben draussen',
      /pathname\.startsWith\('\/api\/'\)/.test(fs.readFileSync(WURZEL + '/sw.js','utf8')));
 
+  /* --- 7) Eine Ersatzantwort muss zur Frage passen ---------------------
+   * DER FEHLER, DER DAZU FÜHRTE. Fand der Arbeiter eine Datei weder im
+   * Speicher noch im Netz, gab er die **Startseite** zurück — für jede
+   * Anfrage. Ein `<script src="…/wissensseiten.js">` bekam damit Status 200
+   * und HTML im Körper, der Browser führte HTML als JavaScript aus, und
+   * `Wissen` blieb undefiniert. Gemeldet wurde dann „Wissen is not defined"
+   * — ein Name, der mit der Ursache nichts zu tun hat, in einer Datei, die
+   * völlig in Ordnung war.
+   *
+   * Geprüft wird beides: das Skript bekommt keine Startseite, die Navigation
+   * bekommt sie weiterhin. Ohne die zweite Hälfte wäre die Offline-Fähigkeit
+   * repariert kaputt.
+   * ------------------------------------------------------------------- */
+  const swQuelle = fs.readFileSync(WURZEL + '/sw.js', 'utf8');
+  ok('Die Startseite kommt nur bei einer Navigation',
+     /anfrage\.mode === 'navigate'/.test(swQuelle));
+  ok('Sonst eine ehrliche Fehlerantwort',
+     /status: 504/.test(swQuelle));
+  ok('Fehlgeschlagenes Ablegen wird nicht verschluckt',
+     /misslungen/.test(swQuelle) && !/\.catch\(\(\) => \{\}\)\)\);/.test(swQuelle));
+
   console.log('\n=== ERGEBNIS ===');
   pruef.forEach(([n, x]) => console.log((x ? '✅ ' : '❌ ') + n));
   console.log('\n' + pruef.filter(x => x[1]).length + '/' + pruef.length + ' bestanden');
