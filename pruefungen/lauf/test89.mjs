@@ -351,7 +351,7 @@ gleich('Der 1. Januar 2026 war ein Donnerstag',
   Dienst.datumLang('2026-01-01'), 'Donnerstag, 1. Januar 2026');
 
 const jetzt = new Date();
-const vorhin = new Date(jetzt.getTime() - 3600000).toISOString();
+const vorhin = new Date(jetzt.getTime() - 300000).toISOString();
 p('Heute heisst „Heute"', Dienst.zeitKurz(vorhin).startsWith('Heute'));
 const gestern = new Date(jetzt.getTime() - 30 * 3600000).toISOString();
 p('Gestern heisst „Gestern" oder trägt ein Datum',
