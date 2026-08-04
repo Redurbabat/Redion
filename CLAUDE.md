@@ -87,7 +87,7 @@ ein Experimentierplatz für unnötige Dependencies
 3. Sprache und Stil
 
 Es gibt zwei Sprachen, und sie sind sauber getrennt. Die vollständige Regel
-steht in ENTSCHEIDUNGEN.md unter E27; hier das Wichtigste:
+steht in Abschnitt 53 und in ENTSCHEIDUNGEN.md unter E27; hier das Wichtigste:
 
 Deutsch für alles, was ein Mensch liest — Nutzertexte, Fehlermeldungen,
 Kommentare, Dokumentation.
@@ -1813,128 +1813,138 @@ Wenn any nötig ist, Kommentar schreiben:
 
 52.8 Zentrale Typen
 
-Zentrale Typen gehören nach:
+Zentrale Typen stehen in:
 
 src/core/types/
 
-oder passend in Fachmodule.
+Dort ist die Wahrheit, nicht hier. Diese Beispiele zeigen die Form; wenn beide
+je auseinandergehen, gilt der Ordner.
 
-Wichtige Typen:
+Typnamen sind englisch. Feldnamen sind es nicht — sie heissen so, wie sie in
+IndexedDB gespeichert sind. Ein Feldname im Typ, der nicht dem gespeicherten
+Feld entspricht, ist keine Übersetzung, sondern eine falsche Behauptung, und
+ihn zu ändern wäre eine Datenmigration.
 
 export type ID = string
-
 export type ISODateTime = string
 
-export type BlockId = string
-export type PageId = string
-export type CollectionId = string
-export type ViewId = string
-export type FileId = string
+export type BlockId = ID
+export type PageId = ID
+export type CollectionId = ID
+export type ViewId = ID
+export type FileId = ID
+
+Ein Block, abgelesen aus quell/kern/ablage/indexdb.js (addBlock, Zeile 255):
 
 export interface RedionBlock {
   id: BlockId
   type: string
-  parentId: PageId | BlockId | null
-  properties: Record<string, unknown>
-  children?: BlockId[]
-  createdAt: ISODateTime
-  updatedAt: ISODateTime
-  deleted?: boolean
+  text: string
+  content: BlockId[]        // Kennungen der Kinder, keine Objekte
+  parentId: BlockId | CollectionId | null
+  parentTable: 'block' | 'collection'
+  color: string
+  created: ISODateTime
+  edited: ISODateTime
+  erstelltVon: string       // deutsch, weil das Feld so gespeichert ist
+  alive: boolean            // false = im Papierkorb, nicht endgültig weg
+  icon?: string
+  collectionId?: CollectionId
+  aktiveView?: string
+  dateiId?: string
 }
 
 export interface RedionPage extends RedionBlock {
   type: 'page'
-  title: string
+  id: PageId
 }
+
+Eine Datenbankzeile ist derselbe Satz mit parentTable: 'collection'; die
+Spaltenwerte stehen unter props.
+
+Eine Datei, abgelesen aus quell/bereiche/dateien/ablage.js:
 
 export interface RedionFile {
   id: FileId
   name: string
-  mime: string
-  size: number
-  createdAt: ISODateTime
-  chunks?: string[]
+  groesse: number
+  typ: string
+  blockId: BlockId | null
+  teile: number
+  angekommen: number
+  zustand: 'wartet' | 'laeuft' | 'fertig'
+  angelegt: ISODateTime
+  fertigAm: ISODateTime | null
 }
 
-Diese Typen dürfen später verbessert werden.
+Nicht raten, welche Felder es gibt. Nachsehen (ENTSCHEIDUNGEN.md E21). Diese
+Beispiele zeigten hier einmal createdAt, updatedAt, properties, children und
+deleted. Vier davon gibt es nicht, und deleted hätte die Bedeutung von alive
+genau umgekehrt.
 
 
 
 52.9 Datenbank-Typen
 
-Datenbanken brauchen eigene Typen:
+Eine Datenbank hält die Spalten. Die Zeilen liegen nicht darin, sondern als
+Blöcke im Fach blocks, und zeigen über parentId hierher zurück.
 
-export type PropertyType =
-  | 'title'
-  | 'text'
-  | 'number'
-  | 'select'
-  | 'multi_select'
-  | 'status'
-  | 'date'
-  | 'person'
-  | 'checkbox'
-  | 'url'
-  | 'email'
-  | 'phone'
-  | 'formula'
-  | 'created_time'
-  | 'updated_time'
-  | 'files'
-  | 'relation'
-  | 'rollup'
-  | 'auto_number'
-  | 'button'
-  | 'ai'
-
-export interface PropertySchema {
-  id: string
+export interface Column {
   name: string
-  type: PropertyType
-  options?: unknown
+  type: string              // Bezeichner aus Register.eigenschaften
+  options?: Array<{ name: string; color?: string }>
+  formel?: string
+  zielCollection?: CollectionId
 }
 
-export interface CollectionSchema {
+export type Schema = Record<string, Column>
+
+export interface RedionDatabase {
   id: CollectionId
   name: string
-  properties: PropertySchema[]
+  icon: string
+  schema: Schema
+  viewIds: ViewId[]
+  created: ISODateTime
 }
+
+Der Spaltentyp ist bewusst string und keine Aufzählung: Register.eigenschaften
+lässt sich zur Laufzeit erweitern. Ein Typ, der das verbietet, wäre falsch
+statt streng.
+
+Die zwölf Ansichtsarten stehen dagegen fest und sind eine Aufzählung:
+table, board, timeline, calendar, list, gallery, chart, feed, map, dashboard,
+pivot, form.
 
 
 
 52.10 .redion-Typen
 
-Das .redion-Backupformat muss typisiert werden:
+Das Sicherungsformat muss typisiert sein. Backup-Code nie untypisiert lassen.
 
 export interface RedionPackageManifest {
-  format: 'redion'
   version: number
-  createdAt: ISODateTime
-  appVersion: string
-  containsAttachments: boolean
-  files: RedionPackageFile[]
+  exportiert: ISODateTime
+  enthaelt: StoreName[]     // welche Fächer wirklich drin sind
+  fehlt: StoreName[]        // welche fehlen; leer heisst vollständig
+  hinweis: string           // ein Satz im Klartext für den Menschen
 }
 
-export interface RedionPackageFile {
-  id: FileId
-  path: string
-  name: string
-  mime: string
-  size: number
-  checksum?: string
-}
-
-export interface RedionPackageData {
+export interface RedionPackageData extends RedionPackageManifest {
   blocks: RedionBlock[]
-  collections: unknown[]
-  views: unknown[]
-  meta: Record<string, unknown>
-  versions?: unknown[]
+  collections: RedionDatabase[]
+  views: RedionView[]
+  meta: MetaEntry[]
+  versions: RedionVersion[]
 }
 
-Regel:
+enthaelt, fehlt und hinweis sind kein Beiwerk. Eine Sicherung, die nicht sagt,
+was sie auslässt, ist die gefährlichste Sorte — man merkt es erst, wenn man
+sie braucht.
 
-Backup-Code nie untypisiert lassen.
+Diese Feldnamen sind deutsch, weil sie wörtlich so in jeder bereits
+geschriebenen Sicherungsdatei stehen. Sie umzubenennen würde vorhandene
+Sicherungen unlesbar machen.
 
 
 
@@ -2203,6 +2213,99 @@ Neuer Kerncode: TypeScript.
 Neue Typen: TypeScript.
 Neue Tests: bevorzugt TypeScript.
 Alten JavaScript-Code nur anfassen, wenn nötig oder im Rahmen einer geplanten Migration.
+
+
+
+53. Code-Sprache und TypeScript
+
+Die Sprachregel in einem Satz:
+
+Deutsch für Menschen. Englisch für Code.
+
+Ausführlich steht sie in ENTSCHEIDUNGEN.md unter E27. Hier das, was beim
+Arbeiten gebraucht wird.
+
+
+53.1 Was englisch wird
+
+Alles, was nur der Code liest — und nur in neuem TypeScript:
+
+Ordnernamen           src/core/helpers/
+Dateinamen            ids.ts, backup.ts, spreadsheet.ts
+Variablen             const activeView = …
+Funktionen            createPage() statt seiteErstellen()
+Klassen               class FormulaParser
+Interfaces und Typen  RedionBlock, ViewLayout, Result<T>
+Enums und Unions      'wartet' | 'laeuft' | 'fertig' bleibt als Wert deutsch,
+                      der Typname UploadState ist englisch
+Testnamen im Code     describe('createPage', …)
+
+
+53.2 Was deutsch bleibt
+
+Alles, was ein Mensch liest:
+
+Nutzertexte           Knöpfe, Überschriften, Menüs, Platzhalter
+Fehlermeldungen       „Die Datei ist größer als 4 GB."
+Kommentare            im Code, auch im englisch benannten
+Dokumentation         README.md, CLAUDE.md, AUFGABEN.md, LUECKEN.md,
+                      ENTSCHEIDUNGEN.md, doku/
+Prüfnamen im Text     die Beschreibung, die im Prüfbericht erscheint
+
+Eine englisch benannte Datei mit deutschen Kommentaren ist kein Widerspruch,
+sondern genau die Regel.
+
+
+53.3 Die zwei harten Grenzen
+
+Grenze 1: Feldnamen sind keine Namen, sondern Daten.
+
+Ein Feld heisst so, wie es in IndexedDB gespeichert ist — created, edited,
+erstelltVon, alive, groesse, teile, enthaelt, fehlt. Diese Namen zu
+übersetzen ist keine Umbenennung, sondern eine Datenmigration, und sie macht
+jede vorhandene Sicherung unlesbar. Also nicht.
+
+Typname englisch, Feldname wie gespeichert.
+
+Grenze 2: Keine Massenumbenennung.
+
+Der Bestand unter quell/ ist deutsch benannt und bleibt es. Eine Datei wird
+umbenannt, wenn sie ohnehin migriert wird — nicht, weil sie deutsch heisst.
+
+Ein Modul mit fünfzehn Aufrufern darf im Zug seiner Migration umbenannt
+werden (so geschehen bei Kennungen → Ids). Ein Modul mit hundert Aufrufern
+nicht ohne eigenen Plan.
+
+
+53.4 Wo neuer Code hingehört
+
+src/                  TypeScript-Quelle, englisch benannt
+  core/types/         nur Typen, keine Logik. Erzeugt nichts (noEmit).
+  core/helpers/       kleine Helfer, werden nach quell/ ausgegeben
+quell/                der laufende Bestand, deutsch benannt
+
+Wichtig bei tsconfig.bauen.json: include darf nicht src/core/** umfassen,
+ohne src/core/types/** auszuschliessen. Sonst werden leere .js-Dateien nach
+quell/ geschrieben.
+
+
+53.5 Was das nicht heisst
+
+Kein React. TypeScript ja, React nur nach eigener Entscheidung in
+ENTSCHEIDUNGEN.md.
+
+Keine Build-Pflicht. index.html doppelklicken muss weiter funktionieren, und
+redion-einzeldatei.html muss sich weiter mit node bauen.js erzeugen lassen.
+
+Kein grosser Umbau auf einmal. Die Phasen stehen in AUFGABEN.md.
+
+Keine Datenmigration nebenbei. Siehe 53.3, Grenze 1.
+
+
+53.6 Der wichtigste Satz dieses Abschnitts
+
+Ein englischer Name ist eine Verbesserung. Ein falscher Feldname ist ein
+Datenverlust. Im Zweifel nachsehen, nicht übersetzen.
 
 
 

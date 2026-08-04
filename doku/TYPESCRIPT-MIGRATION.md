@@ -42,15 +42,18 @@ Sobald ausführbarer `.ts`-Code umzieht, muss daraus `.js` werden. Gewählt:
 **das erzeugte JavaScript wird mitversioniert.**
 
 ```
-src/kern/helfer/kennungen.ts      die Quelle, wird bearbeitet
+src/core/helpers/ids.ts           die Quelle, wird bearbeitet
         ↓  npm run bauen:ts       (tsc -p tsconfig.bauen.json)
-quell/kern/helfer/kennungen.js    wird geladen, wird mitcommittet
+quell/core/helpers/ids.js         wird geladen, wird mitcommittet
 ```
 
 `tsconfig.bauen.json` bildet `rootDir: src` auf `outDir: quell` ab. Die
-Datei landet also genau dort, wo `index.html` und `sw.js` sie ohnehin schon
-laden — **keine der beiden Dateien muss geändert werden**, und `bauen.js`
-auch nicht.
+ausgegebene Datei landet also unter demselben Pfad wie ihre Quelle, nur unter
+`quell/` statt `src/`. Wird eine Datei bei ihrer Migration umbenannt — wie
+hier `kennungen.ts` → `ids.ts` (`ENTSCHEIDUNGEN.md` E27) —, müssen
+`index.html` und `sw.js` den neuen Pfad nennen. `test87` erzwingt das: es
+prüft, dass jede in `index.html` geladene Datei auch im `sw.js` steht.
+`bauen.js` liest `index.html` und zieht von selbst nach.
 
 Ein Bauschritt für den Entwickler, keiner für den Nutzer. Die App startet
 weiterhin per Doppelklick.
@@ -98,10 +101,9 @@ nur nach einer eigenen, geschriebenen Entscheidung.
 src/
 ├─ global.d.ts        Typen für migrierte Dateien (kein `import` erlaubt)
 ├─ core/
-│  └─ types/          die zentralen Typen — werden nie ausgegeben
-├─ kern/              migrierter Code → wird nach quell/ ausgegeben
-│  └─ helfer/
-│     └─ kennungen.ts
+│  ├─ types/          die zentralen Typen — werden nie ausgegeben
+│  └─ helpers/        migrierter Code → wird nach quell/ ausgegeben
+│     └─ ids.ts
 ├─ registry/
 ├─ areas/
 └─ app/
@@ -116,10 +118,15 @@ quell/                der bestehende Code. Bleibt unangetastet, bis eine
 | | wird geprüft | wird ausgegeben | darf `import` |
 |---|---|---|---|
 | `src/core/types/` | ✅ | ✗ | ✅ |
-| `src/kern/…` | ✅ | ✅ → `quell/` | ✗ |
+| `src/core/helpers/…` | ✅ | ✅ → `quell/` | ✗ |
 
-`tsconfig.json` prüft alles unter `src/`. `tsconfig.bauen.json` gibt nur
-`src/kern/**` aus.
+`tsconfig.json` prüft alles unter `src/`. `tsconfig.bauen.json` gibt nur die
+Ordner mit ausführbarem Code aus — zur Zeit `src/core/helpers/**`.
+
+**Achtung beim Erweitern:** `include` darf nicht einfach auf `src/core/**`
+gehen. Dann lägen die Typdateien mit im Bauschritt und schrieben leere
+`.js`-Dateien nach `quell/`. Entweder Ordner einzeln aufzählen — so wie
+jetzt — oder `src/core/types/**` ausdrücklich ausschliessen.
 
 `quell/` (soweit nicht erzeugt), `server/`, `pruefungen/` und `bauen.js`
 sind vom Typecheck ausgeschlossen. Das ist kein Aufschieben:
@@ -138,7 +145,7 @@ Die Nummern sind die aus `CLAUDE.md` §52.16. Der Stand hier ist der wahre.
 | **TS-0** | Analyse: Struktur lesen, grosse Dateien finden, Import/Export/Backup finden, Testlage prüfen | ✅ erledigt |
 | **TS-1** | Werkzeuge: `typescript`, `tsconfig.json`, `npm run typecheck` | ✅ erledigt |
 | **TS-2** | Zentrale Typen unter `src/core/types/` | ✅ erledigt |
-| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Entprellen, Fehler, Säubern | ◐ begonnen — `kennungen.ts` steht, der Rest folgt |
+| **TS-3** | Kleine Kernhelfer: Kennungen, Datum, Objekte, Entprellen, Fehler, Säubern | ◐ begonnen — `ids.ts` steht, der Rest folgt |
 | **TS-4** | `.redion`, ZIP, Dateien, Export/Import — mit Tests | offen |
 | **TS-5** | Die IndexedDB-Schicht. Sehr vorsichtig. | offen |
 | **TS-6** | Die Register | offen |
@@ -168,13 +175,19 @@ Export mit echten Bytes nachgewiesen sind.
 
 | Datei | Inhalt |
 |---|---|
-| `basis.ts` | `ID`, `ISODateTime`, die Kennungstypen, `Ergebnis<T>` |
-| `block.ts` | `Block`, `Zeile`, `Seite`, `Fassung` |
-| `datenbank.ts` | `Sammlung`, `Schema`, `Spalte`, `Ansicht`, Filter, Sortierung |
-| `datei.ts` | `Datei`, `Stueck`, `Uploadzustand` |
-| `sicherung.ts` | `Sicherung`, `Sicherungskopf`, `Dateienkarte`, `RedionPaket`, `Einspielart`, `Einspielbericht` |
-| `ablage.ts` | `FAECHER` (alle neun), `Speicherort`, `Speicherlage` |
+| `id.ts` | `ID`, `ISODateTime`, die Kennungstypen, `Result<T>` |
+| `block.ts` | `RedionBlock`, `RedionRow`, `RedionPage`, `RedionVersion` |
+| `database.ts` | `RedionDatabase`, `Schema`, `Column`, `RedionView`, Filter, Sortierung |
+| `file.ts` | `RedionFile`, `FileChunk`, `UploadState` |
+| `backup.ts` | `RedionPackageData`, `RedionPackageManifest`, `RedionFileMap`, `RedionPackage`, `ImportMode`, `ImportReport` |
+| `storage.ts` | `STORES` (alle neun), `StorageLocation`, `StorageInfo` |
 | `index.ts` | eine Tür für alles davon |
+
+Die Namen sind englisch, seit `ENTSCHEIDUNGEN.md` **E27** die Code-Sprache
+festlegt: Deutsch für Menschen, Englisch für Code. Die **Feldnamen** darin
+sind es nicht — sie heissen so, wie sie in IndexedDB gespeichert sind
+(`created`, `edited`, `erstelltVon`, `alive`, `groesse`, `enthaelt`). Ein
+Feld umzubenennen wäre keine Übersetzung, sondern eine Datenmigration.
 
 ### Diese Typen sind gemessen, nicht erfunden
 
@@ -198,7 +211,7 @@ Geräten von Nutzern liegen. Also: erst nachsehen, dann tippen.
 **1. Eine Datei pro Schritt, mit grünem Prüflauf davor und danach.**
 
 ```
-npm run bauen:ts                  falls die Datei unter src/kern/ liegt
+npm run bauen:ts                  falls die Datei ausführbaren Code enthält
 npm run typecheck
 npm run pruefen -- --schnell
 node bauen.js

@@ -130,7 +130,7 @@ await seite.waitForFunction(() => window.App);                   // wartet ewig
 
 Im Modulcode dasselbe: `typeof Melder !== 'undefined'` statt `self.Melder`.
 Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
-`Kennungen` …), sind beides Mal erreichbar.
+`Ids` …), sind beides Mal erreichbar.
 
 ---
 

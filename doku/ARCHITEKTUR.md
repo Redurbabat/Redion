@@ -48,12 +48,26 @@ Schale, und ein Bereich nichts von einem anderen.
 | `abgleich/` | die Abgleichsmaschine und das Zusammenführen |
 | `zugang/` | Sitzung, Rechte je Spalte, Rollen |
 | `sicherheit/` | Verschlüsselung, HTML säubern, Werte prüfen |
-| `helfer/` | Kennungen, Datum, Objekte, Bremsen, Melder, Tempo |
+| `helfer/` | Datum, Objekte, Bremsen, Melder, Tempo, Bytes |
 | `einstellung/` | Konstanten, Schalter, was diese Fassung ist |
 
 Der Prüfstein für `kern/`: **eine Datei hier darf nichts aus `bereiche/`
 nennen.** Tut sie es, gehört entweder der Code dorthin oder das Gemeinsame
 nach `kern/`.
+
+### `core/` — dasselbe Fundament, schon migriert
+
+Ein zweiter Ordner neben `kern/`, und das ist kein Versehen. Was aus
+TypeScript nach `quell/` ausgegeben wird, landet unter englischem Pfad
+(`ENTSCHEIDUNGEN.md` E27, `CLAUDE.md` 53). Zur Zeit steht dort eine Datei:
+
+| Ordner | Was darin liegt |
+|---|---|
+| `core/helpers/` | `ids.js` — Kennungen erzeugen und lesen. Quelle: `src/core/helpers/ids.ts` |
+
+`kern/` und `core/` gehorchen derselben Regel — kein Zugriff auf `bereiche/`.
+Sie wachsen aufeinander zu: `core/` füllt sich, `kern/` leert sich, und wenn
+`kern/` leer ist, ist die Migration fertig (`doku/TYPESCRIPT-MIGRATION.md`).
 
 ### `register/` — die Kataloge
 

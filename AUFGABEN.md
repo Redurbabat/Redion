@@ -67,9 +67,19 @@ schrieb, konnte beide Seiten belegen — und schrieb deshalb zuerst deutsch.
   widerrief, sind zu geltenden Regeln geworden)
 - `AUFGABEN.md`: diese Datei, zehn Phasen mit ehrlichem Stand
 - `LUECKEN.md`: nach Priorität statt nach Nummer
-- `CLAUDE.md`: neuer Abschnitt zur Code-Sprache · §3 präzisiert · 39 Zeilen
-  unredigierter Chat-Text entfernt
+- `CLAUDE.md`: **Abschnitt 53 · Code-Sprache und TypeScript** neu · §3
+  präzisiert · 39 Zeilen unredigierter Chat-Text entfernt
 - `README.md`: Code-Stil um die Sprachregel ergänzt
+- `doku/TYPESCRIPT-MIGRATION.md`, `doku/ARCHITEKTUR.md`,
+  `pruefungen/LIESMICH.md`: auf die englischen Pfade nachgezogen
+
+**Dabei gefunden: erfundene Feldnamen an zwei Stellen.** `CLAUDE.md` §52.8
+und `README.md` zeigten `createdAt`, `updatedAt`, `properties`, `children`
+und `deleted` als Felder eines Blocks. Vier davon gibt es nicht, und
+`deleted` hätte die Bedeutung von `alive` genau umgekehrt. Beide Beispiele
+waren nie gegen `quell/kern/ablage/indexdb.js:255` geprüft — dieselbe
+Fehlerklasse wie die elf falschen Excel-Zuordnungen. Jetzt steht dort die
+gemessene Form, mit `src/core/types/` als Wahrheit und dem Rest als Beispiel.
 
 **Fertig wenn** — alles erfüllt: TypeScript-Ziel klar · Code-Sprache klar ·
 `.redion` klar · Excel-Ziel klar · Cloudflare als optional klar.

@@ -1277,7 +1277,7 @@ node bauen.js
 
 Code-Stil
 
-Redion ist aktuell ein klassisches HTML/CSS/JavaScript-Projekt, soll aber langfristig professionell auf TypeScript migriert werden.
+Redion ist aktuell ein klassisches HTML/CSS/JavaScript-Projekt, soll aber langfristig vollständig auf TypeScript migriert werden. Die Grundlage steht bereits: `tsconfig.json`, `npm run typecheck`, die zentralen Typen unter `src/core/types/` und eine erste migrierte Datei. Der Weg dorthin steht in `doku/TYPESCRIPT-MIGRATION.md`.
 
 Aktuelle Regeln:
 
@@ -1285,8 +1285,13 @@ bestehende Struktur respektieren
 keine unnötigen Dependencies
 keine großen Dateien weiter aufblasen
 sicheren DOM-Code schreiben
-Nutzertexte auf Deutsch
 Tests bei Speicheränderungen
+
+Sprache: Deutsch für Menschen, Englisch für Code.
+
+Deutsch bleiben Nutzertexte, Fehlermeldungen, Kommentare und die gesamte Dokumentation. Englisch wird neuer TypeScript-Code — Ordner, Dateien, Variablen, Funktionen, Klassen, Interfaces, Typen.
+
+Zwei Grenzen dazu: Feldnamen heißen so, wie sie in IndexedDB gespeichert sind (`created`, `edited`, `alive`) — sie zu übersetzen wäre eine Datenmigration, keine Umbenennung. Und der bestehende deutsch benannte Bestand unter `quell/` wird nicht massenhaft umbenannt, sondern nur dort, wo eine Datei ohnehin migriert wird. Ausführlich in `ENTSCHEIDUNGEN.md` E27.
 
 
 
@@ -1354,35 +1359,43 @@ Während der Migration darf quell/ weiter existieren.
 
 Wichtige TypeScript-Typen
 
-Beispiele für zentrale Typen:
+Die Typen stehen in `src/core/types/`. Dort ist die Wahrheit; das hier zeigt nur die Form.
 
 export type ID = string
 export type ISODateTime = string
 
-export type BlockId = string
-export type PageId = string
-export type CollectionId = string
-export type ViewId = string
-export type FileId = string
+export type BlockId = ID
+export type PageId = ID
+export type CollectionId = ID
+export type ViewId = ID
+export type FileId = ID
 
 export interface RedionBlock {
   id: BlockId
   type: string
-  parentId: PageId | BlockId | null
-  properties: Record<string, unknown>
-  children?: BlockId[]
-  createdAt: ISODateTime
-  updatedAt: ISODateTime
-  deleted?: boolean
+  text: string
+  content: BlockId[]
+  parentId: BlockId | CollectionId | null
+  parentTable: 'block' | 'collection'
+  color: string
+  created: ISODateTime
+  edited: ISODateTime
+  erstelltVon: string
+  alive: boolean
 }
 
 export interface RedionFile {
   id: FileId
   name: string
-  mime: string
-  size: number
-  createdAt: ISODateTime
+  groesse: number
+  typ: string
+  teile: number
+  angekommen: number
+  zustand: 'wartet' | 'laeuft' | 'fertig'
+  angelegt: ISODateTime
 }
+
+Die Typnamen sind englisch, die Feldnamen nicht. Ein Feld heißt so, wie es in IndexedDB gespeichert ist. Es umzubenennen wäre keine Übersetzung, sondern eine Datenmigration — und würde jede vorhandene Sicherung unlesbar machen.
 
 
 

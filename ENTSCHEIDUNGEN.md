@@ -1245,6 +1245,8 @@ korrigiert.
 - Die sieben Typdateien heissen `id.ts`, `block.ts`, `database.ts`,
   `file.ts`, `backup.ts`, `storage.ts`, `index.ts`.
 - `Ergebnis<T>` heisst `Result<T>`, `Kennungen` heisst `Ids`.
+- `CLAUDE.md` **Abschnitt 53** fasst diese Regel für die tägliche Arbeit
+  zusammen; §52.8–52.10 und die README zeigen jetzt die gemessenen Felder.
 
 **Nicht tun**
 
