@@ -277,8 +277,33 @@ const zweite = await oeffne();
 const nachher = await zweite.evaluate((id: string) => {
   const rows = Store.rowsOf(id);
   return { anzahl: rows.length, namen: rows.map((r: any) => r.text),
-           zahlen: rows.map((r: any) => (r.props || {}).umsatz) };
+           zahlen: rows.map((r: any) => (r.props || {}).umsatz),
+           zeitstempel: rows.map((r: any) => r.created),
+           folgen: rows.map((r: any) => r.folge) };
 }, collId) as any;
+/* ─── DER FUND, DEN NUR DER VOLLE LAUF BRACHTE ─────────────────────────────
+ *
+ * Einzeln lief diese Prüfung durch. Im vollen Lauf kamen die Zeilen als
+ * `["Beta","Alpha","Delta","Gamma"]` zurück — paarweise vertauscht.
+ *
+ * Der Grund: `rowsOf` sortierte nach `created`, und das hat Millisekunden.
+ * Vier Zeilen, die beim Einfügen in derselben Millisekunde entstehen, haben
+ * denselben Zeitstempel und damit KEINE Reihenfolge. Beim nächsten Start
+ * liefert IndexedDB sie anders, und die Tabelle steht vertauscht da.
+ *
+ * Von Hand passiert das nie. Beim Einfügen aus Excel, beim CSV-Import und
+ * bei Vorlagen passiert es jedes Mal — also überall dort, wo viele Zeilen
+ * auf einmal entstehen.
+ *
+ * Die Prüfung darunter zeigt, dass der Stichentscheid wirklich gebraucht
+ * wird: die Zeitstempel sind gleich. Wäre das eines Tages nicht mehr so,
+ * prüfte sie nichts mehr — und sagte es. */
+p('Die Zeilen haben denselben Zeitstempel — der Stichentscheid arbeitet wirklich',
+  new Set(nachher.zeitstempel).size < nachher.zeitstempel.length,
+  JSON.stringify(nachher.zeitstempel));
+p('… und jede hat eine Folge bekommen',
+  nachher.folgen.every((f: unknown) => typeof f === 'number'),
+  JSON.stringify(nachher.folgen));
 gleich('Alle vier Zeilen sind noch da', nachher.anzahl, 4);
 gleich('… mit ihren Namen', nachher.namen, ['Alpha', 'Beta', 'Gamma', 'Delta']);
 gleich('… und ihren Zahlen', nachher.zahlen, [10, 20, 30, 40]);

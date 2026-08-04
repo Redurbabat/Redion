@@ -124,7 +124,16 @@ const { chromium } = require('playwright');
 
   const layouts = await p.evaluate(() => Datenbank.LAYOUTS.map(l => l[0]));
   console.log('   Layouts:', JSON.stringify(layouts));
-  ok('Zwölf Ansichtstypen', layouts.length === 12);
+  /* HIER STAND EINE ZAHL, und sie ging rot, als die Rasteransicht dazukam —
+     bei völlig richtiger Arbeit. Dieselbe Lehre wie bei der eingefrorenen
+     Stilblattliste in test87: eine Prüfung, die das Richtige bestraft,
+     bringt man sich ab, und dann fängt sie auch den echten Fehler nicht
+     mehr. Geprüft wird jetzt die Regel — die Leiste und das Register müssen
+     dasselbe sagen. */
+  const ausRegister = await p.evaluate(() => Register.ansichten.alle().map(x => x[0]));
+  ok('Es gibt mindestens die zwölf ursprünglichen Ansichtstypen', layouts.length >= 12);
+  ok('Die Layout-Liste stimmt mit dem Register überein',
+     JSON.stringify(layouts) === JSON.stringify(ausRegister));
   ok('Dashboard ist dabei', layouts.includes('dashboard'));
 
   const dash = await p.evaluate((d) => {
@@ -168,7 +177,8 @@ const { chromium } = require('playwright');
              aktiv: d.querySelector('.dl-kacheln button.on')?.textContent };
   });
   console.log('   Layout-Leiste:', JSON.stringify(leiste));
-  ok('Layout-Leiste mit zwölf Kacheln', leiste && leiste.kacheln === 12);
+  ok('Die Leiste zeigt genau so viele Kacheln, wie es Ansichtstypen gibt',
+     leiste && leiste.kacheln === layouts.length);
   ok('Tabelle ist markiert', /Tabelle/.test(leiste.aktiv || ''));
   ok('Titel der Datenquelle anzeigen', leiste.schalter.some(t => /Titel der Datenquelle/.test(t)));
   ok('Vertikale Linien anzeigen', leiste.schalter.some(t => /Vertikale Linien/.test(t)));

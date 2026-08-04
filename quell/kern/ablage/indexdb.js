@@ -710,11 +710,32 @@ const Store = (() => {
   };
 
   /** Eine Zeile ist ein Block vom Typ 'page' mit parentTable 'collection'. */
+  /* ------------------------------------------------------------------------
+   * WARUM ZEILEN EINE FOLGE BRAUCHEN
+   * ------------------------------------------------------------------------
+   * `created` hat Millisekunden. Vier Zeilen, die in derselben Millisekunde
+   * entstehen, haben denselben Zeitstempel — und damit KEINE Reihenfolge.
+   * `Object.values(cache.blocks)` gibt sie beim nächsten Start in der
+   * Reihenfolge zurück, in der IndexedDB sie liefert, und die ist eine
+   * andere. Ergebnis: nach dem Neuladen stehen die Zeilen vertauscht da.
+   *
+   * Von Hand passiert das nie — kein Mensch legt vier Zeilen in einer
+   * Millisekunde an. Beim Einfügen aus Excel, beim CSV-Import und bei
+   * Vorlagen passiert es jedes Mal. Gefunden hat es `test112`, und zwar nur
+   * im vollen Lauf: einzeln lief die Prüfung durch, weil der Zwischenspeicher
+   * dann zufällig dieselbe Reihenfolge hatte.
+   *
+   * `folge` zählt hoch und wird mitgespeichert. Sie ist der Stichentscheid
+   * bei gleichem Zeitstempel — nicht der Hauptschlüssel: die Zeit bleibt,
+   * was sie ist, und wird nicht verfälscht, um sie eindeutig zu machen.
+   * ----------------------------------------------------------------------*/
+  let folgeZaehler = 0;
+
   const addRow = (collectionId, props = {}) => {
     const r = {
       id: uid(), type: 'page', text: props.title || '', icon: '',
       props, content: [], parentId: collectionId, parentTable: 'collection',
-      created: now(), edited: now(), alive: true
+      created: now(), edited: now(), folge: ++folgeZaehler, alive: true
     };
     cache.blocks[r.id] = r;
     save('blocks', r);
@@ -724,7 +745,13 @@ const Store = (() => {
 
   const rowsOf = (collectionId) => Object.values(cache.blocks)
     .filter(b => b.parentTable === 'collection' && b.parentId === collectionId && b.alive)
-    .sort((a, b) => a.created.localeCompare(b.created));
+    .sort((a, b) =>
+      a.created.localeCompare(b.created) ||
+      ((a.folge || 0) - (b.folge || 0)) ||
+      /* Und wenn beides gleich ist — alte Zeilen ohne `folge` —, dann
+         wenigstens IMMER dasselbe. Eine willkürliche, aber feste Reihenfolge
+         ist besser als eine, die bei jedem Start anders aussieht. */
+      String(a.id).localeCompare(String(b.id)));
 
   const setProp = (rowId, key, value) => {
     const r = cache.blocks[rowId];
