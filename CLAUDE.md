@@ -2438,3 +2438,20 @@ schreibt, prüft zuerst, ob sie überhaupt rot werden KANN.
 Redur will die Bilder direkt im Gespräch sehen — nach jeder Gestaltungs-
 änderung und nach jeder neuen Sache. Das ist keine Höflichkeit, sondern der
 kürzeste Weg zu den vier Fehlern oben.
+
+55.4 Die Bilder gehen nie auf GitHub
+
+`bilder/` steht in `.gitignore`. Bildschirmfotos sind Arbeitsmaterial, keine
+Quelle: sie gehören auf den Rechner, an dem gearbeitet wird — nicht ins
+Verzeichnis, nicht in die Einzeldatei, nicht ins Dienst-Skript.
+
+Zwei Gründe, und der zweite ist der wichtigere:
+
+  · Ein Verzeichnis, das mit jedem Durchgang um ein paar hundert Kilobyte
+    wächst, ist nach einem Monat grösser als die App.
+  · Ein Bild von gestern beantwortet keine Frage von heute. Was zählt, ist
+    der Blick auf das, was JETZT gebaut wurde — und dafür gibt es
+    `bilder.mts`, zehn Sekunden pro Durchgang.
+
+`bilder.mts` selbst gehört sehr wohl ins Verzeichnis. Es ist das Werkzeug,
+nicht das Ergebnis.
