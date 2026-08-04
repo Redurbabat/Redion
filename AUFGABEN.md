@@ -1,394 +1,707 @@
-# Was noch offen ist
+# AUFGABEN.md
 
-**Stand: 3. August 2026** · 59 Prüfläufe im Repository grün (2440 Prüfungen) ·
-516 fertig, 8 teilweise, 0 offen in der Anforderungsliste
+Diese Datei ist die Arbeitsliste für Redion.
 
-> **Zu den Prüfläufen.** Sie lagen unter `/tmp` auf genau einem Rechner und
-> waren in keinem Auscheckvorgang enthalten; im Repository standen drei, und
-> keiner davon war lauffähig. Jetzt liegen sie alle in `pruefungen/lauf/`,
-> laufen über `npm run pruefen` und bei jedem Push von selbst. Die Übersicht,
-> welcher Lauf welchen Bereich abdeckt, steht in `pruefungen/LIESMICH.md`.
+Sie beantwortet:
 
-Diese Datei ist die Arbeitsliste. Sie ist nach **Reihenfolge** sortiert, nicht
-nach Wichtigkeit: was oben steht, macht das darunter leichter.
+```txt
+Was wird als Nächstes gemacht?
+Warum ist es wichtig?
+Wo gehört es hin?
+Wann ist es fertig?
+Welche Tests müssen laufen?
+```
 
-Jede Aufgabe hat: **warum**, **wo**, **fertig wenn**. Ohne das dritte ist eine
-Aufgabe nur ein Wunsch.
+**Wo was steht**
 
----
-
-## A · Der Umbau zu Ende bringen
-
-Der Aufbau steht (`doku/ARCHITEKTUR.md`). A1 bis A3 sind durch, A4 für den
-grössten Bereich — die Datenbanken — auch. Was bleibt, sind die übrigen
-Bereiche. Sie
-gehören zuerst gemacht, weil jede spätere Arbeit in den grossen Dateien
-sonst wieder in denselben Klumpen läuft.
-
-### ~~A1 — Die Seitenleiste herauslösen~~ · erledigt
-
-Liegt in `quell/schale/aufbau/seitenleiste.js`, 704 Zeilen. `schale.js` ist
-von 2600 auf 1993 Zeilen geschrumpft.
-
-Belegt hat es am Ende nicht der Lauf, der dafür geschrieben wurde, sondern
-die 57 aus `pruefungen/lauf/`: **elf davon prüfen die Seitenleiste**, und sie
-liefen nach dem Umzug unverändert durch. Das ist die bessere Aussage — ein
-Lauf, den man für einen Umzug schreibt, kann dieselbe blinde Stelle haben wie
-der Umzug.
-
-**Was an der Aufgabenstellung nicht stimmte**, für den nächsten, der so etwas
-schneidet:
-
-- Die Schnittkante ist **76–682**, nicht 84–700. `woerterZaehlen` gehört
-  schon zum Seitenmenü, nicht zur Seitenleiste.
-- `reiter`, `anpassModus` und `zeichneReiter` sind **im Block selbst**
-  definiert und wandern mit; sie waren nie Einspeisungen. Eingespeist werden
-  müssen dafür `kuerzlich`, `kommendeTermine`, `seitenMenue`, `suche` und
-  `papierkorb`, die hier nicht genannt waren.
-- Der eigentliche Kopplungspunkt stand gar nicht in der Aufgabe:
-  **`App.zeichneBaum` wird an 51 Stellen ausserhalb gerufen** und an 26
-  weiteren in `schale.js` selbst. Der Name musste bleiben — jetzt reicht er
-  nur noch weiter, wie `UI` es für `Menue`/`Hinweis`/`Dialog` tut.
-- `ordne`, der `setTimeout(…, 0)` am Ende von `zeichne` und `abschnitt()`
-  hängen an derselben DOM-Form und mussten gemeinsam umziehen. Einzeln
-  verschoben, wäre die Sortierung still kaputtgegangen.
-
-### ~~A2 — Kopfleiste und Inhaltsfläche trennen~~ · erledigt
-
-`kopfleiste.js` (309 Zeilen: Cover, Symbol, Titel, Sperrhinweis,
-Werkzeugzeile, Pfadleiste) und `inhaltsflaeche.js` (124 Zeilen: Wiki-Index,
-Blöcke, Rückverweise, Streifen). `schale.js` ist von 2022 auf 1745 Zeilen
-gefallen; `zeichneSeite` entscheidet dort nur noch, **was** gezeichnet wird.
-
-**Der Punkt, an dem es kippt**, für den nächsten: `Kopfleiste.zeichne` gibt
-einen Wahrheitswert zurück, und der ist kein Beiwerk. **`false` heisst
-Schluss** — eine verschlüsselte Seite (`locked`) bekommt den Sperrbildschirm
-und danach nichts mehr. Wer den Rückgabewert ignoriert, zeigt verschlüsselten
-Inhalt an. `locked` und `gesperrt` lesen sich ähnlich und meinen
-Gegenteiliges: `gesperrt` ist nur der Schreibschutz.
-
-Nebenbei gefunden: der JSDoc-Block von `zeichneSeite` stand über
-`streifenZeichnen`, fünfzig Zeilen von seiner Funktion entfernt. Steht wieder
-an seinem Platz.
-
-Auch hier haben es am Ende die gelieferten Läufe belegt: **vierzehn davon
-prüfen die Seitenanzeige**, und alle vierzehn liefen nach dem Schnitt durch.
-
-### ~~A3 — Das Stilblatt aufteilen~~ · erledigt
-
-Elf Dateien in `quell/schale/stil/`, aus einer mit 3155 Zeilen:
-
-| Datei | Zeilen | Was |
-|---|--:|---|
-| `marken.css` | 17 | die drei Schriften |
-| `dunkel.css` | 54 | die Farben — **der Normalfall**, nicht der Sonderfall |
-| `hell.css` | 35 | nur, was im Hellmodus anders ist |
-| `grund.css` | 48 | Grundelemente und die zwanzig Farbklassen |
-| `aufbau.css` | 239 | das Gerüst: Seitenleiste und Hauptbereich |
-| `datenbanken.css` | 109 | der Rahmen einer Datenbank |
-| `ki.css` | 96 | das KI-Panel |
-| `werkzeuge.css` | 399 | Menüs, Dialoge, Graph, Karteikarten |
-| `ansichten.css` | 182 | Zeitstrahl, Diagramm, Formular, Seitenvorschau |
-| `einstellungen.css` | 444 | Einstellungen, Verbindungen, Konten |
-| `bausteine.css` | 1682 | der Rest |
-
-**Warum nicht weiter?** Weil es gemessen wurde: 33 Selektoren stehen in mehr
-als einem Themenblock — `#sidebar`, `.db`, `#ai`, `#page`, `.karte`,
-`#handy-leiste`. Thematisch zusammenziehen hiesse umsortieren, und
-Umsortieren dreht bei genau diesen um, wer gegen wen gewinnt. Deshalb ist
-jede der sechs neuen Dateien ein **zusammenhängender** Ausschnitt, kein
-zusammengesuchter. Wer weiter aufteilen will, fängt mit dieser Messung an
-und nicht mit dem Editor.
-
-**Belegt** mit einem Vergleich der berechneten Werte vor und nach dem
-Schnitt: 74 CSS-Variablen (beide Themen) und 56 Element/Thema-Kombinationen
-— **0 Unterschiede**. Dazu die 58 Läufe, davon neun mit
-`getComputedStyle`-Stichproben.
-
-**Der Fund, ohne den A3 die Einzeldatei zerlegt hätte:** `bauen.js` ersetzte
-den `<link rel="stylesheet">` **ohne `g`-Flag**, also nur den ersten. Solange
-es ein Stilblatt gab, fiel das nicht auf. Ab dem zweiten hätte
-`redion-einzeldatei.html` fünf tote `<link>` behalten — und ein `<link>` auf
-`quell/schale/stil/…` geht ins Leere, sobald die Datei allein irgendwo liegt.
-Sie wäre gestartet und unfertig gewesen: die halbe Gestaltung fehlt, und
-nichts meldet einen Fehler. Dieselbe Sorte Fehler wie die fehlende
-HTML-Säuberung. `test87` prüft das jetzt.
-
-**Was beim nächsten Mal zu beachten ist:** Dunkel steht in `:root` und gilt
-immer; `hell.css` überschreibt nur. Wer in `dunkel.css` eine Variable
-ergänzt, muss sie auch in `hell.css` ergänzen — sonst zeigt der Hellmodus an
-dieser einen Stelle den dunklen Wert, und das merkt nur, wer hell arbeitet.
-
-**Und der Fehler, den ich beim zweiten Durchgang selbst gebaut habe**, weil
-er sich wiederholen wird: ein Schnitt landete mitten in einem Kommentar-Banner.
-Die neue Datei fing mit `KI-PANEL` und einem herrenlosen `*/` an. CSS bricht
-dabei nicht ab — es räumt auf: der Parser überliest alles bis zum nächsten
-abgeschlossenen Block und **verschluckt dabei die erste echte Regel**. `#ai`
-verlor sein `display:none`, das KI-Panel stand offen im Fenster. Keine Datei
-war kaputt, keine Klammer unausgeglichen, keine Meldung erschien. Gefunden
-hat es nur der Vergleich der berechneten Werte — 58 Unterschiede.
-`test87` prüft jetzt auf herrenlose Kommentarenden; die Klammernprüfung
-allein hätte es **nicht** gefunden (nachgestellt und belegt).
-
-### A4 — Die Bereiche in `dienst` und `ansicht` trennen · **Datenbanken und Wissen erledigt**
-
-**Warum.** Das ist die eigentliche Regel des Aufbaus: reine Logik ohne DOM
-lässt sich prüfen, ohne einen Browser zu starten.
-
-**Erledigt: `datenbanken`.** `dienst.js` (1022 Zeilen) trägt die
-Eigenschaftstypen, das Lesen eines Wertes, Filtern, Sortieren, Gruppieren und
-die Berechnungen. `steuerung.js` fiel von 8658 auf 7784 Zeilen und zeigt nur
-noch.
-
-Das „fertig wenn" ist wörtlich erfüllt und belegt: `pruefungen/lauf/test88.mjs`
-lädt `dienst.js` in Node — ohne `document`, ohne `window` — und rechnet 38
-Prüfungen durch. **In 47 Millisekunden.** Zum Vergleich: ein Browserlauf
-braucht zwölf Sekunden.
-
-**Dass der Schnitt sauber ging, war nicht Glück, sondern gemessen:** über alle
-Namen gezählt braucht der Logikteil **nichts** aus dem Rest, während der Rest
-16 Namen von dort holt. Die Abhängigkeit läuft nur in eine Richtung. Wäre es
-andersherum auch nur an einer Stelle gewesen, hätten sich die beiden nicht
-trennen lassen, ohne Verhalten zu ändern. Wer den nächsten Bereich schneidet,
-fängt mit dieser Messung an.
-
-Drei Kleinigkeiten waren nötig: `esc` kam aus `Blocks` — einem Modul, das
-zeichnet; die zwei Zeilen stehen jetzt in `dienst.js`. `window.Tempo` wurde zu
-`typeof Tempo !== 'undefined'`, wie CLAUDE.md es ohnehin vorschreibt. Und die
-Datei hängt sich nur dann an ein Fenster, wenn es eines gibt.
-
-**Erledigt: `wissen` — aber anders, als hier stand.** Die Annahme oben lautete,
-jede grosse Datei liesse sich wie `steuerung.js` in eine rechnende und eine
-zeichnende Hälfte teilen. Für `werkzeuge.js` wurde das vor dem Schnitt
-gemessen, und es stimmt nicht: **alle vierzehn Abschnitte fassen das Dokument
-an, zwischen 7 und 47 Mal.** Es gibt dort keine rechnende Hälfte.
-
-Also wurde nicht geschnitten, sondern gesucht — nach den Stellen, die wirklich
-nur rechnen. Es sind neun, sie stehen in `wissen/dienst.js` (228 Zeilen), und
-sie haben eine Gemeinsamkeit: es sind genau die Stellen, bei denen man sich
-fragt, ob sie richtig rechnen. Findet „umb" das „Umbenennen"? Kommt eine
-dreimal gewusste Karteikarte in fünfzehn Tagen wieder? Kommt eine
-Markdown-Tabelle am Dateiende noch an? `pruefungen/lauf/test89.mjs` beantwortet
-98 solche Fragen in 60 Millisekunden — die meisten davon liessen sich in einem
-Browser gar nicht stellen, weil man auf den Termin einer Karteikarte nicht
-warten kann.
-
-`werkzeuge.js` fiel von 1972 auf 1777 Zeilen. Eine Stelle wurde dabei nicht
-bloss verschoben, sondern getrennt: `statistik()` rechnete und zeichnete in
-einem Zug; die Zahlen stehen jetzt in `statistikZahlen()`, das Fenster blieb
-drüben.
-
-**Die Lehre für die nächsten drei:** erst messen, ob es eine Logikhälfte
-überhaupt gibt. Wo keine ist, ist der ehrliche Ertrag eine kleine `dienst.js`
-mit den prüfbaren Kernen — und nicht ein erzwungener Schnitt quer durch eine
-Zeichenfunktion.
-
-**Offen — der Reihe nach, grösste zuerst:**
-
-| Datei | Grösse | Ziel |
-|---|--:|---|
-| `bereiche/hilfe/wissensseiten.js` | 170 KB | ist fast nur Text — nach `doku/` verschieben und beim Bauen einlesen |
-| `bereiche/editor/ansicht/editor.js` | 115 KB | gemessen: `BLOCK-OPERATIONEN` fasst das Dokument 59 Mal an, ist also **keine** reine Logik. Prüfbare Kerne: `inline`, `einbettungsAdresse`, `ueberschriftenDerSeite`, `mitKnopfVars` |
-| `bereiche/datenbanken/steuerung.js` | 7784 Zeilen | die Ansichten einzeln: Tabelle, Board, Kalender, Zeitstrahl |
-| `bereiche/wissen/werkzeuge.js` | 1777 Zeilen | die Oberfläche selbst: `graph/`, `journal/`, `schlagwoerter/`, `befehle` ins Register |
+| Datei | Frage |
+|---|---|
+| `ENTSCHEIDUNGEN.md` | Warum wurde etwas so entschieden? |
+| `AUFGABEN.md` | Was wird als Nächstes gebaut? |
+| `LUECKEN.md` | Was fehlt noch im Produkt? |
 
 ---
 
-### A5 — Den Säuberer aufhängen · **Adressen und Mail-HTML erledigt**
+## Grundregel
 
-**Was auffiel.** `quell/kern/sicherheit/saeubern.js` ist 162 Zeilen lang, hat
-`html`, `nurText`, `alsText`, `alsAttribut`, `adresse`, `adresseOk` und
-`dateiname`, ist über `test85` mit 13 Prüfungen belegt — und **wurde von keiner
-einzigen Stelle der App aufgerufen.** Der einzige Ort, an dem `Saeubern.`
-überhaupt stand, war sein eigener Prüflauf. Ein Sicherheitsnetz, das niemand
-aufgehängt hat.
+Jede Aufgabe braucht:
 
-**Beim Aufhängen kamen zwei Löcher heraus**, die vorher niemand gesucht hatte.
-Beide wurden im Browser bestätigt, bevor eine Zeile geändert wurde.
+```txt
+Ziel
+Warum
+Dateien
+Fertig wenn
+Tests
+Priorität
+```
 
-*Ein losgelöstes Element schützt nicht.* In `verbinden/mail.js` stand zweimal
-`d.innerHTML = <HTML einer fremden Mail>` mit einem `div`, das nie in die Seite
-kam — die Absicht war, das Markup wegzuwerfen und nur den Text zu behalten. Nur
-feuert `<img src=x onerror=…>` beim Zuweisen, auch losgelöst. Nachgemessen:
-`div.innerHTML` führt aus, `template.innerHTML` und `DOMParser` nicht. Genau
-deshalb benutzt `Saeubern.nurText` ein `<template>`.
-
-*„Ist das ein PDF?" entscheidet die Endung.* `javascript:alert(1)//.pdf`
-besteht die Prüfung in `editor.js` — die zwei Schrägstriche sind in JavaScript
-ein Kommentar. Und ein `<iframe src="javascript:…">` läuft **im Ursprung der
-Seite**: im Versuch war aus dem Rahmen heraus `parent` erreichbar, also alle
-Notizen und der KI-Schlüssel. Ein Anhang, den niemand anklickt, führte damit
-Code aus, sobald die Vorschau aufging.
-
-**Die Prüfung sitzt beim Zeichnen, nicht am Eingang** — anders, als hier
-ursprünglich stand. Der Vorschlag lautete: an die drei Eingänge (Import,
-Clipper, Schnittstelle). Nachgesehen sind es mehr — `bookmark`- und
-`file`-Blöcke entstehen ausserdem beim Abgleich mit dem Server, beim Einlesen
-einer Redion-Datei und über `/v1/`. Eine Prüfung pro Eingang hätte man vier Mal
-schreiben und beim fünften vergessen müssen. Beim Zeichnen gibt es dagegen
-genau sechs Stellen, an denen eine Adresse ins Dokument kommt, und die decken
-alle Eingänge zugleich ab — auch die, die es noch nicht gibt.
-
-Zwei neue Funktionen in `Saeubern`, weil die Regel nicht überall dieselbe ist:
-`anhangAdresse` für etwas, das ein Mensch anklickt (sperrt `javascript:` und
-Verwandte, lässt **jedes** `data:` durch — ein Anhang liegt als
-`data:application/zip` im Speicher, weil es keinen Server gibt, auf den man ihn
-legen könnte), und `rahmenAdresse` für einen `<iframe>` (nur `http(s)`, `blob:`
-oder `data:application/pdf`).
-
-**Nichts wird weggeworfen.** Eine gesperrte Adresse bleibt sichtbar und sagt,
-warum sie nicht anklickbar ist.
-
-`pruefungen/lauf/test91.mjs`, 38 Prüfungen. Mit zurückgedrehten Aufrufstellen
-werden 12 davon rot.
-
-**Offen — der zweite Teil.** Die Ursache bleibt: fünfzig `esc`-Kopien sind
-fünfzig Gelegenheiten, eine davon halb zu schreiben. `test87` fängt heute den
-einen bekannten Fall ab (fehlendes `"`); mehr kann eine Textsuche nicht. `esc`
-durch `Saeubern.alsText` zu ersetzen sind fünfzig Dateien und reine
-Fleissarbeit — sie ändert kein Verhalten und gehört deshalb in einen eigenen
-Schritt.
-
-Ebenfalls offen: `Saeubern.html` wird weiterhin nirgends gerufen. Es gibt heute
-keine Stelle, die fremdes HTML als HTML anzeigt — `ausHtml` nimmt nur Text und
-Bildadressen. Wenn eine dazukommt, ist `Saeubern.html` dafür da.
+Aufgaben sind nach Reihenfolge sortiert. Was oben steht, macht das darunter
+leichter.
 
 ---
 
-## B · Was inhaltlich noch aussteht
+## Aktueller Stand
 
-Aus `doku/NOTION-10000X-BESSER.md`, die acht Punkte, die als „teilweise"
-markiert sind. Für jeden steht dort, was genau fehlt.
+**Stand: 4. August 2026 · 73 Prüfläufe grün**
 
-### B1 — Begriffe: dieselbe Sache, verschieden geschrieben (Idee 25)
+Redion kann bereits:
 
-**Warum.** „Acme", „Acme GmbH" und „ACME customer account" sind dasselbe.
-Solange die App das nicht weiss, findet die Suche zwei Drittel nicht und
-jede Auswertung zählt dreimal.
+- lokal starten
+- offline arbeiten
+- Seiten und Blöcke speichern
+- Datenbanken verwenden
+- Formeln ausführen
+- lokale KI vorbereiten und nutzen
+- Versionen speichern
+- Papierkorb nutzen
+- JSON exportieren und importieren
+- `.redion` mit Anhängen sichern
+- große Dateien stückweise behandeln
+- Tests ausführen
 
-**Wie.** Normalisieren (Rechtsformen, Füllwörter, Zeichensetzung weg),
-Ähnlichkeit über Token-Überschneidung plus Levenshtein, Vorschläge zur
-**Bestätigung** — nie automatisch zusammenführen. Bestätigte Begriffe
-bekommen eine Kennung und eine Alias-Liste; die Suche sucht über alle
-Schreibweisen.
+**Wichtigste aktuelle Grenze:**
 
-**Fertig wenn.** Ein Fenster zeigt Vorschläge aus dem echten Bestand, eine
-Bestätigung legt einen Begriff an, und die Suche nach „Acme" findet alle
-drei Schreibweisen.
-
-### B2 — Entscheidungs- und Wissensgraph (Idee 26)
-
-**Warum.** Der Graph zeigt heute Seitenverknüpfungen. Was fehlt, ist die
-Frage „warum haben wir das damals so entschieden?".
-
-**Wie.** Ein Blocktyp „Entscheidung" mit Datum, Beteiligten, Alternativen,
-Begründung und betroffenen Projekten. Der Graph zeigt sie als eigene Art
-und zieht Linien zu dem, was sie beeinflusst.
-
-**Fertig wenn.** Eine Entscheidung lässt sich anlegen, im Graph sehen und
-über Filter finden („alle Entscheidungen zum Preis seit Januar").
-
-### B3 — Eine echte Abfragesprache (Idee 2 und 34)
-
-**Warum.** Filter und Formeln decken viel ab, aber „Umsatz nach Kunde, nur
-bezahlt, gruppiert" schreibt man in einem Satz schneller als in acht
-Klicks.
-
-**Wie.** Keine SQL-Nachbildung — eine lesbare Sprache, die auf die
-vorhandene Filter- und Formel-Maschine abgebildet wird. Der Parser aus
-`formeln/laufzeit.js` ist die Vorlage.
-
-**Fertig wenn.** Eine Zeile wie
-`zeige Aufgaben wo Status nicht Fertig und Fällig vor heute, gruppiert nach Person`
-ergibt eine Ansicht — und ein Fehler nennt die Stelle im Satz.
-
-### B4 — Zweige und Diffs für den Bestand (Idee 3)
-
-**Warum.** Der Versionsverlauf zeigt eine Seite. Was fehlt: eine grosse
-Umstellung vorbereiten, ansehen, dann übernehmen — oder verwerfen.
-
-**Wie.** Auf dem, was schon da ist, aufbauen: `kern/ablage/basis` kennt den
-letzten gemeinsamen Stand, `abgleich/zusammenfuehren.js` kann drei Fassungen
-zusammenlegen. Ein Zweig ist ein benannter Satz Änderungen gegen eine Basis.
-
-**Fertig wenn.** Ein Zweig lässt sich anlegen, darin arbeiten, der
-Unterschied ansehen und übernehmen oder wegwerfen.
-
-### B5 — Import aus Confluence, Trello, Asana, Jira (Idee 11)
-
-**Warum.** XLSX, DOCX, EPUB, CSV, Markdown, HTML und der Web-Clipper gehen.
-Die vier fehlen — und sie sind der häufigste Grund, warum jemand nicht
-umsteigt.
-
-**Wie.** Je Quelle ein eigener Einleser unter `bereiche/dateien/`, der aus
-dem Export eine Zwischenform macht (Seiten, Blöcke, Datenbanken,
-Beziehungen) und diese dann einspielt. Mit Vorschau vor dem Einspielen.
-
-**Fertig wenn.** Für mindestens eine Quelle: Export einlesen, Vorschau
-zeigen, einspielen, Prüflauf mit einer echten Beispieldatei.
-
-### B6 — Suche in Bildern und Tonspuren (Idee 13/28)
-
-**Warum.** Ein PDF-Anhang ist heute unsichtbar für die Suche.
-
-**Wie.** OCR im Browser (Tesseract als WASM) für Bilder und PDFs; für Ton
-die Spracherkennung des Browsers, wo vorhanden. Ergebnisse als Text am Block
-speichern, damit die Suche sie findet.
-
-**Achtung.** Das ist der einzige Punkt, der eine fremde Bibliothek
-rechtfertigen könnte. Vorher prüfen, ob es ohne geht — und wenn nicht, sie
-mitliefern statt nachzuladen.
-
-**Fertig wenn.** Ein Bild mit Text wird gefunden, und der Treffer zeigt die
-Stelle.
-
-### B7 — Screenreader-Feinschliff (Idee 30)
-
-**Warum.** Tastaturbedienung, Fokus-Modus, hoher Kontrast und Schriftgrössen
-sind da. Was fehlt, ist die semantische Struktur: Rollen, Beschriftungen,
-Live-Bereiche für Meldungen.
-
-**Wie.** Durchgang mit einem Screenreader, `aria-*` nachziehen, Meldungen in
-`aria-live`. Beim Baum: `role="tree"`, `aria-expanded`, `aria-level`.
-
-**Fertig wenn.** Ein Prüflauf zeigt für die zwanzig häufigsten Bedienwege
-eine vollständige Beschriftung, und die Meldungen kommen im Screenreader an.
-
-### B8 — Ein Marktplatz für Erweiterungen (Idee 10)
-
-**Warum.** Erweiterungen können Befehle, Blöcke und Seitenpanels anmelden —
-aber es gibt keinen Weg, eine zu finden und zu installieren.
-
-**Wie.** Erst wenn A4 durch ist. Eine Erweiterung ist dann eine Datei, die
-sich bei den Registern anmeldet; der Marktplatz ist eine Liste geprüfter
-Dateien mit Rechteanzeige („diese Erweiterung darf: lesen, Befehle
-anmelden").
-
-**Fertig wenn.** Eine Erweiterung lässt sich aus einer Liste installieren,
-sieht man ihre Rechte vorher, und sie lässt sich vollständig wieder
-entfernen.
+```txt
+Redion ist noch nicht TypeScript.
+```
 
 ---
 
-## C · Dauerhaft
+## Phase 1 · Ordnung und Projektsteuerung · **erledigt**
 
-- **Nach jeder Änderung Prüfläufe.** Vor jedem Commit ein Querschnitt.
-- **Gefundene Fehler in den Commit-Text**, auch wenn sie nicht zum Thema
-  gehören. Sie sind das Wertvollste an der Arbeit.
-- **`doku/ARCHITEKTUR.md` mitziehen**, wenn sich der Aufbau ändert. Eine
-  Architekturbeschreibung, die nicht stimmt, ist schlimmer als keine.
-- **`AUFGABEN.md` mitziehen.** Erledigtes streichen, Neues eintragen, und zu
-  jedem Neuen ein „fertig wenn".
+Die drei Steuerdateien haben jetzt klar getrennte Rollen. Vorher erzählten sie
+vor allem, was gefunden wurde; jetzt sagen sie, was gilt, was offen ist und
+was als Nächstes kommt.
+
+### ~~A1 — Entscheidungen neu ordnen~~ · erledigt
+
+`ENTSCHEIDUNGEN.md` trägt jetzt E1–E17 als langfristige Produkt- und
+Architekturentscheidungen, dazu E18–E23 als die Regeln, die beim Bauen
+entstanden sind — darunter die Markenregel, die CSP-Entscheidung wegen
+`file://` und die Schonfrist beim Papierkorb.
+
+### ~~A2 — Aufgaben neu ordnen~~ · erledigt
+
+Diese Datei: Phasen statt Historie, TypeScript als eigene Phase, Cloudflare
+später eingeordnet.
+
+### ~~A3 — Lücken neu ordnen~~ · erledigt
+
+`LUECKEN.md` trägt jetzt L1–L30 nach Bereichen, mit den gemessenen Zahlen als
+Anhang und einer Zeile je erledigtem Punkt statt der ausführlichen Befunde.
+
+---
+
+## Phase 2 · TypeScript-Grundlage
+
+Siehe `ENTSCHEIDUNGEN.md` E6 und E7: TypeScript ja, React nicht automatisch,
+und die Nutzung per Doppelklick bleibt erhalten.
+
+### B1 — TypeScript technisch vorbereiten
+
+**Ziel**
+
+Redion bekommt die Grundlage für TypeScript.
+
+**Warum**
+
+Ohne Typecheck ist jede weitere Migration ein Blindflug.
+
+**Dateien**
+
+```txt
+package.json
+package-lock.json
+tsconfig.json
+src/core/types/index.ts
+doku/TYPESCRIPT-MIGRATION.md
+```
+
+**Fertig wenn**
+
+- `typescript` als `devDependency` vorhanden ist
+- `npm run typecheck` existiert und läuft
+- `tsconfig.json` existiert
+- `src/core/types/index.ts` existiert
+- **keine App-Funktion verändert wurde**
+- alle bisherigen Prüfläufe weiter grün sind
+
+**Tests**
+
+```
+npm run typecheck
+npm run pruefen -- --schnell
+node bauen.js
+```
+
+**Priorität** — sehr hoch.
+
+---
+
+### B2 — Zentrale Redion-Typen anlegen
+
+**Ziel**
+
+Gemeinsame Typen für Blöcke, Seiten, Datenbanken, Dateien, Backups und Sync.
+
+**Dateien**
+
+```txt
+src/core/types/index.ts
+src/core/types/block.ts
+src/core/types/database.ts
+src/core/types/file.ts
+src/core/types/backup.ts
+src/core/types/result.ts
+```
+
+**Fertig wenn** Typen existieren für:
+
+```txt
+ID · BlockId · PageId · CollectionId · ViewId · FileId · ISODateTime
+RedionBlock · RedionPage · RedionFile · RedionDatabase · RedionView
+RedionPackageManifest · RedionPackageData · Ergebnis<T>
+```
+
+**Tests**
+
+```
+npm run typecheck
+```
+
+**Priorität** — sehr hoch.
+
+---
+
+### B3 — Migrationsdokument schreiben
+
+**Ziel**
+
+Eine klare Anleitung, damit die Migration nicht in Etappen ohne Netz zerfällt.
+
+**Dateien**
+
+```txt
+doku/TYPESCRIPT-MIGRATION.md
+```
+
+**Fertig wenn** das Dokument enthält: Ziel · Nicht-Ziele · Reihenfolge ·
+sichere Migrationsregeln · welche Dateien zuerst · welche zuletzt ·
+Testpflicht · Umgang mit `quell/` · Umgang mit `src/` · Verbot der
+Alles-auf-einmal-Migration
+
+**Priorität** — hoch.
+
+---
+
+### B4 — Typecheck in GitHub Actions
+
+**Ziel**
+
+GitHub prüft TypeScript automatisch mit.
+
+**Dateien**
+
+```txt
+.github/workflows/pruefen.yml
+package.json
+```
+
+**Fertig wenn** CI ausführt:
+
+```
+npm run typecheck
+npm run pruefen -- --schnell
+node bauen.js
+```
+
+**Priorität** — hoch.
+
+---
+
+## Phase 3 · Backup und `.redion`
+
+### C1 — `.redion`-Format dokumentieren
+
+**Ziel**
+
+Das Format bekommt eine eigene Dokumentation.
+
+**Warum**
+
+Backup ist eine Vertrauensfunktion. Wer es in zehn Jahren öffnet, muss
+verstehen, was drinsteht.
+
+**Dateien**
+
+```txt
+doku/REDION-FORMAT.md
+README.md
+ENTSCHEIDUNGEN.md
+```
+
+**Fertig wenn** das Dokument erklärt: Warum `.redion`? · Warum nicht nur
+JSON? · Aufbau · `daten.json` · `dateien.json` · `dateien/` · Dateinamen ·
+Datei-IDs · Import-Regeln · Lösch-Regeln · 4-GB-Grenze · ZIP64 ·
+Kompatibilität
+
+**Priorität** — sehr hoch.
+
+---
+
+### C2 — Backup-Tests schützen
+
+**Ziel**
+
+Die Backup-Prüfungen dürfen nicht versehentlich abgeschwächt werden.
+
+**Dateien**
+
+```txt
+pruefungen/lauf/test100.mjs
+pruefungen/LIESMICH.md
+```
+
+**Fertig wenn**
+
+- dokumentiert ist, was `test100` schützt
+- `.redion`-Import/Export weiter **echte Bytes** vergleicht
+- der JSON-Import weiterhin keine Anhänge löscht
+
+**Tests**
+
+```
+node pruefungen/lauf/test100.mjs
+npm run pruefen -- --schnell
+```
+
+**Priorität** — hoch.
+
+---
+
+### C3 — ZIP64-Entscheidung vorbereiten
+
+**Ziel**
+
+Klären, ob Redion später Dateien über 4 GB unterstützt.
+
+**Dateien**
+
+```txt
+ENTSCHEIDUNGEN.md
+LUECKEN.md
+doku/REDION-FORMAT.md
+```
+
+**Fertig wenn** die aktuelle Grenze und die Fehlermeldung dokumentiert sind,
+ZIP64 als spätere Lücke markiert ist und weiterhin **kein kaputtes Archiv**
+geschrieben wird.
+
+**Priorität** — mittel.
+
+---
+
+## Phase 4 · Speicher und Datenmodell
+
+### D1 — Speicher-Typen definieren
+
+**Ziel**
+
+Die IndexedDB-Fächer typisieren.
+
+**Dateien**
+
+```txt
+src/core/types/storage.ts
+quell/kern/ablage/indexdb.js
+doku/ARCHITEKTUR.md
+```
+
+**Fertig wenn** Typen existieren für:
+
+```txt
+blocks · collections · views · meta · versions
+dateien · stuecke · basis · vorrat
+```
+
+**Tests**
+
+```
+npm run typecheck
+npm run pruefen -- --schnell
+```
+
+**Priorität** — hoch.
+
+---
+
+### D2 — Kleine DOM-freie Helfer migrieren
+
+**Ziel**
+
+Mit sicheren kleinen Dateien anfangen.
+
+**Warum**
+
+Nicht mit Editor oder Datenbanken anfangen — dort ist das Risiko am höchsten.
+
+**Geeignete Kandidaten**
+
+```txt
+Kennungen · Datum · Objekt-Helfer · Ergebnis-Typ
+Datei-Metadaten · Backup-Manifest
+```
+
+**Nicht anfangen mit**
+
+```txt
+editor.js · steuerung.js · indexdb.js komplett
+bauen.js · server/kern.js
+```
+
+**Fertig wenn** die Helfer in TypeScript existieren, **keine
+Verhaltensänderung** eingetreten ist, der Typecheck läuft und alle Prüfläufe
+grün sind.
+
+**Priorität** — hoch.
+
+---
+
+## Phase 5 · Aufräumarbeiten am Bestand
+
+Zwei Umbauten, die noch aus der ersten Etappe offen sind. Beide sind Umzüge
+ohne Verhaltensänderung — genau die Art Arbeit, die vor der TypeScript-
+Migration Ordnung schafft.
+
+### A4-Rest — Die übrigen Bereiche in `dienst` und `ansicht` trennen
+
+**Ziel**
+
+Reine Logik ohne DOM lässt sich prüfen, ohne einen Browser zu starten.
+
+**Stand**
+
+`datenbanken` und `wissen` sind geschnitten. `test88` (Datenbank-Logik) und
+`test89` (Werkzeug-Logik) laufen ohne Browser in Millisekunden — ein
+Browserlauf braucht zwölf Sekunden.
+
+**Warum es beim nächsten Bereich anders aussehen kann**
+
+Bei `wissen` war die Annahme falsch, jede grosse Datei liesse sich in eine
+rechnende und eine zeichnende Hälfte teilen: alle vierzehn Abschnitte fassen
+das Dokument an. Herausgelöst wurden deshalb nur die neun Stellen, die
+wirklich nur rechnen.
+
+**Erst messen, dann schneiden:** über alle Namen zählen, in welche Richtung
+die Abhängigkeit läuft. Bei `datenbanken` brauchte der Logikteil **nichts**
+aus dem Rest, der Rest aber 16 Namen von dort. Wäre es auch nur an einer
+Stelle andersherum gewesen, hätte sich nichts trennen lassen, ohne Verhalten
+zu ändern.
+
+**Fertig wenn** für den nächsten Bereich gemessen ist, ob ein Schnitt
+überhaupt geht — und er entweder sauber vollzogen oder mit Begründung
+verworfen wurde.
+
+**Priorität** — mittel.
+
+---
+
+### A5-Rest — Die `esc`-Kopien durch `Saeubern.alsText` ersetzen
+
+**Ziel**
+
+Eine Stelle, die Text sicher macht, statt rund fünfzig Kopien derselben vier
+Zeilen.
+
+**Stand**
+
+Adressen und Mail-HTML gehen bereits durch `Saeubern`. Die verbliebenen
+`esc`-Kopien nicht.
+
+**Warum**
+
+Beim Messen kam heraus: 30 von 50 Kopien waren korrekt, die übrigen nicht —
+und genau das ist das Muster, das sich durch diese Session zieht: an einer
+Stelle getan, an der benachbarten nicht.
+
+**Dateien**
+
+```txt
+quell/kern/sicherheit/saeubern.js
+und die aufrufenden Bereiche
+```
+
+**Tests**
+
+```
+node pruefungen/lauf/test87.mjs
+npm run pruefen -- --schnell
+```
+
+**Priorität** — mittel.
+
+---
+
+## Phase 6 · README und öffentliche Darstellung
+
+### E1 — README kürzen und schärfen
+
+**Ziel**
+
+Die README soll klar sein und nicht zu lang.
+
+**Stand**
+
+Die README wurde neu geschrieben und erklärt local-first, Schnellstart,
+Funktionen und Cloud bereits gut. Offen ist die **Länge**: aktuell 1484
+Zeilen.
+
+**Fertig wenn**
+
+- die README auf etwa 300–600 Zeilen kommt, höchstens 1000
+- Was ist Redion? · local-first · Schnellstart · Funktionen · `.redion` ·
+  Cloud optional · TypeScript-Ziel · Tests · Grenzen weiterhin vorkommen
+- Ausführliches nach `doku/` wandert statt gelöscht zu werden
+
+**Priorität** — hoch.
+
+---
+
+### E2 — Die alte JavaScript-Aussage nachziehen
+
+**Ziel**
+
+Kein Dokument soll mehr so klingen, als wäre TypeScript unerwünscht.
+
+**Wo es steht**
+
+Nicht mehr in der README — dort wurde es bereits entfernt. Es steht in
+**`CLAUDE.md:1564`**:
+
+> Redion ist aktuell klassisches HTML/CSS/JavaScript ohne Build-Pflicht.
+
+**Neue Formulierung**
+
+```txt
+Redion läuft weiterhin einfach lokal.
+Redion wird schrittweise auf TypeScript migriert.
+Die Nutzung per index.html und redion-einzeldatei.html bleibt erhalten.
+```
+
+**Priorität** — hoch.
+
+---
+
+## Phase 7 · Notion-ähnliche Funktionen
+
+### F1 — Formelfunktionen vollständig beschreiben
+
+**Ziel**
+
+Alle Formelfunktionen sollen im Editor erklärt werden.
+
+**Warum**
+
+Die Laufzeit kennt 158 Funktionen, beschrieben sind 34. Die übrigen 129
+erscheinen als Gruppe „Sonstiges", ohne Argumentliste, ohne Erklärung, ohne
+Beispiel. Eine Funktion, die niemand findet, ist fast wie nicht vorhanden.
+
+**Dateien**
+
+```txt
+quell/register/formeln.js
+```
+
+**Fertig wenn** jede Funktion Signatur, Beschreibung und Beispiel hat und der
+Editor keine bekannte Funktion mehr unter „Sonstiges" zeigt.
+
+**Tests**
+
+Die Gegenprobe ist schon da: `Register.formeln.abgleich()` meldet beide
+Richtungen — `ohneFunktion` ist bereits 0, `ohneBeschreibung` ist 129. Ein
+eigener Prüflauf dafür **fehlt noch** und gehört zu dieser Aufgabe.
+
+```
+npm run pruefen -- --schnell
+```
+
+**Priorität** — mittel.
+
+---
+
+### F2 — Fehlende Blocktypen prüfen
+
+**Ziel**
+
+Die Blocktypen Zeile für Zeile gegen die Notion-Liste prüfen.
+
+**Warum**
+
+Gemessen: 97 gegen 58. Unklar ist, welche wirklich fehlen und welche nur
+anders heissen.
+
+**Dateien**
+
+```txt
+LUECKEN.md
+quell/register/bloecke.js
+```
+
+**Fertig wenn** die Liste durchgegangen ist, fehlende Blöcke benannt und nach
+Nutzen sortiert sind und **keine doppelten Blockarten erfunden** wurden.
+
+**Priorität** — mittel.
+
+---
+
+### F3 — Automationen erweitern
+
+**Ziel**
+
+If/Else und Schleifen in Aktionsketten.
+
+**Dateien**
+
+```txt
+quell/bereiche/editor/ansicht/editor.js
+quell/register/befehle.js
+quell/bereiche/datenbanken/dienst.js
+```
+
+**Fertig wenn** es die Aktionen `wenn`, `sonst` und `fuerJede` gibt, mit
+Vorschau und Prüflauf.
+
+**Priorität** — mittel.
+
+---
+
+## Phase 8 · Cloudflare, Konto und Sync
+
+### G1 — Konto-Modus planen
+
+**Ziel**
+
+Das Konto bleibt optional (siehe E1 und E2 in `ENTSCHEIDUNGEN.md`).
+
+**Dateien**
+
+```txt
+SERVER-EINRICHTEN.md
+CLOUDFLARE.md
+server/
+```
+
+**Fertig wenn** der Nutzer wählen kann: nur lokal · lokal + Backup ·
+lokal + Sync · Cloud-Arbeitsbereich
+
+**Priorität** — mittel.
+
+---
+
+### G2 — R2-Dateispeicher planen
+
+**Ziel**
+
+Große Dateien und `.redion`-Backups gehören nach R2, nicht nach D1.
+
+**Dateien**
+
+```txt
+CLOUDFLARE.md
+server/
+doku/REDION-FORMAT.md
+```
+
+**Fertig wenn** Bucket-Struktur, Rechteprüfung, Upload-Limits und
+Download-Regeln beschrieben sind.
+
+**Priorität** — mittel.
+
+---
+
+### G3 — Sync-Konflikte testen
+
+**Ziel**
+
+Sync darf keine Daten verlieren.
+
+**Dateien**
+
+```txt
+server/
+quell/kern/abgleich/
+pruefungen/
+```
+
+**Fertig wenn** es Prüfläufe gibt für: zwei Geräte · zwei Tabs · Änderung
+offline · späterer Abgleich · Konflikt · Löschung · Datei-Anhang
+
+**Priorität** — hoch, sobald Cloud-Sync aktiv gebaut wird.
+
+---
+
+## Phase 9 · Mobile und iPhone
+
+### H1 — iPhone-Ansicht verbessern
+
+**Ziel**
+
+Redion soll auf dem iPhone gut nutzbar sein.
+
+**Fokus**
+
+```txt
+iPhone 13 Pro Max · Safari · PWA · Touch
+Bottom Sheets · Editor ohne Tastaturprobleme
+```
+
+**Fertig wenn** die Seitenleiste auf dem Handy gut funktioniert, das Blockmenü
+touchfreundlich ist, Datenbanken horizontal nutzbar sind, Dialoge nicht aus
+dem Bildschirm laufen und Dateiimport/-export verständlich ist.
+
+**Priorität** — mittel.
+
+---
+
+## Dauerhafte Regeln
+
+Nach jeder wichtigen Änderung:
+
+```
+npm run pruefen -- --schnell
+node bauen.js
+```
+
+Bei Speicher, Backup, Import oder Export zusätzlich:
+
+```
+node pruefungen/lauf/test100.mjs
+```
+
+Bei Architektur oder Sicherheit:
+
+```
+node pruefungen/lauf/test87.mjs
+```
+
+**Keine Änderung darf:**
+
+- Datenverlust riskieren
+- das Backup schwächen
+- die Offline-Nutzung brechen
+- `redion-einzeldatei.html` kaputtmachen
+- private Daten ungefragt hochladen
 
 ---
 
 ## Wo alles steht
 
-| Frage | Antwort |
-|---|---|
-| Wie macht Notion das? | `Desktop\Notion-Doku\Redion-Recherche` — geprüft, mit Quellen |
-| Was ist schon gebaut? | `doku/WAS-REDION-MEHR-KANN.md`, 30 Abschnitte |
-| Wogegen wird gebaut? | `doku/NOTION-10000X-BESSER.md` — 21 Lücken, 36 Ideen |
-| Wie ist es aufgebaut? | `doku/ARCHITEKTUR.md` |
-| Was gilt beim Arbeiten? | `CLAUDE.md` |
-| Wie steht es um die Anforderungen? | in der App: Befehlspalette → „Umsetzungsstand" |
+```txt
+quell/kern/        Ablage, Sicherheit, Abgleich, Helfer — ohne DOM
+quell/register/    die Kataloge: Blöcke, Ansichten, Formeln, Tasten …
+quell/schale/      Gerüst und Stil
+quell/bereiche/    die Fachbereiche
+server/            Cloudflare Worker und Prüfserver
+pruefungen/lauf/   die Prüfläufe
+doku/              die ausführliche Dokumentation
+```
