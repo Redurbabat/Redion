@@ -605,12 +605,12 @@ const Werkzeuge = (() => {
       roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   };
 
-  /* Aus `kern/helfer/bytes.js`. Vorher stand hier die Fassung mit dem Spread:
+  /* Aus `core/helpers/bytes.ts`. Vorher stand hier die Fassung mit dem Spread:
      ab etwa 128 000 Bytes sprengt sie den Aufrufstapel — und das ist die
      Grösse einer längeren Seite, also genau der Fall, für den das Sperren
      gedacht ist. */
-  const b64 = (buf) => Bytes.alsB64(buf);
-  const vonB64 = (s) => Bytes.ausB64(s);
+  const b64 = (buf) => Bytes.toBase64(buf);
+  const vonB64 = (s) => Bytes.fromBase64(s);
 
   const sperren = async (p) => {
     if (!crypto.subtle) { alert('Verschlüsselung braucht einen sicheren Kontext (https oder lokale Datei).'); return; }

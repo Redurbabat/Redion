@@ -26,12 +26,12 @@ const Krypto = (() => {
   const enc = new TextEncoder();
   const dec = new TextDecoder();
 
-  /* Aus `kern/helfer/bytes.js`. Hier stand vorher die Fassung mit dem
+  /* Aus `core/helpers/bytes.ts`. Hier stand vorher die Fassung mit dem
      Spread, die ab etwa 128 000 Bytes den Aufrufstapel sprengte — also genau
      dann, wenn der Bestand gross genug war, dass sich das Sichern lohnt.
      Dort steht, warum es nur noch eine Fassung davon gibt. */
-  const b64 = (buf) => Bytes.alsB64(buf);
-  const ausB64 = (s) => Bytes.ausB64(s);
+  const b64 = (buf) => Bytes.toBase64(buf);
+  const ausB64 = (s) => Bytes.fromBase64(s);
 
   const RUNDEN = 310000;   /* OWASP-Empfehlung für PBKDF2-SHA256 */
 

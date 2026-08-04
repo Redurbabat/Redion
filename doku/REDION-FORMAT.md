@@ -272,7 +272,7 @@ Der Vollständigkeit halber, weil es zeigt, wonach man bei Sicherungen sucht:
    genau dann, wenn der Bestand gross genug ist, dass sich das Sichern lohnt.
 
 Alle vier behoben, gehalten von `pruefungen/lauf/test104.mjs`. Base64 gibt es
-seither nur einmal, in `quell/kern/helfer/bytes.js`; `test87` verbietet eine
+seither nur einmal, in `src/core/helpers/bytes.ts`; `test87` verbietet eine
 zweite Fassung.
 
 ---

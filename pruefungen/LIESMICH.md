@@ -280,7 +280,7 @@ einzige Prüfung, die eine Eigenschaft misst statt eines Werts.
 `btoa(String.fromCharCode(...bytes))` sprengt ab etwa 128 000 Bytes den
 Aufrufstapel. Diese Zeile stand an drei Stellen — alle drei
 Verschlüsselung, also alle drei mit viel Text. Es gibt jetzt eine Fassung in
-`kern/helfer/bytes.js`, und `test87` verbietet eine vierte.
+`core/helpers/bytes.ts`, und `test87` verbietet eine vierte.
 
 Das ist eine Quelltextprüfung und keine Verhaltensprüfung — mit Absicht.
 Verhalten liesse sich nur dort prüfen, wo die Funktion von aussen aufrufbar

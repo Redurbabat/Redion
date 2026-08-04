@@ -209,10 +209,35 @@ Rahmen einer geplanten Migration".
 Verhalten nachweislich unverändert; `test85` prüft alle acht Funktionen,
 `test105` hält `.ts` und erzeugtes `.js` zusammen.
 
-### 6b — Die übrigen kleinen Helfer
+### ~~6b — Datum, Objekte, Bytes~~ · erledigt
 
-**Ziel** — Datum · Objekte · Bremse · Melder · Säubern · Bytes nach
-`src/core/helpers/`.
+`date.ts` · `objects.ts` · `bytes.ts` → `quell/core/helpers/`.
+
+**Gezählt, bevor umbenannt wurde** — das ist der Schritt, den E27 verlangt:
+
+| Modul | in `quell/` | in Prüfläufen | Schnittstelle umbenannt? |
+|---|--:|--:|---|
+| `Datum` | 1 (`pruefen.js`) | 9 | ja → `Dates` |
+| `Objekte` | 0 | 9 | ja → `Objects` |
+| `Bytes` | 6 (3 Dateien) | 2 | Name blieb, Methoden englisch |
+
+**Verhalten nachweislich unverändert.** Alte und neue Fassung wurden
+nebeneinander geladen und über dieselben Eingaben geschickt: 1923 · 1488 · 72
+Vergleiche, kein einziger Unterschied. Bei `date` waren die Eingaben die
+teuren — beide Zeitumstellungstage, 31. Januar, Schaltjahr, Jahreswechsel,
+kaputte `Date`-Objekte. Bei `bytes` Puffer bis 1 000 000 Bytes, also über die
+Klippe bei 128 000 hinweg, an der die alte Spread-Fassung brach.
+
+**Eine Regel kam dabei dazu:** eine migrierte Datei lässt **keinen Alias
+unter dem alten Namen** zurück. `test85` prüft jetzt ausdrücklich, dass
+`Datum` und `Objekte` als globale Namen weg sind. Ein zurückgelassener Alias
+wäre bequem und würde genau deshalb dafür sorgen, dass niemand die
+Aufrufstellen nachzieht — bis der Alias eines Tages verschwindet und es still
+bricht.
+
+### 6c — Die letzten vier kleinen Helfer
+
+**Ziel** — Bremse · Melder · Säubern · Tempo nach `src/core/helpers/`.
 
 **Warum** — sie sind klein, DOM-frei und einzeln testbar. Jede migrierte
 Datei nimmt einen Eintrag aus der `any`-Liste in `src/global.d.ts`.
@@ -221,9 +246,10 @@ Datei nimmt einen Eintrag aus der `any`-Liste in `src/global.d.ts`.
 `npm run bauen:ts` erzeugt das `.js` · `index.html` und `sw.js` nachgezogen ·
 alle Läufe grün.
 
-**Achtung** — `Saeubern` hat deutlich mehr Aufrufer als `Kennungen`. Vor dem
-Umbenennen der Schnittstelle **zählen**; bei zu vielen Aufrufern bleibt der
-öffentliche Name vorerst.
+**Achtung** — `Saeubern` gehört zuletzt und ist der einzige der vier, an dem
+Sicherheitsverhalten hängt. Aufrufer **zählen**; bei zu vielen bleibt der
+öffentliche Name vorerst, und die XSS-Prüfungen laufen vor und nach dem
+Umzug.
 
 **Tests** — `npm run typecheck` · `npm run bauen:ts` · `test105` · `test87` ·
 `node bauen.js`

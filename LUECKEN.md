@@ -41,12 +41,13 @@ Formeln · lokale KI · Versionen · Papierkorb · `.json`- und
 ✅ tsconfig.json · npm run typecheck · CI-Typecheck
 ✅ tsconfig.bauen.json · npm run bauen:ts · test105
 ✅ src/core/types/ — sieben Dateien, englisch, aus dem Code gemessen
-✅ src/core/helpers/ids.ts — die erste migrierte Laufzeitdatei
-✗  die übrigen 96 Dateien unter quell/
+✅ src/core/helpers/ — vier Laufzeitdateien: ids · date · objects · bytes
+✗  die übrigen 93 Dateien unter quell/
 ```
 
-**Was fehlt zuerst** — Datum · Objekte · Bremse · Melder · Säubern · Bytes.
-Alle klein und DOM-frei.
+**Was fehlt zuerst** — Bremse · Melder · Säubern · Tempo. Alle klein und
+DOM-frei. `Saeubern` zuletzt und mit gezählten Aufrufern: es ist der einzige
+der vier, an dem Sicherheitsverhalten hängt.
 
 **Warum wichtig** — ohne Typen bleiben Datenmodell, Backup, Import/Export,
 Dateien, Sync, Rechte und Cloudflare Bereiche, in denen ein Tippfehler erst
@@ -67,8 +68,9 @@ nicht. Eine Datei wechselt die Sprache nur, wenn sie ohnehin migriert wird,
 und dann gemessen: `ids.ts` hatte fünfzehn Aufrufe in drei Dateien.
 
 **Was fehlt** — bei jeder künftigen Migration die Aufrufer **zählen**, bevor
-die Schnittstelle umbenannt wird. `Saeubern` hat deutlich mehr als
-`Kennungen` hatte.
+die Schnittstelle umbenannt wird. Gemessen bisher: `Kennungen` 15 · `Datum` 1
+· `Objekte` 0 · `Bytes` 6. Alle vier waren deshalb erlaubt. `Saeubern` hat
+deutlich mehr — dort wird die Antwort voraussichtlich anders ausfallen.
 
 **Status** — ⏳ Regel gilt, Umsetzung wandert mit der Migration.
 

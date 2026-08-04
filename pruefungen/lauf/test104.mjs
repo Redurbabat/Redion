@@ -163,7 +163,7 @@ p('Ein falsches Passwort wird abgelehnt', rund.falschesPasswort !== null);
  * Wer genug Notizen hatte, dass sich das Sichern lohnte, konnte nicht
  * sichern — und die Meldung sprach von Aufrufstapeln statt von Grössen.
  *
- * Eine Fassung liegt jetzt in `kern/helfer/bytes.js`; `test87` hält fest,
+ * Eine Fassung liegt jetzt in `core/helpers/bytes.ts`; `test87` hält fest,
  * dass keine vierte danebenwächst. Hier wird das Verhalten geprüft, nicht
  * der Quelltext: eine Million Bytes durch alle drei Wege.
  * ========================================================================= */
@@ -180,8 +180,8 @@ const gross = await seite.evaluate(async () => {
   } catch (e) { erg.sicherung = 'FEHLER: ' + e.message; }
 
   try {
-    const hin = Bytes.alsB64(new TextEncoder().encode(viel));
-    erg.helfer = new TextDecoder().decode(Bytes.ausB64(hin)) === viel;
+    const hin = Bytes.toBase64(new TextEncoder().encode(viel));
+    erg.helfer = new TextDecoder().decode(Bytes.fromBase64(hin)) === viel;
   } catch (e) { erg.helfer = 'FEHLER: ' + e.message; }
 
   return erg;

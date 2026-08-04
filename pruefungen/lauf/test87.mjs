@@ -496,14 +496,14 @@ p('Jede Datei aus index.html steht auch im sw.js', nichtImSw.length === 0,
  * lohnte, konnte nicht sichern; die Meldung sprach dabei von Aufrufstapeln
  * und nicht von Grössen.
  *
- * Es gibt jetzt eine Fassung in `kern/helfer/bytes.js`. Diese Prüfung hält
+ * Es gibt jetzt eine Fassung in `core/helpers/bytes.ts`. Diese Prüfung hält
  * fest, dass keine vierte danebenwächst — der wiederkehrende Befund dieses
  * Projekts ist nicht „etwas vergessen", sondern „an einer Stelle getan und
  * an der Nachbarstelle nicht".
  * ========================================================================= */
 console.log('\n9 · Base64 gibt es nur an einer Stelle');
 
-const HELFER = 'quell/kern/helfer/bytes.js';
+const HELFER = 'quell/core/helpers/bytes.js';
 const mitSpread = [];
 for (const s of skripte) {
   if (s === HELFER) continue;

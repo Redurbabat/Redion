@@ -1,11 +1,17 @@
 /* ============================================================================
- * kern/helfer/bytes.js — Bytes nach Base64 und zurück
+ * core/helpers/bytes.ts — Bytes nach Base64 und zurück
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/helpers/bytes.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/helpers/bytes.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
+ * vorher.
  * ----------------------------------------------------------------------------
  * Zwei Handgriffe, die für sich genommen langweilig sind und an drei Stellen
  * dieselbe Falle aufgestellt hatten:
  *
- *   alsB64(buf)   Bytes → Base64-Zeichenkette
- *   ausB64(text)  Base64-Zeichenkette → Bytes
+ *   toBase64(buf)    Bytes → Base64-Zeichenkette
+ *   fromBase64(text) Base64-Zeichenkette → Bytes
  *
  * DIE FALLE. Die naheliegende Fassung lautet
  *
@@ -26,24 +32,39 @@
  * das Muster, an dem sich dieses Projekt immer wieder verschluckt: an einer
  * Stelle repariert, an der Nachbarstelle nicht. Eine Fassung, ein Ort.
  * `pruefungen/lauf/test87.mjs` hält fest, dass keine vierte entsteht.
+ *
+ * ─── SPRACHE ────────────────────────────────────────────────────────────────
+ *
+ * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27. Der
+ * Modulname war schon englisch und bleibt `Bytes`; nur die drei Namen darin
+ * ziehen nach:
+ *
+ *   alsB64 → toBase64      ausB64 → fromBase64      SCHEIBE → CHUNK
+ *
+ * Gemessen sechs Aufrufe in drei Dateien (`krypto.js`, `maschine.js`,
+ * `werkzeuge.js`) und zwei in `test104.mjs` — der Fall „im Rahmen einer
+ * geplanten Migration", nicht die verbotene Massenumbenennung.
  * ==========================================================================*/
 
 const Bytes = (() => {
 
   /* Weit unter jeder Browsergrenze und gross genug, dass die Schleife nicht
      ins Gewicht fällt: bei 4 MB sind das 128 Durchläufe. */
-  const SCHEIBE = 32768;
+  const CHUNK = 32768;
 
   /**
    * Bytes als Base64.
-   * @param {ArrayBuffer|Uint8Array} buf
-   * @returns {string}
+   *
+   * `apply` statt Spread: es übergibt die Scheibe als ein Argument-Array,
+   * und die Scheibe ist klein genug, dass der Stapel es trägt. Der Spread
+   * täte dasselbe für kleine Puffer und bräche bei grossen — genau der
+   * Unterschied, um den es hier geht.
    */
-  const alsB64 = (buf) => {
+  const toBase64 = (buf: ArrayBuffer | Uint8Array): string => {
     const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
     let s = '';
-    for (let i = 0; i < bytes.length; i += SCHEIBE)
-      s += String.fromCharCode.apply(null, bytes.subarray(i, i + SCHEIBE));
+    for (let i = 0; i < bytes.length; i += CHUNK)
+      s += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[]);
     return btoa(s);
   };
 
@@ -53,13 +74,11 @@ const Bytes = (() => {
    * `Uint8Array.from` mit einer Abbildung hat das Stapelproblem nicht — es
    * ruft die Funktion je Zeichen auf, statt alle Zeichen auf einmal zu
    * übergeben. Diese Richtung war deshalb nie kaputt und bleibt, wie sie war.
-   *
-   * @param {string} text
-   * @returns {Uint8Array}
    */
-  const ausB64 = (text) => Uint8Array.from(atob(String(text)), c => c.charCodeAt(0));
+  const fromBase64 = (text: unknown): Uint8Array =>
+    Uint8Array.from(atob(String(text)), c => c.charCodeAt(0));
 
-  return { alsB64, ausB64, SCHEIBE };
+  return { toBase64, fromBase64, CHUNK };
 })();
 
-window.Bytes = Bytes;
+(window as any).Bytes = Bytes;

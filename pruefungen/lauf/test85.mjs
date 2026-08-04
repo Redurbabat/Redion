@@ -73,15 +73,19 @@ p('Aus einer Adresse herausgeschnitten', r.ausAdresse === true, JSON.stringify(r
 
 console.log('\n— Datum —');
 r = await seite.evaluate(() => ({
-  reinesDatumLokal: Datum.lies('2026-08-03').getDate() === 3 &&
-                    Datum.lies('2026-08-03').getHours() === 0,
-  monatsende: Datum.alsTag(Datum.plusMonate('2026-01-31', 1)),
-  tage: Datum.tageZwischen('2026-08-01', '2026-08-31'),
-  werktage: Datum.werktageZwischen('2026-08-03', '2026-08-10'),
-  wochenende: Datum.istWochenende('2026-08-08') && !Datum.istWochenende('2026-08-03'),
-  kw: Datum.kalenderwoche('2026-01-01'),
-  vor: Datum.vorText(new Date(Date.now() - 3 * 86400000)),
-  wochenanfang: Datum.alsTag(Datum.wochenAnfang('2026-08-08'))
+  reinesDatumLokal: Dates.parse('2026-08-03').getDate() === 3 &&
+                    Dates.parse('2026-08-03').getHours() === 0,
+  monatsende: Dates.toDay(Dates.addMonths('2026-01-31', 1)),
+  tage: Dates.daysBetween('2026-08-01', '2026-08-31'),
+  werktage: Dates.businessDaysBetween('2026-08-03', '2026-08-10'),
+  wochenende: Dates.isWeekend('2026-08-08') && !Dates.isWeekend('2026-08-03'),
+  kw: Dates.isoWeek('2026-01-01'),
+  vor: Dates.relativeText(new Date(Date.now() - 3 * 86400000)),
+  wochenanfang: Dates.toDay(Dates.startOfWeek('2026-08-08')),
+  /* Der alte Name darf nicht mehr da sein. Bliebe er, fiele niemandem auf,
+     dass eine Stelle die alte Fassung benutzt — bis die alte Fassung eines
+     Tages verschwindet und es dann still bricht. */
+  alterNameWeg: typeof Datum === 'undefined'
 }));
 p('Ein reines Datum ist der lokale Tag', r.reinesDatumLokal === true, JSON.stringify(r));
 p('31. Januar plus ein Monat ist der 28. Februar', r.monatsende === '2026-02-28', r.monatsende);
@@ -91,25 +95,28 @@ p('Wochenende wird erkannt',      r.wochenende === true);
 p('Kalenderwoche nach ISO',       r.kw === 1, String(r.kw));
 p('„vor 3 Tagen" auf Deutsch',    /3 Tagen/.test(r.vor), r.vor);
 p('Die Woche beginnt am Montag',  r.wochenanfang === '2026-08-03', r.wochenanfang);
+p('Der alte Name Datum ist weg',  r.alterNameWeg === true);
 
 console.log('\n— Objekte —');
 r = await seite.evaluate(() => {
   const o = { a: 1, b: { c: [1, 2, { d: 3 }] }, e: new Date('2026-01-01') };
-  const k = Objekte.kopie(o);
+  const k = Objects.clone(o);
   k.b.c[2].d = 99;
   return {
     tief: o.b.c[2].d === 3 && k.b.c[2].d === 99,
     datumKopiert: k.e instanceof Date && k.e.getTime() === o.e.getTime(),
-    gleichEgalReihenfolge: Objekte.gleich({ a: 1, b: 2 }, { b: 2, a: 1 }),
-    ungleich: !Objekte.gleich({ a: 1 }, { a: 2 }),
-    hole: Objekte.hole(o, 'b.c.2.d'),
-    holeErsatz: Objekte.hole(o, 'x.y.z', 'nichts'),
-    setze: (() => { const x = {}; Objekte.setze(x, 'a.b.c', 5); return x.a.b.c; })(),
-    misch: Objekte.misch({ a: 1, t: { x: 1, y: 2 } }, { t: { y: 9 } }).t,
-    unterschiede: Objekte.unterschiede({ a: 1, b: 2 }, { a: 1, b: 3 }),
-    gruppiert: Object.keys(Objekte.gruppiere([{ t: 'a' }, { t: 'b' }, { t: 'a' }], 't'))
+    gleichEgalReihenfolge: Objects.equal({ a: 1, b: 2 }, { b: 2, a: 1 }),
+    ungleich: !Objects.equal({ a: 1 }, { a: 2 }),
+    hole: Objects.get(o, 'b.c.2.d'),
+    holeErsatz: Objects.get(o, 'x.y.z', 'nichts'),
+    setze: (() => { const x = {}; Objects.set(x, 'a.b.c', 5); return x.a.b.c; })(),
+    misch: Objects.merge({ a: 1, t: { x: 1, y: 2 } }, { t: { y: 9 } }).t,
+    unterschiede: Objects.differences({ a: 1, b: 2 }, { a: 1, b: 3 }),
+    gruppiert: Object.keys(Objects.groupBy([{ t: 'a' }, { t: 'b' }, { t: 'a' }], 't')),
+    alterNameWeg: typeof Objekte === 'undefined'
   };
 });
+p('Der alte Name Objekte ist weg', r.alterNameWeg === true);
 p('Kopie ist wirklich tief',      r.tief === true, JSON.stringify(r));
 p('Ein Datum überlebt die Kopie', r.datumKopiert === true);
 p('Gleich ohne Rücksicht auf die Reihenfolge', r.gleichEgalReihenfolge && r.ungleich);

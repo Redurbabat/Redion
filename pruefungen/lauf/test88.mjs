@@ -94,7 +94,10 @@ const umgebung = {
     { id: 'checkbox', name: 'Kontrollkästchen', icon: 'K' }
   ] } },
   Formula: { run: () => null },
-  Datum: { heute: () => '2026-08-03', alsText: (d) => String(d) }
+  /* `dienst.js` ruft heute nichts davon — die Attrappe steht hier, damit ein
+     späterer Aufruf nicht am fehlenden Namen scheitert. Nach der Migration
+     heisst das Modul `Dates`; die Namen darin sind die echten. */
+  Dates: { toDay: () => '2026-08-03', toISO: (d) => String(d) }
 };
 
 const quelle = _lies(_dazu(WURZEL, 'quell/bereiche/datenbanken/dienst.js'), 'utf8');

@@ -75,7 +75,7 @@ const Pruefen = (() => {
 
   const datum = (v) => {
     if (leer(v)) return gut();
-    const d = (typeof Datum !== 'undefined') ? Datum.lies(v) : new Date(v);
+    const d = (typeof Dates !== 'undefined') ? Dates.parse(v) : new Date(v);
     if (!d || isNaN(d)) return schlecht('Das ist kein Datum.');
     return gut();
   };

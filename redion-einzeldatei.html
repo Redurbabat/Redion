@@ -4033,9 +4033,16 @@ window.Ids = Ids;
 
 </script>
 <script>
-/* ===== quell/kern/helfer/datum.js ===== */
+/* ===== quell/core/helpers/date.js ===== */
+"use strict";
 /* ============================================================================
- * kern/helfer/datum.js — Zeit, ohne Bibliothek
+ * core/helpers/date.ts — Zeit, ohne Bibliothek
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/helpers/date.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/helpers/date.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
+ * vorher.
  * ----------------------------------------------------------------------------
  * Datumsrechnen ist die Stelle, an der stille Fehler entstehen. Drei Fallen
  * kommen immer wieder, und alle drei sind hier einmal richtig gelöst:
@@ -4052,191 +4059,279 @@ window.Ids = Ids;
  *
  * Alles arbeitet mit echten `Date`-Objekten. Zeichenketten kommen nur an
  * den Rändern vor — beim Speichern und beim Anzeigen.
+ *
+ * ─── SPRACHE ────────────────────────────────────────────────────────────────
+ *
+ * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27. Auch die
+ * öffentliche Schnittstelle ist umgestellt: aus `Datum.lies()` wurde
+ * `Dates.parse()`.
+ *
+ * Das war erlaubt, weil es gemessen **ein** Aufruf in Produktivcode war
+ * (`quell/kern/sicherheit/pruefen.js`) und neun in `test85.mjs` — nicht die
+ * verbotene Massenumbenennung, sondern der Fall „im Rahmen einer geplanten
+ * Migration". Die Zuordnung, falls jemand die alte Fassung sucht:
+ *
+ *   lies → parse                istDatum → isDate
+ *   alsText → toISO             alsTag → toDay
+ *   tagAnfang → startOfDay      tagEnde → endOfDay
+ *   wochenAnfang → startOfWeek  monatsAnfang → startOfMonth
+ *   monatsEnde → endOfMonth     jahresAnfang → startOfYear
+ *   plusTage → addDays          plusMonate → addMonths
+ *   tageZwischen → daysBetween  istWochenende → isWeekend
+ *   werktageZwischen → businessDaysBetween
+ *   plusWerktage → addBusinessDays
+ *   kalenderwoche → isoWeek     vorText → relativeText
+ *   MS_TAG → MS_DAY   WOCHENTAGE → WEEKDAYS   MONATE → MONTHS
+ *
+ * **Die Werte bleiben deutsch.** `WEEKDAYS` und `MONTHS` enthalten weiter
+ * „Sonntag" und „Januar", und `relativeText` sagt weiter „gestern". Das sind
+ * Texte, die ein Mensch liest — E27 stellt nur Namen um, nie Inhalte.
  * ==========================================================================*/
-
-const Datum = (() => {
-
-  const MS_TAG = 86400000;
-
-  /* --- Lesen -------------------------------------------------------------- */
-
-  /**
-   * Irgendetwas in ein Datum verwandeln — oder null.
-   * Ein reines Datum (2026-08-03) wird als **lokaler** Tag gelesen, nicht
-   * als UTC-Mitternacht. Das ist der häufigste Zeitzonenfehler überhaupt.
-   */
-  const lies = (x) => {
-    if (x instanceof Date) return isNaN(x) ? null : x;
-    if (typeof x === 'number') return new Date(x);
-    const s = String(x || '').trim();
-    if (!s) return null;
-    const rein = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (rein) return new Date(+rein[1], +rein[2] - 1, +rein[3]);
-    const d = new Date(s);
-    return isNaN(d) ? null : d;
-  };
-
-  const istDatum = (x) => lies(x) !== null;
-
-  /* --- Schreiben ---------------------------------------------------------- */
-
-  const zwei = (n) => String(n).padStart(2, '0');
-
-  /** ISO mit Zeit — die Form, in der gespeichert wird. */
-  const alsText = (d) => (lies(d) || new Date()).toISOString();
-
-  /** Nur der Tag, in lokaler Zeit: 2026-08-03. */
-  const alsTag = (d) => {
-    const x = lies(d);
-    if (!x) return '';
-    return x.getFullYear() + '-' + zwei(x.getMonth() + 1) + '-' + zwei(x.getDate());
-  };
-
-  /* --- Runden ------------------------------------------------------------- */
-
-  const tagAnfang = (d) => { const x = lies(d); if (!x) return null;
-    const y = new Date(x); y.setHours(0, 0, 0, 0); return y; };
-
-  const tagEnde = (d) => { const x = lies(d); if (!x) return null;
-    const y = new Date(x); y.setHours(23, 59, 59, 999); return y; };
-
-  const wochenAnfang = (d, montags = true) => {
-    const x = tagAnfang(d); if (!x) return null;
-    const tag = x.getDay();                       /* 0 = Sonntag */
-    const zurueck = montags ? (tag === 0 ? 6 : tag - 1) : tag;
-    x.setDate(x.getDate() - zurueck);
-    return x;
-  };
-
-  const monatsAnfang = (d) => { const x = tagAnfang(d); if (!x) return null;
-    x.setDate(1); return x; };
-
-  const monatsEnde = (d) => { const x = monatsAnfang(d); if (!x) return null;
-    x.setMonth(x.getMonth() + 1); x.setDate(0); x.setHours(23, 59, 59, 999); return x; };
-
-  const jahresAnfang = (d) => { const x = tagAnfang(d); if (!x) return null;
-    x.setMonth(0, 1); return x; };
-
-  /* --- Rechnen ------------------------------------------------------------ */
-
-  /**
-   * Tage dazuzählen — über setDate, nicht über Millisekunden.
-   * Sonst geht bei der Zeitumstellung ein Tag verloren oder es kommt einer
-   * dazu, und zwar genau zweimal im Jahr, was niemand reproduzieren kann.
-   */
-  const plusTage = (d, n) => { const x = lies(d); if (!x) return null;
-    const y = new Date(x); y.setDate(y.getDate() + Number(n || 0)); return y; };
-
-  /**
-   * Monate dazuzählen, mit Klemmung ans Monatsende.
-   * 31. Januar plus ein Monat ist der 28. Februar, nicht der 3. März.
-   */
-  const plusMonate = (d, n) => {
-    const x = lies(d); if (!x) return null;
-    const tag = x.getDate();
-    const y = new Date(x);
-    y.setDate(1);
-    y.setMonth(y.getMonth() + Number(n || 0));
-    const letzter = new Date(y.getFullYear(), y.getMonth() + 1, 0).getDate();
-    y.setDate(Math.min(tag, letzter));
-    return y;
-  };
-
-  /** Ganze Tage dazwischen — über die Tagesgrenzen, nicht über die Stunden. */
-  const tageZwischen = (a, b) => {
-    const x = tagAnfang(a), y = tagAnfang(b);
-    if (!x || !y) return 0;
-    return Math.round((y - x) / MS_TAG);
-  };
-
-  /* --- Werktage -----------------------------------------------------------
-     Notion kennt keine Werktage. Hier zählen sie, weil fast jede Frist in
-     Werktagen gemeint ist und niemand das von Hand ausrechnen will. */
-
-  const istWochenende = (d) => { const x = lies(d); if (!x) return false;
-    const t = x.getDay(); return t === 0 || t === 6; };
-
-  const werktageZwischen = (a, b) => {
-    let x = tagAnfang(a), y = tagAnfang(b);
-    if (!x || !y) return 0;
-    const rueckwaerts = x > y;
-    if (rueckwaerts) { const h = x; x = y; y = h; }
-    let n = 0;
-    const lauf = new Date(x);
-    while (lauf < y) { lauf.setDate(lauf.getDate() + 1); if (!istWochenende(lauf)) n++; }
-    return rueckwaerts ? -n : n;
-  };
-
-  const plusWerktage = (d, n) => {
-    let x = tagAnfang(d); if (!x) return null;
-    let uebrig = Math.abs(Number(n) || 0);
-    const schritt = (Number(n) || 0) < 0 ? -1 : 1;
-    while (uebrig > 0) {
-      x = plusTage(x, schritt);
-      if (!istWochenende(x)) uebrig--;
-    }
-    return x;
-  };
-
-  /* --- Kalenderwoche nach ISO --------------------------------------------
-     Nicht „die wievielte Woche im Jahr", sondern die Regel, nach der der
-     Rest Europas zählt: Woche 1 ist die mit dem ersten Donnerstag. */
-
-  const kalenderwoche = (d) => {
-    const x = tagAnfang(d); if (!x) return 0;
-    const t = new Date(x);
-    t.setDate(t.getDate() + 4 - (t.getDay() || 7));
-    const jahresStart = new Date(t.getFullYear(), 0, 1);
-    return Math.ceil(((t - jahresStart) / MS_TAG + 1) / 7);
-  };
-
-  /* --- Für Menschen -------------------------------------------------------- */
-
-  const WOCHENTAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch',
-                      'Donnerstag', 'Freitag', 'Samstag'];
-  const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli',
-                  'August', 'September', 'Oktober', 'November', 'Dezember'];
-
-  /** „vor 3 Minuten", „gestern", „am 3. August" — je nach Abstand. */
-  const vorText = (d, jetzt = new Date()) => {
-    const x = lies(d); if (!x) return '';
-    const sek = Math.round((jetzt - x) / 1000);
-    if (Math.abs(sek) < 45)  return 'gerade eben';
-    const min = Math.round(sek / 60);
-    if (Math.abs(min) < 60)  return min > 0 ? 'vor ' + min + ' Minuten' : 'in ' + -min + ' Minuten';
-    const std = Math.round(min / 60);
-    if (Math.abs(std) < 24)  return std > 0 ? 'vor ' + std + ' Stunden' : 'in ' + -std + ' Stunden';
-    const tage = tageZwischen(x, jetzt);
-    if (tage === 1)  return 'gestern';
-    if (tage === -1) return 'morgen';
-    if (Math.abs(tage) < 7) return tage > 0 ? 'vor ' + tage + ' Tagen' : 'in ' + -tage + ' Tagen';
-    return 'am ' + x.getDate() + '. ' + MONATE[x.getMonth()] +
-           (x.getFullYear() !== jetzt.getFullYear() ? ' ' + x.getFullYear() : '');
-  };
-
-  return { MS_TAG, WOCHENTAGE, MONATE,
-           lies, istDatum, alsText, alsTag,
-           tagAnfang, tagEnde, wochenAnfang, monatsAnfang, monatsEnde, jahresAnfang,
-           plusTage, plusMonate, tageZwischen,
-           istWochenende, werktageZwischen, plusWerktage,
-           kalenderwoche, vorText };
+const Dates = (() => {
+    const MS_DAY = 86400000;
+    /* --- Lesen -------------------------------------------------------------- */
+    /**
+     * Irgendetwas in ein Datum verwandeln — oder null.
+     * Ein reines Datum (2026-08-03) wird als **lokaler** Tag gelesen, nicht
+     * als UTC-Mitternacht. Das ist der häufigste Zeitzonenfehler überhaupt.
+     */
+    const parse = (x) => {
+        /* `isNaN(date)` in der alten Fassung war dasselbe wie `isNaN(getTime())`
+           — eine Date wird über valueOf zur Zahl. Hier steht es ausgeschrieben,
+           weil TypeScript die stille Umwandlung zu Recht nicht mitmacht. */
+        if (x instanceof Date)
+            return isNaN(x.getTime()) ? null : x;
+        if (typeof x === 'number')
+            return new Date(x);
+        const s = String(x || '').trim();
+        if (!s)
+            return null;
+        const rein = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (rein)
+            return new Date(Number(rein[1]), Number(rein[2]) - 1, Number(rein[3]));
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    };
+    const isDate = (x) => parse(x) !== null;
+    /* --- Schreiben ---------------------------------------------------------- */
+    const two = (n) => String(n).padStart(2, '0');
+    /** ISO mit Zeit — die Form, in der gespeichert wird. */
+    const toISO = (d) => (parse(d) || new Date()).toISOString();
+    /** Nur der Tag, in lokaler Zeit: 2026-08-03. */
+    const toDay = (d) => {
+        const x = parse(d);
+        if (!x)
+            return '';
+        return x.getFullYear() + '-' + two(x.getMonth() + 1) + '-' + two(x.getDate());
+    };
+    /* --- Runden ------------------------------------------------------------- */
+    const startOfDay = (d) => {
+        const x = parse(d);
+        if (!x)
+            return null;
+        const y = new Date(x);
+        y.setHours(0, 0, 0, 0);
+        return y;
+    };
+    const endOfDay = (d) => {
+        const x = parse(d);
+        if (!x)
+            return null;
+        const y = new Date(x);
+        y.setHours(23, 59, 59, 999);
+        return y;
+    };
+    const startOfWeek = (d, mondays = true) => {
+        const x = startOfDay(d);
+        if (!x)
+            return null;
+        const day = x.getDay(); /* 0 = Sonntag */
+        const back = mondays ? (day === 0 ? 6 : day - 1) : day;
+        x.setDate(x.getDate() - back);
+        return x;
+    };
+    const startOfMonth = (d) => {
+        const x = startOfDay(d);
+        if (!x)
+            return null;
+        x.setDate(1);
+        return x;
+    };
+    const endOfMonth = (d) => {
+        const x = startOfMonth(d);
+        if (!x)
+            return null;
+        x.setMonth(x.getMonth() + 1);
+        x.setDate(0);
+        x.setHours(23, 59, 59, 999);
+        return x;
+    };
+    const startOfYear = (d) => {
+        const x = startOfDay(d);
+        if (!x)
+            return null;
+        x.setMonth(0, 1);
+        return x;
+    };
+    /* --- Rechnen ------------------------------------------------------------ */
+    /**
+     * Tage dazuzählen — über setDate, nicht über Millisekunden.
+     * Sonst geht bei der Zeitumstellung ein Tag verloren oder es kommt einer
+     * dazu, und zwar genau zweimal im Jahr, was niemand reproduzieren kann.
+     */
+    const addDays = (d, n) => {
+        const x = parse(d);
+        if (!x)
+            return null;
+        const y = new Date(x);
+        y.setDate(y.getDate() + Number(n || 0));
+        return y;
+    };
+    /**
+     * Monate dazuzählen, mit Klemmung ans Monatsende.
+     * 31. Januar plus ein Monat ist der 28. Februar, nicht der 3. März.
+     */
+    const addMonths = (d, n) => {
+        const x = parse(d);
+        if (!x)
+            return null;
+        const day = x.getDate();
+        const y = new Date(x);
+        y.setDate(1);
+        y.setMonth(y.getMonth() + Number(n || 0));
+        const last = new Date(y.getFullYear(), y.getMonth() + 1, 0).getDate();
+        y.setDate(Math.min(day, last));
+        return y;
+    };
+    /** Ganze Tage dazwischen — über die Tagesgrenzen, nicht über die Stunden. */
+    const daysBetween = (a, b) => {
+        const x = startOfDay(a), y = startOfDay(b);
+        if (!x || !y)
+            return 0;
+        return Math.round((y.getTime() - x.getTime()) / MS_DAY);
+    };
+    /* --- Werktage -----------------------------------------------------------
+       Notion kennt keine Werktage. Hier zählen sie, weil fast jede Frist in
+       Werktagen gemeint ist und niemand das von Hand ausrechnen will. */
+    const isWeekend = (d) => {
+        const x = parse(d);
+        if (!x)
+            return false;
+        const t = x.getDay();
+        return t === 0 || t === 6;
+    };
+    const businessDaysBetween = (a, b) => {
+        let x = startOfDay(a), y = startOfDay(b);
+        if (!x || !y)
+            return 0;
+        const backwards = x > y;
+        if (backwards) {
+            const h = x;
+            x = y;
+            y = h;
+        }
+        let n = 0;
+        const run = new Date(x);
+        while (run < y) {
+            run.setDate(run.getDate() + 1);
+            if (!isWeekend(run))
+                n++;
+        }
+        return backwards ? -n : n;
+    };
+    const addBusinessDays = (d, n) => {
+        let x = startOfDay(d);
+        if (!x)
+            return null;
+        let left = Math.abs(Number(n) || 0);
+        const step = (Number(n) || 0) < 0 ? -1 : 1;
+        while (left > 0) {
+            x = addDays(x, step);
+            if (!x)
+                return null; /* kann hier nicht eintreten — addDays
+                                             bekommt ein gültiges Datum. Steht da,
+                                             weil der Typ es zulässt und ein `!`
+                                             eine Behauptung wäre statt einer
+                                             Prüfung. */
+            if (!isWeekend(x))
+                left--;
+        }
+        return x;
+    };
+    /* --- Kalenderwoche nach ISO --------------------------------------------
+       Nicht „die wievielte Woche im Jahr", sondern die Regel, nach der der
+       Rest Europas zählt: Woche 1 ist die mit dem ersten Donnerstag. */
+    const isoWeek = (d) => {
+        const x = startOfDay(d);
+        if (!x)
+            return 0;
+        const t = new Date(x);
+        t.setDate(t.getDate() + 4 - (t.getDay() || 7));
+        const yearStart = new Date(t.getFullYear(), 0, 1);
+        return Math.ceil(((t.getTime() - yearStart.getTime()) / MS_DAY + 1) / 7);
+    };
+    /* --- Für Menschen --------------------------------------------------------
+       Die Namen sind englisch, die Inhalte deutsch. Das ist kein Versehen: was
+       hier drinsteht, liest ein Mensch (E27). */
+    const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch',
+        'Donnerstag', 'Freitag', 'Samstag'];
+    const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli',
+        'August', 'September', 'Oktober', 'November', 'Dezember'];
+    /** „vor 3 Minuten", „gestern", „am 3. August" — je nach Abstand. */
+    const relativeText = (d, now = new Date()) => {
+        const x = parse(d);
+        if (!x)
+            return '';
+        const sec = Math.round((now.getTime() - x.getTime()) / 1000);
+        if (Math.abs(sec) < 45)
+            return 'gerade eben';
+        const min = Math.round(sec / 60);
+        if (Math.abs(min) < 60)
+            return min > 0 ? 'vor ' + min + ' Minuten' : 'in ' + -min + ' Minuten';
+        const hrs = Math.round(min / 60);
+        if (Math.abs(hrs) < 24)
+            return hrs > 0 ? 'vor ' + hrs + ' Stunden' : 'in ' + -hrs + ' Stunden';
+        const days = daysBetween(x, now);
+        if (days === 1)
+            return 'gestern';
+        if (days === -1)
+            return 'morgen';
+        if (Math.abs(days) < 7)
+            return days > 0 ? 'vor ' + days + ' Tagen' : 'in ' + -days + ' Tagen';
+        /* `?? ''` nur wegen `noUncheckedIndexedAccess` — getMonth() liefert 0–11,
+           und MONTHS hat zwölf Einträge. Treffen kann es nicht. */
+        return 'am ' + x.getDate() + '. ' + (MONTHS[x.getMonth()] ?? '') +
+            (x.getFullYear() !== now.getFullYear() ? ' ' + x.getFullYear() : '');
+    };
+    return { MS_DAY, WEEKDAYS, MONTHS,
+        parse, isDate, toISO, toDay,
+        startOfDay, endOfDay, startOfWeek, startOfMonth, endOfMonth, startOfYear,
+        addDays, addMonths, daysBetween,
+        isWeekend, businessDaysBetween, addBusinessDays,
+        isoWeek, relativeText };
 })();
-
-window.Datum = Datum;
+window.Dates = Dates;
 
 </script>
 <script>
-/* ===== quell/kern/helfer/objekte.js ===== */
+/* ===== quell/core/helpers/objects.js ===== */
+"use strict";
 /* ============================================================================
- * kern/helfer/objekte.js — Objekte kopieren, vergleichen, tief anfassen
+ * core/helpers/objects.ts — Objekte kopieren, vergleichen, tief anfassen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/helpers/objects.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/helpers/objects.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
+ * vorher.
  * ----------------------------------------------------------------------------
  * Vier Handgriffe, die überall gebraucht werden und die man überall ein
  * bisschen anders falsch macht:
  *
- *   kopie(x)          eine Kopie, die keine Verbindung zum Original hat
- *   gleich(a, b)      Vergleich nach Inhalt, nicht nach Identität
- *   hole(o, pfad)     tief lesen, ohne bei jedem Schritt zu prüfen
- *   setze(o, pfad, w) tief schreiben, Zwischenebenen anlegen
+ *   clone(x)          eine Kopie, die keine Verbindung zum Original hat
+ *   equal(a, b)       Vergleich nach Inhalt, nicht nach Identität
+ *   get(o, pfad)      tief lesen, ohne bei jedem Schritt zu prüfen
+ *   set(o, pfad, w)   tief schreiben, Zwischenebenen anlegen
  *
  * Warum das zählt: `Object.assign` und `{...x}` kopieren nur die erste
  * Ebene. Wer damit ein Schema kopiert und dann eine Spalte ändert, ändert
@@ -4244,149 +4339,193 @@ window.Datum = Datum;
  * `JSON.stringify`-Vergleich wiederum ist von der Reihenfolge der Schlüssel
  * abhängig: zwei gleiche Objekte gelten als verschieden, nur weil sie in
  * anderer Reihenfolge entstanden sind.
+ *
+ * ─── SPRACHE ────────────────────────────────────────────────────────────────
+ *
+ * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27. Auch die
+ * öffentliche Schnittstelle ist umgestellt: aus `Objekte.kopie()` wurde
+ * `Objects.clone()`.
+ *
+ * Das war der einfachste Fall der ganzen Migration: gemessen **null** Aufrufe
+ * in Produktivcode und neun in `test85.mjs`. Die Zuordnung, falls jemand die
+ * alte Fassung sucht:
+ *
+ *   istObjekt → isObject      kopie → clone         gleich → equal
+ *   hole → get                setze → set           misch → merge
+ *   unterschiede → differences                      ohneLeere → withoutEmpty
+ *   nur → pick                ohne → omit           gruppiere → groupBy
+ *
+ * ─── WARUM HIER `any` STEHT ─────────────────────────────────────────────────
+ *
+ * Diese Datei fasst beliebige Daten an — Schemata, Zeilen, gespeicherte
+ * Sätze, alles, was durch die Ablage geht. Ein enger Typ wäre hier keine
+ * Zusage, sondern eine Behauptung: er würde etwas versprechen, was zur
+ * Laufzeit niemand einhält. `any` an der Grenze zu ungetypten Daten ist
+ * genau der Fall, den `CLAUDE.md` §52 erlaubt. Innerhalb der Funktionen
+ * wird trotzdem geprüft, bevor zugegriffen wird.
  * ==========================================================================*/
-
-const Objekte = (() => {
-
-  const istObjekt = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
-
-  /** Eine tiefe Kopie. Daten, keine Klassen — mehr braucht Redion nicht. */
-  const kopie = (x) => {
-    if (x === null || typeof x !== 'object') return x;
-    if (x instanceof Date) return new Date(x.getTime());
-    if (Array.isArray(x)) return x.map(kopie);
-    const raus = {};
-    for (const k of Object.keys(x)) raus[k] = kopie(x[k]);
-    return raus;
-  };
-
-  /**
-   * Vergleich nach Inhalt — unabhängig von der Reihenfolge der Schlüssel.
-   * `{a:1,b:2}` und `{b:2,a:1}` sind hier gleich; über JSON wären sie es nicht.
-   */
-  const gleich = (a, b) => {
-    if (a === b) return true;
-    if (a instanceof Date || b instanceof Date)
-      return a instanceof Date && b instanceof Date && a.getTime() === b.getTime();
-    if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object')
-      return a === b;
-    if (Array.isArray(a) !== Array.isArray(b)) return false;
-    if (Array.isArray(a)) {
-      if (a.length !== b.length) return false;
-      return a.every((x, i) => gleich(x, b[i]));
-    }
-    const ka = Object.keys(a), kb = Object.keys(b);
-    if (ka.length !== kb.length) return false;
-    return ka.every(k => Object.prototype.hasOwnProperty.call(b, k) && gleich(a[k], b[k]));
-  };
-
-  const teile = (pfad) => Array.isArray(pfad)
-    ? pfad
-    : String(pfad || '').split('.').filter(x => x !== '');
-
-  /** Tief lesen. Fehlt unterwegs etwas, kommt der Ersatzwert. */
-  const hole = (o, pfad, ersatz = undefined) => {
-    let z = o;
-    for (const k of teile(pfad)) {
-      if (z === null || z === undefined) return ersatz;
-      z = z[k];
-    }
-    return z === undefined ? ersatz : z;
-  };
-
-  /** Tief schreiben. Fehlende Zwischenebenen entstehen als Objekte. */
-  const setze = (o, pfad, wert) => {
-    const p = teile(pfad);
-    if (!p.length) return wert;
-    let z = o;
-    for (let i = 0; i < p.length - 1; i++) {
-      if (!istObjekt(z[p[i]]) && !Array.isArray(z[p[i]])) z[p[i]] = {};
-      z = z[p[i]];
-    }
-    if (wert === undefined) delete z[p[p.length - 1]];
-    else z[p[p.length - 1]] = wert;
-    return o;
-  };
-
-  /**
-   * Zwei Objekte tief zusammenlegen. `b` sticht `a`.
-   * Arrays werden ersetzt, nicht verschmolzen — beim Verschmelzen von Listen
-   * kommt fast nie das heraus, was jemand erwartet.
-   */
-  const misch = (a, b) => {
-    if (!istObjekt(a) || !istObjekt(b)) return kopie(b === undefined ? a : b);
-    const raus = kopie(a);
-    for (const k of Object.keys(b)) {
-      raus[k] = (istObjekt(raus[k]) && istObjekt(b[k])) ? misch(raus[k], b[k]) : kopie(b[k]);
-    }
-    return raus;
-  };
-
-  /** Was hat sich geändert? Gibt die Pfade zurück, nicht nur „ja/nein". */
-  const unterschiede = (a, b, pfad = []) => {
-    const raus = [];
-    if (gleich(a, b)) return raus;
-    if (!istObjekt(a) || !istObjekt(b)) { raus.push(pfad.join('.') || '(alles)'); return raus; }
-    const namen = new Set([...Object.keys(a), ...Object.keys(b)]);
-    for (const k of namen) raus.push(...unterschiede(a[k], b[k], [...pfad, k]));
-    return raus;
-  };
-
-  /** Leere Felder herauswerfen — für Ausgaben, die knapp sein sollen. */
-  const ohneLeere = (o) => {
-    if (!istObjekt(o)) return o;
-    const raus = {};
-    for (const k of Object.keys(o)) {
-      const v = o[k];
-      if (v === undefined || v === null || v === '') continue;
-      if (Array.isArray(v) && !v.length) continue;
-      raus[k] = istObjekt(v) ? ohneLeere(v) : v;
-    }
-    return raus;
-  };
-
-  /** Nur diese Felder behalten. */
-  const nur = (o, felder) => {
-    const raus = {};
-    (felder || []).forEach(k => { if (k in (o || {})) raus[k] = o[k]; });
-    return raus;
-  };
-
-  /** Alles ausser diesen Feldern. */
-  const ohne = (o, felder) => {
-    const weg = new Set(felder || []);
-    const raus = {};
-    Object.keys(o || {}).forEach(k => { if (!weg.has(k)) raus[k] = o[k]; });
-    return raus;
-  };
-
-  /** Eine Liste nach einem Schlüssel gruppieren. */
-  const gruppiere = (liste, schluessel) => {
-    const raus = {};
-    (liste || []).forEach(x => {
-      const k = typeof schluessel === 'function' ? schluessel(x) : hole(x, schluessel);
-      (raus[k] = raus[k] || []).push(x);
-    });
-    return raus;
-  };
-
-  return { istObjekt, kopie, gleich, hole, setze, misch, unterschiede,
-           ohneLeere, nur, ohne, gruppiere };
+const Objects = (() => {
+    const isObject = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
+    /** Eine tiefe Kopie. Daten, keine Klassen — mehr braucht Redion nicht. */
+    const clone = (x) => {
+        if (x === null || typeof x !== 'object')
+            return x;
+        if (x instanceof Date)
+            return new Date(x.getTime());
+        if (Array.isArray(x))
+            return x.map(clone);
+        const out = {};
+        for (const k of Object.keys(x))
+            out[k] = clone(x[k]);
+        return out;
+    };
+    /**
+     * Vergleich nach Inhalt — unabhängig von der Reihenfolge der Schlüssel.
+     * `{a:1,b:2}` und `{b:2,a:1}` sind hier gleich; über JSON wären sie es nicht.
+     */
+    const equal = (a, b) => {
+        if (a === b)
+            return true;
+        if (a instanceof Date || b instanceof Date)
+            return a instanceof Date && b instanceof Date && a.getTime() === b.getTime();
+        if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object')
+            return a === b;
+        if (Array.isArray(a) !== Array.isArray(b))
+            return false;
+        if (Array.isArray(a)) {
+            if (a.length !== b.length)
+                return false;
+            return a.every((x, i) => equal(x, b[i]));
+        }
+        const ka = Object.keys(a), kb = Object.keys(b);
+        if (ka.length !== kb.length)
+            return false;
+        return ka.every(k => Object.prototype.hasOwnProperty.call(b, k) && equal(a[k], b[k]));
+    };
+    const parts = (path) => Array.isArray(path)
+        ? path
+        : String(path || '').split('.').filter(x => x !== '');
+    /** Tief lesen. Fehlt unterwegs etwas, kommt der Ersatzwert. */
+    const get = (o, path, fallback = undefined) => {
+        let z = o;
+        for (const k of parts(path)) {
+            if (z === null || z === undefined)
+                return fallback;
+            z = z[k];
+        }
+        return z === undefined ? fallback : z;
+    };
+    /** Tief schreiben. Fehlende Zwischenebenen entstehen als Objekte. */
+    const set = (o, path, value) => {
+        const p = parts(path);
+        if (!p.length)
+            return value;
+        let z = o;
+        for (let i = 0; i < p.length - 1; i++) {
+            /* `?? ''` nur wegen `noUncheckedIndexedAccess`: i läuft bis length-2,
+               der Zugriff kann nicht danebengehen. */
+            const k = p[i] ?? '';
+            if (!isObject(z[k]) && !Array.isArray(z[k]))
+                z[k] = {};
+            z = z[k];
+        }
+        const last = p[p.length - 1] ?? '';
+        if (value === undefined)
+            delete z[last];
+        else
+            z[last] = value;
+        return o;
+    };
+    /**
+     * Zwei Objekte tief zusammenlegen. `b` sticht `a`.
+     * Arrays werden ersetzt, nicht verschmolzen — beim Verschmelzen von Listen
+     * kommt fast nie das heraus, was jemand erwartet.
+     */
+    const merge = (a, b) => {
+        if (!isObject(a) || !isObject(b))
+            return clone(b === undefined ? a : b);
+        const out = clone(a);
+        for (const k of Object.keys(b)) {
+            out[k] = (isObject(out[k]) && isObject(b[k])) ? merge(out[k], b[k]) : clone(b[k]);
+        }
+        return out;
+    };
+    /** Was hat sich geändert? Gibt die Pfade zurück, nicht nur „ja/nein". */
+    const differences = (a, b, path = []) => {
+        const out = [];
+        if (equal(a, b))
+            return out;
+        if (!isObject(a) || !isObject(b)) {
+            out.push(path.join('.') || '(alles)');
+            return out;
+        }
+        const names = new Set([...Object.keys(a), ...Object.keys(b)]);
+        for (const k of names)
+            out.push(...differences(a[k], b[k], [...path, k]));
+        return out;
+    };
+    /** Leere Felder herauswerfen — für Ausgaben, die knapp sein sollen. */
+    const withoutEmpty = (o) => {
+        if (!isObject(o))
+            return o;
+        const out = {};
+        for (const k of Object.keys(o)) {
+            const v = o[k];
+            if (v === undefined || v === null || v === '')
+                continue;
+            if (Array.isArray(v) && !v.length)
+                continue;
+            out[k] = isObject(v) ? withoutEmpty(v) : v;
+        }
+        return out;
+    };
+    /** Nur diese Felder behalten. */
+    const pick = (o, fields) => {
+        const out = {};
+        (fields || []).forEach(k => { if (k in (o || {}))
+            out[k] = o[k]; });
+        return out;
+    };
+    /** Alles ausser diesen Feldern. */
+    const omit = (o, fields) => {
+        const drop = new Set(fields || []);
+        const out = {};
+        Object.keys(o || {}).forEach(k => { if (!drop.has(k))
+            out[k] = o[k]; });
+        return out;
+    };
+    /** Eine Liste nach einem Schlüssel gruppieren. */
+    const groupBy = (list, key) => {
+        const out = {};
+        (list || []).forEach((x) => {
+            const k = typeof key === 'function' ? key(x) : get(x, key);
+            (out[k] = out[k] || []).push(x);
+        });
+        return out;
+    };
+    return { isObject, clone, equal, get, set, merge, differences,
+        withoutEmpty, pick, omit, groupBy };
 })();
-
-window.Objekte = Objekte;
+window.Objects = Objects;
 
 </script>
 <script>
-/* ===== quell/kern/helfer/bytes.js ===== */
+/* ===== quell/core/helpers/bytes.js ===== */
+"use strict";
 /* ============================================================================
- * kern/helfer/bytes.js — Bytes nach Base64 und zurück
+ * core/helpers/bytes.ts — Bytes nach Base64 und zurück
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/helpers/bytes.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/helpers/bytes.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
+ * vorher.
  * ----------------------------------------------------------------------------
  * Zwei Handgriffe, die für sich genommen langweilig sind und an drei Stellen
  * dieselbe Falle aufgestellt hatten:
  *
- *   alsB64(buf)   Bytes → Base64-Zeichenkette
- *   ausB64(text)  Base64-Zeichenkette → Bytes
+ *   toBase64(buf)    Bytes → Base64-Zeichenkette
+ *   fromBase64(text) Base64-Zeichenkette → Bytes
  *
  * DIE FALLE. Die naheliegende Fassung lautet
  *
@@ -4407,42 +4546,48 @@ window.Objekte = Objekte;
  * das Muster, an dem sich dieses Projekt immer wieder verschluckt: an einer
  * Stelle repariert, an der Nachbarstelle nicht. Eine Fassung, ein Ort.
  * `pruefungen/lauf/test87.mjs` hält fest, dass keine vierte entsteht.
+ *
+ * ─── SPRACHE ────────────────────────────────────────────────────────────────
+ *
+ * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27. Der
+ * Modulname war schon englisch und bleibt `Bytes`; nur die drei Namen darin
+ * ziehen nach:
+ *
+ *   alsB64 → toBase64      ausB64 → fromBase64      SCHEIBE → CHUNK
+ *
+ * Gemessen sechs Aufrufe in drei Dateien (`krypto.js`, `maschine.js`,
+ * `werkzeuge.js`) und zwei in `test104.mjs` — der Fall „im Rahmen einer
+ * geplanten Migration", nicht die verbotene Massenumbenennung.
  * ==========================================================================*/
-
 const Bytes = (() => {
-
-  /* Weit unter jeder Browsergrenze und gross genug, dass die Schleife nicht
-     ins Gewicht fällt: bei 4 MB sind das 128 Durchläufe. */
-  const SCHEIBE = 32768;
-
-  /**
-   * Bytes als Base64.
-   * @param {ArrayBuffer|Uint8Array} buf
-   * @returns {string}
-   */
-  const alsB64 = (buf) => {
-    const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-    let s = '';
-    for (let i = 0; i < bytes.length; i += SCHEIBE)
-      s += String.fromCharCode.apply(null, bytes.subarray(i, i + SCHEIBE));
-    return btoa(s);
-  };
-
-  /**
-   * Base64 zurück in Bytes.
-   *
-   * `Uint8Array.from` mit einer Abbildung hat das Stapelproblem nicht — es
-   * ruft die Funktion je Zeichen auf, statt alle Zeichen auf einmal zu
-   * übergeben. Diese Richtung war deshalb nie kaputt und bleibt, wie sie war.
-   *
-   * @param {string} text
-   * @returns {Uint8Array}
-   */
-  const ausB64 = (text) => Uint8Array.from(atob(String(text)), c => c.charCodeAt(0));
-
-  return { alsB64, ausB64, SCHEIBE };
+    /* Weit unter jeder Browsergrenze und gross genug, dass die Schleife nicht
+       ins Gewicht fällt: bei 4 MB sind das 128 Durchläufe. */
+    const CHUNK = 32768;
+    /**
+     * Bytes als Base64.
+     *
+     * `apply` statt Spread: es übergibt die Scheibe als ein Argument-Array,
+     * und die Scheibe ist klein genug, dass der Stapel es trägt. Der Spread
+     * täte dasselbe für kleine Puffer und bräche bei grossen — genau der
+     * Unterschied, um den es hier geht.
+     */
+    const toBase64 = (buf) => {
+        const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+        let s = '';
+        for (let i = 0; i < bytes.length; i += CHUNK)
+            s += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+        return btoa(s);
+    };
+    /**
+     * Base64 zurück in Bytes.
+     *
+     * `Uint8Array.from` mit einer Abbildung hat das Stapelproblem nicht — es
+     * ruft die Funktion je Zeichen auf, statt alle Zeichen auf einmal zu
+     * übergeben. Diese Richtung war deshalb nie kaputt und bleibt, wie sie war.
+     */
+    const fromBase64 = (text) => Uint8Array.from(atob(String(text)), c => c.charCodeAt(0));
+    return { toBase64, fromBase64, CHUNK };
 })();
-
 window.Bytes = Bytes;
 
 </script>
@@ -5298,7 +5443,7 @@ const Pruefen = (() => {
 
   const datum = (v) => {
     if (leer(v)) return gut();
-    const d = (typeof Datum !== 'undefined') ? Datum.lies(v) : new Date(v);
+    const d = (typeof Dates !== 'undefined') ? Dates.parse(v) : new Date(v);
     if (!d || isNaN(d)) return schlecht('Das ist kein Datum.');
     return gut();
   };
@@ -24596,12 +24741,12 @@ const Werkzeuge = (() => {
       roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   };
 
-  /* Aus `kern/helfer/bytes.js`. Vorher stand hier die Fassung mit dem Spread:
+  /* Aus `core/helpers/bytes.ts`. Vorher stand hier die Fassung mit dem Spread:
      ab etwa 128 000 Bytes sprengt sie den Aufrufstapel — und das ist die
      Grösse einer längeren Seite, also genau der Fall, für den das Sperren
      gedacht ist. */
-  const b64 = (buf) => Bytes.alsB64(buf);
-  const vonB64 = (s) => Bytes.ausB64(s);
+  const b64 = (buf) => Bytes.toBase64(buf);
+  const vonB64 = (s) => Bytes.fromBase64(s);
 
   const sperren = async (p) => {
     if (!crypto.subtle) { alert('Verschlüsselung braucht einen sicheren Kontext (https oder lokale Datei).'); return; }
@@ -36462,12 +36607,12 @@ const Krypto = (() => {
   const enc = new TextEncoder();
   const dec = new TextDecoder();
 
-  /* Aus `kern/helfer/bytes.js`. Hier stand vorher die Fassung mit dem
+  /* Aus `core/helpers/bytes.ts`. Hier stand vorher die Fassung mit dem
      Spread, die ab etwa 128 000 Bytes den Aufrufstapel sprengte — also genau
      dann, wenn der Bestand gross genug war, dass sich das Sichern lohnt.
      Dort steht, warum es nur noch eine Fassung davon gibt. */
-  const b64 = (buf) => Bytes.alsB64(buf);
-  const ausB64 = (s) => Bytes.ausB64(s);
+  const b64 = (buf) => Bytes.toBase64(buf);
+  const ausB64 = (s) => Bytes.fromBase64(s);
 
   const RUNDEN = 310000;   /* OWASP-Empfehlung für PBKDF2-SHA256 */
 
@@ -46023,16 +46168,16 @@ const Wolke = (() => {
     const chiffre = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, schluessel, daten);
     const alles = new Uint8Array(iv.length + chiffre.byteLength);
     alles.set(iv); alles.set(new Uint8Array(chiffre), iv.length);
-    /* Aus `kern/helfer/bytes.js`. Der Spread sprengte hier ab etwa 128 000
+    /* Aus `core/helpers/bytes.ts`. Der Spread sprengte hier ab etwa 128 000
        Bytes den Aufrufstapel — bei einem Abgleichpaket mit einem grösseren
        Seitenbaum ist das schnell erreicht. */
-    return Bytes.alsB64(alles);
+    return Bytes.toBase64(alles);
   };
 
   const entschluessele = async (paket) => {
     if (!schluessel) return null;
     try {
-      const roh = Bytes.ausB64(paket);
+      const roh = Bytes.fromBase64(paket);
       const iv = roh.slice(0, 12);
       const klar = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, schluessel, roh.slice(12));
       return new TextDecoder().decode(klar);
