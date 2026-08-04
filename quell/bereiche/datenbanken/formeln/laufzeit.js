@@ -713,11 +713,27 @@ const Formula = (() => {
    * kleingeschrieben. `SUMME`, `Summe` und `summe` landen deshalb von selbst
    * am selben Ort; hier steht nur, wo dieser Ort ist.
    *
-   * WARUM ZEIGER UND KEINE KOPIEN. `summe: F.sum` zeigt auf dieselbe
-   * Funktion. Eine eigene Fassung wäre eine zweite Wahrheit, die irgendwann
-   * anders rechnet als die erste — genau der Fehler, der sich durch dieses
-   * Projekt zieht. `pruefungen/lauf/test106.mjs` prüft jedes Paar auf
-   * **gleiches Ergebnis**, nicht nur darauf, dass es antwortet.
+   * ─── WARUM EINE NAMENSTABELLE UND KEINE ZEIGER IN `F` ───────────────────
+   *
+   * Der erste Versuch schrieb `F.summe = F.sum` — Zeiger auf dieselben
+   * Funktionen, scheinbar sauber. Er hatte einen Fehler, der erst beim
+   * Weiterbauen auffiel:
+   *
+   * `evaluate` behandelt dreizehn Namen besonders, **bevor** es in `F`
+   * schaut — darunter `if` und `ifs`, die ihre Zweige faul auswerten, damit
+   * der nicht genommene Zweig nicht rechnet. Diese Sonderbehandlung hängt am
+   * Namen. Ein Alias, der nur in `F` steht, läuft daran vorbei:
+   *
+   *     if(true, 1, teuer())     rechnet teuer() nicht
+   *     WENN(true, 1, teuer())   rechnete es
+   *
+   * Beide gaben 1 zurück, und deshalb fiel es nicht auf — der Prüflauf
+   * verglich Ergebnisse, und die waren gleich.
+   *
+   * Deshalb steht der deutsche Name jetzt **vor** allem anderen und wird auf
+   * seinen englischen zurückgeführt. Danach gibt es im ganzen Auswerter nur
+   * noch einen Namen je Funktion, und jede Sonderbehandlung — die heutigen
+   * dreizehn und jede spätere — gilt für beide Schreibweisen von selbst.
    *
    * MITTELWERT ZEIGT AUF `mean`, NICHT AUF `average`. `average` ist ein
    * Spaltenaggregat und antwortet ausserhalb einer Datenbankspalte mit „Das
@@ -727,56 +743,55 @@ const Formula = (() => {
    * Die englischen Namen bleiben. Ein Alias, der das Original verdrängt,
    * hätte jede bestehende Formel in jedem Bestand gebrochen.
    * ======================================================================== */
-  Object.assign(F, {
-    /* --- Mathematik ------------------------------------------------------ */
-    summe: F.sum,
-    mittelwert: F.mean,
-    /* MIN, MAX und ABS heissen in beiden Sprachen gleich — sie brauchen
-       keinen Eintrag und stehen hier nur, damit niemand sie für vergessen
-       hält. */
-    wurzel: F.sqrt,
-    rest: F.mod,
-    runden: F.round,
-    abrunden: F.floor,
-    aufrunden: F.ceil,
+  const ALIAS = {
+    /* --- Zahlen ---------------------------------------------------------- */
+    /* MIN, MAX und ABS heissen in beiden Sprachen gleich und brauchen keinen
+       Eintrag. Sie stehen in `register/formeln.js` trotzdem beschrieben. */
+    summe: 'sum',
+    mittelwert: 'mean',
+    wurzel: 'sqrt',
+    rest: 'mod',
+    runden: 'round',
+    abrunden: 'floor',
+    aufrunden: 'ceil',
 
     /* --- Logik ----------------------------------------------------------- */
-    wenn: F.if,
-    wenns: F.ifs,
-    und: F.and,
-    oder: F.or,
-    nicht: F.not,
+    wenn: 'if',
+    wenns: 'ifs',
+    und: 'and',
+    oder: 'or',
+    nicht: 'not',
 
     /* --- Datum ----------------------------------------------------------- */
-    heute: F.today,
-    jetzt: F.now,
-    datum: F.date,
-    jahr: F.year,
-    monat: F.month,
-    tag: F.day,
-    kalenderwoche: F.week,
+    heute: 'today',
+    jetzt: 'now',
+    datum: 'date',
+    jahr: 'year',
+    monat: 'month',
+    tag: 'day',
+    kalenderwoche: 'week',
 
     /* --- Text ------------------------------------------------------------ */
-    'länge': F.length,
-    teil: F.slice,
-    'glätten': F.trim,
-    gross: F.upper,
-    klein: F.lower,
-    wechseln: F.replaceall,
-    ersetzen: F.replace,
-    text: F.format,
-    wert: F.tonumber,
-    textkette: F.concat,
-    textverketten: F.join,
+    'länge': 'length',
+    teil: 'slice',
+    'glätten': 'trim',
+    gross: 'upper',
+    klein: 'lower',
+    wechseln: 'replaceall',
+    ersetzen: 'replace',
+    text: 'format',
+    wert: 'tonumber',
+    textkette: 'concat',
+    textverketten: 'join',
 
     /* --- Information ----------------------------------------------------- */
-    istleer: F.empty,
+    istleer: 'empty',
 
     /* --- Suchen und Verweisen -------------------------------------------- */
-    vergleich: F.match,
-    sortieren: F.sort,
-    eindeutig: F.unique
-  });
+    vergleich: 'match',
+    sortieren: 'sort',
+    eindeutig: 'unique'
+  };
 
   /* Der eigentliche Auswerter */
   /* ------------------------------------------------------------------------
@@ -858,7 +873,10 @@ const Formula = (() => {
       }
 
       case 'call': {
-        const n = knoten.name;
+        /* Zuerst den deutschen Namen auf den englischen zurückführen — vor
+           jeder Sonderbehandlung. Sonst liefe `WENN` an der faulen
+           Auswertung von `if` vorbei und rechnete den toten Zweig mit. */
+        const n = ALIAS[knoten.name] || knoten.name;
 
         /* prop() greift auf die Zeile zu.
          * Mit zwei Argumenten — geschrieben als current.prop("Feld") —
@@ -1109,7 +1127,7 @@ const Formula = (() => {
       register/formeln.js vergleicht damit seine Beschreibungen: eine
       Funktion ohne Beschreibung findet niemand, eine Beschreibung ohne
       Funktion ist ein Versprechen, das beim Tippen bricht. */
-  const namen = () => [...Object.keys(F), ...Object.keys(EIGENE),
+  const namen = () => [...Object.keys(F), ...Object.keys(ALIAS), ...Object.keys(EIGENE),
     'rownumber','runningcount','previous','next','runningsum','runningmax','runningmin',
     'rank','percentoftotal','total','average','rowcount','delta',
     'countwhere','sumwhere','findrows','firstwhere','lastwhere','maxwhere','minwhere',

@@ -160,13 +160,29 @@ Nach Nutzen je Aufwand, nicht nach Vollständigkeit.
 Eine Aliastabelle. Kein neuer Code, keine neue Logik, kein Risiko für
 Bestehendes. Aus 0 % deutscher Abdeckung wurden 59 %.
 
-Die Namen hängen als **Zeiger** auf denselben Funktionen (`summe: F.sum`),
-nicht als Kopien — eine zweite Fassung wäre eine zweite Wahrheit. Beschrieben
-stehen sie im Register, damit die Suche im Formeleditor sie findet.
+Die Namen stehen als **Namenstabelle**, die ganz zu Beginn der Auswertung
+greift. Beschrieben stehen sie im Register, damit die Suche im Formeleditor
+sie findet.
 
-Gehalten von `pruefungen/lauf/test106.mjs`: 78 Prüfungen auf **gleiches
-Ergebnis**, nicht nur darauf, dass ein Name antwortet — ein Alias, der leicht
-anders rechnet, ist schlimmer als keiner, weil er richtig aussieht.
+**Der erste Wurf war falsch.** Er schrieb `F.summe = F.sum` — Zeiger auf
+dieselben Funktionen. `evaluate` behandelt aber dreizehn Namen besonders,
+*bevor* es in die Funktionstabelle schaut, darunter `if` und `ifs` mit ihrer
+faulen Auswertung. Ein Alias, der nur in der Tabelle steht, läuft daran
+vorbei:
+
+```txt
+if(true, 1, teuer())      rechnete teuer() nicht
+WENN(true, 1, teuer())    rechnete es
+```
+
+Beide gaben `1` zurück — deshalb fiel es nicht auf. Die Regel daraus steht in
+`ENTSCHEIDUNGEN.md` E24: ein Zweitname wird am **Anfang** der Auswertung auf
+seinen Erstnamen zurückgeführt, nicht am Ende in die Funktionstabelle
+gehängt.
+
+Gehalten von `pruefungen/lauf/test106.mjs`: 80 Prüfungen auf **gleiches
+Ergebnis** — und, seit diesem Fund, auf **gleiche Auswertung**: der nicht
+genommene Zweig darf nicht rechnen. Das findet kein Ergebnisvergleich.
 
 ### X2 · Die 10 fehlenden Suche/Verweis-Funktionen
 

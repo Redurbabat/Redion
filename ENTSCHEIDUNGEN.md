@@ -1012,6 +1012,36 @@ brauchen einen Fehlerwert im Datenmodell — eine Änderung an der Laufzeit,
 keine neue Funktion. Wird sie später entschieden, wird `WENNFEHLER` zweimal
 gebaut.
 
+**Nachtrag 2 — wie ein Alias richtig gebaut wird.**
+
+Der erste Versuch schrieb die deutschen Namen als Zeiger in die
+Funktionstabelle (`F.summe = F.sum`). Das war falsch, und der Grund ist
+allgemein genug, um hier zu stehen:
+
+`evaluate` behandelt dreizehn Namen besonders, **bevor** es in die
+Funktionstabelle schaut — `if`, `ifs`, `let`, `map`, `filter`, `find`,
+`some`, `every`, `reduce`, `sortBy` und weitere. Sie werten ihre Argumente
+faul aus oder greifen auf die Zeile zu. Diese Sonderbehandlung hängt am
+**Namen**. Ein Alias, der nur in der Funktionstabelle steht, läuft daran
+vorbei.
+
+```txt
+if(true, 1, teuer())      rechnet teuer() nicht
+WENN(true, 1, teuer())    rechnete es
+```
+
+Beide gaben `1` zurück. Ein Prüflauf, der Ergebnisse vergleicht, sieht das
+nicht.
+
+**Die Regel daraus:** Ein Zweitname wird ganz am Anfang der Auswertung auf
+seinen Erstnamen zurückgeführt, nicht am Ende in die Funktionstabelle
+gehängt. Danach gibt es im ganzen Auswerter nur einen Namen je Funktion, und
+jede Sonderbehandlung gilt für beide Schreibweisen von selbst — auch jede,
+die später dazukommt.
+
+Das gilt für die deutschen Excel-Namen und für jeden weiteren Zweitnamen,
+der noch kommt.
+
 **Folgen**
 
 Der Tabellenkern ist ein **Bereich** wie jeder andere und hält sich an E8:

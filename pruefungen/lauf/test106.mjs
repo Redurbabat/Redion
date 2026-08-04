@@ -125,6 +125,59 @@ for (const [de, en] of PAARE) {
     'de=' + JSON.stringify(a) + ' en=' + JSON.stringify(b));
 }
 
+/* ===========================================================================
+ * 1b · DER TOTE ZWEIG DARF NICHT RECHNEN
+ * ---------------------------------------------------------------------------
+ * Der erste Wurf dieses Laufs hat einen echten Fehler durchgelassen, und der
+ * ist lehrreich genug, um hier zu stehen.
+ *
+ * `evaluate` behandelt dreizehn Namen besonders, **bevor** es in die
+ * Funktionstabelle schaut — darunter `if` und `ifs`, die ihre Zweige faul
+ * auswerten, damit der nicht genommene Zweig nicht rechnet. Diese
+ * Sonderbehandlung hängt am **Namen**. Ein Alias, der nur in der
+ * Funktionstabelle steht, läuft daran vorbei und landet in der gewöhnlichen,
+ * eifrigen Auswertung.
+ *
+ * Ergebnis: `if(true, 1, teuer())` rechnete `teuer()` nicht,
+ * `WENN(true, 1, teuer())` rechnete es. **Beide gaben 1 zurück** — und genau
+ * deshalb fiel es nicht auf: Abschnitt 1 vergleicht Ergebnisse, und die waren
+ * gleich.
+ *
+ * Was daran nicht nur Geschmack ist:
+ *   · ein Zweig mit `prop()` wirft in einer Umgebung ohne Verknüpfung — auch
+ *     wenn er gar nicht genommen wird
+ *   · ein teurer Zweig kostet Zeit, den niemand angefordert hat
+ *   · und `WENNFEHLER` liesse sich ohne faule Auswertung gar nicht bauen
+ *
+ * Die Lehre ist dieselbe wie an einem Dutzend Stellen zuvor: geprüft wurde
+ * der Wert, nicht die Nachbareigenschaft.
+ * =========================================================================*/
+console.log('\n1b · Der nicht genommene Zweig wird nicht gerechnet');
+
+{
+  /* Eine Funktion, die mitzählt, wie oft sie ausgewertet wurde. */
+  let zaehler = 0;
+  Formula.F.zaehlmarke = () => { zaehler++; return 1; };
+
+  const zaehleFuer = (quelltext) => {
+    zaehler = 0;
+    rechne(quelltext);
+    return zaehler;
+  };
+
+  for (const [de, en] of [['WENN', 'if'], ['WENNS', 'ifs']]) {
+    const args = de === 'WENN'
+      ? '(true, 1, zaehlmarke())'
+      : '(true, 1, zaehlmarke())';
+    const eng = zaehleFuer(en + args);
+    const deu = zaehleFuer(de + args);
+    p(de + ' rechnet den toten Zweig so oft wie ' + en + ' (' + eng + '×)',
+      deu === eng, de + ' rechnete ihn ' + deu + '× statt ' + eng + '×');
+  }
+
+  delete Formula.F.zaehlmarke;
+}
+
 console.log('\n2 · Gross- und Kleinschreibung ist egal');
 
 for (const schreibweise of ['SUMME(1, 2, 3)', 'Summe(1, 2, 3)', 'summe(1, 2, 3)']) {

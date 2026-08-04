@@ -200,10 +200,10 @@ einen Fehler. Es kostete eine Viertelstunde, das nachzusehen statt zu ändern.
 
 ---
 
-## Die vier Läufe, die man nicht abschwächen darf
+## Die fünf Läufe, die man nicht abschwächen darf
 
 Ein Prüflauf lässt sich immer grün machen, indem man weniger von ihm
-verlangt. Bei den meisten fällt das auf. Bei diesen vier nicht — sie prüfen
+verlangt. Bei den meisten fällt das auf. Bei diesen fünf nicht — sie prüfen
 Dinge, die im Betrieb erst dann auffallen, wenn es zu spät ist.
 
 ### `test96` und `test100` — die Sicherung
@@ -245,6 +245,22 @@ Deshalb prüft dieser Lauf **an `Store.cache` vorbei** — er öffnet IndexedDB
 selbst und sieht nach, was wirklich geschrieben wurde. Wer das auf
 `Store.getBlock` umstellt, weil es kürzer ist, hat genau die Prüfung
 entfernt, für die der Lauf existiert.
+
+### `test106` — die deutschen Excel-Namen
+
+Er vergleicht jedes Namenspaar auf **dasselbe Ergebnis**, nicht darauf, dass
+ein Name antwortet. Ein Alias, der leicht anders rechnet, ist schlimmer als
+keiner: er sieht richtig aus.
+
+Abschnitt **1b** ist der wichtigere und steht dort, weil der erste Wurf ohne
+ihn durchkam. `evaluate` behandelt dreizehn Namen besonders, bevor es in die
+Funktionstabelle schaut — darunter `if` und `ifs` mit fauler Auswertung. Ein
+Alias, der nur in der Tabelle steht, läuft daran vorbei und rechnet den
+toten Zweig mit. Beide Fassungen gaben dasselbe zurück; nur das Zählen der
+Auswertungen fand es.
+
+Wer diesen Abschnitt entfernt, weil er umständlich aussieht, entfernt die
+einzige Prüfung, die eine Eigenschaft misst statt eines Werts.
 
 ### Und `test87`, Punkt 9
 

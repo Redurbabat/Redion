@@ -485,11 +485,31 @@ werden vor dem Nachschlagen kleingeschrieben. Ein Alias ist eine Zeile.
 
 **Schritt 1 — die 37 Namen · erledigt.**
 
-Die Aliase hängen in `quell/bereiche/datenbanken/formeln/laufzeit.js` als
-**Zeiger** auf dieselben Funktionen (`summe: F.sum`), nicht als Kopien: eine
-zweite Fassung wäre eine zweite Wahrheit, die irgendwann anders rechnet.
-Beschrieben stehen sie in `quell/register/formeln.js`, damit die Suche im
-Formeleditor sie findet — sonst gäbe es sie und niemand entdeckte sie.
+Die Aliase stehen in `quell/bereiche/datenbanken/formeln/laufzeit.js` als
+**Namenstabelle**, die ganz zu Beginn der Auswertung greift. Beschrieben
+stehen sie in `quell/register/formeln.js`, damit die Suche im Formeleditor
+sie findet — sonst gäbe es sie und niemand entdeckte sie.
+
+**Der erste Wurf war falsch, und das gehört hierhin.** Er schrieb
+`F.summe = F.sum` — Zeiger auf dieselben Funktionen, scheinbar sauber.
+`evaluate` behandelt aber dreizehn Namen besonders, **bevor** es in `F`
+schaut, darunter `if` und `ifs` mit ihrer faulen Auswertung. Ein Alias, der
+nur in `F` steht, läuft daran vorbei:
+
+```txt
+if(true, 1, teuer())      rechnete teuer() nicht
+WENN(true, 1, teuer())    rechnete es
+```
+
+Beide gaben `1` zurück — und deshalb fiel es nicht auf: der Prüflauf verglich
+Ergebnisse, und die waren gleich. Ein Zweig mit `prop()` hätte in einer
+Umgebung ohne Verknüpfung geworfen, obwohl er nicht genommen wurde, und
+`WENNFEHLER` liesse sich so gar nicht bauen.
+
+Jetzt wird der deutsche Name **vor** allem anderen auf den englischen
+zurückgeführt. Danach gibt es im ganzen Auswerter nur noch einen Namen je
+Funktion, und jede Sonderbehandlung — die heutigen dreizehn und jede spätere
+— gilt für beide Schreibweisen von selbst.
 
 `MIN`, `MAX` und `ABS` brauchten keinen Alias (gleicher Name in beiden
 Sprachen), haben aber jetzt eine Beschreibung: sie standen unbeschrieben
@@ -502,9 +522,14 @@ als keiner, weil er richtig aussieht. Dazu die Gegenrichtung: alle englischen
 Namen rechnen weiter (ein Alias, der das Original verdrängt, hätte jede
 bestehende Formel in jedem Bestand gebrochen).
 
-Gegengeprüft: `summe` entfernt, und drei Prüfungen wurden rot — darunter
-„Keine Beschreibung ohne Funktion", das Sicherheitsnetz gegen ein Register,
-das etwas verspricht, was beim Tippen bricht.
+Er prüft ausserdem, dass der **nicht genommene Zweig nicht rechnet** — die
+Eigenschaft, die der erste Wurf verletzte und die kein Ergebnisvergleich
+findet.
+
+Gegengeprüft: die Namenstabelle wieder aus der Auswertung genommen, und 39
+von 80 Prüfungen wurden rot. Dass es 39 sind und nicht 3, ist der Beweis,
+dass die Tabelle jetzt der einzige Weg ist — es liegt keine zweite Fassung
+mehr daneben.
 
 **Schritt 2 — die 16 kleinen fehlenden · offen.**
 
