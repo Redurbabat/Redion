@@ -582,17 +582,69 @@ bleibt und nicht zu einer Lücke wird, die jemand aus Versehen füllt.
 
 ---
 
-### X3 — Suche und Verweise
+### ~~X3 — Suche und Verweise~~ · erledigt
 
-**Ziel**
+`ZÄHLENWENN(S)` · `SUMMEWENN(S)` · `MITTELWERTWENN(S)` · `SVERWEIS` ·
+`WVERWEIS` · `XVERWEIS` · `INDEX` · `FILTER` — dazu `VERGLEICH`, das vorher
+falsch zeigte.
 
-Die Funktionen, wegen derer Menschen bei Excel bleiben.
+**Die Bedingungssprache.** Excel schreibt Bedingungen als Text:
+`ZÄHLENWENN(Betrag; ">100")`. Das ist eine eigene kleine Sprache — `>`, `>=`,
+`<`, `<=`, `<>`, `=`, dazu `*` und `?`. Redion versteht sie, obwohl es mit
+`filter(liste, current > 100)` einen mächtigeren eigenen Weg hätte: wer diese
+Funktionen sucht, kommt aus Excel und tippt, was er kennt. Eine Funktion, die
+`ZÄHLENWENN` heisst und etwas anderes verlangt, ist eine Falle mit vertrautem
+Namen.
 
-**Fertig wenn** vorhanden: `ZÄHLENWENN(S)` · `SUMMEWENN(S)` ·
-`MITTELWERTWENN(S)` · `SVERWEIS` · `WVERWEIS` · `XVERWEIS` · `INDEX` ·
-`VERGLEICH` · `FILTER` · `SORTIEREN` · `EINDEUTIG`
+Kein `eval`, kein regulärer Ausdruck aus Nutzertext ohne Maskierung: das
+Muster wird Zeichen für Zeichen gebaut und alles ausser `*` und `?` maskiert.
 
-**Priorität** — hoch.
+**Ungleich lange Listen brechen nichts.** In Excel ist das ein Fehler; hier
+wird gekürzt. Eine Sicherung oder ein Import kann Listen verschiedener Länge
+liefern, und ein Absturz mitten in einer Ansicht ist die schlechtere Antwort.
+
+**Gehalten von** `pruefungen/lauf/test107.mjs` (44 Prüfungen).
+
+---
+
+### Der teuerste Fehler dieser Phase — elf falsche Zuordnungen
+
+Beim Bauen von X3 kam heraus, dass **elf** der siebenunddreissig Zuordnungen
+aus X2 nach Namensähnlichkeit gemacht waren statt nach Bedeutung:
+
+```txt
+                          zeigte auf    tat              Excel
+TEIL("Redion";2;3)        slice         "d"              "edi"
+TEXTKETTE("a";"b")        concat        ["a","b"]        "ab"
+TEXTVERKETTEN("-";"a";"b") join         "-"              "a-b"
+DATUM(2026;8;4)           date          1                2026-08-04
+ERSETZEN("Redion";1;3;"XX") replace     "Redion"         "XXion"
+WECHSELN("a.b.c";".";"-") replaceall    "-----"          "a-b-c"
+TEXT(1234,5;"0.00")       format        "1234.5"         "1234.50"
+VERGLEICH(…)              match         ["Genf"]         die Stelle
+TAG("2026-08-04")         day           2 (Wochentag)    4
+REST(-7;3)                mod           -1               2
+RUNDEN(-2,5)              round         -2               -3
+```
+
+**Warum der Prüflauf sie nicht fand.** Er verglich den deutschen Namen mit
+dem, worauf er zeigt. Zeigt der Name auf die verkehrte Funktion, rechnen
+beide Seiten dasselbe Verkehrte — und der Vergleich ist zufrieden. Ein
+solcher Vergleich findet nur einen *fehlenden* Zweitnamen, nie einen
+*falschen*.
+
+Alle elf haben jetzt eigene Funktionen mit Excel-Bedeutung; die englischen
+Namen behalten ihre bisherige, weil bestehende Formeln daran hängen.
+`test106` Abschnitt 4e prüft gegen **feste erwartete Werte** statt gegen die
+Gegenseite. Die Regel steht in `ENTSCHEIDUNGEN.md` E24, Nachtrag 4.
+
+**Nebenbefund:** `namen()` meldete neun Funktionen nicht, die `evaluate`
+sehr wohl kann (`map`, `filter`, `find`, `some`, `every`, `let`, `lets`,
+`findIndex`, `prop`). Die Vervollständigung im Formeleditor bot sie deshalb
+nie an, und `abgleich()` hätte jede Beschreibung dafür als „Versprechen ohne
+Funktion" gemeldet. Behoben.
+
+**Stand: `test106` 168 Prüfungen, `test107` 44.**
 
 ---
 

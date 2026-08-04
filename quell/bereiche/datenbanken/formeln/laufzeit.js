@@ -819,15 +819,350 @@ const Formula = (() => {
     istext:   (a) => typeof a[0] === 'string'
   });
 
+  /* ==========================================================================
+   * SUCHEN UND VERWEISEN — die Gruppe, wegen der man bei Excel bleibt
+   * --------------------------------------------------------------------------
+   * Gemessen war sie mit 3 von 13 die schwächste und zugleich die wichtigste:
+   * `SVERWEIS` und `SUMMEWENN` sind das, wofür Menschen Excel öffnen.
+   *
+   * ─── DIE BEDINGUNGSSPRACHE ────────────────────────────────────────────────
+   *
+   * Excel schreibt Bedingungen als Text: `ZÄHLENWENN(A1:A9; ">100")`. Das ist
+   * eine eigene kleine Sprache — `>`, `>=`, `<`, `<=`, `<>`, `=`, dazu die
+   * Platzhalter `*` (beliebig viele Zeichen) und `?` (genau eines).
+   *
+   * Redion hätte auch einen eigenen Weg: `filter(liste, current > 100)` gibt
+   * es längst und ist mächtiger. Verstanden wird hier trotzdem die
+   * Excel-Sprache, aus einem Grund: Wer diese Funktionen sucht, kommt aus
+   * Excel und tippt, was er kennt. Eine Funktion, die `ZÄHLENWENN` heisst und
+   * etwas anderes verlangt, ist eine Falle mit vertrautem Namen.
+   *
+   * Wer den Redion-Weg will, hat ihn weiterhin: `filter`, `find`,
+   * `countWhere`.
+   *
+   * KEIN `eval`, KEIN `RegExp` AUS NUTZERTEXT OHNE MASKIERUNG. Das Muster
+   * wird Zeichen für Zeichen aufgebaut und alles ausser `*` und `?` maskiert
+   * — sonst wäre ein `.` oder `(` im Suchtext ein Regex-Sonderzeichen und die
+   * Bedingung träfe still das Falsche.
+   * ======================================================================== */
+
+  /** Aus `">100"` oder `"Z*"` eine Prüffunktion machen. */
+  const bedingung = (roh) => {
+    /* Eine Zahl ohne Anführungszeichen ist ein Gleichheitsvergleich. */
+    if (typeof roh === 'number') return (x) => zahl(x) === roh;
+    if (typeof roh === 'boolean') return (x) => wahr(x) === roh;
+
+    const s = text(roh).trim();
+    const m = s.match(/^(<>|>=|<=|=|>|<)\s*(.*)$/);
+    const op = m ? m[1] : '=';
+    const rest = m ? m[2] : s;
+
+    /* Zahlenvergleich, wenn beide Seiten Zahlen sind. */
+    const alsZahl = rest === '' ? NaN : Number(rest);
+    const istZahl = !isNaN(alsZahl);
+
+    if (op === '>' || op === '>=' || op === '<' || op === '<=') {
+      if (!istZahl) return () => false;   /* „>abc" ergibt in Excel nichts */
+      return (x) => {
+        const n = Number(x);
+        if (isNaN(n)) return false;
+        return op === '>'  ? n >  alsZahl
+             : op === '>=' ? n >= alsZahl
+             : op === '<'  ? n <  alsZahl
+             :               n <= alsZahl;
+      };
+    }
+
+    /* Gleich oder ungleich. Bei Zahlen wird gerechnet, bei Text verglichen —
+       blind für Gross und Klein, mit Platzhaltern, wie in Excel. */
+    const trifft = istZahl
+      ? (x) => x !== null && x !== '' && Number(x) === alsZahl
+      : (() => {
+          if (!/[*?]/.test(rest)) {
+            const klein = rest.toLowerCase();
+            return (x) => text(x).toLowerCase() === klein;
+          }
+          /* Platzhalter in ein Muster übersetzen — alles andere maskiert. */
+          const muster = '^' + rest.split('').map(c =>
+            c === '*' ? '.*' :
+            c === '?' ? '.'  :
+            c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('') + '$';
+          const re = new RegExp(muster, 'i');
+          return (x) => re.test(text(x));
+        })();
+
+    return op === '<>' ? (x) => !trifft(x) : trifft;
+  };
+
+  /** Die Stellen, an denen alle Bedingungspaare zutreffen. */
+  const treffer = (paare, laenge) => {
+    const stellen = [];
+    for (let i = 0; i < laenge; i++) {
+      let alle = true;
+      for (const [liste, pruefe] of paare) {
+        /* Ungleich lange Listen brechen nichts: was fehlt, trifft nicht.
+           In Excel ist das ein Fehler — hier kann eine Sicherung oder ein
+           Import Listen verschiedener Länge liefern, und ein Absturz mitten
+           in einer Ansicht ist die schlechtere Antwort. */
+        if (i >= liste.length || !pruefe(liste[i])) { alle = false; break; }
+      }
+      if (alle) stellen.push(i);
+    }
+    return stellen;
+  };
+
+  const alsListe = (x) => Array.isArray(x) ? x : (x === null || x === undefined ? [] : [x]);
+
+  /** Paare aus (Liste, Bedingung) einsammeln — ab Position `ab`. */
+  const paareAus = (a, ab) => {
+    const paare = [];
+    for (let i = ab; i + 1 < a.length; i += 2)
+      paare.push([alsListe(a[i]), bedingung(a[i + 1])]);
+    return paare;
+  };
+
+  const laengsteListe = (paare) => paare.reduce((n, [l]) => Math.max(n, l.length), 0);
+
+  /* ==========================================================================
+   * GLEICHER NAME IST NICHT GLEICHE BEDEUTUNG
+   * --------------------------------------------------------------------------
+   * Acht der ersten siebenunddreissig Zuordnungen waren nach
+   * **Namensähnlichkeit** gemacht statt nach Bedeutung — und sieben davon
+   * rechneten deshalb etwas anderes als Excel. Sie bekommen hier eigene
+   * Funktionen; die englischen Namen behalten ihre bisherige Bedeutung, weil
+   * jede bestehende Formel in jedem Bestand daran hängt.
+   *
+   *   deutsch          zeigte auf     tut jetzt
+   *   TEIL             slice          ab Zeichen n, m Stück (ab 1 gezählt)
+   *   TEXTKETTE        concat         Text aneinanderhängen (concat ist für Listen)
+   *   TEXTVERKETTEN    join           Trenner zuerst, dann die Teile
+   *   DATUM            date           aus Jahr, Monat, Tag
+   *   ERSETZEN         replace        nach Stelle und Anzahl, nicht per Regex
+   *   WECHSELN         replaceall     Suchtext wörtlich, nicht als Regex
+   *   TEXT             format         mit Muster
+   *   VERGLEICH        match          die Stelle, nicht die Textsuche
+   *
+   * `WECHSELN` ist das lehrreichste davon: `replaceall` nimmt einen regulären
+   * Ausdruck. Bei „a.b.c" mit Suchtext „." trifft der Punkt **jedes** Zeichen
+   * — heraus kam „-----". Für Suchtexte ohne Sonderzeichen wäre das nie
+   * aufgefallen.
+   * ======================================================================== */
+  Object.assign(F, {
+    /* Excel zählt ab 1 und nimmt eine Anzahl; `slice` zählt ab 0 und nimmt
+       eine Endstelle. */
+    mid: (a) => {
+      const s = text(a[0]);
+      const von = Math.max(0, Math.floor(zahl(a[1])) - 1);
+      return a[2] === undefined ? s.slice(von)
+                                : s.slice(von, von + Math.max(0, Math.floor(zahl(a[2]))));
+    },
+    /* Text aneinanderhängen. `concat` bleibt für Listen — so steht es seit
+       jeher im Kopf dieser Datei, und Formeln verlassen sich darauf. */
+    concattext: (a) => a.map(x => text(x)).join(''),
+    /* Excel: TEXTVERKETTEN(Trenner; Leere_ignorieren; Text1; …). Das zweite
+       Argument lassen wir weg — leere Teile werden immer übersprungen, weil
+       alles andere in einer Liste aus Datenbankwerten nur Trenner ohne
+       Inhalt ergäbe. */
+    textjoin: (a) => {
+      const trenner = text(a[0]);
+      const teile = [];
+      for (let i = 1; i < a.length; i++) {
+        for (const x of (Array.isArray(a[i]) ? a[i] : [a[i]])) {
+          const t = text(x);
+          if (t !== '') teile.push(t);
+        }
+      }
+      return teile.join(trenner);
+    },
+    /* Excel: DATUM(Jahr; Monat; Tag). `date` liest dagegen einen Text. */
+    datefromparts: (a) => {
+      const zwei = (n) => String(Math.floor(n)).padStart(2, '0');
+      const j = Math.floor(zahl(a[0]));
+      const d = new Date(Date.UTC(j, Math.floor(zahl(a[1])) - 1, Math.floor(zahl(a[2]))));
+      if (isNaN(d.getTime())) return '';
+      return d.getUTCFullYear() + '-' + zwei(d.getUTCMonth() + 1) + '-' + zwei(d.getUTCDate());
+    },
+    /* Excel: ERSETZEN(Text; Erstes_Zeichen; Anzahl_Zeichen; Neuer_Text). */
+    replaceat: (a) => {
+      const s = text(a[0]);
+      const von = Math.max(0, Math.floor(zahl(a[1])) - 1);
+      const wieViele = Math.max(0, Math.floor(zahl(a[2])));
+      return s.slice(0, von) + text(a[3]) + s.slice(von + wieViele);
+    },
+    /* Excel: WECHSELN(Text; Alt; Neu) — wörtlich, nicht als Regex. */
+    substitute: (a) => {
+      const alt = text(a[1]);
+      return alt === '' ? text(a[0]) : text(a[0]).split(alt).join(text(a[2]));
+    },
+    /* Excel lässt das Vorzeichen dem **Teiler** folgen, JavaScript dem
+       Dividenden: REST(-7;3) ist in Excel 2, `-7 % 3` ist -1. Wer Wochentage
+       oder Zyklen rechnet, bekommt sonst negative Zwischenstände. */
+    excelmod: (a) => {
+      const t = zahl(a[1]);
+      if (t === 0) return 0;
+      return ((zahl(a[0]) % t) + t) % t;
+    },
+    /* Excel rundet die Hälfte **von der Null weg**: RUNDEN(-2,5) ist -3.
+       `Math.round` rundet immer nach oben und macht daraus -2. */
+    excelround: (a) => {
+      const n = zahl(a[0]);
+      const stellen = a[1] === undefined ? 0 : Math.floor(zahl(a[1]));
+      const f = Math.pow(10, stellen);
+      const x = n * f;
+      return (x < 0 ? -Math.round(-x) : Math.round(x)) / f;
+    },
+    /* Excel: VERGLEICH(Suchkriterium; Matrix) — die Stelle, ab 1 gezählt.
+       0 heisst „nicht gefunden"; Excel gäbe dort #NV, und Fehlerwerte gibt es
+       hier nicht (ENTSCHEIDUNGEN.md E24, Nachtrag 3). */
+    matchpos: (a) => {
+      const liste = Array.isArray(a[1]) ? a[1] : [a[1]];
+      const gesucht = bedingung(a[0]);
+      for (let i = 0; i < liste.length; i++) if (gesucht(liste[i])) return i + 1;
+      return 0;
+    },
+    /* Excel: TEXT(Wert; Muster). Excels Formatsprache ist riesig; hier stehen
+       die Muster, die im Alltag vorkommen. Was nicht erkannt wird, bleibt
+       unverändert — lieber der rohe Wert als eine falsche Darstellung. */
+    textformat: (a) => {
+      const muster = text(a[1]);
+      if (!muster) return text(a[0]);
+      const n = zahl(a[0]);
+
+      if (muster.includes('%')) {
+        const nach = (muster.split('.')[1] || '').replace(/[^0#]/g, '').length;
+        return (n * 100).toFixed(nach) + '%';
+      }
+      if (/^[#,0]*\.?0*$/.test(muster)) {
+        const nach = (muster.split('.')[1] || '').length;
+        let s = n.toFixed(nach);
+        if (muster.includes(',')) {
+          /* Schweizer Schreibweise mit dem hohen Komma — dieselbe, die die
+             App sonst überall benutzt. */
+          const [ganz, rest] = s.split('.');
+          s = ganz.replace(/\B(?=(\d{3})+(?!\d))/g, '’') + (rest ? '.' + rest : '');
+        }
+        return s;
+      }
+      return text(a[0]);
+    }
+  });
+
+  Object.assign(F, {
+    countif:  (a) => {
+      const liste = alsListe(a[0]);
+      return treffer([[liste, bedingung(a[1])]], liste.length).length;
+    },
+    countifs: (a) => {
+      const paare = paareAus(a, 0);
+      return treffer(paare, laengsteListe(paare)).length;
+    },
+    /* SUMMEWENN(prüfliste; bedingung; summenliste?) — ohne dritte Liste wird
+       die geprüfte Liste selbst summiert, genau wie in Excel. */
+    sumif: (a) => {
+      const pruef = alsListe(a[0]);
+      const summen = a[2] === undefined ? pruef : alsListe(a[2]);
+      return treffer([[pruef, bedingung(a[1])]], pruef.length)
+        .reduce((n, i) => n + zahl(summen[i]), 0);
+    },
+    /* SUMMEWENNS(summenliste; prüfliste1; bedingung1; …) — die Summenliste
+       steht vorn. Das ist Excels Reihenfolge und dreht sich gegenüber
+       SUMMEWENN um; nachgebaut wird, was Excel tut, nicht was hübscher wäre. */
+    sumifs: (a) => {
+      const summen = alsListe(a[0]);
+      const paare = paareAus(a, 1);
+      return treffer(paare, laengsteListe(paare))
+        .reduce((n, i) => n + zahl(summen[i]), 0);
+    },
+    averageif: (a) => {
+      const pruef = alsListe(a[0]);
+      const werte = a[2] === undefined ? pruef : alsListe(a[2]);
+      const st = treffer([[pruef, bedingung(a[1])]], pruef.length);
+      /* Ohne Treffer 0 statt NaN — eine Ansicht voller „NaN" hilft niemandem. */
+      return st.length ? st.reduce((n, i) => n + zahl(werte[i]), 0) / st.length : 0;
+    },
+    averageifs: (a) => {
+      const werte = alsListe(a[0]);
+      const paare = paareAus(a, 1);
+      const st = treffer(paare, laengsteListe(paare));
+      return st.length ? st.reduce((n, i) => n + zahl(werte[i]), 0) / st.length : 0;
+    },
+
+    /* --- Verweise -------------------------------------------------------- */
+    /* Alle geben bei „nichts gefunden" eine leere Zeichenkette zurück und
+       werfen nicht. Excel gibt dort #NV; Redion hat keine Fehlerwerte
+       (siehe ENTSCHEIDUNGEN.md E24, Nachtrag 3), und eine geworfene Ausnahme
+       nähme die ganze Formel mit, nicht nur diese eine Zelle. */
+    vlookup: (a) => {
+      const zeilen = alsListe(a[1]);
+      const spalte = Math.floor(zahl(a[2])) - 1;
+      const gesucht = bedingung(a[0]);
+      for (const zeile of zeilen) {
+        const z = alsListe(zeile);
+        if (z.length && gesucht(z[0]))
+          return spalte >= 0 && spalte < z.length ? z[spalte] : '';
+      }
+      return '';
+    },
+    hlookup: (a) => {
+      const zeilen = alsListe(a[1]);
+      const zeile  = Math.floor(zahl(a[2])) - 1;
+      const kopf = alsListe(zeilen[0]);
+      const gesucht = bedingung(a[0]);
+      for (let s = 0; s < kopf.length; s++) {
+        if (gesucht(kopf[s])) {
+          const z = alsListe(zeilen[zeile]);
+          return zeile >= 0 && zeile < zeilen.length && s < z.length ? z[s] : '';
+        }
+      }
+      return '';
+    },
+    xlookup: (a) => {
+      const suchliste = alsListe(a[1]);
+      const ergebnis  = alsListe(a[2]);
+      const gesucht = bedingung(a[0]);
+      for (let i = 0; i < suchliste.length; i++)
+        if (gesucht(suchliste[i])) return i < ergebnis.length ? ergebnis[i] : '';
+      return a[3] === undefined ? '' : a[3];
+    },
+    /* INDEX zählt ab 1 — wie in Excel und nicht wie JavaScript. Das ist die
+       häufigste Verwechslung bei dieser Funktion. */
+    index: (a) => {
+      const daten = alsListe(a[0]);
+      const zeile = Math.floor(zahl(a[1])) - 1;
+      if (zeile < 0 || zeile >= daten.length) return '';
+      const z = daten[zeile];
+      if (a[2] === undefined) return z;
+      const spalte = Math.floor(zahl(a[2])) - 1;
+      const zz = alsListe(z);
+      return spalte >= 0 && spalte < zz.length ? zz[spalte] : '';
+    }
+  });
+
   const ALIAS = {
+    /* --- Suchen und Verweisen -------------------------------------------- */
+    'zählenwenn': 'countif',
+    'zählenwenns': 'countifs',
+    summewenn: 'sumif',
+    summewenns: 'sumifs',
+    mittelwertwenn: 'averageif',
+    mittelwertwenns: 'averageifs',
+    sverweis: 'vlookup',
+    wverweis: 'hlookup',
+    xverweis: 'xlookup',
+    /* INDEX heisst in beiden Sprachen gleich und braucht keinen Eintrag.
+       FILTER auch — aber `filter` wird in `evaluate` faul behandelt, und
+       genau deshalb muss der Grossbuchstaben-Name über diese Tabelle laufen
+       und nicht über die Funktionstabelle. Kleingeschrieben ist er ohnehin
+       schon `filter`, also fällt er von selbst richtig. */
+
     /* --- Zahlen ---------------------------------------------------------- */
     /* MIN, MAX und ABS heissen in beiden Sprachen gleich und brauchen keinen
        Eintrag. Sie stehen in `register/formeln.js` trotzdem beschrieben. */
     summe: 'sum',
     mittelwert: 'mean',
     wurzel: 'sqrt',
-    rest: 'mod',
-    runden: 'round',
+    rest: 'excelmod',
+    runden: 'excelround',
     abrunden: 'rounddown',
     aufrunden: 'roundup',
     produkt: 'product',
@@ -848,10 +1183,10 @@ const Formula = (() => {
     wochentag: 'weekday',
     heute: 'today',
     jetzt: 'now',
-    datum: 'date',
+    datum: 'datefromparts',
     jahr: 'year',
     monat: 'month',
-    tag: 'day',
+    tag: 'date',
     kalenderwoche: 'week',
 
     /* --- Text ------------------------------------------------------------ */
@@ -861,16 +1196,16 @@ const Formula = (() => {
     suchen: 'search',
     finden: 'findtext',
     'länge': 'length',
-    teil: 'slice',
+    teil: 'mid',
     'glätten': 'trim',
     gross: 'upper',
     klein: 'lower',
-    wechseln: 'replaceall',
-    ersetzen: 'replace',
-    text: 'format',
+    wechseln: 'substitute',
+    ersetzen: 'replaceat',
+    text: 'textformat',
     wert: 'tonumber',
-    textkette: 'concat',
-    textverketten: 'join',
+    textkette: 'concattext',
+    textverketten: 'textjoin',
 
     /* --- Information ----------------------------------------------------- */
     istleer: 'empty',
@@ -878,7 +1213,7 @@ const Formula = (() => {
     isttext: 'istext',
 
     /* --- Suchen und Verweisen -------------------------------------------- */
-    vergleich: 'match',
+    vergleich: 'matchpos',
     sortieren: 'sort',
     eindeutig: 'unique'
   };
@@ -1218,6 +1553,13 @@ const Formula = (() => {
       Funktion ohne Beschreibung findet niemand, eine Beschreibung ohne
       Funktion ist ein Versprechen, das beim Tippen bricht. */
   const namen = () => [...Object.keys(F), ...Object.keys(ALIAS), ...Object.keys(EIGENE),
+    /* Diese dreizehn stehen nicht in `F`: `evaluate` behandelt sie selbst,
+       weil sie ihre Argumente faul auswerten oder auf die Zeile zugreifen.
+       Sie fehlten hier trotzdem — die Maschine konnte sie, sagte es aber
+       nicht. Damit meldete `Register.formeln.abgleich()` jede Beschreibung
+       für sie als „Versprechen ohne Funktion", und die Vervollständigung im
+       Formeleditor bot sie nie an. */
+    'if','ifs','let','lets','map','filter','find','findindex','some','every','prop',
     'rownumber','runningcount','previous','next','runningsum','runningmax','runningmin',
     'rank','percentoftotal','total','average','rowcount','delta',
     'countwhere','sumwhere','findrows','firstwhere','lastwhere','maxwhere','minwhere',

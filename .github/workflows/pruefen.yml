@@ -80,6 +80,8 @@ jobs:
       # Rechnet SUMME dasselbe wie sum? Braucht keinen Browser.
       - name: Die deutschen Excel-Namen prüfen
         run: node pruefungen/lauf/test106.mjs
+      - name: Suchen und Verweisen prüfen
+        run: node pruefungen/lauf/test107.mjs
       # 92 und 93 starten zwar einen HTTP-Server, aber keinen Browser — sie
       # sind in einer halben Sekunde durch. Sicherheitsbefunde sollen nicht
       # zwölf Minuten auf ihre Meldung warten.

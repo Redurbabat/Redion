@@ -184,14 +184,25 @@ Gehalten von `pruefungen/lauf/test106.mjs`: 80 Prüfungen auf **gleiches
 Ergebnis** — und, seit diesem Fund, auf **gleiche Auswertung**: der nicht
 genommene Zweig darf nicht rechnen. Das findet kein Ergebnisvergleich.
 
-### X2 · Die 10 fehlenden Suche/Verweis-Funktionen
+### ~~X2 · Die 10 fehlenden Suche/Verweis-Funktionen~~ · erledigt
 
-`SVERWEIS` · `XVERWEIS` · `INDEX` · `FILTER` · `ZÄHLENWENN(S)` ·
-`SUMMEWENN(S)` · `MITTELWERTWENN(S)`
+`SVERWEIS` · `WVERWEIS` · `XVERWEIS` · `INDEX` · `FILTER` · `ZÄHLENWENN(S)` ·
+`SUMMEWENN(S)` · `MITTELWERTWENN(S)` — samt Excels Bedingungssprache
+(`">100"`, `"Z*"`, `"<>x"`), gebaut ohne `eval` und ohne ungeprüften regulären
+Ausdruck aus Nutzertext.
 
-Die schwächste Gruppe und zugleich die wichtigste. Auf Listen arbeiten sie
-auch ohne Zellraster — Redion hat `filter`, `find`, `map` bereits, sie
-brauchen nur die Excel-Fassade.
+Gehalten von `pruefungen/lauf/test107.mjs` (44 Prüfungen).
+
+**Dabei kam der teuerste Fehler dieser Arbeit heraus:** elf der
+siebenunddreissig Zuordnungen aus X1 waren nach Namensähnlichkeit gemacht
+statt nach Bedeutung — `WECHSELN("a.b.c";".";"-")` ergab `-----`, weil
+`replaceall` einen regulären Ausdruck nimmt und der Punkt jedes Zeichen
+trifft. Der Prüflauf fand es nicht, weil er den deutschen Namen mit dem
+verglich, worauf er zeigt: bei einer falschen Zuordnung rechnen beide Seiten
+dasselbe Verkehrte.
+
+Die Regel daraus steht in `ENTSCHEIDUNGEN.md` E24, Nachtrag 4: ein Zweitname
+wird gegen **feste erwartete Werte** geprüft, nicht gegen die Gegenseite.
 
 ### ~~X3 · Die 16 übrigen Einzelfunktionen~~ · 14 erledigt, 2 bewusst nicht
 

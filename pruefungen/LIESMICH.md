@@ -167,13 +167,15 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 103 | die Grenzen des ZIP-Packers — ohne Browser |
 | 104 | die verschlüsselte Sicherung |
 | 105 | das erzeugte JavaScript passt zu seinem TypeScript |
-| 106 | die deutschen Excel-Namen rechnen dasselbe wie die englischen |
+| 106 | die deutschen Excel-Namen rechnen, was Excel rechnet |
+| 107 | Suchen und Verweisen: SVERWEIS, SUMMEWENN, INDEX, FILTER |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt
 trotzdem auf.
 
-**Acht Läufe starten keinen Browser** — 87, 88, 89, 92, 93, 103, 105 und 106.
+**Neun Läufe starten keinen Browser** — 87, 88, 89, 92, 93, 103, 105, 106
+und 107.
 (92 und 93 starten einen HTTP-Server, aber keinen Browser.) Zusammen sind sie in
 einer Fünftelsekunde fertig und stehen deshalb in der CI als eigener,
 vorgezogener Auftrag. Sie sind verschieden gebaut:
@@ -248,9 +250,20 @@ entfernt, für die der Lauf existiert.
 
 ### `test106` — die deutschen Excel-Namen
 
-Er vergleicht jedes Namenspaar auf **dasselbe Ergebnis**, nicht darauf, dass
-ein Name antwortet. Ein Alias, der leicht anders rechnet, ist schlimmer als
-keiner: er sieht richtig aus.
+Er hat zwei Abschnitte, die verschiedene Fehler finden, und beide werden
+gebraucht:
+
+**Abschnitt 1** vergleicht den deutschen Namen mit dem, worauf er zeigt. Das
+findet einen **fehlenden** Zweitnamen — und niemals einen **falschen**: zeigt
+der Name auf die verkehrte Funktion, rechnen beide Seiten dasselbe Verkehrte.
+Genau so kamen elf falsche Zuordnungen durch.
+
+**Abschnitt 4e** prüft gegen **feste erwartete Werte**, die aus Excel
+nachgeschlagen sind — `TEIL("Redion";2;3)` ist `"edi"`, und das steht so
+dort. Nur das findet eine falsche Zuordnung.
+
+Wer 4e kürzt, weil die Werte fest verdrahtet aussehen, entfernt die einzige
+Prüfung, die Bedeutung misst statt Übereinstimmung.
 
 Abschnitt **1b** ist der wichtigere und steht dort, weil der erste Wurf ohne
 ihn durchkam. `evaluate` behandelt dreizehn Namen besonders, bevor es in die

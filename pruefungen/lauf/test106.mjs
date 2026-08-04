@@ -56,28 +56,45 @@ const Formula = globalThis.Formula;
 const Register = globalThis.Register;
 
 /* ---------------------------------------------------------------------------
- * Die Paare: deutscher Name → englischer Name
+ * Die Paare: deutscher Name → interner Name
+ * ---------------------------------------------------------------------------
+ * Achtung, und das ist die Lehre dieses Laufs: Abschnitt 1 vergleicht den
+ * deutschen Namen mit dem, worauf er **zeigt**. Er kann deshalb nur einen
+ * **fehlenden** Zweitnamen finden, niemals einen **falschen** — zeigt der
+ * Name auf die verkehrte Funktion, rechnen beide Seiten dasselbe Verkehrte
+ * und der Vergleich ist zufrieden.
+ *
+ * Genau so kamen elf falsche Zuordnungen durch. Gefunden hat sie erst
+ * Abschnitt 4e, der gegen **feste erwartete Werte** prüft statt gegen die
+ * Gegenseite.
+ *
+ * Beide Abschnitte zusammen: 1 findet, was fehlt · 4e findet, was falsch ist.
  * -------------------------------------------------------------------------*/
 const PAARE = [
   /* Mathematik */
   ['SUMME', 'sum'], ['MITTELWERT', 'mean'], ['MIN', 'min'], ['MAX', 'max'],
-  ['ABS', 'abs'], ['WURZEL', 'sqrt'], ['REST', 'mod'], ['RUNDEN', 'round'],
-  ['ABRUNDEN', 'floor'], ['AUFRUNDEN', 'ceil'],
+  ['ABS', 'abs'], ['WURZEL', 'sqrt'], ['REST', 'excelmod'],
+  ['RUNDEN', 'excelround'], ['ABRUNDEN', 'rounddown'], ['AUFRUNDEN', 'roundup'],
+  ['GANZZAHL', 'int'], ['PRODUKT', 'product'], ['ANZAHL', 'count'],
+  ['ANZAHL2', 'counta'], ['POTENZ', 'power'],
   /* Logik */
   ['WENN', 'if'], ['WENNS', 'ifs'], ['UND', 'and'], ['ODER', 'or'],
   ['NICHT', 'not'],
   /* Datum */
-  ['HEUTE', 'today'], ['JETZT', 'now'], ['DATUM', 'date'], ['JAHR', 'year'],
-  ['MONAT', 'month'], ['TAG', 'day'], ['KALENDERWOCHE', 'week'],
+  ['HEUTE', 'today'], ['JETZT', 'now'], ['DATUM', 'datefromparts'],
+  ['JAHR', 'year'], ['MONAT', 'month'], ['TAG', 'date'],
+  ['KALENDERWOCHE', 'week'], ['ZEIT', 'time'], ['WOCHENTAG', 'weekday'],
   /* Text */
-  ['LÄNGE', 'length'], ['TEIL', 'slice'], ['GLÄTTEN', 'trim'],
-  ['GROSS', 'upper'], ['KLEIN', 'lower'], ['WECHSELN', 'replaceall'],
-  ['ERSETZEN', 'replace'], ['TEXT', 'format'], ['WERT', 'tonumber'],
-  ['TEXTKETTE', 'concat'], ['TEXTVERKETTEN', 'join'],
+  ['LÄNGE', 'length'], ['TEIL', 'mid'], ['GLÄTTEN', 'trim'],
+  ['GROSS', 'upper'], ['KLEIN', 'lower'], ['WECHSELN', 'substitute'],
+  ['ERSETZEN', 'replaceat'], ['TEXT', 'textformat'], ['WERT', 'tonumber'],
+  ['TEXTKETTE', 'concattext'], ['TEXTVERKETTEN', 'textjoin'],
+  ['LINKS', 'left'], ['RECHTS', 'right'], ['SÄUBERN', 'clean'],
+  ['SUCHEN', 'search'], ['FINDEN', 'findtext'],
   /* Info */
-  ['ISTLEER', 'empty'],
+  ['ISTLEER', 'empty'], ['ISTZAHL', 'isnumber'], ['ISTTEXT', 'istext'],
   /* Suche */
-  ['VERGLEICH', 'match'], ['SORTIEREN', 'sort'], ['EINDEUTIG', 'unique']
+  ['VERGLEICH', 'matchpos'], ['SORTIEREN', 'sort'], ['EINDEUTIG', 'unique']
 ];
 
 /* Ein Aufruf je Paar, mit Argumenten, die für beide Seiten passen. Wo eine
@@ -85,19 +102,25 @@ const PAARE = [
    aufgerufen ergibt zwei verschiedene Werte, und das ist richtig so. */
 const AUFRUF = {
   sum: '(1, 2, 3)', mean: '(2, 4, 6)', min: '(3, 1, 2)', max: '(3, 1, 2)',
-  abs: '(0 - 7)', sqrt: '(16)', mod: '(7, 3)', round: '(2.6)',
-  floor: '(2.6)', ceil: '(2.1)',
+  abs: '(0 - 7)', sqrt: '(16)', excelmod: '(7, 3)', excelround: '(2.6)',
+  rounddown: '(2.6)', roundup: '(2.1)', int: '(2.9)',
+  product: '(2, 3, 4)', count: '(1, "x", 3)', counta: '(1, "x", "")',
+  power: '(2, 10)',
   if: '(true, "ja", "nein")', ifs: '(false, "a", true, "b")',
   and: '(true, true)', or: '(false, true)', not: '(false)',
-  date: '("2026-08-04")', year: '("2026-08-04")', month: '("2026-08-04")',
-  day: '("2026-08-04")', week: '("2026-08-04")',
-  length: '("Hallo")', slice: '("Redion", 0, 3)', trim: '("  x  ")',
-  upper: '("abc")', lower: '("ABC")', replaceall: '("aaa", "a", "b")',
-  replace: '("aaa", "a", "b")', format: '(42)', tonumber: '("42")',
-  concat: '("a", "b")', join: '(["a", "b"], "-")',
-  empty: '("")',
-  match: '(["a","b","c"], "b")', sort: '([3, 1, 2])', unique: '([1, 1, 2])'
+  datefromparts: '(2026, 8, 4)', year: '("2026-08-04")', month: '("2026-08-04")',
+  date: '("2026-08-04")', week: '("2026-08-04")',
+  time: '(9, 30, 0)', weekday: '("2026-08-04")',
+  length: '("Hallo")', mid: '("Redion", 2, 3)', trim: '("  x  ")',
+  upper: '("abc")', lower: '("ABC")', substitute: '("a.b.c", ".", "-")',
+  replaceat: '("Redion", 1, 3, "XX")', textformat: '(1234.5, "0.00")',
+  tonumber: '("42")', concattext: '("a", "b")', textjoin: '("-", "a", "b")',
+  left: '("Redion", 3)', right: '("Redion", 3)', clean: '("abc")',
+  search: '("di", "Redion")', findtext: '("di", "Redion")',
+  empty: '("")', isnumber: '(42)', istext: '("x")',
+  matchpos: '("b", ["a","b","c"])', sort: '([3, 1, 2])', unique: '([1, 1, 2])'
 };
+
 /* Diese lesen die Uhr — nur die Form vergleichen, nicht den Wert. */
 const ZEITABHAENGIG = new Set(['today', 'now']);
 
@@ -346,6 +369,113 @@ for (const name of ['WENNFEHLER', 'ISTFEHLER']) {
   const e = rechne(name + '(1, 2)');
   p(name + ' gibt es (noch) nicht', !e.ok,
     'es antwortet — dann muss Abschnitt 4d neu geschrieben werden');
+}
+
+/* ===========================================================================
+ * 4e · GLEICHER NAME IST NICHT GLEICHE BEDEUTUNG
+ * ---------------------------------------------------------------------------
+ * Der grösste Fehler dieser Arbeit, und er stand schon in der Doku als Regel:
+ * **nachsehen statt raten.** Acht der siebenunddreissig Zuordnungen waren
+ * nach Namensähnlichkeit gemacht, nicht nach Bedeutung — und sieben davon
+ * rechneten deshalb etwas anderes als Excel:
+ *
+ *   TEIL("Redion";2;3)          "d"          statt "edi"
+ *   TEXTKETTE("a";"b")          ["a","b"]    statt "ab"
+ *   TEXTVERKETTEN("-";"a";"b")  "-"          statt "a-b"
+ *   DATUM(2026;8;4)             1            statt 2026-08-04
+ *   ERSETZEN("Redion";1;3;"XX") "Redion"     statt "XXion"
+ *   WECHSELN("a.b.c";".";"-")   "-----"      statt "a-b-c"
+ *   VERGLEICH(…)                ["Genf"]     statt der Position
+ *
+ * `WECHSELN` ist das lehrreichste Beispiel: Redions `replaceall` nimmt einen
+ * regulären Ausdruck, Excels WECHSELN einen wörtlichen Text. Bei „a.b.c" mit
+ * Suchtext „." trifft der Punkt als Regex **jedes** Zeichen — heraus kommt
+ * „-----". Für Suchtexte ohne Sonderzeichen wäre es nie aufgefallen.
+ *
+ * Diese Prüfungen halten die Excel-Bedeutung fest, nicht nur die Existenz
+ * eines Namens.
+ * =========================================================================*/
+console.log('\n4e · Die Excel-Bedeutung, nicht nur der Excel-Name');
+
+const BEDEUTUNG = [
+  ['TEIL zählt ab 1 und nimmt eine Anzahl',
+   'TEIL("Redion", 2, 3)', 'edi'],
+  ['TEIL ohne Anzahl nimmt den Rest',
+   'TEIL("Redion", 4)', 'ion'],
+  ['TEXTKETTE hängt Text aneinander',
+   'TEXTKETTE("a", "b", "c")', 'abc'],
+  ['TEXTVERKETTEN nimmt den Trenner zuerst',
+   'TEXTVERKETTEN("-", "a", "b")', 'a-b'],
+  ['TEXTVERKETTEN nimmt auch eine Liste',
+   'TEXTVERKETTEN("-", ["a", "b"])', 'a-b'],
+  ['DATUM baut aus Jahr, Monat, Tag',
+   'JAHR(DATUM(2026, 8, 4))', 2026],
+  ['DATUM trifft den Monat',
+   'MONAT(DATUM(2026, 8, 4))', 8],
+  ['DATUM trifft den Tag',
+   'TAG(DATUM(2026, 8, 4))', 4],
+  ['ERSETZEN ersetzt nach Stelle und Anzahl',
+   'ERSETZEN("Redion", 1, 3, "XX")', 'XXion'],
+  ['ERSETZEN mitten im Wort',
+   'ERSETZEN("Redion", 4, 3, "")', 'Red'],
+  ['WECHSELN nimmt den Suchtext wörtlich',
+   'WECHSELN("a.b.c", ".", "-")', 'a-b-c'],
+  ['WECHSELN ersetzt jedes Vorkommen',
+   'WECHSELN("aaa", "a", "b")', 'bbb'],
+  ['VERGLEICH gibt die Stelle, ab 1 gezählt',
+   'VERGLEICH("Genf", ["Bern", "Zürich", "Genf"])', 3],
+  ['VERGLEICH ohne Treffer gibt 0',
+   'VERGLEICH("Basel", ["Bern", "Zürich"])', 0],
+  /* TAG ist der Tag im Monat. Redions `day` ist der Wochentag — das ist
+     Notions Bedeutung und bleibt so; der Tag im Monat heisst dort `date`. */
+  ['TAG ist der Tag im Monat, nicht der Wochentag',
+   'TAG("2026-08-04")', 4],
+  /* Excel lässt das Vorzeichen dem Teiler folgen, JavaScript dem Dividenden. */
+  ['REST folgt dem Vorzeichen des Teilers',
+   'REST(0 - 7, 3)', 2],
+  ['REST bleibt bei positiven Zahlen gleich',
+   'REST(7, 3)', 1],
+  /* Excel rundet die Hälfte von der Null weg, JavaScript immer nach oben. */
+  ['RUNDEN rundet die Hälfte von der Null weg',
+   'RUNDEN(0 - 2.5)', -3],
+  ['RUNDEN bleibt bei positiven Zahlen gleich',
+   'RUNDEN(2.5)', 3]
+];
+for (const [n, quelle, soll] of BEDEUTUNG) {
+  const e = rechne(quelle);
+  p(n + ' → ' + JSON.stringify(soll),
+    e.ok && JSON.stringify(e.wert) === JSON.stringify(soll), JSON.stringify(e));
+}
+
+/* TEXT bekommt ein Muster — Excels grosse Formatsprache in dem Umfang, den
+   Redion ehrlich kann. Was darüber hinausgeht, bleibt unverändert stehen,
+   statt etwas Falsches zu zeigen. */
+for (const [quelle, soll] of [
+  ['TEXT(1234.5, "0.00")',   '1234.50'],
+  ['TEXT(1234.5, "0")',      '1235'],
+  ['TEXT(0.25, "0%")',       '25%'],
+  ['TEXT(1234567, "#,##0")', "1’234’567"],
+  ['TEXT(42, "")',           '42']
+]) {
+  const e = rechne(quelle);
+  p('TEXT: ' + quelle + ' → ' + JSON.stringify(soll),
+    e.ok && e.wert === soll, JSON.stringify(e));
+}
+
+/* Die Gegenrichtung, und sie ist hier besonders wichtig: die englischen
+   Namen behalten ihre bisherige Bedeutung. `replace` bleibt regulärer
+   Ausdruck, `concat` bleibt für Listen, `match` bleibt Textsuche. Jede
+   bestehende Formel in jedem Bestand hängt daran. */
+for (const [quelle, soll] of [
+  ['replaceall("a.b.c", ".", "-")', '-----'],
+  ['concat("a", "b")',              ['a', 'b']],
+  ['match("Genf", "Ge")',           ['Ge']],
+  ['slice("Redion", 2, 3)',         'd'],
+  ['join(["a", "b"], "-")',         'a-b']
+]) {
+  const e = rechne(quelle);
+  p('Unverändert: ' + quelle,
+    e.ok && JSON.stringify(e.wert) === JSON.stringify(soll), JSON.stringify(e));
 }
 
 console.log('\n5 · Das Register verspricht nichts, was die Maschine nicht kann');

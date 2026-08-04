@@ -1080,6 +1080,48 @@ Festgehalten wird der heutige Zustand von `pruefungen/lauf/test106.mjs`,
 Abschnitt 4d — damit er eine Entscheidung bleibt und nicht zu einer Lücke
 wird, die jemand aus Versehen füllt.
 
+**Nachtrag 4 — gleicher Name ist nicht gleiche Bedeutung.**
+
+Der teuerste Fehler dieser Arbeit, und er verstösst gegen eine Regel, die
+seit E21 dasteht: **nachsehen statt raten.**
+
+Elf der ersten siebenunddreissig Zuordnungen waren nach **Namensähnlichkeit**
+gemacht. Sie rechneten deshalb etwas anderes als Excel:
+
+```txt
+                          zeigte auf     tat                    Excel
+TEIL("Redion";2;3)        slice          "d"                    "edi"
+TEXTKETTE("a";"b")        concat         ["a","b"]              "ab"
+TEXTVERKETTEN("-";"a";"b") join          "-"                    "a-b"
+DATUM(2026;8;4)           date           1                      2026-08-04
+ERSETZEN("Redion";1;3;"XX") replace      "Redion"               "XXion"
+WECHSELN("a.b.c";".";"-") replaceall     "-----"                "a-b-c"
+TEXT(1234,5;"0.00")       format         "1234.5"               "1234.50"
+VERGLEICH(…)              match          ["Genf"]               die Stelle
+TAG("2026-08-04")         day            2 (Wochentag)          4
+REST(-7;3)                mod            -1                     2
+RUNDEN(-2,5)              round          -2                     -3
+```
+
+`WECHSELN` ist das lehrreichste: `replaceall` nimmt einen **regulären
+Ausdruck**. Bei „a.b.c" mit Suchtext „." trifft der Punkt jedes Zeichen —
+heraus kam „-----". Für Suchtexte ohne Sonderzeichen wäre es nie aufgefallen.
+
+**Warum der Prüflauf es nicht fand.** Er verglich den deutschen Namen mit
+dem, worauf er zeigt. Zeigt der Name auf die verkehrte Funktion, rechnen
+**beide Seiten dasselbe Verkehrte**, und der Vergleich ist zufrieden. Ein
+solcher Vergleich kann nur einen *fehlenden* Zweitnamen finden, niemals einen
+*falschen*.
+
+**Die Regel daraus:** Ein Zweitname wird gegen **feste erwartete Werte**
+geprüft, nicht gegen die Gegenseite. Was ein Name in der fremden Anwendung
+bedeutet, wird nachgeschlagen und als Zahl in den Prüflauf geschrieben —
+`TEIL("Redion";2;3)` ist `"edi"`, und das steht so dort.
+
+Die englischen Namen behalten alle ihre bisherige Bedeutung: `replace` bleibt
+regulärer Ausdruck, `concat` bleibt für Listen, `day` bleibt der Wochentag.
+Jede bestehende Formel in jedem Bestand hängt daran.
+
 **Folgen**
 
 Der Tabellenkern ist ein **Bereich** wie jeder andere und hält sich an E8:

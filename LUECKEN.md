@@ -567,8 +567,8 @@ Materiallisten · Projektkosten · Finanzplanung · Lernfortschritt · Inventar.
 
 ## L32 · Excel-Funktionen
 
-**Stand** — ◐ **51 der 63 Funktionen des Startpakets laufen unter deutschem
-Namen; 12 fehlen, 2 davon mit Absicht.**
+**Stand** — ✅ **61 der 63 Funktionen des Startpakets laufen unter deutschem
+Namen. Die zwei fehlenden fehlen mit Absicht.**
 
 Seit dem 4. August 2026 rechnet `SUMME(1; 2; 3)` — als Zeiger auf dieselbe
 Funktion wie `sum`, nicht als zweite Fassung. Beschrieben im Register, damit
@@ -616,12 +616,15 @@ Dabei kam ein Fehler heraus: `ABRUNDEN` und `AUFRUNDEN` zeigten auf
 negativen Zahlen ein Unterschied von eins. Behoben; `GANZZAHL` ist jetzt der
 Name für „immer nach unten".
 
-**Was fehlt**
+**Auch die Suche/Verweis-Gruppe ist da** — `ZÄHLENWENN(S)`, `SUMMEWENN(S)`,
+`MITTELWERTWENN(S)`, `SVERWEIS`, `WVERWEIS`, `XVERWEIS`, `INDEX`, `FILTER`,
+samt Excels Bedingungssprache (`">100"`, `"Z*"`, `"<>x"`). Gehalten von
+`test107.mjs` (44 Prüfungen).
 
-```txt
-Suche/Verweis  ZÄHLENWENN(S) SUMMEWENN(S) MITTELWERTWENN(S)
-               SVERWEIS WVERWEIS XVERWEIS INDEX FILTER
-```
+**Elf Zuordnungen waren falsch und sind berichtigt.** Sie waren nach
+Namensähnlichkeit gemacht statt nach Bedeutung — `WECHSELN("a.b.c";".";"-")`
+ergab `-----`, weil `replaceall` einen regulären Ausdruck nimmt und der Punkt
+jedes Zeichen trifft. Siehe `ENTSCHEIDUNGEN.md` E24, Nachtrag 4.
 
 **Mit Absicht nicht gebaut** — `WENNFEHLER` und `ISTFEHLER`. Redions Laufzeit
 ist abwehrend gebaut und erzeugt keine Fehlerwerte (`1/0` ist `0`). Excels
@@ -645,8 +648,7 @@ Entscheidung mit Migrationsgedanken.
 **Wichtig** — dieselbe sichere Formelsprache, kein zweiter Auswerter, kein
 `eval()`. Siehe `ENTSCHEIDUNGEN.md` E11 und E24.
 
-**Status** — ◐ 51 von 63. Offen sind die zehn aus Suche/Verweis — die
-wichtigste Gruppe, weil sie in Excel die eigentliche Arbeit trägt.
+**Status** — ✅ 61 von 63. Offen bleibt allein die Fehlerwert-Frage.
 
 ---
 
