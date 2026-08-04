@@ -569,12 +569,32 @@ Bilder für abgeglichen hält.
 
 ---
 
-## Phase 10 · Mobile und iPhone
+## Phase 10 · Mobile und iPhone · ◐ **begonnen**
 
-Fokus: iPhone 13 Pro Max, Safari.
+Fokus: iPhone 13 Pro Max (428 px), Safari.
 
-Touch-Editor · mobile Datenbankansicht · mobile Spreadsheet-Ansicht ·
-Dateiimport und -export mobil · PWA · Tastatur · Offline-Hinweise.
+**Gemessen statt geschätzt** — bei 428 px, mit `bilder.mts` und einer
+Messung im Browser. Was dabei herauskam:
+
+| | Befund |
+|---|---|
+| ✓ | Die letzte Zeile jeder Seite ist erreichbar — `#scroll` hat 86 px Platz, die Leiste ist 57 px hoch. Das hatte ich zuerst für kaputt gehalten und **am falschen Element gemessen**. |
+| ✓ | Die Knöpfe der unteren Leiste sind 83 × 48 px. |
+| ✓ | Die Tabelle und das Raster rollen waagerecht, statt zu quetschen; `env(safe-area-inset-bottom)` ist in Gebrauch; die ganze App rollt **nicht** seitlich. |
+| ✗→✓ | Die Zeilen im aufgeklappten Menü waren 33 px hoch. Jetzt 48 — das ist die Liste, mit der man durch die ganze App navigiert. |
+| ✗→✓ | Die Symbolknöpfe der Kopfleiste waren 28 px hoch. Jetzt 44. |
+
+**Und ein Fehler, den ich dabei selbst gemacht habe:** Der erste Versuch gab
+den Kopfleisten-Knöpfen auch `min-width: 44px`. Acht Knöpfe zu 44 px sind
+352 von 390 Pixeln — der **Seitentitel war weg**. Die Skill sagt beides
+(„56 px hoch, mit kurzem Seitentitel" und „keine sieben Buttons im Header"),
+und eine Kopfleiste ohne Titel ist schlimmer als eine mit schmaleren
+Knöpfen: man weiss dann nicht mehr, wo man ist. In einer waagerechten Leiste
+ist die Höhe die wichtigere Hälfte.
+
+**Noch offen** — die Blocksteuerung im Editor (`⋯` und `+`) ist mit 22 × 21
+px zu klein für einen Finger · zwei Symbolknöpfe in der Seitenleiste ·
+Kopfleiste 44 statt 56 px · mobiler Dateiimport · Offline-Hinweise.
 
 **Priorität** — mittel.
 

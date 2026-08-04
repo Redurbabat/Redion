@@ -133,6 +133,17 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
     }
   },
 
+  app: {
+    titel: 'Die App selbst',
+    bauen: () => {
+      /* Nichts nachbauen — die echte Schale zeigen, so wie sie startet.
+         Alles andere in dieser Datei stellt einen Block frei; hier geht es
+         genau um das Drumherum. */
+      const alt = document.getElementById('bildkasten');
+      if (alt) alt.remove();
+    }
+  },
+
   raster: {
     titel: 'Datenbank als Raster',
     bauen: () => {

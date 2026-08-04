@@ -687,6 +687,68 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #ai.open{bottom:0}
 }
 
+/* ==========================================================================
+ * TELEFON: WAS EIN FINGER TRIFFT
+ * --------------------------------------------------------------------------
+ * Gemessen bei 428 px, dem Zielgerät aus `redion-mobile-ux`. Was dabei
+ * herauskam und was NICHT:
+ *
+ *   ✓ Die letzte Zeile jeder Seite ist erreichbar — `#scroll` hat 86 px
+ *     Platz unter sich, die Leiste ist 57 px hoch. Das hatte ich zuerst für
+ *     kaputt gehalten und am falschen Element gemessen.
+ *   ✓ Die Knöpfe der unteren Leiste sind 83 × 48 px.
+ *   ✗ Die Kopfleiste war 44 px hoch statt 56.
+ *   ✗ Ihre Symbolknöpfe waren 28 × 28 px. Ein Finger braucht 44.
+ *   ✗ Die Zeilen im aufgeklappten Menü waren 33 px hoch. Die Skill sagt
+ *     mindestens 48 — und das ist die Liste, mit der man durch die ganze
+ *     App navigiert.
+ *
+ * DAS SYMBOL BLEIBT KLEIN, DIE FLÄCHE WIRD GROSS. `redion-mobile-ux` sagt
+ * es genau so: „Ein Icon darf visuell 18px bleiben — die Trefferfläche
+ * darum herum nicht." Alles andere sähe auf einmal nach Kinderoberfläche
+ * aus.
+ * ======================================================================== */
+@media(max-width:760px){
+  #topbar{ min-height:56px; }
+
+  /* IN DER KOPFLEISTE WÄCHST NUR DIE HÖHE. Der erste Versuch gab auch
+     `min-width:44px` — und damit war der Seitentitel weg: acht Knöpfe zu
+     44 px sind 352 px von 390. `redion-mobile-ux` sagt beides, und das
+     eine schlägt hier das andere:
+
+         „56px hoch, Inhalt: Menü/Zurück, kurzer Seitentitel, Suche, Mehr."
+         „Keine sieben Buttons im Header."
+
+     Eine Kopfleiste ohne Titel ist schlimmer als eine mit etwas schmaleren
+     Knöpfen: man weiss dann nicht mehr, wo man ist. 44 px Höhe trifft der
+     Daumen ohnehin — die Breite ist in einer waagerechten Leiste die
+     weniger wichtige Hälfte. */
+  #topbar{ align-items:stretch; }
+  #topbar .icon-btn,
+  #topbar .top-btn{ min-height:44px; }
+
+  /* AUSSERHALB der Kopfleiste wächst beides. Zwei Symbolknöpfe sassen in
+     der Seitenleiste und blieben bei 28 × 28 — gefunden hat das die
+     Messung, nicht das Hinsehen: sie sind klein und unauffällig, und genau
+     deshalb trifft man sie nicht. Dort ist Platz. */
+  .seitenleiste .icon-btn, aside .icon-btn, #side .icon-btn{
+    min-width:44px; min-height:44px;
+    flex-basis:auto;
+    display:grid; place-items:center;
+  }
+
+  /* Die Zeilen der Seitenleiste sind auf dem Telefon das Hauptmenü. */
+  .sr, .side-item{
+    min-height:48px;
+    padding:10px 12px;
+    font-size:15px;
+  }
+  .sr span, .side-item span{ font-size:17px; }
+
+  /* Und der Arbeitsbereich-Knopf ganz oben darin. */
+  .ws-btn{ min-height:48px; }
+}
+
 /* Karten im Blatt — iOS-Art wie in Notions App */
 .blatt-karte{background:var(--bg-card, var(--bg-hover)); border-radius:12px;
   margin:8px 4px; overflow:hidden}
