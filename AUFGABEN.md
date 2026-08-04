@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**4. August 2026 · 78 Prüfläufe grün**
+**4. August 2026 · 79 Prüfläufe grün**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -174,21 +174,37 @@ index.ts     eine Tür für alles davon
 IndexedDB. Ein Feldname, der nicht dem gespeicherten Feld entspricht, wäre
 keine Übersetzung, sondern eine falsche Behauptung.
 
-### 5a — `spreadsheet.ts` und `formula.ts`
+### ~~5a — `spreadsheet.ts`, `formula.ts` und `excel.ts`~~ · erledigt
 
-**Ziel** — die Typen für den Tabellenkern, bevor er gebaut wird.
+Drei Dateien, zehn Typen mehr im Sammelpunkt `index.ts`.
 
-**Fertig wenn** vorhanden: `Workbook` · `Sheet` · `Cell` · `Range` ·
-`FormulaResult`
+**Erst gemessen, dann getippt** — und das Messen war die Arbeit. `formula.ts`
+beschreibt, was `laufzeit.js` wirklich zurückgibt: sechs Werttypen, zwei
+Ergebnisformen, und bei `ok: false` immer `wert: ''`. Beim Messen kamen
+**drei Fehler** heraus, die niemand vermutet hatte — das Semikolon als
+Trennzeichen gab es nicht, `2e6` ergab 2, und `check('')` widersprach
+`run('')`. Alle drei behoben.
 
-**Wichtig** — erst messen, was der bestehende Formelauswerter wirklich
-zurückgibt, dann tippen. `FormulaResult` muss die abwehrende Laufzeit
-abbilden (`1/0 → 0`), nicht Excels Fehlerwerte, solange die Entscheidung
-darüber offen ist.
+**Die Fehlerwert-Entscheidung steckt in den Typen, nicht in einem Satz.**
+`FormulaValue` enthält **keinen** `FormulaErrorCode`, `CellValue` schon. Damit
+kann der Spreadsheet-Block später `#DIV/0!` zeigen, ohne dass eine einzige
+bestehende Datenbankspalte ihr Ergebnis ändert. Stünden die Fehlerwerte in
+`FormulaValue`, müsste jeder Aufrufer damit rechnen — und genau das hat
+niemand beschlossen.
 
-**Tests** — `npm run typecheck`
+**`spreadsheet.ts` ist die einzige Datei im Ordner, die eine Absicht
+beschreibt statt eines Zustands.** Ihr Kopf sagt das ausdrücklich: solange
+der Block nicht gebaut ist, darf sie ohne Messung geändert werden — danach
+nicht mehr.
 
-**Priorität** — hoch, vor Phase 7.
+**Und ein Befund im Vorbeigehen:** `register/formeln.js` bringt 82
+beschriebene Einträge mit, `laufzeit.js` meldet danach **180 weitere ohne
+Satz** an. 262 Einträge, 180 davon stumm. `was` ist deshalb im Typ
+freiwillig — nicht aus Bequemlichkeit, sondern weil es die Wirklichkeit ist.
+
+**Neu: `test108`** hält die Typen gegen die laufende Maschine. `tsc` prüft
+sie nur gegen sich selbst; ein Typ, der etwas Schöneres behauptet, ist dort
+grün. Genau so sind die vier erfundenen Feldnamen entstanden.
 
 ---
 
@@ -283,6 +299,57 @@ alles wegwirft, wäre sonst in allem grün.
 ---
 
 ## Phase 6 ist damit abgeschlossen.
+
+---
+
+## Phase 6e · Die Sprachregel · **erledigt**
+
+`ENTSCHEIDUNGEN.md` **E28**: die zehn Sprachen dieses Projekts, und der eine
+Satz, auf den es ankommt — **es entsteht kein neues JavaScript.**
+
+**Warum das vorher nicht ging und jetzt geht.** Neuer Code für den Browser
+musste als `.js` entstehen, weil die App ohne Bauschritt startet — und für
+Node schien es keinen Grund zu geben, TypeScript zu nehmen. Nachgemessen:
+**Node führt TypeScript seit 22.18 direkt aus.** Es entfernt die Typen und
+startet. Damit gibt es zwei Wege, und beide kommen ohne Bauschritt aus:
+
+| Wohin | Wie |
+|---|---|
+| Browser | `src/…/x.ts` → `npm run bauen:ts` → `quell/…/x.js` |
+| Node | `x.mts`, direkt mit `node x.mts` |
+
+**Durchgesetzt, nicht erklärt.** `pruefungen/js-bestand.json` führt jede von
+Hand geschriebene `.js`; das Verzeichnis darf nur schrumpfen. Eine neue
+`.js` macht `test109.mts` sofort rot — gegengeprobt, in beide Richtungen.
+
+`test109.mts` ist zugleich die erste TypeScript-Datei unter `pruefungen/`
+und damit der Beweis, dass der zweite Weg trägt.
+
+**Drei Dinge, die dabei nötig waren:**
+
+- Node-Untergrenze auf **22.18** — in `package.json` und in beiden CI-Jobs.
+  Ein Lauf, der auf Node 20 an einem Syntaxfehler scheitert, zeigt in die
+  falsche Richtung.
+- `pruefungen/**/*.mts` in `tsconfig.json`. Node *entfernt* die Typen, es
+  prüft sie nicht — ohne diesen Eintrag wären sie Zierde statt Zusage.
+- `@types/node` als einzige neue Abhängigkeit. Reine Typinformation: läuft
+  nie, landet nie im Browser, steht unter `devDependencies`.
+
+**Stand beim Beschluss:** 218 Dateien JavaScript, 18 TypeScript.
+
+```txt
+quell (Produktcode)   89
+pruefungen/lauf       79
+pruefungen (sonst)    32
+server                12
+Wurzel                 4
+functions              1
+oeffentlich            1
+```
+
+**Was das für die nächsten Phasen heisst:** die Zahl 218 ist ab jetzt die
+Fortschrittsanzeige. Jede migrierte Datei ist eine Zeile weniger in
+`js-bestand.json`.
 
 **Warum** — sie sind klein, DOM-frei und einzeln testbar. Jede migrierte
 Datei nimmt einen Eintrag aus der `any`-Liste in `src/global.d.ts`.

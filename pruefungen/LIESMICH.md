@@ -315,7 +315,24 @@ hier, weil in ihnen Wissen steckt, das man beim Nachbauen brauchen kann —
 
 ## Einen neuen Lauf schreiben
 
-Als Vorlage `test85.mjs` nehmen. Der Rahmen ist immer derselbe:
+**Neue Läufe entstehen als `.mts`** — TypeScript, das Node direkt ausführt
+(`ENTSCHEIDUNGEN.md` E28). Kein Übersetzer, kein Paket:
+
+```
+node pruefungen/lauf/test109.mts
+```
+
+`.mts` und nicht `.ts`, aus demselben Grund, aus dem die bestehenden Läufe
+`.mjs` heissen: die `package.json` in der Wurzel setzt kein `type`, dort gilt
+CommonJS, und eine `import`-Zeile scheitert.
+
+Zwei Dinge, die Node dabei **nicht** tut: es prüft die Typen nicht (das
+bleibt `npm run typecheck`), und es kann keine Typen ausführen, die zur
+Laufzeit etwas erzeugen — kein `enum`, kein `namespace`, keine
+Parameter-Felder im Konstruktor. `test109` hält beides fest.
+
+Als Vorlage für einen Browserlauf `test85.mjs` nehmen, für einen reinen
+Node-Lauf `test109.mts`. Der Rahmen ist immer derselbe:
 
 ```js
 const { chromium } = require('playwright');

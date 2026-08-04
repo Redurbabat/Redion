@@ -46,7 +46,12 @@ const nummer = (name) => {
 };
 
 const sammeln = (ordner) => fs.existsSync(ordner)
-  ? fs.readdirSync(ordner).filter(f => /\.(js|mjs)$/.test(f)).sort((a, b) => nummer(a) - nummer(b))
+  /* `.ts` gehoert dazu: Node fuehrt TypeScript seit 22.18 direkt aus, und
+     neue Prueflaeufe entstehen deshalb als .mts (ENTSCHEIDUNGEN.md E28).
+     `.mts` und nicht `.ts`, weil die Wurzel-package.json kein `type` setzt:
+     dort gilt CommonJS, und eine import-Zeile scheitert.
+     Ohne diese Zeile lagen sie da und liefen nie — die stille Sorte. */
+  ? fs.readdirSync(ordner).filter(f => /\.(js|mjs|mts)$/.test(f)).sort((a, b) => nummer(a) - nummer(b))
   : [];
 
 let dateien = sammeln(LAUF).map(f => ({ ordner: LAUF, datei: f }));

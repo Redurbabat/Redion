@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**4. August 2026 · 78 Prüfläufe grün**
+**4. August 2026 · 79 Prüfläufe grün**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · lokale KI · Versionen · Papierkorb · `.json`- und
@@ -181,9 +181,15 @@ Ursache nichts zu tun hatte („Wissen is not defined").
 sie zur Frage passt. Eine Antwort in der falschen Form ist schlimmer als
 keine: sie sieht wie Erfolg aus.
 
-## L9 · 129 Formelfunktionen ohne Beschreibung
+## L9 · 180 Formelfunktionen ohne Beschreibung
 
-**Stand** — ◐ 158 Funktionen, **129 ohne Beschreibung**.
+**Stand** — ◐ 262 Einträge im Register, **180 ohne Beschreibung**.
+
+Nachgemessen beim Schreiben von `formula.ts`: `register/formeln.js` bringt
+82 beschriebene Einträge mit, `laufzeit.js` meldet danach 180 weitere an —
+damit die Suche im Formeleditor sie überhaupt findet. Die 180 haben keinen
+Satz. Die frühere Zahl 129 stammte aus einer Zählung vor den deutschen
+Excel-Namen.
 
 Eine Funktion, die niemand findet, ist fast wie nicht vorhanden. Die
 Gegenprobe existiert: `Register.formeln.abgleich()` nennt sie beim Namen.

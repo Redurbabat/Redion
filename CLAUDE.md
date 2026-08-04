@@ -2312,3 +2312,79 @@ Datenverlust. Im Zweifel nachsehen, nicht übersetzen.
 52.19 Wichtigster TypeScript-Satz
 
 Redion soll vollständig TypeScript werden, aber niemals auf Kosten von Datenverlust, kaputtem Backup oder zerstörter Offline-Nutzung.
+
+
+---
+
+54. Die Sprachen dieses Projekts
+
+Beschlossen in ENTSCHEIDUNGEN.md E28. Der ganze Abschnitt in einem Satz:
+
+    Es entsteht kein neues JavaScript.
+
+54.1 Was benutzt wird
+
+TypeScript   neuer Hauptcode, Typen, Kernlogik, neue Module
+JavaScript   nur der bestehende Redion-Code — migrieren, nicht vermehren
+HTML         Startdatei, App-Grundseite, Einzeldatei
+CSS          Aussehen, Aufbau, Hell/Dunkel, Telefon
+SQL          Cloudflare D1: Konten, Abgleich, Rechte, Dateiangaben
+Markdown     README, CLAUDE.md, Doku, Aufgaben, Entscheidungen
+Shell/Bash   Startskripte, lokale Befehle
+YAML         GitHub Actions
+JSON         Konfiguration, Sicherungen, .redion, Manifest
+TOML         Wrangler
+
+Eine weitere Sprache kommt nur dazu, wenn sie vorher in E28 steht. Ein
+Python-Hilfsskript ist genau der Anfang, an dem eine Werkzeugkette entsteht.
+
+54.2 Wo eine neue Datei hingehört
+
+Code, den der BROWSER lädt:
+
+    src/…/name.ts        wird bearbeitet
+    npm run bauen:ts     erzeugt quell/…/name.js
+    index.html + sw.js   laden das erzeugte .js
+
+Das erzeugte .js wird mitversioniert. Es ist Ausgabe, kein Quelltext — und
+es ist der Grund, warum die App weiterhin per Doppelklick startet.
+
+Code, den NODE ausführt — Prüfläufe, bauen, Server:
+
+    pruefungen/lauf/testNN.ts     und direkt starten:
+    node pruefungen/lauf/testNN.ts
+
+Kein Übersetzer, kein Paket, kein Schritt zum Vergessen. Node entfernt die
+Typen seit 22.18 von selbst.
+
+54.3 Der Preis: löschbare Typen
+
+Node ENTFERNT die Typen, es übersetzt nicht. Was zur Laufzeit etwas erzeugt,
+geht deshalb nicht:
+
+    enum          -> stattdessen ein Objekt mit as const
+    namespace     -> stattdessen eine Datei
+    constructor(private x)  -> stattdessen ein gewöhnliches Feld
+
+Eine einzige solche Zeile nimmt Node die Fähigkeit, die Datei auszuführen,
+und der Fehler kommt dann aus einer ganz anderen Ecke. test109 hält das fest.
+
+Und: Node PRÜFT dabei nicht. Das Prüfen bleibt npm run typecheck.
+
+54.4 Wie die Regel durchgesetzt wird
+
+pruefungen/js-bestand.json führt jede von Hand geschriebene .js/.mjs, die es
+heute gibt. Das Verzeichnis darf nur schrumpfen.
+
+    eine Datei migriert   -> aus dem Verzeichnis streichen
+    eine neue .js angelegt -> test109 wird rot
+
+Erzeugtes JavaScript zählt nicht mit; test105 hält es an seiner .ts.
+
+54.5 Was das nicht heisst
+
+Nicht: den Bestand in einem Zug übersetzen. Die Reihenfolge steht in
+doku/TYPESCRIPT-MIGRATION.md und beginnt dort, wo ein Fehler nichts kostet.
+
+Nicht: einen Bauschritt für die App einführen. Das bleibt verboten (§6). Die
+zwei Wege oben kommen ohne aus, und genau deshalb sind es diese zwei.

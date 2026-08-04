@@ -44,6 +44,15 @@
     "noUnusedParameters": true
   },
 
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "quell", "server", "pruefungen", "bauen.js"]
+  "//include2": [
+    "`pruefungen/**/*.mts` steht hier, weil ein Prueflauf in TypeScript sonst",
+    "Typen traegt, die niemand prueft — Zierde statt Zusage. Node fuehrt die",
+    "Datei aus, indem es die Typen ENTFERNT; geprueft wird nur hier.",
+    "",
+    "Die .js- und .mjs-Laeufe bleiben aussen vor: `allowJs` steht nicht, sie",
+    "werden also gar nicht erst angesehen. Sie sind Bestand, kein neuer Code",
+    "(ENTSCHEIDUNGEN.md E28)."
+  ],
+  "include": ["src/**/*.ts", "pruefungen/**/*.mts"],
+  "exclude": ["node_modules", "quell", "server", "bauen.js"]
 }

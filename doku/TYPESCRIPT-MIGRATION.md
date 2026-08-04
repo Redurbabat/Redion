@@ -177,6 +177,25 @@ Die Nummern sind die aus `CLAUDE.md` §52.16. Der Stand hier ist der wahre.
 | **TS-9** | Server: Cloudflare, D1, R2, Sitzungen, Abgleich, Rechte | offen |
 | **TS-10** | Die alten `.js`-Dateien entfernen | offen |
 
+### Zwei Wege, und beide ohne Bauschritt
+
+`ENTSCHEIDUNGEN.md` E28 hat die Regel geschärft: **es entsteht kein neues
+JavaScript.** Möglich ist das, weil es zwei Wege gibt statt einem.
+
+| Wohin der Code läuft | Wie er dorthin kommt |
+|---|---|
+| in den **Browser** | `src/…/x.ts` → `npm run bauen:ts` → `quell/…/x.js` |
+| in **Node** (Prüfläufe, Server, Bauen) | `x.mts`, direkt mit `node x.mts` |
+
+Der zweite Weg ist neu und kostet nichts: Node entfernt die Typen seit 22.18
+von selbst. Der Preis sind **löschbare** Typen — kein `enum`, kein
+`namespace`, keine Parameter-Felder. `pruefungen/lauf/test109.mts` ist der
+erste Lauf dieser Art und prüft die Regel gleich mit.
+
+**Der Fortschritt hat jetzt eine Anzeige.** `pruefungen/js-bestand.json`
+führt jede von Hand geschriebene `.js`; das Verzeichnis darf nur schrumpfen.
+Beim Beschluss: 218 Dateien JavaScript, 18 TypeScript.
+
 ### Warum diese Reihenfolge
 
 Sie läuft von aussen nach innen: erst das, was nichts kaputt machen kann

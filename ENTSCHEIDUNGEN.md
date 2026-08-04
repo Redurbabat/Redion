@@ -1259,3 +1259,113 @@ korrigiert.
 
 Entschieden und umgesetzt für `src/`. `quell/` bleibt deutsch, bis eine
 Datei ohnehin migriert wird.
+
+---
+
+## E28 · Die Sprachen, die dieses Projekt benutzt
+
+**Problem**
+
+„Wir schreiben TypeScript" war eine Absicht, keine Regel. Nichts hinderte
+jemanden daran, die nächste Datei wieder als `.js` anzulegen — und weil das
+in einer App ohne Bauschritt sogar bequemer ist, wäre genau das passiert.
+Eine Migration, in die hinten neuer Code nachläuft, kommt nie an.
+
+**Entscheidung**
+
+Diese Sprachen, und keine anderen:
+
+```txt
+TypeScript   neuer Hauptcode, Typen, Kernlogik, neue Module
+JavaScript   nur der bestehende Redion-Code — er wird migriert, nicht vermehrt
+HTML         Startdatei, App-Grundseite, Einzeldatei
+CSS          Aussehen, Aufbau, Hell/Dunkel, Telefon
+SQL          Cloudflare D1: Konten, Abgleich, Rechte, Angaben zu Dateien
+Markdown     README, CLAUDE.md, Doku, Aufgaben, Entscheidungen
+Shell/Bash   Startskripte, lokale Befehle
+YAML         GitHub Actions
+JSON         Konfiguration, Sicherungen, .redion, Manifest
+TOML         Wrangler
+```
+
+**Die eine Zeile, auf die es ankommt: es entsteht kein neues JavaScript.**
+
+**Wie das geht, ohne einen Bauschritt einzuführen**
+
+Es gibt zwei Wege, und beide waren schon da — sie mussten nur benannt werden.
+
+**1 · Code für den Browser** liegt als `.ts` unter `src/` und wird von
+`npm run bauen:ts` nach `quell/` ausgegeben. Das erzeugte `.js` ist kein
+geschriebenes JavaScript, sondern Ausgabe; es wird mitversioniert, damit die
+App weiterhin per Doppelklick auf `index.html` startet. Das ist der Weg seit
+`ids.ts`.
+
+**2 · Code für Node** — Prüfläufe, `bauen.js`, der Server — liegt als `.ts`
+und läuft **direkt**. Node führt TypeScript seit 22.18 ohne Schalter aus: es
+entfernt die Typen und startet. Kein Übersetzer, kein Paket, kein Schritt,
+den jemand vergessen kann.
+
+Nachgemessen mit Node 22.22: `node datei.ts` läuft, auch ohne
+`--experimental-strip-types`.
+
+Der Preis dafür steht in der Node-Doku und ist klein: die Typen müssen
+**löschbar** sein. Kein `enum`, kein `namespace`, keine Parameter-Felder im
+Konstruktor. Alles drei ist ohnehin verzichtbar — `enum` durch ein
+`as const`-Objekt, `namespace` durch eine Datei.
+
+Und: Node **prüft** dabei nicht, es entfernt nur. Das Prüfen bleibt
+`npm run typecheck`, und das ist richtig so — ein Prüflauf soll Verhalten
+prüfen und nicht nebenbei übersetzen.
+
+**Die Untergrenze**
+
+Node **22.18**. Vorher gibt es das nicht, und ein Prüflauf, der auf einem
+älteren Node stumm scheitert, wäre die schlechteste aller Fassungen.
+`package.json` und die GitHub-Actions sagen das jetzt.
+
+**Wie es durchgesetzt wird**
+
+Eine Regel, die niemand prüft, ist eine Absichtserklärung.
+`pruefungen/lauf/test109.ts` führt ein **Verzeichnis des bestehenden
+JavaScripts** — jede von Hand geschriebene `.js`/`.mjs`, die es heute gibt.
+
+```txt
+Das Verzeichnis darf nur schrumpfen.
+Eine Datei, die nicht darin steht, ist neu — und damit ein Fehler.
+```
+
+Wer eine Datei migriert, streicht sie aus dem Verzeichnis; die Zeile im Diff
+ist der Fortschritt. Wer eine neue `.js` anlegt, wird rot, und zwar sofort.
+
+Ausgenommen ist nur, was von `npm run bauen:ts` erzeugt wird — das ist
+Ausgabe, kein Quelltext, und `test105` hält es ohnehin an seiner `.ts`.
+
+**Stand beim Beschluss** — gemessen, nicht geschätzt:
+
+```txt
+ 89  quell/            Produktcode  (dazu 7 erzeugte, die nicht zählen)
+  9  server/
+ 79  pruefungen/lauf/  Prüfläufe
+  4  Wurzel            bauen.js, bruecke.js, worker.js, sw.js
+  1  functions/
+───
+182 Dateien, die noch JavaScript sind
+ 18 Dateien, die schon TypeScript sind
+```
+
+**Nicht tun**
+
+- Eine neue `.js` anlegen, wo eine `.ts` möglich ist — also überall.
+- Den bestehenden Code in einem Zug übersetzen. Die Reihenfolge steht in
+  `doku/TYPESCRIPT-MIGRATION.md` und beginnt bewusst dort, wo ein Fehler
+  nichts kostet.
+- `enum` oder `namespace` benutzen. Sie sind nicht löschbar und nehmen Node
+  die Fähigkeit, die Datei direkt auszuführen.
+- Eine weitere Sprache dazunehmen, ohne dass sie hier steht. Python für ein
+  Hilfsskript ist genau der Anfang, an dem eine Werkzeugkette entsteht.
+
+**Status**
+
+Beschlossen. Durchgesetzt für alles Neue ab sofort; das Verzeichnis in
+`test109.ts` hält den Bestand fest und ist zugleich die Fortschrittsanzeige
+der Migration.

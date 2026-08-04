@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # --ignore-scripts holt die Pakete, aber keine Browser. Chromium wiegt
       # ein Vielfaches von allem anderen und wird in diesem Job nicht
@@ -106,7 +106,7 @@ jobs:
       - name: Node einrichten
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # Kein `npm ci` — es gibt zwar eine package-lock.json, aber nur eine
       # einzige devDependency. `npm install` ist hier ehrlicher: es zeigt
