@@ -191,6 +191,11 @@ const Datenbank = (() => {
         ['table','list','gallery',undefined,''].includes(view.layout)) {
       koerper.appendChild(alsGruppiert(coll, view, rows, block));
     }
+    /* Das Raster kommt VOR der Gruppierung nicht in Frage und danach zuerst:
+       es ist die einzige Ansicht, die von der Gruppierung nichts wissen will
+       — ein Raster mit Zwischenüberschriften wäre keines mehr. */
+    else if (view.layout === 'raster' && typeof DbRaster !== 'undefined')
+                                         koerper.appendChild(DbRaster.zeichne(coll, view, rows));
     else if (view.layout === 'board')     koerper.appendChild(alsBoard(coll, view, rows));
     else if (view.layout === 'list')     koerper.appendChild(alsListe(coll, view, rows));
     else if (view.layout === 'gallery')  koerper.appendChild(alsGalerie(coll, view, rows));

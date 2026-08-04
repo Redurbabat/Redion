@@ -15,6 +15,10 @@ Register.ansichten = (() => {
 
   const EINGEBAUT = [
     ['table',    '▦', 'Tabelle'],
+    /* Dieselben Daten mit der Bedienung eines Tabellenprogramms: Pfeiltasten,
+       Bereichsauswahl, Einfügen von dreissig Zeilen aus Excel auf einmal.
+       Notions grösste Lücke bei der Eingabe — siehe bereiche/datenbanken/raster.ts */
+    ['raster',   '🧮', 'Raster'],
     ['board',    '▤', 'Board'],
     ['timeline', '▬', 'Zeitleiste'],
     ['calendar', '📅', 'Kalender'],

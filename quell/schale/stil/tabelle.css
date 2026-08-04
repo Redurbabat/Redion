@@ -271,6 +271,27 @@
   z-index: 5;
 }
 
+/* --- Das Datenbankraster ---------------------------------------------------
+   Dieselbe Bedienung wie der Tabellenblock, deshalb dieselben Klassen. Zwei
+   Unterschiede, und beide haben einen Grund.
+
+   ES IST HÖHER. Eine Datenbank hat zwanzig Zeilen oder zweitausend; 420 px
+   wie beim Tabellenblock wären dort ein Guckloch.
+
+   GERECHNETE SPALTEN SIND ERKENNBAR. Formel, Rollup, „erstellt am" — die
+   lassen sich hier nicht tippen. Ausblenden wäre schlechter: dann fehlte
+   genau die Spalte, wegen der man hinsieht. Also sichtbar und leise
+   abgesetzt, mit dem Zeiger als zweitem Hinweis. */
+.tbl-db .tbl-feld { max-height: 62vh; }
+
+.tbl-db .tbl-sp.gerechnet { font-style: italic; }
+.tbl-db .tbl-z.gerechnet {
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--bg-card) 55%, transparent);
+  cursor: default;
+}
+.tbl-db .tbl-z.gerechnet.gewaehlt { color: var(--text); }
+
 /* --- Die Blattreiter ------------------------------------------------------
    Unten, wie in jedem Tabellenprogramm — dort sucht man sie, und am Telefon
    sind sie in Daumenreichweite. Bei einem einzigen Blatt sind sie weg: ein

@@ -125,3 +125,14 @@ declare const Dialog: any;
  * und nicht auf `window`; deshalb der `typeof`-Wächter an der Aufrufstelle.
  */
 declare const UI: any;
+
+/**
+ * Die Datenbanklogik aus `quell/bereiche/datenbanken/dienst.js`.
+ *
+ * `Datenbank.wert(row, key, coll)` liest den Wert einer Zelle — mit allem,
+ * was dazugehört: Titel aus `row.text`, gerechnete Spalten, Verknüpfungen,
+ * laufende Nummern. Die Rasteransicht liest darüber und nicht direkt aus
+ * `row.props`; sonst zeigte sie bei jeder zweiten Spaltenart etwas anderes
+ * als die gewöhnliche Tabellenansicht daneben.
+ */
+declare const Datenbank: any;

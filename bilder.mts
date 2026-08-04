@@ -133,6 +133,58 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
     }
   },
 
+  raster: {
+    titel: 'Datenbank als Raster',
+    bauen: () => {
+      const w = window as any;
+      const seite = Object.values(Store.cache.blocks).find((b: any) => b.type === 'page' && b.alive) as any;
+      /* Eine echte Datenbank anlegen und fuellen. */
+      Store.addDatabase(seite.id, 'Kunden', {
+        title:  { name: 'Kunde',      type: 'title'  },
+        umsatz: { name: 'Umsatz',     type: 'number' },
+        ort:    { name: 'Ort',        type: 'text'   },
+        status: { name: 'Status',     type: 'select', options: [
+          { name: 'Aktiv', color: 'green' }, { name: 'Ruht', color: 'gray' }] },
+        seit:   { name: 'Kunde seit', type: 'created' }
+      }, 'raster');
+      const coll = Object.values(Store.cache.collections).slice(-1)[0] as any;
+      const view = Object.values(Store.cache.views)
+        .find((v: any) => v.collectionId === coll.id) as any;
+      const titel = 'title', zahlKey = 'umsatz', ortKey = 'ort';
+
+      [['Meier AG', 14500, 'Zürich'], ['Bäckerei Süd', 3200, 'Bern'],
+       ['Huber & Co', 8750.5, 'Basel'], ['Studio Nord', 1290, 'Luzern'],
+       ['Werkstatt Kern', 22400, 'St. Gallen'], ['Café Lindenhof', 640, 'Zug']]
+        .forEach(([n, u, o]: any) => {
+          const r = Store.addRow(coll.id, {});
+          Store.updateBlock(r.id, { text: n });
+          Store.setProp(r.id, zahlKey, u);
+          Store.setProp(r.id, ortKey, o);
+          Store.setProp(r.id, 'status', u > 5000 ? 'Aktiv' : 'Ruht');
+        });
+
+      view.layout = 'raster';
+      view.breiten = { [titel]: 190, [zahlKey]: 130, [ortKey]: 130 };
+      const rows = Store.rowsOf(coll.id);
+
+      const k = document.createElement('div');
+      k.id = 'bildkasten';
+      k.style.cssText = 'position:fixed; inset:0; z-index:600; background:var(--bg); padding:24px 20px; overflow:auto';
+      k.innerHTML = '<div id="bildinhalt" style="max-width:900px;margin:0 auto">' +
+        '<h1 style="font:700 30px var(--font);color:var(--text);margin:0 0 4px">Kunden</h1>' +
+        '<p style="font:13px var(--font);color:var(--text-dim);margin:0 0 14px">' +
+        'Raster — Pfeiltasten, Bereiche, Einfügen aus Excel</p></div>';
+      document.body.appendChild(k);
+      document.getElementById('bildinhalt')!.appendChild(w.DbRaster.zeichne(coll, view, rows));
+      setTimeout(() => {
+        const z = k.querySelector('[data-z="1"][data-s="1"]');
+        if (z) z.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        const z2 = k.querySelector('[data-z="3"][data-s="1"]');
+        if (z2) z2.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, shiftKey: true }));
+      }, 200);
+    }
+  },
+
   fehler: {
     titel: 'Fehlerwerte, die sagen was los ist',
     bauen: () => {

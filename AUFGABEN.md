@@ -463,12 +463,31 @@ Siehe `ENTSCHEIDUNGEN.md` E24, Regel 3.
 
 **Priorität** — hoch, nach Phase 5a.
 
-### 7b — Spreadsheet-Ansicht für Datenbanken
+### ~~7b — Spreadsheet-Ansicht für Datenbanken~~ · **erledigt**
 
-Tabellenansicht mit Copy/Paste und Masseneingabe — das Excel-Gefühl auf
-vorhandenen Daten.
+Als eigene Ansichtsart `raster` (🧮 „Raster") neben Tabelle, Board und den
+übrigen. Dieselben Daten, die Bedienung eines Tabellenprogramms:
 
-**Priorität** — mittel, nach 7a.
+Pfeiltasten · Umschalt+Pfeil für Bereiche · Tab und Enter · Tippen fängt
+sofort an · Entf leert einen ganzen Bereich · Strg+A · Spaltenbreiten zum
+Ziehen · Summe und Anzahl in der Fusszeile.
+
+**Und das Eigentliche:** Kopieren und Einfügen als Tabulatortext, also mit
+Excel in **beide** Richtungen — und **Einfügen legt fehlende Zeilen an.** Wer
+dreissig Zeilen einfügt und zehn hat, verlöre sonst zwanzig, und zwar
+lautlos. Genau hier verliert Notion die Leute, die wirklich Daten haben.
+
+**Zwei Vorsichtsmassnahmen:**
+
+- Einfügen ist eine Massenänderung. Vorher wird nachgezählt gesagt, wie viele
+  Zeilen dazukommen, wie viele gefüllte Zellen überschrieben werden und wie
+  viele Werte wegfallen, weil die Spalte gerechnet wird.
+- Gerechnete Spalten (Formel, Rollup, „erstellt am") sind gesperrt und dabei
+  **sichtbar**. Ausblenden wäre schlechter: dann fehlte genau die Spalte,
+  wegen der man hinsieht.
+
+**Wo es steht** — `src/bereiche/datenbanken/raster.ts`.
+**Was es hält** — `test112` (29 Punkte, darunter der Neustart und 390 px).
 
 ---
 
