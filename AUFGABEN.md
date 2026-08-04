@@ -165,31 +165,79 @@ gebraucht und wiegt ein Vielfaches von allem anderen.
 
 ## Phase 3 · Backup und `.redion`
 
-### C1 — `.redion`-Format dokumentieren
+### ~~C1 — `.redion`-Format dokumentieren~~ · erledigt
+
+`doku/REDION-FORMAT.md`. Beschreibt: warum zwei Formate · Aufbau des Archivs ·
+`daten.json` · `dateien.json` · die Namensregel bei gleichnamigen Anhängen ·
+die zwei Einspielarten und warum es keine Vorgabe gibt · die drei ZIP-Grenzen ·
+ZIP64 beim Lesen · wie man ein `.redion` ohne Redion öffnet · was noch fehlt.
+
+Beim Schreiben ist aufgefallen, dass es ein **zweites** Sicherungsformat gibt
+— siehe C4.
+
+---
+
+### ~~C3 — ZIP64-Entscheidung vorbereiten~~ · erledigt
+
+Die drei Grenzen stehen jetzt in `doku/REDION-FORMAT.md`, ZIP64 bleibt als
+Lücke markiert (`LUECKEN.md` L4), und es wird weiterhin kein kaputtes Archiv
+geschrieben.
+
+**Dabei kam eine vierte Grenze heraus, die es gar nicht geben sollte.** Zwei
+Grenzen (4 GB je Datei, 4 GB je Archiv) hatten seit jeher eine Prüfung mit
+einer verständlichen Meldung. Die dritte — **65 535 Einträge, ein 16-Bit-Feld**
+— hatte keine und scheiterte still: 65 536 Einträge wurden im Schlusssatz zu
+`0`, 70 000 zu `4 464`. Das Archiv liess sich öffnen, sah gesund aus und zeigte
+einen Bruchteil.
+
+Auf der Leseseite war es schlimmer. Ein fremdes ZIP64-Archiv liess
+`zipLesenAusBlob` **null Dateien und keinen Fehler** melden — wer eine
+Sicherung mit 70 000 Anhängen einspielte, sah „0 Anhänge" und hatte keinen
+Grund zu zweifeln.
+
+Beides behoben, gehalten von `pruefungen/lauf/test103.mjs` (14 Prüfungen).
+Erkannt wird ZIP64 am Wegweiser `0x07064b50`, nicht an den Platzhaltern —
+sonst würde ein gültiges Archiv mit genau 65 535 Einträgen fälschlich
+abgelehnt.
+
+---
+
+### C4 — Die verschlüsselte Sicherung auf denselben Stand bringen
 
 **Ziel**
 
-Das Format bekommt eine eigene Dokumentation.
+Eine verschlüsselte Sicherung enthält dasselbe wie eine `.redion` — oder sagt
+selbst, was ihr fehlt.
 
 **Warum**
 
-Backup ist eine Vertrauensfunktion. Wer es in zehn Jahren öffnet, muss
-verstehen, was drinsteht.
+Es gibt zwei Wege, die beide „Sicherung" heissen, und sie enthalten nicht
+dasselbe. `quell/kern/sicherheit/krypto.js` schreibt weder den Verlauf noch
+die Anhänge — **und trägt kein `fehlt`/`hinweis`**, das es sagen würde. Genau
+dafür wurden diese Felder erfunden.
+
+Dazu ein zweiter Befund: der Wiederherstellen-Dialog sagt „und dann ersetzt",
+der Code macht `Object.assign` — ein Zusammenführen. Wer eine Sicherung
+einspielt, um einen kaputten Stand loszuwerden, hat ihn danach immer noch.
 
 **Dateien**
 
 ```txt
+quell/kern/sicherheit/krypto.js
+pruefungen/lauf/test104.mjs      (neu)
 doku/REDION-FORMAT.md
-README.md
-ENTSCHEIDUNGEN.md
 ```
 
-**Fertig wenn** das Dokument erklärt: Warum `.redion`? · Warum nicht nur
-JSON? · Aufbau · `daten.json` · `dateien.json` · `dateien/` · Dateinamen ·
-Datei-IDs · Import-Regeln · Lösch-Regeln · 4-GB-Grenze · ZIP64 ·
-Kompatibilität
+**Fertig wenn**
 
-**Priorität** — sehr hoch.
+- die verschlüsselte Sicherung `enthaelt`, `fehlt` und `hinweis` trägt
+- der Verlauf mitkommt **oder** als fehlend benannt wird
+- die Anhänge mitkommen **oder** als fehlend benannt werden
+- der Dialog und der Code dasselbe sagen — entweder wirklich ersetzen oder
+  „dazulegen" schreiben
+- ein Prüflauf beides hält
+
+**Priorität** — sehr hoch. `CLAUDE.md` §46, Priorität 1: Daten sicher.
 
 ---
 
@@ -220,28 +268,6 @@ npm run pruefen -- --schnell
 ```
 
 **Priorität** — hoch.
-
----
-
-### C3 — ZIP64-Entscheidung vorbereiten
-
-**Ziel**
-
-Klären, ob Redion später Dateien über 4 GB unterstützt.
-
-**Dateien**
-
-```txt
-ENTSCHEIDUNGEN.md
-LUECKEN.md
-doku/REDION-FORMAT.md
-```
-
-**Fertig wenn** die aktuelle Grenze und die Fehlermeldung dokumentiert sind,
-ZIP64 als spätere Lücke markiert ist und weiterhin **kein kaputtes Archiv**
-geschrieben wird.
-
-**Priorität** — mittel.
 
 ---
 

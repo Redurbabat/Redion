@@ -65,14 +65,20 @@ export interface Sicherung extends Sicherungskopf {
 }
 
 /**
- * Was beim Einspielen mit vorhandenen Daten geschieht.
+ * Was beim Einspielen mit vorhandenen Daten geschieht. Genau zwei Werte —
+ * abgelesen aus `importAll` in `quell/kern/ablage/indexdb.js:1115`.
  *
- * `'vergleichen'` ist die Vorgabe und die einzige Wahl, die ohne Rückfrage
- * getroffen werden darf: nichts überschreiben, ohne vorher zu vergleichen.
- * `'ersetzen'` wirft weg, was da ist — das verlangt eine ausdrückliche
- * Zustimmung, jedes Mal.
+ * `'ersetzen'` wirft weg, was nicht in der Sicherung steht.
+ * `'zusammenfuehren'` löscht nichts; bei gleicher Kennung gewinnt die
+ * Sicherung.
+ *
+ * **Es gibt bewusst keine Vorgabe.** `importAll` lehnt jeden anderen Wert ab,
+ * auch einen leeren — ohne Angabe geschieht nichts. Das ist die Regel „nichts
+ * löschen ohne Rückfrage" an der Stelle, an der sie am meisten zählt: eine
+ * Vorgabe würde irgendwann durchrutschen, und beim Einspielen einer Sicherung
+ * ist „irgendwann" einmal zu viel.
  */
-export type Einspielart = 'vergleichen' | 'ergaenzen' | 'ersetzen';
+export type Einspielart = 'ersetzen' | 'zusammenfuehren';
 
 /* ---------------------------------------------------------------------------
  * Das `.redion`-Paket
@@ -114,13 +120,19 @@ export interface RedionPaket {
   dateien: Dateienkarte;
 }
 
-/** Was ein Einspielvorgang berichtet, bevor und nachdem er gelaufen ist. */
+/**
+ * Was `importAll` zurückgibt — abgelesen aus
+ * `quell/kern/ablage/indexdb.js:1173`.
+ *
+ * `bloecke` ist die Zahl **nach** dem Einspielen, nicht die Zahl der
+ * eingespielten. Bei `'zusammenfuehren'` steht dort also die Summe aus altem
+ * und neuem Bestand. Das ist nicht schön, aber es ist die Zahl, die der
+ * Nutzer danach in der Seitenleiste zählen kann — und eine Meldung, die sich
+ * nicht nachzählen lässt, ist schlimmer als eine unschöne.
+ */
 export interface Einspielbericht {
-  neu: number;
-  geaendert: number;
-  unveraendert: number;
-  /** Sätze, die nur lokal existieren und von der Sicherung nicht berührt werden. */
-  nurHier: number;
-  /** Fächer, die in der Sicherung fehlen und deshalb unangetastet bleiben. */
-  ausgelassen: Fach[];
+  bloecke: number;
+  versionen: number;
+  /** Was die Sicherung selbst als fehlend angibt — meist die Anhänge. */
+  fehlt: Fach[];
 }

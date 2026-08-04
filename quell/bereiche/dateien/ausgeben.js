@@ -78,6 +78,23 @@ const Austausch = (() => {
      geschrieben, das erst beim Auspacken auffällt. */
   const ZIP_GRENZE = 0xFFFFFFFF;
 
+  /* Die dritte Grenze, und die unauffälligste. Die Anzahl der Einträge steht
+     im Schlusssatz des Archivs in **16 Bit** — nicht in 32. Sie lief lange
+     ungeprüft mit, weil sie kleiner aussieht als die zwei Byte-Grenzen
+     darüber und deshalb nicht wie eine Grenze wirkt.
+
+     Ohne Prüfung scheitert sie still: `schreibe16(ende, 8, 70000)` schreibt
+     kein 70000, es schreibt 4464 — und 65536 schreibt sogar 0. Das Archiv
+     lässt sich danach öffnen und sieht gesund aus; es zeigt nur einen
+     Bruchteil seines Inhalts. Wer 70 000 Anhänge sichert, bekommt eine
+     Datei, die wie eine vollständige Sicherung aussieht, und merkt es an
+     dem Tag, an dem er sie braucht.
+
+     Die zwei Grenzen darüber haben ihre Prüfung seit jeher. Diese hatte
+     keine — wieder derselbe Befund: nicht etwas vergessen, sondern etwas an
+     einer Stelle getan und an der Nachbarstelle nicht. */
+  const ZIP_EINTRAEGE = 65535;
+
   /**
    * @param dateien [{ name, inhalt }] — inhalt als Zeichenkette, Uint8Array
    *                oder **Blob**. Ein Blob wird nie ganz eingelesen: seine
@@ -87,6 +104,16 @@ const Austausch = (() => {
    * @returns {Promise<Blob>}
    */
   const zipSchreiben = async (dateien, beiFortschritt) => {
+    /* Vor dem ersten Byte, nicht danach. Wer 70 000 Anhänge sichert, soll
+       die Meldung sofort bekommen und nicht nach zwanzig Minuten Packen. */
+    if (dateien.length > ZIP_EINTRAEGE)
+      throw new Error('Diese Sicherung hat ' + dateien.length + ' Einträge. Ein ZIP ' +
+                      'dieser Bauart kann höchstens 65 535 verzeichnen — darüber ' +
+                      'stünde im Archiv eine falsche Zahl, und es zeigte nur einen ' +
+                      'Teil seines Inhalts, ohne das zu sagen. Sichere die Anhänge ' +
+                      'in zwei Schritten, statt ein Archiv zu bekommen, dem man ' +
+                      'nicht ansieht, dass es unvollständig ist.');
+
     const enc = new TextEncoder();
     const teile = [];
     const verzeichnis = [];

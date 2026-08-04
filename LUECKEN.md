@@ -655,6 +655,45 @@ Schmutz in der Datenbank und muss dort von Hand aufgeräumt werden.
 
 ---
 
+## L36 · Die verschlüsselte Sicherung ist ein zweites, ärmeres Format
+
+**Stand** — ⚠ sie sichert weniger, als sie verspricht, und sagt es nicht.
+
+Neben `Store.exportAll()` (das `.json` und `.redion` schreibt) gibt es einen
+zweiten Weg in `quell/kern/sicherheit/krypto.js`: `bestandSammeln()` für die
+verschlüsselte Sicherung. Beide heissen „Sicherung", beide sind über die
+Oberfläche erreichbar — und sie enthalten nicht dasselbe.
+
+| | `.json` / `.redion` | `.verschluesselt.json` |
+|---|---|---|
+| `blocks` `collections` `views` `meta` | ✅ | ✅ |
+| `versions` (Verlauf) | ✅ | ✗ |
+| Anhänge | ✅ | ✗ |
+| `enthaelt` / `fehlt` / `hinweis` | ✅ | ✗ |
+
+Die letzte Zeile ist die schlimme. `fehlt` und `hinweis` wurden erfunden,
+damit eine unvollständige Sicherung das selbst sagt — genau diese Felder
+fehlen dort, wo etwas fehlt.
+
+**Dazu ein zweiter Befund.** Der Wiederherstellen-Dialog sagt:
+
+> Der jetzige Bestand wird davor als Datei gesichert und dann **ersetzt**.
+
+Der Code dahinter macht `Object.assign(Store.cache.blocks, p.blocks)` —
+das ist ein Zusammenführen, kein Ersetzen. Wer eine Sicherung einspielt, um
+einen kaputten Stand loszuwerden, hat den kaputten Stand danach immer noch.
+Der Hauptweg fragt an derselben Stelle ausdrücklich nach („Ersetzen" gegen
+„Dazulegen") und hält beide Zusagen ein.
+
+**Warum wichtig** — Priorität 1 aus `CLAUDE.md` §46: Daten sicher. Eine
+Sicherung, die stillschweigend weniger enthält als erwartet, ist die
+gefährlichste Sorte; ein Dialog, der etwas anderes zusagt als der Code tut,
+ist die zweitgefährlichste.
+
+**Status** — ⏳ sehr hohe Priorität. Siehe `AUFGABEN.md` Phase 3, C4.
+
+---
+
 ## Zusammenfassung nach Priorität
 
 **Sehr hoch**
@@ -663,6 +702,7 @@ Schmutz in der Datenbank und muss dort von Hand aufgeräumt werden.
 L1  TypeScript
 L2  Doku auf die neue Richtung bringen
 L3  .redion-Formatdoku
+L36 Verschlüsselte Sicherung: weniger drin als versprochen
 L5  R2-Dateispeicher planen
 L7  Sync-Konflikte vor Cloud-Sync
 L28 Typecheck
