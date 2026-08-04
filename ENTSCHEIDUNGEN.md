@@ -1042,6 +1042,44 @@ die später dazukommt.
 Das gilt für die deutschen Excel-Namen und für jeden weiteren Zweitnamen,
 der noch kommt.
 
+**Nachtrag 3 — kein WENNFEHLER, solange es keine Fehlerwerte gibt.**
+
+Ein früherer Nachtrag sagte, die Fehlerwert-Frage müsse entschieden werden,
+„sonst wird WENNFEHLER zweimal gebaut". Nachgemessen ist die Lage schärfer:
+**WENNFEHLER lässt sich heute überhaupt nicht ehrlich bauen.**
+
+Redions Laufzeit ist **abwehrend** gebaut. Sie erzeugt keine Fehlerwerte,
+sondern sichere Vorgaben:
+
+```txt
+1 / 0          →  0
+WURZEL(-1)     →  0
+WERT("abc")    →  0
+```
+
+Excels WENNFEHLER fängt genau das, was hier gar nicht entsteht — `#DIV/0!`,
+`#WERT!`, `#NV`. Ein WENNFEHLER in Redion fienge also **nichts von dem**,
+wofür man es kennt. Es sähe aus wie Excels und wäre etwas anderes: die
+schlimmste Sorte Funktion, weil man ihr nicht ansieht, dass sie nicht tut,
+was sie verspricht.
+
+**Entscheidung:** `WENNFEHLER` und `ISTFEHLER` kommen **nicht**, bis
+entschieden ist, ob Redion echte Fehlerwerte bekommt. Die vierzehn übrigen
+Funktionen des Startpakets sind davon unabhängig und sind gebaut.
+
+**Was echte Fehlerwerte kosten würden.** Sie sind keine neue Funktion,
+sondern eine Änderung am Rechnen selbst: `1/0` müsste einen Fehlerwert
+liefern statt `0`, und der müsste durch jede Rechnung durchgereicht werden.
+Das ändert das Ergebnis **bestehender Formelspalten in bestehenden
+Datenbanken** — wo heute `0` steht, stünde dann ein Fehler. Das ist kein
+Formelthema mehr, sondern Priorität 1 (§46): es berührt Daten, die auf
+Geräten von Nutzern liegen, und braucht eine eigene Entscheidung mit
+Migrationsgedanken.
+
+Festgehalten wird der heutige Zustand von `pruefungen/lauf/test106.mjs`,
+Abschnitt 4d — damit er eine Entscheidung bleibt und nicht zu einer Lücke
+wird, die jemand aus Versehen füllt.
+
 **Folgen**
 
 Der Tabellenkern ist ein **Bereich** wie jeder andere und hält sich an E8:

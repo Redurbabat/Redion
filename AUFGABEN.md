@@ -531,20 +531,54 @@ von 80 Prüfungen wurden rot. Dass es 39 sind und nicht 3, ist der Beweis,
 dass die Tabelle jetzt der einzige Weg ist — es liegt keine zweite Fassung
 mehr daneben.
 
-**Schritt 2 — die 16 kleinen fehlenden · offen.**
+**Schritt 2 — die 16 kleinen fehlenden · 14 erledigt, 2 bewusst nicht.**
+
+Gebaut:
 
 ```txt
-PRODUKT · ANZAHL · ANZAHL2 · POTENZ · GANZZAHL · WENNFEHLER · ZEIT
-WOCHENTAG · LINKS · RECHTS · SÄUBERN · SUCHEN · FINDEN · ISTZAHL
-ISTTEXT · ISTFEHLER
+PRODUKT · ANZAHL · ANZAHL2 · POTENZ · GANZZAHL · ZEIT · WOCHENTAG
+LINKS · RECHTS · SÄUBERN · SUCHEN · FINDEN · ISTZAHL · ISTTEXT
 ```
 
-**Vorher zu entscheiden:** Excel hat echte Fehlerwerte (`#WERT!`, `#DIV/0!`),
-Redion meldet Text. `WENNFEHLER` und `ISTFEHLER` brauchen einen Fehlerwert im
-Datenmodell — eine Änderung an der Laufzeit, keine neue Funktion. Wird das
-später entschieden, wird `WENNFEHLER` zweimal gebaut.
+**Dabei kam ein Fehler in Schritt 1 heraus.** `ABRUNDEN` zeigte auf `floor`,
+`AUFRUNDEN` auf `ceil`. Für positive Zahlen stimmt das — deshalb fiel es
+nicht auf. Excel rundet aber **zur Null hin** und **von der Null weg**:
 
-**Priorität** — hoch.
+```txt
+                 Excel    floor/ceil
+ABRUNDEN(-2,5)     -2         -3
+AUFRUNDEN(-2,1)    -3         -2
+```
+
+Wer eine Ausgabenliste mit negativen Beträgen rundet, bekommt sonst je Zeile
+einen Rappen Unterschied — die Sorte Fehler, die man erst in der Summe sieht
+und dann nicht mehr findet. Behoben mit eigenen `rounddown`/`roundup`;
+`GANZZAHL` ist jetzt der Name für das, was `floor` tut. `floor` und `ceil`
+behalten ihre mathematische Bedeutung, und der Prüflauf hält beide Seiten.
+
+**`FINDEN` heisst intern `findtext`.** `find` ist die Listenfunktion und wird
+in `evaluate` besonders behandelt — ein `F.find` wäre davon verdeckt worden
+und nie aufgerufen. Nachgesehen statt geraten: geprüft, dass `F.find = …`
+tatsächlich wirkungslos bleibt.
+
+**Nicht gebaut: `WENNFEHLER` und `ISTFEHLER` — mit Absicht.**
+
+Redions Laufzeit ist abwehrend gebaut und erzeugt gar keine Fehlerwerte:
+`1/0` ist `0`, `WERT("abc")` ist `0`. Excels WENNFEHLER fängt `#DIV/0!` und
+`#WERT!` — hier gäbe es nichts zu fangen. Es sähe aus wie Excels und wäre
+etwas anderes.
+
+Echte Fehlerwerte wären keine neue Funktion, sondern eine Änderung am Rechnen
+selbst — und sie änderten das Ergebnis **bestehender Formelspalten in
+bestehenden Datenbanken**. Das ist Priorität 1 und braucht eine eigene
+Entscheidung. Siehe `ENTSCHEIDUNGEN.md` E24, Nachtrag 3.
+
+`test106` Abschnitt 4d hält den Zustand fest, damit er eine Entscheidung
+bleibt und nicht zu einer Lücke wird, die jemand aus Versehen füllt.
+
+**Stand: `test106` hat 111 Prüfungen.**
+
+**Priorität** — der Rest von X2 ist erledigt; als Nächstes X3.
 
 ---
 

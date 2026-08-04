@@ -567,7 +567,8 @@ Materiallisten · Projektkosten · Finanzplanung · Lernfortschritt · Inventar.
 
 ## L32 · Excel-Funktionen
 
-**Stand** — ◐ **die 37 deutschen Namen sind da; 26 Funktionen fehlen noch.**
+**Stand** — ◐ **51 der 63 Funktionen des Startpakets laufen unter deutschem
+Namen; 12 fehlen, 2 davon mit Absicht.**
 
 Seit dem 4. August 2026 rechnet `SUMME(1; 2; 3)` — als Zeiger auf dieselbe
 Funktion wie `sum`, nicht als zweite Fassung. Beschrieben im Register, damit
@@ -603,17 +604,30 @@ Info         1/4    empty
 Suche        3/13   match sort unique
 ```
 
+**Seit dem 4. August dazugekommen**
+
+```txt
+PRODUKT · ANZAHL · ANZAHL2 · POTENZ · GANZZAHL · ZEIT · WOCHENTAG
+LINKS · RECHTS · SÄUBERN · SUCHEN · FINDEN · ISTZAHL · ISTTEXT
+```
+
+Dabei kam ein Fehler heraus: `ABRUNDEN` und `AUFRUNDEN` zeigten auf
+`floor`/`ceil`. Excel rundet zur Null hin und von der Null weg — bei
+negativen Zahlen ein Unterschied von eins. Behoben; `GANZZAHL` ist jetzt der
+Name für „immer nach unten".
+
 **Was fehlt**
 
 ```txt
-Mathematik     PRODUKT ANZAHL ANZAHL2 POTENZ GANZZAHL
-Logik          WENNFEHLER
-Datum          ZEIT WOCHENTAG
-Text           LINKS RECHTS SÄUBERN SUCHEN FINDEN
-Info           ISTZAHL ISTTEXT ISTFEHLER
 Suche/Verweis  ZÄHLENWENN(S) SUMMEWENN(S) MITTELWERTWENN(S)
                SVERWEIS WVERWEIS XVERWEIS INDEX FILTER
 ```
+
+**Mit Absicht nicht gebaut** — `WENNFEHLER` und `ISTFEHLER`. Redions Laufzeit
+ist abwehrend gebaut und erzeugt keine Fehlerwerte (`1/0` ist `0`). Excels
+WENNFEHLER fängt `#DIV/0!` und `#WERT!` — hier gäbe es nichts zu fangen. Es
+sähe aus wie Excels und wäre etwas anderes. Siehe `ENTSCHEIDUNGEN.md` E24,
+Nachtrag 3.
 
 **Suche/Verweis ist mit 3 von 13 die schwächste Gruppe** — und genau sie
 trägt in Excel die eigentliche Arbeit.
@@ -622,16 +636,17 @@ trägt in Excel die eigentliche Arbeit.
 Umlaute schon (`/[A-Za-zÄÖÜäöüß_]/`), und Namen werden vor dem Nachschlagen
 kleingeschrieben. Ein Alias ist eine Zeile.
 
-**Eine Frage ist vorher zu entscheiden** — Excel hat echte Fehlerwerte
-(`#WERT!`, `#DIV/0!`), Redion meldet Text. `WENNFEHLER` und `ISTFEHLER`
-brauchen einen Fehlerwert im Datenmodell; das ist eine Änderung an der
-Laufzeit, keine neue Funktion.
+**Die offene Architekturfrage** — echte Fehlerwerte. Sie wären keine neue
+Funktion, sondern eine Änderung am Rechnen selbst, und sie änderten das
+Ergebnis **bestehender Formelspalten in bestehenden Datenbanken**: wo heute
+`0` steht, stünde ein Fehler. Das ist Priorität 1 und braucht eine eigene
+Entscheidung mit Migrationsgedanken.
 
 **Wichtig** — dieselbe sichere Formelsprache, kein zweiter Auswerter, kein
 `eval()`. Siehe `ENTSCHEIDUNGEN.md` E11 und E24.
 
-**Status** — ◐ Namen erledigt, 26 Funktionen offen. Davon sind die zehn aus
-Suche/Verweis die wichtigsten.
+**Status** — ◐ 51 von 63. Offen sind die zehn aus Suche/Verweis — die
+wichtigste Gruppe, weil sie in Excel die eigentliche Arbeit trägt.
 
 ---
 

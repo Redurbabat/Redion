@@ -193,13 +193,29 @@ Die schwächste Gruppe und zugleich die wichtigste. Auf Listen arbeiten sie
 auch ohne Zellraster — Redion hat `filter`, `find`, `map` bereits, sie
 brauchen nur die Excel-Fassade.
 
-### X3 · Die 16 übrigen Einzelfunktionen
+### ~~X3 · Die 16 übrigen Einzelfunktionen~~ · 14 erledigt, 2 bewusst nicht
 
-`PRODUKT` `ANZAHL` `ANZAHL2` `POTENZ` `GANZZAHL` `WENNFEHLER` `ZEIT`
-`WOCHENTAG` `LINKS` `RECHTS` `SÄUBERN` `SUCHEN` `FINDEN` `ISTZAHL`
-`ISTTEXT` `ISTFEHLER`
+Gebaut: `PRODUKT` `ANZAHL` `ANZAHL2` `POTENZ` `GANZZAHL` `ZEIT` `WOCHENTAG`
+`LINKS` `RECHTS` `SÄUBERN` `SUCHEN` `FINDEN` `ISTZAHL` `ISTTEXT`
 
-Alle klein, alle ohne Abhängigkeit voneinander. Gute Arbeit für zwischendurch.
+**Dabei kam ein Fehler aus X1 heraus.** `ABRUNDEN → floor` und
+`AUFRUNDEN → ceil` stimmen nur für positive Zahlen. Excel rundet zur Null
+hin und von der Null weg:
+
+```txt
+                 Excel    floor/ceil
+ABRUNDEN(-2,5)     -2         -3
+AUFRUNDEN(-2,1)    -3         -2
+```
+
+Behoben mit eigenen `rounddown`/`roundup`. `GANZZAHL` ist der Name für das,
+was `floor` tut.
+
+**`FINDEN` heisst intern `findtext`,** weil `find` die Listenfunktion ist und
+in `evaluate` besonders behandelt wird — ein `F.find` wäre davon verdeckt
+worden. Nachgesehen, nicht geraten.
+
+**`WENNFEHLER` und `ISTFEHLER` kommen nicht** — siehe die nächste Frage.
 
 ### X4 · Die 129 fehlenden Beschreibungen
 
@@ -234,10 +250,27 @@ Fehlerwerte. Der grösste Brocken und der einzige mit echtem Architekturrisiko
    Bedeutung klar; auf einem Bereich `A1:C10` braucht es erst den
    Spreadsheet-Block. Möglich: X2 auf Listen beschränken und beim MVP
    erweitern.
-3. **Fehlerwerte.** Excel hat `#WERT!`, `#BEZUG!`, `#DIV/0!`. Redion meldet
-   heute Text. Für `WENNFEHLER` und `ISTFEHLER` braucht es einen echten
-   Fehlerwert im Datenmodell — das ist eine Änderung an der Laufzeit, keine
-   neue Funktion.
+3. **Fehlerwerte — nachgemessen und schärfer als gedacht.** Redions Laufzeit
+   ist **abwehrend** gebaut und erzeugt gar keine Fehlerwerte:
 
-Frage 3 ist die einzige mit Architekturwirkung. Sie sollte **vor** X2
-entschieden werden, weil `WENNFEHLER` sonst zweimal gebaut wird.
+   ```txt
+   1 / 0          →  0
+   WURZEL(-1)     →  0
+   WERT("abc")    →  0
+   ```
+
+   Excels `WENNFEHLER` fängt `#DIV/0!`, `#WERT!`, `#NV` — hier gäbe es nichts
+   zu fangen. Ein WENNFEHLER in Redion sähe aus wie Excels und wäre etwas
+   anderes. Deshalb kommt es nicht, bis diese Frage entschieden ist.
+
+   **Was es kosten würde:** keine neue Funktion, sondern eine Änderung am
+   Rechnen selbst. `1/0` müsste einen Fehlerwert liefern statt `0`, und der
+   müsste durch jede Rechnung durchgereicht werden. Damit ändert sich das
+   Ergebnis **bestehender Formelspalten in bestehenden Datenbanken** — wo
+   heute `0` steht, stünde ein Fehler. Das ist Priorität 1 (`CLAUDE.md` §46)
+   und braucht eine eigene Entscheidung mit Migrationsgedanken, nicht einen
+   Nebensatz in einer Formelaufgabe.
+
+Frage 3 ist die einzige mit Architekturwirkung. `test106` Abschnitt 4d hält
+den heutigen Zustand fest, damit er eine Entscheidung bleibt und nicht zu
+einer Lücke wird, die jemand aus Versehen füllt.

@@ -121,10 +121,25 @@ Register.formeln = (() => {
       was: 'Was bei der Division übrig bleibt', beispiel: 'REST(7; 3)' },
     { name: 'RUNDEN',      gruppe: 'Zahlen', args: '(zahl)',      notion: false,
       was: 'Kaufmännisch runden', beispiel: 'RUNDEN(2,6)' },
+    /* ABRUNDEN und AUFRUNDEN runden zur Null hin und von der Null weg — wie
+       in Excel, nicht wie floor/ceil. Bei negativen Zahlen ist das ein
+       Unterschied: ABRUNDEN(-2,5) ist -2, floor(-2,5) ist -3. Wer immer nach
+       unten will, nimmt GANZZAHL. */
     { name: 'ABRUNDEN',    gruppe: 'Zahlen', args: '(zahl)',      notion: false,
-      was: 'Immer nach unten', beispiel: 'ABRUNDEN(2,9)' },
+      was: 'Zur Null hin runden', beispiel: 'ABRUNDEN(-2,5) → -2' },
     { name: 'AUFRUNDEN',   gruppe: 'Zahlen', args: '(zahl)',      notion: false,
-      was: 'Immer nach oben', beispiel: 'AUFRUNDEN(2,1)' },
+      was: 'Von der Null weg runden', beispiel: 'AUFRUNDEN(-2,1) → -3' },
+    { name: 'GANZZAHL',    gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Immer nach unten — auch bei negativen Zahlen',
+      beispiel: 'GANZZAHL(-2,5) → -3' },
+    { name: 'PRODUKT',     gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
+      was: 'Alles miteinander malnehmen', beispiel: 'PRODUKT(2; 3; 4)' },
+    { name: 'ANZAHL',      gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
+      was: 'Wie viele davon sind Zahlen?', beispiel: 'ANZAHL(1; "x"; 3) → 2' },
+    { name: 'ANZAHL2',     gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
+      was: 'Wie viele davon sind nicht leer?' },
+    { name: 'POTENZ',      gruppe: 'Zahlen', args: '(zahl; hoch)', notion: false,
+      was: 'Hoch rechnen', beispiel: 'POTENZ(2; 10) → 1024' },
 
     /* --- Logik ----------------------------------------------------------- */
     { name: 'WENN',        gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
@@ -153,10 +168,26 @@ Register.formeln = (() => {
       was: 'Der Tag im Monat' },
     { name: 'KALENDERWOCHE', gruppe: 'Datum', args: '(datum)',    notion: false,
       was: 'Die Kalenderwoche' },
+    { name: 'ZEIT',          gruppe: 'Datum', args: '(std; min; sek)', notion: false,
+      was: 'Eine Uhrzeit bauen', beispiel: 'ZEIT(9; 30; 0) → 09:30:00' },
+    { name: 'WOCHENTAG',     gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Der Wochentag als Zahl — Sonntag ist 1, wie in Excel',
+      beispiel: 'WOCHENTAG("2026-08-04") → 3 (Dienstag)' },
 
     /* --- Text ------------------------------------------------------------ */
     { name: 'LÄNGE',         gruppe: 'Text', args: '(text)',      notion: false,
       was: 'Wie viele Zeichen?' },
+    { name: 'LINKS',         gruppe: 'Text', args: '(text; anzahl)', notion: false,
+      was: 'Die ersten Zeichen', beispiel: 'LINKS("Redion"; 3) → Red' },
+    { name: 'RECHTS',        gruppe: 'Text', args: '(text; anzahl)', notion: false,
+      was: 'Die letzten Zeichen', beispiel: 'RECHTS("Redion"; 3) → ion' },
+    { name: 'SÄUBERN',       gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Steuerzeichen entfernen — das, was man nicht sieht' },
+    { name: 'SUCHEN',        gruppe: 'Text', args: '(was; worin)', notion: false,
+      was: 'An welcher Stelle steht es? Gross und Klein egal. 0 = nicht da',
+      beispiel: 'SUCHEN("di"; "Redion") → 3' },
+    { name: 'FINDEN',        gruppe: 'Text', args: '(was; worin)', notion: false,
+      was: 'Wie SUCHEN, aber Gross und Klein zählen' },
     { name: 'TEIL',          gruppe: 'Text', args: '(text; von; bis)', notion: false,
       was: 'Ein Stück aus dem Text herausschneiden', beispiel: 'TEIL("Redion"; 0; 3)' },
     { name: 'GLÄTTEN',       gruppe: 'Text', args: '(text)',      notion: false,
@@ -181,6 +212,10 @@ Register.formeln = (() => {
     /* --- Information ----------------------------------------------------- */
     { name: 'ISTLEER',   gruppe: 'Logik', args: '(wert)',         notion: false,
       was: 'Ist da nichts drin?' },
+    { name: 'ISTZAHL',   gruppe: 'Logik', args: '(wert)',         notion: false,
+      was: 'Ist das wirklich eine Zahl? „42" als Text ist keine' },
+    { name: 'ISTTEXT',   gruppe: 'Logik', args: '(wert)',         notion: false,
+      was: 'Ist das Text?' },
 
     /* --- Suchen und Verweisen -------------------------------------------- */
     { name: 'VERGLEICH', gruppe: 'Listen', args: '(liste; wert)', notion: false,

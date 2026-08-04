@@ -208,6 +208,146 @@ const ohneBeschreibung = Register.formeln.alle()
 p('Jeder deutsche Name hat eine Beschreibung', ohneBeschreibung.length === 0,
   ohneBeschreibung.map(f => f.name).join(', '));
 
+/* ===========================================================================
+ * 4b · ABRUNDEN UND AUFRUNDEN RECHNEN WIE EXCEL, NICHT WIE floor/ceil
+ * ---------------------------------------------------------------------------
+ * Der erste Wurf setzte `ABRUNDEN = floor` und `AUFRUNDEN = ceil`. Für
+ * positive Zahlen stimmt das, und deshalb fiel es nicht auf. Für negative
+ * nicht:
+ *
+ *              Excel      floor/ceil
+ *   ABRUNDEN(-2,5)   -2         -3
+ *   AUFRUNDEN(-2,1)  -3         -2
+ *
+ * Excel rundet **zur Null hin** (ABRUNDEN) und **von der Null weg**
+ * (AUFRUNDEN). `floor` und `ceil` runden nach unten und nach oben. Bei
+ * positiven Zahlen ist das dasselbe, bei negativen nicht.
+ *
+ * Wer eine Ausgabenliste mit negativen Beträgen rundet, bekommt sonst einen
+ * Rappen Unterschied je Zeile — die Sorte Fehler, die man erst in der Summe
+ * sieht und dann nicht mehr findet.
+ *
+ * GANZZAHL ist der Name für das, was `floor` tut: immer nach unten.
+ * =========================================================================*/
+console.log('\n4b · Runden zur Null hin, nicht nach unten');
+
+const rundung = [
+  ['ABRUNDEN(2,5)',    'ABRUNDEN(2.5)',    2],
+  ['ABRUNDEN(-2,5)',   'ABRUNDEN(0 - 2.5)', -2],
+  ['AUFRUNDEN(2,1)',   'AUFRUNDEN(2.1)',   3],
+  ['AUFRUNDEN(-2,1)',  'AUFRUNDEN(0 - 2.1)', -3],
+  ['GANZZAHL(2,9)',    'GANZZAHL(2.9)',    2],
+  ['GANZZAHL(-2,5)',   'GANZZAHL(0 - 2.5)', -3]
+];
+for (const [zeigen, quelle, soll] of rundung) {
+  const e = rechne(quelle);
+  p(zeigen + ' = ' + soll, e.ok && Number(e.wert) === soll, JSON.stringify(e));
+}
+
+/* Die Gegenrichtung: floor und ceil behalten ihre mathematische Bedeutung. */
+for (const [quelle, soll] of [['floor(0 - 2.5)', -3], ['ceil(0 - 2.1)', -2]]) {
+  const e = rechne(quelle);
+  p(quelle + ' bleibt ' + soll, e.ok && Number(e.wert) === soll, JSON.stringify(e));
+}
+
+/* ===========================================================================
+ * 4c · DIE VIERZEHN NACHGEBAUTEN FUNKTIONEN
+ * ---------------------------------------------------------------------------
+ * WENNFEHLER und ISTFEHLER fehlen hier mit Absicht — siehe Abschnitt 4d.
+ * =========================================================================*/
+console.log('\n4c · Die nachgebauten Excel-Funktionen rechnen richtig');
+
+const NEU = [
+  ['PRODUKT(2; 3; 4)',        'PRODUKT(2, 3, 4)',            24],
+  ['ANZAHL(1; "x"; 3)',       'ANZAHL(1, "x", 3)',           2],
+  ['ANZAHL2(1; "x"; "")',     'ANZAHL2(1, "x", "")',         2],
+  ['POTENZ(2; 10)',           'POTENZ(2, 10)',               1024],
+  ['ZEIT(9; 30; 0)',          'ZEIT(9, 30, 0)',              '09:30:00'],
+  /* 2026-08-04 ist ein Dienstag. Excel zählt bei Typ 1 ab Sonntag = 1,
+     also Dienstag = 3. Beim ersten Schreiben stand hier 2 — der Lauf hat
+     meine Erwartung berichtigt, nicht den Code. */
+  ['WOCHENTAG("2026-08-04")', 'WOCHENTAG("2026-08-04")',     3],
+  ['LINKS("Redion"; 3)',      'LINKS("Redion", 3)',          'Red'],
+  ['RECHTS("Redion"; 3)',     'RECHTS("Redion", 3)',         'ion'],
+  /* R-e-d-i-o-n: „di" beginnt beim dritten Zeichen. Excel zählt ab 1. */
+  ['SUCHEN("di"; "Redion")',  'SUCHEN("di", "Redion")',      3],
+  ['FINDEN("di"; "Redion")',  'FINDEN("di", "Redion")',      3],
+  ['ISTZAHL(42)',             'ISTZAHL(42)',                 true],
+  ['ISTZAHL("x")',            'ISTZAHL("x")',                false],
+  ['ISTTEXT("x")',            'ISTTEXT("x")',                true],
+  ['ISTTEXT(42)',             'ISTTEXT(42)',                 false]
+];
+for (const [zeigen, quelle, soll] of NEU) {
+  const e = rechne(quelle);
+  p(zeigen + ' = ' + JSON.stringify(soll),
+    e.ok && JSON.stringify(e.wert) === JSON.stringify(soll), JSON.stringify(e));
+}
+
+/* SÄUBERN entfernt Steuerzeichen — mit einem echten davon geprüft.
+   Das Zeichen kommt über `prop()` herein und nicht als Zeichenkette im
+   Quelltext: ein rohes Steuerzeichen in einer Quelldatei ist genau das, was
+   `test87` verbietet. In der Einzeldatei macht der HTML-Zerteiler U+FFFD
+   daraus und reisst den ganzen Skriptblock mit. */
+{
+  const mitSteuerzeichen = 'a' + String.fromCharCode(7) + 'b' + String.fromCharCode(31) + 'c';
+  const e = (() => {
+    try {
+      const r = Formula.run('SÄUBERN(prop("x"))',
+        (feld) => (feld === 'x' ? mitSteuerzeichen : null), () => null, {});
+      return r && r.ok ? { ok: true, wert: r.wert } : { ok: false, fehler: r && r.fehler };
+    } catch (err) { return { ok: false, fehler: err.message }; }
+  })();
+  p('SÄUBERN wirft Steuerzeichen weg', e.ok && e.wert === 'abc', JSON.stringify(e));
+}
+
+/* SUCHEN ist blind für Gross und Klein, FINDEN nicht — genau wie in Excel. */
+{
+  const a = rechne('SUCHEN("DI", "Redion")');
+  const b = rechne('FINDEN("DI", "Redion")');
+  p('SUCHEN achtet nicht auf Gross/Klein', a.ok && Number(a.wert) === 3, JSON.stringify(a));
+  p('FINDEN achtet auf Gross/Klein', b.ok && Number(b.wert) === 0, JSON.stringify(b));
+}
+
+/* Die Gegenrichtung: die Listenfunktion `find` bleibt, wie sie war. Sie wird
+   in `evaluate` besonders behandelt und darf von FINDEN nicht verdrängt
+   werden — sonst bräche jede Formel, die sie benutzt. */
+{
+  const e = rechne('find([1, 2, 3], current > 1)');
+  p('Die Listenfunktion find bleibt unangetastet',
+    e.ok && Number(e.wert) === 2, JSON.stringify(e));
+}
+
+/* ===========================================================================
+ * 4d · WENNFEHLER GIBT ES NICHT — UND DAS IST ABSICHT
+ * ---------------------------------------------------------------------------
+ * Excels WENNFEHLER fängt `#DIV/0!`, `#WERT!`, `#NV`. Redions Laufzeit
+ * erzeugt solche Werte gar nicht: sie ist **abwehrend** gebaut.
+ *
+ *   1/0              →  0
+ *   WURZEL(-1)       →  0
+ *   WERT("abc")      →  0
+ *
+ * Ein WENNFEHLER, das hier eingebaut würde, fienge also **nichts von dem**,
+ * wofür man es aus Excel kennt. Es sähe aus wie Excels und wäre etwas
+ * anderes — die schlimmste Sorte Funktion.
+ *
+ * Deshalb fehlt es, bis entschieden ist, ob Redion echte Fehlerwerte bekommt.
+ * Diese Prüfung hält den Zustand fest, damit er eine Entscheidung bleibt und
+ * nicht zu einer Lücke wird, die jemand aus Versehen füllt.
+ * =========================================================================*/
+console.log('\n4d · Kein WENNFEHLER ohne echte Fehlerwerte');
+
+for (const [quelle, soll] of [['1 / 0', 0], ['WURZEL(0 - 1)', 0], ['WERT("abc")', 0]]) {
+  const e = rechne(quelle);
+  p(quelle + ' ergibt ' + soll + ' statt eines Fehlerwerts',
+    e.ok && Number(e.wert) === soll, JSON.stringify(e));
+}
+for (const name of ['WENNFEHLER', 'ISTFEHLER']) {
+  const e = rechne(name + '(1, 2)');
+  p(name + ' gibt es (noch) nicht', !e.ok,
+    'es antwortet — dann muss Abschnitt 4d neu geschrieben werden');
+}
+
 console.log('\n5 · Das Register verspricht nichts, was die Maschine nicht kann');
 
 const a = Register.formeln.abgleich();

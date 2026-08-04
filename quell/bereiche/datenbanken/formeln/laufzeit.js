@@ -743,6 +743,82 @@ const Formula = (() => {
    * Die englischen Namen bleiben. Ein Alias, der das Original verdrängt,
    * hätte jede bestehende Formel in jedem Bestand gebrochen.
    * ======================================================================== */
+  /* ==========================================================================
+   * NACHGEBAUT FÜR EXCEL — Funktionen, die es hier noch nicht gab
+   * --------------------------------------------------------------------------
+   * Vierzehn Stück. Sie stehen bewusst **unter englischem Namen** in der
+   * Funktionstabelle und bekommen ihren deutschen über `ALIAS` — dieselbe
+   * Regel wie für alles andere, damit es nicht zwei Sorten Funktionen gibt.
+   *
+   * WARUM `rounddown` UND `roundup` NEBEN `floor` UND `ceil` STEHEN. Sie sind
+   * nicht dasselbe, und der Unterschied zeigt sich erst bei negativen Zahlen:
+   *
+   *                      Excel      floor/ceil
+   *     ABRUNDEN(-2,5)     -2          -3
+   *     AUFRUNDEN(-2,1)    -3          -2
+   *
+   * Excel rundet **zur Null hin** und **von der Null weg**; `floor` und
+   * `ceil` runden nach unten und nach oben. Bei positiven Zahlen ist das
+   * dasselbe — deshalb zeigten die ersten Aliase (`abrunden: 'floor'`) auch
+   * kein falsches Ergebnis, solange niemand eine negative Zahl rundete. Wer
+   * eine Ausgabenliste rundet, tut genau das.
+   *
+   * `GANZZAHL` ist der Name für das, was `floor` tut: immer nach unten.
+   *
+   * WARUM `findtext` UND NICHT `find`. `find` ist die Listenfunktion und wird
+   * in `evaluate` besonders behandelt — ein `F.find` würde davon verdeckt und
+   * nie aufgerufen. Excels FINDEN sucht in Text und braucht deshalb einen
+   * eigenen Namen.
+   * ======================================================================== */
+  Object.assign(F, {
+    /* --- Zahlen ---------------------------------------------------------- */
+    product: (a) => a.reduce((n, x) => n * zahl(x), 1),
+    /* ANZAHL zählt nur, was wirklich eine Zahl ist — Text zählt nicht mit. */
+    count:  (a) => a.filter(x => x !== null && x !== '' && !isNaN(Number(x))).length,
+    /* ANZAHL2 zählt alles, was nicht leer ist. */
+    counta: (a) => a.filter(x => x !== null && x !== undefined && x !== '').length,
+    power:  (a) => Math.pow(zahl(a[0]), zahl(a[1])),
+    /* Zur Null hin bzw. von der Null weg — nicht nach unten bzw. oben. */
+    rounddown: (a) => Math.trunc(zahl(a[0])),
+    roundup:   (a) => { const n = zahl(a[0]); return n < 0 ? Math.floor(n) : Math.ceil(n); },
+    int:    (a) => Math.floor(zahl(a[0])),
+
+    /* --- Datum ----------------------------------------------------------- */
+    /* ZEIT gibt eine Uhrzeit als hh:mm:ss — die Form, die auch `format`
+       wieder lesen kann. */
+    time: (a) => {
+      const zwei = (n) => String(Math.max(0, Math.floor(n))).padStart(2, '0');
+      return zwei(zahl(a[0])) + ':' + zwei(zahl(a[1] ?? 0)) + ':' + zwei(zahl(a[2] ?? 0));
+    },
+    /* WOCHENTAG wie in Excel mit Typ 1: Sonntag = 1 … Samstag = 7. */
+    weekday: (a) => {
+      const d = new Date(text(a[0]));
+      return isNaN(d.getTime()) ? 0 : d.getUTCDay() + 1;
+    },
+
+    /* --- Text ------------------------------------------------------------ */
+    left:  (a) => text(a[0]).slice(0, Math.max(0, Math.floor(zahl(a[1] ?? 1)))),
+    right: (a) => { const n = Math.max(0, Math.floor(zahl(a[1] ?? 1)));
+                    return n === 0 ? '' : text(a[0]).slice(-n); },
+    /* SÄUBERN wirft Steuerzeichen weg — dieselben, die `test87` im Quelltext
+       verbietet, und aus demselben Grund: sie richten unterwegs Schaden an
+       und sind nicht zu sehen. */
+    clean: (a) => text(a[0]).replace(/[\u0000-\u001F\u007F]/g, ''),
+    /* SUCHEN ist blind für Gross und Klein, FINDEN nicht — wie in Excel.
+       Beide zählen ab 1; 0 heisst „nicht gefunden". */
+    search: (a) => text(a[0]) === '' ? 1
+      : text(a[1]).toLowerCase().indexOf(text(a[0]).toLowerCase()) + 1,
+    findtext: (a) => text(a[0]) === '' ? 1
+      : text(a[1]).indexOf(text(a[0])) + 1,
+
+    /* --- Information ----------------------------------------------------- */
+    /* ISTZAHL fragt nach dem Typ, nicht danach, ob sich etwas umwandeln
+       lässt: "42" ist Text und keine Zahl — sonst wäre die Funktion nutzlos,
+       weil sie für fast alles wahr sagte. */
+    isnumber: (a) => typeof a[0] === 'number' && !isNaN(a[0]),
+    istext:   (a) => typeof a[0] === 'string'
+  });
+
   const ALIAS = {
     /* --- Zahlen ---------------------------------------------------------- */
     /* MIN, MAX und ABS heissen in beiden Sprachen gleich und brauchen keinen
@@ -752,8 +828,13 @@ const Formula = (() => {
     wurzel: 'sqrt',
     rest: 'mod',
     runden: 'round',
-    abrunden: 'floor',
-    aufrunden: 'ceil',
+    abrunden: 'rounddown',
+    aufrunden: 'roundup',
+    produkt: 'product',
+    anzahl: 'count',
+    anzahl2: 'counta',
+    potenz: 'power',
+    ganzzahl: 'int',
 
     /* --- Logik ----------------------------------------------------------- */
     wenn: 'if',
@@ -763,6 +844,8 @@ const Formula = (() => {
     nicht: 'not',
 
     /* --- Datum ----------------------------------------------------------- */
+    zeit: 'time',
+    wochentag: 'weekday',
     heute: 'today',
     jetzt: 'now',
     datum: 'date',
@@ -772,6 +855,11 @@ const Formula = (() => {
     kalenderwoche: 'week',
 
     /* --- Text ------------------------------------------------------------ */
+    links: 'left',
+    rechts: 'right',
+    'säubern': 'clean',
+    suchen: 'search',
+    finden: 'findtext',
     'länge': 'length',
     teil: 'slice',
     'glätten': 'trim',
@@ -786,6 +874,8 @@ const Formula = (() => {
 
     /* --- Information ----------------------------------------------------- */
     istleer: 'empty',
+    istzahl: 'isnumber',
+    isttext: 'istext',
 
     /* --- Suchen und Verweisen -------------------------------------------- */
     vergleich: 'match',
