@@ -1,385 +1,1484 @@
 # Redion
 
-Eine Notiz- und Datenbank-App im Stil von Notion — **die Daten gehören dem
-Gerät**. Kein Konto nötig, kein Server nötig, keine Abo-Gebühr.
-
-Öffnen: `index.html` doppelklicken. Das war die Installation.
-Lieber eine einzige Datei? `redion-einzeldatei.html` enthält alles.
-
-Ein Server ist möglich und kostet nichts — dann gibt es Abgleich zwischen
-zwei Geräten, Rechte, die wirklich sperren, und Seiten, die man weitergeben
-kann. Siehe `SERVER-EINRICHTEN.md`.
-
----
-
-## Der Aufbau
-
-```
-index.html            was der Browser lädt
-quell/
-  start.js            der einzige Einstiegspunkt
-  kern/               kennt keinen Bereich
-    ablage/           IndexedDB, Formen, Umzüge, Befehle
-    zustand/          Verlauf (Rückgängig/Wiederholen)
-    ereignisse/       Bus, Arten, Protokoll
-    abgleich/         Maschine, Zusammenführen
-    zugang/           Sitzung, Rechte, Rollen
-    sicherheit/       Krypto, Säubern, Prüfen
-    helfer/           Kennungen, Datum, Objekte, Bremse, Melder, Tempo
-    einstellung/      Konstanten, Schalter, App
-  register/           die elf Kataloge — hier ändert man EINE Datei
-  schale/             Aufbau, Überlagerungen, Stil
-  bereiche/           editor, datenbanken, wissen, ki, verbinden, dateien,
-                      vorlagen, kommentare, erwähnungen, seiten, planen,
-                      einstellungen, hilfe
-oeffentlich/          Icons, Manifest, Favicon
-server/               der freiwillige Server (Cloudflare Workers + D1)
-doku/                 wie es innen aussieht
-```
-
-**Die drei Regeln, die das tragen:**
-
-1. Ein Bereich benutzt nur `kern/` und `register/` — nie einen anderen
-   Bereich. Braucht er etwas von drüben, geht es über den Ereignisbus oder
-   das Gemeinsame wandert nach `kern/`.
-2. Ein neuer Bereich = **zwei Einträge**: `register/module.js` und
-   `register/navigation.js`. Sonst nichts.
-3. Neue Blockart, neue Ansicht, neuer Spaltentyp, neuer Befehl, neues
-   Tastenkürzel = **ein Objekt** in der passenden `register/`-Datei. Die
-   Oberfläche zeichnet sich daraus.
-
-Es gibt keinen Bauschritt. Die Dateien werden als gewöhnliche Skripte
-geladen — genau deshalb läuft die App auch direkt von der Festplatte, ohne
-Server und ohne Werkzeugkette. `node bauen.js` fasst alles zu
-`redion-einzeldatei.html` zusammen; das ist eine Bequemlichkeit, keine
-Voraussetzung.
-
----
-
-## Der Editor
-
-Alles ist ein Block — Absatz, Überschrift, Unterseite, Datenbank, Whiteboard.
-`/` öffnet das Blockmenü mit **43 Bausteinen** in sechs Gruppen.
-
-| Gruppe | Bausteine |
-|---|---|
-| Grundlegend | Text · Überschrift 1–3 · Aufgabe · Aufzählung · Nummerierung · Toggle · Zitat · Callout · Trennlinie |
-| Datenbank | Tabelle · Board · Liste · Galerie · Kalender |
-| Medien | Bild · Video · Audio · Datei · Lesezeichen · Einbetten |
-| Erweitert | Code · Formel · Einfache Tabelle · Inhaltsverzeichnis · Pfad · Zwei/Drei Spalten · Unterseite · Link zu Seite · Synchronisierter Block · Knopf · HTML |
-| Wissen | Karteikarte · Whiteboard · Diagramm · Rückverweise |
-| KI | Text schreiben · Zusammenfassen · Aufgaben ableiten · Übersetzen · Verbessern |
-
-Beim Tippen wandeln die Markdown-Kürzel sofort um:
-
-```
-#  ##  ###     Überschriften        ```      Codeblock
--  *  +        Aufzählung           $$       Formel
-1.             Nummerierung         "        Zitat
-[]  [ ]        Aufgabe              ---      Trennlinie
->              Toggle
-```
-
-Und mitten im Text:
-
-```
-**fett**   *kursiv*   __unterstrichen__   ~~durchgestrichen~~   `code`
-[[Seite]]  #schlagwort  ((Blockverweis))  @heute  @Person  :emoji  $a^2$
-```
-
-**Text markieren** öffnet die schwebende Werkzeugleiste: KI, Umwandeln,
-Fett, Kursiv, Unterstrichen, Durchgestrichen, Code, Formel, Link,
-Kommentar und die zehn Notion-Farben.
-
----
-
-## Datenbanken
-
-Aufgebaut wie bei Notion: ein Container-Block zeigt auf ein **Schema**,
-das Schema auf beliebig viele **Ansichten**. Eine Zeile ist eine eigene Seite.
-
-**Acht Ansichten** — Tabelle · Board (Drag & Drop) · Liste · Galerie ·
-Kalender · Zeitstrahl · Diagramm · Formular
-
-**21 Eigenschaftstypen** — Titel, Text, Zahl, Auswahl, Mehrfachauswahl,
-Status, Datum, Person, Kontrollkästchen, URL, E-Mail, Telefon, Formel,
-Erstellt am, Zuletzt geändert, Dateien, **Verknüpfung**, **Rollup**,
-**Laufende Nummer**, **Knopf**, **KI-Feld**
-
-Dazu:
-
-- **Filter** mit UND/ODER und typgerechten Operatoren
-- **Sortierung**, **Gruppierung** und **Untergruppierung**
-- **Berechnungen** unter jeder Spalte: Summe, Durchschnitt, Median, Min, Max,
-  Spanne, Anzahl, Prozent gefüllt und mehr
-- **Rollups** über Verknüpfungen — 15 Berechnungsarten
-- **Seitenvorschau** (Side Peek) je Zeile, Rechtsklickmenü mit 10 Aktionen
-- Zeilenhöhe, Kartengrösse, Textumbruch, leere Gruppen, Anzeigegrenze
-- **CSV-Export**
-
----
-
-## Die Formelsprache
-
-Eine eigene Umsetzung von Notions Formelsprache 2.0 — mit eigenem Tokenizer,
-Parser und Auswerter. Kein `eval()`, eine Formel kann also niemals fremden
-Code ausführen.
-
-Über 90 Funktionen: `if` `ifs` `let` `lets` `empty` · `round` `floor` `ceil`
-`abs` `min` `max` `sum` `mean` `median` `pow` `sqrt` · `format` `length`
-`substring` `contains` `replace` `replaceAll` `lower` `upper` `trim` `split`
-`repeat` `join` · `map` `filter` `find` `some` `every` `at` `first` `last`
-`unique` `sort` · `now` `today` `dateAdd` `dateBetween` `formatDate` `year`
-`month` `week` `day` `hour` `minute`
-
-Der Formeleditor prüft live und zeigt das Ergebnis an der ersten Zeile.
-
-> **Die Falle, an der fast jeder scheitert:** Text wird mit `+` verkettet,
-> **nicht** mit `concat()`. `concat()` ist ausschliesslich für Listen.
->
-> ```
-> "Woche " + format(week(now()))     ✓
-> concat("Woche ", format(...))      ✗
-> ```
-
----
-
-## Die Werkzeuge — und woher sie kommen
-
-Diese App ist aus dem Vergleich von zwanzig quelloffenen Notiz-Programmen
-entstanden. Jedes kann eine Sache besonders gut. Diese Sachen sind hier
-nachgebaut — jede an einem Ort, der zu ihr passt:
-
-| Woher die Idee stammt | Was sie kann | Wo sie in dieser App liegt |
-|---|---|---|
-| **Logseq**, **Foam**, **SiYuan** | Tagesjournal | Seitenleiste → Journal · `Strg Shift J` |
-| **Memos**, **Blinko** | Schnellnotizen mit Aktivitäts-Heatmap | Seitenleiste → Schnellnotizen · `Strg Shift M` |
-| **Foam**, **Logseq**, **Anytype** | `[[Links]]`, Rückverweise, Graph | Fusszeile jeder Seite · Seitenleiste → Graph |
-| **Joplin**, **Notesnook**, **TiddlyWiki** | Schlagwörter | `#wort` schreiben · Seitenleiste → Schlagwörter |
-| **SiYuan**, Anki-Verfahren | Karteikarten mit Wiederholungsplan (SM-2) | Block `/karteikarte` · Seitenleiste → Karteikarten |
-| **Outline**, **Trilium**, **Anytype** | Vorlagen | Seitenmenü → Als Vorlage speichern |
-| **Standard Notes**, **Trilium**, **Joplin** | Versionsverlauf | Kopfzeile → 🕘 · Seitenmenü → Versionsverlauf |
-| **Notesnook**, **Standard Notes** | Verschlüsselte Notizen (AES-GCM) | Seitenmenü → Verschlüsseln |
-| **MarkText**, **Zettlr** | Fokus-Modus | Seitenmenü → Fokus · `Strg Shift F` |
-| **HedgeDoc**, Marp | Präsentation aus der Seite | Seitenmenü → Präsentation |
-| **MarkText**, **TUI Editor** | Markdown-Quelltext hin und zurück | Seitenmenü → Markdown-Quelltext |
-| **Zettlr** | Schreibstatistik, Lesezeit, häufige Wörter | Seitenmenü → Statistik |
-| **SilverBullet** | Befehlspalette für alles | `Strg Shift P` |
-| **AFFiNE** | Whiteboard mit Stift, Formen, Haftnotizen | Block `/whiteboard` |
-| **TUI Editor**, Notion Chart | Diagramme | Block `/diagramm` · Datenbank-Ansicht |
-| **AppFlowy** | Kanban-Board | Datenbank-Ansicht Board |
-| **TiddlyWiki** | Alles in einer einzigen HTML-Datei | Einstellungen → Als eine HTML-Datei |
-| **Joplin**, **Zettlr**, **SilverBullet** | Notizen als Markdown-Dateien im Ordner | Einstellungen → In Ordner schreiben / einlesen |
-| **Notesnook** | Erinnerungen | Seitenmenü → Erinnerung |
-| **editor.js** | Blockeditor mit sauberem Datenmodell | das ganze Fundament |
-| **Trilium** | Seite an zweiter Stelle einhängen | Block `/link zu seite` |
-
-Kein einziger fremder Programmcode liegt in diesem Verzeichnis — nur die
-Ideen, neu und einheitlich umgesetzt.
-
----
-
-## Einstellungen
-
-Zwölf Bereiche, wie in Notion aufgebaut — links die Bereiche, rechts die Optionen.
-Über **70 Einstellungen**, und jede tut wirklich etwas:
-
-| Bereich | Was drinsteht |
-|---|---|
-| Mein Konto | Name, Symbol, Seiten verschlüsseln, alle Daten löschen |
-| Einstellungen | Hell/Dunkel/System, Schriftgrösse, Zeilenabstand, Startansicht, Wochenbeginn, Datums- und Zeitformat, Rechtschreibprüfung |
-| Benachrichtigungen | Systemmeldungen erlauben, Erinnerungen, fällige Karteikarten |
-| Verbindungen | Ollama, WebLLM, Ordner auf der Festplatte |
-| Arbeitsbereich | Name, Symbol, Startseite, Zahlen, alles ausgeben |
-| Bereiche | Was bei Notion „Teamspaces" heisst — Gruppen in der Seitenleiste |
-| Sicherheit | Verschlüsselung, Schreibschutz, automatische Versionen |
-| Import und Export | JSON, Markdown-Ordner, eine HTML-Datei, PDF |
-| KI | Modell wählen, Kontext, Antwortlänge |
-| Speicher | Belegung, Papierkorb, alte Versionen aufräumen, dauerhafter Speicher |
-| Abrechnung | Kostenlos, für immer — ohne Stufen und ohne Grenzen |
-| Über | Zahlen zur App, alle Tastenkürzel |
-
-## Automationen
-
-Was Notion erst ab dem Business-Plan anbietet, läuft hier im Browser:
-in jeder Datenbank auf **⚡**, dann *wenn … dann …*
-
-- **Wenn**: ein Eintrag entsteht · eine Eigenschaft ändert sich · eine
-  Eigenschaft bekommt einen bestimmten Wert
-- **Dann**: Eigenschaft setzen · KI-Feld ausfüllen lassen · Erinnerung
-  anlegen · Unterseite anlegen · Meldung zeigen
-
-Beispiel: *Wenn Status auf „Erledigt" springt, dann setze das Datum von heute.*
-
-## Wiki und Teilen
-
-**In Wiki umwandeln** macht aus einer Seite das Verzeichnis ihrer Unterseiten —
-mit Besitzer, Änderungsdatum und dem Vermerk „geprüft".
-
-**Teilen** gibt es ohne Server nicht als Freigabe ins Netz, aber in jeder
-Form, die Seite aus der Hand zu geben: Link, Text, Markdown, HTML, PDF,
-alles als eine Datei oder als Ordner voller Markdown-Dateien.
-
----
-
-## Die KI — lokal und kostenlos
-
-Zwei Wege, umschaltbar wie in Notion. Oben rechts im KI-Panel wählst du das Modell.
-
-| | Ollama | WebLLM |
-|---|---|---|
-| Wo | als Programm auf dem Rechner | direkt im Browser |
-| Installation | einmalig nötig | keine |
-| Geschwindigkeit | **deutlich schneller** | langsamer |
-| Qualität | **besser**, grössere Modelle | ordentlich |
-| Voraussetzung | — | WebGPU (Chrome/Edge ab 113) |
-
-Die App sucht beim Start nach Ollama und listet deine installierten Modelle.
-Läuft Ollama nicht, kannst du eines der sechs WebLLM-Modelle laden — es bleibt
-danach im Browser-Cache.
-
-**Kein Text verlässt deinen Rechner.** Kein API-Schlüssel, keine Abrechnung.
-
-### Ollama einrichten
-
-```bash
-# 1. installieren:  https://ollama.com
-# 2. ein Modell holen
-ollama pull llama3.2
-
-# 3. dem Browser den Zugriff erlauben
-#    Windows
-setx OLLAMA_ORIGINS "*"
-#    macOS
-launchctl setenv OLLAMA_ORIGINS "*"
-#    Linux
-OLLAMA_ORIGINS=* ollama serve
-```
-
-Danach Ollama neu starten und im KI-Panel auf **Erneut nach Ollama suchen** klicken.
-
----
-
-## Wo die Daten liegen
-
-In **IndexedDB** in deinem Browser. Nach Notions Vorbild in fünf Speichern:
-
-```
-blocks       jeder Inhalt — Absätze, Seiten, Datenbankzeilen
-collections  das Schema einer Datenbank
-views        Layout, Filter, Sortierung, sichtbare Spalten
-meta         Einstellungen
-versions     ältere Fassungen jeder Seite
-```
-
-Weil alles lokal liegt, gehört ein Export dazu:
-**Einstellungen → Sicherung speichern** legt eine JSON-Datei ab,
-**Sicherung laden** holt sie zurück. Einzelne Seiten lassen sich als
-Markdown, HTML oder PDF ausgeben, Datenbanken als CSV, der ganze
-Arbeitsbereich als Ordner voller Markdown-Dateien oder als eine HTML-Datei.
-
----
-
-## Tastenkürzel
-
-| Kürzel | Wirkung | | Kürzel | Wirkung |
-|---|---|---|---|---|
-| `Strg N` | Neue Seite | | `/` | Blockmenü |
-| `Strg P` | Suchen | | `Strg Alt 0-9` | Blocktyp wechseln |
-| `Strg Shift P` | Befehlspalette | | `Tab` / `Shift Tab` | Ein-/Ausrücken |
-| `Strg F` | Auf der Seite suchen | | `Strg Shift ↑ ↓` | Block verschieben |
-| `Strg [` / `Strg ]` | Zurück / Vorwärts | | `Strg D` | Duplizieren |
-| `Strg Z` / `Strg Y` | Rückgängig / Wiederholen | | `Strg B I U E` | Fett, Kursiv, Unterstrichen, Code |
-| `Strg J` | KI-Panel | | `Strg Shift S` | Durchgestrichen |
-| `Strg \` | Seitenleiste | | `Strg Shift H` | Letzte Farbe |
-| `Strg Shift L` | Hell / Dunkel | | `Strg Alt T` | Alle Toggles auf/zu |
-| `Strg Shift J` | Journal | | `Esc` | Block auswählen |
-| `Strg Shift M` | Schnellnotiz | | `Strg ,` | Einstellungen |
-| `Strg Shift G` | Graph | | `Strg /` | Alle Kürzel anzeigen |
-| `Strg Shift T` | Schlagwörter | | `Strg Shift F` | Fokus-Modus |
-
----
-
-## Wo was liegt
-
-Der Aufbau steht oben unter „Der Aufbau"; ausführlich in
-`doku/ARCHITEKTUR.md`. Die grössten Brocken, falls man nur einen Namen sucht:
-
-```
-quell/kern/ablage/indexdb.js              IndexedDB, Datenmodell, Suche, Versionen
-quell/bereiche/datenbanken/steuerung.js   Ansichten, Filter, Sortierung, Rollups
-quell/bereiche/datenbanken/formeln/laufzeit.js   Tokenizer, Parser, Auswerter
-quell/bereiche/editor/ansicht/editor.js   Blockkatalog, Rendern, Tastatur, Slash
-quell/bereiche/wissen/werkzeuge.js        Palette, Journal, Vorlagen, Karteikarten
-quell/bereiche/wissen/verweise.js         [[Links]], Rückverweise, Graph
-quell/bereiche/ki/dienst.js               Ollama und WebLLM mit Umschalter
-quell/schale/aufbau/schale.js             Routing, Seitenmenü, Suche, Start
-quell/schale/aufbau/seitenleiste.js       die linke Leiste
-quell/schale/stil/dunkel.css              die Farben (der Normalfall)
-quell/schale/stil/hell.css                was im Hellmodus anders ist
-quell/schale/stil/                        elf Stilblätter statt einer Datei
-bauen.js                                  baut die Einzeldatei (node bauen.js)
-```
-
-Bewusst **ohne Build-Schritt und ohne Abhängigkeiten im Browsercode**: reines
-HTML, CSS und JavaScript. Die Skripte laden ohne `type="module"`, damit die
-Seite auch per Doppelklick direkt von der Festplatte läuft — nicht nur über
-einen Server.
-
----
-
-## Prüfen
-
-```
-npm install                      einmalig — holt Playwright
-npx playwright install chromium  einmalig — holt den Browser
-npm run pruefen                  alle Läufe (~12 min)
-npm run pruefen -- --schnell     ohne die zwei Messläufe
-npm run pruefen -- 33 85 86      nur diese drei
-node pruefungen/lauf/test87.mjs  ein einzelner Lauf
-node bauen.js                    die Einzeldatei neu bauen
-```
-
-Sie liegen unter `pruefungen/lauf/` und laufen über echtes Chromium gegen die
-echte App — keine Attrappen, keine Mocks, keine nachgebauten Speicher. Welcher
-Lauf welchen Bereich abdeckt, steht in `pruefungen/LIESMICH.md`.
-
-Diese Läufe sind nicht beim Bauen entstanden, sondern **beim Kaputtmachen**.
-Fast jeder hat einen echten Fehler gefunden, den kein Mensch beim Durchklicken
-bemerkt hätte — Sätze, die der Abgleich nur in den Arbeitsspeicher schrieb und
-die nach dem Neuladen nie wiederkamen; ein „Kein Zugriff", das die Rechtezeile
-löschte statt sie zu speichern, womit aus einem Riegel ein Loch wurde.
-
-`test87.mjs` ist der einzige ohne Browser: er prüft, was zwischen zwei Dateien
-steht und deshalb in keinem Verhalten auftaucht — keine rohen Steuerzeichen im
-Quelltext, dieselben Rechte in Oberfläche und Server, und dass die Zeichner
-`App` nicht kennen. 80 Millisekunden.
-
-Sie laufen auch bei jedem Push von selbst (`.github/workflows/pruefen.yml`).
-
-Playwright ist eine **devDependency**: sie wird zum Prüfen gebraucht, nie zum
-Laufen. Wer die App nur benutzt, braucht kein npm und kein Node.
-
----
-
-## Grenzen
-
-Ehrlich gesagt:
-
-- Die Daten liegen an **einem Browserprofil**. Anderer Browser, anderes Gerät,
-  gelöschte Websitedaten — dann sind sie weg. Deshalb: regelmässig sichern.
-- Hochgeladene Bilder und Dateien werden als Data-URL gespeichert. Über
-  12 MB blockt die App ab, sonst platzt der lokale Speicher.
-- Keine Zusammenarbeit in Echtzeit, kein Teilen über das Netz — das ginge
-  nicht ohne Server. Kommentare und Erwähnungen sind für dich selbst gedacht.
-- Wer das Passwort einer verschlüsselten Seite vergisst, kommt nicht mehr
-  an den Inhalt. Das ist der Sinn der Sache.
-- WebLLM braucht WebGPU. Ohne das bleibt Ollama.
-- Beim allerersten Laden eines WebLLM-Modells wird das Modell aus dem Netz
-  geholt. Danach läuft alles offline.
-
----
-
-*Gebaut auf Grundlage einer vollständigen Analyse von Notion — Datenmodell,
-Blocktypen, Eigenschaftstypen, Filter-Operatoren, Formelsprache, Tastenkürzel
-und Farbpalette — und dem Vergleich von zwanzig quelloffenen Notiz-Programmen.*
+Redion ist eine local-first Notiz-, Datenbank- und Wissens-App im Stil von Notion.  
+
+Die App läuft direkt im Browser, speichert deine Daten zuerst auf deinem eigenen Gerät und kann optional mit einem Server/Cloudflare erweitert werden.
+
+Redion soll drei Dinge gleichzeitig können:
+
+1. Lokal arbeiten
+2. Offline sichern
+3. Optional mit Cloud/Server synchronisieren
+
+Das wichtigste Prinzip:
+
+Deine Daten gehören dir. Redion muss auch ohne Konto, ohne Server und ohne Abo funktionieren.
+
+
+
+Inhalt
+
+Was ist Redion?
+
+Ziele
+
+Schnellstart
+
+Nutzungsarten
+
+Projektstruktur
+
+Architekturregeln
+
+Editor
+
+Blöcke
+
+Datenbanken
+
+Formeln
+
+Wissen und Notizen
+
+KI
+
+Dateien und Anhänge
+
+Sicherung und Export
+
+Das .redion-Format
+
+Server und Cloudflare
+
+Konten und Sync
+
+Sicherheit
+
+Tests
+
+Entwicklung
+
+TypeScript-Ziel
+
+Grenzen
+
+Roadmap
+
+
+
+Was ist Redion?
+
+Redion ist eine Notion-ähnliche App für:
+
+Notizen
+Seiten
+Datenbanken
+Aufgaben
+Wikis
+Karteikarten
+Graph
+Dateien
+Kommentare
+Erwähnungen
+Automationen
+KI-Hilfe
+lokale Sicherungen
+optionale Cloud-Synchronisation
+
+Redion ist local-first. Das bedeutet:
+
+Die App funktioniert zuerst lokal.
+Deine Daten liegen zuerst auf deinem Gerät.
+Ein Server ist optional.
+Ein Konto ist optional.
+Cloud-Sync ist optional.
+Export und Offline-Sicherung sind Pflicht.
+
+Redion soll nicht nur eine Web-App sein, sondern ein persönlicher Arbeitsbereich, den man mitnehmen, sichern und später auch auf mehreren Geräten verwenden kann.
+
+
+
+Ziele
+
+Hauptziele
+
+local-first
+offlinefähig
+Notion-ähnlicher Editor
+Notion-ähnliche Datenbanken
+vollständige Sicherung
+Anhänge sicher exportieren
+optional Cloudflare Sync
+optional Konto
+optional öffentliche Seiten
+modulare Architektur
+später vollständige TypeScript-Migration
+
+Nicht-Ziele
+
+Redion soll nicht abhängig sein von:
+
+Pflichtkonto
+Pflichtserver
+Pflichtabo
+Cloud-Zwang
+fremder API
+fremder KI
+dauerhafter Internetverbindung
+
+
+
+Schnellstart
+
+Variante 1: Direkt öffnen
+
+index.html doppelklicken
+
+Das ist die einfachste Nutzung.
+
+Keine Installation.  
+
+Kein Konto.  
+
+Kein Server.
+
+
+
+Variante 2: Einzeldatei öffnen
+
+redion-einzeldatei.html
+
+Diese Datei enthält die App gebündelt in einer einzigen HTML-Datei.
+
+Gut für:
+
+USB-Stick
+Offline-Nutzung
+Archiv
+Weitergabe
+einfaches Testen
+
+
+
+Variante 3: Mit lokalem Prüfserver
+
+npm install
+npm run server
+
+Dann im Browser öffnen:
+
+http://localhost:8790
+
+
+
+Variante 4: App bauen
+
+node bauen.js
+
+Erzeugt oder aktualisiert:
+
+redion-einzeldatei.html
+
+
+
+Variante 5: Prüfungen ausführen
+
+npm install
+npx playwright install chromium
+npm run pruefen
+
+Schneller Lauf:
+
+npm run pruefen -- --schnell
+
+Einzelne Prüfung:
+
+node pruefungen/lauf/test87.mjs
+
+
+
+Nutzungsarten
+
+Redion unterstützt mehrere Nutzungsarten.
+
+1. Nur lokal
+
+Daten liegen im Browser
+kein Konto
+kein Server
+kein Cloud-Sync
+Export über JSON oder .redion
+
+Geeignet für:
+
+private Notizen
+lokale Datenbanken
+Offline-Arbeit
+Einzelgerät
+
+
+
+2. Lokal mit Sicherung
+
+Daten liegen lokal
+regelmäßige Sicherung als JSON oder .redion
+Anhänge können mitgesichert werden
+
+Geeignet für:
+
+Backup
+Umzug auf anderes Gerät
+Langzeitarchiv
+
+
+
+3. Lokal + optionaler Server
+
+App bleibt lokal nutzbar
+Server ermöglicht Sync
+Rechte
+Freigaben
+öffentliche Seiten
+
+Geeignet für:
+
+mehrere Geräte
+private Cloud
+geteilte Arbeitsbereiche
+
+
+
+4. Cloudflare-Modus
+
+Geplant/optional:
+
+Cloudflare Pages für App
+Cloudflare Workers für API
+Cloudflare D1 für Konten, Sync-Daten, Rechte
+Cloudflare R2 für Dateien und große Anhänge
+
+Geeignet für:
+
+persönliche Cloud
+Sync zwischen Geräten
+öffentliche Seiten
+Download von Offline-Paketen
+
+
+
+Projektstruktur
+
+Aktuelle Struktur:
+
+Redion/
+├─ index.html
+├─ redion-einzeldatei.html
+├─ bauen.js
+├─ package.json
+├─ package-lock.json
+├─ start.bat
+├─ oeffnen.bat
+├─ sw.js
+│
+├─ quell/
+│  ├─ start.js
+│  ├─ kern/
+│  ├─ register/
+│  ├─ schale/
+│  └─ bereiche/
+│
+├─ oeffentlich/
+│  ├─ icons/
+│  ├─ manifest/
+│  └─ favicon/
+│
+├─ server/
+│  ├─ Cloudflare-Worker
+│  ├─ D1/Datenbank
+│  ├─ Sync
+│  ├─ Rechte
+│  └─ Freigaben
+│
+├─ functions/
+│  └─ api/
+│
+├─ doku/
+│  └─ Architektur und Entscheidungen
+│
+├─ pruefungen/
+│  ├─ alle.js
+│  └─ lauf/
+│
+├─ AUFGABEN.md
+├─ LUECKEN.md
+├─ ENTSCHEIDUNGEN.md
+├─ CLOUDFLARE.md
+├─ SERVER-EINRICHTEN.md
+├─ START-MIT-CLAUDE-CODE.md
+└─ CLAUDE.md
+
+
+
+Architekturregeln
+
+Redion folgt drei Grundregeln.
+
+1. Bereiche kennen einander nicht direkt
+
+Ein Bereich darf nur verwenden:
+
+kern/
+register/
+eigene Dateien
+
+Ein Bereich darf nicht direkt aus einem anderen Bereich importieren.
+
+Nicht so:
+
+import ... from "../datenbanken/..."
+import ... from "../editor/..."
+
+Besser:
+
+gemeinsame Logik nach kern/
+Kommunikation über Ereignisbus
+Funktionen über register/
+
+
+
+2. Neuer Bereich = zwei Einträge
+
+Ein neuer Bereich braucht grundsätzlich:
+
+quell/register/module.js
+quell/register/navigation.js
+
+Wenn mehr nötig ist, muss geprüft werden, ob der Bereich falsch geschnitten ist.
+
+
+
+3. Neue Funktionen sind Register-Objekte
+
+Neue Dinge werden als Objekte registriert:
+
+Blockart      → register/bloecke.js
+Ansicht       → register/ansichten.js
+Eigenschaft   → register/eigenschaften.js
+Formel        → register/formeln.js
+Befehl        → register/befehle.js
+Tastenkürzel  → register/tasten.js
+Vorlage       → register/vorlagen.js
+Verbindung    → register/verbindungen.js
+
+
+
+Wichtige Ordner
+
+quell/start.js
+
+Der einzige Einstiegspunkt.
+
+Aufgaben:
+
+DOM abwarten
+App starten
+Fehler abfangen
+Start-Ereignisse senden
+
+
+
+quell/kern/
+
+Gemeinsamer Kern.
+
+Enthält:
+
+Ablage
+IndexedDB
+Datenmodell
+Zustand
+Verlauf
+Ereignisse
+Abgleich
+Zugang
+Rechte
+Sicherheit
+Krypto
+Helfer
+Einstellungen
+
+Der Kern kennt keine einzelnen Bereiche.
+
+
+
+quell/register/
+
+Zentrale Kataloge.
+
+Enthält:
+
+module.js
+navigation.js
+bloecke.js
+eigenschaften.js
+ansichten.js
+formeln.js
+befehle.js
+tasten.js
+vorlagen.js
+verbindungen.js
+
+
+
+quell/schale/
+
+Globale Oberfläche.
+
+Enthält:
+
+App-Schale
+Seitenleiste
+Kopfbereich
+Dialoge
+Overlays
+Routing
+Suche
+Stile
+
+
+
+quell/bereiche/
+
+Fachbereiche.
+
+Beispiele:
+
+editor
+datenbanken
+wissen
+ki
+verbinden
+dateien
+vorlagen
+kommentare
+erwaehnungen
+seiten
+planen
+einstellungen
+hilfe
+
+
+
+Editor
+
+Der Editor ist blockbasiert.
+
+Alles ist ein Block:
+
+Absatz
+Überschrift
+Aufgabe
+Liste
+Toggle
+Zitat
+Callout
+Code
+Formel
+Datei
+Bild
+Video
+Audio
+Datenbank
+Whiteboard
+Diagramm
+Unterseite
+Synchronisierter Block
+KI-Block
+
+Der Editor unterstützt:
+
+Slash-Menü
+Markdown-Kürzel
+Inline-Formatierung
+Block-Auswahl
+Verschieben
+Duplizieren
+Einrücken
+Kommentare
+Erwähnungen
+Links
+Rückverweise
+Tastenkürzel
+
+
+
+Blöcke
+
+Redion enthält aktuell über 40 Blocktypen.
+
+Grundlegend
+
+Text
+Überschrift 1
+Überschrift 2
+Überschrift 3
+Aufgabe
+Aufzählung
+Nummerierung
+Toggle
+Zitat
+Callout
+Trennlinie
+
+Datenbank
+
+Tabelle
+Board
+Liste
+Galerie
+Kalender
+
+Medien
+
+Bild
+Video
+Audio
+Datei
+Lesezeichen
+Einbetten
+
+Erweitert
+
+Code
+Formel
+Einfache Tabelle
+Inhaltsverzeichnis
+Pfad
+Zwei Spalten
+Drei Spalten
+Unterseite
+Link zu Seite
+Synchronisierter Block
+Knopf
+HTML
+
+Wissen
+
+Karteikarte
+Whiteboard
+Diagramm
+Rückverweise
+
+KI
+
+Text schreiben
+Zusammenfassen
+Aufgaben ableiten
+Übersetzen
+Verbessern
+
+
+
+Markdown-Kürzel
+
+Beim Tippen können Kürzel automatisch umgewandelt werden:
+
+#        Überschrift 1
+##       Überschrift 2
+###      Überschrift 3
+-        Aufzählung
+*        Aufzählung
++        Aufzählung
+1.       Nummerierung
+[]       Aufgabe
+[ ]      Aufgabe
+---      Trennlinie
+>        Toggle oder Zitat
+```       Codeblock
+$$       Formel
+
+Inline:
+
+**fett**
+*kursiv*
+__unterstrichen__
+~~durchgestrichen~~
+`code`
+[[Seite]]
+#schlagwort
+((Blockverweis))
+@heute
+@Person
+:emoji
+$a^2$
+
+
+
+Datenbanken
+
+Redion-Datenbanken sind ähnlich aufgebaut wie in Notion.
+
+Grundprinzip:
+
+Datenbank-Block
+→ Schema
+→ Ansichten
+→ Zeilen als Seiten
+
+Eine Datenbank enthält:
+
+Schema
+Eigenschaften
+Ansichten
+Filter
+Sortierung
+Gruppierung
+Berechnungen
+Zeilen
+Seiten
+
+
+
+Ansichten
+
+Geplante/unterstützte Ansichten:
+
+Tabelle
+Board
+Liste
+Galerie
+Kalender
+Zeitstrahl
+Diagramm
+Formular
+
+
+
+Eigenschaftstypen
+
+Redion unterstützt viele Eigenschaftstypen:
+
+Titel
+Text
+Zahl
+Auswahl
+Mehrfachauswahl
+Status
+Datum
+Person
+Kontrollkästchen
+URL
+E-Mail
+Telefon
+Formel
+Erstellt am
+Zuletzt geändert
+Dateien
+Verknüpfung
+Rollup
+Laufende Nummer
+Knopf
+KI-Feld
+
+
+
+Datenbankfunktionen
+
+Filter mit UND/ODER
+typgerechte Operatoren
+Sortierung
+Gruppierung
+Untergruppierung
+Berechnungen unter Spalten
+Rollups über Verknüpfungen
+Seitenvorschau
+Rechtsklickmenü
+CSV-Export
+Zeilenhöhe
+Kartengröße
+Textumbruch
+leere Gruppen
+Anzeigegrenzen
+
+
+
+Formeln
+
+Redion enthält eine eigene Formelsprache nach dem Vorbild von Notion Formulas 2.0.
+
+Wichtig:
+
+kein eval()
+kein Function()
+eigener Tokenizer
+eigener Parser
+eigene Laufzeit
+
+Dadurch kann eine Formel keinen fremden JavaScript-Code ausführen.
+
+
+
+Beispiele
+
+"Woche " + format(week(now()))
+
+Richtig:
+
+"Hallo " + name
+
+Nicht für Text:
+
+concat("Hallo ", name)
+
+concat() ist für Listen gedacht.
+
+
+
+Funktionsgruppen
+
+Logik
+Zahlen
+Text
+Listen
+Datum
+Formatierung
+Vergleich
+
+Beispiele:
+
+if
+ifs
+let
+lets
+empty
+round
+floor
+ceil
+abs
+min
+max
+sum
+mean
+median
+pow
+sqrt
+format
+length
+substring
+contains
+replace
+replaceAll
+lower
+upper
+trim
+split
+repeat
+join
+map
+filter
+find
+some
+every
+at
+first
+last
+unique
+sort
+now
+today
+dateAdd
+dateBetween
+formatDate
+year
+month
+week
+day
+hour
+minute
+
+
+
+Wissen und Notizen
+
+Redion soll auch als persönliches Wissenssystem dienen.
+
+Funktionen:
+
+[[Wikilinks]]
+Rückverweise
+Graph
+Schlagwörter
+Schnellnotizen
+Tagesjournal
+Karteikarten
+Wiederholungsplan
+Vorlagen
+Versionen
+Fokus-Modus
+Präsentation
+Markdown-Quelltext
+Schreibstatistik
+
+
+
+Karteikarten
+
+Karteikarten können aus Blöcken entstehen.
+
+Ziel:
+
+Wissen langfristig wiederholen
+SM-2-artige Wiederholung
+fällige Karten anzeigen
+Lernfortschritt speichern
+
+
+
+KI
+
+Redion unterstützt lokale KI.
+
+Ollama
+
+läuft als Programm auf dem eigenen Rechner
+schneller
+größere Modelle möglich
+keine Cloud nötig
+
+WebLLM
+
+läuft direkt im Browser
+kein separates Programm nötig
+braucht WebGPU
+Modell wird beim ersten Mal geladen
+danach Browser-Cache
+
+
+
+KI-Grundsätze
+
+kein Text verlässt ungefragt den Rechner
+kein API-Schlüssel nötig
+keine Abrechnung
+keine Cloud-KI als Pflicht
+KI muss optional bleiben
+
+KI kann helfen bei:
+
+Text schreiben
+Zusammenfassen
+Aufgaben ableiten
+Übersetzen
+Verbessern
+KI-Felder in Datenbanken
+
+
+
+Dateien und Anhänge
+
+Redion unterstützt Anhänge wie:
+
+Bilder
+Videos
+Audios
+PDFs
+Dokumente
+sonstige Dateien
+
+Dateien können lokal gespeichert und in Seiten oder Datenbanken verwendet werden.
+
+Wichtige Regeln:
+
+Datei-IDs müssen stabil bleiben
+Blöcke müssen Anhänge nach Import wiederfinden
+große Dateien dürfen nicht vollständig im RAM landen
+Anhänge müssen sicher exportierbar sein
+
+
+
+Sicherung und Export
+
+Redion hat mehrere Exportwege:
+
+JSON-Sicherung
+.redion-Sicherung
+Markdown
+HTML
+PDF
+CSV für Datenbanken
+Ordner voller Markdown-Dateien
+eine HTML-Datei
+
+
+
+JSON-Sicherung
+
+Gut für:
+
+Notizen
+Datenbanken
+Einstellungen
+kleine Arbeitsbereiche ohne Anhänge
+
+Eigenschaften:
+
+lesbar
+einfach
+gut für Textdaten
+
+Wichtig:
+
+JSON enthält keine großen Anhänge.
+Wenn eine JSON-Sicherung importiert wird, dürfen vorhandene Anhänge nicht gelöscht werden.
+
+
+
+.redion-Sicherung
+
+Für vollständige Sicherungen mit Anhängen.
+
+Gut für:
+
+kompletter Arbeitsbereich
+Bilder
+Videos
+Dateien
+Offline-Paket
+Umzug auf anderes Gerät
+Langzeitarchiv
+
+
+
+Das .redion-Format
+
+.redion ist ein ZIP-artiges Paket.
+
+Aufbau:
+
+mein-arbeitsbereich.redion
+├─ daten.json
+├─ dateien.json
+└─ dateien/
+   ├─ bild.jpg
+   ├─ dokument.pdf
+   └─ video.mp4
+
+daten.json
+
+Enthält:
+
+Seiten
+Blöcke
+Datenbanken
+Ansichten
+Eigenschaften
+Einstellungen
+Versionen
+
+dateien.json
+
+Enthält:
+
+Datei-IDs
+Dateinamen
+MIME-Typen
+Größen
+Zuordnungen
+Prüfsummen
+
+dateien/
+
+Enthält die echten Anhänge.
+
+
+
+Warum .redion?
+
+Normale JSON-Sicherung ist für große Dateien ungeeignet.
+
+Problem:
+
+Blob + JSON.stringify = leer oder falsch
+Base64 macht Dateien deutlich größer
+große Videos können Browser/Handy zum Absturz bringen
+
+.redion löst das:
+
+Anhänge bleiben echte Dateien
+echte Dateinamen bleiben erhalten
+große Dateien werden stückweise verarbeitet
+Import erhält Datei-IDs
+Backup kann langfristig auch ohne Redion verstanden werden
+
+
+
+Große Dateien
+
+Redion soll große Dateien speicherschonend behandeln.
+
+Regel:
+
+Nicht alles vollständig in den Arbeitsspeicher laden.
+
+Stattdessen:
+
+stückweise lesen
+stückweise schreiben
+Prüfsummen stückweise berechnen
+
+Ziel:
+
+Auch große Anhänge, zum Beispiel Videos, sollen sicher gesichert werden.
+
+
+
+Grenze über 4 GB
+
+Normales ZIP ohne ZIP64 hat Grenzen.
+
+Wenn eine Datei oder ein Paket zu groß ist, soll Redion:
+
+nicht still ein kaputtes Archiv erzeugen
+
+sondern klar sagen:
+
+Diese Datei ist größer als das aktuelle .redion-Format unterstützt.
+
+
+
+Server und Cloudflare
+
+Redion funktioniert ohne Server.
+
+Ein optionaler Server kann aber zusätzliche Funktionen ermöglichen:
+
+Konten
+Login
+Sitzungen
+Sync
+Rechte
+Freigaben
+öffentliche Seiten
+Feldrechte
+Protokoll
+API
+MCP
+
+
+
+Cloudflare-Ziel
+
+Geplante/optionale Cloudflare-Struktur:
+
+Cloudflare Pages
+→ App ausliefern
+
+Cloudflare Workers
+→ API, Auth, Sync, Rechte
+
+Cloudflare D1
+→ Konten, Sitzungen, Metadaten, Sync-Sätze, Rechte
+
+Cloudflare R2
+→ Dateien, Anhänge, .redion-Pakete, große Medien
+
+
+
+D1
+
+Gut für:
+
+Konten
+Sitzungen
+Arbeitsbereiche
+Sync-Datensätze
+Rechte
+öffentliche Seiten
+Protokoll
+kleine Metadaten
+
+Nicht gut für:
+
+große Dateien
+Videos
+Bilder
+Anhänge
+
+
+
+R2
+
+Gut für:
+
+Dateien
+Anhänge
+Bilder
+Videos
+PDFs
+Backups
+.redion-Pakete
+
+
+
+Konten und Sync
+
+Ein Konto soll optional sein.
+
+Redion soll diese Modi unterstützen:
+
+nur lokal
+lokal mit Sicherung
+lokal + Sync
+Cloud-Arbeitsbereich
+öffentliche Seite
+Offline-Paket herunterladen
+
+Wichtig:
+
+Kein Konto darf Pflicht sein.
+Cloud-Sync darf nicht automatisch private Daten hochladen.
+Nutzer entscheidet, wo Daten liegen.
+
+
+
+Rechte und Freigaben
+
+Mit Server soll Redion echte Rechte unterstützen.
+
+Rollen:
+
+voll
+edit
+komm
+lesen
+kein
+
+Funktionen:
+
+Arbeitsbereiche teilen
+Seiten freigeben
+öffentliche Seiten
+Feldrechte
+Kommentarrechte
+Protokoll
+Widerruf
+
+Regel:
+
+Serverrechte müssen wirklich sperren.
+UI-Rechte allein reichen nicht.
+
+
+
+Sicherheit
+
+Redion behandelt persönliche Daten als privat.
+
+Lokale Sicherheit
+
+Daten liegen im Browser
+verschlüsselte Seiten möglich
+Passwort wird nicht gespeichert
+AES-GCM für verschlüsselte Inhalte
+Export bewusst vom Nutzer ausgelöst
+
+Browser-Sicherheit
+
+Regeln:
+
+Nutzertext escapen
+kein eval()
+keine unsicheren Formeln
+kein ungeprüftes innerHTML
+Einbettungen prüfen
+Links prüfen
+
+Server-Sicherheit
+
+Regeln:
+
+Tokens hashen
+CORS einschränken
+Rate-Limits
+Rechte serverseitig prüfen
+Dateinamen säubern
+Uploads begrenzen
+keine Secrets im Repo
+
+
+
+Tests
+
+Redion nutzt echte Prüfungen gegen die echte App.
+
+Befehle:
+
+npm install
+npx playwright install chromium
+npm run pruefen
+
+Schnell:
+
+npm run pruefen -- --schnell
+
+Einzelne Prüfung:
+
+node pruefungen/lauf/test87.mjs
+
+Einzeldatei bauen:
+
+node bauen.js
+
+
+
+Wichtige Prüfungen
+
+test87.mjs
+
+prüft Architektur- und Sicherheitsgrenzen.
+
+test100.mjs
+
+prüft .redion-Sicherung mit echten Bytes und Anhängen.
+
+
+
+Testprinzip
+
+Tests sollen echte Fehler finden:
+
+keine Attrappen
+keine falschen Mocks
+echte App
+echter Browser
+echter Speicher
+echte Dateien
+
+
+
+Entwicklung
+
+Scripts
+
+{
+  "bauen": "node bauen.js",
+  "pruefen": "node pruefungen/alle.js",
+  "server": "node server/pruefserver.js 8790",
+  "veroeffentlichen": "npx wrangler deploy"
+}
+
+Lokaler Ablauf
+
+npm install
+npm run pruefen -- --schnell
+node bauen.js
+
+
+
+Code-Stil
+
+Redion ist aktuell ein klassisches HTML/CSS/JavaScript-Projekt, soll aber langfristig professionell auf TypeScript migriert werden.
+
+Aktuelle Regeln:
+
+bestehende Struktur respektieren
+keine unnötigen Dependencies
+keine großen Dateien weiter aufblasen
+sicheren DOM-Code schreiben
+Nutzertexte auf Deutsch
+Tests bei Speicheränderungen
+
+
+
+TypeScript-Ziel
+
+Redion soll langfristig vollständig auf TypeScript umgestellt werden.
+
+Ziel:
+
+TypeScript
+klare Typen
+modulare Struktur
+Build-System
+Tests
+Cloudflare-kompatibel
+local-first
+offlinefähig
+exportierbar
+
+
+
+TypeScript-Migration
+
+Nicht alles auf einmal.
+
+Phasen:
+
+1. TypeScript-Plan
+2. tsconfig
+3. zentrale Typen
+4. kleine Kernhelfer
+5. .redion/Backup-Code
+6. IndexedDB-Schicht
+7. Register
+8. Datenbanken/Formeln
+9. Editor
+10. Server/Cloudflare
+
+
+
+Neue TypeScript-Struktur
+
+Langfristig:
+
+src/
+├─ main.ts
+├─ app/
+├─ core/
+│  ├─ storage/
+│  ├─ blocks/
+│  ├─ databases/
+│  ├─ events/
+│  ├─ sync/
+│  ├─ security/
+│  ├─ settings/
+│  └─ utils/
+├─ registry/
+├─ areas/
+├─ styles/
+└─ tests/
+
+Während der Migration darf quell/ weiter existieren.
+
+
+
+Wichtige TypeScript-Typen
+
+Beispiele für zentrale Typen:
+
+export type ID = string
+export type ISODateTime = string
+
+export type BlockId = string
+export type PageId = string
+export type CollectionId = string
+export type ViewId = string
+export type FileId = string
+
+export interface RedionBlock {
+  id: BlockId
+  type: string
+  parentId: PageId | BlockId | null
+  properties: Record<string, unknown>
+  children?: BlockId[]
+  createdAt: ISODateTime
+  updatedAt: ISODateTime
+  deleted?: boolean
+}
+
+export interface RedionFile {
+  id: FileId
+  name: string
+  mime: string
+  size: number
+  createdAt: ISODateTime
+}
+
+
+
+Grenzen
+
+Aktuelle oder wichtige Grenzen:
+
+Daten liegen lokal im Browserprofil
+anderer Browser = anderer Speicher
+gelöschte Websitedaten = Daten weg, wenn keine Sicherung existiert
+WebLLM braucht WebGPU
+Ollama muss lokal laufen
+Server/Cloud ist optional und nicht Pflicht
+große Dateien brauchen .redion/R2 statt JSON
+über 4 GB braucht besondere Behandlung
+
+
+
+Roadmap
+
+Etappe 1: Lokale Stabilität
+
+Editor stabil
+Datenbanken stabil
+Versionen stabil
+Multi-Tab sicherer
+Backup mit Anhängen
+.redion-Format
+Tests grün
+
+Etappe 2: TypeScript-Grundlage
+
+tsconfig
+zentrale Typen
+Build-System
+typecheck
+erste Kernmodule in TypeScript
+
+Etappe 3: Dateien und Backup
+
+.redion dokumentieren
+Import/Export härten
+große Dateien testen
+R2-Konzept vorbereiten
+
+Etappe 4: Cloudflare
+
+Workers
+D1
+R2
+Konten
+Sessions
+Sync
+Rechte
+öffentliche Seiten
+
+Etappe 5: Vollständige TypeScript-Migration
+
+Kern
+Register
+Editor
+Datenbanken
+Formeln
+Server
+Tests
+
+Etappe 6: Notion-ähnliche Vollständigkeit
+
+bessere Datenbankansichten
+Formulare
+Relationen
+Rollups
+Automationen
+KI-Felder
+Team-/Bereichsmodell
+öffentliche Seiten
+Offline-Pakete
+
+
+
+Projektphilosophie
+
+Redion soll nicht die schnellste Demo sein.  
+
+Redion soll eine App sein, der man seine Notizen, Dateien und Datenbanken anvertrauen kann.
+
+Darum gilt:
+
+Datenintegrität vor neuen Features.
+Sicherung vor Design.
+Offline vor Cloud.
+Klarheit vor Magie.
+Tests vor Vertrauen.
+
+
+
+Wichtigster Satz
+
+Redion darf lieber langsamer neue Funktionen bekommen, als jemals Nutzerdaten zu verlieren.
