@@ -310,6 +310,48 @@ gleich('… und ihren Zahlen', nachher.zahlen, [10, 20, 30, 40]);
 await zweite.close();
 
 /* ========================================================================= *
+ * 5b · CSV IN EINE DATENBANK — mit dem richtigen Trennzeichen
+ * ------------------------------------------------------------------------
+ * Der Import der Datenbanken benutzte `csvZerlegen`, und der trennt bei
+ * Komma UND Semikolon UND Tabulator gleichzeitig. Eine deutsche Datei
+ * benutzt das Semikolon zum Trennen und das Komma als Dezimalzeichen:
+ *
+ *     Miete;1450,50;Januar
+ *
+ * Daraus wurden fünf Felder statt drei, und aus `1450,50` wurden `1450` und
+ * `50`. Der Betrag war weg — und es sah nicht nach einem Fehler aus, es sah
+ * nach zwei Spalten mehr aus.
+ *
+ * Geprüft wird hier der Zerleger, den der Import jetzt benutzt, mit genau
+ * dieser Zeile. Der Dialog davor lässt sich ohne echte Datei nicht auslösen;
+ * dass er da ist, hält die Quelltextprüfung weiter unten fest.
+ * ========================================================================= */
+console.log('\n5b · CSV für Datenbanken');
+
+const csvDb = await seite.evaluate(() => {
+  const w = window as any;
+  return {
+    dreiFelder: w.Csv.zerlege('Miete;1450,50;Januar'),
+    alt: typeof Datenbank !== 'undefined' && Datenbank.csvZerlegen
+      ? Datenbank.csvZerlegen('Miete;1450,50;Januar') : null,
+    fragtVorher: /Dialog\.wahl/.test(String(Datenbank.csvImport)),
+    nimmtCsv: /Csv\.zerlege/.test(String(Datenbank.csvImport)),
+    spaetAnlegen: String(Datenbank.csvImport).indexOf('Dialog.wahl') <
+                  String(Datenbank.csvImport).lastIndexOf('updateCollection')
+  };
+}) as any;
+
+gleich('Der neue Zerleger macht drei Felder daraus',
+  csvDb.dreiFelder, [['Miete', '1450,50', 'Januar']]);
+p('… und der alte machte fünf — deshalb die Änderung',
+  !csvDb.alt || csvDb.alt[0].length > 3, JSON.stringify(csvDb.alt));
+p('Der Datenbankimport benutzt den neuen Zerleger', csvDb.nimmtCsv);
+p('… und fragt vor dem Einlesen', csvDb.fragtVorher);
+/* WER ABBRICHT, DARF KEINE NEUEN SPALTEN BEHALTEN. Der erste Entwurf legte
+   sie an, bevor gefragt wurde — und beim Abbrechen standen sie trotzdem da. */
+p('… und legt neue Spalten erst NACH der Antwort an', csvDb.spaetAnlegen);
+
+/* ========================================================================= *
  * 6 · AM TELEFON
  * ========================================================================= */
 console.log('\n6 · Am Telefon (390 px)');

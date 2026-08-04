@@ -491,18 +491,33 @@ lautlos. Genau hier verliert Notion die Leute, die wirklich Daten haben.
 
 ---
 
-## Phase 8 · CSV/XLSX Import und Export
+## Phase 8 · CSV/XLSX Import und Export · ◐ **grösstenteils erledigt**
 
-**Teilweise vorhanden:** CSV rein und raus gibt es in den Datenbanken,
-einfaches XLSX-Lesen und -Schreiben in `bereiche/dateien/`.
+**Reihenfolge**
 
-**Reihenfolge** — CSV-Vorschau vor dem Übernehmen · XLSX-Export mit mehreren
-Blättern · XLSX-Import mit Typerkennung · ODS später prüfen
+- ~~CSV-Vorschau vor dem Übernehmen~~ — im Tabellenblock **und** in den
+  Datenbanken. Beide sagen vorher nachgezählt, was passiert; der
+  Datenbankimport nennt zusätzlich, wie viele Spalten **neu angelegt**
+  werden, und legt sie erst nach der Antwort an.
+- ~~XLSX-Export~~ — echte `.xlsx` aus dem Tabellenblock und aus jeder
+  Datenbank.
+- ~~XLSX-Import~~ — in den Tabellenblock, über `Einlesen.xlsxLesen`.
+- **Offen:** XLSX-Import mit Typerkennung in eine Datenbank (heute wird
+  Text angelegt) · Export mit mehreren Blättern aus einer Mappe · ODS.
 
-**Fertig wenn** — ein Rundlauf mit echten Bytes: exportieren, löschen,
-importieren, vergleichen.
+**~~Fertig wenn~~ — ein Rundlauf mit echten Bytes: exportieren, löschen,
+importieren, vergleichen.** Erledigt: `test111` baut eine echte `.xlsx`
+— ZIP, CRC32, die vier Beipackzettel —, nimmt sie wieder auseinander und
+vergleicht Zelle für Zelle, mit Semikolon im Feld, Anführungszeichen,
+deutschem Komma, Umlaut und leerer Zeile.
 
-**Priorität** — mittel.
+**Der Fund dabei:** der bisherige CSV-Zerleger trennt bei Komma UND
+Semikolon UND Tabulator gleichzeitig. Aus `Miete;1450,50;Januar` wurden fünf
+Felder statt drei, und der Betrag war weg — es sah nicht nach einem Fehler
+aus, sondern nach zwei Spalten mehr. `core/spreadsheet/csv.ts` erkennt das
+Zeichen jetzt, ausserhalb von Anführungszeichen gezählt.
+
+**Priorität** — der Rest: niedrig.
 
 ---
 

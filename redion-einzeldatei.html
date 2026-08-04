@@ -27987,6 +27987,30 @@ const Datenbank = (() => {
     return zeilen.filter(z => z.some(x => String(x).trim()));
   };
 
+  /* ------------------------------------------------------------------------
+   * CSV EINLESEN — jetzt mit Vorschau, und mit dem richtigen Trennzeichen
+   * ------------------------------------------------------------------------
+   * ZWEI DINGE STANDEN HIER FALSCH, und beide kosten Daten.
+   *
+   * **1 · Das Trennzeichen.** `csvZerlegen` trennt bei Komma UND Semikolon
+   * UND Tabulator, gleichzeitig. Eine deutsche oder Schweizer Datei benutzt
+   * das Semikolon zum Trennen und das Komma als Dezimalzeichen:
+   *
+   *     Miete;1450,50;Januar
+   *
+   * Daraus wurden fünf Felder statt drei, und aus `1450,50` wurden `1450`
+   * und `50`. Der Betrag war weg, und es sah nicht nach einem Fehler aus —
+   * es sah nach zwei Spalten mehr aus. `Csv.zerlege` erkennt das Zeichen,
+   * und zwar ausserhalb von Anführungszeichen gezählt, damit ein Komma in
+   * „Meier, Hans" nicht mitredet.
+   *
+   * **2 · Es wurde nichts gefragt.** Einlesen legt Zeilen an und ergänzt
+   * Spalten am Schema — das ist eine Massenänderung, und sie geschah
+   * wortlos. Jetzt steht davor, was passieren wird: wie viele Zeilen, welche
+   * Spalten zugeordnet werden und wie viele NEU angelegt werden. Die letzte
+   * Zahl ist die wichtigere: eine falsch benannte Spalte in der Datei legt
+   * sonst still eine zweite Spalte gleichen Inhalts an.
+   * ----------------------------------------------------------------------*/
   const csvImport = (coll) => {
     const inp = document.createElement('input');
     inp.type = 'file';
@@ -27994,35 +28018,78 @@ const Datenbank = (() => {
     inp.addEventListener('change', async () => {
       const f = inp.files[0];
       if (!f) return;
-      const zeilen = csvZerlegen((await f.text()).replace(/^﻿/, ''));
+      const roh = await f.text();
+
+      /* Der bessere Zerleger, wenn er da ist — sonst der alte. Ein Import,
+         der ohne `core/spreadsheet/csv.js` gar nicht mehr ginge, wäre die
+         schlechtere Abhängigkeit. */
+      const zeilen = (typeof Csv !== 'undefined')
+        ? Csv.zerlege(roh).filter(z => z.some(x => String(x).trim()))
+        : csvZerlegen(roh.replace(/^﻿/, ''));
       if (zeilen.length < 2) { UI.toast('Die Datei enthält keine Daten'); return; }
 
       const kopf = zeilen[0].map(x => String(x).trim());
       const titelKey = Object.keys(coll.schema).find(k => coll.schema[k].type === 'title') || 'title';
 
-      /* Spalten zuordnen — was fehlt, wird als Text angelegt */
-      const karte = kopf.map((name, i) => {
-        if (i === 0) return titelKey;
-        let k = Object.keys(coll.schema).find(x => coll.schema[x].name.toLowerCase() === name.toLowerCase());
-        if (!k) {
-          k = Store.uid().slice(0, 5);
-          coll.schema[k] = { name: name || 'Spalte ' + (i + 1), type: 'text' };
-        }
-        return k;
+      /* ERST NACHSEHEN, DANN FRAGEN, DANN ANLEGEN. Die Zuordnung wird hier
+         nur BERECHNET; angelegt wird erst nach der Antwort. Vorher schon
+         Spalten ins Schema zu schreiben hiesse: wer abbricht, hat trotzdem
+         neue Spalten. */
+      const plan = kopf.map((name, i) => {
+        if (i === 0) return { name, key: titelKey, neu: false, titel: true };
+        const k = Object.keys(coll.schema).find(
+          x => String(coll.schema[x].name).toLowerCase() === String(name).toLowerCase());
+        return k ? { name, key: k, neu: false } : { name, key: null, neu: true };
+      });
+      const neueSpalten = plan.filter(x => x.neu);
+      const getroffen = plan.filter(x => !x.neu && !x.titel);
+
+      const vorschau = zeilen.slice(1, 4)
+        .map(z => z.slice(0, 4).map(v => String(v).slice(0, 14)).join(' · ')).join('\n');
+
+      const antwort = (typeof Dialog !== 'undefined')
+        ? await Dialog.wahl({
+            titel: 'Einlesen: ' + f.name,
+            text: (zeilen.length - 1) + ' Zeilen × ' + kopf.length + ' Spalten\n' +
+                  'Trennzeichen: ' +
+                    (typeof Csv !== 'undefined'
+                      ? (Csv.erkenneTrenner(roh) === '\t' ? 'Tabulator' : Csv.erkenneTrenner(roh))
+                      : 'gemischt') + '\n\n' +
+                  '„' + kopf[0] + '" wird der Titel\n' +
+                  getroffen.length + ' Spalten passen zu vorhandenen' +
+                  (neueSpalten.length
+                    ? '\n' + neueSpalten.length + ' Spalten werden NEU angelegt: ' +
+                      neueSpalten.map(x => x.name).join(', ')
+                    : '\nEs wird keine neue Spalte angelegt') +
+                  '\n\n' + vorschau + (zeilen.length > 4 ? '\n…' : ''),
+            knoepfe: [
+              { id: 'ja', text: 'Einlesen',
+                hinweis: (zeilen.length - 1) + ' Zeilen kommen dazu — vorhandene bleiben' },
+              { id: '', text: 'Abbrechen', hinweis: 'Es wird nichts verändert' }
+            ] })
+        : 'ja';
+      if (antwort !== 'ja') return;
+
+      /* Jetzt erst die neuen Spalten anlegen. */
+      plan.forEach((x, i) => {
+        if (!x.neu) return;
+        x.key = Store.uid().slice(0, 5);
+        coll.schema[x.key] = { name: x.name || 'Spalte ' + (i + 1), type: 'text' };
       });
       Store.updateCollection(coll.id, { schema: coll.schema });
 
       let n = 0;
       zeilen.slice(1).forEach(z => {
         const props = {};
-        karte.forEach((k, i) => { if (k !== titelKey) props[k] = z[i] ?? ''; });
+        plan.forEach((x, i) => { if (x.key !== titelKey) props[x.key] = z[i] ?? ''; });
         const r = Store.addRow(coll.id, props);
         Store.updateBlock(r.id, { text: z[0] || 'Ohne Titel' });
         n++;
       });
 
       App.zeichneSeite();
-      UI.toast(n + ' Einträge eingelesen');
+      UI.toast(n + ' Einträge eingelesen' +
+        (neueSpalten.length ? ', ' + neueSpalten.length + ' Spalten angelegt' : ''));
     });
     inp.click();
   };
