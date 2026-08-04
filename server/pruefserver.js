@@ -15,6 +15,7 @@
 import http from 'node:http';
 import { beantworte } from './kern.js';
 import { ablageSpeicher } from './ablage.js';
+import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.js';
 
 export const starte = async (port = 8790, opt = {}) => {
   const ablage = opt.ablage || ablageSpeicher();
@@ -26,6 +27,17 @@ export const starte = async (port = 8790, opt = {}) => {
     Object.entries(req.headers).forEach(([k, v]) => { kopf[k.toLowerCase()] = String(v); });
     const suche = {};
     u.searchParams.forEach((v, k) => { suche[k] = v; });
+
+    /* Dieselbe Tür wie bei Cloudflare, derselbe Riegel — sonst prüft der
+       Prüfserver etwas anderes als der echte Server, und die Prüfläufe
+       sagen nichts über den Ernstfall. */
+    if (koerperZuGross(u.pathname, kopf['content-length'])) {
+      const z = zuGrossAntwort(u.pathname);
+      req.resume();                       /* den Rest wegwerfen, nicht lesen */
+      res.writeHead(z.status, z.kopf);
+      res.end(z.koerper);
+      return;
+    }
 
     let roh = '';
     for await (const stueck of req) roh += stueck;

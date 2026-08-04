@@ -366,3 +366,46 @@ zählt Grössen und Versätze in 32 Bit; darüber braucht es ZIP64, und das ist
 ein anderes Format, kein grösseres Feld. Hier wird deshalb abgebrochen, mit
 dem Namen der Datei und dem Grund. Ein Archiv, das erst beim Auspacken
 auffällt, ist schlimmer als eine Sicherung, die nicht zustande kam.
+
+---
+
+## E11 · Was eine Marke darf — und die Regel, die am ehesten wieder verlorengeht
+
+**Die Lage.** Eine Marke ist ein Zugangsschlüssel für ein Programm, mit
+Rechten: `lesen`, `schreiben`, `alles`. Geprüft wurden sie an zwei von neun
+Wegen. Über `/bereich` konnte eine Lesemarke schreiben, über `/sync` den
+ganzen Bestand ersetzen, und über `/marken` sich selbst eine neue mit `alles`
+ausstellen.
+
+**Die Entscheidung, die nicht selbstverständlich ist: Regel 3.** Keine Marke
+darf Rechte oder Schlüssel ändern — auch keine mit `alles`. Drei Wege sind
+deshalb ganz zu: `/marken`, `/freigabe`, `/feldrecht`.
+
+Dagegen sprach: `alles` heisst `alles`, und wer sich eine solche Marke
+ausstellt, weiss doch, was er tut. Das ist richtig — solange die Marke bei
+ihm bleibt. Der Fall, für den man baut, ist der andere: sie steht in einer
+Konfigurationsdatei, in einem Protokoll, in einem Screenshot. Von dort aus
+ist der Unterschied zwischen „darf alles in meinen Daten" und „darf sich
+selbst dauerhaft einrichten und andere einladen" der Unterschied zwischen
+einem Schaden und einem Übernahme.
+
+Regel 3 sieht wie eine Unbequemlichkeit aus, solange man nicht daran denkt,
+dass eine Marke abhandenkommen kann. Genau deshalb steht sie hier
+aufgeschrieben: sie wird beim nächsten Umbau als erstes in Frage gestellt.
+
+**Wer schreiben darf, darf auch lesen.** Sonst könnte ein Programm nicht
+nachsehen, was es geschrieben hat, und jeder müsste zwei Marken führen. Die
+Gegenrichtung gilt nicht: Lesen erlaubt kein Schreiben.
+
+**Das Tor steht an einer Stelle, nicht an neun.** Nach dem Token, vor der
+ersten Route. Die zwei alten Fassungen in `v1Weg` und `mcpWeg` rechnen nicht
+mehr selbst, sondern rufen dieselbe Funktion — zwei Fassungen derselben
+Prüfung laufen irgendwann auseinander, und die falsche merkt niemand. Das
+war schon der Befund beim Papierkorb, bei den Kopfzeilen und bei CORS.
+
+**Eine bestehende Marke kann dadurch aufhören zu funktionieren.** Wer sich
+früher eine mit der Voreinstellung `lesen` ausgestellt hat und damit schreibt,
+bekommt jetzt ein 403. Das ist die Absicht, und die Meldung sagt, was zu tun
+ist: eine neue Marke mit den passenden Rechten anlegen. Eine
+Sicherheitszusage, die man aus Rücksicht auf bestehende Aufrufe nicht
+durchsetzt, ist keine.

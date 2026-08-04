@@ -350,9 +350,21 @@ gleich('Der 3. August 2026 war ein Montag',
 gleich('Der 1. Januar 2026 war ein Donnerstag',
   Dienst.datumLang('2026-01-01'), 'Donnerstag, 1. Januar 2026');
 
+/* EINE STUNDE ZURÜCK WAR ES NICHT. Läuft dieser Lauf zwischen Mitternacht
+   und ein Uhr, liegt „vor einer Stunde" gestern — und die Prüfung fiel um,
+   ohne dass am Code etwas falsch war. Einmal am Tag rot ist schlimmer als
+   nie rot, weil man rotem Rauschen irgendwann nicht mehr glaubt.
+
+   Eine Sekunde zurück ist immer derselbe Tag, ausser in der ersten Sekunde
+   des Tages — und der Fall, um den es eigentlich geht, steht darunter
+   ausdrücklich. */
 const jetzt = new Date();
-const vorhin = new Date(jetzt.getTime() - 300000).toISOString();
-p('Heute heisst „Heute"', Dienst.zeitKurz(vorhin).startsWith('Heute'));
+/* Fünf Minuten wären zwischen 00:00 und 00:05 noch immer gestern — eine
+   Sekunde nur in der allerersten Sekunde des Tages. Und wenn es doch
+   einmal umfällt, steht der Wert daneben, statt dass man raten muss. */
+const vorhin = new Date(jetzt.getTime() - 1000).toISOString();
+p('Heute heisst „Heute"', Dienst.zeitKurz(vorhin).startsWith('Heute'),
+  Dienst.zeitKurz(vorhin));
 const gestern = new Date(jetzt.getTime() - 30 * 3600000).toISOString();
 p('Gestern heisst „Gestern" oder trägt ein Datum',
   /^(Gestern|\d)/.test(Dienst.zeitKurz(gestern)));

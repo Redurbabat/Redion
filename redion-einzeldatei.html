@@ -20028,7 +20028,7 @@ const Datenbank = (() => {
    * Schema landen soll — Notion nennt das „Links einfügen" und
    * „Rechts einfügen". Ohne Angabe kommt sie ans Ende.
    */
-  const eigenschaftAnlegen = async (coll, t, stelle = -1) => {
+  const eigenschaftAnlegen = async (coll, t, stelle = -1, neben = null) => {
     const name = await UI.frage('Name der Eigenschaft', propTyp(t).name);
     if (!name) return null;
     const key = Store.uid().slice(0, 5);
@@ -20045,6 +20045,13 @@ const Datenbank = (() => {
     if (t === 'rollup') def.rollup = 'Anzahl alle';
     if (KI_TYPEN.includes(t)) def.auftrag = KI_AUFTRAG[t] || KI_AUFTRAG.ki;
     if (t === 'button') def.knopfText = 'Ausführen';
+
+    /* Die Stelle jetzt bestimmen, nicht vorhin: dazwischen lagen zwei
+       Fragen an den Menschen, und das Schema kann sich geändert haben. */
+    if (neben && neben.nebenKey) {
+      const i = Object.keys(coll.schema).indexOf(neben.nebenKey);
+      stelle = i < 0 ? Object.keys(coll.schema).length : i + neben.versatz;
+    }
 
     if (stelle < 0) {
       coll.schema[key] = def;
@@ -20088,6 +20095,29 @@ const Datenbank = (() => {
 
   const neueEigenschaft = (anker, coll, block) =>
     typWahl(anker, 'Neue Eigenschaft', t => eigenschaftAnlegen(coll, t, -1));
+
+  /**
+   * „Links einfügen" und „Rechts einfügen" — und zwar neben DIESER Spalte.
+   *
+   * HIER STAND EINE ZAHL, UND DAS WAR DER FEHLER. Das Spaltenmenü rechnete
+   * beim Öffnen `idx = keys.indexOf(key)` aus und reichte `idx + 1` weiter.
+   * Zwischen dem Öffnen des Menüs und dem Anlegen liegen aber zwei Fragen an
+   * den Menschen — die Typwahl und der Name —, und in der Zeit kann sich das
+   * Schema geändert haben. Fand `indexOf` den Schlüssel nicht, kam **−1**
+   * heraus, und `−1 + 1` ist `0`: die neue Spalte landete **ganz vorn**.
+   *
+   * Nachgestellt: von drei Läufen einer. `test33` hat es als „flockig"
+   * gemeldet, und das sah lange nach einem Fehler im Prüflauf aus.
+   *
+   * Jetzt wird die Stelle erst beim Anlegen bestimmt, aus dem Schema, das
+   * dann wirklich da ist. Und wenn die Nachbarspalte inzwischen weg ist,
+   * geht die neue ans **Ende** — nicht an den Anfang. Ans Ende ist harmlos
+   * und nachvollziehbar; ganz vorn ist der einzige Platz, an dem niemand
+   * sie sucht.
+   */
+  const neueEigenschaftNeben = (anker, coll, view, nebenKey, versatz) =>
+    typWahl(anker, versatz === 0 ? 'Links einfügen' : 'Rechts einfügen',
+      t => eigenschaftAnlegen(coll, t, -1, { nebenKey, versatz }));
 
   const neueEigenschaftBei = (anker, coll, view, stelle) =>
     typWahl(anker, stelle === 0 ? 'Links einfügen' : 'Neue Eigenschaft',
@@ -20405,8 +20435,7 @@ const Datenbank = (() => {
       /* Neue Eigenschaft links oder rechts daneben */
       if (a === 'neulinks' || a === 'neurechts') {
         m.remove();
-        const stelle = idx + (a === 'neurechts' ? 1 : 0);
-        neueEigenschaftBei(anker, coll, view, stelle);
+        neueEigenschaftNeben(anker, coll, view, key, a === 'neurechts' ? 1 : 0);
         return;
       }
 

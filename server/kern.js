@@ -64,6 +64,8 @@ import { erlaubteAdressen, rueckAdresse, mitCors } from './sicherheit/cors.js';
 import { seitenSchluessel, istGesperrt, zaehleFehlversuch, bremseLoesen,
          herkunft, GRENZEN } from './sicherheit/bremse.js';
 import { mitSicherheitsKopf } from './sicherheit/kopfzeilen.js';
+import { text as feldText, ausListe } from './sicherheit/eingaben.js';
+import { torPruefen, darfMarke, MARKEN_RECHTE } from './sicherheit/marken.js';
 
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
 export const gleich = (a, b) => {
@@ -170,7 +172,7 @@ export const rolleAuf = async (ablage, bereichId, seiteId, kontoId) => {
  * ========================================================================*/
 export const notieren = async (ablage, { bereich, kontoId, art, text, objekt }) => {
   const e = { id: kennung(), bereich: bereich || '', kontoId: kontoId || '',
-              art: art || 'sonstiges', text: String(text || '').slice(0, 500),
+              art: art || 'sonstiges', text: feldText(text, 'protokollText'),
               objekt: objekt || '', wann: jetzt() };
   try { await ablage.setze('protokoll', e); } catch {}
   return e;
@@ -229,6 +231,14 @@ const beantworteRoh = async (a, ablage, umwelt = {}) => {
     const wer = await werFragt(ablage, kopf);
     if (!wer) return fehler(401, 'unauthorized',
       'Ohne gültiges Token geht hier nichts. Melde dich in Redion an oder lege eine Marke an.');
+
+    /* DAS TOR FÜR MARKEN — an einer Stelle, vor allen Wegen.
+       Vorher stand die Prüfung in `v1Weg` und `mcpWeg`, also an zwei von
+       neun Wegen. Eine Marke mit `lesen` konnte über `/bereich` schreiben,
+       über `/sync` den ganzen Bestand ersetzen und über `/marken` sich
+       selbst eine neue mit `alles` ausstellen. Siehe `sicherheit/marken.js`. */
+    const tor = torPruefen(wer, t[0], m);
+    if (tor) return fehler(tor.status, tor.code, tor.satz);
 
     if (t[0] === 'sync')     return await syncWeg(a, ablage, wer, t, m, k, kopf);
     if (t[0] === 'freigabe') return await freigabeWeg(a, ablage, wer, t, m, k);
@@ -343,7 +353,7 @@ const kontoWeg = async (a, ablage, umwelt, t, m, k, kopf, suche) => {
     }
     const code = codeKurz();
     const satz = { wert: await abdruck(code), art: 'geraetecode', kontoId: '',
-                   bereich: '', name: String(k.geraet || 'Unbekanntes Gerät').slice(0, 60),
+                   bereich: '', name: feldText(k.geraet, 'geraet'),
                    rechte: '', angelegt: jetzt(),
                    bis: new Date(Date.now() + 10 * 60000).toISOString(), benutzt: '' };
     await ablage.setze('marken', satz);
@@ -505,7 +515,7 @@ const sitzungGeben = async (ablage, kontoId, geraet, weiterZu) => {
   const roh = 'sit_' + kennung() + kennung();
   const dreissigTage = new Date(Date.now() + 30 * 86400000).toISOString();
   await ablage.setze('sitzungen', { token: await abdruck(roh), kontoId,
-    geraet: String(geraet || '').slice(0, 60), angelegt: jetzt(), bis: dreissigTage });
+    geraet: feldText(geraet, 'geraet'), angelegt: jetzt(), bis: dreissigTage });
 
   /* Beim ersten Anmelden bekommt jeder einen eigenen Bereich. */
   const eigene = await ablage.finde('bereiche', { besitzer: kontoId });
@@ -589,7 +599,7 @@ const syncWeg = async (a, ablage, wer, t, m, k, kopf) => {
     'Diesen Bereich gibt es nicht. Erst /bereich anlegen.');
 
   const meine = await rolleAuf(ablage, bereichId, '*', wer.konto.id);
-  const geraet = String(kopf['redion-geraet'] || 'Unbekannt').slice(0, 60);
+  const geraet = feldText(kopf['redion-geraet'], 'geraet');
 
   /* --- Herunterladen --------------------------------------------------
    * Geprüft wird nicht die Bereichsrolle, sondern ob es überhaupt ein Recht
@@ -703,7 +713,7 @@ const syncWeg = async (a, ablage, wer, t, m, k, kopf) => {
 const bereichWeg = async (a, ablage, wer, t, m, k) => {
   /* Anlegen */
   if (m === 'POST' && !t[1]) {
-    const b = { id: kennung(), name: String(k.name || 'Neuer Bereich').slice(0, 80),
+    const b = { id: kennung(), name: feldText(k.name, 'bereichName'),
                 besitzer: wer.konto.id, angelegt: jetzt() };
     await ablage.setze('bereiche', b);
     await notieren(ablage, { bereich: b.id, kontoId: wer.konto.id, art: 'bereich',
@@ -774,7 +784,7 @@ const bereichWeg = async (a, ablage, wer, t, m, k) => {
   if (m === 'PATCH') {
     if (bereich.besitzer !== wer.konto.id)
       return fehler(403, 'restricted_resource', 'Nur der Besitzer darf umbenennen.');
-    const neu = { ...bereich, name: String(k.name || bereich.name).slice(0, 80) };
+    const neu = { ...bereich, name: feldText(k.name || bereich.name, 'bereichName') };
     await ablage.setze('bereiche', neu);
     return antwort(200, neu, { 'Access-Control-Allow-Origin': '*' });
   }
@@ -1093,8 +1103,10 @@ const veroeffentlichenWeg = async (a, ablage, wer, t, m, k, umwelt) => {
 
   const satz = {
     schluessel, bereich: bereichId, seite,
-    titel: String(k.titel || 'Ohne Titel').slice(0, 200),
-    inhalt: sauber(String(k.inhalt || '')),
+    titel: feldText(k.titel, 'titel'),
+    /* Erst kürzen, dann säubern. Andersherum liefe der teure reguläre
+       Ausdruck über die volle Länge, und die Grenze käme zu spät. */
+    inhalt: sauber(feldText(k.inhalt, 'inhalt')),
     wann: jetzt(),
     bis: k.tage ? new Date(Date.now() + Number(k.tage) * 86400000).toISOString() : '',
     aufrufe: (alte && alte.aufrufe) || 0,
@@ -1164,16 +1176,24 @@ const htmlSeite = (titel, inhalt) =>
 const markenWeg = async (a, ablage, wer, t, m, k) => {
   if (m === 'POST' && !t[1]) {
     const roh = 'red_' + kennung() + kennung();
-    const rechte = Array.isArray(k.rechte) ? k.rechte.join(',') : String(k.rechte || 'lesen');
+    const rechte = (Array.isArray(k.rechte) ? k.rechte : String(k.rechte || 'lesen').split(','))
+      .map(x => ausListe(x, MARKEN_RECHTE, ''))
+      .filter(Boolean);
+    const rechteText = rechte.length ? [...new Set(rechte)].join(',') : 'lesen';
     const satz = { wert: await abdruck(roh), art: 'marke', kontoId: wer.konto.id,
-      bereich: String(k.bereich || ''), name: String(k.name || 'Ohne Namen').slice(0, 60),
-      rechte, angelegt: jetzt(),
+      bereich: String(k.bereich || ''), name: feldText(k.name, 'markeName'),
+      rechte: rechteText, angelegt: jetzt(),
       bis: k.tage ? new Date(Date.now() + Number(k.tage) * 86400000).toISOString() : '',
       benutzt: '' };
     await ablage.setze('marken', satz);
     await notieren(ablage, { bereich: satz.bereich, kontoId: wer.konto.id, art: 'marke',
-      text: 'Marke „' + satz.name + '" angelegt (' + rechte + ')' });
-    return antwort(200, { token: roh, name: satz.name, rechte, bis: satz.bis,
+      text: 'Marke „' + satz.name + '" angelegt (' + rechteText + ')' });
+    /* Was zurückgemeldet wird, muss das sein, was gespeichert wurde. Der
+       erste Wurf gab die gefilterte Liste zurück — bei einem erfundenen
+       Recht also `[]`, während in der Datenbank `lesen` stand. Eine Antwort,
+       die etwas anderes sagt als die Ablage, ist eine Falle. */
+    return antwort(200, { token: roh, name: satz.name,
+      rechte: rechteText.split(','), bis: satz.bis,
       hinweis: 'Diese Zeichenkette wird nicht noch einmal angezeigt. Jetzt kopieren.' },
       { 'Access-Control-Allow-Origin': '*' });
   }
@@ -1240,8 +1260,9 @@ const v1Weg = async (a, ablage, wer, t, m, k, kopf, suche) => {
   const bereich = await ablage.hole('bereiche', { id: bereichId });
   if (!bereich) return fehler(404, 'object_not_found', 'Diesen Bereich gibt es nicht.');
 
-  const markenRechte = wer.marke ? String(wer.marke.rechte || '').split(',') : ['alles'];
-  const markeDarf = (was) => markenRechte.includes('alles') || markenRechte.includes(was);
+  /* Dieselbe Regel wie am Tor — gerufen, nicht abgeschrieben. Zwei Fassungen
+     derselben Prüfung laufen irgendwann auseinander. */
+  const markeDarf = (was) => darfMarke(wer, was);
 
   const bereichAls = t[1], id = t[2], unter = t[3];
 
@@ -1366,8 +1387,7 @@ const mcpWeg = async (a, ablage, wer, m, k) => {
   if (art === 'tools/call') {
     const name = String((k.params || {}).name || '');
     const arg = (k.params || {}).arguments || {};
-    const markenRechte = wer.marke ? String(wer.marke.rechte || '').split(',') : ['alles'];
-    const markeDarf = (was) => markenRechte.includes('alles') || markenRechte.includes(was);
+    const markeDarf = (was) => darfMarke(wer, was);
     const text = (s) => rpc(id, { content: [{ type: 'text', text: s }] });
 
     if (name === 'bereiche_zeigen') {

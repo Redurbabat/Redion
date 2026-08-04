@@ -500,16 +500,96 @@ festgehalten, damit niemand sie noch einmal „repariert".
   Ein Fehler, mit dem gerechnet wurde, ist keine Ausnahme, sondern eine
   Antwort.
 
-- [ ] **D1 · Ein Prüfpunkt für Eingaben** — **kein Sicherheitsloch.**
-  Nachgemessen ist die Prüfung überall da, sie steht nur je Route statt an
-  einem Ort: Längen sind mit `.slice()` begrenzt, Rollen werden zweimal
-  gegen die erlaubte Liste geprüft, und `darf()` fällt bei einer unbekannten
-  Rolle auf `kein` zurück — es **sperrt** im Zweifel, statt durchzulassen.
-  `test93` Abschnitt 7 hält diese Richtung fest, denn genau die lässt sich
-  beim Umbauen lautlos umdrehen.
+- [x] **D1 · Ein Prüfpunkt für Eingaben** — erledigt, und die frühere Messung
+  war unvollständig. Sie hat die Felder angesehen, die eine Prüfung **haben**,
+  und nicht die, die keine haben. **Zwei fehlten ganz:**
 
-  Was offen bleibt, ist Ordnung: die Prüfungen an einem Ort zu bündeln.
-  Ein Umzug ohne Verhaltensänderung — eigener Schritt, wie E3.
+  1. **Keine Obergrenze für den Anfragekörper.** `request.json()` liest, was
+     kommt — kein `Content-Length`, keine Grenze, kein Abbruch. Wer 200 MB
+     schickt, bekommt sie geparst, im Arbeitsspeicher eines Workers mit
+     128 MB. Jetzt prüft **jede** der beiden Türen (Cloudflare und
+     Prüfserver) die Grösse, **bevor** gelesen wird — danach wäre es zu spät.
+  2. **`inhalt` der veröffentlichten Seite war unbegrenzt.** Der `titel` ist
+     auf 200 Zeichen begrenzt, der Inhalt auf gar nichts; er lief durch
+     `sauber()` — mehrere reguläre Ausdrücke über die ganze Zeichenkette —
+     und danach in die Datenbank. Jetzt 2 MB, und **gekürzt wird vor dem
+     Säubern**, sonst käme die Grenze zu spät, um etwas zu sparen.
+
+  Kein Loch, durch das Daten abfliessen, sondern eines, durch das welche
+  hineinlaufen: fremder Speicherplatz, fremde Rechenzeit, eine Rechnung, die
+  jemand anders bezahlt.
+
+  Dazu die eigentliche Ordnungsaufgabe: `server/sicherheit/eingaben.js` hält
+  jetzt eine **Tabelle** je Feld. Ein Bereichsname darf 80 Zeichen, ein
+  Markenname 60 — das ist kein Widerspruch, sondern sind zwei Dinge; dass man
+  es bisher nur bemerkte, wenn man zufällig beide Zeilen nebeneinander las,
+  schon. Die Grenze des Körpers steht je Routenfamilie, weil eine zu enge
+  Grenze schlimmer ist als keine: der Abgleich schickt bis zu 300 Sätze, und
+  bricht er ab, verliert jemand seine Änderungen. `test101.mjs`, 30 Prüfungen.
+
+- [x] **D6 · „Rechts einfügen" fügte manchmal ganz links ein** — beim
+  Nachgehen einer Prüfung, die als „flockig" galt.
+
+  `test33` fiel etwa in einem von vier Läufen um, und der Verdacht lag auf
+  dem Prüflauf: eine fehlende Wartezeit, ein Fenster, das noch stand. Beim
+  Nachmessen war es die App. Das Spaltenmenü rechnete beim **Öffnen**
+  `idx = keys.indexOf(key)` aus und reichte `idx + 1` weiter. Zwischen dem
+  Öffnen und dem Anlegen liegen aber zwei Fragen an den Menschen — Typwahl
+  und Name. Fand `indexOf` den Schlüssel nicht mehr, kam **−1** heraus, und
+  `−1 + 1` ist `0`: die neue Spalte landete **ganz vorn**.
+
+  Jetzt wird die Stelle erst beim Anlegen bestimmt, aus dem Schema, das dann
+  wirklich da ist. Und ist die Nachbarspalte inzwischen weg, geht die neue
+  ans **Ende** — nicht an den Anfang. Ans Ende ist harmlos; ganz vorn ist
+  der einzige Platz, an dem niemand sie sucht.
+
+  Vorher: einer von vier Läufen rot. Nachher: neun von neun grün.
+
+  **Und die Lehre daneben:** ein Lauf, den man „flockig" nennt, ist eine
+  Vermutung. Diese hier war zweimal falsch — beim ersten Mal war es
+  tatsächlich meine eigene Nebenläufigkeit im Aufräumen, beim zweiten Mal
+  ein Fehler in der App, der seit jeher dort lag. Rotes Rauschen gibt es
+  nicht; es gibt nur Ursachen, die man noch nicht gesucht hat.
+
+- [x] **D5 · Was eine Marke wirklich durfte** — beim Messen von D1 daneben
+  gefunden, und der schwerste Befund dieser Etappe.
+
+  Eine **Marke** ist ein Zugangsschlüssel für ein Programm, mit Rechten:
+  `lesen`, `schreiben`, `alles`. Geprüft wurden sie an **zwei von neun
+  Wegen** — in `v1Weg` und `mcpWeg`. Die übrigen fragten nicht danach:
+  `/sync`, `/bereich`, `/veroeffentlichen`, `/protokoll`, `/freigabe`,
+  `/feldrecht` und `/marken`.
+
+  Eine Marke mit `lesen` konnte also über `/bereich` schreiben, über `/sync`
+  den ganzen Bestand ersetzen — und über `/marken` **sich selbst eine neue
+  mit `alles` ausstellen**. Eine Einschränkung, die man mit einem Aufruf
+  abstreifen kann, ist keine.
+
+  Jetzt steht ein **Tor an einer Stelle**, nach dem Token und vor der ersten
+  Route. Drei Regeln: ein Mensch am Gerät ist unberührt; eine Marke schreibt
+  nur mit `schreiben` oder `alles`; und **Rechte und Schlüssel ändert keine
+  Marke**, auch keine mit `alles`. Die letzte sieht wie eine Unbequemlichkeit
+  aus, solange man nicht daran denkt, dass eine Marke abhandenkommen kann.
+
+  Beim Anlegen werden die Rechte gegen die Liste geprüft — vorher ging jede
+  Zeichenkette hinein. Und die Antwort meldet, was **gespeichert** wurde: der
+  erste Wurf gab die gefilterte Liste zurück, also `[]`, während in der
+  Datenbank `lesen` stand. `test102.mjs`, 34 Prüfungen, mit Gegenprobe am
+  echten Server.
+
+> **Was hier vorher stand, und warum es festgehalten bleibt.** Die frühere
+> Messung schrieb: *„Nachgemessen ist die Prüfung überall da, sie steht nur
+> je Route statt an einem Ort. Was offen bleibt, ist Ordnung."* Das stimmte
+> für alles, was sie angesehen hat — Längen sind mit `.slice()` begrenzt,
+> Rollen werden gegen die Liste geprüft, `darf()` fällt bei einer unbekannten
+> Rolle auf `kein` zurück und **sperrt** im Zweifel.
+>
+> Der Fehler lag in der Frage, nicht in der Antwort: gezählt wurde, was
+> geprüft **wird**, nicht was geprüft werden **müsste**. Eine Liste der
+> vorhandenen Prüfungen kann vollständig aussehen und trotzdem drei Felder
+> auslassen, die nie eine hatten. Diese Sorte Irrtum ist in dieser Session
+> jetzt zweimal vorgekommen — beim Papierkorb war es dieselbe: gezählt
+> wurde, was im Papierkorb liegt, nicht was dort liegen müsste.
 
 ---
 

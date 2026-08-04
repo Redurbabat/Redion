@@ -12,6 +12,8 @@
 import { beantworte } from './kern.js';
 import { ablageD1 } from './ablage.js';
 
+import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.js';
+
 /** Cloudflare-Request → das Objekt für den Kern. */
 export const alsAnfrage = async (request) => {
   const u = new URL(request.url);
@@ -19,6 +21,11 @@ export const alsAnfrage = async (request) => {
   request.headers.forEach((v, k) => { kopf[k.toLowerCase()] = v; });
   const suche = {};
   u.searchParams.forEach((v, k) => { suche[k] = v; });
+
+  /* DIE GRÖSSE ZUERST, VOR DEM LESEN. Danach wäre es zu spät: `request.json()`
+     parst, was kommt, und ein Worker hat 128 MB. Die Prüfung steht deshalb
+     hier und nicht im Kern — dort ist der Körper längst im Speicher. */
+  if (koerperZuGross(u.pathname, kopf['content-length'])) return { zuGross: u.pathname };
 
   let koerper = {};
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -78,6 +85,9 @@ export const bedienen = async (request, env, ctx) => {
   }
 
   const anfrage = await alsAnfrage(request);
+  /* Zu gross: die Antwort kommt, ohne dass irgendetwas geparst wurde. */
+  if (anfrage.zuGross) return alsAntwort(zuGrossAntwort(anfrage.zuGross));
+
   const umwelt = {
     GITHUB_ID: env.GITHUB_ID, GITHUB_GEHEIM: env.GITHUB_GEHEIM,
     GOOGLE_ID: env.GOOGLE_ID, GOOGLE_GEHEIM: env.GOOGLE_GEHEIM,
