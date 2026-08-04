@@ -15,7 +15,7 @@
  * unten ist der Schalter dafür.
  * ==========================================================================*/
 
-const VERSION = 'notizen-v12';
+const VERSION = 'notizen-v13';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -35,6 +35,8 @@ const GRUNDSTOCK = [
   './quell/kern/einstellung/schalter.js',
   './quell/kern/zugang/rollen.js',
   './quell/core/security/sanitize.js',
+  './quell/core/spreadsheet/address.js',
+  './quell/core/spreadsheet/engine.js',
   './quell/kern/sicherheit/pruefen.js',
   './quell/kern/ablage/formen.js',
   './quell/kern/ablage/umzuege.js',

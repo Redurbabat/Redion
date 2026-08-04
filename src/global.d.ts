@@ -47,3 +47,17 @@ declare const Store: any;
  * keine Zusage mehr — genau der Zweck dieser Liste.
  */
 declare const Pflege: any;
+
+/**
+ * Die Formelmaschine aus `quell/bereiche/datenbanken/formeln/laufzeit.js`.
+ *
+ * Der Tabellenkern rechnet mit ihr, statt eine zweite zu bauen: eine
+ * Zellformel wird in ihre Sprache übersetzt (`=A1*2` → `prop("A1")*2`) und
+ * an sie weitergereicht. Was sie annimmt und zurückgibt, steht getypt in
+ * `src/core/types/formula.ts` — hier steht `any`, weil die Datei selbst noch
+ * JavaScript ist und dieser Eintrag verschwindet, sobald sie umzieht.
+ *
+ * Sie wird nach dem Tabellenkern geladen, deshalb der `typeof`-Wächter an
+ * der Aufrufstelle.
+ */
+declare const Formula: any;

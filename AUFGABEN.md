@@ -370,6 +370,54 @@ Umzug.
 
 ---
 
+## Phase 7a · Der Tabellenkern ohne Oberfläche · **erledigt**
+
+`src/core/spreadsheet/address.ts` und `engine.ts` → `quell/core/spreadsheet/`.
+Geprüft von `test110.mts` — **68 Prüfungen in zwei Sekunden, ohne Browser.**
+
+**Die Entscheidung, die alles andere trägt: es gibt keine zweite
+Formelmaschine.** Eine Zellformel wird in die Sprache übersetzt, die
+`laufzeit.js` seit jeher spricht:
+
+```txt
+=SUMME(A1:A3)   →   SUMME(prop("A1"), prop("A2"), prop("A3"))
+=A1*2           →   prop("A1")*2
+```
+
+`prop()` ist der Zugriff auf eine Spalte einer Datenbankzeile; hier ist es
+der Zugriff auf eine Zelle. Dieselbe Maschine, ein anderer Nachschlager. Die
+Maschine zu erweitern hätte 158 Funktionen durch neuen Code laufen lassen —
+die Sorte Änderung, deren Schaden man Wochen später sieht. Übersetzen kostet
+dreissig Zeilen und kann nichts kaputtmachen, was es schon gibt.
+
+**Was der Kern kann:** Adressen (`A1` ↔ Zeile/Spalte, auch `AA`, `ZZ`, `AAA`),
+Bereiche in beide Richtungen (`C3:A1` = `A1:C3`), Zellen setzen und lesen,
+deutsches Komma als Zahl, Abhängigkeitsgraph in beide Richtungen,
+Neuberechnung in der richtigen Reihenfolge, **Zirkelbezüge mit Namen** —
+nicht „irgendwo ist einer", sondern welche Zellen.
+
+**Drei Fehler beim Bauen, alle drei vom Lauf gefunden:**
+
+- Der Übersetzer lief dreimal über die Formel und traf im dritten Durchgang
+  das `A1` **im Ergebnis des zweiten**: aus `prop("A1")` wurde
+  `prop("prop("A1")")`. Jetzt ein einziger Ausdruck mit drei Zweigen — was
+  ein Zweig zurückgibt, wird nicht noch einmal angesehen.
+- Der Platzhalter für Zeichenketten sah selbst wie eine Zelladresse aus
+  (`TXT0` — drei Buchstaben, eine Ziffer) und wurde mitersetzt. Mit dem
+  einen Durchgang braucht es gar keinen Platzhalter mehr.
+- **Zwei rohe Steuerzeichen** hatten sich in meine Quelle geschlichen. In der
+  Einzeldatei hätten sie den ganzen Skriptblock mitgerissen — genau der
+  Fehler, für den `test87` Abschnitt 1 existiert.
+
+**Und eine ehrliche Lücke, benannt statt vorgetäuscht:** `#DIV/0!` und
+`#ZAHL!` gibt es noch nicht. Die Laufzeit rechnet abwehrend (`1/0 → 0`), sie
+*meldet* nichts, also kann der Kern nichts weiterreichen. Dafür bräuchte
+`laufzeit.js` einen `FormulaErrorMode` — der Typ steht schon da, der Schritt
+ist eigen. Ein halber Fehlerwert wäre schlimmer als keiner: er sähe aus wie
+Excel und wäre es an der nächsten Zelle nicht mehr.
+
+---
+
 ## Phase 7 · Spreadsheet-MVP
 
 **Der Stand ist besser als erwartet:** alle elf Funktionen, die für den

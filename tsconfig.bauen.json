@@ -61,6 +61,7 @@
   "include": [
     "src/global.d.ts",
     "src/core/helpers/**/*.ts",
-    "src/core/security/**/*.ts"
+    "src/core/security/**/*.ts",
+    "src/core/spreadsheet/**/*.ts"
   ]
 }
