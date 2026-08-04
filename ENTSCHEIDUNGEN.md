@@ -331,8 +331,13 @@ Während der Migration darf `quell/` weiter existieren.
 
 **Status**
 
-Neue Hauptentscheidung. In `AUFGABEN.md` Phase 2 und `LUECKEN.md` L1
-übernommen.
+Entschieden und begonnen. Die Grundlage steht seit Phase 2: Typecheck ohne
+Bauschritt (`noEmit`), zentrale Typen unter `src/core/types/`, Typecheck in
+GitHub Actions. Der ausführliche Weg — die Phasen TS-0 bis TS-10, die Regeln
+beim Umziehen einer Datei und die Frage, wann ein Bauschritt nötig wird —
+steht in **`doku/TYPESCRIPT-MIGRATION.md`**.
+
+Als Nächstes TS-3: die kleinen DOM-freien Kernhelfer.
 
 ---
 
@@ -623,13 +628,13 @@ ENTSCHEIDUNGEN.md
 CLOUDFLARE.md
 SERVER-EINRICHTEN.md
 doku/ARCHITEKTUR.md
+doku/TYPESCRIPT-MIGRATION.md
 ```
 
 Geplant — siehe `AUFGABEN.md` und `LUECKEN.md` L27:
 
 ```txt
 doku/REDION-FORMAT.md
-doku/TYPESCRIPT-MIGRATION.md
 doku/SICHERHEIT.md
 doku/SYNC.md
 doku/CLOUDFLARE-R2.md

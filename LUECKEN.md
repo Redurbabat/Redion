@@ -34,7 +34,7 @@ JSON-Sicherung · `.redion`-Sicherung mit Anhängen · Tests
 Die grössten aktuellen Lücken:
 
 ```txt
-1. TypeScript-Migration fehlt noch
+1. TypeScript-Migration: Grundlage steht, der Bestand ist noch JavaScript
 2. Doku muss die neue Richtung zeigen
 3. .redion-Format braucht eigene Doku
 4. Cloudflare/R2/Sync sind noch nicht produktionsreif
@@ -47,22 +47,35 @@ Die grössten aktuellen Lücken:
 
 ## L1 · TypeScript
 
-**Stand** — ✗ Redion ist noch nicht TypeScript.
+**Stand** — ⏳ die Grundlage steht, der Bestand ist noch JavaScript.
 
-GitHubs Sprachleiste zeigt für das Repository HTML, CSS, JavaScript und
-Batchfile — schlicht deshalb, weil noch keine `.ts`-Datei darin liegt.
+GitHubs Sprachleiste zeigte für das Repository lange nur HTML, CSS,
+JavaScript und Batchfile — schlicht deshalb, weil keine `.ts`-Datei darin
+lag. Seit Phase 2 liegen sieben.
+
+**Was steht**
+
+```txt
+tsconfig.json                  strict + noUncheckedIndexedAccess
+typescript als devDependency   5.9.3
+npm run typecheck              tsc --noEmit, gegengeprüft
+src/core/types/                sieben Dateien, aus dem Code gemessen
+doku/TYPESCRIPT-MIGRATION.md   TS-0 bis TS-10
+TypeScript in GitHub Actions   im schnellen Job, vor allem anderen
+```
 
 **Was fehlt**
 
 ```txt
-tsconfig.json
-typescript als devDependency
-npm run typecheck
-src/core/types/
-doku/TYPESCRIPT-MIGRATION.md
-TypeScript in GitHub Actions
-erste migrierte Kernmodule
+erste migrierte Kernmodule (TS-3: Kennungen, Datum, Objekte, Saeubern)
+und alles danach bis TS-10
 ```
+
+`noEmit` heisst: TypeScript beschreibt heute Daten, es führt sie nicht aus.
+Sobald mit TS-3 der erste ausführbare Code umzieht, braucht es einen Weg von
+`.ts` nach `.js` — ohne dass die App dadurch einen Pflicht-Bauschritt
+bekommt. Die zwei zulässigen Wege stehen in `doku/TYPESCRIPT-MIGRATION.md`;
+entschieden wird zu Beginn von TS-3.
 
 **Warum wichtig**
 
@@ -73,7 +86,7 @@ Rechte · Cloudflare
 **Ziel** — vollständig TypeScript, aber schrittweise. Siehe
 `ENTSCHEIDUNGEN.md` E6 und E7.
 
-**Status** — ⏳ geplant, sehr hohe Priorität.
+**Status** — ⏳ Grundlage erledigt, Migration offen. Sehr hohe Priorität.
 
 ---
 
@@ -456,10 +469,11 @@ iPhone-Speichergrenzen
 
 **Stand** — ◐ viele Doku-Dateien vorhanden, die neue Struktur fehlt.
 
+**Da seit Phase 2** — `doku/TYPESCRIPT-MIGRATION.md`
+
 **Was fehlt**
 
 ```txt
-doku/TYPESCRIPT-MIGRATION.md
 doku/REDION-FORMAT.md
 doku/SICHERHEIT.md
 doku/SYNC.md
@@ -467,18 +481,28 @@ doku/CLOUDFLARE-R2.md
 doku/MOBILE.md
 ```
 
-**Status** — ⏳ geplant.
+**Status** — ⏳ geplant. `REDION-FORMAT.md` zuerst: das `.redion` ist das
+Format, in dem Sicherungen liegen, und ein Format ohne Beschreibung ist
+genau so lange lesbar, wie die App existiert, die es geschrieben hat.
 
 ---
 
 ## L28 · Tests für die TypeScript-Zukunft
 
-**Stand** — ✗ Typecheck fehlt.
+**Stand** — ◐ Typecheck da, Prüfläufe für migrierten Code fehlen noch.
 
-**Was fehlt** — `npm run typecheck` · Typecheck in CI · Typen für Kernmodell,
-Backup, Dateien und Datenbanken
+**Da seit Phase 2** — `npm run typecheck` · Typecheck in GitHub Actions ·
+Typen für Kernmodell, Backup, Dateien und Datenbanken
 
-**Status** — ⏳ sehr hohe Priorität.
+Gegengeprüft: ein absichtlich falscher Typ macht den Lauf rot. Ein
+Typecheck, der grün ist, weil er keine Datei findet, sagt nichts.
+
+**Was fehlt** — Prüfläufe, die migrierten `.ts`-Code auch **ausführen**.
+Solange `noEmit` gilt, beschreibt TypeScript nur Daten. Ab TS-3 zieht
+ausführbarer Code um, und ab dann muss er wie jeder andere unter den
+bestehenden Läufen stehen.
+
+**Status** — ⏳ hohe Priorität, fällig mit TS-3.
 
 ---
 

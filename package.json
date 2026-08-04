@@ -7,13 +7,21 @@
   "scripts": {
     "bauen": "node bauen.js",
     "pruefen": "node pruefungen/alle.js",
+    "typecheck": "tsc --noEmit",
     "server": "node server/pruefserver.js 8790",
     "veroeffentlichen": "npx wrangler deploy"
   },
-  "keywords": ["notizen", "datenbank", "formeln", "local-first", "offline"],
+  "keywords": [
+    "notizen",
+    "datenbank",
+    "formeln",
+    "local-first",
+    "offline"
+  ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "playwright": "^1.56.1"
+    "playwright": "^1.56.1",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20"

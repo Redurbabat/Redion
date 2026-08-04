@@ -1,0 +1,49 @@
+{
+  "//": [
+    "tsconfig.json — die TypeScript-Grundlage für Redion",
+    "",
+    "WAS DIESE DATEI TUT UND WAS NICHT. Sie prüft Typen. Sie baut nichts.",
+    "`noEmit` steht bewusst auf true: Redion läuft weiterhin per Doppelklick",
+    "auf index.html, und dafür darf es keinen Pflicht-Bauschritt geben",
+    "(CLAUDE.md §6 und §52.4). Der Typecheck ist ein Prüflauf wie die",
+    "anderen — er sagt, ob etwas nicht zusammenpasst, und ändert nichts.",
+    "",
+    "WARUM NUR src/. Der bestehende Code unter quell/ ist gewöhnliches",
+    "JavaScript ohne Module und wird über <script src> geladen. Ihn hier",
+    "mitzuprüfen ergäbe hunderte Meldungen über Dinge, die absichtlich so",
+    "sind. Die Migration läuft über src/ (CLAUDE.md §52.3): was dorthin",
+    "wandert, ist typisiert; was in quell/ liegt, bleibt unangetastet, bis",
+    "es an der Reihe ist.",
+    "",
+    "Die Strenge folgt CLAUDE.md §52.6. `strict` allein reicht nicht:",
+    "`noUncheckedIndexedAccess` ist die Einstellung, die den Fehler findet,",
+    "der in dieser App am teuersten war — auf ein Feld zugreifen, das es",
+    "vielleicht nicht gibt, und mit `undefined` weiterrechnen."
+  ],
+
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "quell", "server", "pruefungen", "bauen.js"]
+}

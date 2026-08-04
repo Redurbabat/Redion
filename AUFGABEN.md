@@ -63,6 +63,8 @@ Redion kann bereits:
 
 ```txt
 Redion ist noch nicht TypeScript.
+Die Grundlage steht (Typecheck, zentrale Typen); der Bestand unter quell/
+ist weiterhin JavaScript. Nächster Schritt: TS-3, die kleinen Kernhelfer.
 ```
 
 ---
@@ -92,130 +94,72 @@ Anhang und einer Zeile je erledigtem Punkt statt der ausführlichen Befunde.
 
 ---
 
-## Phase 2 · TypeScript-Grundlage
+## Phase 2 · TypeScript-Grundlage · **erledigt**
 
 Siehe `ENTSCHEIDUNGEN.md` E6 und E7: TypeScript ja, React nicht automatisch,
 und die Nutzung per Doppelklick bleibt erhalten.
 
-### B1 — TypeScript technisch vorbereiten
+Der ausführliche Plan steht jetzt in **`doku/TYPESCRIPT-MIGRATION.md`** —
+die Phasen TS-0 bis TS-10, die Regeln beim Umziehen einer Datei und die
+Frage, wann ein Bauschritt nötig wird und wann nicht.
 
-**Ziel**
+**Zwei Abweichungen vom ursprünglichen Entwurf**, beide bewusst:
 
-Redion bekommt die Grundlage für TypeScript.
+1. **Die Namen sind deutsch.** Der Entwurf nannte `RedionBlock`,
+   `RedionDatabase`, `database.ts`, `file.ts`. Die Projektregel aus
+   `CLAUDE.md` verlangt deutsche Namen, und der gesamte Bestand unter
+   `quell/` hält sie ein. Zwei Namenswelten nebeneinander wären genau der
+   Fehler, der sich durch dieses Projekt zieht: an einer Stelle so, an der
+   Nachbarstelle anders. Also `Block`, `Sammlung`, `Ansicht`, `Datei`,
+   `Sicherung` — und die Dateien heissen entsprechend.
+2. **`result.ts` gibt es nicht.** `Ergebnis<T>` steht in `basis.ts`, weil
+   es zu den Grundbausteinen gehört und sonst eine Datei mit vier Zeilen
+   entstanden wäre.
 
-**Warum**
+### ~~B1 — TypeScript technisch vorbereiten~~ · erledigt
 
-Ohne Typecheck ist jede weitere Migration ein Blindflug.
+`typescript@5.9.3` als `devDependency`, `npm run typecheck` (`tsc --noEmit`),
+`tsconfig.json` mit `strict` **plus** `noUncheckedIndexedAccess`,
+`exactOptionalPropertyTypes` und `useUnknownInCatchVariables`.
 
-**Dateien**
+Geprüft ist auch das Gegenteil: ein absichtlich falscher Typ wurde
+eingesetzt und der Lauf wurde rot (`TS2740`). Ein Typecheck, der nur grün
+sein kann, weil er keine Datei findet, sagt nichts.
 
-```txt
-package.json
-package-lock.json
-tsconfig.json
-src/core/types/index.ts
-doku/TYPESCRIPT-MIGRATION.md
-```
+**`noEmit` steht auf `true`.** Es entsteht kein JavaScript und damit kein
+Bauschritt, den jemand vergessen kann. Nachgewiesen: `node bauen.js`
+schreibt `redion-einzeldatei.html` byteweise unverändert — keine
+App-Funktion ist berührt.
 
-**Fertig wenn**
+### ~~B2 — Zentrale Redion-Typen anlegen~~ · erledigt
 
-- `typescript` als `devDependency` vorhanden ist
-- `npm run typecheck` existiert und läuft
-- `tsconfig.json` existiert
-- `src/core/types/index.ts` existiert
-- **keine App-Funktion verändert wurde**
-- alle bisherigen Prüfläufe weiter grün sind
-
-**Tests**
-
-```
-npm run typecheck
-npm run pruefen -- --schnell
-node bauen.js
-```
-
-**Priorität** — sehr hoch.
-
----
-
-### B2 — Zentrale Redion-Typen anlegen
-
-**Ziel**
-
-Gemeinsame Typen für Blöcke, Seiten, Datenbanken, Dateien, Backups und Sync.
-
-**Dateien**
+Sieben Dateien unter `src/core/types/`:
 
 ```txt
-src/core/types/index.ts
-src/core/types/block.ts
-src/core/types/database.ts
-src/core/types/file.ts
-src/core/types/backup.ts
-src/core/types/result.ts
+basis.ts        ID · ISODateTime · BlockId … FileId · Ergebnis<T>
+block.ts        Block · Zeile · Seite · Fassung
+datenbank.ts    Sammlung · Schema · Spalte · Ansicht · Filter · Sortierung
+datei.ts        Datei · Stueck · Uploadzustand
+sicherung.ts    Sicherung · Sicherungskopf · Dateienkarte · RedionPaket
+ablage.ts       FAECHER (alle neun) · Speicherort · Speicherlage
+index.ts        eine Tür für alles davon
 ```
 
-**Fertig wenn** Typen existieren für:
+Jedes Feld ist aus dem laufenden Code **abgelesen** — `addBlock` in
+`quell/kern/ablage/indexdb.js:255`, `quell/bereiche/dateien/ablage.js` für
+die Anhänge, `quell/register/ansichten.js` für die zwölf Ansichtsarten,
+`sicherungSpeichern` in `quell/schale/aufbau/schale.js` für den Aufbau des
+`.redion`. Das ist E21 angewandt: nachsehen statt raten.
 
-```txt
-ID · BlockId · PageId · CollectionId · ViewId · FileId · ISODateTime
-RedionBlock · RedionPage · RedionFile · RedionDatabase · RedionView
-RedionPackageManifest · RedionPackageData · Ergebnis<T>
-```
+### ~~B3 — Migrationsdokument schreiben~~ · erledigt
 
-**Tests**
+`doku/TYPESCRIPT-MIGRATION.md`.
 
-```
-npm run typecheck
-```
+### ~~B4 — Typecheck in GitHub Actions~~ · erledigt
 
-**Priorität** — sehr hoch.
-
----
-
-### B3 — Migrationsdokument schreiben
-
-**Ziel**
-
-Eine klare Anleitung, damit die Migration nicht in Etappen ohne Netz zerfällt.
-
-**Dateien**
-
-```txt
-doku/TYPESCRIPT-MIGRATION.md
-```
-
-**Fertig wenn** das Dokument enthält: Ziel · Nicht-Ziele · Reihenfolge ·
-sichere Migrationsregeln · welche Dateien zuerst · welche zuletzt ·
-Testpflicht · Umgang mit `quell/` · Umgang mit `src/` · Verbot der
-Alles-auf-einmal-Migration
-
-**Priorität** — hoch.
-
----
-
-### B4 — Typecheck in GitHub Actions
-
-**Ziel**
-
-GitHub prüft TypeScript automatisch mit.
-
-**Dateien**
-
-```txt
-.github/workflows/pruefen.yml
-package.json
-```
-
-**Fertig wenn** CI ausführt:
-
-```
-npm run typecheck
-npm run pruefen -- --schnell
-node bauen.js
-```
-
-**Priorität** — hoch.
+Im Job „Quelltext und Logik (ohne Browser)", vor den übrigen Prüfungen.
+Die Pakete kommen mit `--ignore-scripts` herein: Chromium wird dort nicht
+gebraucht und wiegt ein Vielfaches von allem anderen.
 
 ---
 

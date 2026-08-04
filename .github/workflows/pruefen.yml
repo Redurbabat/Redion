@@ -50,6 +50,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # --ignore-scripts holt die Pakete, aber keine Browser. Chromium wiegt
+      # ein Vielfaches von allem anderen und wird in diesem Job nicht
+      # gebraucht — der lange Lauf holt ihn ohnehin.
+      - name: Pakete holen (ohne Browser)
+        run: npm install --no-audit --no-fund --ignore-scripts
+
+      # Prüft Typen, baut nichts (`noEmit`). Die App startet weiterhin per
+      # Doppelklick — siehe doku/TYPESCRIPT-MIGRATION.md. Der Schritt steht
+      # hier vorne, weil er in Sekunden fertig ist.
+      - name: Typen prüfen
+        run: npm run typecheck
+
       - name: Quelltext prüfen
         run: node pruefungen/lauf/test87.mjs
       - name: Datenbank-Logik prüfen
