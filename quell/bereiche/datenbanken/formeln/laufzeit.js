@@ -697,6 +697,87 @@ const Formula = (() => {
     email: a => text(a[0])
   };
 
+  /* ==========================================================================
+   * DEUTSCHE NAMEN — dieselben Funktionen, die Excel-Schreibweise
+   * --------------------------------------------------------------------------
+   * Nachgemessen (`doku/EXCEL-IN-REDION-RECHERCHE.md`): von den 63 Funktionen
+   * des Excel-Startpakets liefen **37 bereits** — und **keine einzige unter
+   * ihrem deutschen Namen**. Wer aus Excel kam und `SUMME(1;2;3)` tippte,
+   * bekam „Unbekannte Funktion". `sum` hätte gerechnet.
+   *
+   * Es fehlten also nicht 63 Funktionen, sondern 26 Funktionen und 37 Namen.
+   * Die Namen sind das hier — eine Tabelle, kein Projekt.
+   *
+   * WARUM DAS SO BILLIG IST. Der Zerteiler kennt Umlaute schon
+   * (`/[A-Za-zÄÖÜäöüß_]/`), und Namen werden vor dem Nachschlagen
+   * kleingeschrieben. `SUMME`, `Summe` und `summe` landen deshalb von selbst
+   * am selben Ort; hier steht nur, wo dieser Ort ist.
+   *
+   * WARUM ZEIGER UND KEINE KOPIEN. `summe: F.sum` zeigt auf dieselbe
+   * Funktion. Eine eigene Fassung wäre eine zweite Wahrheit, die irgendwann
+   * anders rechnet als die erste — genau der Fehler, der sich durch dieses
+   * Projekt zieht. `pruefungen/lauf/test106.mjs` prüft jedes Paar auf
+   * **gleiches Ergebnis**, nicht nur darauf, dass es antwortet.
+   *
+   * MITTELWERT ZEIGT AUF `mean`, NICHT AUF `average`. `average` ist ein
+   * Spaltenaggregat und antwortet ausserhalb einer Datenbankspalte mit „Das
+   * geht nur in einer Datenbankspalte". Excels MITTELWERT nimmt Argumente —
+   * das ist `mean`. Beim ersten Zählen ging genau das daneben.
+   *
+   * Die englischen Namen bleiben. Ein Alias, der das Original verdrängt,
+   * hätte jede bestehende Formel in jedem Bestand gebrochen.
+   * ======================================================================== */
+  Object.assign(F, {
+    /* --- Mathematik ------------------------------------------------------ */
+    summe: F.sum,
+    mittelwert: F.mean,
+    /* MIN, MAX und ABS heissen in beiden Sprachen gleich — sie brauchen
+       keinen Eintrag und stehen hier nur, damit niemand sie für vergessen
+       hält. */
+    wurzel: F.sqrt,
+    rest: F.mod,
+    runden: F.round,
+    abrunden: F.floor,
+    aufrunden: F.ceil,
+
+    /* --- Logik ----------------------------------------------------------- */
+    wenn: F.if,
+    wenns: F.ifs,
+    und: F.and,
+    oder: F.or,
+    nicht: F.not,
+
+    /* --- Datum ----------------------------------------------------------- */
+    heute: F.today,
+    jetzt: F.now,
+    datum: F.date,
+    jahr: F.year,
+    monat: F.month,
+    tag: F.day,
+    kalenderwoche: F.week,
+
+    /* --- Text ------------------------------------------------------------ */
+    'länge': F.length,
+    teil: F.slice,
+    'glätten': F.trim,
+    gross: F.upper,
+    klein: F.lower,
+    wechseln: F.replaceall,
+    ersetzen: F.replace,
+    text: F.format,
+    wert: F.tonumber,
+    textkette: F.concat,
+    textverketten: F.join,
+
+    /* --- Information ----------------------------------------------------- */
+    istleer: F.empty,
+
+    /* --- Suchen und Verweisen -------------------------------------------- */
+    vergleich: F.match,
+    sortieren: F.sort,
+    eindeutig: F.unique
+  });
+
   /* Der eigentliche Auswerter */
   /* ------------------------------------------------------------------------
    * EIGENE FUNKTIONEN

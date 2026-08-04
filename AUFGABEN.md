@@ -481,42 +481,32 @@ werden vor dem Nachschlagen kleingeschrieben. Ein Alias ist eine Zeile.
 
 ---
 
-### X2 — Die 37 deutschen Namen zuerst, dann die 26 fehlenden Funktionen
+### X2 — Deutsche Excel-Namen · ◐ Schritt 1 erledigt
 
-**Ziel**
+**Schritt 1 — die 37 Namen · erledigt.**
 
-Deutsche Excel-Namen mit englischen Aliasen, in **einem** Register.
+Die Aliase hängen in `quell/bereiche/datenbanken/formeln/laufzeit.js` als
+**Zeiger** auf dieselben Funktionen (`summe: F.sum`), nicht als Kopien: eine
+zweite Fassung wäre eine zweite Wahrheit, die irgendwann anders rechnet.
+Beschrieben stehen sie in `quell/register/formeln.js`, damit die Suche im
+Formeleditor sie findet — sonst gäbe es sie und niemand entdeckte sie.
 
-**Warum**
+`MIN`, `MAX` und `ABS` brauchten keinen Alias (gleicher Name in beiden
+Sprachen), haben aber jetzt eine Beschreibung: sie standen unbeschrieben
+unter „Sonstiges", und wer aus Excel kommt, sucht genau nach ihnen.
 
-Die Formelsprache gibt es schon (`register/formeln.js`, sicherer Parser ohne
-`eval()`). Ein zweiter Auswerter für Tabellen wäre ein zweites Regelwerk mit
-eigenen Fehlern — siehe E24.
+**Gehalten von** `pruefungen/lauf/test106.mjs` (78 Prüfungen). Er prüft nicht,
+ob ein Name *antwortet*, sondern ob er **dasselbe rechnet** wie sein
+englisches Gegenstück — ein Alias, der leicht anders rechnet, ist schlimmer
+als keiner, weil er richtig aussieht. Dazu die Gegenrichtung: alle englischen
+Namen rechnen weiter (ein Alias, der das Original verdrängt, hätte jede
+bestehende Formel in jedem Bestand gebrochen).
 
-**Dateien**
+Gegengeprüft: `summe` entfernt, und drei Prüfungen wurden rot — darunter
+„Keine Beschreibung ohne Funktion", das Sicherheitsnetz gegen ein Register,
+das etwas verspricht, was beim Tippen bricht.
 
-```txt
-quell/register/formeln.js
-quell/bereiche/datenbanken/formeln/laufzeit.js
-pruefungen/lauf/test106.mjs   (neu)
-```
-
-**Schritt 1 — die 37 Namen.** Aliastabelle, kein neuer Code. Macht aus 0 %
-deutscher Abdeckung 59 %.
-
-```txt
-SUMME→sum · MITTELWERT→average · MIN · MAX · ABS · WURZEL→sqrt · REST→mod
-RUNDEN→round · ABRUNDEN→floor · AUFRUNDEN→ceil
-WENN→if · WENNS→ifs · UND→and · ODER→or · NICHT→not
-HEUTE→today · JETZT→now · DATUM→date · JAHR→year · MONAT→month · TAG→day
-KALENDERWOCHE→week
-LÄNGE→length · TEIL→slice · GLÄTTEN→trim · GROSS→upper · KLEIN→lower
-WECHSELN→replaceall · ERSETZEN→replace · TEXT→format · WERT→tonumber
-TEXTKETTE→concat · TEXTVERKETTEN→join
-ISTLEER→empty · VERGLEICH→match · SORTIEREN→sort · EINDEUTIG→unique
-```
-
-**Schritt 2 — die 16 kleinen fehlenden.**
+**Schritt 2 — die 16 kleinen fehlenden · offen.**
 
 ```txt
 PRODUKT · ANZAHL · ANZAHL2 · POTENZ · GANZZAHL · WENNFEHLER · ZEIT
@@ -529,12 +519,7 @@ Redion meldet Text. `WENNFEHLER` und `ISTFEHLER` brauchen einen Fehlerwert im
 Datenmodell — eine Änderung an der Laufzeit, keine neue Funktion. Wird das
 später entschieden, wird `WENNFEHLER` zweimal gebaut.
 
-**Fertig wenn** jeder Name im Register steht (damit die Suche im Formeleditor
-ihn findet), eine Beschreibung und ein Beispiel hat und ein Prüflauf beide
-Schreibweisen gegeneinander hält.
-
-**Priorität** — hoch. Schritt 1 ist der billigste grosse Gewinn im ganzen
-Plan.
+**Priorität** — hoch.
 
 ---
 

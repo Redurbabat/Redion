@@ -155,13 +155,18 @@ benannt.
 
 Nach Nutzen je Aufwand, nicht nach Vollständigkeit.
 
-### X1 · Die 37 deutschen Namen — zuerst
+### ~~X1 · Die 37 deutschen Namen~~ · erledigt am 4. August 2026
 
 Eine Aliastabelle. Kein neuer Code, keine neue Logik, kein Risiko für
-Bestehendes. Macht aus 0 % deutscher Abdeckung 59 %.
+Bestehendes. Aus 0 % deutscher Abdeckung wurden 59 %.
 
-Dazu: die Aliase gehören ins Register, damit die Suche im Formeleditor sie
-findet — sonst existieren sie und niemand entdeckt sie.
+Die Namen hängen als **Zeiger** auf denselben Funktionen (`summe: F.sum`),
+nicht als Kopien — eine zweite Fassung wäre eine zweite Wahrheit. Beschrieben
+stehen sie im Register, damit die Suche im Formeleditor sie findet.
+
+Gehalten von `pruefungen/lauf/test106.mjs`: 78 Prüfungen auf **gleiches
+Ergebnis**, nicht nur darauf, dass ein Name antwortet — ein Alias, der leicht
+anders rechnet, ist schlimmer als keiner, weil er richtig aussieht.
 
 ### X2 · Die 10 fehlenden Suche/Verweis-Funktionen
 

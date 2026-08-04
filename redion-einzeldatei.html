@@ -6837,7 +6837,116 @@ Register.formeln = (() => {
       was: 'Irgendetwas in wahr/falsch verwandeln', notion: false }
   ];
 
-  const LISTE = BESCHRIEBEN.slice();
+  /* ==========================================================================
+   * DIE DEUTSCHEN EXCEL-NAMEN
+   * --------------------------------------------------------------------------
+   * Nachgemessen (`doku/EXCEL-IN-REDION-RECHERCHE.md`): 37 der 63 Funktionen
+   * des Excel-Startpakets liefen längst — aber keine unter ihrem deutschen
+   * Namen. Wer `SUMME(1; 2; 3)` tippte, bekam „Unbekannte Funktion".
+   *
+   * Die Namen selbst hängen in `formeln/laufzeit.js` an denselben Funktionen
+   * wie ihre englischen Geschwister. Hier stehen sie, damit die **Suche im
+   * Formeleditor** sie findet — sonst gäbe es sie und niemand entdeckte sie.
+   * Das ist derselbe Gedanke wie bei den 129 Funktionen ohne Beschreibung:
+   * eine Funktion, die niemand findet, ist fast wie nicht vorhanden.
+   *
+   * `notion: false` stimmt hier wörtlich — Notion kennt keine deutschen
+   * Funktionsnamen. Das ist einer der Punkte, an denen Redion mehr kann.
+   *
+   * MIN, MAX und ABS brauchen in `laufzeit.js` keinen Eintrag — sie heissen
+   * in beiden Sprachen gleich. Beschrieben werden sie hier trotzdem: sie
+   * standen bis dahin unbeschrieben unter „Sonstiges", und wer aus Excel
+   * kommt, sucht genau nach ihnen.
+   * ======================================================================== */
+  const DEUTSCH = [
+    /* --- Zahlen ---------------------------------------------------------- */
+    { name: 'SUMME',       gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
+      was: 'Alles zusammenzählen — wie in Excel', beispiel: 'SUMME(1; 2; 3)' },
+    { name: 'MIN',         gruppe: 'Zahlen', args: '(a; b; …)',   notion: true,
+      was: 'Der kleinste Wert', beispiel: 'MIN(3; 1; 2)' },
+    { name: 'MAX',         gruppe: 'Zahlen', args: '(a; b; …)',   notion: true,
+      was: 'Der grösste Wert', beispiel: 'MAX(3; 1; 2)' },
+    { name: 'ABS',         gruppe: 'Zahlen', args: '(zahl)',      notion: true,
+      was: 'Der Betrag — ohne Vorzeichen', beispiel: 'ABS(0 - 7)' },
+    { name: 'MITTELWERT',  gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
+      was: 'Der Durchschnitt der Werte', beispiel: 'MITTELWERT(2; 4; 6)' },
+    { name: 'WURZEL',      gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Die Quadratwurzel', beispiel: 'WURZEL(16)' },
+    { name: 'REST',        gruppe: 'Zahlen', args: '(zahl; teiler)', notion: false,
+      was: 'Was bei der Division übrig bleibt', beispiel: 'REST(7; 3)' },
+    { name: 'RUNDEN',      gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Kaufmännisch runden', beispiel: 'RUNDEN(2,6)' },
+    { name: 'ABRUNDEN',    gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Immer nach unten', beispiel: 'ABRUNDEN(2,9)' },
+    { name: 'AUFRUNDEN',   gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Immer nach oben', beispiel: 'AUFRUNDEN(2,1)' },
+
+    /* --- Logik ----------------------------------------------------------- */
+    { name: 'WENN',        gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
+      was: 'Die Wenn-Dann-Sonst-Frage', beispiel: 'WENN(Betrag > 100; "gross"; "klein")' },
+    { name: 'WENNS',       gruppe: 'Logik', args: '(p1; w1; p2; w2; …)', notion: false,
+      was: 'Mehrere Fälle nacheinander prüfen' },
+    { name: 'UND',         gruppe: 'Logik', args: '(a; b; …)',    notion: false,
+      was: 'Wahr, wenn alles wahr ist' },
+    { name: 'ODER',        gruppe: 'Logik', args: '(a; b; …)',    notion: false,
+      was: 'Wahr, wenn mindestens eines wahr ist' },
+    { name: 'NICHT',       gruppe: 'Logik', args: '(a)',          notion: false,
+      was: 'Dreht wahr und falsch um' },
+
+    /* --- Datum ----------------------------------------------------------- */
+    { name: 'HEUTE',         gruppe: 'Datum', args: '()',         notion: false,
+      was: 'Das heutige Datum' },
+    { name: 'JETZT',         gruppe: 'Datum', args: '()',         notion: false,
+      was: 'Datum und Uhrzeit gerade eben' },
+    { name: 'DATUM',         gruppe: 'Datum', args: '(text)',     notion: false,
+      was: 'Aus Text ein Datum machen' },
+    { name: 'JAHR',          gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Die Jahreszahl' },
+    { name: 'MONAT',         gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Die Monatszahl' },
+    { name: 'TAG',           gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Der Tag im Monat' },
+    { name: 'KALENDERWOCHE', gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Die Kalenderwoche' },
+
+    /* --- Text ------------------------------------------------------------ */
+    { name: 'LÄNGE',         gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Wie viele Zeichen?' },
+    { name: 'TEIL',          gruppe: 'Text', args: '(text; von; bis)', notion: false,
+      was: 'Ein Stück aus dem Text herausschneiden', beispiel: 'TEIL("Redion"; 0; 3)' },
+    { name: 'GLÄTTEN',       gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Leerzeichen vorn und hinten weg' },
+    { name: 'GROSS',         gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Alles in Grossbuchstaben' },
+    { name: 'KLEIN',         gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Alles in Kleinbuchstaben' },
+    { name: 'WECHSELN',      gruppe: 'Text', args: '(text; alt; neu)', notion: false,
+      was: 'Jedes Vorkommen ersetzen' },
+    { name: 'ERSETZEN',      gruppe: 'Text', args: '(text; alt; neu)', notion: false,
+      was: 'Das erste Vorkommen ersetzen' },
+    { name: 'TEXT',          gruppe: 'Text', args: '(wert)',      notion: false,
+      was: 'Irgendetwas als Text darstellen' },
+    { name: 'WERT',          gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Aus Text eine Zahl machen', beispiel: 'WERT("42") + 1' },
+    { name: 'TEXTKETTE',     gruppe: 'Text', args: '(a; b; …)',   notion: false,
+      was: 'Texte aneinanderhängen' },
+    { name: 'TEXTVERKETTEN', gruppe: 'Text', args: '(liste; trenner)', notion: false,
+      was: 'Eine Liste mit einem Trenner verbinden' },
+
+    /* --- Information ----------------------------------------------------- */
+    { name: 'ISTLEER',   gruppe: 'Logik', args: '(wert)',         notion: false,
+      was: 'Ist da nichts drin?' },
+
+    /* --- Suchen und Verweisen -------------------------------------------- */
+    { name: 'VERGLEICH', gruppe: 'Listen', args: '(liste; wert)', notion: false,
+      was: 'An welcher Stelle steht der Wert?' },
+    { name: 'SORTIEREN', gruppe: 'Listen', args: '(liste)',       notion: false,
+      was: 'Eine Liste sortieren' },
+    { name: 'EINDEUTIG', gruppe: 'Listen', args: '(liste)',       notion: false,
+      was: 'Doppelte Werte entfernen' }
+  ];
+
+  const LISTE = BESCHRIEBEN.concat(DEUTSCH);
 
   const melde = (eintrag) => {
     if (!eintrag || !eintrag.name) return false;
@@ -9769,6 +9878,87 @@ const Formula = (() => {
     name: a => text(a[0]),
     email: a => text(a[0])
   };
+
+  /* ==========================================================================
+   * DEUTSCHE NAMEN — dieselben Funktionen, die Excel-Schreibweise
+   * --------------------------------------------------------------------------
+   * Nachgemessen (`doku/EXCEL-IN-REDION-RECHERCHE.md`): von den 63 Funktionen
+   * des Excel-Startpakets liefen **37 bereits** — und **keine einzige unter
+   * ihrem deutschen Namen**. Wer aus Excel kam und `SUMME(1;2;3)` tippte,
+   * bekam „Unbekannte Funktion". `sum` hätte gerechnet.
+   *
+   * Es fehlten also nicht 63 Funktionen, sondern 26 Funktionen und 37 Namen.
+   * Die Namen sind das hier — eine Tabelle, kein Projekt.
+   *
+   * WARUM DAS SO BILLIG IST. Der Zerteiler kennt Umlaute schon
+   * (`/[A-Za-zÄÖÜäöüß_]/`), und Namen werden vor dem Nachschlagen
+   * kleingeschrieben. `SUMME`, `Summe` und `summe` landen deshalb von selbst
+   * am selben Ort; hier steht nur, wo dieser Ort ist.
+   *
+   * WARUM ZEIGER UND KEINE KOPIEN. `summe: F.sum` zeigt auf dieselbe
+   * Funktion. Eine eigene Fassung wäre eine zweite Wahrheit, die irgendwann
+   * anders rechnet als die erste — genau der Fehler, der sich durch dieses
+   * Projekt zieht. `pruefungen/lauf/test106.mjs` prüft jedes Paar auf
+   * **gleiches Ergebnis**, nicht nur darauf, dass es antwortet.
+   *
+   * MITTELWERT ZEIGT AUF `mean`, NICHT AUF `average`. `average` ist ein
+   * Spaltenaggregat und antwortet ausserhalb einer Datenbankspalte mit „Das
+   * geht nur in einer Datenbankspalte". Excels MITTELWERT nimmt Argumente —
+   * das ist `mean`. Beim ersten Zählen ging genau das daneben.
+   *
+   * Die englischen Namen bleiben. Ein Alias, der das Original verdrängt,
+   * hätte jede bestehende Formel in jedem Bestand gebrochen.
+   * ======================================================================== */
+  Object.assign(F, {
+    /* --- Mathematik ------------------------------------------------------ */
+    summe: F.sum,
+    mittelwert: F.mean,
+    /* MIN, MAX und ABS heissen in beiden Sprachen gleich — sie brauchen
+       keinen Eintrag und stehen hier nur, damit niemand sie für vergessen
+       hält. */
+    wurzel: F.sqrt,
+    rest: F.mod,
+    runden: F.round,
+    abrunden: F.floor,
+    aufrunden: F.ceil,
+
+    /* --- Logik ----------------------------------------------------------- */
+    wenn: F.if,
+    wenns: F.ifs,
+    und: F.and,
+    oder: F.or,
+    nicht: F.not,
+
+    /* --- Datum ----------------------------------------------------------- */
+    heute: F.today,
+    jetzt: F.now,
+    datum: F.date,
+    jahr: F.year,
+    monat: F.month,
+    tag: F.day,
+    kalenderwoche: F.week,
+
+    /* --- Text ------------------------------------------------------------ */
+    'länge': F.length,
+    teil: F.slice,
+    'glätten': F.trim,
+    gross: F.upper,
+    klein: F.lower,
+    wechseln: F.replaceall,
+    ersetzen: F.replace,
+    text: F.format,
+    wert: F.tonumber,
+    textkette: F.concat,
+    textverketten: F.join,
+
+    /* --- Information ----------------------------------------------------- */
+    istleer: F.empty,
+
+    /* --- Suchen und Verweisen -------------------------------------------- */
+    vergleich: F.match,
+    sortieren: F.sort,
+    eindeutig: F.unique
+  });
 
   /* Der eigentliche Auswerter */
   /* ------------------------------------------------------------------------

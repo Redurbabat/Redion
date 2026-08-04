@@ -567,8 +567,15 @@ Materiallisten · Projektkosten · Finanzplanung · Lernfortschritt · Inventar.
 
 ## L32 · Excel-Funktionen
 
-**Stand** — ◐ **37 von 63 des Startpakets laufen bereits — keine einzige
-unter ihrem deutschen Namen.**
+**Stand** — ◐ **die 37 deutschen Namen sind da; 26 Funktionen fehlen noch.**
+
+Seit dem 4. August 2026 rechnet `SUMME(1; 2; 3)` — als Zeiger auf dieselbe
+Funktion wie `sum`, nicht als zweite Fassung. Beschrieben im Register, damit
+die Suche im Formeleditor sie findet. Gehalten von `test106.mjs` (78
+Prüfungen), der auf **gleiches Ergebnis** prüft, nicht nur darauf, dass ein
+Name antwortet.
+
+Der Befund davor:
 
 Gemessen am 4. August 2026 (Register geladen, Laufzeit geladen, Namen
 abgeglichen — `doku/EXCEL-IN-REDION-RECHERCHE.md`):
@@ -623,8 +630,8 @@ Laufzeit, keine neue Funktion.
 **Wichtig** — dieselbe sichere Formelsprache, kein zweiter Auswerter, kein
 `eval()`. Siehe `ENTSCHEIDUNGEN.md` E11 und E24.
 
-**Status** — ⏳ hohe Priorität. Die 37 Namen sind der billigste grosse
-Gewinn im ganzen Plan.
+**Status** — ◐ Namen erledigt, 26 Funktionen offen. Davon sind die zehn aus
+Suche/Verweis die wichtigsten.
 
 ---
 

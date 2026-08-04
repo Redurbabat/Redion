@@ -82,7 +82,116 @@ Register.formeln = (() => {
       was: 'Irgendetwas in wahr/falsch verwandeln', notion: false }
   ];
 
-  const LISTE = BESCHRIEBEN.slice();
+  /* ==========================================================================
+   * DIE DEUTSCHEN EXCEL-NAMEN
+   * --------------------------------------------------------------------------
+   * Nachgemessen (`doku/EXCEL-IN-REDION-RECHERCHE.md`): 37 der 63 Funktionen
+   * des Excel-Startpakets liefen längst — aber keine unter ihrem deutschen
+   * Namen. Wer `SUMME(1; 2; 3)` tippte, bekam „Unbekannte Funktion".
+   *
+   * Die Namen selbst hängen in `formeln/laufzeit.js` an denselben Funktionen
+   * wie ihre englischen Geschwister. Hier stehen sie, damit die **Suche im
+   * Formeleditor** sie findet — sonst gäbe es sie und niemand entdeckte sie.
+   * Das ist derselbe Gedanke wie bei den 129 Funktionen ohne Beschreibung:
+   * eine Funktion, die niemand findet, ist fast wie nicht vorhanden.
+   *
+   * `notion: false` stimmt hier wörtlich — Notion kennt keine deutschen
+   * Funktionsnamen. Das ist einer der Punkte, an denen Redion mehr kann.
+   *
+   * MIN, MAX und ABS brauchen in `laufzeit.js` keinen Eintrag — sie heissen
+   * in beiden Sprachen gleich. Beschrieben werden sie hier trotzdem: sie
+   * standen bis dahin unbeschrieben unter „Sonstiges", und wer aus Excel
+   * kommt, sucht genau nach ihnen.
+   * ======================================================================== */
+  const DEUTSCH = [
+    /* --- Zahlen ---------------------------------------------------------- */
+    { name: 'SUMME',       gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
+      was: 'Alles zusammenzählen — wie in Excel', beispiel: 'SUMME(1; 2; 3)' },
+    { name: 'MIN',         gruppe: 'Zahlen', args: '(a; b; …)',   notion: true,
+      was: 'Der kleinste Wert', beispiel: 'MIN(3; 1; 2)' },
+    { name: 'MAX',         gruppe: 'Zahlen', args: '(a; b; …)',   notion: true,
+      was: 'Der grösste Wert', beispiel: 'MAX(3; 1; 2)' },
+    { name: 'ABS',         gruppe: 'Zahlen', args: '(zahl)',      notion: true,
+      was: 'Der Betrag — ohne Vorzeichen', beispiel: 'ABS(0 - 7)' },
+    { name: 'MITTELWERT',  gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
+      was: 'Der Durchschnitt der Werte', beispiel: 'MITTELWERT(2; 4; 6)' },
+    { name: 'WURZEL',      gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Die Quadratwurzel', beispiel: 'WURZEL(16)' },
+    { name: 'REST',        gruppe: 'Zahlen', args: '(zahl; teiler)', notion: false,
+      was: 'Was bei der Division übrig bleibt', beispiel: 'REST(7; 3)' },
+    { name: 'RUNDEN',      gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Kaufmännisch runden', beispiel: 'RUNDEN(2,6)' },
+    { name: 'ABRUNDEN',    gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Immer nach unten', beispiel: 'ABRUNDEN(2,9)' },
+    { name: 'AUFRUNDEN',   gruppe: 'Zahlen', args: '(zahl)',      notion: false,
+      was: 'Immer nach oben', beispiel: 'AUFRUNDEN(2,1)' },
+
+    /* --- Logik ----------------------------------------------------------- */
+    { name: 'WENN',        gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
+      was: 'Die Wenn-Dann-Sonst-Frage', beispiel: 'WENN(Betrag > 100; "gross"; "klein")' },
+    { name: 'WENNS',       gruppe: 'Logik', args: '(p1; w1; p2; w2; …)', notion: false,
+      was: 'Mehrere Fälle nacheinander prüfen' },
+    { name: 'UND',         gruppe: 'Logik', args: '(a; b; …)',    notion: false,
+      was: 'Wahr, wenn alles wahr ist' },
+    { name: 'ODER',        gruppe: 'Logik', args: '(a; b; …)',    notion: false,
+      was: 'Wahr, wenn mindestens eines wahr ist' },
+    { name: 'NICHT',       gruppe: 'Logik', args: '(a)',          notion: false,
+      was: 'Dreht wahr und falsch um' },
+
+    /* --- Datum ----------------------------------------------------------- */
+    { name: 'HEUTE',         gruppe: 'Datum', args: '()',         notion: false,
+      was: 'Das heutige Datum' },
+    { name: 'JETZT',         gruppe: 'Datum', args: '()',         notion: false,
+      was: 'Datum und Uhrzeit gerade eben' },
+    { name: 'DATUM',         gruppe: 'Datum', args: '(text)',     notion: false,
+      was: 'Aus Text ein Datum machen' },
+    { name: 'JAHR',          gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Die Jahreszahl' },
+    { name: 'MONAT',         gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Die Monatszahl' },
+    { name: 'TAG',           gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Der Tag im Monat' },
+    { name: 'KALENDERWOCHE', gruppe: 'Datum', args: '(datum)',    notion: false,
+      was: 'Die Kalenderwoche' },
+
+    /* --- Text ------------------------------------------------------------ */
+    { name: 'LÄNGE',         gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Wie viele Zeichen?' },
+    { name: 'TEIL',          gruppe: 'Text', args: '(text; von; bis)', notion: false,
+      was: 'Ein Stück aus dem Text herausschneiden', beispiel: 'TEIL("Redion"; 0; 3)' },
+    { name: 'GLÄTTEN',       gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Leerzeichen vorn und hinten weg' },
+    { name: 'GROSS',         gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Alles in Grossbuchstaben' },
+    { name: 'KLEIN',         gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Alles in Kleinbuchstaben' },
+    { name: 'WECHSELN',      gruppe: 'Text', args: '(text; alt; neu)', notion: false,
+      was: 'Jedes Vorkommen ersetzen' },
+    { name: 'ERSETZEN',      gruppe: 'Text', args: '(text; alt; neu)', notion: false,
+      was: 'Das erste Vorkommen ersetzen' },
+    { name: 'TEXT',          gruppe: 'Text', args: '(wert)',      notion: false,
+      was: 'Irgendetwas als Text darstellen' },
+    { name: 'WERT',          gruppe: 'Text', args: '(text)',      notion: false,
+      was: 'Aus Text eine Zahl machen', beispiel: 'WERT("42") + 1' },
+    { name: 'TEXTKETTE',     gruppe: 'Text', args: '(a; b; …)',   notion: false,
+      was: 'Texte aneinanderhängen' },
+    { name: 'TEXTVERKETTEN', gruppe: 'Text', args: '(liste; trenner)', notion: false,
+      was: 'Eine Liste mit einem Trenner verbinden' },
+
+    /* --- Information ----------------------------------------------------- */
+    { name: 'ISTLEER',   gruppe: 'Logik', args: '(wert)',         notion: false,
+      was: 'Ist da nichts drin?' },
+
+    /* --- Suchen und Verweisen -------------------------------------------- */
+    { name: 'VERGLEICH', gruppe: 'Listen', args: '(liste; wert)', notion: false,
+      was: 'An welcher Stelle steht der Wert?' },
+    { name: 'SORTIEREN', gruppe: 'Listen', args: '(liste)',       notion: false,
+      was: 'Eine Liste sortieren' },
+    { name: 'EINDEUTIG', gruppe: 'Listen', args: '(liste)',       notion: false,
+      was: 'Doppelte Werte entfernen' }
+  ];
+
+  const LISTE = BESCHRIEBEN.concat(DEUTSCH);
 
   const melde = (eintrag) => {
     if (!eintrag || !eintrag.name) return false;

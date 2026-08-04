@@ -167,12 +167,13 @@ Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
 | 103 | die Grenzen des ZIP-Packers — ohne Browser |
 | 104 | die verschlüsselte Sicherung |
 | 105 | das erzeugte JavaScript passt zu seinem TypeScript |
+| 106 | die deutschen Excel-Namen rechnen dasselbe wie die englischen |
 
 `test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
 urteilen. `alle.js` behandelt ihn wie die anderen; ein Fehler darin fällt
 trotzdem auf.
 
-**Sieben Läufe starten keinen Browser** — 87, 88, 89, 92, 93, 103 und 105.
+**Acht Läufe starten keinen Browser** — 87, 88, 89, 92, 93, 103, 105 und 106.
 (92 und 93 starten einen HTTP-Server, aber keinen Browser.) Zusammen sind sie in
 einer Fünftelsekunde fertig und stehen deshalb in der CI als eigener,
 vorgezogener Auftrag. Sie sind verschieden gebaut:
