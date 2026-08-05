@@ -1,0 +1,16 @@
+/* ============================================================================
+ * marken.css — die Schriften
+ * ----------------------------------------------------------------------------
+ * Die drei Schriftfamilien, und sonst nichts. Sie stehen vor den Farben,
+ * weil sie mit dem Thema nichts zu tun haben: Hell und Dunkel teilen sie.
+ *
+ * Wer die Schrift der ganzen App ändern will, ändert sie hier — und nur
+ * hier. Vorher lagen diese drei Zeilen zwischen sechsunddreissig Farbwerten
+ * in einer Datei mit 3155 Zeilen.
+ * ==========================================================================*/
+
+:root{
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
+  --mono: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: Lyon-Text, Georgia, ui-serif, serif;
+}

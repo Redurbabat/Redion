@@ -1,0 +1,464 @@
+/* ============================================================================
+ * tabelle.css — der Tabellenblock
+ * ----------------------------------------------------------------------------
+ * Die Entscheidungen dahinter stehen in `DESIGN-TABELLE.md`. Hier nur, was
+ * beim Lesen des Codes nicht auf der Hand liegt.
+ *
+ * KEINE EINZIGE NEUE FARBE. Alles kommt aus `dunkel.css` und `hell.css`. Ein
+ * roher Farbwert an dieser Stelle sähe im Hellmodus falsch aus — und zwar
+ * erst dann, wenn jemand hell arbeitet, also spät.
+ *
+ * DIE AUSWAHL LIEGT INNEN. `box-shadow: inset` statt `border`: ein Rahmen
+ * aussen verschiebt das Raster um zwei Pixel, und die ganze Tabelle zuckt
+ * beim Anklicken.
+ *
+ * UND SIE HAT KEINEN RADIUS. Überall sonst in Redion sind Ecken rund; hier
+ * nicht. Ein Tabellenprogramm hat scharfe Zellen — Excel, Numbers, Sheets,
+ * alle drei. Eine runde Auswahl fühlt sich sofort falsch an, ohne dass man
+ * sagen kann, warum.
+ * ==========================================================================*/
+
+.tbl {
+  --tbl-zh: 32px;        /* Zeilenhöhe */
+  --tbl-sb: 110px;       /* Spaltenbreite */
+  --tbl-kb: 44px;        /* Breite der Kopfspalte links */
+  --tbl-kh: 28px;        /* Höhe der Kopfzeile oben */
+
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg);
+  margin: 6px 0 10px;
+}
+
+/* --- Bearbeitungszeile ---------------------------------------------------
+   Oben, wie in jedem Tabellenprogramm: links die Adresse, rechts die Formel.
+   Sie zeigt, was getippt wurde, nicht was herauskam — das ist ihr Zweck. */
+.tbl-kopf {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-card);
+}
+.tbl-adresse {
+  flex: 0 0 var(--tbl-kb);
+  display: flex; align-items: center; justify-content: center;
+  font: 600 12px var(--font);
+  color: var(--text-dim);
+  border-right: 1px solid var(--line);
+  padding: 0 6px;
+  min-width: 56px;
+}
+.tbl-fx {
+  flex: 0 0 auto;
+  display: flex; align-items: center;
+  padding: 0 8px;
+  font: italic 600 12px var(--serif);
+  color: var(--text-faint);
+  border-right: 1px solid var(--line-soft);
+}
+.tbl-eingabe {
+  flex: 1 1 auto;
+  border: 0; outline: 0; background: transparent;
+  color: var(--text);
+  font: 13px var(--mono);
+  padding: 7px 10px;
+  min-width: 0;
+}
+.tbl-eingabe::placeholder { color: var(--text-faint); }
+
+.tbl-werkzeuge { display: flex; align-items: center; gap: 2px; padding: 0 4px; }
+.tbl-werkzeuge button {
+  border: 0; background: transparent; color: var(--text-dim);
+  width: 26px; height: 26px; border-radius: 4px;
+  font: 13px var(--font); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.tbl-werkzeuge button:hover { background: var(--bg-hover); color: var(--text); }
+.tbl-werkzeuge button.on   { background: var(--bg-hover); color: var(--accent); }
+.tbl-werkzeuge button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* --- Das Rollfeld ---------------------------------------------------------
+   Nur dieses Element rollt. Die Köpfe bleiben über `position: sticky`
+   stehen; das ist der Grund, warum das Raster kein <table> ist. */
+.tbl-feld {
+  position: relative;
+  overflow: auto;
+  max-height: 420px;
+  /* Waagerecht wischen am Telefon soll sich anfühlen wie überall sonst. */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Die Tabelle ist EIN Tabstopp — also muss man sehen, wenn man drinsteht.
+   Ohne diese zwei Zeilen springt der Fokus beim Tabben in ein Raster, das
+   sich nicht verändert: für jeden, der ohne Maus arbeitet, ist die Tabelle
+   dann verschwunden. Aussen liegend, damit das Raster sich nicht verschiebt. */
+.tbl-feld:focus { outline: none; }
+/* Sichtbar wird der Fokus über `.tbl.imFokus` weiter unten — ein zweiter
+   2-px-Rahmen um das ganze Raster stritt auf dem Bildschirm mit dem
+   Auswahlrahmen, und man wusste nicht, was die blaue Linie am rechten Rand
+   bedeutet. Diese Regel bleibt als Rückfall für den Fall, dass das Skript
+   nicht läuft: ohne sie gäbe es dann gar kein Fokuszeichen. */
+.tbl-feld:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+.tbl.imFokus .tbl-feld:focus-visible { outline: none; }
+
+/* --- Kopfzeile oben ------------------------------------------------------- */
+.tbl-spalten {
+  position: sticky; top: 0; z-index: 3;
+  display: flex;
+  height: var(--tbl-kh);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--line);
+  width: max-content;
+}
+.tbl-ecke {
+  position: sticky; left: 0; z-index: 4;
+  flex: 0 0 var(--tbl-kb);
+  background: var(--bg-card);
+  border-right: 1px solid var(--line);
+}
+.tbl-sp {
+  position: relative;
+  flex: 0 0 var(--tbl-sb);
+  display: flex; align-items: center; justify-content: center;
+  font: 600 12px var(--font);
+  color: var(--text-dim);
+  border-right: 1px solid var(--line-soft);
+  user-select: none;
+  cursor: pointer;
+}
+.tbl-sp.aktiv { background: var(--bg-hover); color: var(--text); }
+
+/* Der Griff zum Breiterziehen. Sechs Pixel breit und unsichtbar, bis der
+   Zeiger darüberkommt — sichtbar wäre es eine Linie zu viel in einem Raster,
+   das schon aus Linien besteht. */
+.tbl-griff {
+  position: absolute; top: 0; right: -3px; bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 5;
+}
+.tbl-griff:hover { background: var(--accent); }
+
+.tbl-ecke { cursor: pointer; }
+.tbl-zn { cursor: pointer; }
+
+/* --- Die Zeilen -----------------------------------------------------------
+   Absolut gesetzt in einem Platzhalter voller Höhe: gezeichnet wird nur, was
+   zu sehen ist. Bei 50 Zeilen fällt das nicht auf, bei 5000 schon — und die
+   kommen, sobald jemand eine CSV einliest. */
+.tbl-koerper { position: relative; width: max-content; }
+
+.tbl-zeile {
+  position: absolute; left: 0;
+  display: flex;
+  height: var(--tbl-zh);
+}
+.tbl-zn {
+  position: sticky; left: 0; z-index: 2;
+  flex: 0 0 var(--tbl-kb);
+  display: flex; align-items: center; justify-content: center;
+  font: 12px var(--font);
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-soft);
+  user-select: none;
+}
+.tbl-zn.aktiv { background: var(--bg-hover); color: var(--text); }
+
+/* --- Die Zelle ------------------------------------------------------------ */
+.tbl-z {
+  position: relative;
+  flex: 0 0 var(--tbl-sb);
+  display: flex; align-items: center;
+  padding: 0 7px;
+  font: 14px var(--font);
+  /* Ziffern gleicher Breite: ohne das franst eine Spalte mit Beträgen aus. */
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  border-right: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  cursor: cell;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tbl-z:hover { background: var(--bg-hover); }
+
+/* Zahlen nach rechts, Text nach links — wie in jedem Tabellenprogramm, und
+   aus demselben Grund: so sieht man die Grössenordnung auf einen Blick. */
+.tbl-z.zahl  { justify-content: flex-end; }
+.tbl-z.mitte { justify-content: center; }
+.tbl-z.rechts{ justify-content: flex-end; }
+.tbl-z.links { justify-content: flex-start; }
+
+.tbl-z.fett       { font-weight: 700; }
+.tbl-z.kursiv     { font-style: italic; }
+.tbl-z.formel::after {
+  /* Eine Ecke oben links sagt: hier steht eine Formel, kein getippter Wert. */
+  content: ''; position: absolute; top: 0; left: 0;
+  border-top: 5px solid var(--accent);
+  border-right: 5px solid transparent;
+  opacity: .5;
+}
+.tbl-z.fehler { color: var(--c-red); font-weight: 600; }
+
+/* ### — die Spalte ist zu schmal für diese Zahl.
+   Lieber sichtbar nichts zeigen als unsichtbar etwas Falsches: rechtsbündig
+   abgeschnitten wird aus `634.21` das Bild von `34.21`, und das ist keine
+   halbe Zahl mehr, sondern eine andere. */
+.tbl-z.zuEng { color: var(--text-dim); letter-spacing: 1px; cursor: col-resize; }
+
+/* Eine Zahl, die kürzer geschrieben werden musste, damit sie hineinpasst.
+   Sie ist richtig, nur nicht vollständig — der volle Wert steht im Titel
+   und in der Bearbeitungszeile. Kein eigenes Zeichen dafür: ein Punkt oder
+   Sternchen an jeder zweiten Zelle wäre lauter als der Nutzen. */
+.tbl-z.gekuerzt { cursor: col-resize; }
+
+/* Der Rahmen des Blocks sagt, dass das Raster den Fokus hat. Leise, damit er
+   dem Auswahlrahmen nicht die Aufmerksamkeit nimmt — der ist laut Entwurf
+   selbst der Fokusring. */
+.tbl.imFokus { border-color: var(--accent); }
+
+/* Die Auswahl — das eine Element, an das man sich erinnert. */
+.tbl-z.gewaehlt {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--bg);
+  z-index: 1;
+}
+.tbl-z.imBereich { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+
+/* Der Anfasser sitzt an der LETZTEN Zelle der Auswahl, nicht an der aktiven.
+   Bei einer einzelnen Zelle sind das dieselbe; bei einem Bereich zieht man
+   sonst aus der falschen Ecke, und niemand versteht, warum nichts passiert. */
+.tbl-z.ecke::before {
+  /* INNEN, NICHT ÜBERSTEHEND — und das ist keine Geschmacksfrage.
+     Mit `right:-3px` ragte der Anfasser über die Zelle hinaus. Für den
+     Browser ist das überstehender Inhalt, also wuchs `scrollWidth` um drei
+     Pixel — und die Prüfung „passt die Zahl in die Spalte?" schlug bei
+     JEDER ausgewählten Zelle an. `588.9` stand als `###` da, obwohl es
+     bequem hineinpasste. Ein Messfehler, der wie ein Anzeigefehler aussah. */
+  content: ''; position: absolute; right: 0; bottom: 0;
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border: 1px solid var(--bg);
+  cursor: crosshair;
+  z-index: 3;
+}
+/* Auf den letzten zehn Pixeln unten rechts fasst man ihn an — das sagt der
+   Zeiger, bevor man klickt. */
+.tbl-z.ecke { cursor: cell; }
+
+/* Was der Anfasser beim Ziehen gerade überstreicht. Gestrichelt, damit man
+   sieht: hier steht noch nichts, hier KÄME etwas hin. */
+.tbl-z.fuellvorschau {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Die Zelle im Bearbeiten: ein echtes Eingabefeld über der Zelle. */
+.tbl-z input {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border: 0; outline: 2px solid var(--accent); outline-offset: -2px;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px var(--font);
+  padding: 0 6px;
+  z-index: 5;
+}
+
+/* --- Das Datenbankraster ---------------------------------------------------
+   Dieselbe Bedienung wie der Tabellenblock, deshalb dieselben Klassen. Zwei
+   Unterschiede, und beide haben einen Grund.
+
+   ES IST HÖHER. Eine Datenbank hat zwanzig Zeilen oder zweitausend; 420 px
+   wie beim Tabellenblock wären dort ein Guckloch.
+
+   GERECHNETE SPALTEN SIND ERKENNBAR. Formel, Rollup, „erstellt am" — die
+   lassen sich hier nicht tippen. Ausblenden wäre schlechter: dann fehlte
+   genau die Spalte, wegen der man hinsieht. Also sichtbar und leise
+   abgesetzt, mit dem Zeiger als zweitem Hinweis. */
+.tbl-db .tbl-feld { max-height: 62vh; }
+
+.tbl-db .tbl-sp.gerechnet { font-style: italic; }
+.tbl-db .tbl-z.gerechnet {
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--bg-card) 55%, transparent);
+  cursor: default;
+}
+.tbl-db .tbl-z.gerechnet.gewaehlt { color: var(--text); }
+
+/* --- Die Blattreiter ------------------------------------------------------
+   Unten, wie in jedem Tabellenprogramm — dort sucht man sie, und am Telefon
+   sind sie in Daumenreichweite. Bei einem einzigen Blatt sind sie weg: ein
+   einzelner Reiter über einer einzelnen Tabelle erklärt nichts und kostet in
+   jedem Block, den je jemand angelegt hat, eine Zeile Höhe. */
+.tbl-reiter {
+  display: flex; align-items: stretch; gap: 2px;
+  padding: 4px 6px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-card);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tbl-reiter::-webkit-scrollbar { display: none; }
+.tbl-reiter.einzeln { padding: 0 6px; }
+.tbl-reiter.einzeln .tbl-reiter-eins { display: none; }
+/* Der Plus-Knopf bleibt auch bei einem Blatt — sonst gäbe es keinen Weg zum
+   zweiten, und eine Funktion ohne Weg dorthin gibt es nicht. */
+.tbl-reiter.einzeln .tbl-reiter-plus { opacity: .55; }
+
+.tbl-reiter-eins {
+  flex: 0 0 auto;
+  border: 0; background: transparent;
+  color: var(--text-dim);
+  font: 12px var(--font);
+  padding: 5px 12px;
+  border-radius: 5px 5px 0 0;
+  cursor: pointer;
+  max-width: 160px;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.tbl-reiter-eins:hover { background: var(--bg-hover); color: var(--text); }
+.tbl-reiter-eins.aktiv {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  /* Die Linie unter dem aktiven Reiter ist das eine Zeichen, das sagt: DIESES
+     Blatt liegt oben. Ein blosser Farbwechsel wäre bei zehn Reitern nicht
+     genug — man sucht dann. */
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.tbl-reiter-eins:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.tbl-reiter-plus {
+  flex: 0 0 auto;
+  border: 0; background: transparent;
+  color: var(--text-dim);
+  font: 16px var(--font);
+  width: 28px; border-radius: 5px;
+  cursor: pointer;
+}
+.tbl-reiter-plus:hover { background: var(--bg-hover); color: var(--text); }
+.tbl-reiter-plus:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* --- Fusszeile ------------------------------------------------------------
+   Sagt, was gerade gilt: Auswahl, Summe, Zirkelbezüge. Eine Meldung, die man
+   suchen muss, ist keine. */
+.tbl-fuss {
+  display: flex; align-items: center; gap: 14px;
+  padding: 5px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-card);
+  font: 12px var(--font);
+  color: var(--text-dim);
+  flex-wrap: wrap;
+}
+.tbl-fuss b { color: var(--text); font-weight: 600; }
+.tbl-warnung { color: var(--c-red); font-weight: 600; }
+
+/* Steht in der gewählten Zelle ein Fehlerwert, sagt die Fusszeile, was er
+   heisst und was man tun kann. `#NAME?` allein ist keine Meldung, sondern
+   ein Rätsel. */
+.tbl-erklaerung { color: var(--c-red); }
+.tbl-erklaerung b { color: var(--c-red); }
+
+/* Der leere Zustand: eine Tabelle ohne einen einzigen Wert sagt, womit man
+   anfängt. Leise — sie steht in der Fusszeile und nicht über dem Raster. */
+.tbl-tipp { color: var(--text-faint); }
+.tbl-tipp code {
+  font: 12px var(--mono);
+  background: var(--bg-hover);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+ * TELEFON
+ * --------------------------------------------------------------------------
+ * Drei Dinge, und das dritte ist das, was man sonst erst auf dem Gerät merkt.
+ * ========================================================================*/
+@media (max-width: 760px) {
+  .tbl {
+    --tbl-zh: 40px;      /* 32 px trifft man mit dem Finger nicht */
+    --tbl-kb: 40px;
+    /* 128 statt 110 — gemessen: bei 16 px Schrift ist `1’450.00 CHF` 99 px
+       breit, mit Innenabstand also 114. In 110 px stand deshalb bei jedem
+       Betrag `###`. Die Zahl steht auch im Kopf von `ansicht.ts`; hier
+       gilt sie für den Fall, dass das Skript die Breite nicht setzt. */
+    --tbl-sb: 128px;
+  }
+  .tbl-feld { max-height: 60vh; }
+  .tbl-z { font-size: 16px; }
+
+  /* 16 px, und zwar unbedingt: Safari zoomt die ganze Seite hinein, sobald
+     ein Eingabefeld kleiner ist. Danach steht die Tabelle verrutscht da, und
+     niemand versteht, warum. */
+  .tbl-z input, .tbl-eingabe { font-size: 16px; }
+
+  .tbl-adresse { min-width: 48px; }
+  .tbl-fuss { font-size: 11px; gap: 10px; }
+
+  /* Reiter am Finger: 44 px hoch, und die Schrift so gross, dass man den
+     Namen lesen kann, ohne heranzuzoomen. */
+  .tbl-reiter-eins { padding: 12px 14px; font-size: 14px; min-height: 44px; }
+  .tbl-reiter-plus { width: 44px; min-height: 44px; font-size: 20px; }
+
+  /* ------------------------------------------------------------------------
+   * ZWEI ZEILEN STATT EINER — und das ist kein Feinschliff.
+   *
+   * In einer Zeile brauchte der Kopf: 48 px Adresse + 30 px fx + zehn Knöpfe
+   * zu 34 px = über 410 px. Auf einem iPhone mit 390 px hiess das zweierlei,
+   * und beides war schlimm: das Eingabefeld wurde auf null Pixel gequetscht
+   * — man konnte keine Formel tippen —, und die letzten drei Knöpfe standen
+   * ausserhalb des Bildes. Darunter der ⋯-Knopf, also der ganze Weg zu
+   * „Als Excel speichern". Eine Funktion, die man am Telefon nicht erreicht,
+   * gibt es am Telefon nicht.
+   *
+   * Jetzt: oben Adresse, fx und Eingabe über die volle Breite, darunter die
+   * Werkzeugleiste, die waagerecht rollt. Wie in jeder Tabellen-App am
+   * Telefon, und aus demselben Grund.
+   * ----------------------------------------------------------------------*/
+  .tbl-kopf { flex-wrap: wrap; }
+  .tbl-eingabe { flex: 1 1 120px; }
+  .tbl-werkzeuge {
+    flex: 1 0 100%;
+    border-top: 1px solid var(--line-soft);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 3px 4px;
+    gap: 3px;
+  }
+  .tbl-werkzeuge::-webkit-scrollbar { display: none; }
+  /* 44 px, weil ein Finger 44 px braucht — die Zahl steht so in
+     `redion-mobile-ux`, und sie ist der Grund, warum am Telefon nur zwei
+     Knöpfe stehen statt elf. Elf mal 44 wären 484 px; auf einem 390 px
+     breiten Gerät ist das keine Leiste, sondern eine Ausrede. */
+  .tbl-werkzeuge button {
+    flex: 0 0 auto;
+    min-width: 44px; height: 44px;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+
+  /* DER ANFASSER IST AM FINGER AUS — und das ist eine Entscheidung, keine
+     Auslassung. Er hängt an `mousemove`; auf einem Berührungsbildschirm
+     würde das Ziehen zum Rollen, und die Auswahl bliebe stehen. Ein
+     Anfasser, der beim Anfassen nichts tut, ist schlimmer als keiner.
+     Ausfüllen gibt es am Telefon über Format ▸ „Nach unten ausfüllen".
+     `redion-mobile-ux` stellt die komplexe Ziehauswahl ausdrücklich zurück. */
+  @media (hover: none) and (pointer: coarse) {
+    .tbl-z.ecke::before { display: none; }
+  }
+}
+
+/* Wer keine Bewegung will, bekommt keine. */
+@media (prefers-reduced-motion: reduce) {
+  .tbl * { transition: none !important; animation: none !important; }
+}

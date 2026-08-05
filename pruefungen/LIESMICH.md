@@ -1,0 +1,363 @@
+# Die Prüfläufe
+
+**67 Läufe, 2766 einzelne Prüfungen.** Sie laufen über echtes Chromium
+gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
+Speicher.
+
+```
+node pruefungen/alle.mts              alles                    (~12 min)
+node pruefungen/alle.mts --schnell    ohne die Messläufe       (~11 min)
+node pruefungen/alle.mts 33 85 86     nur diese drei
+node pruefungen/alle.mts server       nur die Serverläufe
+node pruefungen/alle.mts --alt        auch die alten aus alt/
+
+node pruefungen/lauf/test85.mjs      ein einzelner Lauf
+```
+
+Vorher einmal:
+
+```
+npm install
+npx playwright install chromium
+```
+
+Über `npm` gehen die Schalter mit zwei Strichen davor:
+`npm run pruefen -- --schnell`, `npm run pruefen -- 33 85 86`.
+
+Die Läufe starten ausserdem bei jedem Push von selbst
+(`.github/workflows/pruefen.yml`), in zwei Aufträgen: `test87` allein für die
+schnelle Antwort, und daneben die ganze Reihe.
+
+---
+
+## Warum sie mehr wert sind als sie aussehen
+
+Diese Läufe sind nicht beim Bauen entstanden, sondern **beim Kaputtmachen**.
+Fast jeder von ihnen hat mindestens einen echten Fehler gefunden, den kein
+Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
+
+- **Ein Anführungszeichen im Text wurde zu einem Attribut.** Zwanzig der
+  fünfzig `esc`-Funktionen ersetzten `&`, `<` und `>`, aber nicht `"`. An 41
+  Stellen landet ihr Ergebnis in einem Attribut — `<input value="${esc(…)}">`.
+  Wer einen Knopf `" onfocus="…" autofocus="` nennt, schliesst damit `value`
+  und schreibt zwei eigene Attribute dahinter. Kein `<script>`, das ein
+  Säuberer erkennen würde; ein gültiges `onfocus`, das der Browser ausführt.
+  Nachgestellt und bestätigt: der Handler lief. Gefunden wurde es nicht durch
+  Suchen nach Lücken, sondern beim Herauslösen von `wissen/dienst.js` — dort
+  fiel auf, dass die eine Datei ein `"` ersetzt und die Nachbardatei nicht.
+  → `test90.mjs` prüft das Verhalten, `test87.mjs` verhindert den Rückfall.
+- **Ein losgelöstes Element schützt nicht.** `verbinden/mail.js` warf das
+  Markup einer fremden Mail weg, indem es sie einem `div` zuwies, das nie in
+  die Seite kam, und danach nur den Text las. Nur feuert `<img src=x
+  onerror=…>` beim Zuweisen — auch losgelöst. Nachgemessen: `div.innerHTML`
+  führt aus, `template.innerHTML` und `DOMParser` nicht. → `test91.mjs`
+- **„Ist das ein PDF?" entschied die Endung.** `javascript:alert(1)//.pdf`
+  bestand die Prüfung — die zwei Schrägstriche sind in JavaScript ein
+  Kommentar. Der Anhang landete dann in einem `<iframe src>`, und der läuft im
+  Ursprung der Seite: aus dem Rahmen heraus war `parent` erreichbar. Ein
+  Anhang, den niemand anklickt, führte Code aus, sobald die Vorschau aufging.
+  → `test91.mjs`
+- **Der Anmeldeschlüssel ging an jeden Ursprung.** Der Server schickte ihn mit
+  `opener.postMessage(…, "*")` — wer eine eigene Seite baut, die das
+  Anmeldefenster öffnet, ist `opener` und bekommt ihn geliefert. Und die
+  Gegenrichtung fehlte auch: `abgleich/maschine.js` prüfte nicht, von wem eine
+  Nachricht kam, also durfte jede Seite einen Schlüssel *hereinreichen* — die
+  Notizen wären in den Bestand eines Fremden geflossen. Auffällig daran:
+  `verbinden/konten.js` prüfte es seit jeher. Zwei Empfänger derselben Sorte,
+  einer richtig, einer nicht — dasselbe Muster wie die zwanzig halben `esc`.
+  → `test92.mjs`
+- **Die Sicherung enthielt den Versionsverlauf nicht** — obwohl die Doku ihn
+  ausdrücklich aufzählt. Wer sie auf einem neuen Rechner einspielte, bekam
+  seine Seiten zurück und keinen einzigen Verlauf. Und das Einspielen räumte
+  nur den Zwischenspeicher: die alten Seiten kamen **beim nächsten Neuladen
+  zurück** und lagen zwischen den eingespielten. Das ist die schlimmste Sorte
+  Fehler, die diese App haben kann — sie sieht aus wie ein geglückter Vorgang.
+  Geprüft war bisher, dass der Export *läuft*, nicht dass der Bestand danach
+  derselbe ist. → `test96.mjs` vergleicht ihn Feld für Feld.
+- **Niemand hatte je einen alten Bestand geöffnet.** `test85` prüfte die
+  *Beschreibung* der Umzüge — wie viele Fassungen es gibt, welche Fächer
+  dazukamen. Den Fall selbst, dass jemand die App nach Monaten wieder öffnet
+  und die Ablage eine ältere Fassung hat, hatte nie ein Lauf durchgespielt.
+  Genau darum geht es in der Abschlussregel: *„Redion darf niemals so gebaut
+  werden, dass Nutzer ihre Daten unbemerkt verlieren."* Der Umzug hält —
+  aber das war bis dahin eine Annahme. → `test95.mjs` legt eine echte
+  Fassung-1-Ablage an und sieht nach, ob Seite, Text, Häkchen, Reihenfolge
+  und Einstellung überleben. Für alle fünf Fassungen.
+- **Das Schema stand zweimal, unbewacht.** `server/schema.sql` legt die
+  Tabellen an, `server/ablage.ts` trägt dieselben noch einmal als Zeichenkette
+  — nötig, weil ein Cloudflare-Arbeiter keine Datei lesen kann. Die beiden
+  waren identisch, aber nichts hielt sie so. Wer eine Spalte nur in
+  `schema.sql` ergänzt, bekommt einen Server, der lokal läuft und in der Wolke
+  eine Spalte weniger hat — und das fällt erst auf, wenn jemand sie braucht.
+  Beim Anlegen der Bremse ist genau das passiert. → `test87.mjs` vergleicht sie
+  jetzt Spalte für Spalte.
+- Der Abgleich schrieb geholte Sätze nur in den Arbeitsspeicher, nie auf die
+  Platte. Nach dem Neuladen waren sie weg — und weil die Abgleichsmarke schon
+  weitergerückt war, kamen sie **nie wieder**.
+- `updateCollection` setzte nie einen Zeitstempel. Für den Abgleich hiess das,
+  eine Schemaänderung sei nie geschehen: eine neue Spalte kam auf dem zweiten
+  Gerät nie an. Die Zeilen wanderten, ihre Spalten nicht.
+- Ein neuer Block änderte die Reihenfolge der Elternseite, ohne sie als
+  geändert zu markieren. Der Block lag danach im Speicher und war auf keiner
+  Seite zu sehen.
+- „Kein Zugriff" löschte die Rechtezeile, statt sie zu speichern — aus einem
+  Riegel wurde ein Loch, und das geerbte Recht kam sofort wieder durch.
+- Das Salz für die Verschlüsselung gehörte dem Gerät statt dem Konto. Derselbe
+  Satz ergab auf zwei Geräten zwei Schlüssel; das Telefon holte 400 Sätze und
+  konnte keinen lesen.
+
+Deshalb: **wer eine Funktion ändert, lässt die Läufe laufen.** Und wer eine
+neue baut, schreibt einen dazu.
+
+---
+
+## Zwei Eigenheiten, die sonst eine Stunde kosten
+
+**1. Drei Sekunden Pause zwischen zwei Läufen.** Ohne sie werden sie flockig:
+Playwright braucht einen Moment, um Ports freizugeben, und IndexedDB hält die
+Datenbank kurz gesperrt. Ein Lauf, der einzeln grün ist und in der Reihe rot,
+ist fast immer das — nicht ein Fehler im Code. `alle.mts` macht die Pause von
+selbst.
+
+**2. `App`, `Store`, `Datenbank`, `UI` und `Blocks` stehen nicht auf
+`window`.** Sie sind gewöhnliche `const` auf oberster Ebene. In
+`page.evaluate` also:
+
+```js
+await seite.waitForFunction(() => typeof App !== 'undefined');   // richtig
+await seite.waitForFunction(() => window.App);                   // wartet ewig
+```
+
+Im Modulcode dasselbe: `typeof Melder !== 'undefined'` statt `self.Melder`.
+Module, die sich selbst auf `window` legen (`Register`, `Formen`, `Ereignisse`,
+`Ids` …), sind beides Mal erreichbar.
+
+---
+
+## Wo was geprüft wird
+
+| Lauf | Worum es geht |
+|---|---|
+| 31 | PWA, Manifest, Service Worker, Cloudflare-Brücke |
+| 32–40 | Editor, Blöcke, Slash-Menü, Tastenkürzel, Datenbank-Werkzeugleiste |
+| 41–50 | Formeln, Filter, Sortieren, Rollups, Verknüpfungen, Diagramme |
+| 51–60 | Ansichten, Kalender, Zeitstrahl, Board, Pivot, Formulare |
+| 61–70 | KI, Agenten, MCP, Kalender, Mail, Import, Export, Oberfläche am Telefon |
+| 71–74 | Barrierefreiheit, Ablage, Leistung, die Einzeldatei |
+| servercheck, 75–79 | der Server: Konten, Rechte, Abgleich, Spaltenrechte |
+| 80–84 | Spaltenrechte in der Oberfläche, Probelauf, Prüfsätze, Vorlagenfassung, Vorrat |
+| 85 | der Kern: Helfer, Sicherheit, Formen, Umzüge, Ereignisse |
+| 86 | die elf Register |
+| 87 | der Quelltext selbst — ohne Browser, in Millisekunden |
+| 88 | die Datenbank-Logik in Node — ohne document, ohne window |
+| 89 | die Werkzeug-Logik in Node — unscharfe Suche, SM-2, Markdown, Statistik |
+| 90 | ein Anführungszeichen im Text darf kein Attribut werden |
+| 91 | der Säuberer hängt — Adressen in Links und Rahmen, HTML aus Mails |
+| 92 | der Anmeldeschlüssel geht nur an geprüfte Ursprünge · CORS |
+| 93 | die Bremse — wie oft jemand ein Passwort probieren darf · Kopfzeilen |
+| 94 | die CSP der veröffentlichten Seite hält wirklich (im Browser) |
+| 95 | ein Bestand aus jeder alten Fassung überlebt den Umzug |
+| 96 | die Sicherung hält, was sie verspricht — Rundlauf Feld für Feld |
+| 97 | der Papierkorb: was wiederherstellbar ist, was endgültig mitgeht |
+| 98 | der Versionsverlauf wird ausgedünnt, nicht abgeschnitten |
+| 99 | zwei Fenster auf derselben Ablage |
+| 100 | die Anhänge kommen mit — `.redion`, mit echten Bytes |
+| 101 | Eingabegrenzen am Server |
+| 102 | Markenrechte an allen neun Torwegen |
+| 103 | die Grenzen des ZIP-Packers — ohne Browser |
+| 104 | die verschlüsselte Sicherung |
+| 105 | das erzeugte JavaScript passt zu seinem TypeScript |
+| 106 | die deutschen Excel-Namen rechnen, was Excel rechnet |
+| 107 | Suchen und Verweisen: SVERWEIS, SUMMEWENN, INDEX, FILTER |
+
+`test42.js` gibt einen Bericht statt einer Bilanz aus — er misst, statt zu
+urteilen. `alle.mts` behandelt ihn wie die anderen; ein Fehler darin fällt
+trotzdem auf.
+
+**Neun Läufe starten keinen Browser** — 87, 88, 89, 92, 93, 103, 105, 106
+und 107.
+(92 und 93 starten einen HTTP-Server, aber keinen Browser.) Zusammen sind sie in
+einer Fünftelsekunde fertig und stehen deshalb in der CI als eigener,
+vorgezogener Auftrag. Sie sind verschieden gebaut:
+
+`test87.mjs` liest den Quelltext, ohne ihn auszuführen. Er prüft, was zwischen
+zwei Dateien steht und deshalb in keinem Verhalten auftaucht: dass kein
+Steuerzeichen roh im Quelltext steht (in der Einzeldatei macht der HTML-Parser
+U+FFFD daraus und reisst den ganzen Skriptblock mit — so fehlte dort einmal die
+komplette HTML-Säuberung), dass die Rechtetabellen in Oberfläche und Server
+übereinstimmen, und dass die drei Zeichner aus A1/A2 `App` nicht mehr kennen.
+
+`test88.mjs` und `test89.mjs` führen je eine `dienst.js` wirklich aus — mit
+Attrappen statt `Store`, ohne `document` und **ohne `window`**. Dass das geht,
+ist der ganze Zweck dieser beiden Dateien: sie rechnen, sie zeigen nichts.
+Beide prüfen Dinge, die im Browser gar nicht prüfbar wären. `test89` etwa
+fragt, ob eine dreimal gewusste Karteikarte in fünfzehn Tagen wiederkommt —
+darauf zu warten ist kein Prüflauf.
+
+Beim Schreiben von `test89` fiel die vierstufige Notenskala auf: die Knöpfe
+heissen „Nochmal, Schwer, Gut, Leicht", also 1 bis 4, und deshalb steht in der
+Datei `(4 - note)` statt SuperMemos `(5 - q)`. Wer den Lauf für die fünfstufige
+Skala schreibt, bekommt 16 statt 15 heraus und hält die richtige Rechnung für
+einen Fehler. Es kostete eine Viertelstunde, das nachzusehen statt zu ändern.
+
+---
+
+## Die fünf Läufe, die man nicht abschwächen darf
+
+Ein Prüflauf lässt sich immer grün machen, indem man weniger von ihm
+verlangt. Bei den meisten fällt das auf. Bei diesen fünf nicht — sie prüfen
+Dinge, die im Betrieb erst dann auffallen, wenn es zu spät ist.
+
+### `test96` und `test100` — die Sicherung
+
+`test96` vergleicht den Bestand **Feld für Feld** über den Rundlauf hinweg.
+`test100` tut dasselbe für Anhänge, und zwar **mit echten Bytes**: ein
+Anhang wird angelegt, gesichert, alles gelöscht, zurückgespielt und Byte für
+Byte verglichen.
+
+Die Versuchung ist, statt der Bytes die Grösse zu vergleichen oder statt
+aller Felder nur den Text. Beides wäre schneller und beides würde genau die
+Fehler durchlassen, für die es diese Läufe gibt: ein Anhang, der
+scheinbar da ist und leer, ist schlimmer als einer, der fehlt.
+
+`test100` prüft ausserdem **beide Richtungen**: dass beim „Ersetzen" nicht
+zu viel weggeht, und dass bei einer `.json`-Sicherung (ohne Anhänge) die
+vorhandenen Anhänge **nicht** gelöscht werden. Die zweite Richtung ist die
+wichtigere — sie hält fest, dass eine unvollständige Sicherung nicht zum
+Datenverlust wird.
+
+### `test103` — die Grenzen des ZIP-Packers
+
+Drei Grenzen, alle drei im Format festgeschrieben: 4 GB je Datei, 4 GB je
+Archiv, **65 535 Einträge**. Die dritte hatte lange keine Prüfung und
+scheiterte deshalb still — ein Archiv mit 70 000 Einträgen nannte im
+Schlusssatz 4 464 und sah gesund aus.
+
+Der Lauf prüft ausdrücklich **beide** Seiten der Grenze: 65 535 gehen durch,
+65 536 werden abgelehnt. Wer nur die eine Richtung prüft, baut sich die
+nächste Fehlermeldung an der falschen Stelle.
+
+### `test104` — die verschlüsselte Sicherung
+
+Hier waren vier Fehler auf einmal, und der ernsteste war: das Eingespielte
+ging nur in den Zwischenspeicher, die Seite lud 900 ms später neu, und der
+Erfolg wurde trotzdem gemeldet.
+
+Deshalb prüft dieser Lauf **an `Store.cache` vorbei** — er öffnet IndexedDB
+selbst und sieht nach, was wirklich geschrieben wurde. Wer das auf
+`Store.getBlock` umstellt, weil es kürzer ist, hat genau die Prüfung
+entfernt, für die der Lauf existiert.
+
+### `test106` — die deutschen Excel-Namen
+
+Er hat zwei Abschnitte, die verschiedene Fehler finden, und beide werden
+gebraucht:
+
+**Abschnitt 1** vergleicht den deutschen Namen mit dem, worauf er zeigt. Das
+findet einen **fehlenden** Zweitnamen — und niemals einen **falschen**: zeigt
+der Name auf die verkehrte Funktion, rechnen beide Seiten dasselbe Verkehrte.
+Genau so kamen elf falsche Zuordnungen durch.
+
+**Abschnitt 4e** prüft gegen **feste erwartete Werte**, die aus Excel
+nachgeschlagen sind — `TEIL("Redion";2;3)` ist `"edi"`, und das steht so
+dort. Nur das findet eine falsche Zuordnung.
+
+Wer 4e kürzt, weil die Werte fest verdrahtet aussehen, entfernt die einzige
+Prüfung, die Bedeutung misst statt Übereinstimmung.
+
+Abschnitt **1b** ist der wichtigere und steht dort, weil der erste Wurf ohne
+ihn durchkam. `evaluate` behandelt dreizehn Namen besonders, bevor es in die
+Funktionstabelle schaut — darunter `if` und `ifs` mit fauler Auswertung. Ein
+Alias, der nur in der Tabelle steht, läuft daran vorbei und rechnet den
+toten Zweig mit. Beide Fassungen gaben dasselbe zurück; nur das Zählen der
+Auswertungen fand es.
+
+Wer diesen Abschnitt entfernt, weil er umständlich aussieht, entfernt die
+einzige Prüfung, die eine Eigenschaft misst statt eines Werts.
+
+### Und `test87`, Punkt 9
+
+`btoa(String.fromCharCode(...bytes))` sprengt ab etwa 128 000 Bytes den
+Aufrufstapel. Diese Zeile stand an drei Stellen — alle drei
+Verschlüsselung, also alle drei mit viel Text. Es gibt jetzt eine Fassung in
+`core/helpers/bytes.ts`, und `test87` verbietet eine vierte.
+
+Das ist eine Quelltextprüfung und keine Verhaltensprüfung — mit Absicht.
+Verhalten liesse sich nur dort prüfen, wo die Funktion von aussen aufrufbar
+ist, und im Abgleich ist sie das nicht.
+
+---
+
+## Was beim Hereinlegen ins Repository zu reparieren war
+
+Die Läufe lagen vorher unter `/tmp` und gingen davon aus, dass drumherum
+alles an seinem Platz ist. Zwei Stellen hielten dieser Annahme nicht stand:
+
+- **`test74.js`** zeigte fest auf `/tmp/allein/redion-einzeldatei.html` — einen
+  Ordner, den jemand von Hand befüllt haben musste. Auf jedem anderen Rechner
+  lief der Lauf damit gegen eine Datei, die es nicht gab, oder schlimmer:
+  gegen eine alte, die noch von letzter Woche dort lag und grün meldete. Jetzt
+  legt er sich seinen Ordner selbst an und kopiert nur die Einzeldatei hinein
+  — womit er endlich wirklich prüft, was er verspricht: dass sie allein läuft.
+- **`server/package.json`** mit `type: module` muss es geben, sonst liest Node
+  die Serverdateien als CommonJS und meldet „Named export not found".
+
+## `alt/` — gibt es nicht mehr
+
+Hier lagen 31 Läufe aus der Zeit vor dem Umbau. Sie zeigten auf
+`notizen-einzeldatei.html`, eine Datei, die es seit der Umbenennung nicht
+mehr gibt; dieser Abschnitt sagte über sie „Erwarte Rot". Behalten wurden sie
+mit der Begründung, in ihnen stecke Wissen.
+
+Das stimmte — nur steckte es nicht im Code, der nicht mehr lief, sondern in
+den **Fragen**, die sie gestellt haben. Die stehen jetzt in
+`doku/ALTE-PRUEFLAEUFE.md`: 466 Fragen, Datei für Datei, samt jedem
+Kommentar, der mehr als eine Zeile lang war. Die Dateien selbst sind mit
+Bündel 24 entfernt.
+
+`--alt` bleibt als Schalter stehen: legt jemand den Ordner wieder an, nimmt
+`alle.mts` ihn mit. Ohne Ordner tut der Schalter nichts.
+
+---
+
+## Einen neuen Lauf schreiben
+
+**Neue Läufe entstehen als `.mts`** — TypeScript, das Node direkt ausführt
+(`ENTSCHEIDUNGEN.md` E28). Kein Übersetzer, kein Paket:
+
+```
+node pruefungen/lauf/test109.mts
+```
+
+`.mts` und nicht `.ts`, aus demselben Grund, aus dem die bestehenden Läufe
+`.mjs` heissen: die `package.json` in der Wurzel setzt kein `type`, dort gilt
+CommonJS, und eine `import`-Zeile scheitert.
+
+Zwei Dinge, die Node dabei **nicht** tut: es prüft die Typen nicht (das
+bleibt `npm run typecheck`), und es kann keine Typen ausführen, die zur
+Laufzeit etwas erzeugen — kein `enum`, kein `namespace`, keine
+Parameter-Felder im Konstruktor. `test109` hält beides fest.
+
+Als Vorlage für einen Browserlauf `test85.mjs` nehmen, für einen reinen
+Node-Lauf `test109.mts`. Der Rahmen ist immer derselbe:
+
+```js
+const { chromium } = require('playwright');
+const browser = await chromium.launch();
+const seite = await browser.newPage();
+const fehler = [];
+seite.on('pageerror', e => fehler.push(e.message));
+await seite.goto('file://' + WURZEL + '/index.html');
+await seite.waitForFunction(() => typeof App !== 'undefined', null, { timeout: 20000 });
+```
+
+Die Regel für eine gute Prüfung: **sie prüft, was ein Mensch merken würde.**
+Nicht, dass eine Funktion existiert — sondern dass die Zahl stimmt, der Wert
+das Neuladen überlebt, der Knopf etwas tut.
+
+Und der Name der Prüfung ist ein Satz, kein Stichwort:
+
+```js
+p('31. Januar plus ein Monat ist der 28. Februar', ...)   // ja
+p('plusMonate', ...)                                       // nein
+```

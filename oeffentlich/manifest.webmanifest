@@ -1,0 +1,46 @@
+{
+  "name": "Redion",
+  "short_name": "Redion",
+  "description": "Redion — Seiten, Datenbanken, Kalender, Mail und KI. Alles im Browser, alles auf deinem Gerät.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "/index.html",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#191a1e",
+  "theme_color": "#191a1e",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "/oeffentlich/icons/icon-48.png",  "sizes": "48x48",   "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-256.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "/oeffentlich/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/oeffentlich/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/oeffentlich/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Neue Seite",       "short_name": "Neu",    "url": "/index.html#neu",
+      "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Suchen",           "short_name": "Suche",  "url": "/index.html#suche",
+      "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Journal von heute","short_name": "Journal","url": "/index.html#journal",
+      "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Besprechung aufnehmen", "short_name": "Aufnahme", "url": "/index.html#meeting",
+      "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] }
+  ],
+  "share_target": {
+    "action": "/index.html",
+    "method": "GET",
+    "params": { "title": "titel", "text": "text", "url": "adresse" }
+  }
+}

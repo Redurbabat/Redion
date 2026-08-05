@@ -1,0 +1,398 @@
+/* ============================================================================
+ * werkzeuge.css — Werkzeuge, Verknüpfungen, Notion-Bedienelemente
+ * ----------------------------------------------------------------------------
+ * Der grösste zusammenhängende Brocken: Menüs, Dialoge, Overlays, der
+ * Graph, die Karteikarten, das Journal, die Schnellnotizen, die
+ * Auswahlleiste, die Kommentare — alles, was über der Seite schwebt. *
+ * Diese Datei ist ein zusammenhängender Ausschnitt aus dem früheren
+ * bausteine.css — kein thematisch zusammengesuchter. Das ist Absicht: die
+ * Reihenfolge der Regeln IST Teil ihrer Bedeutung. Wer zwei Abschnitte
+ * vertauscht, dreht bei jedem Selektor um, der in beiden vorkommt.
+ * ==========================================================================*/
+
+/* ==========================================================================
+   ERWEITERUNGEN — Werkzeuge, Verknüpfungen, Notion-Bedienelemente
+   ========================================================================== */
+
+/* --- Seitenleiste: Werkzeuge und Fuss -------------------------------------- */
+.wz-block{padding:0 8px}
+.wz-block .side-item{width:100%}
+.side-fuss{border-top:1px solid var(--line); padding:6px 8px 10px}
+.side-fuss .side-item{width:100%}
+.side-item.neu{color:var(--accent)}
+.side-hinweis{padding:8px 8px 2px; font-size:11.5px; color:var(--text-faint)}
+.row.drop{box-shadow:inset 0 -2px 0 var(--accent)}
+
+.top-btn.schmal{padding:5px 8px; min-width:30px; justify-content:center}
+.top-btn.on{color:var(--c-yellow)}
+
+/* --- Dialogköpfe und Knopfleisten ------------------------------------------ */
+.finder .fh{
+  padding:14px 18px; font-weight:600; border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:10px; font-size:14.5px;
+}
+.finder .fh em{font-style:normal; color:var(--text-faint); font-weight:400; font-size:13px}
+.finder .fh .icon-btn{margin-left:auto}
+.finder .grp{padding:9px 14px 3px; font-size:11px; font-weight:600; color:var(--text-faint)}
+.fbtns{
+  display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line);
+  justify-content:flex-end; flex-wrap:wrap;
+}
+.fbtns button{padding:7px 14px; border:1px solid var(--line); border-radius:7px; font-size:14px}
+.fbtns button:hover{background:var(--bg-hover)}
+.fbtns .prim{background:var(--accent); color:#fff; border-color:transparent; font-weight:500}
+.fbtns .prim:hover{filter:brightness(1.1)}
+#mdq{
+  width:100%; height:52vh; padding:16px 18px; background:var(--bg); border:none;
+  border-bottom:1px solid var(--line); outline:none; resize:none;
+  font:13.5px/1.65 var(--mono); color:var(--text);
+}
+
+/* --- Seitenlinks, Schlagwörter, Blockverweise ------------------------------ */
+a.wl{
+  color:var(--text); text-decoration:none; border-bottom:1px solid var(--text-faint);
+  cursor:pointer; padding:0 1px;
+}
+a.wl:hover{background:var(--bg-hover)}
+a.wl.neu{color:var(--text-dim); border-bottom-style:dashed}
+a.wl.tot{color:var(--c-red); border:none}
+a.tg{
+  color:var(--accent); text-decoration:none; cursor:pointer; font-size:.94em;
+  background:var(--bg-card); padding:1px 6px; border-radius:10px;
+}
+a.tg:hover{background:var(--bg-hover)}
+a.bl{
+  color:var(--text-dim); text-decoration:none; cursor:pointer;
+  border-bottom:1px dotted var(--text-faint);
+}
+a.bl:hover{color:var(--text)}
+.datum{
+  background:var(--bg-card); border-radius:4px; padding:0 5px; font-size:.92em; color:var(--text-dim);
+}
+.blk.blitz{animation:blitz 1.4s ease}
+@keyframes blitz{0%,100%{background:transparent}20%{background:#2eaadc35}}
+
+/* --- Rückverweise unter der Seite ------------------------------------------ */
+.backlinks{margin-top:52px; border-top:1px solid var(--line); padding-top:18px}
+.bl-head{font-size:12px; font-weight:600; color:var(--text-faint); margin:14px 0 8px; letter-spacing:.2px}
+.bl-head em{font-style:normal; background:var(--bg-card); padding:1px 6px; border-radius:9px; margin-left:4px}
+.bl-item{
+  padding:9px 12px; border-radius:7px; cursor:pointer; margin-bottom:5px; border:1px solid var(--line-soft);
+}
+.bl-item:hover{background:var(--bg-hover)}
+.bl-t{font-size:14px; font-weight:500; margin-bottom:3px}
+.bl-s{font-size:12.5px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+/* --- Graph ------------------------------------------------------------------ */
+.graph-overlay{align-items:center; padding-top:0}
+.graph-box{
+  width:min(1000px,94vw); height:min(720px,88vh); background:var(--bg-side);
+  border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.graph-head{padding:13px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px}
+.graph-head b{font-size:14.5px}
+.graph-info{font-size:12.5px; color:var(--text-faint); flex:1}
+.graph-box canvas{flex:1; cursor:grab; display:block}
+.graph-box canvas:active{cursor:grabbing}
+.graph-box .hint{padding:8px 14px; font-size:11.5px; color:var(--text-faint); border-top:1px solid var(--line)}
+
+/* --- Schlagwortregister ----------------------------------------------------- */
+.tagwolke{display:flex; flex-wrap:wrap; gap:6px; padding:12px 14px; border-bottom:1px solid var(--line)}
+.tagpill{
+  font-size:13px; padding:4px 11px; border-radius:14px; background:var(--bg-card);
+  color:var(--text-dim); border:1px solid transparent;
+}
+.tagpill:hover{background:var(--bg-hover); color:var(--text)}
+.tagpill.on{border-color:var(--accent); color:var(--text)}
+.tagpill em{font-style:normal; color:var(--text-faint); font-size:11.5px; margin-left:3px}
+
+/* --- Schnellnotizen --------------------------------------------------------- */
+.memo-neu{padding:12px 16px; display:flex; gap:8px; align-items:flex-end; border-bottom:1px solid var(--line)}
+.memo-neu textarea{
+  flex:1; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;
+  padding:9px 12px; outline:none; resize:vertical; font:14px/1.5 var(--font); color:var(--text);
+}
+.memo-neu textarea:focus{border-color:var(--accent)}
+.memo-neu .prim{background:var(--accent); color:#fff; padding:9px 14px; border-radius:8px; font-weight:500}
+.heatmap{
+  display:grid; grid-template-rows:repeat(7,10px); grid-auto-flow:column; gap:3px;
+  padding:12px 16px; border-bottom:1px solid var(--line); overflow-x:auto;
+}
+.heatmap i{width:10px; height:10px; border-radius:2px; background:var(--bg-card); display:block}
+.heatmap .hm1{background:#2eaadc44}.heatmap .hm2{background:#2eaadc77}
+.heatmap .hm3{background:#2eaadcbb}.heatmap .hm4{background:#2eaadc}
+.memo{padding:11px 14px; border-bottom:1px solid var(--line-soft)}
+.memo:hover{background:var(--bg-hover)}
+.memo-kopf{font-size:11.5px; color:var(--text-faint); display:flex; align-items:center; gap:6px; margin-bottom:4px}
+.memo-kopf button{margin-left:auto; opacity:0; font-size:12px; padding:1px 5px; border-radius:4px}
+.memo-kopf button + button{margin-left:0}
+.memo:hover .memo-kopf button{opacity:.75}
+.memo-kopf button:hover{opacity:1; background:var(--line)}
+.memo-txt{font-size:14.5px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+
+/* --- Karteikarten ----------------------------------------------------------- */
+.karte{padding:34px 26px; text-align:center; min-height:190px}
+.k-vorn{font-size:21px; line-height:1.5}
+.karte hr{border:none; border-top:1px solid var(--line); margin:18px 0}
+.k-hinten{font-size:16.5px; color:var(--text-dim); line-height:1.6}
+.k-quelle{margin-top:18px; font-size:12px; color:var(--text-faint); cursor:pointer}
+.k-quelle:hover{color:var(--accent)}
+.lern-btns{justify-content:center}
+.fkarte{width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:6px 0}
+.fk-kopf{font-size:11.5px; color:var(--text-faint); display:flex; gap:8px; margin-bottom:5px}
+.fk-status{margin-left:auto}
+.fk-vor{margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:14px}
+.fk-vor b{display:block; margin-bottom:3px}
+.fk-vor span{color:var(--text-dim)}
+
+/* --- Sperre ------------------------------------------------------------------ */
+.gesperrt{text-align:center; padding:12vh 0}
+.gesperrt input{
+  display:block; margin:0 auto 10px; padding:10px 14px; width:min(280px,80%);
+  background:var(--bg-input); border:1px solid var(--line); border-radius:8px; outline:none;
+  color:var(--text); text-align:center;
+}
+.gesperrt .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:8px; font-weight:500}
+.sperrhinweis{
+  background:var(--b-yellow); border-radius:7px; padding:9px 14px; font-size:13.5px;
+  margin:6px 0 12px; display:flex; align-items:center; gap:10px;
+}
+.sperrhinweis button{margin-left:auto; text-decoration:underline; font-size:13px}
+
+/* --- Präsentation -------------------------------------------------------------- */
+.praesi{
+  position:fixed; inset:0; background:var(--bg); z-index:1000; display:flex;
+  flex-direction:column; align-items:center; justify-content:center; padding:6vh 8vw;
+}
+.praesi .folie{width:100%; max-width:1100px; font-size:22px; line-height:1.6}
+.praesi h1{font-size:52px; margin-bottom:26px; letter-spacing:-1px}
+.praesi h2{font-size:34px; margin:16px 0 10px}
+.praesi h3{font-size:26px; margin:12px 0 6px}
+.praesi li{margin:8px 0 8px 28px}
+.praesi p{margin:10px 0}
+.praesi pre{background:var(--bg-card); padding:16px; border-radius:8px; font-size:17px; overflow-x:auto}
+.praesi blockquote{border-left:4px solid var(--accent); padding-left:18px; color:var(--text-dim)}
+.praesi .cal{background:var(--bg-card); border-radius:8px; padding:18px}
+.praesi img{max-width:100%; max-height:52vh; border-radius:8px}
+.praesi-leiste{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  display:flex; gap:10px; align-items:center; background:var(--bg-side);
+  border:1px solid var(--line); border-radius:22px; padding:6px 14px; font-size:13px;
+}
+.praesi-leiste button{padding:4px 10px; border-radius:14px; color:var(--text-dim)}
+.praesi-leiste button:hover{background:var(--bg-hover); color:var(--text)}
+
+/* --- Statistik ------------------------------------------------------------------ */
+.stat-gitter{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line)}
+.stat-k{background:var(--bg-side); padding:18px 14px; text-align:center}
+.stat-k b{display:block; font-size:24px; font-weight:600}
+.stat-k span{font-size:12px; color:var(--text-faint)}
+.stat-woerter{padding:12px 16px; display:flex; flex-wrap:wrap; gap:6px}
+
+/* --- Tastenkürzel ---------------------------------------------------------------- */
+.kuerzel{padding:8px 16px 16px; max-height:66vh; overflow-y:auto;
+         display:grid; grid-template-columns:1fr 1fr; gap:0 26px}
+.kz{display:flex; align-items:center; gap:10px; padding:3px 0; font-size:13.5px}
+.kz code{
+  font-family:var(--mono); font-size:11.5px; background:var(--bg-card); padding:2px 7px;
+  border-radius:4px; min-width:96px; text-align:center; color:var(--text-dim);
+}
+.kz span{color:var(--text-dim)}
+
+/* --- Startseite und Posteingang ---------------------------------------------------- */
+.home{padding:44px 0 20vh}
+.home h1{font-size:32px; margin-bottom:22px; letter-spacing:-.5px}
+.home h2{font-size:14px; color:var(--text-faint); margin:26px 0 8px; font-weight:600}
+.home-karten{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px}
+.hk{
+  text-align:left; padding:14px 16px; border:1px solid var(--line); border-radius:9px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.hk:hover{background:var(--bg-hover); border-color:var(--text-faint)}
+.hk b{font-size:14.5px}
+.hk span{font-size:12.5px; color:var(--text-dim)}
+.home-liste button{
+  display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px;
+  border-radius:7px; text-align:left; font-size:14px;
+}
+.home-liste button:hover{background:var(--bg-hover)}
+.home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
+.home-liste .snip{display:block; font-size:12px; color:var(--text-dim)}
+.home-liste .leer{padding:8px 10px; font-size:13.5px; color:var(--text-faint)}
+.home-zahlen{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px}
+.hz{border:1px solid var(--line); border-radius:9px; padding:14px; text-align:center}
+.hz b{display:block; font-size:22px}
+.hz span{font-size:12px; color:var(--text-faint)}
+
+/* --- Schwebende Auswahlleiste -------------------------------------------------------- */
+.auswahlleiste{
+  position:fixed; z-index:800; background:var(--bg-side); border:1px solid var(--line);
+  border-radius:8px; box-shadow:var(--shadow); display:flex; align-items:center;
+  gap:1px; padding:4px; font-size:14px;
+}
+.auswahlleiste button{padding:5px 8px; border-radius:5px; color:var(--text-dim); min-width:28px}
+.auswahlleiste button:hover{background:var(--bg-hover); color:var(--text)}
+.auswahlleiste .ki{color:var(--accent); font-weight:500}
+.auswahlleiste .tr{width:1px; height:18px; background:var(--line); margin:0 3px}
+
+/* --- Kommentare ------------------------------------------------------------------------ */
+.komm{padding:12px 16px; border-bottom:1px solid var(--line-soft)}
+.komm.fertig{opacity:.55}
+.komm-zitat{font-size:12.5px; color:var(--text-faint); border-left:2px solid var(--line); padding-left:8px; margin-bottom:5px}
+.komm-txt{font-size:14px; line-height:1.55}
+.komm-fuss{font-size:11.5px; color:var(--text-faint); margin-top:6px; display:flex; gap:10px; align-items:center}
+.komm-fuss button{font-size:11.5px; color:var(--accent); padding:1px 4px; border-radius:4px}
+.komm-fuss button:first-of-type{margin-left:auto}
+.komm-marke{
+  position:absolute; right:-30px; top:2px; font-size:11.5px; opacity:.75;
+  background:var(--bg-card); border-radius:10px; padding:1px 6px;
+}
+.komm-marke:hover{opacity:1; background:var(--bg-hover)}
+
+/* --- Emoji-Auswahl ----------------------------------------------------------------------- */
+.swatches.emojis{grid-template-columns:repeat(9,1fr); max-height:230px; overflow-y:auto}
+.swatches.emojis button{
+  aspect-ratio:1; border:none; font-size:19px; background:none; display:grid; place-items:center;
+}
+.swatches.emojis button:hover{background:var(--bg-hover)}
+.emoji-suche{
+  width:calc(100% - 12px); margin:6px; padding:7px 10px; background:var(--bg-input);
+  border:1px solid var(--line); border-radius:6px; outline:none; color:var(--text); font-size:13.5px;
+}
+
+/* --- Whiteboard ---------------------------------------------------------------------------- */
+.wb{width:100%; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:8px 0}
+.wb-tools{
+  display:flex; align-items:center; gap:2px; padding:6px 8px; flex-wrap:wrap;
+  border-bottom:1px solid var(--line); background:var(--bg-card);
+}
+.wb-tools button{
+  width:28px; height:26px; border-radius:5px; font-size:14px; color:var(--text-dim);
+  display:grid; place-items:center;
+}
+.wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
+.wb-tools button.on{background:var(--accent); color:#fff}
+.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent}
+.wb-tools .wb-farbe.on{border-color:var(--text)}
+.wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
+.wb-flaeche{display:block; width:100%; touch-action:none; color:var(--text-faint); cursor:crosshair}
+.wb-griff{height:9px; cursor:ns-resize; background:var(--bg-card); border-top:1px solid var(--line)}
+.wb-griff:hover{background:var(--bg-hover)}
+
+/* --- Diagramm ------------------------------------------------------------------------------- */
+.chart{width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:8px 0}
+.chart-head{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+.chart-titel{
+  flex:1; min-width:120px; background:none; border:none; outline:none; font-size:15px;
+  font-weight:500; color:var(--text);
+}
+.chart-typen{display:flex; gap:2px}
+.chart-typen button{font-size:12px; padding:3px 9px; border-radius:12px; color:var(--text-dim)}
+.chart-typen button:hover{background:var(--bg-hover)}
+.chart-typen button.on{background:var(--accent); color:#fff}
+.chart-daten{font-size:12.5px; color:var(--text-dim); padding:3px 8px; border-radius:5px}
+.chart-daten:hover{background:var(--bg-hover); color:var(--text)}
+.chart-svg{width:100%; height:auto; color:var(--text)}
+.chart-legende{display:flex; flex-wrap:wrap; gap:12px; font-size:12.5px; color:var(--text-dim); margin-top:6px}
+.chart-legende i{width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:5px}
+.chart-legende b{color:var(--text); font-weight:500}
+.chart-leer{padding:26px 10px; text-align:center; color:var(--text-faint); font-size:14px}
+
+/* --- Einfache Tabelle -------------------------------------------------------------------------- */
+.stab-wrap{width:100%; overflow-x:auto; margin:8px 0}
+table.stab{border-collapse:collapse; font-size:14px; min-width:min(100%,420px)}
+table.stab td, table.stab th{
+  border:1px solid var(--line); padding:7px 10px; min-width:110px; outline:none; vertical-align:top;
+}
+table.stab th{background:var(--bg-card); font-weight:600; text-align:left}
+table.stab.kopfspalte td:first-child{background:var(--bg-card); font-weight:500}
+table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.stab-tools{display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; opacity:0; transition:opacity .15s}
+.stab-wrap:hover .stab-tools{opacity:1}
+.stab-tools button{font-size:12px; padding:3px 9px; border-radius:5px; color:var(--text-dim); border:1px solid var(--line)}
+.stab-tools button:hover{background:var(--bg-hover); color:var(--text)}
+.stab-tools button.on{border-color:var(--accent); color:var(--text)}
+
+/* --- Formeln --------------------------------------------------------------------------------- */
+.eq{width:100%; margin:6px 0}
+.eq-out{
+  padding:14px; background:var(--bg-card); border-radius:6px; text-align:center;
+  cursor:text; font-size:18px; min-height:48px;
+}
+.eq-out:hover{background:var(--bg-hover)}
+.eq-src{
+  width:100%; background:var(--bg-input); border:1px solid var(--accent); border-radius:6px;
+  padding:10px 12px; outline:none; font:13.5px var(--mono); color:var(--text); resize:vertical;
+}
+.mathe{font-family:"Cambria Math", Georgia, serif; font-size:1.05em}
+.mfrac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 3px}
+.mfrac .mz{border-bottom:1px solid currentColor; padding:0 5px}
+.mfrac .mn{padding:0 5px}
+.munter{border-top:1px solid currentColor; padding:0 3px}
+.mtext{font-family:var(--font); font-size:.92em}
+.mop{font-style:italic; margin:0 1px}
+
+/* --- Verweis, Sync, Knopf, HTML ------------------------------------------------------------------ */
+.pageref{
+  display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; cursor:pointer;
+}
+.pageref:hover{background:var(--bg-hover)}
+.pageref .pr-t{border-bottom:1px solid var(--line); font-weight:500}
+.pageref .pr-i{color:var(--text-faint); font-size:12px}
+.synced{width:100%; border-left:3px solid var(--c-purple); padding:4px 0 4px 12px; margin:6px 0}
+.sy-kopf{font-size:11.5px; color:var(--c-purple); margin-bottom:4px}
+.sy-waehl{font-size:13px; color:var(--accent); padding:4px 8px; border-radius:5px}
+.knopf-blk{display:flex; align-items:center; gap:6px; margin:6px 0}
+.knopf{
+  background:var(--bg-card); border:1px solid var(--line); border-radius:7px;
+  padding:7px 15px; font-size:14px; font-weight:500;
+}
+.knopf:hover{background:var(--bg-hover); border-color:var(--text-faint)}
+.knopf-set{opacity:0; color:var(--text-faint); padding:4px 6px; border-radius:5px}
+.knopf-blk:hover .knopf-set{opacity:1}
+.html-vorschau{margin-top:8px; padding:10px 12px; border:1px dashed var(--line); border-radius:6px}
+
+/* --- Einstellungen ------------------------------------------------------------------------------- */
+.einst{padding:16px 18px; display:flex; flex-direction:column; gap:18px; max-height:64vh; overflow-y:auto}
+.eb b{font-size:14px}
+.ez{color:var(--text-dim); margin-top:6px; line-height:1.65; font-size:13.5px}
+.ereihe{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+.ereihe button{padding:6px 12px; border:1px solid var(--line); border-radius:7px; font-size:13.5px}
+.ereihe button:hover{background:var(--bg-hover)}
+.ereihe .warn{border-color:var(--c-red); color:var(--c-red)}
+.einst input, .einst select{
+  margin-top:8px; width:100%; padding:9px 11px; background:var(--bg-input);
+  border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
+}
+.finder label{font-size:13px; color:var(--text-dim)}
+.finder label input, .finder label select{
+  margin-top:5px; width:100%; padding:8px 10px; background:var(--bg-input);
+  border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
+}
+.cover-gitter{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:16px}
+.cover-gitter button{height:56px; border-radius:7px; border:1px solid var(--line)}
+.cover-gitter button:hover{outline:2px solid var(--accent)}
+
+/* --- Suchen auf der Seite ------------------------------------------------------------------------ */
+#findbar{
+  position:fixed; top:56px; right:22px; z-index:750; background:var(--bg-side);
+  border:1px solid var(--line); border-radius:9px; box-shadow:var(--shadow);
+  display:flex; align-items:center; gap:8px; padding:7px 10px;
+}
+#findbar input{background:none; border:none; outline:none; font-size:14px; width:210px; color:var(--text)}
+#findbar .n{font-size:12px; color:var(--text-faint); min-width:52px}
+#page mark{background:#ffdc4966; color:inherit; border-radius:2px}
+
+/* --- Fokus-Modus ---------------------------------------------------------------------------------- */
+body.fokus #sidebar, body.fokus #topbar, body.fokus #ai{display:none}
+body.fokus #page{max-width:760px; padding-top:8vh}
+body.fokus .blk{opacity:.42; transition:opacity .18s}
+body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
+
+@media(max-width:820px){
+  .kuerzel{grid-template-columns:1fr}
+  .stat-gitter{grid-template-columns:repeat(2,1fr)}
+  .home-zahlen{grid-template-columns:repeat(2,1fr)}
+}
+

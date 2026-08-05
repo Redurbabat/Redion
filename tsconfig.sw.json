@@ -1,0 +1,44 @@
+{
+  "//": [
+    "tsconfig.sw.json — der Dienstarbeiter, die zweite bauende Konfiguration",
+    "",
+    "WARUM NOCH EINE DATEI. `tsconfig.bauen.json` schreibt aus `src/…` nach",
+    "`quell/…`. Für den Dienstarbeiter geht das nicht: er MUSS in der Wurzel",
+    "liegen. Ein Dienstarbeiter darf nur den Bereich bedienen, in dem seine",
+    "eigene Datei steht — läge er in `quell/`, könnte er `index.html` nicht",
+    "mehr beiseitelegen, und die App startete ohne Netz nicht mehr.",
+    "`pwa.ts` meldet ihn deshalb als `sw.js` mit `scope: './'` an.",
+    "",
+    "Darum hier `rootDir: src/dienst` und `outDir: .` — aus",
+    "`src/dienst/sw.ts` wird `sw.js` in der Wurzel, genau dort, wo er vorher",
+    "von Hand stand. `test31` und `test105` prüfen beides.",
+    "",
+    "UND WARUM EINE EIGENE `lib`. Ein Dienstarbeiter lebt nicht im Fenster.",
+    "Dort gibt es kein `document`, dafür `caches`, `clients` und `skipWaiting`",
+    "— und `self` ist etwas anderes als im Browser. Mit der DOM-Bibliothek",
+    "hielte TypeScript `self` für ein Fenster und liesse `self.clients`",
+    "durchgehen als Fehler, `document` dagegen als richtig. Genau verkehrt.",
+    "`WebWorker` beschreibt die Welt, in der die Datei wirklich läuft.",
+    "",
+    "Weil die beiden Bibliotheken sich widersprechen, steht `src/dienst/` in",
+    "`tsconfig.json` unter `exclude`: dieselbe Datei kann nicht in zwei",
+    "Welten gleichzeitig geprüft werden."
+  ],
+
+  "extends": "./tsconfig.bauen.json",
+
+  "compilerOptions": {
+    "lib": ["ES2022", "WebWorker"],
+    "rootDir": "src/dienst",
+    "outDir": "."
+  },
+
+  "//exclude": [
+    "`exclude` wird von `tsconfig.json` geerbt, und dort steht `src/dienst`",
+    "drin — genau dieser Ordner. Ohne die Zeile hier fände diese",
+    "Konfiguration ihre einzige Datei nicht („No inputs were found\")."
+  ],
+  "exclude": ["node_modules", "quell"],
+
+  "include": ["src/dienst/sw.ts"]
+}

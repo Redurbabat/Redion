@@ -1,0 +1,694 @@
+"use strict";
+/* ============================================================================
+ * kalender.js — Kalender von draussen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/verbinden/kalender.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/bereiche/verbinden/kalender.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * Drei Wege, einen fremden Kalender hereinzuholen:
+ *
+ *   1. ICS-DATEI          jeder Kalender kann eine .ics ausgeben — Google,
+ *                         iCloud, Outlook, Thunderbird. Läuft immer, auch
+ *                         ohne Netz und ohne Konto.
+ *   2. ICS-ABO            dieselbe Datei, aber als Adresse. Wird beim Öffnen
+ *                         nachgeladen. Manche Anbieter lassen den Browser
+ *                         nicht direkt heran — dann greift die Brücke.
+ *   3. GOOGLE CALENDAR    die richtige Schnittstelle, mit Anmeldung. Lesen
+ *                         und Schreiben, Termine gehen in beide Richtungen.
+ *
+ * iCloud hat keine offene Schnittstelle. Was geht: den Kalender in der
+ * iCloud-App freigeben („Öffentlicher Kalender"), die webcal-Adresse
+ * kopieren und hier als Abo eintragen. Das ist der Weg, den Apple selbst
+ * für fremde Programme vorsieht.
+ *
+ * Und andersherum: jede Datenbank dieser App lässt sich als .ics ausgeben
+ * und in Google, iCloud oder Outlook abonnieren.
+ * ==========================================================================*/
+const Kalender = (() => {
+    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
+       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
+       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
+       kein Element ist, warf das mitten im Behandeln. */
+    const elVon = (e) => e.target instanceof Element ? e.target : null;
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const p2 = (n) => String(n).padStart(2, '0');
+    /* ========================================================================
+     * 1. ICS LESEN
+     * ------------------------------------------------------------------------
+     * Das Format ist alt und eigenwillig: Zeilen dürfen umbrechen, Zeichen
+     * werden maskiert, Zeiten kommen in drei Schreibweisen. Hier steht das
+     * alles an einer Stelle.
+     * ======================================================================*/
+    /** Umgebrochene Zeilen wieder zusammenkleben (Fortsetzung beginnt mit Leerzeichen). */
+    const zeilenFalten = (text) => String(text || '')
+        .replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+        .replace(/\n[ \t]/g, '');
+    const entmaskieren = (s) => String(s || '')
+        .replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
+    /** „20260815T140000Z", „20260815", „2026-08-15T14:00:00" → ISO-Text. */
+    const icsZeit = (roh, parameter) => {
+        const v = String(roh || '').trim();
+        const ganzerTag = /^\d{8}$/.test(v) || /VALUE=DATE(?!-TIME)/i.test(parameter || '');
+        const m = v.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+        if (!m) {
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 16);
+        }
+        if (ganzerTag || !m[4])
+            return `${m[1]}-${m[2]}-${m[3]}`;
+        if (m[7]) {
+            /* Z heisst Weltzeit — in Ortszeit umrechnen, sonst stimmt die Stunde nicht */
+            const d = new Date(Date.UTC(+(m[1] ?? 0), +(m[2] ?? 1) - 1, +(m[3] ?? 1), +(m[4] ?? 0), +(m[5] ?? 0), +(m[6] ?? 0)));
+            return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) +
+                'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+        }
+        return `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}`;
+    };
+    /** Ein ICS-Text wird zu einer Liste Termine. */
+    const icsLesen = (text) => {
+        const zeilen = zeilenFalten(text).split('\n');
+        const termine = [];
+        let kalenderName = '';
+        let jetzt = null;
+        let inAlarm = false;
+        zeilen.forEach(z => {
+            const roh = z.trim();
+            if (!roh)
+                return;
+            if (roh === 'BEGIN:VEVENT') {
+                jetzt = { alarme: [] };
+                return;
+            }
+            if (roh === 'END:VEVENT') {
+                if (jetzt && jetzt.start)
+                    termine.push(jetzt);
+                jetzt = null;
+                return;
+            }
+            if (roh === 'BEGIN:VALARM') {
+                inAlarm = true;
+                return;
+            }
+            if (roh === 'END:VALARM') {
+                inAlarm = false;
+                return;
+            }
+            const doppel = roh.indexOf(':');
+            if (doppel < 0)
+                return;
+            const links = roh.slice(0, doppel);
+            const inhalt = roh.slice(doppel + 1);
+            const strich = links.indexOf(';');
+            const name = (strich < 0 ? links : links.slice(0, strich)).toUpperCase();
+            const parameter = strich < 0 ? '' : links.slice(strich + 1);
+            if (!jetzt) {
+                if (name === 'X-WR-CALNAME')
+                    kalenderName = entmaskieren(inhalt);
+                return;
+            }
+            if (inAlarm) {
+                if (name === 'TRIGGER')
+                    jetzt.alarme.push(inhalt);
+                return;
+            }
+            switch (name) {
+                case 'UID':
+                    jetzt.uid = inhalt;
+                    break;
+                case 'SUMMARY':
+                    jetzt.titel = entmaskieren(inhalt);
+                    break;
+                case 'DESCRIPTION':
+                    jetzt.text = entmaskieren(inhalt);
+                    break;
+                case 'LOCATION':
+                    jetzt.ort = entmaskieren(inhalt);
+                    break;
+                case 'URL':
+                    jetzt.url = inhalt;
+                    break;
+                case 'STATUS':
+                    jetzt.status = inhalt;
+                    break;
+                case 'ORGANIZER':
+                    jetzt.wer = inhalt.replace(/^mailto:/i, '');
+                    break;
+                case 'CATEGORIES':
+                    jetzt.kategorien = entmaskieren(inhalt).split(',').map(x => x.trim());
+                    break;
+                case 'RRULE':
+                    jetzt.regel = inhalt;
+                    break;
+                case 'DTSTART':
+                    jetzt.start = icsZeit(inhalt, parameter);
+                    jetzt.ganzerTag = jetzt.start.length === 10;
+                    break;
+                case 'DTEND':
+                    jetzt.ende = icsZeit(inhalt, parameter);
+                    break;
+                case 'DURATION':
+                    jetzt.dauer = inhalt;
+                    break;
+            }
+        });
+        /* Bei ganztägigen Terminen zeigt DTEND auf den Tag danach — das
+           verwirrt jeden, der es sieht. Also einen Tag zurück. */
+        termine.forEach(t => {
+            if (t.ganzerTag && t.ende && t.ende.length === 10) {
+                const d = new Date(t.ende + 'T12:00');
+                d.setDate(d.getDate() - 1);
+                const zurueck = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+                t.ende = zurueck === t.start ? '' : zurueck;
+            }
+        });
+        return { name: kalenderName, termine };
+    };
+    /** Wiederholungen ausrollen — so weit, wie der Kalender reicht. */
+    const wiederholungen = (termin, bisTage = 400) => {
+        if (!termin.regel)
+            return [termin];
+        const teile = {};
+        termin.regel.split(';').forEach((x) => {
+            const [k, v] = x.split('=');
+            if (k)
+                teile[k.toUpperCase()] = v;
+        });
+        const takt = (teile.FREQ || '').toUpperCase();
+        if (!takt)
+            return [termin];
+        const schritt = Number(teile.INTERVAL) || 1;
+        const grenze = new Date();
+        grenze.setDate(grenze.getDate() + bisTage);
+        const ende = teile.UNTIL ? new Date(icsZeit(teile.UNTIL)) : grenze;
+        const wieOft = Number(teile.COUNT) || 0;
+        const raus = [];
+        const start = new Date(termin.start.length === 10 ? termin.start + 'T12:00' : termin.start);
+        if (isNaN(start.getTime()))
+            return [termin];
+        let d = new Date(start);
+        let n = 0;
+        while (d <= ende && d <= grenze && n < 500) {
+            if (wieOft && n >= wieOft)
+                break;
+            const iso = termin.ganzerTag
+                ? d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate())
+                : d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) +
+                    'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+            raus.push(Object.assign({}, termin, { start: iso, ende: '', folge: n > 0 }));
+            n++;
+            if (takt === 'DAILY')
+                d.setDate(d.getDate() + schritt);
+            else if (takt === 'WEEKLY')
+                d.setDate(d.getDate() + 7 * schritt);
+            else if (takt === 'MONTHLY')
+                d.setMonth(d.getMonth() + schritt);
+            else if (takt === 'YEARLY')
+                d.setFullYear(d.getFullYear() + schritt);
+            else
+                break;
+        }
+        return raus.length ? raus : [termin];
+    };
+    /* ========================================================================
+     * 2. ICS SCHREIBEN
+     * ======================================================================*/
+    const maskieren = (s) => String(s ?? '')
+        .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    const alsIcsZeit = (v, ganzerTag) => {
+        const s = String(v || '');
+        if (!s)
+            return '';
+        if (ganzerTag || s.length <= 10)
+            return s.replace(/-/g, '');
+        const d = new Date(s);
+        if (isNaN(d.getTime()))
+            return s.replace(/[-:]/g, '').slice(0, 15);
+        return d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()) + 'T' +
+            p2(d.getUTCHours()) + p2(d.getUTCMinutes()) + '00Z';
+    };
+    /** Lange Zeilen umbrechen — das Format will höchstens 75 Zeichen. */
+    const falten = (zeile) => {
+        if (zeile.length <= 74)
+            return zeile;
+        const teile = [zeile.slice(0, 74)];
+        let rest = zeile.slice(74);
+        while (rest.length > 73) {
+            teile.push(' ' + rest.slice(0, 73));
+            rest = rest.slice(73);
+        }
+        if (rest)
+            teile.push(' ' + rest);
+        return teile.join('\r\n');
+    };
+    /** Eine Datenbank als ICS ausgeben. */
+    const icsSchreiben = (coll, view) => {
+        const dk = (view && view.dateKey) ||
+            Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
+        if (!dk)
+            throw new Error('Diese Datenbank hat keine Datums-Spalte.');
+        const endeKey = view && view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null;
+        const ortKey = Object.keys(coll.schema).find(k => coll.schema[k].type === 'place') ||
+            Object.keys(coll.schema).find(k => /ort|location/i.test(coll.schema[k].name));
+        const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Redion//DE',
+            'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+            'X-WR-CALNAME:' + maskieren(coll.name)];
+        Store.rowsOf(coll.id).forEach((r) => {
+            const start = Datenbank.wert(r, dk, coll);
+            if (!start)
+                return;
+            const ganz = String(start).length <= 10;
+            const ende = endeKey ? Datenbank.wert(r, endeKey, coll) : '';
+            let ort = ortKey ? Datenbank.wert(r, ortKey, coll) : '';
+            if (ort && typeof ort === 'object')
+                ort = ort.name || '';
+            /* Bei ganztägigen Terminen zeigt DTEND wieder auf den Tag danach */
+            let dtEnde = ende;
+            if (ganz && ende) {
+                const d = new Date(ende + 'T12:00');
+                d.setDate(d.getDate() + 1);
+                dtEnde = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+            }
+            zeilen.push('BEGIN:VEVENT');
+            zeilen.push('UID:' + r.id + '@notizen');
+            zeilen.push('DTSTAMP:' + alsIcsZeit(new Date().toISOString(), false));
+            zeilen.push('DTSTART' + (ganz ? ';VALUE=DATE:' : ':') + alsIcsZeit(start, ganz));
+            if (dtEnde)
+                zeilen.push('DTEND' + (ganz ? ';VALUE=DATE:' : ':') + alsIcsZeit(dtEnde, ganz));
+            zeilen.push('SUMMARY:' + maskieren(r.text || 'Ohne Titel'));
+            if (ort)
+                zeilen.push('LOCATION:' + maskieren(ort));
+            /* Alles andere kommt in die Beschreibung, damit nichts verloren geht */
+            const rest = Object.keys(coll.schema)
+                .filter(k => k !== dk && k !== endeKey && coll.schema[k].type !== 'title')
+                .map(k => coll.schema[k].name + ': ' + Formula.anzeige(Datenbank.wert(r, k, coll)))
+                .filter(x => !/: *$|: *—$/.test(x));
+            if (rest.length)
+                zeilen.push('DESCRIPTION:' + maskieren(rest.join('\n')));
+            zeilen.push('END:VEVENT');
+        });
+        zeilen.push('END:VCALENDAR');
+        return zeilen.map(falten).join('\r\n');
+    };
+    /* ========================================================================
+     * 3. TERMINE IN EINE DATENBANK SCHREIBEN
+     * ======================================================================*/
+    const SCHEMA = () => ({
+        title: { name: 'Termin', type: 'title' },
+        start: { name: 'Beginn', type: 'date' },
+        ende: { name: 'Ende', type: 'date' },
+        ort: { name: 'Ort', type: 'place' },
+        quelle: { name: 'Kalender', type: 'select', options: [] },
+        text: { name: 'Notiz', type: 'text' },
+        uid: { name: 'Kennung', type: 'text' },
+        link: { name: 'Link', type: 'url' }
+    });
+    /** Legt die Termin-Datenbank an oder findet die vorhandene wieder. */
+    const zielDatenbank = (seiteId, name = 'Termine') => {
+        const da = Object.values(Store.cache.collections)
+            .find(c => c.name === name && c.schema.uid && c.schema.start);
+        if (da)
+            return da;
+        const { collectionId } = Store.addDatabase(seiteId || App.aktuelleSeite(), name, SCHEMA(), 'calendar');
+        const c = Store.getCollection(collectionId);
+        const v = Store.getView(c.viewIds[0]);
+        Store.updateView(v.id, { dateKey: 'start', endeKey: 'ende' });
+        return c;
+    };
+    /**
+     * Termine übernehmen. Was schon da ist (gleiche Kennung), wird
+     * aufgefrischt statt doppelt angelegt — sonst wächst die Liste bei
+     * jedem Abgleich.
+     */
+    const uebernehmen = (coll, termine, quelle) => {
+        const vorhanden = new Map();
+        Store.rowsOf(coll.id).forEach((r) => {
+            const u = (r.props || {}).uid;
+            if (u)
+                vorhanden.set(u, r);
+        });
+        /* Die Quelle als Option führen, damit man filtern kann */
+        if (quelle && coll.schema.quelle) {
+            const opts = coll.schema.quelle.options || [];
+            if (!opts.some((o) => o.name === quelle)) {
+                const farben = ['blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow', 'brown'];
+                opts.push({ name: quelle, color: farben[opts.length % farben.length] });
+                coll.schema.quelle.options = opts;
+                Store.updateCollection(coll.id, { schema: coll.schema });
+            }
+        }
+        let neu = 0, frisch = 0;
+        termine.forEach((t) => {
+            const props = {
+                start: t.start || '', ende: t.ende || '',
+                ort: t.ort ? { name: t.ort } : null,
+                quelle: quelle || '', text: t.text || '',
+                uid: t.uid || (t.titel + '|' + t.start), link: t.url || ''
+            };
+            const alt = vorhanden.get(props.uid);
+            if (alt) {
+                Object.entries(props).forEach(([k, w]) => Store.setProp(alt.id, k, w));
+                Store.updateBlock(alt.id, { text: t.titel || 'Ohne Titel' });
+                frisch++;
+            }
+            else {
+                const r = Store.addRow(coll.id, props);
+                Store.updateBlock(r.id, { text: t.titel || 'Ohne Titel' });
+                neu++;
+            }
+        });
+        return { neu, frisch };
+    };
+    /* ========================================================================
+     * 4. ABOS
+     * ======================================================================*/
+    const abos = () => Store.getMeta('ics:abos', []) || [];
+    const aboSpeichern = (liste) => Store.setMeta('ics:abos', liste);
+    /** webcal:// ist nur https:// mit anderem Namen. */
+    const adresseGerade = (u) => String(u || '').trim()
+        .replace(/^webcal:\/\//i, 'https://');
+    const aboHolen = async (abo) => {
+        const url = adresseGerade(abo.url);
+        let text;
+        try {
+            const r = await Verbindungen.ruf(url, { versuche: 2 });
+            text = await r.text();
+        }
+        catch (e) {
+            /* Zweiter Anlauf über die Brücke, falls eine eingetragen ist */
+            if (!Store.getMeta('verb:proxy', ''))
+                throw e;
+            const r = await Verbindungen.ruf(url, { versuche: 2, ueberBruecke: true });
+            text = await r.text();
+        }
+        if (!/BEGIN:VCALENDAR/i.test(text))
+            throw new Error('Unter dieser Adresse liegt kein Kalender.');
+        const gelesen = icsLesen(text);
+        const alle = [];
+        gelesen.termine.forEach(t => wiederholungen(t).forEach(x => alle.push(x)));
+        return { name: gelesen.name || abo.name || 'Abo', termine: alle };
+    };
+    const alleAbosHolen = async (seiteId) => {
+        const liste = abos().filter((a) => a.an !== false);
+        if (!liste.length) {
+            UI.toast('Kein Kalender abonniert');
+            return;
+        }
+        const coll = zielDatenbank(seiteId);
+        let neu = 0, frisch = 0, schief = [];
+        for (const a of liste) {
+            try {
+                const k = await aboHolen(a);
+                const e = uebernehmen(coll, k.termine, a.name || k.name);
+                neu += e.neu;
+                frisch += e.frisch;
+                a.zuletzt = Store.now();
+            }
+            catch (err) {
+                schief.push((a.name || a.url) + ': ' +
+                    (err instanceof Error ? err.message : String(err)));
+            }
+        }
+        aboSpeichern(abos());
+        App.zeichneSeite();
+        if (schief.length)
+            UI.banner('Nicht geklappt — ' + schief.join(' · '), 'warn');
+        UI.toast(neu + ' neu, ' + frisch + ' aufgefrischt');
+    };
+    /* ========================================================================
+     * 5. GOOGLE CALENDAR
+     * ======================================================================*/
+    const GC = 'https://www.googleapis.com/calendar/v3';
+    const googleKalender = async () => {
+        const token = await Verbindungen.googleZugang(['profil', 'kalender']);
+        const d = await Verbindungen.jsonRuf(GC + '/users/me/calendarList?maxResults=50', { token });
+        return (d.items || []).map((c) => ({
+            id: c.id, name: c.summary, farbe: c.backgroundColor,
+            standard: !!c.primary, rolle: c.accessRole
+        }));
+    };
+    const googleTermine = async (kalenderId, vonTagen = -30, bisTagen = 180) => {
+        const token = await Verbindungen.googleZugang(['profil', 'kalender']);
+        const von = new Date();
+        von.setDate(von.getDate() + vonTagen);
+        const bis = new Date();
+        bis.setDate(bis.getDate() + bisTagen);
+        const url = GC + '/calendars/' + encodeURIComponent(kalenderId) + '/events' +
+            '?singleEvents=true&orderBy=startTime&maxResults=500' +
+            '&timeMin=' + encodeURIComponent(von.toISOString()) +
+            '&timeMax=' + encodeURIComponent(bis.toISOString());
+        const d = await Verbindungen.jsonRuf(url, { token });
+        return (d.items || []).map((e) => ({
+            uid: e.id, titel: e.summary || 'Ohne Titel',
+            text: e.description || '', ort: e.location || '',
+            url: e.htmlLink || '',
+            start: e.start?.date || (e.start?.dateTime || '').slice(0, 16),
+            ende: e.end?.date || (e.end?.dateTime || '').slice(0, 16),
+            ganzerTag: !!e.start?.date
+        }));
+    };
+    /** Einen Eintrag dieser App in den Google-Kalender schreiben. */
+    const nachGoogle = async (row, coll, kalenderId = 'primary') => {
+        const token = await Verbindungen.googleZugang(['profil', 'kalender']);
+        const dk = Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
+        if (!dk)
+            throw new Error('Ohne Datums-Spalte gibt es keinen Termin.');
+        const start = String(Datenbank.wert(row, dk, coll) || '');
+        if (!start)
+            throw new Error('Dieser Eintrag hat kein Datum.');
+        const ganz = start.length <= 10;
+        const endeKey = Object.keys(coll.schema).find(k => k !== dk && coll.schema[k].type === 'date');
+        let ende = endeKey ? String(Datenbank.wert(row, endeKey, coll) || '') : '';
+        if (!ende) {
+            if (ganz)
+                ende = start;
+            else {
+                const d = new Date(start);
+                d.setHours(d.getHours() + 1);
+                ende = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) +
+                    'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+            }
+        }
+        /* Google will bei ganztägigen Terminen den Tag danach als Ende */
+        let gEnde = ende;
+        if (ganz) {
+            const d = new Date(ende + 'T12:00');
+            d.setDate(d.getDate() + 1);
+            gEnde = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+        }
+        const koerper = {
+            summary: row.text || 'Ohne Titel',
+            description: 'Aus Redion übernommen',
+            start: ganz ? { date: start } : { dateTime: new Date(start).toISOString() },
+            end: ganz ? { date: gEnde } : { dateTime: new Date(gEnde).toISOString() }
+        };
+        const ortKey = Object.keys(coll.schema).find(k => coll.schema[k].type === 'place');
+        if (ortKey) {
+            const o = Datenbank.wert(row, ortKey, coll);
+            if (o)
+                koerper.location = typeof o === 'object' ? (o.name || '') : String(o);
+        }
+        const vorhandene = (row.props || {}).uid;
+        const url = GC + '/calendars/' + encodeURIComponent(kalenderId) + '/events' +
+            (vorhandene ? '/' + encodeURIComponent(vorhandene) : '');
+        const d = await Verbindungen.jsonRuf(url, {
+            token, method: vorhandene ? 'PATCH' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(koerper)
+        });
+        if (coll.schema.uid)
+            Store.setProp(row.id, 'uid', d.id);
+        return d;
+    };
+    /* ========================================================================
+     * 6. DIE OBERFLÄCHE
+     * ======================================================================*/
+    const dialog = () => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML = '<div class="finder" style="width:min(720px,95vw)">' +
+            '<div class="fh">📅 Kalender verbinden<button class="icon-btn" data-a="zu">✕</button></div>' +
+            '<div id="kb" style="padding:4px 18px 16px; max-height:72vh; overflow:auto"></div>' +
+            '<div class="fbtns"><button data-a="zu" class="prim">Fertig</button></div></div>';
+        document.body.appendChild(o);
+        const zeichne = () => {
+            const z = Verbindungen.zustand();
+            const kasten = o.querySelector('#kb');
+            if (!kasten)
+                return;
+            kasten.innerHTML =
+                /* Google */
+                '<div class="verb-karte">' +
+                    '<div class="verb-kopf"><span>🔵</span><b>Google Kalender</b>' +
+                    `<span class="verb-status ${z.google.verbunden ? 'an' : ''}">` +
+                    `${z.google.verbunden ? 'verbunden' : 'nicht verbunden'}</span></div>` +
+                    '<div class="verb-text">Liest deine Kalender und schreibt Termine zurück. ' +
+                    'Braucht die Client-ID aus den Verbindungen.</div>' +
+                    '<div class="verb-knoepfe"><button data-a="g-liste">Kalender zeigen</button>' +
+                    '<button data-a="g-hol">Termine holen</button>' +
+                    '<button data-a="g-setup">Verbindungen öffnen</button></div>' +
+                    '<div id="gliste"></div>' +
+                    '</div>' +
+                    /* Abos */
+                    '<div class="verb-karte">' +
+                    '<div class="verb-kopf"><span>📡</span><b>Abonnierte Kalender</b>' +
+                    `<span class="verb-status ${abos().length ? 'an' : ''}">${abos().length}</span></div>` +
+                    '<div class="verb-text">Jede ICS-Adresse — iCloud, Outlook, Feiertage, Sportpläne. ' +
+                    'Bei iCloud: Kalender freigeben, „Öffentlicher Kalender" anhaken, Adresse kopieren.</div>' +
+                    (abos().length
+                        ? '<div class="abo-liste">' + abos().map((a, i) => `<div class="abo-zeile"><span class="frei-kreis bg-${a.farbe || 'blue'}">📅</span>` +
+                            `<span class="frei-name"><b>${esc(a.name || 'Ohne Namen')}</b>` +
+                            `<span>${esc(a.url).slice(0, 60)}…${a.zuletzt ? ' · zuletzt ' + esc(String(a.zuletzt).slice(0, 10)) : ''}</span></span>` +
+                            `<button data-an="${i}" title="Ein oder aus">${a.an === false ? '☐' : '☑'}</button>` +
+                            `<button data-weg="${i}" title="Entfernen">🗑</button></div>`).join('') + '</div>'
+                        : '') +
+                    '<div class="verb-knoepfe"><button data-a="abo-neu">＋ Adresse eintragen</button>' +
+                    '<button data-a="abo-hol">Jetzt abgleichen</button>' +
+                    '<button data-a="ics-datei">ICS-Datei einlesen</button></div>' +
+                    '</div>' +
+                    /* Ausgeben */
+                    '<div class="verb-karte">' +
+                    '<div class="verb-kopf"><span>⭳</span><b>Eigene Termine ausgeben</b></div>' +
+                    '<div class="verb-text">Legt eine .ics-Datei an, die sich in Google, iCloud, ' +
+                    'Outlook und Thunderbird einlesen lässt.</div>' +
+                    '<div class="verb-knoepfe"><button data-a="ics-raus">Als ICS speichern</button></div>' +
+                    '</div>';
+        };
+        zeichne();
+        o.addEventListener('click', async (e) => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            const an = elVon(e)?.closest('[data-an]');
+            if (an) {
+                const l = abos();
+                const eintrag = l[Number(an.dataset.an)];
+                if (eintrag) {
+                    eintrag.an = eintrag.an === false;
+                    aboSpeichern(l);
+                    zeichne();
+                }
+                return;
+            }
+            const weg = elVon(e)?.closest('[data-weg]');
+            if (weg) {
+                const l = abos();
+                l.splice(Number(weg.dataset.weg), 1);
+                aboSpeichern(l);
+                zeichne();
+                return;
+            }
+            const b = elVon(e)?.closest('button[data-a]');
+            if (!b)
+                return;
+            const a = b.dataset.a;
+            try {
+                if (a === 'g-setup') {
+                    o.remove();
+                    Verbindungen.dialog();
+                    return;
+                }
+                if (a === 'g-liste') {
+                    const liste = await googleKalender();
+                    const gliste = o.querySelector('#gliste');
+                    if (!gliste)
+                        return;
+                    gliste.innerHTML = '<div class="abo-liste">' + liste.map((k) => `<div class="abo-zeile"><span class="frei-kreis" style="background:${esc(k.farbe || '#888')}">📅</span>` +
+                        `<span class="frei-name"><b>${esc(k.name)}${k.standard ? ' · Standard' : ''}</b>` +
+                        `<span>${esc(k.rolle)}</span></span>` +
+                        `<button data-gk="${esc(k.id)}">Holen</button></div>`).join('') + '</div>';
+                    return;
+                }
+                const gk = elVon(e)?.closest('[data-gk]');
+                if (gk || a === 'g-hol') {
+                    const id = (gk ? gk.dataset.gk : 'primary') ?? 'primary';
+                    const termine = await googleTermine(id);
+                    const coll = zielDatenbank();
+                    const erg = uebernehmen(coll, termine, 'Google' + (gk ? ' · ' + id.slice(0, 20) : ''));
+                    App.zeichneSeite();
+                    UI.toast(erg.neu + ' neu, ' + erg.frisch + ' aufgefrischt');
+                    return;
+                }
+                if (a === 'abo-neu') {
+                    const url = await UI.frage('Adresse des Kalenders (ICS oder webcal)', '');
+                    if (!url)
+                        return;
+                    const name = await UI.frage('Wie soll er heissen?', 'Kalender');
+                    const l = abos();
+                    l.push({ url: url.trim(), name: name || 'Kalender', an: true,
+                        farbe: ['blue', 'green', 'orange', 'purple'][l.length % 4] });
+                    aboSpeichern(l);
+                    zeichne();
+                    UI.toast('Eingetragen — jetzt abgleichen');
+                    return;
+                }
+                if (a === 'abo-hol') {
+                    await alleAbosHolen();
+                    zeichne();
+                    return;
+                }
+                if (a === 'ics-datei') {
+                    const inp = document.createElement('input');
+                    inp.type = 'file';
+                    inp.accept = '.ics,text/calendar';
+                    inp.multiple = true;
+                    inp.addEventListener('change', async () => {
+                        const coll = zielDatenbank();
+                        let neu = 0, frisch = 0;
+                        for (const f of Array.from(inp.files ?? [])) {
+                            const text = await f.text();
+                            const k = icsLesen(text);
+                            const alle = [];
+                            k.termine.forEach(t => wiederholungen(t).forEach(x => alle.push(x)));
+                            const erg = uebernehmen(coll, alle, k.name || f.name.replace(/\.ics$/i, ''));
+                            neu += erg.neu;
+                            frisch += erg.frisch;
+                        }
+                        App.zeichneSeite();
+                        UI.toast(neu + ' Termine übernommen, ' + frisch + ' aufgefrischt');
+                    });
+                    inp.click();
+                    return;
+                }
+                if (a === 'ics-raus') {
+                    const dbs = Object.values(Store.cache.collections)
+                        .filter(c => Object.values(c.schema).some(d => d.type === 'date'));
+                    if (!dbs.length) {
+                        UI.toast('Keine Datenbank mit Datum gefunden');
+                        return;
+                    }
+                    const r = b.getBoundingClientRect();
+                    const m = UI.menu('<div class="grp">Welche Datenbank?</div>' +
+                        dbs.map(c => `<button data-c="${c.id}">${esc(c.name || 'Ohne Namen')}</button>`).join(''), r.left, r.bottom + 4);
+                    m.addEventListener('click', ev => {
+                        const c = ev.target instanceof Element
+                            ? ev.target.closest('button[data-c]') : null;
+                        if (!c)
+                            return;
+                        m.remove();
+                        const coll = Store.getCollection(c.dataset.c);
+                        const text = icsSchreiben(coll, Store.getView(coll.viewIds[0]));
+                        const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+                        const a2 = document.createElement('a');
+                        a2.href = URL.createObjectURL(blob);
+                        a2.download = (coll.name || 'kalender').replace(/[^\w\-]+/g, '-') + '.ics';
+                        a2.click();
+                        setTimeout(() => URL.revokeObjectURL(a2.href), 4000);
+                        UI.toast('ICS gespeichert');
+                    });
+                    return;
+                }
+            }
+            catch (err) {
+                UI.banner(err instanceof Error ? err.message : String(err), 'warn');
+            }
+        });
+    };
+    return { icsLesen, icsSchreiben, icsZeit, wiederholungen, zielDatenbank, uebernehmen,
+        abos, aboHolen, alleAbosHolen, adresseGerade,
+        googleKalender, googleTermine, nachGoogle, dialog };
+})();
+window.Kalender = Kalender;

@@ -1,0 +1,31 @@
+{
+  "name": "redion",
+  "version": "2026.8.3",
+  "description": "Redion — Notizen, Datenbanken und Formeln, die auf dem eigenen Gerät liegen",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "bauen": "node bauen.mts",
+    "pruefen": "node pruefungen/alle.mts",
+    "typecheck": "tsc --noEmit",
+    "bauen:ts": "tsc -p tsconfig.bauen.json && tsc -p tsconfig.sw.json",
+    "server": "node server/pruefserver.ts 8790",
+    "veroeffentlichen": "npx wrangler deploy"
+  },
+  "keywords": [
+    "notizen",
+    "datenbank",
+    "formeln",
+    "local-first",
+    "offline"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "playwright": "^1.56.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

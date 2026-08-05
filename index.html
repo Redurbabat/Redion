@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
+<meta name="description" content="Redion — unser eigenes Notion. Alle Daten im Browser, KI lokal und kostenlos.">
+<meta name="color-scheme" content="dark light">
+<title>Redion</title>
+
+<!-- ==========================================================================
+     ALS APP INSTALLIERBAR
+     Auf dem iPhone: Safari öffnen, Teilen-Knopf, „Zum Home-Bildschirm".
+     Danach startet sie ohne Adresszeile, mit eigenem Symbol und offline.
+     ========================================================================== -->
+<link rel="manifest" href="oeffentlich/manifest.webmanifest">
+<meta name="theme-color" content="#191a1e" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+<link rel="icon" type="image/png" sizes="32x32" href="oeffentlich/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="oeffentlich/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="oeffentlich/icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="167x167" href="oeffentlich/icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="oeffentlich/icons/icon-152.png">
+
+<!-- Apple hört auf eigene Angaben — ohne die bleibt die Adresszeile stehen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Redion">
+<meta name="format-detection" content="telephone=no">
+
+<!-- Startbilder. iPhone 13 Pro Max zuerst, dann die anderen Grössen. -->
+<link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-13-pro-max.png"
+      media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-15-pro-max.png"
+      media="(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-13.png"
+      media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-15.png"
+      media="(device-width:393px) and (device-height:852px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-x.png"
+      media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-xs-max.png"
+      media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="oeffentlich/icons/start-iphone-xr.png"
+      media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2)">
+
+<!-- Die Reihenfolge zählt: Schriften, dann die Farben für Dunkel (der
+     Normalfall), dann was im Hellmodus anders ist, dann die Grundelemente,
+     das Gerüst und zuletzt die Bausteine. Wer eine Zeile verschiebt,
+     verschiebt, wer gegen wen gewinnt. -->
+<link rel="stylesheet" href="quell/schale/stil/marken.css">
+<link rel="stylesheet" href="quell/schale/stil/dunkel.css">
+<link rel="stylesheet" href="quell/schale/stil/hell.css">
+<link rel="stylesheet" href="quell/schale/stil/grund.css">
+<link rel="stylesheet" href="quell/schale/stil/aufbau.css">
+<link rel="stylesheet" href="quell/schale/stil/datenbanken.css">
+<link rel="stylesheet" href="quell/schale/stil/ki.css">
+<link rel="stylesheet" href="quell/schale/stil/werkzeuge.css">
+<link rel="stylesheet" href="quell/schale/stil/ansichten.css">
+<link rel="stylesheet" href="quell/schale/stil/einstellungen.css">
+<link rel="stylesheet" href="quell/schale/stil/tabelle.css">
+<link rel="stylesheet" href="quell/schale/stil/bausteine.css">
+
+<!-- =========================================================================
+     ANMELDE-FENSTER
+     Wenn Google die Anmeldung zurückschickt, landet der Schlüssel hier im
+     Adresszeilen-Anhang. Dieses Fenster ist dann nur der Bote: es reicht den
+     Schlüssel an das Hauptfenster weiter und schliesst sich. Die App selbst
+     wird gar nicht erst geladen.
+     ====================================================================== -->
+<script>
+(function () {
+  var h = location.hash || '';
+  if (!window.opener || !/[#&](access_token|error)=/.test(h)) return;
+  var p = new URLSearchParams(h.replace(/^#/, ''));
+  var d = { art: 'oauth-antwort' };
+  p.forEach(function (v, k) { d[k] = v; });
+  if (p.get('error')) d.fehler = p.get('error_description') || p.get('error');
+  try { window.opener.postMessage(d, location.origin); } catch (e) {}
+  window.__nurBote = true;
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.innerHTML =
+      '<div style="font:15px system-ui;padding:40px;text-align:center">' +
+      (d.fehler ? 'Google meldet: ' + d.fehler : 'Fertig. Dieses Fenster kann zu.') + '</div>';
+  });
+  setTimeout(function () { window.close(); }, d.fehler ? 3000 : 250);
+})();
+</script>
+</head>
+<body>
+
+<!-- Für die Tastatur: der kürzeste Weg an der Seitenleiste vorbei -->
+<a href="#page" id="zum-inhalt">Zum Inhalt springen</a>
+
+<!-- =========================================================================
+     SEITENLEISTE
+     ====================================================================== -->
+<aside id="sidebar" role="navigation" aria-label="Seitenleiste">
+
+  <div class="side-top">
+    <button class="ws-btn" id="btn-settings" title="Einstellungen (Strg + ,)">
+      <span class="ws-icon">N</span>
+      <span>Redion</span>
+    </button>
+    <button class="icon-btn" id="btn-theme" title="Hell / Dunkel (Strg + Shift + L)">◐</button>
+    <button class="icon-btn" id="btn-side"  title="Seitenleiste (Strg + \)">‹‹</button>
+  </div>
+
+  <!-- Reiterleiste wie in Notion: Start, Chat, Besprechungen, Posteingang, Suchen -->
+  <nav class="side-reiter" id="side-reiter">
+    <button class="sr" data-reiter="start"  title="Start"><span>🏠</span><b>Start</b></button>
+    <button class="sr" data-reiter="chat"   title="Chat mit der KI (Strg + O)"><span>💬</span><b>Chat</b></button>
+    <button class="sr" data-reiter="bespr"  title="Besprechungen"><span>🎙</span><b>Besprechungen</b></button>
+    <button class="sr" data-reiter="inbox"  title="Posteingang"><span>📥</span><b>Posteingang</b></button>
+    <button class="sr" data-reiter="suche"  title="Suchen (Strg + P)"><span>🔍</span><b>Suchen</b></button>
+  </nav>
+
+  <nav class="side-nav">
+    <button class="side-item" id="btn-search">
+      <span>🔍</span><span>Suchen</span><span class="k">Strg P</span>
+    </button>
+    <button class="side-item" id="btn-cmd">
+      <span>⌘</span><span>Befehle</span><span class="k">Strg ⇧ P</span>
+    </button>
+    <button class="side-item" id="btn-home">
+      <span>🏠</span><span>Start</span>
+    </button>
+    <button class="side-item" id="btn-inbox">
+      <span>📥</span><span>Posteingang</span>
+    </button>
+    <button class="side-item" id="btn-new">
+      <span>✚</span><span>Neue Seite</span><span class="k">Strg N</span>
+    </button>
+  </nav>
+
+  <div id="tree"></div>
+
+  <div class="side-fuss">
+    <button class="side-item" id="btn-import"><span>⭱</span><span>Importieren</span></button>
+    <button class="side-item" id="btn-trash"><span>🗑</span><span>Papierkorb</span></button>
+    <button class="side-item" id="btn-hilfe"><span>?</span><span>Tastenkürzel</span><span class="k">Strg /</span></button>
+    <div class="side-unten">
+      <button class="side-chat" id="btn-neuer-chat"><span>✨</span><span>Neuer Chat</span><span class="k">Strg O</span></button>
+      <button class="side-schreib" id="btn-new-bottom" title="Neue Seite (Strg + N)">✎</button>
+    </div>
+    <div class="side-hinweis">Alles bleibt auf diesem Gerät.</div>
+  </div>
+</aside>
+
+<!-- =========================================================================
+     DIE BEREICHSLEISTE OBEN — nur auf dem Telefon
+     -------------------------------------------------------------------------
+     Eine Reihe von Pillen: das Konto ganz links, dann die vier Bereiche.
+     NUR DIE AKTIVE PILLE TRÄGT IHREN NAMEN; die übrigen sind Kreise mit
+     ihrem Zeichen. Das ist der Trick, mit dem fünf Ziele in 428 Pixel
+     passen, ohne dass man raten muss, wo man ist — der Name steht immer
+     genau dort, wo man gerade ist.
+
+     Die Kennungen `hl-*` bleiben, wie sie waren: daran hängen die
+     Bedienhandler in `schale.ts` und die Markierung in `seitenleiste.ts`.
+     Eine Umbenennung hätte nichts verbessert und alles gelöst, was daran
+     hängt.
+     ====================================================================== -->
+<div id="handy-oben" role="tablist" aria-label="Hauptbereiche">
+  <button id="hl-konto" class="ho-konto" title="Arbeitsbereich"><span>R</span></button>
+  <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
+  <button id="hl-chat"  role="tab" title="Chats"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a7.5 7.5 0 0 1-7.5 7.5c-1.3 0-2.5-.3-3.6-.9L4 20l1.5-4.3A7.5 7.5 0 1 1 20 12z"/></svg></span><b>Chats</b><i class="hl-punkt" hidden></i></button>
+  <button id="hl-bespr" role="tab" title="Besprechungen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
+  <button id="hl-inbox" role="tab" title="Posteingang"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13h4l1.5 2.5h6L16.5 13h4"/><path d="M3.5 13 6 5.5h12L20.5 13v4.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V13z"/></svg></span><b>Eingang</b></button>
+</div>
+
+<!-- =========================================================================
+     DIE DREI SCHWEBENDEN KNÖPFE UNTEN — nur auf dem Telefon
+     -------------------------------------------------------------------------
+     Suchen · KI fragen · Neue Seite. Sie stehen NICHT in einer geschlossenen
+     Leiste, sondern schweben über dem Inhalt: der Daumen erreicht sie, und
+     der Bildschirm bleibt trotzdem ganz. Die Mitte ist die breiteste und
+     die einzige mit Text — nach ihr greift man am häufigsten.
+     ====================================================================== -->
+<div id="handy-unten" aria-label="Schnellzugriff">
+  <button id="hu-suche" title="Suchen"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></button>
+  <button id="hu-ki" title="KI fragen">
+    <span class="hu-av">✨</span><b>KI fragen</b><i class="hu-mik"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9.25" y="3" width="5.5" height="10" rx="2.75"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></i>
+  </button>
+  <button id="hu-neu" title="Neue Seite"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12v6.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6.5"/><path d="M17.5 3.5 21 7l-8.5 8.5H9v-3.5z"/></svg></button>
+</div>
+
+<!-- Formatleiste über der Tastatur — erscheint beim Schreiben auf dem Telefon -->
+<div id="tastenleiste" role="toolbar" aria-label="Formatieren" hidden>
+  <button data-t="plus"   title="Block einfügen">＋</button>
+  <button data-t="slash"  title="Blockmenü">/</button>
+  <button data-t="fett"   title="Fett"><b>B</b></button>
+  <button data-t="kursiv" title="Kursiv"><i>I</i></button>
+  <button data-t="unter"  title="Unterstrichen"><u>U</u></button>
+  <button data-t="code"   title="Code">&lt;/&gt;</button>
+  <button data-t="link"   title="Link">🔗</button>
+  <button data-t="todo"   title="Aufgabe">☑</button>
+  <button data-t="raus"   title="Ausrücken">⇤</button>
+  <button data-t="rein"   title="Einrücken">⇥</button>
+  <button data-t="fertig" title="Tastatur schliessen">⌄</button>
+</div>
+
+<!-- =========================================================================
+     HAUPTBEREICH
+     ====================================================================== -->
+<main id="main" role="main">
+
+  <header id="topbar" role="toolbar" aria-label="Seitenwerkzeuge">
+    <button class="top-btn schmal" id="btn-back" title="Zurück (Strg + [)">‹</button>
+    <button class="top-btn schmal" id="btn-fwd"  title="Vorwärts (Strg + ])">›</button>
+    <div class="crumb" id="crumb"></div>
+    <!-- Nur am Telefon: Suchen und Neu wandern in die Kopfzeile, weil unten
+         die vier Bereiche stehen. Am PC sind sie in der Seitenleiste. -->
+    <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen">🔍</button>
+    <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite">✎</button>
+    <div class="spacer"></div>
+    <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben">Teilen</button>
+    <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)">✨ KI</button>
+    <button class="top-btn schmal" id="btn-komm"    title="Kommentare">💬</button>
+    <button class="top-btn schmal" id="btn-verlauf" title="Aktualisierungen und Versionsverlauf">🕘</button>
+    <button class="top-btn schmal" id="btn-auto"    title="Automationen der Datenbank">⚡</button>
+    <button class="top-btn schmal" id="btn-link"    title="Link zur Seite kopieren">🔗</button>
+    <button class="top-btn schmal" id="btn-lock"    title="Seite gegen Bearbeiten sperren">🔓</button>
+    <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten">☆</button>
+    <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen">⋯</button>
+  </header>
+
+  <div id="scroll">
+    <div id="page" role="document" tabindex="-1"></div>
+  </div>
+
+</main>
+
+<!-- =========================================================================
+     KI-PANEL
+     ====================================================================== -->
+<aside id="ai">
+  <div class="ai-head">
+    <b>✨ KI</b>
+    <button class="model-btn" title="Modell wechseln">
+      <span class="dot"></span><span class="model-name">Suche …</span><span style="opacity:.5">▾</span>
+    </button>
+    <button class="icon-btn" id="ai-clear" title="Neuer Chat">✚</button>
+  </div>
+
+  <div id="chat"></div>
+
+  <div class="ai-foot">
+    <div class="ai-quick">
+      <button data-p="Fasse diese Seite in fünf Stichpunkten zusammen.">Zusammenfassen</button>
+      <button data-p="Leite aus dieser Seite konkrete Aufgaben ab. Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.">Aufgaben</button>
+      <button data-p="Formuliere den Text dieser Seite klarer, ohne den Sinn zu ändern.">Umschreiben</button>
+      <button data-p="Übersetze diese Seite ins Englische.">Übersetzen</button>
+      <button data-p="Mache aus dieser Seite Karteikarten. Je Zeile: Frage :: Antwort.">Karteikarten</button>
+      <button id="ai-schreiben" title="Schreiben und bearbeiten — 16 Befehle">✒️ Schreiben</button>
+      <button id="ai-agent" title="Mehrstufige Aufgaben">🤖 Agent</button>
+      <button id="ai-meeting" title="Aufnehmen, mitschreiben, auswerten">🎙 Besprechung</button>
+      <button id="ai-wiki" title="Kostenlos, ohne Schlüssel">📖 Nachschlagen</button>
+      <button id="ai-db" title="Die KI legt eine echte Datenbank an">🗂 Datenbank bauen</button>
+      <button id="ai-seite" title="Die KI baut den Seitenaufbau">📄 Seite aufbauen</button>
+      <button id="ai-log" title="Was die KI gebaut hat">🧾 Protokoll</button>
+    </div>
+    <textarea id="ai-input" rows="1" placeholder="Mach alles mit KI …"></textarea>
+    <!-- Zeile unter dem Eingabefeld, wie bei Notion -->
+    <div class="ai-leiste">
+      <button id="ai-plus" title="Anhängen und erwähnen">＋</button>
+      <button id="ai-quellen" title="Quellen, Modus und Personalisierung">⚙</button>
+      <button id="ai-faehig" title="Fähigkeiten">🧩</button>
+      <span class="ai-luecke"></span>
+      <button id="ai-modus" title="Standard darf ändern, Fragen nur antworten (Shift + Tab)">Standard</button>
+      <button id="ai-diktat" title="Diktieren">🎤</button>
+      <button id="ai-senden" title="Senden">↑</button>
+    </div>
+  </div>
+</aside>
+
+<div id="toast"></div>
+
+<!-- Reihenfolge zählt: store und formula zuerst, app zuletzt.
+     Bewusst ohne type="module", damit die Seite auch per Doppelklick
+     direkt von der Festplatte läuft. -->
+<script src="quell/kern/ereignisse/bus.js"></script>
+<script src="quell/kern/einstellung/konstanten.js"></script>
+<script src="quell/core/helpers/reporter.js"></script>
+<script src="quell/core/helpers/ids.js"></script>
+<script src="quell/core/helpers/date.js"></script>
+<script src="quell/core/helpers/objects.js"></script>
+<script src="quell/core/helpers/bytes.js"></script>
+<script src="quell/core/helpers/throttle.js"></script>
+<script src="quell/kern/ereignisse/arten.js"></script>
+<script src="quell/kern/einstellung/app.js"></script>
+<script src="quell/kern/einstellung/schalter.js"></script>
+<script src="quell/kern/zugang/rollen.js"></script>
+<script src="quell/core/security/sanitize.js"></script>
+<!-- Der Tabellenkern. Rechnet mit der vorhandenen Formelmaschine, die
+     weiter unten geladen wird — der Zugriff steht hinter typeof, also
+     zaehlt hier nur, dass beide da sind, bevor jemand rechnet. -->
+<script src="quell/core/spreadsheet/address.js"></script>
+<script src="quell/core/spreadsheet/engine.js"></script>
+<script src="quell/core/spreadsheet/csv.js"></script>
+<script src="quell/core/import/spaltentyp.js"></script>
+<script src="quell/kern/sicherheit/pruefen.js"></script>
+<script src="quell/kern/ablage/formen.js"></script>
+<script src="quell/kern/ablage/umzuege.js"></script>
+<script src="quell/register/module.js"></script>
+<script src="quell/register/navigation.js"></script>
+<script src="quell/register/bloecke.js"></script>
+<script src="quell/register/eigenschaften.js"></script>
+<script src="quell/register/ansichten.js"></script>
+<script src="quell/register/befehle.js"></script>
+<script src="quell/register/tasten.js"></script>
+<script src="quell/register/einstellungen.js"></script>
+<script src="quell/register/formeln.js"></script>
+<script src="quell/register/vorlagen.js"></script>
+<script src="quell/register/verbindungen.js"></script>
+<script src="quell/schale/ueberlagerung/menue.js"></script>
+<script src="quell/schale/ueberlagerung/hinweis.js"></script>
+<script src="quell/schale/ueberlagerung/dialog.js"></script>
+<script src="quell/schale/ueberlagerung/ui.js"></script>
+<script src="quell/kern/ablage/nachbarn.js"></script>
+<script src="quell/kern/ablage/indexdb.js"></script>
+<script src="quell/bereiche/datenbanken/formeln/laufzeit.js"></script>
+<script src="quell/bereiche/wissen/verweise.js"></script>
+<script src="quell/bereiche/bloecke/arten/zeichenflaeche.js"></script>
+<script src="quell/bereiche/spreadsheet/ansicht.js"></script>
+<script src="quell/bereiche/datenbanken/raster.js"></script>
+<script src="quell/bereiche/editor/ansicht/editor.js"></script>
+<script src="quell/bereiche/datenbanken/dienst.js"></script>
+<script src="quell/bereiche/datenbanken/steuerung.js"></script>
+<script src="quell/bereiche/wissen/dienst.js"></script>
+<script src="quell/bereiche/wissen/werkzeuge.js"></script>
+<script src="quell/kern/zustand/verlauf.js"></script>
+<script src="quell/bereiche/editor/ansicht/auswahlleiste.js"></script>
+<script src="quell/bereiche/erwaehnungen/ansicht/menue.js"></script>
+<script src="quell/bereiche/kommentare/ansicht/faden.js"></script>
+<script src="quell/bereiche/editor/mehrfach.js"></script>
+<script src="quell/bereiche/datenbanken/ansichten/dienst.js"></script>
+<script src="quell/bereiche/einstellungen/ansicht/seite.js"></script>
+<script src="quell/bereiche/dateien/einlesen.js"></script>
+<script src="quell/kern/zugang/sitzung.js"></script>
+<script src="quell/bereiche/verbinden/konten.js"></script>
+<script src="quell/bereiche/verbinden/kalender.js"></script>
+<script src="quell/bereiche/datenbanken/spiegel/dienst.js"></script>
+<script src="quell/bereiche/verbinden/mail.js"></script>
+<script src="quell/bereiche/verbinden/clipper.js"></script>
+<script src="quell/bereiche/ki/kontext.js"></script>
+<script src="quell/bereiche/ki/agenten.js"></script>
+<script src="quell/bereiche/verbinden/besprechung.js"></script>
+<script src="quell/bereiche/ki/werkzeuge.js"></script>
+<script src="quell/bereiche/einstellungen/pwa.js"></script>
+<script src="quell/bereiche/vorlagen/daten.js"></script>
+<script src="quell/bereiche/hilfe/stand.js"></script>
+<script src="quell/bereiche/hilfe/wissensseiten.js"></script>
+<script src="quell/bereiche/einstellungen/pflege.js"></script>
+<script src="quell/bereiche/datenbanken/datenmodell/ansicht.js"></script>
+<script src="quell/kern/sicherheit/krypto.js"></script>
+<script src="quell/bereiche/ki/ansicht/baukasten.js"></script>
+<script src="quell/schale/aufbau/reiter.js"></script>
+<script src="quell/bereiche/einstellungen/ansicht/aussehen.js"></script>
+<script src="quell/bereiche/seiten/ansicht/fassungen.js"></script>
+<script src="quell/bereiche/dateien/ausgeben.js"></script>
+<script src="quell/kern/helfer/tempo.js"></script>
+<script src="quell/bereiche/planen/dienst.js"></script>
+<script src="quell/bereiche/einstellungen/erweiterungen.js"></script>
+<script src="quell/bereiche/verbinden/eingang.js"></script>
+<script src="quell/bereiche/hilfe/rundgang.js"></script>
+<script src="quell/bereiche/dateien/format.js"></script>
+<script src="quell/bereiche/verbinden/schnittstelle.js"></script>
+<script src="quell/kern/ablage/befehle.js"></script>
+<script src="quell/kern/ereignisse/protokoll.js"></script>
+<script src="quell/bereiche/dateien/ablage.js"></script>
+<script src="quell/kern/abgleich/zusammenfuehren.js"></script>
+<script src="quell/kern/zugang/rechte.js"></script>
+<script src="quell/bereiche/datenbanken/probelauf/dienst.js"></script>
+<script src="quell/bereiche/datenbanken/pruefsaetze/dienst.js"></script>
+<script src="quell/bereiche/vorlagen/dienst.js"></script>
+<script src="quell/bereiche/datenbanken/vorrat/dienst.js"></script>
+<script src="quell/kern/abgleich/maschine.js"></script>
+<script src="quell/bereiche/verbinden/ansicht/wolke.js"></script>
+<script src="quell/bereiche/wissen/bibliothek.js"></script>
+<script src="quell/bereiche/ki/dienst.js"></script>
+<script src="quell/schale/aufbau/seitenleiste.js"></script>
+<script src="quell/schale/aufbau/kopfleiste.js"></script>
+<script src="quell/schale/aufbau/inhaltsflaeche.js"></script>
+<script src="quell/schale/aufbau/schale.js"></script>
+<script src="quell/start.js"></script>
+<!-- Notnagel: Wenn die Skripte fehlen (z. B. weil nur index.html kopiert
+     wurde, ohne den Ordner js), sagt die Seite das laut, statt still
+     nichts zu tun. -->
+<script>
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (typeof App === 'undefined') {
+      document.body.insertAdjacentHTML('afterbegin',
+        '<div class="banner fehler"><span>Die Programmdateien im Ordner ' +
+        '<b>js</b> wurden nicht gefunden. Bitte den ganzen Ordner zusammen halten ' +
+        '&mdash; oder einfach <b>redion-einzeldatei.html</b> &ouml;ffnen, ' +
+        'da ist alles drin.</span></div>');
+    }
+  }, 1200);
+});
+</script>
+</body>
+</html>
