@@ -4,8 +4,8 @@
    node_modules — der gewöhnliche Import ist der richtige Weg. Ebenso die
    Serverpfade: neben sich statt fest auf /tmp/notizen/. */
 import { chromium } from 'playwright';
-import { starte } from './pruefserver.js';
-import { kennung, abdruck } from './kern.js';
+import { starte } from './pruefserver.ts';
+import { kennung, abdruck } from './kern.ts';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';

@@ -35,7 +35,6 @@ type ISODateTime = string;
  * ist. Die Liste ist also das Gegenteil einer Sammelstelle: sie soll
  * schrumpfen.
  */
-declare const Store: any;
 
 /**
  * Die Bestandspflege. `reporter.ts` reicht Fehler dorthin weiter — aber nur,
@@ -46,7 +45,6 @@ declare const Store: any;
  * `Melder` stand bis zum Umzug hier. Er ist jetzt `reporter.ts` und braucht
  * keine Zusage mehr — genau der Zweck dieser Liste.
  */
-declare const Pflege: any;
 
 /**
  * Die Formelmaschine aus `quell/bereiche/datenbanken/formeln/laufzeit.js`.
@@ -60,18 +58,6 @@ declare const Pflege: any;
  * Sie wird nach dem Tabellenkern geladen, deshalb der `typeof`-Wächter an
  * der Aufrufstelle.
  */
-declare const Formula: any;
-
-/**
- * Die Menüs aus `quell/schale/ueberlagerung/menue.js`.
- *
- * `Menue.menu(html, x, y, opt)` öffnet ein Menü und macht daraus **am
- * Telefon von allein ein Blatt, das von unten hochfährt** — mit Wischen zum
- * Schliessen und Einträgen in Karten. Deshalb geht der Tabellenblock für
- * seine Kopfmenüs hierüber und schreibt keine eigene Touch-Bedienung: die
- * gäbe es dann zweimal, und die zweite wäre die schlechtere.
- */
-declare const Menue: any;
 
 /**
  * Das Ein- und Ausgeben aus `quell/bereiche/dateien/ausgeben.js`.
@@ -82,7 +68,6 @@ declare const Menue: any;
  * ein zweites Mal zu schreiben — zwei ZIP-Schreiber pflegt man einmal und
  * vergisst den anderen.
  */
-declare const Austausch: any;
 
 
 /**
@@ -93,7 +78,6 @@ declare const Austausch: any;
  * ein gewöhnliches `const` auf oberster Ebene und steht **nicht** auf
  * `window`; wer `window.App` schreibt, bekommt `undefined`.
  */
-declare const App: any;
 
 
 /**
@@ -104,27 +88,6 @@ declare const App: any;
  * Der Tabellenblock liest darüber ein, statt einen zweiten ZIP-Leser zu
  * schreiben.
  */
-declare const Einlesen: any;
-
-/**
- * Die Dialoge aus `quell/schale/ueberlagerung/dialog.js`.
- *
- * `Dialog.wahl({ titel, text, knoepfe })` gibt die Kennung des gewählten
- * Knopfes zurück, `''` beim Abbruch — Abbrechen ist dort bewusst keine
- * Antwort, sondern das Gegenteil einer. Der Tabellenblock fragt damit vor
- * dem Einlesen, weil Einlesen vorhandene Zellen überschreibt.
- */
-declare const Dialog: any;
-
-/**
- * Die kleinen Rückmeldungen aus `quell/schale/ueberlagerung/ui.js`.
- *
- * `UI.toast(text)` — eine kurze Meldung, die von selbst verschwindet. Für
- * Erfolg und für alles, was der Mensch wissen soll, ohne dass er etwas
- * entscheiden muss. Wie `Store` ein gewöhnliches `const` auf oberster Ebene
- * und nicht auf `window`; deshalb der `typeof`-Wächter an der Aufrufstelle.
- */
-declare const UI: any;
 
 /**
  * Die Datenbanklogik aus `quell/bereiche/datenbanken/dienst.js`.
@@ -135,4 +98,55 @@ declare const UI: any;
  * `row.props`; sonst zeigte sie bei jeder zweiten Spaltenart etwas anderes
  * als die gewöhnliche Tabellenansicht daneben.
  */
-declare const Datenbank: any;
+
+/* ============================================================================
+ * DIE ÜBRIGEN MODULE AUS `quell/`
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — die Liste stammt aus dem Quelltext selbst und nicht aus dem
+ * Gedächtnis: jedes `window.X = …` und jedes `const X = (() => {` auf
+ * oberster Ebene steht hier, ausser dem, was schon eine `.ts`-Quelle hat und
+ * sich damit selbst erklärt.
+ *
+ * ─── WOZU DIESE LISTE DA IST, UND WOZU NICHT ────────────────────────────────
+ *
+ * Sie ist **die Startbahn für die TypeScript-Migration**, nicht ihr Ziel.
+ *
+ * Gemessen an drei echten Dateien kostet ein Umzug nach `.ts` unter dieser
+ * strengen Einstellung **einen Typfehler je 4,4 Zeilen**. Bei 76 550 Zeilen
+ * in 218 Dateien sind das rund siebzehntausend. Und jeder dritte davon war
+ * schlicht „Cannot find name X": ein globaler Name, den TypeScript nicht
+ * kannte.
+ *
+ * Diese Datei erledigt alle auf einmal. Sie macht jede einzelne der 218
+ * Migrationen billiger — und zwar bevor die erste beginnt.
+ *
+ * ─── WARUM `any`, UND WARUM DAS HIER RICHTIG IST ────────────────────────────
+ *
+ * `CLAUDE.md` §52 erlaubt `any` an genau einer Stelle: **an der Grenze zum
+ * alten Code**, nicht innerhalb einer migrierten Datei. Das hier IST diese
+ * Grenze. Über ein Modul, das noch JavaScript ist, weiss TypeScript wirklich
+ * nichts — und etwas anderes zu behaupten wäre schlimmer als `any`: es sähe
+ * nach Typsicherheit aus und wäre keine.
+ *
+ * ─── UND DESHALB SOLL DIESE LISTE SCHRUMPFEN ────────────────────────────────
+ *
+ * Jeder Eintrag, der hier verschwindet, ist ein Modul, das umgezogen ist und
+ * seine Typen selbst mitbringt. Die Liste ist dasselbe wie
+ * `pruefungen/js-bestand.json`, nur von der anderen Seite gesehen: eine
+ * Fortschrittsanzeige, die nur kleiner werden darf.
+ * ==========================================================================*/
+
+
+/**
+ * Der Sammelpunkt `Register` aus `quell/register/*.js`.
+ *
+ * Er ist kein Modul, sondern eine Ablage: jede Registerdatei hängt ihren
+ * Teil daran (`Register.ansichten`, `Register.bloecke`, `Register.formeln`).
+ * Deshalb steht er hier und verschwindet auch nicht, wenn eine einzelne
+ * Registerdatei umzieht — er gehört keiner von ihnen.
+ *
+ * `umzug.mts` lässt Namen dieser Bauart deshalb ausdrücklich stehen: wer
+ * `(window as any).X = (window as any).X || {}` schreibt, legt den Namen
+ * nicht an, sondern schliesst sich ihm an.
+ */
+declare const Register: any;

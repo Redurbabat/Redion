@@ -1,8 +1,8 @@
 /* Der Server: Rechte als Schloss, Veröffentlichen, /v1/, MCP, Besitzerwechsel */
 /* Pfade neben sich statt fest auf /tmp/notizen/ — sonst läuft dieser Lauf nur
    auf dem einen Rechner, auf dem er geschrieben wurde. */
-import { starte } from './pruefserver.js';
-import { kennung, abdruck } from './kern.js';
+import { starte } from './pruefserver.ts';
+import { kennung, abdruck } from './kern.ts';
 
 let ok = 0, bad = 0;
 const pruef = (n, ist, soll) => {

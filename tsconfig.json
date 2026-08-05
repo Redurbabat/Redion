@@ -18,7 +18,16 @@
     "Die Strenge folgt CLAUDE.md §52.6. `strict` allein reicht nicht:",
     "`noUncheckedIndexedAccess` ist die Einstellung, die den Fehler findet,",
     "der in dieser App am teuersten war — auf ein Feld zugreifen, das es",
-    "vielleicht nicht gibt, und mit `undefined` weiterrechnen."
+    "vielleicht nicht gibt, und mit `undefined` weiterrechnen.",
+    "",
+    "ZU `allowImportingTsExtensions`. Der Code unter server/ wird NICHT",
+    "gebaut. Node führt die .ts-Datei unmittelbar aus und entfernt dabei die",
+    "Typen (ab Node 22.18 ohne Schalter). Damit das geht, muss im Import die",
+    "echte Endung stehen: `from './kern.ts'`. Node sucht die Datei, die",
+    "dasteht — es schreibt kein `.js` in `.ts` um, wie ein Bündler das täte.",
+    "Die Einstellung erlaubt genau das und setzt `noEmit` voraus; das passt,",
+    "denn hier wird nur geprüft. In `tsconfig.bauen.json` — dem einzigen",
+    "Ort, der etwas erzeugt — steht sie deshalb auf false."
   ],
 
   "compilerOptions": {
@@ -32,6 +41,8 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true,
+
+    "allowImportingTsExtensions": true,
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -51,8 +62,23 @@
     "",
     "Die .js- und .mjs-Laeufe bleiben aussen vor: `allowJs` steht nicht, sie",
     "werden also gar nicht erst angesehen. Sie sind Bestand, kein neuer Code",
-    "(ENTSCHEIDUNGEN.md E28)."
+    "(ENTSCHEIDUNGEN.md E28).",
+    "",
+    "SEIT BÜNDEL 19 steht `server/` hier mit drin — vorher stand es in",
+    "`exclude`. Der Grund für den Ausschluss war, dass es JavaScript war;",
+    "jetzt ist es TypeScript, und ein Server, dessen Typen niemand prüft,",
+    "wäre genau die Zierde, die der Absatz darüber meint. `worker.ts` und",
+    "`functions/` gehören dazu: sie sind der Einstiegspunkt bei Cloudflare",
+    "und rufen dasselbe `beantworte` auf.",
+    "",
+    "SEIT BÜNDEL 20 steht `**/*.mts` statt `*.mts`. Der Stern ohne die zwei",
+    "Sterne trifft nur die Wurzel — `oeffentlich/icons/erzeugen.mts` wäre",
+    "ungeprüft dagestanden, und niemand hätte es gemerkt: sie liefe ja. Das",
+    "ist die stille Sorte Fehler, gegen die dieser Absatz geschrieben ist.",
+    "`pruefungen/**/*.mts` ist damit überflüssig und bleibt trotzdem stehen",
+    "— der Grund dafür steht oben und soll nicht mit der Zeile verschwinden."
   ],
-  "include": ["src/**/*.ts", "pruefungen/**/*.mts"],
-  "exclude": ["node_modules", "quell", "server", "bauen.js"]
+  "include": ["src/**/*.ts", "pruefungen/**/*.mts", "**/*.mts",
+              "server/**/*.ts", "functions/**/*.ts", "worker.ts"],
+  "exclude": ["node_modules", "quell", "src/dienst"]
 }

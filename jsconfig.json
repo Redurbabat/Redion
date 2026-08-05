@@ -12,6 +12,6 @@
       "@bereiche/*": ["quell/bereiche/*"]
     }
   },
-  "include": ["quell/**/*.js", "server/**/*.js", "bauen.js", "worker.js"],
+  "include": ["quell/**/*.js"],
   "exclude": ["node_modules", "redion-einzeldatei.html"]
 }

@@ -2,5 +2,5 @@
   "name": "redion-server",
   "private": true,
   "type": "module",
-  "description": "Nur dieser eine Eintrag zaehlt: type=module. Die Dateien in server/ sind ESM (import/export), die Wurzel steht aber auf commonjs, weil bauen.js require() benutzt. Ohne diese Datei bricht 'npm run server' mit 'Cannot use import statement outside a module' ab, und kein Prueflauf kann pruefserver.js laden. Der Ordner bekommt damit seine eigene Modulart, ohne dass die Wurzel umgestellt werden muss."
+  "description": "Nur dieser eine Eintrag zaehlt: type=module. Die Dateien in server/ sind ESM (import/export), die Wurzel steht auf commonjs. Ohne diese Datei bricht 'npm run server' mit 'Cannot use import statement outside a module' ab, und kein Prueflauf kann pruefserver.ts laden. Der Ordner bekommt damit seine eigene Modulart, ohne dass die Wurzel umgestellt werden muss."
 }

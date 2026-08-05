@@ -53,7 +53,7 @@ ausgegebene Datei landet also unter demselben Pfad wie ihre Quelle, nur unter
 hier `kennungen.ts` → `ids.ts` (`ENTSCHEIDUNGEN.md` E27) —, müssen
 `index.html` und `sw.js` den neuen Pfad nennen. `test87` erzwingt das: es
 prüft, dass jede in `index.html` geladene Datei auch im `sw.js` steht.
-`bauen.js` liest `index.html` und zieht von selbst nach.
+`bauen.mts` liest `index.html` und zieht von selbst nach.
 
 Ein Bauschritt für den Entwickler, keiner für den Nutzer. Die App startet
 weiterhin per Doppelklick.
@@ -151,7 +151,7 @@ gehen. Dann lägen die Typdateien mit im Bauschritt und schrieben leere
 `.js`-Dateien nach `quell/`. Entweder Ordner einzeln aufzählen — so wie
 jetzt — oder `src/core/types/**` ausdrücklich ausschliessen.
 
-`quell/` (soweit nicht erzeugt), `server/`, `pruefungen/` und `bauen.js`
+`quell/` (soweit nicht erzeugt), `server/`, `pruefungen/` und `bauen.mts`
 sind vom Typecheck ausgeschlossen. Das ist kein Aufschieben:
 gewöhnliches JavaScript ohne Module mitzuprüfen ergäbe hunderte Meldungen
 über Dinge, die absichtlich so sind — und eine Liste, die niemand liest,
@@ -256,10 +256,10 @@ Geräten von Nutzern liegen. Also: erst nachsehen, dann tippen.
 npm run bauen:ts                  falls die Datei ausführbaren Code enthält
 npm run typecheck
 npm run pruefen -- --schnell
-node bauen.js
+node bauen.mts
 ```
 
-Alle vier. `bauen.js` ist nicht optional — die Einzeldatei ist ein
+Alle vier. `bauen.mts` ist nicht optional — die Einzeldatei ist ein
 Auslieferungsweg, und sie bricht anders als die App.
 
 **2. `any` ist erlaubt, aber nur an der Grenze.**

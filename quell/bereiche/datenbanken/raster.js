@@ -165,11 +165,14 @@ const DbRaster = (() => {
         const breiteVon = (k) => Math.max(handy ? 110 : SB_MIN, Number(view.breiten[k]) || (handy ? 170 : SB));
         let gewaehlt = { z: 0, s: 0 };
         let anker = { z: 0, s: 0 };
+        /* Die Ansicht sichern. Hier standen zwei Wege — `Store.saveView(view)`
+           und `Store.save('views', view)` —, und es gibt weder das eine noch das
+           andere: die Ablage kennt nur `updateView`. Beide Zweige waren tot, also
+           wurde beim Ändern einer Spaltenbreite nie etwas gespeichert; nach dem
+           Neuladen standen die alten Breiten wieder da. */
         const sichere = () => {
-            if (typeof Store !== 'undefined' && Store.saveView)
-                Store.saveView(view);
-            else if (typeof Store !== 'undefined' && Store.cache)
-                Store.save?.('views', view);
+            if (typeof Store !== 'undefined' && view && view.id)
+                Store.updateView(view.id, view);
         };
         /* --- Kopf ------------------------------------------------------------ */
         const kopf = document.createElement('div');

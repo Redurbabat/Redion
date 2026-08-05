@@ -5,11 +5,11 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "bauen": "node bauen.js",
+    "bauen": "node bauen.mts",
     "pruefen": "node pruefungen/alle.js",
     "typecheck": "tsc --noEmit",
-    "bauen:ts": "tsc -p tsconfig.bauen.json",
-    "server": "node server/pruefserver.js 8790",
+    "bauen:ts": "tsc -p tsconfig.bauen.json && tsc -p tsconfig.sw.json",
+    "server": "node server/pruefserver.ts 8790",
     "veroeffentlichen": "npx wrangler deploy"
   },
   "keywords": [

@@ -84,7 +84,7 @@ Mensch beim Durchklicken bemerkt hätte. Ein paar davon:
   Fassung-1-Ablage an und sieht nach, ob Seite, Text, Häkchen, Reihenfolge
   und Einstellung überleben. Für alle fünf Fassungen.
 - **Das Schema stand zweimal, unbewacht.** `server/schema.sql` legt die
-  Tabellen an, `server/ablage.js` trägt dieselben noch einmal als Zeichenkette
+  Tabellen an, `server/ablage.ts` trägt dieselben noch einmal als Zeichenkette
   — nötig, weil ein Cloudflare-Arbeiter keine Datei lesen kann. Die beiden
   waren identisch, aber nichts hielt sie so. Wer eine Spalte nur in
   `schema.sql` ergänzt, bekommt einen Server, der lokal läuft und in der Wolke

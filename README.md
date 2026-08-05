@@ -173,7 +173,7 @@ http://localhost:8790
 
 Variante 4: App bauen
 
-node bauen.js
+node bauen.mts
 
 Erzeugt oder aktualisiert:
 
@@ -273,7 +273,7 @@ Aktuelle Struktur:
 Redion/
 ├─ index.html
 ├─ redion-einzeldatei.html
-├─ bauen.js
+├─ bauen.mts
 ├─ package.json
 ├─ package-lock.json
 ├─ start.bat
@@ -1227,7 +1227,7 @@ node pruefungen/lauf/test87.mjs
 
 Einzeldatei bauen:
 
-node bauen.js
+node bauen.mts
 
 
 
@@ -1261,9 +1261,9 @@ Entwicklung
 Scripts
 
 {
-  "bauen": "node bauen.js",
+  "bauen": "node bauen.mts",
   "pruefen": "node pruefungen/alle.js",
-  "server": "node server/pruefserver.js 8790",
+  "server": "node server/pruefserver.ts 8790",
   "veroeffentlichen": "npx wrangler deploy"
 }
 
@@ -1271,7 +1271,7 @@ Lokaler Ablauf
 
 npm install
 npm run pruefen -- --schnell
-node bauen.js
+node bauen.mts
 
 
 

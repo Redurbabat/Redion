@@ -71,6 +71,14 @@ const erzeugt = new Set<string>(
   alles.filter(f => f.startsWith('src/') && f.endsWith('.ts') && !f.endsWith('.d.ts'))
        .map(f => 'quell/' + f.slice('src/'.length, -3) + '.js'));
 
+/* Eine Ausnahme, und nur diese eine: `src/dienst/sw.ts` wird nach `sw.js`
+   in der WURZEL geschrieben, nicht nach `quell/`. Ein Dienstarbeiter darf
+   nur den Bereich bedienen, in dem seine eigene Datei liegt — läge er unter
+   `quell/`, könnte er `index.html` nicht mehr beiseitelegen, und die App
+   startete ohne Netz nicht mehr. `tsconfig.sw.json` erledigt das, `test105`
+   prüft, dass die erzeugte Datei zu ihrer Quelle passt. */
+if (alles.includes('src/dienst/sw.ts')) erzeugt.add('sw.js');
+
 const vonHand = alles
   .filter(f => /\.(js|mjs|cjs)$/.test(f))
   .filter(f => !erzeugt.has(f))
@@ -224,6 +232,35 @@ p('tsconfig.json nimmt die .mts der Prüfläufe mit',
   /pruefungen\/\*\*\/\*\.mts/.test(tsconfig));
 p('… und schliesst sie nicht gleichzeitig aus',
   !/"exclude"[^\]]*"pruefungen"/.test(tsconfig));
+
+/* SEIT BÜNDEL 19 GILT DASSELBE FÜR server/. Der Ordner stand vorher in
+   `exclude`, weil er JavaScript war. Jetzt ist er TypeScript — und ein
+   Server, der Anmeldungen und Zugangsschlüssel behandelt und dessen Typen
+   niemand ansieht, wäre die stille Fassung des Fehlers: der Typecheck läuft
+   grün, prüft aber genau die Stelle nicht, an der ein Fehler etwas kostet.
+   Diese zwei Zeilen sind die Erinnerung daran. */
+p('tsconfig.json prüft den Server mit',
+  /server\/\*\*\/\*\.ts/.test(tsconfig));
+p('… und schliesst ihn nicht gleichzeitig aus',
+  !/"exclude"[^\]]*"server"/.test(tsconfig));
+
+/* `worker.ts` ist der Einstiegspunkt bei Cloudflare, `functions/` die Brücke
+   daneben. Beide rufen denselben Kern; fehlt eines von beiden hier, wird ein
+   Aufrufer ungeprüft, dessen Fehler erst im Betrieb auffällt. */
+p('… samt Einstiegspunkt und functions/',
+  /"worker\.ts"/.test(tsconfig) && /functions\/\*\*\/\*\.ts/.test(tsconfig));
+
+/* Der Server wird nicht gebaut: Node führt die .ts unmittelbar aus. Dafür
+   muss im Import die echte Endung stehen, und dafür braucht tsc diese
+   Einstellung. Ohne sie ist jeder Import im Server rot. */
+p('allowImportingTsExtensions steht an — sonst laufen die Server-Importe nicht',
+  /"allowImportingTsExtensions"\s*:\s*true/.test(tsconfig));
+
+/* Und in der bauenden Konfiguration steht sie auf false: sie verträgt sich
+   nicht mit `noEmit: false`, und dort wird wirklich etwas erzeugt. */
+const tsbauen = lies(dazu(WURZEL, 'tsconfig.bauen.json'), 'utf8');
+p('… und in tsconfig.bauen.json ausdrücklich aus',
+  /"allowImportingTsExtensions"\s*:\s*false/.test(tsbauen));
 
 /* @types/node ist die einzige Abhängigkeit, die dafür dazukam. Sie ist
    reine Typinformation: sie läuft nie, landet nie im Browser und steht

@@ -1,5 +1,11 @@
+"use strict";
 /* ============================================================================
  * register/formeln.js — jede Formelfunktion mit Namen und Bedeutung
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/register/formeln.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/register/formeln.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
  * ----------------------------------------------------------------------------
  * Die Formel-Maschine kennt ihre Funktionen — als Tabelle von Namen zu Code.
  * Was sie nicht kennt, ist, was sie **bedeuten**: welche Argumente, welche
@@ -16,307 +22,291 @@
  * findet niemand, eine Beschreibung ohne Funktion ist ein Versprechen, das
  * beim Tippen bricht.
  * ==========================================================================*/
-
 window.Register = window.Register || {};
-
 Register.formeln = (() => {
-
-  /* Gruppen in der Reihenfolge, in der sie im Editor stehen. */
-  const GRUPPEN = ['Text', 'Zahlen', 'Datum', 'Logik', 'Listen',
-                   'Zeilen', 'Fremde Datenbanken', 'Personen', 'Sonstiges'];
-
-  /* Nur die Funktionen, die über Notion hinausgehen oder Erklärung brauchen,
-     stehen hier ausgeschrieben. Alles andere holt sich das Register aus der
-     Maschine — eine Liste, die man doppelt pflegen muss, wird nicht gepflegt. */
-  const BESCHRIEBEN = [
-    { name: 'random',        gruppe: 'Zahlen', args: '()',
-      was: 'Zufallszahl zwischen 0 und 1', notion: false,
-      beispiel: 'round(random() * 6) + 1' },
-    { name: 'randomBetween', gruppe: 'Zahlen', args: '(a, b)',
-      was: 'Ganze Zufallszahl von a bis b', notion: false,
-      beispiel: 'randomBetween(1, 6)' },
-
-    { name: 'rowNumber',     gruppe: 'Zeilen', args: '()',
-      was: 'Die wievielte Zeile ist das in dieser Ansicht?', notion: false,
-      beispiel: 'rowNumber()' },
-    { name: 'previous',      gruppe: 'Zeilen', args: '(spalte)',
-      was: 'Derselbe Wert in der Zeile davor', notion: false,
-      beispiel: 'prop("Stand") - previous("Stand")' },
-    { name: 'next',          gruppe: 'Zeilen', args: '(spalte)',
-      was: 'Derselbe Wert in der Zeile danach', notion: false },
-    { name: 'runningSum',    gruppe: 'Zeilen', args: '(spalte)',
-      was: 'Laufende Summe bis hier — der Kontostand', notion: false,
-      beispiel: 'runningSum("Betrag")' },
-    { name: 'rank',          gruppe: 'Zeilen', args: '(spalte)',
-      was: 'Rang in der Bestenliste, grösster Wert = 1', notion: false },
-    { name: 'percentOfTotal',gruppe: 'Zeilen', args: '(spalte)',
-      was: 'Anteil am Gesamtwert der Ansicht', notion: false },
-    { name: 'delta',         gruppe: 'Zeilen', args: '(spalte)',
-      was: 'Unterschied zur Zeile davor', notion: false },
-
-    { name: 'countWhere',    gruppe: 'Fremde Datenbanken', args: '(db, bedingung)',
-      was: 'Zeilen einer anderen Datenbank zählen — ohne Verknüpfung', notion: false,
-      beispiel: 'countWhere("Rechnungen", current.prop("Kunde") == prop("Name"))' },
-    { name: 'sumWhere',      gruppe: 'Fremde Datenbanken', args: '(db, bedingung, wert)',
-      was: 'Werte einer anderen Datenbank summieren', notion: false },
-    { name: 'findRows',      gruppe: 'Fremde Datenbanken', args: '(db, bedingung)',
-      was: 'Zeilen einer anderen Datenbank als Liste holen', notion: false },
-
-    { name: 'businessDaysBetween', gruppe: 'Datum', args: '(a, b)',
-      was: 'Werktage zwischen zwei Daten — ohne Wochenende', notion: false },
-    { name: 'addBusinessDays',     gruppe: 'Datum', args: '(d, n)',
-      was: 'n Werktage dazuzählen', notion: false },
-    { name: 'convertTimezone',     gruppe: 'Datum', args: '(d, von, nach)',
-      was: 'Zeitzone umrechnen', notion: false },
-
-    { name: 'reduce',  gruppe: 'Listen', args: '(liste, start, ausdruck)',
-      was: 'Eine Liste zu einem Wert zusammenfalten', notion: false },
-    { name: 'groupBy', gruppe: 'Listen', args: '(liste, ausdruck)',
-      was: 'Eine Liste nach einem Schlüssel gruppieren', notion: false },
-    { name: 'sortBy',  gruppe: 'Listen', args: '(liste, ausdruck)',
-      was: 'Eine Liste nach einem Schlüssel sortieren', notion: false },
-
-    { name: 'xor',     gruppe: 'Logik', args: '(a, b)',
-      was: 'Entweder-oder, aber nicht beides', notion: false },
-    { name: 'boolean', gruppe: 'Logik', args: '(x)',
-      was: 'Irgendetwas in wahr/falsch verwandeln', notion: false }
-  ];
-
-  /* ==========================================================================
-   * DIE DEUTSCHEN EXCEL-NAMEN
-   * --------------------------------------------------------------------------
-   * Nachgemessen (`doku/EXCEL-IN-REDION-RECHERCHE.md`): 37 der 63 Funktionen
-   * des Excel-Startpakets liefen längst — aber keine unter ihrem deutschen
-   * Namen. Wer `SUMME(1; 2; 3)` tippte, bekam „Unbekannte Funktion".
-   *
-   * Die Namen selbst hängen in `formeln/laufzeit.js` an denselben Funktionen
-   * wie ihre englischen Geschwister. Hier stehen sie, damit die **Suche im
-   * Formeleditor** sie findet — sonst gäbe es sie und niemand entdeckte sie.
-   * Das ist derselbe Gedanke wie bei den 129 Funktionen ohne Beschreibung:
-   * eine Funktion, die niemand findet, ist fast wie nicht vorhanden.
-   *
-   * `notion: false` stimmt hier wörtlich — Notion kennt keine deutschen
-   * Funktionsnamen. Das ist einer der Punkte, an denen Redion mehr kann.
-   *
-   * MIN, MAX und ABS brauchen in `laufzeit.js` keinen Eintrag — sie heissen
-   * in beiden Sprachen gleich. Beschrieben werden sie hier trotzdem: sie
-   * standen bis dahin unbeschrieben unter „Sonstiges", und wer aus Excel
-   * kommt, sucht genau nach ihnen.
-   * ======================================================================== */
-  const DEUTSCH = [
-    /* --- Zahlen ---------------------------------------------------------- */
-    { name: 'SUMME',       gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
-      was: 'Alles zusammenzählen — wie in Excel', beispiel: 'SUMME(1; 2; 3)' },
-    { name: 'MIN',         gruppe: 'Zahlen', args: '(a; b; …)',   notion: true,
-      was: 'Der kleinste Wert', beispiel: 'MIN(3; 1; 2)' },
-    { name: 'MAX',         gruppe: 'Zahlen', args: '(a; b; …)',   notion: true,
-      was: 'Der grösste Wert', beispiel: 'MAX(3; 1; 2)' },
-    { name: 'ABS',         gruppe: 'Zahlen', args: '(zahl)',      notion: true,
-      was: 'Der Betrag — ohne Vorzeichen', beispiel: 'ABS(0 - 7)' },
-    { name: 'MITTELWERT',  gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
-      was: 'Der Durchschnitt der Werte', beispiel: 'MITTELWERT(2; 4; 6)' },
-    { name: 'WURZEL',      gruppe: 'Zahlen', args: '(zahl)',      notion: false,
-      was: 'Die Quadratwurzel', beispiel: 'WURZEL(16)' },
-    { name: 'REST',        gruppe: 'Zahlen', args: '(zahl; teiler)', notion: false,
-      was: 'Rest der Division — das Vorzeichen folgt dem Teiler',
-      beispiel: 'REST(-7; 3) → 2' },
-    { name: 'RUNDEN',      gruppe: 'Zahlen', args: '(zahl)',      notion: false,
-      was: 'Runden — die Hälfte von der Null weg, wie in Excel',
-      beispiel: 'RUNDEN(-2,5) → -3' },
-    /* ABRUNDEN und AUFRUNDEN runden zur Null hin und von der Null weg — wie
-       in Excel, nicht wie floor/ceil. Bei negativen Zahlen ist das ein
-       Unterschied: ABRUNDEN(-2,5) ist -2, floor(-2,5) ist -3. Wer immer nach
-       unten will, nimmt GANZZAHL. */
-    { name: 'ABRUNDEN',    gruppe: 'Zahlen', args: '(zahl)',      notion: false,
-      was: 'Zur Null hin runden', beispiel: 'ABRUNDEN(-2,5) → -2' },
-    { name: 'AUFRUNDEN',   gruppe: 'Zahlen', args: '(zahl)',      notion: false,
-      was: 'Von der Null weg runden', beispiel: 'AUFRUNDEN(-2,1) → -3' },
-    { name: 'GANZZAHL',    gruppe: 'Zahlen', args: '(zahl)',      notion: false,
-      was: 'Immer nach unten — auch bei negativen Zahlen',
-      beispiel: 'GANZZAHL(-2,5) → -3' },
-    { name: 'PRODUKT',     gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
-      was: 'Alles miteinander malnehmen', beispiel: 'PRODUKT(2; 3; 4)' },
-    { name: 'ANZAHL',      gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
-      was: 'Wie viele davon sind Zahlen?', beispiel: 'ANZAHL(1; "x"; 3) → 2' },
-    { name: 'ANZAHL2',     gruppe: 'Zahlen', args: '(a; b; …)',   notion: false,
-      was: 'Wie viele davon sind nicht leer?' },
-    { name: 'POTENZ',      gruppe: 'Zahlen', args: '(zahl; hoch)', notion: false,
-      was: 'Hoch rechnen', beispiel: 'POTENZ(2; 10) → 1024' },
-
-    /* --- Logik ----------------------------------------------------------- */
-    { name: 'WENN',        gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
-      was: 'Die Wenn-Dann-Sonst-Frage', beispiel: 'WENN(Betrag > 100; "gross"; "klein")' },
-    { name: 'WENNS',       gruppe: 'Logik', args: '(p1; w1; p2; w2; …)', notion: false,
-      was: 'Mehrere Fälle nacheinander prüfen' },
-    { name: 'UND',         gruppe: 'Logik', args: '(a; b; …)',    notion: false,
-      was: 'Wahr, wenn alles wahr ist' },
-    { name: 'ODER',        gruppe: 'Logik', args: '(a; b; …)',    notion: false,
-      was: 'Wahr, wenn mindestens eines wahr ist' },
-    { name: 'NICHT',       gruppe: 'Logik', args: '(a)',          notion: false,
-      was: 'Dreht wahr und falsch um' },
-
-    /* --- Datum ----------------------------------------------------------- */
-    { name: 'HEUTE',         gruppe: 'Datum', args: '()',         notion: false,
-      was: 'Das heutige Datum' },
-    { name: 'JETZT',         gruppe: 'Datum', args: '()',         notion: false,
-      was: 'Datum und Uhrzeit gerade eben' },
-    { name: 'DATUM',         gruppe: 'Datum', args: '(jahr; monat; tag)', notion: false,
-      was: 'Aus Jahr, Monat und Tag ein Datum bauen',
-      beispiel: 'DATUM(2026; 8; 4)' },
-    { name: 'JAHR',          gruppe: 'Datum', args: '(datum)',    notion: false,
-      was: 'Die Jahreszahl' },
-    { name: 'MONAT',         gruppe: 'Datum', args: '(datum)',    notion: false,
-      was: 'Die Monatszahl' },
-    { name: 'TAG',           gruppe: 'Datum', args: '(datum)',    notion: false,
-      was: 'Der Tag im Monat — nicht der Wochentag, dafür gibt es WOCHENTAG',
-      beispiel: 'TAG("2026-08-04") → 4' },
-    { name: 'KALENDERWOCHE', gruppe: 'Datum', args: '(datum)',    notion: false,
-      was: 'Die Kalenderwoche' },
-    { name: 'ZEIT',          gruppe: 'Datum', args: '(std; min; sek)', notion: false,
-      was: 'Eine Uhrzeit bauen', beispiel: 'ZEIT(9; 30; 0) → 09:30:00' },
-    { name: 'WOCHENTAG',     gruppe: 'Datum', args: '(datum)',    notion: false,
-      was: 'Der Wochentag als Zahl — Sonntag ist 1, wie in Excel',
-      beispiel: 'WOCHENTAG("2026-08-04") → 3 (Dienstag)' },
-
-    /* --- Text ------------------------------------------------------------ */
-    { name: 'LÄNGE',         gruppe: 'Text', args: '(text)',      notion: false,
-      was: 'Wie viele Zeichen?' },
-    { name: 'LINKS',         gruppe: 'Text', args: '(text; anzahl)', notion: false,
-      was: 'Die ersten Zeichen', beispiel: 'LINKS("Redion"; 3) → Red' },
-    { name: 'RECHTS',        gruppe: 'Text', args: '(text; anzahl)', notion: false,
-      was: 'Die letzten Zeichen', beispiel: 'RECHTS("Redion"; 3) → ion' },
-    { name: 'SÄUBERN',       gruppe: 'Text', args: '(text)',      notion: false,
-      was: 'Steuerzeichen entfernen — das, was man nicht sieht' },
-    { name: 'SUCHEN',        gruppe: 'Text', args: '(was; worin)', notion: false,
-      was: 'An welcher Stelle steht es? Gross und Klein egal. 0 = nicht da',
-      beispiel: 'SUCHEN("di"; "Redion") → 3' },
-    { name: 'FINDEN',        gruppe: 'Text', args: '(was; worin)', notion: false,
-      was: 'Wie SUCHEN, aber Gross und Klein zählen' },
-    { name: 'TEIL',          gruppe: 'Text', args: '(text; ab; anzahl)', notion: false,
-      was: 'Ein Stück herausschneiden — ab Zeichen n, so viele Zeichen',
-      beispiel: 'TEIL("Redion"; 2; 3) → edi' },
-    { name: 'GLÄTTEN',       gruppe: 'Text', args: '(text)',      notion: false,
-      was: 'Leerzeichen vorn und hinten weg' },
-    { name: 'GROSS',         gruppe: 'Text', args: '(text)',      notion: false,
-      was: 'Alles in Grossbuchstaben' },
-    { name: 'KLEIN',         gruppe: 'Text', args: '(text)',      notion: false,
-      was: 'Alles in Kleinbuchstaben' },
-    { name: 'WECHSELN',      gruppe: 'Text', args: '(text; alt; neu)', notion: false,
-      was: 'Jedes Vorkommen ersetzen — der Suchtext gilt wörtlich',
-      beispiel: 'WECHSELN("a.b.c"; "."; "-") → a-b-c' },
-    { name: 'ERSETZEN',      gruppe: 'Text', args: '(text; ab; anzahl; neu)', notion: false,
-      was: 'Nach Stelle und Anzahl ersetzen',
-      beispiel: 'ERSETZEN("Redion"; 1; 3; "XX") → XXion' },
-    { name: 'TEXT',          gruppe: 'Text', args: '(wert; muster)', notion: false,
-      was: 'Eine Zahl mit Muster darstellen — 0.00, #,##0, 0%',
-      beispiel: 'TEXT(1234,5; "0.00") → 1234.50' },
-    { name: 'WERT',          gruppe: 'Text', args: '(text)',      notion: false,
-      was: 'Aus Text eine Zahl machen', beispiel: 'WERT("42") + 1' },
-    { name: 'TEXTKETTE',     gruppe: 'Text', args: '(a; b; …)',   notion: false,
-      was: 'Texte aneinanderhängen — concat() ist für Listen, nicht dafür',
-      beispiel: 'TEXTKETTE("a"; "b") → ab' },
-    { name: 'TEXTVERKETTEN', gruppe: 'Text', args: '(trenner; a; b; …)', notion: false,
-      was: 'Mit einem Trenner verbinden — der Trenner steht vorn, wie in Excel',
-      beispiel: 'TEXTVERKETTEN("-"; "a"; "b") → a-b' },
-
-    /* --- Information ----------------------------------------------------- */
-    { name: 'ISTLEER',   gruppe: 'Logik', args: '(wert)',         notion: false,
-      was: 'Ist da nichts drin?' },
-    { name: 'ISTZAHL',   gruppe: 'Logik', args: '(wert)',         notion: false,
-      was: 'Ist das wirklich eine Zahl? „42" als Text ist keine' },
-    { name: 'ISTTEXT',   gruppe: 'Logik', args: '(wert)',         notion: false,
-      was: 'Ist das Text?' },
-
-    /* --- Suchen und Verweisen -------------------------------------------- */
-    { name: 'VERGLEICH', gruppe: 'Listen', args: '(wert; liste)', notion: false,
-      was: 'An welcher Stelle steht der Wert? Ab 1 gezählt, 0 = nicht da',
-      beispiel: 'VERGLEICH("Genf"; ["Bern"; "Genf"]) → 2' },
-    { name: 'ZÄHLENWENN',  gruppe: 'Listen', args: '(liste; bedingung)', notion: false,
-      was: 'Zählen, was passt — Bedingung wie in Excel: ">100", "Z*"',
-      beispiel: 'ZÄHLENWENN(Betrag; ">100")' },
-    { name: 'ZÄHLENWENNS', gruppe: 'Listen', args: '(l1; b1; l2; b2; …)', notion: false,
-      was: 'Zählen, wo alle Bedingungen passen' },
-    { name: 'SUMMEWENN',   gruppe: 'Listen', args: '(liste; bedingung; summenliste)', notion: false,
-      was: 'Summieren, was passt — ohne dritte Liste wird die geprüfte summiert',
-      beispiel: 'SUMMEWENN(Ort; "Bern"; Betrag)' },
-    { name: 'SUMMEWENNS',  gruppe: 'Listen', args: '(summenliste; l1; b1; …)', notion: false,
-      was: 'Summieren, wo alle Bedingungen passen — Summenliste zuerst' },
-    { name: 'MITTELWERTWENN',  gruppe: 'Listen', args: '(liste; bedingung; werteliste)', notion: false,
-      was: 'Durchschnitt dessen, was passt — ohne Treffer 0' },
-    { name: 'MITTELWERTWENNS', gruppe: 'Listen', args: '(werteliste; l1; b1; …)', notion: false,
-      was: 'Durchschnitt, wo alle Bedingungen passen' },
-    { name: 'SVERWEIS',  gruppe: 'Listen', args: '(wert; matrix; spalte)', notion: false,
-      was: 'In der ersten Spalte suchen, aus einer anderen holen',
-      beispiel: 'SVERWEIS("A2"; Artikel; 2)' },
-    { name: 'WVERWEIS',  gruppe: 'Listen', args: '(wert; matrix; zeile)', notion: false,
-      was: 'Wie SVERWEIS, aber quer: in der ersten Zeile suchen' },
-    { name: 'XVERWEIS',  gruppe: 'Listen', args: '(wert; suchliste; ergebnisliste; sonst)', notion: false,
-      was: 'Zwei getrennte Listen — kein Zählen von Spalten mehr',
-      beispiel: 'XVERWEIS("Genf"; Orte; Betraege; "unbekannt")' },
-    { name: 'INDEX',     gruppe: 'Listen', args: '(matrix; zeile; spalte)', notion: false,
-      was: 'Die Zelle an dieser Stelle — ab 1 gezählt' },
-    { name: 'FILTER',    gruppe: 'Listen', args: '(liste; bedingung)', notion: false,
-      was: 'Nur die Einträge, die passen', beispiel: 'FILTER(Betrag; current > 100)' },
-    { name: 'SORTIEREN', gruppe: 'Listen', args: '(liste)',       notion: false,
-      was: 'Eine Liste sortieren' },
-    { name: 'EINDEUTIG', gruppe: 'Listen', args: '(liste)',       notion: false,
-      was: 'Doppelte Werte entfernen' }
-  ];
-
-  const LISTE = BESCHRIEBEN.concat(DEUTSCH);
-
-  const melde = (eintrag) => {
-    if (!eintrag || !eintrag.name) return false;
-    if (LISTE.some(x => x.name === eintrag.name)) return false;
-    LISTE.push(eintrag);
-    return true;
-  };
-
-  /** Welche Namen kennt die Maschine wirklich? */
-  const ausDerMaschine = () => {
-    try {
-      if (typeof Formula === 'undefined' || !Formula.namen) return [];
-      return Formula.namen();
-    } catch { return []; }
-  };
-
-  /**
-   * Alle Funktionen — beschriebene zuerst, dann alles Weitere aus der
-   * Maschine mit dem, was bekannt ist.
-   */
-  const alle = () => {
-    const beschrieben = new Set(LISTE.map(x => x.name.toLowerCase()));
-    const rest = ausDerMaschine()
-      .filter(n => !beschrieben.has(String(n).toLowerCase()))
-      .map(n => ({ name: n, gruppe: 'Sonstiges', args: '(…)', was: '', notion: true }));
-    return [...LISTE, ...rest];
-  };
-
-  const eines = (name) => alle().find(x => x.name.toLowerCase() === String(name).toLowerCase()) || null;
-  const inGruppe = (g) => alle().filter(x => x.gruppe === g);
-
-  /** Was ausserhalb von Notion geht — das ist die Liste, die zählt. */
-  const ueberNotionHinaus = () => alle().filter(x => x.notion === false);
-
-  const suche = (text) => {
-    const t = String(text || '').toLowerCase();
-    if (!t) return alle();
-    return alle().filter(x => x.name.toLowerCase().startsWith(t) ||
-                              (x.was || '').toLowerCase().includes(t));
-  };
-
-  /**
-   * Der Vergleich, der beide Listen ehrlich hält.
-   * @returns {{ohneBeschreibung:Array, ohneFunktion:Array}}
-   */
-  const abgleich = () => {
-    const inMaschine = new Set(ausDerMaschine().map(n => String(n).toLowerCase()));
-    return {
-      ohneBeschreibung: [...inMaschine].filter(n => !LISTE.some(x => x.name.toLowerCase() === n)),
-      ohneFunktion: LISTE.map(x => x.name).filter(n => !inMaschine.has(n.toLowerCase()))
+    /* Gruppen in der Reihenfolge, in der sie im Editor stehen. */
+    const GRUPPEN = ['Text', 'Zahlen', 'Datum', 'Logik', 'Listen',
+        'Zeilen', 'Fremde Datenbanken', 'Personen', 'Sonstiges'];
+    /* Nur die Funktionen, die über Notion hinausgehen oder Erklärung brauchen,
+       stehen hier ausgeschrieben. Alles andere holt sich das Register aus der
+       Maschine — eine Liste, die man doppelt pflegen muss, wird nicht gepflegt. */
+    const BESCHRIEBEN = [
+        { name: 'random', gruppe: 'Zahlen', args: '()',
+            was: 'Zufallszahl zwischen 0 und 1', notion: false,
+            beispiel: 'round(random() * 6) + 1' },
+        { name: 'randomBetween', gruppe: 'Zahlen', args: '(a, b)',
+            was: 'Ganze Zufallszahl von a bis b', notion: false,
+            beispiel: 'randomBetween(1, 6)' },
+        { name: 'rowNumber', gruppe: 'Zeilen', args: '()',
+            was: 'Die wievielte Zeile ist das in dieser Ansicht?', notion: false,
+            beispiel: 'rowNumber()' },
+        { name: 'previous', gruppe: 'Zeilen', args: '(spalte)',
+            was: 'Derselbe Wert in der Zeile davor', notion: false,
+            beispiel: 'prop("Stand") - previous("Stand")' },
+        { name: 'next', gruppe: 'Zeilen', args: '(spalte)',
+            was: 'Derselbe Wert in der Zeile danach', notion: false },
+        { name: 'runningSum', gruppe: 'Zeilen', args: '(spalte)',
+            was: 'Laufende Summe bis hier — der Kontostand', notion: false,
+            beispiel: 'runningSum("Betrag")' },
+        { name: 'rank', gruppe: 'Zeilen', args: '(spalte)',
+            was: 'Rang in der Bestenliste, grösster Wert = 1', notion: false },
+        { name: 'percentOfTotal', gruppe: 'Zeilen', args: '(spalte)',
+            was: 'Anteil am Gesamtwert der Ansicht', notion: false },
+        { name: 'delta', gruppe: 'Zeilen', args: '(spalte)',
+            was: 'Unterschied zur Zeile davor', notion: false },
+        { name: 'countWhere', gruppe: 'Fremde Datenbanken', args: '(db, bedingung)',
+            was: 'Zeilen einer anderen Datenbank zählen — ohne Verknüpfung', notion: false,
+            beispiel: 'countWhere("Rechnungen", current.prop("Kunde") == prop("Name"))' },
+        { name: 'sumWhere', gruppe: 'Fremde Datenbanken', args: '(db, bedingung, wert)',
+            was: 'Werte einer anderen Datenbank summieren', notion: false },
+        { name: 'findRows', gruppe: 'Fremde Datenbanken', args: '(db, bedingung)',
+            was: 'Zeilen einer anderen Datenbank als Liste holen', notion: false },
+        { name: 'businessDaysBetween', gruppe: 'Datum', args: '(a, b)',
+            was: 'Werktage zwischen zwei Daten — ohne Wochenende', notion: false },
+        { name: 'addBusinessDays', gruppe: 'Datum', args: '(d, n)',
+            was: 'n Werktage dazuzählen', notion: false },
+        { name: 'convertTimezone', gruppe: 'Datum', args: '(d, von, nach)',
+            was: 'Zeitzone umrechnen', notion: false },
+        { name: 'reduce', gruppe: 'Listen', args: '(liste, start, ausdruck)',
+            was: 'Eine Liste zu einem Wert zusammenfalten', notion: false },
+        { name: 'groupBy', gruppe: 'Listen', args: '(liste, ausdruck)',
+            was: 'Eine Liste nach einem Schlüssel gruppieren', notion: false },
+        { name: 'sortBy', gruppe: 'Listen', args: '(liste, ausdruck)',
+            was: 'Eine Liste nach einem Schlüssel sortieren', notion: false },
+        { name: 'xor', gruppe: 'Logik', args: '(a, b)',
+            was: 'Entweder-oder, aber nicht beides', notion: false },
+        { name: 'boolean', gruppe: 'Logik', args: '(x)',
+            was: 'Irgendetwas in wahr/falsch verwandeln', notion: false }
+    ];
+    /* ==========================================================================
+     * DIE DEUTSCHEN EXCEL-NAMEN
+     * --------------------------------------------------------------------------
+     * Nachgemessen (`doku/EXCEL-IN-REDION-RECHERCHE.md`): 37 der 63 Funktionen
+     * des Excel-Startpakets liefen längst — aber keine unter ihrem deutschen
+     * Namen. Wer `SUMME(1; 2; 3)` tippte, bekam „Unbekannte Funktion".
+     *
+     * Die Namen selbst hängen in `formeln/laufzeit.js` an denselben Funktionen
+     * wie ihre englischen Geschwister. Hier stehen sie, damit die **Suche im
+     * Formeleditor** sie findet — sonst gäbe es sie und niemand entdeckte sie.
+     * Das ist derselbe Gedanke wie bei den 129 Funktionen ohne Beschreibung:
+     * eine Funktion, die niemand findet, ist fast wie nicht vorhanden.
+     *
+     * `notion: false` stimmt hier wörtlich — Notion kennt keine deutschen
+     * Funktionsnamen. Das ist einer der Punkte, an denen Redion mehr kann.
+     *
+     * MIN, MAX und ABS brauchen in `laufzeit.js` keinen Eintrag — sie heissen
+     * in beiden Sprachen gleich. Beschrieben werden sie hier trotzdem: sie
+     * standen bis dahin unbeschrieben unter „Sonstiges", und wer aus Excel
+     * kommt, sucht genau nach ihnen.
+     * ======================================================================== */
+    const DEUTSCH = [
+        /* --- Zahlen ---------------------------------------------------------- */
+        { name: 'SUMME', gruppe: 'Zahlen', args: '(a; b; …)', notion: false,
+            was: 'Alles zusammenzählen — wie in Excel', beispiel: 'SUMME(1; 2; 3)' },
+        { name: 'MIN', gruppe: 'Zahlen', args: '(a; b; …)', notion: true,
+            was: 'Der kleinste Wert', beispiel: 'MIN(3; 1; 2)' },
+        { name: 'MAX', gruppe: 'Zahlen', args: '(a; b; …)', notion: true,
+            was: 'Der grösste Wert', beispiel: 'MAX(3; 1; 2)' },
+        { name: 'ABS', gruppe: 'Zahlen', args: '(zahl)', notion: true,
+            was: 'Der Betrag — ohne Vorzeichen', beispiel: 'ABS(0 - 7)' },
+        { name: 'MITTELWERT', gruppe: 'Zahlen', args: '(a; b; …)', notion: false,
+            was: 'Der Durchschnitt der Werte', beispiel: 'MITTELWERT(2; 4; 6)' },
+        { name: 'WURZEL', gruppe: 'Zahlen', args: '(zahl)', notion: false,
+            was: 'Die Quadratwurzel', beispiel: 'WURZEL(16)' },
+        { name: 'REST', gruppe: 'Zahlen', args: '(zahl; teiler)', notion: false,
+            was: 'Rest der Division — das Vorzeichen folgt dem Teiler',
+            beispiel: 'REST(-7; 3) → 2' },
+        { name: 'RUNDEN', gruppe: 'Zahlen', args: '(zahl)', notion: false,
+            was: 'Runden — die Hälfte von der Null weg, wie in Excel',
+            beispiel: 'RUNDEN(-2,5) → -3' },
+        /* ABRUNDEN und AUFRUNDEN runden zur Null hin und von der Null weg — wie
+           in Excel, nicht wie floor/ceil. Bei negativen Zahlen ist das ein
+           Unterschied: ABRUNDEN(-2,5) ist -2, floor(-2,5) ist -3. Wer immer nach
+           unten will, nimmt GANZZAHL. */
+        { name: 'ABRUNDEN', gruppe: 'Zahlen', args: '(zahl)', notion: false,
+            was: 'Zur Null hin runden', beispiel: 'ABRUNDEN(-2,5) → -2' },
+        { name: 'AUFRUNDEN', gruppe: 'Zahlen', args: '(zahl)', notion: false,
+            was: 'Von der Null weg runden', beispiel: 'AUFRUNDEN(-2,1) → -3' },
+        { name: 'GANZZAHL', gruppe: 'Zahlen', args: '(zahl)', notion: false,
+            was: 'Immer nach unten — auch bei negativen Zahlen',
+            beispiel: 'GANZZAHL(-2,5) → -3' },
+        { name: 'PRODUKT', gruppe: 'Zahlen', args: '(a; b; …)', notion: false,
+            was: 'Alles miteinander malnehmen', beispiel: 'PRODUKT(2; 3; 4)' },
+        { name: 'ANZAHL', gruppe: 'Zahlen', args: '(a; b; …)', notion: false,
+            was: 'Wie viele davon sind Zahlen?', beispiel: 'ANZAHL(1; "x"; 3) → 2' },
+        { name: 'ANZAHL2', gruppe: 'Zahlen', args: '(a; b; …)', notion: false,
+            was: 'Wie viele davon sind nicht leer?' },
+        { name: 'POTENZ', gruppe: 'Zahlen', args: '(zahl; hoch)', notion: false,
+            was: 'Hoch rechnen', beispiel: 'POTENZ(2; 10) → 1024' },
+        /* --- Logik ----------------------------------------------------------- */
+        { name: 'WENN', gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
+            was: 'Die Wenn-Dann-Sonst-Frage', beispiel: 'WENN(Betrag > 100; "gross"; "klein")' },
+        { name: 'WENNS', gruppe: 'Logik', args: '(p1; w1; p2; w2; …)', notion: false,
+            was: 'Mehrere Fälle nacheinander prüfen' },
+        { name: 'UND', gruppe: 'Logik', args: '(a; b; …)', notion: false,
+            was: 'Wahr, wenn alles wahr ist' },
+        { name: 'ODER', gruppe: 'Logik', args: '(a; b; …)', notion: false,
+            was: 'Wahr, wenn mindestens eines wahr ist' },
+        { name: 'NICHT', gruppe: 'Logik', args: '(a)', notion: false,
+            was: 'Dreht wahr und falsch um' },
+        /* --- Datum ----------------------------------------------------------- */
+        { name: 'HEUTE', gruppe: 'Datum', args: '()', notion: false,
+            was: 'Das heutige Datum' },
+        { name: 'JETZT', gruppe: 'Datum', args: '()', notion: false,
+            was: 'Datum und Uhrzeit gerade eben' },
+        { name: 'DATUM', gruppe: 'Datum', args: '(jahr; monat; tag)', notion: false,
+            was: 'Aus Jahr, Monat und Tag ein Datum bauen',
+            beispiel: 'DATUM(2026; 8; 4)' },
+        { name: 'JAHR', gruppe: 'Datum', args: '(datum)', notion: false,
+            was: 'Die Jahreszahl' },
+        { name: 'MONAT', gruppe: 'Datum', args: '(datum)', notion: false,
+            was: 'Die Monatszahl' },
+        { name: 'TAG', gruppe: 'Datum', args: '(datum)', notion: false,
+            was: 'Der Tag im Monat — nicht der Wochentag, dafür gibt es WOCHENTAG',
+            beispiel: 'TAG("2026-08-04") → 4' },
+        { name: 'KALENDERWOCHE', gruppe: 'Datum', args: '(datum)', notion: false,
+            was: 'Die Kalenderwoche' },
+        { name: 'ZEIT', gruppe: 'Datum', args: '(std; min; sek)', notion: false,
+            was: 'Eine Uhrzeit bauen', beispiel: 'ZEIT(9; 30; 0) → 09:30:00' },
+        { name: 'WOCHENTAG', gruppe: 'Datum', args: '(datum)', notion: false,
+            was: 'Der Wochentag als Zahl — Sonntag ist 1, wie in Excel',
+            beispiel: 'WOCHENTAG("2026-08-04") → 3 (Dienstag)' },
+        /* --- Text ------------------------------------------------------------ */
+        { name: 'LÄNGE', gruppe: 'Text', args: '(text)', notion: false,
+            was: 'Wie viele Zeichen?' },
+        { name: 'LINKS', gruppe: 'Text', args: '(text; anzahl)', notion: false,
+            was: 'Die ersten Zeichen', beispiel: 'LINKS("Redion"; 3) → Red' },
+        { name: 'RECHTS', gruppe: 'Text', args: '(text; anzahl)', notion: false,
+            was: 'Die letzten Zeichen', beispiel: 'RECHTS("Redion"; 3) → ion' },
+        { name: 'SÄUBERN', gruppe: 'Text', args: '(text)', notion: false,
+            was: 'Steuerzeichen entfernen — das, was man nicht sieht' },
+        { name: 'SUCHEN', gruppe: 'Text', args: '(was; worin)', notion: false,
+            was: 'An welcher Stelle steht es? Gross und Klein egal. 0 = nicht da',
+            beispiel: 'SUCHEN("di"; "Redion") → 3' },
+        { name: 'FINDEN', gruppe: 'Text', args: '(was; worin)', notion: false,
+            was: 'Wie SUCHEN, aber Gross und Klein zählen' },
+        { name: 'TEIL', gruppe: 'Text', args: '(text; ab; anzahl)', notion: false,
+            was: 'Ein Stück herausschneiden — ab Zeichen n, so viele Zeichen',
+            beispiel: 'TEIL("Redion"; 2; 3) → edi' },
+        { name: 'GLÄTTEN', gruppe: 'Text', args: '(text)', notion: false,
+            was: 'Leerzeichen vorn und hinten weg' },
+        { name: 'GROSS', gruppe: 'Text', args: '(text)', notion: false,
+            was: 'Alles in Grossbuchstaben' },
+        { name: 'KLEIN', gruppe: 'Text', args: '(text)', notion: false,
+            was: 'Alles in Kleinbuchstaben' },
+        { name: 'WECHSELN', gruppe: 'Text', args: '(text; alt; neu)', notion: false,
+            was: 'Jedes Vorkommen ersetzen — der Suchtext gilt wörtlich',
+            beispiel: 'WECHSELN("a.b.c"; "."; "-") → a-b-c' },
+        { name: 'ERSETZEN', gruppe: 'Text', args: '(text; ab; anzahl; neu)', notion: false,
+            was: 'Nach Stelle und Anzahl ersetzen',
+            beispiel: 'ERSETZEN("Redion"; 1; 3; "XX") → XXion' },
+        { name: 'TEXT', gruppe: 'Text', args: '(wert; muster)', notion: false,
+            was: 'Eine Zahl mit Muster darstellen — 0.00, #,##0, 0%',
+            beispiel: 'TEXT(1234,5; "0.00") → 1234.50' },
+        { name: 'WERT', gruppe: 'Text', args: '(text)', notion: false,
+            was: 'Aus Text eine Zahl machen', beispiel: 'WERT("42") + 1' },
+        { name: 'TEXTKETTE', gruppe: 'Text', args: '(a; b; …)', notion: false,
+            was: 'Texte aneinanderhängen — concat() ist für Listen, nicht dafür',
+            beispiel: 'TEXTKETTE("a"; "b") → ab' },
+        { name: 'TEXTVERKETTEN', gruppe: 'Text', args: '(trenner; a; b; …)', notion: false,
+            was: 'Mit einem Trenner verbinden — der Trenner steht vorn, wie in Excel',
+            beispiel: 'TEXTVERKETTEN("-"; "a"; "b") → a-b' },
+        /* --- Information ----------------------------------------------------- */
+        { name: 'ISTLEER', gruppe: 'Logik', args: '(wert)', notion: false,
+            was: 'Ist da nichts drin?' },
+        { name: 'ISTZAHL', gruppe: 'Logik', args: '(wert)', notion: false,
+            was: 'Ist das wirklich eine Zahl? „42" als Text ist keine' },
+        { name: 'ISTTEXT', gruppe: 'Logik', args: '(wert)', notion: false,
+            was: 'Ist das Text?' },
+        /* --- Suchen und Verweisen -------------------------------------------- */
+        { name: 'VERGLEICH', gruppe: 'Listen', args: '(wert; liste)', notion: false,
+            was: 'An welcher Stelle steht der Wert? Ab 1 gezählt, 0 = nicht da',
+            beispiel: 'VERGLEICH("Genf"; ["Bern"; "Genf"]) → 2' },
+        { name: 'ZÄHLENWENN', gruppe: 'Listen', args: '(liste; bedingung)', notion: false,
+            was: 'Zählen, was passt — Bedingung wie in Excel: ">100", "Z*"',
+            beispiel: 'ZÄHLENWENN(Betrag; ">100")' },
+        { name: 'ZÄHLENWENNS', gruppe: 'Listen', args: '(l1; b1; l2; b2; …)', notion: false,
+            was: 'Zählen, wo alle Bedingungen passen' },
+        { name: 'SUMMEWENN', gruppe: 'Listen', args: '(liste; bedingung; summenliste)', notion: false,
+            was: 'Summieren, was passt — ohne dritte Liste wird die geprüfte summiert',
+            beispiel: 'SUMMEWENN(Ort; "Bern"; Betrag)' },
+        { name: 'SUMMEWENNS', gruppe: 'Listen', args: '(summenliste; l1; b1; …)', notion: false,
+            was: 'Summieren, wo alle Bedingungen passen — Summenliste zuerst' },
+        { name: 'MITTELWERTWENN', gruppe: 'Listen', args: '(liste; bedingung; werteliste)', notion: false,
+            was: 'Durchschnitt dessen, was passt — ohne Treffer 0' },
+        { name: 'MITTELWERTWENNS', gruppe: 'Listen', args: '(werteliste; l1; b1; …)', notion: false,
+            was: 'Durchschnitt, wo alle Bedingungen passen' },
+        { name: 'SVERWEIS', gruppe: 'Listen', args: '(wert; matrix; spalte)', notion: false,
+            was: 'In der ersten Spalte suchen, aus einer anderen holen',
+            beispiel: 'SVERWEIS("A2"; Artikel; 2)' },
+        { name: 'WVERWEIS', gruppe: 'Listen', args: '(wert; matrix; zeile)', notion: false,
+            was: 'Wie SVERWEIS, aber quer: in der ersten Zeile suchen' },
+        { name: 'XVERWEIS', gruppe: 'Listen', args: '(wert; suchliste; ergebnisliste; sonst)', notion: false,
+            was: 'Zwei getrennte Listen — kein Zählen von Spalten mehr',
+            beispiel: 'XVERWEIS("Genf"; Orte; Betraege; "unbekannt")' },
+        { name: 'INDEX', gruppe: 'Listen', args: '(matrix; zeile; spalte)', notion: false,
+            was: 'Die Zelle an dieser Stelle — ab 1 gezählt' },
+        { name: 'FILTER', gruppe: 'Listen', args: '(liste; bedingung)', notion: false,
+            was: 'Nur die Einträge, die passen', beispiel: 'FILTER(Betrag; current > 100)' },
+        { name: 'SORTIEREN', gruppe: 'Listen', args: '(liste)', notion: false,
+            was: 'Eine Liste sortieren' },
+        { name: 'EINDEUTIG', gruppe: 'Listen', args: '(liste)', notion: false,
+            was: 'Doppelte Werte entfernen' }
+    ];
+    const LISTE = BESCHRIEBEN.concat(DEUTSCH);
+    const melde = (eintrag) => {
+        const e = eintrag;
+        if (!e || !e.name)
+            return false;
+        if (LISTE.some(x => x.name === e.name))
+            return false;
+        LISTE.push(e);
+        return true;
     };
-  };
-
-  return { GRUPPEN, alle, eines, inGruppe, ueberNotionHinaus, suche, abgleich, melde,
-           anzahl: () => alle().length };
+    /** Welche Namen kennt die Maschine wirklich? */
+    const ausDerMaschine = () => {
+        try {
+            if (typeof Formula === 'undefined' || !Formula.namen)
+                return [];
+            return Formula.namen();
+        }
+        catch {
+            return [];
+        }
+    };
+    /**
+     * Alle Funktionen — beschriebene zuerst, dann alles Weitere aus der
+     * Maschine mit dem, was bekannt ist.
+     */
+    const alle = () => {
+        const beschrieben = new Set(LISTE.map(x => x.name.toLowerCase()));
+        const rest = ausDerMaschine()
+            .filter((n) => !beschrieben.has(String(n).toLowerCase()))
+            .map((n) => ({ name: n, gruppe: 'Sonstiges', args: '(…)', was: '', notion: true }));
+        return [...LISTE, ...rest];
+    };
+    const eines = (name) => alle().find(x => x.name.toLowerCase() === String(name).toLowerCase()) || null;
+    const inGruppe = (g) => alle().filter(x => x.gruppe === g);
+    /** Was ausserhalb von Notion geht — das ist die Liste, die zählt. */
+    const ueberNotionHinaus = () => alle().filter(x => x.notion === false);
+    const suche = (text) => {
+        const t = String(text || '').toLowerCase();
+        if (!t)
+            return alle();
+        return alle().filter(x => x.name.toLowerCase().startsWith(t) ||
+            (x.was || '').toLowerCase().includes(t));
+    };
+    /**
+     * Der Vergleich, der beide Listen ehrlich hält.
+     * @returns {{ohneBeschreibung:Array, ohneFunktion:Array}}
+     */
+    const abgleich = () => {
+        const inMaschine = new Set(ausDerMaschine().map((n) => String(n).toLowerCase()));
+        return {
+            ohneBeschreibung: [...inMaschine].filter(n => !LISTE.some(x => x.name.toLowerCase() === n)),
+            ohneFunktion: LISTE.map(x => x.name).filter(n => !inMaschine.has(n.toLowerCase()))
+        };
+    };
+    return { GRUPPEN, alle, eines, inGruppe, ueberNotionHinaus, suche, abgleich, melde,
+        anzahl: () => alle().length };
 })();

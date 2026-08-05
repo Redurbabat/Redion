@@ -212,7 +212,7 @@ grün. Genau so sind die vier erfundenen Feldnamen entstanden.
 ## Phase 6 · Erste sichere Migrationen · ◐ **begonnen**
 
 Nur kleine, DOM-freie Helfer. **Nicht zuerst:** `editor.js` ·
-`steuerung.js` · `indexdb.js` · `bauen.js` · `server/kern.js`.
+`steuerung.js` · `indexdb.js` · `bauen.mts` · `server/kern.ts`.
 
 ### ~~6a — Kennungen~~ · erledigt
 
@@ -365,7 +365,7 @@ Sicherheitsverhalten hängt. Aufrufer **zählen**; bei zu vielen bleibt der
 Umzug.
 
 **Tests** — `npm run typecheck` · `npm run bauen:ts` · `test105` · `test87` ·
-`node bauen.js`
+`node bauen.mts`
 
 **Priorität** — hoch.
 
@@ -606,7 +606,7 @@ Kopfleiste 44 statt 56 px · mobiler Dateiimport · Offline-Hinweise.
 
 ```
 npm run pruefen -- --schnell
-node bauen.js
+node bauen.mts
 ```
 
 **Bei Backup, Import oder Export**

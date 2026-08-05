@@ -79,7 +79,7 @@ public/          ← das kommt ins Netz
   index.html
   app.css
   js/  icons/  sw.js  manifest.webmanifest  _headers
-worker.js        ← Einstiegspunkt: beantwortet /api/*, liefert sonst public/
+worker.ts        ← Einstiegspunkt: beantwortet /api/*, liefert sonst public/
 wrangler.toml    ← sagt Cloudflare, was zu tun ist
 functions/       ← die Brücke
 start.bat        ← lokal starten (dient public/ aus)
@@ -191,7 +191,7 @@ sich. Fertig.
 ## Teil 4 — Die Brücke
 
 Manche Dienste lassen einen Browser nicht direkt heran: iCloud, Jira, viele
-Kalenderadressen. Dafür liegt `functions/api/bruecke.js` im Repo — Cloudflare
+Kalenderadressen. Dafür liegt `functions/api/bruecke.ts` im Repo — Cloudflare
 führt sie von selbst aus, ohne Einrichtung.
 
 Die App findet sie automatisch unter `/api/bruecke`. In den Einstellungen

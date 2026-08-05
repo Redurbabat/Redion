@@ -1,5 +1,11 @@
+"use strict";
 /* ============================================================================
  * kern/ablage/nachbarn.js — der Draht zwischen zwei offenen Fenstern
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/ablage/nachbarn.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/kern/ablage/nachbarn.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
  * ----------------------------------------------------------------------------
  * WAS ES TUT. Es sagt den anderen Fenstern derselben App, dass sich in der
  * Ablage etwas geändert hat, und hört zu, wenn sie dasselbe sagen. Mehr
@@ -35,82 +41,107 @@
  * Dann gibt es keinen Kanal — und es braucht auch keinen, weil sich die
  * Fenster dort auch keine Ablage teilen. `offen()` sagt, woran man ist.
  * ==========================================================================*/
-
 const Nachbarn = (() => {
-
-  const KANAL = 'redion-fenster';
-  const FALLBACK = 'redion-fenster-notnagel';
-
-  /* Die eigene Kennung. Ohne sie hörte jedes Fenster seine eigenen Rufe und
-     läse jede eigene Änderung sofort wieder von der Platte zurück — eine
-     Schleife, die nichts kaputtmacht und alles langsam. */
-  const meine = 'f' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-
-  let kanal = null;
-  let ueberSpeicher = false;
-  const hoerer = new Set();
-
-  const austeilen = (nachricht) => {
-    if (!nachricht || nachricht.von === meine) return;
-    hoerer.forEach(fn => { try { fn(nachricht); } catch (err) {
-      if (typeof Reporter !== 'undefined') Reporter.error('nachbarn', 'Ein Zuhörer ist gestolpert', err);
-    } });
-  };
-
-  const start = () => {
-    if (kanal || ueberSpeicher) return true;          /* zweimal starten ist harmlos */
-    try {
-      if (typeof BroadcastChannel !== 'undefined') {
-        kanal = new BroadcastChannel(KANAL);
-        kanal.onmessage = (e) => austeilen(e.data);
-        return true;
-      }
-    } catch { kanal = null; }
-
-    /* Der Notnagel. `storage` feuert nur in den ANDEREN Fenstern — genau
-       das, was hier gebraucht wird. Der Zeitstempel im Wert sorgt dafür,
-       dass zwei gleiche Nachrichten hintereinander auch zwei Ereignisse
-       auslösen; ohne ihn schriebe man denselben Wert und nichts geschähe. */
-    try {
-      if (typeof localStorage === 'undefined') return false;
-      addEventListener('storage', (e) => {
-        if (e.key !== FALLBACK || !e.newValue) return;
-        try { austeilen(JSON.parse(e.newValue)); } catch {}
-      });
-      ueberSpeicher = true;
-      return true;
-    } catch { return false; }
-  };
-
-  const sende = (nachricht) => {
-    if (!nachricht) return false;
-    const voll = Object.assign({ von: meine, wann: Date.now() }, nachricht);
-    try {
-      if (kanal) { kanal.postMessage(voll); return true; }
-      if (ueberSpeicher) { localStorage.setItem(FALLBACK, JSON.stringify(voll)); return true; }
-    } catch (err) {
-      /* Kein stiller Fehlschlag: ein Kanal, der nicht mehr sendet, heisst,
-         dass zwei Fenster wieder blind nebeneinander schreiben. Das gehört
-         gemeldet, auch wenn es nichts sofort kaputtmacht. */
-      if (typeof Reporter !== 'undefined')
-        Reporter.warn('nachbarn', 'Die anderen Fenster sind nicht erreichbar', err);
-    }
-    return false;
-  };
-
-  const beiNachricht = (fn) => { hoerer.add(fn); return () => hoerer.delete(fn); };
-
-  const schliessen = () => {
-    try { if (kanal) kanal.close(); } catch {}
-    kanal = null; ueberSpeicher = false; hoerer.clear();
-  };
-
-  return {
-    start, sende, beiNachricht, schliessen,
-    kennung: () => meine,
-    offen:   () => !!kanal || ueberSpeicher,
-    weg:     () => (kanal ? 'kanal' : ueberSpeicher ? 'speicher' : 'keiner')
-  };
+    const KANAL = 'redion-fenster';
+    const FALLBACK = 'redion-fenster-notnagel';
+    /* Die eigene Kennung. Ohne sie hörte jedes Fenster seine eigenen Rufe und
+       läse jede eigene Änderung sofort wieder von der Platte zurück — eine
+       Schleife, die nichts kaputtmacht und alles langsam. */
+    const meine = 'f' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    let kanal = null;
+    let ueberSpeicher = false;
+    const hoerer = new Set();
+    const austeilen = (nachricht) => {
+        const n = nachricht;
+        if (!n || n.von === meine)
+            return;
+        hoerer.forEach(fn => {
+            try {
+                fn(n);
+            }
+            catch (err) {
+                if (typeof Reporter !== 'undefined')
+                    Reporter.error('nachbarn', 'Ein Zuhörer ist gestolpert', err);
+            }
+        });
+    };
+    const start = () => {
+        if (kanal || ueberSpeicher)
+            return true; /* zweimal starten ist harmlos */
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                kanal = new BroadcastChannel(KANAL);
+                kanal.onmessage = (e) => austeilen(e.data);
+                return true;
+            }
+        }
+        catch {
+            kanal = null;
+        }
+        /* Der Notnagel. `storage` feuert nur in den ANDEREN Fenstern — genau
+           das, was hier gebraucht wird. Der Zeitstempel im Wert sorgt dafür,
+           dass zwei gleiche Nachrichten hintereinander auch zwei Ereignisse
+           auslösen; ohne ihn schriebe man denselben Wert und nichts geschähe. */
+        try {
+            if (typeof localStorage === 'undefined')
+                return false;
+            addEventListener('storage', (e) => {
+                if (e.key !== FALLBACK || !e.newValue)
+                    return;
+                try {
+                    austeilen(JSON.parse(e.newValue));
+                }
+                catch { }
+            });
+            ueberSpeicher = true;
+            return true;
+        }
+        catch {
+            return false;
+        }
+    };
+    const sende = (nachricht) => {
+        if (!nachricht)
+            return false;
+        const voll = Object.assign({ von: meine, wann: Date.now() }, nachricht);
+        try {
+            if (kanal) {
+                kanal.postMessage(voll);
+                return true;
+            }
+            if (ueberSpeicher) {
+                localStorage.setItem(FALLBACK, JSON.stringify(voll));
+                return true;
+            }
+        }
+        catch (err) {
+            /* Kein stiller Fehlschlag: ein Kanal, der nicht mehr sendet, heisst,
+               dass zwei Fenster wieder blind nebeneinander schreiben. Das gehört
+               gemeldet, auch wenn es nichts sofort kaputtmacht. */
+            if (typeof Reporter !== 'undefined')
+                Reporter.warn('nachbarn', 'Die anderen Fenster sind nicht erreichbar', err);
+        }
+        return false;
+    };
+    const beiNachricht = (fn) => {
+        hoerer.add(fn);
+        return () => { hoerer.delete(fn); };
+    };
+    const schliessen = () => {
+        try {
+            if (kanal)
+                kanal.close();
+        }
+        catch { }
+        kanal = null;
+        ueberSpeicher = false;
+        hoerer.clear();
+    };
+    return {
+        start, sende, beiNachricht, schliessen,
+        kennung: () => meine,
+        offen: () => !!kanal || ueberSpeicher,
+        weg: () => (kanal ? 'kanal' : ueberSpeicher ? 'speicher' : 'keiner')
+    };
 })();
-
 window.Nachbarn = Nachbarn;

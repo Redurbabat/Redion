@@ -352,14 +352,32 @@ const browser = await chromium.launch();
 const gemacht: string[] = [];
 
 for (const name of ansichten) {
+  /* Nachschlagen mit Nachsehen. `noUncheckedIndexedAccess` besteht darauf,
+     und es hat recht: `node bilder.mts handi` schrieb bisher „cannot read
+     property breite of undefined" — ein Satz über die Innerei statt über den
+     Tippfehler. Jetzt steht da, was falsch ist und was es gäbe. */
+  const ansicht = ANSICHTEN[name];
+  if (!ansicht) {
+    console.error(`Unbekannte Ansicht: ${name} — es gibt ${Object.keys(ANSICHTEN).join(', ')}`);
+    process.exitCode = 1;
+    continue;
+  }
+
   for (const g of geraete) {
+    const geraet = GERAETE[g];
+    if (!geraet) {
+      console.error(`Unbekanntes Gerät: ${g} — es gibt ${Object.keys(GERAETE).join(', ')}`);
+      process.exitCode = 1;
+      continue;
+    }
+
     for (const thema of themen) {
       /* Das Telefon nur einmal — zwei Themen mal vier Geräte wären zwölf
          Bilder, und niemand sieht sich zwölf Bilder an. */
       if (g !== 'rechner' && thema === 'light') continue;
 
       const seite = await browser.newPage({
-        viewport: { width: GERAETE[g].breite, height: GERAETE[g].hoehe },
+        viewport: { width: geraet.breite, height: geraet.hoehe },
         deviceScaleFactor: 2
       });
       await seite.goto(`http://localhost:${PORT}/index.html`);
@@ -368,7 +386,7 @@ for (const name of ansichten) {
               (document.getElementById('tree')?.children.length || 0) > 0,
         null, { timeout: 30000 });
       await seite.evaluate((t: string) => document.documentElement.setAttribute('data-theme', t), thema);
-      await seite.evaluate(ANSICHTEN[name].bauen);
+      await seite.evaluate(ansicht.bauen);
       await seite.waitForTimeout(450);
 
       const datei = join(ZIEL, `${name}-${g}-${thema === 'light' ? 'hell' : 'dunkel'}.png`);

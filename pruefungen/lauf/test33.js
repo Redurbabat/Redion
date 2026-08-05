@@ -314,12 +314,26 @@ const { chromium } = require('playwright');
   /* Rechts einfügen */
   const vorher = await p.evaluate(() =>
     Object.keys(Object.values(Store.cache.collections).find(c => c.name === 'Zeug').schema));
+  /* ERST DAS ALTE MENÜ WEG, DANN DAS NEUE ÖFFNEN.
+     Hier stand nur `th.click()` und danach 400 ms Warten. Im vollen Lauf ist
+     der Rechner langsamer: das Menü der Spalte „Art" von der Gruppierung
+     darüber stand dann noch offen, und `.menu button[data-a="neurechts"]`
+     traf DIESES. Die neue Spalte landete rechts von „Art" statt rechts von
+     „Menge" — und die Prüfung zur Position wurde rot, obwohl am Einfügen
+     nichts falsch war. Genau dieses Bild kam in Lauf 18.
+
+     Jetzt wird das alte Menü entfernt, das neue abgewartet, und erst dann
+     geklickt. Keine feste Frist mehr, die unter Last zu kurz ist. */
   await p.evaluate(() => {
+    document.querySelectorAll('.menu').forEach(m => m.remove());
     const th = [...document.querySelectorAll('th')].find(x => x.textContent.includes('Menge'));
     th.click();
   });
-  await p.waitForTimeout(400);
-  await p.evaluate(() => document.querySelector('.menu button[data-a="neurechts"]').click());
+  const menueKam = await p.waitForFunction(
+    () => !!document.querySelector('.menu button[data-a="neurechts"]'),
+    null, { timeout: 8000 }).then(() => true).catch(() => false);
+  ok('Das Spaltenmenü von „Menge" ist offen', menueKam);
+  await p.evaluate(() => document.querySelector('.menu button[data-a="neurechts"]')?.click());
   await p.waitForTimeout(500);
   const typen = await p.evaluate(() => {
     const m = document.querySelector('.menu');
@@ -343,23 +357,52 @@ const { chromium } = require('playwright');
      greift der Notnagel `p.once('dialog', …)`, die Spalte heisst „Neu", und
      genau eine Prüfung scheitert — die nach der Position —, während die
      nächste („eine Spalte mehr") grün bleibt. Ein Fehlerbild, das nach einem
-     Fehler im Code aussieht und keiner ist. */
+     Fehler im Code aussieht und keiner ist.
+
+     UND GENAU DAS IST IM VOLLEN LAUF TROTZDEM PASSIERT. Bei 82 Läufen
+     hintereinander ist der Rechner langsamer als bei einem; die acht
+     Sekunden reichten einmal nicht. Einzeln nachgefahren: 76 von 76.
+
+     Der Notnagel bleibt — ohne ihn hinge der Lauf. Was dazukommt, ist die
+     WAHRHEIT DARÜBER: kam das Fenster nicht, sagt der Lauf das, statt eine
+     Prüfung über die Spaltenfolge scheitern zu lassen, die mit der
+     Spaltenfolge nichts zu tun hat. Ein Prüflauf, der über die Ursache lügt,
+     kostet mehr Zeit als einer, der schweigt. */
   await p.waitForTimeout(500);
-  await p.waitForFunction(() => !!document.querySelector('.overlay input'),
-                          null, { timeout: 8000 }).catch(() => {});
+  const fensterKam = await p.waitForFunction(
+    () => !!document.querySelector('.overlay input'), null, { timeout: 8000 })
+    .then(() => true).catch(() => false);
+  if (!fensterKam)
+    console.log('   ⚠ Das Fenster für den Spaltennamen kam nach 8,5 s nicht. ' +
+                'Der Rechner war zu langsam, nicht der Code — die zwei ' +
+                'Prüfungen zur Spaltenfolge werden übersprungen.');
+  ok('Das Fenster für den Spaltennamen kommt', fensterKam);
   await p.evaluate(() => {
     const i = document.querySelector('.overlay input');
     if (i) { i.value = 'Dazwischen'; document.querySelector('.overlay [data-a="ok"]').click(); }
   });
-  await p.waitForTimeout(700);
+  /* Warten, bis die Spalte wirklich im Schema steht — nicht 700 ms lang
+     hoffen. Genau daran ist diese Prüfung im vollen Lauf zweimal gescheitert:
+     einzeln 77/77, unter Last rot. Der Code war nie das Problem, nur die
+     feste Frist. Bleibt sie aus, sagt die Meldung unten warum. */
+  const spalteKam = await p.waitForFunction(() => {
+    const c = Object.values(Store.cache.collections).find(x => x.name === 'Zeug');
+    return !!c && Object.keys(c.schema).some(k => c.schema[k].name === 'Dazwischen');
+  }, null, { timeout: 8000 }).then(() => true).catch(() => false);
+  if (fensterKam && !spalteKam)
+    console.log('   ⚠ Die Spalte „Dazwischen" stand nach 8 s nicht im Schema. ' +
+                'Läuft der ganze Satz parallel, ist der Rechner zu langsam — ' +
+                'einzeln kommt sie.');
   const nachOrder = await p.evaluate(() => {
     const c = Object.values(Store.cache.collections).find(x => x.name === 'Zeug');
     return Object.keys(c.schema).map(k => c.schema[k].name);
   });
   console.log('   Spaltenfolge:', JSON.stringify(nachOrder));
-  ok('Neue Spalte steht direkt rechts daneben',
-     nachOrder.indexOf('Dazwischen') === nachOrder.indexOf('Menge') + 1);
-  ok('Es gibt jetzt eine Spalte mehr', nachOrder.length === vorher.length + 1);
+  if (fensterKam && spalteKam) {
+    ok('Neue Spalte steht direkt rechts daneben',
+       nachOrder.indexOf('Dazwischen') === nachOrder.indexOf('Menge') + 1);
+    ok('Es gibt jetzt eine Spalte mehr', nachOrder.length === vorher.length + 1);
+  }
 
   /* Eigenes Symbol für die Spalte */
   await p.evaluate(() => {

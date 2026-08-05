@@ -254,7 +254,7 @@ Das ist eine Entscheidung, keine Nachlässigkeit:
   `file://` verweigert sie aus Sicherheitsgründen.
 - Es gibt **keine Werkzeugkette**, die veralten kann. Wer das Repository in
   fünf Jahren öffnet, kann es öffnen.
-- `node bauen.js` fasst alles zu einer einzigen HTML-Datei zusammen. Das ist
+- `node bauen.mts` fasst alles zu einer einzigen HTML-Datei zusammen. Das ist
   eine Bequemlichkeit, keine Voraussetzung.
 
 Der Preis: jedes Modul ist ein globaler Name, und die Reihenfolge in

@@ -1300,7 +1300,7 @@ geschriebenes JavaScript, sondern Ausgabe; es wird mitversioniert, damit die
 App weiterhin per Doppelklick auf `index.html` startet. Das ist der Weg seit
 `ids.ts`.
 
-**2 · Code für Node** — Prüfläufe, `bauen.js`, der Server — liegt als `.ts`
+**2 · Code für Node** — Prüfläufe, `bauen.mts`, der Server — liegt als `.ts`
 und läuft **direkt**. Node führt TypeScript seit 22.18 ohne Schalter aus: es
 entfernt die Typen und startet. Kein Übersetzer, kein Paket, kein Schritt,
 den jemand vergessen kann.

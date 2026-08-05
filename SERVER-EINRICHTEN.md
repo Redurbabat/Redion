@@ -257,15 +257,15 @@ Schrägstrich am Ende.
 
 ## Ohne Cloudflare
 
-Der Server hängt nicht an Cloudflare. `server/kern.js` weiss gar nicht, wo er
+Der Server hängt nicht an Cloudflare. `server/kern.ts` weiss gar nicht, wo er
 läuft — er bekommt eine Anfrage und eine Ablage. Für einen eigenen Rechner:
 
 ```
-node server/pruefserver.js 8790
+node server/pruefserver.ts 8790
 ```
 
 Das ist zum Ausprobieren gedacht, nicht für den Betrieb: es speichert nichts
 über den Neustart hinaus und hat keine Verschlüsselung auf der Leitung. Wer
 es ernsthaft selbst betreiben will, schreibt eine dritte Ablage nach dem
-Vorbild in `server/ablage.js` — sieben Funktionen, mehr braucht der Kern
+Vorbild in `server/ablage.ts` — sieben Funktionen, mehr braucht der Kern
 nicht.

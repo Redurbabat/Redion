@@ -296,11 +296,31 @@ const nachher = await zweite.evaluate((id: string) => {
  * auf einmal entstehen.
  *
  * Die Prüfung darunter zeigt, dass der Stichentscheid wirklich gebraucht
- * wird: die Zeitstempel sind gleich. Wäre das eines Tages nicht mehr so,
- * prüfte sie nichts mehr — und sagte es. */
-p('Die Zeilen haben denselben Zeitstempel — der Stichentscheid arbeitet wirklich',
-  new Set(nachher.zeitstempel).size < nachher.zeitstempel.length,
-  JSON.stringify(nachher.zeitstempel));
+ * wird.
+ *
+ * SIE HING ERST AM ZUFALL. Ursprünglich stand hier nur „mindestens zwei der
+ * vier Zeitstempel sind gleich" — und ob das zutrifft, entscheidet, wie
+ * schnell der Rechner gerade ist. Im vollen Lauf war er langsam genug, dass
+ * alle vier in verschiedene Millisekunden fielen, und die Prüfung wurde rot,
+ * obwohl am Stichentscheid nichts falsch war.
+ *
+ * Jetzt wird der Fall HERGESTELLT statt abgewartet: vier Zeilen bekommen
+ * denselben `created`-Wert geschrieben, und danach muss die Reihenfolge
+ * trotzdem stimmen. Das prüft genau das, was der Stichentscheid können soll —
+ * und es prüft es jedes Mal. */
+const stich = await zweite.evaluate((id: string) => {
+  const rows = Store.rowsOf(id);
+  const gleich = '2026-01-01T00:00:00.000Z';
+  rows.forEach((r: any) => Store.updateBlock(r.id, { created: gleich }));
+  const wieder = Store.rowsOf(id);
+  return { alleGleich: new Set(wieder.map((r: any) => r.created)).size === 1,
+           namen: wieder.map((r: any) => r.text) };
+}, collId) as any;
+
+p('Vier Zeilen mit demselben Zeitstempel — der Stichentscheid arbeitet wirklich',
+  stich.alleGleich, JSON.stringify(stich));
+gleich('… und die Reihenfolge stimmt trotzdem',
+  stich.namen, ['Alpha', 'Beta', 'Gamma', 'Delta']);
 p('… und jede hat eine Folge bekommen',
   nachher.folgen.every((f: unknown) => typeof f === 'number'),
   JSON.stringify(nachher.folgen));

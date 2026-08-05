@@ -144,7 +144,7 @@ oeffentlich/
 server/
 doku/
 pruefungen/
-bauen.js
+bauen.mts
 redion-einzeldatei.html
 
 Bedeutung:
@@ -965,7 +965,7 @@ redion-einzeldatei.html ist wichtig.
 
 Regeln:
 
-node bauen.js muss sie reproduzierbar erzeugen.
+node bauen.mts muss sie reproduzierbar erzeugen.
 
 Keine externen Laufzeitabhängigkeiten in der Einzeldatei.
 
@@ -990,7 +990,7 @@ npx playwright install chromium
 npm run pruefen
 npm run pruefen -- --schnell
 node pruefungen/lauf/test87.mjs
-node bauen.js
+node bauen.mts
 
 Regeln:
 
@@ -2295,7 +2295,7 @@ Kein React. TypeScript ja, React nur nach eigener Entscheidung in
 ENTSCHEIDUNGEN.md.
 
 Keine Build-Pflicht. index.html doppelklicken muss weiter funktionieren, und
-redion-einzeldatei.html muss sich weiter mit node bauen.js erzeugen lassen.
+redion-einzeldatei.html muss sich weiter mit node bauen.mts erzeugen lassen.
 
 Kein grosser Umbau auf einmal. Die Phasen stehen in AUFGABEN.md.
 

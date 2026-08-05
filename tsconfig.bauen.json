@@ -32,6 +32,7 @@
 
   "compilerOptions": {
     "noEmit": false,
+    "allowImportingTsExtensions": false,
     "module": "none",
     "moduleResolution": "Classic",
     "isolatedModules": false,
@@ -64,6 +65,10 @@
     "src/core/security/**/*.ts",
     "src/core/spreadsheet/**/*.ts",
     "src/core/import/**/*.ts",
-    "src/bereiche/**/*.ts"
+    "src/bereiche/**/*.ts",
+    "src/kern/**/*.ts",
+    "src/schale/**/*.ts",
+    "src/register/**/*.ts",
+    "src/*.ts"
   ]
 }

@@ -126,9 +126,9 @@ jobs:
       # ist schon einmal eingetreten: in der weitergegebenen Einzeldatei
       # fehlte die komplette HTML-Säuberung, und niemandem fiel es auf.
       - name: Einzeldatei bauen
-        run: node bauen.js
+        run: node bauen.mts
 
-      # Wenn `bauen.js` etwas anderes herausbekommt als das, was im
+      # Wenn `bauen.mts` etwas anderes herausbekommt als das, was im
       # Repository liegt, hat jemand die Quellen geändert und die Einzeldatei
       # nicht nachgezogen. Das ist kein Fehler im Code, aber einer in dem,
       # was man weitergibt — und genau der fällt sonst nie auf.
@@ -136,7 +136,7 @@ jobs:
         run: |
           if ! git diff --quiet -- redion-einzeldatei.html; then
             echo "::error::redion-einzeldatei.html ist nicht auf dem Stand der Quellen."
-            echo "Bitte 'node bauen.js' laufen lassen und das Ergebnis mit committen."
+            echo "Bitte 'node bauen.mts' laufen lassen und das Ergebnis mit committen."
             git diff --stat -- redion-einzeldatei.html
             exit 1
           fi

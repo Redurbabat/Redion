@@ -32,7 +32,7 @@ const http = require('http');
                    'oeffentlich/icons/icon-180.png','oeffentlich/icons/maskable-512.png',
                    'oeffentlich/icons/start-iphone-13-pro-max.png'];
   const fehlt = dateien.filter(d => !fs.existsSync(WURZEL + '/' + d))
-    .concat(['wrangler.toml','worker.js','functions/api/bruecke.js','CLOUDFLARE.md']
+    .concat(['wrangler.toml','worker.ts','functions/api/bruecke.ts','CLOUDFLARE.md']
       .filter(d => !fs.existsSync(WURZEL + '/' + d)));
   console.log('   Fehlende Dateien:', JSON.stringify(fehlt));
   ok('Alle PWA- und Cloudflare-Dateien da', fehlt.length === 0);
@@ -156,7 +156,7 @@ const http = require('http');
   ok('Am Rechner ist der Knopf weg', gross);
 
   /* --- 5) Cloudflare-Brücke ------------------------------------------- */
-  const bruecke = fs.readFileSync(WURZEL + '/functions/api/bruecke.js', 'utf8');
+  const bruecke = fs.readFileSync(WURZEL + '/functions/api/bruecke.ts', 'utf8');
   ok('Brücke hat eine Freigabeliste', /const ERLAUBT/.test(bruecke));
   ok('Brücke erlaubt iCloud-Kalender', /icloud\.com/.test(bruecke));
   ok('Brücke schickt CORS-Kopfzeilen', /Access-Control-Allow-Origin/.test(bruecke));
@@ -165,9 +165,16 @@ const http = require('http');
   const verb = fs.readFileSync(WURZEL + '/quell/bereiche/verbinden/konten.js', 'utf8');
   ok('App findet die Brücke von selbst', /\/api\/bruecke\?ziel=\{url\}/.test(verb));
 
-  /* --- 6) Der Service Worker fasst Fremdes nicht an -------------------- */
+  /* --- 6) Der Service Worker fasst Fremdes nicht an --------------------
+   * GEPRÜFT WIRD DIE ERZEUGTE DATEI, nicht die Quelle: `sw.js` ist das, was
+   * im Browser läuft. Seit Bündel 20 entsteht sie aus `src/dienst/sw.ts`,
+   * und dort heisst der eigene Geltungsbereich `ich` statt `self` — die
+   * Typbibliothek `WebWorker` kennt `self` nur als den allgemeineren
+   * WorkerGlobalScope. Beide Schreibweisen stehen deshalb hier; die Regel
+   * selbst ist unverändert und wird genauso genau verlangt wie vorher.
+   * ------------------------------------------------------------------- */
   ok('Fremde Adressen bleiben draussen',
-     /u\.origin !== self\.location\.origin/.test(fs.readFileSync(WURZEL + '/sw.js','utf8')));
+     /u\.origin !== (?:self|ich)\.location\.origin/.test(fs.readFileSync(WURZEL + '/sw.js','utf8')));
   ok('API-Aufrufe bleiben draussen',
      /pathname\.startsWith\('\/api\/'\)/.test(fs.readFileSync(WURZEL + '/sw.js','utf8')));
 

@@ -303,8 +303,13 @@ console.log('\n7 · Die Ausgangsschlange');
 
 const maschine = lies(dazu(WURZEL, 'quell/kern/abgleich/maschine.js'), 'utf8');
 
+/* Seit `maschine.js` aus TypeScript erzeugt wird, bestimmt `tsc` die
+   Zeilenumbrüche: aus `while (…) bis++;` in einer Zeile werden zwei. Die
+   Regel ist dieselbe geblieben, nur ihre Schreibweise nicht — deshalb steht
+   hier `\s+` statt eines festen Leerzeichens. Das ist keine Aufweichung: der
+   Ausdruck verlangt weiterhin genau diese Schleife und nichts anderes. */
 p('Die Runde nimmt alles mit, was denselben Zeitstempel trägt',
-  /while \(bis < liste\.length && zeitVon\(liste\[bis\]\) === grenze\) bis\+\+/.test(maschine));
+  /while \(bis < liste\.length && zeitVon\(liste\[bis\]\) === grenze\)\s+bis\+\+/.test(maschine));
 p('… und der Abbruch vergleicht mit der WIRKLICH gesendeten Menge',
   /liste\.length <= dran\.length/.test(maschine));
 p('… nicht mehr mit der festen Rundengrösse',
