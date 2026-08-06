@@ -35,17 +35,19 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**4. August 2026 · 79 Prüfläufe grün**
+**6. August 2026 · 87 Prüfläufe grün**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
-Excel-Namen) · lokale KI · Versionen · Papierkorb · `.json`- und
-`.redion`-Sicherung mit Anhängen · grosse Dateien stückweise.
+Excel-Namen) · Tabellenblock (E29) · lokale KI · Versionen · Papierkorb ·
+`.json`- und `.redion`-Sicherung mit Anhängen · grosse Dateien stückweise ·
+Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
 
 **Die drei wichtigsten offenen Punkte**
 
 ```txt
-1. Die TypeScript-Migration selbst — die Grundlage steht, quell/ ist noch JS
+1. ~~Die TypeScript-Migration selbst~~ · **erledigt** am 6. August —
+   0 handgeschriebene JS-Dateien, siehe doku/BUENDEL-11-BIS-24.md
 2. ~~Der Spreadsheet-Block — die Funktionen sind da, die Tabelle fehlt~~
    · **erledigt**, siehe Phase 7a und `ENTSCHEIDUNGEN.md` E29
 3. Cloudflare, Konto und Sync sind nicht produktionsreif
@@ -209,7 +211,7 @@ grün. Genau so sind die vier erfundenen Feldnamen entstanden.
 
 ---
 
-## Phase 6 · Erste sichere Migrationen · ◐ **begonnen**
+## Phase 6 · Erste sichere Migrationen · **erledigt**
 
 Nur kleine, DOM-freie Helfer. **Nicht zuerst:** `editor.js` ·
 `steuerung.js` · `indexdb.js` · `bauen.mts` · `server/kern.ts`.
