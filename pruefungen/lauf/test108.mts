@@ -188,16 +188,24 @@ for (const e of alle) {
 p('Es gibt Einträge', alle.length >= 200, String(alle.length));
 p('Alle Pflichtfelder sind gefüllt', luecken.length === 0, luecken.slice(0, 5).join(', '));
 
-/* Und die Gegenprobe zu `was?`: der Typ nennt es freiwillig, weil es das
-   wirklich ist. Stünde hier eine Null, wäre das `?` eine Beschönigung statt
-   einer Angabe — und die Zahl gehört genannt, weil sie ein offener Punkt ist
-   (LUECKEN.md L9) und kein Zustand, mit dem man sich abfindet. */
+/* HIER STAND EINE ZAHL, UND SIE IST AUF NULL GEFALLEN. Bis zum 6. August
+   prüfte dieser Abschnitt, dass `was` wirklich fehlt — „zwischen 100 und
+   200", die Grössenordnung aus LUECKEN.md L9. Das war ehrlich gemeint:
+   der Typ nennt das Feld freiwillig, und eine Null hätte das `?` zu einer
+   Beschönigung gemacht.
+
+   Seit L9 geschlossen ist, hat jeder Eintrag einen Satz. Das `?` im Typ
+   bleibt trotzdem richtig — `melde()` nimmt Einträge von aussen entgegen,
+   und ein Zusatzmodul darf einen ohne Satz schicken, ohne dass der Typ
+   lügt. Geprüft wird deshalb jetzt die Richtung, auf die es ankommt: KEIN
+   Eintrag ohne Satz. Wer einen nachreicht, macht `test122` rot. */
 const ohneSatz = alle.filter((e: any) => !e.was);
-p('`was` ist zu Recht freiwillig — es fehlt wirklich',
-  (freiwillig ?? '').includes('was') && ohneSatz.length > 0,
-  ohneSatz.length + ' von ' + alle.length + ' ohne Satz');
-p('Und die Zahl liegt in der Grössenordnung aus LUECKEN.md L9',
-  ohneSatz.length >= 100 && ohneSatz.length <= 200, String(ohneSatz.length));
+p('`was` bleibt im Typ freiwillig — wegen melde() von aussen',
+  (freiwillig ?? '').includes('was'), 'freiwillig: ' + freiwillig.join(', '));
+p('Und trotzdem hat heute jeder Eintrag einen Satz',
+  ohneSatz.length === 0,
+  ohneSatz.length + ' von ' + alle.length + ' ohne Satz: ' +
+  ohneSatz.slice(0, 8).map((e: any) => e.name).join(', '));
 
 const mitBeispiel = alle.filter((e: any) => e.beispiel);
 p('`beispiel` ist optional und kommt vor',

@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**6. August 2026 · 92 Prüfläufe grün**
+**6. August 2026 · 94 Prüfläufe grün**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -55,10 +55,11 @@ Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
      (E33) · G3 Konflikte und Offline (test118) · G4 Rechte (E35)
 ```
 
-**Was jetzt obenauf liegt:** die Fehlerwert-Entscheidung (L4) — sie hält
-`WENNFEHLER`, `ISTFEHLER` und die Fehleranzeige im Tabellenblock auf. Die
-169 Funktionen ohne Beschreibung (L9) sind seit dem 6. August beschrieben
-und von `test122` gehalten.
+**Was jetzt obenauf liegt:** Mobile (L10), ZIP64 für Sicherungen über
+4 GB (L14) und die bedingte Formatierung im Tabellenblock (L15). Die
+Fehlerwert-Frage (L4) ist am 6. August beantwortet — `WENNFEHLER` und
+`ISTFEHLER` gibt es, ohne dass eine bestehende Spalte ihr Ergebnis
+ändert (E36).
 
 ---
 

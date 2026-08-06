@@ -65,6 +65,21 @@
 }
 #toast.show{transform:translateX(-50%) translateY(0)}
 
+/* AM TELEFON STEHT DIE AKTIONSLEISTE UNTEN, und sie ist das Wichtigste auf
+   dem Bild: Suche, KI fragen, Neue Seite. Ein Toast bei bottom:22px legte
+   sich mitten darauf — im Bildschirmfoto vom 6. August verdeckten Toast und
+   Rundgang-Einladung gemeinsam die ganze KI-Leiste. Beide rücken jetzt über
+   die Leiste. Dieselbe Sorte Fehler wie beim Offline-Streifen, dieselbe
+   Lösung: was nur meldet, gehört nicht auf das, womit man arbeitet. */
+@media(max-width:760px){
+  #toast{
+    bottom:calc(104px + env(safe-area-inset-bottom));
+    left:14px; right:14px; transform:translateY(80px);
+    max-width:none; text-align:center;
+  }
+  #toast.show{ transform:translateY(0) }
+}
+
 /* --- Schriftvarianten ----------------------------------------------------- */
 body[data-font="serif"] #page{font-family:var(--serif)}
 body[data-font="mono"]  #page{font-family:var(--mono)}
@@ -76,7 +91,11 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 
 @media(max-width:820px){
   #sidebar{position:fixed; z-index:500; height:100%; box-shadow:var(--shadow)}
-  #page{padding:0 22px 40vh}
+  /* Seitenrand nach der Telefon-Vorgabe (E37): 28 px. Vorher 22 — der
+     Text stand zu dicht am Glasrand, und am Daumen liest es sich enger,
+     als es aussieht. Unter 380 px bleibt es bei 22, sonst wird die Zeile
+     zu schmal. */
+  #page{padding:0 28px 40vh}
   .cover{margin:0 -22px}
   #ai{position:fixed; right:0; top:0; height:100%; z-index:500}
   .blk > .handles{left:-40px}
@@ -84,6 +103,8 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 
 /* Auf schmalen Bildschirmen stapelt Notion die Spalten untereinander,
    und die Mehrfachauswahl von Blöcken entfällt. Genauso hier. */
+@media(max-width:380px){ #page{padding-left:22px; padding-right:22px} }
+
 @media(max-width:700px){
   .spalten-block{grid-template-columns:1fr; gap:8px}
   .blk > .handles{display:none}

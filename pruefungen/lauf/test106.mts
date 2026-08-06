@@ -278,7 +278,8 @@ for (const [quelle, soll] of [['floor(0 - 2.5)', -3], ['ceil(0 - 2.1)', -2]]) {
 /* ===========================================================================
  * 4c · DIE VIERZEHN NACHGEBAUTEN FUNKTIONEN
  * ---------------------------------------------------------------------------
- * WENNFEHLER und ISTFEHLER fehlen hier mit Absicht — siehe Abschnitt 4d.
+ * WENNFEHLER und ISTFEHLER stehen nicht hier, sondern in Abschnitt 4d —
+ * sie rechnen nicht nach, sondern fangen (E36).
  * =========================================================================*/
 console.log('\n4c · Die nachgebauten Excel-Funktionen rechnen richtig');
 
@@ -343,35 +344,49 @@ for (const [zeigen, quelle, soll] of NEU) {
 }
 
 /* ===========================================================================
- * 4d · WENNFEHLER GIBT ES NICHT — UND DAS IST ABSICHT
+ * 4d · WENNFEHLER GIBT ES — ALS STRENGE INSEL, OHNE DAS RECHNEN UMZUSTELLEN
  * ---------------------------------------------------------------------------
- * Excels WENNFEHLER fängt `#DIV/0!`, `#WERT!`, `#NV`. Redions Laufzeit
- * erzeugt solche Werte gar nicht: sie ist **abwehrend** gebaut.
+ * BIS ZUM 6. AUGUST STAND HIER DAS GEGENTEIL, und der Grund war gut:
+ * Redions Laufzeit ist abwehrend gebaut und erzeugt keine Fehlerwerte.
  *
  *   1/0              →  0
  *   WURZEL(-1)       →  0
  *   WERT("abc")      →  0
  *
- * Ein WENNFEHLER, das hier eingebaut würde, fienge also **nichts von dem**,
- * wofür man es aus Excel kennt. Es sähe aus wie Excels und wäre etwas
- * anderes — die schlimmste Sorte Funktion.
+ * Ein WENNFEHLER, das darauf gesetzt worden wäre, fienge nichts von dem,
+ * wofür man es aus Excel kennt — es sähe aus wie Excels und wäre etwas
+ * anderes. Deshalb fehlte es, und diese Prüfung hielt den Zustand fest,
+ * „damit er eine Entscheidung bleibt und nicht zu einer Lücke wird, die
+ * jemand aus Versehen füllt".
  *
- * Deshalb fehlt es, bis entschieden ist, ob Redion echte Fehlerwerte bekommt.
- * Diese Prüfung hält den Zustand fest, damit er eine Entscheidung bleibt und
- * nicht zu einer Lücke wird, die jemand aus Versehen füllt.
+ * GEFÜLLT WURDE SIE NICHT AUS VERSEHEN, sondern mit E36: `WENNFEHLER`
+ * wertet sein Argument im STRENGEN Modus aus (E31) — nur das Argument, nur
+ * innerhalb der Klammer. Das Rechnen selbst bleibt, wie es war; die ersten
+ * drei Zeilen dieses Abschnitts prüfen genau das und sind unverändert
+ * geblieben.
+ *
+ * Die Insel und ihre Grenzen prüft `test123` in fünfundzwanzig Punkten.
+ * Hier steht nur, was hier immer stand: die abwehrende Zusicherung.
  * =========================================================================*/
-console.log('\n4d · Kein WENNFEHLER ohne echte Fehlerwerte');
+console.log('\n4d · WENNFEHLER als Insel — das Rechnen bleibt abwehrend');
 
 for (const [quelle, soll] of [['1 / 0', 0], ['WURZEL(0 - 1)', 0], ['WERT("abc")', 0]]) {
   const e = rechne(quelle);
   p(quelle + ' ergibt ' + soll + ' statt eines Fehlerwerts',
     e.ok && Number(e.wert) === soll, JSON.stringify(e));
 }
-for (const name of ['WENNFEHLER', 'ISTFEHLER']) {
-  const e = rechne(name + '(1, 2)');
-  p(name + ' gibt es (noch) nicht', !e.ok,
-    'es antwortet — dann muss Abschnitt 4d neu geschrieben werden');
-}
+/* Und jetzt die Gegenrichtung: gefragt wird ausdrücklich, und dann kommt
+   der Fehler auch. */
+const gefangen = rechne('WENNFEHLER(1 / 0; "—")');
+p('WENNFEHLER(1/0; "—") ergibt den Ersatz', gefangen.ok && gefangen.wert === '—',
+  JSON.stringify(gefangen));
+p('ISTFEHLER(1/0) ist wahr', rechne('ISTFEHLER(1 / 0)').wert === true);
+p('ISTFEHLER(4/2) ist falsch', rechne('ISTFEHLER(4 / 2)').wert === false);
+/* Die Zusicherung, auf die es ankommt: die Strenge bleibt in der Klammer. */
+const daneben = rechne('WENNFEHLER(1 / 0; 0) + 1 / 0');
+p('Neben der Klammer wird weiter abwehrend gerechnet',
+  daneben.ok && Number(daneben.wert) === 0,
+  JSON.stringify(daneben) + ' — die Strenge ist ausgelaufen');
 
 /* ===========================================================================
  * 4e · GLEICHER NAME IST NICHT GLEICHE BEDEUTUNG

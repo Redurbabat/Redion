@@ -934,9 +934,53 @@ const Werkzeuge = (() => {
 
   const meldungenLeeren = () => Store.setMeta('meldungen', []);
 
+  /** Ein Datum, wie es ein `datetime-local`-Feld erwartet: ORTSZEIT.
+   *
+   *  Hier stand `toISOString().slice(0, 16)`, und das ist Weltzeit. In der
+   *  Schweiz schlug der Dialog im Sommer zwei Stunden zu früh vor — „in
+   *  einer Stunde" wurde zu „vor einer Stunde", und wer den Vorschlag
+   *  übernahm, setzte eine Erinnerung in die Vergangenheit: sie meldete
+   *  sich sofort. Der Fehler ist in London unsichtbar und in Zürich täglich. */
+  const alsOrtszeit = (d: Date): string =>
+    new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+  /** Steht auf dieser Seite schon ein Datum? Dann ist es gemeint.
+   *
+   *  Ein Kalendereintrag IST eine Seite mit einer Datumsspalte. Wer dort
+   *  „morgen 08:00" einträgt und danach eine Erinnerung setzt, meint diese
+   *  Zeit und keine andere — sie am Telefon abzutippen wäre eine Zumutung. */
+  const datumDerSeite = (p: any): string | null => {
+    try {
+      /* Nur Datenbankzeilen haben Spalten. `addRow` setzt `parentTable` auf
+         'collection'; ein gewöhnlicher Block bleibt auf 'block'. */
+      if (!p || p.parentTable !== 'collection') return null;
+      const coll = Store.getCollection(p.parentId);
+      if (!coll || !coll.schema) return null;
+      /* Der Wert einer Datumsspalte ist eine ZEICHENKETTE, kein Objekt —
+         nachgesehen in `datenbanken/dienst.ts:540`, `raster.ts:113` und
+         `steuerung.ts:1569`, die alle `new Date(v)` darauf anwenden. Das
+         `{von, bis}`-Paar gibt es nur bei `daterange()` in einer Formel. */
+      for (const [feld, spalte] of Object.entries<any>(coll.schema)) {
+        if (!spalte || spalte.type !== 'date') continue;
+        const wert = (p.props || {})[feld];
+        if (!wert) continue;
+        const d = new Date(wert);
+        if (isNaN(d.getTime())) continue;
+        /* Ein Datum ohne Uhrzeit meint den Morgen, nicht Mitternacht —
+           um 0:00 erinnert zu werden hat noch niemand gewollt. */
+        if (d.getHours() === 0 && d.getMinutes() === 0) d.setHours(8, 0, 0, 0);
+        return alsOrtszeit(d);
+      }
+    } catch { /* keine Datumsspalte gefunden ist kein Fehler */ }
+    /* Genommen wird die ERSTE Datumsspalte. Eine Kalenderansicht kann über
+       `view.dateKey` eine andere führen (`steuerung.ts:1812`) — welche das
+       war, weiss die Seite allein nicht, sie kennt ihre Ansicht nicht. */
+    return null;
+  };
+
   const erinnerungSetzen = (p: any) => {
     const jetzt = new Date(Date.now() + 60 * 60 * 1000);
-    const vorgabe = jetzt.toISOString().slice(0, 16);
+    const vorgabe = datumDerSeite(p) || alsOrtszeit(jetzt);
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
@@ -951,8 +995,16 @@ const Werkzeuge = (() => {
           `<input id="et" value="${esc(p.text || 'Erinnerung')}" ` +
           `style="margin-top:6px; width:100%; padding:9px 10px; background:var(--bg-input); ` +
           `border:1px solid var(--line); border-radius:7px; outline:none"></label>` +
-          '<div style="font-size:12.5px; color:var(--text-faint)">Die Erinnerung meldet sich, solange diese App offen ist. ' +
-          'Erlaubst du Benachrichtigungen, meldet sie sich auch im System.</div>' +
+          '<div style="font-size:12.5px; color:var(--text-faint); line-height:1.6">' +
+          'Die Erinnerung meldet sich, <b>solange Redion offen ist</b> — auch in ' +
+          'einem Hintergrund-Tab. Ist Redion zu dieser Zeit geschlossen, wartet sie ' +
+          'und meldet sich beim nächsten Öffnen als verpasst.' +
+          (/iPad|iPhone|iPod/.test(navigator.userAgent)
+            ? '<br><br>Auf dem iPhone zeigt nur die <b>installierte App</b> ' +
+              'Systemmeldungen (Teilen → „Zum Home-Bildschirm"). In Safari selbst ' +
+              'erscheint die Erinnerung nur in Redion.'
+            : ' Erlaubst du Benachrichtigungen, meldet sie sich auch im System.') +
+          '</div>' +
         '</div>' +
         '<div class="fbtns"><button data-a="ok" class="prim">Erinnerung setzen</button>' +
         '<button data-a="zu">Abbrechen</button></div>' +
@@ -984,10 +1036,18 @@ const Werkzeuge = (() => {
       if (e.erledigt) return;
       if (new Date(e.zeit).getTime() > jetzt) return;
       e.erledigt = true; geaendert = true;
-      UI.toast('⏰ ' + e.text);
+      /* Wie spät ist es geworden? Eine Erinnerung, die um acht Uhr gemeint
+         war und um halb elf erscheint, darf nicht so tun, als sei jetzt
+         acht — am Telefon ist das der Normalfall, weil die App nicht die
+         ganze Nacht offen war. Ab zwei Minuten steht die gemeinte Zeit dabei. */
+      const gemeint = new Date(e.zeit);
+      const spaet = jetzt - gemeint.getTime() > 120000;
+      const wann = gemeint.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      UI.toast(spaet ? 'Verpasst um ' + wann + ': ' + e.text : '⏰ ' + e.text);
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          const n = new Notification('Erinnerung: ' + e.text, { body: 'In Redion', tag: e.id });
+          const n = new Notification(spaet ? 'Verpasst um ' + wann : 'Erinnerung: ' + e.text,
+            { body: spaet ? e.text : 'In Redion', tag: e.id });
           n.onclick = () => { window.focus(); App.oeffne(e.pageId); };
         } catch {}
       }
@@ -1866,7 +1926,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
     fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
     formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
-    erinnerungSetzen, erinnerungen, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+    erinnerungSetzen, erinnerungen, erinnerungenPruefen, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
     ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,

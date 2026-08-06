@@ -638,6 +638,21 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 }
 #toast.show{transform:translateX(-50%) translateY(0)}
 
+/* AM TELEFON STEHT DIE AKTIONSLEISTE UNTEN, und sie ist das Wichtigste auf
+   dem Bild: Suche, KI fragen, Neue Seite. Ein Toast bei bottom:22px legte
+   sich mitten darauf — im Bildschirmfoto vom 6. August verdeckten Toast und
+   Rundgang-Einladung gemeinsam die ganze KI-Leiste. Beide rücken jetzt über
+   die Leiste. Dieselbe Sorte Fehler wie beim Offline-Streifen, dieselbe
+   Lösung: was nur meldet, gehört nicht auf das, womit man arbeitet. */
+@media(max-width:760px){
+  #toast{
+    bottom:calc(104px + env(safe-area-inset-bottom));
+    left:14px; right:14px; transform:translateY(80px);
+    max-width:none; text-align:center;
+  }
+  #toast.show{ transform:translateY(0) }
+}
+
 /* --- Schriftvarianten ----------------------------------------------------- */
 body[data-font="serif"] #page{font-family:var(--serif)}
 body[data-font="mono"]  #page{font-family:var(--mono)}
@@ -649,7 +664,11 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 
 @media(max-width:820px){
   #sidebar{position:fixed; z-index:500; height:100%; box-shadow:var(--shadow)}
-  #page{padding:0 22px 40vh}
+  /* Seitenrand nach der Telefon-Vorgabe (E37): 28 px. Vorher 22 — der
+     Text stand zu dicht am Glasrand, und am Daumen liest es sich enger,
+     als es aussieht. Unter 380 px bleibt es bei 22, sonst wird die Zeile
+     zu schmal. */
+  #page{padding:0 28px 40vh}
   .cover{margin:0 -22px}
   #ai{position:fixed; right:0; top:0; height:100%; z-index:500}
   .blk > .handles{left:-40px}
@@ -657,6 +676,8 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 
 /* Auf schmalen Bildschirmen stapelt Notion die Spalten untereinander,
    und die Mehrfachauswahl von Blöcken entfällt. Genauso hier. */
+@media(max-width:380px){ #page{padding-left:22px; padding-right:22px} }
+
 @media(max-width:700px){
   .spalten-block{grid-template-columns:1fr; gap:8px}
   .blk > .handles{display:none}
@@ -2943,18 +2964,24 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 @media(max-width:760px){
 
   /* --- OBEN: die Bereiche als Pillen ---------------------------------- */
+  /* MASSE NACH DER TELEFON-VORGABE (E37): die Leiste ist 96-112 px hoch
+     samt Kerbe, die Tasten 52 px, der Rand 28 px. Vorher waren es 60, 44
+     und 12 — das las sich am Rechner sauber und war am Daumen zu klein. */
   #handy-oben{
-    display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:10px;
     position:fixed; left:0; right:0; top:0; z-index:401;
-    padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+    padding:calc(12px + env(safe-area-inset-top)) 28px 12px;
     background:var(--bg);
     overflow-x:auto; scrollbar-width:none;
   }
+  /* Auf sehr schmalen Geräten (SE, 375 px) wird der Rand knapper, sonst
+     bleibt für die fünf Bereiche kein Platz. */
+  @media(max-width:380px){ #handy-oben{ padding-left:22px; padding-right:22px } }
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
     flex:0 0 auto;
-    height:44px; min-width:44px;
+    height:52px; min-width:52px;
     border-radius:999px;
     border:1px solid var(--line);
     background:transparent; color:var(--text-dim);
@@ -3022,17 +3049,21 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
 
   /* --- UNTEN: suchen · KI fragen · schreiben --------------------------- */
+  /* UNTEN: Suche, KI fragen, Neu — die drei Griffe, die immer da sind.
+     56 px hohe Tasten und 28 px Rand nach der Telefon-Vorgabe (E37). */
   #handy-unten{
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:12px;
     position:fixed; left:0; right:0; bottom:0; z-index:400;
-    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    padding:12px 28px calc(12px + env(safe-area-inset-bottom));
     background:linear-gradient(to top, var(--bg) 58%, transparent);
     pointer-events:none;
   }
   #handy-unten > *{ pointer-events:auto }
 
+  @media(max-width:380px){ #handy-unten{ padding-left:22px; padding-right:22px } }
+
   #handy-unten button{
-    height:52px;
+    height:56px;
     border-radius:999px;
     border:1px solid var(--line);
     background:var(--bg-side);
@@ -3042,7 +3073,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     backdrop-filter:saturate(140%) blur(12px);
   }
   #handy-unten button:active{ background:var(--bg-hover) }
-  #handy-unten #hu-suche, #handy-unten #hu-neu{ width:52px; flex:0 0 52px }
+  #handy-unten #hu-suche, #handy-unten #hu-neu{ width:56px; flex:0 0 56px }
 
   /* Die Mitte ist die breiteste und die einzige mit Text — nach ihr greift
      man am häufigsten. */
@@ -3068,7 +3099,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      braucht an beiden Enden Luft, sonst liegt die erste Zeile unter den
      Pillen und die letzte unter der KI. */
   #main{ padding-top:60px }
-  #scroll{ padding-bottom:96px }
+  /* Der Inhalt muss unter der Aktionsleiste durchlaufen können, ohne dass
+     die letzte Zeile darunter verschwindet: 120 px plus die Kerbe des
+     Geräts. Vorher 96 — bei 72 px Leiste blieben 24 px Luft, und mit
+     Safe-Area am iPhone gar keine. */
+  #scroll{ padding-bottom:calc(120px + env(safe-area-inset-bottom)) }
   #ai.open{ bottom:0 }
 }
 
@@ -4282,6 +4317,20 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wahl-knoepfe button.prim{border-color:var(--akzent)}
 .wahl-knoepfe button b{font-size:14.5px; font-weight:600}
 .wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
+
+
+/* Die Rundgang-Einladung am Telefon: über die Aktionsleiste, nicht darauf.
+   Sie lag bei bottom:14px und verdeckte zusammen mit dem Toast die halbe
+   untere Leiste — sichtbar im Bildschirmfoto vom 6. August (E37). */
+@media(max-width:760px){
+  /* Über den Toast, nicht auf ihn: beide sassen auf derselben Höhe und
+     überdeckten einander. Der Toast ist flüchtig und gehört näher an die
+     Leiste, die Einladung steht länger und rückt darüber. */
+  #rg-einladung{
+    left:14px; right:14px; max-width:none;
+    bottom:calc(172px + env(safe-area-inset-bottom));
+  }
+}
 
 </style>
 
@@ -9603,6 +9652,11 @@ Register.formeln = (() => {
         /* --- Logik ----------------------------------------------------------- */
         { name: 'WENN', gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
             was: 'Die Wenn-Dann-Sonst-Frage', beispiel: 'WENN(Betrag > 100; "gross"; "klein")' },
+        { name: 'WENNFEHLER', gruppe: 'Logik', args: '(ausdruck; ersatz)', notion: false,
+            was: 'Deutscher Name für iferror: fängt #DIV/0! und Geschwister ab',
+            beispiel: 'WENNFEHLER(A1/B1; "—")' },
+        { name: 'ISTFEHLER', gruppe: 'Logik', args: '(ausdruck)', notion: false,
+            was: 'Deutscher Name für iserror: prüft auf einen Rechenfehler' },
         { name: 'WENNS', gruppe: 'Logik', args: '(p1; w1; p2; w2; …)', notion: false,
             was: 'Mehrere Fälle nacheinander prüfen' },
         { name: 'UND', gruppe: 'Logik', args: '(a; b; …)', notion: false,
@@ -9749,6 +9803,12 @@ Register.formeln = (() => {
             was: 'Wählt zwischen zwei Werten' },
         { name: 'ifs', gruppe: 'Logik', args: '(b1, w1, b2, w2, …, sonst)', notion: true,
             was: 'Mehrere Bedingungen der Reihe nach; das letzte einzelne Argument ist der Rest' },
+        { name: 'iferror', gruppe: 'Logik', args: '(ausdruck, ersatz)', notion: false,
+            was: 'Rechnet den Ausdruck streng; ergibt er einen Rechenfehler wie #DIV/0!, ' +
+                'kommt der Ersatz. Ein Tippfehler bleibt ein Tippfehler und wird gemeldet',
+            beispiel: 'iferror(prop("Umsatz") / prop("Kunden"), "—")' },
+        { name: 'iserror', gruppe: 'Logik', args: '(ausdruck)', notion: false,
+            was: 'Wahr, wenn der Ausdruck streng gerechnet einen Rechenfehler ergibt' },
         { name: 'empty', gruppe: 'Logik', args: '(wert)', notion: true,
             was: 'Wahr, wenn der Wert leer ist' },
         { name: 'equal', gruppe: 'Logik', args: '(a, b)', notion: true,
@@ -13866,6 +13926,8 @@ const Formula = (() => {
         /* --- Logik ----------------------------------------------------------- */
         wenn: 'if',
         wenns: 'ifs',
+        wennfehler: 'iferror',
+        istfehler: 'iserror',
         und: 'and',
         oder: 'or',
         nicht: 'not',
@@ -14058,6 +14120,44 @@ const Formula = (() => {
                         if (wahr(evaluate(as[i], ctx)))
                             return evaluate(as[i + 1], ctx);
                     return as.length % 2 ? evaluate(as[as.length - 1], ctx) : '';
+                }
+                /* ================================================================ *
+                 * WENNFEHLER UND ISTFEHLER — eine strenge Insel
+                 * ------------------------------------------------------------------
+                 * `LUECKEN.md` L4 führte beide lange als blockiert, und der Grund
+                 * stimmte: Redion rechnet abwehrend, `1/0` ergibt 0, und wo kein
+                 * Fehler entsteht, gibt es nichts zu fangen. Die Antwort war aber
+                 * nicht, das Rechnen umzustellen — das änderte JEDE bestehende
+                 * Formelspalte —, sondern den Fehler dort entstehen zu lassen, wo
+                 * jemand ausdrücklich danach fragt.
+                 *
+                 * Diese beiden werten ihr erstes Argument im STRENGEN Modus aus
+                 * (E31), also genau so, wie es der Tabellenblock tut. Der Rest der
+                 * Formel bleibt, wie er war. Eine bestehende Spalte kann davon
+                 * nichts merken: sie enthält diese Funktionen nicht, denn es gab
+                 * sie bis heute nicht.
+                 *
+                 * GEFANGEN WIRD NUR DER RECHENFEHLER, also `#DIV/0!` und
+                 * Geschwister. Eine kaputte Formel — unbekannte Funktion, falscher
+                 * Ort — fliegt weiter. Excel schluckt auch die; hier nicht, aus
+                 * demselben Grund, der schon einmal aufgeschrieben wurde: wer einen
+                 * Tippfehler als Rechenfehler ausgibt, schickt den Menschen an die
+                 * falsche Stelle. `WENNFEHLER(SUMME(A); 0)` mit einem Tippfehler in
+                 * `SUMME` soll nicht stillschweigend 0 ergeben. */
+                if (n === 'iferror' || n === 'iserror') {
+                    let wert;
+                    try {
+                        wert = evaluate(knoten.args[0], { ...ctx, streng: true });
+                    }
+                    catch (e) {
+                        const satz = e instanceof Error ? e.message : String(e);
+                        if (!satz.startsWith('#'))
+                            throw e;
+                        if (n === 'iserror')
+                            return true;
+                        return knoten.args[1] !== undefined ? evaluate(knoten.args[1], ctx) : '';
+                    }
+                    return n === 'iserror' ? false : wert;
                 }
                 /* let(name, wert, ausdruck) */
                 if (n === 'let') {
@@ -14349,7 +14449,7 @@ const Formula = (() => {
            nicht. Damit meldete `Register.formeln.abgleich()` jede Beschreibung
            für sie als „Versprechen ohne Funktion", und die Vervollständigung im
            Formeleditor bot sie nie an. */
-        'if', 'ifs', 'let', 'lets', 'map', 'filter', 'find', 'findindex', 'some', 'every', 'prop',
+        'if', 'ifs', 'iferror', 'iserror', 'let', 'lets', 'map', 'filter', 'find', 'findindex', 'some', 'every', 'prop',
         'rownumber', 'runningcount', 'previous', 'next', 'runningsum', 'runningmax', 'runningmin',
         'rank', 'percentoftotal', 'total', 'average', 'rowcount', 'delta',
         'countwhere', 'sumwhere', 'findrows', 'firstwhere', 'lastwhere', 'maxwhere', 'minwhere',
@@ -31978,9 +32078,57 @@ const Werkzeuge = (() => {
         Store.setMeta('meldungen', liste);
     };
     const meldungenLeeren = () => Store.setMeta('meldungen', []);
+    /** Ein Datum, wie es ein `datetime-local`-Feld erwartet: ORTSZEIT.
+     *
+     *  Hier stand `toISOString().slice(0, 16)`, und das ist Weltzeit. In der
+     *  Schweiz schlug der Dialog im Sommer zwei Stunden zu früh vor — „in
+     *  einer Stunde" wurde zu „vor einer Stunde", und wer den Vorschlag
+     *  übernahm, setzte eine Erinnerung in die Vergangenheit: sie meldete
+     *  sich sofort. Der Fehler ist in London unsichtbar und in Zürich täglich. */
+    const alsOrtszeit = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    /** Steht auf dieser Seite schon ein Datum? Dann ist es gemeint.
+     *
+     *  Ein Kalendereintrag IST eine Seite mit einer Datumsspalte. Wer dort
+     *  „morgen 08:00" einträgt und danach eine Erinnerung setzt, meint diese
+     *  Zeit und keine andere — sie am Telefon abzutippen wäre eine Zumutung. */
+    const datumDerSeite = (p) => {
+        try {
+            /* Nur Datenbankzeilen haben Spalten. `addRow` setzt `parentTable` auf
+               'collection'; ein gewöhnlicher Block bleibt auf 'block'. */
+            if (!p || p.parentTable !== 'collection')
+                return null;
+            const coll = Store.getCollection(p.parentId);
+            if (!coll || !coll.schema)
+                return null;
+            /* Der Wert einer Datumsspalte ist eine ZEICHENKETTE, kein Objekt —
+               nachgesehen in `datenbanken/dienst.ts:540`, `raster.ts:113` und
+               `steuerung.ts:1569`, die alle `new Date(v)` darauf anwenden. Das
+               `{von, bis}`-Paar gibt es nur bei `daterange()` in einer Formel. */
+            for (const [feld, spalte] of Object.entries(coll.schema)) {
+                if (!spalte || spalte.type !== 'date')
+                    continue;
+                const wert = (p.props || {})[feld];
+                if (!wert)
+                    continue;
+                const d = new Date(wert);
+                if (isNaN(d.getTime()))
+                    continue;
+                /* Ein Datum ohne Uhrzeit meint den Morgen, nicht Mitternacht —
+                   um 0:00 erinnert zu werden hat noch niemand gewollt. */
+                if (d.getHours() === 0 && d.getMinutes() === 0)
+                    d.setHours(8, 0, 0, 0);
+                return alsOrtszeit(d);
+            }
+        }
+        catch { /* keine Datumsspalte gefunden ist kein Fehler */ }
+        /* Genommen wird die ERSTE Datumsspalte. Eine Kalenderansicht kann über
+           `view.dateKey` eine andere führen (`steuerung.ts:1812`) — welche das
+           war, weiss die Seite allein nicht, sie kennt ihre Ansicht nicht. */
+        return null;
+    };
     const erinnerungSetzen = (p) => {
         const jetzt = new Date(Date.now() + 60 * 60 * 1000);
-        const vorgabe = jetzt.toISOString().slice(0, 16);
+        const vorgabe = datumDerSeite(p) || alsOrtszeit(jetzt);
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML =
@@ -31995,8 +32143,16 @@ const Werkzeuge = (() => {
                 `<input id="et" value="${esc(p.text || 'Erinnerung')}" ` +
                 `style="margin-top:6px; width:100%; padding:9px 10px; background:var(--bg-input); ` +
                 `border:1px solid var(--line); border-radius:7px; outline:none"></label>` +
-                '<div style="font-size:12.5px; color:var(--text-faint)">Die Erinnerung meldet sich, solange diese App offen ist. ' +
-                'Erlaubst du Benachrichtigungen, meldet sie sich auch im System.</div>' +
+                '<div style="font-size:12.5px; color:var(--text-faint); line-height:1.6">' +
+                'Die Erinnerung meldet sich, <b>solange Redion offen ist</b> — auch in ' +
+                'einem Hintergrund-Tab. Ist Redion zu dieser Zeit geschlossen, wartet sie ' +
+                'und meldet sich beim nächsten Öffnen als verpasst.' +
+                (/iPad|iPhone|iPod/.test(navigator.userAgent)
+                    ? '<br><br>Auf dem iPhone zeigt nur die <b>installierte App</b> ' +
+                        'Systemmeldungen (Teilen → „Zum Home-Bildschirm"). In Safari selbst ' +
+                        'erscheint die Erinnerung nur in Redion.'
+                    : ' Erlaubst du Benachrichtigungen, meldet sie sich auch im System.') +
+                '</div>' +
                 '</div>' +
                 '<div class="fbtns"><button data-a="ok" class="prim">Erinnerung setzen</button>' +
                 '<button data-a="zu">Abbrechen</button></div>' +
@@ -32038,10 +32194,17 @@ const Werkzeuge = (() => {
                 return;
             e.erledigt = true;
             geaendert = true;
-            UI.toast('⏰ ' + e.text);
+            /* Wie spät ist es geworden? Eine Erinnerung, die um acht Uhr gemeint
+               war und um halb elf erscheint, darf nicht so tun, als sei jetzt
+               acht — am Telefon ist das der Normalfall, weil die App nicht die
+               ganze Nacht offen war. Ab zwei Minuten steht die gemeinte Zeit dabei. */
+            const gemeint = new Date(e.zeit);
+            const spaet = jetzt - gemeint.getTime() > 120000;
+            const wann = gemeint.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            UI.toast(spaet ? 'Verpasst um ' + wann + ': ' + e.text : '⏰ ' + e.text);
             if ('Notification' in window && Notification.permission === 'granted') {
                 try {
-                    const n = new Notification('Erinnerung: ' + e.text, { body: 'In Redion', tag: e.id });
+                    const n = new Notification(spaet ? 'Verpasst um ' + wann : 'Erinnerung: ' + e.text, { body: spaet ? e.text : 'In Redion', tag: e.id });
                     n.onclick = () => { window.focus(); App.oeffne(e.pageId); };
                 }
                 catch { }
@@ -33021,7 +33184,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
         fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
         formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
-        erinnerungSetzen, erinnerungen, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+        erinnerungSetzen, erinnerungen, erinnerungenPruefen, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
         ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
         htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
         alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
@@ -62265,14 +62428,63 @@ const App = (() => {
             sonder: () => sonder
         });
         Inhaltsflaeche.binde({ aktuelleSeite });
-        /* Jeder Fehler soll sichtbar werden — eine stumme Seite hilft niemandem. */
+        /* ----------------------------------------------------------------------
+         * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
+         * ----------------------------------------------------------------------
+         * Eine stumme Seite hilft niemandem. Ein Balken, der „Script error."
+         * sagt und dann um Weitergabe bittet, aber auch nicht: dieser Text ist
+         * die leere Hülle, die jeder Browser liefert, wenn ein Skript von einer
+         * FREMDEN Adresse stolpert. Datei, Zeile und Stapel verschweigt er aus
+         * Sicherheitsgründen — es gibt nichts zu melden, und die Bitte darum
+         * lässt den Menschen mit einer Aufgabe zurück, die er nicht lösen kann.
+         *
+         * Woher so etwas kommt: die KI-Bibliothek von `esm.run`, eingebetteter
+         * fremder Inhalt, oder — am häufigsten auf dem Telefon — eine
+         * Browser-Erweiterung oder ein Inhaltsblocker. Redion läuft in all
+         * diesen Fällen weiter, und genau das gehört dann dagestanden.
+         *
+         * Dazu zwei Kleinigkeiten, die vorher fehlten: Ort und Zeile werden
+         * mitgenannt, wenn es sie gibt, und derselbe Fehler erscheint nur
+         * einmal. Ein Fehler in einer Schleife baute vorher einen Balken pro
+         * Durchgang, bis nichts anderes mehr zu sehen war.
+         * -------------------------------------------------------------------- */
+        const schonGemeldet = new Set();
+        const fehlerMelden = (text, ort, fremd) => {
+            const schluessel = text + '|' + ort;
+            if (schonGemeldet.has(schluessel))
+                return;
+            schonGemeldet.add(schluessel);
+            /* Für später aufheben — auf dem Telefon gibt es keine Konsole, in die
+               man hineinsehen könnte. Zwanzig reichen; ältere fallen hinten raus. */
+            try {
+                const bisher = Store.getMeta('fehlerprotokoll', []) || [];
+                bisher.push({ wann: new Date().toISOString(), text, ort, fremd });
+                Store.setMeta('fehlerprotokoll', bisher.slice(-20));
+            }
+            catch { /* wenn nicht einmal das geht, hilft ein Balken auch nicht */ }
+            UI.banner(fremd
+                ? 'Ein Skript von ausserhalb hat einen Fehler gemeldet — Redion läuft ' +
+                    'weiter. Woher er kommt, verrät der Browser nicht; meist ist es eine ' +
+                    'Erweiterung, ein Inhaltsblocker oder eingebetteter fremder Inhalt.'
+                : 'Es ist ein Fehler aufgetreten: ' + text + (ort ? ' (' + ort + ')' : '') +
+                    ' — bitte melde mir diesen Text.', 'fehler');
+        };
         addEventListener('error', (e) => {
-            UI.banner('Es ist ein Fehler aufgetreten: ' + (e.message || e.error) +
-                ' — bitte melde mir diesen Text.', 'fehler');
+            /* Kein Skriptfehler, sondern ein Bild oder eine Datei, die nicht kam.
+               `e.message` ist dann leer, und der Balken sagte „undefined". */
+            if (!(e instanceof ErrorEvent))
+                return;
+            const text = String(e.message || (e.error && e.error.message) || '').trim();
+            const ort = e.filename ? e.filename.split('/').pop() + ':' + e.lineno : '';
+            /* Die Kennzeichen der leeren Hülle: genau dieser Satz, kein Ort, kein
+               Fehlerobjekt. Fehlt eines davon, ist es ein echter Fehler von hier. */
+            const fremd = (!text || /^script error/i.test(text)) && !e.filename && !e.error;
+            fehlerMelden(text || 'Unbekannter Fehler', ort, fremd);
         });
         addEventListener('unhandledrejection', (e) => {
-            UI.banner('Es ist ein Fehler aufgetreten: ' + (e.reason?.message || e.reason) +
-                ' — bitte melde mir diesen Text.', 'fehler');
+            const grund = e.reason;
+            const text = String(grund?.message ?? grund ?? '').trim();
+            fehlerMelden(text || 'Ein Versprechen wurde gebrochen, ohne Grund zu nennen', '', /^script error/i.test(text));
         });
         Store.beiWarnung((text) => UI.banner(text, 'warn'));
         try {
@@ -62312,6 +62524,24 @@ const App = (() => {
                 : (Store.rootPages()[0] || {}).id;
         zeichneBaum();
         oeffne(startSeite);
+        /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
+           Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
+           eine Webseite; eine App beginnt bei ihrer Übersicht. Der Reiter
+           stand oben schon auf „Start" — nur der Inhalt darunter war die
+           zuletzt geöffnete Seite. Beides zeigte gleichzeitig etwas anderes.
+    
+           Nur beim ERSTEN Öffnen: wer über einen Link mit `#seite` kommt oder
+           schon in dieser Sitzung gearbeitet hat, will dorthin zurück und
+           nicht auf den Start geschickt werden. */
+        /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
+           die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
+           gesetzt. Die Bedingung war damit nie wahr. */
+        if (window.matchMedia('(max-width: 700px)').matches && !ausHash) {
+            try {
+                Ansichten.start();
+            }
+            catch { /* ohne Startbildschirm bleibt die Seite */ }
+        }
         /* ----------------------------------------------------------------------
            WAS DAS ANDERE FENSTER GEÄNDERT HAT
            ----------------------------------------------------------------------

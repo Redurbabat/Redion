@@ -1980,14 +1980,63 @@ const App = (() => {
             sonder: () => sonder
         });
         Inhaltsflaeche.binde({ aktuelleSeite });
-        /* Jeder Fehler soll sichtbar werden — eine stumme Seite hilft niemandem. */
+        /* ----------------------------------------------------------------------
+         * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
+         * ----------------------------------------------------------------------
+         * Eine stumme Seite hilft niemandem. Ein Balken, der „Script error."
+         * sagt und dann um Weitergabe bittet, aber auch nicht: dieser Text ist
+         * die leere Hülle, die jeder Browser liefert, wenn ein Skript von einer
+         * FREMDEN Adresse stolpert. Datei, Zeile und Stapel verschweigt er aus
+         * Sicherheitsgründen — es gibt nichts zu melden, und die Bitte darum
+         * lässt den Menschen mit einer Aufgabe zurück, die er nicht lösen kann.
+         *
+         * Woher so etwas kommt: die KI-Bibliothek von `esm.run`, eingebetteter
+         * fremder Inhalt, oder — am häufigsten auf dem Telefon — eine
+         * Browser-Erweiterung oder ein Inhaltsblocker. Redion läuft in all
+         * diesen Fällen weiter, und genau das gehört dann dagestanden.
+         *
+         * Dazu zwei Kleinigkeiten, die vorher fehlten: Ort und Zeile werden
+         * mitgenannt, wenn es sie gibt, und derselbe Fehler erscheint nur
+         * einmal. Ein Fehler in einer Schleife baute vorher einen Balken pro
+         * Durchgang, bis nichts anderes mehr zu sehen war.
+         * -------------------------------------------------------------------- */
+        const schonGemeldet = new Set();
+        const fehlerMelden = (text, ort, fremd) => {
+            const schluessel = text + '|' + ort;
+            if (schonGemeldet.has(schluessel))
+                return;
+            schonGemeldet.add(schluessel);
+            /* Für später aufheben — auf dem Telefon gibt es keine Konsole, in die
+               man hineinsehen könnte. Zwanzig reichen; ältere fallen hinten raus. */
+            try {
+                const bisher = Store.getMeta('fehlerprotokoll', []) || [];
+                bisher.push({ wann: new Date().toISOString(), text, ort, fremd });
+                Store.setMeta('fehlerprotokoll', bisher.slice(-20));
+            }
+            catch { /* wenn nicht einmal das geht, hilft ein Balken auch nicht */ }
+            UI.banner(fremd
+                ? 'Ein Skript von ausserhalb hat einen Fehler gemeldet — Redion läuft ' +
+                    'weiter. Woher er kommt, verrät der Browser nicht; meist ist es eine ' +
+                    'Erweiterung, ein Inhaltsblocker oder eingebetteter fremder Inhalt.'
+                : 'Es ist ein Fehler aufgetreten: ' + text + (ort ? ' (' + ort + ')' : '') +
+                    ' — bitte melde mir diesen Text.', 'fehler');
+        };
         addEventListener('error', (e) => {
-            UI.banner('Es ist ein Fehler aufgetreten: ' + (e.message || e.error) +
-                ' — bitte melde mir diesen Text.', 'fehler');
+            /* Kein Skriptfehler, sondern ein Bild oder eine Datei, die nicht kam.
+               `e.message` ist dann leer, und der Balken sagte „undefined". */
+            if (!(e instanceof ErrorEvent))
+                return;
+            const text = String(e.message || (e.error && e.error.message) || '').trim();
+            const ort = e.filename ? e.filename.split('/').pop() + ':' + e.lineno : '';
+            /* Die Kennzeichen der leeren Hülle: genau dieser Satz, kein Ort, kein
+               Fehlerobjekt. Fehlt eines davon, ist es ein echter Fehler von hier. */
+            const fremd = (!text || /^script error/i.test(text)) && !e.filename && !e.error;
+            fehlerMelden(text || 'Unbekannter Fehler', ort, fremd);
         });
         addEventListener('unhandledrejection', (e) => {
-            UI.banner('Es ist ein Fehler aufgetreten: ' + (e.reason?.message || e.reason) +
-                ' — bitte melde mir diesen Text.', 'fehler');
+            const grund = e.reason;
+            const text = String(grund?.message ?? grund ?? '').trim();
+            fehlerMelden(text || 'Ein Versprechen wurde gebrochen, ohne Grund zu nennen', '', /^script error/i.test(text));
         });
         Store.beiWarnung((text) => UI.banner(text, 'warn'));
         try {
@@ -2027,6 +2076,24 @@ const App = (() => {
                 : (Store.rootPages()[0] || {}).id;
         zeichneBaum();
         oeffne(startSeite);
+        /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
+           Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
+           eine Webseite; eine App beginnt bei ihrer Übersicht. Der Reiter
+           stand oben schon auf „Start" — nur der Inhalt darunter war die
+           zuletzt geöffnete Seite. Beides zeigte gleichzeitig etwas anderes.
+    
+           Nur beim ERSTEN Öffnen: wer über einen Link mit `#seite` kommt oder
+           schon in dieser Sitzung gearbeitet hat, will dorthin zurück und
+           nicht auf den Start geschickt werden. */
+        /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
+           die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
+           gesetzt. Die Bedingung war damit nie wahr. */
+        if (window.matchMedia('(max-width: 700px)').matches && !ausHash) {
+            try {
+                Ansichten.start();
+            }
+            catch { /* ohne Startbildschirm bleibt die Seite */ }
+        }
         /* ----------------------------------------------------------------------
            WAS DAS ANDERE FENSTER GEÄNDERT HAT
            ----------------------------------------------------------------------
