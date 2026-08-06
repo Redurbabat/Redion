@@ -594,9 +594,16 @@ und eine Kopfleiste ohne Titel ist schlimmer als eine mit schmaleren
 Knöpfen: man weiss dann nicht mehr, wo man ist. In einer waagerechten Leiste
 ist die Höhe die wichtigere Hälfte.
 
-**Noch offen** — die Blocksteuerung im Editor (`⋯` und `+`) ist mit 22 × 21
-px zu klein für einen Finger · zwei Symbolknöpfe in der Seitenleiste ·
-Kopfleiste 44 statt 56 px · mobiler Dateiimport · Offline-Hinweise.
+**Noch offen** — mobiler Dateiimport · Offline-Hinweise.
+
+**Am 6. August nachgemessen (390 px):** Kopfleiste 56 px, die
+Symbolknöpfe der Seitenleiste 44 × 44, die Seitenzeilen 48 px — alle drei
+früheren Punkte sind erledigt. Die Blocksteuerung ersetzt am Telefon das
+lange Drücken (`pwa.ts`). Die Messung mit echten Touch-Ereignissen fand
+dabei einen Fehler, den kein Direktaufruf je gezeigt hätte: der Klick, den
+der Browser dem Loslassen hinterherschickt, traf den Menü-Grund und schloss
+das eben geöffnete Menü sofort wieder. Behoben; seither drückt `test114`
+Abschnitt 5 wirklich lange und wacht darüber.
 
 **Priorität** — mittel.
 
