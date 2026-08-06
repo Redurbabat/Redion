@@ -892,6 +892,52 @@ a.bl:hover{color:var(--text)}
 .home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
 .home-liste .snip{display:block; font-size:12px; color:var(--text-dim)}
 .home-liste .leer{padding:8px 10px; font-size:13.5px; color:var(--text-faint)}
+/* Sicherungsstand.
+   Drei Stufen, ein Platz. Die Farbe steckt im linken Streifen, nicht in der
+   ganzen Fläche — ein durchgefärbter roter Kasten auf dem Start-Bildschirm
+   schreit jeden Morgen, und was jeden Morgen schreit, hört man nach einer
+   Woche nicht mehr. */
+.home-sich{
+  display:flex; align-items:center; gap:12px; margin-top:14px;
+  padding:12px 14px; border:1px solid var(--line); border-radius:9px;
+  border-left-width:3px; border-left-color:var(--line);
+}
+.home-sich .hs-zeichen{
+  flex:0 0 auto; width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700; background:var(--bg-hover); color:var(--text-dim);
+}
+.home-sich .hs-text{flex:1; min-width:0; font-size:13.5px; line-height:1.45}
+.home-sich .hs-text b{display:block; font-size:14.5px; font-weight:600}
+.home-sich .hs-text em{display:block; font-style:normal; font-size:12.5px; color:var(--text-faint)}
+.home-sich .hs-still{
+  flex:0 0 auto; font-size:12.5px; color:var(--text-faint);
+  padding:6px 10px; border-radius:6px;
+}
+.home-sich .hs-still:hover{background:var(--bg-hover); color:var(--text)}
+.home-sich .hs-tun{
+  flex:0 0 auto; font-size:13px; font-weight:500; padding:8px 14px;
+  border-radius:7px; background:var(--accent); color:#fff; white-space:nowrap;
+}
+.home-sich .hs-tun:hover{filter:brightness(1.07)}
+.home-sich .hs-tun:active{transform:translateY(1px)}
+
+.home-sich-gut{padding:9px 14px; border-left-color:var(--c-green, #4dab9a)}
+.home-sich-gut .hs-zeichen{background:var(--b-green); color:var(--c-green)}
+.home-sich-gut .hs-text{color:var(--text-dim)}
+
+.home-sich-erinnern{border-left-color:var(--c-yellow)}
+.home-sich-erinnern .hs-zeichen{background:var(--b-yellow); color:var(--c-yellow)}
+
+.home-sich-warnen{border-left-color:var(--c-red); background:var(--b-red)}
+.home-sich-warnen .hs-zeichen{background:var(--c-red); color:#fff}
+/* Auf der eingefärbten Fläche ist `--text-faint` nicht mehr zu lesen — der Ton
+   ist für den normalen Hintergrund gerechnet. Der erklärende Satz ist aber
+   genau das, was gelesen werden soll; er wäre sonst nur Dekoration um den
+   Knopf herum. */
+.home-sich-warnen .hs-text{color:var(--text)}
+.home-sich-warnen .hs-text em{color:inherit; opacity:.78}
+
 .home-zahlen{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px}
 .hz{border:1px solid var(--line); border-radius:9px; padding:14px; text-align:center}
 .hz b{display:block; font-size:22px}
@@ -1066,6 +1112,19 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .kuerzel{grid-template-columns:1fr}
   .stat-gitter{grid-template-columns:repeat(2,1fr)}
   .home-zahlen{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Auf dem Handy nebeneinander gequetscht bleibt vom Text nichts übrig und der
+   Knopf wird zu schmal zum Treffen. Also untereinander, Knopf über die volle
+   Breite und 44px hoch. Der ruhige Fall darf einzeilig bleiben — dort steht
+   kein Satz, den man lesen muss. */
+@media(max-width:760px){
+  .home-sich{flex-wrap:wrap; gap:10px}
+  .home-sich .hs-text{flex:1 1 auto; min-width:60%}
+  .home-sich .hs-tun{flex:1 0 100%; min-height:44px; font-size:14px}
+  .home-sich-gut{flex-wrap:nowrap}
+  .home-sich-gut .hs-still{min-height:44px; min-width:44px; display:flex;
+    align-items:center; justify-content:center}
 }
 
 
@@ -11485,13 +11544,13 @@ const Store = (() => {
     const flush = () => {
         if (!db) {
             pending.clear();
-            return;
+            return Promise.resolve();
         }
         const schluessel = [...pending.keys()];
         const posten = [...pending.values()];
         pending.clear();
         if (!posten.length)
-            return;
+            return Promise.resolve();
         let fertig;
         try {
             const faecher = [...new Set(posten.map(x => x.store))];
@@ -11525,6 +11584,7 @@ const Store = (() => {
            daraus, der Satz sei gelöscht. Eine Meldung über eine Änderung, die es
            noch nicht gibt, ist schlimmer als gar keine. */
         fertig.then(() => meldeAnAndereFenster('geaendert', schluessel));
+        return fertig;
     };
     /* Vor dem Schließen des Tabs alles rausschreiben. */
     window.addEventListener('beforeunload', flush);
@@ -27650,6 +27710,9 @@ const Datenbank = (() => {
             '<button data-a="link"><span class="mi">🔗</span>Link zur Ansicht kopieren</button>' +
             '<button data-a="csv"><span class="mi">⭳</span>Als CSV exportieren</button>' +
             '<button data-a="xlsx"><span class="mi">📗</span>Als Excel-Mappe (.xlsx)</button>' +
+            /* .ods für alle, die kein Excel haben — LibreOffice, OpenOffice und
+               Google Sheets öffnen es ohne Umweg. */
+            '<button data-a="ods"><span class="mi">📙</span>Als OpenDocument (.ods)</button>' +
             '<button data-a="csvin"><span class="mi">⭱</span>CSV einlesen</button>' +
             '<button data-a="ai"><span class="mi">✨</span>Mit KI auswerten</button>' +
             '<button data-a="dubletten"><span class="mi">⧉</span>Dubletten finden</button>' +
@@ -27854,6 +27917,12 @@ const Datenbank = (() => {
                 Austausch.datenbankAlsExcel(coll)
                     .then(() => UI.toast('Excel-Mappe erzeugt'))
                     .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message));
+            }
+            if (a === 'ods') {
+                Austausch.datenbankAlsOds(coll)
+                    .then(() => UI.toast('OpenDocument-Tabelle erzeugt'))
+                    .catch((e) => UI.toast('Die .ods kam nicht zustande: ' +
+                    (e instanceof Error ? e.message : String(e))));
             }
             if (a === 'csvin')
                 csvImport(coll);
@@ -31673,7 +31742,7 @@ const Werkzeuge = (() => {
     const dateienLesen = () => {
         const inp = document.createElement('input');
         inp.type = 'file';
-        inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.docx,.epub,image/*';
+        inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,.docx,.epub,image/*';
         inp.multiple = true;
         inp.addEventListener('change', async () => {
             let n = 0;
@@ -33672,6 +33741,128 @@ const Ansichten = (() => {
         const teil = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
         return teil + (name && name !== 'Ich' ? ', ' + name : '');
     };
+    /* --------------------------------------------------------------------------
+     * SICHERUNGSSTAND auf dem Start-Bildschirm
+     * ---------------------------------------------------------------------------
+     * Der Zeitstempel lag bisher im Verschlüsselungs-Dialog, drei Klicks tief in
+     * den Einstellungen. Dort sieht ihn, wer ohnehin ans Sichern denkt. Wer
+     * nicht daran denkt — und das ist der Fall, für den die Anzeige da ist —
+     * kommt nie dorthin. Also steht er jetzt da, wo man jeden Morgen hinschaut.
+     *
+     * Abgestuft, und das ist der eigentliche Punkt. Eine Warnung, die immer
+     * gleich laut ist, wird zur Tapete. Frisch gesichert heisst deshalb: eine
+     * ruhige Zeile. Länger her heisst: ein Hinweis mit Knopf. Nie gesichert
+     * heisst: ein Hinweis, den man nicht überliest. Die Stelle auf der Seite
+     * bleibt in allen drei Fällen dieselbe, damit nichts springt.
+     * ------------------------------------------------------------------------ */
+    const TAG = 86400000;
+    /** Ab hier erinnern (eine Woche) bzw. warnen (ein Monat). */
+    const SICHERUNG_ERINNERN = 7;
+    const SICHERUNG_WARNEN = 30;
+    const sicherungsstand = () => {
+        const wann = String(Store.getMeta('sicherung:zuletzt', '') || '');
+        const art = String(Store.getMeta('sicherung:art', '') || '');
+        const zeit = wann ? Date.parse(wann) : NaN;
+        /* Ein unlesbarer Zeitstempel ist wie keiner — nicht wie ein frischer. */
+        if (!wann || Number.isNaN(zeit))
+            return { stufe: 'warnen', tage: null, art, wann: '' };
+        const tage = Math.max(0, Math.floor((Date.now() - zeit) / TAG));
+        const stufe = tage >= SICHERUNG_WARNEN ? 'warnen'
+            : tage >= SICHERUNG_ERINNERN ? 'erinnern' : 'gut';
+        return { stufe, tage, art, wann };
+    };
+    const sicherungBand = () => {
+        const s = sicherungsstand();
+        const wieLang = s.tage === null ? ''
+            : s.tage === 0 ? 'heute'
+                : s.tage === 1 ? 'gestern'
+                    : 'vor ' + s.tage + ' Tagen';
+        if (s.stufe === 'gut') {
+            /* Alles in Ordnung: eine Zeile, kein Kasten, kein Ausrufezeichen. */
+            const ohneAnhaenge = s.art === 'json'
+                ? ' · JSON-Sicherung, ohne Anhänge' : '';
+            return '<div class="home-sich home-sich-gut">' +
+                `<span class="hs-zeichen">✓</span>` +
+                `<span class="hs-text">Gesichert ${esc(wieLang)}` +
+                `<em>${esc(Werkzeuge.zeitKurz(s.wann))}${esc(ohneAnhaenge)}</em></span>` +
+                '<button class="hs-still" data-a="sichern">Sichern</button>' +
+                '</div>';
+        }
+        const nie = s.tage === null;
+        return `<div class="home-sich home-sich-${s.stufe}">` +
+            `<span class="hs-zeichen">${nie ? '!' : '⏳'}</span>` +
+            '<span class="hs-text">' +
+            `<b>${nie ? 'Noch nie gesichert' : 'Zuletzt gesichert ' + esc(wieLang)}</b>` +
+            `<em>${nie
+                ? 'Deine Seiten liegen nur in diesem Browser. Eine Sicherung ist eine Datei auf deinem Gerät.'
+                : 'Was seitdem entstanden ist, liegt nur in diesem Browser.'}</em>` +
+            '</span>' +
+            '<button class="hs-tun prim" data-a="sichern">Jetzt sichern</button>' +
+            '</div>';
+    };
+    /* --------------------------------------------------------------------------
+     * PRIVAT — die eigenen Seiten auf oberster Ebene
+     * ---------------------------------------------------------------------------
+     * „Zuletzt bearbeitet" beantwortet: woran war ich dran? Diese Liste
+     * beantwortet: was habe ich überhaupt? Das ist auf dem Handy die
+     * wichtigere Frage, weil es dort keine Seitenleiste mit dem Baum gibt.
+     * ------------------------------------------------------------------------ */
+    const PRIVAT_MAX = 8;
+    const privatListe = () => {
+        const alle = Store.rootPages().filter((p) => !p.system);
+        const wurzeln = alle.slice(0, PRIVAT_MAX);
+        if (!wurzeln.length)
+            return '';
+        const mehr = alle.length - wurzeln.length;
+        return '<h2>Privat</h2><div class="home-liste">' +
+            wurzeln.map((p) => {
+                const kinder = Store.childrenOf(p.id)
+                    .filter((k) => k.type === 'page' && k.alive).length;
+                return `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '📄')}</span>` +
+                    `<span style="flex:1">${esc(p.text || 'Ohne Titel')}</span>` +
+                    `<span class="pth">${kinder ? kinder + (kinder === 1 ? ' Unterseite' : ' Unterseiten') : ''}</span>` +
+                    '</button>';
+            }).join('') +
+            (mehr > 0 ? `<div class="leer">und ${mehr} weitere in der Seitenleiste</div>` : '') +
+            '</div>';
+    };
+    /* --------------------------------------------------------------------------
+     * SCHNELLZUGRIFF — was der Nutzer selbst nach oben gestellt hat
+     * ---------------------------------------------------------------------------
+     * Der Wunsch war: „Ausbildung" und „Mediathek" als eigene Kacheln auf dem
+     * Start-Bildschirm. Zwei feste Kacheln einzubauen wäre die kurze Antwort —
+     * und die falsche: der Nächste braucht „Rezepte" und „Trainingsplan", und
+     * dann stehen vier Kacheln da, die niemand bestellt hat.
+     *
+     * Redion kennt bereits einen Begriff dafür, dass etwas wichtig ist: den
+     * Stern. Wer eine Seite mit ★ markiert, stellt sie damit nach oben — in der
+     * Seitenleiste und ab jetzt auch hier. Kein zweites Anheften, kein
+     * Einstellungsdialog, keine Liste, die man doppelt pflegt.
+     *
+     * Vier Stück, mehr nicht. Der Schnellzugriff soll der erste Blick sein,
+     * nicht das Inhaltsverzeichnis; alles Weitere steht in der Seitenleiste.
+     * ------------------------------------------------------------------------ */
+    const SCHNELL_MAX = 4;
+    const schnellKarten = () => {
+        const sterne = Links.seiten()
+            .filter((p) => p.favorite && !p.system)
+            .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
+            .slice(0, SCHNELL_MAX);
+        if (!sterne.length)
+            return '';
+        return '<h2>Schnellzugriff</h2><div class="home-karten">' +
+            sterne.map((p) => {
+                const kinder = Store.childrenOf(p.id)
+                    .filter((k) => k.type === 'page' && k.alive).length;
+                const unten = kinder
+                    ? kinder + (kinder === 1 ? ' Unterseite' : ' Unterseiten')
+                    : Werkzeuge.zeitKurz(p.edited);
+                return `<button class="hk" data-open="${esc(p.id)}">` +
+                    `<b>${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</b>` +
+                    `<span>${esc(unten)}</span></button>`;
+            }).join('') +
+            '</div>';
+    };
     const start = () => {
         const f = flaeche();
         if (!f)
@@ -33695,9 +33886,13 @@ const Ansichten = (() => {
                 `<span>${journalHeute ? 'Heutiger Eintrag ist angelegt' : 'Heutigen Eintrag anlegen'}</span></button>` +
                 `<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b><span>Gedanken sofort festhalten</span></button>` +
                 `<button class="hk" data-a="lernen"><b>🎴 Karteikarten</b>` +
-                `<span>${karten ? karten + ' Karten fällig' : 'Keine Karten fällig'}</span></button>` +
+                /* „1 Karten fällig" stand hier, seit es die Karte gibt. */
+                `<span>${karten ? karten + (karten === 1 ? ' Karte fällig' : ' Karten fällig')
+                    : 'Keine Karten fällig'}</span></button>` +
                 `<button class="hk" data-a="graph"><b>🕸 Graph</b><span>Wie alles zusammenhängt</span></button>` +
                 '</div>' +
+                sicherungBand() +
+                schnellKarten() +
                 '<h2>Zuletzt bearbeitet</h2>' +
                 '<div class="home-liste">' +
                 (zuletzt.length ? zuletzt.map((p) => `<button data-open="${p.id}"><span>${esc(p.icon || '📄')}</span>` +
@@ -33711,6 +33906,7 @@ const Ansichten = (() => {
                             `<span class="pth">${esc(new Date(e.zeit).toLocaleString('de-DE'))}</span></button>`).join('') +
                         '</div>'
                     : '') +
+                privatListe() +
                 `<h2>Dein Arbeitsbereich</h2>` +
                 `<div class="home-zahlen">` +
                 zahl(Links.seiten().length, 'Seiten') +
@@ -33737,6 +33933,15 @@ const Ansichten = (() => {
                 Werkzeuge.lernen();
             if (a.dataset['a'] === 'graph')
                 Links.graph();
+            /* Der Knopf im Sicherungsband — derselbe Weg wie in den Einstellungen.
+               Danach den Start-Bildschirm neu zeichnen, damit die Anzeige stimmt;
+               wer sichert, will sehen, dass es gezählt hat. */
+            if (a.dataset['a'] === 'sichern') {
+                void Promise.resolve(App.sicherungSpeichern()).then(() => {
+                    if (document.getElementById('page')?.querySelector('.home-sich'))
+                        start();
+                });
+            }
         });
     };
     const zahl = (n, name) => `<div class="hz"><b>${n}</b><span>${name}</span></div>`;
@@ -34869,7 +35074,8 @@ const Einstellungen = (() => {
         if (V('kartenMelden', true)) {
             const n = Werkzeuge.faellig().length;
             if (n)
-                setTimeout(() => UI.toast('🎴 ' + n + ' Karteikarten sind fällig'), 1800);
+                setTimeout(() => UI.toast('🎴 ' + n +
+                    (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
         }
     };
     return { oeffne, start, anwenden, datum, wochenstart, V, S, GRUPPEN, BEREICHE };
@@ -35086,6 +35292,78 @@ const Einlesen = (() => {
             n = n * 26 + (c.charCodeAt(0) - 64);
         return n - 1;
     };
+    /* ==========================================================================
+     * ODS — das Tabellenformat von LibreOffice und OpenOffice
+     * --------------------------------------------------------------------------
+     * WARUM ÜBERHAUPT. Wer keine Excel-Lizenz hat, speichert in .ods — das ist
+     * der Normalfall auf einem Linux-Rechner und in vielen Schulen und
+     * Verwaltungen. Eine Tabellen-App, die dieses Format nicht lesen kann,
+     * sagt solchen Leuten: hol dir erst Excel.
+     *
+     * WIE ES GEBAUT IST. Ein ODS ist ein ZIP mit `content.xml` darin. Die
+     * Tabellen stehen als `<table:table>`, die Zeilen als `<table:table-row>`,
+     * die Zellen als `<table:table-cell>`.
+     *
+     * ZWEI DINGE, DIE MAN LEICHT ÜBERSIEHT UND DIE ALLES VERSCHIEBEN:
+     *
+     *   1. WIEDERHOLUNGEN. Steht in zehn Zellen nebeneinander dasselbe — oder
+     *      nichts —, schreibt LibreOffice EINE Zelle mit
+     *      `table:number-columns-repeated="10"`. Wer das ignoriert, bekommt
+     *      eine Tabelle, in der ab der ersten Lücke jede Spalte verrutscht
+     *      ist. Dasselbe für Zeilen.
+     *
+     *   2. DER SCHWANZ. Am Ende jedes Blattes stehen oft tausend leere Zeilen
+     *      mit einer einzigen Wiederholungsangabe — „ab hier ist bis Zeile
+     *      1048576 nichts". Wer die ausrollt, baut eine Million leerer Zeilen
+     *      und friert den Browser ein. Deshalb wird die Wiederholung gedeckelt
+     *      und am Schluss abgeschnitten, was leer ist.
+     *
+     * DER WERT steht als Zahl in `office:value` und als Text in `<text:p>`.
+     * Genommen wird die Zahl, wenn es eine gibt — sonst käme aus „1.450,50"
+     * beim Rechnen nichts heraus.
+     * ========================================================================*/
+    const ODS_MAX_WIEDERHOLUNG = 1024;
+    const odsLesen = async (puffer) => {
+        const zip = await zipLesen(puffer);
+        const text = await zip.text('content.xml');
+        if (!text)
+            throw new Error('Diese .ods-Datei hat keine content.xml — ' +
+                'entweder ist sie beschädigt oder es ist keine.');
+        const doc = xml(text);
+        /* `getElementsByTagName` mit dem vollen Namen: `querySelectorAll` kommt
+           mit dem Doppelpunkt im Namensraum nicht zurecht. */
+        const tabellen = [...doc.getElementsByTagName('table:table')];
+        const blaetter = [];
+        for (const tab of tabellen) {
+            const name = tab.getAttribute('table:name') || 'Blatt';
+            const zeilen = [];
+            for (const row of [...tab.getElementsByTagName('table:table-row')]) {
+                const wieOft = Math.min(Number(row.getAttribute('table:number-rows-repeated') || 1) || 1, ODS_MAX_WIEDERHOLUNG);
+                const werte = [];
+                for (const c of [...row.getElementsByTagName('table:table-cell')]) {
+                    const malSo = Math.min(Number(c.getAttribute('table:number-columns-repeated') || 1) || 1, ODS_MAX_WIEDERHOLUNG);
+                    const zahl = c.getAttribute('office:value');
+                    const wert = zahl !== null && zahl !== ''
+                        ? Number(zahl)
+                        : [...c.getElementsByTagName('text:p')].map(x => x.textContent ?? '').join('\n');
+                    for (let i = 0; i < malSo; i++)
+                        werte.push(wert);
+                }
+                /* Rechts abschneiden, was leer ist — sonst schleppt jede Zeile die
+                   ausgerollten Wiederholungen mit. */
+                while (werte.length && (werte[werte.length - 1] === '' ||
+                    werte[werte.length - 1] === undefined))
+                    werte.pop();
+                for (let i = 0; i < wieOft; i++)
+                    zeilen.push([...werte]);
+            }
+            /* Und unten dasselbe. */
+            while (zeilen.length && !(zeilen[zeilen.length - 1] ?? []).length)
+                zeilen.pop();
+            blaetter.push({ name, zeilen });
+        }
+        return blaetter;
+    };
     const xlsxLesen = async (puffer) => {
         const zip = await zipLesen(puffer);
         /* Gemeinsame Texte */
@@ -35278,6 +35556,24 @@ const Einlesen = (() => {
             });
             return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt' };
         }
+        /* Dieselbe Behandlung wie .xlsx: ein Blatt wird eine Datenbank. Wer eine
+           Tabelle einliest, will damit rechnen und filtern können — nicht ein
+           Bild davon. */
+        if (name.endsWith('.ods')) {
+            const blaetter = await odsLesen(puffer);
+            if (!blaetter.length)
+                throw new Error('Keine Tabellenblätter gefunden.');
+            const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
+            let n = 0;
+            blaetter.forEach(b => {
+                Store.addBlock(seite.id, 'h2', { text: b.name });
+                if (alsDatenbank(seite.id, b.name, b.zeilen))
+                    n++;
+                else
+                    Store.addBlock(seite.id, 'text', { text: '(Blatt „' + b.name + '" war leer)' });
+            });
+            return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt' };
+        }
         if (name.endsWith('.docx')) {
             const bloecke = await docxLesen(puffer);
             const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📄' });
@@ -35301,7 +35597,8 @@ const Einlesen = (() => {
         }
         return null;
     };
-    return { zipLesen, zipLesenAusBlob, xlsxLesen, docxLesen, epubLesen, alsDatenbank, datei };
+    return { zipLesen, zipLesenAusBlob, xlsxLesen, odsLesen, docxLesen, epubLesen,
+        alsDatenbank, datei };
 })();
 window.Einlesen = Einlesen;
 
@@ -44118,6 +44415,9 @@ const Krypto = (() => {
         a.download = name;
         a.click();
         Store.setMeta('sicherung:zuletzt', new Date().toISOString());
+        /* Auch dieser Weg schreibt JSON — ohne Anhänge. Der Start-Bildschirm sagt
+           das jetzt dazu, also muss hier stehen, was für eine Sicherung es war. */
+        Store.setMeta('sicherung:art', 'json');
         return name;
     };
     /**
@@ -46383,6 +46683,108 @@ const Austausch = (() => {
     /**
      * @param blaetter [{ name, zeilen }]
      */
+    /* ==========================================================================
+     * ODS SCHREIBEN
+     * --------------------------------------------------------------------------
+     * Die Gegenrichtung zu `odsLesen`. Vier Dateien reichen für ein ODS, das
+     * LibreOffice, OpenOffice, Excel und Google Sheets öffnen:
+     *
+     *   mimetype              muss ZUERST im Archiv stehen und UNKOMPRIMIERT
+     *   META-INF/manifest.xml das Verzeichnis
+     *   content.xml           die Tabellen
+     *   styles.xml            leer, aber verlangt
+     *
+     * DIE ERSTE ZEILE IST EINE FALLE. Die Norm verlangt, dass `mimetype` der
+     * erste Eintrag ist und ohne Kompression gespeichert wird — daran erkennen
+     * manche Programme das Format, noch bevor sie das Verzeichnis lesen. Der
+     * ZIP-Schreiber hier legt ohnehin alles „gespeichert" ab, damit ist die
+     * zweite Hälfte erfüllt; die erste erledigt die Reihenfolge unten.
+     *
+     * ZAHLEN BLEIBEN ZAHLEN. Eine Zelle bekommt `office:value-type="float"`
+     * samt `office:value`, wenn der Wert eine Zahl ist. Ohne das steht in
+     * LibreOffice überall Text, die Summe ist 0 und Sortieren sortiert
+     * alphabetisch — `100` vor `20`. Das war beim CSV-Import derselbe Fehler.
+     * ========================================================================*/
+    const odsZelle = (w) => {
+        const leer = w === null || w === undefined || w === '';
+        if (leer)
+            return '<table:table-cell/>';
+        const zahl = typeof w === 'number' ? w
+            : (typeof w === 'string' && w.trim() !== '' && Number.isFinite(Number(w))
+                ? Number(w) : null);
+        if (zahl !== null)
+            return `<table:table-cell office:value-type="float" office:value="${zahl}">` +
+                `<text:p>${esc(String(w))}</text:p></table:table-cell>`;
+        return '<table:table-cell office:value-type="string">' +
+            String(w).split('\n').map(z => `<text:p>${esc(z)}</text:p>`).join('') +
+            '</table:table-cell>';
+    };
+    const odsBlatt = (b) => {
+        const zeilen = b.zeilen || [];
+        const breite = zeilen.reduce((m, z) => Math.max(m, (z || []).length), 0);
+        return `<table:table table:name="${esc(String(b.name || 'Blatt'))}">` +
+            `<table:table-column table:number-columns-repeated="${Math.max(1, breite)}"/>` +
+            zeilen.map(z => '<table:table-row>' +
+                Array.from({ length: breite }, (_, i) => odsZelle((z || [])[i])).join('') +
+                '</table:table-row>').join('') +
+            '</table:table>';
+    };
+    const alsOds = async (blaetter, dateiname) => {
+        const NS = ' xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"' +
+            ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"' +
+            ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
+        const dateien = [
+            /* ZUERST und unkomprimiert — siehe oben. */
+            { name: 'mimetype', inhalt: 'application/vnd.oasis.opendocument.spreadsheet' },
+            { name: 'META-INF/manifest.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?>' +
+                    '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" ' +
+                    'manifest:version="1.2">' +
+                    '<manifest:file-entry manifest:full-path="/" ' +
+                    'manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/>' +
+                    '<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>' +
+                    '<manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>' +
+                    '</manifest:manifest>' },
+            { name: 'styles.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?>' +
+                    `<office:document-styles${NS} office:version="1.2"/>` },
+            { name: 'content.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?>' +
+                    `<office:document-content${NS} office:version="1.2">` +
+                    '<office:body><office:spreadsheet>' +
+                    (blaetter || []).map((b) => odsBlatt(b)).join('') +
+                    '</office:spreadsheet></office:body></office:document-content>' }
+        ];
+        const blob = await zipSchreiben(dateien);
+        laden(blob, (dateiname || 'Redion') + '.ods');
+        return blob;
+    };
+    /**
+     * Eine Datenbank als ODS — ein Blatt je Ansicht, wie bei Excel.
+     *
+     * DIE ZELLEN WERDEN GENAUSO GELESEN WIE DORT. Der erste Versuch hatte
+     * hier `Werkzeuge.zelleAlsText` stehen — eine Funktion, die es nicht
+     * gibt. Der Übersetzer hat es gemeldet, bevor irgendetwas lief; ohne ihn
+     * wäre jede Zelle „undefined" gewesen und die Datei sähe trotzdem
+     * vollständig aus.
+     */
+    const datenbankAlsOds = (coll) => {
+        const ansichten = Object.values(Store.cache.views).filter(v => v.collectionId === coll.id);
+        const keys = Object.keys(coll.schema);
+        const kopf = keys.map(k => coll.schema[k].name);
+        const zeilenVon = (view) => {
+            const rows = view ? Datenbank.zeilen(coll, view) : Store.rowsOf(coll.id);
+            return rows.map((r) => keys.map(k => {
+                const v = Datenbank.wert(r, k, coll);
+                if (Array.isArray(v))
+                    return v.map(x => (x && x.name) || x).join(', ');
+                if (v instanceof Date)
+                    return v.toISOString().slice(0, 10);
+                return v === null || v === undefined ? '' : String(Formula.anzeige(v));
+            }));
+        };
+        const blaetter = ansichten.length
+            ? ansichten.map(v => ({ name: v.name || 'Ansicht', zeilen: [kopf, ...zeilenVon(v)] }))
+            : [{ name: coll.name, zeilen: [kopf, ...zeilenVon(null)] }];
+        return alsOds(blaetter, (coll.name || 'Datenbank').replace(/[\\/:*?"<>|]/g, '-'));
+    };
     const alsExcel = async (blaetter, dateiname) => {
         const sicher = (n, i) => String(n || ('Blatt' + (i + 1)))
             .replace(/[\\/:*?[\]]/g, ' ').slice(0, 31) || ('Blatt' + (i + 1));
@@ -46741,7 +47143,9 @@ const Austausch = (() => {
         ['obsidian', '🔮', 'Obsidian', 'Ein ganzer Ordner mit .md-Dateien, Wikilinks werden aufgelöst', 'ordner'],
         ['notion', '📓', 'Notion-Export', 'Das ZIP aus Notions eigenem Export', '.zip'],
         ['asana', '🗒', 'Asana / Jira / Monday', 'Der CSV-Export — wird zur Datenbank', '.csv'],
-        ['markdown', '📄', 'Einzelne Dateien', 'Markdown, Text, CSV, Word, Excel, EPUB', '.md,.txt,.csv,.docx,.xlsx,.epub']
+        ['markdown', '📄', 'Einzelne Dateien',
+            'Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB',
+            '.md,.txt,.csv,.docx,.xlsx,.ods,.epub']
     ];
     const dialog = () => {
         const o = document.createElement('div');
@@ -46825,7 +47229,7 @@ const Austausch = (() => {
         });
     };
     return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
-        allesAlsExcel, blattXml, spaltenName, wortInhalt,
+        allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
         ausTrello, ausEvernote, ausMarkdownOrdner, ausNotionZip, ausNotionJson,
         dialog, QUELLEN };
 })();
@@ -60559,6 +60963,27 @@ const App = (() => {
      * ZIP-Packer rechnet die Prüfsumme scheibchenweise. Was durch den Speicher
      * geht, ist immer nur ein Megabyte.
      */
+    /**
+     * Merkt sich, dass gerade gesichert wurde.
+     *
+     * WARUM DAS HIER FEHLTE UND WAS ES ANRICHTETE. Den Zeitstempel
+     * `sicherung:zuletzt` schrieb bis jetzt einzig `Krypto.sicherungSchreiben`
+     * — der Weg über den Verschlüsselungs-Dialog. Der Hauptweg, dieser hier,
+     * schrieb ihn nicht: nicht aus den Einstellungen, nicht aus der PWA, nicht
+     * aus der Befehlsleiste. Wer also normal sicherte — und das sind alle —
+     * bekam bis in alle Ewigkeit „Noch nie gesichert." zu lesen. Eine Warnung,
+     * die auch dann kommt, wenn alles in Ordnung ist, bringt einem bei, sie zu
+     * übersehen; und dann übersieht man sie auch, wenn sie stimmt.
+     *
+     * `sicherung:art` steht daneben, weil die beiden Sicherungen nicht
+     * dasselbe können: `.redion` nimmt die Anhänge mit, `.json` nicht. Wer nur
+     * JSON gesichert hat, hat seine Bilder nicht gesichert — das darf die
+     * Anzeige nicht verschweigen.
+     */
+    const sicherungGemerkt = (art) => {
+        Store.setMeta('sicherung:zuletzt', new Date().toISOString());
+        Store.setMeta('sicherung:art', art);
+    };
     const sicherungSpeichern = async () => {
         /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
            Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
@@ -60570,6 +60995,7 @@ const App = (() => {
             l.href = URL.createObjectURL(blob);
             l.download = 'redion-sicherung-' + heute + '.json';
             l.click();
+            sicherungGemerkt('json');
             UI.toast('Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
             return;
         }
@@ -60613,6 +61039,7 @@ const App = (() => {
             l.href = URL.createObjectURL(blob);
             l.download = 'redion-sicherung-' + heute + '.redion';
             l.click();
+            sicherungGemerkt('redion');
             UI.toast('Sicherung gespeichert — mit ' + (eintraege.length - 2) + ' Anhang/Anhängen');
         }
         catch (err) {

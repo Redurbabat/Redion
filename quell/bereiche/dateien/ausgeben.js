@@ -353,6 +353,108 @@ const Austausch = (() => {
     /**
      * @param blaetter [{ name, zeilen }]
      */
+    /* ==========================================================================
+     * ODS SCHREIBEN
+     * --------------------------------------------------------------------------
+     * Die Gegenrichtung zu `odsLesen`. Vier Dateien reichen für ein ODS, das
+     * LibreOffice, OpenOffice, Excel und Google Sheets öffnen:
+     *
+     *   mimetype              muss ZUERST im Archiv stehen und UNKOMPRIMIERT
+     *   META-INF/manifest.xml das Verzeichnis
+     *   content.xml           die Tabellen
+     *   styles.xml            leer, aber verlangt
+     *
+     * DIE ERSTE ZEILE IST EINE FALLE. Die Norm verlangt, dass `mimetype` der
+     * erste Eintrag ist und ohne Kompression gespeichert wird — daran erkennen
+     * manche Programme das Format, noch bevor sie das Verzeichnis lesen. Der
+     * ZIP-Schreiber hier legt ohnehin alles „gespeichert" ab, damit ist die
+     * zweite Hälfte erfüllt; die erste erledigt die Reihenfolge unten.
+     *
+     * ZAHLEN BLEIBEN ZAHLEN. Eine Zelle bekommt `office:value-type="float"`
+     * samt `office:value`, wenn der Wert eine Zahl ist. Ohne das steht in
+     * LibreOffice überall Text, die Summe ist 0 und Sortieren sortiert
+     * alphabetisch — `100` vor `20`. Das war beim CSV-Import derselbe Fehler.
+     * ========================================================================*/
+    const odsZelle = (w) => {
+        const leer = w === null || w === undefined || w === '';
+        if (leer)
+            return '<table:table-cell/>';
+        const zahl = typeof w === 'number' ? w
+            : (typeof w === 'string' && w.trim() !== '' && Number.isFinite(Number(w))
+                ? Number(w) : null);
+        if (zahl !== null)
+            return `<table:table-cell office:value-type="float" office:value="${zahl}">` +
+                `<text:p>${esc(String(w))}</text:p></table:table-cell>`;
+        return '<table:table-cell office:value-type="string">' +
+            String(w).split('\n').map(z => `<text:p>${esc(z)}</text:p>`).join('') +
+            '</table:table-cell>';
+    };
+    const odsBlatt = (b) => {
+        const zeilen = b.zeilen || [];
+        const breite = zeilen.reduce((m, z) => Math.max(m, (z || []).length), 0);
+        return `<table:table table:name="${esc(String(b.name || 'Blatt'))}">` +
+            `<table:table-column table:number-columns-repeated="${Math.max(1, breite)}"/>` +
+            zeilen.map(z => '<table:table-row>' +
+                Array.from({ length: breite }, (_, i) => odsZelle((z || [])[i])).join('') +
+                '</table:table-row>').join('') +
+            '</table:table>';
+    };
+    const alsOds = async (blaetter, dateiname) => {
+        const NS = ' xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"' +
+            ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"' +
+            ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
+        const dateien = [
+            /* ZUERST und unkomprimiert — siehe oben. */
+            { name: 'mimetype', inhalt: 'application/vnd.oasis.opendocument.spreadsheet' },
+            { name: 'META-INF/manifest.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?>' +
+                    '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" ' +
+                    'manifest:version="1.2">' +
+                    '<manifest:file-entry manifest:full-path="/" ' +
+                    'manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/>' +
+                    '<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>' +
+                    '<manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>' +
+                    '</manifest:manifest>' },
+            { name: 'styles.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?>' +
+                    `<office:document-styles${NS} office:version="1.2"/>` },
+            { name: 'content.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?>' +
+                    `<office:document-content${NS} office:version="1.2">` +
+                    '<office:body><office:spreadsheet>' +
+                    (blaetter || []).map((b) => odsBlatt(b)).join('') +
+                    '</office:spreadsheet></office:body></office:document-content>' }
+        ];
+        const blob = await zipSchreiben(dateien);
+        laden(blob, (dateiname || 'Redion') + '.ods');
+        return blob;
+    };
+    /**
+     * Eine Datenbank als ODS — ein Blatt je Ansicht, wie bei Excel.
+     *
+     * DIE ZELLEN WERDEN GENAUSO GELESEN WIE DORT. Der erste Versuch hatte
+     * hier `Werkzeuge.zelleAlsText` stehen — eine Funktion, die es nicht
+     * gibt. Der Übersetzer hat es gemeldet, bevor irgendetwas lief; ohne ihn
+     * wäre jede Zelle „undefined" gewesen und die Datei sähe trotzdem
+     * vollständig aus.
+     */
+    const datenbankAlsOds = (coll) => {
+        const ansichten = Object.values(Store.cache.views).filter(v => v.collectionId === coll.id);
+        const keys = Object.keys(coll.schema);
+        const kopf = keys.map(k => coll.schema[k].name);
+        const zeilenVon = (view) => {
+            const rows = view ? Datenbank.zeilen(coll, view) : Store.rowsOf(coll.id);
+            return rows.map((r) => keys.map(k => {
+                const v = Datenbank.wert(r, k, coll);
+                if (Array.isArray(v))
+                    return v.map(x => (x && x.name) || x).join(', ');
+                if (v instanceof Date)
+                    return v.toISOString().slice(0, 10);
+                return v === null || v === undefined ? '' : String(Formula.anzeige(v));
+            }));
+        };
+        const blaetter = ansichten.length
+            ? ansichten.map(v => ({ name: v.name || 'Ansicht', zeilen: [kopf, ...zeilenVon(v)] }))
+            : [{ name: coll.name, zeilen: [kopf, ...zeilenVon(null)] }];
+        return alsOds(blaetter, (coll.name || 'Datenbank').replace(/[\\/:*?"<>|]/g, '-'));
+    };
     const alsExcel = async (blaetter, dateiname) => {
         const sicher = (n, i) => String(n || ('Blatt' + (i + 1)))
             .replace(/[\\/:*?[\]]/g, ' ').slice(0, 31) || ('Blatt' + (i + 1));
@@ -711,7 +813,9 @@ const Austausch = (() => {
         ['obsidian', '🔮', 'Obsidian', 'Ein ganzer Ordner mit .md-Dateien, Wikilinks werden aufgelöst', 'ordner'],
         ['notion', '📓', 'Notion-Export', 'Das ZIP aus Notions eigenem Export', '.zip'],
         ['asana', '🗒', 'Asana / Jira / Monday', 'Der CSV-Export — wird zur Datenbank', '.csv'],
-        ['markdown', '📄', 'Einzelne Dateien', 'Markdown, Text, CSV, Word, Excel, EPUB', '.md,.txt,.csv,.docx,.xlsx,.epub']
+        ['markdown', '📄', 'Einzelne Dateien',
+            'Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB',
+            '.md,.txt,.csv,.docx,.xlsx,.ods,.epub']
     ];
     const dialog = () => {
         const o = document.createElement('div');
@@ -795,7 +899,7 @@ const Austausch = (() => {
         });
     };
     return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
-        allesAlsExcel, blattXml, spaltenName, wortInhalt,
+        allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
         ausTrello, ausEvernote, ausMarkdownOrdner, ausNotionZip, ausNotionJson,
         dialog, QUELLEN };
 })();

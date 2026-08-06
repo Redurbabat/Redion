@@ -1396,6 +1396,27 @@ const App = (() => {
      * ZIP-Packer rechnet die Prüfsumme scheibchenweise. Was durch den Speicher
      * geht, ist immer nur ein Megabyte.
      */
+    /**
+     * Merkt sich, dass gerade gesichert wurde.
+     *
+     * WARUM DAS HIER FEHLTE UND WAS ES ANRICHTETE. Den Zeitstempel
+     * `sicherung:zuletzt` schrieb bis jetzt einzig `Krypto.sicherungSchreiben`
+     * — der Weg über den Verschlüsselungs-Dialog. Der Hauptweg, dieser hier,
+     * schrieb ihn nicht: nicht aus den Einstellungen, nicht aus der PWA, nicht
+     * aus der Befehlsleiste. Wer also normal sicherte — und das sind alle —
+     * bekam bis in alle Ewigkeit „Noch nie gesichert." zu lesen. Eine Warnung,
+     * die auch dann kommt, wenn alles in Ordnung ist, bringt einem bei, sie zu
+     * übersehen; und dann übersieht man sie auch, wenn sie stimmt.
+     *
+     * `sicherung:art` steht daneben, weil die beiden Sicherungen nicht
+     * dasselbe können: `.redion` nimmt die Anhänge mit, `.json` nicht. Wer nur
+     * JSON gesichert hat, hat seine Bilder nicht gesichert — das darf die
+     * Anzeige nicht verschweigen.
+     */
+    const sicherungGemerkt = (art) => {
+        Store.setMeta('sicherung:zuletzt', new Date().toISOString());
+        Store.setMeta('sicherung:art', art);
+    };
     const sicherungSpeichern = async () => {
         /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
            Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
@@ -1407,6 +1428,7 @@ const App = (() => {
             l.href = URL.createObjectURL(blob);
             l.download = 'redion-sicherung-' + heute + '.json';
             l.click();
+            sicherungGemerkt('json');
             UI.toast('Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
             return;
         }
@@ -1450,6 +1472,7 @@ const App = (() => {
             l.href = URL.createObjectURL(blob);
             l.download = 'redion-sicherung-' + heute + '.redion';
             l.click();
+            sicherungGemerkt('redion');
             UI.toast('Sicherung gespeichert — mit ' + (eintraege.length - 2) + ' Anhang/Anhängen');
         }
         catch (err) {

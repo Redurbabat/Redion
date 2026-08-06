@@ -916,14 +916,14 @@ const Store = (() => {
    * Anfrage ihr eigenes `onerror`, das den Abbruch verhindert. Der schlechte
    * Satz geht verloren, die guten kommen an.
    */
-  const flush = () => {
-    if (!db) { pending.clear(); return; }
+  const flush = (): Promise<unknown> => {
+    if (!db) { pending.clear(); return Promise.resolve(); }
     const schluessel = [...pending.keys()];
     const posten = [...pending.values()];
     pending.clear();
-    if (!posten.length) return;
+    if (!posten.length) return Promise.resolve();
 
-    let fertig;
+    let fertig: Promise<unknown>;
     try {
       const faecher = [...new Set(posten.map(x => x.store))];
       const t = tx(faecher, 'readwrite');
@@ -955,6 +955,7 @@ const Store = (() => {
        daraus, der Satz sei gelöscht. Eine Meldung über eine Änderung, die es
        noch nicht gibt, ist schlimmer als gar keine. */
     fertig.then(() => meldeAnAndereFenster('geaendert', schluessel));
+    return fertig;
   };
 
   /* Vor dem Schließen des Tabs alles rausschreiben. */

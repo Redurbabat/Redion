@@ -205,6 +205,78 @@ const Einlesen = (() => {
             n = n * 26 + (c.charCodeAt(0) - 64);
         return n - 1;
     };
+    /* ==========================================================================
+     * ODS — das Tabellenformat von LibreOffice und OpenOffice
+     * --------------------------------------------------------------------------
+     * WARUM ÜBERHAUPT. Wer keine Excel-Lizenz hat, speichert in .ods — das ist
+     * der Normalfall auf einem Linux-Rechner und in vielen Schulen und
+     * Verwaltungen. Eine Tabellen-App, die dieses Format nicht lesen kann,
+     * sagt solchen Leuten: hol dir erst Excel.
+     *
+     * WIE ES GEBAUT IST. Ein ODS ist ein ZIP mit `content.xml` darin. Die
+     * Tabellen stehen als `<table:table>`, die Zeilen als `<table:table-row>`,
+     * die Zellen als `<table:table-cell>`.
+     *
+     * ZWEI DINGE, DIE MAN LEICHT ÜBERSIEHT UND DIE ALLES VERSCHIEBEN:
+     *
+     *   1. WIEDERHOLUNGEN. Steht in zehn Zellen nebeneinander dasselbe — oder
+     *      nichts —, schreibt LibreOffice EINE Zelle mit
+     *      `table:number-columns-repeated="10"`. Wer das ignoriert, bekommt
+     *      eine Tabelle, in der ab der ersten Lücke jede Spalte verrutscht
+     *      ist. Dasselbe für Zeilen.
+     *
+     *   2. DER SCHWANZ. Am Ende jedes Blattes stehen oft tausend leere Zeilen
+     *      mit einer einzigen Wiederholungsangabe — „ab hier ist bis Zeile
+     *      1048576 nichts". Wer die ausrollt, baut eine Million leerer Zeilen
+     *      und friert den Browser ein. Deshalb wird die Wiederholung gedeckelt
+     *      und am Schluss abgeschnitten, was leer ist.
+     *
+     * DER WERT steht als Zahl in `office:value` und als Text in `<text:p>`.
+     * Genommen wird die Zahl, wenn es eine gibt — sonst käme aus „1.450,50"
+     * beim Rechnen nichts heraus.
+     * ========================================================================*/
+    const ODS_MAX_WIEDERHOLUNG = 1024;
+    const odsLesen = async (puffer) => {
+        const zip = await zipLesen(puffer);
+        const text = await zip.text('content.xml');
+        if (!text)
+            throw new Error('Diese .ods-Datei hat keine content.xml — ' +
+                'entweder ist sie beschädigt oder es ist keine.');
+        const doc = xml(text);
+        /* `getElementsByTagName` mit dem vollen Namen: `querySelectorAll` kommt
+           mit dem Doppelpunkt im Namensraum nicht zurecht. */
+        const tabellen = [...doc.getElementsByTagName('table:table')];
+        const blaetter = [];
+        for (const tab of tabellen) {
+            const name = tab.getAttribute('table:name') || 'Blatt';
+            const zeilen = [];
+            for (const row of [...tab.getElementsByTagName('table:table-row')]) {
+                const wieOft = Math.min(Number(row.getAttribute('table:number-rows-repeated') || 1) || 1, ODS_MAX_WIEDERHOLUNG);
+                const werte = [];
+                for (const c of [...row.getElementsByTagName('table:table-cell')]) {
+                    const malSo = Math.min(Number(c.getAttribute('table:number-columns-repeated') || 1) || 1, ODS_MAX_WIEDERHOLUNG);
+                    const zahl = c.getAttribute('office:value');
+                    const wert = zahl !== null && zahl !== ''
+                        ? Number(zahl)
+                        : [...c.getElementsByTagName('text:p')].map(x => x.textContent ?? '').join('\n');
+                    for (let i = 0; i < malSo; i++)
+                        werte.push(wert);
+                }
+                /* Rechts abschneiden, was leer ist — sonst schleppt jede Zeile die
+                   ausgerollten Wiederholungen mit. */
+                while (werte.length && (werte[werte.length - 1] === '' ||
+                    werte[werte.length - 1] === undefined))
+                    werte.pop();
+                for (let i = 0; i < wieOft; i++)
+                    zeilen.push([...werte]);
+            }
+            /* Und unten dasselbe. */
+            while (zeilen.length && !(zeilen[zeilen.length - 1] ?? []).length)
+                zeilen.pop();
+            blaetter.push({ name, zeilen });
+        }
+        return blaetter;
+    };
     const xlsxLesen = async (puffer) => {
         const zip = await zipLesen(puffer);
         /* Gemeinsame Texte */
@@ -397,6 +469,24 @@ const Einlesen = (() => {
             });
             return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt' };
         }
+        /* Dieselbe Behandlung wie .xlsx: ein Blatt wird eine Datenbank. Wer eine
+           Tabelle einliest, will damit rechnen und filtern können — nicht ein
+           Bild davon. */
+        if (name.endsWith('.ods')) {
+            const blaetter = await odsLesen(puffer);
+            if (!blaetter.length)
+                throw new Error('Keine Tabellenblätter gefunden.');
+            const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
+            let n = 0;
+            blaetter.forEach(b => {
+                Store.addBlock(seite.id, 'h2', { text: b.name });
+                if (alsDatenbank(seite.id, b.name, b.zeilen))
+                    n++;
+                else
+                    Store.addBlock(seite.id, 'text', { text: '(Blatt „' + b.name + '" war leer)' });
+            });
+            return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt' };
+        }
         if (name.endsWith('.docx')) {
             const bloecke = await docxLesen(puffer);
             const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📄' });
@@ -420,6 +510,7 @@ const Einlesen = (() => {
         }
         return null;
     };
-    return { zipLesen, zipLesenAusBlob, xlsxLesen, docxLesen, epubLesen, alsDatenbank, datei };
+    return { zipLesen, zipLesenAusBlob, xlsxLesen, odsLesen, docxLesen, epubLesen,
+        alsDatenbank, datei };
 })();
 window.Einlesen = Einlesen;

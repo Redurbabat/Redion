@@ -220,6 +220,52 @@ a.bl:hover{color:var(--text)}
 .home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
 .home-liste .snip{display:block; font-size:12px; color:var(--text-dim)}
 .home-liste .leer{padding:8px 10px; font-size:13.5px; color:var(--text-faint)}
+/* Sicherungsstand.
+   Drei Stufen, ein Platz. Die Farbe steckt im linken Streifen, nicht in der
+   ganzen Fläche — ein durchgefärbter roter Kasten auf dem Start-Bildschirm
+   schreit jeden Morgen, und was jeden Morgen schreit, hört man nach einer
+   Woche nicht mehr. */
+.home-sich{
+  display:flex; align-items:center; gap:12px; margin-top:14px;
+  padding:12px 14px; border:1px solid var(--line); border-radius:9px;
+  border-left-width:3px; border-left-color:var(--line);
+}
+.home-sich .hs-zeichen{
+  flex:0 0 auto; width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700; background:var(--bg-hover); color:var(--text-dim);
+}
+.home-sich .hs-text{flex:1; min-width:0; font-size:13.5px; line-height:1.45}
+.home-sich .hs-text b{display:block; font-size:14.5px; font-weight:600}
+.home-sich .hs-text em{display:block; font-style:normal; font-size:12.5px; color:var(--text-faint)}
+.home-sich .hs-still{
+  flex:0 0 auto; font-size:12.5px; color:var(--text-faint);
+  padding:6px 10px; border-radius:6px;
+}
+.home-sich .hs-still:hover{background:var(--bg-hover); color:var(--text)}
+.home-sich .hs-tun{
+  flex:0 0 auto; font-size:13px; font-weight:500; padding:8px 14px;
+  border-radius:7px; background:var(--accent); color:#fff; white-space:nowrap;
+}
+.home-sich .hs-tun:hover{filter:brightness(1.07)}
+.home-sich .hs-tun:active{transform:translateY(1px)}
+
+.home-sich-gut{padding:9px 14px; border-left-color:var(--c-green, #4dab9a)}
+.home-sich-gut .hs-zeichen{background:var(--b-green); color:var(--c-green)}
+.home-sich-gut .hs-text{color:var(--text-dim)}
+
+.home-sich-erinnern{border-left-color:var(--c-yellow)}
+.home-sich-erinnern .hs-zeichen{background:var(--b-yellow); color:var(--c-yellow)}
+
+.home-sich-warnen{border-left-color:var(--c-red); background:var(--b-red)}
+.home-sich-warnen .hs-zeichen{background:var(--c-red); color:#fff}
+/* Auf der eingefärbten Fläche ist `--text-faint` nicht mehr zu lesen — der Ton
+   ist für den normalen Hintergrund gerechnet. Der erklärende Satz ist aber
+   genau das, was gelesen werden soll; er wäre sonst nur Dekoration um den
+   Knopf herum. */
+.home-sich-warnen .hs-text{color:var(--text)}
+.home-sich-warnen .hs-text em{color:inherit; opacity:.78}
+
 .home-zahlen{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px}
 .hz{border:1px solid var(--line); border-radius:9px; padding:14px; text-align:center}
 .hz b{display:block; font-size:22px}
@@ -394,5 +440,18 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .kuerzel{grid-template-columns:1fr}
   .stat-gitter{grid-template-columns:repeat(2,1fr)}
   .home-zahlen{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Auf dem Handy nebeneinander gequetscht bleibt vom Text nichts übrig und der
+   Knopf wird zu schmal zum Treffen. Also untereinander, Knopf über die volle
+   Breite und 44px hoch. Der ruhige Fall darf einzeilig bleiben — dort steht
+   kein Satz, den man lesen muss. */
+@media(max-width:760px){
+  .home-sich{flex-wrap:wrap; gap:10px}
+  .home-sich .hs-text{flex:1 1 auto; min-width:60%}
+  .home-sich .hs-tun{flex:1 0 100%; min-height:44px; font-size:14px}
+  .home-sich-gut{flex-wrap:nowrap}
+  .home-sich-gut .hs-still{min-height:44px; min-width:44px; display:flex;
+    align-items:center; justify-content:center}
 }
 

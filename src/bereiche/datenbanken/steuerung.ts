@@ -5702,6 +5702,9 @@ const Datenbank = (() => {
       '<button data-a="link"><span class="mi">🔗</span>Link zur Ansicht kopieren</button>' +
       '<button data-a="csv"><span class="mi">⭳</span>Als CSV exportieren</button>' +
       '<button data-a="xlsx"><span class="mi">📗</span>Als Excel-Mappe (.xlsx)</button>' +
+      /* .ods für alle, die kein Excel haben — LibreOffice, OpenOffice und
+         Google Sheets öffnen es ohne Umweg. */
+      '<button data-a="ods"><span class="mi">📙</span>Als OpenDocument (.ods)</button>' +
       '<button data-a="csvin"><span class="mi">⭱</span>CSV einlesen</button>' +
       '<button data-a="ai"><span class="mi">✨</span>Mit KI auswerten</button>' +
       '<button data-a="dubletten"><span class="mi">⧉</span>Dubletten finden</button>' +
@@ -5884,6 +5887,10 @@ const Datenbank = (() => {
       if (a === 'xlsx') { Austausch.datenbankAlsExcel(coll)
         .then(() => UI.toast('Excel-Mappe erzeugt'))
         .catch(e => UI.toast('Die Excel-Mappe kam nicht zustande: ' + e.message)); }
+      if (a === 'ods') { Austausch.datenbankAlsOds(coll)
+        .then(() => UI.toast('OpenDocument-Tabelle erzeugt'))
+        .catch((e: unknown) => UI.toast('Die .ods kam nicht zustande: ' +
+          (e instanceof Error ? e.message : String(e)))); }
       if (a === 'csvin') csvImport(coll);
       if (a === 'ai')  KI.datenbankAuswerten(coll, view);
       if (a === 'del') {

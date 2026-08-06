@@ -1012,7 +1012,8 @@ const Einstellungen = (() => {
         if (V('kartenMelden', true)) {
             const n = Werkzeuge.faellig().length;
             if (n)
-                setTimeout(() => UI.toast('🎴 ' + n + ' Karteikarten sind fällig'), 1800);
+                setTimeout(() => UI.toast('🎴 ' + n +
+                    (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
         }
     };
     return { oeffne, start, anwenden, datum, wochenstart, V, S, GRUPPEN, BEREICHE };
