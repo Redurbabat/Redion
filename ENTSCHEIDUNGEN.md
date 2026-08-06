@@ -1560,3 +1560,30 @@ der Kern weiterhin nicht, weil er sie nicht sicher weiss.
 
 Beschlossen und umgesetzt. Damit ist die letzte in E29 genannte Lücke am
 Tabellenblock geschlossen.
+
+
+## E32 · Der Worker heisst redion — die Datenbank weiter notizen
+
+**Die Lage.** Im Cloudflare-Dashboard ist das Repository mit einem Worker
+namens `redion` verbunden. Die `wrangler.toml` sagte aber `name = "notizen"`
+— der Name aus der Zeit, als das Projekt noch Notizen hiess. Cloudflare
+veröffentlicht nur, wenn beide Namen übereinstimmen; also wurde nichts
+veröffentlicht.
+
+**Beschluss.** Der Worker heisst `redion`, wie das Projekt. Die
+`wrangler.toml` und die Adressen in CLOUDFLARE.md und SERVER-EINRICHTEN.md
+sagen das jetzt auch. Die App ist damit unter
+`redion.<dein-name>.workers.dev` erreichbar; eine unter der alten
+notizen-Adresse installierte PWA muss von der neuen Adresse neu
+installiert werden.
+
+**Was ausdrücklich NICHT umbenannt wird.** Die IndexedDB im Browser heisst
+weiter `notizen`, der Dienst-Cache weiter `notizen-v…`, exportierte Dateien
+weiter `notizen-…`. Das sind keine Namen, sondern Daten (E27, Grenze 1):
+wer die Datenbank umbenennt, trennt jeden Bestandsnutzer von seinen
+Notizen. Der Worker-Name dagegen ist reine
+Veröffentlichungs-Konfiguration — er berührt keine gespeicherten Daten.
+
+**Status**
+
+Beschlossen und umgesetzt.
