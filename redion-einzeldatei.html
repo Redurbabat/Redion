@@ -3965,7 +3965,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                          font-size:12px; text-decoration:underline; padding:0 3px}
 #offline-streifen button[data-a="zu"]{text-decoration:none; font-size:13px; opacity:.7}
 #offline-streifen button:hover{opacity:1}
-@media(max-width:760px){ #offline-streifen{bottom:70px; font-size:12px} }
+/* Am Telefon: volle Breite und ÜBER der unteren Leiste (72 px + Safe-Area) —
+   bei bottom:70px lag der Streifen auf ihr. Und die Knöpfe sind
+   Fingerflächen: das ✕ war 17 × 20 px. */
+@media(max-width:760px){
+  #offline-streifen{left:10px; right:10px; transform:none;
+                    bottom:calc(84px + env(safe-area-inset-bottom));
+                    font-size:13px; gap:6px; padding:2px 4px 2px 13px}
+  #offline-streifen span{flex:1 1 auto; min-width:0}
+  #offline-streifen button{min-height:44px; padding:0 10px}
+  #offline-streifen button[data-a="zu"]{min-width:44px; padding:0}
+}
 
 /* Hineinschauen in Diagramme und Kreuztabellen */
 .ch-teil{cursor:pointer; transition:opacity .12s}
@@ -4128,7 +4138,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .rg-thema ul{margin:0; padding-left:19px}
 .rg-thema li{font-size:13px; color:var(--text-dim); line-height:1.65}
 @media(max-width:760px){ #rg-kasten{width:min(330px,92vw)} }
-#rg-einladung{position:fixed; left:14px; bottom:14px; z-index:640; display:flex;
+/* z-index unter dem Menü-Grund (590): eine Einladung darf nie über einem
+   geöffneten Menü liegen — am Telefon verdeckte sie das Import-Blatt. */
+#rg-einladung{position:fixed; left:14px; bottom:14px; z-index:560; display:flex;
               gap:11px; align-items:center; background:var(--bg-side);
               border:1px solid var(--line); border-radius:10px; padding:9px 12px;
               box-shadow:var(--shadow); max-width:min(360px,88vw)}
@@ -61775,13 +61787,21 @@ const App = (() => {
         });
         an('btn-import', (e) => {
             const r = e.currentTarget.getBoundingClientRect();
+            /* Am Telefon wird nur angeboten, was dort wirklich geht: Ordner wählen
+               können Telefon-Browser nicht, und eine Datei auf die Seite ziehen
+               kann auf einem Touchscreen niemand. Ein toter Knopf ist schlimmer
+               als ein fehlender. */
+            const telefon = window.matchMedia('(max-width: 700px)').matches;
             const m = UI.menu('<div class="grp">Was soll hereinkommen?</div>' +
                 '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
                 '<span class="sub">Markdown, CSV, TSV, HTML, Excel, Word, EPUB</span></button>' +
-                '<button data-i="ordner"><span class="mi">📁</span>Ganzen Ordner einlesen</button>' +
+                (telefon ? '' :
+                    '<button data-i="ordner"><span class="mi">📁</span>Ganzen Ordner einlesen</button>') +
                 '<hr><button data-i="werkzeug"><span class="mi">⭱</span>Aus einem anderen Werkzeug' +
                 '<span class="sub">Trello, Evernote, Obsidian, Notion-Export, Asana</span></button>' +
-                '<hr><div class="grp" style="font-weight:400">Oder einfach eine Datei auf die Seite ziehen.</div>', r.right + 6, r.top);
+                '<hr><div class="grp" style="font-weight:400">' +
+                (telefon ? 'Die Auswahl öffnet die Dateien-App des Telefons.'
+                    : 'Oder einfach eine Datei auf die Seite ziehen.') + '</div>', r.right + 6, r.top);
             m.addEventListener('click', ev => {
                 const b = elVon(ev)?.closest('button[data-i]');
                 if (!b)

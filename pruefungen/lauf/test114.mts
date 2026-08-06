@@ -35,7 +35,10 @@
  * NEU AM 6. AUGUST: Abschnitt 5 drückt wirklich lange auf einen Block und
  * lässt los — gegen den Fehler, dass der Klick, den der Browser der
  * Berührung hinterherschickt, das eben geöffnete Blockmenü sofort wieder
- * schloss.
+ * schloss. Abschnitt 6 geht wirklich offline: der Streifen lag auf der
+ * unteren Leiste und sein ✕ war 17 × 20 px. Abschnitt 7 öffnet den Import:
+ * Ordnerwahl und Zieh-Hinweis haben auf einem Telefon nichts verloren, und
+ * die Rundgang-Einladung verdeckte das offene Blatt.
  *
  *   node pruefungen/lauf/test114.mts
  * ==========================================================================*/
@@ -228,6 +231,73 @@ if (ziel) {
     menue.zuFlach.length === 0, menue.zuFlach.join(', '));
   await seite.evaluate(() => { document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove()); });
 }
+
+console.log('\n6 · Ohne Verbindung: der Streifen sitzt über der Leiste und ist antippbar');
+
+/* Vorher lag der Streifen bei bottom:70px AUF der 72 px hohen unteren
+   Leiste, und sein ✕ war 17 × 20 px — auf dem einzigen Gerät, auf dem man
+   wirklich offline ist, war die Anzeige weder lesbar noch schliessbar. */
+await seite.context().setOffline(true);
+await seite.waitForTimeout(700);
+const streifen = await seite.evaluate(() => {
+  const s = document.getElementById('offline-streifen');
+  if (!s) return { da: false, bottom: 0, leisteTop: 0, flach: [] as string[], xBreit: 0 };
+  const r = s.getBoundingClientRect();
+  const leiste = document.getElementById('handy-unten')?.getBoundingClientRect();
+  const flach = [...s.querySelectorAll('button')]
+    .filter(k => k.getBoundingClientRect().height < 44)
+    .map(k => `${(k.textContent ?? '').trim().slice(0, 12)} ${Math.round(k.getBoundingClientRect().height)}px`);
+  const x = s.querySelector('button[data-a="zu"]');
+  return { da: true, bottom: Math.round(r.bottom),
+           leisteTop: leiste ? Math.round(leiste.top) : 9999, flach,
+           xBreit: x ? Math.round(x.getBoundingClientRect().width) : 0 };
+}) as { da: boolean; bottom: number; leisteTop: number; flach: string[]; xBreit: number };
+p('Der Offline-Streifen erscheint', streifen.da);
+p('Er liegt über der unteren Leiste, nicht auf ihr',
+  streifen.da && streifen.bottom <= streifen.leisteTop,
+  `Streifen endet bei ${streifen.bottom}, die Leiste beginnt bei ${streifen.leisteTop}`);
+p('Beide Knöpfe des Streifens sind 44 px hoch',
+  streifen.da && streifen.flach.length === 0, streifen.flach.join(', '));
+p('Das ✕ ist 44 px breit', streifen.xBreit >= 44, `${streifen.xBreit}px`);
+await seite.context().setOffline(false);
+await seite.waitForTimeout(600);
+p('Mit Verbindung verschwindet der Streifen wieder',
+  await seite.evaluate(() => !document.getElementById('offline-streifen')));
+
+console.log('\n7 · Import am Telefon: nur, was dort wirklich geht');
+
+/* „Ganzen Ordner einlesen" können Telefon-Browser nicht, und eine Datei auf
+   die Seite ziehen kann auf einem Touchscreen niemand — beides stand
+   trotzdem da. Und die Rundgang-Einladung lag ÜBER dem offenen Blatt und
+   verdeckte den untersten Eintrag. */
+await seite.evaluate(() => { document.getElementById('btn-import')?.click(); });
+await seite.waitForTimeout(500);
+const imp = await seite.evaluate(() => {
+  const m = document.querySelector('.menu');
+  const z = (el: Element | null) =>
+    el ? (Number(getComputedStyle(el as HTMLElement).zIndex) || 0) : null;
+  return {
+    da: !!m, blatt: !!m && m.classList.contains('blatt'),
+    dateien: !!m?.querySelector('[data-i="dateien"]'),
+    werkzeug: !!m?.querySelector('[data-i="werkzeug"]'),
+    ordner: !!m?.querySelector('[data-i="ordner"]'),
+    ziehen: /ziehen/i.test(m?.textContent ?? ''),
+    einladungZ: z(document.getElementById('rg-einladung')),
+    grundZ: z(document.querySelector('.menu-grund')),
+  };
+}) as { da: boolean; blatt: boolean; dateien: boolean; werkzeug: boolean;
+        ordner: boolean; ziehen: boolean; einladungZ: number | null; grundZ: number | null };
+p('Das Import-Blatt öffnet', imp.da && imp.blatt);
+p('„Dateien wählen" und „Aus einem anderen Werkzeug" stehen drin',
+  imp.dateien && imp.werkzeug);
+p('„Ganzen Ordner einlesen" steht am Telefon nicht drin', !imp.ordner,
+  'Ordnerwahl gibt es in Telefon-Browsern nicht — ein toter Knopf');
+p('Kein Zieh-Hinweis am Telefon', !imp.ziehen,
+  'auf einem Touchscreen zieht niemand eine Datei auf die Seite');
+p('Die Einladung liegt nicht über dem offenen Blatt',
+  imp.einladungZ === null || (imp.grundZ !== null && imp.einladungZ < imp.grundZ),
+  `Einladung z=${imp.einladungZ}, Menü-Grund z=${imp.grundZ}`);
+await seite.evaluate(() => { document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove()); });
 
 await browser.close();
 server.close();

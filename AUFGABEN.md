@@ -594,7 +594,16 @@ und eine Kopfleiste ohne Titel ist schlimmer als eine mit schmaleren
 Knöpfen: man weiss dann nicht mehr, wo man ist. In einer waagerechten Leiste
 ist die Höhe die wichtigere Hälfte.
 
-**Noch offen** — mobiler Dateiimport · Offline-Hinweise.
+**Noch offen** — nichts mehr aus dieser Liste; was Mobile grundsätzlich
+fehlt, steht in `LUECKEN.md` L10.
+
+**Dateiimport und Offline-Hinweise, nachgesehen am 6. August (390 px):**
+Beides gab es schon — aber der Offline-Streifen lag AUF der unteren Leiste,
+sein ✕ war 17 × 20 px, das Import-Blatt bot „Ganzen Ordner einlesen" an
+(können Telefon-Browser nicht) samt Zieh-Hinweis (zieht auf einem
+Touchscreen niemand), und die Rundgang-Einladung verdeckte das offene
+Blatt. Alles behoben; `test114` Abschnitte 6 und 7 gehen seither wirklich
+offline und öffnen den Import wirklich.
 
 **Am 6. August nachgemessen (390 px):** Kopfleiste 56 px, die
 Symbolknöpfe der Seitenleiste 44 × 44, die Seitenzeilen 48 px — alle drei
