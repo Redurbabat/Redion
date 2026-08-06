@@ -533,11 +533,16 @@ Zeichen jetzt, ausserhalb von Anführungszeichen gezählt.
 
 ## Phase 9 · Cloudflare, Konto und Sync
 
-**G1 — Konto-Modus.** Ohne Konto nutzen · Konto anlegen · anmelden ·
-abmelden · lokal bleiben · lokal + Sync wählen · Cloud-Arbeitsbereich ·
-Konto löschen · alles exportieren.
+**~~G1 — Konto-Modus.~~** ✅ **erledigt** (6. August, E34): Anmelden ist
+nicht mehr Zustimmen — der Schalter `wolkeAbgleich` trennt „nur lokal"
+von „lokal + Abgleich", die Oberfläche fragt ausdrücklich, `test120`
+beweist am echten Server: ohne das Ja bleibt er leer. Abmelden warnt und
+lässt die Notizen da; Konto löschen räumt die volle Server-Kaskade und
+verlangt die abgetippte Mail; „Alles als .redion sichern" steht daneben.
+**Offen bleibt** der Cloud-Arbeitsbereich als eigenes Konzept (mehrere
+Bereiche in der Oberfläche wählen und anlegen) — siehe L7.
 **Regel:** lokale Daten werden **nie** ohne ausdrückliche Zustimmung
-hochgeladen (E1).
+hochgeladen (E1). Das Tor steht in `abgleichen()`.
 
 **~~G2 — R2 für Dateien.~~** ✅ **erledigt** (6. August, E33): Server-Wege
 in `server/dateien.ts`, Client-Abgleich in `maschine.ts` Abschnitt 6b —

@@ -341,6 +341,54 @@ const kontoWeg = async (a: any, ablage: any, umwelt: any, t: any, m: any, k: any
     return antwort(200, { ok: true }, { 'Access-Control-Allow-Origin': '*' });
   }
 
+  /* --- Konto löschen: alles Serverseitige, nichts Lokales ---------------
+     Die Kaskade räumt, was dem Konto gehört: eigene Bereiche samt Sätzen,
+     Dateien und deren Stücken im Blob-Speicher, Freigaben, veröffentlichte
+     Seiten, Protokoll und Feldrechte — dann fremde Freigaben AN dieses
+     Konto, seine Marken, seine Sitzungen, und zuletzt den Kontosatz selbst.
+     Was auf den Geräten liegt, liegt auf den Geräten: der Server löscht
+     nur, was er hat. */
+  if (was === 'loeschen' && m === 'POST') {
+    const wer = await werFragt(ablage, kopf);
+    if (!wer) return fehler(401, 'unauthorized', 'Nicht angemeldet.');
+    if (wer.marke) return fehler(403, 'restricted_resource',
+      'Ein Konto löscht nur ein Mensch mit Sitzung, keine Marke.');
+    const kontoId = wer.konto.id;
+    const blobs = (umwelt && umwelt.blobs) || null;
+
+    const eigene = await ablage.finde('bereiche', { besitzer: kontoId });
+    for (const b of eigene) {
+      for (const s of await ablage.finde('saetze', { bereich: b.id }))
+        await ablage.weg('saetze', { bereich: b.id, id: s.id });
+      for (const d of await ablage.finde('dateien', { bereich: b.id })) {
+        if (blobs) for (let nr = 0; nr < Math.max(1, Number(d.teile) || 1); nr++)
+          await blobs.weg(`${b.id}/${d.id}/${nr}`);
+        await ablage.weg('dateien', { bereich: b.id, id: d.id });
+      }
+      for (const f of await ablage.finde('freigaben', { bereich: b.id }))
+        await ablage.weg('freigaben', { bereich: b.id, seite: f.seite, kontoId: f.kontoId });
+      for (const oe of await ablage.finde('oeffentlich', { bereich: b.id }))
+        await ablage.weg('oeffentlich', { schluessel: oe.schluessel });
+      for (const pr of await ablage.finde('protokoll', { bereich: b.id }))
+        await ablage.weg('protokoll', { id: pr.id });
+      for (const fr of await ablage.finde('feldrechte', { bereich: b.id }))
+        await ablage.weg('feldrechte',
+          { bereich: b.id, sammlung: fr.sammlung, feld: fr.feld, kontoId: fr.kontoId });
+      await ablage.weg('bereiche', { id: b.id });
+    }
+    for (const f of await ablage.finde('freigaben', { kontoId }))
+      await ablage.weg('freigaben', { bereich: f.bereich, seite: f.seite, kontoId });
+    for (const mk of await ablage.finde('marken', { kontoId }))
+      await ablage.weg('marken', { wert: mk.wert });
+    for (const s of await ablage.finde('sitzungen', { kontoId }))
+      await ablage.weg('sitzungen', { token: s.token });
+    await ablage.weg('konten', { id: kontoId });
+    /* Kein Protokolleintrag: das Protokoll gehörte zu den Bereichen, und
+       die sind eben mitgegangen. Ein Eintrag für niemanden hilft niemandem. */
+    return antwort(200, { ok: true, bereiche: eigene.length },
+      { 'Access-Control-Allow-Origin': '*' });
+  }
+
   /* --- Gerätecode: der Rechner fragt nach einem Code ------------------- */
   if (was === 'code' && m === 'POST') {
     /* Diese Bremse steht NICHT gegen das Erraten — 32^8 Möglichkeiten erraten

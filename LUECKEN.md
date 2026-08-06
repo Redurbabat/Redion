@@ -129,9 +129,8 @@ füllt.
 „steht am Ende die eine oder die andere Fassung da — oder ist ein Konflikt
 gemeldet?"), `test78` (zwei Chromium-Geräte ändern gleichzeitig) und seit
 dem 6. August `test118`: Gerät A ändert offline, das **Wiederverbinden
-allein** stösst den Abgleich an, und die dateiId eines Anhangs überlebt
-den Abgleich auf beiden Geräten. Die Bytes selbst bleiben ausdrücklich
-zurück, bis G2 (L6) gebaut ist — `test113` und `test118` halten das fest.
+allein** stösst den Abgleich an, und Anhänge kommen samt Bytes hinüber —
+Byte für Byte, verschlüsselt unterwegs (seit G2, E33).
 
 Zwei Fehler, die diese Läufe gefunden haben: der `online`-Handler zeigte
 nur einen Toast statt abzugleichen, und `/sync/runter` liess die Marke vor
@@ -171,14 +170,23 @@ das Wie steht in E33.
 
 ## L7 · Konto-Modus
 
-**Stand** — ◐ Server- und Kontologik existieren, der Nutzerfluss nicht.
+**Stand** — ✅ der Nutzerfluss steht (6. August, E34).
 
-Fehlt: Registrierung · Login · Sitzungen · Logout · lokal bleiben ·
-lokal + Sync wählen · Cloud-Arbeitsbereich · Offline-Paket herunterladen ·
-Konto löschen · alles exportieren.
+Anmelden (GitHub, Google, Gerätecode) gab es schon; neu ist die
+Entscheidung dahinter: **anmelden ist nicht zustimmen.** Der Schalter
+`wolkeAbgleich` trennt „nur lokal" von „lokal + Abgleich", die Oberfläche
+fragt ausdrücklich, und ohne das Ja verlässt kein Satz das Gerät —
+`test120` beweist es am echten Server. Abmelden warnt und lässt die
+Notizen da; **Konto löschen** räumt serverseitig die volle Kaskade und
+verlangt die abgetippte Mail-Adresse; „Alles als .redion sichern" steht
+direkt daneben.
+
+Offen bleibt der Cloud-Arbeitsbereich als eigenes Konzept (mehrere
+Bereiche wählen und anlegen in der Oberfläche) — bisher nimmt das Gerät
+den ersten Bereich des Kontos.
 
 **Regel** — ein Konto darf nie Pflicht sein, und lokale Daten werden nie
-ungefragt hochgeladen (E1).
+ungefragt hochgeladen (E1). Das Tor dazu steht in `abgleichen()` (E34).
 
 ## L8 · Rechte und Freigaben produktionsreif machen
 

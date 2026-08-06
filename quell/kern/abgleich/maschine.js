@@ -294,6 +294,14 @@ const Wolke = (() => {
             Protokoll.notieren('konto', 'Bei der Wolke angemeldet als ' + ich.konto.name);
         return ich;
     };
+    /** Das Konto samt allem Serverseitigen löschen — die Notizen auf diesem
+     *  Gerät bleiben. Der Server räumt die Kaskade, danach wird lokal
+     *  aufgeräumt wie beim Abmelden. */
+    const kontoLoeschen = async () => {
+        const a = await ruf('/konto/loeschen', { m: 'POST' });
+        await abmelden();
+        return a;
+    };
     const abmelden = async () => {
         try {
             await ruf('/konto/abmelden', { m: 'POST' });
@@ -313,6 +321,9 @@ const Wolke = (() => {
         Store.setMeta('wolkeMarkeRunter', '');
         Store.setMeta('wolkeMarkeDateien', '');
         Store.setMeta('wolkeDateienOben', []);
+        /* Das Ja zum Abgleich gehörte zu DIESEM Konto — das nächste wird neu
+           gefragt. */
+        Store.setMeta('wolkeAbgleich', null);
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
@@ -561,9 +572,27 @@ const Wolke = (() => {
         }
         return { uebernommen, unlesbar, gemischt, strittig, mehr: a.mehr };
     };
+    /* ------------------------------------------------------------------------
+     * DER SCHALTER — abgleichen nur mit ausdrücklichem Ja (E1, E34)
+     * ------------------------------------------------------------------------
+     * Angemeldet sein und abgleichen sind zwei Entscheidungen. Die zweite
+     * fällt hier: ohne `wolkeAbgleich` verlässt kein Satz und kein Stück
+     * dieses Gerät — egal wer Takt, Sichtwechsel oder online-Ereignis ist,
+     * sie laufen alle durch `abgleichen()`.
+     *
+     * Bestandsgeräte: wer vor dem Schalter schon abgeglichen hat, hat sein
+     * Ja längst gegeben — ein stiller Sync-Stopp wäre die falsche Sorte
+     * Überraschung. Die Marken sind der Beleg. */
+    const abgleichErlaubt = () => {
+        const v = Store.getMeta('wolkeAbgleich', null);
+        if (v !== null)
+            return !!v;
+        return !!(Store.getMeta('wolkeMarkeHoch', '') || Store.getMeta('wolkeMarkeRunter', ''));
+    };
+    const abgleichSetzen = (an) => { Store.setMeta('wolkeAbgleich', !!an); melden(); };
     /** Beide Richtungen. Läuft nie zweimal gleichzeitig. */
     const abgleichen = async () => {
-        if (!angemeldet() || !bereich() || zustand.laeuft)
+        if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt())
             return null;
         zustand.laeuft = true;
         zustand.fehler = '';
@@ -833,6 +862,7 @@ const Wolke = (() => {
     };
     return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
         anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
+        abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
         hoch, runter, abgleichen, dateienAbgleichen, takt, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,

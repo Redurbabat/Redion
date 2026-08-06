@@ -1648,3 +1648,41 @@ kostet; das `.redion`-Archiv in R2 als Cloud-Sicherung; und Dateien über
 Beide Hälften beschlossen und umgesetzt (`server/dateien.ts` + Abschnitt 6b
 in `maschine.ts`; `test119` 19 Punkte, `test118` Abschnitt 3, `test113`
 Abschnitt 8).
+
+
+## E34 · Der Konto-Modus — anmelden ist nicht zustimmen
+
+**Der Fehler zuerst.** E1 sagt seit dem ersten Tag: lokale Daten werden nie
+ohne ausdrückliche Zustimmung hochgeladen. Gestimmt hat das nicht — wer
+sich anmeldete und die App neu lud, dessen gesamter Bestand ging beim
+ersten Takt zum Server. Niemand hatte je Ja gesagt; das Anmelden galt
+stillschweigend als Zustimmung. Das sind aber zwei Entscheidungen: WER man
+ist, und WAS dieses Gerät hergibt.
+
+**Beschluss.** Zwischen angemeldet und abgeglichen steht ein Schalter:
+`wolkeAbgleich`. Alles, was abgleicht — Takt, Sichtwechsel, das
+online-Ereignis, der Knopf — läuft durch `abgleichen()`, und dort steht
+das Tor. Nach dem Anmelden stellt die Oberfläche die Frage ausdrücklich;
+„Abbrechen" heisst angemeldet bleiben und nur lokal arbeiten. Das
+Wolke-Fenster zeigt den Modus als erste Karte und lässt ihn jederzeit
+wechseln.
+
+**Bestandsgeräte** bleiben freigeschaltet: wer vor dem Schalter schon
+abgeglichen hat, hat sein Ja längst gegeben — die Sync-Marken sind der
+Beleg. Ein stiller Sync-Stopp wäre die falsche Sorte Überraschung.
+Abmelden setzt den Schalter zurück; das nächste Konto wird neu gefragt.
+
+**Konto löschen** gibt es jetzt wirklich: `/konto/loeschen` räumt die
+volle Kaskade — eigene Bereiche samt Sätzen, Dateien und ihren Stücken im
+Blob-Speicher, Freigaben, veröffentlichte Seiten, Protokoll, Feldrechte,
+dann fremde Freigaben an dieses Konto, Marken, Sitzungen, zuletzt den
+Kontosatz. Eine Marke darf das nicht — nur ein Mensch mit Sitzung. Die
+Oberfläche verlangt die abgetippte Mail-Adresse: ein Klick zu viel darf
+hier nichts kosten. Und die Notizen auf dem Gerät bleiben — Priorität 1
+gilt auch beim Aufhören.
+
+**Status**
+
+Beschlossen und umgesetzt. `test120` (Suite 84, 21 Punkte): ohne das Ja
+bleibt der Server leer; die Lösch-Kaskade lässt nichts zurück und fremde
+Konten in Ruhe; nach dem Löschen sind die lokalen Notizen noch da.

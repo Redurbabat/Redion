@@ -85,6 +85,8 @@ const geraet = async (name: string) => {
     Store.setMeta('wolkeGeraet', nm);
     await Wolke.tokenUebernehmen(tok);
     await Wolke.schluesselSetzen('mein langer geheimer satz');
+    /* Das ausdrückliche Ja zum Abgleich — seit E34 Pflicht (E1). */
+    Wolke.abgleichSetzen(true);
   }, [t, BEREICH, name]);
   return { p, ctx };
 };

@@ -56,6 +56,7 @@ const WolkeFenster = (() => {
                     a.textContent = 'Fenster geöffnet …';
                     await Wolke.anmeldenMit(was);
                     await schluesselFragen();
+                    await abgleichFragen();
                     await zeichne();
                 }
                 if (was === 'code') {
@@ -73,13 +74,33 @@ const WolkeFenster = (() => {
                     await Wolke.abmelden();
                     await zeichne();
                 }
+                if (was === 'abgleich-an') {
+                    await abgleichFragen();
+                    await zeichne();
+                }
+                if (was === 'nurlokal') {
+                    Wolke.abgleichSetzen(false);
+                    UI.toast('Nur lokal: nichts verlässt dieses Gerät, bis du den Abgleich wieder einschaltest.');
+                    await zeichne();
+                }
                 if (was === 'jetzt') {
+                    if (!Wolke.abgleichErlaubt()) {
+                        UI.toast('Der Abgleich ist für dieses Gerät ausgeschaltet — erst einschalten.');
+                        return;
+                    }
                     a.disabled = true;
                     a.textContent = 'Läuft …';
                     const r = await Wolke.abgleichen();
                     UI.toast(r ? (r.uebernommen + ' geholt, ' + r.angenommen + ' geschickt' +
                         (r.unlesbar ? ' · ' + r.unlesbar + ' nicht lesbar' : '')) : 'Nichts zu tun');
                     await zeichne();
+                }
+                if (was === 'sichern') {
+                    await App.sicherungSpeichern();
+                }
+                if (was === 'loeschen') {
+                    o.remove();
+                    loeschenFenster();
                 }
                 if (was === 'schluessel') {
                     await schluesselFragen();
@@ -140,6 +161,7 @@ const WolkeFenster = (() => {
     const angemeldetHtml = () => {
         const z = Wolke.zustand;
         const k = z.konto || {};
+        const an = Wolke.abgleichErlaubt();
         return ('<div style="display:flex; gap:13px; align-items:center; margin-bottom:16px">' +
             (k.bild ? `<img src="${esc(k.bild)}" style="width:42px;height:42px;border-radius:50%">`
                 : '<div style="width:42px;height:42px;border-radius:50%;background:var(--bg-hover);' +
@@ -148,6 +170,23 @@ const WolkeFenster = (() => {
             '<div style="font-size:12px;color:var(--text-faint)">' + esc(k.mail || '') + '</div></div>' +
             '<button data-a="abmelden" style="font-size:12.5px">Abmelden</button>' +
             '</div>' +
+            /* Der Modus zuerst — er ist die Antwort auf die wichtigste Frage:
+               verlässt etwas dieses Gerät oder nicht? */
+            (an
+                ? '<div style="padding:12px; border:1px solid var(--line); border-radius:8px; ' +
+                    'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
+                    'gap:10px; align-items:center">' +
+                    '<span style="font-size:17px">🔄</span><div style="flex:1; min-width:0"><b>Lokal + Abgleich.</b> ' +
+                    'Dieses Gerät gleicht mit der Wolke ab.</div>' +
+                    '<button data-a="nurlokal" style="font-size:12px; flex:none; width:auto; white-space:nowrap">' +
+                    'Nur lokal arbeiten</button></div>'
+                : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
+                    'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
+                    'gap:10px; align-items:center">' +
+                    '<span style="font-size:17px">📴</span><div style="flex:1; min-width:0"><b>Nur lokal.</b> ' +
+                    'Du bist angemeldet, aber nichts verlässt dieses Gerät.</div>' +
+                    '<button data-a="abgleich-an" class="prim" style="font-size:12px; flex:none; ' +
+                    'width:auto; white-space:nowrap">Abgleich einschalten</button></div>') +
             '<div id="wo-zahlen" style="display:flex; gap:9px; margin-bottom:16px; flex-wrap:wrap"></div>' +
             '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">' +
             '<button data-a="jetzt" class="prim">Jetzt abgleichen</button>' +
@@ -172,7 +211,108 @@ const WolkeFenster = (() => {
             : 'noch keiner') +
             '<br>Gerät: ' + esc(Wolke.geraeteName()) +
             '<br>Server: <code>' + esc(Wolke.adresse()) + '</code>' +
+            '</div>' +
+            '<hr style="border:none;border-top:1px solid var(--line); margin:16px 0 12px">' +
+            '<div style="display:flex; gap:8px; align-items:center; font-size:12px; ' +
+            'color:var(--text-faint); flex-wrap:wrap">' +
+            '<button data-a="sichern" style="font-size:12px; width:auto">⬇ Alles als .redion sichern</button>' +
+            '<span style="flex:1"></span>' +
+            '<button data-a="loeschen" style="font-size:12px; width:auto; color:var(--rot,#d64545)">' +
+            'Konto löschen …</button>' +
             '</div>');
+    };
+    /* ------------------------------------------------------------------
+     * Die Frage nach dem Abgleich — sie fällt EINMAL und ausdrücklich.
+     * Anmelden allein lädt nichts hoch (E1); erst dieses Ja tut es. */
+    const abgleichFragen = async () => {
+        if (!Wolke.angemeldet() || Wolke.abgleichErlaubt())
+            return;
+        const ja = confirm('Dieses Gerät ab jetzt mit der Wolke abgleichen?\n\n' +
+            'Deine bisherigen Notizen gehen dann — verschlüsselt — zum Server ' +
+            'und erscheinen auf deinen anderen Geräten.\n\n' +
+            '„Abbrechen" heisst: angemeldet bleiben, aber alles bleibt nur auf ' +
+            'diesem Gerät. Das lässt sich im Wolke-Fenster jederzeit ändern.');
+        Wolke.abgleichSetzen(ja);
+        if (ja) {
+            UI.toast('Abgleich läuft …');
+            try {
+                await Wolke.abgleichen();
+            }
+            catch { /* steht danach im Fenster */ }
+        }
+        else {
+            UI.toast('Nur lokal: nichts verlässt dieses Gerät.');
+        }
+    };
+    /* ------------------------------------------------------------------
+     * Konto löschen — mit Aufzählung, Sicherungs-Knopf und Tippbestätigung.
+     * Die Mail-Adresse abzutippen ist bewusst mühsam: ein Klick zu viel darf
+     * hier nichts kosten. */
+    const loeschenFenster = () => {
+        const k = Wolke.zustand.konto || {};
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML = '<div class="finder" style="width:min(520px,94vw)">' +
+            '<div class="fh">Konto löschen<button class="icon-btn" data-a="zu">✕</button></div>' +
+            '<div class="res" style="padding:18px; font-size:13px; line-height:1.65">' +
+            '<div style="padding:12px; border:1px solid var(--rot,#d64545); border-radius:8px; ' +
+            'margin-bottom:14px">' +
+            'Das löscht auf dem Server <b>endgültig</b>:' +
+            '<ul style="margin:8px 0 0 18px; padding:0">' +
+            '<li>alle deine Bereiche samt Sätzen und Anhängen</li>' +
+            '<li>alle Freigaben und veröffentlichten Seiten</li>' +
+            '<li>alle Marken und Sitzungen</li>' +
+            '<li>das Konto selbst</li>' +
+            '</ul>' +
+            '</div>' +
+            '<div style="margin-bottom:14px">Die Notizen <b>auf diesem Gerät bleiben</b>. ' +
+            'Sichere sie trotzdem vorher — eine Sicherung zu viel hat noch nie geschadet:</div>' +
+            '<button data-a="sichern" style="margin-bottom:16px">⬇ Alles als .redion sichern</button>' +
+            '<div style="margin-bottom:8px">Zum Bestätigen die Mail-Adresse des Kontos eintippen:</div>' +
+            '<div style="display:flex; gap:8px">' +
+            '<input id="wo-mail-bestaetigen" placeholder="' + esc(k.mail || '') + '" ' +
+            'style="flex:1; min-width:0">' +
+            '<button data-a="endgueltig" class="prim" style="flex:none; width:auto; ' +
+            'white-space:nowrap; background:var(--rot,#d64545); ' +
+            'border-color:var(--rot,#d64545)">Endgültig löschen</button>' +
+            '</div>' +
+            '</div></div>';
+        document.body.appendChild(o);
+        o.addEventListener('click', async (e) => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            const a = elVon(e)?.closest('[data-a]');
+            if (!a)
+                return;
+            if (a.dataset.a === 'sichern') {
+                await App.sicherungSpeichern();
+                return;
+            }
+            if (a.dataset.a !== 'endgueltig')
+                return;
+            const feld = o.querySelector('#wo-mail-bestaetigen');
+            const getippt = (feld?.value || '').trim().toLowerCase();
+            if (!getippt || getippt !== String(k.mail || '').toLowerCase()) {
+                UI.toast('Die Adresse stimmt nicht — nichts wurde gelöscht.');
+                return;
+            }
+            a.disabled = true;
+            a.textContent = 'Wird gelöscht …';
+            try {
+                const r = await Wolke.kontoLoeschen();
+                o.remove();
+                UI.toast('Das Konto ist gelöscht' +
+                    (r && r.bereiche ? ' — samt ' + r.bereiche + ' Bereich(en) auf dem Server.' : '.') +
+                    ' Deine Notizen hier sind noch da.');
+            }
+            catch (err) {
+                a.disabled = false;
+                a.textContent = 'Endgültig löschen';
+                UI.toast(err instanceof Error ? err.message : String(err));
+            }
+        });
     };
     const zahlenNachtragen = async (ziel) => {
         const kasten = ziel.querySelector('#wo-zahlen');
@@ -237,7 +377,7 @@ const WolkeFenster = (() => {
                 codeFeld2.innerHTML =
                     '<div style="font-size:34px; margin-bottom:12px">✅</div>' +
                         '<b style="font-size:16px">Angemeldet als ' + esc(konto?.name || '') + '</b>';
-            setTimeout(async () => { o.remove(); await schluesselFragen(); dialog(); }, 1200);
+            setTimeout(async () => { o.remove(); await schluesselFragen(); await abgleichFragen(); dialog(); }, 1200);
         }
         catch (e) {
             const codeFeld = o.querySelector('#wo-code');
