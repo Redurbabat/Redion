@@ -146,12 +146,20 @@ mitnimmt: L6.
 
 ## L6 · Cloudflare R2 für Dateien
 
-**Stand** — ◐ der Server ist vorbereitet, R2 als Produktfunktion nicht.
+**Stand** — ◐ die Server-Hälfte steht (6. August, E33), die Client-Hälfte
+fehlt.
 
-Fehlt: Bucket-Struktur · Upload · Download · Rechteprüfung ·
-Datei-Metadaten · `.redion` und Anhänge in R2 · Speichergrenzen.
+✅ `server/dateien.ts`: melden · stueck · runter · stand · weg — Metadaten
+in D1 (Tabelle `dateien`), Bytes in R2 (`blobsR2`) bzw. im Prüfserver in
+einer Map (`blobsSpeicher`). Rechte je Seite, Grenzen 100 MB je Datei und
+2 MB je Stück, Grabstein beim Löschen. `test119`, 19 Punkte.
 
-**Regel** — grosse Dateien gehören nicht in D1 (`ENTSCHEIDUNGEN.md` E2).
+✗ Die Client-Hälfte: `maschine.ts` lädt noch nichts hoch und nichts
+herunter. Der Stolperdraht in `test113` Abschnitt 8 steht deshalb weiter —
+und wird rot, sobald diese Hälfte kommt.
+
+**Regel** — grosse Dateien gehören nicht in D1 (`ENTSCHEIDUNGEN.md` E2);
+das Wie steht in E33.
 
 ## L7 · Konto-Modus
 

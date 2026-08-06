@@ -95,7 +95,10 @@ if (E) {
 
   p('Es gibt eine Grenze je Routenfamilie', typeof E.koerperGrenze === 'function');
   const klein = E.koerperGrenze('/bereich/liste');
-  const gross = E.koerperGrenze('/abgleich/hin');
+  /* Der echte Weg des Abgleichs — nicht '/abgleich', den es nie gab. Der
+     falsche Name liess den Abgleich auf die 1-MB-Vorgabe fallen, und diese
+     Prüfung war grün dabei, weil sie denselben falschen Namen fragte. */
+  const gross = E.koerperGrenze('/sync/hoch');
   p('Eine gewöhnliche Route darf wenig', klein > 0 && klein <= 2 * 1024 * 1024,
     String(klein));
   p('Der Abgleich darf mehr — sonst bricht er bei der ersten grossen Seite ab',
@@ -150,12 +153,13 @@ const normal = await schicke('/api/stand', {});
 p('Eine gewöhnliche Anfrage geht weiter durch', normal.status < 500,
   `Status ${normal.status}`);
 
-const mittel = await schicke('/abgleich/hin', { saetze: [] });
+const mittel = await schicke('/sync/hoch', { saetze: [] });
 p('Auch der Abgleich antwortet noch', mittel.status < 500, `Status ${mittel.status}`);
 
 /* Und der Abgleich darf mehr als eine kleine Route — mit derselben Grösse,
-   die eben abgewiesen wurde. */
-const abgleichGross = await schicke('/abgleich/hin', riesig);
+   die eben abgewiesen wurde. 401 heisst: die Grösse war nicht das Problem,
+   nur das fehlende Token — genau richtig. */
+const abgleichGross = await schicke('/sync/hoch', riesig);
 p('Derselbe Körper ist beim Abgleich nicht zu gross',
   abgleichGross.status !== 413, `Status ${abgleichGross.status}`);
 

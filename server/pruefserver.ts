@@ -14,17 +14,20 @@
 
 import http from 'node:http';
 import { beantworte } from './kern.ts';
-import { ablageSpeicher } from './ablage.ts';
+import { ablageSpeicher, blobsSpeicher } from './ablage.ts';
 import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.ts';
-import type { Ablage, Antwort, Kopfzeilen, Umwelt } from './typen.ts';
+import type { Ablage, Antwort, Blobs, Kopfzeilen, Umwelt } from './typen.ts';
 
 /** Was ein Prüflauf beim Starten mitgeben kann: eine eigene Ablage (etwa eine
- *  vorgefüllte), ein eigenes `holen` statt echter Netzzugriffe, und weitere
- *  Einstellungen für den Kern. */
-type StartOpt = { ablage?: Ablage; holen?: typeof fetch; umwelt?: Umwelt };
+ *  vorgefüllte), eine eigene Blob-Ablage, ein eigenes `holen` statt echter
+ *  Netzzugriffe, und weitere Einstellungen für den Kern. */
+type StartOpt = { ablage?: Ablage; blobs?: Blobs; holen?: typeof fetch; umwelt?: Umwelt };
 
 export const starte = async (port = 8790, opt: StartOpt = {}) => {
   const ablage: Ablage = opt.ablage || ablageSpeicher();
+  /* EINMAL angelegt, nicht je Anfrage — sonst vergisst der Speicher die
+     Stücke zwischen Hochladen und Holen. */
+  const blobs: Blobs = opt.blobs || blobsSpeicher();
   await ablage.einrichten();
 
   const server = http.createServer(async (req, res) => {
@@ -51,7 +54,7 @@ export const starte = async (port = 8790, opt: StartOpt = {}) => {
     if (roh) { try { koerper = JSON.parse(roh); } catch { koerper = { text: roh }; } }
 
     const umwelt: Umwelt = { ADRESSE: 'http://localhost:' + port,
-                             holen: opt.holen || fetch, ...(opt.umwelt || {}) };
+                             holen: opt.holen || fetch, blobs, ...(opt.umwelt || {}) };
 
     let a: Antwort;
     try {
@@ -67,7 +70,7 @@ export const starte = async (port = 8790, opt: StartOpt = {}) => {
   });
 
   await new Promise<void>(fertig => { server.listen(port, () => fertig()); });
-  return { server, ablage, port, adresse: 'http://localhost:' + port,
+  return { server, ablage, blobs, port, adresse: 'http://localhost:' + port,
            stopp: () => new Promise<void>(fertig => { server.close(() => fertig()); }) };
 };
 

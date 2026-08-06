@@ -1587,3 +1587,53 @@ Veröffentlichungs-Konfiguration — er berührt keine gespeicherten Daten.
 **Status**
 
 Beschlossen und umgesetzt.
+
+
+## E33 · Anhänge in der Wolke — Metadaten in D1, Bytes in R2
+
+**Die Frage.** `test113` und `test118` halten als Stolperdraht fest: Anhänge
+gehen beim Abgleich nicht mit. Ein Block mit Bild kommt auf dem zweiten
+Gerät ohne Bild an. Das ist G2 in AUFGABEN.md — und die Frage ist nicht ob,
+sondern wie.
+
+**Beschluss, in fünf Sätzen.**
+
+Die **Metadaten** (Name, Grösse, Typ, Seite, Stückzahl) sind Sätze und
+liegen in der Tabelle `dateien` — in D1 wie alles Strukturierte. Die
+**Bytes** liegen stückweise unter `bereich/dateiId/nr` in R2; im Prüfserver
+steht eine Map dahinter (`blobsSpeicher`), damit jede Prüfung ohne Wolke
+läuft. Grosse Dateien gehören nicht in D1 — das war schon E2.
+
+**Die Rechte** laufen wie beim Abgleich über die Seite, zu der die Datei
+gehört: hochladen und löschen braucht `bearbeiten`, holen braucht `lesen`,
+der Besitzer darf alles. `/datei/stand` rückt seine Marke mit dem
+**Gelesenen** vor, nicht mit dem Durchgelassenen — dieselbe Lehre wie bei
+`/sync/runter`, am selben Tag gelernt.
+
+**Die Grenzen** sind echte Grenzen mit deutschen Sätzen: eine Datei höchstens
+100 MB (wer mehr hat, sichert als `.redion`), ein Stück höchstens 2 MB roh —
+das Gerät schneidet ohnehin bei 1 MB (`KONSTANTEN.STUECK`).
+
+**Gelöscht wird mit Grabstein:** die Stücke gehen weg, die Metadaten bleiben
+als `geloescht` stehen. Sonst erfährt das zweite Gerät nie vom Löschen und
+lädt die Datei ewig wieder hoch.
+
+**Die Verschlüsselung ist Sache des Geräts.** Wer seine Sätze verschlüsselt,
+verschlüsselt auch seine Stücke, bevor sie den Rechner verlassen; der Server
+merkt sich nur das Flag. Ein Server, der entschlüsseln kann, wäre der
+falsche Server.
+
+**Transport als Base64 im JSON** — bewusst schlicht: derselbe Weg wie alle
+anderen, dieselben Körpergrenzen (`/datei` darf 4 MB), kein zweiter
+Anfrage-Typ. Der Aufpreis von einem Drittel auf 1-MB-Stücke ist der Preis
+für einen Server, der aus einem Guss bleibt. Wenn er je drückt, ist ein
+Binär-Weg eine eigene Entscheidung.
+
+**Was ausdrücklich noch fehlt:** die Client-Hälfte — `maschine.ts` lädt noch
+nichts hoch und nichts herunter. Erst wenn sie da ist, wird der
+Stolperdraht in `test113` Abschnitt 8 rot und gehört umgeschrieben.
+
+**Status**
+
+Server-Hälfte beschlossen und umgesetzt (`server/dateien.ts`, `test119`:
+19 Punkte). Client-Hälfte offen — L6.

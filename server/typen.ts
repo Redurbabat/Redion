@@ -65,6 +65,18 @@ export type Ablage = {
   leeren?(): Promise<void>;
 };
 
+/**
+ * Die Ablage für Datei-Stücke — Bytes, keine Sätze (E2: grosse Dateien
+ * gehören nicht in D1). In der Wolke steckt R2 dahinter, im Prüfserver
+ * eine Map. Schlüssel sind `bereich/dateiId/nr`.
+ */
+export type Blobs = {
+  art: string;
+  lege(schluessel: string, bytes: Uint8Array): Promise<void>;
+  hole(schluessel: string): Promise<Uint8Array | null>;
+  weg(schluessel: string): Promise<boolean>;
+};
+
 /* --------------------------------------------------------------------------
  * 2 · ANFRAGE UND ANTWORT
  * ------------------------------------------------------------------------*/
@@ -125,5 +137,8 @@ export type Umwelt = {
   ADRESSE?: string;
   holen?: typeof fetch;
   DB?: unknown;
+  /** Die Blob-Ablage für Anhänge (`/datei/*`). Fehlt sie, sagen die
+   *  Datei-Wege 503 mit dem Weg zur Einrichtung — alles andere läuft. */
+  blobs?: Blobs | null;
   [schluessel: string]: any;
 };

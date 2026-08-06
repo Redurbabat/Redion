@@ -539,8 +539,12 @@ Konto löschen · alles exportieren.
 **Regel:** lokale Daten werden **nie** ohne ausdrückliche Zustimmung
 hochgeladen (E1).
 
-**G2 — R2 für Dateien.** Bucket-Struktur · Upload · Download ·
-Rechteprüfung · `.redion` und Anhänge in R2.
+**G2 — R2 für Dateien.** ◐ **Server-Hälfte erledigt** (6. August, E33):
+`/datei/melden · stueck · runter · stand · weg` in `server/dateien.ts`,
+Metadaten in D1, Bytes in R2, Rechte je Seite, Grenzen mit deutschen
+Sätzen, Grabstein beim Löschen — `test119`. **Offen:** die Client-Hälfte
+in `maschine.ts` (hochladen nach dem Abgleich, herunterladen beim Fehlen,
+Stücke verschlüsseln wie Sätze) und `.redion` in R2.
 **Regel:** grosse Dateien gehören nicht in D1 (E2).
 
 **~~G3 — Sync-Konflikte.~~** ✅ **erledigt** — `test113` (Zusammenführung,
