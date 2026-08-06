@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**6. August 2026 · 91 Prüfläufe grün**
+**6. August 2026 · 92 Prüfläufe grün**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
@@ -26,8 +26,8 @@ Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
 ```txt
 1. Fehlerwerte sind nicht entschieden (L4) — das hält WENNFEHLER,
    ISTFEHLER und die Fehleranzeige im Tabellenblock auf
-2. 180 der 262 Formelfunktionen haben keine Beschreibung (L9)
-3. Mobile läuft, ist aber nicht dafür gebaut (L10)
+2. Mobile läuft, ist aber nicht dafür gebaut (L10)
+3. ZIP64 fehlt — Sicherungen über 4 GB brechen ehrlich ab (L14)
 
 Die Wolke ist seit dem 6. August durch: Konto (L7), Anhänge (L6),
 Konflikte (L5) und Rechte (L8) stehen und sind geprüft.
@@ -225,21 +225,30 @@ Ursache nichts zu tun hatte („Wissen is not defined").
 sie zur Frage passt. Eine Antwort in der falschen Form ist schlimmer als
 keine: sie sieht wie Erfolg aus.
 
-## L9 · 180 Formelfunktionen ohne Beschreibung
+## L9 · Formelfunktionen ohne Beschreibung
 
-**Stand** — ◐ 262 Einträge im Register, **180 ohne Beschreibung**.
+**Stand** — ✅ geschlossen (6. August). 0 ohne Beschreibung, 0 ohne Funktion.
 
-Nachgemessen beim Schreiben von `formula.ts`: `register/formeln.js` bringt
-82 beschriebene Einträge mit, `laufzeit.js` meldet danach 180 weitere an —
-damit die Suche im Formeleditor sie überhaupt findet. Die 180 haben keinen
-Satz. Die frühere Zahl 129 stammte aus einer Zählung vor den deutschen
-Excel-Namen.
+Es waren zuletzt 169, nicht 180 — die alte Zahl stammte aus einer Zählung
+vor den deutschen Excel-Namen. Jede hat jetzt Gruppe, Argumente und einen
+Satz, und **jeder Satz ist am Quelltext gemessen**, nicht aus dem Namen
+geraten. Wo die Maschine etwas anderes tut, als der Name vermuten lässt,
+steht genau das da:
 
-Eine Funktion, die niemand findet, ist fast wie nicht vorhanden. Die
-Gegenprobe existiert: `Register.formeln.abgleich()` nennt sie beim Namen.
+```txt
+date()     gibt den Tag im Monat, nicht das Datum
+sort()     sortiert als Text — 10 steht damit vor 9
+divide()   durch null ergibt 0 und keinen Fehler (siehe L4)
+sqrt(-1)   ergibt 0, nicht einen Fehler
+id()       gibt heute immer leer zurück
+```
 
-Fehlt je Funktion: Signatur · Beschreibung · Beispiel · Fehlerfall ·
-Kategorie.
+**Warum es so lange offen war, und was sich daran geändert hat.** Der Kopf
+von `register/formeln.ts` sagte: „eine Liste, die man doppelt pflegen muss,
+wird nicht gepflegt." Das stimmt, solange niemand nachsieht — und
+`abgleich()` hat die Lücke die ganze Zeit korrekt gemeldet, nur hat niemand
+gefragt. `test122` fragt jetzt bei jedem Lauf, in beide Richtungen, samt
+Gegenprobe, dass es auch rot werden kann.
 
 ## L10 · Mobile und iPhone
 
