@@ -123,14 +123,22 @@ füllt.
 
 ## L5 · Sync-Konflikte zwischen Geräten
 
-**Stand** — ◐ der Abgleich existiert, die Konfliktfälle sind ungeprüft.
+**Stand** — ✅ geprüft, gegen echten Server und echte Geräte.
 
-**Was fehlt** — Prüfläufe für: Gerät A ändert offline · Gerät B ändert
-dieselbe Seite · A kommt online · Konflikt wird **sichtbar** · keine Daten
-verloren · Anhänge bleiben mit ihren Blöcken verbunden.
+`test113` (Zusammenführung: sieben Konfliktfälle, jeder gegen die Frage
+„steht am Ende die eine oder die andere Fassung da — oder ist ein Konflikt
+gemeldet?"), `test78` (zwei Chromium-Geräte ändern gleichzeitig) und seit
+dem 6. August `test118`: Gerät A ändert offline, das **Wiederverbinden
+allein** stösst den Abgleich an, und die dateiId eines Anhangs überlebt
+den Abgleich auf beiden Geräten. Die Bytes selbst bleiben ausdrücklich
+zurück, bis G2 (L6) gebaut ist — `test113` und `test118` halten das fest.
 
-**Status** — ⏳ **vor** echtem Cloud-Sync. Ohne diese Läufe ist Sync ein
-Datenverlustrisiko.
+Zwei Fehler, die diese Läufe gefunden haben: der `online`-Handler zeigte
+nur einen Toast statt abzugleichen, und `/sync/runter` liess die Marke vor
+unlesbaren Sätzen stehen — die eigenen dahinter kamen nie.
+
+**Status** — ✅ die Läufe stehen. Offen bleibt, was Anhänge wirklich
+mitnimmt: L6.
 
 ---
 

@@ -570,7 +570,15 @@ const PWA = (() => {
 
   const verbindungUeberwachen = () => {
     verbindungAnzeigen(navigator.onLine);
-    addEventListener('online',  () => { verbindungAnzeigen(true);  UI.toast('Verbindung ist wieder da'); });
+    addEventListener('online',  () => {
+      verbindungAnzeigen(true);
+      UI.toast('Verbindung ist wieder da');
+      /* Und sofort abgleichen: wer offline geschrieben hat, soll nicht bis
+         zum nächsten Takt warten — der kommt erst nach zwei Minuten.
+         `abgleichen()` schützt sich selbst: ohne Anmeldung oder während
+         einer laufenden Runde tut es nichts. */
+      Wolke.abgleichen();
+    });
     addEventListener('offline', () => { verbindungAnzeigen(false); });
   };
 

@@ -543,8 +543,9 @@ hochgeladen (E1).
 Rechteprüfung · `.redion` und Anhänge in R2.
 **Regel:** grosse Dateien gehören nicht in D1 (E2).
 
-**~~G3 — Sync-Konflikte.~~** ◐ **grösstenteils erledigt** — `test113`,
-52 Punkte, ohne Browser.
+**~~G3 — Sync-Konflikte.~~** ✅ **erledigt** — `test113` (Zusammenführung,
+ohne Browser), `test78` (zwei Geräte gleichzeitig), `test118` (offline und
+Wiederverbinden, gegen den echten Prüfserver).
 
 Geprüft: ~~derselbe Block geändert~~ · ~~Konflikt wird sichtbar~~ ·
 ~~keine Daten verloren~~ (sieben Fälle, jeder gegen dieselbe Frage: *steht
@@ -562,12 +563,24 @@ Von Hand passiert das nie; beim Einfügen aus Excel, beim CSV-Import und bei
 Vorlagen entstehen Sätze in Reihe. Eine Runde zerschneidet jetzt keine
 Millisekunde mehr.
 
-**Noch offen:** „Änderung offline" und „Anhänge bleiben verbunden" brauchen
-einen Lauf gegen einen echten Server — und Anhänge gehen heute gar nicht mit
-(das ist G2). `test113` hält beides ausdrücklich fest, damit niemand seine
-Bilder für abgeglichen hält.
+**Erledigt am 6. August:** `test118` läuft gegen den echten Prüfserver mit
+zwei Chromium-Geräten. „Änderung offline": das Wiederverbinden stösst jetzt
+**selbst** einen Abgleich an — vorher zeigte der `online`-Handler nur einen
+Toast, und wer offline schrieb, wartete bis zu zwei Minuten auf den Takt.
+„Anhänge bleiben verbunden": die dateiId überlebt den Abgleich auf beiden
+Geräten, die Bytes bleiben auf dem Ursprungsgerät Byte für Byte unversehrt —
+und gehen weiterhin ausdrücklich **nicht** mit (das ist G2; `test113` und
+`test118` halten es fest, damit niemand seine Bilder für abgeglichen hält).
 
-**Priorität** — der Rest von G3 **vor** echtem Cloud-Sync.
+**Dabei gefunden:** `/sync/runter` rechnete Marke und `mehr` aus dem
+Durchgelassenen statt aus dem Gelesenen — wer viele fremde Seiten vor sich
+hatte, bekam `marke = seit`, `mehr = false`, und die eigenen Sätze dahinter
+**nie**. Behoben; `test118` Abschnitt 4 wacht darüber, und die Gegenprobe
+(beide Fixes kurz zurückgenommen) machte genau die vier erwarteten Punkte
+rot.
+
+**Damit ist G3 abgeschlossen.** Es bleiben G1 (Konto-Modus) und G2 (R2 für
+Dateien).
 
 ---
 
