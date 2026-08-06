@@ -18,11 +18,10 @@
  *     bekam `marke = seit` und `mehr = false` — und die eigenen Sätze
  *     dahinter nie (server/kern.ts).
  *
- * Und der zweite offene G3-Punkt steht hier auch: Anhänge. Die Bytes gehen
- * NICHT mit (das ist G2, R2 fehlt) — aber die VERBINDUNG muss den Abgleich
- * überleben: der Block trägt auf beiden Geräten dieselbe dateiId, und auf
- * dem Ursprungsgerät bleibt die Datei Byte für Byte unversehrt. Der Tag, an
- * dem G2 kommt, findet die Verweise dann intakt vor.
+ * Und der zweite G3-Punkt steht hier auch: Anhänge. Seit G2 (E33) gehen
+ * die Bytes MIT — stückweise, verschlüsselt wie die Sätze. Abschnitt 3
+ * verlangt beides: dieselbe dateiId auf beiden Geräten UND denselben
+ * Inhalt, Byte für Byte, nach einer Reise durch AES-GCM und Base64.
  *
  * Ports: 8820 (Prüfserver) und 8821 (App + Durchreiche) — die Karte der
  * belegten Ports steht in test93.
@@ -60,7 +59,7 @@ const PORT = 8821;
 const alles = http.createServer(async (req, res) => {
   const weg2 = req.url ?? '/';
   const u = new URL(weg2, 'http://x');
-  const serverWeg = /^\/(konto|sync|freigabe|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/
+  const serverWeg = /^\/(konto|sync|datei|freigabe|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/
     .test(u.pathname ?? '') || /^\/v1\//.test(u.pathname ?? '') || u.pathname === '/api/stand';
   if (serverWeg) {
     let roh = '';
@@ -175,13 +174,13 @@ p('Nach dem Wiederverbinden kommt die Offline-Änderung von selbst an',
   `Gerät B sieht nach 8 s: „${angekommen}"`);
 
 /* ==========================================================================
- * 3 · Anhänge: die Bytes bleiben da, die Verbindung überlebt
+ * 3 · Anhänge: die Bytes kommen mit — verschlüsselt, stückweise, vollständig
  * ==========================================================================
- * Die Datei selbst geht nicht mit — das ist G2 und steht in test113 als
- * Stolperdraht. Was der Abgleich aber schon heute garantieren muss:
- * der Verweis (dateiId) überlebt ihn auf beiden Geräten, und die Bytes auf
- * dem Ursprungsgerät bleiben unangetastet. */
-console.log('\n3 · Anhänge: die Bytes bleiben da, die Verbindung überlebt');
+ * Bis zum 6. August stand hier: „die Datei selbst geht nicht mit". G2 ist
+ * gebaut (E33) — jetzt muss der Abgleich die Bytes wirklich hinübertragen:
+ * gleiche dateiId auf beiden Geräten, Byte für Byte identischer Inhalt,
+ * und das Ursprungsgerät bleibt unversehrt. */
+console.log('\n3 · Anhänge: die Bytes kommen mit');
 
 const BYTES = 5000;
 const anhang = await A.seite.evaluate(async (n: number) => {
@@ -204,13 +203,29 @@ const drueben = await B2.seite.evaluate(async (bid: string) => {
   await Wolke.abgleichen();
   const bl = Store.getBlock(bid);
   const datei = bl && bl.dateiId ? await Store.dateiHolen(bl.dateiId) : null;
-  return { da: !!bl, dateiId: bl ? bl.dateiId : null, bytesDa: !!datei };
-}, anhang.blockId) as { da: boolean; dateiId: string | null; bytesDa: boolean };
+  let laenge = -1, stimmt = false;
+  if (datei) {
+    const blob = await Dateien.alsBlob(datei.id);
+    if (blob) {
+      const roh = new Uint8Array(await blob.arrayBuffer());
+      laenge = roh.length;
+      stimmt = true;
+      for (let i = 0; i < roh.length; i++)
+        if (roh[i] !== (i * 31 + 7) % 256) { stimmt = false; break; }
+    }
+  }
+  return { da: !!bl, dateiId: bl ? bl.dateiId : null, bytesDa: !!datei,
+           blockVerknuepft: datei ? datei.blockId === bid : false, laenge, stimmt };
+}, anhang.blockId) as { da: boolean; dateiId: string | null; bytesDa: boolean;
+                        blockVerknuepft: boolean; laenge: number; stimmt: boolean };
 p('Der Dateiblock kommt auf Gerät B an', drueben.da);
 p('Er trägt dieselbe dateiId — die Verbindung hat den Abgleich überlebt',
   drueben.dateiId === anhang.dateiId, `drüben: ${drueben.dateiId}`);
-p('Die Bytes sind drüben ehrlich NICHT da (G2 fehlt noch)', !drueben.bytesDa,
-  'sollte das je grün werden wollen: G2 ist gebaut, dann gehört test113 Abschnitt 8 umgeschrieben');
+p('Die Bytes kommen auf Gerät B an — G2 trägt sie hinüber', drueben.bytesDa,
+  'kein Dateisatz auf Gerät B angekommen');
+p('… vollständig', drueben.laenge === BYTES, `${drueben.laenge} von ${BYTES} Bytes`);
+p('… und Byte für Byte identisch, trotz Verschlüsselung unterwegs', drueben.stimmt);
+p('Die Datei kennt drüben ihren Block wieder', drueben.blockVerknuepft);
 
 const daheim = await A.seite.evaluate(async (dId: string) => {
   await Wolke.abgleichen();

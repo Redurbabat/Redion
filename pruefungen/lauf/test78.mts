@@ -32,7 +32,7 @@ const alles = http.createServer(async (req, res) => {
      dann überall derselbe Weg — auch beim Durchreichen weiter unten. */
   const weg = req.url ?? '/';
   const u = new URL(weg, 'http://x');
-  const serverWeg = /^\/(konto|sync|freigabe|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/
+  const serverWeg = /^\/(konto|sync|datei|freigabe|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/
     .test(u.pathname ?? '') || /^\/v1\//.test(u.pathname ?? '') || u.pathname === '/api/stand';
   if (serverWeg) {
     let roh = '';

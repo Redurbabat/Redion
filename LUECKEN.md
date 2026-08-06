@@ -146,17 +146,25 @@ mitnimmt: L6.
 
 ## L6 · Cloudflare R2 für Dateien
 
-**Stand** — ◐ die Server-Hälfte steht (6. August, E33), die Client-Hälfte
-fehlt.
+**Stand** — ✅ Anhänge syncen (6. August, E33) — mit vier benannten Resten.
 
-✅ `server/dateien.ts`: melden · stueck · runter · stand · weg — Metadaten
-in D1 (Tabelle `dateien`), Bytes in R2 (`blobsR2`) bzw. im Prüfserver in
-einer Map (`blobsSpeicher`). Rechte je Seite, Grenzen 100 MB je Datei und
-2 MB je Stück, Grabstein beim Löschen. `test119`, 19 Punkte.
+Server: `server/dateien.ts` (melden · stueck · runter · stand · weg),
+Metadaten in D1, Bytes in R2 bzw. im Prüfserver in einer Map. Client:
+Abschnitt 6b in `maschine.ts` — nach den Sätzen gehen die Stücke, hoch wie
+runter, verschlüsselt wie die Sätze. Geprüft: `test119` (Server, 19
+Punkte), `test118` Abschnitt 3 (zwei echte Geräte, Byte für Byte),
+`test113` Abschnitt 8 (der frühere Stolperdraht, planmässig umgedreht).
 
-✗ Die Client-Hälfte: `maschine.ts` lädt noch nichts hoch und nichts
-herunter. Der Stolperdraht in `test113` Abschnitt 8 steht deshalb weiter —
-und wird rot, sobald diese Hälfte kommt.
+**Was benannt offen bleibt:**
+
+```txt
+✗ Lokales Löschen wandert nicht zum Server — es gibt keinen lokalen
+  Grabstein; gelöscht wird bisher nur vom Server zum Gerät
+✗ Der Download ist eifrig — am Telefon kann ein grosser Bereich viel
+  Datenvolumen ziehen; ein „nur bei Bedarf" ist eine eigene Entscheidung
+✗ .redion-Archiv in R2 als Cloud-Sicherung
+✗ Dateien über 100 MB bleiben bewusst lokal (E33) — ihr Weg ist .redion
+```
 
 **Regel** — grosse Dateien gehören nicht in D1 (`ENTSCHEIDUNGEN.md` E2);
 das Wie steht in E33.

@@ -54950,6 +54950,8 @@ const Wolke = (() => {
         catch { }
         Store.setMeta('wolkeMarkeHoch', '');
         Store.setMeta('wolkeMarkeRunter', '');
+        Store.setMeta('wolkeMarkeDateien', '');
+        Store.setMeta('wolkeDateienOben', []);
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
@@ -55208,6 +55210,9 @@ const Wolke = (() => {
         try {
             const r = await runter();
             const h = await hoch();
+            /* Erst die Sätze, dann die Bytes dazu — ein Blockverweis ohne Datei
+               ist ein kurzer Zustand, eine Datei ohne Block ein verwaister. */
+            const d = await dateienAbgleichen();
             zustand.letzter = Store.now();
             if (typeof Feldrechte !== 'undefined') {
                 try {
@@ -55221,7 +55226,7 @@ const Wolke = (() => {
                 }
                 catch { }
             }
-            return { ...r, ...h };
+            return { ...r, ...h, ...(d || {}) };
         }
         catch (e) {
             zustand.fehler = e instanceof Error ? e.message : String(e);
@@ -55240,6 +55245,175 @@ const Wolke = (() => {
         if (!angemeldet())
             return;
         uhr = setInterval(() => { abgleichen().catch(() => { }); }, 120000);
+    };
+    /* ========================================================================
+     * 6b · ANHÄNGE — die Bytes zu den Blöcken (G2, E33)
+     * ------------------------------------------------------------------------
+     * Die Sätze nehmen nur den VERWEIS mit (dateiId am Block). Hier gehen die
+     * Bytes selbst: stückweise, wie sie in `stuecke` liegen — nie eine ganze
+     * Datei im Arbeitsspeicher. Wer seine Sätze verschlüsselt, verschlüsselt
+     * auch seine Stücke; der Server sieht nur das Flag.
+     *
+     * Merken statt raten: `wolkeDateienOben` hält die Kennungen, die der
+     * Server schon hat, `wolkeMarkeDateien` die Stand-Marke fürs Holen.
+     * Beide räumt `abmelden()` weg, wie die Satz-Marken auch.
+     * ======================================================================*/
+    const verschluesseleBytes = async (bytes) => {
+        if (!schluessel)
+            throw new Error('Es ist kein Schlüssel gesetzt.');
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const chiffre = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, schluessel, bytes);
+        const alles = new Uint8Array(iv.length + chiffre.byteLength);
+        alles.set(iv);
+        alles.set(new Uint8Array(chiffre), iv.length);
+        return alles;
+    };
+    const entschluesseleBytes = async (bytes) => {
+        if (!schluessel)
+            return null;
+        try {
+            const iv = bytes.slice(0, 12);
+            const klar = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, schluessel, bytes.slice(12));
+            return new Uint8Array(klar);
+        }
+        catch {
+            return null;
+        }
+    };
+    /* Läuft der Server ohne Dateispeicher (kein R2 gebunden), sagt er das mit
+       einem klaren Satz. Dann bis zum nächsten Laden der App nicht mehr
+       anklopfen — der Zustand ändert sich nicht von allein, und ein Fehler
+       alle zwei Minuten wäre nur Lärm über einen dokumentierten Betrieb. */
+    let dateienGehenNicht = false;
+    /** Zu welcher Seite gehört diese Datei? Über ihren Block — für die
+     *  Rechteprüfung am Server. Ohne Block gilt die Kennung selbst. */
+    const seiteFuerDatei = (d) => {
+        const b = d.blockId ? Store.getBlock(d.blockId) : null;
+        return b ? seiteVon(b) : String(d.blockId || d.id);
+    };
+    /** Holen, was der Server hat und hier fehlt — und löschen, was er als
+     *  Grabstein meldet. */
+    const dateienRunter = async () => {
+        let marke = Store.getMeta('wolkeMarkeDateien', '');
+        const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
+        let geholt = 0, entfernt = 0, unlesbar = 0;
+        for (let runde = 0; runde < 20; runde++) {
+            const a = await ruf('/datei/stand', { m: 'POST',
+                k: { bereich: bereich(), seit: marke, grenze: 200 } });
+            for (const d of (a.dateien || [])) {
+                const lokal = await Store.dateiHolen(d.id);
+                if (d.geloescht) {
+                    if (lokal) {
+                        for (const st of await Store.stueckeVon(d.id))
+                            await Store.stueckWeg(st.id);
+                        await Store.dateiWeg(d.id);
+                        entfernt++;
+                    }
+                    oben.delete(d.id);
+                    continue;
+                }
+                if (lokal) {
+                    if (lokal.zustand === 'fertig')
+                        oben.add(d.id);
+                    continue;
+                }
+                /* Stück für Stück holen; eine Datei, die nicht ganz ankommt oder
+                   sich nicht entschlüsseln lässt, wird NICHT halb angelegt. */
+                const teile = Math.max(1, Number(d.teile) || 1);
+                let ganz = true;
+                for (let nr = 0; nr < teile; nr++) {
+                    const r = await ruf('/datei/runter', { m: 'POST',
+                        k: { bereich: bereich(), dateiId: d.id, nr } });
+                    const roh = Bytes.fromBase64(String(r.base64 || ''));
+                    const bytes = d.verschluesselt ? await entschluesseleBytes(roh) : roh;
+                    if (!bytes) {
+                        ganz = false;
+                        unlesbar++;
+                        break;
+                    }
+                    await Store.stueckPut({ id: d.id + ':' + nr, dateiId: d.id, nr,
+                        blob: new Blob([bytes], { type: String(d.typ || '') }) });
+                }
+                if (!ganz) {
+                    for (const st of await Store.stueckeVon(d.id))
+                        await Store.stueckWeg(st.id);
+                    continue;
+                }
+                /* Den Block wiederfinden, der auf die Datei zeigt — die Sätze sind
+                   vor den Anhängen abgeglichen, er ist also schon da, wenn es ihn
+                   gibt. Der Server kennt nur die Seite, nicht den Block. */
+                const block = Object.values(Store.cache.blocks)
+                    .find(b => b && b.dateiId === d.id);
+                await Store.dateiPut({ id: d.id, name: String(d.name || ''),
+                    groesse: Number(d.groesse) || 0, typ: String(d.typ || ''),
+                    blockId: block ? block.id : null, teile, angekommen: teile,
+                    zustand: 'fertig', angelegt: Store.now(), fertigAm: Store.now() });
+                oben.add(d.id);
+                geholt++;
+            }
+            if (a.marke && String(a.marke) !== marke) {
+                marke = String(a.marke);
+                Store.setMeta('wolkeMarkeDateien', marke);
+            }
+            if (!a.mehr)
+                break;
+        }
+        Store.setMeta('wolkeDateienOben', [...oben]);
+        return { dateienGeholt: geholt, dateienEntfernt: entfernt, dateienUnlesbar: unlesbar };
+    };
+    /** Schicken, was hier fertig liegt und dem Server noch fehlt. */
+    const dateienHoch = async () => {
+        const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
+        const alle = await Store.dateiAlle();
+        let rauf = 0;
+        for (const d of alle) {
+            if (!d || d.zustand !== 'fertig' || oben.has(d.id))
+                continue;
+            /* Über der Server-Grenze: gar nicht erst anklopfen. Für solche Dateien
+               gilt der .redion-Weg — steht so in E33. */
+            if ((Number(d.groesse) || 0) > 100 * 1024 * 1024)
+                continue;
+            const stuecke = (await Store.stueckeVon(d.id))
+                .sort((x, y) => (Number(x.nr) || 0) - (Number(y.nr) || 0));
+            if (!stuecke.length)
+                continue;
+            await ruf('/datei/melden', { m: 'POST', k: { bereich: bereich(), datei: {
+                        id: d.id, name: d.name, groesse: d.groesse, typ: d.typ,
+                        seite: seiteFuerDatei(d), teile: stuecke.length,
+                        verschluesselt: hatSchluessel() ? 1 : 0
+                    } } });
+            for (const st of stuecke) {
+                const bytes = new Uint8Array(await st.blob.arrayBuffer());
+                const raus = hatSchluessel() ? await verschluesseleBytes(bytes) : bytes;
+                await ruf('/datei/stueck', { m: 'POST', k: { bereich: bereich(),
+                        dateiId: d.id, nr: Number(st.nr) || 0, base64: Bytes.toBase64(raus) } });
+            }
+            oben.add(d.id);
+            Store.setMeta('wolkeDateienOben', [...oben]);
+            rauf++;
+        }
+        return { dateienRauf: rauf };
+    };
+    /** Beide Richtungen für Anhänge — nach den Sätzen, nie statt ihrer. */
+    const dateienAbgleichen = async () => {
+        if (dateienGehenNicht)
+            return null;
+        try {
+            const r = await dateienRunter();
+            const h = await dateienHoch();
+            zustand.fehlerDateien = '';
+            return { ...r, ...h };
+        }
+        catch (e) {
+            const satz = e instanceof Error ? e.message : String(e);
+            if (/Dateispeicher/.test(satz)) {
+                dateienGehenNicht = true;
+                return null;
+            }
+            zustand.fehlerDateien = satz;
+            melden();
+            return null;
+        }
     };
     /* ========================================================================
      * 7 · TEILEN UND VERÖFFENTLICHEN
@@ -55299,7 +55473,7 @@ const Wolke = (() => {
     return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
         anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
-        hoch, runter, abgleichen, takt, zuSchicken, seiteVon,
+        hoch, runter, abgleichen, dateienAbgleichen, takt, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,
         markeAnlegen, markenListe, markeWeg, ruf, start };
