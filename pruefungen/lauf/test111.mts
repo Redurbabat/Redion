@@ -443,6 +443,10 @@ p('Die leere Zeile ist noch an ihrer Stelle',
  * ========================================================================= */
 console.log('\n5 · Nach dem Neustart');
 
+/* Alle ausstehenden IndexedDB-Schreibvorgänge abschliessen, bevor die zweite
+   Seite die Datenbank liest. `Store.flush()` gibt jetzt ein Promise zurück,
+   das erst auflöst, wenn die Transaktion wirklich abgeschlossen ist. */
+await seite.evaluate(() => Store.flush());
 const blockId = await seite.evaluate(() => (window as any).__blockId);
 const zweite = await oeffne();
 const nachNeustart = await zweite.evaluate((id: string) => {
