@@ -1903,3 +1903,88 @@ keine Zeile unter 44 px, „KI fragen" steht weiter unten — und die Leiste
 passt bei 375 UND 390 px ganz ins Bild. Alle können rot werden;
 nachgestellt am 6. August durch Entfernen der `reiter()`-Zeile, Zurückdrehen
 auf `<em>` und Aufweiten der Leiste auf die alten Masse.
+
+---
+
+## E39 · ZIP64 kommt — eine ehrliche Meldung ist keine Sicherung
+
+**Die offene Frage.** `LUECKEN.md` L14 stand seit Wochen auf einem Satz:
+„Fehlt: die Entscheidung, ob ZIP64 kommt." Die Grenzen des alten ZIP-Formats
+meldeten sich ehrlich, und das galt als guter Stand.
+
+**Was die Messung ergab.** Jeder Sicherungsweg der App — Befehlspalette,
+Einstellungen, R-Blatt, Wolke, das Kärtchen auf dem Start-Bildschirm — mündet
+in dasselbe `App.sicherungSpeichern()`. Das baut **ein** Archiv mit **allen**
+Anhängen. Über 4 GB brach es ab, mit dieser Meldung:
+
+```txt
+Diese Sicherung wird grösser als 4 GB. […] Sichere die Anhänge in zwei
+Schritten, statt ein Archiv zu bekommen, das sich nicht öffnen lässt.
+```
+
+Diesen zweiten Schritt gibt es nicht. Es gibt keine Teilsicherung, keine
+Auswahl, kein „nur diese Anhänge". Wer 5 GB Fotos hatte, konnte **gar nicht**
+sichern — die `.json`-Sicherung lässt Anhänge ausdrücklich aus.
+
+**Die Entscheidung.** ZIP64 kommt. Nicht weil das Format schöner wäre,
+sondern weil §46 Priorität 1 „Daten sicher halten" heisst und der bisherige
+Zustand kein Sichern war. Eine ehrliche Fehlermeldung ist besser als ein
+kaputtes Archiv — aber sie ist keine Sicherung.
+
+**Nur wenn nötig.** Ein Archiv unter allen drei Grenzen wird byteweise
+geschrieben wie bisher: Fassung 20, kein Zusatzfeld, kein zweiter
+Schlusssatz. Ein Archiv, das ohne Not ZIP64 wird, sperrt ältere Werkzeuge und
+ältere Redion-Fassungen aus. Die Referenz macht es genauso.
+
+**Schreiber und Leser zusammen, nicht nacheinander.** Ein Packer, dessen
+Leser nicht mitkommt, schreibt Sicherungen, die niemand zurückholen kann —
+das wäre schlechter als der Zustand davor. Beide Wege (`zipLesen` aus dem
+Speicher, `zipLesenAusBlob` vom Datenträger) lesen ZIP64 seit demselben
+Commit.
+
+**Drei Sachen, die man beim Bauen falsch rät** — alle drei gemessen, keine
+geraten:
+
+Die 64-Bit-Zahlen im Verzeichnis stehen **bedingt** da: nur für die Felder,
+deren 32-Bit-Feld den Platzhalter trägt, in fester Reihenfolge roh, gepackt,
+Versatz. Wer alle drei vorsorglich mitschreibt, verschiebt die folgenden, und
+der Leser bekommt Werte, die *fast* stimmen. Abgelesen an
+`zipfile._decodeExtra`, und die Gegenprobe zeigt, wie leise das scheitert:
+`unzip` merkt es nicht, nur der zweite Anhang kommt falsch zurück.
+
+`schreibe64` darf **nicht** über `>>>` gehen. JavaScripts Bit-Schieber
+rechnen in 32 Bit; `4294967296 >>> 0` ist 0. Wer die obere Hälfte so gewinnt,
+schreibt lautlos Null in genau das Feld, das den Überlauf abfangen soll.
+
+ZIP64 ist **nicht alles-oder-nichts**. Pythons `zipfile` setzt bei einer
+einzelnen grossen Datei die Platzhalter nur in den lokalen Kopf und lässt
+Verzeichnis und Schlusssatz gewöhnlich. Solche Archive las Redion schon immer
+richtig — deshalb wird jedes Feld einzeln angesehen, nicht das Archiv als
+Ganzes eingeordnet.
+
+**Und die Falle, die beinahe zurückkam.** Der erste Entwurf des Lesers nahm
+bei unlesbarem ZIP64-Schlusssatz „ersatzweise" die Zahlen aus dem alten. Dort
+stehen dann Platzhalter, `blob.slice(0xFFFFFFFF, …)` gibt nichts zurück, und
+heraus kamen **null Dateien und kein Fehler** — genau der Fehler, gegen den
+`test103` einmal geschrieben wurde. Gefunden hat ihn dieser Prüflauf selbst,
+in seiner alten Fassung. Jetzt wird geworfen, und zusätzlich gilt: ein
+Archiv, das `N` Einträge ankündigt und keinen liefert, wird abgelehnt.
+
+**Wie das ohne vier Gigabyte geprüft wird.** `Austausch.grenzen` senkt die
+Schwelle, sodass dieselbe Verzweigung bei vierzig Byte greift. Das Ergebnis
+ist ein vollwertiges ZIP64, nur klein — und **`unzip` und `zipinfo` lesen
+es**. Das ist der eigentliche Beweis: „Redion liest, was Redion schrieb"
+wäre keiner, denn zwei Fehler, die sich aufheben, bestünden ihn mühelos. Die
+Anzahl-Grenze braucht gar keine Absenkung; 70 000 Einträge sind sieben
+Megabyte, und `test103` schreibt sie wirklich.
+
+**Was das NICHT löst.** Ob ein Browser einen Blob von 10 GB zusammensetzen
+und herunterladen kann, entscheidet der Browser, nicht Redion. ZIP64 nimmt
+die Grenze aus dem *Format*; die Grenze der Umgebung bleibt und ist nicht
+gemessen. Steht so in `LUECKEN.md` L14.
+
+**Status**
+
+Beschlossen und gebaut. `test103` (36 Punkte, davon 6 mit fremdem Werkzeug),
+`test100` Abschnitt 4 umgeschrieben — er hielt bis heute die Gegenrichtung
+fest. `doku/REDION-FORMAT.md` beschreibt das Format.

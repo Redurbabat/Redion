@@ -85,28 +85,43 @@ const Austausch = (() => {
     return (c ^ 0xFFFFFFFF) >>> 0;
   };
 
-  /* Ein ZIP der alten Bauart zählt Grössen und Versätze in 32 Bit. Darüber
-     braucht es ZIP64 — das ist ein anderes Format, kein grösseres Feld.
-     Hier wird deshalb ehrlich abgebrochen statt still etwas Kaputtes
-     geschrieben, das erst beim Auspacken auffällt. */
+  /* ------------------------------------------------------------------------
+   * DIE DREI GRENZEN — und warum sie seit dem 6. August keine mehr sind
+   * ------------------------------------------------------------------------
+   * Ein ZIP der alten Bauart zählt Grössen und Versätze in 32 Bit, die Zahl
+   * der Einträge sogar nur in 16:
+   *
+   *     eine einzelne Datei     4 GB        (32 Bit)
+   *     das ganze Archiv        4 GB        (32 Bit)
+   *     die Anzahl der Einträge 65 535      (16 Bit)
+   *
+   * Bis heute brach der Packer an allen dreien ehrlich ab. Das war richtig
+   * gegenüber der Alternative — ein Archiv zu schreiben, das erst beim
+   * Auspacken auffällt —, aber es war keine Sicherung. Und die Meldung riet
+   * „sichere die Anhänge in zwei Schritten", während es diesen zweiten
+   * Schritt in Redion gar nicht gibt: jeder Weg mündet in dasselbe eine
+   * Archiv mit allen Anhängen. Wer 5 GB Fotos hatte, konnte nicht sichern.
+   *
+   * Deshalb jetzt ZIP64 (E39). Es ist kein grösseres Feld, sondern ein
+   * Zusatz: an den Stellen, die überlaufen, steht der Platzhalter
+   * 0xFFFFFFFF, und die echte Zahl liegt in 64 Bit daneben.
+   *
+   * NUR WENN NÖTIG. Ein Archiv unter den Grenzen wird byteweise geschrieben
+   * wie bisher — sonst könnte eine ältere Redion-Fassung die neuen
+   * Sicherungen nicht mehr lesen, und alte Werkzeuge auch nicht. Die
+   * Referenz macht es genauso: Pythons `zipfile` setzt die Platzhalter
+   * einzeln, dort wo sie gebraucht werden, und sonst nirgends.
+   * ----------------------------------------------------------------------*/
   const ZIP_GRENZE = 0xFFFFFFFF;
-
-  /* Die dritte Grenze, und die unauffälligste. Die Anzahl der Einträge steht
-     im Schlusssatz des Archivs in **16 Bit** — nicht in 32. Sie lief lange
-     ungeprüft mit, weil sie kleiner aussieht als die zwei Byte-Grenzen
-     darüber und deshalb nicht wie eine Grenze wirkt.
-
-     Ohne Prüfung scheitert sie still: `schreibe16(ende, 8, 70000)` schreibt
-     kein 70000, es schreibt 4464 — und 65536 schreibt sogar 0. Das Archiv
-     lässt sich danach öffnen und sieht gesund aus; es zeigt nur einen
-     Bruchteil seines Inhalts. Wer 70 000 Anhänge sichert, bekommt eine
-     Datei, die wie eine vollständige Sicherung aussieht, und merkt es an
-     dem Tag, an dem er sie braucht.
-
-     Die zwei Grenzen darüber haben ihre Prüfung seit jeher. Diese hatte
-     keine — wieder derselbe Befund: nicht etwas vergessen, sondern etwas an
-     einer Stelle getan und an der Nachbarstelle nicht. */
   const ZIP_EINTRAEGE = 65535;
+
+  /* DIE SCHWELLEN SIND ABSENKBAR, und das ist kein Schlupfloch, sondern die
+     einzige Art, diesen Code zu prüfen. Ein Prüflauf kann keine 4 GB
+     schreiben — wohl aber dieselbe Verzweigung bei 40 Byte nehmen. Ein
+     ZIP64 mit kleinen Dateien ist ein vollkommen gültiges ZIP64; `unzip`
+     und Pythons `zipfile` lesen es, und genau das prüft `test103`.
+     Im Betrieb bleiben die Werte, wie das Format sie vorschreibt. */
+  const grenzen = { bytes: ZIP_GRENZE, eintraege: ZIP_EINTRAEGE };
 
   /**
    * @param dateien [{ name, inhalt }] — inhalt als Zeichenkette, Uint8Array
@@ -117,23 +132,28 @@ const Austausch = (() => {
    * @returns {Promise<Blob>}
    */
   const zipSchreiben = async (dateien: any, beiFortschritt?: any) => {
-    /* Vor dem ersten Byte, nicht danach. Wer 70 000 Anhänge sichert, soll
-       die Meldung sofort bekommen und nicht nach zwanzig Minuten Packen. */
-    if (dateien.length > ZIP_EINTRAEGE)
-      throw new Error('Diese Sicherung hat ' + dateien.length + ' Einträge. Ein ZIP ' +
-                      'dieser Bauart kann höchstens 65 535 verzeichnen — darüber ' +
-                      'stünde im Archiv eine falsche Zahl, und es zeigte nur einen ' +
-                      'Teil seines Inhalts, ohne das zu sagen. Sichere die Anhänge ' +
-                      'in zwei Schritten, statt ein Archiv zu bekommen, dem man ' +
-                      'nicht ansieht, dass es unvollständig ist.');
-
     const enc = new TextEncoder();
     const teile = [];
     const verzeichnis = [];
     let versatz = 0;
+    /* Ob dieses Archiv ZIP64 wird, entscheidet sich erst unterwegs — beim
+       ersten Eintrag, der überläuft. Gemerkt wird es hier, weil der
+       Schlusssatz am Ende davon abhängt. */
+    let braucht64 = dateien.length > grenzen.eintraege;
 
     const schreibe32 = (a: any, i: number, w: any) => { a[i] = w & 255; a[i+1] = (w>>>8) & 255; a[i+2] = (w>>>16) & 255; a[i+3] = (w>>>24) & 255; };
     const schreibe16 = (a: any, i: number, w: any) => { a[i] = w & 255; a[i+1] = (w>>>8) & 255; };
+    /* ACHT BYTE, UND NICHT ÜBER `>>>`. Die Bit-Schieber von JavaScript
+       rechnen in 32 Bit — `4294967296 >>> 0` ist 0, nicht 2^32. Wer die
+       obere Hälfte so gewinnen will, schreibt lautlos Null in genau das
+       Feld, das den Überlauf abfangen soll. Deshalb geteilt, nicht
+       geschoben. Bis 2^53 ist das exakt, und darüber gibt es keine Blobs. */
+    const schreibe64 = (a: any, i: number, w: number) => {
+      const unten = w >>> 0;
+      const oben  = Math.floor(w / 4294967296);
+      schreibe32(a, i, unten);
+      schreibe32(a, i + 4, oben);
+    };
 
     for (const d of dateien) {
       const name = enc.encode(d.name);
@@ -143,64 +163,133 @@ const Austausch = (() => {
                    : d.inhalt;
       const laenge = istBlob ? inhalt.size : inhalt.length;
 
-      if (laenge > ZIP_GRENZE)
-        throw new Error('„' + d.name + '" ist grösser als 4 GB. Ein ZIP dieser ' +
-                        'Bauart kann das nicht — die Datei bleibt lieber aussen ' +
-                        'vor, als in einem Archiv zu stehen, das sich nicht ' +
-                        'öffnen lässt.');
-
       const summe = istBlob
         ? await crc32Strom(inhalt, (a: any) => beiFortschritt && beiFortschritt(d.name, a))
         : crc32(inhalt);
 
-      const kopf = new Uint8Array(30 + name.length);
+      /* Drei Entscheidungen, jede für sich. Eine grosse Datei zwingt den
+         lokalen Kopf ins ZIP64; ein weit hinten liegender Eintrag nur den
+         Verzeichniseintrag. Beides zusammen kommt vor, keines bedingt das
+         andere. */
+      const grosseDatei = laenge > grenzen.bytes;
+      const weitHinten  = versatz > grenzen.bytes;
+      if (grosseDatei || weitHinten) braucht64 = true;
+
+      /* Der lokale Kopf trägt sein Zusatzfeld nur wegen der GRÖSSE. Der
+         Versatz steht hier gar nicht — der Kopf IST ja an dieser Stelle. */
+      const lokalExtra = grosseDatei ? 20 : 0;
+      const kopf = new Uint8Array(30 + name.length + lokalExtra);
       schreibe32(kopf, 0, 0x04034b50);
-      schreibe16(kopf, 4, 20);         /* benötigte Fassung */
+      schreibe16(kopf, 4, grosseDatei ? 45 : 20);  /* benötigte Fassung */
       schreibe16(kopf, 6, 0);          /* Flags             */
       schreibe16(kopf, 8, 0);          /* Methode: gespeichert */
       schreibe16(kopf, 10, 0);         /* Uhrzeit           */
       schreibe16(kopf, 12, 0x21);      /* Datum: 1. Jan 1980 */
       schreibe32(kopf, 14, summe);
-      schreibe32(kopf, 18, laenge);
-      schreibe32(kopf, 22, laenge);
+      schreibe32(kopf, 18, grosseDatei ? ZIP_GRENZE : laenge);
+      schreibe32(kopf, 22, grosseDatei ? ZIP_GRENZE : laenge);
       schreibe16(kopf, 26, name.length);
-      schreibe16(kopf, 28, 0);
+      schreibe16(kopf, 28, lokalExtra);
       kopf.set(name, 30);
+      if (grosseDatei) {
+        const e = 30 + name.length;
+        schreibe16(kopf, e, 0x0001);   /* Kennung des ZIP64-Zusatzfelds */
+        schreibe16(kopf, e + 2, 16);   /* zwei Zahlen zu acht Byte      */
+        schreibe64(kopf, e + 4, laenge);       /* roh     */
+        schreibe64(kopf, e + 12, laenge);      /* gepackt */
+      }
       teile.push(kopf, inhalt);
 
-      const eintrag = new Uint8Array(46 + name.length);
+      /* IM VERZEICHNIS STEHEN NUR DIE FELDER IM ZUSATZ, DIE ÜBERLAUFEN —
+         und zwar in dieser festen Reihenfolge: roh, gepackt, Versatz. Wer
+         eines davon vorsorglich mitschreibt, obwohl daneben die echte Zahl
+         steht, verschiebt alle folgenden. Abgelesen an `zipfile`, nicht
+         geraten: dort steht dieselbe Kette von drei `if`. */
+      const zusatz: number[] = [];
+      if (grosseDatei) { zusatz.push(laenge, laenge); }
+      if (weitHinten)  { zusatz.push(versatz); }
+      const vzExtra = zusatz.length ? 4 + 8 * zusatz.length : 0;
+
+      const eintrag = new Uint8Array(46 + name.length + vzExtra);
       schreibe32(eintrag, 0, 0x02014b50);
       schreibe16(eintrag, 4, 20);
-      schreibe16(eintrag, 6, 20);
+      schreibe16(eintrag, 6, (grosseDatei || weitHinten) ? 45 : 20);
       schreibe16(eintrag, 8, 0);
       schreibe16(eintrag, 10, 0);
       schreibe16(eintrag, 12, 0);
       schreibe16(eintrag, 14, 0x21);
       schreibe32(eintrag, 16, summe);
-      schreibe32(eintrag, 20, laenge);
-      schreibe32(eintrag, 24, laenge);
+      schreibe32(eintrag, 20, grosseDatei ? ZIP_GRENZE : laenge);
+      schreibe32(eintrag, 24, grosseDatei ? ZIP_GRENZE : laenge);
       schreibe16(eintrag, 28, name.length);
-      schreibe32(eintrag, 42, versatz);
+      schreibe16(eintrag, 30, vzExtra);
+      schreibe32(eintrag, 42, weitHinten ? ZIP_GRENZE : versatz);
       eintrag.set(name, 46);
+      if (vzExtra) {
+        const e = 46 + name.length;
+        schreibe16(eintrag, e, 0x0001);
+        schreibe16(eintrag, e + 2, 8 * zusatz.length);
+        zusatz.forEach((w, k) => schreibe64(eintrag, e + 4 + 8 * k, w));
+      }
       verzeichnis.push(eintrag);
 
       versatz += kopf.length + laenge;
-      if (versatz > ZIP_GRENZE)
-        throw new Error('Diese Sicherung wird grösser als 4 GB. Ein ZIP dieser ' +
-                        'Bauart kann das nicht. Sichere die Anhänge in zwei ' +
-                        'Schritten, statt ein Archiv zu bekommen, das sich ' +
-                        'nicht öffnen lässt.');
     }
 
     const vzGroesse = verzeichnis.reduce((n, e) => n + e.length, 0);
+    /* Auch der Schlusssatz zählt in 32 Bit. Liegt das Verzeichnis jenseits
+       der Grenze oder ist es selbst zu gross, wird das Archiv hier ZIP64,
+       selbst wenn jeder einzelne Eintrag darunter blieb. */
+    if (versatz > grenzen.bytes || vzGroesse > grenzen.bytes) braucht64 = true;
+
+    /* ------------------------------------------------------------------ *
+     * DER SCHLUSS — zwei zusätzliche Sätze, wenn ZIP64 nötig ist
+     * ------------------------------------------------------------------ *
+     * Zuerst der ZIP64-Schlusssatz mit den echten Zahlen (56 Byte), dann
+     * ein Wegweiser darauf (20 Byte), dann der alte Schlusssatz mit
+     * Platzhaltern. Die Reihenfolge ist nicht frei: jeder Leser sucht
+     * zuerst den alten Satz am Dateiende und findet den Wegweiser genau
+     * 20 Byte davor. Anders herum wäre er unauffindbar.
+     * ------------------------------------------------------------------ */
+    const schluss: Uint8Array[] = [];
+    if (braucht64) {
+      const z64 = new Uint8Array(56);
+      schreibe32(z64, 0, 0x06064b50);
+      schreibe64(z64, 4, 44);          /* Grösse ab hier: 56 − 12 */
+      schreibe16(z64, 12, 45);         /* erzeugt von  */
+      schreibe16(z64, 14, 45);         /* benötigt     */
+      schreibe32(z64, 16, 0);          /* Datenträger  */
+      schreibe32(z64, 20, 0);
+      schreibe64(z64, 24, dateien.length);
+      schreibe64(z64, 32, dateien.length);
+      schreibe64(z64, 40, vzGroesse);
+      schreibe64(z64, 48, versatz);
+      schluss.push(z64);
+
+      const weg = new Uint8Array(20);
+      schreibe32(weg, 0, 0x07064b50);
+      schreibe32(weg, 4, 0);
+      schreibe64(weg, 8, versatz + vzGroesse);   /* wo der ZIP64-Satz liegt */
+      schreibe32(weg, 16, 1);
+      schluss.push(weg);
+    }
+
+    /* Im alten Schlusssatz steht ab jetzt der Platzhalter, wo die echte
+       Zahl nicht mehr hineinpasst — und nur dort. `Math.min` statt einer
+       Fallunterscheidung: 0xFFFF ist gleichzeitig der Platzhalter UND die
+       grösste Zahl, die das Feld fassen kann. Ein Archiv mit genau 65 535
+       Einträgen schreibt deshalb dieselbe Zahl wie eines mit 70 000 — und
+       genau darum darf ein Leser ZIP64 nie am Platzhalter erkennen,
+       sondern nur am Wegweiser. */
     const ende = new Uint8Array(22);
     schreibe32(ende, 0, 0x06054b50);
-    schreibe16(ende, 8,  dateien.length);
-    schreibe16(ende, 10, dateien.length);
-    schreibe32(ende, 12, vzGroesse);
-    schreibe32(ende, 16, versatz);
+    schreibe16(ende, 8,  Math.min(dateien.length, 0xFFFF));
+    schreibe16(ende, 10, Math.min(dateien.length, 0xFFFF));
+    schreibe32(ende, 12, Math.min(vzGroesse, ZIP_GRENZE));
+    schreibe32(ende, 16, Math.min(versatz, ZIP_GRENZE));
 
-    return new Blob([...teile, ...verzeichnis, ende], { type: 'application/zip' });
+    return new Blob([...teile, ...verzeichnis, ...schluss, ende],
+                    { type: 'application/zip' });
   };
 
   const laden = (blob: any, name: string) => {
@@ -928,7 +1017,11 @@ const Austausch = (() => {
   return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
            allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
            ausTrello, ausEvernote, ausMarkdownOrdner, ausNotionZip, ausNotionJson,
-           dialog, QUELLEN };
+           dialog, QUELLEN,
+           /* Nur für Prüfläufe — siehe die Erklärung bei `grenzen`. Wer sie
+              im Betrieb verstellt, schreibt ZIP64, wo es keines braucht:
+              gültig, aber ohne Not unlesbar für alte Werkzeuge. */
+           grenzen };
 })();
 
 (window as any).Austausch = Austausch;
