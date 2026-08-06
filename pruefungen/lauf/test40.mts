@@ -89,7 +89,7 @@ import { chromium } from 'playwright';
      nur einmal. */
   ok('Oben stehen Konto und die vier Bereiche als Pillen',
      handy.obenSichtbar &&
-     handy.obenLeiste.join(',') === 'hl-konto,hl-start,hl-chat,hl-bespr,hl-inbox',
+     handy.obenLeiste.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-inbox',
      handy.obenLeiste.join(','));
   ok('Unten stehen Suchen, KI fragen und Neu',
      handy.untenSichtbar &&

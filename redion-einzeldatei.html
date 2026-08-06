@@ -2409,9 +2409,17 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
            height:calc(46px + env(safe-area-inset-top)); }
   #sidebar{ padding-top:env(safe-area-inset-top);
             padding-bottom:env(safe-area-inset-bottom); }
-  #page{ padding-left:max(18px, env(safe-area-inset-left));
-         padding-right:max(18px, env(safe-area-inset-right));
+  /* 28 px, nicht 18. Die Zahl steht auch in `ki.css`, aber DIESE Regel
+     gewinnt (gleiche Spezifität, spätere Datei) — gemessen kamen 18 px
+     heraus, während der Start-Bildschirm daneben mit 28 gebaut war. Zwei
+     Ränder in einer App sind einer zu viel. */
+  #page{ padding-left:max(28px, env(safe-area-inset-left));
+         padding-right:max(28px, env(safe-area-inset-right));
          padding-bottom:calc(30vh + env(safe-area-inset-bottom)); }
+  @media(max-width:380px){
+    #page{ padding-left:max(22px, env(safe-area-inset-left));
+           padding-right:max(22px, env(safe-area-inset-right)); }
+  }
   #ai{ padding-bottom:env(safe-area-inset-bottom); }
 
   /* Die Seitenleiste als Schublade */
@@ -3009,9 +3017,18 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     background:var(--bg);
     overflow-x:auto; scrollbar-width:none;
   }
-  /* Auf sehr schmalen Geräten (SE, 375 px) wird der Rand knapper, sonst
-     bleibt für die fünf Bereiche kein Platz. */
-  @media(max-width:380px){ #handy-oben{ padding-left:22px; padding-right:22px } }
+  /* GEMESSEN AM 6. AUGUST, und es war knapper als gedacht: bei 390 px
+     brauchte die Leiste 395 px mit „Start" und 421 px mit „Eingang" — die
+     letzte Pille stand ausserhalb des Bildes. Am 428er iPhone fiel das nie
+     auf; E37 sagt aber 390 zuerst.
+
+     Unter 420 px wird deshalb enger gerückt: Rand 20 statt 28, Abstand 6
+     statt 10, Pillenpolster 11 statt 13. Das reicht für „Eingang", das
+     längste der fünf Wörter. Die Tasten bleiben 52 px — an der Fläche, die
+     der Daumen trifft, wird nicht gespart; gespart wird am Weissraum
+     zwischen ihnen. */
+  @media(max-width:420px){ #handy-oben{ gap:6px; padding-left:20px; padding-right:20px } }
+  @media(max-width:380px){ #handy-oben{ padding-left:14px; padding-right:14px } }
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
@@ -3044,6 +3061,20 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   #handy-oben .ho-konto span{ line-height:1 }
 
+  /* Der zweite Teil der Enge von oben — er MUSS hier unten stehen, nach der
+     Grundregel für `#handy-oben button`. Gleiche Spezifität entscheidet die
+     Reihenfolge, und weiter oben verlor er lautlos: gemessen kamen 13 px
+     Polster und 16 px Schrift zurück, obwohl der Rand daneben schon eng
+     war. Eine Regel, die dasteht und nichts tut, ist schlimmer als keine. */
+  @media(max-width:420px){
+    #handy-oben button{ padding:0 11px }
+    #handy-oben button b{ font-size:15px }
+  }
+  @media(max-width:380px){
+    #handy-oben button{ padding:0 9px }
+    #handy-oben button b{ font-size:14px }
+  }
+
   #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
   #handy-oben .ho-z svg{ display:block }
 
@@ -3073,6 +3104,39 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   .pg-tools::-webkit-scrollbar{ display:none }
   .pg-tools button{ flex:0 0 auto }
+
+  /* --- CODEBLOCK: die Werkzeuge STANDEN AUF DEM CODE ------------------- *
+     Gemessen am 6. August bei 390 px: der Kasten mit ⧉ № ↩ lag von x=175
+     bis 252, die Sprachwahl von 248 bis 362 — und die erste Codezeile
+     lief darunter durch. Man las `const abfahr…` und dahinter drei
+     Knöpfe. Das ist derselbe Fehler wie die abgeschnittene Zahl in §55.1:
+     was dasteht, ist nicht, was gemeint ist.
+
+     Am Rechner ist die schwebende Leiste richtig — dort ist der Block
+     700 px breit und die Knöpfe stehen im Leerraum rechts. Am Telefon
+     gibt es keinen Leerraum rechts, also bekommt der Block eine eigene
+     Kopfzeile und der Code beginnt darunter.
+
+     Die Knöpfe werden dabei gleich 44 px gross. Sie waren 22 × 23. */
+  .b-code .code-werk{ top:8px; right:auto; left:12px; gap:6px }
+  .b-code .code-werk button{
+    min-width:44px; min-height:44px; font-size:17px; border-radius:10px;
+  }
+  .b-code select{
+    top:8px !important; right:12px !important;
+    min-height:44px; font-size:14px !important; padding:0 8px !important;
+    border-radius:10px !important;
+  }
+  .b-code .ct{ padding-top:64px }
+  .b-code .code-nr{ padding-top:64px }
+  .mit-nr .ct{ padding-left:46px !important }
+
+  /* Das Kästchen der Aufgabe war 16 × 16 — der kleinste Treffer der ganzen
+     Seite. 22 px sind noch keine 44, aber ein Kästchen mitten im Text darf
+     die Zeile nicht auseinanderschieben; die Trefferfläche wächst darum
+     über den unsichtbaren Rand von `.mk`, nicht über den Kasten. */
+  .b-todo .mk{ flex:0 0 34px; padding:2px 0 }
+  .b-todo input{ width:22px; height:22px }
 
   /* Der rote Punkt an den Chats — klein, aber am richtigen Ort. */
   #handy-oben .hl-punkt{
@@ -3317,6 +3381,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   line-height:1.5}
 .pe-link{background:none; color:var(--accent); font-size:15px; margin-top:18px; padding:6px}
 .pe-link:hover{text-decoration:underline; color:var(--accent)}
+/* AM TELEFON DIE EINZIGE HANDLUNG IM LEEREN ZUSTAND — und mit 6 px Polster
+   war sie 32 px hoch. Gemessen am 6. August im Posteingang: „Filter ändern"
+   stand als einziger Weg da und war der flachste Knopf der Ansicht.
+   Ein leerer Zustand, den man nicht trifft, ist eine Sackgasse. */
+@media(max-width:760px){
+  .pe-link{ min-height:44px; padding:10px 18px; font-size:16px;
+            border-radius:12px; background:var(--bg-hover) }
+}
 
 /* Chatverlauf: Titel oben, „vor 3 Monaten" darunter */
 .kc-txt{display:flex; flex-direction:column; align-items:flex-start; gap:1px; min-width:0}
@@ -4423,6 +4495,52 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   #fehler-karte{ top:calc(88px + env(safe-area-inset-top)); left:14px; right:14px }
 }
 
+/* ===========================================================================
+   DAS R-BLATT  (Telefon-Vorgabe Phase 7)
+   ---------------------------------------------------------------------------
+   Über den ganzen Bildschirm, nicht halb darüber. Vorher zog der Kreis die
+   Seitenleiste des Rechners herein — Baum, Reiter, 33-px-Zeilen. Hier sind
+   die Zeilen 56 px hoch: darunter trifft der Daumen die Nachbarzeile mit.
+   =========================================================================*/
+#r-blatt{
+  position:fixed; inset:0; z-index:700; background:var(--bg);
+  display:flex; flex-direction:column;
+  padding:calc(14px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
+  transform:translateY(14px); opacity:0;
+  transition:transform .2s ease, opacity .2s ease;
+}
+#r-blatt.auf{ transform:translateY(0); opacity:1 }
+@media(prefers-reduced-motion:reduce){ #r-blatt{ transition:none } }
+
+.rm-kopf{ display:flex; align-items:flex-start; gap:12px; margin-bottom:20px }
+.rm-kopf b{ display:block; font-size:20px; letter-spacing:-.02em }
+.rm-kopf span{ display:block; font-size:13px; color:var(--text-faint); margin-top:2px }
+.rm-zu{
+  margin-left:auto; width:44px; height:44px; flex:none; border-radius:50%;
+  border:1px solid var(--line); color:var(--text-dim); font-size:15px;
+  display:grid; place-items:center;
+}
+.rm-zu:active{ background:var(--bg-hover) }
+
+.rm-rollen{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch }
+.rm-gruppe{
+  background:var(--bg-side); border:1px solid var(--line); border-radius:16px;
+  overflow:hidden; margin-bottom:14px;
+}
+.rm-gruppe button{
+  display:flex; align-items:center; gap:14px; width:100%;
+  min-height:56px; padding:0 16px; text-align:left; font-size:16px;
+  color:var(--text); border-bottom:1px solid var(--line);
+}
+.rm-gruppe button:last-child{ border-bottom:0 }
+.rm-gruppe button:active{ background:var(--bg-hover) }
+.rm-z{ width:26px; flex:none; text-align:center; font-size:17px }
+.rm-n{ flex:none }
+.rm-h{ margin-left:auto; font-size:12.5px; color:var(--text-faint); text-align:right }
+
+/* Am Rechner gibt es dieses Blatt nicht — dort ist die Seitenleiste richtig. */
+@media(min-width:701px){ #r-blatt{ display:none } }
+
 </style>
 
 <!-- =========================================================================
@@ -4528,7 +4646,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 <div id="handy-oben" role="tablist" aria-label="Hauptbereiche">
   <button id="hl-konto" class="ho-konto" title="Arbeitsbereich"><span>R</span></button>
   <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
-  <button id="hl-chat"  role="tab" title="Chats"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a7.5 7.5 0 0 1-7.5 7.5c-1.3 0-2.5-.3-3.6-.9L4 20l1.5-4.3A7.5 7.5 0 1 1 20 12z"/></svg></span><b>Chats</b><i class="hl-punkt" hidden></i></button>
+  <button id="hl-seiten" role="tab" title="Seiten"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h7L18.5 8v12.5h-12z"/><path d="M13.5 3.5V8h5"/><path d="M9.5 12.5h6M9.5 16h4"/></svg></span><b>Seiten</b><i class="hl-punkt" hidden></i></button>
   <button id="hl-bespr" role="tab" title="Besprechungen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
   <button id="hl-inbox" role="tab" title="Posteingang"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13h4l1.5 2.5h6L16.5 13h4"/><path d="M3.5 13 6 5.5h12L20.5 13v4.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V13z"/></svg></span><b>Eingang</b></button>
 </div>
@@ -34664,7 +34782,190 @@ const Ansichten = (() => {
             posteingang();
         });
     };
-    return { start, posteingang, posteingangFilter, gruss };
+    /* ==========================================================================
+     * DER SEITEN-BEREICH  (E38)
+     * --------------------------------------------------------------------------
+     * Hier stand am Telefon einmal „Chats". Redion ist aber keine Chat-App:
+     * die KI ist ein Werkzeug, kein Hauptbereich. Sie bleibt unten in der
+     * Leiste („KI fragen") und im R-Blatt erreichbar — der Platz oben gehört
+     * dem, was man täglich sucht.
+     *
+     * Fünf Abschnitte, und jeder erscheint nur, wenn er etwas enthält. Ein
+     * leerer Abschnitt mit Überschrift ist eine Behauptung ohne Inhalt; er
+     * kostet Platz und sagt nichts.
+     * ========================================================================*/
+    const seiten = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>📄 Seiten</a>';
+        const alle = Object.values(Store.cache.blocks)
+            .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' && !b.system);
+        const kuerzlich = [...alle]
+            .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 6);
+        const sterne = alle.filter(b => b.fav);
+        const privat = alle.filter(b => !b.parentId);
+        const datenbanken = Object.values(Store.cache.collections || {});
+        const vorlagen = (() => {
+            try {
+                return (Register.vorlagen?.alle?.() || []).slice(0, 6);
+            }
+            catch {
+                return [];
+            }
+        })();
+        const zeit = (p) => {
+            const d = p.edited ? new Date(p.edited) : null;
+            if (!d || isNaN(d.getTime()))
+                return '';
+            const heute = new Date();
+            heute.setHours(0, 0, 0, 0);
+            return d.getTime() >= heute.getTime()
+                ? 'Heute ' + d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })
+                : d.toLocaleDateString('de-CH', { day: '2-digit', month: 'short' });
+        };
+        const zeile = (p, rechts = '') => `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '📄')}</span>` +
+            `<span class="pt">${esc(p.text || 'Ohne Titel')}</span>` +
+            (rechts ? `<span class="pth">${esc(rechts)}</span>` : '') + '</button>';
+        const block = (titel, inhalt) => inhalt ? `<h2>${esc(titel)}</h2><div class="home-liste">${inhalt}</div>` : '';
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Seiten</h1>' +
+                '<div class="home-karten">' +
+                '<button class="hk" data-a="neu"><b>✚ Neue Seite</b>' +
+                '<span>Leere Seite anlegen</span></button>' +
+                '<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b>' +
+                '<span>Gedanken sofort festhalten</span></button>' +
+                '</div>' +
+                block('Kürzlich verwendet', kuerzlich.map(p => zeile(p, zeit(p))).join('')) +
+                block('Favoriten', sterne.map(p => zeile(p)).join('')) +
+                block('Privat', privat.map(p => zeile(p, (() => {
+                    const n = (p.content || []).filter((k) => {
+                        const kind = Store.getBlock(k);
+                        return kind && kind.type === 'page' && kind.alive;
+                    }).length;
+                    return n ? n + (n === 1 ? ' Unterseite' : ' Unterseiten') : '';
+                })())).join('')) +
+                block('Datenbanken', datenbanken.map((c) => `<button data-db="${esc(c.id)}"><span>${esc(c.icon || '📊')}</span>` +
+                    `<span class="pt">${esc(c.name || 'Ohne Namen')}</span>` +
+                    `<span class="pth">${(Store.rowsOf(c.id) || []).length} Zeilen</span></button>`).join('')) +
+                block('Vorlagen', vorlagen.map((v) => `<button data-vorlage="${esc(v.id || v.name)}"><span>${esc(v.icon || '🧩')}</span>` +
+                    `<span class="pt">${esc(v.name || v.titel || 'Vorlage')}</span></button>`).join('')) +
+                '<div class="home-liste" style="margin-top:22px">' +
+                '<button data-a="papierkorb"><span>🗑</span><span class="pt">Papierkorb</span></button>' +
+                '</div>' +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            const auf = el?.closest('[data-open]');
+            if (auf?.dataset.open) {
+                App.oeffne(auf.dataset.open);
+                return;
+            }
+            const db = el?.closest('[data-db]');
+            if (db?.dataset.db) {
+                /* Eine Sammlung selbst ist keine Seite — geöffnet wird der Block,
+                   der sie zeigt. Findet sich keiner, bleibt die Ansicht stehen,
+                   statt in eine leere Seite zu springen. */
+                const traeger = Object.values(Store.cache.blocks)
+                    .find(b => b && b.collectionId === db.dataset.db && b.alive);
+                if (traeger)
+                    App.oeffne(traeger.parentId || traeger.id);
+                return;
+            }
+            const a = el?.closest('[data-a]');
+            if (!a)
+                return;
+            if (a.dataset.a === 'neu')
+                App.neueSeite();
+            else if (a.dataset.a === 'memo')
+                Werkzeuge.schnellnotizen();
+            else if (a.dataset.a === 'papierkorb')
+                App.papierkorb();
+        };
+    };
+    /* ========================================================================
+     * TERMINE — der dritte Bereich am Telefon
+     * ------------------------------------------------------------------------
+     * VORHER ÖFFNETE DIESER REITER DIE SCHUBLADE, also die Seitenleiste des
+     * Rechners auf 390 px geschoben — genau das, was das R-Blatt für den
+     * Kreis links oben abgeschafft hat (E38). Gemessen am 6. August: die
+     * Zeilen kamen zwar aus `Meeting.seitenleiste`, standen aber in einem
+     * Behälter, der für 260 px Breite und einen Mauszeiger gebaut ist.
+     *
+     * Jetzt dieselben Angaben auf der Bühne, in Fingerzeilen: was ansteht,
+     * und was aus Besprechungen entstanden ist.
+     *
+     * Die Daten kommen über `App` und `Store` — kein Bereich greift in einen
+     * anderen hinein (Architekturregel 1). `Kalender` und `Meeting` werden
+     * nur angetippt, wenn es sie gibt; fehlt eines, fehlt die Zeile und nicht
+     * die Ansicht.
+     * ========================================================================*/
+    const termine = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>📅 Termine</a>';
+        const kommend = (() => {
+            try {
+                return App.kommendeTermine(12) || [];
+            }
+            catch {
+                return [];
+            }
+        })();
+        const notizen = Object.values(Store.cache.blocks)
+            .filter(b => b.type === 'page' && b.alive !== false && b.besprechung)
+            .sort((a, b) => String(b.created).localeCompare(String(a.created)))
+            .slice(0, 8);
+        const block = (titel, inhalt) => inhalt ? `<h2>${esc(titel)}</h2><div class="home-liste">${inhalt}</div>` : '';
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Termine</h1>' +
+                '<div class="home-karten">' +
+                '<button class="hk" data-a="kal"><b>📅 Kalender</b>' +
+                '<span>Termine hereinholen</span></button>' +
+                '<button class="hk" data-a="mtg"><b>🎙 Besprechung</b>' +
+                '<span>Mitreden statt mitschreiben</span></button>' +
+                '</div>' +
+                block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>📌</span>` +
+                    `<span class="pt">${esc(t.text)}</span>` +
+                    `<span class="pth">${esc(t.wann)}</span></button>`).join('')) +
+                /* Steht nichts an, sagt die Ansicht das — und daneben den einen
+                   Weg, der etwas ändert. Eine leere Liste ohne Ausweg ist eine
+                   Sackgasse. */
+                (kommend.length ? '' :
+                    '<h2>Bevorstehend</h2><div class="home-liste">' +
+                        '<button data-a="kal"><span>📅</span><span class="pt">Kalender verbinden</span>' +
+                        '</button>' +
+                        '<div class="leer">Dann stehen hier alle Termine der nächsten ' +
+                        'dreissig Tage, und zu jedem kannst du eine Notiz anlegen.</div></div>') +
+                block('Aus Besprechungen', notizen.map(p => `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '🎙')}</span>` +
+                    `<span class="pt">${esc(p.text || 'Ohne Titel')}</span></button>`).join('')) +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            const auf = el?.closest('[data-open]');
+            if (auf?.dataset.open) {
+                App.oeffne(auf.dataset.open);
+                return;
+            }
+            const a = el?.closest('[data-a]');
+            if (!a)
+                return;
+            if (a.dataset.a === 'kal')
+                window.Kalender?.dialog?.();
+            else if (a.dataset.a === 'mtg')
+                window.Meeting?.panel?.();
+        };
+    };
+    return { start, seiten, termine, posteingang, posteingangFilter, gruss };
 })();
 window.Ansichten = Ansichten;
 
@@ -59422,7 +59723,11 @@ const Seitenleiste = (() => {
         const l = document.getElementById('handy-oben');
         if (!l)
             return;
-        const karte = { start: 'hl-start', chat: 'hl-chat', bespr: 'hl-bespr' };
+        /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
+           stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
+           kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
+        const karte = { start: 'hl-start', seiten: 'hl-seiten',
+            bespr: 'hl-bespr', inbox: 'hl-inbox' };
         l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
         const aktiv = document.getElementById(karte[reiter] || 'hl-start');
         if (aktiv)
@@ -61909,6 +62214,104 @@ const App = (() => {
      * ======================================================================*/
     /* Der Einstellungsbereich liegt in einer eigenen Datei. */
     const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
+    /* ==========================================================================
+     * DAS R-BLATT — der Arbeitsbereich am Telefon (Phase 7)
+     * --------------------------------------------------------------------------
+     * Ein Blatt über den ganzen Bildschirm statt einer hereingeschobenen
+     * Seitenleiste. Zwei Gruppen: oben die Wege, unten die Werkzeuge — und
+     * ganz oben der Satz, der Redion von allem anderen unterscheidet.
+     *
+     * Die Zeilen sind 56 px hoch. Das ist keine Grosszügigkeit, sondern die
+     * Rechnung: darunter trifft der Daumen die Nachbarzeile mit.
+     * ========================================================================*/
+    const rMenue = () => {
+        const zeile = (was, zeichen, name, hinweis = '') => `<button data-r="${was}"><span class="rm-z">${zeichen}</span>` +
+            `<span class="rm-n">${name}</span>` +
+            (hinweis ? `<span class="rm-h">${hinweis}</span>` : '') + '</button>';
+        const o = document.createElement('div');
+        o.id = 'r-blatt';
+        o.innerHTML =
+            '<div class="rm-kopf">' +
+                '<div><b>Redion</b><span>Alles bleibt auf diesem Gerät</span></div>' +
+                '<button class="rm-zu" data-r="zu" aria-label="Schliessen">✕</button>' +
+                '</div>' +
+                '<div class="rm-rollen">' +
+                '<div class="rm-gruppe">' +
+                zeile('suche', '🔍', 'Suchen') +
+                zeile('befehle', '⌘', 'Befehle') +
+                zeile('start', '🏠', 'Start') +
+                zeile('seiten', '📄', 'Seiten') +
+                zeile('inbox', '📥', 'Posteingang') +
+                zeile('neu', '✚', 'Neue Seite') +
+                /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
+                   weg: unten steht „KI fragen", und hier steht der Weg zu allem,
+                   was länger dauert als eine Frage. */
+                zeile('ki', '✨', 'KI und Verlauf') +
+                '</div>' +
+                '<div class="rm-gruppe">' +
+                zeile('import', '⭱', 'Importieren') +
+                zeile('sichern', '⬇', 'Sichern', 'als Datei auf dieses Gerät') +
+                zeile('papierkorb', '🗑', 'Papierkorb') +
+                zeile('tasten', '⌨', 'Tastenkürzel') +
+                zeile('einstellungen', '⚙', 'Einstellungen') +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        requestAnimationFrame(() => o.classList.add('auf'));
+        const zu = () => { o.classList.remove('auf'); setTimeout(() => o.remove(), 200); };
+        o.addEventListener('click', (e) => {
+            const b = (e.target instanceof Element) ? e.target.closest('[data-r]') : null;
+            if (!b)
+                return;
+            const was = b.dataset.r;
+            zu();
+            /* Erst schliessen, dann handeln: ein Dialog, der unter einem Blatt
+               aufgeht, ist von aussen nicht erreichbar. */
+            setTimeout(() => {
+                if (was === 'ki')
+                    kiPanel(true);
+                else if (was === 'suche')
+                    suche();
+                else if (was === 'befehle')
+                    Werkzeuge.palette();
+                /* DERSELBE FUND WIE OBEN AN DEN REITERN, und hier stand er dreimal:
+                   `handyLeiste()` liest `Seitenleiste.reiter()`. Wer nur zeichnet,
+                   bekommt die Ansicht — und daneben eine Pille, die auf den vorigen
+                   Bereich zeigt. Erst den Reiter setzen, dann zeichnen. */
+                else if (was === 'seiten') {
+                    Seitenleiste.reiter('seiten');
+                    Ansichten.seiten();
+                    handyLeiste();
+                }
+                else if (was === 'start') {
+                    Seitenleiste.reiter('start');
+                    Ansichten.start();
+                    handyLeiste();
+                }
+                else if (was === 'inbox') {
+                    Seitenleiste.reiter('inbox');
+                    Ansichten.posteingang();
+                    handyLeiste();
+                }
+                else if (was === 'neu')
+                    neueSeite();
+                else if (was === 'import')
+                    Werkzeuge.dateienLesen();
+                else if (was === 'sichern')
+                    sicherungSpeichern();
+                else if (was === 'papierkorb')
+                    papierkorb();
+                else if (was === 'tasten')
+                    Werkzeuge.tastenkuerzel();
+                else if (was === 'einstellungen')
+                    einstellungen();
+            }, 60);
+        });
+        /* Zurück-Taste des Telefons schliesst das Blatt, statt die Seite zu
+           verlassen — sonst ist der einzige Weg heraus das kleine Kreuz. */
+        const zurueckTaste = () => { zu(); removeEventListener('popstate', zurueckTaste); };
+        addEventListener('popstate', zurueckTaste);
+    };
     /**
      * Die Sicherung schreiben.
      *
@@ -62808,17 +63211,31 @@ const App = (() => {
             Ansichten.start();
             handyLeiste();
         });
-        an('hl-chat', () => {
+        /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
+           unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
+           gehört dem, was man täglich sucht — den eigenen Seiten. */
+        an('hl-seiten', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('chat');
-            zeichneBaum();
+            /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
+               liest ihn, und ohne ihn bliebe die Pille auf „Start"
+               stehen, während daneben schon die Seiten stünden. */
+            Seitenleiste.reiter('seiten');
+            Ansichten.seiten();
             handyLeiste();
-            if (PWA.schubladeAuf)
-                PWA.schubladeAuf();
         });
+        /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
+           dieser Reiter auch am Telefon die Schublade auf — also die
+           Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
+           33-px-Zeilen. Genau davon ist das R-Blatt weggekommen (E38); ein
+           Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
             Seitenleiste.reiter('bespr');
+            if (window.matchMedia('(max-width: 700px)').matches) {
+                Ansichten.termine();
+                handyLeiste();
+                return;
+            }
             zeichneBaum();
             handyLeiste();
             if (PWA.schubladeAuf)
@@ -62830,11 +63247,33 @@ const App = (() => {
         an('hu-neu', () => neueSeite());
         /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
            wie früher der ☰. */
-        an('hl-konto', () => { if (PWA.schubladeAuf)
-            PWA.schubladeAuf(); });
+        /* ----------------------------------------------------------------------
+         * DAS R-MENÜ (Telefon-Vorgabe Phase 7)
+         * ----------------------------------------------------------------------
+         * Vorher zog der Kreis die Seitenleiste als Schublade herein — also die
+         * Rechner-Oberfläche auf ein Telefon geschoben: Baum, Reiter, kleine
+         * Zeilen. Am Telefon gehört an diese Stelle ein Blatt mit grossen
+         * Zeilen und den Wegen, die man wirklich sucht.
+         *
+         * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
+         * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
+         * -------------------------------------------------------------------- */
+        an('hl-konto', () => {
+            if (!window.matchMedia('(max-width: 700px)').matches) {
+                if (PWA.schubladeAuf)
+                    PWA.schubladeAuf();
+                return;
+            }
+            PWA.schubladeZu && PWA.schubladeZu();
+            rMenue();
+        });
+        /* `reiter('inbox')`, nicht `'start'`: die Pille oben liest ihn, und mit
+           `'start'` stand sie auf „Start", während daneben schon der Posteingang
+           stand. Derselbe Fund wie bei „Seiten", nur eine Zeile weiter unten —
+           gefunden hat ihn wieder das Bildschirmfoto, nicht der Code. */
         an('hl-inbox', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('start');
+            Seitenleiste.reiter('inbox');
             Ansichten.posteingang();
             handyLeiste();
         });

@@ -212,20 +212,22 @@ const pruef = (n: any, ist: any, soll: any) => {
              punkt: !!l.querySelector('.hl-punkt') };
   }) as any;
   pruef('Die Leiste steht am Telefon', leiste.sichtbar, true);
+  /* Seit E38: „Seiten" statt „Chats". Der Platz oben gehört dem, was man
+     täglich sucht; die KI steht unten in der Leiste und im R-Blatt. */
   pruef('Konto und vier Bereiche', leiste.ids,
-        ['hl-konto', 'hl-start', 'hl-chat', 'hl-bespr', 'hl-inbox']);
+        ['hl-konto', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-inbox']);
   pruef('Jeder hat seinen Namen dabei', leiste.beschriftung,
-        ['Start', 'Chats', 'Termine', 'Eingang']);
+        ['Start', 'Seiten', 'Termine', 'Eingang']);
   pruef('Start ist markiert', leiste.markiert, ['hl-start']);
   /* DAS IST DIE REGEL, DIE DEN PLATZ MACHT. Stünden alle vier Namen da,
      bliebe für den Inhalt nichts; stünde keiner da, müsste man raten. */
   pruef('Nur der markierte zeigt seinen Namen', leiste.nameSichtbar, ['hl-start']);
-  pruef('Die Chats haben einen Punktplatz', leiste.punkt, true);
+  pruef('Der Eingang hat einen Punktplatz', leiste.punkt, true);
 
   /* Umschalten markiert richtig */
   const wechsel = await handy.evaluate(async () => {
     const raus = [];
-    for (const id of ['hl-chat', 'hl-bespr', 'hl-start']) {
+    for (const id of ['hl-seiten', 'hl-bespr', 'hl-start']) {
       document.getElementById(id)?.click();
       await new Promise(r => setTimeout(r, 450));
       raus.push([id, [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')].map(x => x.id)]);
@@ -247,7 +249,7 @@ const pruef = (n: any, ist: any, soll: any) => {
       if (!x) throw new Error(sel + ' ist nicht da.');
       return x;
     };
-    musselement('#hl-chat').click();
+    musselement('#hl-seiten').click();
     await new Promise(r => setTimeout(r, 500));
     /* DIE RICHTUNG HAT SICH GEDREHT. Vorher lag die Leiste unten und die
        Schublade musste ÜBER ihr enden. Jetzt liegen die Pillen oben und die

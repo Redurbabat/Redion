@@ -346,6 +346,189 @@ const Ansichten = (() => {
             posteingang();
         });
     };
-    return { start, posteingang, posteingangFilter, gruss };
+    /* ==========================================================================
+     * DER SEITEN-BEREICH  (E38)
+     * --------------------------------------------------------------------------
+     * Hier stand am Telefon einmal „Chats". Redion ist aber keine Chat-App:
+     * die KI ist ein Werkzeug, kein Hauptbereich. Sie bleibt unten in der
+     * Leiste („KI fragen") und im R-Blatt erreichbar — der Platz oben gehört
+     * dem, was man täglich sucht.
+     *
+     * Fünf Abschnitte, und jeder erscheint nur, wenn er etwas enthält. Ein
+     * leerer Abschnitt mit Überschrift ist eine Behauptung ohne Inhalt; er
+     * kostet Platz und sagt nichts.
+     * ========================================================================*/
+    const seiten = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>📄 Seiten</a>';
+        const alle = Object.values(Store.cache.blocks)
+            .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' && !b.system);
+        const kuerzlich = [...alle]
+            .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 6);
+        const sterne = alle.filter(b => b.fav);
+        const privat = alle.filter(b => !b.parentId);
+        const datenbanken = Object.values(Store.cache.collections || {});
+        const vorlagen = (() => {
+            try {
+                return (Register.vorlagen?.alle?.() || []).slice(0, 6);
+            }
+            catch {
+                return [];
+            }
+        })();
+        const zeit = (p) => {
+            const d = p.edited ? new Date(p.edited) : null;
+            if (!d || isNaN(d.getTime()))
+                return '';
+            const heute = new Date();
+            heute.setHours(0, 0, 0, 0);
+            return d.getTime() >= heute.getTime()
+                ? 'Heute ' + d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })
+                : d.toLocaleDateString('de-CH', { day: '2-digit', month: 'short' });
+        };
+        const zeile = (p, rechts = '') => `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '📄')}</span>` +
+            `<span class="pt">${esc(p.text || 'Ohne Titel')}</span>` +
+            (rechts ? `<span class="pth">${esc(rechts)}</span>` : '') + '</button>';
+        const block = (titel, inhalt) => inhalt ? `<h2>${esc(titel)}</h2><div class="home-liste">${inhalt}</div>` : '';
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Seiten</h1>' +
+                '<div class="home-karten">' +
+                '<button class="hk" data-a="neu"><b>✚ Neue Seite</b>' +
+                '<span>Leere Seite anlegen</span></button>' +
+                '<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b>' +
+                '<span>Gedanken sofort festhalten</span></button>' +
+                '</div>' +
+                block('Kürzlich verwendet', kuerzlich.map(p => zeile(p, zeit(p))).join('')) +
+                block('Favoriten', sterne.map(p => zeile(p)).join('')) +
+                block('Privat', privat.map(p => zeile(p, (() => {
+                    const n = (p.content || []).filter((k) => {
+                        const kind = Store.getBlock(k);
+                        return kind && kind.type === 'page' && kind.alive;
+                    }).length;
+                    return n ? n + (n === 1 ? ' Unterseite' : ' Unterseiten') : '';
+                })())).join('')) +
+                block('Datenbanken', datenbanken.map((c) => `<button data-db="${esc(c.id)}"><span>${esc(c.icon || '📊')}</span>` +
+                    `<span class="pt">${esc(c.name || 'Ohne Namen')}</span>` +
+                    `<span class="pth">${(Store.rowsOf(c.id) || []).length} Zeilen</span></button>`).join('')) +
+                block('Vorlagen', vorlagen.map((v) => `<button data-vorlage="${esc(v.id || v.name)}"><span>${esc(v.icon || '🧩')}</span>` +
+                    `<span class="pt">${esc(v.name || v.titel || 'Vorlage')}</span></button>`).join('')) +
+                '<div class="home-liste" style="margin-top:22px">' +
+                '<button data-a="papierkorb"><span>🗑</span><span class="pt">Papierkorb</span></button>' +
+                '</div>' +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            const auf = el?.closest('[data-open]');
+            if (auf?.dataset.open) {
+                App.oeffne(auf.dataset.open);
+                return;
+            }
+            const db = el?.closest('[data-db]');
+            if (db?.dataset.db) {
+                /* Eine Sammlung selbst ist keine Seite — geöffnet wird der Block,
+                   der sie zeigt. Findet sich keiner, bleibt die Ansicht stehen,
+                   statt in eine leere Seite zu springen. */
+                const traeger = Object.values(Store.cache.blocks)
+                    .find(b => b && b.collectionId === db.dataset.db && b.alive);
+                if (traeger)
+                    App.oeffne(traeger.parentId || traeger.id);
+                return;
+            }
+            const a = el?.closest('[data-a]');
+            if (!a)
+                return;
+            if (a.dataset.a === 'neu')
+                App.neueSeite();
+            else if (a.dataset.a === 'memo')
+                Werkzeuge.schnellnotizen();
+            else if (a.dataset.a === 'papierkorb')
+                App.papierkorb();
+        };
+    };
+    /* ========================================================================
+     * TERMINE — der dritte Bereich am Telefon
+     * ------------------------------------------------------------------------
+     * VORHER ÖFFNETE DIESER REITER DIE SCHUBLADE, also die Seitenleiste des
+     * Rechners auf 390 px geschoben — genau das, was das R-Blatt für den
+     * Kreis links oben abgeschafft hat (E38). Gemessen am 6. August: die
+     * Zeilen kamen zwar aus `Meeting.seitenleiste`, standen aber in einem
+     * Behälter, der für 260 px Breite und einen Mauszeiger gebaut ist.
+     *
+     * Jetzt dieselben Angaben auf der Bühne, in Fingerzeilen: was ansteht,
+     * und was aus Besprechungen entstanden ist.
+     *
+     * Die Daten kommen über `App` und `Store` — kein Bereich greift in einen
+     * anderen hinein (Architekturregel 1). `Kalender` und `Meeting` werden
+     * nur angetippt, wenn es sie gibt; fehlt eines, fehlt die Zeile und nicht
+     * die Ansicht.
+     * ========================================================================*/
+    const termine = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>📅 Termine</a>';
+        const kommend = (() => {
+            try {
+                return App.kommendeTermine(12) || [];
+            }
+            catch {
+                return [];
+            }
+        })();
+        const notizen = Object.values(Store.cache.blocks)
+            .filter(b => b.type === 'page' && b.alive !== false && b.besprechung)
+            .sort((a, b) => String(b.created).localeCompare(String(a.created)))
+            .slice(0, 8);
+        const block = (titel, inhalt) => inhalt ? `<h2>${esc(titel)}</h2><div class="home-liste">${inhalt}</div>` : '';
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Termine</h1>' +
+                '<div class="home-karten">' +
+                '<button class="hk" data-a="kal"><b>📅 Kalender</b>' +
+                '<span>Termine hereinholen</span></button>' +
+                '<button class="hk" data-a="mtg"><b>🎙 Besprechung</b>' +
+                '<span>Mitreden statt mitschreiben</span></button>' +
+                '</div>' +
+                block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>📌</span>` +
+                    `<span class="pt">${esc(t.text)}</span>` +
+                    `<span class="pth">${esc(t.wann)}</span></button>`).join('')) +
+                /* Steht nichts an, sagt die Ansicht das — und daneben den einen
+                   Weg, der etwas ändert. Eine leere Liste ohne Ausweg ist eine
+                   Sackgasse. */
+                (kommend.length ? '' :
+                    '<h2>Bevorstehend</h2><div class="home-liste">' +
+                        '<button data-a="kal"><span>📅</span><span class="pt">Kalender verbinden</span>' +
+                        '</button>' +
+                        '<div class="leer">Dann stehen hier alle Termine der nächsten ' +
+                        'dreissig Tage, und zu jedem kannst du eine Notiz anlegen.</div></div>') +
+                block('Aus Besprechungen', notizen.map(p => `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '🎙')}</span>` +
+                    `<span class="pt">${esc(p.text || 'Ohne Titel')}</span></button>`).join('')) +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            const auf = el?.closest('[data-open]');
+            if (auf?.dataset.open) {
+                App.oeffne(auf.dataset.open);
+                return;
+            }
+            const a = el?.closest('[data-a]');
+            if (!a)
+                return;
+            if (a.dataset.a === 'kal')
+                window.Kalender?.dialog?.();
+            else if (a.dataset.a === 'mtg')
+                window.Meeting?.panel?.();
+        };
+    };
+    return { start, seiten, termine, posteingang, posteingangFilter, gruss };
 })();
 window.Ansichten = Ansichten;

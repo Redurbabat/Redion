@@ -152,7 +152,11 @@ const Seitenleiste = (() => {
         const l = document.getElementById('handy-oben');
         if (!l)
             return;
-        const karte = { start: 'hl-start', chat: 'hl-chat', bespr: 'hl-bespr' };
+        /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
+           stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
+           kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
+        const karte = { start: 'hl-start', seiten: 'hl-seiten',
+            bespr: 'hl-bespr', inbox: 'hl-inbox' };
         l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
         const aktiv = document.getElementById(karte[reiter] || 'hl-start');
         if (aktiv)

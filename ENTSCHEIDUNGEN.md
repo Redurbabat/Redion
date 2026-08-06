@@ -1824,3 +1824,82 @@ hinsieht, findet solche Sachen vorher.
 
 Beschlossen. `test124` läuft ausdrücklich mit Telefon-Bildmass UND
 Zeitzone `Europe/Zurich` — ohne beides kann er nicht rot werden.
+
+---
+
+## E38 · Die Telefon-Navigation: fünf Wege oben, die KI unten
+
+**Die Ansage.** Redur, am 6. August: „Wenn du nicht viel mit AI/Chats arbeiten
+wirst, dann sollte der obere Tab nicht ‚Chats' heissen. […] Chats raus aus der
+Hauptnavigation. Seiten rein. KI bleibt unten."
+
+**Was oben steht.**
+
+```txt
+R          das Blatt mit allem, was sonst in der Seitenleiste stünde
+Start      das Armaturenbrett
+Seiten     alles, was man geschrieben hat
+Termine    Kalender und Besprechungen
+Eingang    Meldungen
+```
+
+Fünf Wege sind das Höchste, was auf 390 px nebeneinander passt, ohne dass die
+Kreise unter 52 px fallen. Jeder weitere Reiter geht nur, wenn ein anderer
+geht — das ist keine Enge, sondern die Rechnung.
+
+**Warum „Seiten" und nicht „Chats".** Ein Reiter in der Hauptnavigation kostet
+einen von fünf Plätzen. Er verdient ihn, wenn man ihn täglich braucht. Redion
+ist eine Notiz- und Wissens-App; man öffnet den ganzen Tag Seiten und selten
+einen KI-Verlauf. Der Platz gehört dem, was man oft tut.
+
+**Was der Reiter zeigt.** `Ansichten.seiten()` — zwei Schnellkarten (Neue
+Seite, Schnellnotiz), dann Kürzlich verwendet, Favoriten, Privat, Datenbanken,
+Vorlagen, Papierkorb. Ein leerer Abschnitt wird gar nicht erst gezeichnet:
+eine Überschrift ohne Inhalt sagt nur, dass man etwas nicht hat.
+
+**Die KI verschwindet nicht, sie zieht um.** Sie steht weiterhin
+
+```txt
+unten in der festen Leiste als „KI fragen" — der breiteste Knopf dort
+im R-Blatt als „KI und Verlauf"
+```
+
+Das war die ausdrückliche Bedingung, und `test114` §8 und §9 prüfen beide
+Stellen. Ein Reiter weniger ist eine Umsortierung; eine Funktion weniger wäre
+ein Verlust.
+
+**Fünf Fehler, die nur das Bildschirmfoto fand** (§55, und deshalb steht das
+hier). Kein einziger stand im Code falsch da — alle fünf sah man erst.
+
+Die Pille blieb auf „Start" stehen, während daneben schon die Seiten standen.
+`handyLeiste()` liest `Seitenleiste.reiter()`, und den setzte im neuen Zweig
+niemand. Kein Prüflauf hatte das — der Inhalt war ja richtig.
+
+Derselbe Fund eine Zeile weiter unten: „Eingang" setzte `reiter('start')`.
+Man stand im Posteingang, und oben stand „Start".
+
+Die Titel waren kursiv, weil sie in einem `<em>` steckten. `<em>` heisst
+Betonung, nicht Titel; im Browser heisst es schräg. Jetzt `<span class="pt">`.
+
+„Termine" zog die SCHUBLADE auf — die Seitenleiste des Rechners auf 390 px
+geschoben, mit ihrem Baum und ihren 33-px-Zeilen. Genau davon war das
+R-Blatt weggekommen; ein Reiter, der sie wieder hereinholt, macht die Hälfte
+der Entscheidung rückgängig. Jetzt `Ansichten.termine()` auf der Bühne:
+Kalender, Besprechung, Bevorstehend, Aus Besprechungen.
+
+Und die Leiste selbst passte gar nicht. Gemessen bei 390 px brauchte sie
+395 px mit „Start" und 421 px mit „Eingang" — die letzte Pille stand
+ausserhalb des Bildes und war nicht antippbar. Am 428er iPhone fiel das nie
+auf, und genau das meint E37 mit „390 zuerst". Unter 420 px rücken Rand
+(28→20), Abstand (10→6) und Pillenpolster (13→11) zusammen; die Tasten
+bleiben 52 px. Gespart wird am Weissraum, nicht an der Fläche für den Daumen.
+
+**Status**
+
+Beschlossen und gebaut. `test114` §9 und §10 prüfen: „Seiten" steht oben,
+„Chats" nicht mehr, jeder Reiter führt dahin, wo er hinführt, die Pille
+wandert mit, „Termine" zieht keine Schublade auf, die Titel sind aufrecht,
+keine Zeile unter 44 px, „KI fragen" steht weiter unten — und die Leiste
+passt bei 375 UND 390 px ganz ins Bild. Alle können rot werden;
+nachgestellt am 6. August durch Entfernen der `reiter()`-Zeile, Zurückdrehen
+auf `<em>` und Aufweiten der Leiste auf die alten Masse.

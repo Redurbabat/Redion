@@ -299,6 +299,268 @@ p('Die Einladung liegt nicht über dem offenen Blatt',
   `Einladung z=${imp.einladungZ}, Menü-Grund z=${imp.grundZ}`);
 await seite.evaluate(() => { document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove()); });
 
+console.log('\n8 · Das R-Blatt: der Arbeitsbereich am Telefon');
+
+/* Vorher zog der Kreis links oben die SEITENLEISTE des Rechners herein —
+   Baum, Reiter, 33-px-Zeilen, auf 390 px geschoben. Jetzt ein Blatt über
+   den ganzen Bildschirm mit Fingerzeilen. Am Rechner bleibt die
+   Seitenleiste; Abschnitt 4 prüft weiter, dass sich dort nichts ändert. */
+await seite.evaluate(() => document.getElementById('hl-konto')?.click());
+await seite.waitForTimeout(450);
+const blatt = await seite.evaluate(() => {
+  const bl = document.getElementById('r-blatt');
+  if (!bl) return null;
+  const r = bl.getBoundingClientRect();
+  const zeilen = [...bl.querySelectorAll<HTMLElement>('.rm-gruppe button')];
+  const zu = bl.querySelector<HTMLElement>('.rm-zu');
+  return {
+    voll: Math.round(r.width) === innerWidth && Math.round(r.height) === innerHeight,
+    anzahl: zeilen.length,
+    zuFlach: zeilen.filter(z => z.getBoundingClientRect().height < 56)
+      .map(z => (z.textContent || '').trim().slice(0, 16)),
+    zuHoch: zu ? Math.round(zu.getBoundingClientRect().height) : 0,
+    satz: /Alles bleibt auf diesem Gerät/.test(bl.textContent || ''),
+    hatSichern: /Sichern/.test(bl.textContent || ''),
+    hatPapierkorb: /Papierkorb/.test(bl.textContent || ''),
+    hatKI: /KI und Verlauf/.test(bl.textContent || '')
+  };
+}) as { voll: boolean; anzahl: number; zuFlach: string[]; zuHoch: number;
+        satz: boolean; hatSichern: boolean; hatPapierkorb: boolean; hatKI: boolean } | null;
+
+p('Der Kreis öffnet ein Blatt', !!blatt, 'es kam keines — dann hängt noch die Schublade dran');
+p('Es bedeckt den ganzen Bildschirm', blatt?.voll === true);
+p('Es hat zwölf Wege', (blatt?.anzahl ?? 0) === 12, String(blatt?.anzahl));
+p('Jede Zeile ist 56 px hoch', (blatt?.zuFlach.length ?? 1) === 0,
+  (blatt?.zuFlach ?? []).join(', '));
+p('Das Schliessen-Kreuz ist 44 px', (blatt?.zuHoch ?? 0) >= 44, String(blatt?.zuHoch));
+p('Oben steht, was Redion ausmacht', blatt?.satz === true,
+  '„Alles bleibt auf diesem Gerät" fehlt');
+p('Sichern und Papierkorb sind erreichbar',
+  blatt?.hatSichern === true && blatt?.hatPapierkorb === true);
+p('Die KI ist hier erreichbar, auch ohne Reiter oben (E38)',
+  blatt?.hatKI === true, 'sie hat oben keinen Platz mehr und muss hier stehen');
+
+/* UND DAS BLATT MUSS DIE PILLE MITNEHMEN. Es zeichnete dreimal eine
+   Ansicht, ohne den Reiter zu setzen, den `handyLeiste()` liest — man
+   landete im Posteingang, und oben stand noch „Start". Derselbe Fehler wie
+   an den Reitern selbst, nur an einer Stelle, wo ihn niemand suchte. */
+for (const [weg, erwartet] of [['seiten', 'Seiten'], ['inbox', 'Eingang'],
+                               ['start', 'Start']] as [string, string][]) {
+  await seite.evaluate(() => document.getElementById('r-blatt')?.remove());
+  await seite.evaluate(() => document.getElementById('hl-konto')?.click());
+  await seite.waitForTimeout(400);
+  await seite.evaluate((w) => {
+    document.querySelector<HTMLElement>(`#r-blatt [data-r="${w}"]`)?.click();
+  }, weg);
+  await seite.waitForTimeout(600);
+  const pille = await seite.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')]
+      .map(b => (b.textContent || '').trim()));
+  p(`„${erwartet}" aus dem Blatt setzt auch die Pille oben`,
+    pille.length === 1 && pille[0] === erwartet,
+    'aktiv: ' + pille.join(', ') + ' — ohne reiter() zeigt sie noch auf den vorigen Bereich');
+}
+
+await seite.evaluate(() => document.getElementById('r-blatt')?.remove());
+
+console.log('\n9 · Der Reiter „Seiten" — statt „Chats" (E38)');
+
+/* Redur: „Chats raus aus der Hauptnavigation. Seiten rein. KI bleibt unten."
+   Der Reiter oben führt jetzt in den Seitenbereich; die KI steht weiter in
+   der unteren Leiste und im R-Blatt.
+   ZWEI FEHLER STANDEN HIER, und beide sah erst das Bildschirmfoto:
+   · Die Pille blieb auf „Start" stehen, während daneben schon die Seiten
+     standen — `handyLeiste()` liest den Reiter, und den setzte niemand.
+   · Die Titel waren kursiv, weil sie in einem `<em>` steckten. */
+await seite.evaluate(() => {
+  const a = Store.addPage(null, { text: 'Reisenotizen', icon: '🧳' });
+  Store.addPage(a.id, { text: 'Unterseite' });
+  Store.addPage(null, { text: 'Einkaufsliste', icon: '🛒', fav: true });
+});
+await seite.waitForTimeout(300);
+await seite.evaluate(() => document.getElementById('hl-seiten')?.click());
+await seite.waitForTimeout(700);
+
+const seitenReiter = await seite.evaluate(() => {
+  const oben = document.getElementById('handy-oben');
+  const buehne = document.getElementById('page');
+  if (!oben || !buehne) return null;
+  const pillen = [...oben.querySelectorAll<HTMLElement>('button[role="tab"]')];
+  const titel = [...buehne.querySelectorAll<HTMLElement>('.pt')];
+  const zeilen = [...buehne.querySelectorAll<HTMLElement>('button')];
+  const unten = document.getElementById('handy-unten');
+  return {
+    beschriftungen: pillen.map(b => (b.textContent || '').trim()),
+    aktiv: pillen.filter(b => b.classList.contains('an'))
+                 .map(b => (b.textContent || '').trim()),
+    ueberschrift: (buehne.querySelector('h1')?.textContent || '').trim(),
+    abschnitte: [...buehne.querySelectorAll('h2,h3')].map(h => (h.textContent || '').trim()),
+    kursiv: titel.filter(t => getComputedStyle(t).fontStyle !== 'normal')
+                 .map(t => (t.textContent || '').trim().slice(0, 16)),
+    zuFlach: zeilen.filter(z => { const h = z.getBoundingClientRect().height;
+                                  return h > 0 && h < 44; })
+                   .map(z => (z.textContent || '').trim().slice(0, 16)),
+    kiUnten: /KI fragen/.test(unten?.textContent || '')
+  };
+}) as { beschriftungen: string[]; aktiv: string[]; ueberschrift: string;
+        abschnitte: string[]; kursiv: string[]; zuFlach: string[];
+        kiUnten: boolean } | null;
+
+p('Oben steht „Seiten"', seitenReiter?.beschriftungen.includes('Seiten') === true,
+  (seitenReiter?.beschriftungen ?? []).join(' · '));
+p('… und „Chats" steht nicht mehr da',
+  seitenReiter?.beschriftungen.includes('Chats') === false);
+p('Ein Tipp darauf öffnet den Seitenbereich',
+  seitenReiter?.ueberschrift === 'Seiten', seitenReiter?.ueberschrift);
+p('Die Pille wandert mit',
+  seitenReiter?.aktiv.length === 1 && seitenReiter.aktiv[0] === 'Seiten',
+  'aktiv: ' + (seitenReiter?.aktiv ?? []).join(', ') +
+  ' — ohne Seitenleiste.reiter() bliebe sie auf „Start"');
+p('Die Abschnitte aus der Vorgabe stehen da',
+  ['Kürzlich verwendet', 'Favoriten', 'Privat'].every(
+    a => (seitenReiter?.abschnitte ?? []).includes(a)),
+  (seitenReiter?.abschnitte ?? []).join(' · '));
+p('Die Titel sind aufrecht, nicht kursiv',
+  (seitenReiter?.kursiv.length ?? 1) === 0, (seitenReiter?.kursiv ?? []).join(', '));
+p('Keine Zeile ist unter 44 px', (seitenReiter?.zuFlach.length ?? 1) === 0,
+  (seitenReiter?.zuFlach ?? []).join(', '));
+p('Die KI ist unten geblieben', seitenReiter?.kiUnten === true,
+  'Redur: „KI bleibt unten" — sie darf mit dem Reiter nicht verschwinden');
+
+console.log('\n10 · Termine und Eingang führen dahin, wo sie hinführen sollen');
+
+/* ZWEI FUNDE VOM 6. AUGUST, beide am Bildschirmfoto und nicht im Code:
+   · „Termine" öffnete die SCHUBLADE — die Seitenleiste des Rechners auf
+     390 px geschoben, genau das, wovon das R-Blatt weggekommen ist.
+   · „Eingang" liess die Pille auf „Start" stehen. */
+await seite.evaluate(() => document.getElementById('hl-bespr')?.click());
+await seite.waitForTimeout(700);
+const term = await seite.evaluate(() => ({
+  ueberschrift: (document.querySelector('#page h1')?.textContent || '').trim(),
+  aktiv: [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')]
+           .map(b => (b.textContent || '').trim()),
+  schublade: document.body.classList.contains('side-offen'),
+  hatKalender: /Kalender/.test(document.getElementById('page')?.textContent || '')
+}));
+p('„Termine" zeigt die Termine auf der Bühne', term.ueberschrift === 'Termine',
+  term.ueberschrift);
+p('… und zieht NICHT die Schublade auf', term.schublade === false,
+  'die Seitenleiste des Rechners gehört nicht aufs Telefon (E38)');
+p('Der Weg zum Kalender steht darin', term.hatKalender === true);
+p('Die Pille steht auf „Termine"',
+  term.aktiv.length === 1 && term.aktiv[0] === 'Termine', term.aktiv.join(', '));
+
+await seite.evaluate(() => document.getElementById('hl-inbox')?.click());
+await seite.waitForTimeout(700);
+const ein = await seite.evaluate(() => {
+  const link = document.querySelector<HTMLElement>('#page .pe-link');
+  return {
+    aktiv: [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')]
+             .map(b => (b.textContent || '').trim()),
+    linkHoch: link ? Math.round(link.getBoundingClientRect().height) : -1,
+    linkText: (link?.textContent || '').trim()
+  };
+});
+p('Die Pille steht auf „Eingang"',
+  ein.aktiv.length === 1 && ein.aktiv[0] === 'Eingang',
+  ein.aktiv.join(', ') + ' — mit reiter(\'start\') stand hier „Start"');
+p('Die einzige Handlung im leeren Posteingang ist 44 px',
+  ein.linkHoch === -1 || ein.linkHoch >= 44,
+  `„${ein.linkText}" ist ${ein.linkHoch} px`);
+
+console.log('\n11 · Der Codeblock: die Werkzeuge standen AUF dem Code');
+
+/* GEMESSEN AM 6. AUGUST bei 390 px: der Kasten mit ⧉ № ↩ lag von x=175 bis
+   252, die Sprachwahl von 248 bis 362, und die erste Codezeile lief
+   darunter durch. Man las `const abfahr…` und dahinter drei Knöpfe.
+   Derselbe Fehler wie die abgeschnittene Zahl in §55.1: was dasteht, ist
+   nicht, was gemeint ist.
+
+   UND EINE FALLE BEIM PRÜFEN: der Kasten des Codes ist nicht der Code.
+   Mit `padding-top:64px` misst man Luft und nennt sie frei. Gemessen wird
+   die erste Zeile selbst, über einen Range. */
+await seite.evaluate(() => {
+  const p = Store.addPage(null, { text: 'Codeprobe', icon: '💻' });
+  Store.addBlock(p.id, 'code', { text: 'const abfahrt = "08:14";\nconsole.log(abfahrt);' });
+  Store.addBlock(p.id, 'todo', { text: 'Ticket kaufen' });
+  App.oeffne(p.id);
+});
+await seite.waitForTimeout(900);
+
+const code = await seite.evaluate(() => {
+  const kasten = (el: Element | null) => {
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { l: r.left, t: r.top, r: r.right, b: r.bottom };
+  };
+  const zeile = (() => {
+    const e = document.querySelector('.b-code .ct');
+    if (!e || !e.firstChild) return null;
+    const rg = document.createRange(); rg.selectNodeContents(e);
+    const r = rg.getClientRects()[0];
+    return r ? { l: r.left, t: r.top, r: r.right, b: r.bottom } : null;
+  })();
+  const trifft = (a: any, b: any) => !!a && !!b && a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+  const werk = kasten(document.querySelector('.code-werk'));
+  const wahl = kasten(document.querySelector('.b-code select'));
+  return {
+    gabEsCode: !!zeile,
+    werkAufText: trifft(zeile, werk),
+    wahlAufText: trifft(zeile, wahl),
+    knoepfe: [...document.querySelectorAll<HTMLElement>('.code-werk button')]
+      .map(b => Math.round(b.getBoundingClientRect().height)),
+    wahlHoch: wahl ? Math.round(wahl.b - wahl.t) : 0,
+    kasten: (() => {
+      const i = document.querySelector<HTMLElement>('.b-todo input');
+      return i ? Math.round(i.getBoundingClientRect().width) : 0;
+    })(),
+    seitenrand: parseInt(getComputedStyle(document.getElementById('page')!).paddingLeft, 10)
+  };
+});
+
+p('Der Codeblock steht wirklich da', code.gabEsCode === true,
+  'ohne Code misst der Rest dieses Abschnitts nichts');
+p('Die Werkzeuge stehen NICHT auf dem Code', code.werkAufText === false,
+  '⧉ № ↩ lagen quer über der ersten Zeile');
+p('Die Sprachwahl steht NICHT auf dem Code', code.wahlAufText === false);
+p('Die drei Werkzeuge sind 44 px hoch',
+  code.knoepfe.length === 3 && code.knoepfe.every(h => h >= 44), code.knoepfe.join(', '));
+p('Die Sprachwahl ist 44 px hoch', code.wahlHoch >= 44, String(code.wahlHoch));
+p('Das Kästchen der Aufgabe ist grösser als 16 px', code.kasten >= 20,
+  `${code.kasten} px — es war der kleinste Treffer der Seite`);
+p('Der Seitenrand ist derselbe wie auf dem Start-Bildschirm',
+  code.seitenrand >= 22, `${code.seitenrand} px, erwartet 28 (22 unter 380 px)`);
+
+/* DIE LEISTE MUSS AUF DEN SCHMALEN GERÄTEN GANZ HINEINPASSEN. Gemessen bei
+   390 px brauchte sie 395 px mit „Start" und 421 px mit „Eingang" — die
+   letzte Pille stand ausserhalb des Bildes und war nicht antippbar. Am
+   428er iPhone fiel das nie auf, und deshalb prüft dieser Abschnitt bei
+   375 UND 390. */
+for (const breite of [375, 390]) {
+  const schmal = await browser.newPage({
+    viewport: { width: breite, height: 844 }, hasTouch: true, isMobile: true
+  });
+  await schmal.goto(`http://localhost:${PORT}/index.html`);
+  await schmal.waitForTimeout(2000);
+  const zuBreit = await schmal.evaluate(() => {
+    const l = document.getElementById('handy-oben');
+    if (!l) return ['(keine Leiste)'];
+    const raus: string[] = [];
+    for (const id of ['hl-start', 'hl-seiten', 'hl-bespr', 'hl-inbox']) {
+      l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
+      document.getElementById(id)?.classList.add('an');
+      if (l.scrollWidth > l.clientWidth) {
+        raus.push((document.getElementById(id)?.textContent || id).trim() +
+                  ' (' + (l.scrollWidth - l.clientWidth) + ' px zu viel)');
+      }
+    }
+    return raus;
+  }) as string[];
+  p(`Bei ${breite} px passen alle fünf Wege nebeneinander`, zuBreit.length === 0,
+    zuBreit.join(', '));
+  await schmal.close();
+}
+
 await browser.close();
 server.close();
 

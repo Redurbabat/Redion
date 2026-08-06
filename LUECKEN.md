@@ -254,11 +254,30 @@ Gegenprobe, dass es auch rot werden kann.
 
 ## L10 · Mobile und iPhone
 
-**Stand** — ◐ die App läuft mobil, ist aber nicht dafür gebaut.
+**Stand** — ◐ die Schale steht, die Bereiche darin noch nicht ganz.
 
-Fehlt: Test auf iPhone 13 Pro Max · Touch-Editor · mobile
-Datenbankansicht · mobile Tabellenansicht · Dateiimport und -export mobil ·
-Tastaturverhalten · Side Peek auf kleinen Bildschirmen.
+Seit dem 6. August ist das Telefon die Hauptumgebung (E37). Die Schale ist
+gebaut: fünf Wege oben (R · Start · Seiten · Termine · Eingang, E38), die
+feste Leiste unten (Suche · KI fragen · Neue Seite), das R-Blatt über den
+ganzen Bildschirm, der Start-Bereich beim Öffnen. `test114` misst das an
+390 und 428 px; jede Fläche ist mindestens 44 px.
+
+Termine und Eingang haben ihre eigenen Bereiche bekommen; der Codeblock
+seine Kopfzeile. Was das Hinsehen dabei fand, steht in E38 — fünf Fehler,
+und keinen davon hatte ein Prüflauf.
+
+**Fehlt noch:** die übrigen Menüs sind noch keine Bottom Sheets · der
+Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
+über der Tastatur) · mobile Datenbank- und Tabellenansicht rollen zwar,
+sind aber nicht fürs Telefon entworfen · Tastaturverhalten · Side Peek auf
+kleinen Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter
+Pixelzahlen — die Masse stehen an einem Dutzend Stellen in `bausteine.css`
+und wurden schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
+
+**Geprüft auf echtem Gerät** — nein. Alles bisher gemessen mit Playwright
+im Telefon-Bildmass. Das findet Grössen und Überdeckungen, aber nicht das
+Verhalten von Safari selbst; der Fehlerbalken kam vom iPhone, nicht aus
+einem Prüflauf.
 
 ## L11 · Agenten-Sicherheit
 
