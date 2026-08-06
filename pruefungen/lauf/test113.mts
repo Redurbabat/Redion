@@ -340,25 +340,26 @@ p('… nicht mehr mit der festen Rundengrösse',
 }
 
 /* ==========================================================================
- * 8 · WAS DER ABGLEICH HEUTE NICHT MITNIMMT
+ * 8 · WAS DER ABGLEICH MITNIMMT — seit dem 6. August auch die Anhänge
  * ------------------------------------------------------------------------
- * `zuSchicken` sammelt Blöcke, Sammlungen und Ansichten. **Anhänge nicht.**
- *
- * Das ist keine Nachlässigkeit, sondern die noch offene Aufgabe G2 („R2 für
- * Dateien"). Es steht hier trotzdem als Prüfung, und zwar mit Absicht: wer
- * das nicht weiss, hält seine Bilder für abgeglichen. Der Tag, an dem G2
- * kommt, macht diese Prüfung rot — und dann gehört sie umgeschrieben.
+ * Bis G2 gebaut war, stand hier der Stolperdraht „Anhänge gehen NOCH NICHT
+ * mit", damit niemand seine Bilder für abgeglichen hielt. Der Tag ist da
+ * (E33): die Bytes gehen stückweise über /datei/*, verschlüsselt wie die
+ * Sätze. Der Draht ist deshalb umgedreht — jetzt wacht er darüber, dass
+ * die Wege im Code BLEIBEN. Am echten Server prüfen test118 und test119.
  * ========================================================================*/
-console.log('\n8 · Was noch nicht mitgeht');
+console.log('\n8 · Was der Abgleich mitnimmt');
 
 p('Blöcke gehen mit', /cache\.blocks\)\.forEach/.test(maschine));
 p('Sammlungen gehen mit', /cache\.collections\)\.forEach/.test(maschine));
 p('Ansichten gehen mit', /cache\.views\)\.forEach/.test(maschine));
-p('Anhänge gehen NOCH NICHT mit — das ist G2, und es steht so in AUFGABEN.md',
-  !/cache\.(files|anhaenge)\)\.forEach/.test(maschine));
+p('Anhänge gehen mit — der Stand wird geholt', /\/datei\/stand/.test(maschine));
+p('… die Stücke gehen hoch und runter',
+  /\/datei\/stueck/.test(maschine) && /\/datei\/runter/.test(maschine));
+p('… und zwar verschlüsselt wie die Sätze', /verschluesseleBytes/.test(maschine));
 
 const aufgaben = lies(dazu(WURZEL, 'AUFGABEN.md'), 'utf8');
-p('… und die Aufgabenliste sagt es auch', /G2 —|G2 -/.test(aufgaben) && /R2/.test(aufgaben));
+p('… und die Aufgabenliste kennt G2 und R2', /G2 —|G2 -/.test(aufgaben) && /R2/.test(aufgaben));
 
 console.log(`\n  Suite 77 — Zwei Geräte: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

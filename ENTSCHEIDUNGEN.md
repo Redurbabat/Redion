@@ -1629,11 +1629,22 @@ Anfrage-Typ. Der Aufpreis von einem Drittel auf 1-MB-Stücke ist der Preis
 für einen Server, der aus einem Guss bleibt. Wenn er je drückt, ist ein
 Binär-Weg eine eigene Entscheidung.
 
-**Was ausdrücklich noch fehlt:** die Client-Hälfte — `maschine.ts` lädt noch
-nichts hoch und nichts herunter. Erst wenn sie da ist, wird der
-Stolperdraht in `test113` Abschnitt 8 rot und gehört umgeschrieben.
+**Die Client-Hälfte** kam am selben Tag: `maschine.ts` gleicht Anhänge nach
+den Sätzen ab — nie statt ihrer. `wolkeDateienOben` merkt, was der Server
+schon hat, `wolkeMarkeDateien` hält die Stand-Marke, `abmelden()` räumt
+beide weg. Ein Server ohne Dateispeicher (503) wird einmal erkannt und bis
+zum nächsten Laden in Ruhe gelassen. Der Stolperdraht in `test113`
+Abschnitt 8 ist planmässig umgedreht: er wacht jetzt darüber, dass die
+Wege im Code BLEIBEN.
+
+**Was ausdrücklich offen bleibt** (steht in L6): das LOKALE Löschen einer
+Datei wandert noch nicht zum Server — es gibt keinen lokalen Grabstein;
+der Download ist eifrig, was am Telefon bei grossen Bereichen Datenvolumen
+kostet; das `.redion`-Archiv in R2 als Cloud-Sicherung; und Dateien über
+100 MB bleiben bewusst lokal.
 
 **Status**
 
-Server-Hälfte beschlossen und umgesetzt (`server/dateien.ts`, `test119`:
-19 Punkte). Client-Hälfte offen — L6.
+Beide Hälften beschlossen und umgesetzt (`server/dateien.ts` + Abschnitt 6b
+in `maschine.ts`; `test119` 19 Punkte, `test118` Abschnitt 3, `test113`
+Abschnitt 8).
