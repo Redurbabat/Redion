@@ -35,17 +35,19 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**4. August 2026 · 79 Prüfläufe grün**
+**6. August 2026 · 87 Prüfläufe grün**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
-Excel-Namen) · lokale KI · Versionen · Papierkorb · `.json`- und
-`.redion`-Sicherung mit Anhängen · grosse Dateien stückweise.
+Excel-Namen) · Tabellenblock (E29) · lokale KI · Versionen · Papierkorb ·
+`.json`- und `.redion`-Sicherung mit Anhängen · grosse Dateien stückweise ·
+Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
 
 **Die drei wichtigsten offenen Punkte**
 
 ```txt
-1. Die TypeScript-Migration selbst — die Grundlage steht, quell/ ist noch JS
+1. ~~Die TypeScript-Migration selbst~~ · **erledigt** am 6. August —
+   0 handgeschriebene JS-Dateien, siehe doku/BUENDEL-11-BIS-24.md
 2. ~~Der Spreadsheet-Block — die Funktionen sind da, die Tabelle fehlt~~
    · **erledigt**, siehe Phase 7a und `ENTSCHEIDUNGEN.md` E29
 3. Cloudflare, Konto und Sync sind nicht produktionsreif
@@ -209,7 +211,7 @@ grün. Genau so sind die vier erfundenen Feldnamen entstanden.
 
 ---
 
-## Phase 6 · Erste sichere Migrationen · ◐ **begonnen**
+## Phase 6 · Erste sichere Migrationen · **erledigt**
 
 Nur kleine, DOM-freie Helfer. **Nicht zuerst:** `editor.js` ·
 `steuerung.js` · `indexdb.js` · `bauen.mts` · `server/kern.ts`.
@@ -592,9 +594,16 @@ und eine Kopfleiste ohne Titel ist schlimmer als eine mit schmaleren
 Knöpfen: man weiss dann nicht mehr, wo man ist. In einer waagerechten Leiste
 ist die Höhe die wichtigere Hälfte.
 
-**Noch offen** — die Blocksteuerung im Editor (`⋯` und `+`) ist mit 22 × 21
-px zu klein für einen Finger · zwei Symbolknöpfe in der Seitenleiste ·
-Kopfleiste 44 statt 56 px · mobiler Dateiimport · Offline-Hinweise.
+**Noch offen** — mobiler Dateiimport · Offline-Hinweise.
+
+**Am 6. August nachgemessen (390 px):** Kopfleiste 56 px, die
+Symbolknöpfe der Seitenleiste 44 × 44, die Seitenzeilen 48 px — alle drei
+früheren Punkte sind erledigt. Die Blocksteuerung ersetzt am Telefon das
+lange Drücken (`pwa.ts`). Die Messung mit echten Touch-Ereignissen fand
+dabei einen Fehler, den kein Direktaufruf je gezeigt hätte: der Klick, den
+der Browser dem Loslassen hinterherschickt, traf den Menü-Grund und schloss
+das eben geöffnete Menü sofort wieder. Behoben; seither drückt `test114`
+Abschnitt 5 wirklich lange und wacht darüber.
 
 **Priorität** — mittel.
 

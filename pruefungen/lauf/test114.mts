@@ -32,6 +32,11 @@
  * Diese Ausnahme steht hier NAMENTLICH. Eine Ausnahme, die man nicht
  * aufzählen muss, ist keine Ausnahme mehr, sondern ein Loch.
  *
+ * NEU AM 6. AUGUST: Abschnitt 5 drückt wirklich lange auf einen Block und
+ * lässt los — gegen den Fehler, dass der Klick, den der Browser der
+ * Berührung hinterherschickt, das eben geöffnete Blockmenü sofort wieder
+ * schloss.
+ *
  *   node pruefungen/lauf/test114.mts
  * ==========================================================================*/
 
@@ -174,6 +179,56 @@ p('Am Rechner erscheinen sie weiterhin erst beim Überfahren',
   versteckt > 0, `${versteckt} verborgen — bei 0 wäre die Telefon-Regel auf den Rechner durchgeschlagen`);
 
 await gross.close();
+
+console.log('\n5 · Langes Drücken öffnet das Blockmenü — und es überlebt das Loslassen');
+
+/* DER FEHLER, GEGEN DEN DIESER ABSCHNITT STEHT (6. August 2026). Die Griffe
+   neben den Blöcken sind am Telefon ausgeblendet; ihr Ersatz ist das lange
+   Drücken. Das Menü ÖFFNETE auch — bei noch gedrücktem Finger. Beim
+   Loslassen schickt der Browser der Berührung aber mousedown, mouseup und
+   click hinterher, und dieser click traf den frisch gelegten Menü-Grund,
+   dessen Klick-Handler das Menü schliesst. Es verschwand im selben Atemzug,
+   in dem es aufging.
+
+   Sichtbar ist das nur mit echten Touch-Ereignissen SAMT Loslassen. Ein
+   Direktaufruf von blockMenue() wäre hier immer grün gewesen — genau so hat
+   der Fehler überlebt. Deshalb drückt dieser Abschnitt wirklich. */
+p('Vorher ist kein Menü offen',
+  await seite.evaluate(() => !document.querySelector('.menu')));
+
+const ziel = await seite.evaluate(() => {
+  const el = document.querySelector('.blk .ct');
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return { x: r.left + Math.min(60, r.width / 2), y: r.top + r.height / 2 };
+}) as { x: number; y: number } | null;
+p('Ein Block steht zum Drücken bereit', !!ziel);
+
+if (ziel) {
+  const cdp = await seite.context().newCDPSession(seite);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: ziel.x, y: ziel.y }] });
+  await seite.waitForTimeout(650);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await seite.waitForTimeout(400);
+
+  const menue = await seite.evaluate(() => {
+    const m = document.querySelector('.menu');
+    if (!m) return { da: false, blatt: false, turn: false, zuFlach: [] as string[] };
+    const zuFlach = [...m.querySelectorAll('button')]
+      .filter(k => k.getBoundingClientRect().height < 44)
+      .map(k => `${(k.textContent ?? '').trim().slice(0, 12)} ${Math.round(k.getBoundingClientRect().height)}px`);
+    return { da: true, blatt: m.classList.contains('blatt'),
+             turn: !!m.querySelector('[data-a="turn"]'), zuFlach };
+  }) as { da: boolean; blatt: boolean; turn: boolean; zuFlach: string[] };
+  p('Nach dem Loslassen ist das Menü noch da', menue.da,
+    'der Klick nach dem Loslassen hat es wieder geschlossen — die Nachzügler werden nicht geschluckt');
+  p('Es ist das Blatt von unten', menue.blatt);
+  p('„Umwandeln in" steht darin', menue.turn);
+  p('Jeder Menüeintrag ist mindestens 44 px hoch',
+    menue.zuFlach.length === 0, menue.zuFlach.join(', '));
+  await seite.evaluate(() => { document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove()); });
+}
+
 await browser.close();
 server.close();
 

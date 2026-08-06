@@ -15,18 +15,20 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**4. August 2026 · 79 Prüfläufe grün**
+**6. August 2026 · 87 Prüfläufe grün**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
-Formeln · lokale KI · Versionen · Papierkorb · `.json`- und
-`.redion`-Sicherung mit Anhängen · Tests.
+Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
+`.redion`-Sicherung mit Anhängen · durchgängig TypeScript · Tests.
 
 **Die drei Lücken, die alles andere aufhalten**
 
 ```txt
-1. quell/ ist noch JavaScript — die TypeScript-Grundlage steht, der Umzug nicht
-2. Der Spreadsheet-Block fehlt — die Rechenkraft ist da, die Tabelle nicht
-3. Sync-Konflikte sind ungeprüft — und das blockiert die ganze Cloud
+1. Die Cloud ist nicht produktionsreif — Konto (L7), R2 für Dateien (L6),
+   und der Rest von L5 braucht einen Lauf gegen einen echten Server
+2. Rechte und Freigaben sind nicht produktionsreif (L8) — das blockiert
+   echtes Teilen
+3. Mobile läuft, ist aber nicht dafür gebaut (L10)
 ```
 
 ---
@@ -35,37 +37,31 @@ Formeln · lokale KI · Versionen · Papierkorb · `.json`- und
 
 ## L1 · Die TypeScript-Migration selbst
 
-**Stand** — ◐ die Grundlage steht, der Bestand ist noch JavaScript.
+**Stand** — ✅ der Bestand ist migriert (6. August 2026).
 
-```txt
-✅ tsconfig.json · npm run typecheck · CI-Typecheck
-✅ tsconfig.bauen.json · npm run bauen:ts · test105
-✅ src/core/types/ — sieben Dateien, englisch, aus dem Code gemessen
-✅ src/core/helpers/ — sechs Laufzeitdateien:
-   ids · date · objects · bytes · throttle · reporter
-✅ src/core/security/sanitize.ts — der Säuberer
-✗  die übrigen 90 Dateien unter quell/
-```
+159 → 0 handgeschriebene JavaScript-Dateien. `tsc` meldet in allen drei
+Konfigurationen nichts; `pruefungen/js-bestand.json` ist leer, und `test109`
+wacht darüber, dass keine neue `.js` von Hand dazukommt. Das JavaScript
+unter `quell/` ist seither **Ausgabe** von `npm run bauen:ts` — `test105`
+hält es an seiner Quelle unter `src/`.
 
-**Die kleinen, DOM-freien Helfer sind durch.** Was jetzt kommt, ist eine
-andere Grössenordnung: `.redion` und ZIP (TS-4), dann die Ablage (TS-5).
+Die Nachrichten zu den Übertragungs-Bündeln stehen in
+`doku/BUENDEL-11-BIS-24.md`; die Fragen der alten Läufe in
+`doku/ALTE-PRUEFLAEUFE.md`.
 
-`Tempo` gehört **nicht** in diese Reihe — es greift vierzehnmal ins DOM und
-wandert erst mit der Trennung von `dienst` und `ansicht`.
-
-**Warum wichtig** — ohne Typen bleiben Datenmodell, Backup, Import/Export,
-Dateien, Sync, Rechte und Cloudflare Bereiche, in denen ein Tippfehler erst
-im Betrieb auffällt.
-
-**Status** — ⏳ läuft. Siehe `AUFGABEN.md` Phase 6.
+**Status** — ✅ abgeschlossen. Offen bleibt nur die Benennung des Bestands
+(L2), und die wandert ausdrücklich nicht rückwirkend.
 
 ## L2 · Die Code-Sprache ist entschieden, aber nicht durchgezogen
 
-**Stand** — ◐ neu seit `ENTSCHEIDUNGEN.md` E27.
+**Stand** — ◐ die Regel gilt (E27/E28); der migrierte Bestand behielt seine
+deutschen Namen.
 
 Neuer TypeScript-Code ist englisch, Nutzertexte und Dokumentation bleiben
-deutsch. Umgesetzt ist das für `src/`; die 96 Dateien unter `quell/` sind
-weiter deutsch benannt.
+deutsch. Englisch benannt ist, was neu geschnitten wurde (`src/core/`); die
+gewachsenen Module heissen weiter deutsch (`src/bereiche/dateien/ausgeben.ts`),
+weil ihre Ausgabepfade unter `quell/` stabil bleiben müssen — `index.html`
+und `sw.js` laden sie namentlich.
 
 **Das ist kein Versehen, sondern die Regel** — massenhaft umbenannt wird
 nicht. Eine Datei wechselt die Sprache nur, wenn sie ohnehin migriert wird,
@@ -82,20 +78,21 @@ die den **Quelltext** lesen (`test91`), und die mussten mitgezogen werden.
 
 ## L3 · Der Spreadsheet-Block
 
-**Stand** — ✗ es gibt keinen.
+**Stand** — ✅ der Tabellenblock ist gebaut — siehe `ENTSCHEIDUNGEN.md` E29,
+`DESIGN-TABELLE.md` und `AUFGABEN.md` Phase 7a. Es gibt keine zweite
+Formelmaschine: Zellformeln werden in die Sprache von `formeln/laufzeit.js`
+übersetzt.
 
-Die Rechenkraft ist da: 158 Formelfunktionen, davon 61 unter deutschem
-Excel-Namen. Was fehlt, ist das **Zellraster**.
+Was er **bewusst nicht** ist, steht in E29. Was noch fehlt, hat eigene
+Nummern:
 
 ```txt
-✗ Spreadsheet-Block · Zellen · A1-Bezüge · Bereiche A1:C10
-✗ automatische Neuberechnung · Abhängigkeiten · Zirkelbezüge
-✗ Spreadsheet-Ansicht für Datenbanken · Copy/Paste · Masseneingabe
+✗ Spreadsheet-Ansicht für Datenbanken (eine der Ansichtsarten ist sie nicht)
+✗ bedingte Formatierung — L15
+✗ Zielwertsuche, Szenarien, Solver — L28
 ```
 
-**Vorher zu entscheiden** — Fehlerwerte, siehe L4.
-
-**Status** — ⏳ hoch. `AUFGABEN.md` Phase 7.
+**Status** — ✅ Kern fertig; Ausbau siehe L15 · L18 · L28.
 
 ## L4 · Fehlerwerte — die offene Architekturfrage
 
@@ -221,14 +218,13 @@ dunkel · keine Information nur über Farbe · Escape schliesst Overlays.
 
 ## L13 · Prüfläufe für migrierten TypeScript-Code
 
-**Stand** — ◐ Typecheck da, Ausführung nicht.
+**Stand** — ✅ erledigt.
 
-Solange `noEmit` galt, beschrieb TypeScript nur Daten. Seit `ids.ts` läuft
-migrierter Code wirklich — und muss wie jeder andere unter den bestehenden
-Läufen stehen.
-
-Fehlt: ein Muster, wie migrierte Helfer geprüft werden, ohne dass jeder
-seinen eigenen Lauf bekommt.
+Alle Prüfläufe sind `.mts` und laufen direkt unter Node (Typen werden
+entfernt, `CLAUDE.md` §54.3); `npm run typecheck` prüft sie mit,
+`test109` hält den JS-Bestand bei null. Die alten Läufe unter
+`pruefungen/alt/` sind gegangen; ihre Fragen stehen in
+`doku/ALTE-PRUEFLAEUFE.md`.
 
 ---
 

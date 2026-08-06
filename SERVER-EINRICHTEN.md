@@ -138,7 +138,7 @@ npx wrangler secret put ADRESSE
 ```
 
 Eintragen: die Adresse, unter der Redion läuft, ohne Schrägstrich am Ende —
-zum Beispiel `https://notizen.deine-domain.workers.dev`.
+zum Beispiel `https://redion.deine-domain.workers.dev`.
 
 Wer die App unter mehreren Adressen erreicht (etwa eine `.pages.dev` und eine
 eigene Domäne), trägt die weiteren mit Komma dazu ein:

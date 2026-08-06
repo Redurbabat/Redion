@@ -1,7 +1,7 @@
 # Notizen im Netz veröffentlichen — Schritt für Schritt
 
 Ziel: Die App liegt unter einer echten Adresse wie
-`https://notizen.<dein-name>.workers.dev`, lässt sich auf dem iPhone installieren, und die
+`https://redion.<dein-name>.workers.dev`, lässt sich auf dem iPhone installieren, und die
 Anmeldung bei Google funktioniert. Alles kostenlos.
 
 Zeitaufwand beim ersten Mal: etwa zehn Minuten.
@@ -60,7 +60,7 @@ Die Vorgaben passen:
 **Save and Deploy** drücken. Nach etwa einer Minute steht deine Adresse da:
 
 ```
-https://notizen.<dein-name>.workers.dev
+https://redion.<dein-name>.workers.dev
 ```
 
 Ab jetzt gilt: Jeder `git push` veröffentlicht automatisch neu.
@@ -89,7 +89,7 @@ oeffnen.bat      ← lokal ohne Server öffnen
 ### 5. Eigene Adresse (freiwillig)
 
 Hast du eine eigene Domain, geht sie unter **Custom domains** dazu.
-Ohne Domain reicht `notizen.<dein-name>.workers.dev` völlig.
+Ohne Domain reicht `redion.<dein-name>.workers.dev` völlig.
 
 ---
 
@@ -99,7 +99,7 @@ Die App bringt alles mit, was iOS dafür braucht: Manifest, Symbole,
 Startbilder, Service Worker.
 
 1. **Safari** auf dem iPhone öffnen — Chrome und Firefox können es dort nicht
-2. `https://notizen.<dein-name>.workers.dev` aufrufen
+2. `https://redion.<dein-name>.workers.dev` aufrufen
 3. Unten auf den **Teilen-Knopf** tippen (Quadrat mit Pfeil nach oben)
 4. In der Liste nach unten wischen bis **„Zum Home-Bildschirm"**
 5. Oben rechts **Hinzufügen**
@@ -158,12 +158,12 @@ Zwei Felder sind wichtig:
 **Autorisierte JavaScript-Ursprünge** — genau die Adresse aus deiner
 Adresszeile, ohne Schrägstrich am Ende:
 ```
-https://notizen.dein-name.workers.dev
+https://redion.dein-name.workers.dev
 ```
 
 **Autorisierte Weiterleitungs-URIs**
 ```
-https://notizen.dein-name.workers.dev/index.html
+https://redion.dein-name.workers.dev/index.html
 ```
 
 > Läuft die App auch zu Hause über `start.bat`, trag zusätzlich

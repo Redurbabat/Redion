@@ -41438,6 +41438,15 @@ const PWA = (() => {
                     const griff = blk.querySelector('.handles button[data-act="menu"]');
                     if (navigator.vibrate)
                         navigator.vibrate(12);
+                    /* Beim Loslassen schickt der Browser der Berührung noch mousedown,
+                       mouseup und click hinterher. Die träfen den frisch geöffneten
+                       Menü-Grund — und schlössen das Menü im selben Atemzug, in dem es
+                       aufging. Die Nachzügler werden deshalb einmal geschluckt; falls
+                       keiner kommt, räumt die Uhr die Fänger wieder weg. */
+                    const schlucken = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+                    const arten = ['mousedown', 'mouseup', 'click'];
+                    arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
+                    setTimeout(() => arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true })), 800);
                     Blocks.blockMenue(griff || blk, b);
                     halten = null;
                 }, 500);
