@@ -651,12 +651,17 @@ const syncWeg = async (a: any, ablage: any, wer: any, t: any, m: any, k: any, ko
       raus.push(nimm);
     }
 
-    const neueste = raus.length ? raus[raus.length - 1].geaendert : seit;
+    /* Marke und `mehr` richten sich nach dem GELESENEN (`alle`), nicht nach
+       dem Durchgelassenen (`raus`). Wer viele fremde Seiten vor sich hat,
+       bekäme sonst `marke = seit` und `mehr = false` zurück — und die
+       eigenen Sätze dahinter nie. Was der Filter zurückhält, ist bewusst
+       zurückgehalten, nicht ausstehend. */
+    const neueste = alle.length ? alle[alle.length - 1].geaendert : seit;
     return antwort(200, {
       saetze: raus.map(s => ({ id: s.id, tabelle: s.tabelle, daten: s.daten,
         verschluesselt: !!s.verschluesselt, version: s.version,
         geaendert: s.geaendert, geloescht: !!s.geloescht })),
-      marke: neueste, mehr: raus.length >= (Number(k.grenze) || 500), rolle: meine
+      marke: neueste, mehr: alle.length >= (Number(k.grenze) || 500), rolle: meine
     }, { 'Access-Control-Allow-Origin': '*' });
   }
 
