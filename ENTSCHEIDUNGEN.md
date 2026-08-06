@@ -1786,3 +1786,41 @@ Klammer für Klammer.
 Beschlossen und umgesetzt. `test123` (Suite 87, 25 Punkte) hält beides
 fest: die sieben abwehrenden Fälle rechnen unverändert, und die Insel
 bleibt eine Insel.
+
+
+## E37 · Redion ist zuerst eine Telefon-Seite
+
+**Die Ansage.** Redur, am 6. August: „wir fokusieren uns auf handy nicht auf
+laptop ansich! Weil das wird eine handy webseite nich laptop, aber muss auch
+für laptop gut funktioniern."
+
+**Was das heisst.** Das Telefon ist nicht mehr die enge Probe, die man am
+Schluss noch macht — es ist der Normalfall. Der Rechner bleibt eine
+vollwertige Umgebung, aber wenn beide nicht zusammengehen, gewinnt das
+Telefon.
+
+**Was sich dadurch ändert:**
+
+```txt
+Gebaut wird für 390 px zuerst, der Rechner bekommt den Ausbau danach
+Geprüft wird am Telefon-Bildmass, nicht nur am Rechner
+Angesehen wird mit bilder.mts am Telefon (§55), bevor etwas fertig heisst
+L10 (Mobile) steigt in der Reihenfolge, nicht als Nachtrag
+```
+
+**Und was sich NICHT ändert.** Der Rechner darf nicht schlechter werden;
+`test114` Abschnitt 4 prüft ausdrücklich die Gegenrichtung („Am Rechner
+erscheinen sie weiterhin erst beim Überfahren"). Eine Telefon-Regel, die auf
+den Rechner durchschlägt, ist ein Fehler und keine Konsequenz.
+
+**Warum das hier steht und nicht nur im Kopf.** Zwei Fehler desselben Tages
+waren reine Telefon-Fehler und wären am Rechner nie aufgefallen: der
+Erinnerungsdialog schlug die Zeit in Weltzeit statt Ortszeit vor (zwei
+Stunden daneben, in London unsichtbar), und der Fehlerbalken bat um einen
+Text, den es nicht gab — gemeldet wurde er vom iPhone. Wer zuerst am Telefon
+hinsieht, findet solche Sachen vorher.
+
+**Status**
+
+Beschlossen. `test124` läuft ausdrücklich mit Telefon-Bildmass UND
+Zeitzone `Europe/Zurich` — ohne beides kann er nicht rot werden.
