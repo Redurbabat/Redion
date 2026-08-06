@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**6. August 2026 · 92 Prüfläufe grün**
+**6. August 2026 · 93 Prüfläufe grün**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
@@ -24,10 +24,9 @@ Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
 **Die drei Lücken, die alles andere aufhalten**
 
 ```txt
-1. Fehlerwerte sind nicht entschieden (L4) — das hält WENNFEHLER,
-   ISTFEHLER und die Fehleranzeige im Tabellenblock auf
-2. Mobile läuft, ist aber nicht dafür gebaut (L10)
-3. ZIP64 fehlt — Sicherungen über 4 GB brechen ehrlich ab (L14)
+1. Mobile läuft, ist aber nicht dafür gebaut (L10)
+2. ZIP64 fehlt — Sicherungen über 4 GB brechen ehrlich ab (L14)
+3. Bedingte Formatierung im Tabellenblock (L15)
 
 Die Wolke ist seit dem 6. August durch: Konto (L7), Anhänge (L6),
 Konflikte (L5) und Rechte (L8) stehen und sind geprüft.
@@ -96,12 +95,13 @@ Nummern:
 
 **Status** — ✅ Kern fertig; Ausbau siehe L15 · L18 · L28.
 
-## L4 · Fehlerwerte — die offene Architekturfrage
+## L4 · Fehlerwerte — beantwortet, ohne das Rechnen umzustellen
 
-**Stand** — ⚠ blockiert `WENNFEHLER`, `ISTFEHLER` und die Fehleranzeige im
-Spreadsheet.
+**Stand** — ✅ die Frage ist beantwortet (6. August, E36). `WENNFEHLER` und
+`ISTFEHLER` gibt es; blockiert ist nichts mehr.
 
-Redions Laufzeit ist **abwehrend** gebaut und erzeugt keine Fehlerwerte:
+Redions Laufzeit bleibt **abwehrend**, und das ist die Zusicherung, unter
+der jede bestehende Datenbank läuft:
 
 ```txt
 1 / 0        →  0
@@ -109,19 +109,20 @@ WURZEL(-1)   →  0
 WERT("abc")  →  0
 ```
 
-Excels `WENNFEHLER` fängt `#DIV/0!` und `#WERT!` — hier gäbe es nichts zu
-fangen.
+Neu ist die **strenge Insel**: `WENNFEHLER(1/0; "—")` rechnet nur das
+Argument in der Klammer streng und ergibt „—". Ausserhalb ändert sich
+nichts — `iferror(1/0, 0) + 1/0` ist weiterhin 0. Damit kann keine
+bestehende Formelspalte ihr Ergebnis ändern; sie enthält diese Funktionen
+nicht, denn es gab sie bis heute nicht.
 
-**Warum es keine Formelaufgabe ist** — echte Fehlerwerte wären eine Änderung
-am Rechnen selbst und änderten das Ergebnis **bestehender Formelspalten in
-bestehenden Datenbanken**: wo heute `0` steht, stünde ein Fehler. Das ist
-Priorität 1 und braucht Migrationsgedanken.
+`test106` Abschnitt 4d hält den abwehrenden Zustand weiter fest, `test123`
+die Insel und ihre Grenzen — samt der Regel, dass ein Tippfehler nicht als
+Rechenfehler verschluckt wird.
 
-`test106` Abschnitt 4d hält den heutigen Zustand fest, damit er eine
-Entscheidung bleibt und nicht zu einer Lücke wird, die jemand aus Versehen
-füllt.
-
-**Status** — ⏳ Entscheidung offen. `ENTSCHEIDUNGEN.md` E24, Regel 3.
+**Was offen bleibt** — echte Fehlerwerte als **Zellinhalt** in
+Datenbankspalten (also `#DIV/0!` in einer Liste statt 0). Das wäre die
+Umstellung, die E36 ausdrücklich nicht macht. Ob sie je kommt, ist eine
+eigene Entscheidung mit Migrationsgedanken.
 
 ## L5 · Sync-Konflikte zwischen Geräten
 

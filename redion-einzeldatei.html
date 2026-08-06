@@ -9603,6 +9603,11 @@ Register.formeln = (() => {
         /* --- Logik ----------------------------------------------------------- */
         { name: 'WENN', gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
             was: 'Die Wenn-Dann-Sonst-Frage', beispiel: 'WENN(Betrag > 100; "gross"; "klein")' },
+        { name: 'WENNFEHLER', gruppe: 'Logik', args: '(ausdruck; ersatz)', notion: false,
+            was: 'Deutscher Name für iferror: fängt #DIV/0! und Geschwister ab',
+            beispiel: 'WENNFEHLER(A1/B1; "—")' },
+        { name: 'ISTFEHLER', gruppe: 'Logik', args: '(ausdruck)', notion: false,
+            was: 'Deutscher Name für iserror: prüft auf einen Rechenfehler' },
         { name: 'WENNS', gruppe: 'Logik', args: '(p1; w1; p2; w2; …)', notion: false,
             was: 'Mehrere Fälle nacheinander prüfen' },
         { name: 'UND', gruppe: 'Logik', args: '(a; b; …)', notion: false,
@@ -9749,6 +9754,12 @@ Register.formeln = (() => {
             was: 'Wählt zwischen zwei Werten' },
         { name: 'ifs', gruppe: 'Logik', args: '(b1, w1, b2, w2, …, sonst)', notion: true,
             was: 'Mehrere Bedingungen der Reihe nach; das letzte einzelne Argument ist der Rest' },
+        { name: 'iferror', gruppe: 'Logik', args: '(ausdruck, ersatz)', notion: false,
+            was: 'Rechnet den Ausdruck streng; ergibt er einen Rechenfehler wie #DIV/0!, ' +
+                'kommt der Ersatz. Ein Tippfehler bleibt ein Tippfehler und wird gemeldet',
+            beispiel: 'iferror(prop("Umsatz") / prop("Kunden"), "—")' },
+        { name: 'iserror', gruppe: 'Logik', args: '(ausdruck)', notion: false,
+            was: 'Wahr, wenn der Ausdruck streng gerechnet einen Rechenfehler ergibt' },
         { name: 'empty', gruppe: 'Logik', args: '(wert)', notion: true,
             was: 'Wahr, wenn der Wert leer ist' },
         { name: 'equal', gruppe: 'Logik', args: '(a, b)', notion: true,
@@ -13866,6 +13877,8 @@ const Formula = (() => {
         /* --- Logik ----------------------------------------------------------- */
         wenn: 'if',
         wenns: 'ifs',
+        wennfehler: 'iferror',
+        istfehler: 'iserror',
         und: 'and',
         oder: 'or',
         nicht: 'not',
@@ -14058,6 +14071,44 @@ const Formula = (() => {
                         if (wahr(evaluate(as[i], ctx)))
                             return evaluate(as[i + 1], ctx);
                     return as.length % 2 ? evaluate(as[as.length - 1], ctx) : '';
+                }
+                /* ================================================================ *
+                 * WENNFEHLER UND ISTFEHLER — eine strenge Insel
+                 * ------------------------------------------------------------------
+                 * `LUECKEN.md` L4 führte beide lange als blockiert, und der Grund
+                 * stimmte: Redion rechnet abwehrend, `1/0` ergibt 0, und wo kein
+                 * Fehler entsteht, gibt es nichts zu fangen. Die Antwort war aber
+                 * nicht, das Rechnen umzustellen — das änderte JEDE bestehende
+                 * Formelspalte —, sondern den Fehler dort entstehen zu lassen, wo
+                 * jemand ausdrücklich danach fragt.
+                 *
+                 * Diese beiden werten ihr erstes Argument im STRENGEN Modus aus
+                 * (E31), also genau so, wie es der Tabellenblock tut. Der Rest der
+                 * Formel bleibt, wie er war. Eine bestehende Spalte kann davon
+                 * nichts merken: sie enthält diese Funktionen nicht, denn es gab
+                 * sie bis heute nicht.
+                 *
+                 * GEFANGEN WIRD NUR DER RECHENFEHLER, also `#DIV/0!` und
+                 * Geschwister. Eine kaputte Formel — unbekannte Funktion, falscher
+                 * Ort — fliegt weiter. Excel schluckt auch die; hier nicht, aus
+                 * demselben Grund, der schon einmal aufgeschrieben wurde: wer einen
+                 * Tippfehler als Rechenfehler ausgibt, schickt den Menschen an die
+                 * falsche Stelle. `WENNFEHLER(SUMME(A); 0)` mit einem Tippfehler in
+                 * `SUMME` soll nicht stillschweigend 0 ergeben. */
+                if (n === 'iferror' || n === 'iserror') {
+                    let wert;
+                    try {
+                        wert = evaluate(knoten.args[0], { ...ctx, streng: true });
+                    }
+                    catch (e) {
+                        const satz = e instanceof Error ? e.message : String(e);
+                        if (!satz.startsWith('#'))
+                            throw e;
+                        if (n === 'iserror')
+                            return true;
+                        return knoten.args[1] !== undefined ? evaluate(knoten.args[1], ctx) : '';
+                    }
+                    return n === 'iserror' ? false : wert;
                 }
                 /* let(name, wert, ausdruck) */
                 if (n === 'let') {
@@ -14349,7 +14400,7 @@ const Formula = (() => {
            nicht. Damit meldete `Register.formeln.abgleich()` jede Beschreibung
            für sie als „Versprechen ohne Funktion", und die Vervollständigung im
            Formeleditor bot sie nie an. */
-        'if', 'ifs', 'let', 'lets', 'map', 'filter', 'find', 'findindex', 'some', 'every', 'prop',
+        'if', 'ifs', 'iferror', 'iserror', 'let', 'lets', 'map', 'filter', 'find', 'findindex', 'some', 'every', 'prop',
         'rownumber', 'runningcount', 'previous', 'next', 'runningsum', 'runningmax', 'runningmin',
         'rank', 'percentoftotal', 'total', 'average', 'rowcount', 'delta',
         'countwhere', 'sumwhere', 'findrows', 'firstwhere', 'lastwhere', 'maxwhere', 'minwhere',

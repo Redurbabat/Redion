@@ -1743,3 +1743,46 @@ Beschlossen und umgesetzt. `test121` (Suite 85, 24 Punkte) hält alle drei
 fest, dazu den Widerruf in seinen drei Formen (Seite zurückziehen,
 Freigabe entziehen, Marke löschen) und den Satz, der zu G2 gehört: eine
 veröffentlichte Seite macht keinen Anhang öffentlich.
+
+
+## E36 · WENNFEHLER — der Fehler entsteht dort, wo jemand danach fragt
+
+**Die Frage, die seit L4 offen stand.** Excel kennt `WENNFEHLER`. Redion
+rechnet abwehrend: `1/0` ergibt 0, `WURZEL(-1)` ergibt 0. Wo kein Fehler
+entsteht, gibt es nichts zu fangen — also müsste man das Rechnen
+umstellen, um die Funktion überhaupt sinnvoll zu machen.
+
+**Warum das nicht ging.** Eine Umstellung änderte das Ergebnis **jeder
+bestehenden Formelspalte in jeder bestehenden Datenbank**: wo heute 0
+steht, stünde ein Fehler. Kein Nutzer hat das bestellt, und niemand
+bemerkt es, bevor eine Liste rot ist. Priorität 1.
+
+**Beschluss: die strenge Insel.** `WENNFEHLER` und `ISTFEHLER` werten ihr
+erstes Argument im strengen Modus aus (E31) — dem, den der Tabellenblock
+ohnehin benutzt. Streng gerechnet wird nur, wonach ausdrücklich gefragt
+wurde, und nur innerhalb der Klammer. Ausserhalb bleibt alles beim Alten,
+und `iferror(1/0, 0) + 1/0` ergibt 0: die zweite Division ist nicht
+betroffen.
+
+Dass bestehende Spalten unberührt bleiben, ist deshalb kein Versprechen,
+sondern eine Beobachtung: eine bestehende Formel kann diese Funktionen
+nicht enthalten, denn es gab sie bis heute nicht.
+
+**Ein Tippfehler bleibt ein Tippfehler.** Excels `IFERROR` schluckt auch
+`#NAME?`. Hier nicht — aus demselben Grund, der beim strengen Modus schon
+einmal aufgeschrieben wurde: wer einen Tippfehler als Rechenfehler
+ausgibt, schickt den Menschen an die falsche Stelle. `WENNFEHLER(SUMEE(A);
+0)` ergibt nicht stillschweigend 0, sondern meldet den unbekannten Namen.
+Gefangen wird, was mit `#` anfängt; alles andere fliegt weiter.
+
+**Was das für L4 heisst.** Die Architekturfrage bleibt beantwortet, wie sie
+in E24 Regel 3 und E31 beantwortet wurde: die Datenbankspalte rechnet
+freundlich, die Tabellenzelle streng. Neu ist nur, dass man die Strenge
+jetzt auch in einer Datenbankspalte anfordern kann — Zeile für Zeile,
+Klammer für Klammer.
+
+**Status**
+
+Beschlossen und umgesetzt. `test123` (Suite 87, 25 Punkte) hält beides
+fest: die sieben abwehrenden Fälle rechnen unverändert, und die Insel
+bleibt eine Insel.
