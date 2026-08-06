@@ -1983,14 +1983,22 @@ const App = (() => {
     });
     an('btn-import', (e: any) => {
       const r = e.currentTarget.getBoundingClientRect();
+      /* Am Telefon wird nur angeboten, was dort wirklich geht: Ordner wählen
+         können Telefon-Browser nicht, und eine Datei auf die Seite ziehen
+         kann auf einem Touchscreen niemand. Ein toter Knopf ist schlimmer
+         als ein fehlender. */
+      const telefon = window.matchMedia('(max-width: 700px)').matches;
       const m = UI.menu(
         '<div class="grp">Was soll hereinkommen?</div>' +
         '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
           '<span class="sub">Markdown, CSV, TSV, HTML, Excel, Word, EPUB</span></button>' +
-        '<button data-i="ordner"><span class="mi">📁</span>Ganzen Ordner einlesen</button>' +
+        (telefon ? '' :
+          '<button data-i="ordner"><span class="mi">📁</span>Ganzen Ordner einlesen</button>') +
         '<hr><button data-i="werkzeug"><span class="mi">⭱</span>Aus einem anderen Werkzeug' +
           '<span class="sub">Trello, Evernote, Obsidian, Notion-Export, Asana</span></button>' +
-        '<hr><div class="grp" style="font-weight:400">Oder einfach eine Datei auf die Seite ziehen.</div>',
+        '<hr><div class="grp" style="font-weight:400">' +
+          (telefon ? 'Die Auswahl öffnet die Dateien-App des Telefons.'
+                   : 'Oder einfach eine Datei auf die Seite ziehen.') + '</div>',
         r.right + 6, r.top);
       m.addEventListener('click', ev => {
         const b = elVon(ev)?.closest<HTMLElement>('button[data-i]');
