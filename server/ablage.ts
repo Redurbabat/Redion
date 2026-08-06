@@ -16,7 +16,7 @@
  * mehr prüfen kann.
  * ========================================================================*/
 
-import type { Ablage, FindeOpt, Satz, Wo } from './typen.ts';
+import type { Ablage, Blobs, FindeOpt, Satz, Wo } from './typen.ts';
 
 /* Die Tabellen. Bewusst wenige — jede zusätzliche ist eine, die man später
    mitschleppen muss. */
@@ -147,12 +147,30 @@ CREATE TABLE IF NOT EXISTS bremse (
   seit       TEXT
 );
 CREATE INDEX IF NOT EXISTS bremse_seit ON bremse(seit);
+
+/* Anhaenge: nur die METADATEN. Die Bytes liegen stueckweise in R2 unter
+   bereich/dateiId/nr — grosse Dateien gehoeren nicht in D1 (E2). */
+CREATE TABLE IF NOT EXISTS dateien (
+  id             TEXT,
+  bereich        TEXT,
+  name           TEXT,
+  groesse        INTEGER DEFAULT 0,
+  typ            TEXT,
+  seite          TEXT,
+  teile          INTEGER DEFAULT 1,
+  verschluesselt INTEGER DEFAULT 0,
+  version        INTEGER DEFAULT 1,
+  geaendert      TEXT,
+  geloescht      INTEGER DEFAULT 0,
+  PRIMARY KEY (bereich, id)
+);
+CREATE INDEX IF NOT EXISTS dateien_zeit ON dateien(bereich, geaendert);
 `;
 
 /* Die Tabellen, die der Kern kennt — alles andere wird abgewiesen. */
 export const TABELLEN = ['konten', 'sitzungen', 'bereiche', 'saetze',
                          'freigaben', 'oeffentlich', 'protokoll', 'marken',
-                         'feldrechte', 'bremse'];
+                         'feldrechte', 'bremse', 'dateien'];
 
 /* Der Primärschlüssel je Tabelle. 'saetze' und 'freigaben' sind zusammengesetzt. */
 const SCHLUESSEL: Record<string, string[]> = {
@@ -160,7 +178,7 @@ const SCHLUESSEL: Record<string, string[]> = {
   saetze: ['bereich', 'id'], freigaben: ['bereich', 'seite', 'kontoId'],
   oeffentlich: ['schluessel'], protokoll: ['id'], marken: ['wert'],
   feldrechte: ['bereich', 'sammlung', 'feld', 'kontoId'],
-  bremse: ['schluessel']
+  bremse: ['schluessel'], dateien: ['bereich', 'id']
 };
 
 /* ==========================================================================
@@ -312,3 +330,32 @@ export const ablageD1 = (db: any): Ablage => {
     }
   };
 };
+
+/* ==========================================================================
+ * 3 · DIE BLOB-ABLAGE — Bytes für Anhänge, keine Sätze
+ * --------------------------------------------------------------------------
+ * Dieselbe Zweiteilung wie oben: eine Map für Prüfungen und den Betrieb
+ * ohne Wolke, R2 dahinter im Ernstfall. Schlüssel: `bereich/dateiId/nr`.
+ * ========================================================================*/
+export const blobsSpeicher = (): Blobs => {
+  const ablage = new Map<string, Uint8Array>();
+  return {
+    art: 'speicher',
+    async lege(schluessel, bytes) { ablage.set(schluessel, bytes.slice()); },
+    async hole(schluessel) { const b = ablage.get(schluessel); return b ? b.slice() : null; },
+    async weg(schluessel) { return ablage.delete(schluessel); }
+  };
+};
+
+/** R2 aus Cloudflare. `bucket` ist das Binding aus wrangler.toml —
+ *  die Schnittstelle ist schmal genug, um sie nicht nachzubauen. */
+export const blobsR2 = (bucket: any): Blobs => ({
+  art: 'r2',
+  async lege(schluessel, bytes) { await bucket.put(schluessel, bytes); },
+  async hole(schluessel) {
+    const obj = await bucket.get(schluessel);
+    if (!obj) return null;
+    return new Uint8Array(await obj.arrayBuffer());
+  },
+  async weg(schluessel) { await bucket.delete(schluessel); return true; }
+});

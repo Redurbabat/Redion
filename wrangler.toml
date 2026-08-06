@@ -44,3 +44,17 @@ binding = "ASSETS"
 # binding = "DB"
 # database_name = "redion"
 # database_id = "hier-die-eigene-einsetzen"
+
+# ===========================================================================
+#  R2 — die Ablage fuer Anhaenge (Bilder, PDFs, Videos)
+# ---------------------------------------------------------------------------
+#  Grosse Dateien gehoeren nicht in D1 (E2). Der Bucket entsteht mit
+#
+#      npx wrangler r2 bucket create redion-dateien
+#
+#  und wird dann hier eingebunden. Ohne ihn laeuft alles Uebrige weiter —
+#  die /datei-Wege sagen dann 503 mit genau diesem Hinweis.
+# ===========================================================================
+# [[r2_buckets]]
+# binding = "R2"
+# bucket_name = "redion-dateien"

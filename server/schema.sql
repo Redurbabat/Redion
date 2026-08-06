@@ -129,3 +129,25 @@ CREATE TABLE IF NOT EXISTS bremse (
   seit       TEXT
 );
 CREATE INDEX IF NOT EXISTS bremse_seit ON bremse(seit);
+
+/* --------------------------------------------------------------------------
+   Anhänge: nur die METADATEN. Die Bytes liegen stückweise in R2 unter
+   `bereich/dateiId/nr` — grosse Dateien gehören nicht in D1 (E2).
+   `geloescht` bleibt als Grabstein stehen, damit der Abgleich der anderen
+   Geräte vom Löschen erfährt, statt die Datei ewig neu hochzuladen.
+   -------------------------------------------------------------------------- */
+CREATE TABLE IF NOT EXISTS dateien (
+  id             TEXT,
+  bereich        TEXT,
+  name           TEXT,
+  groesse        INTEGER DEFAULT 0,
+  typ            TEXT,
+  seite          TEXT,
+  teile          INTEGER DEFAULT 1,
+  verschluesselt INTEGER DEFAULT 0,
+  version        INTEGER DEFAULT 1,
+  geaendert      TEXT,
+  geloescht      INTEGER DEFAULT 0,
+  PRIMARY KEY (bereich, id)
+);
+CREATE INDEX IF NOT EXISTS dateien_zeit ON dateien(bereich, geaendert);

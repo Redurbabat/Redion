@@ -10,7 +10,7 @@
  * ========================================================================*/
 
 import { beantworte } from './kern.ts';
-import { ablageD1 } from './ablage.ts';
+import { ablageD1, blobsR2 } from './ablage.ts';
 import type { Anfrage, Antwort, Kopfzeilen, Umwelt } from './typen.ts';
 
 import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.ts';
@@ -73,7 +73,7 @@ const ohneDatenbank = () => new Response(JSON.stringify({
 
 /** Gehört dieser Pfad dem Server? */
 export const istServerWeg = (pfad: string) =>
-  /^\/(konto|sync|freigabe|feldrecht|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/.test(pfad) ||
+  /^\/(konto|sync|datei|freigabe|feldrecht|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/.test(pfad) ||
   /^\/v1\//.test(pfad) || pfad === '/api/stand';
 
 /* `ctx` nimmt der Worker entgegen und reicht es durch; hier wird es nicht
@@ -102,6 +102,9 @@ export const bedienen = async (request: Request, env: Umwelt, _ctx?: unknown) =>
     GITHUB_ID: env.GITHUB_ID, GITHUB_GEHEIM: env.GITHUB_GEHEIM,
     GOOGLE_ID: env.GOOGLE_ID, GOOGLE_GEHEIM: env.GOOGLE_GEHEIM,
     ADRESSE: env.ADRESSE || anfrage.adresse || '',
+    /* Anhänge: R2, wenn gebunden — ohne Binding sagen die /datei-Wege
+       503 mit dem Weg zur Einrichtung, alles andere läuft weiter. */
+    blobs: env.R2 ? blobsR2(env.R2) : null,
     holen: fetch
   };
   return alsAntwort(await beantworte(anfrage, ablageD1(env.DB), umwelt));

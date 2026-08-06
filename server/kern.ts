@@ -67,6 +67,7 @@ import { seitenSchluessel, istGesperrt, zaehleFehlversuch, bremseLoesen,
 import { mitSicherheitsKopf } from './sicherheit/kopfzeilen.ts';
 import { text as feldText, ausListe } from './sicherheit/eingaben.ts';
 import { torPruefen, darfMarke, MARKEN_RECHTE } from './sicherheit/marken.ts';
+import { dateiWeg } from './dateien.ts';
 
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
 export const gleich = (a: any, b: any) => {
@@ -249,6 +250,7 @@ const beantworteRoh = async (a: any, ablage: any, umwelt = {}) => {
     if (tor) return fehler(tor.status, tor.code, tor.satz);
 
     if (t[0] === 'sync')     return await syncWeg(a, ablage, wer, t, m, k, kopf);
+    if (t[0] === 'datei')    return await dateiWeg(a, ablage, umwelt, wer, t, m, k);
     if (t[0] === 'freigabe') return await freigabeWeg(a, ablage, wer, t, m, k);
     if (t[0] === 'feldrecht') return await feldrechtWeg(a, ablage, wer, t, m, k);
     if (t[0] === 'veroeffentlichen') return await veroeffentlichenWeg(a, ablage, wer, t, m, k, umwelt);

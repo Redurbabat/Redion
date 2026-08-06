@@ -63,7 +63,23 @@ Diese vier Zeilen **ans Ende von `wrangler.toml` kopieren.** Die
 npx wrangler d1 execute redion --remote --file=server/schema.sql
 ```
 
-Das legt acht Tabellen an. Sie sind leer, bis sich jemand anmeldet.
+Das legt die Tabellen an. Sie sind leer, bis sich jemand anmeldet.
+
+---
+
+## Schritt 2b — Der Speicher für Anhänge (freiwillig)
+
+Bilder, PDFs und Videos gehören nicht in die Datenbank (E2). Sie liegen in
+R2, dem Dateispeicher von Cloudflare:
+
+```
+npx wrangler r2 bucket create redion-dateien
+```
+
+Danach in `wrangler.toml` die drei Zeilen unter `[[r2_buckets]]`
+einkommentieren und neu veröffentlichen. Ohne diesen Schritt läuft alles
+Übrige weiter — die Datei-Wege antworten dann mit 503 und genau diesem
+Hinweis.
 
 ---
 

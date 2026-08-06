@@ -55,6 +55,7 @@ export const FELDER: Record<string, { max: number; vorgabe: string }> = {
   rolle:         { max: 16,      vorgabe: 'lesen' },
   code:          { max: 32,      vorgabe: '' },
   suchwort:      { max: 200,     vorgabe: '' },
+  dateiName:     { max: 200,     vorgabe: 'Ohne Namen' },
 
   /* Der Inhalt einer veröffentlichten Seite. Zwei Megabyte HTML sind rund
      eine Million Zeichen Text — ein Buch. Wer mehr veröffentlichen will,
@@ -106,8 +107,17 @@ export const ausListe = (wert: any, erlaubt: any, rueckfall: any) => {
 export const KOERPER = [
   /* Der Abgleich schickt bis zu 300 Sätze (`KONSTANTEN.ABGLEICH_RUNDE`).
      Bei einer grossen Seite sind das schnell ein paar Megabyte. Zu eng
-     heisst hier: ein Gerät kann nicht mehr abgleichen und merkt es nicht. */
-  { pfad: '/abgleich', grenze: 16 * MB },
+     heisst hier: ein Gerät kann nicht mehr abgleichen und merkt es nicht.
+
+     Der Eintrag hiess einmal '/abgleich' — einen solchen Pfad gab es aber
+     nie. Die echten Wege heissen /sync/hoch und /sync/runter; sie fielen
+     dadurch auf die 1-MB-Vorgabe, und eine einzige grosse Seite hätte den
+     Abgleich mit 413 abgebrochen. Genau der Fall, vor dem der Satz darüber
+     warnt. */
+  { pfad: '/sync', grenze: 16 * MB },
+  /* Ein Datei-Stück ist roh höchstens 2 MB (server/dateien.ts), als Base64
+     gut 2,7 MB — vier lassen Luft für den Rest des Umschlags. */
+  { pfad: '/datei', grenze: 4 * MB },
   /* Veröffentlichen schickt eine ganze Seite als HTML — das Feld `inhalt`
      darf 2 MB, der Körper etwas mehr für Titel und Beiwerk. */
   { pfad: '/oeffentlich', grenze: 4 * MB },
