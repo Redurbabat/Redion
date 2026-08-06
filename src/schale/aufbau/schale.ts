@@ -1884,6 +1884,22 @@ const App = (() => {
     zeichneBaum();
     oeffne(startSeite);
 
+    /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
+       Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
+       eine Webseite; eine App beginnt bei ihrer Übersicht. Der Reiter
+       stand oben schon auf „Start" — nur der Inhalt darunter war die
+       zuletzt geöffnete Seite. Beides zeigte gleichzeitig etwas anderes.
+
+       Nur beim ERSTEN Öffnen: wer über einen Link mit `#seite` kommt oder
+       schon in dieser Sitzung gearbeitet hat, will dorthin zurück und
+       nicht auf den Start geschickt werden. */
+    /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
+       die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
+       gesetzt. Die Bedingung war damit nie wahr. */
+    if (window.matchMedia('(max-width: 700px)').matches && !ausHash) {
+      try { Ansichten.start(); } catch { /* ohne Startbildschirm bleibt die Seite */ }
+    }
+
     /* ----------------------------------------------------------------------
        WAS DAS ANDERE FENSTER GEÄNDERT HAT
        ----------------------------------------------------------------------

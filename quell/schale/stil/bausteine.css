@@ -710,18 +710,24 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 @media(max-width:760px){
 
   /* --- OBEN: die Bereiche als Pillen ---------------------------------- */
+  /* MASSE NACH DER TELEFON-VORGABE (E37): die Leiste ist 96-112 px hoch
+     samt Kerbe, die Tasten 52 px, der Rand 28 px. Vorher waren es 60, 44
+     und 12 — das las sich am Rechner sauber und war am Daumen zu klein. */
   #handy-oben{
-    display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:10px;
     position:fixed; left:0; right:0; top:0; z-index:401;
-    padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+    padding:calc(12px + env(safe-area-inset-top)) 28px 12px;
     background:var(--bg);
     overflow-x:auto; scrollbar-width:none;
   }
+  /* Auf sehr schmalen Geräten (SE, 375 px) wird der Rand knapper, sonst
+     bleibt für die fünf Bereiche kein Platz. */
+  @media(max-width:380px){ #handy-oben{ padding-left:22px; padding-right:22px } }
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
     flex:0 0 auto;
-    height:44px; min-width:44px;
+    height:52px; min-width:52px;
     border-radius:999px;
     border:1px solid var(--line);
     background:transparent; color:var(--text-dim);
@@ -789,17 +795,21 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
 
   /* --- UNTEN: suchen · KI fragen · schreiben --------------------------- */
+  /* UNTEN: Suche, KI fragen, Neu — die drei Griffe, die immer da sind.
+     56 px hohe Tasten und 28 px Rand nach der Telefon-Vorgabe (E37). */
   #handy-unten{
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:12px;
     position:fixed; left:0; right:0; bottom:0; z-index:400;
-    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    padding:12px 28px calc(12px + env(safe-area-inset-bottom));
     background:linear-gradient(to top, var(--bg) 58%, transparent);
     pointer-events:none;
   }
   #handy-unten > *{ pointer-events:auto }
 
+  @media(max-width:380px){ #handy-unten{ padding-left:22px; padding-right:22px } }
+
   #handy-unten button{
-    height:52px;
+    height:56px;
     border-radius:999px;
     border:1px solid var(--line);
     background:var(--bg-side);
@@ -809,7 +819,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     backdrop-filter:saturate(140%) blur(12px);
   }
   #handy-unten button:active{ background:var(--bg-hover) }
-  #handy-unten #hu-suche, #handy-unten #hu-neu{ width:52px; flex:0 0 52px }
+  #handy-unten #hu-suche, #handy-unten #hu-neu{ width:56px; flex:0 0 56px }
 
   /* Die Mitte ist die breiteste und die einzige mit Text — nach ihr greift
      man am häufigsten. */
@@ -835,7 +845,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      braucht an beiden Enden Luft, sonst liegt die erste Zeile unter den
      Pillen und die letzte unter der KI. */
   #main{ padding-top:60px }
-  #scroll{ padding-bottom:96px }
+  /* Der Inhalt muss unter der Aktionsleiste durchlaufen können, ohne dass
+     die letzte Zeile darunter verschwindet: 120 px plus die Kerbe des
+     Geräts. Vorher 96 — bei 72 px Leiste blieben 24 px Luft, und mit
+     Safe-Area am iPhone gar keine. */
+  #scroll{ padding-bottom:calc(120px + env(safe-area-inset-bottom)) }
   #ai.open{ bottom:0 }
 }
 
@@ -2049,3 +2063,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wahl-knoepfe button.prim{border-color:var(--akzent)}
 .wahl-knoepfe button b{font-size:14.5px; font-weight:600}
 .wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
+
+
+/* Die Rundgang-Einladung am Telefon: über die Aktionsleiste, nicht darauf.
+   Sie lag bei bottom:14px und verdeckte zusammen mit dem Toast die halbe
+   untere Leiste — sichtbar im Bildschirmfoto vom 6. August (E37). */
+@media(max-width:760px){
+  /* Über den Toast, nicht auf ihn: beide sassen auf derselben Höhe und
+     überdeckten einander. Der Toast ist flüchtig und gehört näher an die
+     Leiste, die Einladung steht länger und rückt darüber. */
+  #rg-einladung{
+    left:14px; right:14px; max-width:none;
+    bottom:calc(172px + env(safe-area-inset-bottom));
+  }
+}
