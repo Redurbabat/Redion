@@ -178,10 +178,9 @@ p('Eine pünktliche Erinnerung sagt NICHT „Verpasst"',
 console.log('\n4 · Der Fehlerbalken sagt, was er weiss');
 
 const balken = await seite.evaluate(() => {
-  const lies = () => [...document.querySelectorAll('.banner, .bnr, [class*="banner"]')]
+  const lies = () => [...document.querySelectorAll('#fehler-karte')]
     .map(b => (b.textContent || '').trim());
-  const leeren = () => document.querySelectorAll('.banner, .bnr, [class*="banner"]')
-    .forEach(b => b.remove());
+  const leeren = () => document.querySelectorAll('#fehler-karte').forEach(b => b.remove());
 
   leeren();
   /* Die leere Hülle: genau dieser Satz, ohne Datei, ohne Fehlerobjekt. */
@@ -200,10 +199,29 @@ const balken = await seite.evaluate(() => {
     filename: 'a.js', lineno: 7 }));
   const doppelt = lies().length;
 
+  /* Die Karte selbst: nicht markierbar, Schliessen gross genug, und der
+     technische Text steht NICHT darin — er wartet hinter „Details". */
   leeren();
-  return { fremd, echt, doppelt,
+  dispatchEvent(new ErrorEvent('error', { message: 'geheimer technikkram',
+    filename: 'b.js', lineno: 3 }));
+  const karte = document.querySelector<HTMLElement>('#fehler-karte');
+  const zu = karte?.querySelector<HTMLElement>('.fk-zu');
+  const form = karte ? {
+    markierbar: getComputedStyle(karte).userSelect !== 'none',
+    breite: Math.round(karte.getBoundingClientRect().width),
+    zuHoch: zu ? Math.round(zu.getBoundingClientRect().height) : 0,
+    hatKopieren: /Details kopieren/.test(karte.textContent || ''),
+    hatSchliessen: /Schliessen/.test(karte.textContent || ''),
+    zeigtTechnik: /geheimer technikkram/.test(karte.textContent || ''),
+    alltagssatz: /nicht ausführen|von ausserhalb/.test(karte.textContent || '')
+  } : null;
+  leeren();
+  return { fremd, echt, doppelt, form,
            protokoll: (Store.getMeta('fehlerprotokoll', []) || []).length };
-}) as { fremd: string[]; echt: string[]; doppelt: number; protokoll: number };
+}) as { fremd: string[]; echt: string[]; doppelt: number;
+        form: { markierbar: boolean; breite: number; zuHoch: number; hatKopieren: boolean;
+                hatSchliessen: boolean; zeigtTechnik: boolean; alltagssatz: boolean } | null;
+        protokoll: number };
 
 p('Ein fremder Fehler erzeugt einen Balken', balken.fremd.length === 1,
   JSON.stringify(balken.fremd));
@@ -213,14 +231,30 @@ p('Er bittet NICHT mehr um einen Text, den es nicht gibt',
 p('Er sagt stattdessen, woher der Fehler kommt und dass Redion weiterläuft',
   /ausserhalb/.test(balken.fremd.join(' ')) && /läuft weiter/.test(balken.fremd.join(' ')),
   balken.fremd.join(' '));
-p('Ein echter Fehler nennt weiterhin seinen Text', /nicht definiert/.test(balken.echt.join(' ')),
+p('Ein echter Fehler sagt es in Alltagssprache', /nicht ausführen/.test(balken.echt.join(' ')),
   balken.echt.join(' '));
-p('… und dazu Datei und Zeile', /etwas\.js:42/.test(balken.echt.join(' ')),
-  balken.echt.join(' '));
+p('… und stellt den technischen Text NICHT auf die Karte',
+  !/etwas\.js:42/.test(balken.echt.join(' ')) && !/nicht definiert/.test(balken.echt.join(' ')),
+  balken.echt.join(' ') + ' — der technische Teil gehört hinter „Details kopieren"');
 p('Derselbe Fehler zweimal ergibt einen Balken, nicht zwei', balken.doppelt === 1,
   String(balken.doppelt) + ' — eine Schleife baut sonst einen Balken pro Durchgang');
 p('Die Fehler stehen im Protokoll — auf dem Telefon gibt es keine Konsole',
   balken.protokoll >= 3, String(balken.protokoll));
+
+console.log('\n5 · Die Fehlerkarte hat die Form aus der Vorgabe');
+p('Es gibt eine Karte', !!balken.form);
+p('Sie ist nicht markierbar', balken.form?.markierbar === false,
+  'markierter Fehlertext sieht aus wie Inhalt, den man anfassen soll');
+p('Sie ist schmaler als der Bildschirm', (balken.form?.breite ?? 999) <= 390 - 20,
+  String(balken.form?.breite));
+p('Das Schliessen-Kreuz ist 44 px hoch', (balken.form?.zuHoch ?? 0) >= 44,
+  String(balken.form?.zuHoch));
+p('„Details kopieren" und „Schliessen" stehen da',
+  balken.form?.hatKopieren === true && balken.form?.hatSchliessen === true);
+p('Der technische Text steht NICHT auf der Karte',
+  balken.form?.zeigtTechnik === false,
+  'er gehört hinter „Details kopieren", nicht vor die Augen');
+p('Stattdessen ein Satz in Alltagssprache', balken.form?.alltagssatz === true);
 
 p('Keine echten JS-Fehler beim Laden', jsFehler.length === 0, jsFehler.slice(0, 2).join(' · '));
 

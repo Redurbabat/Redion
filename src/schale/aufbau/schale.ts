@@ -1812,12 +1812,62 @@ const App = (() => {
         Store.setMeta('fehlerprotokoll', bisher.slice(-20));
       } catch { /* wenn nicht einmal das geht, hilft ein Balken auch nicht */ }
 
-      UI.banner(fremd
-        ? 'Ein Skript von ausserhalb hat einen Fehler gemeldet — Redion läuft ' +
-          'weiter. Woher er kommt, verrät der Browser nicht; meist ist es eine ' +
-          'Erweiterung, ein Inhaltsblocker oder eingebetteter fremder Inhalt.'
-        : 'Es ist ein Fehler aufgetreten: ' + text + (ort ? ' (' + ort + ')' : '') +
-          ' — bitte melde mir diesen Text.', 'fehler');
+      fehlerKarte(fremd, text, ort);
+    };
+
+    /* ----------------------------------------------------------------------
+     * DIE FEHLERKARTE (Telefon-Vorgabe, Phase 8)
+     * ----------------------------------------------------------------------
+     * Vorher war das ein Balken über die ganze Breite mit dem technischen
+     * Text darin. Auf dem Telefon sah das aus wie ein kaputtes Stück Seite:
+     * im Bildschirmfoto vom 6. August hatte Redur den Text markiert, weil
+     * er wie Inhalt aussah und weil dort „bitte melde mir diesen Text"
+     * stand.
+     *
+     * Jetzt: eine kleine Karte, ein Satz in Alltagssprache, und der
+     * technische Teil hinter „Details kopieren". Wer ihn braucht, holt ihn;
+     * wer ihn nicht braucht, sieht ihn nicht. Nicht markierbar, damit sie
+     * nicht wie Text wirkt, den man anfassen soll.
+     * -------------------------------------------------------------------- */
+    const fehlerKarte = (fremd: boolean, text: string, ort: string) => {
+      document.getElementById('fehler-karte')?.remove();
+      const k = document.createElement('div');
+      k.id = 'fehler-karte';
+      k.setAttribute('role', 'alert');
+      k.innerHTML =
+        '<div class="fk-kopf"><span class="fk-zeichen">!</span>' +
+          '<b>Etwas ist schiefgelaufen</b>' +
+          '<button class="fk-zu" data-a="zu" aria-label="Meldung schliessen">✕</button></div>' +
+        '<div class="fk-satz">' + (fremd
+          ? 'Der Fehler kommt von ausserhalb — meist von einer Browser-Erweiterung ' +
+            'oder eingebettetem Inhalt. Redion läuft weiter.'
+          : 'Redion konnte diesen Schritt nicht ausführen. Deine Notizen sind davon ' +
+            'nicht betroffen.') + '</div>' +
+        '<div class="fk-knoepfe"><button data-a="kopieren">Details kopieren</button>' +
+          '<button data-a="zu">Schliessen</button></div>';
+      document.body.appendChild(k);
+      requestAnimationFrame(() => k.classList.add('auf'));
+
+      const einzelheiten = [text, ort, location.href, navigator.userAgent]
+        .filter(Boolean).join('\n');
+      k.addEventListener('click', async (ev) => {
+        const b = (ev.target instanceof Element) ? ev.target.closest('button') : null;
+        if (!b) return;
+        if (b.dataset.a === 'zu') { k.remove(); return; }
+        if (b.dataset.a !== 'kopieren') return;
+        try {
+          await navigator.clipboard.writeText(einzelheiten);
+          b.textContent = 'Kopiert';
+        } catch {
+          /* Ohne Zwischenablage (altes iOS, kein sicherer Kontext) wenigstens
+             zeigen, statt nur „ging nicht" zu sagen. */
+          b.textContent = 'Kopieren geht hier nicht';
+          const pre = document.createElement('pre');
+          pre.className = 'fk-roh';
+          pre.textContent = einzelheiten;
+          k.appendChild(pre);
+        }
+      });
     };
 
     addEventListener('error', (e) => {

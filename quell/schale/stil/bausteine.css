@@ -2077,3 +2077,59 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     bottom:calc(172px + env(safe-area-inset-bottom));
   }
 }
+
+/* ===========================================================================
+   FEHLERKARTE  (Telefon-Vorgabe Phase 8)
+   ---------------------------------------------------------------------------
+   Klein, oben, rund, gedämpftes Rot — keine Fläche über die ganze Breite,
+   die aussieht, als sei die Seite kaputt. Der technische Text steht nicht
+   darin, sondern hinter „Details kopieren".
+
+   `user-select:none`: im Bildschirmfoto vom 6. August war die Meldung
+   markiert, weil sie wie Inhalt aussah. Was man nicht anfassen soll, soll
+   sich auch nicht anfassen lassen.
+   =========================================================================*/
+#fehler-karte{
+  position:fixed; z-index:950; left:16px; right:16px; top:16px;
+  max-width:min(520px, calc(100vw - 32px)); margin:0 auto;
+  background:#2a1a1a; border:1px solid rgba(239,68,68,.45); border-radius:16px;
+  padding:14px 16px 12px; box-shadow:var(--shadow);
+  user-select:none; -webkit-user-select:none;
+  transform:translateY(-16px); opacity:0;
+  transition:transform .18s ease, opacity .18s ease;
+}
+#fehler-karte.auf{ transform:translateY(0); opacity:1 }
+@media(prefers-reduced-motion:reduce){ #fehler-karte{ transition:none } }
+
+.fk-kopf{ display:flex; align-items:center; gap:10px; margin-bottom:6px }
+.fk-zeichen{
+  width:24px; height:24px; flex:none; border-radius:50%;
+  background:rgba(239,68,68,.22); color:#ef4444;
+  display:grid; place-items:center; font-weight:700; font-size:14px;
+}
+.fk-kopf b{ font-size:15px; color:var(--text) }
+.fk-zu{
+  margin-left:auto; width:44px; height:44px; margin:-10px -10px -10px 0;
+  border-radius:50%; color:var(--text-dim); font-size:15px;
+  display:grid; place-items:center;
+}
+.fk-zu:active{ background:rgba(255,255,255,.08) }
+.fk-satz{ font-size:13.5px; line-height:1.55; color:var(--text-dim) }
+.fk-knoepfe{ display:flex; gap:8px; margin-top:12px }
+.fk-knoepfe button{
+  min-height:44px; padding:0 14px; border-radius:10px;
+  border:1px solid var(--line); color:var(--text-dim); font-size:13.5px;
+}
+.fk-knoepfe button:active{ background:rgba(255,255,255,.08) }
+.fk-roh{
+  margin-top:10px; padding:10px; border-radius:8px; background:rgba(0,0,0,.35);
+  font-size:11px; line-height:1.5; white-space:pre-wrap; word-break:break-all;
+  color:var(--text-faint); user-select:text; -webkit-user-select:text;
+  max-height:120px; overflow:auto;
+}
+
+/* Am Telefon sitzt oben die Pill-Navigation — die Karte gehört darunter,
+   nicht darauf, sonst verdeckt eine Meldung die Bedienung. */
+@media(max-width:760px){
+  #fehler-karte{ top:calc(88px + env(safe-area-inset-top)); left:14px; right:14px }
+}

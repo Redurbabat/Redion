@@ -218,6 +218,41 @@ a.bl:hover{color:var(--text)}
 }
 .home-liste button:hover{background:var(--bg-hover)}
 .home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
+
+/* ===========================================================================
+   DER START-BILDSCHIRM AM TELEFON (E37, Phase 3)
+   ---------------------------------------------------------------------------
+   Am Rechner ist `auto-fit minmax(190px)` richtig: die Karten füllen die
+   Breite, die da ist. Am Telefon ergab dieselbe Regel EINE Spalte —
+   190 px passen bei 28 px Rand nicht zweimal in 390 px, also stapelte sich
+   alles untereinander und man scrollte an vier Karten vorbei, um zur
+   Sicherung zu kommen. Zwei feste Spalten sind hier die bessere Antwort:
+   die vier Karten stehen als Block da, und darunter beginnt der Inhalt.
+
+   Die Zeilen darunter bekommen Fingerhöhe. 8 px Polster ergaben 34 px hohe
+   Zeilen — unter der 44er-Regel und in einer Liste, durch die man mit dem
+   Daumen fährt.
+   =========================================================================*/
+@media(max-width:760px){
+  .home{ padding:16px 0 20vh }
+  .home h1{ font-size:44px; line-height:1.05; font-weight:750; letter-spacing:-1px;
+            margin-bottom:24px }
+  .home h2{ font-size:13px; margin:28px 0 10px }
+
+  .home-karten{ grid-template-columns:1fr 1fr; gap:12px }
+  .hk{ padding:18px; border-radius:18px; gap:6px; min-height:96px; justify-content:center }
+  .hk b{ font-size:16px }
+  .hk span{ font-size:13px; line-height:1.4 }
+
+  .home-liste button{ min-height:54px; padding:10px 12px; font-size:16px; border-radius:12px }
+  .home-liste .pth{ font-size:12.5px }
+}
+
+/* Sehr schmale Geräte: eine Spalte ist ehrlicher als zwei zerquetschte. */
+@media(max-width:340px){
+  .home-karten{ grid-template-columns:1fr }
+  .home h1{ font-size:40px }
+}
 .home-liste .snip{display:block; font-size:12px; color:var(--text-dim)}
 .home-liste .leer{padding:8px 10px; font-size:13.5px; color:var(--text-faint)}
 /* Sicherungsstand.
