@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**6. August 2026 · 87 Prüfläufe grün**
+**6. August 2026 · 91 Prüfläufe grün**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
@@ -24,11 +24,13 @@ Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
 **Die drei Lücken, die alles andere aufhalten**
 
 ```txt
-1. Die Cloud ist nicht produktionsreif — Konto (L7), R2 für Dateien (L6),
-   und der Rest von L5 braucht einen Lauf gegen einen echten Server
-2. Rechte und Freigaben sind nicht produktionsreif (L8) — das blockiert
-   echtes Teilen
+1. Fehlerwerte sind nicht entschieden (L4) — das hält WENNFEHLER,
+   ISTFEHLER und die Fehleranzeige im Tabellenblock auf
+2. 180 der 262 Formelfunktionen haben keine Beschreibung (L9)
 3. Mobile läuft, ist aber nicht dafür gebaut (L10)
+
+Die Wolke ist seit dem 6. August durch: Konto (L7), Anhänge (L6),
+Konflikte (L5) und Rechte (L8) stehen und sind geprüft.
 ```
 
 ---
@@ -190,12 +192,25 @@ ungefragt hochgeladen (E1). Das Tor dazu steht in `abgleichen()` (E34).
 
 ## L8 · Rechte und Freigaben produktionsreif machen
 
-**Stand** — ◐ Rechte existieren, Spaltenrechte greifen in Oberfläche und
-Server.
+**Stand** — ✅ die Rechte sperren, und sie erlauben auch (6. August, E35).
 
-Fehlt: serverseitige Prüfung vollständig · öffentliche Seiten sicher
-trennen · private Anhänge nicht mitliefern · Feldrechte · Kommentarrechte ·
-Widerruf testen.
+```txt
+✅ serverseitige Prüfung  test75, test79, test121 — je Seite und je Spalte
+✅ öffentliche Seiten     Unterseiten gehen NICHT mit; nur der Titel steht da
+✅ private Anhänge        eine offene Seite macht keinen Anhang öffentlich
+✅ Feldrechte             feldFilter beim Lesen, feldSchutz beim Schreiben
+✅ Kommentarrechte        kommentarSchutz — die Rolle komm darf wirklich
+✅ Widerruf               Seite zurückziehen · Freigabe entziehen · Marke löschen
+```
+
+Drei Fehler kamen dabei heraus, alle aus derselben Richtung — eine Regel
+stand da, aber niemand hat sie je gefragt: Veröffentlichen nahm jede
+Unterseite mit, die Kommentarrolle konnte nicht kommentieren, und eine
+Marke mit `lesen` konnte nichts lesen. Die drei stehen in E35.
+
+**Was hier offen bleibt:** Rechte für Datenbank-ZEILEN (heute gilt die
+Seite, zu der die Zeile gehört) und ein Weg, eine Freigabe zeitlich zu
+begrenzen — beides ist eine eigene Entscheidung, kein Loch.
 
 ## L8b · Der Service Worker und die ehrliche Ersatzantwort
 

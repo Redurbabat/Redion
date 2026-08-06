@@ -66,7 +66,7 @@ import { seitenSchluessel, istGesperrt, zaehleFehlversuch, bremseLoesen,
          herkunft, GRENZEN } from './sicherheit/bremse.ts';
 import { mitSicherheitsKopf } from './sicherheit/kopfzeilen.ts';
 import { text as feldText, ausListe } from './sicherheit/eingaben.ts';
-import { torPruefen, darfMarke, MARKEN_RECHTE } from './sicherheit/marken.ts';
+import { torPruefen, darfMarke, rechteVon, MARKEN_RECHTE } from './sicherheit/marken.ts';
 import { dateiWeg } from './dateien.ts';
 
 /* Zeitkonstanter Vergleich — sonst verrät die Dauer, wie viel vom Token stimmt. */
@@ -672,6 +672,14 @@ const syncWeg = async (a: any, ablage: any, wer: any, t: any, m: any, k: any, ko
   const meine = await rolleAuf(ablage, bereichId, '*', wer.konto.id);
   const geraet = feldText(kopf['redion-geraet'], 'geraet');
 
+  /* REGEL 3 FÜR MARKEN, hier statt im Tor — beide Wege sind POST, und die
+     Methode verrät deshalb nichts (siehe `sicherheit/marken.ts`). Für eine
+     Sitzung ist `darfMarke` immer wahr; sie merkt von dieser Stelle nichts. */
+  const braucht = t[1] === 'hoch' ? 'schreiben' : 'lesen';
+  if (!darfMarke(wer, braucht)) return fehler(403, 'restricted_resource',
+    'Diese Marke darf nicht ' + braucht + '. Ihre Rechte: ' +
+    (rechteVon(wer).join(', ') || 'keine') + '.');
+
   /* --- Herunterladen --------------------------------------------------
    * Geprüft wird nicht die Bereichsrolle, sondern ob es überhaupt ein Recht
    * gibt — und dann jede Seite einzeln. Sonst käme jemand, der nur auf einer
@@ -730,11 +738,18 @@ const syncWeg = async (a: any, ablage: any, wer: any, t: any, m: any, k: any, ko
       if (!s || !s.id) { abgelehnt.push({ id: s && s.id, grund: 'ohne Kennung' }); continue; }
 
       /* Recht je Seite, nicht nur je Bereich */
+      let nurKommentar = false;
       if (meine !== 'voll') {
         const r = await rolleAuf(ablage, bereichId, s.seite || s.id, wer.konto.id);
         if (!darf(r, 'bearbeiten')) {
-          abgelehnt.push({ id: s.id, grund: 'kein Schreibrecht auf dieser Seite' });
-          continue;
+          /* Wer kommentieren darf, kommt hier nicht mehr raus — sein
+             Kommentar geht durch, alles andere daran nicht. Siehe
+             `kommentarSchutz`. */
+          if (!darf(r, 'kommentieren')) {
+            abgelehnt.push({ id: s.id, grund: 'kein Schreibrecht auf dieser Seite' });
+            continue;
+          }
+          nurKommentar = true;
         }
       }
 
@@ -753,7 +768,13 @@ const syncWeg = async (a: any, ablage: any, wer: any, t: any, m: any, k: any, ko
          zurück — der Rest der Zeile geht trotzdem durch. Alles abzulehnen
          hiesse, eine erlaubte Änderung wegen einer unerlaubten zu verlieren. */
       let daten = String(s.daten ?? '');
-      if (wer.konto.id !== bereich.besitzer) {
+      if (nurKommentar) {
+        const k2 = kommentarSchutz(s, alt);
+        if (!k2.ok) { abgelehnt.push({ id: s.id, grund: k2.grund }); continue; }
+        daten = String(k2.daten);
+        angepasst.push({ id: s.id, felder: ['kommentare'],
+          grund: 'Nur der Kommentar wurde übernommen — mehr darf diese Rolle nicht.' });
+      } else if (wer.konto.id !== bereich.besitzer) {
         const sch = await feldSchutz(ablage, bereichId, wer.konto.id, s, alt);
         if (sch.zurueck.length) {
           daten = sch.daten;
@@ -953,6 +974,48 @@ export const feldSchutz = async (ablage: any, bereichId: any, kontoId: any, s: a
   });
   if (!zurueck.length) return { daten: s.daten, zurueck: [] };
   return { daten: JSON.stringify(satz), zurueck };
+};
+
+/**
+ * Wer nur kommentieren darf, darf **das** auch wirklich.
+ *
+ * WARUM ES DIESE FUNKTION GIBT. Die Rolle `komm` verspricht „lesen und
+ * kommentieren", und `ROLLEN` führt das Recht seit jeher — geprüft hat es
+ * nie jemand. Ein Kommentar ist in Redion kein eigener Satz, sondern das
+ * Feld `kommentare` AM BLOCK; er geht also als gewöhnliche Blockänderung
+ * durch `/sync/hoch`, und dort stand nur die Frage nach `bearbeiten`. Ein
+ * Kommentator schrieb seinen Kommentar, sah ihn auf seinem Gerät stehen —
+ * und er kam nie an. Keine Meldung, kein Fehler, nur weg.
+ *
+ * Dasselbe Muster wie `feldSchutz`: der Satz geht durch, aber nur das eine
+ * erlaubte Feld. Alles andere kommt auf seinen alten Wert zurück, statt
+ * die ganze Änderung abzulehnen.
+ *
+ * DIE EHRLICHE GRENZE: verschlüsselte Sätze kann der Server nicht ansehen,
+ * also auch nicht so beschneiden. Das trifft hier niemanden — eine Seite,
+ * die man mit jemandem teilt, liegt ohnehin im Klartext (sonst könnte der
+ * Server sie nicht ausliefern). Ein verschlüsselter Satz von jemandem, der
+ * nur kommentieren darf, wird deshalb abgelehnt und sagt auch warum.
+ */
+export const kommentarSchutz = (s: any, alt: any) => {
+  if (!alt) return { ok: false, grund: 'Wer nur kommentieren darf, legt nichts Neues an.' };
+  if (s.verschluesselt || alt.verschluesselt) return { ok: false,
+    grund: 'Verschlüsselte Seiten kann der Server nicht auf den Kommentar beschneiden. ' +
+           'Zum Kommentieren muss die Seite geteilt und damit lesbar sein.' };
+  if (String(s.tabelle || 'blocks') !== 'blocks') return { ok: false,
+    grund: 'Kommentiert wird an Blöcken, nicht an Sammlungen oder Ansichten.' };
+  let neuSatz, altSatz;
+  try { neuSatz = JSON.parse(s.daten); altSatz = JSON.parse(alt.daten); }
+  catch { return { ok: false, grund: 'Der Satz ist nicht lesbar.' }; }
+  if (!neuSatz || !altSatz) return { ok: false, grund: 'Der Satz ist leer.' };
+
+  /* Der alte Satz, und daraus genau zwei Felder neu: die Kommentare und der
+     Zeitstempel, ohne den die anderen Geräte die Änderung nie holen. */
+  const gemischt = { ...altSatz, kommentare: neuSatz.kommentare ?? altSatz.kommentare,
+                     edited: neuSatz.edited ?? altSatz.edited };
+  if (JSON.stringify(gemischt.kommentare ?? null) === JSON.stringify(altSatz.kommentare ?? null))
+    return { ok: false, grund: 'Ausser einem Kommentar darf hier nichts geändert werden.' };
+  return { ok: true, daten: JSON.stringify(gemischt) };
 };
 
 const feldrechtWeg = async (a: any, ablage: any, wer: any, _t: any, m: any, k: any) => {

@@ -30,6 +30,7 @@
 
 import type { Ablage, Umwelt } from './typen.ts';
 import { antwort, fehler, jetzt, darf, rolleAuf, irgendeinRecht } from './kern.ts';
+import { darfMarke, rechteVon } from './sicherheit/marken.ts';
 import { text as feldText } from './sicherheit/eingaben.ts';
 
 const MB = 1024 * 1024;
@@ -70,6 +71,14 @@ export const dateiWeg = async (_a: unknown, ablage: Ablage, umwelt: Umwelt,
     'in wrangler.toml binden — die Schritte stehen in SERVER-EINRICHTEN.md.');
 
   if (m !== 'POST') return fehler(405, 'method_not_allowed', 'Hier geht nur POST.');
+
+  /* Regel 3 für Marken, hier statt im Tor: alle fünf Wege sind POST, die
+     Methode verrät also nichts. Holen und Stand sind Lesen, der Rest ist
+     Schreiben. Für eine Sitzung ist `darfMarke` immer wahr. */
+  const brauchtRecht = (t[1] === 'runter' || t[1] === 'stand') ? 'lesen' : 'schreiben';
+  if (!darfMarke(wer, brauchtRecht)) return fehler(403, 'restricted_resource',
+    'Diese Marke darf nicht ' + brauchtRecht + '. Ihre Rechte: ' +
+    (rechteVon(wer).join(', ') || 'keine') + '.');
 
   const bereichId = String(k.bereich || '');
   const bereich = await ablage.hole('bereiche', { id: bereichId });

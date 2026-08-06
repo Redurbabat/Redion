@@ -68,7 +68,20 @@ const SCHREIBT = ['POST', 'PUT', 'PATCH', 'DELETE'];
  * zu führen. Dann stünde das Wissen über die Route an zwei Orten — und beim
  * nächsten neuen Endpunkt an einem davon nicht.
  */
-const SELBST_PRUEFEND = ['v1', 'mcp'];
+const SELBST_PRUEFEND = ['v1', 'mcp', 'sync', 'datei'];
+
+/* NACHGETRAGEN AM 6. AUGUST: `sync` und `datei` gehören in dieselbe Reihe,
+   und dass sie fehlten, machte das Leserecht wertlos. Beide Abgleichswege
+   sind POST — der Filter (`seit`, `bereich`) gehört in den Körper —, und
+   das Tor las daraus „schreibt". Eine Marke mit `lesen` bekam auf
+   `/sync/runter` die Antwort „Diese Marke darf nicht schreiben": sie
+   konnte nichts lesen. Wer lesen wollte, musste `schreiben` vergeben —
+   und damit genau das Recht, den ganzen Bestand zu ersetzen, gegen das
+   dieses Tor gebaut wurde.
+
+   Die Routen stellen die Frage jetzt selbst, mit derselben `darfMarke`:
+   runter und stand brauchen `lesen`, hoch, melden, stueck und weg
+   brauchen `schreiben`. */
 
 /** Die Rechte dieser Marke als Liste — eine Sitzung hat sie alle. */
 export const rechteVon = (wer: any) => {

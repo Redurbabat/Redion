@@ -1204,7 +1204,15 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         else if (b.type === 'database') h += datenbankHtml(b);
         else if (b.type === 'page') h += `<p>📄 <b>${esc(t || 'Ohne Titel')}</b></p>`;
         else if (t) h += `<p>${Blocks.inline(t)}</p>`;
-        if (b.type !== 'toggle') h += raus(b.id, tiefe + 1);
+        /* NICHT in Unterseiten hineingehen. Eine Unterseite steht hier mit
+           ihrem Titel da — und genau das hat der Mensch gesehen, als er auf
+           „Veröffentlichen" drückte. Vorher lief diese Zeile auch über
+           `page`, und der ganze Inhalt jeder Unterseite hing rekursiv mit
+           im veröffentlichten HTML: wer „Projekt X" freigab, gab die
+           Unterseite „Gehälter" gleich mit frei, ohne dass irgendwo etwas
+           davon stand. Eine eigene Seite wird eigens veröffentlicht.
+           `toggle` steht schon hier, weil es seine Kinder selbst einfügt. */
+        if (b.type !== 'toggle' && b.type !== 'page') h += raus(b.id, tiefe + 1);
       });
       return h;
     };
