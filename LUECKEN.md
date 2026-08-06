@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**6. August 2026 · 87 Prüfläufe grün**
+**6. August 2026 · 91 Prüfläufe grün**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
@@ -24,11 +24,13 @@ Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
 **Die drei Lücken, die alles andere aufhalten**
 
 ```txt
-1. Die Cloud ist nicht produktionsreif — Konto (L7), R2 für Dateien (L6),
-   und der Rest von L5 braucht einen Lauf gegen einen echten Server
-2. Rechte und Freigaben sind nicht produktionsreif (L8) — das blockiert
-   echtes Teilen
+1. Fehlerwerte sind nicht entschieden (L4) — das hält WENNFEHLER,
+   ISTFEHLER und die Fehleranzeige im Tabellenblock auf
+2. 180 der 262 Formelfunktionen haben keine Beschreibung (L9)
 3. Mobile läuft, ist aber nicht dafür gebaut (L10)
+
+Die Wolke ist seit dem 6. August durch: Konto (L7), Anhänge (L6),
+Konflikte (L5) und Rechte (L8) stehen und sind geprüft.
 ```
 
 ---
@@ -129,9 +131,8 @@ füllt.
 „steht am Ende die eine oder die andere Fassung da — oder ist ein Konflikt
 gemeldet?"), `test78` (zwei Chromium-Geräte ändern gleichzeitig) und seit
 dem 6. August `test118`: Gerät A ändert offline, das **Wiederverbinden
-allein** stösst den Abgleich an, und die dateiId eines Anhangs überlebt
-den Abgleich auf beiden Geräten. Die Bytes selbst bleiben ausdrücklich
-zurück, bis G2 (L6) gebaut ist — `test113` und `test118` halten das fest.
+allein** stösst den Abgleich an, und Anhänge kommen samt Bytes hinüber —
+Byte für Byte, verschlüsselt unterwegs (seit G2, E33).
 
 Zwei Fehler, die diese Läufe gefunden haben: der `online`-Handler zeigte
 nur einen Toast statt abzugleichen, und `/sync/runter` liess die Marke vor
@@ -171,23 +172,45 @@ das Wie steht in E33.
 
 ## L7 · Konto-Modus
 
-**Stand** — ◐ Server- und Kontologik existieren, der Nutzerfluss nicht.
+**Stand** — ✅ der Nutzerfluss steht (6. August, E34).
 
-Fehlt: Registrierung · Login · Sitzungen · Logout · lokal bleiben ·
-lokal + Sync wählen · Cloud-Arbeitsbereich · Offline-Paket herunterladen ·
-Konto löschen · alles exportieren.
+Anmelden (GitHub, Google, Gerätecode) gab es schon; neu ist die
+Entscheidung dahinter: **anmelden ist nicht zustimmen.** Der Schalter
+`wolkeAbgleich` trennt „nur lokal" von „lokal + Abgleich", die Oberfläche
+fragt ausdrücklich, und ohne das Ja verlässt kein Satz das Gerät —
+`test120` beweist es am echten Server. Abmelden warnt und lässt die
+Notizen da; **Konto löschen** räumt serverseitig die volle Kaskade und
+verlangt die abgetippte Mail-Adresse; „Alles als .redion sichern" steht
+direkt daneben.
+
+Offen bleibt der Cloud-Arbeitsbereich als eigenes Konzept (mehrere
+Bereiche wählen und anlegen in der Oberfläche) — bisher nimmt das Gerät
+den ersten Bereich des Kontos.
 
 **Regel** — ein Konto darf nie Pflicht sein, und lokale Daten werden nie
-ungefragt hochgeladen (E1).
+ungefragt hochgeladen (E1). Das Tor dazu steht in `abgleichen()` (E34).
 
 ## L8 · Rechte und Freigaben produktionsreif machen
 
-**Stand** — ◐ Rechte existieren, Spaltenrechte greifen in Oberfläche und
-Server.
+**Stand** — ✅ die Rechte sperren, und sie erlauben auch (6. August, E35).
 
-Fehlt: serverseitige Prüfung vollständig · öffentliche Seiten sicher
-trennen · private Anhänge nicht mitliefern · Feldrechte · Kommentarrechte ·
-Widerruf testen.
+```txt
+✅ serverseitige Prüfung  test75, test79, test121 — je Seite und je Spalte
+✅ öffentliche Seiten     Unterseiten gehen NICHT mit; nur der Titel steht da
+✅ private Anhänge        eine offene Seite macht keinen Anhang öffentlich
+✅ Feldrechte             feldFilter beim Lesen, feldSchutz beim Schreiben
+✅ Kommentarrechte        kommentarSchutz — die Rolle komm darf wirklich
+✅ Widerruf               Seite zurückziehen · Freigabe entziehen · Marke löschen
+```
+
+Drei Fehler kamen dabei heraus, alle aus derselben Richtung — eine Regel
+stand da, aber niemand hat sie je gefragt: Veröffentlichen nahm jede
+Unterseite mit, die Kommentarrolle konnte nicht kommentieren, und eine
+Marke mit `lesen` konnte nichts lesen. Die drei stehen in E35.
+
+**Was hier offen bleibt:** Rechte für Datenbank-ZEILEN (heute gilt die
+Seite, zu der die Zeile gehört) und ein Weg, eine Freigabe zeitlich zu
+begrenzen — beides ist eine eigene Entscheidung, kein Loch.
 
 ## L8b · Der Service Worker und die ehrliche Ersatzantwort
 

@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**6. August 2026 · 87 Prüfläufe grün**
+**6. August 2026 · 91 Prüfläufe grün**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -50,8 +50,14 @@ Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
    0 handgeschriebene JS-Dateien, siehe doku/BUENDEL-11-BIS-24.md
 2. ~~Der Spreadsheet-Block — die Funktionen sind da, die Tabelle fehlt~~
    · **erledigt**, siehe Phase 7a und `ENTSCHEIDUNGEN.md` E29
-3. Cloudflare, Konto und Sync sind nicht produktionsreif
+3. ~~Cloudflare, Konto und Sync sind nicht produktionsreif~~
+   · **Phase 9 erledigt** am 6. August: G1 Konto (E34) · G2 Anhänge in R2
+     (E33) · G3 Konflikte und Offline (test118) · G4 Rechte (E35)
 ```
+
+**Was jetzt obenauf liegt:** die Fehlerwert-Entscheidung (L4, hält
+`WENNFEHLER` und die Fehleranzeige im Tabellenblock auf) und die 180
+Formelfunktionen ohne Beschreibung (L9).
 
 ---
 
@@ -533,11 +539,24 @@ Zeichen jetzt, ausserhalb von Anführungszeichen gezählt.
 
 ## Phase 9 · Cloudflare, Konto und Sync
 
-**G1 — Konto-Modus.** Ohne Konto nutzen · Konto anlegen · anmelden ·
-abmelden · lokal bleiben · lokal + Sync wählen · Cloud-Arbeitsbereich ·
-Konto löschen · alles exportieren.
+**G4 — Rechte und Freigaben.** ✅ **erledigt** (6. August, E35):
+Veröffentlichen nimmt keine Unterseite mehr mit, die Kommentarrolle darf
+wirklich kommentieren, und eine Marke mit `lesen` darf lesen (beide
+Abgleichswege sind POST — das Tor las daraus „schreibt"). Widerruf in
+seinen drei Formen geprüft, und eine offene Seite macht keinen Anhang
+öffentlich. `test121`, 24 Punkte. Offen bleibt: Rechte je Datenbankzeile
+und zeitlich begrenzte Freigaben — beides eigene Entscheidungen, siehe L8.
+
+**~~G1 — Konto-Modus.~~** ✅ **erledigt** (6. August, E34): Anmelden ist
+nicht mehr Zustimmen — der Schalter `wolkeAbgleich` trennt „nur lokal"
+von „lokal + Abgleich", die Oberfläche fragt ausdrücklich, `test120`
+beweist am echten Server: ohne das Ja bleibt er leer. Abmelden warnt und
+lässt die Notizen da; Konto löschen räumt die volle Server-Kaskade und
+verlangt die abgetippte Mail; „Alles als .redion sichern" steht daneben.
+**Offen bleibt** der Cloud-Arbeitsbereich als eigenes Konzept (mehrere
+Bereiche in der Oberfläche wählen und anlegen) — siehe L7.
 **Regel:** lokale Daten werden **nie** ohne ausdrückliche Zustimmung
-hochgeladen (E1).
+hochgeladen (E1). Das Tor steht in `abgleichen()`.
 
 **~~G2 — R2 für Dateien.~~** ✅ **erledigt** (6. August, E33): Server-Wege
 in `server/dateien.ts`, Client-Abgleich in `maschine.ts` Abschnitt 6b —

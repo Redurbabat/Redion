@@ -1648,3 +1648,98 @@ kostet; das `.redion`-Archiv in R2 als Cloud-Sicherung; und Dateien über
 Beide Hälften beschlossen und umgesetzt (`server/dateien.ts` + Abschnitt 6b
 in `maschine.ts`; `test119` 19 Punkte, `test118` Abschnitt 3, `test113`
 Abschnitt 8).
+
+
+## E34 · Der Konto-Modus — anmelden ist nicht zustimmen
+
+**Der Fehler zuerst.** E1 sagt seit dem ersten Tag: lokale Daten werden nie
+ohne ausdrückliche Zustimmung hochgeladen. Gestimmt hat das nicht — wer
+sich anmeldete und die App neu lud, dessen gesamter Bestand ging beim
+ersten Takt zum Server. Niemand hatte je Ja gesagt; das Anmelden galt
+stillschweigend als Zustimmung. Das sind aber zwei Entscheidungen: WER man
+ist, und WAS dieses Gerät hergibt.
+
+**Beschluss.** Zwischen angemeldet und abgeglichen steht ein Schalter:
+`wolkeAbgleich`. Alles, was abgleicht — Takt, Sichtwechsel, das
+online-Ereignis, der Knopf — läuft durch `abgleichen()`, und dort steht
+das Tor. Nach dem Anmelden stellt die Oberfläche die Frage ausdrücklich;
+„Abbrechen" heisst angemeldet bleiben und nur lokal arbeiten. Das
+Wolke-Fenster zeigt den Modus als erste Karte und lässt ihn jederzeit
+wechseln.
+
+**Bestandsgeräte** bleiben freigeschaltet: wer vor dem Schalter schon
+abgeglichen hat, hat sein Ja längst gegeben — die Sync-Marken sind der
+Beleg. Ein stiller Sync-Stopp wäre die falsche Sorte Überraschung.
+Abmelden setzt den Schalter zurück; das nächste Konto wird neu gefragt.
+
+**Konto löschen** gibt es jetzt wirklich: `/konto/loeschen` räumt die
+volle Kaskade — eigene Bereiche samt Sätzen, Dateien und ihren Stücken im
+Blob-Speicher, Freigaben, veröffentlichte Seiten, Protokoll, Feldrechte,
+dann fremde Freigaben an dieses Konto, Marken, Sitzungen, zuletzt den
+Kontosatz. Eine Marke darf das nicht — nur ein Mensch mit Sitzung. Die
+Oberfläche verlangt die abgetippte Mail-Adresse: ein Klick zu viel darf
+hier nichts kosten. Und die Notizen auf dem Gerät bleiben — Priorität 1
+gilt auch beim Aufhören.
+
+**Status**
+
+Beschlossen und umgesetzt. `test120` (Suite 84, 21 Punkte): ohne das Ja
+bleibt der Server leer; die Lösch-Kaskade lässt nichts zurück und fremde
+Konten in Ruhe; nach dem Löschen sind die lokalen Notizen noch da.
+
+
+## E35 · Rechte, die wirklich sperren — und Rechte, die wirklich erlauben
+
+**Drei Fehler an einem Nachmittag, und alle drei kommen aus derselben
+Richtung:** eine Regel stand da, aber niemand hat sie je gefragt.
+
+**1 · Veröffentlichen nahm jede Unterseite mit.** `seiteAlsHtml` stellte
+eine Unterseite mit ihrem Titel dar — „📄 Gehälter" — und hängte danach
+ihren ganzen Inhalt an, rekursiv über alle Ebenen. Wer „Projekt X"
+veröffentlichte, veröffentlichte alles darunter. Der Mensch sah den Titel
+und hielt ihn für einen Verweis; das war er auch, aber der Inhalt stand
+zwei Zeilen später trotzdem da.
+
+**Beschluss:** eine Unterseite steht mit ihrem Titel da und sonst nichts.
+Wer sie veröffentlichen will, veröffentlicht sie eigens. Der Aufklapper
+(`toggle`) geht weiterhin mit — er ist keine eigene Seite, sondern
+zusammengeklappter Text derselben.
+
+**2 · Die Kommentarrolle durfte nicht kommentieren.** `ROLLEN` führt das
+Recht `kommentieren` seit jeher, und `komm` verspricht es. Geprüft hat es
+nie jemand: ein Kommentar ist in Redion das Feld `kommentare` AM BLOCK,
+geht also als gewöhnliche Blockänderung durch `/sync/hoch` — und dort
+stand nur die Frage nach `bearbeiten`. Der Kommentar blieb auf dem Gerät
+des Kommentators stehen, ohne Meldung.
+
+**Beschluss:** `kommentarSchutz` nach dem Muster von `feldSchutz` — der
+Satz geht durch, aber nur das Feld `kommentare` (und `edited`, sonst holt
+ihn niemand). Alles andere kommt auf seinen alten Wert zurück, statt die
+ganze Änderung abzulehnen. Eine reine Textänderung ohne Kommentar wird
+abgelehnt und sagt warum.
+
+**Die ehrliche Grenze:** verschlüsselte Sätze kann der Server nicht
+beschneiden, weil er sie nicht liest. Das trifft niemanden — eine geteilte
+Seite liegt ohnehin im Klartext, sonst könnte der Server sie gar nicht
+ausliefern.
+
+**3 · Eine Marke mit „lesen" konnte nichts lesen.** Das Marken-Tor
+entscheidet nach HTTP-Methode: POST heisst schreiben. Beide Abgleichswege
+sind aber POST — der Filter (`seit`, `bereich`) gehört in den Körper —,
+und so bekam ein reines Leserecht auf `/sync/runter` die Antwort „Diese
+Marke darf nicht schreiben". Wer eine Marke zum Lesen brauchte, musste ihr
+`schreiben` geben: genau das Recht, den ganzen Bestand zu ersetzen, gegen
+das dieses Tor einmal gebaut wurde. Das Loch war zugemauert und daneben
+eine Tür eingebaut.
+
+**Beschluss:** `sync` und `datei` kommen in die selbstprüfende Familie, wie
+`v1` und `mcp` es längst sind. `runter` und `stand` verlangen `lesen`,
+`hoch`, `melden`, `stueck` und `weg` verlangen `schreiben` — mit derselben
+`darfMarke`, nicht mit einer zweiten Rechnung.
+
+**Status**
+
+Beschlossen und umgesetzt. `test121` (Suite 85, 24 Punkte) hält alle drei
+fest, dazu den Widerruf in seinen drei Formen (Seite zurückziehen,
+Freigabe entziehen, Marke löschen) und den Satz, der zu G2 gehört: eine
+veröffentlichte Seite macht keinen Anhang öffentlich.
