@@ -1034,7 +1034,7 @@ const Werkzeuge = (() => {
   const dateienLesen = () => {
     const inp = document.createElement('input');
     inp.type = 'file';
-    inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.docx,.epub,image/*';
+    inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,.docx,.epub,image/*';
     inp.multiple = true;
     inp.addEventListener('change', async () => {
       let n = 0;

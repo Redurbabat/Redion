@@ -34,6 +34,128 @@ const Ansichten = (() => {
         const teil = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
         return teil + (name && name !== 'Ich' ? ', ' + name : '');
     };
+    /* --------------------------------------------------------------------------
+     * SICHERUNGSSTAND auf dem Start-Bildschirm
+     * ---------------------------------------------------------------------------
+     * Der Zeitstempel lag bisher im Verschlüsselungs-Dialog, drei Klicks tief in
+     * den Einstellungen. Dort sieht ihn, wer ohnehin ans Sichern denkt. Wer
+     * nicht daran denkt — und das ist der Fall, für den die Anzeige da ist —
+     * kommt nie dorthin. Also steht er jetzt da, wo man jeden Morgen hinschaut.
+     *
+     * Abgestuft, und das ist der eigentliche Punkt. Eine Warnung, die immer
+     * gleich laut ist, wird zur Tapete. Frisch gesichert heisst deshalb: eine
+     * ruhige Zeile. Länger her heisst: ein Hinweis mit Knopf. Nie gesichert
+     * heisst: ein Hinweis, den man nicht überliest. Die Stelle auf der Seite
+     * bleibt in allen drei Fällen dieselbe, damit nichts springt.
+     * ------------------------------------------------------------------------ */
+    const TAG = 86400000;
+    /** Ab hier erinnern (eine Woche) bzw. warnen (ein Monat). */
+    const SICHERUNG_ERINNERN = 7;
+    const SICHERUNG_WARNEN = 30;
+    const sicherungsstand = () => {
+        const wann = String(Store.getMeta('sicherung:zuletzt', '') || '');
+        const art = String(Store.getMeta('sicherung:art', '') || '');
+        const zeit = wann ? Date.parse(wann) : NaN;
+        /* Ein unlesbarer Zeitstempel ist wie keiner — nicht wie ein frischer. */
+        if (!wann || Number.isNaN(zeit))
+            return { stufe: 'warnen', tage: null, art, wann: '' };
+        const tage = Math.max(0, Math.floor((Date.now() - zeit) / TAG));
+        const stufe = tage >= SICHERUNG_WARNEN ? 'warnen'
+            : tage >= SICHERUNG_ERINNERN ? 'erinnern' : 'gut';
+        return { stufe, tage, art, wann };
+    };
+    const sicherungBand = () => {
+        const s = sicherungsstand();
+        const wieLang = s.tage === null ? ''
+            : s.tage === 0 ? 'heute'
+                : s.tage === 1 ? 'gestern'
+                    : 'vor ' + s.tage + ' Tagen';
+        if (s.stufe === 'gut') {
+            /* Alles in Ordnung: eine Zeile, kein Kasten, kein Ausrufezeichen. */
+            const ohneAnhaenge = s.art === 'json'
+                ? ' · JSON-Sicherung, ohne Anhänge' : '';
+            return '<div class="home-sich home-sich-gut">' +
+                `<span class="hs-zeichen">✓</span>` +
+                `<span class="hs-text">Gesichert ${esc(wieLang)}` +
+                `<em>${esc(Werkzeuge.zeitKurz(s.wann))}${esc(ohneAnhaenge)}</em></span>` +
+                '<button class="hs-still" data-a="sichern">Sichern</button>' +
+                '</div>';
+        }
+        const nie = s.tage === null;
+        return `<div class="home-sich home-sich-${s.stufe}">` +
+            `<span class="hs-zeichen">${nie ? '!' : '⏳'}</span>` +
+            '<span class="hs-text">' +
+            `<b>${nie ? 'Noch nie gesichert' : 'Zuletzt gesichert ' + esc(wieLang)}</b>` +
+            `<em>${nie
+                ? 'Deine Seiten liegen nur in diesem Browser. Eine Sicherung ist eine Datei auf deinem Gerät.'
+                : 'Was seitdem entstanden ist, liegt nur in diesem Browser.'}</em>` +
+            '</span>' +
+            '<button class="hs-tun prim" data-a="sichern">Jetzt sichern</button>' +
+            '</div>';
+    };
+    /* --------------------------------------------------------------------------
+     * PRIVAT — die eigenen Seiten auf oberster Ebene
+     * ---------------------------------------------------------------------------
+     * „Zuletzt bearbeitet" beantwortet: woran war ich dran? Diese Liste
+     * beantwortet: was habe ich überhaupt? Das ist auf dem Handy die
+     * wichtigere Frage, weil es dort keine Seitenleiste mit dem Baum gibt.
+     * ------------------------------------------------------------------------ */
+    const PRIVAT_MAX = 8;
+    const privatListe = () => {
+        const alle = Store.rootPages().filter((p) => !p.system);
+        const wurzeln = alle.slice(0, PRIVAT_MAX);
+        if (!wurzeln.length)
+            return '';
+        const mehr = alle.length - wurzeln.length;
+        return '<h2>Privat</h2><div class="home-liste">' +
+            wurzeln.map((p) => {
+                const kinder = Store.childrenOf(p.id)
+                    .filter((k) => k.type === 'page' && k.alive).length;
+                return `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '📄')}</span>` +
+                    `<span style="flex:1">${esc(p.text || 'Ohne Titel')}</span>` +
+                    `<span class="pth">${kinder ? kinder + (kinder === 1 ? ' Unterseite' : ' Unterseiten') : ''}</span>` +
+                    '</button>';
+            }).join('') +
+            (mehr > 0 ? `<div class="leer">und ${mehr} weitere in der Seitenleiste</div>` : '') +
+            '</div>';
+    };
+    /* --------------------------------------------------------------------------
+     * SCHNELLZUGRIFF — was der Nutzer selbst nach oben gestellt hat
+     * ---------------------------------------------------------------------------
+     * Der Wunsch war: „Ausbildung" und „Mediathek" als eigene Kacheln auf dem
+     * Start-Bildschirm. Zwei feste Kacheln einzubauen wäre die kurze Antwort —
+     * und die falsche: der Nächste braucht „Rezepte" und „Trainingsplan", und
+     * dann stehen vier Kacheln da, die niemand bestellt hat.
+     *
+     * Redion kennt bereits einen Begriff dafür, dass etwas wichtig ist: den
+     * Stern. Wer eine Seite mit ★ markiert, stellt sie damit nach oben — in der
+     * Seitenleiste und ab jetzt auch hier. Kein zweites Anheften, kein
+     * Einstellungsdialog, keine Liste, die man doppelt pflegt.
+     *
+     * Vier Stück, mehr nicht. Der Schnellzugriff soll der erste Blick sein,
+     * nicht das Inhaltsverzeichnis; alles Weitere steht in der Seitenleiste.
+     * ------------------------------------------------------------------------ */
+    const SCHNELL_MAX = 4;
+    const schnellKarten = () => {
+        const sterne = Links.seiten()
+            .filter((p) => p.favorite && !p.system)
+            .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
+            .slice(0, SCHNELL_MAX);
+        if (!sterne.length)
+            return '';
+        return '<h2>Schnellzugriff</h2><div class="home-karten">' +
+            sterne.map((p) => {
+                const kinder = Store.childrenOf(p.id)
+                    .filter((k) => k.type === 'page' && k.alive).length;
+                const unten = kinder
+                    ? kinder + (kinder === 1 ? ' Unterseite' : ' Unterseiten')
+                    : Werkzeuge.zeitKurz(p.edited);
+                return `<button class="hk" data-open="${esc(p.id)}">` +
+                    `<b>${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</b>` +
+                    `<span>${esc(unten)}</span></button>`;
+            }).join('') +
+            '</div>';
+    };
     const start = () => {
         const f = flaeche();
         if (!f)
@@ -57,9 +179,13 @@ const Ansichten = (() => {
                 `<span>${journalHeute ? 'Heutiger Eintrag ist angelegt' : 'Heutigen Eintrag anlegen'}</span></button>` +
                 `<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b><span>Gedanken sofort festhalten</span></button>` +
                 `<button class="hk" data-a="lernen"><b>🎴 Karteikarten</b>` +
-                `<span>${karten ? karten + ' Karten fällig' : 'Keine Karten fällig'}</span></button>` +
+                /* „1 Karten fällig" stand hier, seit es die Karte gibt. */
+                `<span>${karten ? karten + (karten === 1 ? ' Karte fällig' : ' Karten fällig')
+                    : 'Keine Karten fällig'}</span></button>` +
                 `<button class="hk" data-a="graph"><b>🕸 Graph</b><span>Wie alles zusammenhängt</span></button>` +
                 '</div>' +
+                sicherungBand() +
+                schnellKarten() +
                 '<h2>Zuletzt bearbeitet</h2>' +
                 '<div class="home-liste">' +
                 (zuletzt.length ? zuletzt.map((p) => `<button data-open="${p.id}"><span>${esc(p.icon || '📄')}</span>` +
@@ -73,6 +199,7 @@ const Ansichten = (() => {
                             `<span class="pth">${esc(new Date(e.zeit).toLocaleString('de-DE'))}</span></button>`).join('') +
                         '</div>'
                     : '') +
+                privatListe() +
                 `<h2>Dein Arbeitsbereich</h2>` +
                 `<div class="home-zahlen">` +
                 zahl(Links.seiten().length, 'Seiten') +
@@ -99,6 +226,15 @@ const Ansichten = (() => {
                 Werkzeuge.lernen();
             if (a.dataset['a'] === 'graph')
                 Links.graph();
+            /* Der Knopf im Sicherungsband — derselbe Weg wie in den Einstellungen.
+               Danach den Start-Bildschirm neu zeichnen, damit die Anzeige stimmt;
+               wer sichert, will sehen, dass es gezählt hat. */
+            if (a.dataset['a'] === 'sichern') {
+                void Promise.resolve(App.sicherungSpeichern()).then(() => {
+                    if (document.getElementById('page')?.querySelector('.home-sich'))
+                        start();
+                });
+            }
         });
     };
     const zahl = (n, name) => `<div class="hz"><b>${n}</b><span>${name}</span></div>`;

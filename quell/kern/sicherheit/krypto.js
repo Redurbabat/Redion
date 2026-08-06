@@ -186,6 +186,9 @@ const Krypto = (() => {
         a.download = name;
         a.click();
         Store.setMeta('sicherung:zuletzt', new Date().toISOString());
+        /* Auch dieser Weg schreibt JSON — ohne Anhänge. Der Start-Bildschirm sagt
+           das jetzt dazu, also muss hier stehen, was für eine Sicherung es war. */
+        Store.setMeta('sicherung:art', 'json');
         return name;
     };
     /**
