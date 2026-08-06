@@ -920,13 +920,13 @@ const Store = (() => {
     const flush = () => {
         if (!db) {
             pending.clear();
-            return;
+            return Promise.resolve();
         }
         const schluessel = [...pending.keys()];
         const posten = [...pending.values()];
         pending.clear();
         if (!posten.length)
-            return;
+            return Promise.resolve();
         let fertig;
         try {
             const faecher = [...new Set(posten.map(x => x.store))];
@@ -960,6 +960,7 @@ const Store = (() => {
            daraus, der Satz sei gelöscht. Eine Meldung über eine Änderung, die es
            noch nicht gibt, ist schlimmer als gar keine. */
         fertig.then(() => meldeAnAndereFenster('geaendert', schluessel));
+        return fertig;
     };
     /* Vor dem Schließen des Tabs alles rausschreiben. */
     window.addEventListener('beforeunload', flush);
