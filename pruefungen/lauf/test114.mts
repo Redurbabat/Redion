@@ -565,6 +565,70 @@ for (const breite of [375, 390]) {
   await schmal.close();
 }
 
+console.log('\n12 · Das Blatt „Neu erstellen" hinter dem Stift');
+
+/* WAS DER STIFT VORHER TAT: sofort eine leere Seite anlegen. Richtig für
+   den, der genau das will — eine Sackgasse für alle anderen. Redion kann
+   Datenbanken, Tabellen, Aufgaben, Karteikarten, Dateien und Vorlagen, und
+   keines davon war von hier aus erreichbar. Wer nicht wusste, dass es
+   Karteikarten gibt, fand sie nie (Vorgabe §18, E45). */
+await seite.evaluate(() => {
+  document.querySelectorAll('.menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+});
+await seite.evaluate(() => document.getElementById('hu-neu')?.click());
+await seite.waitForTimeout(600);
+
+const blattNeu = await seite.evaluate(() => {
+  const m = document.querySelector<HTMLElement>('.menu.blatt');
+  if (!m) return null;
+  const kn = [...m.querySelectorAll<HTMLElement>('button[data-neu]')];
+  const r = m.getBoundingClientRect();
+  return {
+    titel: (m.querySelector('.blatt-titel')?.textContent || '').trim(),
+    wege: kn.map(b => b.dataset['neu'] || ''),
+    grund: !!document.querySelector('.menu-grund'),
+    zuFlach: kn.filter(b => b.getBoundingClientRect().height < 60)
+               .map(b => (b.textContent || '').trim().slice(0, 16)),
+    ohneSatz: kn.filter(b => !b.querySelector('.ne-txt i')).length,
+    amBoden: Math.round(r.bottom) >= innerHeight - 1,
+    seitenVorher: Store.rootPages().length
+  };
+}) as { titel: string; wege: string[]; grund: boolean; zuFlach: string[];
+        ohneSatz: number; amBoden: boolean; seitenVorher: number } | null;
+
+p('Der Stift öffnet ein Blatt', !!blattNeu, 'er legte vorher sofort eine Seite an');
+p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.titel);
+p('Es führt zu acht Sachen, nicht zu einer',
+  (blattNeu?.wege.length ?? 0) === 8, (blattNeu?.wege ?? []).join(', '));
+p('Datenbank, Tabelle, Aufgabe und Karteikarte sind dabei',
+  ['db', 'tabelle', 'aufgabe', 'karte'].every(w => (blattNeu?.wege ?? []).includes(w)),
+  (blattNeu?.wege ?? []).join(', '));
+p('Jede Zeile ist mindestens 60 px hoch', (blattNeu?.zuFlach.length ?? 1) === 0,
+  (blattNeu?.zuFlach ?? []).join(', '));
+/* Ohne den Satz darunter ist „Neue Tabelle" nur ein Wort — mit ihm weiss
+   man, dass darin gerechnet wird. Das ist der Unterschied zwischen einer
+   Liste und einem Wegweiser. */
+p('Jede Zeile sagt in einem Satz, was sie tut',
+  blattNeu?.ohneSatz === 0, String(blattNeu?.ohneSatz) + ' ohne Satz');
+p('Es sitzt am unteren Rand', blattNeu?.amBoden === true);
+p('Dahinter liegt ein Grund zum Wegtippen', blattNeu?.grund === true);
+
+/* Und es tut auch etwas. „Neue Seite" muss weiterhin eine Seite anlegen —
+   ein Blatt, das nur schön ist, hat den Stift verschlechtert. */
+await seite.evaluate(() => {
+  document.querySelector<HTMLElement>('.menu.blatt [data-neu="seite"]')?.click();
+});
+await seite.waitForTimeout(700);
+const danach = await seite.evaluate(() => ({
+  seiten: Store.rootPages().length,
+  blattWeg: !document.querySelector('.menu.blatt'),
+  imTitel: document.activeElement?.id === 'title'
+}));
+p('„Neue Seite" legt wirklich eine an',
+  danach.seiten === (blattNeu?.seitenVorher ?? 0) + 1,
+  `vorher ${blattNeu?.seitenVorher}, nachher ${danach.seiten}`);
+p('… und das Blatt geht dabei zu', danach.blattWeg === true);
+
 await browser.close();
 server.close();
 

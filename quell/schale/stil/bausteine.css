@@ -2299,3 +2299,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   from{ transform:translateY(16px); opacity:0 }
   to{ transform:translateY(0); opacity:1 }
 }
+
+/* Zwei Zeilen im Blatt „Neu erstellen": Name und der Satz darunter. Ohne
+   den Satz ist „Neue Tabelle" nur ein Wort — mit ihm weiss man, dass darin
+   gerechnet wird. Die Vorgabe verlangt 60 px Mindesthöhe; hier sind es 62. */
+.menu.blatt button:has(.ne-txt){ align-items:flex-start; min-height:62px }
+.ne-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1;
+         text-align:left }
+.ne-txt b{ font-size:16px; font-weight:500 }
+.ne-txt i{ font-size:13.5px; color:var(--text-dim); font-style:normal;
+           line-height:1.35 }
+.ne-pfeil{ margin-left:auto; color:var(--text-faint); font-size:17px;
+           align-self:center }

@@ -1814,6 +1814,77 @@ const App = (() => {
         setTimeout(() => document.getElementById('title')?.focus(), 60);
         return p;
     };
+    /* ==========================================================================
+     * „NEU ERSTELLEN" — das Blatt hinter dem Stift (E45, Vorgabe §18)
+     * --------------------------------------------------------------------------
+     * WAS DER STIFT VORHER TAT: sofort eine leere Seite anlegen. Das ist der
+     * richtige Weg für den, der genau das will, und eine Sackgasse für alle
+     * anderen. Redion kann Datenbanken, Tabellen, Aufgaben, Karteikarten,
+     * Dateien und Vorlagen — und keines davon war von hier aus erreichbar.
+     * Wer nicht wusste, dass es Karteikarten gibt, fand sie nie.
+     *
+     * Deshalb ein Blatt mit acht Wegen, und die leere Seite steht als erster
+     * darin: wer sie will, tippt einmal mehr. Das ist der Preis dafür, dass
+     * die anderen sieben überhaupt existieren.
+     *
+     * NUR AM TELEFON. Am Rechner gibt es Strg+N, die Seitenleiste und die
+     * Befehlspalette — dort wäre ein Blatt ein Umweg, kein Wegweiser.
+     * ========================================================================*/
+    const ERSTELLEN = [
+        ['seite', '📄', 'Neue Seite', 'Leere Seite anlegen'],
+        ['memo', '⚡', 'Schnellnotiz', 'Gedanken sofort festhalten'],
+        ['db', '▦', 'Neue Datenbank', 'Zeilen sind eigene Seiten'],
+        ['tabelle', '📊', 'Neue Tabelle', 'Rechnen wie in Excel'],
+        ['aufgabe', '☑', 'Aufgabe', 'Mit Datum planen'],
+        ['karte', '📚', 'Karteikarte', 'Später wiederholen'],
+        ['datei', '📎', 'Datei hochladen', 'Bleibt auf diesem Gerät'],
+        ['vorlage', '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
+    ];
+    const erstellenBlatt = () => {
+        const html = '<div class="menu-liste">' +
+            ERSTELLEN.map(([was, z, name, sub]) => `<button data-neu="${was}"><span class="mi">${z}</span>` +
+                `<span class="ne-txt"><b>${name}</b><i>${sub}</i></span>` +
+                '<span class="ne-pfeil">›</span></button>').join('') +
+            '</div>';
+        const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen' });
+        m.addEventListener('click', (e) => {
+            const b = (e.target instanceof Element)
+                ? e.target.closest('[data-neu]') : null;
+            if (!b)
+                return;
+            const was = b.dataset['neu'];
+            document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
+            /* Erst schliessen, dann handeln — ein Dialog unter einem Blatt ist
+               von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
+            setTimeout(() => {
+                if (was === 'seite')
+                    neueSeite();
+                else if (was === 'memo')
+                    Werkzeuge.schnellnotizen();
+                else if (was === 'datei')
+                    Werkzeuge.dateienLesen();
+                else if (was === 'vorlage')
+                    Werkzeuge.vorlagen();
+                else if (was === 'karte')
+                    Werkzeuge.lernen();
+                else {
+                    /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
+                       gibt sie nicht ohne eine. Also erst die Seite, dann der Block
+                       darin, und der Cursor steht schon an der richtigen Stelle. */
+                    const p = neueSeite();
+                    setTimeout(() => {
+                        if (was === 'db')
+                            Store.addDatabase(p.id, 'Ohne Namen');
+                        else if (was === 'tabelle')
+                            Store.addBlock(p.id, 'tabelle', {});
+                        else if (was === 'aufgabe')
+                            Store.addBlock(p.id, 'todo', { text: '' });
+                        zeichneSeite();
+                    }, 80);
+                }
+            }, 60);
+        });
+    };
     /* ------------------------------------------------------------------------
      * BREITE DER SEITENLEISTE
      * ---------------------------------------------------------------------- */
@@ -2405,7 +2476,14 @@ const App = (() => {
         /* Die KI sitzt jetzt unten in der Mitte, nicht mehr in der Reiterleiste. */
         an('hu-ki', () => kiPanel(true));
         an('hu-suche', () => suche());
-        an('hu-neu', () => neueSeite());
+        /* Am Telefon das Blatt (Vorgabe §18), am Rechner der Direktweg: dort
+           gibt es Strg+N, die Seitenleiste und die Befehlspalette. */
+        an('hu-neu', () => {
+            if (window.matchMedia('(max-width: 700px)').matches)
+                erstellenBlatt();
+            else
+                neueSeite();
+        });
         /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
            wie früher der ☰. */
         /* ----------------------------------------------------------------------
