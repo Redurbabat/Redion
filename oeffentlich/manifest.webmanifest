@@ -4,7 +4,7 @@
   "description": "Redion — Seiten, Datenbanken, Kalender, Mail und KI. Alles im Browser, alles auf deinem Gerät.",
   "lang": "de",
   "dir": "ltr",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "id": "/",
   "display": "standalone",
@@ -29,17 +29,17 @@
     { "src": "/oeffentlich/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Neue Seite",       "short_name": "Neu",    "url": "/index.html#neu",
+    { "name": "Neue Seite",       "short_name": "Neu",    "url": "/#neu",
       "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] },
-    { "name": "Suchen",           "short_name": "Suche",  "url": "/index.html#suche",
+    { "name": "Suchen",           "short_name": "Suche",  "url": "/#suche",
       "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] },
-    { "name": "Journal von heute","short_name": "Journal","url": "/index.html#journal",
+    { "name": "Journal von heute","short_name": "Journal","url": "/#journal",
       "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] },
-    { "name": "Besprechung aufnehmen", "short_name": "Aufnahme", "url": "/index.html#meeting",
+    { "name": "Besprechung aufnehmen", "short_name": "Aufnahme", "url": "/#meeting",
       "icons": [{ "src": "/oeffentlich/icons/icon-96.png", "sizes": "96x96" }] }
   ],
   "share_target": {
-    "action": "/index.html",
+    "action": "/",
     "method": "GET",
     "params": { "title": "titel", "text": "text", "url": "adresse" }
   }

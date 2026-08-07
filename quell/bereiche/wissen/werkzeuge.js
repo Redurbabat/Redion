@@ -1005,6 +1005,66 @@ const Werkzeuge = (() => {
      * dort wo auch Erinnerungen und Kommentare stehen.
      * --------------------------------------------------------------------- */
     const meldungen = () => Store.getMeta('meldungen', []) || [];
+    /* ==========================================================================
+     * EINE MELDUNG DES GERÄTS ZEIGEN — über das Dienst-Skript, nicht über
+     * `new Notification()`
+     * --------------------------------------------------------------------------
+     * DER FEHLER, GEGEN DEN DAS STEHT (7. August 2026). Hier stand zweimal
+     *
+     *     try { new Notification(text, { … }); } catch {}
+     *
+     * und auf einem iPhone ist das eine Zeile, die nichts tut. Eine
+     * installierte Web-App kennt den Konstruktor `Notification` dort gar
+     * nicht — Apple unterstützt ausschliesslich
+     * `ServiceWorkerRegistration.showNotification()`. Der Aufruf wirft
+     * `Illegal constructor`, das `catch` verschluckte es, und übrig blieb der
+     * Hinweis in der App. Wer Redion geschlossen hatte, bekam nichts; wer sie
+     * offen hatte, bekam den Toast und hielt das für alles, was es gibt.
+     *
+     * Das ist genau die Funktion, um die Redur gebeten hatte („wenn ich beim
+     * Kalender sage morgen um 08:00 Uhr aufstehen, sollte mir in dieser
+     * Uhrzeit erinnern") — und sie scheiterte auf seinem Gerät lautlos.
+     *
+     * Deshalb zuerst der Weg über die Registrierung. Er ist nicht nur der
+     * einzige, den iOS kann, er ist auch der bessere: eine so gezeigte
+     * Meldung überlebt das Schliessen des Fensters, und der Tipp darauf
+     * landet im Dienst-Skript, das die Seite öffnen kann.
+     *
+     * `new Notification` bleibt als Rückfall für Browser ohne Dienst-Skript
+     * — etwa beim Öffnen per Doppelklick aus dem Dateisystem, wo sich keines
+     * registrieren lässt (§6: die App muss auch so laufen).
+     * ========================================================================*/
+    const geraeteMeldung = async (titel, text, kennung, seite = '') => {
+        if (!('Notification' in window) || Notification.permission !== 'granted')
+            return 'nein';
+        try {
+            /* `serviceWorker.ready` WARTET EWIG, WENN NIE EINES KOMMT — es wird
+               nie abgelehnt, es bleibt einfach offen. Ohne die Frist hätte
+               dieser Zweig die Erinnerung ganz verschluckt statt sie über den
+               Rückfall zu zeigen: schlimmer als der Fehler, den er behebt.
+               Gefunden hat das der eigene Prüflauf, der daran hängenblieb. */
+            const reg = navigator.serviceWorker && await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise(fertig => setTimeout(() => fertig(null), 1500))
+            ]);
+            if (reg && typeof reg.showNotification === 'function') {
+                await reg.showNotification(titel, {
+                    body: text, tag: kennung, data: { seite }
+                });
+                return 'dienst';
+            }
+        }
+        catch { /* dann der Rückfall darunter */ }
+        try {
+            const n = new Notification(titel, { body: text, tag: kennung });
+            n.onclick = () => { window.focus(); if (seite)
+                App.oeffne(seite); };
+            return 'fenster';
+        }
+        catch {
+            return 'nein';
+        }
+    };
     const posteingangMelden = (m) => {
         const liste = meldungen();
         liste.unshift({
@@ -1019,11 +1079,7 @@ const Werkzeuge = (() => {
         }
         catch { }
         /* Und, falls erlaubt, als echte Benachrichtigung des Geräts */
-        try {
-            if (window.Notification && Notification.permission === 'granted')
-                new Notification(m.text || 'Redion', { body: m.quelle || '', tag: 'redion' });
-        }
-        catch { }
+        void geraeteMeldung(m.text || 'Redion', m.quelle || '', 'redion', m.seite || '');
         return liste[0];
     };
     const meldungGelesen = (id) => {
@@ -1155,13 +1211,7 @@ const Werkzeuge = (() => {
             const spaet = jetzt - gemeint.getTime() > 120000;
             const wann = gemeint.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
             UI.toast(spaet ? 'Verpasst um ' + wann + ': ' + e.text : '⏰ ' + e.text);
-            if ('Notification' in window && Notification.permission === 'granted') {
-                try {
-                    const n = new Notification(spaet ? 'Verpasst um ' + wann : 'Erinnerung: ' + e.text, { body: spaet ? e.text : 'In Redion', tag: e.id });
-                    n.onclick = () => { window.focus(); App.oeffne(e.pageId); };
-                }
-                catch { }
-            }
+            void geraeteMeldung(spaet ? 'Verpasst um ' + wann : 'Erinnerung: ' + e.text, spaet ? e.text : 'In Redion', e.id, e.pageId || '');
         });
         if (geaendert)
             Store.setMeta('erinnerungen', liste);
@@ -2137,7 +2187,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
         fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
         formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
-        erinnerungSetzen, erinnerungen, erinnerungenPruefen, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+        erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
         ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
         htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
         alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,

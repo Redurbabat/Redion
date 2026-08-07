@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**6. August 2026 · 94 Prüfläufe grün**
+**7. August 2026 · 96 Prüfläufe grün**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
@@ -26,7 +26,7 @@ Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
 ```txt
 1. Mobile ist ab dem 6. August die Hauptumgebung (E37) — L10 ist damit
    keine Nachlese mehr, sondern die Reihenfolge
-2. Erinnerungen wecken das Telefon nicht, wenn Redion zu ist (L29)
+2. Erinnerungen wecken das Telefon nicht, wenn Redion zu ist (L33)
 3. Was der Browser bei sehr grossen Sicherungen hergibt, ist
    ungemessen (L14) — das Format kann es seit E39
 
@@ -586,7 +586,7 @@ Die Prüfung hätte für immer grün gesagt.
 |---|---|---|
 | S1 | Die Ausgangsschlange konnte eine Millisekunde zerschneiden: `edited <= marke` schloss den Rest **für immer** aus. Der Satz stand auf dem Gerät und kam nie in der Wolke an — kein Fehler, keine Meldung | `test113` |
 
-## L29 · Erinnerungen, wenn Redion geschlossen ist
+## L33 · Erinnerungen, wenn Redion geschlossen ist
 
 **Stand** — ◐ sie melden sich zuverlässig, solange Redion offen ist.
 
@@ -596,12 +596,28 @@ Datumsspalte eines Kalendereintrags, und eine verpasste Erinnerung sagt
 „Verpasst um 08:00" statt zu tun, als sei es gerade jetzt. `test124`, 20
 Punkte, mit Telefon-Bildmass und Zeitzone.
 
+**Am 7. August behoben: sie erschienen auf dem iPhone GAR NICHT.** Redion
+zeigte sie mit `new Notification(…)` in einem `try/catch`. Eine
+**installierte** Web-App kennt diesen Konstruktor auf iOS nicht — Apple
+unterstützt ausschliesslich `registration.showNotification()`. Der Aufruf
+warf `Illegal constructor`, das `catch` verschluckte es, und übrig blieb der
+Hinweis innerhalb der App. Wer Redion offen hatte, hielt den Toast für
+alles, was es gibt; wer sie geschlossen hatte, bekam nichts.
+
+Jetzt geht der Weg über die Registrierung, mit `new Notification` als
+Rückfall für den Start ohne Dienst-Skript (Doppelklick aus dem
+Dateisystem, §6). Ein Tipp auf die Meldung landet im Dienst-Skript
+(`notificationclick`) und holt ein offenes Fenster nach vorn, statt ein
+zweites zu öffnen. `test124` Abschnitt 6, elf Punkte — geprüft, indem der
+Prüflauf dem Browser dieselbe Einschränkung gibt wie iOS.
+
 **Was fehlt, und es ist die eigentliche Frage.** Ist Redion um acht Uhr
 geschlossen, passiert um acht Uhr nichts — die Erinnerung wartet bis zum
 nächsten Öffnen. Ein Telefon zu wecken, ohne dass die Seite läuft, geht nur
 mit **Web Push**: Schlüsselpaar (VAPID), Anmeldung je Gerät, ein Dienst, der
 zur richtigen Zeit sendet. Der Server dafür steht (Cloudflare Workers), die
-Push-Hälfte fehlt ganz.
+Push-Hälfte fehlt ganz. Die Hälfte im Browser steht seit dem 7. August: das
+Dienst-Skript zeigt Meldungen und nimmt den Tipp entgegen.
 
 **Auf dem iPhone kommt eine Bedingung dazu:** Systemmeldungen zeigt dort nur
 die **installierte** App (Teilen → „Zum Home-Bildschirm", ab iOS 16.4). In
