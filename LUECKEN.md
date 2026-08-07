@@ -267,11 +267,19 @@ Termine und Eingang haben ihre eigenen Bereiche bekommen; der Codeblock
 seine Kopfzeile. Was das Hinsehen dabei fand, steht in E38 — fünf Fehler,
 und keinen davon hatte ein Prüflauf.
 
-**Aus Redurs Entwurf „Nocturne" (E42) fehlt noch:** die Farben (die App hat
-ihre eigenen) · das Blatt „Neu erstellen" · das KI-Blatt als Blatt · der
-eigene Suchbildschirm mit Filtern und Textausschnitten · die Ladeskelette ·
-der Speicherbalken im R-Blatt · die Masse der oberen Leiste (der Entwurf
-sagt 56 px, gebaut sind 52).
+**Aus Redurs Entwurf „Nocturne" gebaut** (E42–E46): der Reiter „Mehr" und
+der Bereich dahinter · der Kompass als Seite darin · die Farbwelt mit
+nachgerechneten Kontrasten · die Bewegungsmarken und die
+Berührungsrückmeldung · das Blatt „Neu erstellen" · das KI-Fenster als
+Blatt von unten · der Speicherbalken im R-Blatt · „Zuletzt gesucht" und
+ein Leer, das etwas sagt · die Ladeskelette.
+
+**Aus dem Entwurf fehlt noch:** die gleitende Pille beim Reiterwechsel ·
+die versetzt einblendenden Listenzeilen · die Zustandswechsel der
+Sicherungskarte (Kreisel → Haken) · die Suchfilter als Marken statt als
+Auswahlfelder · die Masse der oberen Leiste (der Entwurf sagt 56 px,
+gebaut sind 52) · der Willkommensbildschirm (§11) · die Einstellungen als
+Karten (§12).
 
 **Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
 Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
