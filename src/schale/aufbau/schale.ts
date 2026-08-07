@@ -1295,6 +1295,39 @@ const App = (() => {
     document.body.appendChild(o);
     requestAnimationFrame(() => o.classList.add('auf'));
 
+    /* DER SPEICHERBALKEN (Vorgabe §16). Er gehört genau hierher und
+       nirgendwo sonst: das R-Blatt ist der Ort für den Arbeitsbereich, und
+       „wie viel liegt hier eigentlich?" ist bei einer App, die alles auf
+       dem Gerät hält, die erste Frage danach.
+
+       NACHGETRAGEN, NICHT MITGEBAUT — `navigator.storage.estimate()` ist
+       asynchron und braucht auf einem vollen Gerät spürbar Zeit. Darauf zu
+       warten hiesse, das Blatt später zu öffnen; also kommt der Balken
+       nach, wenn er da ist. Ist das Blatt bis dahin zu, passiert nichts. */
+    void (async () => {
+      let stand: { benutzt?: number | undefined;
+                   verfuegbar?: number | undefined } | null = null;
+      try { stand = await Store.usage(); } catch { }
+      if (!stand || !stand.benutzt || !o.isConnected) return;
+      const rollen = o.querySelector('.rm-rollen');
+      if (!rollen) return;
+      const mb = (n: number) => n >= 1073741824
+        ? (n / 1073741824).toFixed(2).replace('.', ',') + ' GB'
+        : Math.round(n / 1048576) + ' MB';
+      const anteil = stand.verfuegbar
+        ? Math.min(100, Math.round((stand.benutzt / stand.verfuegbar) * 100)) : 0;
+      const k = document.createElement('div');
+      k.className = 'rm-speicher';
+      k.innerHTML =
+        '<div class="rs-kopf"><span>Auf diesem Gerät</span>' +
+        `<b>${mb(stand.benutzt)}</b></div>` +
+        `<div class="rs-balken"><i style="width:${Math.max(2, anteil)}%"></i></div>` +
+        `<div class="rs-fuss">${stand.verfuegbar
+          ? anteil + ' % von ' + mb(stand.verfuegbar) + ' — der Browser gibt den Rest frei, wenn er ihn braucht'
+          : 'Wie viel der Browser noch freigibt, sagt er nicht.'}</div>`;
+      rollen.appendChild(k);
+    })();
+
     const zu = () => { o.classList.remove('auf'); setTimeout(() => o.remove(), 200); };
     o.addEventListener('click', (e) => {
       const b = (e.target instanceof Element) ? e.target.closest<HTMLElement>('[data-r]') : null;

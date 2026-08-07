@@ -340,6 +340,35 @@ p('Sichern und Papierkorb sind erreichbar',
 p('Die KI ist hier erreichbar, auch ohne Reiter oben (E38)',
   blatt?.hatKI === true, 'sie hat oben keinen Platz mehr und muss hier stehen');
 
+/* DER SPEICHERBALKEN (Vorgabe §16). Er gehört hierher: bei einer App, die
+   alles auf dem Gerät hält, ist „wie viel liegt hier eigentlich?" die
+   erste Frage nach „wo bin ich?". Er kommt NACH — `storage.estimate()` ist
+   asynchron —, deshalb wird hier gewartet statt sofort gemessen. */
+await seite.waitForTimeout(600);
+const speicher = await seite.evaluate(() => {
+  const sp = document.querySelector<HTMLElement>('#r-blatt .rm-speicher');
+  if (!sp) return null;
+  const bal = sp.querySelector<HTMLElement>('.rs-balken i');
+  const r = sp.getBoundingClientRect();
+  const oben = document.elementFromPoint(r.left + r.width / 2, r.top + 14);
+  return {
+    text: (sp.textContent || '').trim(),
+    breite: bal ? bal.style.width : '',
+    /* Liegt etwas DARÜBER? Der Hinweisstreifen lag auf z-index 900 und
+       damit mitten auf diesem Balken — im Code nicht zu ahnen. */
+    frei: !!oben && !!oben.closest('#r-blatt')
+  };
+}) as { text: string; breite: string; frei: boolean } | null;
+
+p('Der Speicherstand steht im Blatt', !!speicher, 'er kommt nach — asynchron');
+p('… mit einer Zahl in MB oder GB', /\d+\s?(MB|GB)/.test(speicher?.text || ''),
+  (speicher?.text || '').slice(0, 60));
+p('… und einem Balken, der etwas zeigt',
+  /%$/.test(speicher?.breite || '') && parseFloat(speicher?.breite || '0') > 0,
+  speicher?.breite);
+p('Nichts liegt über dem Blatt', speicher?.frei === true,
+  'der Hinweisstreifen lag auf z-index 900 und das Blatt auf 700');
+
 /* UND DAS BLATT MUSS DIE PILLE MITNEHMEN. Es zeichnete dreimal eine
    Ansicht, ohne den Reiter zu setzen, den `handyLeiste()` liest — man
    landete im Posteingang, und oben stand noch „Start". Derselbe Fehler wie

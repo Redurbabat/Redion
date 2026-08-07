@@ -2213,8 +2213,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Seitenleiste des Rechners herein — Baum, Reiter, 33-px-Zeilen. Hier sind
    die Zeilen 56 px hoch: darunter trifft der Daumen die Nachbarzeile mit.
    =========================================================================*/
+/* Z-INDEX 950, NICHT 700. Der Hinweisstreifen („1 Karteikarte ist fällig")
+   liegt auf 900 und stand damit MITTEN AUF dem Speicherbalken des Blattes —
+   gesehen am 7. August, im Code nicht zu ahnen. Ein Blatt über den ganzen
+   Bildschirm muss über allem liegen, was sonst über der Seite schwebt;
+   sonst spricht etwas hindurch, das gerade nicht gemeint ist. */
 #r-blatt{
-  position:fixed; inset:0; z-index:700; background:var(--bg);
+  position:fixed; inset:0; z-index:950; background:var(--bg);
   display:flex; flex-direction:column;
   padding:calc(14px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
   transform:translateY(14px); opacity:0;
@@ -2311,3 +2316,18 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
            line-height:1.35 }
 .ne-pfeil{ margin-left:auto; color:var(--text-faint); font-size:17px;
            align-self:center }
+
+/* Der Speicherbalken im R-Blatt (Vorgabe §16). Er beantwortet die Frage,
+   die bei einer App, die alles auf dem Gerät hält, gleich nach „wo bin
+   ich?" kommt: wie viel liegt hier eigentlich. */
+.rm-speicher{ margin:22px 0 8px; padding:16px 18px; border-radius:16px;
+              background:var(--bg-card) }
+.rs-kopf{ display:flex; justify-content:space-between; align-items:baseline;
+          font-size:15px; color:var(--text-dim) }
+.rs-kopf b{ font-size:16px; color:var(--text); font-weight:600 }
+.rs-balken{ height:6px; border-radius:3px; background:var(--bg-hover);
+            margin-top:12px; overflow:hidden }
+.rs-balken i{ display:block; height:100%; background:var(--accent);
+              border-radius:3px }
+.rs-fuss{ font-size:13px; color:var(--text-faint); margin-top:9px;
+          line-height:1.4 }
