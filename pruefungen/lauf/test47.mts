@@ -53,8 +53,14 @@ const pruef = (n: any, ist: any, soll: any) => {
     const w = getComputedStyle(document.documentElement);
     return { bg: w.getPropertyValue('--bg').trim(), akzent: w.getPropertyValue('--accent').trim() };
   });
-  pruef('Standard hat wieder seinen Hintergrund', zurueck.bg, '#191919');
-  pruef('Standard hat wieder seinen Akzent',      zurueck.akzent, '#2eaadc');
+  /* DIE WERTE VON NOCTURNE (E44), nicht mehr Notions #191919/#2eaadc.
+     Und sie kommen jetzt aus dem STILBLATT, nicht aus `SCHEMATA`: das
+     Standardschema setzt `akzent: ''`, damit Hell- und Dunkelmodus je
+     eigene Akzente haben können — ein Inline-Stil auf `<html>` hätte
+     beide überschrieben und war genau der Grund, warum die neue Farbe
+     zwar im Blatt stand, aber nie auf dem Bildschirm. */
+  pruef('Standard hat wieder seinen Hintergrund', zurueck.bg, '#141414');
+  pruef('Standard hat wieder seinen Akzent',      zurueck.akzent, '#f97316');
 
   /* Eigene Akzentfarbe */
   const akzent = await p.evaluate(() => {
@@ -187,7 +193,7 @@ const pruef = (n: any, ist: any, soll: any) => {
     groesse: document.body?.style.fontSize
   }));
   pruef('Kürzel zurückgesetzt', reset.suche, 'Ctrl+K');
-  pruef('Akzent zurückgesetzt', reset.akzent, '#2eaadc');
+  pruef('Akzent zurückgesetzt', reset.akzent, '#f97316');   /* Nocturne, E44 */
   pruef('Grösse zurückgesetzt', reset.groesse, '100%');
 
   /* --- Wirkt ein umbelegtes Kürzel auch wirklich? ---------------------- */

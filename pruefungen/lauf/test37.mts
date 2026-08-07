@@ -85,10 +85,29 @@ import { chromium } from 'playwright';
   await p.evaluate(() => App.kiPanel(false));
   await p.waitForTimeout(600);      /* das KI-Fenster deckt am Telefon alles zu */
 
+  /* SEIT E45 FRAGT DER STIFT ERST, WAS ENTSTEHEN SOLL. Vorher legte er
+     sofort eine leere Seite an — richtig in einem von acht Fällen.
+
+     Diese Prüfung stand danach zwei Tage auf Grün, ohne noch etwas zu
+     prüfen: sie zählte `rootPages().length >= 2`, und so viele gab es aus
+     den Schritten davor längst. Das Blatt blieb offen, und der nächste
+     Klick lief in seinen Hintergrund — der deckt den ganzen Bildschirm.
+     Genau daran ist der Lauf dann gescheitert, drei Zeilen später und
+     ohne erkennbaren Zusammenhang.
+
+     Eine Prüfung, die grün bleibt, wenn sich das Verhalten ändert, ist
+     schlimmer als keine: sie behauptet, jemand habe hingesehen. */
+  const seitenVorher = await p.evaluate(() => Store.rootPages().length);
   await p.click('#hu-neu');
   await p.waitForTimeout(700);
-  ok('Der Stift unten rechts legt eine neue Seite an', await p.evaluate(() =>
-    Store.rootPages().length >= 2 && !!document.getElementById('title')));
+  ok('Der Stift öffnet das Blatt „Neu erstellen"', await p.evaluate(() =>
+    !!document.querySelector('.menu.blatt [data-neu="seite"]')));
+  await p.click('.menu.blatt [data-neu="seite"]');
+  await p.waitForTimeout(800);
+  ok('… und „Neue Seite" legt wirklich eine an', await p.evaluate((v) =>
+    Store.rootPages().length > v && !!document.getElementById('title'), seitenVorher));
+  ok('… und das Blatt ist danach zu', await p.evaluate(() =>
+    document.querySelectorAll('.menu, .menu-grund').length === 0));
 
   /* Die vier Bereiche schalten wirklich um und markieren sich.
      Erst den Cursor aus dem Titel nehmen: waehrend man schreibt, geht die
