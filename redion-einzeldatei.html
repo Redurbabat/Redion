@@ -2159,6 +2159,65 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .clip-knopf:active{cursor:grabbing}
 
 
+/* ===========================================================================
+   DIE SUCHFILTER ALS MARKEN — am Telefon (Vorgabe §17, E48)
+   ---------------------------------------------------------------------------
+   Vier Auswahlfelder nebeneinander sind am Rechner richtig: sie sind kompakt
+   und man sieht auf einen Blick, was eingestellt ist. Am Telefon sind sie
+   das Gegenteil. Ein `<select>` öffnet dort ein Systemrad über den halben
+   Bildschirm — für „nur Titel" statt „Titel und Inhalt" ist das drei
+   Handgriffe, und währenddessen sieht man die Suche gar nicht mehr.
+
+   Als Marken behalten sie ihre Funktion, brauchen aber nur einen Tipp, und
+   die Trefferliste bleibt die ganze Zeit sichtbar.
+
+   DIE ZEILE ROLLT SEITWÄRTS, statt umzubrechen. Vier Marken in zwei Reihen
+   nähmen 100 px vom Bildschirm — genau die 100 px, in denen die Treffer
+   stehen sollen. Wer den vierten Filter braucht, wischt einmal.
+   =========================================================================*/
+@media(max-width:760px){
+  .such-filter{
+    flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+    padding:0 16px 12px; gap:8px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .such-filter::-webkit-scrollbar{ display:none }
+  .such-filter select{
+    flex:0 0 auto;
+    min-height:42px; padding:0 32px 0 14px;
+    border-radius:999px; font-size:15px;
+    background:var(--bg-card); border-color:transparent;
+    color:var(--text-dim);
+    /* Der eigene Pfeil — der vom System sitzt am Telefon anders und
+       zerschneidet die runde Form. */
+    appearance:none; -webkit-appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, currentColor 50%),
+                     linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+  }
+  /* Ein Filter, der NICHT auf der Vorgabe steht, ist gesetzt — und das
+     muss man sehen, ohne ihn zu öffnen. Sonst sucht man in einem
+     Ausschnitt und weiss es nicht. */
+  .such-filter select:not(.leer){
+    background-color:var(--bg-hover); color:var(--text);
+    border-color:var(--line);
+  }
+
+  /* Die Tastenzeile der Fusszeile nennt ↑ ↓, Enter und Esc. Keine dieser
+     Tasten gibt es auf einer Telefontastatur. Sie stand da, nahm die
+     Höhe von zwei Treffern weg und stimmte kein einziges Mal. Die
+     Suchbefehle daneben gelten auf jedem Gerät und bleiben — in EINER
+     Zeile, die seitwärts rollt, statt in dreien, die den Platz fressen. */
+  .finder.such .hint-tasten{ display:none }
+  .finder.such .hint{
+    white-space:nowrap; overflow-x:auto; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .finder.such .hint::-webkit-scrollbar{ display:none }
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/tabelle.css ===== */
@@ -62592,11 +62651,20 @@ const App = (() => {
      * SUCHE
      * ======================================================================*/
     const suche = () => {
+        /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
+           Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
+           Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
+           Drittel davon ins Feld, und was übrig bleibt („Suchen — auch
+           typ:seite, in:Projekte, nach:202") liest sich wie ein Fehler. Lieber
+           ein Wort, das stimmt, als ein Satz, der abbricht. */
+        const eng = matchMedia('(max-width:760px)').matches;
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML =
             '<div class="finder such" style="width:min(820px,95vw)">' +
-                '<input id="q" placeholder="Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;" autocomplete="off">' +
+                '<input id="q" placeholder="' + (eng ? 'Seiten und Inhalte suchen'
+                : 'Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;') +
+                '" autocomplete="off">' +
                 '<div class="such-filter">' +
                 '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
                 '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -62613,9 +62681,17 @@ const App = (() => {
                 '<div class="res" id="res"></div>' +
                 '<div class="such-vorschau" id="vorschau"></div>' +
                 '</div>' +
-                '<div class="hint">↑ ↓ auswählen · Enter öffnen · Esc schliessen · ' +
-                'Befehle: <code>typ:seite</code> <code>in:Projekte</code> <code>nach:2026-01</code> ' +
-                '<code>tag:wichtig</code> <code>titel:Wort</code> <code>"genauer Satz"</code></div>' +
+                /* Die Fusszeile hat zwei Hälften, und nur eine gilt überall.
+                   „↑ ↓ auswählen · Enter öffnen · Esc schliessen" nennt drei Tasten,
+                   die eine Telefontastatur nicht hat — das ist keine Hilfe, sondern
+                   eine Anleitung für ein anderes Gerät. Die Suchbefehle dagegen
+                   gelten auf beiden, also bleiben sie. Getrennt, damit das
+                   Stilblatt die eine Hälfte ausblenden kann und die andere nicht. */
+                '<div class="hint">' +
+                '<span class="hint-tasten">↑ ↓ auswählen · Enter öffnen · Esc schliessen · </span>' +
+                '<span class="hint-befehle">Befehle: <code>typ:seite</code> <code>in:Projekte</code> ' +
+                '<code>nach:2026-01</code> <code>tag:wichtig</code> <code>titel:Wort</code> ' +
+                '<code>"genauer Satz"</code></span></div>' +
                 '</div>';
         document.body.appendChild(o);
         const inp = o.querySelector('#q');
@@ -62865,6 +62941,19 @@ const App = (() => {
                 o.remove();
             }
         });
+        /* WELCHER FILTER IST GESETZT? Am Telefon sind die Filter Marken, und
+           eine gesetzte Marke muss man sehen, ohne sie zu öffnen — sonst sucht
+           man in einem Ausschnitt und weiss es nicht. `.leer` heisst: steht
+           auf der Vorgabe, also unauffällig. */
+        const filterMarken = () => {
+            o.querySelectorAll('.such-filter select').forEach(s2 => {
+                const vorgabe = s2.options[0]?.value ?? '';
+                s2.classList.toggle('leer', s2.value === vorgabe);
+            });
+        };
+        o.querySelectorAll('.such-filter select')
+            .forEach(s2 => s2.addEventListener('change', filterMarken));
+        filterMarken();
         o.addEventListener('mousedown', e => { if (e.target === o)
             o.remove(); });
         /* EINMAL ZEICHNEN, BEVOR JEMAND TIPPT. Ohne das blieb das leere

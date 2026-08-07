@@ -2317,6 +2317,38 @@ den Stilblättern — was zählt, ist der Wert, der am Ende gilt.
 
 ---
 
+## E45 · Ein Blatt hinter dem Stift, statt sofort einer leeren Seite
+
+**Aus der Vorgabe §18:** der ⊕-Knopf soll fragen, WAS entstehen soll —
+Seite, Datenbank, Aufgabe, Notiz, Tabelle, Import.
+
+**Vorher entstand sofort eine leere Seite.** Das ist die richtige Antwort
+in genau einem von sechs Fällen. In den anderen fünf muss man danach etwas
+umbauen, das man gar nicht wollte: erst eine Seite, dann darin einen
+Datenbankblock, dann die Ansicht wählen. Drei Schritte für etwas, das ein
+Tipp sein sollte.
+
+**Acht Zeilen, nicht sechs.** Dazugekommen sind „Von einer Vorlage" und
+„Sicherung einlesen". Die zweite ist die wichtigere und sieht am
+unwichtigsten aus: wer gerade das Gerät gewechselt hat, will nicht
+anfangen, sondern zurückholen — und sucht das dann in den Einstellungen.
+
+**Der Unterschied zwischen Rechner und Telefon bleibt.** Am Rechner ist
+der ⊕ ein Knopf unter vielen, und wer ihn drückt, will meistens genau eine
+Seite; dort passiert weiterhin sofort das Erwartete. Am Telefon ist er
+einer von fünf Wegen überhaupt — dort lohnt die Frage.
+
+**Was das Blatt intern tut, sieht man ihm nicht an.** „Datenbank",
+„Tabelle" und „Aufgabe" legen zuerst eine Seite an und setzen den Block
+hinein. Ein Datenbankblock ohne Seite hat keinen Ort, an dem er stehen
+kann — das ist keine Bequemlichkeit, sondern das Datenmodell.
+
+**Status**
+
+`test114` §12, 7 Punkte.
+
+---
+
 ## E46 · Ladeskelette statt Kreisel
 
 **Aus der Vorgabe §23:** „Use skeletons, not random spinners everywhere."
@@ -2350,3 +2382,94 @@ es zeigt die Form.
 **Status**
 
 `test126` §5, 6 Punkte. Gegenprobe: Dauer auf 0,3 s gesetzt → rot.
+
+---
+
+## E47 · Zeilen kommen versetzt herein — aber nur die ersten neun
+
+**Aus der Bewegungs-Vorgabe:** „list items stagger in, 20–30 ms apart".
+
+**Warum überhaupt.** Erscheint eine Liste als Block, sieht das Auge einen
+Sprung: „da war nichts, jetzt ist alles da" — und muss von vorn anfangen.
+Kommen die Zeilen nacheinander von oben nach unten, folgt der Blick der
+Bewegung in Leserichtung und ist am Ende der Animation schon bei der
+ersten Zeile.
+
+**Die Obergrenze ist der eigentliche Beschluss.** Bei 20 ms je Zeile und
+zwanzig Zeilen sind das 400 ms, in denen die Liste noch nicht steht. Das
+ist keine Bewegung mehr, das ist Warten — und Warten, das man selbst
+eingebaut hat, ist die schlechteste Sorte.
+
+Deshalb bekommen nur die **ersten neun** Zeilen eine Verzögerung. Zeile
+zehn und alles darunter erscheint mit Zeile neun. Wer so weit unten liest,
+hat ohnehin gescrollt und die Ankunft nie gesehen.
+
+```css
+.zeile-hoch:nth-child(1) { animation-delay:0ms }
+…
+.zeile-hoch:nth-child(9) { animation-delay:160ms }
+/* ab 10: keine Verzögerung */
+```
+
+**Und wer keine Bewegung mag, bekommt keine.** `prefers-reduced-motion`
+hält auch diese Staffel an — die Liste erscheint dann vollständig, was
+genau der Zustand vorher war.
+
+**Status**
+
+`test126` §6, 4 Punkte. Gegenprobe: Staffel versechsfacht → rot.
+
+---
+
+## E48 · Die Suchfilter sind am Telefon Marken, nicht Auswahlfelder
+
+**Aus der Vorgabe §17:** die Suche gehört zu den fünf Wegen, die am
+Telefon zählen — und sie soll dort nicht wie ein Formular aussehen.
+
+**Vier `<select>` nebeneinander sind am Rechner richtig.** Sie sind
+kompakt, man sieht auf einen Blick, was eingestellt ist, und ein Klick
+öffnet eine kleine Liste neben dem Feld. Am Telefon ist jede dieser drei
+Eigenschaften weg:
+
+Ein `<select>` öffnet dort ein **Systemrad über den halben Bildschirm**.
+Für „nur Titel" statt „Titel und Inhalt" sind das drei Handgriffe, und
+währenddessen sieht man die Trefferliste gar nicht mehr.
+
+Vier Felder **brechen um** in zwei Reihen. Das kostet rund 100 px — genau
+die 100 px, in denen die Treffer stehen sollen.
+
+**Also: eine Reihe runder Marken, die seitwärts rollt.** 42 px hoch, mit
+eigenem Pfeil (der vom System sitzt am Telefon anders und zerschneidet die
+runde Form). Wer den vierten Filter braucht, wischt einmal — das ist
+billiger als eine zweite Reihe, die immer da ist.
+
+**Ein gesetzter Filter ist heller als ein leerer.** `select:not(.leer)`
+bekommt Kartenfläche und vollen Text. Das ist kein Schmuck: ein Filter,
+den man nicht sieht, lässt einen in einem Ausschnitt suchen, ohne es zu
+wissen — und das Ergebnis ist dann „Redion findet meine Seite nicht".
+
+**Zwei Funde beim Hinsehen** (CLAUDE.md §55 — Bild machen, nicht Code
+lesen), beide unsichtbar für jede bestehende Prüfung:
+
+Der Platzhalter brach ab. Statt der sechs Suchbefehle stand da „Suchen —
+auch typ:seite, in:Projekte, nach:202". Ein Satz, der mitten im Wort
+endet, liest sich wie ein Fehler. Am Telefon steht dort jetzt „Seiten und
+Inhalte suchen" — die Befehle bleiben in der Fusszeile, wo sie ganz
+hinpassen.
+
+Die Fusszeile nannte **„↑ ↓ auswählen · Enter öffnen · Esc schliessen"**.
+Keine dieser drei Tasten gibt es auf einer Telefontastatur. Das war eine
+Anleitung für ein anderes Gerät, sie nahm die Höhe von zwei Treffern weg,
+und sie stimmte kein einziges Mal. Am Telefon ist sie weg; die
+Suchbefehle daneben gelten überall und bleiben — in einer Zeile, die
+seitwärts rollt.
+
+**Am Rechner ändert sich nichts.** Die ganze Regel steht unter
+`@media(max-width:760px)`.
+
+**Status**
+
+`test114` §16, 8 Punkte. Gegenprobe: Marken-Block entfernt, `eng` auf
+`false`, `.leer` immer gesetzt → 7 von 8 rot. Der achte („die Suchbefehle
+bleiben") bleibt absichtlich grün — er prüft, dass die Fusszeile nicht
+komplett verschwindet.

@@ -720,11 +720,20 @@ const App = (() => {
    * SUCHE
    * ======================================================================*/
   const suche = () => {
+    /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
+       Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
+       Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
+       Drittel davon ins Feld, und was übrig bleibt („Suchen — auch
+       typ:seite, in:Projekte, nach:202") liest sich wie ein Fehler. Lieber
+       ein Wort, das stimmt, als ein Satz, der abbricht. */
+    const eng = matchMedia('(max-width:760px)').matches;
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder such" style="width:min(820px,95vw)">' +
-        '<input id="q" placeholder="Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;" autocomplete="off">' +
+        '<input id="q" placeholder="' + (eng ? 'Seiten und Inhalte suchen'
+          : 'Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;') +
+          '" autocomplete="off">' +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
             '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -741,9 +750,17 @@ const App = (() => {
           '<div class="res" id="res"></div>' +
           '<div class="such-vorschau" id="vorschau"></div>' +
         '</div>' +
-        '<div class="hint">↑ ↓ auswählen · Enter öffnen · Esc schliessen · ' +
-          'Befehle: <code>typ:seite</code> <code>in:Projekte</code> <code>nach:2026-01</code> ' +
-          '<code>tag:wichtig</code> <code>titel:Wort</code> <code>"genauer Satz"</code></div>' +
+        /* Die Fusszeile hat zwei Hälften, und nur eine gilt überall.
+           „↑ ↓ auswählen · Enter öffnen · Esc schliessen" nennt drei Tasten,
+           die eine Telefontastatur nicht hat — das ist keine Hilfe, sondern
+           eine Anleitung für ein anderes Gerät. Die Suchbefehle dagegen
+           gelten auf beiden, also bleiben sie. Getrennt, damit das
+           Stilblatt die eine Hälfte ausblenden kann und die andere nicht. */
+        '<div class="hint">' +
+          '<span class="hint-tasten">↑ ↓ auswählen · Enter öffnen · Esc schliessen · </span>' +
+          '<span class="hint-befehle">Befehle: <code>typ:seite</code> <code>in:Projekte</code> ' +
+          '<code>nach:2026-01</code> <code>tag:wichtig</code> <code>titel:Wort</code> ' +
+          '<code>"genauer Satz"</code></span></div>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -961,6 +978,20 @@ const App = (() => {
       if (e.key === 'ArrowUp')   { e.preventDefault(); i = Math.max(i - 1, 0); zeichne(); }
       if (e.key === 'Enter' && treffer[i]) { oeffne(treffer[i].page.id); o.remove(); }
     });
+
+    /* WELCHER FILTER IST GESETZT? Am Telefon sind die Filter Marken, und
+       eine gesetzte Marke muss man sehen, ohne sie zu öffnen — sonst sucht
+       man in einem Ausschnitt und weiss es nicht. `.leer` heisst: steht
+       auf der Vorgabe, also unauffällig. */
+    const filterMarken = () => {
+      o.querySelectorAll<HTMLSelectElement>('.such-filter select').forEach(s2 => {
+        const vorgabe = s2.options[0]?.value ?? '';
+        s2.classList.toggle('leer', s2.value === vorgabe);
+      });
+    };
+    o.querySelectorAll<HTMLSelectElement>('.such-filter select')
+      .forEach(s2 => s2.addEventListener('change', filterMarken));
+    filterMarken();
 
     o.addEventListener('mousedown', e => { if (e.target === o) o.remove(); });
     /* EINMAL ZEICHNEN, BEVOR JEMAND TIPPT. Ohne das blieb das leere

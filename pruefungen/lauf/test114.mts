@@ -806,6 +806,90 @@ p('… darunter das Zurückholen einer Sicherung',
   'wer das Gerät gewechselt hat, will nicht anfangen, sondern zurückholen');
 p('… und beide sind mit dem Finger zu treffen', lz.zuFlach === 0);
 
+console.log('\n16 · Die Suche am Telefon: Marken statt Auswahlfelder (§17, E48)');
+
+/* VIER `<select>` NEBENEINANDER SIND AM RECHNER RICHTIG und am Telefon das
+   Gegenteil. Dort öffnet jedes ein Systemrad über den halben Bildschirm —
+   für „nur Titel" statt „Titel und Inhalt" sind das drei Handgriffe, und
+   währenddessen sieht man die Trefferliste gar nicht mehr.
+   Als runde Marken behalten sie ihre Funktion und brauchen einen Tipp.
+
+   GEMESSEN WIRD DIE ZEILE, NICHT DAS STILBLATT. Der erste Entwurf schrieb
+   `flex-wrap:wrap` — vier Marken zu 42 px in zwei Reihen sind 100 px, und
+   das sind genau die 100 px, in denen die Treffer stehen. Ob die Zeile
+   umbricht, sieht man nur an den Y-Werten der vier Felder. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  App.suche();
+});
+await seite.waitForTimeout(600);
+
+const fl = await seite.evaluate(() => {
+  const leiste = document.querySelector<HTMLElement>('.such-filter');
+  const sel = [...(leiste?.querySelectorAll<HTMLSelectElement>('select') || [])];
+  const inp = document.getElementById('q') as HTMLInputElement | null;
+
+  /* Passt der Platzhalter ins Feld? NICHT über `scrollWidth` — ein
+     Platzhalter steht nicht im Inhalt und taucht dort nie auf. Also die
+     Breite mit derselben Schrift nachrechnen. */
+  let textBreite = 0, feldBreite = 0;
+  if (inp) {
+    const c = getComputedStyle(inp);
+    const g = document.createElement('canvas').getContext('2d');
+    if (g) {
+      g.font = `${c.fontStyle} ${c.fontWeight} ${c.fontSize} ${c.fontFamily}`;
+      textBreite = Math.round(g.measureText(inp.placeholder).width);
+    }
+    feldBreite = Math.round(inp.clientWidth
+      - parseFloat(c.paddingLeft) - parseFloat(c.paddingRight));
+  }
+
+  return {
+    reihen: new Set(sel.map(x => Math.round(x.getBoundingClientRect().top))).size,
+    zuFlach: sel.filter(x => x.getBoundingClientRect().height < 42).length,
+    rund: sel.every(x => parseFloat(getComputedStyle(x).borderTopLeftRadius) >= 18),
+    rollt: (leiste?.scrollWidth ?? 0) > (leiste?.clientWidth ?? 0),
+    tastenZeile: !!document.querySelector<HTMLElement>('.hint-tasten')?.offsetParent,
+    befehlsZeile: !!document.querySelector<HTMLElement>('.hint-befehle')?.offsetParent,
+    textBreite, feldBreite
+  };
+});
+
+p('Die vier Filter stehen in EINER Reihe', fl.reihen === 1,
+  fl.reihen + ' Reihen — zwei Reihen kosten 100 px Trefferliste');
+p('… sind mit dem Finger zu treffen', fl.zuFlach === 0, String(fl.zuFlach) + ' zu flach');
+p('… sehen aus wie Marken, nicht wie Formularfelder', fl.rund === true);
+p('… und die Zeile rollt seitwärts, statt umzubrechen', fl.rollt === true);
+
+/* Ein gesetzter Filter muss man SEHEN, ohne ihn zu öffnen — sonst sucht
+   man in einem Ausschnitt und weiss es nicht. */
+const marke = await seite.evaluate(() => {
+  const vorher = getComputedStyle(document.getElementById('f-typ')!).backgroundColor;
+  const x = document.getElementById('f-typ') as HTMLSelectElement;
+  x.value = 'datenbank';
+  x.dispatchEvent(new Event('change', { bubbles: true }));
+  const nachher = getComputedStyle(x).backgroundColor;
+  const nachbar = getComputedStyle(document.getElementById('f-wo')!).backgroundColor;
+  return { vorher, nachher, nachbar };
+});
+p('Ein gesetzter Filter sieht anders aus als ein leerer',
+  marke.nachher !== marke.vorher && marke.nachher !== marke.nachbar,
+  marke.vorher + ' → ' + marke.nachher + ' (Nachbar ' + marke.nachbar + ')');
+
+/* Die Fusszeile nannte ↑ ↓, Enter und Esc. Keine dieser Tasten gibt es auf
+   einer Telefontastatur — das war eine Anleitung für ein anderes Gerät. */
+p('Die Tastenzeile ist am Telefon weg', fl.tastenZeile === false,
+  'Esc gibt es dort nicht');
+p('… die Suchbefehle bleiben — die gelten überall', fl.befehlsZeile === true);
+
+/* Und der Platzhalter, der im Feld abbrach: „Suchen — auch typ:seite,
+   in:Projekte, nach:202" liest sich wie ein Fehler. */
+p('Der Platzhalter passt ins Suchfeld',
+  fl.textBreite > 0 && fl.textBreite <= fl.feldBreite,
+  fl.textBreite + ' px Text in ' + fl.feldBreite + ' px Feld');
+
+await seite.evaluate(() => document.querySelector('.overlay')?.remove());
+
 await browser.close();
 server.close();
 

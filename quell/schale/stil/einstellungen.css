@@ -441,3 +441,62 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   border-radius:7px; font-size:14px; font-weight:500; text-decoration:none; cursor:grab}
 .clip-knopf:active{cursor:grabbing}
 
+
+/* ===========================================================================
+   DIE SUCHFILTER ALS MARKEN — am Telefon (Vorgabe §17, E48)
+   ---------------------------------------------------------------------------
+   Vier Auswahlfelder nebeneinander sind am Rechner richtig: sie sind kompakt
+   und man sieht auf einen Blick, was eingestellt ist. Am Telefon sind sie
+   das Gegenteil. Ein `<select>` öffnet dort ein Systemrad über den halben
+   Bildschirm — für „nur Titel" statt „Titel und Inhalt" ist das drei
+   Handgriffe, und währenddessen sieht man die Suche gar nicht mehr.
+
+   Als Marken behalten sie ihre Funktion, brauchen aber nur einen Tipp, und
+   die Trefferliste bleibt die ganze Zeit sichtbar.
+
+   DIE ZEILE ROLLT SEITWÄRTS, statt umzubrechen. Vier Marken in zwei Reihen
+   nähmen 100 px vom Bildschirm — genau die 100 px, in denen die Treffer
+   stehen sollen. Wer den vierten Filter braucht, wischt einmal.
+   =========================================================================*/
+@media(max-width:760px){
+  .such-filter{
+    flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+    padding:0 16px 12px; gap:8px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .such-filter::-webkit-scrollbar{ display:none }
+  .such-filter select{
+    flex:0 0 auto;
+    min-height:42px; padding:0 32px 0 14px;
+    border-radius:999px; font-size:15px;
+    background:var(--bg-card); border-color:transparent;
+    color:var(--text-dim);
+    /* Der eigene Pfeil — der vom System sitzt am Telefon anders und
+       zerschneidet die runde Form. */
+    appearance:none; -webkit-appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, currentColor 50%),
+                     linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+  }
+  /* Ein Filter, der NICHT auf der Vorgabe steht, ist gesetzt — und das
+     muss man sehen, ohne ihn zu öffnen. Sonst sucht man in einem
+     Ausschnitt und weiss es nicht. */
+  .such-filter select:not(.leer){
+    background-color:var(--bg-hover); color:var(--text);
+    border-color:var(--line);
+  }
+
+  /* Die Tastenzeile der Fusszeile nennt ↑ ↓, Enter und Esc. Keine dieser
+     Tasten gibt es auf einer Telefontastatur. Sie stand da, nahm die
+     Höhe von zwei Treffern weg und stimmte kein einziges Mal. Die
+     Suchbefehle daneben gelten auf jedem Gerät und bleiben — in EINER
+     Zeile, die seitwärts rollt, statt in dreien, die den Platz fressen. */
+  .finder.such .hint-tasten{ display:none }
+  .finder.such .hint{
+    white-space:nowrap; overflow-x:auto; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .finder.such .hint::-webkit-scrollbar{ display:none }
+}
