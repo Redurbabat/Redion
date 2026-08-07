@@ -627,3 +627,25 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .sk-karte{height:118px; border-radius:20px}
   .sk-titel{font-size:15px}
 }
+
+/* Leere Zustände (Vorgabe §13). „Noch keine Seiten" allein ist eine
+   Feststellung; erst die Knöpfe daneben machen daraus einen Weg. Und der
+   zweite — Importieren — ist wichtiger, als er aussieht: wer gerade das
+   Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. */
+.leer-zustand{padding:34px 20px; text-align:center; border:1px dashed var(--line);
+  border-radius:18px; margin:6px 0 8px}
+.lz-zeichen{font-size:38px; opacity:.5; margin-bottom:12px}
+.leer-zustand b{display:block; font-size:19px; margin-bottom:7px}
+.leer-zustand span{display:block; font-size:14.5px; color:var(--text-dim);
+  line-height:1.5; max-width:320px; margin:0 auto}
+.lz-knoepfe{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+  margin-top:18px}
+.lz-knoepfe button{min-height:44px; padding:0 20px; border-radius:999px;
+  border:1px solid var(--line); font-size:15px}
+.lz-knoepfe button.prim{border-color:var(--accent); color:var(--accent)}
+.lz-knoepfe button:hover{background:var(--bg-hover)}
+@media(max-width:760px){
+  .leer-zustand b{font-size:21px}
+  .leer-zustand span{font-size:16px}
+  .lz-knoepfe button{min-height:48px; font-size:16px}
+}

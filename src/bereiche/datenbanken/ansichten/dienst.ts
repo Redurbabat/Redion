@@ -429,6 +429,17 @@ const Ansichten = (() => {
           '<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b>' +
             '<span>Gedanken sofort festhalten</span></button>' +
         '</div>' +
+        /* LEERER ZUSTAND (Vorgabe §13). „Noch keine Seiten" allein ist eine
+           Feststellung; erst die zwei Knöpfe daneben machen daraus einen
+           Weg. Der zweite ist wichtiger, als er aussieht: wer gerade das
+           Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. */
+        (alle.length ? '' :
+          '<div class="leer-zustand"><div class="lz-zeichen">📄</div>' +
+          '<b>Noch keine Seiten</b>' +
+          '<span>Erstelle deine erste Seite — oder hole eine Sicherung zurück, ' +
+          'wenn du von einem anderen Gerät kommst.</span>' +
+          '<div class="lz-knoepfe"><button data-a="neu" class="prim">Neue Seite</button>' +
+          '<button data-a="import">Importieren</button></div></div>') +
         block('Kürzlich verwendet', kuerzlich.map(p => zeile(p, zeit(p))).join('')) +
         block('Favoriten', sterne.map(p => zeile(p)).join('')) +
         block('Privat', privat.map(p =>
@@ -469,6 +480,7 @@ const Ansichten = (() => {
       if (!a) return;
       if (a.dataset.a === 'neu')        App.neueSeite();
       else if (a.dataset.a === 'memo')  Werkzeuge.schnellnotizen();
+      else if (a.dataset.a === 'import') Werkzeuge.dateienLesen();
       else if (a.dataset.a === 'papierkorb') App.papierkorb();
     };
   };

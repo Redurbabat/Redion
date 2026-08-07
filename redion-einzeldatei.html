@@ -1461,6 +1461,28 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .sk-titel{font-size:15px}
 }
 
+/* Leere Zustände (Vorgabe §13). „Noch keine Seiten" allein ist eine
+   Feststellung; erst die Knöpfe daneben machen daraus einen Weg. Und der
+   zweite — Importieren — ist wichtiger, als er aussieht: wer gerade das
+   Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. */
+.leer-zustand{padding:34px 20px; text-align:center; border:1px dashed var(--line);
+  border-radius:18px; margin:6px 0 8px}
+.lz-zeichen{font-size:38px; opacity:.5; margin-bottom:12px}
+.leer-zustand b{display:block; font-size:19px; margin-bottom:7px}
+.leer-zustand span{display:block; font-size:14.5px; color:var(--text-dim);
+  line-height:1.5; max-width:320px; margin:0 auto}
+.lz-knoepfe{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+  margin-top:18px}
+.lz-knoepfe button{min-height:44px; padding:0 20px; border-radius:999px;
+  border:1px solid var(--line); font-size:15px}
+.lz-knoepfe button.prim{border-color:var(--accent); color:var(--accent)}
+.lz-knoepfe button:hover{background:var(--bg-hover)}
+@media(max-width:760px){
+  .leer-zustand b{font-size:21px}
+  .leer-zustand span{font-size:16px}
+  .lz-knoepfe button{min-height:48px; font-size:16px}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */
@@ -35284,6 +35306,17 @@ const Ansichten = (() => {
                 '<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b>' +
                 '<span>Gedanken sofort festhalten</span></button>' +
                 '</div>' +
+                /* LEERER ZUSTAND (Vorgabe §13). „Noch keine Seiten" allein ist eine
+                   Feststellung; erst die zwei Knöpfe daneben machen daraus einen
+                   Weg. Der zweite ist wichtiger, als er aussieht: wer gerade das
+                   Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. */
+                (alle.length ? '' :
+                    '<div class="leer-zustand"><div class="lz-zeichen">📄</div>' +
+                        '<b>Noch keine Seiten</b>' +
+                        '<span>Erstelle deine erste Seite — oder hole eine Sicherung zurück, ' +
+                        'wenn du von einem anderen Gerät kommst.</span>' +
+                        '<div class="lz-knoepfe"><button data-a="neu" class="prim">Neue Seite</button>' +
+                        '<button data-a="import">Importieren</button></div></div>') +
                 block('Kürzlich verwendet', kuerzlich.map(p => zeile(p, zeit(p))).join('')) +
                 block('Favoriten', sterne.map(p => zeile(p)).join('')) +
                 block('Privat', privat.map(p => zeile(p, (() => {
@@ -35327,6 +35360,8 @@ const Ansichten = (() => {
                 App.neueSeite();
             else if (a.dataset.a === 'memo')
                 Werkzeuge.schnellnotizen();
+            else if (a.dataset.a === 'import')
+                Werkzeuge.dateienLesen();
             else if (a.dataset.a === 'papierkorb')
                 App.papierkorb();
         };

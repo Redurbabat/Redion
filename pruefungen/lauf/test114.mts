@@ -773,6 +773,39 @@ p('Nichts gefunden sagt, was man tun kann',
 
 await seite.evaluate(() => document.querySelector('.overlay')?.remove());
 
+console.log('\n15 · Leere Zustände sagen, was man tun kann (Vorgabe §13)');
+
+/* „Noch keine Seiten" allein ist eine Feststellung; erst die Knöpfe daneben
+   machen daraus einen Weg. Der zweite — Importieren — ist wichtiger, als
+   er aussieht: wer gerade das Gerät gewechselt hat, will nicht anfangen,
+   sondern zurückholen. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  Object.values<any>(Store.cache.blocks).forEach((b: any) => {
+    if (b.type === 'page') Store.updateBlock(b.id, { alive: false });
+  });
+  Ansichten.seiten();
+});
+await seite.waitForTimeout(600);
+
+const lz = await seite.evaluate(() => {
+  const el = document.querySelector<HTMLElement>('.leer-zustand');
+  const kn = [...(el?.querySelectorAll<HTMLElement>('button') || [])];
+  return {
+    da: !!el,
+    text: (el?.textContent || '').trim(),
+    knoepfe: kn.map(b => (b.textContent || '').trim()),
+    zuFlach: kn.filter(b => b.getBoundingClientRect().height < 44).length
+  };
+});
+p('Ohne Seiten steht ein leerer Zustand da', lz.da === true,
+  'vorher stand dort nur „Noch keine Seiten" in einer grauen Zeile');
+p('… und er nennt zwei Wege', lz.knoepfe.length === 2, lz.knoepfe.join(', '));
+p('… darunter das Zurückholen einer Sicherung',
+  lz.knoepfe.includes('Importieren'),
+  'wer das Gerät gewechselt hat, will nicht anfangen, sondern zurückholen');
+p('… und beide sind mit dem Finger zu treffen', lz.zuFlach === 0);
+
 await browser.close();
 server.close();
 
