@@ -330,9 +330,17 @@ const manifest = JSON.parse(_lies(_dazu(WURZEL, manifestPfad), 'utf8'));
 const BASIS = new URL(manifestPfad, 'https://beispiel.test/');
 const aufloesen = (wert: any) => new URL(wert, BASIS).pathname;
 
-/* Und dann nachsehen, ob unter dieser Adresse wirklich eine Datei liegt. */
+/* Und dann nachsehen, ob unter dieser Adresse wirklich eine Datei liegt.
+   `/` selbst ist dabei die Startseite und landet also bei index.html. */
 const gibtEs = (pfad: any) => {
-  try { _lies(_dazu(WURZEL, pfad.replace(/^\//, ''))); return true; } catch { return false; }
+  const relativ = pfad.replace(/^\//, '');
+  const kandidaten = [
+    relativ,
+    relativ ? _dazu(relativ, 'index.html') : 'index.html'
+  ];
+  return kandidaten.some((kandidat: string) => {
+    try { _lies(_dazu(WURZEL, kandidat)); return true; } catch { return false; }
+  });
 };
 
 const start = aufloesen(manifest.start_url);
