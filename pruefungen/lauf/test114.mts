@@ -725,6 +725,54 @@ p('Nichts liegt über dem Eingabefeld', ki?.frei === true,
 await seite.evaluate(() => App.kiPanel(false));
 await seite.waitForTimeout(400);
 
+console.log('\n14 · Die Suche: „Zuletzt gesucht" und ein ehrliches Leer (§17)');
+
+/* DAS LEERE SUCHFELD IST DER HÄUFIGSTE ZUSTAND ÜBERHAUPT — man öffnet die
+   Suche und hat noch nichts getippt. Ausgerechnet dort stand nichts.
+   Menschen suchen wiederholt dasselbe; die letzten Begriffe als antippbare
+   Marken sind die schnellste Abkürzung, die eine Suche haben kann. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  Store.setMeta('suchverlauf', ['formel', 'sicherung', 'karteikarte']);
+  App.suche();
+});
+await seite.waitForTimeout(700);
+
+const su = await seite.evaluate(() => {
+  const m = [...document.querySelectorAll<HTMLElement>('.sv-marken button')];
+  return {
+    kopf: (document.querySelector('.sv-kopf')?.textContent || '').trim(),
+    marken: m.map(b => (b.textContent || '').trim()),
+    hoehe: m[0] ? Math.round(m[0].getBoundingClientRect().height) : 0
+  };
+});
+p('Das leere Suchfeld zeigt die letzten Suchen', su.marken.length === 3,
+  JSON.stringify(su.marken) + ' — vorher stand dort nichts');
+p('… unter einer Überschrift', su.kopf === 'Zuletzt gesucht', su.kopf);
+p('… und die Marken sind mit dem Finger zu treffen', su.hoehe >= 40, String(su.hoehe));
+
+/* Ein Tipp darauf sucht wirklich — eine Marke, die nur dasteht, ist Zierrat. */
+await seite.evaluate(() => {
+  document.querySelector<HTMLElement>('.sv-marken button')?.click();
+});
+await seite.waitForTimeout(500);
+const nachTipp = await seite.evaluate(() =>
+  (document.getElementById('q') as HTMLInputElement | null)?.value || '');
+p('Ein Tipp auf eine Marke sucht danach', nachTipp === 'formel', nachTipp);
+
+/* Und wenn nichts da ist, steht ein Satz statt einer leeren Fläche. */
+await seite.evaluate(() => {
+  const i = document.getElementById('q') as HTMLInputElement;
+  i.value = 'zzqqxxyy'; i.dispatchEvent(new Event('input'));
+});
+await seite.waitForTimeout(500);
+const leer = await seite.evaluate(() =>
+  (document.querySelector('.such-leer')?.textContent || '').trim());
+p('Nichts gefunden sagt, was man tun kann',
+  /Nichts gefunden/.test(leer) && /Befehl/.test(leer), leer.slice(0, 70));
+
+await seite.evaluate(() => document.querySelector('.overlay')?.remove());
+
 await browser.close();
 server.close();
 

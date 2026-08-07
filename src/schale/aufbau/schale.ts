@@ -753,22 +753,77 @@ const App = (() => {
     let treffer: any[] = [];
     let i = 0;
 
+    /* ----------------------------------------------------------------------
+     * „ZULETZT GESUCHT" (Vorgabe §17)
+     * ----------------------------------------------------------------------
+     * Vorher war das leere Suchfeld ein leeres Fenster. Das ist der
+     * häufigste Zustand überhaupt — man öffnet die Suche und hat noch
+     * nichts getippt — und ausgerechnet dort stand nichts.
+     *
+     * Menschen suchen wiederholt dasselbe. Die letzten sechs Begriffe als
+     * antippbare Marken sind deshalb kein Beiwerk, sondern die schnellste
+     * Abkürzung, die eine Suche haben kann: einmal tippen statt elfmal.
+     *
+     * Gemerkt wird erst beim Öffnen eines Treffers, nicht bei jedem
+     * Tastendruck — sonst stünde dort „f", „fo", „for", „form".
+     * -------------------------------------------------------------------- */
+    const letzteSuchen = (): string[] => {
+      try { return (Store.getMeta('suchverlauf', []) || []).slice(0, 6); }
+      catch { return []; }
+    };
+    const merkeSuche = (wort: string) => {
+      const w = String(wort || '').trim();
+      if (w.length < 2) return;
+      const alt2 = letzteSuchen().filter(x => x.toLowerCase() !== w.toLowerCase());
+      try { Store.setMeta('suchverlauf', [w, ...alt2].slice(0, 12)); } catch { }
+    };
+
+    /* Der Verlauf steht ÜBER der Liste, nicht statt ihrer. Das leere
+       Suchfeld zeigt nämlich schon alle Seiten — mein erster Entwurf
+       prüfte auf `!treffer.length` und griff deshalb nie. Gesehen hat das
+       die Probe, nicht der Code. */
+    const verlaufBlock = (): string => {
+      if (inp.value) return '';
+      const w = letzteSuchen();
+      if (!w.length) return '';
+      return '<div class="such-verlauf"><div class="sv-kopf">Zuletzt gesucht</div>' +
+        '<div class="sv-marken">' +
+        w.map(x => `<button data-wort="${esc(x)}">${esc(x)}</button>`).join('') +
+        '</div></div>';
+    };
+    const verlaufBinden = () => {
+      res.querySelectorAll<HTMLElement>('[data-wort]').forEach(b => {
+        b.addEventListener('click', () => {
+          inp.value = b.dataset['wort'] || '';
+          inp.dispatchEvent(new Event('input'));
+          inp.focus();
+        });
+      });
+    };
+
     const zeichne = () => {
       if (!treffer.length) {
         res.innerHTML = inp.value
-          ? '<div style="padding:14px; color:var(--text-faint); font-size:14px">Nichts gefunden</div>'
-          : '';
+          ? '<div class="such-leer"><b>Nichts gefunden</b>' +
+            '<span>Versuche einen anderen Begriff — oder suche in den Befehlen ' +
+            'mit <code>Strg ⇧ P</code>.</span></div>'
+          : verlaufBlock();
+        verlaufBinden();
         return;
       }
-      res.innerHTML = treffer.map((t, k) =>
+      res.innerHTML = verlaufBlock() + treffer.map((t, k) =>
         `<button data-i="${k}" ${k === i ? 'class="on"' : ''}>` +
           `<span>${t.page.icon || '📄'}</span>` +
           `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
           (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
           (t.treffer === 'Inhalt' ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
-      res.querySelectorAll<HTMLElement>('button').forEach(b => {
-        b.addEventListener('click', () => { oeffne(treffer[Number(b.dataset.i)]?.page.id); o.remove(); });
+      verlaufBinden();
+      res.querySelectorAll<HTMLElement>('button[data-i]').forEach(b => {
+        b.addEventListener('click', () => {
+          merkeSuche(inp.value);
+          oeffne(treffer[Number(b.dataset.i)]?.page.id); o.remove();
+        });
         b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
       });
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
@@ -908,6 +963,11 @@ const App = (() => {
     });
 
     o.addEventListener('mousedown', e => { if (e.target === o) o.remove(); });
+    /* EINMAL ZEICHNEN, BEVOR JEMAND TIPPT. Ohne das blieb das leere
+       Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
+       überhaupt: man öffnet die Suche und hat noch nichts eingegeben.
+       Genau dort gehören die letzten Suchbegriffe hin. */
+    zeichne();
     inp.focus();
   };
 

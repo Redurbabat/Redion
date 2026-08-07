@@ -236,3 +236,25 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .finder .res .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
 .finder .res .snip{display:block; font-size:12px; color:var(--text-dim); margin-top:2px}
 .finder .hint{padding:8px 14px; font-size:11.5px; color:var(--text-faint); border-top:1px solid var(--line)}
+
+/* „Zuletzt gesucht" und der leere Treffer (Vorgabe §17). Vorher war das
+   leere Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
+   überhaupt: man öffnet die Suche und hat noch nichts getippt. */
+.such-verlauf{padding:14px 12px 16px}
+.sv-kopf{font-size:12.5px; color:var(--text-faint); margin-bottom:9px}
+.sv-marken{display:flex; flex-wrap:wrap; gap:8px}
+.sv-marken button{display:inline-flex; align-items:center; height:36px;
+  padding:0 14px; border-radius:999px; background:var(--bg-card);
+  color:var(--text-dim); font-size:14px; white-space:nowrap; border:1px solid transparent}
+.sv-marken button:hover{background:var(--bg-hover); color:var(--text);
+  border-color:var(--line)}
+.such-leer{padding:22px 16px; text-align:center}
+.such-leer b{display:block; font-size:16px; margin-bottom:6px}
+.such-leer span{display:block; font-size:14px; color:var(--text-dim); line-height:1.5}
+.such-leer code{font:12.5px var(--mono); background:var(--bg-card);
+  padding:2px 7px; border-radius:6px}
+@media(max-width:760px){
+  .sv-marken button{height:42px; font-size:15px; padding:0 16px}
+  .such-leer b{font-size:18px}
+  .such-leer span{font-size:15.5px}
+}
