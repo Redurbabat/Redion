@@ -2244,3 +2244,73 @@ verdreht → rot. Die Abschaltung wird mit einem Browser geprüft, der
 **Was aus der Bewegungs-Vorgabe noch fehlt:** die gleitende Pille beim
 Reiterwechsel, die versetzt einblendenden Listenzeilen, das Schimmern der
 Ladeskelette, die Zustandswechsel der Sicherungskarte. Steht in `L10`.
+
+---
+
+## E44 · Nocturne — Redion bekommt eigene Farben
+
+**Die grosse Änderung.** Redion trug im Kern Notions Palette: `#191919` und
+ein Himmelblau. Das war ein guter Anfang und die falsche Identität — die
+Vorgabe sagt „inspired by Notion Mobile, but it must not be a direct copy",
+und die Farben sind die Stelle, an der man das zuerst sieht.
+
+```txt
+Grund      #191919 → #141414        näher an Schwarz
+Fläche     #202020 → #1a1a1a
+Karte      #252525 → #202020
+Ränder     feste Grauwerte → rgba(255,255,255,.08/.12/.18)
+Text       #e9e9e7 → #f2f2f2        16.5:1 statt 14.5:1
+Akzent     #2eaadc → #f97316        warm, nicht blau
+```
+
+**Die Ränder sind jetzt durchscheinend**, und das ist mehr als Kosmetik.
+Ein fester Grauwert stimmt auf genau einer Fläche; derselbe Rand auf einer
+Karte ist plötzlich zu dunkel. `rgba` über Weiss verhält sich überall
+gleich — hellerer Grund, hellerer Rand.
+
+**Der Akzent ist orange, nicht rot, und eine Rechnung hat das entschieden.**
+Die Vorgabe nennt `#EF4444` gleichzeitig als Akzent UND als Gefahr. Zwei
+Gründe dagegen, beide gemessen:
+
+```txt
+#EF4444 auf einer Karte   4.33:1   unter der Grenze für Text
+#F97316 auf einer Karte   5.81:1   darüber
+Akzent = Gefahr           →        „Sichern" sieht aus wie „Löschen"
+```
+
+Rot bleibt deshalb, was es sein muss: das Zeichen für etwas
+Unwiderrufliches. `test127` prüft beides und wird rot, wenn jemand den
+Vorschlag der Vorgabe wörtlich nimmt — nachgestellt.
+
+**Ein Fehler, der den ganzen Umstieg unsichtbar gemacht hätte.** Die
+Schemata „Standard" und „Hell" setzten den Akzent per `style.setProperty`
+auf `documentElement`. Ein Inline-Stil schlägt jedes Stilblatt: die neue
+Farbe stand in `dunkel.css` und kam nie auf dem Bildschirm an. Schlimmer —
+EIN Inline-Wert kann für hell und dunkel nicht beide richtig sein. Das
+Orange mit 6.6:1 auf Schwarz kommt auf Weiss auf **2.80:1**. Beide
+Standard-Schemata tragen jetzt gar keinen Akzent; die Stilblätter bringen
+ihren eigenen, nachgerechneten mit.
+
+**Und ein Fund, der älter ist als diese Änderung.** `test127` misst auch
+den Hellmodus, und dort lagen zwei Werte aus Notions Palette seit jeher
+unter der Grenze:
+
+```txt
+--text-dim   #787774   4.17:1 auf der Karte   nötig 4.5
+--text-faint #9b9a97   2.62:1 auf der Karte   nötig 3.0
+```
+
+Auf Weiss ging der erste gerade so durch (4.48) — auf einer Karte nicht
+mehr. Genau diese Sorte Fehler sieht man nicht: 4.4:1 und 4.6:1 wirken
+gleich, und nur eines davon kann jemand mit schwachen Augen lesen. Jetzt
+`#66655f` und `#82817e`.
+
+**Was NICHT angefasst wurde:** die zehn Block- und Hintergrundfarben
+(`--c-*`, `--b-*`). Die wählt der Nutzer für seine eigenen Blöcke aus; sie
+sind Inhalt, nicht Oberfläche. Und die anderen Schemata (Mitternacht,
+Wald, Sand) bringen weiter ihre eigenen Flächen und Akzente mit.
+
+**Status**
+
+`test127`, 20 Punkte, beide Modi, gerechnet am laufenden Browser statt an
+den Stilblättern — was zählt, ist der Wert, der am Ende gilt.

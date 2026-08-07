@@ -130,18 +130,50 @@
  * ==========================================================================*/
 
 :root{
-  --bg:            #191919;
-  --bg-side:       #202020;
-  --bg-card:       #252525;
-  --bg-hover:      #2f2f2f;
-  --bg-active:     #37352f26;
-  --bg-input:      #2b2b2b;
-  --line:          #373737;
-  --line-soft:     #2a2a2a;
-  --text:          #e9e9e7;
-  --text-dim:      #9b9a97;
-  --text-faint:    #6b6b6b;
-  --accent:        #2eaadc;
+  /* ------------------------------------------------------------------------
+   * NOCTURNE (E44) — die Farbwelt aus Redurs Vorgabe, §3
+   * ------------------------------------------------------------------------
+   * Bis hierher trug Redion im Kern Notions Palette: #191919 und ein
+   * Himmelblau. Das war ein guter Anfang und die falsche Identität — die
+   * Vorgabe sagt „inspired by Notion Mobile, but it must not be a direct
+   * copy", und die Farben sind die Stelle, an der man das zuerst sieht.
+   *
+   * Nocturne heisst: näher an Schwarz, ruhigere Flächen, Ränder aus Licht
+   * statt aus Grau, und EIN warmer Akzent, sparsam gesetzt.
+   *
+   * DIE RÄNDER SIND JETZT DURCHSCHEINEND, und das ist mehr als Kosmetik.
+   * Ein fester Grauwert stimmt auf genau einer Fläche; liegt derselbe Rand
+   * auf einer Karte, ist er plötzlich zu dunkel oder zu hell. `rgba` über
+   * Weiss verhält sich auf jeder Fläche gleich — heller Grund, hellerer
+   * Rand.
+   * --------------------------------------------------------------------- */
+  --bg:            #141414;   /* Grundfläche                                */
+  --bg-tief:       #0f1012;   /* darunter: Blätter, Überlagerungen          */
+  --bg-side:       #1a1a1a;   /* Fläche                                     */
+  --bg-card:       #202020;   /* gehobene Fläche                            */
+  --bg-hover:      #2d2d2d;   /* berührt / überfahren                       */
+  --bg-press:      #343434;   /* gedrückt                                   */
+  --bg-active:     rgba(255,255,255,.06);
+  --bg-input:      #1a1a1a;
+  --line:          rgba(255,255,255,.12);
+  --line-soft:     rgba(255,255,255,.08);
+  --line-stark:    rgba(255,255,255,.18);
+  --text:          #f2f2f2;   /* gemessen 16.5:1 auf dem Grund             */
+  --text-dim:      #a7a7a7;   /* 7.7:1 — Fliesstext erlaubt                */
+  --text-faint:    #737373;   /* 3.9:1 — nur Beiwerk und Symbole           */
+
+  /* DER AKZENT IST ORANGE, NICHT ROT, und das ist keine Geschmacksfrage.
+     Die Vorgabe nennt #EF4444 gleichzeitig als Akzent UND als Gefahr —
+     dann sieht „Sichern" aus wie „Löschen". Und gemessen fällt Rot auf
+     einer Karte auf 4.33:1, also unter die Grenze für Text; Orange liegt
+     mit 5.8:1 überall darüber. Rot bleibt deshalb, was es sein muss: das
+     Zeichen für etwas Unwiderrufliches. */
+  --accent:        #f97316;
+  --accent-warm:   #fb923c;
+  --gefahr:        #ef4444;
+  --erfolg:        #22c55e;
+  --info:          #38bdf8;
+  --warnung:       #f59e0b;
   --shadow:        0 8px 28px rgba(0,0,0,.45);
 
   /* Die zehn Notion-Textfarben */
@@ -193,9 +225,52 @@ html[data-theme="light"]{
   --line:      #e9e9e7;
   --line-soft: #f1f1ef;
   --text:      #37352f;
-  --text-dim:  #787774;
-  --text-faint:#9b9a97;
+  /* NACHGEDUNKELT AM 7. AUGUST, und der Grund ist eine Rechnung, kein
+     Geschmack. Diese beiden Werte stammen aus Notions heller Palette und
+     lagen unter der Lesbarkeitsgrenze:
+
+         #787774  4.17:1 auf der Karte   nötig sind 4.5 für Fliesstext
+         #9b9a97  2.62:1 auf der Karte   nötig sind 3.0 selbst für Beiwerk
+
+     Auf Weiss ging der erste gerade so durch (4.48) — auf einer Karte
+     nicht mehr. Genau diese Sorte Fehler sieht man nicht: 4.4:1 und 4.6:1
+     wirken gleich, und nur eines davon kann jemand mit schwachen Augen
+     lesen. Gefunden hat es `test127`, nicht das Auge. */
+  --text-dim:  #66655f;
+  --text-faint:#82817e;
   --shadow:    0 8px 28px rgba(15,15,15,.12);
+
+  /* ------------------------------------------------------------------------
+   * NOCTURNE IM HELLMODUS (E44)
+   * ------------------------------------------------------------------------
+   * Dieselben Marken wie im Dunkelmodus, aber NICHT dieselben Werte — und
+   * das ist der Grund, warum sie hier überhaupt stehen. `dunkel.css` warnt
+   * oben ausdrücklich: wer dort eine Marke ergänzt und hier nicht, bekommt
+   * im Hellmodus den dunklen Wert, und das merkt erst jemand, der hell
+   * arbeitet.
+   *
+   * Gemessen auf Weiss, nicht geschätzt:
+   *
+   *     #f97316  2.80:1   zu hell für Text
+   *     #c2410c  5.18:1   ok
+   *     #ef4444  3.76:1   zu hell für Text
+   *     #dc2626  4.83:1   ok
+   *     #16a34a  3.30:1   zu hell → #15803d mit 5.02:1
+   *     #0284c7  4.10:1   knapp darunter → #0369a1 mit 5.93:1
+   *
+   * Eine Farbe, die auf Schwarz leuchtet, verschwindet auf Weiss. Dieselbe
+   * Zahl für beide Modi zu nehmen ist der häufigste Fehler bei dunkel
+   * entworfenen Oberflächen.
+   * --------------------------------------------------------------------- */
+  --bg-tief:     #f4f4f2;
+  --bg-press:    #e6e6e4;
+  --line-stark:  rgba(15,15,15,.22);
+  --accent:      #c2410c;
+  --accent-warm: #ea580c;
+  --gefahr:      #dc2626;
+  --erfolg:      #15803d;
+  --info:        #0369a1;
+  --warnung:     #b45309;
 
   --c-default:#37352f; --c-gray:#787774; --c-brown:#9f6b53; --c-orange:#d9730d;
   --c-yellow:#cb912f;  --c-green:#448361; --c-blue:#337ea9;  --c-purple:#9065b0;
@@ -47080,9 +47155,20 @@ const Aussehen = (() => {
      * daraus ab. „grund" sagt, ob darüber das helle oder das dunkle Grundgerüst
      * gilt.
      * ======================================================================*/
+    /* STANDARD UND HELL TRAGEN KEINEN EIGENEN AKZENT, und das ist der Punkt:
+       ein Inline-Stil auf `documentElement` schlägt jedes Stilblatt. Solange
+       hier `#2eaadc` stand, konnte `dunkel.css` seinen Akzent gar nicht
+       durchsetzen — die Nocturne-Farbe war gesetzt und blieb unsichtbar.
+  
+       Schlimmer noch: EIN Wert kann für hell und dunkel nicht beide richtig
+       sein. Das Orange, das auf Schwarz mit 6.6:1 leuchtet, kommt auf Weiss
+       auf 2.8:1 — unter jeder Lesbarkeitsgrenze. Genau deshalb steht der
+       Akzent jetzt in `dunkel.css` und `hell.css`, jeder mit seinem eigenen,
+       nachgerechneten Wert. Die anderen Schemata setzen ihn weiter selbst;
+       sie bringen ja auch ihre eigenen Flächen mit. */
     const SCHEMATA = [
-        { id: 'standard', name: 'Standard', grund: 'dark', akzent: '#2eaadc', werte: {} },
-        { id: 'hell', name: 'Hell', grund: 'light', akzent: '#2eaadc', werte: {} },
+        { id: 'standard', name: 'Standard', grund: 'dark', akzent: '', werte: {} },
+        { id: 'hell', name: 'Hell', grund: 'light', akzent: '', werte: {} },
         { id: 'nacht', name: 'Mitternacht', grund: 'dark', akzent: '#6c8cff', werte: {
                 '--bg': '#0f1117', '--bg-side': '#141824', '--bg-card': '#1a1f2e',
                 '--bg-hover': '#232838', '--bg-input': '#1d2231',
