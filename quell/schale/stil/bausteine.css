@@ -2251,3 +2251,51 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 
 /* Am Rechner gibt es dieses Blatt nicht — dort ist die Seitenleiste richtig. */
 @media(min-width:701px){ #r-blatt{ display:none } }
+
+/* ===========================================================================
+   BERÜHRUNGSRÜCKMELDUNG — jedes Antippen antwortet (E43)
+   ---------------------------------------------------------------------------
+   Am Telefon gibt es kein Hover. Ohne :active antwortet also GAR NICHTS auf
+   eine Berührung: man tippt, und bis die neue Ansicht steht, weiss man
+   nicht, ob man getroffen hat. Bei einer Ansicht, die 200 ms braucht, sind
+   das 200 ms Zweifel — und Zweifel führen zum zweiten Tippen.
+
+   Deshalb hier, und nur am Telefon: eine Antwort, die man spürt, bevor
+   irgendetwas geladen ist.
+
+   `transform` und `opacity` sind mit Absicht die einzigen Eigenschaften,
+   die sich bewegen — nur diese beiden kann der Browser ohne neues Rechnen
+   des Aufbaus zeichnen. Eine Höhe zu animieren sieht auf dem Rechner gleich
+   aus und ruckelt auf dem Telefon.
+   =========================================================================*/
+@media(max-width:760px){
+  .home-karten .hk,
+  .home-liste button,
+  #handy-oben button,
+  #handy-unten > *,
+  #r-blatt .rm-gruppe button,
+  .kp-wolke span{
+    transition: transform var(--motion-fast) var(--ease-standard),
+                background-color var(--motion-fast) var(--ease-standard);
+  }
+  .home-karten .hk:active,
+  .home-liste button:active{
+    transform: scale(var(--card-press-scale));
+    background: var(--bg-hover);
+  }
+  #handy-oben button:active,
+  #handy-unten > *:active,
+  #r-blatt .rm-gruppe button:active{
+    transform: scale(var(--press-scale));
+  }
+
+  /* Das Blatt von unten darf schwer wirken — langsamer herein als hinaus,
+     genau wie die Vorgabe es sagt. */
+  #r-blatt{ transition: opacity var(--motion-slow) var(--ease-enter),
+                        transform var(--motion-slow) var(--ease-enter) }
+  .menu.blatt{ animation: blatt-hoch var(--motion-slow) var(--ease-enter) }
+}
+@keyframes blatt-hoch{
+  from{ transform:translateY(16px); opacity:0 }
+  to{ transform:translateY(0); opacity:1 }
+}

@@ -68,6 +68,49 @@
   --serif: Lyon-Text, Georgia, ui-serif, serif;
 }
 
+/* ===========================================================================
+   BEWEGUNG — die Marken aus Redurs Vorgabe (E43)
+   ---------------------------------------------------------------------------
+   Bis hierher stand jede Dauer an ihrer eigenen Stelle: .14s hier, 200ms
+   dort, .22s im Blatt. Gemessen am 7. August: rund achtunddreissig
+   Übergänge in sieben Stilblättern, kein einziger gemeinsamer Wert. Wer die
+   App als Ganzes ruhiger oder schneller machen wollte, musste sie suchen.
+
+   DREI DAUERN REICHEN, und das ist der Punkt der Vorgabe:
+
+     schnell   Berührung, Knopfdruck — es soll SOFORT wirken
+     normal    Reiterwechsel, Seitenwechsel, Hinweis
+     langsam   Blätter von unten; sie dürfen schwer wirken
+
+   Die Kurven sind nicht Geschmack. `ease-enter` startet schnell und bremst
+   weich aus — was hereinkommt, soll ankommen, nicht anschweben.
+   `ease-exit` macht es umgekehrt: was geht, geht zügig. Beides linear wäre
+   das, was billige Oberflächen unterscheidet von teuren.
+
+   WAS HIER ABSICHTLICH NICHT STEHT: Federn und Sprünge. Redion ist ein
+   Arbeitsgerät. Ein Blatt, das nachwippt, ist beim ersten Mal nett und beim
+   fünfzigsten eine Verzögerung.
+
+   Wer keine Bewegung mag, bekommt keine — die Regel dafür steht global in
+   `bausteine.css` und überschreibt jede dieser Marken.
+   =========================================================================*/
+:root{
+  --motion-fast: 120ms;
+  --motion-normal: 220ms;
+  --motion-slow: 320ms;
+
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+
+  /* Wie weit etwas beim Antippen einsinkt. Ein Knopf darf deutlich
+     reagieren; eine Karte, die man mit der halben Handfläche trifft, nur
+     angedeutet — sonst zuckt der halbe Bildschirm. */
+  --press-scale: 0.96;
+  --card-press-scale: 0.985;
+  --sheet-dim: rgba(0,0,0,0.35);
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/dunkel.css ===== */
@@ -4627,6 +4670,54 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 
 /* Am Rechner gibt es dieses Blatt nicht — dort ist die Seitenleiste richtig. */
 @media(min-width:701px){ #r-blatt{ display:none } }
+
+/* ===========================================================================
+   BERÜHRUNGSRÜCKMELDUNG — jedes Antippen antwortet (E43)
+   ---------------------------------------------------------------------------
+   Am Telefon gibt es kein Hover. Ohne :active antwortet also GAR NICHTS auf
+   eine Berührung: man tippt, und bis die neue Ansicht steht, weiss man
+   nicht, ob man getroffen hat. Bei einer Ansicht, die 200 ms braucht, sind
+   das 200 ms Zweifel — und Zweifel führen zum zweiten Tippen.
+
+   Deshalb hier, und nur am Telefon: eine Antwort, die man spürt, bevor
+   irgendetwas geladen ist.
+
+   `transform` und `opacity` sind mit Absicht die einzigen Eigenschaften,
+   die sich bewegen — nur diese beiden kann der Browser ohne neues Rechnen
+   des Aufbaus zeichnen. Eine Höhe zu animieren sieht auf dem Rechner gleich
+   aus und ruckelt auf dem Telefon.
+   =========================================================================*/
+@media(max-width:760px){
+  .home-karten .hk,
+  .home-liste button,
+  #handy-oben button,
+  #handy-unten > *,
+  #r-blatt .rm-gruppe button,
+  .kp-wolke span{
+    transition: transform var(--motion-fast) var(--ease-standard),
+                background-color var(--motion-fast) var(--ease-standard);
+  }
+  .home-karten .hk:active,
+  .home-liste button:active{
+    transform: scale(var(--card-press-scale));
+    background: var(--bg-hover);
+  }
+  #handy-oben button:active,
+  #handy-unten > *:active,
+  #r-blatt .rm-gruppe button:active{
+    transform: scale(var(--press-scale));
+  }
+
+  /* Das Blatt von unten darf schwer wirken — langsamer herein als hinaus,
+     genau wie die Vorgabe es sagt. */
+  #r-blatt{ transition: opacity var(--motion-slow) var(--ease-enter),
+                        transform var(--motion-slow) var(--ease-enter) }
+  .menu.blatt{ animation: blatt-hoch var(--motion-slow) var(--ease-enter) }
+}
+@keyframes blatt-hoch{
+  from{ transform:translateY(16px); opacity:0 }
+  to{ transform:translateY(0); opacity:1 }
+}
 
 </style>
 

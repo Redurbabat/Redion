@@ -2176,3 +2176,71 @@ in `LUECKEN.md` L10.
 Gebaut: der Reiter „Mehr", der Bereich Mehr mit drei Gruppen, der Kompass
 als Seite darin. `test114` (57 Punkte), `test37`, `test40`, `test67`
 mitgezogen.
+
+---
+
+## E43 · Bewegung: drei Dauern, drei Kurven, keine Federn
+
+**Woher das kommt.** Redurs Vorgabe zum Bewegungssystem, und der Satz, der
+sie zusammenfasst: *„Animations must improve clarity, not distract."*
+
+**Was gemessen wurde, bevor gebaut wurde.** Rund achtunddreissig Übergänge
+in sieben Stilblättern — und **kein einziger gemeinsamer Wert**. `.14s`
+hier, `200ms` dort, `.22s` im Blatt. Wer die App als Ganzes ruhiger oder
+schneller machen wollte, musste sie einzeln suchen.
+
+Was dagegen schon stimmte und deshalb NICHT angefasst wurde: die
+Abschaltung. `bausteine.css` hat eine globale Regel auf `*`, die bei
+`prefers-reduced-motion` jede Dauer auf 0.001ms setzt. Der erste Blick
+zählte vier Fundstellen und hielt das für lückenhaft — die eine davon deckt
+alles ab.
+
+**Die Marken.**
+
+```txt
+--motion-fast    120ms   Berührung, Knopfdruck — es soll SOFORT wirken
+--motion-normal  220ms   Reiterwechsel, Seitenwechsel, Hinweis
+--motion-slow    320ms   Blätter von unten; sie dürfen schwer wirken
+
+--ease-standard  cubic-bezier(0.2, 0.8, 0.2, 1)
+--ease-enter     cubic-bezier(0.16, 1, 0.3, 1)
+--ease-exit      cubic-bezier(0.4, 0, 1, 1)
+
+--press-scale       0.96    Knopf
+--card-press-scale  0.985   Karte
+```
+
+Die Kurven sind nicht Geschmack. `ease-enter` startet schnell und bremst
+weich aus — was hereinkommt, soll ankommen, nicht anschweben. `ease-exit`
+macht es umgekehrt. Beides linear ist das, was billige Oberflächen von
+teuren unterscheidet.
+
+**Keine Federn, und das wird geprüft.** Eine Kurve mit einem Wert über 1
+schwingt über das Ziel hinaus. Beim ersten Mal nett, beim fünfzigsten eine
+Verzögerung — Redion ist ein Arbeitsgerät. `test126` rechnet die
+Bezier-Werte nach und wird rot, wenn jemand eine Feder einbaut.
+
+**Warum die Berührungsrückmeldung mehr ist als Zierrat.** Am Telefon gibt
+es kein Hover. Ohne `:active` antwortet auf eine Berührung **gar nichts**,
+und bis die neue Ansicht steht, weiss man nicht, ob man getroffen hat. Bei
+200 ms sind das 200 ms Zweifel — und Zweifel führen zum zweiten Tippen.
+
+Bewegt werden ausschliesslich `transform` und `opacity`. Nur diese beiden
+zeichnet der Browser ohne den Aufbau neu zu rechnen; eine Höhe zu
+animieren sieht am Rechner gleich aus und ruckelt am Telefon. `test126`
+prüft auch das.
+
+**Ein Fehler in der Prüfung, nicht im Code.** Der erste Entwurf suchte
+Ziffern im Text der Dauer und scheiterte an `1e-06s` — so schreibt der
+Browser die 0.001ms der Abschaltregel. Der Lauf war rot, die App richtig.
+Eine Prüfung, die Zeichen vergleicht statt Zahlen, misst die Schreibweise.
+
+**Status**
+
+`test126`, 12 Punkte, mit Gegenprobe: Feder eingebaut → rot, Dauer
+verdreht → rot. Die Abschaltung wird mit einem Browser geprüft, der
+`reducedMotion: 'reduce'` wirklich gesetzt hat.
+
+**Was aus der Bewegungs-Vorgabe noch fehlt:** die gleitende Pille beim
+Reiterwechsel, die versetzt einblendenden Listenzeilen, das Schimmern der
+Ladeskelette, die Zustandswechsel der Sicherungskarte. Steht in `L10`.
