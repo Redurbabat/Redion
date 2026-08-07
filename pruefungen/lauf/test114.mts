@@ -349,15 +349,32 @@ const speicher = await seite.evaluate(() => {
   const sp = document.querySelector<HTMLElement>('#r-blatt .rm-speicher');
   if (!sp) return null;
   const bal = sp.querySelector<HTMLElement>('.rs-balken i');
+
+  /* LIEGT ETWAS DARÜBER? Der Hinweisstreifen liegt auf z-index 900, das
+     Blatt lag auf 700 — der Streifen stand mitten auf dem Speicherbalken.
+
+     DER ERSTE ENTWURF DIESER PRÜFUNG WAR WERTLOS: er fragte
+     `elementFromPoint` an der Stelle des Balkens ab und verliess sich
+     darauf, dass gerade ein Streifen da ist. War keiner da — und in
+     diesem Lauf ist keiner —, sagte sie „passt schon", auch mit dem
+     alten z-index. Gegenprobe gemacht, nicht rot geworden.
+
+     Jetzt legt der Lauf SELBST einen Streifen hin, genau wie der echte:
+     `position:fixed`, z-index 900, über dem Balken. Bleibt das Blatt
+     obenauf, stimmt die Schichtung wirklich. */
+  const streifen = document.createElement('div');
+  const r0 = sp.getBoundingClientRect();
+  streifen.style.cssText =
+    `position:fixed; z-index:900; left:${r0.left}px; top:${r0.top}px;` +
+    `width:${r0.width}px; height:${r0.height}px; background:#f0f`;
+  document.body.appendChild(streifen);
   const r = sp.getBoundingClientRect();
   const oben = document.elementFromPoint(r.left + r.width / 2, r.top + 14);
-  return {
-    text: (sp.textContent || '').trim(),
-    breite: bal ? bal.style.width : '',
-    /* Liegt etwas DARÜBER? Der Hinweisstreifen lag auf z-index 900 und
-       damit mitten auf diesem Balken — im Code nicht zu ahnen. */
-    frei: !!oben && !!oben.closest('#r-blatt')
-  };
+  const frei = !!oben && !!oben.closest('#r-blatt');
+  streifen.remove();
+
+  return { text: (sp.textContent || '').trim(),
+           breite: bal ? bal.style.width : '', frei };
 }) as { text: string; breite: string; frei: boolean } | null;
 
 p('Der Speicherstand steht im Blatt', !!speicher, 'er kommt nach — asynchron');
