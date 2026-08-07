@@ -317,23 +317,53 @@ p('Eine .json-Sicherung lässt die Anhänge in Ruhe', jsonSchont.nochDa,
 p('… und sagt ausdrücklich, dass sie sie nicht enthält', jsonSchont.sagtEs);
 
 /* ========================================================================= *
- * 4 · WAS ZU GROSS IST, WIRD GESAGT UND NICHT GESCHRIEBEN
+ * 4 · ÜBER VIER GIGABYTE — GESICHERT STATT ABGELEHNT
+ * -------------------------------------------------------------------------
+ * HIER STAND DAS GEGENTEIL, und der Wechsel ist der Punkt (E39). Bis zum
+ * 6. August brach die Sicherung bei einem Anhang über 4 GB ab. Die Meldung
+ * war ehrlich und riet, „die Anhänge in zwei Schritten" zu sichern — nur
+ * gibt es diesen zweiten Schritt in Redion nicht: jeder Weg mündet in
+ * dasselbe eine Archiv mit allen Anhängen. Wer 5 GB Fotos hatte, konnte
+ * nicht sichern. Eine ehrliche Fehlermeldung ist besser als ein kaputtes
+ * Archiv, aber sie ist keine Sicherung.
+ *
+ * Jetzt schreibt Redion ZIP64. Geprüft wird das hier an der Verzweigung,
+ * nicht an vier echten Gigabyte: `Austausch.grenzen` senkt die Schwelle,
+ * und heraus kommt ein vollwertiges ZIP64 mit kleinen Dateien. Dass es
+ * eines ist, das fremde Werkzeuge lesen, prüft `test103` Abschnitt 5 mit
+ * `unzip` und `zipinfo`.
  * ========================================================================= */
-console.log('\n4 · Über vier Gigabyte: ein Satz statt eines kaputten Archivs');
+console.log('\n4 · Über vier Gigabyte: gesichert, nicht abgelehnt');
 
-const zuGross = await seite.evaluate(async () => {
-  /* Ein Blob, der eine Grösse BEHAUPTET, die er nicht hat — echte 4 GB
-     anzulegen würde den Prüflauf sprengen und nichts weiter beweisen. */
-  const luegner = { size: 5 * 1024 * 1024 * 1024, slice: () => new Blob([]) };
-  Object.setPrototypeOf(luegner, Blob.prototype);
+const grossGeht = await seite.evaluate(async () => {
+  const alt = Austausch.grenzen.bytes;
+  Austausch.grenzen.bytes = 30;          /* „über der Grenze" ab 30 Byte */
   try {
-    await Austausch.zipSchreiben([{ name: 'riesig.mov', inhalt: luegner }]);
-    return '';
-  } catch (e: unknown) { return (e instanceof Error ? e.message : String(e)); }
+    const blob = await Austausch.zipSchreiben([
+      { name: 'daten.json', inhalt: '{"a":1}' },
+      { name: 'riesig.mov', inhalt: new Blob([new Uint8Array(400)]) }
+    ]);
+    const zip = await Einlesen.zipLesenAusBlob(blob);
+    const wieder = await zip.alsBlob('riesig.mov');
+    return {
+      fehler: '',
+      namen: zip.namen,
+      bytes: wieder ? wieder.size : -1,
+      daten: await zip.text('daten.json')
+    };
+  } catch (e: unknown) {
+    return { fehler: (e instanceof Error ? e.message : String(e)), namen: [], bytes: -1, daten: '' };
+  } finally {
+    Austausch.grenzen.bytes = alt;
+  }
 });
-p('Ein zu grosser Anhang wird abgelehnt', /4 GB/.test(zuGross), zuGross.slice(0, 80));
-p('… mit einem Satz, der den Namen nennt', /riesig\.mov/.test(zuGross));
-p('… und erklärt, warum das besser ist', /öffnen lässt/.test(zuGross));
+p('Ein Anhang über der Grenze wird gesichert, nicht abgelehnt',
+  grossGeht.fehler === '', grossGeht.fehler.slice(0, 90));
+p('… und steht mit Namen im Archiv',
+  grossGeht.namen.includes('riesig.mov'), JSON.stringify(grossGeht.namen));
+p('… und kommt Byte für Byte zurück', grossGeht.bytes === 400, String(grossGeht.bytes));
+p('… ohne den Rest der Sicherung zu beschädigen', grossGeht.daten === '{"a":1}',
+  String(grossGeht.daten));
 
 p('Kein JS-Fehler in der Konsole', fehler.length === 0, fehler.slice(0, 2).join(' · '));
 

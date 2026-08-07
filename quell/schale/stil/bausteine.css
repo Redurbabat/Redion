@@ -120,9 +120,17 @@
            height:calc(46px + env(safe-area-inset-top)); }
   #sidebar{ padding-top:env(safe-area-inset-top);
             padding-bottom:env(safe-area-inset-bottom); }
-  #page{ padding-left:max(18px, env(safe-area-inset-left));
-         padding-right:max(18px, env(safe-area-inset-right));
+  /* 28 px, nicht 18. Die Zahl steht auch in `ki.css`, aber DIESE Regel
+     gewinnt (gleiche Spezifität, spätere Datei) — gemessen kamen 18 px
+     heraus, während der Start-Bildschirm daneben mit 28 gebaut war. Zwei
+     Ränder in einer App sind einer zu viel. */
+  #page{ padding-left:max(28px, env(safe-area-inset-left));
+         padding-right:max(28px, env(safe-area-inset-right));
          padding-bottom:calc(30vh + env(safe-area-inset-bottom)); }
+  @media(max-width:380px){
+    #page{ padding-left:max(22px, env(safe-area-inset-left));
+           padding-right:max(22px, env(safe-area-inset-right)); }
+  }
   #ai{ padding-bottom:env(safe-area-inset-bottom); }
 
   /* Die Seitenleiste als Schublade */
@@ -720,9 +728,18 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     background:var(--bg);
     overflow-x:auto; scrollbar-width:none;
   }
-  /* Auf sehr schmalen Geräten (SE, 375 px) wird der Rand knapper, sonst
-     bleibt für die fünf Bereiche kein Platz. */
-  @media(max-width:380px){ #handy-oben{ padding-left:22px; padding-right:22px } }
+  /* GEMESSEN AM 6. AUGUST, und es war knapper als gedacht: bei 390 px
+     brauchte die Leiste 395 px mit „Start" und 421 px mit „Eingang" — die
+     letzte Pille stand ausserhalb des Bildes. Am 428er iPhone fiel das nie
+     auf; E37 sagt aber 390 zuerst.
+
+     Unter 420 px wird deshalb enger gerückt: Rand 20 statt 28, Abstand 6
+     statt 10, Pillenpolster 11 statt 13. Das reicht für „Eingang", das
+     längste der fünf Wörter. Die Tasten bleiben 52 px — an der Fläche, die
+     der Daumen trifft, wird nicht gespart; gespart wird am Weissraum
+     zwischen ihnen. */
+  @media(max-width:420px){ #handy-oben{ gap:6px; padding-left:20px; padding-right:20px } }
+  @media(max-width:380px){ #handy-oben{ padding-left:14px; padding-right:14px } }
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
@@ -755,6 +772,20 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   #handy-oben .ho-konto span{ line-height:1 }
 
+  /* Der zweite Teil der Enge von oben — er MUSS hier unten stehen, nach der
+     Grundregel für `#handy-oben button`. Gleiche Spezifität entscheidet die
+     Reihenfolge, und weiter oben verlor er lautlos: gemessen kamen 13 px
+     Polster und 16 px Schrift zurück, obwohl der Rand daneben schon eng
+     war. Eine Regel, die dasteht und nichts tut, ist schlimmer als keine. */
+  @media(max-width:420px){
+    #handy-oben button{ padding:0 11px }
+    #handy-oben button b{ font-size:15px }
+  }
+  @media(max-width:380px){
+    #handy-oben button{ padding:0 9px }
+    #handy-oben button b{ font-size:14px }
+  }
+
   #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
   #handy-oben .ho-z svg{ display:block }
 
@@ -784,6 +815,39 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   .pg-tools::-webkit-scrollbar{ display:none }
   .pg-tools button{ flex:0 0 auto }
+
+  /* --- CODEBLOCK: die Werkzeuge STANDEN AUF DEM CODE ------------------- *
+     Gemessen am 6. August bei 390 px: der Kasten mit ⧉ № ↩ lag von x=175
+     bis 252, die Sprachwahl von 248 bis 362 — und die erste Codezeile
+     lief darunter durch. Man las `const abfahr…` und dahinter drei
+     Knöpfe. Das ist derselbe Fehler wie die abgeschnittene Zahl in §55.1:
+     was dasteht, ist nicht, was gemeint ist.
+
+     Am Rechner ist die schwebende Leiste richtig — dort ist der Block
+     700 px breit und die Knöpfe stehen im Leerraum rechts. Am Telefon
+     gibt es keinen Leerraum rechts, also bekommt der Block eine eigene
+     Kopfzeile und der Code beginnt darunter.
+
+     Die Knöpfe werden dabei gleich 44 px gross. Sie waren 22 × 23. */
+  .b-code .code-werk{ top:8px; right:auto; left:12px; gap:6px }
+  .b-code .code-werk button{
+    min-width:44px; min-height:44px; font-size:17px; border-radius:10px;
+  }
+  .b-code select{
+    top:8px !important; right:12px !important;
+    min-height:44px; font-size:14px !important; padding:0 8px !important;
+    border-radius:10px !important;
+  }
+  .b-code .ct{ padding-top:64px }
+  .b-code .code-nr{ padding-top:64px }
+  .mit-nr .ct{ padding-left:46px !important }
+
+  /* Das Kästchen der Aufgabe war 16 × 16 — der kleinste Treffer der ganzen
+     Seite. 22 px sind noch keine 44, aber ein Kästchen mitten im Text darf
+     die Zeile nicht auseinanderschieben; die Trefferfläche wächst darum
+     über den unsichtbaren Rand von `.mk`, nicht über den Kasten. */
+  .b-todo .mk{ flex:0 0 34px; padding:2px 0 }
+  .b-todo input{ width:22px; height:22px }
 
   /* Der rote Punkt an den Chats — klein, aber am richtigen Ort. */
   #handy-oben .hl-punkt{
@@ -1028,6 +1092,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   line-height:1.5}
 .pe-link{background:none; color:var(--accent); font-size:15px; margin-top:18px; padding:6px}
 .pe-link:hover{text-decoration:underline; color:var(--accent)}
+/* AM TELEFON DIE EINZIGE HANDLUNG IM LEEREN ZUSTAND — und mit 6 px Polster
+   war sie 32 px hoch. Gemessen am 6. August im Posteingang: „Filter ändern"
+   stand als einziger Weg da und war der flachste Knopf der Ansicht.
+   Ein leerer Zustand, den man nicht trifft, ist eine Sackgasse. */
+@media(max-width:760px){
+  .pe-link{ min-height:44px; padding:10px 18px; font-size:16px;
+            border-radius:12px; background:var(--bg-hover) }
+}
 
 /* Chatverlauf: Titel oben, „vor 3 Monaten" darunter */
 .kc-txt{display:flex; flex-direction:column; align-items:flex-start; gap:1px; min-width:0}
@@ -2077,3 +2149,105 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     bottom:calc(172px + env(safe-area-inset-bottom));
   }
 }
+
+/* ===========================================================================
+   FEHLERKARTE  (Telefon-Vorgabe Phase 8)
+   ---------------------------------------------------------------------------
+   Klein, oben, rund, gedämpftes Rot — keine Fläche über die ganze Breite,
+   die aussieht, als sei die Seite kaputt. Der technische Text steht nicht
+   darin, sondern hinter „Details kopieren".
+
+   `user-select:none`: im Bildschirmfoto vom 6. August war die Meldung
+   markiert, weil sie wie Inhalt aussah. Was man nicht anfassen soll, soll
+   sich auch nicht anfassen lassen.
+   =========================================================================*/
+#fehler-karte{
+  position:fixed; z-index:950; left:16px; right:16px; top:16px;
+  max-width:min(520px, calc(100vw - 32px)); margin:0 auto;
+  background:#2a1a1a; border:1px solid rgba(239,68,68,.45); border-radius:16px;
+  padding:14px 16px 12px; box-shadow:var(--shadow);
+  user-select:none; -webkit-user-select:none;
+  transform:translateY(-16px); opacity:0;
+  transition:transform .18s ease, opacity .18s ease;
+}
+#fehler-karte.auf{ transform:translateY(0); opacity:1 }
+@media(prefers-reduced-motion:reduce){ #fehler-karte{ transition:none } }
+
+.fk-kopf{ display:flex; align-items:center; gap:10px; margin-bottom:6px }
+.fk-zeichen{
+  width:24px; height:24px; flex:none; border-radius:50%;
+  background:rgba(239,68,68,.22); color:#ef4444;
+  display:grid; place-items:center; font-weight:700; font-size:14px;
+}
+.fk-kopf b{ font-size:15px; color:var(--text) }
+.fk-zu{
+  margin-left:auto; width:44px; height:44px; margin:-10px -10px -10px 0;
+  border-radius:50%; color:var(--text-dim); font-size:15px;
+  display:grid; place-items:center;
+}
+.fk-zu:active{ background:rgba(255,255,255,.08) }
+.fk-satz{ font-size:13.5px; line-height:1.55; color:var(--text-dim) }
+.fk-knoepfe{ display:flex; gap:8px; margin-top:12px }
+.fk-knoepfe button{
+  min-height:44px; padding:0 14px; border-radius:10px;
+  border:1px solid var(--line); color:var(--text-dim); font-size:13.5px;
+}
+.fk-knoepfe button:active{ background:rgba(255,255,255,.08) }
+.fk-roh{
+  margin-top:10px; padding:10px; border-radius:8px; background:rgba(0,0,0,.35);
+  font-size:11px; line-height:1.5; white-space:pre-wrap; word-break:break-all;
+  color:var(--text-faint); user-select:text; -webkit-user-select:text;
+  max-height:120px; overflow:auto;
+}
+
+/* Am Telefon sitzt oben die Pill-Navigation — die Karte gehört darunter,
+   nicht darauf, sonst verdeckt eine Meldung die Bedienung. */
+@media(max-width:760px){
+  #fehler-karte{ top:calc(88px + env(safe-area-inset-top)); left:14px; right:14px }
+}
+
+/* ===========================================================================
+   DAS R-BLATT  (Telefon-Vorgabe Phase 7)
+   ---------------------------------------------------------------------------
+   Über den ganzen Bildschirm, nicht halb darüber. Vorher zog der Kreis die
+   Seitenleiste des Rechners herein — Baum, Reiter, 33-px-Zeilen. Hier sind
+   die Zeilen 56 px hoch: darunter trifft der Daumen die Nachbarzeile mit.
+   =========================================================================*/
+#r-blatt{
+  position:fixed; inset:0; z-index:700; background:var(--bg);
+  display:flex; flex-direction:column;
+  padding:calc(14px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
+  transform:translateY(14px); opacity:0;
+  transition:transform .2s ease, opacity .2s ease;
+}
+#r-blatt.auf{ transform:translateY(0); opacity:1 }
+@media(prefers-reduced-motion:reduce){ #r-blatt{ transition:none } }
+
+.rm-kopf{ display:flex; align-items:flex-start; gap:12px; margin-bottom:20px }
+.rm-kopf b{ display:block; font-size:20px; letter-spacing:-.02em }
+.rm-kopf span{ display:block; font-size:13px; color:var(--text-faint); margin-top:2px }
+.rm-zu{
+  margin-left:auto; width:44px; height:44px; flex:none; border-radius:50%;
+  border:1px solid var(--line); color:var(--text-dim); font-size:15px;
+  display:grid; place-items:center;
+}
+.rm-zu:active{ background:var(--bg-hover) }
+
+.rm-rollen{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch }
+.rm-gruppe{
+  background:var(--bg-side); border:1px solid var(--line); border-radius:16px;
+  overflow:hidden; margin-bottom:14px;
+}
+.rm-gruppe button{
+  display:flex; align-items:center; gap:14px; width:100%;
+  min-height:56px; padding:0 16px; text-align:left; font-size:16px;
+  color:var(--text); border-bottom:1px solid var(--line);
+}
+.rm-gruppe button:last-child{ border-bottom:0 }
+.rm-gruppe button:active{ background:var(--bg-hover) }
+.rm-z{ width:26px; flex:none; text-align:center; font-size:17px }
+.rm-n{ flex:none }
+.rm-h{ margin-left:auto; font-size:12.5px; color:var(--text-faint); text-align:right }
+
+/* Am Rechner gibt es dieses Blatt nicht — dort ist die Seitenleiste richtig. */
+@media(min-width:701px){ #r-blatt{ display:none } }

@@ -57,8 +57,8 @@ import { chromium } from 'playwright';
   console.log('   Bereichsleiste:', JSON.stringify(leiste));
   ok('Die Bereichsleiste steht oben auf dem Telefon', leiste.sichtbar && leiste.obenBuendig);
   ok('Sie geht über die volle Breite', leiste.breite === 428);
-  ok('Konto, Start, Chats, Termine, Eingang',
-     leiste.knoepfe.join(',') === 'hl-konto,hl-start,hl-chat,hl-bespr,hl-inbox', leiste.knoepfe.join(','));
+  ok('Konto, Start, Seiten, Termine, Eingang',
+     leiste.knoepfe.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-inbox', leiste.knoepfe.join(','));
   ok('Unten stehen Suchen, KI und Neu', leiste.untenBuendig &&
      leiste.untenKnoepfe.join(',') === 'hu-suche,hu-ki,hu-neu', leiste.untenKnoepfe.join(','));
   ok('Die Mitte ist die KI', /KI/.test(leiste.kiText || ''), leiste.kiText);
@@ -100,15 +100,17 @@ import { chromium } from 'playwright';
     if (fokus instanceof HTMLElement) fokus.blur();
                            document.body?.classList.remove('schreibt'); });
   await p.waitForTimeout(400);
-  await p.click('#hl-chat');
+  /* Seit E38 steht hier „Seiten" statt „Chats" — der Platz oben gehört
+     dem, was man täglich sucht. Die KI blieb unten in der Leiste. */
+  await p.click('#hl-seiten');
   await p.waitForTimeout(500);
-  ok('Der Chat-Bereich markiert sich', await p.evaluate(() =>
-    document.querySelector<HTMLElement>('#hl-chat')?.classList.contains('an')));
+  ok('Der Seitenbereich markiert sich', await p.evaluate(() =>
+    document.querySelector<HTMLElement>('#hl-seiten')?.classList.contains('an')));
   await p.click('#hl-bespr');
   await p.waitForTimeout(500);
   ok('Besprechungen ebenso', await p.evaluate(() =>
     document.querySelector<HTMLElement>('#hl-bespr')?.classList.contains('an') &&
-    !document.querySelector<HTMLElement>('#hl-chat')?.classList.contains('an')));
+    !document.querySelector<HTMLElement>('#hl-seiten')?.classList.contains('an')));
   await p.click('#hl-start');
   await p.waitForTimeout(500);
   ok('Und zurück auf Start', await p.evaluate(() =>

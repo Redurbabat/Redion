@@ -89,7 +89,7 @@ import { chromium } from 'playwright';
      nur einmal. */
   ok('Oben stehen Konto und die vier Bereiche als Pillen',
      handy.obenSichtbar &&
-     handy.obenLeiste.join(',') === 'hl-konto,hl-start,hl-chat,hl-bespr,hl-inbox',
+     handy.obenLeiste.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-inbox',
      handy.obenLeiste.join(','));
   ok('Unten stehen Suchen, KI fragen und Neu',
      handy.untenSichtbar &&
@@ -114,27 +114,47 @@ import { chromium } from 'playwright';
      imMenue.txt.length + ' Einträge');
   ok('Und das Menü ist am Handy ein Blatt von unten', imMenue.blatt);
 
-  /* Die Schublade fährt auf und wieder zu — über den Kreis links oben,
-     der seit dem Umbau die Rolle des ☰ hat. */
+  /* Der Kreis links oben — er hat seit E38 nicht mehr die Rolle des ☰.
+     Vorher zog er die SEITENLEISTE DES RECHNERS als Schublade herein, mit
+     Baum, Reitern und 33-px-Zeilen auf 390 px geschoben. Jetzt öffnet er
+     ein Blatt über den ganzen Bildschirm mit Fingerzeilen. */
   await t.click('#hl-konto');
   await t.waitForTimeout(400);
-  const auf = await t.evaluate(() => ({
-    offen: document.body?.classList.contains('side-offen'),
-    links: Math.round(document.querySelector<HTMLElement>('#sidebar')?.getBoundingClientRect().left ?? -1),
-    schatten: !!document.getElementById('side-schatten')
-  }));
-  ok('Der Kreis links oben fährt die Bereichsansicht auf', auf.offen && auf.links === 0,
+  const auf = await t.evaluate(() => {
+    const bl = document.getElementById('r-blatt');
+    const r = bl?.getBoundingClientRect();
+    return {
+      blatt: !!bl,
+      voll: !!r && Math.round(r.width) === innerWidth && Math.round(r.height) === innerHeight,
+      schublade: document.body?.classList.contains('side-offen'),
+      wege: bl ? bl.querySelectorAll('.rm-gruppe button').length : 0
+    };
+  });
+  ok('Der Kreis links oben öffnet das R-Blatt', auf.blatt && auf.voll, JSON.stringify(auf));
+  ok('… und NICHT mehr die Schublade des Rechners', auf.schublade === false,
      JSON.stringify(auf));
-  /* ZUM SCHLIESSEN TIPPT MAN NICHT MEHR DANEBEN — es gibt kein Daneben
-     mehr. Die Bereichsansicht füllt seit dem Umbau die volle Breite; ein
-     dunkler Streifen mit der alten Seite dahinter wäre verschenkter Platz
-     gewesen. Der Weg hinaus führt über die Pillen darüber, und die bleiben
-     die ganze Zeit sichtbar und anklickbar. Das ist die Bedingung, unter
-     der die Vollbreite überhaupt zulässig ist. */
-  await t.click('#hl-start');
+  ok('Es führt weiter als die alte Schublade', auf.wege >= 10, String(auf.wege));
+
+  /* WAS SICH DAMIT AUCH GEÄNDERT HAT, und es gehört hierher: die Pillen
+     oben sind jetzt VERDECKT. Vorher stand hier die Zusage, sie blieben
+     „die ganze Zeit sichtbar und anklickbar", und das war die Bedingung,
+     unter der die Vollbreite zulässig war. Ein Blatt über den ganzen
+     Bildschirm hebt sie auf — also muss es seinen eigenen Ausgang haben,
+     und zwar mehr als einen. Beide werden hier geprüft: das Kreuz und der
+     Weg, der einen gleich dorthin bringt, wo man hinwollte. */
+  await t.click('#r-blatt .rm-zu');
   await t.waitForTimeout(400);
-  ok('Ein Tipp auf „Start" führt wieder hinaus', await t.evaluate(() =>
-    !document.body?.classList.contains('side-offen')));
+  ok('Das Kreuz führt wieder hinaus', await t.evaluate(() =>
+    !document.getElementById('r-blatt')));
+
+  await t.click('#hl-konto');
+  await t.waitForTimeout(400);
+  await t.click('#r-blatt [data-r="start"]');
+  await t.waitForTimeout(500);
+  ok('Und „Start" im Blatt führt hinaus UND dorthin', await t.evaluate(() =>
+    !document.getElementById('r-blatt') &&
+    [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')]
+      .some(b => (b.textContent ?? '').trim() === 'Start')));
 
   /* ================= TEIL B — Windows-Desktop ======================== */
   const d = await b.newPage({ viewport: { width: 1400, height: 900 } });

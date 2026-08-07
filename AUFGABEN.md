@@ -653,7 +653,27 @@ der Browser dem Loslassen hinterherschickt, traf den Menü-Grund und schloss
 das eben geöffnete Menü sofort wieder. Behoben; seither drückt `test114`
 Abschnitt 5 wirklich lange und wacht darüber.
 
-**Priorität** — mittel.
+**Der Umbau zur Telefon-Schale, 6. August (E37, E38).** Redion ist ab jetzt
+zuerst eine Telefon-Seite. Was dabei gebaut wurde:
+
+| | |
+|---|---|
+| ✓ | **Oben fünf Wege** statt einer Kopfleiste: R · Start · Seiten · Termine · Eingang. Die Kreise sind 52 px, die Leiste hat `env(safe-area-inset-top)`. |
+| ✓ | **„Seiten" statt „Chats"** (E38) — der Platz gehört dem, was man täglich tut. Die KI bleibt unten als „KI fragen" und im R-Blatt als „KI und Verlauf". |
+| ✓ | **Das R-Blatt** — der Kreis links oben zog vorher die Seitenleiste des Rechners auf 390 px zusammen. Jetzt ein Blatt über den ganzen Bildschirm, zwölf Zeilen zu 56 px. |
+| ✓ | **Unten die feste Leiste**: Suche · KI fragen · Neue Seite, Knöpfe 56 px, 28 px Rand. |
+| ✓ | **Der Start-Bereich** öffnet am Telefon ohne Adresszusatz — vorher stand da die zuletzt offene Seite. |
+| ✓ | **Der Fehlerbalken** sagt nicht mehr „bitte melde mir diesen Text", wenn es keinen gibt (E36); derselbe Fehler ergibt einen Balken statt zehn, und alle landen im Protokoll. |
+| ✓ | **Erinnerungen** schlagen die Ortszeit vor, nicht die Weltzeit; ein Kalendereintrag bringt seine Zeit mit; Mitternacht wird 08:00; eine verpasste sagt „Verpasst um HH:MM". |
+| ✓ | **Die obere Leiste passte nicht.** Gemessen bei 390 px brauchte sie 421 px mit „Eingang" — die letzte Pille stand ausserhalb des Bildes. Unter 420 px rücken Rand, Abstand und Polster zusammen; die Tasten bleiben 52 px. |
+| ✓ | **Der Codeblock zeigte etwas anderes, als dastand.** ⧉ № ↩ und die Sprachwahl lagen quer über der ersten Zeile. Jetzt eine eigene Kopfzeile darüber, Knöpfe 44 px. |
+| ✓ | **Ein Rand für die ganze App.** `#page` stand am Telefon auf 18 px, während der Start-Bildschirm daneben mit 28 gebaut war. Jetzt beide 28 (22 unter 380 px). |
+
+**Noch offen am Telefon:** Termine und Eingang haben ihren eigenen Aufbau
+noch nicht bekommen, die übrigen Menüs sind noch keine Bottom Sheets, und
+der Editor braucht seinen Feinschliff. Steht in `LUECKEN.md` L10.
+
+**Priorität** — hoch (E37: das Telefon ist der Normalfall).
 
 ---
 

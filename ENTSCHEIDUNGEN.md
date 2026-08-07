@@ -1824,3 +1824,167 @@ hinsieht, findet solche Sachen vorher.
 
 Beschlossen. `test124` läuft ausdrücklich mit Telefon-Bildmass UND
 Zeitzone `Europe/Zurich` — ohne beides kann er nicht rot werden.
+
+---
+
+## E38 · Die Telefon-Navigation: fünf Wege oben, die KI unten
+
+**Die Ansage.** Redur, am 6. August: „Wenn du nicht viel mit AI/Chats arbeiten
+wirst, dann sollte der obere Tab nicht ‚Chats' heissen. […] Chats raus aus der
+Hauptnavigation. Seiten rein. KI bleibt unten."
+
+**Was oben steht.**
+
+```txt
+R          das Blatt mit allem, was sonst in der Seitenleiste stünde
+Start      das Armaturenbrett
+Seiten     alles, was man geschrieben hat
+Termine    Kalender und Besprechungen
+Eingang    Meldungen
+```
+
+Fünf Wege sind das Höchste, was auf 390 px nebeneinander passt, ohne dass die
+Kreise unter 52 px fallen. Jeder weitere Reiter geht nur, wenn ein anderer
+geht — das ist keine Enge, sondern die Rechnung.
+
+**Warum „Seiten" und nicht „Chats".** Ein Reiter in der Hauptnavigation kostet
+einen von fünf Plätzen. Er verdient ihn, wenn man ihn täglich braucht. Redion
+ist eine Notiz- und Wissens-App; man öffnet den ganzen Tag Seiten und selten
+einen KI-Verlauf. Der Platz gehört dem, was man oft tut.
+
+**Was der Reiter zeigt.** `Ansichten.seiten()` — zwei Schnellkarten (Neue
+Seite, Schnellnotiz), dann Kürzlich verwendet, Favoriten, Privat, Datenbanken,
+Vorlagen, Papierkorb. Ein leerer Abschnitt wird gar nicht erst gezeichnet:
+eine Überschrift ohne Inhalt sagt nur, dass man etwas nicht hat.
+
+**Die KI verschwindet nicht, sie zieht um.** Sie steht weiterhin
+
+```txt
+unten in der festen Leiste als „KI fragen" — der breiteste Knopf dort
+im R-Blatt als „KI und Verlauf"
+```
+
+Das war die ausdrückliche Bedingung, und `test114` §8 und §9 prüfen beide
+Stellen. Ein Reiter weniger ist eine Umsortierung; eine Funktion weniger wäre
+ein Verlust.
+
+**Fünf Fehler, die nur das Bildschirmfoto fand** (§55, und deshalb steht das
+hier). Kein einziger stand im Code falsch da — alle fünf sah man erst.
+
+Die Pille blieb auf „Start" stehen, während daneben schon die Seiten standen.
+`handyLeiste()` liest `Seitenleiste.reiter()`, und den setzte im neuen Zweig
+niemand. Kein Prüflauf hatte das — der Inhalt war ja richtig.
+
+Derselbe Fund eine Zeile weiter unten: „Eingang" setzte `reiter('start')`.
+Man stand im Posteingang, und oben stand „Start".
+
+Die Titel waren kursiv, weil sie in einem `<em>` steckten. `<em>` heisst
+Betonung, nicht Titel; im Browser heisst es schräg. Jetzt `<span class="pt">`.
+
+„Termine" zog die SCHUBLADE auf — die Seitenleiste des Rechners auf 390 px
+geschoben, mit ihrem Baum und ihren 33-px-Zeilen. Genau davon war das
+R-Blatt weggekommen; ein Reiter, der sie wieder hereinholt, macht die Hälfte
+der Entscheidung rückgängig. Jetzt `Ansichten.termine()` auf der Bühne:
+Kalender, Besprechung, Bevorstehend, Aus Besprechungen.
+
+Und die Leiste selbst passte gar nicht. Gemessen bei 390 px brauchte sie
+395 px mit „Start" und 421 px mit „Eingang" — die letzte Pille stand
+ausserhalb des Bildes und war nicht antippbar. Am 428er iPhone fiel das nie
+auf, und genau das meint E37 mit „390 zuerst". Unter 420 px rücken Rand
+(28→20), Abstand (10→6) und Pillenpolster (13→11) zusammen; die Tasten
+bleiben 52 px. Gespart wird am Weissraum, nicht an der Fläche für den Daumen.
+
+**Status**
+
+Beschlossen und gebaut. `test114` §9 und §10 prüfen: „Seiten" steht oben,
+„Chats" nicht mehr, jeder Reiter führt dahin, wo er hinführt, die Pille
+wandert mit, „Termine" zieht keine Schublade auf, die Titel sind aufrecht,
+keine Zeile unter 44 px, „KI fragen" steht weiter unten — und die Leiste
+passt bei 375 UND 390 px ganz ins Bild. Alle können rot werden;
+nachgestellt am 6. August durch Entfernen der `reiter()`-Zeile, Zurückdrehen
+auf `<em>` und Aufweiten der Leiste auf die alten Masse.
+
+---
+
+## E39 · ZIP64 kommt — eine ehrliche Meldung ist keine Sicherung
+
+**Die offene Frage.** `LUECKEN.md` L14 stand seit Wochen auf einem Satz:
+„Fehlt: die Entscheidung, ob ZIP64 kommt." Die Grenzen des alten ZIP-Formats
+meldeten sich ehrlich, und das galt als guter Stand.
+
+**Was die Messung ergab.** Jeder Sicherungsweg der App — Befehlspalette,
+Einstellungen, R-Blatt, Wolke, das Kärtchen auf dem Start-Bildschirm — mündet
+in dasselbe `App.sicherungSpeichern()`. Das baut **ein** Archiv mit **allen**
+Anhängen. Über 4 GB brach es ab, mit dieser Meldung:
+
+```txt
+Diese Sicherung wird grösser als 4 GB. […] Sichere die Anhänge in zwei
+Schritten, statt ein Archiv zu bekommen, das sich nicht öffnen lässt.
+```
+
+Diesen zweiten Schritt gibt es nicht. Es gibt keine Teilsicherung, keine
+Auswahl, kein „nur diese Anhänge". Wer 5 GB Fotos hatte, konnte **gar nicht**
+sichern — die `.json`-Sicherung lässt Anhänge ausdrücklich aus.
+
+**Die Entscheidung.** ZIP64 kommt. Nicht weil das Format schöner wäre,
+sondern weil §46 Priorität 1 „Daten sicher halten" heisst und der bisherige
+Zustand kein Sichern war. Eine ehrliche Fehlermeldung ist besser als ein
+kaputtes Archiv — aber sie ist keine Sicherung.
+
+**Nur wenn nötig.** Ein Archiv unter allen drei Grenzen wird byteweise
+geschrieben wie bisher: Fassung 20, kein Zusatzfeld, kein zweiter
+Schlusssatz. Ein Archiv, das ohne Not ZIP64 wird, sperrt ältere Werkzeuge und
+ältere Redion-Fassungen aus. Die Referenz macht es genauso.
+
+**Schreiber und Leser zusammen, nicht nacheinander.** Ein Packer, dessen
+Leser nicht mitkommt, schreibt Sicherungen, die niemand zurückholen kann —
+das wäre schlechter als der Zustand davor. Beide Wege (`zipLesen` aus dem
+Speicher, `zipLesenAusBlob` vom Datenträger) lesen ZIP64 seit demselben
+Commit.
+
+**Drei Sachen, die man beim Bauen falsch rät** — alle drei gemessen, keine
+geraten:
+
+Die 64-Bit-Zahlen im Verzeichnis stehen **bedingt** da: nur für die Felder,
+deren 32-Bit-Feld den Platzhalter trägt, in fester Reihenfolge roh, gepackt,
+Versatz. Wer alle drei vorsorglich mitschreibt, verschiebt die folgenden, und
+der Leser bekommt Werte, die *fast* stimmen. Abgelesen an
+`zipfile._decodeExtra`, und die Gegenprobe zeigt, wie leise das scheitert:
+`unzip` merkt es nicht, nur der zweite Anhang kommt falsch zurück.
+
+`schreibe64` darf **nicht** über `>>>` gehen. JavaScripts Bit-Schieber
+rechnen in 32 Bit; `4294967296 >>> 0` ist 0. Wer die obere Hälfte so gewinnt,
+schreibt lautlos Null in genau das Feld, das den Überlauf abfangen soll.
+
+ZIP64 ist **nicht alles-oder-nichts**. Pythons `zipfile` setzt bei einer
+einzelnen grossen Datei die Platzhalter nur in den lokalen Kopf und lässt
+Verzeichnis und Schlusssatz gewöhnlich. Solche Archive las Redion schon immer
+richtig — deshalb wird jedes Feld einzeln angesehen, nicht das Archiv als
+Ganzes eingeordnet.
+
+**Und die Falle, die beinahe zurückkam.** Der erste Entwurf des Lesers nahm
+bei unlesbarem ZIP64-Schlusssatz „ersatzweise" die Zahlen aus dem alten. Dort
+stehen dann Platzhalter, `blob.slice(0xFFFFFFFF, …)` gibt nichts zurück, und
+heraus kamen **null Dateien und kein Fehler** — genau der Fehler, gegen den
+`test103` einmal geschrieben wurde. Gefunden hat ihn dieser Prüflauf selbst,
+in seiner alten Fassung. Jetzt wird geworfen, und zusätzlich gilt: ein
+Archiv, das `N` Einträge ankündigt und keinen liefert, wird abgelehnt.
+
+**Wie das ohne vier Gigabyte geprüft wird.** `Austausch.grenzen` senkt die
+Schwelle, sodass dieselbe Verzweigung bei vierzig Byte greift. Das Ergebnis
+ist ein vollwertiges ZIP64, nur klein — und **`unzip` und `zipinfo` lesen
+es**. Das ist der eigentliche Beweis: „Redion liest, was Redion schrieb"
+wäre keiner, denn zwei Fehler, die sich aufheben, bestünden ihn mühelos. Die
+Anzahl-Grenze braucht gar keine Absenkung; 70 000 Einträge sind sieben
+Megabyte, und `test103` schreibt sie wirklich.
+
+**Was das NICHT löst.** Ob ein Browser einen Blob von 10 GB zusammensetzen
+und herunterladen kann, entscheidet der Browser, nicht Redion. ZIP64 nimmt
+die Grenze aus dem *Format*; die Grenze der Umgebung bleibt und ist nicht
+gemessen. Steht so in `LUECKEN.md` L14.
+
+**Status**
+
+Beschlossen und gebaut. `test103` (36 Punkte, davon 6 mit fremdem Werkzeug),
+`test100` Abschnitt 4 umgeschrieben — er hielt bis heute die Gegenrichtung
+fest. `doku/REDION-FORMAT.md` beschreibt das Format.

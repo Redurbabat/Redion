@@ -161,8 +161,8 @@ samt ihren Stücken. Beim Dazulegen wird nichts entfernt.
 
 ## Grenzen
 
-Redion schreibt ein ZIP **ohne ZIP64**. Das hat drei Grenzen, und alle drei
-stehen im Format, nicht in der Laune des Packers:
+Redion schreibt ein gewöhnliches ZIP und wechselt auf **ZIP64**, sobald eine
+der drei Grenzen des alten Formats nicht mehr reicht:
 
 | Grenze | Wert | Feld |
 |---|--:|---|
@@ -170,45 +170,76 @@ stehen im Format, nicht in der Laune des Packers:
 | das ganze Archiv | 4 GB | 32 Bit |
 | Anzahl der Einträge | 65 535 | **16 Bit** |
 
-Alle drei melden sich mit einer verständlichen Meldung, **bevor** etwas
-geschrieben wird. Keine schreibt ein Archiv, dem man nicht ansieht, dass es
-unvollständig ist.
+**Nur wenn nötig.** Ein Archiv unterhalb aller drei Grenzen wird geschrieben
+wie eh und je — Fassung 20, kein Zusatzfeld, kein zusätzlicher Schlusssatz.
+Das ist keine Sparsamkeit, sondern Rücksicht: ein Archiv, das ohne Not ZIP64
+wird, sperrt ältere Werkzeuge und ältere Redion-Fassungen aus. Pythons
+`zipfile` hält es genauso.
 
-Die dritte Grenze war lange ungeprüft und ist deshalb erwähnenswert: sie
-scheiterte still. `65 536` Einträge wurden im Schlusssatz des Archivs zu `0`,
-`70 000` zu `4 464` — das Archiv liess sich öffnen, sah gesund aus und zeigte
-einen Bruchteil seines Inhalts. Gehalten wird das jetzt von
-`pruefungen/lauf/test103.mjs`.
+### Was ZIP64 anders macht
+
+An den Stellen, die überlaufen, steht der Platzhalter `0xFFFFFFFF` (oder
+`0xFFFF` bei der Anzahl), und die echte Zahl liegt in 64 Bit daneben:
+
+```txt
+lokaler Kopf         Zusatzfeld 0x0001 mit roher und gepackter Grösse
+Verzeichniseintrag   Zusatzfeld 0x0001, aber NUR mit den Zahlen, deren
+                     32-Bit-Feld den Platzhalter trägt — in fester
+                     Reihenfolge: roh, gepackt, Versatz
+am Ende              ZIP64-Schlusssatz (0x06064b50, 56 Byte)
+                     + Wegweiser darauf (0x07064b50, 20 Byte)
+                     + der alte Schlusssatz mit Platzhaltern
+```
+
+Die Reihenfolge am Ende ist nicht frei: jeder Leser sucht zuerst den alten
+Schlusssatz am Dateiende und findet den Wegweiser genau 20 Byte davor.
+
+Und die Bedingtheit im Verzeichnis ist die Stelle, an der man sich vertut.
+Wer vorsorglich alle drei Zahlen mitschreibt, obwohl daneben schon die echte
+steht, verschiebt alle folgenden — und der Leser bekommt Werte, die *fast*
+stimmen. `unzip` bemerkt das nicht einmal; `test103` schon.
 
 ### Fremde ZIP64-Archive
 
-Beim **Lesen** gilt dasselbe von der anderen Seite. Ein Werkzeug, das mehr
-als 65 535 Einträge packt, schreibt ZIP64 — im alten Schlusssatz stehen dann
-nur Platzhalter, die echten Zahlen liegen in einem eigenen Satz davor.
-
-Redions Leser kennen diesen Satz nicht und sagen das auch:
-
-> Dieses Archiv ist im ZIP64-Format — es hat mehr als 65 535 Einträge oder
-> ist grösser als 4 GB. Redion kann es nicht lesen und gibt lieber diese
-> Meldung, als einen Teil einzuspielen und den Rest zu verschweigen.
-
-Ungeprüft war das der schlimmste denkbare Fall: der Leser fand null Dateien
-und meldete **keinen Fehler**. Wer eine fremde Sicherung mit 70 000 Anhängen
-einspielte, sah „0 Anhänge" und hatte keinen Grund zu zweifeln.
+Werden gelesen. Auch die Sorte, die nur den lokalen Kopf auf ZIP64 setzt und
+Verzeichnis und Schlusssatz gewöhnlich lässt — Pythons `zipfile` schreibt
+genau das bei einer einzelnen grossen Datei.
 
 Erkannt wird ZIP64 am Wegweiser `0x07064b50` direkt vor dem Schlusssatz —
 nicht an den Platzhaltern. Ein gewöhnliches Archiv mit genau 65 535 Einträgen
 schreibt nämlich denselben Platzhalter, ohne ZIP64 zu sein, und darf nicht
-fälschlich abgelehnt werden.
+fälschlich als ZIP64 gelesen werden.
 
-### Wird ZIP64 eingebaut?
+### Was weiterhin abgelehnt wird
 
-Noch nicht entschieden — siehe `LUECKEN.md` L4. Die heutige Regel ist:
-**lieber eine ehrliche Fehlermeldung als ein kaputtes Archiv.** Solange das
-gilt, verliert niemand unbemerkt Daten; es gibt nur etwas, das Redion nicht
-kann, und das sagt es.
+Ein Archiv, das sich ZIP64 nennt, dessen ZIP64-Schlusssatz aber fehlt oder
+beschädigt ist. Das ist wichtig genug für einen eigenen Absatz, weil es die
+gefährlichste Sorte Fehler ist: im alten Schlusssatz stehen dann nur
+Platzhalter, `blob.slice(0xFFFFFFFF, …)` gibt einen leeren Ausschnitt, und
+heraus kämen **null Dateien und kein Fehler**. Wer eine Sicherung mit 70 000
+Anhängen einspielte, sähe „0 Anhänge" und hätte keinen Grund zu zweifeln.
 
----
+Dieselbe Falle kam beim Umbau auf ZIP64 beinahe zurück: der erste Entwurf
+nahm bei unlesbarem ZIP64-Satz „ersatzweise" die Zahlen aus dem alten
+Schlusssatz — also die Platzhalter. Gefunden hat das der Prüflauf, der noch
+aus der Zeit der Ablehnung stammte.
+
+Dazu die allgemeine Fassung derselben Regel: ein Archiv, das `N` Einträge
+ankündigt und keinen einzigen liefert, wird abgelehnt statt als leer
+durchgereicht.
+
+### Wie das geprüft wird
+
+Vier Gigabyte schreibt kein Prüflauf. `Austausch.grenzen` senkt deshalb die
+Schwelle, sodass dieselbe Verzweigung schon bei vierzig Byte greift; heraus
+kommt ein vollwertiges ZIP64, nur klein. Dass es wirklich eines ist,
+bestätigen **`unzip` und `zipinfo`** — fremde Werkzeuge, die Redion nicht
+kennen und keinen Grund haben, denselben Fehler zu machen. „Redion liest,
+was Redion schrieb" wäre kein Beweis: zwei Fehler, die sich gegenseitig
+aufheben, bestünden das mühelos.
+
+Die Anzahl-Grenze braucht keine Absenkung — 70 000 winzige Einträge sind
+sieben Megabyte, und `test103` schreibt sie wirklich.
 
 ## Ein `.redion` ohne Redion öffnen
 

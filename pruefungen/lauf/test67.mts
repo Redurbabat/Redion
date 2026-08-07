@@ -212,20 +212,22 @@ const pruef = (n: any, ist: any, soll: any) => {
              punkt: !!l.querySelector('.hl-punkt') };
   }) as any;
   pruef('Die Leiste steht am Telefon', leiste.sichtbar, true);
+  /* Seit E38: „Seiten" statt „Chats". Der Platz oben gehört dem, was man
+     täglich sucht; die KI steht unten in der Leiste und im R-Blatt. */
   pruef('Konto und vier Bereiche', leiste.ids,
-        ['hl-konto', 'hl-start', 'hl-chat', 'hl-bespr', 'hl-inbox']);
+        ['hl-konto', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-inbox']);
   pruef('Jeder hat seinen Namen dabei', leiste.beschriftung,
-        ['Start', 'Chats', 'Termine', 'Eingang']);
+        ['Start', 'Seiten', 'Termine', 'Eingang']);
   pruef('Start ist markiert', leiste.markiert, ['hl-start']);
   /* DAS IST DIE REGEL, DIE DEN PLATZ MACHT. Stünden alle vier Namen da,
      bliebe für den Inhalt nichts; stünde keiner da, müsste man raten. */
   pruef('Nur der markierte zeigt seinen Namen', leiste.nameSichtbar, ['hl-start']);
-  pruef('Die Chats haben einen Punktplatz', leiste.punkt, true);
+  pruef('Der Eingang hat einen Punktplatz', leiste.punkt, true);
 
   /* Umschalten markiert richtig */
   const wechsel = await handy.evaluate(async () => {
     const raus = [];
-    for (const id of ['hl-chat', 'hl-bespr', 'hl-start']) {
+    for (const id of ['hl-seiten', 'hl-bespr', 'hl-start']) {
       document.getElementById(id)?.click();
       await new Promise(r => setTimeout(r, 450));
       raus.push([id, [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')].map(x => x.id)]);
@@ -247,22 +249,30 @@ const pruef = (n: any, ist: any, soll: any) => {
       if (!x) throw new Error(sel + ' ist nicht da.');
       return x;
     };
-    musselement('#hl-chat').click();
+    musselement('#hl-seiten').click();
     await new Promise(r => setTimeout(r, 500));
-    /* DIE RICHTUNG HAT SICH GEDREHT. Vorher lag die Leiste unten und die
-       Schublade musste ÜBER ihr enden. Jetzt liegen die Pillen oben und die
-       Bereichsansicht beginnt DARUNTER — die Frage bleibt dieselbe: bleibt
-       die Leiste erreichbar, oder deckt der Inhalt sie zu? Eine Navigation,
-       die vom Inhalt verdeckt wird, ist eine Sackgasse. */
+    /* DIE RICHTUNG HAT SICH ZWEIMAL GEDREHT. Erst lag die Leiste unten und
+       die Schublade musste ÜBER ihr enden. Dann lagen die Pillen oben und
+       die Schublade begann darunter. Seit E38 gibt es hier gar keine
+       Schublade mehr — „Seiten" zeichnet auf die Bühne, und gemessen wird
+       deshalb der Inhalt selbst.
+
+       DIE FRAGE IST DIESELBE GEBLIEBEN, und nur sie zählt: deckt der
+       Inhalt die Navigation zu? Eine Leiste, die vom Inhalt verdeckt wird,
+       ist eine Sackgasse. Der Titel der Ansicht ist das oberste sichtbare
+       Stück Inhalt — liegt er unter der Leiste, liegt alles darunter. */
     const l = musselement('#handy-oben').getBoundingClientRect();
-    const s = musselement('#sidebar').getBoundingClientRect();
+    const titel = document.querySelector<HTMLElement>('#page h1');
+    const t = titel ? titel.getBoundingClientRect() : null;
     const oben = document.elementFromPoint(l.left + l.width * 0.7, l.top + l.height / 2);
     if ((window as any).PWA && PWA.schubladeZu) PWA.schubladeZu();
     await new Promise(r => setTimeout(r, 300));
-    return { schubladeBeginntDarunter: Math.round(s.top) >= Math.round(l.bottom) - 2,
+    return { inhaltBeginntDarunter: !!t && Math.round(t.top) >= Math.round(l.bottom) - 2,
+             titelText: (titel?.textContent ?? '').trim(),
              obenLiegt: !!(oben && oben.closest('#handy-oben')) };
   });
-  pruef('Die Bereichsansicht beginnt unter der Leiste', deckung.schubladeBeginntDarunter, true);
+  pruef('Der Seitenbereich ist wirklich offen', deckung.titelText, 'Seiten');
+  pruef('Sein Inhalt beginnt unter der Leiste', deckung.inhaltBeginntDarunter, true);
   pruef('Und die Leiste ist anklickbar',                deckung.obenLiegt, true);
 
   /* Suchen und Neu sind in die Kopfzeile gewandert */

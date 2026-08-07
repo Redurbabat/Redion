@@ -29,34 +29,125 @@ const Einlesen = (() => {
    * ======================================================================*/
 
   /* ------------------------------------------------------------------------
-   * ZIP64 erkennen — die Sorte Archiv, die diese Leser nicht können
+   * ZIP64 — seit dem 6. August gelesen statt abgelehnt (E39)
    * ------------------------------------------------------------------------
-   * Über 65 535 Einträgen oder 4 GB schreiben andere Werkzeuge ZIP64. Im
-   * alten Schlusssatz stehen dann nur noch Platzhalter (0xFFFF, 0xFFFFFFFF);
-   * die echten Zahlen liegen in einem eigenen Satz davor, den diese Leser
-   * nicht kennen.
+   * Über 65 535 Einträgen oder 4 GB schreiben Werkzeuge ZIP64. Im alten
+   * Schlusssatz stehen dann Platzhalter (0xFFFF, 0xFFFFFFFF); die echten
+   * Zahlen liegen in einem eigenen Satz davor.
    *
-   * Ungeprüft war das der schlimmste Fall, den es gibt: `blob.slice` auf
-   * einen Versatz von 0xFFFFFFFF gibt einen leeren Ausschnitt, die Schleife
-   * läuft nullmal — und `zipLesenAusBlob` meldete **null Dateien und keinen
-   * Fehler**. Wer eine fremde Sicherung mit 70 000 Anhängen einspielte, sah
-   * „0 Anhänge" und hatte keinen Grund, daran zu zweifeln.
+   * DREI STUFEN, und es lohnt sich, sie auseinanderzuhalten:
+   *
+   *   1. Ungeprüft war das der schlimmste Fall, den es gibt: `blob.slice`
+   *      auf einen Versatz von 0xFFFFFFFF gibt einen leeren Ausschnitt, die
+   *      Schleife läuft nullmal — **null Dateien und kein Fehler**. Wer eine
+   *      Sicherung mit 70 000 Anhängen einspielte, sah „0 Anhänge".
+   *   2. Dann eine ehrliche Ablehnung. Besser, aber keine Sicherung.
+   *   3. Jetzt gelesen. Redion schreibt solche Archive selbst, seit die
+   *      4-GB-Grenze gefallen ist — ein Packer, dessen Leser nicht
+   *      mitkommt, schriebe Sicherungen, die niemand zurückholen kann.
    *
    * WARUM AM WEGWEISER UND NICHT AN DEN PLATZHALTERN. Ein gewöhnliches
    * Archiv mit genau 65 535 Einträgen schreibt ebenfalls 0xFFFF in das
-   * Anzahlfeld, ohne ZIP64 zu sein. Es am Platzhalter zu erkennen würde
-   * gültige Archive ablehnen. Der Wegweiser (0x07064b50) steht dagegen nur
-   * dort, wo wirklich ZIP64 vorliegt — und immer genau 20 Byte vor dem
-   * Schlusssatz.
+   * Anzahlfeld, ohne ZIP64 zu sein. Der Wegweiser (0x07064b50) steht
+   * dagegen nur dort, wo wirklich ZIP64 vorliegt — und immer genau 20 Byte
+   * vor dem Schlusssatz.
+   *
+   * UND ZIP64 IST NICHT ALLES-ODER-NICHTS. Pythons `zipfile` schreibt bei
+   * einer einzelnen grossen Datei die Platzhalter nur in den lokalen Kopf
+   * und lässt Verzeichnis und Schlusssatz gewöhnlich — nachgemessen am
+   * 6. August. Solche Archive las Redion schon immer richtig, weil es die
+   * Längen aus dem Verzeichnis nimmt. Deshalb wird hier jedes Feld einzeln
+   * angesehen und nicht das Archiv als Ganzes eingeordnet.
    * ----------------------------------------------------------------------*/
-  const ZIP64_MELDUNG =
-    'Dieses Archiv ist im ZIP64-Format — es hat mehr als 65 535 Einträge oder ' +
-    'ist grösser als 4 GB. Redion kann es nicht lesen und gibt lieber diese ' +
-    'Meldung, als einen Teil einzuspielen und den Rest zu verschweigen. Packe ' +
-    'es mit einem anderen Werkzeug in mehrere kleinere Archive.';
-
   const istZip64 = (d: DataView, eocd: number): boolean =>
     eocd >= 20 && d.getUint32(eocd - 20, true) === 0x07064b50;
+
+  /* Acht Byte lesen. `getBigUint64` gäbe ein BigInt, und damit rechnet
+     `blob.slice` nicht — also gleich als Zahl. Bis 2^53 ist das exakt; ein
+     Archiv jenseits von acht Petabyte gibt es nicht. */
+  const lies64 = (d: DataView, i: number): number =>
+    d.getUint32(i, true) + d.getUint32(i + 4, true) * 4294967296;
+
+  /**
+   * Die echten Zahlen aus dem ZIP64-Zusatzfeld eines Verzeichniseintrags.
+   *
+   * DIE REIHENFOLGE IST FEST und die Anwesenheit bedingt: roh, gepackt,
+   * Versatz — jede Zahl steht nur dann da, wenn das zugehörige 32-Bit-Feld
+   * den Platzhalter trägt. Wer stattdessen alle drei erwartet, liest ab der
+   * ersten fehlenden Zahl alles verschoben und bekommt Werte, die fast
+   * stimmen. Abgelesen an Pythons `zipfile._decodeExtra`, nicht geraten.
+   */
+  const zip64Zusatz = (
+    d: DataView, extraStart: number, extraLaenge: number,
+    roh: number, gepackt: number, versatz: number
+  ): { roh: number; gepackt: number; versatz: number } => {
+    let e = extraStart;
+    const ende = extraStart + extraLaenge;
+    while (e + 4 <= ende) {
+      const kennung = d.getUint16(e, true);
+      const laenge  = d.getUint16(e + 2, true);
+      if (kennung === 0x0001) {
+        let f = e + 4;
+        const rest = () => f + 8 <= e + 4 + laenge;
+        if (roh     === 0xFFFFFFFF && rest()) { roh     = lies64(d, f); f += 8; }
+        if (gepackt === 0xFFFFFFFF && rest()) { gepackt = lies64(d, f); f += 8; }
+        if (versatz === 0xFFFFFFFF && rest()) { versatz = lies64(d, f); f += 8; }
+        break;
+      }
+      e += 4 + laenge;
+    }
+    return { roh, gepackt, versatz };
+  };
+
+  const ZIP64_KAPUTT =
+    'Dieses Archiv nennt sich ZIP64, aber sein ZIP64-Schlusssatz fehlt oder ' +
+    'ist beschädigt. Ohne ihn stünden im alten Schlusssatz nur Platzhalter, ' +
+    'und Redion läse aus einem Archiv voller Dateien null Dateien heraus — ' +
+    'ohne das zu merken. Lieber diese Meldung.';
+
+  /**
+   * Anzahl, Grösse und Ort des Verzeichnisses — aus dem ZIP64-Schlusssatz,
+   * wenn es einen gibt, sonst aus dem alten.
+   *
+   * `z64Satz` ist der ZIP64-Schlusssatz, falls der Aufrufer ihn getrennt
+   * holen musste: beim Lesen aus einem Blob deckt `d` nur ein Fenster am
+   * Dateiende ab, und bei einem langen Archivkommentar liegt der Satz
+   * davor.
+   *
+   * WARUM HIER GEWORFEN WIRD UND NICHT AUSGEWICHEN. Der erste Entwurf
+   * nahm bei einem unlesbaren ZIP64-Satz „ersatzweise" die Zahlen aus dem
+   * alten Schlusssatz. Das ist die schlechteste aller Möglichkeiten: dort
+   * stehen dann 0xFFFFFFFF, `blob.slice` gibt einen leeren Ausschnitt, und
+   * heraus kommen **null Dateien und kein Fehler**. Genau der Fall, gegen
+   * den dieser Code einmal geschrieben wurde — beim Umbau auf ZIP64 wäre
+   * er beinahe zurückgekehrt. Gefunden hat ihn der eigene Prüflauf.
+   */
+  const schlussLesen = (d: DataView, eocd: number, z64Satz?: DataView | null) => {
+    const anzahl  = d.getUint16(eocd + 10, true);
+    const groesse = d.getUint32(eocd + 12, true);
+    const start   = d.getUint32(eocd + 16, true);
+    if (!istZip64(d, eocd)) return { anzahl, groesse, start, zip64: false };
+
+    const s = z64Satz;
+    if (!s || s.byteLength < 56 || s.getUint32(0, true) !== 0x06064b50)
+      throw new Error(ZIP64_KAPUTT);
+    return { anzahl: lies64(s, 32), groesse: lies64(s, 40),
+             start: lies64(s, 48), zip64: true };
+  };
+
+  /** Wo der ZIP64-Schlusssatz liegt — absolut, laut Wegweiser. */
+  const z64Ort = (d: DataView, eocd: number): number => lies64(d, eocd - 20 + 8);
+
+  /* Ein Archiv, das N Einträge ankündigt und keinen einzigen liefert, ist
+     kaputt — und schweigend leer zurückzugeben ist der Fehler, der Leuten
+     ihre Anhänge kostet. Diese eine Zeile fängt jede Sorte davon ab. */
+  const vollzaehlig = (versprochen: number, gefunden: number): void => {
+    if (versprochen > 0 && gefunden === 0)
+      throw new Error('Dieses Archiv kündigt ' + versprochen + ' Einträge an, ' +
+        'hat aber keinen einzigen an der angegebenen Stelle. Es ist ' +
+        'beschädigt oder unvollständig — Redion spielt lieber nichts ein, ' +
+        'als so zu tun, als wäre es leer gewesen.');
+  };
 
   const zipLesen = async (puffer: ArrayBuffer): Promise<any> => {
     const d = new DataView(puffer);
@@ -68,22 +159,37 @@ const Einlesen = (() => {
       if (d.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
     }
     if (eocd < 0) throw new Error('Das ist kein gültiges ZIP-Archiv.');
-    if (istZip64(d, eocd)) throw new Error(ZIP64_MELDUNG);
 
-    const anzahl = d.getUint16(eocd + 10, true);
-    let zeiger = d.getUint32(eocd + 16, true);
+    /* Hier liegt das ganze Archiv im Speicher, der ZIP64-Satz also auch —
+       er wird nur ausgeschnitten, damit `schlussLesen` beide Wege gleich
+       behandeln kann. */
+    const z64 = istZip64(d, eocd) ? (() => {
+      const o = z64Ort(d, eocd);
+      return (o >= 0 && o + 56 <= d.byteLength)
+        ? new DataView(puffer, o, 56) : null;
+    })() : null;
+    const schluss = schlussLesen(d, eocd, z64);
+    const anzahl = schluss.anzahl;
+    let zeiger = schluss.start;
 
     const dateien = new Map();
 
     for (let n = 0; n < anzahl; n++) {
       if (d.getUint32(zeiger, true) !== 0x02014b50) break;
       const methode   = d.getUint16(zeiger + 10, true);
-      const gepackt   = d.getUint32(zeiger + 20, true);
       const nameLaenge= d.getUint16(zeiger + 28, true);
       const extra     = d.getUint16(zeiger + 30, true);
       const kommentar = d.getUint16(zeiger + 32, true);
-      const offset    = d.getUint32(zeiger + 42, true);
       const name = new TextDecoder().decode(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+
+      /* Erst die 32-Bit-Felder, dann die echten Zahlen aus dem Zusatz —
+         aber nur für die Felder, die den Platzhalter tragen. */
+      const echt = zip64Zusatz(d, zeiger + 46 + nameLaenge, extra,
+                               d.getUint32(zeiger + 24, true),
+                               d.getUint32(zeiger + 20, true),
+                               d.getUint32(zeiger + 42, true));
+      const gepackt = echt.gepackt;
+      const offset  = echt.versatz;
 
       /* Am lokalen Kopf stehen die tatsächlichen Längen der Zusatzfelder */
       const lokalName  = d.getUint16(offset + 26, true);
@@ -94,6 +200,7 @@ const Einlesen = (() => {
       dateien.set(name, { methode, roh });
       zeiger += 46 + nameLaenge + extra + kommentar;
     }
+    vollzaehlig(anzahl, dateien.size);
 
     /* Entpacken übernimmt der Browser */
     const holen = async (name: string): Promise<Uint8Array | null> => {
@@ -132,17 +239,31 @@ const Einlesen = (() => {
    * weiterreicht, ohne ihn anzusehen, hat ihn nie im Speicher gehabt.
    */
   const zipLesenAusBlob = async (blob: Blob): Promise<any> => {
-    const ende = new DataView(await blob.slice(Math.max(0, blob.size - 65558)).arrayBuffer());
+    const fensterStart = Math.max(0, blob.size - 65558);
+    const ende = new DataView(await blob.slice(fensterStart).arrayBuffer());
 
     let eocd = -1;
     for (let i = ende.byteLength - 22; i >= 0; i--)
       if (ende.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
     if (eocd < 0) throw new Error('Das ist kein gültiges ZIP-Archiv.');
-    if (istZip64(ende, eocd)) throw new Error(ZIP64_MELDUNG);
 
-    const anzahl = ende.getUint16(eocd + 10, true);
-    const vzGroesse = ende.getUint32(eocd + 12, true);
-    const vzStart = ende.getUint32(eocd + 16, true);
+    /* DEN ZIP64-SATZ HOLT SICH DIESER WEG SELBST, per absolutem Versatz aus
+       dem Blob. Ihn aus dem Fenster zu schneiden wäre naheliegend und in
+       den meisten Fällen richtig — aber bei einem langen Archivkommentar
+       liegt er davor, und dann läse man an einer beliebigen Stelle nach.
+       Ein `slice` kostet nichts; eine Sicherung, die daran scheitert,
+       kostet alles. */
+    const z64 = istZip64(ende, eocd)
+      ? await (async () => {
+          const o = z64Ort(ende, eocd);
+          if (o < 0 || o + 56 > blob.size) return null;
+          return new DataView(await blob.slice(o, o + 56).arrayBuffer());
+        })()
+      : null;
+    const schluss = schlussLesen(ende, eocd, z64);
+    const anzahl = schluss.anzahl;
+    const vzGroesse = schluss.groesse;
+    const vzStart = schluss.start;
 
     const vz = new DataView(await blob.slice(vzStart, vzStart + vzGroesse).arrayBuffer());
     const vzBytes = new Uint8Array(vz.buffer);
@@ -152,15 +273,18 @@ const Einlesen = (() => {
     for (let n = 0; n < anzahl; n++) {
       if (zeiger + 46 > vz.byteLength || vz.getUint32(zeiger, true) !== 0x02014b50) break;
       const methode    = vz.getUint16(zeiger + 10, true);
-      const gepackt    = vz.getUint32(zeiger + 20, true);
       const nameLaenge = vz.getUint16(zeiger + 28, true);
       const extra      = vz.getUint16(zeiger + 30, true);
       const kommentar  = vz.getUint16(zeiger + 32, true);
-      const offset     = vz.getUint32(zeiger + 42, true);
       const name = new TextDecoder().decode(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
-      dateien.set(name, { methode, gepackt, offset });
+      const echt = zip64Zusatz(vz, zeiger + 46 + nameLaenge, extra,
+                               vz.getUint32(zeiger + 24, true),
+                               vz.getUint32(zeiger + 20, true),
+                               vz.getUint32(zeiger + 42, true));
+      dateien.set(name, { methode, gepackt: echt.gepackt, offset: echt.versatz });
       zeiger += 46 + nameLaenge + extra + kommentar;
     }
+    vollzaehlig(anzahl, dateien.size);
 
     /* Die Längen der Zusatzfelder stehen am lokalen Kopf noch einmal, und
        zwar oft anders als im Verzeichnis. Wer das Verzeichnis glaubt, liest

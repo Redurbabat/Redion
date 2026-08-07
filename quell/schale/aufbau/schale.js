@@ -1370,6 +1370,104 @@ const App = (() => {
      * ======================================================================*/
     /* Der Einstellungsbereich liegt in einer eigenen Datei. */
     const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
+    /* ==========================================================================
+     * DAS R-BLATT — der Arbeitsbereich am Telefon (Phase 7)
+     * --------------------------------------------------------------------------
+     * Ein Blatt über den ganzen Bildschirm statt einer hereingeschobenen
+     * Seitenleiste. Zwei Gruppen: oben die Wege, unten die Werkzeuge — und
+     * ganz oben der Satz, der Redion von allem anderen unterscheidet.
+     *
+     * Die Zeilen sind 56 px hoch. Das ist keine Grosszügigkeit, sondern die
+     * Rechnung: darunter trifft der Daumen die Nachbarzeile mit.
+     * ========================================================================*/
+    const rMenue = () => {
+        const zeile = (was, zeichen, name, hinweis = '') => `<button data-r="${was}"><span class="rm-z">${zeichen}</span>` +
+            `<span class="rm-n">${name}</span>` +
+            (hinweis ? `<span class="rm-h">${hinweis}</span>` : '') + '</button>';
+        const o = document.createElement('div');
+        o.id = 'r-blatt';
+        o.innerHTML =
+            '<div class="rm-kopf">' +
+                '<div><b>Redion</b><span>Alles bleibt auf diesem Gerät</span></div>' +
+                '<button class="rm-zu" data-r="zu" aria-label="Schliessen">✕</button>' +
+                '</div>' +
+                '<div class="rm-rollen">' +
+                '<div class="rm-gruppe">' +
+                zeile('suche', '🔍', 'Suchen') +
+                zeile('befehle', '⌘', 'Befehle') +
+                zeile('start', '🏠', 'Start') +
+                zeile('seiten', '📄', 'Seiten') +
+                zeile('inbox', '📥', 'Posteingang') +
+                zeile('neu', '✚', 'Neue Seite') +
+                /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
+                   weg: unten steht „KI fragen", und hier steht der Weg zu allem,
+                   was länger dauert als eine Frage. */
+                zeile('ki', '✨', 'KI und Verlauf') +
+                '</div>' +
+                '<div class="rm-gruppe">' +
+                zeile('import', '⭱', 'Importieren') +
+                zeile('sichern', '⬇', 'Sichern', 'als Datei auf dieses Gerät') +
+                zeile('papierkorb', '🗑', 'Papierkorb') +
+                zeile('tasten', '⌨', 'Tastenkürzel') +
+                zeile('einstellungen', '⚙', 'Einstellungen') +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        requestAnimationFrame(() => o.classList.add('auf'));
+        const zu = () => { o.classList.remove('auf'); setTimeout(() => o.remove(), 200); };
+        o.addEventListener('click', (e) => {
+            const b = (e.target instanceof Element) ? e.target.closest('[data-r]') : null;
+            if (!b)
+                return;
+            const was = b.dataset.r;
+            zu();
+            /* Erst schliessen, dann handeln: ein Dialog, der unter einem Blatt
+               aufgeht, ist von aussen nicht erreichbar. */
+            setTimeout(() => {
+                if (was === 'ki')
+                    kiPanel(true);
+                else if (was === 'suche')
+                    suche();
+                else if (was === 'befehle')
+                    Werkzeuge.palette();
+                /* DERSELBE FUND WIE OBEN AN DEN REITERN, und hier stand er dreimal:
+                   `handyLeiste()` liest `Seitenleiste.reiter()`. Wer nur zeichnet,
+                   bekommt die Ansicht — und daneben eine Pille, die auf den vorigen
+                   Bereich zeigt. Erst den Reiter setzen, dann zeichnen. */
+                else if (was === 'seiten') {
+                    Seitenleiste.reiter('seiten');
+                    Ansichten.seiten();
+                    handyLeiste();
+                }
+                else if (was === 'start') {
+                    Seitenleiste.reiter('start');
+                    Ansichten.start();
+                    handyLeiste();
+                }
+                else if (was === 'inbox') {
+                    Seitenleiste.reiter('inbox');
+                    Ansichten.posteingang();
+                    handyLeiste();
+                }
+                else if (was === 'neu')
+                    neueSeite();
+                else if (was === 'import')
+                    Werkzeuge.dateienLesen();
+                else if (was === 'sichern')
+                    sicherungSpeichern();
+                else if (was === 'papierkorb')
+                    papierkorb();
+                else if (was === 'tasten')
+                    Werkzeuge.tastenkuerzel();
+                else if (was === 'einstellungen')
+                    einstellungen();
+            }, 60);
+        });
+        /* Zurück-Taste des Telefons schliesst das Blatt, statt die Seite zu
+           verlassen — sonst ist der einzige Weg heraus das kleine Kreuz. */
+        const zurueckTaste = () => { zu(); removeEventListener('popstate', zurueckTaste); };
+        addEventListener('popstate', zurueckTaste);
+    };
     /**
      * Die Sicherung schreiben.
      *
@@ -2014,12 +2112,66 @@ const App = (() => {
                 Store.setMeta('fehlerprotokoll', bisher.slice(-20));
             }
             catch { /* wenn nicht einmal das geht, hilft ein Balken auch nicht */ }
-            UI.banner(fremd
-                ? 'Ein Skript von ausserhalb hat einen Fehler gemeldet — Redion läuft ' +
-                    'weiter. Woher er kommt, verrät der Browser nicht; meist ist es eine ' +
-                    'Erweiterung, ein Inhaltsblocker oder eingebetteter fremder Inhalt.'
-                : 'Es ist ein Fehler aufgetreten: ' + text + (ort ? ' (' + ort + ')' : '') +
-                    ' — bitte melde mir diesen Text.', 'fehler');
+            fehlerKarte(fremd, text, ort);
+        };
+        /* ----------------------------------------------------------------------
+         * DIE FEHLERKARTE (Telefon-Vorgabe, Phase 8)
+         * ----------------------------------------------------------------------
+         * Vorher war das ein Balken über die ganze Breite mit dem technischen
+         * Text darin. Auf dem Telefon sah das aus wie ein kaputtes Stück Seite:
+         * im Bildschirmfoto vom 6. August hatte Redur den Text markiert, weil
+         * er wie Inhalt aussah und weil dort „bitte melde mir diesen Text"
+         * stand.
+         *
+         * Jetzt: eine kleine Karte, ein Satz in Alltagssprache, und der
+         * technische Teil hinter „Details kopieren". Wer ihn braucht, holt ihn;
+         * wer ihn nicht braucht, sieht ihn nicht. Nicht markierbar, damit sie
+         * nicht wie Text wirkt, den man anfassen soll.
+         * -------------------------------------------------------------------- */
+        const fehlerKarte = (fremd, text, ort) => {
+            document.getElementById('fehler-karte')?.remove();
+            const k = document.createElement('div');
+            k.id = 'fehler-karte';
+            k.setAttribute('role', 'alert');
+            k.innerHTML =
+                '<div class="fk-kopf"><span class="fk-zeichen">!</span>' +
+                    '<b>Etwas ist schiefgelaufen</b>' +
+                    '<button class="fk-zu" data-a="zu" aria-label="Meldung schliessen">✕</button></div>' +
+                    '<div class="fk-satz">' + (fremd
+                    ? 'Der Fehler kommt von ausserhalb — meist von einer Browser-Erweiterung ' +
+                        'oder eingebettetem Inhalt. Redion läuft weiter.'
+                    : 'Redion konnte diesen Schritt nicht ausführen. Deine Notizen sind davon ' +
+                        'nicht betroffen.') + '</div>' +
+                    '<div class="fk-knoepfe"><button data-a="kopieren">Details kopieren</button>' +
+                    '<button data-a="zu">Schliessen</button></div>';
+            document.body.appendChild(k);
+            requestAnimationFrame(() => k.classList.add('auf'));
+            const einzelheiten = [text, ort, location.href, navigator.userAgent]
+                .filter(Boolean).join('\n');
+            k.addEventListener('click', async (ev) => {
+                const b = (ev.target instanceof Element) ? ev.target.closest('button') : null;
+                if (!b)
+                    return;
+                if (b.dataset.a === 'zu') {
+                    k.remove();
+                    return;
+                }
+                if (b.dataset.a !== 'kopieren')
+                    return;
+                try {
+                    await navigator.clipboard.writeText(einzelheiten);
+                    b.textContent = 'Kopiert';
+                }
+                catch {
+                    /* Ohne Zwischenablage (altes iOS, kein sicherer Kontext) wenigstens
+                       zeigen, statt nur „ging nicht" zu sagen. */
+                    b.textContent = 'Kopieren geht hier nicht';
+                    const pre = document.createElement('pre');
+                    pre.className = 'fk-roh';
+                    pre.textContent = einzelheiten;
+                    k.appendChild(pre);
+                }
+            });
         };
         addEventListener('error', (e) => {
             /* Kein Skriptfehler, sondern ein Bild oder eine Datei, die nicht kam.
@@ -2215,17 +2367,31 @@ const App = (() => {
             Ansichten.start();
             handyLeiste();
         });
-        an('hl-chat', () => {
+        /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
+           unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
+           gehört dem, was man täglich sucht — den eigenen Seiten. */
+        an('hl-seiten', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('chat');
-            zeichneBaum();
+            /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
+               liest ihn, und ohne ihn bliebe die Pille auf „Start"
+               stehen, während daneben schon die Seiten stünden. */
+            Seitenleiste.reiter('seiten');
+            Ansichten.seiten();
             handyLeiste();
-            if (PWA.schubladeAuf)
-                PWA.schubladeAuf();
         });
+        /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
+           dieser Reiter auch am Telefon die Schublade auf — also die
+           Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
+           33-px-Zeilen. Genau davon ist das R-Blatt weggekommen (E38); ein
+           Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
             Seitenleiste.reiter('bespr');
+            if (window.matchMedia('(max-width: 700px)').matches) {
+                Ansichten.termine();
+                handyLeiste();
+                return;
+            }
             zeichneBaum();
             handyLeiste();
             if (PWA.schubladeAuf)
@@ -2237,11 +2403,33 @@ const App = (() => {
         an('hu-neu', () => neueSeite());
         /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
            wie früher der ☰. */
-        an('hl-konto', () => { if (PWA.schubladeAuf)
-            PWA.schubladeAuf(); });
+        /* ----------------------------------------------------------------------
+         * DAS R-MENÜ (Telefon-Vorgabe Phase 7)
+         * ----------------------------------------------------------------------
+         * Vorher zog der Kreis die Seitenleiste als Schublade herein — also die
+         * Rechner-Oberfläche auf ein Telefon geschoben: Baum, Reiter, kleine
+         * Zeilen. Am Telefon gehört an diese Stelle ein Blatt mit grossen
+         * Zeilen und den Wegen, die man wirklich sucht.
+         *
+         * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
+         * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
+         * -------------------------------------------------------------------- */
+        an('hl-konto', () => {
+            if (!window.matchMedia('(max-width: 700px)').matches) {
+                if (PWA.schubladeAuf)
+                    PWA.schubladeAuf();
+                return;
+            }
+            PWA.schubladeZu && PWA.schubladeZu();
+            rMenue();
+        });
+        /* `reiter('inbox')`, nicht `'start'`: die Pille oben liest ihn, und mit
+           `'start'` stand sie auf „Start", während daneben schon der Posteingang
+           stand. Derselbe Fund wie bei „Seiten", nur eine Zeile weiter unten —
+           gefunden hat ihn wieder das Bildschirmfoto, nicht der Code. */
         an('hl-inbox', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('start');
+            Seitenleiste.reiter('inbox');
             Ansichten.posteingang();
             handyLeiste();
         });

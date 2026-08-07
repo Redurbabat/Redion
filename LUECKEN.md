@@ -27,7 +27,8 @@ Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
 1. Mobile ist ab dem 6. August die Hauptumgebung (E37) — L10 ist damit
    keine Nachlese mehr, sondern die Reihenfolge
 2. Erinnerungen wecken das Telefon nicht, wenn Redion zu ist (L29)
-3. ZIP64 fehlt — Sicherungen über 4 GB brechen ehrlich ab (L14)
+3. Was der Browser bei sehr grossen Sicherungen hergibt, ist
+   ungemessen (L14) — das Format kann es seit E39
 
 Die Wolke ist seit dem 6. August durch: Konto (L7), Anhänge (L6),
 Konflikte (L5) und Rechte (L8) stehen und sind geprüft.
@@ -254,11 +255,30 @@ Gegenprobe, dass es auch rot werden kann.
 
 ## L10 · Mobile und iPhone
 
-**Stand** — ◐ die App läuft mobil, ist aber nicht dafür gebaut.
+**Stand** — ◐ die Schale steht, die Bereiche darin noch nicht ganz.
 
-Fehlt: Test auf iPhone 13 Pro Max · Touch-Editor · mobile
-Datenbankansicht · mobile Tabellenansicht · Dateiimport und -export mobil ·
-Tastaturverhalten · Side Peek auf kleinen Bildschirmen.
+Seit dem 6. August ist das Telefon die Hauptumgebung (E37). Die Schale ist
+gebaut: fünf Wege oben (R · Start · Seiten · Termine · Eingang, E38), die
+feste Leiste unten (Suche · KI fragen · Neue Seite), das R-Blatt über den
+ganzen Bildschirm, der Start-Bereich beim Öffnen. `test114` misst das an
+390 und 428 px; jede Fläche ist mindestens 44 px.
+
+Termine und Eingang haben ihre eigenen Bereiche bekommen; der Codeblock
+seine Kopfzeile. Was das Hinsehen dabei fand, steht in E38 — fünf Fehler,
+und keinen davon hatte ein Prüflauf.
+
+**Fehlt noch:** die übrigen Menüs sind noch keine Bottom Sheets · der
+Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
+über der Tastatur) · mobile Datenbank- und Tabellenansicht rollen zwar,
+sind aber nicht fürs Telefon entworfen · Tastaturverhalten · Side Peek auf
+kleinen Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter
+Pixelzahlen — die Masse stehen an einem Dutzend Stellen in `bausteine.css`
+und wurden schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
+
+**Geprüft auf echtem Gerät** — nein. Alles bisher gemessen mit Playwright
+im Telefon-Bildmass. Das findet Grössen und Überdeckungen, aber nicht das
+Verhalten von Safari selbst; der Fehlerbalken kam vom iPhone, nicht aus
+einem Prüflauf.
 
 ## L11 · Agenten-Sicherheit
 
@@ -290,19 +310,31 @@ entfernt, `CLAUDE.md` §54.3); `npm run typecheck` prüft sie mit,
 
 ## L14 · ZIP64 / Dateien über 4 GB
 
-**Stand** — ◐ die Grenzen melden sich ehrlich, ZIP64 fehlt.
+**Stand** — ✅ die Grenzen des Formats sind gefallen (6. August 2026, E39).
 
 ```txt
-eine Datei          4 GB      geprüft, klare Meldung
-das ganze Archiv    4 GB      geprüft, klare Meldung
-Anzahl Einträge     65 535    geprüft, klare Meldung
-fremdes ZIP64                 wird erkannt und abgelehnt
+eine Datei          über 4 GB    ZIP64, geprüft
+das ganze Archiv    über 4 GB    ZIP64, geprüft
+Anzahl Einträge     über 65 535  ZIP64, mit 70 000 wirklich geschrieben
+fremdes ZIP64                    wird gelesen
+kaputtes ZIP64                   wird abgelehnt, nicht als leer gemeldet
 ```
 
-Die heutige Regel ist **eine ehrliche Fehlermeldung statt eines kaputten
-Archivs**. Solange sie gilt, verliert niemand unbemerkt Daten.
+**Warum es doch kam.** Die alte Regel — eine ehrliche Meldung statt eines
+kaputten Archivs — war richtig und trotzdem zu wenig. Die Meldung riet, „die
+Anhänge in zwei Schritten" zu sichern, und diesen zweiten Schritt gibt es in
+Redion nicht: jeder Weg mündet in dasselbe eine Archiv. Wer 5 GB Fotos
+hatte, konnte gar nicht sichern. Eine ehrliche Fehlermeldung ist keine
+Sicherung.
 
-Fehlt: die Entscheidung, ob ZIP64 kommt.
+Gehalten wird das von `test103` (36 Punkte) — und zwar von **`unzip` und
+`zipinfo`** mitgehalten, nicht nur von Redion selbst.
+
+**Fehlt noch:** was der BROWSER hergibt, ist nicht gemessen. Ob Chrome oder
+Safari einen Blob von zehn Gigabyte zusammensetzen und herunterladen können,
+entscheidet der Browser. ZIP64 nimmt die Grenze aus dem Format; die Grenze
+der Umgebung bleibt und ist unbekannt. Wer das misst, braucht ein Gerät mit
+Platz und Geduld — im Prüfcontainer geht es nicht.
 
 ## L15 · Bedingte Formatierung
 
