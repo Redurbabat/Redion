@@ -2314,3 +2314,39 @@ Wald, Sand) bringen weiter ihre eigenen Flächen und Akzente mit.
 
 `test127`, 20 Punkte, beide Modi, gerechnet am laufenden Browser statt an
 den Stilblättern — was zählt, ist der Wert, der am Ende gilt.
+
+---
+
+## E46 · Ladeskelette statt Kreisel
+
+**Aus der Vorgabe §23:** „Use skeletons, not random spinners everywhere."
+
+**Der Grund ist nicht Mode.** Ein Kreisel sagt „warte". Ein Skelett sagt
+„hier kommen sechs Zeilen mit einem Symbol links und einem Datum rechts" —
+man weiss, was gleich dasteht, das Auge hat schon einen Platz dafür, und
+wenn der Inhalt kommt, springt nichts.
+
+**Drei Kleinigkeiten, die den Unterschied machen:**
+
+Die Strichbreiten sind **ungleich** (62 %, 48 %, 71 %, …). Sechs gleich
+lange Balken sehen aus wie ein Muster; ungleiche sehen aus wie Text, und
+genau darum geht es.
+
+Die Zeilen atmen **versetzt**, 120 ms Abstand. Sonst pulsiert die ganze
+Liste wie ein Block — und das wirkt wie ein Fehler statt wie Warten.
+
+Das Atmen ist **leise**: von .35 auf .7 über 1,4 Sekunden. Die Vorgabe sagt
+„very subtle shimmer" und „do not use bright shimmer". Ein Skelett, das
+blitzt, zieht die Aufmerksamkeit auf das Warten statt auf das, was kommt.
+
+**Und eine Frist.** `beimLaden()` zeigt das Skelett erst nach 180 ms. Ein
+Skelett, das bei jedem Wechsel aufblitzt, ist schlimmer als keines — die
+Ansicht flackert. Darunter merkt ohnehin niemand, dass geladen wurde.
+
+Wer keine Bewegung mag, bekommt keine: die globale Regel hält auch diese
+Animation an, und ein stehendes Skelett erfüllt seinen Zweck weiterhin —
+es zeigt die Form.
+
+**Status**
+
+`test126` §5, 6 Punkte. Gegenprobe: Dauer auf 0,3 s gesetzt → rot.

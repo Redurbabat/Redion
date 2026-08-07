@@ -709,6 +709,49 @@ const Ansichten = (() => {
     };
   };
 
-  return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter, gruss };
+  /* ========================================================================
+   * DAS SKELETT — was dasteht, bevor etwas dasteht (Vorgabe §23, E46)
+   * ------------------------------------------------------------------------
+   * Ein Kreisel sagt „warte". Ein Skelett sagt „hier kommen sechs Zeilen
+   * mit einem Symbol links und einem Datum rechts" — man weiss, was gleich
+   * kommt, und wenn es kommt, springt nichts.
+   *
+   * Die Strichbreiten sind ABSICHTLICH ungleich. Sechs gleich lange
+   * Balken sehen aus wie ein Muster; ungleiche sehen aus wie Text, und
+   * genau darum geht es.
+   * ======================================================================*/
+  const skelett = (wieViele = 6, mitKarten = false): string =>
+    (mitKarten
+      ? '<div class="sk-karten"><div class="sk-karte"></div><div class="sk-karte"></div></div>'
+      : '') +
+    '<div class="sk-titel">Wird geladen …</div><div class="sk-liste">' +
+    ['62%', '48%', '71%', '54%', '40%', '66%', '58%', '45%']
+      .slice(0, wieViele)
+      .map(b => '<div class="sk-zeile"><div class="sk-punkt"></div>' +
+                `<div class="sk-strich" style="width:${b}"></div>` +
+                '<div class="sk-rechts"></div></div>').join('') +
+    '</div>';
+
+  /**
+   * Ein Skelett auf die Bühne stellen, bis der Inhalt da ist.
+   *
+   * WARUM MIT FRIST. Ein Skelett, das bei jedem Wechsel aufblitzt, ist
+   * schlimmer als keines — die Ansicht flackert. Erst ab 180 ms Wartezeit
+   * lohnt es sich; darunter merkt niemand, dass etwas geladen wurde.
+   */
+  const beimLaden = async <T>(arbeit: () => Promise<T>, wieViele = 6,
+                              mitKarten = false): Promise<T> => {
+    const f = flaeche();
+    let gezeigt = false;
+    const uhr = setTimeout(() => {
+      if (f) { f.wrap.innerHTML = '<div class="home">' + skelett(wieViele, mitKarten) + '</div>'; }
+      gezeigt = true;
+    }, 180);
+    try { return await arbeit(); }
+    finally { clearTimeout(uhr); void gezeigt; }
+  };
+
+  return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter,
+           gruss, skelett, beimLaden };
 })();
 (window as any).Ansichten = Ansichten;

@@ -143,6 +143,49 @@ p('Nichts bewegt sich mehr, wenn man es abschaltet', bewegt.length === 0,
 p('… und die Prüfung misst wirklich diesen Browser',
   still.every(x => x.da), still.filter(x => !x.da).map(x => x.sel).join(', '));
 
+console.log('\n5 · Ladeskelette statt Kreisel (Vorgabe §23)');
+
+/* „Use skeletons, not random spinners everywhere." Der Grund ist nicht
+   Mode: ein Kreisel sagt „warte", ein Skelett sagt „hier kommen sechs
+   Zeilen mit einem Symbol links und einem Datum rechts". Wenn der Inhalt
+   kommt, springt nichts. */
+const sk = await handy.evaluate(() => {
+  const b = document.getElementById('page');
+  if (!b) return null;
+  b.innerHTML = '<div class="home">' + (window as any).Ansichten.skelett(6, true) + '</div>';
+  const zeilen = [...b.querySelectorAll<HTMLElement>('.sk-zeile')];
+  const striche = zeilen.map(z =>
+    (z.querySelector<HTMLElement>('.sk-strich')?.style.width) || '');
+  const st = zeilen[0] ? getComputedStyle(zeilen[0]) : null;
+  const verzoegert = zeilen.map(z => getComputedStyle(z).animationDelay);
+  return {
+    zeilen: zeilen.length,
+    karten: b.querySelectorAll('.sk-karte').length,
+    striche,
+    dauer: st ? st.animationDuration : '',
+    verzoegert,
+    sagtEs: /Wird geladen/.test(b.textContent || '')
+  };
+}) as { zeilen: number; karten: number; striche: string[]; dauer: string;
+        verzoegert: string[]; sagtEs: boolean } | null;
+
+p('Es entsteht ein Skelett', (sk?.zeilen ?? 0) === 6, String(sk?.zeilen));
+p('… mit zwei Karten darüber', sk?.karten === 2, String(sk?.karten));
+p('… und es sagt, dass geladen wird', sk?.sagtEs === true);
+/* SECHS GLEICH LANGE BALKEN SEHEN AUS WIE EIN MUSTER, ungleiche wie Text.
+   Genau darum geht es: das Auge soll die Form von Inhalt erkennen. */
+p('Die Striche sind ungleich lang',
+  new Set(sk?.striche ?? []).size >= 5, (sk?.striche ?? []).join(' '));
+/* Ein Skelett, das blitzt, zieht die Aufmerksamkeit auf das Warten statt
+   auf das, was kommt. Die Vorgabe: 1000–1400 ms, „very subtle". */
+p('Das Atmen ist langsam (1000–1400 ms)',
+  parseFloat(sk?.dauer || '0') >= 1 && parseFloat(sk?.dauer || '0') <= 1.4,
+  sk?.dauer);
+/* Und versetzt — sonst pulsiert die Liste wie ein Block, und das wirkt
+   wie ein Fehler statt wie Warten. */
+p('Die Zeilen atmen versetzt',
+  new Set(sk?.verzoegert ?? []).size >= 5, (sk?.verzoegert ?? []).join(' '));
+
 await browser.close();
 console.log(`\n  Suite 90 — Bewegung: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

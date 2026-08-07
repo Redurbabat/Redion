@@ -1411,6 +1411,56 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .home-liste .mz{flex:0 0 26px; text-align:center}
 @media(max-width:760px){ .home-liste .mz{flex:0 0 28px} }
 
+/* ===========================================================================
+   LADESKELETTE (Vorgabe §23, E46)
+   ---------------------------------------------------------------------------
+   „Use skeletons, not random spinners everywhere."
+
+   Der Grund ist nicht Mode. Ein Kreisel sagt „warte", ein Skelett sagt
+   „hier kommen sechs Zeilen mit einem Symbol links und einem Datum
+   rechts" — man weiss, was gleich dasteht, und das Auge hat schon einen
+   Platz dafür. Wenn der Inhalt kommt, springt nichts.
+
+   DAS SCHIMMERN IST ABSICHTLICH LEISE: von .35 auf .7 und zurück, über
+   1,4 Sekunden. Die Vorgabe sagt „very subtle shimmer" und „do not use
+   bright shimmer" — ein Skelett, das blitzt, zieht die Aufmerksamkeit auf
+   das Warten statt auf das, was kommt.
+
+   Wer keine Bewegung mag, bekommt keine: die globale Regel in
+   `bausteine.css` hält auch diese Animation an, und ein stehendes Skelett
+   erfüllt seinen Zweck weiterhin — es zeigt die Form.
+   =========================================================================*/
+.sk-liste{display:flex; flex-direction:column}
+.sk-zeile{display:flex; align-items:center; gap:14px; height:56px;
+          animation:sk-atmen 1.4s ease-in-out infinite}
+.sk-punkt{width:26px; height:26px; border-radius:8px; background:var(--bg-card);
+          flex:none}
+.sk-strich{height:12px; border-radius:6px; background:var(--bg-card)}
+.sk-rechts{margin-left:auto; height:12px; width:62px; border-radius:6px;
+           background:var(--bg-card); opacity:.6; flex:none}
+.sk-karten{display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:26px}
+.sk-karte{height:110px; border-radius:18px; background:var(--bg-card);
+          animation:sk-atmen 1.4s ease-in-out infinite}
+.sk-titel{font-size:14px; color:var(--text-faint); margin:0 0 12px}
+
+@keyframes sk-atmen{
+  0%{opacity:.35} 50%{opacity:.7} 100%{opacity:.35}
+}
+
+/* Jede Zeile atmet ein wenig versetzt — sonst pulsiert die ganze Liste
+   wie ein Block, und das wirkt wie ein Fehler statt wie Warten. */
+.sk-zeile:nth-child(2){animation-delay:.12s}
+.sk-zeile:nth-child(3){animation-delay:.24s}
+.sk-zeile:nth-child(4){animation-delay:.36s}
+.sk-zeile:nth-child(5){animation-delay:.48s}
+.sk-zeile:nth-child(6){animation-delay:.6s}
+
+@media(max-width:760px){
+  .sk-zeile{height:60px}
+  .sk-karte{height:118px; border-radius:20px}
+  .sk-titel{font-size:15px}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */
@@ -35525,7 +35575,53 @@ const Ansichten = (() => {
                 App.sicherungSpeichern();
         };
     };
-    return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter, gruss };
+    /* ========================================================================
+     * DAS SKELETT — was dasteht, bevor etwas dasteht (Vorgabe §23, E46)
+     * ------------------------------------------------------------------------
+     * Ein Kreisel sagt „warte". Ein Skelett sagt „hier kommen sechs Zeilen
+     * mit einem Symbol links und einem Datum rechts" — man weiss, was gleich
+     * kommt, und wenn es kommt, springt nichts.
+     *
+     * Die Strichbreiten sind ABSICHTLICH ungleich. Sechs gleich lange
+     * Balken sehen aus wie ein Muster; ungleiche sehen aus wie Text, und
+     * genau darum geht es.
+     * ======================================================================*/
+    const skelett = (wieViele = 6, mitKarten = false) => (mitKarten
+        ? '<div class="sk-karten"><div class="sk-karte"></div><div class="sk-karte"></div></div>'
+        : '') +
+        '<div class="sk-titel">Wird geladen …</div><div class="sk-liste">' +
+        ['62%', '48%', '71%', '54%', '40%', '66%', '58%', '45%']
+            .slice(0, wieViele)
+            .map(b => '<div class="sk-zeile"><div class="sk-punkt"></div>' +
+            `<div class="sk-strich" style="width:${b}"></div>` +
+            '<div class="sk-rechts"></div></div>').join('') +
+        '</div>';
+    /**
+     * Ein Skelett auf die Bühne stellen, bis der Inhalt da ist.
+     *
+     * WARUM MIT FRIST. Ein Skelett, das bei jedem Wechsel aufblitzt, ist
+     * schlimmer als keines — die Ansicht flackert. Erst ab 180 ms Wartezeit
+     * lohnt es sich; darunter merkt niemand, dass etwas geladen wurde.
+     */
+    const beimLaden = async (arbeit, wieViele = 6, mitKarten = false) => {
+        const f = flaeche();
+        let gezeigt = false;
+        const uhr = setTimeout(() => {
+            if (f) {
+                f.wrap.innerHTML = '<div class="home">' + skelett(wieViele, mitKarten) + '</div>';
+            }
+            gezeigt = true;
+        }, 180);
+        try {
+            return await arbeit();
+        }
+        finally {
+            clearTimeout(uhr);
+            void gezeigt;
+        }
+    };
+    return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter,
+        gruss, skelett, beimLaden };
 })();
 window.Ansichten = Ansichten;
 
