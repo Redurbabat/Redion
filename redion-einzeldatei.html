@@ -2686,8 +2686,45 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .fbtns{ flex-wrap:wrap; }
   .fbtns button{ flex:1 1 auto; min-height:42px; }
 
-  /* Das KI-Fenster nimmt das ganze Telefon ein */
-  #ai{ width:100% !important; }
+  /* ------------------------------------------------------------------------
+   * DAS KI-FENSTER KOMMT VON UNTEN, NICHT VON DER SEITE (Vorgabe §19)
+   * ------------------------------------------------------------------------
+   * Es schob sich bisher als volle Fläche von rechts herein — die Form,
+   * die am Rechner richtig ist, weil es dort eine Spalte NEBEN der Seite
+   * ist. Am Telefon gibt es kein Neben; dort ist es ein Blatt, und es
+   * kommt von da, wo der Daumen es angetippt hat: von unten.
+   *
+   * Und es lässt oben einen Streifen frei. Ein Blatt, das den ganzen
+   * Bildschirm nimmt, ist keine Überlagerung mehr, sondern eine neue
+   * Seite — man verliert das Gefühl, wo man herkam. Die Vorgabe sagt
+   * dasselbe: „No huge chatbot interface."
+   * --------------------------------------------------------------------- */
+  #ai{
+    width:100% !important;
+    /* Über den Hinweisstreifen (900), unter das R-Blatt (950). Derselbe
+       Fund wie beim Speicherbalken: der Streifen stand mitten im
+       Eingabefeld. Ein Blatt, in das man tippen soll, darf nichts
+       verdecken — und nichts darf es verdecken. */
+    z-index:920 !important;
+    left:0; right:0; bottom:0; top:auto !important;
+    height:88vh !important; max-height:88vh;
+    border-left:none; border-top:1px solid var(--line);
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -18px 50px rgba(0,0,0,.45);
+    transform:translateY(100%);
+    transition:transform var(--motion-slow) var(--ease-enter);
+  }
+  #ai.open{ transform:translateY(0) }
+
+  /* Der Griff oben — er sagt ohne Wort, dass man das Blatt wegwischen
+     kann. `::before` statt eines Elements: die Zeile im Markup gäbe es
+     am Rechner auch, und dort wäre sie sinnlos. */
+  #ai::before{
+    content:''; position:absolute; left:50%; top:9px;
+    transform:translateX(-50%);
+    width:40px; height:5px; border-radius:3px; background:var(--line-stark);
+  }
+  .ai-head{ padding-top:22px }
   .ai-quick{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
   .ai-quick button{ flex:0 0 auto; }
 
@@ -4707,8 +4744,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Seitenleiste des Rechners herein — Baum, Reiter, 33-px-Zeilen. Hier sind
    die Zeilen 56 px hoch: darunter trifft der Daumen die Nachbarzeile mit.
    =========================================================================*/
+/* Z-INDEX 950, NICHT 700. Der Hinweisstreifen („1 Karteikarte ist fällig")
+   liegt auf 900 und stand damit MITTEN AUF dem Speicherbalken des Blattes —
+   gesehen am 7. August, im Code nicht zu ahnen. Ein Blatt über den ganzen
+   Bildschirm muss über allem liegen, was sonst über der Seite schwebt;
+   sonst spricht etwas hindurch, das gerade nicht gemeint ist. */
 #r-blatt{
-  position:fixed; inset:0; z-index:700; background:var(--bg);
+  position:fixed; inset:0; z-index:950; background:var(--bg);
   display:flex; flex-direction:column;
   padding:calc(14px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
   transform:translateY(14px); opacity:0;
@@ -4793,6 +4835,33 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   from{ transform:translateY(16px); opacity:0 }
   to{ transform:translateY(0); opacity:1 }
 }
+
+/* Zwei Zeilen im Blatt „Neu erstellen": Name und der Satz darunter. Ohne
+   den Satz ist „Neue Tabelle" nur ein Wort — mit ihm weiss man, dass darin
+   gerechnet wird. Die Vorgabe verlangt 60 px Mindesthöhe; hier sind es 62. */
+.menu.blatt button:has(.ne-txt){ align-items:flex-start; min-height:62px }
+.ne-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1;
+         text-align:left }
+.ne-txt b{ font-size:16px; font-weight:500 }
+.ne-txt i{ font-size:13.5px; color:var(--text-dim); font-style:normal;
+           line-height:1.35 }
+.ne-pfeil{ margin-left:auto; color:var(--text-faint); font-size:17px;
+           align-self:center }
+
+/* Der Speicherbalken im R-Blatt (Vorgabe §16). Er beantwortet die Frage,
+   die bei einer App, die alles auf dem Gerät hält, gleich nach „wo bin
+   ich?" kommt: wie viel liegt hier eigentlich. */
+.rm-speicher{ margin:22px 0 8px; padding:16px 18px; border-radius:16px;
+              background:var(--bg-card) }
+.rs-kopf{ display:flex; justify-content:space-between; align-items:baseline;
+          font-size:15px; color:var(--text-dim) }
+.rs-kopf b{ font-size:16px; color:var(--text); font-weight:600 }
+.rs-balken{ height:6px; border-radius:3px; background:var(--bg-hover);
+            margin-top:12px; overflow:hidden }
+.rs-balken i{ display:block; height:100%; background:var(--accent);
+              border-radius:3px }
+.rs-fuss{ font-size:13px; color:var(--text-faint); margin-top:9px;
+          line-height:1.4 }
 
 </style>
 
@@ -62960,6 +63029,42 @@ const App = (() => {
                 '</div>';
         document.body.appendChild(o);
         requestAnimationFrame(() => o.classList.add('auf'));
+        /* DER SPEICHERBALKEN (Vorgabe §16). Er gehört genau hierher und
+           nirgendwo sonst: das R-Blatt ist der Ort für den Arbeitsbereich, und
+           „wie viel liegt hier eigentlich?" ist bei einer App, die alles auf
+           dem Gerät hält, die erste Frage danach.
+    
+           NACHGETRAGEN, NICHT MITGEBAUT — `navigator.storage.estimate()` ist
+           asynchron und braucht auf einem vollen Gerät spürbar Zeit. Darauf zu
+           warten hiesse, das Blatt später zu öffnen; also kommt der Balken
+           nach, wenn er da ist. Ist das Blatt bis dahin zu, passiert nichts. */
+        void (async () => {
+            let stand = null;
+            try {
+                stand = await Store.usage();
+            }
+            catch { }
+            if (!stand || !stand.benutzt || !o.isConnected)
+                return;
+            const rollen = o.querySelector('.rm-rollen');
+            if (!rollen)
+                return;
+            const mb = (n) => n >= 1073741824
+                ? (n / 1073741824).toFixed(2).replace('.', ',') + ' GB'
+                : Math.round(n / 1048576) + ' MB';
+            const anteil = stand.verfuegbar
+                ? Math.min(100, Math.round((stand.benutzt / stand.verfuegbar) * 100)) : 0;
+            const k = document.createElement('div');
+            k.className = 'rm-speicher';
+            k.innerHTML =
+                '<div class="rs-kopf"><span>Auf diesem Gerät</span>' +
+                    `<b>${mb(stand.benutzt)}</b></div>` +
+                    `<div class="rs-balken"><i style="width:${Math.max(2, anteil)}%"></i></div>` +
+                    `<div class="rs-fuss">${stand.verfuegbar
+                        ? anteil + ' % von ' + mb(stand.verfuegbar) + ' — der Browser gibt den Rest frei, wenn er ihn braucht'
+                        : 'Wie viel der Browser noch freigibt, sagt er nicht.'}</div>`;
+            rollen.appendChild(k);
+        })();
         const zu = () => { o.classList.remove('auf'); setTimeout(() => o.remove(), 200); };
         o.addEventListener('click', (e) => {
             const b = (e.target instanceof Element) ? e.target.closest('[data-r]') : null;
@@ -63354,6 +63459,77 @@ const App = (() => {
         oeffne(p.id);
         setTimeout(() => document.getElementById('title')?.focus(), 60);
         return p;
+    };
+    /* ==========================================================================
+     * „NEU ERSTELLEN" — das Blatt hinter dem Stift (E45, Vorgabe §18)
+     * --------------------------------------------------------------------------
+     * WAS DER STIFT VORHER TAT: sofort eine leere Seite anlegen. Das ist der
+     * richtige Weg für den, der genau das will, und eine Sackgasse für alle
+     * anderen. Redion kann Datenbanken, Tabellen, Aufgaben, Karteikarten,
+     * Dateien und Vorlagen — und keines davon war von hier aus erreichbar.
+     * Wer nicht wusste, dass es Karteikarten gibt, fand sie nie.
+     *
+     * Deshalb ein Blatt mit acht Wegen, und die leere Seite steht als erster
+     * darin: wer sie will, tippt einmal mehr. Das ist der Preis dafür, dass
+     * die anderen sieben überhaupt existieren.
+     *
+     * NUR AM TELEFON. Am Rechner gibt es Strg+N, die Seitenleiste und die
+     * Befehlspalette — dort wäre ein Blatt ein Umweg, kein Wegweiser.
+     * ========================================================================*/
+    const ERSTELLEN = [
+        ['seite', '📄', 'Neue Seite', 'Leere Seite anlegen'],
+        ['memo', '⚡', 'Schnellnotiz', 'Gedanken sofort festhalten'],
+        ['db', '▦', 'Neue Datenbank', 'Zeilen sind eigene Seiten'],
+        ['tabelle', '📊', 'Neue Tabelle', 'Rechnen wie in Excel'],
+        ['aufgabe', '☑', 'Aufgabe', 'Mit Datum planen'],
+        ['karte', '📚', 'Karteikarte', 'Später wiederholen'],
+        ['datei', '📎', 'Datei hochladen', 'Bleibt auf diesem Gerät'],
+        ['vorlage', '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
+    ];
+    const erstellenBlatt = () => {
+        const html = '<div class="menu-liste">' +
+            ERSTELLEN.map(([was, z, name, sub]) => `<button data-neu="${was}"><span class="mi">${z}</span>` +
+                `<span class="ne-txt"><b>${name}</b><i>${sub}</i></span>` +
+                '<span class="ne-pfeil">›</span></button>').join('') +
+            '</div>';
+        const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen' });
+        m.addEventListener('click', (e) => {
+            const b = (e.target instanceof Element)
+                ? e.target.closest('[data-neu]') : null;
+            if (!b)
+                return;
+            const was = b.dataset['neu'];
+            document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
+            /* Erst schliessen, dann handeln — ein Dialog unter einem Blatt ist
+               von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
+            setTimeout(() => {
+                if (was === 'seite')
+                    neueSeite();
+                else if (was === 'memo')
+                    Werkzeuge.schnellnotizen();
+                else if (was === 'datei')
+                    Werkzeuge.dateienLesen();
+                else if (was === 'vorlage')
+                    Werkzeuge.vorlagen();
+                else if (was === 'karte')
+                    Werkzeuge.lernen();
+                else {
+                    /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
+                       gibt sie nicht ohne eine. Also erst die Seite, dann der Block
+                       darin, und der Cursor steht schon an der richtigen Stelle. */
+                    const p = neueSeite();
+                    setTimeout(() => {
+                        if (was === 'db')
+                            Store.addDatabase(p.id, 'Ohne Namen');
+                        else if (was === 'tabelle')
+                            Store.addBlock(p.id, 'tabelle', {});
+                        else if (was === 'aufgabe')
+                            Store.addBlock(p.id, 'todo', { text: '' });
+                        zeichneSeite();
+                    }, 80);
+                }
+            }, 60);
+        });
     };
     /* ------------------------------------------------------------------------
      * BREITE DER SEITENLEISTE
@@ -63946,7 +64122,14 @@ const App = (() => {
         /* Die KI sitzt jetzt unten in der Mitte, nicht mehr in der Reiterleiste. */
         an('hu-ki', () => kiPanel(true));
         an('hu-suche', () => suche());
-        an('hu-neu', () => neueSeite());
+        /* Am Telefon das Blatt (Vorgabe §18), am Rechner der Direktweg: dort
+           gibt es Strg+N, die Seitenleiste und die Befehlspalette. */
+        an('hu-neu', () => {
+            if (window.matchMedia('(max-width: 700px)').matches)
+                erstellenBlatt();
+            else
+                neueSeite();
+        });
         /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
            wie früher der ☰. */
         /* ----------------------------------------------------------------------

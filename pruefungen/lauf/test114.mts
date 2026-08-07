@@ -675,6 +675,56 @@ p('„Neue Seite" legt wirklich eine an',
   `vorher ${blattNeu?.seitenVorher}, nachher ${danach.seiten}`);
 p('… und das Blatt geht dabei zu', danach.blattWeg === true);
 
+console.log('\n13 · Das KI-Blatt kommt von unten (Vorgabe §19)');
+
+/* ES SCHOB SICH BISHER VON RECHTS HEREIN — die Form, die am Rechner
+   richtig ist, weil es dort eine Spalte NEBEN der Seite ist. Am Telefon
+   gibt es kein Neben. Dort ist es ein Blatt, und es kommt von da, wo der
+   Daumen es angetippt hat: von unten. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+});
+await seite.evaluate(() => document.getElementById('hu-ki')?.click());
+await seite.waitForTimeout(800);
+
+const ki = await seite.evaluate(() => {
+  const a = document.getElementById('ai');
+  if (!a) return null;
+  const r = a.getBoundingClientRect();
+  const st = getComputedStyle(a);
+  /* Wieder selbst einen Streifen hinlegen — der echte ist nicht immer da,
+     und eine Prüfung, die auf Zufall wartet, ist keine (§55.2). */
+  const streifen = document.createElement('div');
+  streifen.style.cssText =
+    `position:fixed; z-index:900; left:0; right:0; bottom:0; height:120px; background:#f0f`;
+  document.body.appendChild(streifen);
+  const oben = document.elementFromPoint(innerWidth / 2, innerHeight - 40);
+  const frei = !!oben && (oben.id === 'ai' || !!oben.closest('#ai'));
+  streifen.remove();
+  return {
+    offen: a.classList.contains('open'),
+    amBoden: Math.round(r.bottom) >= innerHeight - 1,
+    laesstLuft: r.top > 40,
+    vollBreit: Math.round(r.width) === innerWidth,
+    rund: parseInt(st.borderTopLeftRadius) >= 12,
+    frei
+  };
+}) as { offen: boolean; amBoden: boolean; laesstLuft: boolean;
+        vollBreit: boolean; rund: boolean; frei: boolean } | null;
+
+p('Der KI-Knopf öffnet das Blatt', ki?.offen === true);
+p('Es sitzt unten, nicht rechts', ki?.amBoden === true && ki?.vollBreit === true,
+  JSON.stringify(ki));
+/* Ein Blatt, das den ganzen Bildschirm nimmt, ist keine Überlagerung mehr,
+   sondern eine neue Seite — man verliert das Gefühl, wo man herkam. */
+p('… und lässt oben einen Streifen frei', ki?.laesstLuft === true);
+p('… mit runden Ecken oben', ki?.rund === true);
+p('Nichts liegt über dem Eingabefeld', ki?.frei === true,
+  'der Hinweisstreifen liegt auf 900; ein Blatt zum Hineintippen muss darüber');
+
+await seite.evaluate(() => App.kiPanel(false));
+await seite.waitForTimeout(400);
+
 await browser.close();
 server.close();
 

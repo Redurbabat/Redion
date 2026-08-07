@@ -192,8 +192,45 @@
   .fbtns{ flex-wrap:wrap; }
   .fbtns button{ flex:1 1 auto; min-height:42px; }
 
-  /* Das KI-Fenster nimmt das ganze Telefon ein */
-  #ai{ width:100% !important; }
+  /* ------------------------------------------------------------------------
+   * DAS KI-FENSTER KOMMT VON UNTEN, NICHT VON DER SEITE (Vorgabe §19)
+   * ------------------------------------------------------------------------
+   * Es schob sich bisher als volle Fläche von rechts herein — die Form,
+   * die am Rechner richtig ist, weil es dort eine Spalte NEBEN der Seite
+   * ist. Am Telefon gibt es kein Neben; dort ist es ein Blatt, und es
+   * kommt von da, wo der Daumen es angetippt hat: von unten.
+   *
+   * Und es lässt oben einen Streifen frei. Ein Blatt, das den ganzen
+   * Bildschirm nimmt, ist keine Überlagerung mehr, sondern eine neue
+   * Seite — man verliert das Gefühl, wo man herkam. Die Vorgabe sagt
+   * dasselbe: „No huge chatbot interface."
+   * --------------------------------------------------------------------- */
+  #ai{
+    width:100% !important;
+    /* Über den Hinweisstreifen (900), unter das R-Blatt (950). Derselbe
+       Fund wie beim Speicherbalken: der Streifen stand mitten im
+       Eingabefeld. Ein Blatt, in das man tippen soll, darf nichts
+       verdecken — und nichts darf es verdecken. */
+    z-index:920 !important;
+    left:0; right:0; bottom:0; top:auto !important;
+    height:88vh !important; max-height:88vh;
+    border-left:none; border-top:1px solid var(--line);
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -18px 50px rgba(0,0,0,.45);
+    transform:translateY(100%);
+    transition:transform var(--motion-slow) var(--ease-enter);
+  }
+  #ai.open{ transform:translateY(0) }
+
+  /* Der Griff oben — er sagt ohne Wort, dass man das Blatt wegwischen
+     kann. `::before` statt eines Elements: die Zeile im Markup gäbe es
+     am Rechner auch, und dort wäre sie sinnlos. */
+  #ai::before{
+    content:''; position:absolute; left:50%; top:9px;
+    transform:translateX(-50%);
+    width:40px; height:5px; border-radius:3px; background:var(--line-stark);
+  }
+  .ai-head{ padding-top:22px }
   .ai-quick{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
   .ai-quick button{ flex:0 0 auto; }
 
