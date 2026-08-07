@@ -2473,3 +2473,61 @@ seitwärts rollt.
 `false`, `.leer` immer gesetzt → 7 von 8 rot. Der achte („die Suchbefehle
 bleiben") bleibt absichtlich grün — er prüft, dass die Fusszeile nicht
 komplett verschwindet.
+
+---
+
+## E49 · Die Reiterpille wandert, statt zu springen
+
+**Aus der Bewegungs-Vorgabe:** „active tab indicator slides".
+
+**Warum das kein Schmuck ist.** Verschwindet die Fläche an einer Stelle
+und taucht an der nächsten auf, liest das Auge „hier ist etwas Neues" und
+muss die Stelle erst suchen. Wandert sie, folgt der Blick von selbst mit
+und ist beim Ankommen schon dort. Der Unterschied ist ein Sekundenbruchteil
+— aber es ist der Bruchteil, in dem man sonst kurz nicht weiss, wo man ist.
+
+**Ein eigenes Feld statt eines Knopfhintergrunds.** `#ho-pille` liegt hinter
+den Reitern, nimmt keine Berührung an und trägt aria-hidden — Vorleseprogramme
+sollen vier Reiter finden, nicht fünf Dinge. Der aktive Knopf gibt seinen
+Hintergrund dafür ab; stünden beide da, käme die wandernde Fläche bei einer
+schon fertigen an, und die Bewegung würde nichts mehr erklären.
+
+**Drei Stellen, an denen das leicht schiefgeht — alle drei geprüft:**
+
+*Gemessen wird nach dem Setzen von `.an`.* Die aktive Pille zeigt als
+einzige ihre Beschriftung und ist deshalb breiter als vorher. Wer vorher
+misst, bekommt die alte Breite, und die Fläche endet einen Zentimeter zu
+kurz.
+
+*`offsetLeft`, nicht `getBoundingClientRect()`.* Die Leiste rollt seitwärts;
+die Pille liegt IN ihr und rollt mit. Der Bildschirmort wäre der falsche
+Bezug — bei gerollter Leiste stünde sie richtig im Bild und falsch im Inhalt.
+
+*Beim Start darf sie nicht gleiten.* Sonst schiebt sie sich beim Öffnen der
+App von der linken Kante herein — eine Bewegung ohne Anlass, und die liest
+sich als Fehler.
+
+**Verschiebung statt `left`.** `translateX` bewegt nur den fertigen
+Bildinhalt; `left` rechnet die Leiste neu. Auf einem älteren Telefon ist
+das der Unterschied zwischen weich und ruckelig. Die Breite muss leider
+bleiben, wie sie ist — für sie gibt es keine Verschiebung.
+
+**Wo kein Reiter zuständig ist, ist auch keine Pille.** „Kompass" hat oben
+keinen (E42). Sie bleibt dann stehen und verschwindet, statt an den Anfang
+zu rutschen: das wäre eine Aussage, und zwar eine falsche.
+
+**Und der Reiter wird hereingeholt,** wenn er halb ausserhalb steht. Bei
+390 px passen die fünf Wege nicht alle ins Bild; ohne das tippt man auf
+„Mehr" und sieht danach nicht, dass man dort ist. Wer keine Bewegung mag,
+bekommt den Sprung statt des Rollens.
+
+**Status**
+
+`test114` §17, 7 Punkte. Die Gegenprobe hat dabei etwas gezeigt, das man
+sonst nie gemerkt hätte: die Sperre gegen das Hereingleiten ist heute
+wirkungslos, weil ein Übergang gar nicht erst startet, solange der
+Ausgangswert nie gemalt wurde. Sie greift erst, wenn jemand im Stilblatt
+Anfangswerte einträgt, die wirklich gemalt werden — mit
+`width:40px; transform:translateX(0)` glitt die Pille prompt über elf
+Zwischenorte herein und der Punkt wurde rot. Die Zeile ist also keine tote
+Vorsicht, sondern die Sicherung dagegen; das steht jetzt auch im Stilblatt.

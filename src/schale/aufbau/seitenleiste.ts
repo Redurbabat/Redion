@@ -155,6 +155,71 @@ const Seitenleiste = (() => {
 
   let reiter = 'start';
 
+  /* Beim allerersten Setzen darf die Pille nicht gleiten. Sonst schiebt
+     sie sich beim Öffnen der App von der linken Kante herein — eine
+     Bewegung ohne Anlass, und die liest sich als Fehler. */
+  let pilleGesetzt = false;
+
+  /**
+   * DIE GLEITENDE PILLE UNTER DEN REITERN.
+   *
+   * Sie ist der Hintergrund der aktiven Pille, aber als eigenes Feld: statt
+   * an einer Stelle zu verschwinden und an der nächsten aufzutauchen,
+   * wandert sie hinüber. Das Auge folgt der Bewegung und ist beim Ankommen
+   * schon dort — ein Sprung dagegen muss erst wieder gesucht werden.
+   *
+   * ZWEI DINGE, DIE HIER LEICHT SCHIEFGEHEN:
+   *
+   *   1. GEMESSEN WIRD NACH DEM SETZEN VON `.an`. Die aktive Pille zeigt
+   *      als einzige ihre Beschriftung und ist deshalb breiter als vorher.
+   *      Wer vorher misst, bekommt die alte Breite und die Pille endet
+   *      einen Zentimeter zu kurz.
+   *
+   *   2. DIE LEISTE ROLLT SEITWÄRTS. `offsetLeft` zählt vom Anfang des
+   *      Inhalts, nicht vom Bildrand — und genau das wird gebraucht: die
+   *      Pille liegt IN der rollenden Leiste und rollt mit. Wer hier
+   *      `getBoundingClientRect()` nähme, hätte die Pille an der richtigen
+   *      Stelle des Bildschirms und an der falschen des Inhalts.
+   */
+  const pilleSchieben = (l: HTMLElement, aktiv: HTMLElement | null) => {
+    const pille = l.querySelector<HTMLElement>('#ho-pille');
+    if (!pille) return;
+
+    /* „Mehr" und „Kompass" haben oben keinen Reiter (E42). Dann gehört
+       auch keine Pille irgendwohin — sie bleibt, wo sie war, und
+       verschwindet. Sie an den Anfang zu schieben wäre eine Aussage, und
+       zwar eine falsche. */
+    if (!aktiv) { pille.style.opacity = '0'; return; }
+
+    const x = aktiv.offsetLeft;
+    const b = aktiv.offsetWidth;
+    const y = aktiv.offsetTop;
+    if (!b) return;                      /* Leiste unsichtbar — am Rechner */
+
+    if (!pilleGesetzt) pille.classList.add('stumm');
+    pille.style.transform = `translateX(${x}px)`;
+    pille.style.width = b + 'px';
+    pille.style.top = y + 'px';
+    pille.style.opacity = '1';
+
+    if (!pilleGesetzt) {
+      /* Die Sperre erst im nächsten Bild lösen, sonst gilt sie für die
+         eben gesetzten Werte schon nicht mehr. */
+      pilleGesetzt = true;
+      requestAnimationFrame(() => requestAnimationFrame(() =>
+        pille.classList.remove('stumm')));
+    }
+
+    /* Steht der neue Reiter halb ausserhalb, ihn hereinholen. Bei 390 px
+       passen die fünf Wege nicht alle ins Bild; ohne das tippt man auf
+       „Mehr" und sieht danach nicht, dass man dort ist. */
+    const links = x - l.scrollLeft;
+    if (links < 0 || links + b > l.clientWidth) {
+      const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      l.scrollTo({ left: Math.max(0, x - 16), behavior: ruhig ? 'auto' : 'smooth' });
+    }
+  };
+
   /**
    * Die untere Leiste am Telefon markieren und den Punkt am Posteingang
    * setzen. Wird bei jedem Wechsel und nach jedem Zeichnen aufgerufen —
@@ -177,6 +242,7 @@ const Seitenleiste = (() => {
     const id = karte[reiter];
     const aktiv = id ? document.getElementById(id) : null;
     if (aktiv) aktiv.classList.add('an');
+    pilleSchieben(l, aktiv);
     /* Ein Punkt, wenn im Posteingang etwas Ungelesenes liegt */
     const punkt = l.querySelector<HTMLElement>('.hl-punkt');
     if (punkt) {

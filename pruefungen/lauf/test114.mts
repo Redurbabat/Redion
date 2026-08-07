@@ -890,6 +890,97 @@ p('Der Platzhalter passt ins Suchfeld',
 
 await seite.evaluate(() => document.querySelector('.overlay')?.remove());
 
+console.log('\n17 · Die Pille unter den Reitern gleitet, statt zu springen');
+
+/* AUS DER BEWEGUNGS-VORGABE: „active tab indicator slides".
+   Der Unterschied ist keine Zierde. Verschwindet die Fläche an einer
+   Stelle und taucht an der nächsten auf, liest das Auge „hier ist etwas
+   Neues" und muss die Stelle suchen. Wandert sie, folgt der Blick von
+   selbst und ist beim Ankommen schon dort.
+
+   EINE EIGENE SEITE MIT MITSCHRIFT. Die interessanteste Frage ist nicht,
+   ob die Pille wandert, sondern ob sie es beim START NICHT tut: eine
+   Pille, die sich beim Öffnen der App von der linken Kante hereinschiebt,
+   ist eine Bewegung ohne Anlass. Das sieht man nur, wenn man von der
+   ersten Bildwiederholung an mitschreibt. */
+const spurSeite = await browser.newPage({
+  viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true
+});
+await spurSeite.addInitScript(() => {
+  (globalThis as any).__spur = [] as number[];
+  const tick = () => {
+    const el = document.getElementById('ho-pille');
+    if (el && getComputedStyle(el).opacity !== '0')
+      (globalThis as any).__spur.push(Math.round(el.getBoundingClientRect().left));
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+});
+await spurSeite.goto(`http://localhost:${PORT}/index.html`);
+await spurSeite.waitForTimeout(2600);
+
+const spur = await spurSeite.evaluate(() => {
+  const s = (globalThis as any).__spur as number[];
+  const an = document.querySelector<HTMLElement>('#handy-oben button.an');
+  const pl = document.getElementById('ho-pille');
+  return {
+    orte: [...new Set(s)],
+    bilder: s.length,
+    aktivX: an ? Math.round(an.getBoundingClientRect().left) : -1,
+    aktivB: an ? Math.round(an.getBoundingClientRect().width) : -1,
+    aktivGrund: an ? getComputedStyle(an).backgroundColor : '',
+    pilleX: pl ? Math.round(pl.getBoundingClientRect().left) : -1,
+    pilleB: pl ? Math.round(pl.getBoundingClientRect().width) : -1,
+    pilleGrund: pl ? getComputedStyle(pl).backgroundColor : ''
+  };
+});
+p('Beim Start steht die Pille sofort da, statt hereinzugleiten',
+  spur.bilder > 10 && spur.orte.length === 1,
+  spur.orte.length + ' Orte in ' + spur.bilder + ' Bildern: ' + spur.orte.join(' '));
+p('… und zwar genau auf dem aktiven Reiter',
+  spur.pilleX === spur.aktivX && spur.pilleB === spur.aktivB,
+  `Pille ${spur.pilleX}/${spur.pilleB}, Reiter ${spur.aktivX}/${spur.aktivB}`);
+/* Zwei Flächen übereinander wären keine Wanderung, sondern eine Ankunft
+   bei etwas, das schon da ist. Der Knopf gibt seinen Hintergrund ab. */
+p('Der aktive Reiter bringt keinen eigenen Hintergrund mehr mit',
+  /^rgba\(0, 0, 0, 0\)$|^transparent$/.test(spur.aktivGrund), spur.aktivGrund);
+p('… den bringt die Pille', !/^rgba\(0, 0, 0, 0\)$/.test(spur.pilleGrund), spur.pilleGrund);
+
+/* Und jetzt der Wechsel: unterwegs muss sie WIRKLICH unterwegs sein. */
+const flug = await spurSeite.evaluate(async () => {
+  const ort = () => Math.round(document.getElementById('ho-pille')!.getBoundingClientRect().left);
+  const start = ort();
+  Seitenleiste.reiterWechseln('bespr');
+  await new Promise(f => setTimeout(f, 90));
+  const mitte = ort();
+  await new Promise(f => setTimeout(f, 600));
+  const ende = ort();
+  const ziel = Math.round(
+    document.getElementById('hl-bespr')!.getBoundingClientRect().left);
+  return { start, mitte, ende, ziel };
+});
+p('Beim Wechsel ist die Pille unterwegs zwischen den Reitern',
+  flug.mitte > flug.start && flug.mitte < flug.ende,
+  `${flug.start} → ${flug.mitte} → ${flug.ende} (Ziel ${flug.ziel})`);
+p('… und kommt genau an', flug.ende === flug.ziel, flug.ende + ' statt ' + flug.ziel);
+
+/* „Kompass" hat oben keinen Reiter (E42). Dann gehört die Pille nirgendwo
+   hin — und sie an den Anfang zu schieben wäre eine falsche Aussage. */
+const ohne = await spurSeite.evaluate(async () => {
+  Seitenleiste.reiterWechseln('kompass');
+  await new Promise(f => setTimeout(f, 500));
+  const pl = document.getElementById('ho-pille')!;
+  return {
+    deck: getComputedStyle(pl).opacity,
+    markiert: document.querySelectorAll('#handy-oben button.an').length
+  };
+});
+p('Wo kein Reiter zuständig ist, ist auch keine Pille',
+  ohne.deck === '0' && ohne.markiert === 0,
+  'Deckkraft ' + ohne.deck + ', markiert ' + ohne.markiert);
+
+await spurSeite.close();
+
 await browser.close();
 server.close();
 

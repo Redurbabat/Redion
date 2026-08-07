@@ -3478,19 +3478,60 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     background:transparent; color:var(--text-dim);
     display:flex; align-items:center; justify-content:center; gap:8px;
     padding:0 13px; font-size:17px; line-height:1;
-    position:relative;
+    position:relative; z-index:1;
     transition:background .14s, color .14s;
   }
   #handy-oben button:active{ background:var(--bg-hover) }
+
+  /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
+  /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
+     wandert. Der Unterschied ist keine Spielerei: springt die Fläche,
+     liest das Auge „hier ist etwas Neues" und sucht die Stelle; wandert
+     sie, folgt der Blick von selbst mit und ist schon da.
+
+     Sie liegt unter den Knöpfen (`z-index:0` gegen deren 1) und nimmt
+     keine Berührung an. Ort und Breite setzt `handyLeiste()` — hier steht
+     nur, WIE sie sich dorthin bewegt.
+
+     `left:0` und `translateX` statt `left:<x>`: eine Verschiebung
+     bewegt nur den fertigen Bildinhalt, `left` rechnet die ganze Leiste
+     neu. Auf einem älteren Telefon ist das der Unterschied zwischen weich
+     und ruckelig. Die Breite muss leider bleiben, wie sie ist — die
+     aktive Pille wächst um ihre Beschriftung, und dafür gibt es keine
+     Verschiebung. */
+  #handy-oben #ho-pille{
+    position:absolute; left:0; top:0; z-index:0;
+    height:52px; width:0; border-radius:999px;
+    background:var(--bg-hover);
+    pointer-events:none; opacity:0;
+    transition:transform var(--motion-normal) var(--ease-standard),
+               width var(--motion-normal) var(--ease-standard),
+               opacity var(--motion-fast) linear;
+  }
+  /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
+     beim Öffnen der App von der linken Kante herein, und das sieht aus
+     wie ein Fehler statt wie eine Antwort auf einen Tipp.
+
+     WICHTIG FÜR SPÄTER: heute wäre diese Zeile auch ohne Wirkung nicht
+     zu merken. Ein Übergang läuft nur, wenn der Ausgangswert schon einmal
+     gemalt wurde — und die Pille steht beim ersten Setzen noch auf
+     `opacity:0` und hat nie einen gerechneten Ort gehabt. Der Schutz
+     greift also erst, wenn jemand oben Anfangswerte einträgt, die
+     WIRKLICH gemalt werden. Genau das prüft `test114` §17 nach: mit
+     einem gemalten `width:40px; transform:translateX(0)` glitt sie über
+     elf Zwischenorte herein. Die Zeile ist keine tote Vorsicht, sie ist
+     die Sicherung dagegen. */
+  #handy-oben #ho-pille.stumm{ transition:none }
 
   /* DER NAME STEHT NUR AN DER AKTIVEN PILLE. Das ist die ganze Idee: er
      kostet Platz, und Platz gibt es nur einmal — also bekommt ihn die
      Stelle, an der er etwas sagt. */
   #handy-oben button b{ display:none; font-size:16px; font-weight:600; letter-spacing:-.01em }
-  #handy-oben button.an{
-    background:var(--bg-hover); color:var(--text);
-    border-color:transparent;
-  }
+  /* KEIN EIGENER HINTERGRUND MEHR. Den bringt `#ho-pille` mit und schiebt
+     ihn herüber; stünde er hier auch, wären es zwei Flächen übereinander
+     und die wandernde käme bei einer schon fertigen an — die Bewegung
+     wäre da und würde nichts erklären. */
+  #handy-oben button.an{ color:var(--text); border-color:transparent }
   #handy-oben button.an b{ display:inline }
 
   /* Das Konto ganz links ist ein Kreis mit dem Anfangsbuchstaben. */
@@ -5163,6 +5204,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
      hängt.
      ====================================================================== -->
 <div id="handy-oben" role="tablist" aria-label="Hauptbereiche">
+  <!-- Die gleitende Pille. Sie liegt HINTER den Knöpfen und wandert beim
+       Reiterwechsel dorthin, wo die neue Auswahl steht; die Knöpfe selbst
+       bleiben durchsichtig. Ein Hintergrund, der springt, sagt „ein
+       anderer Knopf" — einer, der wandert, sagt „derselbe Ort, weiter
+       vorn". Sie steht als erstes Kind, damit sie auch ohne Stilblatt
+       nicht über den Knöpfen liegt. Sie ist leer und aus dem Baum
+       genommen: Vorleseprogramme sollen die vier Reiter finden, nicht
+       fünf Dinge. -->
+  <i id="ho-pille" class="stumm" aria-hidden="true"></i>
   <button id="hl-konto" class="ho-konto" title="Arbeitsbereich"><span>R</span></button>
   <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
   <button id="hl-seiten" role="tab" title="Seiten"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h7L18.5 8v12.5h-12z"/><path d="M13.5 3.5V8h5"/><path d="M9.5 12.5h6M9.5 16h4"/></svg></span><b>Seiten</b><i class="hl-punkt" hidden></i></button>
@@ -60730,6 +60780,69 @@ const Seitenleiste = (() => {
             handyLeiste();
     };
     let reiter = 'start';
+    /* Beim allerersten Setzen darf die Pille nicht gleiten. Sonst schiebt
+       sie sich beim Öffnen der App von der linken Kante herein — eine
+       Bewegung ohne Anlass, und die liest sich als Fehler. */
+    let pilleGesetzt = false;
+    /**
+     * DIE GLEITENDE PILLE UNTER DEN REITERN.
+     *
+     * Sie ist der Hintergrund der aktiven Pille, aber als eigenes Feld: statt
+     * an einer Stelle zu verschwinden und an der nächsten aufzutauchen,
+     * wandert sie hinüber. Das Auge folgt der Bewegung und ist beim Ankommen
+     * schon dort — ein Sprung dagegen muss erst wieder gesucht werden.
+     *
+     * ZWEI DINGE, DIE HIER LEICHT SCHIEFGEHEN:
+     *
+     *   1. GEMESSEN WIRD NACH DEM SETZEN VON `.an`. Die aktive Pille zeigt
+     *      als einzige ihre Beschriftung und ist deshalb breiter als vorher.
+     *      Wer vorher misst, bekommt die alte Breite und die Pille endet
+     *      einen Zentimeter zu kurz.
+     *
+     *   2. DIE LEISTE ROLLT SEITWÄRTS. `offsetLeft` zählt vom Anfang des
+     *      Inhalts, nicht vom Bildrand — und genau das wird gebraucht: die
+     *      Pille liegt IN der rollenden Leiste und rollt mit. Wer hier
+     *      `getBoundingClientRect()` nähme, hätte die Pille an der richtigen
+     *      Stelle des Bildschirms und an der falschen des Inhalts.
+     */
+    const pilleSchieben = (l, aktiv) => {
+        const pille = l.querySelector('#ho-pille');
+        if (!pille)
+            return;
+        /* „Mehr" und „Kompass" haben oben keinen Reiter (E42). Dann gehört
+           auch keine Pille irgendwohin — sie bleibt, wo sie war, und
+           verschwindet. Sie an den Anfang zu schieben wäre eine Aussage, und
+           zwar eine falsche. */
+        if (!aktiv) {
+            pille.style.opacity = '0';
+            return;
+        }
+        const x = aktiv.offsetLeft;
+        const b = aktiv.offsetWidth;
+        const y = aktiv.offsetTop;
+        if (!b)
+            return; /* Leiste unsichtbar — am Rechner */
+        if (!pilleGesetzt)
+            pille.classList.add('stumm');
+        pille.style.transform = `translateX(${x}px)`;
+        pille.style.width = b + 'px';
+        pille.style.top = y + 'px';
+        pille.style.opacity = '1';
+        if (!pilleGesetzt) {
+            /* Die Sperre erst im nächsten Bild lösen, sonst gilt sie für die
+               eben gesetzten Werte schon nicht mehr. */
+            pilleGesetzt = true;
+            requestAnimationFrame(() => requestAnimationFrame(() => pille.classList.remove('stumm')));
+        }
+        /* Steht der neue Reiter halb ausserhalb, ihn hereinholen. Bei 390 px
+           passen die fünf Wege nicht alle ins Bild; ohne das tippt man auf
+           „Mehr" und sieht danach nicht, dass man dort ist. */
+        const links = x - l.scrollLeft;
+        if (links < 0 || links + b > l.clientWidth) {
+            const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            l.scrollTo({ left: Math.max(0, x - 16), behavior: ruhig ? 'auto' : 'smooth' });
+        }
+    };
     /**
      * Die untere Leiste am Telefon markieren und den Punkt am Posteingang
      * setzen. Wird bei jedem Wechsel und nach jedem Zeichnen aufgerufen —
@@ -60754,6 +60867,7 @@ const Seitenleiste = (() => {
         const aktiv = id ? document.getElementById(id) : null;
         if (aktiv)
             aktiv.classList.add('an');
+        pilleSchieben(l, aktiv);
         /* Ein Punkt, wenn im Posteingang etwas Ungelesenes liegt */
         const punkt = l.querySelector('.hl-punkt');
         if (punkt) {

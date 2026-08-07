@@ -787,19 +787,60 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     background:transparent; color:var(--text-dim);
     display:flex; align-items:center; justify-content:center; gap:8px;
     padding:0 13px; font-size:17px; line-height:1;
-    position:relative;
+    position:relative; z-index:1;
     transition:background .14s, color .14s;
   }
   #handy-oben button:active{ background:var(--bg-hover) }
+
+  /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
+  /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
+     wandert. Der Unterschied ist keine Spielerei: springt die Fläche,
+     liest das Auge „hier ist etwas Neues" und sucht die Stelle; wandert
+     sie, folgt der Blick von selbst mit und ist schon da.
+
+     Sie liegt unter den Knöpfen (`z-index:0` gegen deren 1) und nimmt
+     keine Berührung an. Ort und Breite setzt `handyLeiste()` — hier steht
+     nur, WIE sie sich dorthin bewegt.
+
+     `left:0` und `translateX` statt `left:<x>`: eine Verschiebung
+     bewegt nur den fertigen Bildinhalt, `left` rechnet die ganze Leiste
+     neu. Auf einem älteren Telefon ist das der Unterschied zwischen weich
+     und ruckelig. Die Breite muss leider bleiben, wie sie ist — die
+     aktive Pille wächst um ihre Beschriftung, und dafür gibt es keine
+     Verschiebung. */
+  #handy-oben #ho-pille{
+    position:absolute; left:0; top:0; z-index:0;
+    height:52px; width:0; border-radius:999px;
+    background:var(--bg-hover);
+    pointer-events:none; opacity:0;
+    transition:transform var(--motion-normal) var(--ease-standard),
+               width var(--motion-normal) var(--ease-standard),
+               opacity var(--motion-fast) linear;
+  }
+  /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
+     beim Öffnen der App von der linken Kante herein, und das sieht aus
+     wie ein Fehler statt wie eine Antwort auf einen Tipp.
+
+     WICHTIG FÜR SPÄTER: heute wäre diese Zeile auch ohne Wirkung nicht
+     zu merken. Ein Übergang läuft nur, wenn der Ausgangswert schon einmal
+     gemalt wurde — und die Pille steht beim ersten Setzen noch auf
+     `opacity:0` und hat nie einen gerechneten Ort gehabt. Der Schutz
+     greift also erst, wenn jemand oben Anfangswerte einträgt, die
+     WIRKLICH gemalt werden. Genau das prüft `test114` §17 nach: mit
+     einem gemalten `width:40px; transform:translateX(0)` glitt sie über
+     elf Zwischenorte herein. Die Zeile ist keine tote Vorsicht, sie ist
+     die Sicherung dagegen. */
+  #handy-oben #ho-pille.stumm{ transition:none }
 
   /* DER NAME STEHT NUR AN DER AKTIVEN PILLE. Das ist die ganze Idee: er
      kostet Platz, und Platz gibt es nur einmal — also bekommt ihn die
      Stelle, an der er etwas sagt. */
   #handy-oben button b{ display:none; font-size:16px; font-weight:600; letter-spacing:-.01em }
-  #handy-oben button.an{
-    background:var(--bg-hover); color:var(--text);
-    border-color:transparent;
-  }
+  /* KEIN EIGENER HINTERGRUND MEHR. Den bringt `#ho-pille` mit und schiebt
+     ihn herüber; stünde er hier auch, wären es zwei Flächen übereinander
+     und die wandernde käme bei einer schon fertigen an — die Bewegung
+     wäre da und würde nichts erklären. */
+  #handy-oben button.an{ color:var(--text); border-color:transparent }
   #handy-oben button.an b{ display:inline }
 
   /* Das Konto ganz links ist ein Kreis mit dem Anfangsbuchstaben. */

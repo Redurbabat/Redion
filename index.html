@@ -163,6 +163,15 @@
      hängt.
      ====================================================================== -->
 <div id="handy-oben" role="tablist" aria-label="Hauptbereiche">
+  <!-- Die gleitende Pille. Sie liegt HINTER den Knöpfen und wandert beim
+       Reiterwechsel dorthin, wo die neue Auswahl steht; die Knöpfe selbst
+       bleiben durchsichtig. Ein Hintergrund, der springt, sagt „ein
+       anderer Knopf" — einer, der wandert, sagt „derselbe Ort, weiter
+       vorn". Sie steht als erstes Kind, damit sie auch ohne Stilblatt
+       nicht über den Knöpfen liegt. Sie ist leer und aus dem Baum
+       genommen: Vorleseprogramme sollen die vier Reiter finden, nicht
+       fünf Dinge. -->
+  <i id="ho-pille" class="stumm" aria-hidden="true"></i>
   <button id="hl-konto" class="ho-konto" title="Arbeitsbereich"><span>R</span></button>
   <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
   <button id="hl-seiten" role="tab" title="Seiten"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h7L18.5 8v12.5h-12z"/><path d="M13.5 3.5V8h5"/><path d="M9.5 12.5h6M9.5 16h4"/></svg></span><b>Seiten</b><i class="hl-punkt" hidden></i></button>
