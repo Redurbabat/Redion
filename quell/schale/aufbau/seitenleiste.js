@@ -156,9 +156,15 @@ const Seitenleiste = (() => {
            stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
            kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
         const karte = { start: 'hl-start', seiten: 'hl-seiten',
-            bespr: 'hl-bespr', inbox: 'hl-inbox' };
+            bespr: 'hl-bespr', mehr: 'hl-mehr' };
         l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
-        const aktiv = document.getElementById(karte[reiter] || 'hl-start');
+        /* KEIN RÜCKFALL AUF „START". Hier stand `karte[reiter] || 'hl-start'`,
+           und das war eine Behauptung: „Mehr" und „Kompass" haben oben keinen
+           Reiter, also leuchtete beim Öffnen die Start-Pille — man stand im
+           Kompass, und oben stand „Start". Wer nirgends in der Reiterleiste
+           ist, soll dort auch nirgends markiert sein. */
+        const id = karte[reiter];
+        const aktiv = id ? document.getElementById(id) : null;
         if (aktiv)
             aktiv.classList.add('an');
         /* Ein Punkt, wenn im Posteingang etwas Ungelesenes liegt */

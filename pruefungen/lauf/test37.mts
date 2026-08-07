@@ -57,8 +57,8 @@ import { chromium } from 'playwright';
   console.log('   Bereichsleiste:', JSON.stringify(leiste));
   ok('Die Bereichsleiste steht oben auf dem Telefon', leiste.sichtbar && leiste.obenBuendig);
   ok('Sie geht über die volle Breite', leiste.breite === 428);
-  ok('Konto, Start, Seiten, Termine, Eingang',
-     leiste.knoepfe.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-inbox', leiste.knoepfe.join(','));
+  ok('Konto, Start, Seiten, Termine, Mehr',
+     leiste.knoepfe.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-mehr', leiste.knoepfe.join(','));
   ok('Unten stehen Suchen, KI und Neu', leiste.untenBuendig &&
      leiste.untenKnoepfe.join(',') === 'hu-suche,hu-ki,hu-neu', leiste.untenKnoepfe.join(','));
   ok('Die Mitte ist die KI', /KI/.test(leiste.kiText || ''), leiste.kiText);

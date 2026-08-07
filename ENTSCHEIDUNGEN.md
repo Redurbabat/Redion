@@ -2112,3 +2112,67 @@ und die Seite bleibt leer. Ein Abschnitt prüft ausserdem, dass der Server
 **Status**
 
 Beschlossen und gebaut. `test125`, 9 Punkte.
+
+---
+
+## E42 · „Mehr" statt „Eingang", und der Kompass gehört hinein
+
+**Woher das kommt.** Redur hat in Claude Design einen vollständigen Entwurf
+gebaut — „Nocturne" — und ihn als Übergabepaket geschickt, mit einer
+Vorgabe von vierzig Abschnitten. Zwei Sätze darin ändern die Navigation:
+
+> Earlier „Eingang/Posteingang" should be replaced by „Mehr", because help,
+> settings, import, backup, shortcuts and compass do not need a permanent
+> main tab.
+
+> Kompass is **not** a main tab. Kompass is a normal page/view opened from
+> Mehr.
+
+**Was daraus wurde.**
+
+```txt
+oben     R · Start · Seiten · Termine · Mehr
+Mehr     Kompass · Befehle · Tastenkürzel · Vorlagen
+         Sicherung · Importieren · Posteingang · Papierkorb
+         Einstellungen · Über Redion
+Kompass  eine Seite IN Mehr, kein Reiter
+```
+
+**Warum das besser ist als „Eingang".** Ein Platz in der Hauptnavigation ist
+einer von fünf. Der Posteingang ist bei den meisten Leuten leer; Sicherung,
+Import und Einstellungen braucht man dagegen wirklich. Der Posteingang ist
+darum kein eigener Weg mehr, sondern eine Zeile in Mehr — einen Griff
+entfernt, nicht weiter als vorher.
+
+**Der Kompass ist der eigentliche Gewinn.** Er ist der einzige Bereich, den
+der Entwurf ganz neu erfindet, und er schliesst die Lücke, die keine
+Funktion schliesst: Redion kann viel, und nichts davon sagt es von selbst.
+Wer nicht weiss, dass es Karteikarten gibt, findet sie nie. Der Kompass
+sagt in einer Seite, wie die App aufgebaut ist, welche Befehle es gibt,
+welche Tastenkürzel — und was noch nicht fertig ist.
+
+**Und dieser letzte Punkt ist Absicht.** Die Befehle tragen ihren Stand:
+`fertig`, `teilweise`, `geplant`. Ein Wegweiser, der Geplantes wie Fertiges
+aussehen lässt, ist eine Enttäuschung mit Ansage. „Redion kann" zählt
+dagegen aus dem Register — eine von Hand gepflegte Aufzählung erzählt nach
+dem dritten neuen Block von einer App, die es nicht mehr gibt.
+
+**Ein Fund beim Bauen.** `handyLeiste()` hatte einen Rückfall:
+`karte[reiter] || 'hl-start'`. Der Kompass hat oben keinen Reiter — also
+leuchtete beim Öffnen die Start-Pille. Man stand im Kompass, und oben stand
+„Start". Derselbe Fehlertyp wie dreimal zuvor (E38), nur diesmal von der
+anderen Seite: nicht ein fehlendes `reiter()`, sondern ein Rückfall, der
+lieber etwas Falsches behauptet als nichts. Jetzt leuchtet nichts, wenn man
+nirgends in der Leiste ist.
+
+**Was aus dem Entwurf noch NICHT gebaut ist** — damit niemand es für
+erledigt hält: die Farben von Nocturne (die App hat ihre eigenen), das
+Bottom Sheet „Neu erstellen", das KI-Blatt als Blatt, der eigene
+Suchbildschirm, die Ladeskelette und der Speicherbalken im R-Blatt. Steht
+in `LUECKEN.md` L10.
+
+**Status**
+
+Gebaut: der Reiter „Mehr", der Bereich Mehr mit drei Gruppen, der Kompass
+als Seite darin. `test114` (57 Punkte), `test37`, `test40`, `test67`
+mitgezogen.

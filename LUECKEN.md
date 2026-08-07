@@ -267,7 +267,13 @@ Termine und Eingang haben ihre eigenen Bereiche bekommen; der Codeblock
 seine Kopfzeile. Was das Hinsehen dabei fand, steht in E38 — fünf Fehler,
 und keinen davon hatte ein Prüflauf.
 
-**Fehlt noch:** die übrigen Menüs sind noch keine Bottom Sheets · der
+**Aus Redurs Entwurf „Nocturne" (E42) fehlt noch:** die Farben (die App hat
+ihre eigenen) · das Blatt „Neu erstellen" · das KI-Blatt als Blatt · der
+eigene Suchbildschirm mit Filtern und Textausschnitten · die Ladeskelette ·
+der Speicherbalken im R-Blatt · die Masse der oberen Leiste (der Entwurf
+sagt 56 px, gebaut sind 52).
+
+**Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
 Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
 über der Tastatur) · mobile Datenbank- und Tabellenansicht rollen zwar,
 sind aber nicht fürs Telefon entworfen · Tastaturverhalten · Side Peek auf

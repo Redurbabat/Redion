@@ -1397,7 +1397,12 @@ const App = (() => {
                 zeile('befehle', '⌘', 'Befehle') +
                 zeile('start', '🏠', 'Start') +
                 zeile('seiten', '📄', 'Seiten') +
-                zeile('inbox', '📥', 'Posteingang') +
+                /* „Mehr" statt „Posteingang" (E42 §16). Der Posteingang ist kein
+                   eigener Weg mehr, sondern eine Zeile IN Mehr — er ist meistens
+                   leer, und ein Platz in der Hauptnavigation gehört dem, was man
+                   oft braucht. Der Kompass steht bewusst NICHT hier: die Vorgabe
+                   sagt ausdrücklich, er sei eine Seite in Mehr, kein Reiter. */
+                zeile('mehr', '🧭', 'Mehr') +
                 zeile('neu', '✚', 'Neue Seite') +
                 /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
                    weg: unten steht „KI fragen", und hier steht der Weg zu allem,
@@ -1444,9 +1449,9 @@ const App = (() => {
                     Ansichten.start();
                     handyLeiste();
                 }
-                else if (was === 'inbox') {
-                    Seitenleiste.reiter('inbox');
-                    Ansichten.posteingang();
+                else if (was === 'mehr') {
+                    Seitenleiste.reiter('mehr');
+                    Ansichten.mehr();
                     handyLeiste();
                 }
                 else if (was === 'neu')
@@ -2423,14 +2428,15 @@ const App = (() => {
             PWA.schubladeZu && PWA.schubladeZu();
             rMenue();
         });
-        /* `reiter('inbox')`, nicht `'start'`: die Pille oben liest ihn, und mit
-           `'start'` stand sie auf „Start", während daneben schon der Posteingang
-           stand. Derselbe Fund wie bei „Seiten", nur eine Zeile weiter unten —
-           gefunden hat ihn wieder das Bildschirmfoto, nicht der Code. */
-        an('hl-inbox', () => {
+        /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
+           Papierkorb und Einstellungen brauchen einen Platz oben — ein
+           Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
+           in Mehr und ist damit keinen Griff weiter weg als vorher.
+           `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
+        an('hl-mehr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('inbox');
-            Ansichten.posteingang();
+            Seitenleiste.reiter('mehr');
+            Ansichten.mehr();
             handyLeiste();
         });
         an('btn-suche-handy', () => suche());

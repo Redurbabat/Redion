@@ -1184,6 +1184,93 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 }
 
 
+/* ===========================================================================
+   KOMPASS UND MEHR — die zwei Bereiche aus Redurs Entwurf (E42)
+   ---------------------------------------------------------------------------
+   Der Kompass ist der Bereich, den der Entwurf als einzigen ganz neu
+   erfindet, und er schliesst die grösste Lücke: Redion kann viel, und
+   nichts davon sagt es von selbst. Wer nicht weiss, dass es Karteikarten
+   gibt, findet sie nie.
+
+   Die Masse folgen dem Entwurf: Zeilen ab 54 px, Abschnittsüberschriften
+   19 px, Beiwerk in `--text-faint`. Am Telefon greift zusätzlich der Block
+   weiter oben, der `.home-liste button` auf 54 px Mindesthöhe setzt.
+   =========================================================================*/
+.kp-vor{font-size:16px; color:var(--text-dim); line-height:1.45; margin:0 0 22px}
+
+.kp-liste{display:flex; flex-direction:column}
+.kp-zeile{padding:13px 0; border-bottom:1px solid var(--line)}
+.kp-zeile b{display:block; font-size:15.5px; font-weight:600}
+.kp-zeile span{display:block; font-size:14px; color:var(--text-dim);
+               line-height:1.45; margin-top:3px}
+
+.kp-befehl{display:flex; align-items:center; gap:14px; min-height:50px;
+           border-bottom:1px solid var(--line)}
+.kp-befehl code{flex:0 0 46px; font:600 15px var(--mono); color:var(--accent)}
+.kp-befehl > span:not(.kp-marke){flex:1; font-size:15px}
+
+/* DER STAND STEHT DABEI, und das ist Absicht: ein Wegweiser, der Geplantes
+   wie Fertiges aussehen lässt, ist eine Enttäuschung mit Ansage. */
+.kp-marke{flex:none; font-size:12px; padding:3px 9px; border-radius:999px;
+          white-space:nowrap}
+.kp-fertig{background:var(--bg-hover); color:var(--accent)}
+.kp-teilweise{border:1px solid var(--line); color:var(--text-dim)}
+.kp-geplant{color:var(--text-faint)}
+
+.kp-taste{display:flex; align-items:center; gap:14px; min-height:46px;
+          border-bottom:1px solid var(--line)}
+.kp-taste kbd{flex:none; font:13px var(--mono); color:var(--text-dim);
+              background:var(--bg-card); padding:5px 9px; border-radius:8px}
+.kp-taste span{font-size:15px; color:var(--text-dim)}
+.kp-fuss{font-size:13px; color:var(--text-faint); margin-top:10px}
+
+.kp-wolke{display:flex; flex-wrap:wrap; gap:8px}
+.kp-wolke span{display:inline-flex; align-items:center; height:36px;
+               padding:0 14px; border-radius:999px; background:var(--bg-card);
+               color:var(--text-dim); font-size:14px; white-space:nowrap}
+
+.kp-karte{margin-top:28px; padding:20px; border-radius:16px;
+          background:var(--bg-card)}
+.kp-karte b{display:block; font-size:17px; margin-bottom:8px}
+.kp-karte div{font-size:14.5px; color:var(--text-dim); line-height:1.55}
+.kp-karte button{margin-top:16px; height:44px; padding:0 20px;
+                 border-radius:999px; border:1px solid var(--accent);
+                 color:var(--accent); font-size:15px}
+.kp-karte button:hover{background:var(--bg-hover)}
+
+/* Der Untertext in „Mehr" — er ist der ganze Unterschied zwischen einer
+   Liste und einem Wegweiser. */
+.home-liste .pt .snip{display:block; font-size:13.5px; color:var(--text-dim);
+                      line-height:1.35; margin-top:2px; font-weight:400}
+.home-liste button:has(.snip){align-items:flex-start; padding-top:11px;
+                              padding-bottom:11px}
+
+@media(max-width:760px){
+  .kp-vor{font-size:17px}
+  .kp-zeile b{font-size:17px}
+  .kp-zeile span{font-size:15px}
+  .kp-befehl{min-height:54px}
+  .kp-befehl > span:not(.kp-marke){font-size:16px}
+  .kp-taste{min-height:50px}
+  .kp-taste span{font-size:16px}
+  .kp-wolke span{height:38px; font-size:15px}
+  .home-liste .pt .snip{font-size:14px}
+}
+
+/* Die Symbole in „Mehr" gehören in EINE Spalte. Ohne feste Breite richtet
+   sich jede Zeile nach ihrem eigenen Zeichen — ⌨ ist breiter als 🧭 —, und
+   die Titel stehen treppenförmig. Am Bildschirm sieht man das sofort, im
+   Code nie. */
+.home-liste .mz{flex:0 0 26px; text-align:center}
+@media(max-width:760px){ .home-liste .mz{flex:0 0 28px} }
+
+/* Die Symbole in „Mehr" gehören in EINE Spalte. Ohne feste Breite richtet
+   sich jede Zeile nach ihrem eigenen Zeichen — ⌨ ist breiter als 🧭 —, und
+   die Titel stehen treppenförmig. Am Bildschirm sieht man das sofort, im
+   Code nie. */
+.home-liste .mz{flex:0 0 26px; text-align:center}
+@media(max-width:760px){ .home-liste .mz{flex:0 0 28px} }
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */
@@ -4648,7 +4735,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
   <button id="hl-seiten" role="tab" title="Seiten"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h7L18.5 8v12.5h-12z"/><path d="M13.5 3.5V8h5"/><path d="M9.5 12.5h6M9.5 16h4"/></svg></span><b>Seiten</b><i class="hl-punkt" hidden></i></button>
   <button id="hl-bespr" role="tab" title="Besprechungen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
-  <button id="hl-inbox" role="tab" title="Posteingang"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13h4l1.5 2.5h6L16.5 13h4"/><path d="M3.5 13 6 5.5h12L20.5 13v4.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V13z"/></svg></span><b>Eingang</b></button>
+  <button id="hl-mehr" role="tab" title="Mehr"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></span><b>Mehr</b><i class="hl-punkt" hidden></i></button>
 </div>
 
 <!-- =========================================================================
@@ -35015,7 +35102,173 @@ const Ansichten = (() => {
                 window.Meeting?.panel?.();
         };
     };
-    return { start, seiten, termine, posteingang, posteingangFilter, gruss };
+    /* ========================================================================
+     * MEHR — die Werkzeuge, geordnet und mit einem Satz dazu
+     * ------------------------------------------------------------------------
+     * Aus Redurs Entwurf „Nocturne" (E42). Bisher lagen diese Wege im R-Blatt
+     * als nackte Liste: „Importieren", „Sichern", „Papierkorb". Wer nicht
+     * schon wusste, was dahintersteckt, erfuhr es dort nicht.
+     *
+     * Drei Gruppen, und jede Zeile sagt in einem Satz, wofür sie da ist. Das
+     * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
+     * ======================================================================*/
+    const mehrGruppen = () => [
+        { name: 'Wichtige Werkzeuge', eintraege: [
+                { z: '🧭', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
+                { z: '⌘', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
+                { z: '⌨', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
+                { z: '🧩', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' }
+            ] },
+        { name: 'Daten und Sicherheit', eintraege: [
+                { z: '💾', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
+                { z: '📥', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
+                { z: '📥', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+                { z: '🗑', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
+            ] },
+        { name: 'System', eintraege: [
+                { z: '⚙', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
+                { z: 'ℹ', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
+            ] }
+    ];
+    const mehr = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>🧭 Mehr</a>';
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Mehr</h1>' +
+                mehrGruppen().map(g => `<h2>${esc(g.name)}</h2><div class="home-liste">` +
+                    g.eintraege.map(e => `<button data-a="${esc(e.a)}"><span class="mz">${esc(e.z)}</span>` +
+                        `<span class="pt">${esc(e.t)}` +
+                        `<span class="snip">${esc(e.s)}</span></span>` +
+                        '<span class="pth">›</span></button>').join('') +
+                    '</div>').join('') +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            const a = el?.closest('[data-a]')?.dataset.a;
+            if (!a)
+                return;
+            if (a === 'kompass')
+                kompass();
+            else if (a === 'befehle')
+                Werkzeuge.palette();
+            else if (a === 'tasten')
+                Werkzeuge.tastenkuerzel();
+            else if (a === 'vorlagen')
+                Werkzeuge.vorlagen && Werkzeuge.vorlagen();
+            else if (a === 'sichern')
+                App.sicherungSpeichern();
+            else if (a === 'import')
+                Werkzeuge.dateienLesen();
+            else if (a === 'inbox')
+                posteingang();
+            else if (a === 'papierkorb')
+                App.papierkorb();
+            else if (a === 'einstellungen')
+                App.einstellungen();
+            else if (a === 'ueber')
+                App.einstellungen('ueber');
+        };
+    };
+    /* ========================================================================
+     * KOMPASS — was diese App kann, an einer Stelle
+     * ------------------------------------------------------------------------
+     * Der Bereich, den Redurs Entwurf als einzigen ganz neu erfindet, und der
+     * die grösste Lücke schliesst: Redion kann viel, und nichts davon sagt es
+     * von selbst. Wer nicht weiss, dass es Karteikarten gibt, findet sie nie.
+     *
+     * ZWEI SACHEN SIND HIER ABSICHTLICH SO GEBAUT:
+     *
+     * Die Befehle tragen ihren Stand — fertig, teilweise, geplant. Ein
+     * Wegweiser, der Geplantes wie Fertiges aussehen lässt, ist eine
+     * Enttäuschung mit Ansage. Lieber steht daneben „geplant".
+     *
+     * Und die Liste kommt, wo es geht, aus dem Register statt aus dieser
+     * Datei. Eine von Hand gepflegte Aufzählung erzählt nach dem dritten
+     * neuen Befehl von einer App, die es nicht mehr gibt.
+     * ======================================================================*/
+    const kompass = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>🧭 Kompass</a>';
+        const aufbau = [
+            ['Start', 'Armaturenbrett mit Schnellkarten, Sicherungsstand und zuletzt Bearbeitetem.'],
+            ['Seiten', 'Alles Geschriebene: kürzlich, Favoriten, privat, Datenbanken, Vorlagen.'],
+            ['Termine', 'Was ansteht — Aufgaben mit Datum, Erinnerungen, Besprechungen.'],
+            ['Mehr', 'Werkzeuge, Sicherung, Import, Papierkorb, Einstellungen.'],
+            ['R-Blatt', 'Der Arbeitsbereich: Suche, Befehle, jeder Weg auf einen Griff.']
+        ];
+        const befehle = [
+            ['/', 'Blockmenü öffnen', 'fertig'],
+            ['@', 'Seite, Datum oder Person erwähnen', 'fertig'],
+            ['#', 'Schlagwort erstellen', 'teilweise'],
+            [':', 'Emoji einfügen', 'fertig'],
+            ['[[', 'Seite verlinken', 'geplant']
+        ];
+        const tasten = [
+            ['Strg + P', 'Suchen'], ['Strg + ⇧ + P', 'Befehle'], ['Strg + N', 'Neue Seite'],
+            ['Strg + /', 'Tastenkürzel'], ['Esc', 'Menü schliessen']
+        ];
+        /* Aus dem Register, nicht von Hand: so altert die Liste mit der App. */
+        const kann = (() => {
+            try {
+                const b = Object.keys(Register.bloecke?.alle?.() || Register.bloecke || {}).length;
+                const a = (Register.ansichten?.alle?.() || []).length;
+                return [
+                    'Notizen schreiben', 'Seiten verlinken', 'Datenbanken bauen',
+                    b ? b + ' Blockarten' : '', a ? a + ' Ansichten' : '',
+                    'Formeln rechnen', 'Dateien behalten', 'Sicherungen schreiben',
+                    'Importieren', 'Karteikarten lernen', 'KI fragen'
+                ].filter(Boolean);
+            }
+            catch {
+                return ['Notizen schreiben', 'Datenbanken bauen', 'Formeln rechnen',
+                    'Sicherungen schreiben', 'Karteikarten lernen', 'KI fragen'];
+            }
+        })();
+        const marke = (stand) => `<span class="kp-marke kp-${stand}">${esc(stand)}</span>`;
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Kompass</h1>' +
+                '<p class="kp-vor">Was du in Redion machen kannst — und wo es steht.</p>' +
+                '<h2>App-Aufbau</h2><div class="kp-liste">' +
+                aufbau.map(([n, t]) => `<div class="kp-zeile"><b>${esc(n)}</b><span>${esc(t)}</span></div>`).join('') +
+                '</div>' +
+                '<h2>Befehle</h2><div class="kp-liste">' +
+                befehle.map(([k, t, stand]) => `<div class="kp-befehl"><code>${esc(k)}</code><span>${esc(t)}</span>` +
+                    marke(String(stand)) + '</div>').join('') +
+                '</div>' +
+                '<h2>Tastenkürzel</h2><div class="kp-liste">' +
+                tasten.map(([k, t]) => `<div class="kp-taste"><kbd>${esc(k)}</kbd><span>${esc(t)}</span></div>`).join('') +
+                '<div class="kp-fuss">Auf dem Mac: Cmd statt Strg.</div>' +
+                '</div>' +
+                '<h2>Redion kann</h2><div class="kp-wolke">' +
+                kann.map(n => `<span>${esc(n)}</span>`).join('') +
+                '</div>' +
+                '<div class="kp-karte">' +
+                '<b>Sicherung</b>' +
+                '<div>JSON — schnell, ohne Anhänge.<br>' +
+                '.redion — vollständig, mit Anhängen.<br>' +
+                'Wolke — freiwillig, nie Pflicht.</div>' +
+                '<button data-a="sichern">Sicherung öffnen</button>' +
+                '</div>' +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            if (el?.closest('[data-a="sichern"]'))
+                App.sicherungSpeichern();
+        };
+    };
+    return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter, gruss };
 })();
 window.Ansichten = Ansichten;
 
@@ -59988,9 +60241,15 @@ const Seitenleiste = (() => {
            stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
            kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
         const karte = { start: 'hl-start', seiten: 'hl-seiten',
-            bespr: 'hl-bespr', inbox: 'hl-inbox' };
+            bespr: 'hl-bespr', mehr: 'hl-mehr' };
         l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
-        const aktiv = document.getElementById(karte[reiter] || 'hl-start');
+        /* KEIN RÜCKFALL AUF „START". Hier stand `karte[reiter] || 'hl-start'`,
+           und das war eine Behauptung: „Mehr" und „Kompass" haben oben keinen
+           Reiter, also leuchtete beim Öffnen die Start-Pille — man stand im
+           Kompass, und oben stand „Start". Wer nirgends in der Reiterleiste
+           ist, soll dort auch nirgends markiert sein. */
+        const id = karte[reiter];
+        const aktiv = id ? document.getElementById(id) : null;
         if (aktiv)
             aktiv.classList.add('an');
         /* Ein Punkt, wenn im Posteingang etwas Ungelesenes liegt */
@@ -62502,7 +62761,12 @@ const App = (() => {
                 zeile('befehle', '⌘', 'Befehle') +
                 zeile('start', '🏠', 'Start') +
                 zeile('seiten', '📄', 'Seiten') +
-                zeile('inbox', '📥', 'Posteingang') +
+                /* „Mehr" statt „Posteingang" (E42 §16). Der Posteingang ist kein
+                   eigener Weg mehr, sondern eine Zeile IN Mehr — er ist meistens
+                   leer, und ein Platz in der Hauptnavigation gehört dem, was man
+                   oft braucht. Der Kompass steht bewusst NICHT hier: die Vorgabe
+                   sagt ausdrücklich, er sei eine Seite in Mehr, kein Reiter. */
+                zeile('mehr', '🧭', 'Mehr') +
                 zeile('neu', '✚', 'Neue Seite') +
                 /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
                    weg: unten steht „KI fragen", und hier steht der Weg zu allem,
@@ -62549,9 +62813,9 @@ const App = (() => {
                     Ansichten.start();
                     handyLeiste();
                 }
-                else if (was === 'inbox') {
-                    Seitenleiste.reiter('inbox');
-                    Ansichten.posteingang();
+                else if (was === 'mehr') {
+                    Seitenleiste.reiter('mehr');
+                    Ansichten.mehr();
                     handyLeiste();
                 }
                 else if (was === 'neu')
@@ -63528,14 +63792,15 @@ const App = (() => {
             PWA.schubladeZu && PWA.schubladeZu();
             rMenue();
         });
-        /* `reiter('inbox')`, nicht `'start'`: die Pille oben liest ihn, und mit
-           `'start'` stand sie auf „Start", während daneben schon der Posteingang
-           stand. Derselbe Fund wie bei „Seiten", nur eine Zeile weiter unten —
-           gefunden hat ihn wieder das Bildschirmfoto, nicht der Code. */
-        an('hl-inbox', () => {
+        /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
+           Papierkorb und Einstellungen brauchen einen Platz oben — ein
+           Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
+           in Mehr und ist damit keinen Griff weiter weg als vorher.
+           `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
+        an('hl-mehr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('inbox');
-            Ansichten.posteingang();
+            Seitenleiste.reiter('mehr');
+            Ansichten.mehr();
             handyLeiste();
         });
         an('btn-suche-handy', () => suche());

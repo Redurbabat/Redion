@@ -344,7 +344,7 @@ p('Die KI ist hier erreichbar, auch ohne Reiter oben (E38)',
    Ansicht, ohne den Reiter zu setzen, den `handyLeiste()` liest — man
    landete im Posteingang, und oben stand noch „Start". Derselbe Fehler wie
    an den Reitern selbst, nur an einer Stelle, wo ihn niemand suchte. */
-for (const [weg, erwartet] of [['seiten', 'Seiten'], ['inbox', 'Eingang'],
+for (const [weg, erwartet] of [['seiten', 'Seiten'], ['mehr', 'Mehr'],
                                ['start', 'Start']] as [string, string][]) {
   await seite.evaluate(() => document.getElementById('r-blatt')?.remove());
   await seite.evaluate(() => document.getElementById('hl-konto')?.click());
@@ -450,7 +450,7 @@ p('Der Weg zum Kalender steht darin', term.hatKalender === true);
 p('Die Pille steht auf „Termine"',
   term.aktiv.length === 1 && term.aktiv[0] === 'Termine', term.aktiv.join(', '));
 
-await seite.evaluate(() => document.getElementById('hl-inbox')?.click());
+await seite.evaluate(() => document.getElementById('hl-mehr')?.click());
 await seite.waitForTimeout(700);
 const ein = await seite.evaluate(() => {
   const link = document.querySelector<HTMLElement>('#page .pe-link');
@@ -458,13 +458,17 @@ const ein = await seite.evaluate(() => {
     aktiv: [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')]
              .map(b => (b.textContent || '').trim()),
     linkHoch: link ? Math.round(link.getBoundingClientRect().height) : -1,
-    linkText: (link?.textContent || '').trim()
+    linkText: (link?.textContent || '').trim(),
+    hatInbox: /Posteingang/.test(document.getElementById('page')?.textContent || '')
   };
 });
-p('Die Pille steht auf „Eingang"',
-  ein.aktiv.length === 1 && ein.aktiv[0] === 'Eingang',
+p('Die Pille steht auf „Mehr"',
+  ein.aktiv.length === 1 && ein.aktiv[0] === 'Mehr',
   ein.aktiv.join(', ') + ' — mit reiter(\'start\') stand hier „Start"');
-p('Die einzige Handlung im leeren Posteingang ist 44 px',
+p('Der Posteingang ist von hier aus erreichbar',
+  ein.hatInbox === true,
+  'er hat oben keinen eigenen Reiter mehr (E42 §6) und muss deshalb in Mehr stehen');
+p('Jede Handlung darin ist 44 px hoch',
   ein.linkHoch === -1 || ein.linkHoch >= 44,
   `„${ein.linkText}" ist ${ein.linkHoch} px`);
 
@@ -546,7 +550,7 @@ for (const breite of [375, 390]) {
     const l = document.getElementById('handy-oben');
     if (!l) return ['(keine Leiste)'];
     const raus: string[] = [];
-    for (const id of ['hl-start', 'hl-seiten', 'hl-bespr', 'hl-inbox']) {
+    for (const id of ['hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']) {
       l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
       document.getElementById(id)?.classList.add('an');
       if (l.scrollWidth > l.clientWidth) {

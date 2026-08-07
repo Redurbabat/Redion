@@ -547,6 +547,168 @@ const Ansichten = (() => {
     };
   };
 
-  return { start, seiten, termine, posteingang, posteingangFilter, gruss };
+  /* ========================================================================
+   * MEHR — die Werkzeuge, geordnet und mit einem Satz dazu
+   * ------------------------------------------------------------------------
+   * Aus Redurs Entwurf „Nocturne" (E42). Bisher lagen diese Wege im R-Blatt
+   * als nackte Liste: „Importieren", „Sichern", „Papierkorb". Wer nicht
+   * schon wusste, was dahintersteckt, erfuhr es dort nicht.
+   *
+   * Drei Gruppen, und jede Zeile sagt in einem Satz, wofür sie da ist. Das
+   * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
+   * ======================================================================*/
+  const mehrGruppen = () => [
+    { name: 'Wichtige Werkzeuge', eintraege: [
+      { z: '🧭', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
+      { z: '⌘', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
+      { z: '⌨', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
+      { z: '🧩', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' } ] },
+    { name: 'Daten und Sicherheit', eintraege: [
+      { z: '💾', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
+      { z: '📥', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
+      { z: '📥', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+      { z: '🗑', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' } ] },
+    { name: 'System', eintraege: [
+      { z: '⚙', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
+      { z: 'ℹ', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' } ] }
+  ];
+
+  const mehr = (): void => {
+    const f = flaeche();
+    if (!f) return;
+    const { wrap, crumb } = f;
+    App.setzeSeite(null);
+    crumb.innerHTML = '<a>🧭 Mehr</a>';
+
+    wrap.className = '';
+    wrap.innerHTML =
+      '<div class="home">' +
+        '<h1>Mehr</h1>' +
+        mehrGruppen().map(g =>
+          `<h2>${esc(g.name)}</h2><div class="home-liste">` +
+          g.eintraege.map(e =>
+            `<button data-a="${esc(e.a)}"><span class="mz">${esc(e.z)}</span>` +
+            `<span class="pt">${esc(e.t)}` +
+            `<span class="snip">${esc(e.s)}</span></span>` +
+            '<span class="pth">›</span></button>').join('') +
+          '</div>').join('') +
+      '</div>';
+
+    wrap.onclick = (e: Event) => {
+      const el = (e.target instanceof Element) ? e.target : null;
+      const a = el?.closest<HTMLElement>('[data-a]')?.dataset.a;
+      if (!a) return;
+      if (a === 'kompass')            kompass();
+      else if (a === 'befehle')       Werkzeuge.palette();
+      else if (a === 'tasten')        Werkzeuge.tastenkuerzel();
+      else if (a === 'vorlagen')      Werkzeuge.vorlagen && Werkzeuge.vorlagen();
+      else if (a === 'sichern')       App.sicherungSpeichern();
+      else if (a === 'import')        Werkzeuge.dateienLesen();
+      else if (a === 'inbox')         posteingang();
+      else if (a === 'papierkorb')    App.papierkorb();
+      else if (a === 'einstellungen') App.einstellungen();
+      else if (a === 'ueber')         App.einstellungen('ueber');
+    };
+  };
+
+  /* ========================================================================
+   * KOMPASS — was diese App kann, an einer Stelle
+   * ------------------------------------------------------------------------
+   * Der Bereich, den Redurs Entwurf als einzigen ganz neu erfindet, und der
+   * die grösste Lücke schliesst: Redion kann viel, und nichts davon sagt es
+   * von selbst. Wer nicht weiss, dass es Karteikarten gibt, findet sie nie.
+   *
+   * ZWEI SACHEN SIND HIER ABSICHTLICH SO GEBAUT:
+   *
+   * Die Befehle tragen ihren Stand — fertig, teilweise, geplant. Ein
+   * Wegweiser, der Geplantes wie Fertiges aussehen lässt, ist eine
+   * Enttäuschung mit Ansage. Lieber steht daneben „geplant".
+   *
+   * Und die Liste kommt, wo es geht, aus dem Register statt aus dieser
+   * Datei. Eine von Hand gepflegte Aufzählung erzählt nach dem dritten
+   * neuen Befehl von einer App, die es nicht mehr gibt.
+   * ======================================================================*/
+  const kompass = (): void => {
+    const f = flaeche();
+    if (!f) return;
+    const { wrap, crumb } = f;
+    App.setzeSeite(null);
+    crumb.innerHTML = '<a>🧭 Kompass</a>';
+
+    const aufbau = [
+      ['Start', 'Armaturenbrett mit Schnellkarten, Sicherungsstand und zuletzt Bearbeitetem.'],
+      ['Seiten', 'Alles Geschriebene: kürzlich, Favoriten, privat, Datenbanken, Vorlagen.'],
+      ['Termine', 'Was ansteht — Aufgaben mit Datum, Erinnerungen, Besprechungen.'],
+      ['Mehr', 'Werkzeuge, Sicherung, Import, Papierkorb, Einstellungen.'],
+      ['R-Blatt', 'Der Arbeitsbereich: Suche, Befehle, jeder Weg auf einen Griff.']
+    ];
+    const befehle = [
+      ['/', 'Blockmenü öffnen', 'fertig'],
+      ['@', 'Seite, Datum oder Person erwähnen', 'fertig'],
+      ['#', 'Schlagwort erstellen', 'teilweise'],
+      [':', 'Emoji einfügen', 'fertig'],
+      ['[[', 'Seite verlinken', 'geplant']
+    ];
+    const tasten = [
+      ['Strg + P', 'Suchen'], ['Strg + ⇧ + P', 'Befehle'], ['Strg + N', 'Neue Seite'],
+      ['Strg + /', 'Tastenkürzel'], ['Esc', 'Menü schliessen']
+    ];
+    /* Aus dem Register, nicht von Hand: so altert die Liste mit der App. */
+    const kann = (() => {
+      try {
+        const b = Object.keys(Register.bloecke?.alle?.() || Register.bloecke || {}).length;
+        const a = (Register.ansichten?.alle?.() || []).length;
+        return [
+          'Notizen schreiben', 'Seiten verlinken', 'Datenbanken bauen',
+          b ? b + ' Blockarten' : '', a ? a + ' Ansichten' : '',
+          'Formeln rechnen', 'Dateien behalten', 'Sicherungen schreiben',
+          'Importieren', 'Karteikarten lernen', 'KI fragen'
+        ].filter(Boolean);
+      } catch {
+        return ['Notizen schreiben', 'Datenbanken bauen', 'Formeln rechnen',
+                'Sicherungen schreiben', 'Karteikarten lernen', 'KI fragen'];
+      }
+    })();
+    const marke = (stand: string) =>
+      `<span class="kp-marke kp-${stand}">${esc(stand)}</span>`;
+
+    wrap.className = '';
+    wrap.innerHTML =
+      '<div class="home">' +
+        '<h1>Kompass</h1>' +
+        '<p class="kp-vor">Was du in Redion machen kannst — und wo es steht.</p>' +
+        '<h2>App-Aufbau</h2><div class="kp-liste">' +
+          aufbau.map(([n, t]) =>
+            `<div class="kp-zeile"><b>${esc(n)}</b><span>${esc(t)}</span></div>`).join('') +
+        '</div>' +
+        '<h2>Befehle</h2><div class="kp-liste">' +
+          befehle.map(([k, t, stand]) =>
+            `<div class="kp-befehl"><code>${esc(k)}</code><span>${esc(t)}</span>` +
+            marke(String(stand)) + '</div>').join('') +
+        '</div>' +
+        '<h2>Tastenkürzel</h2><div class="kp-liste">' +
+          tasten.map(([k, t]) =>
+            `<div class="kp-taste"><kbd>${esc(k)}</kbd><span>${esc(t)}</span></div>`).join('') +
+          '<div class="kp-fuss">Auf dem Mac: Cmd statt Strg.</div>' +
+        '</div>' +
+        '<h2>Redion kann</h2><div class="kp-wolke">' +
+          kann.map(n => `<span>${esc(n)}</span>`).join('') +
+        '</div>' +
+        '<div class="kp-karte">' +
+          '<b>Sicherung</b>' +
+          '<div>JSON — schnell, ohne Anhänge.<br>' +
+          '.redion — vollständig, mit Anhängen.<br>' +
+          'Wolke — freiwillig, nie Pflicht.</div>' +
+          '<button data-a="sichern">Sicherung öffnen</button>' +
+        '</div>' +
+      '</div>';
+
+    wrap.onclick = (e: Event) => {
+      const el = (e.target instanceof Element) ? e.target : null;
+      if (el?.closest<HTMLElement>('[data-a="sichern"]')) App.sicherungSpeichern();
+    };
+  };
+
+  return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter, gruss };
 })();
 (window as any).Ansichten = Ansichten;

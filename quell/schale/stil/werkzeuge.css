@@ -490,3 +490,90 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
     align-items:center; justify-content:center}
 }
 
+
+/* ===========================================================================
+   KOMPASS UND MEHR — die zwei Bereiche aus Redurs Entwurf (E42)
+   ---------------------------------------------------------------------------
+   Der Kompass ist der Bereich, den der Entwurf als einzigen ganz neu
+   erfindet, und er schliesst die grösste Lücke: Redion kann viel, und
+   nichts davon sagt es von selbst. Wer nicht weiss, dass es Karteikarten
+   gibt, findet sie nie.
+
+   Die Masse folgen dem Entwurf: Zeilen ab 54 px, Abschnittsüberschriften
+   19 px, Beiwerk in `--text-faint`. Am Telefon greift zusätzlich der Block
+   weiter oben, der `.home-liste button` auf 54 px Mindesthöhe setzt.
+   =========================================================================*/
+.kp-vor{font-size:16px; color:var(--text-dim); line-height:1.45; margin:0 0 22px}
+
+.kp-liste{display:flex; flex-direction:column}
+.kp-zeile{padding:13px 0; border-bottom:1px solid var(--line)}
+.kp-zeile b{display:block; font-size:15.5px; font-weight:600}
+.kp-zeile span{display:block; font-size:14px; color:var(--text-dim);
+               line-height:1.45; margin-top:3px}
+
+.kp-befehl{display:flex; align-items:center; gap:14px; min-height:50px;
+           border-bottom:1px solid var(--line)}
+.kp-befehl code{flex:0 0 46px; font:600 15px var(--mono); color:var(--accent)}
+.kp-befehl > span:not(.kp-marke){flex:1; font-size:15px}
+
+/* DER STAND STEHT DABEI, und das ist Absicht: ein Wegweiser, der Geplantes
+   wie Fertiges aussehen lässt, ist eine Enttäuschung mit Ansage. */
+.kp-marke{flex:none; font-size:12px; padding:3px 9px; border-radius:999px;
+          white-space:nowrap}
+.kp-fertig{background:var(--bg-hover); color:var(--accent)}
+.kp-teilweise{border:1px solid var(--line); color:var(--text-dim)}
+.kp-geplant{color:var(--text-faint)}
+
+.kp-taste{display:flex; align-items:center; gap:14px; min-height:46px;
+          border-bottom:1px solid var(--line)}
+.kp-taste kbd{flex:none; font:13px var(--mono); color:var(--text-dim);
+              background:var(--bg-card); padding:5px 9px; border-radius:8px}
+.kp-taste span{font-size:15px; color:var(--text-dim)}
+.kp-fuss{font-size:13px; color:var(--text-faint); margin-top:10px}
+
+.kp-wolke{display:flex; flex-wrap:wrap; gap:8px}
+.kp-wolke span{display:inline-flex; align-items:center; height:36px;
+               padding:0 14px; border-radius:999px; background:var(--bg-card);
+               color:var(--text-dim); font-size:14px; white-space:nowrap}
+
+.kp-karte{margin-top:28px; padding:20px; border-radius:16px;
+          background:var(--bg-card)}
+.kp-karte b{display:block; font-size:17px; margin-bottom:8px}
+.kp-karte div{font-size:14.5px; color:var(--text-dim); line-height:1.55}
+.kp-karte button{margin-top:16px; height:44px; padding:0 20px;
+                 border-radius:999px; border:1px solid var(--accent);
+                 color:var(--accent); font-size:15px}
+.kp-karte button:hover{background:var(--bg-hover)}
+
+/* Der Untertext in „Mehr" — er ist der ganze Unterschied zwischen einer
+   Liste und einem Wegweiser. */
+.home-liste .pt .snip{display:block; font-size:13.5px; color:var(--text-dim);
+                      line-height:1.35; margin-top:2px; font-weight:400}
+.home-liste button:has(.snip){align-items:flex-start; padding-top:11px;
+                              padding-bottom:11px}
+
+@media(max-width:760px){
+  .kp-vor{font-size:17px}
+  .kp-zeile b{font-size:17px}
+  .kp-zeile span{font-size:15px}
+  .kp-befehl{min-height:54px}
+  .kp-befehl > span:not(.kp-marke){font-size:16px}
+  .kp-taste{min-height:50px}
+  .kp-taste span{font-size:16px}
+  .kp-wolke span{height:38px; font-size:15px}
+  .home-liste .pt .snip{font-size:14px}
+}
+
+/* Die Symbole in „Mehr" gehören in EINE Spalte. Ohne feste Breite richtet
+   sich jede Zeile nach ihrem eigenen Zeichen — ⌨ ist breiter als 🧭 —, und
+   die Titel stehen treppenförmig. Am Bildschirm sieht man das sofort, im
+   Code nie. */
+.home-liste .mz{flex:0 0 26px; text-align:center}
+@media(max-width:760px){ .home-liste .mz{flex:0 0 28px} }
+
+/* Die Symbole in „Mehr" gehören in EINE Spalte. Ohne feste Breite richtet
+   sich jede Zeile nach ihrem eigenen Zeichen — ⌨ ist breiter als 🧭 —, und
+   die Titel stehen treppenförmig. Am Bildschirm sieht man das sofort, im
+   Code nie. */
+.home-liste .mz{flex:0 0 26px; text-align:center}
+@media(max-width:760px){ .home-liste .mz{flex:0 0 28px} }
