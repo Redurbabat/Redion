@@ -1483,6 +1483,50 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .lz-knoepfe button{min-height:48px; font-size:16px}
 }
 
+/* ===========================================================================
+   ZEILEN, DIE VERSETZT HEREINKOMMEN (Bewegungs-Vorgabe, E47)
+   ---------------------------------------------------------------------------
+   „rows fade in upward by 4–8px, stagger 20ms per row, max total stagger
+   180ms."
+
+   WARUM VERSETZT UND NICHT ALLE AUF EINMAL. Erscheint eine Liste als Block,
+   sieht man einen Sprung — das Auge liest „da war nichts, jetzt ist alles
+   da" und muss von vorn anfangen. Kommen die Zeilen nacheinander, folgt der
+   Blick der Bewegung von oben nach unten, also genau in Leserichtung, und
+   ist beim Ende der Animation schon bei der ersten Zeile.
+
+   DIE OBERGRENZE IST DER PUNKT. Bei 20 ms je Zeile und zwanzig Zeilen wären
+   das 400 ms, in denen die Liste noch nicht steht — das ist keine Bewegung
+   mehr, das ist Warten. Deshalb bekommen nur die ersten neun Zeilen eine
+   Verzögerung; alles darunter kommt sofort. Wer so weit unten liest, hat
+   ohnehin gescrollt.
+
+   NUR AM TELEFON. Am Rechner wechselt man Ansichten mit der Maus und
+   erwartet, dass sie da sind.
+   =========================================================================*/
+@media(max-width:760px){
+  .home-liste button,
+  .kp-zeile, .kp-befehl, .kp-taste{
+    animation:zeile-hoch var(--motion-normal) var(--ease-enter) both;
+  }
+  .home-liste button:nth-child(1),
+  .kp-zeile:nth-child(1){ animation-delay:0ms }
+  .home-liste button:nth-child(2){ animation-delay:20ms }
+  .home-liste button:nth-child(3){ animation-delay:40ms }
+  .home-liste button:nth-child(4){ animation-delay:60ms }
+  .home-liste button:nth-child(5){ animation-delay:80ms }
+  .home-liste button:nth-child(6){ animation-delay:100ms }
+  .home-liste button:nth-child(7){ animation-delay:120ms }
+  .home-liste button:nth-child(8){ animation-delay:140ms }
+  .home-liste button:nth-child(9){ animation-delay:160ms }
+  /* Ab der zehnten Zeile ohne Verzögerung — siehe oben. */
+  .home-liste button:nth-child(n+10){ animation-delay:0ms }
+}
+@keyframes zeile-hoch{
+  from{ opacity:0; transform:translateY(6px) }
+  to{ opacity:1; transform:translateY(0) }
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */

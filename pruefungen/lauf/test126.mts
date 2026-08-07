@@ -186,6 +186,36 @@ p('Das Atmen ist langsam (1000–1400 ms)',
 p('Die Zeilen atmen versetzt',
   new Set(sk?.verzoegert ?? []).size >= 5, (sk?.verzoegert ?? []).join(' '));
 
+console.log('\n6 · Zeilen kommen versetzt herein');
+
+/* Erscheint eine Liste als Block, sieht man einen Sprung — das Auge liest
+   „da war nichts, jetzt ist alles da" und muss von vorn anfangen. Kommen
+   die Zeilen nacheinander, folgt der Blick der Bewegung von oben nach
+   unten, also in Leserichtung. */
+const staffel = await handy.evaluate(() => {
+  (window as any).Ansichten.seiten();
+  const kn = [...document.querySelectorAll<HTMLElement>('#page .home-liste button')];
+  const verz = kn.slice(0, 12).map(b => getComputedStyle(b).animationDelay);
+  return {
+    zeilen: kn.length,
+    verz,
+    dauer: kn[0] ? getComputedStyle(kn[0]).animationDuration : '',
+    name: kn[0] ? getComputedStyle(kn[0]).animationName : ''
+  };
+}) as { zeilen: number; verz: string[]; dauer: string; name: string };
+
+p('Die Zeilen sind überhaupt animiert', staffel.name !== 'none' && !!staffel.name,
+  staffel.name);
+p('Sie kommen versetzt', new Set(staffel.verz.slice(0, 6)).size >= 4,
+  staffel.verz.slice(0, 6).join(' '));
+/* DIE OBERGRENZE IST DER PUNKT: bei 20 ms je Zeile und zwanzig Zeilen wären
+   das 400 ms, in denen die Liste noch nicht steht. Das ist kein Aufbau
+   mehr, das ist Warten. */
+const groesste = Math.max(0, ...staffel.verz.map(v => parseFloat(v) * (/ms/.test(v) ? 1 : 1000)));
+p('Die Staffel bleibt unter 200 ms', groesste <= 200, groesste + ' ms');
+p('Und die Bewegung selbst ist kurz',
+  parseFloat(staffel.dauer) <= 0.3, staffel.dauer);
+
 await browser.close();
 console.log(`\n  Suite 90 — Bewegung: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);
