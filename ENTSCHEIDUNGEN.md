@@ -2595,3 +2595,108 @@ der sagt hier nur `calc(80px + 0px)`.
 
 `test114` §11, jetzt 15 Punkte. Gegenprobe: `--hoben` auf `60px` gesetzt →
 6 rot.
+
+---
+
+## E51 · Dialoge werden an EINER Stelle zu Dialogen
+
+**Aus `LUECKEN.md` L12** — Barrierefreiheit stand seit Monaten auf „◐
+Grundlagen da, nicht geprüft" und nannte fünf Punkte. Gemessen am
+7. August waren zwei in Ordnung und drei nicht:
+
+```txt
+✓ Fokus sichtbar      2 px Rahmen in der Akzentfarbe, überall
+✓ Escape schliesst    Suche, Befehle, Einstellungen, Papierkorb
+✗ nur über Farbe      der rote Punkt „ungelesen" war leer und still
+✗ Fokusreihenfolge    blieb hinter dem Dialog, lief mit Tab hinaus,
+                      kam nie zurück
+✗ Vorlesen            null Überschriften, Meldungen stumm, Reiter
+                      ohne `aria-selected`
+```
+
+**Das Problem war nicht 106 Fehler, sondern einer.** Redion baut seine
+Überlagerungen an 106 Stellen, jedes Mal als `<div class="overlay">` an
+`<body>`. Allen fehlte dasselbe, und keine dieser Stellen war schuld:
+
+- **Keine Rolle.** Für ein Vorleseprogramm ist so ein `<div>` kein Dialog,
+  sondern Text am Ende des Dokuments.
+- **Der Fokus blieb draussen.** Die Einstellungen gingen auf, die Tastatur
+  stand weiter auf dem Knopf dahinter.
+- **Tab lief hinaus.** Nach zwölf Tabs stand der Fokus in der Seitenleiste
+  hinter dem Dialog — unter der Überlagerung, also unsichtbar. Man tippte
+  ins Nichts.
+- **Und er kam nicht zurück.** Nach dem Schliessen: `<body>`. Das nächste
+  Tab fing wieder ganz oben an, bei jedem Menü, jedes Mal.
+
+**Also ein Beobachter statt 106 Änderungen.**
+`src/schale/ueberlagerung/fokus.ts` sieht zu, was an `<body>` gehängt wird,
+und legt Rolle, `aria-modal`, einen Namen, den Fokus, die Tab-Falle und die
+Rückkehr auf. Das ist nicht nur weniger Arbeit: die 107. Überlagerung
+bekommt es auch, ohne dass jemand daran denkt.
+
+**Was er ausdrücklich NICHT tut:** er nimmt niemandem den Fokus weg, der
+schon gesetzt wurde. Die Suche setzt ihn auf ihr Feld, der Papierkorb auf
+seins. Wer das überschreibt, macht drei richtige Dialoge kaputt, um einen
+falschen zu heilen.
+
+**Eine Reihenfolge, die beim Bauen zuschlug.** Ein Beobachter meldet sich
+erst nach dem laufenden Durchgang — und die meisten Dialoge setzen ihren
+Fokus noch darin, direkt nach dem `appendChild`. Wer beim Anmelden nach dem
+aktiven Element fragt, bekommt deshalb ein Feld IM Dialog, merkt sich das
+als Herkunft, und beim Schliessen ist es längst weg. Von vier Dialogen
+kehrte genau einer zurück: ausgerechnet der, der seinen Fokus gar nicht
+setzte. Deshalb wird die letzte Stelle AUSSERHALB jeder Überlagerung
+laufend mitgeschrieben.
+
+**Und was sonst noch dazugehörte:**
+
+*Überschriften.* Jeder Block ist ein `<div>`, auch `h1`, `h2` und `h3`.
+Sichtbar durch ihre Grösse, hörbar durch gar nichts — eine Seite mit Titel
+und Überschrift ergab null Sprungmarken. Jetzt `role="heading"` mit
+`aria-level`, und zwar auf dem Textfeld statt auf dem Blockkasten: der
+enthält auch die Griffe ✚ und ⋮⋮, die Überschrift hiesse sonst
+„+ ⋮⋮ Eine Überschrift". Eine Stufe tiefer als der Blockname sagt, denn die
+Stufe 1 gehört dem Seitentitel; zwei Einsen auf einer Seite heissen beim
+Vorlesen „hier fangen zwei Dokumente an".
+
+*Der Fenstertitel* stand dauerhaft auf „Redion". In einem Fenster unter
+zwanzig anderen ist das keine Auskunft, ein Lesezeichen darauf heisst
+später auch nur so, und ein Vorleseprogramm nennt ihn bei jedem Wechsel —
+es sagte also immer dasselbe. Jetzt „Projekte — Redion".
+
+*Meldungen.* `#toast` bekam `role="status"` und `aria-live="polite"`.
+Ohne das erscheint „Gespeichert" nur auf dem Bildschirm; wer zuhört,
+erfährt es nie, auch nicht als Auslöser.
+
+*Der rote Punkt* am Reiter heisst „hier liegt Ungelesenes". Er ist rund,
+acht Pixel gross und leer. Jetzt ist er `aria-hidden` — er ist das Bild —
+und die Zahl steht im Namen des Knopfes: „Mehr, 3 ungelesen". Und
+verschwindet wieder; ein Knopf, der dauerhaft „0 ungelesen" heisst, ist
+schlimmer als keiner.
+
+Dabei fiel ein zweiter Punkt auf, an „Seiten". Ein Rest aus der Zeit, als
+der Reiter „Chats" hiess (E38) — angezeigt wurde er nie, weil nur der
+erste gefundene gesetzt wurde. Er hätte ungelesene Nachrichten an einem
+Ort gemeldet, an dem keine liegen. Der Posteingang steht seit E42 unter
+„Mehr", und dort steht jetzt auch der Punkt.
+
+*Die Reiter.* `role="tab"` ohne `aria-selected` meldet vier gleichrangige
+Reiter; wo man steht, stand einzig in der Farbe der Pille. Am Rechner sind
+es keine Reiter, sondern Verweise — dort ist `aria-current="page"` das
+richtige Wort.
+
+**Was offen bleibt:** ein Durchlauf mit einem echten Vorleseprogramm.
+Dieser Lauf prüft, worauf jedes von ihnen angewiesen ist — Rollen, Namen,
+Zustände, den Weg der Tastatur. Das ist nicht dasselbe wie VoiceOver, und
+L12 sagt das weiterhin.
+
+**Status**
+
+`test128` (Suite 92), 46 Punkte. Gegenprobe: Beobachter stillgelegt,
+Überschriften-Rollen, Live-Bereich, Punktname und `aria-selected` entfernt
+→ 25 von 46 rot.
+
+Und eine Falle fürs nächste Mal: `getComputedStyle` gibt ein LEBENDES
+Objekt zurück. Zweimal daraus lesen — vor und nach `focus()` — liefert
+zweimal den Zustand von nachher. Die erste Fassung meldete deshalb „der
+Fokus ändert nichts", obwohl er einen 2-px-Rahmen setzt.

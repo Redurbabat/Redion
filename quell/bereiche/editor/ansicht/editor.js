@@ -175,6 +175,9 @@ const Blocks = (() => {
         el.className = 'blk b-' + block.type;
         el.dataset.id = block.type;
         el.dataset.bid = block.id;
+        /* Die Stufe für `h1`/`h2`/`h3` — gesetzt wird sie weiter unten auf dem
+           TEXTFELD, nicht auf diesem Kasten. Siehe `machText`. */
+        const stufe = { h1: '2', h2: '3', h3: '4' }[block.type];
         /* Der Griff links: Plus und Sechs-Punkte */
         const griffe = document.createElement('div');
         griffe.className = 'handles';
@@ -198,6 +201,25 @@ const Blocks = (() => {
             ct.innerHTML = inline(block.text || '');
             if (block.color)
                 ct.classList.add(block.color.startsWith('bg-') ? block.color : 't-' + block.color);
+            /* ÜBERSCHRIFTEN MÜSSEN AUCH ÜBERSCHRIFTEN SEIN.
+               Jeder Block ist ein `<div>`, auch `h1`, `h2` und `h3` — sichtbar
+               sind sie durch ihre Grösse, hörbar durch gar nichts. Wer nicht
+               sieht, springt von Überschrift zu Überschrift; gemessen am
+               7. August fand eine Seite mit Titel und Überschrift genau null.
+      
+               AUF DEM TEXTFELD, NICHT AUF DEM BLOCKKASTEN. Der Kasten enthält
+               auch die Griffe ✚ und ⋮⋮; die Überschrift hiesse dann
+               „+ ⋮⋮ Eine Überschrift".
+      
+               UND EINE STUFE TIEFER, als der Blockname sagt: die Stufe 1 gehört
+               dem Seitentitel. Ein `h1`-Block ist die erste Gliederungsebene
+               DARIN, also Stufe 2. Zwei Überschriften der Stufe 1 auf einer
+               Seite heissen für ein Vorleseprogramm: hier fangen zwei Dokumente
+               an. */
+            if (stufe) {
+                ct.setAttribute('role', 'heading');
+                ct.setAttribute('aria-level', stufe);
+            }
             return ct;
         };
         switch (block.type) {

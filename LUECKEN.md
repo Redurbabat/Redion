@@ -302,10 +302,34 @@ Bestätigung vor jeder ändernden Handlung.
 
 ## L12 · Barrierefreiheit
 
-**Stand** — ◐ Grundlagen da, nicht geprüft.
+**Stand** — ◐ gemessen und grösstenteils behoben (7. August, E51); der
+Durchlauf mit einem echten Vorleseprogramm fehlt.
 
-Fehlt: Screenreader-Durchlauf · Fokusreihenfolge · Kontrast in hell und
-dunkel · keine Information nur über Farbe · Escape schliesst Overlays.
+Fünf Punkte standen hier. Gemessen ergab das:
+
+```txt
+✓ Fokus sichtbar        2 px Rahmen in der Akzentfarbe, überall
+✓ Escape schliesst      Suche, Befehle, Einstellungen, Papierkorb
+✓ Kontrast hell/dunkel  gerechnet in test127 (E44), 20 Punkte
+✓ nur über Farbe        der rote Punkt „ungelesen" war leer und still —
+                        jetzt steht die Zahl im Namen des Knopfes, und
+                        die Reiter sagen mit `aria-selected` /
+                        `aria-current`, wo man ist
+✓ Fokusreihenfolge      der Fokus blieb hinter dem Dialog stehen, lief
+                        mit Tab hinaus und kam nie zurück — repariert an
+                        einer Stelle für alle 106 Überlagerungen
+```
+
+Dazu kam, was beim Messen auffiel und in keinem der fünf Punkte stand:
+null Überschriften auf einer Seite mit Titel und Überschrift · Meldungen
+ohne Live-Bereich · ein Fenstertitel, der immer „Redion" hiess.
+
+**Fehlt weiterhin:** ein Durchlauf mit VoiceOver oder NVDA. `test128`
+prüft, worauf jedes Vorleseprogramm angewiesen ist — Rollen, Namen,
+Zustände, den Weg der Tastatur. Das ist nicht dasselbe wie zuhören, wie es
+wirklich klingt. Ausserdem ungeprüft: die Bereiche unterhalb der Schale
+(Datenbankansichten, Tabellenblatt, KI-Fenster) und die Bedienung ganz
+ohne Maus über einen längeren Arbeitsablauf.
 
 ## L13 · Prüfläufe für migrierten TypeScript-Code
 

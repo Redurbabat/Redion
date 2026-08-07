@@ -73,6 +73,7 @@ const GRUNDSTOCK = [
   './quell/schale/ueberlagerung/menue.js',
   './quell/schale/ueberlagerung/hinweis.js',
   './quell/schale/ueberlagerung/dialog.js',
+  './quell/schale/ueberlagerung/fokus.js',
   './quell/schale/ueberlagerung/ui.js',
   './quell/kern/ablage/nachbarn.js',
   './quell/kern/ablage/indexdb.js',

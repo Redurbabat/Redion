@@ -146,7 +146,14 @@ const Seitenleiste = (() => {
     if (!leiste) return;
     leiste.classList.toggle('ohne-namen', !tabNamen());
     leiste.querySelectorAll<HTMLElement>('.sr').forEach(b => {
-      b.classList.toggle('on', b.dataset.reiter === reiter);
+      const hier = b.dataset.reiter === reiter;
+      b.classList.toggle('on', hier);
+      /* Die Klasse `on` färbt den Reiter. Ein Vorleseprogramm sieht keine
+         Farbe — für es ist `aria-current` der einzige Unterschied zwischen
+         „Start" und „Start, aktuelle Seite". Ohne die Zeile klingen alle
+         fünf Reiter gleich. */
+      if (hier) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
     });
     /* Die untere Leiste am Telefon zeigt dieselben Bereiche — sie muss
        mitgehen, sonst stimmt an einem der beiden Orte die Markierung nicht. */
@@ -233,7 +240,15 @@ const Seitenleiste = (() => {
        kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
     const karte: Record<string, string> = { start: 'hl-start', seiten: 'hl-seiten',
                                             bespr: 'hl-bespr', mehr: 'hl-mehr' };
-    l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
+    l.querySelectorAll('button[role="tab"]').forEach(b => {
+      b.classList.remove('an');
+      /* `aria-selected` gehört zu `role="tab"` wie das Ziel zum Verweis.
+         Ohne die Angabe meldet ein Vorleseprogramm vier gleichrangige
+         Reiter und verschweigt, auf welchem man steht — die Auskunft
+         steckte einzig in der Farbe der Pille (CLAUDE.md §38: keine
+         Information nur über Farbe). */
+      b.setAttribute('aria-selected', 'false');
+    });
     /* KEIN RÜCKFALL AUF „START". Hier stand `karte[reiter] || 'hl-start'`,
        und das war eine Behauptung: „Mehr" und „Kompass" haben oben keinen
        Reiter, also leuchtete beim Öffnen die Start-Pille — man stand im
@@ -241,16 +256,36 @@ const Seitenleiste = (() => {
        ist, soll dort auch nirgends markiert sein. */
     const id = karte[reiter];
     const aktiv = id ? document.getElementById(id) : null;
-    if (aktiv) aktiv.classList.add('an');
+    if (aktiv) { aktiv.classList.add('an'); aktiv.setAttribute('aria-selected', 'true'); }
     pilleSchieben(l, aktiv);
-    /* Ein Punkt, wenn im Posteingang etwas Ungelesenes liegt */
-    const punkt = l.querySelector<HTMLElement>('.hl-punkt');
-    if (punkt) {
+
+    /* EIN PUNKT, WENN IM POSTEINGANG ETWAS UNGELESENES LIEGT — und ein
+       Satz dazu. Der Punkt ist rot, klein und leer: für ein
+       Vorleseprogramm ist er nichts. Wer die App hört statt sie zu sehen,
+       erfuhr nie, dass etwas anliegt.
+
+       Der Punkt wird deshalb versteckt (er ist Bild, kein Inhalt) und die
+       Zahl wandert in den Namen des Knopfes: „Mehr, 3 ungelesen". Der
+       Titel bleibt der schlichte, damit die Maus-Blase kurz bleibt.
+
+       DER ZWEITE PUNKT IST GEGANGEN. „Seiten" trug auch einen — ein Rest
+       aus der Zeit, als der Reiter „Chats" hiess (E38). Angezeigt wurde er
+       nie, weil nur der erste gefundene Punkt gesetzt wurde; er hätte
+       ungelesene Nachrichten an einem Ort gemeldet, an dem keine liegen.
+       Der Posteingang steht seit E42 unter „Mehr", und dort steht auch
+       der Punkt. */
+    l.querySelectorAll<HTMLElement>('.hl-punkt').forEach(pt => {
+      pt.setAttribute('aria-hidden', 'true');
+      const knopf = pt.closest<HTMLElement>('button');
       let offen = 0;
       try { offen = (Werkzeuge.meldungen ? Werkzeuge.meldungen() : [])
                       .filter((m: any) => !m.gelesen).length; } catch {}
-      punkt.hidden = !offen;
-    }
+      pt.hidden = !offen;
+      if (!knopf) return;
+      const name = knopf.getAttribute('title') || '';
+      if (offen) knopf.setAttribute('aria-label', `${name}, ${offen} ungelesen`);
+      else knopf.removeAttribute('aria-label');
+    });
   };
 
   const reiterWechseln = (id: string) => {
