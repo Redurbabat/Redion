@@ -756,8 +756,21 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
   /* --- OBEN: die Bereiche als Pillen ---------------------------------- */
   /* MASSE NACH DER TELEFON-VORGABE (E37): die Leiste ist 96-112 px hoch
-     samt Kerbe, die Tasten 52 px, der Rand 28 px. Vorher waren es 60, 44
-     und 12 — das las sich am Rechner sauber und war am Daumen zu klein. */
+     samt Kerbe, die Tasten 56 px, der Rand 28 px. Vorher waren es 60, 44
+     und 12 — das las sich am Rechner sauber und war am Daumen zu klein.
+
+     DIE HÖHE STEHT AN EINER STELLE, und das ist der eigentliche Punkt
+     dieser Zeile. Vorher stand sie an zweien: die Leiste rechnete sich aus
+     12 + 52 + 12 + Kerbe zu 76 px (und am iPhone zu 123), und darunter
+     hielt `#main` schlicht `padding-top:60px` frei. Gemessen am 7. August
+     bei 390 px: die Seitenleiste darunter begann bei y=60 und die Pillen
+     reichten bis 76 — die obersten 16 px des Zurück-Knopfes lagen hinter
+     der Leiste. Am iPhone mit 47 px Kerbe wären es 63 px gewesen, also
+     die ganze Zeile.
+
+     Zwei Zahlen, die dasselbe meinen müssen, gehen irgendwann
+     auseinander. Also nur noch eine. */
+  :root{ --hoben: calc(80px + env(safe-area-inset-top)) }
   #handy-oben{
     display:flex; align-items:center; gap:10px;
     position:fixed; left:0; right:0; top:0; z-index:401;
@@ -770,18 +783,37 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      letzte Pille stand ausserhalb des Bildes. Am 428er iPhone fiel das nie
      auf; E37 sagt aber 390 zuerst.
 
-     Unter 420 px wird deshalb enger gerückt: Rand 20 statt 28, Abstand 6
-     statt 10, Pillenpolster 11 statt 13. Das reicht für „Eingang", das
-     längste der fünf Wörter. Die Tasten bleiben 52 px — an der Fläche, die
-     der Daumen trifft, wird nicht gespart; gespart wird am Weissraum
-     zwischen ihnen. */
-  @media(max-width:420px){ #handy-oben{ gap:6px; padding-left:20px; padding-right:20px } }
-  @media(max-width:380px){ #handy-oben{ padding-left:14px; padding-right:14px } }
+     NACHGEMESSEN AM 7. AUGUST, nachdem die Tasten von 52 auf 56 px
+     gewachsen sind. Vier Tasten mal 4 px sind 16 px, und die haben zwei
+     Breiten gekippt, die vorher gerade noch gingen:
+
+       Breite   längster Reiter („Termine")   davor
+       428 px   435 px  →  passt nicht        423 px  passte knapp
+       390 px   395 px  →  passt nicht        379 px  passte
+       375 px   375 px  →  passt genau
+
+     An der Fläche, die der Daumen trifft, wird nicht gespart — gespart
+     wird am Weissraum. Also rückt jetzt schon ab 440 px zusammen (das
+     nimmt auch das 428er iPhone mit, das vorher ausserhalb jeder Regel
+     stand) und noch einmal ab 380 px:
+
+       ab 440 px   Rand 17, Abstand 5, Pillenpolster 11   →  385 px
+       ab 380 px   Rand 10, Abstand 4, Pillenpolster 9    →  359 px
+
+     Damit passt jede gängige Telefonbreite: 428, 393, 390, 375, 360.
+     Darunter — 320 px, also iPhone SE der ersten Bauart — rollt die
+     Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
+     geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
+     nichts mehr zu holen ist. */
+  @media(max-width:440px){
+    #handy-oben{ gap:5px; padding-left:17px; padding-right:17px }
+  }
+  @media(max-width:380px){ #handy-oben{ gap:4px; padding-left:10px; padding-right:10px } }
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
     flex:0 0 auto;
-    height:52px; min-width:52px;
+    height:56px; min-width:56px;
     border-radius:999px;
     border:1px solid var(--line);
     background:transparent; color:var(--text-dim);
@@ -810,7 +842,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Verschiebung. */
   #handy-oben #ho-pille{
     position:absolute; left:0; top:0; z-index:0;
-    height:52px; width:0; border-radius:999px;
+    height:56px; width:0; border-radius:999px;
     background:var(--bg-hover);
     pointer-events:none; opacity:0;
     transition:transform var(--motion-normal) var(--ease-standard),
@@ -855,7 +887,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Reihenfolge, und weiter oben verlor er lautlos: gemessen kamen 13 px
      Polster und 16 px Schrift zurück, obwohl der Rand daneben schon eng
      war. Eine Regel, die dasteht und nichts tut, ist schlimmer als keine. */
-  @media(max-width:420px){
+  @media(max-width:440px){
     #handy-oben button{ padding:0 11px }
     #handy-oben button b{ font-size:15px }
   }
@@ -985,8 +1017,13 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   /* --- Platz für beide ------------------------------------------------- */
   /* Oben die Pillenleiste, unten die drei Knöpfe: der Inhalt dazwischen
      braucht an beiden Enden Luft, sonst liegt die erste Zeile unter den
-     Pillen und die letzte unter der KI. */
-  #main{ padding-top:60px }
+     Pillen und die letzte unter der KI.
+
+     `--hoben` STATT EINER ZAHL. Hier stand `60px`, und die Leiste darüber
+     war 76 px hoch — die obersten 16 px des Zurück-Knopfes lagen dahinter.
+     Am iPhone, wo die Kerbe noch 47 px dazulegt, war es die ganze Zeile.
+     Die Marke rechnet die Kerbe mit; sie steht oben bei `#handy-oben`. */
+  #main{ padding-top:var(--hoben) }
   /* Der Inhalt muss unter der Aktionsleiste durchlaufen können, ohne dass
      die letzte Zeile darunter verschwindet: 120 px plus die Kerbe des
      Geräts. Vorher 96 — bei 72 px Leiste blieben 24 px Luft, und mit

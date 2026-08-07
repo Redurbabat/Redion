@@ -583,10 +583,14 @@ p('Der Seitenrand ist derselbe wie auf dem Start-Bildschirm',
 
 /* DIE LEISTE MUSS AUF DEN SCHMALEN GERÄTEN GANZ HINEINPASSEN. Gemessen bei
    390 px brauchte sie 395 px mit „Start" und 421 px mit „Eingang" — die
-   letzte Pille stand ausserhalb des Bildes und war nicht antippbar. Am
-   428er iPhone fiel das nie auf, und deshalb prüft dieser Abschnitt bei
-   375 UND 390. */
-for (const breite of [375, 390]) {
+   letzte Pille stand ausserhalb des Bildes und war nicht antippbar.
+
+   AM 428er FIEL DAS NIE AUF, und genau das war der Fehler dieser Prüfung:
+   sie kannte 375 und 390, aber nicht 428 und nicht 393. Als die Tasten
+   von 52 auf 56 px wuchsen (vier mal vier Pixel), kippte 428 auf 435 —
+   und niemand hätte es gemerkt, weil die eine Breite, die niemand prüfte,
+   ausgerechnet die häufigste grosse ist. Also alle vier gängigen. */
+for (const breite of [428, 393, 390, 375, 360]) {
   const schmal = await browser.newPage({
     viewport: { width: breite, height: 844 }, hasTouch: true, isMobile: true
   });
@@ -608,6 +612,57 @@ for (const breite of [375, 390]) {
   }) as string[];
   p(`Bei ${breite} px passen alle fünf Wege nebeneinander`, zuBreit.length === 0,
     zuBreit.join(', '));
+
+  /* UND DER INHALT DARF NICHT DAHINTER LIEGEN. Die Leiste steht fest oben;
+     was darunter kommt, muss sich genau um ihre Höhe nach unten setzen.
+     Gemessen am 7. August: Leiste 76 px, freigehaltener Platz 60 px — die
+     obersten 16 px des Zurück-Knopfes lagen dahinter. Am iPhone, wo die
+     Kerbe noch einmal 47 px dazulegt, wäre es die ganze Zeile gewesen,
+     denn die Kerbe wuchs nur in der Leiste mit, nicht im Platz darunter.
+
+     Hier wird bei 0 px Kerbe gemessen — was die Prüfung sichert, ist die
+     Gleichheit der beiden Zahlen. Solange BEIDE dieselbe Kerbe
+     dazurechnen, hält sie auch auf dem Gerät. */
+  const platz = await schmal.evaluate(() => ({
+    leiste: Math.round(document.getElementById('handy-oben')!
+              .getBoundingClientRect().height),
+    frei: Math.round(parseFloat(
+            getComputedStyle(document.getElementById('main')!).paddingTop)),
+    /* NICHT über `getComputedStyle` — das rechnet `env()` schon aus und
+       liefert auf diesem Rechner `calc(80px + 0px)`. Ob die Kerbe
+       überhaupt vorkommt, steht nur im Stilblatt selbst. */
+    marke: (() => {
+      let t = '';
+      /* Über `rule.style`, nicht über `cssText`: eine Verschachtelungs-
+         regel führt den ganzen Rumpf im Text mit, und in Chrome hat
+         inzwischen JEDE Stilregel eine (leere) `cssRules` — wer daran
+         entlangläuft, kommt an der Deklaration nie vorbei. */
+      const geh = (r: CSSRuleList) => {
+        for (const rr of [...r] as any[]) {
+          const wert = rr.style?.getPropertyValue?.('--hoben');
+          if (wert) t += wert.trim();
+          if (rr.cssRules?.length) geh(rr.cssRules);
+        }
+      };
+      for (const b of [...document.styleSheets]) {
+        try { geh(b.cssRules); } catch { /* fremde Herkunft */ }
+      }
+      return t;
+    })()
+  }));
+  p(`… und der Inhalt beginnt genau darunter (${breite} px)`,
+    platz.frei === platz.leiste,
+    `Leiste ${platz.leiste} px, freigehalten ${platz.frei} px`);
+  if (breite === 428) {
+    /* Der Teil, den dieser Rechner NICHT nachmessen kann. Hier ist die
+       Kerbe 0, also stimmen die beiden Zahlen auch dann, wenn nur die
+       Leiste sie mitrechnet. Auf dem iPhone wären es 47 px Unterschied.
+       Also wird stattdessen geprüft, dass die gemeinsame Marke die Kerbe
+       überhaupt kennt — die Leiste tut es nachweislich seit E37. */
+    p('Der freigehaltene Platz rechnet die Kerbe des Geräts mit',
+      /env\(\s*safe-area-inset-top/.test(platz.marke),
+      platz.marke || '--hoben steht nirgends');
+  }
   await schmal.close();
 }
 

@@ -2531,3 +2531,67 @@ Anfangswerte einträgt, die wirklich gemalt werden — mit
 `width:40px; transform:translateX(0)` glitt die Pille prompt über elf
 Zwischenorte herein und der Punkt wurde rot. Die Zeile ist also keine tote
 Vorsicht, sondern die Sicherung dagegen; das steht jetzt auch im Stilblatt.
+
+---
+
+## E50 · Die obere Leiste: 56 px, und ihre Höhe steht an EINER Stelle
+
+**Aus dem Entwurf:** 56 px hohe Tasten. Gebaut waren 52 — und unten, in der
+Aktionsleiste, standen längst 56. Zwei Zahlen für dieselbe Sache.
+
+**Der eigentliche Fund lag darunter.** Die Pillenleiste steht fest oben und
+rechnet sich aus 12 + 52 + 12 plus der Kerbe des Geräts. Der Platz darunter
+war eine getippte Zahl:
+
+```css
+#handy-oben{ padding: calc(12px + env(safe-area-inset-top)) 28px 12px }
+#main      { padding-top: 60px }
+```
+
+Gemessen am 7. August bei 390 px: die Leiste 76 px hoch, freigehalten
+60 px. **Die obersten 16 px des Zurück-Knopfes lagen dahinter** — und die
+Leiste ist undurchsichtig, es war also nicht nur ein Klickproblem.
+
+Am iPhone ist es schlimmer, und zwar systematisch: dort legt die Kerbe
+noch 47 px dazu — aber nur in der Leiste, nicht im Platz darunter. Aus
+16 px Überdeckung werden 63, also die ganze Zeile. Genau die Sorte Fehler,
+die auf keinem Entwicklerrechner auftaucht.
+
+**Jetzt eine Marke statt zweier Zahlen:**
+
+```css
+:root { --hoben: calc(80px + env(safe-area-inset-top)) }
+#main { padding-top: var(--hoben) }
+```
+
+**Und was das Wachsen sonst noch kippte.** Vier Tasten mal vier Pixel sind
+16 px, und die haben zwei Breiten aus dem Bild geschoben:
+
+```txt
+Breite   längster Reiter („Termine")    davor
+428 px   435 px  →  passte nicht        423 px  passte knapp
+390 px   395 px  →  passte nicht        379 px  passte
+```
+
+Gespart wird am Weissraum, nie an der Fläche, die der Daumen trifft. Die
+Stufen rücken deshalb früher zusammen — ab 440 px (das nimmt das 428er
+iPhone mit, das vorher ausserhalb jeder Regel stand) und noch einmal ab
+380 px. Damit passt jede gängige Telefonbreite: 428, 393, 390, 375, 360.
+Bei 320 px rollt die Leiste, und `pilleSchieben()` holt den gewählten
+Reiter ins Bild.
+
+**Und die Prüfung, die das nicht fand, war das dritte Problem.** Sie kannte
+375 und 390 — aber nicht 428. Die eine Breite, die niemand prüfte, war
+ausgerechnet die häufigste grosse. Sie prüft jetzt alle fünf, und dazu, dass
+der freigehaltene Platz genau der Leistenhöhe entspricht.
+
+Was dieser Rechner nicht nachmessen kann, ist die Kerbe: hier ist sie 0, und
+dann stimmen die beiden Zahlen auch dann, wenn nur eine sie mitrechnet.
+Geprüft wird deshalb zusätzlich, dass `--hoben` das `env(safe-area-inset-top)`
+überhaupt enthält — abgelesen am Stilblatt, nicht am gerechneten Wert, denn
+der sagt hier nur `calc(80px + 0px)`.
+
+**Status**
+
+`test114` §11, jetzt 15 Punkte. Gegenprobe: `--hoben` auf `60px` gesetzt →
+6 rot.

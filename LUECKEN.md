@@ -267,17 +267,17 @@ Termine und Eingang haben ihre eigenen Bereiche bekommen; der Codeblock
 seine Kopfzeile. Was das Hinsehen dabei fand, steht in E38 — fünf Fehler,
 und keinen davon hatte ein Prüflauf.
 
-**Aus Redurs Entwurf „Nocturne" gebaut** (E42–E49): der Reiter „Mehr" und
+**Aus Redurs Entwurf „Nocturne" gebaut** (E42–E50): der Reiter „Mehr" und
 der Bereich dahinter · der Kompass als Seite darin · die Farbwelt mit
 nachgerechneten Kontrasten · die Bewegungsmarken und die
 Berührungsrückmeldung · das Blatt „Neu erstellen" · das KI-Fenster als
 Blatt von unten · der Speicherbalken im R-Blatt · „Zuletzt gesucht" und
 ein Leer, das etwas sagt · die Ladeskelette · die versetzt einblendenden
-Listenzeilen · die Suchfilter als Marken · die gleitende Reiterpille.
+Listenzeilen · die Suchfilter als Marken · die gleitende Reiterpille · die
+56-px-Leiste oben, deren Höhe jetzt an einer Stelle steht.
 
 **Aus dem Entwurf fehlt noch:** die Zustandswechsel der Sicherungskarte
-(Kreisel → Haken) · die Masse der oberen Leiste (der Entwurf sagt 56 px,
-gebaut sind 52) · der Willkommensbildschirm (§11) · die Einstellungen als
+(Kreisel → Haken) · der Willkommensbildschirm (§11) · die Einstellungen als
 Karten (§12).
 
 **Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
