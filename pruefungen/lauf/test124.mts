@@ -256,6 +256,159 @@ p('Der technische Text steht NICHT auf der Karte',
   'er gehört hinter „Details kopieren", nicht vor die Augen');
 p('Stattdessen ein Satz in Alltagssprache', balken.form?.alltagssatz === true);
 
+console.log('\n6 · Die Meldung des Geräts — auf dem Weg, den ein iPhone kann');
+
+/* ===========================================================================
+ * DER FEHLER, GEGEN DEN DIESER ABSCHNITT STEHT (7. August 2026)
+ * ---------------------------------------------------------------------------
+ * Redion zeigte Erinnerungen mit
+ *
+ *     try { new Notification(text, { … }); } catch {}
+ *
+ * und auf einem iPhone ist das eine Zeile, die nichts tut. Eine
+ * INSTALLIERTE Web-App kennt den Konstruktor `Notification` dort gar nicht
+ * — Apple unterstützt ausschliesslich `registration.showNotification()`.
+ * Der Aufruf wirft `Illegal constructor`, das `catch` verschluckte es, und
+ * übrig blieb der Hinweis in der App. Genau die Funktion, um die Redur
+ * gebeten hatte, scheiterte auf seinem Gerät lautlos.
+ *
+ * WIE MAN DAS OHNE IPHONE PRÜFT. Nicht mit einem zweiten Browser, sondern
+ * indem man ihm dieselbe Einschränkung gibt: `window.Notification` wird
+ * durch einen Konstruktor ersetzt, der wirft — wie auf dem iPhone. Bleibt
+ * dann eine Meldung übrig, kann sie nur über die Registrierung gekommen
+ * sein. Der Weg ist der Beweis, nicht die Absicht.
+ * =========================================================================*/
+const meldung = await seite.evaluate(async () => {
+  const gesehen: any[] = [];
+  const echterKonstruktor = (window as any).Notification;
+  const echterSW = (navigator as any).serviceWorker;
+
+  /* DAS IPHONE NACHSTELLEN: der Konstruktor wirft, wie dort. */
+  const kaputt: any = function () { throw new TypeError('Illegal constructor'); };
+  kaputt.permission = 'granted';
+  (window as any).Notification = kaputt;
+
+  /* Die Registrierung wird NACHGESTELLT statt abgewartet. Auf das echte
+     Dienst-Skript zu warten hiesse, die Lebensdauer eines Service Workers
+     mitzuprüfen — und `serviceWorker.ready` bleibt offen, wenn nie eines
+     kommt: dieser Prüflauf blieb daran hängen. Gemessen wird Redions
+     Verzweigung, nicht die Maschinerie des Browsers. */
+  Object.defineProperty(navigator, 'serviceWorker', {
+    configurable: true,
+    get: () => ({
+      ready: Promise.resolve({
+        showNotification: (titel: string, o: any) => {
+          gesehen.push({ titel, body: o && o.body, tag: o && o.tag,
+                         seite: o && o.data && o.data.seite });
+          return Promise.resolve();
+        }
+      })
+    })
+  });
+
+  const weg = await Werkzeuge.geraeteMeldung('Erinnerung: Aufstehen', 'In Redion',
+                                             'e1', 'seite-42');
+
+  Object.defineProperty(navigator, 'serviceWorker',
+    { get: () => echterSW, configurable: true });
+  (window as any).Notification = echterKonstruktor;
+  return { weg, gesehen };
+}) as { weg: string; gesehen: any[] };
+
+p('Auch ohne `new Notification` kommt eine Meldung an',
+  meldung.gesehen.length === 1,
+  'genau das war der iPhone-Fall — vorher blieb hier nichts übrig');
+p('Sie geht über das Dienst-Skript', meldung.weg === 'dienst', meldung.weg);
+p('Der Text steht drin', meldung.gesehen[0]?.titel === 'Erinnerung: Aufstehen',
+  String(meldung.gesehen[0]?.titel));
+p('Und die Seite reist mit, damit der Tipp irgendwo hinführt',
+  meldung.gesehen[0]?.seite === 'seite-42', String(meldung.gesehen[0]?.seite));
+
+/* Und die Gegenrichtung: OHNE Dienst-Skript muss der alte Weg bleiben —
+   Redion soll auch per Doppelklick aus dem Dateisystem laufen (§6), und
+   dort lässt sich keines registrieren. */
+const ohneDienst = await seite.evaluate(async () => {
+  let gebaut: any = null;
+  try {
+    Object.defineProperty(Notification, 'permission',
+      { get: () => 'granted', configurable: true });
+  } catch {}
+  const echterKonstruktor = (window as any).Notification;
+  const attrappe: any = function (this: any, titel: string, o: any) {
+    gebaut = { titel, body: o && o.body }; this.onclick = null;
+  };
+  attrappe.permission = 'granted';
+  (window as any).Notification = attrappe;
+
+  /* Kein Dienst-Skript: `serviceWorker` verschwindet für diesen Aufruf. */
+  const echterSW = (navigator as any).serviceWorker;
+  Object.defineProperty(navigator, 'serviceWorker',
+    { get: () => undefined, configurable: true });
+
+  const weg = await Werkzeuge.geraeteMeldung('Ohne Dienst', 'Text', 'e2', '');
+
+  Object.defineProperty(navigator, 'serviceWorker',
+    { get: () => echterSW, configurable: true });
+  (window as any).Notification = echterKonstruktor;
+  return { weg, gebaut };
+}) as { weg: string; gebaut: any };
+
+p('Ohne Dienst-Skript bleibt der alte Weg', ohneDienst.weg === 'fenster', ohneDienst.weg);
+p('… und zeigt denselben Text', ohneDienst.gebaut?.titel === 'Ohne Dienst',
+  String(ohneDienst.gebaut?.titel));
+
+/* ---------------------------------------------------------------------------
+ * UND DER FALL, DER DIESEN PRÜFLAUF SELBST ZUM HÄNGEN BRACHTE
+ * ---------------------------------------------------------------------------
+ * `navigator.serviceWorker.ready` wird nie ABGELEHNT. Kommt nie eines,
+ * bleibt das Versprechen einfach offen — für immer. Der erste Entwurf von
+ * `geraeteMeldung` wartete darauf ohne Frist und hätte die Erinnerung damit
+ * ganz verschluckt, statt sie über den Rückfall zu zeigen: schlimmer als
+ * der Fehler, den sie beheben sollte. Gefunden hat es dieser Abschnitt,
+ * indem er daran hängenblieb.
+ * -------------------------------------------------------------------------*/
+const haengt = await seite.evaluate(async () => {
+  const echterKonstruktor = (window as any).Notification;
+  const echterSW = (navigator as any).serviceWorker;
+  let gebaut: any = null;
+
+  const attrappe: any = function (this: any, titel: string) { gebaut = { titel }; };
+  attrappe.permission = 'granted';
+  (window as any).Notification = attrappe;
+
+  /* Ein `ready`, das nie fertig wird — genau wie im Browser ohne Skript. */
+  Object.defineProperty(navigator, 'serviceWorker', {
+    configurable: true,
+    get: () => ({ ready: new Promise(() => { /* nie */ }) })
+  });
+
+  const start = Date.now();
+  const weg = await Werkzeuge.geraeteMeldung('Trotzdem', 'Text', 'e3', '');
+  const dauer = Date.now() - start;
+
+  Object.defineProperty(navigator, 'serviceWorker',
+    { get: () => echterSW, configurable: true });
+  (window as any).Notification = echterKonstruktor;
+  return { weg, dauer, gebaut };
+}) as { weg: string; dauer: number; gebaut: any };
+
+p('Ein Dienst-Skript, das nie fertig wird, verschluckt die Meldung nicht',
+  haengt.weg === 'fenster', haengt.weg + ' nach ' + haengt.dauer + ' ms');
+p('… und die Frist greift in wenigen Sekunden', haengt.dauer < 4000,
+  haengt.dauer + ' ms — ohne Frist wäre es nie zurückgekommen');
+p('… und der Text ist trotzdem da', haengt.gebaut?.titel === 'Trotzdem');
+
+/* Der Tipp auf die Meldung gehört ab jetzt dem Dienst-Skript. Ohne diesen
+   Zweig öffnet er gar nichts — geprüft an der Quelle, weil ein Prüflauf
+   keine Systemmeldung antippen kann. */
+const swQuelle = await (await import('node:fs')).promises.readFile(
+  path.join(WURZEL, 'sw.js'), 'utf8');
+p('Das Dienst-Skript nimmt den Tipp entgegen',
+  /addEventListener\('notificationclick'/.test(swQuelle),
+  'ohne `notificationclick` führt die Meldung ins Leere');
+p('… und holt ein offenes Fenster nach vorn, statt ein zweites zu öffnen',
+  /matchAll/.test(swQuelle) && /focus\(\)/.test(swQuelle));
+
 p('Keine echten JS-Fehler beim Laden', jsFehler.length === 0, jsFehler.slice(0, 2).join(' · '));
 
 await browser.close();

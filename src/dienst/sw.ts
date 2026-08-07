@@ -240,6 +240,45 @@ const beimFenster = async (anfrage: Request) => {
   return alsAntwort(erg);
 };
 
+/* ===========================================================================
+ * EINE UMGELEITETE ANTWORT DARF NICHT AUS DEM DIENST-SKRIPT KOMMEN
+ * ---------------------------------------------------------------------------
+ * GEMELDET VOM IPHONE (7. August 2026), und die App startete gar nicht:
+ *
+ *     Safari kann die Seite nicht öffnen.
+ *     Fehler: „Response served by service worker has redirections"
+ *
+ * WebKit verbietet das strikt: Beantwortet ein Dienst-Skript eine
+ * SEITENNAVIGATION mit einer Antwort, die durch eine Umleitung entstanden
+ * ist (`response.redirected`), bricht Safari ab. Kein Inhalt, keine App,
+ * eine Meldung, die nicht sagt, woher sie kommt.
+ *
+ * WIE ES DAZU KAM. Im Manifest stand `start_url: "/index.html"`. Cloudflare
+ * beantwortet diesen Weg mit einer Umleitung auf `/` — beim Aufruf im
+ * Browser fällt das nicht auf, weil der Browser ihr einfach folgt. Die
+ * installierte App startet aber GENAU auf `start_url`, die Anfrage läuft
+ * durch dieses Dienst-Skript, und die umgeleitete Antwort ging ungeprüft
+ * hinaus. Das Manifest zeigt jetzt auf `/`, wo es nichts umzuleiten gibt.
+ *
+ * DIESE FUNKTION BLEIBT TROTZDEM, und das ist der Punkt: sie hängt nicht
+ * davon ab, dass ein Server sich wohlverhält. Jede Umleitung irgendeines
+ * Anbieters — ein Wechsel auf HTTPS, ein Schrägstrich zu viel, eine
+ * Anmeldeschleife — träfe sonst wieder die ganze App. Die Antwort wird
+ * neu zusammengesetzt: derselbe Inhalt, dieselben Kopfzeilen, nur ohne
+ * die Marke „umgeleitet".
+ *
+ * Nur für Navigationen. Bei Skripten und Bildern stört die Marke nicht,
+ * und ein unnötiges Umkopieren des Körpers kostet Speicher.
+ * =========================================================================*/
+const ohneUmleitung = (anfrage: Request, antwort: Response): Response => {
+  if (anfrage.mode !== 'navigate' || !antwort.redirected) return antwort;
+  return new Response(antwort.body, {
+    status: antwort.status,
+    statusText: antwort.statusText,
+    headers: antwort.headers
+  });
+};
+
 ich.addEventListener('fetch', (e) => {
   const anfrage = e.request;
   const u0 = new URL(anfrage.url);
@@ -270,10 +309,10 @@ ich.addEventListener('fetch', (e) => {
     }).catch(() => null);
 
     /* Sofort ausliefern, was da ist; im Hintergrund neu holen. */
-    if (gemerkt) { e.waitUntil(netz); return gemerkt; }
+    if (gemerkt) { e.waitUntil(netz); return ohneUmleitung(anfrage, gemerkt); }
 
     const frisch = await netz;
-    if (frisch) return frisch;
+    if (frisch) return ohneUmleitung(anfrage, frisch);
 
     /* Weder Speicher noch Netz.
        ----------------------------------------------------------------------
@@ -305,4 +344,47 @@ ich.addEventListener('fetch', (e) => {
 /* Die App kann sich melden, wenn sie eine neue Fassung will. */
 ich.addEventListener('message', (e) => {
   if (e.data === 'aktualisieren') ich.skipWaiting();
+});
+
+/* ===========================================================================
+ * EIN TIPP AUF DIE ERINNERUNG FÜHRT ZUR SEITE
+ * ---------------------------------------------------------------------------
+ * WARUM DAS HIER STEHT UND NICHT IN DER APP. Erinnerungen werden seit dem
+ * 7. August über `registration.showNotification()` gezeigt und nicht mehr
+ * über `new Notification()`. Der Grund ist das iPhone: dort kennt eine
+ * installierte Web-App den Konstruktor `Notification` gar nicht, er wirft
+ * `Illegal constructor` — und in Redion stand dieser Aufruf in einem
+ * `try/catch`, das den Fehler verschluckte. Auf dem Telefon erschien also
+ * der Hinweis in der App und **sonst nichts**, ohne dass irgendwo stand,
+ * warum. Genau die Funktion, um die Redur gebeten hatte.
+ *
+ * Eine so gezeigte Meldung gehört aber dem Dienst-Skript, nicht der Seite.
+ * `notification.onclick` in der App greift bei ihr nicht mehr; der Tipp
+ * kommt hier an. Ohne diesen Zweig öffnet ein Tipp gar nichts.
+ *
+ * Der Weg zur Seite läuft über den Hash, weil Redion Seiten so öffnet
+ * (`App.oeffne` schreibt die Kennung dorthin). Ein schon offenes Fenster
+ * wird nach vorn geholt, statt ein zweites aufzumachen — zwei Redions
+ * nebeneinander wären der Anfang jedes Mehr-Tab-Problems (§16).
+ * =========================================================================*/
+ich.addEventListener('notificationclick', (e) => {
+  const meldung = (e as any).notification;
+  meldung.close();
+  const seite = (meldung.data && meldung.data.seite) || '';
+  const ziel = seite ? './#' + seite : './';
+
+  e.waitUntil((async () => {
+    const fenster = await (ich as any).clients.matchAll(
+      { type: 'window', includeUncontrolled: true });
+    for (const f of fenster) {
+      /* Dasselbe Redion, das schon offen ist — nach vorn holen und dorthin
+         schicken. `navigate` kann fehlschlagen, wenn das Fenster einer
+         anderen Herkunft gehört; dann bleibt wenigstens der Fokus. */
+      if (f.url.indexOf(ich.registration.scope) === 0) {
+        try { if (seite) await f.navigate(ziel); } catch { /* dann eben nur Fokus */ }
+        return f.focus();
+      }
+    }
+    return (ich as any).clients.openWindow(ziel);
+  })());
 });

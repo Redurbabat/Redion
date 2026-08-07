@@ -1988,3 +1988,127 @@ gemessen. Steht so in `LUECKEN.md` L14.
 Beschlossen und gebaut. `test103` (36 Punkte, davon 6 mit fremdem Werkzeug),
 `test100` Abschnitt 4 umgeschrieben — er hielt bis heute die Gegenrichtung
 fest. `doku/REDION-FORMAT.md` beschreibt das Format.
+
+---
+
+## E40 · Meldungen gehören dem Dienst-Skript, nicht dem Fenster
+
+**Der Fund.** Redion zeigte Erinnerungen so:
+
+```js
+try { new Notification(text, { … }); } catch {}
+```
+
+Auf einem iPhone ist das eine Zeile, die nichts tut. Eine **installierte**
+Web-App kennt den Konstruktor `Notification` dort gar nicht — Apple
+unterstützt ausschliesslich `ServiceWorkerRegistration.showNotification()`.
+Der Aufruf wirft `Illegal constructor`, das `catch` verschluckte es, und
+übrig blieb der Hinweis innerhalb der App.
+
+Das ist genau die Funktion, um die Redur gebeten hatte („wenn ich beim
+Kalender sage morgen um 08:00 Uhr aufstehen, sollte mir in dieser Uhrzeit
+erinnern") — und sie scheiterte auf seinem Gerät lautlos. Ein `catch {}` um
+einen Aufruf, der auf einer ganzen Plattform nicht existiert, ist kein
+Schutz, sondern ein Deckel.
+
+**Die Entscheidung.** Zuerst der Weg über die Registrierung, `new
+Notification` nur noch als Rückfall.
+
+```txt
+registration.showNotification()   der einzige Weg, den iOS kennt
+new Notification()                Rückfall ohne Dienst-Skript (§6)
+```
+
+Er ist nicht nur der einzige, den iOS kann, er ist auch der bessere: eine so
+gezeigte Meldung überlebt das Schliessen des Fensters, und der Tipp darauf
+landet im Dienst-Skript, das die Seite öffnen kann.
+
+**Und deshalb `notificationclick` im Dienst-Skript.** Bei einer über die
+Registrierung gezeigten Meldung greift `notification.onclick` in der Seite
+nicht mehr. Ohne diesen Zweig hätte ein Tipp auf die Erinnerung **gar nichts**
+geöffnet — die halbe Umstellung wäre schlechter gewesen als keine. Er holt
+ein offenes Redion nach vorn, statt ein zweites Fenster aufzumachen; zwei
+nebeneinander wären der Anfang jedes Mehr-Tab-Problems (§16).
+
+**Der Fehler, den die eigene Prüfung fand.** Der erste Entwurf wartete auf
+`navigator.serviceWorker.ready` — und dieses Versprechen wird **nie
+abgelehnt**. Kommt nie ein Dienst-Skript, bleibt es für immer offen. Damit
+hätte `geraeteMeldung` die Erinnerung ganz verschluckt, statt sie über den
+Rückfall zu zeigen: schlimmer als der Fehler, den sie beheben sollte.
+Gefunden hat es der Prüflauf, indem er daran hängenblieb. Jetzt eine Frist
+von 1,5 Sekunden, und die Gegenprobe ist eindeutig — ohne sie hängt
+`test124` statt rot zu werden.
+
+**Wie man das ohne iPhone prüft.** Nicht mit einem zweiten Browser, sondern
+indem man ihm dieselbe Einschränkung gibt: `window.Notification` wird durch
+einen Konstruktor ersetzt, der wirft. Bleibt dann eine Meldung übrig, kann
+sie nur über die Registrierung gekommen sein. **Der Weg ist der Beweis,
+nicht die Absicht.**
+
+**Was das NICHT löst.** Ist Redion geschlossen, meldet sich weiterhin
+nichts. Dafür braucht es Web Push — VAPID-Schlüssel, Anmeldung je Gerät,
+ein Dienst, der zur richtigen Zeit sendet. Steht als L33 offen; die Hälfte
+im Browser ist damit gebaut, die Hälfte auf dem Server fehlt ganz.
+
+**Status**
+
+Beschlossen und gebaut. `test124` Abschnitt 6, elf Punkte. Beide
+Gegenproben treffen: ohne den Weg über die Registrierung bleibt keine
+Meldung übrig, ohne die Frist hängt der Lauf.
+
+---
+
+## E41 · Ein Dienst-Skript gibt keine umgeleitete Antwort heraus
+
+**Die Meldung.** Redur, 7. August, vom iPhone — Redion als App auf den
+Home-Bildschirm gelegt, angetippt:
+
+```txt
+Safari kann die Seite nicht öffnen.
+Fehler: „Response served by service worker has redirections"
+```
+
+Kein Inhalt, keine App. Und eine Meldung, die nicht sagt, woher sie kommt.
+
+**Was dahintersteckt.** Beantwortet ein Dienst-Skript eine
+SEITENNAVIGATION mit einer Antwort, die durch eine Umleitung entstanden ist
+(`response.redirected`), lehnen die Browser sie ab. Safari sagt den Satz
+oben, Chromium sagt „a redirected response was used for a request whose
+redirect mode is not follow" — die Wirkung ist dieselbe.
+
+Im Manifest stand `start_url: "/index.html"`, und Cloudflare beantwortet
+diesen Weg mit einer Umleitung auf `/`.
+
+**Warum das im Browser nie auffiel, und das ist der lehrreiche Teil.** Ruft
+man Redion gewöhnlich auf, folgt der Browser der Umleitung selbst, und das
+Dienst-Skript steht dabei nicht im Weg. Die **installierte** App startet
+aber genau auf `start_url` — und dort läuft die Anfrage durch das Skript.
+Der Fehler traf also ausschliesslich den Fall, den keine Prüfung nachstellte
+und den man nur auf einem Gerät sieht.
+
+**Zwei Hälften, und keine ersetzt die andere.**
+
+```txt
+Manifest      start_url zeigt auf „/", wo es nichts umzuleiten gibt
+Dienst-Skript baut eine umgeleitete Antwort neu auf, bevor sie hinausgeht
+```
+
+Nur das Manifest zu ändern wäre eine Reparatur, die vom Wohlverhalten eines
+Anbieters abhängt: jede andere Umleitung — ein Wechsel auf HTTPS, ein
+Schrägstrich zu viel, eine Anmeldeschleife — träfe wieder die ganze App.
+Nur das Skript zu ändern hiesse, bei jedem Start eine Umleitung
+hinzunehmen, die niemand braucht.
+
+Neu aufgebaut wird nur bei Navigationen. Bei Skripten und Bildern stört die
+Marke nicht, und ein unnötiges Umkopieren des Körpers kostet Speicher.
+
+**Wie das geprüft wird.** `test125` stellt einen Server hin, der
+`/index.html` auf `/` umleitet — wie Cloudflare —, registriert das echte
+Dienst-Skript und lässt es die Seite kontrollieren. Die Gegenprobe ist
+eindeutig: mit abgeschaltetem Schutz endet der Aufruf in `net::ERR_FAILED`
+und die Seite bleibt leer. Ein Abschnitt prüft ausserdem, dass der Server
+**wirklich** umgeleitet hat — ohne das könnte der Rest gar nicht rot werden.
+
+**Status**
+
+Beschlossen und gebaut. `test125`, 9 Punkte.
