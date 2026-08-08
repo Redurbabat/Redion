@@ -3885,3 +3885,86 @@ Ansichtsarten, das Register dreizehn · die Telefongrenze steht als 700,
 760 und 768 nebeneinander · vier Grössengrenzen der Dateiablage stehen je
 zweimal. Ein Fehlalarm war auch dabei: `#topbar .nur-telefon` wird
 absichtlich ausgeblendet, seit die Pillenleiste die Kopfleiste ist.
+
+---
+
+## E66 · Ein Typ, der lügt, ist schlimmer als keiner
+
+**Datum** 8. August 2026 · **Prüflauf** `test139` (24 Punkte)
+
+Die Typen unter `src/core/types/` erzeugen nichts — `noEmit`. Niemand
+merkt zur Laufzeit, wenn sie danebenliegen, und `tsc` prüft nur, ob der
+Code zum Typ passt, nicht ob der Typ zur Datei auf der Festplatte passt.
+Zwei lagen daneben.
+
+**Die Sicherung: Verzeichnisse, keine Listen**
+
+```txt
+Der Typ sagte:   blocks: RedionBlock[]
+Geschrieben wird: cache.blocks — ein Record<string, any>
+Gelesen wird:     d.blocks || {}
+```
+
+So steht es in **jeder** bereits geschriebenen Sicherungsdatei. Der Typ war
+also nicht streng, sondern falsch, und wer danach programmiert hätte, wäre
+auf `daten.blocks.map(...)` gekommen — ein Fehler, den die Datei nicht
+erklärt.
+
+Geändert wurde der **Typ**, nie das Format. CLAUDE.md §52.8 sagt es in
+einem Satz: nicht raten, welche Felder es gibt, sondern nachsehen. Ein
+Format zu ändern, um einen Typ zu retten, macht jede vorhandene Sicherung
+unlesbar.
+
+`versions` bleibt eine Liste, und das stimmt auch — der Verlauf kommt nicht
+aus `cache`, sondern wird beim Sichern eingelesen.
+
+**Die Ansichtsarten: zwölf gegen dreizehn**
+
+`ViewLayout` zählte zwölf auf. `Register.ansichten` führt dreizehn:
+`raster` fehlte im Typ, obwohl es die Ansicht seit langem gibt — die
+Tabellenbedienung mit Pfeiltasten und Bereichsauswahl, laut eigenem
+Kommentar „Notions grösste Lücke bei der Eingabe". Ein Typ, der eine
+gebaute Ansicht nicht kennt, weist gültigen Code ab.
+
+**Wie das geprüft wird, und warum umständlich**
+
+`test139` liest den **Quelltext der Typdatei** und vergleicht ihn mit dem,
+was die laufende App tut: eine echte Sicherung wird geschrieben und Feld
+für Feld nachgesehen, ob es Liste oder Verzeichnis ist; die Ansichtsliste
+wird beim Register erfragt. Das ist mehr Arbeit als eine Typprüfung — aber
+eine Typprüfung kann diesen Fehler prinzipiell nicht finden.
+
+**Ein Fehler beim Bauen des Prüflaufs, der hierher gehört**
+
+Der Ausdruck, der den Typ aus der Datei schneidet, hiess zuerst
+`/export interface RedionPackageData[^}]*}/`. Der erklärende Kommentar im
+Typ nennt aber `d.blocks || {}` — und an dieser Klammer hörte der Ausschnitt
+auf. Alle vier Felder galten als „fehlt", und der Lauf meldete fünf rote
+Punkte für einen Zustand, den es nicht gab.
+
+Das ist derselbe Fall wie bei `test136` heute früh: **ein Prüflauf, der
+das Falsche misst, ist so wenig wert wie einer, der nichts misst.** Beide
+Male half nur, dem roten Punkt zu misstrauen und nachzusehen.
+
+**Was dabei ein Fehlalarm war**
+
+Die Suche meldete auch, `TOC_STUFEN` im Editor und der Überschriftenfilter
+in `inhaltsflaeche.ts` gingen auseinander — der eine kennt `toggle-h1`, der
+andere nicht. Nachgesehen: eine Toggle-Überschrift wird als `type: 'h1'`
+mit `toggleKopf: true` gespeichert (`'toggle-h1'.slice(7)` ist `'h1'`). Die
+zusätzlichen Schlüssel sind **tote Einträge**, die nie zutreffen.
+
+Die Doppelung war also echt, der Fehler nicht. Beide Stellen lesen jetzt
+trotzdem `Register.bloecke.ueberschriften()` — zwei Kataloge für dieselbe
+Sache sind auch ohne Schaden zwei zu viel, und §8 sagt, wo so etwas
+hingehört.
+
+**Status**
+
+`test139`, 24 Punkte. Gegenprobe — beide Typen zurück auf falsch:
+
+```txt
+✗ … und sagt für `blocks` ein Verzeichnis — RedionBlock[]
+✗ … und sagt für `views` ein Verzeichnis — RedionView[]
+✗ Jede Ansicht des Registers steht auch im Typ — fehlt im Typ: ["raster"]
+```

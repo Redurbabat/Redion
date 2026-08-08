@@ -17,7 +17,7 @@
  * jede vorhandene Sicherung unlesbar machen. Sie bleiben deutsch.
  * ==========================================================================*/
 
-import type { FileId, ISODateTime } from './id.js';
+import type { BlockId, CollectionId, FileId, ISODateTime, ViewId } from './id.js';
 import type { RedionBlock, RedionVersion } from './block.js';
 import type { RedionDatabase, RedionView } from './database.js';
 import type { RedionFile } from './file.js';
@@ -62,10 +62,21 @@ export interface RedionPackageManifest {
  * stiller Verlust werden: `hinweis` gehört dem Nutzer gezeigt.
  */
 export interface RedionPackageData extends RedionPackageManifest {
-  blocks: RedionBlock[];
-  collections: RedionDatabase[];
-  views: RedionView[];
-  meta: MetaEntry[];
+  /* VERZEICHNISSE, KEINE LISTEN — und das ist keine Geschmacksfrage.
+     Hier stand `RedionBlock[]`. Geschrieben wird aber `cache.blocks`, und
+     das ist in `kern/ablage/indexdb.ts` ein `Record<string, any>`; der
+     Einleser holt es mit `d.blocks || {}` genauso zurück. So steht es
+     wörtlich in JEDER bereits geschriebenen Sicherungsdatei.
+     Der Typ war also nicht streng, sondern falsch — und einer, der
+     danach programmiert hätte, wäre auf `daten.blocks.map(...)` gekommen
+     und hätte einen Fehler bekommen, den die Datei nicht erklärt.
+     Geändert wird der TYP, nie das Format: CLAUDE.md §52.8. */
+  blocks: Record<BlockId, RedionBlock>;
+  collections: Record<CollectionId, RedionDatabase>;
+  views: Record<ViewId, RedionView>;
+  meta: Record<string, unknown>;
+  /* Der Verlauf ist wirklich eine Liste — er kommt nicht aus `cache`,
+     sondern wird beim Sichern eingelesen (`exportVersionen`). */
   versions: RedionVersion[];
 }
 

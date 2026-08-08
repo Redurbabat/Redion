@@ -56,6 +56,11 @@ export interface RedionDatabase {
 /** Die zwölf Ansichtsarten aus `Register.ansichten`. */
 export type ViewLayout =
   | 'table'
+  /* `raster` stand hier nicht, obwohl das Register es seit jeher führt —
+     die Tabellenbedienung mit Pfeiltasten und Bereichsauswahl. Ein Typ,
+     der eine gebaute Ansicht nicht kennt, weist gültigen Code ab.
+     `test139` vergleicht diese Liste jetzt mit `Register.ansichten`. */
+  | 'raster'
   | 'board'
   | 'timeline'
   | 'calendar'

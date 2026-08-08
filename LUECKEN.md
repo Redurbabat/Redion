@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 108 Prüfläufe**
+**8. August 2026 · 111 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -47,6 +47,9 @@ L10  die weiche Kante am Rollfeld (E63) — am Telefon stand `1'450.00 CHF`
      als `1'45` da, mit scharfer Kante und damit als andere Zahl
 L10  Fingermasse im Tabellenblock (E64) — Zelle 40 px, Formelzeile 32,
      wo §37 44 verlangt; dazu eine Zahl, die an zwei Stellen steht
+L22  fensterweise Zeichnen rechnete mit 34 px je Zeile (E65) — bei „alle
+     Einträge" und weitem Rollen sah man die falschen Zeilen
+—    zwei Typen, die über das eigene Format logen (E66)
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -591,6 +594,59 @@ nur den Textbestand ab) · verschlüsselte Anhänge · Schlüsselwechsel.
 Fehlt: Messungen mit zehntausend Seiten · virtualisierte Listen ·
 Suchindex, der nicht bei jedem Start neu entsteht · Speichermessung bei
 Export und Import.
+
+## L34 · Ein Wert, der an zwei Stellen steht
+
+**Stand** — ◐ dreimal behoben (E64 zweimal, E65), der Rest ist gelistet.
+
+Am 8. August dreimal an einem Tag gefunden: eine Zahl steht an zwei
+Stellen, nichts erzwingt Gleichheit, und die Abweichung ist erst nach dem
+Rollen sichtbar. Danach wurde gezielt gesucht — fünf Blickwinkel,
+22 Kandidaten.
+
+**Behoben**
+
+```txt
+ZH_HANDY gegen --tbl-zh, im Tabellenblock          E64
+ZH_HANDY gegen --tbl-zh, im Datenbankraster        E64
+tempo.ts rechnete mit 34 px je Zeile               E65 — jetzt gemessen
+RedionPackageData sagte Listen, es sind Verzeichnisse  E66
+ViewLayout kannte `raster` nicht                   E66
+Überschriften standen in zwei Katalogen            E66 — jetzt im Register
+```
+
+**Offen, nach Schaden sortiert**
+
+```txt
+daten    Die Dateigrenze von 100 MB steht als blanke Zahl in
+         kern/abgleich/maschine.ts:722 und als DATEI_GRENZE in
+         server/dateien.ts:41. Sie stimmen heute überein.
+daten    STUECK (1 MB) steht in kern/einstellung/konstanten.ts:38 und
+         noch einmal als eigenes Literal in bereiche/dateien/ablage.ts:45.
+daten    DATEI_MAX (500 MB) ebenso — konstanten.ts:37 gegen ablage.ts:47.
+anzeige  Die Telefongrenze gibt es dreimal: 768 als
+         KONSTANTEN.TELEFON_BREITE, 760 in 38 CSS-Regeln und in
+         menue.ts/ansicht.ts/raster.ts, 700 in pwa.ts und schale.ts.
+         Zwischen 701 und 768 widersprechen sie sich.
+anzeige  Die Kopfleistenhöhe: --hoben ist 80 px + Kerbe, die Schublade
+         rechnet mit top:60px.
+anzeige  Der Ziffern-Blocktyp steht im Register als `kurz` und dreimal
+         als Zuordnung im Editor.
+anzeige  TYP_GRUPPEN in steuerung.ts baut Register.eigenschaften nach.
+kosmetik ABLAGE_NAME ('notizen') steht in konstanten.ts und noch einmal
+         als Zeichenkette in dienst/sw.ts:421.
+kosmetik EINFACHE_TYPEN steht in editor.ts zweimal, 23 Zeilen auseinander.
+kosmetik KACHEL (256) und die Seitenleistenbreite (260) je zweimal.
+```
+
+**Ein Fehlalarm war auch dabei** — `#topbar .nur-telefon` wird absichtlich
+ausgeblendet, seit die Pillenleiste die Kopfleiste ist.
+
+**Die Lehre, dreimal bestätigt** — wo ein Wert schon irgendwo steht, soll
+man ihn **lesen**, nicht abschreiben. Geht das nicht, weil das Rechnen ihn
+vor dem Zeichnen braucht, dann muss ein Prüflauf die Gleichheit nachrechnen.
+Ein Kommentar „muss übereinstimmen" reicht nicht: genau der stand bei
+`ZH_HANDY` und hat nichts verhindert.
 
 ---
 

@@ -1126,7 +1126,13 @@ const Blocks = (() => {
        also auch in Toggles, Spalten und Callouts, nimmt Toggle-Überschriften mit,
        kann durchnummerieren und hebt hervor, wo man gerade steht. Notions
        Verzeichnis kennt nur die oberste Ebene. */
-    const TOC_STUFEN = { h1: 1, h2: 2, h3: 3, 'toggle-h1': 1, 'toggle-h2': 2, 'toggle-h3': 3 };
+    /* Aus dem Register, nicht abgeschrieben. Hier stand dieselbe Liste, die
+       `schale/aufbau/inhaltsflaeche.ts` ein zweites Mal führte — dort ohne
+       die Toggle-Überschriften. Eine Seite aus Toggle-Überschriften bekam
+       deshalb hier Einträge und im Gliederungsstreifen keine. */
+    const TOC_STUFEN = (typeof Register !== 'undefined' && Register.bloecke?.ueberschriften)
+        ? Register.bloecke.ueberschriften()
+        : { h1: 1, h2: 2, h3: 3, 'toggle-h1': 1, 'toggle-h2': 2, 'toggle-h3': 3 };
     const ueberschriftenDerSeite = (seitenId) => {
         const gefunden = [];
         const lauf = (id, tiefe) => {
