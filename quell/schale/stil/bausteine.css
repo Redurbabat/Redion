@@ -135,7 +135,9 @@
    ========================================================================== */
 :root{ --vh: 1vh; }
 
-@media(max-width:700px){
+/* 760, nicht 700 — dieselbe Grenze wie die Telefonleisten.
+   Dazwischen lagen sie sonst ÜBER der Rechner-Seitenleiste. */
+@media(max-width:760px){
   html, body{ height:calc(var(--vh, 1vh) * 100); overflow:hidden; }
 
   /* Rand um Kerbe und Streifen */
@@ -266,7 +268,9 @@
 
 /* Der Menue-Knopf erscheint nur auf dem Telefon */
 .nur-telefon{ display:none; }
-@media(max-width:700px){ .nur-telefon{ display:inline-flex; } }
+/* 760, nicht 700 — dieselbe Grenze wie die Telefonleisten.
+   Dazwischen lagen sie sonst ÜBER der Rechner-Seitenleiste. */
+@media(max-width:760px){ .nur-telefon{ display:inline-flex; } }
 
 /* Als installierte App: kein Textmarkieren beim langen Tippen auf Knoepfe */
 @media(display-mode: standalone){

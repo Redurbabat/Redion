@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 111 Prüfläufe**
+**8. August 2026 · 112 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -615,15 +615,12 @@ ViewLayout kannte `raster` nicht                   E66
 Überschriften standen in zwei Katalogen            E66 — jetzt im Register
 STUECK, KLEIN und DATEI_MAX je zweimal             E67 — jetzt aus KONSTANTEN
 Die Serverzahl 100 MB stand blank in maschine.ts   E67 — benannt und geprüft
+Die Telefongrenze stand als 700, 760 und 768       E68 — jetzt eine
 ```
 
 **Offen, nach Schaden sortiert**
 
 ```txt
-anzeige  Die Telefongrenze gibt es dreimal: 768 als
-         KONSTANTEN.TELEFON_BREITE, 760 in 38 CSS-Regeln und in
-         menue.ts/ansicht.ts/raster.ts, 700 in pwa.ts und schale.ts.
-         Zwischen 701 und 768 widersprechen sie sich.
 anzeige  Die Kopfleistenhöhe: --hoben ist 80 px + Kerbe, die Schublade
          rechnet mit top:60px.
 anzeige  Der Ziffern-Blocktyp steht im Register als `kurz` und dreimal

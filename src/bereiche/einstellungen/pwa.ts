@@ -41,7 +41,7 @@ const PWA = (() => {
     /* `navigator.standalone` gibt es nur auf dem iPhone; die Typen kennen
        es nicht. Deshalb hier nachgefragt statt behauptet. */
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  const istTelefon = () => window.matchMedia('(max-width: 700px)').matches;
+  const istTelefon = () => window.matchMedia('(max-width: 760px)').matches;
 
   /* ------------------------------------------------------------------------
    * SERVICE WORKER

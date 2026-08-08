@@ -57,8 +57,11 @@ const AppEinstellung = (() => {
   };
 
   const amTelefon = () => {
-    try { return window.innerWidth < (typeof KONSTANTEN !== 'undefined'
-            ? KONSTANTEN.TELEFON_BREITE : 768); }
+    /* `<=`, nicht `<`. Die CSS sagt `max-width: 760px`, und das schliesst
+       760 EIN. Mit `<` hätte genau die Breite 760 hier „Rechner" geheissen
+       und dort „Telefon" — ein Pixel breites Band, das man nie findet. */
+    try { return window.innerWidth <= (typeof KONSTANTEN !== 'undefined'
+            ? KONSTANTEN.TELEFON_BREITE : 760); }
     catch { return false; }
   };
 

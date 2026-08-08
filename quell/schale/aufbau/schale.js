@@ -2447,7 +2447,7 @@ const App = (() => {
         /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
            die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
            gesetzt. Die Bedingung war damit nie wahr. */
-        if (window.matchMedia('(max-width: 700px)').matches && !ausHash) {
+        if (window.matchMedia('(max-width: 760px)').matches && !ausHash) {
             try {
                 Ansichten.start();
             }
@@ -2594,7 +2594,7 @@ const App = (() => {
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
             Seitenleiste.reiter('bespr');
-            if (window.matchMedia('(max-width: 700px)').matches) {
+            if (window.matchMedia('(max-width: 760px)').matches) {
                 Ansichten.termine();
                 handyLeiste();
                 return;
@@ -2610,7 +2610,7 @@ const App = (() => {
         /* Am Telefon das Blatt (Vorgabe §18), am Rechner der Direktweg: dort
            gibt es Strg+N, die Seitenleiste und die Befehlspalette. */
         an('hu-neu', () => {
-            if (window.matchMedia('(max-width: 700px)').matches)
+            if (window.matchMedia('(max-width: 760px)').matches)
                 erstellenBlatt();
             else
                 neueSeite();
@@ -2629,7 +2629,7 @@ const App = (() => {
          * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
          * -------------------------------------------------------------------- */
         an('hl-konto', () => {
-            if (!window.matchMedia('(max-width: 700px)').matches) {
+            if (!window.matchMedia('(max-width: 760px)').matches) {
                 if (PWA.schubladeAuf)
                     PWA.schubladeAuf();
                 return;
@@ -2673,7 +2673,7 @@ const App = (() => {
                können Telefon-Browser nicht, und eine Datei auf die Seite ziehen
                kann auf einem Touchscreen niemand. Ein toter Knopf ist schlimmer
                als ein fehlender. */
-            const telefon = window.matchMedia('(max-width: 700px)').matches;
+            const telefon = window.matchMedia('(max-width: 760px)').matches;
             const m = UI.menu('<div class="grp">Was soll hereinkommen?</div>' +
                 '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
                 '<span class="sub">Markdown, CSV, TSV, HTML, Excel, Word, EPUB</span></button>' +

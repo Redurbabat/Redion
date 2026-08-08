@@ -88,7 +88,16 @@ const KONSTANTEN = Object.freeze({
     HINWEIS_MS: 2600, /* Wie lange ein Hinweis stehen bleibt */
     FENSTERWEISE_AB: 200, /* Ab so vielen Zeilen wird nur gezeichnet,
                                         was man sehen kann */
-    TELEFON_BREITE: 768, /* Darunter gilt die Handy-Oberfläche */
+    /* DIE Telefongrenze. Sie stand auf 768 und war damit die einzige der
+       drei Zahlen, an die sich niemand hielt: die CSS nimmt 760 (38 Regeln),
+       `UI.amTelefon()` nimmt 760, Tabellenblock und Raster nehmen 760 — und
+       an sechs Stellen stand 700.
+       Gemessen am 8. August, was das anrichtete: zwischen 701 und 760 px
+       waren die Telefonleisten SICHTBAR und die Rechner-Seitenleiste stand
+       daneben. Die Pillen lagen über dem Logo, die untere Leiste über
+       „Neuer Chat". Bei jedem Fenster dieser Breite — kleines Tablet,
+       halbierter Bildschirm, verkleinertes Browserfenster. */
+    TELEFON_BREITE: 760, /* Bis hierher gilt die Handy-Oberfläche */
     SUCHE_MAX: 200, /* Treffer je Suche — mehr liest niemand */
     /* --- Aufräumen --------------------------------------------------------- */
     PAPIERKORB_TAGE: 30, /* Voreinstellung; einstellbar */

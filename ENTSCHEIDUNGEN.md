@@ -4038,3 +4038,73 @@ Konstanten in ablage.ts
 **Was von L34 offen bleibt** — die Telefongrenze (700 / 760 / 768), die
 Kopfleistenhöhe, die Ziffern-Blocktypen und die kleineren Doppelungen.
 Sie stehen dort einzeln, nach Schaden sortiert.
+
+---
+
+## E68 · Eine Telefongrenze, nicht drei
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test141` (24 Punkte)
+
+„Das ist ein Telefon" stand mit drei verschiedenen Zahlen da:
+
+```txt
+768   KONSTANTEN.TELEFON_BREITE → AppEinstellung.amTelefon()
+760   38 CSS-Regeln · UI.amTelefon() · Tabellenblock · Raster
+700   sechs matchMedia-Aufrufe im TypeScript · drei CSS-Blöcke
+```
+
+**Was das anrichtete**, gemessen bei jedem Fenster zwischen 701 und 760 px:
+
+```txt
+Telefonleisten         sichtbar    (CSS: ab 760 gilt Telefon)
+Rechner-Seitenleiste   daneben     (CSS: ab 700 wird sie zur Schublade)
+```
+
+Auf dem Bildschirm hiess das: die Telefon-Pillen lagen **über** dem Logo
+der Seitenleiste, die untere Leiste **über** „Neuer Chat". Zwei Entwürfe
+übereinander gezeichnet.
+
+Und das ist keine Randbreite. Ein halbierter Bildschirm, ein kleines
+Tablet, ein verkleinertes Browserfenster liegen alle darin. Gefunden hat
+es kein Prüflauf: alle messen bei 390, 428 oder 1500 px — also links und
+rechts vom Band, nie darin.
+
+**Welche der drei gewinnt**
+
+760, und zwar nach Stimmenzahl: 38 CSS-Regeln, `UI.amTelefon()`, der
+Tabellenblock und das Raster nehmen sie. Die 768 war die einzige Zahl, an
+die sich **niemand** hielt — sie stand in der Konstantendatei und wurde nur
+von einer Diagnosefunktion gelesen. Die 700 stand an sieben Stellen, alle
+in der Schale und im Editor.
+
+**Und `<=` statt `<`.** `AppEinstellung.amTelefon()` verglich mit `<`. Die
+CSS schreibt `max-width: 760px`, und das schliesst 760 **ein**. Mit `<`
+hätte genau die Breite 760 hier „Rechner" geheissen und dort „Telefon" —
+ein Band von einem Pixel, das man nie findet und das trotzdem existiert.
+
+**Was geprüft wird, und was nicht**
+
+Nicht, dass irgendwo 760 steht — das wäre eine Behauptung über den
+Quelltext. `test141` misst an sechs Breiten rund um die Grenze, ob alle
+Antworten übereinstimmen, und §3 stellt die eigentliche Frage:
+
+> Sind bei irgendeiner Breite Telefonleisten **und** feste Seitenleiste
+> gleichzeitig da?
+
+Die Gegenprobe — die Seitenleiste zurück auf 700 — beantwortet sie
+wörtlich mit dem alten Zustand:
+
+```txt
+✗ 730 px: nicht Telefonleisten UND Rechner-Seitenleiste
+  — Leisten da, Seitenleiste relative
+✗ 760 px: nicht Telefonleisten UND Rechner-Seitenleiste
+  — Leisten da, Seitenleiste relative
+```
+
+§5 hält zusätzlich fest, dass im Quelltext keine zweite Grenze mehr steht.
+Erklärende Kommentare, die die alte Zahl nennen, zählen dabei nicht mit —
+sonst würde die Erklärung des Fehlers selbst zum Fehler.
+
+**Status**
+
+`test141`, 24 Punkte, sechs Breiten. Gegenprobe: 5 rot.
