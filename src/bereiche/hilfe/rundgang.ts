@@ -366,8 +366,15 @@ const Rundgang = (() => {
    * aus demselben Grund: eine Begrüssung, die bei jedem Öffnen kommt, ist
    * eine Ermahnung.
    * ========================================================================*/
-  const willkommen = (): void => {
+  const willkommen = (erzwingen?: boolean): void => {
     if (document.getElementById('rg-willkommen')) return;
+    /* NOCHMAL NACHSEHEN, KURZ BEVOR ES ERSCHEINT. Zwischen dem Beschluss
+       „nach 1,4 Sekunden" und dem Erscheinen liegt eine Ewigkeit: in einem
+       zweiten Tab kann die Begrüssung inzwischen gelaufen sein, oder der
+       Mensch hat die Führung längst von Hand gestartet. Ein Blatt über dem
+       ganzen Bildschirm, das auf einem Beschluss von vorhin beruht, ist
+       genau die Sorte Ärgernis, gegen die die Marke da ist. */
+    if (!erzwingen && Store.getMeta('rundgangGesehen', false)) return;
     const d = document.createElement('div');
     d.id = 'rg-willkommen';
     d.setAttribute('role', 'dialog');

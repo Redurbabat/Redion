@@ -67,8 +67,17 @@ const kontext = await browser.newContext();
 const seite = await kontext.newPage();
 
 type Stand = { gruss: boolean; neu: boolean; marke: unknown; gesehen: unknown; eintraege: number };
+/* `gruss` MISST SEIT E55 DAS WILLKOMMEN. Bis dahin war die Begrüssung eine
+   kleine Einladung unten links; jetzt ist es ein Blatt mit drei Wegen, das
+   sagt, was Redion ist und wohin die Daten gehören. Die Frage dieses Laufs
+   ist dieselbe geblieben, und sie ist die eigentliche: kommt sie ein
+   zweites Mal? Eine Begrüssung, die bei jedem Öffnen erscheint, ist eine
+   Ermahnung — und beim Willkommen wäre sie eine, die den ganzen Bildschirm
+   nimmt. Die Einladung zählt weiter mit: sie gibt es noch, und käme sie
+   statt des Willkommens, wäre auch das eine Begrüssung. */
 const nachsehen = async (): Promise<Stand> => seite.evaluate(() => ({
-  gruss: !!document.getElementById('rg-einladung'),
+  gruss: !!document.getElementById('rg-willkommen') ||
+         !!document.getElementById('rg-einladung'),
   neu: !!document.getElementById('rg-neu'),
   marke: Store.getMeta('rundgangGesehen', false),
   gesehen: Store.getMeta('neuerungenGesehen', 0),
@@ -81,6 +90,9 @@ await seite.goto(`http://localhost:${PORT}/index.html`);
 await seite.waitForTimeout(3200);
 const erst = await nachsehen();
 p('Die Begrüssung steht da', erst.gruss);
+p('… und sie sagt, wo die Daten liegen',
+  await seite.evaluate(() =>
+    /auf deinem Ger\u00e4t/.test(document.getElementById('rg-willkommen')?.textContent || '')));
 p('Und sie ist damit als gesehen vermerkt', erst.marke === true, String(erst.marke));
 
 console.log('\n2 · Beim zweiten Öffnen nicht mehr');

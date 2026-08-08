@@ -11,6 +11,16 @@ import { chromium } from 'playwright';
   const bauePage = async (p: any) => {
     await p.goto('file://' + WURZEL + '/index.html');
     await p.waitForTimeout(1900);
+    /* KEIN ERSTBESUCHER — das Willkommen wegräumen (E55).
+       Seit §11 legt sich beim allerersten Öffnen ein Blatt über den ganzen
+       Bildschirm. Für den, der Redion zum ersten Mal sieht, ist das richtig;
+       hier misst niemand zum ersten Mal, und Playwright wartet dann
+       sechzig Sekunden darauf, dass ein Knopf darunter anklickbar wird. */
+    await p.evaluate(() => {
+      Store.setMeta('rundgangGesehen', true);
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+    });
     await p.evaluate(() => {
       const s = Store.addPage(null, { text: 'Layout-Probe', icon: '🎯' });
       Store.addBlock(s.id, 'h1',   { text: 'Überschrift' });

@@ -1061,7 +1061,7 @@ console.log('\n18 · Der Willkommensbildschirm (Vorgabe §11)');
 await seite.evaluate(() => {
   document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt, ' +
     '#rg-einladung, #rg-willkommen').forEach(x => x.remove());
-  Rundgang.willkommen();
+  Rundgang.willkommen(true);
 });
 await seite.waitForTimeout(700);
 

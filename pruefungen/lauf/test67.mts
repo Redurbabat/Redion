@@ -17,6 +17,20 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.goto('file://' + WURZEL + '/index.html');
   await p.waitForTimeout(1700);
 
+  /* DAS WILLKOMMEN WEGRÄUMEN — hier misst kein Erstbesucher.
+     Seit E55 legt sich beim allerersten Öffnen ein Blatt über den ganzen
+     Bildschirm. Das ist dort richtig und hier im Weg: es deckte die
+     Pillenleiste ab, und die Meldung dazu lautete „die Leiste ist nicht
+     anklickbar" — richtig gemessen, falsch verstanden. */
+  const willkommenWeg = async () => {
+    await p.evaluate(() => {
+      Store.setMeta('rundgangGesehen', true);
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+    });
+  };
+  await willkommenWeg();
+
   /* --- 1 · Jeder Abschnitt hat drei Punkte ------------------------------ */
   const kopf = await p.evaluate(async () => {
     App.zeichneBaum();
@@ -194,6 +208,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   handy.on('pageerror', e => fehler2.push('JS: ' + e.message));
   await handy.goto('file://' + WURZEL + '/index.html');
   await handy.waitForTimeout(1900);
+  /* Auch hier: kein Erstbesucher, also kein Willkommen (E55). */
+  await handy.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+  });
 
   /* SEIT DEM UMBAU NACH DER VORLAGE stehen die Bereiche oben als Pillen.
      Die Fragen sind dieselben geblieben — nur die letzte ist eine andere
@@ -377,6 +397,7 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
   await p.reload();
   await p.waitForTimeout(2000);
+  await willkommenWeg();
   const nach = await p.evaluate(() => ({
     zu: Store.getMeta('sidebarZu', []),
     folge: (Store.getMeta('sidebarFolge', []) || [])[0],
