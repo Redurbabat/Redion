@@ -210,7 +210,12 @@ const ersetzen = await seite.evaluate(async (bau) => {
     collections: {}, views: {}, meta: {}, versions: []
   });
 
-  const zurueck = (new Function('return ' + bau)())('blocks', 'getAll');
+  /* Seit E79 läuft das Ersetzen in EINER Transaktion und liest seine
+     Schlüssel über `getAllKeys` — nicht mehr über `getAll` in eigenen
+     Lese-Transaktionen. Die Sabotage muss treffen, was der Code wirklich
+     ruft, sonst prüft sie den Weg von gestern: genau so blieb dieser
+     Punkt nach dem E79-Umbau erst grün, obwohl er ins Leere lief. */
+  const zurueck = (new Function('return ' + bau)())('blocks', 'getAllKeys');
   let wie = '', text = '';
   try {
     await Store.importAll(sicherung, 'ersetzen');

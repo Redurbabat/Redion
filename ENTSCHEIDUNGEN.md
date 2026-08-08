@@ -4996,3 +4996,64 @@ alle drei Wege werden rot gemeldet (`blob-ungleich`, `ungleich`,
 `fehlt-alt`). `notizen` ist nach alledem Satz für Satz identisch.
 Vitest: 6 weitere Punkte gegen ein rohes Nachbau-`notizen` mit den echten
 keyPaths. Die neue Ablage kennt jetzt auch `basis` und `vorrat`.
+
+---
+
+## E79 · Einspielen ist ganz oder gar nicht
+
+**Datum** 8. August 2026 · **Betrifft** `importAll` in
+`src/kern/ablage/indexdb.ts` · **Prüfläufe** `test152` (neu), `test144`
+(nachgezogen)
+
+**Der Satz aus dem Architektur-Text, wörtlich:** „Ein kaputter Import darf
+niemals die aktuelle Redion-Datenbank halb überschreiben."
+
+**Was war.** E71 sicherte den Abbruch VOR dem ersten Anfassen ab. Aber
+das Einspielen selbst lief als hunderte einzelne Transaktionen: erst die
+Löschschleife, dann die Schreibschleife. Wer dazwischen Tab, Strom oder
+Speicherplatz verlor, behielt einen halben Bestand — die eine Hälfte
+gelöscht, die andere nie geschrieben. §13 nennt genau das als Verbot
+(„bei Fehlern halbe Zustände hinterlassen"), und es galt trotzdem nicht.
+
+**Was jetzt gilt.** Das ganze Einspielen — Schlüssel lesen, löschen,
+schreiben, der Versionsverlauf — läuft in EINER IndexedDB-Transaktion über
+die fünf Fächer. Eine IndexedDB-Transaktion ist ganz oder gar nicht:
+bricht irgendetwas ab, rollt der Browser alles zurück. Der
+Zwischenspeicher wird erst NACH dem `oncomplete` umgestellt — der
+Bildschirm zeigt nie einen Stand, der nicht auf der Platte steht. Der
+Abbruch trägt sich in die Fehlerliste ein, damit der Vorfall nachlesbar
+ist.
+
+**Die drei Arme, und warum jeder seinen eigenen Beweis braucht.** Ein
+Einspielen kann an drei Stellen scheitern, und jede führt anders zum
+Rollback:
+
+```txt
+1  Lesen der Schlüssel scheitert   → eigenes onerror je Anfrage: abort + Ablehnung
+2  Schreiben wirft synchron        → catch in schreiben(): abort + Ablehnung
+3  Transaktion bricht asynchron ab → t.onerror/t.onabort: Ablehnung
+```
+
+Arm 1 hat obendrein eine Feinheit: OHNE das eigene `onerror` je Anfrage
+liesse ein Fach, das nie antwortet, die Transaktion LEER durchgehen —
+nichts gelesen, nichts geschrieben, `oncomplete` meldet Erfolg. Genau das
+fand `test144` §3 nach dem Umbau: seine Sabotage (eine Anfrage, die nie
+über `onsuccess` antwortet) machte den Import zum stillen Leerlauf.
+
+**Die Gegenproben-Lehre, zum dritten Mal in dieser Woche:** Beim Kippen
+der Arme im gebauten Bestand blieben die ERSTEN ZWEI Versuche grün — die
+Sabotage von test152 §1 läuft durch Arm 2, gekippt hatte ich erst Arm 3,
+dann Arm 1. Eine Gegenprobe, die den falschen Arm kippt, beweist nichts
+über den richtigen (E77 sagte es beim flush, E79 bestätigt es beim
+Import). Bewiesen sind jetzt: Arm 1 durch test144 §3 (war rot, bis das
+eigene onerror kam), Arm 2 durch test152 §1 (gekippt → 4 Punkte rot).
+Arm 3 hat keinen eigenen Kipp-Beweis — er ist die Rückfalldecke des
+Browsers unter den beiden anderen, und das steht hier, statt es zu
+verschweigen.
+
+**test152 fand ausserdem seine eigene Falle:** die erste Sabotage traf
+`views` — und die Prüfsicherung ENTHIELT keine views. Null Schreibversuche,
+null Scheitern, alles grün. Sabotiert wird seither, was wirklich
+geschrieben wird. Und der Plattenvergleich musste die `fehlerliste`
+ausnehmen — der abgebrochene Import trägt sich dort ein, das ist gewollt
+und jetzt ein eigener Prüfpunkt statt einer Abweichung.

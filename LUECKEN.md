@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 122 Prüfläufe**
+**8. August 2026 · 123 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·

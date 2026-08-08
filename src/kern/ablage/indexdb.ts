@@ -1330,39 +1330,88 @@ const Store = (() => {
       meta:        d.meta        || {}
     };
 
-    if (art === 'ersetzen') {
-      /* Was in der Ablage steht und nicht in der Sicherung, muss weg — sonst
-         ist es kein Ersetzen, sondern ein Zusammenführen, das sich als
-         Ersetzen ausgibt. Und zwar von der PLATTE, nicht nur aus dem
-         Zwischenspeicher: genau daran hing der Fehler. */
-      /* HIER WIRD ABGEBROCHEN, NICHT WEITERGEMACHT. Vorher stand an beiden
-         Stellen `.catch(() => [])`: konnte die Platte nicht gelesen werden,
-         lief die Löschschleife null Mal, die neuen Sätze wurden darübergelegt
-         und der Nutzer las „Sicherung geladen" — während der alte Bestand
-         darunter stehen blieb. Nach dem Neuladen war er wieder da.
-         Ein halb ausgeführtes „Ersetzen" ist schlimmer als ein
-         abgebrochenes: das eine merkt man erst nach Tagen, das andere
-         sofort. */
-      try {
-        for (const [fach, schluessel] of
-             [['blocks', 'id'], ['collections', 'id'], ['views', 'id']] as [string, string][]) {
-          const vorhanden = await all(fach);
-          for (const satz of vorhanden)
-            if (!(neu as Record<string, any>)[fach][satz[schluessel]]) await del(fach, satz[schluessel]);
-        }
-        const metaVorhanden = await all('meta');
-        for (const m of metaVorhanden)
-          if (!(m.k in neu.meta)) await del('meta', m.k);
-      } catch (err) {
-        if (typeof Reporter !== 'undefined')
-          Reporter.error('Ablage', 'Ersetzen abgebrochen', err);
-        throw new Error('Die Sicherung wurde NICHT eingespielt: der vorhandene ' +
-          'Bestand liess sich nicht vollständig löschen (' +
-          (err instanceof Error ? err.message : String(err)) + '). ' +
-          'Es ist nichts verändert worden. Schliesse andere Fenster dieser App ' +
-          'und versuche es noch einmal.');
-      }
+    /* --- ALLES IN EINER TRANSAKTION -----------------------------------
+       Löschen und Schreiben liefen hier als hunderte einzelne
+       Transaktionen. E71 hat den Abbruch VOR dem ersten Anfassen sauber
+       gemacht — aber wer zwischen Löschen und Schreiben den Rechner
+       verlor (Tab zu, Strom weg, Quota voll), behielt einen halben
+       Bestand: die eine Hälfte gelöscht, die andere noch nicht da.
 
+       Eine IndexedDB-Transaktion ist ganz oder gar nicht. Also passiert
+       das ganze Einspielen — Löschen, Schreiben, der Verlauf — in EINER
+       Transaktion über die fünf Fächer. Bricht irgendetwas ab, rollt der
+       Browser ALLES zurück, und der Zwischenspeicher wird erst nach dem
+       `oncomplete` umgestellt: der Speicher lügt dem Bildschirm nie
+       einen Stand vor, der nicht auf der Platte steht. */
+    if (db) {
+      await new Promise<void>((ok, nein) => {
+        let t: IDBTransaction;
+        try { t = tx(['blocks', 'collections', 'views', 'meta', 'versions'], 'readwrite'); }
+        catch (err) { return nein(err); }
+        t.oncomplete = () => ok();
+        t.onerror = t.onabort = () =>
+          nein((t as any).error || new Error('Das Einspielen wurde abgebrochen'));
+
+        const schreiben = (): void => {
+          try {
+            for (const b of Object.values<any>(neu.blocks))      t.objectStore('blocks').put(b);
+            for (const c of Object.values<any>(neu.collections)) t.objectStore('collections').put(c);
+            for (const v of Object.values<any>(neu.views))       t.objectStore('views').put(v);
+            for (const [k, v] of Object.entries<any>(neu.meta))  t.objectStore('meta').put({ k, v });
+            if (Array.isArray(d.versions))
+              for (const v of d.versions) t.objectStore('versions').put(v);
+          } catch (err) { try { t.abort(); } catch { /* schon abgebrochen */ } nein(err); }
+        };
+
+        if (art === 'ersetzen') {
+          /* Was in der Ablage steht und nicht in der Sicherung, muss weg —
+             sonst ist es kein Ersetzen, sondern ein Zusammenführen, das
+             sich als Ersetzen ausgibt. Die Schlüssel werden IN derselben
+             Transaktion gelesen: was sie sieht, ist auch das, was sie
+             löscht. */
+          const faecher: [string, Record<string, any>][] =
+            [['blocks', neu.blocks], ['collections', neu.collections], ['views', neu.views]];
+          let offen = faecher.length + 1;
+          const dann = () => { if (--offen === 0) schreiben(); };
+          /* Jede Leseanfrage bekommt ihr EIGENES onerror, das die
+             Transaktion abbricht. Ein echter Fehler würde auch ohne das
+             zur Transaktion hochsteigen — aber „würde" ist keine
+             Zusicherung, und ein Fach, das nie antwortet, liesse die
+             Transaktion sonst LEER durchgehen: nichts geschrieben,
+             nichts gelöscht, und oncomplete meldete Erfolg. */
+          const lesen = (fach: string, weiter: (keys: IDBValidKey[]) => void): void => {
+            const r = t.objectStore(fach).getAllKeys();
+            r.onsuccess = () => weiter(r.result);
+            r.onerror = () => {
+              try { t.abort(); } catch { /* schon abgebrochen */ }
+              nein(r.error || new Error('Fach „' + fach + '" nicht lesbar'));
+            };
+          };
+          for (const [fach, behalten] of faecher)
+            lesen(fach, (keys) => {
+              for (const k of keys) if (!behalten[String(k)]) t.objectStore(fach).delete(k);
+              dann();
+            });
+          lesen('meta', (keys) => {
+            for (const k of keys) if (!(String(k) in neu.meta)) t.objectStore('meta').delete(k);
+            dann();
+          });
+        } else {
+          schreiben();
+        }
+      }).catch((err: unknown) => {
+        if (typeof Reporter !== 'undefined')
+          Reporter.error('Ablage', 'Einspielen abgebrochen — alles zurückgerollt', err);
+        throw new Error('Die Sicherung wurde NICHT eingespielt: ' +
+          (err instanceof Error ? err.message : String(err)) + '. ' +
+          'Es ist nichts verändert worden — die Transaktion hat alles ' +
+          'zurückgerollt. Schliesse andere Fenster dieser App und versuche ' +
+          'es noch einmal.');
+      });
+    }
+
+    /* Erst JETZT, nach dem oncomplete, den Zwischenspeicher umstellen. */
+    if (art === 'ersetzen') {
       cache.blocks = neu.blocks; cache.collections = neu.collections;
       cache.views = neu.views;   cache.meta = neu.meta;
     } else {
@@ -1373,18 +1422,6 @@ const Store = (() => {
       Object.assign(cache.views, neu.views);
       Object.assign(cache.meta, neu.meta);
     }
-
-    await Promise.all([
-      ...Object.values<any>(cache.blocks).map(b      => put('blocks', b)),
-      ...Object.values<any>(cache.collections).map(c => put('collections', c)),
-      ...Object.values<any>(cache.views).map(v       => put('views', v)),
-      ...Object.entries<any>(cache.meta).map(([k,v]) => put('meta', { k, v }))
-    ]);
-
-    /* Der Verlauf, falls die Sicherung ihn mitbringt. Ältere Sicherungen
-       haben ihn nicht — die sind deshalb nicht kaputt, nur älter. */
-    if (Array.isArray(d.versions))
-      await Promise.all(d.versions.map((v: any) => put('versions', v)));
 
     notify('import');
     /* Nach einer eingespielten Sicherung ist der ganze Bestand ein anderer.
