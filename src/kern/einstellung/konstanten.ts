@@ -38,6 +38,14 @@ const KONSTANTEN = Object.freeze({
   STUECK:           1024 * 1024,        /* Stückgrösse beim Hochladen */
   KLEIN:            256 * 1024,         /* Darunter ohne Stückelung — der
                                            Apparat kostet mehr als er spart */
+  /* Was der Server annimmt. Er hat seine eigene Zahl — `DATEI_GRENZE` in
+     `server/dateien.ts` —, denn er läuft als eigenes Bündel und kann diese
+     Datei nicht lesen. Zwei Zahlen also, notgedrungen; `test140` rechnet
+     nach, dass sie übereinstimmen.
+     Stand hier vorher gar nicht: `maschine.ts` trug ein blankes
+     `100 * 1024 * 1024` mitten in einer Schleife, ohne Namen und ohne
+     Verbindung zur Zahl auf der anderen Seite. */
+  SERVER_DATEI_MAX: 100 * 1024 * 1024,  /* 100 MB — darüber gilt der .redion-Weg (E33) */
   /* --- Der Versionsverlauf ------------------------------------------------
      Diese Zahl stand hier und wurde von niemandem gelesen: `versionSpeichern`
      schnitt hart bei `slice(30)`, der Aufräumknopf bei `slice(5)`. Drei

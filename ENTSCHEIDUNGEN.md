@@ -3968,3 +3968,73 @@ hingehört.
 ✗ … und sagt für `views` ein Verzeichnis — RedionView[]
 ✗ Jede Ansicht des Registers steht auch im Typ — fehlt im Typ: ["raster"]
 ```
+
+---
+
+## E67 · Jede Grenze bekommt ein Zuhause — und wo das nicht geht, eine Prüfung
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test140` (17 Punkte)
+
+Vier Grössengrenzen der Dateiablage standen je zweimal:
+
+```txt
+STUECK      1 MB     konstanten.ts        und  dateien/ablage.ts
+KLEIN     256 KB     konstanten.ts        und  dateien/ablage.ts
+DATEI_MAX 500 MB     konstanten.ts        und  dateien/ablage.ts
+100 MB               maschine.ts (blank)  und  server/dateien.ts
+```
+
+Alle vier stimmten überein. Das ist kein Trost: `ZH_HANDY` und `--tbl-zh`
+stimmten auch überein, bis sie es nicht mehr taten — zweimal an einem Tag.
+
+**Drei lassen sich teilen.** `dateien/ablage.ts` liest jetzt `KONSTANTEN`.
+
+Der Rückfallwert bleibt stehen, und zwar mit Absicht: ist `konstanten.js`
+nicht geladen, ist die App ohnehin kaputt — aber eine Grenze von
+`undefined` liesse **jede** Datei durch, und das wäre schlimmer als eine
+falsche Grenze. `test140` prüft deshalb auch, dass der Rückfall dieselbe
+Zahl nennt; sonst wäre er eine zweite Wahrheit im Wartestand.
+
+**Die vierte lässt sich nicht teilen.** Das Gerät und der Server sind
+getrennte Bündel — der Worker läuft bei Cloudflare und kann
+`konstanten.js` nicht lesen. Zwei Zahlen also, notgedrungen.
+
+Und genau dann muss ein Prüflauf sie nachrechnen. `test140` §3 liest
+`export const DATEI_GRENZE` aus `server/dateien.ts`, wertet den Ausdruck
+aus und vergleicht ihn mit `KONSTANTEN.SERVER_DATEI_MAX`.
+
+Was ohne diese Prüfung schiefginge, ist in beide Richtungen still:
+
+```txt
+Gerät höher als Server  →  es schickt Dateien, die der Server mit 413
+                           abweist. Der Nutzer sieht einen Fehler ohne
+                           Erklärung.
+Gerät tiefer als Server →  es hält Dateien zurück, die durchgingen. Sie
+                           fehlen auf dem zweiten Gerät, und nirgends
+                           wird etwas rot.
+```
+
+Die zweite ist die gefährlichere, weil sie wie Erfolg aussieht.
+
+**Nebenbei ein Name für eine blanke Zahl.** In `maschine.ts` stand
+`> 100 * 1024 * 1024` mitten in einer Schleife — ohne Namen, ohne Bezug
+zur Gegenstelle. Wer die Serverzahl geändert hätte, wäre über diese Zeile
+nie gestolpert; sie enthält das Wort „Server" nicht.
+
+**Und eine Konstante, die niemand anwendet, ist keine Grenze.** `test140`
+§2 meldet deshalb eine Datei von 600 MB an und prüft, dass sie abgewiesen
+wird — mit einer Meldung, die die Grenze in MB nennt.
+
+**Status**
+
+`test140`, 17 Punkte. Gegenproben:
+
+```txt
+Server auf 150 MB gesetzt   → 2 rot: „Server 150 MB, Gerät 100 MB"
+Konstanten in ablage.ts
+   wieder abgeschrieben     → 2 rot
+```
+
+**Was von L34 offen bleibt** — die Telefongrenze (700 / 760 / 768), die
+Kopfleistenhöhe, die Ziffern-Blocktypen und die kleineren Doppelungen.
+Sie stehen dort einzeln, nach Schaden sortiert.

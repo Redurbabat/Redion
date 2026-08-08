@@ -5965,6 +5965,14 @@ const KONSTANTEN = Object.freeze({
     STUECK: 1024 * 1024, /* Stückgrösse beim Hochladen */
     KLEIN: 256 * 1024, /* Darunter ohne Stückelung — der
                                              Apparat kostet mehr als er spart */
+    /* Was der Server annimmt. Er hat seine eigene Zahl — `DATEI_GRENZE` in
+       `server/dateien.ts` —, denn er läuft als eigenes Bündel und kann diese
+       Datei nicht lesen. Zwei Zahlen also, notgedrungen; `test140` rechnet
+       nach, dass sie übereinstimmen.
+       Stand hier vorher gar nicht: `maschine.ts` trug ein blankes
+       `100 * 1024 * 1024` mitten in einer Schleife, ohne Namen und ohne
+       Verbindung zur Zahl auf der anderen Seite. */
+    SERVER_DATEI_MAX: 100 * 1024 * 1024, /* 100 MB — darüber gilt der .redion-Weg (E33) */
     /* --- Der Versionsverlauf ------------------------------------------------
        Diese Zahl stand hier und wurde von niemandem gelesen: `versionSpeichern`
        schnitt hart bei `slice(30)`, der Aufräumknopf bei `slice(5)`. Drei
@@ -56354,9 +56362,17 @@ const Dateien = (() => {
        stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
        kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    const STUECK = 1024 * 1024; /* 1 MB je Stück */
-    const KLEIN = 256 * 1024; /* darunter lohnt der Aufwand nicht */
-    const GRENZE = 500 * 1024 * 1024; /* darüber wird es auch lokal eng */
+    /* AUS DEN KONSTANTEN, nicht abgeschrieben. Hier standen dieselben drei
+       Zahlen ein zweites Mal — sie stimmten überein, aber nichts hätte es
+       gemerkt, wenn eine der beiden Seiten sich geändert hätte. Genau diese
+       Fehlerklasse hat am 8. August dreimal zugeschlagen (E64, E65).
+       Der Rückfall gilt nur, wenn `konstanten.js` nicht geladen ist — dann
+       ist die App ohnehin kaputt, aber eine Grenze von `undefined` liesse
+       jede Datei durch, und das wäre schlimmer als eine falsche Grenze. */
+    const K = (n, standard) => (typeof KONSTANTEN !== 'undefined' && Number(KONSTANTEN[n])) || standard;
+    const STUECK = K('STUECK', 1024 * 1024); /* 1 MB je Stück */
+    const KLEIN = K('KLEIN', 256 * 1024); /* darunter lohnt der Aufwand nicht */
+    const GRENZE = K('DATEI_MAX', 500 * 1024 * 1024); /* darüber wird es auch lokal eng */
     /* Laufende Uploads: id → { datei, teile, fertig, abgebrochen } */
     const laufend = new Map();
     /* Blob-Adressen, die schon gebaut wurden — damit dieselbe Datei nicht
@@ -59195,6 +59211,14 @@ const Wolke = (() => {
             return location.origin;
         return '';
     };
+    /* Was der Server annimmt. Hier stand ein blankes `100 * 1024 * 1024`
+       mitten in einer Schleife — ohne Namen und ohne Verbindung zu
+       `DATEI_GRENZE` in `server/dateien.ts`, das dieselbe Zahl trägt. Wäre
+       eine der beiden gewachsen, hätte das Gerät entweder Dateien
+       zurückgehalten, die der Server genommen hätte, oder welche geschickt,
+       die er mit 413 abweist. `test140` rechnet beide Zahlen nach. */
+    const SERVER_DATEI_MAX = (typeof KONSTANTEN !== 'undefined' && Number(KONSTANTEN.SERVER_DATEI_MAX)) ||
+        100 * 1024 * 1024;
     const token = () => Store.getMeta('wolkeToken', '');
     const bereich = () => Store.getMeta('wolkeBereich', '');
     const angemeldet = () => !!token();
@@ -59912,7 +59936,7 @@ const Wolke = (() => {
                 continue;
             /* Über der Server-Grenze: gar nicht erst anklopfen. Für solche Dateien
                gilt der .redion-Weg — steht so in E33. */
-            if ((Number(d.groesse) || 0) > 100 * 1024 * 1024)
+            if ((Number(d.groesse) || 0) > SERVER_DATEI_MAX)
                 continue;
             const stuecke = (await Store.stueckeVon(d.id))
                 .sort((x, y) => (Number(x.nr) || 0) - (Number(y.nr) || 0));

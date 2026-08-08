@@ -613,17 +613,13 @@ tempo.ts rechnete mit 34 px je Zeile               E65 — jetzt gemessen
 RedionPackageData sagte Listen, es sind Verzeichnisse  E66
 ViewLayout kannte `raster` nicht                   E66
 Überschriften standen in zwei Katalogen            E66 — jetzt im Register
+STUECK, KLEIN und DATEI_MAX je zweimal             E67 — jetzt aus KONSTANTEN
+Die Serverzahl 100 MB stand blank in maschine.ts   E67 — benannt und geprüft
 ```
 
 **Offen, nach Schaden sortiert**
 
 ```txt
-daten    Die Dateigrenze von 100 MB steht als blanke Zahl in
-         kern/abgleich/maschine.ts:722 und als DATEI_GRENZE in
-         server/dateien.ts:41. Sie stimmen heute überein.
-daten    STUECK (1 MB) steht in kern/einstellung/konstanten.ts:38 und
-         noch einmal als eigenes Literal in bereiche/dateien/ablage.ts:45.
-daten    DATEI_MAX (500 MB) ebenso — konstanten.ts:37 gegen ablage.ts:47.
 anzeige  Die Telefongrenze gibt es dreimal: 768 als
          KONSTANTEN.TELEFON_BREITE, 760 in 38 CSS-Regeln und in
          menue.ts/ansicht.ts/raster.ts, 700 in pwa.ts und schale.ts.

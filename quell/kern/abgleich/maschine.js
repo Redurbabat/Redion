@@ -44,6 +44,14 @@ const Wolke = (() => {
             return location.origin;
         return '';
     };
+    /* Was der Server annimmt. Hier stand ein blankes `100 * 1024 * 1024`
+       mitten in einer Schleife — ohne Namen und ohne Verbindung zu
+       `DATEI_GRENZE` in `server/dateien.ts`, das dieselbe Zahl trägt. Wäre
+       eine der beiden gewachsen, hätte das Gerät entweder Dateien
+       zurückgehalten, die der Server genommen hätte, oder welche geschickt,
+       die er mit 413 abweist. `test140` rechnet beide Zahlen nach. */
+    const SERVER_DATEI_MAX = (typeof KONSTANTEN !== 'undefined' && Number(KONSTANTEN.SERVER_DATEI_MAX)) ||
+        100 * 1024 * 1024;
     const token = () => Store.getMeta('wolkeToken', '');
     const bereich = () => Store.getMeta('wolkeBereich', '');
     const angemeldet = () => !!token();
@@ -761,7 +769,7 @@ const Wolke = (() => {
                 continue;
             /* Über der Server-Grenze: gar nicht erst anklopfen. Für solche Dateien
                gilt der .redion-Weg — steht so in E33. */
-            if ((Number(d.groesse) || 0) > 100 * 1024 * 1024)
+            if ((Number(d.groesse) || 0) > SERVER_DATEI_MAX)
                 continue;
             const stuecke = (await Store.stueckeVon(d.id))
                 .sort((x, y) => (Number(x.nr) || 0) - (Number(y.nr) || 0));
