@@ -220,8 +220,7 @@ window.open('${ziel}#clip='+encodeURIComponent(JSON.stringify(p)),'_blank');
       const b = ziel?.closest<HTMLElement>('button[data-a]');
       if (!b) return;
       if (b.dataset['a'] === 'kopieren') {
-        navigator.clipboard?.writeText(decodeURIComponent(schnipsel().slice('javascript:'.length)));
-        UI.toast('Code kopiert — als Lesezeichen-Adresse einfügen');
+        Ablage.kopiereJetzt(decodeURIComponent(schnipsel().slice('javascript:'.length)), 'Code kopiert — als Lesezeichen-Adresse einfügen');
       }
       if (b.dataset['a'] === 'db') {
         o.remove();

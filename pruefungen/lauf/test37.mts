@@ -19,6 +19,16 @@ import { chromium } from 'playwright';
 
   await p.goto('file://' + WURZEL + '/index.html');
   await p.waitForTimeout(1900);
+  /* KEIN ERSTBESUCHER — das Willkommen wegräumen (E55).
+     Seit §11 legt sich beim allerersten Öffnen ein Blatt über den ganzen
+     Bildschirm. Für den, der Redion zum ersten Mal sieht, ist das richtig;
+     hier misst niemand zum ersten Mal, und Playwright wartet dann
+     sechzig Sekunden darauf, dass ein Knopf darunter anklickbar wird. */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+  });
 
   await p.evaluate(() => {
     const s = Store.addPage(null, { text: 'Claude Probe', icon: '🧪' });
@@ -57,8 +67,8 @@ import { chromium } from 'playwright';
   console.log('   Bereichsleiste:', JSON.stringify(leiste));
   ok('Die Bereichsleiste steht oben auf dem Telefon', leiste.sichtbar && leiste.obenBuendig);
   ok('Sie geht über die volle Breite', leiste.breite === 428);
-  ok('Konto, Start, Seiten, Termine, Eingang',
-     leiste.knoepfe.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-inbox', leiste.knoepfe.join(','));
+  ok('Konto, Start, Seiten, Termine, Mehr',
+     leiste.knoepfe.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-mehr', leiste.knoepfe.join(','));
   ok('Unten stehen Suchen, KI und Neu', leiste.untenBuendig &&
      leiste.untenKnoepfe.join(',') === 'hu-suche,hu-ki,hu-neu', leiste.untenKnoepfe.join(','));
   ok('Die Mitte ist die KI', /KI/.test(leiste.kiText || ''), leiste.kiText);
@@ -85,10 +95,29 @@ import { chromium } from 'playwright';
   await p.evaluate(() => App.kiPanel(false));
   await p.waitForTimeout(600);      /* das KI-Fenster deckt am Telefon alles zu */
 
+  /* SEIT E45 FRAGT DER STIFT ERST, WAS ENTSTEHEN SOLL. Vorher legte er
+     sofort eine leere Seite an — richtig in einem von acht Fällen.
+
+     Diese Prüfung stand danach zwei Tage auf Grün, ohne noch etwas zu
+     prüfen: sie zählte `rootPages().length >= 2`, und so viele gab es aus
+     den Schritten davor längst. Das Blatt blieb offen, und der nächste
+     Klick lief in seinen Hintergrund — der deckt den ganzen Bildschirm.
+     Genau daran ist der Lauf dann gescheitert, drei Zeilen später und
+     ohne erkennbaren Zusammenhang.
+
+     Eine Prüfung, die grün bleibt, wenn sich das Verhalten ändert, ist
+     schlimmer als keine: sie behauptet, jemand habe hingesehen. */
+  const seitenVorher = await p.evaluate(() => Store.rootPages().length);
   await p.click('#hu-neu');
   await p.waitForTimeout(700);
-  ok('Der Stift unten rechts legt eine neue Seite an', await p.evaluate(() =>
-    Store.rootPages().length >= 2 && !!document.getElementById('title')));
+  ok('Der Stift öffnet das Blatt „Neu erstellen"', await p.evaluate(() =>
+    !!document.querySelector('.menu.blatt [data-neu="seite"]')));
+  await p.click('.menu.blatt [data-neu="seite"]');
+  await p.waitForTimeout(800);
+  ok('… und „Neue Seite" legt wirklich eine an', await p.evaluate((v) =>
+    Store.rootPages().length > v && !!document.getElementById('title'), seitenVorher));
+  ok('… und das Blatt ist danach zu', await p.evaluate(() =>
+    document.querySelectorAll('.menu, .menu-grund').length === 0));
 
   /* Die vier Bereiche schalten wirklich um und markieren sich.
      Erst den Cursor aus dem Titel nehmen: waehrend man schreibt, geht die
@@ -374,4 +403,10 @@ import { chromium } from 'playwright';
   if (f.length) { console.log('\nFEHLER:'); f.slice(0, 8).forEach(x => console.log('  ' + x)); }
   else console.log('Keine JS-Fehler.');
   await b.close();
+  /* EIN RÜCKGABEWERT. Ohne ihn endet der Lauf mit 0, auch wenn oben ein ❌
+     steht — und der Orchestrator meldete das jahrelang als „bestanden"
+     (E56). Seit dem 8. August liest er die Ausgabe mit; die ehrliche
+     Auskunft gehört trotzdem hierher, denn wer den Lauf einzeln startet,
+     sieht nur den Rückgabewert. */
+  process.exit(pruef.some((x: any) => !x[1]) ? 1 : 0);
 })();

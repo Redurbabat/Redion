@@ -10,6 +10,16 @@ import { chromium } from 'playwright';
   p.on('pageerror', e => fehler.push('JS: ' + e.message));
   await p.goto('file://' + WURZEL + '/index.html');
   await p.waitForTimeout(1400);
+  /* KEIN ERSTBESUCHER — das Willkommen wegräumen (E55).
+     Seit §11 legt sich beim allerersten Öffnen ein Blatt über den ganzen
+     Bildschirm. Für den, der Redion zum ersten Mal sieht, ist das richtig;
+     hier misst niemand zum ersten Mal, und Playwright wartet dann
+     sechzig Sekunden darauf, dass ein Knopf darunter anklickbar wird. */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+  });
 
   const erg = await p.evaluate(async () => {
     const out: Record<string, any> = {};
@@ -147,4 +157,9 @@ import { chromium } from 'playwright';
     board, gruppen, nachDatum, zugeklappt, fehler
   }, null, 1));
   await b.close();
+  /* EIN RÜCKGABEWERT. Dieser Lauf hat keine Punkteliste — er druckt seine
+     Messwerte als JSON. Was er melden kann, sind die JS-Fehler der Seite:
+     ein Zeitstrahl, der beim Zoomen wirft, ist ein kaputter Zeitstrahl,
+     auch wenn die Zahlen darunter plausibel aussehen. */
+  process.exit(fehler.length ? 1 : 0);
 })();

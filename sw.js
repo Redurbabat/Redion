@@ -71,6 +71,7 @@ const GRUNDSTOCK = [
     './quell/schale/ueberlagerung/menue.js',
     './quell/schale/ueberlagerung/hinweis.js',
     './quell/schale/ueberlagerung/dialog.js',
+    './quell/schale/ueberlagerung/fokus.js',
     './quell/schale/ueberlagerung/ui.js',
     './quell/kern/ablage/nachbarn.js',
     './quell/kern/ablage/indexdb.js',
@@ -115,6 +116,8 @@ const GRUNDSTOCK = [
     './quell/bereiche/seiten/ansicht/fassungen.js',
     './quell/bereiche/dateien/ausgeben.js',
     './quell/kern/helfer/tempo.js',
+    './quell/kern/helfer/ablage.js',
+    './quell/kern/helfer/rollrand.js',
     './quell/bereiche/planen/dienst.js',
     './quell/bereiche/einstellungen/erweiterungen.js',
     './quell/bereiche/verbinden/eingang.js',
@@ -372,5 +375,103 @@ ich.addEventListener('notificationclick', (e) => {
             }
         }
         return ich.clients.openWindow(ziel);
+    })());
+});
+/* ==========================================================================
+ * DER STOSS VON AUSSEN — Web Push (L33, E54)
+ * --------------------------------------------------------------------------
+ * ER TRÄGT NICHTS, und das ist der ganze Entwurf. Ein Web Push kann Inhalt
+ * mitbringen; Redions Server schickt keinen. Der Text einer Erinnerung geht
+ * ihn nichts an — „Zahnarzt 14:00" ist genau die Sorte Satz, die
+ * local-first schützen soll.
+ *
+ * Der Stoss sagt also nur „wach auf". Was fällig ist, steht hier auf dem
+ * Gerät, in derselben IndexedDB, aus der es auch die App liest.
+ *
+ * WARUM DIE DATENBANK HIER NOCH EINMAL GEÖFFNET WIRD, statt sie von der
+ * App zu erben: das Dienst-Skript läuft, WENN die App nicht läuft. Genau
+ * dafür gibt es diesen Weg. Es gibt also nichts zu erben.
+ *
+ * `openWithoutUpgrade`: die Version wird NICHT gesetzt. Ein Dienst-Skript,
+ * das die Datenbank hochzieht, während in einem anderen Tab die App darauf
+ * arbeitet, ist ein Umbau am fahrenden Zug. Ohne Versionsangabe öffnet der
+ * Browser, was da ist — und wenn es die Datenbank noch gar nicht gibt,
+ * gibt es auch nichts zu melden.
+ * ========================================================================*/
+/** Die fälligen, noch nicht erledigten Erinnerungen — direkt aus der Ablage. */
+const faelligeErinnerungen = () => new Promise((fertig) => {
+    let raus = [];
+    let req;
+    try {
+        req = indexedDB.open('notizen');
+    }
+    catch {
+        fertig([]);
+        return;
+    }
+    /* Eine Datenbank, die es nicht gibt, wird hier NICHT angelegt: `onupgradeneeded`
+       bedeutet dann „leer, ohne Fächer" — abbrechen statt eine leere Hülle
+       zu hinterlassen, in der die App später ihre Umzüge nicht mehr findet. */
+    req.onupgradeneeded = () => { try {
+        req.transaction?.abort();
+    }
+    catch { } };
+    req.onerror = () => fertig([]);
+    req.onsuccess = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('meta')) {
+            db.close();
+            fertig([]);
+            return;
+        }
+        let g;
+        try {
+            g = db.transaction('meta', 'readonly').objectStore('meta').get('erinnerungen');
+        }
+        catch {
+            db.close();
+            fertig([]);
+            return;
+        }
+        g.onerror = () => { db.close(); fertig([]); };
+        g.onsuccess = () => {
+            const liste = (g.result && g.result.v) || [];
+            const jetzt = Date.now();
+            raus = (Array.isArray(liste) ? liste : []).filter((e) => e && !e.erledigt && e.zeit && new Date(e.zeit).getTime() <= jetzt);
+            db.close();
+            fertig(raus);
+        };
+    };
+});
+ich.addEventListener('push', (e) => {
+    e.waitUntil((async () => {
+        const faellig = await faelligeErinnerungen();
+        /* EIN STOSS OHNE MELDUNG IST KEINE OPTION. Zeigt ein Dienst-Skript auf
+           einen Push hin gar nichts, blendet der Browser von sich aus „Diese
+           Seite wurde im Hintergrund aktualisiert" ein — eine Meldung, die
+           niemand geschrieben hat und die nichts sagt. Lieber ein ehrlicher
+           Satz: es gab einen Weckruf, und hier steht, was daran war. */
+        if (!faellig.length) {
+            return ich.registration.showNotification('Redion', {
+                body: 'Ein Weckruf kam an, aber es ist gerade nichts fällig. ' +
+                    'Vielleicht wurde die Erinnerung schon auf einem anderen Gerät erledigt.',
+                icon: './oeffentlich/icons/icon-180.png',
+                tag: 'redion-leer'
+            });
+        }
+        for (const er of faellig) {
+            const gemeint = new Date(er.zeit);
+            const spaet = Date.now() - gemeint.getTime() > 120000;
+            const wann = gemeint.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            await ich.registration.showNotification(spaet ? 'Verpasst um ' + wann : 'Erinnerung: ' + (er.text || 'Redion'), {
+                body: spaet ? (er.text || '') : 'In Redion',
+                icon: './oeffentlich/icons/icon-180.png',
+                /* `tag` je Erinnerung: derselbe Weckruf zweimal ersetzt die
+                   Meldung, statt eine zweite danebenzulegen. */
+                tag: 'redion-' + (er.id || 'erinnerung'),
+                data: { seite: er.pageId || '' }
+            });
+        }
+        return undefined;
     })());
 });

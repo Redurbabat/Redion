@@ -41,8 +41,14 @@ const Mehrfach = (() => {
   const ids = (): string[] => [...gewaehlt];
 
   /* Auf schmalen Bildschirmen gibt es in Notion keine Mehrfachauswahl —
-     dort ist Ziehen zum Markieren dem Scrollen im Weg. */
-  const schmal = (): boolean => window.matchMedia('(max-width:700px)').matches;
+     dort ist Ziehen zum Markieren dem Scrollen im Weg.
+     760 und nicht 700: „schmal" soll überall dasselbe heissen. Die 700
+     stand hier als letzte von sieben Stellen, und ein Bildschirm von
+     730 px hätte Telefonleisten gezeigt und trotzdem Ziehen erlaubt. */
+  const schmal = (): boolean =>
+    window.matchMedia('(max-width:' +
+      ((typeof KONSTANTEN !== 'undefined' && KONSTANTEN.TELEFON_BREITE) || 760) +
+      'px)').matches;
 
   const waehle = (id: string | undefined, dazu = false): void => {
     if (!id) return;

@@ -90,6 +90,18 @@ const seite = await browser.newPage({
 await seite.goto(`http://localhost:${PORT}/index.html`);
 await seite.waitForTimeout(2200);
 
+/* DAS WILLKOMMEN WEGRÄUMEN — hier misst kein Erstbesucher.
+   Seit §11 (E55) legt sich beim allerersten Öffnen ein Blatt über den
+   ganzen Bildschirm. Das ist dort richtig und hier im Weg: es deckte in
+   drei Abschnitten das ab, was gemessen werden sollte, und die Meldungen
+   dazu („der Klick nach dem Loslassen hat das Menü geschlossen") zeigten
+   auf ganz andere Ecken. Abschnitt 18 ruft es später ausdrücklich auf. */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.getElementById('rg-willkommen')?.remove();
+  document.getElementById('rg-einladung')?.remove();
+});
+
 /* Eine Seite mit Inhalt, damit auch die Werkzeuge über dem Titel dastehen. */
 await seite.evaluate(() => {
   const s = Store.addBlock(null, 'page', { text: 'Fingerprobe' });
@@ -340,11 +352,57 @@ p('Sichern und Papierkorb sind erreichbar',
 p('Die KI ist hier erreichbar, auch ohne Reiter oben (E38)',
   blatt?.hatKI === true, 'sie hat oben keinen Platz mehr und muss hier stehen');
 
+/* DER SPEICHERBALKEN (Vorgabe §16). Er gehört hierher: bei einer App, die
+   alles auf dem Gerät hält, ist „wie viel liegt hier eigentlich?" die
+   erste Frage nach „wo bin ich?". Er kommt NACH — `storage.estimate()` ist
+   asynchron —, deshalb wird hier gewartet statt sofort gemessen. */
+await seite.waitForTimeout(600);
+const speicher = await seite.evaluate(() => {
+  const sp = document.querySelector<HTMLElement>('#r-blatt .rm-speicher');
+  if (!sp) return null;
+  const bal = sp.querySelector<HTMLElement>('.rs-balken i');
+
+  /* LIEGT ETWAS DARÜBER? Der Hinweisstreifen liegt auf z-index 900, das
+     Blatt lag auf 700 — der Streifen stand mitten auf dem Speicherbalken.
+
+     DER ERSTE ENTWURF DIESER PRÜFUNG WAR WERTLOS: er fragte
+     `elementFromPoint` an der Stelle des Balkens ab und verliess sich
+     darauf, dass gerade ein Streifen da ist. War keiner da — und in
+     diesem Lauf ist keiner —, sagte sie „passt schon", auch mit dem
+     alten z-index. Gegenprobe gemacht, nicht rot geworden.
+
+     Jetzt legt der Lauf SELBST einen Streifen hin, genau wie der echte:
+     `position:fixed`, z-index 900, über dem Balken. Bleibt das Blatt
+     obenauf, stimmt die Schichtung wirklich. */
+  const streifen = document.createElement('div');
+  const r0 = sp.getBoundingClientRect();
+  streifen.style.cssText =
+    `position:fixed; z-index:900; left:${r0.left}px; top:${r0.top}px;` +
+    `width:${r0.width}px; height:${r0.height}px; background:#f0f`;
+  document.body.appendChild(streifen);
+  const r = sp.getBoundingClientRect();
+  const oben = document.elementFromPoint(r.left + r.width / 2, r.top + 14);
+  const frei = !!oben && !!oben.closest('#r-blatt');
+  streifen.remove();
+
+  return { text: (sp.textContent || '').trim(),
+           breite: bal ? bal.style.width : '', frei };
+}) as { text: string; breite: string; frei: boolean } | null;
+
+p('Der Speicherstand steht im Blatt', !!speicher, 'er kommt nach — asynchron');
+p('… mit einer Zahl in MB oder GB', /\d+\s?(MB|GB)/.test(speicher?.text || ''),
+  (speicher?.text || '').slice(0, 60));
+p('… und einem Balken, der etwas zeigt',
+  /%$/.test(speicher?.breite || '') && parseFloat(speicher?.breite || '0') > 0,
+  speicher?.breite);
+p('Nichts liegt über dem Blatt', speicher?.frei === true,
+  'der Hinweisstreifen lag auf z-index 900 und das Blatt auf 700');
+
 /* UND DAS BLATT MUSS DIE PILLE MITNEHMEN. Es zeichnete dreimal eine
    Ansicht, ohne den Reiter zu setzen, den `handyLeiste()` liest — man
    landete im Posteingang, und oben stand noch „Start". Derselbe Fehler wie
    an den Reitern selbst, nur an einer Stelle, wo ihn niemand suchte. */
-for (const [weg, erwartet] of [['seiten', 'Seiten'], ['inbox', 'Eingang'],
+for (const [weg, erwartet] of [['seiten', 'Seiten'], ['mehr', 'Mehr'],
                                ['start', 'Start']] as [string, string][]) {
   await seite.evaluate(() => document.getElementById('r-blatt')?.remove());
   await seite.evaluate(() => document.getElementById('hl-konto')?.click());
@@ -450,7 +508,7 @@ p('Der Weg zum Kalender steht darin', term.hatKalender === true);
 p('Die Pille steht auf „Termine"',
   term.aktiv.length === 1 && term.aktiv[0] === 'Termine', term.aktiv.join(', '));
 
-await seite.evaluate(() => document.getElementById('hl-inbox')?.click());
+await seite.evaluate(() => document.getElementById('hl-mehr')?.click());
 await seite.waitForTimeout(700);
 const ein = await seite.evaluate(() => {
   const link = document.querySelector<HTMLElement>('#page .pe-link');
@@ -458,13 +516,17 @@ const ein = await seite.evaluate(() => {
     aktiv: [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')]
              .map(b => (b.textContent || '').trim()),
     linkHoch: link ? Math.round(link.getBoundingClientRect().height) : -1,
-    linkText: (link?.textContent || '').trim()
+    linkText: (link?.textContent || '').trim(),
+    hatInbox: /Posteingang/.test(document.getElementById('page')?.textContent || '')
   };
 });
-p('Die Pille steht auf „Eingang"',
-  ein.aktiv.length === 1 && ein.aktiv[0] === 'Eingang',
+p('Die Pille steht auf „Mehr"',
+  ein.aktiv.length === 1 && ein.aktiv[0] === 'Mehr',
   ein.aktiv.join(', ') + ' — mit reiter(\'start\') stand hier „Start"');
-p('Die einzige Handlung im leeren Posteingang ist 44 px',
+p('Der Posteingang ist von hier aus erreichbar',
+  ein.hatInbox === true,
+  'er hat oben keinen eigenen Reiter mehr (E42 §6) und muss deshalb in Mehr stehen');
+p('Jede Handlung darin ist 44 px hoch',
   ein.linkHoch === -1 || ein.linkHoch >= 44,
   `„${ein.linkText}" ist ${ein.linkHoch} px`);
 
@@ -533,10 +595,14 @@ p('Der Seitenrand ist derselbe wie auf dem Start-Bildschirm',
 
 /* DIE LEISTE MUSS AUF DEN SCHMALEN GERÄTEN GANZ HINEINPASSEN. Gemessen bei
    390 px brauchte sie 395 px mit „Start" und 421 px mit „Eingang" — die
-   letzte Pille stand ausserhalb des Bildes und war nicht antippbar. Am
-   428er iPhone fiel das nie auf, und deshalb prüft dieser Abschnitt bei
-   375 UND 390. */
-for (const breite of [375, 390]) {
+   letzte Pille stand ausserhalb des Bildes und war nicht antippbar.
+
+   AM 428er FIEL DAS NIE AUF, und genau das war der Fehler dieser Prüfung:
+   sie kannte 375 und 390, aber nicht 428 und nicht 393. Als die Tasten
+   von 52 auf 56 px wuchsen (vier mal vier Pixel), kippte 428 auf 435 —
+   und niemand hätte es gemerkt, weil die eine Breite, die niemand prüfte,
+   ausgerechnet die häufigste grosse ist. Also alle vier gängigen. */
+for (const breite of [428, 393, 390, 375, 360]) {
   const schmal = await browser.newPage({
     viewport: { width: breite, height: 844 }, hasTouch: true, isMobile: true
   });
@@ -546,7 +612,7 @@ for (const breite of [375, 390]) {
     const l = document.getElementById('handy-oben');
     if (!l) return ['(keine Leiste)'];
     const raus: string[] = [];
-    for (const id of ['hl-start', 'hl-seiten', 'hl-bespr', 'hl-inbox']) {
+    for (const id of ['hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']) {
       l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
       document.getElementById(id)?.classList.add('an');
       if (l.scrollWidth > l.clientWidth) {
@@ -558,8 +624,698 @@ for (const breite of [375, 390]) {
   }) as string[];
   p(`Bei ${breite} px passen alle fünf Wege nebeneinander`, zuBreit.length === 0,
     zuBreit.join(', '));
+
+  /* UND DER INHALT DARF NICHT DAHINTER LIEGEN. Die Leiste steht fest oben;
+     was darunter kommt, muss sich genau um ihre Höhe nach unten setzen.
+     Gemessen am 7. August: Leiste 76 px, freigehaltener Platz 60 px — die
+     obersten 16 px des Zurück-Knopfes lagen dahinter. Am iPhone, wo die
+     Kerbe noch einmal 47 px dazulegt, wäre es die ganze Zeile gewesen,
+     denn die Kerbe wuchs nur in der Leiste mit, nicht im Platz darunter.
+
+     Hier wird bei 0 px Kerbe gemessen — was die Prüfung sichert, ist die
+     Gleichheit der beiden Zahlen. Solange BEIDE dieselbe Kerbe
+     dazurechnen, hält sie auch auf dem Gerät. */
+  const platz = await schmal.evaluate(() => ({
+    leiste: Math.round(document.getElementById('handy-oben')!
+              .getBoundingClientRect().height),
+    frei: Math.round(parseFloat(
+            getComputedStyle(document.getElementById('main')!).paddingTop)),
+    /* NICHT über `getComputedStyle` — das rechnet `env()` schon aus und
+       liefert auf diesem Rechner `calc(80px + 0px)`. Ob die Kerbe
+       überhaupt vorkommt, steht nur im Stilblatt selbst. */
+    marke: (() => {
+      let t = '';
+      /* Über `rule.style`, nicht über `cssText`: eine Verschachtelungs-
+         regel führt den ganzen Rumpf im Text mit, und in Chrome hat
+         inzwischen JEDE Stilregel eine (leere) `cssRules` — wer daran
+         entlangläuft, kommt an der Deklaration nie vorbei. */
+      const geh = (r: CSSRuleList) => {
+        for (const rr of [...r] as any[]) {
+          const wert = rr.style?.getPropertyValue?.('--hoben');
+          if (wert) t += wert.trim();
+          if (rr.cssRules?.length) geh(rr.cssRules);
+        }
+      };
+      for (const b of [...document.styleSheets]) {
+        try { geh(b.cssRules); } catch { /* fremde Herkunft */ }
+      }
+      return t;
+    })()
+  }));
+  p(`… und der Inhalt beginnt genau darunter (${breite} px)`,
+    platz.frei === platz.leiste,
+    `Leiste ${platz.leiste} px, freigehalten ${platz.frei} px`);
+  if (breite === 428) {
+    /* Der Teil, den dieser Rechner NICHT nachmessen kann. Hier ist die
+       Kerbe 0, also stimmen die beiden Zahlen auch dann, wenn nur die
+       Leiste sie mitrechnet. Auf dem iPhone wären es 47 px Unterschied.
+       Also wird stattdessen geprüft, dass die gemeinsame Marke die Kerbe
+       überhaupt kennt — die Leiste tut es nachweislich seit E37. */
+    p('Der freigehaltene Platz rechnet die Kerbe des Geräts mit',
+      /env\(\s*safe-area-inset-top/.test(platz.marke),
+      platz.marke || '--hoben steht nirgends');
+  }
   await schmal.close();
 }
+
+console.log('\n12 · Das Blatt „Neu erstellen" hinter dem Stift');
+
+/* WAS DER STIFT VORHER TAT: sofort eine leere Seite anlegen. Richtig für
+   den, der genau das will — eine Sackgasse für alle anderen. Redion kann
+   Datenbanken, Tabellen, Aufgaben, Karteikarten, Dateien und Vorlagen, und
+   keines davon war von hier aus erreichbar. Wer nicht wusste, dass es
+   Karteikarten gibt, fand sie nie (Vorgabe §18, E45). */
+await seite.evaluate(() => {
+  document.querySelectorAll('.menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+});
+await seite.evaluate(() => document.getElementById('hu-neu')?.click());
+await seite.waitForTimeout(600);
+
+const blattNeu = await seite.evaluate(() => {
+  const m = document.querySelector<HTMLElement>('.menu.blatt');
+  if (!m) return null;
+  const kn = [...m.querySelectorAll<HTMLElement>('button[data-neu]')];
+  const r = m.getBoundingClientRect();
+  return {
+    titel: (m.querySelector('.blatt-titel')?.textContent || '').trim(),
+    wege: kn.map(b => b.dataset['neu'] || ''),
+    grund: !!document.querySelector('.menu-grund'),
+    zuFlach: kn.filter(b => b.getBoundingClientRect().height < 60)
+               .map(b => (b.textContent || '').trim().slice(0, 16)),
+    ohneSatz: kn.filter(b => !b.querySelector('.ne-txt i')).length,
+    amBoden: Math.round(r.bottom) >= innerHeight - 1,
+    seitenVorher: Store.rootPages().length
+  };
+}) as { titel: string; wege: string[]; grund: boolean; zuFlach: string[];
+        ohneSatz: number; amBoden: boolean; seitenVorher: number } | null;
+
+p('Der Stift öffnet ein Blatt', !!blattNeu, 'er legte vorher sofort eine Seite an');
+p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.titel);
+p('Es führt zu acht Sachen, nicht zu einer',
+  (blattNeu?.wege.length ?? 0) === 8, (blattNeu?.wege ?? []).join(', '));
+p('Datenbank, Tabelle, Aufgabe und Karteikarte sind dabei',
+  ['db', 'tabelle', 'aufgabe', 'karte'].every(w => (blattNeu?.wege ?? []).includes(w)),
+  (blattNeu?.wege ?? []).join(', '));
+p('Jede Zeile ist mindestens 60 px hoch', (blattNeu?.zuFlach.length ?? 1) === 0,
+  (blattNeu?.zuFlach ?? []).join(', '));
+/* Ohne den Satz darunter ist „Neue Tabelle" nur ein Wort — mit ihm weiss
+   man, dass darin gerechnet wird. Das ist der Unterschied zwischen einer
+   Liste und einem Wegweiser. */
+p('Jede Zeile sagt in einem Satz, was sie tut',
+  blattNeu?.ohneSatz === 0, String(blattNeu?.ohneSatz) + ' ohne Satz');
+p('Es sitzt am unteren Rand', blattNeu?.amBoden === true);
+p('Dahinter liegt ein Grund zum Wegtippen', blattNeu?.grund === true);
+
+/* Und es tut auch etwas. „Neue Seite" muss weiterhin eine Seite anlegen —
+   ein Blatt, das nur schön ist, hat den Stift verschlechtert. */
+await seite.evaluate(() => {
+  document.querySelector<HTMLElement>('.menu.blatt [data-neu="seite"]')?.click();
+});
+await seite.waitForTimeout(700);
+const danach = await seite.evaluate(() => ({
+  seiten: Store.rootPages().length,
+  blattWeg: !document.querySelector('.menu.blatt'),
+  imTitel: document.activeElement?.id === 'title'
+}));
+p('„Neue Seite" legt wirklich eine an',
+  danach.seiten === (blattNeu?.seitenVorher ?? 0) + 1,
+  `vorher ${blattNeu?.seitenVorher}, nachher ${danach.seiten}`);
+p('… und das Blatt geht dabei zu', danach.blattWeg === true);
+
+console.log('\n13 · Das KI-Blatt kommt von unten (Vorgabe §19)');
+
+/* ES SCHOB SICH BISHER VON RECHTS HEREIN — die Form, die am Rechner
+   richtig ist, weil es dort eine Spalte NEBEN der Seite ist. Am Telefon
+   gibt es kein Neben. Dort ist es ein Blatt, und es kommt von da, wo der
+   Daumen es angetippt hat: von unten. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+});
+await seite.evaluate(() => document.getElementById('hu-ki')?.click());
+await seite.waitForTimeout(800);
+
+const ki = await seite.evaluate(() => {
+  const a = document.getElementById('ai');
+  if (!a) return null;
+  const r = a.getBoundingClientRect();
+  const st = getComputedStyle(a);
+  /* Wieder selbst einen Streifen hinlegen — der echte ist nicht immer da,
+     und eine Prüfung, die auf Zufall wartet, ist keine (§55.2). */
+  const streifen = document.createElement('div');
+  streifen.style.cssText =
+    `position:fixed; z-index:900; left:0; right:0; bottom:0; height:120px; background:#f0f`;
+  document.body.appendChild(streifen);
+  const oben = document.elementFromPoint(innerWidth / 2, innerHeight - 40);
+  const frei = !!oben && (oben.id === 'ai' || !!oben.closest('#ai'));
+  streifen.remove();
+  return {
+    offen: a.classList.contains('open'),
+    amBoden: Math.round(r.bottom) >= innerHeight - 1,
+    laesstLuft: r.top > 40,
+    vollBreit: Math.round(r.width) === innerWidth,
+    rund: parseInt(st.borderTopLeftRadius) >= 12,
+    frei
+  };
+}) as { offen: boolean; amBoden: boolean; laesstLuft: boolean;
+        vollBreit: boolean; rund: boolean; frei: boolean } | null;
+
+p('Der KI-Knopf öffnet das Blatt', ki?.offen === true);
+p('Es sitzt unten, nicht rechts', ki?.amBoden === true && ki?.vollBreit === true,
+  JSON.stringify(ki));
+/* Ein Blatt, das den ganzen Bildschirm nimmt, ist keine Überlagerung mehr,
+   sondern eine neue Seite — man verliert das Gefühl, wo man herkam. */
+p('… und lässt oben einen Streifen frei', ki?.laesstLuft === true);
+p('… mit runden Ecken oben', ki?.rund === true);
+p('Nichts liegt über dem Eingabefeld', ki?.frei === true,
+  'der Hinweisstreifen liegt auf 900; ein Blatt zum Hineintippen muss darüber');
+
+await seite.evaluate(() => App.kiPanel(false));
+await seite.waitForTimeout(400);
+
+console.log('\n14 · Die Suche: „Zuletzt gesucht" und ein ehrliches Leer (§17)');
+
+/* DAS LEERE SUCHFELD IST DER HÄUFIGSTE ZUSTAND ÜBERHAUPT — man öffnet die
+   Suche und hat noch nichts getippt. Ausgerechnet dort stand nichts.
+   Menschen suchen wiederholt dasselbe; die letzten Begriffe als antippbare
+   Marken sind die schnellste Abkürzung, die eine Suche haben kann. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  Store.setMeta('suchverlauf', ['formel', 'sicherung', 'karteikarte']);
+  App.suche();
+});
+await seite.waitForTimeout(700);
+
+const su = await seite.evaluate(() => {
+  const m = [...document.querySelectorAll<HTMLElement>('.sv-marken button')];
+  return {
+    kopf: (document.querySelector('.sv-kopf')?.textContent || '').trim(),
+    marken: m.map(b => (b.textContent || '').trim()),
+    hoehe: m[0] ? Math.round(m[0].getBoundingClientRect().height) : 0
+  };
+});
+p('Das leere Suchfeld zeigt die letzten Suchen', su.marken.length === 3,
+  JSON.stringify(su.marken) + ' — vorher stand dort nichts');
+p('… unter einer Überschrift', su.kopf === 'Zuletzt gesucht', su.kopf);
+p('… und die Marken sind mit dem Finger zu treffen', su.hoehe >= 40, String(su.hoehe));
+
+/* Ein Tipp darauf sucht wirklich — eine Marke, die nur dasteht, ist Zierrat. */
+await seite.evaluate(() => {
+  document.querySelector<HTMLElement>('.sv-marken button')?.click();
+});
+await seite.waitForTimeout(500);
+const nachTipp = await seite.evaluate(() =>
+  (document.getElementById('q') as HTMLInputElement | null)?.value || '');
+p('Ein Tipp auf eine Marke sucht danach', nachTipp === 'formel', nachTipp);
+
+/* Und wenn nichts da ist, steht ein Satz statt einer leeren Fläche. */
+await seite.evaluate(() => {
+  const i = document.getElementById('q') as HTMLInputElement;
+  i.value = 'zzqqxxyy'; i.dispatchEvent(new Event('input'));
+});
+await seite.waitForTimeout(500);
+const leer = await seite.evaluate(() =>
+  (document.querySelector('.such-leer')?.textContent || '').trim());
+p('Nichts gefunden sagt, was man tun kann',
+  /Nichts gefunden/.test(leer) && /Befehl/.test(leer), leer.slice(0, 70));
+
+await seite.evaluate(() => document.querySelector('.overlay')?.remove());
+
+console.log('\n15 · Leere Zustände sagen, was man tun kann (Vorgabe §13)');
+
+/* „Noch keine Seiten" allein ist eine Feststellung; erst die Knöpfe daneben
+   machen daraus einen Weg. Der zweite — Importieren — ist wichtiger, als
+   er aussieht: wer gerade das Gerät gewechselt hat, will nicht anfangen,
+   sondern zurückholen. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  Object.values<any>(Store.cache.blocks).forEach((b: any) => {
+    if (b.type === 'page') Store.updateBlock(b.id, { alive: false });
+  });
+  Ansichten.seiten();
+});
+await seite.waitForTimeout(600);
+
+const lz = await seite.evaluate(() => {
+  const el = document.querySelector<HTMLElement>('.leer-zustand');
+  const kn = [...(el?.querySelectorAll<HTMLElement>('button') || [])];
+  return {
+    da: !!el,
+    text: (el?.textContent || '').trim(),
+    knoepfe: kn.map(b => (b.textContent || '').trim()),
+    zuFlach: kn.filter(b => b.getBoundingClientRect().height < 44).length
+  };
+});
+p('Ohne Seiten steht ein leerer Zustand da', lz.da === true,
+  'vorher stand dort nur „Noch keine Seiten" in einer grauen Zeile');
+p('… und er nennt zwei Wege', lz.knoepfe.length === 2, lz.knoepfe.join(', '));
+p('… darunter das Zurückholen einer Sicherung',
+  lz.knoepfe.includes('Importieren'),
+  'wer das Gerät gewechselt hat, will nicht anfangen, sondern zurückholen');
+p('… und beide sind mit dem Finger zu treffen', lz.zuFlach === 0);
+
+console.log('\n16 · Die Suche am Telefon: Marken statt Auswahlfelder (§17, E48)');
+
+/* VIER `<select>` NEBENEINANDER SIND AM RECHNER RICHTIG und am Telefon das
+   Gegenteil. Dort öffnet jedes ein Systemrad über den halben Bildschirm —
+   für „nur Titel" statt „Titel und Inhalt" sind das drei Handgriffe, und
+   währenddessen sieht man die Trefferliste gar nicht mehr.
+   Als runde Marken behalten sie ihre Funktion und brauchen einen Tipp.
+
+   GEMESSEN WIRD DIE ZEILE, NICHT DAS STILBLATT. Der erste Entwurf schrieb
+   `flex-wrap:wrap` — vier Marken zu 42 px in zwei Reihen sind 100 px, und
+   das sind genau die 100 px, in denen die Treffer stehen. Ob die Zeile
+   umbricht, sieht man nur an den Y-Werten der vier Felder. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  App.suche();
+});
+await seite.waitForTimeout(600);
+
+const fl = await seite.evaluate(() => {
+  const leiste = document.querySelector<HTMLElement>('.such-filter');
+  const sel = [...(leiste?.querySelectorAll<HTMLSelectElement>('select') || [])];
+  const inp = document.getElementById('q') as HTMLInputElement | null;
+
+  /* Passt der Platzhalter ins Feld? NICHT über `scrollWidth` — ein
+     Platzhalter steht nicht im Inhalt und taucht dort nie auf. Also die
+     Breite mit derselben Schrift nachrechnen. */
+  let textBreite = 0, feldBreite = 0;
+  if (inp) {
+    const c = getComputedStyle(inp);
+    const g = document.createElement('canvas').getContext('2d');
+    if (g) {
+      g.font = `${c.fontStyle} ${c.fontWeight} ${c.fontSize} ${c.fontFamily}`;
+      textBreite = Math.round(g.measureText(inp.placeholder).width);
+    }
+    feldBreite = Math.round(inp.clientWidth
+      - parseFloat(c.paddingLeft) - parseFloat(c.paddingRight));
+  }
+
+  return {
+    reihen: new Set(sel.map(x => Math.round(x.getBoundingClientRect().top))).size,
+    zuFlach: sel.filter(x => x.getBoundingClientRect().height < 42).length,
+    rund: sel.every(x => parseFloat(getComputedStyle(x).borderTopLeftRadius) >= 18),
+    rollt: (leiste?.scrollWidth ?? 0) > (leiste?.clientWidth ?? 0),
+    tastenZeile: !!document.querySelector<HTMLElement>('.hint-tasten')?.offsetParent,
+    befehlsZeile: !!document.querySelector<HTMLElement>('.hint-befehle')?.offsetParent,
+    textBreite, feldBreite
+  };
+});
+
+p('Die vier Filter stehen in EINER Reihe', fl.reihen === 1,
+  fl.reihen + ' Reihen — zwei Reihen kosten 100 px Trefferliste');
+p('… sind mit dem Finger zu treffen', fl.zuFlach === 0, String(fl.zuFlach) + ' zu flach');
+p('… sehen aus wie Marken, nicht wie Formularfelder', fl.rund === true);
+p('… und die Zeile rollt seitwärts, statt umzubrechen', fl.rollt === true);
+
+/* Ein gesetzter Filter muss man SEHEN, ohne ihn zu öffnen — sonst sucht
+   man in einem Ausschnitt und weiss es nicht. */
+const marke = await seite.evaluate(() => {
+  const vorher = getComputedStyle(document.getElementById('f-typ')!).backgroundColor;
+  const x = document.getElementById('f-typ') as HTMLSelectElement;
+  x.value = 'datenbank';
+  x.dispatchEvent(new Event('change', { bubbles: true }));
+  const nachher = getComputedStyle(x).backgroundColor;
+  const nachbar = getComputedStyle(document.getElementById('f-wo')!).backgroundColor;
+  return { vorher, nachher, nachbar };
+});
+p('Ein gesetzter Filter sieht anders aus als ein leerer',
+  marke.nachher !== marke.vorher && marke.nachher !== marke.nachbar,
+  marke.vorher + ' → ' + marke.nachher + ' (Nachbar ' + marke.nachbar + ')');
+
+/* Die Fusszeile nannte ↑ ↓, Enter und Esc. Keine dieser Tasten gibt es auf
+   einer Telefontastatur — das war eine Anleitung für ein anderes Gerät. */
+p('Die Tastenzeile ist am Telefon weg', fl.tastenZeile === false,
+  'Esc gibt es dort nicht');
+p('… die Suchbefehle bleiben — die gelten überall', fl.befehlsZeile === true);
+
+/* Und der Platzhalter, der im Feld abbrach: „Suchen — auch typ:seite,
+   in:Projekte, nach:202" liest sich wie ein Fehler. */
+p('Der Platzhalter passt ins Suchfeld',
+  fl.textBreite > 0 && fl.textBreite <= fl.feldBreite,
+  fl.textBreite + ' px Text in ' + fl.feldBreite + ' px Feld');
+
+await seite.evaluate(() => document.querySelector('.overlay')?.remove());
+
+console.log('\n17 · Die Pille unter den Reitern gleitet, statt zu springen');
+
+/* AUS DER BEWEGUNGS-VORGABE: „active tab indicator slides".
+   Der Unterschied ist keine Zierde. Verschwindet die Fläche an einer
+   Stelle und taucht an der nächsten auf, liest das Auge „hier ist etwas
+   Neues" und muss die Stelle suchen. Wandert sie, folgt der Blick von
+   selbst und ist beim Ankommen schon dort.
+
+   EINE EIGENE SEITE MIT MITSCHRIFT. Die interessanteste Frage ist nicht,
+   ob die Pille wandert, sondern ob sie es beim START NICHT tut: eine
+   Pille, die sich beim Öffnen der App von der linken Kante hereinschiebt,
+   ist eine Bewegung ohne Anlass. Das sieht man nur, wenn man von der
+   ersten Bildwiederholung an mitschreibt. */
+const spurSeite = await browser.newPage({
+  viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true
+});
+await spurSeite.addInitScript(() => {
+  (globalThis as any).__spur = [] as number[];
+  const tick = () => {
+    const el = document.getElementById('ho-pille');
+    if (el && getComputedStyle(el).opacity !== '0')
+      (globalThis as any).__spur.push(Math.round(el.getBoundingClientRect().left));
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+});
+await spurSeite.goto(`http://localhost:${PORT}/index.html`);
+await spurSeite.waitForTimeout(2600);
+
+const spur = await spurSeite.evaluate(() => {
+  const s = (globalThis as any).__spur as number[];
+  const an = document.querySelector<HTMLElement>('#handy-oben button.an');
+  const pl = document.getElementById('ho-pille');
+  return {
+    orte: [...new Set(s)],
+    bilder: s.length,
+    aktivX: an ? Math.round(an.getBoundingClientRect().left) : -1,
+    aktivB: an ? Math.round(an.getBoundingClientRect().width) : -1,
+    aktivGrund: an ? getComputedStyle(an).backgroundColor : '',
+    pilleX: pl ? Math.round(pl.getBoundingClientRect().left) : -1,
+    pilleB: pl ? Math.round(pl.getBoundingClientRect().width) : -1,
+    pilleGrund: pl ? getComputedStyle(pl).backgroundColor : ''
+  };
+});
+p('Beim Start steht die Pille sofort da, statt hereinzugleiten',
+  spur.bilder > 10 && spur.orte.length === 1,
+  spur.orte.length + ' Orte in ' + spur.bilder + ' Bildern: ' + spur.orte.join(' '));
+p('… und zwar genau auf dem aktiven Reiter',
+  spur.pilleX === spur.aktivX && spur.pilleB === spur.aktivB,
+  `Pille ${spur.pilleX}/${spur.pilleB}, Reiter ${spur.aktivX}/${spur.aktivB}`);
+/* Zwei Flächen übereinander wären keine Wanderung, sondern eine Ankunft
+   bei etwas, das schon da ist. Der Knopf gibt seinen Hintergrund ab. */
+p('Der aktive Reiter bringt keinen eigenen Hintergrund mehr mit',
+  /^rgba\(0, 0, 0, 0\)$|^transparent$/.test(spur.aktivGrund), spur.aktivGrund);
+p('… den bringt die Pille', !/^rgba\(0, 0, 0, 0\)$/.test(spur.pilleGrund), spur.pilleGrund);
+
+/* Und jetzt der Wechsel: unterwegs muss sie WIRKLICH unterwegs sein. */
+const flug = await spurSeite.evaluate(async () => {
+  const ort = () => Math.round(document.getElementById('ho-pille')!.getBoundingClientRect().left);
+  const start = ort();
+  Seitenleiste.reiterWechseln('bespr');
+  await new Promise(f => setTimeout(f, 90));
+  const mitte = ort();
+  await new Promise(f => setTimeout(f, 600));
+  const ende = ort();
+  const ziel = Math.round(
+    document.getElementById('hl-bespr')!.getBoundingClientRect().left);
+  return { start, mitte, ende, ziel };
+});
+p('Beim Wechsel ist die Pille unterwegs zwischen den Reitern',
+  flug.mitte > flug.start && flug.mitte < flug.ende,
+  `${flug.start} → ${flug.mitte} → ${flug.ende} (Ziel ${flug.ziel})`);
+p('… und kommt genau an', flug.ende === flug.ziel, flug.ende + ' statt ' + flug.ziel);
+
+/* „Kompass" hat oben keinen Reiter (E42). Dann gehört die Pille nirgendwo
+   hin — und sie an den Anfang zu schieben wäre eine falsche Aussage. */
+const ohne = await spurSeite.evaluate(async () => {
+  Seitenleiste.reiterWechseln('kompass');
+  await new Promise(f => setTimeout(f, 500));
+  const pl = document.getElementById('ho-pille')!;
+  return {
+    deck: getComputedStyle(pl).opacity,
+    markiert: document.querySelectorAll('#handy-oben button.an').length
+  };
+});
+p('Wo kein Reiter zuständig ist, ist auch keine Pille',
+  ohne.deck === '0' && ohne.markiert === 0,
+  'Deckkraft ' + ohne.deck + ', markiert ' + ohne.markiert);
+
+await spurSeite.close();
+
+console.log('\n18 · Der Willkommensbildschirm (Vorgabe §11)');
+
+/* WAS VORHER DASTAND, und warum es zu wenig war: eine kleine Einladung
+   unten, „Neu hier? — Führung". Der Gedanke war richtig, aber sie
+   beantwortete die eine Frage nicht, die der allererste Blick stellt:
+   was ist das hier, und wohin gehören meine Daten?
+
+   Redion ist local-first. Das ist der Grund, warum es die App gibt — und
+   ausgerechnet das erfuhr niemand, bevor er anfing. Es stand in der
+   README, die kein Mensch öffnet. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt, ' +
+    '#rg-einladung, #rg-willkommen').forEach(x => x.remove());
+  Rundgang.willkommen(true);
+});
+await seite.waitForTimeout(700);
+
+const wk = await seite.evaluate(() => {
+  const d = document.getElementById('rg-willkommen');
+  const k = d?.querySelector<HTMLElement>('.wk-kasten');
+  const wege = [...(d?.querySelectorAll<HTMLElement>('.wk-weg') || [])];
+  const r = k?.getBoundingClientRect();
+  return {
+    da: !!d,
+    rolle: d?.getAttribute('role'), modal: d?.getAttribute('aria-modal'),
+    text: (d?.textContent || '').replace(/\s+/g, ' '),
+    wege: wege.map(w => ({ a: w.dataset['a'],
+                           h: Math.round(w.getBoundingClientRect().height) })),
+    fokus: (document.activeElement as HTMLElement | null)?.dataset?.['a'] || '',
+    /* Am Telefon ein Blatt von unten: es sitzt bündig unten und über die
+       ganze Breite. */
+    untenBuendig: r ? Math.round(innerHeight - r.bottom) <= 1 : false,
+    volleBreite: r ? Math.round(r.width) === innerWidth : false,
+    gesehen: !!Store.getMeta('rundgangGesehen', false)
+  };
+});
+p('Beim ersten Öffnen steht ein Willkommen da', wk.da === true);
+p('… und es ist ein Dialog', wk.rolle === 'dialog' && wk.modal === 'true',
+  wk.rolle + '/' + wk.modal);
+/* DER SATZ, UM DEN ES GEHT. Ohne ihn ist es ein hübscher Kasten. */
+p('… der sagt, wo die Daten liegen',
+  /auf deinem Gerät/.test(wk.text) && /Kein Konto/.test(wk.text),
+  wk.text.slice(0, 100));
+p('… und drei Wege anbietet', wk.wege.length === 3,
+  JSON.stringify(wk.wege.map(w => w.a)));
+/* DER ZWEITE IST DER, DEN MAN VERGISST. Wer gerade das Gerät gewechselt
+   hat, will nicht anfangen, sondern zurückholen. */
+p('… darunter das Einlesen einer Sicherung',
+  wk.wege.some(w => w.a === 'import'),
+  JSON.stringify(wk.wege.map(w => w.a)));
+p('… alle drei mit dem Finger zu treffen',
+  wk.wege.every(w => w.h >= 60), JSON.stringify(wk.wege.map(w => w.h)));
+p('Der Fokus steht auf dem ersten Weg', wk.fokus === 'los', wk.fokus);
+p('Am Telefon kommt es als Blatt von unten',
+  wk.untenBuendig && wk.volleBreite,
+  `unten bündig ${wk.untenBuendig}, volle Breite ${wk.volleBreite}`);
+/* GEZEIGT IST GESEHEN. Eine Begrüssung, die bei jedem Öffnen kommt, ist
+   eine Ermahnung. */
+p('Gezeigt ist gesehen — es kommt nicht wieder', wk.gesehen === true);
+
+/* Escape ist „später": nichts davon ist Pflicht. */
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(300);
+p('Escape schliesst es', await seite.evaluate(() =>
+  !document.getElementById('rg-willkommen')));
+
+
+console.log('\n19 · Die Sicherungskarte sagt, dass sie arbeitet (§20)');
+
+/* EINE `.redion`-SICHERUNG MIT ANHÄNGEN DAUERT. Bis hierher passierte in
+   dieser Zeit auf der Karte nichts: der Knopf blieb, wie er war, und
+   irgendwann kam ein Toast. Am Telefon steht der über der Aktionsleiste
+   und ist nach 2,6 Sekunden weg — wer in dem Moment wegsieht, weiss nicht,
+   ob überhaupt etwas geschieht, und tippt ein zweites Mal.
+
+   Gemessen wird mit einer absichtlich langsamen Sicherung: der mittlere
+   Zustand ist der, um den es geht, und er ist im Betrieb der kürzeste. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt, ' +
+    '#rg-willkommen').forEach(x => x.remove());
+  Store.setMeta('sicherung:zuletzt', '');       /* nie gesichert */
+  Ansichten.start();
+});
+await seite.waitForTimeout(500);
+
+const sich = await seite.evaluate(async () => {
+  const w = window as any;
+  w.__echtSichern = App.sicherungSpeichern;
+  let gerufen = 0;
+  (App as any).sicherungSpeichern = () => { gerufen++;
+    return new Promise(f => setTimeout(f, 1500)); };
+
+  const knopf = () => document.querySelector<HTMLButtonElement>('.home-sich button');
+  const vorher = { text: (knopf()?.textContent || '').trim(),
+                   gesperrt: !!knopf()?.disabled };
+
+  knopf()?.click();
+  await new Promise(f => setTimeout(f, 300));
+  const b1 = knopf();
+  const laeuft = {
+    text: (b1?.textContent || '').trim(),
+    kreisel: !!document.querySelector('.hs-kreisel'),
+    gesperrt: !!b1?.disabled,
+    /* Ein zweiter Klick darf keine zweite Sicherung starten. */
+    dreht: b1 ? getComputedStyle(document.querySelector('.hs-kreisel')!)
+      .animationName : ''
+  };
+  knopf()?.click();
+  await new Promise(f => setTimeout(f, 1500));
+
+  const b2 = knopf();
+  const c2 = b2 ? getComputedStyle(b2) : null;
+  const fertig = { text: (b2?.textContent || '').trim(),
+                   klasse: b2?.className || '',
+                   deck: c2?.opacity || '', farbe: c2?.color || '',
+                   grund: c2?.backgroundColor || '' };
+
+  (App as any).sicherungSpeichern = w.__echtSichern;
+  return { vorher, laeuft, fertig, gerufen };
+});
+
+p('Vorher ist der Knopf ein gewöhnlicher Knopf',
+  /sichern/i.test(sich.vorher.text) && !sich.vorher.gesperrt,
+  JSON.stringify(sich.vorher));
+p('Während des Sicherns sagt er es', /Sichern …/.test(sich.laeuft.text),
+  sich.laeuft.text);
+p('… mit einem Kreisel, der sich dreht',
+  sich.laeuft.kreisel && sich.laeuft.dreht === 'hs-dreh', JSON.stringify(sich.laeuft));
+/* EIN ZWEITER KLICK WÄHREND DES LAUFS wäre eine zweite Sicherung — bei
+   Anhängen eine zweite Runde durch alle Dateien. */
+p('… und ein zweiter Klick startet nichts Neues', sich.gerufen === 1,
+  String(sich.gerufen) + ' Aufrufe');
+p('Danach steht ein Haken da', /Gesichert/.test(sich.fertig.text) &&
+  /✓/.test(sich.fertig.text), sich.fertig.text);
+/* GESPERRT HEISST NICHT „NICHT GEMEINT". Der Knopf bleibt gesperrt, damit
+   kein zweiter Lauf startet — aber die Erfolgsmeldung muss man lesen
+   können. Gemessen war sie auf Grün bei 40 Prozent Deckkraft. */
+p('… und man kann ihn lesen', parseFloat(sich.fertig.deck) >= 0.95,
+  'Deckkraft ' + sich.fertig.deck);
+p('… in der Farbe für Erfolg, nicht mehr im Akzent',
+  sich.fertig.grund !== '' && sich.fertig.grund !== 'rgba(0, 0, 0, 0)' &&
+  /fertig/.test(sich.fertig.klasse), sich.fertig.grund);
+
+
+console.log('\n20 · Ein Klick ist ein Klick, auch nach dem zehnten Zeichnen');
+
+/* DER FUND, DEN ABSCHNITT 19 NEBENBEI GEMACHT HAT. Er zählte zwei Klicks
+   und bekam drei Aufrufe.
+
+   `#page` bleibt stehen; nur sein Inhalt wird neu geschrieben. Der
+   Start-Bildschirm hängte seinen Zuhörer mit `addEventListener` daran —
+   und `start()` läuft bei JEDER Rückkehr zum Start. Nach dem dritten Mal
+   legte ein Klick auf „Tagesjournal" drei Journale an; nach dem zehnten
+   zehn. Bei „Jetzt sichern" mit Anhängen wären das zehn Läufe durch alle
+   Dateien.
+
+   Gemessen wird mit zehn Zeichnungen, weil eine oder zwei den Unterschied
+   nicht zeigen — der Fehler wächst mit der Nutzungsdauer, und genau
+   deshalb fällt er beim Ausprobieren nie auf. */
+const mehrfach = await seite.evaluate(async () => {
+  const w = window as any;
+  w.__echtJournal = Werkzeuge.journal;
+  let gerufen = 0;
+  (Werkzeuge as any).journal = () => { gerufen++; };
+
+  for (let i = 0; i < 10; i++) Ansichten.start();
+  await new Promise(f => setTimeout(f, 300));
+  document.querySelector<HTMLElement>('#page [data-a="journal"]')?.click();
+  await new Promise(f => setTimeout(f, 200));
+
+  (Werkzeuge as any).journal = w.__echtJournal;
+  return gerufen;
+});
+p('Zehnmal gezeichnet, einmal geklickt, einmal ausgeführt', mehrfach === 1,
+  String(mehrfach) + ' Aufrufe — jeder Zuhörer, der beim Zeichnen dazukommt, ' +
+  'bleibt für immer');
+
+
+console.log('\n21 · Die Einstellungen am Telefon (Vorgabe §12)');
+
+/* DIE SCHLECHTESTE SEITE DER GANZEN APP, gemessen am 8. August bei 390 px:
+   die Rechner-Aufteilung lief unverändert weiter — 236 px Navigation, und
+   für den Inhalt blieben 129 Pixel. Jede Beschreibung brach in
+   Einzelwörter um („Hell, dunkel oder wie das System" als sechs Zeilen),
+   und die Auswahlfelder ragten über den Rand hinaus.
+
+   Zwei Spalten passen nicht auf ein Telefon. Also zwei Seiten. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  Einstellungen.oeffne();
+});
+await seite.waitForTimeout(600);
+
+const eList = await seite.evaluate(() => {
+  const f2 = document.querySelector<HTMLElement>('.einst-fenster');
+  const nav = document.querySelector<HTMLElement>('.einst-nav');
+  const inh = document.querySelector<HTMLElement>('.einst-inhalt');
+  const kn = [...(nav?.querySelectorAll<HTMLElement>('button[data-b]') || [])];
+  const zu = document.querySelector<HTMLElement>('.einst-zu');
+  return {
+    blick: f2?.getAttribute('data-blick'),
+    volleBreite: Math.round(nav?.getBoundingClientRect().width || 0) === innerWidth,
+    inhaltWeg: inh ? getComputedStyle(inh).display === 'none' : false,
+    zeilen: kn.length,
+    zuFlach: kn.filter(b => b.getBoundingClientRect().height < 44).length,
+    zuKlein: zu ? Math.round(zu.getBoundingClientRect().height) : 0
+  };
+});
+p('Die Bereichsliste nimmt die ganze Breite',
+  eList.volleBreite && eList.blick === 'liste', JSON.stringify(eList));
+p('… und der Inhalt liegt nicht daneben', eList.inhaltWeg === true,
+  'auf 390 px blieben dafür 129 px übrig');
+p('… jede Zeile ist mit dem Finger zu treffen', eList.zuFlach === 0,
+  String(eList.zuFlach) + ' von ' + eList.zeilen + ' zu flach');
+p('Auch das ✕ ist ein Fingerziel', eList.zuKlein >= 44, String(eList.zuKlein));
+
+const eBereich = await seite.evaluate(async () => {
+  document.querySelector<HTMLElement>('.einst-nav [data-b="allgemein"]')?.click();
+  await new Promise(f => setTimeout(f, 400));
+  const f2 = document.querySelector<HTMLElement>('.einst-fenster');
+  const nav = document.querySelector<HTMLElement>('.einst-nav');
+  const st = [...document.querySelectorAll<HTMLElement>('.ez-steuer select, .ez-steuer input')];
+  const zur = document.querySelector<HTMLElement>('.einst-zurueck');
+  const z = document.querySelector<HTMLElement>('.ez-zeile');
+  return {
+    blick: f2?.getAttribute('data-blick'),
+    navWeg: nav ? getComputedStyle(nav).display === 'none' : false,
+    umbruch: z ? getComputedStyle(z).flexWrap : '',
+    steuerHoch: st.slice(0, 4).map(x => Math.round(x.getBoundingClientRect().height)),
+    /* DAS WAR DER SICHTBARE FEHLER: die Felder standen halb ausserhalb. */
+    ueberRand: st.some(x => Math.round(x.getBoundingClientRect().right) > innerWidth),
+    zurueck: !!zur && getComputedStyle(zur).display !== 'none',
+    zurueckHoch: Math.round(zur?.getBoundingClientRect().height || 0)
+  };
+});
+p('Ein Tipp führt eine Seite weiter', eBereich.blick === 'bereich' && eBereich.navWeg,
+  JSON.stringify(eBereich));
+p('… die Zeilen stapeln, statt sich zu quetschen', eBereich.umbruch === 'wrap',
+  eBereich.umbruch);
+p('… die Felder sind 44 px hoch und im Bild',
+  eBereich.steuerHoch.every(h => h >= 44) && !eBereich.ueberRand,
+  JSON.stringify(eBereich.steuerHoch) + ', über den Rand: ' + eBereich.ueberRand);
+/* OHNE WEG ZURÜCK WÄRE DIE ZWEITE SEITE EINE SACKGASSE: das ✕ schliesst
+   alles, und dann fängt man von vorn an. */
+p('… und es gibt einen Weg zurück', eBereich.zurueck && eBereich.zurueckHoch >= 44,
+  JSON.stringify(eBereich));
+
+const zurueck = await seite.evaluate(async () => {
+  document.querySelector<HTMLElement>('.einst-zurueck')?.click();
+  await new Promise(f => setTimeout(f, 300));
+  return document.querySelector<HTMLElement>('.einst-fenster')?.getAttribute('data-blick');
+});
+p('Der Weg zurück führt zur Liste', zurueck === 'liste', String(zurueck));
+
+/* Der Hinweisstreifen liegt auf 900. Am Rechner ist das richtig — dort
+   nimmt das Fenster nur die Mitte ein. Am Telefon füllt es alles, und
+   dann lag „1 Karteikarte ist fällig" mitten in der Liste. */
+const drueber = await seite.evaluate(() => {
+  const o = document.querySelector<HTMLElement>('.overlay');
+  const t2 = document.getElementById('toast');
+  if (!o || !t2) return null;
+  return { fenster: Number(getComputedStyle(o).zIndex) || 0,
+           streifen: Number(getComputedStyle(t2).zIndex) || 0 };
+});
+p('Nichts liegt über den Einstellungen',
+  !!drueber && drueber.fenster > drueber.streifen, JSON.stringify(drueber));
+
+await seite.evaluate(() => document.querySelectorAll('.overlay').forEach(x => x.remove()));
 
 await browser.close();
 server.close();

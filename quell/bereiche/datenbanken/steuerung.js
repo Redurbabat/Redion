@@ -1065,8 +1065,16 @@ const Datenbank = (() => {
             }
         });
         const box = document.createElement('div');
+        box.className = 'db-rollbox';
         box.style.overflowX = 'auto';
         box.appendChild(t);
+        /* Die weiche Kante, wo die Tabelle über den Rand hinausgeht. Am Telefon
+           ist das der Regelfall, sobald jemand im Ansichtsmenü „Tabelle statt
+           Karten" wählt: 703 px Inhalt in 334 px Kasten. Ohne sie steht dort
+           eine Zahl mit scharfer Kante — und `14500` liest sich als `1450`.
+           Siehe `kern/helfer/rollrand.ts` und ENTSCHEIDUNGEN.md E63. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(box);
         return box;
     };
     /** Welche Zeilen sind gerade angehakt? */
@@ -2385,26 +2393,38 @@ const Datenbank = (() => {
                 App.zeichneSeite();
                 return;
             }
-            /* Testlauf — Notion hat keinen. Er läuft auf der ersten Zeile und
-               sagt hinterher, was passiert ist. */
+            /* --- Probelauf ------------------------------------------------------
+             * Hier stand ein „Testlauf", der die Automation WIRKLICH ausführte
+             * und hinterher sagte, ob sich etwas geändert hat. Er hiess Test und
+             * änderte echte Daten — wer ihn drückte, um zu sehen, ob seine Regel
+             * stimmt, hatte sie danach angewendet. Bei „Eintrag in den Papierkorb"
+             * war die Zeile weg, und rückgängig macht der Toast nichts.
+             *
+             * Jetzt zeigt er den PLAN: welche Aktion mit welchem Wert an der
+             * Reihe wäre. Geschrieben wird nichts (`ctx.probe`).
+             * ------------------------------------------------------------------ */
             const test = elVon(e)?.closest('[data-test]');
             if (test) {
                 const a = coll.automationen[Number(test.dataset.test)];
                 const zeile = Store.rowsOf(coll.id)[0];
                 if (!zeile) {
-                    UI.toast('Für einen Testlauf braucht es mindestens eine Zeile');
+                    UI.toast('Für einen Probelauf braucht es mindestens eine Zeile');
                     return;
                 }
-                const vorher = JSON.stringify(zeile.props || {});
+                const plan = [];
                 const artT = a.wenn.art === 'wiederkehrend' ? 'wiederkehrend' : a.wenn.art;
-                automationenLaufen(zeile, coll, artT, a.wenn.key, a.wenn.art === 'prop-wert' ? a.wenn.wert : undefined);
-                setTimeout(() => {
-                    const nachher = JSON.stringify(Store.getBlock(zeile.id).props || {});
-                    UI.toast(vorher === nachher
-                        ? 'Testlauf: nichts verändert — prüfe Auslöser und Bedingungen'
-                        : 'Testlauf: „' + (zeile.text || 'Zeile') + '" wurde geändert');
-                    zeichnen();
-                }, 400);
+                automationenLaufen(zeile, coll, artT, a.wenn.key, a.wenn.art === 'prop-wert' ? a.wenn.wert : undefined, { probe: plan });
+                UI.menu('<div class="grp">Probelauf — ' + esc(a.name || 'Automation') + '</div>' +
+                    '<div class="grp" style="font-weight:400; text-transform:none">' +
+                    'Nichts davon ist passiert. So sähe der Lauf für „' +
+                    esc(zeile.text || 'die erste Zeile') + '" aus.</div>' +
+                    (plan.length
+                        ? plan.map(s => '<button><span class="mi">→</span>' + esc(s.name) +
+                            (s.ziel ? ': ' + esc(s.ziel) : '') +
+                            (s.wert ? '<span class="ms">' + esc(s.wert) + '</span>' : '') +
+                            '</button>').join('')
+                        : '<button disabled>Keine Aktion käme zum Zug — prüfe Auslöser ' +
+                            'und Bedingungen</button>'), test.getBoundingClientRect().left - 220, test.getBoundingClientRect().bottom + 4);
                 return;
             }
             /* Laufverlauf ansehen */
@@ -3534,8 +3554,7 @@ const Datenbank = (() => {
             if (elVon(e)?.closest('[data-a="formlink"]')) {
                 const link = location.origin + location.pathname + '#' +
                     (block ? block.id : coll.id) + '/' + view.id;
-                navigator.clipboard?.writeText(link);
-                UI.toast('Link zum Formular kopiert — ohne Server gilt er auf diesem Gerät');
+                Ablage.kopiereJetzt(link, 'Link zum Formular kopiert — ohne Server gilt er auf diesem Gerät');
                 return;
             }
             if (elVon(e)?.closest('[data-a="logik"]')) {
@@ -3903,8 +3922,7 @@ const Datenbank = (() => {
                 });
             }
             if (a === 'link') {
-                navigator.clipboard?.writeText(location.origin + location.pathname + '#' + row.id);
-                UI.toast('Link kopiert');
+                Ablage.kopiereJetzt(location.origin + location.pathname + '#' + row.id, 'Link kopiert');
             }
             if (a === 'komm')
                 Kommentare.neu(row);
@@ -4771,8 +4789,7 @@ const Datenbank = (() => {
             if (a2 === 'vlink') {
                 const link = location.origin + location.pathname + '#' +
                     (block ? block.id : coll.id) + '/' + view.id;
-                navigator.clipboard?.writeText(link);
-                UI.toast('Link zur Ansicht kopiert');
+                Ablage.kopiereJetzt(link, 'Link zur Ansicht kopiert');
                 return;
             }
             if (b.dataset.a === 'rename') {
@@ -5279,7 +5296,7 @@ const Datenbank = (() => {
     /** Typauswahl mit Suche — dieselbe Liste wie beim Ändern eines Typs. */
     const typWahl = (anker, titel, danach) => {
         const r = anker.getBoundingClientRect();
-        const html = TYP_GRUPPEN.map(([name, ids]) => `<div class="grp">${name}</div>` +
+        const html = typGruppen().map(([name, ids]) => `<div class="grp">${name}</div>` +
             '<div class="typ-gitter">' +
             ids.filter((id) => TYPEN.some((x) => x.id === id)).map((id) => {
                 const t = TYPEN.find((x) => x.id === id);
@@ -5338,10 +5355,36 @@ const Datenbank = (() => {
         ['Automatisch', ['created', 'edited', 'createdBy', 'editedBy']],
         ['Verbindungen', ['gdrive', 'figma', 'githubpr', 'zendesk']]
     ];
+    /* `title` steht mit Absicht in keiner Gruppe: eine Spalte lässt sich nicht
+       in den Titel verwandeln, es gibt genau einen. */
+    const NICHT_WAEHLBAR = ['title'];
+    /**
+     * Die Gruppen des Menüs — plus eine Auffanggruppe für alles, was im
+     * Register steht und oben nicht genannt ist.
+     *
+     * WARUM DIE AUFFANGGRUPPE NÖTIG IST. `TYP_GRUPPEN` ist eine
+     * Literalliste, `Register.eigenschaften` die Wahrheit. Heute decken sich
+     * beide — 34 hier, 35 dort, und der Unterschied ist `title`. Wer aber
+     * einen Typ ins Register einträgt und diese Liste vergisst, bekommt
+     * einen Typ, den es gibt und den niemand auswählen kann: kein Fehler,
+     * keine Meldung, nur ein Eintrag, der im Menü fehlt.
+     *
+     * Das Register hat für genau diesen Fall `inGruppe('Weiteres')`. Hier
+     * dasselbe, damit nichts hinten runterfällt. `test142` prüft, dass die
+     * Auffanggruppe im Normalfall LEER ist — sonst wäre sie eine Ausrede
+     * dafür, die Gliederung nicht zu pflegen.
+     */
+    const typGruppen = () => {
+        const genannt = new Set(TYP_GRUPPEN.flatMap(([, ids]) => ids).concat(NICHT_WAEHLBAR));
+        const rest = TYPEN.map((t) => t.id).filter((id) => !genannt.has(id));
+        return rest.length
+            ? [...TYP_GRUPPEN, ['Weiteres', rest]]
+            : TYP_GRUPPEN;
+    };
     const typMenue = (anker, coll, key) => {
         const def = coll.schema[key];
         const r = anker.getBoundingClientRect();
-        const html = TYP_GRUPPEN.map(([name, ids]) => `<div class="grp">${name}</div>` +
+        const html = typGruppen().map(([name, ids]) => `<div class="grp">${name}</div>` +
             '<div class="typ-gitter">' +
             ids.filter((id) => TYPEN.some((t) => t.id === id)).map((id) => {
                 const t = TYPEN.find((x) => x.id === id);
@@ -6187,8 +6230,7 @@ const Datenbank = (() => {
                 App.zeichneSeite();
             }
             if (a === 'link') {
-                navigator.clipboard?.writeText(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + view.id);
-                UI.toast('Link zur Ansicht kopiert');
+                Ablage.kopiereJetzt(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + view.id, 'Link zur Ansicht kopiert');
             }
             if (a === 'csv')
                 csvExport(coll, view);
@@ -7075,6 +7117,45 @@ const Datenbank = (() => {
     let imLauf = false; /* verhindert, dass Automationen sich gegenseitig auslösen */
     let wdhZaehler = 0; /* Notbremse gegen Ketten, die sich selbst nachlegen */
     /**
+     * Was eine Aktion im Probelauf zu melden hat — der Wert, mit dem sie
+     * arbeiten WÜRDE, mit aufgelösten Variablen und Platzhaltern.
+     *
+     * Nur lesen. Diese Funktion darf nichts anfassen; sie läuft an der
+     * Stelle, an der der Probelauf abbricht, und wäre sonst genau das Leck,
+     * das er verhindern soll.
+     */
+    const probeWert = (d, mitVars, coll, row) => {
+        const fuellen = (t) => String(mitVars(String(t ?? ''))).replace(/\{titel\}/g, row?.text || '');
+        switch (d.art) {
+            case 'setze-prop': {
+                const v = fuellen(d.wert);
+                return v === 'heute' ? new Date().toISOString().slice(0, 10)
+                    : v === 'morgen' ? (() => {
+                        const t = new Date();
+                        t.setDate(t.getDate() + 1);
+                        return t.toISOString().slice(0, 10);
+                    })()
+                        : v === 'jetzt' ? new Date().toISOString().slice(0, 16)
+                            : v;
+            }
+            case 'leeren': return '(leer)';
+            case 'zaehler': return String(Formula.zahl(wert(row, d.key, coll)) + 1);
+            case 'neue-zeile': return fuellen(d.titel || '{titel}') + ' in „' +
+                (Store.getCollection(d.zielDb)?.name || '?') + '"';
+            case 'mail': return fuellen(d.betreff) + ' → ' + fuellen(d.an);
+            case 'webhook': return String(d.url || '');
+            case 'benachricht':
+            case 'melden':
+            case 'kommentar': return fuellen(d.text);
+            case 'unterseite': return fuellen(d.titel || d.text);
+            case 'wiederholen': return String(naechstesDatum(wert(row, d.key, coll), d.takt) ?? '—');
+            case 'variablen': return (d.vars || []).map((v) => v?.name).filter(Boolean).join(', ');
+            case 'fremd-setzen': return 'in „' + (Store.getCollection(d.zielDb)?.name || '?') + '"';
+            case 'zurueckstellen': return String(d.takt || d.wert || '');
+            default: return fuellen(d.wert ?? '');
+        }
+    };
+    /**
      * Einträge einer anderen Datenbank ändern — Notions „Edit pages in".
      * Wahlweise alle, die durch den Filter einer Ansicht kommen, oder alle,
      * die einer Regel entsprechen. Höchstens 500 auf einmal.
@@ -7217,10 +7298,18 @@ const Datenbank = (() => {
                 const mitVars = (v) => typeof v === 'string'
                     ? v.replace(/\{\{\s*([A-Za-zÄÖÜäöüß0-9_]+)\s*\}\}/g, (_, n) => (n in vars ? String(vars[n]) : ''))
                     : v;
-                /* Wie oft läuft diese Aktion? Notion kennt nur „einmal je Zeile".
-                   Hier darf eine Aktion auch über die verknüpften Zeilen laufen
-                   oder mehrfach wiederholt werden. */
-                (a.dann || []).forEach((d) => {
+                /* Jede Aktion läuft EINMAL für diese Zeile.
+                   Über mehrere Zeilen läuft nur `fremd-setzen` — es nimmt die
+                   Zeilen einer anderen Datenbank, gefiltert über eine Ansicht, eine
+                   eigene Regel oder die Verknüpfung zu dieser Zeile, und ändert sie
+                   alle (höchstens 500).
+                   Hier stand einmal, eine Aktion dürfe „mehrfach wiederholt werden".
+                   Das konnte sie nie; es gibt kein Feld dafür und keinen Zweig, der
+                   es läse. Ein Satz im Quelltext ist keine Funktion. */
+                /* Der Rumpf bleibt, wo er ist — er wird nur benannt, damit der Aufruf
+                   darunter ihn einpacken kann. Ein `try` um zweihundert Zeilen wäre
+                   dieselbe Wirkung mit einer Verschiebung jeder einzelnen davon. */
+                const eineAktion = (d) => {
                     /* --- Bedingung an der einzelnen Aktion — das „sonst" von
                            Notions Automationen, das es dort nicht gibt ------------- */
                     if (d.wenn && d.wenn.key) {
@@ -7243,6 +7332,37 @@ const Datenbank = (() => {
                             }, fremdWert, formelUmgebung(row, coll));
                             vars[v.name] = r.ok ? Formula.anzeige(r.wert) : '';
                         });
+                    }
+                    /* =================================================================
+                     * DER PROBELAUF ENDET HIER — und zwar an EINER Stelle.
+                     *
+                     * Alles oberhalb liest nur: die Bedingung an der Aktion fragt
+                     * Werte ab, „Variablen festlegen" schreibt in ein Objekt, das
+                     * beim Verlassen dieser Funktion verschwindet. Alles unterhalb
+                     * schreibt: `Store.setProp`, `Store.addRow`, `Store.trashBlock`,
+                     * `fetch`, `location.href`.
+                     *
+                     * Diese Reihenfolge ist der ganze Schutz. Eine neue Aktion, die
+                     * jemand unten anhängt, ist damit automatisch mitgeschützt — und
+                     * eine, die jemand versehentlich OBEN einfügt, fällt auf, weil
+                     * `test133` §2 nach einem Probelauf die Zeile Feld für Feld
+                     * vergleicht.
+                     *
+                     * Warum kein Nachbau der Aktionen für die Vorschau: dann gäbe es
+                     * zwei Beschreibungen desselben Ablaufs, und die zweite läuft der
+                     * ersten davon. Was der Probelauf zeigt, ist deshalb NICHT das
+                     * Ergebnis, sondern der Plan — welche Aktion mit welchen Werten
+                     * an der Reihe wäre.
+                     * =============================================================== */
+                    if (ctx.probe) {
+                        ctx.probe.push({
+                            name: (AKTIONEN.find(x => x[0] === d.art) || ['', d.art])[1],
+                            art: d.art,
+                            ziel: d.key ? (coll.schema[d.key]?.name || d.key) : '',
+                            wert: probeWert(d, mitVars, coll, row),
+                            zeile: row?.text || ''
+                        });
+                        return;
                     }
                     if (d.art === 'setze-prop' && d.key) {
                         let v = mitVars(d.wert ?? '');
@@ -7419,8 +7539,38 @@ const Datenbank = (() => {
                             ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
                     }
                     laufNotiz.aktionen.push((AKTIONEN.find((x) => x[0] === d.art) || [])[1] || d.art);
+                };
+                /* --- Ein Fehler stoppt nicht alles Weitere ------------------------
+                 * `laufNotiz.fehler` gab es seit jeher, und der Laufverlauf zeigt
+                 * dafür ein ⚠. Gesetzt hat es nie jemand — das Feld stand auf ''
+                 * und blieb dort. Ein Zeichen, das nie erscheint, ist schlimmer als
+                 * keines: es sagt „hier wäre ein Fehler zu sehen".
+                 *
+                 * Und schlimmer noch war, was ohne diesen Griff geschah: eine
+                 * Aktion, die wirft, riss den ganzen forEach mit. Die Aktionen
+                 * DAHINTER liefen nicht, die Automation schrieb keinen Verlauf,
+                 * und die nächste Automation der Datenbank kam nie an die Reihe —
+                 * still, denn geworfen wurde in einen Aufruf, den niemand fängt.
+                 * ---------------------------------------------------------------- */
+                (a.dann || []).forEach((d) => {
+                    try {
+                        eineAktion(d);
+                    }
+                    catch (e) {
+                        const name = (AKTIONEN.find((x) => x[0] === d.art) || ['', d.art])[1];
+                        const text = e instanceof Error ? e.message : String(e);
+                        laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                            name + ': ' + text;
+                        /* Nicht nur ins Protokoll: wer gerade zusieht, soll es sehen. */
+                        if (!ctx.probe)
+                            UI.toast('⚠ „' + name + '" ging nicht: ' + text);
+                    }
                 });
-                notieren();
+                /* Ein Probelauf ist nicht gelaufen. Er darf deshalb weder im
+                   Laufverlauf noch im gemeinsamen Protokoll stehen — sonst zeigte
+                   die Automation morgen zwanzig Läufe, von denen keiner stattfand. */
+                if (!ctx.probe)
+                    notieren();
             });
         }
         finally {
@@ -7815,7 +7965,7 @@ const Datenbank = (() => {
                             : `${namen(b.key)} ${b.op} ${b.wert}`).join(' und ')) : '') +
                     ` · Dann: ${a.dann.map((d) => esc((AKTIONEN.find(x => x[0] === d.art) || [])[1] || '')).join(', ')}` +
                     `</span></div>` +
-                    `<button data-test="${i}" title="Einmal probeweise laufen lassen">▶</button>` +
+                    `<button data-test="${i}" title="Probelauf: zeigt den Plan, ändert nichts">▶</button>` +
                     `<button data-verlauf="${i}" title="Laufverlauf">🕘` +
                     ((a.verlauf || []).length ? `<span class="ms">${a.verlauf.length}</span>` : '') +
                     '</button>' +
@@ -8483,7 +8633,7 @@ const Datenbank = (() => {
         ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
         rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN, TAKTE,
         wiederkehrendeAutomationen, taktMarke, inZone, ZONEN, eigeneZone,
-        BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
+        typGruppen, BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
         pruefeWert, pruefeZeile, hatRegeln, regelnDialog, MUSTER_VORLAGEN,
         alsPivot, pivotRechne, PIVOT_ARTEN, formelEinruecken, teilausdruecke,
         ansichtKopie, ansichtVorlagen, gruppenListe, gruppeVon, ZEIT_STUFEN, ZS_STUFEN, kartenBild,

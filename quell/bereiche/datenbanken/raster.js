@@ -55,7 +55,15 @@ const DbRaster = (() => {
     const SB = 150; /* Spaltenbreite, Vorgabe */
     const SB_MIN = 60;
     const ZH = 32;
-    const ZH_HANDY = 40;
+    /* 44 und nicht 40 — aus zwei Gründen, und der zweite wiegt schwerer.
+       §37 verlangt 44 px für alles, was mit dem Finger getroffen wird, und
+       eine Rasterzelle wird angetippt.
+       Vor allem aber teilt sich das Raster die CSS mit dem Tabellenblock:
+       `class="tbl tbl-db"`, also gilt `--tbl-zh` hier mit. Als E64 die
+       Variable auf 44 setzte, rechnete dieses Modul weiter mit 40 — und die
+       Zeilennummern standen versetzt zu ihren Zellen. Beide Zahlen gehören
+       zusammen; `test137` §2b misst es jetzt auch für das Raster. */
+    const ZH_HANDY = 44;
     const PUFFER = 6;
     const amTelefon = () => typeof window !== 'undefined' && window.matchMedia
         ? window.matchMedia('(max-width: 760px)').matches : false;
@@ -198,6 +206,10 @@ const DbRaster = (() => {
         feld.tabIndex = 0;
         feld.setAttribute('role', 'grid');
         feld.setAttribute('aria-label', 'Raster ' + (coll.name || ''));
+        /* Dieselbe weiche Kante wie im Tabellenblock — dasselbe Raster, derselbe
+           Fund: am Telefon stand `14500` als `1450` da. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(feld);
         const spaltenKopf = document.createElement('div');
         spaltenKopf.className = 'tbl-spalten';
         const koerper = document.createElement('div');

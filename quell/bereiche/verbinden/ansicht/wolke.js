@@ -538,7 +538,7 @@ const WolkeFenster = (() => {
                 }
                 if (a.dataset.a === 'kopie') {
                     const adr = o.querySelector('#wo-adresse')?.dataset['adresse'] ?? '';
-                    navigator.clipboard?.writeText(adr).then(() => UI.toast('Adresse kopiert'));
+                    Ablage.kopiereJetzt(adr, 'Adresse kopiert');
                 }
                 if (a.dataset.a === 'zurueck') {
                     await Wolke.zurueckziehen(seiteId);

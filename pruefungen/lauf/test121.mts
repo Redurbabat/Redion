@@ -58,11 +58,21 @@ const alles = http.createServer(async (req, res) => {
   const serverWeg = /^\/(konto|sync|datei|freigabe|feldrecht|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/
     .test(u.pathname ?? '') || /^\/v1\//.test(u.pathname ?? '') || u.pathname === '/api/stand';
   if (serverWeg) {
-    let roh = '';
-    for await (const st of req) roh += st;
+    /* Rumpf als PUFFER und ohne die Kopfzeilen, die nur für diese eine
+       Verbindung gelten. Als Zeichenkette gingen `content-length` (Bytes)
+       und das wirklich Gesendete auseinander, sobald ein Umlaut im Spiel
+       war — dieser Lauf starb daran etwa jedes dritte Mal. Siehe test120. */
+    const stuecke: Buffer[] = [];
+    for await (const st of req) stuecke.push(Buffer.from(st));
+    const rumpf = Buffer.concat(stuecke);
+    const HIER_BLEIBEN = new Set(['host', 'connection', 'keep-alive',
+      'content-length', 'transfer-encoding', 'upgrade', 'proxy-connection']);
+    const durch: Record<string, string> = {};
+    for (const [k, v] of Object.entries(req.headers))
+      if (!HIER_BLEIBEN.has(k.toLowerCase()) && typeof v === 'string') durch[k] = v;
     const a = await fetch('http://localhost:8832' + weg2, {
-      method: req.method ?? 'GET', headers: req.headers as any, redirect: 'manual',
-      ...(roh ? { body: roh } : {}) });
+      method: req.method ?? 'GET', headers: durch, redirect: 'manual',
+      ...(rumpf.length ? { body: rumpf } : {}) });
     const text = await a.text();
     const kopf: Record<string, any> = {};
     a.headers.forEach((v, k) => { if (k !== 'content-encoding') kopf[k] = v; });

@@ -14,3 +14,46 @@
   --mono: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   --serif: Lyon-Text, Georgia, ui-serif, serif;
 }
+
+/* ===========================================================================
+   BEWEGUNG — die Marken aus Redurs Vorgabe (E43)
+   ---------------------------------------------------------------------------
+   Bis hierher stand jede Dauer an ihrer eigenen Stelle: .14s hier, 200ms
+   dort, .22s im Blatt. Gemessen am 7. August: rund achtunddreissig
+   Übergänge in sieben Stilblättern, kein einziger gemeinsamer Wert. Wer die
+   App als Ganzes ruhiger oder schneller machen wollte, musste sie suchen.
+
+   DREI DAUERN REICHEN, und das ist der Punkt der Vorgabe:
+
+     schnell   Berührung, Knopfdruck — es soll SOFORT wirken
+     normal    Reiterwechsel, Seitenwechsel, Hinweis
+     langsam   Blätter von unten; sie dürfen schwer wirken
+
+   Die Kurven sind nicht Geschmack. `ease-enter` startet schnell und bremst
+   weich aus — was hereinkommt, soll ankommen, nicht anschweben.
+   `ease-exit` macht es umgekehrt: was geht, geht zügig. Beides linear wäre
+   das, was billige Oberflächen unterscheidet von teuren.
+
+   WAS HIER ABSICHTLICH NICHT STEHT: Federn und Sprünge. Redion ist ein
+   Arbeitsgerät. Ein Blatt, das nachwippt, ist beim ersten Mal nett und beim
+   fünfzigsten eine Verzögerung.
+
+   Wer keine Bewegung mag, bekommt keine — die Regel dafür steht global in
+   `bausteine.css` und überschreibt jede dieser Marken.
+   =========================================================================*/
+:root{
+  --motion-fast: 120ms;
+  --motion-normal: 220ms;
+  --motion-slow: 320ms;
+
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+
+  /* Wie weit etwas beim Antippen einsinkt. Ein Knopf darf deutlich
+     reagieren; eine Karte, die man mit der halben Handfläche trifft, nur
+     angedeutet — sonst zuckt der halbe Bildschirm. */
+  --press-scale: 0.96;
+  --card-press-scale: 0.985;
+  --sheet-dim: rgba(0,0,0,0.35);
+}

@@ -306,8 +306,7 @@ const Eingang = (() => {
 
       if (elVon(e)?.closest<HTMLElement>('[data-a="linkkopie"]')) {
         const code = o.querySelector('.eg-adresse code');
-        navigator.clipboard?.writeText(code?.textContent ?? '');
-        UI.toast('Beispiel kopiert');
+        Ablage.kopiereJetzt(code?.textContent ?? '', 'Beispiel kopiert');
       }
     });
   };

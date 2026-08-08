@@ -18,7 +18,7 @@
  * ==========================================================================*/
 
 import { onRequest as bruecke } from './functions/api/bruecke.ts';
-import { bedienen, istServerWeg } from './server/cloudflare.ts';
+import { bedienen, istServerWeg, geplant } from './server/cloudflare.ts';
 
 export default {
   async fetch(request: any, env: any, ctx: any) {
@@ -65,5 +65,23 @@ export default {
     }
 
     return antwort;
+  },
+
+  /* ========================================================================
+   * DER GEPLANTE LAUF — Weckrufe (L33, E54)
+   * ------------------------------------------------------------------------
+   * Cloudflare ruft das nach dem Zeitplan aus `wrangler.toml` auf. Ohne
+   * `[triggers]` passiert hier nie etwas, und ohne D1 auch nicht — beides
+   * ist freiwillig, wie der ganze Server (CLAUDE.md §22).
+   *
+   * `waitUntil`: der Lauf darf zu Ende gehen, auch wenn `scheduled`
+   * zurückkehrt. Ohne das bricht Cloudflare mitten im Stossen ab, und die
+   * Hälfte der Wecker bliebe stumm — bei einer Erinnerung merkt man das
+   * erst, wenn es zu spät ist.
+   * ======================================================================*/
+  async scheduled(_ereignis: any, env: any, ctx: any) {
+    const arbeit = geplant(env).catch(() => ({ gestossen: 0, entfernt: 0, fehler: 0 }));
+    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(arbeit);
+    else await arbeit;
   }
 };

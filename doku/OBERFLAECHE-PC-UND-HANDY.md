@@ -1,6 +1,14 @@
 # Die Oberfläche — wo jeder Knopf sitzt, am PC und am Handy
 
-**Stand: 2. August 2026**
+**Stand: 2. August 2026 · Abschnitt B ist überholt, siehe E**
+
+> **Achtung beim Lesen.** Die Abschnitte B und D beschreiben das Telefon,
+> wie es bis zum 5. August aussah: eine schmalere Fassung der
+> Rechner-Oberfläche. Am 6. August wurde es umgebaut (E37/E38) und danach
+> nach Redurs Entwurf „Nocturne" weitergebaut (E42–E53). Was heute gilt,
+> steht in **Abschnitt E**. B und D bleiben stehen, weil der Vergleich mit
+> Notion darin weiterhin richtig ist — und weil man sonst nicht mehr sieht,
+> wovon der Umbau wegkam.
 
 Zwei Fragen an die Notion-KI im laufenden Notion: einmal nur Windows-Desktop,
 einmal nur iPhone. Beide Antworten stehen hier vollständig, jeweils mit
@@ -16,6 +24,7 @@ Spalte **Wir**: ✅ gleich · ◐ anders gelöst · ✗ fehlt.
 - [B. iPhone](#b-handy)
 - [C. Was sich zwischen PC und Handy unterscheidet](#c-unterschied)
 - [D. Was diese Runde an unserer Oberfläche verändert hat](#d-geaendert)
+- [E. Das Telefon, wie es seit dem 6. August aussieht](#e-heute)
 
 ---
 
@@ -298,8 +307,69 @@ Titel „🎯 Layout-Probe" in der Mitte.
 
 ---
 
+<a id="e-heute"></a>
+## E. Das Telefon, wie es seit dem 6. August aussieht
+
+Abschnitt D endet damit, dass die Kopfzeile auf **☰ · ‹ · Titel · ⋯**
+zusammengestrichen wurde. Das war richtig und trotzdem nur die halbe
+Antwort: es blieb eine Rechner-Oberfläche, der man Dinge weggenommen hatte.
+
+Am 6. August wurde daraus eine Telefon-Oberfläche (E37). Der Unterschied ist
+nicht die Zahl der Knöpfe, sondern **wo der Daumen ist**.
+
+### E.1 Oben: fünf Wege als Pillen
+
+| | |
+|---|---|
+| Ganz links | Kreis mit dem Anfangsbuchstaben des Arbeitsbereichs. Tippen öffnet das **R-Blatt** über den ganzen Bildschirm — zwölf Zeilen zu 56 px, dazu ein Balken, wie viel Speicher belegt ist. Am Rechner wäre das die Seitenleiste; auf 390 px war sie unbedienbar. |
+| Dann | 🏠 Start · 📄 Seiten · 📅 Termine · ⋯ Mehr |
+| Der Kniff | **Nur die gewählte Pille trägt ihren Namen.** Fünf Wörter nebeneinander passen nicht; eines schon. |
+| Die Marke | Eine Fläche **wandert** zwischen den Pillen, statt zu springen (E49). Das Auge folgt der Bewegung und ist beim Ankommen schon dort. |
+| Masse | Tasten 56 px, Rand 28 px (17 unter 440, 10 unter 380). Die Höhe der Leiste steht an **einer** Stelle — `--hoben` rechnet die Kerbe des Geräts mit (E50). |
+
+**„Mehr" statt „Eingang"** (E42): der Posteingang ist eine Sache unter
+vielen, nicht einer von fünf Hauptwegen. Dahinter liegen Posteingang,
+Vorlagen, Papierkorb, Import, Einstellungen — und der **Kompass**, die
+Übersicht über den ganzen Arbeitsbereich.
+
+### E.2 Unten: die drei Griffe, die immer da sind
+
+🔍 **Suchen** · ✨ **KI fragen** · ✎ **Neue Seite**
+
+Sie schweben über dem Inhalt, statt in einer geschlossenen Leiste zu
+sitzen: der Daumen erreicht sie, und der Bildschirm bleibt trotzdem ganz.
+Die Mitte ist die breiteste und die einzige mit Text.
+
+Der Stift legt **nicht** sofort eine leere Seite an, sondern fragt (E45):
+Seite · Schnellnotiz · Datenbank · Tabelle · Aufgabe · Karteikarte · Datei ·
+Vorlage. Das ist ein Tipp mehr für den häufigsten Fall und der einzige Weg
+zu den anderen sieben.
+
+### E.3 Was sonst noch anders ist als am Rechner
+
+| | |
+|---|---|
+| Menüs | kommen als **Blatt von unten**, nicht als Kästchen am Zeiger. Wischen nach unten schliesst. |
+| Das KI-Fenster | ebenso — 88 % der Höhe, oben abgerundet, mit Griff (E43/E19). |
+| Suche | Filter als **Marken in einer rollenden Zeile** statt vier Auswahlfelder; die Tastenzeile „↑ ↓ Enter Esc" ist weg, weil es diese Tasten dort nicht gibt (E48). |
+| Ladezustände | **Skelette** in der Form dessen, was gleich kommt — kein Kreisel (E46). |
+| Listen | erscheinen **versetzt**, die ersten neun Zeilen mit 20 ms Abstand (E47). |
+| Berührung | jedes Antippen antwortet mit einem leichten Einsinken; wer keine Bewegung mag, bekommt keine. |
+| Farben | eine eigene Palette, keine Kopie von Notions — mit nachgerechneten Kontrasten für hell und dunkel (E44). |
+
+### E.4 Was am Rechner bleibt, wie es war
+
+Alles. Die ganze Telefon-Fassung steht unter `@media(max-width:760px)`;
+die Seitenleiste, die Kopfzeile mit ihren zwölf Knöpfen und die Menüs am
+Zeiger sind unverändert. Ein Umbau, der die eine Seite verbessert und die
+andere kaputtmacht, wäre keiner — `test114` Abschnitt 4 prüft das eigens.
+
+---
+
 ## Quellen
 
 - Notion-KI im laufenden Notion, Runde 9 (Windows) und Runde 10 (iPhone)
 - Eigene Messung mit Playwright bei 1400 × 900 und 428 × 926
 - Die iPhone-Aufnahmen aus dem Notion-Konto, die Redur geschickt hat
+- Redurs Entwurf „Redion mobile app design" (Nocturne), 7. August 2026 —
+  daraus E42 bis E53

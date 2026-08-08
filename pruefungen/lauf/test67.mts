@@ -17,6 +17,20 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.goto('file://' + WURZEL + '/index.html');
   await p.waitForTimeout(1700);
 
+  /* DAS WILLKOMMEN WEGRÄUMEN — hier misst kein Erstbesucher.
+     Seit E55 legt sich beim allerersten Öffnen ein Blatt über den ganzen
+     Bildschirm. Das ist dort richtig und hier im Weg: es deckte die
+     Pillenleiste ab, und die Meldung dazu lautete „die Leiste ist nicht
+     anklickbar" — richtig gemessen, falsch verstanden. */
+  const willkommenWeg = async () => {
+    await p.evaluate(() => {
+      Store.setMeta('rundgangGesehen', true);
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+    });
+  };
+  await willkommenWeg();
+
   /* --- 1 · Jeder Abschnitt hat drei Punkte ------------------------------ */
   const kopf = await p.evaluate(async () => {
     App.zeichneBaum();
@@ -194,6 +208,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   handy.on('pageerror', e => fehler2.push('JS: ' + e.message));
   await handy.goto('file://' + WURZEL + '/index.html');
   await handy.waitForTimeout(1900);
+  /* Auch hier: kein Erstbesucher, also kein Willkommen (E55). */
+  await handy.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+  });
 
   /* SEIT DEM UMBAU NACH DER VORLAGE stehen die Bereiche oben als Pillen.
      Die Fragen sind dieselben geblieben — nur die letzte ist eine andere
@@ -215,14 +235,14 @@ const pruef = (n: any, ist: any, soll: any) => {
   /* Seit E38: „Seiten" statt „Chats". Der Platz oben gehört dem, was man
      täglich sucht; die KI steht unten in der Leiste und im R-Blatt. */
   pruef('Konto und vier Bereiche', leiste.ids,
-        ['hl-konto', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-inbox']);
+        ['hl-konto', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']);
   pruef('Jeder hat seinen Namen dabei', leiste.beschriftung,
-        ['Start', 'Seiten', 'Termine', 'Eingang']);
+        ['Start', 'Seiten', 'Termine', 'Mehr']);
   pruef('Start ist markiert', leiste.markiert, ['hl-start']);
   /* DAS IST DIE REGEL, DIE DEN PLATZ MACHT. Stünden alle vier Namen da,
      bliebe für den Inhalt nichts; stünde keiner da, müsste man raten. */
   pruef('Nur der markierte zeigt seinen Namen', leiste.nameSichtbar, ['hl-start']);
-  pruef('Der Eingang hat einen Punktplatz', leiste.punkt, true);
+  pruef('Mehr hat einen Punktplatz', leiste.punkt, true);
 
   /* Umschalten markiert richtig */
   const wechsel = await handy.evaluate(async () => {
@@ -315,12 +335,23 @@ const pruef = (n: any, ist: any, soll: any) => {
     const sucheDa = !!document.querySelector('.overlay');
     document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
     const vorher = Store.rootPages().length;
+    /* SEIT E45 FRAGT DER STIFT ERST, WAS ENTSTEHEN SOLL — Seite,
+       Datenbank, Tabelle, Aufgabe, Karteikarte, Datei oder Vorlage. Vorher
+       legte er sofort eine leere Seite an, was in einem von acht Fällen
+       richtig war. Diese Prüfung tippt jetzt wie ein Mensch: erst den
+       Stift, dann „Neue Seite". */
     musselement('#hu-neu').click();
-    await new Promise(r => setTimeout(r, 600));
-    return { sucheDa, mehr: Store.rootPages().length > vorher };
+    await new Promise(r => setTimeout(r, 500));
+    const blattDa = !!document.querySelector('.menu.blatt [data-neu="seite"]');
+    document.querySelector<HTMLElement>('.menu.blatt [data-neu="seite"]')?.click();
+    await new Promise(r => setTimeout(r, 700));
+    return { sucheDa, blattDa, mehr: Store.rootPages().length > vorher,
+             zu: document.querySelectorAll('.menu, .menu-grund').length === 0 };
   });
   pruef('Der Lupenknopf öffnet die Suche', werkzeuge.sucheDa, true);
-  pruef('Der Stift legt eine Seite an',    werkzeuge.mehr, true);
+  pruef('Der Stift fragt erst, was entstehen soll', werkzeuge.blattDa, true);
+  pruef('… und „Neue Seite" legt eine an', werkzeuge.mehr, true);
+  pruef('… und das Blatt ist danach zu',   werkzeuge.zu, true);
 
   /* Am PC ist von den beiden nichts zu sehen */
   const amPC = await p.evaluate(() => [...document.querySelectorAll<HTMLElement>('.nur-handy')]
@@ -366,6 +397,7 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
   await p.reload();
   await p.waitForTimeout(2000);
+  await willkommenWeg();
   const nach = await p.evaluate(() => ({
     zu: Store.getMeta('sidebarZu', []),
     folge: (Store.getMeta('sidebarFolge', []) || [])[0],

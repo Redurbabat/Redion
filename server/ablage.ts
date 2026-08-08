@@ -165,12 +165,37 @@ CREATE TABLE IF NOT EXISTS dateien (
   PRIMARY KEY (bereich, id)
 );
 CREATE INDEX IF NOT EXISTS dateien_zeit ON dateien(bereich, geaendert);
+
+/* --------------------------------------------------------------------------
+   WECKRUFE — Web Push (L33, E54)
+   --------------------------------------------------------------------------
+   HIER STEHT KEIN ERINNERUNGSTEXT, und das ist der ganze Entwurf. Ein Web
+   Push kann Inhalt mitbringen; Redion schickt keinen. Der Server erfaehrt
+   einen Zeitpunkt und die Adresse eines Geraets — nicht, woran erinnert
+   wird. „Zahnarzt 14:00" ist genau die Sorte Satz, die local-first
+   schuetzen soll.
+
+   Der Stoss sagt nur „wach auf". Was faellig ist, liest das Dienst-Skript
+   danach aus der lokalen IndexedDB.
+   -------------------------------------------------------------------------- */
+CREATE TABLE IF NOT EXISTS weckrufe (
+  id       TEXT PRIMARY KEY,
+  kontoId  TEXT,
+  geraet   TEXT,
+  endpunkt TEXT,
+  p256dh   TEXT,
+  auth     TEXT,
+  wann     TEXT,
+  angelegt TEXT
+);
+CREATE INDEX IF NOT EXISTS weckrufe_wann ON weckrufe(wann);
+CREATE INDEX IF NOT EXISTS weckrufe_konto ON weckrufe(kontoId);
 `;
 
 /* Die Tabellen, die der Kern kennt — alles andere wird abgewiesen. */
 export const TABELLEN = ['konten', 'sitzungen', 'bereiche', 'saetze',
                          'freigaben', 'oeffentlich', 'protokoll', 'marken',
-                         'feldrechte', 'bremse', 'dateien'];
+                         'feldrechte', 'bremse', 'dateien', 'weckrufe'];
 
 /* Der Primärschlüssel je Tabelle. 'saetze' und 'freigaben' sind zusammengesetzt. */
 const SCHLUESSEL: Record<string, string[]> = {
@@ -178,7 +203,8 @@ const SCHLUESSEL: Record<string, string[]> = {
   saetze: ['bereich', 'id'], freigaben: ['bereich', 'seite', 'kontoId'],
   oeffentlich: ['schluessel'], protokoll: ['id'], marken: ['wert'],
   feldrechte: ['bereich', 'sammlung', 'feld', 'kontoId'],
-  bremse: ['schluessel'], dateien: ['bereich', 'id']
+  bremse: ['schluessel'], dateien: ['bereich', 'id'],
+  weckrufe: ['id']
 };
 
 /* ==========================================================================

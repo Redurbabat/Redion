@@ -162,6 +162,19 @@ const Kopfleiste = (() => {
     });
   };
 
+  /**
+   * Der Fenstertitel folgt der offenen Seite: „Projekte — Redion".
+   *
+   * Er stand dauerhaft auf „Redion". In einem Fenster unter zwanzig anderen
+   * ist das keine Auskunft, ein Lesezeichen darauf heisst später auch nur
+   * so, und ein Vorleseprogramm nennt den Fenstertitel beim Wechsel — es
+   * sagte also bei jeder Seite dasselbe.
+   */
+  const fensterTitel = (text: unknown): void => {
+    const t = String(text ?? '').trim();
+    document.title = t ? t + ' — Redion' : 'Redion';
+  };
+
   /* ------------------------------------------------------------------------
    * Der Kopf einer Seite.
    * Gibt `false` zurück, wenn danach Schluss ist — siehe Punkt 2 oben.
@@ -189,11 +202,27 @@ const Kopfleiste = (() => {
     /* Titel */
     const t = document.createElement('div');
     t.id = 'title';
+    /* EIN TITEL, DER KEINE ÜBERSCHRIFT IST, IST FÜR EIN VORLESEPROGRAMM
+       nur ein Absatz irgendwo auf der Seite. Wer nicht sieht, springt von
+       Überschrift zu Überschrift — gemessen am 7. August fand die Seite
+       null davon, den eigenen Titel eingeschlossen.
+
+       `role="heading"` statt eines echten `<h1>`: das Feld ist bearbeitbar
+       und trägt eigene Masse; ein Elementwechsel wäre ein Umbau des
+       Aussehens für einen Zweck, den zwei Angaben genauso erfüllen. Für
+       ein Vorleseprogramm sind beide dasselbe. */
+    t.setAttribute('role', 'heading');
+    t.setAttribute('aria-level', '1');
     t.contentEditable = p.gesperrt ? 'false' : 'true';
     t.spellcheck = !!Store.getMeta('rechtschreib', false);
     t.textContent = p.text || '';
+    /* Und der Fenstertitel sagt, wo man ist. Er stand dauerhaft auf
+       „Redion" — in einem Fenster unter zwanzig anderen ist das keine
+       Auskunft, und ein Lesezeichen darauf heisst später auch nur so. */
+    fensterTitel(p.text);
     t.addEventListener('input', () => {
       Store.updateBlock(p.id, { text: t.textContent });
+      fensterTitel(t.textContent);
       zeichneBaum();
     });
     t.addEventListener('keydown', e => {

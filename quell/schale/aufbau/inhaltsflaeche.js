@@ -66,8 +66,16 @@ const Inhaltsflaeche = (() => {
         const seite = seiteId ? Store.getBlock(seiteId) : null;
         if (!seite)
             return;
+        /* Welche Blockarten Überschriften sind, sagt das Register — hier stand
+           ['h1','h2','h3'] und damit eine Liste ohne die Toggle-Überschriften.
+           Eine Seite, die mit einklappbaren Überschriften gegliedert ist, bekam
+           deshalb keinen Gliederungsstreifen, obwohl das Inhaltsverzeichnis im
+           Editor sie sehr wohl auflistete. */
+        const stufen = (typeof Register !== 'undefined' && Register.bloecke?.ueberschriften)
+            ? Register.bloecke.ueberschriften()
+            : { h1: 1, h2: 2, h3: 3 };
         const kopfzeilen = Store.childrenOf(seite.id)
-            .filter((b) => ['h1', 'h2', 'h3'].includes(b.type) && (b.text || '').trim());
+            .filter((b) => stufen[b.type] && (b.text || '').trim());
         if (kopfzeilen.length < 3)
             return;
         /* `#main` und `#scroll` gehören zur Schale. Fehlt eines, wird hier kein

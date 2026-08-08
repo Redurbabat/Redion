@@ -923,7 +923,7 @@ const Api = (() => {
                 UI.toast('Token zurückgezogen');
             }
             if (a.dataset.a === 'kopie') {
-                navigator.clipboard?.writeText(tokenHolen() || '').then(() => UI.toast('Token kopiert'));
+                Ablage.kopiereJetzt(tokenHolen() || '', 'Token kopiert');
             }
             if (a.dataset.a === 'los') {
                 const fm = feld('#api-m'), fp = feld('#api-p'), fk = feld('#api-k');

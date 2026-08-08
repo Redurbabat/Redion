@@ -34,16 +34,20 @@ Register.bloecke = (() => {
     const EINGEBAUT = [
         /* --- Grundlegende Blöcke ------------------------------------------- */
         { id: 'text', name: 'Text', icon: '¶', gruppe: 'Grundlegend', cmd: ['text', 'absatz', 'p', 'plain'], kurz: 'Ctrl+Shift+0', ph: 'Tippe etwas, oder drücke / für Befehle' },
-        { id: 'h1', name: 'Überschrift 1', icon: 'H₁', gruppe: 'Grundlegend', cmd: ['h1', 'ueberschrift1', 'titel', '#'], kurz: 'Ctrl+Shift+1', md: '#', ph: 'Überschrift 1' },
-        { id: 'h2', name: 'Überschrift 2', icon: 'H₂', gruppe: 'Grundlegend', cmd: ['h2', 'ueberschrift2', '##'], kurz: 'Ctrl+Shift+2', md: '##', ph: 'Überschrift 2' },
-        { id: 'h3', name: 'Überschrift 3', icon: 'H₃', gruppe: 'Grundlegend', cmd: ['h3', 'ueberschrift3', '###'], kurz: 'Ctrl+Shift+3', md: '###', ph: 'Überschrift 3' },
-        { id: 'todo', name: 'Aufgabenliste', icon: '☑', gruppe: 'Grundlegend', cmd: ['todo', 'aufgabe', 'checkbox'], kurz: 'Ctrl+Shift+4', md: ['[]', '[ ]'], ph: 'Aufgabe' },
+        { id: 'h1', name: 'Überschrift 1', icon: 'H₁', gruppe: 'Grundlegend', cmd: ['h1', 'ueberschrift1', 'titel', '#'], kurz: 'Ctrl+Shift+1', md: '#', ph: 'Überschrift 1', stufe: 1 },
+        { id: 'h2', name: 'Überschrift 2', icon: 'H₂', gruppe: 'Grundlegend', cmd: ['h2', 'ueberschrift2', '##'], kurz: 'Ctrl+Shift+2', md: '##', ph: 'Überschrift 2', stufe: 2 },
+        { id: 'h3', name: 'Überschrift 3', icon: 'H₃', gruppe: 'Grundlegend', cmd: ['h3', 'ueberschrift3', '###'], kurz: 'Ctrl+Shift+3', md: '###', ph: 'Überschrift 3', stufe: 3 },
+        { id: 'todo', name: 'Aufgabenliste', icon: '☑', gruppe: 'Grundlegend', cmd: ['todo', 'aufgabe', 'checkbox'], kurz: 'Ctrl+Shift+4', md: ['[]', '[ ]', '[x]', '[X]'], ph: 'Aufgabe' },
         { id: 'bullet', name: 'Aufzählungsliste', icon: '•', gruppe: 'Grundlegend', cmd: ['bullet', 'liste', 'aufzaehlung'], kurz: 'Ctrl+Shift+5', md: ['-', '*', '+'], ph: 'Listenpunkt' },
-        { id: 'number', name: 'Nummerierte Liste', icon: '1.', gruppe: 'Grundlegend', cmd: ['number', 'nummeriert', 'num'], kurz: 'Ctrl+Shift+6', md: '1.', ph: 'Listenpunkt' },
+        /* Notion nimmt für die nummerierte Liste nicht nur „1." — auch Buchstaben
+           und römische Zahlen, mit Punkt oder mit Klammer. Wir hatten nur „1.",
+           und `doku/SLASH-UND-TASTEN.md` behauptete trotzdem „a." und „i.". */
+        { id: 'number', name: 'Nummerierte Liste', icon: '1.', gruppe: 'Grundlegend', cmd: ['number', 'nummeriert', 'num'], kurz: 'Ctrl+Shift+6',
+            md: ['1.', '1)', 'a.', 'a)', 'i.', 'i)', 'A.', 'A)', 'I.', 'I)'], ph: 'Listenpunkt' },
         { id: 'toggle', name: 'Toggle-Liste', icon: '▸', gruppe: 'Grundlegend', cmd: ['toggle', 'einklappbar'], kurz: 'Ctrl+Shift+7', md: '>', ph: 'Toggle' },
-        { id: 'toggle-h1', name: 'Toggle-Überschrift 1', icon: '▸H₁', gruppe: 'Grundlegend', cmd: ['toggle h1', 'einklappbare ueberschrift 1'] },
-        { id: 'toggle-h2', name: 'Toggle-Überschrift 2', icon: '▸H₂', gruppe: 'Grundlegend', cmd: ['toggle h2', 'einklappbare ueberschrift 2'] },
-        { id: 'toggle-h3', name: 'Toggle-Überschrift 3', icon: '▸H₃', gruppe: 'Grundlegend', cmd: ['toggle h3', 'einklappbare ueberschrift 3'] },
+        { id: 'toggle-h1', name: 'Toggle-Überschrift 1', icon: '▸H₁', gruppe: 'Grundlegend', cmd: ['toggle h1', 'einklappbare ueberschrift 1'], stufe: 1 },
+        { id: 'toggle-h2', name: 'Toggle-Überschrift 2', icon: '▸H₂', gruppe: 'Grundlegend', cmd: ['toggle h2', 'einklappbare ueberschrift 2'], stufe: 2 },
+        { id: 'toggle-h3', name: 'Toggle-Überschrift 3', icon: '▸H₃', gruppe: 'Grundlegend', cmd: ['toggle h3', 'einklappbare ueberschrift 3'], stufe: 3 },
         { id: 'quote', name: 'Zitat', icon: '❝', gruppe: 'Grundlegend', cmd: ['quote', 'zitat'], md: '"', ph: 'Zitat' },
         { id: 'callout', name: 'Callout', icon: '💡', gruppe: 'Grundlegend', cmd: ['callout', 'hinweis'], ph: 'Hinweis' },
         { id: 'divider', name: 'Trennlinie', icon: '—', gruppe: 'Grundlegend', cmd: ['divider', 'trennlinie', 'hr', 'div'], md: ['---', '***', '___'] },
@@ -152,6 +156,42 @@ Register.bloecke = (() => {
     const eines = (id) => alle().find(x => x.id === id) || null;
     const gruppen = () => [...new Set(alle().map(x => x.gruppe).filter((g) => !!g))];
     const inGruppe = (g) => alle().filter(x => x.gruppe === g);
+    /**
+     * Alle Blockarten, die eine Überschrift sind — mit ihrer Stufe.
+     *
+     * Eine Antwort für alle, die es wissen müssen: das Inhaltsverzeichnis im
+     * Editor, der Gliederungsstreifen der Schale, und was noch kommt.
+     */
+    const ueberschriften = () => {
+        const raus = {};
+        alle().forEach(x => { if (x.stufe)
+            raus[x.id] = x.stufe; });
+        return raus;
+    };
+    /**
+     * Ziffer → Blockart, abgeleitet aus dem `kurz`-Feld.
+     *
+     * Notion legt die zehn häufigsten Blockarten auf Strg+Umschalt+Ziffer.
+     * Welche Ziffer welche Art meint, stand bisher DREIMAL im Editor als
+     * Literal — einmal für Strg+Umschalt, einmal für die Mac-Belegung
+     * Strg+Alt, einmal für die Mehrfachauswahl. Und zusätzlich hier, als
+     * `kurz: 'Ctrl+Shift+1'`, wo die Kürzelübersicht es liest.
+     *
+     * Vier Kopien einer Zuordnung. Wer eine Art auf eine andere Ziffer legt,
+     * ändert die Übersicht und lässt drei Griffe stehen — oder umgekehrt,
+     * und dann zeigt die Übersicht etwas, das nichts tut.
+     *
+     * Hier wird sie aus `kurz` GELESEN, nicht danebengeschrieben.
+     */
+    const zifferZuTyp = () => {
+        const raus = {};
+        alle().forEach(x => {
+            const m = /^Ctrl\+Shift\+([0-9])$/.exec(String(x.kurz ?? ''));
+            if (m && m[1])
+                raus[m[1]] = x.id;
+        });
+        return raus;
+    };
     /** Welche Art passt zu diesem Markdown-Kürzel? */
     const zuMarkdown = (zeichen) => alle().find(x => {
         const m = x.md;
@@ -165,6 +205,7 @@ Register.bloecke = (() => {
         return alle().filter(x => (x.name || '').toLowerCase().includes(t) ||
             (x.cmd || []).some(c => c.toLowerCase().startsWith(t)));
     };
-    return { alle, eines, gruppen, inGruppe, zuMarkdown, suche, melde, nimmZurueck,
+    return { alle, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, zifferZuTyp,
+        suche, melde, nimmZurueck,
         vonAussen: () => [...vonAussen], anzahl: () => LISTE.length };
 })();

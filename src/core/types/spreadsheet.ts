@@ -174,6 +174,44 @@ export interface Sheet {
   fixierteZeilen?: number;
   fixierteSpalten?: number;
   versteckt?: boolean;
+  /** Bedingte Formatierung — siehe `FormatRule`. */
+  regeln?: FormatRule[];
+}
+
+/* ---------------------------------------------------------------------------
+ * BEDINGTE FORMATIERUNG
+ * ---------------------------------------------------------------------------
+ * Eine Regel gehört dem BLATT, nicht der Zelle. Der Unterschied ist nicht
+ * kosmetisch: eine Farbe an der Zelle müsste bei jeder Änderung mitgeführt,
+ * beim Einfügen einer Zeile verschoben und beim Löschen aufgeräumt werden.
+ * Eine Regel am Blatt beschreibt stattdessen, WANN gefärbt wird, und
+ * überlebt jede Umstellung der Daten darunter.
+ *
+ * Und sie ändert die Daten nicht. Was `wert` sagt, bleibt, was es war —
+ * eine bedingte Farbe ist eine Sicht darauf, keine Bearbeitung. Deshalb
+ * kann man sie auch abschalten, ohne etwas zurückzunehmen.
+ * ------------------------------------------------------------------------*/
+
+/** Was eine Regel prüft. */
+export type FormatRuleKind =
+  | 'groesser' | 'kleiner' | 'gleich' | 'zwischen'
+  | 'enthaelt' | 'leer' | 'nichtLeer'
+  | 'doppelt'          /* derselbe Wert kommt im Bereich mehrfach vor */
+  | 'skala'            /* Farbverlauf zwischen kleinstem und grösstem Wert */
+  | 'balken';          /* Balken im Hintergrund, Länge nach Wert */
+
+export interface FormatRule {
+  /** Wo sie gilt: `A1:C20`. Leer heisst: das ganze Blatt. */
+  bereich: string;
+  art: FormatRuleKind;
+  /** Vergleichswert. Bei `zwischen` die untere Grenze. */
+  wert?: string | number;
+  /** Nur bei `zwischen`: die obere Grenze. */
+  wert2?: string | number;
+  /** Farbmarke — `rot`, `gruen`, `gelb`, `blau`, `orange`. Nicht bei skala/balken. */
+  farbe?: string;
+  /** Abgeschaltet, ohne sie zu löschen. */
+  an?: boolean;
 }
 
 /** Eine Mappe: mehrere Blätter, wie eine Excel-Datei. */

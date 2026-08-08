@@ -2112,3 +2112,2117 @@ und die Seite bleibt leer. Ein Abschnitt prüft ausserdem, dass der Server
 **Status**
 
 Beschlossen und gebaut. `test125`, 9 Punkte.
+
+---
+
+## E42 · „Mehr" statt „Eingang", und der Kompass gehört hinein
+
+**Woher das kommt.** Redur hat in Claude Design einen vollständigen Entwurf
+gebaut — „Nocturne" — und ihn als Übergabepaket geschickt, mit einer
+Vorgabe von vierzig Abschnitten. Zwei Sätze darin ändern die Navigation:
+
+> Earlier „Eingang/Posteingang" should be replaced by „Mehr", because help,
+> settings, import, backup, shortcuts and compass do not need a permanent
+> main tab.
+
+> Kompass is **not** a main tab. Kompass is a normal page/view opened from
+> Mehr.
+
+**Was daraus wurde.**
+
+```txt
+oben     R · Start · Seiten · Termine · Mehr
+Mehr     Kompass · Befehle · Tastenkürzel · Vorlagen
+         Sicherung · Importieren · Posteingang · Papierkorb
+         Einstellungen · Über Redion
+Kompass  eine Seite IN Mehr, kein Reiter
+```
+
+**Warum das besser ist als „Eingang".** Ein Platz in der Hauptnavigation ist
+einer von fünf. Der Posteingang ist bei den meisten Leuten leer; Sicherung,
+Import und Einstellungen braucht man dagegen wirklich. Der Posteingang ist
+darum kein eigener Weg mehr, sondern eine Zeile in Mehr — einen Griff
+entfernt, nicht weiter als vorher.
+
+**Der Kompass ist der eigentliche Gewinn.** Er ist der einzige Bereich, den
+der Entwurf ganz neu erfindet, und er schliesst die Lücke, die keine
+Funktion schliesst: Redion kann viel, und nichts davon sagt es von selbst.
+Wer nicht weiss, dass es Karteikarten gibt, findet sie nie. Der Kompass
+sagt in einer Seite, wie die App aufgebaut ist, welche Befehle es gibt,
+welche Tastenkürzel — und was noch nicht fertig ist.
+
+**Und dieser letzte Punkt ist Absicht.** Die Befehle tragen ihren Stand:
+`fertig`, `teilweise`, `geplant`. Ein Wegweiser, der Geplantes wie Fertiges
+aussehen lässt, ist eine Enttäuschung mit Ansage. „Redion kann" zählt
+dagegen aus dem Register — eine von Hand gepflegte Aufzählung erzählt nach
+dem dritten neuen Block von einer App, die es nicht mehr gibt.
+
+**Ein Fund beim Bauen.** `handyLeiste()` hatte einen Rückfall:
+`karte[reiter] || 'hl-start'`. Der Kompass hat oben keinen Reiter — also
+leuchtete beim Öffnen die Start-Pille. Man stand im Kompass, und oben stand
+„Start". Derselbe Fehlertyp wie dreimal zuvor (E38), nur diesmal von der
+anderen Seite: nicht ein fehlendes `reiter()`, sondern ein Rückfall, der
+lieber etwas Falsches behauptet als nichts. Jetzt leuchtet nichts, wenn man
+nirgends in der Leiste ist.
+
+**Was aus dem Entwurf noch NICHT gebaut ist** — damit niemand es für
+erledigt hält: die Farben von Nocturne (die App hat ihre eigenen), das
+Bottom Sheet „Neu erstellen", das KI-Blatt als Blatt, der eigene
+Suchbildschirm, die Ladeskelette und der Speicherbalken im R-Blatt. Steht
+in `LUECKEN.md` L10.
+
+**Status**
+
+Gebaut: der Reiter „Mehr", der Bereich Mehr mit drei Gruppen, der Kompass
+als Seite darin. `test114` (57 Punkte), `test37`, `test40`, `test67`
+mitgezogen.
+
+---
+
+## E43 · Bewegung: drei Dauern, drei Kurven, keine Federn
+
+**Woher das kommt.** Redurs Vorgabe zum Bewegungssystem, und der Satz, der
+sie zusammenfasst: *„Animations must improve clarity, not distract."*
+
+**Was gemessen wurde, bevor gebaut wurde.** Rund achtunddreissig Übergänge
+in sieben Stilblättern — und **kein einziger gemeinsamer Wert**. `.14s`
+hier, `200ms` dort, `.22s` im Blatt. Wer die App als Ganzes ruhiger oder
+schneller machen wollte, musste sie einzeln suchen.
+
+Was dagegen schon stimmte und deshalb NICHT angefasst wurde: die
+Abschaltung. `bausteine.css` hat eine globale Regel auf `*`, die bei
+`prefers-reduced-motion` jede Dauer auf 0.001ms setzt. Der erste Blick
+zählte vier Fundstellen und hielt das für lückenhaft — die eine davon deckt
+alles ab.
+
+**Die Marken.**
+
+```txt
+--motion-fast    120ms   Berührung, Knopfdruck — es soll SOFORT wirken
+--motion-normal  220ms   Reiterwechsel, Seitenwechsel, Hinweis
+--motion-slow    320ms   Blätter von unten; sie dürfen schwer wirken
+
+--ease-standard  cubic-bezier(0.2, 0.8, 0.2, 1)
+--ease-enter     cubic-bezier(0.16, 1, 0.3, 1)
+--ease-exit      cubic-bezier(0.4, 0, 1, 1)
+
+--press-scale       0.96    Knopf
+--card-press-scale  0.985   Karte
+```
+
+Die Kurven sind nicht Geschmack. `ease-enter` startet schnell und bremst
+weich aus — was hereinkommt, soll ankommen, nicht anschweben. `ease-exit`
+macht es umgekehrt. Beides linear ist das, was billige Oberflächen von
+teuren unterscheidet.
+
+**Keine Federn, und das wird geprüft.** Eine Kurve mit einem Wert über 1
+schwingt über das Ziel hinaus. Beim ersten Mal nett, beim fünfzigsten eine
+Verzögerung — Redion ist ein Arbeitsgerät. `test126` rechnet die
+Bezier-Werte nach und wird rot, wenn jemand eine Feder einbaut.
+
+**Warum die Berührungsrückmeldung mehr ist als Zierrat.** Am Telefon gibt
+es kein Hover. Ohne `:active` antwortet auf eine Berührung **gar nichts**,
+und bis die neue Ansicht steht, weiss man nicht, ob man getroffen hat. Bei
+200 ms sind das 200 ms Zweifel — und Zweifel führen zum zweiten Tippen.
+
+Bewegt werden ausschliesslich `transform` und `opacity`. Nur diese beiden
+zeichnet der Browser ohne den Aufbau neu zu rechnen; eine Höhe zu
+animieren sieht am Rechner gleich aus und ruckelt am Telefon. `test126`
+prüft auch das.
+
+**Ein Fehler in der Prüfung, nicht im Code.** Der erste Entwurf suchte
+Ziffern im Text der Dauer und scheiterte an `1e-06s` — so schreibt der
+Browser die 0.001ms der Abschaltregel. Der Lauf war rot, die App richtig.
+Eine Prüfung, die Zeichen vergleicht statt Zahlen, misst die Schreibweise.
+
+**Status**
+
+`test126`, 12 Punkte, mit Gegenprobe: Feder eingebaut → rot, Dauer
+verdreht → rot. Die Abschaltung wird mit einem Browser geprüft, der
+`reducedMotion: 'reduce'` wirklich gesetzt hat.
+
+**Was aus der Bewegungs-Vorgabe noch fehlt:** die gleitende Pille beim
+Reiterwechsel, die versetzt einblendenden Listenzeilen, das Schimmern der
+Ladeskelette, die Zustandswechsel der Sicherungskarte. Steht in `L10`.
+
+---
+
+## E44 · Nocturne — Redion bekommt eigene Farben
+
+**Die grosse Änderung.** Redion trug im Kern Notions Palette: `#191919` und
+ein Himmelblau. Das war ein guter Anfang und die falsche Identität — die
+Vorgabe sagt „inspired by Notion Mobile, but it must not be a direct copy",
+und die Farben sind die Stelle, an der man das zuerst sieht.
+
+```txt
+Grund      #191919 → #141414        näher an Schwarz
+Fläche     #202020 → #1a1a1a
+Karte      #252525 → #202020
+Ränder     feste Grauwerte → rgba(255,255,255,.08/.12/.18)
+Text       #e9e9e7 → #f2f2f2        16.5:1 statt 14.5:1
+Akzent     #2eaadc → #f97316        warm, nicht blau
+```
+
+**Die Ränder sind jetzt durchscheinend**, und das ist mehr als Kosmetik.
+Ein fester Grauwert stimmt auf genau einer Fläche; derselbe Rand auf einer
+Karte ist plötzlich zu dunkel. `rgba` über Weiss verhält sich überall
+gleich — hellerer Grund, hellerer Rand.
+
+**Der Akzent ist orange, nicht rot, und eine Rechnung hat das entschieden.**
+Die Vorgabe nennt `#EF4444` gleichzeitig als Akzent UND als Gefahr. Zwei
+Gründe dagegen, beide gemessen:
+
+```txt
+#EF4444 auf einer Karte   4.33:1   unter der Grenze für Text
+#F97316 auf einer Karte   5.81:1   darüber
+Akzent = Gefahr           →        „Sichern" sieht aus wie „Löschen"
+```
+
+Rot bleibt deshalb, was es sein muss: das Zeichen für etwas
+Unwiderrufliches. `test127` prüft beides und wird rot, wenn jemand den
+Vorschlag der Vorgabe wörtlich nimmt — nachgestellt.
+
+**Ein Fehler, der den ganzen Umstieg unsichtbar gemacht hätte.** Die
+Schemata „Standard" und „Hell" setzten den Akzent per `style.setProperty`
+auf `documentElement`. Ein Inline-Stil schlägt jedes Stilblatt: die neue
+Farbe stand in `dunkel.css` und kam nie auf dem Bildschirm an. Schlimmer —
+EIN Inline-Wert kann für hell und dunkel nicht beide richtig sein. Das
+Orange mit 6.6:1 auf Schwarz kommt auf Weiss auf **2.80:1**. Beide
+Standard-Schemata tragen jetzt gar keinen Akzent; die Stilblätter bringen
+ihren eigenen, nachgerechneten mit.
+
+**Und ein Fund, der älter ist als diese Änderung.** `test127` misst auch
+den Hellmodus, und dort lagen zwei Werte aus Notions Palette seit jeher
+unter der Grenze:
+
+```txt
+--text-dim   #787774   4.17:1 auf der Karte   nötig 4.5
+--text-faint #9b9a97   2.62:1 auf der Karte   nötig 3.0
+```
+
+Auf Weiss ging der erste gerade so durch (4.48) — auf einer Karte nicht
+mehr. Genau diese Sorte Fehler sieht man nicht: 4.4:1 und 4.6:1 wirken
+gleich, und nur eines davon kann jemand mit schwachen Augen lesen. Jetzt
+`#66655f` und `#82817e`.
+
+**Was NICHT angefasst wurde:** die zehn Block- und Hintergrundfarben
+(`--c-*`, `--b-*`). Die wählt der Nutzer für seine eigenen Blöcke aus; sie
+sind Inhalt, nicht Oberfläche. Und die anderen Schemata (Mitternacht,
+Wald, Sand) bringen weiter ihre eigenen Flächen und Akzente mit.
+
+**Status**
+
+`test127`, 20 Punkte, beide Modi, gerechnet am laufenden Browser statt an
+den Stilblättern — was zählt, ist der Wert, der am Ende gilt.
+
+---
+
+## E45 · Ein Blatt hinter dem Stift, statt sofort einer leeren Seite
+
+**Aus der Vorgabe §18:** der ⊕-Knopf soll fragen, WAS entstehen soll —
+Seite, Datenbank, Aufgabe, Notiz, Tabelle, Import.
+
+**Vorher entstand sofort eine leere Seite.** Das ist die richtige Antwort
+in genau einem von sechs Fällen. In den anderen fünf muss man danach etwas
+umbauen, das man gar nicht wollte: erst eine Seite, dann darin einen
+Datenbankblock, dann die Ansicht wählen. Drei Schritte für etwas, das ein
+Tipp sein sollte.
+
+**Acht Zeilen, nicht sechs.** Dazugekommen sind „Von einer Vorlage" und
+„Sicherung einlesen". Die zweite ist die wichtigere und sieht am
+unwichtigsten aus: wer gerade das Gerät gewechselt hat, will nicht
+anfangen, sondern zurückholen — und sucht das dann in den Einstellungen.
+
+**Der Unterschied zwischen Rechner und Telefon bleibt.** Am Rechner ist
+der ⊕ ein Knopf unter vielen, und wer ihn drückt, will meistens genau eine
+Seite; dort passiert weiterhin sofort das Erwartete. Am Telefon ist er
+einer von fünf Wegen überhaupt — dort lohnt die Frage.
+
+**Was das Blatt intern tut, sieht man ihm nicht an.** „Datenbank",
+„Tabelle" und „Aufgabe" legen zuerst eine Seite an und setzen den Block
+hinein. Ein Datenbankblock ohne Seite hat keinen Ort, an dem er stehen
+kann — das ist keine Bequemlichkeit, sondern das Datenmodell.
+
+**Status**
+
+`test114` §12, 7 Punkte.
+
+---
+
+## E46 · Ladeskelette statt Kreisel
+
+**Aus der Vorgabe §23:** „Use skeletons, not random spinners everywhere."
+
+**Der Grund ist nicht Mode.** Ein Kreisel sagt „warte". Ein Skelett sagt
+„hier kommen sechs Zeilen mit einem Symbol links und einem Datum rechts" —
+man weiss, was gleich dasteht, das Auge hat schon einen Platz dafür, und
+wenn der Inhalt kommt, springt nichts.
+
+**Drei Kleinigkeiten, die den Unterschied machen:**
+
+Die Strichbreiten sind **ungleich** (62 %, 48 %, 71 %, …). Sechs gleich
+lange Balken sehen aus wie ein Muster; ungleiche sehen aus wie Text, und
+genau darum geht es.
+
+Die Zeilen atmen **versetzt**, 120 ms Abstand. Sonst pulsiert die ganze
+Liste wie ein Block — und das wirkt wie ein Fehler statt wie Warten.
+
+Das Atmen ist **leise**: von .35 auf .7 über 1,4 Sekunden. Die Vorgabe sagt
+„very subtle shimmer" und „do not use bright shimmer". Ein Skelett, das
+blitzt, zieht die Aufmerksamkeit auf das Warten statt auf das, was kommt.
+
+**Und eine Frist.** `beimLaden()` zeigt das Skelett erst nach 180 ms. Ein
+Skelett, das bei jedem Wechsel aufblitzt, ist schlimmer als keines — die
+Ansicht flackert. Darunter merkt ohnehin niemand, dass geladen wurde.
+
+Wer keine Bewegung mag, bekommt keine: die globale Regel hält auch diese
+Animation an, und ein stehendes Skelett erfüllt seinen Zweck weiterhin —
+es zeigt die Form.
+
+**Status**
+
+`test126` §5, 6 Punkte. Gegenprobe: Dauer auf 0,3 s gesetzt → rot.
+
+---
+
+## E47 · Zeilen kommen versetzt herein — aber nur die ersten neun
+
+**Aus der Bewegungs-Vorgabe:** „list items stagger in, 20–30 ms apart".
+
+**Warum überhaupt.** Erscheint eine Liste als Block, sieht das Auge einen
+Sprung: „da war nichts, jetzt ist alles da" — und muss von vorn anfangen.
+Kommen die Zeilen nacheinander von oben nach unten, folgt der Blick der
+Bewegung in Leserichtung und ist am Ende der Animation schon bei der
+ersten Zeile.
+
+**Die Obergrenze ist der eigentliche Beschluss.** Bei 20 ms je Zeile und
+zwanzig Zeilen sind das 400 ms, in denen die Liste noch nicht steht. Das
+ist keine Bewegung mehr, das ist Warten — und Warten, das man selbst
+eingebaut hat, ist die schlechteste Sorte.
+
+Deshalb bekommen nur die **ersten neun** Zeilen eine Verzögerung. Zeile
+zehn und alles darunter erscheint mit Zeile neun. Wer so weit unten liest,
+hat ohnehin gescrollt und die Ankunft nie gesehen.
+
+```css
+.zeile-hoch:nth-child(1) { animation-delay:0ms }
+…
+.zeile-hoch:nth-child(9) { animation-delay:160ms }
+/* ab 10: keine Verzögerung */
+```
+
+**Und wer keine Bewegung mag, bekommt keine.** `prefers-reduced-motion`
+hält auch diese Staffel an — die Liste erscheint dann vollständig, was
+genau der Zustand vorher war.
+
+**Status**
+
+`test126` §6, 4 Punkte. Gegenprobe: Staffel versechsfacht → rot.
+
+---
+
+## E48 · Die Suchfilter sind am Telefon Marken, nicht Auswahlfelder
+
+**Aus der Vorgabe §17:** die Suche gehört zu den fünf Wegen, die am
+Telefon zählen — und sie soll dort nicht wie ein Formular aussehen.
+
+**Vier `<select>` nebeneinander sind am Rechner richtig.** Sie sind
+kompakt, man sieht auf einen Blick, was eingestellt ist, und ein Klick
+öffnet eine kleine Liste neben dem Feld. Am Telefon ist jede dieser drei
+Eigenschaften weg:
+
+Ein `<select>` öffnet dort ein **Systemrad über den halben Bildschirm**.
+Für „nur Titel" statt „Titel und Inhalt" sind das drei Handgriffe, und
+währenddessen sieht man die Trefferliste gar nicht mehr.
+
+Vier Felder **brechen um** in zwei Reihen. Das kostet rund 100 px — genau
+die 100 px, in denen die Treffer stehen sollen.
+
+**Also: eine Reihe runder Marken, die seitwärts rollt.** 42 px hoch, mit
+eigenem Pfeil (der vom System sitzt am Telefon anders und zerschneidet die
+runde Form). Wer den vierten Filter braucht, wischt einmal — das ist
+billiger als eine zweite Reihe, die immer da ist.
+
+**Ein gesetzter Filter ist heller als ein leerer.** `select:not(.leer)`
+bekommt Kartenfläche und vollen Text. Das ist kein Schmuck: ein Filter,
+den man nicht sieht, lässt einen in einem Ausschnitt suchen, ohne es zu
+wissen — und das Ergebnis ist dann „Redion findet meine Seite nicht".
+
+**Zwei Funde beim Hinsehen** (CLAUDE.md §55 — Bild machen, nicht Code
+lesen), beide unsichtbar für jede bestehende Prüfung:
+
+Der Platzhalter brach ab. Statt der sechs Suchbefehle stand da „Suchen —
+auch typ:seite, in:Projekte, nach:202". Ein Satz, der mitten im Wort
+endet, liest sich wie ein Fehler. Am Telefon steht dort jetzt „Seiten und
+Inhalte suchen" — die Befehle bleiben in der Fusszeile, wo sie ganz
+hinpassen.
+
+Die Fusszeile nannte **„↑ ↓ auswählen · Enter öffnen · Esc schliessen"**.
+Keine dieser drei Tasten gibt es auf einer Telefontastatur. Das war eine
+Anleitung für ein anderes Gerät, sie nahm die Höhe von zwei Treffern weg,
+und sie stimmte kein einziges Mal. Am Telefon ist sie weg; die
+Suchbefehle daneben gelten überall und bleiben — in einer Zeile, die
+seitwärts rollt.
+
+**Am Rechner ändert sich nichts.** Die ganze Regel steht unter
+`@media(max-width:760px)`.
+
+**Status**
+
+`test114` §16, 8 Punkte. Gegenprobe: Marken-Block entfernt, `eng` auf
+`false`, `.leer` immer gesetzt → 7 von 8 rot. Der achte („die Suchbefehle
+bleiben") bleibt absichtlich grün — er prüft, dass die Fusszeile nicht
+komplett verschwindet.
+
+---
+
+## E49 · Die Reiterpille wandert, statt zu springen
+
+**Aus der Bewegungs-Vorgabe:** „active tab indicator slides".
+
+**Warum das kein Schmuck ist.** Verschwindet die Fläche an einer Stelle
+und taucht an der nächsten auf, liest das Auge „hier ist etwas Neues" und
+muss die Stelle erst suchen. Wandert sie, folgt der Blick von selbst mit
+und ist beim Ankommen schon dort. Der Unterschied ist ein Sekundenbruchteil
+— aber es ist der Bruchteil, in dem man sonst kurz nicht weiss, wo man ist.
+
+**Ein eigenes Feld statt eines Knopfhintergrunds.** `#ho-pille` liegt hinter
+den Reitern, nimmt keine Berührung an und trägt aria-hidden — Vorleseprogramme
+sollen vier Reiter finden, nicht fünf Dinge. Der aktive Knopf gibt seinen
+Hintergrund dafür ab; stünden beide da, käme die wandernde Fläche bei einer
+schon fertigen an, und die Bewegung würde nichts mehr erklären.
+
+**Drei Stellen, an denen das leicht schiefgeht — alle drei geprüft:**
+
+*Gemessen wird nach dem Setzen von `.an`.* Die aktive Pille zeigt als
+einzige ihre Beschriftung und ist deshalb breiter als vorher. Wer vorher
+misst, bekommt die alte Breite, und die Fläche endet einen Zentimeter zu
+kurz.
+
+*`offsetLeft`, nicht `getBoundingClientRect()`.* Die Leiste rollt seitwärts;
+die Pille liegt IN ihr und rollt mit. Der Bildschirmort wäre der falsche
+Bezug — bei gerollter Leiste stünde sie richtig im Bild und falsch im Inhalt.
+
+*Beim Start darf sie nicht gleiten.* Sonst schiebt sie sich beim Öffnen der
+App von der linken Kante herein — eine Bewegung ohne Anlass, und die liest
+sich als Fehler.
+
+**Verschiebung statt `left`.** `translateX` bewegt nur den fertigen
+Bildinhalt; `left` rechnet die Leiste neu. Auf einem älteren Telefon ist
+das der Unterschied zwischen weich und ruckelig. Die Breite muss leider
+bleiben, wie sie ist — für sie gibt es keine Verschiebung.
+
+**Wo kein Reiter zuständig ist, ist auch keine Pille.** „Kompass" hat oben
+keinen (E42). Sie bleibt dann stehen und verschwindet, statt an den Anfang
+zu rutschen: das wäre eine Aussage, und zwar eine falsche.
+
+**Und der Reiter wird hereingeholt,** wenn er halb ausserhalb steht. Bei
+390 px passen die fünf Wege nicht alle ins Bild; ohne das tippt man auf
+„Mehr" und sieht danach nicht, dass man dort ist. Wer keine Bewegung mag,
+bekommt den Sprung statt des Rollens.
+
+**Status**
+
+`test114` §17, 7 Punkte. Die Gegenprobe hat dabei etwas gezeigt, das man
+sonst nie gemerkt hätte: die Sperre gegen das Hereingleiten ist heute
+wirkungslos, weil ein Übergang gar nicht erst startet, solange der
+Ausgangswert nie gemalt wurde. Sie greift erst, wenn jemand im Stilblatt
+Anfangswerte einträgt, die wirklich gemalt werden — mit
+`width:40px; transform:translateX(0)` glitt die Pille prompt über elf
+Zwischenorte herein und der Punkt wurde rot. Die Zeile ist also keine tote
+Vorsicht, sondern die Sicherung dagegen; das steht jetzt auch im Stilblatt.
+
+---
+
+## E50 · Die obere Leiste: 56 px, und ihre Höhe steht an EINER Stelle
+
+**Aus dem Entwurf:** 56 px hohe Tasten. Gebaut waren 52 — und unten, in der
+Aktionsleiste, standen längst 56. Zwei Zahlen für dieselbe Sache.
+
+**Der eigentliche Fund lag darunter.** Die Pillenleiste steht fest oben und
+rechnet sich aus 12 + 52 + 12 plus der Kerbe des Geräts. Der Platz darunter
+war eine getippte Zahl:
+
+```css
+#handy-oben{ padding: calc(12px + env(safe-area-inset-top)) 28px 12px }
+#main      { padding-top: 60px }
+```
+
+Gemessen am 7. August bei 390 px: die Leiste 76 px hoch, freigehalten
+60 px. **Die obersten 16 px des Zurück-Knopfes lagen dahinter** — und die
+Leiste ist undurchsichtig, es war also nicht nur ein Klickproblem.
+
+Am iPhone ist es schlimmer, und zwar systematisch: dort legt die Kerbe
+noch 47 px dazu — aber nur in der Leiste, nicht im Platz darunter. Aus
+16 px Überdeckung werden 63, also die ganze Zeile. Genau die Sorte Fehler,
+die auf keinem Entwicklerrechner auftaucht.
+
+**Jetzt eine Marke statt zweier Zahlen:**
+
+```css
+:root { --hoben: calc(80px + env(safe-area-inset-top)) }
+#main { padding-top: var(--hoben) }
+```
+
+**Und was das Wachsen sonst noch kippte.** Vier Tasten mal vier Pixel sind
+16 px, und die haben zwei Breiten aus dem Bild geschoben:
+
+```txt
+Breite   längster Reiter („Termine")    davor
+428 px   435 px  →  passte nicht        423 px  passte knapp
+390 px   395 px  →  passte nicht        379 px  passte
+```
+
+Gespart wird am Weissraum, nie an der Fläche, die der Daumen trifft. Die
+Stufen rücken deshalb früher zusammen — ab 440 px (das nimmt das 428er
+iPhone mit, das vorher ausserhalb jeder Regel stand) und noch einmal ab
+380 px. Damit passt jede gängige Telefonbreite: 428, 393, 390, 375, 360.
+Bei 320 px rollt die Leiste, und `pilleSchieben()` holt den gewählten
+Reiter ins Bild.
+
+**Und die Prüfung, die das nicht fand, war das dritte Problem.** Sie kannte
+375 und 390 — aber nicht 428. Die eine Breite, die niemand prüfte, war
+ausgerechnet die häufigste grosse. Sie prüft jetzt alle fünf, und dazu, dass
+der freigehaltene Platz genau der Leistenhöhe entspricht.
+
+Was dieser Rechner nicht nachmessen kann, ist die Kerbe: hier ist sie 0, und
+dann stimmen die beiden Zahlen auch dann, wenn nur eine sie mitrechnet.
+Geprüft wird deshalb zusätzlich, dass `--hoben` das `env(safe-area-inset-top)`
+überhaupt enthält — abgelesen am Stilblatt, nicht am gerechneten Wert, denn
+der sagt hier nur `calc(80px + 0px)`.
+
+**Status**
+
+`test114` §11, jetzt 15 Punkte. Gegenprobe: `--hoben` auf `60px` gesetzt →
+6 rot.
+
+---
+
+## E51 · Dialoge werden an EINER Stelle zu Dialogen
+
+**Aus `LUECKEN.md` L12** — Barrierefreiheit stand seit Monaten auf „◐
+Grundlagen da, nicht geprüft" und nannte fünf Punkte. Gemessen am
+7. August waren zwei in Ordnung und drei nicht:
+
+```txt
+✓ Fokus sichtbar      2 px Rahmen in der Akzentfarbe, überall
+✓ Escape schliesst    Suche, Befehle, Einstellungen, Papierkorb
+✗ nur über Farbe      der rote Punkt „ungelesen" war leer und still
+✗ Fokusreihenfolge    blieb hinter dem Dialog, lief mit Tab hinaus,
+                      kam nie zurück
+✗ Vorlesen            null Überschriften, Meldungen stumm, Reiter
+                      ohne `aria-selected`
+```
+
+**Das Problem war nicht 106 Fehler, sondern einer.** Redion baut seine
+Überlagerungen an 106 Stellen, jedes Mal als `<div class="overlay">` an
+`<body>`. Allen fehlte dasselbe, und keine dieser Stellen war schuld:
+
+- **Keine Rolle.** Für ein Vorleseprogramm ist so ein `<div>` kein Dialog,
+  sondern Text am Ende des Dokuments.
+- **Der Fokus blieb draussen.** Die Einstellungen gingen auf, die Tastatur
+  stand weiter auf dem Knopf dahinter.
+- **Tab lief hinaus.** Nach zwölf Tabs stand der Fokus in der Seitenleiste
+  hinter dem Dialog — unter der Überlagerung, also unsichtbar. Man tippte
+  ins Nichts.
+- **Und er kam nicht zurück.** Nach dem Schliessen: `<body>`. Das nächste
+  Tab fing wieder ganz oben an, bei jedem Menü, jedes Mal.
+
+**Also ein Beobachter statt 106 Änderungen.**
+`src/schale/ueberlagerung/fokus.ts` sieht zu, was an `<body>` gehängt wird,
+und legt Rolle, `aria-modal`, einen Namen, den Fokus, die Tab-Falle und die
+Rückkehr auf. Das ist nicht nur weniger Arbeit: die 107. Überlagerung
+bekommt es auch, ohne dass jemand daran denkt.
+
+**Was er ausdrücklich NICHT tut:** er nimmt niemandem den Fokus weg, der
+schon gesetzt wurde. Die Suche setzt ihn auf ihr Feld, der Papierkorb auf
+seins. Wer das überschreibt, macht drei richtige Dialoge kaputt, um einen
+falschen zu heilen.
+
+**Eine Reihenfolge, die beim Bauen zuschlug.** Ein Beobachter meldet sich
+erst nach dem laufenden Durchgang — und die meisten Dialoge setzen ihren
+Fokus noch darin, direkt nach dem `appendChild`. Wer beim Anmelden nach dem
+aktiven Element fragt, bekommt deshalb ein Feld IM Dialog, merkt sich das
+als Herkunft, und beim Schliessen ist es längst weg. Von vier Dialogen
+kehrte genau einer zurück: ausgerechnet der, der seinen Fokus gar nicht
+setzte. Deshalb wird die letzte Stelle AUSSERHALB jeder Überlagerung
+laufend mitgeschrieben.
+
+**Und was sonst noch dazugehörte:**
+
+*Überschriften.* Jeder Block ist ein `<div>`, auch `h1`, `h2` und `h3`.
+Sichtbar durch ihre Grösse, hörbar durch gar nichts — eine Seite mit Titel
+und Überschrift ergab null Sprungmarken. Jetzt `role="heading"` mit
+`aria-level`, und zwar auf dem Textfeld statt auf dem Blockkasten: der
+enthält auch die Griffe ✚ und ⋮⋮, die Überschrift hiesse sonst
+„+ ⋮⋮ Eine Überschrift". Eine Stufe tiefer als der Blockname sagt, denn die
+Stufe 1 gehört dem Seitentitel; zwei Einsen auf einer Seite heissen beim
+Vorlesen „hier fangen zwei Dokumente an".
+
+*Der Fenstertitel* stand dauerhaft auf „Redion". In einem Fenster unter
+zwanzig anderen ist das keine Auskunft, ein Lesezeichen darauf heisst
+später auch nur so, und ein Vorleseprogramm nennt ihn bei jedem Wechsel —
+es sagte also immer dasselbe. Jetzt „Projekte — Redion".
+
+*Meldungen.* `#toast` bekam `role="status"` und `aria-live="polite"`.
+Ohne das erscheint „Gespeichert" nur auf dem Bildschirm; wer zuhört,
+erfährt es nie, auch nicht als Auslöser.
+
+*Der rote Punkt* am Reiter heisst „hier liegt Ungelesenes". Er ist rund,
+acht Pixel gross und leer. Jetzt ist er `aria-hidden` — er ist das Bild —
+und die Zahl steht im Namen des Knopfes: „Mehr, 3 ungelesen". Und
+verschwindet wieder; ein Knopf, der dauerhaft „0 ungelesen" heisst, ist
+schlimmer als keiner.
+
+Dabei fiel ein zweiter Punkt auf, an „Seiten". Ein Rest aus der Zeit, als
+der Reiter „Chats" hiess (E38) — angezeigt wurde er nie, weil nur der
+erste gefundene gesetzt wurde. Er hätte ungelesene Nachrichten an einem
+Ort gemeldet, an dem keine liegen. Der Posteingang steht seit E42 unter
+„Mehr", und dort steht jetzt auch der Punkt.
+
+*Die Reiter.* `role="tab"` ohne `aria-selected` meldet vier gleichrangige
+Reiter; wo man steht, stand einzig in der Farbe der Pille. Am Rechner sind
+es keine Reiter, sondern Verweise — dort ist `aria-current="page"` das
+richtige Wort.
+
+**Was offen bleibt:** ein Durchlauf mit einem echten Vorleseprogramm.
+Dieser Lauf prüft, worauf jedes von ihnen angewiesen ist — Rollen, Namen,
+Zustände, den Weg der Tastatur. Das ist nicht dasselbe wie VoiceOver, und
+L12 sagt das weiterhin.
+
+**Status**
+
+`test128` (Suite 92), 46 Punkte. Gegenprobe: Beobachter stillgelegt,
+Überschriften-Rollen, Live-Bereich, Punktname und `aria-selected` entfernt
+→ 25 von 46 rot.
+
+Und eine Falle fürs nächste Mal: `getComputedStyle` gibt ein LEBENDES
+Objekt zurück. Zweimal daraus lesen — vor und nach `focus()` — liefert
+zweimal den Zustand von nachher. Die erste Fassung meldete deshalb „der
+Fokus ändert nichts", obwohl er einen 2-px-Rahmen setzt.
+
+---
+
+## E52 · Grenzen für Agenten — und der gefährliche Fall ist der unbeaufsichtigte
+
+**Aus `LUECKEN.md` L11**, dem einzigen Eintrag mit „✗ es gibt keine
+Grenzen". Nachgesehen am 8. August gab es zwei der fünf genannten Dinge
+längst; sie standen nur nicht in der Liste:
+
+```txt
+✓ Rechte je Agent   jedes Werkzeug trägt `recht`, gefiltert über
+                    `Konten.darf` — ein Agent kann nie mehr als du
+✓ Protokoll         `agent:laeufe`, die letzten 30 samt Rücknahme
+```
+
+Drei fehlten wirklich, und alle drei betreffen denselben Fall.
+
+**Notausschalter.** Ein Agent, der Unsinn baute, liess sich nur dadurch
+anhalten, dass man das Fenster schloss — und die Auslöser liefen weiter,
+auch beim nächsten Öffnen. Jetzt ein Schalter, der zuerst in
+`ausloeserPruefen()` greift und dann in jedem Schleifendurchgang von
+`laufen()`: er wirkt sofort, nicht erst beim nächsten Auftrag. Sonst wäre
+er kein Notaus.
+
+**Tageslimit.** Das Guthaben eines Agenten gilt JE LAUF. Ein täglicher
+Auslöser war damit unbegrenzt: acht Schritte, jeden Tag, ohne Ende — und
+wer den Auslöser vergessen hat, merkt es nie, weil niemand danebensteht.
+Jetzt eine gemeinsame Zahl für alle Agenten zusammen, Vorgabe 120
+Schritte, geprüft **auch mitten im Lauf**. Ohne das wäre es keine Grenze,
+sondern eine Bedingung fürs Anfangen: der letzte Lauf käme immer noch mit
+vollem Guthaben durch, egal wie voll der Tag schon war.
+
+Der Tag wechselt um Mitternacht **Ortszeit**, nicht UTC — dieselbe Falle
+wie bei den Erinnerungen (E31).
+
+**Bestätigung vor der Änderung.** Zurücknehmen gab es, aber nur für
+ANGELEGTES: was ein Agent überschrieben hat, war weg. Also wird davor
+gefragt, mit dem Werkzeug, dem Vorhaben und den Argumenten im Text — „Der
+Agent möchte etwas ändern" ist keine Grundlage für ein Ja.
+
+Drei Antworten, nicht zwei: *Nicht ändern* · *Einmal erlauben* · *Für
+diesen Lauf erlauben*. Die dritte ist der Unterschied zwischen einer
+Sicherung, die man benutzt, und einer, die man nach dem vierten Dialog
+abschaltet.
+
+**Und die eigentliche Regel: ohne Aufsicht nur lesen.**
+
+Wer auf „Loslegen" drückt, sieht zu und kann eingreifen. Ein Auslöser um
+acht Uhr früh läuft, während niemand hinsieht — dort ist eine Rückfrage
+kein Schutz, sondern eine Sperre, die nie beantwortet wird. Ein
+unbeaufsichtigter Lauf bekommt deshalb gar keine ändernden Werkzeuge; er
+liest, berichtet und schreibt Vorschläge in seine Antwort. Wer es anders
+will, setzt beim Agenten „darf auch ohne Aufsicht ändern" — eine
+ausdrückliche Erlaubnis mit einem Satz daneben, was sie bedeutet.
+
+**Der Fehler, den der Prüflauf gefunden hat, war genau in dieser Naht.**
+Ein Agent mit „darf allein" bekam sein Werkzeug zurück — und danach die
+Rückfrage. Der Prüflauf blieb dort stehen; in der App wäre der Lauf bis
+zum nächsten Klick irgendwo hängen geblieben, mit einem Dialog über dem
+Bildschirm, den niemand erwartet hatte. „Darf allein" heisst: ohne mich.
+Dann auch ohne Frage.
+
+**Ein abgebrochener Lauf ist trotzdem ein Lauf** und kommt mitsamt Grund
+ins Protokoll. Sonst sucht man später den Agenten, der „nichts getan hat".
+
+**Der Streifen im Agentenfenster** nennt den Tagesstand und trägt den
+Schalter — ganz oben, nicht in einem Untermenü: wer ihn sucht, sucht ihn,
+weil gerade etwas schiefläuft. Steht er, wird der Streifen rot UND sagt es
+in Worten. Eine rote Fläche allein wäre eine Auskunft nur über Farbe
+(CLAUDE.md §38), und ausgerechnet bei einer Sicherung darf man nicht raten
+müssen, ob sie greift.
+
+**Status**
+
+`test129` (Suite 93), 26 Punkte. Gegenprobe: Notaus, Tageslimit,
+Rückfrage und die Leseregel einzeln stillgelegt → 15 von 26 rot.
+
+Und ein Hinweis für den nächsten Prüfstand dieser Art: die Ersatz-KI
+braucht ihren Zähler AUSSERHALB der Rüstfunktion. Lag er innen, lief er
+über mehrere Läufe hinweg weiter, der dritte bekam sofort „fertig" — und
+die Prüfung meldete einen Fehler in Redion, den es nicht gab.
+
+---
+
+## E53 · Bedingte Formatierung — im Tabellenblock, wo das Wort herkommt
+
+**Aus `LUECKEN.md` L15.** Der Eintrag nannte fünf Dinge: Zell- und
+Zeilenfarbe nach Regel, Datenbalken, Farbskalen, Symbolregeln, Duplikate
+und überfällige Werte. Nachgesehen am 8. August war die Hälfte längst da —
+aber in den **Datenbanken**: `farbregeln` färbt dort ganze Zeilen, und die
+Spaltenanzeige kennt `skala`, `heat`, `bar` und `ring`. Im
+**Tabellenblock**, wo der Begriff herkommt, gab es nichts davon.
+
+**Die Regel gehört dem Blatt, nicht der Zelle.** Der Unterschied ist nicht
+kosmetisch: eine Farbe an der Zelle müsste bei jeder Änderung mitgeführt,
+beim Einfügen einer Zeile verschoben und beim Löschen aufgeräumt werden.
+Eine Regel am Blatt beschreibt stattdessen, WANN gefärbt wird, und
+überlebt jede Umstellung der Daten darunter.
+
+**Und sie ändert die Daten nicht.** Was `wert` sagt, bleibt, was es war —
+eine bedingte Farbe ist eine Sicht darauf, keine Bearbeitung. Deshalb
+lässt sie sich abschalten, ohne dass etwas zurückzunehmen wäre. Der
+Prüflauf misst das ausdrücklich; es ist die Stelle, an der so eine Sache
+gefährlich würde.
+
+**Zehn Arten**, davon acht Vergleiche (grösser · kleiner · gleich ·
+zwischen · enthält · leer · nicht leer · mehrfach) und zwei, die mit dem
+ganzen Bereich rechnen (Farbverlauf · Balken). Die **erste zutreffende
+Regel gewinnt** — dieselbe Regel wie bei den Datenbanken. Zwei Regeln auf
+derselben Zelle sind kein Fehler, sondern der Normalfall („über 100 grün,
+über 1000 blau"); es braucht nur eine feste Reihenfolge.
+
+**Einmal je Zeichnung, nicht je Zelle.** `skala` und `balken` brauchen das
+kleinste und grösste, `doppelt` die Häufigkeiten. Ohne diesen Schritt
+liefe je Zelle eine Schleife über den ganzen Bereich: bei 1000 × 26 wären
+das 26 Millionen Vergleiche für eine Farbe.
+
+**Zwei Dinge, die erst das Bildschirmfoto gezeigt hat** (CLAUDE.md §55) —
+beide sahen im Quelltext richtig aus:
+
+*Der Balken misst von Null, nicht vom kleinsten Wert.* Bei 340, 890, 1200,
+2400, 3100 war der kleinste Balken null Pixel lang, und 340 sah aus wie
+„nichts" — dabei ist es ein Neuntel des grössten. Genau so lügen Diagramme
+mit abgeschnittener Achse. `Math.min(0, min)` hält dabei den Fall mit
+negativen Zahlen offen. Die Skala bleibt bei min→max: sie zeigt einen
+PLATZ in einer Reihe, kein Mass, und dort ist der kleinste zu Recht am
+Ende.
+
+*Die Regelliste stand in `.res`* — der Trefferliste des Finders, wo
+`button { width:100% }` gilt. Die beiden kleinen Knöpfe ☑ und 🗑 sprangen
+damit auf je eine eigene Zeile, und aus einer Regel wurden drei Zeilen
+Papier.
+
+**Der Balken liegt hinter dem Text.** Neben ihm bräuchte er eigene Breite,
+und eine Tabellenspalte hat keine übrig — dann wäre entweder der Balken
+zwei Pixel lang oder die Zahl abgeschnitten. Abgeschnittene Zahlen sind in
+diesem Block die gefährlichste Sorte Fehler (E29: aus `634.21` wird das
+Bild von `34.21`).
+
+**Die Auswahl gewinnt über die Farbe.** Eine gefärbte Zelle muss trotzdem
+als gewählt zu erkennen sein, sonst verliert man beim Malen die Stelle, an
+der man gerade steht.
+
+**Der Bereich ist vorausgefüllt** mit dem, was gerade markiert ist. Das
+ist der Unterschied zwischen „ich probiere das mal aus" und „ich muss
+erst nachsehen, wie meine Spalte heisst".
+
+**Was noch fehlt** und in L15 stehenbleibt: Symbolregeln (Ampeln, Pfeile)
+und „überfällig" als eigene Art — das braucht einen Datumsvergleich gegen
+heute, und der gehört zuerst geklärt (Ortszeit, siehe E31).
+
+**Status**
+
+`test130` (Suite 94), 48 Punkte, samt Telefon. Gegenprobe: das Auftragen
+der Regeln stillgelegt → 19 von 48 rot.
+
+---
+
+## E54 · Web Push — und der Stoss trägt nichts
+
+**Aus `LUECKEN.md` L33.** Eine Erinnerung meldete sich nur, solange Redion
+offen war. Ist die App um acht Uhr geschlossen, passiert um acht Uhr
+nichts; sie wartet bis zum nächsten Öffnen und sagt dann „Verpasst um
+08:00". Ein Telefon zu wecken, ohne dass die Seite läuft, geht nur mit
+Web Push.
+
+**Die Entscheidung fiel vor dem Code: der Stoss trägt keinen Inhalt.**
+
+Ein Web Push kann welchen mitbringen. Er müsste dann verschlüsselt werden
+(aes128gcm) — aber das ist nicht der Grund, ihn wegzulassen. Der Grund
+ist: **der Text einer Erinnerung geht Redions Server nichts an.**
+„Zahnarzt 14:00" ist genau die Sorte Satz, die local-first schützen soll.
+
+```txt
+Gerät   →  „weck mich am 2026-08-09 um 06:00 UTC"   nur die Zeit
+Server  →  zur Zeit: ein leerer Stoss an dieses Gerät
+Gerät   →  liest lokal nach, was fällig ist, und zeigt es
+```
+
+Nebenbei ist das die einfachste Bauform: kein Inhalt heisst keine
+Verschlüsselung, nur die VAPID-Signatur.
+
+**Was der Server am Ende weiss:** acht Felder — Kennung, Konto, Gerätename,
+Endpunkt, die beiden Schlüssel des Geräts, ein Zeitpunkt, ein Datum. Kein
+Titel, kein Ort, keine Seite. Wer diesen Weg erweitert, prüfe zuerst, ob
+das noch gilt.
+
+**Deshalb ist Abschnitt 5 des Prüflaufs der wichtigste.** Alles andere hier
+merkt man am Verhalten: ein Wecker, der nicht klingelt, fällt auf. Dass ein
+Erinnerungstext mitgeschickt wird, fällt **niemandem** auf — nicht dem, der
+es baut, und schon gar nicht dem, der die App benutzt. Genau solche Fehler
+brauchen eine Prüfung.
+
+**Drei Dinge, die beim Bauen schiefgingen** — alle drei vom Lauf gefunden:
+
+*Die Argumente von `feldText` standen vertauscht.* Es heisst
+`text(wert, feld)`; da stand `text('geraet', k.geraet)`. Damit hiess **jedes
+Gerät „geraet"**: zwei verschiedene Telefone fanden einander, und ein
+unbekanntes wurde gefunden. Kein Mensch hätte das je bemerkt. (CLAUDE.md,
+Regel 1: nachsehen statt raten — der teuerste wiederkehrende Fehler.)
+
+*`geraet` hat in der Feldtabelle die Vorgabe „Unbekannt".* Für ein
+Namensfeld richtig, hier falsch: eine fehlende Kennung wäre damit ein
+gültiges Gerät gewesen. Also erst am rohen Wert prüfen, dann säubern.
+
+*Das Prüf-Token brauchte `sit_` davor.* `werFragt` entscheidet am Präfix,
+ob es eine Sitzung oder eine Marke ist; ohne das kam 401, und es sah nach
+einem kaputten Weg aus.
+
+**Eine Marke darf keine Weckrufe legen.** `push` steht bei
+`NUR_MIT_SITZUNG`. Eine Marke ist ein Schlüssel für ein Programm; ein
+Weckruf ist ein Wecker für einen Menschen an einem Gerät. Dürfte eine Marke
+ihn legen, könnte ein Skript mit `schreiben`-Recht fremde Telefone um drei
+Uhr nachts klingeln lassen — und das steht in keiner Rechteliste.
+
+**Auch ein misslungener Stoss löscht die Zeit.** Sonst versucht der nächste
+Lauf es wieder, und der übernächste auch: bei einem Dienst, der gerade
+streikt, wären das sechzig Versuche pro Stunde für einen Wecker, der
+ohnehin zu spät wäre. Ein 404 oder 410 löscht den ganzen Eintrag — dann
+gibt es das Gerät nicht mehr.
+
+**Und ohne Server bleibt alles, wie es ist.** Web Push ist eine Zugabe des
+Cloud-Modus, keine Voraussetzung (CLAUDE.md §22). Ohne VAPID-Schlüssel sagt
+`/push/schluessel` 503 mit dem Weg zur Einrichtung, der geplante Lauf tut
+nichts und wirft auch nicht, und wer nur lokal arbeitet, bekommt seine
+Erinnerung weiterhin beim nächsten Öffnen. Der Cron-Eintrag in
+`wrangler.toml` steht auskommentiert da — es gäbe ohne Schlüssel nichts zu
+tun.
+
+**Was das Dienst-Skript beim Stoss tut:** es öffnet die IndexedDB **ohne
+Versionsangabe**. Ein Dienst-Skript, das die Datenbank hochzieht, während
+in einem anderen Tab die App darauf arbeitet, wäre ein Umbau am fahrenden
+Zug. Gibt es sie noch gar nicht, bricht es ab, statt eine leere Hülle zu
+hinterlassen, in der die App später ihre Umzüge nicht mehr findet.
+
+Und es zeigt **immer** etwas. Ein Dienst-Skript, das auf einen Push hin
+nichts anzeigt, lässt den Browser von sich aus „Diese Seite wurde im
+Hintergrund aktualisiert" einblenden — eine Meldung, die niemand
+geschrieben hat und die nichts sagt. Ist nichts fällig, steht dort
+stattdessen ein ehrlicher Satz.
+
+**Status**
+
+`test131` (Suite 95), 44 Punkte, gegen den echten Kern mit einem `fetch`,
+das jeden Stoss mitschreibt. Die Unterschrift wird mit dem öffentlichen
+Schlüssel nachgerechnet — sonst hätte man ein JWT, das kein Dienst
+annimmt, und die Meldung dazu wäre „401 unauthorized".
+
+Gegenprobe: einen Erinnerungstext in den Stoss gelegt und das Leeren der
+Zeit entfernt → 4 rot, darunter beide Punkte aus Abschnitt 5.
+
+---
+
+## E55 · Der Willkommensbildschirm — und die Frage, die niemand beantwortet hat
+
+**Aus der Vorgabe §11.**
+
+**Was vorher dastand**, war nicht falsch, sondern zu klein: eine Einladung
+unten links, „Neu hier? — Neun Schritte durch das Wichtigste". Der Gedanke
+dahinter stimmt und steht weiter im Code — ein Fenster, das den Bildschirm
+nimmt, bevor man etwas getan hat, ist zudringlich.
+
+**Aber sie beantwortete die eine Frage nicht, die der allererste Blick
+stellt: was ist das hier, und wohin gehören meine Daten?**
+
+Redion ist local-first. Das ist keine Kleinigkeit am Rand, sondern der
+Grund, warum es die App gibt — und ausgerechnet das erfuhr niemand, bevor
+er anfing. Es stand in der README, die kein Mensch öffnet.
+
+```txt
+Notizen, Seiten und Datenbanken — auf deinem Gerät.
+Kein Konto, kein Abo, keine Wolke, solange du keine willst.
+```
+
+**Drei Wege, und der zweite ist der, den man vergisst.** Wer gerade das
+Gerät gewechselt hat, will nicht anfangen, sondern **zurückholen**. Ein
+Willkommen, das nur „Loslegen" anbietet, schickt ihn in einen leeren
+Arbeitsbereich und lässt ihn die Sicherung in den Einstellungen suchen —
+dieselbe Überlegung wie beim leeren Zustand (§13).
+
+**Untereinander, nicht nebeneinander.** Die drei sind nicht gleichwertig,
+und drei Knöpfe in einer Reihe behaupten das Gegenteil.
+
+**Am Telefon ein Blatt von unten**, am Rechner ein Kasten in der Mitte —
+dieselbe Aufteilung wie bei allen anderen Fenstern (E43). Escape ist
+„später": nichts davon ist Pflicht. Gezeigt ist gesehen.
+
+**Was das Bild zeigte und der Quelltext nicht:** der erste Weg trug
+`--b-blue` als Fläche — eine blau getönte Karte unter einem orangen
+Rahmen. `--b-blue` heisst blau, weil es blau ist; es war nie die
+Akzentfarbe, sondern eine der zehn Blockfarben, die der Mensch für seine
+eigenen Blöcke wählt.
+
+**Und der teure Teil: es stand elf Prüfläufen im Weg.**
+
+Der volle Lauf danach meldete zwölf gescheiterte Läufe, alle aus demselben
+Grund — ein Blatt über dem ganzen Bildschirm, und Playwright wartet
+sechzig Sekunden darauf, dass ein Knopf darunter anklickbar wird. Die
+Meldungen zeigten dabei auf ganz andere Ecken („die Leiste ist nicht
+anklickbar", „der Klick nach dem Loslassen hat das Menü geschlossen").
+
+Die Läufe markieren sich jetzt im Aufbau als Wiederkehrer. Und im Code
+steht eine Zeile, die den halben Ärger gar nicht erst entstehen lässt:
+`willkommen()` sieht **kurz vor dem Erscheinen** noch einmal nach, ob die
+Begrüssung inzwischen als gesehen gilt. Zwischen dem Beschluss „nach 1,4
+Sekunden" und dem Erscheinen liegt eine Ewigkeit — in einem zweiten Tab
+kann sie längst gelaufen sein.
+
+**Status**
+
+`test114` §18, 10 Punkte. `test115` misst weiterhin die eigentliche Frage
+— kommt sie ein zweites Mal? —, nur meint `gruss` dort jetzt das
+Willkommen.
+
+---
+
+## E56 · Der Prüfstand übersah rote Punkte
+
+**Gefunden am 8. August, und es ist die unangenehmste Sorte Fund.**
+`test31` meldete „33/34 bestanden" mit einem ❌ mittendrin, und der
+Orchestrator sagte „✓ Alle 101 Läufe bestanden".
+
+**Der Grund:** er zählte allein den Rückgabewert. Läufe, die mit
+`process.exit(weg ? 1 : 0)` enden, melden damit richtig — mehrere ältere
+haben das aber nicht. Sie drucken ihre Zeilen, schliessen den Browser und
+enden mit 0, ganz gleich was dastand.
+
+**Ein Prüfstand, der Rotes übersieht, ist schlimmer als keiner:** er
+behauptet, jemand habe hingesehen.
+
+`alle.mts` liest jetzt mit. Ein `❌` oder `✗` **am Zeilenanfang** zählt als
+gescheitert, auch bei Rückgabewert 0 — und sagt dazu, dass dem Lauf der
+`process.exit` fehlt. Nur am Zeilenanfang: ein ✗ mitten im Text ist eine
+Erklärung („vorher stand hier ✗"), kein Ergebnis. Die Ausgabe läuft weiter
+durch, Zeile für Zeile; `stdio: 'inherit'` ginge dafür nicht mehr.
+
+**Und der Punkt, den er übersah, war ein echter.** Seit E42 öffnet der
+Kreis links oben nicht mehr die Schublade, sondern das R-Blatt über den
+ganzen Bildschirm. Die Prüfung fragte noch nach `side-offen` — sie stand
+über Wochen auf Rot, und niemand hat es gesehen.
+
+**Status**
+
+Gegenprobe: einen roten Punkt erzwungen, Rückgabewert 0 gelassen → der
+Orchestrator meldet ihn samt Zahl und Grund.
+
+---
+
+## E57 · Die Sicherungskarte sagt, dass sie arbeitet — und der Fund daneben
+
+**Aus dem Entwurf:** die Sicherungskarte soll ihre Zustände zeigen, Kreisel
+→ Haken.
+
+**Warum das mehr ist als Zierde.** Eine `.redion`-Sicherung mit Anhängen
+dauert Sekunden bis Minuten. Bis hierher passierte in dieser Zeit auf der
+Karte **nichts**: der Knopf blieb, wie er war, und irgendwann kam ein Toast.
+Am Telefon steht der über der Aktionsleiste und ist nach 2,6 Sekunden weg —
+wer in dem Moment wegsieht, weiss nicht, ob überhaupt etwas geschieht, und
+tippt ein zweites Mal.
+
+Drei Zustände, und der mittlere ist der, den man sonst verpasst:
+
+```txt
+Jetzt sichern   →   ⟳ Sichern …   →   ✓ Gesichert   →   Gesichert heute
+```
+
+**Der Knopf bleibt dabei gesperrt** — ein zweiter Klick wäre eine zweite
+Sicherung, bei Anhängen eine zweite Runde durch alle Dateien.
+
+**Aber gesperrt heisst nicht „nicht gemeint".** `button[disabled]` steht in
+`bausteine.css` auf `opacity:.4`, und damit stand die Erfolgsmeldung auf
+Grün bei vierzig Prozent Deckkraft: hübsch und unlesbar. Gemessen, nicht
+geschätzt.
+
+**Und wer keine Bewegung mag, bekommt keine.** Der Kreisel steht dann
+still — ein Zustand, der NUR über Bewegung erkennbar wäre, wäre derselbe
+Fehler wie einer, der nur über Farbe geht (CLAUDE.md §38). Der Text daneben
+sagt es ohnehin.
+
+**Der eigentliche Fund kam nebenbei, und er ist der wichtigere.**
+
+Die Prüfung zählte zwei Klicks und bekam **drei Aufrufe**.
+
+`#page` bleibt stehen; nur sein Inhalt wird neu geschrieben. Der
+Start-Bildschirm hängte seinen Zuhörer mit `addEventListener` daran — und
+`start()` läuft bei **jeder** Rückkehr zum Start. Nach dem dritten Mal legte
+ein Klick auf „Tagesjournal" drei Journale an; nach dem zehnten zehn. Bei
+„Jetzt sichern" mit Anhängen wären das zehn Läufe durch alle Dateien.
+
+```txt
+wrap.addEventListener('click', …)   jedes Zeichnen ein Zuhörer mehr
+wrap.onclick = …                    ersetzt
+```
+
+Vier der sechs Ansichten in derselben Datei machten es von Anfang an
+richtig; zwei nicht. Das ist die Fehlerklasse, die `CLAUDE.md` Regel 3
+beschreibt: nicht „vergessen", sondern „an einer Stelle getan und an der
+Nachbarstelle nicht".
+
+**Der Fehler wächst mit der Nutzungsdauer** — und fällt beim Ausprobieren
+deshalb nie auf. Die Prüfung zeichnet zehnmal, weil ein- oder zweimal den
+Unterschied nicht zeigt.
+
+**Status**
+
+`test114` §19 (7 Punkte) und §20 (1 Punkt). Gegenprobe: zurück auf
+`addEventListener` → 13 Journale aus einem Klick.
+
+---
+
+## E58 · Einstellungen am Telefon: zwei Seiten statt zwei Spalten
+
+**Aus der Vorgabe §12.** Und der Anlass war nicht der Entwurf, sondern eine
+Messung: bei 390 px war das die **schlechteste Seite der ganzen App**.
+
+Die Rechner-Aufteilung lief unverändert weiter — 236 px Navigation plus
+Inhalt. Für den Inhalt blieben **129 Pixel**:
+
+```txt
+Erscheinungsbild
+Hell,
+dunkel
+oder                    ← und daneben, halb ausserhalb
+wie                       des Bildschirms:  [ Dunkel ▾ ]
+das
+System
+```
+
+Jede Beschreibung brach in Einzelwörter um, jedes Auswahlfeld ragte über den
+Rand, und das ✕ lag auf der Überschrift, die dadurch abbrach.
+
+**Zwei Spalten passen nicht auf ein Telefon.** Also zwei **Seiten**: erst
+die Liste der Bereiche, dann der gewählte Bereich mit einem Weg zurück.
+Genau so macht es jedes Telefon-Betriebssystem, und aus demselben Grund.
+
+`data-blick` sagt, welche gerade dran ist. Am Rechner steht dieselbe
+Angabe da und ändert nichts — dort sind beide Spalten immer sichtbar, und
+der Klick in die Liste zeichnet rechts neu.
+
+**Und die Zeilen stapeln.** Beschreibung und Auswahlfeld nebeneinander
+brauchen Breite, die es nicht gibt. Untereinander bekommt jedes die ganze:
+der Text liest sich, und das Feld ist 44 px hoch statt 35 — und 16 px
+Schrift, sonst zoomt iOS beim Antippen.
+
+Der **Schalter** bleibt davon ausgenommen und rutscht nach rechts. Er ist
+die Antwort auf eine Ja-Nein-Frage und braucht keine ganze Zeile.
+
+**Der Weg zurück ist kein Beiwerk.** Ohne ihn wäre die zweite Seite eine
+Sackgasse: das ✕ schliesst alles, und dann fängt man von vorn an. Escape
+geht ebenfalls eine Stufe zurück, nicht gleich ganz hinaus — wer in
+„Sicherheit" steht und abbricht, meint meistens diesen Bereich.
+
+**Und wieder der Hinweisstreifen.** `.overlay` liegt auf 700, der Toast auf
+900. Am Rechner ist das richtig, weil das Fenster dort nur die Mitte
+einnimmt. Am Telefon füllt es alles, und dann lag „1 Karteikarte ist
+fällig" mitten in der Bereichsliste. Das ist der vierte Ort mit demselben
+Fund — nach dem R-Blatt, dem KI-Fenster und dem Offline-Streifen. Dieselbe
+Antwort: was den ganzen Bildschirm nimmt, gehört über 900.
+
+**Am Rechner ändert sich nichts.** Gemessen: 236 px Navigation, beide
+Spalten sichtbar, kein Weg-zurück-Knopf, keine umbrechenden Zeilen.
+
+**Status**
+
+`test114` §21, 10 Punkte. Gegenprobe: den Telefon-Block entfernt → 9 von
+10 rot.
+
+---
+
+## E59 · Markdown geht jetzt in beide Richtungen — und das Zeichen bleibt nicht stehen
+
+**Datum** 8. August 2026 · **Lücke** L20 · **Prüflauf** `test132` (79 Punkte)
+
+**Der Fund, der alles andere klein aussehen lässt**
+
+`doku/SLASH-UND-TASTEN.md` führte zwölf Markdown-Kürzel, alle mit ✅. Sie
+wandelten auch alle um. Was keiner geprüft hat, ist, was danach im Block
+steht:
+
+```txt
+Getippt:    # Meine Überschrift
+Erwartet:   Überschrift 1 · „Meine Überschrift"
+Gemessen:   Überschrift 1 · „#Meine Überschrift"
+```
+
+Das `#` blieb. Es war **sichtbar**, es war seit jeher da, und jeder
+Prüflauf war grün — weil alle nur `block.type` verglichen haben. Der Typ
+stimmte ja.
+
+Die Ursache steht in drei Zeilen: der Tastendruck vor dem Leerzeichen
+speichert `#` im Block. `ct.textContent = ''` räumt danach nur das Feld,
+und `umwandeln()` zeichnet sofort neu — aus dem Block, in dem das `#` noch
+steht. Die Behebung ist eine Zeile mehr, `Store.updateBlock(b.id, {text:''})`,
+und der Grund, warum sie fehlte, ist kein Flüchtigkeitsfehler: **die
+Prüfung, die sie erzwungen hätte, hat niemand geschrieben.**
+
+Das ist derselbe Satz wie in CLAUDE.md §55.2, nur ohne Bild: eine Prüfung,
+die nur die halbe Sache misst, sagt „passt schon" und meint es nicht.
+`test132` §1b vergleicht deshalb `block.text` **und** `textContent` — was
+gespeichert ist und was auf dem Bildschirm steht.
+
+**Drei Behauptungen, die keine waren**
+
+Derselbe Lauf hat drei Zeilen der Doku umgeworfen:
+
+```txt
+a. i. 1) a) i)   standen in der Doku, nicht im Blockkatalog
+~Text~           stand in der Doku, der Zeichner kannte nur ~~Text~~
+[x]              gab es nirgends
+```
+
+Die Behebung ist jeweils klein — vier Einträge mehr im `md`-Feld von
+`register/bloecke.ts`, ein Muster mehr in `inline()`. Der Punkt ist nicht
+die Behebung, sondern **wie sie gefunden wurden**: indem ein Prüflauf jede
+Zeile der Doku tippt, statt sie zu glauben.
+
+**Die einfache Tilde und ihr Sicherheitsabstand**
+
+`~Text~` durchzustreichen ist gefährlicher, als es aussieht: „ca. 3~5 Grad"
+darf nicht durchgestrichen werden, und `~~doppelt~~` darf nicht als
+`<s>~doppelt~</s>` zerfallen. Beides löst die Reihenfolge — erst `~~`,
+dann `~` — plus die Bedingung, dass an keiner der beiden Tilden ein
+Leerzeichen anschliesst. Beide Grenzfälle stehen als eigene Punkte in §4.
+
+**Und die grosse Lücke, die in L20 gar nicht stand**
+
+Strg C schreibt eine Auswahl seit jeher **als Markdown** — das steht so in
+`auswahlAlsText()` und ist auch von `test65` gehalten. Zurück ging es nicht.
+Es gab überhaupt keinen `paste`-Griff im Editor: die Zwischenablage landete
+über den Standardweg des Browsers in genau einem Block, samt Rautezeichen.
+Wer eine Seite kopierte und woanders einfügte, bekam seinen Text — und
+seine Gliederung nicht.
+
+`mdLesen()` liest jetzt die Gegenrichtung. Vier Entscheidungen darin:
+
+**Eine Zeile wird ein Block.** Nicht die Markdown-Regel „zwei Zeilen sind
+ein Absatz". Für eine Notiz-App ist das die Erwartung, und Notion macht es
+genauso.
+
+**Vier Leerzeichen sind eine Stufe.** Eingerücktes wird echtes Kind, kein
+Text mit Leerzeichen davor. Das ist der Unterschied zwischen einer
+Gliederung, die man weiter einklappen kann, und einer, die nur so aussieht.
+
+**Im Codeblock wird nichts gelesen.** `# hallo` in einem Stück Python ist
+eine Kommentarzeile. Das gilt in beide Richtungen: sowohl beim Einfügen
+*in* einen Codeblock als auch für den Inhalt *zwischen* zwei Zäunen — dort
+bleiben sogar die Leerzeilen erhalten.
+
+**Immer selbst einsetzen, auch ohne Gliederung.** Der Standardweg des
+Browsers legt mitkopiertes HTML mit allen Stilen in den Block; beim
+nächsten Zeichnen ist es weg, weil das Datenmodell nur Text kennt. Text,
+der vor den Augen des Nutzers verschwindet, ist schlimmer als Text, der nie
+formatiert ankam.
+
+**Was ausdrücklich nicht dazugehört**
+
+Markdown-Tabellen (`| a | b |`) und verschachtelte Zitate liest der Leser
+nicht. Beide stehen in L20 als offen. Eine Tabelle beim Einfügen zu
+erkennen hiesse zu entscheiden, ob daraus ein Tabellenblock, eine einfache
+Tabelle oder eine Datenbank wird — das ist eine eigene Frage und keine
+Nebenbei-Antwort.
+
+**Status**
+
+`test132`, 79 Punkte, 9 Abschnitte. Gegenprobe für jede der vier
+Behebungen einzeln:
+
+```txt
+Text-Leeren entfernt      → 14 rot
+Listenvarianten und [x]   →  9 rot
+paste-Griff entfernt      → 15 rot
+einfache Tilde entfernt   →  1 rot
+```
+
+`test65` und `test86` zählen die Gruppen der Kürzelübersicht; beide mussten
+von zwölf auf dreizehn — die neue heisst „Markdown einfügen". Dass sie das
+gemeldet haben, ist der Zweck einer festen Zahl an dieser Stelle.
+
+---
+
+## E60 · Symbole und Daten in der bedingten Formatierung — und wo „heute" anfängt
+
+**Datum** 8. August 2026 · **Lücke** L15, damit geschlossen ·
+**Prüflauf** `test130` (79 Punkte, von 48 gewachsen)
+
+E53 hat die bedingte Formatierung im Tabellenblock gebaut und zwei Dinge
+ausdrücklich offen gelassen: Symbolregeln und „überfällig". Beide sind
+jetzt da, und beide hatten je eine Frage, die vorher zu beantworten war.
+
+**Das Symbol gehört nicht in den Wert**
+
+Der naheliegende Weg wäre, `🔴 ` vor den Zellinhalt zu schreiben. Dann
+stünde es in `wert` — und damit rechnet die Zelle nicht mehr, das Symbol
+ginge beim Kopieren nach Excel als Text mit, und beim Abschalten der Regel
+müsste es wieder herausgeschnitten werden. Das wäre eine Bearbeitung, und
+E53 hat für diese Sorte Regel das Gegenteil beschlossen: **eine bedingte
+Farbe ist eine Sicht, keine Bearbeitung.**
+
+Das Symbol steht deshalb in `content: var(--regel-symbol)`, gesetzt über
+eine CSS-Eigenschaft am Element. `wert` bleibt unangetastet — `test130`
+§10 prüft beides: was auf dem Bildschirm steht **und** was gespeichert ist.
+
+Dazu eine Zeile, die kein Beiwerk ist: `flex: none`. Der Zellinhalt ist ein
+Flex-Element; ohne sie würde das Symbol mitgestaucht, sobald die Spalte eng
+wird. Ein halber Kreis bedeutet nichts. Das ist derselbe Fund wie beim
+abgeschnittenen Zahlenwert vom 8. August (CLAUDE.md §55.2) — nur diesmal
+vorher bedacht und als Zahl geprüft, nicht erst auf dem Bildschirmfoto
+gesehen.
+
+**Drei Stufen, nicht Excels fünf.** Eine vierte Stufe unterscheidet sich auf
+einem Telefonbildschirm nicht mehr erkennbar von der dritten, und ein
+Symbol, das man nicht auseinanderhält, sagt weniger als keines.
+
+**Eigene Grenzen schlagen die Drittelung.** Ohne Angabe wird der Bereich
+gedrittelt. Mit `wert`/`wert2` gelten die als Grenzen — und dann zählt nur,
+was der Mensch eingetragen hat: bei „Ampel ab 50 und ab 80" ist die 79
+gelb, auch wenn im Blatt zufällig eine 300 steht. Eine Skala, die sich
+lautlos am grössten Wert ausrichtet, beantwortet eine andere Frage als die
+gestellte.
+
+**Und `umgekehrt`**, weil es Werte gibt, bei denen klein gut ist — „Tage
+überfällig", „Fehler pro Woche". Ohne den Schalter müsste man den
+Symbolsatz rückwärts lesen.
+
+**Wo „heute" anfängt**
+
+Das war die eigentliche Frage an „überfällig", und sie hat eine falsche
+und eine richtige Antwort:
+
+```txt
+new Date('2026-08-08')      →  2026-08-08T00:00:00 UTC
+in Zürich (UTC+2)           →  8. August, 02:00 Uhr    fällt nicht auf
+in Los Angeles (UTC−7)      →  7. August, 17:00 Uhr    fällt auf
+```
+
+Westlich von Greenwich liegt ein Datum, das **heute** ist, damit vor der
+heutigen Mitternacht — und jede heute fällige Aufgabe wäre am Morgen schon
+rot. `alsDatum` baut das Datum deshalb aus seinen Teilen (`new Date(j, m-1,
+t)`) und trifft damit die Ortszeit. Dieselbe Rechnung wie „Nächste Termine"
+in `steuerung.ts`, das seit jeher `setHours(0,0,0,0)` nimmt.
+
+`test130` §11b rechnet das in einem Browser mit `timezoneId:
+'America/Los_Angeles'` nach. Es ist der einzige Abschnitt, in dem der
+Unterschied überhaupt sichtbar wird — in der Gegenprobe mit naivem
+`new Date(text)` wird genau dieser Punkt rot, und sonst nur noch einer:
+die blosse Zahl `5`, die `new Date` klaglos als Datum durchgehen lässt.
+
+**Heute ist nicht überfällig.** Die Grenze steht als eigener Punkt in §11,
+weil sie eine Entscheidung ist und keine Selbstverständlichkeit: wer heute
+etwas abzugeben hat, hat den ganzen Tag Zeit.
+
+**Was kein Datum ist, ist nicht überfällig** — sondern gar nichts. Eine 5
+in einer Datumsspalte darf nicht rot werden, nur weil sie kleiner ist als
+irgendetwas.
+
+**`faelligBald` dazu**, weil „überfällig" allein zu spät kommt. Ohne
+Tagesangabe gelten sieben; eine Regel, die ohne Zahl nichts täte, wäre eine
+Regel, die man versehentlich leer anlegt und die dann schweigt.
+
+**Eine Zeile Aufräumen nebenbei**
+
+Welche Regelart welches Feld braucht, stand an **drei** Stellen als
+Literalliste — beim Anzeigen, beim Speichern und im Satz für die
+Regelliste. Drei neue Arten hätten an zwei davon vergessen werden können,
+ohne dass etwas auffällt. Jetzt steht sie einmal, als `OHNE_WERT` und
+`OHNE_FARBE`.
+
+**Status**
+
+`test130`, 79 Punkte, 12 Abschnitte. Gegenproben:
+
+```txt
+Symbolzweig entfernt        → 12 rot
+Datumsregeln entfernt       →  6 rot
+alsDatum naiv geparst       →  2 rot — und zwar die zwei richtigen
+```
+
+---
+
+## E61 · Der Testlauf war keiner — er änderte die Daten
+
+**Datum** 8. August 2026 · **Lücke** L16 · **Prüflauf** `test133` (28 Punkte)
+
+An jeder Automation sass ein Knopf `▶` mit dem Titel „Einmal probeweise
+laufen lassen". Er liess sie **wirklich** laufen, auf der ersten Zeile der
+Datenbank, und sagte hinterher per Toast, ob sich etwas geändert hat.
+
+Wer ihn drückte, um zu sehen, ob seine Regel stimmt, hatte sie danach
+angewendet. Bei „Eintrag in den Papierkorb" war die Zeile weg. Der Toast
+macht nichts rückgängig.
+
+Das ist nicht Feinschliff, sondern Priorität 1 aus CLAUDE.md §46: **Daten
+sicher halten.** Ein Knopf, dessen Beschriftung „probeweise" sagt und der
+schreibt, ist gefährlicher als gar kein Knopf — er lädt gerade dazu ein,
+ihn bei einer Regel zu drücken, der man noch nicht traut.
+
+**Der Probelauf, und warum er an genau einer Stelle abbricht**
+
+Der naheliegende Weg wäre gewesen, jede der neunzehn Aktionsarten um einen
+Zweig „im Probelauf nur beschreiben" zu ergänzen. Das wäre neunzehn Mal
+dieselbe Entscheidung, und beim zwanzigsten Mal — der nächsten neuen Aktion
+— vergisst sie jemand. Ein Schutz, den man je Fall wiederholen muss, ist
+kein Schutz.
+
+Stattdessen nutzt der Probelauf die Reihenfolge, die ohnehin da war:
+
+```txt
+oben   Bedingung an der Aktion   liest nur
+       Variablen festlegen       schreibt in ein Objekt, das gleich vergeht
+       ────────── hier bricht der Probelauf ab ──────────
+unten  alles Übrige              Store.setProp · Store.addRow ·
+                                 Store.trashBlock · fetch · location.href
+```
+
+Eine neue Aktion wird unten angehängt und ist damit **automatisch**
+mitgeschützt. Und wenn jemand versehentlich oben etwas einfügt, das
+schreibt, meldet es `test133` §2 — der prüft nicht, welche Aktionen
+übersprungen wurden, sondern vergleicht nach drei Probeläufen den ganzen
+Bestand Zeichen für Zeichen: Zeilen, Werte, Archivmerker, die Zieldatenbank,
+den Laufverlauf, das gemeinsame Protokoll und die Zahl aller Blöcke.
+
+Die Gegenprobe zeigt, was der Knopf vorher tat: Zähler von 3 auf **7**,
+vier neue Zeilen in der Zieldatenbank, die Zeile archiviert. 16 rote Punkte.
+
+**Was der Probelauf zeigt, ist der Plan — nicht das Ergebnis**
+
+Eine Vorschau könnte auch das Ergebnis auf einer Kopie rechnen. Dann gäbe
+es zwei Beschreibungen desselben Ablaufs, und die zweite läuft der ersten
+davon: die Kopie kennt die neue Aktion noch nicht, die jemand letzte Woche
+eingebaut hat. Der Probelauf zeigt deshalb, welche Aktion mit welchem Wert
+an der Reihe **wäre** — Variablen aufgelöst, `{titel}` eingesetzt, der
+Zähler auf seinem künftigen Stand.
+
+Bedingungen gelten dabei mit. Eine Vorschau, die Aktionen zeigt, die gar
+nicht drankämen, ist schlimmer als keine: sie lässt eine falsche Regel
+richtig aussehen.
+
+**Der Fehler, der nie ankam**
+
+`laufNotiz.fehler` gab es seit jeher, und der Laufverlauf zeigt dafür ein
+`⚠`. Gesetzt hat es **nie jemand** — das Feld stand auf `''` und blieb
+dort. Ein Zeichen, das nie erscheint, ist schlimmer als keines: es sagt
+„hier wäre ein Fehler zu sehen".
+
+Schlimmer war, was ohne diesen Griff geschah. Eine Aktion, die wirft, riss
+den ganzen `forEach` mit: die Aktionen **dahinter** liefen nicht, die
+Automation schrieb keinen Verlauf, und die nächste Automation derselben
+Datenbank kam nie an die Reihe — still, denn geworfen wurde in einen Aufruf,
+den niemand fängt. In der Gegenprobe fliegt der Fehler bis in den Prüflauf
+hinaus und bricht ihn ab; das ist kein roter Punkt mehr, sondern gar kein
+Ergebnis.
+
+Jetzt wird je Aktion gefangen, mit Namen ins Protokoll geschrieben und dem,
+der zusieht, als Hinweis gezeigt.
+
+**Eine Zahl, die niemand nachgezählt hatte**
+
+`LUECKEN.md` L16 sagte „11 Aktionsarten, ohne Verzweigung und Schleife" und
+führte als fehlend auf: If/Else, sonst-Zweig, für jede Zeile, Vorschau,
+Protokoll, Fehleranzeige. Nachgezählt sind es **19** Aktionsarten, und
+Protokoll wie Bedingung-je-Aktion waren längst gebaut. Zwei von sechs
+„fehlt" waren richtig.
+
+Dazu stand im Quelltext, eine Aktion dürfe „auch über die verknüpften
+Zeilen laufen oder mehrfach wiederholt werden". Der erste Teil stimmt für
+`fremd-setzen`; den zweiten konnte nie eine Aktion — es gibt kein Feld
+dafür und keinen Zweig, der es läse. **Ein Satz im Quelltext ist keine
+Funktion.** Derselbe Fund wie bei `~Text~` in E59, nur eine Datei weiter.
+
+**Was offen bleibt** — ein sonst-Zweig als eigenes Ding in der Oberfläche
+(heute schreibt man ihn als zwei gespiegelte Bedingungen) und eine Schleife
+über die **eigenen** Zeilen. Beides steht so in L16.
+
+**Status**
+
+`test133`, 28 Punkte, 7 Abschnitte. Gegenproben:
+
+```txt
+Probe-Wächter entfernt   → 16 rot, darunter „Zähler steht auf 3" mit 7
+try/catch entfernt       → der Prüflauf bricht ab, statt rot zu werden —
+                           genau das war das Verhalten vorher
+```
+
+---
+
+## E62 · „Kopiert" muss stimmen — und ein Ausschneiden, das nichts verliert
+
+**Datum** 8. August 2026 · **Prüflauf** `test135` (19 Punkte)
+
+An dreissig Stellen stand dasselbe Muster:
+
+```js
+navigator.clipboard?.writeText(irgendwas);
+UI.toast('Link kopiert');
+```
+
+Drei davon hatten ein `.then`, drei ein `.catch`. Die übrigen
+vierundzwanzig hatten weder noch.
+
+**Warum das zwei Fehler auf einmal sind**
+
+`writeText` ist ein Versprechen, das brechen kann — kein Recht, kein Fokus
+im Fenster, kein Nutzerklick davor, ein älterer Browser. Ohne `.catch`
+wird daraus eine unbehandelte Ablehnung: in der Konsole, nicht vor den
+Augen dessen, der gerade kopiert hat.
+
+Und der Toast meldet danach trotzdem Erfolg. Der Mensch geht weg, fügt
+woanders ein — und bekommt, was vorher in der Ablage lag. Still, plausibel,
+falsch: dieselbe Sorte wie die abgeschnittene Zahl aus CLAUDE.md §55.2.
+
+**Was gemessen wurde**
+
+In Chromium, am 8. August, in beiden Umgebungen:
+
+```txt
+                          file://          http://localhost
+navigator.clipboard       da               da
+writeText('probe')        WIRFT            WIRFT
+execCommand('copy')       geht             geht
+```
+
+Das „WIRFT" ist die Antwort ohne Ablage-Recht — in einem gewöhnlichen
+Browserfenster mit Fokus geht `writeText` meistens sehr wohl. Aber es
+zeigt: der alte Weg ist kein Notnagel für alte Browser, sondern der, der
+ankommt, wo der neue abgewiesen wird. Deshalb ist er in
+`kern/helfer/ablage.ts` nicht der Notfall, sondern der gleichberechtigte
+zweite Versuch.
+
+**Die Regel des Helfers: er sagt nur etwas, wenn ihm jemand etwas zu sagen
+mitgegeben hat.** Ohne `meldung` schweigt er ganz und gibt nur `true` oder
+`false` zurück. Das braucht, wer selbst mehr weiss — beim Kopieren
+mehrerer Blöcke etwa steht Redions eigene Ablage in jedem Fall, innerhalb
+der App lässt sich also einfügen, auch wenn der Browser sich weigert. Ein
+blosses „kopiert" verschwiege das, ein blosses „ging nicht" wäre zu düster.
+
+**Der Punkt, an dem aus dem Ärgernis ein Datenverlust wurde**
+
+Im Blockmenü stand:
+
+```js
+Ablage.kopiereJetzt(b.text || '');
+Store.trashBlock(b.id); Store.purgeBlock(b.id);
+```
+
+`purgeBlock` räumt **endgültig** weg — nicht in den Papierkorb, sondern
+fort. Ging das Kopieren nicht, gab es den Text danach nirgends mehr: nicht
+in der Zwischenablage, nicht im Papierkorb, nicht auf der Seite. Ein
+Tastendruck, drei Verluste.
+
+Jetzt wird erst kopiert und nur bei Erfolg gelöscht. `test135` §5 hält es
+fest: beide Wege abgewiesen → der Block steht noch da, mit seinem Text.
+
+Das Ausschneiden **mehrerer** Blöcke war davon nie betroffen: es nimmt
+`trashBlock` ohne `purgeBlock`, und Redions eigene Ablage hält den Baum.
+Diese Unterscheidung ist der Grund, warum nur die eine Stelle geändert
+wurde.
+
+**Eine Antwort, die dadurch falsch geworden wäre**
+
+`AppEinstellung.kann().zwischenlage` fragte, ob es `writeText` gibt. Mit
+dem Rückfallweg ist „nein" die falsche Antwort — kopieren geht dann immer
+noch. Die Prüfung fragt jetzt nach beiden Wegen.
+
+**Was der Helfer nicht tut: lesen.** Aus der Zwischenablage zu lesen
+braucht eine ausdrückliche Erlaubnis und ist etwas anderes als
+hineinzuschreiben. Redion liest über das `paste`-Ereignis, und das bringt
+seinen Inhalt selbst mit (siehe E59).
+
+**Status**
+
+`test135`, 19 Punkte. §6 hält den Zustand: keine Datei ausser dem Helfer
+ruft `writeText` noch selbst auf. Gegenproben:
+
+```txt
+Rückfallweg entfernt      → 3 rot
+Wahrheitsprüfung entfernt → 2 rot, darunter „Es steht NICHT ‚Link
+                            kopiert' da" mit genau diesem Text
+```
+
+**Und die Taste, die Redion sich genommen hatte**
+
+`test134` misst über `defaultPrevented`, wem eine Taste gehört. Fünfzehn
+nimmt Redion dem Browser ab, und das ist richtig — Strg P würde sonst
+drucken. Acht lässt es in Ruhe, und das ist der wichtigere Teil: wer Strg C
+global abfängt, nimmt dem Menschen das Kopieren aus jedem Textfeld.
+
+Zwei standen auf der falschen Seite. **Strg T** und **Strg W** waren an
+Redions eigene Reiter gebunden. Der Browser gibt beide nicht her —
+`preventDefault` bleibt dort wirkungslos —, also geschah beides: Redion
+schloss seinen Reiter, und der Browser das Fenster darüber. Der Mensch kam
+zurück und fand einen Reiter nicht mehr, ohne Anhaltspunkt, warum.
+
+**Nachweisen lässt sich das hier nicht.** Playwright schickt Tastendrücke
+an die Seite, nicht an die Browseroberfläche; dass der Browser trotzdem
+handelt, ist in diesem Prüfstand nicht zu zeigen. Also wurde nicht
+bewiesen, sondern **ausgewichen**: Redions Reiter liegen jetzt auf
+**Strg Alt N** und **Strg Alt W**.
+
+Die Abwägung dahinter, offen ausgeschrieben, weil sie auf einer
+unbewiesenen Annahme steht:
+
+```txt
+Annahme falsch, Kürzel getauscht   zwei bequeme Kürzel gegen zwei
+                                   etwas umständlichere — kleiner Verlust
+Annahme richtig, Kürzel behalten   jedes Strg W schliesst das Fenster UND
+                                   verliert einen Reiter — echter Verlust
+```
+
+Ungleich verteilt, also die vorsichtige Seite. Dazu kommt ein Grund, der
+ganz ohne die Annahme auskommt: wer Strg W drückt, meint meistens den
+Browserreiter. Eine Seite, die das umdeutet, ist unhöflich zu einer
+Gewohnheit, die älter ist als sie.
+
+**Was offen bleibt** — Strg Tab und Strg 1…9 sind derselbe Fall und
+bleiben gebunden. Sie zerstören nichts: im schlimmsten Fall wechselt
+zusätzlich der Browserreiter. Der Tausch lohnte den Verlust nicht, und die
+Frage steht in L20.
+
+---
+
+## E63 · Eine scharfe Kante liest sich als Ende der Zahl
+
+**Datum** 8. August 2026 · **Lücke** L10 · **Prüflauf** `test136` (17 Punkte)
+
+Der Fund kam von einem Bild, nicht aus dem Quelltext. Am Telefon, 390 px
+breit, stand im Tabellenblock:
+
+```txt
+Spalte B          Spalte C
+1'450.00 CHF      1'45
+2'199.70 CHF      2'18
+```
+
+Rechts ist nichts kaputt. Die Tabelle geht dort weiter, C2 enthält sehr
+wohl `1'450.00 CHF`, und ein Wisch nach links bringt es zum Vorschein.
+Abgeschnitten hat es der **Bildrand**.
+
+**Warum das trotzdem ein Fehler ist**
+
+Weil die Kante scharf war. Eine scharfe Kante liest sich als Ende der Zahl,
+und `1'45` ist eine gültige Zahl — nur eine andere. Niemand sieht einer
+sauber endenden Ziffernfolge an, dass hinter ihr noch drei Stellen stehen.
+
+Für eine **zu enge Zelle** gibt es das seit dem ersten Tag: `###`. Die
+Zelle weiss dann, dass ihr Inhalt nicht hineinpasst, und sagt es. Am
+Bildrand weiss das niemand — die Zelle ist breit genug, nur der Bildschirm
+ist es nicht.
+
+Das ist derselbe Fund wie in CLAUDE.md §55.2, eine Ebene höher. Dort war es
+`634.2166666667`, das als `34.2166666667` dastand. Beide Male gilt: kein
+Prüflauf konnte es finden, weil beide Zahlen gültig sind. Beide Male hat es
+das **Hinsehen** gefunden.
+
+**Die Antwort ist keine Warnung, sondern eine weiche Kante**
+
+Der letzte Streifen verläuft ins Nichts. Das Auge liest damit „hier geht es
+weiter" statt „hier hört die Zahl auf". Es kostet keinen Hinweistext,
+keinen Platz und keinen Klick — und es ist genau die Auskunft, die fehlte.
+
+26 px am Telefon, 18 px am Rechner. Dort ist die Tabelle seltener
+angeschnitten, und wenn doch, reicht ein schmalerer Streifen.
+
+**Über `mask-image`, nicht über ein aufgelegtes Element.** Ein
+Pseudo-Element im Rollfeld rollte **mit dem Inhalt** und wäre nach dem
+ersten Wisch aus dem Bild. Eine Maske gilt dem Kasten des Elements, nicht
+seinem Inhalt: sie bleibt am Rand stehen, egal wie weit gerollt wurde. Und
+sie braucht keine Geometrie — kein Ausmessen von Kopf- und Fusszeile, das
+beim nächsten Umbau schiefgeht.
+
+**Nur dort, wo es wirklich weitergeht.** `data-rand` setzt
+`kern/helfer/rollrand.ts`, und zwar erst, wenn `scrollWidth` grösser ist als
+`clientWidth`. Eine Kante an einer Tabelle, die ganz ins Bild passt, wäre
+eine Behauptung, die nicht stimmt — `test136` §1 prüft ausdrücklich, dass
+sie dann fehlt.
+
+Der Spielraum von zwei Pixeln ist kein Rundungsfehler, sondern Absicht:
+Browser rechnen `scrollWidth` und `clientWidth` bei gebrochenen Zoomstufen
+um Bruchteile auseinander, und bei null flackerte die Kante an einem
+Rollfeld, an dem gar nichts zu rollen ist.
+
+**Was dabei geprüft werden musste, ohne dass es jemand vermutet hätte**
+
+Eine Maske erzeugt einen eigenen Stapelzusammenhang. Ob `position: sticky`
+darin weiter greift — die stehende Kopfzeile und die stehende Zeilenspalte
+sind der halbe Tabellenblock —, ist im Quelltext nicht zu sehen. `test136`
+§3 rollt deshalb 200 px nach rechts und misst nach, dass beide stehen
+bleiben.
+
+**Und ein Prüflauf, der zuerst das Falsche mass**
+
+Der erste Ablauf meldete sieben rote Punkte. Nachgemessen in der echten
+App: der Block ist dort 334 px breit, das Rollfeld rollt, die Kante steht.
+Der Prüflauf hatte in einen Kasten **ohne Breitengrenze** gezeichnet — dort
+wächst der Block bis zur Breite seines Inhalts, das Rollfeld rollt gar
+nicht mehr, und die Kante fehlt zu Recht.
+
+Sieben rote Punkte für einen Zustand, den es nicht gibt. Die Lehre ist
+dieselbe wie in §55.2, nur andersherum: eine Prüfung, die immer rot sagt,
+ist so wenig wert wie eine, die immer grün sagt. Beide Male hilft nur,
+**in der echten App nachzumessen**, bevor man dem Prüflauf glaubt.
+
+**Und die dritte Stelle, die erst das Nachsehen fand**
+
+Am Telefon zeigt eine Datenbank **Karten**, nicht die Tabelle — eine
+Zeile, ihre Felder untereinander, nichts rollt seitlich. Das war schon
+gebaut und ist gut so; `LUECKEN.md` L10 behauptete das Gegenteil.
+
+Aber im Ansichtsmenü gibt es `handyTabelle`: „Tabelle statt Karten". Wer
+den Schalter umlegt, bekommt genau die Lage von oben — gemessen **703 px
+Inhalt in einem 334 px breiten Kasten**, scharfe Kante, und `14500` sowie
+`8750.5` standen direkt darauf.
+
+Dass es diesen Weg gibt, sieht man dem Bildschirmfoto nicht an; der
+Regelfall ist ja richtig. Gefunden wurde er beim Nachlesen, WARUM das
+erste Foto keinen Fehler zeigte — und das ist die Lehre: ein Foto, auf dem
+alles stimmt, beantwortet nur die Frage nach diesem einen Zustand.
+
+**Status**
+
+`test136`, 22 Punkte, 7 Abschnitte — Tabellenblock, Datenbankraster und
+Datenbanktabelle, Telefon und Rechner. Gegenproben:
+
+```txt
+Masken entfernt                  → 2 rot
+Beobachter entfernt              → 9 rot
+Bindung an der DB-Tabelle raus   → 2 rot
+```
+
+---
+
+## E64 · 40 ist auch nicht 44 — und eine Zahl, die an zwei Stellen steht
+
+**Datum** 8. August 2026 · **Lücke** L10 · **Prüflauf** `test137` (13 Punkte)
+
+CLAUDE.md §37 nennt 44 px als Mindestmass für alles, was mit dem Finger
+getroffen wird. Gemessen im Tabellenblock, 390 px breit:
+
+```txt
+Zelle             40 px
+Formelzeile       32 px
+Werkzeugknöpfe    44 px   ✓
+```
+
+**Der Gedanke war da, nur nicht zu Ende gerechnet.** Bei der Zeilenhöhe
+stand im Quelltext sogar der richtige Satz — `/* 32 px trifft man mit dem
+Finger nicht */` — und daneben die 40. Jemand hat das Problem erkannt, die
+Zahl vergrössert und nicht nachgesehen, ob sie nun reicht.
+
+Bei der Formelzeile machte allein `padding: 7px 10px` die Höhe. Was dabei
+herauskommt, stand nirgends; man hätte es ausrechnen müssen, und niemand
+tut das beim Lesen.
+
+Beides kostet zusammen eine Zeile: 660 px Blockhöhe zeigen jetzt 14 statt
+16. Für ein Tabellenprogramm klingt das nach Verlust — für ein
+Tabellenprogramm, dessen Zellen man **antippen** muss, ist es der Preis
+dafür, dass man die richtige trifft.
+
+**Am Rechner bleibt es bei 32.** Die 44 gelten fürs Telefon, nicht als
+Weltregel: eine Maus trifft auch 32 px, und eine Tabelle lebt davon, dass
+viel gleichzeitig zu sehen ist. `test137` §3 hält beide Zahlen fest, damit
+niemand die eine für die andere hält.
+
+**Die Zahl, die an zwei Stellen steht**
+
+Die Zeilenhöhe gibt es zweimal: als `ZH_HANDY` in `ansicht.ts` und als
+`--tbl-zh` in `tabelle.css`. Das ist kein Versehen, sondern nötig — das
+fensterweise Zeichnen rechnet mit der ersten aus, welche Zeilen überhaupt
+ins Dokument kommen und wie hoch der Platzhalter darüber sein muss;
+gezeichnet werden sie mit der zweiten.
+
+Gehen die zwei auseinander, verschiebt sich der Inhalt gegen seine
+Beschriftung: Zeile 30 steht dort, wo Zeile 29 hingehört. Und zwar **erst
+nach dem Rollen** — beim flüchtigen Ansehen stimmt alles.
+
+Ein Kommentar `/* muss zu --tbl-zh passen */` stand schon da. **Ein
+Kommentar ist keine Zusicherung.** `test137` §2 rollt deshalb 25 Zeilen
+weit, liest die Zeilennummern aus den Zellen und rechnet nach, wie viele
+Pixel laut Bildschirm zwischen zwei Zeilen liegen. Stimmt das nicht mit
+`--tbl-zh` überein, sagt die Meldung beide Zahlen:
+
+```txt
+✗ Zwischen den Zeilen liegt genau eine Zeilenhöhe
+  — gemessen 44 px, --tbl-zh 40 px, Zeilen 17–40
+```
+
+Das ist der Punkt, an dem eine Prüfung mehr wert ist als ein Kommentar:
+sie nennt nicht die Regel, sondern den Verstoss.
+
+**Status**
+
+`test137`, 13 Punkte, 5 Abschnitte. Gegenproben:
+
+```txt
+CSS auf 40 zurück, JS auf 44   → 3 rot, darunter der Zwei-Stellen-Punkt
+min-height der Formelzeile raus → 1 rot
+```
+
+**Was offen bleibt** — der Tabellenblock hat am Telefon weiterhin keinen
+eigenen Entwurf. Er zeigt dasselbe Raster wie am Rechner, nur grösser;
+zwölf Zeilen, von denen bei einem kleinen Blatt die Hälfte leer ist. Ob
+dort etwas anderes hingehört — eine Zeile als Karte, wie es die Datenbank
+längst macht —, ist eine eigene Frage und steht in L10.
+
+---
+
+## E65 · Dieselbe Zahl an zwei Stellen, zum dritten Mal an einem Tag
+
+**Datum** 8. August 2026 · **Lücke** L22 · **Prüflauf** `test138` (14 Punkte)
+
+Nachdem E64 zweimal denselben Fehler gefunden hatte — eine Zahl, die an
+zwei Stellen steht und auseinanderläuft —, habe ich das Projekt gezielt
+danach absuchen lassen: fünf Blickwinkel, 22 Kandidaten. Der schwerste
+steht hier.
+
+**Der Fund**
+
+`kern/helfer/tempo.ts` blendet in langen Tabellen die Zeilen aus, die
+niemand sieht, und setzt an ihre Stelle einen Platzhalter. Die Rechnung
+dafür stand als:
+
+```js
+const hoehe = 34;
+```
+
+Eine Zeile ist nie 34 px hoch. `table.grid td` macht ihre Höhe über
+`padding`, und die Ansicht hat drei Stufen. Gemessen in Chromium:
+
+```txt
+h-klein    31,25 px
+h-normal   37,25 px
+h-gross    49,25 px
+```
+
+Keine davon ist 34.
+
+**Was das anrichtet**
+
+Der Platzhalter oben bekommt `von * hoehe`. Bei 142 übersprungenen Zeilen
+sind das 4828 px statt der wirklichen 6994 — ein Versatz von **2166 px**.
+Der Puffer beträgt 25 Zeilen, also 1231 px, und kann ihn nicht auffangen.
+
+Gemessen, bevor es behoben war: der Nutzer steht bei 6000 px, also etwa
+bei Zeile 122. Eingeblendet waren die Zeilen 143 bis 218. **Er sieht die
+falschen Zeilen** — oder leeren Raum.
+
+Es braucht drei Dinge, damit es auftritt: mehr als 120 Zeilen, die Ansicht
+auf „alle Einträge" statt der üblichen 50, und weites Rollen. Alle drei
+sind gewöhnliche Zustände, und keiner davon war je geprüft.
+
+**Warum nicht zwei Zahlen abgleichen**
+
+Weil die Fehlerquelle dann bliebe, nur mit einem Kommentar daneben. Genau
+das stand bei `ZH_HANDY` schon (`/* muss zu --tbl-zh passen */`) und hat
+nicht verhindert, dass sie auseinanderliefen — zweimal an einem Tag.
+
+Die Höhe wird jetzt **gemessen**, an einer eingeblendeten Zeile, und bei
+jedem Durchgang nachgesehen: der Nutzer kann im Ansichtsmenü von „normal"
+auf „gross" stellen, ohne dass neu gebunden wird. Eine gemessene Zahl kann
+nicht auseinanderlaufen.
+
+Das ist die allgemeine Lehre aus allen drei Fällen: **wo ein Wert schon
+irgendwo steht, soll man ihn lesen, nicht abschreiben.** Beim Tabellenblock
+ging das nicht — dort braucht das Rechnen die Zahl, bevor gezeichnet ist,
+und deshalb prüft `test137` §2 dort die Gleichheit nach. Hier ging es, und
+dann ist Messen die bessere Antwort.
+
+**Status**
+
+`test138`, 14 Punkte, drei Zeilenhöhen einzeln. Gegenprobe — die 34 zurück:
+
+```txt
+✗ Die Zeile, vor der man steht, ist auch gezeichnet
+  — bei 6000 px und 49.25 px je Zeile ist das Zeile 121;
+    gezeichnet sind 143–218
+```
+
+vier rote Punkte über die drei Stufen.
+
+**Was die Suche sonst noch fand** — 22 Kandidaten, nach Schaden sortiert
+in `LUECKEN.md` unter L34. Darunter: die Sicherungstypen sagen Listen, wo
+der schreibende Code Verzeichnisse schreibt · `ViewLayout` kennt zwölf
+Ansichtsarten, das Register dreizehn · die Telefongrenze steht als 700,
+760 und 768 nebeneinander · vier Grössengrenzen der Dateiablage stehen je
+zweimal. Ein Fehlalarm war auch dabei: `#topbar .nur-telefon` wird
+absichtlich ausgeblendet, seit die Pillenleiste die Kopfleiste ist.
+
+---
+
+## E66 · Ein Typ, der lügt, ist schlimmer als keiner
+
+**Datum** 8. August 2026 · **Prüflauf** `test139` (24 Punkte)
+
+Die Typen unter `src/core/types/` erzeugen nichts — `noEmit`. Niemand
+merkt zur Laufzeit, wenn sie danebenliegen, und `tsc` prüft nur, ob der
+Code zum Typ passt, nicht ob der Typ zur Datei auf der Festplatte passt.
+Zwei lagen daneben.
+
+**Die Sicherung: Verzeichnisse, keine Listen**
+
+```txt
+Der Typ sagte:   blocks: RedionBlock[]
+Geschrieben wird: cache.blocks — ein Record<string, any>
+Gelesen wird:     d.blocks || {}
+```
+
+So steht es in **jeder** bereits geschriebenen Sicherungsdatei. Der Typ war
+also nicht streng, sondern falsch, und wer danach programmiert hätte, wäre
+auf `daten.blocks.map(...)` gekommen — ein Fehler, den die Datei nicht
+erklärt.
+
+Geändert wurde der **Typ**, nie das Format. CLAUDE.md §52.8 sagt es in
+einem Satz: nicht raten, welche Felder es gibt, sondern nachsehen. Ein
+Format zu ändern, um einen Typ zu retten, macht jede vorhandene Sicherung
+unlesbar.
+
+`versions` bleibt eine Liste, und das stimmt auch — der Verlauf kommt nicht
+aus `cache`, sondern wird beim Sichern eingelesen.
+
+**Die Ansichtsarten: zwölf gegen dreizehn**
+
+`ViewLayout` zählte zwölf auf. `Register.ansichten` führt dreizehn:
+`raster` fehlte im Typ, obwohl es die Ansicht seit langem gibt — die
+Tabellenbedienung mit Pfeiltasten und Bereichsauswahl, laut eigenem
+Kommentar „Notions grösste Lücke bei der Eingabe". Ein Typ, der eine
+gebaute Ansicht nicht kennt, weist gültigen Code ab.
+
+**Wie das geprüft wird, und warum umständlich**
+
+`test139` liest den **Quelltext der Typdatei** und vergleicht ihn mit dem,
+was die laufende App tut: eine echte Sicherung wird geschrieben und Feld
+für Feld nachgesehen, ob es Liste oder Verzeichnis ist; die Ansichtsliste
+wird beim Register erfragt. Das ist mehr Arbeit als eine Typprüfung — aber
+eine Typprüfung kann diesen Fehler prinzipiell nicht finden.
+
+**Ein Fehler beim Bauen des Prüflaufs, der hierher gehört**
+
+Der Ausdruck, der den Typ aus der Datei schneidet, hiess zuerst
+`/export interface RedionPackageData[^}]*}/`. Der erklärende Kommentar im
+Typ nennt aber `d.blocks || {}` — und an dieser Klammer hörte der Ausschnitt
+auf. Alle vier Felder galten als „fehlt", und der Lauf meldete fünf rote
+Punkte für einen Zustand, den es nicht gab.
+
+Das ist derselbe Fall wie bei `test136` heute früh: **ein Prüflauf, der
+das Falsche misst, ist so wenig wert wie einer, der nichts misst.** Beide
+Male half nur, dem roten Punkt zu misstrauen und nachzusehen.
+
+**Was dabei ein Fehlalarm war**
+
+Die Suche meldete auch, `TOC_STUFEN` im Editor und der Überschriftenfilter
+in `inhaltsflaeche.ts` gingen auseinander — der eine kennt `toggle-h1`, der
+andere nicht. Nachgesehen: eine Toggle-Überschrift wird als `type: 'h1'`
+mit `toggleKopf: true` gespeichert (`'toggle-h1'.slice(7)` ist `'h1'`). Die
+zusätzlichen Schlüssel sind **tote Einträge**, die nie zutreffen.
+
+Die Doppelung war also echt, der Fehler nicht. Beide Stellen lesen jetzt
+trotzdem `Register.bloecke.ueberschriften()` — zwei Kataloge für dieselbe
+Sache sind auch ohne Schaden zwei zu viel, und §8 sagt, wo so etwas
+hingehört.
+
+**Status**
+
+`test139`, 24 Punkte. Gegenprobe — beide Typen zurück auf falsch:
+
+```txt
+✗ … und sagt für `blocks` ein Verzeichnis — RedionBlock[]
+✗ … und sagt für `views` ein Verzeichnis — RedionView[]
+✗ Jede Ansicht des Registers steht auch im Typ — fehlt im Typ: ["raster"]
+```
+
+---
+
+## E67 · Jede Grenze bekommt ein Zuhause — und wo das nicht geht, eine Prüfung
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test140` (17 Punkte)
+
+Vier Grössengrenzen der Dateiablage standen je zweimal:
+
+```txt
+STUECK      1 MB     konstanten.ts        und  dateien/ablage.ts
+KLEIN     256 KB     konstanten.ts        und  dateien/ablage.ts
+DATEI_MAX 500 MB     konstanten.ts        und  dateien/ablage.ts
+100 MB               maschine.ts (blank)  und  server/dateien.ts
+```
+
+Alle vier stimmten überein. Das ist kein Trost: `ZH_HANDY` und `--tbl-zh`
+stimmten auch überein, bis sie es nicht mehr taten — zweimal an einem Tag.
+
+**Drei lassen sich teilen.** `dateien/ablage.ts` liest jetzt `KONSTANTEN`.
+
+Der Rückfallwert bleibt stehen, und zwar mit Absicht: ist `konstanten.js`
+nicht geladen, ist die App ohnehin kaputt — aber eine Grenze von
+`undefined` liesse **jede** Datei durch, und das wäre schlimmer als eine
+falsche Grenze. `test140` prüft deshalb auch, dass der Rückfall dieselbe
+Zahl nennt; sonst wäre er eine zweite Wahrheit im Wartestand.
+
+**Die vierte lässt sich nicht teilen.** Das Gerät und der Server sind
+getrennte Bündel — der Worker läuft bei Cloudflare und kann
+`konstanten.js` nicht lesen. Zwei Zahlen also, notgedrungen.
+
+Und genau dann muss ein Prüflauf sie nachrechnen. `test140` §3 liest
+`export const DATEI_GRENZE` aus `server/dateien.ts`, wertet den Ausdruck
+aus und vergleicht ihn mit `KONSTANTEN.SERVER_DATEI_MAX`.
+
+Was ohne diese Prüfung schiefginge, ist in beide Richtungen still:
+
+```txt
+Gerät höher als Server  →  es schickt Dateien, die der Server mit 413
+                           abweist. Der Nutzer sieht einen Fehler ohne
+                           Erklärung.
+Gerät tiefer als Server →  es hält Dateien zurück, die durchgingen. Sie
+                           fehlen auf dem zweiten Gerät, und nirgends
+                           wird etwas rot.
+```
+
+Die zweite ist die gefährlichere, weil sie wie Erfolg aussieht.
+
+**Nebenbei ein Name für eine blanke Zahl.** In `maschine.ts` stand
+`> 100 * 1024 * 1024` mitten in einer Schleife — ohne Namen, ohne Bezug
+zur Gegenstelle. Wer die Serverzahl geändert hätte, wäre über diese Zeile
+nie gestolpert; sie enthält das Wort „Server" nicht.
+
+**Und eine Konstante, die niemand anwendet, ist keine Grenze.** `test140`
+§2 meldet deshalb eine Datei von 600 MB an und prüft, dass sie abgewiesen
+wird — mit einer Meldung, die die Grenze in MB nennt.
+
+**Status**
+
+`test140`, 17 Punkte. Gegenproben:
+
+```txt
+Server auf 150 MB gesetzt   → 2 rot: „Server 150 MB, Gerät 100 MB"
+Konstanten in ablage.ts
+   wieder abgeschrieben     → 2 rot
+```
+
+**Was von L34 offen bleibt** — die Telefongrenze (700 / 760 / 768), die
+Kopfleistenhöhe, die Ziffern-Blocktypen und die kleineren Doppelungen.
+Sie stehen dort einzeln, nach Schaden sortiert.
+
+---
+
+## E68 · Eine Telefongrenze, nicht drei
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test141` (24 Punkte)
+
+„Das ist ein Telefon" stand mit drei verschiedenen Zahlen da:
+
+```txt
+768   KONSTANTEN.TELEFON_BREITE → AppEinstellung.amTelefon()
+760   38 CSS-Regeln · UI.amTelefon() · Tabellenblock · Raster
+700   sechs matchMedia-Aufrufe im TypeScript · drei CSS-Blöcke
+```
+
+**Was das anrichtete**, gemessen bei jedem Fenster zwischen 701 und 760 px:
+
+```txt
+Telefonleisten         sichtbar    (CSS: ab 760 gilt Telefon)
+Rechner-Seitenleiste   daneben     (CSS: ab 700 wird sie zur Schublade)
+```
+
+Auf dem Bildschirm hiess das: die Telefon-Pillen lagen **über** dem Logo
+der Seitenleiste, die untere Leiste **über** „Neuer Chat". Zwei Entwürfe
+übereinander gezeichnet.
+
+Und das ist keine Randbreite. Ein halbierter Bildschirm, ein kleines
+Tablet, ein verkleinertes Browserfenster liegen alle darin. Gefunden hat
+es kein Prüflauf: alle messen bei 390, 428 oder 1500 px — also links und
+rechts vom Band, nie darin.
+
+**Welche der drei gewinnt**
+
+760, und zwar nach Stimmenzahl: 38 CSS-Regeln, `UI.amTelefon()`, der
+Tabellenblock und das Raster nehmen sie. Die 768 war die einzige Zahl, an
+die sich **niemand** hielt — sie stand in der Konstantendatei und wurde nur
+von einer Diagnosefunktion gelesen. Die 700 stand an sieben Stellen, alle
+in der Schale und im Editor.
+
+**Und `<=` statt `<`.** `AppEinstellung.amTelefon()` verglich mit `<`. Die
+CSS schreibt `max-width: 760px`, und das schliesst 760 **ein**. Mit `<`
+hätte genau die Breite 760 hier „Rechner" geheissen und dort „Telefon" —
+ein Band von einem Pixel, das man nie findet und das trotzdem existiert.
+
+**Was geprüft wird, und was nicht**
+
+Nicht, dass irgendwo 760 steht — das wäre eine Behauptung über den
+Quelltext. `test141` misst an sechs Breiten rund um die Grenze, ob alle
+Antworten übereinstimmen, und §3 stellt die eigentliche Frage:
+
+> Sind bei irgendeiner Breite Telefonleisten **und** feste Seitenleiste
+> gleichzeitig da?
+
+Die Gegenprobe — die Seitenleiste zurück auf 700 — beantwortet sie
+wörtlich mit dem alten Zustand:
+
+```txt
+✗ 730 px: nicht Telefonleisten UND Rechner-Seitenleiste
+  — Leisten da, Seitenleiste relative
+✗ 760 px: nicht Telefonleisten UND Rechner-Seitenleiste
+  — Leisten da, Seitenleiste relative
+```
+
+§5 hält zusätzlich fest, dass im Quelltext keine zweite Grenze mehr steht.
+Erklärende Kommentare, die die alte Zahl nennen, zählen dabei nicht mit —
+sonst würde die Erklärung des Fehlers selbst zum Fehler.
+
+**Und derselbe Fehler eine Regel weiter oben**
+
+Beim Aufräumen fiel die Schublade auf, die auf dem Telefon die Bereiche
+zeigt. Ihr Kommentar sagt ausdrücklich: „Jetzt füllt sie die Breite und
+beginnt **UNTER den Pillen**." Ihre Zahl sagte `top: 60px`. Die
+Pillenleiste endet bei 80.
+
+Die obersten 20 px lagen also dahinter, und das war die Zeile „🔍 Suchen"
+— die erste im Blatt, halb abgeschnitten. Am iPhone, wo die Kerbe 47 px
+dazulegt, wäre `--hoben` 127 px und die Schublade begänne immer noch bei
+60: anderthalb Zeilen weg.
+
+Das Bittere daran: **die Lehre stand schon in derselben Datei.** Sechzig
+Zeilen weiter unten, bei `#main`, steht seit E58 wörtlich:
+
+> `--hoben` STATT EINER ZAHL. Hier stand `60px`, und die Leiste darüber
+> war 76 px hoch — die obersten 16 px des Zurück-Knopfes lagen dahinter.
+> Am iPhone, wo die Kerbe noch 47 px dazulegt, war es die ganze Zeile.
+
+Angewandt wurde sie damals auf `#main`. Die Schublade, die dieselbe Zahl
+trug, blieb stehen. Eine Lehre, die man an einer Stelle zieht, gilt nicht
+von selbst an der zweiten — auch nicht, wenn sie zwei Bildschirmseiten
+entfernt aufgeschrieben ist.
+
+**Ein Messfehler beim Prüfen, der ebenfalls hierher gehört.** Der erste
+Anlauf griff die erste Zeile mit `querySelector('button, a')` und bekam
+die Logozeile: am Telefon ausgeblendet, meldet aber trotzdem ein Rechteck
+bei 0 px. Der Lauf war rot für ein Element, das niemand sieht. Gemessen
+wird jetzt nur, was `display`, `visibility` und eine Höhe über 8 px hat.
+
+**Status**
+
+`test141`, 27 Punkte, sechs Breiten plus die Schublade. Gegenproben:
+
+```txt
+Seitenleiste zurück auf 700   → 5 rot
+Schublade zurück auf top:60px → 2 rot: „🔍SuchenStrg P beginnt bei
+                                 64 px, die Leiste endet bei 80 px"
+```
+
+---
+
+## E69 · Kataloge gehören ins Register — und was ohne Auffang verschwindet
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test142` (24 Punkte)
+
+CLAUDE.md §8 sagt es in einem Satz: die Register sind die zentrale
+Wahrheit. Zwei Kataloge hielten sich nicht daran.
+
+**Ziffer → Blockart, viermal geschrieben**
+
+Notion legt die zehn häufigsten Blockarten auf Strg+Umschalt+Ziffer.
+Welche Ziffer welche Art meint, stand **viermal** im Code:
+
+```txt
+register/bloecke.ts     kurz: 'Ctrl+Shift+1'   → die Kürzelübersicht liest es
+editor.ts, Griff 1      { '0':'text', '1':'h1', … }   Strg+Umschalt
+editor.ts, Griff 2      dasselbe noch einmal          Strg+Alt (Mac)
+editor.ts, Griff 3      dasselbe ohne die '9'         Mehrfachauswahl
+```
+
+Wer eine Art auf eine andere Ziffer legt, ändert die Übersicht und lässt
+drei Griffe stehen — oder umgekehrt, und dann zeigt die Übersicht ein
+Kürzel, das nichts tut.
+
+Jetzt leitet `Register.bloecke.zifferZuTyp()` die Zuordnung aus `kurz` ab.
+Der dritte Griff lässt die `'9'` weiter aus, und zwar mit Begründung: eine
+Mehrfachauswahl lässt sich nicht in **eine** Seite verwandeln.
+
+**Das Typmenü ohne Auffanggruppe**
+
+`TYP_GRUPPEN` in `steuerung.ts` zählt 34 Eigenschaftstypen in fünf Gruppen
+auf. Das Register führt 35. Der Unterschied ist `title`, und der ist
+richtig: eine Spalte lässt sich nicht in den Titel verwandeln, es gibt
+genau einen.
+
+Heute decken sich also beide. Das Gefährliche ist, was **morgen**
+passiert: `TYP_GRUPPEN` hatte keine Auffanggruppe. Wer einen Typ ins
+Register einträgt und diese Liste vergisst, bekommt einen Typ, den es gibt
+und den niemand auswählen kann. Kein Fehler, keine Meldung — nur ein
+Eintrag, der im Menü fehlt.
+
+Das Register hat für genau diesen Fall `inGruppe('Weiteres')`. `typGruppen()`
+macht es jetzt genauso.
+
+**Und die Auffanggruppe muss leer sein.** `test142` §2 prüft beides: dass
+es sie heute **nicht** gibt — sonst wäre sie eine Ausrede dafür, die
+Gliederung nicht zu pflegen — und dass sie greift, wenn doch etwas
+dazukommt. Dafür meldet der Lauf einen Probetyp an und sieht im
+**gezeichneten** Menü nach, ob er anklickbar ist.
+
+Die Gegenprobe sagt genau, was ohne sie geschähe:
+
+```txt
+✗ … und landet in der Auffanggruppe, statt zu verschwinden
+✗ Das gezeichnete Menü zeigt den neuen Typ — 34 Knöpfe
+```
+
+Vierunddreissig Knöpfe, und der neue ist keiner davon.
+
+**Zwei Kleinigkeiten beim Prüfen, die hierher gehören**
+
+`.menu` ist der Kasten, `.menu-grund` der dunkle Grund **darunter**. Der
+erste Anlauf suchte im Grund und fand null Knöpfe — ein roter Punkt für
+einen Selektor, nicht für einen Fehler. Dritter Fall an einem Tag.
+
+Und: `Register.bloecke` hat `nimmZurueck`, `Register.eigenschaften` nicht.
+Eine Unwucht, die erst auffällt, wenn man sie braucht — für Erweiterungen
+(L30) wird sie es. Der Prüflauf erfindet keine Aufräumfunktion, sondern
+lädt eine frische Seite und hält fest, dass das Register dort wieder wie
+neu ist. Die Unwucht steht als Notiz in L34.
+
+**Status**
+
+`test142`, 24 Punkte. Gegenproben:
+
+```txt
+Auffanggruppe entfernt          → 2 rot
+Aufzählung auf Strg+Umschalt+3  → 3 rot, darunter „Strg+Umschalt+3 ist
+                                  h3 — ist bullet"
+```

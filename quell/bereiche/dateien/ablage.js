@@ -40,9 +40,17 @@ const Dateien = (() => {
        stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
        kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    const STUECK = 1024 * 1024; /* 1 MB je Stück */
-    const KLEIN = 256 * 1024; /* darunter lohnt der Aufwand nicht */
-    const GRENZE = 500 * 1024 * 1024; /* darüber wird es auch lokal eng */
+    /* AUS DEN KONSTANTEN, nicht abgeschrieben. Hier standen dieselben drei
+       Zahlen ein zweites Mal — sie stimmten überein, aber nichts hätte es
+       gemerkt, wenn eine der beiden Seiten sich geändert hätte. Genau diese
+       Fehlerklasse hat am 8. August dreimal zugeschlagen (E64, E65).
+       Der Rückfall gilt nur, wenn `konstanten.js` nicht geladen ist — dann
+       ist die App ohnehin kaputt, aber eine Grenze von `undefined` liesse
+       jede Datei durch, und das wäre schlimmer als eine falsche Grenze. */
+    const K = (n, standard) => (typeof KONSTANTEN !== 'undefined' && Number(KONSTANTEN[n])) || standard;
+    const STUECK = K('STUECK', 1024 * 1024); /* 1 MB je Stück */
+    const KLEIN = K('KLEIN', 256 * 1024); /* darunter lohnt der Aufwand nicht */
+    const GRENZE = K('DATEI_MAX', 500 * 1024 * 1024); /* darüber wird es auch lokal eng */
     /* Laufende Uploads: id → { datei, teile, fertig, abgebrochen } */
     const laufend = new Map();
     /* Blob-Adressen, die schon gebaut wurden — damit dieselbe Datei nicht

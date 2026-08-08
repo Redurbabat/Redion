@@ -52,12 +52,38 @@ const alles = http.createServer(async (req, res) => {
   const serverWeg = /^\/(konto|sync|datei|freigabe|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/
     .test(u.pathname ?? '') || /^\/v1\//.test(u.pathname ?? '') || u.pathname === '/api/stand';
   if (serverWeg) {
-    let roh = '';
-    for await (const st of req) roh += st;
-    const durch: Record<string, any> = req.headers;
+    /* --- Der Weiterreicher, und warum er so aussieht -------------------
+     * Hier stand `let roh = ''; for await (…) roh += st;` — der Rumpf als
+     * ZEICHENKETTE, und alle Kopfzeilen der Anfrage unverändert weiter.
+     * Beides zusammen liess diesen Lauf etwa jedes dritte Mal mit
+     * „SocketError: other side closed" sterben, mitten in einem Abgleich
+     * von rund anderthalb Megabyte.
+     *
+     * Der Grund sind zwei Zahlen, die auseinandergehen. `content-length`
+     * kommt aus der ursprünglichen Anfrage und zählt BYTES; `roh` ist
+     * eine Zeichenkette, und `fetch` zählt sie beim Senden neu. Bei
+     * Umlauten und Emoji sind das nicht dieselben Zahlen — der Empfänger
+     * wartet dann auf Bytes, die nie kommen, oder liest über das Ende
+     * hinaus, und irgendwann macht einer von beiden zu.
+     *
+     * Deshalb: der Rumpf als Puffer, und die Kopfzeilen, die nur für DIE
+     * EINE Verbindung gelten, bleiben hier. `host`, `connection`,
+     * `content-length` und `transfer-encoding` gehören dem Sprung von
+     * Browser zu Weiterreicher — nicht dem von Weiterreicher zu Server.
+     * ------------------------------------------------------------------ */
+    const stuecke: Buffer[] = [];
+    for await (const st of req) stuecke.push(Buffer.from(st));
+    const rumpf = Buffer.concat(stuecke);
+
+    const HIER_BLEIBEN = new Set(['host', 'connection', 'keep-alive',
+      'content-length', 'transfer-encoding', 'upgrade', 'proxy-connection']);
+    const durch: Record<string, string> = {};
+    for (const [k, v] of Object.entries(req.headers))
+      if (!HIER_BLEIBEN.has(k.toLowerCase()) && typeof v === 'string') durch[k] = v;
+
     const a = await fetch('http://localhost:8826' + weg2, {
       method: req.method ?? 'GET', headers: durch, redirect: 'manual',
-      ...(roh ? { body: roh } : {}) });
+      ...(rumpf.length ? { body: rumpf } : {}) });
     const text = await a.text();
     const kopf: Record<string, any> = {};
     a.headers.forEach((v, k) => { if (k !== 'content-encoding') kopf[k] = v; });

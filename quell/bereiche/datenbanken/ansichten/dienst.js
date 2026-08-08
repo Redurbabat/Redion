@@ -208,7 +208,21 @@ const Ansichten = (() => {
                 zahl(Werkzeuge.karten().length, 'Karteikarten') +
                 `</div>` +
                 '</div>';
-        wrap.addEventListener('click', e => {
+        /* `onclick =`, NICHT `addEventListener`. Der Unterschied ist hier kein
+           Geschmack, sondern ein gefundener Fehler (E57).
+    
+           `wrap` ist `#page` und bleibt stehen; nur sein Inhalt wird neu
+           geschrieben. Mit `addEventListener` kam bei jedem Zeichnen ein
+           weiterer Zuhörer dazu — und `start()` läuft bei jeder Rückkehr zum
+           Start-Bildschirm. Nach dem dritten Mal legte ein Klick auf
+           „Tagesjournal" drei Journale an, und ein Klick auf „Jetzt sichern"
+           startete drei Sicherungen nacheinander, bei Anhängen also dreimal
+           durch alle Dateien.
+    
+           Gefunden hat das die Prüfung zum Sicherungsknopf: sie zählte zwei
+           Klicks und bekam drei Aufrufe. Die vier anderen Ansichten in dieser
+           Datei machten es von Anfang an richtig. */
+        wrap.onclick = (e) => {
             const ziel = elVon(e);
             const o = ziel?.closest('[data-open]');
             if (o) {
@@ -226,16 +240,55 @@ const Ansichten = (() => {
                 Werkzeuge.lernen();
             if (a.dataset['a'] === 'graph')
                 Links.graph();
-            /* Der Knopf im Sicherungsband — derselbe Weg wie in den Einstellungen.
-               Danach den Start-Bildschirm neu zeichnen, damit die Anzeige stimmt;
-               wer sichert, will sehen, dass es gezählt hat. */
+            /* DER KNOPF IM SICHERUNGSBAND — und was er dabei erzählt (E57).
+               Derselbe Weg wie in den Einstellungen; neu ist, was dazwischen
+               zu sehen ist.
+      
+               Eine `.redion`-Sicherung mit Anhängen dauert Sekunden bis Minuten.
+               Bis hierher passierte in dieser Zeit auf der Karte NICHTS: der
+               Knopf blieb, wie er war, und irgendwann kam ein Toast. Am Telefon
+               steht der Toast über der Aktionsleiste und ist nach 2,6 Sekunden
+               weg — wer in dem Moment wegsieht, weiss nicht, ob überhaupt etwas
+               geschieht, und tippt ein zweites Mal.
+      
+               Also sagt es der Knopf selbst: erst „Sichern …" mit einem Kreisel,
+               dann ein Haken, dann die neu gezeichnete Karte mit „Gesichert
+               heute". Drei Zustände, und der mittlere ist der, den man sonst
+               verpasst. */
             if (a.dataset['a'] === 'sichern') {
-                void Promise.resolve(App.sicherungSpeichern()).then(() => {
-                    if (document.getElementById('page')?.querySelector('.home-sich'))
-                        start();
-                });
+                const knopf = a;
+                const wieVorher = knopf.innerHTML;
+                knopf.disabled = true;
+                knopf.classList.add('laeuft');
+                knopf.innerHTML = '<i class="hs-kreisel" aria-hidden="true"></i>Sichern …';
+                /* Was das Vorleseprogramm hört. Ein Kreisel ist für es nichts. */
+                knopf.setAttribute('aria-live', 'polite');
+                const fertig = (gut) => {
+                    if (!knopf.isConnected)
+                        return;
+                    knopf.classList.remove('laeuft');
+                    knopf.classList.toggle('fertig', gut);
+                    knopf.innerHTML = gut ? '✓ Gesichert' : 'Nicht gesichert';
+                    /* Den Haken kurz stehen lassen. Sofort neu zu zeichnen hiesse:
+                       der Knopf blinkt einmal und die Karte sieht aus wie vorher —
+                       man hätte nichts gesehen. */
+                    setTimeout(() => {
+                        if (document.getElementById('page')?.querySelector('.home-sich'))
+                            start();
+                        else if (knopf.isConnected) {
+                            knopf.disabled = false;
+                            knopf.classList.remove('fertig');
+                            knopf.innerHTML = wieVorher;
+                        }
+                    }, 1200);
+                };
+                void Promise.resolve(App.sicherungSpeichern())
+                    .then(() => fertig(true))
+                    /* Auch der Fehlschlag gehört auf den Knopf. Ein Kreisel, der
+                       ewig dreht, ist die schlechteste aller Auskünfte. */
+                    .catch(() => fertig(false));
             }
-        });
+        };
     };
     const zahl = (n, name) => `<div class="hz"><b>${n}</b><span>${name}</span></div>`;
     const posteingang = () => {
@@ -307,7 +360,8 @@ const Ansichten = (() => {
                     `<span class="pth">${esc(Werkzeuge.zeitKurz(p.edited))}</span></button>`).join('') +
                 '</div>' +
                 '</div>';
-        wrap.addEventListener('click', e => {
+        /* `onclick =` — siehe die Begründung bei `start()`. */
+        wrap.onclick = (e) => {
             const ziel = elVon(e);
             /* Eine Benachrichtigung gilt als gelesen, sobald man sie antippt */
             const m = ziel?.closest('[data-meld]');
@@ -324,7 +378,7 @@ const Ansichten = (() => {
             }
             if (ziel?.closest('[data-filter]'))
                 posteingangFilter(ziel);
-        });
+        };
     };
     /** Was soll im Posteingang auftauchen? */
     const posteingangFilter = (anker) => {
@@ -404,6 +458,17 @@ const Ansichten = (() => {
                 '<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b>' +
                 '<span>Gedanken sofort festhalten</span></button>' +
                 '</div>' +
+                /* LEERER ZUSTAND (Vorgabe §13). „Noch keine Seiten" allein ist eine
+                   Feststellung; erst die zwei Knöpfe daneben machen daraus einen
+                   Weg. Der zweite ist wichtiger, als er aussieht: wer gerade das
+                   Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. */
+                (alle.length ? '' :
+                    '<div class="leer-zustand"><div class="lz-zeichen">📄</div>' +
+                        '<b>Noch keine Seiten</b>' +
+                        '<span>Erstelle deine erste Seite — oder hole eine Sicherung zurück, ' +
+                        'wenn du von einem anderen Gerät kommst.</span>' +
+                        '<div class="lz-knoepfe"><button data-a="neu" class="prim">Neue Seite</button>' +
+                        '<button data-a="import">Importieren</button></div></div>') +
                 block('Kürzlich verwendet', kuerzlich.map(p => zeile(p, zeit(p))).join('')) +
                 block('Favoriten', sterne.map(p => zeile(p)).join('')) +
                 block('Privat', privat.map(p => zeile(p, (() => {
@@ -447,6 +512,8 @@ const Ansichten = (() => {
                 App.neueSeite();
             else if (a.dataset.a === 'memo')
                 Werkzeuge.schnellnotizen();
+            else if (a.dataset.a === 'import')
+                Werkzeuge.dateienLesen();
             else if (a.dataset.a === 'papierkorb')
                 App.papierkorb();
         };
@@ -529,6 +596,218 @@ const Ansichten = (() => {
                 window.Meeting?.panel?.();
         };
     };
-    return { start, seiten, termine, posteingang, posteingangFilter, gruss };
+    /* ========================================================================
+     * MEHR — die Werkzeuge, geordnet und mit einem Satz dazu
+     * ------------------------------------------------------------------------
+     * Aus Redurs Entwurf „Nocturne" (E42). Bisher lagen diese Wege im R-Blatt
+     * als nackte Liste: „Importieren", „Sichern", „Papierkorb". Wer nicht
+     * schon wusste, was dahintersteckt, erfuhr es dort nicht.
+     *
+     * Drei Gruppen, und jede Zeile sagt in einem Satz, wofür sie da ist. Das
+     * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
+     * ======================================================================*/
+    const mehrGruppen = () => [
+        { name: 'Wichtige Werkzeuge', eintraege: [
+                { z: '🧭', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
+                { z: '⌘', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
+                { z: '⌨', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
+                { z: '🧩', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' }
+            ] },
+        { name: 'Daten und Sicherheit', eintraege: [
+                { z: '💾', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
+                { z: '📥', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
+                { z: '📥', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+                { z: '🗑', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
+            ] },
+        { name: 'System', eintraege: [
+                { z: '⚙', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
+                { z: 'ℹ', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
+            ] }
+    ];
+    const mehr = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>🧭 Mehr</a>';
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Mehr</h1>' +
+                mehrGruppen().map(g => `<h2>${esc(g.name)}</h2><div class="home-liste">` +
+                    g.eintraege.map(e => `<button data-a="${esc(e.a)}"><span class="mz">${esc(e.z)}</span>` +
+                        `<span class="pt">${esc(e.t)}` +
+                        `<span class="snip">${esc(e.s)}</span></span>` +
+                        '<span class="pth">›</span></button>').join('') +
+                    '</div>').join('') +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            const a = el?.closest('[data-a]')?.dataset.a;
+            if (!a)
+                return;
+            if (a === 'kompass')
+                kompass();
+            else if (a === 'befehle')
+                Werkzeuge.palette();
+            else if (a === 'tasten')
+                Werkzeuge.tastenkuerzel();
+            else if (a === 'vorlagen')
+                Werkzeuge.vorlagen && Werkzeuge.vorlagen();
+            else if (a === 'sichern')
+                App.sicherungSpeichern();
+            else if (a === 'import')
+                Werkzeuge.dateienLesen();
+            else if (a === 'inbox')
+                posteingang();
+            else if (a === 'papierkorb')
+                App.papierkorb();
+            else if (a === 'einstellungen')
+                App.einstellungen();
+            else if (a === 'ueber')
+                App.einstellungen('ueber');
+        };
+    };
+    /* ========================================================================
+     * KOMPASS — was diese App kann, an einer Stelle
+     * ------------------------------------------------------------------------
+     * Der Bereich, den Redurs Entwurf als einzigen ganz neu erfindet, und der
+     * die grösste Lücke schliesst: Redion kann viel, und nichts davon sagt es
+     * von selbst. Wer nicht weiss, dass es Karteikarten gibt, findet sie nie.
+     *
+     * ZWEI SACHEN SIND HIER ABSICHTLICH SO GEBAUT:
+     *
+     * Die Befehle tragen ihren Stand — fertig, teilweise, geplant. Ein
+     * Wegweiser, der Geplantes wie Fertiges aussehen lässt, ist eine
+     * Enttäuschung mit Ansage. Lieber steht daneben „geplant".
+     *
+     * Und die Liste kommt, wo es geht, aus dem Register statt aus dieser
+     * Datei. Eine von Hand gepflegte Aufzählung erzählt nach dem dritten
+     * neuen Befehl von einer App, die es nicht mehr gibt.
+     * ======================================================================*/
+    const kompass = () => {
+        const f = flaeche();
+        if (!f)
+            return;
+        const { wrap, crumb } = f;
+        App.setzeSeite(null);
+        crumb.innerHTML = '<a>🧭 Kompass</a>';
+        const aufbau = [
+            ['Start', 'Armaturenbrett mit Schnellkarten, Sicherungsstand und zuletzt Bearbeitetem.'],
+            ['Seiten', 'Alles Geschriebene: kürzlich, Favoriten, privat, Datenbanken, Vorlagen.'],
+            ['Termine', 'Was ansteht — Aufgaben mit Datum, Erinnerungen, Besprechungen.'],
+            ['Mehr', 'Werkzeuge, Sicherung, Import, Papierkorb, Einstellungen.'],
+            ['R-Blatt', 'Der Arbeitsbereich: Suche, Befehle, jeder Weg auf einen Griff.']
+        ];
+        const befehle = [
+            ['/', 'Blockmenü öffnen', 'fertig'],
+            ['@', 'Seite, Datum oder Person erwähnen', 'fertig'],
+            ['#', 'Schlagwort erstellen', 'teilweise'],
+            [':', 'Emoji einfügen', 'fertig'],
+            ['[[', 'Seite verlinken', 'geplant']
+        ];
+        const tasten = [
+            ['Strg + P', 'Suchen'], ['Strg + ⇧ + P', 'Befehle'], ['Strg + N', 'Neue Seite'],
+            ['Strg + /', 'Tastenkürzel'], ['Esc', 'Menü schliessen']
+        ];
+        /* Aus dem Register, nicht von Hand: so altert die Liste mit der App. */
+        const kann = (() => {
+            try {
+                const b = Object.keys(Register.bloecke?.alle?.() || Register.bloecke || {}).length;
+                const a = (Register.ansichten?.alle?.() || []).length;
+                return [
+                    'Notizen schreiben', 'Seiten verlinken', 'Datenbanken bauen',
+                    b ? b + ' Blockarten' : '', a ? a + ' Ansichten' : '',
+                    'Formeln rechnen', 'Dateien behalten', 'Sicherungen schreiben',
+                    'Importieren', 'Karteikarten lernen', 'KI fragen'
+                ].filter(Boolean);
+            }
+            catch {
+                return ['Notizen schreiben', 'Datenbanken bauen', 'Formeln rechnen',
+                    'Sicherungen schreiben', 'Karteikarten lernen', 'KI fragen'];
+            }
+        })();
+        const marke = (stand) => `<span class="kp-marke kp-${stand}">${esc(stand)}</span>`;
+        wrap.className = '';
+        wrap.innerHTML =
+            '<div class="home">' +
+                '<h1>Kompass</h1>' +
+                '<p class="kp-vor">Was du in Redion machen kannst — und wo es steht.</p>' +
+                '<h2>App-Aufbau</h2><div class="kp-liste">' +
+                aufbau.map(([n, t]) => `<div class="kp-zeile"><b>${esc(n)}</b><span>${esc(t)}</span></div>`).join('') +
+                '</div>' +
+                '<h2>Befehle</h2><div class="kp-liste">' +
+                befehle.map(([k, t, stand]) => `<div class="kp-befehl"><code>${esc(k)}</code><span>${esc(t)}</span>` +
+                    marke(String(stand)) + '</div>').join('') +
+                '</div>' +
+                '<h2>Tastenkürzel</h2><div class="kp-liste">' +
+                tasten.map(([k, t]) => `<div class="kp-taste"><kbd>${esc(k)}</kbd><span>${esc(t)}</span></div>`).join('') +
+                '<div class="kp-fuss">Auf dem Mac: Cmd statt Strg.</div>' +
+                '</div>' +
+                '<h2>Redion kann</h2><div class="kp-wolke">' +
+                kann.map(n => `<span>${esc(n)}</span>`).join('') +
+                '</div>' +
+                '<div class="kp-karte">' +
+                '<b>Sicherung</b>' +
+                '<div>JSON — schnell, ohne Anhänge.<br>' +
+                '.redion — vollständig, mit Anhängen.<br>' +
+                'Wolke — freiwillig, nie Pflicht.</div>' +
+                '<button data-a="sichern">Sicherung öffnen</button>' +
+                '</div>' +
+                '</div>';
+        wrap.onclick = (e) => {
+            const el = (e.target instanceof Element) ? e.target : null;
+            if (el?.closest('[data-a="sichern"]'))
+                App.sicherungSpeichern();
+        };
+    };
+    /* ========================================================================
+     * DAS SKELETT — was dasteht, bevor etwas dasteht (Vorgabe §23, E46)
+     * ------------------------------------------------------------------------
+     * Ein Kreisel sagt „warte". Ein Skelett sagt „hier kommen sechs Zeilen
+     * mit einem Symbol links und einem Datum rechts" — man weiss, was gleich
+     * kommt, und wenn es kommt, springt nichts.
+     *
+     * Die Strichbreiten sind ABSICHTLICH ungleich. Sechs gleich lange
+     * Balken sehen aus wie ein Muster; ungleiche sehen aus wie Text, und
+     * genau darum geht es.
+     * ======================================================================*/
+    const skelett = (wieViele = 6, mitKarten = false) => (mitKarten
+        ? '<div class="sk-karten"><div class="sk-karte"></div><div class="sk-karte"></div></div>'
+        : '') +
+        '<div class="sk-titel">Wird geladen …</div><div class="sk-liste">' +
+        ['62%', '48%', '71%', '54%', '40%', '66%', '58%', '45%']
+            .slice(0, wieViele)
+            .map(b => '<div class="sk-zeile"><div class="sk-punkt"></div>' +
+            `<div class="sk-strich" style="width:${b}"></div>` +
+            '<div class="sk-rechts"></div></div>').join('') +
+        '</div>';
+    /**
+     * Ein Skelett auf die Bühne stellen, bis der Inhalt da ist.
+     *
+     * WARUM MIT FRIST. Ein Skelett, das bei jedem Wechsel aufblitzt, ist
+     * schlimmer als keines — die Ansicht flackert. Erst ab 180 ms Wartezeit
+     * lohnt es sich; darunter merkt niemand, dass etwas geladen wurde.
+     */
+    const beimLaden = async (arbeit, wieViele = 6, mitKarten = false) => {
+        const f = flaeche();
+        let gezeigt = false;
+        const uhr = setTimeout(() => {
+            if (f) {
+                f.wrap.innerHTML = '<div class="home">' + skelett(wieViele, mitKarten) + '</div>';
+            }
+            gezeigt = true;
+        }, 180);
+        try {
+            return await arbeit();
+        }
+        finally {
+            clearTimeout(uhr);
+            void gezeigt;
+        }
+    };
+    return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter,
+        gruss, skelett, beimLaden };
 })();
 window.Ansichten = Ansichten;

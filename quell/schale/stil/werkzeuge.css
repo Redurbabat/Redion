@@ -285,6 +285,47 @@ a.bl:hover{color:var(--text)}
 .home-sich .hs-tun:hover{filter:brightness(1.07)}
 .home-sich .hs-tun:active{transform:translateY(1px)}
 
+/* --------------------------------------------------------------------------
+   DREI ZUSTÄNDE DES SICHERUNGSKNOPFES (E57)
+   --------------------------------------------------------------------------
+   Eine `.redion`-Sicherung mit Anhängen dauert Sekunden bis Minuten. Bis
+   hierher passierte in dieser Zeit auf der Karte NICHTS: der Knopf blieb,
+   wie er war, und irgendwann kam ein Toast. Am Telefon steht der über der
+   Aktionsleiste und ist nach 2,6 Sekunden weg — wer in dem Moment wegsieht,
+   weiss nicht, ob überhaupt etwas geschieht, und tippt ein zweites Mal.
+
+   Der mittlere Zustand ist der, den man sonst verpasst. Deshalb bekommt er
+   ein eigenes Zeichen und nicht nur einen anderen Text: einen Kreisel, der
+   sich dreht, solange wirklich etwas läuft.
+
+   WER KEINE BEWEGUNG MAG, BEKOMMT KEINE — dann steht der Kreisel still. Er
+   ist dann ein Ring statt einer Drehung, und der Text daneben sagt
+   ohnehin, was los ist. Ein Zustand, der NUR über Bewegung erkennbar wäre,
+   wäre derselbe Fehler wie einer, der nur über Farbe geht (CLAUDE.md §38).
+   -------------------------------------------------------------------------- */
+.home-sich button.laeuft,
+.home-sich button.fertig{ display:inline-flex; align-items:center; gap:8px }
+.home-sich button.laeuft{ opacity:.85; cursor:progress }
+/* `!important` gegen `button[disabled]{opacity:.4}` in bausteine.css.
+   Der Knopf BLEIBT gesperrt, und das ist richtig — ein zweiter Klick
+   während der Nachschau würde eine zweite Sicherung starten. Aber gesperrt
+   heisst hier nicht „nicht gemeint": es ist die Erfolgsmeldung, und die
+   muss man lesen können. Gemessen war sie auf Grün bei 40 Prozent
+   Deckkraft — hübsch und unlesbar. */
+.home-sich button.fertig{
+  background:var(--erfolg, #16a34a); color:#fff;
+  opacity:1 !important; cursor:default;
+}
+.hs-kreisel{
+  width:13px; height:13px; flex:0 0 13px; border-radius:50%;
+  border:2px solid currentColor; border-top-color:transparent;
+  animation:hs-dreh .8s linear infinite;
+}
+@keyframes hs-dreh{ to{ transform:rotate(360deg) } }
+@media(prefers-reduced-motion:reduce){
+  .hs-kreisel{ animation:none; border-top-color:currentColor; opacity:.5 }
+}
+
 .home-sich-gut{padding:9px 14px; border-left-color:var(--c-green, #4dab9a)}
 .home-sich-gut .hs-zeichen{background:var(--b-green); color:var(--c-green)}
 .home-sich-gut .hs-text{color:var(--text-dim)}
@@ -490,3 +531,206 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
     align-items:center; justify-content:center}
 }
 
+
+/* ===========================================================================
+   KOMPASS UND MEHR — die zwei Bereiche aus Redurs Entwurf (E42)
+   ---------------------------------------------------------------------------
+   Der Kompass ist der Bereich, den der Entwurf als einzigen ganz neu
+   erfindet, und er schliesst die grösste Lücke: Redion kann viel, und
+   nichts davon sagt es von selbst. Wer nicht weiss, dass es Karteikarten
+   gibt, findet sie nie.
+
+   Die Masse folgen dem Entwurf: Zeilen ab 54 px, Abschnittsüberschriften
+   19 px, Beiwerk in `--text-faint`. Am Telefon greift zusätzlich der Block
+   weiter oben, der `.home-liste button` auf 54 px Mindesthöhe setzt.
+   =========================================================================*/
+.kp-vor{font-size:16px; color:var(--text-dim); line-height:1.45; margin:0 0 22px}
+
+.kp-liste{display:flex; flex-direction:column}
+.kp-zeile{padding:13px 0; border-bottom:1px solid var(--line)}
+.kp-zeile b{display:block; font-size:15.5px; font-weight:600}
+.kp-zeile span{display:block; font-size:14px; color:var(--text-dim);
+               line-height:1.45; margin-top:3px}
+
+.kp-befehl{display:flex; align-items:center; gap:14px; min-height:50px;
+           border-bottom:1px solid var(--line)}
+.kp-befehl code{flex:0 0 46px; font:600 15px var(--mono); color:var(--accent)}
+.kp-befehl > span:not(.kp-marke){flex:1; font-size:15px}
+
+/* DER STAND STEHT DABEI, und das ist Absicht: ein Wegweiser, der Geplantes
+   wie Fertiges aussehen lässt, ist eine Enttäuschung mit Ansage. */
+.kp-marke{flex:none; font-size:12px; padding:3px 9px; border-radius:999px;
+          white-space:nowrap}
+.kp-fertig{background:var(--bg-hover); color:var(--accent)}
+.kp-teilweise{border:1px solid var(--line); color:var(--text-dim)}
+.kp-geplant{color:var(--text-faint)}
+
+.kp-taste{display:flex; align-items:center; gap:14px; min-height:46px;
+          border-bottom:1px solid var(--line)}
+.kp-taste kbd{flex:none; font:13px var(--mono); color:var(--text-dim);
+              background:var(--bg-card); padding:5px 9px; border-radius:8px}
+.kp-taste span{font-size:15px; color:var(--text-dim)}
+.kp-fuss{font-size:13px; color:var(--text-faint); margin-top:10px}
+
+.kp-wolke{display:flex; flex-wrap:wrap; gap:8px}
+.kp-wolke span{display:inline-flex; align-items:center; height:36px;
+               padding:0 14px; border-radius:999px; background:var(--bg-card);
+               color:var(--text-dim); font-size:14px; white-space:nowrap}
+
+.kp-karte{margin-top:28px; padding:20px; border-radius:16px;
+          background:var(--bg-card)}
+.kp-karte b{display:block; font-size:17px; margin-bottom:8px}
+.kp-karte div{font-size:14.5px; color:var(--text-dim); line-height:1.55}
+.kp-karte button{margin-top:16px; height:44px; padding:0 20px;
+                 border-radius:999px; border:1px solid var(--accent);
+                 color:var(--accent); font-size:15px}
+.kp-karte button:hover{background:var(--bg-hover)}
+
+/* Der Untertext in „Mehr" — er ist der ganze Unterschied zwischen einer
+   Liste und einem Wegweiser. */
+.home-liste .pt .snip{display:block; font-size:13.5px; color:var(--text-dim);
+                      line-height:1.35; margin-top:2px; font-weight:400}
+.home-liste button:has(.snip){align-items:flex-start; padding-top:11px;
+                              padding-bottom:11px}
+
+@media(max-width:760px){
+  .kp-vor{font-size:17px}
+  .kp-zeile b{font-size:17px}
+  .kp-zeile span{font-size:15px}
+  .kp-befehl{min-height:54px}
+  .kp-befehl > span:not(.kp-marke){font-size:16px}
+  .kp-taste{min-height:50px}
+  .kp-taste span{font-size:16px}
+  .kp-wolke span{height:38px; font-size:15px}
+  .home-liste .pt .snip{font-size:14px}
+}
+
+/* Die Symbole in „Mehr" gehören in EINE Spalte. Ohne feste Breite richtet
+   sich jede Zeile nach ihrem eigenen Zeichen — ⌨ ist breiter als 🧭 —, und
+   die Titel stehen treppenförmig. Am Bildschirm sieht man das sofort, im
+   Code nie. */
+.home-liste .mz{flex:0 0 26px; text-align:center}
+@media(max-width:760px){ .home-liste .mz{flex:0 0 28px} }
+
+/* Die Symbole in „Mehr" gehören in EINE Spalte. Ohne feste Breite richtet
+   sich jede Zeile nach ihrem eigenen Zeichen — ⌨ ist breiter als 🧭 —, und
+   die Titel stehen treppenförmig. Am Bildschirm sieht man das sofort, im
+   Code nie. */
+.home-liste .mz{flex:0 0 26px; text-align:center}
+@media(max-width:760px){ .home-liste .mz{flex:0 0 28px} }
+
+/* ===========================================================================
+   LADESKELETTE (Vorgabe §23, E46)
+   ---------------------------------------------------------------------------
+   „Use skeletons, not random spinners everywhere."
+
+   Der Grund ist nicht Mode. Ein Kreisel sagt „warte", ein Skelett sagt
+   „hier kommen sechs Zeilen mit einem Symbol links und einem Datum
+   rechts" — man weiss, was gleich dasteht, und das Auge hat schon einen
+   Platz dafür. Wenn der Inhalt kommt, springt nichts.
+
+   DAS SCHIMMERN IST ABSICHTLICH LEISE: von .35 auf .7 und zurück, über
+   1,4 Sekunden. Die Vorgabe sagt „very subtle shimmer" und „do not use
+   bright shimmer" — ein Skelett, das blitzt, zieht die Aufmerksamkeit auf
+   das Warten statt auf das, was kommt.
+
+   Wer keine Bewegung mag, bekommt keine: die globale Regel in
+   `bausteine.css` hält auch diese Animation an, und ein stehendes Skelett
+   erfüllt seinen Zweck weiterhin — es zeigt die Form.
+   =========================================================================*/
+.sk-liste{display:flex; flex-direction:column}
+.sk-zeile{display:flex; align-items:center; gap:14px; height:56px;
+          animation:sk-atmen 1.4s ease-in-out infinite}
+.sk-punkt{width:26px; height:26px; border-radius:8px; background:var(--bg-card);
+          flex:none}
+.sk-strich{height:12px; border-radius:6px; background:var(--bg-card)}
+.sk-rechts{margin-left:auto; height:12px; width:62px; border-radius:6px;
+           background:var(--bg-card); opacity:.6; flex:none}
+.sk-karten{display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:26px}
+.sk-karte{height:110px; border-radius:18px; background:var(--bg-card);
+          animation:sk-atmen 1.4s ease-in-out infinite}
+.sk-titel{font-size:14px; color:var(--text-faint); margin:0 0 12px}
+
+@keyframes sk-atmen{
+  0%{opacity:.35} 50%{opacity:.7} 100%{opacity:.35}
+}
+
+/* Jede Zeile atmet ein wenig versetzt — sonst pulsiert die ganze Liste
+   wie ein Block, und das wirkt wie ein Fehler statt wie Warten. */
+.sk-zeile:nth-child(2){animation-delay:.12s}
+.sk-zeile:nth-child(3){animation-delay:.24s}
+.sk-zeile:nth-child(4){animation-delay:.36s}
+.sk-zeile:nth-child(5){animation-delay:.48s}
+.sk-zeile:nth-child(6){animation-delay:.6s}
+
+@media(max-width:760px){
+  .sk-zeile{height:60px}
+  .sk-karte{height:118px; border-radius:20px}
+  .sk-titel{font-size:15px}
+}
+
+/* Leere Zustände (Vorgabe §13). „Noch keine Seiten" allein ist eine
+   Feststellung; erst die Knöpfe daneben machen daraus einen Weg. Und der
+   zweite — Importieren — ist wichtiger, als er aussieht: wer gerade das
+   Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. */
+.leer-zustand{padding:34px 20px; text-align:center; border:1px dashed var(--line);
+  border-radius:18px; margin:6px 0 8px}
+.lz-zeichen{font-size:38px; opacity:.5; margin-bottom:12px}
+.leer-zustand b{display:block; font-size:19px; margin-bottom:7px}
+.leer-zustand span{display:block; font-size:14.5px; color:var(--text-dim);
+  line-height:1.5; max-width:320px; margin:0 auto}
+.lz-knoepfe{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+  margin-top:18px}
+.lz-knoepfe button{min-height:44px; padding:0 20px; border-radius:999px;
+  border:1px solid var(--line); font-size:15px}
+.lz-knoepfe button.prim{border-color:var(--accent); color:var(--accent)}
+.lz-knoepfe button:hover{background:var(--bg-hover)}
+@media(max-width:760px){
+  .leer-zustand b{font-size:21px}
+  .leer-zustand span{font-size:16px}
+  .lz-knoepfe button{min-height:48px; font-size:16px}
+}
+
+/* ===========================================================================
+   ZEILEN, DIE VERSETZT HEREINKOMMEN (Bewegungs-Vorgabe, E47)
+   ---------------------------------------------------------------------------
+   „rows fade in upward by 4–8px, stagger 20ms per row, max total stagger
+   180ms."
+
+   WARUM VERSETZT UND NICHT ALLE AUF EINMAL. Erscheint eine Liste als Block,
+   sieht man einen Sprung — das Auge liest „da war nichts, jetzt ist alles
+   da" und muss von vorn anfangen. Kommen die Zeilen nacheinander, folgt der
+   Blick der Bewegung von oben nach unten, also genau in Leserichtung, und
+   ist beim Ende der Animation schon bei der ersten Zeile.
+
+   DIE OBERGRENZE IST DER PUNKT. Bei 20 ms je Zeile und zwanzig Zeilen wären
+   das 400 ms, in denen die Liste noch nicht steht — das ist keine Bewegung
+   mehr, das ist Warten. Deshalb bekommen nur die ersten neun Zeilen eine
+   Verzögerung; alles darunter kommt sofort. Wer so weit unten liest, hat
+   ohnehin gescrollt.
+
+   NUR AM TELEFON. Am Rechner wechselt man Ansichten mit der Maus und
+   erwartet, dass sie da sind.
+   =========================================================================*/
+@media(max-width:760px){
+  .home-liste button,
+  .kp-zeile, .kp-befehl, .kp-taste{
+    animation:zeile-hoch var(--motion-normal) var(--ease-enter) both;
+  }
+  .home-liste button:nth-child(1),
+  .kp-zeile:nth-child(1){ animation-delay:0ms }
+  .home-liste button:nth-child(2){ animation-delay:20ms }
+  .home-liste button:nth-child(3){ animation-delay:40ms }
+  .home-liste button:nth-child(4){ animation-delay:60ms }
+  .home-liste button:nth-child(5){ animation-delay:80ms }
+  .home-liste button:nth-child(6){ animation-delay:100ms }
+  .home-liste button:nth-child(7){ animation-delay:120ms }
+  .home-liste button:nth-child(8){ animation-delay:140ms }
+  .home-liste button:nth-child(9){ animation-delay:160ms }
+  /* Ab der zehnten Zeile ohne Verzögerung — siehe oben. */
+  .home-liste button:nth-child(n+10){ animation-delay:0ms }
+}
+@keyframes zeile-hoch{
+  from{ opacity:0; transform:translateY(6px) }
+  to{ opacity:1; transform:translateY(0) }
+}

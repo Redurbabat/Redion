@@ -49,6 +49,29 @@
 .agent-karte:hover{background:var(--bg-hover)}
 .agent-karte.on{border-color:var(--accent); background:var(--b-blue)}
 .agent-ico{font-size:19px}
+
+/* DER STREIFEN MIT DEM NOTAUS (L11, E52). Er steht ganz oben im
+   Agentenfenster, weil man ihn dann sucht, wenn gerade etwas schiefläuft.
+
+   Steht der Schalter, wird der Streifen rot UND sagt es in ganzen Worten:
+   „Angehalten. Kein Agent läuft, auch kein Auslöser." Eine rote Fläche
+   allein wäre eine Auskunft nur über Farbe (CLAUDE.md §38) — und ausgerechnet
+   bei einer Sicherung darf man nicht raten müssen, ob sie greift. */
+.ag-grenzstreifen{display:flex; align-items:center; gap:12px;
+  padding:9px 18px; border-bottom:1px solid var(--line); background:var(--bg-card);
+  font-size:13px; color:var(--text-dim)}
+.ag-grenzstreifen .ags-text{flex:1; min-width:0}
+.ag-grenzstreifen b{color:var(--text); font-weight:600}
+.ag-grenzstreifen button{flex:0 0 auto; padding:6px 12px; border:1px solid var(--line);
+  border-radius:7px; font-size:13px; min-height:34px}
+.ag-grenzstreifen button:hover{background:var(--bg-hover)}
+.ag-grenzstreifen.aus{background:var(--b-red, rgba(239,68,68,.14))}
+.ag-grenzstreifen.aus, .ag-grenzstreifen.aus b{color:var(--text)}
+.ag-grenzstreifen.aus button.prim{background:var(--accent); color:#fff; border-color:transparent}
+@media(max-width:760px){
+  .ag-grenzstreifen{flex-wrap:wrap}
+  .ag-grenzstreifen button{min-height:44px; width:100%}
+}
 .agent-karte b{font-size:13.5px; font-weight:500}
 .agent-karte span{font-size:11.5px; color:var(--text-faint); line-height:1.45}
 .agent-karte em{font-size:11px; color:var(--text-faint); font-style:normal; margin-top:2px}
@@ -112,7 +135,9 @@
    ========================================================================== */
 :root{ --vh: 1vh; }
 
-@media(max-width:700px){
+/* 760, nicht 700 — dieselbe Grenze wie die Telefonleisten.
+   Dazwischen lagen sie sonst ÜBER der Rechner-Seitenleiste. */
+@media(max-width:760px){
   html, body{ height:calc(var(--vh, 1vh) * 100); overflow:hidden; }
 
   /* Rand um Kerbe und Streifen */
@@ -149,7 +174,18 @@
      bleiben also stehen: man sieht weiter, in welchem Bereich man ist, und
      kommt mit einem Tipp in den nächsten. Das ist genau die Rolle, die die
      Vorlage ihnen gibt. */
-  #sidebar{ position:fixed; left:0; top:60px; height:calc(100% - 60px);
+  /* `--hoben` STATT DER 60. Genau diese Lehre steht weiter unten schon
+     einmal, bei `#main` — und sie war hier nicht angewandt.
+
+     Gemessen am 8. August: die Pillenleiste endet bei 80 px, die Schublade
+     begann bei 60. Die obersten 20 px lagen dahinter, und das war die
+     Zeile „🔍 Suchen" — halb abgeschnitten, gleich die erste im Blatt.
+     Am iPhone, wo die Kerbe 47 px dazulegt, wäre `--hoben` 127 px und die
+     Schublade begänne immer noch bei 60: die ersten anderthalb Zeilen weg.
+
+     Der Kommentar darüber sagt „sie beginnt UNTER den Pillen". Die Absicht
+     stand also da, nur die Zahl folgte ihr nicht. */
+  #sidebar{ position:fixed; left:0; top:var(--hoben); height:calc(100% - var(--hoben));
             transform:translateX(-102%); transition:transform .22s ease;
             width:100%; z-index:390; flex:0 0 auto;
             border-right:none; }
@@ -192,8 +228,45 @@
   .fbtns{ flex-wrap:wrap; }
   .fbtns button{ flex:1 1 auto; min-height:42px; }
 
-  /* Das KI-Fenster nimmt das ganze Telefon ein */
-  #ai{ width:100% !important; }
+  /* ------------------------------------------------------------------------
+   * DAS KI-FENSTER KOMMT VON UNTEN, NICHT VON DER SEITE (Vorgabe §19)
+   * ------------------------------------------------------------------------
+   * Es schob sich bisher als volle Fläche von rechts herein — die Form,
+   * die am Rechner richtig ist, weil es dort eine Spalte NEBEN der Seite
+   * ist. Am Telefon gibt es kein Neben; dort ist es ein Blatt, und es
+   * kommt von da, wo der Daumen es angetippt hat: von unten.
+   *
+   * Und es lässt oben einen Streifen frei. Ein Blatt, das den ganzen
+   * Bildschirm nimmt, ist keine Überlagerung mehr, sondern eine neue
+   * Seite — man verliert das Gefühl, wo man herkam. Die Vorgabe sagt
+   * dasselbe: „No huge chatbot interface."
+   * --------------------------------------------------------------------- */
+  #ai{
+    width:100% !important;
+    /* Über den Hinweisstreifen (900), unter das R-Blatt (950). Derselbe
+       Fund wie beim Speicherbalken: der Streifen stand mitten im
+       Eingabefeld. Ein Blatt, in das man tippen soll, darf nichts
+       verdecken — und nichts darf es verdecken. */
+    z-index:920 !important;
+    left:0; right:0; bottom:0; top:auto !important;
+    height:88vh !important; max-height:88vh;
+    border-left:none; border-top:1px solid var(--line);
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -18px 50px rgba(0,0,0,.45);
+    transform:translateY(100%);
+    transition:transform var(--motion-slow) var(--ease-enter);
+  }
+  #ai.open{ transform:translateY(0) }
+
+  /* Der Griff oben — er sagt ohne Wort, dass man das Blatt wegwischen
+     kann. `::before` statt eines Elements: die Zeile im Markup gäbe es
+     am Rechner auch, und dort wäre sie sinnlos. */
+  #ai::before{
+    content:''; position:absolute; left:50%; top:9px;
+    transform:translateX(-50%);
+    width:40px; height:5px; border-radius:3px; background:var(--line-stark);
+  }
+  .ai-head{ padding-top:22px }
   .ai-quick{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
   .ai-quick button{ flex:0 0 auto; }
 
@@ -206,7 +279,9 @@
 
 /* Der Menue-Knopf erscheint nur auf dem Telefon */
 .nur-telefon{ display:none; }
-@media(max-width:700px){ .nur-telefon{ display:inline-flex; } }
+/* 760, nicht 700 — dieselbe Grenze wie die Telefonleisten.
+   Dazwischen lagen sie sonst ÜBER der Rechner-Seitenleiste. */
+@media(max-width:760px){ .nur-telefon{ display:inline-flex; } }
 
 /* Als installierte App: kein Textmarkieren beim langen Tippen auf Knoepfe */
 @media(display-mode: standalone){
@@ -279,6 +354,41 @@
 .fr-punkt{width:13px; height:13px; border-radius:4px; flex:0 0 auto}
 .fr-text{flex:1; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .fr-zeile button{padding:2px 6px; border-radius:4px; color:var(--text-dim); font-size:13px}
+/* Die Zeile zum Anlegen einer Regel im Tabellenblock (L15, E53). Ein Satz
+   in einer Zeile — „B2:B40 ist grösser als 100, dann rot" —, kein Assistent
+   in drei Schritten. Am Telefon bricht sie um, statt zu schrumpfen: vier
+   Felder auf 390 px wären alle unbedienbar. */
+.rg-hinweis{padding:10px 18px 12px}
+.rg-liste{max-height:38vh; overflow-y:auto; padding:2px 18px 6px;
+  border-top:1px solid var(--line)}
+.rg-liste .fr-zeile{flex-wrap:nowrap}
+.rg-liste .fr-zeile button{flex:0 0 auto; width:auto; min-height:32px;
+  padding:3px 8px; border-radius:5px; color:var(--text-dim); font-size:14px}
+.rg-liste .fr-zeile button:hover{background:var(--bg-hover); color:var(--text)}
+.rg-neu{display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+  padding:12px 18px; border-top:1px solid var(--line)}
+.rg-neu button.prim{background:var(--accent); color:#fff; border-color:transparent;
+  font-weight:500}
+.rg-neu input, .rg-neu select{
+  padding:8px 10px; background:var(--bg-input); border:1px solid var(--line);
+  border-radius:7px; outline:none; color:var(--text); font-size:13.5px; min-height:38px}
+.rg-neu input:focus, .rg-neu select:focus{border-color:var(--accent)}
+.rg-neu #rg-bereich{flex:1 1 140px; min-width:120px}
+.rg-neu button{padding:8px 14px; border-radius:7px; font-size:13.5px; min-height:38px}
+/* Der Farbverlauf als Zeichen für „Skala" oder „Balken" — dieselben drei
+   Farben wie die Skala selbst, damit dasselbe Bild dasselbe bedeutet. */
+.fr-punkt.fr-verlauf{background:linear-gradient(90deg,
+  hsl(0 62% 46%), hsl(55 62% 46%), hsl(135 62% 40%))}
+@media(max-width:760px){
+  .rg-neu{padding:12px 16px}
+  .rg-neu input, .rg-neu select, .rg-neu button{min-height:44px; font-size:16px}
+  .rg-neu #rg-bereich{flex:1 1 100%}
+  .rg-neu button{flex:1 1 100%}
+  /* An- und Ausschalten und Löschen sind am Telefon Fingerziele, keine
+     Zeichen am Zeilenende (CLAUDE.md §37). */
+  .rg-liste .fr-zeile button{min-height:44px; min-width:44px}
+  .rg-hinweis{padding:10px 16px 12px}
+}
 .fr-farben{display:flex; gap:5px; margin-top:5px}
 .fr-farben button{width:26px; height:26px; border-radius:6px; border:2px solid transparent}
 .fr-farben button.on{border-color:var(--text)}
@@ -719,8 +829,21 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
   /* --- OBEN: die Bereiche als Pillen ---------------------------------- */
   /* MASSE NACH DER TELEFON-VORGABE (E37): die Leiste ist 96-112 px hoch
-     samt Kerbe, die Tasten 52 px, der Rand 28 px. Vorher waren es 60, 44
-     und 12 — das las sich am Rechner sauber und war am Daumen zu klein. */
+     samt Kerbe, die Tasten 56 px, der Rand 28 px. Vorher waren es 60, 44
+     und 12 — das las sich am Rechner sauber und war am Daumen zu klein.
+
+     DIE HÖHE STEHT AN EINER STELLE, und das ist der eigentliche Punkt
+     dieser Zeile. Vorher stand sie an zweien: die Leiste rechnete sich aus
+     12 + 52 + 12 + Kerbe zu 76 px (und am iPhone zu 123), und darunter
+     hielt `#main` schlicht `padding-top:60px` frei. Gemessen am 7. August
+     bei 390 px: die Seitenleiste darunter begann bei y=60 und die Pillen
+     reichten bis 76 — die obersten 16 px des Zurück-Knopfes lagen hinter
+     der Leiste. Am iPhone mit 47 px Kerbe wären es 63 px gewesen, also
+     die ganze Zeile.
+
+     Zwei Zahlen, die dasselbe meinen müssen, gehen irgendwann
+     auseinander. Also nur noch eine. */
+  :root{ --hoben: calc(80px + env(safe-area-inset-top)) }
   #handy-oben{
     display:flex; align-items:center; gap:10px;
     position:fixed; left:0; right:0; top:0; z-index:401;
@@ -733,36 +856,96 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      letzte Pille stand ausserhalb des Bildes. Am 428er iPhone fiel das nie
      auf; E37 sagt aber 390 zuerst.
 
-     Unter 420 px wird deshalb enger gerückt: Rand 20 statt 28, Abstand 6
-     statt 10, Pillenpolster 11 statt 13. Das reicht für „Eingang", das
-     längste der fünf Wörter. Die Tasten bleiben 52 px — an der Fläche, die
-     der Daumen trifft, wird nicht gespart; gespart wird am Weissraum
-     zwischen ihnen. */
-  @media(max-width:420px){ #handy-oben{ gap:6px; padding-left:20px; padding-right:20px } }
-  @media(max-width:380px){ #handy-oben{ padding-left:14px; padding-right:14px } }
+     NACHGEMESSEN AM 7. AUGUST, nachdem die Tasten von 52 auf 56 px
+     gewachsen sind. Vier Tasten mal 4 px sind 16 px, und die haben zwei
+     Breiten gekippt, die vorher gerade noch gingen:
+
+       Breite   längster Reiter („Termine")   davor
+       428 px   435 px  →  passt nicht        423 px  passte knapp
+       390 px   395 px  →  passt nicht        379 px  passte
+       375 px   375 px  →  passt genau
+
+     An der Fläche, die der Daumen trifft, wird nicht gespart — gespart
+     wird am Weissraum. Also rückt jetzt schon ab 440 px zusammen (das
+     nimmt auch das 428er iPhone mit, das vorher ausserhalb jeder Regel
+     stand) und noch einmal ab 380 px:
+
+       ab 440 px   Rand 17, Abstand 5, Pillenpolster 11   →  385 px
+       ab 380 px   Rand 10, Abstand 4, Pillenpolster 9    →  359 px
+
+     Damit passt jede gängige Telefonbreite: 428, 393, 390, 375, 360.
+     Darunter — 320 px, also iPhone SE der ersten Bauart — rollt die
+     Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
+     geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
+     nichts mehr zu holen ist. */
+  @media(max-width:440px){
+    #handy-oben{ gap:5px; padding-left:17px; padding-right:17px }
+  }
+  @media(max-width:380px){ #handy-oben{ gap:4px; padding-left:10px; padding-right:10px } }
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
     flex:0 0 auto;
-    height:52px; min-width:52px;
+    height:56px; min-width:56px;
     border-radius:999px;
     border:1px solid var(--line);
     background:transparent; color:var(--text-dim);
     display:flex; align-items:center; justify-content:center; gap:8px;
     padding:0 13px; font-size:17px; line-height:1;
-    position:relative;
+    position:relative; z-index:1;
     transition:background .14s, color .14s;
   }
   #handy-oben button:active{ background:var(--bg-hover) }
+
+  /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
+  /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
+     wandert. Der Unterschied ist keine Spielerei: springt die Fläche,
+     liest das Auge „hier ist etwas Neues" und sucht die Stelle; wandert
+     sie, folgt der Blick von selbst mit und ist schon da.
+
+     Sie liegt unter den Knöpfen (`z-index:0` gegen deren 1) und nimmt
+     keine Berührung an. Ort und Breite setzt `handyLeiste()` — hier steht
+     nur, WIE sie sich dorthin bewegt.
+
+     `left:0` und `translateX` statt `left:<x>`: eine Verschiebung
+     bewegt nur den fertigen Bildinhalt, `left` rechnet die ganze Leiste
+     neu. Auf einem älteren Telefon ist das der Unterschied zwischen weich
+     und ruckelig. Die Breite muss leider bleiben, wie sie ist — die
+     aktive Pille wächst um ihre Beschriftung, und dafür gibt es keine
+     Verschiebung. */
+  #handy-oben #ho-pille{
+    position:absolute; left:0; top:0; z-index:0;
+    height:56px; width:0; border-radius:999px;
+    background:var(--bg-hover);
+    pointer-events:none; opacity:0;
+    transition:transform var(--motion-normal) var(--ease-standard),
+               width var(--motion-normal) var(--ease-standard),
+               opacity var(--motion-fast) linear;
+  }
+  /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
+     beim Öffnen der App von der linken Kante herein, und das sieht aus
+     wie ein Fehler statt wie eine Antwort auf einen Tipp.
+
+     WICHTIG FÜR SPÄTER: heute wäre diese Zeile auch ohne Wirkung nicht
+     zu merken. Ein Übergang läuft nur, wenn der Ausgangswert schon einmal
+     gemalt wurde — und die Pille steht beim ersten Setzen noch auf
+     `opacity:0` und hat nie einen gerechneten Ort gehabt. Der Schutz
+     greift also erst, wenn jemand oben Anfangswerte einträgt, die
+     WIRKLICH gemalt werden. Genau das prüft `test114` §17 nach: mit
+     einem gemalten `width:40px; transform:translateX(0)` glitt sie über
+     elf Zwischenorte herein. Die Zeile ist keine tote Vorsicht, sie ist
+     die Sicherung dagegen. */
+  #handy-oben #ho-pille.stumm{ transition:none }
 
   /* DER NAME STEHT NUR AN DER AKTIVEN PILLE. Das ist die ganze Idee: er
      kostet Platz, und Platz gibt es nur einmal — also bekommt ihn die
      Stelle, an der er etwas sagt. */
   #handy-oben button b{ display:none; font-size:16px; font-weight:600; letter-spacing:-.01em }
-  #handy-oben button.an{
-    background:var(--bg-hover); color:var(--text);
-    border-color:transparent;
-  }
+  /* KEIN EIGENER HINTERGRUND MEHR. Den bringt `#ho-pille` mit und schiebt
+     ihn herüber; stünde er hier auch, wären es zwei Flächen übereinander
+     und die wandernde käme bei einer schon fertigen an — die Bewegung
+     wäre da und würde nichts erklären. */
+  #handy-oben button.an{ color:var(--text); border-color:transparent }
   #handy-oben button.an b{ display:inline }
 
   /* Das Konto ganz links ist ein Kreis mit dem Anfangsbuchstaben. */
@@ -777,7 +960,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Reihenfolge, und weiter oben verlor er lautlos: gemessen kamen 13 px
      Polster und 16 px Schrift zurück, obwohl der Rand daneben schon eng
      war. Eine Regel, die dasteht und nichts tut, ist schlimmer als keine. */
-  @media(max-width:420px){
+  @media(max-width:440px){
     #handy-oben button{ padding:0 11px }
     #handy-oben button b{ font-size:15px }
   }
@@ -907,8 +1090,13 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   /* --- Platz für beide ------------------------------------------------- */
   /* Oben die Pillenleiste, unten die drei Knöpfe: der Inhalt dazwischen
      braucht an beiden Enden Luft, sonst liegt die erste Zeile unter den
-     Pillen und die letzte unter der KI. */
-  #main{ padding-top:60px }
+     Pillen und die letzte unter der KI.
+
+     `--hoben` STATT EINER ZAHL. Hier stand `60px`, und die Leiste darüber
+     war 76 px hoch — die obersten 16 px des Zurück-Knopfes lagen dahinter.
+     Am iPhone, wo die Kerbe noch 47 px dazulegt, war es die ganze Zeile.
+     Die Marke rechnet die Kerbe mit; sie steht oben bei `#handy-oben`. */
+  #main{ padding-top:var(--hoben) }
   /* Der Inhalt muss unter der Aktionsleiste durchlaufen können, ohne dass
      die letzte Zeile darunter verschwindet: 120 px plus die Kerbe des
      Geräts. Vorher 96 — bei 72 px Leiste blieben 24 px Luft, und mit
@@ -2007,6 +2195,85 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 @media(max-width:760px){ #rg-einladung{left:8px; right:8px; bottom:74px; max-width:none} }
 
 /* --------------------------------------------------------------------------
+ * DER WILLKOMMENSBILDSCHIRM (Vorgabe §11, E55)
+ * --------------------------------------------------------------------------
+ * Er nimmt den ganzen Bildschirm, und das ist genau einmal richtig: beim
+ * allerersten Öffnen, wenn dahinter ohnehin nichts steht, das man kennen
+ * würde. Danach nie wieder.
+ *
+ * AM TELEFON EIN BLATT VON UNTEN, am Rechner ein Kasten in der Mitte —
+ * dieselbe Aufteilung wie bei allen anderen Fenstern (E43). Die drei Wege
+ * sind untereinander, nicht nebeneinander: sie sind nicht gleichwertig,
+ * und drei Knöpfe in einer Reihe behaupten das Gegenteil.
+ * ------------------------------------------------------------------------*/
+#rg-willkommen{
+  position:fixed; inset:0; z-index:960;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,var(--sheet-dim, .5));
+  backdrop-filter:blur(3px);
+  animation:wk-auf var(--motion-normal, .22s) var(--ease-enter, ease-out);
+}
+@keyframes wk-auf{ from{ opacity:0 } to{ opacity:1 } }
+.wk-kasten{
+  width:min(460px, 94vw); max-height:90vh; overflow-y:auto;
+  background:var(--bg-side); border:1px solid var(--line);
+  border-radius:16px; box-shadow:var(--shadow); padding:28px 26px 22px;
+}
+.wk-kopf{ text-align:center; margin-bottom:22px }
+.wk-zeichen{
+  width:56px; height:56px; margin:0 auto 14px; border-radius:16px;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:700;
+}
+.wk-kopf h2{ font-size:22px; font-weight:600; margin-bottom:8px }
+.wk-kopf p{ font-size:14px; color:var(--text-dim); line-height:1.6 }
+.wk-kopf p b{ color:var(--text); font-weight:600 }
+
+.wk-wege{ display:flex; flex-direction:column; gap:9px }
+.wk-weg{
+  display:flex; align-items:center; gap:13px; text-align:left; width:100%;
+  min-height:60px; padding:12px 15px;
+  border:1px solid var(--line); border-radius:12px;
+  background:transparent; color:var(--text);
+  transition:background var(--motion-fast, .12s) var(--ease-standard, ease);
+}
+.wk-weg:hover{ background:var(--bg-hover) }
+.wk-weg:active{ transform:scale(var(--card-press-scale, .985)) }
+/* Eine Tönung DER AKZENTFARBE, nicht `--b-blue`. Das war der erste Wurf,
+   und auf dem Bild sah man sofort, warum er falsch ist: eine blau getönte
+   Karte unter einem orangen Rahmen. `--b-blue` heisst blau, weil es blau
+   ist — es war nie die Farbe des Akzents, sondern eine der zehn
+   Blockfarben, die der Mensch für seine eigenen Blöcke wählt. */
+.wk-weg.prim{
+  border-color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.wk-ico{ font-size:20px; flex:0 0 26px; text-align:center }
+.wk-t{ display:flex; flex-direction:column; gap:2px; min-width:0 }
+.wk-t b{ font-size:15px; font-weight:600 }
+.wk-t i{ font-style:normal; font-size:12.5px; color:var(--text-faint); line-height:1.45 }
+.wk-fuss{
+  margin-top:18px; font-size:12px; color:var(--text-faint);
+  line-height:1.55; text-align:center;
+}
+
+@media(max-width:760px){
+  /* Von unten, wie jedes andere Blatt am Telefon. Und mit Luft für die
+     Kerbe: ein „Loslegen", das unter dem Balken des Geräts liegt, ist
+     kein Knopf. */
+  #rg-willkommen{ align-items:flex-end }
+  .wk-kasten{
+    width:100%; max-width:none; border-radius:20px 20px 0 0;
+    border-left:0; border-right:0; border-bottom:0;
+    padding:24px 20px calc(20px + env(safe-area-inset-bottom));
+    max-height:92vh;
+    animation:blatt-hoch var(--motion-slow, .32s) var(--ease-enter, ease-out);
+  }
+  .wk-weg{ min-height:66px }
+}
+
+/* --------------------------------------------------------------------------
  * WAS SEITHER DAZUGEKOMMEN IST
  * --------------------------------------------------------------------------
  * Dieselbe Ecke, dieselbe Machart wie die Begrüssung — nur höher, weil hier
@@ -2213,8 +2480,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Seitenleiste des Rechners herein — Baum, Reiter, 33-px-Zeilen. Hier sind
    die Zeilen 56 px hoch: darunter trifft der Daumen die Nachbarzeile mit.
    =========================================================================*/
+/* Z-INDEX 950, NICHT 700. Der Hinweisstreifen („1 Karteikarte ist fällig")
+   liegt auf 900 und stand damit MITTEN AUF dem Speicherbalken des Blattes —
+   gesehen am 7. August, im Code nicht zu ahnen. Ein Blatt über den ganzen
+   Bildschirm muss über allem liegen, was sonst über der Seite schwebt;
+   sonst spricht etwas hindurch, das gerade nicht gemeint ist. */
 #r-blatt{
-  position:fixed; inset:0; z-index:700; background:var(--bg);
+  position:fixed; inset:0; z-index:950; background:var(--bg);
   display:flex; flex-direction:column;
   padding:calc(14px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
   transform:translateY(14px); opacity:0;
@@ -2251,3 +2523,78 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 
 /* Am Rechner gibt es dieses Blatt nicht — dort ist die Seitenleiste richtig. */
 @media(min-width:701px){ #r-blatt{ display:none } }
+
+/* ===========================================================================
+   BERÜHRUNGSRÜCKMELDUNG — jedes Antippen antwortet (E43)
+   ---------------------------------------------------------------------------
+   Am Telefon gibt es kein Hover. Ohne :active antwortet also GAR NICHTS auf
+   eine Berührung: man tippt, und bis die neue Ansicht steht, weiss man
+   nicht, ob man getroffen hat. Bei einer Ansicht, die 200 ms braucht, sind
+   das 200 ms Zweifel — und Zweifel führen zum zweiten Tippen.
+
+   Deshalb hier, und nur am Telefon: eine Antwort, die man spürt, bevor
+   irgendetwas geladen ist.
+
+   `transform` und `opacity` sind mit Absicht die einzigen Eigenschaften,
+   die sich bewegen — nur diese beiden kann der Browser ohne neues Rechnen
+   des Aufbaus zeichnen. Eine Höhe zu animieren sieht auf dem Rechner gleich
+   aus und ruckelt auf dem Telefon.
+   =========================================================================*/
+@media(max-width:760px){
+  .home-karten .hk,
+  .home-liste button,
+  #handy-oben button,
+  #handy-unten > *,
+  #r-blatt .rm-gruppe button,
+  .kp-wolke span{
+    transition: transform var(--motion-fast) var(--ease-standard),
+                background-color var(--motion-fast) var(--ease-standard);
+  }
+  .home-karten .hk:active,
+  .home-liste button:active{
+    transform: scale(var(--card-press-scale));
+    background: var(--bg-hover);
+  }
+  #handy-oben button:active,
+  #handy-unten > *:active,
+  #r-blatt .rm-gruppe button:active{
+    transform: scale(var(--press-scale));
+  }
+
+  /* Das Blatt von unten darf schwer wirken — langsamer herein als hinaus,
+     genau wie die Vorgabe es sagt. */
+  #r-blatt{ transition: opacity var(--motion-slow) var(--ease-enter),
+                        transform var(--motion-slow) var(--ease-enter) }
+  .menu.blatt{ animation: blatt-hoch var(--motion-slow) var(--ease-enter) }
+}
+@keyframes blatt-hoch{
+  from{ transform:translateY(16px); opacity:0 }
+  to{ transform:translateY(0); opacity:1 }
+}
+
+/* Zwei Zeilen im Blatt „Neu erstellen": Name und der Satz darunter. Ohne
+   den Satz ist „Neue Tabelle" nur ein Wort — mit ihm weiss man, dass darin
+   gerechnet wird. Die Vorgabe verlangt 60 px Mindesthöhe; hier sind es 62. */
+.menu.blatt button:has(.ne-txt){ align-items:flex-start; min-height:62px }
+.ne-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1;
+         text-align:left }
+.ne-txt b{ font-size:16px; font-weight:500 }
+.ne-txt i{ font-size:13.5px; color:var(--text-dim); font-style:normal;
+           line-height:1.35 }
+.ne-pfeil{ margin-left:auto; color:var(--text-faint); font-size:17px;
+           align-self:center }
+
+/* Der Speicherbalken im R-Blatt (Vorgabe §16). Er beantwortet die Frage,
+   die bei einer App, die alles auf dem Gerät hält, gleich nach „wo bin
+   ich?" kommt: wie viel liegt hier eigentlich. */
+.rm-speicher{ margin:22px 0 8px; padding:16px 18px; border-radius:16px;
+              background:var(--bg-card) }
+.rs-kopf{ display:flex; justify-content:space-between; align-items:baseline;
+          font-size:15px; color:var(--text-dim) }
+.rs-kopf b{ font-size:16px; color:var(--text); font-weight:600 }
+.rs-balken{ height:6px; border-radius:3px; background:var(--bg-hover);
+            margin-top:12px; overflow:hidden }
+.rs-balken i{ display:block; height:100%; background:var(--accent);
+              border-radius:3px }
+.rs-fuss{ font-size:13px; color:var(--text-faint); margin-top:9px;
+          line-height:1.4 }

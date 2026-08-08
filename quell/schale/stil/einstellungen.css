@@ -42,6 +42,9 @@
 .einst-zu{position:absolute; top:12px; right:14px; font-size:15px; color:var(--text-faint);
           width:28px; height:28px; border-radius:6px}
 .einst-zu:hover{background:var(--bg-hover); color:var(--text)}
+/* Der Weg zurück zur Bereichsliste gibt es nur am Telefon — am Rechner
+   stehen beide Spalten nebeneinander, da führt er nirgendwohin. */
+.einst-zurueck{display:none}
 
 .ez-zeile{
   display:flex; align-items:center; gap:20px; padding:13px 0;
@@ -441,3 +444,143 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   border-radius:7px; font-size:14px; font-weight:500; text-decoration:none; cursor:grab}
 .clip-knopf:active{cursor:grabbing}
 
+
+/* ===========================================================================
+   DIE SUCHFILTER ALS MARKEN — am Telefon (Vorgabe §17, E48)
+   ---------------------------------------------------------------------------
+   Vier Auswahlfelder nebeneinander sind am Rechner richtig: sie sind kompakt
+   und man sieht auf einen Blick, was eingestellt ist. Am Telefon sind sie
+   das Gegenteil. Ein `<select>` öffnet dort ein Systemrad über den halben
+   Bildschirm — für „nur Titel" statt „Titel und Inhalt" ist das drei
+   Handgriffe, und währenddessen sieht man die Suche gar nicht mehr.
+
+   Als Marken behalten sie ihre Funktion, brauchen aber nur einen Tipp, und
+   die Trefferliste bleibt die ganze Zeit sichtbar.
+
+   DIE ZEILE ROLLT SEITWÄRTS, statt umzubrechen. Vier Marken in zwei Reihen
+   nähmen 100 px vom Bildschirm — genau die 100 px, in denen die Treffer
+   stehen sollen. Wer den vierten Filter braucht, wischt einmal.
+   =========================================================================*/
+@media(max-width:760px){
+  .such-filter{
+    flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+    padding:0 16px 12px; gap:8px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .such-filter::-webkit-scrollbar{ display:none }
+  .such-filter select{
+    flex:0 0 auto;
+    min-height:42px; padding:0 32px 0 14px;
+    border-radius:999px; font-size:15px;
+    background:var(--bg-card); border-color:transparent;
+    color:var(--text-dim);
+    /* Der eigene Pfeil — der vom System sitzt am Telefon anders und
+       zerschneidet die runde Form. */
+    appearance:none; -webkit-appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, currentColor 50%),
+                     linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+  }
+  /* Ein Filter, der NICHT auf der Vorgabe steht, ist gesetzt — und das
+     muss man sehen, ohne ihn zu öffnen. Sonst sucht man in einem
+     Ausschnitt und weiss es nicht. */
+  .such-filter select:not(.leer){
+    background-color:var(--bg-hover); color:var(--text);
+    border-color:var(--line);
+  }
+
+  /* Die Tastenzeile der Fusszeile nennt ↑ ↓, Enter und Esc. Keine dieser
+     Tasten gibt es auf einer Telefontastatur. Sie stand da, nahm die
+     Höhe von zwei Treffern weg und stimmte kein einziges Mal. Die
+     Suchbefehle daneben gelten auf jedem Gerät und bleiben — in EINER
+     Zeile, die seitwärts rollt, statt in dreien, die den Platz fressen. */
+  .finder.such .hint-tasten{ display:none }
+  .finder.such .hint{
+    white-space:nowrap; overflow-x:auto; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .finder.such .hint::-webkit-scrollbar{ display:none }
+}
+
+
+/* ===========================================================================
+   DIE EINSTELLUNGEN AM TELEFON — zwei Seiten statt zwei Spalten (§12, E58)
+   ---------------------------------------------------------------------------
+   GEMESSEN AM 8. AUGUST BEI 390 PX, und es war die schlechteste Seite der
+   ganzen App: die Rechner-Aufteilung lief unverändert weiter — 236 px
+   Navigation, und für den Inhalt blieben **129 Pixel**. Jede Beschreibung
+   brach in Einzelwörter um („Hell, dunkel oder wie das System" als sechs
+   Zeilen), und die Auswahlfelder daneben ragten über den Rand hinaus.
+
+   Zwei Spalten passen nicht auf ein Telefon. Also zwei SEITEN: erst die
+   Liste der Bereiche, dann der gewählte Bereich mit einem Weg zurück.
+   `data-blick` sagt, welche gerade dran ist.
+
+   UND DIE ZEILEN STAPELN. Beschreibung und Auswahlfeld nebeneinander
+   brauchen Breite, die es nicht gibt. Untereinander bekommt jedes die
+   ganze — der Text liest sich, und das Feld ist 44 px hoch statt 35.
+   =========================================================================*/
+@media(max-width:760px){
+  /* ÜBER DEN HINWEISSTREIFEN. `.overlay` liegt auf 700, der Toast auf 900 —
+     am Rechner ist das richtig, weil das Fenster dort nur die Mitte
+     einnimmt und der Streifen unten daneben Platz hat. Am Telefon füllt
+     es den ganzen Bildschirm, und dann lag „1 Karteikarte ist fällig"
+     mitten in der Liste. Dieselbe Sorte Fund wie beim R-Blatt und beim
+     KI-Fenster; dieselbe Antwort. */
+  .overlay:has(.einst-fenster){ z-index:940; padding-top:0 }
+  .einst-fenster{
+    width:100%; height:100%; max-width:none; max-height:none;
+    border-radius:0; border:0;
+  }
+  /* Beide Teile nehmen die volle Breite; sichtbar ist immer genau einer. */
+  .einst-nav, .einst-inhalt{
+    width:100%; flex:1 1 auto; border-right:0;
+    padding-top:calc(10px + env(safe-area-inset-top));
+    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+  .einst-fenster[data-blick="liste"]   .einst-inhalt{ display:none }
+  .einst-fenster[data-blick="bereich"] .einst-nav{ display:none }
+
+  /* Die Bereiche als Zeilen, die ein Finger trifft — und mit dem Pfeil,
+     der sagt, dass es weitergeht. Ohne ihn sieht die Liste aus wie eine
+     Auswahl, die schon getroffen ist. */
+  .einst-nav button{
+    min-height:52px; font-size:16px; gap:12px; padding:9px 14px;
+    border-radius:10px;
+  }
+  .einst-nav button::after{
+    content:'›'; margin-left:auto; color:var(--text-faint); font-size:17px;
+  }
+  .einst-nav button.on{ background:transparent; font-weight:400 }
+  .einst-nav .mi{ width:24px; flex:0 0 24px; font-size:17px }
+  .einst-konto{ padding:6px 12px 16px }
+
+  .einst-inhalt{ padding-left:16px; padding-right:16px }
+  .einst-zurueck{
+    display:flex; align-items:center; min-height:44px; margin:0 0 6px -6px;
+    padding:0 8px; font-size:15px; color:var(--accent); border-radius:8px;
+  }
+  .einst-zurueck:active{ background:var(--bg-hover) }
+
+  /* Zeile umbrechen: Text oben, Bedienung darunter über die volle Breite. */
+  .ez-zeile{ flex-wrap:wrap; gap:10px; padding:14px 0 }
+  .ez-zeile .ez-text{ flex:1 1 100% }
+  .ez-zeile .ez-steuer{ flex:1 1 100%; flex-wrap:wrap }
+  .ez-steuer select, .ez-steuer input{
+    flex:1 1 auto; min-width:0; width:100%;
+    min-height:44px; font-size:16px;   /* 16 px, sonst zoomt iOS beim Tippen */
+  }
+  .ez-steuer .ez-knopf, .ez-steuer button:not(.schalter){ min-height:44px; padding:0 14px }
+  /* Der Schalter bleibt klein und rutscht nach rechts — er ist die
+     Antwort auf eine Ja-Nein-Frage und braucht keine ganze Zeile. */
+  .ez-zeile .ez-steuer .schalter{ flex:0 0 auto; margin-left:auto }
+
+  /* Das ✕ lag auf der Überschrift „Einstellungen", die dadurch abbrach. */
+  .einst-zu{
+    top:calc(6px + env(safe-area-inset-top)); right:8px;
+    width:44px; height:44px; font-size:18px; z-index:2;
+  }
+  .einst-inhalt h2{ padding-right:44px }
+}

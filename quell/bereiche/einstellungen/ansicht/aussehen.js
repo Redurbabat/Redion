@@ -32,9 +32,20 @@ const Aussehen = (() => {
      * daraus ab. „grund" sagt, ob darüber das helle oder das dunkle Grundgerüst
      * gilt.
      * ======================================================================*/
+    /* STANDARD UND HELL TRAGEN KEINEN EIGENEN AKZENT, und das ist der Punkt:
+       ein Inline-Stil auf `documentElement` schlägt jedes Stilblatt. Solange
+       hier `#2eaadc` stand, konnte `dunkel.css` seinen Akzent gar nicht
+       durchsetzen — die Nocturne-Farbe war gesetzt und blieb unsichtbar.
+  
+       Schlimmer noch: EIN Wert kann für hell und dunkel nicht beide richtig
+       sein. Das Orange, das auf Schwarz mit 6.6:1 leuchtet, kommt auf Weiss
+       auf 2.8:1 — unter jeder Lesbarkeitsgrenze. Genau deshalb steht der
+       Akzent jetzt in `dunkel.css` und `hell.css`, jeder mit seinem eigenen,
+       nachgerechneten Wert. Die anderen Schemata setzen ihn weiter selbst;
+       sie bringen ja auch ihre eigenen Flächen mit. */
     const SCHEMATA = [
-        { id: 'standard', name: 'Standard', grund: 'dark', akzent: '#2eaadc', werte: {} },
-        { id: 'hell', name: 'Hell', grund: 'light', akzent: '#2eaadc', werte: {} },
+        { id: 'standard', name: 'Standard', grund: 'dark', akzent: '', werte: {} },
+        { id: 'hell', name: 'Hell', grund: 'light', akzent: '', werte: {} },
         { id: 'nacht', name: 'Mitternacht', grund: 'dark', akzent: '#6c8cff', werte: {
                 '--bg': '#0f1117', '--bg-side': '#141824', '--bg-card': '#1a1f2e',
                 '--bg-hover': '#232838', '--bg-input': '#1d2231',
@@ -130,8 +141,10 @@ const Aussehen = (() => {
         ['ki', 'KI-Bereich', 'Ctrl+J'],
         ['chat', 'Neuer Chat', 'Ctrl+O'],
         ['seitenleiste', 'Seitenleiste ein und aus', 'Ctrl+\\'],
-        ['reiterNeu', 'Neuer Reiter', 'Ctrl+T'],
-        ['reiterZu', 'Reiter schliessen', 'Ctrl+W'],
+        /* Nicht Ctrl+T und Ctrl+W: die gibt der Browser nicht her, und dann
+           geschieht beides. Siehe `schale/aufbau/reiter.ts`. */
+        ['reiterNeu', 'Neuer Reiter', 'Ctrl+Alt+N'],
+        ['reiterZu', 'Reiter schliessen', 'Ctrl+Alt+W'],
         ['teilen', 'Geteilte Ansicht', 'Ctrl+Alt+S'],
         ['zurueck', 'Zurück', 'Ctrl+['],
         ['vor', 'Vorwärts', 'Ctrl+]'],

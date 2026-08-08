@@ -106,9 +106,161 @@ const Blocks = (() => {
 
   const typ = (id: any) => TYPEN.find((t: any) => t.id === id) || TYPEN[0];
 
+  /* Ziffer → Blockart, aus dem Register. Hier standen dieselben zehn Paare
+     DREIMAL als Literal: für Strg+Umschalt, für die Mac-Belegung Strg+Alt
+     und für die Mehrfachauswahl. Zusammen mit dem `kurz`-Feld im Register
+     waren es vier Kopien einer Zuordnung. */
+  const ZIFFER_TYP = (): Record<string, string> =>
+    (typeof Register !== 'undefined' && Register.bloecke?.zifferZuTyp)
+      ? Register.bloecke.zifferZuTyp()
+      : { '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
+          '6':'number','7':'toggle','8':'code','9':'page' };
+
   /* Die Blocktypen, in die man einen bestehenden Block umwandeln kann. */
   const UMWANDELBAR = ['text','h1','h2','h3','todo','bullet','number','toggle','quote','callout',
                        'code','equation','flashcard','page'];
+
+  /* Die Sprachen des Codeblocks. Stand hier früher mitten im Zeichnen — jetzt
+     oben, weil auch das Markdown-Kürzel ```js sie braucht. */
+  const SPRACHEN = ['Plain Text','JavaScript','TypeScript','JSX','Python','HTML','XML','CSS','SCSS','Less','JSON','YAML','TOML',
+    'SQL','GraphQL','Bash','Shell','PowerShell','Java','C','C++','C#','Go','Rust','Swift','Kotlin','Dart',
+    'PHP','Ruby','Perl','Lua','R','Julia','MATLAB','Haskell','Elixir','Erlang','Clojure','Scala','Objective-C',
+    'Assembly','Docker','Makefile','Nginx','Diff','LaTeX','Markdown'];
+
+  /* Wer ```js tippt, meint JavaScript. Nur die Kurzformen, die sich nicht
+     von selbst ergeben — „python" findet SPRACHEN schon ohne Hilfe. */
+  const SPRACH_KURZ: Record<string, string> = {
+    js: 'JavaScript', ts: 'TypeScript', tsx: 'JSX', py: 'Python',
+    sh: 'Bash', zsh: 'Bash', console: 'Shell', ps1: 'PowerShell',
+    'c++': 'C++', cpp: 'C++', cs: 'C#', 'objective-c': 'Objective-C', objc: 'Objective-C',
+    golang: 'Go', rs: 'Rust', kt: 'Kotlin', rb: 'Ruby', pl: 'Perl',
+    yml: 'YAML', md: 'Markdown', tex: 'LaTeX', dockerfile: 'Docker',
+    text: 'Plain Text', plain: 'Plain Text', txt: 'Plain Text'
+  };
+
+  /** „js" → „JavaScript". Unbekanntes bleibt Plain Text, statt zu verschwinden. */
+  const sprachName = (roh: string): string => {
+    const k = String(roh ?? '').toLowerCase();
+    if (SPRACH_KURZ[k]) return SPRACH_KURZ[k];
+    return SPRACHEN.find(s => s.toLowerCase() === k) || 'Plain Text';
+  };
+
+  /* ========================================================================
+   * MARKDOWN LESEN — die Gegenrichtung zu auswahlAlsText()
+   * ------------------------------------------------------------------------
+   * Strg C schreibt die Auswahl seit jeher als Markdown in die Zwischenablage.
+   * Zurück ging es nicht: eingefügt wurde ein einziger Block mit allen
+   * Rautezeichen darin. Wer eine Seite kopierte und woanders einfügte, bekam
+   * seinen Text — aber nicht mehr seine Gliederung.
+   *
+   * Eine Zeile wird ein Block. Notion macht es genauso, und für eine
+   * Notiz-App ist das die Erwartung; die Markdown-Regel „zwei Zeilen sind ein
+   * Absatz" gilt hier nicht.
+   * ======================================================================*/
+
+  /** Ein gelesener Block: was er ist, was drinsteht, wie tief er sitzt. */
+  type MdBlock = { typ: string; text: string; tiefe: number;
+                   checked?: boolean; lang?: string };
+
+  /** Wie viele Stufen ist die Zeile eingerückt? Vier Leerzeichen = ein Tab. */
+  const mdTiefe = (roh: string): number => {
+    const vorn = /^[\t ]*/.exec(roh)?.[0] ?? '';
+    let n = 0;
+    for (const z of vorn) n += z === '\t' ? 4 : 1;
+    return Math.floor(n / 4);   /* 0-3 Zeichen → 0, 4-7 → 1, 8-11 → 2 */
+  };
+
+  /**
+   * Markdown-Text in Blöcke lesen. Gibt eine flache Liste mit Tiefenangabe
+   * zurück — wer daraus einen Baum bauen will, tut es beim Einfügen.
+   */
+  const mdLesen = (roh: string): MdBlock[] => {
+    const zeilen = String(roh ?? '').replace(/\r\n?/g, '\n').split('\n');
+    const raus: MdBlock[] = [];
+
+    for (let i = 0; i < zeilen.length; i++) {
+      const zeile = zeilen[i] ?? '';
+      const tiefe = mdTiefe(zeile);
+      const t = zeile.trim();
+
+      /* Codezaun: alles bis zum schliessenden Zaun bleibt, wie es ist —
+         auch die leeren Zeilen, auch die Rautezeichen darin. */
+      const auf = /^```([a-zA-Z0-9+#.-]{0,20})\s*$/.exec(t);
+      if (auf) {
+        const inhalt: string[] = [];
+        let zu = false;
+        while (++i < zeilen.length) {
+          if (/^\s*```\s*$/.test(zeilen[i] ?? '')) { zu = true; break; }
+          inhalt.push(zeilen[i] ?? '');
+        }
+        /* Ein Zaun ohne Ende ist kaputtes Markdown, aber der Text darin ist
+           echt — er wird zum Codeblock, statt verloren zu gehen. */
+        void zu;
+        raus.push({ typ: 'code', text: inhalt.join('\n'), tiefe,
+                    lang: sprachName(auf[1] ?? '') });
+        continue;
+      }
+
+      if (!t) continue;                                  /* Leerzeilen weg */
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { raus.push({ typ: 'divider', text: '', tiefe }); continue; }
+
+      let m;
+      if ((m = /^(#{1,3})\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'h' + (m[1] ?? '#').length, text: m[2] ?? '', tiefe }); continue; }
+      /* Aufgabe vor Aufzählung prüfen: „- [ ] x" ist beides, und das
+         Kästchen ist die genauere Auskunft. */
+      if ((m = /^[-*+]\s+\[([ xX])\]\s*(.*)$/.exec(t)))
+        { raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' }); continue; }
+      if ((m = /^\[([ xX])\]\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' }); continue; }
+      /* „> 💡 " ist unser Callout — auswahlAlsText() schreibt ihn so. */
+      if ((m = /^>\s*💡\s*(.*)$/.exec(t)))
+        { raus.push({ typ: 'callout', text: m[1] ?? '', tiefe }); continue; }
+      if ((m = /^>\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'quote', text: m[1] ?? '', tiefe }); continue; }
+      if ((m = /^[-*+]\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'bullet', text: m[1] ?? '', tiefe }); continue; }
+      if ((m = /^(?:\d{1,9}|[a-zA-Z]|[ivxIVX]{1,6})[.)]\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'number', text: m[1] ?? '', tiefe }); continue; }
+
+      raus.push({ typ: 'text', text: t, tiefe });
+    }
+    return raus;
+  };
+
+  /** Steckt Markdown genug Gliederung, dass daraus mehr als ein Block wird? */
+  const mdIstStruktur = (roh: string): boolean => {
+    const teile = mdLesen(roh);
+    return teile.length > 1 || (teile.length === 1 && teile[0]!.typ !== 'text');
+  };
+
+  /**
+   * Gelesene Blöcke unter `elternId` ab `idx` einsetzen. Die Tiefe wird zu
+   * echter Verschachtelung: ein eingerückter Punkt landet im Block darüber.
+   * Gibt die Kennung des letzten eingesetzten Blocks zurück.
+   */
+  const mdEinsetzen = (teile: MdBlock[], elternId: string, idx: number): string | null => {
+    /* Je Tiefe der zuletzt gesetzte Block — sein Kind kommt eine Stufe tiefer.
+       Stufe 0 ist der Eltern-Block selbst, dort zählt der Einfügeplatz. */
+    const stapel: (string | null)[] = [null];
+    const gesetzt: string[] = [];
+
+    teile.forEach(teil => {
+      const tiefe = Math.min(teil.tiefe, stapel.length - 1);
+      const ziel = tiefe === 0 ? elternId : stapel[tiefe];
+      if (!ziel) return;
+      const props: any = { text: teil.text };
+      if (teil.checked) props.checked = true;
+      if (teil.lang) props.lang = teil.lang;
+      const neu = tiefe === 0
+        ? Store.addBlock(ziel, teil.typ, props, idx++)
+        : Store.addBlock(ziel, teil.typ, props);
+      stapel.length = tiefe + 1;
+      stapel.push(neu.id);
+      gesetzt.push(neu.id);
+    });
+    return gesetzt.length ? gesetzt[gesetzt.length - 1]! : null;
+  };
 
   /* ========================================================================
    * HILFEN
@@ -123,6 +275,10 @@ const Blocks = (() => {
       .replace(/(^|\W)\*(.+?)\*(\W|$)/g, '$1<i>$2</i>$3')
       .replace(/__(.+?)__/g, '<u>$1</u>')
       .replace(/~~(.+?)~~/g, '<s>$1</s>')
+      /* Notion streicht auch mit einer einzelnen Tilde durch. Erst danach,
+         damit ~~doppelt~~ nicht zu <s>~doppelt~</s> zerfällt — und nur, wenn
+         kein Leerzeichen anschliesst, sonst trifft es „ca. 3~5 Grad". */
+      .replace(/(^|[^~\w])~([^~\s](?:[^~]*[^~\s])?)~(?![~\w])/g, '$1<s>$2</s>')
       .replace(/`([^`]+?)`/g, '<code>$1</code>')
       .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
@@ -180,6 +336,10 @@ const Blocks = (() => {
     el.dataset.id = block.type;
     el.dataset.bid = block.id;
 
+    /* Die Stufe für `h1`/`h2`/`h3` — gesetzt wird sie weiter unten auf dem
+       TEXTFELD, nicht auf diesem Kasten. Siehe `machText`. */
+    const stufe = ({ h1: '2', h2: '3', h3: '4' } as Record<string, string>)[block.type];
+
     /* Der Griff links: Plus und Sechs-Punkte */
     const griffe = document.createElement('div');
     griffe.className = 'handles';
@@ -205,6 +365,23 @@ const Blocks = (() => {
       ct.dataset.ph = ph || t.ph || '';
       ct.innerHTML = inline(block.text || '');
       if (block.color) ct.classList.add(block.color.startsWith('bg-') ? block.color : 't-' + block.color);
+
+      /* ÜBERSCHRIFTEN MÜSSEN AUCH ÜBERSCHRIFTEN SEIN.
+         Jeder Block ist ein `<div>`, auch `h1`, `h2` und `h3` — sichtbar
+         sind sie durch ihre Grösse, hörbar durch gar nichts. Wer nicht
+         sieht, springt von Überschrift zu Überschrift; gemessen am
+         7. August fand eine Seite mit Titel und Überschrift genau null.
+
+         AUF DEM TEXTFELD, NICHT AUF DEM BLOCKKASTEN. Der Kasten enthält
+         auch die Griffe ✚ und ⋮⋮; die Überschrift hiesse dann
+         „+ ⋮⋮ Eine Überschrift".
+
+         UND EINE STUFE TIEFER, als der Blockname sagt: die Stufe 1 gehört
+         dem Seitentitel. Ein `h1`-Block ist die erste Gliederungsebene
+         DARIN, also Stufe 2. Zwei Überschriften der Stufe 1 auf einer
+         Seite heissen für ein Vorleseprogramm: hier fangen zwei Dokumente
+         an. */
+      if (stufe) { ct.setAttribute('role', 'heading'); ct.setAttribute('aria-level', stufe); }
       return ct;
     };
 
@@ -292,11 +469,7 @@ const Blocks = (() => {
           'position:absolute; top:8px; right:10px; background:var(--bg-input); ' +
           'border:1px solid var(--line); border-radius:4px; font-size:11.5px; ' +
           'padding:2px 4px; color:var(--text-dim); outline:none; z-index:2';
-        ['Plain Text','JavaScript','TypeScript','JSX','Python','HTML','XML','CSS','SCSS','Less','JSON','YAML','TOML',
-         'SQL','GraphQL','Bash','Shell','PowerShell','Java','C','C++','C#','Go','Rust','Swift','Kotlin','Dart',
-         'PHP','Ruby','Perl','Lua','R','Julia','MATLAB','Haskell','Elixir','Erlang','Clojure','Scala','Objective-C',
-         'Assembly','Docker','Makefile','Nginx','Diff','LaTeX','Markdown']
-          .forEach(s => {
+        SPRACHEN.forEach(s => {
             const o = document.createElement('option');
             o.textContent = s;
             if ((block.lang || 'Plain Text') === s) o.selected = true;
@@ -343,8 +516,7 @@ const Blocks = (() => {
           const b2 = elVon(e)?.closest<HTMLElement>('button[data-a]');
           if (!b2) return;
           if (b2.dataset.a === 'kopieren') {
-            navigator.clipboard?.writeText(Store.getBlock(block.id)?.text || '');
-            UI.toast('Code kopiert'); return;
+            Ablage.kopiereJetzt(Store.getBlock(block.id)?.text || '', 'Code kopiert'); return;
           }
           if (b2.dataset.a === 'nr') { Store.updateBlock(block.id, { zeilennr: !nrAn }); App.zeichneSeite(); return; }
           if (b2.dataset.a === 'um') { Store.updateBlock(block.id, { zeilenUm: !block.zeilenUm }); App.zeichneSeite(); }
@@ -945,7 +1117,14 @@ const Blocks = (() => {
      also auch in Toggles, Spalten und Callouts, nimmt Toggle-Überschriften mit,
      kann durchnummerieren und hebt hervor, wo man gerade steht. Notions
      Verzeichnis kennt nur die oberste Ebene. */
-  const TOC_STUFEN = { h1: 1, h2: 2, h3: 3, 'toggle-h1': 1, 'toggle-h2': 2, 'toggle-h3': 3 };
+  /* Aus dem Register, nicht abgeschrieben. Hier stand dieselbe Liste, die
+     `schale/aufbau/inhaltsflaeche.ts` ein zweites Mal führte — dort ohne
+     die Toggle-Überschriften. Eine Seite aus Toggle-Überschriften bekam
+     deshalb hier Einträge und im Gliederungsstreifen keine. */
+  const TOC_STUFEN: Record<string, number> =
+    (typeof Register !== 'undefined' && Register.bloecke?.ueberschriften)
+      ? Register.bloecke.ueberschriften()
+      : { h1: 1, h2: 2, h3: 3, 'toggle-h1': 1, 'toggle-h2': 2, 'toggle-h3': 3 };
 
   const ueberschriftenDerSeite = (seitenId: any) => {
     const gefunden: any[] = [];
@@ -1062,14 +1241,85 @@ const Blocks = (() => {
           return liste.includes(wort);
         });
         if (treffer) {
+          /* Auch im Block löschen, nicht nur im Feld. Der vorige Tastendruck
+             hat „#" längst gespeichert; `umwandeln` zeichnet gleich neu und
+             holt es zurück. Genau das ist jahrelang passiert: aus „# Titel"
+             wurde eine Überschrift, die „#Titel" hiess. Kein Prüflauf sah es,
+             weil alle nur den TYP verglichen haben. */
           ct.textContent = '';
+          Store.updateBlock(b.id, { text: '' });
           umwandeln(b.id, treffer.id);
+          /* Zwei Kürzel sagen mehr als nur den Typ: „[x] " hakt gleich ab.
+             Nach umwandeln() ist die Seite neu gezeichnet, der Block aber
+             derselbe — deshalb reicht ein zweiter, kleiner Schreibvorgang. */
+          if (treffer.id === 'todo' && /^\[[xX]\]$/.test(wort)) {
+            Store.updateBlock(b.id, { checked: true });
+            App.zeichneSeite(b.id, 'ende');
+          }
+          return;
+        }
+        /* ```sprache — der Codeblock nimmt die Sprache gleich mit.
+           Das geht über keine Liste im Register: die Sprache ist frei. */
+        const zaun = /^```([a-zA-Z0-9+#.-]{1,20})$/.exec(wort);
+        if (zaun) {
+          ct.textContent = '';
+          Store.updateBlock(b.id, { text: '' });
+          umwandeln(b.id, 'code');
+          Store.updateBlock(b.id, { lang: sprachName(zaun[1] ?? '') });
+          App.zeichneSeite(b.id, 'ende');
           return;
         }
       }
 
       Store.updateBlock(b.id, { text: roh });
       if (b.type === 'toc') return;
+    });
+
+    /* --- Einfügen: Markdown wird wieder zu Blöcken ------------------------
+       Strg C schreibt die Auswahl als Markdown. Zurück ging es nicht — der
+       ganze Text landete in einem einzigen Block, samt Rautezeichen. */
+    wurzel.addEventListener('paste', (e: any) => {
+      if (e.defaultPrevented) return;          /* Tabelle und Kalkulation zuerst */
+      const ct = elVon(e)?.closest<HTMLElement>('.ct');
+      if (!ct) return;
+      const blk = ct.closest<HTMLElement>('.blk');
+      if (!blk) return;
+      const b = Store.getBlock(blk.dataset.bid);
+      if (!b) return;
+      const text = e.clipboardData?.getData('text/plain');
+      if (!text) return;
+
+      /* Wo roher Text der Inhalt IST, wird kein Markdown gelesen. In einem
+         Codeblock ist „# hallo" eine Kommentarzeile, in einer Formel steht
+         TeX, und im HTML-Block steht HTML. Alles andere darf gliedern —
+         auch ein Listenpunkt: wer eine Liste in eine Liste einfügt, will
+         Punkte und keinen Absatz mit Bindestrichen darin. */
+      const ROHTEXT = ['code', 'equation', 'html', 'flashcard'];
+      const strukturiert = !ROHTEXT.includes(b.type) && mdIstStruktur(text);
+
+      /* Immer selbst einsetzen: sonst legt der Browser das mitkopierte HTML
+         mit all seinen Stilen in den Block, und beim nächsten Zeichnen ist
+         es wieder weg — Text, der vor den Augen des Nutzers verschwindet. */
+      e.preventDefault();
+
+      if (!strukturiert) {
+        document.execCommand('insertText', false, text);
+        return;
+      }
+
+      const eltern = Store.getBlock(b.parentId);
+      if (!eltern) { document.execCommand('insertText', false, text); return; }
+      const teile = mdLesen(text);
+      const letzte = mdEinsetzen(teile, b.parentId, eltern.content.indexOf(b.id) + 1);
+
+      /* Der leere Block, in dem eingefügt wurde, hat seinen Zweck erfüllt —
+         ob er ein Absatz war oder ein leerer Listenpunkt. */
+      if (!ct.textContent.trim()) {
+        Store.trashBlock(b.id);
+        Store.purgeBlock(b.id);
+      }
+      App.zeichneSeite(letzte || b.id, 'ende');
+      if (teile.length > 1) UI.toast(teile.length + ' Blöcke eingefügt');
     });
 
     /* --- Vorschlagsmodus -------------------------------------------------
@@ -1203,8 +1453,7 @@ const Blocks = (() => {
       };
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && zifferAus(e)) {
         e.preventDefault();
-        const ziel = ({ '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
-                       '6':'number','7':'toggle','8':'code','9':'page' } as Record<string, string>)[zifferAus(e) ?? ''];
+        const ziel = ZIFFER_TYP()[zifferAus(e) ?? ''];
         if (ziel === 'page') {
           const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
           Store.trashBlock(b.id);
@@ -1240,8 +1489,7 @@ const Blocks = (() => {
       /* Strg+Alt+Ziffer: Blocktyp wechseln (Mac-Belegung) */
       if ((e.ctrlKey || e.metaKey) && e.altKey && /^[0-9]$/.test(e.key)) {
         e.preventDefault();
-        const ziel = ({ '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
-                       '6':'number','7':'toggle','8':'code','9':'page' } as Record<string, string>)[e.key];
+        const ziel = ZIFFER_TYP()[e.key];
         if (ziel === 'page') {
           const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
           Store.trashBlock(b.id);
@@ -1285,9 +1533,7 @@ const Blocks = (() => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
         e.preventDefault();
         const adr = location.href.split('#')[0] + '#block=' + b.id;
-        navigator.clipboard.writeText(adr)
-          .then(() => UI.toast('Link auf diesen Block kopiert'))
-          .catch(() => UI.toast('Link: ' + adr));
+        Ablage.kopiereJetzt(adr, 'Link auf diesen Block kopiert');
         return;
       }
 
@@ -2271,18 +2517,22 @@ const Blocks = (() => {
       if (a === 'up')   verschiebe(b, -1);
       if (a === 'down') verschiebe(b, 1);
       if (a === 'link') {
-        navigator.clipboard?.writeText(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + b.id);
-        UI.toast('Link zum Block kopiert');
+        Ablage.kopiereJetzt(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + b.id, 'Link zum Block kopiert');
       }
       if (a === 'ref') {
-        navigator.clipboard?.writeText('((' + b.id + '))');
-        UI.toast('Blockverweis kopiert — irgendwo einfügen');
+        Ablage.kopiereJetzt('((' + b.id + '))', 'Blockverweis kopiert — irgendwo einfügen');
       }
-      if (a === 'copy') { navigator.clipboard?.writeText(b.text || ''); UI.toast('Text kopiert'); }
+      if (a === 'copy') { Ablage.kopiereJetzt(b.text || '', 'Text kopiert'); }
       if (a === 'cut') {
-        navigator.clipboard?.writeText(b.text || '');
-        Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite();
-        UI.toast('Ausgeschnitten');
+        /* ERST kopieren, DANN löschen — und nur dann. `purgeBlock` räumt
+           endgültig weg; wenn die Zwischenablage den Text nicht genommen
+           hat, gäbe es ihn danach nirgends mehr. Vorher stand das Löschen
+           gleichberechtigt daneben und lief auch, wenn das Kopieren
+           abgewiesen wurde. */
+        Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
+          if (!ging) return;
+          Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite();
+        });
       }
       if (a === 'komm') Kommentare.neu(b);
       /* Callout: eigenes Symbol wählen — Notion kann das, wir bisher nicht */
@@ -2446,8 +2696,16 @@ const Blocks = (() => {
   const auswahlKopieren = async () => {
     const t = auswahlAlsText();
     ablage = auswahlBloecke().map(b => Store.baum(b.id));
-    try { await navigator.clipboard.writeText(t); } catch {}
-    UI.toast(ausgewaehlt.length + ' Blöcke kopiert');
+    const n = ausgewaehlt.length;
+    /* Ohne Meldung, weil hier mehr zu sagen ist als „ging" oder „ging
+       nicht": die INTERNE Ablage steht in jedem Fall, innerhalb von Redion
+       lässt sich also einfügen, auch wenn der Browser die Zwischenablage
+       verweigert. Ein blosses „kopiert" verschwiege das, ein blosses
+       „ging nicht" wäre zu düster. */
+    const ging = await Ablage.kopiere(t);
+    UI.toast(ging
+      ? n + (n === 1 ? ' Block kopiert' : ' Blöcke kopiert')
+      : n + ' hier gemerkt — für andere Programme hat der Browser das Kopieren abgelehnt');
   };
 
   const auswahlSchneiden = async () => {
@@ -2607,8 +2865,10 @@ const Blocks = (() => {
     const ziffer = /^[0-9]$/.test(k) ? k : (/^Digit([0-9])$/.exec(e.code || '') || [])[1];
     if (strg && (e.shiftKey || e.altKey) && ziffer) {
       e.preventDefault();
-      const ziel = ({ '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet',
-                     '6':'number','7':'toggle','8':'code' } as Record<string, string>)[ziffer ?? ''];
+      /* Ohne die 9: eine Mehrfachauswahl lässt sich nicht in EINE Seite
+         verwandeln — dafür gibt es „Verschieben nach". */
+      const ohneSeite: Record<string, string> = { ...ZIFFER_TYP(), '9': '' };
+      const ziel = ohneSeite[ziffer ?? ''];
       if (ziel) auswahlUmwandeln(ziel);
       return true;
     }
@@ -2665,6 +2925,8 @@ const Blocks = (() => {
     auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
     auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,
     auswahlAlsText, auswahlTaste, sichtbareBloecke,
+    /* Markdown in beide Richtungen */
+    mdLesen, mdEinsetzen, mdIstStruktur, sprachName,
     auswahl: () => ausgewaehlt.slice()
   };
 })();

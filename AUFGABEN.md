@@ -35,13 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**6. August 2026 · 94 Prüfläufe grün**
+**8. August 2026 · 113 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
-Excel-Namen) · Tabellenblock (E29) · lokale KI · Versionen · Papierkorb ·
-`.json`- und `.redion`-Sicherung mit Anhängen · grosse Dateien stückweise ·
-Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
+Excel-Namen) · Tabellenblock (E29) mit bedingter Formatierung (E53) ·
+lokale KI mit Grenzen für Agenten (E52) · Versionen · Papierkorb ·
+`.json`- und `.redion`-Sicherung mit Anhängen, auch über 4 GB (E39) ·
+grosse Dateien stückweise · `.ods` lesen und schreiben · als App
+installierbar, mit Erinnerungen, die auch ankommen (E40/E41).
 
 **Die drei wichtigsten offenen Punkte**
 
@@ -55,11 +57,39 @@ Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
      (E33) · G3 Konflikte und Offline (test118) · G4 Rechte (E35)
 ```
 
-**Was jetzt obenauf liegt:** Mobile (L10), ZIP64 für Sicherungen über
-4 GB (L14) und die bedingte Formatierung im Tabellenblock (L15). Die
-Fehlerwert-Frage (L4) ist am 6. August beantwortet — `WENNFEHLER` und
-`ISTFEHLER` gibt es, ohne dass eine bestehende Spalte ihr Ergebnis
-ändert (E36).
+**Seit dem 7. August ist das Telefon die Hauptumgebung** (E37). Aus Redurs
+Entwurf „Nocturne" sind gebaut: E42–E53 — der Reiter „Mehr" · der Kompass ·
+eine eigene Farbwelt mit nachgerechneten Kontrasten · Bewegungsmarken und
+Berührungsrückmeldung · das Blatt „Neu erstellen" · das KI-Fenster von
+unten · Ladeskelette · versetzte Listenzeilen · Suchfilter als Marken · die
+gleitende Reiterpille · eine 56-px-Leiste, deren Höhe an einer Stelle steht.
+
+**Was jetzt obenauf liegt:**
+
+```txt
+L10  Mobile — die Schale steht, die Bereiche darin noch nicht ganz.
+     Offen: Willkommensbildschirm (§11) · Einstellungen als Karten (§12) ·
+     Zustandswechsel der Sicherungskarte · Datenbank- und Tabellenansicht
+     fürs Telefon entworfen · Prüfung auf einem echten Gerät
+L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
+     Durchlauf mit einem echten Vorleseprogramm
+L16  Automationen: sonst-Zweig in der Oberfläche und eine Schleife
+     über die eigenen Zeilen — Vorschau und Protokoll sind da (E61)
+L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
+L20  die 33 fehlenden Tastenkürzel · Konflikte mit Browser und
+     Betriebssystem systematisch prüfen · Markdown-Tabellen beim Einfügen
+```
+
+**Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push
+(E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · L20 Markdown (E59) ·
+L15 bedingte Formatierung vollständig (E60) · der grösste Teil von L10
+und L12.
+
+**Der Fund vom 8. August**, weil er die Art Fehler zeigt, auf die zu achten
+ist: `# Titel` wurde eine Überschrift namens `#Titel` — das Kürzelzeichen
+blieb im Text stehen. Seit es die Kürzel gibt. Sichtbar auf jedem
+Bildschirm, und trotzdem grün, weil jeder Prüflauf nur den **Blocktyp**
+verglich. Siehe E59.
 
 ---
 
@@ -674,6 +704,135 @@ noch nicht bekommen, die übrigen Menüs sind noch keine Bottom Sheets, und
 der Editor braucht seinen Feinschliff. Steht in `LUECKEN.md` L10.
 
 **Priorität** — hoch (E37: das Telefon ist der Normalfall).
+
+---
+
+## Phase 11 · Nocturne, Zugang und Grenzen · ◐ **grösstenteils erledigt**
+
+Redurs Entwurf für die Telefon-App, dazu zwei Lücken, die beim Bauen
+obenauf lagen. Die Entscheidungen stehen einzeln in `ENTSCHEIDUNGEN.md`
+E42–E53; hier nur, was daraus wurde.
+
+**Aus dem Entwurf gebaut** (E42–E50, E55): der Reiter „Mehr" und der Bereich
+dahinter · der Kompass als Seite darin · eine eigene Farbwelt mit
+nachgerechneten Kontrasten statt Notions Palette · drei Bewegungsdauern und
+drei Kurven, keine Federn · Berührungsrückmeldung · das Blatt „Neu
+erstellen" hinter dem Stift · das KI-Fenster als Blatt von unten ·
+Ladeskelette statt Kreisel · versetzt einblendende Listenzeilen · die
+Suchfilter als Marken · die gleitende Reiterpille · eine 56-px-Leiste
+oben, deren Höhe nur noch an einer Stelle steht · und der
+Willkommensbildschirm, der als Erstes sagt, wohin die Daten gehören.
+
+**Zwei Lücken dazu:**
+
+`L12` **Barrierefreiheit** (E51). Sie stand seit Monaten auf „Grundlagen
+da, nicht geprüft". Gemessen waren zwei der fünf Punkte in Ordnung und
+drei nicht. Der grösste Fund: an 106 Stellen baut Redion Überlagerungen,
+und keine davon war für ein Vorleseprogramm ein Dialog, keine nahm den
+Fokus auf, aus zweien lief Tab hinaus, und keine gab den Fokus zurück.
+Repariert an EINER Stelle. Dazu: null Überschriften auf einer Seite mit
+Titel und Überschrift, ein Fenstertitel, der immer „Redion" hiess, und
+Meldungen, die kein Vorleseprogramm hörte.
+
+`L11` **Grenzen für Agenten** (E52). Der einzige Eintrag mit „es gibt
+keine Grenzen". Notausschalter, Tageslimit und Bestätigung vor jeder
+ändernden Handlung — und die Regel, die in der Liste fehlte und die
+wichtigste ist: **ohne Aufsicht nur lesen**.
+
+`L15` **Bedingte Formatierung** (E53) im Tabellenblock: zehn Arten,
+Farbverlauf und Balken. Offen bleiben Symbolregeln und „überfällig".
+
+**Aus dem Entwurf ist damit alles gebaut** — zuletzt die Zustandswechsel
+der Sicherungskarte (E57) und die Einstellungen als zwei Seiten statt zwei
+Spalten (E58). Bei 390 px war das die schlechteste Seite der App: für den
+Inhalt blieben 129 Pixel.
+
+**Tests** — `test114` (119) · `test126` (22) · `test127` (20) ·
+`test128` (46) · `test129` (26) · `test130` (48) · `test131` (44).
+Dazu `test114` selbst: aus 85 Punkten sind 137 geworden.
+
+**Priorität** — hoch, solange das Telefon der Normalfall ist.
+
+---
+
+## Phase 12 · Web Push · **erledigt** (8. August, E54)
+
+**Ziel war** — `LUECKEN.md` L33 schliessen: ist Redion um acht Uhr
+geschlossen, soll um acht Uhr trotzdem etwas passieren. Steht.
+
+**Der Stand.** Die Hälfte im Browser steht seit dem 7. August (E40): das
+Dienst-Skript zeigt Meldungen über `registration.showNotification()` und
+nimmt den Tipp darauf entgegen. Was fehlt, ist das Wecken von aussen — und
+das geht nur mit Web Push: Schlüsselpaar (VAPID), Anmeldung je Gerät, ein
+Dienst, der zur richtigen Zeit sendet.
+
+**Die Entscheidung, die vor dem Bauen fällt: der Stoss ist LEER.**
+
+Ein Web Push kann Inhalt mitbringen. Er müsste dann verschlüsselt werden
+(aes128gcm) — aber das ist nicht der Grund, ihn wegzulassen. Der Grund ist:
+**der Text einer Erinnerung geht Redions Server nichts an.** „Zahnarzt
+14:00" ist genau die Sorte Satz, die local-first schützen soll.
+
+Also trägt der Stoss nichts. Er sagt nur „wach auf". Das Dienst-Skript liest
+daraufhin die fälligen Erinnerungen aus der lokalen IndexedDB und zeigt sie.
+Der Server erfährt einen **Zeitpunkt** und sonst nichts — kein Titel, kein
+Ort, keine Seite.
+
+```txt
+Gerät   →  „weck mich am 2026-08-09 um 06:00 UTC"   (nur die Zeit)
+Server  →  zur Zeit: ein leerer Stoss an dieses Gerät
+Gerät   →  liest lokal nach, was fällig ist, und zeigt es
+```
+
+Das ist zugleich die einfachste Bauform: kein Payload heisst keine
+Verschlüsselung, nur die VAPID-Signatur (ES256, kann Web Crypto in Workers).
+
+**Was zu bauen ist**
+
+```txt
+server/schema.sql     Tabelle `weckrufe`: geraet, endpunkt, p256dh, auth,
+                      wann, konto — und ein Index auf `wann`
+server/cloudflare.ts  POST /push/anmelden   Anmeldung eines Geräts
+                      POST /push/wecken     Zeitpunkt eintragen/ändern
+                      DELETE /push/abmelden
+                      scheduled()           jede Minute: was fällig ist,
+                                            stossen und den Eintrag löschen
+server/sicherheit/    VAPID: Schlüssel aus den Secrets, JWT signieren
+src/dienst/sw.ts      `push`-Ereignis → fällige Erinnerungen lokal lesen
+                      und zeigen
+src/bereiche/wissen/  Anmeldung anbieten, wenn Erinnerungen erlaubt sind
+```
+
+**Fertig, und geprüft** — ein Gerät meldet sich an · ein Zeitpunkt kommt in
+die Tabelle · der geplante Lauf stösst ihn · das Dienst-Skript liest lokal
+nach und zeigt, was fällig ist · ein abgelaufener Endpunkt (410) wird
+gelöscht statt endlos wiederholt · und **kein Erinnerungstext verlässt das
+Gerät**.
+
+**Drei Fehler beim Bauen, alle drei vom Lauf gefunden:** die Argumente von
+`feldText` standen vertauscht, womit jedes Gerät „geraet" hiess und zwei
+verschiedene Telefone einander fanden · `geraet` hat die Feld-Vorgabe
+„Unbekannt", eine fehlende Kennung wäre damit ein gültiges Gerät gewesen ·
+und das Prüf-Token brauchte `sit_` davor, sonst kam 401 und es sah nach
+einem kaputten Weg aus.
+
+**Tests** — `test131` (Suite 95), 44 Punkte, gegen den echten Kern mit
+einem `fetch`, das jeden Stoss mitschreibt statt ihn zu senden. Die
+VAPID-Unterschrift wird mit dem öffentlichen Schlüssel nachgerechnet.
+
+**Achtung, zwei Dinge**
+
+Auf dem iPhone zeigt nur die **installierte** App Systemmeldungen (ab iOS
+16.4). Das steht schon im Dialog; die Anmeldung darf dort nicht so tun, als
+ginge es auch in Safari.
+
+Und ohne Server bleibt alles, wie es ist. Web Push ist eine Zugabe des
+Cloud-Modus, keine Voraussetzung (CLAUDE.md §22): wer nur lokal arbeitet,
+bekommt seine Erinnerung weiterhin beim nächsten Öffnen, mit „Verpasst um
+HH:MM".
+
+**Priorität** — mittel. Der Nutzen ist gross, aber die Zahl der Menschen,
+die Redion installiert und einen Server betreibt, ist heute klein.
 
 ---
 

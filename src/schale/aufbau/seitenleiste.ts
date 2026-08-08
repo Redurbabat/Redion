@@ -146,7 +146,14 @@ const Seitenleiste = (() => {
     if (!leiste) return;
     leiste.classList.toggle('ohne-namen', !tabNamen());
     leiste.querySelectorAll<HTMLElement>('.sr').forEach(b => {
-      b.classList.toggle('on', b.dataset.reiter === reiter);
+      const hier = b.dataset.reiter === reiter;
+      b.classList.toggle('on', hier);
+      /* Die Klasse `on` färbt den Reiter. Ein Vorleseprogramm sieht keine
+         Farbe — für es ist `aria-current` der einzige Unterschied zwischen
+         „Start" und „Start, aktuelle Seite". Ohne die Zeile klingen alle
+         fünf Reiter gleich. */
+      if (hier) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
     });
     /* Die untere Leiste am Telefon zeigt dieselben Bereiche — sie muss
        mitgehen, sonst stimmt an einem der beiden Orte die Markierung nicht. */
@@ -154,6 +161,71 @@ const Seitenleiste = (() => {
   };
 
   let reiter = 'start';
+
+  /* Beim allerersten Setzen darf die Pille nicht gleiten. Sonst schiebt
+     sie sich beim Öffnen der App von der linken Kante herein — eine
+     Bewegung ohne Anlass, und die liest sich als Fehler. */
+  let pilleGesetzt = false;
+
+  /**
+   * DIE GLEITENDE PILLE UNTER DEN REITERN.
+   *
+   * Sie ist der Hintergrund der aktiven Pille, aber als eigenes Feld: statt
+   * an einer Stelle zu verschwinden und an der nächsten aufzutauchen,
+   * wandert sie hinüber. Das Auge folgt der Bewegung und ist beim Ankommen
+   * schon dort — ein Sprung dagegen muss erst wieder gesucht werden.
+   *
+   * ZWEI DINGE, DIE HIER LEICHT SCHIEFGEHEN:
+   *
+   *   1. GEMESSEN WIRD NACH DEM SETZEN VON `.an`. Die aktive Pille zeigt
+   *      als einzige ihre Beschriftung und ist deshalb breiter als vorher.
+   *      Wer vorher misst, bekommt die alte Breite und die Pille endet
+   *      einen Zentimeter zu kurz.
+   *
+   *   2. DIE LEISTE ROLLT SEITWÄRTS. `offsetLeft` zählt vom Anfang des
+   *      Inhalts, nicht vom Bildrand — und genau das wird gebraucht: die
+   *      Pille liegt IN der rollenden Leiste und rollt mit. Wer hier
+   *      `getBoundingClientRect()` nähme, hätte die Pille an der richtigen
+   *      Stelle des Bildschirms und an der falschen des Inhalts.
+   */
+  const pilleSchieben = (l: HTMLElement, aktiv: HTMLElement | null) => {
+    const pille = l.querySelector<HTMLElement>('#ho-pille');
+    if (!pille) return;
+
+    /* „Mehr" und „Kompass" haben oben keinen Reiter (E42). Dann gehört
+       auch keine Pille irgendwohin — sie bleibt, wo sie war, und
+       verschwindet. Sie an den Anfang zu schieben wäre eine Aussage, und
+       zwar eine falsche. */
+    if (!aktiv) { pille.style.opacity = '0'; return; }
+
+    const x = aktiv.offsetLeft;
+    const b = aktiv.offsetWidth;
+    const y = aktiv.offsetTop;
+    if (!b) return;                      /* Leiste unsichtbar — am Rechner */
+
+    if (!pilleGesetzt) pille.classList.add('stumm');
+    pille.style.transform = `translateX(${x}px)`;
+    pille.style.width = b + 'px';
+    pille.style.top = y + 'px';
+    pille.style.opacity = '1';
+
+    if (!pilleGesetzt) {
+      /* Die Sperre erst im nächsten Bild lösen, sonst gilt sie für die
+         eben gesetzten Werte schon nicht mehr. */
+      pilleGesetzt = true;
+      requestAnimationFrame(() => requestAnimationFrame(() =>
+        pille.classList.remove('stumm')));
+    }
+
+    /* Steht der neue Reiter halb ausserhalb, ihn hereinholen. Bei 390 px
+       passen die fünf Wege nicht alle ins Bild; ohne das tippt man auf
+       „Mehr" und sieht danach nicht, dass man dort ist. */
+    const links = x - l.scrollLeft;
+    if (links < 0 || links + b > l.clientWidth) {
+      const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      l.scrollTo({ left: Math.max(0, x - 16), behavior: ruhig ? 'auto' : 'smooth' });
+    }
+  };
 
   /**
    * Die untere Leiste am Telefon markieren und den Punkt am Posteingang
@@ -167,18 +239,53 @@ const Seitenleiste = (() => {
        stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
        kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
     const karte: Record<string, string> = { start: 'hl-start', seiten: 'hl-seiten',
-                                            bespr: 'hl-bespr', inbox: 'hl-inbox' };
-    l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
-    const aktiv = document.getElementById(karte[reiter] || 'hl-start');
-    if (aktiv) aktiv.classList.add('an');
-    /* Ein Punkt, wenn im Posteingang etwas Ungelesenes liegt */
-    const punkt = l.querySelector<HTMLElement>('.hl-punkt');
-    if (punkt) {
+                                            bespr: 'hl-bespr', mehr: 'hl-mehr' };
+    l.querySelectorAll('button[role="tab"]').forEach(b => {
+      b.classList.remove('an');
+      /* `aria-selected` gehört zu `role="tab"` wie das Ziel zum Verweis.
+         Ohne die Angabe meldet ein Vorleseprogramm vier gleichrangige
+         Reiter und verschweigt, auf welchem man steht — die Auskunft
+         steckte einzig in der Farbe der Pille (CLAUDE.md §38: keine
+         Information nur über Farbe). */
+      b.setAttribute('aria-selected', 'false');
+    });
+    /* KEIN RÜCKFALL AUF „START". Hier stand `karte[reiter] || 'hl-start'`,
+       und das war eine Behauptung: „Mehr" und „Kompass" haben oben keinen
+       Reiter, also leuchtete beim Öffnen die Start-Pille — man stand im
+       Kompass, und oben stand „Start". Wer nirgends in der Reiterleiste
+       ist, soll dort auch nirgends markiert sein. */
+    const id = karte[reiter];
+    const aktiv = id ? document.getElementById(id) : null;
+    if (aktiv) { aktiv.classList.add('an'); aktiv.setAttribute('aria-selected', 'true'); }
+    pilleSchieben(l, aktiv);
+
+    /* EIN PUNKT, WENN IM POSTEINGANG ETWAS UNGELESENES LIEGT — und ein
+       Satz dazu. Der Punkt ist rot, klein und leer: für ein
+       Vorleseprogramm ist er nichts. Wer die App hört statt sie zu sehen,
+       erfuhr nie, dass etwas anliegt.
+
+       Der Punkt wird deshalb versteckt (er ist Bild, kein Inhalt) und die
+       Zahl wandert in den Namen des Knopfes: „Mehr, 3 ungelesen". Der
+       Titel bleibt der schlichte, damit die Maus-Blase kurz bleibt.
+
+       DER ZWEITE PUNKT IST GEGANGEN. „Seiten" trug auch einen — ein Rest
+       aus der Zeit, als der Reiter „Chats" hiess (E38). Angezeigt wurde er
+       nie, weil nur der erste gefundene Punkt gesetzt wurde; er hätte
+       ungelesene Nachrichten an einem Ort gemeldet, an dem keine liegen.
+       Der Posteingang steht seit E42 unter „Mehr", und dort steht auch
+       der Punkt. */
+    l.querySelectorAll<HTMLElement>('.hl-punkt').forEach(pt => {
+      pt.setAttribute('aria-hidden', 'true');
+      const knopf = pt.closest<HTMLElement>('button');
       let offen = 0;
       try { offen = (Werkzeuge.meldungen ? Werkzeuge.meldungen() : [])
                       .filter((m: any) => !m.gelesen).length; } catch {}
-      punkt.hidden = !offen;
-    }
+      pt.hidden = !offen;
+      if (!knopf) return;
+      const name = knopf.getAttribute('title') || '';
+      if (offen) knopf.setAttribute('aria-label', `${name}, ${offen} ungelesen`);
+      else knopf.removeAttribute('aria-label');
+    });
   };
 
   const reiterWechseln = (id: string) => {

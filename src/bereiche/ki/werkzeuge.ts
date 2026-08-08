@@ -405,7 +405,7 @@ const MCP = (() => {
         o2.addEventListener('click', ev => {
           if (ev.target === o2 || elVon(ev)?.closest<HTMLElement>('[data-a="zu"]')) { o2.remove(); return; }
           if (elVon(ev)?.closest<HTMLElement>('[data-a="kop"]')) {
-            navigator.clipboard?.writeText(text); UI.toast('Kopiert');
+            Ablage.kopiereJetzt(text, 'Kopiert');
           }
         });
         return;

@@ -46,7 +46,12 @@ export const MARKEN_RECHTE = ['lesen', 'schreiben', 'alles'];
  *   freigabe    jemanden in einen Bereich hinein- oder hinauslassen
  *   feldrecht   einzelne Spalten öffnen oder sperren
  */
-export const NUR_MIT_SITZUNG = ['marken', 'freigabe', 'feldrecht'];
+/* `push` gehört dazu, seit es Weckrufe gibt (E54). Eine Marke ist ein
+   Schlüssel für ein Programm; ein Weckruf ist ein Wecker für einen
+   Menschen an einem Gerät. Dürfte eine Marke ihn legen, könnte ein
+   Skript mit `schreiben`-Recht fremde Telefone um drei Uhr nachts
+   klingeln lassen — und das steht in keiner Rechteliste. */
+export const NUR_MIT_SITZUNG = ['marken', 'freigabe', 'feldrecht', 'push'];
 
 /** Methoden, die etwas verändern. Alles Übrige gilt als Lesen. */
 const SCHREIBT = ['POST', 'PUT', 'PATCH', 'DELETE'];

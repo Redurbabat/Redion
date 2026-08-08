@@ -584,6 +584,21 @@ const tastatur = await seite.evaluate(async () => {
   const t = document.querySelector<HTMLTableElement>('#pruef-tabelle .tbl') as HTMLElement;
   const feld = t.querySelector('.tbl-feld') as HTMLElement;
   const wo = () => (t.querySelector('.tbl-z.gewaehlt') as HTMLElement)?.dataset.a;
+  /* WARTEN, BIS DIE GEWÄHLTE ZELLE WIRKLICH DASTEHT.
+     Der Körper zeichnet nur das Sichtfenster; Strg+Ende springt nach T50
+     und muss dafür erst rollen und neu zeichnen. Mit festen 10 ms war das
+     meistens genug und manchmal nicht — der Lauf war an dieser einen
+     Zeile flockig und meldete `undefined` statt „T50". Eine Prüfung, die
+     jedes zwanzigste Mal rot wird, bringt niemandem etwas bei; sie
+     bringt nur bei, das Rote nicht mehr ernst zu nehmen. */
+  const warteAufWahl = async (): Promise<string | undefined> => {
+    for (let i = 0; i < 60; i++) {
+      const a = wo();
+      if (a) return a;
+      await new Promise(f => setTimeout(f, 10));
+    }
+    return wo();
+  };
   const taste = async (key: string, opt: any = {}) => {
     feld.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...opt }));
     await new Promise(f => setTimeout(f, 10));
@@ -592,12 +607,12 @@ const tastatur = await seite.evaluate(async () => {
     .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
   await new Promise(f => setTimeout(f, 10));
   const start = wo();
-  await taste('ArrowDown'); const runter = wo();
-  await taste('ArrowRight'); const rechts = wo();
-  await taste('Home'); const heim = wo();
+  await taste('ArrowDown'); const runter = await warteAufWahl();
+  await taste('ArrowRight'); const rechts = await warteAufWahl();
+  await taste('Home'); const heim = await warteAufWahl();
   await taste('ArrowRight', { shiftKey: true });
   const bereich = t.querySelectorAll('.tbl-z.imBereich, .tbl-z.gewaehlt').length;
-  await taste('End', { ctrlKey: true }); const ende = wo();
+  await taste('End', { ctrlKey: true }); const ende = await warteAufWahl();
   return { start, runter, rechts, heim, bereich, ende };
 });
 gleich('Ein Klick wählt B2', tastatur.start, 'B2');

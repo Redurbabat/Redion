@@ -38,6 +38,14 @@ const KONSTANTEN = Object.freeze({
   STUECK:           1024 * 1024,        /* Stückgrösse beim Hochladen */
   KLEIN:            256 * 1024,         /* Darunter ohne Stückelung — der
                                            Apparat kostet mehr als er spart */
+  /* Was der Server annimmt. Er hat seine eigene Zahl — `DATEI_GRENZE` in
+     `server/dateien.ts` —, denn er läuft als eigenes Bündel und kann diese
+     Datei nicht lesen. Zwei Zahlen also, notgedrungen; `test140` rechnet
+     nach, dass sie übereinstimmen.
+     Stand hier vorher gar nicht: `maschine.ts` trug ein blankes
+     `100 * 1024 * 1024` mitten in einer Schleife, ohne Namen und ohne
+     Verbindung zur Zahl auf der anderen Seite. */
+  SERVER_DATEI_MAX: 100 * 1024 * 1024,  /* 100 MB — darüber gilt der .redion-Weg (E33) */
   /* --- Der Versionsverlauf ------------------------------------------------
      Diese Zahl stand hier und wurde von niemandem gelesen: `versionSpeichern`
      schnitt hart bei `slice(30)`, der Aufräumknopf bei `slice(5)`. Drei
@@ -86,7 +94,16 @@ const KONSTANTEN = Object.freeze({
   HINWEIS_MS:       2600,          /* Wie lange ein Hinweis stehen bleibt */
   FENSTERWEISE_AB:  200,           /* Ab so vielen Zeilen wird nur gezeichnet,
                                       was man sehen kann */
-  TELEFON_BREITE:   768,           /* Darunter gilt die Handy-Oberfläche */
+  /* DIE Telefongrenze. Sie stand auf 768 und war damit die einzige der
+     drei Zahlen, an die sich niemand hielt: die CSS nimmt 760 (38 Regeln),
+     `UI.amTelefon()` nimmt 760, Tabellenblock und Raster nehmen 760 — und
+     an sechs Stellen stand 700.
+     Gemessen am 8. August, was das anrichtete: zwischen 701 und 760 px
+     waren die Telefonleisten SICHTBAR und die Rechner-Seitenleiste stand
+     daneben. Die Pillen lagen über dem Logo, die untere Leiste über
+     „Neuer Chat". Bei jedem Fenster dieser Breite — kleines Tablet,
+     halbierter Bildschirm, verkleinertes Browserfenster. */
+  TELEFON_BREITE:   760,           /* Bis hierher gilt die Handy-Oberfläche */
   SUCHE_MAX:        200,           /* Treffer je Suche — mehr liest niemand */
 
   /* --- Aufräumen --------------------------------------------------------- */

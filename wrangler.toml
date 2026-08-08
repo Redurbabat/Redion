@@ -58,3 +58,28 @@ binding = "ASSETS"
 # [[r2_buckets]]
 # binding = "R2"
 # bucket_name = "redion-dateien"
+
+# ===========================================================================
+#  WECKRUFE — Web Push (L33, E54)
+# ---------------------------------------------------------------------------
+#  Damit eine Erinnerung auch klingelt, wenn Redion geschlossen ist, muss
+#  jemand zur richtigen Zeit anstossen. Das tut der geplante Lauf.
+#
+#  Eine Minute ist die kleinste Aufloesung, die Cron erlaubt, und fuer einen
+#  Wecker genau genug: "08:00" darf 08:00:40 heissen, aber nicht 08:05.
+#
+#  Auskommentiert, weil es ohne VAPID-Schluessel nichts zu tun gaebe. Wer
+#  Weckrufe will, setzt zuerst die Schluessel und nimmt dann das Kommentar-
+#  zeichen weg:
+#
+#      npx web-push generate-vapid-keys
+#      npx wrangler secret put VAPID_OEFFENTLICH
+#      npx wrangler secret put VAPID_PRIVAT
+#      npx wrangler secret put VAPID_ABSENDER      # mailto:du@example.com
+#
+#  WAS DABEI AN DEN SERVER GEHT, ist ein Zeitpunkt - nicht der Text der
+#  Erinnerung, nicht die Seite, nicht der Grund. Der Stoss sagt nur
+#  "wach auf"; was faellig ist, liest das Dienst-Skript auf dem Geraet.
+# ===========================================================================
+# [triggers]
+# crons = ["* * * * *"]

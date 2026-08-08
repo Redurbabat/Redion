@@ -343,9 +343,45 @@ const gibtEs = (pfad: any) => {
   });
 };
 
+/* --------------------------------------------------------------------------
+ * „WIRD AUSGELIEFERT" IST NICHT DASSELBE WIE „IST EINE DATEI"
+ * --------------------------------------------------------------------------
+ * Hier stand `gibtEs(start)`, und diese Prüfung war selbst die Falle. Sie
+ * verlangte, dass `start_url` eine Datei benennt — also `/index.html`. Und
+ * genau daran ist die installierte App am 7. August gescheitert (E41):
+ *
+ *     Safari kann die Seite nicht öffnen.
+ *     Fehler: „Response served by service worker has redirections"
+ *
+ * Cloudflare beantwortet `/index.html` mit einer Umleitung auf `/`. Im
+ * Browser fällt das nie auf — er folgt ihr, und das Dienst-Skript steht
+ * dabei nicht im Weg. Die INSTALLIERTE App startet aber genau auf
+ * `start_url`, die Anfrage läuft durch das Skript, und eine umgeleitete
+ * Antwort von dort lehnen die Browser strikt ab.
+ *
+ * `/` wird ausgeliefert, ist aber keine Datei. Deshalb zählt ab jetzt, was
+ * beim Aufruf herauskommt, nicht was im Dateisystem steht.
+ * ------------------------------------------------------------------------*/
+const wirdAusgeliefert = (pfad: string) =>
+  gibtEs(pfad) || (pfad.endsWith('/') && gibtEs(pfad + 'index.html'));
+
 const start = aufloesen(manifest.start_url);
 const bereich = aufloesen(manifest.scope);
-p('start_url zeigt auf eine Datei, die es gibt', gibtEs(start), start);
+p('start_url wird wirklich ausgeliefert', wirdAusgeliefert(start), start);
+
+/* UND SIE DARF `index.html` NICHT AUSSCHREIBEN. Das ist der eigentliche
+   Fund, und er gilt für jeden Weg im Manifest: statische Anbieter
+   normalisieren `/index.html` auf `/` — mit einer Umleitung. Für einen
+   gewöhnlichen Aufruf ist das gleichgültig, für den Start der installierten
+   App ist es das Ende. */
+const mitIndex = [
+  manifest.start_url,
+  ...(manifest.shortcuts || []).map((s: any) => s.url),
+  manifest.share_target?.action
+].filter(Boolean).filter((w: string) => /index\.html/.test(w));
+p('Kein Weg im Manifest schreibt `index.html` aus', mitIndex.length === 0,
+  mitIndex.join(', ') + ' — darauf antworten Anbieter mit einer Umleitung, ' +
+  'und die bringt die installierte App zum Stehen (E41)');
 p('scope umfasst die start_url', start.startsWith(bereich), `${start} liegt nicht unter ${bereich}`);
 p('scope ist die Wurzel und nicht oeffentlich/', bereich === '/', bereich);
 
@@ -362,7 +398,8 @@ p('Jedes Symbol im Manifest liegt an seinem Platz', kaputteIcons.length === 0,
 const kaputteWege = [
   ...(manifest.shortcuts || []).map((s: any) => s.url),
   manifest.share_target?.action
-].filter(Boolean).map(aufloesen).filter(pf => !gibtEs(pf.split('#')[0] ?? ''));
+].filter(Boolean).map(aufloesen)
+ .filter(pf => !wirdAusgeliefert(pf.split('#')[0] ?? ''));
 p('Abkürzungen und Teilen-Ziel zeigen ins Volle', kaputteWege.length === 0,
   kaputteWege.join(', '));
 

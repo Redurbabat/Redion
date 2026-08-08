@@ -501,7 +501,7 @@ const Pflege = (() => {
                 return;
             }
             if (elVon(e)?.closest('[data-a="kopieren"]')) {
-                navigator.clipboard?.writeText(liste.map((f) => f.wann + ' — ' + f.text + ' (' + f.wo + ')').join('\n'));
+                Ablage.kopiereJetzt(liste.map((f) => f.wann + ' — ' + f.text + ' (' + f.wo + ')').join('\n'));
                 UI.toast('In die Zwischenablage kopiert');
             }
         });

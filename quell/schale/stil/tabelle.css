@@ -104,6 +104,78 @@
 .tbl-feld:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 .tbl.imFokus .tbl-feld:focus-visible { outline: none; }
 
+/* ===========================================================================
+   DIE WEICHE KANTE, WO ES SEITLICH WEITERGEHT
+
+   Am Telefon, 390 px breit, stand im Tabellenblock:
+
+       Spalte B          Spalte C
+       1'450.00 CHF      1'45
+       2'199.70 CHF      2'18
+
+   Dort ist nichts kaputt — die Tabelle geht rechts weiter, und C2 enthält
+   sehr wohl `1'450.00 CHF`. Abgeschnitten hat sie der BILDRAND.
+
+   Gefährlich ist daran die SCHARFE Kante. Sie liest sich als Ende der Zahl:
+   `1'45` ist eine gültige Zahl, nur eine andere. Für eine zu enge Zelle gibt
+   es seit jeher `###` — die Zelle weiss, dass ihr Inhalt nicht passt. Am
+   Bildrand weiss das niemand: die Zelle ist breit genug, nur der Bildschirm
+   ist es nicht. Derselbe Fund wie in CLAUDE.md §55.2, eine Ebene höher.
+
+   Der letzte Streifen verläuft deshalb ins Nichts. Das Auge liest „geht
+   weiter" statt „hört auf", und es kostet weder Platz noch einen Hinweis.
+
+   ÜBER `mask-image`, nicht über ein aufgelegtes Element: ein Pseudo-Element
+   im Rollfeld rollte MIT dem Inhalt und wäre nach dem ersten Wisch weg. Eine
+   Maske gilt dem Kasten, nicht seinem Inhalt — sie bleibt am Rand stehen.
+
+   `data-rand` setzt `kern/helfer/rollrand.js`, und nur dann, wenn es
+   wirklich weitergeht. Eine Kante an einer Tabelle, die ganz ins Bild passt,
+   wäre eine Behauptung, die nicht stimmt. */
+.tbl-feld[data-rand] { --rollrand: 26px; }
+
+.tbl-feld[data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+.tbl-feld[data-rand~="links"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+}
+.tbl-feld[data-rand~="links"][data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+
+/* Dieselbe Kante an der gewöhnlichen Datenbanktabelle. Am Telefon zeigt
+   die Datenbank normalerweise Karten — dort rollt nichts und es gibt
+   nichts abzuschneiden. Wer im Ansichtsmenü auf „Tabelle" umstellt, hat
+   aber genau die Lage von oben: gemessen 703 px Inhalt in 334 px Kasten. */
+.db-rollbox[data-rand] { --rollrand: 26px; }
+.db-rollbox[data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+.db-rollbox[data-rand~="links"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+}
+.db-rollbox[data-rand~="links"][data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+
+/* Am Rechner ist die Tabelle selten angeschnitten, und wenn doch, ist der
+   Bildschirm gross genug, dass ein schmalerer Streifen reicht. */
+@media (min-width: 761px) {
+  .tbl-feld[data-rand] { --rollrand: 18px; }
+  .db-rollbox[data-rand] { --rollrand: 18px; }
+}
+
 /* --- Kopfzeile oben ------------------------------------------------------- */
 .tbl-spalten {
   position: sticky; top: 0; z-index: 3;
@@ -217,6 +289,75 @@
    und in der Bearbeitungszeile. Kein eigenes Zeichen dafür: ein Punkt oder
    Sternchen an jeder zweiten Zelle wäre lauter als der Nutzen. */
 .tbl-z.gekuerzt { cursor: col-resize; }
+
+/* ==========================================================================
+   BEDINGTE FORMATIERUNG (L15, E53)
+   --------------------------------------------------------------------------
+   Drei Bauformen, und sie liegen ALLE HINTER dem Text:
+
+     Farbe    eine Fläche nach einer Bedingung
+     Skala    ein Farbverlauf zwischen kleinstem und grösstem Wert
+     Balken   ein Balken, dessen Länge den Wert zeigt
+
+   Der Balken ist der Fall, an dem man es falsch machen kann. Neben dem Text
+   bräuchte er eigene Breite, und eine Tabellenspalte hat keine übrig — dann
+   wäre entweder der Balken zwei Pixel lang oder die Zahl abgeschnitten, und
+   abgeschnittene Zahlen sind in diesem Block die gefährlichste Sorte Fehler
+   (siehe `###` weiter oben). Also liegt er dahinter.
+
+   DIE AUSWAHL GEWINNT IMMER. Diese Regeln stehen VOR `.gewaehlt` und
+   `.imBereich`, damit eine gefärbte Zelle trotzdem als gewählt zu erkennen
+   ist. Sonst verliert man beim Malen die Stelle, an der man gerade steht.
+   ========================================================================== */
+.tbl-z.regel-farbe  { background: var(--regel-flaeche, transparent); }
+.tbl-z.regel-farbe.bg-red    { --regel-flaeche: var(--b-red); }
+.tbl-z.regel-farbe.bg-orange { --regel-flaeche: var(--b-orange); }
+.tbl-z.regel-farbe.bg-yellow { --regel-flaeche: var(--b-yellow); }
+.tbl-z.regel-farbe.bg-green  { --regel-flaeche: var(--b-green); }
+.tbl-z.regel-farbe.bg-blue   { --regel-flaeche: var(--b-blue); }
+.tbl-z.regel-farbe.bg-purple { --regel-flaeche: var(--b-purple); }
+
+/* Die Skala bringt ihre Farbe als Inline-Stil mit — sie hängt vom WERT ab,
+   es gäbe also eine Klasse je möglichem Wert. */
+.tbl-z.regel-skala { color: var(--text); }
+
+.tbl-z.regel-balken { position: relative; }
+.tbl-z.regel-balken::before {
+  content: ''; position: absolute; left: 0; top: 3px; bottom: 3px;
+  width: var(--regel-balken, 0%);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 0 3px 3px 0;
+  pointer-events: none;
+}
+
+/* Das Symbol steht VOR dem Wert und färbt nichts.
+
+   Über `content` und eine eigene Eigenschaft, nicht über den Zellinhalt:
+   was in `wert` steht, bleibt damit unangetastet — beim Kopieren nach
+   Excel geht kein Emoji als Text mit, und die Zelle rechnet weiter mit
+   der Zahl.
+
+   `flex:none` ist Pflicht und nicht Zierde. Der Zellinhalt ist ein
+   Flex-Element; ohne diese Zeile würde das Symbol mitgestaucht, sobald
+   die Spalte eng wird — und ein halber Kreis bedeutet nichts. Gestaucht
+   wird dann lieber der Text, und der zeigt bei Platzmangel `###`. */
+.tbl-z.regel-symbol::before {
+  content: var(--regel-symbol, '');
+  flex: none;
+  margin-right: 5px;
+  font-size: .85em;
+  line-height: 1;
+}
+
+/* In der Regelliste des Fensters: der Punkt zeigt das Symbol selbst, nicht
+   eine Farbe, die es gar nicht hat. */
+.fr-punkt.fr-symbol {
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
 
 /* Der Rahmen des Blocks sagt, dass das Raster den Fokus hat. Leise, damit er
    dem Auswahlrahmen nicht die Aufmerksamkeit nimmt — der ist laut Entwurf
@@ -384,8 +525,14 @@
  * ========================================================================*/
 @media (max-width: 760px) {
   .tbl {
-    --tbl-zh: 40px;      /* 32 px trifft man mit dem Finger nicht */
-    --tbl-kb: 40px;
+    /* 44 px, weil CLAUDE.md §37 das als Mindestmass für alles nennt, was
+       mit dem Finger getroffen wird — und eine Zelle wird angetippt, um sie
+       auszuwählen. Hier stand 40 mit der Bemerkung „32 px trifft man mit
+       dem Finger nicht": richtig erkannt, nur nicht zu Ende gerechnet.
+       DIESE ZAHL MUSS ZU `ZH_HANDY` IN `ansicht.ts` PASSEN — das
+       fensterweise Zeichnen rechnet damit, welche Zeilen im Bild sind. */
+    --tbl-zh: 44px;
+    --tbl-kb: 44px;
     /* 128 statt 110 — gemessen: bei 16 px Schrift ist `1’450.00 CHF` 99 px
        breit, mit Innenabstand also 114. In 110 px stand deshalb bei jedem
        Betrag `###`. Die Zahl steht auch im Kopf von `ansicht.ts`; hier
@@ -424,7 +571,11 @@
    * Telefon, und aus demselben Grund.
    * ----------------------------------------------------------------------*/
   .tbl-kopf { flex-wrap: wrap; }
-  .tbl-eingabe { flex: 1 1 120px; }
+  /* 44 px hoch, nicht 32. Die Formelzeile ist ein Eingabefeld, und ein
+     Eingabefeld wird angetippt — §37 gilt auch dort. Gemessen waren es 32,
+     weil nur `padding: 7px 10px` die Höhe machte und niemand nachgerechnet
+     hat, was dabei herauskommt. */
+  .tbl-eingabe { flex: 1 1 120px; min-height: 44px; }
   .tbl-werkzeuge {
     flex: 1 0 100%;
     border-top: 1px solid var(--line-soft);

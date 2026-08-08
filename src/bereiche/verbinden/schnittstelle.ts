@@ -878,7 +878,7 @@ const Api = (() => {
       if (a.dataset.a === 'neu')   { tokenNeu(); setzeToken(); UI.toast('Neues Token angelegt'); }
       if (a.dataset.a === 'weg')   { tokenWeg(); setzeToken(); UI.toast('Token zurückgezogen'); }
       if (a.dataset.a === 'kopie') {
-        navigator.clipboard?.writeText(tokenHolen() || '').then(() => UI.toast('Token kopiert'));
+        Ablage.kopiereJetzt(tokenHolen() || '', 'Token kopiert');
       }
       if (a.dataset.a === 'los') {
         const fm = feld('#api-m'), fp = feld('#api-p'), fk = feld('#api-k');

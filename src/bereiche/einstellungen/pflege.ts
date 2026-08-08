@@ -467,7 +467,7 @@ const Pflege = (() => {
         Store.setMeta('fehlerliste', []); o.remove(); UI.toast('Fehlerliste geleert'); return;
       }
       if (elVon(e)?.closest<HTMLElement>('[data-a="kopieren"]')) {
-        navigator.clipboard?.writeText(liste.map((f: any) =>
+        Ablage.kopiereJetzt(liste.map((f: any) =>
           f.wann + ' — ' + f.text + ' (' + f.wo + ')').join('\n'));
         UI.toast('In die Zwischenablage kopiert');
       }

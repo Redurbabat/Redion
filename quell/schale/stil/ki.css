@@ -105,7 +105,9 @@ body[data-small="1"] .b-text .ct{font-size:14px}
    und die Mehrfachauswahl von Blöcken entfällt. Genauso hier. */
 @media(max-width:380px){ #page{padding-left:22px; padding-right:22px} }
 
-@media(max-width:700px){
+/* 760, nicht 700 — dieselbe Grenze wie die Telefonleisten.
+   Dazwischen lagen sie sonst ÜBER der Rechner-Seitenleiste. */
+@media(max-width:760px){
   .spalten-block{grid-template-columns:1fr; gap:8px}
   .blk > .handles{display:none}
   .cal.woche{grid-template-columns:1fr}

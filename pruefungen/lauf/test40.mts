@@ -11,6 +11,16 @@ import { chromium } from 'playwright';
   const bauePage = async (p: any) => {
     await p.goto('file://' + WURZEL + '/index.html');
     await p.waitForTimeout(1900);
+    /* KEIN ERSTBESUCHER — das Willkommen wegräumen (E55).
+       Seit §11 legt sich beim allerersten Öffnen ein Blatt über den ganzen
+       Bildschirm. Für den, der Redion zum ersten Mal sieht, ist das richtig;
+       hier misst niemand zum ersten Mal, und Playwright wartet dann
+       sechzig Sekunden darauf, dass ein Knopf darunter anklickbar wird. */
+    await p.evaluate(() => {
+      Store.setMeta('rundgangGesehen', true);
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+    });
     await p.evaluate(() => {
       const s = Store.addPage(null, { text: 'Layout-Probe', icon: '🎯' });
       Store.addBlock(s.id, 'h1',   { text: 'Überschrift' });
@@ -89,7 +99,7 @@ import { chromium } from 'playwright';
      nur einmal. */
   ok('Oben stehen Konto und die vier Bereiche als Pillen',
      handy.obenSichtbar &&
-     handy.obenLeiste.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-inbox',
+     handy.obenLeiste.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-mehr',
      handy.obenLeiste.join(','));
   ok('Unten stehen Suchen, KI fragen und Neu',
      handy.untenSichtbar &&
@@ -203,4 +213,10 @@ import { chromium } from 'playwright';
   if (f.length) { console.log('\nFEHLER:'); f.slice(0, 8).forEach(x => console.log('  ' + x)); }
   else console.log('Keine JS-Fehler.');
   await b.close();
+  /* EIN RÜCKGABEWERT. Ohne ihn endet der Lauf mit 0, auch wenn oben ein ❌
+     steht — und der Orchestrator meldete das jahrelang als „bestanden"
+     (E56). Seit dem 8. August liest er die Ausgabe mit; die ehrliche
+     Auskunft gehört trotzdem hierher, denn wer den Lauf einzeln startet,
+     sieht nur den Rückgabewert. */
+  process.exit(pruef.some((x: any) => !x[1]) ? 1 : 0);
 })();

@@ -153,18 +153,29 @@ import http from 'node:http';
        eine leere Zeichenkette wäre ungleich 'none' und damit still grün. */
     const vorher = side ? getComputedStyle(side).transform : 'none';
     menu?.click();
-    const offen = document.body?.classList.contains('side-offen');
-    const schatten = !!document.getElementById('side-schatten');
+    /* SEIT E42 IST ES KEINE SCHUBLADE MEHR. Der Kreis links oben zog
+       vorher die Seitenleiste des Rechners auf 390 px zusammen — 260 px
+       Baum, Reiter, 33-px-Zeilen. Jetzt öffnet er das R-Blatt über den
+       ganzen Bildschirm, zwölf Zeilen zu 56 px.
+
+       Diese Zeile stand hier über Wochen auf ❌, und niemand hat es
+       gesehen: dem Lauf fehlt ein Rückgabewert, also meldete der
+       Orchestrator „alle bestanden". Beides ist am 8. August behoben —
+       die Prüfung fragt jetzt nach dem Blatt, und `alle.mts` liest mit. */
+    const blatt = !!document.getElementById('r-blatt');
+    const zeilen = document.querySelectorAll('#r-blatt .rm-gruppe button').length;
+    document.getElementById('r-blatt')?.remove();
     PWA.schubladeZu();
     return { menuDa: !!menu, menuSichtbar: menu ? getComputedStyle(menu).display !== 'none' : false,
-             versteckt: vorher !== 'none', offen, schatten,
+             versteckt: vorher !== 'none', blatt, zeilen,
              istTelefon: PWA.istTelefon(),
              schriftgroesse: getComputedStyle(document.querySelector('.blk .ct') || document.body).fontSize };
   });
   console.log('   Telefon:', JSON.stringify(tel));
   ok('Der Arbeitsbereich-Knopf erscheint auf dem Telefon', tel.menuDa && tel.menuSichtbar);
   ok('Seitenleiste ist eingefahren', tel.versteckt);
-  ok('Knopf klappt sie auf', tel.offen && tel.schatten);
+  ok('Der Knopf öffnet das R-Blatt', tel.blatt);
+  ok('… mit den Wegen des Arbeitsbereichs darin', Number(tel.zeilen) >= 8);
   ok('Schrift gross genug gegen iOS-Zoom', parseFloat(tel.schriftgroesse) >= 16);
 
   await p.setViewportSize({ width: 1400, height: 900 });
@@ -227,4 +238,10 @@ import http from 'node:http';
   if (f.length) { console.log('\nFEHLER:'); f.slice(0, 6).forEach(x => console.log('  ' + x)); }
   else console.log('Keine JS-Fehler.');
   await b.close();
+  /* EIN RÜCKGABEWERT. Ohne ihn endet der Lauf mit 0, auch wenn oben ein ❌
+     steht — und der Orchestrator meldete das jahrelang als „bestanden"
+     (E56). Seit dem 8. August liest er die Ausgabe mit; die ehrliche
+     Auskunft gehört trotzdem hierher, denn wer den Lauf einzeln startet,
+     sieht nur den Rückgabewert. */
+  process.exit(pruef.some((x: any) => !x[1]) ? 1 : 0);
 })();

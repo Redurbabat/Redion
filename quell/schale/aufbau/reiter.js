@@ -357,12 +357,29 @@ const Fenster = (() => {
             wechseln(e.shiftKey ? (aktiv - 1 + reiter.length) % reiter.length : (aktiv + 1) % reiter.length);
             return;
         }
-        if (!e.altKey && e.key.toLowerCase() === 't' && !e.shiftKey) {
+        /* --- Warum hier NICHT Strg T und Strg W stehen ----------------------
+         * Beide gehören dem Browser, und er gibt sie nicht her: `preventDefault`
+         * bleibt bei ihnen wirkungslos. Gebunden waren sie trotzdem, und das
+         * Ergebnis war, dass BEIDES geschah — Redion schloss seinen Reiter, und
+         * der Browser schloss das Fenster darüber. Der Mensch kam zurück und
+         * fand einen seiner Reiter nicht mehr, ohne Anhaltspunkt, warum.
+         *
+         * Nachweisen lässt sich das im Prüfstand nicht: Playwright schickt
+         * Tastendrücke an die Seite, nicht an die Browseroberfläche. Deshalb
+         * wird hier nicht bewiesen, sondern ausgewichen — auf zwei Kürzel, bei
+         * denen die Frage gar nicht erst entsteht. `test134` hält fest, dass
+         * Strg T und Strg W wieder beim Browser liegen.
+         *
+         * Und selbst wenn der Browser sie hergäbe: wer Strg W drückt, meint
+         * meistens den Browserreiter. Eine Seite, die das umdeutet, ist
+         * unhöflich zu einer Gewohnheit, die älter ist als sie.
+         * ------------------------------------------------------------------ */
+        if (e.altKey && e.key.toLowerCase() === 'n' && !e.shiftKey) {
             e.preventDefault();
             neuerReiter();
             return;
         }
-        if (!e.altKey && e.key.toLowerCase() === 'w' && !e.shiftKey) {
+        if (e.altKey && e.key.toLowerCase() === 'w' && !e.shiftKey) {
             e.preventDefault();
             schliessen(aktiv);
             return;

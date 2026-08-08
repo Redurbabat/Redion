@@ -307,7 +307,7 @@ const pruef = (n: any, ist: any, soll: any) => {
     document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
     return { gruppen, anzahl, zahl, doppelt };
   });
-  pruef('Zwölf Gruppen in der Übersicht', uebersicht.gruppen.length, 12);
+  pruef('Dreizehn Gruppen in der Übersicht', uebersicht.gruppen.length, 13);
   pruef('Die neue Gruppe ist dabei',
         (uebersicht.gruppen ?? '').includes('Mehrere Blöcke auf einmal'), true);
   pruef('Markdown-Gruppe ist dabei',

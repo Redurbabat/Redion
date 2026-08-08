@@ -475,8 +475,8 @@ const App = (() => {
       }
       if (a === 'inhalt') {
         const text = markdownVonSeite(p);
-        navigator.clipboard?.writeText(text);
-        UI.toast('Seiteninhalte kopiert — ' + text.split('\n').length + ' Zeilen');
+        Ablage.kopiereJetzt(text,
+          'Seiteninhalte kopiert — ' + text.split('\n').length + ' Zeilen');
         m.remove();
         return;
       }
@@ -566,10 +566,9 @@ const App = (() => {
         if (n !== null) { Store.updateBlock(p.id, { text: n }); zeichneBaum(); if (p.id === seiteId) zeichneSeite(); }
       }
       if (a === 'dup')  { dupliziereSeite(p.id, p.parentId); zeichneBaum(); UI.toast('Seite dupliziert'); }
-      if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); }
+      if (a === 'link') { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); }
       if (a === 'pid') {
-        navigator.clipboard?.writeText(p.id);
-        UI.toast('Seiten-ID kopiert: ' + p.id);
+        Ablage.kopiereJetzt(p.id, 'Seiten-ID kopiert: ' + p.id);
       }
       if (a === 'komm') Kommentare.panel(p.id);
       if (a === 'vorschlag') vorschlagModus(p);
@@ -720,11 +719,20 @@ const App = (() => {
    * SUCHE
    * ======================================================================*/
   const suche = () => {
+    /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
+       Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
+       Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
+       Drittel davon ins Feld, und was übrig bleibt („Suchen — auch
+       typ:seite, in:Projekte, nach:202") liest sich wie ein Fehler. Lieber
+       ein Wort, das stimmt, als ein Satz, der abbricht. */
+    const eng = matchMedia('(max-width:760px)').matches;
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder such" style="width:min(820px,95vw)">' +
-        '<input id="q" placeholder="Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;" autocomplete="off">' +
+        '<input id="q" placeholder="' + (eng ? 'Seiten und Inhalte suchen'
+          : 'Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;') +
+          '" autocomplete="off">' +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
             '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -741,9 +749,17 @@ const App = (() => {
           '<div class="res" id="res"></div>' +
           '<div class="such-vorschau" id="vorschau"></div>' +
         '</div>' +
-        '<div class="hint">↑ ↓ auswählen · Enter öffnen · Esc schliessen · ' +
-          'Befehle: <code>typ:seite</code> <code>in:Projekte</code> <code>nach:2026-01</code> ' +
-          '<code>tag:wichtig</code> <code>titel:Wort</code> <code>"genauer Satz"</code></div>' +
+        /* Die Fusszeile hat zwei Hälften, und nur eine gilt überall.
+           „↑ ↓ auswählen · Enter öffnen · Esc schliessen" nennt drei Tasten,
+           die eine Telefontastatur nicht hat — das ist keine Hilfe, sondern
+           eine Anleitung für ein anderes Gerät. Die Suchbefehle dagegen
+           gelten auf beiden, also bleiben sie. Getrennt, damit das
+           Stilblatt die eine Hälfte ausblenden kann und die andere nicht. */
+        '<div class="hint">' +
+          '<span class="hint-tasten">↑ ↓ auswählen · Enter öffnen · Esc schliessen · </span>' +
+          '<span class="hint-befehle">Befehle: <code>typ:seite</code> <code>in:Projekte</code> ' +
+          '<code>nach:2026-01</code> <code>tag:wichtig</code> <code>titel:Wort</code> ' +
+          '<code>"genauer Satz"</code></span></div>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -753,22 +769,77 @@ const App = (() => {
     let treffer: any[] = [];
     let i = 0;
 
+    /* ----------------------------------------------------------------------
+     * „ZULETZT GESUCHT" (Vorgabe §17)
+     * ----------------------------------------------------------------------
+     * Vorher war das leere Suchfeld ein leeres Fenster. Das ist der
+     * häufigste Zustand überhaupt — man öffnet die Suche und hat noch
+     * nichts getippt — und ausgerechnet dort stand nichts.
+     *
+     * Menschen suchen wiederholt dasselbe. Die letzten sechs Begriffe als
+     * antippbare Marken sind deshalb kein Beiwerk, sondern die schnellste
+     * Abkürzung, die eine Suche haben kann: einmal tippen statt elfmal.
+     *
+     * Gemerkt wird erst beim Öffnen eines Treffers, nicht bei jedem
+     * Tastendruck — sonst stünde dort „f", „fo", „for", „form".
+     * -------------------------------------------------------------------- */
+    const letzteSuchen = (): string[] => {
+      try { return (Store.getMeta('suchverlauf', []) || []).slice(0, 6); }
+      catch { return []; }
+    };
+    const merkeSuche = (wort: string) => {
+      const w = String(wort || '').trim();
+      if (w.length < 2) return;
+      const alt2 = letzteSuchen().filter(x => x.toLowerCase() !== w.toLowerCase());
+      try { Store.setMeta('suchverlauf', [w, ...alt2].slice(0, 12)); } catch { }
+    };
+
+    /* Der Verlauf steht ÜBER der Liste, nicht statt ihrer. Das leere
+       Suchfeld zeigt nämlich schon alle Seiten — mein erster Entwurf
+       prüfte auf `!treffer.length` und griff deshalb nie. Gesehen hat das
+       die Probe, nicht der Code. */
+    const verlaufBlock = (): string => {
+      if (inp.value) return '';
+      const w = letzteSuchen();
+      if (!w.length) return '';
+      return '<div class="such-verlauf"><div class="sv-kopf">Zuletzt gesucht</div>' +
+        '<div class="sv-marken">' +
+        w.map(x => `<button data-wort="${esc(x)}">${esc(x)}</button>`).join('') +
+        '</div></div>';
+    };
+    const verlaufBinden = () => {
+      res.querySelectorAll<HTMLElement>('[data-wort]').forEach(b => {
+        b.addEventListener('click', () => {
+          inp.value = b.dataset['wort'] || '';
+          inp.dispatchEvent(new Event('input'));
+          inp.focus();
+        });
+      });
+    };
+
     const zeichne = () => {
       if (!treffer.length) {
         res.innerHTML = inp.value
-          ? '<div style="padding:14px; color:var(--text-faint); font-size:14px">Nichts gefunden</div>'
-          : '';
+          ? '<div class="such-leer"><b>Nichts gefunden</b>' +
+            '<span>Versuche einen anderen Begriff — oder suche in den Befehlen ' +
+            'mit <code>Strg ⇧ P</code>.</span></div>'
+          : verlaufBlock();
+        verlaufBinden();
         return;
       }
-      res.innerHTML = treffer.map((t, k) =>
+      res.innerHTML = verlaufBlock() + treffer.map((t, k) =>
         `<button data-i="${k}" ${k === i ? 'class="on"' : ''}>` +
           `<span>${t.page.icon || '📄'}</span>` +
           `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
           (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
           (t.treffer === 'Inhalt' ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
-      res.querySelectorAll<HTMLElement>('button').forEach(b => {
-        b.addEventListener('click', () => { oeffne(treffer[Number(b.dataset.i)]?.page.id); o.remove(); });
+      verlaufBinden();
+      res.querySelectorAll<HTMLElement>('button[data-i]').forEach(b => {
+        b.addEventListener('click', () => {
+          merkeSuche(inp.value);
+          oeffne(treffer[Number(b.dataset.i)]?.page.id); o.remove();
+        });
         b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
       });
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
@@ -907,7 +978,26 @@ const App = (() => {
       if (e.key === 'Enter' && treffer[i]) { oeffne(treffer[i].page.id); o.remove(); }
     });
 
+    /* WELCHER FILTER IST GESETZT? Am Telefon sind die Filter Marken, und
+       eine gesetzte Marke muss man sehen, ohne sie zu öffnen — sonst sucht
+       man in einem Ausschnitt und weiss es nicht. `.leer` heisst: steht
+       auf der Vorgabe, also unauffällig. */
+    const filterMarken = () => {
+      o.querySelectorAll<HTMLSelectElement>('.such-filter select').forEach(s2 => {
+        const vorgabe = s2.options[0]?.value ?? '';
+        s2.classList.toggle('leer', s2.value === vorgabe);
+      });
+    };
+    o.querySelectorAll<HTMLSelectElement>('.such-filter select')
+      .forEach(s2 => s2.addEventListener('change', filterMarken));
+    filterMarken();
+
     o.addEventListener('mousedown', e => { if (e.target === o) o.remove(); });
+    /* EINMAL ZEICHNEN, BEVOR JEMAND TIPPT. Ohne das blieb das leere
+       Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
+       überhaupt: man öffnet die Suche und hat noch nichts eingegeben.
+       Genau dort gehören die letzten Suchbegriffe hin. */
+    zeichne();
     inp.focus();
   };
 
@@ -1272,7 +1362,12 @@ const App = (() => {
           zeile('befehle', '⌘', 'Befehle') +
           zeile('start', '🏠', 'Start') +
           zeile('seiten', '📄', 'Seiten') +
-          zeile('inbox', '📥', 'Posteingang') +
+          /* „Mehr" statt „Posteingang" (E42 §16). Der Posteingang ist kein
+             eigener Weg mehr, sondern eine Zeile IN Mehr — er ist meistens
+             leer, und ein Platz in der Hauptnavigation gehört dem, was man
+             oft braucht. Der Kompass steht bewusst NICHT hier: die Vorgabe
+             sagt ausdrücklich, er sei eine Seite in Mehr, kein Reiter. */
+          zeile('mehr', '🧭', 'Mehr') +
           zeile('neu', '✚', 'Neue Seite') +
           /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
              weg: unten steht „KI fragen", und hier steht der Weg zu allem,
@@ -1289,6 +1384,39 @@ const App = (() => {
       '</div>';
     document.body.appendChild(o);
     requestAnimationFrame(() => o.classList.add('auf'));
+
+    /* DER SPEICHERBALKEN (Vorgabe §16). Er gehört genau hierher und
+       nirgendwo sonst: das R-Blatt ist der Ort für den Arbeitsbereich, und
+       „wie viel liegt hier eigentlich?" ist bei einer App, die alles auf
+       dem Gerät hält, die erste Frage danach.
+
+       NACHGETRAGEN, NICHT MITGEBAUT — `navigator.storage.estimate()` ist
+       asynchron und braucht auf einem vollen Gerät spürbar Zeit. Darauf zu
+       warten hiesse, das Blatt später zu öffnen; also kommt der Balken
+       nach, wenn er da ist. Ist das Blatt bis dahin zu, passiert nichts. */
+    void (async () => {
+      let stand: { benutzt?: number | undefined;
+                   verfuegbar?: number | undefined } | null = null;
+      try { stand = await Store.usage(); } catch { }
+      if (!stand || !stand.benutzt || !o.isConnected) return;
+      const rollen = o.querySelector('.rm-rollen');
+      if (!rollen) return;
+      const mb = (n: number) => n >= 1073741824
+        ? (n / 1073741824).toFixed(2).replace('.', ',') + ' GB'
+        : Math.round(n / 1048576) + ' MB';
+      const anteil = stand.verfuegbar
+        ? Math.min(100, Math.round((stand.benutzt / stand.verfuegbar) * 100)) : 0;
+      const k = document.createElement('div');
+      k.className = 'rm-speicher';
+      k.innerHTML =
+        '<div class="rs-kopf"><span>Auf diesem Gerät</span>' +
+        `<b>${mb(stand.benutzt)}</b></div>` +
+        `<div class="rs-balken"><i style="width:${Math.max(2, anteil)}%"></i></div>` +
+        `<div class="rs-fuss">${stand.verfuegbar
+          ? anteil + ' % von ' + mb(stand.verfuegbar) + ' — der Browser gibt den Rest frei, wenn er ihn braucht'
+          : 'Wie viel der Browser noch freigibt, sagt er nicht.'}</div>`;
+      rollen.appendChild(k);
+    })();
 
     const zu = () => { o.classList.remove('auf'); setTimeout(() => o.remove(), 200); };
     o.addEventListener('click', (e) => {
@@ -1310,8 +1438,8 @@ const App = (() => {
                                            Ansichten.seiten(); handyLeiste(); }
         else if (was === 'start')        { Seitenleiste.reiter('start');
                                            Ansichten.start(); handyLeiste(); }
-        else if (was === 'inbox')        { Seitenleiste.reiter('inbox');
-                                           Ansichten.posteingang(); handyLeiste(); }
+        else if (was === 'mehr')         { Seitenleiste.reiter('mehr');
+                                           Ansichten.mehr(); handyLeiste(); }
         else if (was === 'neu')          neueSeite();
         else if (was === 'import')       Werkzeuge.dateienLesen();
         else if (was === 'sichern')      sicherungSpeichern();
@@ -1657,6 +1785,71 @@ const App = (() => {
     return p;
   };
 
+  /* ==========================================================================
+   * „NEU ERSTELLEN" — das Blatt hinter dem Stift (E45, Vorgabe §18)
+   * --------------------------------------------------------------------------
+   * WAS DER STIFT VORHER TAT: sofort eine leere Seite anlegen. Das ist der
+   * richtige Weg für den, der genau das will, und eine Sackgasse für alle
+   * anderen. Redion kann Datenbanken, Tabellen, Aufgaben, Karteikarten,
+   * Dateien und Vorlagen — und keines davon war von hier aus erreichbar.
+   * Wer nicht wusste, dass es Karteikarten gibt, fand sie nie.
+   *
+   * Deshalb ein Blatt mit acht Wegen, und die leere Seite steht als erster
+   * darin: wer sie will, tippt einmal mehr. Das ist der Preis dafür, dass
+   * die anderen sieben überhaupt existieren.
+   *
+   * NUR AM TELEFON. Am Rechner gibt es Strg+N, die Seitenleiste und die
+   * Befehlspalette — dort wäre ein Blatt ein Umweg, kein Wegweiser.
+   * ========================================================================*/
+  const ERSTELLEN: [string, string, string, string][] = [
+    ['seite',    '📄', 'Neue Seite',       'Leere Seite anlegen'],
+    ['memo',     '⚡', 'Schnellnotiz',     'Gedanken sofort festhalten'],
+    ['db',       '▦', 'Neue Datenbank',   'Zeilen sind eigene Seiten'],
+    ['tabelle',  '📊', 'Neue Tabelle',     'Rechnen wie in Excel'],
+    ['aufgabe',  '☑', 'Aufgabe',          'Mit Datum planen'],
+    ['karte',    '📚', 'Karteikarte',      'Später wiederholen'],
+    ['datei',    '📎', 'Datei hochladen',  'Bleibt auf diesem Gerät'],
+    ['vorlage',  '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
+  ];
+
+  const erstellenBlatt = (): void => {
+    const html = '<div class="menu-liste">' +
+      ERSTELLEN.map(([was, z, name, sub]) =>
+        `<button data-neu="${was}"><span class="mi">${z}</span>` +
+        `<span class="ne-txt"><b>${name}</b><i>${sub}</i></span>` +
+        '<span class="ne-pfeil">›</span></button>').join('') +
+      '</div>';
+    const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen' });
+    m.addEventListener('click', (e: Event) => {
+      const b = (e.target instanceof Element)
+        ? e.target.closest<HTMLElement>('[data-neu]') : null;
+      if (!b) return;
+      const was = b.dataset['neu'];
+      document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
+      /* Erst schliessen, dann handeln — ein Dialog unter einem Blatt ist
+         von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
+      setTimeout(() => {
+        if (was === 'seite')        neueSeite();
+        else if (was === 'memo')    Werkzeuge.schnellnotizen();
+        else if (was === 'datei')   Werkzeuge.dateienLesen();
+        else if (was === 'vorlage') Werkzeuge.vorlagen();
+        else if (was === 'karte')   Werkzeuge.lernen();
+        else {
+          /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
+             gibt sie nicht ohne eine. Also erst die Seite, dann der Block
+             darin, und der Cursor steht schon an der richtigen Stelle. */
+          const p = neueSeite();
+          setTimeout(() => {
+            if (was === 'db')           Store.addDatabase(p.id, 'Ohne Namen');
+            else if (was === 'tabelle') Store.addBlock(p.id, 'tabelle', {});
+            else if (was === 'aufgabe') Store.addBlock(p.id, 'todo', { text: '' });
+            zeichneSeite();
+          }, 80);
+        }
+      }, 60);
+    });
+  };
+
   /* ------------------------------------------------------------------------
    * BREITE DER SEITENLEISTE
    * ---------------------------------------------------------------------- */
@@ -1758,8 +1951,7 @@ const App = (() => {
       /* Strg+L: Adresse dieser Seite kopieren */
       if (k === 'l' && !e.shiftKey && !e.altKey) {
         e.preventDefault();
-        navigator.clipboard?.writeText(location.origin + location.pathname + '#' + aktuelleSeite());
-        UI.toast('Link zur Seite kopiert');
+        Ablage.kopiereJetzt(location.origin + location.pathname + '#' + aktuelleSeite(), 'Link zur Seite kopiert');
         return;
       }
       /* Strg+Umschalt+U: eine Ebene nach oben in der Seitenhierarchie */
@@ -1939,7 +2131,7 @@ const App = (() => {
         if (b.dataset.a === 'zu') { k.remove(); return; }
         if (b.dataset.a !== 'kopieren') return;
         try {
-          await navigator.clipboard.writeText(einzelheiten);
+          await Ablage.kopiere(einzelheiten);
           b.textContent = 'Kopiert';
         } catch {
           /* Ohne Zwischenablage (altes iOS, kein sicherer Kontext) wenigstens
@@ -2029,7 +2221,7 @@ const App = (() => {
     /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
        die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
        gesetzt. Die Bedingung war damit nie wahr. */
-    if (window.matchMedia('(max-width: 700px)').matches && !ausHash) {
+    if (window.matchMedia('(max-width: 760px)').matches && !ausHash) {
       try { Ansichten.start(); } catch { /* ohne Startbildschirm bleibt die Seite */ }
     }
 
@@ -2164,7 +2356,7 @@ const App = (() => {
        Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
     an('hl-bespr', () => { PWA.schubladeZu && PWA.schubladeZu();
                            Seitenleiste.reiter('bespr');
-                           if (window.matchMedia('(max-width: 700px)').matches) {
+                           if (window.matchMedia('(max-width: 760px)').matches) {
                              Ansichten.termine(); handyLeiste(); return;
                            }
                            zeichneBaum(); handyLeiste();
@@ -2172,7 +2364,10 @@ const App = (() => {
     /* Die KI sitzt jetzt unten in der Mitte, nicht mehr in der Reiterleiste. */
     an('hu-ki', () => kiPanel(true));
     an('hu-suche', () => suche());
-    an('hu-neu',   () => neueSeite());
+    /* Am Telefon das Blatt (Vorgabe §18), am Rechner der Direktweg: dort
+       gibt es Strg+N, die Seitenleiste und die Befehlspalette. */
+    an('hu-neu',   () => { if (window.matchMedia('(max-width: 760px)').matches)
+                             erstellenBlatt(); else neueSeite(); });
     /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
        wie früher der ☰. */
     /* ----------------------------------------------------------------------
@@ -2187,19 +2382,20 @@ const App = (() => {
      * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
      * -------------------------------------------------------------------- */
     an('hl-konto', () => {
-      if (!window.matchMedia('(max-width: 700px)').matches) {
+      if (!window.matchMedia('(max-width: 760px)').matches) {
         if (PWA.schubladeAuf) PWA.schubladeAuf();
         return;
       }
       PWA.schubladeZu && PWA.schubladeZu();
       rMenue();
     });
-    /* `reiter('inbox')`, nicht `'start'`: die Pille oben liest ihn, und mit
-       `'start'` stand sie auf „Start", während daneben schon der Posteingang
-       stand. Derselbe Fund wie bei „Seiten", nur eine Zeile weiter unten —
-       gefunden hat ihn wieder das Bildschirmfoto, nicht der Code. */
-    an('hl-inbox', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           Seitenleiste.reiter('inbox'); Ansichten.posteingang(); handyLeiste(); });
+    /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
+       Papierkorb und Einstellungen brauchen einen Platz oben — ein
+       Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
+       in Mehr und ist damit keinen Griff weiter weg als vorher.
+       `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
+    an('hl-mehr', () => { PWA.schubladeZu && PWA.schubladeZu();
+                          Seitenleiste.reiter('mehr'); Ansichten.mehr(); handyLeiste(); });
     an('btn-suche-handy', () => suche());
     an('btn-neu-handy',   () => neueSeite());
     handyLeiste();
@@ -2223,7 +2419,7 @@ const App = (() => {
          können Telefon-Browser nicht, und eine Datei auf die Seite ziehen
          kann auf einem Touchscreen niemand. Ein toter Knopf ist schlimmer
          als ein fehlender. */
-      const telefon = window.matchMedia('(max-width: 700px)').matches;
+      const telefon = window.matchMedia('(max-width: 760px)').matches;
       const m = UI.menu(
         '<div class="grp">Was soll hereinkommen?</div>' +
         '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
@@ -2256,8 +2452,7 @@ const App = (() => {
     an('btn-verlauf', () => seiteId && Werkzeuge.versionen(Store.getBlock(seiteId)));
     an('btn-link', () => {
       if (!seiteId) return;
-      navigator.clipboard?.writeText(location.origin + location.pathname + '#' + seiteId);
-      UI.toast('Link zur Seite kopiert');
+      Ablage.kopiereJetzt(location.origin + location.pathname + '#' + seiteId, 'Link zur Seite kopiert');
     });
     an('btn-lock', () => {
       if (!seiteId) return;
