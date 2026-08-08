@@ -741,6 +741,80 @@ Einstellungen als Karten (§12) · die Zustandswechsel der Sicherungskarte.
 
 ---
 
+## Phase 12 · Web Push — der Wecker, der auch bei geschlossener App klingelt
+
+**Ziel** — `LUECKEN.md` L33 schliessen: ist Redion um acht Uhr geschlossen,
+soll um acht Uhr trotzdem etwas passieren.
+
+**Der Stand.** Die Hälfte im Browser steht seit dem 7. August (E40): das
+Dienst-Skript zeigt Meldungen über `registration.showNotification()` und
+nimmt den Tipp darauf entgegen. Was fehlt, ist das Wecken von aussen — und
+das geht nur mit Web Push: Schlüsselpaar (VAPID), Anmeldung je Gerät, ein
+Dienst, der zur richtigen Zeit sendet.
+
+**Die Entscheidung, die vor dem Bauen fällt: der Stoss ist LEER.**
+
+Ein Web Push kann Inhalt mitbringen. Er müsste dann verschlüsselt werden
+(aes128gcm) — aber das ist nicht der Grund, ihn wegzulassen. Der Grund ist:
+**der Text einer Erinnerung geht Redions Server nichts an.** „Zahnarzt
+14:00" ist genau die Sorte Satz, die local-first schützen soll.
+
+Also trägt der Stoss nichts. Er sagt nur „wach auf". Das Dienst-Skript liest
+daraufhin die fälligen Erinnerungen aus der lokalen IndexedDB und zeigt sie.
+Der Server erfährt einen **Zeitpunkt** und sonst nichts — kein Titel, kein
+Ort, keine Seite.
+
+```txt
+Gerät   →  „weck mich am 2026-08-09 um 06:00 UTC"   (nur die Zeit)
+Server  →  zur Zeit: ein leerer Stoss an dieses Gerät
+Gerät   →  liest lokal nach, was fällig ist, und zeigt es
+```
+
+Das ist zugleich die einfachste Bauform: kein Payload heisst keine
+Verschlüsselung, nur die VAPID-Signatur (ES256, kann Web Crypto in Workers).
+
+**Was zu bauen ist**
+
+```txt
+server/schema.sql     Tabelle `weckrufe`: geraet, endpunkt, p256dh, auth,
+                      wann, konto — und ein Index auf `wann`
+server/cloudflare.ts  POST /push/anmelden   Anmeldung eines Geräts
+                      POST /push/wecken     Zeitpunkt eintragen/ändern
+                      DELETE /push/abmelden
+                      scheduled()           jede Minute: was fällig ist,
+                                            stossen und den Eintrag löschen
+server/sicherheit/    VAPID: Schlüssel aus den Secrets, JWT signieren
+src/dienst/sw.ts      `push`-Ereignis → fällige Erinnerungen lokal lesen
+                      und zeigen
+src/bereiche/wissen/  Anmeldung anbieten, wenn Erinnerungen erlaubt sind
+```
+
+**Fertig wenn** — ein Gerät meldet sich an · ein Zeitpunkt kommt in die
+Tabelle · der geplante Lauf stösst ihn · das Dienst-Skript zeigt die
+richtige Erinnerung, auch bei geschlossener App · Abmelden räumt auf · ein
+abgelaufener Endpunkt (410 vom Push-Dienst) wird gelöscht statt endlos
+wiederholt.
+
+**Tests** — ein Lauf gegen den echten Worker, wie `test118` es für den
+Abgleich tut. Dazu: kein Erinnerungstext verlässt je das Gerät (das ist der
+Punkt, an dem diese Phase scheitern kann, ohne dass es jemand merkt).
+
+**Achtung, zwei Dinge**
+
+Auf dem iPhone zeigt nur die **installierte** App Systemmeldungen (ab iOS
+16.4). Das steht schon im Dialog; die Anmeldung darf dort nicht so tun, als
+ginge es auch in Safari.
+
+Und ohne Server bleibt alles, wie es ist. Web Push ist eine Zugabe des
+Cloud-Modus, keine Voraussetzung (CLAUDE.md §22): wer nur lokal arbeitet,
+bekommt seine Erinnerung weiterhin beim nächsten Öffnen, mit „Verpasst um
+HH:MM".
+
+**Priorität** — mittel. Der Nutzen ist gross, aber die Zahl der Menschen,
+die Redion installiert und einen Server betreibt, ist heute klein.
+
+---
+
 ## Dauerhafte Regeln
 
 **Nach jeder Codeänderung**
