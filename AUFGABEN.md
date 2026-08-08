@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 103 Prüfläufe**
+**8. August 2026 · 104 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -73,7 +73,8 @@ L10  Mobile — die Schale steht, die Bereiche darin noch nicht ganz.
      fürs Telefon entworfen · Prüfung auf einem echten Gerät
 L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
      Durchlauf mit einem echten Vorleseprogramm
-L16  Automationen: If/Else, Schleife, Vorschau, Protokoll
+L16  Automationen: sonst-Zweig in der Oberfläche und eine Schleife
+     über die eigenen Zeilen — Vorschau und Protokoll sind da (E61)
 L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
 L20  die 33 fehlenden Tastenkürzel · Konflikte mit Browser und
      Betriebssystem systematisch prüfen · Markdown-Tabellen beim Einfügen

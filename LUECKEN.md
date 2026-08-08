@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 103 Prüfläufe**
+**8. August 2026 · 104 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -37,6 +37,8 @@ L10  aus dem Nocturne-Entwurf: Marken statt Auswahlfelder, gleitende
      Reiterpille, 56-px-Leiste, Willkommensbildschirm (E48–E50, E55)
 L20  Markdown gemessen statt gezählt (E59) — das Kürzelzeichen blieb
      seit jeher im Text stehen, und Strg V las kein Markdown zurück
+L16  Probelauf für Automationen (E61) — der ▶-Knopf hiess „probeweise"
+     und änderte echte Daten; dazu Fehler im Laufverlauf
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -451,10 +453,39 @@ Kopieren nach Excel geht kein Emoji als Text mit.
 
 ## L16 · Automationen erweitern
 
-**Stand** — ◐ 11 Aktionsarten, ohne Verzweigung und Schleife.
+**Stand** — ◐ nachgezählt am 8. August: **19** Aktionsarten, nicht 11.
+Vorschau, Protokoll und Fehleranzeige sind da (E61); Schleife und ein
+erstklassiger sonst-Zweig fehlen.
 
-Fehlt: If/Else · sonst-Zweig · für jede Zeile · Vorschau vor der
-Ausführung · Protokoll · Fehleranzeige.
+Diese Lücke stand mit einer Zahl da, die niemand nachgezählt hatte, und
+listete als fehlend, was teils längst gebaut war. Was das Nachsehen fand:
+
+```txt
+✓ 19 Aktionsarten          setze-prop · ki-fuellen · erinnerung ·
+                           unterseite · zaehler · wiederholen ·
+                           fremd-setzen · webhook · melden · variablen ·
+                           neue-zeile · benachricht · mail · archivieren ·
+                           loeschen · leeren · duplizieren · kommentar ·
+                           zurueckstellen
+✓ Bedingung je Aktion      `d.wenn` samt `umkehren` — ein If/Else lässt
+                           sich damit als zwei gespiegelte Aktionen
+                           schreiben
+✓ Variablen                `{{name}}` in jedem Textfeld, aus Formeln
+✓ Protokoll                Laufverlauf je Automation (100 Läufe) und ein
+                           Eintrag im gemeinsamen Protokoll
+✓ Vorschau                 seit E61 — zeigt den Plan, schreibt nichts
+✓ Fehleranzeige            seit E61 — vorher war das Feld da, das ⚠ im
+                           Verlauf auch, und gesetzt hat es nie jemand
+✗ sonst-Zweig              nur über zwei gespiegelte Bedingungen, nicht
+                           als eigenes Ding in der Oberfläche
+✗ für jede Zeile           über mehrere Zeilen läuft nur `fremd-setzen`
+                           (eine ANDERE Datenbank, höchstens 500 Zeilen).
+                           Über die eigenen Zeilen läuft nichts.
+```
+
+**Und was dabei aufgefallen ist** — der ▶-Knopf hiess „Einmal probeweise
+laufen lassen" und liess die Automation **wirklich** laufen. Siehe E61;
+das war Priorität 1, nicht Feinschliff.
 
 ## L17 · Dashboards und Pivot ausbauen
 

@@ -2606,6 +2606,35 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   pointer-events: none;
 }
 
+/* Das Symbol steht VOR dem Wert und färbt nichts.
+
+   Über `content` und eine eigene Eigenschaft, nicht über den Zellinhalt:
+   was in `wert` steht, bleibt damit unangetastet — beim Kopieren nach
+   Excel geht kein Emoji als Text mit, und die Zelle rechnet weiter mit
+   der Zahl.
+
+   `flex:none` ist Pflicht und nicht Zierde. Der Zellinhalt ist ein
+   Flex-Element; ohne diese Zeile würde das Symbol mitgestaucht, sobald
+   die Spalte eng wird — und ein halber Kreis bedeutet nichts. Gestaucht
+   wird dann lieber der Text, und der zeigt bei Platzmangel `###`. */
+.tbl-z.regel-symbol::before {
+  content: var(--regel-symbol, '');
+  flex: none;
+  margin-right: 5px;
+  font-size: .85em;
+  line-height: 1;
+}
+
+/* In der Regelliste des Fensters: der Punkt zeigt das Symbol selbst, nicht
+   eine Farbe, die es gar nicht hat. */
+.fr-punkt.fr-symbol {
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
 /* Der Rahmen des Blocks sagt, dass das Raster den Fokus hat. Leise, damit er
    dem Auswahlrahmen nicht die Aufmerksamkeit nimmt — der ist laut Entwurf
    selbst der Fokusring. */
@@ -9892,9 +9921,13 @@ Register.bloecke = (() => {
         { id: 'h1', name: 'Überschrift 1', icon: 'H₁', gruppe: 'Grundlegend', cmd: ['h1', 'ueberschrift1', 'titel', '#'], kurz: 'Ctrl+Shift+1', md: '#', ph: 'Überschrift 1' },
         { id: 'h2', name: 'Überschrift 2', icon: 'H₂', gruppe: 'Grundlegend', cmd: ['h2', 'ueberschrift2', '##'], kurz: 'Ctrl+Shift+2', md: '##', ph: 'Überschrift 2' },
         { id: 'h3', name: 'Überschrift 3', icon: 'H₃', gruppe: 'Grundlegend', cmd: ['h3', 'ueberschrift3', '###'], kurz: 'Ctrl+Shift+3', md: '###', ph: 'Überschrift 3' },
-        { id: 'todo', name: 'Aufgabenliste', icon: '☑', gruppe: 'Grundlegend', cmd: ['todo', 'aufgabe', 'checkbox'], kurz: 'Ctrl+Shift+4', md: ['[]', '[ ]'], ph: 'Aufgabe' },
+        { id: 'todo', name: 'Aufgabenliste', icon: '☑', gruppe: 'Grundlegend', cmd: ['todo', 'aufgabe', 'checkbox'], kurz: 'Ctrl+Shift+4', md: ['[]', '[ ]', '[x]', '[X]'], ph: 'Aufgabe' },
         { id: 'bullet', name: 'Aufzählungsliste', icon: '•', gruppe: 'Grundlegend', cmd: ['bullet', 'liste', 'aufzaehlung'], kurz: 'Ctrl+Shift+5', md: ['-', '*', '+'], ph: 'Listenpunkt' },
-        { id: 'number', name: 'Nummerierte Liste', icon: '1.', gruppe: 'Grundlegend', cmd: ['number', 'nummeriert', 'num'], kurz: 'Ctrl+Shift+6', md: '1.', ph: 'Listenpunkt' },
+        /* Notion nimmt für die nummerierte Liste nicht nur „1." — auch Buchstaben
+           und römische Zahlen, mit Punkt oder mit Klammer. Wir hatten nur „1.",
+           und `doku/SLASH-UND-TASTEN.md` behauptete trotzdem „a." und „i.". */
+        { id: 'number', name: 'Nummerierte Liste', icon: '1.', gruppe: 'Grundlegend', cmd: ['number', 'nummeriert', 'num'], kurz: 'Ctrl+Shift+6',
+            md: ['1.', '1)', 'a.', 'a)', 'i.', 'i)', 'A.', 'A)', 'I.', 'I)'], ph: 'Listenpunkt' },
         { id: 'toggle', name: 'Toggle-Liste', icon: '▸', gruppe: 'Grundlegend', cmd: ['toggle', 'einklappbar'], kurz: 'Ctrl+Shift+7', md: '>', ph: 'Toggle' },
         { id: 'toggle-h1', name: 'Toggle-Überschrift 1', icon: '▸H₁', gruppe: 'Grundlegend', cmd: ['toggle h1', 'einklappbare ueberschrift 1'] },
         { id: 'toggle-h2', name: 'Toggle-Überschrift 2', icon: '▸H₂', gruppe: 'Grundlegend', cmd: ['toggle h2', 'einklappbare ueberschrift 2'] },
@@ -10345,11 +10378,26 @@ Register.tasten = (() => {
            md-Feld und sind deshalb hier keine Behauptung, sondern eine Liste. */
         ['Markdown beim Tippen', [
                 ['# ␣', 'Überschrift 1'], ['## ␣', 'Überschrift 2'], ['### ␣', 'Überschrift 3'],
-                ['- ␣ oder * ␣', 'Aufzählung'], ['1. ␣', 'Nummerierte Liste'],
-                ['[] ␣', 'Aufgabe'], ['> ␣', 'Toggle'], ['" ␣', 'Zitat'],
-                ['--- ␣', 'Trennlinie'], ['``` ␣', 'Codeblock'], ['$$ ␣', 'Formelblock'],
+                ['- ␣ · * ␣ · + ␣', 'Aufzählung'],
+                ['1. ␣ · a. ␣ · i. ␣', 'Nummerierte Liste — auch mit Klammer: 1) a) i)'],
+                ['[] ␣', 'Aufgabe'], ['[x] ␣', 'Aufgabe, schon abgehakt'],
+                ['> ␣', 'Toggle'], ['" ␣', 'Zitat'],
+                ['--- ␣ · *** ␣ · ___ ␣', 'Trennlinie'],
+                ['``` ␣', 'Codeblock'], ['```js ␣', 'Codeblock in dieser Sprache'],
+                ['$$ ␣', 'Formelblock'],
                 ['**Text**', 'Fett'], ['*Text*', 'Kursiv'], ['`Text`', 'Code'],
-                ['~~Text~~', 'Durchgestrichen'], ['__Text__', 'Unterstrichen']
+                ['~Text~ · ~~Text~~', 'Durchgestrichen'], ['__Text__', 'Unterstrichen'],
+                ['[Text](Adresse)', 'Link'], ['$a^2$', 'Formel im Text']
+            ]],
+        /* Einfügen ist die Gegenrichtung zu „Als Markdown kopieren". Wer eine
+           Gliederung einfügt, bekommt sie wieder als Blöcke — nicht als einen
+           Block voller Rautezeichen. */
+        ['Markdown einfügen', [
+                ['# Text', 'Eingefügt wird daraus eine Überschrift'],
+                ['- [x] Text', 'Eine schon abgehakte Aufgabe'],
+                ['``` … ```', 'Ein Codeblock — der Inhalt bleibt wörtlich'],
+                ['Vier Leerzeichen', 'Eine Stufe tiefer, als Kind darüber'],
+                ['Im Codeblock', 'Markdown bleibt Text und wird nicht gelesen']
             ]],
         ['Verknüpfen', [
                 ['[[', 'Seite verlinken'], ['@', 'Seite, Datum oder Person erwähnen'],
@@ -17505,9 +17553,57 @@ const SpreadsheetView = (() => {
         ['leer', 'ist leer'],
         ['nichtLeer', 'ist nicht leer'],
         ['doppelt', 'kommt mehrfach vor'],
+        ['ueberfaellig', 'ist ein Datum in der Vergangenheit'],
+        ['faelligBald', 'wird fällig in den nächsten … Tagen'],
         ['skala', 'Farbverlauf klein → gross'],
-        ['balken', 'Balken nach Wert']
+        ['balken', 'Balken nach Wert'],
+        ['symbol', 'Symbol nach Wert']
     ];
+    /**
+     * Die Symbolsätze. Drei Stufen, immer in der Reihenfolge klein → gross.
+     *
+     * Warum genau drei und nicht Excels fünf: eine vierte Stufe unterscheidet
+     * sich auf einem Telefonbildschirm nicht mehr erkennbar von der dritten,
+     * und ein Symbol, das man nicht auseinanderhält, sagt weniger als keines.
+     */
+    const SYMBOLSAETZE = {
+        ampel: ['🔴', '🟡', '🟢'],
+        pfeile: ['▼', '▬', '▲'],
+        formen: ['◆', '■', '●'],
+        noten: ['✗', '~', '✓']
+    };
+    /**
+     * Ein Datum aus einer Zelle — als ORTSZEIT um Mitternacht.
+     *
+     * `new Date('2026-08-10')` liest ISO-Daten als UTC. Wer östlich von
+     * Greenwich sitzt, bekäme damit den Vortag um zwei Uhr nachts, und
+     * „überfällig" spränge einen Tag zu früh an. Deshalb aus den Teilen
+     * gebaut, nicht geparst. Dieselbe Rechnung wie in `steuerung.ts`, wo
+     * „Nächste Termine" seit jeher `setHours(0,0,0,0)` nimmt.
+     */
+    const alsDatum = (v) => {
+        const t = String(v ?? '').trim();
+        if (!t)
+            return NaN;
+        let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
+        if (m)
+            return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+        m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(t); /* 10.08.2026 */
+        if (m)
+            return new Date(+m[3], +m[2] - 1, +m[1]).getTime();
+        return NaN;
+    };
+    /** Heute um Mitternacht, in der Zeitzone des Geräts. */
+    const heuteUm0 = () => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+    };
+    /* Welche Arten welches Feld brauchen — an EINER Stelle, weil dieselbe
+       Liste vorher an drei Stellen stand und beim Dazukommen einer Art an
+       zwei davon vergessen worden wäre. */
+    const OHNE_WERT = ['leer', 'nichtLeer', 'doppelt', 'ueberfaellig', 'skala', 'balken'];
+    const OHNE_FARBE = ['skala', 'balken', 'symbol'];
     /** Ein Bereich `A1:C20` als Zeilen-/Spaltengrenzen. Leer = ganzes Blatt. */
     const bereichLesen = (text, R, blatt) => {
         const ganz = { vonZ: 0, bisZ: (blatt.zeilen || 1) - 1,
@@ -17593,8 +17689,54 @@ const SpreadsheetView = (() => {
                 return isFinite(a) && isFinite(u) && isFinite(o) &&
                     a >= Math.min(u, o) && a <= Math.max(u, o);
             }
+            /* Was kein Datum ist, ist nicht überfällig — sondern gar nichts.
+               Die Zahl 5 in einer Datumsspalte darf nicht rot werden, nur weil
+               sie kleiner ist als irgendetwas. */
+            case 'ueberfaellig': {
+                const d = alsDatum(wert);
+                return isFinite(d) && d < heuteUm0();
+            }
+            case 'faelligBald': {
+                const d = alsDatum(wert);
+                if (!isFinite(d))
+                    return false;
+                const tage = alsZahl(regel.wert);
+                const spanne = isFinite(tage) && tage > 0 ? tage : 7;
+                const heute = heuteUm0();
+                /* Heute zählt mit, gestern nicht — das ist `ueberfaellig`. */
+                return d >= heute && d <= heute + spanne * 86400000;
+            }
             default: return false;
         }
+    };
+    /**
+     * Welche der drei Stufen? Gibt 0, 1 oder 2 zurück — oder -1 für „kein Wert".
+     *
+     * Ohne eigene Grenzen wird der Bereich gedrittelt. Mit `wert`/`wert2`
+     * gelten die als Grenzen, und dann zählt nur, was der Mensch eingetragen
+     * hat: bei „Ampel ab 50 und ab 80" soll die 79 gelb sein, egal ob im
+     * Blatt zufällig eine 900 steht.
+     */
+    const symbolStufe = (regel, wert, hilf) => {
+        const n = alsZahl(wert);
+        if (!isFinite(n))
+            return -1;
+        const u = alsZahl(regel.wert), o = alsZahl(regel.wert2);
+        let stufe;
+        if (isFinite(u) && isFinite(o)) {
+            const klein = Math.min(u, o), gross = Math.max(u, o);
+            stufe = n < klein ? 0 : n < gross ? 1 : 2;
+        }
+        else {
+            if (!isFinite(hilf.min) || !isFinite(hilf.max))
+                return -1;
+            const spanne = hilf.max - hilf.min;
+            const t = spanne === 0 ? 1 : (n - hilf.min) / spanne;
+            stufe = t < 1 / 3 ? 0 : t < 2 / 3 ? 1 : 2;
+        }
+        /* „Tage überfällig" ist ein Wert, bei dem klein gut ist. Ohne diesen
+           Schalter müsste man den Symbolsatz rückwärts lesen. */
+        return regel.umgekehrt ? 2 - stufe : stufe;
     };
     /**
      * Was eine Zelle an Aussehen bekommt — Klasse und/oder Inline-Stil.
@@ -17649,6 +17791,22 @@ const SpreadsheetView = (() => {
                    als ihr Bild. */
                 return { klasse: ' regel-balken',
                     stil: `--regel-balken:${p}%` };
+            }
+            /* Ein Symbol färbt nicht, es stellt sich davor. Deshalb steht es
+               nicht bei den Vergleichsregeln: es trifft nicht zu oder nicht zu,
+               es sagt bei jedem Wert etwas. */
+            if (v.regel.art === 'symbol') {
+                if (leer)
+                    continue;
+                const stufe = symbolStufe(v.regel, wert, v.hilf);
+                if (stufe < 0)
+                    continue;
+                const satz = SYMBOLSAETZE[v.regel.satz || 'ampel'] || SYMBOLSAETZE['ampel'];
+                /* Über eine CSS-Eigenschaft, nicht über den Zellinhalt: `wert`
+                   bleibt damit unangetastet, und beim Kopieren nach Excel geht
+                   kein Emoji als Text mit. */
+                return { klasse: ' regel-symbol',
+                    stil: `--regel-symbol:'${satz[stufe] ?? ''}'` };
             }
             if (regelTrifft(v.regel, wert, v.hilf)) {
                 const marke = REGELFARBEN[v.regel.farbe || 'gelb'] || 'yellow';
@@ -18214,6 +18372,12 @@ const SpreadsheetView = (() => {
                 '</select>' +
                 '<input id="rg-wert" placeholder="Wert" style="max-width:110px">' +
                 '<input id="rg-wert2" placeholder="bis" style="max-width:80px; display:none">' +
+                '<select id="rg-satz" style="display:none">' +
+                Object.entries(SYMBOLSAETZE).map(([id, z]) => `<option value="${id}">${z.join(' ')}</option>`).join('') +
+                '</select>' +
+                '<label id="rg-umlabel" style="display:none; align-items:center; gap:6px; ' +
+                'font-size:13px; color:var(--text-dim)">' +
+                '<input type="checkbox" id="rg-um" style="width:auto">klein ist gut</label>' +
                 '<select id="rg-farbe">' +
                 Object.keys(REGELFARBEN).map(f => `<option value="${f}">${f}</option>`).join('') +
                 '</select>' +
@@ -18224,9 +18388,11 @@ const SpreadsheetView = (() => {
             const satz = (r) => {
                 const name = (REGELARTEN.find(x => x[0] === r.art) || ['', r.art])[1];
                 const wert = r.art === 'zwischen' ? `${r.wert ?? ''} und ${r.wert2 ?? ''}`
-                    : ['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(r.art)
+                    : OHNE_WERT.includes(r.art)
                         ? '' : String(r.wert ?? '');
-                return `${r.bereich || 'ganzes Blatt'} ${name}${wert ? ' ' + wert : ''}`;
+                const anhang = r.art === 'symbol'
+                    ? ' ' + (SYMBOLSAETZE[r.satz || 'ampel'] || []).join('') : '';
+                return `${r.bereich || 'ganzes Blatt'} ${name}${wert ? ' ' + wert : ''}${anhang}`;
             };
             const zeichneListe = () => {
                 const k = o.querySelector('#rg-liste');
@@ -18235,9 +18401,11 @@ const SpreadsheetView = (() => {
                 const l = blatt.regeln || [];
                 k.innerHTML = l.length
                     ? l.map((r, i) => '<div class="fr-zeile">' +
-                        (r.art === 'skala' || r.art === 'balken'
-                            ? '<span class="fr-punkt fr-verlauf"></span>'
-                            : `<span class="fr-punkt bg-${REGELFARBEN[r.farbe || 'gelb'] || 'yellow'}"></span>`) +
+                        (r.art === 'symbol'
+                            ? `<span class="fr-punkt fr-symbol">${esc((SYMBOLSAETZE[r.satz || 'ampel'] || [])[2] ?? '')}</span>`
+                            : r.art === 'skala' || r.art === 'balken'
+                                ? '<span class="fr-punkt fr-verlauf"></span>'
+                                : `<span class="fr-punkt bg-${REGELFARBEN[r.farbe || 'gelb'] || 'yellow'}"></span>`) +
                         `<span class="fr-text">${esc(satz(r))}</span>` +
                         `<button data-an="${i}" title="An oder aus">${r.an === false ? '☐' : '☑'}</button>` +
                         `<button data-weg="${i}" title="Regel löschen">🗑</button></div>`).join('')
@@ -18253,13 +18421,24 @@ const SpreadsheetView = (() => {
                 const w1 = o.querySelector('#rg-wert');
                 const w2 = o.querySelector('#rg-wert2');
                 const fa = o.querySelector('#rg-farbe');
-                const ohneWert = ['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(art);
+                const sa = o.querySelector('#rg-satz');
+                const um = o.querySelector('#rg-umlabel');
+                const w1f = o.querySelector('#rg-wert');
                 if (w1)
-                    w1.style.display = ohneWert ? 'none' : '';
+                    w1.style.display = OHNE_WERT.includes(art) ? 'none' : '';
                 if (w2)
-                    w2.style.display = art === 'zwischen' ? '' : 'none';
+                    w2.style.display = (art === 'zwischen' || art === 'symbol') ? '' : 'none';
                 if (fa)
-                    fa.style.display = (art === 'skala' || art === 'balken') ? 'none' : '';
+                    fa.style.display = OHNE_FARBE.includes(art) ? 'none' : '';
+                if (sa)
+                    sa.style.display = art === 'symbol' ? '' : 'none';
+                if (um)
+                    um.style.display = art === 'symbol' ? 'flex' : 'none';
+                /* Der Platzhalter sagt, was das Feld hier bedeutet — „Wert" heisst
+                   bei drei Arten drei verschiedene Dinge. */
+                if (w1f)
+                    w1f.placeholder = art === 'symbol' ? 'ab'
+                        : art === 'faelligBald' ? 'Tage' : 'Wert';
             };
             felderAnpassen();
             o.querySelector('#rg-art')?.addEventListener('change', felderAnpassen);
@@ -18298,12 +18477,16 @@ const SpreadsheetView = (() => {
                     bereich: (o.querySelector('#rg-bereich')?.value || '').trim(),
                     art, an: true
                 };
-                if (!['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(art))
+                if (!OHNE_WERT.includes(art))
                     regel['wert'] = o.querySelector('#rg-wert')?.value ?? '';
-                if (art === 'zwischen')
+                if (art === 'zwischen' || art === 'symbol')
                     regel['wert2'] = o.querySelector('#rg-wert2')?.value ?? '';
-                if (art !== 'skala' && art !== 'balken')
+                if (!OHNE_FARBE.includes(art))
                     regel['farbe'] = o.querySelector('#rg-farbe')?.value || 'gelb';
+                if (art === 'symbol') {
+                    regel['satz'] = o.querySelector('#rg-satz')?.value || 'ampel';
+                    regel['umgekehrt'] = o.querySelector('#rg-um')?.checked ?? false;
+                }
                 blatt.regeln = (blatt.regeln || []).concat([regel]);
                 sichere();
                 alles();
@@ -19218,7 +19401,10 @@ const SpreadsheetView = (() => {
         }, 0);
         return w;
     };
-    return { zeichne, zeigeWert, istFehler };
+    /* REGELARTEN und SYMBOLSAETZE geben wir mit heraus: `test130` §11 fragt
+       den Katalog, statt eine zweite Liste danebenzustellen — eine Liste, die
+       jemand nachschreiben müsste, läuft mit der Zeit auseinander. */
+    return { zeichne, zeigeWert, istFehler, REGELARTEN, SYMBOLSAETZE };
 })();
 window.SpreadsheetView = SpreadsheetView;
 
@@ -20031,6 +20217,144 @@ const Blocks = (() => {
     /* Die Blocktypen, in die man einen bestehenden Block umwandeln kann. */
     const UMWANDELBAR = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number', 'toggle', 'quote', 'callout',
         'code', 'equation', 'flashcard', 'page'];
+    /* Die Sprachen des Codeblocks. Stand hier früher mitten im Zeichnen — jetzt
+       oben, weil auch das Markdown-Kürzel ```js sie braucht. */
+    const SPRACHEN = ['Plain Text', 'JavaScript', 'TypeScript', 'JSX', 'Python', 'HTML', 'XML', 'CSS', 'SCSS', 'Less', 'JSON', 'YAML', 'TOML',
+        'SQL', 'GraphQL', 'Bash', 'Shell', 'PowerShell', 'Java', 'C', 'C++', 'C#', 'Go', 'Rust', 'Swift', 'Kotlin', 'Dart',
+        'PHP', 'Ruby', 'Perl', 'Lua', 'R', 'Julia', 'MATLAB', 'Haskell', 'Elixir', 'Erlang', 'Clojure', 'Scala', 'Objective-C',
+        'Assembly', 'Docker', 'Makefile', 'Nginx', 'Diff', 'LaTeX', 'Markdown'];
+    /* Wer ```js tippt, meint JavaScript. Nur die Kurzformen, die sich nicht
+       von selbst ergeben — „python" findet SPRACHEN schon ohne Hilfe. */
+    const SPRACH_KURZ = {
+        js: 'JavaScript', ts: 'TypeScript', tsx: 'JSX', py: 'Python',
+        sh: 'Bash', zsh: 'Bash', console: 'Shell', ps1: 'PowerShell',
+        'c++': 'C++', cpp: 'C++', cs: 'C#', 'objective-c': 'Objective-C', objc: 'Objective-C',
+        golang: 'Go', rs: 'Rust', kt: 'Kotlin', rb: 'Ruby', pl: 'Perl',
+        yml: 'YAML', md: 'Markdown', tex: 'LaTeX', dockerfile: 'Docker',
+        text: 'Plain Text', plain: 'Plain Text', txt: 'Plain Text'
+    };
+    /** „js" → „JavaScript". Unbekanntes bleibt Plain Text, statt zu verschwinden. */
+    const sprachName = (roh) => {
+        const k = String(roh ?? '').toLowerCase();
+        if (SPRACH_KURZ[k])
+            return SPRACH_KURZ[k];
+        return SPRACHEN.find(s => s.toLowerCase() === k) || 'Plain Text';
+    };
+    /** Wie viele Stufen ist die Zeile eingerückt? Vier Leerzeichen = ein Tab. */
+    const mdTiefe = (roh) => {
+        const vorn = /^[\t ]*/.exec(roh)?.[0] ?? '';
+        let n = 0;
+        for (const z of vorn)
+            n += z === '\t' ? 4 : 1;
+        return Math.floor(n / 4); /* 0-3 Zeichen → 0, 4-7 → 1, 8-11 → 2 */
+    };
+    /**
+     * Markdown-Text in Blöcke lesen. Gibt eine flache Liste mit Tiefenangabe
+     * zurück — wer daraus einen Baum bauen will, tut es beim Einfügen.
+     */
+    const mdLesen = (roh) => {
+        const zeilen = String(roh ?? '').replace(/\r\n?/g, '\n').split('\n');
+        const raus = [];
+        for (let i = 0; i < zeilen.length; i++) {
+            const zeile = zeilen[i] ?? '';
+            const tiefe = mdTiefe(zeile);
+            const t = zeile.trim();
+            /* Codezaun: alles bis zum schliessenden Zaun bleibt, wie es ist —
+               auch die leeren Zeilen, auch die Rautezeichen darin. */
+            const auf = /^```([a-zA-Z0-9+#.-]{0,20})\s*$/.exec(t);
+            if (auf) {
+                const inhalt = [];
+                let zu = false;
+                while (++i < zeilen.length) {
+                    if (/^\s*```\s*$/.test(zeilen[i] ?? '')) {
+                        zu = true;
+                        break;
+                    }
+                    inhalt.push(zeilen[i] ?? '');
+                }
+                /* Ein Zaun ohne Ende ist kaputtes Markdown, aber der Text darin ist
+                   echt — er wird zum Codeblock, statt verloren zu gehen. */
+                void zu;
+                raus.push({ typ: 'code', text: inhalt.join('\n'), tiefe,
+                    lang: sprachName(auf[1] ?? '') });
+                continue;
+            }
+            if (!t)
+                continue; /* Leerzeilen weg */
+            if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) {
+                raus.push({ typ: 'divider', text: '', tiefe });
+                continue;
+            }
+            let m;
+            if ((m = /^(#{1,3})\s+(.*)$/.exec(t))) {
+                raus.push({ typ: 'h' + (m[1] ?? '#').length, text: m[2] ?? '', tiefe });
+                continue;
+            }
+            /* Aufgabe vor Aufzählung prüfen: „- [ ] x" ist beides, und das
+               Kästchen ist die genauere Auskunft. */
+            if ((m = /^[-*+]\s+\[([ xX])\]\s*(.*)$/.exec(t))) {
+                raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' });
+                continue;
+            }
+            if ((m = /^\[([ xX])\]\s+(.*)$/.exec(t))) {
+                raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' });
+                continue;
+            }
+            /* „> 💡 " ist unser Callout — auswahlAlsText() schreibt ihn so. */
+            if ((m = /^>\s*💡\s*(.*)$/.exec(t))) {
+                raus.push({ typ: 'callout', text: m[1] ?? '', tiefe });
+                continue;
+            }
+            if ((m = /^>\s+(.*)$/.exec(t))) {
+                raus.push({ typ: 'quote', text: m[1] ?? '', tiefe });
+                continue;
+            }
+            if ((m = /^[-*+]\s+(.*)$/.exec(t))) {
+                raus.push({ typ: 'bullet', text: m[1] ?? '', tiefe });
+                continue;
+            }
+            if ((m = /^(?:\d{1,9}|[a-zA-Z]|[ivxIVX]{1,6})[.)]\s+(.*)$/.exec(t))) {
+                raus.push({ typ: 'number', text: m[1] ?? '', tiefe });
+                continue;
+            }
+            raus.push({ typ: 'text', text: t, tiefe });
+        }
+        return raus;
+    };
+    /** Steckt Markdown genug Gliederung, dass daraus mehr als ein Block wird? */
+    const mdIstStruktur = (roh) => {
+        const teile = mdLesen(roh);
+        return teile.length > 1 || (teile.length === 1 && teile[0].typ !== 'text');
+    };
+    /**
+     * Gelesene Blöcke unter `elternId` ab `idx` einsetzen. Die Tiefe wird zu
+     * echter Verschachtelung: ein eingerückter Punkt landet im Block darüber.
+     * Gibt die Kennung des letzten eingesetzten Blocks zurück.
+     */
+    const mdEinsetzen = (teile, elternId, idx) => {
+        /* Je Tiefe der zuletzt gesetzte Block — sein Kind kommt eine Stufe tiefer.
+           Stufe 0 ist der Eltern-Block selbst, dort zählt der Einfügeplatz. */
+        const stapel = [null];
+        const gesetzt = [];
+        teile.forEach(teil => {
+            const tiefe = Math.min(teil.tiefe, stapel.length - 1);
+            const ziel = tiefe === 0 ? elternId : stapel[tiefe];
+            if (!ziel)
+                return;
+            const props = { text: teil.text };
+            if (teil.checked)
+                props.checked = true;
+            if (teil.lang)
+                props.lang = teil.lang;
+            const neu = tiefe === 0
+                ? Store.addBlock(ziel, teil.typ, props, idx++)
+                : Store.addBlock(ziel, teil.typ, props);
+            stapel.length = tiefe + 1;
+            stapel.push(neu.id);
+            gesetzt.push(neu.id);
+        });
+        return gesetzt.length ? gesetzt[gesetzt.length - 1] : null;
+    };
     /* ========================================================================
      * HILFEN
      * ======================================================================*/
@@ -20043,6 +20367,10 @@ const Blocks = (() => {
             .replace(/(^|\W)\*(.+?)\*(\W|$)/g, '$1<i>$2</i>$3')
             .replace(/__(.+?)__/g, '<u>$1</u>')
             .replace(/~~(.+?)~~/g, '<s>$1</s>')
+            /* Notion streicht auch mit einer einzelnen Tilde durch. Erst danach,
+               damit ~~doppelt~~ nicht zu <s>~doppelt~</s> zerfällt — und nur, wenn
+               kein Leerzeichen anschliesst, sonst trifft es „ca. 3~5 Grad". */
+            .replace(/(^|[^~\w])~([^~\s](?:[^~]*[^~\s])?)~(?![~\w])/g, '$1<s>$2</s>')
             .replace(/`([^`]+?)`/g, '<code>$1</code>')
             .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
         /* Inline-Formel $a^2$ — der kleine Mathe-Satz aus canvas.js */
@@ -20221,11 +20549,7 @@ const Blocks = (() => {
                     'position:absolute; top:8px; right:10px; background:var(--bg-input); ' +
                         'border:1px solid var(--line); border-radius:4px; font-size:11.5px; ' +
                         'padding:2px 4px; color:var(--text-dim); outline:none; z-index:2';
-                ['Plain Text', 'JavaScript', 'TypeScript', 'JSX', 'Python', 'HTML', 'XML', 'CSS', 'SCSS', 'Less', 'JSON', 'YAML', 'TOML',
-                    'SQL', 'GraphQL', 'Bash', 'Shell', 'PowerShell', 'Java', 'C', 'C++', 'C#', 'Go', 'Rust', 'Swift', 'Kotlin', 'Dart',
-                    'PHP', 'Ruby', 'Perl', 'Lua', 'R', 'Julia', 'MATLAB', 'Haskell', 'Elixir', 'Erlang', 'Clojure', 'Scala', 'Objective-C',
-                    'Assembly', 'Docker', 'Makefile', 'Nginx', 'Diff', 'LaTeX', 'Markdown']
-                    .forEach(s => {
+                SPRACHEN.forEach(s => {
                     const o = document.createElement('option');
                     o.textContent = s;
                     if ((block.lang || 'Plain Text') === s)
@@ -21022,14 +21346,82 @@ const Blocks = (() => {
                     return liste.includes(wort);
                 });
                 if (treffer) {
+                    /* Auch im Block löschen, nicht nur im Feld. Der vorige Tastendruck
+                       hat „#" längst gespeichert; `umwandeln` zeichnet gleich neu und
+                       holt es zurück. Genau das ist jahrelang passiert: aus „# Titel"
+                       wurde eine Überschrift, die „#Titel" hiess. Kein Prüflauf sah es,
+                       weil alle nur den TYP verglichen haben. */
                     ct.textContent = '';
+                    Store.updateBlock(b.id, { text: '' });
                     umwandeln(b.id, treffer.id);
+                    /* Zwei Kürzel sagen mehr als nur den Typ: „[x] " hakt gleich ab.
+                       Nach umwandeln() ist die Seite neu gezeichnet, der Block aber
+                       derselbe — deshalb reicht ein zweiter, kleiner Schreibvorgang. */
+                    if (treffer.id === 'todo' && /^\[[xX]\]$/.test(wort)) {
+                        Store.updateBlock(b.id, { checked: true });
+                        App.zeichneSeite(b.id, 'ende');
+                    }
+                    return;
+                }
+                /* ```sprache — der Codeblock nimmt die Sprache gleich mit.
+                   Das geht über keine Liste im Register: die Sprache ist frei. */
+                const zaun = /^```([a-zA-Z0-9+#.-]{1,20})$/.exec(wort);
+                if (zaun) {
+                    ct.textContent = '';
+                    Store.updateBlock(b.id, { text: '' });
+                    umwandeln(b.id, 'code');
+                    Store.updateBlock(b.id, { lang: sprachName(zaun[1] ?? '') });
+                    App.zeichneSeite(b.id, 'ende');
                     return;
                 }
             }
             Store.updateBlock(b.id, { text: roh });
             if (b.type === 'toc')
                 return;
+        });
+        /* --- Einfügen: Markdown wird wieder zu Blöcken ------------------------
+           Strg C schreibt die Auswahl als Markdown. Zurück ging es nicht — der
+           ganze Text landete in einem einzigen Block, samt Rautezeichen. */
+        wurzel.addEventListener('paste', (e) => {
+            if (e.defaultPrevented)
+                return; /* Tabelle und Kalkulation zuerst */
+            const ct = elVon(e)?.closest('.ct');
+            if (!ct)
+                return;
+            const blk = ct.closest('.blk');
+            if (!blk)
+                return;
+            const b = Store.getBlock(blk.dataset.bid);
+            if (!b)
+                return;
+            const text = e.clipboardData?.getData('text/plain');
+            if (!text)
+                return;
+            /* Im Codeblock ist Markdown kein Markdown, sondern Inhalt. */
+            const strukturiert = b.type === 'text' && mdIstStruktur(text);
+            /* Immer selbst einsetzen: sonst legt der Browser das mitkopierte HTML
+               mit all seinen Stilen in den Block, und beim nächsten Zeichnen ist
+               es wieder weg — Text, der vor den Augen des Nutzers verschwindet. */
+            e.preventDefault();
+            if (!strukturiert) {
+                document.execCommand('insertText', false, text);
+                return;
+            }
+            const eltern = Store.getBlock(b.parentId);
+            if (!eltern) {
+                document.execCommand('insertText', false, text);
+                return;
+            }
+            const teile = mdLesen(text);
+            const letzte = mdEinsetzen(teile, b.parentId, eltern.content.indexOf(b.id) + 1);
+            /* Der leere Block, in dem eingefügt wurde, hat seinen Zweck erfüllt. */
+            if (b.type === 'text' && !ct.textContent.trim()) {
+                Store.trashBlock(b.id);
+                Store.purgeBlock(b.id);
+            }
+            App.zeichneSeite(letzte || b.id, 'ende');
+            if (teile.length > 1)
+                UI.toast(teile.length + ' Blöcke eingefügt');
         });
         /* --- Vorschlagsmodus -------------------------------------------------
            Ist er für die Seite an, wird beim Verlassen eines Blocks festgehalten,
@@ -22822,6 +23214,8 @@ const Blocks = (() => {
         auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
         auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,
         auswahlAlsText, auswahlTaste, sichtbareBloecke,
+        /* Markdown in beide Richtungen */
+        mdLesen, mdEinsetzen, mdIstStruktur, sprachName,
         auswahl: () => ausgewaehlt.slice()
     };
 })();
@@ -26285,26 +26679,38 @@ const Datenbank = (() => {
                 App.zeichneSeite();
                 return;
             }
-            /* Testlauf — Notion hat keinen. Er läuft auf der ersten Zeile und
-               sagt hinterher, was passiert ist. */
+            /* --- Probelauf ------------------------------------------------------
+             * Hier stand ein „Testlauf", der die Automation WIRKLICH ausführte
+             * und hinterher sagte, ob sich etwas geändert hat. Er hiess Test und
+             * änderte echte Daten — wer ihn drückte, um zu sehen, ob seine Regel
+             * stimmt, hatte sie danach angewendet. Bei „Eintrag in den Papierkorb"
+             * war die Zeile weg, und rückgängig macht der Toast nichts.
+             *
+             * Jetzt zeigt er den PLAN: welche Aktion mit welchem Wert an der
+             * Reihe wäre. Geschrieben wird nichts (`ctx.probe`).
+             * ------------------------------------------------------------------ */
             const test = elVon(e)?.closest('[data-test]');
             if (test) {
                 const a = coll.automationen[Number(test.dataset.test)];
                 const zeile = Store.rowsOf(coll.id)[0];
                 if (!zeile) {
-                    UI.toast('Für einen Testlauf braucht es mindestens eine Zeile');
+                    UI.toast('Für einen Probelauf braucht es mindestens eine Zeile');
                     return;
                 }
-                const vorher = JSON.stringify(zeile.props || {});
+                const plan = [];
                 const artT = a.wenn.art === 'wiederkehrend' ? 'wiederkehrend' : a.wenn.art;
-                automationenLaufen(zeile, coll, artT, a.wenn.key, a.wenn.art === 'prop-wert' ? a.wenn.wert : undefined);
-                setTimeout(() => {
-                    const nachher = JSON.stringify(Store.getBlock(zeile.id).props || {});
-                    UI.toast(vorher === nachher
-                        ? 'Testlauf: nichts verändert — prüfe Auslöser und Bedingungen'
-                        : 'Testlauf: „' + (zeile.text || 'Zeile') + '" wurde geändert');
-                    zeichnen();
-                }, 400);
+                automationenLaufen(zeile, coll, artT, a.wenn.key, a.wenn.art === 'prop-wert' ? a.wenn.wert : undefined, { probe: plan });
+                UI.menu('<div class="grp">Probelauf — ' + esc(a.name || 'Automation') + '</div>' +
+                    '<div class="grp" style="font-weight:400; text-transform:none">' +
+                    'Nichts davon ist passiert. So sähe der Lauf für „' +
+                    esc(zeile.text || 'die erste Zeile') + '" aus.</div>' +
+                    (plan.length
+                        ? plan.map(s => '<button><span class="mi">→</span>' + esc(s.name) +
+                            (s.ziel ? ': ' + esc(s.ziel) : '') +
+                            (s.wert ? '<span class="ms">' + esc(s.wert) + '</span>' : '') +
+                            '</button>').join('')
+                        : '<button disabled>Keine Aktion käme zum Zug — prüfe Auslöser ' +
+                            'und Bedingungen</button>'), test.getBoundingClientRect().left - 220, test.getBoundingClientRect().bottom + 4);
                 return;
             }
             /* Laufverlauf ansehen */
@@ -30975,6 +31381,45 @@ const Datenbank = (() => {
     let imLauf = false; /* verhindert, dass Automationen sich gegenseitig auslösen */
     let wdhZaehler = 0; /* Notbremse gegen Ketten, die sich selbst nachlegen */
     /**
+     * Was eine Aktion im Probelauf zu melden hat — der Wert, mit dem sie
+     * arbeiten WÜRDE, mit aufgelösten Variablen und Platzhaltern.
+     *
+     * Nur lesen. Diese Funktion darf nichts anfassen; sie läuft an der
+     * Stelle, an der der Probelauf abbricht, und wäre sonst genau das Leck,
+     * das er verhindern soll.
+     */
+    const probeWert = (d, mitVars, coll, row) => {
+        const fuellen = (t) => String(mitVars(String(t ?? ''))).replace(/\{titel\}/g, row?.text || '');
+        switch (d.art) {
+            case 'setze-prop': {
+                const v = fuellen(d.wert);
+                return v === 'heute' ? new Date().toISOString().slice(0, 10)
+                    : v === 'morgen' ? (() => {
+                        const t = new Date();
+                        t.setDate(t.getDate() + 1);
+                        return t.toISOString().slice(0, 10);
+                    })()
+                        : v === 'jetzt' ? new Date().toISOString().slice(0, 16)
+                            : v;
+            }
+            case 'leeren': return '(leer)';
+            case 'zaehler': return String(Formula.zahl(wert(row, d.key, coll)) + 1);
+            case 'neue-zeile': return fuellen(d.titel || '{titel}') + ' in „' +
+                (Store.getCollection(d.zielDb)?.name || '?') + '"';
+            case 'mail': return fuellen(d.betreff) + ' → ' + fuellen(d.an);
+            case 'webhook': return String(d.url || '');
+            case 'benachricht':
+            case 'melden':
+            case 'kommentar': return fuellen(d.text);
+            case 'unterseite': return fuellen(d.titel || d.text);
+            case 'wiederholen': return String(naechstesDatum(wert(row, d.key, coll), d.takt) ?? '—');
+            case 'variablen': return (d.vars || []).map((v) => v?.name).filter(Boolean).join(', ');
+            case 'fremd-setzen': return 'in „' + (Store.getCollection(d.zielDb)?.name || '?') + '"';
+            case 'zurueckstellen': return String(d.takt || d.wert || '');
+            default: return fuellen(d.wert ?? '');
+        }
+    };
+    /**
      * Einträge einer anderen Datenbank ändern — Notions „Edit pages in".
      * Wahlweise alle, die durch den Filter einer Ansicht kommen, oder alle,
      * die einer Regel entsprechen. Höchstens 500 auf einmal.
@@ -31117,10 +31562,18 @@ const Datenbank = (() => {
                 const mitVars = (v) => typeof v === 'string'
                     ? v.replace(/\{\{\s*([A-Za-zÄÖÜäöüß0-9_]+)\s*\}\}/g, (_, n) => (n in vars ? String(vars[n]) : ''))
                     : v;
-                /* Wie oft läuft diese Aktion? Notion kennt nur „einmal je Zeile".
-                   Hier darf eine Aktion auch über die verknüpften Zeilen laufen
-                   oder mehrfach wiederholt werden. */
-                (a.dann || []).forEach((d) => {
+                /* Jede Aktion läuft EINMAL für diese Zeile.
+                   Über mehrere Zeilen läuft nur `fremd-setzen` — es nimmt die
+                   Zeilen einer anderen Datenbank, gefiltert über eine Ansicht, eine
+                   eigene Regel oder die Verknüpfung zu dieser Zeile, und ändert sie
+                   alle (höchstens 500).
+                   Hier stand einmal, eine Aktion dürfe „mehrfach wiederholt werden".
+                   Das konnte sie nie; es gibt kein Feld dafür und keinen Zweig, der
+                   es läse. Ein Satz im Quelltext ist keine Funktion. */
+                /* Der Rumpf bleibt, wo er ist — er wird nur benannt, damit der Aufruf
+                   darunter ihn einpacken kann. Ein `try` um zweihundert Zeilen wäre
+                   dieselbe Wirkung mit einer Verschiebung jeder einzelnen davon. */
+                const eineAktion = (d) => {
                     /* --- Bedingung an der einzelnen Aktion — das „sonst" von
                            Notions Automationen, das es dort nicht gibt ------------- */
                     if (d.wenn && d.wenn.key) {
@@ -31143,6 +31596,37 @@ const Datenbank = (() => {
                             }, fremdWert, formelUmgebung(row, coll));
                             vars[v.name] = r.ok ? Formula.anzeige(r.wert) : '';
                         });
+                    }
+                    /* =================================================================
+                     * DER PROBELAUF ENDET HIER — und zwar an EINER Stelle.
+                     *
+                     * Alles oberhalb liest nur: die Bedingung an der Aktion fragt
+                     * Werte ab, „Variablen festlegen" schreibt in ein Objekt, das
+                     * beim Verlassen dieser Funktion verschwindet. Alles unterhalb
+                     * schreibt: `Store.setProp`, `Store.addRow`, `Store.trashBlock`,
+                     * `fetch`, `location.href`.
+                     *
+                     * Diese Reihenfolge ist der ganze Schutz. Eine neue Aktion, die
+                     * jemand unten anhängt, ist damit automatisch mitgeschützt — und
+                     * eine, die jemand versehentlich OBEN einfügt, fällt auf, weil
+                     * `test133` §2 nach einem Probelauf die Zeile Feld für Feld
+                     * vergleicht.
+                     *
+                     * Warum kein Nachbau der Aktionen für die Vorschau: dann gäbe es
+                     * zwei Beschreibungen desselben Ablaufs, und die zweite läuft der
+                     * ersten davon. Was der Probelauf zeigt, ist deshalb NICHT das
+                     * Ergebnis, sondern der Plan — welche Aktion mit welchen Werten
+                     * an der Reihe wäre.
+                     * =============================================================== */
+                    if (ctx.probe) {
+                        ctx.probe.push({
+                            name: (AKTIONEN.find(x => x[0] === d.art) || ['', d.art])[1],
+                            art: d.art,
+                            ziel: d.key ? (coll.schema[d.key]?.name || d.key) : '',
+                            wert: probeWert(d, mitVars, coll, row),
+                            zeile: row?.text || ''
+                        });
+                        return;
                     }
                     if (d.art === 'setze-prop' && d.key) {
                         let v = mitVars(d.wert ?? '');
@@ -31319,8 +31803,38 @@ const Datenbank = (() => {
                             ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
                     }
                     laufNotiz.aktionen.push((AKTIONEN.find((x) => x[0] === d.art) || [])[1] || d.art);
+                };
+                /* --- Ein Fehler stoppt nicht alles Weitere ------------------------
+                 * `laufNotiz.fehler` gab es seit jeher, und der Laufverlauf zeigt
+                 * dafür ein ⚠. Gesetzt hat es nie jemand — das Feld stand auf ''
+                 * und blieb dort. Ein Zeichen, das nie erscheint, ist schlimmer als
+                 * keines: es sagt „hier wäre ein Fehler zu sehen".
+                 *
+                 * Und schlimmer noch war, was ohne diesen Griff geschah: eine
+                 * Aktion, die wirft, riss den ganzen forEach mit. Die Aktionen
+                 * DAHINTER liefen nicht, die Automation schrieb keinen Verlauf,
+                 * und die nächste Automation der Datenbank kam nie an die Reihe —
+                 * still, denn geworfen wurde in einen Aufruf, den niemand fängt.
+                 * ---------------------------------------------------------------- */
+                (a.dann || []).forEach((d) => {
+                    try {
+                        eineAktion(d);
+                    }
+                    catch (e) {
+                        const name = (AKTIONEN.find((x) => x[0] === d.art) || ['', d.art])[1];
+                        const text = e instanceof Error ? e.message : String(e);
+                        laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                            name + ': ' + text;
+                        /* Nicht nur ins Protokoll: wer gerade zusieht, soll es sehen. */
+                        if (!ctx.probe)
+                            UI.toast('⚠ „' + name + '" ging nicht: ' + text);
+                    }
                 });
-                notieren();
+                /* Ein Probelauf ist nicht gelaufen. Er darf deshalb weder im
+                   Laufverlauf noch im gemeinsamen Protokoll stehen — sonst zeigte
+                   die Automation morgen zwanzig Läufe, von denen keiner stattfand. */
+                if (!ctx.probe)
+                    notieren();
             });
         }
         finally {
@@ -31715,7 +32229,7 @@ const Datenbank = (() => {
                             : `${namen(b.key)} ${b.op} ${b.wert}`).join(' und ')) : '') +
                     ` · Dann: ${a.dann.map((d) => esc((AKTIONEN.find(x => x[0] === d.art) || [])[1] || '')).join(', ')}` +
                     `</span></div>` +
-                    `<button data-test="${i}" title="Einmal probeweise laufen lassen">▶</button>` +
+                    `<button data-test="${i}" title="Probelauf: zeigt den Plan, ändert nichts">▶</button>` +
                     `<button data-verlauf="${i}" title="Laufverlauf">🕘` +
                     ((a.verlauf || []).length ? `<span class="ms">${a.verlauf.length}</span>` : '') +
                     '</button>' +

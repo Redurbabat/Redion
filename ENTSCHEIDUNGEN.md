@@ -3376,3 +3376,109 @@ Symbolzweig entfernt        → 12 rot
 Datumsregeln entfernt       →  6 rot
 alsDatum naiv geparst       →  2 rot — und zwar die zwei richtigen
 ```
+
+---
+
+## E61 · Der Testlauf war keiner — er änderte die Daten
+
+**Datum** 8. August 2026 · **Lücke** L16 · **Prüflauf** `test133` (28 Punkte)
+
+An jeder Automation sass ein Knopf `▶` mit dem Titel „Einmal probeweise
+laufen lassen". Er liess sie **wirklich** laufen, auf der ersten Zeile der
+Datenbank, und sagte hinterher per Toast, ob sich etwas geändert hat.
+
+Wer ihn drückte, um zu sehen, ob seine Regel stimmt, hatte sie danach
+angewendet. Bei „Eintrag in den Papierkorb" war die Zeile weg. Der Toast
+macht nichts rückgängig.
+
+Das ist nicht Feinschliff, sondern Priorität 1 aus CLAUDE.md §46: **Daten
+sicher halten.** Ein Knopf, dessen Beschriftung „probeweise" sagt und der
+schreibt, ist gefährlicher als gar kein Knopf — er lädt gerade dazu ein,
+ihn bei einer Regel zu drücken, der man noch nicht traut.
+
+**Der Probelauf, und warum er an genau einer Stelle abbricht**
+
+Der naheliegende Weg wäre gewesen, jede der neunzehn Aktionsarten um einen
+Zweig „im Probelauf nur beschreiben" zu ergänzen. Das wäre neunzehn Mal
+dieselbe Entscheidung, und beim zwanzigsten Mal — der nächsten neuen Aktion
+— vergisst sie jemand. Ein Schutz, den man je Fall wiederholen muss, ist
+kein Schutz.
+
+Stattdessen nutzt der Probelauf die Reihenfolge, die ohnehin da war:
+
+```txt
+oben   Bedingung an der Aktion   liest nur
+       Variablen festlegen       schreibt in ein Objekt, das gleich vergeht
+       ────────── hier bricht der Probelauf ab ──────────
+unten  alles Übrige              Store.setProp · Store.addRow ·
+                                 Store.trashBlock · fetch · location.href
+```
+
+Eine neue Aktion wird unten angehängt und ist damit **automatisch**
+mitgeschützt. Und wenn jemand versehentlich oben etwas einfügt, das
+schreibt, meldet es `test133` §2 — der prüft nicht, welche Aktionen
+übersprungen wurden, sondern vergleicht nach drei Probeläufen den ganzen
+Bestand Zeichen für Zeichen: Zeilen, Werte, Archivmerker, die Zieldatenbank,
+den Laufverlauf, das gemeinsame Protokoll und die Zahl aller Blöcke.
+
+Die Gegenprobe zeigt, was der Knopf vorher tat: Zähler von 3 auf **7**,
+vier neue Zeilen in der Zieldatenbank, die Zeile archiviert. 16 rote Punkte.
+
+**Was der Probelauf zeigt, ist der Plan — nicht das Ergebnis**
+
+Eine Vorschau könnte auch das Ergebnis auf einer Kopie rechnen. Dann gäbe
+es zwei Beschreibungen desselben Ablaufs, und die zweite läuft der ersten
+davon: die Kopie kennt die neue Aktion noch nicht, die jemand letzte Woche
+eingebaut hat. Der Probelauf zeigt deshalb, welche Aktion mit welchem Wert
+an der Reihe **wäre** — Variablen aufgelöst, `{titel}` eingesetzt, der
+Zähler auf seinem künftigen Stand.
+
+Bedingungen gelten dabei mit. Eine Vorschau, die Aktionen zeigt, die gar
+nicht drankämen, ist schlimmer als keine: sie lässt eine falsche Regel
+richtig aussehen.
+
+**Der Fehler, der nie ankam**
+
+`laufNotiz.fehler` gab es seit jeher, und der Laufverlauf zeigt dafür ein
+`⚠`. Gesetzt hat es **nie jemand** — das Feld stand auf `''` und blieb
+dort. Ein Zeichen, das nie erscheint, ist schlimmer als keines: es sagt
+„hier wäre ein Fehler zu sehen".
+
+Schlimmer war, was ohne diesen Griff geschah. Eine Aktion, die wirft, riss
+den ganzen `forEach` mit: die Aktionen **dahinter** liefen nicht, die
+Automation schrieb keinen Verlauf, und die nächste Automation derselben
+Datenbank kam nie an die Reihe — still, denn geworfen wurde in einen Aufruf,
+den niemand fängt. In der Gegenprobe fliegt der Fehler bis in den Prüflauf
+hinaus und bricht ihn ab; das ist kein roter Punkt mehr, sondern gar kein
+Ergebnis.
+
+Jetzt wird je Aktion gefangen, mit Namen ins Protokoll geschrieben und dem,
+der zusieht, als Hinweis gezeigt.
+
+**Eine Zahl, die niemand nachgezählt hatte**
+
+`LUECKEN.md` L16 sagte „11 Aktionsarten, ohne Verzweigung und Schleife" und
+führte als fehlend auf: If/Else, sonst-Zweig, für jede Zeile, Vorschau,
+Protokoll, Fehleranzeige. Nachgezählt sind es **19** Aktionsarten, und
+Protokoll wie Bedingung-je-Aktion waren längst gebaut. Zwei von sechs
+„fehlt" waren richtig.
+
+Dazu stand im Quelltext, eine Aktion dürfe „auch über die verknüpften
+Zeilen laufen oder mehrfach wiederholt werden". Der erste Teil stimmt für
+`fremd-setzen`; den zweiten konnte nie eine Aktion — es gibt kein Feld
+dafür und keinen Zweig, der es läse. **Ein Satz im Quelltext ist keine
+Funktion.** Derselbe Fund wie bei `~Text~` in E59, nur eine Datei weiter.
+
+**Was offen bleibt** — ein sonst-Zweig als eigenes Ding in der Oberfläche
+(heute schreibt man ihn als zwei gespiegelte Bedingungen) und eine Schleife
+über die **eigenen** Zeilen. Beides steht so in L16.
+
+**Status**
+
+`test133`, 28 Punkte, 7 Abschnitte. Gegenproben:
+
+```txt
+Probe-Wächter entfernt   → 16 rot, darunter „Zähler steht auf 3" mit 7
+try/catch entfernt       → der Prüflauf bricht ab, statt rot zu werden —
+                           genau das war das Verhalten vorher
+```
