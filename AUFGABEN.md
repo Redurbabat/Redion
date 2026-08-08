@@ -35,13 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**6. August 2026 · 94 Prüfläufe grün**
+**8. August 2026 · 101 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
-Excel-Namen) · Tabellenblock (E29) · lokale KI · Versionen · Papierkorb ·
-`.json`- und `.redion`-Sicherung mit Anhängen · grosse Dateien stückweise ·
-Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
+Excel-Namen) · Tabellenblock (E29) mit bedingter Formatierung (E53) ·
+lokale KI mit Grenzen für Agenten (E52) · Versionen · Papierkorb ·
+`.json`- und `.redion`-Sicherung mit Anhängen, auch über 4 GB (E39) ·
+grosse Dateien stückweise · `.ods` lesen und schreiben · als App
+installierbar, mit Erinnerungen, die auch ankommen (E40/E41).
 
 **Die drei wichtigsten offenen Punkte**
 
@@ -55,11 +57,29 @@ Sicherungsstand auf dem Start-Bildschirm · `.ods` lesen und schreiben.
      (E33) · G3 Konflikte und Offline (test118) · G4 Rechte (E35)
 ```
 
-**Was jetzt obenauf liegt:** Mobile (L10), ZIP64 für Sicherungen über
-4 GB (L14) und die bedingte Formatierung im Tabellenblock (L15). Die
-Fehlerwert-Frage (L4) ist am 6. August beantwortet — `WENNFEHLER` und
-`ISTFEHLER` gibt es, ohne dass eine bestehende Spalte ihr Ergebnis
-ändert (E36).
+**Seit dem 7. August ist das Telefon die Hauptumgebung** (E37). Aus Redurs
+Entwurf „Nocturne" sind gebaut: E42–E53 — der Reiter „Mehr" · der Kompass ·
+eine eigene Farbwelt mit nachgerechneten Kontrasten · Bewegungsmarken und
+Berührungsrückmeldung · das Blatt „Neu erstellen" · das KI-Fenster von
+unten · Ladeskelette · versetzte Listenzeilen · Suchfilter als Marken · die
+gleitende Reiterpille · eine 56-px-Leiste, deren Höhe an einer Stelle steht.
+
+**Was jetzt obenauf liegt:**
+
+```txt
+L10  Mobile — die Schale steht, die Bereiche darin noch nicht ganz.
+     Offen: Willkommensbildschirm (§11) · Einstellungen als Karten (§12) ·
+     Zustandswechsel der Sicherungskarte · Datenbank- und Tabellenansicht
+     fürs Telefon entworfen · Prüfung auf einem echten Gerät
+L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
+     Durchlauf mit einem echten Vorleseprogramm
+L15  Symbolregeln und „überfällig" in der bedingten Formatierung
+L16  Automationen: If/Else, Schleife, Vorschau, Protokoll
+L33  Erinnerungen, wenn Redion geschlossen ist — braucht Web Push/VAPID
+```
+
+**Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L14 ZIP64
+(E39) · L4 Fehlerwerte (E36) · der grösste Teil von L10, L12 und L15.
 
 ---
 
@@ -674,6 +694,50 @@ noch nicht bekommen, die übrigen Menüs sind noch keine Bottom Sheets, und
 der Editor braucht seinen Feinschliff. Steht in `LUECKEN.md` L10.
 
 **Priorität** — hoch (E37: das Telefon ist der Normalfall).
+
+---
+
+## Phase 11 · Nocturne, Zugang und Grenzen · ◐ **grösstenteils erledigt**
+
+Redurs Entwurf für die Telefon-App, dazu zwei Lücken, die beim Bauen
+obenauf lagen. Die Entscheidungen stehen einzeln in `ENTSCHEIDUNGEN.md`
+E42–E53; hier nur, was daraus wurde.
+
+**Aus dem Entwurf gebaut** (E42–E50): der Reiter „Mehr" und der Bereich
+dahinter · der Kompass als Seite darin · eine eigene Farbwelt mit
+nachgerechneten Kontrasten statt Notions Palette · drei Bewegungsdauern und
+drei Kurven, keine Federn · Berührungsrückmeldung · das Blatt „Neu
+erstellen" hinter dem Stift · das KI-Fenster als Blatt von unten ·
+Ladeskelette statt Kreisel · versetzt einblendende Listenzeilen · die
+Suchfilter als Marken · die gleitende Reiterpille · eine 56-px-Leiste
+oben, deren Höhe nur noch an einer Stelle steht.
+
+**Zwei Lücken dazu:**
+
+`L12` **Barrierefreiheit** (E51). Sie stand seit Monaten auf „Grundlagen
+da, nicht geprüft". Gemessen waren zwei der fünf Punkte in Ordnung und
+drei nicht. Der grösste Fund: an 106 Stellen baut Redion Überlagerungen,
+und keine davon war für ein Vorleseprogramm ein Dialog, keine nahm den
+Fokus auf, aus zweien lief Tab hinaus, und keine gab den Fokus zurück.
+Repariert an EINER Stelle. Dazu: null Überschriften auf einer Seite mit
+Titel und Überschrift, ein Fenstertitel, der immer „Redion" hiess, und
+Meldungen, die kein Vorleseprogramm hörte.
+
+`L11` **Grenzen für Agenten** (E52). Der einzige Eintrag mit „es gibt
+keine Grenzen". Notausschalter, Tageslimit und Bestätigung vor jeder
+ändernden Handlung — und die Regel, die in der Liste fehlte und die
+wichtigste ist: **ohne Aufsicht nur lesen**.
+
+`L15` **Bedingte Formatierung** (E53) im Tabellenblock: zehn Arten,
+Farbverlauf und Balken. Offen bleiben Symbolregeln und „überfällig".
+
+**Was aus dem Entwurf noch fehlt:** der Willkommensbildschirm (§11) · die
+Einstellungen als Karten (§12) · die Zustandswechsel der Sicherungskarte.
+
+**Tests** — `test114` (109) · `test126` (22) · `test127` (20) ·
+`test128` (46) · `test129` (26) · `test130` (48).
+
+**Priorität** — hoch, solange das Telefon der Normalfall ist.
 
 ---
 
