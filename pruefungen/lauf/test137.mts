@@ -166,6 +166,56 @@ p('Zwischen den Zeilen liegt genau eine Zeilenhöhe',
   `gemessen ${(lage as any)?.proZeile} px, --tbl-zh ${(lage as any)?.zh} px, ` +
   `Zeilen ${(lage as any)?.von}–${(lage as any)?.bis}`);
 
+console.log('\n2b · Und dasselbe fürs Datenbankraster');
+/* WARUM DIESER ABSCHNITT EXISTIERT. §2 prüfte den Tabellenblock — und nur
+   ihn. Das Raster trägt aber `class="tbl tbl-db"`, es bekommt also
+   `--tbl-zh` mit. Als E64 die Variable auf 44 setzte, rechnete `raster.ts`
+   weiter mit seinem eigenen `ZH_HANDY = 40`, und die Zeilennummern standen
+   versetzt zu ihren Zellen.
+   Der volle Durchlauf blieb dabei grün. Eine gemeinsame Variable hat mehr
+   als einen Nutzer, und eine Prüfung, die einen davon misst, sagt nichts
+   über den anderen. */
+const imRaster = await seite.evaluate(async () => {
+  const w = window as any;
+  document.getElementById('pruef-raster')?.remove();
+  const s = Store.addBlock(null, 'page', { text: 'Rasterprobe' });
+  const db = Store.addDatabase(s.id, 'Kunden', {
+    title: { name: 'Kunde', type: 'title' }, a: { name: 'Umsatz', type: 'number' }
+  }, 'raster');
+  const coll = Store.getCollection(db.collectionId);
+  for (let i = 0; i < 40; i++) Store.addRow(coll.id, { title: 'Zeile ' + i, a: i });
+  const view = Object.values(Store.cache.views)
+    .find((v: any) => v.collectionId === coll.id) as any;
+  const kasten = document.createElement('div');
+  kasten.id = 'pruef-raster';
+  kasten.style.cssText = 'width:334px';
+  document.body.appendChild(kasten);
+  kasten.appendChild(w.DbRaster.zeichne(coll, view, Store.rowsOf(coll.id)));
+  await new Promise(r => setTimeout(r, 500));
+
+  const el = document.querySelector<HTMLElement>('#pruef-raster .tbl');
+  const feld = document.querySelector<HTMLElement>('#pruef-raster .tbl-feld');
+  const zh = el ? parseFloat(getComputedStyle(el).getPropertyValue('--tbl-zh')) : -1;
+  if (feld) { feld.scrollTop = 500; feld.dispatchEvent(new Event('scroll')); }
+  await new Promise(r => setTimeout(r, 300));
+
+  const zeilen = [...(feld?.querySelectorAll<HTMLElement>('.tbl-z[data-z]') ?? [])]
+    .map(z => ({ nr: Number(z.dataset['z']), oben: z.getBoundingClientRect().top }))
+    .filter(x => Number.isFinite(x.nr))
+    .sort((a, b) => a.nr - b.nr);
+  const a = zeilen[0], b = zeilen[zeilen.length - 1];
+  return { zh,
+    proZeile: (a && b && b.nr !== a.nr)
+      ? Math.round((b.oben - a.oben) / (b.nr - a.nr) * 100) / 100 : -1,
+    von: a?.nr, bis: b?.nr, gerollt: Math.round(feld?.scrollTop ?? -1) };
+});
+p('Auch im Raster wurde weit genug gerollt',
+  ((imRaster as any).gerollt ?? 0) > 400, String((imRaster as any).gerollt));
+p('Das Raster zeichnet mit derselben Zeilenhöhe, die die CSS vorgibt',
+  Math.abs(((imRaster as any).proZeile ?? 0) - ((imRaster as any).zh ?? -1)) < 0.5,
+  `gezeichnet ${(imRaster as any).proZeile} px, --tbl-zh ${(imRaster as any).zh} px, ` +
+  `Zeilen ${(imRaster as any).von}–${(imRaster as any).bis}`);
+
 console.log('\n3 · Am Rechner bleibt es schmal');
 /* 44 px überall wäre am Rechner verschenkter Platz: dort trifft eine Maus
    auch 32 px, und eine Tabelle lebt davon, dass viel gleichzeitig zu sehen
