@@ -315,12 +315,23 @@ const pruef = (n: any, ist: any, soll: any) => {
     const sucheDa = !!document.querySelector('.overlay');
     document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
     const vorher = Store.rootPages().length;
+    /* SEIT E45 FRAGT DER STIFT ERST, WAS ENTSTEHEN SOLL — Seite,
+       Datenbank, Tabelle, Aufgabe, Karteikarte, Datei oder Vorlage. Vorher
+       legte er sofort eine leere Seite an, was in einem von acht Fällen
+       richtig war. Diese Prüfung tippt jetzt wie ein Mensch: erst den
+       Stift, dann „Neue Seite". */
     musselement('#hu-neu').click();
-    await new Promise(r => setTimeout(r, 600));
-    return { sucheDa, mehr: Store.rootPages().length > vorher };
+    await new Promise(r => setTimeout(r, 500));
+    const blattDa = !!document.querySelector('.menu.blatt [data-neu="seite"]');
+    document.querySelector<HTMLElement>('.menu.blatt [data-neu="seite"]')?.click();
+    await new Promise(r => setTimeout(r, 700));
+    return { sucheDa, blattDa, mehr: Store.rootPages().length > vorher,
+             zu: document.querySelectorAll('.menu, .menu-grund').length === 0 };
   });
   pruef('Der Lupenknopf öffnet die Suche', werkzeuge.sucheDa, true);
-  pruef('Der Stift legt eine Seite an',    werkzeuge.mehr, true);
+  pruef('Der Stift fragt erst, was entstehen soll', werkzeuge.blattDa, true);
+  pruef('… und „Neue Seite" legt eine an', werkzeuge.mehr, true);
+  pruef('… und das Blatt ist danach zu',   werkzeuge.zu, true);
 
   /* Am PC ist von den beiden nichts zu sehen */
   const amPC = await p.evaluate(() => [...document.querySelectorAll<HTMLElement>('.nur-handy')]
