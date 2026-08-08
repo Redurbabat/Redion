@@ -104,10 +104,30 @@ const Einstellungen = (() => {
     const oeffne = (bereich) => {
         offenerBereich = bereich || offenerBereich;
         document.querySelectorAll('.overlay').forEach(o => o.remove());
+        /* ========================================================================
+         * ZWEI SPALTEN AM RECHNER, ZWEI SEITEN AM TELEFON (Vorgabe §12, E58)
+         * ------------------------------------------------------------------------
+         * GEMESSEN AM 8. AUGUST BEI 390 PX, und es war die schlechteste Seite
+         * der ganzen App: die Rechner-Aufteilung von 236 px Navigation plus
+         * Inhalt lief unverändert weiter. Übrig blieben **129 Pixel** für den
+         * Inhalt. Jede Beschreibung brach in Einzelwörter um — „Hell, dunkel
+         * oder wie das System" stand als sechs Zeilen —, und die Auswahlfelder
+         * daneben ragten über den Rand hinaus.
+         *
+         * Zwei Spalten passen nicht auf ein Telefon. Also zwei SEITEN: erst die
+         * Liste der Bereiche, dann der gewählte Bereich mit einem Weg zurück.
+         * Genau so macht es jedes Telefon-Betriebssystem, und aus demselben
+         * Grund.
+         *
+         * `data-blick` sagt, welche der beiden gerade dran ist. Am Rechner
+         * steht dieselbe Angabe da und ändert nichts — dort sind beide Spalten
+         * immer sichtbar, und der Klick in die Liste zeichnet rechts neu.
+         * ======================================================================*/
+        const amTelefon = () => window.matchMedia('(max-width: 760px)').matches;
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML =
-            '<div class="einst-fenster">' +
+            '<div class="einst-fenster" data-blick="liste">' +
                 '<div class="einst-nav">' +
                 `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
                 `<div><b>${esc(V('arbeitsName', 'Redion'))}</b>` +
@@ -116,14 +136,23 @@ const Einstellungen = (() => {
                     liste.map(([id, i, n]) => `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
                         `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
                 '</div>' +
-                '<div class="einst-inhalt" id="ei"></div>' +
-                '<button class="einst-zu" data-a="zu">✕</button>' +
+                /* Der Weg zurück zur Liste — nur am Telefon zu sehen. Ohne ihn
+                   wäre die zweite Seite eine Sackgasse: das ✕ schliesst alles,
+                   und dann fängt man von vorn an. */
+                '<div class="einst-inhalt" id="ei">' +
+                '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
+                '‹ Übersicht</button>' +
+                '</div>' +
+                '<button class="einst-zu" data-a="zu" aria-label="Schliessen">✕</button>' +
                 '</div>';
         document.body.appendChild(o);
+        const fenster = o.querySelector('.einst-fenster');
         const zeichne = () => {
             const ziel = o.querySelector('#ei');
             if (ziel)
-                ziel.innerHTML = inhalt(offenerBereich);
+                ziel.innerHTML =
+                    '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
+                        '‹ Übersicht</button>' + inhalt(offenerBereich);
             o.querySelectorAll('.einst-nav button').forEach(b => b.classList.toggle('on', b.dataset.b === offenerBereich));
             binde(o);
         };
@@ -133,12 +162,43 @@ const Einstellungen = (() => {
                 o.remove();
                 return;
             }
+            /* Zurück zur Liste. Am Rechner kommt man hier nie hin — der Knopf
+               steht dort auf `display:none`. */
+            if (elVon(e)?.closest('[data-a="liste"]')) {
+                fenster?.setAttribute('data-blick', 'liste');
+                return;
+            }
             const b = elVon(e)?.closest('.einst-nav button[data-b]');
             if (b) {
                 offenerBereich = b.dataset.b ?? offenerBereich;
                 zeichne();
+                /* Am Telefon eine Seite weiter; am Rechner ändert die Angabe
+                   nichts, weil dort beide Spalten stehen. */
+                if (amTelefon())
+                    fenster?.setAttribute('data-blick', 'bereich');
+                const inh = o.querySelector('#ei');
+                if (inh)
+                    inh.scrollTop = 0;
             }
         });
+        /* Wurde das Fenster mit einem Bereich aufgerufen — etwa aus dem
+           R-Blatt heraus —, dann ist die Liste nicht gemeint. */
+        if (bereich && amTelefon())
+            fenster?.setAttribute('data-blick', 'bereich');
+        /* Escape geht eine Stufe zurück, nicht gleich ganz hinaus. Wer in
+           „Sicherheit" steht und abbrechen will, meint meistens diesen
+           Bereich und nicht das ganze Fenster. */
+        const beiTaste = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            if (amTelefon() && fenster?.getAttribute('data-blick') === 'bereich') {
+                e.stopPropagation();
+                fenster.setAttribute('data-blick', 'liste');
+                return;
+            }
+            document.removeEventListener('keydown', beiTaste, true);
+        };
+        document.addEventListener('keydown', beiTaste, true);
         /* Der Rundgang ruft das Fenster von aussen zum Neuzeichnen auf. Ein
            eigenes Feld an einem `div` gibt es im Typ nicht — hier ausdrücklich. */
         o.neuZeichnen = zeichne;

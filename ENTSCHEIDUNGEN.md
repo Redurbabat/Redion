@@ -3107,3 +3107,62 @@ Unterschied nicht zeigt.
 
 `test114` §19 (7 Punkte) und §20 (1 Punkt). Gegenprobe: zurück auf
 `addEventListener` → 13 Journale aus einem Klick.
+
+---
+
+## E58 · Einstellungen am Telefon: zwei Seiten statt zwei Spalten
+
+**Aus der Vorgabe §12.** Und der Anlass war nicht der Entwurf, sondern eine
+Messung: bei 390 px war das die **schlechteste Seite der ganzen App**.
+
+Die Rechner-Aufteilung lief unverändert weiter — 236 px Navigation plus
+Inhalt. Für den Inhalt blieben **129 Pixel**:
+
+```txt
+Erscheinungsbild
+Hell,
+dunkel
+oder                    ← und daneben, halb ausserhalb
+wie                       des Bildschirms:  [ Dunkel ▾ ]
+das
+System
+```
+
+Jede Beschreibung brach in Einzelwörter um, jedes Auswahlfeld ragte über den
+Rand, und das ✕ lag auf der Überschrift, die dadurch abbrach.
+
+**Zwei Spalten passen nicht auf ein Telefon.** Also zwei **Seiten**: erst
+die Liste der Bereiche, dann der gewählte Bereich mit einem Weg zurück.
+Genau so macht es jedes Telefon-Betriebssystem, und aus demselben Grund.
+
+`data-blick` sagt, welche gerade dran ist. Am Rechner steht dieselbe
+Angabe da und ändert nichts — dort sind beide Spalten immer sichtbar, und
+der Klick in die Liste zeichnet rechts neu.
+
+**Und die Zeilen stapeln.** Beschreibung und Auswahlfeld nebeneinander
+brauchen Breite, die es nicht gibt. Untereinander bekommt jedes die ganze:
+der Text liest sich, und das Feld ist 44 px hoch statt 35 — und 16 px
+Schrift, sonst zoomt iOS beim Antippen.
+
+Der **Schalter** bleibt davon ausgenommen und rutscht nach rechts. Er ist
+die Antwort auf eine Ja-Nein-Frage und braucht keine ganze Zeile.
+
+**Der Weg zurück ist kein Beiwerk.** Ohne ihn wäre die zweite Seite eine
+Sackgasse: das ✕ schliesst alles, und dann fängt man von vorn an. Escape
+geht ebenfalls eine Stufe zurück, nicht gleich ganz hinaus — wer in
+„Sicherheit" steht und abbricht, meint meistens diesen Bereich.
+
+**Und wieder der Hinweisstreifen.** `.overlay` liegt auf 700, der Toast auf
+900. Am Rechner ist das richtig, weil das Fenster dort nur die Mitte
+einnimmt. Am Telefon füllt es alles, und dann lag „1 Karteikarte ist
+fällig" mitten in der Bereichsliste. Das ist der vierte Ort mit demselben
+Fund — nach dem R-Blatt, dem KI-Fenster und dem Offline-Streifen. Dieselbe
+Antwort: was den ganzen Bildschirm nimmt, gehört über 900.
+
+**Am Rechner ändert sich nichts.** Gemessen: 236 px Navigation, beide
+Spalten sichtbar, kein Weg-zurück-Knopf, keine umbrechenden Zeilen.
+
+**Status**
+
+`test114` §21, 10 Punkte. Gegenprobe: den Telefon-Block entfernt → 9 von
+10 rot.

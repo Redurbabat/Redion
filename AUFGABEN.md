@@ -733,11 +733,14 @@ wichtigste ist: **ohne Aufsicht nur lesen**.
 `L15` **Bedingte Formatierung** (E53) im Tabellenblock: zehn Arten,
 Farbverlauf und Balken. Offen bleiben Symbolregeln und „überfällig".
 
-**Was aus dem Entwurf noch fehlt:** die Einstellungen als Karten (§12) ·
-die Zustandswechsel der Sicherungskarte.
+**Aus dem Entwurf ist damit alles gebaut** — zuletzt die Zustandswechsel
+der Sicherungskarte (E57) und die Einstellungen als zwei Seiten statt zwei
+Spalten (E58). Bei 390 px war das die schlechteste Seite der App: für den
+Inhalt blieben 129 Pixel.
 
 **Tests** — `test114` (119) · `test126` (22) · `test127` (20) ·
 `test128` (46) · `test129` (26) · `test130` (48) · `test131` (44).
+Dazu `test114` selbst: aus 85 Punkten sind 137 geworden.
 
 **Priorität** — hoch, solange das Telefon der Normalfall ist.
 

@@ -1225,6 +1225,98 @@ p('Zehnmal gezeichnet, einmal geklickt, einmal ausgeführt', mehrfach === 1,
   String(mehrfach) + ' Aufrufe — jeder Zuhörer, der beim Zeichnen dazukommt, ' +
   'bleibt für immer');
 
+
+console.log('\n21 · Die Einstellungen am Telefon (Vorgabe §12)');
+
+/* DIE SCHLECHTESTE SEITE DER GANZEN APP, gemessen am 8. August bei 390 px:
+   die Rechner-Aufteilung lief unverändert weiter — 236 px Navigation, und
+   für den Inhalt blieben 129 Pixel. Jede Beschreibung brach in
+   Einzelwörter um („Hell, dunkel oder wie das System" als sechs Zeilen),
+   und die Auswahlfelder ragten über den Rand hinaus.
+
+   Zwei Spalten passen nicht auf ein Telefon. Also zwei Seiten. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove());
+  Einstellungen.oeffne();
+});
+await seite.waitForTimeout(600);
+
+const eList = await seite.evaluate(() => {
+  const f2 = document.querySelector<HTMLElement>('.einst-fenster');
+  const nav = document.querySelector<HTMLElement>('.einst-nav');
+  const inh = document.querySelector<HTMLElement>('.einst-inhalt');
+  const kn = [...(nav?.querySelectorAll<HTMLElement>('button[data-b]') || [])];
+  const zu = document.querySelector<HTMLElement>('.einst-zu');
+  return {
+    blick: f2?.getAttribute('data-blick'),
+    volleBreite: Math.round(nav?.getBoundingClientRect().width || 0) === innerWidth,
+    inhaltWeg: inh ? getComputedStyle(inh).display === 'none' : false,
+    zeilen: kn.length,
+    zuFlach: kn.filter(b => b.getBoundingClientRect().height < 44).length,
+    zuKlein: zu ? Math.round(zu.getBoundingClientRect().height) : 0
+  };
+});
+p('Die Bereichsliste nimmt die ganze Breite',
+  eList.volleBreite && eList.blick === 'liste', JSON.stringify(eList));
+p('… und der Inhalt liegt nicht daneben', eList.inhaltWeg === true,
+  'auf 390 px blieben dafür 129 px übrig');
+p('… jede Zeile ist mit dem Finger zu treffen', eList.zuFlach === 0,
+  String(eList.zuFlach) + ' von ' + eList.zeilen + ' zu flach');
+p('Auch das ✕ ist ein Fingerziel', eList.zuKlein >= 44, String(eList.zuKlein));
+
+const eBereich = await seite.evaluate(async () => {
+  document.querySelector<HTMLElement>('.einst-nav [data-b="allgemein"]')?.click();
+  await new Promise(f => setTimeout(f, 400));
+  const f2 = document.querySelector<HTMLElement>('.einst-fenster');
+  const nav = document.querySelector<HTMLElement>('.einst-nav');
+  const st = [...document.querySelectorAll<HTMLElement>('.ez-steuer select, .ez-steuer input')];
+  const zur = document.querySelector<HTMLElement>('.einst-zurueck');
+  const z = document.querySelector<HTMLElement>('.ez-zeile');
+  return {
+    blick: f2?.getAttribute('data-blick'),
+    navWeg: nav ? getComputedStyle(nav).display === 'none' : false,
+    umbruch: z ? getComputedStyle(z).flexWrap : '',
+    steuerHoch: st.slice(0, 4).map(x => Math.round(x.getBoundingClientRect().height)),
+    /* DAS WAR DER SICHTBARE FEHLER: die Felder standen halb ausserhalb. */
+    ueberRand: st.some(x => Math.round(x.getBoundingClientRect().right) > innerWidth),
+    zurueck: !!zur && getComputedStyle(zur).display !== 'none',
+    zurueckHoch: Math.round(zur?.getBoundingClientRect().height || 0)
+  };
+});
+p('Ein Tipp führt eine Seite weiter', eBereich.blick === 'bereich' && eBereich.navWeg,
+  JSON.stringify(eBereich));
+p('… die Zeilen stapeln, statt sich zu quetschen', eBereich.umbruch === 'wrap',
+  eBereich.umbruch);
+p('… die Felder sind 44 px hoch und im Bild',
+  eBereich.steuerHoch.every(h => h >= 44) && !eBereich.ueberRand,
+  JSON.stringify(eBereich.steuerHoch) + ', über den Rand: ' + eBereich.ueberRand);
+/* OHNE WEG ZURÜCK WÄRE DIE ZWEITE SEITE EINE SACKGASSE: das ✕ schliesst
+   alles, und dann fängt man von vorn an. */
+p('… und es gibt einen Weg zurück', eBereich.zurueck && eBereich.zurueckHoch >= 44,
+  JSON.stringify(eBereich));
+
+const zurueck = await seite.evaluate(async () => {
+  document.querySelector<HTMLElement>('.einst-zurueck')?.click();
+  await new Promise(f => setTimeout(f, 300));
+  return document.querySelector<HTMLElement>('.einst-fenster')?.getAttribute('data-blick');
+});
+p('Der Weg zurück führt zur Liste', zurueck === 'liste', String(zurueck));
+
+/* Der Hinweisstreifen liegt auf 900. Am Rechner ist das richtig — dort
+   nimmt das Fenster nur die Mitte ein. Am Telefon füllt es alles, und
+   dann lag „1 Karteikarte ist fällig" mitten in der Liste. */
+const drueber = await seite.evaluate(() => {
+  const o = document.querySelector<HTMLElement>('.overlay');
+  const t2 = document.getElementById('toast');
+  if (!o || !t2) return null;
+  return { fenster: Number(getComputedStyle(o).zIndex) || 0,
+           streifen: Number(getComputedStyle(t2).zIndex) || 0 };
+});
+p('Nichts liegt über den Einstellungen',
+  !!drueber && drueber.fenster > drueber.streifen, JSON.stringify(drueber));
+
+await seite.evaluate(() => document.querySelectorAll('.overlay').forEach(x => x.remove()));
+
 await browser.close();
 server.close();
 

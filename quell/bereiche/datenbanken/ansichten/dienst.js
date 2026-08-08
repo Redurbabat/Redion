@@ -289,7 +289,6 @@ const Ansichten = (() => {
                     .catch(() => fertig(false));
             }
         };
-        ;
     };
     const zahl = (n, name) => `<div class="hz"><b>${n}</b><span>${name}</span></div>`;
     const posteingang = () => {
@@ -380,7 +379,6 @@ const Ansichten = (() => {
             if (ziel?.closest('[data-filter]'))
                 posteingangFilter(ziel);
         };
-        ;
     };
     /** Was soll im Posteingang auftauchen? */
     const posteingangFilter = (anker) => {

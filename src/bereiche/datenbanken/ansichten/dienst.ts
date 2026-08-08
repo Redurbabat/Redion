@@ -310,7 +310,7 @@ const Ansichten = (() => {
              ewig dreht, ist die schlechteste aller Auskünfte. */
           .catch(() => fertig(false));
       }
-    });
+    };
   };
 
   const zahl = (n: number, name: string): string =>
@@ -403,7 +403,7 @@ const Ansichten = (() => {
       if (o) { App.oeffne(o.dataset['open']); return; }
       if (m) { posteingang(); return; }
       if (ziel?.closest('[data-filter]')) posteingangFilter(ziel);
-    });
+    };
   };
 
   /** Was soll im Posteingang auftauchen? */

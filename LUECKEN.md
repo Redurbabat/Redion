@@ -292,8 +292,9 @@ Listenzeilen · die Suchfilter als Marken · die gleitende Reiterpille · die
 56-px-Leiste oben, deren Höhe jetzt an einer Stelle steht · der
 Willkommensbildschirm (§11, E55).
 
-**Aus dem Entwurf fehlt noch:** die Zustandswechsel der Sicherungskarte
-(Kreisel → Haken) · die Einstellungen als Karten (§12).
+**Aus dem Entwurf ist damit alles gebaut**, was Redur beschrieben hat —
+zuletzt die Zustandswechsel der Sicherungskarte (E57) und die Einstellungen
+als zwei Seiten statt zwei Spalten (E58).
 
 **Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
 Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
