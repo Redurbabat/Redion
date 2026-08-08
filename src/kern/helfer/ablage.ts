@@ -59,17 +59,25 @@ const Ablage = (() => {
       feld.style.cssText = 'position:fixed; top:0; left:-9999px; opacity:0';
       document.body.appendChild(feld);
 
-      /* Was vorher markiert war, gehört dem Menschen — nachher steht es
-         wieder da. Ohne das verliert er beim Kopieren eines Links die
-         Markierung, an der er gerade gearbeitet hat. */
+      /* Was vorher markiert war und wo der Cursor stand, gehört dem
+         Menschen — nachher steht beides wieder da.
+
+         BEIDES, nicht nur die Markierung. `select()` holt den Fokus in
+         das Hilfsfeld; nach `remove()` landet er sonst beim `body`, und
+         wer gerade mitten in einem Block schrieb, tippt danach ins Leere.
+         Die Markierung allein zurückzulegen sieht richtig aus und ist es
+         nicht: der Strich blinkt, und die Tastatur kommt nicht an. */
       const vorher = document.getSelection()?.rangeCount
         ? document.getSelection()!.getRangeAt(0) : null;
+      const warAktiv = document.activeElement instanceof HTMLElement
+        ? document.activeElement : null;
 
       feld.select();
       feld.setSelectionRange(0, text.length);
       const ging = document.execCommand('copy');
       feld.remove();
 
+      if (warAktiv && warAktiv !== feld) { try { warAktiv.focus(); } catch {} }
       if (vorher) {
         const s = document.getSelection();
         s?.removeAllRanges();

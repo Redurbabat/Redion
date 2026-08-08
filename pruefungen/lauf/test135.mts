@@ -194,6 +194,63 @@ p('Der Block ist deshalb NICHT weg', (geschnitten as any).lebtNoch === true);
 gleich('… und sein Text steht noch da',
   (geschnitten as any).text, 'Bitte nicht verlieren');
 
+console.log('\n5b · Der Cursor bleibt, wo er war');
+/* Der alte Weg holt den Fokus in ein Hilfsfeld. Kommt er danach nicht
+   zurück, tippt der Mensch nach einem „Link kopieren" ins Leere.
+
+   GEMESSEN, und der Grund, warum hier ein EINGABEFELD steht und kein
+   Block: in einem `contenteditable` legt schon das Zurücklegen der
+   Markierung den Fokus wieder hin — dort kann diese Prüfung gar nicht
+   rot werden. In einem `<input>` gibt es keine Markierung im Dokument,
+   die man zurücklegen könnte; dort zählt allein, ob `focus()` gerufen
+   wurde. Die erste Fassung dieses Abschnitts prüfte den Block und war
+   auch ohne die Behebung grün (CLAUDE.md §55.2). */
+const cursor = await seite.evaluate(() => {
+  const feld = document.createElement('input');
+  feld.type = 'text';
+  feld.value = 'Hier tippt jemand';
+  document.body.appendChild(feld);
+  feld.focus();
+  feld.setSelectionRange(5, 5);
+  const vorher = document.activeElement === feld;
+
+  (window as any).Ablage.ueberFeld('etwas zum Kopieren');
+
+  const raus = { vorher, nachher: document.activeElement === feld,
+                 wer: (document.activeElement as HTMLElement)?.tagName ?? '?',
+                 stelle: feld.selectionStart };
+  feld.remove();
+  return raus;
+});
+p('Vorher lag der Fokus im Eingabefeld', (cursor as any).vorher === true);
+p('Und danach liegt er wieder dort', (cursor as any).nachher === true,
+  'jetzt: ' + (cursor as any).wer);
+
+/* Und im Block gilt dasselbe — dort trägt es die Markierung, aber es
+   muss trotzdem stimmen. */
+const imBlock = await seite.evaluate(async () => {
+  const s = Store.addBlock(null, 'page', { text: 'Cursorprobe' });
+  App.oeffne(s.id);
+  await new Promise(r => setTimeout(r, 250));
+  const b = Store.addBlock(s.id, 'text', { text: 'Hier stand der Cursor' });
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 200));
+  const ct = document.querySelector<HTMLElement>(`.blk[data-bid="${b.id}"] .ct`);
+  if (!ct) return {};
+  ct.focus();
+  const r2 = document.createRange();
+  r2.selectNodeContents(ct); r2.collapse(false);
+  const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r2);
+
+  (window as any).Ablage.ueberFeld('etwas zum Kopieren');
+
+  return { fokus: document.activeElement === ct,
+           markierung: !!getSelection()?.anchorNode &&
+                       ct.contains(getSelection()!.anchorNode) };
+});
+p('Im Block bleibt der Fokus ebenfalls', (imBlock as any).fokus === true);
+p('… und die Markierung steht wieder darin', (imBlock as any).markierung === true);
+
 console.log('\n6 · Niemand schreibt mehr an dem Helfer vorbei');
 /* Eine neue Stelle mit `writeText` und einem Toast daneben wäre genau der
    Zustand, den dieser Lauf abschafft. Deshalb wird der Quelltext gefragt. */
