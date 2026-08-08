@@ -267,6 +267,53 @@ const imRaster = await seite.evaluate(async () => {
 p('Sechs Spalten rollen auf 390 px', (imRaster as any).rollt === true);
 gleich('… und die Kante steht auch dort', (imRaster as any).rand, 'rechts');
 
+console.log('\n5b · Und die gewöhnliche Datenbanktabelle auch');
+/* Am Telefon zeigt die Datenbank Karten — dort rollt nichts. Wer im
+   Ansichtsmenü auf „Tabelle" umstellt, hat aber genau die Lage von oben.
+   Gemessen vor der Behebung: 703 px Inhalt in 334 px Kasten, scharfe
+   Kante, `14500` und `8750.5` genau darauf. */
+const alsTabelle = await seite.evaluate(async () => {
+  document.getElementById('pruef-rand')?.remove();
+  const s = Store.addBlock(null, 'page', { text: 'Tabelle am Telefon' });
+  App.oeffne(s.id);
+  await new Promise(r => setTimeout(r, 300));
+  const db = Store.addDatabase(s.id, 'Kunden', {
+    title:  { name: 'Kunde',  type: 'title' },
+    umsatz: { name: 'Umsatz', type: 'number' },
+    ort:    { name: 'Ort',    type: 'text' },
+    land:   { name: 'Land',   type: 'text' },
+    notiz:  { name: 'Notiz',  type: 'text' }
+  }, 'table');
+  const coll = Store.getCollection(db.collectionId);
+  Store.addRow(coll.id, { title: 'Meier AG', umsatz: 14500, ort: 'Zürich', land: 'CH' });
+  const view = Store.getView(coll.viewIds[0]);
+
+  /* Erst der Regelfall: Karten, und dort darf es keine Kante geben. */
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 500));
+  const mitKarten = !!document.querySelector('.db-rollbox');
+
+  /* Dann der Schalter aus dem Ansichtsmenü. */
+  Store.updateView(view.id, { handyTabelle: true });
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 600));
+  const box = document.querySelector<HTMLElement>('.db-rollbox');
+  return {
+    mitKarten,
+    da: !!box,
+    rollt: box ? box.scrollWidth > box.clientWidth + 2 : false,
+    masse: box ? `${box.scrollWidth} in ${box.clientWidth}` : '',
+    rand: box?.dataset['rand'] ?? '',
+    maske: box ? getComputedStyle(box).maskImage : 'none'
+  };
+});
+p('Als Karten gibt es gar keinen Rollkasten', (alsTabelle as any).mitKarten === false);
+p('Nach dem Umschalten auf Tabelle ist er da', (alsTabelle as any).da === true);
+p('… und rollt seitlich', (alsTabelle as any).rollt === true, (alsTabelle as any).masse);
+gleich('… mit der Kante rechts', (alsTabelle as any).rand, 'rechts');
+p('… als echte Maske', String((alsTabelle as any).maske ?? '').includes('gradient'),
+  String((alsTabelle as any).maske).slice(0, 70));
+
 console.log('\n6 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 

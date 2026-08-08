@@ -3701,12 +3701,29 @@ dieselbe wie in §55.2, nur andersherum: eine Prüfung, die immer rot sagt,
 ist so wenig wert wie eine, die immer grün sagt. Beide Male hilft nur,
 **in der echten App nachzumessen**, bevor man dem Prüflauf glaubt.
 
+**Und die dritte Stelle, die erst das Nachsehen fand**
+
+Am Telefon zeigt eine Datenbank **Karten**, nicht die Tabelle — eine
+Zeile, ihre Felder untereinander, nichts rollt seitlich. Das war schon
+gebaut und ist gut so; `LUECKEN.md` L10 behauptete das Gegenteil.
+
+Aber im Ansichtsmenü gibt es `handyTabelle`: „Tabelle statt Karten". Wer
+den Schalter umlegt, bekommt genau die Lage von oben — gemessen **703 px
+Inhalt in einem 334 px breiten Kasten**, scharfe Kante, und `14500` sowie
+`8750.5` standen direkt darauf.
+
+Dass es diesen Weg gibt, sieht man dem Bildschirmfoto nicht an; der
+Regelfall ist ja richtig. Gefunden wurde er beim Nachlesen, WARUM das
+erste Foto keinen Fehler zeigte — und das ist die Lehre: ein Foto, auf dem
+alles stimmt, beantwortet nur die Frage nach diesem einen Zustand.
+
 **Status**
 
-`test136`, 17 Punkte, 6 Abschnitte — Tabellenblock und Datenbankraster,
-Telefon und Rechner. Gegenproben:
+`test136`, 22 Punkte, 7 Abschnitte — Tabellenblock, Datenbankraster und
+Datenbanktabelle, Telefon und Rechner. Gegenproben:
 
 ```txt
-Masken entfernt        → 2 rot
-Beobachter entfernt    → 9 rot
+Masken entfernt                  → 2 rot
+Beobachter entfernt              → 9 rot
+Bindung an der DB-Tabelle raus   → 2 rot
 ```

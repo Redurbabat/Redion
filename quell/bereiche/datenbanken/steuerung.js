@@ -1065,8 +1065,16 @@ const Datenbank = (() => {
             }
         });
         const box = document.createElement('div');
+        box.className = 'db-rollbox';
         box.style.overflowX = 'auto';
         box.appendChild(t);
+        /* Die weiche Kante, wo die Tabelle über den Rand hinausgeht. Am Telefon
+           ist das der Regelfall, sobald jemand im Ansichtsmenü „Tabelle statt
+           Karten" wählt: 703 px Inhalt in 334 px Kasten. Ohne sie steht dort
+           eine Zahl mit scharfer Kante — und `14500` liest sich als `1450`.
+           Siehe `kern/helfer/rollrand.ts` und ENTSCHEIDUNGEN.md E63. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(box);
         return box;
     };
     /** Welche Zeilen sind gerade angehakt? */

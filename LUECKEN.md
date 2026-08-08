@@ -313,12 +313,17 @@ hatte eine **scharfe** Kante. `1'450.00 CHF` stand dort als `1'45` — eine
 gültige Zahl, nur eine andere. Jetzt verläuft der letzte Streifen; das Auge
 liest „geht weiter" statt „hört auf". `test136` hält es.
 
+**Und eine Behauptung weniger.** Die Datenbank zeigt am Telefon längst
+**Karten** statt einer Tabelle — eine Zeile, ihre Felder untereinander,
+nichts rollt seitlich. Diese Lücke sagte das Gegenteil. Die rollende
+Tabelle gibt es dort nur, wer sie im Ansichtsmenü ausdrücklich anschaltet
+(`handyTabelle`), und auch die hat jetzt ihre Kante.
+
 **Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
 Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
-über der Tastatur) · die mobile Datenbank- und Tabellenansicht ist damit
-noch nicht fürs Telefon **entworfen**, nur gegen die gefährlichste Stelle
-gesichert — es fehlen etwa eine Kartenansicht statt des Rasters und
-weniger leere Zeilen · Tastaturverhalten · Side Peek auf kleinen
+über der Tastatur) · der **Tabellenblock** hat am Telefon noch keinen
+eigenen Entwurf — er zeigt dasselbe Raster wie am Rechner, mit vier leeren
+Zeilen auf halbem Bildschirm · Tastaturverhalten · Side Peek auf kleinen
 Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen —
 die Masse stehen an einem Dutzend Stellen in `bausteine.css` und wurden
 schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).

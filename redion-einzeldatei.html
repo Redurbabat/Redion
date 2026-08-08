@@ -2497,10 +2497,31 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
                       #000 calc(100% - var(--rollrand)), transparent 100%);
 }
 
+/* Dieselbe Kante an der gewöhnlichen Datenbanktabelle. Am Telefon zeigt
+   die Datenbank normalerweise Karten — dort rollt nichts und es gibt
+   nichts abzuschneiden. Wer im Ansichtsmenü auf „Tabelle" umstellt, hat
+   aber genau die Lage von oben: gemessen 703 px Inhalt in 334 px Kasten. */
+.db-rollbox[data-rand] { --rollrand: 26px; }
+.db-rollbox[data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+.db-rollbox[data-rand~="links"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+}
+.db-rollbox[data-rand~="links"][data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+
 /* Am Rechner ist die Tabelle selten angeschnitten, und wenn doch, ist der
    Bildschirm gross genug, dass ein schmalerer Streifen reicht. */
 @media (min-width: 761px) {
   .tbl-feld[data-rand] { --rollrand: 18px; }
+  .db-rollbox[data-rand] { --rollrand: 18px; }
 }
 
 /* --- Kopfzeile oben ------------------------------------------------------- */
@@ -25435,8 +25456,16 @@ const Datenbank = (() => {
             }
         });
         const box = document.createElement('div');
+        box.className = 'db-rollbox';
         box.style.overflowX = 'auto';
         box.appendChild(t);
+        /* Die weiche Kante, wo die Tabelle über den Rand hinausgeht. Am Telefon
+           ist das der Regelfall, sobald jemand im Ansichtsmenü „Tabelle statt
+           Karten" wählt: 703 px Inhalt in 334 px Kasten. Ohne sie steht dort
+           eine Zahl mit scharfer Kante — und `14500` liest sich als `1450`.
+           Siehe `kern/helfer/rollrand.ts` und ENTSCHEIDUNGEN.md E63. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(box);
         return box;
     };
     /** Welche Zeilen sind gerade angehakt? */
