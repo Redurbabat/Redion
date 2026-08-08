@@ -251,7 +251,12 @@ p('Der Menüpunkt „Als OpenDocument" steht im Ansichtsmenü',
 const wz = fs.readFileSync(path.join(WURZEL, 'quell/bereiche/wissen/werkzeuge.js'), 'utf8');
 p('Der Dateidialog lässt .ods zu', /accept[^\n]*\.ods/.test(wz),
   'sonst kann man die Datei nicht einmal auswählen');
-p('index.html ist unverändert gültig', html.includes('<html'));
+/* „ist unverändert gültig" stand hier — geprüft war `includes('<html')`,
+   und das überlebt jede Verstümmelung, die den Kopf stehen lässt. Der
+   Punkt heisst jetzt, was er prüft, und schaut zusätzlich auf das Ende:
+   eine halb geschriebene Datei bricht dort zuerst ab. */
+p('index.html beginnt und endet wie eine HTML-Seite',
+  html.includes('<html') && /<\/html>\s*$/.test(html));
 
 await browser.close();
 server.close();

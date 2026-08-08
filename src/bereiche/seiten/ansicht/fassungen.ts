@@ -192,7 +192,16 @@ const Vergleich = (() => {
    * FENSTER
    * ======================================================================*/
   const dialog = async (p: any, vorgabeAltId?: string): Promise<void> => {
-    const liste = await Store.versionen(p.id);
+    /* Die Meldung darunter behauptet etwas über den Bestand. Sie darf nur
+       fallen, wenn wirklich nachgesehen werden konnte. */
+    let liste: any[];
+    try { liste = await Store.versionen(p.id); }
+    catch (err) {
+      UI.toast('Die Fassungen sind gerade nicht lesbar');
+      if (typeof Reporter !== 'undefined')
+        Reporter.error('seiten', 'Fassungen nicht lesbar', err);
+      return;
+    }
     if (!liste.length) { UI.toast('Für diese Seite gibt es noch keine Fassung'); return; }
 
     let altId = vorgabeAltId || liste[0].id;

@@ -164,22 +164,53 @@ const Store = (() => {
     r.onerror   = () => fail(r.error);
   });
 
-  const all = (store: any) => new Promise<any[]>((ok) => {
+  /* ==========================================================================
+   * LESEN UND LÖSCHEN — und warum sie jetzt ABLEHNEN
+   * --------------------------------------------------------------------------
+   * Hier stand in beiden Fällen `ok([])` bzw. `ok()` im Fehlerzweig: ein
+   * Lesefehler wurde zu einer leeren Liste, ein misslungenes Löschen zu
+   * einem Erfolg. Das ist bequem und in einer Ablage die gefährlichste
+   * Bequemlichkeit, die es gibt — denn beides sind gültige Antworten.
+   *
+   * WAS DARAN HING, gemessen am 8. August:
+   *
+   *   `importAll(json, 'ersetzen')` liest erst, was da ist, und löscht dann,
+   *   was in der Sicherung fehlt. Scheitert das Lesen (zweiter Tab mit
+   *   neuerer Fassung, Quota, abgebrochene Transaktion), kommt `[]` zurück,
+   *   die Löschschleife läuft NULL Mal, die neuen Sätze werden darübergelegt
+   *   — und der Nutzer liest „Sicherung geladen". Nach dem Neuladen stehen
+   *   die alten Seiten wieder dazwischen. Genau die Geisterseite, die der
+   *   Kommentar weiter unten für behoben erklärt.
+   *
+   *   `exportVorbereiten` zählt die Anhänge mit `all('dateien')`. Scheitert
+   *   das, sind es null, und die .json-Sicherung schreibt sich selbst
+   *   „Vollständig: dieser Bestand hat keine Dateianhänge" ins Manifest —
+   *   während die Anhänge da sind.
+   *
+   * Die vier `.catch(() => [])` an den Aufrufstellen waren übrigens toter
+   * Code: `all` konnte nie ablehnen. Jemand hat den Fall bedacht und ist
+   * dem Versprechen der Funktion aufgesessen.
+   *
+   * FEHLT DIE ABLAGE GANZ (`!db`, also nurSpeicher), bleibt es bei der
+   * leeren Antwort. Das ist kein Fehler, sondern der bekannte Zustand: die
+   * App läuft ohne Speicher weiter, und `load()` hat davor gewarnt.
+   * ========================================================================*/
+  const all = (store: any) => new Promise<any[]>((ok, fail) => {
     if (!db) return ok([]);
     try {
       const r = tx([store], 'readonly').objectStore(store).getAll();
       r.onsuccess = () => ok(r.result || []);
-      r.onerror   = () => ok([]);
-    } catch (err) { ok([]); }
+      r.onerror   = () => fail(r.error || new Error('Fach „' + store + '" nicht lesbar'));
+    } catch (err) { fail(err); }
   });
 
-  const del = (store: any, key: any) => new Promise<void>((ok) => {
+  const del = (store: any, key: any) => new Promise<void>((ok, fail) => {
     if (!db) return ok();
     try {
       const r = tx([store], 'readwrite').objectStore(store).delete(key);
       r.onsuccess = () => ok();
-      r.onerror   = () => ok();
-    } catch { ok(); }
+      r.onerror   = () => fail(r.error || new Error('Aus „' + store + '" nicht löschbar'));
+    } catch (err) { fail(err); }
   });
 
   /* --------------------------------------------------------------------------
@@ -209,17 +240,39 @@ const Store = (() => {
             'dann bleibt alles erhalten.');
       return;
     }
-    (await all('blocks')).forEach((b: any)      => cache.blocks[b.id] = b);
-    (await all('collections')).forEach((c: any) => cache.collections[c.id] = c);
-    (await all('views')).forEach((v: any)       => cache.views[v.id] = v);
-    (await all('meta')).forEach((m: any)        => cache.meta[m.k] = m.v);
+    /* EIN LESEFEHLER IST KEIN LEERER BESTAND. Vorher gab `all` bei jedem
+       Fehler `[]` zurück; die App startete dann mit einem leeren Zwischen-
+       speicher, und das Erste, was der Nutzer tat, wurde daraufgeschrieben.
+       Jetzt bricht der Start ab und sagt, was los ist — die Daten auf der
+       Platte bleiben unangetastet. */
+    try {
+      (await all('blocks')).forEach((b: any)      => cache.blocks[b.id] = b);
+      (await all('collections')).forEach((c: any) => cache.collections[c.id] = c);
+      (await all('views')).forEach((v: any)       => cache.views[v.id] = v);
+      (await all('meta')).forEach((m: any)        => cache.meta[m.k] = m.v);
+    } catch (err) {
+      db = null;
+      nurSpeicher = true;
+      if (typeof Reporter !== 'undefined')
+        Reporter.error('Ablage', 'Der Bestand liess sich nicht lesen', err);
+      warne('Der gespeicherte Bestand liess sich nicht lesen: ' +
+            (err instanceof Error ? err.message : String(err)) +
+            ' — Redion arbeitet jetzt NUR im Arbeitsspeicher und schreibt nichts, ' +
+            'damit nichts überschrieben wird. Schliesse andere Fenster dieser App ' +
+            'und lade neu.');
+      return;
+    }
 
     /* --- Selbstheilung ---------------------------------------------------
        Ein Satz, dem ein Feld fehlt, bringt die Oberfläche zu Fall — und zwar
        an einer Stelle, die mit der Ursache nichts zu tun hat. Ein Import,
        eine alte Sicherung oder ein abgebrochener Abgleich reichen dafür.
-       Deshalb wird hier einmal durchgesehen und ergänzt, was fehlt. Nichts
-       wird ersetzt und nichts weggeworfen. */
+       Deshalb wird hier einmal durchgesehen und ergänzt, was fehlt.
+
+       „Nichts wird ersetzt und nichts weggeworfen" stand hier — und war an
+       zwei Stellen von `formen.ts` schlicht nicht wahr (E72). Jetzt ist es
+       wahr: was Redion nicht lesen kann, bekommt die Vorgabe vorgesetzt und
+       liegt daneben unter `unlesbar`. Weggeworfen wird nur, was leer war. */
     if (typeof Formen !== 'undefined') {
       try {
         const b = Formen.zustand(true);
@@ -398,8 +451,19 @@ const Store = (() => {
       await Promise.all(geloescht);
       meldeAnAndereFenster('geaendert', gesammelt.map(x => 'blocks:' + x));
       for (const x of gesammelt) await purgeAnhaenge(x);
-    })().catch(err => { if (typeof Reporter !== 'undefined')
-      Reporter.error('ablage', 'Beim endgültigen Löschen blieben Fassungen oder Anhänge liegen', err); });
+    })().catch(err => {
+      /* Seit `del` ablehnt, kann hier auch der BLOCK selbst liegenbleiben,
+         nicht nur seine Anhänge — und dann steht er nach dem Neuladen wieder
+         da. `meldeAnAndereFenster` läuft in dem Fall nicht, weil das `await`
+         darüber wirft; die anderen Fenster behalten also ihren Stand, was
+         richtig ist. Was fehlt, ist eine Meldung an den Menschen, und die
+         steht jetzt hier. */
+      if (typeof Reporter !== 'undefined')
+        Reporter.error('ablage', 'Das endgültige Löschen ist nicht durchgelaufen — ' +
+          'nach dem Neuladen kann Gelöschtes wieder auftauchen', err);
+      if (typeof UI !== 'undefined' && UI.toast)
+        UI.toast('Der Speicher hat das Löschen nicht angenommen — bitte neu laden.');
+    });
   };
 
   /**
@@ -472,13 +536,16 @@ const Store = (() => {
   const purgeAnhaenge = async (id: string, hinweis: { datei?: string } = {}) => {
     for (const v of await versionen(id)) await del('versions', v.id);
 
-    const dateien = await new Promise<any[]>((ok2) => {
+    /* Auch hier: „kein Anhang" und „nicht nachsehen können" sind zweierlei.
+       Das Zweite muss durchschlagen — sonst meldet das endgültige Löschen
+       Erfolg, während die Anhänge liegen bleiben. `purgeBlock` fängt es. */
+    const dateien = await new Promise<any[]>((ok2, fail2) => {
       if (!db || !db.objectStoreNames.contains('dateien')) return ok2([]);
       try {
         const r = tx(['dateien'], 'readonly').objectStore('dateien').index('block').getAll(id);
         r.onsuccess = () => ok2(r.result || []);
-        r.onerror   = () => ok2([]);
-      } catch { ok2([]); }
+        r.onerror   = () => fail2(r.error || new Error('Das Fach „dateien" ist nicht lesbar'));
+      } catch (err) { fail2(err); }
     });
     /* Manche Blockarten merken sich die Datei am Block statt umgekehrt.
        Beide Wege werden gegangen, doppelt gelöscht wird nichts. */
@@ -800,7 +867,33 @@ const Store = (() => {
   /* ========================================================================
    * EINSTELLUNGEN
    * ======================================================================*/
-  const setMeta = (k: any, v: any): void => { cache.meta[k] = v; put('meta', { k, v }).catch(() => {}); };
+  /* Nur einmal je Sitzung meckern — wer bei jedem der ~170 setMeta-Aufrufe
+     einen Toast bekäme, schaltete die Meldung ab, statt das Problem zu
+     lösen. Der erste Fehlschlag ist die Nachricht; die weiteren sind
+     derselbe Fehlschlag. */
+  let metaFehlerGemeldet = false;
+
+  const setMeta = (k: any, v: any): void => {
+    cache.meta[k] = v;
+    /* Der leere `.catch(() => {})`, der hier stand, machte aus „liess sich
+       nicht speichern" ein „gespeichert". Am härtesten traf das
+       `wolkeSalz`: einmal gewürfelt, nie geschrieben — und nach dem
+       Neuladen würfelt der Abgleich neu und kann nichts mehr entziffern,
+       was mit dem alten Salz hochging.
+
+       WICHTIG: `Reporter.warn`, nicht `Reporter.error` — error ruft die
+       Pflege, die Pflege schreibt ihre Fehlerliste per setMeta, und bei
+       einem anhaltenden Speicherfehler wäre das eine endlose Schleife. */
+    put('meta', { k, v }).catch((err: unknown) => {
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('ablage', 'Die Einstellung „' + k + '" liess sich nicht speichern', err);
+      if (!metaFehlerGemeldet) {
+        metaFehlerGemeldet = true;
+        if (typeof UI !== 'undefined' && UI.toast)
+          UI.toast('Eine Einstellung liess sich nicht speichern — sie geht beim Neuladen verloren.');
+      }
+    });
+  };
   /* `fallback` ist alles Mögliche — eine leere Liste, 'Ich', `true`. Ohne
      Anmerkung liest TypeScript aus `= null` „immer null" und meldet jeden
      der rund neunzig Aufrufe im Rest der App. */
@@ -923,28 +1016,71 @@ const Store = (() => {
     pending.clear();
     if (!posten.length) return Promise.resolve();
 
+    /* Ein Satz, der nicht ankam, kommt zurück in den Stapel — der nächste
+       flush versucht es wieder. Aber nur, wenn dort nicht längst ein
+       NEUERER Stand desselben Satzes wartet; der ältere darf ihn nie
+       überschreiben. Der Schlüssel ist derselbe wie in `save`. */
+    const zurueckInDenStapel = (welche: { store: any; val: any }[]): void => {
+      welche.forEach(x => {
+        const k = x.store + ':' + x.val.id;
+        if (!pending.has(k)) pending.set(k, x);
+      });
+    };
+
     let fertig: Promise<unknown>;
     try {
       const faecher = [...new Set(posten.map(x => x.store))];
       const t = tx(faecher, 'readwrite');
-      posten.forEach(({ store, val }) => {
+      const gescheitert: { store: any; val: any }[] = [];
+      posten.forEach((eintrag) => {
+        const { store, val } = eintrag;
         try {
           const r = t.objectStore(store).put(val);
           r.onerror = (e: any) => {
             e.preventDefault();          /* nicht den ganzen Stapel abbrechen */
+            gescheitert.push(eintrag);
             if (typeof Reporter !== 'undefined')
               Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
           };
         } catch (err) {
+          gescheitert.push(eintrag);
           if (typeof Reporter !== 'undefined')
             Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
         }
       });
-      fertig = new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });
+      /* `oncomplete` heisst: auf der Platte. `onerror` und `onabort`
+         zeigten hier jahrelang auf DASSELBE `ok` — ein flush nach vollem
+         Speicher „gelang", und die Meldung unten ging trotzdem hinaus.
+         Jetzt: ein Abbruch rollt alles zurück (so arbeitet eine
+         Transaktion), also wandert alles zurück in den Stapel, und der
+         Aufrufer bekommt ein Nein. Einzelne gescheiterte Sätze in einer
+         sonst gelungenen Transaktion sind auch ein Nein — eines, das die
+         Zahl nennt. */
+      fertig = new Promise((ok, nein) => {
+        t.oncomplete = () => {
+          if (!gescheitert.length) return ok(undefined);
+          zurueckInDenStapel(gescheitert);
+          nein(new Error(gescheitert.length + ' von ' + posten.length +
+                         ' Sätzen liessen sich nicht schreiben'));
+        };
+        t.onerror = t.onabort = () => {
+          zurueckInDenStapel(posten);
+          nein((t as any).error ||
+               new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+        };
+      });
     } catch (err) {
       /* Geht die Sammeltransaktion gar nicht auf, lieber einzeln als nicht:
          ein langsamer Weg ist besser als ein verlorener Stapel. */
-      fertig = Promise.all(posten.map(({ store, val }) => put(store, val).catch(() => {})));
+      fertig = Promise.all(posten.map((eintrag) =>
+        put(eintrag.store, eintrag.val).then(() => undefined,
+          () => { zurueckInDenStapel([eintrag]); return 'kaputt'; })
+      )).then(ergebnisse => {
+        const kaputt = ergebnisse.filter(x => x === 'kaputt').length;
+        if (kaputt) throw new Error(kaputt + ' von ' + posten.length +
+                                    ' Sätzen liessen sich nicht schreiben');
+        return undefined;
+      });
     }
 
     /* Und die anderen Fenster wissen es jetzt auch. Siehe `nachbarn.js`:
@@ -953,14 +1089,19 @@ const Store = (() => {
        ERST WENN ES WIRKLICH AUF DER PLATTE STEHT. Der erste Wurf meldete
        sofort — das Fenster drüben las nach, fand noch nichts und schloss
        daraus, der Satz sei gelöscht. Eine Meldung über eine Änderung, die es
-       noch nicht gibt, ist schlimmer als gar keine. */
-    fertig.then(() => meldeAnAndereFenster('geaendert', schluessel));
+       noch nicht gibt, ist schlimmer als gar keine. Seit E77 gilt der Satz
+       auch im Fehlerfall: nach einem Abbruch geht KEINE Meldung hinaus —
+       drüben gäbe es nichts zu lesen. (Der leere zweite Ast hält nur die
+       abgeleitete Kette still; die Ablehnung selbst bekommt der Aufrufer.) */
+    fertig.then(() => meldeAnAndereFenster('geaendert', schluessel), () => {});
     return fertig;
   };
 
-  /* Vor dem Schließen des Tabs alles rausschreiben. */
-  window.addEventListener('beforeunload', flush);
-  window.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
+  /* Vor dem Schließen des Tabs alles rausschreiben. Die Ablehnung ist hier
+     nicht mehr zu gebrauchen — das Fenster schliesst; gemeldet hat flush
+     selbst schon über den Reporter. */
+  window.addEventListener('beforeunload', () => { flush().catch(() => {}); });
+  window.addEventListener('visibilitychange', () => { if (document.hidden) flush().catch(() => {}); });
 
   /* ========================================================================
    * SUCHE
@@ -1132,8 +1273,15 @@ const Store = (() => {
 
   /** Vor dem Sichern aufrufen: holt, was nicht im Zwischenspeicher liegt. */
   const exportVorbereiten = async () => {
-    exportVersionen = await all('versions').catch(() => []);
-    exportDateien = (await all('dateien').catch(() => [])).length;
+    /* KEIN `.catch(() => [])` MEHR. Es stand hier, war aber toter Code —
+       `all` konnte nicht ablehnen. Jetzt kann es, und dann darf die
+       Sicherung NICHT weiterlaufen: eine Zahl von null Anhängen schreibt
+       sich als „Vollständig: dieser Bestand hat keine Dateianhänge" ins
+       Manifest, und das wäre die gefährlichste Sorte Sicherung — eine, die
+       behauptet, vollständig zu sein.
+       Wer sichert, bekommt lieber einen Fehler als eine stille Lücke. */
+    exportVersionen = await all('versions');
+    exportDateien = (await all('dateien')).length;
     return { versionen: exportVersionen.length, dateien: exportDateien };
   };
 
@@ -1187,15 +1335,33 @@ const Store = (() => {
          ist es kein Ersetzen, sondern ein Zusammenführen, das sich als
          Ersetzen ausgibt. Und zwar von der PLATTE, nicht nur aus dem
          Zwischenspeicher: genau daran hing der Fehler. */
-      for (const [fach, schluessel] of
-           [['blocks', 'id'], ['collections', 'id'], ['views', 'id']] as [string, string][]) {
-        const vorhanden = await all(fach).catch(() => []);
-        for (const satz of vorhanden)
-          if (!(neu as Record<string, any>)[fach][satz[schluessel]]) await del(fach, satz[schluessel]);
+      /* HIER WIRD ABGEBROCHEN, NICHT WEITERGEMACHT. Vorher stand an beiden
+         Stellen `.catch(() => [])`: konnte die Platte nicht gelesen werden,
+         lief die Löschschleife null Mal, die neuen Sätze wurden darübergelegt
+         und der Nutzer las „Sicherung geladen" — während der alte Bestand
+         darunter stehen blieb. Nach dem Neuladen war er wieder da.
+         Ein halb ausgeführtes „Ersetzen" ist schlimmer als ein
+         abgebrochenes: das eine merkt man erst nach Tagen, das andere
+         sofort. */
+      try {
+        for (const [fach, schluessel] of
+             [['blocks', 'id'], ['collections', 'id'], ['views', 'id']] as [string, string][]) {
+          const vorhanden = await all(fach);
+          for (const satz of vorhanden)
+            if (!(neu as Record<string, any>)[fach][satz[schluessel]]) await del(fach, satz[schluessel]);
+        }
+        const metaVorhanden = await all('meta');
+        for (const m of metaVorhanden)
+          if (!(m.k in neu.meta)) await del('meta', m.k);
+      } catch (err) {
+        if (typeof Reporter !== 'undefined')
+          Reporter.error('Ablage', 'Ersetzen abgebrochen', err);
+        throw new Error('Die Sicherung wurde NICHT eingespielt: der vorhandene ' +
+          'Bestand liess sich nicht vollständig löschen (' +
+          (err instanceof Error ? err.message : String(err)) + '). ' +
+          'Es ist nichts verändert worden. Schliesse andere Fenster dieser App ' +
+          'und versuche es noch einmal.');
       }
-      const metaVorhanden = await all('meta').catch(() => []);
-      for (const m of metaVorhanden)
-        if (!(m.k in neu.meta)) await del('meta', m.k);
 
       cache.blocks = neu.blocks; cache.collections = neu.collections;
       cache.views = neu.views;   cache.meta = neu.meta;
@@ -1407,15 +1573,40 @@ const Store = (() => {
       daten: baum(pageId)
     };
     await put('versions', v);
-    for (const id of fassungenAusduennen(await versionen(pageId))) await del('versions', id);
+    /* Das Ausdünnen darf den Aufruf nicht scheitern lassen. Die Fassung IST
+       gespeichert; misslingt nur das Wegräumen der alten, hat der Nutzer
+       mehr Verlauf als geplant — das ist kein Schaden. Ihn dafür einen
+       Fehler sehen zu lassen (oder, schlimmer, eine unbehandelte Ablehnung
+       zu erzeugen: `werkzeuge.ts:854` ruft ohne `await`), wäre einer. */
+    try {
+      for (const id of fassungenAusduennen(await versionen(pageId))) await del('versions', id);
+    } catch (err) {
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('ablage', 'Alte Fassungen liessen sich nicht ausdünnen — ' +
+          'der Verlauf wächst weiter', err);
+    }
     return v;
   };
 
-  const versionen = (pageId: any) => new Promise<any[]>((ok) => {
+  /**
+   * Die Fassungen einer Seite, jüngste zuerst.
+   *
+   * Die leere Liste hat hier ZWEI Bedeutungen, und nur eine davon ist
+   * harmlos. „Es gibt keine Fassungen" ist eine Auskunft; „ich konnte nicht
+   * nachsehen" ist ein Fehler. Bis eben sahen beide gleich aus — der
+   * Verlauf zeigte „0", der Mensch schloss daraus, dass es nichts
+   * wiederherzustellen gibt, und überschrieb die Seite guten Gewissens.
+   *
+   * Deshalb: fehlt das Fach, ist die leere Liste richtig (eine junge Ablage
+   * hat es noch nicht). Ist es da und antwortet nicht, wird abgelehnt.
+   */
+  const versionen = (pageId: any) => new Promise<any[]>((ok, fail) => {
     if (!db || !db.objectStoreNames.contains('versions')) return ok([]);
-    const r = tx(['versions'], 'readonly').objectStore('versions').index('page').getAll(pageId);
-    r.onsuccess = () => ok((r.result || []).sort((a: any, b: any) => b.zeit.localeCompare(a.zeit)));
-    r.onerror = () => ok([]);
+    try {
+      const r = tx(['versions'], 'readonly').objectStore('versions').index('page').getAll(pageId);
+      r.onsuccess = () => ok((r.result || []).sort((a: any, b: any) => b.zeit.localeCompare(a.zeit)));
+      r.onerror = () => fail(r.error || new Error('Der Versionsverlauf ist nicht lesbar'));
+    } catch (err) { fail(err); }
   });
 
   const versionLoeschen = (id: string) => del('versions', id);
@@ -1438,14 +1629,27 @@ const Store = (() => {
    * von sich aus dabei.
    */
   const wipe = async () => {
+    /* Ein misslungenes Leeren durfte hier bis eben schweigen. Das ist die
+       gefährlichste Stelle dafür, die es gibt: wer „alles löschen" drückt,
+       gibt danach womöglich den Rechner weiter. Bleibt ein Fach stehen und
+       niemand sagt es, glaubt er, seine Daten seien fort — und sie sind es
+       nicht. Deshalb wird gezählt, was nicht ging, und es wird genannt. */
+    const geblieben: string[] = [];
     if (db) await Promise.all([...db.objectStoreNames].map((s: string) => new Promise<void>(ok => {
       try {
         const r = tx([s], 'readwrite').objectStore(s).clear();
-        r.onsuccess = () => ok(); r.onerror = () => ok();
-      } catch { ok(); }
+        r.onsuccess = () => ok();
+        r.onerror   = () => { geblieben.push(s); ok(); };
+      } catch { geblieben.push(s); ok(); }
     })));
     cache.blocks = {}; cache.collections = {}; cache.views = {}; cache.meta = {};
     meldeAnAndereFenster('alles', []);
+    if (geblieben.length) {
+      const text = 'Nicht alles liess sich löschen. Diese Fächer sind noch da: ' +
+                   geblieben.join(', ') + '. Der Speicher des Browsers muss von Hand geleert werden.';
+      if (typeof Reporter !== 'undefined') Reporter.error('ablage', text);
+      throw new Error(text);
+    }
   };
 
   /* ========================================================================

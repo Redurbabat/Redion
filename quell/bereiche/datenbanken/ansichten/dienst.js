@@ -282,8 +282,13 @@ const Ansichten = (() => {
                         }
                     }, 1200);
                 };
+                /* `sicherungSpeichern` fängt seine Fehler selbst und kehrt regulär
+                   zurück — deshalb reicht `.then(() => fertig(true))` nicht, der
+                   Haken erschien auch nach dem „Es wurde nichts geschrieben"-Alert.
+                   Nur ein ausdrückliches `false` ist ein Fehlschlag; `undefined`
+                   (etwa aus einem Prüf-Stellvertreter) zählt weiter als Erfolg. */
                 void Promise.resolve(App.sicherungSpeichern())
-                    .then(() => fertig(true))
+                    .then((gut) => fertig(gut !== false))
                     /* Auch der Fehlschlag gehört auf den Knopf. Ein Kreisel, der
                        ewig dreht, ist die schlechteste aller Auskünfte. */
                     .catch(() => fertig(false));

@@ -105,7 +105,7 @@ const Agent = (() => {
             recht: 'bearbeiten',
             beschreibung: 'Legt einen Eintrag in einer vorhandenen Datenbank an. Argument: ' +
                 '{"datenbank":"Name","werte":{"Spalte":"Wert"}}',
-            lauf: async (a) => {
+            lauf: async (a, protokoll) => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase() === String(a.datenbank || '').toLowerCase());
                 if (!c)
                     return 'Keine Datenbank namens „' + a.datenbank + '".';
@@ -122,6 +122,10 @@ const Agent = (() => {
                 });
                 const r = Store.addRow(c.id, props);
                 Store.updateBlock(r.id, { text: titel || 'Ohne Titel' });
+                /* Ohne diesen Eintrag konnte „Zurücknehmen" die Zeile nicht finden —
+                   der Knopf meldete Erfolg, die Zeile blieb. */
+                if (protokoll && protokoll.ids)
+                    protokoll.ids.push(r.id);
                 App.zeichneSeite();
                 return 'Eintrag „' + (titel || 'Ohne Titel') + '" in „' + c.name + '" angelegt.';
             }
@@ -143,7 +147,7 @@ const Agent = (() => {
             recht: 'bearbeiten',
             beschreibung: 'Füllt ein Feld aller Einträge einer Datenbank per KI. Argument: ' +
                 '{"datenbank":"…","spalte":"…","auftrag":"Was soll dort stehen?"}',
-            lauf: async (a) => {
+            lauf: async (a, protokoll) => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase().includes(String(a.datenbank || '').toLowerCase()));
                 if (!c)
                     return 'Keine Datenbank gefunden.';
@@ -153,9 +157,29 @@ const Agent = (() => {
                 c.schema[k].auftrag = a.auftrag || c.schema[k].auftrag;
                 Store.updateCollection(c.id, { schema: c.schema });
                 const zeilen = Store.rowsOf(c.id).slice(0, 15);
-                for (const r of zeilen)
-                    await Datenbank.kiFeldFuellenFuer(r, k, c);
-                return zeilen.length + ' Einträge in „' + a.spalte + '" gefüllt.';
+                /* Gezählt wird, was WIRKLICH gefüllt wurde — nicht, was angefasst
+                   wurde. „15 Einträge gefüllt" stand hier auch dann, wenn jede
+                   Zeile am Spaltenrecht abprallte oder die KI nichts gab. */
+                let gefuellt = 0, kaputt = 0;
+                for (const r of zeilen) {
+                    /* Der alte Wert wandert VOR dem Überschreiben ins Protokoll —
+                       erst damit ist „Zurücknehmen" hier ein Wiederherstellen und
+                       keine leere Behauptung. */
+                    if (protokoll && protokoll.felder)
+                        protokoll.felder.push({ id: r.id, key: k,
+                            alt: (Store.getBlock(r.id)?.props || {})[k] });
+                    try {
+                        if (await Datenbank.kiFeldFuellenFuer(r, k, c))
+                            gefuellt++;
+                    }
+                    catch {
+                        kaputt++;
+                    }
+                }
+                const rest = zeilen.length - gefuellt - kaputt;
+                return gefuellt + ' von ' + zeilen.length + ' Einträgen in „' + a.spalte + '" gefüllt' +
+                    (kaputt ? ', ' + kaputt + ' mit Fehler' : '') +
+                    (rest ? ', ' + rest + ' ohne Antwort oder ohne Schreibrecht' : '') + '.';
             }
         },
         nachschlagen: {
@@ -209,11 +233,16 @@ const Agent = (() => {
         worker: {
             recht: 'bearbeiten',
             beschreibung: 'Führt einen gespeicherten Worker aus. Argument: {"name":"…","eingabe":{}}',
-            lauf: async (a) => {
+            lauf: async (a, protokoll) => {
                 const w = worker().find((x) => x.name === a.name);
                 if (!w)
                     return 'Keinen Worker namens „' + a.name + '" gefunden. Vorhanden: ' +
                         (worker().map((x) => x.name).join(', ') || 'keiner');
+                /* Was ein Worker verändert, weiss niemand — sein Code ist fremd.
+                   Zurücknehmen kann das nicht; also steht es im Protokoll, und der
+                   Knopf sagt es, statt so zu tun, als ginge es. */
+                if (protokoll && protokoll.bleibt && !protokoll.bleibt.includes('worker'))
+                    protokoll.bleibt.push('worker');
                 try {
                     const raus = await workerLaufen(w, a.eingabe || {});
                     return 'Worker „' + w.name + '" sagt: ' + JSON.stringify(raus).slice(0, 1200);
@@ -450,7 +479,8 @@ const Agent = (() => {
            nicht dürfte. Der Agent kann nicht mehr als du. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
-        const protokoll = { agent: a.name, auftrag, schritte: [], ids: [], zeit: Store.now() };
+        const protokoll = { agent: a.name, auftrag, schritte: [], ids: [],
+            felder: [], bleibt: [], zeit: Store.now() };
         /* Ein abgebrochener Lauf ist trotzdem ein Lauf. Er kommt ins Protokoll,
            mit dem Grund — sonst sucht man den Agenten, der „nichts getan hat". */
         const abbrechen = (grund) => {
@@ -617,11 +647,35 @@ const Agent = (() => {
         Store.setMeta('agent:laeufe', l.slice(0, 30));
         return protokoll;
     };
-    /** Alles zurücknehmen, was ein Lauf angelegt hat. */
+    /**
+     * Alles zurücknehmen, was ein Lauf getan hat — und ehrlich sagen, was
+     * sich nicht zurücknehmen lässt.
+     *
+     * Angelegte Seiten werden gelöscht, überschriebene Feldwerte
+     * WIEDERHERGESTELLT (der alte Wert steht im Protokoll). Der Rückgabetext
+     * gehört in den Toast: „Zurückgenommen" allein war eine Lüge, wenn der
+     * Lauf per `feldFuellen` fünfzehn Notizen überschrieben hatte und keine
+     * davon zurückkam.
+     */
     const zuruecknehmen = (protokoll) => {
         (protokoll.ids || []).forEach((id) => { Store.trashBlock(id); Store.purgeBlock(id); });
+        /* Rückwärts: hat der Lauf dieselbe Zelle zweimal überschrieben, gewinnt
+           der älteste Stand — der von VOR dem Lauf. */
+        [...(protokoll.felder || [])].reverse().forEach((f) => {
+            if (Store.getBlock(f.id))
+                Store.setProp(f.id, f.key, f.alt);
+        });
         App.zeichneBaum();
         App.zeichneSeite();
+        const teile = [];
+        if ((protokoll.ids || []).length)
+            teile.push((protokoll.ids || []).length + ' angelegte Seite(n) entfernt');
+        if ((protokoll.felder || []).length)
+            teile.push((protokoll.felder || []).length + ' Feldwert(e) wiederhergestellt');
+        let text = 'Zurückgenommen' + (teile.length ? ': ' + teile.join(', ') : '');
+        if ((protokoll.bleibt || []).length)
+            text += ' — was „' + protokoll.bleibt.join('", „') + '" verändert hat, bleibt';
+        return text;
     };
     /* ========================================================================
      * AUSLÖSER — der Agent läuft von selbst
@@ -808,8 +862,7 @@ const Agent = (() => {
                         (p.ids.length ? `<button data-zurueck="1">${p.ids.length} angelegte Seiten zurücknehmen</button>` : '');
                     liste.appendChild(fertig);
                     fertig.querySelector('[data-zurueck]')?.addEventListener('click', () => {
-                        zuruecknehmen(p);
-                        UI.toast('Zurückgenommen');
+                        UI.toast(zuruecknehmen(p));
                         fertig.querySelector('button')?.remove();
                     });
                 }
@@ -1186,8 +1239,7 @@ const Agent = (() => {
             }
             const z = elVon(e)?.closest('[data-zurueck]');
             if (z) {
-                zuruecknehmen(laeufe()[Number(z.dataset.zurueck)]);
-                UI.toast('Zurückgenommen');
+                UI.toast(zuruecknehmen(laeufe()[Number(z.dataset.zurueck)]));
                 return;
             }
             if (elVon(e)?.closest('[data-a="leeren"]')) {

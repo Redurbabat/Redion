@@ -463,14 +463,34 @@ const Mail = (() => {
                                                        w ? [] : ['IMPORTANT']));
                            App.zeichneSeite(); UI.toast(w ? 'Als wichtig markiert' : 'Nicht mehr wichtig');
                            return; }
-      if (taste === 'e') { e.preventDefault();
-                           versuche(() => archivieren(r.props.mid));
-                           Store.trashBlock(r.id); App.zeichneSeite();
-                           UI.toast('Archiviert'); return; }
-      if (taste === '#') { e.preventDefault();
-                           versuche(() => gmailAendern(r.props.mid, ['TRASH'], ['INBOX']));
-                           Store.trashBlock(r.id); App.zeichneSeite();
-                           UI.toast('In den Papierkorb'); return; }
+      /* Die zwei Tasten, die eine Zeile VERSCHWINDEN lassen, gehen den Weg
+         erst beim Server und dann lokal. Vorher lief es umgekehrt:
+         `versuche()` schluckte die Gmail-Ablehnung, die Zeile war weg, und
+         „Archiviert" stand da — bei Gmail lag die Mail weiter im Eingang.
+         Eine .eml-Mail (eingelesen, kein Gmail-Konto dahinter — erkennbar
+         am leeren `link`) KONNTE der Aufruf nie treffen; da ist „nur
+         lokal" die ehrliche Auskunft, kein Fehler. */
+      if (taste === 'e' || taste === '#') {
+        e.preventDefault();
+        const gmail = !!(r.props || {}).link;
+        const wohin = taste === 'e' ? 'Archiviert' : 'In den Papierkorb';
+        if (!gmail) {
+          Store.trashBlock(r.id); App.zeichneSeite();
+          UI.toast(wohin + ' (nur hier — hinter dieser Mail steht kein Gmail-Konto)');
+          return;
+        }
+        try {
+          if (taste === 'e') await archivieren(r.props.mid);
+          else await gmailAendern(r.props.mid, ['TRASH'], ['INBOX']);
+          Store.trashBlock(r.id); App.zeichneSeite();
+          UI.toast(wohin);
+        } catch (err) {
+          /* Die Zeile bleibt liegen — es gibt nichts zurückzurollen. */
+          UI.toast('Gmail hat abgelehnt: ' +
+                   (err instanceof Error ? err.message : String(err)));
+        }
+        return;
+      }
       if (taste === 'r' || taste === 'a') { e.preventDefault(); antwortMenue(r, coll); return; }
       /* `l` öffnet die Beschriftungen. Hier stand `Datenbank.zelleMenueFuer`
          — die Funktion gibt es nicht, und wegen des `?.` tat die Taste

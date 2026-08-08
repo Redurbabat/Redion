@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 113 Prüfläufe**
+**8. August 2026 · 118 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -50,6 +50,17 @@ L10  Fingermasse im Tabellenblock (E64) — Zelle 40 px, Formelzeile 32,
 L22  fensterweise Zeichnen rechnete mit 34 px je Zeile (E65) — bei „alle
      Einträge" und weitem Rollen sah man die falschen Zeilen
 —    zwei Typen, die über das eigene Format logen (E66)
+—    ein Lesefehler sah aus wie ein leerer Bestand (E71) — „Ersetzen"
+     löschte dann nichts und meldete Erfolg; der Verlauf zeigte „0
+     Fassungen", wenn er nicht lesbar war
+—    Heilen überschrieb Inhalt mit Vorgaben (E72) — ein `text` in fremder
+     Verpackung wurde bei jedem Start zu `''`; jetzt liegt er beiseite
+—    test100 prüfte eine Abschrift statt der echten Sicherung (E73) —
+     der zerbrochene Entdoppler blieb grün, bis der Lauf die Funktion rief
+—    ein halber Upload wanderte als halbes Video in die Sicherung (E74) —
+     `alsBlob` hält jetzt Stückzahl gegen Sollzahl
+—    sechs Prüfpunkte konnten nicht rot werden (E75) — `<= 4`, `>= 0`,
+     -1 gegen -1, eine erfundene Klasse, ein Literal, eine Endlosschleife
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -619,17 +630,20 @@ Die Telefongrenze stand als 700, 760 und 768       E68 — jetzt eine
 Die Schublade begann bei 60 px, die Leiste bei 80  E68 — jetzt --hoben
 Ziffer→Blockart stand viermal                      E69 — jetzt aus `kurz`
 Das Typmenü hatte keine Auffanggruppe              E69 — jetzt schon
+Der Ablagename stand blank im Dienstarbeiter        E70 — benannt, geprüft
+Offline-Vorrat gegen index.html                     E70 — beide Richtungen
+EINFACHE_TYPEN stand zweimal in einer Datei         E70
 ```
 
-**Offen, nach Schaden sortiert**
+**Stand: ✅ abgearbeitet** (8. August 2026). Auch die letzten drei:
 
 ```txt
-anzeige  `Register.bloecke` hat `nimmZurueck`, `Register.eigenschaften`
-         nicht — eine Unwucht, die für Erweiterungen (L30) zählt.
-kosmetik ABLAGE_NAME ('notizen') steht in konstanten.ts und noch einmal
-         als Zeichenkette in dienst/sw.ts:421.
-kosmetik EINFACHE_TYPEN steht in editor.ts zweimal, 23 Zeilen auseinander.
-kosmetik KACHEL (256) und die Seitenleistenbreite (260) je zweimal.
+`Register.eigenschaften` hat jetzt `nimmZurueck` — nach dem Vorbild von
+`bloecke`, Eingebautes bleibt unabmeldbar. test142 benutzt es, statt die
+Unwucht nur festzuhalten.
+KACHEL (256) und die Seitenleistenbreite (260) stehen weiter je zweimal —
+CSS kann keine Konstante importieren. test143 §5 rechnet beide Paare nach
+und misst den Doppelklick-Rücksetzer obendrein.
 ```
 
 **Ein Fehlalarm war auch dabei** — `#topbar .nur-telefon` wird absichtlich
@@ -640,6 +654,49 @@ man ihn **lesen**, nicht abschreiben. Geht das nicht, weil das Rechnen ihn
 vor dem Zeichnen braucht, dann muss ein Prüflauf die Gleichheit nachrechnen.
 Ein Kommentar „muss übereinstimmen" reicht nicht: genau der stand bei
 `ZH_HANDY` und hat nichts verhindert.
+
+## L35 · `stueckeVon` schweigt noch bei einem Lesefehler
+
+**Wo** `src/kern/ablage/indexdb.ts`, in `stueckeVon`:
+
+```js
+r.onerror = () => ok2([]);
+```
+
+**Was das heisst.** Dieselbe Verwechslung, die E71 an drei Stellen aufgelöst
+hat, steht hier noch: „ich konnte die Stücke nicht lesen" sieht aus wie
+„diese Datei hat keine Stücke". Eine Datei besteht aus Stücken; null Stücke
+heisst, es gibt sie nicht.
+
+**Was daraus folgt, nach Aufrufer:**
+
+| Stelle | Folge bei `[]` |
+|---|---|
+| `dateien/ablage.ts:173` (`alsBlob`) | gibt `null` — der Mensch liest „Datei nicht gefunden", obwohl sie da ist |
+| `dateien/ablage.ts:214` (`weg`) | löscht **kein** Stück, entfernt aber den Dateisatz → die Stücke liegen für immer verwaist im Speicher |
+| `dateien/ablage.ts:109` (`bestaetigen`) | meldet „Es fehlen noch N Stücke" — zufällig ehrlich, aber aus dem falschen Grund |
+| `abgleich/maschine.ts:675, 698, 733` | Abgleich arbeitet mit einer Datei ohne Inhalt |
+
+Ein zusammengesetzter Blob aus null Stücken ist **0 Byte** — und ginge so in
+eine `.redion`-Sicherung, die dann einen Anhang nennt, den sie nicht hat.
+Das ist der Grund, warum diese Lücke nicht „später irgendwann" ist.
+
+**Warum sie trotzdem offen bleibt.** Drei der sieben Aufrufer liegen im
+Abgleich, und Abgleichslogik ist in dieser Sitzung ausdrücklich nicht zu
+ändern (Vorgabe von Redur). Ein `fail` ohne durchdachte Aufrufer wäre keine
+Verbesserung, sondern ein Absturz an einer Stelle, die heute wenigstens
+weiterläuft.
+
+**Woran man sich erinnert.** `test144` §6 hält den Zustand mit einem Punkt
+fest, der heute grün ist, **weil** die Lücke besteht:
+
+```txt
+✓ Bekannt und festgehalten: `stueckeVon` schweigt noch (L35)
+```
+
+Wird sie geschlossen, fällt dieser Punkt — und die Meldung daneben sagt, was
+dann zu tun ist: den Punkt umdrehen und L35 streichen. Eine Lücke, an die
+kein Prüflauf erinnert, wird vergessen.
 
 ---
 

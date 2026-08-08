@@ -4215,7 +4215,8 @@ Und: `Register.bloecke` hat `nimmZurueck`, `Register.eigenschaften` nicht.
 Eine Unwucht, die erst auffällt, wenn man sie braucht — für Erweiterungen
 (L30) wird sie es. Der Prüflauf erfindet keine Aufräumfunktion, sondern
 lädt eine frische Seite und hält fest, dass das Register dort wieder wie
-neu ist. Die Unwucht steht als Notiz in L34.
+neu ist. Die Unwucht steht als Notiz in L34. *(Inzwischen behoben — siehe
+den Nachtrag unter E70; test142 meldet seither wirklich ab.)*
 
 **Status**
 
@@ -4226,3 +4227,633 @@ Auffanggruppe entfernt          → 2 rot
 Aufzählung auf Strg+Umschalt+3  → 3 rot, darunter „Strg+Umschalt+3 ist
                                   h3 — ist bullet"
 ```
+
+---
+
+## E70 · Was sich nicht teilen lässt, wird nachgerechnet
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test143` (16 Punkte)
+
+Redion sind drei Bündel: die App im Browserfenster, der Dienstarbeiter
+`sw.js` und der Server bei Cloudflare. Keiner kann die Dateien der anderen
+lesen — der Dienstarbeiter hat kein `window`, der Worker keinen Browser.
+
+Wo sie sich trotzdem über einen Wert einig sein **müssen**, gibt es ihn
+zwangsläufig zweimal. E67 hat das für die Dateigrenze zwischen Gerät und
+Server festgehalten; hier kommen die zwei anderen dazu.
+
+**Der Name der Ablage**
+
+`KONSTANTEN.ABLAGE_NAME` ist `'notizen'`. Der Dienstarbeiter öffnet die
+IndexedDB selbst, um fällige Erinnerungen zu holen, wenn die App
+geschlossen ist — und stand dort als blanke Zeichenkette
+`indexedDB.open('notizen')`.
+
+Was ein falscher Name dort anrichtet, ist das Tückische: **keine
+Fehlermeldung, sondern keine Erinnerungen.** Eine Erinnerung, die nicht
+kommt, sieht aus wie eine, die nicht fällig war. Man merkt es Wochen
+später oder nie.
+
+Jetzt trägt der Dienstarbeiter eine benannte Konstante, und `test143`
+vergleicht sie mit der der App.
+
+**Der Offline-Vorrat gegen das, was geladen wird**
+
+`index.html` lädt rund neunzig Skripte und dreizehn Stildateien.
+`GRUNDSTOCK` in `sw.ts` legt sie beiseite, damit die App ohne Netz
+startet. Zwei Listen, die niemand nebeneinanderlegt.
+
+Fehlt dort eine Datei, startet die App offline **unvollständig** — und
+auch das sieht nicht nach einem Fehler aus, sondern nach einer App, die
+eine Sache nicht kann. In der Gegenprobe, mit `tabelle.css` aus dem
+Vorrat entfernt:
+
+```txt
+✗ Und jede Stildatei ebenfalls — quell/schale/stil/tabelle.css
+```
+
+Offline wäre der Tabellenblock ohne Gestaltung gewesen.
+
+Geprüft wird in beide Richtungen: jede geladene Datei liegt im Vorrat, und
+keine Datei im Vorrat fehlt auf der Platte. `sw.ts` meldet Letzteres seit
+jeher — aber nur in der Konsole, und dorthin sieht beim Ablegen niemand.
+
+**Eine Liste, die zweimal in derselben Datei stand**
+
+`EINFACHE_TYPEN` — die Blocktypen, die `auswahlUmwandeln` direkt setzen
+kann — stand dreiundzwanzig Zeilen weiter unten noch einmal wörtlich, für
+das Menü, das genau diese Typen anbietet.
+
+Zwei Listen hiessen: entweder ein Knopf, der nichts tut, oder ein Typ, den
+man nicht auswählen kann. Heute deckten sie sich; die Gegenprobe zeigt,
+was der Prüflauf jetzt verhindert.
+
+**Status**
+
+`test143`, 16 Punkte. Gegenproben:
+
+```txt
+Ablagename auf 'redion'         → 1 rot
+tabelle.css aus dem Vorrat      → 1 rot
+Umwandelliste wieder doppelt    → 2 rot
+```
+
+**Damit ist L34 abgearbeitet** bis auf drei Kleinigkeiten, die dort
+einzeln stehen: `KACHEL` und die Seitenleistenbreite je zweimal, und die
+Unwucht, dass `Register.eigenschaften` kein `nimmZurueck` hat.
+
+*Nachtrag vom selben Tag:* auch die drei sind erledigt.
+`Register.eigenschaften.nimmZurueck` gibt es jetzt (Eingebautes bleibt
+unabmeldbar; test142 benutzt es). Die beiden CSS↔TS-Paare — Kartenkachel
+256 und Seitenleiste 260 — rechnet test143 §5 nach, samt Messung, dass der
+Doppelklick wirklich auf die Startbreite zurückführt. Gegenproben: CSS auf
+255 → 1 rot; `setze(240)` im gebauten `schale.js` → der Textvergleich der
+Quelle blieb grün, die **Messung** wurde rot — genau dafür sind beide da.
+
+---
+
+## E71 · Ein Lesefehler ist kein leerer Bestand
+
+**Datum** 8. August 2026 · **Betrifft** `src/kern/ablage/indexdb.ts`,
+`src/bereiche/wissen/werkzeuge.ts`, `src/bereiche/seiten/ansicht/fassungen.ts`,
+`src/bereiche/einstellungen/ansicht/seite.ts` · **Prüflauf** `test144`
+
+**Was war**
+
+Die beiden Grundfunktionen der Ablage schwiegen, wenn die Ablage nicht
+antwortete:
+
+```js
+const all = (store) => new Promise((ok) => {
+  ...
+  r.onerror = () => ok([]);        // „nichts drin"
+});
+const del = (store, key) => new Promise((ok) => {
+  ...
+  r.onerror = () => ok();          // „erledigt"
+});
+```
+
+Beide Zeilen sagen dasselbe Falsche: sie machen aus **„ich konnte nicht
+nachsehen"** ein **„da ist nichts"**, und aus **„ich konnte nicht löschen"**
+ein **„gelöscht"**. Der Aufrufer kann den Unterschied danach nicht mehr
+erkennen — die Auskunft ist in beiden Fällen wortgleich.
+
+**Warum das kein Schönheitsfehler war**
+
+Der Weg, an dem es weh tut, ist das Einspielen einer Sicherung mit
+„Ersetzen". Er liest erst den Bestand und löscht dann, was er gelesen hat:
+
+```js
+for (const fach of FAECHER)
+  for (const satz of await all(fach)) await del(fach, satz.id);
+```
+
+Mit `ok([])` läuft die innere Schleife **null Mal**. Der alte Bestand bleibt
+liegen, die neuen Sätze legen sich darüber, und der Mensch liest
+„Sicherung geladen". Er hat dann eine Mischung aus zwei Ständen und weiss es
+nicht.
+
+Die Gegenprobe hat es in eine Zahl gefasst. Ein Bestand von **1973** Sätzen,
+danach **1**:
+
+```txt
+✗ Der alte Bestand steht unverändert da — vorher 1973, nachher 1
+```
+
+Genau diese Zeile ist heute grün, weil der Vorgang jetzt abbricht, **bevor**
+er etwas anfasst.
+
+Dieselbe Sorte Schweigen stand im Versionsverlauf:
+
+```js
+const versionen = (pageId) => new Promise((ok) => {
+  ...
+  r.onerror = () => ok([]);
+});
+```
+
+Das ist die gefährlichste der drei Stellen, obwohl sie am harmlosesten
+aussieht. Wer den Verlauf aufschlägt und „0 Fassungen" liest, schliesst
+daraus, dass es nichts wiederherzustellen gibt — und überschreibt die Seite
+guten Gewissens. Der Verlauf ist die Rückversicherung; eine Rückversicherung,
+die im Fehlerfall „gibt es nicht" sagt, ist schlimmer als keine.
+
+**Was jetzt gilt**
+
+Ein **fehlendes Fach** bleibt eine leere Liste. Eine junge Ablage hat
+`versions` noch nicht, und das ist keine Störung:
+
+```js
+if (!db || !db.objectStoreNames.contains('versions')) return ok([]);
+```
+
+Ein **vorhandenes Fach, das nicht antwortet**, lehnt ab:
+
+```js
+r.onerror = () => fail(r.error || new Error('Der Versionsverlauf ist nicht lesbar'));
+```
+
+Der Unterschied zwischen „gibt es nicht" und „antwortet nicht" ist der ganze
+Punkt dieser Entscheidung.
+
+**Und was die acht Aufrufer daraus machen**
+
+Ein `fail` nützt nichts, wenn es niemand auffängt. Jeder Aufrufer wurde
+einzeln angesehen, weil jeder etwas anderes Richtiges tun muss:
+
+| Aufrufer | Was jetzt passiert | Warum gerade das |
+|---|---|---|
+| `load()` beim Start | geht in den Nur-Speicher-Betrieb, mit Warnung | Die App muss starten, aber sie darf nicht so tun, als wäre der Speicher heil |
+| `exportVorbereiten` | reicht den Fehler durch | Sonst stünde „Vollständig: keine Dateianhänge" in einer Sicherung, deren Anhangfach unlesbar war |
+| Import „Ersetzen" | bricht ab, bevor gelöscht wird | Siehe oben — hier steht der Bestand auf dem Spiel |
+| `purgeBlock` | vorhandener `catch`, jetzt mit richtigem Text und Hinweis | Endgültiges Löschen, das nur halb ging, muss man wissen |
+| `versionSpeichern` (Ausdünnen) | `Reporter.warn`, sonst weiter | `werkzeuge.ts:854` ruft ohne `await` auf; ein Wurf ginge ins Leere. Und nicht ausdünnen heisst: der Verlauf wächst — nichts geht verloren |
+| Verlaufsfenster (`werkzeuge`, `fassungen`) | sagt „nicht lesbar", statt „keine Fassung" | Der Unterschied, um den es geht |
+| „Verlauf aufräumen" | bricht ab, löscht nichts | Die Liste wäre eine Auswahl aus den lesbaren Seiten. Nach unvollständigem Bild zu löschen ist unumkehrbar |
+
+**`wipe()` dazu**
+
+Beim Weg „alles löschen" durfte ein misslungenes Leeren ebenfalls schweigen.
+Das ist die unangenehmste Stelle dafür, die es gibt: wer diesen Knopf
+drückt, gibt den Rechner womöglich danach weiter. Bleibt ein Fach stehen und
+niemand sagt es, hält er seine Daten für fort — und sie sind es nicht.
+Jetzt wird gezählt, was nicht ging, und beim Namen genannt; **und es wird
+nicht neu geladen**, denn ein leerer Bildschirm nach dem Neuladen wäre genau
+die Lüge.
+
+**Was bewusst NICHT angefasst wurde**
+
+`stueckeVon()` schweigt weiter. Es liegt im Weg des Abgleichs
+(`maschine.ts:675, 698, 733`), und Abgleichslogik ist in dieser Sitzung
+ausdrücklich nicht zu ändern. Die Lücke steht als **L35**, und `test144`
+hält sie mit einem Punkt fest, der **umgedreht werden muss**, sobald sie
+geschlossen ist — eine Lücke, an die kein Prüflauf erinnert, wird vergessen.
+
+**Status**
+
+`test144`, 22 Punkte, alle grün. Gegenprobe — die drei Zeilen im gebauten
+`quell/kern/ablage/indexdb.js` zurückgedreht:
+
+```txt
+all → ok([])          ┐
+del → ok()            ├→  9 Punkte rot
+versionen → ok([])    ┘
+```
+
+**Eine Nebenlehre über Gegenproben.** Der erste Versuch drehte im gebauten
+`.js` mit dem Text aus der `.ts` zurück — und traf zwei von drei Zeilen
+nicht, weil `tsc` die Ausrichtung der Zuweisung glättet
+(`r.onerror   =` wird zu `r.onerror =`). Ergebnis: zwei rote Punkte statt
+neun, und beinahe der Schluss „die Prüfung kann gar nicht rot werden".
+Eine Gegenprobe muss **selbst nachweisen, dass sie gegriffen hat** — seither
+zählt das Skript seine Treffer und meldet `OK 1x` je Zeile.
+
+---
+
+## E72 · Heilen heisst auffüllen, nicht überschreiben
+
+**Datum** 8. August 2026 · **Betrifft** `src/kern/ablage/formen.ts` ·
+**Prüflauf** `test145`
+
+**Was war**
+
+`formen.ts` versprach in seinem eigenen Kopf zwei Regeln, und die zweite
+lautete wörtlich: *„Ein vorhandener Wert wird nie ersetzt, auch wenn er
+komisch aussieht."* Dreissig Zeilen tiefer stand:
+
+```js
+else raus[name] = regel.vorgabe();
+geheilt.push(name + ' hatte die falsche Art');
+```
+
+Passte die Sorte nicht und griff keine der vier Umformungen, trat die
+Vorgabe an die Stelle des Wertes — bedingungslos. Der Lauf ist
+`load()` → `Formen.zustand(true)`, also **jeder Start**. Gemeldet wurde als
+`Reporter.info`, das heisst: gar nicht sichtbar.
+
+**Wen es trifft**
+
+Die Felder mit Vorgabe sind nicht die Randfelder:
+
+```txt
+text     Objekt statt Zeichenkette  → ''    der Text des Menschen
+props    Liste statt Objekt         → {}    alle Zeilenwerte
+schema   Liste statt Objekt         → {}    alle Spalten einer Datenbank
+content  Objekt statt Liste         → []    alle Kinder eines Blocks
+```
+
+Genau die Formen, die ein Import aus einem fremden Werkzeug oder eine
+fremde Sicherung liefert. Ein Quill-Export etwa trägt `text` als
+`{ ops: [{ insert: … }] }` — lesbar für jeden Menschen, „falsche Art" für
+`heile`, und nach dem nächsten Start eine leere Zeichenkette.
+
+Die zweite Stelle: Kinder-Kennungen, die gerade nicht im Speicher stehen,
+flogen ersatzlos aus `content`. „Steht nicht im Speicher" trifft aber auch
+einen Block, den der Abgleich **noch nicht geholt hat**. Kommt er an, ist
+die Verbindung zu seinem Elternteil längst hinausgeschrieben — `heile`
+ändert den Satz an Ort und Stelle, den Rest erledigt der nächste `flush`.
+
+**Die Entscheidung**
+
+Regel 2 gilt jetzt wirklich, mit einer Unterscheidung, die vorher fehlte:
+
+**Was nichts trägt, darf ersetzt werden.** `''`, `0`, `false`, `[]`, `{}` —
+die Leere in falscher Verpackung. Hier geht durch die Vorgabe nichts
+verloren, und eine Kiste dafür wäre eine Müllhalde, die durch jede
+Sicherung mitwanderte.
+
+**Was etwas trägt, wird beiseitegelegt.** Der Wert wandert nach
+`unlesbar` im selben Satz; die Vorgabe tritt an seine Stelle, damit die
+Oberfläche läuft. `unlesbar` ist ein unbekanntes Feld im Sinne von
+Regel 1 — es bleibt stehen, wandert durch `.json` und `.redion` mit und
+lässt sich später ansehen. Die Meldung sagt es beim Namen:
+`text war unlesbar und liegt jetzt unter „unlesbar"`.
+
+Die fehlenden Kinder ebenso: sie verlassen `content` (die Oberfläche
+zeichnete sonst leere Zeilen), aber ihre Kennungen liegen unter
+`unlesbar.contentFehlt` — beim zweiten Durchgang ohne Doppelung.
+
+**Warum nicht einfach `fail`?** Weil `heile` beim Start läuft und die App
+starten muss. Ein Satz, der die Oberfläche zu Fall bringt, ist schlimmer
+als einer mit Vorgabe und Kiste. Der Unterschied zu E71: dort ging es um
+**Auskünfte** („da ist nichts"), die falsch waren — hier geht es um
+**Inhalt**, der verschwand.
+
+**Status**
+
+`test145`, 32 Punkte. Gegenprobe — im gebauten `formen.js` den
+`traegtInhalt`-Zweig auf `false` und den `content`-Filter wieder ersatzlos
+gestellt: **7 Punkte rot**, darunter die Meldung von früher im Wortlaut
+(`text hatte die falsche Art` — und der Text war weg).
+
+---
+
+## E73 · Eine Prüfung ruft die Funktion, nicht ihre Abschrift
+
+**Datum** 8. August 2026 · **Betrifft** `pruefungen/lauf/test100.mts` ·
+**Prüflauf** `test100`
+
+**Was war**
+
+`test100` — der wichtigste Lauf für die `.redion`-Sicherung — baute das
+Archiv nicht mit `sicherungSpeichern`, sondern mit dreissig Zeilen, die
+Wort für Wort aus `schale.ts` abgeschrieben waren: der Namens-Entdoppler,
+die Zuordnungskarte, alles. Der Kommentar sagte es sogar ehrlich: *„genau
+wie `sicherungSpeichern` es tut"*.
+
+Eine Abschrift prüft sich selbst. Die Gegenprobe hat es vorgeführt: mit
+zerbrochenem Entdoppler in der **echten** Funktion blieb der alte Lauf
+grün — er rechnete mit seiner eigenen, heilen Kopie. Der neue wird rot:
+
+```txt
+✗ Beide liegen unter ihrem echten Namen im Archiv
+  — ["daten.json","dateien/ferien.jpg","dateien.json"]
+✗ Der Anhang ist zurück, Byte für Byte identisch — 0 statt 307200 Byte
+```
+
+Zwei Anhänge mit demselben Namen, keiner entdoppelt, das Auspacken
+überschreibt den einen mit dem anderen — genau der stille Fehler, vor dem
+der Kommentar im echten Code warnt.
+
+**Warum die Abschrift überhaupt da war**
+
+`sicherungSpeichern` gibt den Blob nicht zurück, sie lädt ihn herunter
+(`a.download` + `click()`). Der Lauf kam an das Archiv nicht heran und
+baute es deshalb nach.
+
+**Die Entscheidung**
+
+Nicht die App umbauen, sondern den Download abfangen. Der Lauf ersetzt für
+einen Aufruf `URL.createObjectURL` (legt den Blob beiseite) und schluckt
+den Klick auf `download`-Anker, ruft dann `App.sicherungSpeichern()` und
+dreht beides zurück. Kein neuer Rückgabewert, keine zweite Schnittstelle,
+kein Umbau am Sicherungsweg — der ist tabu (Vorgabe von Redur), und er
+bleibt unangefasst.
+
+Nebengewinn: der echte Weg kann jetzt Dinge beweisen, an denen die
+Abschrift vorbeilief — der Dateiname ist `redion-sicherung-JJJJ-MM-TT.redion`,
+und `sicherung:art` steht danach auf `redion`, womit „Noch nie gesichert"
+aus der Erinnerung verschwindet.
+
+**Die Regel daraus**
+
+Wenn eine Prüfung Code abschreibt, statt ihn zu rufen, prüft sie den
+Abschreiber. Kommt man an das Ergebnis der echten Funktion nicht heran,
+ist das Abfangen des Seiteneffekts (Download, Toast, Meldung) dem
+Nachbauen der Funktion immer vorzuziehen.
+
+---
+
+## E74 · Ein halber Upload ist kein halbes Video
+
+**Datum** 8. August 2026 · **Betrifft** `src/bereiche/dateien/ablage.ts`
+(`alsBlob`) · **Prüflauf** `test100` §2b
+
+**Was war**
+
+Tab geschlossen bei Stück 25 von 40: der Dateisatz bleibt auf `laeuft`,
+25 Stücke liegen in der Ablage. `alsBlob` reihte aneinander, was da war —
+ohne `stuecke.length` gegen `satz.teile` zu halten. Die `.redion`-Sicherung
+trug dann ein halbes Video unter vollem Namen, während `dateien.json`
+daneben 40 Teile deklarierte. Beim Einspielen wurde aus den 25 Stücken
+`zustand: 'fertig'` — und der Verlust war keine Lücke mehr, sondern
+unsichtbar.
+
+**Die Entscheidung**
+
+`alsBlob` setzt nur zusammen, was vollständig ist. Fehlen Stücke, kommt
+`null` — mit einer `Reporter`-Warnung, die sagt, wie viele von wie vielen
+da sind. Die Sicherung überspringt die Datei dann (wie bisher schon eine
+ohne jedes Stück), statt einen Torso als Anhang auszugeben; die Anzeige
+zeigt nichts statt eines halben Bildes.
+
+Der Wächter greift nur bei `teile > 0` als Zahl — ein Altsatz ohne das
+Feld wird nicht plötzlich unlesbar.
+
+**Was offen bleibt** — die zweite Hälfte von D6: `stueckeVon` antwortet auf
+einen LESEFEHLER weiter mit `[]` (L35, Abgleichsweg, in dieser Sitzung
+tabu). Der Wächter hier fängt den halben Bestand, nicht das kaputte Lesen.
+
+**Status** — `test100` §2b: Upload mit 2 von 3 Stücken → `alsBlob` gibt
+`null`, die echte Sicherung (E73: abgefangener Download) trägt die Datei
+nicht. Gegenprobe: Wächter auf `false` → beide Punkte rot, der Torso
+wandert wieder ins Archiv.
+
+---
+
+## E75 · Sechs Prüfpunkte, die nicht rot werden konnten
+
+**Datum** 8. August 2026 · **Betrifft** test65, test86, test89, test97,
+test136, test137
+
+§55.2 in einem Satz: wer eine Prüfung schreibt, prüft zuerst, ob sie
+überhaupt rot werden KANN. Die Suche vom 8. August fand sechs, die es
+nicht konnten — jede aus einem anderen Grund, und genau darum stehen alle
+sechs hier:
+
+**P1 · test137: eine Klasse, die es nie gab.** `.tbl-zk` — richtig ist
+`.tbl-zn` — und `-1` („nicht gefunden") zählte als bestanden. Ein auf
+12 px gestauchter Zeilenkopf (klarer §37-Bruch) wäre grün geblieben.
+Jetzt wird die echte Klasse gemessen und `-1` ist rot.
+
+**P2 · test136: `-1` gegen `-1`.** Fehlten `.tbl-ecke`/`.tbl-spalten`,
+verglich der Punkt zwei Rückfallwerte und meldete „steht still" für ein
+Element, das es nicht gab. Dazu wurde waagerecht gerollt, aber `top`
+gemessen — eine Zahl, die sich dabei auch ohne sticky nicht bewegt.
+Jetzt: Existenz ist ein eigener Punkt, gemessen wird `left`.
+
+**Der Fund dahinter:** der reparierte Punkt wurde sofort rot (21 → 0) —
+aber nicht die App war kaputt, sondern die Messung hielt einen VERALTETEN
+Knoten: das fensterweise Zeichnen baut die Zeilen beim Rollen neu, der
+alte `.tbl-zn` hing nirgends mehr und mass `left: 0`. In der echten App
+stand die Spalte auf den Pixel (29 → 29, eigens nachgemessen). Nach dem
+Rollen neu suchen — sonst prüft man die Müllabfuhr des Browsers.
+
+**P3 · test65: `spanne <= 4`.** Vier ist genau die kaputte Fassung
+(Ersatzanker → Shift-Klick markiert vier statt einem). Jetzt `=== 1`.
+
+**P4 · test86: `weiteres >= 0`.** Eine Array-Länge ist immer ≥ 0. Jetzt
+wird nachgezählt: die Summe über alle Gruppen muss die Registerlänge
+ergeben.
+
+**P5 · test97: `a < a + b`.** Das ist `b > 0` — über den ersten Durchgang
+sagte der Punkt nichts, und `blockWegNachErster` stand als Literal `false`
+im Ergebnis. Jetzt wird ZWISCHEN den Runden gemessen, ob Runde eins den
+Block wirklich verschont hat.
+
+**P6 · test89: die Endlosschleife im eigenen Faden.** Wer eine synchrone
+Endlosschleife mit `Date.now()` danach misst, misst nie — der Lauf hängt,
+und `alle.mts` gleich mit. Der Ring läuft jetzt in einem Arbeitsfaden mit
+Zwei-Sekunden-Wecker: kommt er nicht zurück, ist der Punkt rot und der
+Lauf lebt. Die Gegenprobe (Schleifenwächter `n++ < 50` entfernt) meldet
+`✗ … haengt` statt zu stehen. Und eine Lehre aus dem ersten Entwurf: der
+rief danach „zur Sicherheit" noch einmal im Hauptfaden — und hing bei der
+Gegenprobe genau dort.
+
+**Die Regel, noch einmal:** `<= n`, `>= 0`, Rückfallwert gegen
+Rückfallwert, Literal im Ergebnis, Messung nach einer Endlosschleife —
+das sind fünf Schreibweisen desselben Fehlers: eine Behauptung, die unter
+keiner Bedingung falsch werden kann, ist keine.
+
+---
+
+## E76 · Erfolg heisst: es ist passiert
+
+**Datum** 8. August 2026 · **Betrifft** sieben Stellen aus dem Durchgang
+„sagt eines, tut ein anderes" (A1–A6, D4, D7, D10) · **Prüfläufe**
+`test146` (neu), `test58` (erweitert)
+
+**Der gemeinsame Fehler**
+
+Sieben Stellen meldeten Erfolg, ohne hinzusehen. Nicht dieselbe Zeile,
+aber dasselbe Muster: die Meldung entstand aus dem **Absenden**, nicht aus
+dem **Ankommen**.
+
+**Die Stellen, und was jetzt gilt**
+
+**A1 — Webhook meldet „geschickt" bei 401.** `KI.holen` wirft bei
+nicht-wiederholbaren Statuscodes bewusst nicht, sondern gibt die Antwort
+zurück; sechs Aufrufer verlassen sich darauf. Die zwei Webhook-Stellen
+(Knopf im Editor, Automation in der Datenbank) schrieben trotzdem nur
+`.then(… geschickt)`. Jetzt prüfen beide `r.ok` und nennen sonst Status
+samt `KI.FEHLERTEXT`. Der Vertrag von `holen` blieb unangetastet.
+
+**A2 — Der Laufverlauf zeigte ✓ für einen Webhook, der nie ankam.** Der
+Webhook läuft neben dem Lauf her; `notieren()` schreibt den Verlauf,
+bevor die Antwort da ist. Der Griff: `notieren` legt das `laufNotiz`-Objekt
+**als Referenz** in den Verlauf — ein später Fehler kann den Eintrag also
+noch auf ⚠ drehen und `verlaufSichern` schreibt ihn erneut. Dasselbe für
+`ki-fuellen`, dessen Ablehnung vorher unbehandelt verpuffte. Grenze des
+kleinsten Eingriffs: ein bereits GEÖFFNETES Verlaufsmenü zeigt den alten
+Stand, bis man es neu öffnet.
+
+**A3 — „15 Einträge gefüllt", auch wenn nichts ankam.** Der KI-Agent
+zählte angefasste Zeilen. `kiFeldFuellen` sagt jetzt zurück, ob wirklich
+etwas Brauchbares in der Zelle steht — per **Nachlesen** aus dem Speicher,
+denn `setProp` kehrt bei fehlendem Spaltenrecht still zurück, und die
+Rechteprüfung anzufassen war tabu. Der Agent zählt damit ehrlich
+(„3 von 15 gefüllt, 2 mit Fehler, 10 ohne Antwort oder ohne
+Schreibrecht"). Und eine Zelle bleibt nicht mehr ewig auf „… denkt nach"
+stehen, wenn die KI wirft — sie sagt „(Fehler)".
+
+**A4 — „Gesichert: foto.jpg" während der Prüfsumme.** Der einzige
+Fortschritts-Rückruf des Packers feuert in der CRC-Schleife; das Archiv
+ist da noch nicht gebaut, geschweige denn heruntergeladen. Der Toast sagt
+jetzt „Geprüft: … — wird verpackt". Das Wort „Gesichert" gehört dem
+Abschluss.
+
+**A5 — „Der ganze Bestand", ohne die Anhänge.** Die verschlüsselte
+Sicherung ruft `exportAll()` ohne Anhänge — und ihr Manifest gibt das
+sogar zu (`fehlt: ['dateien','stuecke']`), nur AES-verschlüsselt, wo es
+niemand liest, bevor er es braucht. `exportAll(true)` wäre KEINE Lösung
+gewesen: die Blobs kämen trotzdem nicht mit, das Manifest löge dann erst
+recht. Also sagt es jetzt der Dialog („Dateianhänge sind nicht dabei —
+vollständig sichert nur .redion"), und der Toast sagt es noch einmal,
+wenn es Anhänge gibt.
+
+**A6 — Die Schublade endete 24 px unter dem Bildschirmrand.** Eine Regel
+rechnete `100% − 56px` für eine untere Leiste (`#handy-leiste`), die kein
+Skript mehr erzeugt — und weil `top: 80px` stehen blieb, wurde die
+Schublade nicht kürzer, sondern ragte unten hinaus, samt der Knöpfe am
+Fuss. Die Regel ist ersatzlos weg; die Grundregel setzt die Unterkante
+exakt auf den Rand. Die Gegenprobe mass vorher `bottom: 868` bei 844 hoch.
+
+**D4 — `setMeta` verschluckte Schreibfehler.** `.catch(() => {})` machte
+aus „liess sich nicht speichern" ein „gespeichert". Am härtesten träfe
+das `wolkeSalz`. Jetzt: `Reporter.warn` plus EIN Toast je Sitzung.
+Bewusst warn, nicht error — `Reporter.error` ruft die Pflege, die Pflege
+schreibt ihre Fehlerliste per `setMeta`, und bei einem anhaltenden
+Speicherfehler wäre das eine endlose Schleife. Signatur und alle ~170
+Aufrufer blieben unverändert.
+
+**D7 — Der Sichern-Knopf zeigte „✓ Gesichert" nach dem Fehlschlag.**
+`sicherungSpeichern` fängt seine Fehler selbst (richtig so — der Alert
+„Es wurde nichts geschrieben" gehört dazu) und kehrte dann regulär
+zurück; `.then(() => fertig(true))` kann das nicht unterscheiden. Jetzt
+gibt sie `Promise<boolean>` zurück (§52.11), und der Knopf wertet
+`gut !== false` — die tolerante Form, damit ein Prüf-Stellvertreter, der
+`undefined` liefert, nicht rot wird.
+
+**D10 — „Archiviert", und bei Gmail lag die Mail noch im Eingang.** Die
+zwei Tasten, die eine Zeile VERSCHWINDEN lassen (E, #), gingen lokal vor
+und schickten den Gmail-Aufruf durch `versuche()`, das jede Ablehnung
+schluckt. Jetzt: erst der Server, dann lokal; lehnt Gmail ab, bleibt die
+Zeile liegen und der Toast nennt den Grund — nichts muss zurückgerollt
+werden. Eine .eml-Mail (erkennbar am leeren `link`) bekommt gar keinen
+Gmail-Aufruf mehr, sondern die ehrliche Auskunft „nur hier". Die
+nicht-zerstörenden Tasten (gelesen/wichtig) behalten `versuche()` —
+dort verschwindet nichts.
+
+**Status**
+
+`test146`, 22 Punkte · `test58` +1 Punkt (Webhook-401 → ⚠ im Verlauf).
+Gegenprobe im gebauten Bestand, alle sechs Verhaltenspunkte kippten:
+
+```txt
+Rückgabewerte weg (D7)        → 2 rot (undefined statt true/false)
+Zählung weg (A3)              → 2 rot
+CSS-Regel zurück (A6)         → 1 rot: bottom 868 bei 844 hoch
+setMeta-catch leer (D4)       → 1 rot
+webhookFehler stumm (A2)      → test58 rot
+```
+
+**Offen aus diesem Durchgang** — D11 (KI „Zurückgenommen" nimmt nur
+Protokolliertes zurück), D12 (Notion-Import lässt Anhänge stumm fallen),
+D14 (`flush` meldet Erfolg vor der Platte), K1–K5 (Prüflauf-Kosmetik).
+Die Prüfagenten dafür fielen dem Sitzungslimit zum Opfer; die Befunde
+stehen im Bericht und sind nicht widerlegt.
+
+---
+
+## E77 · Zurücknehmen, Mitnehmen, Aufschreiben (D11, D12, D14, K1–K4)
+
+**Datum** 8. August 2026 · **Prüfläufe** `test147` (neu), Korrekturen in
+`test113`, `test116`, `test131`, `test87`
+
+**D11 — „Zurückgenommen", und die Hälfte blieb.** Der Knopf nach einem
+Agentenlauf nahm zurück, was in `protokoll.ids` stand. Eingetragen haben
+dort nur zwei der fünf schreibenden Werkzeuge etwas. Jetzt gilt:
+
+- `zeileAnlegen` trägt die neue Zeile ein (anlegen → löschen ist die
+  richtige Rücknahme),
+- `feldFuellen` merkt sich je Zeile den ALTEN Wert (`protokoll.felder`),
+  und `zuruecknehmen` stellt ihn wieder her — eine echte Rücknahme statt
+  einer Löschung,
+- der `worker` KANN nicht zurückgenommen werden; er trägt sich unter
+  `protokoll.bleibt` ein, und der Toast sagt es, statt zu schweigen.
+
+**D12 — Der Notion-Import warf Anhänge stumm weg.** Gelesen wurden .md,
+.csv, .json; alles andere fiel ohne Zähler unter den Tisch — ein Export
+mit zwölf Bildern kam als „8 Seiten übernommen" an. Jetzt werden bekannte
+Medien (Bilder, PDF, Video, Audio …) als echte Dateien abgelegt
+(`Dateien.ablegen`, mit Stücken und stabiler Kennung) und als Block in die
+Seite gehängt; Unbekanntes wird GEZÄHLT und im Hinweis genannt
+(„… 2 Dateien nicht übernommen (.xyz)"). Die leere Doppelseite für
+Bild-Ordner verschwindet nebenbei: der Ordner hält jetzt den Bild-Block.
+
+**D14 — `flush` meldete Erfolg, wenn die Transaktion ZU ENDE war — egal
+wie.** `oncomplete`, `onerror` und `onabort` zeigten auf dasselbe `ok`.
+Der Kommentar darüber versprach „ERST WENN ES WIRKLICH AUF DER PLATTE
+STEHT" — und genau auf dieses falsche Versprechen hin ging „geändert" an
+die Nachbarfenster, auch für Sätze, die nie ankamen. Jetzt: `oncomplete`
+erfüllt und meldet; `onerror`/`onabort` lehnen ab, melden nichts an die
+Nachbarn und legen die Sätze zurück in den Stapel (`pending`), damit der
+nächste flush es wieder versucht. Der Rückfallweg (einzelne puts) zählt
+seine Fehlschläge, statt sie mit `.catch(() => {})` zu schlucken.
+Aufrufer: in der App nur `beforeunload` (Feuer-und-vergessen, bekommt ein
+`.catch`); die ~27 Prüfläufe rufen mit gesunder Ablage und bleiben grün.
+
+**K1–K4 — Prüfpunkte, die nicht rot werden konnten.**
+- `test113`: „Ohne die Regel wären es fünf gewesen" rechnete
+  `Math.min(5, 31)` aus den eigenen Konstanten — Arithmetik, kein
+  Prüfpunkt. Ist jetzt Kommentar; die Quelltext-Zusicherungen daneben
+  (die echte while-Schleife in `maschine.js`) bleiben.
+- `test116`: „index.html ist unverändert gültig" prüfte `includes('<html')`.
+  Heisst jetzt ehrlich, was es prüft, und schaut zusätzlich aufs Ende.
+- `test131`: `p('… und es wird auch nicht geworfen', true)` — das Literal
+  ist durch try/catch ersetzt.
+- `test87`: die Gegenprobe testete ein Regex-LITERAL gegen ein
+  String-LITERAL. Das Muster steht jetzt EINMAL als Konstante und wird an
+  beiden Stellen benutzt — erst dadurch prüft die Gegenprobe die Prüfung.
+- K5 (`test89`) war ein Fehlalarm: die zwei `typeof`-Punkte sichern die
+  Prämisse des Laufs (kein DOM in Node), und der Ladepunkt darüber wird
+  rot, wenn `dienst.js` doch ein `document` anfasst.
+
+**Status**
+
+`test147`, 17 Punkte · `test113`/`test116`/`test131`/`test87` korrigiert,
+alle grün. Gegenprobe im gebauten Bestand, jede Wirkung einzeln gekippt:
+
+```txt
+zeileAnlegen trägt nicht ein     → 1 rot (Protokoll leer)
+Wiederherstellen ausgehängt      → 2 rot (KI-Text bleibt)
+Medienzweig weg (D12)            → 4 rot („2 Datei(en) nicht übernommen")
+flush-Teilfehler meldet ok       → 1 rot („kam durch")
+```
+
+Bemerkenswert an der letzten Zeile: der erste Kippversuch drehte nur den
+ABBRUCH-Arm um, und der Punkt blieb grün — die Probe läuft durch den
+Teilfehler-Arm, nicht durch den Abbruch. Erst der zweite Dreh bewies den
+Punkt. Eine Gegenprobe, die den falschen Arm kippt, beweist nichts über
+den richtigen.

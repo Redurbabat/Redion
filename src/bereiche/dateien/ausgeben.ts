@@ -847,7 +847,28 @@ const Austausch = (() => {
       return s.id;
     };
 
-    let seiten = 0, tabellen = 0, jsonWerte = 0, formeln = 0;
+    /* Ein Notion-Export enthält die BILDER der Seiten als Dateien neben dem
+       Markdown. Bis heute las dieser Import .md, .csv und .json — und liess
+       alles andere STUMM fallen: zwölf Bilder weg, und der Hinweis sagte
+       „8 Seiten übernommen", als wäre nichts. Jetzt werden bekannte Medien
+       als echte Dateien abgelegt (mit Stücken, wie jeder Upload), und was
+       wirklich niemand kennt, wird wenigstens GEZÄHLT und genannt. */
+    const MEDIEN: Record<string, { typ: string; block: string }> = {
+      png:  { typ: 'image/png',       block: 'image' },
+      jpg:  { typ: 'image/jpeg',      block: 'image' },
+      jpeg: { typ: 'image/jpeg',      block: 'image' },
+      gif:  { typ: 'image/gif',       block: 'image' },
+      webp: { typ: 'image/webp',      block: 'image' },
+      svg:  { typ: 'image/svg+xml',   block: 'image' },
+      pdf:  { typ: 'application/pdf', block: 'file' },
+      mp4:  { typ: 'video/mp4',       block: 'video' },
+      webm: { typ: 'video/webm',      block: 'video' },
+      mp3:  { typ: 'audio/mpeg',      block: 'file' },
+      wav:  { typ: 'audio/wav',       block: 'file' }
+    };
+
+    let seiten = 0, tabellen = 0, jsonWerte = 0, formeln = 0, anhaenge = 0;
+    const ausgelassen: string[] = [];
     for (const name of zip.namen) {
       if (name.endsWith('/')) continue;
       const teile = name.split('/');
@@ -878,13 +899,34 @@ const Austausch = (() => {
           formeln   += erg.formeln;
           tabellen  += erg.tabellen;
         } catch { /* keine Notion-Struktur — dann eben nicht */ }
+      } else {
+        const endung = (datei.split('.').pop() || '').toLowerCase();
+        const art = MEDIEN[endung];
+        if (!art) { ausgelassen.push('.' + (endung || '?')); continue; }
+        try {
+          const bytes = await zip.holen(name);
+          if (!bytes) { ausgelassen.push('.' + endung); continue; }
+          const b = Store.addBlock(eltern, art.block, { text: saeubern(datei) });
+          const satz = await Dateien.ablegen(
+            new File([bytes], saeubern(datei), { type: art.typ }), { blockId: b.id });
+          const url = await Dateien.adresse(satz.id);
+          Store.updateBlock(b.id, { src: url, dateiId: satz.id });
+          anhaenge++;
+        } catch {
+          /* Ein kaputter Anhang bricht nicht den ganzen Import — aber er
+             verschwindet auch nicht wortlos. */
+          ausgelassen.push('.' + endung);
+        }
       }
     }
     Store.updateBlock(wurzel.id, { aufgeklappt: true });
     return { seite: wurzel,
              hinweis: seiten + ' Seiten und ' + tabellen + ' Tabellen übernommen' +
+               (anhaenge ? ', ' + anhaenge + ' Anhänge dabei' : '') +
                (jsonWerte ? ', ' + jsonWerte + ' verschachtelte Werte flachgelegt' : '') +
-               (formeln ? ', ' + formeln + ' Formeln übersetzt' : '') };
+               (formeln ? ', ' + formeln + ' Formeln übersetzt' : '') +
+               (ausgelassen.length ? ' — ' + ausgelassen.length + ' Datei(en) nicht übernommen (' +
+                 [...new Set(ausgelassen)].join(', ') + ')' : '') };
   };
 
   /**

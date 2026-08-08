@@ -60,6 +60,9 @@ Register.eigenschaften = (() => {
     ];
     /* Eine Liste, und immer dieselbe — siehe register/bloecke.js. */
     const LISTE = EINGEBAUT.slice();
+    /* Nur was von aussen kam, darf wieder gehen — eine eingebaute Feldart
+       abzumelden hiesse, dass jede Spalte dieses Typs ihr Menü verliert. */
+    const vonAussen = new Set();
     const melde = (eintrag) => {
         const e = eintrag;
         if (!e || !e.id)
@@ -67,6 +70,26 @@ Register.eigenschaften = (() => {
         if (LISTE.some(x => x.id === e.id))
             return false;
         LISTE.push(e);
+        vonAussen.add(e.id);
+        return true;
+    };
+    /**
+     * Wieder abmelden — für Erweiterungen, die abgeschaltet werden.
+     *
+     * `Register.bloecke` hatte das von Anfang an, dieses Register nicht — eine
+     * Unwucht, die test142 nur festhalten konnte, statt sie zu benutzen: sein
+     * Probetyp blieb bis zum Neuladen im Katalog. Spalten, die den Typ schon
+     * TRAGEN, behalten ihn übrigens auch nach dem Abmelden — `name` und `icon`
+     * fallen dann auf die Kennung bzw. „≡" zurück, gelöscht wird nichts.
+     */
+    const nimmZurueck = (id) => {
+        if (!vonAussen.has(id))
+            return false;
+        const i = LISTE.findIndex(x => x.id === id);
+        if (i < 0)
+            return false;
+        LISTE.splice(i, 1);
+        vonAussen.delete(id);
         return true;
     };
     const alle = () => LISTE;
@@ -90,6 +113,6 @@ Register.eigenschaften = (() => {
         const bekannt = new Set(Object.values(GRUPPEN).flat());
         return alle().filter(x => !bekannt.has(x.id));
     };
-    return { alle, eines, name, icon, GRUPPEN, inGruppe, melde,
+    return { alle, eines, name, icon, GRUPPEN, inGruppe, melde, nimmZurueck,
         anzahl: () => LISTE.length };
 })();

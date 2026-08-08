@@ -334,9 +334,11 @@ p('… nicht mehr mit der festen Rundengrösse',
   p('… und der spätere bleibt für die nächste Runde',
     zeitVon(saetze[bis]) === '2026-08-04T12:00:01.000Z');
 
-  /* Die Gegenprobe: OHNE die Regel wären es fünf gewesen — und die
-     restlichen fünfundzwanzig für immer ausgeschlossen. */
-  gleich('Ohne die Regel wären es fünf gewesen', Math.min(RUNDE, saetze.length), 5);
+  /* OHNE die Regel wären es fünf gewesen (Math.min(5, 31)) — und die
+     restlichen fünfundzwanzig für immer ausgeschlossen. Das stand hier als
+     Prüfpunkt und konnte nie rot werden: Arithmetik über die EIGENEN
+     Konstanten dieses Modells, nicht über die App (§55.2). Was die App
+     wirklich tut, halten die drei Quelltext-Punkte über diesem Block fest. */
 }
 
 /* ==========================================================================
