@@ -3727,3 +3727,78 @@ Masken entfernt                  → 2 rot
 Beobachter entfernt              → 9 rot
 Bindung an der DB-Tabelle raus   → 2 rot
 ```
+
+---
+
+## E64 · 40 ist auch nicht 44 — und eine Zahl, die an zwei Stellen steht
+
+**Datum** 8. August 2026 · **Lücke** L10 · **Prüflauf** `test137` (13 Punkte)
+
+CLAUDE.md §37 nennt 44 px als Mindestmass für alles, was mit dem Finger
+getroffen wird. Gemessen im Tabellenblock, 390 px breit:
+
+```txt
+Zelle             40 px
+Formelzeile       32 px
+Werkzeugknöpfe    44 px   ✓
+```
+
+**Der Gedanke war da, nur nicht zu Ende gerechnet.** Bei der Zeilenhöhe
+stand im Quelltext sogar der richtige Satz — `/* 32 px trifft man mit dem
+Finger nicht */` — und daneben die 40. Jemand hat das Problem erkannt, die
+Zahl vergrössert und nicht nachgesehen, ob sie nun reicht.
+
+Bei der Formelzeile machte allein `padding: 7px 10px` die Höhe. Was dabei
+herauskommt, stand nirgends; man hätte es ausrechnen müssen, und niemand
+tut das beim Lesen.
+
+Beides kostet zusammen eine Zeile: 660 px Blockhöhe zeigen jetzt 14 statt
+16. Für ein Tabellenprogramm klingt das nach Verlust — für ein
+Tabellenprogramm, dessen Zellen man **antippen** muss, ist es der Preis
+dafür, dass man die richtige trifft.
+
+**Am Rechner bleibt es bei 32.** Die 44 gelten fürs Telefon, nicht als
+Weltregel: eine Maus trifft auch 32 px, und eine Tabelle lebt davon, dass
+viel gleichzeitig zu sehen ist. `test137` §3 hält beide Zahlen fest, damit
+niemand die eine für die andere hält.
+
+**Die Zahl, die an zwei Stellen steht**
+
+Die Zeilenhöhe gibt es zweimal: als `ZH_HANDY` in `ansicht.ts` und als
+`--tbl-zh` in `tabelle.css`. Das ist kein Versehen, sondern nötig — das
+fensterweise Zeichnen rechnet mit der ersten aus, welche Zeilen überhaupt
+ins Dokument kommen und wie hoch der Platzhalter darüber sein muss;
+gezeichnet werden sie mit der zweiten.
+
+Gehen die zwei auseinander, verschiebt sich der Inhalt gegen seine
+Beschriftung: Zeile 30 steht dort, wo Zeile 29 hingehört. Und zwar **erst
+nach dem Rollen** — beim flüchtigen Ansehen stimmt alles.
+
+Ein Kommentar `/* muss zu --tbl-zh passen */` stand schon da. **Ein
+Kommentar ist keine Zusicherung.** `test137` §2 rollt deshalb 25 Zeilen
+weit, liest die Zeilennummern aus den Zellen und rechnet nach, wie viele
+Pixel laut Bildschirm zwischen zwei Zeilen liegen. Stimmt das nicht mit
+`--tbl-zh` überein, sagt die Meldung beide Zahlen:
+
+```txt
+✗ Zwischen den Zeilen liegt genau eine Zeilenhöhe
+  — gemessen 44 px, --tbl-zh 40 px, Zeilen 17–40
+```
+
+Das ist der Punkt, an dem eine Prüfung mehr wert ist als ein Kommentar:
+sie nennt nicht die Regel, sondern den Verstoss.
+
+**Status**
+
+`test137`, 13 Punkte, 5 Abschnitte. Gegenproben:
+
+```txt
+CSS auf 40 zurück, JS auf 44   → 3 rot, darunter der Zwei-Stellen-Punkt
+min-height der Formelzeile raus → 1 rot
+```
+
+**Was offen bleibt** — der Tabellenblock hat am Telefon weiterhin keinen
+eigenen Entwurf. Er zeigt dasselbe Raster wie am Rechner, nur grösser;
+zwölf Zeilen, von denen bei einem kleinen Blatt die Hälfte leer ist. Ob
+dort etwas anderes hingehört — eine Zeile als Karte, wie es die Datenbank
+längst macht —, ist eine eigene Frage und steht in L10.

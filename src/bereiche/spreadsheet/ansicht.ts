@@ -50,8 +50,19 @@ const SpreadsheetView = (() => {
   const kern = (): any => (typeof Spreadsheet !== 'undefined') ? Spreadsheet : null;
   const refs = (): any => (typeof CellRefs !== 'undefined') ? CellRefs : null;
 
-  const ZH = 32;          /* Zeilenhöhe — muss zu --tbl-zh in tabelle.css passen */
-  const ZH_HANDY = 40;
+  /* Die Zeilenhöhe steht an ZWEI Stellen: hier und als `--tbl-zh` in
+     `tabelle.css`. Sie MÜSSEN übereinstimmen — das fensterweise Zeichnen
+     rechnet mit dieser Zahl aus, welche Zeilen im Bild sind, und schon zwei
+     Pixel Unterschied verschieben die Platzhalter gegen den Inhalt.
+     `test137` vergleicht beide Zahlen, statt sich auf diesen Satz zu
+     verlassen. */
+  const ZH = 32;
+  /* 44 und nicht 40. CLAUDE.md §37 nennt 44 px als Mindestmass für alles,
+     was mit dem Finger getroffen wird, und eine Zelle wird angetippt, um
+     sie auszuwählen. Hier stand 40 mit dem Kommentar „32 px trifft man mit
+     dem Finger nicht" — richtig erkannt, nur nicht zu Ende gerechnet.
+     Gekostet hat es eine Zeile: 660 px Blockhöhe zeigen jetzt 14 statt 16. */
+  const ZH_HANDY = 44;
   const SB = 110;         /* Spaltenbreite, Vorgabe — --tbl-sb */
   const SB_MIN = 48;
   const PUFFER = 6;       /* Zeilen über und unter dem Sichtfenster */

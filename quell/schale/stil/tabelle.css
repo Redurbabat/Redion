@@ -525,8 +525,14 @@
  * ========================================================================*/
 @media (max-width: 760px) {
   .tbl {
-    --tbl-zh: 40px;      /* 32 px trifft man mit dem Finger nicht */
-    --tbl-kb: 40px;
+    /* 44 px, weil CLAUDE.md §37 das als Mindestmass für alles nennt, was
+       mit dem Finger getroffen wird — und eine Zelle wird angetippt, um sie
+       auszuwählen. Hier stand 40 mit der Bemerkung „32 px trifft man mit
+       dem Finger nicht": richtig erkannt, nur nicht zu Ende gerechnet.
+       DIESE ZAHL MUSS ZU `ZH_HANDY` IN `ansicht.ts` PASSEN — das
+       fensterweise Zeichnen rechnet damit, welche Zeilen im Bild sind. */
+    --tbl-zh: 44px;
+    --tbl-kb: 44px;
     /* 128 statt 110 — gemessen: bei 16 px Schrift ist `1’450.00 CHF` 99 px
        breit, mit Innenabstand also 114. In 110 px stand deshalb bei jedem
        Betrag `###`. Die Zahl steht auch im Kopf von `ansicht.ts`; hier
@@ -565,7 +571,11 @@
    * Telefon, und aus demselben Grund.
    * ----------------------------------------------------------------------*/
   .tbl-kopf { flex-wrap: wrap; }
-  .tbl-eingabe { flex: 1 1 120px; }
+  /* 44 px hoch, nicht 32. Die Formelzeile ist ein Eingabefeld, und ein
+     Eingabefeld wird angetippt — §37 gilt auch dort. Gemessen waren es 32,
+     weil nur `padding: 7px 10px` die Höhe machte und niemand nachgerechnet
+     hat, was dabei herauskommt. */
+  .tbl-eingabe { flex: 1 1 120px; min-height: 44px; }
   .tbl-werkzeuge {
     flex: 1 0 100%;
     border-top: 1px solid var(--line-soft);

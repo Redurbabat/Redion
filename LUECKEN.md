@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 107 Prüfläufe**
+**8. August 2026 · 108 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -45,6 +45,8 @@ L16  Probelauf für Automationen (E61) — der ▶-Knopf hiess „probeweise"
      starben etwa jedes dritte Mal an einem Socketfehler
 L10  die weiche Kante am Rollfeld (E63) — am Telefon stand `1'450.00 CHF`
      als `1'45` da, mit scharfer Kante und damit als andere Zahl
+L10  Fingermasse im Tabellenblock (E64) — Zelle 40 px, Formelzeile 32,
+     wo §37 44 verlangt; dazu eine Zahl, die an zwei Stellen steht
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -322,8 +324,10 @@ Tabelle gibt es dort nur, wer sie im Ansichtsmenü ausdrücklich anschaltet
 **Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
 Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
 über der Tastatur) · der **Tabellenblock** hat am Telefon noch keinen
-eigenen Entwurf — er zeigt dasselbe Raster wie am Rechner, mit vier leeren
-Zeilen auf halbem Bildschirm · Tastaturverhalten · Side Peek auf kleinen
+eigenen Entwurf — die Fingermasse stimmen seit E64, aber es bleibt dasselbe
+Raster wie am Rechner, mit leeren Zeilen auf halbem Bildschirm; ob dort
+eine Zeile als Karte hingehört, wie es die Datenbank längst macht, ist eine
+eigene Frage · Tastaturverhalten · Side Peek auf kleinen
 Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen —
 die Masse stehen an einem Dutzend Stellen in `bausteine.css` und wurden
 schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
