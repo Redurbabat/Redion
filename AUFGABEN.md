@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 120 Prüfläufe**
+**8. August 2026 · 122 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -56,8 +56,14 @@ RM-0   Regressionsnetz             ✅ die 118 Prüfläufe
 RM-1   Vite + ESM + Struktur       ← begonnen 8. August
 RM-2   Typen, Zod-Schemas, IDs     ← begonnen (src/domain)
 RM-3   Dexie neben dem Bestand     ← begonnen (redion-neu, nie notizen)
-RM-4   Datenmigration mit Vergleich alt ↔ neu
-RM-5   React-Shell, Navigation, Modal/Sheet-System
+RM-4   Datenmigration mit Vergleich    ✅ 8. August — migration.ts:
+       kopieren, dann Satz für Satz und Byte für Byte nachrechnen;
+       test150 an echten Daten, Gegenproben im Lauf (Byte gekippt,
+       Satz verfälscht, erfundener Satz — alles wird rot)
+RM-5   Shell, Navigation, Sheet     ← begonnen: Hash-Router (20 Zeilen
+       statt einer Routing-Dependency), Seitenansicht nur lesend mit
+       ehrlicher Fremdblock-Anzeige, Sheet als <dialog> mit Escape und
+       Fokus-Rückkehr — test151
 RM-6   Bereich für Bereich auf React
 RM-7   Editor auf ProseMirror
 RM-8   Dateien auf OPFS + SHA-256

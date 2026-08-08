@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 120 Prüfläufe**
+**8. August 2026 · 122 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -66,8 +66,8 @@ L22  fensterweise Zeichnen rechnete mit 34 px je Zeile (E65) — bei „alle
 **Die Lücken, die jetzt obenauf liegen**
 
 ```txt
-1. Die React-Migration (E78) — RM-4 ist die nächste Phase: Datenmigration
-   mit Vergleich alt ↔ neu; erst danach darf die neue Schicht schreiben
+1. Die React-Migration (E78) — RM-4 ist nachgerechnet (test150); als
+   Nächstes RM-5: Shell, Navigation, Modal/Sheet-System in React
 2. Mobile: der Willkommensbildschirm und die Einstellungen als Karten
    fehlen noch, und geprüft ist alles nur im Bildmass, nie am Gerät (L10)
 3. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)

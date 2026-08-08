@@ -13,3 +13,31 @@ body { margin: 0; font: 15px/1.5 system-ui, sans-serif; }
                    display: flex; align-items: center; gap: 8px;
                    border-bottom: 1px solid rgba(128,128,128,.2); }
 .shell-tabelle td { padding: 3px 12px 3px 0; font-variant-numeric: tabular-nums; }
+.shell-gut { color: #2e7d32; }
+.shell-abweichungen { font: 13px/1.5 ui-monospace, monospace; }
+.shell button { min-height: 44px; padding: 0 16px; border-radius: 8px;
+                border: 1px solid rgba(128,128,128,.4); background: transparent;
+                font: inherit; cursor: pointer; }
+.shell button:disabled { opacity: .6; cursor: wait; }
+
+/* Seitenansicht (RM-5) */
+.pv-weg button { margin-bottom: 12px; }
+.pv-titel { font-size: 26px; margin: 4px 0 16px; }
+.pv-block { margin: 2px 0; }
+.pv-h1 { font-size: 21px; margin: 14px 0 4px; }
+.pv-h2 { font-size: 18px; margin: 12px 0 4px; }
+.pv-h3 { font-size: 16px; margin: 10px 0 4px; }
+.pv-text, .pv-punkt, .pv-todo { margin: 4px 0; }
+.pv-zitat { margin: 6px 0; padding-left: 12px;
+            border-left: 3px solid rgba(128,128,128,.5); }
+.pv-code { background: rgba(128,128,128,.12); padding: 10px 12px;
+           border-radius: 8px; overflow-x: auto; }
+.pv-unterseite a { text-decoration: none; }
+.pv-unbekannt { opacity: .8; }
+.pv-art { display: block; font-size: 12px; opacity: .65; }
+.shell-seite { display: flex; align-items: center; gap: 8px; width: 100%;
+               min-height: 44px; color: inherit; text-decoration: none; }
+.shell-seite:hover { background: rgba(128,128,128,.08); border-radius: 6px; }
+.shell-ueber { margin-left: auto; min-width: 44px; min-height: 44px;
+               border: none; background: transparent; font-size: 17px;
+               cursor: pointer; border-radius: 8px; }

@@ -1,0 +1,161 @@
+/* Suite 115 — Die Shell navigiert, zeigt und überlagert richtig (RM-5, E78)
+ * ============================================================================
+ * Drei Zusicherungen der neuen Schicht, jede an echten Daten:
+ *
+ *   1. NAVIGATION: der Hash trägt die Route. Ein Klick auf eine Seite
+ *      öffnet sie, Zurück führt zur Liste, und ein direkter Aufruf von
+ *      #/seite/<id> landet ohne Umweg auf der Seite.
+ *   2. DARSTELLUNG: die Blöcke des Bestands erscheinen in Reihenfolge und
+ *      Art — und eine UNBEKANNTE Blockart wird gezeigt statt verschluckt
+ *      (§18). Nutzertext mit spitzen Klammern bleibt Text (§19); React
+ *      escapet, und das wird hier BEWIESEN, nicht geglaubt.
+ *   3. ÜBERLAGERUNG: das Sheet ist ein echter <dialog> — Escape schliesst
+ *      es, und der Fokus kehrt zum auslösenden Knopf zurück (§38). Genau
+ *      die zwei Dinge, die der Bestand an dutzenden Stellen von Hand
+ *      macht und die dort diese Woche zweimal kaputt waren.
+ *
+ *   node pruefungen/lauf/test151.mts
+ * ==========================================================================*/
+import { chromium } from 'playwright';
+import { execSync } from 'node:child_process';
+import http from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const WURZEL = path.resolve(import.meta.dirname, '../..');
+const PORT = 8855;
+
+if (!fs.existsSync(path.join(WURZEL, 'dist-neu/app.html')))
+  execSync('npx vite build', { cwd: WURZEL, stdio: 'pipe' });
+
+const TYP: Record<string, string> = {
+  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
+  '.png': 'image/png', '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon'
+};
+const server = http.createServer((a: IncomingMessage, b: ServerResponse) => {
+  const rein = decodeURIComponent((a.url ?? '/').split('?')[0] ?? '/');
+  const ausNeu = rein === '/app.html' || rein.startsWith('/assets/');
+  const basis = ausNeu ? path.join(WURZEL, 'dist-neu') : WURZEL;
+  const pfad = path.join(basis, rein === '/' ? 'index.html' : rein.slice(1));
+  if (!pfad.startsWith(basis) || !fs.existsSync(pfad) || fs.statSync(pfad).isDirectory()) {
+    b.writeHead(404); b.end(); return;
+  }
+  b.writeHead(200, { 'Content-Type': TYP[path.extname(pfad)] ?? 'application/octet-stream' });
+  b.end(fs.readFileSync(pfad));
+});
+await new Promise<void>(f => { server.listen(PORT, () => f()); });
+
+let ok = 0, weg = 0;
+const p = (n: string, b: unknown, extra = ''): void => {
+  if (b) { ok++; console.log('  ✓ ' + n); }
+  else { weg++; console.log('  ✗ ' + n + (extra ? ' — ' + extra : '')); }
+};
+const gleich = (n: string, ist: unknown, soll: unknown): void =>
+  p(n, ist === soll, `ist ${JSON.stringify(ist)}, soll ${JSON.stringify(soll)}`);
+
+const browser = await chromium.launch();
+const seite = await browser.newPage({ viewport: { width: 900, height: 800 } });
+const fehler: string[] = [];
+seite.on('pageerror', e => fehler.push('PAGEERROR: ' + e.message));
+
+console.log('\n1 · Der Bestand schreibt eine Seite mit allem Drum und Dran');
+
+await seite.goto(`http://localhost:${PORT}/index.html`);
+await seite.waitForTimeout(2400);
+const ids = await seite.evaluate(async () => {
+  Store.setMeta('rundgangGesehen', true);
+  const s = Store.addBlock(null, 'page', { text: 'Navigationsseite', icon: '🧭' });
+  Store.addBlock(s.id, 'h1', { text: 'Eine Überschrift' });
+  Store.addBlock(s.id, 'text', { text: 'Ein Absatz mit <b>spitzen</b> Klammern' });
+  const t = Store.addBlock(s.id, 'todo', { text: 'Eine Aufgabe' });
+  Store.updateBlock(t.id, { checked: true });
+  Store.addBlock(s.id, 'gibtsnicht-9000', { text: 'Fremder Block' });
+  const unter = Store.addBlock(s.id, 'page', { text: 'Unterseite', icon: '🌿' });
+  Store.addBlock(unter.id, 'text', { text: 'Tief drin' });
+  await Store.flush();
+  return { seite: s.id, unter: unter.id };
+});
+p('Seite und Unterseite stehen', !!(ids as any).seite && !!(ids as any).unter);
+
+console.log('\n2 · Navigation: Liste → Seite → zurück → Direktaufruf');
+
+await seite.goto(`http://localhost:${PORT}/app.html`);
+await seite.waitForTimeout(1600);
+await seite.click('a.shell-seite:has-text("Navigationsseite")');
+await seite.waitForTimeout(600);
+const aufSeite = await seite.evaluate(() => ({
+  hash: location.hash, text: document.body.innerText }));
+p('Der Klick öffnet die Seite', /Eine Überschrift/.test((aufSeite as any).text));
+p('… und der Hash trägt die Route',
+  (aufSeite as any).hash.startsWith('#/seite/'), (aufSeite as any).hash);
+
+await seite.click('.pv-weg button');
+await seite.waitForTimeout(600);
+p('Zurück führt zur Liste', /Die Fächer des Bestands/.test(
+  await seite.evaluate(() => document.body.innerText)));
+
+await seite.goto(`http://localhost:${PORT}/app.html#/seite/${(ids as any).unter}`);
+await seite.waitForTimeout(1600);
+p('Ein Direktaufruf mit Kennung landet auf der Unterseite',
+  /Tief drin/.test(await seite.evaluate(() => document.body.innerText)));
+
+console.log('\n3 · Darstellung: ehrlich und sicher');
+
+await seite.goto(`http://localhost:${PORT}/app.html#/seite/${(ids as any).seite}`);
+await seite.waitForTimeout(1600);
+const dar = await seite.evaluate(() => ({
+  text: document.body.innerText,
+  hatB: !!document.querySelector('.pv-text b'),
+  todoHaken: (document.querySelector('.pv-todo input') as HTMLInputElement | null)?.checked ?? null,
+  unterLink: !!document.querySelector('.pv-unterseite a')
+}));
+p('Die spitzen Klammern sind TEXT geblieben — kein <b> im Baum (§19)',
+  /<b>spitzen<\/b>/.test((dar as any).text) && (dar as any).hatB === false);
+gleich('Die erledigte Aufgabe trägt ihren Haken', (dar as any).todoHaken, true);
+p('Die unbekannte Blockart wird gezeigt, mit Namen',
+  /gibtsnicht-9000/.test((dar as any).text) && /Fremder Block/.test((dar as any).text));
+p('Die Unterseite ist ein Link', (dar as any).unterLink === true);
+
+console.log('\n4 · Das Sheet: Escape schliesst, der Fokus kehrt zurück');
+
+await seite.goto(`http://localhost:${PORT}/app.html`);
+await seite.waitForTimeout(1600);
+await seite.click('.shell-ueber');
+await seite.waitForTimeout(300);
+const offen = await seite.evaluate(() => {
+  const d = document.querySelector('dialog.ui-sheet') as HTMLDialogElement | null;
+  return { offen: d?.open ?? false, text: d?.textContent || '' };
+});
+gleich('Der ⓘ-Knopf öffnet das Sheet', (offen as any).offen, true);
+p('… mit Inhalt', /React-Schicht aus E78/.test((offen as any).text));
+
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(300);
+const zu = await seite.evaluate(() => ({
+  offen: (document.querySelector('dialog.ui-sheet') as HTMLDialogElement | null)?.open ?? false,
+  fokus: document.activeElement?.className || ''
+}));
+gleich('Escape schliesst es', (zu as any).offen, false);
+p('Und der Fokus steht wieder auf dem Knopf (§38)',
+  /shell-ueber/.test((zu as any).fokus), (zu as any).fokus);
+
+/* Wieder öffnen: der Zustand draussen muss mitgekommen sein — sonst wäre
+   der Dialog nach Escape „offen" im Zustand und liesse sich nie wieder
+   aufmachen. Genau dafür horcht Sheet auf `close`. */
+await seite.click('.shell-ueber');
+await seite.waitForTimeout(300);
+gleich('Nach Escape lässt es sich wieder öffnen',
+  await seite.evaluate(() =>
+    (document.querySelector('dialog.ui-sheet') as HTMLDialogElement | null)?.open ?? false),
+  true);
+
+console.log('\n5 · Die Konsole');
+p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
+
+await browser.close();
+server.close();
+
+console.log(`\n  Suite 115 — Shell: Navigation, Darstellung, Sheet: ${ok} ok, ${weg} offen`);
+process.exit(weg ? 1 : 0);

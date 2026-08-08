@@ -4985,3 +4985,14 @@ jetzt davor, und die schreibende Shell macht den Punkt rot.
 Der Bestand blieb dabei vollständig grün: quell/ ohne ein geändertes Byte,
 Einzeldatei baut, test31/87/105/109 grün (test109 bewacht jetzt die VIER
 beschlossenen Abhängigkeiten als Allowlist statt „keine").
+
+**RM-4, noch am selben Abend** — `src/persistence/migration.ts`: alle neun
+Fächer werden aus `notizen` herauskopiert (nur lesend) und danach
+NACHGERECHNET — Satz für Satz über stabile JSON-Form, Stücke Byte für Byte
+in 4-MB-Schritten. `test150` führt das mit dem GEBAUTEN Code an echten
+Daten aus (Seite, Datenbank, 3-MB-Datei mit Stücken, Fassung) und kippt in
+der eigenen Gegenprobe ein Byte, einen Satz und erfindet einen dritten —
+alle drei Wege werden rot gemeldet (`blob-ungleich`, `ungleich`,
+`fehlt-alt`). `notizen` ist nach alledem Satz für Satz identisch.
+Vitest: 6 weitere Punkte gegen ein rohes Nachbau-`notizen` mit den echten
+keyPaths. Die neue Ablage kennt jetzt auch `basis` und `vorrat`.

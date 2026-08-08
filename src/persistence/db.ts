@@ -20,6 +20,14 @@ import type { Block, Collection, View, FileRecord, Version } from '../domain/sch
 /** Ein Eintrag im Fach `meta`: Schlüssel und Wert, mehr nicht. */
 export interface MetaRecord { k: string; v: unknown }
 
+/** Der letzte gemeinsame Stand eines Satzes (Abgleich): `satz` ist
+ *  bewusst ein JSON-String — so schreibt ihn `basisPut` im Bestand. */
+export interface BaseRecord { id: string; satz: string; wann: string }
+
+/** Ein vorberechneter Wert — `id` plus freie Felder, wie `vorratPut`
+ *  ihn zusammensetzt. */
+export interface CacheRecord { id: string; [feld: string]: unknown }
+
 /**
  * Ein Stück einer Datei — `nr` zählt ab 0, `dateiId` zeigt auf den Satz.
  *
@@ -38,6 +46,8 @@ export class RedionDb extends Dexie {
   versions!: Table<Version, string>;
   dateien!: Table<FileRecord, string>;
   stuecke!: Table<ChunkRecord, string>;
+  basis!: Table<BaseRecord, string>;
+  vorrat!: Table<CacheRecord, string>;
 
   constructor(name = 'redion-neu') {
     if (name === 'notizen')
@@ -52,7 +62,9 @@ export class RedionDb extends Dexie {
       meta: 'k',
       versions: 'id, pageId',
       dateien: 'id, blockId',
-      stuecke: 'id, dateiId, [dateiId+nr]'
+      stuecke: 'id, dateiId, [dateiId+nr]',
+      basis: 'id',
+      vorrat: 'id'
     });
   }
 }

@@ -6,7 +6,15 @@
  */
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { RedionDb } from '../persistence/db';
+import { copyFromLegacy, compare, migrateAndVerify } from '../persistence/migration';
 import './shell.css';
+
+/* Für Prüfläufe erreichbar — dieselben Funktionen, die der Knopf in der
+   Shell ruft. Ein Prüflauf, der eine eigene Abschrift der Migration
+   testet, testet nichts (E73); er muss DIESE hier rufen. */
+(window as unknown as Record<string, unknown>)['RedionMigration'] =
+  { RedionDb, copyFromLegacy, compare, migrateAndVerify };
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Der App-Container fehlt.');
