@@ -1,6 +1,6 @@
 # Slash-Befehle und Tastenkürzel — die vollständige Referenz
 
-**Stand: 2. August 2026**
+**Stand: 8. August 2026**
 
 Die Notion-KI hat dafür `notion.com/help/keyboard-shortcuts` geladen. Sie
 sagt selbst dazu, was sie **nicht** belegen kann — das steht am Ende, wörtlich.
@@ -121,15 +121,59 @@ selbst belegt haben kann.
 | `**Text**` | Fett | ✅ |
 | `*Text*` | Kursiv | ✅ |
 | `` `Text` `` | Code | ✅ |
-| `~Text~` | Durchgestrichen | ✅ |
-| `*` + Leertaste | Aufzählungsliste | ✅ |
+| `~Text~` | Durchgestrichen | ✅ *(seit test132 — vorher nur `~~Text~~`)* |
+| `~~Text~~` | Durchgestrichen | ✅ |
+| `__Text__` | Unterstrichen | ✅ *(hat Notion nicht)* |
+| `[Text](Adresse)` | Link | ✅ |
+| `*` `-` `+` + Leertaste | Aufzählungsliste | ✅ |
 | `1.` + Leertaste | Nummerierte Liste | ✅ |
+| `a.` `i.` `A.` `I.` + Leertaste | Nummerierte Liste | ✅ *(seit test132)* |
+| `1)` `a)` `i)` + Leertaste | Nummerierte Liste | ✅ *(seit test132)* |
 | `#` + Leertaste | Überschrift 1 | ✅ |
 | `##` + Leertaste | Überschrift 2 | ✅ |
 | `###` + Leertaste | Überschrift 3 | ✅ |
 | `>` + Leertaste | Toggle-Liste | ✅ |
 | `"` + Leertaste | Zitat | ✅ |
-| `---` | Trennlinie | ✅ |
+| `[]` + Leertaste | Aufgabe | ✅ |
+| `[x]` + Leertaste | Aufgabe, gleich abgehakt | ✅ *(seit test132)* |
+| `---` `***` `___` | Trennlinie | ✅ |
+| ` ``` ` + Leertaste | Codeblock | ✅ |
+| ` ```js ` + Leertaste | Codeblock in dieser Sprache | ✅ *(seit test132)* |
+| `$$` + Leertaste | Formelblock | ✅ |
+| `$a^2$` | Formel im Text | ✅ *(hat Notion nicht)* |
+
+> **Was diese Tabelle vorher verschwiegen hat.** Sie führte `~Text~`, `a.`
+> und `i.` als ✅ — keines der drei funktionierte. Und sie sagte nichts
+> darüber, dass das Zeichen nach dem Umwandeln **stehen blieb**: aus
+> `# Titel` wurde eine Überschrift, die `#Titel` hiess. Der Typ stimmte,
+> und weil jeder Prüflauf nur den Typ verglich, war alles grün.
+> `pruefungen/lauf/test132.mts` §1b vergleicht seither den Text.
+
+### 2.2b Markdown einfügen
+
+Strg C schreibt eine Auswahl seit jeher **als Markdown** in die
+Zwischenablage. Zurück ging es nicht — beim Einfügen landete alles in einem
+Block, samt Rautezeichen. Seit test132 liest Redion die Gegenrichtung:
+
+| Eingefügt | Wird | Wir |
+|---|---|:--:|
+| `# Text` bis `### Text` | Überschrift 1–3 | ✅ |
+| `- Text` · `* Text` · `+ Text` | Aufzählung | ✅ |
+| `1. Text` · `1) Text` · `a. Text` | Nummerierte Liste | ✅ |
+| `- [ ] Text` · `- [x] Text` | Aufgabe, offen oder abgehakt | ✅ |
+| `> Text` | Zitat | ✅ |
+| `> 💡 Text` | Callout — so schreibt ihn Strg C | ✅ |
+| `---` · `***` · `___` | Trennlinie | ✅ |
+| ` ``` ` … ` ``` ` | Codeblock, Inhalt wörtlich | ✅ |
+| ` ```js ` | Codeblock mit Sprache | ✅ |
+| Vier Leerzeichen davor | Eine Stufe tiefer, als Kind darüber | ✅ |
+| Leerzeilen | Fallen weg, statt leere Blöcke anzulegen | ✅ |
+| Eine Zeile ohne Gliederung | Bleibt Text im selben Block | ✅ |
+| Im Codeblock | Markdown bleibt Text und wird nicht gelesen | ✅ |
+
+Eine Zeile wird ein Block — nicht die Markdown-Regel „zwei Zeilen sind ein
+Absatz". Für eine Notiz-App ist das die Erwartung, und Notion macht es
+genauso.
 
 ### 2.3 Schreiben und Formatieren
 
@@ -251,6 +295,29 @@ Ihre eigenen Worte, sinngemäss:
 
 Offen bleibt: Strg+R und Strg+D zum Ausfüllen mehrerer Tabellenzellen, und
 Alt+Umschalt+Klick zur Blockauswahl.
+
+---
+
+## 5. Was die Markdown-Runde verändert hat (L20)
+
+Diese Tabelle stand seit August 2026 hier und führte alles als ✅. Ein
+Prüflauf, der jede Zeile **tippt** statt sie zu behaupten, fand vier Dinge:
+
+| Was | Vorher | Jetzt |
+|---|---|---|
+| Das Zeichen nach dem Umwandeln | blieb stehen: `# Titel` → Überschrift `#Titel` | ist weg |
+| `a.` `i.` `1)` `a)` `i)` | standen in der Doku, nicht im Blockkatalog | wandeln um |
+| `[x]` | gab es nicht | Aufgabe, gleich abgehakt |
+| ` ```js ` | ergab einen Codeblock ohne Sprache | Sprache wird gesetzt |
+| `~Text~` | stand in der Doku, der Zeichner kannte nur `~~` | streicht durch |
+| Markdown einfügen | ein Block voller Rautezeichen | wird wieder zur Gliederung |
+
+Der erste Punkt ist der, auf den es ankommt. Er war seit jeher da, er war
+**sichtbar**, und kein Prüflauf hat ihn gesehen — weil alle nur verglichen
+haben, ob der Blocktyp stimmt. Er stimmte ja.
+
+Gehalten von `pruefungen/lauf/test132.mts` — 79 Punkte, jeder einzeln
+gegengeprobt.
 
 ---
 

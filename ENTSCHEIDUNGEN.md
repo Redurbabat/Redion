@@ -3166,3 +3166,114 @@ Spalten sichtbar, kein Weg-zurück-Knopf, keine umbrechenden Zeilen.
 
 `test114` §21, 10 Punkte. Gegenprobe: den Telefon-Block entfernt → 9 von
 10 rot.
+
+---
+
+## E59 · Markdown geht jetzt in beide Richtungen — und das Zeichen bleibt nicht stehen
+
+**Datum** 8. August 2026 · **Lücke** L20 · **Prüflauf** `test132` (79 Punkte)
+
+**Der Fund, der alles andere klein aussehen lässt**
+
+`doku/SLASH-UND-TASTEN.md` führte zwölf Markdown-Kürzel, alle mit ✅. Sie
+wandelten auch alle um. Was keiner geprüft hat, ist, was danach im Block
+steht:
+
+```txt
+Getippt:    # Meine Überschrift
+Erwartet:   Überschrift 1 · „Meine Überschrift"
+Gemessen:   Überschrift 1 · „#Meine Überschrift"
+```
+
+Das `#` blieb. Es war **sichtbar**, es war seit jeher da, und jeder
+Prüflauf war grün — weil alle nur `block.type` verglichen haben. Der Typ
+stimmte ja.
+
+Die Ursache steht in drei Zeilen: der Tastendruck vor dem Leerzeichen
+speichert `#` im Block. `ct.textContent = ''` räumt danach nur das Feld,
+und `umwandeln()` zeichnet sofort neu — aus dem Block, in dem das `#` noch
+steht. Die Behebung ist eine Zeile mehr, `Store.updateBlock(b.id, {text:''})`,
+und der Grund, warum sie fehlte, ist kein Flüchtigkeitsfehler: **die
+Prüfung, die sie erzwungen hätte, hat niemand geschrieben.**
+
+Das ist derselbe Satz wie in CLAUDE.md §55.2, nur ohne Bild: eine Prüfung,
+die nur die halbe Sache misst, sagt „passt schon" und meint es nicht.
+`test132` §1b vergleicht deshalb `block.text` **und** `textContent` — was
+gespeichert ist und was auf dem Bildschirm steht.
+
+**Drei Behauptungen, die keine waren**
+
+Derselbe Lauf hat drei Zeilen der Doku umgeworfen:
+
+```txt
+a. i. 1) a) i)   standen in der Doku, nicht im Blockkatalog
+~Text~           stand in der Doku, der Zeichner kannte nur ~~Text~~
+[x]              gab es nirgends
+```
+
+Die Behebung ist jeweils klein — vier Einträge mehr im `md`-Feld von
+`register/bloecke.ts`, ein Muster mehr in `inline()`. Der Punkt ist nicht
+die Behebung, sondern **wie sie gefunden wurden**: indem ein Prüflauf jede
+Zeile der Doku tippt, statt sie zu glauben.
+
+**Die einfache Tilde und ihr Sicherheitsabstand**
+
+`~Text~` durchzustreichen ist gefährlicher, als es aussieht: „ca. 3~5 Grad"
+darf nicht durchgestrichen werden, und `~~doppelt~~` darf nicht als
+`<s>~doppelt~</s>` zerfallen. Beides löst die Reihenfolge — erst `~~`,
+dann `~` — plus die Bedingung, dass an keiner der beiden Tilden ein
+Leerzeichen anschliesst. Beide Grenzfälle stehen als eigene Punkte in §4.
+
+**Und die grosse Lücke, die in L20 gar nicht stand**
+
+Strg C schreibt eine Auswahl seit jeher **als Markdown** — das steht so in
+`auswahlAlsText()` und ist auch von `test65` gehalten. Zurück ging es nicht.
+Es gab überhaupt keinen `paste`-Griff im Editor: die Zwischenablage landete
+über den Standardweg des Browsers in genau einem Block, samt Rautezeichen.
+Wer eine Seite kopierte und woanders einfügte, bekam seinen Text — und
+seine Gliederung nicht.
+
+`mdLesen()` liest jetzt die Gegenrichtung. Vier Entscheidungen darin:
+
+**Eine Zeile wird ein Block.** Nicht die Markdown-Regel „zwei Zeilen sind
+ein Absatz". Für eine Notiz-App ist das die Erwartung, und Notion macht es
+genauso.
+
+**Vier Leerzeichen sind eine Stufe.** Eingerücktes wird echtes Kind, kein
+Text mit Leerzeichen davor. Das ist der Unterschied zwischen einer
+Gliederung, die man weiter einklappen kann, und einer, die nur so aussieht.
+
+**Im Codeblock wird nichts gelesen.** `# hallo` in einem Stück Python ist
+eine Kommentarzeile. Das gilt in beide Richtungen: sowohl beim Einfügen
+*in* einen Codeblock als auch für den Inhalt *zwischen* zwei Zäunen — dort
+bleiben sogar die Leerzeilen erhalten.
+
+**Immer selbst einsetzen, auch ohne Gliederung.** Der Standardweg des
+Browsers legt mitkopiertes HTML mit allen Stilen in den Block; beim
+nächsten Zeichnen ist es weg, weil das Datenmodell nur Text kennt. Text,
+der vor den Augen des Nutzers verschwindet, ist schlimmer als Text, der nie
+formatiert ankam.
+
+**Was ausdrücklich nicht dazugehört**
+
+Markdown-Tabellen (`| a | b |`) und verschachtelte Zitate liest der Leser
+nicht. Beide stehen in L20 als offen. Eine Tabelle beim Einfügen zu
+erkennen hiesse zu entscheiden, ob daraus ein Tabellenblock, eine einfache
+Tabelle oder eine Datenbank wird — das ist eine eigene Frage und keine
+Nebenbei-Antwort.
+
+**Status**
+
+`test132`, 79 Punkte, 9 Abschnitte. Gegenprobe für jede der vier
+Behebungen einzeln:
+
+```txt
+Text-Leeren entfernt      → 14 rot
+Listenvarianten und [x]   →  9 rot
+paste-Griff entfernt      → 15 rot
+einfache Tilde entfernt   →  1 rot
+```
+
+`test65` und `test86` zählen die Gruppen der Kürzelübersicht; beide mussten
+von zwölf auf dreizehn — die neue heisst „Markdown einfügen". Dass sie das
+gemeldet haben, ist der Zweck einer festen Zahl an dieser Stelle.

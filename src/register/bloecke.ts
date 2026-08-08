@@ -39,9 +39,13 @@ Register.bloecke = (() => {
     { id:'h1',      name:'Überschrift 1',     icon:'H₁', gruppe:'Grundlegend', cmd:['h1','ueberschrift1','titel','#'], kurz:'Ctrl+Shift+1', md:'#',    ph:'Überschrift 1' },
     { id:'h2',      name:'Überschrift 2',     icon:'H₂', gruppe:'Grundlegend', cmd:['h2','ueberschrift2','##'],      kurz:'Ctrl+Shift+2', md:'##',   ph:'Überschrift 2' },
     { id:'h3',      name:'Überschrift 3',     icon:'H₃', gruppe:'Grundlegend', cmd:['h3','ueberschrift3','###'],     kurz:'Ctrl+Shift+3', md:'###',  ph:'Überschrift 3' },
-    { id:'todo',    name:'Aufgabenliste',     icon:'☑',  gruppe:'Grundlegend', cmd:['todo','aufgabe','checkbox'],    kurz:'Ctrl+Shift+4', md:['[]','[ ]'], ph:'Aufgabe' },
+    { id:'todo',    name:'Aufgabenliste',     icon:'☑',  gruppe:'Grundlegend', cmd:['todo','aufgabe','checkbox'],    kurz:'Ctrl+Shift+4', md:['[]','[ ]','[x]','[X]'], ph:'Aufgabe' },
     { id:'bullet',  name:'Aufzählungsliste',  icon:'•',  gruppe:'Grundlegend', cmd:['bullet','liste','aufzaehlung'], kurz:'Ctrl+Shift+5', md:['-','*','+'], ph:'Listenpunkt' },
-    { id:'number',  name:'Nummerierte Liste', icon:'1.', gruppe:'Grundlegend', cmd:['number','nummeriert','num'],    kurz:'Ctrl+Shift+6', md:'1.',   ph:'Listenpunkt' },
+    /* Notion nimmt für die nummerierte Liste nicht nur „1." — auch Buchstaben
+       und römische Zahlen, mit Punkt oder mit Klammer. Wir hatten nur „1.",
+       und `doku/SLASH-UND-TASTEN.md` behauptete trotzdem „a." und „i.". */
+    { id:'number',  name:'Nummerierte Liste', icon:'1.', gruppe:'Grundlegend', cmd:['number','nummeriert','num'],    kurz:'Ctrl+Shift+6',
+      md:['1.','1)','a.','a)','i.','i)','A.','A)','I.','I)'], ph:'Listenpunkt' },
     { id:'toggle',  name:'Toggle-Liste',      icon:'▸',  gruppe:'Grundlegend', cmd:['toggle','einklappbar'],         kurz:'Ctrl+Shift+7', md:'>',    ph:'Toggle' },
     { id:'toggle-h1', name:'Toggle-Überschrift 1', icon:'▸H₁', gruppe:'Grundlegend', cmd:['toggle h1','einklappbare ueberschrift 1'] },
     { id:'toggle-h2', name:'Toggle-Überschrift 2', icon:'▸H₂', gruppe:'Grundlegend', cmd:['toggle h2','einklappbare ueberschrift 2'] },

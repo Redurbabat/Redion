@@ -110,6 +110,148 @@ const Blocks = (() => {
   const UMWANDELBAR = ['text','h1','h2','h3','todo','bullet','number','toggle','quote','callout',
                        'code','equation','flashcard','page'];
 
+  /* Die Sprachen des Codeblocks. Stand hier früher mitten im Zeichnen — jetzt
+     oben, weil auch das Markdown-Kürzel ```js sie braucht. */
+  const SPRACHEN = ['Plain Text','JavaScript','TypeScript','JSX','Python','HTML','XML','CSS','SCSS','Less','JSON','YAML','TOML',
+    'SQL','GraphQL','Bash','Shell','PowerShell','Java','C','C++','C#','Go','Rust','Swift','Kotlin','Dart',
+    'PHP','Ruby','Perl','Lua','R','Julia','MATLAB','Haskell','Elixir','Erlang','Clojure','Scala','Objective-C',
+    'Assembly','Docker','Makefile','Nginx','Diff','LaTeX','Markdown'];
+
+  /* Wer ```js tippt, meint JavaScript. Nur die Kurzformen, die sich nicht
+     von selbst ergeben — „python" findet SPRACHEN schon ohne Hilfe. */
+  const SPRACH_KURZ: Record<string, string> = {
+    js: 'JavaScript', ts: 'TypeScript', tsx: 'JSX', py: 'Python',
+    sh: 'Bash', zsh: 'Bash', console: 'Shell', ps1: 'PowerShell',
+    'c++': 'C++', cpp: 'C++', cs: 'C#', 'objective-c': 'Objective-C', objc: 'Objective-C',
+    golang: 'Go', rs: 'Rust', kt: 'Kotlin', rb: 'Ruby', pl: 'Perl',
+    yml: 'YAML', md: 'Markdown', tex: 'LaTeX', dockerfile: 'Docker',
+    text: 'Plain Text', plain: 'Plain Text', txt: 'Plain Text'
+  };
+
+  /** „js" → „JavaScript". Unbekanntes bleibt Plain Text, statt zu verschwinden. */
+  const sprachName = (roh: string): string => {
+    const k = String(roh ?? '').toLowerCase();
+    if (SPRACH_KURZ[k]) return SPRACH_KURZ[k];
+    return SPRACHEN.find(s => s.toLowerCase() === k) || 'Plain Text';
+  };
+
+  /* ========================================================================
+   * MARKDOWN LESEN — die Gegenrichtung zu auswahlAlsText()
+   * ------------------------------------------------------------------------
+   * Strg C schreibt die Auswahl seit jeher als Markdown in die Zwischenablage.
+   * Zurück ging es nicht: eingefügt wurde ein einziger Block mit allen
+   * Rautezeichen darin. Wer eine Seite kopierte und woanders einfügte, bekam
+   * seinen Text — aber nicht mehr seine Gliederung.
+   *
+   * Eine Zeile wird ein Block. Notion macht es genauso, und für eine
+   * Notiz-App ist das die Erwartung; die Markdown-Regel „zwei Zeilen sind ein
+   * Absatz" gilt hier nicht.
+   * ======================================================================*/
+
+  /** Ein gelesener Block: was er ist, was drinsteht, wie tief er sitzt. */
+  type MdBlock = { typ: string; text: string; tiefe: number;
+                   checked?: boolean; lang?: string };
+
+  /** Wie viele Stufen ist die Zeile eingerückt? Vier Leerzeichen = ein Tab. */
+  const mdTiefe = (roh: string): number => {
+    const vorn = /^[\t ]*/.exec(roh)?.[0] ?? '';
+    let n = 0;
+    for (const z of vorn) n += z === '\t' ? 4 : 1;
+    return Math.floor(n / 4);   /* 0-3 Zeichen → 0, 4-7 → 1, 8-11 → 2 */
+  };
+
+  /**
+   * Markdown-Text in Blöcke lesen. Gibt eine flache Liste mit Tiefenangabe
+   * zurück — wer daraus einen Baum bauen will, tut es beim Einfügen.
+   */
+  const mdLesen = (roh: string): MdBlock[] => {
+    const zeilen = String(roh ?? '').replace(/\r\n?/g, '\n').split('\n');
+    const raus: MdBlock[] = [];
+
+    for (let i = 0; i < zeilen.length; i++) {
+      const zeile = zeilen[i] ?? '';
+      const tiefe = mdTiefe(zeile);
+      const t = zeile.trim();
+
+      /* Codezaun: alles bis zum schliessenden Zaun bleibt, wie es ist —
+         auch die leeren Zeilen, auch die Rautezeichen darin. */
+      const auf = /^```([a-zA-Z0-9+#.-]{0,20})\s*$/.exec(t);
+      if (auf) {
+        const inhalt: string[] = [];
+        let zu = false;
+        while (++i < zeilen.length) {
+          if (/^\s*```\s*$/.test(zeilen[i] ?? '')) { zu = true; break; }
+          inhalt.push(zeilen[i] ?? '');
+        }
+        /* Ein Zaun ohne Ende ist kaputtes Markdown, aber der Text darin ist
+           echt — er wird zum Codeblock, statt verloren zu gehen. */
+        void zu;
+        raus.push({ typ: 'code', text: inhalt.join('\n'), tiefe,
+                    lang: sprachName(auf[1] ?? '') });
+        continue;
+      }
+
+      if (!t) continue;                                  /* Leerzeilen weg */
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { raus.push({ typ: 'divider', text: '', tiefe }); continue; }
+
+      let m;
+      if ((m = /^(#{1,3})\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'h' + (m[1] ?? '#').length, text: m[2] ?? '', tiefe }); continue; }
+      /* Aufgabe vor Aufzählung prüfen: „- [ ] x" ist beides, und das
+         Kästchen ist die genauere Auskunft. */
+      if ((m = /^[-*+]\s+\[([ xX])\]\s*(.*)$/.exec(t)))
+        { raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' }); continue; }
+      if ((m = /^\[([ xX])\]\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' }); continue; }
+      /* „> 💡 " ist unser Callout — auswahlAlsText() schreibt ihn so. */
+      if ((m = /^>\s*💡\s*(.*)$/.exec(t)))
+        { raus.push({ typ: 'callout', text: m[1] ?? '', tiefe }); continue; }
+      if ((m = /^>\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'quote', text: m[1] ?? '', tiefe }); continue; }
+      if ((m = /^[-*+]\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'bullet', text: m[1] ?? '', tiefe }); continue; }
+      if ((m = /^(?:\d{1,9}|[a-zA-Z]|[ivxIVX]{1,6})[.)]\s+(.*)$/.exec(t)))
+        { raus.push({ typ: 'number', text: m[1] ?? '', tiefe }); continue; }
+
+      raus.push({ typ: 'text', text: t, tiefe });
+    }
+    return raus;
+  };
+
+  /** Steckt Markdown genug Gliederung, dass daraus mehr als ein Block wird? */
+  const mdIstStruktur = (roh: string): boolean => {
+    const teile = mdLesen(roh);
+    return teile.length > 1 || (teile.length === 1 && teile[0]!.typ !== 'text');
+  };
+
+  /**
+   * Gelesene Blöcke unter `elternId` ab `idx` einsetzen. Die Tiefe wird zu
+   * echter Verschachtelung: ein eingerückter Punkt landet im Block darüber.
+   * Gibt die Kennung des letzten eingesetzten Blocks zurück.
+   */
+  const mdEinsetzen = (teile: MdBlock[], elternId: string, idx: number): string | null => {
+    /* Je Tiefe der zuletzt gesetzte Block — sein Kind kommt eine Stufe tiefer.
+       Stufe 0 ist der Eltern-Block selbst, dort zählt der Einfügeplatz. */
+    const stapel: (string | null)[] = [null];
+    const gesetzt: string[] = [];
+
+    teile.forEach(teil => {
+      const tiefe = Math.min(teil.tiefe, stapel.length - 1);
+      const ziel = tiefe === 0 ? elternId : stapel[tiefe];
+      if (!ziel) return;
+      const props: any = { text: teil.text };
+      if (teil.checked) props.checked = true;
+      if (teil.lang) props.lang = teil.lang;
+      const neu = tiefe === 0
+        ? Store.addBlock(ziel, teil.typ, props, idx++)
+        : Store.addBlock(ziel, teil.typ, props);
+      stapel.length = tiefe + 1;
+      stapel.push(neu.id);
+      gesetzt.push(neu.id);
+    });
+    return gesetzt.length ? gesetzt[gesetzt.length - 1]! : null;
+  };
+
   /* ========================================================================
    * HILFEN
    * ======================================================================*/
@@ -123,6 +265,10 @@ const Blocks = (() => {
       .replace(/(^|\W)\*(.+?)\*(\W|$)/g, '$1<i>$2</i>$3')
       .replace(/__(.+?)__/g, '<u>$1</u>')
       .replace(/~~(.+?)~~/g, '<s>$1</s>')
+      /* Notion streicht auch mit einer einzelnen Tilde durch. Erst danach,
+         damit ~~doppelt~~ nicht zu <s>~doppelt~</s> zerfällt — und nur, wenn
+         kein Leerzeichen anschliesst, sonst trifft es „ca. 3~5 Grad". */
+      .replace(/(^|[^~\w])~([^~\s](?:[^~]*[^~\s])?)~(?![~\w])/g, '$1<s>$2</s>')
       .replace(/`([^`]+?)`/g, '<code>$1</code>')
       .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
@@ -313,11 +459,7 @@ const Blocks = (() => {
           'position:absolute; top:8px; right:10px; background:var(--bg-input); ' +
           'border:1px solid var(--line); border-radius:4px; font-size:11.5px; ' +
           'padding:2px 4px; color:var(--text-dim); outline:none; z-index:2';
-        ['Plain Text','JavaScript','TypeScript','JSX','Python','HTML','XML','CSS','SCSS','Less','JSON','YAML','TOML',
-         'SQL','GraphQL','Bash','Shell','PowerShell','Java','C','C++','C#','Go','Rust','Swift','Kotlin','Dart',
-         'PHP','Ruby','Perl','Lua','R','Julia','MATLAB','Haskell','Elixir','Erlang','Clojure','Scala','Objective-C',
-         'Assembly','Docker','Makefile','Nginx','Diff','LaTeX','Markdown']
-          .forEach(s => {
+        SPRACHEN.forEach(s => {
             const o = document.createElement('option');
             o.textContent = s;
             if ((block.lang || 'Plain Text') === s) o.selected = true;
@@ -1083,14 +1225,79 @@ const Blocks = (() => {
           return liste.includes(wort);
         });
         if (treffer) {
+          /* Auch im Block löschen, nicht nur im Feld. Der vorige Tastendruck
+             hat „#" längst gespeichert; `umwandeln` zeichnet gleich neu und
+             holt es zurück. Genau das ist jahrelang passiert: aus „# Titel"
+             wurde eine Überschrift, die „#Titel" hiess. Kein Prüflauf sah es,
+             weil alle nur den TYP verglichen haben. */
           ct.textContent = '';
+          Store.updateBlock(b.id, { text: '' });
           umwandeln(b.id, treffer.id);
+          /* Zwei Kürzel sagen mehr als nur den Typ: „[x] " hakt gleich ab.
+             Nach umwandeln() ist die Seite neu gezeichnet, der Block aber
+             derselbe — deshalb reicht ein zweiter, kleiner Schreibvorgang. */
+          if (treffer.id === 'todo' && /^\[[xX]\]$/.test(wort)) {
+            Store.updateBlock(b.id, { checked: true });
+            App.zeichneSeite(b.id, 'ende');
+          }
+          return;
+        }
+        /* ```sprache — der Codeblock nimmt die Sprache gleich mit.
+           Das geht über keine Liste im Register: die Sprache ist frei. */
+        const zaun = /^```([a-zA-Z0-9+#.-]{1,20})$/.exec(wort);
+        if (zaun) {
+          ct.textContent = '';
+          Store.updateBlock(b.id, { text: '' });
+          umwandeln(b.id, 'code');
+          Store.updateBlock(b.id, { lang: sprachName(zaun[1] ?? '') });
+          App.zeichneSeite(b.id, 'ende');
           return;
         }
       }
 
       Store.updateBlock(b.id, { text: roh });
       if (b.type === 'toc') return;
+    });
+
+    /* --- Einfügen: Markdown wird wieder zu Blöcken ------------------------
+       Strg C schreibt die Auswahl als Markdown. Zurück ging es nicht — der
+       ganze Text landete in einem einzigen Block, samt Rautezeichen. */
+    wurzel.addEventListener('paste', (e: any) => {
+      if (e.defaultPrevented) return;          /* Tabelle und Kalkulation zuerst */
+      const ct = elVon(e)?.closest<HTMLElement>('.ct');
+      if (!ct) return;
+      const blk = ct.closest<HTMLElement>('.blk');
+      if (!blk) return;
+      const b = Store.getBlock(blk.dataset.bid);
+      if (!b) return;
+      const text = e.clipboardData?.getData('text/plain');
+      if (!text) return;
+
+      /* Im Codeblock ist Markdown kein Markdown, sondern Inhalt. */
+      const strukturiert = b.type === 'text' && mdIstStruktur(text);
+
+      /* Immer selbst einsetzen: sonst legt der Browser das mitkopierte HTML
+         mit all seinen Stilen in den Block, und beim nächsten Zeichnen ist
+         es wieder weg — Text, der vor den Augen des Nutzers verschwindet. */
+      e.preventDefault();
+
+      if (!strukturiert) {
+        document.execCommand('insertText', false, text);
+        return;
+      }
+
+      const eltern = Store.getBlock(b.parentId);
+      if (!eltern) { document.execCommand('insertText', false, text); return; }
+      const teile = mdLesen(text);
+      const letzte = mdEinsetzen(teile, b.parentId, eltern.content.indexOf(b.id) + 1);
+
+      /* Der leere Block, in dem eingefügt wurde, hat seinen Zweck erfüllt. */
+      if (b.type === 'text' && !ct.textContent.trim()) {
+        Store.trashBlock(b.id);
+        Store.purgeBlock(b.id);
+      }
+      App.zeichneSeite(letzte || b.id, 'ende');
+      if (teile.length > 1) UI.toast(teile.length + ' Blöcke eingefügt');
     });
 
     /* --- Vorschlagsmodus -------------------------------------------------
@@ -2686,6 +2893,8 @@ const Blocks = (() => {
     auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
     auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,
     auswahlAlsText, auswahlTaste, sichtbareBloecke,
+    /* Markdown in beide Richtungen */
+    mdLesen, mdEinsetzen, mdIstStruktur, sprachName,
     auswahl: () => ausgewaehlt.slice()
   };
 })();

@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 102 Prüfläufe**
+**8. August 2026 · 103 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -34,6 +34,8 @@ L33  Web Push (E54) — mit Server klingelt es auch bei geschlossener App;
      der Stoss trägt dabei keinen Erinnerungstext
 L10  aus dem Nocturne-Entwurf: Marken statt Auswahlfelder, gleitende
      Reiterpille, 56-px-Leiste, Willkommensbildschirm (E48–E50, E55)
+L20  Markdown gemessen statt gezählt (E59) — das Kürzelzeichen blieb
+     seit jeher im Text stehen, und Strg V las kein Markdown zurück
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -463,10 +465,32 @@ summary block · File gallery · Button automation block.
 
 ## L20 · Markdown- und Tastenkürzel
 
-**Stand** — ◐ Markdown 23 von 48 · Tastenkürzel 127 von 160.
+**Stand** — ✅ Markdown, gemessen statt gezählt · ◐ Tastenkürzel 127 von 160.
 
-Fehlt: Zeile-für-Zeile-Vergleich · Konflikte prüfen · deutsche Tastatur ·
-Mac/Windows · Übersicht in der App.
+Der Zeile-für-Zeile-Vergleich ist da: `pruefungen/lauf/test132.mts` **tippt**
+jedes Kürzel und liest ab, was daraus wird. Er hat vier Behauptungen
+umgeworfen, die `doku/SLASH-UND-TASTEN.md` als ✅ führte — und einen Fehler
+gefunden, der die ganze Zeit sichtbar war:
+
+**Das Zeichen blieb stehen.** `# Titel` wurde eine Überschrift namens
+`#Titel`. Der Block bekam den richtigen Typ, aber `ct.textContent = ''`
+räumte nur das Feld; das `#` war einen Tastendruck vorher schon gespeichert,
+und das Neuzeichnen holte es zurück. Kein Prüflauf sah es, weil alle nur den
+**Typ** verglichen. Genau der Fall aus CLAUDE.md §55.2.
+
+Dazu: `a.` `i.` `1)` `a)` `i)` wandelten nicht um, obwohl die Doku sie
+führte. `~Text~` strich nicht durch, obwohl die Doku es führte. `[x]` gab es
+nicht. ` ```js ` ergab einen Codeblock ohne Sprache.
+
+Und die grosse Lücke, die vorher gar nicht in dieser Liste stand: **Strg C
+schrieb Markdown, Strg V las es nicht.** Wer eine Seite kopierte und
+woanders einfügte, bekam einen einzigen Block mit allen Rautezeichen darin —
+der Text war da, die Gliederung weg. Es gab überhaupt keinen `paste`-Griff
+im Editor.
+
+Fehlt noch: Konflikte mit Browser- und Betriebssystem-Kürzeln systematisch
+prüfen · die 33 fehlenden Tastenkürzel · Markdown-Tabellen beim Einfügen
+(`| a | b |`) · verschachtelte Zitate.
 
 ## L21 · Vollständige Verschlüsselung
 
@@ -547,7 +571,7 @@ sie nicht neu gemessen werden müssen.
 | Eigenschaftstypen | 29 | 35 | ✅ |
 | Ansichten | 11 | 12 | ✅ |
 | Tastenkürzel | 160 | 127 | ◐ |
-| Markdown-Kürzel | 48 | 23 | ◐ |
+| Markdown-Kürzel | 48 | 33 | ✅ — siehe L20, jetzt getippt statt gezählt |
 | Einstellungs-Optionen | 111 | 143 | ✅ |
 | Formelfunktionen | 125 | 158 | ✅, aber 129 ohne Beschreibung |
 | Excel-Startpaket | 63 | 61 | ✅, 2 fehlen mit Absicht |

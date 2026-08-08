@@ -103,7 +103,10 @@ r = await seite.evaluate(() => ({
   mehrfach: Register.tasten.mehrfach().length,
   inGruppe: Register.tasten.inGruppe('Allgemein').length
 }));
-p('Zwölf Gruppen',            r.gruppen === 12, String(r.gruppen));
+/* Dreizehn seit „Markdown einfügen" (L20). Diese Zeile hat den Zuwachs
+   gemeldet, bevor jemand die Übersicht aufgeschlagen hat — genau dafür
+   steht hier eine Zahl und kein `>= 1`. */
+p('Dreizehn Gruppen',         r.gruppen === 13, String(r.gruppen));
 p('Über hundert Kürzel',      Number(r.anzahl ?? -1) >= 120, String(r.anzahl));
 p('Suche findet',             r.suche >= 1, String(r.suche));
 p('Innerhalb einer Gruppe keine Taste doppelt', r.doppelte.length === 0,

@@ -54,11 +54,26 @@ Register.tasten = (() => {
            md-Feld und sind deshalb hier keine Behauptung, sondern eine Liste. */
         ['Markdown beim Tippen', [
                 ['# ␣', 'Überschrift 1'], ['## ␣', 'Überschrift 2'], ['### ␣', 'Überschrift 3'],
-                ['- ␣ oder * ␣', 'Aufzählung'], ['1. ␣', 'Nummerierte Liste'],
-                ['[] ␣', 'Aufgabe'], ['> ␣', 'Toggle'], ['" ␣', 'Zitat'],
-                ['--- ␣', 'Trennlinie'], ['``` ␣', 'Codeblock'], ['$$ ␣', 'Formelblock'],
+                ['- ␣ · * ␣ · + ␣', 'Aufzählung'],
+                ['1. ␣ · a. ␣ · i. ␣', 'Nummerierte Liste — auch mit Klammer: 1) a) i)'],
+                ['[] ␣', 'Aufgabe'], ['[x] ␣', 'Aufgabe, schon abgehakt'],
+                ['> ␣', 'Toggle'], ['" ␣', 'Zitat'],
+                ['--- ␣ · *** ␣ · ___ ␣', 'Trennlinie'],
+                ['``` ␣', 'Codeblock'], ['```js ␣', 'Codeblock in dieser Sprache'],
+                ['$$ ␣', 'Formelblock'],
                 ['**Text**', 'Fett'], ['*Text*', 'Kursiv'], ['`Text`', 'Code'],
-                ['~~Text~~', 'Durchgestrichen'], ['__Text__', 'Unterstrichen']
+                ['~Text~ · ~~Text~~', 'Durchgestrichen'], ['__Text__', 'Unterstrichen'],
+                ['[Text](Adresse)', 'Link'], ['$a^2$', 'Formel im Text']
+            ]],
+        /* Einfügen ist die Gegenrichtung zu „Als Markdown kopieren". Wer eine
+           Gliederung einfügt, bekommt sie wieder als Blöcke — nicht als einen
+           Block voller Rautezeichen. */
+        ['Markdown einfügen', [
+                ['# Text', 'Eingefügt wird daraus eine Überschrift'],
+                ['- [x] Text', 'Eine schon abgehakte Aufgabe'],
+                ['``` … ```', 'Ein Codeblock — der Inhalt bleibt wörtlich'],
+                ['Vier Leerzeichen', 'Eine Stufe tiefer, als Kind darüber'],
+                ['Im Codeblock', 'Markdown bleibt Text und wird nicht gelesen']
             ]],
         ['Verknüpfen', [
                 ['[[', 'Seite verlinken'], ['@', 'Seite, Datum oder Person erwähnen'],

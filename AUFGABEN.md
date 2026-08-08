@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 102 Prüfläufe**
+**8. August 2026 · 103 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -76,11 +76,19 @@ L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
 L15  Symbolregeln und „überfällig" in der bedingten Formatierung
 L16  Automationen: If/Else, Schleife, Vorschau, Protokoll
 L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
+L20  die 33 fehlenden Tastenkürzel · Konflikte mit Browser und
+     Betriebssystem systematisch prüfen · Markdown-Tabellen beim Einfügen
 ```
 
 **Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push
-(E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · der grösste Teil von L10,
-L12 und L15.
+(E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · L20 Markdown (E59) · der
+grösste Teil von L10, L12 und L15.
+
+**Der Fund vom 8. August**, weil er die Art Fehler zeigt, auf die zu achten
+ist: `# Titel` wurde eine Überschrift namens `#Titel` — das Kürzelzeichen
+blieb im Text stehen. Seit es die Kürzel gibt. Sichtbar auf jedem
+Bildschirm, und trotzdem grün, weil jeder Prüflauf nur den **Blocktyp**
+verglich. Siehe E59.
 
 ---
 
