@@ -4144,3 +4144,85 @@ Seitenleiste zurück auf 700   → 5 rot
 Schublade zurück auf top:60px → 2 rot: „🔍SuchenStrg P beginnt bei
                                  64 px, die Leiste endet bei 80 px"
 ```
+
+---
+
+## E69 · Kataloge gehören ins Register — und was ohne Auffang verschwindet
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test142` (24 Punkte)
+
+CLAUDE.md §8 sagt es in einem Satz: die Register sind die zentrale
+Wahrheit. Zwei Kataloge hielten sich nicht daran.
+
+**Ziffer → Blockart, viermal geschrieben**
+
+Notion legt die zehn häufigsten Blockarten auf Strg+Umschalt+Ziffer.
+Welche Ziffer welche Art meint, stand **viermal** im Code:
+
+```txt
+register/bloecke.ts     kurz: 'Ctrl+Shift+1'   → die Kürzelübersicht liest es
+editor.ts, Griff 1      { '0':'text', '1':'h1', … }   Strg+Umschalt
+editor.ts, Griff 2      dasselbe noch einmal          Strg+Alt (Mac)
+editor.ts, Griff 3      dasselbe ohne die '9'         Mehrfachauswahl
+```
+
+Wer eine Art auf eine andere Ziffer legt, ändert die Übersicht und lässt
+drei Griffe stehen — oder umgekehrt, und dann zeigt die Übersicht ein
+Kürzel, das nichts tut.
+
+Jetzt leitet `Register.bloecke.zifferZuTyp()` die Zuordnung aus `kurz` ab.
+Der dritte Griff lässt die `'9'` weiter aus, und zwar mit Begründung: eine
+Mehrfachauswahl lässt sich nicht in **eine** Seite verwandeln.
+
+**Das Typmenü ohne Auffanggruppe**
+
+`TYP_GRUPPEN` in `steuerung.ts` zählt 34 Eigenschaftstypen in fünf Gruppen
+auf. Das Register führt 35. Der Unterschied ist `title`, und der ist
+richtig: eine Spalte lässt sich nicht in den Titel verwandeln, es gibt
+genau einen.
+
+Heute decken sich also beide. Das Gefährliche ist, was **morgen**
+passiert: `TYP_GRUPPEN` hatte keine Auffanggruppe. Wer einen Typ ins
+Register einträgt und diese Liste vergisst, bekommt einen Typ, den es gibt
+und den niemand auswählen kann. Kein Fehler, keine Meldung — nur ein
+Eintrag, der im Menü fehlt.
+
+Das Register hat für genau diesen Fall `inGruppe('Weiteres')`. `typGruppen()`
+macht es jetzt genauso.
+
+**Und die Auffanggruppe muss leer sein.** `test142` §2 prüft beides: dass
+es sie heute **nicht** gibt — sonst wäre sie eine Ausrede dafür, die
+Gliederung nicht zu pflegen — und dass sie greift, wenn doch etwas
+dazukommt. Dafür meldet der Lauf einen Probetyp an und sieht im
+**gezeichneten** Menü nach, ob er anklickbar ist.
+
+Die Gegenprobe sagt genau, was ohne sie geschähe:
+
+```txt
+✗ … und landet in der Auffanggruppe, statt zu verschwinden
+✗ Das gezeichnete Menü zeigt den neuen Typ — 34 Knöpfe
+```
+
+Vierunddreissig Knöpfe, und der neue ist keiner davon.
+
+**Zwei Kleinigkeiten beim Prüfen, die hierher gehören**
+
+`.menu` ist der Kasten, `.menu-grund` der dunkle Grund **darunter**. Der
+erste Anlauf suchte im Grund und fand null Knöpfe — ein roter Punkt für
+einen Selektor, nicht für einen Fehler. Dritter Fall an einem Tag.
+
+Und: `Register.bloecke` hat `nimmZurueck`, `Register.eigenschaften` nicht.
+Eine Unwucht, die erst auffällt, wenn man sie braucht — für Erweiterungen
+(L30) wird sie es. Der Prüflauf erfindet keine Aufräumfunktion, sondern
+lädt eine frische Seite und hält fest, dass das Register dort wieder wie
+neu ist. Die Unwucht steht als Notiz in L34.
+
+**Status**
+
+`test142`, 24 Punkte. Gegenproben:
+
+```txt
+Auffanggruppe entfernt          → 2 rot
+Aufzählung auf Strg+Umschalt+3  → 3 rot, darunter „Strg+Umschalt+3 ist
+                                  h3 — ist bullet"
+```

@@ -5059,7 +5059,7 @@ const Datenbank = (() => {
   /** Typauswahl mit Suche — dieselbe Liste wie beim Ändern eines Typs. */
   const typWahl = (anker: any, titel: string, danach: any) => {
     const r = anker.getBoundingClientRect();
-    const html = TYP_GRUPPEN.map(([name, ids]: any[]) =>
+    const html = typGruppen().map(([name, ids]: any[]) =>
       `<div class="grp">${name}</div>` +
       '<div class="typ-gitter">' +
         ids.filter((id: any) => TYPEN.some((x: any) => x.id === id)).map((id: any) => {
@@ -5129,11 +5129,40 @@ const Datenbank = (() => {
     ['Verbindungen', ['gdrive','figma','githubpr','zendesk']]
   ];
 
+  /* `title` steht mit Absicht in keiner Gruppe: eine Spalte lässt sich nicht
+     in den Titel verwandeln, es gibt genau einen. */
+  const NICHT_WAEHLBAR = ['title'];
+
+  /**
+   * Die Gruppen des Menüs — plus eine Auffanggruppe für alles, was im
+   * Register steht und oben nicht genannt ist.
+   *
+   * WARUM DIE AUFFANGGRUPPE NÖTIG IST. `TYP_GRUPPEN` ist eine
+   * Literalliste, `Register.eigenschaften` die Wahrheit. Heute decken sich
+   * beide — 34 hier, 35 dort, und der Unterschied ist `title`. Wer aber
+   * einen Typ ins Register einträgt und diese Liste vergisst, bekommt
+   * einen Typ, den es gibt und den niemand auswählen kann: kein Fehler,
+   * keine Meldung, nur ein Eintrag, der im Menü fehlt.
+   *
+   * Das Register hat für genau diesen Fall `inGruppe('Weiteres')`. Hier
+   * dasselbe, damit nichts hinten runterfällt. `test142` prüft, dass die
+   * Auffanggruppe im Normalfall LEER ist — sonst wäre sie eine Ausrede
+   * dafür, die Gliederung nicht zu pflegen.
+   */
+  const typGruppen = (): Array<[string, string[]]> => {
+    const genannt = new Set<string>(
+      TYP_GRUPPEN.flatMap(([, ids]: any[]) => ids as string[]).concat(NICHT_WAEHLBAR));
+    const rest = TYPEN.map((t: any) => t.id).filter((id: string) => !genannt.has(id));
+    return rest.length
+      ? [...(TYP_GRUPPEN as Array<[string, string[]]>), ['Weiteres', rest]]
+      : (TYP_GRUPPEN as Array<[string, string[]]>);
+  };
+
   const typMenue = (anker: any, coll: any, key: any) => {
     const def = coll.schema[key];
     const r = anker.getBoundingClientRect();
 
-    const html = TYP_GRUPPEN.map(([name, ids]: any[]) =>
+    const html = typGruppen().map(([name, ids]: any[]) =>
       `<div class="grp">${name}</div>` +
       '<div class="typ-gitter">' +
         ids.filter((id: any) => TYPEN.some((t: any) => t.id === id)).map((id: any) => {
@@ -8134,7 +8163,7 @@ const Datenbank = (() => {
            ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
            rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN, TAKTE,
            wiederkehrendeAutomationen, taktMarke, inZone, ZONEN, eigeneZone,
-           BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
+           typGruppen, BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
            pruefeWert, pruefeZeile, hatRegeln, regelnDialog, MUSTER_VORLAGEN,
            alsPivot, pivotRechne, PIVOT_ARTEN, formelEinruecken, teilausdruecke,
            ansichtKopie, ansichtVorlagen, gruppenListe, gruppeVon, ZEIT_STUFEN, ZS_STUFEN, kartenBild,

@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 112 Prüfläufe**
+**8. August 2026 · 113 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -617,14 +617,15 @@ STUECK, KLEIN und DATEI_MAX je zweimal             E67 — jetzt aus KONSTANTEN
 Die Serverzahl 100 MB stand blank in maschine.ts   E67 — benannt und geprüft
 Die Telefongrenze stand als 700, 760 und 768       E68 — jetzt eine
 Die Schublade begann bei 60 px, die Leiste bei 80  E68 — jetzt --hoben
+Ziffer→Blockart stand viermal                      E69 — jetzt aus `kurz`
+Das Typmenü hatte keine Auffanggruppe              E69 — jetzt schon
 ```
 
 **Offen, nach Schaden sortiert**
 
 ```txt
-anzeige  Der Ziffern-Blocktyp steht im Register als `kurz` und dreimal
-         als Zuordnung im Editor.
-anzeige  TYP_GRUPPEN in steuerung.ts baut Register.eigenschaften nach.
+anzeige  `Register.bloecke` hat `nimmZurueck`, `Register.eigenschaften`
+         nicht — eine Unwucht, die für Erweiterungen (L30) zählt.
 kosmetik ABLAGE_NAME ('notizen') steht in konstanten.ts und noch einmal
          als Zeichenkette in dienst/sw.ts:421.
 kosmetik EINFACHE_TYPEN steht in editor.ts zweimal, 23 Zeilen auseinander.

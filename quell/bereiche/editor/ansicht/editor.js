@@ -109,6 +109,14 @@ const Blocks = (() => {
         }
     };
     const typ = (id) => TYPEN.find((t) => t.id === id) || TYPEN[0];
+    /* Ziffer → Blockart, aus dem Register. Hier standen dieselben zehn Paare
+       DREIMAL als Literal: für Strg+Umschalt, für die Mac-Belegung Strg+Alt
+       und für die Mehrfachauswahl. Zusammen mit dem `kurz`-Feld im Register
+       waren es vier Kopien einer Zuordnung. */
+    const ZIFFER_TYP = () => (typeof Register !== 'undefined' && Register.bloecke?.zifferZuTyp)
+        ? Register.bloecke.zifferZuTyp()
+        : { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
+            '6': 'number', '7': 'toggle', '8': 'code', '9': 'page' };
     /* Die Blocktypen, in die man einen bestehenden Block umwandeln kann. */
     const UMWANDELBAR = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number', 'toggle', 'quote', 'callout',
         'code', 'equation', 'flashcard', 'page'];
@@ -1468,8 +1476,7 @@ const Blocks = (() => {
             };
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && zifferAus(e)) {
                 e.preventDefault();
-                const ziel = { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
-                    '6': 'number', '7': 'toggle', '8': 'code', '9': 'page' }[zifferAus(e) ?? ''];
+                const ziel = ZIFFER_TYP()[zifferAus(e) ?? ''];
                 if (ziel === 'page') {
                     const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
                     Store.trashBlock(b.id);
@@ -1505,8 +1512,7 @@ const Blocks = (() => {
             /* Strg+Alt+Ziffer: Blocktyp wechseln (Mac-Belegung) */
             if ((e.ctrlKey || e.metaKey) && e.altKey && /^[0-9]$/.test(e.key)) {
                 e.preventDefault();
-                const ziel = { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
-                    '6': 'number', '7': 'toggle', '8': 'code', '9': 'page' }[e.key];
+                const ziel = ZIFFER_TYP()[e.key];
                 if (ziel === 'page') {
                     const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
                     Store.trashBlock(b.id);
@@ -3061,8 +3067,10 @@ const Blocks = (() => {
         const ziffer = /^[0-9]$/.test(k) ? k : (/^Digit([0-9])$/.exec(e.code || '') || [])[1];
         if (strg && (e.shiftKey || e.altKey) && ziffer) {
             e.preventDefault();
-            const ziel = { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
-                '6': 'number', '7': 'toggle', '8': 'code' }[ziffer ?? ''];
+            /* Ohne die 9: eine Mehrfachauswahl lässt sich nicht in EINE Seite
+               verwandeln — dafür gibt es „Verschieben nach". */
+            const ohneSeite = { ...ZIFFER_TYP(), '9': '' };
+            const ziel = ohneSeite[ziffer ?? ''];
             if (ziel)
                 auswahlUmwandeln(ziel);
             return true;

@@ -10175,6 +10175,30 @@ Register.bloecke = (() => {
             raus[x.id] = x.stufe; });
         return raus;
     };
+    /**
+     * Ziffer → Blockart, abgeleitet aus dem `kurz`-Feld.
+     *
+     * Notion legt die zehn häufigsten Blockarten auf Strg+Umschalt+Ziffer.
+     * Welche Ziffer welche Art meint, stand bisher DREIMAL im Editor als
+     * Literal — einmal für Strg+Umschalt, einmal für die Mac-Belegung
+     * Strg+Alt, einmal für die Mehrfachauswahl. Und zusätzlich hier, als
+     * `kurz: 'Ctrl+Shift+1'`, wo die Kürzelübersicht es liest.
+     *
+     * Vier Kopien einer Zuordnung. Wer eine Art auf eine andere Ziffer legt,
+     * ändert die Übersicht und lässt drei Griffe stehen — oder umgekehrt,
+     * und dann zeigt die Übersicht etwas, das nichts tut.
+     *
+     * Hier wird sie aus `kurz` GELESEN, nicht danebengeschrieben.
+     */
+    const zifferZuTyp = () => {
+        const raus = {};
+        alle().forEach(x => {
+            const m = /^Ctrl\+Shift\+([0-9])$/.exec(String(x.kurz ?? ''));
+            if (m && m[1])
+                raus[m[1]] = x.id;
+        });
+        return raus;
+    };
     /** Welche Art passt zu diesem Markdown-Kürzel? */
     const zuMarkdown = (zeichen) => alle().find(x => {
         const m = x.md;
@@ -10188,7 +10212,8 @@ Register.bloecke = (() => {
         return alle().filter(x => (x.name || '').toLowerCase().includes(t) ||
             (x.cmd || []).some(c => c.toLowerCase().startsWith(t)));
     };
-    return { alle, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, suche, melde, nimmZurueck,
+    return { alle, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, zifferZuTyp,
+        suche, melde, nimmZurueck,
         vonAussen: () => [...vonAussen], anzahl: () => LISTE.length };
 })();
 
@@ -20377,6 +20402,14 @@ const Blocks = (() => {
         }
     };
     const typ = (id) => TYPEN.find((t) => t.id === id) || TYPEN[0];
+    /* Ziffer → Blockart, aus dem Register. Hier standen dieselben zehn Paare
+       DREIMAL als Literal: für Strg+Umschalt, für die Mac-Belegung Strg+Alt
+       und für die Mehrfachauswahl. Zusammen mit dem `kurz`-Feld im Register
+       waren es vier Kopien einer Zuordnung. */
+    const ZIFFER_TYP = () => (typeof Register !== 'undefined' && Register.bloecke?.zifferZuTyp)
+        ? Register.bloecke.zifferZuTyp()
+        : { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
+            '6': 'number', '7': 'toggle', '8': 'code', '9': 'page' };
     /* Die Blocktypen, in die man einen bestehenden Block umwandeln kann. */
     const UMWANDELBAR = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number', 'toggle', 'quote', 'callout',
         'code', 'equation', 'flashcard', 'page'];
@@ -21736,8 +21769,7 @@ const Blocks = (() => {
             };
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && zifferAus(e)) {
                 e.preventDefault();
-                const ziel = { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
-                    '6': 'number', '7': 'toggle', '8': 'code', '9': 'page' }[zifferAus(e) ?? ''];
+                const ziel = ZIFFER_TYP()[zifferAus(e) ?? ''];
                 if (ziel === 'page') {
                     const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
                     Store.trashBlock(b.id);
@@ -21773,8 +21805,7 @@ const Blocks = (() => {
             /* Strg+Alt+Ziffer: Blocktyp wechseln (Mac-Belegung) */
             if ((e.ctrlKey || e.metaKey) && e.altKey && /^[0-9]$/.test(e.key)) {
                 e.preventDefault();
-                const ziel = { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
-                    '6': 'number', '7': 'toggle', '8': 'code', '9': 'page' }[e.key];
+                const ziel = ZIFFER_TYP()[e.key];
                 if (ziel === 'page') {
                     const p = Store.addPage(App.aktuelleSeite(), { text: ct.textContent });
                     Store.trashBlock(b.id);
@@ -23329,8 +23360,10 @@ const Blocks = (() => {
         const ziffer = /^[0-9]$/.test(k) ? k : (/^Digit([0-9])$/.exec(e.code || '') || [])[1];
         if (strg && (e.shiftKey || e.altKey) && ziffer) {
             e.preventDefault();
-            const ziel = { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
-                '6': 'number', '7': 'toggle', '8': 'code' }[ziffer ?? ''];
+            /* Ohne die 9: eine Mehrfachauswahl lässt sich nicht in EINE Seite
+               verwandeln — dafür gibt es „Verschieben nach". */
+            const ohneSeite = { ...ZIFFER_TYP(), '9': '' };
+            const ziel = ohneSeite[ziffer ?? ''];
             if (ziel)
                 auswahlUmwandeln(ziel);
             return true;
@@ -29771,7 +29804,7 @@ const Datenbank = (() => {
     /** Typauswahl mit Suche — dieselbe Liste wie beim Ändern eines Typs. */
     const typWahl = (anker, titel, danach) => {
         const r = anker.getBoundingClientRect();
-        const html = TYP_GRUPPEN.map(([name, ids]) => `<div class="grp">${name}</div>` +
+        const html = typGruppen().map(([name, ids]) => `<div class="grp">${name}</div>` +
             '<div class="typ-gitter">' +
             ids.filter((id) => TYPEN.some((x) => x.id === id)).map((id) => {
                 const t = TYPEN.find((x) => x.id === id);
@@ -29830,10 +29863,36 @@ const Datenbank = (() => {
         ['Automatisch', ['created', 'edited', 'createdBy', 'editedBy']],
         ['Verbindungen', ['gdrive', 'figma', 'githubpr', 'zendesk']]
     ];
+    /* `title` steht mit Absicht in keiner Gruppe: eine Spalte lässt sich nicht
+       in den Titel verwandeln, es gibt genau einen. */
+    const NICHT_WAEHLBAR = ['title'];
+    /**
+     * Die Gruppen des Menüs — plus eine Auffanggruppe für alles, was im
+     * Register steht und oben nicht genannt ist.
+     *
+     * WARUM DIE AUFFANGGRUPPE NÖTIG IST. `TYP_GRUPPEN` ist eine
+     * Literalliste, `Register.eigenschaften` die Wahrheit. Heute decken sich
+     * beide — 34 hier, 35 dort, und der Unterschied ist `title`. Wer aber
+     * einen Typ ins Register einträgt und diese Liste vergisst, bekommt
+     * einen Typ, den es gibt und den niemand auswählen kann: kein Fehler,
+     * keine Meldung, nur ein Eintrag, der im Menü fehlt.
+     *
+     * Das Register hat für genau diesen Fall `inGruppe('Weiteres')`. Hier
+     * dasselbe, damit nichts hinten runterfällt. `test142` prüft, dass die
+     * Auffanggruppe im Normalfall LEER ist — sonst wäre sie eine Ausrede
+     * dafür, die Gliederung nicht zu pflegen.
+     */
+    const typGruppen = () => {
+        const genannt = new Set(TYP_GRUPPEN.flatMap(([, ids]) => ids).concat(NICHT_WAEHLBAR));
+        const rest = TYPEN.map((t) => t.id).filter((id) => !genannt.has(id));
+        return rest.length
+            ? [...TYP_GRUPPEN, ['Weiteres', rest]]
+            : TYP_GRUPPEN;
+    };
     const typMenue = (anker, coll, key) => {
         const def = coll.schema[key];
         const r = anker.getBoundingClientRect();
-        const html = TYP_GRUPPEN.map(([name, ids]) => `<div class="grp">${name}</div>` +
+        const html = typGruppen().map(([name, ids]) => `<div class="grp">${name}</div>` +
             '<div class="typ-gitter">' +
             ids.filter((id) => TYPEN.some((t) => t.id === id)).map((id) => {
                 const t = TYPEN.find((x) => x.id === id);
@@ -33082,7 +33141,7 @@ const Datenbank = (() => {
         ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
         rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN, TAKTE,
         wiederkehrendeAutomationen, taktMarke, inZone, ZONEN, eigeneZone,
-        BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
+        typGruppen, BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
         pruefeWert, pruefeZeile, hatRegeln, regelnDialog, MUSTER_VORLAGEN,
         alsPivot, pivotRechne, PIVOT_ARTEN, formelEinruecken, teilausdruecke,
         ansichtKopie, ansichtVorlagen, gruppenListe, gruppeVon, ZEIT_STUFEN, ZS_STUFEN, kartenBild,

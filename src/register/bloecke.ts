@@ -205,6 +205,30 @@ Register.bloecke = (() => {
     return raus;
   };
 
+  /**
+   * Ziffer → Blockart, abgeleitet aus dem `kurz`-Feld.
+   *
+   * Notion legt die zehn häufigsten Blockarten auf Strg+Umschalt+Ziffer.
+   * Welche Ziffer welche Art meint, stand bisher DREIMAL im Editor als
+   * Literal — einmal für Strg+Umschalt, einmal für die Mac-Belegung
+   * Strg+Alt, einmal für die Mehrfachauswahl. Und zusätzlich hier, als
+   * `kurz: 'Ctrl+Shift+1'`, wo die Kürzelübersicht es liest.
+   *
+   * Vier Kopien einer Zuordnung. Wer eine Art auf eine andere Ziffer legt,
+   * ändert die Übersicht und lässt drei Griffe stehen — oder umgekehrt,
+   * und dann zeigt die Übersicht etwas, das nichts tut.
+   *
+   * Hier wird sie aus `kurz` GELESEN, nicht danebengeschrieben.
+   */
+  const zifferZuTyp = (): Record<string, string> => {
+    const raus: Record<string, string> = {};
+    alle().forEach(x => {
+      const m = /^Ctrl\+Shift\+([0-9])$/.exec(String(x.kurz ?? ''));
+      if (m && m[1]) raus[m[1]] = x.id;
+    });
+    return raus;
+  };
+
   /** Welche Art passt zu diesem Markdown-Kürzel? */
   const zuMarkdown = (zeichen: unknown): Blockart | null => alle().find(x => {
     const m = x.md;
@@ -220,6 +244,7 @@ Register.bloecke = (() => {
       (x.cmd || []).some(c => c.toLowerCase().startsWith(t)));
   };
 
-  return { alle, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, suche, melde, nimmZurueck,
+  return { alle, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, zifferZuTyp,
+           suche, melde, nimmZurueck,
            vonAussen: () => [...vonAussen], anzahl: () => LISTE.length };
 })();
