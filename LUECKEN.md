@@ -41,6 +41,8 @@ L16  Probelauf für Automationen (E61) — der ▶-Knopf hiess „probeweise"
      und änderte echte Daten; dazu Fehler im Laufverlauf
 —    „Kopiert" muss stimmen (E62) — dreissig Stellen meldeten Erfolg,
      ohne hinzusehen, und eine löschte danach endgültig
+—    Fünf Prüfläufe reichten ihren Rumpf als Zeichenkette weiter und
+     starben etwa jedes dritte Mal an einem Socketfehler
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
