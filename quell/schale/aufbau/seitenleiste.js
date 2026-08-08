@@ -702,30 +702,31 @@ const Seitenleiste = (() => {
         const zu = abschnittZu(name);
         const folge = abschnitteGeordnet().map(x => x[0]);
         const i = id ? folge.indexOf(id) : -1;
+        /* Über `Menue.menu`, nicht von Hand: von Hand gebaut wurde dieses Menü
+           am Telefon NIE zum Blatt — es stand als Rechner-Kästchen mitten auf
+           dem kleinen Bildschirm, ohne Wischgeste, ohne Karten. Das Modul kann
+           das alles; man muss es nur benutzen (§8-Gedanke, auf Menüs gewandt). */
         const r = anker.getBoundingClientRect();
-        const m = document.createElement('div');
-        m.className = 'menu';
-        m.style.cssText = `position:fixed; left:${Math.min(r.left, innerWidth - 230)}px; ` +
-            `top:${r.bottom + 4}px; z-index:1400; min-width:210px`;
-        m.innerHTML =
-            `<button data-a="klappen"><span class="mi">${zu ? '⌄' : '›'}</span>` +
-                `${zu ? 'Aufklappen' : 'Zuklappen'}</button>` +
-                '<button data-a="alleZu"><span class="mi">⌃</span>Alle Abschnitte zuklappen</button>' +
-                '<button data-a="alleAuf"><span class="mi">⌄</span>Alle aufklappen</button>' +
-                (id ? '<hr>' +
-                    `<button data-a="hoch"${i <= 0 ? ' disabled' : ''}><span class="mi">↑</span>Weiter nach oben</button>` +
-                    `<button data-a="runter"${i < 0 || i >= folge.length - 1 ? ' disabled' : ''}>` +
-                    '<span class="mi">↓</span>Weiter nach unten</button>' +
-                    '<button data-a="aus"><span class="mi">🚫</span>Diesen Abschnitt ausblenden</button>' : '') +
-                '<hr>' +
-                '<button data-a="anpassen"><span class="mi">⚙</span>Abschnitte anpassen</button>';
-        document.body.appendChild(m);
+        const m = Menue.menu(`<button data-a="klappen"><span class="mi">${zu ? '⌄' : '›'}</span>` +
+            `${zu ? 'Aufklappen' : 'Zuklappen'}</button>` +
+            '<button data-a="alleZu"><span class="mi">⌃</span>Alle Abschnitte zuklappen</button>' +
+            '<button data-a="alleAuf"><span class="mi">⌄</span>Alle aufklappen</button>' +
+            (id ? '<hr>' +
+                `<button data-a="hoch"${i <= 0 ? ' disabled' : ''}><span class="mi">↑</span>Weiter nach oben</button>` +
+                `<button data-a="runter"${i < 0 || i >= folge.length - 1 ? ' disabled' : ''}>` +
+                '<span class="mi">↓</span>Weiter nach unten</button>' +
+                '<button data-a="aus"><span class="mi">🚫</span>Diesen Abschnitt ausblenden</button>' : '') +
+            '<hr>' +
+            '<button data-a="anpassen"><span class="mi">⚙</span>Abschnitte anpassen</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4, { titel: name });
+        m.style.minWidth = '210px';
         m.addEventListener('click', (e) => {
             const b = elVon(e)?.closest('[data-a]');
             if (!b || b.disabled)
                 return;
             const a = b.dataset.a;
-            m.remove();
+            /* Beides weg — am Telefon steht hinter dem Blatt der dunkle Grund,
+               und ein Grund ohne Blatt wäre eine unsichtbare Wand vor der App. */
+            document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
             if (a === 'klappen')
                 abschnittKlappen(name);
             if (a === 'alleZu') {
@@ -751,7 +752,10 @@ const Seitenleiste = (() => {
             if (a === 'anpassen')
                 abschnitteAnpassen();
         });
-        setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }), 0);
+        /* Das Schliessen von aussen übernimmt das Modul: am Rechner der
+           mousedown daneben, am Telefon der Grund und die Wischgeste. Der
+           once-Klick-Schliesser, der hier stand, hätte am Telefon das Blatt
+           entfernt und den Grund stehen lassen — eine unsichtbare Wand. */
     };
     const abschnitt = (name, beiPlus, beiZahnrad) => {
         const d = document.createElement('div');
@@ -876,7 +880,8 @@ const Seitenleiste = (() => {
         abschnittAn,
         abschnittSchalten,
         abschnitteAnpassen,
-        abschnitteGeordnet
+        abschnitteGeordnet,
+        abschnittMenue
     };
 })();
 window.Seitenleiste = Seitenleiste;

@@ -664,12 +664,12 @@ const Seitenleiste = (() => {
     const folge = abschnitteGeordnet().map(x => x[0]);
     const i = id ? folge.indexOf(id) : -1;
 
+    /* Über `Menue.menu`, nicht von Hand: von Hand gebaut wurde dieses Menü
+       am Telefon NIE zum Blatt — es stand als Rechner-Kästchen mitten auf
+       dem kleinen Bildschirm, ohne Wischgeste, ohne Karten. Das Modul kann
+       das alles; man muss es nur benutzen (§8-Gedanke, auf Menüs gewandt). */
     const r = anker.getBoundingClientRect();
-    const m = document.createElement('div');
-    m.className = 'menu';
-    m.style.cssText = `position:fixed; left:${Math.min(r.left, innerWidth - 230)}px; ` +
-                      `top:${r.bottom + 4}px; z-index:1400; min-width:210px`;
-    m.innerHTML =
+    const m = Menue.menu(
       `<button data-a="klappen"><span class="mi">${zu ? '⌄' : '›'}</span>` +
         `${zu ? 'Aufklappen' : 'Zuklappen'}</button>` +
       '<button data-a="alleZu"><span class="mi">⌃</span>Alle Abschnitte zuklappen</button>' +
@@ -680,14 +680,17 @@ const Seitenleiste = (() => {
           '<span class="mi">↓</span>Weiter nach unten</button>' +
         '<button data-a="aus"><span class="mi">🚫</span>Diesen Abschnitt ausblenden</button>' : '') +
       '<hr>' +
-      '<button data-a="anpassen"><span class="mi">⚙</span>Abschnitte anpassen</button>';
-    document.body.appendChild(m);
+      '<button data-a="anpassen"><span class="mi">⚙</span>Abschnitte anpassen</button>',
+      Math.min(r.left, innerWidth - 230), r.bottom + 4, { titel: name });
+    m.style.minWidth = '210px';
 
     m.addEventListener('click', (e) => {
       const b = elVon(e)?.closest<HTMLElement>('[data-a]');
       if (!b || (b as HTMLButtonElement).disabled) return;
       const a = b.dataset.a;
-      m.remove();
+      /* Beides weg — am Telefon steht hinter dem Blatt der dunkle Grund,
+         und ein Grund ohne Blatt wäre eine unsichtbare Wand vor der App. */
+      document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
       if (a === 'klappen') abschnittKlappen(name);
       if (a === 'alleZu')  { Store.setMeta('sidebarZu', ABSCHNITTE.map(x => x[1])); zeichneBaum(); }
       if (a === 'alleAuf') { Store.setMeta('sidebarZu', []); zeichneBaum(); }
@@ -699,8 +702,10 @@ const Seitenleiste = (() => {
       if (a === 'aus')     { abschnittSchalten(id); UI.toast(name + ' ausgeblendet'); }
       if (a === 'anpassen') abschnitteAnpassen();
     });
-    setTimeout(() => document.addEventListener('click',
-      () => m.remove(), { once: true }), 0);
+    /* Das Schliessen von aussen übernimmt das Modul: am Rechner der
+       mousedown daneben, am Telefon der Grund und die Wischgeste. Der
+       once-Klick-Schliesser, der hier stand, hätte am Telefon das Blatt
+       entfernt und den Grund stehen lassen — eine unsichtbare Wand. */
   };
 
   const abschnitt = (name: string, beiPlus?: any, beiZahnrad?: any) => {
@@ -832,7 +837,8 @@ const Seitenleiste = (() => {
     abschnittAn,
     abschnittSchalten,
     abschnitteAnpassen,
-    abschnitteGeordnet
+    abschnitteGeordnet,
+    abschnittMenue
   };
 })();
 

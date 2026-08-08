@@ -2915,26 +2915,23 @@ const Blocks = (() => {
     };
     const auswahlTypMenue = (anker) => {
         const r = anker.getBoundingClientRect();
-        const m = document.createElement('div');
-        m.className = 'menu';
-        m.style.cssText = `position:fixed; left:${Math.max(8, r.left)}px; ` +
-            `bottom:${window.innerHeight - r.top + 6}px; z-index:1400`;
+        /* Über `Menue.menu` statt von Hand: von Hand wurde dieses Menü am
+           Telefon nie zum Blatt. Am Rechner stand es ÜBER dem Anker (die
+           Auswahl-Leiste sitzt unten) — das Modul klemmt die Lage selbst ins
+           Bild, also reicht ein Wunschpunkt oberhalb. */
         /* `EINFACHE_TYPEN`, nicht dieselbe Liste zum zweiten Mal. Sie stand
            dreiundzwanzig Zeilen weiter oben wörtlich genauso — und dieses Menü
            darf genau die Typen anbieten, die `auswahlUmwandeln` auch direkt
            setzen kann. Zwei Listen hiessen: ein Knopf, der nichts tut, oder ein
            Typ, den man nicht auswählen kann. */
-        m.innerHTML = TYPEN.filter((t) => EINFACHE_TYPEN.includes(t.id))
-            .map((t) => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`).join('');
-        document.body.appendChild(m);
-        const weg = () => m.remove();
+        const m = Menue.menu(TYPEN.filter((t) => EINFACHE_TYPEN.includes(t.id))
+            .map((t) => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`).join(''), Math.max(8, r.left), Math.max(8, r.top - 8 - 44 * EINFACHE_TYPEN.length), { titel: 'Umwandeln in' });
         m.addEventListener('click', e => {
             const b2 = elVon(e)?.closest('[data-t]');
             if (b2)
                 auswahlUmwandeln(b2.dataset.t);
-            weg();
+            document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
         });
-        setTimeout(() => document.addEventListener('click', weg, { once: true }), 0);
     };
     const auswahlEinruecken = (raus) => {
         auswahlBloecke().forEach(b => raus ? ausruecken(b) : einruecken(b));
@@ -3145,7 +3142,7 @@ const Blocks = (() => {
         auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
         auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
         auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,
-        auswahlAlsText, auswahlTaste, sichtbareBloecke,
+        auswahlAlsText, auswahlTaste, sichtbareBloecke, auswahlTypMenue,
         /* Markdown in beide Richtungen */
         mdLesen, mdEinsetzen, mdIstStruktur, sprachName,
         auswahl: () => ausgewaehlt.slice()
