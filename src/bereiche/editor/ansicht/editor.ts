@@ -1970,7 +1970,14 @@ const Blocks = (() => {
         body: JSON.stringify({ quelle: 'Redion', knopf: block.text || '',
                                seite: App.aktuelleSeite(), wann: new Date().toISOString(),
                                variablen: knopfVars }) })
-        .then(() => UI.toast('An den Webhook geschickt'))
+        /* `KI.holen` wirft bei 401/403/404 nicht, sondern gibt die Antwort
+           zurück — sechs andere Aufrufer verlassen sich darauf. Wer hier
+           nur `.then(… geschickt)` schreibt, meldet also auch bei
+           „401 Unauthorized" Erfolg. */
+        .then(r => r.ok
+          ? UI.toast('An den Webhook geschickt')
+          : UI.banner('Webhook antwortet mit ' + r.status +
+                      (KI.FEHLERTEXT[r.status] ? ' — ' + KI.FEHLERTEXT[r.status] : ''), 'warn'))
         .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message, 'warn'));
       return;
     }

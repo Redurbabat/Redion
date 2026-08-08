@@ -2343,15 +2343,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 @media(max-width:760px){
   .nur-handy{ display:inline-flex; align-items:center; justify-content:center }
   #handy-leiste button{ position:relative }
-  /* Die Schublade endet über der Leiste, statt sie zuzudecken. Sonst
-     kommt man von „Chats" nicht mehr zu „Termine" — man sähe die
-     Reiter, könnte sie aber nicht treffen. Derselbe Grund gilt für den
-     Schatten dahinter. */
-  body.side-offen #sidebar{ height:calc(100% - 56px - env(safe-area-inset-bottom)); }
-  body.side-offen #side-schatten{ bottom:calc(56px + env(safe-area-inset-bottom)); inset-block-end:auto;
-                                  top:0; left:0; right:0;
-                                  height:calc(100% - 56px - env(safe-area-inset-bottom)); }
-  #handy-leiste{ z-index:620; }
+  /* Hier stand: „Die Schublade endet über der Leiste, statt sie
+     zuzudecken" — mit `height:calc(100% - 56px - …)`. Nur: die untere
+     56-px-Leiste (#handy-leiste) gibt es nicht mehr, kein Skript erzeugt
+     sie. Und weil `top: var(--hoben)` (80px) aus der Grundregel stehen
+     blieb, machte die Formel die Schublade nicht kürzer, sondern schob
+     ihre Unterkante 24 px UNTER den Bildschirmrand — samt der Knöpfe am
+     Fuss. Ohne die Regel greift die Grundregel, und die Unterkante liegt
+     exakt auf dem Rand. Kommt je wieder eine echte untere Leiste, lautet
+     die richtige Formel:
+     height:calc(100% - var(--hoben) - 56px - env(safe-area-inset-bottom)) */
 }
 
 /* ── Protokoll ────────────────────────────────────────────────────────────

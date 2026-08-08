@@ -4675,3 +4675,111 @@ Gegenprobe genau dort.
 Rückfallwert, Literal im Ergebnis, Messung nach einer Endlosschleife —
 das sind fünf Schreibweisen desselben Fehlers: eine Behauptung, die unter
 keiner Bedingung falsch werden kann, ist keine.
+
+---
+
+## E76 · Erfolg heisst: es ist passiert
+
+**Datum** 8. August 2026 · **Betrifft** sieben Stellen aus dem Durchgang
+„sagt eines, tut ein anderes" (A1–A6, D4, D7, D10) · **Prüfläufe**
+`test146` (neu), `test58` (erweitert)
+
+**Der gemeinsame Fehler**
+
+Sieben Stellen meldeten Erfolg, ohne hinzusehen. Nicht dieselbe Zeile,
+aber dasselbe Muster: die Meldung entstand aus dem **Absenden**, nicht aus
+dem **Ankommen**.
+
+**Die Stellen, und was jetzt gilt**
+
+**A1 — Webhook meldet „geschickt" bei 401.** `KI.holen` wirft bei
+nicht-wiederholbaren Statuscodes bewusst nicht, sondern gibt die Antwort
+zurück; sechs Aufrufer verlassen sich darauf. Die zwei Webhook-Stellen
+(Knopf im Editor, Automation in der Datenbank) schrieben trotzdem nur
+`.then(… geschickt)`. Jetzt prüfen beide `r.ok` und nennen sonst Status
+samt `KI.FEHLERTEXT`. Der Vertrag von `holen` blieb unangetastet.
+
+**A2 — Der Laufverlauf zeigte ✓ für einen Webhook, der nie ankam.** Der
+Webhook läuft neben dem Lauf her; `notieren()` schreibt den Verlauf,
+bevor die Antwort da ist. Der Griff: `notieren` legt das `laufNotiz`-Objekt
+**als Referenz** in den Verlauf — ein später Fehler kann den Eintrag also
+noch auf ⚠ drehen und `verlaufSichern` schreibt ihn erneut. Dasselbe für
+`ki-fuellen`, dessen Ablehnung vorher unbehandelt verpuffte. Grenze des
+kleinsten Eingriffs: ein bereits GEÖFFNETES Verlaufsmenü zeigt den alten
+Stand, bis man es neu öffnet.
+
+**A3 — „15 Einträge gefüllt", auch wenn nichts ankam.** Der KI-Agent
+zählte angefasste Zeilen. `kiFeldFuellen` sagt jetzt zurück, ob wirklich
+etwas Brauchbares in der Zelle steht — per **Nachlesen** aus dem Speicher,
+denn `setProp` kehrt bei fehlendem Spaltenrecht still zurück, und die
+Rechteprüfung anzufassen war tabu. Der Agent zählt damit ehrlich
+(„3 von 15 gefüllt, 2 mit Fehler, 10 ohne Antwort oder ohne
+Schreibrecht"). Und eine Zelle bleibt nicht mehr ewig auf „… denkt nach"
+stehen, wenn die KI wirft — sie sagt „(Fehler)".
+
+**A4 — „Gesichert: foto.jpg" während der Prüfsumme.** Der einzige
+Fortschritts-Rückruf des Packers feuert in der CRC-Schleife; das Archiv
+ist da noch nicht gebaut, geschweige denn heruntergeladen. Der Toast sagt
+jetzt „Geprüft: … — wird verpackt". Das Wort „Gesichert" gehört dem
+Abschluss.
+
+**A5 — „Der ganze Bestand", ohne die Anhänge.** Die verschlüsselte
+Sicherung ruft `exportAll()` ohne Anhänge — und ihr Manifest gibt das
+sogar zu (`fehlt: ['dateien','stuecke']`), nur AES-verschlüsselt, wo es
+niemand liest, bevor er es braucht. `exportAll(true)` wäre KEINE Lösung
+gewesen: die Blobs kämen trotzdem nicht mit, das Manifest löge dann erst
+recht. Also sagt es jetzt der Dialog („Dateianhänge sind nicht dabei —
+vollständig sichert nur .redion"), und der Toast sagt es noch einmal,
+wenn es Anhänge gibt.
+
+**A6 — Die Schublade endete 24 px unter dem Bildschirmrand.** Eine Regel
+rechnete `100% − 56px` für eine untere Leiste (`#handy-leiste`), die kein
+Skript mehr erzeugt — und weil `top: 80px` stehen blieb, wurde die
+Schublade nicht kürzer, sondern ragte unten hinaus, samt der Knöpfe am
+Fuss. Die Regel ist ersatzlos weg; die Grundregel setzt die Unterkante
+exakt auf den Rand. Die Gegenprobe mass vorher `bottom: 868` bei 844 hoch.
+
+**D4 — `setMeta` verschluckte Schreibfehler.** `.catch(() => {})` machte
+aus „liess sich nicht speichern" ein „gespeichert". Am härtesten träfe
+das `wolkeSalz`. Jetzt: `Reporter.warn` plus EIN Toast je Sitzung.
+Bewusst warn, nicht error — `Reporter.error` ruft die Pflege, die Pflege
+schreibt ihre Fehlerliste per `setMeta`, und bei einem anhaltenden
+Speicherfehler wäre das eine endlose Schleife. Signatur und alle ~170
+Aufrufer blieben unverändert.
+
+**D7 — Der Sichern-Knopf zeigte „✓ Gesichert" nach dem Fehlschlag.**
+`sicherungSpeichern` fängt seine Fehler selbst (richtig so — der Alert
+„Es wurde nichts geschrieben" gehört dazu) und kehrte dann regulär
+zurück; `.then(() => fertig(true))` kann das nicht unterscheiden. Jetzt
+gibt sie `Promise<boolean>` zurück (§52.11), und der Knopf wertet
+`gut !== false` — die tolerante Form, damit ein Prüf-Stellvertreter, der
+`undefined` liefert, nicht rot wird.
+
+**D10 — „Archiviert", und bei Gmail lag die Mail noch im Eingang.** Die
+zwei Tasten, die eine Zeile VERSCHWINDEN lassen (E, #), gingen lokal vor
+und schickten den Gmail-Aufruf durch `versuche()`, das jede Ablehnung
+schluckt. Jetzt: erst der Server, dann lokal; lehnt Gmail ab, bleibt die
+Zeile liegen und der Toast nennt den Grund — nichts muss zurückgerollt
+werden. Eine .eml-Mail (erkennbar am leeren `link`) bekommt gar keinen
+Gmail-Aufruf mehr, sondern die ehrliche Auskunft „nur hier". Die
+nicht-zerstörenden Tasten (gelesen/wichtig) behalten `versuche()` —
+dort verschwindet nichts.
+
+**Status**
+
+`test146`, 22 Punkte · `test58` +1 Punkt (Webhook-401 → ⚠ im Verlauf).
+Gegenprobe im gebauten Bestand, alle sechs Verhaltenspunkte kippten:
+
+```txt
+Rückgabewerte weg (D7)        → 2 rot (undefined statt true/false)
+Zählung weg (A3)              → 2 rot
+CSS-Regel zurück (A6)         → 1 rot: bottom 868 bei 844 hoch
+setMeta-catch leer (D4)       → 1 rot
+webhookFehler stumm (A2)      → test58 rot
+```
+
+**Offen aus diesem Durchgang** — D11 (KI „Zurückgenommen" nimmt nur
+Protokolliertes zurück), D12 (Notion-Import lässt Anhänge stumm fallen),
+D14 (`flush` meldet Erfolg vor der Platte), K1–K5 (Prüflauf-Kosmetik).
+Die Prüfagenten dafür fielen dem Sitzungslimit zum Opfer; die Befunde
+stehen im Bericht und sind nicht widerlegt.

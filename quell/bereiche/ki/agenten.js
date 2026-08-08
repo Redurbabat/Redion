@@ -153,9 +153,23 @@ const Agent = (() => {
                 c.schema[k].auftrag = a.auftrag || c.schema[k].auftrag;
                 Store.updateCollection(c.id, { schema: c.schema });
                 const zeilen = Store.rowsOf(c.id).slice(0, 15);
-                for (const r of zeilen)
-                    await Datenbank.kiFeldFuellenFuer(r, k, c);
-                return zeilen.length + ' Einträge in „' + a.spalte + '" gefüllt.';
+                /* Gezählt wird, was WIRKLICH gefüllt wurde — nicht, was angefasst
+                   wurde. „15 Einträge gefüllt" stand hier auch dann, wenn jede
+                   Zeile am Spaltenrecht abprallte oder die KI nichts gab. */
+                let gefuellt = 0, kaputt = 0;
+                for (const r of zeilen) {
+                    try {
+                        if (await Datenbank.kiFeldFuellenFuer(r, k, c))
+                            gefuellt++;
+                    }
+                    catch {
+                        kaputt++;
+                    }
+                }
+                const rest = zeilen.length - gefuellt - kaputt;
+                return gefuellt + ' von ' + zeilen.length + ' Einträgen in „' + a.spalte + '" gefüllt' +
+                    (kaputt ? ', ' + kaputt + ' mit Fehler' : '') +
+                    (rest ? ', ' + rest + ' ohne Antwort oder ohne Schreibrecht' : '') + '.';
             }
         },
         nachschlagen: {

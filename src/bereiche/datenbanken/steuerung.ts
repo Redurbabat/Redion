@@ -1175,7 +1175,16 @@ const Datenbank = (() => {
   };
 
   /* --- KI-Feld: Notions „AI Autofill", nur lokal --------------------------- */
-  const kiFeldFuellen = async (row: any, key: any, coll: any) => {
+  /**
+   * Gibt zurück, ob wirklich etwas Brauchbares in der Zelle steht.
+   *
+   * `false` heisst: die KI gab nichts, sie warf, oder das Schreiben prallte
+   * am Spaltenrecht ab (`setProp` kehrt dann still zurück — das wird hier
+   * durch Nachlesen erkannt, ohne die Rechteprüfung anzufassen). Die
+   * Aufrufer im Automationslauf ignorieren den Wert; der KI-Agent zählt
+   * damit, was er wirklich gefüllt hat, statt was er angefasst hat.
+   */
+  const kiFeldFuellen = async (row: any, key: any, coll: any): Promise<boolean> => {
     const def = coll.schema[key];
     const auftrag = def.auftrag || (KI_AUFTRAG as Record<string, string>)[def.type] ||
       'Fasse diesen Eintrag in einem kurzen Satz zusammen.';
@@ -1188,12 +1197,25 @@ const Datenbank = (() => {
     Store.setProp(row.id, key, '… denkt nach');
     App.zeichneSeite();
 
-    const antwort = await KI.frageKurz(
-      auftrag + '\n\nDer Eintrag:\n' + zeileAlsText +
-      '\n\nAntworte knapp, ohne Einleitung, in höchstens 20 Wörtern.');
+    let antwort = '';
+    try {
+      antwort = await KI.frageKurz(
+        auftrag + '\n\nDer Eintrag:\n' + zeileAlsText +
+        '\n\nAntworte knapp, ohne Einleitung, in höchstens 20 Wörtern.');
+    } catch (err) {
+      /* Die Zelle darf nicht ewig „… denkt nach" zeigen — das sieht aus
+         wie Arbeit und ist keine. Erst aufräumen, dann weiterwerfen. */
+      Store.setProp(row.id, key, '(Fehler)');
+      App.zeichneSeite();
+      throw err;
+    }
 
-    Store.setProp(row.id, key, (antwort || '').trim() || '(keine Antwort)');
+    const final = (antwort || '').trim();
+    Store.setProp(row.id, key, final || '(keine Antwort)');
     App.zeichneSeite();
+    /* Nachlesen statt glauben: prallte das Schreiben am Spaltenrecht ab,
+       steht der Wert jetzt NICHT da — und genau das ist die Antwort. */
+    return !!final && ((Store.getBlock(row.id) || {}).props || {})[key] === final;
   };
 
   /**
@@ -7025,7 +7047,16 @@ const Datenbank = (() => {
             Store.setProp(row.id, d.key, Formula.zahl(wert(row, d.key, coll)) + 1);
           }
           if (d.art === 'ki-fuellen' && d.key) {
-            kiFeldFuellen(row, d.key, coll);
+            /* Läuft neben dem Lauf her, wie der Webhook: der Verlauf ist
+               längst geschrieben, wenn die KI scheitert. Ohne den `.catch`
+               war das eine unbehandelte Ablehnung, die Zelle blieb auf
+               „… denkt nach", und im Verlauf stand ✓. */
+            kiFeldFuellen(row, d.key, coll).catch((e: unknown) => {
+              const text = e instanceof Error ? e.message : String(e);
+              laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                                 'KI-Feld: ' + text;
+              if (!ctx.probe) { verlaufSichern(coll); UI.toast('⚠ KI-Feld ging nicht: ' + text); }
+            });
           }
           if (d.art === 'erinnerung') {
             const zeit = new Date();
@@ -7114,14 +7145,35 @@ const Datenbank = (() => {
             if (wert2 && art === 'basic')   kopf.Authorization = 'Basic ' + btoa(wert2);
             if (wert2 && art === 'kopf')    kopf[Store.getMeta('webhookAuthName', 'X-Api-Key')] = wert2;
             if (wert2 && art === 'geheim')  paket.geheimnis = wert2;
+            /* Der Webhook läuft neben dem Lauf her — `eineAktion` kehrt
+               zurück, bevor die Antwort da ist, und `notieren()` schreibt
+               den Verlauf mit ✓. Ein Fehler, der DANACH eintrifft, muss den
+               Eintrag noch auf ⚠ drehen: `notieren` legt `laufNotiz` als
+               Objekt in den Verlauf, die Referenz lebt also weiter, und
+               `verlaufSichern` schreibt den Stand erneut. Ohne das stand im
+               Verlauf ein Haken, obwohl nie etwas ankam. */
+            const webhookFehler = (text: string): void => {
+              laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                                 'Webhook: ' + text;
+              if (!ctx.probe) verlaufSichern(coll);
+            };
             KI.holen(url, { method: 'POST', headers: kopf,
                             body: JSON.stringify(paket) },
                      { versuche: 3, beiWartezeit: (sek: number, nr: number) =>
                          UI.toast('Webhook meldet sich nicht — Versuch ' + (nr + 1) + ' in ' + sek + ' s') })
-              .then(() => UI.toast('An den Webhook geschickt'))
-              .catch((err: unknown) => UI.banner('Webhook nicht erreicht: ' +
-                                      (err instanceof Error ? err.message : String(err)) +
-                                      ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
+              .then((r: any) => {
+                if (r.ok) { UI.toast('An den Webhook geschickt'); return; }
+                const text = 'antwortet mit ' + r.status +
+                             (KI.FEHLERTEXT[r.status] ? ' — ' + KI.FEHLERTEXT[r.status] : '');
+                webhookFehler(text);
+                UI.banner('Webhook ' + text, 'warn');
+              })
+              .catch((err: unknown) => {
+                const text = (err instanceof Error ? err.message : String(err));
+                webhookFehler(text);
+                UI.banner('Webhook nicht erreicht: ' + text +
+                          ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn');
+              });
           }
           laufNotiz.aktionen.push((AKTIONEN.find((x: any) => x[0] === d.art) || [])[1] || d.art);
         };

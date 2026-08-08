@@ -1502,7 +1502,16 @@ const App = (() => {
     Store.setMeta('sicherung:art', art);
   };
 
-  const sicherungSpeichern = async () => {
+  /**
+   * Gibt zurück, ob die Sicherung wirklich zustande kam.
+   *
+   * Der `catch` unten fängt den Fehler und kehrt regulär zurück — richtig
+   * für die Aufrufer, die nur einen Knopf drücken. Aber der Sichern-Knopf
+   * in den Datenbank-Ansichten zeigte danach „✓ Gesichert", weil `.then`
+   * eine reguläre Rückkehr nicht von einem Erfolg unterscheiden kann.
+   * Deshalb: `true` heisst gesichert, `false` heisst nicht.
+   */
+  const sicherungSpeichern = async (): Promise<boolean> => {
     /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
        Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
     const stand = await Store.exportVorbereiten();
@@ -1516,7 +1525,7 @@ const App = (() => {
       l.click();
       sicherungGemerkt('json');
       UI.toast('Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
-      return;
+      return true;
     }
 
     UI.toast(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
@@ -1553,20 +1562,26 @@ const App = (() => {
       eintraege.push({ name: 'dateien.json', inhalt: JSON.stringify({
         version: 1, saetze, zuordnung: karte }, null, 2) });
 
+      /* „Gesichert: foto.jpg" log hier: der Fortschritt kommt aus der
+         Prüfsummen-Schleife, das Archiv ist da noch gar nicht gebaut,
+         geschweige denn heruntergeladen. Das Wort „Gesichert" gehört dem
+         Abschluss-Toast unten — hier ist es nur ein Lebenszeichen. */
       const blob = await Austausch.zipSchreiben(eintraege,
-        (name: string, anteil: any) => { if (anteil >= 1) UI.toast('Gesichert: ' + name.replace('dateien/', '')); });
+        (name: string, anteil: any) => { if (anteil >= 1) UI.toast('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
       const l = document.createElement('a');
       l.href = URL.createObjectURL(blob);
       l.download = 'redion-sicherung-' + heute + '.redion';
       l.click();
       sicherungGemerkt('redion');
       UI.toast('Sicherung gespeichert — mit ' + (eintraege.length - 2) + ' Anhang/Anhängen');
+      return true;
     } catch (err) {
       /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
          hat, ist schlechter dran als jemand, der es weiss. */
       alert('Die Sicherung kam nicht zustande: ' +
             (err instanceof Error ? err.message : String(err)) +
             '\n\nEs wurde nichts geschrieben.');
+      return false;
     }
   };
 

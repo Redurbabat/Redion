@@ -867,7 +867,33 @@ const Store = (() => {
   /* ========================================================================
    * EINSTELLUNGEN
    * ======================================================================*/
-  const setMeta = (k: any, v: any): void => { cache.meta[k] = v; put('meta', { k, v }).catch(() => {}); };
+  /* Nur einmal je Sitzung meckern — wer bei jedem der ~170 setMeta-Aufrufe
+     einen Toast bekäme, schaltete die Meldung ab, statt das Problem zu
+     lösen. Der erste Fehlschlag ist die Nachricht; die weiteren sind
+     derselbe Fehlschlag. */
+  let metaFehlerGemeldet = false;
+
+  const setMeta = (k: any, v: any): void => {
+    cache.meta[k] = v;
+    /* Der leere `.catch(() => {})`, der hier stand, machte aus „liess sich
+       nicht speichern" ein „gespeichert". Am härtesten traf das
+       `wolkeSalz`: einmal gewürfelt, nie geschrieben — und nach dem
+       Neuladen würfelt der Abgleich neu und kann nichts mehr entziffern,
+       was mit dem alten Salz hochging.
+
+       WICHTIG: `Reporter.warn`, nicht `Reporter.error` — error ruft die
+       Pflege, die Pflege schreibt ihre Fehlerliste per setMeta, und bei
+       einem anhaltenden Speicherfehler wäre das eine endlose Schleife. */
+    put('meta', { k, v }).catch((err: unknown) => {
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('ablage', 'Die Einstellung „' + k + '" liess sich nicht speichern', err);
+      if (!metaFehlerGemeldet) {
+        metaFehlerGemeldet = true;
+        if (typeof UI !== 'undefined' && UI.toast)
+          UI.toast('Eine Einstellung liess sich nicht speichern — sie geht beim Neuladen verloren.');
+      }
+    });
+  };
   /* `fallback` ist alles Mögliche — eine leere Liste, 'Ich', `true`. Ohne
      Anmerkung liest TypeScript aus `= null` „immer null" und meldet jeden
      der rund neunzig Aufrufe im Rest der App. */

@@ -14,10 +14,17 @@
  *
  * Zwei Dinge stecken drin:
  *
- *   1. VERSCHLÜSSELTE SICHERUNG — der vollständige Bestand als eine Datei,
- *      mit AES-GCM 256 verschlüsselt. Der Schlüssel entsteht aus dem Passwort
- *      über PBKDF2 mit 310 000 Runden und einem zufälligen Salz. Ohne das
- *      Passwort ist die Datei ein Haufen Zufall.
+ *   1. VERSCHLÜSSELTE SICHERUNG — der Bestand OHNE Dateianhänge als eine
+ *      Datei, mit AES-GCM 256 verschlüsselt. Der Schlüssel entsteht aus dem
+ *      Passwort über PBKDF2 mit 310 000 Runden und einem zufälligen Salz.
+ *      Ohne das Passwort ist die Datei ein Haufen Zufall.
+ *
+ *      „Der vollständige Bestand" stand hier — und stimmte nicht:
+ *      `bestandSammeln` ruft `exportAll()` ohne Anhänge, und das Manifest
+ *      in der Datei sagt es sogar (`fehlt: ['dateien','stuecke']`), nur
+ *      eben AES-verschlüsselt, wo es niemand liest. Vollständig mit
+ *      Anhängen sichert das `.redion`-Paket; `exportAll(true)` hier wäre
+ *      keine Lösung, denn die Blobs kämen trotzdem nicht mit.
  *
  *   2. SPERRE — beim Öffnen erst das Passwort. Sie schützt vor dem Blick über
  *      die Schulter, nicht vor jemandem mit Zugriff auf die Festplatte; das
@@ -168,12 +175,17 @@ const Krypto = (() => {
      * vor einem Jahr angelegt hat, ist kein Altlastenproblem — sie ist der
      * Zweck der Übung.
      */
+    /* Was der letzten gesammelten Sicherung fehlte — für den Toast danach.
+       Das Manifest in der Datei sagt es auch, aber verschlüsselt liest es
+       niemand, bevor er es braucht. */
+    let zuletztGefehlt = [];
     const bestandSammeln = async () => {
         /* Holt den Verlauf aus der Ablage; er liegt bewusst nicht im
            Zwischenspeicher. Ohne diesen Aufruf wäre `versions` leer — still. */
         if (Store.exportVorbereiten)
             await Store.exportVorbereiten();
         const d = JSON.parse(Store.exportAll());
+        zuletztGefehlt = Array.isArray(d.fehlt) ? d.fehlt : [];
         return JSON.stringify(Object.assign({ art: 'redion-sicherung', fassung: 1, wann: d.exportiert }, d), null, 2);
     };
     const sicherungSchreiben = async (passwort) => {
@@ -256,8 +268,11 @@ const Krypto = (() => {
                 '<div style="padding:15px 18px; display:flex; flex-direction:column; gap:14px">' +
                 '<div class="kr-karte">' +
                 '<b>Verschlüsselte Sicherung</b>' +
-                '<div class="kr-text">Der ganze Bestand in einer Datei, mit AES-GCM 256 ' +
-                'verschlüsselt. Der Schlüssel entsteht aus deinem Passwort über 310 000 Runden. ' +
+                '<div class="kr-text">Seiten, Datenbanken, Ansichten, Einstellungen und ' +
+                'Versionsverlauf in einer Datei, mit AES-GCM 256 verschlüsselt. ' +
+                'Dateianhänge sind <b>nicht</b> dabei — vollständig mit Anhängen sichert ' +
+                'nur die .redion-Sicherung in den Einstellungen. ' +
+                'Der Schlüssel entsteht aus deinem Passwort über 310 000 Runden. ' +
                 'Ohne Passwort ist die Datei nicht zu öffnen — auch nicht von mir.</div>' +
                 '<div class="kr-zeile">' +
                 '<input id="kr-pw" type="password" placeholder="Passwort für die Datei">' +
@@ -298,7 +313,11 @@ const Krypto = (() => {
             if (elVon(e)?.closest('[data-a="sichern"]')) {
                 const pw = o.querySelector('#kr-pw')?.value ?? '';
                 const name = await sicherungSchreiben(pw || undefined);
-                UI.toast(pw ? 'Verschlüsselt gesichert: ' + name : 'Ungeschützt gesichert: ' + name);
+                /* Wenn Anhänge da sind und hier fehlen, gehört das in den Toast —
+                   nicht nur ins verschlüsselte Manifest, wo es niemand liest. */
+                const dazu = zuletztGefehlt.includes('dateien')
+                    ? ' — ohne die Dateianhänge (dafür: .redion-Sicherung)' : '';
+                UI.toast((pw ? 'Verschlüsselt gesichert: ' : 'Ungeschützt gesichert: ') + name + dazu);
                 return;
             }
             if (elVon(e)?.closest('[data-a="laden"]')) {

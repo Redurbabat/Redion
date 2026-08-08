@@ -5312,15 +5312,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 @media(max-width:760px){
   .nur-handy{ display:inline-flex; align-items:center; justify-content:center }
   #handy-leiste button{ position:relative }
-  /* Die Schublade endet über der Leiste, statt sie zuzudecken. Sonst
-     kommt man von „Chats" nicht mehr zu „Termine" — man sähe die
-     Reiter, könnte sie aber nicht treffen. Derselbe Grund gilt für den
-     Schatten dahinter. */
-  body.side-offen #sidebar{ height:calc(100% - 56px - env(safe-area-inset-bottom)); }
-  body.side-offen #side-schatten{ bottom:calc(56px + env(safe-area-inset-bottom)); inset-block-end:auto;
-                                  top:0; left:0; right:0;
-                                  height:calc(100% - 56px - env(safe-area-inset-bottom)); }
-  #handy-leiste{ z-index:620; }
+  /* Hier stand: „Die Schublade endet über der Leiste, statt sie
+     zuzudecken" — mit `height:calc(100% - 56px - …)`. Nur: die untere
+     56-px-Leiste (#handy-leiste) gibt es nicht mehr, kein Skript erzeugt
+     sie. Und weil `top: var(--hoben)` (80px) aus der Grundregel stehen
+     blieb, machte die Formel die Schublade nicht kürzer, sondern schob
+     ihre Unterkante 24 px UNTER den Bildschirmrand — samt der Knöpfe am
+     Fuss. Ohne die Regel greift die Grundregel, und die Unterkante liegt
+     exakt auf dem Rand. Kommt je wieder eine echte untere Leiste, lautet
+     die richtige Formel:
+     height:calc(100% - var(--hoben) - 56px - env(safe-area-inset-bottom)) */
 }
 
 /* ── Protokoll ────────────────────────────────────────────────────────────
@@ -13559,7 +13560,32 @@ const Store = (() => {
     /* ========================================================================
      * EINSTELLUNGEN
      * ======================================================================*/
-    const setMeta = (k, v) => { cache.meta[k] = v; put('meta', { k, v }).catch(() => { }); };
+    /* Nur einmal je Sitzung meckern — wer bei jedem der ~170 setMeta-Aufrufe
+       einen Toast bekäme, schaltete die Meldung ab, statt das Problem zu
+       lösen. Der erste Fehlschlag ist die Nachricht; die weiteren sind
+       derselbe Fehlschlag. */
+    let metaFehlerGemeldet = false;
+    const setMeta = (k, v) => {
+        cache.meta[k] = v;
+        /* Der leere `.catch(() => {})`, der hier stand, machte aus „liess sich
+           nicht speichern" ein „gespeichert". Am härtesten traf das
+           `wolkeSalz`: einmal gewürfelt, nie geschrieben — und nach dem
+           Neuladen würfelt der Abgleich neu und kann nichts mehr entziffern,
+           was mit dem alten Salz hochging.
+    
+           WICHTIG: `Reporter.warn`, nicht `Reporter.error` — error ruft die
+           Pflege, die Pflege schreibt ihre Fehlerliste per setMeta, und bei
+           einem anhaltenden Speicherfehler wäre das eine endlose Schleife. */
+        put('meta', { k, v }).catch((err) => {
+            if (typeof Reporter !== 'undefined')
+                Reporter.warn('ablage', 'Die Einstellung „' + k + '" liess sich nicht speichern', err);
+            if (!metaFehlerGemeldet) {
+                metaFehlerGemeldet = true;
+                if (typeof UI !== 'undefined' && UI.toast)
+                    UI.toast('Eine Einstellung liess sich nicht speichern — sie geht beim Neuladen verloren.');
+            }
+        });
+    };
     /* `fallback` ist alles Mögliche — eine leere Liste, 'Ich', `true`. Ohne
        Anmerkung liest TypeScript aus `= null` „immer null" und meldet jeden
        der rund neunzig Aufrufe im Rest der App. */
@@ -22588,7 +22614,14 @@ const Blocks = (() => {
                 body: JSON.stringify({ quelle: 'Redion', knopf: block.text || '',
                     seite: App.aktuelleSeite(), wann: new Date().toISOString(),
                     variablen: knopfVars }) })
-                .then(() => UI.toast('An den Webhook geschickt'))
+                /* `KI.holen` wirft bei 401/403/404 nicht, sondern gibt die Antwort
+                   zurück — sechs andere Aufrufer verlassen sich darauf. Wer hier
+                   nur `.then(… geschickt)` schreibt, meldet also auch bei
+                   „401 Unauthorized" Erfolg. */
+                .then(r => r.ok
+                ? UI.toast('An den Webhook geschickt')
+                : UI.banner('Webhook antwortet mit ' + r.status +
+                    (KI.FEHLERTEXT[r.status] ? ' — ' + KI.FEHLERTEXT[r.status] : ''), 'warn'))
                 .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message, 'warn'));
             return;
         }
@@ -25954,6 +25987,15 @@ const Datenbank = (() => {
         });
     };
     /* --- KI-Feld: Notions „AI Autofill", nur lokal --------------------------- */
+    /**
+     * Gibt zurück, ob wirklich etwas Brauchbares in der Zelle steht.
+     *
+     * `false` heisst: die KI gab nichts, sie warf, oder das Schreiben prallte
+     * am Spaltenrecht ab (`setProp` kehrt dann still zurück — das wird hier
+     * durch Nachlesen erkannt, ohne die Rechteprüfung anzufassen). Die
+     * Aufrufer im Automationslauf ignorieren den Wert; der KI-Agent zählt
+     * damit, was er wirklich gefüllt hat, statt was er angefasst hat.
+     */
     const kiFeldFuellen = async (row, key, coll) => {
         const def = coll.schema[key];
         const auftrag = def.auftrag || KI_AUFTRAG[def.type] ||
@@ -25964,10 +26006,24 @@ const Datenbank = (() => {
             .join('\n');
         Store.setProp(row.id, key, '… denkt nach');
         App.zeichneSeite();
-        const antwort = await KI.frageKurz(auftrag + '\n\nDer Eintrag:\n' + zeileAlsText +
-            '\n\nAntworte knapp, ohne Einleitung, in höchstens 20 Wörtern.');
-        Store.setProp(row.id, key, (antwort || '').trim() || '(keine Antwort)');
+        let antwort = '';
+        try {
+            antwort = await KI.frageKurz(auftrag + '\n\nDer Eintrag:\n' + zeileAlsText +
+                '\n\nAntworte knapp, ohne Einleitung, in höchstens 20 Wörtern.');
+        }
+        catch (err) {
+            /* Die Zelle darf nicht ewig „… denkt nach" zeigen — das sieht aus
+               wie Arbeit und ist keine. Erst aufräumen, dann weiterwerfen. */
+            Store.setProp(row.id, key, '(Fehler)');
+            App.zeichneSeite();
+            throw err;
+        }
+        const final = (antwort || '').trim();
+        Store.setProp(row.id, key, final || '(keine Antwort)');
         App.zeichneSeite();
+        /* Nachlesen statt glauben: prallte das Schreiben am Spaltenrecht ab,
+           steht der Wert jetzt NICHT da — und genau das ist die Antwort. */
+        return !!final && ((Store.getBlock(row.id) || {}).props || {})[key] === final;
     };
     /**
      * Setzt eine Verknüpfung und pflegt die Gegenrichtung.
@@ -32167,7 +32223,19 @@ const Datenbank = (() => {
                         Store.setProp(row.id, d.key, Formula.zahl(wert(row, d.key, coll)) + 1);
                     }
                     if (d.art === 'ki-fuellen' && d.key) {
-                        kiFeldFuellen(row, d.key, coll);
+                        /* Läuft neben dem Lauf her, wie der Webhook: der Verlauf ist
+                           längst geschrieben, wenn die KI scheitert. Ohne den `.catch`
+                           war das eine unbehandelte Ablehnung, die Zelle blieb auf
+                           „… denkt nach", und im Verlauf stand ✓. */
+                        kiFeldFuellen(row, d.key, coll).catch((e) => {
+                            const text = e instanceof Error ? e.message : String(e);
+                            laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                                'KI-Feld: ' + text;
+                            if (!ctx.probe) {
+                                verlaufSichern(coll);
+                                UI.toast('⚠ KI-Feld ging nicht: ' + text);
+                            }
+                        });
                     }
                     if (d.art === 'erinnerung') {
                         const zeit = new Date();
@@ -32273,12 +32341,37 @@ const Datenbank = (() => {
                             kopf[Store.getMeta('webhookAuthName', 'X-Api-Key')] = wert2;
                         if (wert2 && art === 'geheim')
                             paket.geheimnis = wert2;
+                        /* Der Webhook läuft neben dem Lauf her — `eineAktion` kehrt
+                           zurück, bevor die Antwort da ist, und `notieren()` schreibt
+                           den Verlauf mit ✓. Ein Fehler, der DANACH eintrifft, muss den
+                           Eintrag noch auf ⚠ drehen: `notieren` legt `laufNotiz` als
+                           Objekt in den Verlauf, die Referenz lebt also weiter, und
+                           `verlaufSichern` schreibt den Stand erneut. Ohne das stand im
+                           Verlauf ein Haken, obwohl nie etwas ankam. */
+                        const webhookFehler = (text) => {
+                            laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                                'Webhook: ' + text;
+                            if (!ctx.probe)
+                                verlaufSichern(coll);
+                        };
                         KI.holen(url, { method: 'POST', headers: kopf,
                             body: JSON.stringify(paket) }, { versuche: 3, beiWartezeit: (sek, nr) => UI.toast('Webhook meldet sich nicht — Versuch ' + (nr + 1) + ' in ' + sek + ' s') })
-                            .then(() => UI.toast('An den Webhook geschickt'))
-                            .catch((err) => UI.banner('Webhook nicht erreicht: ' +
-                            (err instanceof Error ? err.message : String(err)) +
-                            ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn'));
+                            .then((r) => {
+                            if (r.ok) {
+                                UI.toast('An den Webhook geschickt');
+                                return;
+                            }
+                            const text = 'antwortet mit ' + r.status +
+                                (KI.FEHLERTEXT[r.status] ? ' — ' + KI.FEHLERTEXT[r.status] : '');
+                            webhookFehler(text);
+                            UI.banner('Webhook ' + text, 'warn');
+                        })
+                            .catch((err) => {
+                            const text = (err instanceof Error ? err.message : String(err));
+                            webhookFehler(text);
+                            UI.banner('Webhook nicht erreicht: ' + text +
+                                ' — viele Dienste erlauben keinen Zugriff direkt aus dem Browser.', 'warn');
+                        });
                     }
                     laufNotiz.aktionen.push((AKTIONEN.find((x) => x[0] === d.art) || [])[1] || d.art);
                 };
@@ -37396,8 +37489,13 @@ const Ansichten = (() => {
                         }
                     }, 1200);
                 };
+                /* `sicherungSpeichern` fängt seine Fehler selbst und kehrt regulär
+                   zurück — deshalb reicht `.then(() => fertig(true))` nicht, der
+                   Haken erschien auch nach dem „Es wurde nichts geschrieben"-Alert.
+                   Nur ein ausdrückliches `false` ist ein Fehlschlag; `undefined`
+                   (etwa aus einem Prüf-Stellvertreter) zählt weiter als Erfolg. */
                 void Promise.resolve(App.sicherungSpeichern())
-                    .then(() => fertig(true))
+                    .then((gut) => fertig(gut !== false))
                     /* Auch der Fehlschlag gehört auf den Knopf. Ein Kreisel, der
                        ewig dreht, ist die schlechteste aller Auskünfte. */
                     .catch(() => fertig(false));
@@ -42090,20 +42188,37 @@ const Mail = (() => {
                 UI.toast(w ? 'Als wichtig markiert' : 'Nicht mehr wichtig');
                 return;
             }
-            if (taste === 'e') {
+            /* Die zwei Tasten, die eine Zeile VERSCHWINDEN lassen, gehen den Weg
+               erst beim Server und dann lokal. Vorher lief es umgekehrt:
+               `versuche()` schluckte die Gmail-Ablehnung, die Zeile war weg, und
+               „Archiviert" stand da — bei Gmail lag die Mail weiter im Eingang.
+               Eine .eml-Mail (eingelesen, kein Gmail-Konto dahinter — erkennbar
+               am leeren `link`) KONNTE der Aufruf nie treffen; da ist „nur
+               lokal" die ehrliche Auskunft, kein Fehler. */
+            if (taste === 'e' || taste === '#') {
                 e.preventDefault();
-                versuche(() => archivieren(r.props.mid));
-                Store.trashBlock(r.id);
-                App.zeichneSeite();
-                UI.toast('Archiviert');
-                return;
-            }
-            if (taste === '#') {
-                e.preventDefault();
-                versuche(() => gmailAendern(r.props.mid, ['TRASH'], ['INBOX']));
-                Store.trashBlock(r.id);
-                App.zeichneSeite();
-                UI.toast('In den Papierkorb');
+                const gmail = !!(r.props || {}).link;
+                const wohin = taste === 'e' ? 'Archiviert' : 'In den Papierkorb';
+                if (!gmail) {
+                    Store.trashBlock(r.id);
+                    App.zeichneSeite();
+                    UI.toast(wohin + ' (nur hier — hinter dieser Mail steht kein Gmail-Konto)');
+                    return;
+                }
+                try {
+                    if (taste === 'e')
+                        await archivieren(r.props.mid);
+                    else
+                        await gmailAendern(r.props.mid, ['TRASH'], ['INBOX']);
+                    Store.trashBlock(r.id);
+                    App.zeichneSeite();
+                    UI.toast(wohin);
+                }
+                catch (err) {
+                    /* Die Zeile bleibt liegen — es gibt nichts zurückzurollen. */
+                    UI.toast('Gmail hat abgelehnt: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                }
                 return;
             }
             if (taste === 'r' || taste === 'a') {
@@ -43283,9 +43398,23 @@ const Agent = (() => {
                 c.schema[k].auftrag = a.auftrag || c.schema[k].auftrag;
                 Store.updateCollection(c.id, { schema: c.schema });
                 const zeilen = Store.rowsOf(c.id).slice(0, 15);
-                for (const r of zeilen)
-                    await Datenbank.kiFeldFuellenFuer(r, k, c);
-                return zeilen.length + ' Einträge in „' + a.spalte + '" gefüllt.';
+                /* Gezählt wird, was WIRKLICH gefüllt wurde — nicht, was angefasst
+                   wurde. „15 Einträge gefüllt" stand hier auch dann, wenn jede
+                   Zeile am Spaltenrecht abprallte oder die KI nichts gab. */
+                let gefuellt = 0, kaputt = 0;
+                for (const r of zeilen) {
+                    try {
+                        if (await Datenbank.kiFeldFuellenFuer(r, k, c))
+                            gefuellt++;
+                    }
+                    catch {
+                        kaputt++;
+                    }
+                }
+                const rest = zeilen.length - gefuellt - kaputt;
+                return gefuellt + ' von ' + zeilen.length + ' Einträgen in „' + a.spalte + '" gefüllt' +
+                    (kaputt ? ', ' + kaputt + ' mit Fehler' : '') +
+                    (rest ? ', ' + rest + ' ohne Antwort oder ohne Schreibrecht' : '') + '.';
             }
         },
         nachschlagen: {
@@ -48624,10 +48753,17 @@ window.Schema = Schema;
  *
  * Zwei Dinge stecken drin:
  *
- *   1. VERSCHLÜSSELTE SICHERUNG — der vollständige Bestand als eine Datei,
- *      mit AES-GCM 256 verschlüsselt. Der Schlüssel entsteht aus dem Passwort
- *      über PBKDF2 mit 310 000 Runden und einem zufälligen Salz. Ohne das
- *      Passwort ist die Datei ein Haufen Zufall.
+ *   1. VERSCHLÜSSELTE SICHERUNG — der Bestand OHNE Dateianhänge als eine
+ *      Datei, mit AES-GCM 256 verschlüsselt. Der Schlüssel entsteht aus dem
+ *      Passwort über PBKDF2 mit 310 000 Runden und einem zufälligen Salz.
+ *      Ohne das Passwort ist die Datei ein Haufen Zufall.
+ *
+ *      „Der vollständige Bestand" stand hier — und stimmte nicht:
+ *      `bestandSammeln` ruft `exportAll()` ohne Anhänge, und das Manifest
+ *      in der Datei sagt es sogar (`fehlt: ['dateien','stuecke']`), nur
+ *      eben AES-verschlüsselt, wo es niemand liest. Vollständig mit
+ *      Anhängen sichert das `.redion`-Paket; `exportAll(true)` hier wäre
+ *      keine Lösung, denn die Blobs kämen trotzdem nicht mit.
  *
  *   2. SPERRE — beim Öffnen erst das Passwort. Sie schützt vor dem Blick über
  *      die Schulter, nicht vor jemandem mit Zugriff auf die Festplatte; das
@@ -48778,12 +48914,17 @@ const Krypto = (() => {
      * vor einem Jahr angelegt hat, ist kein Altlastenproblem — sie ist der
      * Zweck der Übung.
      */
+    /* Was der letzten gesammelten Sicherung fehlte — für den Toast danach.
+       Das Manifest in der Datei sagt es auch, aber verschlüsselt liest es
+       niemand, bevor er es braucht. */
+    let zuletztGefehlt = [];
     const bestandSammeln = async () => {
         /* Holt den Verlauf aus der Ablage; er liegt bewusst nicht im
            Zwischenspeicher. Ohne diesen Aufruf wäre `versions` leer — still. */
         if (Store.exportVorbereiten)
             await Store.exportVorbereiten();
         const d = JSON.parse(Store.exportAll());
+        zuletztGefehlt = Array.isArray(d.fehlt) ? d.fehlt : [];
         return JSON.stringify(Object.assign({ art: 'redion-sicherung', fassung: 1, wann: d.exportiert }, d), null, 2);
     };
     const sicherungSchreiben = async (passwort) => {
@@ -48866,8 +49007,11 @@ const Krypto = (() => {
                 '<div style="padding:15px 18px; display:flex; flex-direction:column; gap:14px">' +
                 '<div class="kr-karte">' +
                 '<b>Verschlüsselte Sicherung</b>' +
-                '<div class="kr-text">Der ganze Bestand in einer Datei, mit AES-GCM 256 ' +
-                'verschlüsselt. Der Schlüssel entsteht aus deinem Passwort über 310 000 Runden. ' +
+                '<div class="kr-text">Seiten, Datenbanken, Ansichten, Einstellungen und ' +
+                'Versionsverlauf in einer Datei, mit AES-GCM 256 verschlüsselt. ' +
+                'Dateianhänge sind <b>nicht</b> dabei — vollständig mit Anhängen sichert ' +
+                'nur die .redion-Sicherung in den Einstellungen. ' +
+                'Der Schlüssel entsteht aus deinem Passwort über 310 000 Runden. ' +
                 'Ohne Passwort ist die Datei nicht zu öffnen — auch nicht von mir.</div>' +
                 '<div class="kr-zeile">' +
                 '<input id="kr-pw" type="password" placeholder="Passwort für die Datei">' +
@@ -48908,7 +49052,11 @@ const Krypto = (() => {
             if (elVon(e)?.closest('[data-a="sichern"]')) {
                 const pw = o.querySelector('#kr-pw')?.value ?? '';
                 const name = await sicherungSchreiben(pw || undefined);
-                UI.toast(pw ? 'Verschlüsselt gesichert: ' + name : 'Ungeschützt gesichert: ' + name);
+                /* Wenn Anhänge da sind und hier fehlen, gehört das in den Toast —
+                   nicht nur ins verschlüsselte Manifest, wo es niemand liest. */
+                const dazu = zuletztGefehlt.includes('dateien')
+                    ? ' — ohne die Dateianhänge (dafür: .redion-Sicherung)' : '';
+                UI.toast((pw ? 'Verschlüsselt gesichert: ' : 'Ungeschützt gesichert: ') + name + dazu);
                 return;
             }
             if (elVon(e)?.closest('[data-a="laden"]')) {
@@ -66662,6 +66810,15 @@ const App = (() => {
         Store.setMeta('sicherung:zuletzt', new Date().toISOString());
         Store.setMeta('sicherung:art', art);
     };
+    /**
+     * Gibt zurück, ob die Sicherung wirklich zustande kam.
+     *
+     * Der `catch` unten fängt den Fehler und kehrt regulär zurück — richtig
+     * für die Aufrufer, die nur einen Knopf drücken. Aber der Sichern-Knopf
+     * in den Datenbank-Ansichten zeigte danach „✓ Gesichert", weil `.then`
+     * eine reguläre Rückkehr nicht von einem Erfolg unterscheiden kann.
+     * Deshalb: `true` heisst gesichert, `false` heisst nicht.
+     */
     const sicherungSpeichern = async () => {
         /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
            Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
@@ -66675,7 +66832,7 @@ const App = (() => {
             l.click();
             sicherungGemerkt('json');
             UI.toast('Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
-            return;
+            return true;
         }
         UI.toast(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
         try {
@@ -66711,14 +66868,19 @@ const App = (() => {
             eintraege.push({ name: 'dateien.json', inhalt: JSON.stringify({
                     version: 1, saetze, zuordnung: karte
                 }, null, 2) });
+            /* „Gesichert: foto.jpg" log hier: der Fortschritt kommt aus der
+               Prüfsummen-Schleife, das Archiv ist da noch gar nicht gebaut,
+               geschweige denn heruntergeladen. Das Wort „Gesichert" gehört dem
+               Abschluss-Toast unten — hier ist es nur ein Lebenszeichen. */
             const blob = await Austausch.zipSchreiben(eintraege, (name, anteil) => { if (anteil >= 1)
-                UI.toast('Gesichert: ' + name.replace('dateien/', '')); });
+                UI.toast('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
             const l = document.createElement('a');
             l.href = URL.createObjectURL(blob);
             l.download = 'redion-sicherung-' + heute + '.redion';
             l.click();
             sicherungGemerkt('redion');
             UI.toast('Sicherung gespeichert — mit ' + (eintraege.length - 2) + ' Anhang/Anhängen');
+            return true;
         }
         catch (err) {
             /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
@@ -66726,6 +66888,7 @@ const App = (() => {
             alert('Die Sicherung kam nicht zustande: ' +
                 (err instanceof Error ? err.message : String(err)) +
                 '\n\nEs wurde nichts geschrieben.');
+            return false;
         }
     };
     /**

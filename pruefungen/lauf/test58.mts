@@ -124,6 +124,28 @@ const pruef = (n: any, ist: any, soll: any) => {
   pruef('Webhook mit Bearer-Schlüssel geschickt',
         kopfzeilen.some(h => h === 'Bearer geheim123'), true);
 
+  /* --- Und wenn der Webhook ablehnt? ------------------------------------
+     `KI.holen` wirft bei 401 nicht — es gibt die Antwort zurück. Wer nur
+     `.then(… geschickt)` schreibt, meldet Erfolg, und im Laufverlauf steht
+     ✓, obwohl nie etwas ankam. Beides muss ehrlich werden: kein
+     Erfolgstoast, und der Verlaufseintrag kippt auf ⚠ (A1/A2, E76). */
+  await p.route('**/hook-401', route => route.fulfill({ status: 401, body: 'nein' }));
+  const abgelehnt = await p.evaluate(async (x) => {
+    const c = Store.getCollection(x.coll);
+    c.automationen = [{ id: 'w2', name: 'Kaputter Hook', an: true, wenn: { art: 'zeile-neu' },
+                        bedingungen: [], dann: [{ art: 'webhook', text: 'https://test.local/hook-401' }] }];
+    Store.updateCollection(c.id, { automationen: c.automationen });
+    Store.addRow(c.id, { title: 'Löst den kaputten Hook aus' });
+    /* Der Fehler kommt NACH notieren() an — der Eintrag entsteht mit ✓ und
+       muss danach auf ⚠ gedreht werden. Kurz warten, dann nachsehen. */
+    await new Promise(r => setTimeout(r, 1200));
+    const frisch = Store.getCollection(x.coll);
+    const eintrag = ((frisch.automationen || []).find((a: any) => a.id === 'w2') || {}).verlauf?.[0];
+    return { fehler: eintrag?.fehler || '', aktionen: eintrag?.aktionen || [] };
+  }, bau);
+  pruef('Der Verlaufseintrag trägt den Fehler nach',
+        /401/.test(abgelehnt.fehler), true);
+
   /* --- Eingänge von aussen --------------------------------------------- */
   const eingang = await p.evaluate(async () => {
     const s = Store.addBlock(null, 'page', { text: 'Eingangstest' });
