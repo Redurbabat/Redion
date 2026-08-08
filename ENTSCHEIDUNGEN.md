@@ -2781,3 +2781,77 @@ Und ein Hinweis für den nächsten Prüfstand dieser Art: die Ersatz-KI
 braucht ihren Zähler AUSSERHALB der Rüstfunktion. Lag er innen, lief er
 über mehrere Läufe hinweg weiter, der dritte bekam sofort „fertig" — und
 die Prüfung meldete einen Fehler in Redion, den es nicht gab.
+
+---
+
+## E53 · Bedingte Formatierung — im Tabellenblock, wo das Wort herkommt
+
+**Aus `LUECKEN.md` L15.** Der Eintrag nannte fünf Dinge: Zell- und
+Zeilenfarbe nach Regel, Datenbalken, Farbskalen, Symbolregeln, Duplikate
+und überfällige Werte. Nachgesehen am 8. August war die Hälfte längst da —
+aber in den **Datenbanken**: `farbregeln` färbt dort ganze Zeilen, und die
+Spaltenanzeige kennt `skala`, `heat`, `bar` und `ring`. Im
+**Tabellenblock**, wo der Begriff herkommt, gab es nichts davon.
+
+**Die Regel gehört dem Blatt, nicht der Zelle.** Der Unterschied ist nicht
+kosmetisch: eine Farbe an der Zelle müsste bei jeder Änderung mitgeführt,
+beim Einfügen einer Zeile verschoben und beim Löschen aufgeräumt werden.
+Eine Regel am Blatt beschreibt stattdessen, WANN gefärbt wird, und
+überlebt jede Umstellung der Daten darunter.
+
+**Und sie ändert die Daten nicht.** Was `wert` sagt, bleibt, was es war —
+eine bedingte Farbe ist eine Sicht darauf, keine Bearbeitung. Deshalb
+lässt sie sich abschalten, ohne dass etwas zurückzunehmen wäre. Der
+Prüflauf misst das ausdrücklich; es ist die Stelle, an der so eine Sache
+gefährlich würde.
+
+**Zehn Arten**, davon acht Vergleiche (grösser · kleiner · gleich ·
+zwischen · enthält · leer · nicht leer · mehrfach) und zwei, die mit dem
+ganzen Bereich rechnen (Farbverlauf · Balken). Die **erste zutreffende
+Regel gewinnt** — dieselbe Regel wie bei den Datenbanken. Zwei Regeln auf
+derselben Zelle sind kein Fehler, sondern der Normalfall („über 100 grün,
+über 1000 blau"); es braucht nur eine feste Reihenfolge.
+
+**Einmal je Zeichnung, nicht je Zelle.** `skala` und `balken` brauchen das
+kleinste und grösste, `doppelt` die Häufigkeiten. Ohne diesen Schritt
+liefe je Zelle eine Schleife über den ganzen Bereich: bei 1000 × 26 wären
+das 26 Millionen Vergleiche für eine Farbe.
+
+**Zwei Dinge, die erst das Bildschirmfoto gezeigt hat** (CLAUDE.md §55) —
+beide sahen im Quelltext richtig aus:
+
+*Der Balken misst von Null, nicht vom kleinsten Wert.* Bei 340, 890, 1200,
+2400, 3100 war der kleinste Balken null Pixel lang, und 340 sah aus wie
+„nichts" — dabei ist es ein Neuntel des grössten. Genau so lügen Diagramme
+mit abgeschnittener Achse. `Math.min(0, min)` hält dabei den Fall mit
+negativen Zahlen offen. Die Skala bleibt bei min→max: sie zeigt einen
+PLATZ in einer Reihe, kein Mass, und dort ist der kleinste zu Recht am
+Ende.
+
+*Die Regelliste stand in `.res`* — der Trefferliste des Finders, wo
+`button { width:100% }` gilt. Die beiden kleinen Knöpfe ☑ und 🗑 sprangen
+damit auf je eine eigene Zeile, und aus einer Regel wurden drei Zeilen
+Papier.
+
+**Der Balken liegt hinter dem Text.** Neben ihm bräuchte er eigene Breite,
+und eine Tabellenspalte hat keine übrig — dann wäre entweder der Balken
+zwei Pixel lang oder die Zahl abgeschnitten. Abgeschnittene Zahlen sind in
+diesem Block die gefährlichste Sorte Fehler (E29: aus `634.21` wird das
+Bild von `34.21`).
+
+**Die Auswahl gewinnt über die Farbe.** Eine gefärbte Zelle muss trotzdem
+als gewählt zu erkennen sein, sonst verliert man beim Malen die Stelle, an
+der man gerade steht.
+
+**Der Bereich ist vorausgefüllt** mit dem, was gerade markiert ist. Das
+ist der Unterschied zwischen „ich probiere das mal aus" und „ich muss
+erst nachsehen, wie meine Spalte heisst".
+
+**Was noch fehlt** und in L15 stehenbleibt: Symbolregeln (Ampeln, Pfeile)
+und „überfällig" als eigene Art — das braucht einen Datumsvergleich gegen
+heute, und der gehört zuerst geklärt (Ortszeit, siehe E31).
+
+**Status**
+
+`test130` (Suite 94), 48 Punkte, samt Telefon. Gegenprobe: das Auftragen
+der Regeln stillgelegt → 19 von 48 rot.

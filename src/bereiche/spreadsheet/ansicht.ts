@@ -135,6 +135,184 @@ const SpreadsheetView = (() => {
   };
 
   /* ==========================================================================
+   * BEDINGTE FORMATIERUNG (L15)
+   * --------------------------------------------------------------------------
+   * Eine Regel gehört dem BLATT, nicht der Zelle. Der Unterschied ist nicht
+   * kosmetisch: eine Farbe an der Zelle müsste bei jeder Änderung mitgeführt,
+   * beim Einfügen einer Zeile verschoben und beim Löschen aufgeräumt werden.
+   * Eine Regel am Blatt sagt stattdessen, WANN gefärbt wird, und überlebt
+   * jede Umstellung der Daten darunter.
+   *
+   * SIE ÄNDERT DIE DATEN NICHT. Was in `wert` steht, bleibt, was es war —
+   * eine bedingte Farbe ist eine Sicht darauf, keine Bearbeitung. Deshalb
+   * lässt sie sich abschalten, ohne dass etwas zurückzunehmen wäre.
+   *
+   * DIE ERSTE REGEL, DIE ZUTRIFFT, GEWINNT — dieselbe Regel wie bei den
+   * bedingten Farben der Datenbanken. Zwei Regeln, die dieselbe Zelle
+   * einfärben wollen, sind kein Fehler, sondern der Normalfall („über 100
+   * grün, über 1000 blau"); es braucht nur eine feste Reihenfolge.
+   * ========================================================================*/
+
+  /** Die neun Marken aus dem Farbsystem — dieselben wie in den Datenbanken. */
+  const REGELFARBEN: Record<string, string> = {
+    rot: 'red', orange: 'orange', gelb: 'yellow', gruen: 'green',
+    blau: 'blue', lila: 'purple'
+  };
+
+  const REGELARTEN: Array<[string, string]> = [
+    ['groesser', 'ist grösser als'],
+    ['kleiner', 'ist kleiner als'],
+    ['gleich', 'ist gleich'],
+    ['zwischen', 'liegt zwischen'],
+    ['enthaelt', 'enthält den Text'],
+    ['leer', 'ist leer'],
+    ['nichtLeer', 'ist nicht leer'],
+    ['doppelt', 'kommt mehrfach vor'],
+    ['skala', 'Farbverlauf klein → gross'],
+    ['balken', 'Balken nach Wert']
+  ];
+
+  /** Ein Bereich `A1:C20` als Zeilen-/Spaltengrenzen. Leer = ganzes Blatt. */
+  const bereichLesen = (text: string, R: any, blatt: any):
+      { vonZ: number; bisZ: number; vonS: number; bisS: number } => {
+    const ganz = { vonZ: 0, bisZ: (blatt.zeilen || 1) - 1,
+                   vonS: 0, bisS: (blatt.spalten || 1) - 1 };
+    const t = String(text || '').trim().toUpperCase();
+    if (!t || !R) return ganz;
+    const teile = t.split(':');
+    const a = R.lies(teile[0]);
+    const b = teile[1] ? R.lies(teile[1]) : a;
+    if (!a || !b) return ganz;
+    return {
+      vonZ: Math.min(a.zeile, b.zeile), bisZ: Math.max(a.zeile, b.zeile),
+      vonS: Math.min(a.spalte, b.spalte), bisS: Math.max(a.spalte, b.spalte)
+    };
+  };
+
+  const inBereich = (z: number, s: number, g: any): boolean =>
+    z >= g.vonZ && z <= g.bisZ && s >= g.vonS && s <= g.bisS;
+
+  const alsZahl = (v: unknown): number => {
+    if (typeof v === 'number') return v;
+    const n = parseFloat(String(v ?? '').replace(',', '.'));
+    return isFinite(n) ? n : NaN;
+  };
+
+  /**
+   * Was in einem Bereich steht — einmal je Regel gerechnet, nicht je Zelle.
+   *
+   * `skala` und `balken` brauchen das kleinste und grösste, `doppelt` die
+   * Häufigkeiten. Ohne diesen Schritt liefe je Zelle eine Schleife über den
+   * ganzen Bereich: bei 1000 × 26 wären das 26 Millionen Vergleiche für
+   * eine Farbe.
+   */
+  const bereichsWerte = (g: any, blatt: any, R: any) => {
+    let min = Infinity, max = -Infinity;
+    const wieOft = new Map<string, number>();
+    for (let z = g.vonZ; z <= g.bisZ; z++) {
+      for (let s = g.vonS; s <= g.bisS; s++) {
+        const zelle = blatt.zellen[R.schreibe(z, s)];
+        const v = zelle ? zelle.wert : '';
+        if (v === '' || v == null) continue;
+        const n = alsZahl(v);
+        if (isFinite(n)) { if (n < min) min = n; if (n > max) max = n; }
+        const k = String(v);
+        wieOft.set(k, (wieOft.get(k) || 0) + 1);
+      }
+    }
+    return { min, max, wieOft };
+  };
+
+  /** Trifft eine Vergleichsregel auf einen Wert zu? */
+  const regelTrifft = (regel: any, wert: unknown, hilf: any): boolean => {
+    const leer = wert === '' || wert == null;
+    switch (regel.art) {
+      case 'leer':      return leer;
+      case 'nichtLeer': return !leer;
+      case 'doppelt':   return !leer && (hilf.wieOft.get(String(wert)) || 0) > 1;
+      case 'enthaelt':  return !leer && String(wert).toLowerCase()
+                                 .includes(String(regel.wert ?? '').toLowerCase());
+      case 'gleich': {
+        if (leer) return false;
+        const a = alsZahl(wert), b = alsZahl(regel.wert);
+        if (isFinite(a) && isFinite(b)) return a === b;
+        return String(wert).toLowerCase() === String(regel.wert ?? '').toLowerCase();
+      }
+      case 'groesser': { const a = alsZahl(wert); return isFinite(a) && a > alsZahl(regel.wert); }
+      case 'kleiner':  { const a = alsZahl(wert); return isFinite(a) && a < alsZahl(regel.wert); }
+      case 'zwischen': {
+        const a = alsZahl(wert);
+        const u = alsZahl(regel.wert), o = alsZahl(regel.wert2);
+        return isFinite(a) && isFinite(u) && isFinite(o) &&
+               a >= Math.min(u, o) && a <= Math.max(u, o);
+      }
+      default: return false;
+    }
+  };
+
+  /**
+   * Was eine Zelle an Aussehen bekommt — Klasse und/oder Inline-Stil.
+   *
+   * Gibt `null` zurück, wenn keine Regel greift. Der Inline-Stil ist hier
+   * die richtige Wahl und nicht der Ausnahmefall: die Farbe hängt vom WERT
+   * ab, es gäbe also eine Klasse je möglichem Wert.
+   */
+  const regelAussehen = (z: number, s: number, wert: unknown, vorbereitet: any[]):
+      { klasse?: string; stil?: string } | null => {
+    for (const v of vorbereitet) {
+      if (!inBereich(z, s, v.g)) continue;
+      const leer = wert === '' || wert == null;
+
+      if (v.regel.art === 'skala' || v.regel.art === 'balken') {
+        if (leer) continue;
+        const n = alsZahl(wert);
+        if (!isFinite(n) || !isFinite(v.hilf.min) || !isFinite(v.hilf.max)) continue;
+        /* DER BALKEN MISST VON NULL, die Skala von klein nach gross — und
+           das ist kein Versehen, sondern der Unterschied zwischen den
+           beiden.
+
+           Ein Balken zeigt eine GRÖSSE. Bei 340, 890, 1200, 2400, 3100
+           wäre der kleinste Wert mit einer Skala von min bis max null
+           Pixel lang, und 340 sähe aus wie „nichts" — dabei ist es ein
+           Neuntel des grössten. Genau so lügen Diagramme mit
+           abgeschnittener Achse. Gesehen am Bildschirmfoto vom 8. August,
+           nicht im Quelltext.
+
+           `Math.min(0, …)` hält den Fall mit negativen Zahlen offen: dann
+           beginnt der Balken wieder unten, weil es sonst keinen ehrlichen
+           Nullpunkt gäbe.
+
+           Eine SKALA zeigt dagegen einen PLATZ in einer Reihe — dort ist
+           der kleinste Wert zu Recht am einen Ende. */
+        const unten = v.regel.art === 'balken' ? Math.min(0, v.hilf.min) : v.hilf.min;
+        const oben  = v.regel.art === 'balken' ? Math.max(0, v.hilf.max) : v.hilf.max;
+        const spanne = oben - unten;
+        const t = spanne === 0 ? 1 : (n - unten) / spanne;
+        if (v.regel.art === 'skala') {
+          /* Von Rot (0°) über Gelb (55°) nach Grün (135°) — dieselbe
+             Farbfolge wie die Heatmap der Datenbanken, damit dasselbe
+             Bild dasselbe bedeutet. */
+          const ton = Math.round(t * 135);
+          return { klasse: ' regel-skala',
+                   stil: `background:hsl(${ton} 62% 42% / .5)` };
+        }
+        const p = Math.round(Math.max(0, Math.min(1, t)) * 100);
+        /* Der Balken liegt HINTER dem Text, nicht daneben: eine Spalte
+           ist selten breit genug für beides, und die Zahl ist wichtiger
+           als ihr Bild. */
+        return { klasse: ' regel-balken',
+                 stil: `--regel-balken:${p}%` };
+      }
+
+      if (regelTrifft(v.regel, wert, v.hilf)) {
+        const marke = REGELFARBEN[v.regel.farbe || 'gelb'] || 'yellow';
+        return { klasse: ' regel-farbe bg-' + marke };
+      }
+    }
+    return null;
+  };
+
+  /* ==========================================================================
    * DER BLOCK
    * ========================================================================*/
   const zeichne = (block: any): HTMLElement => {
@@ -362,6 +540,15 @@ const SpreadsheetView = (() => {
       const b = bereich();
       const fb = fuellBereich();
 
+      /* Die Regeln EINMAL je Zeichnung vorbereiten, nicht je Zelle. Bei
+         1000 × 26 Zellen wäre das sonst eine Schleife über den ganzen
+         Bereich pro Zelle — Millionen Vergleiche für eine Farbe. */
+      const regeln = (blatt.regeln || []).filter((r: any) => r && r.an !== false);
+      const vorbereitet = regeln.map((regel: any) => {
+        const g = bereichLesen(regel.bereich, R, blatt);
+        return { regel, g, hilf: bereichsWerte(g, blatt, R) };
+      });
+
       koerper.innerHTML = '';
       for (let z = oben; z < unten; z++) {
         const zeile = document.createElement('div');
@@ -399,6 +586,19 @@ const SpreadsheetView = (() => {
           if (stil.ausrichtung) klassen.push(stil.ausrichtung);
           d.className = klassen.join(' ');
           d.style.flex = '0 0 ' + breiteVon(s) + 'px';
+
+          /* Die bedingte Farbe kommt VOR der Auswahl und dem Fehlerzustand
+             in die Klassenliste, aber NACH ihnen im Stilblatt: eine
+             gewählte Zelle muss gewählt aussehen, auch wenn eine Regel sie
+             färbt. Sonst verliert man beim Malen die Stelle, an der man
+             gerade steht. */
+          if (vorbereitet.length) {
+            const aus = regelAussehen(z, s, wert, vorbereitet);
+            if (aus) {
+              if (aus.klasse) d.className += aus.klasse;
+              if (aus.stil) d.style.cssText += ';' + aus.stil;
+            }
+          }
 
           const voll = zeigeWert(wert, stil.format);
           const passend = passendMachen(voll, wert, s, stil);
@@ -645,6 +845,139 @@ const SpreadsheetView = (() => {
       zirkel = erg.zirkel || [];
       sichere();
       alles();
+    };
+
+    /* ======================================================================
+     * DAS FENSTER FÜR DIE BEDINGTE FORMATIERUNG (L15)
+     * ----------------------------------------------------------------------
+     * Eine Liste und ein Formular darunter. Kein Assistent in drei Schritten:
+     * eine Regel ist ein Satz — „B2:B40 ist grösser als 100, dann rot" —,
+     * und ein Satz gehört in eine Zeile.
+     *
+     * DER BEREICH IST VORAUSGEFÜLLT mit dem, was gerade markiert ist. Das
+     * ist der ganze Unterschied zwischen „ich probiere das mal aus" und
+     * „ich muss erst nachsehen, wie meine Spalte heisst".
+     * ====================================================================*/
+    const regelFenster = (): void => {
+      const o = document.createElement('div');
+      o.className = 'overlay';
+      const b0 = bereich();
+      const vorschlag = b0
+        ? R.schreibe(b0.vonZ, b0.vonS) + ':' + R.schreibe(b0.bisZ, b0.bisS)
+        : '';
+
+      o.innerHTML = '<div class="finder" style="width:min(620px,94vw)">' +
+        '<div class="fh">🎨 Bedingte Formatierung' +
+          '<button class="icon-btn" data-a="zu">✕</button></div>' +
+        /* Eigene Klasse, weil `.dl-hinweis` keinen seitlichen Rand hat — es
+           steht sonst in einem Kasten, der selbst schon einen hat. Hier
+           liegt es direkt im Fenster, und der Satz stiess bei 390 px an
+           den Rahmen. */
+        '<div class="dl-hinweis rg-hinweis">Die erste Regel, die zutrifft, färbt ' +
+          'die Zelle. Die Werte selbst bleiben unverändert — eine Regel ist eine ' +
+          'Sicht, keine Bearbeitung.</div>' +
+        /* NICHT `.res`. Das ist die Trefferliste des Finders, und dort gilt
+           `button { width:100% }` — die beiden kleinen Knöpfe ☑ und 🗑
+           sprangen damit auf je eine eigene Zeile, und aus einer Regel
+           wurden drei Zeilen Papier. Gefunden beim Hinsehen (§55), nicht
+           beim Lesen: im Quelltext sah es richtig aus. */
+        '<div class="rg-liste" id="rg-liste"></div>' +
+        '<div class="rg-neu">' +
+          `<input id="rg-bereich" placeholder="Bereich, z. B. B2:B40" value="${esc(vorschlag)}">` +
+          '<select id="rg-art">' +
+            REGELARTEN.map(([id, name]) => `<option value="${id}">${esc(name)}</option>`).join('') +
+          '</select>' +
+          '<input id="rg-wert" placeholder="Wert" style="max-width:110px">' +
+          '<input id="rg-wert2" placeholder="bis" style="max-width:80px; display:none">' +
+          '<select id="rg-farbe">' +
+            Object.keys(REGELFARBEN).map(f =>
+              `<option value="${f}">${f}</option>`).join('') +
+          '</select>' +
+          '<button data-a="add" class="prim">Hinzufügen</button>' +
+        '</div>' +
+        '<div class="fbtns"><button data-a="zu">Fertig</button></div></div>';
+      document.body.appendChild(o);
+
+      const satz = (r: any): string => {
+        const name = (REGELARTEN.find(x => x[0] === r.art) || ['', r.art])[1];
+        const wert = r.art === 'zwischen' ? `${r.wert ?? ''} und ${r.wert2 ?? ''}`
+                   : ['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(r.art)
+                     ? '' : String(r.wert ?? '');
+        return `${r.bereich || 'ganzes Blatt'} ${name}${wert ? ' ' + wert : ''}`;
+      };
+
+      const zeichneListe = (): void => {
+        const k = o.querySelector('#rg-liste');
+        if (!k) return;
+        const l = blatt.regeln || [];
+        k.innerHTML = l.length
+          ? l.map((r: any, i: number) =>
+              '<div class="fr-zeile">' +
+              (r.art === 'skala' || r.art === 'balken'
+                ? '<span class="fr-punkt fr-verlauf"></span>'
+                : `<span class="fr-punkt bg-${REGELFARBEN[r.farbe || 'gelb'] || 'yellow'}"></span>`) +
+              `<span class="fr-text">${esc(satz(r))}</span>` +
+              `<button data-an="${i}" title="An oder aus">${r.an === false ? '☐' : '☑'}</button>` +
+              `<button data-weg="${i}" title="Regel löschen">🗑</button></div>`).join('')
+          : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
+            'Noch keine Regel. Unten eine anlegen — der Bereich ist schon ' +
+            'ausgefüllt, wenn du vorher etwas markiert hast.</div>';
+      };
+      zeichneListe();
+
+      /* Welche Felder eine Art überhaupt braucht — ein Feld, das nichts tut,
+         ist eine Frage ohne Antwort. */
+      const felderAnpassen = (): void => {
+        const art = o.querySelector<HTMLSelectElement>('#rg-art')?.value || '';
+        const w1 = o.querySelector<HTMLElement>('#rg-wert');
+        const w2 = o.querySelector<HTMLElement>('#rg-wert2');
+        const fa = o.querySelector<HTMLElement>('#rg-farbe');
+        const ohneWert = ['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(art);
+        if (w1) w1.style.display = ohneWert ? 'none' : '';
+        if (w2) w2.style.display = art === 'zwischen' ? '' : 'none';
+        if (fa) fa.style.display = (art === 'skala' || art === 'balken') ? 'none' : '';
+      };
+      felderAnpassen();
+      o.querySelector('#rg-art')?.addEventListener('change', felderAnpassen);
+
+      o.addEventListener('click', e => {
+        const ziel = e.target instanceof Element ? e.target : null;
+        if (e.target === o || ziel?.closest('[data-a="zu"]')) { o.remove(); return; }
+
+        const an = ziel?.closest<HTMLElement>('[data-an]');
+        if (an) {
+          const l = blatt.regeln || [];
+          const i = Number(an.dataset['an']);
+          if (l[i]) l[i].an = l[i].an === false;
+          blatt.regeln = l;
+          sichere(); alles(); zeichneListe();
+          return;
+        }
+        const weg = ziel?.closest<HTMLElement>('[data-weg]');
+        if (weg) {
+          const l = blatt.regeln || [];
+          l.splice(Number(weg.dataset['weg']), 1);
+          blatt.regeln = l;
+          sichere(); alles(); zeichneListe();
+          return;
+        }
+        if (!ziel?.closest('[data-a="add"]')) return;
+
+        const art = o.querySelector<HTMLSelectElement>('#rg-art')?.value || 'groesser';
+        const regel: Record<string, unknown> = {
+          bereich: (o.querySelector<HTMLInputElement>('#rg-bereich')?.value || '').trim(),
+          art, an: true
+        };
+        if (!['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(art))
+          regel['wert'] = o.querySelector<HTMLInputElement>('#rg-wert')?.value ?? '';
+        if (art === 'zwischen')
+          regel['wert2'] = o.querySelector<HTMLInputElement>('#rg-wert2')?.value ?? '';
+        if (art !== 'skala' && art !== 'balken')
+          regel['farbe'] = o.querySelector<HTMLSelectElement>('#rg-farbe')?.value || 'gelb';
+
+        blatt.regeln = (blatt.regeln || []).concat([regel]);
+        sichere(); alles(); zeichneListe();
+      });
     };
 
     /* ======================================================================
@@ -1277,6 +1610,10 @@ const SpreadsheetView = (() => {
           '<button data-a="oeffnen"><span class="mi">📂</span>Excel oder CSV öffnen</button><hr>' +
           '<button data-a="xlsx"><span class="mi">📊</span>Als Excel speichern</button>' +
           '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button><hr>' +
+          '<button data-a="regeln"><span class="mi">🎨</span>Bedingte Formatierung' +
+            ((blatt.regeln || []).length
+              ? '<span class="ms">' + (blatt.regeln || []).length + '</span>' : '') +
+          '</button><hr>' +
           '<button data-a="zeilen"><span class="mi">⬇</span>20 Zeilen anhängen</button>' +
           '<button data-a="spalten"><span class="mi">➡</span>5 Spalten anhängen</button><hr>' +
           '<button data-a="breiten"><span class="mi">↔</span>Spaltenbreiten zurücksetzen</button>',
@@ -1289,6 +1626,7 @@ const SpreadsheetView = (() => {
           if (t.dataset.a === 'oeffnen') return einlesen();
           if (t.dataset.a === 'xlsx') return gibAus('xlsx');
           if (t.dataset.a === 'csv')  return gibAus('csv');
+          if (t.dataset.a === 'regeln') return regelFenster();
           if (t.dataset.a === 'zeilen')  blatt.zeilen += 20;
           if (t.dataset.a === 'spalten') blatt.spalten += 5;
           if (t.dataset.a === 'breiten') blatt.breiten = {};

@@ -218,6 +218,46 @@
    Sternchen an jeder zweiten Zelle wäre lauter als der Nutzen. */
 .tbl-z.gekuerzt { cursor: col-resize; }
 
+/* ==========================================================================
+   BEDINGTE FORMATIERUNG (L15, E53)
+   --------------------------------------------------------------------------
+   Drei Bauformen, und sie liegen ALLE HINTER dem Text:
+
+     Farbe    eine Fläche nach einer Bedingung
+     Skala    ein Farbverlauf zwischen kleinstem und grösstem Wert
+     Balken   ein Balken, dessen Länge den Wert zeigt
+
+   Der Balken ist der Fall, an dem man es falsch machen kann. Neben dem Text
+   bräuchte er eigene Breite, und eine Tabellenspalte hat keine übrig — dann
+   wäre entweder der Balken zwei Pixel lang oder die Zahl abgeschnitten, und
+   abgeschnittene Zahlen sind in diesem Block die gefährlichste Sorte Fehler
+   (siehe `###` weiter oben). Also liegt er dahinter.
+
+   DIE AUSWAHL GEWINNT IMMER. Diese Regeln stehen VOR `.gewaehlt` und
+   `.imBereich`, damit eine gefärbte Zelle trotzdem als gewählt zu erkennen
+   ist. Sonst verliert man beim Malen die Stelle, an der man gerade steht.
+   ========================================================================== */
+.tbl-z.regel-farbe  { background: var(--regel-flaeche, transparent); }
+.tbl-z.regel-farbe.bg-red    { --regel-flaeche: var(--b-red); }
+.tbl-z.regel-farbe.bg-orange { --regel-flaeche: var(--b-orange); }
+.tbl-z.regel-farbe.bg-yellow { --regel-flaeche: var(--b-yellow); }
+.tbl-z.regel-farbe.bg-green  { --regel-flaeche: var(--b-green); }
+.tbl-z.regel-farbe.bg-blue   { --regel-flaeche: var(--b-blue); }
+.tbl-z.regel-farbe.bg-purple { --regel-flaeche: var(--b-purple); }
+
+/* Die Skala bringt ihre Farbe als Inline-Stil mit — sie hängt vom WERT ab,
+   es gäbe also eine Klasse je möglichem Wert. */
+.tbl-z.regel-skala { color: var(--text); }
+
+.tbl-z.regel-balken { position: relative; }
+.tbl-z.regel-balken::before {
+  content: ''; position: absolute; left: 0; top: 3px; bottom: 3px;
+  width: var(--regel-balken, 0%);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 0 3px 3px 0;
+  pointer-events: none;
+}
+
 /* Der Rahmen des Blocks sagt, dass das Raster den Fokus hat. Leise, damit er
    dem Auswahlrahmen nicht die Aufmerksamkeit nimmt — der ist laut Entwurf
    selbst der Fokusring. */

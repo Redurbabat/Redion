@@ -399,8 +399,25 @@ Platz und Geduld — im Prüfcontainer geht es nicht.
 
 ## L15 · Bedingte Formatierung
 
-Fehlt: Zellfarbe und Zeilenfarbe nach Regel · Datenbalken · Farbskalen ·
-Symbolregeln · Duplikate und überfällige Werte markieren.
+**Stand** — ◐ im Tabellenblock gebaut (8. August, E53); Symbolregeln und
+„überfällig" fehlen.
+
+Die Hälfte war beim Nachsehen längst da, aber in den **Datenbanken**:
+`farbregeln` färbt dort ganze Zeilen, und die Spaltenanzeige kennt
+`skala`, `heat`, `bar` und `ring`. Im **Tabellenblock**, wo der Begriff
+herkommt, gab es nichts.
+
+```txt
+✓ Zellfarbe nach Regel   acht Vergleiche: grösser · kleiner · gleich ·
+                         zwischen · enthält · leer · nicht leer · mehrfach
+✓ Zeilenfarbe            in den Datenbanken, über `farbregeln`
+✓ Datenbalken            im Blatt und in den Datenbankspalten
+✓ Farbskalen             ebenso
+✓ Duplikate              die Art „kommt mehrfach vor"
+✗ Symbolregeln           Ampeln und Pfeile gibt es nirgends
+✗ überfällige Werte      braucht einen Datumsvergleich gegen heute, und
+                         der gehört zuerst geklärt (Ortszeit, siehe E31)
+```
 
 ## L16 · Automationen erweitern
 
