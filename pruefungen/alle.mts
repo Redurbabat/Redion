@@ -96,10 +96,47 @@ if (auswahl.length === 0) {
 /* --------------------------------------------------------------------------
  * Lauf starten und auf Ergebnis warten
  * ------------------------------------------------------------------------*/
-const starte = (datei: string): Promise<{ code: number }> =>
+/**
+ * Einen Lauf starten — und dabei MITLESEN.
+ *
+ * DER GRUND, UND ER IST EIN GEFUNDENER FEHLER. Bis hierher zählte allein
+ * der Rückgabewert. Ein Lauf, der `process.exit(weg ? 1 : 0)` am Ende hat,
+ * meldet damit richtig. Mehrere ältere Läufe haben das aber nicht: sie
+ * drucken ihre Zeilen, schliessen den Browser und enden mit 0 — auch mit
+ * einem ❌ mittendrin.
+ *
+ * Gemessen am 8. August: `test31` meldete „33/34 bestanden" mit einem roten
+ * Punkt, und der Orchestrator sagte „✓ Alle 101 Läufe bestanden". Ein
+ * Prüfstand, der Rotes übersieht, ist schlimmer als keiner — er behauptet,
+ * jemand habe hingesehen.
+ *
+ * Also wird die Ausgabe jetzt gelesen. Ein `❌` oder ein `✗` am Zeilenanfang
+ * (nach Leerraum) zählt als gescheitert, ganz gleich, was der Rückgabewert
+ * sagt. Die Ausgabe geht dabei weiter durch, Zeile für Zeile — `stdio:
+ * 'inherit'` ginge nicht mehr, weil dann niemand mitliest.
+ */
+const starte = (datei: string): Promise<{ code: number; rot: number }> =>
   new Promise(resolve => {
-    const kind = spawn(process.execPath, [datei], { stdio: 'inherit' });
-    kind.on('close', code => resolve({ code: code ?? 1 }));
+    const kind = spawn(process.execPath, [datei], { stdio: ['inherit', 'pipe', 'pipe'] });
+    let rot = 0;
+    let rest = '';
+    const lesen = (stueck: Buffer, nach: NodeJS.WriteStream) => {
+      const text = rest + stueck.toString();
+      const zeilen = text.split('\n');
+      rest = zeilen.pop() ?? '';
+      for (const z of zeilen) {
+        /* Nur am Anfang der Zeile. Ein ✗ mitten im Text ist eine
+           Erklärung („vorher stand hier ✗"), kein Ergebnis. */
+        if (/^\s*(❌|✗)\s/.test(z)) rot++;
+        nach.write(z + '\n');
+      }
+    };
+    kind.stdout?.on('data', (d: Buffer) => lesen(d, process.stdout));
+    kind.stderr?.on('data', (d: Buffer) => lesen(d, process.stderr as NodeJS.WriteStream));
+    kind.on('close', code => {
+      if (rest) { if (/^\s*(❌|✗)\s/.test(rest)) rot++; process.stdout.write(rest); }
+      resolve({ code: code ?? 1, rot });
+    });
   });
 
 const warte = (ms: number): Promise<void> =>
@@ -116,8 +153,15 @@ for (const lauf of auswahl) {
   if (i > 0) await warte(3000);
   i++;
   console.log(`\n──── [${i}/${auswahl.length}] ${lauf.name} ────`);
-  const { code } = await starte(lauf.datei);
+  const { code, rot } = await starte(lauf.datei);
   if (code !== 0) gescheitert.push(lauf.name);
+  else if (rot > 0) {
+    /* Ein Lauf, der rote Punkte druckt und trotzdem mit 0 endet. Beides
+       gehört gesagt: dass er rot ist UND dass sein Rückgabewert lügt. */
+    console.log(`\n  ⚠ ${lauf.name} meldet ${rot} rote Punkte, endet aber mit 0 — ` +
+                `dem Lauf fehlt ein "process.exit(weg ? 1 : 0)".`);
+    gescheitert.push(lauf.name + ' (' + rot + ' rot, Rückgabewert 0)');
+  }
 }
 
 /* --------------------------------------------------------------------------

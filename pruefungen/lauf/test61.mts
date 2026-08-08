@@ -15,20 +15,30 @@ const pruef = (n: any, ist: any, soll: any) => {
   const fehler: any[] = [];
   p.on('pageerror', e => fehler.push('JS: ' + e.message));
   await p.goto('file://' + WURZEL + '/index.html');
-  await p.waitForTimeout(2800);      /* die Einladung erscheint nach 2 s */
+  await p.waitForTimeout(2800);      /* das Willkommen erscheint nach 1,4 s */
 
-  /* --- Beim ersten Mal lädt sie nur ein, sie drängt sich nicht auf ------ */
-  const einladung = await p.evaluate(() => ({
-    da: !!document.getElementById('rg-einladung'),
+  /* --- BEIM ERSTEN MAL STEHT SEIT E55 EIN WILLKOMMEN DA ------------------
+     Vorher war es eine kleine Einladung unten links: „Neu hier? — Führung".
+     Der Gedanke war richtig und die Antwort zu klein — sie sagte nicht, was
+     Redion überhaupt ist und wohin die Daten gehören. Jetzt drei Wege, und
+     die Führung ist der dritte davon. Die Einladung selbst gibt es weiter;
+     sie ist die richtige Form für „später nochmal". */
+  const willkommen = await p.evaluate(() => ({
+    da: !!document.getElementById('rg-willkommen'),
     kasten: !!document.getElementById('rg-kasten'),
-    text: (document.querySelector('.rge-text') || {}).textContent
+    text: (document.getElementById('rg-willkommen') || {}).textContent || '',
+    wege: document.querySelectorAll('#rg-willkommen .wk-weg').length
   }));
-  pruef('Einladung erscheint',            einladung.da, true);
-  pruef('Aber nichts wird zugedeckt',     einladung.kasten, false);
-  pruef('Sie sagt, wie lange es dauert',  einladung.text?.includes('zwei Minuten'), true);
+  pruef('Willkommen erscheint',           willkommen.da, true);
+  pruef('Die Führung läuft noch nicht',   willkommen.kasten, false);
+  pruef('Es sagt, wo die Daten liegen',
+        /auf deinem Gerät/.test(willkommen.text), true);
+  pruef('Und bietet drei Wege an',        willkommen.wege, 3);
+  pruef('Die Führung ist einer davon',
+        /zwei Minuten/.test(willkommen.text), true);
 
-  await p.click('#rg-einladung [data-a="los"]');
-  await p.waitForTimeout(350);
+  await p.click('#rg-willkommen [data-a="fuehrung"]');
+  await p.waitForTimeout(400);
 
   /* --- Ab hier läuft die Führung --------------------------------------- */
   const erst = await p.evaluate(() => ({
