@@ -3045,3 +3045,65 @@ ganzen Bildschirm. Die Prüfung fragte noch nach `side-offen` — sie stand
 
 Gegenprobe: einen roten Punkt erzwungen, Rückgabewert 0 gelassen → der
 Orchestrator meldet ihn samt Zahl und Grund.
+
+---
+
+## E57 · Die Sicherungskarte sagt, dass sie arbeitet — und der Fund daneben
+
+**Aus dem Entwurf:** die Sicherungskarte soll ihre Zustände zeigen, Kreisel
+→ Haken.
+
+**Warum das mehr ist als Zierde.** Eine `.redion`-Sicherung mit Anhängen
+dauert Sekunden bis Minuten. Bis hierher passierte in dieser Zeit auf der
+Karte **nichts**: der Knopf blieb, wie er war, und irgendwann kam ein Toast.
+Am Telefon steht der über der Aktionsleiste und ist nach 2,6 Sekunden weg —
+wer in dem Moment wegsieht, weiss nicht, ob überhaupt etwas geschieht, und
+tippt ein zweites Mal.
+
+Drei Zustände, und der mittlere ist der, den man sonst verpasst:
+
+```txt
+Jetzt sichern   →   ⟳ Sichern …   →   ✓ Gesichert   →   Gesichert heute
+```
+
+**Der Knopf bleibt dabei gesperrt** — ein zweiter Klick wäre eine zweite
+Sicherung, bei Anhängen eine zweite Runde durch alle Dateien.
+
+**Aber gesperrt heisst nicht „nicht gemeint".** `button[disabled]` steht in
+`bausteine.css` auf `opacity:.4`, und damit stand die Erfolgsmeldung auf
+Grün bei vierzig Prozent Deckkraft: hübsch und unlesbar. Gemessen, nicht
+geschätzt.
+
+**Und wer keine Bewegung mag, bekommt keine.** Der Kreisel steht dann
+still — ein Zustand, der NUR über Bewegung erkennbar wäre, wäre derselbe
+Fehler wie einer, der nur über Farbe geht (CLAUDE.md §38). Der Text daneben
+sagt es ohnehin.
+
+**Der eigentliche Fund kam nebenbei, und er ist der wichtigere.**
+
+Die Prüfung zählte zwei Klicks und bekam **drei Aufrufe**.
+
+`#page` bleibt stehen; nur sein Inhalt wird neu geschrieben. Der
+Start-Bildschirm hängte seinen Zuhörer mit `addEventListener` daran — und
+`start()` läuft bei **jeder** Rückkehr zum Start. Nach dem dritten Mal legte
+ein Klick auf „Tagesjournal" drei Journale an; nach dem zehnten zehn. Bei
+„Jetzt sichern" mit Anhängen wären das zehn Läufe durch alle Dateien.
+
+```txt
+wrap.addEventListener('click', …)   jedes Zeichnen ein Zuhörer mehr
+wrap.onclick = …                    ersetzt
+```
+
+Vier der sechs Ansichten in derselben Datei machten es von Anfang an
+richtig; zwei nicht. Das ist die Fehlerklasse, die `CLAUDE.md` Regel 3
+beschreibt: nicht „vergessen", sondern „an einer Stelle getan und an der
+Nachbarstelle nicht".
+
+**Der Fehler wächst mit der Nutzungsdauer** — und fällt beim Ausprobieren
+deshalb nie auf. Die Prüfung zeichnet zehnmal, weil ein- oder zweimal den
+Unterschied nicht zeigt.
+
+**Status**
+
+`test114` §19 (7 Punkte) und §20 (1 Punkt). Gegenprobe: zurück auf
+`addEventListener` → 13 Journale aus einem Klick.

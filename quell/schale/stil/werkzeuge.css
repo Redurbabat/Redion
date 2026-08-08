@@ -285,6 +285,47 @@ a.bl:hover{color:var(--text)}
 .home-sich .hs-tun:hover{filter:brightness(1.07)}
 .home-sich .hs-tun:active{transform:translateY(1px)}
 
+/* --------------------------------------------------------------------------
+   DREI ZUSTÄNDE DES SICHERUNGSKNOPFES (E57)
+   --------------------------------------------------------------------------
+   Eine `.redion`-Sicherung mit Anhängen dauert Sekunden bis Minuten. Bis
+   hierher passierte in dieser Zeit auf der Karte NICHTS: der Knopf blieb,
+   wie er war, und irgendwann kam ein Toast. Am Telefon steht der über der
+   Aktionsleiste und ist nach 2,6 Sekunden weg — wer in dem Moment wegsieht,
+   weiss nicht, ob überhaupt etwas geschieht, und tippt ein zweites Mal.
+
+   Der mittlere Zustand ist der, den man sonst verpasst. Deshalb bekommt er
+   ein eigenes Zeichen und nicht nur einen anderen Text: einen Kreisel, der
+   sich dreht, solange wirklich etwas läuft.
+
+   WER KEINE BEWEGUNG MAG, BEKOMMT KEINE — dann steht der Kreisel still. Er
+   ist dann ein Ring statt einer Drehung, und der Text daneben sagt
+   ohnehin, was los ist. Ein Zustand, der NUR über Bewegung erkennbar wäre,
+   wäre derselbe Fehler wie einer, der nur über Farbe geht (CLAUDE.md §38).
+   -------------------------------------------------------------------------- */
+.home-sich button.laeuft,
+.home-sich button.fertig{ display:inline-flex; align-items:center; gap:8px }
+.home-sich button.laeuft{ opacity:.85; cursor:progress }
+/* `!important` gegen `button[disabled]{opacity:.4}` in bausteine.css.
+   Der Knopf BLEIBT gesperrt, und das ist richtig — ein zweiter Klick
+   während der Nachschau würde eine zweite Sicherung starten. Aber gesperrt
+   heisst hier nicht „nicht gemeint": es ist die Erfolgsmeldung, und die
+   muss man lesen können. Gemessen war sie auf Grün bei 40 Prozent
+   Deckkraft — hübsch und unlesbar. */
+.home-sich button.fertig{
+  background:var(--erfolg, #16a34a); color:#fff;
+  opacity:1 !important; cursor:default;
+}
+.hs-kreisel{
+  width:13px; height:13px; flex:0 0 13px; border-radius:50%;
+  border:2px solid currentColor; border-top-color:transparent;
+  animation:hs-dreh .8s linear infinite;
+}
+@keyframes hs-dreh{ to{ transform:rotate(360deg) } }
+@media(prefers-reduced-motion:reduce){
+  .hs-kreisel{ animation:none; border-top-color:currentColor; opacity:.5 }
+}
+
 .home-sich-gut{padding:9px 14px; border-left-color:var(--c-green, #4dab9a)}
 .home-sich-gut .hs-zeichen{background:var(--b-green); color:var(--c-green)}
 .home-sich-gut .hs-text{color:var(--text-dim)}

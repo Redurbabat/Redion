@@ -208,7 +208,21 @@ const Ansichten = (() => {
                 zahl(Werkzeuge.karten().length, 'Karteikarten') +
                 `</div>` +
                 '</div>';
-        wrap.addEventListener('click', e => {
+        /* `onclick =`, NICHT `addEventListener`. Der Unterschied ist hier kein
+           Geschmack, sondern ein gefundener Fehler (E57).
+    
+           `wrap` ist `#page` und bleibt stehen; nur sein Inhalt wird neu
+           geschrieben. Mit `addEventListener` kam bei jedem Zeichnen ein
+           weiterer Zuhörer dazu — und `start()` läuft bei jeder Rückkehr zum
+           Start-Bildschirm. Nach dem dritten Mal legte ein Klick auf
+           „Tagesjournal" drei Journale an, und ein Klick auf „Jetzt sichern"
+           startete drei Sicherungen nacheinander, bei Anhängen also dreimal
+           durch alle Dateien.
+    
+           Gefunden hat das die Prüfung zum Sicherungsknopf: sie zählte zwei
+           Klicks und bekam drei Aufrufe. Die vier anderen Ansichten in dieser
+           Datei machten es von Anfang an richtig. */
+        wrap.onclick = (e) => {
             const ziel = elVon(e);
             const o = ziel?.closest('[data-open]');
             if (o) {
@@ -226,16 +240,56 @@ const Ansichten = (() => {
                 Werkzeuge.lernen();
             if (a.dataset['a'] === 'graph')
                 Links.graph();
-            /* Der Knopf im Sicherungsband — derselbe Weg wie in den Einstellungen.
-               Danach den Start-Bildschirm neu zeichnen, damit die Anzeige stimmt;
-               wer sichert, will sehen, dass es gezählt hat. */
+            /* DER KNOPF IM SICHERUNGSBAND — und was er dabei erzählt (E57).
+               Derselbe Weg wie in den Einstellungen; neu ist, was dazwischen
+               zu sehen ist.
+      
+               Eine `.redion`-Sicherung mit Anhängen dauert Sekunden bis Minuten.
+               Bis hierher passierte in dieser Zeit auf der Karte NICHTS: der
+               Knopf blieb, wie er war, und irgendwann kam ein Toast. Am Telefon
+               steht der Toast über der Aktionsleiste und ist nach 2,6 Sekunden
+               weg — wer in dem Moment wegsieht, weiss nicht, ob überhaupt etwas
+               geschieht, und tippt ein zweites Mal.
+      
+               Also sagt es der Knopf selbst: erst „Sichern …" mit einem Kreisel,
+               dann ein Haken, dann die neu gezeichnete Karte mit „Gesichert
+               heute". Drei Zustände, und der mittlere ist der, den man sonst
+               verpasst. */
             if (a.dataset['a'] === 'sichern') {
-                void Promise.resolve(App.sicherungSpeichern()).then(() => {
-                    if (document.getElementById('page')?.querySelector('.home-sich'))
-                        start();
-                });
+                const knopf = a;
+                const wieVorher = knopf.innerHTML;
+                knopf.disabled = true;
+                knopf.classList.add('laeuft');
+                knopf.innerHTML = '<i class="hs-kreisel" aria-hidden="true"></i>Sichern …';
+                /* Was das Vorleseprogramm hört. Ein Kreisel ist für es nichts. */
+                knopf.setAttribute('aria-live', 'polite');
+                const fertig = (gut) => {
+                    if (!knopf.isConnected)
+                        return;
+                    knopf.classList.remove('laeuft');
+                    knopf.classList.toggle('fertig', gut);
+                    knopf.innerHTML = gut ? '✓ Gesichert' : 'Nicht gesichert';
+                    /* Den Haken kurz stehen lassen. Sofort neu zu zeichnen hiesse:
+                       der Knopf blinkt einmal und die Karte sieht aus wie vorher —
+                       man hätte nichts gesehen. */
+                    setTimeout(() => {
+                        if (document.getElementById('page')?.querySelector('.home-sich'))
+                            start();
+                        else if (knopf.isConnected) {
+                            knopf.disabled = false;
+                            knopf.classList.remove('fertig');
+                            knopf.innerHTML = wieVorher;
+                        }
+                    }, 1200);
+                };
+                void Promise.resolve(App.sicherungSpeichern())
+                    .then(() => fertig(true))
+                    /* Auch der Fehlschlag gehört auf den Knopf. Ein Kreisel, der
+                       ewig dreht, ist die schlechteste aller Auskünfte. */
+                    .catch(() => fertig(false));
             }
-        });
+        };
+        ;
     };
     const zahl = (n, name) => `<div class="hz"><b>${n}</b><span>${name}</span></div>`;
     const posteingang = () => {
@@ -307,7 +361,8 @@ const Ansichten = (() => {
                     `<span class="pth">${esc(Werkzeuge.zeitKurz(p.edited))}</span></button>`).join('') +
                 '</div>' +
                 '</div>';
-        wrap.addEventListener('click', e => {
+        /* `onclick =` — siehe die Begründung bei `start()`. */
+        wrap.onclick = (e) => {
             const ziel = elVon(e);
             /* Eine Benachrichtigung gilt als gelesen, sobald man sie antippt */
             const m = ziel?.closest('[data-meld]');
@@ -324,7 +379,8 @@ const Ansichten = (() => {
             }
             if (ziel?.closest('[data-filter]'))
                 posteingangFilter(ziel);
-        });
+        };
+        ;
     };
     /** Was soll im Posteingang auftauchen? */
     const posteingangFilter = (anker) => {

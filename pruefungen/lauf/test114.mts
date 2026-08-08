@@ -1114,6 +1114,117 @@ await seite.waitForTimeout(300);
 p('Escape schliesst es', await seite.evaluate(() =>
   !document.getElementById('rg-willkommen')));
 
+
+console.log('\n19 · Die Sicherungskarte sagt, dass sie arbeitet (§20)');
+
+/* EINE `.redion`-SICHERUNG MIT ANHÄNGEN DAUERT. Bis hierher passierte in
+   dieser Zeit auf der Karte nichts: der Knopf blieb, wie er war, und
+   irgendwann kam ein Toast. Am Telefon steht der über der Aktionsleiste
+   und ist nach 2,6 Sekunden weg — wer in dem Moment wegsieht, weiss nicht,
+   ob überhaupt etwas geschieht, und tippt ein zweites Mal.
+
+   Gemessen wird mit einer absichtlich langsamen Sicherung: der mittlere
+   Zustand ist der, um den es geht, und er ist im Betrieb der kürzeste. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt, ' +
+    '#rg-willkommen').forEach(x => x.remove());
+  Store.setMeta('sicherung:zuletzt', '');       /* nie gesichert */
+  Ansichten.start();
+});
+await seite.waitForTimeout(500);
+
+const sich = await seite.evaluate(async () => {
+  const w = window as any;
+  w.__echtSichern = App.sicherungSpeichern;
+  let gerufen = 0;
+  (App as any).sicherungSpeichern = () => { gerufen++;
+    return new Promise(f => setTimeout(f, 1500)); };
+
+  const knopf = () => document.querySelector<HTMLButtonElement>('.home-sich button');
+  const vorher = { text: (knopf()?.textContent || '').trim(),
+                   gesperrt: !!knopf()?.disabled };
+
+  knopf()?.click();
+  await new Promise(f => setTimeout(f, 300));
+  const b1 = knopf();
+  const laeuft = {
+    text: (b1?.textContent || '').trim(),
+    kreisel: !!document.querySelector('.hs-kreisel'),
+    gesperrt: !!b1?.disabled,
+    /* Ein zweiter Klick darf keine zweite Sicherung starten. */
+    dreht: b1 ? getComputedStyle(document.querySelector('.hs-kreisel')!)
+      .animationName : ''
+  };
+  knopf()?.click();
+  await new Promise(f => setTimeout(f, 1500));
+
+  const b2 = knopf();
+  const c2 = b2 ? getComputedStyle(b2) : null;
+  const fertig = { text: (b2?.textContent || '').trim(),
+                   klasse: b2?.className || '',
+                   deck: c2?.opacity || '', farbe: c2?.color || '',
+                   grund: c2?.backgroundColor || '' };
+
+  (App as any).sicherungSpeichern = w.__echtSichern;
+  return { vorher, laeuft, fertig, gerufen };
+});
+
+p('Vorher ist der Knopf ein gewöhnlicher Knopf',
+  /sichern/i.test(sich.vorher.text) && !sich.vorher.gesperrt,
+  JSON.stringify(sich.vorher));
+p('Während des Sicherns sagt er es', /Sichern …/.test(sich.laeuft.text),
+  sich.laeuft.text);
+p('… mit einem Kreisel, der sich dreht',
+  sich.laeuft.kreisel && sich.laeuft.dreht === 'hs-dreh', JSON.stringify(sich.laeuft));
+/* EIN ZWEITER KLICK WÄHREND DES LAUFS wäre eine zweite Sicherung — bei
+   Anhängen eine zweite Runde durch alle Dateien. */
+p('… und ein zweiter Klick startet nichts Neues', sich.gerufen === 1,
+  String(sich.gerufen) + ' Aufrufe');
+p('Danach steht ein Haken da', /Gesichert/.test(sich.fertig.text) &&
+  /✓/.test(sich.fertig.text), sich.fertig.text);
+/* GESPERRT HEISST NICHT „NICHT GEMEINT". Der Knopf bleibt gesperrt, damit
+   kein zweiter Lauf startet — aber die Erfolgsmeldung muss man lesen
+   können. Gemessen war sie auf Grün bei 40 Prozent Deckkraft. */
+p('… und man kann ihn lesen', parseFloat(sich.fertig.deck) >= 0.95,
+  'Deckkraft ' + sich.fertig.deck);
+p('… in der Farbe für Erfolg, nicht mehr im Akzent',
+  sich.fertig.grund !== '' && sich.fertig.grund !== 'rgba(0, 0, 0, 0)' &&
+  /fertig/.test(sich.fertig.klasse), sich.fertig.grund);
+
+
+console.log('\n20 · Ein Klick ist ein Klick, auch nach dem zehnten Zeichnen');
+
+/* DER FUND, DEN ABSCHNITT 19 NEBENBEI GEMACHT HAT. Er zählte zwei Klicks
+   und bekam drei Aufrufe.
+
+   `#page` bleibt stehen; nur sein Inhalt wird neu geschrieben. Der
+   Start-Bildschirm hängte seinen Zuhörer mit `addEventListener` daran —
+   und `start()` läuft bei JEDER Rückkehr zum Start. Nach dem dritten Mal
+   legte ein Klick auf „Tagesjournal" drei Journale an; nach dem zehnten
+   zehn. Bei „Jetzt sichern" mit Anhängen wären das zehn Läufe durch alle
+   Dateien.
+
+   Gemessen wird mit zehn Zeichnungen, weil eine oder zwei den Unterschied
+   nicht zeigen — der Fehler wächst mit der Nutzungsdauer, und genau
+   deshalb fällt er beim Ausprobieren nie auf. */
+const mehrfach = await seite.evaluate(async () => {
+  const w = window as any;
+  w.__echtJournal = Werkzeuge.journal;
+  let gerufen = 0;
+  (Werkzeuge as any).journal = () => { gerufen++; };
+
+  for (let i = 0; i < 10; i++) Ansichten.start();
+  await new Promise(f => setTimeout(f, 300));
+  document.querySelector<HTMLElement>('#page [data-a="journal"]')?.click();
+  await new Promise(f => setTimeout(f, 200));
+
+  (Werkzeuge as any).journal = w.__echtJournal;
+  return gerufen;
+});
+p('Zehnmal gezeichnet, einmal geklickt, einmal ausgeführt', mehrfach === 1,
+  String(mehrfach) + ' Aufrufe — jeder Zuhörer, der beim Zeichnen dazukommt, ' +
+  'bleibt für immer');
+
 await browser.close();
 server.close();
 
