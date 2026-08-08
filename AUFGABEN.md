@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 101 Prüfläufe**
+**8. August 2026 · 102 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -75,11 +75,12 @@ L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
      Durchlauf mit einem echten Vorleseprogramm
 L15  Symbolregeln und „überfällig" in der bedingten Formatierung
 L16  Automationen: If/Else, Schleife, Vorschau, Protokoll
-L33  Erinnerungen, wenn Redion geschlossen ist — braucht Web Push/VAPID
+L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
 ```
 
-**Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L14 ZIP64
-(E39) · L4 Fehlerwerte (E36) · der grösste Teil von L10, L12 und L15.
+**Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push
+(E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · der grösste Teil von L10,
+L12 und L15.
 
 ---
 
@@ -741,10 +742,10 @@ Einstellungen als Karten (§12) · die Zustandswechsel der Sicherungskarte.
 
 ---
 
-## Phase 12 · Web Push — der Wecker, der auch bei geschlossener App klingelt
+## Phase 12 · Web Push · **erledigt** (8. August, E54)
 
-**Ziel** — `LUECKEN.md` L33 schliessen: ist Redion um acht Uhr geschlossen,
-soll um acht Uhr trotzdem etwas passieren.
+**Ziel war** — `LUECKEN.md` L33 schliessen: ist Redion um acht Uhr
+geschlossen, soll um acht Uhr trotzdem etwas passieren. Steht.
 
 **Der Stand.** Die Hälfte im Browser steht seit dem 7. August (E40): das
 Dienst-Skript zeigt Meldungen über `registration.showNotification()` und
@@ -789,15 +790,22 @@ src/dienst/sw.ts      `push`-Ereignis → fällige Erinnerungen lokal lesen
 src/bereiche/wissen/  Anmeldung anbieten, wenn Erinnerungen erlaubt sind
 ```
 
-**Fertig wenn** — ein Gerät meldet sich an · ein Zeitpunkt kommt in die
-Tabelle · der geplante Lauf stösst ihn · das Dienst-Skript zeigt die
-richtige Erinnerung, auch bei geschlossener App · Abmelden räumt auf · ein
-abgelaufener Endpunkt (410 vom Push-Dienst) wird gelöscht statt endlos
-wiederholt.
+**Fertig, und geprüft** — ein Gerät meldet sich an · ein Zeitpunkt kommt in
+die Tabelle · der geplante Lauf stösst ihn · das Dienst-Skript liest lokal
+nach und zeigt, was fällig ist · ein abgelaufener Endpunkt (410) wird
+gelöscht statt endlos wiederholt · und **kein Erinnerungstext verlässt das
+Gerät**.
 
-**Tests** — ein Lauf gegen den echten Worker, wie `test118` es für den
-Abgleich tut. Dazu: kein Erinnerungstext verlässt je das Gerät (das ist der
-Punkt, an dem diese Phase scheitern kann, ohne dass es jemand merkt).
+**Drei Fehler beim Bauen, alle drei vom Lauf gefunden:** die Argumente von
+`feldText` standen vertauscht, womit jedes Gerät „geraet" hiess und zwei
+verschiedene Telefone einander fanden · `geraet` hat die Feld-Vorgabe
+„Unbekannt", eine fehlende Kennung wäre damit ein gültiges Gerät gewesen ·
+und das Prüf-Token brauchte `sit_` davor, sonst kam 401 und es sah nach
+einem kaputten Weg aus.
+
+**Tests** — `test131` (Suite 95), 44 Punkte, gegen den echten Kern mit
+einem `fetch`, das jeden Stoss mitschreibt statt ihn zu senden. Die
+VAPID-Unterschrift wird mit dem öffentlichen Schlüssel nachgerechnet.
 
 **Achtung, zwei Dinge**
 

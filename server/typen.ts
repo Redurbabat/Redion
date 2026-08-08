@@ -140,5 +140,13 @@ export type Umwelt = {
   /** Die Blob-Ablage für Anhänge (`/datei/*`). Fehlt sie, sagen die
    *  Datei-Wege 503 mit dem Weg zur Einrichtung — alles andere läuft. */
   blobs?: Blobs | null;
+  /** VAPID für Weckrufe (E54). Der öffentliche Schlüssel geht ans Gerät,
+   *  der private unterschreibt den Stoss und bleibt hier. Fehlen sie,
+   *  sagt `/push/schluessel` 503 — Web Push ist eine Zugabe des
+   *  Cloud-Modus, keine Voraussetzung (CLAUDE.md §22). */
+  VAPID_OEFFENTLICH?: string;
+  VAPID_PRIVAT?: string;
+  /** `mailto:…` oder `https://…` — wen der Push-Dienst bei Ärger erreicht. */
+  VAPID_ABSENDER?: string;
   [schluessel: string]: any;
 };

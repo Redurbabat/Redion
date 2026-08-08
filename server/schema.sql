@@ -151,3 +151,28 @@ CREATE TABLE IF NOT EXISTS dateien (
   PRIMARY KEY (bereich, id)
 );
 CREATE INDEX IF NOT EXISTS dateien_zeit ON dateien(bereich, geaendert);
+
+/* --------------------------------------------------------------------------
+   WECKRUFE — Web Push (L33, E54)
+   --------------------------------------------------------------------------
+   HIER STEHT KEIN ERINNERUNGSTEXT, und das ist der ganze Entwurf. Ein Web
+   Push kann Inhalt mitbringen; Redion schickt keinen. Der Server erfährt
+   einen Zeitpunkt und die Adresse eines Geräts — nicht, woran erinnert
+   wird. „Zahnarzt 14:00" ist genau die Sorte Satz, die local-first
+   schützen soll.
+
+   Der Stoss sagt nur „wach auf". Was fällig ist, liest das Dienst-Skript
+   danach aus der lokalen IndexedDB des Geräts.
+   -------------------------------------------------------------------------- */
+CREATE TABLE IF NOT EXISTS weckrufe (
+  id       TEXT PRIMARY KEY,
+  kontoId  TEXT,
+  geraet   TEXT,
+  endpunkt TEXT,
+  p256dh   TEXT,
+  auth     TEXT,
+  wann     TEXT,
+  angelegt TEXT
+);
+CREATE INDEX IF NOT EXISTS weckrufe_wann ON weckrufe(wann);
+CREATE INDEX IF NOT EXISTS weckrufe_konto ON weckrufe(kontoId);

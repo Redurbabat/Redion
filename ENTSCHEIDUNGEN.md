@@ -2855,3 +2855,98 @@ heute, und der gehört zuerst geklärt (Ortszeit, siehe E31).
 
 `test130` (Suite 94), 48 Punkte, samt Telefon. Gegenprobe: das Auftragen
 der Regeln stillgelegt → 19 von 48 rot.
+
+---
+
+## E54 · Web Push — und der Stoss trägt nichts
+
+**Aus `LUECKEN.md` L33.** Eine Erinnerung meldete sich nur, solange Redion
+offen war. Ist die App um acht Uhr geschlossen, passiert um acht Uhr
+nichts; sie wartet bis zum nächsten Öffnen und sagt dann „Verpasst um
+08:00". Ein Telefon zu wecken, ohne dass die Seite läuft, geht nur mit
+Web Push.
+
+**Die Entscheidung fiel vor dem Code: der Stoss trägt keinen Inhalt.**
+
+Ein Web Push kann welchen mitbringen. Er müsste dann verschlüsselt werden
+(aes128gcm) — aber das ist nicht der Grund, ihn wegzulassen. Der Grund
+ist: **der Text einer Erinnerung geht Redions Server nichts an.**
+„Zahnarzt 14:00" ist genau die Sorte Satz, die local-first schützen soll.
+
+```txt
+Gerät   →  „weck mich am 2026-08-09 um 06:00 UTC"   nur die Zeit
+Server  →  zur Zeit: ein leerer Stoss an dieses Gerät
+Gerät   →  liest lokal nach, was fällig ist, und zeigt es
+```
+
+Nebenbei ist das die einfachste Bauform: kein Inhalt heisst keine
+Verschlüsselung, nur die VAPID-Signatur.
+
+**Was der Server am Ende weiss:** acht Felder — Kennung, Konto, Gerätename,
+Endpunkt, die beiden Schlüssel des Geräts, ein Zeitpunkt, ein Datum. Kein
+Titel, kein Ort, keine Seite. Wer diesen Weg erweitert, prüfe zuerst, ob
+das noch gilt.
+
+**Deshalb ist Abschnitt 5 des Prüflaufs der wichtigste.** Alles andere hier
+merkt man am Verhalten: ein Wecker, der nicht klingelt, fällt auf. Dass ein
+Erinnerungstext mitgeschickt wird, fällt **niemandem** auf — nicht dem, der
+es baut, und schon gar nicht dem, der die App benutzt. Genau solche Fehler
+brauchen eine Prüfung.
+
+**Drei Dinge, die beim Bauen schiefgingen** — alle drei vom Lauf gefunden:
+
+*Die Argumente von `feldText` standen vertauscht.* Es heisst
+`text(wert, feld)`; da stand `text('geraet', k.geraet)`. Damit hiess **jedes
+Gerät „geraet"**: zwei verschiedene Telefone fanden einander, und ein
+unbekanntes wurde gefunden. Kein Mensch hätte das je bemerkt. (CLAUDE.md,
+Regel 1: nachsehen statt raten — der teuerste wiederkehrende Fehler.)
+
+*`geraet` hat in der Feldtabelle die Vorgabe „Unbekannt".* Für ein
+Namensfeld richtig, hier falsch: eine fehlende Kennung wäre damit ein
+gültiges Gerät gewesen. Also erst am rohen Wert prüfen, dann säubern.
+
+*Das Prüf-Token brauchte `sit_` davor.* `werFragt` entscheidet am Präfix,
+ob es eine Sitzung oder eine Marke ist; ohne das kam 401, und es sah nach
+einem kaputten Weg aus.
+
+**Eine Marke darf keine Weckrufe legen.** `push` steht bei
+`NUR_MIT_SITZUNG`. Eine Marke ist ein Schlüssel für ein Programm; ein
+Weckruf ist ein Wecker für einen Menschen an einem Gerät. Dürfte eine Marke
+ihn legen, könnte ein Skript mit `schreiben`-Recht fremde Telefone um drei
+Uhr nachts klingeln lassen — und das steht in keiner Rechteliste.
+
+**Auch ein misslungener Stoss löscht die Zeit.** Sonst versucht der nächste
+Lauf es wieder, und der übernächste auch: bei einem Dienst, der gerade
+streikt, wären das sechzig Versuche pro Stunde für einen Wecker, der
+ohnehin zu spät wäre. Ein 404 oder 410 löscht den ganzen Eintrag — dann
+gibt es das Gerät nicht mehr.
+
+**Und ohne Server bleibt alles, wie es ist.** Web Push ist eine Zugabe des
+Cloud-Modus, keine Voraussetzung (CLAUDE.md §22). Ohne VAPID-Schlüssel sagt
+`/push/schluessel` 503 mit dem Weg zur Einrichtung, der geplante Lauf tut
+nichts und wirft auch nicht, und wer nur lokal arbeitet, bekommt seine
+Erinnerung weiterhin beim nächsten Öffnen. Der Cron-Eintrag in
+`wrangler.toml` steht auskommentiert da — es gäbe ohne Schlüssel nichts zu
+tun.
+
+**Was das Dienst-Skript beim Stoss tut:** es öffnet die IndexedDB **ohne
+Versionsangabe**. Ein Dienst-Skript, das die Datenbank hochzieht, während
+in einem anderen Tab die App darauf arbeitet, wäre ein Umbau am fahrenden
+Zug. Gibt es sie noch gar nicht, bricht es ab, statt eine leere Hülle zu
+hinterlassen, in der die App später ihre Umzüge nicht mehr findet.
+
+Und es zeigt **immer** etwas. Ein Dienst-Skript, das auf einen Push hin
+nichts anzeigt, lässt den Browser von sich aus „Diese Seite wurde im
+Hintergrund aktualisiert" einblenden — eine Meldung, die niemand
+geschrieben hat und die nichts sagt. Ist nichts fällig, steht dort
+stattdessen ein ehrlicher Satz.
+
+**Status**
+
+`test131` (Suite 95), 44 Punkte, gegen den echten Kern mit einem `fetch`,
+das jeden Stoss mitschreibt. Die Unterschrift wird mit dem öffentlichen
+Schlüssel nachgerechnet — sonst hätte man ein JWT, das kein Dienst
+annimmt, und die Meldung dazu wäre „401 unauthorized".
+
+Gegenprobe: einen Erinnerungstext in den Stoss gelegt und das Leeren der
+Zeit entfernt → 4 rot, darunter beide Punkte aus Abschnitt 5.

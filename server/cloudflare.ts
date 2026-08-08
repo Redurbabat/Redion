@@ -9,11 +9,12 @@
  * ehrlich mit einer Anleitung statt mit einem Absturz.
  * ========================================================================*/
 
-import { beantworte } from './kern.ts';
+import { beantworte, weckrufeFaellig } from './kern.ts';
 import { ablageD1, blobsR2 } from './ablage.ts';
 import type { Anfrage, Antwort, Kopfzeilen, Umwelt } from './typen.ts';
 
 import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.ts';
+import { stossen, schluesselLesen } from './sicherheit/push.ts';
 
 /**
  * Cloudflare-Request → das Objekt für den Kern.
@@ -73,7 +74,7 @@ const ohneDatenbank = () => new Response(JSON.stringify({
 
 /** Gehört dieser Pfad dem Server? */
 export const istServerWeg = (pfad: string) =>
-  /^\/(konto|sync|datei|freigabe|feldrecht|veroeffentlichen|bereich|protokoll|marken|mcp|s)(\/|$)/.test(pfad) ||
+  /^\/(konto|sync|datei|freigabe|feldrecht|veroeffentlichen|bereich|protokoll|marken|push|mcp|s)(\/|$)/.test(pfad) ||
   /^\/v1\//.test(pfad) || pfad === '/api/stand';
 
 /* `ctx` nimmt der Worker entgegen und reicht es durch; hier wird es nicht
@@ -101,6 +102,13 @@ export const bedienen = async (request: Request, env: Umwelt, _ctx?: unknown) =>
   const umwelt: Umwelt = {
     GITHUB_ID: env.GITHUB_ID, GITHUB_GEHEIM: env.GITHUB_GEHEIM,
     GOOGLE_ID: env.GOOGLE_ID, GOOGLE_GEHEIM: env.GOOGLE_GEHEIM,
+    /* Die VAPID-Schlüssel für Weckrufe (E54). Fehlen sie, sagt
+       `/push/schluessel` 503 mit dem Weg zur Einrichtung; alles andere
+       läuft unverändert weiter — Web Push ist eine Zugabe, keine
+       Voraussetzung (CLAUDE.md §22). */
+    VAPID_OEFFENTLICH: env.VAPID_OEFFENTLICH || '',
+    VAPID_PRIVAT: env.VAPID_PRIVAT || '',
+    VAPID_ABSENDER: env.VAPID_ABSENDER || '',
     ADRESSE: env.ADRESSE || anfrage.adresse || '',
     /* Anhänge: R2, wenn gebunden — ohne Binding sagen die /datei-Wege
        503 mit dem Weg zur Einrichtung, alles andere läuft weiter. */
@@ -108,4 +116,25 @@ export const bedienen = async (request: Request, env: Umwelt, _ctx?: unknown) =>
     holen: fetch
   };
   return alsAntwort(await beantworte(anfrage, ablageD1(env.DB), umwelt));
+};
+
+/* ==========================================================================
+ * DER GEPLANTE LAUF — jede Minute nachsehen, was fällig ist (L33, E54)
+ * --------------------------------------------------------------------------
+ * Eine Minute ist die kleinste Auflösung, die Cloudflare Cron erlaubt, und
+ * für einen Wecker genau genug: „08:00" darf 08:00:40 heissen, aber nicht
+ * 08:05.
+ *
+ * Was hier NICHT passiert: nachsehen, WORAN erinnert wird. Der Server hat
+ * dazu keine Angabe und soll keine haben. Er stösst ein leeres „wach auf";
+ * den Rest weiss nur das Gerät.
+ * ========================================================================*/
+export const geplant = async (env: Umwelt & { DB?: unknown }) => {
+  if (!env || !env.DB) return { gestossen: 0, entfernt: 0, fehler: 0 };
+  return weckrufeFaellig(
+    ablageD1(env.DB),
+    { VAPID_OEFFENTLICH: env.VAPID_OEFFENTLICH || '',
+      VAPID_PRIVAT: env.VAPID_PRIVAT || '',
+      VAPID_ABSENDER: env.VAPID_ABSENDER || '', holen: fetch },
+    new Date().toISOString(), stossen, schluesselLesen);
 };

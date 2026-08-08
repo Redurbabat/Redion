@@ -15,18 +15,33 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**7. August 2026 · 96 Prüfläufe grün**
+**8. August 2026 · 102 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
-Formeln · Tabellenblock · lokale KI · Versionen · Papierkorb · `.json`- und
-`.redion`-Sicherung mit Anhängen · durchgängig TypeScript · Tests.
+Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
+Versionen · Papierkorb · `.json`- und `.redion`-Sicherung mit Anhängen, auch
+über 4 GB · durchgängig TypeScript · Tests.
 
-**Die drei Lücken, die alles andere aufhalten**
+**Was seit dem 7. August dazukam**
 
 ```txt
-1. Mobile ist ab dem 6. August die Hauptumgebung (E37) — L10 ist damit
-   keine Nachlese mehr, sondern die Reihenfolge
-2. Erinnerungen wecken das Telefon nicht, wenn Redion zu ist (L33)
+L11  Grenzen für Agenten (E52) — Notaus, Tageslimit, Rückfrage, und
+     ohne Aufsicht nur lesen
+L12  Barrierefreiheit gemessen und behoben (E51) — 106 Überlagerungen
+     waren für ein Vorleseprogramm keine Dialoge
+L15  bedingte Formatierung im Tabellenblock (E53)
+L33  Web Push (E54) — mit Server klingelt es auch bei geschlossener App;
+     der Stoss trägt dabei keinen Erinnerungstext
+L10  aus dem Nocturne-Entwurf: Marken statt Auswahlfelder, gleitende
+     Reiterpille, 56-px-Leiste (E48–E50)
+```
+
+**Die Lücken, die jetzt obenauf liegen**
+
+```txt
+1. Mobile: der Willkommensbildschirm und die Einstellungen als Karten
+   fehlen noch, und geprüft ist alles nur im Bildmass, nie am Gerät (L10)
+2. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
 3. Was der Browser bei sehr grossen Sicherungen hergibt, ist
    ungemessen (L14) — das Format kann es seit E39
 
@@ -666,7 +681,8 @@ Die Prüfung hätte für immer grün gesagt.
 
 ## L33 · Erinnerungen, wenn Redion geschlossen ist
 
-**Stand** — ◐ sie melden sich zuverlässig, solange Redion offen ist.
+**Stand** — ✅ mit Server (8. August, E54); ohne Server melden sie sich
+weiterhin beim nächsten Öffnen.
 
 Seit dem 6. August: der Dialog schlägt die Zeit in **Ortszeit** vor (vorher
 zwei Stunden daneben — Weltzeit), er übernimmt die Zeit aus der
@@ -689,13 +705,22 @@ Dateisystem, §6). Ein Tipp auf die Meldung landet im Dienst-Skript
 zweites zu öffnen. `test124` Abschnitt 6, elf Punkte — geprüft, indem der
 Prüflauf dem Browser dieselbe Einschränkung gibt wie iOS.
 
-**Was fehlt, und es ist die eigentliche Frage.** Ist Redion um acht Uhr
-geschlossen, passiert um acht Uhr nichts — die Erinnerung wartet bis zum
-nächsten Öffnen. Ein Telefon zu wecken, ohne dass die Seite läuft, geht nur
-mit **Web Push**: Schlüsselpaar (VAPID), Anmeldung je Gerät, ein Dienst, der
-zur richtigen Zeit sendet. Der Server dafür steht (Cloudflare Workers), die
-Push-Hälfte fehlt ganz. Die Hälfte im Browser steht seit dem 7. August: das
-Dienst-Skript zeigt Meldungen und nimmt den Tipp entgegen.
+**Am 8. August gebaut: Web Push (E54).** Ist Redion um acht Uhr
+geschlossen, klingelt es jetzt trotzdem — sofern ein Server mit VAPID-
+Schlüsseln dahintersteht. Anmeldung je Gerät, ein Zeitpunkt in der
+Tabelle `weckrufe`, ein geplanter Lauf jede Minute.
+
+**Der Stoss trägt dabei nichts.** Der Server erfährt einen Zeitpunkt und
+die Adresse eines Geräts — nicht den Text, nicht die Seite, nicht den
+Grund. „Zahnarzt 14:00" ist genau die Sorte Satz, die local-first
+schützen soll. Das Dienst-Skript liest nach dem Aufwachen aus der lokalen
+IndexedDB, was fällig ist. `test131`, 44 Punkte; Abschnitt 5 prüft
+ausdrücklich, dass kein Erinnerungstext hinausgeht.
+
+**Was dafür nötig ist:** ein Server mit D1, VAPID-Schlüssel als Secrets und
+der Cron-Eintrag in `wrangler.toml` (steht auskommentiert da, mit der
+Anleitung daneben). Ohne all das bleibt alles, wie es war — Web Push ist
+eine Zugabe des Cloud-Modus, keine Voraussetzung (CLAUDE.md §22).
 
 **Auf dem iPhone kommt eine Bedingung dazu:** Systemmeldungen zeigt dort nur
 die **installierte** App (Teilen → „Zum Home-Bildschirm", ab iOS 16.4). In

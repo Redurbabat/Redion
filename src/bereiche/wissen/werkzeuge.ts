@@ -1076,10 +1076,102 @@ const Werkzeuge = (() => {
       if ('Notification' in window && Notification.permission === 'default') {
         try { await Notification.requestPermission(); } catch {}
       }
+      /* Und, wenn ein Server da ist, den Weckruf legen — dann klingelt es
+         auch, wenn Redion zu dieser Zeit geschlossen ist (E54). Kein
+         Grund, darauf zu warten: die Erinnerung steht lokal schon, und
+         wenn der Server nicht mag, ist das kein Fehler dieses Dialogs. */
+      void weckrufLegen();
       o.remove();
       UI.toast('Erinnerung gesetzt für ' + new Date(zeit).toLocaleString('de-DE'));
       App.zeichneSeite();
     });
+  };
+
+  /* ==========================================================================
+   * DER WECKRUF — damit es auch klingelt, wenn Redion zu ist (L33, E54)
+   * --------------------------------------------------------------------------
+   * Bis hierher meldete sich eine Erinnerung nur, solange Redion offen war.
+   * Ist die App um acht Uhr geschlossen, passiert um acht Uhr nichts; sie
+   * wartet bis zum nächsten Öffnen und sagt dann „Verpasst um 08:00".
+   *
+   * Ein Telefon zu wecken, ohne dass die Seite läuft, geht nur mit Web Push.
+   * Was dabei an den Server geht, ist ein **Zeitpunkt** — nicht der Text,
+   * nicht die Seite, nicht der Grund. Der Stoss sagt später nur „wach auf";
+   * was fällig ist, liest das Dienst-Skript aus der lokalen Ablage.
+   *
+   * ALLES DARAN IST FREIWILLIG UND DARF FEHLSCHLAGEN. Kein Server, kein
+   * Dienst-Skript, keine Erlaubnis, kein Push im Browser — jedes Mal wird
+   * still aufgehört. Die Erinnerung steht dann trotzdem, sie meldet sich
+   * eben nur beim nächsten Öffnen. Eine Zugabe, die den Grundfall kaputt
+   * macht, wäre keine (CLAUDE.md §22).
+   * ========================================================================*/
+
+  /** Der nächste noch offene Zeitpunkt — oder leer, wenn keiner ansteht. */
+  const naechsteErinnerung = (): string => {
+    const jetzt = Date.now();
+    const offen = erinnerungen()
+      .filter((e: any) => e && !e.erledigt && e.zeit && new Date(e.zeit).getTime() > jetzt)
+      .map((e: any) => new Date(e.zeit).getTime())
+      .sort((a: number, b: number) => a - b);
+    return offen.length ? new Date(offen[0]!).toISOString() : '';
+  };
+
+  const b64uZuBytes = (text: string): Uint8Array => {
+    const s = String(text || '').replace(/-/g, '+').replace(/_/g, '/');
+    const roh = atob(s + '='.repeat((4 - (s.length % 4)) % 4));
+    const b = new Uint8Array(roh.length);
+    for (let i = 0; i < roh.length; i++) b[i] = roh.charCodeAt(i);
+    return b;
+  };
+
+  const bytesZuB64u = (b: ArrayBuffer | null): string => {
+    if (!b) return '';
+    const x = new Uint8Array(b);
+    let s = '';
+    for (const c of x) s += String.fromCharCode(c);
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+
+  const weckrufLegen = async (): Promise<'gelegt' | 'kein-server' | 'nein'> => {
+    try {
+      if (typeof Wolke === 'undefined' || !Wolke.angemeldet()) return 'kein-server';
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'nein';
+      if (!('Notification' in window) || Notification.permission !== 'granted') return 'nein';
+
+      const schluessel = await Wolke.ruf('/push/schluessel');
+      const oeffentlich = schluessel && schluessel.oeffentlich;
+      if (!oeffentlich) return 'kein-server';
+
+      const reg: any = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(f => setTimeout(() => f(null), 2000))
+      ]);
+      if (!reg || !reg.pushManager) return 'nein';
+
+      /* Eine vorhandene Anmeldung weiterverwenden. Zwei Anmeldungen
+         desselben Geräts wären zwei Stösse für einen Wecker — und der
+         Browser gibt beim zweiten `subscribe` ohnehin dieselbe zurück,
+         solange der Schlüssel derselbe ist. */
+      let ab = await reg.pushManager.getSubscription();
+      if (!ab) ab = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64uZuBytes(oeffentlich)
+      });
+      if (!ab) return 'nein';
+
+      const geraet = Wolke.geraeteName();
+      await Wolke.ruf('/push/anmelden', { m: 'POST', k: {
+        geraet, endpunkt: ab.endpoint,
+        p256dh: bytesZuB64u(ab.getKey ? ab.getKey('p256dh') : null),
+        auth:   bytesZuB64u(ab.getKey ? ab.getKey('auth') : null)
+      } });
+
+      /* UND HIER GEHT DIE EINZIGE ANGABE HINAUS, die etwas über den
+         Menschen sagt: WANN. Nicht was, nicht wo, nicht warum. */
+      await Wolke.ruf('/push/wecken', { m: 'POST',
+        k: { geraet, wann: naechsteErinnerung() } });
+      return 'gelegt';
+    } catch { return 'nein'; }
   };
 
   const erinnerungenPruefen = () => {
@@ -1103,7 +1195,13 @@ const Werkzeuge = (() => {
         spaet ? e.text : 'In Redion',
         e.id, e.pageId || '');
     });
-    if (geaendert) Store.setMeta('erinnerungen', liste);
+    if (geaendert) {
+      Store.setMeta('erinnerungen', liste);
+      /* Eine erledigte Erinnerung verschiebt den nächsten Weckruf. Ohne
+         das stünde am Server weiter die Zeit von gestern, und der Stoss
+         käme zu einer Erinnerung, die es nicht mehr gibt. */
+      void weckrufLegen();
+    }
   };
 
   /* ========================================================================
@@ -1978,6 +2076,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
     formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
     erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+    weckrufLegen, naechsteErinnerung,
     ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,

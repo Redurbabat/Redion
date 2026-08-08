@@ -257,6 +257,7 @@ const beantworteRoh = async (a: any, ablage: any, umwelt = {}) => {
     if (t[0] === 'bereich')  return await bereichWeg(a, ablage, wer, t, m, k);
     if (t[0] === 'protokoll')return await protokollWeg(a, ablage, wer, t, m, suche);
     if (t[0] === 'marken')   return await markenWeg(a, ablage, wer, t, m, k);
+    if (t[0] === 'push')     return await pushWeg(a, ablage, wer, t, m, k, umwelt);
     if (t[0] === 'v1')       return await v1Weg(a, ablage, wer, t, m, k, kopf, suche);
     if (t[0] === 'mcp')      return await mcpWeg(a, ablage, wer, m, k);
 
@@ -1307,6 +1308,154 @@ const htmlSeite = (titel: string, inhalt: any) =>
   '</style><h1>' + String(titel).replace(/[<>&]/g, '') + '</h1>' + inhalt +
   '<div class="fuss">Veröffentlicht mit Redion. Die Daten liegen auf dem Gerät ' +
   'des Verfassers — hier steht nur diese eine Seite.</div></html>';
+
+/* ==========================================================================
+ * 10c · WECKRUFE — Web Push, und was hier NICHT ankommt (L33, E54)
+ * --------------------------------------------------------------------------
+ * Vier Wege, und drei davon nehmen zusammen fünf Angaben entgegen:
+ *
+ *   POST   /push/anmelden   { geraet, endpunkt, p256dh, auth }
+ *   POST   /push/wecken     { geraet, wann }
+ *   DELETE /push/abmelden   { geraet }
+ *   GET    /push/schluessel
+ *
+ * Alle vier brauchen ein Token — auch der öffentliche Schlüssel. Nicht
+ * weil er geheim wäre (er heisst öffentlich, weil er es ist), sondern weil
+ * ihn nur braucht, wer sich gleich anmelden will, und dazu ist man ohnehin
+ * angemeldet. Ein Weg weniger, der ohne Token erreichbar ist.
+ *
+ * WAS HIER NICHT ANKOMMT: der Text der Erinnerung. Nicht „Zahnarzt", nicht
+ * die Seite, auf der sie steht, nicht der Grund. Nur ein Zeitpunkt und die
+ * Adresse eines Geräts. Der Stoss sagt später „wach auf"; was fällig ist,
+ * liest das Dienst-Skript aus der lokalen IndexedDB (E54).
+ *
+ * Wer diesen Weg erweitert, prüfe zuerst, ob das noch gilt. Es ist der
+ * einzige Grund, warum es hier keine Verschlüsselung braucht — und der
+ * einzige Grund, warum ein Redion-Server nichts weiss, was er nicht
+ * wissen muss.
+ * ========================================================================*/
+const pushWeg = async (_a: any, ablage: any, wer: any, t: any, m: any, k: any,
+                       umwelt: any) => {
+  const was = t[1];
+
+  /* --- Der öffentliche Schlüssel ---------------------------------------- */
+  /* Ohne eingerichtete Schlüssel eine ehrliche Absage statt einer leeren
+     Antwort — sonst versucht das Gerät es endlos und niemand erfährt,
+     woran es liegt. */
+  if (was === 'schluessel') {
+    const o = umwelt?.VAPID_OEFFENTLICH || '';
+    if (!o) return fehler(503, 'service_unavailable',
+      'Dieser Server kann keine Weckrufe senden — es sind keine VAPID-Schlüssel ' +
+      'eingerichtet. Siehe SERVER-EINRICHTEN.md. Erinnerungen melden sich ' +
+      'weiterhin, solange Redion offen ist.');
+    return antwort(200, { oeffentlich: o });
+  }
+
+  /* ZWEIMAL HINSEHEN, UND BEIDES AUS EINEM GRUND.
+     `feldText` heisst `text(wert, feld)` — erst der Wert, dann der Name.
+     Beim ersten Wurf standen die beiden vertauscht da, und damit hiess
+     JEDES Gerät „geraet": zwei verschiedene Telefone fanden einander,
+     und ein unbekanntes wurde gefunden. Der Prüflauf hat es gemerkt, kein
+     Mensch hätte es je bemerkt.
+     Und `geraet` hat in der Feldtabelle die Vorgabe „Unbekannt" — für ein
+     Namensfeld richtig, hier falsch: eine fehlende Kennung wäre damit ein
+     gültiges Gerät. Also erst am ROHEN Wert prüfen, ob überhaupt einer
+     dasteht, und danach säubern. */
+  const rohGeraet = String(k.geraet ?? '').trim();
+  if (!rohGeraet) return fehler(400, 'validation_error',
+    'Ohne Gerätekennung geht das nicht — sonst wüsste der Server nicht, ' +
+    'welches Gerät er wecken soll.');
+  const geraet = feldText(rohGeraet, 'geraet');
+
+  /* Ein Eintrag JE KONTO UND GERÄT. Zwei Anmeldungen desselben Geräts
+     wären zwei Stösse für einen Wecker. */
+  const vorhanden = (await ablage.finde('weckrufe',
+    { kontoId: wer.konto.id })).find((x: any) => x.geraet === geraet);
+
+  if (was === 'anmelden' && m === 'POST') {
+    const endpunkt = String(k.endpunkt || '');
+    if (!/^https:\/\//.test(endpunkt)) return fehler(400, 'validation_error',
+      'Der Endpunkt muss eine https-Adresse sein.');
+    if (endpunkt.length > 1000) return fehler(400, 'validation_error',
+      'Der Endpunkt ist zu lang.');
+    const satz = {
+      id: vorhanden ? vorhanden.id : kennung(),
+      kontoId: wer.konto.id, geraet, endpunkt,
+      p256dh: String(k.p256dh || '').slice(0, 200),
+      auth: String(k.auth || '').slice(0, 100),
+      /* Eine Anmeldung ist noch kein Wecker. `wann` bleibt leer, bis
+         jemand einen setzt. */
+      wann: vorhanden ? vorhanden.wann : '',
+      angelegt: vorhanden ? vorhanden.angelegt : jetzt()
+    };
+    await ablage.setze('weckrufe', satz);
+    return antwort(200, { ok: true, geraet });
+  }
+
+  if (was === 'wecken' && m === 'POST') {
+    if (!vorhanden) return fehler(404, 'object_not_found',
+      'Dieses Gerät ist nicht angemeldet. Erst /push/anmelden.');
+    const wann = String(k.wann || '');
+    /* Eine Zeit, die kein Datum ist, wäre ein Wecker, der nie klingelt —
+       und niemand würde je erfahren, warum. */
+    if (wann && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(wann))
+      return fehler(400, 'validation_error',
+        'Die Zeit muss im Format 2026-08-09T06:00:00Z stehen.');
+    await ablage.setze('weckrufe', { ...vorhanden, wann });
+    return antwort(200, { ok: true, wann });
+  }
+
+  if (was === 'abmelden' && (m === 'DELETE' || m === 'POST')) {
+    if (vorhanden) await ablage.weg('weckrufe', { id: vorhanden.id });
+    return antwort(200, { ok: true });
+  }
+
+  return fehler(404, 'object_not_found',
+    'Diesen Weg gibt es nicht: /push/' + (was || ''));
+};
+
+/**
+ * Was jetzt fällig ist, stossen — der geplante Lauf.
+ *
+ * Der EINTRAG bleibt stehen, nur `wann` wird geleert: das Gerät ist ja
+ * weiter angemeldet, und eine neue Erinnerung setzt einfach eine neue Zeit.
+ *
+ * Gelöscht wird nur, was der Push-Dienst mit 404 oder 410 abweist — dann
+ * gibt es das Gerät nicht mehr. Ohne das wächst die Tabelle mit Leichen,
+ * und jeder Lauf wird langsamer.
+ */
+export const weckrufeFaellig = async (
+  ablage: any, umwelt: any, jetztZeit: string,
+  stossen: any, schluesselLesen: any
+): Promise<{ gestossen: number; entfernt: number; fehler: number }> => {
+  const o = umwelt?.VAPID_OEFFENTLICH || '';
+  const p = umwelt?.VAPID_PRIVAT || '';
+  if (!o || !p) return { gestossen: 0, entfernt: 0, fehler: 0 };
+
+  const alle = await ablage.finde('weckrufe');
+  const faellig = alle.filter((x: any) => x.wann && x.wann <= jetztZeit);
+  if (!faellig.length) return { gestossen: 0, entfernt: 0, fehler: 0 };
+
+  const schluessel = await schluesselLesen(p, o);
+  const absender = umwelt.VAPID_ABSENDER || 'mailto:redion@example.invalid';
+  let gestossen = 0, entfernt = 0, schlecht = 0;
+
+  for (const w of faellig) {
+    let erg: any = null;
+    try {
+      erg = await stossen(w.endpunkt, schluessel, o, absender,
+                          Date.parse(jetztZeit) || 0, umwelt.holen || fetch);
+    } catch { schlecht++; continue; }
+    if (erg.weg) { await ablage.weg('weckrufe', { id: w.id }); entfernt++; continue; }
+    /* Auch ein misslungener Stoss löscht die Zeit. Sonst versucht der
+       nächste Lauf es wieder, und der übernächste auch — bei einem Dienst,
+       der gerade streikt, sind das sechzig Versuche pro Stunde für einen
+       Wecker, der ohnehin zu spät wäre. */
+    await ablage.setze('weckrufe', { ...w, wann: '' });
+    if (erg.ok) gestossen++; else schlecht++;
+  }
+  return { gestossen, entfernt, fehler: schlecht };
+};
 
 /* ==========================================================================
  * 11 · MARKEN — Token für Programme
