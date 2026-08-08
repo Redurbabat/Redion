@@ -5057,3 +5057,23 @@ null Scheitern, alles grün. Sabotiert wird seither, was wirklich
 geschrieben wird. Und der Plattenvergleich musste die `fehlerliste`
 ausnehmen — der abgebrochene Import trägt sich dort ein, das ist gewollt
 und jetzt ein eigener Prüfpunkt statt einer Abweichung.
+
+**Später am Abend — alle zehn Phasen haben ihr geprüftes Fundament:**
+
+```txt
+RM-5  Shell: Hash-Router (20 eigene Zeilen), Seitenansicht nur lesend,
+      Sheet als <dialog> mit Escape und Fokus-Rückkehr        test151
+RM-6  Datenbank-Tabelle in der Seite, Rohwerte; Formelspalten
+      sagen „(rechnet der Bestand)" statt falscher Zahlen      test151 §3b
+RM-7  ProseMirror-Werkstatt an echten Blöcken — tippt, zeichnet
+      aus, Verlauf, und speichert AUSDRÜCKLICH nicht           test154
+RM-8  Inhaltsadressen (redion-merkle-v1) + BlobStore mit OPFS,
+      IndexedDB-Rückfall, Dedup als Folge der Adressierung     test153
+RM-9  Outbox nach dem Operations-Modell des Texts — Konflikte
+      bleiben liegen, bis sie GELÖST werden                    Vitest
+```
+
+Dazu, ausserhalb der Migration: E79 (Einspielen in einer Transaktion).
+Der Weg zu RM-10 ist jetzt reine Parität — Bereich für Bereich in RM-6,
+bis die neue Shell alles kann, was der Bestand kann, und der grosse
+Vergleich sie freigibt.
