@@ -117,6 +117,7 @@ const GRUNDSTOCK = [
     './quell/bereiche/dateien/ausgeben.js',
     './quell/kern/helfer/tempo.js',
     './quell/kern/helfer/ablage.js',
+    './quell/kern/helfer/rollrand.js',
     './quell/bereiche/planen/dienst.js',
     './quell/bereiche/einstellungen/erweiterungen.js',
     './quell/bereiche/verbinden/eingang.js',

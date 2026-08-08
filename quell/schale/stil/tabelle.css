@@ -104,6 +104,57 @@
 .tbl-feld:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 .tbl.imFokus .tbl-feld:focus-visible { outline: none; }
 
+/* ===========================================================================
+   DIE WEICHE KANTE, WO ES SEITLICH WEITERGEHT
+
+   Am Telefon, 390 px breit, stand im Tabellenblock:
+
+       Spalte B          Spalte C
+       1'450.00 CHF      1'45
+       2'199.70 CHF      2'18
+
+   Dort ist nichts kaputt — die Tabelle geht rechts weiter, und C2 enthält
+   sehr wohl `1'450.00 CHF`. Abgeschnitten hat sie der BILDRAND.
+
+   Gefährlich ist daran die SCHARFE Kante. Sie liest sich als Ende der Zahl:
+   `1'45` ist eine gültige Zahl, nur eine andere. Für eine zu enge Zelle gibt
+   es seit jeher `###` — die Zelle weiss, dass ihr Inhalt nicht passt. Am
+   Bildrand weiss das niemand: die Zelle ist breit genug, nur der Bildschirm
+   ist es nicht. Derselbe Fund wie in CLAUDE.md §55.2, eine Ebene höher.
+
+   Der letzte Streifen verläuft deshalb ins Nichts. Das Auge liest „geht
+   weiter" statt „hört auf", und es kostet weder Platz noch einen Hinweis.
+
+   ÜBER `mask-image`, nicht über ein aufgelegtes Element: ein Pseudo-Element
+   im Rollfeld rollte MIT dem Inhalt und wäre nach dem ersten Wisch weg. Eine
+   Maske gilt dem Kasten, nicht seinem Inhalt — sie bleibt am Rand stehen.
+
+   `data-rand` setzt `kern/helfer/rollrand.js`, und nur dann, wenn es
+   wirklich weitergeht. Eine Kante an einer Tabelle, die ganz ins Bild passt,
+   wäre eine Behauptung, die nicht stimmt. */
+.tbl-feld[data-rand] { --rollrand: 26px; }
+
+.tbl-feld[data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+.tbl-feld[data-rand~="links"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+}
+.tbl-feld[data-rand~="links"][data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+
+/* Am Rechner ist die Tabelle selten angeschnitten, und wenn doch, ist der
+   Bildschirm gross genug, dass ein schmalerer Streifen reicht. */
+@media (min-width: 761px) {
+  .tbl-feld[data-rand] { --rollrand: 18px; }
+}
+
 /* --- Kopfzeile oben ------------------------------------------------------- */
 .tbl-spalten {
   position: sticky; top: 0; z-index: 3;

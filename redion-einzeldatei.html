@@ -2452,6 +2452,57 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .tbl-feld:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 .tbl.imFokus .tbl-feld:focus-visible { outline: none; }
 
+/* ===========================================================================
+   DIE WEICHE KANTE, WO ES SEITLICH WEITERGEHT
+
+   Am Telefon, 390 px breit, stand im Tabellenblock:
+
+       Spalte B          Spalte C
+       1'450.00 CHF      1'45
+       2'199.70 CHF      2'18
+
+   Dort ist nichts kaputt — die Tabelle geht rechts weiter, und C2 enthält
+   sehr wohl `1'450.00 CHF`. Abgeschnitten hat sie der BILDRAND.
+
+   Gefährlich ist daran die SCHARFE Kante. Sie liest sich als Ende der Zahl:
+   `1'45` ist eine gültige Zahl, nur eine andere. Für eine zu enge Zelle gibt
+   es seit jeher `###` — die Zelle weiss, dass ihr Inhalt nicht passt. Am
+   Bildrand weiss das niemand: die Zelle ist breit genug, nur der Bildschirm
+   ist es nicht. Derselbe Fund wie in CLAUDE.md §55.2, eine Ebene höher.
+
+   Der letzte Streifen verläuft deshalb ins Nichts. Das Auge liest „geht
+   weiter" statt „hört auf", und es kostet weder Platz noch einen Hinweis.
+
+   ÜBER `mask-image`, nicht über ein aufgelegtes Element: ein Pseudo-Element
+   im Rollfeld rollte MIT dem Inhalt und wäre nach dem ersten Wisch weg. Eine
+   Maske gilt dem Kasten, nicht seinem Inhalt — sie bleibt am Rand stehen.
+
+   `data-rand` setzt `kern/helfer/rollrand.js`, und nur dann, wenn es
+   wirklich weitergeht. Eine Kante an einer Tabelle, die ganz ins Bild passt,
+   wäre eine Behauptung, die nicht stimmt. */
+.tbl-feld[data-rand] { --rollrand: 26px; }
+
+.tbl-feld[data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+.tbl-feld[data-rand~="links"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand));
+}
+.tbl-feld[data-rand~="links"][data-rand~="rechts"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--rollrand),
+                      #000 calc(100% - var(--rollrand)), transparent 100%);
+}
+
+/* Am Rechner ist die Tabelle selten angeschnitten, und wenn doch, ist der
+   Bildschirm gross genug, dass ein schmalerer Streifen reicht. */
+@media (min-width: 761px) {
+  .tbl-feld[data-rand] { --rollrand: 18px; }
+}
+
 /* --- Kopfzeile oben ------------------------------------------------------- */
 .tbl-spalten {
   position: sticky; top: 0; z-index: 3;
@@ -17964,6 +18015,11 @@ const SpreadsheetView = (() => {
         const koerper = document.createElement('div');
         koerper.className = 'tbl-koerper';
         feld.append(spaltenKopf, koerper);
+        /* Die weiche Kante rechts, wo die Tabelle über den Bildrand hinausgeht.
+           Am Telefon stand `1'450.00 CHF` dort als `1'45` — eine gültige Zahl,
+           nur eine andere. Siehe `kern/helfer/rollrand.ts`. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(feld);
         const fuss = document.createElement('div');
         fuss.className = 'tbl-fuss';
         /* ======================================================================
@@ -19615,6 +19671,10 @@ const DbRaster = (() => {
         feld.tabIndex = 0;
         feld.setAttribute('role', 'grid');
         feld.setAttribute('aria-label', 'Raster ' + (coll.name || ''));
+        /* Dieselbe weiche Kante wie im Tabellenblock — dasselbe Raster, derselbe
+           Fund: am Telefon stand `14500` als `1450` da. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(feld);
         const spaltenKopf = document.createElement('div');
         spaltenKopf.className = 'tbl-spalten';
         const koerper = document.createElement('div');
@@ -51715,6 +51775,110 @@ const Ablage = (() => {
     return { kopiere, kopiereJetzt, ueberFeld };
 })();
 window.Ablage = Ablage;
+
+</script>
+<script>
+/* ===== quell/kern/helfer/rollrand.js ===== */
+"use strict";
+/* ============================================================================
+ * rollrand.js — Wo ein Rollfeld angeschnitten ist, soll man das sehen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/helfer/rollrand.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/kern/helfer/rollrand.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * DER GRUND, WARUM ES DIESE DATEI GIBT
+ *
+ * Am Telefon, 390 px breit, stand im Tabellenblock:
+ *
+ *     Spalte B          Spalte C
+ *     1'450.00 CHF      1'45
+ *     2'199.70 CHF      2'18
+ *
+ * Rechts ist nichts kaputt — dort geht die Tabelle weiter, und die Zelle C2
+ * enthält sehr wohl `1'450.00 CHF`. Abgeschnitten hat sie der BILDRAND.
+ *
+ * Und genau das ist gefährlich, weil die Kante SCHARF ist. Eine scharfe
+ * Kante liest sich als Ende der Zahl: `1'45` ist eine gültige Zahl, nur eine
+ * andere. Für eine zu enge Zelle gibt es seit jeher `###` — die Zelle weiss,
+ * dass ihr Inhalt nicht passt. Am Bildrand weiss das niemand: die Zelle ist
+ * breit genug, nur der Bildschirm ist es nicht.
+ *
+ * Das ist derselbe Fund wie in CLAUDE.md §55.2, eine Ebene höher. Dort war es
+ * `634.2166666667`, das als `34.2166666667` dastand.
+ *
+ * DIE ANTWORT ist keine Warnung und kein Hinweistext, sondern eine WEICHE
+ * KANTE. Der letzte Streifen verläuft ins Nichts, und damit liest das Auge
+ * „hier geht es weiter" statt „hier hört die Zahl auf". Es kostet keine
+ * Zeile Text, keinen Platz und keinen Klick.
+ *
+ * WARUM ÜBER `mask-image` UND NICHT ÜBER EIN AUFGELEGTES ELEMENT. Ein
+ * Pseudo-Element im Rollfeld rollt MIT dem Inhalt und wäre nach dem ersten
+ * Wisch weg. Eine Maske gilt dem Kasten des Elements, nicht seinem Inhalt —
+ * sie bleibt am Rand stehen, egal wie weit gerollt wurde. Und sie braucht
+ * keine Geometrie: kein Ausmessen von Kopf- und Fusszeile, das beim nächsten
+ * Umbau schiefgeht.
+ * ==========================================================================*/
+const Rollrand = (() => {
+    /**
+     * Wie viel Spielraum, bevor eine Seite als „geht weiter" gilt.
+     *
+     * Nicht null: Browser rechnen `scrollWidth` und `clientWidth` bei
+     * gebrochenen Zoomstufen um Bruchteile eines Pixels auseinander. Bei null
+     * flackerte die Kante dann an einem Rollfeld, an dem gar nichts zu rollen
+     * ist.
+     */
+    const SPIEL = 2;
+    /** Setzt `data-rand` auf „links", „rechts", „links rechts" oder nichts. */
+    const pruefe = (feld) => {
+        const links = feld.scrollLeft > SPIEL;
+        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
+        const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
+        /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
+           Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
+        if (wert) {
+            if (feld.dataset['rand'] !== wert)
+                feld.dataset['rand'] = wert;
+        }
+        else if (feld.dataset['rand'] !== undefined)
+            delete feld.dataset['rand'];
+    };
+    /**
+     * Ein Rollfeld beobachten. Gibt eine Funktion zurück, die das wieder
+     * löst — gebraucht wird sie bisher nicht, aber ein Beobachter ohne
+     * Abmeldung ist ein Leck, das man erst bemerkt, wenn es zu spät ist.
+     */
+    const binde = (feld) => {
+        if (!feld)
+            return () => { };
+        const nachsehen = () => pruefe(feld);
+        feld.addEventListener('scroll', nachsehen, { passive: true });
+        /* Die Breite ändert sich auch ohne Rollen: das Fenster dreht sich, eine
+           Spalte wird breiter gezogen, die Seitenleiste klappt ein. Ohne diesen
+           Beobachter bliebe die Kante stehen, wo sie beim ersten Zeichnen war. */
+        let beobachter = null;
+        if (typeof ResizeObserver !== 'undefined') {
+            beobachter = new ResizeObserver(nachsehen);
+            beobachter.observe(feld);
+            /* Auch der Inhalt zählt — eine neue Spalte macht `scrollWidth` grösser,
+               ohne dass sich am Feld selbst etwas ändert. */
+            const inhalt = feld.firstElementChild;
+            if (inhalt)
+                beobachter.observe(inhalt);
+        }
+        /* Beim ersten Mal steht die Breite noch nicht fest: das Feld ist gerade
+           erst im Dokument, und der Zeichner war noch nicht dran. */
+        nachsehen();
+        requestAnimationFrame(nachsehen);
+        return () => {
+            feld.removeEventListener('scroll', nachsehen);
+            beobachter?.disconnect();
+        };
+    };
+    return { binde, pruefe, SPIEL };
+})();
+window.Rollrand = Rollrand;
 
 </script>
 <script>

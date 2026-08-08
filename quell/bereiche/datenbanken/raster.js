@@ -198,6 +198,10 @@ const DbRaster = (() => {
         feld.tabIndex = 0;
         feld.setAttribute('role', 'grid');
         feld.setAttribute('aria-label', 'Raster ' + (coll.name || ''));
+        /* Dieselbe weiche Kante wie im Tabellenblock — dasselbe Raster, derselbe
+           Fund: am Telefon stand `14500` als `1450` da. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(feld);
         const spaltenKopf = document.createElement('div');
         spaltenKopf.className = 'tbl-spalten';
         const koerper = document.createElement('div');

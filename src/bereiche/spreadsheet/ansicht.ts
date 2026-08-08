@@ -577,6 +577,11 @@ const SpreadsheetView = (() => {
     koerper.className = 'tbl-koerper';
     feld.append(spaltenKopf, koerper);
 
+    /* Die weiche Kante rechts, wo die Tabelle über den Bildrand hinausgeht.
+       Am Telefon stand `1'450.00 CHF` dort als `1'45` — eine gültige Zahl,
+       nur eine andere. Siehe `kern/helfer/rollrand.ts`. */
+    if (typeof Rollrand !== 'undefined') Rollrand.binde(feld);
+
     const fuss = document.createElement('div');
     fuss.className = 'tbl-fuss';
 

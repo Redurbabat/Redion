@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 106 Prüfläufe**
+**8. August 2026 · 107 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -43,6 +43,8 @@ L16  Probelauf für Automationen (E61) — der ▶-Knopf hiess „probeweise"
      ohne hinzusehen, und eine löschte danach endgültig
 —    Fünf Prüfläufe reichten ihren Rumpf als Zeichenkette weiter und
      starben etwa jedes dritte Mal an einem Socketfehler
+L10  die weiche Kante am Rollfeld (E63) — am Telefon stand `1'450.00 CHF`
+     als `1'45` da, mit scharfer Kante und damit als andere Zahl
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -305,13 +307,21 @@ Willkommensbildschirm (§11, E55).
 zuletzt die Zustandswechsel der Sicherungskarte (E57) und die Einstellungen
 als zwei Seiten statt zwei Spalten (E58).
 
+**Was das Hinsehen am 8. August fand** (E63): Tabellenblock und
+Datenbankraster rollen am Telefon seitlich, und die angeschnittene Spalte
+hatte eine **scharfe** Kante. `1'450.00 CHF` stand dort als `1'45` — eine
+gültige Zahl, nur eine andere. Jetzt verläuft der letzte Streifen; das Auge
+liest „geht weiter" statt „hört auf". `test136` hält es.
+
 **Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
 Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
-über der Tastatur) · mobile Datenbank- und Tabellenansicht rollen zwar,
-sind aber nicht fürs Telefon entworfen · Tastaturverhalten · Side Peek auf
-kleinen Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter
-Pixelzahlen — die Masse stehen an einem Dutzend Stellen in `bausteine.css`
-und wurden schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
+über der Tastatur) · die mobile Datenbank- und Tabellenansicht ist damit
+noch nicht fürs Telefon **entworfen**, nur gegen die gefährlichste Stelle
+gesichert — es fehlen etwa eine Kartenansicht statt des Rasters und
+weniger leere Zeilen · Tastaturverhalten · Side Peek auf kleinen
+Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen —
+die Masse stehen an einem Dutzend Stellen in `bausteine.css` und wurden
+schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
 
 **Geprüft auf echtem Gerät** — nein. Alles bisher gemessen mit Playwright
 im Telefon-Bildmass. Das findet Grössen und Überdeckungen, aber nicht das

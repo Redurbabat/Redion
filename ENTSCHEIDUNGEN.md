@@ -3617,3 +3617,96 @@ Gewohnheit, die älter ist als sie.
 bleiben gebunden. Sie zerstören nichts: im schlimmsten Fall wechselt
 zusätzlich der Browserreiter. Der Tausch lohnte den Verlust nicht, und die
 Frage steht in L20.
+
+---
+
+## E63 · Eine scharfe Kante liest sich als Ende der Zahl
+
+**Datum** 8. August 2026 · **Lücke** L10 · **Prüflauf** `test136` (17 Punkte)
+
+Der Fund kam von einem Bild, nicht aus dem Quelltext. Am Telefon, 390 px
+breit, stand im Tabellenblock:
+
+```txt
+Spalte B          Spalte C
+1'450.00 CHF      1'45
+2'199.70 CHF      2'18
+```
+
+Rechts ist nichts kaputt. Die Tabelle geht dort weiter, C2 enthält sehr
+wohl `1'450.00 CHF`, und ein Wisch nach links bringt es zum Vorschein.
+Abgeschnitten hat es der **Bildrand**.
+
+**Warum das trotzdem ein Fehler ist**
+
+Weil die Kante scharf war. Eine scharfe Kante liest sich als Ende der Zahl,
+und `1'45` ist eine gültige Zahl — nur eine andere. Niemand sieht einer
+sauber endenden Ziffernfolge an, dass hinter ihr noch drei Stellen stehen.
+
+Für eine **zu enge Zelle** gibt es das seit dem ersten Tag: `###`. Die
+Zelle weiss dann, dass ihr Inhalt nicht hineinpasst, und sagt es. Am
+Bildrand weiss das niemand — die Zelle ist breit genug, nur der Bildschirm
+ist es nicht.
+
+Das ist derselbe Fund wie in CLAUDE.md §55.2, eine Ebene höher. Dort war es
+`634.2166666667`, das als `34.2166666667` dastand. Beide Male gilt: kein
+Prüflauf konnte es finden, weil beide Zahlen gültig sind. Beide Male hat es
+das **Hinsehen** gefunden.
+
+**Die Antwort ist keine Warnung, sondern eine weiche Kante**
+
+Der letzte Streifen verläuft ins Nichts. Das Auge liest damit „hier geht es
+weiter" statt „hier hört die Zahl auf". Es kostet keinen Hinweistext,
+keinen Platz und keinen Klick — und es ist genau die Auskunft, die fehlte.
+
+26 px am Telefon, 18 px am Rechner. Dort ist die Tabelle seltener
+angeschnitten, und wenn doch, reicht ein schmalerer Streifen.
+
+**Über `mask-image`, nicht über ein aufgelegtes Element.** Ein
+Pseudo-Element im Rollfeld rollte **mit dem Inhalt** und wäre nach dem
+ersten Wisch aus dem Bild. Eine Maske gilt dem Kasten des Elements, nicht
+seinem Inhalt: sie bleibt am Rand stehen, egal wie weit gerollt wurde. Und
+sie braucht keine Geometrie — kein Ausmessen von Kopf- und Fusszeile, das
+beim nächsten Umbau schiefgeht.
+
+**Nur dort, wo es wirklich weitergeht.** `data-rand` setzt
+`kern/helfer/rollrand.ts`, und zwar erst, wenn `scrollWidth` grösser ist als
+`clientWidth`. Eine Kante an einer Tabelle, die ganz ins Bild passt, wäre
+eine Behauptung, die nicht stimmt — `test136` §1 prüft ausdrücklich, dass
+sie dann fehlt.
+
+Der Spielraum von zwei Pixeln ist kein Rundungsfehler, sondern Absicht:
+Browser rechnen `scrollWidth` und `clientWidth` bei gebrochenen Zoomstufen
+um Bruchteile auseinander, und bei null flackerte die Kante an einem
+Rollfeld, an dem gar nichts zu rollen ist.
+
+**Was dabei geprüft werden musste, ohne dass es jemand vermutet hätte**
+
+Eine Maske erzeugt einen eigenen Stapelzusammenhang. Ob `position: sticky`
+darin weiter greift — die stehende Kopfzeile und die stehende Zeilenspalte
+sind der halbe Tabellenblock —, ist im Quelltext nicht zu sehen. `test136`
+§3 rollt deshalb 200 px nach rechts und misst nach, dass beide stehen
+bleiben.
+
+**Und ein Prüflauf, der zuerst das Falsche mass**
+
+Der erste Ablauf meldete sieben rote Punkte. Nachgemessen in der echten
+App: der Block ist dort 334 px breit, das Rollfeld rollt, die Kante steht.
+Der Prüflauf hatte in einen Kasten **ohne Breitengrenze** gezeichnet — dort
+wächst der Block bis zur Breite seines Inhalts, das Rollfeld rollt gar
+nicht mehr, und die Kante fehlt zu Recht.
+
+Sieben rote Punkte für einen Zustand, den es nicht gibt. Die Lehre ist
+dieselbe wie in §55.2, nur andersherum: eine Prüfung, die immer rot sagt,
+ist so wenig wert wie eine, die immer grün sagt. Beide Male hilft nur,
+**in der echten App nachzumessen**, bevor man dem Prüflauf glaubt.
+
+**Status**
+
+`test136`, 17 Punkte, 6 Abschnitte — Tabellenblock und Datenbankraster,
+Telefon und Rechner. Gegenproben:
+
+```txt
+Masken entfernt        → 2 rot
+Beobachter entfernt    → 9 rot
+```
