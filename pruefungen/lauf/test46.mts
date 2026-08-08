@@ -73,15 +73,18 @@ const pruef = (n: any, ist: any, soll: any) => {
   const nachTab = await p.evaluate(() => document.querySelector<HTMLElement>('.rt-tab.an span')?.textContent);
   pruef('Strg+Tab wechselt zum ersten', nachTab, '🅰 Alpha');
 
-  /* Neuer Reiter über Strg + T */
+  /* Neuer Reiter über Strg + Alt + N.
+     Hier stand Strg + T. Das gibt der Browser nicht her: `preventDefault`
+     bleibt dort wirkungslos, und dann geschah beides — Redion legte einen
+     Reiter an, der Browser einen daneben. Siehe ENTSCHEIDUNGEN.md E62. */
   await p.evaluate(async (s) => { App.oeffne(s.c); await new Promise(r => setTimeout(r, 250)); }, seiten);
-  await p.keyboard.press('Control+t');
+  await p.keyboard.press('Control+Alt+n');
   await p.waitForTimeout(350);
   const drei = await p.evaluate(() => ({
     anzahl: Fenster.reiter().length,
     tabs: [...document.querySelectorAll<HTMLElement>('.rt-tab span')].map(x => x.textContent)
   }));
-  pruef('Drei Reiter nach Strg+T', drei.anzahl, 3);
+  pruef('Drei Reiter nach Strg+Alt+N', drei.anzahl, 3);
 
   /* Öffnen ändert nur den aktiven Reiter */
   const gewechselt = await p.evaluate(async (s) => {
