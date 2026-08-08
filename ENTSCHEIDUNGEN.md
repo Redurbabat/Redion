@@ -3802,3 +3802,86 @@ eigenen Entwurf. Er zeigt dasselbe Raster wie am Rechner, nur grösser;
 zwölf Zeilen, von denen bei einem kleinen Blatt die Hälfte leer ist. Ob
 dort etwas anderes hingehört — eine Zeile als Karte, wie es die Datenbank
 längst macht —, ist eine eigene Frage und steht in L10.
+
+---
+
+## E65 · Dieselbe Zahl an zwei Stellen, zum dritten Mal an einem Tag
+
+**Datum** 8. August 2026 · **Lücke** L22 · **Prüflauf** `test138` (14 Punkte)
+
+Nachdem E64 zweimal denselben Fehler gefunden hatte — eine Zahl, die an
+zwei Stellen steht und auseinanderläuft —, habe ich das Projekt gezielt
+danach absuchen lassen: fünf Blickwinkel, 22 Kandidaten. Der schwerste
+steht hier.
+
+**Der Fund**
+
+`kern/helfer/tempo.ts` blendet in langen Tabellen die Zeilen aus, die
+niemand sieht, und setzt an ihre Stelle einen Platzhalter. Die Rechnung
+dafür stand als:
+
+```js
+const hoehe = 34;
+```
+
+Eine Zeile ist nie 34 px hoch. `table.grid td` macht ihre Höhe über
+`padding`, und die Ansicht hat drei Stufen. Gemessen in Chromium:
+
+```txt
+h-klein    31,25 px
+h-normal   37,25 px
+h-gross    49,25 px
+```
+
+Keine davon ist 34.
+
+**Was das anrichtet**
+
+Der Platzhalter oben bekommt `von * hoehe`. Bei 142 übersprungenen Zeilen
+sind das 4828 px statt der wirklichen 6994 — ein Versatz von **2166 px**.
+Der Puffer beträgt 25 Zeilen, also 1231 px, und kann ihn nicht auffangen.
+
+Gemessen, bevor es behoben war: der Nutzer steht bei 6000 px, also etwa
+bei Zeile 122. Eingeblendet waren die Zeilen 143 bis 218. **Er sieht die
+falschen Zeilen** — oder leeren Raum.
+
+Es braucht drei Dinge, damit es auftritt: mehr als 120 Zeilen, die Ansicht
+auf „alle Einträge" statt der üblichen 50, und weites Rollen. Alle drei
+sind gewöhnliche Zustände, und keiner davon war je geprüft.
+
+**Warum nicht zwei Zahlen abgleichen**
+
+Weil die Fehlerquelle dann bliebe, nur mit einem Kommentar daneben. Genau
+das stand bei `ZH_HANDY` schon (`/* muss zu --tbl-zh passen */`) und hat
+nicht verhindert, dass sie auseinanderliefen — zweimal an einem Tag.
+
+Die Höhe wird jetzt **gemessen**, an einer eingeblendeten Zeile, und bei
+jedem Durchgang nachgesehen: der Nutzer kann im Ansichtsmenü von „normal"
+auf „gross" stellen, ohne dass neu gebunden wird. Eine gemessene Zahl kann
+nicht auseinanderlaufen.
+
+Das ist die allgemeine Lehre aus allen drei Fällen: **wo ein Wert schon
+irgendwo steht, soll man ihn lesen, nicht abschreiben.** Beim Tabellenblock
+ging das nicht — dort braucht das Rechnen die Zahl, bevor gezeichnet ist,
+und deshalb prüft `test137` §2 dort die Gleichheit nach. Hier ging es, und
+dann ist Messen die bessere Antwort.
+
+**Status**
+
+`test138`, 14 Punkte, drei Zeilenhöhen einzeln. Gegenprobe — die 34 zurück:
+
+```txt
+✗ Die Zeile, vor der man steht, ist auch gezeichnet
+  — bei 6000 px und 49.25 px je Zeile ist das Zeile 121;
+    gezeichnet sind 143–218
+```
+
+vier rote Punkte über die drei Stufen.
+
+**Was die Suche sonst noch fand** — 22 Kandidaten, nach Schaden sortiert
+in `LUECKEN.md` unter L34. Darunter: die Sicherungstypen sagen Listen, wo
+der schreibende Code Verzeichnisse schreibt · `ViewLayout` kennt zwölf
+Ansichtsarten, das Register dreizehn · die Telefongrenze steht als 700,
+760 und 768 nebeneinander · vier Grössengrenzen der Dateiablage stehen je
+zweimal. Ein Fehlalarm war auch dabei: `#topbar .nur-telefon` wird
+absichtlich ausgeblendet, seit die Pillenleiste die Kopfleiste ist.

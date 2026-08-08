@@ -51465,7 +51465,39 @@ const Tempo = (() => {
             return;
         if (Store.getMeta('tempoFenster', true) === false)
             return;
-        const hoehe = 34;
+        /* ---------------------------------------------------------------------
+         * DIE ZEILENHÖHE WIRD GEMESSEN, NICHT ANGENOMMEN.
+         *
+         * Hier stand `const hoehe = 34`. Eine Zeile ist aber nie 34 px hoch:
+         * `table.grid td` bringt sie über `padding` zustande, und die Ansicht
+         * hat drei Stufen. Gemessen am 8. August, Chromium:
+         *
+         *     h-klein    31,25 px
+         *     h-normal   37,25 px
+         *     h-gross    49,25 px
+         *
+         * Der Schaden war nicht kosmetisch. Der Platzhalter oben bekommt
+         * `von * hoehe`; bei 142 übersprungenen Zeilen sind das 4828 px statt
+         * der wirklichen 6994. Der Versatz von 2166 px ist grösser als der
+         * Puffer von 25 Zeilen — wer in einer langen Tabelle mit „alle
+         * Einträge" weit nach unten rollt, sieht die falschen Zeilen.
+         *
+         * Zwei Zahlen abzugleichen wäre die schlechtere Antwort gewesen: dann
+         * gäbe es die Fehlerquelle weiterhin, nur mit einem Kommentar daneben.
+         * Eine gemessene Zahl kann nicht auseinanderlaufen.
+         *
+         * Gemessen wird JETZT, solange noch alle Zeilen sichtbar sind — nach
+         * dem ersten Ausblenden gäbe es nichts mehr zu messen.
+         * ------------------------------------------------------------------- */
+        const gemessen = () => {
+            for (const z of zeilen) {
+                const h = z.getBoundingClientRect().height;
+                if (h > 4)
+                    return h; /* > 4, damit eine eingeklappte Zeile nicht zählt */
+            }
+            return 34; /* Nur, wenn gar nichts zu messen ist. */
+        };
+        let hoehe = gemessen();
         const puffer = 25;
         const kasten = scroller || document.getElementById('scroll') || document.documentElement;
         /* Damit die Bildlaufleiste stimmt: eine Zeile, die den Rest ausfüllt. */
@@ -51487,6 +51519,20 @@ const Tempo = (() => {
             if (!document.body.contains(tabelle)) {
                 kasten.removeEventListener('scroll', zeichne);
                 return;
+            }
+            /* Die Höhe kann sich ändern, ohne dass neu gezeichnet wird: der
+               Nutzer stellt im Ansichtsmenü von „normal" auf „gross". Also bei
+               jedem Durchgang an einer sichtbaren Zeile nachsehen — das kostet
+               eine Messung und erspart genau den Fehler, den diese Stelle hatte. */
+            for (const z of zeilen) {
+                if (z.style.display === 'none')
+                    continue;
+                const h = z.getBoundingClientRect().height;
+                if (h > 4 && Math.abs(h - hoehe) > 0.5) {
+                    hoehe = h;
+                    vonAlt = bisAlt = -1;
+                }
+                break;
             }
             const k = tabelle.getBoundingClientRect();
             const sicht = kasten.clientHeight || innerHeight;
