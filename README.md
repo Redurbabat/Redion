@@ -193,7 +193,7 @@ npm run pruefen -- --schnell
 
 Einzelne Prüfung:
 
-node pruefungen/lauf/test87.mjs
+node pruefungen/lauf/test87.mts
 
 
 
@@ -263,6 +263,20 @@ persönliche Cloud
 Sync zwischen Geräten
 öffentliche Seiten
 Download von Offline-Paketen
+
+
+
+Am Telefon
+
+Seit August 2026 ist das Telefon die Hauptumgebung, nicht der Nebenschauplatz. Redion sieht dort anders aus als am Rechner — dieselben Daten, ein anderer Weg dorthin.
+
+Oben fünf Wege: der Arbeitsbereich, Start, Seiten, Termine und Mehr. Nur der gewählte trägt seinen Namen; so passen alle fünf auch auf 360 Pixel.
+
+Unten drei Knöpfe, die immer da sind: Suchen, KI fragen, Neue Seite. Der Stift fragt zuerst, was entstehen soll — Seite, Datenbank, Tabelle, Aufgabe, Karteikarte, Datei oder Vorlage.
+
+Menüs kommen als Blatt von unten, nicht als kleines Fenster in der Ecke. Was man antippen soll, ist mindestens 44 Pixel gross.
+
+Als App installieren: In Safari den Teilen-Knopf, dann „Zum Home-Bildschirm". Danach startet Redion ohne Adresszeile, mit eigenem Symbol und offline. Auf dem iPhone erscheinen Erinnerungen als Systemmeldung nur in dieser installierten Fassung (ab iOS 16.4) — in Safari selbst nur innerhalb von Redion.
 
 
 
@@ -1223,7 +1237,7 @@ npm run pruefen -- --schnell
 
 Einzelne Prüfung:
 
-node pruefungen/lauf/test87.mjs
+node pruefungen/lauf/test87.mts
 
 Einzeldatei bauen:
 
@@ -1233,13 +1247,29 @@ node bauen.mts
 
 Wichtige Prüfungen
 
-test87.mjs
+test87.mts
 
-prüft Architektur- und Sicherheitsgrenzen.
+prüft Architektur- und Sicherheitsgrenzen: dass kein Bereich einen anderen direkt einbindet, dass Nutzertext escaped wird, dass keine Formel fremden Code ausführt.
 
-test100.mjs
+test100.mts
 
-prüft .redion-Sicherung mit echten Bytes und Anhängen.
+prüft die .redion-Sicherung mit echten Bytes und Anhängen: exportieren, alles löschen, importieren, Byte für Byte vergleichen.
+
+test103.mts
+
+prüft die Grenzen des ZIP-Formats — über 4 GB, über 65535 Einträge, ZIP64.
+
+test114.mts
+
+misst am Telefon: was man antippen soll, muss man treffen können. 428, 393, 390, 375 und 360 Pixel.
+
+test128.mts
+
+prüft, was ein Vorleseprogramm hört: Rollen, Namen, Zustände, den Weg der Tastatur.
+
+test129.mts
+
+prüft die Grenzen für KI-Agenten: Notaus, Tageslimit, Rückfrage vor Änderungen, und dass ein unbeaufsichtigter Lauf nur liest.
 
 
 
@@ -1277,7 +1307,7 @@ node bauen.mts
 
 Code-Stil
 
-Redion ist aktuell ein klassisches HTML/CSS/JavaScript-Projekt, soll aber langfristig vollständig auf TypeScript migriert werden. Die Grundlage steht bereits: `tsconfig.json`, `npm run typecheck`, die zentralen Typen unter `src/core/types/` und eine erste migrierte Datei. Der Weg dorthin steht in `doku/TYPESCRIPT-MIGRATION.md`.
+Redion ist ein TypeScript-Projekt ohne Framework und ohne Bauzwang für die normale Nutzung. Die Migration ist seit August 2026 abgeschlossen: es gibt keine von Hand geschriebene JavaScript-Datei mehr. Was der Browser lädt, wird aus `src/**.ts` erzeugt (`npm run bauen:ts` schreibt nach `quell/`) und mitversioniert — deshalb startet die App weiterhin per Doppelklick auf `index.html`. Prüfläufe und Server laufen als `.mts` direkt unter Node. Der Weg dorthin steht in `doku/TYPESCRIPT-MIGRATION.md`, die Regel in `ENTSCHEIDUNGEN.md` E28.
 
 Aktuelle Regeln:
 
@@ -1410,7 +1440,18 @@ WebLLM braucht WebGPU
 Ollama muss lokal laufen
 Server/Cloud ist optional und nicht Pflicht
 große Dateien brauchen .redion/R2 statt JSON
-über 4 GB braucht besondere Behandlung
+
+Über 4 GB geht seit August 2026: die Sicherung schreibt ZIP64, wenn eine Datei, das Archiv oder die Zahl der Einträge die alten Grenzen sprengt. Kleine Sicherungen bleiben dabei gewöhnliche ZIP-Dateien, die jedes Programm öffnet.
+
+Zwei Grenzen, die zu kennen wichtiger ist als die technischen:
+
+Erinnerungen melden sich, solange Redion offen ist. Ist die App um acht Uhr geschlossen, wartet die Erinnerung bis zum nächsten Öffnen und sagt dann „Verpasst um 08:00". Ein Telefon zu wecken, ohne dass die Seite läuft, braucht Web Push und damit einen Server — das ist geplant und noch nicht gebaut.
+
+Vorleseprogramme: Rollen, Namen, Zustände und der Weg der Tastatur sind gemessen und in Ordnung. Ein Durchlauf mit einem echten Vorleseprogramm (VoiceOver, NVDA) fehlt noch. Was gemessen ist, ist nicht dasselbe wie gehört.
+
+Und eine, die Absicht ist:
+
+Ein KI-Agent, der von selbst zu einer Uhrzeit loslegt, darf nur lesen und berichten. Ändern darf er dabei nur, wenn man es ihm ausdrücklich erlaubt hat — eine Rückfrage um acht Uhr früh beantwortet niemand. Dazu gibt es einen Notausschalter und ein Tageslimit.
 
 
 
