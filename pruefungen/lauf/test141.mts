@@ -146,6 +146,63 @@ for (const b of BREITEN) {
     `oben ${l.leisteOben}, unten ${l.leisteUnten}, Leiste ${l.seitenleiste}`);
 }
 
+console.log('\n4b · Die Schublade beginnt unter den Pillen, nicht dahinter');
+/* DIESELBE LEHRE, EINE REGEL WEITER OBEN. Bei `#main` steht sie seit E58
+   im Kommentar: „`--hoben` STATT EINER ZAHL. Hier stand `60px`, und die
+   Leiste darüber war 76 px hoch." Angewandt war sie dort — und bei der
+   Schublade nicht: sie begann bei 60, die Leiste endet bei 80.
+   Die obersten 20 px waren die Zeile „Suchen", halb dahinter. Am iPhone,
+   wo die Kerbe 47 px dazulegt, wären es anderthalb Zeilen. */
+const schublade = await browser.newPage({
+  viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+schublade.on('pageerror', e => fehler.push('Schublade: ' + e.message));
+await schublade.goto(`http://localhost:${PORT}/index.html`);
+await schublade.waitForTimeout(1800);
+const sl = await schublade.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.getElementById('rg-willkommen')?.remove();
+  document.getElementById('rg-einladung')?.remove();
+  document.body.classList.add('side-offen');
+  const sb = document.getElementById('sidebar');
+  sb?.classList.remove('collapsed');
+  const oben = document.getElementById('handy-oben');
+  const r = sb?.getBoundingClientRect();
+  const ro = oben?.getBoundingClientRect();
+  /* Und die erste SICHTBARE Zeile darin — sie ist es, die verschwand.
+     Nicht einfach `querySelector`: die Logozeile steht auch im Blatt, ist
+     am Telefon aber ausgeblendet und meldet trotzdem ein Rechteck bei 0.
+     Der erste Anlauf mass sie und meldete „N Redion beginnt bei 0 px" —
+     ein roter Punkt für ein Element, das niemand sieht. */
+  const sichtbareZeilen = [...(sb?.querySelectorAll('button, a') ?? [])]
+    .filter(el => {
+      const st = getComputedStyle(el);
+      const rr = el.getBoundingClientRect();
+      return st.display !== 'none' && st.visibility !== 'hidden' && rr.height > 8;
+    })
+    .sort((a, b2) => a.getBoundingClientRect().top - b2.getBoundingClientRect().top);
+  const ersteZeile = sichtbareZeilen[0];
+  const rz = ersteZeile?.getBoundingClientRect();
+  return {
+    leisteUnten: ro ? Math.round(ro.bottom) : -1,
+    schubladeOben: r ? Math.round(r.top) : -1,
+    zeileOben: rz ? Math.round(rz.top) : -1,
+    zeileText: (ersteZeile?.textContent ?? '').trim().slice(0, 24),
+    zTiefe: sb ? Number(getComputedStyle(sb).zIndex) : -1,
+    zLeiste: oben ? Number(getComputedStyle(oben).zIndex) : -1
+  };
+});
+await schublade.close();
+
+p('Die Pillenleiste liegt über der Schublade',
+  (sl as any).zLeiste > (sl as any).zTiefe,
+  `Leiste ${(sl as any).zLeiste}, Schublade ${(sl as any).zTiefe}`);
+gleich('Die Schublade beginnt genau an der Unterkante der Leiste',
+  (sl as any).schubladeOben, (sl as any).leisteUnten);
+p('… und ihre erste Zeile liegt ganz darunter',
+  (sl as any).zeileOben >= (sl as any).leisteUnten,
+  `„${(sl as any).zeileText}" beginnt bei ${(sl as any).zeileOben} px, ` +
+  `die Leiste endet bei ${(sl as any).leisteUnten} px`);
+
 console.log('\n5 · Im Quelltext steht keine zweite Grenze mehr');
 /* Sechs `matchMedia('(max-width: 700px)')` im TypeScript und drei
    `@media(max-width:700px)` in der CSS waren die Quelle des Bandes. */

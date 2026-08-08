@@ -3143,7 +3143,18 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
      bleiben also stehen: man sieht weiter, in welchem Bereich man ist, und
      kommt mit einem Tipp in den nächsten. Das ist genau die Rolle, die die
      Vorlage ihnen gibt. */
-  #sidebar{ position:fixed; left:0; top:60px; height:calc(100% - 60px);
+  /* `--hoben` STATT DER 60. Genau diese Lehre steht weiter unten schon
+     einmal, bei `#main` — und sie war hier nicht angewandt.
+
+     Gemessen am 8. August: die Pillenleiste endet bei 80 px, die Schublade
+     begann bei 60. Die obersten 20 px lagen dahinter, und das war die
+     Zeile „🔍 Suchen" — halb abgeschnitten, gleich die erste im Blatt.
+     Am iPhone, wo die Kerbe 47 px dazulegt, wäre `--hoben` 127 px und die
+     Schublade begänne immer noch bei 60: die ersten anderthalb Zeilen weg.
+
+     Der Kommentar darüber sagt „sie beginnt UNTER den Pillen". Die Absicht
+     stand also da, nur die Zahl folgte ihr nicht. */
+  #sidebar{ position:fixed; left:0; top:var(--hoben); height:calc(100% - var(--hoben));
             transform:translateX(-102%); transition:transform .22s ease;
             width:100%; z-index:390; flex:0 0 auto;
             border-right:none; }

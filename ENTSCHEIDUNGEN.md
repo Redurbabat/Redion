@@ -4105,6 +4105,42 @@ wörtlich mit dem alten Zustand:
 Erklärende Kommentare, die die alte Zahl nennen, zählen dabei nicht mit —
 sonst würde die Erklärung des Fehlers selbst zum Fehler.
 
+**Und derselbe Fehler eine Regel weiter oben**
+
+Beim Aufräumen fiel die Schublade auf, die auf dem Telefon die Bereiche
+zeigt. Ihr Kommentar sagt ausdrücklich: „Jetzt füllt sie die Breite und
+beginnt **UNTER den Pillen**." Ihre Zahl sagte `top: 60px`. Die
+Pillenleiste endet bei 80.
+
+Die obersten 20 px lagen also dahinter, und das war die Zeile „🔍 Suchen"
+— die erste im Blatt, halb abgeschnitten. Am iPhone, wo die Kerbe 47 px
+dazulegt, wäre `--hoben` 127 px und die Schublade begänne immer noch bei
+60: anderthalb Zeilen weg.
+
+Das Bittere daran: **die Lehre stand schon in derselben Datei.** Sechzig
+Zeilen weiter unten, bei `#main`, steht seit E58 wörtlich:
+
+> `--hoben` STATT EINER ZAHL. Hier stand `60px`, und die Leiste darüber
+> war 76 px hoch — die obersten 16 px des Zurück-Knopfes lagen dahinter.
+> Am iPhone, wo die Kerbe noch 47 px dazulegt, war es die ganze Zeile.
+
+Angewandt wurde sie damals auf `#main`. Die Schublade, die dieselbe Zahl
+trug, blieb stehen. Eine Lehre, die man an einer Stelle zieht, gilt nicht
+von selbst an der zweiten — auch nicht, wenn sie zwei Bildschirmseiten
+entfernt aufgeschrieben ist.
+
+**Ein Messfehler beim Prüfen, der ebenfalls hierher gehört.** Der erste
+Anlauf griff die erste Zeile mit `querySelector('button, a')` und bekam
+die Logozeile: am Telefon ausgeblendet, meldet aber trotzdem ein Rechteck
+bei 0 px. Der Lauf war rot für ein Element, das niemand sieht. Gemessen
+wird jetzt nur, was `display`, `visibility` und eine Höhe über 8 px hat.
+
 **Status**
 
-`test141`, 24 Punkte, sechs Breiten. Gegenprobe: 5 rot.
+`test141`, 27 Punkte, sechs Breiten plus die Schublade. Gegenproben:
+
+```txt
+Seitenleiste zurück auf 700   → 5 rot
+Schublade zurück auf top:60px → 2 rot: „🔍SuchenStrg P beginnt bei
+                                 64 px, die Leiste endet bei 80 px"
+```

@@ -616,13 +616,12 @@ ViewLayout kannte `raster` nicht                   E66
 STUECK, KLEIN und DATEI_MAX je zweimal             E67 — jetzt aus KONSTANTEN
 Die Serverzahl 100 MB stand blank in maschine.ts   E67 — benannt und geprüft
 Die Telefongrenze stand als 700, 760 und 768       E68 — jetzt eine
+Die Schublade begann bei 60 px, die Leiste bei 80  E68 — jetzt --hoben
 ```
 
 **Offen, nach Schaden sortiert**
 
 ```txt
-anzeige  Die Kopfleistenhöhe: --hoben ist 80 px + Kerbe, die Schublade
-         rechnet mit top:60px.
 anzeige  Der Ziffern-Blocktyp steht im Register als `kurz` und dreimal
          als Zuordnung im Editor.
 anzeige  TYP_GRUPPEN in steuerung.ts baut Register.eigenschaften nach.
