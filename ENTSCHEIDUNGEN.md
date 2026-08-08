@@ -3482,3 +3482,106 @@ Probe-Wächter entfernt   → 16 rot, darunter „Zähler steht auf 3" mit 7
 try/catch entfernt       → der Prüflauf bricht ab, statt rot zu werden —
                            genau das war das Verhalten vorher
 ```
+
+---
+
+## E62 · „Kopiert" muss stimmen — und ein Ausschneiden, das nichts verliert
+
+**Datum** 8. August 2026 · **Prüflauf** `test135` (19 Punkte)
+
+An dreissig Stellen stand dasselbe Muster:
+
+```js
+navigator.clipboard?.writeText(irgendwas);
+UI.toast('Link kopiert');
+```
+
+Drei davon hatten ein `.then`, drei ein `.catch`. Die übrigen
+vierundzwanzig hatten weder noch.
+
+**Warum das zwei Fehler auf einmal sind**
+
+`writeText` ist ein Versprechen, das brechen kann — kein Recht, kein Fokus
+im Fenster, kein Nutzerklick davor, ein älterer Browser. Ohne `.catch`
+wird daraus eine unbehandelte Ablehnung: in der Konsole, nicht vor den
+Augen dessen, der gerade kopiert hat.
+
+Und der Toast meldet danach trotzdem Erfolg. Der Mensch geht weg, fügt
+woanders ein — und bekommt, was vorher in der Ablage lag. Still, plausibel,
+falsch: dieselbe Sorte wie die abgeschnittene Zahl aus CLAUDE.md §55.2.
+
+**Was gemessen wurde**
+
+In Chromium, am 8. August, in beiden Umgebungen:
+
+```txt
+                          file://          http://localhost
+navigator.clipboard       da               da
+writeText('probe')        WIRFT            WIRFT
+execCommand('copy')       geht             geht
+```
+
+Das „WIRFT" ist die Antwort ohne Ablage-Recht — in einem gewöhnlichen
+Browserfenster mit Fokus geht `writeText` meistens sehr wohl. Aber es
+zeigt: der alte Weg ist kein Notnagel für alte Browser, sondern der, der
+ankommt, wo der neue abgewiesen wird. Deshalb ist er in
+`kern/helfer/ablage.ts` nicht der Notfall, sondern der gleichberechtigte
+zweite Versuch.
+
+**Die Regel des Helfers: er sagt nur etwas, wenn ihm jemand etwas zu sagen
+mitgegeben hat.** Ohne `meldung` schweigt er ganz und gibt nur `true` oder
+`false` zurück. Das braucht, wer selbst mehr weiss — beim Kopieren
+mehrerer Blöcke etwa steht Redions eigene Ablage in jedem Fall, innerhalb
+der App lässt sich also einfügen, auch wenn der Browser sich weigert. Ein
+blosses „kopiert" verschwiege das, ein blosses „ging nicht" wäre zu düster.
+
+**Der Punkt, an dem aus dem Ärgernis ein Datenverlust wurde**
+
+Im Blockmenü stand:
+
+```js
+Ablage.kopiereJetzt(b.text || '');
+Store.trashBlock(b.id); Store.purgeBlock(b.id);
+```
+
+`purgeBlock` räumt **endgültig** weg — nicht in den Papierkorb, sondern
+fort. Ging das Kopieren nicht, gab es den Text danach nirgends mehr: nicht
+in der Zwischenablage, nicht im Papierkorb, nicht auf der Seite. Ein
+Tastendruck, drei Verluste.
+
+Jetzt wird erst kopiert und nur bei Erfolg gelöscht. `test135` §5 hält es
+fest: beide Wege abgewiesen → der Block steht noch da, mit seinem Text.
+
+Das Ausschneiden **mehrerer** Blöcke war davon nie betroffen: es nimmt
+`trashBlock` ohne `purgeBlock`, und Redions eigene Ablage hält den Baum.
+Diese Unterscheidung ist der Grund, warum nur die eine Stelle geändert
+wurde.
+
+**Eine Antwort, die dadurch falsch geworden wäre**
+
+`AppEinstellung.kann().zwischenlage` fragte, ob es `writeText` gibt. Mit
+dem Rückfallweg ist „nein" die falsche Antwort — kopieren geht dann immer
+noch. Die Prüfung fragt jetzt nach beiden Wegen.
+
+**Was der Helfer nicht tut: lesen.** Aus der Zwischenablage zu lesen
+braucht eine ausdrückliche Erlaubnis und ist etwas anderes als
+hineinzuschreiben. Redion liest über das `paste`-Ereignis, und das bringt
+seinen Inhalt selbst mit (siehe E59).
+
+**Status**
+
+`test135`, 19 Punkte. §6 hält den Zustand: keine Datei ausser dem Helfer
+ruft `writeText` noch selbst auf. Gegenproben:
+
+```txt
+Rückfallweg entfernt      → 3 rot
+Wahrheitsprüfung entfernt → 2 rot, darunter „Es steht NICHT ‚Link
+                            kopiert' da" mit genau diesem Text
+```
+
+**Was offen bleibt** — Strg T, Strg W, Strg Tab und Strg 1…9 belegt Redion
+für seine eigenen Reiter, und Browser geben diese Kombinationen nicht her;
+`preventDefault` bleibt dort wirkungslos. Nachweisen lässt sich das in
+diesem Prüfstand **nicht**: Playwright schickt Tastendrücke an die Seite,
+nicht an die Browseroberfläche. Es steht deshalb als offene Frage in L20
+und nicht als behobener Punkt.

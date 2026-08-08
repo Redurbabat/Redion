@@ -3460,8 +3460,7 @@ const Datenbank = (() => {
       if (elVon(e)?.closest<HTMLElement>('[data-a="formlink"]')) {
         const link = location.origin + location.pathname + '#' +
                      (block ? block.id : coll.id) + '/' + view.id;
-        navigator.clipboard?.writeText(link);
-        UI.toast('Link zum Formular kopiert — ohne Server gilt er auf diesem Gerät');
+        Ablage.kopiereJetzt(link, 'Link zum Formular kopiert — ohne Server gilt er auf diesem Gerät');
         return;
       }
       if (elVon(e)?.closest<HTMLElement>('[data-a="logik"]')) {
@@ -3796,7 +3795,7 @@ const Datenbank = (() => {
           m2.remove(); App.zeichneSeite();
         });
       }
-      if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + row.id); UI.toast('Link kopiert'); }
+      if (a === 'link') { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + row.id, 'Link kopiert'); }
       if (a === 'komm') Kommentare.neu(row);
       if (a === 'fav') { Store.updateBlock(row.id, { favorite: !row.favorite }); App.zeichneBaum(); }
       if (a === 'del') {
@@ -4592,8 +4591,7 @@ const Datenbank = (() => {
       if (a2 === 'vlink') {
         const link = location.origin + location.pathname + '#' +
                      (block ? block.id : coll.id) + '/' + view.id;
-        navigator.clipboard?.writeText(link);
-        UI.toast('Link zur Ansicht kopiert');
+        Ablage.kopiereJetzt(link, 'Link zur Ansicht kopiert');
         return;
       }
       if (b.dataset.a === 'rename') {
@@ -5896,8 +5894,7 @@ const Datenbank = (() => {
         App.zeichneSeite();
       }
       if (a === 'link') {
-        navigator.clipboard?.writeText(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + view.id);
-        UI.toast('Link zur Ansicht kopiert');
+        Ablage.kopiereJetzt(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + view.id, 'Link zur Ansicht kopiert');
       }
       if (a === 'csv') csvExport(coll, view);
       if (a === 'xlsx') { Austausch.datenbankAlsExcel(coll)

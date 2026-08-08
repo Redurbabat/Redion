@@ -414,8 +414,7 @@ const MCP = (() => {
                         return;
                     }
                     if (elVon(ev)?.closest('[data-a="kop"]')) {
-                        navigator.clipboard?.writeText(text);
-                        UI.toast('Kopiert');
+                        Ablage.kopiereJetzt(text, 'Kopiert');
                     }
                 });
                 return;

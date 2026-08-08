@@ -928,8 +928,7 @@ const KI = (() => {
                 if (!b)
                     return;
                 if (b.dataset.t === 'kopie') {
-                    navigator.clipboard?.writeText(antwort);
-                    UI.toast('Antwort kopiert');
+                    Ablage.kopiereJetzt(antwort, 'Antwort kopiert');
                 }
                 else {
                     b.classList.add('an');
@@ -1425,8 +1424,7 @@ const KI = (() => {
             if (!b)
                 return;
             if (b.dataset.a === 'kopieren') {
-                navigator.clipboard?.writeText(antwort);
-                UI.toast('Kopiert');
+                Ablage.kopiereJetzt(antwort, 'Kopiert');
             }
             if (b.dataset.a === 'nochmal') {
                 schreibLauf(befehl, auftrag);

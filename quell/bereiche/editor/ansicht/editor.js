@@ -493,8 +493,7 @@ const Blocks = (() => {
                     if (!b2)
                         return;
                     if (b2.dataset.a === 'kopieren') {
-                        navigator.clipboard?.writeText(Store.getBlock(block.id)?.text || '');
-                        UI.toast('Code kopiert');
+                        Ablage.kopiereJetzt(Store.getBlock(block.id)?.text || '', 'Code kopiert');
                         return;
                     }
                     if (b2.dataset.a === 'nr') {
@@ -1292,8 +1291,13 @@ const Blocks = (() => {
             const text = e.clipboardData?.getData('text/plain');
             if (!text)
                 return;
-            /* Im Codeblock ist Markdown kein Markdown, sondern Inhalt. */
-            const strukturiert = b.type === 'text' && mdIstStruktur(text);
+            /* Wo roher Text der Inhalt IST, wird kein Markdown gelesen. In einem
+               Codeblock ist „# hallo" eine Kommentarzeile, in einer Formel steht
+               TeX, und im HTML-Block steht HTML. Alles andere darf gliedern —
+               auch ein Listenpunkt: wer eine Liste in eine Liste einfügt, will
+               Punkte und keinen Absatz mit Bindestrichen darin. */
+            const ROHTEXT = ['code', 'equation', 'html', 'flashcard'];
+            const strukturiert = !ROHTEXT.includes(b.type) && mdIstStruktur(text);
             /* Immer selbst einsetzen: sonst legt der Browser das mitkopierte HTML
                mit all seinen Stilen in den Block, und beim nächsten Zeichnen ist
                es wieder weg — Text, der vor den Augen des Nutzers verschwindet. */
@@ -1309,8 +1313,9 @@ const Blocks = (() => {
             }
             const teile = mdLesen(text);
             const letzte = mdEinsetzen(teile, b.parentId, eltern.content.indexOf(b.id) + 1);
-            /* Der leere Block, in dem eingefügt wurde, hat seinen Zweck erfüllt. */
-            if (b.type === 'text' && !ct.textContent.trim()) {
+            /* Der leere Block, in dem eingefügt wurde, hat seinen Zweck erfüllt —
+               ob er ein Absatz war oder ein leerer Listenpunkt. */
+            if (!ct.textContent.trim()) {
                 Store.trashBlock(b.id);
                 Store.purgeBlock(b.id);
             }
@@ -1546,9 +1551,7 @@ const Blocks = (() => {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
                 e.preventDefault();
                 const adr = location.href.split('#')[0] + '#block=' + b.id;
-                navigator.clipboard.writeText(adr)
-                    .then(() => UI.toast('Link auf diesen Block kopiert'))
-                    .catch(() => UI.toast('Link: ' + adr));
+                Ablage.kopiereJetzt(adr, 'Link auf diesen Block kopiert');
                 return;
             }
             /* Strg + Umschalt + Rücktaste: den ganzen Block weg, ohne Rückfrage */
@@ -2643,23 +2646,27 @@ const Blocks = (() => {
             if (a === 'down')
                 verschiebe(b, 1);
             if (a === 'link') {
-                navigator.clipboard?.writeText(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + b.id);
-                UI.toast('Link zum Block kopiert');
+                Ablage.kopiereJetzt(location.origin + location.pathname + '#' + App.aktuelleSeite() + ':' + b.id, 'Link zum Block kopiert');
             }
             if (a === 'ref') {
-                navigator.clipboard?.writeText('((' + b.id + '))');
-                UI.toast('Blockverweis kopiert — irgendwo einfügen');
+                Ablage.kopiereJetzt('((' + b.id + '))', 'Blockverweis kopiert — irgendwo einfügen');
             }
             if (a === 'copy') {
-                navigator.clipboard?.writeText(b.text || '');
-                UI.toast('Text kopiert');
+                Ablage.kopiereJetzt(b.text || '', 'Text kopiert');
             }
             if (a === 'cut') {
-                navigator.clipboard?.writeText(b.text || '');
-                Store.trashBlock(b.id);
-                Store.purgeBlock(b.id);
-                App.zeichneSeite();
-                UI.toast('Ausgeschnitten');
+                /* ERST kopieren, DANN löschen — und nur dann. `purgeBlock` räumt
+                   endgültig weg; wenn die Zwischenablage den Text nicht genommen
+                   hat, gäbe es ihn danach nirgends mehr. Vorher stand das Löschen
+                   gleichberechtigt daneben und lief auch, wenn das Kopieren
+                   abgewiesen wurde. */
+                Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
+                    if (!ging)
+                        return;
+                    Store.trashBlock(b.id);
+                    Store.purgeBlock(b.id);
+                    App.zeichneSeite();
+                });
             }
             if (a === 'komm')
                 Kommentare.neu(b);
@@ -2839,11 +2846,16 @@ const Blocks = (() => {
     const auswahlKopieren = async () => {
         const t = auswahlAlsText();
         ablage = auswahlBloecke().map(b => Store.baum(b.id));
-        try {
-            await navigator.clipboard.writeText(t);
-        }
-        catch { }
-        UI.toast(ausgewaehlt.length + ' Blöcke kopiert');
+        const n = ausgewaehlt.length;
+        /* Ohne Meldung, weil hier mehr zu sagen ist als „ging" oder „ging
+           nicht": die INTERNE Ablage steht in jedem Fall, innerhalb von Redion
+           lässt sich also einfügen, auch wenn der Browser die Zwischenablage
+           verweigert. Ein blosses „kopiert" verschwiege das, ein blosses
+           „ging nicht" wäre zu düster. */
+        const ging = await Ablage.kopiere(t);
+        UI.toast(ging
+            ? n + (n === 1 ? ' Block kopiert' : ' Blöcke kopiert')
+            : n + ' hier gemerkt — für andere Programme hat der Browser das Kopieren abgelehnt');
     };
     const auswahlSchneiden = async () => {
         await auswahlKopieren();

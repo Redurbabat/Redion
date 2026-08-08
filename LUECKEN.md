@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 104 Prüfläufe**
+**8. August 2026 · 106 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -39,6 +39,8 @@ L20  Markdown gemessen statt gezählt (E59) — das Kürzelzeichen blieb
      seit jeher im Text stehen, und Strg V las kein Markdown zurück
 L16  Probelauf für Automationen (E61) — der ▶-Knopf hiess „probeweise"
      und änderte echte Daten; dazu Fehler im Laufverlauf
+—    „Kopiert" muss stimmen (E62) — dreissig Stellen meldeten Erfolg,
+     ohne hinzusehen, und eine löschte danach endgültig
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -531,9 +533,23 @@ woanders einfügte, bekam einen einzigen Block mit allen Rautezeichen darin —
 der Text war da, die Gliederung weg. Es gab überhaupt keinen `paste`-Griff
 im Editor.
 
-Fehlt noch: Konflikte mit Browser- und Betriebssystem-Kürzeln systematisch
-prüfen · die 33 fehlenden Tastenkürzel · Markdown-Tabellen beim Einfügen
-(`| a | b |`) · verschachtelte Zitate.
+**Konflikte, Stand 8. August.** `test134` schickt jedes Kürzel ab und
+liest `defaultPrevented`: fünfzehn nimmt Redion dem Browser ab (Strg N, P,
+K, J, F, L, [, ], \, Komma und fünf mit Umschalt), und die acht, die dem
+Menschen gehören, lässt es in Ruhe — Strg C, V, X, A, R, S. Das ist der
+Teil, der zählt: wer Strg C global abfängt, nimmt dem Menschen das
+Kopieren aus jedem Textfeld.
+
+**Was dabei NICHT nachweisbar ist.** Strg T, Strg W, Strg Tab und
+Strg 1…9 belegt Redion für seine eigenen Reiter, und Browser geben diese
+Kombinationen nicht her — `preventDefault` bleibt dort wirkungslos, beide
+Dinge geschehen. Zeigen lässt sich das hier nicht: Playwright schickt
+Tastendrücke an die Seite, nicht an die Browseroberfläche. Es steht
+deshalb als offene Frage da und nicht als Befund.
+
+Fehlt noch: ein Weg, die vier oben wirklich zu messen · die 33 fehlenden
+Tastenkürzel · Markdown-Tabellen beim Einfügen (`| a | b |`) ·
+verschachtelte Zitate.
 
 ## L21 · Vollständige Verschlüsselung
 

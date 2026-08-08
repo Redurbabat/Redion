@@ -922,7 +922,7 @@ const KI = (() => {
       tat.addEventListener('click', (e) => {
         const b = elVon(e)?.closest<HTMLElement>('[data-t]');
         if (!b) return;
-        if (b.dataset.t === 'kopie') { navigator.clipboard?.writeText(antwort); UI.toast('Antwort kopiert'); }
+        if (b.dataset.t === 'kopie') { Ablage.kopiereJetzt(antwort, 'Antwort kopiert'); }
         else {
           b.classList.add('an');
           const bew = Store.getMeta('kiBewertung', []) || [];
@@ -1389,7 +1389,7 @@ const KI = (() => {
     leiste.addEventListener('click', async e => {
       const b = elVon(e)?.closest<HTMLElement>('button[data-a]');
       if (!b) return;
-      if (b.dataset.a === 'kopieren') { navigator.clipboard?.writeText(antwort); UI.toast('Kopiert'); }
+      if (b.dataset.a === 'kopieren') { Ablage.kopiereJetzt(antwort, 'Kopiert'); }
       if (b.dataset.a === 'nochmal')  { schreibLauf(befehl, auftrag); }
       if (b.dataset.a === 'darunter') { alsBloeckeEinfuegen(antwort); }
       if (b.dataset.a === 'ersetzen') {

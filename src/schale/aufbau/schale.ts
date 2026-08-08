@@ -475,8 +475,8 @@ const App = (() => {
       }
       if (a === 'inhalt') {
         const text = markdownVonSeite(p);
-        navigator.clipboard?.writeText(text);
-        UI.toast('Seiteninhalte kopiert — ' + text.split('\n').length + ' Zeilen');
+        Ablage.kopiereJetzt(text,
+          'Seiteninhalte kopiert — ' + text.split('\n').length + ' Zeilen');
         m.remove();
         return;
       }
@@ -566,10 +566,9 @@ const App = (() => {
         if (n !== null) { Store.updateBlock(p.id, { text: n }); zeichneBaum(); if (p.id === seiteId) zeichneSeite(); }
       }
       if (a === 'dup')  { dupliziereSeite(p.id, p.parentId); zeichneBaum(); UI.toast('Seite dupliziert'); }
-      if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); }
+      if (a === 'link') { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); }
       if (a === 'pid') {
-        navigator.clipboard?.writeText(p.id);
-        UI.toast('Seiten-ID kopiert: ' + p.id);
+        Ablage.kopiereJetzt(p.id, 'Seiten-ID kopiert: ' + p.id);
       }
       if (a === 'komm') Kommentare.panel(p.id);
       if (a === 'vorschlag') vorschlagModus(p);
@@ -1952,8 +1951,7 @@ const App = (() => {
       /* Strg+L: Adresse dieser Seite kopieren */
       if (k === 'l' && !e.shiftKey && !e.altKey) {
         e.preventDefault();
-        navigator.clipboard?.writeText(location.origin + location.pathname + '#' + aktuelleSeite());
-        UI.toast('Link zur Seite kopiert');
+        Ablage.kopiereJetzt(location.origin + location.pathname + '#' + aktuelleSeite(), 'Link zur Seite kopiert');
         return;
       }
       /* Strg+Umschalt+U: eine Ebene nach oben in der Seitenhierarchie */
@@ -2133,7 +2131,7 @@ const App = (() => {
         if (b.dataset.a === 'zu') { k.remove(); return; }
         if (b.dataset.a !== 'kopieren') return;
         try {
-          await navigator.clipboard.writeText(einzelheiten);
+          await Ablage.kopiere(einzelheiten);
           b.textContent = 'Kopiert';
         } catch {
           /* Ohne Zwischenablage (altes iOS, kein sicherer Kontext) wenigstens
@@ -2454,8 +2452,7 @@ const App = (() => {
     an('btn-verlauf', () => seiteId && Werkzeuge.versionen(Store.getBlock(seiteId)));
     an('btn-link', () => {
       if (!seiteId) return;
-      navigator.clipboard?.writeText(location.origin + location.pathname + '#' + seiteId);
-      UI.toast('Link zur Seite kopiert');
+      Ablage.kopiereJetzt(location.origin + location.pathname + '#' + seiteId, 'Link zur Seite kopiert');
     });
     an('btn-lock', () => {
       if (!seiteId) return;

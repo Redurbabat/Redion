@@ -108,7 +108,7 @@ const Werkzeuge = (() => {
       c('Seite', 'Als Markdown speichern', '', () => App.markdownExport(p));
       c('Seite', 'Als HTML speichern', '', () => htmlExport(p));
       c('Seite', 'Drucken / als PDF', 'Strg P', () => drucken(p));
-      c('Seite', 'Link kopieren', '', () => { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); });
+      c('Seite', 'Link kopieren', '', () => { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); });
       c('Seite', 'In den Papierkorb', '', () => { Store.trashBlock(p.id); App.zeichneBaum(); App.oeffne((Store.rootPages()[0]||{}).id); UI.toast('In den Papierkorb'); });
     }
 
@@ -847,7 +847,7 @@ const Werkzeuge = (() => {
 
     o.addEventListener('click', e => {
       if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
-      if (elVon(e)?.closest<HTMLElement>('[data-a="kopieren"]')) { navigator.clipboard?.writeText(ta.value); UI.toast('Kopiert'); }
+      if (elVon(e)?.closest<HTMLElement>('[data-a="kopieren"]')) { Ablage.kopiereJetzt(ta.value, 'Kopiert'); }
       if (elVon(e)?.closest<HTMLElement>('[data-a="datei"]')) App.markdownExport(p);
       if (elVon(e)?.closest<HTMLElement>('[data-a="ok"]')) {
         if (ta.value !== md) {
@@ -1619,8 +1619,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       if (!b) return;
       m.remove();
       const a = b.dataset.a;
-      if (a === 'link') { navigator.clipboard?.writeText(location.origin + location.pathname + '#' + p.id); UI.toast('Link kopiert'); }
-      if (a === 'text') { navigator.clipboard?.writeText(alsMarkdown(p)); UI.toast('Text kopiert'); }
+      if (a === 'link') { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); }
+      if (a === 'text') { Ablage.kopiereJetzt(alsMarkdown(p), 'Text kopiert'); }
       if (a === 'md') App.markdownExport(p);
       if (a === 'html') htmlExport(p);
       if (a === 'pdf') drucken(p);

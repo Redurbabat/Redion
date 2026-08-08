@@ -328,6 +328,40 @@ p('Ein gewöhnlicher Satz legt keinen neuen Block an', (einzeilig as any).lebt =
 p('… und steht danach im Block', String((einzeilig as any).text ?? '').includes('ohne Gliederung'),
   JSON.stringify((einzeilig as any).text));
 
+console.log('\n6b · In eine Liste eingefügt wird eine Liste');
+/* Der erste Wurf liess nur einen Textblock gliedern. Wer eine Liste in
+   einen bestehenden Listenpunkt einfügte, bekam einen Punkt mit
+   Bindestrichen darin — genau das, was das Einfügen abschaffen sollte. */
+const inListe = await seite.evaluate(async () => {
+  const s = Store.addBlock(null, 'page', { text: 'Liste-in-Liste' });
+  App.oeffne(s.id);
+  await new Promise(r => setTimeout(r, 250));
+  const b = Store.addBlock(s.id, 'bullet', { text: '' });
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 200));
+  /* Eine frisch geöffnete Seite legt sich selbst einen leeren Absatz an.
+     Der gehört nicht zur Messung — also wird gemerkt, was vorher da war. */
+  const vorherIds = new Set(Store.childrenOf(s.id).map((x: any) => x.id));
+  const ct = document.querySelector<HTMLElement>(`.blk[data-bid="${b.id}"] .ct`);
+  if (!ct) return {};
+  ct.focus();
+  const r2 = document.createRange();
+  r2.selectNodeContents(ct); r2.collapse(false);
+  const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r2);
+  const dt = new DataTransfer();
+  dt.setData('text/plain', '- Eins\n- Zwei\n- Drei');
+  ct.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+  await new Promise(r => setTimeout(r, 350));
+  const neue = Store.childrenOf(s.id).filter((x: any) => x.alive && !vorherIds.has(x.id));
+  return { typen: neue.map((x: any) => x.type), texte: neue.map((x: any) => x.text) };
+});
+p('Aus drei Zeilen werden drei Listenpunkte',
+  JSON.stringify((inListe as any).typen) === '["bullet","bullet","bullet"]',
+  JSON.stringify((inListe as any).typen));
+p('… ohne Bindestriche im Text',
+  JSON.stringify((inListe as any).texte) === '["Eins","Zwei","Drei"]',
+  JSON.stringify((inListe as any).texte));
+
 console.log('\n7 · Hin und zurück');
 /* Der Punkt, an dem sich beide Richtungen treffen: was auswahlAlsText()
    schreibt, muss mdLesen() wieder als dieselben Typen zurückgeben. */

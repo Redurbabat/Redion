@@ -69,7 +69,11 @@ const AppEinstellung = (() => {
     return {
       speicher:      p(() => self.indexedDB),
       dateien:       p(() => window.File && window.FileReader && window.Blob),
-      zwischenlage:  p(() => navigator.clipboard && navigator.clipboard.writeText),
+      /* Nicht nur der neue Weg. Seit `kern/helfer/ablage.ts` gibt es den
+         alten dazu, und der geht auch dort, wo `writeText` abgewiesen wird
+         — die Antwort „kann nicht" wäre sonst falsch. */
+      zwischenlage:  p(() => (navigator.clipboard && navigator.clipboard.writeText) ||
+                             (typeof document.execCommand === 'function')),
       arbeiter:      p(() => 'serviceWorker' in navigator),
       krypto:        p(() => self.crypto && crypto.subtle),
       netz:          p(() => navigator.onLine),
