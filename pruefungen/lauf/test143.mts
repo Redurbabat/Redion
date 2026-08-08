@@ -164,7 +164,47 @@ p('Umwandeln setzt einen Typ aus der Liste',
   ((menue as any).typen ?? []).includes('h2'),
   JSON.stringify((menue as any).typen));
 
-console.log('\n5 · Die Konsole');
+console.log('\n5 · Auch CSS und TypeScript sind zwei Welten');
+/* Ein Stylesheet kann keine Konstante importieren. Wo ein Mass in beiden
+   steht, bleibt nur das Nachrechnen — die letzten zwei Paare aus L34. */
+
+/* Die Kartenkachel: `steuerung.ts` rechnet die Lage der Kacheln mit
+   KACHEL, das CSS gibt ihnen ihre Grösse. Weichen die beiden ab, klaffen
+   Lücken zwischen den Kacheln oder sie überlappen — je nach Richtung. */
+const steuerungTs = lies('src/bereiche/datenbanken/steuerung.ts');
+const kachelTs = /const KACHEL = (\d+);/.exec(steuerungTs)?.[1] ?? '(fehlt)';
+const einstCss = lies('quell/schale/stil/einstellungen.css');
+const kachelCss = /\.karte \.kachel\{[^}]*width:(\d+)px;\s*height:(\d+)px/.exec(einstCss);
+gleich('Die Kartenkachel rechnet mit 256', kachelTs, '256');
+gleich('… und das CSS zeichnet dieselbe Breite', kachelCss?.[1] ?? '(fehlt)', kachelTs);
+gleich('… und dieselbe Höhe', kachelCss?.[2] ?? '(fehlt)', kachelTs);
+
+/* Die Seitenleiste: das CSS gibt die Breite beim ersten Start, der
+   Doppelklick auf den Griff setzt sie „zurück". Zwei verschiedene Zahlen
+   hiessen: Zurücksetzen führt woandershin als der erste Start. */
+const schaleTs = lies('src/schale/aufbau/schale.ts');
+const rueckKlick = /dblclick[\s\S]{0,120}?setze\((\d+)\)/.exec(schaleTs)?.[1] ?? '(fehlt)';
+const aufbauCss = lies('quell/schale/stil/aufbau.css');
+const startBreite = /#sidebar\{[^}]*width:(\d+)px/.exec(aufbauCss)?.[1] ?? '(fehlt)';
+const rueckfall = /--side-w, (\d+)px/.exec(aufbauCss)?.[1] ?? '(fehlt)';
+gleich('Die Seitenleiste startet mit 260 px', startBreite, '260');
+gleich('Der Doppelklick setzt auf dieselbe Breite zurück', rueckKlick, startBreite);
+gleich('… und der CSS-Rückfall nennt sie auch', rueckfall, startBreite);
+
+/* Und die Wirkung, nicht nur der Text: nach dem Doppelklick ist die
+   Leiste wirklich so breit wie beim ersten Start. */
+const gemessen = await seite.evaluate(async () => {
+  const side = document.getElementById('sidebar');
+  const griff = document.querySelector<HTMLElement>('.side-griff');
+  if (!side || !griff) return { breite: -1 };
+  griff.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+  await new Promise(r => setTimeout(r, 100));
+  return { breite: Math.round(side.getBoundingClientRect().width) };
+});
+gleich('Gemessen: der Doppelklick stellt 260 px her',
+  (gemessen as any).breite, 260);
+
+console.log('\n6 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 
 await browser.close();

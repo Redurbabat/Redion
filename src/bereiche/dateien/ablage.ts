@@ -172,6 +172,20 @@ const Dateien = (() => {
     if (!satz) return null;
     const stuecke = await Store.stueckeVon(dateiId);
     if (!stuecke.length) return null;
+    /* Unvollständig ist nicht „etwas kleiner", sondern KAPUTT. Hier wurden
+       bis eben 25 von 40 Stücken kommentarlos aneinandergereiht — ein
+       abgebrochener Upload wanderte so als halbes Video in die
+       `.redion`-Sicherung, deren `dateien.json` daneben 40 Teile
+       deklarierte. Beim Einspielen wurde aus den 25 dann `zustand: 'fertig'`
+       — und die fehlenden 15 MB waren keine Lücke mehr, sondern Geschichte.
+       Ein halbes Video ist kein kleineres Video; es ist keines. */
+    if (typeof satz.teile === 'number' && satz.teile > 0 &&
+        stuecke.length !== satz.teile) {
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('dateien', 'Datei „' + satz.name + '" ist unvollständig (' +
+          stuecke.length + ' von ' + satz.teile + ' Stücken) und wird nicht zusammengesetzt');
+      return null;
+    }
     return new Blob(stuecke.map((s: any) => s.blob), { type: satz.typ });
   };
 

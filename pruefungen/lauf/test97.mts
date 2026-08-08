@@ -318,6 +318,10 @@ const frist = await seite.evaluate(async () => {
   Store.setMeta('papierkorbTage', 30);
   /* Erster Durchgang: die Schonfrist für vorher Unsichtbares gilt noch. */
   const ersteRunde = await Store.papierkorbAufraeumen();
+  /* JETZT nachsehen, nicht am Ende: ob der Block die erste Runde überlebt
+     hat, lässt sich nach der zweiten nicht mehr feststellen. Hier stand
+     ein hartkodiertes `false` im Ergebnis. */
+  const blockWegNachErster = !Store.getBlock(altBlock.id);
 
   /* Zweiter Durchgang, mit einer Sichtbarkeit, die lange zurückliegt —
      jetzt darf auch der Block gehen. */
@@ -327,7 +331,7 @@ const frist = await seite.evaluate(async () => {
   return {
     ersteRunde, zweiteRunde,
     seiteWeg: !Store.getBlock(altSeite.id),
-    blockWegNachErster: false,
+    blockWegNachErster,
     blockWeg: !Store.getBlock(altBlock.id),
     jungDa: !!Store.getBlock(jung.id)
   };
@@ -338,16 +342,17 @@ p('Der alte Block ebenfalls — sobald er sichtbar sein konnte', frist.blockWeg)
 p('Das gestern Weggelegte bleibt liegen', frist.jungDa);
 /* Ohne die neue Fassung kommt nur `{ fehlt: true }` zurück — dann gibt es
    keine Zahlen zu vergleichen, und die Zeile muss rot werden statt zu rechnen.
-   ECHTER FEHLER, unverändert gelassen: `a < a + b` ist dasselbe wie `b > 0`,
-   die linke Hälfte der Bedingung sagt also nichts über den ERSTEN Durchgang.
-   Geprüft wird nur, dass der zweite noch etwas findet. */
+   Hier stand `a < a + b` — das ist dasselbe wie `b > 0` und sagte nichts
+   über den ERSTEN Durchgang (P5). Jetzt steht die Behauptung wirklich da:
+   Runde eins verschont den Block, der vorher nie sichtbar sein konnte —
+   gemessen ZWISCHEN den Runden, nicht danach — und Runde zwei holt ihn. */
 if (typeof frist.ersteRunde !== 'number' || typeof frist.zweiteRunde !== 'number') {
   p('Der erste Durchgang nimmt nicht alles auf einmal', false,
     'papierkorbAufraeumen lieferte keine Zahl');
 } else {
   p('Der erste Durchgang nimmt nicht alles auf einmal',
-    frist.ersteRunde < frist.ersteRunde + frist.zweiteRunde || frist.zweiteRunde > 0,
-    `erste=${frist.ersteRunde} zweite=${frist.zweiteRunde}`);
+    frist.blockWegNachErster === false && frist.zweiteRunde > 0,
+    `Block nach Runde 1 weg: ${frist.blockWegNachErster}, zweite=${frist.zweiteRunde}`);
 }
 
 /* Ab hier braucht es die neue Fassung. Ohne sie stürbe der Lauf an einem

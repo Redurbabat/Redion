@@ -559,7 +559,17 @@ const Werkzeuge = (() => {
    * 6. VERSIONSVERLAUF   (Standard Notes, Trilium, Joplin)
    * ======================================================================*/
   const versionen = async (p: any) => {
-    const liste = await Store.versionen(p.id);
+    /* „Keine Fassungen" und „nicht nachsehen können" sahen im Verlauf gleich
+       aus — beides eine leere Liste. Der Unterschied entscheidet, ob man
+       die Seite beruhigt überschreibt oder besser nicht. */
+    let liste: any[];
+    try { liste = await Store.versionen(p.id); }
+    catch (err) {
+      UI.toast('Der Versionsverlauf ist gerade nicht lesbar — bitte nichts überschreiben');
+      if (typeof Reporter !== 'undefined')
+        Reporter.error('wissen', 'Versionsverlauf nicht lesbar', err);
+      return;
+    }
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =

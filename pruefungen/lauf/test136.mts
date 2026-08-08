@@ -184,28 +184,46 @@ console.log('\n3 · Die Maske lässt die stehenden Köpfe stehen');
    man im Quelltext nicht sieht — deshalb wird sie hier gemessen: beim
    Rollen nach rechts muss die Kopfspalte an ihrem Platz bleiben. */
 await baue(9);
+/* ZWEI FEHLER SASSEN IN DIESEM ABSCHNITT SELBST (P2). Erstens: fehlte die
+   Klasse, wurde `-1` mit `-1` verglichen und „steht still" gemeldet — für
+   ein Element, das es gar nicht gab. Zweitens wurde waagerecht gerollt,
+   aber für die Kopfzeile `.top` gemessen — eine Zahl, die sich beim
+   waagerechten Rollen auch OHNE sticky nicht bewegt. Jetzt wird erst
+   festgehalten, dass beide Teile existieren, und beim waagerechten Rollen
+   das gemessen, was dabei stehen bleiben muss: die linke Kante von Ecke
+   und Zeilenkopf. */
 const stehen = await seite.evaluate(async () => {
   const f = document.querySelector<HTMLElement>('#pruef-rand .tbl-feld');
   if (!f) return null;
   const ecke = f.querySelector<HTMLElement>('.tbl-ecke');
-  const kopf = f.querySelector<HTMLElement>('.tbl-spalten');
-  const vorher = ecke?.getBoundingClientRect().left ?? -1;
-  const kopfOben = kopf?.getBoundingClientRect().top ?? -1;
+  const zn   = f.querySelector<HTMLElement>('.tbl-zn');
+  const da = !!ecke && !!zn;
+  const vorher  = ecke?.getBoundingClientRect().left ?? -1;
+  const znLinks = zn?.getBoundingClientRect().left ?? -1;
   f.scrollLeft = 200;
   f.dispatchEvent(new Event('scroll'));
   await new Promise(r => setTimeout(r, 80));
-  return { vorher, nachher: ecke?.getBoundingClientRect().left ?? -1,
-           kopfOben, kopfDanach: kopf?.getBoundingClientRect().top ?? -1,
+  /* NACH dem Rollen neu suchen: das fensterweise Zeichnen baut die Zeilen
+     beim Rollen neu, der alte `.tbl-zn`-Knoten hängt dann nirgends mehr und
+     misst `left: 0`. Der erste Anlauf hielt genau das für einen kaputten
+     sticky — in der echten App stand die Spalte auf den Pixel still. */
+  const znNeu = f.querySelector<HTMLElement>('.tbl-zn');
+  return { da, vorher, nachher: ecke?.getBoundingClientRect().left ?? -99,
+           znLinks, znDanach: znNeu?.getBoundingClientRect().left ?? -99,
            gerollt: Math.round(f.scrollLeft) };
 });
+p('Ecke und Zeilenkopf sind da — sonst prüfte -1 gegen -1',
+  (stehen as any)?.da === true);
 p('Es wurde wirklich gerollt', ((stehen as any)?.gerollt ?? 0) > 100,
   String((stehen as any)?.gerollt));
 p('Die Ecke links bleibt, wo sie war',
+  (stehen as any)?.da === true &&
   Math.abs(((stehen as any)?.vorher ?? 0) - ((stehen as any)?.nachher ?? -99)) < 2,
   `${(stehen as any)?.vorher} → ${(stehen as any)?.nachher}`);
-p('Und die Kopfzeile oben ebenfalls',
-  Math.abs(((stehen as any)?.kopfOben ?? 0) - ((stehen as any)?.kopfDanach ?? -99)) < 2,
-  `${(stehen as any)?.kopfOben} → ${(stehen as any)?.kopfDanach}`);
+p('Und der Zeilenkopf ebenfalls',
+  (stehen as any)?.da === true &&
+  Math.abs(((stehen as any)?.znLinks ?? 0) - ((stehen as any)?.znDanach ?? -99)) < 2,
+  `${(stehen as any)?.znLinks} → ${(stehen as any)?.znDanach}`);
 
 console.log('\n4 · Am Rechner gilt dasselbe, nur schmaler');
 const rechner = await browser.newPage({ viewport: { width: 1280, height: 900 } });

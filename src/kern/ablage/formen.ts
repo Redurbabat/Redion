@@ -25,6 +25,15 @@
  *   2. **Nur ergänzen, was fehlt.** Ein vorhandener Wert wird nie ersetzt,
  *      auch wenn er komisch aussieht. Reparieren heisst auffüllen, nicht
  *      überschreiben.
+ *
+ * Regel 2 stand hier von Anfang an — und der Code hielt sich nicht daran.
+ * Passte die Sorte nicht und griff keine der vier Rettungen, setzte `heile`
+ * die Vorgabe ein und der alte Wert war fort. Bei jedem Start, still.
+ *
+ * Seit E72 gilt sie wirklich. Was nichts trägt (`''`, `0`, `false`, `[]`,
+ * `{}`), darf die Vorgabe bekommen — dabei geht nichts verloren. Was etwas
+ * trägt, wandert nach `unlesbar` im selben Satz: die Oberfläche bekommt die
+ * Vorgabe und läuft, der Inhalt bleibt und wandert durch `.redion` mit.
  * ==========================================================================*/
 
 /**
@@ -66,7 +75,11 @@ const Formen = (() => {
    * 1 · DIE FORMEN
    * ------------------------------------------------------------------------
    * `pflicht` muss da sein und ist reparierbar. `art` ist die erwartete
-   * Sorte; passt sie nicht, wird der Wert ersetzt und das gemeldet.
+   * Sorte; passt sie nicht, wird versucht, den Wert umzuformen — und wenn
+   * das nicht geht, tritt die Vorgabe an seine Stelle, während er selbst
+   * unter `unlesbar` liegen bleibt. Hier stand „wird der Wert ersetzt", und
+   * das war die Wahrheit über den Code, aber nicht über die Absicht: der
+   * Kopf dieser Datei versprach drei Bildschirme weiter oben das Gegenteil.
    * ======================================================================*/
 
   const FORMEN: Record<string, Form> = {
@@ -175,6 +188,41 @@ const Formen = (() => {
    * 3 · HEILEN
    * ======================================================================*/
 
+  /**
+   * Trägt dieser Wert etwas? `''`, `0`, `false`, `[]` und `{}` tun es nicht —
+   * sie sind die Leere in einer falschen Verpackung, und die darf durch die
+   * Vorgabe ersetzt werden, ohne dass jemand etwas verliert.
+   */
+  const traegtInhalt = (v: unknown): boolean => {
+    if (v === null || v === undefined || v === '' || v === 0 || v === false) return false;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === 'object') return Object.keys(v as object).length > 0;
+    return true;
+  };
+
+  /**
+   * Beiseitelegen statt wegwerfen.
+   *
+   * Ein Wert, den keine der Rettungen versteht, ist nicht wertlos — er ist
+   * nur nicht in der Form, die Redion kennt. Ein Import aus einem anderen
+   * Werkzeug kann `text` als Objekt liefern; das ist der Text des Menschen,
+   * bloss anders verpackt. Ihn durch `''` zu ersetzen heisst, ihn zu
+   * löschen — still, bei jedem Start.
+   *
+   * Deshalb wandert er nach `unlesbar`. Die Oberfläche bekommt die Vorgabe
+   * und läuft; der Inhalt bleibt im Satz, wandert durch `.redion` mit und
+   * lässt sich später ansehen. Regel 1 dieser Datei sorgt dafür, dass ihn
+   * niemand wieder wegräumt: unbekannte Felder bleiben stehen.
+   */
+  const beiseite = (satz: Satz, feld: string, wert: unknown): void => {
+    const bisher = satz['unlesbar'];
+    const kiste: Record<string, unknown> =
+      (bisher && typeof bisher === 'object' && !Array.isArray(bisher))
+        ? bisher as Record<string, unknown> : {};
+    kiste[feld] = wert;
+    satz['unlesbar'] = kiste;
+  };
+
   /** Einen Satz wieder in Form bringen — und sagen, was dabei ergänzt wurde. */
   const heile = (formName: string, satz: unknown): { satz: Satz; geheilt: string[] } => {
     const geheilt: string[] = [];
@@ -196,19 +244,43 @@ const Formen = (() => {
         else if (regel.art === 'text' && typeof v === 'number')       raus[name] = String(v);
         else if (regel.art === 'ja/nein')                             raus[name] = !!v;
         else if (regel.art === 'zeit' && typeof v === 'number')       raus[name] = new Date(v).toISOString();
-        else                                                          raus[name] = regel.vorgabe();
+        else if (traegtInhalt(v)) {
+          /* Hier stand `raus[name] = regel.vorgabe()` ohne Wenn und Aber —
+             und damit die einzige Zeile dieser Datei, die gegen ihre eigene
+             Regel 2 verstiess. Ein `text`, das ein Objekt war, wurde bei
+             JEDEM Start zu `''`; ein `props` mit allen Zeilenwerten zu `{}`;
+             ein `schema` mit allen Spalten ebenso. Gemeldet wurde es als
+             `Reporter.info` — also gar nicht. */
+          beiseite(raus, name, v);
+          raus[name] = regel.vorgabe();
+          geheilt.push(name + ' war unlesbar und liegt jetzt unter „unlesbar"');
+          continue;
+        }
+        else raus[name] = regel.vorgabe();
         geheilt.push(name + ' hatte die falsche Art');
       }
     }
 
     /* Kinder, die es nicht mehr gibt, sind kein Inhalt, sondern ein Loch:
-       die Oberfläche zeichnet dann eine leere Zeile ohne Erklärung. */
+       die Oberfläche zeichnet dann eine leere Zeile ohne Erklärung.
+       Sie aus `content` zu nehmen ist deshalb richtig — sie ERSATZLOS zu
+       streichen war es nicht.
+
+       „Gibt es nicht" heisst hier nämlich nur: steht gerade nicht im
+       Speicher. Das trifft auch einen Block, den ein Abgleich noch nicht
+       herübergeholt hat. Kommt er später an, war die Verbindung zu seinem
+       Elternteil trotzdem schon weg — endgültig, denn `heile` ändert den
+       Satz an Ort und Stelle, und der nächste `flush` schreibt ihn so
+       hinaus. Deshalb liegen die Kennungen jetzt daneben, statt fort zu
+       sein. */
     if (formName === 'block' && Array.isArray(raus['content']) &&
         typeof Store !== 'undefined' && Store.cache) {
-      const vorher = raus['content'].length;
-      raus['content'] = raus['content'].filter((id: string) => !!Store.cache.blocks[id]);
-      if (raus['content'].length !== vorher)
-        geheilt.push((vorher - raus['content'].length) + ' Kinder gab es nicht mehr');
+      const fehlend = raus['content'].filter((id: string) => !Store.cache.blocks[id]);
+      if (fehlend.length) {
+        raus['content'] = raus['content'].filter((id: string) => !!Store.cache.blocks[id]);
+        beiseite(raus, 'contentFehlt', fehlend);
+        geheilt.push(fehlend.length + ' Kinder gab es nicht mehr');
+      }
     }
 
     return { satz: raus, geheilt };

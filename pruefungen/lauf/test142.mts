@@ -175,25 +175,32 @@ p('Das gezeichnete Menü zeigt den neuen Typ',
   (imMenue as any).hat === true,
   `${(imMenue as any).wieViele} Knöpfe`);
 
-/* ABMELDEN GIBT ES HIER NICHT. `Register.bloecke` hat `nimmZurueck`,
-   `Register.eigenschaften` nicht — eine Unwucht, die erst auffällt, wenn
-   man sie braucht. Für diesen Lauf ist sie harmlos: das Register lebt im
-   Speicher der Seite und ist beim nächsten Laden wieder wie neu. Der Punkt
-   hält genau das fest, statt eine Aufräumfunktion zu erfinden. */
-const frisch = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-await frisch.goto(`http://localhost:${PORT}/index.html`);
-await frisch.waitForTimeout(2000);
-const nachNeuladen = await frisch.evaluate(() => {
+/* ABMELDEN. Als dieser Lauf entstand, hatte `Register.eigenschaften` kein
+   `nimmZurueck` — `Register.bloecke` schon, und der Probetyp blieb bis zum
+   Neuladen im Katalog. Die Unwucht ist behoben; seither räumt der Lauf mit
+   der echten Funktion auf und prüft dabei gleich ihre Grenzen. */
+const abgemeldet = await seite.evaluate(() => {
+  const r = (Register as any).eigenschaften;
+  /* Eingebautes darf NICHT gehen — sonst verlöre jede Textspalte ihr Menü. */
+  const eingebaut = r.nimmZurueck('text');
+  const ging = r.nimmZurueck('probefeld');
+  const nochmal = r.nimmZurueck('probefeld');
   const g = (Datenbank as any).typGruppen();
-  return { gruppen: g.map(([n]: any[]) => n),
-           hatProbe: g.some(([, ids]: any[]) => (ids as string[]).includes('probefeld')) };
+  return { eingebaut, ging, nochmal,
+           gruppen: g.map(([n]: any[]) => n),
+           hatProbe: g.some(([, ids]: any[]) => (ids as string[]).includes('probefeld')),
+           textNochDa: !!r.eines('text') };
 });
-await frisch.close();
-p('Nach dem Neuladen ist der Probetyp weg',
-  (nachNeuladen as any).hatProbe === false);
+gleich('Eine eingebaute Feldart lässt sich NICHT abmelden',
+  (abgemeldet as any).eingebaut, false);
+p('… und ist noch da', (abgemeldet as any).textNochDa === true);
+gleich('Der Probetyp lässt sich abmelden', (abgemeldet as any).ging, true);
+gleich('… aber nur einmal', (abgemeldet as any).nochmal, false);
+p('Danach ist er aus dem Typmenü verschwunden',
+  (abgemeldet as any).hatProbe === false);
 p('… und die Auffanggruppe damit auch',
-  !((nachNeuladen as any).gruppen ?? []).includes('Weiteres'),
-  JSON.stringify((nachNeuladen as any).gruppen));
+  !((abgemeldet as any).gruppen ?? []).includes('Weiteres'),
+  JSON.stringify((abgemeldet as any).gruppen));
 
 console.log('\n3 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));

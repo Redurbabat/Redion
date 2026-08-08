@@ -103,7 +103,10 @@ const masse = await seite.evaluate(() => {
     .map(x => Math.round(x.getBoundingClientRect().height)).filter(n => n > 0);
   return {
     zelle:     h(document.querySelector('.tbl-z')),
-    zeilenkopf: h(document.querySelector('.tbl-zk')),
+    /* `.tbl-zn` — der erste Anlauf suchte `.tbl-zk`, eine Klasse, die es
+       nie gab, und liess `-1` als bestanden durchgehen. Ein Prüfpunkt, der
+       nicht rot werden KANN, ist keiner (§55.2). */
+    zeilenkopf: h(document.querySelector('.tbl-zn')),
     eingabe:   h(document.querySelector('.tbl-eingabe')),
     adresse:   h(document.querySelector('.tbl-adresse')),
     werkzeuge: alle('.tbl-werkzeuge button'),
@@ -116,8 +119,8 @@ const masse = await seite.evaluate(() => {
 
 gleich('Die Zeilenhöhe steht auf 44 px', (masse as any).zh, '44px');
 p('Eine Zelle ist 44 px hoch', (masse as any).zelle >= 44, `${(masse as any).zelle} px`);
-p('Der Zeilenkopf ebenfalls', (masse as any).zeilenkopf >= 44 || (masse as any).zeilenkopf === -1,
-  `${(masse as any).zeilenkopf} px`);
+p('Der Zeilenkopf ebenfalls', (masse as any).zeilenkopf >= 44,
+  `${(masse as any).zeilenkopf} px — -1 hiesse: gar nicht gefunden`);
 p('Die Formelzeile ist 44 px hoch', (masse as any).eingabe >= 44,
   `${(masse as any).eingabe} px`);
 p('Jeder Werkzeugknopf ist 44 px hoch',

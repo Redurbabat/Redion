@@ -1024,9 +1024,21 @@ const Einstellungen = (() => {
              */
             'versionen-aufraeumen': async () => {
                 const opfer = [];
-                for (const p of Links.seiten()) {
-                    const v = await Store.versionen(p.id);
-                    Store.fassungenAusduennen(v).forEach(id => opfer.push(id));
+                try {
+                    for (const p of Links.seiten()) {
+                        const v = await Store.versionen(p.id);
+                        Store.fassungenAusduennen(v).forEach(id => opfer.push(id));
+                    }
+                }
+                catch (err) {
+                    /* Auf halbem Weg abbrechen ist hier richtig: was schon in `opfer`
+                       steht, ist nur eine Auswahl aus den Seiten, die lesbar waren.
+                       Danach zu löschen hiesse, nach einem unvollständigen Bild zu
+                       handeln — und gelöschte Fassungen kommen nicht wieder. */
+                    UI.toast('Der Verlauf ist gerade nicht lesbar — es wurde nichts gelöscht');
+                    if (typeof Reporter !== 'undefined')
+                        Reporter.error('einstellungen', 'Aufräumen abgebrochen: Verlauf nicht lesbar', err);
+                    return;
                 }
                 if (!opfer.length) {
                     UI.toast('Der Verlauf ist schon aufgeräumt — nichts zu tun');
@@ -1053,7 +1065,16 @@ const Einstellungen = (() => {
                     return;
                 if (!confirm('Ganz sicher? Am besten vorher eine Sicherung speichern.'))
                     return;
-                await Store.wipe();
+                /* Kein Neuladen, wenn es nicht ganz geklappt hat: nach dem Neuladen
+                   sähe der Bildschirm leer aus, und genau das wäre die Lüge — die
+                   Daten wären noch da. Lieber stehen bleiben und es sagen. */
+                try {
+                    await Store.wipe();
+                }
+                catch (err) {
+                    alert(err instanceof Error ? err.message : 'Es liess sich nicht alles löschen.');
+                    return;
+                }
                 location.reload();
             }
         };

@@ -183,43 +183,52 @@ const rund = await seite.evaluate(async () => {
 });
 gleich('Der Anhang liegt in der Ablage', rund.groesse, 300 * 1024);
 
-/* Das Archiv bauen — genau wie `sicherungSpeichern` es tut. */
+/* Das Archiv bauen — mit `sicherungSpeichern` SELBST, nicht mit einer
+   Abschrift davon. Hier standen dreissig Zeilen, Wort für Wort aus
+   `schale.ts` kopiert: der Namens-Entdoppler, die Zuordnungskarte, alles.
+   Eine Abschrift prüft sich selbst — wäre in der echten Funktion der
+   Entdoppler zerbrochen, hätte dieser Lauf weiter Grün gemeldet, denn er
+   rechnete mit seiner eigenen, heilen Kopie.
+
+   Die echte Funktion lädt herunter, statt den Blob zurückzugeben. Deshalb
+   wird der Download abgefangen: `createObjectURL` legt den Blob beiseite,
+   und der Klick auf einen `download`-Anker wird geschluckt. Beides wird
+   danach zurückgedreht. */
 const archiv = await seite.evaluate(async () => {
   const stand = await Store.exportVorbereiten();
-  const saetze = await Store.dateiAlle();
-  /* Ein Eintrag trägt entweder Text (daten.json) oder einen Anhang als Blob;
-     `kennung` steht nur bei den Anhängen dabei. */
-  type Eintrag = { name: string; inhalt: string | Blob; kennung?: string };
-  const eintraege: Eintrag[] = [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
-  const belegt = new Set(['daten.json']);
-  for (const satz of saetze) {
-    const inhalt = await Dateien.alsBlob(satz.id);
-    if (!inhalt) continue;
-    const roh = String(satz.name || 'Datei').replace(/[\\/:*?"<>|]/g, '-');
-    let name = 'dateien/' + roh;
-    if (belegt.has(name)) {
-      const punkt = roh.lastIndexOf('.');
-      const stamm = punkt > 0 ? roh.slice(0, punkt) : roh;
-      const endung = punkt > 0 ? roh.slice(punkt) : '';
-      let n = 2;
-      while (belegt.has('dateien/' + stamm + '-' + n + endung)) n++;
-      name = 'dateien/' + stamm + '-' + n + endung;
-    }
-    belegt.add(name);
-    eintraege.push({ name, inhalt, kennung: satz.id });
+  const gefangen: { blob: Blob | null; name: string } = { blob: null, name: '' };
+  const echtURL = URL.createObjectURL.bind(URL);
+  const echtClick = HTMLAnchorElement.prototype.click;
+  (URL as any).createObjectURL = (b: Blob) => { gefangen.blob = b; return 'blob:gefangen'; };
+  HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
+    if (this.download) { gefangen.name = this.download; return; }
+    return echtClick.call(this);
+  };
+  try {
+    await App.sicherungSpeichern();
+  } finally {
+    (URL as any).createObjectURL = echtURL;
+    HTMLAnchorElement.prototype.click = echtClick;
   }
-  const karte: Record<string, any> = {};
-  eintraege.filter(e => e.kennung).forEach(e => { karte[e.name] = e.kennung; });
-  eintraege.push({ name: 'dateien.json', inhalt: JSON.stringify({
-    version: 1, saetze, zuordnung: karte }, null, 2) });
+  if (!gefangen.blob) return { namen: '', dateienDa: stand.dateien,
+    enthaelt: '', fehlt: [], hinweis: '', dateiname: gefangen.name, gemerkt: '' };
 
-  const blob = await Austausch.zipSchreiben(eintraege);
+  const blob = gefangen.blob;
   (window as any).__archiv = blob;                       /* für den nächsten Schritt */
   const zip = await Einlesen.zipLesenAusBlob(blob);
   const daten = JSON.parse(await zip.text('daten.json'));
   return { namen: zip.namen, dateienDa: stand.dateien,
-           enthaelt: daten.enthaelt, fehlt: daten.fehlt, hinweis: daten.hinweis };
+           enthaelt: daten.enthaelt, fehlt: daten.fehlt, hinweis: daten.hinweis,
+           dateiname: gefangen.name,
+           /* Und was der echte Weg nebenbei können muss: sich merken, DASS
+              gesichert wurde, und womit. Die Abschrift konnte das nie
+              mitprüfen — sie lief an `sicherungGemerkt` vorbei. */
+           gemerkt: Store.getMeta('sicherung:art') };
 });
+p('Der echte Weg lädt eine `.redion`-Datei herunter',
+  /^redion-sicherung-\d{4}-\d{2}-\d{2}\.redion$/.test((archiv as any).dateiname ?? ''),
+  JSON.stringify((archiv as any).dateiname));
+gleich('… und merkt sich die Sicherung samt Art', (archiv as any).gemerkt, 'redion');
 
 gleich('Die Sicherung kennt zwei Anhänge', archiv.dateienDa, 2);
 p('Beide liegen unter ihrem echten Namen im Archiv',
@@ -285,6 +294,53 @@ gleich('Auch der zweite mit demselben Namen', zurueck.zweiteDa, true);
 gleich('… und mit seiner eigenen Grösse', zurueck.zweiteGroesse, 1000);
 gleich('Der Medientyp überlebt — sonst wäre aus dem Bild ein Download geworden',
        zurueck.typ, 'image/jpeg');
+
+/* ========================================================================= *
+ * 2b · EIN HALBER UPLOAD IST KEIN HALBES VIDEO
+ * -------------------------------------------------------------------------
+ * Tab zu bei Stück 25 von 40: der Satz bleibt auf `laeuft`, die 25 Stücke
+ * liegen in der Ablage. `alsBlob` reihte sie bis eben kommentarlos
+ * aneinander — die Sicherung trug dann ein halbes Video unter vollem Namen,
+ * und das Einspielen machte aus den 25 Stücken `zustand: 'fertig'`. Danach
+ * war der Verlust keine Lücke mehr, sondern unsichtbar.
+ * ========================================================================= */
+console.log('\n2b · Ein halber Upload wandert nicht in die Sicherung');
+
+const halb = await seite.evaluate(async () => {
+  /* Einen Upload von 3 Stücken anmelden und nur 2 schicken — genau der
+     Zustand nach einem geschlossenen Tab. */
+  const STUECK = KONSTANTEN.STUECK;
+  const satz = await Dateien.anmelden({ name: 'abgebrochen.mp4',
+    groesse: 3 * STUECK, typ: 'video/mp4' });
+  const stueck = new Blob([new Uint8Array(STUECK)]);
+  await Dateien.stueckSchicken(satz.id, 0, stueck);
+  await Dateien.stueckSchicken(satz.id, 1, stueck);
+
+  const blob = await Dateien.alsBlob(satz.id);
+
+  /* Und die Sicherung: der echte Weg, wie oben abgefangen. */
+  const gefangen: { blob: Blob | null } = { blob: null };
+  const echtURL = URL.createObjectURL.bind(URL);
+  const echtClick = HTMLAnchorElement.prototype.click;
+  (URL as any).createObjectURL = (b: Blob) => { gefangen.blob = b; return 'blob:gefangen'; };
+  HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
+    if (this.download) return; return echtClick.call(this);
+  };
+  try { await App.sicherungSpeichern(); }
+  finally {
+    (URL as any).createObjectURL = echtURL;
+    HTMLAnchorElement.prototype.click = echtClick;
+  }
+  const zip = gefangen.blob ? await Einlesen.zipLesenAusBlob(gefangen.blob) : null;
+  /* Aufräumen, damit der Rest des Laufs den Torso nicht mitschleppt. */
+  await Dateien.weg(satz.id);
+  return { blobIstNull: blob === null,
+           imArchiv: zip ? (zip.namen ?? []).some((n: string) => n.includes('abgebrochen')) : null };
+});
+p('`alsBlob` setzt einen halben Upload NICHT zusammen',
+  (halb as any).blobIstNull === true);
+gleich('… und die Sicherung trägt ihn nicht als Datei',
+  (halb as any).imArchiv, false);
 
 /* ========================================================================= *
  * 3 · DIE BEIDEN RICHTUNGEN, IN DENEN ES SCHIEFGEHT

@@ -72,8 +72,12 @@ const pruef = (n: any, ist: any, soll: any) => {
     return Blocks.auswahl().length;
   }, auf);
   /* Ohne Anker tut auswahlBis nichts — das ist gewollt und wird gleich
-     über die Tastatur richtig geprüft. */
-  pruef('Ohne Anker keine Spanne', spanne <= 4, true);
+     über die Tastatur richtig geprüft. Der Punkt stand als `spanne <= 4`
+     da, und 4 wäre genau die kaputte Fassung (Ersatzanker auf den ersten
+     gewählten Block, Spanne 1→4). Eine Prüfung, die die kaputte UND die
+     richtige Fassung durchlässt, prüft nichts (§55.2): der Block bleibt
+     allein gewählt, also genau EINER. */
+  pruef('Ohne Anker keine Spanne', spanne === 1, true);
 
   /* --- Über die Tastatur: Esc, Shift+Pfeil, Strg+A ----------------------- */
   const tasten = await p.evaluate(async (x) => {

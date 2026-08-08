@@ -390,11 +390,38 @@ p('C hängt unter B', Dienst.istUnter(c.id, b.id));
 p('C hängt auch unter A', Dienst.istUnter(c.id, a.id));
 p('A hängt nicht unter C', !Dienst.istUnter(a.id, c.id));
 
-/* Ein Ring von Hand gebaut: die Prüfung muss trotzdem zurückkommen. */
+/* Ein Ring von Hand gebaut: die Prüfung muss trotzdem zurückkommen.
+   NICHT im eigenen Faden messen (P6): eine synchrone Endlosschleife kommt
+   an keiner `Date.now()`-Zeile mehr vorbei — der Punkt würde nie rot,
+   sondern der ganze Lauf hinge, und `alle.mts` gleich mit. Deshalb läuft
+   der Ring in einem Arbeitsfaden, den der Lauf nach zwei Sekunden
+   abschiesst. Und NUR dort: der erste Entwurf rief danach „zur Sicherheit"
+   noch einmal im Hauptfaden — und hing bei der Gegenprobe genau dort. */
 welt.bloecke[a.id].parentId = c.id;
-const uhr = Date.now();
-Dienst.istUnter(c.id, 'gibtesnicht');
-p('Ein Ring im Baum führt nicht in eine Endlosschleife', Date.now() - uhr < 100);
+const ringErgebnis = await (async () => {
+  const { Worker } = await import('node:worker_threads');
+  const w = new Worker(`
+    const { parentPort, workerData } = require('node:worker_threads');
+    const bloecke = workerData.bloecke;
+    const Store = { getBlock: (id) => bloecke[id] || null,
+                    addBlock: () => { throw new Error('nicht hier'); },
+                    setMeta: () => {}, getMeta: () => null };
+    const Dienst = new Function('Store', workerData.quelle + '\\nreturn WissenDienst;')(Store);
+    Dienst.istUnter(workerData.c, 'gibtesnicht');
+    parentPort.postMessage('zurueckgekommen');
+  `, { eval: true, workerData: {
+        quelle,
+        c: c.id,
+        bloecke: JSON.parse(JSON.stringify(welt.bloecke))
+      } });
+  return new Promise<string>((fertig) => {
+    const wecker = setTimeout(() => { void w.terminate(); fertig('haengt'); }, 2000);
+    w.on('message', (m: string) => { clearTimeout(wecker); void w.terminate(); fertig(m); });
+    w.on('error', (e: Error) => { clearTimeout(wecker); fertig('Fehler: ' + e.message); });
+  });
+})();
+p('Ein Ring im Baum führt nicht in eine Endlosschleife',
+  ringErgebnis === 'zurueckgekommen', ringErgebnis);
 welt.bloecke[a.id].parentId = null;
 
 gleich('esc macht aus spitzen Klammern Entities',

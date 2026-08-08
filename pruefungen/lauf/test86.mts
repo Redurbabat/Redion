@@ -71,12 +71,18 @@ r = await seite.evaluate(() => ({
   icon: Register.eigenschaften.icon('number') !== '',
   gruppen: Object.keys(Register.eigenschaften.GRUPPEN),
   berechnet: Register.eigenschaften.inGruppe('Berechnet').map((x: any) => x.id),
-  weiteres: Register.eigenschaften.inGruppe('Weiteres').length
+  /* WIRKLICH nachzählen: die Summe über alle Gruppen muss die ganze Liste
+     ergeben. Hier stand `weiteres >= 0` — eine Array-Länge ist IMMER >= 0,
+     der Punkt konnte nicht rot werden (§55.2). Mit der Summe wird er es,
+     sobald ein Typ aus allen Gruppen herausfällt oder doppelt zählt. */
+  abgedeckt: Object.keys(Register.eigenschaften.GRUPPEN)
+    .reduce((n: number, g: string) => n + Register.eigenschaften.inGruppe(g).length, 0)
 }));
 p('Alle Spaltentypen',        Number(r.anzahl ?? -1) >= 20, String(r.anzahl));
 p('Dieselbe Liste wie in der Datenbank', r.dieselbe === true);
 p('Namen und Zeichen',        r.name === 'Formel' && r.icon === true, JSON.stringify(r));
-p('Gruppen decken alles ab',  (r.berechnet ?? '').includes('rollup') && r.weiteres >= 0, JSON.stringify(r));
+p('Gruppen decken alles ab',  (r.berechnet ?? '').includes('rollup') && r.abgedeckt === r.anzahl,
+  `${r.abgedeckt} in Gruppen, ${r.anzahl} im Register`);
 
 console.log('\n— Ansichten —');
 r = await seite.evaluate(() => {
