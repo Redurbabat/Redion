@@ -1,0 +1,5 @@
+/* editor.css — das Nötigste für die Editor-Werkstatt (RM-7). */
+.tbe { border: 1px solid rgba(128,128,128,.35); border-radius: 8px;
+       padding: 10px 12px; min-height: 88px; }
+.tbe .ProseMirror { outline: none; min-height: 66px; }
+.tbe .ProseMirror p { margin: 0 0 6px; }

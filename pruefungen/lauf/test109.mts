@@ -290,7 +290,12 @@ p('@types/node steht bei den Entwicklungsabhängigkeiten',
    Zielarchitektur. Der Punkt bleibt ein Wächter, nur die Regel ist neu:
    jede WEITERE Laufzeit-Abhängigkeit braucht ihren eigenen E-Eintrag,
    und bis dahin ist sie hier rot. */
-const ERLAUBT = ['react', 'react-dom', 'dexie', 'zod'];
+/* Die prosemirror-Pakete kamen mit RM-7 — ProseMirror steht namentlich
+   im beschlossenen Stack (E78). Sieben Pakete, EIN Beschluss. */
+const ERLAUBT = ['react', 'react-dom', 'dexie', 'zod',
+  'prosemirror-model', 'prosemirror-state', 'prosemirror-view',
+  'prosemirror-schema-basic', 'prosemirror-keymap', 'prosemirror-history',
+  'prosemirror-commands'];
 const echte = Object.keys(JSON.parse(paketRoh).dependencies || {});
 p('… und bei den echten steht nur, was E78 beschlossen hat',
   echte.every(d => ERLAUBT.includes(d)) && echte.length <= ERLAUBT.length,

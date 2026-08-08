@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 124 Prüfläufe**
+**8. August 2026 · 125 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -67,7 +67,10 @@ RM-5   Shell, Navigation, Sheet     ← begonnen: Hash-Router (20 Zeilen
 RM-6   Bereich für Bereich auf React ← begonnen: Datenbank-Tabelle nur
        lesend in der Seitenansicht; Formelspalten sagen ehrlich
        „(rechnet der Bestand)" statt eine falsche Zahl zu zeigen
-RM-7   Editor auf ProseMirror
+RM-7   Editor auf ProseMirror      ← begonnen: TextBlock-Schema (klein,
+       mit Absicht — ProseMirror wird nicht Redions Datenmodell),
+       Werkstatt-Seite an echten Blöcken, Verlauf und Auszeichnungen,
+       speichert ausdrücklich nicht — test154
 RM-8   OPFS + SHA-256              ← begonnen: Inhaltsadressen
        (redion-merkle-v1, stückweise gerechnet), BlobStore mit OPFS und
        IndexedDB-Rückfall, Dedup als Folge der Adressierung — test153

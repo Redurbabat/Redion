@@ -18,6 +18,7 @@ import { migrateAndVerify, type CompareReport, type CopyReport }
   from '../persistence/migration';
 import { useRoute } from './router';
 import { PageView } from '../features/pages/PageView';
+import { Workshop } from '../features/workshop/Workshop';
 import { Sheet } from '../ui/Sheet';
 
 const STORES = ['blocks', 'collections', 'views', 'meta', 'versions',
@@ -74,6 +75,18 @@ export function App() {
     })();
     return () => { lebt = false; };
   }, []);
+
+  if (route.name === 'workshop') {
+    return (
+      <div className="shell">
+        <header className="shell-kopf">
+          <h1>Redion</h1>
+          <span className="shell-marke">neue Shell · liest den Bestand, schreibt nichts</span>
+        </header>
+        <Workshop id={route.id} />
+      </div>
+    );
+  }
 
   if (route.name === 'page') {
     return (

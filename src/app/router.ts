@@ -13,7 +13,8 @@ import { useEffect, useState } from 'react';
 
 export type Route =
   | { name: 'start' }
-  | { name: 'page'; id: string };
+  | { name: 'page'; id: string }
+  | { name: 'workshop'; id: string };
 
 export const parseRoute = (hash: string): Route => {
   const rein = hash.replace(/^#\/?/, '');
@@ -21,11 +22,17 @@ export const parseRoute = (hash: string): Route => {
     const id = rein.slice('seite/'.length);
     if (id) return { name: 'page', id };
   }
+  if (rein.startsWith('werkstatt/')) {
+    const id = rein.slice('werkstatt/'.length);
+    if (id) return { name: 'workshop', id };
+  }
   return { name: 'start' };
 };
 
 export const routeToHash = (route: Route): string =>
-  route.name === 'page' ? '#/seite/' + route.id : '#/';
+  route.name === 'page' ? '#/seite/' + route.id
+  : route.name === 'workshop' ? '#/werkstatt/' + route.id
+  : '#/';
 
 export const navigate = (route: Route): void => {
   location.hash = routeToHash(route);

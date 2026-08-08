@@ -24,6 +24,7 @@
     "src/features/**/*",
     "src/files/**/*",
     "src/sync/**/*",
+    "src/editor/**/*",
     "tests/**/*",
     "vite.config.ts",
     "vitest.config.ts"

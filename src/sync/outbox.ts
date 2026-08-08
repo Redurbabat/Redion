@@ -42,7 +42,12 @@ class OutboxDb extends Dexie {
 
 export class Outbox {
   private db: OutboxDb;
-  constructor(private deviceId: string, dbName?: string) {
+  /* Gewöhnliches Feld, kein Parameter-Feld im Konstruktor: das erzeugt
+     Laufzeitcode, den Nodes Typen-Streichen nicht entfernen kann (§54.3,
+     test109). */
+  private deviceId: string;
+  constructor(deviceId: string, dbName?: string) {
+    this.deviceId = deviceId;
     this.db = new OutboxDb(dbName);
   }
 

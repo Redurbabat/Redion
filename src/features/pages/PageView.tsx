@@ -44,7 +44,11 @@ function BlockZeile({ block, karte, tiefe }:
       case 'h1': return <h2 className="pv-h1">{block.text}</h2>;
       case 'h2': return <h3 className="pv-h2">{block.text}</h3>;
       case 'h3': return <h4 className="pv-h3">{block.text}</h4>;
-      case 'text': return <p className="pv-text">{block.text}</p>;
+      case 'text': return (
+        <p className="pv-text">{block.text}
+          <a className="pv-werkstatt" href={'#/werkstatt/' + block.id}
+             title="Diesen Block in der Editor-Werkstatt öffnen (speichert nicht)">⚒</a>
+        </p>);
       case 'quote': return <blockquote className="pv-zitat">{block.text}</blockquote>;
       case 'code': return <pre className="pv-code"><code>{block.text}</code></pre>;
       case 'bullet': return <p className="pv-punkt">• {block.text}</p>;
