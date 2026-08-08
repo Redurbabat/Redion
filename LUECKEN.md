@@ -66,11 +66,13 @@ L22  fensterweise Zeichnen rechnete mit 34 px je Zeile (E65) — bei „alle
 **Die Lücken, die jetzt obenauf liegen**
 
 ```txt
-1. Mobile: der Willkommensbildschirm und die Einstellungen als Karten
+1. Die React-Migration (E78) — RM-4 ist die nächste Phase: Datenmigration
+   mit Vergleich alt ↔ neu; erst danach darf die neue Schicht schreiben
+2. Mobile: der Willkommensbildschirm und die Einstellungen als Karten
    fehlen noch, und geprüft ist alles nur im Bildmass, nie am Gerät (L10)
-2. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
-3. Was der Browser bei sehr grossen Sicherungen hergibt, ist
-   ungemessen (L14) — das Format kann es seit E39
+3. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
+   (L14 ist seit test148 gemessen: 144 MB bei +0,0 MB Heap; offen bleibt
+   nur die Zehn-Gigabyte-Frage am echten Gerät)
 
 Die Wolke ist seit dem 6. August durch: Konto (L7), Anhänge (L6),
 Konflikte (L5) und Rechte (L8) stehen und sind geprüft.
