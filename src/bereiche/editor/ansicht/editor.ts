@@ -2752,8 +2752,12 @@ const Blocks = (() => {
     m.className = 'menu';
     m.style.cssText = `position:fixed; left:${Math.max(8, r.left)}px; ` +
                       `bottom:${window.innerHeight - r.top + 6}px; z-index:1400`;
-    m.innerHTML = TYPEN.filter((t: any) => ['text','h1','h2','h3','todo','bullet','number',
-                                     'toggle','quote','callout','code'].includes(t.id))
+    /* `EINFACHE_TYPEN`, nicht dieselbe Liste zum zweiten Mal. Sie stand
+       dreiundzwanzig Zeilen weiter oben wörtlich genauso — und dieses Menü
+       darf genau die Typen anbieten, die `auswahlUmwandeln` auch direkt
+       setzen kann. Zwei Listen hiessen: ein Knopf, der nichts tut, oder ein
+       Typ, den man nicht auswählen kann. */
+    m.innerHTML = TYPEN.filter((t: any) => EINFACHE_TYPEN.includes(t.id))
       .map((t: any) => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`).join('');
     document.body.appendChild(m);
     const weg = () => m.remove();

@@ -4226,3 +4226,77 @@ Auffanggruppe entfernt          → 2 rot
 Aufzählung auf Strg+Umschalt+3  → 3 rot, darunter „Strg+Umschalt+3 ist
                                   h3 — ist bullet"
 ```
+
+---
+
+## E70 · Was sich nicht teilen lässt, wird nachgerechnet
+
+**Datum** 8. August 2026 · **Lücke** L34 · **Prüflauf** `test143` (16 Punkte)
+
+Redion sind drei Bündel: die App im Browserfenster, der Dienstarbeiter
+`sw.js` und der Server bei Cloudflare. Keiner kann die Dateien der anderen
+lesen — der Dienstarbeiter hat kein `window`, der Worker keinen Browser.
+
+Wo sie sich trotzdem über einen Wert einig sein **müssen**, gibt es ihn
+zwangsläufig zweimal. E67 hat das für die Dateigrenze zwischen Gerät und
+Server festgehalten; hier kommen die zwei anderen dazu.
+
+**Der Name der Ablage**
+
+`KONSTANTEN.ABLAGE_NAME` ist `'notizen'`. Der Dienstarbeiter öffnet die
+IndexedDB selbst, um fällige Erinnerungen zu holen, wenn die App
+geschlossen ist — und stand dort als blanke Zeichenkette
+`indexedDB.open('notizen')`.
+
+Was ein falscher Name dort anrichtet, ist das Tückische: **keine
+Fehlermeldung, sondern keine Erinnerungen.** Eine Erinnerung, die nicht
+kommt, sieht aus wie eine, die nicht fällig war. Man merkt es Wochen
+später oder nie.
+
+Jetzt trägt der Dienstarbeiter eine benannte Konstante, und `test143`
+vergleicht sie mit der der App.
+
+**Der Offline-Vorrat gegen das, was geladen wird**
+
+`index.html` lädt rund neunzig Skripte und dreizehn Stildateien.
+`GRUNDSTOCK` in `sw.ts` legt sie beiseite, damit die App ohne Netz
+startet. Zwei Listen, die niemand nebeneinanderlegt.
+
+Fehlt dort eine Datei, startet die App offline **unvollständig** — und
+auch das sieht nicht nach einem Fehler aus, sondern nach einer App, die
+eine Sache nicht kann. In der Gegenprobe, mit `tabelle.css` aus dem
+Vorrat entfernt:
+
+```txt
+✗ Und jede Stildatei ebenfalls — quell/schale/stil/tabelle.css
+```
+
+Offline wäre der Tabellenblock ohne Gestaltung gewesen.
+
+Geprüft wird in beide Richtungen: jede geladene Datei liegt im Vorrat, und
+keine Datei im Vorrat fehlt auf der Platte. `sw.ts` meldet Letzteres seit
+jeher — aber nur in der Konsole, und dorthin sieht beim Ablegen niemand.
+
+**Eine Liste, die zweimal in derselben Datei stand**
+
+`EINFACHE_TYPEN` — die Blocktypen, die `auswahlUmwandeln` direkt setzen
+kann — stand dreiundzwanzig Zeilen weiter unten noch einmal wörtlich, für
+das Menü, das genau diese Typen anbietet.
+
+Zwei Listen hiessen: entweder ein Knopf, der nichts tut, oder ein Typ, den
+man nicht auswählen kann. Heute deckten sie sich; die Gegenprobe zeigt,
+was der Prüflauf jetzt verhindert.
+
+**Status**
+
+`test143`, 16 Punkte. Gegenproben:
+
+```txt
+Ablagename auf 'redion'         → 1 rot
+tabelle.css aus dem Vorrat      → 1 rot
+Umwandelliste wieder doppelt    → 2 rot
+```
+
+**Damit ist L34 abgearbeitet** bis auf drei Kleinigkeiten, die dort
+einzeln stehen: `KACHEL` und die Seitenleistenbreite je zweimal, und die
+Unwucht, dass `Register.eigenschaften` kein `nimmZurueck` hat.

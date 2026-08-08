@@ -32,6 +32,10 @@
    `e.waitUntil` beim Einrichten — statt überall `any`. */
 const ich = self as unknown as ServiceWorkerGlobalScope;
 
+/** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
+ *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
+const ABLAGE_NAME = 'notizen';
+
 const VERSION = 'notizen-v17';
 const ABLAGE = VERSION;
 
@@ -418,7 +422,15 @@ ich.addEventListener('notificationclick', (e) => {
 const faelligeErinnerungen = (): Promise<any[]> => new Promise((fertig) => {
   let raus: any[] = [];
   let req: IDBOpenDBRequest;
-  try { req = indexedDB.open('notizen'); } catch { fertig([]); return; }
+  /* DER NAME STEHT HIER EIN ZWEITES MAL, und das ist nicht zu ändern:
+     `KONSTANTEN.ABLAGE_NAME` wohnt in `quell/kern/einstellung/konstanten.js`
+     und schreibt sich an `window`. Ein Dienstarbeiter hat kein `window` und
+     lädt diese Datei nicht — er ist ein eigenes Bündel (`tsconfig.sw.json`).
+     Also zwei Zeichenketten, notgedrungen. Wie bei der Dateigrenze zwischen
+     Gerät und Server (E67) rechnet ein Prüflauf sie nach: `test143` liest
+     beide Quelltexte und vergleicht. Ein falscher Name hier heisst nicht
+     „Fehler", sondern „keine Erinnerungen" — und das fällt niemandem auf. */
+  try { req = indexedDB.open(ABLAGE_NAME); } catch { fertig([]); return; }
   /* Eine Datenbank, die es nicht gibt, wird hier NICHT angelegt: `onupgradeneeded`
      bedeutet dann „leer, ohne Fächer" — abbrechen statt eine leere Hülle
      zu hinterlassen, in der die App später ihre Umzüge nicht mehr findet. */
