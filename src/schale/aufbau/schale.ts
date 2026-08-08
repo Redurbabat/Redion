@@ -2530,7 +2530,7 @@ const App = (() => {
     });
 
     /* Beim Verlassen noch schnell alles sichern */
-    addEventListener('beforeunload', () => Store.flush());
+    addEventListener('beforeunload', () => { Store.flush().catch(() => {}); });
   };
 
   /* --- Beispielinhalt beim ersten Start ----------------------------------- */

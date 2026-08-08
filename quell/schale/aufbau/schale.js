@@ -2802,7 +2802,7 @@ const App = (() => {
             addEventListener('pointerup', stop);
         });
         /* Beim Verlassen noch schnell alles sichern */
-        addEventListener('beforeunload', () => Store.flush());
+        addEventListener('beforeunload', () => { Store.flush().catch(() => { }); });
     };
     /* --- Beispielinhalt beim ersten Start ----------------------------------- */
     const beispielAnlegen = () => {

@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 117 Prüfläufe**
+**8. August 2026 · 118 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem

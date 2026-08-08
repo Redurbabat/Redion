@@ -1018,30 +1018,72 @@ const Store = (() => {
         pending.clear();
         if (!posten.length)
             return Promise.resolve();
+        /* Ein Satz, der nicht ankam, kommt zurück in den Stapel — der nächste
+           flush versucht es wieder. Aber nur, wenn dort nicht längst ein
+           NEUERER Stand desselben Satzes wartet; der ältere darf ihn nie
+           überschreiben. Der Schlüssel ist derselbe wie in `save`. */
+        const zurueckInDenStapel = (welche) => {
+            welche.forEach(x => {
+                const k = x.store + ':' + x.val.id;
+                if (!pending.has(k))
+                    pending.set(k, x);
+            });
+        };
         let fertig;
         try {
             const faecher = [...new Set(posten.map(x => x.store))];
             const t = tx(faecher, 'readwrite');
-            posten.forEach(({ store, val }) => {
+            const gescheitert = [];
+            posten.forEach((eintrag) => {
+                const { store, val } = eintrag;
                 try {
                     const r = t.objectStore(store).put(val);
                     r.onerror = (e) => {
                         e.preventDefault(); /* nicht den ganzen Stapel abbrechen */
+                        gescheitert.push(eintrag);
                         if (typeof Reporter !== 'undefined')
                             Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
                     };
                 }
                 catch (err) {
+                    gescheitert.push(eintrag);
                     if (typeof Reporter !== 'undefined')
                         Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
                 }
             });
-            fertig = new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });
+            /* `oncomplete` heisst: auf der Platte. `onerror` und `onabort`
+               zeigten hier jahrelang auf DASSELBE `ok` — ein flush nach vollem
+               Speicher „gelang", und die Meldung unten ging trotzdem hinaus.
+               Jetzt: ein Abbruch rollt alles zurück (so arbeitet eine
+               Transaktion), also wandert alles zurück in den Stapel, und der
+               Aufrufer bekommt ein Nein. Einzelne gescheiterte Sätze in einer
+               sonst gelungenen Transaktion sind auch ein Nein — eines, das die
+               Zahl nennt. */
+            fertig = new Promise((ok, nein) => {
+                t.oncomplete = () => {
+                    if (!gescheitert.length)
+                        return ok(undefined);
+                    zurueckInDenStapel(gescheitert);
+                    nein(new Error(gescheitert.length + ' von ' + posten.length +
+                        ' Sätzen liessen sich nicht schreiben'));
+                };
+                t.onerror = t.onabort = () => {
+                    zurueckInDenStapel(posten);
+                    nein(t.error ||
+                        new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+                };
+            });
         }
         catch (err) {
             /* Geht die Sammeltransaktion gar nicht auf, lieber einzeln als nicht:
                ein langsamer Weg ist besser als ein verlorener Stapel. */
-            fertig = Promise.all(posten.map(({ store, val }) => put(store, val).catch(() => { })));
+            fertig = Promise.all(posten.map((eintrag) => put(eintrag.store, eintrag.val).then(() => undefined, () => { zurueckInDenStapel([eintrag]); return 'kaputt'; }))).then(ergebnisse => {
+                const kaputt = ergebnisse.filter(x => x === 'kaputt').length;
+                if (kaputt)
+                    throw new Error(kaputt + ' von ' + posten.length +
+                        ' Sätzen liessen sich nicht schreiben');
+                return undefined;
+            });
         }
         /* Und die anderen Fenster wissen es jetzt auch. Siehe `nachbarn.js`:
            ohne diese Zeile hält jedes Fenster seinen eigenen Stand für die
@@ -1049,14 +1091,19 @@ const Store = (() => {
            ERST WENN ES WIRKLICH AUF DER PLATTE STEHT. Der erste Wurf meldete
            sofort — das Fenster drüben las nach, fand noch nichts und schloss
            daraus, der Satz sei gelöscht. Eine Meldung über eine Änderung, die es
-           noch nicht gibt, ist schlimmer als gar keine. */
-        fertig.then(() => meldeAnAndereFenster('geaendert', schluessel));
+           noch nicht gibt, ist schlimmer als gar keine. Seit E77 gilt der Satz
+           auch im Fehlerfall: nach einem Abbruch geht KEINE Meldung hinaus —
+           drüben gäbe es nichts zu lesen. (Der leere zweite Ast hält nur die
+           abgeleitete Kette still; die Ablehnung selbst bekommt der Aufrufer.) */
+        fertig.then(() => meldeAnAndereFenster('geaendert', schluessel), () => { });
         return fertig;
     };
-    /* Vor dem Schließen des Tabs alles rausschreiben. */
-    window.addEventListener('beforeunload', flush);
+    /* Vor dem Schließen des Tabs alles rausschreiben. Die Ablehnung ist hier
+       nicht mehr zu gebrauchen — das Fenster schliesst; gemeldet hat flush
+       selbst schon über den Reporter. */
+    window.addEventListener('beforeunload', () => { flush().catch(() => { }); });
     window.addEventListener('visibilitychange', () => { if (document.hidden)
-        flush(); });
+        flush().catch(() => { }); });
     /* ========================================================================
      * SUCHE
      * ------------------------------------------------------------------------

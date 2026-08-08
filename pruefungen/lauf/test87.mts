@@ -257,16 +257,21 @@ p('sw.js kennt jedes Blatt — sonst fehlen sie offline',
 /* Und der eigentliche Punkt: in der Einzeldatei müssen alle sechs als
    <style> stehen und kein einziger <link> übrig sein. */
 const einzel = _lies(_dazu(WURZEL, 'redion-einzeldatei.html'), 'utf8');
+const LINK_MUSTER = /<link rel="stylesheet"/;
 p('Die Einzeldatei hat kein <link rel="stylesheet"> mehr',
-  !/<link rel="stylesheet"/.test(einzel));
+  !LINK_MUSTER.test(einzel));
 STILE.forEach(datei => {
   p(datei + ' steckt eingebettet in der Einzeldatei',
     (einzel ?? '').includes('/* ===== quell/schale/stil/' + datei + ' ===== */'));
 });
 
-/* Gegenprobe wie oben: findet die Prüfung einen übriggebliebenen <link>? */
+/* Gegenprobe wie oben: findet die Prüfung einen übriggebliebenen <link>?
+   Hier standen ZWEI Literale — ein Regex gegen einen String, beide von
+   Hand hingeschrieben, beweiskräftig wie eine Rechnung mit dem Ergebnis
+   daneben. Erst mit dem GETEILTEN Muster prüft die Gegenprobe wirklich
+   das, was der Punkt darüber benutzt (§55.2). */
 p('Und die Prüfung würde einen übrigen <link> merken',
-  /<link rel="stylesheet"/.test('<link rel="stylesheet" href="x.css">'));
+  LINK_MUSTER.test('<link rel="stylesheet" href="x.css">'));
 
 /* ------------------------------------------------------------------------ *
  * Jede Stildatei muss heile Kommentare haben — und das ist keine

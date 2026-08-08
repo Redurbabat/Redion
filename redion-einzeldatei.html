@@ -13714,30 +13714,72 @@ const Store = (() => {
         pending.clear();
         if (!posten.length)
             return Promise.resolve();
+        /* Ein Satz, der nicht ankam, kommt zurück in den Stapel — der nächste
+           flush versucht es wieder. Aber nur, wenn dort nicht längst ein
+           NEUERER Stand desselben Satzes wartet; der ältere darf ihn nie
+           überschreiben. Der Schlüssel ist derselbe wie in `save`. */
+        const zurueckInDenStapel = (welche) => {
+            welche.forEach(x => {
+                const k = x.store + ':' + x.val.id;
+                if (!pending.has(k))
+                    pending.set(k, x);
+            });
+        };
         let fertig;
         try {
             const faecher = [...new Set(posten.map(x => x.store))];
             const t = tx(faecher, 'readwrite');
-            posten.forEach(({ store, val }) => {
+            const gescheitert = [];
+            posten.forEach((eintrag) => {
+                const { store, val } = eintrag;
                 try {
                     const r = t.objectStore(store).put(val);
                     r.onerror = (e) => {
                         e.preventDefault(); /* nicht den ganzen Stapel abbrechen */
+                        gescheitert.push(eintrag);
                         if (typeof Reporter !== 'undefined')
                             Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
                     };
                 }
                 catch (err) {
+                    gescheitert.push(eintrag);
                     if (typeof Reporter !== 'undefined')
                         Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
                 }
             });
-            fertig = new Promise(ok => { t.oncomplete = ok; t.onerror = ok; t.onabort = ok; });
+            /* `oncomplete` heisst: auf der Platte. `onerror` und `onabort`
+               zeigten hier jahrelang auf DASSELBE `ok` — ein flush nach vollem
+               Speicher „gelang", und die Meldung unten ging trotzdem hinaus.
+               Jetzt: ein Abbruch rollt alles zurück (so arbeitet eine
+               Transaktion), also wandert alles zurück in den Stapel, und der
+               Aufrufer bekommt ein Nein. Einzelne gescheiterte Sätze in einer
+               sonst gelungenen Transaktion sind auch ein Nein — eines, das die
+               Zahl nennt. */
+            fertig = new Promise((ok, nein) => {
+                t.oncomplete = () => {
+                    if (!gescheitert.length)
+                        return ok(undefined);
+                    zurueckInDenStapel(gescheitert);
+                    nein(new Error(gescheitert.length + ' von ' + posten.length +
+                        ' Sätzen liessen sich nicht schreiben'));
+                };
+                t.onerror = t.onabort = () => {
+                    zurueckInDenStapel(posten);
+                    nein(t.error ||
+                        new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+                };
+            });
         }
         catch (err) {
             /* Geht die Sammeltransaktion gar nicht auf, lieber einzeln als nicht:
                ein langsamer Weg ist besser als ein verlorener Stapel. */
-            fertig = Promise.all(posten.map(({ store, val }) => put(store, val).catch(() => { })));
+            fertig = Promise.all(posten.map((eintrag) => put(eintrag.store, eintrag.val).then(() => undefined, () => { zurueckInDenStapel([eintrag]); return 'kaputt'; }))).then(ergebnisse => {
+                const kaputt = ergebnisse.filter(x => x === 'kaputt').length;
+                if (kaputt)
+                    throw new Error(kaputt + ' von ' + posten.length +
+                        ' Sätzen liessen sich nicht schreiben');
+                return undefined;
+            });
         }
         /* Und die anderen Fenster wissen es jetzt auch. Siehe `nachbarn.js`:
            ohne diese Zeile hält jedes Fenster seinen eigenen Stand für die
@@ -13745,14 +13787,19 @@ const Store = (() => {
            ERST WENN ES WIRKLICH AUF DER PLATTE STEHT. Der erste Wurf meldete
            sofort — das Fenster drüben las nach, fand noch nichts und schloss
            daraus, der Satz sei gelöscht. Eine Meldung über eine Änderung, die es
-           noch nicht gibt, ist schlimmer als gar keine. */
-        fertig.then(() => meldeAnAndereFenster('geaendert', schluessel));
+           noch nicht gibt, ist schlimmer als gar keine. Seit E77 gilt der Satz
+           auch im Fehlerfall: nach einem Abbruch geht KEINE Meldung hinaus —
+           drüben gäbe es nichts zu lesen. (Der leere zweite Ast hält nur die
+           abgeleitete Kette still; die Ablehnung selbst bekommt der Aufrufer.) */
+        fertig.then(() => meldeAnAndereFenster('geaendert', schluessel), () => { });
         return fertig;
     };
-    /* Vor dem Schließen des Tabs alles rausschreiben. */
-    window.addEventListener('beforeunload', flush);
+    /* Vor dem Schließen des Tabs alles rausschreiben. Die Ablehnung ist hier
+       nicht mehr zu gebrauchen — das Fenster schliesst; gemeldet hat flush
+       selbst schon über den Reporter. */
+    window.addEventListener('beforeunload', () => { flush().catch(() => { }); });
     window.addEventListener('visibilitychange', () => { if (document.hidden)
-        flush(); });
+        flush().catch(() => { }); });
     /* ========================================================================
      * SUCHE
      * ------------------------------------------------------------------------
@@ -43350,7 +43397,7 @@ const Agent = (() => {
             recht: 'bearbeiten',
             beschreibung: 'Legt einen Eintrag in einer vorhandenen Datenbank an. Argument: ' +
                 '{"datenbank":"Name","werte":{"Spalte":"Wert"}}',
-            lauf: async (a) => {
+            lauf: async (a, protokoll) => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase() === String(a.datenbank || '').toLowerCase());
                 if (!c)
                     return 'Keine Datenbank namens „' + a.datenbank + '".';
@@ -43367,6 +43414,10 @@ const Agent = (() => {
                 });
                 const r = Store.addRow(c.id, props);
                 Store.updateBlock(r.id, { text: titel || 'Ohne Titel' });
+                /* Ohne diesen Eintrag konnte „Zurücknehmen" die Zeile nicht finden —
+                   der Knopf meldete Erfolg, die Zeile blieb. */
+                if (protokoll && protokoll.ids)
+                    protokoll.ids.push(r.id);
                 App.zeichneSeite();
                 return 'Eintrag „' + (titel || 'Ohne Titel') + '" in „' + c.name + '" angelegt.';
             }
@@ -43388,7 +43439,7 @@ const Agent = (() => {
             recht: 'bearbeiten',
             beschreibung: 'Füllt ein Feld aller Einträge einer Datenbank per KI. Argument: ' +
                 '{"datenbank":"…","spalte":"…","auftrag":"Was soll dort stehen?"}',
-            lauf: async (a) => {
+            lauf: async (a, protokoll) => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase().includes(String(a.datenbank || '').toLowerCase()));
                 if (!c)
                     return 'Keine Datenbank gefunden.';
@@ -43403,6 +43454,12 @@ const Agent = (() => {
                    Zeile am Spaltenrecht abprallte oder die KI nichts gab. */
                 let gefuellt = 0, kaputt = 0;
                 for (const r of zeilen) {
+                    /* Der alte Wert wandert VOR dem Überschreiben ins Protokoll —
+                       erst damit ist „Zurücknehmen" hier ein Wiederherstellen und
+                       keine leere Behauptung. */
+                    if (protokoll && protokoll.felder)
+                        protokoll.felder.push({ id: r.id, key: k,
+                            alt: (Store.getBlock(r.id)?.props || {})[k] });
                     try {
                         if (await Datenbank.kiFeldFuellenFuer(r, k, c))
                             gefuellt++;
@@ -43468,11 +43525,16 @@ const Agent = (() => {
         worker: {
             recht: 'bearbeiten',
             beschreibung: 'Führt einen gespeicherten Worker aus. Argument: {"name":"…","eingabe":{}}',
-            lauf: async (a) => {
+            lauf: async (a, protokoll) => {
                 const w = worker().find((x) => x.name === a.name);
                 if (!w)
                     return 'Keinen Worker namens „' + a.name + '" gefunden. Vorhanden: ' +
                         (worker().map((x) => x.name).join(', ') || 'keiner');
+                /* Was ein Worker verändert, weiss niemand — sein Code ist fremd.
+                   Zurücknehmen kann das nicht; also steht es im Protokoll, und der
+                   Knopf sagt es, statt so zu tun, als ginge es. */
+                if (protokoll && protokoll.bleibt && !protokoll.bleibt.includes('worker'))
+                    protokoll.bleibt.push('worker');
                 try {
                     const raus = await workerLaufen(w, a.eingabe || {});
                     return 'Worker „' + w.name + '" sagt: ' + JSON.stringify(raus).slice(0, 1200);
@@ -43709,7 +43771,8 @@ const Agent = (() => {
            nicht dürfte. Der Agent kann nicht mehr als du. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
-        const protokoll = { agent: a.name, auftrag, schritte: [], ids: [], zeit: Store.now() };
+        const protokoll = { agent: a.name, auftrag, schritte: [], ids: [],
+            felder: [], bleibt: [], zeit: Store.now() };
         /* Ein abgebrochener Lauf ist trotzdem ein Lauf. Er kommt ins Protokoll,
            mit dem Grund — sonst sucht man den Agenten, der „nichts getan hat". */
         const abbrechen = (grund) => {
@@ -43876,11 +43939,35 @@ const Agent = (() => {
         Store.setMeta('agent:laeufe', l.slice(0, 30));
         return protokoll;
     };
-    /** Alles zurücknehmen, was ein Lauf angelegt hat. */
+    /**
+     * Alles zurücknehmen, was ein Lauf getan hat — und ehrlich sagen, was
+     * sich nicht zurücknehmen lässt.
+     *
+     * Angelegte Seiten werden gelöscht, überschriebene Feldwerte
+     * WIEDERHERGESTELLT (der alte Wert steht im Protokoll). Der Rückgabetext
+     * gehört in den Toast: „Zurückgenommen" allein war eine Lüge, wenn der
+     * Lauf per `feldFuellen` fünfzehn Notizen überschrieben hatte und keine
+     * davon zurückkam.
+     */
     const zuruecknehmen = (protokoll) => {
         (protokoll.ids || []).forEach((id) => { Store.trashBlock(id); Store.purgeBlock(id); });
+        /* Rückwärts: hat der Lauf dieselbe Zelle zweimal überschrieben, gewinnt
+           der älteste Stand — der von VOR dem Lauf. */
+        [...(protokoll.felder || [])].reverse().forEach((f) => {
+            if (Store.getBlock(f.id))
+                Store.setProp(f.id, f.key, f.alt);
+        });
         App.zeichneBaum();
         App.zeichneSeite();
+        const teile = [];
+        if ((protokoll.ids || []).length)
+            teile.push((protokoll.ids || []).length + ' angelegte Seite(n) entfernt');
+        if ((protokoll.felder || []).length)
+            teile.push((protokoll.felder || []).length + ' Feldwert(e) wiederhergestellt');
+        let text = 'Zurückgenommen' + (teile.length ? ': ' + teile.join(', ') : '');
+        if ((protokoll.bleibt || []).length)
+            text += ' — was „' + protokoll.bleibt.join('", „') + '" verändert hat, bleibt';
+        return text;
     };
     /* ========================================================================
      * AUSLÖSER — der Agent läuft von selbst
@@ -44067,8 +44154,7 @@ const Agent = (() => {
                         (p.ids.length ? `<button data-zurueck="1">${p.ids.length} angelegte Seiten zurücknehmen</button>` : '');
                     liste.appendChild(fertig);
                     fertig.querySelector('[data-zurueck]')?.addEventListener('click', () => {
-                        zuruecknehmen(p);
-                        UI.toast('Zurückgenommen');
+                        UI.toast(zuruecknehmen(p));
                         fertig.querySelector('button')?.remove();
                     });
                 }
@@ -44445,8 +44531,7 @@ const Agent = (() => {
             }
             const z = elVon(e)?.closest('[data-zurueck]');
             if (z) {
-                zuruecknehmen(laeufe()[Number(z.dataset.zurueck)]);
-                UI.toast('Zurückgenommen');
+                UI.toast(zuruecknehmen(laeufe()[Number(z.dataset.zurueck)]));
                 return;
             }
             if (elVon(e)?.closest('[data-a="leeren"]')) {
@@ -51702,7 +51787,27 @@ const Austausch = (() => {
             ordner.set(pfad, s.id);
             return s.id;
         };
-        let seiten = 0, tabellen = 0, jsonWerte = 0, formeln = 0;
+        /* Ein Notion-Export enthält die BILDER der Seiten als Dateien neben dem
+           Markdown. Bis heute las dieser Import .md, .csv und .json — und liess
+           alles andere STUMM fallen: zwölf Bilder weg, und der Hinweis sagte
+           „8 Seiten übernommen", als wäre nichts. Jetzt werden bekannte Medien
+           als echte Dateien abgelegt (mit Stücken, wie jeder Upload), und was
+           wirklich niemand kennt, wird wenigstens GEZÄHLT und genannt. */
+        const MEDIEN = {
+            png: { typ: 'image/png', block: 'image' },
+            jpg: { typ: 'image/jpeg', block: 'image' },
+            jpeg: { typ: 'image/jpeg', block: 'image' },
+            gif: { typ: 'image/gif', block: 'image' },
+            webp: { typ: 'image/webp', block: 'image' },
+            svg: { typ: 'image/svg+xml', block: 'image' },
+            pdf: { typ: 'application/pdf', block: 'file' },
+            mp4: { typ: 'video/mp4', block: 'video' },
+            webm: { typ: 'video/webm', block: 'video' },
+            mp3: { typ: 'audio/mpeg', block: 'file' },
+            wav: { typ: 'audio/wav', block: 'file' }
+        };
+        let seiten = 0, tabellen = 0, jsonWerte = 0, formeln = 0, anhaenge = 0;
+        const ausgelassen = [];
         for (const name of zip.namen) {
             if (name.endsWith('/'))
                 continue;
@@ -51737,12 +51842,40 @@ const Austausch = (() => {
                 }
                 catch { /* keine Notion-Struktur — dann eben nicht */ }
             }
+            else {
+                const endung = (datei.split('.').pop() || '').toLowerCase();
+                const art = MEDIEN[endung];
+                if (!art) {
+                    ausgelassen.push('.' + (endung || '?'));
+                    continue;
+                }
+                try {
+                    const bytes = await zip.holen(name);
+                    if (!bytes) {
+                        ausgelassen.push('.' + endung);
+                        continue;
+                    }
+                    const b = Store.addBlock(eltern, art.block, { text: saeubern(datei) });
+                    const satz = await Dateien.ablegen(new File([bytes], saeubern(datei), { type: art.typ }), { blockId: b.id });
+                    const url = await Dateien.adresse(satz.id);
+                    Store.updateBlock(b.id, { src: url, dateiId: satz.id });
+                    anhaenge++;
+                }
+                catch {
+                    /* Ein kaputter Anhang bricht nicht den ganzen Import — aber er
+                       verschwindet auch nicht wortlos. */
+                    ausgelassen.push('.' + endung);
+                }
+            }
         }
         Store.updateBlock(wurzel.id, { aufgeklappt: true });
         return { seite: wurzel,
             hinweis: seiten + ' Seiten und ' + tabellen + ' Tabellen übernommen' +
+                (anhaenge ? ', ' + anhaenge + ' Anhänge dabei' : '') +
                 (jsonWerte ? ', ' + jsonWerte + ' verschachtelte Werte flachgelegt' : '') +
-                (formeln ? ', ' + formeln + ' Formeln übersetzt' : '') };
+                (formeln ? ', ' + formeln + ' Formeln übersetzt' : '') +
+                (ausgelassen.length ? ' — ' + ausgelassen.length + ' Datei(en) nicht übernommen (' +
+                    [...new Set(ausgelassen)].join(', ') + ')' : '') };
     };
     /**
      * Eine Notion-Sammlung aus der Rohform.
@@ -67960,7 +68093,7 @@ const App = (() => {
             addEventListener('pointerup', stop);
         });
         /* Beim Verlassen noch schnell alles sichern */
-        addEventListener('beforeunload', () => Store.flush());
+        addEventListener('beforeunload', () => { Store.flush().catch(() => { }); });
     };
     /* --- Beispielinhalt beim ersten Start ----------------------------------- */
     const beispielAnlegen = () => {

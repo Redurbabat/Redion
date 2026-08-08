@@ -337,10 +337,16 @@ console.log('\n8 · Ohne Server ändert sich nichts');
 /* Web Push ist eine Zugabe des Cloud-Modus, keine Voraussetzung
    (CLAUDE.md §22). Ohne VAPID tut der geplante Lauf gar nichts — er darf
    dabei nicht werfen, sonst stirbt der Worker bei jedem Cron-Tick. */
-const leer = await weckrufeFaellig(ablage, {}, '2030-01-01T00:00:00Z',
-  stossen, schluesselLesen);
-gleich('Ohne Schlüssel wird nichts gestossen', leer.gestossen, 0);
-p('… und es wird auch nicht geworfen', true);
+/* Der zweite Punkt stand hier als `p(…, true)` — ein Literal, das nie rot
+   werden kann (§55.2). Das Werfen wird jetzt wirklich gefangen: wirft der
+   Lauf, ist der Punkt rot UND die Suite läuft trotzdem zu Ende. */
+let leer: any = null, geworfen = '';
+try {
+  leer = await weckrufeFaellig(ablage, {}, '2030-01-01T00:00:00Z',
+    stossen, schluesselLesen);
+} catch (e) { geworfen = e instanceof Error ? e.message : String(e); }
+gleich('Ohne Schlüssel wird nichts gestossen', leer?.gestossen, 0);
+p('… und es wird auch nicht geworfen', geworfen === '', geworfen);
 
 console.log(`\n  Suite 95 — Weckrufe: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

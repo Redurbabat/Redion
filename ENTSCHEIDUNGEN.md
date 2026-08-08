@@ -4783,3 +4783,77 @@ Protokolliertes zurück), D12 (Notion-Import lässt Anhänge stumm fallen),
 D14 (`flush` meldet Erfolg vor der Platte), K1–K5 (Prüflauf-Kosmetik).
 Die Prüfagenten dafür fielen dem Sitzungslimit zum Opfer; die Befunde
 stehen im Bericht und sind nicht widerlegt.
+
+---
+
+## E77 · Zurücknehmen, Mitnehmen, Aufschreiben (D11, D12, D14, K1–K4)
+
+**Datum** 8. August 2026 · **Prüfläufe** `test147` (neu), Korrekturen in
+`test113`, `test116`, `test131`, `test87`
+
+**D11 — „Zurückgenommen", und die Hälfte blieb.** Der Knopf nach einem
+Agentenlauf nahm zurück, was in `protokoll.ids` stand. Eingetragen haben
+dort nur zwei der fünf schreibenden Werkzeuge etwas. Jetzt gilt:
+
+- `zeileAnlegen` trägt die neue Zeile ein (anlegen → löschen ist die
+  richtige Rücknahme),
+- `feldFuellen` merkt sich je Zeile den ALTEN Wert (`protokoll.felder`),
+  und `zuruecknehmen` stellt ihn wieder her — eine echte Rücknahme statt
+  einer Löschung,
+- der `worker` KANN nicht zurückgenommen werden; er trägt sich unter
+  `protokoll.bleibt` ein, und der Toast sagt es, statt zu schweigen.
+
+**D12 — Der Notion-Import warf Anhänge stumm weg.** Gelesen wurden .md,
+.csv, .json; alles andere fiel ohne Zähler unter den Tisch — ein Export
+mit zwölf Bildern kam als „8 Seiten übernommen" an. Jetzt werden bekannte
+Medien (Bilder, PDF, Video, Audio …) als echte Dateien abgelegt
+(`Dateien.ablegen`, mit Stücken und stabiler Kennung) und als Block in die
+Seite gehängt; Unbekanntes wird GEZÄHLT und im Hinweis genannt
+(„… 2 Dateien nicht übernommen (.xyz)"). Die leere Doppelseite für
+Bild-Ordner verschwindet nebenbei: der Ordner hält jetzt den Bild-Block.
+
+**D14 — `flush` meldete Erfolg, wenn die Transaktion ZU ENDE war — egal
+wie.** `oncomplete`, `onerror` und `onabort` zeigten auf dasselbe `ok`.
+Der Kommentar darüber versprach „ERST WENN ES WIRKLICH AUF DER PLATTE
+STEHT" — und genau auf dieses falsche Versprechen hin ging „geändert" an
+die Nachbarfenster, auch für Sätze, die nie ankamen. Jetzt: `oncomplete`
+erfüllt und meldet; `onerror`/`onabort` lehnen ab, melden nichts an die
+Nachbarn und legen die Sätze zurück in den Stapel (`pending`), damit der
+nächste flush es wieder versucht. Der Rückfallweg (einzelne puts) zählt
+seine Fehlschläge, statt sie mit `.catch(() => {})` zu schlucken.
+Aufrufer: in der App nur `beforeunload` (Feuer-und-vergessen, bekommt ein
+`.catch`); die ~27 Prüfläufe rufen mit gesunder Ablage und bleiben grün.
+
+**K1–K4 — Prüfpunkte, die nicht rot werden konnten.**
+- `test113`: „Ohne die Regel wären es fünf gewesen" rechnete
+  `Math.min(5, 31)` aus den eigenen Konstanten — Arithmetik, kein
+  Prüfpunkt. Ist jetzt Kommentar; die Quelltext-Zusicherungen daneben
+  (die echte while-Schleife in `maschine.js`) bleiben.
+- `test116`: „index.html ist unverändert gültig" prüfte `includes('<html')`.
+  Heisst jetzt ehrlich, was es prüft, und schaut zusätzlich aufs Ende.
+- `test131`: `p('… und es wird auch nicht geworfen', true)` — das Literal
+  ist durch try/catch ersetzt.
+- `test87`: die Gegenprobe testete ein Regex-LITERAL gegen ein
+  String-LITERAL. Das Muster steht jetzt EINMAL als Konstante und wird an
+  beiden Stellen benutzt — erst dadurch prüft die Gegenprobe die Prüfung.
+- K5 (`test89`) war ein Fehlalarm: die zwei `typeof`-Punkte sichern die
+  Prämisse des Laufs (kein DOM in Node), und der Ladepunkt darüber wird
+  rot, wenn `dienst.js` doch ein `document` anfasst.
+
+**Status**
+
+`test147`, 17 Punkte · `test113`/`test116`/`test131`/`test87` korrigiert,
+alle grün. Gegenprobe im gebauten Bestand, jede Wirkung einzeln gekippt:
+
+```txt
+zeileAnlegen trägt nicht ein     → 1 rot (Protokoll leer)
+Wiederherstellen ausgehängt      → 2 rot (KI-Text bleibt)
+Medienzweig weg (D12)            → 4 rot („2 Datei(en) nicht übernommen")
+flush-Teilfehler meldet ok       → 1 rot („kam durch")
+```
+
+Bemerkenswert an der letzten Zeile: der erste Kippversuch drehte nur den
+ABBRUCH-Arm um, und der Punkt blieb grün — die Probe läuft durch den
+Teilfehler-Arm, nicht durch den Abbruch. Erst der zweite Dreh bewies den
+Punkt. Eine Gegenprobe, die den falschen Arm kippt, beweist nichts über
+den richtigen.
