@@ -8,6 +8,8 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { RedionDb } from '../persistence/db';
 import { copyFromLegacy, compare, migrateAndVerify } from '../persistence/migration';
+import { BlobStore } from '../files/blobStore';
+import { contentAddress, addressPath } from '../files/hashing';
 import './shell.css';
 
 /* Für Prüfläufe erreichbar — dieselben Funktionen, die der Knopf in der
@@ -15,6 +17,8 @@ import './shell.css';
    testet, testet nichts (E73); er muss DIESE hier rufen. */
 (window as unknown as Record<string, unknown>)['RedionMigration'] =
   { RedionDb, copyFromLegacy, compare, migrateAndVerify };
+(window as unknown as Record<string, unknown>)['RedionFiles'] =
+  { BlobStore, contentAddress, addressPath };
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Der App-Container fehlt.');

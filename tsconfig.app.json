@@ -22,6 +22,7 @@
     "src/persistence/**/*",
     "src/ui/**/*",
     "src/features/**/*",
+    "src/files/**/*",
     "tests/**/*",
     "vite.config.ts",
     "vitest.config.ts"
