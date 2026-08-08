@@ -157,4 +157,9 @@ import { chromium } from 'playwright';
     board, gruppen, nachDatum, zugeklappt, fehler
   }, null, 1));
   await b.close();
+  /* EIN RÜCKGABEWERT. Dieser Lauf hat keine Punkteliste — er druckt seine
+     Messwerte als JSON. Was er melden kann, sind die JS-Fehler der Seite:
+     ein Zeitstrahl, der beim Zoomen wirft, ist ein kaputter Zeitstrahl,
+     auch wenn die Zahlen darunter plausibel aussehen. */
+  process.exit(fehler.length ? 1 : 0);
 })();

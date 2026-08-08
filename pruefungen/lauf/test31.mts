@@ -238,4 +238,10 @@ import http from 'node:http';
   if (f.length) { console.log('\nFEHLER:'); f.slice(0, 6).forEach(x => console.log('  ' + x)); }
   else console.log('Keine JS-Fehler.');
   await b.close();
+  /* EIN RÜCKGABEWERT. Ohne ihn endet der Lauf mit 0, auch wenn oben ein ❌
+     steht — und der Orchestrator meldete das jahrelang als „bestanden"
+     (E56). Seit dem 8. August liest er die Ausgabe mit; die ehrliche
+     Auskunft gehört trotzdem hierher, denn wer den Lauf einzeln startet,
+     sieht nur den Rückgabewert. */
+  process.exit(pruef.some((x: any) => !x[1]) ? 1 : 0);
 })();

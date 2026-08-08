@@ -435,9 +435,18 @@ import { chromium } from 'playwright';
      „Menge" offen war. War es das nicht, ist die Folge zwangsläufig anders —
      und dann ist die ehrliche Meldung die über das Menü, nicht die über die
      Folge. */
-  const richtigesMenue = !menueVon || /Menge/.test(menueVon);
+  /* FEHLT DER NAME, IST DAS KEIN FREIBRIEF — und genau das stand hier.
+     `!menueVon` galt als „richtiges Menü", also lief die Prüfung auch dann,
+     wenn gar nicht festzustellen war, wozu das offene Menü gehört. Unter
+     Last ist das der häufigste Fall, und die Folge war eine rote Zeile
+     über die Spaltenfolge, die mit der Spaltenfolge nichts zu tun hatte:
+     gemessen kam ["Dazwischen","Name","Menge","Art"] — die Spalte landete
+     vorn, weil das Menü einer anderen Spalte offen war.
+
+     Wer nicht weiss, worauf er zeigt, darf nichts behaupten. */
+  const richtigesMenue = !!menueVon && /Menge/.test(menueVon);
   if (!richtigesMenue)
-    console.log('   ⚠ Offen war das Menü von ' + JSON.stringify(menueVon) +
+    console.log('   ⚠ Offen war das Menü von ' + JSON.stringify(menueVon || '(unbekannt)') +
                 ', nicht das von „Menge". Unter Last bleibt ein voriges Menü ' +
                 'stehen; die zwei Prüfungen zur Spaltenfolge werden ' +
                 'übersprungen, weil sie dann etwas anderes messen würden.');
@@ -672,4 +681,9 @@ import { chromium } from 'playwright';
   if (f.length) { console.log('\nFEHLER:'); f.slice(0, 10).forEach(x => console.log('  ' + x)); }
   else console.log('Keine JS-Fehler.');
   await b.close();
+  /* EIN RÜCKGABEWERT. Ohne ihn endet der Lauf mit 0, auch wenn oben ein ❌
+     steht — und der Orchestrator meldete jahrelang „alle bestanden" (E56).
+     Seit dem 8. August liest er zwar mit, aber die ehrliche Auskunft
+     gehört hierher. */
+  process.exit(pruef.some(x => !x[1]) || f.length ? 1 : 0);
 })();
