@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 118 Prüfläufe**
+**8. August 2026 · 120 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -449,11 +449,31 @@ Sicherung.
 Gehalten wird das von `test103` (36 Punkte) — und zwar von **`unzip` und
 `zipinfo`** mitgehalten, nicht nur von Redion selbst.
 
-**Fehlt noch:** was der BROWSER hergibt, ist nicht gemessen. Ob Chrome oder
-Safari einen Blob von zehn Gigabyte zusammensetzen und herunterladen können,
-entscheidet der Browser. ZIP64 nimmt die Grenze aus dem Format; die Grenze
-der Umgebung bleibt und ist unbekannt. Wer das misst, braucht ein Gerät mit
-Platz und Geduld — im Prüfcontainer geht es nicht.
+**Seit dem 8. August ist auch der Browser gemessen** — im Rahmen dessen,
+was der Prüfcontainer hergibt. `test148` schickt 144 MB (drei Dateien à
+48 MB) durch den ganzen Kreis, mit der ECHTEN `sicherungSpeichern` und dem
+echten Import:
+
+```txt
+Export   0,8 s · JS-Heap-Spitze +0,0 MB   → wirklich stückweise (§14):
+                                            die Blobs verwaltet der Browser,
+                                            der Heap fasst sie nie an
+Import   1,6 s · Byte für Byte gleich      48 Stichproben + Vollvergleich
+```
+
+**Der Fund dabei war einer in den eigenen Prüfwerkzeugen:** der
+Import-Nachbau schrieb `datei:` statt `dateiId:` — der Index heisst
+`datei`, das FELD heisst `dateiId`, dieselbe Falle wie `page`/`pageId`
+(E21). Alle 48 Stücke lagen im Fach und waren für `stueckeVon` unsichtbar.
+Und die Stichproben-Prüfung war dabei GRÜN — als „0 von 0 stimmen". Seither
+prüft test148 zuerst, DASS Stichproben genommen wurden (§55.2). Derselbe
+Feldfehler steckte im ersten Wurf der Dexie-Schicht (E78) und ist dort samt
+Kommentar berichtigt.
+
+**Weiter offen:** die Zehn-Gigabyte-Frage. Ob Chrome oder Safari einen
+Blob dieser Grösse zusammensetzen und herunterladen, entscheidet der
+Browser; dafür braucht es ein echtes Gerät mit Platz und Geduld — im
+Prüfcontainer geht es nicht.
 
 ## L15 · Bedingte Formatierung
 

@@ -51,7 +51,9 @@ const p = (n: string, b: boolean, extra: string = ''): void => {
 /* --------------------------------------------------------------------------
  * Alles einsammeln
  * ------------------------------------------------------------------------*/
-const UEBERGANGEN = ['.git', 'node_modules', '.wrangler'];
+/* `dist-neu` ist Vite-Bauausgabe der neuen Schicht (E78) — erzeugtes
+   JavaScript wie node_modules, nicht versioniert, zählt nicht als Bestand. */
+const UEBERGANGEN = ['.git', 'node_modules', '.wrangler', 'dist-neu'];
 
 const alleDateien = (ordner: string, gesammelt: string[] = []): string[] => {
   for (const eintrag of liesOrdner(ordner)) {
@@ -283,8 +285,16 @@ p('… und in tsconfig.bauen.json ausdrücklich aus',
 const paketRoh = lies(dazu(WURZEL, 'package.json'), 'utf8');
 p('@types/node steht bei den Entwicklungsabhängigkeiten',
   /"devDependencies"[\s\S]*"@types\/node"/.test(paketRoh));
-p('… und nicht bei den echten',
-  !/"dependencies"\s*:/.test(paketRoh));
+/* Bis zum 8. August galt: gar keine echten Abhängigkeiten. Seit E78 gibt
+   es GENAU VIER — react, react-dom, dexie, zod, die beschlossene
+   Zielarchitektur. Der Punkt bleibt ein Wächter, nur die Regel ist neu:
+   jede WEITERE Laufzeit-Abhängigkeit braucht ihren eigenen E-Eintrag,
+   und bis dahin ist sie hier rot. */
+const ERLAUBT = ['react', 'react-dom', 'dexie', 'zod'];
+const echte = Object.keys(JSON.parse(paketRoh).dependencies || {});
+p('… und bei den echten steht nur, was E78 beschlossen hat',
+  echte.every(d => ERLAUBT.includes(d)) && echte.length <= ERLAUBT.length,
+  'gefunden: ' + echte.join(', '));
 
 console.log(`\n  Suite 73 — Keine neue JavaScript-Datei: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

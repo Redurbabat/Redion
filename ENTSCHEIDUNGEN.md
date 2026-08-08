@@ -4857,3 +4857,131 @@ ABBRUCH-Arm um, und der Punkt blieb grün — die Probe läuft durch den
 Teilfehler-Arm, nicht durch den Abbruch. Erst der zweite Dreh bewies den
 Punkt. Eine Gegenprobe, die den falschen Arm kippt, beweist nichts über
 den richtigen.
+
+---
+
+## E78 · Die Zielarchitektur: React, Vite, Dexie, ProseMirror — als Strangler, nie als Big-Bang
+
+**Datum** 8. August 2026 · **Entschieden von** Redur · **Betrifft** alles —
+aber in Phasen, nicht auf einmal
+
+**Die Entscheidung**
+
+Redur hat entschieden, Redion auf die folgende Zielarchitektur zu führen:
+
+```txt
+Hauptsprache        TypeScript
+UI                  React 19 + TSX
+Build               Vite 8, ESM, kein CommonJS
+Strukturierte Daten IndexedDB + Dexie
+Grosse Dateien      OPFS, mit IndexedDB-Rückfall
+Validierung         Zod
+Rich-Text           ProseMirror (nur je Textblock, nicht als Datenmodell)
+Styling             CSS + CSS-Variablen
+Unit-Tests          Vitest
+E2E                 Playwright (bleibt)
+PWA                 bleibt, eigener Service Worker
+Cloud               Cloudflare Workers + D1 + R2, weiterhin optional
+Desktop später      Tauri, nicht Electron
+Kein Next.js, kein SSR, keine Server-Pflicht.
+```
+
+Installiert am 8. August: react 19.2.8 · vite 8.2.1 · vitest 4.1.10 ·
+dexie 4.4.4 · zod 4.4.3.
+
+**Zwei Grundsätze werden damit aufgegeben — ausdrücklich und von Redur:**
+
+```txt
+„Kein Framework"                          → aufgegeben
+„index.html per Doppelklick, für immer"   → aufgegeben als Endziel
+```
+
+Der zweite gilt als ENDZIEL-Aufgabe, nicht als Sofort-Bruch: bis Phase
+RM-10 den Parity-Test besteht, bleibt der Bestand vollständig lauffähig —
+Doppelklick, Einzeldatei, alle 118 Prüfläufe. Der Nutzer braucht auch am
+Ende kein Node; nur der Entwickler baut.
+
+**Diese Grundsätze werden dafür härter geschützt als bisher:**
+
+```txt
+local-first · offline-first · Daten gehören dem Nutzer · kein Pflichtkonto
+keine Cloud-Pflicht · atomare Sicherungen · keine Datenverluste
+modulare Domain-Architektur (React ist NUR die Darstellungsschicht)
+```
+
+**Warum jetzt.** Die ehrliche Diagnose aus der Beratung: Redion verwaltet
+Overlay-Stapel, Fokus-Wiederherstellung, Dialog-Lebenszyklen, Sheets und
+reaktive Zustände von Hand — ein selbstgebautes UI-Framework. Genau in
+dieser Schicht lagen die Fehler dieser Woche (doppelter Fokusrahmen,
+Schublade unterm Bildschirmrand, `.menu` gegen `.menu-grund`). React
+übernimmt diese Ebene; die Domain-Logik bleibt frameworkfrei und testbar.
+
+**Die Phasen (Strangler, eine Datenquelle, niemals zwei Wahrheiten)**
+
+```txt
+RM-0   Stand einfrieren; Regressionsnetz = die 118 Prüfläufe (existiert)
+RM-1   Vite + ESM + neue Projektstruktur NEBEN dem Bestand      ← begonnen
+RM-2   Zentrale Typen, Zod-Schemas, IDs, Domain-Modelle         ← begonnen
+RM-3   Dexie-Persistenz NEBEN der bestehenden Ablage            ← begonnen
+RM-4   Datenmigration mit Vergleich alt ↔ neu, Byte für Byte
+RM-5   React-Shell, Navigation, Modal/Sheet-System
+RM-6   Bereich für Bereich auf React
+RM-7   Editor auf ProseMirror (je Textblock ein PM-Dokument)
+RM-8   Dateien auf OPFS + SHA-256-Adressierung (Dedup für R2-Sync)
+RM-9   Outbox/Sync-Schicht formalisieren
+RM-10  quell/ entfernen — NUR nach vollständigem Parity-Test
+```
+
+**Die drei harten Regeln der Migration**
+
+1. **Eine Datenquelle.** Die IndexedDB `notizen` bleibt die einzige
+   Wahrheit, und der Bestand bleibt ihr einziger Schreiber, bis RM-4 die
+   Migration mit Vergleich bestanden hat. Die neue Schicht LIEST bis dahin
+   nur. Dexie fasst `notizen` NIEMALS an — es arbeitet ausschliesslich
+   gegen die neue Ablage `redion-neu`. Ein Dexie-`open` auf `notizen`
+   wäre ein Schema-Upgrade auf echten Nutzerdaten: verboten.
+2. **Der Bestand bleibt grün.** Jede RM-Phase endet mit allen Prüfläufen
+   grün und einer baubaren Einzeldatei. Eine Phase, die den Bestand
+   bricht, ist nicht „fast fertig", sondern falsch geschnitten.
+3. **Kein Big-Bang.** Der Beratungstext selbst verbietet „schreib alles
+   neu"; wer eine Phase überspringen will, braucht einen neuen Eintrag
+   hier.
+
+**Feldnamen bleiben Daten.** Auch unter Dexie/Zod heissen die Felder so,
+wie sie gespeichert sind (`created`, `alive`, `groesse`, `enthaelt` …).
+Die Zod-Schemas beschreiben den IST-Zustand; eine Umbenennung wäre eine
+Datenmigration und braucht RM-4, nicht ein Suchen-und-Ersetzen (§53.3).
+
+**Was der Beratungstext über den heutigen Stand falsch annahm** — fürs
+Protokoll, damit niemand daraus plant: der Bestand ist seit L1 vollständig
+TypeScript (nicht „quell/ viel JavaScript"); IndexedDB ist längst
+Hauptspeicher (nicht localStorage); Blöcke sind strukturiert (nicht HTML);
+Tombstones (`alive`), Versionen und änderungsbasierter Abgleich existieren
+und sind getestet; `.redion` ist bereits das ZIP-Paket mit Manifest und
+stückweisen Prüfsummen. Diese Stärken werden ÜBERNOMMEN, nicht neu
+erfunden.
+
+**Status am Abend des 8. August** — RM-1 bis RM-3 stehen als Gerüst, und
+die Kette ist an echten Daten bewiesen:
+
+```txt
+npm run dev / build     Vite 8, app.html neben index.html, dist-neu/
+npm run test:unit       Vitest: 14 Punkte (Schemas, Dexie-Schicht)
+npm run typecheck       prüft Bestand UND neue Schicht
+src/domain/schema.ts    Zod-Schemas des IST-Zustands (Feldnamen wie gespeichert;
+                        der erste Wurf schrieb `page` statt `pageId` — E21 wirkt)
+src/persistence/        Dexie NUR gegen `redion-neu` (wirft bei `notizen`),
+                        Bestandsleser roh und ohne Versionsnummer
+src/app/                React-Shell: liest echte Seiten, nur lesend
+```
+
+`test149` wacht über die drei Regeln — alte App schreibt, Shell liest
+dieselbe Ablage, Satz für Satz unverändert danach, `redion-neu` entsteht
+beim Lesen nicht. Die Gegenprobe (eine heimlich schreibende Shell) hat den
+ersten Wurf des Wächters entlarvt: der Vorher-Abzug lag hinter dem ersten
+Shell-Besuch, ein idempotenter Schreiber blieb unsichtbar. Der Abzug liegt
+jetzt davor, und die schreibende Shell macht den Punkt rot.
+
+Der Bestand blieb dabei vollständig grün: quell/ ohne ein geändertes Byte,
+Einzeldatei baut, test31/87/105/109 grün (test109 bewacht jetzt die VIER
+beschlossenen Abhängigkeiten als Allowlist statt „keine").

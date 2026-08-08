@@ -68,7 +68,8 @@ erweiterbar
 
 Redion ist nicht:
 
-ein React-Projekt
+ein Framework-Schaukasten — React ist seit E78 die beschlossene
+Darstellungsschicht, aber die Domain-Logik bleibt frameworkfrei
 
 ein schweres Framework-Projekt
 
@@ -245,37 +246,30 @@ Nicht überall verstreut neue Sonderfälle einbauen.
 
 
 
-6. Kein Framework-Zwang
+6. Framework: entschieden, aber in Phasen (E78)
 
-Redion läuft bewusst ohne Browser-Framework.
+Diese Regel hiess bis zum 8. August 2026 „Kein Framework-Zwang". Redur hat
+die Zielarchitektur neu entschieden — die vollständige Entscheidung samt
+Phasenplan steht in ENTSCHEIDUNGEN.md unter E78 und in Abschnitt 56:
 
-Nicht einführen ohne sehr starken Grund:
+React 19 + TSX als Darstellungsschicht
+Vite 8 + ESM als Build
+Dexie über IndexedDB, OPFS für grosse Dateien
+Zod für Validierung, ProseMirror je Textblock
+Vitest für Unit-Tests, Playwright bleibt für E2E
 
-React
+Weiterhin NICHT einführen: Next.js, SSR-Zwang, Angular, Electron,
+grosse State-Management-Libraries ohne eigenen E-Eintrag.
 
-Vue
+Die Übergangsregeln, bis Phase RM-10 den Parity-Test besteht:
 
-Svelte
+Der Bestand bleibt vollständig lauffähig — index.html doppelklicken und
+redion-einzeldatei.html öffnen funktionieren weiter, und alle Prüfläufe
+bleiben grün. React ist NUR die Darstellungsschicht; Domain-Logik bleibt
+frameworkfrei. Es gibt EINE Datenquelle (die IndexedDB `notizen`), und
+der Bestand ist ihr einziger Schreiber, bis RM-4 besteht.
 
-Angular
-
-Next.js
-
-große UI-Bibliotheken
-
-große State-Management-Libraries
-
-Bundler-Zwang für normale Nutzung
-
-Die App muss weiterhin funktionieren:
-
-index.html doppelklicken
-
-und:
-
-redion-einzeldatei.html öffnen
-
-Node/npm darf für Prüfungen, Bauen und Server genutzt werden, aber nicht als Pflicht für normale Nutzung.
+Node/npm ist für Entwickler nötig (Bauen, Prüfen, Vite), für Nutzer nicht.
 
 
 
@@ -1449,9 +1443,11 @@ Neue Features sind weniger wichtig als Datenintegrität.
 
 Nicht tun:
 
-React einbauen
+React ausserhalb des RM-Phasenplans einbauen (E78: Strangler, nie Big-Bang)
 
-Vite als Pflicht für normale Nutzung einführen
+den Bestand vor RM-10 von einem Bauschritt abhängig machen
+
+mit Dexie die IndexedDB `notizen` öffnen (E78: nur `redion-neu`)
 
 IndexedDB durch LocalStorage ersetzen
 
@@ -2455,3 +2451,64 @@ Zwei Gründe, und der zweite ist der wichtigere:
 
 `bilder.mts` selbst gehört sehr wohl ins Verzeichnis. Es ist das Werkzeug,
 nicht das Ergebnis.
+
+
+================================================================================
+# 56. Die Zielarchitektur und ihre Migrationsregeln (E78)
+================================================================================
+
+Am 8. August 2026 hat Redur die Zielarchitektur entschieden. Der volle
+Wortlaut mit Begründung steht in ENTSCHEIDUNGEN.md E78; hier steht, was
+beim Arbeiten gilt.
+
+56.1 Der Stack
+
+    TypeScript · React 19 + TSX · Vite 8 · ESM
+    Dexie über IndexedDB · OPFS für grosse Dateien (mit Rückfall)
+    Zod · ProseMirror (je Textblock) · Vitest · Playwright
+    PWA bleibt · Cloudflare optional · später Tauri, nie Electron
+    Kein Next.js, kein SSR, keine Server-Pflicht, kein Pflichtkonto.
+
+56.2 Die neue Struktur, neben dem Bestand
+
+    src/app/           React-Einstieg und Shell        (neu, englisch, .tsx)
+    src/domain/        Domain-Modelle, Zod-Schemas     (framework-frei)
+    src/application/   Services, Commands, Queries     (framework-frei)
+    src/persistence/   Dexie (`redion-neu`), Leser für `notizen`
+    src/ui/            wiederverwendbare Bausteine     (.tsx)
+    src/features/      Bereiche in React               (.tsx)
+    tests/             Vitest-Unit-Tests
+
+    Der Bestand (src/bereiche, src/kern, src/schale, src/register) bleibt,
+    wird weiter nach quell/ gebaut und läuft unverändert. tsconfig.bauen
+    zählt seine Ordner AUF — die neuen Ordner geraten nie nach quell/.
+
+56.3 Die drei harten Regeln (aus E78)
+
+    1. EINE Datenquelle: `notizen` bleibt die Wahrheit, der Bestand ihr
+       einziger Schreiber, bis RM-4 die Migration mit Vergleich besteht.
+       Die neue Schicht liest bis dahin nur. Dexie öffnet NIEMALS
+       `notizen` — nur `redion-neu`.
+    2. Der Bestand bleibt grün: jede Phase endet mit allen Prüfläufen
+       grün und baubarer Einzeldatei.
+    3. Kein Big-Bang. Phasen überspringen braucht einen neuen E-Eintrag.
+
+56.4 Sprache im neuen Kern
+
+    Ordner, Dateien, Bezeichner: englisch — auch .tsx.
+    Nutzertexte, Kommentare, Doku: deutsch, wie immer (§53).
+    Feldnamen: wie gespeichert, niemals übersetzt (§53.3). Die
+    Zod-Schemas in src/domain beschreiben den IST-Zustand der Ablage.
+
+56.5 Werkzeuge
+
+    npm run dev          Vite-Entwicklungsserver (neue Shell, app.html)
+    npm run build        Vite-Produktionsbau nach dist-neu/ (nicht versioniert)
+    npm run test:unit    Vitest
+    npm run typecheck    prüft Bestand UND neue Schicht
+    npm run pruefen      die Playwright-Läufe — das Netz unter allem
+
+56.6 Der wichtigste Satz
+
+    Die Migration ist erst dann ein Fortschritt, wenn der Bestand dabei
+    keinen einzigen grünen Punkt verliert.

@@ -1,0 +1,15 @@
+/* shell.css — das Nötigste für die erste Shell (E78). Kein Designsystem:
+   das kommt mit RM-5 aus den bestehenden Stil-Werten, nicht neu erfunden. */
+:root { color-scheme: light dark; }
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; }
+.shell { max-width: 720px; margin: 0 auto; padding: 16px; }
+.shell-kopf { display: flex; align-items: baseline; gap: 12px; }
+.shell-kopf h1 { font-size: 22px; margin: 0; }
+.shell-marke { font-size: 12px; opacity: .65; }
+.shell-hinweis { opacity: .75; }
+.shell-fehler { color: #c62828; }
+.shell-seiten { list-style: none; padding: 0; }
+.shell-seiten li { padding: 8px 4px; min-height: 44px; box-sizing: border-box;
+                   display: flex; align-items: center; gap: 8px;
+                   border-bottom: 1px solid rgba(128,128,128,.2); }
+.shell-tabelle td { padding: 3px 12px 3px 0; font-variant-numeric: tabular-nums; }

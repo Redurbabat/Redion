@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 118 Prüfläufe**
+**8. August 2026 · 120 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -44,6 +44,26 @@ lokale KI mit Grenzen für Agenten (E52) · Versionen · Papierkorb ·
 `.json`- und `.redion`-Sicherung mit Anhängen, auch über 4 GB (E39) ·
 grosse Dateien stückweise · `.ods` lesen und schreiben · als App
 installierbar, mit Erinnerungen, die auch ankommen (E40/E41).
+
+**Seit dem 8. August: die React-Migration (E78)**
+
+Redur hat die Zielarchitektur entschieden — React 19, Vite 8, Dexie, Zod,
+später ProseMirror und OPFS. Als Strangler in Phasen, nie als Big-Bang;
+der Bestand bleibt bis RM-10 vollständig lauffähig. Regeln: CLAUDE.md §56.
+
+```txt
+RM-0   Regressionsnetz             ✅ die 118 Prüfläufe
+RM-1   Vite + ESM + Struktur       ← begonnen 8. August
+RM-2   Typen, Zod-Schemas, IDs     ← begonnen (src/domain)
+RM-3   Dexie neben dem Bestand     ← begonnen (redion-neu, nie notizen)
+RM-4   Datenmigration mit Vergleich alt ↔ neu
+RM-5   React-Shell, Navigation, Modal/Sheet-System
+RM-6   Bereich für Bereich auf React
+RM-7   Editor auf ProseMirror
+RM-8   Dateien auf OPFS + SHA-256
+RM-9   Outbox/Sync formalisieren
+RM-10  quell/ entfernen — nur nach vollständigem Parity-Test
+```
 
 **Die drei wichtigsten offenen Punkte**
 
