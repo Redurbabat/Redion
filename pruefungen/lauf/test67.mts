@@ -195,6 +195,11 @@ const pruef = (n: any, ist: any, soll: any) => {
     abschnitt?.querySelector<HTMLElement>('button:last-child')?.click();
     await new Promise(r => setTimeout(r, 250));
     const offen = !!document.querySelector('.menu');
+    /* mousedown UND click, wie ein echter Zeiger: seit das ⋯-Menü über
+       `Menue.menu` läuft (test155), schliesst es auf mousedown daneben —
+       so wie jedes Modulmenü. Das nackte click-Ereignis hier war eine
+       Simulation, die kein Gerät je erzeugt. */
+    musselement('#page').dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     musselement('#page').dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await new Promise(r => setTimeout(r, 250));
     return { offen, danach: !document.querySelector('.menu') };
