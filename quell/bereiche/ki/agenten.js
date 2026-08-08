@@ -362,21 +362,125 @@ const Agent = (() => {
         }
         return null;
     };
+    /* ========================================================================
+     * GRENZEN — was ein Agent NICHT darf (L11)
+     * ------------------------------------------------------------------------
+     * `LUECKEN.md` L11 stand auf „✗ es gibt keine Grenzen" und nannte fünf
+     * Dinge. Zwei davon gab es längst und standen nur nicht in der Liste:
+     * Rechte je Agent (jedes Werkzeug trägt `recht`, gefiltert über
+     * `Konten.darf`) und ein Protokoll (`agent:laeufe`, die letzten 30 samt
+     * Rücknahme). Drei fehlten wirklich:
+     *
+     *   NOTAUSSCHALTER  Ein Agent, der Unsinn baut, liess sich nur dadurch
+     *                   anhalten, dass man das Fenster schloss. Die Auslöser
+     *                   liefen weiter — auch beim nächsten Öffnen.
+     *
+     *   TAGESLIMIT      Das Guthaben gilt JE LAUF. Ein täglicher Auslöser
+     *                   ist damit unbegrenzt: acht Schritte, jeden Tag, ohne
+     *                   Ende. Und wer den Auslöser vergessen hat, merkt es
+     *                   nie, weil niemand danebensteht.
+     *
+     *   BESTÄTIGUNG    Ein Agent legte Seiten an, schrieb in Datenbanken und
+     *                   änderte Blöcke, ohne dass jemand zustimmte.
+     *                   Zurücknehmen ging — aber erst hinterher, und nur für
+     *                   Angelegtes, nicht für Geändertes.
+     *
+     * DER GEFÄHRLICHE FALL IST DER UNBEAUFSICHTIGTE. Wer auf „Loslegen"
+     * drückt, sieht zu und kann eingreifen. Ein Auslöser um acht Uhr früh
+     * läuft, während niemand hinsieht — dort ist eine Rückfrage kein Schutz,
+     * sondern eine Sperre, die nie beantwortet wird. Also gilt dort die
+     * strengere Regel: ohne ausdrückliche Erlaubnis nur lesen.
+     * ======================================================================*/
+    /** Der Notausschalter. Steht er, läuft gar nichts. */
+    const notaus = () => !!Store.getMeta('agent:notaus', false);
+    const notausSetzen = (an) => {
+        Store.setMeta('agent:notaus', !!an);
+        try {
+            UI.toast(an ? '⛔ Agenten angehalten — auch die Auslöser'
+                : '▶️ Agenten dürfen wieder');
+        }
+        catch { /* vor dem Aufbau der Schale gibt es keinen Toast */ }
+    };
+    /** Wie viele Schritte ALLE Agenten zusammen an einem Tag tun dürfen. */
+    const TAGESGRENZE_VORGABE = 120;
+    const tagesgrenze = () => Math.max(0, Number(Store.getMeta('agent:tagesgrenze', TAGESGRENZE_VORGABE)) || 0);
+    /* Der Tag wechselt um Mitternacht ORTSZEIT, nicht UTC. Wer in Berlin um
+       halb eins nachts arbeitet, hat sonst schon den nächsten Tag verbraucht
+       — dieselbe Falle wie bei den Erinnerungen (E31). */
+    const heuteAls = () => {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+            '-' + String(d.getDate()).padStart(2, '0');
+    };
+    const tagesstand = () => {
+        const s = Store.getMeta('agent:tagesstand', null);
+        if (!s || s.tag !== heuteAls())
+            return { tag: heuteAls(), schritte: 0 };
+        return { tag: s.tag, schritte: Number(s.schritte) || 0 };
+    };
+    const tagesRest = () => Math.max(0, tagesgrenze() - tagesstand().schritte);
+    const schrittZaehlen = () => {
+        const s = tagesstand();
+        Store.setMeta('agent:tagesstand', { tag: s.tag, schritte: s.schritte + 1 });
+    };
+    /**
+     * Wird vor einer ändernden Handlung gefragt? `einmal` ist die Vorgabe:
+     * einmal je Lauf, danach gilt die Zusage für diesen Lauf.
+     *
+     * `immer` ist die sicherste und die lästigste Einstellung — bei acht
+     * Schritten acht Fragen. Wer sie wählt, weiss warum.
+     */
+    const fragenModus = () => {
+        const m = String(Store.getMeta('agent:fragen', 'einmal'));
+        return m === 'immer' || m === 'nie' ? m : 'einmal';
+    };
     /**
      * Lässt einen Agenten arbeiten.
      * @param agentId   welcher Agent
      * @param auftrag   was er tun soll
      * @param beiSchritt Rückmeldung nach jedem Schritt
+     * @param optionen  `unbeaufsichtigt` für Läufe, bei denen niemand zusieht
      */
-    const laufen = async (agentId, auftrag, beiSchritt) => {
+    const laufen = async (agentId, auftrag, beiSchritt, optionen) => {
         const a = holen(agentId);
         const guthaben = Number(a.guthaben) || 8;
+        const ohneAufsicht = !!optionen?.unbeaufsichtigt;
         const erlaubt = (a.werkzeuge || []).filter((n) => WERKZEUGE[n]);
         /* Berechtigungsschicht: kein Werkzeug, das der angemeldete Mensch selbst
            nicht dürfte. Der Agent kann nicht mehr als du. */
-        const nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
-        const gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
+        let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
+        let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
         const protokoll = { agent: a.name, auftrag, schritte: [], ids: [], zeit: Store.now() };
+        /* Ein abgebrochener Lauf ist trotzdem ein Lauf. Er kommt ins Protokoll,
+           mit dem Grund — sonst sucht man den Agenten, der „nichts getan hat". */
+        const abbrechen = (grund) => {
+            protokoll.schritte.push({ nr: 1, gedanke: 'Grenze erreicht',
+                werkzeug: 'fertig', ergebnis: grund });
+            const l0 = laeufe();
+            l0.unshift(protokoll);
+            Store.setMeta('agent:laeufe', l0.slice(0, 30));
+            if (beiSchritt)
+                beiSchritt(protokoll.schritte[0], protokoll);
+            return protokoll;
+        };
+        /* ---- NOTAUS ---------------------------------------------------- */
+        if (notaus())
+            return abbrechen('Der Notausschalter steht. Kein Agent läuft, auch kein Auslöser. ' +
+                'Wieder freigeben unter 🤖 Agent → Grenzen.');
+        /* ---- TAGESLIMIT -------------------------------------------------- */
+        if (tagesgrenze() > 0 && tagesRest() <= 0)
+            return abbrechen('Das Tageslimit von ' + tagesgrenze() + ' Schritten ist aufgebraucht. ' +
+                'Morgen geht es weiter, oder du hebst die Grenze unter 🤖 Agent → Grenzen an.');
+        /* ---- OHNE AUFSICHT NUR LESEN ------------------------------------- */
+        /* Ein Auslöser läuft, während niemand hinsieht. Eine Rückfrage wäre
+           dort keine Sicherung, sondern eine Sperre, die nie beantwortet wird
+           — also fallen die ändernden Werkzeuge ganz weg, es sei denn, der
+           Agent trägt die Erlaubnis ausdrücklich. */
+        if (ohneAufsicht && !a.darfAllein) {
+            const nurLesen = nutzbar.filter((n) => WERKZEUGE[n].recht === 'lesen');
+            gesperrt = gesperrt.concat(nutzbar.filter((n) => !nurLesen.includes(n)));
+            nutzbar = nurLesen;
+        }
         /* Wissensquellen des Agenten kommen gleich mit in den Kontext */
         const wissen = (a.wissen || []).map((id) => {
             const p = Store.getBlock(id);
@@ -393,9 +497,37 @@ const Agent = (() => {
             (gesperrt.length ? 'Nicht erlaubt (fehlende Rechte): ' + gesperrt.join(', ') + '\n\n' : '') +
             'Regeln: Suche, bevor du behauptest. Lege nichts doppelt an. ' +
             'Wenn du fertig bist, nimm das Werkzeug "fertig" und schreib die Antwort für den Menschen.' +
+            (ohneAufsicht && !a.darfAllein
+                ? '\n\nDu läufst gerade, ohne dass jemand zusieht. Du darfst deshalb nur lesen ' +
+                    'und berichten. Was geändert werden soll, schreibst du als Vorschlag in deine Antwort.'
+                : '') +
             (wissen ? '\n\nDas ist dein hinterlegtes Wissen:\n' + wissen : '');
         const verlauf = [{ role: 'user', content: auftrag }];
+        /* Eine Zusage gilt für diesen Lauf — bei `fragen: 'einmal'`. */
+        let zugesagt = false;
         for (let i = 0; i < guthaben; i++) {
+            /* Das Tageslimit gilt AUCH MITTEN IM LAUF. Sonst wäre es keine
+               Grenze, sondern eine Bedingung fürs Anfangen: acht Schritte kämen
+               immer noch durch, egal wie voll der Tag schon war. */
+            if (tagesgrenze() > 0 && tagesRest() <= 0) {
+                protokoll.schritte.push({ nr: i + 1, gedanke: 'Tageslimit erreicht',
+                    werkzeug: 'fertig',
+                    ergebnis: 'Das Tageslimit von ' + tagesgrenze() + ' Schritten ist erreicht. ' +
+                        'Was bis hierhin herauskam, steht oben.' });
+                if (beiSchritt)
+                    beiSchritt(protokoll.schritte[protokoll.schritte.length - 1], protokoll);
+                break;
+            }
+            /* Und der Notaus wirkt sofort, nicht erst beim nächsten Lauf — sonst
+               wäre er kein Notaus. */
+            if (notaus()) {
+                protokoll.schritte.push({ nr: i + 1, gedanke: 'Notaus', werkzeug: 'fertig',
+                    ergebnis: 'Angehalten. Der Notausschalter wurde umgelegt.' });
+                if (beiSchritt)
+                    beiSchritt(protokoll.schritte[protokoll.schritte.length - 1], protokoll);
+                break;
+            }
+            schrittZaehlen();
             const antwort = await KI.frageKurz(verlauf.map(m => (m.role === 'user' ? 'MENSCH: ' : 'DU: ') + m.content).join('\n\n') +
                 '\n\nDein nächster Schritt als JSON:', system);
             const plan = JSON_HOLEN(antwort);
@@ -417,6 +549,48 @@ const Agent = (() => {
             if (!wz || !nutzbar.includes(plan.werkzeug)) {
                 schritt.ergebnis = 'Dieses Werkzeug gibt es nicht oder du darfst es nicht. ' +
                     'Erlaubt sind: ' + nutzbar.join(', ');
+            }
+            else if (wz.recht === 'bearbeiten' && !ohneAufsicht &&
+                (fragenModus() === 'immer' || (fragenModus() === 'einmal' && !zugesagt))) {
+                /* `!ohneAufsicht` IST DER WICHTIGSTE TEIL DIESER BEDINGUNG, und er
+                   hat beim Bauen gefehlt. Ein Agent mit „darf allein ändern" bekam
+                   sein Werkzeug zurück — und danach die Rückfrage, die um acht Uhr
+                   früh niemand beantwortet. Der Prüflauf blieb genau dort stehen,
+                   und in der App wäre der Lauf bis zum nächsten Klick irgendwo
+                   hängen geblieben, mit einem Dialog über dem Bildschirm.
+                   „Darf allein" heisst: ohne mich. Dann auch ohne Frage. */
+                /* VOR DER ÄNDERUNG FRAGEN. Nicht danach: Zurücknehmen gab es zwar,
+                   aber nur für ANGELEGTES — was ein Agent überschrieben hat, war
+                   weg. Gefragt wird mit dem, was wirklich geschehen soll, im Text;
+                   „Der Agent möchte etwas ändern" ist keine Grundlage für ein Ja. */
+                const antwortJa = await Dialog.wahl({
+                    titel: '🤖 ' + a.name + ' möchte etwas ändern',
+                    text: 'Werkzeug: ' + plan.werkzeug + '\n' +
+                        (plan.gedanke ? 'Vorhaben: ' + plan.gedanke + '\n' : '') +
+                        'Damit: ' + JSON.stringify(plan.argument || {}).slice(0, 400),
+                    knoepfe: [
+                        { id: 'nein', text: 'Nicht ändern',
+                            hinweis: 'Der Agent bekommt eine Absage und arbeitet ohne diesen Schritt weiter.' },
+                        { id: 'ja', text: 'Einmal erlauben', hinweis: 'Nur dieser eine Schritt.' },
+                        { id: 'lauf', text: 'Für diesen Lauf erlauben',
+                            hinweis: 'Bis dieser Auftrag fertig ist. Danach wird wieder gefragt.' }
+                    ]
+                });
+                if (antwortJa === 'lauf')
+                    zugesagt = true;
+                if (antwortJa !== 'ja' && antwortJa !== 'lauf') {
+                    schritt.ergebnis = 'Der Mensch hat diesen Schritt abgelehnt. ' +
+                        'Arbeite ohne ihn weiter oder werde fertig.';
+                }
+                else {
+                    try {
+                        schritt.ergebnis = String(await wz.lauf(plan.argument || {}, protokoll) || '').slice(0, 4000);
+                    }
+                    catch (e) {
+                        schritt.ergebnis = 'Das Werkzeug ist gescheitert: ' +
+                            (e instanceof Error ? e.message : String(e));
+                    }
+                }
             }
             else {
                 try {
@@ -453,6 +627,13 @@ const Agent = (() => {
      * AUSLÖSER — der Agent läuft von selbst
      * ======================================================================*/
     const ausloeserPruefen = async () => {
+        /* DER NOTAUS GILT ZUERST HIER. Ein Auslöser läuft von selbst; ihn
+           anzuhalten ist der eigentliche Zweck des Schalters. Ohne diese Zeile
+           stünde er zwar, und um acht Uhr früh liefe der Agent trotzdem. */
+        if (notaus())
+            return;
+        if (tagesgrenze() > 0 && tagesRest() <= 0)
+            return;
         const jetzt = new Date();
         const liste = eigene();
         let geaendert = false;
@@ -469,8 +650,12 @@ const Agent = (() => {
                 t.zuletzt = tag;
                 geaendert = true;
                 UI.toast('🤖 ' + a.name + ' läuft …');
+                /* `unbeaufsichtigt`: hier sitzt niemand davor. Ohne die Angabe
+                   bekäme der Agent seine ändernden Werkzeuge und eine Rückfrage,
+                   die kein Mensch beantwortet — der Lauf hinge dann bis zum
+                   nächsten Klick irgendwo in der App. */
                 try {
-                    await laufen(a.id, t.auftrag || a.anweisung || 'Mach deine tägliche Runde.');
+                    await laufen(a.id, t.auftrag || a.anweisung || 'Mach deine tägliche Runde.', undefined, { unbeaufsichtigt: true });
                 }
                 catch (e) {
                     UI.banner(a.name + ': ' +
@@ -493,6 +678,9 @@ const Agent = (() => {
         o.className = 'overlay';
         o.innerHTML = '<div class="finder" style="width:min(760px,95vw)">' +
             '<div class="fh">🤖 Agent<button class="icon-btn" data-a="zu">✕</button></div>' +
+            /* DER NOTAUS STEHT GANZ OBEN UND NICHT IN EINEM UNTERMENÜ. Wer ihn
+               sucht, sucht ihn, weil gerade etwas schiefläuft. */
+            '<div id="ag-notaus"></div>' +
             '<div style="padding:12px 18px 4px">' +
             '<div class="agent-typen" id="at"></div>' +
             `<textarea id="aa" rows="3" placeholder="Was soll der Agent tun? Zum Beispiel: ` +
@@ -504,8 +692,30 @@ const Agent = (() => {
             '<button data-a="eigen">Eigener Agent</button>' +
             '<button data-a="worker">Workers</button>' +
             '<button data-a="verlauf">Frühere Läufe</button>' +
+            '<button data-a="grenzen">Grenzen</button>' +
             '<button data-a="zu">Schliessen</button></div></div>';
         document.body.appendChild(o);
+        /* Der Streifen ganz oben: Schalter, Tagesstand, und wenn der Notaus
+           steht, sagt er es in ganzen Worten statt mit einer roten Farbe. */
+        const zeichneNotaus = () => {
+            const k = o.querySelector('#ag-notaus');
+            if (!k)
+                return;
+            const aus = notaus();
+            const rest = tagesRest(), grenze = tagesgrenze();
+            k.innerHTML =
+                '<div class="ag-grenzstreifen' + (aus ? ' aus' : '') + '">' +
+                    '<span class="ags-text">' +
+                    (aus ? '⛔ <b>Angehalten.</b> Kein Agent läuft, auch kein Auslöser.'
+                        : (grenze > 0
+                            ? 'Heute noch <b>' + rest + '</b> von ' + grenze + ' Schritten'
+                            : 'Kein Tageslimit gesetzt')) +
+                    '</span>' +
+                    '<button data-a="notaus" class="' + (aus ? 'prim' : '') + '">' +
+                    (aus ? 'Wieder erlauben' : '⛔ Alle anhalten') + '</button>' +
+                    '</div>';
+        };
+        zeichneNotaus();
         let gewaehlt = Store.getMeta('agent:zuletzt', 'assistent');
         const zeichneTypen = () => {
             const kasten = o.querySelector('#at');
@@ -562,6 +772,16 @@ const Agent = (() => {
                 verlaufDialog();
                 return;
             }
+            if (b.dataset.a === 'grenzen') {
+                o.remove();
+                grenzenDialog();
+                return;
+            }
+            if (b.dataset.a === 'notaus') {
+                notausSetzen(!notaus());
+                zeichneNotaus();
+                return;
+            }
             if (b.dataset.a === 'los') {
                 const auftrag = (o.querySelector('#aa')?.value || '').trim();
                 const liste = o.querySelector('#al');
@@ -598,6 +818,73 @@ const Agent = (() => {
                         esc(err instanceof Error ? err.message : String(err)) + '</div>';
                 }
                 b.disabled = false;
+            }
+        });
+    };
+    /**
+     * DIE GRENZEN — ein Fenster, in dem steht, was ein Agent nicht darf.
+     *
+     * Es ist bewusst kurz. Drei Einstellungen, jede mit einem Satz dazu, was
+     * sie im schlimmsten Fall verhindert. Wer Grenzen setzt, will nicht
+     * lesen, sondern entscheiden.
+     */
+    const grenzenDialog = () => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        const stand = tagesstand();
+        o.innerHTML = '<div class="finder" style="width:min(600px,94vw)">' +
+            '<div class="fh">🛡 Grenzen für Agenten<button class="icon-btn" data-a="zu">✕</button></div>' +
+            '<div style="padding:6px 18px 14px">' +
+            '<div class="ez-zeile"><div class="ez-text"><b>Notausschalter</b>' +
+            '<span>Hält alle Agenten an — auch die, die von selbst zu einer ' +
+            'Uhrzeit loslegen. Bleibt gesetzt, bis du ihn wieder löst.</span></div>' +
+            '<div class="ez-steuer"><button class="ez-knopf' + (notaus() ? ' warn' : '') +
+            '" data-a="notaus">' + (notaus() ? 'Steht — wieder erlauben' : 'Alle anhalten') +
+            '</button></div></div>' +
+            '<div class="ez-zeile"><div class="ez-text"><b>Schritte je Tag</b>' +
+            '<span>Für alle Agenten zusammen. Das Guthaben eines Agenten gilt ' +
+            'nur je Auftrag — ein täglicher Auslöser wäre damit unbegrenzt. ' +
+            'Heute verbraucht: ' + stand.schritte + '. 0 heisst: keine Grenze.</span></div>' +
+            '<div class="ez-steuer"><input id="ag-tag" type="number" min="0" max="10000" ' +
+            'value="' + tagesgrenze() + '" style="min-width:100px"></div></div>' +
+            '<div class="ez-zeile"><div class="ez-text"><b>Vor Änderungen fragen</b>' +
+            '<span>Zurücknehmen gibt es nur für Angelegtes. Was ein Agent ' +
+            'überschreibt, ist weg — deshalb wird davor gefragt, nicht danach.</span></div>' +
+            '<div class="ez-steuer"><select id="ag-fragen">' +
+            '<option value="einmal">Einmal je Auftrag</option>' +
+            '<option value="immer">Vor jeder Änderung</option>' +
+            '<option value="nie">Gar nicht</option>' +
+            '</select></div></div>' +
+            '<p class="ez-grau" style="margin-top:14px; line-height:1.6">' +
+            'Läuft ein Agent <b>ohne Aufsicht</b> — durch einen Auslöser zu einer ' +
+            'festen Uhrzeit —, darf er nur lesen und berichten. Eine Rückfrage ' +
+            'wäre dort keine Sicherung, sondern eine Sperre, die niemand ' +
+            'beantwortet. Wer das anders will, setzt beim Agenten selbst ' +
+            '„darf allein ändern".</p>' +
+            '</div>' +
+            '<div class="fbtns"><button data-a="sichern" class="prim">Übernehmen</button>' +
+            '<button data-a="zu">Schliessen</button></div></div>';
+        document.body.appendChild(o);
+        const wahl = o.querySelector('#ag-fragen');
+        if (wahl)
+            wahl.value = fragenModus();
+        o.addEventListener('click', e => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="notaus"]')) {
+                notausSetzen(!notaus());
+                o.remove();
+                grenzenDialog();
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="sichern"]')) {
+                const n = Number(o.querySelector('#ag-tag')?.value);
+                Store.setMeta('agent:tagesgrenze', Number.isFinite(n) && n >= 0 ? Math.floor(n) : TAGESGRENZE_VORGABE);
+                Store.setMeta('agent:fragen', wahl?.value || 'einmal');
+                UI.toast('Grenzen gesichert');
+                o.remove();
             }
         });
     };
@@ -665,6 +952,14 @@ const Agent = (() => {
                 '<label id="eta">Was soll er dann tun?<br>' +
                 `<input id="eauf" value="${esc(a.ausloeser?.auftrag || '')}" ` +
                 'placeholder="z. B. Fasse zusammen, was gestern dazugekommen ist."></label>' +
+                /* Die gefährlichste Einstellung des Fensters, und deshalb steht
+                   daneben, was sie bedeutet — nicht nur, was sie heisst. */
+                '<label id="etd" class="wz-w"><input id="ed" type="checkbox"' +
+                (a.darfAllein ? ' checked' : '') + '> Darf auch ohne Aufsicht ändern' +
+                '<span class="fl-hinweis">Ohne das darf ein Agent, der von selbst ' +
+                'loslegt, nur lesen und berichten — niemand sitzt davor, um eine ' +
+                'Rückfrage zu beantworten. Mit dem Haken legt er an und schreibt, ' +
+                'während du schläfst.</span></label>' +
                 '</div>' +
                 '<div class="fbtns"><button data-a="ok" class="prim">Sichern</button>' +
                 '<button data-a="zu">Abbrechen</button></div></div>';
@@ -705,6 +1000,7 @@ const Agent = (() => {
                     werkzeuge: [...o2.querySelectorAll('[data-w]:checked')].map(x => x.dataset.w),
                     wissen: [...ew.selectedOptions].map(x => x.value),
                     guthaben: Number(eg.value) || 8,
+                    darfAllein: !!o2.querySelector('#ed')?.checked,
                     text: (ea.value || '').slice(0, 90)
                 };
                 const art = et.value;
@@ -902,6 +1198,10 @@ const Agent = (() => {
     };
     return { WERKZEUGE, TYPEN, alle, holen, eigene, laufen, zuruecknehmen, laeufe,
         worker, workerLaufen, WORKER_BEISPIEL, panel, eigenerDialog, workerDialog,
-        verlaufDialog, start, ausloeserPruefen, JSON_HOLEN };
+        verlaufDialog, grenzenDialog, start, ausloeserPruefen, JSON_HOLEN,
+        /* Die Grenzen — auch von aussen sichtbar, damit Einstellungen und
+           Prüfläufe sie lesen können, ohne im Speicher zu graben. */
+        notaus, notausSetzen, tagesgrenze, tagesstand, tagesRest, fragenModus,
+        TAGESGRENZE_VORGABE };
 })();
 window.Agent = Agent;

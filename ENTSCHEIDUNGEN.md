@@ -2700,3 +2700,84 @@ Und eine Falle fürs nächste Mal: `getComputedStyle` gibt ein LEBENDES
 Objekt zurück. Zweimal daraus lesen — vor und nach `focus()` — liefert
 zweimal den Zustand von nachher. Die erste Fassung meldete deshalb „der
 Fokus ändert nichts", obwohl er einen 2-px-Rahmen setzt.
+
+---
+
+## E52 · Grenzen für Agenten — und der gefährliche Fall ist der unbeaufsichtigte
+
+**Aus `LUECKEN.md` L11**, dem einzigen Eintrag mit „✗ es gibt keine
+Grenzen". Nachgesehen am 8. August gab es zwei der fünf genannten Dinge
+längst; sie standen nur nicht in der Liste:
+
+```txt
+✓ Rechte je Agent   jedes Werkzeug trägt `recht`, gefiltert über
+                    `Konten.darf` — ein Agent kann nie mehr als du
+✓ Protokoll         `agent:laeufe`, die letzten 30 samt Rücknahme
+```
+
+Drei fehlten wirklich, und alle drei betreffen denselben Fall.
+
+**Notausschalter.** Ein Agent, der Unsinn baute, liess sich nur dadurch
+anhalten, dass man das Fenster schloss — und die Auslöser liefen weiter,
+auch beim nächsten Öffnen. Jetzt ein Schalter, der zuerst in
+`ausloeserPruefen()` greift und dann in jedem Schleifendurchgang von
+`laufen()`: er wirkt sofort, nicht erst beim nächsten Auftrag. Sonst wäre
+er kein Notaus.
+
+**Tageslimit.** Das Guthaben eines Agenten gilt JE LAUF. Ein täglicher
+Auslöser war damit unbegrenzt: acht Schritte, jeden Tag, ohne Ende — und
+wer den Auslöser vergessen hat, merkt es nie, weil niemand danebensteht.
+Jetzt eine gemeinsame Zahl für alle Agenten zusammen, Vorgabe 120
+Schritte, geprüft **auch mitten im Lauf**. Ohne das wäre es keine Grenze,
+sondern eine Bedingung fürs Anfangen: der letzte Lauf käme immer noch mit
+vollem Guthaben durch, egal wie voll der Tag schon war.
+
+Der Tag wechselt um Mitternacht **Ortszeit**, nicht UTC — dieselbe Falle
+wie bei den Erinnerungen (E31).
+
+**Bestätigung vor der Änderung.** Zurücknehmen gab es, aber nur für
+ANGELEGTES: was ein Agent überschrieben hat, war weg. Also wird davor
+gefragt, mit dem Werkzeug, dem Vorhaben und den Argumenten im Text — „Der
+Agent möchte etwas ändern" ist keine Grundlage für ein Ja.
+
+Drei Antworten, nicht zwei: *Nicht ändern* · *Einmal erlauben* · *Für
+diesen Lauf erlauben*. Die dritte ist der Unterschied zwischen einer
+Sicherung, die man benutzt, und einer, die man nach dem vierten Dialog
+abschaltet.
+
+**Und die eigentliche Regel: ohne Aufsicht nur lesen.**
+
+Wer auf „Loslegen" drückt, sieht zu und kann eingreifen. Ein Auslöser um
+acht Uhr früh läuft, während niemand hinsieht — dort ist eine Rückfrage
+kein Schutz, sondern eine Sperre, die nie beantwortet wird. Ein
+unbeaufsichtigter Lauf bekommt deshalb gar keine ändernden Werkzeuge; er
+liest, berichtet und schreibt Vorschläge in seine Antwort. Wer es anders
+will, setzt beim Agenten „darf auch ohne Aufsicht ändern" — eine
+ausdrückliche Erlaubnis mit einem Satz daneben, was sie bedeutet.
+
+**Der Fehler, den der Prüflauf gefunden hat, war genau in dieser Naht.**
+Ein Agent mit „darf allein" bekam sein Werkzeug zurück — und danach die
+Rückfrage. Der Prüflauf blieb dort stehen; in der App wäre der Lauf bis
+zum nächsten Klick irgendwo hängen geblieben, mit einem Dialog über dem
+Bildschirm, den niemand erwartet hatte. „Darf allein" heisst: ohne mich.
+Dann auch ohne Frage.
+
+**Ein abgebrochener Lauf ist trotzdem ein Lauf** und kommt mitsamt Grund
+ins Protokoll. Sonst sucht man später den Agenten, der „nichts getan hat".
+
+**Der Streifen im Agentenfenster** nennt den Tagesstand und trägt den
+Schalter — ganz oben, nicht in einem Untermenü: wer ihn sucht, sucht ihn,
+weil gerade etwas schiefläuft. Steht er, wird der Streifen rot UND sagt es
+in Worten. Eine rote Fläche allein wäre eine Auskunft nur über Farbe
+(CLAUDE.md §38), und ausgerechnet bei einer Sicherung darf man nicht raten
+müssen, ob sie greift.
+
+**Status**
+
+`test129` (Suite 93), 26 Punkte. Gegenprobe: Notaus, Tageslimit,
+Rückfrage und die Leseregel einzeln stillgelegt → 15 von 26 rot.
+
+Und ein Hinweis für den nächsten Prüfstand dieser Art: die Ersatz-KI
+braucht ihren Zähler AUSSERHALB der Rüstfunktion. Lag er innen, lief er
+über mehrere Läufe hinweg weiter, der dritte bekam sofort „fertig" — und
+die Prüfung meldete einen Fehler in Redion, den es nicht gab.

@@ -295,10 +295,34 @@ einem Prüflauf.
 
 ## L11 · Agenten-Sicherheit
 
-**Stand** — ✗ es gibt keine Grenzen.
+**Stand** — ✅ die fünf genannten Grenzen stehen (8. August, E52).
 
-Fehlt: Notausschalter · Tageslimit · Rechte je Agent · Protokoll ·
-Bestätigung vor jeder ändernden Handlung.
+Zwei davon gab es längst und standen nur nicht in der Liste: Rechte je
+Agent (jedes Werkzeug trägt `recht`, gefiltert über `Konten.darf`) und ein
+Protokoll (`agent:laeufe`, die letzten 30 samt Rücknahme). Drei fehlten:
+
+```txt
+✓ Notausschalter   hält alle Agenten an, zuerst die Auslöser — und wirkt
+                   mitten im Lauf, nicht erst beim nächsten
+✓ Tageslimit       120 Schritte für alle Agenten zusammen, geprüft auch
+                   mitten im Lauf. Das Guthaben gilt nur je Auftrag; ein
+                   täglicher Auslöser war damit unbegrenzt
+✓ Bestätigung      vor jeder ändernden Handlung, mit Werkzeug, Vorhaben
+                   und Argumenten im Text. Drei Antworten: nicht ändern ·
+                   einmal · für diesen Lauf
+```
+
+Dazu die Regel, die in der Liste fehlte und die wichtigste ist: **ohne
+Aufsicht nur lesen**. Ein Auslöser läuft, während niemand hinsieht — dort
+ist eine Rückfrage keine Sicherung, sondern eine Sperre, die nie
+beantwortet wird. Wer es anders will, setzt beim Agenten ausdrücklich
+„darf auch ohne Aufsicht ändern".
+
+**Fehlt weiterhin:** ein Limit für Worker (`workerLaufen` führt eigenen
+Code in einem Web Worker aus und zählt nicht mit) · eine Obergrenze für
+die Grösse dessen, was ein Agent in einem Schritt schreibt · und ein Weg,
+einen laufenden Agenten von aussen abzubrechen, ohne den Notaus für alle
+umzulegen.
 
 ## L12 · Barrierefreiheit
 
