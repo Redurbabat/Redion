@@ -18,6 +18,7 @@ import { migrateAndVerify, type CompareReport, type CopyReport }
   from '../persistence/migration';
 import { useRoute } from './router';
 import { PageView } from '../features/pages/PageView';
+import { PageTree } from '../features/pages/PageTree';
 import { Workshop } from '../features/workshop/Workshop';
 import { Sheet } from '../ui/Sheet';
 
@@ -27,7 +28,8 @@ const STORES = ['blocks', 'collections', 'views', 'meta', 'versions',
 type Stand =
   | { art: 'laedt' }
   | { art: 'fehler'; text: string }
-  | { art: 'da'; seiten: Block[]; unlesbar: number; faecher: Record<string, number> };
+  | { art: 'da'; seiten: Block[]; alleSeiten: Map<string, Block>;
+      unlesbar: number; faecher: Record<string, number> };
 
 type MigrationStand =
   | { art: 'bereit' }
@@ -58,16 +60,19 @@ export function App() {
       try {
         const alle = await readAll<unknown>('blocks');
         const seiten: Block[] = [];
+        const alleSeiten = new Map<string, Block>();
         let unlesbar = 0;
         for (const roh of alle) {
           const p = BlockSchema.safeParse(roh);
           if (!p.success) { unlesbar++; continue; }
-          if (p.data.type === 'page' && p.data.alive && p.data.parentId == null)
-            seiten.push(p.data);
+          if (p.data.type === 'page' && p.data.alive) {
+            alleSeiten.set(p.data.id, p.data);
+            if (p.data.parentId == null) seiten.push(p.data);
+          }
         }
         seiten.sort((a, b) => a.created.localeCompare(b.created));
         const faecher = await counts(STORES);
-        if (lebt) setStand({ art: 'da', seiten, unlesbar, faecher });
+        if (lebt) setStand({ art: 'da', seiten, alleSeiten, unlesbar, faecher });
       } catch (err) {
         if (lebt) setStand({ art: 'fehler',
           text: err instanceof Error ? err.message : String(err) });
@@ -135,16 +140,13 @@ export function App() {
                 gespeichert.
               </p>
             )}
-            <ul className="shell-seiten">
-              {stand.seiten.map((s) => (
-                <li key={s.id}>
-                  <a className="shell-seite" href={'#/seite/' + s.id}>
-                    <span className="shell-icon">{s.icon || '📄'}</span>
-                    {s.text || 'Ohne Titel'}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <PageTree seiten={stand.seiten}
+              kinderVon={(id) => {
+                const eltern = stand.alleSeiten.get(id);
+                return (eltern?.content ?? [])
+                  .map((k) => stand.alleSeiten.get(k))
+                  .filter((b): b is Block => !!b);
+              }} />
             {stand.unlesbar > 0 && (
               <p className="shell-fehler">
                 {stand.unlesbar} Satz/Sätze entsprachen dem Schema nicht —

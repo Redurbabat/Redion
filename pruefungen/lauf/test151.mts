@@ -101,6 +101,40 @@ await seite.waitForTimeout(1600);
 p('Ein Direktaufruf mit Kennung landet auf der Unterseite',
   /Tief drin/.test(await seite.evaluate(() => document.body.innerText)));
 
+console.log('\n2b · Der Seitenbaum: Pfeile nur, wo es Unterseiten gibt');
+
+await seite.goto(`http://localhost:${PORT}/app.html`);
+await seite.waitForTimeout(1600);
+const baum = await seite.evaluate(() => {
+  const zeilen = [...document.querySelectorAll('.baum > li')];
+  const mit = zeilen.find(z => z.textContent?.includes('Navigationsseite'));
+  return {
+    zeilen: zeilen.length,
+    hatPfeil: !!mit?.querySelector('.baum-pfeil'),
+    zu: mit?.querySelector('.baum-pfeil')?.getAttribute('aria-expanded'),
+    unterSichtbar: document.body.innerText.includes('Unterseite')
+  };
+});
+p('Der Baum steht', (baum as any).zeilen >= 1, String((baum as any).zeilen));
+p('Die Seite mit Unterseite trägt einen Pfeil', (baum as any).hatPfeil === true);
+gleich('… zugeklappt, und sagt es (aria-expanded)', (baum as any).zu, 'false');
+p('Die Unterseite ist noch nicht sichtbar', (baum as any).unterSichtbar === false);
+
+await seite.evaluate(() => {
+  const mit = [...document.querySelectorAll('.baum > li')]
+    .find(z => z.textContent?.includes('Navigationsseite'));
+  (mit?.querySelector('.baum-pfeil') as HTMLElement)?.click();
+});
+await seite.waitForTimeout(300);
+const auf = await seite.evaluate(() => ({
+  unterSichtbar: document.body.innerText.includes('Unterseite'),
+  zu: [...document.querySelectorAll('.baum > li')]
+    .find(z => z.textContent?.includes('Navigationsseite'))
+    ?.querySelector('.baum-pfeil')?.getAttribute('aria-expanded')
+}));
+p('Aufklappen zeigt die Unterseite', (auf as any).unterSichtbar === true);
+gleich('… und der Pfeil sagt es', (auf as any).zu, 'true');
+
 console.log('\n3 · Darstellung: ehrlich und sicher');
 
 await seite.goto(`http://localhost:${PORT}/app.html#/seite/${(ids as any).seite}`);

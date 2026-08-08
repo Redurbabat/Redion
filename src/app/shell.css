@@ -62,3 +62,13 @@ body { margin: 0; font: 15px/1.5 system-ui, sans-serif; }
                border-radius: 8px; white-space: pre-wrap; }
 .pv-werkstatt { margin-left: 8px; text-decoration: none; opacity: .45; }
 .pv-werkstatt:hover { opacity: 1; }
+
+/* Seitenbaum */
+.baum, .baum-kinder { list-style: none; padding: 0; margin: 0; }
+.baum-zeile { display: flex; align-items: center; min-height: 44px;
+              border-bottom: 1px solid rgba(128,128,128,.15); }
+.baum-pfeil { min-width: 44px; min-height: 44px; border: none;
+              background: transparent; cursor: pointer; font: inherit;
+              opacity: .7; border-radius: 8px; }
+.baum-pfeil:hover { background: rgba(128,128,128,.12); opacity: 1; }
+.baum-platz { min-width: 44px; }
