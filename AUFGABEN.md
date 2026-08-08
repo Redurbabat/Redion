@@ -73,7 +73,6 @@ L10  Mobile — die Schale steht, die Bereiche darin noch nicht ganz.
      fürs Telefon entworfen · Prüfung auf einem echten Gerät
 L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
      Durchlauf mit einem echten Vorleseprogramm
-L15  Symbolregeln und „überfällig" in der bedingten Formatierung
 L16  Automationen: If/Else, Schleife, Vorschau, Protokoll
 L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
 L20  die 33 fehlenden Tastenkürzel · Konflikte mit Browser und
@@ -81,8 +80,9 @@ L20  die 33 fehlenden Tastenkürzel · Konflikte mit Browser und
 ```
 
 **Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push
-(E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · L20 Markdown (E59) · der
-grösste Teil von L10, L12 und L15.
+(E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · L20 Markdown (E59) ·
+L15 bedingte Formatierung vollständig (E60) · der grösste Teil von L10
+und L12.
 
 **Der Fund vom 8. August**, weil er die Art Fehler zeigt, auf die zu achten
 ist: `# Titel` wurde eine Überschrift namens `#Titel` — das Kürzelzeichen

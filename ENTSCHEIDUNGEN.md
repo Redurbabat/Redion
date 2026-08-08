@@ -3277,3 +3277,102 @@ einfache Tilde entfernt   →  1 rot
 `test65` und `test86` zählen die Gruppen der Kürzelübersicht; beide mussten
 von zwölf auf dreizehn — die neue heisst „Markdown einfügen". Dass sie das
 gemeldet haben, ist der Zweck einer festen Zahl an dieser Stelle.
+
+---
+
+## E60 · Symbole und Daten in der bedingten Formatierung — und wo „heute" anfängt
+
+**Datum** 8. August 2026 · **Lücke** L15, damit geschlossen ·
+**Prüflauf** `test130` (79 Punkte, von 48 gewachsen)
+
+E53 hat die bedingte Formatierung im Tabellenblock gebaut und zwei Dinge
+ausdrücklich offen gelassen: Symbolregeln und „überfällig". Beide sind
+jetzt da, und beide hatten je eine Frage, die vorher zu beantworten war.
+
+**Das Symbol gehört nicht in den Wert**
+
+Der naheliegende Weg wäre, `🔴 ` vor den Zellinhalt zu schreiben. Dann
+stünde es in `wert` — und damit rechnet die Zelle nicht mehr, das Symbol
+ginge beim Kopieren nach Excel als Text mit, und beim Abschalten der Regel
+müsste es wieder herausgeschnitten werden. Das wäre eine Bearbeitung, und
+E53 hat für diese Sorte Regel das Gegenteil beschlossen: **eine bedingte
+Farbe ist eine Sicht, keine Bearbeitung.**
+
+Das Symbol steht deshalb in `content: var(--regel-symbol)`, gesetzt über
+eine CSS-Eigenschaft am Element. `wert` bleibt unangetastet — `test130`
+§10 prüft beides: was auf dem Bildschirm steht **und** was gespeichert ist.
+
+Dazu eine Zeile, die kein Beiwerk ist: `flex: none`. Der Zellinhalt ist ein
+Flex-Element; ohne sie würde das Symbol mitgestaucht, sobald die Spalte eng
+wird. Ein halber Kreis bedeutet nichts. Das ist derselbe Fund wie beim
+abgeschnittenen Zahlenwert vom 8. August (CLAUDE.md §55.2) — nur diesmal
+vorher bedacht und als Zahl geprüft, nicht erst auf dem Bildschirmfoto
+gesehen.
+
+**Drei Stufen, nicht Excels fünf.** Eine vierte Stufe unterscheidet sich auf
+einem Telefonbildschirm nicht mehr erkennbar von der dritten, und ein
+Symbol, das man nicht auseinanderhält, sagt weniger als keines.
+
+**Eigene Grenzen schlagen die Drittelung.** Ohne Angabe wird der Bereich
+gedrittelt. Mit `wert`/`wert2` gelten die als Grenzen — und dann zählt nur,
+was der Mensch eingetragen hat: bei „Ampel ab 50 und ab 80" ist die 79
+gelb, auch wenn im Blatt zufällig eine 300 steht. Eine Skala, die sich
+lautlos am grössten Wert ausrichtet, beantwortet eine andere Frage als die
+gestellte.
+
+**Und `umgekehrt`**, weil es Werte gibt, bei denen klein gut ist — „Tage
+überfällig", „Fehler pro Woche". Ohne den Schalter müsste man den
+Symbolsatz rückwärts lesen.
+
+**Wo „heute" anfängt**
+
+Das war die eigentliche Frage an „überfällig", und sie hat eine falsche
+und eine richtige Antwort:
+
+```txt
+new Date('2026-08-08')      →  2026-08-08T00:00:00 UTC
+in Zürich (UTC+2)           →  8. August, 02:00 Uhr    fällt nicht auf
+in Los Angeles (UTC−7)      →  7. August, 17:00 Uhr    fällt auf
+```
+
+Westlich von Greenwich liegt ein Datum, das **heute** ist, damit vor der
+heutigen Mitternacht — und jede heute fällige Aufgabe wäre am Morgen schon
+rot. `alsDatum` baut das Datum deshalb aus seinen Teilen (`new Date(j, m-1,
+t)`) und trifft damit die Ortszeit. Dieselbe Rechnung wie „Nächste Termine"
+in `steuerung.ts`, das seit jeher `setHours(0,0,0,0)` nimmt.
+
+`test130` §11b rechnet das in einem Browser mit `timezoneId:
+'America/Los_Angeles'` nach. Es ist der einzige Abschnitt, in dem der
+Unterschied überhaupt sichtbar wird — in der Gegenprobe mit naivem
+`new Date(text)` wird genau dieser Punkt rot, und sonst nur noch einer:
+die blosse Zahl `5`, die `new Date` klaglos als Datum durchgehen lässt.
+
+**Heute ist nicht überfällig.** Die Grenze steht als eigener Punkt in §11,
+weil sie eine Entscheidung ist und keine Selbstverständlichkeit: wer heute
+etwas abzugeben hat, hat den ganzen Tag Zeit.
+
+**Was kein Datum ist, ist nicht überfällig** — sondern gar nichts. Eine 5
+in einer Datumsspalte darf nicht rot werden, nur weil sie kleiner ist als
+irgendetwas.
+
+**`faelligBald` dazu**, weil „überfällig" allein zu spät kommt. Ohne
+Tagesangabe gelten sieben; eine Regel, die ohne Zahl nichts täte, wäre eine
+Regel, die man versehentlich leer anlegt und die dann schweigt.
+
+**Eine Zeile Aufräumen nebenbei**
+
+Welche Regelart welches Feld braucht, stand an **drei** Stellen als
+Literalliste — beim Anzeigen, beim Speichern und im Satz für die
+Regelliste. Drei neue Arten hätten an zwei davon vergessen werden können,
+ohne dass etwas auffällt. Jetzt steht sie einmal, als `OHNE_WERT` und
+`OHNE_FARBE`.
+
+**Status**
+
+`test130`, 79 Punkte, 12 Abschnitte. Gegenproben:
+
+```txt
+Symbolzweig entfernt        → 12 rot
+Datumsregeln entfernt       →  6 rot
+alsDatum naiv geparst       →  2 rot — und zwar die zwei richtigen
+```

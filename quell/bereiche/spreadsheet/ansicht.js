@@ -162,9 +162,57 @@ const SpreadsheetView = (() => {
         ['leer', 'ist leer'],
         ['nichtLeer', 'ist nicht leer'],
         ['doppelt', 'kommt mehrfach vor'],
+        ['ueberfaellig', 'ist ein Datum in der Vergangenheit'],
+        ['faelligBald', 'wird fällig in den nächsten … Tagen'],
         ['skala', 'Farbverlauf klein → gross'],
-        ['balken', 'Balken nach Wert']
+        ['balken', 'Balken nach Wert'],
+        ['symbol', 'Symbol nach Wert']
     ];
+    /**
+     * Die Symbolsätze. Drei Stufen, immer in der Reihenfolge klein → gross.
+     *
+     * Warum genau drei und nicht Excels fünf: eine vierte Stufe unterscheidet
+     * sich auf einem Telefonbildschirm nicht mehr erkennbar von der dritten,
+     * und ein Symbol, das man nicht auseinanderhält, sagt weniger als keines.
+     */
+    const SYMBOLSAETZE = {
+        ampel: ['🔴', '🟡', '🟢'],
+        pfeile: ['▼', '▬', '▲'],
+        formen: ['◆', '■', '●'],
+        noten: ['✗', '~', '✓']
+    };
+    /**
+     * Ein Datum aus einer Zelle — als ORTSZEIT um Mitternacht.
+     *
+     * `new Date('2026-08-10')` liest ISO-Daten als UTC. Wer östlich von
+     * Greenwich sitzt, bekäme damit den Vortag um zwei Uhr nachts, und
+     * „überfällig" spränge einen Tag zu früh an. Deshalb aus den Teilen
+     * gebaut, nicht geparst. Dieselbe Rechnung wie in `steuerung.ts`, wo
+     * „Nächste Termine" seit jeher `setHours(0,0,0,0)` nimmt.
+     */
+    const alsDatum = (v) => {
+        const t = String(v ?? '').trim();
+        if (!t)
+            return NaN;
+        let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
+        if (m)
+            return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+        m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(t); /* 10.08.2026 */
+        if (m)
+            return new Date(+m[3], +m[2] - 1, +m[1]).getTime();
+        return NaN;
+    };
+    /** Heute um Mitternacht, in der Zeitzone des Geräts. */
+    const heuteUm0 = () => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+    };
+    /* Welche Arten welches Feld brauchen — an EINER Stelle, weil dieselbe
+       Liste vorher an drei Stellen stand und beim Dazukommen einer Art an
+       zwei davon vergessen worden wäre. */
+    const OHNE_WERT = ['leer', 'nichtLeer', 'doppelt', 'ueberfaellig', 'skala', 'balken'];
+    const OHNE_FARBE = ['skala', 'balken', 'symbol'];
     /** Ein Bereich `A1:C20` als Zeilen-/Spaltengrenzen. Leer = ganzes Blatt. */
     const bereichLesen = (text, R, blatt) => {
         const ganz = { vonZ: 0, bisZ: (blatt.zeilen || 1) - 1,
@@ -250,8 +298,54 @@ const SpreadsheetView = (() => {
                 return isFinite(a) && isFinite(u) && isFinite(o) &&
                     a >= Math.min(u, o) && a <= Math.max(u, o);
             }
+            /* Was kein Datum ist, ist nicht überfällig — sondern gar nichts.
+               Die Zahl 5 in einer Datumsspalte darf nicht rot werden, nur weil
+               sie kleiner ist als irgendetwas. */
+            case 'ueberfaellig': {
+                const d = alsDatum(wert);
+                return isFinite(d) && d < heuteUm0();
+            }
+            case 'faelligBald': {
+                const d = alsDatum(wert);
+                if (!isFinite(d))
+                    return false;
+                const tage = alsZahl(regel.wert);
+                const spanne = isFinite(tage) && tage > 0 ? tage : 7;
+                const heute = heuteUm0();
+                /* Heute zählt mit, gestern nicht — das ist `ueberfaellig`. */
+                return d >= heute && d <= heute + spanne * 86400000;
+            }
             default: return false;
         }
+    };
+    /**
+     * Welche der drei Stufen? Gibt 0, 1 oder 2 zurück — oder -1 für „kein Wert".
+     *
+     * Ohne eigene Grenzen wird der Bereich gedrittelt. Mit `wert`/`wert2`
+     * gelten die als Grenzen, und dann zählt nur, was der Mensch eingetragen
+     * hat: bei „Ampel ab 50 und ab 80" soll die 79 gelb sein, egal ob im
+     * Blatt zufällig eine 900 steht.
+     */
+    const symbolStufe = (regel, wert, hilf) => {
+        const n = alsZahl(wert);
+        if (!isFinite(n))
+            return -1;
+        const u = alsZahl(regel.wert), o = alsZahl(regel.wert2);
+        let stufe;
+        if (isFinite(u) && isFinite(o)) {
+            const klein = Math.min(u, o), gross = Math.max(u, o);
+            stufe = n < klein ? 0 : n < gross ? 1 : 2;
+        }
+        else {
+            if (!isFinite(hilf.min) || !isFinite(hilf.max))
+                return -1;
+            const spanne = hilf.max - hilf.min;
+            const t = spanne === 0 ? 1 : (n - hilf.min) / spanne;
+            stufe = t < 1 / 3 ? 0 : t < 2 / 3 ? 1 : 2;
+        }
+        /* „Tage überfällig" ist ein Wert, bei dem klein gut ist. Ohne diesen
+           Schalter müsste man den Symbolsatz rückwärts lesen. */
+        return regel.umgekehrt ? 2 - stufe : stufe;
     };
     /**
      * Was eine Zelle an Aussehen bekommt — Klasse und/oder Inline-Stil.
@@ -306,6 +400,22 @@ const SpreadsheetView = (() => {
                    als ihr Bild. */
                 return { klasse: ' regel-balken',
                     stil: `--regel-balken:${p}%` };
+            }
+            /* Ein Symbol färbt nicht, es stellt sich davor. Deshalb steht es
+               nicht bei den Vergleichsregeln: es trifft nicht zu oder nicht zu,
+               es sagt bei jedem Wert etwas. */
+            if (v.regel.art === 'symbol') {
+                if (leer)
+                    continue;
+                const stufe = symbolStufe(v.regel, wert, v.hilf);
+                if (stufe < 0)
+                    continue;
+                const satz = SYMBOLSAETZE[v.regel.satz || 'ampel'] || SYMBOLSAETZE['ampel'];
+                /* Über eine CSS-Eigenschaft, nicht über den Zellinhalt: `wert`
+                   bleibt damit unangetastet, und beim Kopieren nach Excel geht
+                   kein Emoji als Text mit. */
+                return { klasse: ' regel-symbol',
+                    stil: `--regel-symbol:'${satz[stufe] ?? ''}'` };
             }
             if (regelTrifft(v.regel, wert, v.hilf)) {
                 const marke = REGELFARBEN[v.regel.farbe || 'gelb'] || 'yellow';
@@ -871,6 +981,12 @@ const SpreadsheetView = (() => {
                 '</select>' +
                 '<input id="rg-wert" placeholder="Wert" style="max-width:110px">' +
                 '<input id="rg-wert2" placeholder="bis" style="max-width:80px; display:none">' +
+                '<select id="rg-satz" style="display:none">' +
+                Object.entries(SYMBOLSAETZE).map(([id, z]) => `<option value="${id}">${z.join(' ')}</option>`).join('') +
+                '</select>' +
+                '<label id="rg-umlabel" style="display:none; align-items:center; gap:6px; ' +
+                'font-size:13px; color:var(--text-dim)">' +
+                '<input type="checkbox" id="rg-um" style="width:auto">klein ist gut</label>' +
                 '<select id="rg-farbe">' +
                 Object.keys(REGELFARBEN).map(f => `<option value="${f}">${f}</option>`).join('') +
                 '</select>' +
@@ -881,9 +997,11 @@ const SpreadsheetView = (() => {
             const satz = (r) => {
                 const name = (REGELARTEN.find(x => x[0] === r.art) || ['', r.art])[1];
                 const wert = r.art === 'zwischen' ? `${r.wert ?? ''} und ${r.wert2 ?? ''}`
-                    : ['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(r.art)
+                    : OHNE_WERT.includes(r.art)
                         ? '' : String(r.wert ?? '');
-                return `${r.bereich || 'ganzes Blatt'} ${name}${wert ? ' ' + wert : ''}`;
+                const anhang = r.art === 'symbol'
+                    ? ' ' + (SYMBOLSAETZE[r.satz || 'ampel'] || []).join('') : '';
+                return `${r.bereich || 'ganzes Blatt'} ${name}${wert ? ' ' + wert : ''}${anhang}`;
             };
             const zeichneListe = () => {
                 const k = o.querySelector('#rg-liste');
@@ -892,9 +1010,11 @@ const SpreadsheetView = (() => {
                 const l = blatt.regeln || [];
                 k.innerHTML = l.length
                     ? l.map((r, i) => '<div class="fr-zeile">' +
-                        (r.art === 'skala' || r.art === 'balken'
-                            ? '<span class="fr-punkt fr-verlauf"></span>'
-                            : `<span class="fr-punkt bg-${REGELFARBEN[r.farbe || 'gelb'] || 'yellow'}"></span>`) +
+                        (r.art === 'symbol'
+                            ? `<span class="fr-punkt fr-symbol">${esc((SYMBOLSAETZE[r.satz || 'ampel'] || [])[2] ?? '')}</span>`
+                            : r.art === 'skala' || r.art === 'balken'
+                                ? '<span class="fr-punkt fr-verlauf"></span>'
+                                : `<span class="fr-punkt bg-${REGELFARBEN[r.farbe || 'gelb'] || 'yellow'}"></span>`) +
                         `<span class="fr-text">${esc(satz(r))}</span>` +
                         `<button data-an="${i}" title="An oder aus">${r.an === false ? '☐' : '☑'}</button>` +
                         `<button data-weg="${i}" title="Regel löschen">🗑</button></div>`).join('')
@@ -910,13 +1030,24 @@ const SpreadsheetView = (() => {
                 const w1 = o.querySelector('#rg-wert');
                 const w2 = o.querySelector('#rg-wert2');
                 const fa = o.querySelector('#rg-farbe');
-                const ohneWert = ['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(art);
+                const sa = o.querySelector('#rg-satz');
+                const um = o.querySelector('#rg-umlabel');
+                const w1f = o.querySelector('#rg-wert');
                 if (w1)
-                    w1.style.display = ohneWert ? 'none' : '';
+                    w1.style.display = OHNE_WERT.includes(art) ? 'none' : '';
                 if (w2)
-                    w2.style.display = art === 'zwischen' ? '' : 'none';
+                    w2.style.display = (art === 'zwischen' || art === 'symbol') ? '' : 'none';
                 if (fa)
-                    fa.style.display = (art === 'skala' || art === 'balken') ? 'none' : '';
+                    fa.style.display = OHNE_FARBE.includes(art) ? 'none' : '';
+                if (sa)
+                    sa.style.display = art === 'symbol' ? '' : 'none';
+                if (um)
+                    um.style.display = art === 'symbol' ? 'flex' : 'none';
+                /* Der Platzhalter sagt, was das Feld hier bedeutet — „Wert" heisst
+                   bei drei Arten drei verschiedene Dinge. */
+                if (w1f)
+                    w1f.placeholder = art === 'symbol' ? 'ab'
+                        : art === 'faelligBald' ? 'Tage' : 'Wert';
             };
             felderAnpassen();
             o.querySelector('#rg-art')?.addEventListener('change', felderAnpassen);
@@ -955,12 +1086,16 @@ const SpreadsheetView = (() => {
                     bereich: (o.querySelector('#rg-bereich')?.value || '').trim(),
                     art, an: true
                 };
-                if (!['leer', 'nichtLeer', 'doppelt', 'skala', 'balken'].includes(art))
+                if (!OHNE_WERT.includes(art))
                     regel['wert'] = o.querySelector('#rg-wert')?.value ?? '';
-                if (art === 'zwischen')
+                if (art === 'zwischen' || art === 'symbol')
                     regel['wert2'] = o.querySelector('#rg-wert2')?.value ?? '';
-                if (art !== 'skala' && art !== 'balken')
+                if (!OHNE_FARBE.includes(art))
                     regel['farbe'] = o.querySelector('#rg-farbe')?.value || 'gelb';
+                if (art === 'symbol') {
+                    regel['satz'] = o.querySelector('#rg-satz')?.value || 'ampel';
+                    regel['umgekehrt'] = o.querySelector('#rg-um')?.checked ?? false;
+                }
                 blatt.regeln = (blatt.regeln || []).concat([regel]);
                 sichere();
                 alles();
@@ -1875,6 +2010,9 @@ const SpreadsheetView = (() => {
         }, 0);
         return w;
     };
-    return { zeichne, zeigeWert, istFehler };
+    /* REGELARTEN und SYMBOLSAETZE geben wir mit heraus: `test130` §11 fragt
+       den Katalog, statt eine zweite Liste danebenzustellen — eine Liste, die
+       jemand nachschreiben müsste, läuft mit der Zeit auseinander. */
+    return { zeichne, zeigeWert, istFehler, REGELARTEN, SYMBOLSAETZE };
 })();
 window.SpreadsheetView = SpreadsheetView;

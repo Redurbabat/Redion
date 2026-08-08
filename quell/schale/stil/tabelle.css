@@ -258,6 +258,35 @@
   pointer-events: none;
 }
 
+/* Das Symbol steht VOR dem Wert und färbt nichts.
+
+   Über `content` und eine eigene Eigenschaft, nicht über den Zellinhalt:
+   was in `wert` steht, bleibt damit unangetastet — beim Kopieren nach
+   Excel geht kein Emoji als Text mit, und die Zelle rechnet weiter mit
+   der Zahl.
+
+   `flex:none` ist Pflicht und nicht Zierde. Der Zellinhalt ist ein
+   Flex-Element; ohne diese Zeile würde das Symbol mitgestaucht, sobald
+   die Spalte eng wird — und ein halber Kreis bedeutet nichts. Gestaucht
+   wird dann lieber der Text, und der zeigt bei Platzmangel `###`. */
+.tbl-z.regel-symbol::before {
+  content: var(--regel-symbol, '');
+  flex: none;
+  margin-right: 5px;
+  font-size: .85em;
+  line-height: 1;
+}
+
+/* In der Regelliste des Fensters: der Punkt zeigt das Symbol selbst, nicht
+   eine Farbe, die es gar nicht hat. */
+.fr-punkt.fr-symbol {
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
 /* Der Rahmen des Blocks sagt, dass das Raster den Fokus hat. Leise, damit er
    dem Auswahlrahmen nicht die Aufmerksamkeit nimmt — der ist laut Entwurf
    selbst der Fokusring. */

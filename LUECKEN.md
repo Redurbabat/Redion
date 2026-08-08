@@ -29,7 +29,8 @@ L11  Grenzen für Agenten (E52) — Notaus, Tageslimit, Rückfrage, und
      ohne Aufsicht nur lesen
 L12  Barrierefreiheit gemessen und behoben (E51) — 106 Überlagerungen
      waren für ein Vorleseprogramm keine Dialoge
-L15  bedingte Formatierung im Tabellenblock (E53)
+L15  bedingte Formatierung im Tabellenblock (E53), vollständig mit
+     Symbol- und Datumsregeln (E60)
 L33  Web Push (E54) — mit Server klingelt es auch bei geschlossener App;
      der Stoss trägt dabei keinen Erinnerungstext
 L10  aus dem Nocturne-Entwurf: Marken statt Auswahlfelder, gleitende
@@ -108,11 +109,11 @@ Nummern:
 
 ```txt
 ✗ Spreadsheet-Ansicht für Datenbanken (eine der Ansichtsarten ist sie nicht)
-✗ bedingte Formatierung — L15
+✓ bedingte Formatierung — L15, seit E53 und E60 vollständig
 ✗ Zielwertsuche, Szenarien, Solver — L28
 ```
 
-**Status** — ✅ Kern fertig; Ausbau siehe L15 · L18 · L28.
+**Status** — ✅ Kern fertig; Ausbau siehe L18 · L28.
 
 ## L4 · Fehlerwerte — beantwortet, ohne das Rechnen umzustellen
 
@@ -417,8 +418,7 @@ Platz und Geduld — im Prüfcontainer geht es nicht.
 
 ## L15 · Bedingte Formatierung
 
-**Stand** — ◐ im Tabellenblock gebaut (8. August, E53); Symbolregeln und
-„überfällig" fehlen.
+**Stand** — ✅ vollständig (8. August, E53 und E60).
 
 Die Hälfte war beim Nachsehen längst da, aber in den **Datenbanken**:
 `farbregeln` färbt dort ganze Zeilen, und die Spaltenanzeige kennt
@@ -432,10 +432,22 @@ herkommt, gab es nichts.
 ✓ Datenbalken            im Blatt und in den Datenbankspalten
 ✓ Farbskalen             ebenso
 ✓ Duplikate              die Art „kommt mehrfach vor"
-✗ Symbolregeln           Ampeln und Pfeile gibt es nirgends
-✗ überfällige Werte      braucht einen Datumsvergleich gegen heute, und
-                         der gehört zuerst geklärt (Ortszeit, siehe E31)
+✓ Symbolregeln           vier Sätze — Ampel, Pfeile, Formen, Noten; drei
+                         Stufen, gedrittelt oder mit eigenen Grenzen
+✓ überfällige Werte      und „wird fällig in den nächsten … Tagen"
 ```
+
+Die Ortszeit war die eigentliche Frage, und sie ist beantwortet:
+`new Date('2026-08-08')` liest ISO als **UTC**. In Zürich fällt das nicht
+auf; in Los Angeles ist derselbe Zeitpunkt der 7. August um 17 Uhr — und
+damit wäre jede *heute* fällige Aufgabe schon am Morgen rot. `alsDatum`
+baut das Datum deshalb aus seinen Teilen. `test130` §11b rechnet dasselbe
+in `America/Los_Angeles` nach; mit einem naiven `new Date(text)` wird
+genau dieser Punkt rot.
+
+Das Symbol steht über `content` und eine CSS-Eigenschaft vor dem Wert,
+nicht *im* Wert: die Zelle rechnet weiter mit ihrer Zahl, und beim
+Kopieren nach Excel geht kein Emoji als Text mit.
 
 ## L16 · Automationen erweitern
 

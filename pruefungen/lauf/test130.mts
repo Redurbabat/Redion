@@ -446,7 +446,236 @@ p('Und der Hinweistext stösst nicht an den Rahmen', eng?.ueberRand === false);
 await handy.close();
 
 
-console.log('\n9 · Die Konsole');
+/* ===========================================================================
+ * 10 · SYMBOLREGELN — der erste der zwei Reste aus L15
+ *
+ * Ein Symbol färbt nicht, es stellt sich vor den Wert. Deshalb kann es
+ * nicht bei den Vergleichsregeln stehen: es trifft nicht „zu" oder „nicht
+ * zu", es sagt bei jedem Wert etwas.
+ *
+ * Der Punkt, an dem es falsch wäre: das Symbol IN die Zelle zu schreiben.
+ * Dann stünde es in `wert`, ginge beim Kopieren nach Excel als Text mit
+ * und die Zelle rechnete nicht mehr. Es steht deshalb in einer CSS-
+ * Eigenschaft, und dieser Abschnitt prüft genau das mit.
+ * ========================================================================= */
+console.log('\n10 · Symbolregeln');
+
+/* A1..A6 = 10, 50, 120, 50, 5, 300 — Spanne 5 bis 300. */
+await mitRegeln([{ bereich: 'A1:A6', art: 'symbol', satz: 'ampel', an: true }]);
+const [s5, s120, s300] = [await zelle('A5'), await zelle('A3'), await zelle('A6')];
+p('Die Zelle bekommt die Symbolklasse', /regel-symbol/.test(s300?.klasse || ''),
+  s300?.klasse);
+p('Der kleinste Wert bekommt das unterste Symbol',
+  (s5?.stil || '').includes('🔴'), s5?.stil);
+p('Der grösste das oberste', (s300?.stil || '').includes('🟢'), s300?.stil);
+p('Und dazwischen das mittlere', (s120?.stil || '').includes('🟡'), s120?.stil);
+
+/* DAS IST DER PUNKT, DER ZÄHLT: der Wert darf sich nicht ändern. */
+p('Der Zellinhalt bleibt die blosse Zahl', s300?.text === '300',
+  JSON.stringify(s300?.text));
+const unberuehrt = await seite.evaluate(() => {
+  const w = window as any;
+  return Store.getBlock(w.__bid).mappe.blaetter[0].zellen['A6'].wert;
+});
+p('… und gespeichert steht sie ebenso da', unberuehrt === 300, String(unberuehrt));
+
+/* Eigene Grenzen schlagen die Drittelung: bei „ab 50 und ab 80" ist 79
+   gelb, auch wenn im Blatt eine 300 steht. */
+await mitRegeln([{ bereich: 'A1:A6', art: 'symbol', satz: 'ampel',
+                   wert: 50, wert2: 80, an: true }]);
+const g10 = await zelle('A1'), g50 = await zelle('A2'), g120 = await zelle('A3');
+p('Eigene Grenzen: 10 liegt unter 50 → rot', (g10?.stil || '').includes('🔴'), g10?.stil);
+p('… 50 liegt dazwischen → gelb', (g50?.stil || '').includes('🟡'), g50?.stil);
+p('… 120 liegt über 80 → grün', (g120?.stil || '').includes('🟢'), g120?.stil);
+
+/* Umgekehrt, für Werte, bei denen klein gut ist. */
+await mitRegeln([{ bereich: 'A1:A6', art: 'symbol', satz: 'ampel',
+                   umgekehrt: true, an: true }]);
+const u5 = await zelle('A5'), u300 = await zelle('A6');
+p('Umgekehrt: der kleinste Wert wird grün', (u5?.stil || '').includes('🟢'), u5?.stil);
+p('… und der grösste rot', (u300?.stil || '').includes('🔴'), u300?.stil);
+
+/* Die anderen Sätze. */
+await mitRegeln([{ bereich: 'A1:A6', art: 'symbol', satz: 'pfeile', an: true }]);
+const pf = await zelle('A6');
+p('Der Pfeilsatz nimmt Pfeile', (pf?.stil || '').includes('▲'), pf?.stil);
+
+/* Text hat keine Stufe — und darf deshalb kein Symbol bekommen. */
+await mitRegeln([{ bereich: 'B1:B6', art: 'symbol', satz: 'ampel', an: true }]);
+const txt = await zelle('B1'), leerZ = await zelle('B2');
+p('Text bekommt kein Symbol', !/regel-symbol/.test(txt?.klasse || ''), txt?.klasse);
+p('Eine leere Zelle auch nicht', !/regel-symbol/.test(leerZ?.klasse || ''), leerZ?.klasse);
+
+/* Und die Anzeige selbst. Ohne `flex:none` würde das Symbol in einer engen
+   Spalte mitgestaucht — und ein halber Kreis bedeutet nichts. Genau diese
+   Sorte Fehler hat beim Tabellenblock nur das Hinsehen gefunden
+   (CLAUDE.md §55.2), deshalb steht sie hier als Zahl. */
+await mitRegeln([{ bereich: 'A1:A6', art: 'symbol', satz: 'ampel', an: true }]);
+const eng6 = await seite.evaluate(() => {
+  const d = document.querySelector<HTMLElement>('#pruef-regeln [data-a="A6"]');
+  if (!d) return null;
+  const v = getComputedStyle(d, '::before');
+  return { grow: v.flexGrow, shrink: v.flexShrink, inhalt: v.content };
+});
+p('Das Symbol wird nicht mitgestaucht',
+  eng6?.shrink === '0' && eng6?.grow === '0', JSON.stringify(eng6));
+p('… und der Zeichner setzt es wirklich ein',
+  (eng6?.inhalt ?? '').includes('🟢'), JSON.stringify(eng6?.inhalt));
+
+/* ===========================================================================
+ * 11 · ÜBERFÄLLIG — der zweite Rest aus L15
+ *
+ * Ein Datumsvergleich gegen heute, und „heute" heisst ORTSZEIT um
+ * Mitternacht. `new Date('2026-08-10')` liest ISO als UTC; östlich von
+ * Greenwich wäre das der Vortag um zwei Uhr nachts, und die Regel spränge
+ * einen Tag zu früh an. Deshalb wird das Datum aus seinen Teilen gebaut.
+ *
+ * Der zweite Punkt: was KEIN Datum ist, ist nicht überfällig — sondern gar
+ * nichts. Eine 5 in einer Datumsspalte darf nicht rot werden, nur weil sie
+ * kleiner ist als irgendetwas.
+ * ========================================================================= */
+console.log('\n11 · Überfällige und bald fällige Daten');
+
+const daten = await seite.evaluate(() => {
+  const w = window as any;
+  const blk = Store.getBlock(w.__bid);
+  const blatt = blk.mappe.blaetter[0];
+  const tag = (v: number) => {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + v);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-` +
+           `${String(d.getDate()).padStart(2, '0')}`;
+  };
+  blatt.zellen['C1'] = { wert: tag(-30) };   /* lange vorbei      */
+  blatt.zellen['C2'] = { wert: tag(-1) };    /* gestern           */
+  blatt.zellen['C3'] = { wert: tag(0) };     /* heute             */
+  blatt.zellen['C4'] = { wert: tag(3) };     /* in drei Tagen     */
+  blatt.zellen['C5'] = { wert: tag(30) };    /* weit weg          */
+  blatt.zellen['C6'] = { wert: 5 };          /* gar kein Datum    */
+  Store.updateBlock(blk.id, { mappe: blk.mappe });
+  return { gestern: tag(-1), heute: tag(0) };
+});
+
+await mitRegeln([{ bereich: 'C1:C6', art: 'ueberfaellig', farbe: 'rot', an: true }]);
+const [c1, c2, c3, c4, c6] = [await zelle('C1'), await zelle('C2'), await zelle('C3'),
+                              await zelle('C4'), await zelle('C6')];
+p('Ein Datum von vor dreissig Tagen ist überfällig',
+  /regel-farbe/.test(c1?.klasse || ''), c1?.klasse);
+p('Gestern ebenfalls', /regel-farbe/.test(c2?.klasse || ''),
+  `${daten.gestern} → ${c2?.klasse}`);
+/* DIE GRENZE. Heute ist nicht überfällig — sonst wäre jede Aufgabe, die
+   heute fällig ist, schon am Morgen rot. */
+p('Heute ist NICHT überfällig', !/regel-farbe/.test(c3?.klasse || ''),
+  `${daten.heute} → ${c3?.klasse}`);
+p('Ein künftiges Datum auch nicht', !/regel-farbe/.test(c4?.klasse || ''), c4?.klasse);
+p('Und eine blosse Zahl ist kein überfälliges Datum',
+  !/regel-farbe/.test(c6?.klasse || ''), c6?.klasse);
+
+/* Deutsche Schreibweise muss ebenso gehen — sie ist die, die ein Mensch
+   hier eintippt. */
+await seite.evaluate(() => {
+  const w = window as any;
+  const blk = Store.getBlock(w.__bid);
+  blk.mappe.blaetter[0].zellen['C6'] = { wert: '01.01.2020' };
+  Store.updateBlock(blk.id, { mappe: blk.mappe });
+});
+await mitRegeln([{ bereich: 'C1:C6', art: 'ueberfaellig', farbe: 'rot', an: true }]);
+const deutsch = await zelle('C6');
+p('01.01.2020 wird als Datum gelesen', /regel-farbe/.test(deutsch?.klasse || ''),
+  deutsch?.klasse);
+
+await mitRegeln([{ bereich: 'C1:C6', art: 'faelligBald', wert: 7, farbe: 'orange', an: true }]);
+const [b3, b4, b5, b2] = [await zelle('C3'), await zelle('C4'),
+                          await zelle('C5'), await zelle('C2')];
+p('Bald fällig: heute zählt mit', /regel-farbe/.test(b3?.klasse || ''), b3?.klasse);
+p('… in drei Tagen auch', /regel-farbe/.test(b4?.klasse || ''), b4?.klasse);
+p('… in dreissig Tagen nicht mehr', !/regel-farbe/.test(b5?.klasse || ''), b5?.klasse);
+p('… und gestern ist nicht bald, sondern vorbei',
+  !/regel-farbe/.test(b2?.klasse || ''), b2?.klasse);
+
+/* Ohne Angabe sieben Tage — eine Regel ohne Zahl darf nicht nichts tun. */
+await mitRegeln([{ bereich: 'C1:C6', art: 'faelligBald', farbe: 'orange', an: true }]);
+const ohneZahl = await zelle('C4');
+p('Ohne Tagesangabe gelten sieben Tage', /regel-farbe/.test(ohneZahl?.klasse || ''),
+  ohneZahl?.klasse);
+
+/* Und im Fenster stehen die drei neuen Arten zur Auswahl. */
+const imFenster = await seite.evaluate(() => {
+  const w = window as any;
+  const arten = w.SpreadsheetView.REGELARTEN ?? [];
+  return arten.map((x: any) => x[0]);
+});
+p('Die neuen Arten stehen im Regelkatalog',
+  ['ueberfaellig', 'faelligBald', 'symbol'].every(a => (imFenster as string[]).includes(a)),
+  JSON.stringify(imFenster));
+
+
+/* ===========================================================================
+ * 11b · UND DAS GANZE WESTLICH VON GREENWICH
+ *
+ * Hier entscheidet sich, ob „Ortszeit" eine Behauptung ist oder eine
+ * Zusicherung. `new Date('2026-08-08')` ergibt UTC-Mitternacht. In Zürich
+ * fällt das nicht auf; in Los Angeles ist derselbe Zeitpunkt der 7. August
+ * um 17 Uhr — und damit läge ein Datum, das HEUTE ist, vor der heutigen
+ * Mitternacht. Jede heute fällige Aufgabe wäre am Morgen schon rot.
+ *
+ * Deshalb baut `alsDatum` das Datum aus seinen Teilen. Diese Prüfung ist
+ * die einzige Stelle, an der ein Unterschied überhaupt sichtbar wird: mit
+ * `viewport` und `hasTouch` hat sie nichts zu tun, nur mit `timezoneId`.
+ * ========================================================================= */
+console.log('\n11b · Dieselbe Rechnung in Los Angeles (UTC−7)');
+
+const westen = await browser.newContext({
+  viewport: { width: 1280, height: 900 }, timezoneId: 'America/Los_Angeles'
+});
+const wSeite = await westen.newPage();
+await wSeite.goto(`http://localhost:${PORT}/index.html`);
+await wSeite.waitForTimeout(2400);
+
+const wErg = await wSeite.evaluate(async () => {
+  const w = window as any;
+  const s = Object.values(Store.cache.blocks)
+    .find((b: any) => b.type === 'page' && b.alive) as any;
+  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Westen' });
+  const kasten = document.createElement('div');
+  kasten.id = 'pruef-west';
+  document.body.appendChild(kasten);
+  kasten.appendChild(w.SpreadsheetView.zeichne(Store.getBlock(blk.id)));
+  await new Promise(r => setTimeout(r, 300));
+
+  const b2 = Store.getBlock(blk.id);
+  const blatt = b2.mappe.blaetter[0];
+  const tag = (v: number) => {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + v);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-` +
+           `${String(d.getDate()).padStart(2, '0')}`;
+  };
+  blatt.zellen['A1'] = { wert: tag(0) };    /* heute, örtlich */
+  blatt.zellen['A2'] = { wert: tag(-1) };   /* gestern        */
+  blatt.regeln = [{ bereich: 'A1:A2', art: 'ueberfaellig', farbe: 'rot', an: true }];
+  Store.updateBlock(b2.id, { mappe: b2.mappe });
+  kasten.innerHTML = '';
+  kasten.appendChild(w.SpreadsheetView.zeichne(Store.getBlock(blk.id)));
+  await new Promise(r => setTimeout(r, 250));
+
+  const lies = (a: string) =>
+    document.querySelector<HTMLElement>(`#pruef-west [data-a="${a}"]`)?.className ?? '';
+  return { zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+           versatz: new Date().getTimezoneOffset(),
+           heute: lies('A1'), gestern: lies('A2'), datum: tag(0) };
+});
+
+p('Der Browser steht wirklich westlich von Greenwich',
+  (wErg as any).versatz > 0, `Versatz ${(wErg as any).versatz} min, ${(wErg as any).zone}`);
+p('Ein heute fälliges Datum ist dort ebenfalls nicht überfällig',
+  !/regel-farbe/.test((wErg as any).heute), `${(wErg as any).datum} → ${(wErg as any).heute}`);
+p('… und gestern ist es weiterhin', /regel-farbe/.test((wErg as any).gestern),
+  (wErg as any).gestern);
+await westen.close();
+
+
+console.log('\n12 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 
 await browser.close();
