@@ -10423,7 +10423,7 @@ Register.tasten = (() => {
                 ['Strg Shift F', 'Fokus-Modus'], ['Strg Z', 'Rückgängig'], ['Strg Y', 'Wiederholen']
             ]],
         ['Fenster — hat Notion nur in der Desktop-App', [
-                ['Strg T', 'Neuer Reiter'], ['Strg W', 'Reiter schliessen'],
+                ['Strg Alt N', 'Neuer Reiter'], ['Strg Alt W', 'Reiter schliessen'],
                 ['Strg Tab', 'Nächster Reiter'], ['Strg Shift Tab', 'Vorheriger Reiter'],
                 ['Strg 1 … 9', 'Direkt zu diesem Reiter'],
                 ['Strg Alt S', 'Geteilte Ansicht ein oder aus'],
@@ -49390,12 +49390,29 @@ const Fenster = (() => {
             wechseln(e.shiftKey ? (aktiv - 1 + reiter.length) % reiter.length : (aktiv + 1) % reiter.length);
             return;
         }
-        if (!e.altKey && e.key.toLowerCase() === 't' && !e.shiftKey) {
+        /* --- Warum hier NICHT Strg T und Strg W stehen ----------------------
+         * Beide gehören dem Browser, und er gibt sie nicht her: `preventDefault`
+         * bleibt bei ihnen wirkungslos. Gebunden waren sie trotzdem, und das
+         * Ergebnis war, dass BEIDES geschah — Redion schloss seinen Reiter, und
+         * der Browser schloss das Fenster darüber. Der Mensch kam zurück und
+         * fand einen seiner Reiter nicht mehr, ohne Anhaltspunkt, warum.
+         *
+         * Nachweisen lässt sich das im Prüfstand nicht: Playwright schickt
+         * Tastendrücke an die Seite, nicht an die Browseroberfläche. Deshalb
+         * wird hier nicht bewiesen, sondern ausgewichen — auf zwei Kürzel, bei
+         * denen die Frage gar nicht erst entsteht. `test134` hält fest, dass
+         * Strg T und Strg W wieder beim Browser liegen.
+         *
+         * Und selbst wenn der Browser sie hergäbe: wer Strg W drückt, meint
+         * meistens den Browserreiter. Eine Seite, die das umdeutet, ist
+         * unhöflich zu einer Gewohnheit, die älter ist als sie.
+         * ------------------------------------------------------------------ */
+        if (e.altKey && e.key.toLowerCase() === 'n' && !e.shiftKey) {
             e.preventDefault();
             neuerReiter();
             return;
         }
-        if (!e.altKey && e.key.toLowerCase() === 'w' && !e.shiftKey) {
+        if (e.altKey && e.key.toLowerCase() === 'w' && !e.shiftKey) {
             e.preventDefault();
             schliessen(aktiv);
             return;
@@ -49627,8 +49644,10 @@ const Aussehen = (() => {
         ['ki', 'KI-Bereich', 'Ctrl+J'],
         ['chat', 'Neuer Chat', 'Ctrl+O'],
         ['seitenleiste', 'Seitenleiste ein und aus', 'Ctrl+\\'],
-        ['reiterNeu', 'Neuer Reiter', 'Ctrl+T'],
-        ['reiterZu', 'Reiter schliessen', 'Ctrl+W'],
+        /* Nicht Ctrl+T und Ctrl+W: die gibt der Browser nicht her, und dann
+           geschieht beides. Siehe `schale/aufbau/reiter.ts`. */
+        ['reiterNeu', 'Neuer Reiter', 'Ctrl+Alt+N'],
+        ['reiterZu', 'Reiter schliessen', 'Ctrl+Alt+W'],
         ['teilen', 'Geteilte Ansicht', 'Ctrl+Alt+S'],
         ['zurueck', 'Zurück', 'Ctrl+['],
         ['vor', 'Vorwärts', 'Ctrl+]'],

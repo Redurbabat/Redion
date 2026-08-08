@@ -141,8 +141,10 @@ const Aussehen = (() => {
         ['ki', 'KI-Bereich', 'Ctrl+J'],
         ['chat', 'Neuer Chat', 'Ctrl+O'],
         ['seitenleiste', 'Seitenleiste ein und aus', 'Ctrl+\\'],
-        ['reiterNeu', 'Neuer Reiter', 'Ctrl+T'],
-        ['reiterZu', 'Reiter schliessen', 'Ctrl+W'],
+        /* Nicht Ctrl+T und Ctrl+W: die gibt der Browser nicht her, und dann
+           geschieht beides. Siehe `schale/aufbau/reiter.ts`. */
+        ['reiterNeu', 'Neuer Reiter', 'Ctrl+Alt+N'],
+        ['reiterZu', 'Reiter schliessen', 'Ctrl+Alt+W'],
         ['teilen', 'Geteilte Ansicht', 'Ctrl+Alt+S'],
         ['zurueck', 'Zurück', 'Ctrl+['],
         ['vor', 'Vorwärts', 'Ctrl+]'],

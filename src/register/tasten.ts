@@ -97,7 +97,7 @@ Register.tasten = (() => {
         ['Strg Shift F', 'Fokus-Modus'], ['Strg Z', 'Rückgängig'], ['Strg Y', 'Wiederholen']
       ]],
       ['Fenster — hat Notion nur in der Desktop-App', [
-        ['Strg T', 'Neuer Reiter'], ['Strg W', 'Reiter schliessen'],
+        ['Strg Alt N', 'Neuer Reiter'], ['Strg Alt W', 'Reiter schliessen'],
         ['Strg Tab', 'Nächster Reiter'], ['Strg Shift Tab', 'Vorheriger Reiter'],
         ['Strg 1 … 9', 'Direkt zu diesem Reiter'],
         ['Strg Alt S', 'Geteilte Ansicht ein oder aus'],

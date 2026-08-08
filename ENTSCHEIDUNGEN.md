@@ -3579,9 +3579,41 @@ Wahrheitsprüfung entfernt → 2 rot, darunter „Es steht NICHT ‚Link
                             kopiert' da" mit genau diesem Text
 ```
 
-**Was offen bleibt** — Strg T, Strg W, Strg Tab und Strg 1…9 belegt Redion
-für seine eigenen Reiter, und Browser geben diese Kombinationen nicht her;
-`preventDefault` bleibt dort wirkungslos. Nachweisen lässt sich das in
-diesem Prüfstand **nicht**: Playwright schickt Tastendrücke an die Seite,
-nicht an die Browseroberfläche. Es steht deshalb als offene Frage in L20
-und nicht als behobener Punkt.
+**Und die Taste, die Redion sich genommen hatte**
+
+`test134` misst über `defaultPrevented`, wem eine Taste gehört. Fünfzehn
+nimmt Redion dem Browser ab, und das ist richtig — Strg P würde sonst
+drucken. Acht lässt es in Ruhe, und das ist der wichtigere Teil: wer Strg C
+global abfängt, nimmt dem Menschen das Kopieren aus jedem Textfeld.
+
+Zwei standen auf der falschen Seite. **Strg T** und **Strg W** waren an
+Redions eigene Reiter gebunden. Der Browser gibt beide nicht her —
+`preventDefault` bleibt dort wirkungslos —, also geschah beides: Redion
+schloss seinen Reiter, und der Browser das Fenster darüber. Der Mensch kam
+zurück und fand einen Reiter nicht mehr, ohne Anhaltspunkt, warum.
+
+**Nachweisen lässt sich das hier nicht.** Playwright schickt Tastendrücke
+an die Seite, nicht an die Browseroberfläche; dass der Browser trotzdem
+handelt, ist in diesem Prüfstand nicht zu zeigen. Also wurde nicht
+bewiesen, sondern **ausgewichen**: Redions Reiter liegen jetzt auf
+**Strg Alt N** und **Strg Alt W**.
+
+Die Abwägung dahinter, offen ausgeschrieben, weil sie auf einer
+unbewiesenen Annahme steht:
+
+```txt
+Annahme falsch, Kürzel getauscht   zwei bequeme Kürzel gegen zwei
+                                   etwas umständlichere — kleiner Verlust
+Annahme richtig, Kürzel behalten   jedes Strg W schliesst das Fenster UND
+                                   verliert einen Reiter — echter Verlust
+```
+
+Ungleich verteilt, also die vorsichtige Seite. Dazu kommt ein Grund, der
+ganz ohne die Annahme auskommt: wer Strg W drückt, meint meistens den
+Browserreiter. Eine Seite, die das umdeutet, ist unhöflich zu einer
+Gewohnheit, die älter ist als sie.
+
+**Was offen bleibt** — Strg Tab und Strg 1…9 sind derselbe Fall und
+bleiben gebunden. Sie zerstören nichts: im schlimmsten Fall wechselt
+zusätzlich der Browserreiter. Der Tausch lohnte den Verlust nicht, und die
+Frage steht in L20.

@@ -26,9 +26,16 @@
  *   wenig zu nehmen ist ein Ärgernis, eine zu viel ist ein Datenverlust
  *   in Zeitlupe.
  *
- *   KANN NICHT GENOMMEN WERDEN — Strg T, Strg W, Strg N. Der Browser gibt
- *   sie nicht her, egal was die Seite versucht. Sie stehen in unserer
- *   Kürzelübersicht, und die muss das sagen, statt etwas zu versprechen.
+ *   KANN NICHT GENOMMEN WERDEN — Strg T und Strg W. Der Browser gibt sie
+ *   nicht her, egal was die Seite versucht, und dann geschieht BEIDES:
+ *   Redion schliesst seinen Reiter, der Browser das Fenster darüber.
+ *   Redion hatte sie gebunden; jetzt liegen seine eigenen Reiter auf
+ *   Strg Alt N und Strg Alt W.
+ *
+ *   Und hier die ehrliche Grenze dieses Laufs: dass der Browser sie nicht
+ *   hergibt, kann er NICHT zeigen. Playwright schickt Tastendrücke an die
+ *   Seite, nicht an die Browseroberfläche. Also wird nicht bewiesen,
+ *   sondern ausgewichen — und §2 hält fest, dass sie wieder frei sind.
  *
  *   node pruefungen/lauf/test134.mts
  * ==========================================================================*/
@@ -132,14 +139,39 @@ const RUHE: Array<[string, Record<string, boolean>, string]> = [
   ['a', {}, 'Alles markieren'],
   ['r', {}, 'Neu laden — in der Tabelle belegt, aber nicht global'],
   ['s', {}, 'Speichern — Redion speichert von selbst'],
-  ['t', {}, 'Neuer Reiter'],
-  ['w', {}, 'Reiter schliessen']
+  ['t', {}, 'Neuer Reiter — Redions eigene liegen auf Strg Alt N'],
+  ['w', {}, 'Reiter schliessen — Redions eigene auf Strg Alt W']
 ];
 for (const [k, opt, was] of RUHE) {
   const genommen = await taste(k, opt);
   p(`Strg ${k.toUpperCase()} bleibt beim Browser — ${was}`, genommen === false,
     genommen ? 'Redion nimmt sie' : '');
 }
+
+console.log('\n2b · Redions eigene Reiter liegen daneben');
+/* Gebunden waren sie auf Strg T und Strg W. Der Browser gibt die nicht
+   her — `preventDefault` bleibt dort wirkungslos —, also geschah beides:
+   Redion schloss seinen Reiter, und der Browser das Fenster darüber.
+   Nachweisen lässt sich das hier nicht, weil Playwright Tastendrücke an
+   die Seite schickt und nicht an die Browseroberfläche. Also wird nicht
+   bewiesen, sondern ausgewichen — und §2 hält fest, dass die zwei wieder
+   beim Browser liegen. */
+for (const [k, was] of [['n', 'Neuer Reiter'], ['w', 'Reiter schliessen']] as [string, string][]) {
+  const genommen = await taste(k, { altKey: true });
+  p(`Strg Alt ${k.toUpperCase()} gehört Redion — ${was}`, genommen === true);
+}
+const uebersichtReiter = await seite.evaluate(() => {
+  const g = (Register as any).tasten.alle()
+    .find((x: any) => x[0].startsWith('Fenster'));
+  return (g?.[1] ?? []).map((x: any) => x[0]);
+});
+p('Und die Übersicht nennt sie auch so',
+  (uebersichtReiter as string[]).includes('Strg Alt N') &&
+  (uebersichtReiter as string[]).includes('Strg Alt W'),
+  JSON.stringify(uebersichtReiter));
+p('… und verspricht Strg T und Strg W nicht mehr',
+  !(uebersichtReiter as string[]).some(t => t === 'Strg T' || t === 'Strg W'),
+  JSON.stringify(uebersichtReiter));
 
 console.log('\n3 · Ohne Strg passiert nichts von alledem');
 /* Ein Handler, der die Umschalttaste vergisst, frisst gewöhnliche

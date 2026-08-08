@@ -540,14 +540,21 @@ Menschen gehören, lässt es in Ruhe — Strg C, V, X, A, R, S. Das ist der
 Teil, der zählt: wer Strg C global abfängt, nimmt dem Menschen das
 Kopieren aus jedem Textfeld.
 
-**Was dabei NICHT nachweisbar ist.** Strg T, Strg W, Strg Tab und
-Strg 1…9 belegt Redion für seine eigenen Reiter, und Browser geben diese
-Kombinationen nicht her — `preventDefault` bleibt dort wirkungslos, beide
-Dinge geschehen. Zeigen lässt sich das hier nicht: Playwright schickt
-Tastendrücke an die Seite, nicht an die Browseroberfläche. Es steht
-deshalb als offene Frage da und nicht als Befund.
+**Zwei standen auf der falschen Seite.** Strg T und Strg W waren an
+Redions eigene Reiter gebunden. Der Browser gibt beide nicht her, also
+geschah beides — Redion schloss seinen Reiter, der Browser das Fenster
+darüber. Seit E62 liegen sie auf **Strg Alt N** und **Strg Alt W**.
 
-Fehlt noch: ein Weg, die vier oben wirklich zu messen · die 33 fehlenden
+**Was dabei NICHT nachweisbar ist.** Dass der Browser sie nicht hergibt,
+kann dieser Prüfstand nicht zeigen: Playwright schickt Tastendrücke an die
+Seite, nicht an die Browseroberfläche. Es wurde deshalb nicht bewiesen,
+sondern ausgewichen — die Abwägung dazu steht in E62.
+
+Strg Tab und Strg 1…9 sind derselbe Fall und bleiben gebunden: sie
+zerstören nichts, im schlimmsten Fall wechselt zusätzlich der
+Browserreiter.
+
+Fehlt noch: ein Weg, Browserkürzel wirklich zu messen · die 33 fehlenden
 Tastenkürzel · Markdown-Tabellen beim Einfügen (`| a | b |`) ·
 verschachtelte Zitate.
 
