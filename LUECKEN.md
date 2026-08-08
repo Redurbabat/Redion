@@ -33,7 +33,7 @@ L15  bedingte Formatierung im Tabellenblock (E53)
 L33  Web Push (E54) — mit Server klingelt es auch bei geschlossener App;
      der Stoss trägt dabei keinen Erinnerungstext
 L10  aus dem Nocturne-Entwurf: Marken statt Auswahlfelder, gleitende
-     Reiterpille, 56-px-Leiste (E48–E50)
+     Reiterpille, 56-px-Leiste, Willkommensbildschirm (E48–E50, E55)
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -289,11 +289,11 @@ Berührungsrückmeldung · das Blatt „Neu erstellen" · das KI-Fenster als
 Blatt von unten · der Speicherbalken im R-Blatt · „Zuletzt gesucht" und
 ein Leer, das etwas sagt · die Ladeskelette · die versetzt einblendenden
 Listenzeilen · die Suchfilter als Marken · die gleitende Reiterpille · die
-56-px-Leiste oben, deren Höhe jetzt an einer Stelle steht.
+56-px-Leiste oben, deren Höhe jetzt an einer Stelle steht · der
+Willkommensbildschirm (§11, E55).
 
 **Aus dem Entwurf fehlt noch:** die Zustandswechsel der Sicherungskarte
-(Kreisel → Haken) · der Willkommensbildschirm (§11) · die Einstellungen als
-Karten (§12).
+(Kreisel → Haken) · die Einstellungen als Karten (§12).
 
 **Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
 Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste

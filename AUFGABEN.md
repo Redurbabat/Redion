@@ -704,14 +704,15 @@ Redurs Entwurf für die Telefon-App, dazu zwei Lücken, die beim Bauen
 obenauf lagen. Die Entscheidungen stehen einzeln in `ENTSCHEIDUNGEN.md`
 E42–E53; hier nur, was daraus wurde.
 
-**Aus dem Entwurf gebaut** (E42–E50): der Reiter „Mehr" und der Bereich
+**Aus dem Entwurf gebaut** (E42–E50, E55): der Reiter „Mehr" und der Bereich
 dahinter · der Kompass als Seite darin · eine eigene Farbwelt mit
 nachgerechneten Kontrasten statt Notions Palette · drei Bewegungsdauern und
 drei Kurven, keine Federn · Berührungsrückmeldung · das Blatt „Neu
 erstellen" hinter dem Stift · das KI-Fenster als Blatt von unten ·
 Ladeskelette statt Kreisel · versetzt einblendende Listenzeilen · die
 Suchfilter als Marken · die gleitende Reiterpille · eine 56-px-Leiste
-oben, deren Höhe nur noch an einer Stelle steht.
+oben, deren Höhe nur noch an einer Stelle steht · und der
+Willkommensbildschirm, der als Erstes sagt, wohin die Daten gehören.
 
 **Zwei Lücken dazu:**
 
@@ -732,11 +733,11 @@ wichtigste ist: **ohne Aufsicht nur lesen**.
 `L15` **Bedingte Formatierung** (E53) im Tabellenblock: zehn Arten,
 Farbverlauf und Balken. Offen bleiben Symbolregeln und „überfällig".
 
-**Was aus dem Entwurf noch fehlt:** der Willkommensbildschirm (§11) · die
-Einstellungen als Karten (§12) · die Zustandswechsel der Sicherungskarte.
+**Was aus dem Entwurf noch fehlt:** die Einstellungen als Karten (§12) ·
+die Zustandswechsel der Sicherungskarte.
 
-**Tests** — `test114` (109) · `test126` (22) · `test127` (20) ·
-`test128` (46) · `test129` (26) · `test130` (48).
+**Tests** — `test114` (119) · `test126` (22) · `test127` (20) ·
+`test128` (46) · `test129` (26) · `test130` (48) · `test131` (44).
 
 **Priorität** — hoch, solange das Telefon der Normalfall ist.
 

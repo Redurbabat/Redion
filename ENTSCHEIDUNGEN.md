@@ -2950,3 +2950,98 @@ annimmt, und die Meldung dazu wäre „401 unauthorized".
 
 Gegenprobe: einen Erinnerungstext in den Stoss gelegt und das Leeren der
 Zeit entfernt → 4 rot, darunter beide Punkte aus Abschnitt 5.
+
+---
+
+## E55 · Der Willkommensbildschirm — und die Frage, die niemand beantwortet hat
+
+**Aus der Vorgabe §11.**
+
+**Was vorher dastand**, war nicht falsch, sondern zu klein: eine Einladung
+unten links, „Neu hier? — Neun Schritte durch das Wichtigste". Der Gedanke
+dahinter stimmt und steht weiter im Code — ein Fenster, das den Bildschirm
+nimmt, bevor man etwas getan hat, ist zudringlich.
+
+**Aber sie beantwortete die eine Frage nicht, die der allererste Blick
+stellt: was ist das hier, und wohin gehören meine Daten?**
+
+Redion ist local-first. Das ist keine Kleinigkeit am Rand, sondern der
+Grund, warum es die App gibt — und ausgerechnet das erfuhr niemand, bevor
+er anfing. Es stand in der README, die kein Mensch öffnet.
+
+```txt
+Notizen, Seiten und Datenbanken — auf deinem Gerät.
+Kein Konto, kein Abo, keine Wolke, solange du keine willst.
+```
+
+**Drei Wege, und der zweite ist der, den man vergisst.** Wer gerade das
+Gerät gewechselt hat, will nicht anfangen, sondern **zurückholen**. Ein
+Willkommen, das nur „Loslegen" anbietet, schickt ihn in einen leeren
+Arbeitsbereich und lässt ihn die Sicherung in den Einstellungen suchen —
+dieselbe Überlegung wie beim leeren Zustand (§13).
+
+**Untereinander, nicht nebeneinander.** Die drei sind nicht gleichwertig,
+und drei Knöpfe in einer Reihe behaupten das Gegenteil.
+
+**Am Telefon ein Blatt von unten**, am Rechner ein Kasten in der Mitte —
+dieselbe Aufteilung wie bei allen anderen Fenstern (E43). Escape ist
+„später": nichts davon ist Pflicht. Gezeigt ist gesehen.
+
+**Was das Bild zeigte und der Quelltext nicht:** der erste Weg trug
+`--b-blue` als Fläche — eine blau getönte Karte unter einem orangen
+Rahmen. `--b-blue` heisst blau, weil es blau ist; es war nie die
+Akzentfarbe, sondern eine der zehn Blockfarben, die der Mensch für seine
+eigenen Blöcke wählt.
+
+**Und der teure Teil: es stand elf Prüfläufen im Weg.**
+
+Der volle Lauf danach meldete zwölf gescheiterte Läufe, alle aus demselben
+Grund — ein Blatt über dem ganzen Bildschirm, und Playwright wartet
+sechzig Sekunden darauf, dass ein Knopf darunter anklickbar wird. Die
+Meldungen zeigten dabei auf ganz andere Ecken („die Leiste ist nicht
+anklickbar", „der Klick nach dem Loslassen hat das Menü geschlossen").
+
+Die Läufe markieren sich jetzt im Aufbau als Wiederkehrer. Und im Code
+steht eine Zeile, die den halben Ärger gar nicht erst entstehen lässt:
+`willkommen()` sieht **kurz vor dem Erscheinen** noch einmal nach, ob die
+Begrüssung inzwischen als gesehen gilt. Zwischen dem Beschluss „nach 1,4
+Sekunden" und dem Erscheinen liegt eine Ewigkeit — in einem zweiten Tab
+kann sie längst gelaufen sein.
+
+**Status**
+
+`test114` §18, 10 Punkte. `test115` misst weiterhin die eigentliche Frage
+— kommt sie ein zweites Mal? —, nur meint `gruss` dort jetzt das
+Willkommen.
+
+---
+
+## E56 · Der Prüfstand übersah rote Punkte
+
+**Gefunden am 8. August, und es ist die unangenehmste Sorte Fund.**
+`test31` meldete „33/34 bestanden" mit einem ❌ mittendrin, und der
+Orchestrator sagte „✓ Alle 101 Läufe bestanden".
+
+**Der Grund:** er zählte allein den Rückgabewert. Läufe, die mit
+`process.exit(weg ? 1 : 0)` enden, melden damit richtig — mehrere ältere
+haben das aber nicht. Sie drucken ihre Zeilen, schliessen den Browser und
+enden mit 0, ganz gleich was dastand.
+
+**Ein Prüfstand, der Rotes übersieht, ist schlimmer als keiner:** er
+behauptet, jemand habe hingesehen.
+
+`alle.mts` liest jetzt mit. Ein `❌` oder `✗` **am Zeilenanfang** zählt als
+gescheitert, auch bei Rückgabewert 0 — und sagt dazu, dass dem Lauf der
+`process.exit` fehlt. Nur am Zeilenanfang: ein ✗ mitten im Text ist eine
+Erklärung („vorher stand hier ✗"), kein Ergebnis. Die Ausgabe läuft weiter
+durch, Zeile für Zeile; `stdio: 'inherit'` ginge dafür nicht mehr.
+
+**Und der Punkt, den er übersah, war ein echter.** Seit E42 öffnet der
+Kreis links oben nicht mehr die Schublade, sondern das R-Blatt über den
+ganzen Bildschirm. Die Prüfung fragte noch nach `side-offen` — sie stand
+über Wochen auf Rot, und niemand hat es gesehen.
+
+**Status**
+
+Gegenprobe: einen roten Punkt erzwungen, Rückgabewert 0 gelassen → der
+Orchestrator meldet ihn samt Zahl und Grund.
