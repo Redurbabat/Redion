@@ -41,3 +41,15 @@ body { margin: 0; font: 15px/1.5 system-ui, sans-serif; }
 .shell-ueber { margin-left: auto; min-width: 44px; min-height: 44px;
                border: none; background: transparent; font-size: 17px;
                cursor: pointer; border-radius: 8px; }
+
+/* Datenbankansicht (RM-6, nur lesend) */
+.dbv { margin: 10px 0; }
+.dbv-name { font-weight: 600; margin: 4px 0 6px; }
+.dbv-zahl { font-weight: 400; opacity: .65; }
+.dbv-rollbox { overflow-x: auto; border: 1px solid rgba(128,128,128,.3);
+               border-radius: 8px; }
+.dbv-tabelle { border-collapse: collapse; width: 100%; font-size: 14px; }
+.dbv-tabelle th, .dbv-tabelle td { text-align: left; padding: 8px 10px;
+  border-bottom: 1px solid rgba(128,128,128,.2); white-space: nowrap; }
+.dbv-tabelle th { position: sticky; top: 0; background: Canvas; }
+.dbv-gerechnet { opacity: .55; font-style: italic; }

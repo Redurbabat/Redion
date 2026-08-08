@@ -64,7 +64,9 @@ RM-5   Shell, Navigation, Sheet     ← begonnen: Hash-Router (20 Zeilen
        statt einer Routing-Dependency), Seitenansicht nur lesend mit
        ehrlicher Fremdblock-Anzeige, Sheet als <dialog> mit Escape und
        Fokus-Rückkehr — test151
-RM-6   Bereich für Bereich auf React
+RM-6   Bereich für Bereich auf React ← begonnen: Datenbank-Tabelle nur
+       lesend in der Seitenansicht; Formelspalten sagen ehrlich
+       „(rechnet der Bestand)" statt eine falsche Zahl zu zeigen
 RM-7   Editor auf ProseMirror
 RM-8   Dateien auf OPFS + SHA-256
 RM-9   Outbox/Sync formalisieren

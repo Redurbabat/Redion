@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { BlockSchema, type Block } from '../../domain/schema';
 import { readAll } from '../../persistence/legacyStore';
 import { navigate } from '../../app/router';
+import { DatabaseView } from '../databases/DatabaseView';
 
 type Stand =
   | { art: 'laedt' }
@@ -54,6 +55,13 @@ function BlockZeile({ block, karte, tiefe }:
                  checked={!!(block as Record<string, unknown>)['checked']} /> {block.text}
         </p>);
       case 'divider': return <hr />;
+      case 'database': {
+        const collId = (block as Record<string, unknown>)['collectionId'];
+        return typeof collId === 'string'
+          ? <DatabaseView collectionId={collId} />
+          : <p className="pv-unbekannt">Ein Datenbankblock ohne Sammlung —
+              das ist ein Befund, kein Inhalt.</p>;
+      }
       case 'page': return (
         <p className="pv-unterseite">
           <a href={'#/seite/' + block.id}>{block.icon || '📄'} {block.text || 'Ohne Titel'}</a>

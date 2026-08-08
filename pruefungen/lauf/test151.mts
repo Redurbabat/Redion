@@ -118,6 +118,45 @@ p('Die unbekannte Blockart wird gezeigt, mit Namen',
   /gibtsnicht-9000/.test((dar as any).text) && /Fremder Block/.test((dar as any).text));
 p('Die Unterseite ist ein Link', (dar as any).unterLink === true);
 
+console.log('\n3b · Eine Datenbank in der Seite: Tabelle, nur lesend (RM-6)');
+
+/* Schreiben kann nur der Bestand — also zurück zu index.html dafür. */
+await seite.goto(`http://localhost:${PORT}/index.html`);
+await seite.waitForTimeout(2200);
+const dbIds = await seite.evaluate(async () => {
+  const gefunden = Object.values<any>(Store.cache.blocks)
+    .find(b => b.type === 'page' && b.text === 'Navigationsseite');
+  const db = Store.addDatabase(gefunden.id, 'Fahrten', {
+    title: { name: 'Titel', type: 'title' },
+    km:    { name: 'Kilometer', type: 'number' },
+    magie: { name: 'Magie', type: 'formula', formel: 'km * 2' }
+  }, 'table');
+  const z = Store.addRow(db.collectionId, { km: 12 });
+  Store.updateBlock(z.id, { text: 'Nach Norden' });
+  await Store.flush();
+  return { seite: gefunden.id };
+});
+await seite.goto(`http://localhost:${PORT}/app.html#/seite/${(dbIds as any).seite}`);
+await seite.waitForTimeout(1600);
+const tabelle = await seite.evaluate(() => {
+  const koepfe = [...document.querySelectorAll('.dbv-tabelle th')].map(x => x.textContent);
+  const zellen = [...document.querySelectorAll('.dbv-tabelle td')].map(x => x.textContent);
+  return { koepfe, zellen, name: document.querySelector('.dbv-name')?.textContent || '' };
+});
+p('Die Tabelle steht mit den Spalten des Schemas',
+  JSON.stringify((tabelle as any).koepfe) === '["Titel","Kilometer","Magie"]',
+  JSON.stringify((tabelle as any).koepfe));
+p('Die Zeile zeigt ihre Rohwerte',
+  ((tabelle as any).zellen ?? []).includes('Nach Norden') &&
+  ((tabelle as any).zellen ?? []).includes('12'),
+  JSON.stringify((tabelle as any).zellen));
+p('Die Formelspalte LÜGT nicht — sie sagt, dass der Bestand rechnet',
+  ((tabelle as any).zellen ?? []).some((z: any) => /rechnet der Bestand/.test(String(z))),
+  JSON.stringify((tabelle as any).zellen));
+p('Der Datenbankname samt Zeilenzahl steht darüber',
+  /Fahrten/.test((tabelle as any).name) && /1 Zeile/.test((tabelle as any).name),
+  (tabelle as any).name);
+
 console.log('\n4 · Das Sheet: Escape schliesst, der Fokus kehrt zurück');
 
 await seite.goto(`http://localhost:${PORT}/app.html`);
