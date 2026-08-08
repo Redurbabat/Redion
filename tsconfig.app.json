@@ -23,6 +23,7 @@
     "src/ui/**/*",
     "src/features/**/*",
     "src/files/**/*",
+    "src/sync/**/*",
     "tests/**/*",
     "vite.config.ts",
     "vitest.config.ts"

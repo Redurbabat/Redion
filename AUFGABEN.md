@@ -71,7 +71,11 @@ RM-7   Editor auf ProseMirror
 RM-8   OPFS + SHA-256              ← begonnen: Inhaltsadressen
        (redion-merkle-v1, stückweise gerechnet), BlobStore mit OPFS und
        IndexedDB-Rückfall, Dedup als Folge der Adressierung — test153
-RM-9   Outbox/Sync formalisieren
+RM-9   Outbox/Sync                 ← begonnen: das Operationen-Tagebuch
+       (Operation Log nach dem Text-Modell) — Konflikte bleiben liegen,
+       bis sie GELÖST werden; ack lügt nie über Konflikte; prune räumt
+       nur Bestätigtes. 5 Vitest-Punkte. Der Abgleich des Bestands
+       bleibt unangetastet, bis die neue Schicht schreibt
 RM-10  quell/ entfernen — nur nach vollständigem Parity-Test
 ```
 
