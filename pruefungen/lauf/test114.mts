@@ -90,6 +90,18 @@ const seite = await browser.newPage({
 await seite.goto(`http://localhost:${PORT}/index.html`);
 await seite.waitForTimeout(2200);
 
+/* DAS WILLKOMMEN WEGRÄUMEN — hier misst kein Erstbesucher.
+   Seit §11 (E55) legt sich beim allerersten Öffnen ein Blatt über den
+   ganzen Bildschirm. Das ist dort richtig und hier im Weg: es deckte in
+   drei Abschnitten das ab, was gemessen werden sollte, und die Meldungen
+   dazu („der Klick nach dem Loslassen hat das Menü geschlossen") zeigten
+   auf ganz andere Ecken. Abschnitt 18 ruft es später ausdrücklich auf. */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.getElementById('rg-willkommen')?.remove();
+  document.getElementById('rg-einladung')?.remove();
+});
+
 /* Eine Seite mit Inhalt, damit auch die Werkzeuge über dem Titel dastehen. */
 await seite.evaluate(() => {
   const s = Store.addBlock(null, 'page', { text: 'Fingerprobe' });
@@ -1035,6 +1047,72 @@ p('Wo kein Reiter zuständig ist, ist auch keine Pille',
   'Deckkraft ' + ohne.deck + ', markiert ' + ohne.markiert);
 
 await spurSeite.close();
+
+console.log('\n18 · Der Willkommensbildschirm (Vorgabe §11)');
+
+/* WAS VORHER DASTAND, und warum es zu wenig war: eine kleine Einladung
+   unten, „Neu hier? — Führung". Der Gedanke war richtig, aber sie
+   beantwortete die eine Frage nicht, die der allererste Blick stellt:
+   was ist das hier, und wohin gehören meine Daten?
+
+   Redion ist local-first. Das ist der Grund, warum es die App gibt — und
+   ausgerechnet das erfuhr niemand, bevor er anfing. Es stand in der
+   README, die kein Mensch öffnet. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt, ' +
+    '#rg-einladung, #rg-willkommen').forEach(x => x.remove());
+  Rundgang.willkommen();
+});
+await seite.waitForTimeout(700);
+
+const wk = await seite.evaluate(() => {
+  const d = document.getElementById('rg-willkommen');
+  const k = d?.querySelector<HTMLElement>('.wk-kasten');
+  const wege = [...(d?.querySelectorAll<HTMLElement>('.wk-weg') || [])];
+  const r = k?.getBoundingClientRect();
+  return {
+    da: !!d,
+    rolle: d?.getAttribute('role'), modal: d?.getAttribute('aria-modal'),
+    text: (d?.textContent || '').replace(/\s+/g, ' '),
+    wege: wege.map(w => ({ a: w.dataset['a'],
+                           h: Math.round(w.getBoundingClientRect().height) })),
+    fokus: (document.activeElement as HTMLElement | null)?.dataset?.['a'] || '',
+    /* Am Telefon ein Blatt von unten: es sitzt bündig unten und über die
+       ganze Breite. */
+    untenBuendig: r ? Math.round(innerHeight - r.bottom) <= 1 : false,
+    volleBreite: r ? Math.round(r.width) === innerWidth : false,
+    gesehen: !!Store.getMeta('rundgangGesehen', false)
+  };
+});
+p('Beim ersten Öffnen steht ein Willkommen da', wk.da === true);
+p('… und es ist ein Dialog', wk.rolle === 'dialog' && wk.modal === 'true',
+  wk.rolle + '/' + wk.modal);
+/* DER SATZ, UM DEN ES GEHT. Ohne ihn ist es ein hübscher Kasten. */
+p('… der sagt, wo die Daten liegen',
+  /auf deinem Gerät/.test(wk.text) && /Kein Konto/.test(wk.text),
+  wk.text.slice(0, 100));
+p('… und drei Wege anbietet', wk.wege.length === 3,
+  JSON.stringify(wk.wege.map(w => w.a)));
+/* DER ZWEITE IST DER, DEN MAN VERGISST. Wer gerade das Gerät gewechselt
+   hat, will nicht anfangen, sondern zurückholen. */
+p('… darunter das Einlesen einer Sicherung',
+  wk.wege.some(w => w.a === 'import'),
+  JSON.stringify(wk.wege.map(w => w.a)));
+p('… alle drei mit dem Finger zu treffen',
+  wk.wege.every(w => w.h >= 60), JSON.stringify(wk.wege.map(w => w.h)));
+p('Der Fokus steht auf dem ersten Weg', wk.fokus === 'los', wk.fokus);
+p('Am Telefon kommt es als Blatt von unten',
+  wk.untenBuendig && wk.volleBreite,
+  `unten bündig ${wk.untenBuendig}, volle Breite ${wk.volleBreite}`);
+/* GEZEIGT IST GESEHEN. Eine Begrüssung, die bei jedem Öffnen kommt, ist
+   eine Ermahnung. */
+p('Gezeigt ist gesehen — es kommt nicht wieder', wk.gesehen === true);
+
+/* Escape ist „später": nichts davon ist Pflicht. */
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(300);
+p('Escape schliesst es', await seite.evaluate(() =>
+  !document.getElementById('rg-willkommen')));
 
 await browser.close();
 server.close();

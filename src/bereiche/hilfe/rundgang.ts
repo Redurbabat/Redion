@@ -343,6 +343,102 @@ const Rundgang = (() => {
    * und sieht sie nie wieder. Ein Fenster, das den Bildschirm nimmt, bevor
    * man überhaupt etwas getan hat, ist zudringlich.
    */
+  /* ==========================================================================
+   * DER WILLKOMMENSBILDSCHIRM (Vorgabe §11, E55)
+   * --------------------------------------------------------------------------
+   * WAS VORHER DASTAND, und warum es zu wenig war: eine kleine Einladung
+   * unten, „Neu hier? — Führung". Der Gedanke dahinter war richtig — ein
+   * Fenster, das den Bildschirm nimmt, bevor man etwas getan hat, ist
+   * zudringlich. Aber sie beantwortete die eine Frage nicht, die der
+   * allererste Blick stellt: **was ist das hier, und wohin gehören meine
+   * Daten?**
+   *
+   * Redion ist local-first. Das ist keine Kleinigkeit am Rand, sondern der
+   * Grund, warum es die App gibt — und ausgerechnet das erfuhr niemand,
+   * bevor er anfing. Es stand in der README, die kein Mensch öffnet.
+   *
+   * DREI WEGE, UND DER ZWEITE IST DER, DEN MAN VERGISST. Wer gerade das
+   * Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. Ein
+   * Willkommen, das nur „Loslegen" anbietet, schickt ihn in einen leeren
+   * Arbeitsbereich und lässt ihn die Sicherung in den Einstellungen suchen.
+   *
+   * EINMAL. Gezeigt ist gesehen — dieselbe Regel wie bei der Einladung, und
+   * aus demselben Grund: eine Begrüssung, die bei jedem Öffnen kommt, ist
+   * eine Ermahnung.
+   * ========================================================================*/
+  const willkommen = (): void => {
+    if (document.getElementById('rg-willkommen')) return;
+    const d = document.createElement('div');
+    d.id = 'rg-willkommen';
+    d.setAttribute('role', 'dialog');
+    d.setAttribute('aria-modal', 'true');
+    d.setAttribute('aria-label', 'Willkommen bei Redion');
+    d.innerHTML =
+      '<div class="wk-kasten">' +
+        '<div class="wk-kopf">' +
+          '<div class="wk-zeichen" aria-hidden="true">R</div>' +
+          '<h2>Willkommen bei Redion</h2>' +
+          '<p>Notizen, Seiten und Datenbanken — <b>auf deinem Gerät</b>. ' +
+          'Kein Konto, kein Abo, keine Wolke, solange du keine willst.</p>' +
+        '</div>' +
+        '<div class="wk-wege">' +
+          '<button data-a="los" class="wk-weg prim">' +
+            '<span class="wk-ico" aria-hidden="true">✎</span>' +
+            '<span class="wk-t"><b>Loslegen</b>' +
+            '<i>Ein paar Beispielseiten stehen schon bereit.</i></span></button>' +
+          '<button data-a="import" class="wk-weg">' +
+            '<span class="wk-ico" aria-hidden="true">⭱</span>' +
+            '<span class="wk-t"><b>Sicherung einlesen</b>' +
+            '<i>Vom alten Gerät — .redion oder .json.</i></span></button>' +
+          '<button data-a="fuehrung" class="wk-weg">' +
+            '<span class="wk-ico" aria-hidden="true">🧭</span>' +
+            '<span class="wk-t"><b>Kurze Führung</b>' +
+            '<i>Neun Schritte durch das Wichtigste — zwei Minuten.</i></span></button>' +
+        '</div>' +
+        '<p class="wk-fuss">Deine Daten liegen im Speicher dieses Browsers. ' +
+        'Sichere sie ab und zu — unter „Mehr" steht, wie.</p>' +
+      '</div>';
+
+    d.addEventListener('click', e => {
+      const b = elVon(e)?.closest<HTMLElement>('[data-a]');
+      if (!b) return;
+      const was = b.dataset['a'];
+      d.remove();
+      /* Erst schliessen, dann handeln: ein Dialog unter dem Willkommen wäre
+         von aussen nicht erreichbar — derselbe Grund wie im R-Blatt. */
+      setTimeout(() => {
+        if (was === 'import') {
+          /* Denselben Weg nehmen wie der Knopf in der Seitenleiste — nicht
+             einen zweiten bauen. Sonst gibt es zwei Importe, von denen
+             einer irgendwann stehenbleibt. */
+          const knopf = document.getElementById('btn-import');
+          if (knopf) knopf.click();
+          else UI.toast('Der Import steht unter „Mehr → Importieren".');
+          return;
+        }
+        if (was === 'fuehrung') start();
+      }, 40);
+    });
+    document.body.appendChild(d);
+
+    /* Der Fokus gehört in den Dialog — sonst tabbt man durch die Seite
+       dahinter, die man ohnehin noch nicht kennt (E51). */
+    setTimeout(() => d.querySelector<HTMLElement>('[data-a="los"]')?.focus(), 30);
+
+    /* Escape ist „später": nichts davon ist Pflicht. */
+    const beiTaste = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      d.remove();
+      document.removeEventListener('keydown', beiTaste);
+    };
+    document.addEventListener('keydown', beiTaste);
+
+    /* GEZEIGT IST GESEHEN. Dieselbe Regel wie bei der Einladung darunter. */
+    Store.setMeta('rundgangGesehen', true);
+    if (!Number(Store.getMeta('neuerungenGesehen', 0)))
+      Store.setMeta('neuerungenGesehen', neuestes());
+  };
+
   const einladung = () => {
     if (document.getElementById('rg-einladung')) return;
     const d = document.createElement('div');
@@ -422,11 +518,16 @@ const Rundgang = (() => {
     const seiten = Object.values<any>(Store.cache.blocks)
       .filter(b => b.alive !== false && b.type === 'page').length;
     if (seiten > 24) { Store.setMeta('rundgangGesehen', true); return; }
-    setTimeout(einladung, 2000);
+    /* DER WILLKOMMENSBILDSCHIRM STATT DER KLEINEN EINLADUNG (§11, E55).
+       Die Einladung bleibt als Baustein stehen — sie ist die richtige Form
+       für „später nochmal", etwa nach einem Import. Beim allerersten
+       Öffnen zählt aber die Frage, die sie nicht beantwortete: was ist das
+       hier, und wohin gehören meine Daten? */
+    setTimeout(willkommen, 1400);
   };
 
-  return { start, uebersicht, vielleichtStarten, einladung, neuerungen, fertig,
-           SCHRITTE, THEMEN, NEUERUNGEN };
+  return { start, uebersicht, vielleichtStarten, willkommen, einladung,
+           neuerungen, fertig, SCHRITTE, THEMEN, NEUERUNGEN };
 })();
 
 (window as any).Rundgang = Rundgang;

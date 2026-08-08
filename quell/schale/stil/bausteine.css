@@ -2180,6 +2180,85 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 @media(max-width:760px){ #rg-einladung{left:8px; right:8px; bottom:74px; max-width:none} }
 
 /* --------------------------------------------------------------------------
+ * DER WILLKOMMENSBILDSCHIRM (Vorgabe §11, E55)
+ * --------------------------------------------------------------------------
+ * Er nimmt den ganzen Bildschirm, und das ist genau einmal richtig: beim
+ * allerersten Öffnen, wenn dahinter ohnehin nichts steht, das man kennen
+ * würde. Danach nie wieder.
+ *
+ * AM TELEFON EIN BLATT VON UNTEN, am Rechner ein Kasten in der Mitte —
+ * dieselbe Aufteilung wie bei allen anderen Fenstern (E43). Die drei Wege
+ * sind untereinander, nicht nebeneinander: sie sind nicht gleichwertig,
+ * und drei Knöpfe in einer Reihe behaupten das Gegenteil.
+ * ------------------------------------------------------------------------*/
+#rg-willkommen{
+  position:fixed; inset:0; z-index:960;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,var(--sheet-dim, .5));
+  backdrop-filter:blur(3px);
+  animation:wk-auf var(--motion-normal, .22s) var(--ease-enter, ease-out);
+}
+@keyframes wk-auf{ from{ opacity:0 } to{ opacity:1 } }
+.wk-kasten{
+  width:min(460px, 94vw); max-height:90vh; overflow-y:auto;
+  background:var(--bg-side); border:1px solid var(--line);
+  border-radius:16px; box-shadow:var(--shadow); padding:28px 26px 22px;
+}
+.wk-kopf{ text-align:center; margin-bottom:22px }
+.wk-zeichen{
+  width:56px; height:56px; margin:0 auto 14px; border-radius:16px;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:700;
+}
+.wk-kopf h2{ font-size:22px; font-weight:600; margin-bottom:8px }
+.wk-kopf p{ font-size:14px; color:var(--text-dim); line-height:1.6 }
+.wk-kopf p b{ color:var(--text); font-weight:600 }
+
+.wk-wege{ display:flex; flex-direction:column; gap:9px }
+.wk-weg{
+  display:flex; align-items:center; gap:13px; text-align:left; width:100%;
+  min-height:60px; padding:12px 15px;
+  border:1px solid var(--line); border-radius:12px;
+  background:transparent; color:var(--text);
+  transition:background var(--motion-fast, .12s) var(--ease-standard, ease);
+}
+.wk-weg:hover{ background:var(--bg-hover) }
+.wk-weg:active{ transform:scale(var(--card-press-scale, .985)) }
+/* Eine Tönung DER AKZENTFARBE, nicht `--b-blue`. Das war der erste Wurf,
+   und auf dem Bild sah man sofort, warum er falsch ist: eine blau getönte
+   Karte unter einem orangen Rahmen. `--b-blue` heisst blau, weil es blau
+   ist — es war nie die Farbe des Akzents, sondern eine der zehn
+   Blockfarben, die der Mensch für seine eigenen Blöcke wählt. */
+.wk-weg.prim{
+  border-color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.wk-ico{ font-size:20px; flex:0 0 26px; text-align:center }
+.wk-t{ display:flex; flex-direction:column; gap:2px; min-width:0 }
+.wk-t b{ font-size:15px; font-weight:600 }
+.wk-t i{ font-style:normal; font-size:12.5px; color:var(--text-faint); line-height:1.45 }
+.wk-fuss{
+  margin-top:18px; font-size:12px; color:var(--text-faint);
+  line-height:1.55; text-align:center;
+}
+
+@media(max-width:760px){
+  /* Von unten, wie jedes andere Blatt am Telefon. Und mit Luft für die
+     Kerbe: ein „Loslegen", das unter dem Balken des Geräts liegt, ist
+     kein Knopf. */
+  #rg-willkommen{ align-items:flex-end }
+  .wk-kasten{
+    width:100%; max-width:none; border-radius:20px 20px 0 0;
+    border-left:0; border-right:0; border-bottom:0;
+    padding:24px 20px calc(20px + env(safe-area-inset-bottom));
+    max-height:92vh;
+    animation:blatt-hoch var(--motion-slow, .32s) var(--ease-enter, ease-out);
+  }
+  .wk-weg{ min-height:66px }
+}
+
+/* --------------------------------------------------------------------------
  * WAS SEITHER DAZUGEKOMMEN IST
  * --------------------------------------------------------------------------
  * Dieselbe Ecke, dieselbe Machart wie die Begrüssung — nur höher, weil hier
