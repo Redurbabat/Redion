@@ -51,9 +51,7 @@ const p = (n: string, b: boolean, extra: string = ''): void => {
 /* --------------------------------------------------------------------------
  * Alles einsammeln
  * ------------------------------------------------------------------------*/
-/* `dist-neu` ist Vite-Bauausgabe der neuen Schicht (E78) — erzeugtes
-   JavaScript wie node_modules, nicht versioniert, zählt nicht als Bestand. */
-const UEBERGANGEN = ['.git', 'node_modules', '.wrangler', 'dist-neu'];
+const UEBERGANGEN = ['.git', 'node_modules', '.wrangler'];
 
 const alleDateien = (ordner: string, gesammelt: string[] = []): string[] => {
   for (const eintrag of liesOrdner(ordner)) {
@@ -290,16 +288,13 @@ p('@types/node steht bei den Entwicklungsabhängigkeiten',
    Zielarchitektur. Der Punkt bleibt ein Wächter, nur die Regel ist neu:
    jede WEITERE Laufzeit-Abhängigkeit braucht ihren eigenen E-Eintrag,
    und bis dahin ist sie hier rot. */
-/* Die prosemirror-Pakete kamen mit RM-7 — ProseMirror steht namentlich
-   im beschlossenen Stack (E78). Sieben Pakete, EIN Beschluss. */
-const ERLAUBT = ['react', 'react-dom', 'dexie', 'zod',
-  'prosemirror-model', 'prosemirror-state', 'prosemirror-view',
-  'prosemirror-schema-basic', 'prosemirror-keymap', 'prosemirror-history',
-  'prosemirror-commands'];
+/* Seit E80 gilt wieder der alte Satz: KEINE Laufzeit-Abhängigkeiten.
+   Zwischen E78 und E80 stand hier eine Allowlist (react, dexie, zod,
+   prosemirror …) — Redur hat den React-Umbau nach Ansicht des Rohbaus
+   widerrufen, und mit ihm gingen alle elf Pakete wieder. */
 const echte = Object.keys(JSON.parse(paketRoh).dependencies || {});
-p('… und bei den echten steht nur, was E78 beschlossen hat',
-  echte.every(d => ERLAUBT.includes(d)) && echte.length <= ERLAUBT.length,
-  'gefunden: ' + echte.join(', '));
+p('… und echte Laufzeit-Abhängigkeiten gibt es KEINE (E80)',
+  echte.length === 0, 'gefunden: ' + echte.join(', '));
 
 console.log(`\n  Suite 73 — Keine neue JavaScript-Datei: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

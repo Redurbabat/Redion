@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 126 Prüfläufe**
+**9. August 2026 · 121 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -45,42 +45,9 @@ lokale KI mit Grenzen für Agenten (E52) · Versionen · Papierkorb ·
 grosse Dateien stückweise · `.ods` lesen und schreiben · als App
 installierbar, mit Erinnerungen, die auch ankommen (E40/E41).
 
-**Seit dem 8. August: die React-Migration (E78)**
-
-Redur hat die Zielarchitektur entschieden — React 19, Vite 8, Dexie, Zod,
-später ProseMirror und OPFS. Als Strangler in Phasen, nie als Big-Bang;
-der Bestand bleibt bis RM-10 vollständig lauffähig. Regeln: CLAUDE.md §56.
-
-```txt
-RM-0   Regressionsnetz             ✅ die 118 Prüfläufe
-RM-1   Vite + ESM + Struktur       ← begonnen 8. August
-RM-2   Typen, Zod-Schemas, IDs     ← begonnen (src/domain)
-RM-3   Dexie neben dem Bestand     ← begonnen (redion-neu, nie notizen)
-RM-4   Datenmigration mit Vergleich    ✅ 8. August — migration.ts:
-       kopieren, dann Satz für Satz und Byte für Byte nachrechnen;
-       test150 an echten Daten, Gegenproben im Lauf (Byte gekippt,
-       Satz verfälscht, erfundener Satz — alles wird rot)
-RM-5   Shell, Navigation, Sheet     ← begonnen: Hash-Router (20 Zeilen
-       statt einer Routing-Dependency), Seitenansicht nur lesend mit
-       ehrlicher Fremdblock-Anzeige, Sheet als <dialog> mit Escape und
-       Fokus-Rückkehr — test151
-RM-6   Bereich für Bereich auf React ← begonnen: Datenbank-Tabelle nur
-       lesend in der Seitenansicht; Formelspalten sagen ehrlich
-       „(rechnet der Bestand)" statt eine falsche Zahl zu zeigen
-RM-7   Editor auf ProseMirror      ← begonnen: TextBlock-Schema (klein,
-       mit Absicht — ProseMirror wird nicht Redions Datenmodell),
-       Werkstatt-Seite an echten Blöcken, Verlauf und Auszeichnungen,
-       speichert ausdrücklich nicht — test154
-RM-8   OPFS + SHA-256              ← begonnen: Inhaltsadressen
-       (redion-merkle-v1, stückweise gerechnet), BlobStore mit OPFS und
-       IndexedDB-Rückfall, Dedup als Folge der Adressierung — test153
-RM-9   Outbox/Sync                 ← begonnen: das Operationen-Tagebuch
-       (Operation Log nach dem Text-Modell) — Konflikte bleiben liegen,
-       bis sie GELÖST werden; ack lügt nie über Konflikte; prune räumt
-       nur Bestätigtes. 5 Vitest-Punkte. Der Abgleich des Bestands
-       bleibt unangetastet, bis die neue Schicht schreibt
-RM-10  quell/ entfernen — nur nach vollständigem Parity-Test
-```
+**Der React-Umbau (E78) ist widerrufen** — Redur hat ihn am 9. August
+nach Ansicht des Rohbaus entfernt (E80). Geblieben sind die Reparaturen
+der echten App: E71–E77, E79, test148/152/155.
 
 **Die drei wichtigsten offenen Punkte**
 

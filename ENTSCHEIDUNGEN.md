@@ -5077,3 +5077,55 @@ Dazu, ausserhalb der Migration: E79 (Einspielen in einer Transaktion).
 Der Weg zu RM-10 ist jetzt reine Parität — Bereich für Bereich in RM-6,
 bis die neue Shell alles kann, was der Bestand kann, und der grosse
 Vergleich sie freigibt.
+
+---
+
+## E80 · Der React-Umbau ist widerrufen — Redur braucht keine zweite Oberfläche
+
+**Datum** 9. August 2026 · **Entschieden von** Redur · **widerruft** E78
+
+**Was geschah.** E78 beschloss am Vorabend die React-Zielarchitektur, und
+binnen eines Tages standen alle zehn RM-Phasen als geprüfter Rohbau: die
+lesende Shell neben index.html, die nachgerechnete Migration, Router,
+Baum, Suche, Papierkorb, Einstellungen, die ProseMirror-Werkstatt, die
+Inhaltsadressen, die Outbox. Redur sah den Rohbau im Bild — und stellte
+die richtige Frage: „Nein, ich brauche keine neue Shell?"
+
+**Die Antwort war seine Entscheidung: Entfernen.** Eine zweite Oberfläche
+löst kein Problem, das Redur hat. Die heutige App ist vollständig, läuft
+offline, per Doppelklick, und ihre Fehlerklassen der Woche lagen in
+Ehrlichkeit der Meldungen und Speicher-Härtung — nichts davon wird durch
+React kleiner. Der Strangler-Weg hätte Monate gekostet, um am Ende
+dasselbe zu können.
+
+**Was entfernt wurde:**
+
+```txt
+src/app · src/domain · src/persistence · src/ui · src/features
+src/files · src/sync · src/editor · tests/ (Vitest)
+app.html · vite.config.ts · vitest.config.ts · tsconfig.app.json
+alle 18 npm-Pakete (react, dexie, zod, prosemirror-*, vite, vitest …)
+test149–151, test153, test154 (die Wächter und Prüfer der Schicht)
+package.json: type wieder commonjs, Skripte wieder die fünf alten
+CLAUDE.md: §6 „Kein Framework-Zwang" gilt unverändert, §56 ist weg
+```
+
+**Was BLEIBT — denn es gehört der echten App, nicht dem Umbau:**
+
+```txt
+E71–E77   ehrliche Lesefehler, Heilen ohne Datenverlust, neun ehrliche
+          Erfolgs-Meldungen, flush/setMeta melden Schreibfehler
+E79       das Einspielen einer Sicherung ist atomar (eine Transaktion)
+test148   die L14-Messung: 144 MB durch den Kreis bei +0,0 MB Heap
+test152   der Atomaritäts-Wächter des Imports
+test155   die Menü-Blätter am Telefon (und der Modul-Umzug der zwei
+          Handmenüs samt test67-Nachzug — das war L10, nicht E78)
+```
+
+**Die Lehre.** Ein Rohbau, der in einem Tag steht und wieder gehen kann,
+ohne dass die App ein Byte verliert, war der billigste Weg, diese
+Entscheidung ECHT zu treffen — am Bild statt am Versprechen. Genau dafür
+war der Strangler-Schnitt da: der Bestand blieb die ganze Zeit die einzige
+Wahrheit, und der Rückbau ist ein `git rm` ohne Migrationsgedanken.
+Wer den Umbau je wieder will, findet ihn vollständig in der Git-Geschichte
+(Commits bis `6c93175`) und den Plan in E78.

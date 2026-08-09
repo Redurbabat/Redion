@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**8. August 2026 · 126 Prüfläufe**
+**9. August 2026 · 121 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -66,14 +66,12 @@ L22  fensterweise Zeichnen rechnete mit 34 px je Zeile (E65) — bei „alle
 **Die Lücken, die jetzt obenauf liegen**
 
 ```txt
-1. Die React-Migration (E78) — RM-4 ist nachgerechnet (test150); als
-   Nächstes RM-5: Shell, Navigation, Modal/Sheet-System in React
-2. Mobile (L10): Willkommensbildschirm (E55) und Einstellungen (E58)
+1. Mobile (L10): Willkommensbildschirm (E55) und Einstellungen (E58)
    SIND gebaut — diese Zeile behauptete tagelang das Gegenteil ihres
    eigenen Abschnitts. Wirklich offen: Bottom Sheets für die übrigen
    Menüs · Touch-Editor-Feinschliff · ein Telefon-Entwurf für den
    Tabellenblock · geprüft ist alles nur im Bildmass, nie am Gerät
-3. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
+2. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
    (L14 ist seit test148 gemessen: 144 MB bei +0,0 MB Heap; offen bleibt
    nur die Zehn-Gigabyte-Frage am echten Gerät)
 
