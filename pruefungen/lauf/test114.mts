@@ -968,31 +968,36 @@ console.log('\n17 · Die Pille unter den Reitern gleitet, statt zu springen');
    EINE EIGENE SEITE MIT MITSCHRIFT. Die interessanteste Frage ist nicht,
    ob die Pille wandert, sondern ob sie es beim START NICHT tut: eine
    Pille, die sich beim Öffnen der App von der linken Kante hereinschiebt,
-   ist eine Bewegung ohne Anlass. Das sieht man nur, wenn man von der
-   ersten Bildwiederholung an mitschreibt. */
+   ist eine Bewegung ohne Anlass.
+
+   NICHT MEHR MIT BILDERN GEMESSEN. Die erste Fassung schrieb per
+   requestAnimationFrame die Orte mit und verlangte „mehr als 10 Bilder,
+   ein Ort". Unter Volllast der ganzen Suite malte der Browser aber nur
+   ZWEI Bilder in 2,6 Sekunden — der Lauf wurde rot, obwohl die Pille
+   stand wie sie soll. Der Prüfstand hungerte, nicht die App. Deshalb
+   jetzt malunabhängig: `transitionstart` feuert auch dann, wenn kein
+   einziges Bild gemalt wird. Rot werden kann der Punkt weiterhin — wer
+   die stumm-Sperre aus `pilleSchieben` nimmt, gleitet beim Start und
+   zählt hoch. */
 const spurSeite = await browser.newPage({
   viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true
 });
 await spurSeite.addInitScript(() => {
-  (globalThis as any).__spur = [] as number[];
-  const tick = () => {
-    const el = document.getElementById('ho-pille');
-    if (el && getComputedStyle(el).opacity !== '0')
-      (globalThis as any).__spur.push(Math.round(el.getBoundingClientRect().left));
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
+  (globalThis as any).__pilleFlog = 0;
+  document.addEventListener('transitionstart', (e) => {
+    const t = e.target as Element | null;
+    if (t && t.id === 'ho-pille' && (e as TransitionEvent).propertyName === 'transform')
+      (globalThis as any).__pilleFlog++;
+  }, true);
 });
 await spurSeite.goto(`http://localhost:${PORT}/index.html`);
 await spurSeite.waitForTimeout(2600);
 
 const spur = await spurSeite.evaluate(() => {
-  const s = (globalThis as any).__spur as number[];
   const an = document.querySelector<HTMLElement>('#handy-oben button.an');
   const pl = document.getElementById('ho-pille');
   return {
-    orte: [...new Set(s)],
-    bilder: s.length,
+    flog: (globalThis as any).__pilleFlog as number,
     aktivX: an ? Math.round(an.getBoundingClientRect().left) : -1,
     aktivB: an ? Math.round(an.getBoundingClientRect().width) : -1,
     aktivGrund: an ? getComputedStyle(an).backgroundColor : '',
@@ -1002,8 +1007,7 @@ const spur = await spurSeite.evaluate(() => {
   };
 });
 p('Beim Start steht die Pille sofort da, statt hereinzugleiten',
-  spur.bilder > 10 && spur.orte.length === 1,
-  spur.orte.length + ' Orte in ' + spur.bilder + ' Bildern: ' + spur.orte.join(' '));
+  spur.flog === 0, 'sie glitt ' + spur.flog + '×');
 p('… und zwar genau auf dem aktiven Reiter',
   spur.pilleX === spur.aktivX && spur.pilleB === spur.aktivB,
   `Pille ${spur.pilleX}/${spur.pilleB}, Reiter ${spur.aktivX}/${spur.aktivB}`);
@@ -1013,22 +1017,39 @@ p('Der aktive Reiter bringt keinen eigenen Hintergrund mehr mit',
   /^rgba\(0, 0, 0, 0\)$|^transparent$/.test(spur.aktivGrund), spur.aktivGrund);
 p('… den bringt die Pille', !/^rgba\(0, 0, 0, 0\)$/.test(spur.pilleGrund), spur.pilleGrund);
 
-/* Und jetzt der Wechsel: unterwegs muss sie WIRKLICH unterwegs sein. */
+/* Und jetzt der Wechsel: unterwegs muss sie WIRKLICH unterwegs sein.
+
+   AUCH HIER OHNE UHR UND OHNE BILDER. Die erste Fassung schlief 90 ms
+   und las dann die Position — unter Volllast war nach 90 ms noch kein
+   Bild gemalt, die Pille stand rechnerisch noch am Start, der Punkt
+   wurde rot. Jetzt fragt der Punkt den Browser selbst: eine laufende
+   CSS-Transition ist ein `getAnimations()`-Eintrag, ganz gleich, ob je
+   ein Bild gemalt wird. Wer der Pille die transition nimmt, bekommt
+   keinen Eintrag — der Punkt kann also weiter rot werden. Die Ankunft
+   wird abgewartet statt abgepasst: der Zeitwert der Transition schreitet
+   auch ohne Malen voran, `getBoundingClientRect` liest ihn jederzeit. */
 const flug = await spurSeite.evaluate(async () => {
-  const ort = () => Math.round(document.getElementById('ho-pille')!.getBoundingClientRect().left);
+  const pl = document.getElementById('ho-pille')!;
+  const ort = () => Math.round(pl.getBoundingClientRect().left);
   const start = ort();
   Seitenleiste.reiterWechseln('bespr');
-  await new Promise(f => setTimeout(f, 90));
-  const mitte = ort();
-  await new Promise(f => setTimeout(f, 600));
-  const ende = ort();
-  const ziel = Math.round(
+  /* Die Transition entsteht mit dem Stilwechsel — kurz darauf ist sie
+     als Animation sichtbar. Bis zu 600 ms darauf warten, dann aufgeben. */
+  let unterwegs = false;
+  for (let i = 0; i < 30 && !unterwegs; i++) {
+    unterwegs = pl.getAnimations().some(a =>
+      a instanceof CSSTransition && a.transitionProperty === 'transform');
+    if (!unterwegs) await new Promise(f => setTimeout(f, 20));
+  }
+  const ziel = () => Math.round(
     document.getElementById('hl-bespr')!.getBoundingClientRect().left);
-  return { start, mitte, ende, ziel };
+  const bis = Date.now() + 5000;
+  while (Date.now() < bis && ort() !== ziel()) await new Promise(f => setTimeout(f, 40));
+  return { start, unterwegs, ende: ort(), ziel: ziel() };
 });
 p('Beim Wechsel ist die Pille unterwegs zwischen den Reitern',
-  flug.mitte > flug.start && flug.mitte < flug.ende,
-  `${flug.start} → ${flug.mitte} → ${flug.ende} (Ziel ${flug.ziel})`);
+  flug.unterwegs && flug.ende !== flug.start,
+  `Transition ${flug.unterwegs ? 'lief' : 'lief NICHT'}, ${flug.start} → ${flug.ende} (Ziel ${flug.ziel})`);
 p('… und kommt genau an', flug.ende === flug.ziel, flug.ende + ' statt ' + flug.ziel);
 
 /* „Kompass" hat oben keinen Reiter (E42). Dann gehört die Pille nirgendwo

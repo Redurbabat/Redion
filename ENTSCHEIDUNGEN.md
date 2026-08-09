@@ -5193,3 +5193,43 @@ Rechner messbar war. Ein toter Selektor, sechs fehlende Pixel und eine
 Tastatur, die es im Prüfstand nicht gibt, sind unsichtbar, bis jemand
 hinsieht — oder bis jemand die fehlende Umgebung nachbaut, statt sie für
 unprüfbar zu erklären.
+
+
+## E82 · Der Prüfstand hungerte, nicht die App — die Pille wird malunabhängig gemessen
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Betrifft:** test114
+
+Im vollen Suitenlauf (122 Läufe) wurde test114 rot — an zwei Punkten der
+gleitenden Reiterpille, die einzeln immer grün waren. Der Blick in die
+Zahlen: der requestAnimationFrame-Mitschreiber bekam **zwei Bilder in 2,6
+Sekunden**. Unter Volllast malt der Browser schlicht nicht; die 90-ms-Probe
+des Flugs traf eine Transition, die rechnerisch lief und optisch noch
+nirgends war. Beide Punkte massen das Malen, nicht die Pille.
+
+**Die Reparatur** stützt beide Punkte auf Signale, die auch ohne ein
+einziges gemaltes Bild feuern:
+
+```txt
+„sofort da"   transitionstart zählt. Eine Pille, die beim Start
+              hereingleitet, startet eine transform-Transition — das
+              Ereignis feuert malunabhängig. Null Ereignisse = steht.
+„unterwegs"   getAnimations() fragt den Browser selbst: eine laufende
+              CSS-Transition ist ein CSSTransition-Eintrag, ob gemalt
+              oder nicht. Die Ankunft wird abgewartet statt abgepasst —
+              der Zeitwert schreitet auch ungemalt voran, und
+              getBoundingClientRect liest ihn jederzeit.
+```
+
+**Die Gegenprobe kippte zuerst den falschen Arm** — wieder (E77, E79).
+Der erste Versuch nahm dem Code beide `pilleGesetzt`-Zweige und erwartete
+Start-Gleiten; stattdessen kippte „unterwegs". Der Grund: `stumm` hat
+ZWEI Quellen — die Klasse steht schon im Markup (`index.html`), der Code
+fügt sie nur wieder hinzu. Beide Zweige weg heisst: die Markup-Sperre
+bleibt für immer, keine Transition läuft je. Erst die Probe am lebenden
+Objekt zeigte es. Die sauberen Arme: nur die Entsperrung weg → „unterwegs"
+rot; Markup-Klasse und Wiederhinzufügen weg → „sie glitt 1×" rot.
+
+**Die Lehre**, dritte Fassung: Wer eine Sicherung kippen will, muss alle
+ihre Quellen kennen — und ein Prüfpunkt, der die Umgebung misst statt das
+Verhalten, wird genau dann rot, wenn es am wenigsten aussagt: unter Last,
+im Paket, nach Mitternacht.
