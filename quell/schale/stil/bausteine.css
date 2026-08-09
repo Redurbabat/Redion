@@ -1377,15 +1377,28 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
     background:var(--bg-side); border-top:1px solid var(--line);
     overflow-x:auto; -webkit-overflow-scrolling:touch;
   }
+  /* 44, nicht 38: die Fingerregel (§37) galt für die Breite und wurde bei
+     der Höhe vergessen — gemessen am 9. August, 44×38. */
   #tastenleiste button{
-    flex:0 0 auto; min-width:44px; height:38px; border-radius:9px;
+    flex:0 0 auto; min-width:44px; height:44px; border-radius:9px;
     background:var(--bg-hover); border:1px solid var(--line);
     color:var(--text); font-size:15px;
   }
   #tastenleiste button:active{ background:var(--accent); color:#fff; }
-  #tastenleiste button[data-t="fertig"]{ margin-left:auto; }
-  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück */
-  body.schreibt #handy-leiste{ display:none; }
+  /* Angepinnt: elf Knöpfe rollen seitlich, aber der Weg zurück (Tastatur
+     schliessen) darf nicht mitrollen — er stand ausserhalb des Bildes.
+     Der Schatten deckt zu, was darunter durchrollt. */
+  #tastenleiste button[data-t="fertig"]{
+    margin-left:auto; position:sticky; right:0;
+    background:var(--bg-side); box-shadow:-6px 0 6px var(--bg-side);
+  }
+  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück.
+     Hier stand `#handy-leiste` — ein Element, das es nicht mehr gibt
+     (siehe den Kommentar bei der Schubladen-Höhe weiter unten). Die
+     echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
+     Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
+     hervor. */
+  body.schreibt #handy-unten{ display:none; }
 }
 
 /* ==========================================================================

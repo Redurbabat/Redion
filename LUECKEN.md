@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 121 Prüfläufe**
+**9. August 2026 · 122 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -61,16 +61,22 @@ L22  fensterweise Zeichnen rechnete mit 34 px je Zeile (E65) — bei „alle
      `alsBlob` hält jetzt Stückzahl gegen Sollzahl
 —    sechs Prüfpunkte konnten nicht rot werden (E75) — `<= 4`, `>= 0`,
      -1 gegen -1, eine erfundene Klasse, ein Literal, eine Endlosschleife
+L10  alle Menüs sind am Telefon Blätter — die letzten zwei Handmenüs
+     laufen übers Menü-Modul (test155)
+L10  die Formatleiste über der Tastatur, mit Augen gemessen (E81) — sie
+     hätte am iPhone HINTER der Tastatur gelegen, die Reiterleiste ragte
+     durch eine tote Regel hindurch, Fertig rollte aus dem Bild; und die
+     Auswahlleiste war 442 px breit bei 390 px Bildschirm
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
 
 ```txt
-1. Mobile (L10): Willkommensbildschirm (E55) und Einstellungen (E58)
-   SIND gebaut — diese Zeile behauptete tagelang das Gegenteil ihres
-   eigenen Abschnitts. Wirklich offen: Bottom Sheets für die übrigen
-   Menüs · Touch-Editor-Feinschliff · ein Telefon-Entwurf für den
-   Tabellenblock · geprüft ist alles nur im Bildmass, nie am Gerät
+1. Mobile (L10): Bottom Sheets (test155) und die Formatleiste über der
+   Tastatur (E81) SIND jetzt da — hier standen sie noch als offen.
+   Wirklich offen: Touch-Editor-Rest (Auswahl, Ziehen) · ein
+   Telefon-Entwurf für den Tabellenblock · geprüft ist alles nur im
+   Bildmass, nie am Gerät
 2. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
    (L14 ist seit test148 gemessen: 144 MB bei +0,0 MB Heap; offen bleibt
    nur die Zehn-Gigabyte-Frage am echten Gerät)
@@ -338,13 +344,22 @@ nichts rollt seitlich. Diese Lücke sagte das Gegenteil. Die rollende
 Tabelle gibt es dort nur, wer sie im Ansichtsmenü ausdrücklich anschaltet
 (`handyTabelle`), und auch die hat jetzt ihre Kante.
 
-**Fehlt ausserdem:** die übrigen Menüs sind noch keine Bottom Sheets · der
-Touch-Editor braucht weiteren Feinschliff (Auswahl, Ziehen, Formatleiste
-über der Tastatur) · der **Tabellenblock** hat am Telefon noch keinen
-eigenen Entwurf — die Fingermasse stimmen seit E64, aber es bleibt dasselbe
+**Was das Hinsehen am 9. August fand** (E81): die Formatleiste über der
+Tastatur gab es längst — aber sie hätte am echten iPhone HINTER der
+Tastatur gelegen (`bottom:0` ohne visualViewport), ihre Versteck-Regel
+zielte auf ein Element, das es nicht mehr gibt (die Reiterleiste ragte
+dahinter hervor), die Knöpfe massen 44×38, und der Fertig-Knopf rollte
+seitlich aus dem Bild. Dazu die schwebende Auswahlleiste: 442 px breit
+bei 390 px Bildschirm, Knöpfe 28×31. Alles repariert; `test156` hält es,
+samt Tastatur-Stummel für die Höhenrechnung. Seit test155 sind auch alle
+Menüs am Telefon Blätter — beides stand hier noch als offen.
+
+**Fehlt ausserdem:** der Touch-Editor braucht Rest-Feinschliff (Auswahl,
+Ziehen) · der **Tabellenblock** hat am Telefon noch keinen eigenen
+Entwurf — die Fingermasse stimmen seit E64, aber es bleibt dasselbe
 Raster wie am Rechner, mit leeren Zeilen auf halbem Bildschirm; ob dort
 eine Zeile als Karte hingehört, wie es die Datenbank längst macht, ist eine
-eigene Frage · Tastaturverhalten · Side Peek auf kleinen
+eigene Frage · Side Peek auf kleinen
 Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen —
 die Masse stehen an einem Dutzend Stellen in `bausteine.css` und wurden
 schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).

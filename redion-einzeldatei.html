@@ -1192,6 +1192,17 @@ a.bl:hover{color:var(--text)}
 .auswahlleiste button:hover{background:var(--bg-hover); color:var(--text)}
 .auswahlleiste .ki{color:var(--accent); font-weight:500}
 .auswahlleiste .tr{width:1px; height:18px; background:var(--line); margin:0 3px}
+/* Am Telefon (Hinsehen, 9. August): die Leiste war 442 px breit bei 390 px
+   Bild — Farbe und Kommentar lagen AUSSERHALB, und 28×31-px-Knöpfe trifft
+   kein Finger (§37). Jetzt: nie breiter als das Bild, innen rollbar, Knöpfe
+   44 px. `flex:0 0 auto`, weil Flexbox sonst staucht statt überstehen zu
+   lassen — die Lehre aus §55.2. */
+@media(max-width:760px){
+  .auswahlleiste{max-width:calc(100vw - 16px); overflow-x:auto;
+                 -webkit-overflow-scrolling:touch}
+  .auswahlleiste button{flex:0 0 auto; min-width:44px; min-height:44px}
+  .auswahlleiste .tr{flex:0 0 auto}
+}
 
 /* --- Kommentare ------------------------------------------------------------------------ */
 .komm{padding:12px 16px; border-bottom:1px solid var(--line-soft)}
@@ -4346,15 +4357,28 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
     background:var(--bg-side); border-top:1px solid var(--line);
     overflow-x:auto; -webkit-overflow-scrolling:touch;
   }
+  /* 44, nicht 38: die Fingerregel (§37) galt für die Breite und wurde bei
+     der Höhe vergessen — gemessen am 9. August, 44×38. */
   #tastenleiste button{
-    flex:0 0 auto; min-width:44px; height:38px; border-radius:9px;
+    flex:0 0 auto; min-width:44px; height:44px; border-radius:9px;
     background:var(--bg-hover); border:1px solid var(--line);
     color:var(--text); font-size:15px;
   }
   #tastenleiste button:active{ background:var(--accent); color:#fff; }
-  #tastenleiste button[data-t="fertig"]{ margin-left:auto; }
-  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück */
-  body.schreibt #handy-leiste{ display:none; }
+  /* Angepinnt: elf Knöpfe rollen seitlich, aber der Weg zurück (Tastatur
+     schliessen) darf nicht mitrollen — er stand ausserhalb des Bildes.
+     Der Schatten deckt zu, was darunter durchrollt. */
+  #tastenleiste button[data-t="fertig"]{
+    margin-left:auto; position:sticky; right:0;
+    background:var(--bg-side); box-shadow:-6px 0 6px var(--bg-side);
+  }
+  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück.
+     Hier stand `#handy-leiste` — ein Element, das es nicht mehr gibt
+     (siehe den Kommentar bei der Schubladen-Höhe weiter unten). Die
+     echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
+     Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
+     hervor. */
+  body.schreibt #handy-unten{ display:none; }
 }
 
 /* ==========================================================================
@@ -45911,15 +45935,29 @@ const PWA = (() => {
         if (!leiste)
             return;
         let aktiv = null; /* das Feld, in dem geschrieben wird */
+        /* `bottom:0` allein genügt nicht: die Bildschirmtastatur legt sich am
+           iPhone ÜBER die Seite, ohne das Layout zu verkleinern — die Leiste
+           stünde exakt HINTER der Tastatur, unsichtbar und unerreichbar. Der
+           sichtbare Ausschnitt (visualViewport) kennt die wahre Höhe; die
+           Differenz schiebt die Leiste über die Tastatur. */
+        const lege = () => {
+            const vv = window.visualViewport;
+            const unten = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+            leiste.style.bottom = unten + 'px';
+        };
+        window.visualViewport?.addEventListener('resize', lege);
+        window.visualViewport?.addEventListener('scroll', lege);
         const zeigen = (feld) => {
             if (!istTelefon())
                 return;
             aktiv = feld;
             leiste.hidden = false;
             document.body.classList.add('schreibt');
+            lege();
         };
         const verstecken = () => {
             leiste.hidden = true;
+            leiste.style.bottom = '';
             document.body.classList.remove('schreibt');
             aktiv = null;
         };

@@ -357,6 +357,17 @@ a.bl:hover{color:var(--text)}
 .auswahlleiste button:hover{background:var(--bg-hover); color:var(--text)}
 .auswahlleiste .ki{color:var(--accent); font-weight:500}
 .auswahlleiste .tr{width:1px; height:18px; background:var(--line); margin:0 3px}
+/* Am Telefon (Hinsehen, 9. August): die Leiste war 442 px breit bei 390 px
+   Bild — Farbe und Kommentar lagen AUSSERHALB, und 28×31-px-Knöpfe trifft
+   kein Finger (§37). Jetzt: nie breiter als das Bild, innen rollbar, Knöpfe
+   44 px. `flex:0 0 auto`, weil Flexbox sonst staucht statt überstehen zu
+   lassen — die Lehre aus §55.2. */
+@media(max-width:760px){
+  .auswahlleiste{max-width:calc(100vw - 16px); overflow-x:auto;
+                 -webkit-overflow-scrolling:touch}
+  .auswahlleiste button{flex:0 0 auto; min-width:44px; min-height:44px}
+  .auswahlleiste .tr{flex:0 0 auto}
+}
 
 /* --- Kommentare ------------------------------------------------------------------------ */
 .komm{padding:12px 16px; border-bottom:1px solid var(--line-soft)}

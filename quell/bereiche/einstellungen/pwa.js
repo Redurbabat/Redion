@@ -247,15 +247,29 @@ const PWA = (() => {
         if (!leiste)
             return;
         let aktiv = null; /* das Feld, in dem geschrieben wird */
+        /* `bottom:0` allein genügt nicht: die Bildschirmtastatur legt sich am
+           iPhone ÜBER die Seite, ohne das Layout zu verkleinern — die Leiste
+           stünde exakt HINTER der Tastatur, unsichtbar und unerreichbar. Der
+           sichtbare Ausschnitt (visualViewport) kennt die wahre Höhe; die
+           Differenz schiebt die Leiste über die Tastatur. */
+        const lege = () => {
+            const vv = window.visualViewport;
+            const unten = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+            leiste.style.bottom = unten + 'px';
+        };
+        window.visualViewport?.addEventListener('resize', lege);
+        window.visualViewport?.addEventListener('scroll', lege);
         const zeigen = (feld) => {
             if (!istTelefon())
                 return;
             aktiv = feld;
             leiste.hidden = false;
             document.body.classList.add('schreibt');
+            lege();
         };
         const verstecken = () => {
             leiste.hidden = true;
+            leiste.style.bottom = '';
             document.body.classList.remove('schreibt');
             aktiv = null;
         };

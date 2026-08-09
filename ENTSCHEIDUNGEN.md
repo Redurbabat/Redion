@@ -5129,3 +5129,67 @@ war der Strangler-Schnitt da: der Bestand blieb die ganze Zeit die einzige
 Wahrheit, und der Rückbau ist ein `git rm` ohne Migrationsgedanken.
 Wer den Umbau je wieder will, findet ihn vollständig in der Git-Geschichte
 (Commits bis `6c93175`) und den Plan in E78.
+
+
+## E81 · Die Formatleiste über der Tastatur — vier Fehler, die nur Augen fanden
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L10
+
+Die Leiste gab es längst: `#tastenleiste`, gebaut in `pwa.ts`, elf Knöpfe,
+erscheint beim Schreiben. LUECKEN führte sie trotzdem unter „Feinschliff
+nötig" — und das Hinsehen nach §55 hat erklärt, warum. Vier Fehler, kein
+einziger davon in einem Prüflauf:
+
+```txt
+1  Die Versteck-Regel zielte auf #handy-leiste — ein Element, das es
+   seit dem Umbau auf #handy-unten nicht mehr gibt. Die Reiterleiste
+   blieb also stehen; ihre Knopfkreise ragten hinter der Formatleiste
+   hervor wie ein zweiter, kaputter Rand.
+2  Die Knöpfe massen 44×38. Die Fingerregel (§37) stand im Code — aber
+   nur bei der Breite. min-width:44px neben height:38px, seit Anbeginn.
+3  bottom:0 ohne visualViewport. Am iPhone legt sich die Tastatur ÜBER
+   die Seite, ohne das Layout zu verkleinern — die „Leiste über der
+   Tastatur" stünde auf dem echten Gerät exakt HINTER ihr. Im
+   Playwright-Bildmass ist das unsichtbar, weil dort nie eine Tastatur
+   aufgeht. Der Name der Leiste war ihr eigenes Versprechen, und der
+   Code hielt es nicht.
+4  Der Fertig-Knopf rollte mit. Elf Knöpfe bei 390 px Breite heisst:
+   die Leiste rollt seitlich — und der Weg zurück (Tastatur schliessen)
+   rollte mit aus dem Bild.
+```
+
+Und ein fünfter, eine Leiste weiter: die schwebende **Auswahlleiste** war
+am Telefon **442 px breit bei 390 px Bild**. Farbe und Kommentar lagen
+vollständig ausserhalb; die Knöpfe massen 28×31. Dasselbe Muster wie beim
+Tabellenblock in §55.1 — die halbe Werkzeugleiste ausserhalb des Bildes.
+
+**Die Reparatur.**
+
+```txt
+1  body.schreibt #handy-unten{display:none} — die Regel zielt aufs
+   echte Element
+2  height:44px
+3  visualViewport: die Differenz zwischen Layout- und Sichthöhe schiebt
+   die Leiste hoch (resize + scroll abonniert, in pwa.ts)
+4  Fertig ist position:sticky; right:0 — rollt nie mehr weg, ein
+   Schatten deckt zu, was darunter durchrollt
+5  Auswahlleiste am Telefon: max-width:calc(100vw - 16px), innen
+   rollbar, Knöpfe 44 px, flex:0 0 auto (Flexbox staucht sonst, §55.2)
+```
+
+**Wie prüft man eine Tastatur, die es im Prüfstand nicht gibt?** Mit einem
+Stummel: `test156` ersetzt `window.visualViewport`, BEVOR die App startet,
+und kann dann eine Tastatur beliebiger Höhe „öffnen". Was die App darauf
+tut, ist ihr echter Code — nur die gemeldete Höhe ist gestellt. Mit
+336-px-Tastatur muss die Leiste auf 508 sitzen, ohne wieder auf 844. Das
+ist keine Prüfung des Geräts (die bleibt unmöglich im Container, L10),
+aber eine Prüfung der Rechnung — und sie kann rot werden: alle fünf
+Reparaturen wurden einzeln zurückgedreht, jede kippte genau ihren Punkt
+(18 ok, 1 offen), dann alle wiederhergestellt (19 ok).
+
+**Die Lehre** ist dieselbe wie in §55, eine Schicht tiefer: die Leiste
+BESTAND alle Prüfungen, die es gab, denn die Prüfungen massen nur, was am
+Rechner messbar war. Ein toter Selektor, sechs fehlende Pixel und eine
+Tastatur, die es im Prüfstand nicht gibt, sind unsichtbar, bis jemand
+hinsieht — oder bis jemand die fehlende Umgebung nachbaut, statt sie für
+unprüfbar zu erklären.
