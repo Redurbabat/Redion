@@ -1577,6 +1577,11 @@ const Blocks = (() => {
      * Browsers stehen — dort will man Rechtschreibung und Einfügen.
      * -------------------------------------------------------------------- */
     wurzel.addEventListener('contextmenu', (e: any) => {
+      /* Am Telefon gehört das lange Drücken der Hebe-Geste (E83). Android
+         feuert trotzdem contextmenu — das öffnete das Rechner-Menü mitten
+         ins Tragen hinein. Hier unterdrücken, die Geste liefert das Menü
+         selbst beim Loslassen. */
+      if (window.matchMedia('(max-width: 760px)').matches) { e.preventDefault(); return; }
       if (e.shiftKey) return;                       /* Umschalt = Browsermenü */
       const blk = elVon(e)?.closest<HTMLElement>('.blk');
       if (!blk) return;
@@ -1804,6 +1809,19 @@ const Blocks = (() => {
   const lege = (quelleId: any, zielId: any, danach = false) => {
     const q = Store.getBlock(quelleId), z = Store.getBlock(zielId);
     if (!q || !z) return;
+
+    /* Ein Block darf nicht in sein eigenes Inneres fallen. Landet er neben
+       einem seiner NACHKOMMEN, zeigt seine neue Elternkette auf ihn selbst
+       zurück — der ganze Teilbaum hängt im Kreis und verschwindet von der
+       Seite, ohne gelöscht zu sein. Das Loch war so alt wie das Ziehen am
+       Rechner; gefunden hat es erst der Review der Telefon-Geste (E83). */
+    for (let el = z; el; el = Store.getBlock(el.parentId)) {
+      if (el.id === quelleId) {
+        UI.toast('Ein Block lässt sich nicht in sein eigenes Inneres verschieben.');
+        return;
+      }
+    }
+
     const qe = Store.getBlock(q.parentId), ze = Store.getBlock(z.parentId);
     if (!qe || !ze) return;
     qe.content = qe.content.filter((x: any) => x !== quelleId);

@@ -4388,6 +4388,12 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
                 -webkit-user-select:none; user-select:none; }
   .fallmarke{ position:fixed; height:3px; border-radius:2px;
               background:var(--accent); z-index:530; pointer-events:none; }
+  /* iOS legt beim langen Drücken gern seine Sprechblase (Kopieren/Nach-
+     schlagen) über alles. Auf Blöcken gehört das lange Drücken der
+     Hebe-Geste; die Sprechblase bleibt nur im Schreibtext erlaubt.
+     Ob das auf echtem iOS reicht, kann nur ein echtes Gerät zeigen (L10). */
+  .blk{ -webkit-touch-callout:none; }
+  .blk [contenteditable="true"]{ -webkit-touch-callout:default; }
 }
 
 /* ==========================================================================
@@ -22314,6 +22320,14 @@ const Blocks = (() => {
          * Browsers stehen — dort will man Rechtschreibung und Einfügen.
          * -------------------------------------------------------------------- */
         wurzel.addEventListener('contextmenu', (e) => {
+            /* Am Telefon gehört das lange Drücken der Hebe-Geste (E83). Android
+               feuert trotzdem contextmenu — das öffnete das Rechner-Menü mitten
+               ins Tragen hinein. Hier unterdrücken, die Geste liefert das Menü
+               selbst beim Loslassen. */
+            if (window.matchMedia('(max-width: 760px)').matches) {
+                e.preventDefault();
+                return;
+            }
             if (e.shiftKey)
                 return; /* Umschalt = Browsermenü */
             const blk = elVon(e)?.closest('.blk');
@@ -22571,6 +22585,17 @@ const Blocks = (() => {
         const q = Store.getBlock(quelleId), z = Store.getBlock(zielId);
         if (!q || !z)
             return;
+        /* Ein Block darf nicht in sein eigenes Inneres fallen. Landet er neben
+           einem seiner NACHKOMMEN, zeigt seine neue Elternkette auf ihn selbst
+           zurück — der ganze Teilbaum hängt im Kreis und verschwindet von der
+           Seite, ohne gelöscht zu sein. Das Loch war so alt wie das Ziehen am
+           Rechner; gefunden hat es erst der Review der Telefon-Geste (E83). */
+        for (let el = z; el; el = Store.getBlock(el.parentId)) {
+            if (el.id === quelleId) {
+                UI.toast('Ein Block lässt sich nicht in sein eigenes Inneres verschieben.');
+                return;
+            }
+        }
         const qe = Store.getBlock(q.parentId), ze = Store.getBlock(z.parentId);
         if (!qe || !ze)
             return;
@@ -46128,7 +46153,11 @@ const PWA = (() => {
             arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
             const weg = () => {
                 arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
-                schluckerWeg = null;
+                /* Nur das EIGENE Merkzeichen löschen. Die 800-ms-Uhr eines alten
+                   Fängers darf nicht das Merkzeichen eines neueren nullen — sonst
+                   hängt der neue fest und frisst wieder den nächsten Tipp. */
+                if (schluckerWeg === weg)
+                    schluckerWeg = null;
             };
             schluckerWeg = weg;
             setTimeout(weg, 800);
@@ -46194,11 +46223,28 @@ const PWA = (() => {
             if (schluckerWeg)
                 schluckerWeg();
             /* Langes Drücken HEBT den Block an (E83). Ob daraus Tragen oder das
-               Menü wird, entscheidet sich erst beim Loslassen — siehe touchend. */
+               Menü wird, entscheidet sich erst beim Loslassen — siehe touchend.
+      
+               NICHT gehoben wird in einem fokussierten Schreibfeld: dort heisst
+               langes Drücken „Wort auswählen", und wer schreibt, will keinen
+               davonschwebenden Block. Dieselbe Regel wie beim Wischen. */
             const blk = elVon(e)?.closest('.blk');
-            if (blk && !elVon(e)?.closest('#tastenleiste, .handles')) {
+            const imSchreibfeld = (() => {
+                const feld = elVon(e)?.closest('[contenteditable="true"]');
+                return !!(feld && feld === document.activeElement);
+            })();
+            const rollerVorher = document.getElementById('scroll');
+            const scrollVorher = rollerVorher ? rollerVorher.scrollTop : 0;
+            if (blk && !imSchreibfeld && !elVon(e)?.closest('#tastenleiste, .handles')) {
                 halten = setTimeout(() => {
                     halten = null;
+                    /* Hat die Seite seit dem Auflegen gerollt, war das ein Blättern
+                       mit ruhendem Ende — kein Drücken. Ein Heben mitten im
+                       laufenden Rollen könnte das Rollen auch nicht mehr anhalten
+                       (preventDefault greift nur vor dem ersten Rollzug). */
+                    const rollerJetzt = document.getElementById('scroll');
+                    if (rollerJetzt && Math.abs(rollerJetzt.scrollTop - scrollVorher) > 4)
+                        return;
                     const b = Store.getBlock(blk.dataset.bid);
                     if (!b)
                         return;
@@ -46206,8 +46252,14 @@ const PWA = (() => {
                         navigator.vibrate(12);
                     hebung = { id: b.id, el: blk };
                     blk.classList.add('gehoben');
+                    /* Ein angefangener Wisch gibt seine Spuren zurück, bevor er
+                       zurücktritt — sonst klebte translateX auf der Zeile fest. */
+                    if (gezogen) {
+                        gezogen.style.transform = '';
+                        gezogen.style.opacity = '';
+                    }
                     gezogen = null;
-                    verschoben = 0; /* Wischen tritt zurück */
+                    verschoben = 0;
                     document.addEventListener('touchmove', tragen, { passive: false });
                 }, 500);
             }
@@ -46225,7 +46277,21 @@ const PWA = (() => {
                Schreibfeld, denn dort zieht der Finger die Textauswahl. */
             const zeile = elVon(e)?.closest('tbody tr[data-rid], .blk.b-todo, .liste-zeile[data-rid]');
             const schreibfeld = elVon(e)?.closest('[contenteditable="true"], textarea, input:not([type="checkbox"]):not([type="radio"])');
-            if (zeile && !(schreibfeld && schreibfeld === document.activeElement))
+            /* Und nicht in einem seitlich rollenden Feld (Tabellenblock, breite
+               Datenbank): dort ist die waagrechte Bewegung zum ROLLEN da — ein
+               Wisch, der beim Blättern archiviert, wäre eine Falle. */
+            const rolltSeitlich = (von) => {
+                for (let p = von; p && p !== document.body; p = p.parentElement) {
+                    if (p.scrollWidth > p.clientWidth + 4) {
+                        const ueber = getComputedStyle(p).overflowX;
+                        if (ueber === 'auto' || ueber === 'scroll')
+                            return true;
+                    }
+                }
+                return false;
+            };
+            if (zeile && !(schreibfeld && schreibfeld === document.activeElement) &&
+                !rolltSeitlich(zeile))
                 gezogen = zeile;
         }, { passive: true });
         document.addEventListener('touchmove', (e) => {
@@ -46252,7 +46318,11 @@ const PWA = (() => {
             gezogen.style.transform = 'translateX(' + verschoben + 'px)';
             gezogen.style.opacity = String(1 - Math.abs(verschoben) / 260);
         }, { passive: true });
-        document.addEventListener('touchend', () => {
+        document.addEventListener('touchend', (e) => {
+            /* Erst wenn der LETZTE Finger geht. Ein zweiter Finger — oft nur der
+               Handballen — beendete sonst das Tragen des ersten mitten im Flug. */
+            if (e.touches && e.touches.length)
+                return;
             if (halten) {
                 clearTimeout(halten);
                 halten = null;
@@ -46260,7 +46330,11 @@ const PWA = (() => {
             /* Der gehobene Block: getragen und über einem Ziel → ablegen.
                Nicht getragen → das Menü, wie es das lange Drücken immer tat. */
             if (hebung) {
-                const id = hebung.id, el = hebung.el;
+                const id = hebung.id;
+                /* Frisch nachschlagen: hat ein Neuzeichnen den Block während der
+                   Hebung ersetzt, wäre hebung.el ein abgehängtes Element — das
+                   Menü öffnete sich dann an einem Geist. */
+                const el = document.querySelector(`.blk[data-bid="${id}"]`) || hebung.el;
                 const ziel = fallZiel, trug = getragen;
                 absetzen();
                 nachzuegler();

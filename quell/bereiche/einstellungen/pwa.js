@@ -431,7 +431,11 @@ const PWA = (() => {
             arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
             const weg = () => {
                 arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
-                schluckerWeg = null;
+                /* Nur das EIGENE Merkzeichen löschen. Die 800-ms-Uhr eines alten
+                   Fängers darf nicht das Merkzeichen eines neueren nullen — sonst
+                   hängt der neue fest und frisst wieder den nächsten Tipp. */
+                if (schluckerWeg === weg)
+                    schluckerWeg = null;
             };
             schluckerWeg = weg;
             setTimeout(weg, 800);
@@ -497,11 +501,28 @@ const PWA = (() => {
             if (schluckerWeg)
                 schluckerWeg();
             /* Langes Drücken HEBT den Block an (E83). Ob daraus Tragen oder das
-               Menü wird, entscheidet sich erst beim Loslassen — siehe touchend. */
+               Menü wird, entscheidet sich erst beim Loslassen — siehe touchend.
+      
+               NICHT gehoben wird in einem fokussierten Schreibfeld: dort heisst
+               langes Drücken „Wort auswählen", und wer schreibt, will keinen
+               davonschwebenden Block. Dieselbe Regel wie beim Wischen. */
             const blk = elVon(e)?.closest('.blk');
-            if (blk && !elVon(e)?.closest('#tastenleiste, .handles')) {
+            const imSchreibfeld = (() => {
+                const feld = elVon(e)?.closest('[contenteditable="true"]');
+                return !!(feld && feld === document.activeElement);
+            })();
+            const rollerVorher = document.getElementById('scroll');
+            const scrollVorher = rollerVorher ? rollerVorher.scrollTop : 0;
+            if (blk && !imSchreibfeld && !elVon(e)?.closest('#tastenleiste, .handles')) {
                 halten = setTimeout(() => {
                     halten = null;
+                    /* Hat die Seite seit dem Auflegen gerollt, war das ein Blättern
+                       mit ruhendem Ende — kein Drücken. Ein Heben mitten im
+                       laufenden Rollen könnte das Rollen auch nicht mehr anhalten
+                       (preventDefault greift nur vor dem ersten Rollzug). */
+                    const rollerJetzt = document.getElementById('scroll');
+                    if (rollerJetzt && Math.abs(rollerJetzt.scrollTop - scrollVorher) > 4)
+                        return;
                     const b = Store.getBlock(blk.dataset.bid);
                     if (!b)
                         return;
@@ -509,8 +530,14 @@ const PWA = (() => {
                         navigator.vibrate(12);
                     hebung = { id: b.id, el: blk };
                     blk.classList.add('gehoben');
+                    /* Ein angefangener Wisch gibt seine Spuren zurück, bevor er
+                       zurücktritt — sonst klebte translateX auf der Zeile fest. */
+                    if (gezogen) {
+                        gezogen.style.transform = '';
+                        gezogen.style.opacity = '';
+                    }
                     gezogen = null;
-                    verschoben = 0; /* Wischen tritt zurück */
+                    verschoben = 0;
                     document.addEventListener('touchmove', tragen, { passive: false });
                 }, 500);
             }
@@ -528,7 +555,21 @@ const PWA = (() => {
                Schreibfeld, denn dort zieht der Finger die Textauswahl. */
             const zeile = elVon(e)?.closest('tbody tr[data-rid], .blk.b-todo, .liste-zeile[data-rid]');
             const schreibfeld = elVon(e)?.closest('[contenteditable="true"], textarea, input:not([type="checkbox"]):not([type="radio"])');
-            if (zeile && !(schreibfeld && schreibfeld === document.activeElement))
+            /* Und nicht in einem seitlich rollenden Feld (Tabellenblock, breite
+               Datenbank): dort ist die waagrechte Bewegung zum ROLLEN da — ein
+               Wisch, der beim Blättern archiviert, wäre eine Falle. */
+            const rolltSeitlich = (von) => {
+                for (let p = von; p && p !== document.body; p = p.parentElement) {
+                    if (p.scrollWidth > p.clientWidth + 4) {
+                        const ueber = getComputedStyle(p).overflowX;
+                        if (ueber === 'auto' || ueber === 'scroll')
+                            return true;
+                    }
+                }
+                return false;
+            };
+            if (zeile && !(schreibfeld && schreibfeld === document.activeElement) &&
+                !rolltSeitlich(zeile))
                 gezogen = zeile;
         }, { passive: true });
         document.addEventListener('touchmove', (e) => {
@@ -555,7 +596,11 @@ const PWA = (() => {
             gezogen.style.transform = 'translateX(' + verschoben + 'px)';
             gezogen.style.opacity = String(1 - Math.abs(verschoben) / 260);
         }, { passive: true });
-        document.addEventListener('touchend', () => {
+        document.addEventListener('touchend', (e) => {
+            /* Erst wenn der LETZTE Finger geht. Ein zweiter Finger — oft nur der
+               Handballen — beendete sonst das Tragen des ersten mitten im Flug. */
+            if (e.touches && e.touches.length)
+                return;
             if (halten) {
                 clearTimeout(halten);
                 halten = null;
@@ -563,7 +608,11 @@ const PWA = (() => {
             /* Der gehobene Block: getragen und über einem Ziel → ablegen.
                Nicht getragen → das Menü, wie es das lange Drücken immer tat. */
             if (hebung) {
-                const id = hebung.id, el = hebung.el;
+                const id = hebung.id;
+                /* Frisch nachschlagen: hat ein Neuzeichnen den Block während der
+                   Hebung ersetzt, wäre hebung.el ein abgehängtes Element — das
+                   Menü öffnete sich dann an einem Geist. */
+                const el = document.querySelector(`.blk[data-bid="${id}"]`) || hebung.el;
                 const ziel = fallZiel, trug = getragen;
                 absetzen();
                 nachzuegler();

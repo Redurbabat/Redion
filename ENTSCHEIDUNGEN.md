@@ -5288,3 +5288,57 @@ ohne Rumpf zurück — Syntaxfehler, ALLES rot; `;` statt Leere).
 **Was der Prüfstand nicht kann,** bleibt ehrlich offen (L10): echtes
 iOS-Verhalten — Auswahl-Callout beim langen Drücken auf Text,
 Safari-Eigenheiten bei passiven Zuhörern — sieht nur ein echtes Gerät.
+
+
+### E83-Nachtrag · Was der adversariale Review fand — neun Härtungen
+
+Nach dem Grün von test157 haben drei unabhängige Prüf-Blicke
+(Zustandsmaschine · echtes Gerät · Regression) den E83-Diff adversarial
+gelesen; jeder Befund wurde einzeln am Code durchgespielt. Das Ergebnis,
+nach Gewicht:
+
+```txt
+ZYKLUS (Datenverlust, auch am RECHNER seit es Ziehen gibt): Wer einen
+Block neben eines seiner eigenen Kinder legte, hängte die Elternkette
+im Kreis auf — der Teilbaum verschwand von der Seite, ohne gelöscht zu
+sein. lege() weist das jetzt ab, mit Toast. test157 §8 beweist beides:
+mit Guard bleibt alles, ohne Guard fehlt der Block wirklich.
+
+ANDROID-KONTEXTMENÜ: Langes Drücken feuert dort contextmenu — das
+Rechner-Menü öffnete sich mitten ins Tragen. Am Telefon ist es jetzt
+unterdrückt; das Menü liefert die Geste selbst beim Loslassen.
+
+ZWEITER FINGER: touchend zählte keine Finger — der aufgesetzte
+Handballen beendete das Tragen des ersten Fingers. Jetzt endet die
+Geste erst mit dem letzten Finger (test157 §9).
+
+FOKUSSIERTES SCHREIBFELD: Langes Drücken heisst dort „Wort auswählen".
+Gehoben wird nur ausserhalb — dieselbe Regel wie beim Wischen
+(test157 §10).
+
+ROLLEN STATT DRÜCKEN: Hat die Seite zwischen Auflegen und der
+500-ms-Marke gerollt, war es ein Blättern — kein Heben (preventDefault
+könnte laufendes Rollen ohnehin nicht mehr anhalten).
+
+SEITLICH ROLLENDE FELDER: Im Tabellenblock und in breiten Datenbanken
+ist die waagrechte Bewegung zum Rollen da — dort armiert das Wischen
+nicht mehr; sonst hätte Blättern archiviert.
+
+FÄNGER-UHR: Die 800-ms-Uhr eines alten Schluckers nullte das
+Merkzeichen eines neueren — der nächste Tipp wäre wieder verschluckt
+worden. Die Uhr räumt jetzt nur noch ihr eigenes weg.
+
+NEUZEICHNEN WÄHREND DER HEBUNG: hebung.el konnte ein abgehängtes
+Element sein; das Menü öffnete sich an einem Geist. Beim Loslassen
+wird der Block frisch nachgeschlagen.
+
+WISCH-SPUREN: Ein Heben mitten aus einem angefangenen Wisch liess
+translateX/opacity auf der Zeile kleben. Sie werden jetzt
+zurückgegeben, bevor das Wischen zurücktritt.
+```
+
+**Ehrlich offen bleibt** (L10, echtes Gerät): ob iOS beim langen Drücken
+auf UNfokussiertem Text die eigene Auswahl-Sprechblase über die Hebe-
+Geste legt. `-webkit-touch-callout:none` auf Blöcken nimmt ihr den
+Anlass ausserhalb des Schreibtexts; was Safari wirklich tut, zeigt nur
+ein iPhone in der Hand.

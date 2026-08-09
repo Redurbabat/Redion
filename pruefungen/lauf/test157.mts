@@ -204,6 +204,80 @@ if (todo) {
   }
 }
 
+console.log('\n8 · Ein Block fällt nicht in sein eigenes Inneres');
+
+/* Der Review von E83 fand das Loch — und es klaffte auch am Rechner,
+   seit es das Ziehen gibt: wer einen Block neben eines seiner KINDER
+   legt, hängt seine Elternkette im Kreis auf. Der Teilbaum verschwindet
+   von der Seite, ohne gelöscht zu sein. */
+const zyklus = await seite.evaluate(async (s: { seite: string }) => {
+  const t = Store.addBlock(s.seite, 'toggle', { text: 'Eltern' });
+  const kind = Store.addBlock(t.id, 'text', { text: 'Kind' });
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 400));
+  const vorher = (Store.getBlock(s.seite)?.content || []).length;
+  Blocks.lege(t.id, kind.id, true);          /* Eltern NEBEN das eigene Kind */
+  await new Promise(r => setTimeout(r, 200));
+  const elternJetzt = Store.getBlock(t.id);
+  return {
+    vorher, nachher: (Store.getBlock(s.seite)?.content || []).length,
+    elternWoNoch: elternJetzt ? elternJetzt.parentId === s.seite : false,
+    kindNochDrin: (elternJetzt?.content || []).includes(kind.id)
+  };
+}, ids);
+gleich('Die Seite hat danach so viele Blöcke wie davor', zyklus.nachher, zyklus.vorher);
+gleich('Der Eltern-Block hängt weiter an der Seite — kein Kreis', zyklus.elternWoNoch, true);
+gleich('… und sein Kind ist noch bei ihm', zyklus.kindNochDrin, true);
+
+console.log('\n9 · Ein zweiter Finger beendet das Tragen nicht');
+
+const zwei = await seite.evaluate(() => {
+  const bloecke = [...document.querySelectorAll<HTMLElement>('.blk')];
+  const a = bloecke[0]!.getBoundingClientRect();
+  return { x: a.left + 60, y: a.top + a.height / 2 };
+});
+await druck(zwei.x, zwei.y);
+await seite.waitForTimeout(650);
+/* Der Handballen setzt auf … */
+await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart',
+  touchPoints: [{ x: zwei.x, y: zwei.y }, { x: 320, y: 700 }] });
+/* … und geht wieder weg — der tragende Finger bleibt. */
+await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd',
+  touchPoints: [{ x: zwei.x, y: zwei.y }] });
+await seite.waitForTimeout(200);
+const traegtNoch = await seite.evaluate(() => ({
+  gehoben: !!document.querySelector('.gehoben'),
+  menue: !!document.querySelector('.menu')
+}));
+gleich('Der Block ist noch gehoben', traegtNoch.gehoben, true);
+gleich('Kein Menü ist aufgesprungen', traegtNoch.menue, false);
+await los();
+await seite.waitForTimeout(300);
+p('Nach dem letzten Finger ist er abgesetzt',
+  await seite.evaluate(() => !document.querySelector('.gehoben')));
+await seite.evaluate(() => { document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove()); });
+
+console.log('\n10 · Im fokussierten Schreibfeld hebt langes Drücken nicht');
+
+/* Wer schreibt, wählt mit langem Drücken ein Wort aus — kein Block darf
+   ihm dabei davonschweben. Dieselbe Regel wie beim Wischen. */
+const feld = await seite.evaluate((s: { b: string }) => {
+  const ct = document.querySelector(`.blk[data-bid="${s.b}"] .ct`) as HTMLElement;
+  ct.focus();
+  const r = ct.getBoundingClientRect();
+  return { x: r.left + 40, y: r.top + r.height / 2 };
+}, ids);
+await druck(feld.x, feld.y);
+await seite.waitForTimeout(650);
+const imFeld = await seite.evaluate(() => !!document.querySelector('.gehoben'));
+await los();
+await seite.waitForTimeout(300);
+gleich('Nichts wurde angehoben', imFeld, false);
+await seite.evaluate(() => {
+  (document.activeElement as HTMLElement | null)?.blur();
+  document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
+});
+
 p('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
 
 await browser.close();

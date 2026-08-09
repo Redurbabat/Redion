@@ -1408,6 +1408,12 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
                 -webkit-user-select:none; user-select:none; }
   .fallmarke{ position:fixed; height:3px; border-radius:2px;
               background:var(--accent); z-index:530; pointer-events:none; }
+  /* iOS legt beim langen Drücken gern seine Sprechblase (Kopieren/Nach-
+     schlagen) über alles. Auf Blöcken gehört das lange Drücken der
+     Hebe-Geste; die Sprechblase bleibt nur im Schreibtext erlaubt.
+     Ob das auf echtem iOS reicht, kann nur ein echtes Gerät zeigen (L10). */
+  .blk{ -webkit-touch-callout:none; }
+  .blk [contenteditable="true"]{ -webkit-touch-callout:default; }
 }
 
 /* ==========================================================================
