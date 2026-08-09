@@ -30,7 +30,7 @@ type Stand =
   | { art: 'laedt' }
   | { art: 'fehler'; text: string }
   | { art: 'da'; seiten: Block[]; alleSeiten: Map<string, Block>;
-      unlesbar: number; faecher: Record<string, number> };
+      papierkorb: Block[]; unlesbar: number; faecher: Record<string, number> };
 
 type MigrationStand =
   | { art: 'bereit' }
@@ -63,17 +63,22 @@ export function App() {
         const seiten: Block[] = [];
         const alleSeiten = new Map<string, Block>();
         let unlesbar = 0;
+        const papierkorb: Block[] = [];
         for (const roh of alle) {
           const p = BlockSchema.safeParse(roh);
           if (!p.success) { unlesbar++; continue; }
-          if (p.data.type === 'page' && p.data.alive) {
+          if (p.data.type !== 'page') continue;
+          if (p.data.alive) {
             alleSeiten.set(p.data.id, p.data);
             if (p.data.parentId == null) seiten.push(p.data);
+          } else {
+            papierkorb.push(p.data);
           }
         }
         seiten.sort((a, b) => a.created.localeCompare(b.created));
+        papierkorb.sort((a, b) => b.edited.localeCompare(a.edited));
         const faecher = await counts(STORES);
-        if (lebt) setStand({ art: 'da', seiten, alleSeiten, unlesbar, faecher });
+        if (lebt) setStand({ art: 'da', seiten, alleSeiten, papierkorb, unlesbar, faecher });
       } catch (err) {
         if (lebt) setStand({ art: 'fehler',
           text: err instanceof Error ? err.message : String(err) });
@@ -156,6 +161,29 @@ export function App() {
             )}
           </section>
           <Search />
+          <section>
+            <h2>Papierkorb ({stand.papierkorb.length})</h2>
+            {stand.papierkorb.length === 0 && (
+              <p className="shell-hinweis">Leer — nichts liegt im Papierkorb.</p>
+            )}
+            <ul className="shell-seiten">
+              {stand.papierkorb.slice(0, 20).map((s) => (
+                <li key={s.id} className="korb-zeile">
+                  <span className="shell-icon">{s.icon || '📄'}</span>
+                  <span>{s.text || 'Ohne Titel'}</span>
+                </li>
+              ))}
+            </ul>
+            {stand.papierkorb.length > 20 && (
+              <p className="shell-hinweis">… und {stand.papierkorb.length - 20} weitere.</p>
+            )}
+            {stand.papierkorb.length > 0 && (
+              <p className="shell-hinweis">
+                Wiederherstellen und endgültig löschen kann nur der Bestand —
+                diese Shell liest. Öffne dafür <a href="index.html">index.html</a>.
+              </p>
+            )}
+          </section>
           <section>
             <h2>Die Fächer des Bestands</h2>
             <table className="shell-tabelle">

@@ -194,7 +194,7 @@ p('Der Datenbankname samt Zeilenzahl steht darüber',
 console.log('\n3c · Die Suche: Titel und Inhalt, ehrlich gedeckelt (RM-6)');
 
 await seite.goto(`http://localhost:${PORT}/app.html`);
-await seite.waitForTimeout(1600);
+await seite.waitForSelector('.suche-feld', { timeout: 10000 });
 await seite.fill('.suche-feld', 'Tief drin');
 await seite.waitForTimeout(400);
 const suche = await seite.evaluate(() => {
@@ -220,6 +220,32 @@ await seite.click('.suche-treffer a');
 await seite.waitForTimeout(600);
 p('Ein Klick auf den Treffer öffnet die Seite',
   /Eine Überschrift/.test(await seite.evaluate(() => document.body.innerText)));
+
+console.log('\n3d · Der Papierkorb: sichtbar, aber nur der Bestand darf handeln');
+
+await seite.goto(`http://localhost:${PORT}/index.html`);
+await seite.waitForTimeout(2200);
+await seite.evaluate(async () => {
+  const s = Store.addBlock(null, 'page', { text: 'Weggeworfene Seite' });
+  Store.trashBlock(s.id);
+  await Store.flush();
+});
+await seite.goto(`http://localhost:${PORT}/app.html`);
+/* Auf den ABSCHNITT warten, nicht eine feste Zeit: einmal reichte die
+   Sekunde, einmal nicht — ein Lauf, der vom Wetter abhängt, prüft nichts. */
+await seite.waitForSelector('.korb-zeile, .shell-hinweis', { timeout: 10000 });
+await seite.waitForTimeout(300);
+const korb = await seite.evaluate(() => ({
+  text: document.body.innerText,
+  imBaum: [...document.querySelectorAll('.baum a')]
+    .some(a => a.textContent?.includes('Weggeworfene Seite'))
+}));
+p('Die weggeworfene Seite steht im Papierkorb-Abschnitt',
+  /Papierkorb \(/.test((korb as any).text) &&
+  /Weggeworfene Seite/.test((korb as any).text));
+p('… aber NICHT im Seitenbaum', (korb as any).imBaum === false);
+p('Und die Zuständigkeit steht dabei: handeln kann nur der Bestand',
+  /Wiederherstellen und endgültig löschen kann nur der Bestand/.test((korb as any).text));
 
 console.log('\n4 · Das Sheet: Escape schliesst, der Fokus kehrt zurück');
 

@@ -80,3 +80,4 @@ body { margin: 0; font: 15px/1.5 system-ui, sans-serif; }
 .suche-treffer { list-style: none; padding: 0; }
 .suche-text { display: flex; flex-direction: column; }
 .suche-auszug { font-size: 12px; opacity: .65; }
+.korb-zeile { opacity: .7; }
