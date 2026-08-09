@@ -247,6 +247,25 @@ p('… aber NICHT im Seitenbaum', (korb as any).imBaum === false);
 p('Und die Zuständigkeit steht dabei: handeln kann nur der Bestand',
   /Wiederherstellen und endgültig löschen kann nur der Bestand/.test((korb as any).text));
 
+console.log('\n3e · Einstellungen: lesbar, ohne Geheimnisse, ohne tote Regler');
+
+await seite.goto(`http://localhost:${PORT}/index.html`);
+await seite.waitForTimeout(2200);
+await seite.evaluate(async () => {
+  Store.setMeta('nutzer', 'Redur');
+  Store.setMeta('api:webhookAuth', 'streng-geheim-123');
+  await Store.flush();
+});
+await seite.goto(`http://localhost:${PORT}/app.html`);
+await seite.waitForSelector('[data-einstellungen]', { timeout: 10000 });
+const est = await seite.evaluate(() => document.body.innerText);
+p('Der Name steht da', /Name\s+Redur/.test(String(est)));
+p('Der API-Schlüssel steht als „hinterlegt" da — der WERT nirgends',
+  /hinterlegt — der Wert bleibt hier bewusst unsichtbar/.test(String(est)) &&
+  !/streng-geheim-123/.test(String(est)));
+p('Und die Zuständigkeit steht dabei',
+  /Ändern kann nur der Bestand/.test(String(est)));
+
 console.log('\n4 · Das Sheet: Escape schliesst, der Fokus kehrt zurück');
 
 await seite.goto(`http://localhost:${PORT}/app.html`);
