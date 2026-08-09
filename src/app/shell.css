@@ -72,3 +72,11 @@ body { margin: 0; font: 15px/1.5 system-ui, sans-serif; }
               opacity: .7; border-radius: 8px; }
 .baum-pfeil:hover { background: rgba(128,128,128,.12); opacity: 1; }
 .baum-platz { min-width: 44px; }
+
+/* Suche (RM-6) */
+.suche-feld { width: 100%; min-height: 44px; padding: 0 12px; font: inherit;
+              border: 1px solid rgba(128,128,128,.4); border-radius: 8px;
+              background: transparent; color: inherit; box-sizing: border-box; }
+.suche-treffer { list-style: none; padding: 0; }
+.suche-text { display: flex; flex-direction: column; }
+.suche-auszug { font-size: 12px; opacity: .65; }

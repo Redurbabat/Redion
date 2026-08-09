@@ -191,6 +191,36 @@ p('Der Datenbankname samt Zeilenzahl steht darüber',
   /Fahrten/.test((tabelle as any).name) && /1 Zeile/.test((tabelle as any).name),
   (tabelle as any).name);
 
+console.log('\n3c · Die Suche: Titel und Inhalt, ehrlich gedeckelt (RM-6)');
+
+await seite.goto(`http://localhost:${PORT}/app.html`);
+await seite.waitForTimeout(1600);
+await seite.fill('.suche-feld', 'Tief drin');
+await seite.waitForTimeout(400);
+const suche = await seite.evaluate(() => {
+  const treffer = [...document.querySelectorAll('.suche-treffer li')];
+  return { anzahl: treffer.length,
+           erste: treffer[0]?.textContent || '',
+           auszug: !!treffer[0]?.querySelector('.suche-auszug') };
+});
+p('Ein Inhaltstreffer findet seine Seite',
+  (suche as any).anzahl >= 1 && /Unterseite/.test((suche as any).erste),
+  JSON.stringify(suche));
+p('… mit Auszug aus dem Inhalt', (suche as any).auszug === true);
+
+await seite.fill('.suche-feld', 'gibtsnichtnirgends12345');
+await seite.waitForTimeout(400);
+p('Nichts gefunden sagt es ehrlich, mit der Frage im Satz',
+  await seite.evaluate(() =>
+    /Nichts gefunden zu „gibtsnichtnirgends12345"/.test(document.body.innerText)));
+
+await seite.fill('.suche-feld', 'Navigationsseite');
+await seite.waitForTimeout(400);
+await seite.click('.suche-treffer a');
+await seite.waitForTimeout(600);
+p('Ein Klick auf den Treffer öffnet die Seite',
+  /Eine Überschrift/.test(await seite.evaluate(() => document.body.innerText)));
+
 console.log('\n4 · Das Sheet: Escape schliesst, der Fokus kehrt zurück');
 
 await seite.goto(`http://localhost:${PORT}/app.html`);

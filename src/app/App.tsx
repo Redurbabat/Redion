@@ -20,6 +20,7 @@ import { useRoute } from './router';
 import { PageView } from '../features/pages/PageView';
 import { PageTree } from '../features/pages/PageTree';
 import { Workshop } from '../features/workshop/Workshop';
+import { Search } from '../features/search/Search';
 import { Sheet } from '../ui/Sheet';
 
 const STORES = ['blocks', 'collections', 'views', 'meta', 'versions',
@@ -154,6 +155,7 @@ export function App() {
               </p>
             )}
           </section>
+          <Search />
           <section>
             <h2>Die Fächer des Bestands</h2>
             <table className="shell-tabelle">
