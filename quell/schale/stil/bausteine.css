@@ -1399,6 +1399,15 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
      Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
      hervor. */
   body.schreibt #handy-unten{ display:none; }
+
+  /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
+     leicht und durchscheinend —, die Fallmarke zeigt die Lücke, in die er
+     fällt. user-select aus, damit das Halten keinen Text markiert. */
+  .blk.gehoben{ opacity:.55; transform:scale(.98);
+                transition:transform .12s ease, opacity .12s ease;
+                -webkit-user-select:none; user-select:none; }
+  .fallmarke{ position:fixed; height:3px; border-radius:2px;
+              background:var(--accent); z-index:530; pointer-events:none; }
 }
 
 /* ==========================================================================

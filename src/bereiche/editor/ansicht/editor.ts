@@ -2927,7 +2927,7 @@ const Blocks = (() => {
 
   return {
     TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc,
-    cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe,
+    cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe, lege,
     blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
     knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
     DIENSTE, einbettungsAdresse,

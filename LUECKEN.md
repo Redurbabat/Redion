@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 122 Prüfläufe**
+**9. August 2026 · 123 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -67,14 +67,20 @@ L10  die Formatleiste über der Tastatur, mit Augen gemessen (E81) — sie
      hätte am iPhone HINTER der Tastatur gelegen, die Reiterleiste ragte
      durch eine tote Regel hindurch, Fertig rollte aus dem Bild; und die
      Auswahlleiste war 442 px breit bei 390 px Bildschirm
+L10  Ziehen am Telefon (E83) — langes Drücken hebt, der Finger trägt,
+     die Fallmarke zeigt die Lücke; das Menü kommt beim Loslassen ohne
+     Bewegung. Dabei zwei Altfehler: das Wischen war seit dem Bau
+     unerreichbar (der Berührungsradius traf immer Checkbox oder Text,
+     beide waren tabu), und nach einem Wisch frass der Nachzügler-Fänger
+     den nächsten Tipp
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
 
 ```txt
-1. Mobile (L10): Bottom Sheets (test155) und die Formatleiste über der
-   Tastatur (E81) SIND jetzt da — hier standen sie noch als offen.
-   Wirklich offen: Touch-Editor-Rest (Auswahl, Ziehen) · ein
+1. Mobile (L10): Bottom Sheets (test155), Formatleiste (E81) und
+   Ziehen (E83) sind da. Wirklich offen: die Mehrfachauswahl ist am
+   Telefon nicht erreichbar (kein Weg hinein ohne Tastatur) · ein
    Telefon-Entwurf für den Tabellenblock · geprüft ist alles nur im
    Bildmass, nie am Gerät
 2. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
@@ -354,12 +360,19 @@ bei 390 px Bildschirm, Knöpfe 28×31. Alles repariert; `test156` hält es,
 samt Tastatur-Stummel für die Höhenrechnung. Seit test155 sind auch alle
 Menüs am Telefon Blätter — beides stand hier noch als offen.
 
-**Fehlt ausserdem:** der Touch-Editor braucht Rest-Feinschliff (Auswahl,
-Ziehen) · der **Tabellenblock** hat am Telefon noch keinen eigenen
-Entwurf — die Fingermasse stimmen seit E64, aber es bleibt dasselbe
-Raster wie am Rechner, mit leeren Zeilen auf halbem Bildschirm; ob dort
-eine Zeile als Karte hingehört, wie es die Datenbank längst macht, ist eine
-eigene Frage · Side Peek auf kleinen
+**Ziehen gibt es seit E83** — langes Drücken hebt den Block, der Finger
+trägt ihn, die Fallmarke zeigt die Lücke; das Menü kommt beim Loslassen
+ohne Bewegung. `test157` prüft die Geste mit echten CDP-Berührungen und
+fand dabei zwei Altfehler (Wischen unerreichbar, Fänger frass den
+nächsten Tipp — beide behoben, siehe E83).
+
+**Fehlt ausserdem:** die **Mehrfachauswahl** ist am Telefon nicht
+erreichbar — hinein kommt man nur mit Umschalt-Klick oder Tastatur, und
+beides gibt es dort nicht · der **Tabellenblock** hat am Telefon noch
+keinen eigenen Entwurf — die Fingermasse stimmen seit E64, aber es bleibt
+dasselbe Raster wie am Rechner, mit leeren Zeilen auf halbem Bildschirm;
+ob dort eine Zeile als Karte hingehört, wie es die Datenbank längst
+macht, ist eine eigene Frage · Side Peek auf kleinen
 Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen —
 die Masse stehen an einem Dutzend Stellen in `bausteine.css` und wurden
 schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).

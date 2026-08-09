@@ -5233,3 +5233,58 @@ rot; Markup-Klasse und Wiederhinzufügen weg → „sie glitt 1×" rot.
 ihre Quellen kennen — und ein Prüfpunkt, der die Umgebung misst statt das
 Verhalten, wird genau dann rot, wenn es am wenigsten aussagt: unter Last,
 im Paket, nach Mitternacht.
+
+
+## E83 · Ziehen am Telefon — und zwei Altfehler, die die neue Prüfung fand
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L10
+
+Am Rechner zieht man Blöcke am ⋮⋮-Griff. Am Telefon gab es GAR KEINEN Weg,
+einen Block mit dem Finger zu verschieben — langes Drücken öffnete sofort
+das Menü, das war alles. Jetzt gilt die Notion-Geste:
+
+```txt
+langes Drücken   hebt den Block an — spürbar (Vibration) und sichtbar
+                 (.gehoben: blass, leicht verkleinert)
+der Finger       trägt ihn; die Fallmarke zeigt die Lücke, in die er
+                 fällt; nahe der Kante rollt die Seite mit
+Loslassen        legt ab (Blocks.lege — derselbe Weg wie beim Rechner-
+                 Drag) · OHNE Bewegung: das Menü, wie eh und je
+```
+
+Das Menü wandert damit vom 500-ms-Punkt zum Loslassen. Der eigene
+touchmove-Zuhörer ist non-passiv (der Finger zielt, die Seite rollt nicht
+selbst); der gemeinsame bleibt passiv und tritt zurück, solange getragen
+wird.
+
+**Fund 1: Das Wischen war seit dem Bau unerreichbar.** test157 §6 wollte
+nur belegen, dass Wischen (abhaken/archivieren) neben dem Ziehen weiter
+funktioniert — und fand: es funktionierte NIE. Die Armier-Regel schloss
+`input, [contenteditable]` aus, und der Berührungsradius des Fingers
+trifft fast immer eines von beidem, denn aus Checkbox und Schreibtext
+BESTEHT die Zeile. Im Chromium-Prüfstand dasselbe: der CDP-Touch bei
+x+3 landete auf dem INPUT, nicht auf dem 7 px schmalen Randstreifen.
+Kein Lauf sah es, weil keiner je wirklich wischte. Die ehrliche Regel:
+Beginnen darf das Wischen überall — ob Wisch oder Tipp, entscheidet die
+70-px-Schwelle beim Loslassen; tabu ist nur ein FOKUSSIERTES
+Schreibfeld, dort zieht der Finger die Textauswahl.
+
+**Fund 2: Der Fänger frass die nächste Berührung.** Die Klick-Nachzügler
+einer Berührung werden geschluckt (seit E38, damit das Menü das Loslassen
+überlebt). Aber nach einem WISCH synthetisiert der Browser gar keine
+Klicks — die once-Fänger blieben 800 ms scharf und schluckten den
+NÄCHSTEN Tipp: wischen, sofort auf die Checkbox tippen, nichts geschah
+(test157 §7). Jetzt räumt jede neue Berührung die alten Fänger weg —
+deren Nachzügler wären längst da gewesen —, die Uhr bleibt Besenkammer.
+
+**Geprüft** mit echten CDP-Berührungen (test157, 19 Punkte): heben ohne
+Menü · tragen mit Marke an der richtigen Kante · ablegen mit richtiger
+Reihenfolge · Menü beim Loslassen ohne Bewegung, als Blatt, überlebend ·
+kurzer Tipp bleibt Tipp · Wischen hakt ab · Tipp auf die Checkbox
+schaltet weiter. Sieben Gegenprobe-Arme, jeder kippte genau seinen Punkt
+(der Menü-Arm brauchte zwei Anläufe: die erste Ersetzung liess ein `if`
+ohne Rumpf zurück — Syntaxfehler, ALLES rot; `;` statt Leere).
+
+**Was der Prüfstand nicht kann,** bleibt ehrlich offen (L10): echtes
+iOS-Verhalten — Auswahl-Callout beim langen Drücken auf Text,
+Safari-Eigenheiten bei passiven Zuhörern — sieht nur ein echtes Gerät.
