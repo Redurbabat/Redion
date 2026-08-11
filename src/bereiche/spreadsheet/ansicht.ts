@@ -1644,6 +1644,34 @@ const SpreadsheetView = (() => {
     };
     const alsZeilen = (): string[][] => alsZeilenVon(blatt);
 
+    /* Rohwerte samt Zellstil je Zelle — für den Excel-Ausgang (E94). Der
+       ANZEIGETEXT machte dort aus 0.15 „15 %" und aus jeder grossen Zahl
+       per Tausenderzeichen Text; Summen in Excel ergaben 0. */
+    const alsRohVon = (vonBlatt: any): { zeilen: any[][]; stile: any[][] } => {
+      const zeilen: any[][] = [];
+      const stile: any[][] = [];
+      let letzteVolle = 0;
+      for (let z = 0; z < vonBlatt.zeilen; z++) {
+        const eine: any[] = [];
+        const stilZeile: any[] = [];
+        let etwasDrin = false;
+        for (let s = 0; s < vonBlatt.spalten; s++) {
+          const zelle = vonBlatt.zellen[R.schreibe(z, s)];
+          const wert = zelle ? zelle.wert : '';
+          const roh = (typeof wert === 'number' && isFinite(wert))
+            ? wert
+            : zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
+          if (roh !== '') etwasDrin = true;
+          eine.push(roh);
+          stilZeile.push((zelle && zelle.stil) || null);
+        }
+        zeilen.push(eine);
+        stile.push(stilZeile);
+        if (etwasDrin) letzteVolle = zeilen.length;
+      }
+      return { zeilen: zeilen.slice(0, letzteVolle), stile: stile.slice(0, letzteVolle) };
+    };
+
     /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
        auch einliest. Zwei eigene Regeln fürs Anführen liefen auseinander,
        und dann öffnet die eigene Datei sich selbst nicht mehr richtig. */
@@ -1658,7 +1686,10 @@ const SpreadsheetView = (() => {
         ({ name: b.name || ('Blatt ' + (i + 1)), zeilen: alsZeilenVon(b) }));
       if (art === 'xlsx') {
         if (typeof Austausch === 'undefined') return;
-        Austausch.alsExcel(ganzeMappe(), name);
+        /* Rohwerte samt Zellstil (E94), nicht ganzeMappe(): dort steht der
+           Anzeigetext, und aus „15 %" würde in Excel Text. */
+        Austausch.alsExcel(block.mappe.blaetter.map((b: any, i: number) =>
+          ({ name: b.name || ('Blatt ' + (i + 1)), ...alsRohVon(b) })), name);
         return;
       }
       if (art === 'ods') {

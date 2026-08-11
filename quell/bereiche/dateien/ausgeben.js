@@ -428,16 +428,28 @@ const Austausch = (() => {
         }
         return s;
     };
-    /** Eine Tabelle als Blatt-XML. Zahlen bleiben Zahlen. */
-    const blattXml = (zeilen) => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    /** Eine Tabelle als Blatt-XML. Zahlen bleiben Zahlen.
+     *
+     * `stilIx` ist je Zelle der Verweis in die cellXfs der styles.xml —
+     * 0 heisst ungestaltet. OHNE `stilIx` gilt das alte Verhalten der
+     * Datenbank-Ausgänge: Zeile 1 ist die Kopfzeile, immer Text und fett.
+     * MIT `stilIx` (der Tabellenblock, E94) ist Zeile 1 gewöhnliche
+     * Nutzerdaten — dort entscheidet allein der Zellstil. */
+    const blattXml = (zeilen, stilIx) => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
         '<sheetData>' +
         zeilen.map((z, r) => `<row r="${r + 1}">` + z.map((c, s) => {
             const bezug = spaltenName(s) + (r + 1);
-            const zahl = c !== '' && c !== null && c !== undefined && !isNaN(Number(String(c).replace(',', '.')));
-            if (r > 0 && zahl)
-                return `<c r="${bezug}"><v>${Number(String(c).replace(',', '.'))}</v></c>`;
-            return `<c r="${bezug}" t="inlineStr"${r === 0 ? ' s="1"' : ''}>` +
+            const ix = (stilIx && stilIx[r] && stilIx[r][s]) || 0;
+            const kopf = !stilIx && r === 0;
+            const zahl = typeof c === 'number'
+                ? isFinite(c)
+                : c !== '' && c !== null && c !== undefined && !isNaN(Number(String(c).replace(',', '.')));
+            if (!kopf && zahl) {
+                const n = typeof c === 'number' ? c : Number(String(c).replace(',', '.'));
+                return `<c r="${bezug}"${ix ? ` s="${ix}"` : ''}><v>${n}</v></c>`;
+            }
+            return `<c r="${bezug}" t="inlineStr"${kopf ? ' s="1"' : (ix ? ` s="${ix}"` : '')}>` +
                 `<is><t xml:space="preserve">${esc(c)}</t></is></c>`;
         }).join('') + '</row>').join('') +
         '</sheetData></worksheet>';
@@ -546,9 +558,90 @@ const Austausch = (() => {
             : [{ name: coll.name, zeilen: [kopf, ...zeilenVon(null)] }];
         return alsOds(blaetter, (coll.name || 'Datenbank').replace(/[\\/:*?"<>|]/g, '-'));
     };
+    /* Aus den Zellstilen aller Blätter eine styles.xml bauen (E94). Gleiche
+       Kombis (fett/kursiv × Ausrichtung × Zahlenformat) werden je EINMAL
+       angelegt; jede Zelle bekommt nur den Verweis. Ohne Stile entsteht
+       byte-gleich die alte Datei: zwei Schriften, zwei Verweise, Kopf fett. */
+    const stilSammlung = (blaetter) => {
+        const fonts = ['<font><sz val="11"/><name val="Calibri"/></font>',
+            '<font><b/><sz val="11"/><name val="Calibri"/></font>'];
+        const fontIx = new Map([['', 0], ['f', 1]]);
+        const numFmts = [];
+        const fmtIx = new Map();
+        const xfs = ['<xf xfId="0"/>', '<xf fontId="1" applyFont="1" xfId="0"/>'];
+        const xfIx = new Map();
+        let naechsteFmtId = 164; /* ab hier beginnen eigene Formate */
+        const kombi = (stil) => {
+            if (!stil)
+                return 0;
+            const fett = !!stil.fett, kursiv = !!stil.kursiv;
+            const aus = stil.ausrichtung === 'links' ? 'left'
+                : stil.ausrichtung === 'mitte' ? 'center'
+                    : stil.ausrichtung === 'rechts' ? 'right' : '';
+            const art = (stil.format && stil.format.art) || '';
+            const stellen = stil.format && typeof stil.format.stellen === 'number'
+                ? stil.format.stellen : undefined;
+            const waehrung = (stil.format && stil.format.waehrung) || 'CHF';
+            const key = (fett ? 'f' : '') + (kursiv ? 'k' : '') + '|' + aus + '|' +
+                art + '|' + (stellen ?? '') + '|' + (art === 'waehrung' ? waehrung : '');
+            if (key === '||||')
+                return 0;
+            const bekannt = xfIx.get(key);
+            if (bekannt !== undefined)
+                return bekannt;
+            const fKey = (fett ? 'f' : '') + (kursiv ? 'k' : '');
+            let fId = fontIx.get(fKey);
+            if (fId === undefined) {
+                fId = fonts.length;
+                fonts.push('<font>' + (fett ? '<b/>' : '') + (kursiv ? '<i/>' : '') +
+                    '<sz val="11"/><name val="Calibri"/></font>');
+                fontIx.set(fKey, fId);
+            }
+            let fmtId = 0;
+            if (art === 'prozent' || art === 'waehrung') {
+                /* Die Prozent-Semantik passt: Redion speichert 0.15 und ZEIGT
+                   „15 %" — genau Excels 0%. Beim Geld gehört der Name in
+                   Anführungszeichen, sonst liest Excel das C von CHF als Datum. */
+                const code = art === 'prozent'
+                    ? (stellen ? '0.' + '0'.repeat(stellen) + '%' : '0%')
+                    : '#,##0' + (stellen === 0 ? '' : '.' + '0'.repeat(stellen ?? 2)) +
+                        '\\ "' + waehrung + '"';
+                let id = fmtIx.get(code);
+                if (id === undefined) {
+                    id = naechsteFmtId++;
+                    numFmts.push(`<numFmt numFmtId="${id}" formatCode="${esc(code)}"/>`);
+                    fmtIx.set(code, id);
+                }
+                fmtId = id;
+            }
+            const ix = xfs.length;
+            const attrs = 'xfId="0"' +
+                (fId ? ` fontId="${fId}" applyFont="1"` : '') +
+                (fmtId ? ` numFmtId="${fmtId}" applyNumberFormat="1"` : '');
+            xfs.push(aus
+                ? `<xf ${attrs} applyAlignment="1"><alignment horizontal="${aus}"/></xf>`
+                : `<xf ${attrs}/>`);
+            xfIx.set(key, ix);
+            return ix;
+        };
+        const je = blaetter.map((b) => (b.stile || []).length
+            ? b.stile.map((zeile) => zeile.map((st) => kombi(st)))
+            : null);
+        const xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+            (numFmts.length ? `<numFmts count="${numFmts.length}">` + numFmts.join('') + '</numFmts>' : '') +
+            `<fonts count="${fonts.length}">` + fonts.join('') + '</fonts>' +
+            '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>' +
+            '<borders count="1"><border/></borders>' +
+            '<cellStyleXfs count="1"><xf/></cellStyleXfs>' +
+            `<cellXfs count="${xfs.length}">` + xfs.join('') + '</cellXfs>' +
+            '</styleSheet>';
+        return { xml, je };
+    };
     const alsExcel = async (blaetter, dateiname) => {
         const sicher = (n, i) => String(n || ('Blatt' + (i + 1)))
             .replace(/[\\/:*?[\]]/g, ' ').slice(0, 31) || ('Blatt' + (i + 1));
+        const stile = stilSammlung(blaetter);
         const dateien = [
             { name: '[Content_Types].xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
                     '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
@@ -577,16 +670,9 @@ const Austausch = (() => {
                     'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" ' +
                     'Target="styles.xml"/>' +
                     '</Relationships>' },
-            { name: 'xl/styles.xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-                    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-                    '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>' +
-                    '<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
-                    '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>' +
-                    '<borders count="1"><border/></borders>' +
-                    '<cellStyleXfs count="1"><xf/></cellStyleXfs>' +
-                    '<cellXfs count="2"><xf xfId="0"/><xf fontId="1" applyFont="1" xfId="0"/></cellXfs>' +
-                    '</styleSheet>' }
-        ].concat(blaetter.map((b, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, inhalt: blattXml(b.zeilen) })));
+            { name: 'xl/styles.xml', inhalt: stile.xml }
+        ].concat(blaetter.map((b, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`,
+            inhalt: blattXml(b.zeilen, stile.je[i] || undefined) })));
         const blob = await zipSchreiben(dateien);
         laden(blob, (dateiname || 'Redion') + '.xlsx');
         return blob;

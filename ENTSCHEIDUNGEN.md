@@ -5832,3 +5832,55 @@ Absturzmeldung zurück.
 **L18** führt damit den Punkt „ODS-Mehrblatt" nicht mehr; offen bleiben
 Zellformatierung im Austausch · Kommentare · Bilder · Diagramme ·
 bedingte Formatierung.
+
+
+## E94 · Excel-Export mit Zellformat: Zahlen bleiben Zahlen
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Der Tabellenblock exportierte jede Zelle als ANZEIGETEXT. Drei stille
+Folgen in Excel und LibreOffice:
+
+```txt
+0.15 mit Prozentformat   → „15 %" als TEXT — Summen ergeben 0
+jede Zahl ab tausend     → TEXT, auch ganz ohne Format: die de-CH-
+                           Anzeige fügt das Tausenderzeichen ein
+                           („1'450.5"), und der Schreiber sieht keine
+                           Zahl mehr
+fett · kursiv · Ausrichtung → verschwanden ersatzlos
+```
+
+test165 trug die Spur der zweiten Folge längst mit sich herum: sein
+Vergleich musste Apostrophe wegputzen (`replace(/['']/g, '')`), um
+„1'450" als 1450 zu erkennen. Ein Test, der Zeichen wegputzen muss,
+zeigt auf einen Export, der sie nicht hätte schreiben sollen.
+
+Jetzt gehen ROHWERTE hinaus (`alsRohVon`: Zahl bleibt Zahl, alles
+andere bleibt Anzeigetext) und daneben der Zellstil. `stilSammlung`
+baut die styles.xml dynamisch: gleiche Kombis aus Schrift, Ausrichtung
+und Zahlenformat werden je EINMAL angelegt, jede Zelle trägt nur den
+Verweis. Die Prozent-Semantik passt dabei exakt — Redion speichert
+0.15 und zeigt „15 %", Excels `0%`-Format tut dasselbe. Beim Geld
+steht der Name in Anführungszeichen (`#,##0.00\ "CHF"`), sonst liest
+Excel das C als Datumszeichen.
+
+**Eine Regel wurde dabei ehrlich.** `blattXml` zwang Zeile 1 IMMER zu
+fettem Text. Für die Datenbank-Ausgänge ist das richtig — ihre erste
+Zeile ist der Spaltenkopf. Für den Block war es falsch: seine erste
+Zeile ist Nutzerdaten, und sogar eine ZAHL in Zeile 1 wurde still zu
+Text. Neue Regel: mit Stil-Matrix keine Kopf-Erzwingung, ohne bleibt
+alles beim Alten — die Datenbank-Ausgänge erzeugen byte-gleich
+dieselbe Datei wie vorher (zwei Schriften, keine numFmts, Kopf fett).
+
+**Bewusster Rest:** der ODS-Ausgang schreibt weiter Anzeigetext
+(E95-Kandidat), und beim EINLESEN wird Formatierung noch nicht
+übernommen. Beides steht in L18.
+
+**Geprüft** (test168, 17 Punkte): echte Download-Bytes, das Archiv
+entpackt und sheet1.xml samt styles.xml gelesen (`<v>0.15</v>` mit
+Stilverweis, `<i/>`, `horizontal="right"`, CHF im Format); die
+Rundreise über den eigenen Leser bringt „0.15" zurück, wo vorher
+„15 %" stand. Vier Gegenprobe-Arme, jeder einzeln: der Aufrufer
+zurück auf Anzeigetext (zehn Punkte fallen — das ganze historische
+Schadensbild auf einmal), numFmts weggelassen, kursiv nie
+geschrieben, Kopf-Zwang wieder an.
