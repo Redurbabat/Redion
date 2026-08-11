@@ -160,7 +160,7 @@ const Blocks = (() => {
 
   /** Ein gelesener Block: was er ist, was drinsteht, wie tief er sitzt. */
   type MdBlock = { typ: string; text: string; tiefe: number;
-                   checked?: boolean; lang?: string };
+                   checked?: boolean; lang?: string; zellen?: string[][] };
 
   /** Wie viele Stufen ist die Zeile eingerückt? Vier Leerzeichen = ein Tab. */
   const mdTiefe = (roh: string): number => {
@@ -202,6 +202,25 @@ const Blocks = (() => {
       }
 
       if (!t) continue;                                  /* Leerzeilen weg */
+
+      /* Markdown-Tabelle (L20): eine |-Zeile, unmittelbar gefolgt von der
+         Trennzeile (|---|---|). Alle |-Zeilen danach gehören dazu. Ohne
+         Trennzeile ist es keine Tabelle — dann bleibt die Zeile Text,
+         denn „| a | b |" kann auch einfach so gemeint sein. */
+      if (/^\|.*\|$/.test(t)) {
+        const naechste = (zeilen[i + 1] ?? '').trim();
+        if (/^\|?[\s:|-]+\|?$/.test(naechste) && naechste.includes('-')) {
+          const spaltenVon = (z: string) =>
+            z.replace(/^\|/, '').replace(/\|$/, '').split('|').map(x => x.trim());
+          const daten: string[][] = [spaltenVon(t)];
+          i++;                                 /* die Trennzeile überspringen */
+          while (i + 1 < zeilen.length && /^\|.*\|$/.test((zeilen[i + 1] ?? '').trim()))
+            daten.push(spaltenVon((zeilen[++i] ?? '').trim()));
+          raus.push({ typ: 'tabelle', text: '', tiefe, zellen: daten });
+          continue;
+        }
+      }
+
       if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { raus.push({ typ: 'divider', text: '', tiefe }); continue; }
 
       let m;
@@ -249,6 +268,30 @@ const Blocks = (() => {
       const tiefe = Math.min(teil.tiefe, stapel.length - 1);
       const ziel = tiefe === 0 ? elternId : stapel[tiefe];
       if (!ziel) return;
+
+      /* Eine Markdown-Tabelle wird ein Tabellenblock (E88). Die Zellen
+         gehen durch Spreadsheet.setze, damit aus „12" eine Zahl wird und
+         aus „=A1+B1" eine Formel — genau wie beim Tippen. */
+      if (teil.typ === 'tabelle' && teil.zellen &&
+          typeof Spreadsheet !== 'undefined' && typeof CellRefs !== 'undefined') {
+        const neuT = tiefe === 0
+          ? Store.addBlock(ziel, 'spreadsheet', { text: 'Tabelle' }, idx++)
+          : Store.addBlock(ziel, 'spreadsheet', { text: 'Tabelle' });
+        const mappe = Spreadsheet.neueMappe('Tabelle');
+        const blatt = mappe.blaetter[0];
+        blatt.zeilen  = Math.max(blatt.zeilen,  teil.zellen.length);
+        blatt.spalten = Math.max(blatt.spalten,
+          teil.zellen.reduce((m, z) => Math.max(m, z.length), 1));
+        teil.zellen.forEach((zeile, z) => zeile.forEach((wert, s) => {
+          if (wert !== '') Spreadsheet.setze(blatt, CellRefs.schreibe(z, s), wert);
+        }));
+        Store.updateBlock(neuT.id, { mappe });
+        stapel.length = tiefe + 1;
+        stapel.push(neuT.id);
+        gesetzt.push(neuT.id);
+        return;
+      }
+
       const props: any = { text: teil.text };
       if (teil.checked) props.checked = true;
       if (teil.lang) props.lang = teil.lang;
@@ -2729,6 +2772,30 @@ const Blocks = (() => {
       callout: '> 💡 ' } as Record<string, string>)[b.type] || '';
     if (b.type === 'divider') return '---';
     if (b.type === 'code') return '```' + (b.lang || '') + '\n' + (b.text || '') + '\n```';
+
+    /* Der Tabellenblock geht als Markdown-Tabelle hinaus (E88) — die
+       Gegenrichtung zum Einfügen. Was er sonst schriebe, wäre sein leerer
+       `text`: die Tabelle wäre beim Kopieren einfach verschwunden. */
+    if (b.type === 'spreadsheet' && b.mappe && b.mappe.blaetter &&
+        typeof Spreadsheet !== 'undefined' && typeof CellRefs !== 'undefined') {
+      const blatt = b.mappe.blaetter.find((x: any) => x.id === b.mappe.aktiv)
+                 || b.mappe.blaetter[0];
+      if (blatt) {
+        let hochZ = 0, hochS = 0;
+        Object.keys(blatt.zellen || {}).forEach(a => {
+          const p = CellRefs.lies(a);
+          if (p) { hochZ = Math.max(hochZ, p.zeile + 1); hochS = Math.max(hochS, p.spalte + 1); }
+        });
+        if (hochZ && hochS) {
+          const zeile = (z: number) => '| ' + Array.from({ length: hochS }, (_, s) =>
+            String(Spreadsheet.eingabe(blatt, CellRefs.schreibe(z, s)) ?? '')
+              .replace(/\|/g, '\\|').replace(/\n/g, ' ')).join(' | ') + ' |';
+          const trenner = '|' + Array.from({ length: hochS }, () => ' --- |').join('');
+          return [zeile(0), trenner,
+                  ...Array.from({ length: hochZ - 1 }, (_, z) => zeile(z + 1))].join('\n');
+        }
+      }
+    }
     return marke + (b.text || '');
   }).join('\n');
 

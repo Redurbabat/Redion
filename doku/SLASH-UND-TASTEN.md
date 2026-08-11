@@ -170,6 +170,7 @@ Block, samt Rautezeichen. Seit test132 liest Redion die Gegenrichtung:
 | Leerzeilen | Fallen weg, statt leere Blöcke anzulegen | ✅ |
 | Eine Zeile ohne Gliederung | Bleibt Text im selben Block | ✅ |
 | Im Codeblock | Markdown bleibt Text und wird nicht gelesen | ✅ |
+| `\| a \| b \|` mit Trennzeile | Tabellenblock — Zahlen als Zahlen, `=`-Formeln als Formeln | ✅ *(E88; ohne Trennzeile bleibt es Text, und Strg+C schreibt die Gegenrichtung)* |
 
 Eine Zeile wird ein Block — nicht die Markdown-Regel „zwei Zeilen sind ein
 Absatz". Für eine Notiz-App ist das die Erwartung, und Notion macht es

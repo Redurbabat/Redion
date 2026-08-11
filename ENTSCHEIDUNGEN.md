@@ -5565,3 +5565,36 @@ Beide warten jetzt auf den ZUSTAND statt auf die Uhr und bleiben
 rot-fähig: ohne Willkommen bzw. mit gekapptem Kanal UND Notnagel kippen
 sie — der zweite Arm bewies dabei nebenher, dass der localStorage-
 Notnagel allein den Abgleich trägt.
+
+
+## E88 · Markdown-Tabellen: Einfügen wird ein Tabellenblock, Kopieren schreibt ihn
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L20
+
+`| Ware | Preis |` mit Trennzeile wurde beim Einfügen gewöhnlicher Text —
+die Gliederung war da, und Redion warf sie weg. Jetzt:
+
+```txt
+Einfügen   eine |-Zeile mit Trennzeile darunter wird ein TABELLENBLOCK;
+           alle |-Zeilen danach gehören dazu. Die Zellen gehen durch
+           Spreadsheet.setze — aus „12" wird eine Zahl, aus „=A1+B1"
+           eine Formel, genau wie beim Tippen.
+Ohne       Trennzeile keine Tabelle: „| a | b |" kann auch einfach so
+           gemeinter Text sein — er bleibt Text, mit den Zeichen darin.
+Kopieren   Strg+C schreibt den Tabellenblock als Markdown-Tabelle.
+           Vorher VERSCHWAND er beim Kopieren: sein `text` ist leer,
+           und genau der wurde geschrieben. Der Kreis schliesst sich:
+           kopieren, einfügen, und Kopf wie Zahlen stehen wieder da.
+```
+
+Der Editor fasst dafür kein Bereichs-Modul an: `Spreadsheet` und
+`CellRefs` sind Kern (src/core), für Bereiche erlaubt — Regel 1 hält.
+
+**Geprüft** (test162, 12 Punkte): Überschrift bleibt Überschrift, Tabelle
+wird Block · B2 ist die ZAHL 3.5 (typeof number) · C2 ist eine Formel ·
+ohne Trennzeile bleiben Textblöcke samt Zeichen · der Kreis
+Strg+C→Einfügen trägt Kopf und Zahl zurück. Vier Gegenprobe-Arme: ohne
+Leser-Zweig wird alles Text, ohne Trennzeilen-Pflicht wird falscher Text
+zur Tabelle, ohne setze bleiben Zahlen Zeichenketten, ohne Serialisierung
+verschwindet die Tabelle beim Kopieren — jeder kippte genau seine Punkte.
+test132 (Markdown, 81 Punkte) blieb unangetastet grün.

@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 127 Prüfläufe**
+**9. August 2026 · 128 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -94,6 +94,9 @@ L20  Ausfüllen im Raster (E87) — Strg+D nach unten, Strg+R nach
      lag der Fokus auf BODY — die ganze Rastertastatur ging bis zum
      ersten Tab ins Leere, und kein Lauf sah es, weil der Prüfstand
      per feld.focus() den Tab-Druck tat, den der Mensch nicht wusste
+L20  Markdown-Tabellen (E88) — Einfügen wird ein Tabellenblock (Zahlen
+     als Zahlen, =Formeln als Formeln), Strg+C schreibt ihn als
+     |-Zeilen zurück; vorher verschwand der Block beim Kopieren
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -630,12 +633,11 @@ summary block · File gallery · Button automation block.
 
 ## L20 · Markdown- und Tastenkürzel
 
-**Stand** — ✅ Markdown, gemessen statt gezählt · ◐ Tastenkürzel: die
-Referenz (doku/SLASH-UND-TASTEN.md) führt als offen nur noch
-Alt+Umschalt+Klick zur Blockauswahl und ein paar ◐-Halbheiten;
-Strg+R/Strg+D zum Ausfüllen kamen mit E87. Offen bleibt ausserdem:
-Markdown-Tabellen beim Einfügen (`| a | b |` wird noch Text, kein
-Tabellenblock).
+**Stand** — ✅ Markdown, gemessen statt gezählt (Tabellen seit E88 in
+beide Richtungen) · ◐ Tastenkürzel: die Referenz
+(doku/SLASH-UND-TASTEN.md) führt als offen nur noch Alt+Umschalt+Klick
+zur Blockauswahl und ein paar ◐-Halbheiten; Strg+R/Strg+D zum Ausfüllen
+kamen mit E87.
 
 Der Zeile-für-Zeile-Vergleich ist da: `pruefungen/lauf/test132.mts` **tippt**
 jedes Kürzel und liest ab, was daraus wird. Er hat vier Behauptungen
