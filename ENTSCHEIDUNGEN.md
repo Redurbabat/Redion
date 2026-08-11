@@ -5646,3 +5646,40 @@ Namen und ausgerechneter Formel · ⊞/☰ in beide Richtungen, je Block
 gemerkt · die leere Tabelle nennt den Weg · am Rechner das Raster wie
 immer. Fünf Arme einzeln rot (Standard, Feldnamen, Rechenlauf — dessen
 Rot der echte Vor-Fix-Lauf war —, Merken, Leer-Hinweis).
+
+
+## E90 · Die Blocktypen-Inventur: 76 statt „58 von 97", und vier Kandidaten gab es längst
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L19
+
+L19 stand seit Wochen auf „58 von 97 gemessen; welche wirklich fehlen,
+ist ungeprüft" — mit sechs Kandidaten. Die Inventur (aus dem laufenden
+Register erzeugt, nicht abgetippt) ergab:
+
+```txt
+76   Einträge führt Register.bloecke — nicht 58. Seit der Zählung
+     kamen unter anderem Kalkulationstabelle (E29), Whiteboard,
+     Diagramm und Karteikarte dazu, und niemand zählte nach.
+4/6  der „fehlenden" Kandidaten gab es LÄNGST: Breadcrumb (breadcrumb),
+     Synced view (linkeddb + synced), AI summary (ai-summary),
+     Button (button).
+2/6  sind anders gelöst: File gallery über die Galerie-Ansicht und den
+     Dateien-Bereich; Relation preview ist Eigenschafts-Verhalten
+     (Zeilen-Peek), kein Blocktyp.
+```
+
+Die Inventur steht in `doku/BLOCKTYPEN.md` — mechanisch erzeugt, damit
+kein Abtippen sie verfälscht — und `test164` hält Doku und Register
+zusammen: jede Kennung beidseitig, Anzahl gleich, Standzeile stimmt.
+Eine Inventur, die vom Bestand abweichen kann, ohne dass etwas rot wird,
+wäre in einem Monat wieder die alte Lüge.
+
+Die Notion-Seite der Zählung (97) bleibt als Alt-Messung stehen, deren
+Einzelliste nie archiviert wurde. Ohne neuen Blick in Notion ist sie
+nicht belegbar — und geraten wird nicht (E21).
+
+**Die Lehre** reiht sich ein: „58 von 97" hat niemand angezweifelt, weil
+es präzise KLANG. Präzision der Form ist kein Beleg. Dieselbe Sorte
+Behauptung fiel diese Woche bei den Menü-Blättern, beim Wischen, bei der
+Eigen-Schleife der Automationen — jedes Mal war Nachsehen billiger als
+die Falschaussage.

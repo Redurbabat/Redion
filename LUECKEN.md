@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 129 Prüfläufe**
+**9. August 2026 · 130 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -631,10 +631,22 @@ Diagramme · bedingte Formatierung · ODS ganz.
 
 ## L19 · Fehlende oder ungeprüfte Blocktypen
 
-**Stand** — ◐ 58 von 97 gemessen; welche wirklich fehlen, ist ungeprüft.
+**Stand** — ✅ inventarisiert am 9. August (E90): das Register führt
+**76** Einträge, aufgeschrieben in `doku/BLOCKTYPEN.md` — erzeugt aus
+dem Register, nicht abgetippt, und `test164` hält beide zusammen.
 
-Kandidaten: Breadcrumb · Synced database view · Relation preview · AI
-summary block · File gallery · Button automation block.
+Die alte Zeile hier war doppelt falsch: sie zählte 58 (das Register
+führte 76 — seit E29 kamen unter anderem Kalkulationstabelle,
+Whiteboard, Diagramm und Karteikarte dazu), und von den sechs
+„Kandidaten" gab es VIER längst: Breadcrumb (`breadcrumb`), Synced view
+(`linkeddb` und `synced`), AI summary (`ai-summary`), Button (`button`).
+Die übrigen zwei sind anders gelöst — File gallery über die
+Galerie-Ansicht und den Dateien-Bereich, Relation preview ist
+Eigenschafts-Verhalten (Zeilen-Peek), kein Blocktyp.
+
+Die Notion-Seite der alten Zählung (97) ist eine Alt-Messung ohne
+archivierte Einzelliste; ohne neuen Blick in Notion ist sie nicht
+belegbar, und geraten wird nicht (E21).
 
 ## L20 · Markdown- und Tastenkürzel
 
@@ -858,7 +870,7 @@ sie nicht neu gemessen werden müssen.
 
 | Liste | Notion | Redion | Stand |
 |---|--:|--:|:--:|
-| Blocktypen | 97 | 58 | ◐ |
+| Blocktypen | 97 *(Alt-Messung, Einzelliste nicht archiviert)* | 76 — `doku/BLOCKTYPEN.md`, gehalten von test164 | ✅ |
 | Eigenschaftstypen | 29 | 35 | ✅ |
 | Ansichten | 11 | 12 | ✅ |
 | Tastenkürzel | 160 | 127 | ◐ |
