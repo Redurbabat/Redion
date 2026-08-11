@@ -698,14 +698,21 @@ const Store = (() => {
     const addDatabase = (parentId, name = 'Neue Datenbank', schema = null, layout = 'table') => {
         const colId = uid();
         const viewId = uid();
+        /* Schema-Schlüssel über Ids.short, nie roh aus uid(): ein rein
+           numerischer Schnipsel („2345") ist ein Integer-Schlüssel und stünde
+           in Object.keys VOR dem Titel — bei vier Hex-Zeichen trifft das 15 %
+           aller Schlüssel (E96). Der Rückfall greift nur, wenn diese Datei
+           allein geladen wird, und stellt dann einen Buchstaben voran. */
+        const kurz = (n) => (typeof Ids !== 'undefined')
+            ? Ids.short(n) : 'k' + uid().slice(0, n - 1);
         const s = schema || {
             title: { name: 'Name', type: 'title' },
-            [uid().slice(0, 4)]: { name: 'Status', type: 'select', options: [
+            [kurz(4)]: { name: 'Status', type: 'select', options: [
                     { name: 'Offen', color: 'gray' },
                     { name: 'In Arbeit', color: 'blue' },
                     { name: 'Erledigt', color: 'green' }
                 ] },
-            [uid().slice(0, 4)]: { name: 'Datum', type: 'date' }
+            [kurz(4)]: { name: 'Datum', type: 'date' }
         };
         cache.collections[colId] = {
             id: colId, name, icon: '🗂️', schema: s, viewIds: [viewId], created: now()

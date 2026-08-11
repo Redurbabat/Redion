@@ -1312,7 +1312,7 @@ const Datenbank = (() => {
       const ziel = Store.getCollection(zielId);
       if (wechsel && ziel) {
         if (!def.gegen || !ziel.schema[def.gegen]) {
-          const gk = Store.uid().slice(0, 5);
+          const gk = Ids.short(5);
           ziel.schema[gk] = { name: coll.name, type: 'relation', ziel: coll.id, gegen: key, limit: 0 };
           def.gegen = gk;
           Store.updateCollection(ziel.id, { schema: ziel.schema });
@@ -5058,7 +5058,9 @@ const Datenbank = (() => {
                                     neben: { nebenKey?: string; versatz?: number } | null = null) => {
     const name = await UI.frage('Name der Eigenschaft', propTyp(t).name);
     if (!name) return null;
-    const key = Store.uid().slice(0, 5);
+    /* Ids.short, nie uid().slice: ein rein numerischer Schlüssel wandert
+       in Object.keys an Position 0, und die Spalte stünde immer vorn (E96). */
+    const key = Ids.short(5);
     const def: Record<string, any> = { name, type: t };
     if (['select','status','multi'].includes(t)) def.options = [];
     if (t === 'formula') {
@@ -5609,7 +5611,7 @@ const Datenbank = (() => {
       }
       if (a === 'feldrechte') { m.remove(); Feldrechte.fenster(coll.id); }
       if (a === 'dup') {
-        const neuKey = Store.uid().slice(0, 5);
+        const neuKey = Ids.short(5);
         coll.schema[neuKey] = JSON.parse(JSON.stringify(def));
         coll.schema[neuKey].name = def.name + ' Kopie';
         Store.updateCollection(coll.id, { schema: coll.schema });
@@ -8271,7 +8273,7 @@ const Datenbank = (() => {
       /* Jetzt erst die neuen Spalten anlegen. */
       plan.forEach((x, i) => {
         if (!x.neu) return;
-        x.key = Store.uid().slice(0, 5);
+        x.key = Ids.short(5);
         const def: Record<string, any> = { name: x.name || 'Spalte ' + (i + 1), type: x.typ || 'text' };
         /* Eine Auswahlspalte braucht ihre Möglichkeiten, sonst ist sie eine
            Auswahl ohne Auswahl. Die Farben nimmt sie der Reihe nach — das
@@ -8333,7 +8335,7 @@ const Datenbank = (() => {
            wiederkehrendeAutomationen, taktMarke, inZone, ZONEN, eigeneZone,
            typGruppen, BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
            pruefeWert, pruefeZeile, hatRegeln, regelnDialog, MUSTER_VORLAGEN,
-           alsPivot, pivotRechne, PIVOT_ARTEN, formelEinruecken, teilausdruecke,
+           alsPivot, pivotRechne, PIVOT_ARTEN, eigenschaftAnlegen, formelEinruecken, teilausdruecke,
            ansichtKopie, ansichtVorlagen, gruppenListe, gruppeVon, ZEIT_STUFEN, ZS_STUFEN, kartenBild,
            typName, drilldown,
            typMenue, TYP_GRUPPEN, alsDashboard, zeilenGesamt, begrenzen, layoutPanel, farbregelPanel, farbeFuerZeile,

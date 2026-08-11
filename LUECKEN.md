@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**11. August 2026 · 135 Prüfläufe**
+**11. August 2026 · 136 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -836,6 +836,21 @@ kein Prüflauf erinnert, wird vergessen.
 ---
 
 # Später
+
+## L36 · Rein numerische Spaltenschlüssel im Bestand
+
+Bis E96 entstanden Spaltenschlüssel als Hex-Schnipsel — 9,6 % davon
+rein numerisch, und solche Schlüssel sortiert JavaScript in
+`Object.keys` vor alle anderen: die Spalte steht immer ganz links,
+egal wo sie eingefügt wurde. Neue Schlüssel beginnen seit E96 nie mehr
+mit einer Ziffer (test170); test33s alte Erklärung dafür („fremdes
+Menü") ist berichtigt.
+
+Offen bleibt der BESTAND: eine vor E96 angelegte Spalte kann einen
+rein numerischen Schlüssel tragen und bleibt dann vorn einsortiert,
+bis sie neu angelegt wird. Eine stille Umbenennung wäre eine
+Datenmigration (Bezüge in Zeilen, Ansichten, Formeln, Automationen,
+Sicherungen) — die gibt es nur mit eigenem Plan und Tests (§9).
 
 ## L23 · Abfragesprache für normale Nutzer
 

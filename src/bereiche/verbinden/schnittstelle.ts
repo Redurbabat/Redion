@@ -643,7 +643,7 @@ const Api = (() => {
     Object.entries<any>(k.properties || {}).forEach(([nm, d]) => {
       const typ = Object.keys(d || {})[0] || 'rich_text';
       const unser = Object.keys(TYP_API).find(x => TYP_API[x] === typ) || 'text';
-      const key = unser === 'title' ? 'title' : Store.uid().slice(0, 6);
+      const key = unser === 'title' ? 'title' : Ids.short(6);
       schema[key] = { name: nm, type: unser };
       if (d[typ] && Array.isArray(d[typ].options))
         schema[key].options = d[typ].options.map((o: any) => o.name);
@@ -667,7 +667,7 @@ const Api = (() => {
         if (d === null) { if (key) delete schema[key]; return; }
         const typ = Object.keys(d || {}).find(x => x !== 'name');
         const unser = Object.keys(TYP_API).find(x => TYP_API[x] === typ);
-        const ziel = key || Store.uid().slice(0, 6);
+        const ziel = key || Ids.short(6);
         schema[ziel] = { ...(schema[ziel] || {}), name: d.name || nm };
         if (unser) schema[ziel].type = unser;
         if (!schema[ziel].type) schema[ziel].type = 'text';

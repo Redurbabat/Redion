@@ -56,8 +56,20 @@ const Ids = (() => {
                Indexzugriff `undefined` für möglich hält; hier kann es das nicht. */
             ('89ab'[Math.floor(Math.random() * 4)] ?? '8') +
             randomHex(3) + '-' + randomHex(12);
-    /** Kurz, aber immer noch zufällig. Für Spaltenschlüssel. */
-    const short = (n = 5) => long().replace(/-/g, '').slice(0, n);
+    /** Kurz, aber immer noch zufällig. Für Spaltenschlüssel.
+     *
+     * NIE REIN NUMERISCH. Ein Schlüssel wie „12345" ist für JavaScript ein
+     * Integer-Schlüssel und wandert in `Object.keys` VOR alle String-Schlüssel
+     * — eine so benannte Spalte stünde immer ganz links, egal wo sie
+     * eingefügt wurde. Bei fünf Hex-Zeichen trifft das 9,6 % aller Schlüssel,
+     * bei vieren 15 % (gemessen, E96). Beginnt der Schnipsel mit einer
+     * Ziffer, wird sie deterministisch auf a–f abgebildet. */
+    const short = (n = 5) => {
+        const roh = long().replace(/-/g, '').slice(0, n);
+        return /^[0-9]/.test(roh)
+            ? ('abcdef'[roh.charCodeAt(0) % 6] ?? 'a') + roh.slice(1)
+            : roh;
+    };
     /* Ohne 0/O und 1/I/L — die verwechselt jeder beim Abtippen. */
     const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     /** Ein Code zum Vorlesen und Eintippen, z. B. „K7M2-QW9F". */

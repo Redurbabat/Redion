@@ -6332,8 +6332,20 @@ const Ids = (() => {
                Indexzugriff `undefined` für möglich hält; hier kann es das nicht. */
             ('89ab'[Math.floor(Math.random() * 4)] ?? '8') +
             randomHex(3) + '-' + randomHex(12);
-    /** Kurz, aber immer noch zufällig. Für Spaltenschlüssel. */
-    const short = (n = 5) => long().replace(/-/g, '').slice(0, n);
+    /** Kurz, aber immer noch zufällig. Für Spaltenschlüssel.
+     *
+     * NIE REIN NUMERISCH. Ein Schlüssel wie „12345" ist für JavaScript ein
+     * Integer-Schlüssel und wandert in `Object.keys` VOR alle String-Schlüssel
+     * — eine so benannte Spalte stünde immer ganz links, egal wo sie
+     * eingefügt wurde. Bei fünf Hex-Zeichen trifft das 9,6 % aller Schlüssel,
+     * bei vieren 15 % (gemessen, E96). Beginnt der Schnipsel mit einer
+     * Ziffer, wird sie deterministisch auf a–f abgebildet. */
+    const short = (n = 5) => {
+        const roh = long().replace(/-/g, '').slice(0, n);
+        return /^[0-9]/.test(roh)
+            ? ('abcdef'[roh.charCodeAt(0) % 6] ?? 'a') + roh.slice(1)
+            : roh;
+    };
     /* Ohne 0/O und 1/I/L — die verwechselt jeder beim Abtippen. */
     const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     /** Ein Code zum Vorlesen und Eintippen, z. B. „K7M2-QW9F". */
@@ -13474,14 +13486,21 @@ const Store = (() => {
     const addDatabase = (parentId, name = 'Neue Datenbank', schema = null, layout = 'table') => {
         const colId = uid();
         const viewId = uid();
+        /* Schema-Schlüssel über Ids.short, nie roh aus uid(): ein rein
+           numerischer Schnipsel („2345") ist ein Integer-Schlüssel und stünde
+           in Object.keys VOR dem Titel — bei vier Hex-Zeichen trifft das 15 %
+           aller Schlüssel (E96). Der Rückfall greift nur, wenn diese Datei
+           allein geladen wird, und stellt dann einen Buchstaben voran. */
+        const kurz = (n) => (typeof Ids !== 'undefined')
+            ? Ids.short(n) : 'k' + uid().slice(0, n - 1);
         const s = schema || {
             title: { name: 'Name', type: 'title' },
-            [uid().slice(0, 4)]: { name: 'Status', type: 'select', options: [
+            [kurz(4)]: { name: 'Status', type: 'select', options: [
                     { name: 'Offen', color: 'gray' },
                     { name: 'In Arbeit', color: 'blue' },
                     { name: 'Erledigt', color: 'green' }
                 ] },
-            [uid().slice(0, 4)]: { name: 'Datum', type: 'date' }
+            [kurz(4)]: { name: 'Datum', type: 'date' }
         };
         cache.collections[colId] = {
             id: colId, name, icon: '🗂️', schema: s, viewIds: [viewId], created: now()
@@ -26705,7 +26724,7 @@ const Datenbank = (() => {
             const ziel = Store.getCollection(zielId);
             if (wechsel && ziel) {
                 if (!def.gegen || !ziel.schema[def.gegen]) {
-                    const gk = Store.uid().slice(0, 5);
+                    const gk = Ids.short(5);
                     ziel.schema[gk] = { name: coll.name, type: 'relation', ziel: coll.id, gegen: key, limit: 0 };
                     def.gegen = gk;
                     Store.updateCollection(ziel.id, { schema: ziel.schema });
@@ -30652,7 +30671,9 @@ const Datenbank = (() => {
         const name = await UI.frage('Name der Eigenschaft', propTyp(t).name);
         if (!name)
             return null;
-        const key = Store.uid().slice(0, 5);
+        /* Ids.short, nie uid().slice: ein rein numerischer Schlüssel wandert
+           in Object.keys an Position 0, und die Spalte stünde immer vorn (E96). */
+        const key = Ids.short(5);
         const def = { name, type: t };
         if (['select', 'status', 'multi'].includes(t))
             def.options = [];
@@ -31242,7 +31263,7 @@ const Datenbank = (() => {
                 Feldrechte.fenster(coll.id);
             }
             if (a === 'dup') {
-                const neuKey = Store.uid().slice(0, 5);
+                const neuKey = Ids.short(5);
                 coll.schema[neuKey] = JSON.parse(JSON.stringify(def));
                 coll.schema[neuKey].name = def.name + ' Kopie';
                 Store.updateCollection(coll.id, { schema: coll.schema });
@@ -34117,7 +34138,7 @@ const Datenbank = (() => {
             plan.forEach((x, i) => {
                 if (!x.neu)
                     return;
-                x.key = Store.uid().slice(0, 5);
+                x.key = Ids.short(5);
                 const def = { name: x.name || 'Spalte ' + (i + 1), type: x.typ || 'text' };
                 /* Eine Auswahlspalte braucht ihre Möglichkeiten, sonst ist sie eine
                    Auswahl ohne Auswahl. Die Farben nimmt sie der Reihe nach — das
@@ -34177,7 +34198,7 @@ const Datenbank = (() => {
         wiederkehrendeAutomationen, taktMarke, inZone, ZONEN, eigeneZone,
         typGruppen, BEDINGUNGEN, bedingungTrifft, bedingungText, bedingungenTreffen, WOCHENTAGE,
         pruefeWert, pruefeZeile, hatRegeln, regelnDialog, MUSTER_VORLAGEN,
-        alsPivot, pivotRechne, PIVOT_ARTEN, formelEinruecken, teilausdruecke,
+        alsPivot, pivotRechne, PIVOT_ARTEN, eigenschaftAnlegen, formelEinruecken, teilausdruecke,
         ansichtKopie, ansichtVorlagen, gruppenListe, gruppeVon, ZEIT_STUFEN, ZS_STUFEN, kartenBild,
         typName, drilldown,
         typMenue, TYP_GRUPPEN, alsDashboard, zeilenGesamt, begrenzen, layoutPanel, farbregelPanel, farbeFuerZeile,
@@ -56769,7 +56790,7 @@ const Api = (() => {
         Object.entries(k.properties || {}).forEach(([nm, d]) => {
             const typ = Object.keys(d || {})[0] || 'rich_text';
             const unser = Object.keys(TYP_API).find(x => TYP_API[x] === typ) || 'text';
-            const key = unser === 'title' ? 'title' : Store.uid().slice(0, 6);
+            const key = unser === 'title' ? 'title' : Ids.short(6);
             schema[key] = { name: nm, type: unser };
             if (d[typ] && Array.isArray(d[typ].options))
                 schema[key].options = d[typ].options.map((o) => o.name);
@@ -56797,7 +56818,7 @@ const Api = (() => {
                 }
                 const typ = Object.keys(d || {}).find(x => x !== 'name');
                 const unser = Object.keys(TYP_API).find(x => TYP_API[x] === typ);
-                const ziel = key || Store.uid().slice(0, 6);
+                const ziel = key || Ids.short(6);
                 schema[ziel] = { ...(schema[ziel] || {}), name: d.name || nm };
                 if (unser)
                     schema[ziel].type = unser;

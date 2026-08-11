@@ -5917,3 +5917,53 @@ kursiv/fett/Ausrichtung, Stilverweise an den Zellen); die Rundreise
 Vier Gegenprobe-Arme, jeder einzeln: der Anzeigetext-Rückfall (zehn
 Punkte fallen), der nie angelegte Zahlenstil, das nie geschriebene
 kursiv, der verlorene Stilverweis.
+
+
+## E96 · Spaltenschlüssel dürfen nicht rein numerisch sein
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Fund:** voll53
+
+Der erste rote Volldurchlauf seit Tagen: test33 fand die neue Spalte
+VORN statt rechts neben ihrem Anker — `["Dazwischen","Name","Menge",
+"Art"]`. Der Einfüge-Code war fehlerfrei. Die Wurzel liegt in der
+Sprache: JavaScript sortiert Integer-artige Schlüssel („12345") in
+`Object.keys` VOR alle String-Schlüssel, in aufsteigender Zahlfolge.
+Und Spaltenschlüssel entstanden als `Store.uid().slice(0, 5)` — fünf
+Zeichen einer Hex-UUID. Gemessen (200 000 Ziehungen): **9,61 %** davon
+sind rein numerisch. Also landete etwa jede zehnte neue Spalte an
+Position 0, egal wo sie hingehörte — und bei der Standard-Datenbank
+(vier Zeichen, 15 % je Schlüssel) stand mit gut einem Viertel
+Wahrscheinlichkeit Status oder Datum VOR dem Titel, seit es sie gibt.
+
+**Eine alte Diagnose fällt damit.** test33 war an dieser Prüfung schon
+zweimal gescheitert, und sein Kommentar erklärte: „die Spalte landete
+vorn, weil das Menü einer anderen Spalte offen war." Klang plausibel,
+war messbar falsch — ein falsches Menü setzt die Spalte NEBEN die
+falsche Ankerspalte, aber nie an Position 0. Der Wächter gegen fremde
+Menüs bleibt (den Fall gibt es), die Behauptung ist berichtigt. Die
+E90-Lehre, wieder einmal: eine plausible Erklärung ist kein Beleg,
+auch nicht im eigenen Prüfkommentar.
+
+**Der Fix wohnt an einer Stelle:** `Ids.short(n)` bildet einen
+Ziffern-Anfang deterministisch auf a–f ab und beginnt damit nie mit
+einer Ziffer. Alle Schema-Schlüssel-Erzeuger rufen jetzt `Ids.short`:
+`eigenschaftAnlegen`, Duplizieren, der Import-Spaltenplan, die
+Gegen-Relation (steuerung), die API-Schemata (verbinden) und das
+Standard-Schema neuer Datenbanken (indexdb, mit Wächter-Rückfall
+`'k' + …`, falls die Datei allein geladen wird).
+
+**Geprüft** (test170, 9 Punkte): der Mechanismus selbst als
+Kanarienvogel (ändert V8 die Regel, wird der Punkt rot), 1600
+Ziehungen ohne Ziffern-Anfang, der ECHTE Weg über das exportierte
+`eigenschaftAnlegen` 25-mal, die Standard-Datenbank 30-mal, vier
+Quelltext-Zeugen. Zwei Gegenprobe-Arme einzeln: das tote Remap bringt
+Ziehungs-, Echtweg- und Standard-Probe gleichzeitig zu Fall (der alte
+Zufall, live); der erzwungene Schlüssel „12345" trifft NUR den
+Echtweg — deterministisch, 25 von 25 vorn. test33 danach dreimal
+hintereinander grün.
+
+**Bewusster Rest (L36):** Bestandsdaten können bereits rein numerische
+Schlüssel tragen — solche Spalten sortieren weiterhin nach vorn, bis
+sie neu angelegt werden. Eine stille Umbenennung wäre eine
+Datenmigration mit Bezügen in Zeilen, Ansichten, Formeln und
+Automationen — nicht nebenbei (§9).

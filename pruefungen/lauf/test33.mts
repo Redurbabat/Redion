@@ -437,11 +437,18 @@ import { chromium } from 'playwright';
      Folge. */
   /* FEHLT DER NAME, IST DAS KEIN FREIBRIEF — und genau das stand hier.
      `!menueVon` galt als „richtiges Menü", also lief die Prüfung auch dann,
-     wenn gar nicht festzustellen war, wozu das offene Menü gehört. Unter
-     Last ist das der häufigste Fall, und die Folge war eine rote Zeile
-     über die Spaltenfolge, die mit der Spaltenfolge nichts zu tun hatte:
-     gemessen kam ["Dazwischen","Name","Menge","Art"] — die Spalte landete
-     vorn, weil das Menü einer anderen Spalte offen war.
+     wenn gar nicht festzustellen war, wozu das offene Menü gehört.
+
+     UND EINE DIAGNOSE HIER WAR FALSCH. An dieser Stelle stand: „die
+     Spalte landete vorn, weil das Menü einer anderen Spalte offen war."
+     Ein falsches Menü setzt die Spalte woandershin — aber nie an
+     Position 0. Vorn landete sie, wenn der Zufallsschlüssel rein
+     numerisch ausfiel („77577"): Integer-artige Schlüssel sortiert
+     JavaScript in Object.keys VOR alle String-Schlüssel, und
+     `uid().slice(0, 5)` ist Hex — das traf 9,6 % aller neuen Spalten.
+     Behoben in E96 (`Ids.short` beginnt nie mit einer Ziffer),
+     festgehalten in test170. Der Wächter hier bleibt trotzdem — gegen
+     den echten Fall des fremden Menüs, der die Folge ANDERS verschiebt.
 
      Wer nicht weiss, worauf er zeigt, darf nichts behaupten. */
   const richtigesMenue = !!menueVon && /Menge/.test(menueVon);
