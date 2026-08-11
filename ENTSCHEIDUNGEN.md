@@ -5683,3 +5683,43 @@ es präzise KLANG. Präzision der Form ist kein Beleg. Dieselbe Sorte
 Behauptung fiel diese Woche bei den Menü-Blättern, beim Wischen, bei der
 Eigen-Schleife der Automationen — jedes Mal war Nachsehen billiger als
 die Falschaussage.
+
+
+## E91 · Excel-Mehrblatt: die ganze Mappe raus, jedes Blatt herein
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Der Excel-SCHREIBER konnte Mehrblatt von Anfang an — Content-Types,
+workbook und Beziehungen mappen alle über eine Blätterliste. Aber der
+Aufrufer im Tabellenblock gab ihm nur das AKTIVE Blatt: eine Mappe mit
+drei Blättern kam als eines heraus, und niemand sagte es. Das ist die
+§13-Klasse — Export darf nicht Daten verschweigen — an ihrer stillsten
+Stelle: die Datei sah vollständig aus.
+
+Und der Import nahm nur Blatt 1, begründet mit einem Satz, der Mehrblatt
+je Block VERNEINTE — während die Blattreiter am unteren Rand desselben
+Blocks es längst konnten. Ein Kommentar ist keine Funktion; hier war er
+nicht einmal eine Wahrheit.
+
+```txt
+Export   die GANZE Mappe: je Blatt ein Arbeitsblatt, mit Namen
+Import   eine mehrblättrige Datei legt je Blatt ein EIGENES Blatt der
+         Mappe an (freie Namen über freierName); ein einblättriges
+         geht weiter den alten Weg — an den Schreibzeiger, mit
+         Zählung des Überschriebenen
+```
+
+**Geprüft mit echten Bytes** (test165, 12 Punkte): der Export läuft bis
+zum echten Browser-Download (Playwright fängt die Datei), gelesen wird
+mit dem echten Leser — die Rundreise Mappe → .xlsx → Mappe trägt beide
+Blätter samt Zellwerten (Zahl bleibt Zahl). Gegenprobe-Arme: der
+Export-Rückfall aufs aktive Blatt zeigt „Datei trägt 1 statt 2", der
+gestrichene Import-Zweig kippt den Quelltext-Zeugen — der erste Zeuge
+dafür war untauglich, weil `K.neuesBlatt(freierName(` auch am
+„Neues Blatt"-Reiter steht: ein Zeuge, der zwei Herren dient, bezeugt
+keinen (dritte Auflage der Gegenproben-Lehre aus E77/E79/E82).
+
+**L18 bleibt offen** für: Zellformatierung im Austausch · Kommentare ·
+Bilder · Diagramme · bedingte Formatierung · ODS-Mehrblatt. Formeln
+gehen als WERTE hinaus (bewusst: fremde Rechenwerke rechnen anders) —
+und kommen als Werte zurück.

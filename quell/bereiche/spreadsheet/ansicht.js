@@ -1674,14 +1674,17 @@ const SpreadsheetView = (() => {
          * kann. Eine zweite ZIP-Schreiberei für xlsx wäre die Sorte Arbeit, die
          * man zweimal pflegt und einmal vergisst.
          * ====================================================================*/
-        const alsZeilen = () => {
+        /* Je Blatt, nicht nur fürs aktive: der Excel-Ausgang nimmt seit E91
+           die GANZE Mappe mit — eine Mappe mit drei Blättern, die als eines
+           herauskam, war stiller Datenverlust (§13). */
+        const alsZeilenVon = (vonBlatt) => {
             const raus = [];
             let letzteVolle = 0;
-            for (let z = 0; z < blatt.zeilen; z++) {
+            for (let z = 0; z < vonBlatt.zeilen; z++) {
                 const eine = [];
                 let etwasDrin = false;
-                for (let s = 0; s < blatt.spalten; s++) {
-                    const zelle = blatt.zellen[R.schreibe(z, s)];
+                for (let s = 0; s < vonBlatt.spalten; s++) {
+                    const zelle = vonBlatt.zellen[R.schreibe(z, s)];
                     const wert = zelle ? zelle.wert : '';
                     const t = zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
                     if (t !== '')
@@ -1697,6 +1700,7 @@ const SpreadsheetView = (() => {
                Ende sieht in jedem anderen Programm nach einem Fehler aus. */
             return raus.slice(0, letzteVolle);
         };
+        const alsZeilen = () => alsZeilenVon(blatt);
         /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
            auch einliest. Zwei eigene Regeln fürs Anführen liefen auseinander,
            und dann öffnet die eigene Datei sich selbst nicht mehr richtig. */
@@ -1706,7 +1710,10 @@ const SpreadsheetView = (() => {
             if (art === 'xlsx') {
                 if (typeof Austausch === 'undefined')
                     return;
-                Austausch.alsExcel([{ name: blatt.name || 'Tabelle', zeilen: alsZeilen() }], name);
+                /* Die GANZE Mappe (E91). Der Schreiber konnte Mehrblatt schon
+                   immer — nur diese Stelle gab ihm allein das aktive Blatt, und
+                   die übrigen fehlten in der Datei, ohne dass es jemand sagte. */
+                Austausch.alsExcel(block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), zeilen: alsZeilenVon(b) })), name);
                 return;
             }
             /* CSV mit Semikolon und BOM: so öffnet Excel im deutschen Sprachraum
@@ -1760,12 +1767,35 @@ const SpreadsheetView = (() => {
                         const blaetter = await Einlesen.xlsxLesen(await datei.arrayBuffer());
                         if (!blaetter || !blaetter.length)
                             throw new Error('In dieser Datei steckt kein Tabellenblatt.');
-                        /* Nur das erste Blatt — mehrere Blätter je Block gibt es noch
-                           nicht, und es stillschweigend zu verschlucken wäre schlimmer,
-                           als es zu sagen. */
+                        /* Mehrere Blätter (E91): jedes wird ein EIGENES Blatt der
+                           Mappe. Der Satz, der hier vorher stand, verneinte
+                           Mehrblatt je Block — während die Blattreiter darunter es
+                           längst konnten. Ein einzelnes Blatt geht weiter den alten
+                           Weg: an den Schreibzeiger, mit Zählung des
+                           Überschriebenen. */
+                        if (blaetter.length > 1) {
+                            blaetter.forEach((gelesen) => {
+                                const neu = K.neuesBlatt(freierName(String(gelesen.name || 'Blatt')));
+                                const zl = gelesen.zeilen || [];
+                                neu.zeilen = Math.max(neu.zeilen, zl.length);
+                                neu.spalten = Math.max(neu.spalten, zl.reduce((m, x) => Math.max(m, x.length), 1));
+                                zl.forEach((zeileWerte, z) => zeileWerte.forEach((wert, s) => {
+                                    if (wert !== '')
+                                        K.setze(neu, R.schreibe(z, s), wert);
+                                }));
+                                block.mappe.blaetter.push(neu);
+                            });
+                            const letztes = block.mappe.blaetter[block.mappe.blaetter.length - 1];
+                            block.mappe.aktiv = letztes.id;
+                            blatt = letztes;
+                            gewaehlt = anker = 'A1';
+                            rechneUndZeichne();
+                            if (typeof UI !== 'undefined' && UI.toast)
+                                UI.toast(blaetter.length + ' Blätter aus „' + datei.name + '" angelegt');
+                            return;
+                        }
                         zeilen = blaetter[0].zeilen || [];
-                        quelle = datei.name + (blaetter.length > 1
-                            ? ' · Blatt „' + (blaetter[0].name || '1') + '" von ' + blaetter.length : '');
+                        quelle = datei.name;
                     }
                     else {
                         zeilen = Csv.zerlege(await datei.text());

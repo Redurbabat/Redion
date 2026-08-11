@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**9. August 2026 · 130 Prüfläufe**
+**9. August 2026 · 131 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -82,7 +82,9 @@ L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
 L16  ✅ komplett (9. August): sonst-Zweig (E85), Schleifenschutz
      gegen Automations-Kreisel (E86), Schleife über eigene Zeilen
      (gab es längst — erst jetzt gefahrlos)
-L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
+L18  XLSX/ODS-Rest: Zellformatierung, Kommentare, ODS-Mehrblatt —
+     Mehrblatt-XLSX kam mit E91 (Export trug vorher nur das aktive
+     Blatt: stille §13-Lücke)
 L20  ✅ komplett (9. August): Ausfüllen (E87), Markdown-Tabellen
      (E88), Alt+Umschalt+Klick (test158 §7)
 ```

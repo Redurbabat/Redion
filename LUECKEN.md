@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 130 Prüfläufe**
+**9. August 2026 · 131 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -624,10 +624,15 @@ Diagrammquellen · Pivot mit Prozent von Gesamt.
 
 ## L18 · XLSX und ODS
 
-**Stand** — ◐ einfaches Lesen und Schreiben gibt es.
+**Stand** — ◐ Lesen und Schreiben gibt es, seit E91 mit ALLEN Blättern:
+der Export trug vorher nur das aktive Blatt (stille §13-Lücke — die
+Datei sah vollständig aus), der Import nahm nur Blatt 1 mit einer
+Begründung, die Mehrblatt je Block verneinte, während die Blattreiter es
+längst konnten. Jetzt: Rundreise Mappe → .xlsx → Mappe mit echten Bytes
+belegt (test165). Formeln gehen bewusst als Werte hinaus.
 
-Fehlt: mehrere Blätter · Formeln · Zellformatierung · Kommentare · Bilder ·
-Diagramme · bedingte Formatierung · ODS ganz.
+Fehlt: Zellformatierung im Austausch · Kommentare · Bilder ·
+Diagramme · bedingte Formatierung · ODS-Mehrblatt.
 
 ## L19 · Fehlende oder ungeprüfte Blocktypen
 
