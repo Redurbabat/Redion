@@ -372,7 +372,26 @@ const Datenbank = (() => {
       if (proz === 'aus') return rund(v);
       const bezug = proz === 'zeile' ? zeileSumme(z) : proz === 'spalte' ? spalteSumme(s) : gesamt;
       if (!bezug) return '0 %';
-      return (Math.round(v / bezug * 1000) / 10).toString().replace('.', ',') + ' %';
+      return prozText(v, bezug);
+    };
+    const prozText = (v: any, bezug: any) =>
+      (Math.round(v / bezug * 1000) / 10).toString().replace('.', ',') + ' %';
+    /* Die Ränder brauchen eine eigene Rechnung: längs zum Prozentbezug sind
+       sie definitionsgemäss 100 %, quer dazu ist der Bezug die Gesamtsumme.
+       Vorher lief auch der Rand durch `zeig(…, z, null)` — das suchte
+       `spalteSumme(null)`, fand den Schlüssel nie, und in beiden Modi stand
+       am ganzen Quer-Rand „0 %". */
+    const randRechts = (z: any) => {            /* Gesamt-Spalte der Zeile z */
+      const v = zeileSumme(z);
+      if (proz === 'aus')   return rund(v);
+      if (proz === 'zeile') return v ? '100 %' : '0 %';
+      return gesamt ? prozText(v, gesamt) : '0 %';
+    };
+    const randUnten = (s: any) => {             /* Gesamt-Zeile der Spalte s */
+      const v = spalteSumme(s);
+      if (proz === 'aus')    return rund(v);
+      if (proz === 'spalte') return v ? '100 %' : '0 %';
+      return gesamt ? prozText(v, gesamt) : '0 %';
     };
     const rund = (v: any) => {
       const n = Math.round(v * 100) / 100;
@@ -396,12 +415,12 @@ const Datenbank = (() => {
                `>${leer ? '' : esc(zeig(v, z, s))}</td>`;
       }).join('');
       return `<tr><th class="pv-zeile">${esc(z)}</th>${tds}` +
-             `<td class="pv-summe">${esc(zeig(zeileSumme(z), z, null))}</td></tr>`;
+             `<td class="pv-summe">${esc(randRechts(z))}</td></tr>`;
     }).join('');
 
     const fuss = '<tr class="pv-fuss"><th>Gesamt</th>' +
-      spaltenNamen.map(s => `<td>${esc(zeig(spalteSumme(s), null, s))}</td>`).join('') +
-      `<td class="pv-summe">${esc(proz === 'aus' ? rund(gesamt) : '100 %')}</td></tr>`;
+      spaltenNamen.map(s => `<td>${esc(randUnten(s))}</td>`).join('') +
+      `<td class="pv-summe">${esc(proz === 'aus' ? rund(gesamt) : (gesamt ? '100 %' : '0 %'))}</td></tr>`;
 
     t.innerHTML = '<thead>' + kopfZeile.join('') + '</thead><tbody>' + koerper + fuss + '</tbody>';
     w.appendChild(t);
@@ -430,9 +449,9 @@ const Datenbank = (() => {
     kopf.querySelector<HTMLElement>('[data-p="csv"]')?.addEventListener('click', () => {
       const zeilenCsv = [[coll.schema[zk].name, ...spaltenNamen, 'Gesamt']];
       zeilenNamen.forEach(z => zeilenCsv.push([z,
-        ...spaltenNamen.map(s => zeig(zelleWert(z, s), z, s)), zeig(zeileSumme(z), z, null)]));
-      zeilenCsv.push(['Gesamt', ...spaltenNamen.map(s => zeig(spalteSumme(s), null, s)),
-                      proz === 'aus' ? rund(gesamt) : '100 %']);
+        ...spaltenNamen.map(s => zeig(zelleWert(z, s), z, s)), randRechts(z)]));
+      zeilenCsv.push(['Gesamt', ...spaltenNamen.map(s => randUnten(s)),
+                      proz === 'aus' ? rund(gesamt) : (gesamt ? '100 %' : '0 %')]);
       const csv = zeilenCsv.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(';')).join('\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));

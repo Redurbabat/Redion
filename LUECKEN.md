@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 131 Prüfläufe**
+**11. August 2026 · 132 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -620,7 +620,13 @@ das war Priorität 1, nicht Feinschliff.
 ## L17 · Dashboards und Pivot ausbauen
 
 Fehlt: mehrere Datenquellen je Dashboard · KPI-Karten · Layout ·
-Diagrammquellen · Pivot mit Prozent von Gesamt.
+Diagrammquellen.
+
+Hier stand „Pivot mit Prozent von Gesamt" — den Modus gibt es seit dem
+Pivot-Bau (`pivotProzent: aus | zeile | spalte | gesamt`). Die Behauptung
+war falsch; beim Nachsehen fand sich stattdessen ein echter Fehler: die
+Quer-Ränder zeigten in den Modi Zeile/Spalte überall „0 %", auch in der
+CSV. Behoben und Zelle für Zelle geprüft (E92, test166).
 
 ## L18 · XLSX und ODS
 

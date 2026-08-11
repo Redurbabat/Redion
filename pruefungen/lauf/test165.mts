@@ -59,7 +59,7 @@ const alsBase64 = (pfad: string): string => fs.readFileSync(pfad).toString('base
 
 console.log('\n1 · Der Export trägt ALLE Blätter — bis zum echten Download');
 
-const blkId = await seite.evaluate(async () => {
+await seite.evaluate(async () => {
   Store.setMeta('rundgangGesehen', true);
   document.getElementById('rg-willkommen')?.remove();
   document.getElementById('rg-einladung')?.remove();

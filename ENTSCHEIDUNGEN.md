@@ -5723,3 +5723,51 @@ keinen (dritte Auflage der Gegenproben-Lehre aus E77/E79/E82).
 Bilder · Diagramme · bedingte Formatierung · ODS-Mehrblatt. Formeln
 gehen als WERTE hinaus (bewusst: fremde Rechenwerke rechnen anders) —
 und kommen als Werte zurück.
+
+
+## E92 · Pivot-Prozent: die Ränder rechnen mit
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L17
+
+Die Lückenliste führte unter L17: „Pivot mit Prozent von Gesamt" fehlt.
+Den Modus gibt es seit dem Bau des Pivots — `pivotProzent` kennt
+`aus | zeile | spalte | gesamt`, samt Auswahlfeld im Kopf. Das ist die
+E90-Klasse in der eigenen Doku: eine präzise klingende Behauptung, die
+nie jemand nachgesehen hat. Die Lückenliste ist davor nicht sicherer
+als ein Werbetext.
+
+Beim Nachsehen fand sich der echte Fehler. Die RÄNDER der Kreuztabelle
+liefen durch dieselbe Anzeigefunktion wie die Zellen — `zeig(…, z, null)`
+mit `null` als Gegenachse. Das rief `spalteSumme(null)` auf, baute den
+Zellschlüssel mit dem Steuerzeichen-Trenner und wörtlichem
+`null` darin, fand ihn nie, und der Bezug war 0:
+
+```txt
+„von der Zeile"    Gesamt-Fusszeile: überall „0 %"
+„von der Spalte"   Gesamt-Spalte:    überall „0 %"
+```
+
+Excel zeigt an diesen Rändern den Anteil am Gesamt bzw. 100 %. Jetzt
+haben die Ränder ihre eigene Rechnung (`randRechts`, `randUnten`):
+längs zum Prozentbezug definitionsgemäss 100 % — bzw. ehrlich „0 %",
+wenn die Summe selbst 0 ist —, quer dazu der Anteil an der Gesamtsumme.
+
+**Der Zeuge fing den dritten Fundort.** Nach dem Bildschirm-Fix schlug
+der Quelltext-Zeuge in test166 an: der CSV-KNOPF baute seine Ränder mit
+denselben null-Aufrufen. Der Bildschirm wäre repariert gewesen, die
+exportierte Datei hätte weiter „0 %" gelogen — §13 an der stillsten
+Stelle, wieder einmal. Die CSV wird seitdem bis zum echten Download
+gefangen und Zeile für Zeile gelesen.
+
+**Geprüft** (test166, 19 Punkte): alle vier Modi Zelle für Zelle an
+bekannten Zahlen, die CSV mit echten Bytes, zwei Quelltext-Zeugen.
+Drei Gegenprobe-Arme, jeder einzeln: randUnten quer → Fusszeile lügt
+am Bildschirm UND in der Datei; randRechts quer → Gesamt-Spalte lügt
+in beiden Modi; nur die CSV-Stelle → allein die Datei-Prüfung wird
+rot. Der dritte Arm beweist, dass die CSV-Prüfung eigenes Gewicht
+trägt und nicht am Bildschirm mitfährt.
+
+**L17 bleibt offen** für: mehrere Datenquellen je Dashboard ·
+KPI-Karten · Layout · Diagrammquellen. Der Pivot-Teil der Lücke ist
+damit geschlossen — er bestand aus einer falschen Behauptung und einem
+echten Fehler daneben.
