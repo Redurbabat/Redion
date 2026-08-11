@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**11. August 2026 · 134 Prüfläufe**
+**11. August 2026 · 135 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -645,13 +645,14 @@ geprüft bis zum echten Download und durch den echten Dateiwähler
 Mehrblatt-Anlegen, der auch den E91-Excel-Import betraf — behoben
 (Blattwechsel über `zuBlatt`).
 
-Seit E94 trägt der Excel-Ausgang des Blocks ROHWERTE samt Zellformat:
-0.15 kommt als Zahl mit `0%`-Format an, nicht als Text „15 %", und
-das de-CH-Tausenderzeichen macht grosse Zahlen nicht mehr zu Text;
-fett/kursiv/Ausrichtung gehen als styles.xml mit (test168).
+Seit E94/E95 tragen BEIDE Ausgänge des Blocks ROHWERTE samt
+Zellformat: 0.15 kommt als Zahl mit Prozentformat an, nicht als Text
+„15 %", das de-CH-Tausenderzeichen macht grosse Zahlen nicht mehr zu
+Text, und fett/kursiv/Ausrichtung gehen mit — als styles.xml (test168)
+bzw. automatic-styles in der content.xml (test169).
 
-Fehlt: Zellformatierung beim EINLESEN und im ODS-Ausgang ·
-Kommentare · Bilder · Diagramme · bedingte Formatierung im Austausch.
+Fehlt: Zellformatierung beim EINLESEN · Kommentare · Bilder ·
+Diagramme · bedingte Formatierung im Austausch.
 
 ## L19 · Fehlende oder ungeprüfte Blocktypen
 

@@ -182,7 +182,7 @@ const quelle = fs.readFileSync(
   path.join(WURZEL, 'src/bereiche/spreadsheet/ansicht.ts'), 'utf8');
 p('Der Speichern-Eintrag steht im Block-Menü', quelle.includes('data-a="ods"'));
 p('Der Export übergibt die ganze Mappe',
-  quelle.includes('Austausch.alsOds(ganzeMappe(), name)'));
+  quelle.includes('Austausch.alsOds(block.mappe.blaetter.map'));
 p('Die Öffnen-Weiche kennt .ods',
   quelle.includes('.xlsm,.ods') && quelle.includes('odsLesen'));
 

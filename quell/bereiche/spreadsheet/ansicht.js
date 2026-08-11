@@ -1706,29 +1706,34 @@ const SpreadsheetView = (() => {
            per Tausenderzeichen Text; Summen in Excel ergaben 0. */
         const alsRohVon = (vonBlatt) => {
             const zeilen = [];
+            const anzeigen = [];
             const stile = [];
             let letzteVolle = 0;
             for (let z = 0; z < vonBlatt.zeilen; z++) {
                 const eine = [];
+                const anzeigeZeile = [];
                 const stilZeile = [];
                 let etwasDrin = false;
                 for (let s = 0; s < vonBlatt.spalten; s++) {
                     const zelle = vonBlatt.zellen[R.schreibe(z, s)];
                     const wert = zelle ? zelle.wert : '';
-                    const roh = (typeof wert === 'number' && isFinite(wert))
-                        ? wert
-                        : zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
+                    const text = zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
+                    const roh = (typeof wert === 'number' && isFinite(wert)) ? wert : text;
                     if (roh !== '')
                         etwasDrin = true;
                     eine.push(roh);
+                    anzeigeZeile.push(text);
                     stilZeile.push((zelle && zelle.stil) || null);
                 }
                 zeilen.push(eine);
+                anzeigen.push(anzeigeZeile);
                 stile.push(stilZeile);
                 if (etwasDrin)
                     letzteVolle = zeilen.length;
             }
-            return { zeilen: zeilen.slice(0, letzteVolle), stile: stile.slice(0, letzteVolle) };
+            return { zeilen: zeilen.slice(0, letzteVolle),
+                anzeigen: anzeigen.slice(0, letzteVolle),
+                stile: stile.slice(0, letzteVolle) };
         };
         /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
            auch einliest. Zwei eigene Regeln fürs Anführen liefen auseinander,
@@ -1736,10 +1741,9 @@ const SpreadsheetView = (() => {
         const alsCsv = () => Csv.schreibe(alsZeilen(), ';');
         const gibAus = (art) => {
             const name = (blatt.name || block.mappe.name || 'Tabelle').replace(/[\\/:*?"<>|]/g, '-');
-            /* Die GANZE Mappe (E91). Der Schreiber konnte Mehrblatt schon
-               immer — nur diese Stelle gab ihm allein das aktive Blatt, und
-               die übrigen fehlten in der Datei, ohne dass es jemand sagte. */
-            const ganzeMappe = () => block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), zeilen: alsZeilenVon(b) }));
+            /* Beide Ausgänge nehmen die GANZE Mappe (E91) — der Rückfall aufs
+               aktive Blatt war stiller Datenverlust — und beide tragen seit
+               E94/E95 Rohwerte samt Zellstil statt des Anzeigetexts. */
             if (art === 'xlsx') {
                 if (typeof Austausch === 'undefined')
                     return;
@@ -1753,7 +1757,7 @@ const SpreadsheetView = (() => {
                     return;
                 /* Fürs Fehlschlagen gibt es einen Satz: alsOds ist asynchron, und
                    ein stilles Scheitern sähe aus wie ein vergessener Klick. */
-                Austausch.alsOds(ganzeMappe(), name)
+                Austausch.alsOds(block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), ...alsRohVon(b) })), name)
                     .catch((e) => {
                     if (typeof UI !== 'undefined' && UI.toast)
                         UI.toast('Die .ods kam nicht zustande: ' +

@@ -507,27 +507,101 @@ const Austausch = (() => {
    * alphabetisch — `100` vor `20`. Das war beim CSV-Import derselbe Fehler.
    * ========================================================================*/
 
-  const odsZelle = (w: any): string => {
+  /* Zellstile für den ODS-Ausgang (E95) — das Gegenstück zu `stilSammlung`:
+     gleiche Kombis werden je EINMAL als automatic-styles angelegt, jede
+     Zelle trägt nur den Namen. Ohne Stile bleibt content.xml die alte. */
+  const odsStilSammlung = (blaetter: any) => {
+    const datenStile: string[] = [];
+    const datenIx = new Map<string, string>();
+    const zellStile: string[] = [];
+    const zellIx = new Map<string, string>();
+
+    const datenStil = (art: string, stellen: number | undefined, waehrung: string): string => {
+      const key = art + '|' + (stellen ?? '') + '|' + (art === 'waehrung' ? waehrung : '');
+      const da = datenIx.get(key);
+      if (da) return da;
+      const name = (art === 'prozent' ? 'np' : 'nw') + (datenStile.length + 1);
+      if (art === 'prozent')
+        datenStile.push(`<number:percentage-style style:name="${name}">` +
+          `<number:number number:decimal-places="${stellen ?? 0}" number:min-integer-digits="1"/>` +
+          '<number:text> %</number:text></number:percentage-style>');
+      else
+        datenStile.push(`<number:currency-style style:name="${name}">` +
+          `<number:number number:decimal-places="${stellen ?? 2}" number:min-integer-digits="1" number:grouping="true"/>` +
+          `<number:text> </number:text><number:currency-symbol>${esc(waehrung)}</number:currency-symbol>` +
+          '</number:currency-style>');
+      datenIx.set(key, name);
+      return name;
+    };
+
+    const kombi = (stil: any): string => {
+      if (!stil) return '';
+      const fett = !!stil.fett, kursiv = !!stil.kursiv;
+      const aus = stil.ausrichtung === 'links' ? 'start'
+                : stil.ausrichtung === 'mitte' ? 'center'
+                : stil.ausrichtung === 'rechts' ? 'end' : '';
+      const art = (stil.format && stil.format.art) || '';
+      const stellen = stil.format && typeof stil.format.stellen === 'number'
+        ? stil.format.stellen : undefined;
+      const waehrung = (stil.format && stil.format.waehrung) || 'CHF';
+      const key = (fett ? 'f' : '') + (kursiv ? 'k' : '') + '|' + aus + '|' +
+                  art + '|' + (stellen ?? '') + '|' + (art === 'waehrung' ? waehrung : '');
+      if (key === '||||') return '';
+      const bekannt = zellIx.get(key);
+      if (bekannt) return bekannt;
+      const daten = (art === 'prozent' || art === 'waehrung')
+        ? datenStil(art, stellen, waehrung) : '';
+      const name = 'ce' + (zellStile.length + 1);
+      zellStile.push(`<style:style style:name="${name}" style:family="table-cell"` +
+        (daten ? ` style:data-style-name="${daten}"` : '') + '>' +
+        (fett || kursiv
+          ? '<style:text-properties' + (fett ? ' fo:font-weight="bold"' : '') +
+            (kursiv ? ' fo:font-style="italic"' : '') + '/>'
+          : '') +
+        (aus ? `<style:paragraph-properties fo:text-align="${aus}"/>` : '') +
+        '</style:style>');
+      zellIx.set(key, name);
+      return name;
+    };
+
+    const je = (blaetter || []).map((b: any) =>
+      (b.stile || []).length
+        ? b.stile.map((zeile: any[]) => zeile.map((st: any) => kombi(st)))
+        : null);
+
+    const xml = (datenStile.length || zellStile.length)
+      ? '<office:automatic-styles>' + datenStile.join('') + zellStile.join('') +
+        '</office:automatic-styles>'
+      : '';
+    return { xml, je };
+  };
+
+  const odsZelle = (w: any, anzeige?: string, stilName?: string): string => {
+    const stilA = stilName ? ` table:style-name="${stilName}"` : '';
     const leer = w === null || w === undefined || w === '';
-    if (leer) return '<table:table-cell/>';
-    const zahl = typeof w === 'number' ? w
+    if (leer) return `<table:table-cell${stilA}/>`;
+    const zahl = typeof w === 'number' ? (isFinite(w) ? w : null)
                : (typeof w === 'string' && w.trim() !== '' && Number.isFinite(Number(w))
                   ? Number(w) : null);
     if (zahl !== null)
-      return `<table:table-cell office:value-type="float" office:value="${zahl}">` +
-             `<text:p>${esc(String(w))}</text:p></table:table-cell>`;
-    return '<table:table-cell office:value-type="string">' +
+      return `<table:table-cell${stilA} office:value-type="float" office:value="${zahl}">` +
+             `<text:p>${esc(String(anzeige ?? w))}</text:p></table:table-cell>`;
+    return `<table:table-cell${stilA} office:value-type="string">` +
            String(w).split('\n').map(z => `<text:p>${esc(z)}</text:p>`).join('') +
            '</table:table-cell>';
   };
 
-  const odsBlatt = (b: any): string => {
+  const odsBlatt = (b: any, stilJe?: (string | null)[][]): string => {
     const zeilen: any[][] = b.zeilen || [];
+    const anzeigen: any[][] = b.anzeigen || [];
     const breite = zeilen.reduce((m, z) => Math.max(m, (z || []).length), 0);
     return `<table:table table:name="${esc(String(b.name || 'Blatt'))}">` +
       `<table:table-column table:number-columns-repeated="${Math.max(1, breite)}"/>` +
-      zeilen.map(z => '<table:table-row>' +
-        Array.from({ length: breite }, (_, i) => odsZelle((z || [])[i])).join('') +
+      zeilen.map((z, r) => '<table:table-row>' +
+        Array.from({ length: breite }, (_, i) =>
+          odsZelle((z || [])[i],
+                   anzeigen[r] ? anzeigen[r][i] : undefined,
+                   (stilJe && stilJe[r] && stilJe[r][i]) || undefined)).join('') +
         '</table:table-row>').join('') +
       '</table:table>';
   };
@@ -536,7 +610,12 @@ const Austausch = (() => {
     const NS =
       ' xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"' +
       ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"' +
-      ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
+      ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"' +
+      ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"' +
+      ' xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"' +
+      ' xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0"';
+
+    const stile = odsStilSammlung(blaetter);
 
     const dateien = [
       /* ZUERST und unkomprimiert — siehe oben. */
@@ -556,8 +635,9 @@ const Austausch = (() => {
       { name: 'content.xml', inhalt:
         '<?xml version="1.0" encoding="UTF-8"?>' +
         `<office:document-content${NS} office:version="1.2">` +
+        stile.xml +
         '<office:body><office:spreadsheet>' +
-        (blaetter || []).map((b: any) => odsBlatt(b)).join('') +
+        (blaetter || []).map((b: any, i: number) => odsBlatt(b, stile.je[i] || undefined)).join('') +
         '</office:spreadsheet></office:body></office:document-content>' }
     ];
 

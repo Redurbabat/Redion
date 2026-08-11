@@ -5884,3 +5884,36 @@ Rundreise über den eigenen Leser bringt „0.15" zurück, wo vorher
 zurück auf Anzeigetext (zehn Punkte fallen — das ganze historische
 Schadensbild auf einmal), numFmts weggelassen, kursiv nie
 geschrieben, Kopf-Zwang wieder an.
+
+
+## E95 · ODS-Export mit Zellformat: der Zwilling zu E94
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Was E94 für Excel geradezog, galt wortgleich für den ODS-Ausgang des
+Tabellenblocks: Anzeigetext statt Rohwert („15 %" als Text, Summen in
+LibreOffice ergeben 0), Tausenderzeichen machten grosse Zahlen zu
+Text, und die Zellstile verschwanden.
+
+Jetzt teilen sich beide Ausgänge EINEN Werte-Läufer (`alsRohVon`
+liefert `zeilen` roh, `anzeigen` als Redion-Text, `stile` je Zelle —
+ein Läufer statt dreier Abschriften, die L34-Lehre), und der
+ODS-Schreiber hat sein Gegenstück zur styles.xml-Sammlung:
+`odsStilSammlung` legt gleiche Kombis je einmal als automatic-styles
+an — `number:percentage-style` und `number:currency-style` als
+Zahlenstile, `fo:font-weight`/`fo:font-style` für die Schrift,
+`fo:text-align` für die Ausrichtung — und jede Zelle trägt nur den
+Namen. `office:value` trägt den Rohwert; das `text:p` daneben zeigt
+weiterhin die Redion-Anzeige, damit Leser ohne Stil-Verständnis
+„15 %" sehen statt „0.15".
+
+Ohne Stile bleibt content.xml die alte: die Datenbank-Ausgänge
+erzeugen keinerlei Stilverweise (test169 §3).
+
+**Geprüft** (test169, 15 Punkte): echte Download-Bytes, content.xml
+gelesen (`office:value="0.15"`, Prozent- und Währungsstil samt CHF,
+kursiv/fett/Ausrichtung, Stilverweise an den Zellen); die Rundreise
+über `odsLesen` bringt die ZAHL 0.15 zurück, wo vorher „15 %" stand.
+Vier Gegenprobe-Arme, jeder einzeln: der Anzeigetext-Rückfall (zehn
+Punkte fallen), der nie angelegte Zahlenstil, das nie geschriebene
+kursiv, der verlorene Stilverweis.

@@ -1647,29 +1647,35 @@ const SpreadsheetView = (() => {
     /* Rohwerte samt Zellstil je Zelle — für den Excel-Ausgang (E94). Der
        ANZEIGETEXT machte dort aus 0.15 „15 %" und aus jeder grossen Zahl
        per Tausenderzeichen Text; Summen in Excel ergaben 0. */
-    const alsRohVon = (vonBlatt: any): { zeilen: any[][]; stile: any[][] } => {
+    const alsRohVon = (vonBlatt: any):
+        { zeilen: any[][]; anzeigen: string[][]; stile: any[][] } => {
       const zeilen: any[][] = [];
+      const anzeigen: string[][] = [];
       const stile: any[][] = [];
       let letzteVolle = 0;
       for (let z = 0; z < vonBlatt.zeilen; z++) {
         const eine: any[] = [];
+        const anzeigeZeile: string[] = [];
         const stilZeile: any[] = [];
         let etwasDrin = false;
         for (let s = 0; s < vonBlatt.spalten; s++) {
           const zelle = vonBlatt.zellen[R.schreibe(z, s)];
           const wert = zelle ? zelle.wert : '';
-          const roh = (typeof wert === 'number' && isFinite(wert))
-            ? wert
-            : zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
+          const text = zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
+          const roh = (typeof wert === 'number' && isFinite(wert)) ? wert : text;
           if (roh !== '') etwasDrin = true;
           eine.push(roh);
+          anzeigeZeile.push(text);
           stilZeile.push((zelle && zelle.stil) || null);
         }
         zeilen.push(eine);
+        anzeigen.push(anzeigeZeile);
         stile.push(stilZeile);
         if (etwasDrin) letzteVolle = zeilen.length;
       }
-      return { zeilen: zeilen.slice(0, letzteVolle), stile: stile.slice(0, letzteVolle) };
+      return { zeilen: zeilen.slice(0, letzteVolle),
+               anzeigen: anzeigen.slice(0, letzteVolle),
+               stile: stile.slice(0, letzteVolle) };
     };
 
     /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
@@ -1679,11 +1685,9 @@ const SpreadsheetView = (() => {
 
     const gibAus = (art: 'csv' | 'xlsx' | 'ods'): void => {
       const name = (blatt.name || block.mappe.name || 'Tabelle').replace(/[\\/:*?"<>|]/g, '-');
-      /* Die GANZE Mappe (E91). Der Schreiber konnte Mehrblatt schon
-         immer — nur diese Stelle gab ihm allein das aktive Blatt, und
-         die übrigen fehlten in der Datei, ohne dass es jemand sagte. */
-      const ganzeMappe = () => block.mappe.blaetter.map((b: any, i: number) =>
-        ({ name: b.name || ('Blatt ' + (i + 1)), zeilen: alsZeilenVon(b) }));
+      /* Beide Ausgänge nehmen die GANZE Mappe (E91) — der Rückfall aufs
+         aktive Blatt war stiller Datenverlust — und beide tragen seit
+         E94/E95 Rohwerte samt Zellstil statt des Anzeigetexts. */
       if (art === 'xlsx') {
         if (typeof Austausch === 'undefined') return;
         /* Rohwerte samt Zellstil (E94), nicht ganzeMappe(): dort steht der
@@ -1696,7 +1700,8 @@ const SpreadsheetView = (() => {
         if (typeof Austausch === 'undefined') return;
         /* Fürs Fehlschlagen gibt es einen Satz: alsOds ist asynchron, und
            ein stilles Scheitern sähe aus wie ein vergessener Klick. */
-        Austausch.alsOds(ganzeMappe(), name)
+        Austausch.alsOds(block.mappe.blaetter.map((b: any, i: number) =>
+          ({ name: b.name || ('Blatt ' + (i + 1)), ...alsRohVon(b) })), name)
           .catch((e: unknown) => {
             if (typeof UI !== 'undefined' && UI.toast)
               UI.toast('Die .ods kam nicht zustande: ' +
