@@ -5515,3 +5515,45 @@ Zeilen. Vier Gegenprobe-Arme: ohne Gleichwert dreht der Kreisel wieder
 (und der Deckel fängt ihn als zweites Netz bei Tiefe 5), ohne Deckel
 läuft das Ping-Pong auf 600 Aufrufe, ohne Kettenfang ebenso, ohne Notiz
 schweigt der Halt — jeder Arm kippte genau seine Punkte.
+
+
+## E87 · Raster: Ausfüllen mit Strg+D und Strg+R — und der Klick, der die Tastatur verlor
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L20
+
+Die Referenz führte Notions Ausfüll-Kürzel als ✗: Strg+D (nach unten) und
+Strg+R (nach rechts). Jetzt gibt es beide im Datenbank-Raster, mit
+Excel-Semantik:
+
+```txt
+Bereich gewählt    die oberste Zeile (bzw. linke Spalte) der Auswahl
+                   wird in den Rest gefüllt
+einzelne Zelle     nimmt den Wert von DARÜBER (bzw. links)
+nichts zu holen    ehrlicher Hinweis — ein Kürzel, das still nichts
+                   tut, lässt einen an der eigenen Hand zweifeln
+```
+
+Beide gelten NUR im fokussierten Raster: global gehört Strg+R dem
+Browser und Strg+D dem Block-Duplizieren (E62, test134 unverändert).
+stopPropagation verhindert, dass Strg+D nebenbei den ganzen
+Datenbank-Block dupliziert.
+
+**Der Fund darunter wog schwerer als das Feature:** Nach einem ZELLKLICK
+lag der Fokus auf BODY — die ganze Rastertastatur (Pfeile, Kopieren,
+Einfügen, Enter, Entf) ging ins Leere, bis man einmal Tab drückte. Der
+Hergang, mit der Ereignisspur bewiesen: der mousedown-Handler wählt und
+zeichnet neu, das EREIGNISZIEL hängt damit ab; die Browser-Standardaktion
+nach mousedown sucht am abgehängten Ziel einen fokussierbaren Vorfahren,
+findet keinen — und wirft den Fokus auf BODY, NACHDEM feld.focus() schon
+gelaufen war. Ein preventDefault an genau dieser Stelle behebt es;
+test161 §0 hält fest, dass ein Klick seither genügt.
+
+Kein Prüflauf sah den Altfehler, weil test112 die Tastatur über
+`feld.focus()` aus dem Skript erreichte — der Prüfstand tat den Tab-Druck,
+den der Mensch nicht wusste.
+
+**Geprüft** (test161, 10 Punkte, echte Maus- und Tastaturschritte,
+abgelesen wird der Speicher): Klick→Pfeil wählt · Bereich nach unten ·
+Einzelzelle von darüber · Bereich nach rechts · ganz links bleibt alles
+stehen samt Hinweis. Fünf Gegenprobe-Arme, jeder kippte genau seine
+Punkte. Nachbarn: test112 (39), test136 (23), test137 (15).

@@ -240,8 +240,8 @@ genauso.
 |---|---|:--:|
 | Strg+K / Strg+J | In der Datenbank-Vorschau blättern | ◐ |
 | Mehrere Zeilen wählen, dann Strg+/ | Gemeinsam bearbeiten | ◐ |
-| Strg+R | Nach rechts ausfüllen | ✗ |
-| Strg+D | Nach unten ausfüllen | ✗ |
+| Strg+R | Nach rechts ausfüllen | ✅ *(E87 — im Raster; Excel-Semantik)* |
+| Strg+D | Nach unten ausfüllen | ✅ *(E87 — im Raster; Excel-Semantik)* |
 
 ### 2.7 Seiten, Erwähnungen, Links
 
@@ -293,8 +293,11 @@ Ihre eigenen Worte, sinngemäss:
 | Strg + / − / 0 | fehlten | Schriftgrösse |
 | Kürzelübersicht (Strg+/) | zeigte die alte Belegung | zeigt beide |
 
-Offen bleibt: Strg+R und Strg+D zum Ausfüllen mehrerer Tabellenzellen, und
-Alt+Umschalt+Klick zur Blockauswahl.
+Offen bleibt: Alt+Umschalt+Klick zur Blockauswahl. (Strg+R und Strg+D zum
+Ausfüllen gibt es seit E87 — nur im fokussierten Raster, denn global
+gehört Strg+R dem Browser. Und der Fund dabei: nach einem Zellklick lag
+der Fokus auf BODY, die ganze Rastertastatur ging bis zum ersten Tab ins
+Leere — behoben, test161 §0.)
 
 ---
 

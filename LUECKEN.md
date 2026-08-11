@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 126 Prüfläufe**
+**9. August 2026 · 127 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -89,6 +89,11 @@ L16  Automationen drehen keine Kreisel mehr (E86) — „wenn X sich
      Sekunden); jetzt Gleichwert-Schutz plus Ketten-Deckel bei Tiefe 5
      mit ⚠ im Verlauf. Und die Schleife über die EIGENEN Zeilen gab es
      entgegen dieser Liste längst — erst jetzt ist sie gefahrlos
+L20  Ausfüllen im Raster (E87) — Strg+D nach unten, Strg+R nach
+     rechts, Excel-Semantik. Der Fund darunter: nach einem Zellklick
+     lag der Fokus auf BODY — die ganze Rastertastatur ging bis zum
+     ersten Tab ins Leere, und kein Lauf sah es, weil der Prüfstand
+     per feld.focus() den Tab-Druck tat, den der Mensch nicht wusste
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -625,7 +630,12 @@ summary block · File gallery · Button automation block.
 
 ## L20 · Markdown- und Tastenkürzel
 
-**Stand** — ✅ Markdown, gemessen statt gezählt · ◐ Tastenkürzel 127 von 160.
+**Stand** — ✅ Markdown, gemessen statt gezählt · ◐ Tastenkürzel: die
+Referenz (doku/SLASH-UND-TASTEN.md) führt als offen nur noch
+Alt+Umschalt+Klick zur Blockauswahl und ein paar ◐-Halbheiten;
+Strg+R/Strg+D zum Ausfüllen kamen mit E87. Offen bleibt ausserdem:
+Markdown-Tabellen beim Einfügen (`| a | b |` wird noch Text, kein
+Tabellenblock).
 
 Der Zeile-für-Zeile-Vergleich ist da: `pruefungen/lauf/test132.mts` **tippt**
 jedes Kürzel und liest ab, was daraus wird. Er hat vier Behauptungen
