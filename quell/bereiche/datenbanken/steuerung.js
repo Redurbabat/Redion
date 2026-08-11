@@ -7139,6 +7139,12 @@ const Datenbank = (() => {
             (kurz ? '' : 'T' + p(d.getHours()) + ':' + p(d.getMinutes()));
     };
     let imLauf = false; /* verhindert, dass Automationen sich gegenseitig auslösen */
+    /* Die Kettentiefe (E86): >0, solange gerade Aktionen einer Automation
+       laufen. Der setProp-Hook fängt sie SYNCHRON und reicht sie in seinen
+       verzögerten Lauf weiter — so weiss die nächste Automation, die
+       wievielte Stufe einer Kette sie ist. imLauf kann das nicht leisten:
+       der Riegel ist längst offen, wenn der verzögerte Hook feuert. */
+    let laufKette = 0;
     let wdhZaehler = 0; /* Notbremse gegen Ketten, die sich selbst nachlegen */
     /**
      * Was eine Aktion im Probelauf zu melden hat — der Wert, mit dem sie
@@ -7274,6 +7280,20 @@ const Datenbank = (() => {
                 const getroffen = alleAusloeser.findIndex(passt);
                 if (getroffen < 0)
                     return;
+                /* --- Schleifenschutz, Stufe 2: der KETTEN-DECKEL (E86) ----------
+                 * Fünf Stufen Automation-löst-Automation-aus sind erlaubt — eine
+                 * ehrliche Kette braucht selten mehr als zwei. Ab der sechsten
+                 * ist es fast sicher ein Kreisel mit wechselnden Werten, den der
+                 * Gleichwert-Schutz nicht fangen kann. Der Halt steht im Verlauf:
+                 * still verhungern lassen wäre gelogen. */
+                if (((ctx && ctx.kette) || 0) >= 5) {
+                    a.verlauf = [{ wann: new Date().toISOString(),
+                            zeile: (row && row.text) || '', aktionen: [],
+                            fehler: 'Ketten-Deckel: nach 5 Automations-Stufen angehalten — mögliche Endlosschleife' },
+                        ...(a.verlauf || [])].slice(0, 100);
+                    verlaufSichern(coll);
+                    return;
+                }
                 if ((a.weitereWenn || []).length && a.wennModus === 'alle') {
                     a.gefeuert = a.gefeuert || {};
                     const jetztMs = new Date().getTime();
@@ -7632,20 +7652,29 @@ const Datenbank = (() => {
                  * und die nächste Automation der Datenbank kam nie an die Reihe —
                  * still, denn geworfen wurde in einen Aufruf, den niemand fängt.
                  * ---------------------------------------------------------------- */
-                zweigListe.forEach((d) => {
-                    try {
-                        eineAktion(d);
-                    }
-                    catch (e) {
-                        const name = (AKTIONEN.find((x) => x[0] === d.art) || ['', d.art])[1];
-                        const text = e instanceof Error ? e.message : String(e);
-                        laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
-                            name + ': ' + text;
-                        /* Nicht nur ins Protokoll: wer gerade zusieht, soll es sehen. */
-                        if (!ctx.probe)
-                            UI.toast('⚠ „' + name + '" ging nicht: ' + text);
-                    }
-                });
+                /* Solange die Aktionen laufen, gilt die nächste Stufe der Kette —
+                   jeder setProp darin fängt sie synchron (E86). */
+                const ketteVorher = laufKette;
+                laufKette = ((ctx && ctx.kette) || 0) + 1;
+                try {
+                    zweigListe.forEach((d) => {
+                        try {
+                            eineAktion(d);
+                        }
+                        catch (e) {
+                            const name = (AKTIONEN.find((x) => x[0] === d.art) || ['', d.art])[1];
+                            const text = e instanceof Error ? e.message : String(e);
+                            laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                                name + ': ' + text;
+                            /* Nicht nur ins Protokoll: wer gerade zusieht, soll es sehen. */
+                            if (!ctx.probe)
+                                UI.toast('⚠ „' + name + '" ging nicht: ' + text);
+                        }
+                    });
+                }
+                finally {
+                    laufKette = ketteVorher;
+                }
                 /* Ein Probelauf ist nicht gelaufen. Er darf deshalb weder im
                    Laufverlauf noch im gemeinsamen Protokoll stehen — sonst zeigte
                    die Automation morgen zwanzig Läufe, von denen keiner stattfand. */
@@ -7928,15 +7957,38 @@ const Datenbank = (() => {
             const erg = altSetProp.call(Store, rowId, key, value);
             const r = Store.getBlock(rowId);
             const c = r && r.parentTable === 'collection' ? Store.getCollection(r.parentId) : null;
+            /* --- Schleifenschutz, Stufe 1: GLEICHWERT (E86) -------------------
+             * „Eine Eigenschaft ändert sich" muss ändern heissen. Eine
+             * Automation „wenn X sich ändert → setze X auf fest" lief sonst
+             * endlos — gemessen: 720 Schreibvorgänge in drei Sekunden, für
+             * immer. Der imLauf-Riegel hilft nicht, weil der Hook verzögert
+             * feuert. Listen (Dateien, Verknüpfungen) werden nach Inhalt
+             * verglichen, nicht nach Hülle. */
+            const gleichGeblieben = alterWert === value ||
+                (() => {
+                    try {
+                        return JSON.stringify(alterWert) === JSON.stringify(value);
+                    }
+                    catch {
+                        return false;
+                    }
+                })();
+            /* --- Stufe 2: KETTENTIEFE — synchron gefangen ---------------------
+             * Läuft dieser setProp aus einer Automation heraus, trägt er ihre
+             * Tiefe weiter. Ping-Pong mit WECHSELNDEN Werten (a→b→a→…) fängt
+             * Stufe 1 nicht — den fängt der Deckel im Läufer. */
+            const kette = laufKette;
             if (c)
                 setTimeout(() => {
-                    automationenLaufen(r, c, 'prop-geaendert', key, value, { alterWert });
-                    automationenLaufen(r, c, 'prop-wert', key, value, { alterWert });
-                    automationenLaufen(r, c, 'zeile-geaendert', key, value, { alterWert });
+                    if (!gleichGeblieben) {
+                        automationenLaufen(r, c, 'prop-geaendert', key, value, { alterWert, kette });
+                        automationenLaufen(r, c, 'prop-wert', key, value, { alterWert, kette });
+                        automationenLaufen(r, c, 'zeile-geaendert', key, value, { alterWert, kette });
+                    }
                     /* Eine Datei ist dazugekommen */
                     if ((c.schema[key] || {}).type === 'files' &&
                         Array.isArray(value) && value.length > dateiVorher)
-                        automationenLaufen(r, c, 'datei-neu', key, value, { alterWert });
+                        automationenLaufen(r, c, 'datei-neu', key, value, { alterWert, kette });
                     /* Grenzübertritt in eine Ansicht — in beide Richtungen */
                     const gesehen = {};
                     wachen.forEach((a) => {
@@ -7950,7 +8002,7 @@ const Datenbank = (() => {
                         const nachher = gruppeTrifftZu(r, v.filters, c);
                         if (nachher === !!vorher[vid])
                             return;
-                        automationenLaufen(r, c, nachher ? 'ansicht-rein' : 'ansicht-raus', key, value, { alterWert, ansicht: vid });
+                        automationenLaufen(r, c, nachher ? 'ansicht-rein' : 'ansicht-raus', key, value, { alterWert, ansicht: vid, kette });
                     });
                 }, 0);
             return erg;

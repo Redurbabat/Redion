@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 125 Prüfläufe**
+**9. August 2026 · 126 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -84,6 +84,11 @@ L10  Mehrfachauswahl am Telefon (E84) — „Auswählen" im Blockmenü, Tipp
 L16  der sonst-Zweig ist erstklassig (E85) — treffen die Bedingungen
      nicht, laufen die sonst-Aktionen statt gar keiner; dazu der tote
      Probelauf-Pfad, der `a.aktionen` las (die Liste heisst `dann`)
+L16  Automationen drehen keine Kreisel mehr (E86) — „wenn X sich
+     ändert → setze X" lief endlos (720 Schreibvorgänge in drei
+     Sekunden); jetzt Gleichwert-Schutz plus Ketten-Deckel bei Tiefe 5
+     mit ⚠ im Verlauf. Und die Schleife über die EIGENEN Zeilen gab es
+     entgegen dieser Liste längst — erst jetzt ist sie gefahrlos
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -556,9 +561,15 @@ Kopieren nach Excel geht kein Emoji als Text mit.
 
 ## L16 · Automationen erweitern
 
-**Stand** — ◐ nachgezählt am 8. August: **19** Aktionsarten, nicht 11.
-Vorschau, Protokoll und Fehleranzeige sind da (E61), der sonst-Zweig ist
-erstklassig (E85, 9. August); es fehlt die Schleife über eigene Zeilen.
+**Stand** — ✅ komplett seit dem 9. August: 19 Aktionsarten · Bedingungen
+je Aktion und je Automation · Variablen · Vorschau, Protokoll und
+Fehleranzeige (E61) · sonst-Zweig erstklassig (E85) · Schleifenschutz
+(E86: Gleichwert + Ketten-Deckel) · Schleife über eigene Zeilen.
+
+Die letzte „fehlende" Sache stand hier falsch: „Über die eigenen Zeilen
+läuft nichts" stimmte nie — `fremd-setzen` listete die eigene Datenbank
+seit jeher als Ziel. Was wirklich fehlte, war der Schleifenschutz, ohne
+den jede Eigen-Massenänderung ein Kreisel-Kandidat war (E86, test160 §5).
 
 Diese Lücke stand mit einer Zahl da, die niemand nachgezählt hatte, und
 listete als fehlend, was teils längst gebaut war. Was das Nachsehen fand:
@@ -583,9 +594,10 @@ listete als fehlend, was teils längst gebaut war. Was das Nachsehen fand:
                            von `dann` — treffen die Bedingungen nicht,
                            läuft er statt gar nichts; Verlauf, Liste und
                            Probelauf zeigen den Zweig
-✗ für jede Zeile           über mehrere Zeilen läuft nur `fremd-setzen`
-                           (eine ANDERE Datenbank, höchstens 500 Zeilen).
-                           Über die eigenen Zeilen läuft nichts.
+✓ für jede Zeile           `fremd-setzen` (höchstens 500 Zeilen) nimmt
+                           auch die EIGENE Datenbank — das ging entgegen
+                           dieser Zeile schon immer und ist seit dem
+                           Schleifenschutz (E86) gefahrlos (test160 §5)
 ```
 
 **Und was dabei aufgefallen ist** — der ▶-Knopf hiess „Einmal probeweise

@@ -103,7 +103,11 @@ import { chromium } from 'playwright';
     const bk = Object.keys(c.schema).find(k => c.schema[k].name === 'Betrag') ?? '';
     const nk = Object.keys(c.schema).find(k => c.schema[k].name === 'Notiz') ?? '';
     const r = Store.addRow(collectionId, {});
-    Store.updateBlock(r.id, { text: 'R1', props: { [bk]: 250 } });
+    /* Hier wurde der Betrag schon VORGESÄT und dann „ausgelöst", indem
+       derselbe Wert noch einmal gesetzt wurde. Seit E86 ist das ehrlich
+       kein Ereignis mehr — „bekommt einen Wert" heisst: bekommt ihn NEU.
+       Der Auslöser unten ist jetzt der echte Übergang leer → 250. */
+    Store.updateBlock(r.id, { text: 'R1' });
 
     c.automationen = [{
       id: 'v1', name: 'Mit Variablen', an: true,

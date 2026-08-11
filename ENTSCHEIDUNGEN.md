@@ -5451,3 +5451,67 @@ der Dialog legt per Häkchen in den richtigen Zweig und trägt den
 Hinweis. Fünf Gegenprobe-Arme, jeder kippte genau seine Punkte —
 der Zweigwahl-Arm zeigte dabei beides auf einmal: sonst liefe nie UND
 die Alt-Automation bräche (sie liefe plötzlich bei Nichttreffen).
+
+**Nachtrag zum Nebenfund:** Der „tote" Pfad hatte doch einen Rufer —
+test81, und der fütterte ihn mit derselben Fiktion (`aktionen`,
+`setzen`). Test und Modul waren untereinander stimmig und beide von der
+Wirklichkeit abgekoppelt; der volle Lauf nach der Reparatur machte es
+sichtbar (test81 rot: „keine Aktionen"). Jetzt baut test81 eine ECHTE
+Automation und nagelt das reale Schema fest — ein Prüfling, der eine
+Fiktion pinnt, ist selbst Teil der Fiktion.
+
+
+## E86 · Automationen drehen keine Kreisel — der Schleifenschutz
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L16
+
+Beim Planen der „Schleife über eigene Zeilen" fiel die Frage: was hindert
+eine Automation eigentlich daran, sich selbst auszulösen? Die Messung
+antwortete: NICHTS. Eine Automation „wenn X sich ändert → setze X auf
+fest" lief endlos — **720 Schreibvorgänge in drei Sekunden**, für immer:
+CPU-Brand, IndexedDB-Dauerschreiben, am Telefon leerer Akku. Ein einziger
+argloser Dialog-Klick genügte. Der `imLauf`-Riegel griff nicht, weil der
+Auslöser-Hook VERZÖGERT feuert — der Riegel ist dann längst offen.
+
+**Zwei Stufen:**
+
+```txt
+1  GLEICHWERT   „ändert sich" heisst jetzt ändern. Wird ein Wert auf
+                sich selbst gesetzt, feuern prop-geaendert, prop-wert
+                und zeile-geaendert nicht. Listen (Dateien,
+                Verknüpfungen) werden nach Inhalt verglichen, nicht
+                nach Hülle. Bricht den Kreisel mit festem Wert.
+2  KETTEN-DECKEL  Ping-Pong mit WECHSELNDEN Werten (a→b→a→…) fängt
+                Stufe 1 nicht. Schreibvorgänge aus Automationen tragen
+                eine Kettentiefe — der Hook fängt sie SYNCHRON, bevor
+                er verzögert feuert. Ab Tiefe 5 hält der Läufer an und
+                schreibt es in den Verlauf: „Ketten-Deckel: nach 5
+                Automations-Stufen angehalten". Still verhungern lassen
+                wäre gelogen.
+```
+
+Eine ehrliche Kette (A stösst B an, B stösst C an) läuft weiter — fünf
+Stufen sind erlaubt, gebraucht werden selten mehr als zwei.
+
+**Die Semantik wird dabei ehrlicher, und ein Test musste nachziehen:**
+test41 „löste aus", indem er einen vorgesäten Wert noch einmal setzte —
+unter Stufe 1 ist das richtigerweise kein Ereignis mehr („bekommt einen
+Wert" heisst: bekommt ihn NEU, wie bei Notion). Der Test setzt jetzt den
+echten Übergang leer → 250.
+
+**Und die L16-Behauptung fiel:** „Über die eigenen Zeilen läuft nichts"
+stimmte nie — das Ziel-Dropdown von `fremd-setzen` listete die eigene
+Datenbank seit jeher, und der Läufer hat keinen Eigen-Riegel. Was fehlte,
+war genau dieser Schleifenschutz: OHNE ihn war jede Eigen-Massenänderung
+ein Kreisel-Kandidat. test160 §5 belegt beides — alle eigenen Zeilen
+ändern sich, und nichts dreht durch. Damit ist L16 komplett: 19
+Aktionsarten, Bedingungen, Variablen, Vorschau, Protokoll, Fehleranzeige,
+sonst-Zweig (E85), Schleife über eigene Zeilen.
+
+**Geprüft** (test160, 11 Punkte): Kreisel steht nach ≤6 Schreibvorgängen ·
+Ping-Pong endet am Deckel UND sagt es im Verlauf · die ehrliche Kette
+A→B→C läuft · Gleichwert zählt nicht · die Eigen-Schleife ändert alle
+Zeilen. Vier Gegenprobe-Arme: ohne Gleichwert dreht der Kreisel wieder
+(und der Deckel fängt ihn als zweites Netz bei Tiefe 5), ohne Deckel
+läuft das Ping-Pong auf 600 Aufrufe, ohne Kettenfang ebenso, ohne Notiz
+schweigt der Halt — jeder Arm kippte genau seine Punkte.
