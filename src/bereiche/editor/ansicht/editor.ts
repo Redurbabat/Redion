@@ -3012,10 +3012,24 @@ const Blocks = (() => {
     document.addEventListener('click', (e) => {
       const blk = elVon(e)?.closest<HTMLElement>('#page .blk[data-bid]');
       if (!blk) { if (ausgewaehlt.length && !elVon(e)?.closest<HTMLElement>('#auswahl-leiste, .menu')) auswahlLeeren(); return; }
-      if (e.shiftKey && ankerId && blk.dataset.bid) { e.preventDefault(); auswahlBis(blk.dataset.bid); return; }
+      /* Ohne Alt: mit Alt+Umschalt gehört der Klick dem Einzel-Umschalter
+         weiter unten — sonst fräse „bis hierher" jeden zweiten Alt-Klick. */
+      if (e.shiftKey && !e.altKey && ankerId && blk.dataset.bid) { e.preventDefault(); auswahlBis(blk.dataset.bid); return; }
       if ((e.ctrlKey || e.metaKey) && ausgewaehlt.length) {
         e.preventDefault();
         const id = blk.dataset.bid;
+        auswahlSetzen(ausgewaehlt.includes(id)
+          ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
+        return;
+      }
+      /* Alt+Umschalt+Klick wählt den Block — auch als ERSTEN (Notions
+         Griff, letzter L20-Rest). Strg+Klick kann nur erweitern, weil
+         der blosse Klick dem Schreibzeiger gehört; diese Kombination
+         darf die Auswahl auch beginnen. */
+      if (e.altKey && e.shiftKey && blk.dataset.bid) {
+        e.preventDefault();
+        const id = blk.dataset.bid;
+        ankerId = id;
         auswahlSetzen(ausgewaehlt.includes(id)
           ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
         return;

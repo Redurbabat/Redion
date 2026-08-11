@@ -5598,3 +5598,10 @@ Leser-Zweig wird alles Text, ohne Trennzeilen-Pflicht wird falscher Text
 zur Tabelle, ohne setze bleiben Zahlen Zeichenketten, ohne Serialisierung
 verschwindet die Tabelle beim Kopieren — jeder kippte genau seine Punkte.
 test132 (Markdown, 81 Punkte) blieb unangetastet grün.
+
+**Nachtrag — der L20-Schluss:** Alt+Umschalt+Klick wählt einen Block,
+auch als ersten (Strg+Klick kann nur erweitern, der blosse Klick gehört
+dem Schreibzeiger). Der reine Umschalt-Zweig („bis hierher") schliesst
+Alt jetzt aus — sonst frass er jeden zweiten Alt-Klick, was die erste
+Fassung des Prüfpunkts sofort zeigte. Damit führt die Referenz nichts
+Offenes mehr; L20 ist komplett (test158 §7 mit Gegenprobe).

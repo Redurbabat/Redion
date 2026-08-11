@@ -82,8 +82,8 @@ L16  ✅ komplett (9. August): sonst-Zweig (E85), Schleifenschutz
      gegen Automations-Kreisel (E86), Schleife über eigene Zeilen
      (gab es längst — erst jetzt gefahrlos)
 L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
-L20  fast fertig: Ausfüllen (E87) und Markdown-Tabellen (E88) sind
-     da; offen bleibt Alt+Umschalt+Klick zur Blockauswahl
+L20  ✅ komplett (9. August): Ausfüllen (E87), Markdown-Tabellen
+     (E88), Alt+Umschalt+Klick (test158 §7)
 ```
 
 **Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push

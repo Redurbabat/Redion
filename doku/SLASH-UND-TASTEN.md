@@ -224,7 +224,7 @@ genauso.
 | Strg+A | Alle Blöcke auswählen | ✅ |
 | Pfeiltasten | Anderen Block auswählen | ✅ |
 | Umschalt+↑ ↓ | Auswahl erweitern | ✅ |
-| Alt+Umschalt+Klick | Ganzen Block wählen oder abwählen | ◐ |
+| Alt+Umschalt+Klick | Ganzen Block wählen oder abwählen | ✅ *(L20-Schluss — wählt auch als ersten; test158 §7)* |
 | Umschalt+Klick | Bis hierher alles auswählen | ✅ |
 | Rücktaste / Entf | Ausgewählte Blöcke löschen | ✅ |
 | Strg+D | Duplizieren | ✅ |
@@ -294,11 +294,12 @@ Ihre eigenen Worte, sinngemäss:
 | Strg + / − / 0 | fehlten | Schriftgrösse |
 | Kürzelübersicht (Strg+/) | zeigte die alte Belegung | zeigt beide |
 
-Offen bleibt: Alt+Umschalt+Klick zur Blockauswahl. (Strg+R und Strg+D zum
-Ausfüllen gibt es seit E87 — nur im fokussierten Raster, denn global
-gehört Strg+R dem Browser. Und der Fund dabei: nach einem Zellklick lag
-der Fokus auf BODY, die ganze Rastertastatur ging bis zum ersten Tab ins
-Leere — behoben, test161 §0.)
+Aus dieser Liste ist nichts mehr offen: Alt+Umschalt+Klick kam als
+letztes (test158 §7). Strg+R und Strg+D zum Ausfüllen gibt es seit E87 —
+nur im fokussierten Raster, denn global gehört Strg+R dem Browser; der
+Fund dabei: nach einem Zellklick lag der Fokus auf BODY, die ganze
+Rastertastatur ging bis zum ersten Tab ins Leere (behoben, test161 §0).
+Und Markdown-Tabellen gehen seit E88 in beide Richtungen.
 
 ---
 

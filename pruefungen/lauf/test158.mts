@@ -218,6 +218,25 @@ const amRechner = await rechner.evaluate(async () => {
 gleich('Ein einzelner Block wird markiert', amRechner.gewaehlt, true);
 gleich('… aber die Leiste kommt am Rechner erst ab zwei', amRechner.leisteBeiEinem, false);
 
+console.log('\n7 · Alt+Umschalt+Klick wählt am Rechner — auch als erster (L20-Rest)');
+
+const altKlick = await rechner.evaluate(async () => {
+  Blocks.auswahlLeeren();
+  await new Promise(r => setTimeout(r, 150));
+  const blk = document.querySelector<HTMLElement>('#page .blk[data-bid]')!;
+  const id = blk.dataset['bid']!;
+  const schuss = (art: string) => blk.dispatchEvent(new MouseEvent(art,
+    { bubbles: true, cancelable: true, altKey: true, shiftKey: true }));
+  schuss('mousedown'); schuss('mouseup'); schuss('click');
+  await new Promise(r => setTimeout(r, 150));
+  const gewaehlt = !!document.querySelector(`.blk[data-bid="${id}"].gewaehlt`);
+  schuss('mousedown'); schuss('mouseup'); schuss('click');
+  await new Promise(r => setTimeout(r, 150));
+  return { gewaehlt, wiederWeg: !document.querySelector(`.blk[data-bid="${id}"].gewaehlt`) };
+});
+gleich('Der erste Alt+Umschalt+Klick wählt den Block', (altKlick as any).gewaehlt, true);
+gleich('Der zweite nimmt ihn wieder heraus', (altKlick as any).wiederWeg, true);
+
 p('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
 
 await browser.close();

@@ -3215,7 +3215,9 @@ const Blocks = (() => {
                     auswahlLeeren();
                 return;
             }
-            if (e.shiftKey && ankerId && blk.dataset.bid) {
+            /* Ohne Alt: mit Alt+Umschalt gehört der Klick dem Einzel-Umschalter
+               weiter unten — sonst fräse „bis hierher" jeden zweiten Alt-Klick. */
+            if (e.shiftKey && !e.altKey && ankerId && blk.dataset.bid) {
                 e.preventDefault();
                 auswahlBis(blk.dataset.bid);
                 return;
@@ -3223,6 +3225,18 @@ const Blocks = (() => {
             if ((e.ctrlKey || e.metaKey) && ausgewaehlt.length) {
                 e.preventDefault();
                 const id = blk.dataset.bid;
+                auswahlSetzen(ausgewaehlt.includes(id)
+                    ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
+                return;
+            }
+            /* Alt+Umschalt+Klick wählt den Block — auch als ERSTEN (Notions
+               Griff, letzter L20-Rest). Strg+Klick kann nur erweitern, weil
+               der blosse Klick dem Schreibzeiger gehört; diese Kombination
+               darf die Auswahl auch beginnen. */
+            if (e.altKey && e.shiftKey && blk.dataset.bid) {
+                e.preventDefault();
+                const id = blk.dataset.bid;
+                ankerId = id;
                 auswahlSetzen(ausgewaehlt.includes(id)
                     ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
                 return;

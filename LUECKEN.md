@@ -634,10 +634,11 @@ summary block · File gallery · Button automation block.
 ## L20 · Markdown- und Tastenkürzel
 
 **Stand** — ✅ Markdown, gemessen statt gezählt (Tabellen seit E88 in
-beide Richtungen) · ◐ Tastenkürzel: die Referenz
-(doku/SLASH-UND-TASTEN.md) führt als offen nur noch Alt+Umschalt+Klick
-zur Blockauswahl und ein paar ◐-Halbheiten; Strg+R/Strg+D zum Ausfüllen
-kamen mit E87.
+beide Richtungen) · ✅ Tastenkürzel: die Referenz
+(doku/SLASH-UND-TASTEN.md) führt nichts Offenes mehr — Strg+R/Strg+D
+zum Ausfüllen kamen mit E87, Alt+Umschalt+Klick als letztes (test158
+§7). Übrig sind nur die als — markierten Programmfunktionen, die es im
+Browser nicht geben kann, und die ◐-Halbheiten der Datenbank-Vorschau.
 
 Der Zeile-für-Zeile-Vergleich ist da: `pruefungen/lauf/test132.mts` **tippt**
 jedes Kürzel und liest ab, was daraus wird. Er hat vier Behauptungen
