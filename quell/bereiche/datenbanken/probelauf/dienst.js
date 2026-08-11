@@ -334,17 +334,24 @@ const Probelauf = (() => {
         });
         const b = [];
         b.push(befund(treffer.length ? 'hinweis' : 'hinweis', treffer.length + ' von ' + zeilen.length + ' Zeilen erfüllen die Bedingungen.', treffer.slice(0, 8).map((r) => r.text || 'Ohne Titel')));
-        (a.aktionen || []).forEach((ak) => {
+        /* Hier stand `a.aktionen` mit den Arten `setzen` und `wert` — beides
+           gibt es nicht. Die Liste heisst seit jeher `dann` (seit E85 dazu
+           `sonst`), die Art heisst `setze-prop`. Wäre dieser Pfad je gerufen
+           worden, hätte er JEDER Automation „keine Aktionen" bescheinigt —
+           toter Code, der beim Erwachen gelogen hätte. */
+        const zweig = (liste, wo) => (liste || []).forEach((ak) => {
             const feld = ak.key && coll.schema[ak.key] ? coll.schema[ak.key].name : ak.key;
-            if (ak.art === 'setzen' || ak.art === 'wert')
-                b.push(befund('verlust', 'Setzt „' + esc(feld) + '" auf „' + esc(ak.wert) +
+            if (ak.art === 'setze-prop')
+                b.push(befund('verlust', wo + 'Setzt „' + esc(feld) + '" auf „' + esc(ak.wert) +
                     '" — der bisherige Wert wird überschrieben, bei ' + treffer.length + ' Zeilen.'));
             else if (ak.art === 'loeschen')
-                b.push(befund('verlust', 'Löscht ' + treffer.length + ' Zeilen.'));
+                b.push(befund('verlust', wo + 'Löscht ' + treffer.length + ' Zeilen.'));
             else
-                b.push(befund('hinweis', 'Aktion: ' + esc(ak.art || 'unbekannt')));
+                b.push(befund('hinweis', wo + 'Aktion: ' + esc(ak.art || 'unbekannt')));
         });
-        if (!(a.aktionen || []).length)
+        zweig(a.dann, '');
+        zweig(a.sonst, 'Sonst-Zweig: ');
+        if (!(a.dann || []).length && !(a.sonst || []).length)
             b.push(befund('hinweis', 'Diese Automation hat keine Aktionen — sie tut nichts.'));
         return { titel: 'Probelauf: ' + (a.name || 'Automation'), befunde: b, trocken: true };
     };

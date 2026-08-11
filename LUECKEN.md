@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 124 Prüfläufe**
+**9. August 2026 · 125 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -81,6 +81,9 @@ L10  Mehrfachauswahl am Telefon (E84) — „Auswählen" im Blockmenü, Tipp
      schaltet dazu/weg, Leiste ab dem ersten Block mit 44-px-Knöpfen.
      Dabei: der dunkle Menü-Grund blieb nach JEDER einfachen
      Menü-Aktion stehen und frass einen Tipp — seit es Blätter gibt
+L16  der sonst-Zweig ist erstklassig (E85) — treffen die Bedingungen
+     nicht, laufen die sonst-Aktionen statt gar keiner; dazu der tote
+     Probelauf-Pfad, der `a.aktionen` las (die Liste heisst `dann`)
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
@@ -554,8 +557,8 @@ Kopieren nach Excel geht kein Emoji als Text mit.
 ## L16 · Automationen erweitern
 
 **Stand** — ◐ nachgezählt am 8. August: **19** Aktionsarten, nicht 11.
-Vorschau, Protokoll und Fehleranzeige sind da (E61); Schleife und ein
-erstklassiger sonst-Zweig fehlen.
+Vorschau, Protokoll und Fehleranzeige sind da (E61), der sonst-Zweig ist
+erstklassig (E85, 9. August); es fehlt die Schleife über eigene Zeilen.
 
 Diese Lücke stand mit einer Zahl da, die niemand nachgezählt hatte, und
 listete als fehlend, was teils längst gebaut war. Was das Nachsehen fand:
@@ -576,8 +579,10 @@ listete als fehlend, was teils längst gebaut war. Was das Nachsehen fand:
 ✓ Vorschau                 seit E61 — zeigt den Plan, schreibt nichts
 ✓ Fehleranzeige            seit E61 — vorher war das Feld da, das ⚠ im
                            Verlauf auch, und gesetzt hat es nie jemand
-✗ sonst-Zweig              nur über zwei gespiegelte Bedingungen, nicht
-                           als eigenes Ding in der Oberfläche
+✓ sonst-Zweig              seit E85 erstklassig: `sonst` als Schwester
+                           von `dann` — treffen die Bedingungen nicht,
+                           läuft er statt gar nichts; Verlauf, Liste und
+                           Probelauf zeigen den Zweig
 ✗ für jede Zeile           über mehrere Zeilen läuft nur `fremd-setzen`
                            (eine ANDERE Datenbank, höchstens 500 Zeilen).
                            Über die eigenen Zeilen läuft nichts.

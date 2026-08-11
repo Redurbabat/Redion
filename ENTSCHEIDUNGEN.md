@@ -5404,3 +5404,50 @@ Code entsprach dem dokumentierten Bauplan Zeile für Zeile; er wurde wie
 fremder Code behandelt: vollständig gelesen, aus der Quelle neu gebaut,
 und jedes Stück einzeln per Gegenprobe rot gesehen (sechs Arme), bevor
 es blieb.
+
+
+## E85 · Automationen: der sonst-Zweig ist erstklassig
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L16
+
+Bisher hiess „sonst": zwei gespiegelte Aktions-Bedingungen von Hand — und
+trafen die Bedingungen der Automation nicht, lief schlicht GAR NICHTS.
+Jetzt hat die Automation neben ihrer Aktionsliste `dann` eine Schwester
+`sonst`:
+
+```txt
+Bedingungen treffen        → die dann-Aktionen laufen (wie immer)
+Bedingungen treffen nicht  → die sonst-Aktionen laufen (statt keiner)
+kein sonst                 → wie eh und je: nichts
+```
+
+Der Feldname `sonst` ist deutsch, weil er so gespeichert wird — als
+Schwester des bestehenden `dann` (§53.3). Alte Automationen haben das
+Feld nicht, und fehlen heisst leer: keine Migration, kein geändertes
+Verhalten. (Eine ALTE App, die eine NEUE Sicherung mit sonst-Automationen
+lädt, ignoriert den Zweig schlicht — sie kennt ihn nicht. Das ist die
+übliche Abwärtsgrenze und hier ohne Datenrisiko.)
+
+**Sichtbar wird der Zweig überall, wo die Automation spricht:** die
+Liste zeigt „… · Sonst: …", der Laufverlauf trägt „· sonst-Zweig",
+und der ▶-Probelauf sagt als erste Zeile, welcher Zweig liefe — aber
+nur bei Automationen, die überhaupt ein sonst haben: alle anderen
+behalten ihre Vorschau unverändert (und test133 blieb unangefasst grün).
+
+**Im Anlege-Dialog** wandert eine Aktion per Häkchen in den sonst-Zweig.
+Daneben steht der Pflicht-Hinweis: ein sonst ohne Bedingungen liefe nie
+— ein Häkchen, das still nichts bewirkt, wäre gelogen.
+
+**Nebenfund:** `Probelauf.automation()` war toter Code mit erfundenen
+Feldnamen — er las `a.aktionen` (die Liste heisst seit jeher `dann`) und
+prüfte Arten (`setzen`, `wert`), die es nie gab. Wäre er je gerufen
+worden, hätte er JEDER Automation „keine Aktionen" bescheinigt. Er liest
+jetzt die echten Felder, beide Zweige.
+
+**Geprüft** (test159, 13 Punkte): beide Zweige laufen richtig · der
+Verlauf notiert den Zweig · eine alte Automation ohne sonst verhält
+sich unverändert (beide Richtungen) · die Liste zeigt beide Zweige ·
+der Dialog legt per Häkchen in den richtigen Zweig und trägt den
+Hinweis. Fünf Gegenprobe-Arme, jeder kippte genau seine Punkte —
+der Zweigwahl-Arm zeigte dabei beides auf einmal: sonst liefe nie UND
+die Alt-Automation bräche (sie liefe plötzlich bei Nichttreffen).

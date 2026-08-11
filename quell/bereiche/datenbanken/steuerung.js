@@ -2459,6 +2459,7 @@ const Datenbank = (() => {
                     (liste.length
                         ? liste.slice(0, 30).map((l) => '<button><span class="mi">' + (l.fehler ? '⚠' : '✓') + '</span>' +
                             esc(Werkzeuge.zeitKurz(l.wann)) + ' — ' + esc(l.zeile || '(ohne Zeile)') +
+                            (l.zweig === 'sonst' ? ' · sonst-Zweig' : '') +
                             '<span class="ms">' + esc((l.aktionen || []).join(', ')) + '</span></button>').join('')
                         : '<button disabled>Noch nie gelaufen</button>'), verl.getBoundingClientRect().left - 220, verl.getBoundingClientRect().bottom + 4);
                 return;
@@ -7286,10 +7287,19 @@ const Datenbank = (() => {
                         return;
                     a.gefeuert = {};
                 }
-                /* Zusätzliche Bedingungen — alle müssen zutreffen.
-                   Benannte Bedingungen dürfen auch nach dem alten Wert fragen. */
-                if ((a.bedingungen || []).length &&
-                    !bedingungenTreffen(a, row, coll, { key, alterWert: ctx.alterWert, neuerWert }))
+                /* Zusätzliche Bedingungen — alle müssen zutreffen. Benannte
+                   Bedingungen dürfen auch nach dem alten Wert fragen.
+        
+                   Seit E85 entscheiden sie den ZWEIG, statt nur abzubrechen:
+                   treffen sie zu, läuft `dann`; treffen sie nicht, läuft `sonst`.
+                   Kein sonst heisst wie eh und je: nichts. Der Feldname `sonst`
+                   ist deutsch, weil er so gespeichert wird — als Schwester des
+                   bestehenden `dann` (§53.3); bei alten Automationen fehlt er
+                   einfach, und fehlen heisst leer. */
+                const bedingungenOk = !(a.bedingungen || []).length ||
+                    bedingungenTreffen(a, row, coll, { key, alterWert: ctx.alterWert, neuerWert });
+                const zweigListe = bedingungenOk ? (a.dann || []) : (a.sonst || []);
+                if (!bedingungenOk && !zweigListe.length)
                     return;
                 /* Gilt die Automation nur für eine Ansicht? Dann muss die Zeile
                    auch durch deren Filter kommen. */
@@ -7305,6 +7315,16 @@ const Datenbank = (() => {
                  * -------------------------------------------------------------- */
                 const laufNotiz = { wann: new Date().toISOString(),
                     zeile: (row && row.text) || '', aktionen: [], fehler: '' };
+                if (!bedingungenOk)
+                    laufNotiz.zweig = 'sonst';
+                /* Im Probelauf sagt die erste Zeile, welcher Zweig liefe — aber nur,
+                   wenn es überhaupt einen sonst-Zweig gibt: Automationen ohne ihn
+                   behalten ihre Vorschau unverändert. */
+                if (ctx.probe && (a.sonst || []).length) {
+                    ctx.probe.push({ name: bedingungenOk
+                            ? 'Bedingungen treffen — der dann-Zweig läuft'
+                            : 'Bedingungen treffen nicht — der sonst-Zweig läuft' });
+                }
                 const notieren = () => {
                     a.verlauf = [laufNotiz, ...(a.verlauf || [])].slice(0, 100);
                     verlaufSichern(coll);
@@ -7612,7 +7632,7 @@ const Datenbank = (() => {
                  * und die nächste Automation der Datenbank kam nie an die Reihe —
                  * still, denn geworfen wurde in einen Aufruf, den niemand fängt.
                  * ---------------------------------------------------------------- */
-                (a.dann || []).forEach((d) => {
+                zweigListe.forEach((d) => {
                     try {
                         eineAktion(d);
                     }
@@ -8024,6 +8044,9 @@ const Datenbank = (() => {
                             ? bedingungText(b)
                             : `${namen(b.key)} ${b.op} ${b.wert}`).join(' und ')) : '') +
                     ` · Dann: ${a.dann.map((d) => esc((AKTIONEN.find(x => x[0] === d.art) || [])[1] || '')).join(', ')}` +
+                    ((a.sonst || []).length
+                        ? ` · Sonst: ${a.sonst.map((d) => esc((AKTIONEN.find((x) => x[0] === d.art) || [])[1] || '')).join(', ')}`
+                        : '') +
                     `</span></div>` +
                     `<button data-test="${i}" title="Probelauf: zeigt den Plan, ändert nichts">▶</button>` +
                     `<button data-verlauf="${i}" title="Laufverlauf">🕘` +
@@ -8118,6 +8141,18 @@ const Datenbank = (() => {
                 keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
                 '</select></label>' +
                 '<label id="adw">… auf diesen Wert<br><input id="adv" placeholder="z. B. heute"></label>' +
+                /* Der sonst-Zweig (E85): treffen die Bedingungen der Automation
+                   NICHT zu, laufen die hier markierten Aktionen — statt gar
+                   keiner. Der Hinweis ist Pflicht: ein sonst ohne Bedingungen
+                   liefe nie, und ein Häkchen, das still nichts bewirkt, wäre
+                   gelogen. */
+                '<div class="ab-wenn"><label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
+                '<input type="checkbox" id="adsonst" style="width:auto"> in den sonst-Zweig legen ' +
+                '(läuft, wenn die Bedingungen NICHT zutreffen)</label>' +
+                '<div id="sonst-hinweis" style="font-size:12px; color:var(--text-faint); margin-top:4px">' +
+                'Der sonst-Zweig braucht Bedingungen („Nur wenn"): ohne sie treffen ' +
+                'die Bedingungen immer zu, und sonst-Aktionen liefen nie.</div>' +
+                '</div>' +
                 /* Bedingung nur für diese eine Aktion — Notions Automationen
                    können das nicht, dort gilt jede Bedingung für alle Aktionen. */
                 '<div class="ab-wenn"><label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
@@ -8354,6 +8389,7 @@ const Datenbank = (() => {
         o.querySelector('#adwk')?.addEventListener('change', auffrischen);
         o.querySelector('#abda')?.addEventListener('change', auffrischen);
         const gesammelt = [];
+        const gesammeltSonst = [];
         const bedingungen = [];
         o.addEventListener('click', e => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
@@ -8462,12 +8498,22 @@ const Datenbank = (() => {
                 }
                 dann.nurVerknuepft = o.querySelector('#afr')?.checked;
             }
-            gesammelt.push(dann);
+            /* Das Häkchen entscheidet den Zweig (E85) */
+            const sonstKasten = o.querySelector('#adsonst');
+            if (sonstKasten?.checked)
+                gesammeltSonst.push(dann);
+            else
+                gesammelt.push(dann);
             if (elVon(e)?.closest('[data-a="mehr"]')) {
-                UI.toast(gesammelt.length + ' Aktionen gesammelt — noch eine einstellen');
+                const beide = gesammelt.length + gesammeltSonst.length;
+                UI.toast(beide + ' Aktion(en) gesammelt' +
+                    (gesammeltSonst.length ? ' — davon ' + gesammeltSonst.length + ' im sonst-Zweig' : '') +
+                    ' — noch eine einstellen');
                 const adv = o.querySelector('#adv');
                 if (adv)
                     adv.value = '';
+                if (sonstKasten)
+                    sonstKasten.checked = false;
                 return;
             }
             coll.automationen = coll.automationen || [];
@@ -8490,12 +8536,17 @@ const Datenbank = (() => {
                 nurAnsicht: o.querySelector('#aw')?.value === 'wiederkehrend'
                     ? (o.querySelector('#azv')?.value || null) : null,
                 bedingungen: bedingungen,
-                dann: gesammelt
+                dann: gesammelt,
+                sonst: gesammeltSonst
             });
             Store.updateCollection(coll.id, { automationen: coll.automationen });
             o.remove();
-            UI.toast('Automation mit ' + gesammelt.length +
-                (gesammelt.length === 1 ? ' Aktion angelegt' : ' Aktionen angelegt'));
+            const alleZahl = gesammelt.length + gesammeltSonst.length;
+            UI.toast('Automation mit ' + alleZahl +
+                (alleZahl === 1 ? ' Aktion' : ' Aktionen') +
+                (gesammeltSonst.length
+                    ? ' angelegt — davon ' + gesammeltSonst.length + ' im sonst-Zweig'
+                    : ' angelegt'));
         });
     };
     /* ========================================================================
