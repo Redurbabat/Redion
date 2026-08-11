@@ -397,7 +397,9 @@ const eng = await handy.evaluate(async () => {
   const w = window as any;
   const s = Object.values(Store.cache.blocks)
     .find((b: any) => b.type === 'page' && b.alive) as any;
-  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Handy' });
+  /* Seit E89 zeigt das Telefon standardmässig Karten; das Regel-Fenster
+     wohnt im RASTER — also mit offenem Raster anlegen (⊞-Weg). */
+  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Handy', telefonRaster: true });
   const k = document.createElement('div');
   k.id = 'ph'; document.body.appendChild(k);
   k.appendChild(w.SpreadsheetView.zeichne(Store.getBlock(blk.id)));
