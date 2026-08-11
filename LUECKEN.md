@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 123 Prüfläufe**
+**9. August 2026 · 124 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -73,14 +73,21 @@ L10  Ziehen am Telefon (E83) — langes Drücken hebt, der Finger trägt,
      unerreichbar (der Berührungsradius traf immer Checkbox oder Text,
      beide waren tabu), und nach einem Wisch frass der Nachzügler-Fänger
      den nächsten Tipp
+—    der Review der Geste fand ein Datenverlust-Loch, das auch am
+     RECHNER klaffte, seit es Ziehen gibt: ein Block neben dem eigenen
+     Kind abgelegt hängte die Elternkette im Kreis auf — der Teilbaum
+     verschwand, ohne gelöscht zu sein (E83-Nachtrag; lege() weist ab)
+L10  Mehrfachauswahl am Telefon (E84) — „Auswählen" im Blockmenü, Tipp
+     schaltet dazu/weg, Leiste ab dem ersten Block mit 44-px-Knöpfen.
+     Dabei: der dunkle Menü-Grund blieb nach JEDER einfachen
+     Menü-Aktion stehen und frass einen Tipp — seit es Blätter gibt
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
 
 ```txt
-1. Mobile (L10): Bottom Sheets (test155), Formatleiste (E81) und
-   Ziehen (E83) sind da. Wirklich offen: die Mehrfachauswahl ist am
-   Telefon nicht erreichbar (kein Weg hinein ohne Tastatur) · ein
+1. Mobile (L10): Bottom Sheets (test155), Formatleiste (E81), Ziehen
+   (E83) und Mehrfachauswahl (E84) sind da. Wirklich offen: ein
    Telefon-Entwurf für den Tabellenblock · geprüft ist alles nur im
    Bildmass, nie am Gerät
 2. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
@@ -366,9 +373,14 @@ ohne Bewegung. `test157` prüft die Geste mit echten CDP-Berührungen und
 fand dabei zwei Altfehler (Wischen unerreichbar, Fänger frass den
 nächsten Tipp — beide behoben, siehe E83).
 
-**Fehlt ausserdem:** die **Mehrfachauswahl** ist am Telefon nicht
-erreichbar — hinein kommt man nur mit Umschalt-Klick oder Tastatur, und
-beides gibt es dort nicht · der **Tabellenblock** hat am Telefon noch
+**Die Mehrfachauswahl gibt es seit E84** — „Auswählen" im Blockmenü
+steigt ein, ein Tipp schaltet Blöcke dazu und wieder weg, die
+Aktionsleiste steht am Telefon ab dem ersten Block (test158). Der Bau
+fand den nächsten Altfehler: der dunkle Menü-Grund blieb nach jeder
+einfachen Menü-Aktion stehen und frass einen Tipp (jetzt Wächter im
+Menü-Modul, test155 §4) — und die Leisten-Knöpfe massen 31 px statt 44.
+
+**Fehlt ausserdem:** der **Tabellenblock** hat am Telefon noch
 keinen eigenen Entwurf — die Fingermasse stimmen seit E64, aber es bleibt
 dasselbe Raster wie am Rechner, mit leeren Zeilen auf halbem Bildschirm;
 ob dort eine Zeile als Karte hingehört, wie es die Datenbank längst

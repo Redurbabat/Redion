@@ -40,6 +40,18 @@ const Menue = (() => {
             grund.addEventListener('click', () => { m.remove(); grund.remove(); });
             document.body.appendChild(grund);
             document.body.appendChild(m);
+            /* Fast alle Aufrufer schliessen ihr Menü nach einer Aktion mit
+               `menu.remove()` — vom Grund wissen sie nichts, den gibt es nur am
+               Telefon. Er blieb dann als unsichtbare dunkle Wand stehen und
+               frass genau einen Tipp. Der Wächter nimmt ihn mit, sobald das
+               Menü aus dem Baum verschwindet — egal, wer es entfernt hat. */
+            const waechter = new MutationObserver(() => {
+                if (!m.isConnected) {
+                    grund.remove();
+                    waechter.disconnect();
+                }
+            });
+            waechter.observe(document.body, { childList: true });
             /* Nach unten wischen schliesst es */
             let start = 0;
             /* `touches[0]` ist bei einem `touchstart` immer da — aber der Typ sagt

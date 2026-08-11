@@ -1896,8 +1896,12 @@ const Blocks = (() => {
            einem seiner NACHKOMMEN, zeigt seine neue Elternkette auf ihn selbst
            zurück — der ganze Teilbaum hängt im Kreis und verschwindet von der
            Seite, ohne gelöscht zu sein. Das Loch war so alt wie das Ziehen am
-           Rechner; gefunden hat es erst der Review der Telefon-Geste (E83). */
-        for (let el = z; el; el = Store.getBlock(el.parentId)) {
+           Rechner; gefunden hat es erst der Review der Telefon-Geste (E83).
+    
+           Mit Schranke, wie bei seiteVon: wäre der Bestand schon zyklisch
+           kaputt (ein Elternkreis OHNE die Quelle), liefe die Kette sonst
+           endlos — die Sicherung gegen den Kreis darf selbst keiner werden. */
+        for (let el = z, tiefe = 0; el && tiefe < 100; el = Store.getBlock(el.parentId), tiefe++) {
             if (el.id === quelleId) {
                 UI.toast('Ein Block lässt sich nicht in sein eigenes Inneres verschieben.');
                 return;
@@ -2627,6 +2631,7 @@ const Blocks = (() => {
             '<button data-a="ai"><span class="mi">✨</span>Mit KI bearbeiten</button>' +
             '<button data-a="komm"><span class="mi">💬</span>Kommentar<span class="ms">Ctrl+Shift+M</span></button>' +
             '<hr>' +
+            '<button data-a="auswahl"><span class="mi">☑</span>Auswählen</button>' +
             '<button data-a="dup"><span class="mi">⧉</span>Duplizieren<span class="ms">Ctrl+D</span></button>' +
             '<button data-a="up"><span class="mi">↑</span>Nach oben<span class="ms">Ctrl+Shift+↑</span></button>' +
             '<button data-a="down"><span class="mi">↓</span>Nach unten<span class="ms">Ctrl+Shift+↓</span></button>' +
@@ -2677,6 +2682,13 @@ const Blocks = (() => {
                 return;
             }
             menu.remove();
+            /* Der Einstieg in die Mehrfachauswahl — am Telefon der EINZIGE
+               (E84): dort gibt es weder Esc noch Umschalt-Klick. Danach
+               schaltet ein Tipp weitere Blöcke dazu, siehe auswahlEinklinken. */
+            if (a === 'auswahl') {
+                ankerId = b.id;
+                auswahlSetzen([b.id]);
+            }
             if (a === 'dup')
                 dupliziere(b);
             if (a === 'up')
@@ -2802,7 +2814,12 @@ const Blocks = (() => {
                 el.classList.add('gewaehlt');
         });
         let leiste = document.getElementById('auswahl-leiste');
-        if (ausgewaehlt.length < 2) {
+        /* Am Rechner erscheint die Leiste ab zwei Blöcken — EIN gewählter
+           Block hat dort seine Griffe und das Kontextmenü. Am Telefon ist
+           sie ab dem ersten da: sie ist dort der einzige Beleg, dass man
+           im Auswahl-Zustand ist, und der einzige Weg zu den Aktionen. */
+        const mindest = window.matchMedia('(max-width: 760px)').matches ? 1 : 2;
+        if (ausgewaehlt.length < mindest) {
             if (leiste)
                 leiste.remove();
             return;
@@ -2828,7 +2845,7 @@ const Blocks = (() => {
             });
         }
         leiste.innerHTML =
-            `<b>${ausgewaehlt.length} Blöcke</b>` +
+            `<b>${ausgewaehlt.length} ${ausgewaehlt.length === 1 ? 'Block' : 'Blöcke'}</b>` +
                 '<button data-a="typ">Umwandeln ▾</button>' +
                 '<button data-a="dup" title="Strg D">Duplizieren</button>' +
                 '<button data-a="kopie" title="Strg C">Kopieren</button>' +
@@ -3147,8 +3164,31 @@ const Blocks = (() => {
                     ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
                 return;
             }
+            /* Am Telefon gibt es keine Strg-Taste: solange die Auswahl steht,
+               schaltet ein Tipp den Block dazu oder wieder weg (E84). Der
+               letzte weggetippte Block beendet die Auswahl von selbst. */
+            if (window.matchMedia('(max-width: 760px)').matches &&
+                ausgewaehlt.length && blk.dataset.bid) {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = blk.dataset.bid;
+                ankerId = id;
+                auswahlSetzen(ausgewaehlt.includes(id)
+                    ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
+                return;
+            }
             if (ausgewaehlt.length)
                 auswahlLeeren();
+        }, true);
+        /* Der Tipp, der einen Block dazuschaltet, darf nicht nebenbei das
+           Schreibfeld öffnen — der Fokus fällt beim mousedown, nicht beim
+           click. Bei stehender Auswahl wird er am Telefon deshalb hier
+           abgefangen; die Tastatur bleibt unten. */
+        document.addEventListener('mousedown', (e) => {
+            if (!window.matchMedia('(max-width: 760px)').matches || !ausgewaehlt.length)
+                return;
+            if (elVon(e)?.closest('#page .blk[data-bid]'))
+                e.preventDefault();
         }, true);
     };
     return {

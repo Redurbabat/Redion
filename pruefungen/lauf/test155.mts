@@ -146,7 +146,24 @@ gleich('Kein Blatt am Rechner', (amRechner as any).istBlatt, false);
 gleich('Kein Grund am Rechner', (amRechner as any).grund, false);
 await rechner.close();
 
-console.log('\n4 · Und es gibt keine Handmenüs mehr am Modul vorbei');
+console.log('\n4 · Wer das Menü entfernt, nimmt den Grund mit');
+
+/* Fast alle Aufrufer schliessen nach einer Aktion mit `menu.remove()` —
+   vom Grund wissen sie nichts. Er blieb dann als unsichtbare dunkle Wand
+   stehen und frass genau einen Tipp (gefunden beim Bau von E84). Der
+   Wächter im Modul räumt ihn jetzt mit weg. */
+const wandWeg = await handy.evaluate(async () => {
+  const m = Menue.menu('<button>Eintrag</button>', 10, 10, { titel: 'Probe' });
+  await new Promise(r => setTimeout(r, 150));
+  const grundVorher = !!document.querySelector('.menu-grund');
+  m.remove();                                   /* wie es die Aufrufer tun */
+  await new Promise(r => setTimeout(r, 150));
+  return { grundVorher, grundNachher: !!document.querySelector('.menu-grund') };
+});
+gleich('Der Grund stand', (wandWeg as any).grundVorher, true);
+gleich('… und ist mit dem Menü verschwunden', (wandWeg as any).grundNachher, false);
+
+console.log('\n5 · Und es gibt keine Handmenüs mehr am Modul vorbei');
 const quellen = ['src/schale/aufbau/seitenleiste.ts',
                  'src/bereiche/editor/ansicht/editor.ts'];
 for (const q of quellen) {
@@ -155,7 +172,7 @@ for (const q of quellen) {
     !/className = 'menu'/.test(s));
 }
 
-console.log('\n5 · Die Konsole');
+console.log('\n6 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 
 await browser.close();

@@ -2356,7 +2356,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 #auswahl-leiste button.rot{ color:var(--rot,#d64545) }
 @media(max-width:760px){
   #auswahl-leiste{ left:8px; right:8px; transform:none; bottom:74px;
-                   flex-wrap:wrap; justify-content:center } }
+                   flex-wrap:wrap; justify-content:center }
+  /* Die Fingerregel (§37) galt auch hier nicht: die Aktionsknöpfe der
+     Auswahl-Leiste massen ~30 px — gesehen auf dem E84-Bild, dieselbe
+     Fehlerklasse wie bei der Formatleiste (E81). */
+  #auswahl-leiste button{ min-height:44px; min-width:44px } }
 
 /* ── Untere Leiste am Telefon: die vier Bereiche ──────────────────────────
    Notion hat unten Start, Chats, Besprechungen und Posteingang — bei uns

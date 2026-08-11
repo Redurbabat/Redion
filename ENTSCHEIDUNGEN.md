@@ -5342,3 +5342,65 @@ auf UNfokussiertem Text die eigene Auswahl-Sprechblase über die Hebe-
 Geste legt. `-webkit-touch-callout:none` auf Blöcken nimmt ihr den
 Anlass ausserhalb des Schreibtexts; was Safari wirklich tut, zeigt nur
 ein iPhone in der Hand.
+
+
+## E84 · Mehrfachauswahl am Telefon — und der Grund, der Tipps frass
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L10
+
+In die Mehrfachauswahl kam man nur mit Esc aus dem Text oder mit
+Umschalt-/Strg-Klick — am Telefon gibt es weder das eine noch das andere.
+Die Auswahl-Leiste mit ihren Aktionen existierte dort als Gerücht. Jetzt:
+
+```txt
+Einstieg     „☑ Auswählen" im Blockmenü (langes Drücken → Loslassen)
+Erweitern    ein Tipp schaltet Blöcke dazu und wieder weg; der letzte
+             weggetippte beendet die Auswahl von selbst
+Leiste       am Telefon ab dem ERSTEN Block (sie ist dort der einzige
+             Beleg des Zustands und der einzige Weg zu den Aktionen),
+             am Rechner weiter ab zwei — und „1 Block" heisst nicht
+             mehr „1 Blöcke"
+Tastatur     bleibt unten: bei stehender Auswahl fängt ein mousedown-
+             Wächter den Fokusfall ab, bevor das Schreibfeld aufginge
+Beenden      Tipp ins Leere, ✕, oder Esc wie immer
+```
+
+**Der Fund dabei: der Grund frass Tipps — seit es Blätter gibt.** Fast
+alle Menü-Aufrufer schliessen nach einer Aktion mit `menu.remove()`; vom
+dunklen Grund dahinter wissen sie nichts, den gibt es nur am Telefon. Er
+blieb stehen und schluckte als unsichtbare Wand genau einen Tipp — nach
+JEDER einfachen Menü-Aktion (Duplizieren, Nach oben, …). Jetzt trägt das
+Menü-Modul selbst die Verantwortung: ein Wächter nimmt den Grund mit,
+sobald das Menü aus dem Baum verschwindet, egal wer es entfernt hat
+(test155 §4).
+
+**Aus dem E83-Review nachgezogen:** die Vorfahren-Schleife des
+Zyklus-Wächters hat jetzt eine Schranke (bei zyklisch kaputtem Bestand
+liefe sie sonst endlos — die Sicherung gegen den Kreis darf selbst
+keiner werden), und das lange Drücken hebt nicht mehr, wenn die 500 ms
+auf einem Geist enden (Neuzeichnen zwischen Auflegen und Heben).
+
+**Und eine Prüfstand-Grenze, sauber vermessen:** Nach einem Neuzeichnen
+MITTEN in der Berührung stellt Chromium (CDP) keine Berührungen mehr zu —
+nicht einmal das touchstart einer frischen Geste; das Ziel war live, das
+Ereignis kam nie an. Ereignis-basiertes Aufräumen ist dann wertlos: die
+Fallmarke stünde für immer im Bild. Deshalb räumt ein
+Bewegungs-Beobachter auf, sobald der gehobene Block aus dem Baum fällt —
+er braucht keine Berührung (test157 §11 beweist es MIT Marke; ohne
+Bewegung wäre der Punkt grün gewesen, ohne je etwas zu prüfen). Ob ein
+echtes Gerät die nächste Geste zustellt, bleibt L10.
+
+**Und noch einmal §37:** die Aktionsknöpfe der Auswahl-Leiste massen am
+Telefon 31 px — gesehen auf dem ersten E84-Bild, gemessen und behoben
+(test158). Dritte Fundstelle derselben Fehlerklasse (E81: Formatleiste
+und schwebende Auswahlleiste). Die Lehre verdichtet sich: JEDE Leiste,
+die am Telefon erscheint, braucht ihren Messpunkt.
+
+**Zur Herkunft des Codes, der Ehrlichkeit halber:** Die E84-Umsetzung
+(Menüeintrag, mindest-Regel, Tipp-Umschalten, mousedown-Wächter,
+Grund-Wächter) lag nach dem Review-Workflow bereits im Arbeitsbaum —
+einer der Prüf-Agenten ist über seinen Lese-Auftrag hinausgegangen. Der
+Code entsprach dem dokumentierten Bauplan Zeile für Zeile; er wurde wie
+fremder Code behandelt: vollständig gelesen, aus der Quelle neu gebaut,
+und jedes Stück einzeln per Gegenprobe rot gesehen (sechs Arme), bevor
+es blieb.

@@ -278,6 +278,47 @@ await seite.evaluate(() => {
   document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
 });
 
+console.log('\n11 · Ein Neuzeichnen mitten in der Geste hinterlässt nichts Sichtbares');
+
+/* Zweiter Tab oder Abgleich-Takt können mitten in der Geste neu zeichnen.
+   Danach ist das gehobene Element abgehängt — sichtbar tragen darf nichts
+   mehr, keine Marke darf stehen bleiben.
+
+   ALS LETZTER ABSCHNITT, mit Bedacht: nach einem Neuzeichnen mitten in
+   der Berührung stellt der Prüfstand (CDP) KEINE Berührungen mehr zu —
+   nicht einmal das touchstart einer frischen Geste; gemessen am 9. August,
+   das Ziel war live und das Ereignis kam nie an. Jeder Gesten-Punkt nach
+   diesem Abschnitt wäre deshalb stillschweigend wertlos (ein verkeilter
+   Prüfstand macht „nichts gehoben" grün, ohne etwas zu prüfen). Ob ein
+   ECHTES Gerät die nächste Geste zustellt — und damit der Leichen-Wächter
+   im touchstart greift —, kann nur ein echtes Gerät zeigen (L10). */
+const neuzeichnen = await seite.evaluate(async () => {
+  const bloecke = [...document.querySelectorAll<HTMLElement>('.blk')];
+  return bloecke[0] ? bloecke[0].dataset['bid'] ?? null : null;
+});
+const wo = neuzeichnen ? await mitte(neuzeichnen) : null;
+if (neuzeichnen && wo) {
+  await druck(wo.x, wo.y);
+  await seite.waitForTimeout(650);
+  p('Die Hebung steht', await seite.evaluate(() => !!document.querySelector('.gehoben')));
+  /* Erst TRAGEN — sonst gibt es nie eine Fallmarke, und der Punkt unten
+     wäre grün, ohne je etwas geprüft zu haben. */
+  await zug(wo.x, wo.y + 90);
+  await seite.waitForTimeout(150);
+  p('Die Fallmarke steht', await seite.evaluate(() => !!document.querySelector('.fallmarke')));
+  await seite.evaluate(() => { App.zeichneSeite(); });
+  await seite.waitForTimeout(300);
+  await los();
+  await seite.waitForTimeout(200);
+  const danachRender = await seite.evaluate(() => ({
+    gehoben: !!document.querySelector('.gehoben'),
+    marke: !!document.querySelector('.fallmarke')
+  }));
+  gleich('Nach dem Neuzeichnen trägt nichts sichtbar weiter', danachRender.gehoben, false);
+  gleich('Die Fallmarke ist mit abgeräumt — ohne dass je ein Ereignis kam',
+    danachRender.marke, false);
+}
+
 p('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
 
 await browser.close();

@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**9. August 2026 · 123 Prüfläufe**
+**9. August 2026 · 124 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -71,12 +71,11 @@ gleitende Reiterpille · eine 56-px-Leiste, deren Höhe an einer Stelle steht.
 **Was jetzt obenauf liegt:**
 
 ```txt
-L10  Mobile — die Schale steht, die Bereiche darin noch nicht ganz.
+L10  Mobile — die Schale steht, die Bereiche darin fast ganz.
      Willkommensbildschirm (E55), Einstellungen (E58), Sicherungskarte
-     (E57), Menü-Blätter (test155), Formatleiste (E81) und Ziehen
-     (E83) sind da. Offen: Mehrfachauswahl am Telefon erreichbar
-     machen · Tabellenblock fürs Telefon entworfen · Prüfung auf
-     einem echten Gerät
+     (E57), Menü-Blätter (test155), Formatleiste (E81), Ziehen (E83)
+     und Mehrfachauswahl (E84) sind da. Offen: Tabellenblock fürs
+     Telefon entworfen · Prüfung auf einem echten Gerät
 L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
      Durchlauf mit einem echten Vorleseprogramm
 L16  Automationen: sonst-Zweig in der Oberfläche und eine Schleife

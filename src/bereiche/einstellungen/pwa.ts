@@ -450,6 +450,17 @@ const PWA = (() => {
       document.removeEventListener('touchmove', tragen);
     };
 
+    /* Ein Neuzeichnen ersetzt die Blöcke mitten in der Geste — die
+       Berührungsereignisse zielen danach auf abgehängte Elemente und
+       erreichen das Dokument nie mehr (gemessen am 9. August: nicht
+       einmal touchend kommt noch an). Kein Ereignis heisst: niemand
+       räumt auf, die Fallmarke stünde für immer im Bild. Der Beobachter
+       setzt deshalb ab, sobald der gehobene Block aus dem Baum fällt —
+       er braucht dafür keine Berührung. */
+    new MutationObserver(() => {
+      if (hebung && !hebung.el.isConnected) absetzen();
+    }).observe(document.body, { childList: true, subtree: true });
+
     document.addEventListener('touchstart', (e) => {
       if (!istTelefon() || e.touches.length !== 1) return;
       const t = e.touches[0];
@@ -458,6 +469,14 @@ const PWA = (() => {
 
       /* Eine neue Berührung heisst: die Nachzügler der alten sind durch. */
       if (schluckerWeg) schluckerWeg();
+
+      /* Eine Hebung, die ein neues touchstart noch vorfindet, ist eine
+         Leiche: ihr Berührungsstrom starb mit einem Neuzeichnen — die
+         Ereignisse zielen seither auf ein abgehängtes Element und
+         erreichen das Dokument nie mehr. Läge sie weiter herum, wäre das
+         Wischen tot (der Wächter oben) und der nächste Zug belebte die
+         alte Geste wieder. Aufräumen, bevor die neue beginnt. */
+      if (hebung) absetzen();
 
       /* Langes Drücken HEBT den Block an (E83). Ob daraus Tragen oder das
          Menü wird, entscheidet sich erst beim Loslassen — siehe touchend.
@@ -483,9 +502,15 @@ const PWA = (() => {
           if (rollerJetzt && Math.abs(rollerJetzt.scrollTop - scrollVorher) > 4) return;
           const b = Store.getBlock(blk.dataset.bid);
           if (!b) return;
+          /* Hat ein Neuzeichnen den Block während der 500 ms ersetzt, wäre
+             blk ein Geist: Vibration ohne sichtbare Hebung. Nachschlagen —
+             und ohne lebendes Element gar nicht erst heben. */
+          const blkJetzt = blk.isConnected ? blk
+            : document.querySelector<HTMLElement>(`.blk[data-bid="${b.id}"]`);
+          if (!blkJetzt) return;
           if (navigator.vibrate) navigator.vibrate(12);
-          hebung = { id: b.id, el: blk };
-          blk.classList.add('gehoben');
+          hebung = { id: b.id, el: blkJetzt };
+          blkJetzt.classList.add('gehoben');
           /* Ein angefangener Wisch gibt seine Spuren zurück, bevor er
              zurücktritt — sonst klebte translateX auf der Zeile fest. */
           if (gezogen) { gezogen.style.transform = ''; gezogen.style.opacity = ''; }
