@@ -5967,3 +5967,52 @@ Schlüssel tragen — solche Spalten sortieren weiterhin nach vorn, bis
 sie neu angelegt werden. Eine stille Umbenennung wäre eine
 Datenmigration mit Bezügen in Zeilen, Ansichten, Formeln und
 Automationen — nicht nebenbei (§9).
+
+
+## E97 · Zellformat beim Einlesen: die Gegenrichtung zu E94/E95
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Hinaus gingen die Stile seit E94/E95 — herein kamen sie nicht: beide
+Leser warfen styles.xml bzw. automatic-styles weg, und ein Blatt, das
+fett, kursiv, Prozent und Währung trug, kam nackt an. Wer eine
+formatierte Datei mit Redion weiterpflegen wollte, verlor die
+Formatierung beim ersten Öffnen — still.
+
+Jetzt geben `xlsxLesen` und `odsLesen` je Blatt neben `zeilen` eine
+`stile`-Matrix zurück. Übernommen wird, was Redion selbst kennt —
+fett, kursiv, Ausrichtung, Prozent (samt Stellen), Währung (samt
+Zeichen); Farben, Rahmen und Füllungen bleiben bewusst liegen. Beim
+Excel-Leser heisst das: cellXfs → Schriften und Zahlenformate, die
+eingebauten Prozentformate 9 und 10 eingeschlossen; beim ODS-Leser:
+die automatic-styles samt `number:percentage-style` und
+`number:currency-style`, mit denselben Wiederholungs- und
+Beschnittregeln wie die Werte — die Stile laufen synchron.
+
+Der Tabellenblock trägt die Matrix auf BEIDEN Wegen an: in der
+Mehrblatt-Schleife und am Schreibzeiger (`stilDazu`). Je Zelle eine
+KOPIE des Stil-Objekts — der ODS-Leser gibt wiederholten Zellen
+dasselbe Objekt, und ein geteiltes hiesse, dass Fett-Schalten in
+einer Zelle alle Geschwister mitschaltet. Und `stilDazu` legt auch
+für leere Zellen mit Stil einen Eintrag an — vorher gingen
+Stil-ohne-Wert-Zellen ganz verloren.
+
+**Geprüft** (test171, 15 Punkte): beide Leser an echten
+Download-Bytes aus den eigenen Schreibern; der Mehrblatt-Weg durch
+den ECHTEN Dateiwähler, der Einzelblatt-Weg durch den ECHTEN Dialog
+(„Ab A1 einlesen"). Drei Gegenprobe-Arme, sauber komplementär: die
+tote xf-Zuordnung trifft nur die Excel-Wege, die leere ODS-Stilkarte
+nur die ODS-Wege, das tote `stilDazu` nur die Block-Anwendung —
+die Leser-Rundreisen bleiben dabei grün.
+
+**Eine Panne im Prüfen selbst,** festgehalten, weil sie wiederkommen
+kann: der erste Arm-Durchlauf „stellte wieder her" mit `git checkout`
+— das holt den COMMITTETEN Stand, und der trug E97 noch nicht. Ab dem
+zweiten Arm lief alles gegen den alten Bau, zwölf Punkte rot, auch der
+„Endlauf". Wiederherstellen heisst: neu bauen oder die Sicherungskopie
+zurücklegen — nie `git checkout` auf ein Bau-Artefakt, dessen Quelle
+noch nicht committet ist.
+
+**L18** führt damit die Zellformatierung im Austausch in beide
+Richtungen; offen bleiben Kommentare · Bilder · Diagramme · bedingte
+Formatierung im Austausch.

@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**11. August 2026 · 136 Prüfläufe**
+**11. August 2026 · 137 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -651,8 +651,14 @@ Zellformat: 0.15 kommt als Zahl mit Prozentformat an, nicht als Text
 Text, und fett/kursiv/Ausrichtung gehen mit — als styles.xml (test168)
 bzw. automatic-styles in der content.xml (test169).
 
-Fehlt: Zellformatierung beim EINLESEN · Kommentare · Bilder ·
-Diagramme · bedingte Formatierung im Austausch.
+Seit E97 kommt die Zellformatierung auch HEREIN: beide Leser geben je
+Blatt eine Stil-Matrix zurück (fett · kursiv · Ausrichtung · Prozent ·
+Währung), und der Block trägt sie auf beiden Einlese-Wegen an
+(test171). Der Austausch der Zellformate ist damit in beide
+Richtungen geschlossen.
+
+Fehlt: Kommentare · Bilder · Diagramme · bedingte Formatierung im
+Austausch.
 
 ## L19 · Fehlende oder ungeprüfte Blocktypen
 

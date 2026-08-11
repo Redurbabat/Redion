@@ -373,6 +373,41 @@ const Einlesen = (() => {
                                'entweder ist sie beschädigt oder es ist keine.');
     const doc = xml(text);
 
+    /* Die Zellstile (E97) aus den automatic-styles — übernommen wird, was
+       Redion kennt: fett, kursiv, Ausrichtung, Prozent, Währung. */
+    const zellStil = new Map<string, any>();
+    {
+      const daten = new Map<string, any>();
+      for (const n of [...doc.getElementsByTagName('number:percentage-style')]) {
+        const dp = +(n.getElementsByTagName('number:number')[0]
+          ?.getAttribute('number:decimal-places') || 0);
+        daten.set(n.getAttribute('style:name') || '', { art: 'prozent', stellen: dp });
+      }
+      for (const n of [...doc.getElementsByTagName('number:currency-style')]) {
+        const dp = +(n.getElementsByTagName('number:number')[0]
+          ?.getAttribute('number:decimal-places') || 0);
+        const sym = (n.getElementsByTagName('number:currency-symbol')[0]
+          ?.textContent || 'CHF').trim();
+        daten.set(n.getAttribute('style:name') || '',
+          { art: 'waehrung', stellen: dp, waehrung: sym });
+      }
+      for (const s of [...doc.getElementsByTagName('style:style')]) {
+        if (s.getAttribute('style:family') !== 'table-cell') continue;
+        const st: any = {};
+        const schrift = s.getElementsByTagName('style:text-properties')[0];
+        if (schrift?.getAttribute('fo:font-weight') === 'bold') st.fett = true;
+        if (schrift?.getAttribute('fo:font-style') === 'italic') st.kursiv = true;
+        const absatz = s.getElementsByTagName('style:paragraph-properties')[0];
+        const quer = absatz?.getAttribute('fo:text-align') || '';
+        if (quer === 'start' || quer === 'left') st.ausrichtung = 'links';
+        if (quer === 'center') st.ausrichtung = 'mitte';
+        if (quer === 'end' || quer === 'right') st.ausrichtung = 'rechts';
+        const dsn = s.getAttribute('style:data-style-name');
+        if (dsn && daten.has(dsn)) st.format = daten.get(dsn);
+        if (Object.keys(st).length) zellStil.set(s.getAttribute('style:name') || '', st);
+      }
+    }
+
     /* `getElementsByTagName` mit dem vollen Namen: `querySelectorAll` kommt
        mit dem Doppelpunkt im Namensraum nicht zurecht. */
     const tabellen = [...doc.getElementsByTagName('table:table')];
@@ -381,12 +416,14 @@ const Einlesen = (() => {
     for (const tab of tabellen) {
       const name = tab.getAttribute('table:name') || 'Blatt';
       const zeilen: any[][] = [];
+      const stile: any[][] = [];
 
       for (const row of [...tab.getElementsByTagName('table:table-row')]) {
         const wieOft = Math.min(
           Number(row.getAttribute('table:number-rows-repeated') || 1) || 1,
           ODS_MAX_WIEDERHOLUNG);
         const werte: any[] = [];
+        const stilWerte: any[] = [];
 
         for (const c of [...row.getElementsByTagName('table:table-cell')]) {
           const malSo = Math.min(
@@ -396,19 +433,23 @@ const Einlesen = (() => {
           const wert = zahl !== null && zahl !== ''
             ? Number(zahl)
             : [...c.getElementsByTagName('text:p')].map(x => x.textContent ?? '').join('\n');
-          for (let i = 0; i < malSo; i++) werte.push(wert);
+          const stName = c.getAttribute('table:style-name');
+          const st = stName ? (zellStil.get(stName) ?? null) : null;
+          for (let i = 0; i < malSo; i++) { werte.push(wert); stilWerte.push(st); }
         }
 
         /* Rechts abschneiden, was leer ist — sonst schleppt jede Zeile die
-           ausgerollten Wiederholungen mit. */
+           ausgerollten Wiederholungen mit. Die Stile laufen synchron. */
         while (werte.length && (werte[werte.length - 1] === '' ||
                                 werte[werte.length - 1] === undefined)) werte.pop();
-        for (let i = 0; i < wieOft; i++) zeilen.push([...werte]);
+        stilWerte.length = werte.length;
+        for (let i = 0; i < wieOft; i++) { zeilen.push([...werte]); stile.push([...stilWerte]); }
       }
 
       /* Und unten dasselbe. */
       while (zeilen.length && !(zeilen[zeilen.length - 1] ?? []).length) zeilen.pop();
-      blaetter.push({ name, zeilen });
+      stile.length = zeilen.length;
+      blaetter.push({ name, zeilen, stile });
     }
     return blaetter;
   };
@@ -422,6 +463,55 @@ const Einlesen = (() => {
     if (stText) {
       xml(stText).querySelectorAll('si').forEach(si => {
         gemeinsam.push([...si.querySelectorAll('t')].map(t => t.textContent ?? '').join(''));
+      });
+    }
+
+    /* Die Zellstile (E97): cellXfs verweisen auf Schriften und
+       Zahlenformate. Übernommen wird, was Redion selbst kennt —
+       fett, kursiv, Ausrichtung, Prozent, Währung. Der Rest der
+       styles.xml (Farben, Rahmen, Füllungen) bleibt bewusst liegen. */
+    const stilText = await zip.text('xl/styles.xml');
+    let xfListe: any[] = [];
+    if (stilText) {
+      const sdoc = xml(stilText);
+      const schriften = [...sdoc.querySelectorAll('fonts > font')].map(f => ({
+        fett: !!f.querySelector('b'), kursiv: !!f.querySelector('i')
+      }));
+      const eigene = new Map<string, string>();
+      sdoc.querySelectorAll('numFmts > numFmt').forEach(n =>
+        eigene.set(n.getAttribute('numFmtId') || '', n.getAttribute('formatCode') || ''));
+      const formatVon = (id: number): any => {
+        if (!id) return undefined;
+        /* 9 und 10 sind Excels eingebaute Prozentformate. */
+        if (id === 9) return { art: 'prozent', stellen: 0 };
+        if (id === 10) return { art: 'prozent', stellen: 2 };
+        const code = eigene.get(String(id)) || '';
+        if (!code) return undefined;
+        if (code.includes('%')) {
+          const m = /0\.(0+)%/.exec(code);
+          return { art: 'prozent', stellen: m && m[1] ? m[1].length : 0 };
+        }
+        const w = /"([^"]+)"/.exec(code);
+        if (w && w[1]) {
+          const m = /0\.(0+)/.exec(code);
+          return { art: 'waehrung', stellen: m && m[1] ? m[1].length : 0,
+                   waehrung: w[1].trim() };
+        }
+        return undefined;
+      };
+      xfListe = [...sdoc.querySelectorAll('cellXfs > xf')].map(x => {
+        const schrift = schriften[+(x.getAttribute('fontId') || 0)] ||
+                        { fett: false, kursiv: false };
+        const quer = x.querySelector('alignment')?.getAttribute('horizontal') || '';
+        const aus = quer === 'left' ? 'links' : quer === 'center' ? 'mitte'
+                  : quer === 'right' ? 'rechts' : undefined;
+        const format = formatVon(+(x.getAttribute('numFmtId') || 0));
+        const st: any = {};
+        if (schrift.fett) st.fett = true;
+        if (schrift.kursiv) st.kursiv = true;
+        if (aus) st.ausrichtung = aus;
+        if (format) st.format = format;
+        return Object.keys(st).length ? st : null;
       });
     }
 
@@ -440,9 +530,11 @@ const Einlesen = (() => {
       if (!t) continue;
       const doc = xml(t);
       const zeilen: any[][] = [];
+      const stile: any[][] = [];
 
       doc.querySelectorAll('row').forEach(row => {
         const werte = [];
+        const stilWerte: any[] = [];
         row.querySelectorAll('c').forEach(c => {
           const spalte = spalteZuNummer(c.getAttribute('r') || '');
           const typ = c.getAttribute('t');
@@ -456,12 +548,18 @@ const Einlesen = (() => {
             wert = c.querySelector('v')?.textContent || '';
           }
           werte[spalte] = wert;
+          const sIx = c.getAttribute('s');
+          stilWerte[spalte] = sIx !== null ? (xfListe[+sIx] ?? null) : null;
         });
-        for (let k = 0; k < werte.length; k++) if (werte[k] === undefined) werte[k] = '';
+        for (let k = 0; k < werte.length; k++) {
+          if (werte[k] === undefined) werte[k] = '';
+          if (stilWerte[k] === undefined) stilWerte[k] = null;
+        }
+        stile.push(stilWerte);
         zeilen.push(werte);
       });
 
-      blaetter.push({ name: namen[i] || ('Blatt ' + (i + 1)), zeilen });
+      blaetter.push({ name: namen[i] || ('Blatt ' + (i + 1)), zeilen, stile });
     }
     return blaetter;
   };

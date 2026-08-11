@@ -1808,6 +1808,18 @@ const SpreadsheetView = (() => {
                 if (!datei)
                     return;
                 let zeilen = [];
+                let stilMatrix = null;
+                /* Den gelesenen Zellstil an die Zelle tragen (E97). Je Zelle eine
+                   KOPIE: der ODS-Leser gibt wiederholten Zellen dasselbe
+                   Stil-Objekt, und ein geteiltes Objekt hiesse, dass Fett-Schalten
+                   in einer Zelle alle Geschwister mitschaltet. */
+                const stilDazu = (ziel, z, sp, adr, matrix) => {
+                    const st = matrix && matrix[z] && matrix[z][sp];
+                    if (!st)
+                        return;
+                    const zelle = ziel.zellen[adr] || (ziel.zellen[adr] = { wert: '' });
+                    zelle.stil = JSON.parse(JSON.stringify(st));
+                };
                 let quelle = datei.name;
                 try {
                     if (/\.(xlsx|xlsm|ods)$/i.test(datei.name)) {
@@ -1833,8 +1845,10 @@ const SpreadsheetView = (() => {
                                 neu.zeilen = Math.max(neu.zeilen, zl.length);
                                 neu.spalten = Math.max(neu.spalten, zl.reduce((m, x) => Math.max(m, x.length), 1));
                                 zl.forEach((zeileWerte, z) => zeileWerte.forEach((wert, s) => {
+                                    const adr = R.schreibe(z, s);
                                     if (wert !== '')
-                                        K.setze(neu, R.schreibe(z, s), wert);
+                                        K.setze(neu, adr, wert);
+                                    stilDazu(neu, z, s, adr, gelesen.stile || null);
                                 }));
                                 block.mappe.blaetter.push(neu);
                             });
@@ -1851,6 +1865,7 @@ const SpreadsheetView = (() => {
                             return;
                         }
                         zeilen = blaetter[0].zeilen || [];
+                        stilMatrix = blaetter[0].stile || null;
                         quelle = datei.name;
                     }
                     else {
@@ -1914,7 +1929,11 @@ const SpreadsheetView = (() => {
                     blatt.zeilen = vonZ + zeilen.length;
                 if (vonS + breite > blatt.spalten)
                     blatt.spalten = vonS + breite;
-                zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) => K.setze(blatt, R.schreibe(vonZ + z, vonS + sp), wert)));
+                zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) => {
+                    const adr = R.schreibe(vonZ + z, vonS + sp);
+                    K.setze(blatt, adr, wert);
+                    stilDazu(blatt, z, sp, adr, stilMatrix);
+                }));
                 gewaehlt = anker = R.schreibe(vonZ, vonS);
                 rechneUndZeichne();
                 if (typeof UI !== 'undefined' && UI.toast)

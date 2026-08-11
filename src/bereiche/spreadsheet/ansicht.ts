@@ -1753,6 +1753,17 @@ const SpreadsheetView = (() => {
         if (!datei) return;
 
         let zeilen: string[][] = [];
+        let stilMatrix: any = null;
+        /* Den gelesenen Zellstil an die Zelle tragen (E97). Je Zelle eine
+           KOPIE: der ODS-Leser gibt wiederholten Zellen dasselbe
+           Stil-Objekt, und ein geteiltes Objekt hiesse, dass Fett-Schalten
+           in einer Zelle alle Geschwister mitschaltet. */
+        const stilDazu = (ziel: any, z: number, sp: number, adr: string, matrix: any): void => {
+          const st = matrix && matrix[z] && matrix[z][sp];
+          if (!st) return;
+          const zelle = ziel.zellen[adr] || (ziel.zellen[adr] = { wert: '' });
+          zelle.stil = JSON.parse(JSON.stringify(st));
+        };
         let quelle = datei.name;
         try {
           if (/\.(xlsx|xlsm|ods)$/i.test(datei.name)) {
@@ -1779,7 +1790,9 @@ const SpreadsheetView = (() => {
                   zl.reduce((m: number, x: string[]) => Math.max(m, x.length), 1));
                 zl.forEach((zeileWerte: string[], z: number) =>
                   zeileWerte.forEach((wert: string, s: number) => {
-                    if (wert !== '') K.setze(neu, R.schreibe(z, s), wert);
+                    const adr = R.schreibe(z, s);
+                    if (wert !== '') K.setze(neu, adr, wert);
+                    stilDazu(neu, z, s, adr, gelesen.stile || null);
                   }));
                 block.mappe.blaetter.push(neu);
               });
@@ -1797,6 +1810,7 @@ const SpreadsheetView = (() => {
             }
 
             zeilen = blaetter[0].zeilen || [];
+            stilMatrix = blaetter[0].stile || null;
             quelle = datei.name;
           } else {
             zeilen = Csv.zerlege(await datei.text());
@@ -1862,8 +1876,11 @@ const SpreadsheetView = (() => {
         if (vonZ + zeilen.length > blatt.zeilen) blatt.zeilen = vonZ + zeilen.length;
         if (vonS + breite > blatt.spalten) blatt.spalten = vonS + breite;
 
-        zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) =>
-          K.setze(blatt, R.schreibe(vonZ + z, vonS + sp), wert)));
+        zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) => {
+          const adr = R.schreibe(vonZ + z, vonS + sp);
+          K.setze(blatt, adr, wert);
+          stilDazu(blatt, z, sp, adr, stilMatrix);
+        }));
 
         gewaehlt = anker = R.schreibe(vonZ, vonS);
         rechneUndZeichne();
