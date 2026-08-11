@@ -5557,3 +5557,11 @@ abgelesen wird der Speicher): Klick→Pfeil wählt · Bereich nach unten ·
 Einzelzelle von darüber · Bereich nach rechts · ganz links bleibt alles
 stehen samt Hinweis. Fünf Gegenprobe-Arme, jeder kippte genau seine
 Punkte. Nachbarn: test112 (39), test136 (23), test137 (15).
+
+**Nachtrag (E82-Klasse, gleiche Kur):** Im 127er-Lauf hungerten zwei
+weitere Uhren-Warter — test61 (das Willkommen erscheint „nach 1,4 s",
+unter Volllast später) und test99 (die Fenster-Botschaft „nach 500 ms").
+Beide warten jetzt auf den ZUSTAND statt auf die Uhr und bleiben
+rot-fähig: ohne Willkommen bzw. mit gekapptem Kanal UND Notnagel kippen
+sie — der zweite Arm bewies dabei nebenher, dass der localStorage-
+Notnagel allein den Abgleich trägt.
