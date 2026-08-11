@@ -5771,3 +5771,64 @@ trägt und nicht am Bildschirm mitfährt.
 KPI-Karten · Layout · Diagrammquellen. Der Pivot-Teil der Lücke ist
 damit geschlossen — er bestand aus einer falschen Behauptung und einem
 echten Fehler daneben.
+
+
+## E93 · ODS am Tabellenblock: Speichern und Öffnen
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Der ODS-Schreiber (`alsOds`) und der ODS-Leser (`odsLesen`) konnten
+Mehrblatt längst — die Datenbanken nutzen beide seit ihrem Bau. Nur der
+Tabellenblock kannte keinen von beiden: sein Menü bot Excel und CSV,
+seine Öffnen-Weiche liess `.ods` gar nicht erst zum Wähler zu. Wer ohne
+Excel-Lizenz arbeitet — LibreOffice, Schulen, Verwaltungen —, hatte am
+Block nur CSV, und CSV kann keine Blätter.
+
+Jetzt:
+
+```txt
+Speichern   ⋯ → „Als OpenDocument (.ods) speichern" — die GANZE Mappe,
+            je Blatt eine table:table, Zahlen als office:value
+Öffnen      die Weiche kennt .ods; mehrere Blätter legen je ein
+            EIGENES Blatt an (derselbe E91-Zweig wie bei Excel),
+            ein einzelnes geht an den Schreibzeiger mit Nachzählung
+```
+
+**Ein Unterschied, der KEINE Stellschraube brauchte:** `odsLesen`
+liefert Zahlen als ECHTE Zahlen (aus `office:value`), die Excel-Leser
+liefern Text. Der erste Wurf dieses Eintrags wollte deshalb eine
+String-Normalisierung vorschreiben — nachgesehen war sie überflüssig:
+`setze(blatt, adresse, eingabe: unknown)` macht am Eingang selbst
+`String(eingabe)` und erkennt die Zahl wieder. Die Behauptung „setze
+erwartet Eingabetext" wäre eine Doku-Fiktion der E90-Klasse gewesen,
+diesmal aus eigener Feder. Nachsehen, auch beim eigenen Satz.
+
+**Der echte Weg fand einen echten Absturz — auch im E91-Excel-Import.**
+Der Mehrblatt-Zweig wechselte das Blatt VON HAND (`blatt = letztes`)
+und liess dabei aus, was `zuBlatt` beim Wechseln immer tut:
+`blatt.breiten` anlegen. `neuesBlatt` liefert Blätter ohne `breiten`,
+das Neuzeichnen stürzte gleich nach dem Anlegen — die Blätter waren
+da, aber statt des Erfolgs-Hinweises stand „Die Datei liess sich nicht
+lesen", und die Ansicht blieb die alte. test165 KONNTE das nicht
+sehen: es hatte die Import-Logik im Test nachgebaut, statt durch den
+Dateiwähler zu gehen — die Logik stimmte ja auch; kaputt war die
+Verdrahtung dahinter. Der Wechsel geht jetzt durch `zuBlatt` — eine
+Quelle der Wahrheit statt abgeschriebener Zeilen, die L34-Lehre in
+Code-Gestalt.
+
+**Geprüft** (test167, 14 Punkte): der Export bis zum echten Download
+und per `odsLesen` zurückgelesen (Zahl bleibt Zahl: `office:value`
+250); der Import über den ECHTEN Dateiwähler des Blocks — Playwright
+legt die Datei per `setInputFiles` in das wirkliche `<input>`, keine
+nachgebaute Logik. Die Falle dabei: der Temppfad eines
+Playwright-Downloads hat KEINE Endung, die Weiche prüft aber den
+Dateinamen — die Probedatei muss unter echtem Namen bereitliegen,
+sonst prüft man unbemerkt den CSV-Zweig. Drei Gegenprobe-Arme, jeder
+einzeln: der Export-Rückfall aufs aktive Blatt („1 statt 2"), die
+Leser-Weiche auf xlsxLesen gebogen (ehrlicher Lesefehler), und der
+handgeschriebene Blattwechsel — der bringt wortgleich die historische
+Absturzmeldung zurück.
+
+**L18** führt damit den Punkt „ODS-Mehrblatt" nicht mehr; offen bleiben
+Zellformatierung im Austausch · Kommentare · Bilder · Diagramme ·
+bedingte Formatierung.

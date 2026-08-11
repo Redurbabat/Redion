@@ -1707,13 +1707,27 @@ const SpreadsheetView = (() => {
         const alsCsv = () => Csv.schreibe(alsZeilen(), ';');
         const gibAus = (art) => {
             const name = (blatt.name || block.mappe.name || 'Tabelle').replace(/[\\/:*?"<>|]/g, '-');
+            /* Die GANZE Mappe (E91). Der Schreiber konnte Mehrblatt schon
+               immer — nur diese Stelle gab ihm allein das aktive Blatt, und
+               die übrigen fehlten in der Datei, ohne dass es jemand sagte. */
+            const ganzeMappe = () => block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), zeilen: alsZeilenVon(b) }));
             if (art === 'xlsx') {
                 if (typeof Austausch === 'undefined')
                     return;
-                /* Die GANZE Mappe (E91). Der Schreiber konnte Mehrblatt schon
-                   immer — nur diese Stelle gab ihm allein das aktive Blatt, und
-                   die übrigen fehlten in der Datei, ohne dass es jemand sagte. */
-                Austausch.alsExcel(block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), zeilen: alsZeilenVon(b) })), name);
+                Austausch.alsExcel(ganzeMappe(), name);
+                return;
+            }
+            if (art === 'ods') {
+                if (typeof Austausch === 'undefined')
+                    return;
+                /* Fürs Fehlschlagen gibt es einen Satz: alsOds ist asynchron, und
+                   ein stilles Scheitern sähe aus wie ein vergessener Klick. */
+                Austausch.alsOds(ganzeMappe(), name)
+                    .catch((e) => {
+                    if (typeof UI !== 'undefined' && UI.toast)
+                        UI.toast('Die .ods kam nicht zustande: ' +
+                            (e instanceof Error ? e.message : String(e)));
+                });
                 return;
             }
             /* CSV mit Semikolon und BOM: so öffnet Excel im deutschen Sprachraum
@@ -1750,7 +1764,7 @@ const SpreadsheetView = (() => {
         const einlesen = () => {
             const eingang = document.createElement('input');
             eingang.type = 'file';
-            eingang.accept = '.csv,.tsv,.txt,.xlsx,.xlsm';
+            eingang.accept = '.csv,.tsv,.txt,.xlsx,.xlsm,.ods';
             eingang.style.display = 'none';
             document.body.appendChild(eingang);
             eingang.addEventListener('change', async () => {
@@ -1761,10 +1775,14 @@ const SpreadsheetView = (() => {
                 let zeilen = [];
                 let quelle = datei.name;
                 try {
-                    if (/\.(xlsx|xlsm)$/i.test(datei.name)) {
+                    if (/\.(xlsx|xlsm|ods)$/i.test(datei.name)) {
                         if (typeof Einlesen === 'undefined')
-                            throw new Error('Der Excel-Leser ist nicht geladen.');
-                        const blaetter = await Einlesen.xlsxLesen(await datei.arrayBuffer());
+                            throw new Error('Der Tabellen-Leser ist nicht geladen.');
+                        /* .ods geht an den ODS-Leser — er liefert Zahlen als echte
+                           Zahlen (office:value), und `setze` normalisiert selbst. */
+                        const blaetter = /\.ods$/i.test(datei.name)
+                            ? await Einlesen.odsLesen(await datei.arrayBuffer())
+                            : await Einlesen.xlsxLesen(await datei.arrayBuffer());
                         if (!blaetter || !blaetter.length)
                             throw new Error('In dieser Datei steckt kein Tabellenblatt.');
                         /* Mehrere Blätter (E91): jedes wird ein EIGENES Blatt der
@@ -1786,9 +1804,12 @@ const SpreadsheetView = (() => {
                                 block.mappe.blaetter.push(neu);
                             });
                             const letztes = block.mappe.blaetter[block.mappe.blaetter.length - 1];
-                            block.mappe.aktiv = letztes.id;
-                            blatt = letztes;
-                            gewaehlt = anker = 'A1';
+                            /* Über `zuBlatt`, nicht von Hand: es setzt auch `breiten`
+                               und die Auswahl. Der handgeschriebene Wechsel liess
+                               `breiten` aus, und `alles()` stürzte gleich nach dem
+                               Anlegen — unsichtbar, solange die Prüfung die Logik
+                               nachbaute, statt durch den echten Dateiwähler zu gehen. */
+                            zuBlatt(letztes.id);
                             rechneUndZeichne();
                             if (typeof UI !== 'undefined' && UI.toast)
                                 UI.toast(blaetter.length + ' Blätter aus „' + datei.name + '" angelegt');
@@ -1952,9 +1973,10 @@ const SpreadsheetView = (() => {
                 if (typeof Menue === 'undefined')
                     return;
                 const r = b.getBoundingClientRect();
-                const m = Menue.menu('<button data-a="oeffnen"><span class="mi">📂</span>Excel oder CSV öffnen</button><hr>' +
+                const m = Menue.menu('<button data-a="oeffnen"><span class="mi">📂</span>Tabelle öffnen (Excel, CSV, ODS)</button><hr>' +
                     '<button data-a="xlsx"><span class="mi">📊</span>Als Excel speichern</button>' +
-                    '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button><hr>' +
+                    '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button>' +
+                    '<button data-a="ods"><span class="mi">📙</span>Als OpenDocument (.ods) speichern</button><hr>' +
                     '<button data-a="regeln"><span class="mi">🎨</span>Bedingte Formatierung' +
                     ((blatt.regeln || []).length
                         ? '<span class="ms">' + (blatt.regeln || []).length + '</span>' : '') +
@@ -1974,6 +1996,8 @@ const SpreadsheetView = (() => {
                         return gibAus('xlsx');
                     if (t.dataset.a === 'csv')
                         return gibAus('csv');
+                    if (t.dataset.a === 'ods')
+                        return gibAus('ods');
                     if (t.dataset.a === 'regeln')
                         return regelFenster();
                     if (t.dataset.a === 'zeilen')

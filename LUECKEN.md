@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**11. August 2026 · 132 Prüfläufe**
+**11. August 2026 · 133 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -637,8 +637,16 @@ Begründung, die Mehrblatt je Block verneinte, während die Blattreiter es
 längst konnten. Jetzt: Rundreise Mappe → .xlsx → Mappe mit echten Bytes
 belegt (test165). Formeln gehen bewusst als Werte hinaus.
 
+Seit E93 kann auch der Tabellenblock ODS in beide Richtungen: ⋯ →
+„Als OpenDocument (.ods) speichern" gibt die ganze Mappe aus, die
+Öffnen-Weiche nimmt `.ods` an und legt je Blatt ein eigenes an —
+geprüft bis zum echten Download und durch den echten Dateiwähler
+(test167). Der echte Weg fand dabei einen Absturz nach dem
+Mehrblatt-Anlegen, der auch den E91-Excel-Import betraf — behoben
+(Blattwechsel über `zuBlatt`).
+
 Fehlt: Zellformatierung im Austausch · Kommentare · Bilder ·
-Diagramme · bedingte Formatierung · ODS-Mehrblatt.
+Diagramme · bedingte Formatierung.
 
 ## L19 · Fehlende oder ungeprüfte Blocktypen
 
