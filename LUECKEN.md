@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**9. August 2026 · 128 Prüfläufe**
+**9. August 2026 · 129 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -97,15 +97,18 @@ L20  Ausfüllen im Raster (E87) — Strg+D nach unten, Strg+R nach
 L20  Markdown-Tabellen (E88) — Einfügen wird ein Tabellenblock (Zahlen
      als Zahlen, =Formeln als Formeln), Strg+C schreibt ihn als
      |-Zeilen zurück; vorher verschwand der Block beim Kopieren
+L10  der Tabellenblock zeigt am Telefon Karten (E89, Vorschlag) — die
+     Kopfzeile liefert die Feldnamen, Formeln ausgerechnet, ⊞/☰
+     schalten je Block ins Raster und zurück; Redur entscheidet am Bild
 ```
 
 **Die Lücken, die jetzt obenauf liegen**
 
 ```txt
 1. Mobile (L10): Bottom Sheets (test155), Formatleiste (E81), Ziehen
-   (E83) und Mehrfachauswahl (E84) sind da. Wirklich offen: ein
-   Telefon-Entwurf für den Tabellenblock · geprüft ist alles nur im
-   Bildmass, nie am Gerät
+   (E83), Mehrfachauswahl (E84) und der Tabellenblock-Entwurf (E89,
+   Karten als Vorschlag — Redur entscheidet am Bild) sind da.
+   Wirklich offen: geprüft ist alles nur im Bildmass, nie am Gerät
 2. Ein Durchlauf mit einem echten Vorleseprogramm fehlt (L12)
    (L14 ist seit test148 gemessen: 144 MB bei +0,0 MB Heap; offen bleibt
    nur die Zehn-Gigabyte-Frage am echten Gerät)
@@ -396,11 +399,13 @@ fand den nächsten Altfehler: der dunkle Menü-Grund blieb nach jeder
 einfachen Menü-Aktion stehen und frass einen Tipp (jetzt Wächter im
 Menü-Modul, test155 §4) — und die Leisten-Knöpfe massen 31 px statt 44.
 
-**Fehlt ausserdem:** der **Tabellenblock** hat am Telefon noch
-keinen eigenen Entwurf — die Fingermasse stimmen seit E64, aber es bleibt
-dasselbe Raster wie am Rechner, mit leeren Zeilen auf halbem Bildschirm;
-ob dort eine Zeile als Karte hingehört, wie es die Datenbank längst
-macht, ist eine eigene Frage · Side Peek auf kleinen
+**Die „eigene Frage" ist als Vorschlag beantwortet** (E89): der
+Tabellenblock zeigt am Telefon Zeilen als **Karten** — die Kopfzeile
+liefert die Feldnamen, Formeln stehen ausgerechnet da, ⊞/☰ schalten je
+Block ins Raster und zurück, am Rechner ändert sich nichts (test163).
+Redur entscheidet am Bild; kippt er den Standard, ist das eine Zeile.
+
+**Fehlt ausserdem:** Side Peek auf kleinen
 Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen —
 die Masse stehen an einem Dutzend Stellen in `bausteine.css` und wurden
 schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).

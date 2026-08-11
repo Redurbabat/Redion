@@ -1417,6 +1417,31 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
 }
 
 /* ==========================================================================
+ * TELEFON: TABELLENBLOCK ALS KARTEN (E89)
+ * Zeilen als Karten, wie es die Datenbank vormacht; die Kopfzeile liefert
+ * die Feldnamen, ⊞/☰ schalten zwischen Karten und Raster um.
+ * ======================================================================== */
+@media(max-width:760px){
+  .tblk-karten{ display:flex; flex-direction:column; gap:8px; margin:6px 0 12px;
+                width:100%; min-width:0 }
+  .tblk-kopf{ display:flex; align-items:center; gap:8px }
+  .tblk-kopf b{ flex:1; font-size:15.5px }
+  .tblk-kopf button, .tblk-zurueck{
+    min-height:44px; min-width:44px; padding:0 12px; border-radius:9px;
+    background:var(--bg-hover); border:1px solid var(--line); color:var(--text);
+    font-size:14px }
+  .tblk-zurueck{ align-self:flex-start; margin:4px 0 6px }
+  .tblk-karte{ background:var(--bg-card, var(--bg-hover)); border:1px solid var(--line);
+               border-radius:12px; padding:11px 13px; cursor:pointer }
+  .tblk-karte:active{ background:var(--bg-hover) }
+  .tblk-titel{ font-size:15.5px; font-weight:600; margin-bottom:6px }
+  .tblk-feld{ display:flex; gap:10px; align-items:baseline; font-size:13px }
+  .tblk-name{ flex:0 0 38%; color:var(--text-faint) }
+  .tblk-wert{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis }
+  .tblk-leer{ padding:18px; text-align:center; color:var(--text-faint); font-size:14px }
+}
+
+/* ==========================================================================
  * TELEFON: DATENBANK ALS KARTEN
  * ======================================================================== */
 .hk-liste{ display:flex; flex-direction:column; gap:8px; margin:6px 0 12px; }

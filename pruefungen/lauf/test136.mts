@@ -90,7 +90,9 @@ const baue = (spalten: number) => seite.evaluate(async (n) => {
   document.getElementById('pruef-rand')?.remove();
   const s = Object.values(Store.cache.blocks)
     .find((b: any) => b.type === 'page' && b.alive) as any;
-  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Randprobe' });
+  /* Seit E89 zeigt das Telefon standardmässig Karten; die weiche Kante
+     gehört zum RASTER — also mit offenem Raster anlegen (⊞-Weg). */
+  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Randprobe', telefonRaster: true });
   const kasten = document.createElement('div');
   kasten.id = 'pruef-rand';
   /* MIT BREITENGRENZE, wie die Inhaltsspalte der echten Seite.
@@ -235,7 +237,7 @@ const breit = await rechner.evaluate(async () => {
   document.getElementById('rg-willkommen')?.remove();
   const s = Object.values(Store.cache.blocks)
     .find((b: any) => b.type === 'page' && b.alive) as any;
-  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Breit' });
+  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Breit', telefonRaster: true });
   const kasten = document.createElement('div');
   kasten.id = 'pruef-rand';
   kasten.style.cssText = 'width:600px';

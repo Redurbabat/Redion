@@ -431,6 +431,92 @@ const SpreadsheetView = (() => {
   };
 
   /* ==========================================================================
+   * TELEFON: ZEILEN ALS KARTEN (E89)
+   * ------------------------------------------------------------------------
+   * Eine Karte je Zeile: der erste gefüllte Wert ist der Titel, die
+   * übrigen stehen als Name/Wert-Paare darunter — die Namen kommen aus der
+   * Kopfzeile, ersatzweise aus dem Spaltenbuchstaben. Formeln stehen
+   * AUSGERECHNET da: die Karte zeigt, was das Raster zeigt.
+   * ========================================================================*/
+  const kartenAnsicht = (w: HTMLElement, block: any, blatt: any, K: any, R: any): HTMLElement => {
+    w.className = 'tblk-karten';
+
+    /* Erst rechnen, dann zeigen — sonst stünden Formeln leer oder alt da.
+       Das Raster tut dasselbe bei jedem Zeichnen. */
+    try { K.rechneMappe(block.mappe); } catch { /* Zirkel etc. zeigt die Zelle selbst */ }
+
+    let hochZ = 0, hochS = 0;
+    Object.keys(blatt.zellen || {}).forEach((a: string) => {
+      const p = R.lies(a);
+      if (p) { hochZ = Math.max(hochZ, p.zeile + 1); hochS = Math.max(hochS, p.spalte + 1); }
+    });
+
+    const kopf = document.createElement('div');
+    kopf.className = 'tblk-kopf';
+    const name = document.createElement('b');
+    name.textContent = blatt.name || block.text || 'Tabelle';
+    const zumRaster = document.createElement('button');
+    zumRaster.type = 'button';
+    zumRaster.textContent = '⊞ Raster';
+    zumRaster.title = 'Als Raster öffnen';
+    zumRaster.addEventListener('click', () => {
+      Store.updateBlock(block.id, { telefonRaster: true });
+      App.zeichneSeite();
+    });
+    kopf.appendChild(name);
+    kopf.appendChild(zumRaster);
+    w.appendChild(kopf);
+
+    if (hochZ < 2) {
+      const leer = document.createElement('div');
+      leer.className = 'tblk-leer';
+      leer.textContent = hochZ === 0
+        ? 'Noch keine Zellen — zum Ausfüllen das Raster öffnen.'
+        : 'Nur die Kopfzeile ist gefüllt — Zeilen kommen im Raster dazu.';
+      w.appendChild(leer);
+      return w;
+    }
+
+    const feldname = (s: number): string => {
+      const k = K.eingabe(blatt, R.schreibe(0, s));
+      return k !== '' && k != null ? String(k) : R.spalteZuText(s);
+    };
+
+    for (let z = 1; z < hochZ; z++) {
+      const karte = document.createElement('div');
+      karte.className = 'tblk-karte';
+      let titelDa = false;
+      for (let s = 0; s < hochS; s++) {
+        const adr = R.schreibe(z, s);
+        const zelle = blatt.zellen[adr];
+        const anzeige = zeigeWert(K.wert(blatt, adr), zelle && zelle.format);
+        if (anzeige === '') continue;
+        if (!titelDa) {
+          const t = document.createElement('div');
+          t.className = 'tblk-titel';
+          t.textContent = anzeige;
+          karte.appendChild(t);
+          titelDa = true;
+          continue;
+        }
+        const f = document.createElement('div');
+        f.className = 'tblk-feld';
+        f.innerHTML = '<span class="tblk-name">' + esc(feldname(s)) + '</span>' +
+                      '<span class="tblk-wert">' + esc(anzeige) + '</span>';
+        karte.appendChild(f);
+      }
+      if (!karte.childElementCount) continue;      /* leere Zeile, keine leere Karte */
+      /* Bearbeitet wird im Raster — die Karte ist der Weg dorthin. */
+      karte.addEventListener('click', () => {
+        Store.updateBlock(block.id, { telefonRaster: true });
+        App.zeichneSeite();
+      });
+      w.appendChild(karte);
+    }
+    return w;
+  };
+
+  /* ==========================================================================
    * DER BLOCK
    * ========================================================================*/
   const zeichne = (block: any): HTMLElement => {
@@ -458,6 +544,31 @@ const SpreadsheetView = (() => {
                      || block.mappe.blaetter[0];
     block.mappe.aktiv = blatt.id;
     if (!blatt.breiten) blatt.breiten = {};
+
+    /* --- Telefon: Karten statt Raster (E89, Vorschlag) -------------------
+       Die Datenbank zeigt am Telefon längst Karten; der Tabellenblock
+       blieb dasselbe Rechner-Raster, mit leeren Zeilen auf halbem
+       Bildschirm. Jetzt: Zeilen als Karten, die Kopfzeile liefert die
+       Feldnamen, Formeln stehen ausgerechnet da. Der Umschalter ⊞ bleibt
+       sichtbar — wer das Raster will, ist einen Tipp entfernt
+       (`telefonRaster`, je Block gespeichert; der Feldname ist deutsch,
+       weil er so gespeichert wird). */
+    if (amTelefon() && !block.telefonRaster)
+      return kartenAnsicht(w, block, blatt, K, R);
+
+    /* Und im Raster der Rückweg — sonst wäre der Umschalter eine Einbahn. */
+    if (amTelefon()) {
+      const zurueck = document.createElement('button');
+      zurueck.type = 'button';
+      zurueck.className = 'tblk-zurueck';
+      zurueck.textContent = '☰ Karten';
+      zurueck.title = 'Zurück zur Kartenansicht';
+      zurueck.addEventListener('click', () => {
+        Store.updateBlock(block.id, { telefonRaster: false });
+        App.zeichneSeite();
+      });
+      w.appendChild(zurueck);
+    }
 
     /* Die Auswahl lebt hier, nicht im DOM — sie überlebt jedes Neuzeichnen. */
     let gewaehlt = 'A1';

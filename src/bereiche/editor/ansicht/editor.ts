@@ -285,6 +285,9 @@ const Blocks = (() => {
         teil.zellen.forEach((zeile, z) => zeile.forEach((wert, s) => {
           if (wert !== '') Spreadsheet.setze(blatt, CellRefs.schreibe(z, s), wert);
         }));
+        /* Einmal durchrechnen: eingefügte =Formeln sollen ihren Wert
+           tragen, auch wenn das Raster nie geöffnet wird. */
+        try { Spreadsheet.rechneMappe(mappe); } catch { /* Zirkel zeigt die Zelle */ }
         Store.updateBlock(neuT.id, { mappe });
         stapel.length = tiefe + 1;
         stapel.push(neuT.id);

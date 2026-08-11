@@ -5605,3 +5605,44 @@ dem Schreibzeiger). Der reine Umschalt-Zweig („bis hierher") schliesst
 Alt jetzt aus — sonst frass er jeden zweiten Alt-Klick, was die erste
 Fassung des Prüfpunkts sofort zeigte. Damit führt die Referenz nichts
 Offenes mehr; L20 ist komplett (test158 §7 mit Gegenprobe).
+
+
+## E89 · Der Tabellenblock am Telefon: Zeilen als Karten — ein Vorschlag mit Rückweg
+
+**Datum:** 9. August 2026 · **Status:** Vorschlag, gebaut — Redur entscheidet am Bild · **Lücke:** L10
+
+Die letzte offene Entwurfsfrage aus L10: die Datenbank zeigt am Telefon
+längst Karten, der Tabellenblock blieb dasselbe Rechner-Raster, mit
+leeren Zeilen auf halbem Bildschirm. LUECKEN nannte es ausdrücklich
+„eine eigene Frage". Entschieden wird sie am Bild — deshalb ist der
+Vorschlag so gebaut, dass beides jederzeit da ist:
+
+```txt
+Standard am Telefon   Zeilen als KARTEN: der erste gefüllte Wert ist
+                      der Titel, die übrigen stehen als Name/Wert-
+                      Paare darunter — die Namen kommen aus der
+                      Kopfzeile, Formeln stehen AUSGERECHNET da
+                      (die Karte rechnet vor dem Zeigen, wie das
+                      Raster auch)
+⊞ / Karte antippen    öffnet das Raster — bearbeitet wird dort
+☰                     führt zurück; die Wahl wird JE BLOCK gemerkt
+                      (`telefonRaster`, deutsch, weil gespeichert)
+leere Tabelle         sagt ehrlich, dass es im Raster weitergeht
+am Rechner            ändert sich nichts
+```
+
+Kippt Redur den Standard („Raster zuerst"), ist das eine Zeile — die
+Karten blieben als ☰-Angebot.
+
+**Nachzug im Prüfstand:** test111 §8, test136 und test137 messen das
+RASTER am Telefon (Fingermasse, weiche Kante, Werkzeugleiste) — sie
+legen ihre Blöcke jetzt mit offenem Raster an, den Weg, den der Mensch
+per ⊞ geht. Die Karten prüft test163. Und der E88-Import rechnet seine
+Mappe jetzt einmal durch — sonst stünden eingefügte Formeln leer da,
+solange nie jemand das Raster öffnet (der Karten-Blick fand es).
+
+**Geprüft** (test163, 16 Punkte): Karten als Standard mit Kopfzeilen-
+Namen und ausgerechneter Formel · ⊞/☰ in beide Richtungen, je Block
+gemerkt · die leere Tabelle nennt den Weg · am Rechner das Raster wie
+immer. Fünf Arme einzeln rot (Standard, Feldnamen, Rechenlauf — dessen
+Rot der echte Vor-Fix-Lauf war —, Merken, Leer-Hinweis).
