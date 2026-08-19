@@ -6085,3 +6085,39 @@ einmal nach 40 ms und einmal nach 120 ms — eine Prüfung darauf wäre
 eine Behauptung über Langsamkeit und würde unter Last zufällig kippen
 (E82). Geblieben ist, was zählt: kein zweites Zeichnen, und das Bild
 ist da.
+
+
+## E99 · Ziehen-und-Ablegen kennt nur noch eine Grenze
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen · **Lücke:** L34-Klasse
+
+Dieselbe Datei, zwei Ergebnisse — je nachdem, wie man sie hereinbrachte:
+
+```txt
+Datei-Block, eigener Knopf   Stücke, bis 500 MB, Fortschrittsanzeige
+Datei auf die Seite ZIEHEN   Data-Adresse, bis 12 MB — darüber nur ein
+                             Hinweis, und die Datei war weg
+```
+
+Ein 20-MB-Schulskript verschwand also beim Ziehen und klappte über den
+Knopf. CLAUDE.md §14 nennt genau diese 12-MB-Grenze ausdrücklich als
+nicht endgültig, und §34 verlangt: ein Wert, der an zwei Stellen steht,
+gehört an eine.
+
+Jetzt entscheidet `Dateien.lohntSich` beide Male. Grosses geht in
+Stücken mit sichtbarem Fortschritt, Kleines weiter den kurzen Weg —
+für ein Bild von 40 KB wäre der Apparat Unfug. Und der Block bekommt
+nur die Kennung, nie eine `blob:`-Adresse (E98).
+
+**Geprüft** (test173, 11 Punkte): ein echtes `DragEvent` mit echtem
+`DataTransfer` auf `#scroll` — das Ziel wurde nachgesehen, nicht
+geraten, und der erste Wurf ging daneben, weil er auf `main` zielte.
+Ein 20-MB-PDF landet in 20 Stücken ohne Data-Adresse; ein 50-KB-Bild
+nimmt den kurzen Weg und trägt seine Daten direkt. Zwei Arme, jeder
+einzeln: die alte Grenze zurück (drei Punkte fallen), die Kennung
+nicht eingetragen (zwei fallen).
+
+**Eine Kleinigkeit, die den Prüflauf zuerst irreführte:** `.txt` wird
+beim Ablegen absichtlich zur Unterseite, nicht zum Anhang. Die erste
+Fassung mass mit einer Textdatei und fand keinen Block — kein Fehler
+im Code, ein Fehler in der Probe.

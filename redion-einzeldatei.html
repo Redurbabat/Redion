@@ -36751,6 +36751,61 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             if (e.target === bereich)
                 bereich.classList.remove('ablegen');
         });
+        /* ======================================================================
+         * EINE GRENZE STATT ZWEIER (E99)
+         * ----------------------------------------------------------------------
+         * Bis hierher nahm das Ziehen-und-Ablegen Dateien bis 12 MB als
+         * Data-Adresse und warf alles Grössere mit einem Hinweis weg — während
+         * der Knopf am Datei-Block dieselbe Datei bis 500 MB in Stücken ablegte.
+         * Dieselbe Datei, zwei Ergebnisse, je nachdem wie man sie hereinbrachte.
+         * §14 nennt genau diese 12-MB-Grenze als nicht endgültig.
+         *
+         * Jetzt entscheidet `Dateien.lohntSich` an EINER Stelle, wie beim Knopf.
+         * ====================================================================*/
+        const anhaengen = async (seite, f, art) => {
+            const grund = art === 'image'
+                ? { caption: f.name } : { text: f.name };
+            if (typeof Dateien !== 'undefined' && Dateien.lohntSich(f.size)) {
+                if (f.size > Dateien.GRENZE) {
+                    UI.toast('„' + f.name + '" ist grösser als ' +
+                        Dateien.groesseText(Dateien.GRENZE) + '. So viel hält der Browser nicht.');
+                    return;
+                }
+                const b = Store.addBlock(seite, art, grund);
+                const melder = UI.toast('„' + f.name + '" wird abgelegt … 0 %', 60000);
+                try {
+                    const satz = await Dateien.ablegen(f, { blockId: b.id,
+                        beiFortschritt: (anteil) => {
+                            if (melder && melder.textContent !== undefined)
+                                melder.textContent = '„' + f.name + '" wird abgelegt … ' +
+                                    Math.round(anteil * 100) + ' %';
+                        } });
+                    /* Nur die Kennung in den Block — die blob-Adresse gilt nur für
+                       diese Sitzung (E98). */
+                    await Dateien.adresse(satz.id);
+                    Store.updateBlock(b.id, { dateiId: satz.id, typ: f.type });
+                    if (melder && melder.remove)
+                        melder.remove();
+                    UI.toast('„' + f.name + '" abgelegt (' + Dateien.groesseText(f.size) +
+                        ' in ' + satz.teile + ' Stücken)');
+                }
+                catch (err) {
+                    if (melder && melder.remove)
+                        melder.remove();
+                    UI.toast('„' + f.name + '" ging nicht: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                }
+                return;
+            }
+            /* Kleines geht weiter den kurzen Weg — für ein Bild von 40 KB wäre
+               der Apparat oben Unfug. */
+            const daten = await new Promise(ok => {
+                const r = new FileReader();
+                r.onload = () => ok(r.result);
+                r.readAsDataURL(f);
+            });
+            Store.addBlock(seite, art, { ...grund, src: daten });
+        };
         bereich.addEventListener('drop', async (e) => {
             if (!e.dataTransfer?.files?.length)
                 return;
@@ -36764,16 +36819,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             for (const f of e.dataTransfer.files) {
                 const name = f.name.toLowerCase();
                 if (f.type.startsWith('image/')) {
-                    if (f.size > 12 * 1024 * 1024) {
-                        UI.toast(f.name + ' ist grösser als 12 MB');
-                        continue;
-                    }
-                    const daten = await new Promise(ok => {
-                        const r = new FileReader();
-                        r.onload = () => ok(r.result);
-                        r.readAsDataURL(f);
-                    });
-                    Store.addBlock(seite, 'image', { src: daten, caption: f.name });
+                    await anhaengen(seite, f, 'image');
                     continue;
                 }
                 /* Excel, Word und EPUB laufen über den eigenen ZIP-Leser */
@@ -36828,17 +36874,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     UI.toast(f.name + ' als Unterseite angelegt');
                     continue;
                 }
-                /* Alles andere als Datei anhängen */
-                if (f.size <= 12 * 1024 * 1024) {
-                    const daten = await new Promise(ok => {
-                        const r = new FileReader();
-                        r.onload = () => ok(r.result);
-                        r.readAsDataURL(f);
-                    });
-                    Store.addBlock(seite, 'file', { src: daten, text: f.name });
-                }
-                else
-                    UI.toast(f.name + ' ist grösser als 12 MB');
+                /* Alles andere als Datei anhängen — ohne willkürliche Grenze. */
+                await anhaengen(seite, f, 'file');
             }
             App.zeichneSeite();
             App.zeichneBaum();
