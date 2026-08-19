@@ -901,6 +901,31 @@ sonstige Dateien
 
 Dateien können lokal gespeichert und in Seiten oder Datenbanken verwendet werden.
 
+
+PDFs zum Draufschreiben
+
+Ein PDF, das man auf eine Seite zieht, wird zu einzelnen Seiten, durch die
+man scrollt und auf die man direkt schreiben und malen kann — Stift in fünf
+Farben, drei Strichbreiten, Radierer. Daneben passt ein leeres A4-Blatt für
+die eigenen Antworten; „Zwei Spalten" stellt beides nebeneinander.
+
+Das Original bleibt unverändert als Anhang liegen. Redion schreibt nie in
+das PDF zurück — die Anmerkungen liegen daneben in Redion. Das heisst auch:
+wer die Datei mit Anmerkungen weitergeben will, kann das noch nicht.
+
+Die Seitenbilder kommen NICHT in die Sicherung. Sie entstehen aus dem
+Original in Sekunden neu, und bei einem Skript mit 500 Seiten wären es sonst
+hundert Megabyte in jeder `.redion`. Das Original selbst ist natürlich
+darin, Byte für Byte.
+
+Ein Dokument mit mehr als 30 Seiten fragt vorher nach. Passwortgeschützte
+PDFs kann Redion nicht öffnen; es sagt das dann auch.
+
+Dafür ist als einzige fremde Bibliothek pdf.js eingebaut (Apache-2.0,
+eingepackt in `quell/fremd/pdfjs/`). Sie läuft einmal je Dokument beim
+Einlesen — danach zeigt Redion die Seiten selbst.
+
+
 Wichtige Regeln:
 
 Datei-IDs müssen stabil bleiben

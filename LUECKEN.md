@@ -1103,3 +1103,35 @@ sagt das jetzt, statt es den Menschen herausfinden zu lassen.
 
 **Regel** — was die App verspricht, muss sie halten können. Lieber „meldet
 sich beim nächsten Öffnen" als eine Weckerfunktion, die schweigt.
+
+## L37 · Was am PDF noch fehlt
+
+**19. August 2026, nach E103.** Ein PDF wird jetzt zu Seiten, die man
+durchblättert und beschreibt. Vier Dinge kann es noch nicht, und keines
+davon ist ein Fehler — es ist Arbeit, die nicht getan ist.
+
+**Seitenanker.** Eine Notiz kann noch nicht auf „Seite 14" zeigen. Genau
+das war Redurs erster Wunsch („direk neben es die aufgaben"), und es ist
+das nächste Stück: eine Verknüpfung von einem Block zu einer Seitenzahl,
+die beim Anklicken dorthin springt.
+
+**Textsuche im PDF.** pdf.js liest die Textebene mit; Redion nutzt sie
+nicht. Nach der Rasterung ist eine Seite ein Bild, und die Suche findet
+darin nichts. Der Text liesse sich beim Einlesen **einmal** mitnehmen und
+am Block ablegen — dann fände die Suche ihn, ohne dass die Bibliothek
+später noch gebraucht würde. Passt zu L29.
+
+**Neurasterung.** Seiten entstehen bei 1654 px Breite, rund 140 dpi. Wer
+stark hineinzoomt, sieht Unschärfe. Eine Seite liesse sich auf Wunsch
+neu und feiner rechnen — die Marken blieben dabei liegen, weil sie in
+Seitenpunkten gespeichert sind und nicht in Bildpunkten (E100). Nötig
+dafür ist, dass das Original noch da ist; es ist da (E103).
+
+**Verschlüsselte PDFs.** Eine passwortgeschützte Datei wird nicht
+geöffnet. Die Meldung sagt das inzwischen im Klartext, statt eine
+technische Zeile zu zeigen — aber eine Passwortabfrage gibt es nicht.
+
+**Und eine Grenze, die bleiben soll:** Redion schreibt nie in das PDF
+zurück. Anmerkungen liegen daneben. Wer die Datei mit Anmerkungen
+weitergeben will, braucht einen Ausdruck oder einen Export — auch das
+gibt es noch nicht.

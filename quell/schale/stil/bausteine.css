@@ -2670,9 +2670,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    sie gar nicht erst eingeengt war. Dieselbe Falle wie bei den
    Tabellenkarten (E89). */
 .blatt-huelle{margin:10px 0; width:100%; min-width:0}
+/* Der Rahmen sitzt auf der REIHE, nicht auf dem Rollkasten darin — sonst
+   stünde der feste Teil rechts ausserhalb des Kastens (E103). */
+.blatt-reihe{display:flex; align-items:stretch; min-width:0;
+             background:var(--bg-card); border-radius:8px 8px 0 0;
+             border:1px solid var(--rand); border-bottom:none}
 .blatt-werk{display:flex; flex-wrap:wrap; align-items:center; gap:4px;
-            padding:6px 8px; background:var(--bg-card); border-radius:8px 8px 0 0;
-            border:1px solid var(--rand); border-bottom:none}
+            padding:6px 8px; min-width:0; flex:1 1 auto}
+.blatt-fest{display:flex; align-items:center; gap:4px; flex:0 0 auto;
+            padding:6px 8px 6px 0}
 .blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-werk button:hover{background:var(--bg-hover)}
@@ -2714,6 +2720,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk .zeichen{margin:0; font-size:17px}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
   .blatt-strich{min-width:38px}
+  /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
+     eine abgeschnittene Leiste aus wie eine vollständige (E103). */
+  .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
 }
 
 /* ── Schriftgrösse und Schriftart je Block (E101) ──────────────────────────
@@ -2756,3 +2765,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    dritte Auflage derselben Falle.                                         */
 .spalte{min-width:0; display:flex; flex-direction:column; gap:2px}
 .spalte > .blk{width:100%}
+
+/* ── PDF-Seite (E103) ──────────────────────────────────────────────────────
+   Dieselbe Hülle wie das A4-Blatt, nur liegt unten ein Bild statt Text.   */
+.pdfs-papier{background:#fff}
+.pdfs-bild{position:absolute; inset:0; width:100%; height:100%;
+           object-fit:contain; z-index:1; display:block}
+.pdfs-wartet{position:absolute; inset:0; z-index:1; display:flex;
+             align-items:center; justify-content:center;
+             color:#666; font-size:14px; text-align:center; padding:20px}
+.pdfs-nr{font-size:12.5px; color:var(--text-dim); padding:0 6px; white-space:nowrap}
+@media (max-width:760px){ .pdfs-nr{font-size:12px} }

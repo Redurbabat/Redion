@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**19. August 2026 · 142 Prüfläufe**
+**19. August 2026 · 143 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -87,7 +87,25 @@ L18  XLSX/ODS-Rest: Zellformatierung, Kommentare, ODS-Mehrblatt —
      Blatt: stille §13-Lücke)
 L20  ✅ komplett (9. August): Ausfüllen (E87), Markdown-Tabellen
      (E88), Alt+Umschalt+Klick (test158 §7)
+L37  Was am PDF noch fehlt — neu am 19. August, nach E103:
+     Seitenanker („Notiz zeigt auf Seite 14", Redurs erster Wunsch) ·
+     Textsuche im PDF (passt zu L29) · Neurasterung feiner ·
+     verschlüsselte Dateien
 ```
+
+**Redurs vier Wünsche für die Schulaufgaben** (11.–19. August) sind
+abgearbeitet:
+
+```txt
+leeres A4-Blatt zum Draufschreiben          E100  ✅
+daneben stellen (Spalten)                   E102  ✅
+Schriftgrösse, Farbe, Schriftart            E101  ✅  (Farbe gab es schon)
+PDF durchblättern und darauf schreiben      E103  ✅
+```
+
+Mit E103 kommt die **erste fremde Laufzeitbibliothek** ins Verzeichnis:
+pdf.js, Apache-2.0, als Umwandler beim Einlesen — nicht im Anzeigeweg.
+Was das kostet und warum es umkehrbar bleibt, steht in E103.
 
 **Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push
 (E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · L20 Markdown (E59) ·

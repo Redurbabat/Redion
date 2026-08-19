@@ -1530,7 +1530,17 @@ const App = (() => {
 
     UI.toast(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
     try {
-      const saetze = await Store.dateiAlle();
+      /* ABGELEITETES BLEIBT DRAUSSEN (E103). Ein gerastertes PDF-Seiten-
+         bild entsteht beim Einlesen in Sekunden neu; mitgepackt kostet es
+         bei 200 KB je Seite und 500 Seiten hundert Megabyte in JEDER
+         Sicherung. Eine Sicherung, die man auf dem Telefon nicht mehr
+         herunterladen kann, ist keine Sicherung.
+         Gefiltert wird HIER und nicht in der Schleife unten, weil
+         `dateien.json` aus derselben Liste entsteht: ein Satz darin, dessen
+         Bytes fehlen, wäre ein Anhang, den der Block sucht und nicht
+         findet. Lieber gar nicht erwähnt als falsch versprochen. */
+      const saetze = (await Store.dateiAlle())
+        .filter((s: any) => !(s && s.abgeleitet));
       const eintraege: { name: string; inhalt: any; kennung?: string }[] =
         [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
       const belegt = new Set(['daten.json']);

@@ -2189,6 +2189,17 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     UI.toast(f.name + ' als Unterseite angelegt');
                     continue;
                 }
+                /* Ein PDF wird zu beschreibbaren Seiten (E103) — das Original
+                   legt `alsSeiten` selbst als Anhang ab, Byte für Byte. */
+                if (/\.pdf$/i.test(name) && typeof PdfEinlesen !== 'undefined') {
+                    try {
+                        await PdfEinlesen.alsSeiten(f, seite);
+                        continue;
+                    }
+                    catch {
+                        continue;
+                    } /* die Meldung kam schon von dort */
+                }
                 /* Alles andere als Datei anhängen — ohne willkürliche Grenze. */
                 await anhaengen(seite, f, 'file');
             }

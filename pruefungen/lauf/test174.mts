@@ -262,10 +262,24 @@ p('Die Umrechnung geht über getScreenCTM', raumCode.includes('getScreenCTM('));
 p('Und im Code steht kein getBoundingClientRect',
   !raumCode.includes('getBoundingClientRect'),
   'im Kommentar darf es stehen, im Code nicht');
+/* DIE ZEICHENSCHICHT LIEGT SEIT E103 IN `marken.ts`. Sie war zuerst hier im
+   Blatt; als die PDF-Seite dieselbe brauchte, wurde sie herausgelöst statt
+   abgeschrieben. Diese zwei Zeugen zeigen jetzt dorthin — dieselbe Zusage,
+   eine Stelle statt zwei. Der Punkt darunter hält fest, dass das Blatt
+   wirklich keine eigene Kopie mehr hat: zwei Kopien laufen auseinander, und
+   die vergessene ist die, auf der gerade jemand malt (§34). */
+const markenQ = fs.readFileSync(
+  path.join(WURZEL, 'src/bereiche/pdf/marken.ts'), 'utf8');
+p('Nur der Hauptzeiger malt', markenQ.includes('e.isPrimary'));
+p('Abbrechen schliesst den Strich ab', markenQ.includes('pointercancel'));
+
 const blattQ = fs.readFileSync(
   path.join(WURZEL, 'src/bereiche/bloecke/arten/blatt.ts'), 'utf8');
-p('Nur der Hauptzeiger malt', blattQ.includes('e.isPrimary'));
-p('Abbrechen schliesst den Strich ab', blattQ.includes('pointercancel'));
+const blattCode = blattQ.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+p('Das Blatt hält keine zweite Zeichenschicht mehr',
+  !blattCode.includes('pointerdown') && !blattCode.includes('pointermove'));
+p('Sondern nimmt dieselbe wie die PDF-Seite',
+  blattCode.includes('Marken.schicht('));
 
 p('Keine Seitenfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 

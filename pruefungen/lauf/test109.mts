@@ -79,9 +79,24 @@ const erzeugt = new Set<string>(
    prüft, dass die erzeugte Datei zu ihrer Quelle passt. */
 if ((alles ?? '').includes('src/dienst/sw.ts')) erzeugt.add('sw.js');
 
+/* FREMDER CODE zählt auch nicht — er ist nichts, was hier jemand
+   geschrieben hat, und ihn zu migrieren wäre sinnlos. Er steht mit Pfad,
+   Fassung, Lizenz, Herkunft und Prüfsumme in `pruefungen/fremd-bestand.json`;
+   `test177` rechnet die Prüfsummen nach. `js-bestand.json` bleibt dabei
+   leer — §54.4 sagt „darf nur schrumpfen", und eine fremde Bibliothek ist
+   kein Rückschritt in der Migration, sondern eine eigene Entscheidung
+   (E103). */
+const FREMD = dazu(WURZEL, 'pruefungen/fremd-bestand.json');
+const fremd = new Set<string>(
+  da(FREMD)
+    ? (JSON.parse(lies(FREMD, 'utf8')).eintraege || [])
+        .map((e: { pfad: string }) => e.pfad)
+    : []);
+
 const vonHand = alles
   .filter(f => /\.(js|mjs|cjs)$/.test(f))
   .filter(f => !erzeugt.has(f))
+  .filter(f => !fremd.has(f))
   .sort();
 
 /* ==========================================================================

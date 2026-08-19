@@ -130,6 +130,18 @@ Stand: 77 Einträge. Darunter sind drei Sorten:
 | `embed-canva` | Canva |
 | `embed-pdf` | PDF |
 
+## Bausteine ohne Menüeintrag
+
+Nicht jeder Blocktyp lässt sich einfügen. Diese hier entstehen, weil etwas
+anderes sie anlegt — sie stehen in keinem Register und deshalb auch in
+keiner Tabelle oben. Wer den Bestand liest, findet sie trotzdem, und dann
+soll hier stehen, was sie sind.
+
+| Kennung | Woher | Wozu |
+|---|---|---|
+| `spalte` | von `columns`/`columns3` beim Anlegen | Hülle um EINE Spalte. Ohne sie war jedes Kind eine eigene Spalte, und Enter im Text machte aus zwei Spalten drei (E102). |
+| `pdfseite` | vom PDF-Einlesen, eine je Seite | Seitenbild plus Zeichenschicht. Kennt `nr`, `bw`, `bh`, das Bild und das unveränderte Original (E103). |
+
 ## Die sechs „Kandidaten" aus L19, nachgesehen
 
 L19 nannte sechs Blocktypen als vermutlich fehlend. Vier davon gibt es

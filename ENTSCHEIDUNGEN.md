@@ -6355,3 +6355,152 @@ Probe den Zellentext auf zwölf Zeichen — die Griffe (`+`, `⋮⋮`) stehen
 mit im `textContent`, und übrig blieb „links, al". Drittens zitierte
 ein Quelltext-Zeuge einen Aufruf, den es so nie gab. Eine Prüfung, die
 rot wird, hat nicht automatisch recht.
+
+
+## E103 · Ein PDF wird zu Seiten, auf die man schreiben kann
+
+**19. August 2026.** Redur hatte vier Wünsche für seine Schulaufgaben
+genannt. Drei sind erledigt: das leere A4-Blatt (E100), das Nebeneinander
+in Spalten (E102), Schriftgrösse und Schriftart (E101). Der vierte war der
+grösste: *„ich wollte so haben das die orgunal pdf so jeder seite ich
+unterscrolen kann … und ich sollte auch direk auf pdf schreiben bearbeiten
+kann."*
+
+Ein PDF anzeigen kann Redion nicht selbst. Das ist keine Nachlässigkeit —
+ein PDF-Zeichner ist ein eigenes Programm: Schriftarten einbetten,
+Farbräume umrechnen, Pfade füllen, Verschlüsselung entpacken. Also kommt
+mit **pdf.js** die erste fremde Bibliothek in ein Verzeichnis, das bis
+heute null Laufzeitabhängigkeiten hatte.
+
+### Die eigentliche Entscheidung ist nicht *ob*, sondern *wo*
+
+pdf.js kommt als **Umwandler** herein, nicht als Betrachter.
+
+    einmal je Dokument          statt       bei jeder angesehenen Seite
+    PDF  →  Seitenbilder                    PDF  →  Anzeige  →  Marken
+
+Läge die Bibliothek dauerhaft im Anzeigeweg, hinge jede Seite, jede Marke
+und jede Zoomstufe an ihr. So läuft sie **einmal**, und danach ist eine
+Seite ein Bild mit einer SVG-Schicht darüber — etwas, das Redion ohne eine
+einzige fremde Zeile anzeigen, beschreiben, zoomen, sichern und ausgeben
+kann.
+
+Der Preis ist Platz: rund 200 KB je Seite. Der Gewinn ist, dass die
+Abhängigkeit **umkehrbar** bleibt. Fiele pdf.js später heraus — Lizenz,
+Sicherheitslücke, Grösse —, funktionierten alle vorhandenen Mappen
+weiter; nur der Import neuer PDFs bräche. Bei der ersten fremden
+Bibliothek eines Projekts, das seine Unabhängigkeit als Merkmal führt, ist
+das der Punkt, an dem alles hängt.
+
+### Das Original bleibt das Original
+
+Es wird als Anhang abgelegt, Byte für Byte, und nie zurückgeschrieben.
+Anmerkungen liegen daneben in Redion, nicht im PDF. Wer sein Zeugnis in
+Redion legt, bekommt es unverändert wieder — auch wenn die Rasterung, die
+Bibliothek oder Redion selbst verschwindet. `test177` rechnet die
+SHA-256-Summe nach Ablegen und Zurückholen nach.
+
+### `abgeleitet`: was sich neu rechnen lässt, gehört nicht in die Sicherung
+
+Die Seitenbilder tragen `abgeleitet: true`. Sie bleiben aus der `.redion`
+und aus dem Abgleich heraus. Bei 200 KB je Seite und einem Skript mit 500
+Seiten wären das **hundert Megabyte in jeder Sicherung**, für etwas, das
+in Sekunden neu entsteht. Eine Sicherung, die man auf dem Telefon nicht
+mehr herunterladen kann, ist keine Sicherung (§11).
+
+Gefiltert wird **beim Holen**, nicht in der Packschleife: `dateien.json`
+entsteht aus derselben Liste, und ein Satz darin, dessen Bytes fehlen,
+wäre ein Anhang, den der Block sucht und nicht findet. Lieber gar nicht
+erwähnt als falsch versprochen.
+
+Der Gegenprobe-Arm in `test177` §5 ist der wichtige: ein **gewöhnlicher**
+Anhang auf derselben Seite liegt weiterhin in der Sicherung. Ohne ihn
+liesse sich nicht unterscheiden, ob das Auslassen zielt oder ob die
+Sicherung einfach keine Anhänge mehr schreibt.
+
+### Fremder Code wird getrennt und nachgerechnet
+
+Die Bibliothek liegt in `quell/fremd/pdfjs/`, in zwei Dateien:
+
+    daten.js    zwei Base64-Zeichenketten, gzip-gepackt. FREMDE BYTES —
+                keine Zeile davon ist hier geschrieben.
+    laden.js    erzeugt aus `src/fremd/pdfjs/laden.ts`. REDION-CODE,
+                TypeScript, mit Kommentaren, unter allen üblichen Regeln.
+
+Die Trennung ist keine Kosmetik. §54.4 sagt „es entsteht kein neues
+JavaScript"; die Ausnahme in `pruefungen/fremd-bestand.json` deckt damit
+**Bytes, nicht Logik**. Der erste Entwurf hatte beides in einer
+handgeschriebenen `.js` — das wäre eine Ausnahme gewesen, die sich selbst
+ausweitet.
+
+`fremd-bestand.json` führt Pfad, Paket, Fassung, Bau, Herkunft, Lizenz,
+Lizenzdatei, Begründung und je Teildatei Bytezahl und SHA-256. `test177`
+§0 packt beim Prüfen wieder aus und rechnet nach. Eine eingepackte
+Bibliothek, die niemand nachrechnet, ist eine halbe Million Bytes, denen
+man auf Zuruf glaubt.
+
+**Drei Entscheidungen im Kleinen**, jede gemessen statt vermutet:
+
+- **Die `legacy`-Fassung.** Die moderne stürzte im Prüfstand ab
+  (`getOrInsertComputed is not a function`) — sie verlangt einen sehr
+  neuen Browser. Die legacy-Fassung läuft auch auf älteren Telefonen.
+- **Eingepackt, nicht daneben.** `bauen.mts` bettet ein, was `index.html`
+  über ein script-Feld lädt (§29). Roh wären es 1,7 MB; gzip und Base64
+  machen 524 KB daraus, `DecompressionStream` packt beim ersten Gebrauch
+  aus. Die Einzeldatei wächst von 3,8 auf 4,4 MB.
+- **`isEvalSupported: false`, fest verdrahtet.** pdf.js wertet sonst
+  Typ-4-Funktionen über `new Function` aus. §19 verbietet das, und eine
+  Voreinstellung ist keine Zusage.
+
+### Eine Zeichenschicht, nicht zwei
+
+Als die PDF-Seite dieselbe Schicht brauchte wie das A4-Blatt, wurde sie
+aus `blatt.ts` **herausgelöst** statt abgeschrieben: `bereiche/pdf/
+marken.ts`. Zwei Kopien laufen auseinander, und die vergessene ist die,
+auf der der Nutzer gerade malt (§34). Damit gilt E100 unverändert auch
+über PDF-Seiten: gerechnet wird in Seitenpunkten über `getScreenCTM`, und
+ein Strich liegt bei 1400 px Fenster an derselben Stelle der Seite wie bei
+390 px.
+
+### Die Leiste hat jetzt zwei Kästen
+
+Links die Werkzeuge, die am Telefon seitlich rollen — 665 px Inhalt in
+einem 334 px schmalen Kasten, gemessen. Rechts daneben ein **fester**
+Teil, der nicht mitrollt: dort steht „Seite 1 von 3".
+
+Das kam aus dem Hinsehen (§55). Die Seitenzahl stand als letztes IN der
+rollenden Leiste, also hinter einem Wisch — und sie beantwortet „wo bin
+ich", die einzige Frage, die man bei einem Skript mit achtzig Seiten nicht
+durch Hinsehen beantwortet. Der erste Versuch hielt sie mit
+`position: sticky` an der rechten Kante des Rollbereichs. Sie blieb auch
+stehen, aber die Farbknöpfe schienen durch den Text hindurch. Zwei Kästen
+haben diese Frage gar nicht: was nicht im Rollbereich liegt, kann nichts
+überdecken.
+
+### Und ein Fehler, der nur mit Augen zu finden war
+
+Das PDF für die Bildschirmfotos zeigte die Überschrift „Mathematik
+Klausur 2" und darunter — nichts. Kein Fehler, keine Meldung, halbe Seite.
+Der Grund lag in der Prüfdatei, nicht in Redion: in einem PDF steht Text
+in runden Klammern, und das `)` in „1)" hatte die Zeichenkette vorzeitig
+beendet und den ganzen Inhaltsstrom danach mitgenommen.
+
+Die Lehre ist nicht das Escapen. Sie ist, dass `test177` vorher gemessen
+hatte, ob **irgendetwas** auf der Seite steht — die Bytezahl des Bildes.
+Eine Überschrift allein besteht diese Messung mühelos. Jetzt werden die
+dunklen Punkte in dem Streifen gezählt, in dem die Aufgaben stehen, und
+ein Gegenprobe-Arm rendert dasselbe PDF **ohne** Escape und zeigt, dass
+der Streifen dort leer ist. Erst damit kann die Messung überhaupt rot
+werden (§55.2).
+
+**Geprüft** (test177, 64 Punkte in acht Abschnitten): Prüfsummen des
+Fremdcodes · pdf.js liest ein dreiseitiges PDF · der ganze Weg vom
+Ablegen zu drei Seitenblöcken, über das echte Fallenlassen und nicht am
+Umwandler vorbei (E93) · das Original Byte für Byte zurück · ein Strich
+bei 1400 und bei 390 px · die Sicherung lässt Abgeleitetes weg und
+Gewöhnliches nicht · Quelltext-Zeugen · und alles noch einmal per
+Doppelklick über `file://` in der Einzeldatei (§29), wo Blob-Adressen,
+dynamische Importe und Arbeiter sonst gern verweigert werden.
+
+**Was noch fehlt**, steht in LUECKEN.md: Seitenanker, Textsuche im PDF,
+Neurasterung in höherer Auflösung, verschlüsselte Dateien.

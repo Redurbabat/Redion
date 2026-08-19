@@ -727,6 +727,9 @@ const Wolke = (() => {
     let rauf = 0;
     for (const d of alle) {
       if (!d || d.zustand !== 'fertig' || oben.has(d.id)) continue;
+      /* Abgeleitetes wandert nicht zum Server (E103): es ist in Sekunden
+         neu gerechnet und kostet als Base64 ein Drittel mehr Leitung. */
+      if (d.abgeleitet) continue;
       /* Über der Server-Grenze: gar nicht erst anklopfen. Für solche Dateien
          gilt der .redion-Weg — steht so in E33. */
       if ((Number(d.groesse) || 0) > SERVER_DATEI_MAX) continue;

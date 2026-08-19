@@ -802,7 +802,12 @@ const Blocks = (() => {
          sie selbst — deshalb steht es hier und nicht in der Kinderliste
          weiter unten (E100). */
       case 'blatt':
-        box.appendChild((window as any).Blatt.zeichne(block));
+        box.appendChild(Blatt.zeichne(block));
+        break;
+
+      /* Eine PDF-Seite: Bild unten, Zeichenschicht darüber (E103). */
+      case 'pdfseite':
+        box.appendChild(PdfSeite.zeichne(block));
         break;
 
       case 'whiteboard':

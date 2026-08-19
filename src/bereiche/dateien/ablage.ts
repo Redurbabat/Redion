@@ -65,7 +65,9 @@ const Dateien = (() => {
   /* ========================================================================
    * 1 · ANMELDEN — Notions „create file upload"
    * ======================================================================*/
-  const anmelden = async ({ name, groesse, typ, blockId }: { name: string; groesse: number; typ?: string; blockId?: string }): Promise<any> => {
+  const anmelden = async ({ name, groesse, typ, blockId, abgeleitet }:
+      { name: string; groesse: number; typ?: string; blockId?: string;
+        abgeleitet?: boolean }): Promise<any> => {
     if (!groesse && groesse !== 0) throw new Error('Es fehlt die Grösse.');
     if (groesse > GRENZE)
       throw new Error('Diese Datei ist grösser als ' + Math.round(GRENZE / 1048576) +
@@ -75,6 +77,13 @@ const Dateien = (() => {
     const satz = {
       id, name: name || 'Datei', groesse, typ: typ || 'application/octet-stream',
       blockId: blockId || null, teile, angekommen: 0,
+      /* ABGELEITET heisst: aus etwas anderem in Sekunden neu herstellbar —
+         ein gerastertes PDF-Seitenbild etwa. Solche Dateien gehören NICHT
+         in jede Sicherung und nicht in jeden Abgleich: bei 200 KB je Seite
+         und 500 Seiten wären das 100 MB in jedem `.redion`, für etwas, das
+         sich neu berechnen lässt. Eine Sicherung, die man auf dem Telefon
+         nicht mehr herunterladen kann, ist keine Sicherung (E103). */
+      abgeleitet: !!abgeleitet,
       zustand: 'wartet', angelegt: Store.now(), fertigAm: null
     };
     await Store.dateiPut(satz);
@@ -146,7 +155,8 @@ const Dateien = (() => {
     opt = opt || {};
     const satz = await anmelden({
       name: opt.name || datei.name || 'Datei',
-      groesse: datei.size, typ: datei.type, blockId: opt.blockId });
+      groesse: datei.size, typ: datei.type, blockId: opt.blockId,
+      abgeleitet: !!opt.abgeleitet });
 
     try {
       for (let nr = 0; nr < satz.teile; nr++) {

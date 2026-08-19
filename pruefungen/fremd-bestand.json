@@ -1,0 +1,28 @@
+{
+  "hinweis": "Fremde Bytes im Verzeichnis. Jede Zeile mit Herkunft, Fassung, Lizenz und Prüfsumme. test177 packt sie aus und rechnet nach. Hier steht NUR, was von aussen kommt — der Lader daneben ist Redion-Code in TypeScript.",
+  "eintraege": [
+    {
+      "pfad": "quell/fremd/pdfjs/daten.js",
+      "paket": "pdfjs-dist",
+      "fassung": "6.2.108",
+      "bau": "legacy",
+      "herkunft": "https://www.npmjs.com/package/pdfjs-dist",
+      "lizenz": "Apache-2.0",
+      "lizenzdatei": "quell/fremd/pdfjs/LIZENZ.txt",
+      "begruendung": "Ohne sie kann Redion eine PDF-Seite nicht selbst zeichnen; siehe ENTSCHEIDUNGEN.md E103.",
+      "enthaelt": [
+        {
+          "datei": "pdf.min.mjs",
+          "bytes": 512483,
+          "sha256": "9fab0c910bf1484835c5c2aeb68f7eb3dfce7f9eb435a004526c5af86d70890c"
+        },
+        {
+          "datei": "pdf.worker.min.mjs",
+          "bytes": 1312452,
+          "sha256": "bc0d1b88ea0b66196b1d36a58ac243c6d92adfe725624e2a9fdd381bdf8ef434"
+        }
+      ],
+      "lader": "src/fremd/pdfjs/laden.ts"
+    }
+  ]
+}
