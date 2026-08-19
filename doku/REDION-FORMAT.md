@@ -167,6 +167,12 @@ Bytes fehlen, wäre das ein Anhang, den der Block sucht und nicht findet —
 und man merkte es erst beim Einspielen. Lieber gar nicht erwähnt als
 falsch versprochen.
 
+**Beim Einspielen** stehen die Seiten deshalb zunächst leer da, mit einem
+Knopf „Aus dem Original zurückholen" darauf. Ein Klick rechnet das ganze
+Dokument neu; Nummer, Masse und Marken bleiben dabei unangetastet (E106).
+Der Block trägt seine alte `bildDateiId` noch — sie zeigt ins Leere, bis der
+Knopf gedrückt wurde.
+
 **Für Fremdlesende:** wer ein `.redion` ohne Redion auspackt, findet das
 PDF unter `dateien/` und die Anmerkungen im Block-Datensatz von
 `daten.json` (Feld `marken`, Koordinaten in PDF-Punkten). Die Seitenbilder

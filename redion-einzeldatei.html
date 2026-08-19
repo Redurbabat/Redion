@@ -5659,6 +5659,10 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
             padding:6px 8px; min-width:0; flex:1 1 auto}
 .blatt-fest{display:flex; align-items:center; gap:4px; flex:0 0 auto;
             padding:6px 8px 6px 0}
+.blatt-fest button{min-height:32px; padding:4px 9px; border-radius:6px;
+                   font-size:13px; color:var(--text); background:none; cursor:pointer}
+.blatt-fest button:hover{background:var(--bg-hover)}
+.blatt-fest .zeichen{margin-right:5px}
 .blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-werk button:hover{background:var(--bg-hover)}
@@ -5711,6 +5715,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .spalte .blatt-farbe{width:24px; height:24px; min-width:24px}
 .spalte .blatt-strich{min-width:32px}
 .spalte .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
+.spalte .blatt-fest .wort{display:none}
+.spalte .blatt-fest .zeichen{margin:0}
+.spalte .blatt-fest button{min-height:36px; min-width:36px; padding:4px 7px;
+                           border-radius:6px; color:var(--text);
+                           background:none; cursor:pointer; font-size:15px}
 .spalte .pdfs-nr{font-size:11.5px}
 
 @media (max-width:760px){
@@ -5726,6 +5735,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */
   .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
+  .blatt-fest .wort{display:none}
+  .blatt-fest .zeichen{margin:0; font-size:17px}
+  .blatt-fest button{min-height:44px; min-width:44px}
 }
 
 /* ── Schriftgrösse und Schriftart je Block (E101) ──────────────────────────
@@ -5790,6 +5802,18 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
              align-items:center; justify-content:center;
              color:#666; font-size:14px; text-align:center; padding:20px}
 .pdfs-nr{font-size:12.5px; color:var(--text-dim); padding:0 6px; white-space:nowrap}
+/* Der Weg zurück auf einer Seite ohne Bild (E106). Dunkel auf dem weissen
+   Papier — der Hinweis darüber liegt ebenfalls auf Papier, nicht auf der
+   App-Fläche, und erbt deren Farben deshalb nicht. */
+/* Untereinander, nicht nebeneinander: `.pdfs-wartet` ist ein Flex-Kasten,
+   und Satz und Knopf drängelten sich in einer Zeile (mit Augen gesehen). */
+.pdfs-wartet{flex-direction:column; gap:2px; text-align:center; padding:0 16px}
+.pdfs-neu{margin-top:10px; padding:8px 14px; min-height:36px; border-radius:8px;
+          border:1px solid #c8c8c8; background:#f3f3f3; color:#111;
+          font-size:13px; cursor:pointer}
+.pdfs-neu:hover{background:#e8e8e8}
+.pdfs-neu:disabled{opacity:.6; cursor:default}
+@media (max-width:760px){ .pdfs-neu{min-height:44px; padding:10px 16px} }
 @media (max-width:760px){ .pdfs-nr{font-size:12px} }
 
 </style>
@@ -18749,10 +18773,31 @@ const PdfSeite = (() => {
         w.className = 'blatt-huelle pdfs';
         const schicht = Marken.schicht(block, breite, hoehe, 0);
         /* Die Leiste bekommt rechts die Seitenzahl — sie beantwortet die Frage
-           „wo bin ich", ohne dass man zählen muss. */
-        const werk = Marken.leiste(schicht, '<span class="blatt-trenn"></span>' +
+           „wo bin ich", ohne dass man zählen muss — und daneben den ANKER: einen
+           Verweis auf genau diese Seite. Bei einem Skript mit achtzig Seiten ist
+           das der Unterschied zwischen „ich weiss, dass es drinsteht" und „ich
+           bin da" (E105, L37). */
+        const werk = Marken.leiste(schicht, 
+        /* NUR DAS ZEICHEN, auch am Rechner. Mit dem Wort „Verweis" daneben
+           passte die Leiste bei der üblichen Spaltenbreite von 708 px nicht
+           mehr in eine Zeile und klappte in zwei um (mit Augen gesehen, §55).
+           `aria-label` statt bloss `title`, damit ein Vorleseprogramm ihn
+           auch nennt (§38). */
+        '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
+            'title="Verweis auf genau diese Seite kopieren">🔗</button>' +
+            '<span class="blatt-trenn"></span>' +
             '<span class="pdfs-nr">Seite ' + (Number(block.nr) || 1) +
             (block.vonSeiten ? ' von ' + block.vonSeiten : '') + '</span>');
+        werk.addEventListener('click', e => {
+            const k = e.target?.closest?.('button');
+            if (k?.dataset.a !== 'anker')
+                return;
+            /* `location.href` ohne Hash — dieselbe Form wie Strg + Umschalt + C,
+               und die einzige, die auch als Datei über `file://` stimmt. */
+            const adr = location.href.split('#')[0] + '#block=' + block.id;
+            Ablage.kopiereJetzt(adr, 'Verweis auf Seite ' +
+                (Number(block.nr) || 1) + ' kopiert');
+        });
         w.appendChild(werk);
         const papier = document.createElement('div');
         papier.className = 'blatt-papier pdfs-papier';
@@ -18765,13 +18810,44 @@ const PdfSeite = (() => {
         bild.alt = 'Seite ' + (Number(block.nr) || 1);
         bild.decoding = 'async';
         bild.loading = 'lazy';
-        papier.appendChild(bild);
+        /* NOCH NICHT einhängen. Ein `img` ohne `src` ist für den Browser ein
+           kaputtes Bild: er malt sein Bruchsymbol und den Alt-Text hin — über
+           den Satz, der dasselbe in Ordentlich sagt (E105, mit Augen gesehen). */
         const hinweis = document.createElement('div');
         hinweis.className = 'pdfs-wartet';
         hinweis.textContent = 'Seite wird vorbereitet …';
         papier.appendChild(hinweis);
+        /**
+         * Aus dem Hinweis einen Weg machen.
+         *
+         * NACH DEM EINSPIELEN EINER `.redion` IST DAS DER NORMALFALL, nicht der
+         * Ausnahmefall: E103 lässt die gerasterten Seitenbilder bewusst draussen,
+         * weil sie sich neu rechnen lassen. „Lässt sich" ist aber kein Weg, solange
+         * niemand ihn gehen kann. Also steht er hier — ein Knopf, der das ganze
+         * Dokument auf einmal zurückholt, weil das Original aufzuschlagen der teure
+         * Teil ist und eine einzelne Seite daraus der billige (E106).
+         */
+        const wegZeigen = (text) => {
+            hinweis.textContent = '';
+            const satz = document.createElement('div');
+            satz.textContent = text;
+            hinweis.appendChild(satz);
+            if (!block.quelleId)
+                return; /* ohne Original kein Weg */
+            const k = document.createElement('button');
+            k.type = 'button';
+            k.className = 'pdfs-neu';
+            k.textContent = 'Aus dem Original zurückholen';
+            k.addEventListener('click', () => {
+                k.disabled = true;
+                k.textContent = 'wird gerechnet …';
+                PdfEinlesen.neuBerechnen(block.quelleId);
+            });
+            hinweis.appendChild(k);
+        };
         const zeigeBild = (u) => {
             bild.src = u;
+            papier.insertBefore(bild, papier.firstChild);
             hinweis.remove();
         };
         if (block.bildDateiId && typeof Dateien !== 'undefined') {
@@ -18780,12 +18856,16 @@ const PdfSeite = (() => {
                 zeigeBild(da);
             else
                 Dateien.adresse(block.bildDateiId)
-                    .then((u) => { if (u)
-                    zeigeBild(u); })
-                    .catch(() => { hinweis.textContent = 'Das Seitenbild fehlt — bitte neu einlesen.'; });
+                    .then((u) => {
+                    if (u)
+                        zeigeBild(u);
+                    else
+                        wegZeigen('Das Seitenbild fehlt.');
+                })
+                    .catch(() => wegZeigen('Das Seitenbild fehlt.'));
         }
         else {
-            hinweis.textContent = 'Für diese Seite gibt es noch kein Bild.';
+            wegZeigen('Für diese Seite gibt es noch kein Bild.');
         }
         papier.appendChild(schicht.flaeche);
         return w;
@@ -18845,6 +18925,14 @@ const PdfEinlesen = (() => {
     const alsSeiten = async (datei, elternId) => {
         if (typeof PdfLeser === 'undefined')
             throw new Error('Der PDF-Leser ist nicht geladen.');
+        /* Jedes PDF beginnt mit `%PDF-`. Fünf Bytes lesen kostet nichts und
+           spart bei einer falsch benannten 20-MB-Datei das vollständige Ablegen
+           und Einlesen, bevor jemand merkt, dass es keine ist. Wer hier
+           herausfliegt, geht den gewöhnlichen Anhang-Weg — und der legt den
+           Block ZUERST an, sodass sofort etwas dasteht. */
+        const kopf = new Uint8Array(await datei.slice(0, 5).arrayBuffer());
+        if (String.fromCharCode(...Array.from(kopf)) !== '%PDF-')
+            throw new Error('Das ist keine PDF-Datei.');
         const melder = UI.toast('„' + datei.name + '" wird gelesen …', 120000);
         const sageAn = (t) => {
             if (melder && melder.textContent !== undefined)
@@ -19025,7 +19113,104 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    return { alsSeiten, OHNE_FRAGE };
+    /* ==========================================================================
+     * SEITENBILDER AUS DEM ORIGINAL ZURÜCKHOLEN
+     * --------------------------------------------------------------------------
+     * E103 lässt die gerasterten Seitenbilder aus der Sicherung heraus, weil sie
+     * „in Sekunden neu entstehen". Der Satz stimmte bisher nur der Möglichkeit
+     * nach: NICHTS stellte sie wirklich wieder her. Wer eine `.redion` einspielte,
+     * bekam sein Skript zurück — die Marken darauf, die Notizblätter daneben, das
+     * Original als Anhang — und lauter leere Seiten mit dem Satz „Für diese Seite
+     * gibt es noch kein Bild." Ein Hinweis ohne Ausweg.
+     *
+     * Jetzt gibt es den Ausweg, und zwar für das GANZE Dokument auf einmal: das
+     * Original aufzuschlagen ist der teure Teil, eine einzelne Seite daraus zu
+     * zeichnen der billige. Wer eine Seite anklickt, meint das Skript.
+     *
+     * DIE MASSE WERDEN NICHT NEU GELESEN. `bw`, `bh` und `nr` stehen am Block und
+     * bleiben, wie sie sind — die Marken liegen in genau diesem Raum (E100).
+     * Käme aus einer neuen Messung eine andere Zahl, läge jeder Strich woanders.
+     * ========================================================================*/
+    /**
+     * Alle Seiten eines Dokuments, die kein Bild haben.
+     *
+     * „KEIN BILD" HEISST NICHT NUR „KEINE KENNUNG". Nach dem Einspielen einer
+     * Sicherung trägt jeder Block seine alte `bildDateiId` — die Datei dahinter
+     * ist aber nicht mitgekommen (E103). Eine Kennung, die ins Leere zeigt,
+     * ist kein Bild; wer nur auf ihr Vorhandensein sieht, hält genau die
+     * Seiten für fertig, um die es hier geht.
+     */
+    const ohneBild = async (quelleId) => {
+        const kandidaten = Object.values(Store.cache.blocks)
+            .filter(b => b && b.alive !== false && b.type === 'pdfseite' &&
+            b.quelleId === quelleId)
+            .sort((a, b) => (Number(a.nr) || 0) - (Number(b.nr) || 0));
+        const offen = [];
+        for (const b of kandidaten) {
+            if (!b.bildDateiId) {
+                offen.push(b);
+                continue;
+            }
+            const satz = await Store.dateiHolen(b.bildDateiId);
+            if (!satz || satz.zustand !== 'fertig')
+                offen.push(b);
+        }
+        return offen;
+    };
+    /**
+     * Die fehlenden Seitenbilder eines Dokuments neu rechnen.
+     * @param quelleId Kennung des abgelegten Originals
+     */
+    const neuBerechnen = async (quelleId) => {
+        const offen = await ohneBild(quelleId);
+        if (!offen.length)
+            return { seiten: 0, grund: 'nichts offen' };
+        const roh = await Dateien.alsBlob(quelleId);
+        if (!roh) {
+            /* Das kann echt vorkommen: eine `.json`-Sicherung kennt keine Anhänge,
+               also fehlt auch das Original. Dann hilft nur die Datei selbst. */
+            UI.toast('Das Original fehlt in diesem Bestand — zieh die PDF-Datei ' +
+                'noch einmal herein.');
+            return { seiten: 0, grund: 'ohne Original' };
+        }
+        /* Der Name steht am Datei-Satz, nicht am Block: ein `pdfseite`-Block
+           trägt keinen Text. */
+        const satzQuelle = await Store.dateiHolen(quelleId);
+        const name = String(satzQuelle?.name || 'dem Original');
+        const melder = UI.toast('„' + name + '": Seitenbilder werden neu gerechnet …', 120000);
+        let griff = null;
+        let fertig = 0;
+        try {
+            griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+            for (const b of offen) {
+                const n = Number(b.nr) || 1;
+                if (n > griff.seiten)
+                    continue; /* Seite gibt es im Original nicht */
+                melder.textContent = 'Seite ' + n + ' von ' + offen.length + ' …';
+                const bild = await griff.alsBild(n);
+                const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
+                Store.updateBlock(b.id, { bildDateiId: satz.id });
+                fertig++;
+                await new Promise(r => setTimeout(r, 0));
+            }
+            melder.remove();
+            App.zeichneSeite();
+            UI.toast('„' + name + '": ' + (fertig === 1 ? 'eine Seite ist wieder da'
+                : fertig + ' Seiten sind wieder da'));
+            return { seiten: fertig };
+        }
+        catch (e) {
+            melder.remove();
+            UI.toast('Die Seiten liessen sich nicht neu rechnen: ' +
+                (e instanceof Error ? e.message : String(e)));
+            return { seiten: fertig, fehler: true };
+        }
+        finally {
+            if (griff)
+                griff.schliessen();
+        }
+    };
+    return { alsSeiten, neuBerechnen, ohneBild, OHNE_FRAGE };
 })();
 window.PdfEinlesen = PdfEinlesen;
 
@@ -69613,6 +69798,9 @@ const App = (() => {
                 for (const st of await Store.stueckeVon(alt.id))
                     await Store.stueckWeg(st.id);
                 await Store.dateiWeg(alt.id);
+                /* Und die Adresse aus dem Zwischenspeicher — sonst zeigt ein Block,
+                   der noch auf diese Kennung zeigt, weiter das alte Bild (E106). */
+                Dateien.adresseWeg(alt.id);
             }
         }
         return wieViele;
@@ -70093,6 +70281,72 @@ const App = (() => {
     /* ========================================================================
      * START
      * ======================================================================*/
+    /* ==========================================================================
+     * EIN LINK AUF GENAU EINEN BLOCK
+     * --------------------------------------------------------------------------
+     * Strg + Umschalt + C legt seit Langem eine Adresse der Form
+     * `…#block=<kennung>` in die Zwischenablage und meldet „Link auf diesen
+     * Block kopiert". GELESEN HAT SIE NIE JEMAND. Beim Start wurde der Hash als
+     * Seitenkennung genommen — `Store.getBlock('block=abc')` gibt nichts, also
+     * fiel der Start auf die zuletzt geöffnete Seite zurück. Der Link tat
+     * etwas, nur nicht das Versprochene, und gemerkt hat es niemand, weil
+     * „irgendeine Seite geht auf" wie ein Erfolg aussieht (E105).
+     *
+     * Jetzt führt er hin: Seite des Blocks suchen, sie öffnen, zum Block
+     * rollen, ihn kurz hervorheben.
+     * ========================================================================*/
+    /** Erst rollen, wenn der Zeichner durch ist — und noch einmal, wenn ein
+     *  Bild darin nachlädt und alles darunter verschiebt. */
+    const rolleZu = (blockId) => {
+        const hin = () => {
+            const ziel = document.querySelector(`[data-bid="${blockId}"]`);
+            if (!ziel)
+                return false;
+            ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            ziel.classList.add('hebe-hervor');
+            setTimeout(() => ziel.classList.remove('hebe-hervor'), 1400);
+            /* Ein PDF-Seitenbild kommt aus der Stücke-Ablage und ist beim ersten
+               Rollen oft noch nicht da. Es ist genau das, was die Seite hoch
+               macht — also noch einmal, wenn es steht. Kein fester Zeitwert:
+               gewartet wird auf das Bild, nicht auf die Uhr. */
+            const bild = ziel.querySelector('img');
+            if (bild && !bild.complete)
+                bild.addEventListener('load', () => ziel.scrollIntoView({ behavior: 'smooth', block: 'center' }), { once: true });
+            return true;
+        };
+        /* Zwei Bilder Zeit: `oeffne` setzt am Ende `scrollTop = 0`, und davor
+           zu rollen hiesse, gegen diese Zeile anzurollen. */
+        requestAnimationFrame(() => { if (!hin())
+            requestAnimationFrame(hin); });
+    };
+    /**
+     * Zu einem Block springen — Seite öffnen, hinrollen, hervorheben.
+     * Gibt zurück, ob es geklappt hat.
+     */
+    const zeigeBlock = (blockId) => {
+        const b = blockId ? Store.getBlock(blockId) : null;
+        if (!b || b.alive === false) {
+            UI.toast('Dieser Block ist nicht mehr da.');
+            return false;
+        }
+        const seite = (typeof Links !== 'undefined' && Links.seiteVon)
+            ? Links.seiteVon(blockId) : null;
+        if (!seite) {
+            UI.toast('Zu diesem Block führt kein Weg — seine Seite fehlt.');
+            return false;
+        }
+        /* Ist die Seite schon offen, NICHT neu öffnen: `oeffne` setzt den Lauf
+           zurück auf null und zählt einen Aufruf mit. Rollen genügt. */
+        if (aktuelleSeite() !== seite.id)
+            oeffne(seite.id);
+        rolleZu(blockId);
+        return true;
+    };
+    /** `#block=<kennung>` aus einer Adresse holen, sonst leer. */
+    const blockAusHash = (roh) => {
+        const m = String(roh || '').replace(/^#/, '').match(/^block=(.+)$/);
+        return m && m[1] ? decodeURIComponent(m[1]) : '';
+    };
     const start = async () => {
         /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
            Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
@@ -70250,13 +70504,32 @@ const App = (() => {
         Werkzeuge.formelBibliothekAnwenden();
         /* Fehler sammeln, Papierkorb nach Frist aufräumen */
         Pflege.start();
-        const ausHash = location.hash.slice(1).split(':')[0];
+        /* Ein Blocklink nennt keine Seite, sondern einen Block. Welche Seite
+           aufgehen muss, steht erst nach dem Hochlaufen fest — deshalb hier die
+           Seite DES BLOCKS, und nicht der Hash selbst (E105). */
+        const zielBlock = blockAusHash(location.hash);
+        const ausHash = zielBlock
+            ? ((typeof Links !== 'undefined' && Links.seiteVon)
+                ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
+            : location.hash.slice(1).split(':')[0];
         const startSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash
             : (Store.getMeta('letzte') && Store.getBlock(Store.getMeta('letzte')))
                 ? Store.getMeta('letzte')
                 : (Store.rootPages()[0] || {}).id;
         zeichneBaum();
         oeffne(startSeite);
+        /* Kam der Start über einen Blocklink, steht jetzt die richtige Seite —
+           aber oben. Also noch hinrollen. */
+        if (zielBlock)
+            zeigeBlock(zielBlock);
+        /* Und für jeden Blocklink, der SPÄTER angeklickt wird. `oeffne` schreibt
+           die Seitenkennung selbst in die Adresse; solche Änderungen laufen hier
+           durch, weil sie nicht mit `block=` beginnen. */
+        addEventListener('hashchange', () => {
+            const b = blockAusHash(location.hash);
+            if (b)
+                zeigeBlock(b);
+        });
         /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
            Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
            eine Webseite; eine App beginnt bei ihrer Übersicht. Der Reiter
@@ -70664,6 +70937,7 @@ const App = (() => {
     };
     return {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
+        zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,

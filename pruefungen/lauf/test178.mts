@@ -339,8 +339,16 @@ gleich('Und für die abgebrochene wurde kein Bild gerechnet',
 /* ==========================================================================
  * §4b · Und ein KAPUTTES PDF verschwindet auch nicht
  * --------------------------------------------------------------------------
- * Kein Dialog, keine Wahl — pdf.js kommt gar nicht erst durch. Genau hier
- * stand vorher `catch { continue; }`, und die Datei fiel ins Nichts.
+ * Kein Dialog, keine Wahl — pdf.js kommt nicht durch. Genau hier stand
+ * vorher `catch { continue; }`, und die Datei fiel ins Nichts.
+ *
+ * DIE DATEI HAT EINEN GÜLTIGEN KOPF UND EINEN KAPUTTEN LEIB, und das ist
+ * Absicht. Seit E106 sieht das Einlesen zuerst auf die ersten fünf Bytes;
+ * eine Datei, die nur `.pdf` HEISST, fliegt dort sofort heraus und geht den
+ * gewöhnlichen Weg. Der Rückfall in `alsSeiten` — Original schon abgelegt,
+ * dann scheitert das Lesen — wird nur von dieser Sorte erreicht. Mit
+ * blossen Füllbytes hätte dieser Abschnitt ab E106 etwas anderes geprüft
+ * als das, was sein Name sagt.
  * ========================================================================*/
 console.log('\n4b · Und ein KAPUTTES PDF verschwindet auch nicht');
 
@@ -351,10 +359,12 @@ const sidD = await seite.evaluate(async () => {
 });
 await seite.waitForFunction(() => !!document.getElementById('scroll'));
 await seite.evaluate(() => {
-  /* Ein Megabyte Füllbytes, das `.pdf` heisst. Kein PDF ist das nicht: es
-     hat nicht einmal einen Kopf. */
+  /* Gültiger Kopf, danach ein Megabyte Unsinn. pdf.js beginnt zu lesen und
+     scheitert am Inhalt — genau der Fall, für den es den Rückfall gibt. */
+  const kopf = new TextEncoder().encode('%PDF-1.4\n');
+  const leib = new Uint8Array(1024 * 1024).fill(7);
   const dt = new DataTransfer();
-  dt.items.add(new File([new Uint8Array(1024 * 1024).fill(7)],
+  dt.items.add(new File([kopf, leib],
     'kein-echtes.pdf', { type: 'application/pdf' }));
   document.getElementById('scroll')!.dispatchEvent(
     new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
@@ -387,7 +397,7 @@ const kaputt = await seite.evaluate(async (s: string) => {
 gleich('Ein Block steht da', kaputt.wieViele, 1);
 gleich('Und es ist ein Anhang', kaputt.art, 'file');
 gleich('Mit dem Namen der Datei', kaputt.name, 'kein-echtes.pdf');
-gleich('Die Bytes sind vollständig da', kaputt.bytes, 1024 * 1024);
+gleich('Die Bytes sind vollständig da', kaputt.bytes, 1024 * 1024 + 9);
 p('In Stücken, weil ein Megabyte sich dafür lohnt',
   Number(kaputt.stuecke) >= 1, String(kaputt.stuecke));
 gleich('Und keine einzige Seite wurde gerastert', kaputt.seiten, 0);

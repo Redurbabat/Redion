@@ -46,6 +46,14 @@ const PdfEinlesen = (() => {
     const alsSeiten = async (datei, elternId) => {
         if (typeof PdfLeser === 'undefined')
             throw new Error('Der PDF-Leser ist nicht geladen.');
+        /* Jedes PDF beginnt mit `%PDF-`. Fünf Bytes lesen kostet nichts und
+           spart bei einer falsch benannten 20-MB-Datei das vollständige Ablegen
+           und Einlesen, bevor jemand merkt, dass es keine ist. Wer hier
+           herausfliegt, geht den gewöhnlichen Anhang-Weg — und der legt den
+           Block ZUERST an, sodass sofort etwas dasteht. */
+        const kopf = new Uint8Array(await datei.slice(0, 5).arrayBuffer());
+        if (String.fromCharCode(...Array.from(kopf)) !== '%PDF-')
+            throw new Error('Das ist keine PDF-Datei.');
         const melder = UI.toast('„' + datei.name + '" wird gelesen …', 120000);
         const sageAn = (t) => {
             if (melder && melder.textContent !== undefined)
@@ -226,6 +234,103 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    return { alsSeiten, OHNE_FRAGE };
+    /* ==========================================================================
+     * SEITENBILDER AUS DEM ORIGINAL ZURÜCKHOLEN
+     * --------------------------------------------------------------------------
+     * E103 lässt die gerasterten Seitenbilder aus der Sicherung heraus, weil sie
+     * „in Sekunden neu entstehen". Der Satz stimmte bisher nur der Möglichkeit
+     * nach: NICHTS stellte sie wirklich wieder her. Wer eine `.redion` einspielte,
+     * bekam sein Skript zurück — die Marken darauf, die Notizblätter daneben, das
+     * Original als Anhang — und lauter leere Seiten mit dem Satz „Für diese Seite
+     * gibt es noch kein Bild." Ein Hinweis ohne Ausweg.
+     *
+     * Jetzt gibt es den Ausweg, und zwar für das GANZE Dokument auf einmal: das
+     * Original aufzuschlagen ist der teure Teil, eine einzelne Seite daraus zu
+     * zeichnen der billige. Wer eine Seite anklickt, meint das Skript.
+     *
+     * DIE MASSE WERDEN NICHT NEU GELESEN. `bw`, `bh` und `nr` stehen am Block und
+     * bleiben, wie sie sind — die Marken liegen in genau diesem Raum (E100).
+     * Käme aus einer neuen Messung eine andere Zahl, läge jeder Strich woanders.
+     * ========================================================================*/
+    /**
+     * Alle Seiten eines Dokuments, die kein Bild haben.
+     *
+     * „KEIN BILD" HEISST NICHT NUR „KEINE KENNUNG". Nach dem Einspielen einer
+     * Sicherung trägt jeder Block seine alte `bildDateiId` — die Datei dahinter
+     * ist aber nicht mitgekommen (E103). Eine Kennung, die ins Leere zeigt,
+     * ist kein Bild; wer nur auf ihr Vorhandensein sieht, hält genau die
+     * Seiten für fertig, um die es hier geht.
+     */
+    const ohneBild = async (quelleId) => {
+        const kandidaten = Object.values(Store.cache.blocks)
+            .filter(b => b && b.alive !== false && b.type === 'pdfseite' &&
+            b.quelleId === quelleId)
+            .sort((a, b) => (Number(a.nr) || 0) - (Number(b.nr) || 0));
+        const offen = [];
+        for (const b of kandidaten) {
+            if (!b.bildDateiId) {
+                offen.push(b);
+                continue;
+            }
+            const satz = await Store.dateiHolen(b.bildDateiId);
+            if (!satz || satz.zustand !== 'fertig')
+                offen.push(b);
+        }
+        return offen;
+    };
+    /**
+     * Die fehlenden Seitenbilder eines Dokuments neu rechnen.
+     * @param quelleId Kennung des abgelegten Originals
+     */
+    const neuBerechnen = async (quelleId) => {
+        const offen = await ohneBild(quelleId);
+        if (!offen.length)
+            return { seiten: 0, grund: 'nichts offen' };
+        const roh = await Dateien.alsBlob(quelleId);
+        if (!roh) {
+            /* Das kann echt vorkommen: eine `.json`-Sicherung kennt keine Anhänge,
+               also fehlt auch das Original. Dann hilft nur die Datei selbst. */
+            UI.toast('Das Original fehlt in diesem Bestand — zieh die PDF-Datei ' +
+                'noch einmal herein.');
+            return { seiten: 0, grund: 'ohne Original' };
+        }
+        /* Der Name steht am Datei-Satz, nicht am Block: ein `pdfseite`-Block
+           trägt keinen Text. */
+        const satzQuelle = await Store.dateiHolen(quelleId);
+        const name = String(satzQuelle?.name || 'dem Original');
+        const melder = UI.toast('„' + name + '": Seitenbilder werden neu gerechnet …', 120000);
+        let griff = null;
+        let fertig = 0;
+        try {
+            griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+            for (const b of offen) {
+                const n = Number(b.nr) || 1;
+                if (n > griff.seiten)
+                    continue; /* Seite gibt es im Original nicht */
+                melder.textContent = 'Seite ' + n + ' von ' + offen.length + ' …';
+                const bild = await griff.alsBild(n);
+                const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
+                Store.updateBlock(b.id, { bildDateiId: satz.id });
+                fertig++;
+                await new Promise(r => setTimeout(r, 0));
+            }
+            melder.remove();
+            App.zeichneSeite();
+            UI.toast('„' + name + '": ' + (fertig === 1 ? 'eine Seite ist wieder da'
+                : fertig + ' Seiten sind wieder da'));
+            return { seiten: fertig };
+        }
+        catch (e) {
+            melder.remove();
+            UI.toast('Die Seiten liessen sich nicht neu rechnen: ' +
+                (e instanceof Error ? e.message : String(e)));
+            return { seiten: fertig, fehler: true };
+        }
+        finally {
+            if (griff)
+                griff.schliessen();
+        }
+    };
+    return { alsSeiten, neuBerechnen, ohneBild, OHNE_FRAGE };
 })();
 window.PdfEinlesen = PdfEinlesen;

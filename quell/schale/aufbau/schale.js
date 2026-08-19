@@ -1816,6 +1816,9 @@ const App = (() => {
                 for (const st of await Store.stueckeVon(alt.id))
                     await Store.stueckWeg(st.id);
                 await Store.dateiWeg(alt.id);
+                /* Und die Adresse aus dem Zwischenspeicher — sonst zeigt ein Block,
+                   der noch auf diese Kennung zeigt, weiter das alte Bild (E106). */
+                Dateien.adresseWeg(alt.id);
             }
         }
         return wieViele;
@@ -2296,6 +2299,72 @@ const App = (() => {
     /* ========================================================================
      * START
      * ======================================================================*/
+    /* ==========================================================================
+     * EIN LINK AUF GENAU EINEN BLOCK
+     * --------------------------------------------------------------------------
+     * Strg + Umschalt + C legt seit Langem eine Adresse der Form
+     * `…#block=<kennung>` in die Zwischenablage und meldet „Link auf diesen
+     * Block kopiert". GELESEN HAT SIE NIE JEMAND. Beim Start wurde der Hash als
+     * Seitenkennung genommen — `Store.getBlock('block=abc')` gibt nichts, also
+     * fiel der Start auf die zuletzt geöffnete Seite zurück. Der Link tat
+     * etwas, nur nicht das Versprochene, und gemerkt hat es niemand, weil
+     * „irgendeine Seite geht auf" wie ein Erfolg aussieht (E105).
+     *
+     * Jetzt führt er hin: Seite des Blocks suchen, sie öffnen, zum Block
+     * rollen, ihn kurz hervorheben.
+     * ========================================================================*/
+    /** Erst rollen, wenn der Zeichner durch ist — und noch einmal, wenn ein
+     *  Bild darin nachlädt und alles darunter verschiebt. */
+    const rolleZu = (blockId) => {
+        const hin = () => {
+            const ziel = document.querySelector(`[data-bid="${blockId}"]`);
+            if (!ziel)
+                return false;
+            ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            ziel.classList.add('hebe-hervor');
+            setTimeout(() => ziel.classList.remove('hebe-hervor'), 1400);
+            /* Ein PDF-Seitenbild kommt aus der Stücke-Ablage und ist beim ersten
+               Rollen oft noch nicht da. Es ist genau das, was die Seite hoch
+               macht — also noch einmal, wenn es steht. Kein fester Zeitwert:
+               gewartet wird auf das Bild, nicht auf die Uhr. */
+            const bild = ziel.querySelector('img');
+            if (bild && !bild.complete)
+                bild.addEventListener('load', () => ziel.scrollIntoView({ behavior: 'smooth', block: 'center' }), { once: true });
+            return true;
+        };
+        /* Zwei Bilder Zeit: `oeffne` setzt am Ende `scrollTop = 0`, und davor
+           zu rollen hiesse, gegen diese Zeile anzurollen. */
+        requestAnimationFrame(() => { if (!hin())
+            requestAnimationFrame(hin); });
+    };
+    /**
+     * Zu einem Block springen — Seite öffnen, hinrollen, hervorheben.
+     * Gibt zurück, ob es geklappt hat.
+     */
+    const zeigeBlock = (blockId) => {
+        const b = blockId ? Store.getBlock(blockId) : null;
+        if (!b || b.alive === false) {
+            UI.toast('Dieser Block ist nicht mehr da.');
+            return false;
+        }
+        const seite = (typeof Links !== 'undefined' && Links.seiteVon)
+            ? Links.seiteVon(blockId) : null;
+        if (!seite) {
+            UI.toast('Zu diesem Block führt kein Weg — seine Seite fehlt.');
+            return false;
+        }
+        /* Ist die Seite schon offen, NICHT neu öffnen: `oeffne` setzt den Lauf
+           zurück auf null und zählt einen Aufruf mit. Rollen genügt. */
+        if (aktuelleSeite() !== seite.id)
+            oeffne(seite.id);
+        rolleZu(blockId);
+        return true;
+    };
+    /** `#block=<kennung>` aus einer Adresse holen, sonst leer. */
+    const blockAusHash = (roh) => {
+        const m = String(roh || '').replace(/^#/, '').match(/^block=(.+)$/);
+        return m && m[1] ? decodeURIComponent(m[1]) : '';
+    };
     const start = async () => {
         /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
            Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
@@ -2453,13 +2522,32 @@ const App = (() => {
         Werkzeuge.formelBibliothekAnwenden();
         /* Fehler sammeln, Papierkorb nach Frist aufräumen */
         Pflege.start();
-        const ausHash = location.hash.slice(1).split(':')[0];
+        /* Ein Blocklink nennt keine Seite, sondern einen Block. Welche Seite
+           aufgehen muss, steht erst nach dem Hochlaufen fest — deshalb hier die
+           Seite DES BLOCKS, und nicht der Hash selbst (E105). */
+        const zielBlock = blockAusHash(location.hash);
+        const ausHash = zielBlock
+            ? ((typeof Links !== 'undefined' && Links.seiteVon)
+                ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
+            : location.hash.slice(1).split(':')[0];
         const startSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash
             : (Store.getMeta('letzte') && Store.getBlock(Store.getMeta('letzte')))
                 ? Store.getMeta('letzte')
                 : (Store.rootPages()[0] || {}).id;
         zeichneBaum();
         oeffne(startSeite);
+        /* Kam der Start über einen Blocklink, steht jetzt die richtige Seite —
+           aber oben. Also noch hinrollen. */
+        if (zielBlock)
+            zeigeBlock(zielBlock);
+        /* Und für jeden Blocklink, der SPÄTER angeklickt wird. `oeffne` schreibt
+           die Seitenkennung selbst in die Adresse; solche Änderungen laufen hier
+           durch, weil sie nicht mit `block=` beginnen. */
+        addEventListener('hashchange', () => {
+            const b = blockAusHash(location.hash);
+            if (b)
+                zeigeBlock(b);
+        });
         /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
            Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
            eine Webseite; eine App beginnt bei ihrer Übersicht. Der Reiter
@@ -2867,6 +2955,7 @@ const App = (() => {
     };
     return {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
+        zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,

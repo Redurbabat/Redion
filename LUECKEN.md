@@ -1110,14 +1110,16 @@ sich beim nächsten Öffnen" als eine Weckerfunktion, die schweigt.
 durchblättert und beschreibt. Vier Dinge kann es noch nicht, und keines
 davon ist ein Fehler — es ist Arbeit, die nicht getan ist.
 
-**Seitenanker.** Eine Notiz kann noch nicht auf „Seite 14" zeigen.
+**~~Seitenanker~~ · erledigt (E105).** Jede PDF-Seite hat neben ihrer
+Seitenzahl einen 🔗, der einen Verweis auf genau sie kopiert. Beim
+Nachsehen stellte sich heraus, dass Redion solche Verweise seit Langem
+SCHRIEB (Strg + Umschalt + C) und nie las — der Link öffnete irgendeine
+Seite, und das sah aus wie ein Erfolg.
 
-Das Danebenstellen selbst ist seit E104 erledigt — beim Einlesen bekommt
-jede Seite auf Wunsch ein leeres Blatt neben sich. Was fehlt, ist der Weg
-in die andere Richtung: von einer Notiz IRGENDWO im Arbeitsbereich auf eine
-bestimmte Seite eines bestimmten Dokuments springen. Bei achtzig Seiten ist
-das der Unterschied zwischen „ich weiss, dass es drinsteht" und „ich bin
-da".
+**~~Neurasterung~~ · halb erledigt (E106).** Fehlende Seitenbilder holt ein
+Knopf aus dem Original zurück — das ist der Weg, den E103 versprochen und
+nicht gebaut hatte. Was noch fehlt, ist eine HÖHERE Auflösung als die 140
+dpi vom Einlesen: wer stark hineinzoomt, sieht weiterhin Unschärfe.
 
 **Textsuche im PDF.** pdf.js liest die Textebene mit; Redion nutzt sie
 nicht. Nach der Rasterung ist eine Seite ein Bild, und die Suche findet

@@ -922,10 +922,16 @@ Das Original bleibt unverändert als Anhang liegen. Redion schreibt nie in
 das PDF zurück — die Anmerkungen liegen daneben in Redion. Das heisst auch:
 wer die Datei mit Anmerkungen weitergeben will, kann das noch nicht.
 
-Die Seitenbilder kommen NICHT in die Sicherung. Sie entstehen aus dem
-Original in Sekunden neu, und bei einem Skript mit 500 Seiten wären es sonst
-hundert Megabyte in jeder `.redion`. Das Original selbst ist natürlich
-darin, Byte für Byte.
+Die Seitenbilder kommen NICHT in die Sicherung — bei einem Skript mit 500
+Seiten wären das sonst hundert Megabyte in jeder `.redion`. Das Original ist
+natürlich darin, Byte für Byte, und auf jeder leeren Seite steht danach ein
+Knopf „Aus dem Original zurückholen", der das ganze Dokument in einem Zug
+neu rechnet. Deine Notizen und Striche darauf sind davon nie betroffen: sie
+hängen am Block, nicht am Bild.
+
+Jede Seite hat ausserdem neben ihrer Seitenzahl einen 🔗. Er kopiert einen
+Verweis auf genau diese Seite — eine Notiz kann so auf „Seite 14" zeigen und
+beim Anklicken dorthin springen.
 
 Ein Dokument mit mehr als 30 Seiten fragt vorher nach. Passwortgeschützte
 PDFs kann Redion nicht öffnen; es sagt das dann auch.

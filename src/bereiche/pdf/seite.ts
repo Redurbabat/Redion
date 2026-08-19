@@ -39,11 +39,30 @@ const PdfSeite = (() => {
     const schicht = Marken.schicht(block, breite, hoehe, 0);
 
     /* Die Leiste bekommt rechts die Seitenzahl — sie beantwortet die Frage
-       „wo bin ich", ohne dass man zählen muss. */
+       „wo bin ich", ohne dass man zählen muss — und daneben den ANKER: einen
+       Verweis auf genau diese Seite. Bei einem Skript mit achtzig Seiten ist
+       das der Unterschied zwischen „ich weiss, dass es drinsteht" und „ich
+       bin da" (E105, L37). */
     const werk = Marken.leiste(schicht,
+      /* NUR DAS ZEICHEN, auch am Rechner. Mit dem Wort „Verweis" daneben
+         passte die Leiste bei der üblichen Spaltenbreite von 708 px nicht
+         mehr in eine Zeile und klappte in zwei um (mit Augen gesehen, §55).
+         `aria-label` statt bloss `title`, damit ein Vorleseprogramm ihn
+         auch nennt (§38). */
+      '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
+        'title="Verweis auf genau diese Seite kopieren">🔗</button>' +
       '<span class="blatt-trenn"></span>' +
       '<span class="pdfs-nr">Seite ' + (Number(block.nr) || 1) +
       (block.vonSeiten ? ' von ' + block.vonSeiten : '') + '</span>');
+    werk.addEventListener('click', e => {
+      const k = (e.target as HTMLElement)?.closest?.('button') as HTMLElement | null;
+      if (k?.dataset.a !== 'anker') return;
+      /* `location.href` ohne Hash — dieselbe Form wie Strg + Umschalt + C,
+         und die einzige, die auch als Datei über `file://` stimmt. */
+      const adr = location.href.split('#')[0] + '#block=' + block.id;
+      Ablage.kopiereJetzt(adr, 'Verweis auf Seite ' +
+        (Number(block.nr) || 1) + ' kopiert');
+    });
     w.appendChild(werk);
 
     const papier = document.createElement('div');
@@ -58,25 +77,59 @@ const PdfSeite = (() => {
     bild.alt = 'Seite ' + (Number(block.nr) || 1);
     bild.decoding = 'async';
     bild.loading = 'lazy';
-    papier.appendChild(bild);
+    /* NOCH NICHT einhängen. Ein `img` ohne `src` ist für den Browser ein
+       kaputtes Bild: er malt sein Bruchsymbol und den Alt-Text hin — über
+       den Satz, der dasselbe in Ordentlich sagt (E105, mit Augen gesehen). */
 
     const hinweis = document.createElement('div');
     hinweis.className = 'pdfs-wartet';
     hinweis.textContent = 'Seite wird vorbereitet …';
     papier.appendChild(hinweis);
 
+    /**
+     * Aus dem Hinweis einen Weg machen.
+     *
+     * NACH DEM EINSPIELEN EINER `.redion` IST DAS DER NORMALFALL, nicht der
+     * Ausnahmefall: E103 lässt die gerasterten Seitenbilder bewusst draussen,
+     * weil sie sich neu rechnen lassen. „Lässt sich" ist aber kein Weg, solange
+     * niemand ihn gehen kann. Also steht er hier — ein Knopf, der das ganze
+     * Dokument auf einmal zurückholt, weil das Original aufzuschlagen der teure
+     * Teil ist und eine einzelne Seite daraus der billige (E106).
+     */
+    const wegZeigen = (text: string): void => {
+      hinweis.textContent = '';
+      const satz = document.createElement('div');
+      satz.textContent = text;
+      hinweis.appendChild(satz);
+      if (!block.quelleId) return;      /* ohne Original kein Weg */
+      const k = document.createElement('button');
+      k.type = 'button';
+      k.className = 'pdfs-neu';
+      k.textContent = 'Aus dem Original zurückholen';
+      k.addEventListener('click', () => {
+        k.disabled = true;
+        k.textContent = 'wird gerechnet …';
+        PdfEinlesen.neuBerechnen(block.quelleId);
+      });
+      hinweis.appendChild(k);
+    };
+
     const zeigeBild = (u: string): void => {
       bild.src = u;
+      papier.insertBefore(bild, papier.firstChild);
       hinweis.remove();
     };
     if (block.bildDateiId && typeof Dateien !== 'undefined') {
       const da = Dateien.adresseBekannt ? Dateien.adresseBekannt(block.bildDateiId) : null;
       if (da) zeigeBild(da);
       else Dateien.adresse(block.bildDateiId)
-        .then((u: string | null) => { if (u) zeigeBild(u); })
-        .catch(() => { hinweis.textContent = 'Das Seitenbild fehlt — bitte neu einlesen.'; });
+        .then((u: string | null) => {
+          if (u) zeigeBild(u);
+          else wegZeigen('Das Seitenbild fehlt.');
+        })
+        .catch(() => wegZeigen('Das Seitenbild fehlt.'));
     } else {
-      hinweis.textContent = 'Für diese Seite gibt es noch kein Bild.';
+      wegZeigen('Für diese Seite gibt es noch kein Bild.');
     }
 
     papier.appendChild(schicht.flaeche);

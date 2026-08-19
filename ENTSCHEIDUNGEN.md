@@ -6599,3 +6599,184 @@ mit dem Blatt UNTER der Seite · und auf beiden Blättern lässt sich getrennt
 malen. `test177` zieht nach: es beantwortet den neuen Dialog ausdrücklich
 über die Kennung, nicht über „der erste Knopf" — welcher vorn steht, hängt
 seit heute an der letzten Wahl.
+
+
+## E105 · Ein Verweis führt wirklich hin
+
+**19. August 2026.** L37 nannte den Seitenanker als nächstes Stück: von einer
+Notiz auf „Seite 14" eines Dokuments springen. Beim Nachsehen, worauf das
+aufbauen kann, stand da schon etwas — und es war kaputt.
+
+`editor.js` hat seit Langem ein Tastenkürzel:
+
+    Strg + Umschalt + C   →   …#block=<kennung>
+                              „Link auf diesen Block kopiert"
+
+**Gelesen hat diese Adresse nie jemand.** Beim Start nahm die Schale den Hash
+als Seitenkennung; `Store.getBlock('block=abc')` gibt nichts, also griff der
+Rückfall auf „zuletzt geöffnet". Der Link tat also etwas — er öffnete eine
+Seite, nur nicht die richtige, und ohne ein Wort darüber.
+
+Das ist die gefährlichste Bauart eines Fehlers: **er sieht aus wie ein
+Erfolg.** Wer den Link anklickt, sieht Redion aufgehen und eine Seite
+erscheinen. Dass es die falsche ist, merkt man nur, wenn man weiss, welche
+die richtige gewesen wäre.
+
+### Was jetzt geschieht
+
+    #block=<kennung>   →  Seite des Blocks suchen (Links.seiteVon)
+                       →  sie öffnen, falls nicht schon offen
+                       →  zum Block rollen
+                       →  ihn kurz hervorheben
+
+Beim Start **und** bei jeder späteren Adressänderung. `oeffne` schreibt die
+Seitenkennung selbst in die Adresse; solche Änderungen laufen durch den
+`hashchange`-Zuhörer durch, weil sie nicht mit `block=` beginnen.
+
+**Gerollt wird über Bildfolgen, nicht über die Uhr.** `oeffne` setzt am Ende
+`scrollTop = 0`; wer davor rollt, rollt dagegen an. Also zwei
+`requestAnimationFrame`. Und ein PDF-Seitenbild kommt aus der Stücke-Ablage
+und ist beim ersten Rollen oft noch nicht da — es ist genau das, was die
+Seite hoch macht. Deshalb noch einmal rollen, wenn es steht: am `load` des
+Bildes, nicht nach einer geratenen Wartezeit.
+
+### Der Anker an der PDF-Seite (L37)
+
+Neben „Seite 14 von 80" steht jetzt ein 🔗. Er kopiert den Verweis auf genau
+diese Seite. Er sitzt im **festen** Kasten der Leiste (E104), nicht im
+rollenden — sonst läge er am Telefon hinter einem Wisch, und das gilt für
+einen Verweis noch mehr als für die Seitenzahl.
+
+### Wie die Prüfung ihren eigenen Fehler zeigte
+
+`test179` §1 lädt Redion über `…#block=<kennung>` und verlangt, dass die
+**zweite** Seite aufgeht, obwohl die **erste** die zuletzt geöffnete ist.
+Genau diese Anordnung ist der Beweis: ein Punkt, der nur „irgendeine Seite
+ist offen" prüft, wäre auch vor E105 grün gewesen.
+
+Der erste Entwurf prüfte trotzdem nichts. Er rief
+
+    seite.goto('…/index.html#block=' + kennung)
+
+und nannte den Abschnitt „beim Start". Ein `goto` auf dieselbe Adresse mit
+anderem Hash ist aber **keine Navigation** — der Browser bleibt im selben
+Dokument und feuert nur `hashchange`. Aufgefallen ist es erst am Arm: die
+Start-Behandlung herauszunehmen änderte gar nichts, während der Arm ohne
+`hashchange` sechs Punkte fällte. Zwei Arme auf denselben Weg. Über
+`about:blank` gibt es jetzt ein echtes zweites Hochlaufen, und dann fällt
+Arm A wie er soll.
+
+**Und eine zweite Lehre über Prüfungen:** ein Punkt las die Meldung aus
+`#toast`. Der Kasten ist EINER für die ganze App, und beim Lauf stand dort
+„🎴 1 Karteikarte ist fällig" — die Erinnerung war dazwischengekommen.
+Geprüft wird jetzt, was der Verweis GESAGT hat, nicht was zuletzt im Kasten
+stand.
+
+### Und ein Fund beim Hinsehen
+
+Eine PDF-Seite ohne Bild zeigte das Bruchsymbol des Browsers samt Alt-Text —
+direkt über dem Satz, der dasselbe in Ordentlich sagt. Ein `img` ohne `src`
+ist für den Browser ein kaputtes Bild. Es wird jetzt erst eingehängt, wenn
+es eine Adresse hat.
+
+Das ist kein Randfall: **nach dem Einspielen einer `.redion` haben alle
+Seiten kein Bild**, weil E103 die abgeleiteten Dateien bewusst weglässt.
+Womit die nächste Aufgabe feststeht — der Satz „sie entstehen in Sekunden
+neu" stimmt bisher nur der Möglichkeit nach; nichts stellt sie wirklich
+wieder her. Das steht als L38 fest und kommt als nächstes.
+
+**Geprüft** (test179, 26 Punkte): Start über einen Verweis auf eine andere
+als die zuletzt geöffnete Seite · dasselbe im Betrieb ohne Neuladen · ein
+Verweis auf einen gelöschten Block sagt es und lässt die Seite stehen · der
+Anker an der PDF-Seite, sein Platz im festen Kasten, sein Text, sein Inhalt
+und der Weg zurück über den eben kopierten Verweis · Quelltext-Zeugen. Drei
+Arme, jeder einzeln: ohne die Start-Behandlung fallen sechs Punkte, ohne
+`hashchange` fünf, ohne den Anker bricht §3 ab.
+
+
+## E106 · Die Seitenbilder kommen aus dem Original zurück
+
+**19. August 2026.** E103 lässt die gerasterten Seitenbilder bewusst aus der
+Sicherung heraus — 200 KB je Seite, bei einem Skript mit 500 Seiten hundert
+Megabyte in jeder `.redion` — mit der Begründung, sie liessen sich „in
+Sekunden neu rechnen".
+
+**Der Satz stimmte nur der Möglichkeit nach.** Nichts stellte sie wieder her.
+Wer eine Sicherung einspielte, bekam sein Skript zurück — die Marken darauf,
+die Notizblätter daneben, das Original als Anhang — und lauter leere Seiten
+mit dem Satz „Für diese Seite gibt es noch kein Bild." Ein Hinweis ohne
+Ausweg, und damit stand in E103 und in der README ein Versprechen, das der
+Code nicht hielt.
+
+Gefunden habe ich es beim Hinsehen (§55), nicht durch einen Prüflauf: auf
+einem Bildschirmfoto stand über dem Hinweis noch das Bruchsymbol des
+Browsers. Beim Nachdenken darüber, wann eine Seite ohne Bild überhaupt
+vorkommt, fiel die Antwort auf: **nach jedem Einspielen, für jede Seite.**
+
+### Ein Knopf, ein Dokument
+
+Aus dem Hinweis ist ein Weg geworden: „Aus dem Original zurückholen". Er holt
+**das ganze Dokument** zurück, nicht die eine Seite — das Original
+aufzuschlagen ist der teure Teil, eine Seite daraus zu zeichnen der billige.
+Wer eine Seite anklickt, meint das Skript.
+
+**Die Masse werden nicht neu gelesen.** `nr`, `bw` und `bh` stehen am Block
+und bleiben. Käme aus einer neuen Messung eine andere Zahl, läge jeder Strich
+woanders — die Marken sind in genau diesem Raum gespeichert (E100). Deshalb
+ruft das Zurückholen `geometrie()` gar nicht erst auf, und `test180` bezeugt
+das im Quelltext.
+
+Ohne `quelleId` gibt es keinen Knopf: eine `.json`-Sicherung kennt keine
+Anhänge, also fehlt auch das Original. Ein Knopf, der nichts tun kann, ist
+schlimmer als keiner. Ist die Kennung da und das Original trotzdem weg, sagt
+Redion, was zu tun ist — die Datei noch einmal hereinziehen.
+
+### Drei Fehler, die dabei sichtbar wurden
+
+**„Kein Bild" heisst nicht „keine Kennung".** Nach dem Einspielen trägt jeder
+Block seine alte `bildDateiId`; die Datei dahinter ist nicht mitgekommen. Die
+erste Fassung von `ohneBild` sah nur, ob eine Kennung dasteht — und hielt
+damit genau die Seiten für fertig, um die es geht. Jetzt wird der Datei-Satz
+nachgeschlagen.
+
+**Die blob-Adresse überlebte ihre Datei.** `Dateien.weg` räumt den
+Adress-Zwischenspeicher mit auf; `anhaengeEinspielen` in der Schale griff
+beim Ersetzen daran vorbei direkt auf den Speicher zu. Ein Block, der noch
+auf die weggeworfene Kennung zeigt, bekam daraufhin **weiter das alte Bild**
+zu sehen — bis zum nächsten Neuladen. Vorher war das kaum erreichbar; seit
+E103 überleben genau solche Blöcke das Einspielen, also ist es der Normalfall
+geworden. Eine Zeile: `Dateien.adresseWeg(alt.id)`.
+
+**Und E104s Rückfall war zu teuer.** Eine Datei, die nur `.pdf` HEISST, wurde
+erst vollständig abgelegt, dann ganz eingelesen, dann von pdf.js abgelehnt
+und erst dann sichtbar angehängt. Bei 20 MB vergingen so Sekunden, in denen
+auf der Seite nichts stand — `test173` mass `angelegt: 0`. Jedes PDF beginnt
+mit `%PDF-`; fünf Bytes zu lesen kostet nichts. Wer daran scheitert, geht
+sofort den gewöhnlichen Weg, und der legt den Block **zuerst** an.
+
+### Was die Prüfung über sich selbst lernte
+
+`test180` fährt den ganzen Ring ab — einlesen, malen, sichern, alles löschen,
+einspielen, zurückholen — weil nur er die Frage beantwortet. Ein Lauf, der
+bloss `neuBerechnen` aufriefe, prüfte die Rechnung; hier zählt, ob nach einer
+echten Sicherung überhaupt genug übrig ist, um sie anstellen zu können.
+
+Dreimal hat der Lauf dabei denselben Fehler gemacht und ihn dreimal anders
+angezogen: **er hielt eine Kennung für ein Bild.** Beim Löschen liess er den
+Adress-Zwischenspeicher stehen und sah ein Bild, das es nicht mehr gab. Beim
+Zählen nahm er `b.bildDateiId` und fand zwei, wo keines war. Und beim Warten
+gab er eine `async`-Bedingung an `waitForFunction` — ein Versprechen ist immer
+wahr, also war die Bedingung sofort erfüllt und gemessen wurde der Zustand
+VOR dem Zurückholen.
+
+Gewartet wird jetzt darauf, dass sich die Kennung **ändert**: der letzte
+Handgriff je Seite, synchron ablesbar, und weder von einer toten Kennung noch
+von einem Versprechen zu verwechseln.
+
+**Geprüft** (test180, 35 Punkte): der ganze Ring · in der Sicherung liegt
+genau ein Anhang · nach dem Einspielen sind Nummern, Masse und Marken Zeichen
+für Zeichen dieselben und kein Bild lebt · der Hinweis trägt einen Knopf ·
+ein Klick holt beide Seiten zurück, als WebP, wieder als `abgeleitet`
+gestempelt, ohne die Masse anzurühren · das Original bleibt Byte für Byte ·
+ein zweiter Lauf rechnet nichts noch einmal · ohne Original kein Knopf ·
+Quelltext-Zeugen.
