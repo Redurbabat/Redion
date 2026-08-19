@@ -2828,6 +2828,24 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* Untereinander, nicht nebeneinander: `.pdfs-wartet` ist ein Flex-Kasten,
    und Satz und Knopf drängelten sich in einer Zeile (mit Augen gesehen). */
 .pdfs-wartet{flex-direction:column; gap:2px; text-align:center; padding:0 16px}
+/* Ein Blatt auf einer Folie (E109). Die HÖHE ist der begrenzende Wert —
+   eine Folie ist breit und flach, ein Blatt hoch und schmal. `45vh` Breite
+   ergibt bei A4 rund 64vh Höhe; zwei davon stehen nebeneinander bequem. */
+.folie-spalten{display:flex; gap:3vh; justify-content:center; align-items:flex-start}
+.folie-spalte{flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:1vh}
+.folie-blatt{position:relative; margin:0 auto; width:100%;
+             max-width:min(100%, 45vh); background:#fff; color:#111}
+/* `.praesi img{max-height:52vh; border-radius:8px}` gilt sonst auch hier —
+   und deckelt ausgerechnet die Höhe, die das Seitenverhältnis bestimmen
+   soll. Ein Aufgabenblatt hat auch keine runden Ecken. */
+.folie-blatt img{display:block; width:100%; height:100%;
+                 max-height:none; border-radius:0; object-fit:contain}
+.folie-blatt.papier{border:1px solid #ccc}
+.folie-blatt .blatt-text{padding:8%; font-size:1.8vh; text-align:left; line-height:1.5}
+.folie-blatt .blatt-text h2{font-size:2.4vh; margin:0 0 .6em}
+.folie-blatt .marken{position:absolute; inset:0; width:100%; height:100%; color:#111}
+.folie-blatt .fehlt{padding:14vh 2vh; text-align:center; color:#666}
+
 .pdfs-neu{margin-top:10px; padding:8px 14px; min-height:36px; border-radius:8px;
           border:1px solid #c8c8c8; background:#f3f3f3; color:#111;
           font-size:13px; cursor:pointer}

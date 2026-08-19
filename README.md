@@ -943,8 +943,9 @@ Jede Seite hat ausserdem neben ihrer Seitenzahl einen 🔗. Er kopiert einen
 Verweis auf genau diese Seite — eine Notiz kann so auf „Seite 14" zeigen und
 beim Anklicken dorthin springen.
 
-Ein Dokument mit mehr als 30 Seiten fragt vorher nach. Passwortgeschützte
-PDFs kann Redion nicht öffnen; es sagt das dann auch.
+Ein Dokument mit mehr als 30 Seiten fragt vorher nach. Ist die Datei mit
+einem Passwort geschützt, fragt Redion danach — das Passwort wird nur
+weitergereicht und nirgends gespeichert, auch nicht in der Sicherung.
 
 Dafür ist als einzige fremde Bibliothek pdf.js eingebaut (Apache-2.0,
 eingepackt in `quell/fremd/pdfjs/`). Sie läuft einmal je Dokument beim

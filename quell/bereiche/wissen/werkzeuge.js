@@ -823,7 +823,10 @@ const Werkzeuge = (() => {
      * ------------------------------------------------------------------------
      * Jede Überschrift 1 oder jede Trennlinie beginnt eine neue Folie.
      * ======================================================================*/
-    const praesentation = (p) => {
+    const praesentation = async (p) => {
+        /* Die Seitenbilder vorher holen — `folieBlock` zeichnet synchron. Für
+           den Bildschirm genügen blob-Adressen (E109). */
+        const bilder = await bilderSammeln(p, false);
         const folien = [];
         let aktuell = { titel: p.text || '', bloecke: [] };
         /* Eine neue Folie beginnt bei einer Trennlinie und bei jeder
@@ -838,7 +841,18 @@ const Werkzeuge = (() => {
                     aktuell = { titel: b.type === 'divider' ? '' : (b.text || ''), bloecke: [] };
                     return;
                 }
+                /* SPALTEN BLEIBEN SPALTEN. Vorher stieg `sammle` in einen
+                   Spaltenblock gar nicht hinab, und eine Schulaufgabe — die seit
+                   E104 immer in Spalten liegt — war als Vortrag vollständig leer.
+                   Untereinander wäre auch falsch: eine Folie ist breit und flach,
+                   zwei hochkante Blätter übereinander passen nicht darauf und
+                   schieben die Überschrift aus dem Bild (mit Augen gesehen, §55).
+                   Nebeneinander ist genau das, was das Dokument sagt. */
                 aktuell.bloecke.push({ b, tiefe });
+                /* Diese drei zeichnen ihren Inhalt selbst — sonst stünde er zweimal
+                   da, einmal darin und einmal daneben. */
+                if (['columns', 'columns3', 'blatt'].includes(b.type))
+                    return;
                 if (['bullet', 'number', 'todo', 'toggle'].includes(b.type))
                     sammle(b.id, tiefe + 1);
             });
@@ -887,6 +901,46 @@ const Werkzeuge = (() => {
                 return `<div class="eqp">${Zusatz.mathe(b.text || '')}</div>`;
             if (b.type === 'divider')
                 return '<hr>';
+            /* WAS SEIT DAMALS DAZUKAM. Diese Kette ist die zweite in dieser Datei,
+               und das ist in Ordnung — Folien sind ein anderes Medium als
+               Fliesstext. Nicht in Ordnung war, dass sie beim Stand von damals
+               stehen blieb: Tabelle, Datenbank, PDF-Seite und A4-Blatt gab es
+               hier nicht, und jede Folie mit so etwas darauf war leer. Der
+               wiederkehrende Befund dieses Projekts: nicht „vergessen", sondern
+               „an einer Stelle getan und an der Nachbarstelle nicht" (L38). */
+            if (b.type === 'table')
+                return tabelleHtml(b);
+            if (b.type === 'database')
+                return datenbankHtml(b);
+            if (b.type === 'columns' || b.type === 'columns3') {
+                const spalten = Store.childrenOf(b.id)
+                    .map((sp) => '<div class="folie-spalte">' +
+                    Store.childrenOf(sp.id).map((k) => folieBlock(k, 0)).join('') +
+                    '</div>').join('');
+                return `<div class="folie-spalten">${spalten}</div>`;
+            }
+            if (b.type === 'pdfseite') {
+                const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
+                const adr = bilder[b.id] || '';
+                /* Das Seitenverhältnis steht am KASTEN, nicht am Bild — genau wie
+                   beim Blatt daneben. Sonst regiert `.praesi img{max-height:52vh}`
+                   die Höhe, und zwei gleich grosse A4-Seiten stehen unterschiedlich
+                   hoch nebeneinander (gemessen: 442 gegen 541 px, §55). */
+                return '<figure class="folie-blatt" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
+                        : `<div class="fehlt">Seite ${esc(b.nr || '')} — kein Bild</div>`) +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            if (b.type === 'blatt') {
+                const bw = Number(b.blattBreite) || 595.28;
+                const bh = Number(b.blattHoehe) || 841.89;
+                return '<figure class="folie-blatt papier" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    '<div class="blatt-text">' +
+                    Store.childrenOf(b.id).map((k) => folieBlock(k, 0)).join('') +
+                    '</div>' + markenAlsSvg(b, bw, bh) + '</figure>';
+            }
             return b.text ? `<p${ein}>${Blocks.inline(b.text)}</p>` : '';
         };
         const weiter = (n) => { i = Math.max(0, Math.min(folien.length - 1, i + n)); zeichne(); };
@@ -1674,8 +1728,17 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             return '';
         }
     };
-    /** Alle Seitenbilder einer Seite einsammeln, bevor gedruckt wird. */
-    const bilderSammeln = async (p) => {
+    /**
+     * Alle Seitenbilder einer Seite einsammeln, bevor gezeichnet wird.
+     *
+     * `alsDaten` entscheidet, WELCHE Adresse. Zum Drucken muss es eine
+     * Daten-Adresse sein: der Druckrahmen ist ein eigenes Dokument, und eine
+     * blob-Adresse wäre dort — und erst recht in einer gespeicherten Datei —
+     * nach der Sitzung tot (E98). Für die Präsentation, die im selben
+     * Dokument läuft, genügt die blob-Adresse: sie kostet nichts und lädt
+     * sofort (E109).
+     */
+    const bilderSammeln = async (p, alsDaten = true) => {
         const karte = {};
         const gehe = async (id, tiefe) => {
             if (tiefe > 6)
@@ -1684,7 +1747,9 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 if (b.type === 'page')
                     continue;
                 if (b.type === 'pdfseite' && b.bildDateiId)
-                    karte[b.id] = await alsDatenAdresse(b.bildDateiId);
+                    karte[b.id] = alsDaten
+                        ? await alsDatenAdresse(b.bildDateiId)
+                        : ((await Dateien.adresse(b.bildDateiId)) || '');
                 await gehe(b.id, tiefe + 1);
             }
         };

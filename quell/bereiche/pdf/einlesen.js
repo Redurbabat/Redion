@@ -109,7 +109,13 @@ const PdfEinlesen = (() => {
         };
         try {
             const bytes = new Uint8Array(await datei.arrayBuffer());
-            griff = await PdfLeser.oeffne(bytes);
+            griff = await PdfLeser.oeffne(bytes, async (nochmal) => {
+                if (typeof Dialog === 'undefined')
+                    return null;
+                melder.textContent = '„' + datei.name + '" ist geschützt.';
+                return await Dialog.frage(nochmal ? 'Das Passwort stimmte nicht — noch einmal'
+                    : 'Passwort für „' + datei.name + '"', '', 'passwort');
+            });
             const gesamt = griff.seiten;
             /* ---- Anordnung ---------------------------------------------------- */
             const zuletzt = String(Store.getMeta('pdfAnordnung', 'nebeneinander'));
@@ -241,7 +247,10 @@ const PdfEinlesen = (() => {
             /* Verschlüsselte Dateien sind der häufigste Fall — und der einzige,
                bei dem eine allgemeine Meldung ratlos machen würde. */
             const warum = /password|encrypt/i.test(text)
-                ? 'ist mit einem Passwort geschützt — sie liegt als Anhang auf der Seite.'
+                /* Seit E110 gibt es die Passwortfrage — wer hier landet, hat sie
+                   abgebrochen oder dreimal danebengetippt. Der Satz sagt deshalb
+                   nicht mehr „Redion kann sie nicht öffnen", sondern was los ist. */
+                ? 'bleibt ohne Passwort zu — sie liegt als Anhang auf der Seite.'
                 : 'liess sich nicht als Seiten lesen (' + text +
                     ') — sie liegt als Anhang auf der Seite.';
             /* NICHT weiterwerfen: die Datei ist da und sichtbar. Ein Fehler, der

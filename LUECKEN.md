@@ -1138,27 +1138,31 @@ neu und feiner rechnen — die Marken blieben dabei liegen, weil sie in
 Seitenpunkten gespeichert sind und nicht in Bildpunkten (E100). Nötig
 dafür ist, dass das Original noch da ist; es ist da (E103).
 
-**Verschlüsselte PDFs.** Eine passwortgeschützte Datei wird nicht
-geöffnet. Die Meldung sagt das inzwischen im Klartext, statt eine
-technische Zeile zu zeigen — aber eine Passwortabfrage gibt es nicht.
+**~~Verschlüsselte PDFs~~ · erledigt (E110).** Redion fragt jetzt nach dem
+Passwort, sagt beim zweiten Anlauf, dass das erste falsch war, und legt es
+nirgends ab — nicht im Block, nicht in der Sicherung, nicht im Browser-
+Speicher. Wer abbricht, bekommt die Datei vollständig als Anhang.
 
 **Und eine Grenze, die bleiben soll:** Redion schreibt nie in das PDF
-zurück. Anmerkungen liegen daneben. Wer die Datei mit Anmerkungen
-weitergeben will, braucht einen Ausdruck oder einen Export — auch das
-gibt es noch nicht.
+zurück. Anmerkungen liegen daneben. Weitergeben lässt sich das seit E108
+trotzdem — Strg + P druckt Seite, Striche und Notizblätter, oder speichert
+sie über den Druckdialog als PDF.
 
-## L38 · Die Präsentation kennt die neuen Blöcke nicht
+## L38 · ~~Die Präsentation kennt die neuen Blöcke nicht~~ · erledigt (E109)
 
-**19. August 2026, bei E108 nebenbei gefunden.** `Werkzeuge.praesentation`
-baut Folien über eine **eigene** Kette von Blockarten (`folieBlock`), getrennt
-von der des Exports. PDF-Seiten, A4-Blätter, Spalten und der Tabellenblock
-stehen darin nicht — eine Schulaufgabe als Folien vorzuführen zeigt also die
-Notizzeilen und sonst nichts.
+**19. August 2026, bei E108 gefunden, am selben Tag geschlossen.**
+`Werkzeuge.praesentation` baute Folien über eine **eigene** Kette von
+Blockarten. PDF-Seiten, A4-Blätter, Tabellen und Datenbanken standen darin
+nicht — und `sammle` stieg in Spalten gar nicht erst hinab, sodass eine
+Schulaufgabe (die seit E104 immer in Spalten liegt) als Vortrag vollständig
+leer war.
 
-Dass es zwei Ketten gibt, ist dabei nicht von vornherein falsch: Folien sind
-ein anderes Medium als Fliesstext, mit anderem Aufbau und anderen Grössen.
-Falsch ist nur, dass die eine seit E108 alle Blockarten kennt und die andere
-den Stand von damals hält.
+Dass es zwei Ketten gibt, ist dabei nicht falsch: Folien sind ein anderes
+Medium als Fliesstext. Falsch war, dass die eine mitwuchs und die andere den
+Stand von damals hielt — der wiederkehrende Befund dieses Projekts: nicht
+„etwas vergessen", sondern „an einer Stelle getan und an der Nachbarstelle
+nicht".
 
-Der wiederkehrende Befund dieses Projekts, wieder einmal: nicht „etwas
-vergessen", sondern „an einer Stelle getan und an der Nachbarstelle nicht".
+Was dabei noch auffiel und mit behoben ist: `.praesi img{max-height:52vh}`
+deckelte das Seitenbild und brach damit sein Seitenverhältnis — zwei gleich
+grosse A4-Seiten standen 442 gegen 541 px hoch nebeneinander.

@@ -6960,3 +6960,139 @@ Seitenpunkten, mit dem Zeichenraum der Seite · nichts wird beim Umbruch
 zerschnitten · der gewöhnliche Export erfindet kein Bild, schweigt aber auch
 nicht mehr · Quelltext-Zeugen. Ein Arm: ohne den Sonderfall fallen sieben
 Punkte.
+
+
+## E109 · Die Präsentation kennt die neuen Blöcke — L38 geschlossen
+
+**19. August 2026.** Bei E108 fiel nebenbei auf, dass `Werkzeuge.praesentation`
+Folien über eine **eigene** Kette von Blockarten baut. Ich habe es als L38
+notiert und weitergemacht. Eine Stunde später war klar, dass das der falsche
+Ort dafür war: eine gefundene Lücke, die man aufschreibt und liegen lässt,
+ist ein Fund weniger und ein Eintrag mehr.
+
+Was auf einer Folie nicht vorkam: **Tabelle, Datenbank, PDF-Seite, A4-Blatt.**
+Und schlimmer als jede fehlende Blockart: `sammle` stieg in Spalten gar nicht
+erst hinab. Eine Schulaufgabe liegt seit E104 **immer** in Spalten — als
+Vortrag war sie damit vollständig leer. Nicht kaputt, nicht gemeldet: leer.
+
+### Zwei Ketten sind in Ordnung, zwei Stände nicht
+
+Dass es zwei Ketten gibt, ist keine Nachlässigkeit. Folien sind ein anderes
+Medium als Fliesstext: andere Grössen, andere Umbrüche, ein Bild je Folie
+statt eines Flusses. Sie zusammenzulegen hiesse, beiden das anzutun, was der
+anderen passt.
+
+Falsch war nur, dass die eine mitwuchs und die andere den Stand von damals
+hielt. **Der wiederkehrende Befund dieses Projekts, wieder einmal: nicht
+„etwas vergessen", sondern „an einer Stelle getan und an der Nachbarstelle
+nicht."**
+
+### Spalten bleiben Spalten
+
+Der erste Entwurf löste die Spalten auf und setzte alles untereinander. Das
+Bild zeigte, warum das falsch ist: eine Folie ist **breit und flach**, ein
+Blatt hoch und schmal. Zwei hochkante Blätter übereinander passen nicht
+darauf — das zweite stand halb ausserhalb, und die Überschrift war ganz aus
+dem Bild geschoben.
+
+Nebeneinander ist ausserdem das, was das Dokument ohnehin sagt. Also bleiben
+Spalten Spalten, und `folieBlock` setzt sie als Reihe.
+
+### Der 52-vh-Deckel
+
+Zwei gleich grosse A4-Seiten standen unterschiedlich hoch nebeneinander:
+**442 gegen 541 px.** Der Grund stand in der Präsentations-CSS seit jeher:
+
+    .praesi img{max-width:100%; max-height:52vh; border-radius:8px}
+
+Für ein eingefügtes Foto ist das richtig. Für eine Dokumentseite deckelt es
+ausgerechnet die Höhe, die das Seitenverhältnis bestimmen soll — und rundet
+die Ecken eines Aufgabenblatts.
+
+Das Seitenverhältnis steht deshalb jetzt am **Kasten**, wie beim Blatt
+daneben, und das Bild darin ist vom Deckel ausgenommen.
+
+**Das genügte der Prüfung fast zum Verhängnis.** Der Arm, der den Deckel
+zurückbrachte, blieb grün: das Seitenverhältnis am Kasten hält die äussere
+Höhe schon allein richtig. Nur das Bild DARIN wäre wieder zu kurz — die Seite
+stünde oben im Kasten, unten bliebe weisses Papier. Gemessen wurde aber der
+Kasten. Erst der Punkt, der das **Bild** gegen seinen Kasten misst, macht den
+Arm rot.
+
+Eine Prüfung, die den Behälter misst statt des Inhalts, sagt „passt" über
+etwas, das man ansieht und schief findet.
+
+**Geprüft** (test183, 26 Punkte): drei Folien entstehen · die Aufgabenfolie
+ist nicht leer, trägt zwei Blätter nebeneinander in zwei Spalten, eines mit
+Seitenbild, beide Striche mit ihren gespeicherten Punkten · beide gleich
+hoch, im A4-Verhältnis, und das Bild füllt seinen Kasten ohne runde Ecken ·
+die Tabellenfolie zeigt ihre Werte · Escape beendet · Quelltext-Zeugen. Drei
+Arme, jeder einzeln: ohne den Spaltendurchstieg fallen sieben Punkte, ohne
+die neuen Blockarten acht, ohne die Bildregel zwei.
+
+
+## E110 · Ein geschütztes PDF fragt nach seinem Passwort
+
+**19. August 2026.** Der letzte offene Punkt aus L37. Bisher sagte Redion bei
+einer passwortgeschützten Datei „Redion kann sie nicht öffnen" und hängte sie
+an. Ehrlich — aber eine Sackgasse: die Datei hat ein Passwort, der Mensch
+davor kennt es, und niemand hat ihn gefragt.
+
+pdf.js kann fragen. `getDocument()` gibt einen Auftrag zurück, und dessen
+`onPassword` wird gerufen, wenn die Datei eines verlangt — mit einem Grund
+dazu: `2` heisst „das war falsch". Ohne diese Unterscheidung käme beim
+zweiten Mal derselbe Satz, und man wüsste nicht, ob man sich vertippt hat
+oder ob gar nichts angekommen ist.
+
+### Das Passwort wird nirgends abgelegt
+
+Es geht von der Tastatur an pdf.js und ist danach weg. Nicht in den Block,
+nicht in die Ablage, nicht in die Sicherung, nicht in den Browser-Speicher.
+
+Das ist keine Sparsamkeit, sondern der Punkt: **ein Passwort, das die App
+aufbewahrt, hebt den Schutz auf, den es geben soll** — und zwar für jeden,
+der später an die Sicherung kommt. §19 sagt „Passwort nie speichern", und
+das gilt auch für fremde Passwörter.
+
+`test184` §4 misst das nach: nach dem Einlesen wird das Passwort in allen
+Fächern, im Export, in den Datei-Sätzen, im `localStorage` und über die Suche
+gesucht — und darf nirgends auftauchen. Ein Gegenprobe-Punkt sucht daneben
+nach „Klausur" und findet es, damit klar ist, dass die Suche nicht einfach
+ins Leere greift.
+
+Das Eingabefeld ist ein `type="password"` mit `autocomplete="off"`: nicht
+sichtbar, nicht vom Browser gemerkt. `Dialog.frage` hat dafür ein drittes
+Argument bekommen.
+
+### Und wer abbricht, verliert nichts
+
+Der Abbruch führt in denselben Rückfall wie E104: die Datei hängt sichtbar an
+der Seite, vollständig, genau einmal. Die Meldung sagt seither nicht mehr
+„Redion kann sie nicht öffnen", sondern „bleibt ohne Passwort zu" — der
+Unterschied zwischen einer Grenze der App und einer Entscheidung des
+Menschen.
+
+### Das Prüf-PDF ist echt verschlüsselt
+
+Ein Prüflauf, der die Passwortfrage an einer Datei ohne Passwort prüft, wäre
+grün und bedeutungslos. `pruefungen/hilfe/krypto-pdf.mts` baut deshalb ein
+PDF mit dem Standard-Sicherheitshandler — V1/R2, RC4 mit 40 Bit —, inklusive
+`/O`, `/U`, dem daraus abgeleiteten Schlüssel und einem eigenen Objektschlüssel
+je Inhaltsstrom.
+
+Warum die älteste Form und nicht AES: geprüft wird die **Frage** nach dem
+Passwort, nicht die Güte der Verschlüsselung. Etwas Modernes zu bauen hiesse,
+den halben Standard nachzuschreiben, ohne dass die Prüfung dadurch mehr
+wüsste. Und RC4 steht ausdrücklich nur im Prüfstand: Redion verschlüsselt
+kein PDF, es liest nur.
+
+`test184` §0 stellt vor allem anderen fest, dass die Datei ohne Passwort
+wirklich zu ist und ein falsches sie nicht öffnet.
+
+**Geprüft** (test184, 31 Punkte): die Datei ist wirklich verschlossen · ein
+falsches Passwort wird abgelehnt und noch einmal gefragt, das zweite Mal mit
+Hinweis · mit dem richtigen gehen Seiten, Text, Masse und Bild · der ganze
+Weg vom Fallenlassen bis zu zwei fertigen Seiten, mit einem Fehlversuch
+dazwischen · Abbrechen hängt die Datei vollständig an · das Passwort steht
+danach nirgends · Quelltext-Zeugen. Zwei Arme: ohne `onPassword` fallen die
+Fragepunkte, ohne das Passwortfeld drei.

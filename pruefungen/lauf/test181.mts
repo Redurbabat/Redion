@@ -317,6 +317,34 @@ p('Und dass die Bilder nicht in die Sicherung kommen',
   /nicht.*Sicherung|Sicherung.*nicht/i.test(frage));
 p('Gegenprobe: „ungefähr" steht dort nicht mehr', !/ungefähr/.test(frage));
 
+/* UND SIE MUSS AUF EIN TELEFON PASSEN (§37). Drei Knöpfe mit je zwei Zeilen
+   Erklärung sind viel Text; bei 390 px ist das die Stelle, an der so etwas
+   aus dem Bild läuft — bei E89, E100 und E104 ist es das jedes Mal getan. */
+await seite.setViewportSize({ width: 390, height: 844 });
+await seite.waitForTimeout(300);
+const amTelefon = await seite.evaluate(() => {
+  const f = document.querySelector('.overlay .finder') as HTMLElement;
+  const kn = [...f.querySelectorAll('[data-w]')] as HTMLElement[];
+  const r = f.getBoundingClientRect();
+  return {
+    breite: Math.round(r.width), unten: Math.round(r.bottom),
+    fenster: innerHeight, ueberlauf: f.scrollHeight - f.clientHeight,
+    kleinsterKnopf: Math.min(...kn.map(k => Math.round(k.getBoundingClientRect().height))),
+    letzterUnten: Math.round(kn[kn.length - 1]!.getBoundingClientRect().bottom)
+  };
+});
+
+p('Die Frage passt in die Fensterbreite', amTelefon.breite <= 390,
+  amTelefon.breite + ' px');
+p('Und steht ganz im Bild', amTelefon.letzterUnten <= amTelefon.fenster,
+  `letzter Knopf bei ${amTelefon.letzterUnten}, Fenster ${amTelefon.fenster}`);
+gleich('Nichts muss darin gerollt werden', amTelefon.ueberlauf, 0);
+p('Jeder Knopf ist mit dem Finger zu treffen (44 px, §37)',
+  amTelefon.kleinsterKnopf >= 44, amTelefon.kleinsterKnopf + ' px');
+
+await seite.setViewportSize({ width: 1400, height: 900 });
+await seite.waitForTimeout(200);
+
 await seite.click('.overlay [data-w=""]');
 await seite.waitForFunction((s: string) =>
   (Store.getBlock(s)?.content || []).some(

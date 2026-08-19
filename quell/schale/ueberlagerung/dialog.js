@@ -17,13 +17,24 @@
  * andere Antwort als „abgebrochen".
  * ==========================================================================*/
 const Dialog = (() => {
-    const frage = (titel, vorgabe = '') => new Promise(ok => {
+    /**
+     * Eine Frage mit einem Eingabefeld.
+     *
+     * `art: 'passwort'` macht daraus ein Passwortfeld: der Text wird nicht
+     * angezeigt, der Browser bietet keine Vervollständigung an, und er merkt
+     * ihn sich auch nicht. Ein PDF-Passwort gehört niemandem ausser dem
+     * Menschen davor — es wird weitergereicht und nirgends abgelegt (E110).
+     */
+    const frage = (titel, vorgabe = '', art = 'text') => new Promise(ok => {
         const o = document.createElement('div');
         o.className = 'overlay';
+        const feldArt = art === 'passwort'
+            ? 'type="password" autocomplete="off" spellcheck="false"' : '';
         o.innerHTML =
             '<div class="finder" style="width:min(460px,94vw)">' +
                 `<div class="fh">${titel}</div>` +
-                `<div style="padding:16px 18px"><input id="fq" value="${String(vorgabe).replace(/"/g, '&quot;')}" ` +
+                `<div style="padding:16px 18px"><input id="fq" ${feldArt} ` +
+                `value="${String(vorgabe).replace(/"/g, '&quot;')}" ` +
                 'style="width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line); ' +
                 'border-radius:8px; outline:none; font-size:15px"></div>' +
                 '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button>' +

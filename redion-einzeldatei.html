@@ -5808,6 +5808,24 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* Untereinander, nicht nebeneinander: `.pdfs-wartet` ist ein Flex-Kasten,
    und Satz und Knopf drängelten sich in einer Zeile (mit Augen gesehen). */
 .pdfs-wartet{flex-direction:column; gap:2px; text-align:center; padding:0 16px}
+/* Ein Blatt auf einer Folie (E109). Die HÖHE ist der begrenzende Wert —
+   eine Folie ist breit und flach, ein Blatt hoch und schmal. `45vh` Breite
+   ergibt bei A4 rund 64vh Höhe; zwei davon stehen nebeneinander bequem. */
+.folie-spalten{display:flex; gap:3vh; justify-content:center; align-items:flex-start}
+.folie-spalte{flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:1vh}
+.folie-blatt{position:relative; margin:0 auto; width:100%;
+             max-width:min(100%, 45vh); background:#fff; color:#111}
+/* `.praesi img{max-height:52vh; border-radius:8px}` gilt sonst auch hier —
+   und deckelt ausgerechnet die Höhe, die das Seitenverhältnis bestimmen
+   soll. Ein Aufgabenblatt hat auch keine runden Ecken. */
+.folie-blatt img{display:block; width:100%; height:100%;
+                 max-height:none; border-radius:0; object-fit:contain}
+.folie-blatt.papier{border:1px solid #ccc}
+.folie-blatt .blatt-text{padding:8%; font-size:1.8vh; text-align:left; line-height:1.5}
+.folie-blatt .blatt-text h2{font-size:2.4vh; margin:0 0 .6em}
+.folie-blatt .marken{position:absolute; inset:0; width:100%; height:100%; color:#111}
+.folie-blatt .fehlt{padding:14vh 2vh; text-align:center; color:#666}
+
 .pdfs-neu{margin-top:10px; padding:8px 14px; min-height:36px; border-radius:8px;
           border:1px solid #c8c8c8; background:#f3f3f3; color:#111;
           font-size:13px; cursor:pointer}
@@ -12583,13 +12601,24 @@ window.Hinweis = Hinweis;
  * andere Antwort als „abgebrochen".
  * ==========================================================================*/
 const Dialog = (() => {
-    const frage = (titel, vorgabe = '') => new Promise(ok => {
+    /**
+     * Eine Frage mit einem Eingabefeld.
+     *
+     * `art: 'passwort'` macht daraus ein Passwortfeld: der Text wird nicht
+     * angezeigt, der Browser bietet keine Vervollständigung an, und er merkt
+     * ihn sich auch nicht. Ein PDF-Passwort gehört niemandem ausser dem
+     * Menschen davor — es wird weitergereicht und nirgends abgelegt (E110).
+     */
+    const frage = (titel, vorgabe = '', art = 'text') => new Promise(ok => {
         const o = document.createElement('div');
         o.className = 'overlay';
+        const feldArt = art === 'passwort'
+            ? 'type="password" autocomplete="off" spellcheck="false"' : '';
         o.innerHTML =
             '<div class="finder" style="width:min(460px,94vw)">' +
                 `<div class="fh">${titel}</div>` +
-                `<div style="padding:16px 18px"><input id="fq" value="${String(vorgabe).replace(/"/g, '&quot;')}" ` +
+                `<div style="padding:16px 18px"><input id="fq" ${feldArt} ` +
+                `value="${String(vorgabe).replace(/"/g, '&quot;')}" ` +
                 'style="width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line); ' +
                 'border-radius:8px; outline:none; font-size:15px"></div>' +
                 '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button>' +
@@ -18707,13 +18736,44 @@ const PdfLeser = (() => {
      * Seitenbilder liefert. Der Griff hält das Dokument offen; `schliessen`
      * gibt es frei.
      */
-    const oeffne = async (daten) => {
+    /**
+     * Ein PDF öffnen.
+     *
+     * `frage` wird gerufen, wenn die Datei ein Passwort verlangt — einmal für
+     * die erste Eingabe und noch einmal für jede falsche. Gibt sie `null`
+     * zurück, bleibt die Datei zu.
+     *
+     * DAS PASSWORT WIRD NIRGENDS ABGELEGT. Es geht von der Tastatur in
+     * `updatePassword` und ist danach weg: nicht in den Block, nicht in die
+     * Ablage, nicht in die Sicherung. Ein Schlüssel, den man aufbewahrt,
+     * schützt nichts mehr (§19, E110).
+     */
+    const oeffne = async (daten, frage) => {
         const pdfjs = await window.PdfFremd.laden();
         /* `isEvalSupported: false` fest verdrahtet: pdf.js wertet sonst
            Typ-4-Funktionen über `new Function` aus, und das verbietet §19. */
-        const doc = await pdfjs.getDocument({
+        const auftrag = pdfjs.getDocument({
             data: daten, isEvalSupported: false, disableAutoFetch: true
-        }).promise;
+        });
+        if (frage) {
+            /* `grund === 2` heisst „das war falsch" — pdf.js ruft dann noch
+               einmal. Ohne diese Unterscheidung fragte Redion beim zweiten Mal
+               mit demselben Satz und der Mensch wüsste nicht, ob er sich vertippt
+               hat oder ob gar nichts ankam. */
+            auftrag.onPassword = (weiter, grund) => {
+                frage(grund === 2).then(pw => {
+                    if (pw === null) {
+                        try {
+                            auftrag.destroy();
+                        }
+                        catch { /* egal */ }
+                        return;
+                    }
+                    weiter(pw);
+                });
+            };
+        }
+        const doc = await auftrag.promise;
         /** Breite, Höhe und Drehung EINER Seite, in Punkten. */
         const geometrie = async (nr) => {
             const seite = await doc.getPage(nr);
@@ -19054,7 +19114,13 @@ const PdfEinlesen = (() => {
         };
         try {
             const bytes = new Uint8Array(await datei.arrayBuffer());
-            griff = await PdfLeser.oeffne(bytes);
+            griff = await PdfLeser.oeffne(bytes, async (nochmal) => {
+                if (typeof Dialog === 'undefined')
+                    return null;
+                melder.textContent = '„' + datei.name + '" ist geschützt.';
+                return await Dialog.frage(nochmal ? 'Das Passwort stimmte nicht — noch einmal'
+                    : 'Passwort für „' + datei.name + '"', '', 'passwort');
+            });
             const gesamt = griff.seiten;
             /* ---- Anordnung ---------------------------------------------------- */
             const zuletzt = String(Store.getMeta('pdfAnordnung', 'nebeneinander'));
@@ -19186,7 +19252,10 @@ const PdfEinlesen = (() => {
             /* Verschlüsselte Dateien sind der häufigste Fall — und der einzige,
                bei dem eine allgemeine Meldung ratlos machen würde. */
             const warum = /password|encrypt/i.test(text)
-                ? 'ist mit einem Passwort geschützt — sie liegt als Anhang auf der Seite.'
+                /* Seit E110 gibt es die Passwortfrage — wer hier landet, hat sie
+                   abgebrochen oder dreimal danebengetippt. Der Satz sagt deshalb
+                   nicht mehr „Redion kann sie nicht öffnen", sondern was los ist. */
+                ? 'bleibt ohne Passwort zu — sie liegt als Anhang auf der Seite.'
                 : 'liess sich nicht als Seiten lesen (' + text +
                     ') — sie liegt als Anhang auf der Seite.';
             /* NICHT weiterwerfen: die Datei ist da und sichtbar. Ein Fehler, der
@@ -36952,7 +37021,10 @@ const Werkzeuge = (() => {
      * ------------------------------------------------------------------------
      * Jede Überschrift 1 oder jede Trennlinie beginnt eine neue Folie.
      * ======================================================================*/
-    const praesentation = (p) => {
+    const praesentation = async (p) => {
+        /* Die Seitenbilder vorher holen — `folieBlock` zeichnet synchron. Für
+           den Bildschirm genügen blob-Adressen (E109). */
+        const bilder = await bilderSammeln(p, false);
         const folien = [];
         let aktuell = { titel: p.text || '', bloecke: [] };
         /* Eine neue Folie beginnt bei einer Trennlinie und bei jeder
@@ -36967,7 +37039,18 @@ const Werkzeuge = (() => {
                     aktuell = { titel: b.type === 'divider' ? '' : (b.text || ''), bloecke: [] };
                     return;
                 }
+                /* SPALTEN BLEIBEN SPALTEN. Vorher stieg `sammle` in einen
+                   Spaltenblock gar nicht hinab, und eine Schulaufgabe — die seit
+                   E104 immer in Spalten liegt — war als Vortrag vollständig leer.
+                   Untereinander wäre auch falsch: eine Folie ist breit und flach,
+                   zwei hochkante Blätter übereinander passen nicht darauf und
+                   schieben die Überschrift aus dem Bild (mit Augen gesehen, §55).
+                   Nebeneinander ist genau das, was das Dokument sagt. */
                 aktuell.bloecke.push({ b, tiefe });
+                /* Diese drei zeichnen ihren Inhalt selbst — sonst stünde er zweimal
+                   da, einmal darin und einmal daneben. */
+                if (['columns', 'columns3', 'blatt'].includes(b.type))
+                    return;
                 if (['bullet', 'number', 'todo', 'toggle'].includes(b.type))
                     sammle(b.id, tiefe + 1);
             });
@@ -37016,6 +37099,46 @@ const Werkzeuge = (() => {
                 return `<div class="eqp">${Zusatz.mathe(b.text || '')}</div>`;
             if (b.type === 'divider')
                 return '<hr>';
+            /* WAS SEIT DAMALS DAZUKAM. Diese Kette ist die zweite in dieser Datei,
+               und das ist in Ordnung — Folien sind ein anderes Medium als
+               Fliesstext. Nicht in Ordnung war, dass sie beim Stand von damals
+               stehen blieb: Tabelle, Datenbank, PDF-Seite und A4-Blatt gab es
+               hier nicht, und jede Folie mit so etwas darauf war leer. Der
+               wiederkehrende Befund dieses Projekts: nicht „vergessen", sondern
+               „an einer Stelle getan und an der Nachbarstelle nicht" (L38). */
+            if (b.type === 'table')
+                return tabelleHtml(b);
+            if (b.type === 'database')
+                return datenbankHtml(b);
+            if (b.type === 'columns' || b.type === 'columns3') {
+                const spalten = Store.childrenOf(b.id)
+                    .map((sp) => '<div class="folie-spalte">' +
+                    Store.childrenOf(sp.id).map((k) => folieBlock(k, 0)).join('') +
+                    '</div>').join('');
+                return `<div class="folie-spalten">${spalten}</div>`;
+            }
+            if (b.type === 'pdfseite') {
+                const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
+                const adr = bilder[b.id] || '';
+                /* Das Seitenverhältnis steht am KASTEN, nicht am Bild — genau wie
+                   beim Blatt daneben. Sonst regiert `.praesi img{max-height:52vh}`
+                   die Höhe, und zwei gleich grosse A4-Seiten stehen unterschiedlich
+                   hoch nebeneinander (gemessen: 442 gegen 541 px, §55). */
+                return '<figure class="folie-blatt" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
+                        : `<div class="fehlt">Seite ${esc(b.nr || '')} — kein Bild</div>`) +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            if (b.type === 'blatt') {
+                const bw = Number(b.blattBreite) || 595.28;
+                const bh = Number(b.blattHoehe) || 841.89;
+                return '<figure class="folie-blatt papier" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    '<div class="blatt-text">' +
+                    Store.childrenOf(b.id).map((k) => folieBlock(k, 0)).join('') +
+                    '</div>' + markenAlsSvg(b, bw, bh) + '</figure>';
+            }
             return b.text ? `<p${ein}>${Blocks.inline(b.text)}</p>` : '';
         };
         const weiter = (n) => { i = Math.max(0, Math.min(folien.length - 1, i + n)); zeichne(); };
@@ -37803,8 +37926,17 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             return '';
         }
     };
-    /** Alle Seitenbilder einer Seite einsammeln, bevor gedruckt wird. */
-    const bilderSammeln = async (p) => {
+    /**
+     * Alle Seitenbilder einer Seite einsammeln, bevor gezeichnet wird.
+     *
+     * `alsDaten` entscheidet, WELCHE Adresse. Zum Drucken muss es eine
+     * Daten-Adresse sein: der Druckrahmen ist ein eigenes Dokument, und eine
+     * blob-Adresse wäre dort — und erst recht in einer gespeicherten Datei —
+     * nach der Sitzung tot (E98). Für die Präsentation, die im selben
+     * Dokument läuft, genügt die blob-Adresse: sie kostet nichts und lädt
+     * sofort (E109).
+     */
+    const bilderSammeln = async (p, alsDaten = true) => {
         const karte = {};
         const gehe = async (id, tiefe) => {
             if (tiefe > 6)
@@ -37813,7 +37945,9 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 if (b.type === 'page')
                     continue;
                 if (b.type === 'pdfseite' && b.bildDateiId)
-                    karte[b.id] = await alsDatenAdresse(b.bildDateiId);
+                    karte[b.id] = alsDaten
+                        ? await alsDatenAdresse(b.bildDateiId)
+                        : ((await Dateien.adresse(b.bildDateiId)) || '');
                 await gehe(b.id, tiefe + 1);
             }
         };

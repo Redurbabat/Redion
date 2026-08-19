@@ -40,13 +40,44 @@ const PdfLeser = (() => {
      * Seitenbilder liefert. Der Griff hält das Dokument offen; `schliessen`
      * gibt es frei.
      */
-    const oeffne = async (daten) => {
+    /**
+     * Ein PDF öffnen.
+     *
+     * `frage` wird gerufen, wenn die Datei ein Passwort verlangt — einmal für
+     * die erste Eingabe und noch einmal für jede falsche. Gibt sie `null`
+     * zurück, bleibt die Datei zu.
+     *
+     * DAS PASSWORT WIRD NIRGENDS ABGELEGT. Es geht von der Tastatur in
+     * `updatePassword` und ist danach weg: nicht in den Block, nicht in die
+     * Ablage, nicht in die Sicherung. Ein Schlüssel, den man aufbewahrt,
+     * schützt nichts mehr (§19, E110).
+     */
+    const oeffne = async (daten, frage) => {
         const pdfjs = await window.PdfFremd.laden();
         /* `isEvalSupported: false` fest verdrahtet: pdf.js wertet sonst
            Typ-4-Funktionen über `new Function` aus, und das verbietet §19. */
-        const doc = await pdfjs.getDocument({
+        const auftrag = pdfjs.getDocument({
             data: daten, isEvalSupported: false, disableAutoFetch: true
-        }).promise;
+        });
+        if (frage) {
+            /* `grund === 2` heisst „das war falsch" — pdf.js ruft dann noch
+               einmal. Ohne diese Unterscheidung fragte Redion beim zweiten Mal
+               mit demselben Satz und der Mensch wüsste nicht, ob er sich vertippt
+               hat oder ob gar nichts ankam. */
+            auftrag.onPassword = (weiter, grund) => {
+                frage(grund === 2).then(pw => {
+                    if (pw === null) {
+                        try {
+                            auftrag.destroy();
+                        }
+                        catch { /* egal */ }
+                        return;
+                    }
+                    weiter(pw);
+                });
+            };
+        }
+        const doc = await auftrag.promise;
         /** Breite, Höhe und Drehung EINER Seite, in Punkten. */
         const geometrie = async (nr) => {
             const seite = await doc.getPage(nr);
