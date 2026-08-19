@@ -896,7 +896,38 @@ const Blocks = (() => {
     const medienBlock = (block) => {
         const w = document.createElement('div');
         w.style.width = '100%';
-        if (!block.src) {
+        /* ======================================================================
+         * WOHER DIE ADRESSE KOMMT (E98)
+         * ----------------------------------------------------------------------
+         * Eine in Stücken abgelegte Datei liegt in `dateien`/`stuecke`. Ihre
+         * `blob:`-Adresse gehört dem Dokument, das sie erzeugt hat — Browser zu,
+         * Adresse tot. Sie wurde trotzdem IN DEN BLOCK geschrieben, und niemand
+         * las `dateiId` je zurück: gemessen lagen nach einem Neustart alle fünf
+         * Stücke unversehrt da, und das Bild hatte Breite 0.
+         *
+         * Also: die Adresse wird beim ZEICHNEN geholt, nie gespeichert. Ist sie
+         * schon gebaut, kommt sie synchron; sonst wird sie nachgereicht. Eine
+         * gespeicherte tote `blob:`-Adresse wird übergangen — sie ist schlechter
+         * als gar keine, weil der Browser sonst ein kaputtes Bild zeigt.
+         * ====================================================================*/
+        const nachtragen = [];
+        const ausAblage = () => {
+            const gespeichert = String(block.src || '');
+            if (!block.dateiId || typeof Dateien === 'undefined')
+                return gespeichert;
+            const schonDa = Dateien.adresseBekannt ? Dateien.adresseBekannt(block.dateiId) : null;
+            if (schonDa)
+                return schonDa;
+            Dateien.adresse(block.dateiId)
+                .then((u) => { if (u)
+                nachtragen.forEach(f => f(u)); })
+                .catch(() => { });
+            return gespeichert.startsWith('blob:') ? '' : gespeichert;
+        };
+        const quelle = ausAblage();
+        /* Ohne Quelle UND ohne Kennung gibt es nichts zu zeigen. Die Kennung
+           allein genügt: die Adresse kommt gleich nach. */
+        if (!block.src && !block.dateiId) {
             /* Noch keine Quelle: Eingabefeld anzeigen */
             const feld = document.createElement('div');
             feld.style.cssText = 'display:flex; gap:8px; padding:12px 14px; background:var(--bg-card); ' +
@@ -936,10 +967,11 @@ const Blocks = (() => {
             const rahmen = document.createElement('div');
             rahmen.className = 'bild-rahmen aus-' + (block.ausricht || 'links');
             const i = document.createElement('img');
-            i.src = block.src;
+            i.src = quelle;
             i.alt = block.caption || block.text || '';
+            nachtragen.push(u => { i.src = u; });
             i.style.width = (block.breite || 100) + '%';
-            i.addEventListener('click', () => bildGross(block.src, block.caption));
+            i.addEventListener('click', () => bildGross(i.src || quelle, block.caption));
             rahmen.appendChild(i);
             const werk = document.createElement('div');
             werk.className = 'bild-werk';
@@ -963,7 +995,7 @@ const Blocks = (() => {
                     return;
                 }
                 if (b2.dataset.a === 'voll')
-                    bildGross(block.src, block.caption);
+                    bildGross(i.src || quelle, block.caption);
             });
             rahmen.appendChild(werk);
             /* Rechter Rand zum Ziehen */
@@ -991,16 +1023,18 @@ const Blocks = (() => {
         }
         else if (block.type === 'video') {
             const v = document.createElement('video');
-            v.src = block.src;
+            v.src = quelle;
             v.controls = true;
             v.style.maxWidth = '100%';
+            nachtragen.push(u => { v.src = u; });
             w.appendChild(v);
         }
         else if (block.type === 'audio') {
             const a = document.createElement('audio');
-            a.src = block.src;
+            a.src = quelle;
             a.controls = true;
             a.style.width = '100%';
+            nachtragen.push(u => { a.src = u; });
             w.appendChild(a);
         }
         else if (block.type === 'file') {
@@ -1009,9 +1043,15 @@ const Blocks = (() => {
                aber nicht als Erlaubnis, die Adresse in einen Rahmen zu setzen:
                `javascript:…//.pdf` besteht diese Prüfung. Deshalb geht jede Adresse
                hier durch Saeubern, und zwar durch die zum Ort passende. */
-            const istPdf = /\.pdf(\?|$)/i.test(block.src) || /^data:application\/pdf/i.test(block.src);
-            const zielAdresse = Sanitize.attachmentUrl(block.src);
-            const rahmenSrc = Sanitize.frameUrl(block.src);
+            /* Der NAME entscheidet mit: eine in Stücken abgelegte Datei hat ihre
+               Adresse erst, wenn sie nachgereicht wurde — bis dahin steht dort
+               nichts, wonach man die Endung fragen könnte (E98). */
+            const dateiName = String(block.text || block.caption || '');
+            const istPdf = /\.pdf(\?|$)/i.test(quelle) || /^data:application\/pdf/i.test(quelle)
+                || /\.pdf$/i.test(dateiName)
+                || String(block.typ || '') === 'application/pdf';
+            const zielAdresse = Sanitize.attachmentUrl(quelle);
+            const rahmenSrc = Sanitize.frameUrl(quelle);
             const zeile = document.createElement('div');
             zeile.className = 'datei-zeile';
             zeile.innerHTML =
@@ -1020,7 +1060,11 @@ const Blocks = (() => {
                         ? `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>`
                         /* Kein stiller Fehlschlag: der Name bleibt stehen und sagt, warum
                            er nicht anklickbar ist. Wegwerfen tun wir hier nichts. */
-                        : `<span class="datei-gesperrt" title="Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.">${esc(block.text || block.caption || 'Datei')} ⚠</span>`) +
+                        /* Solange die Adresse noch kommt, ist der Name KEIN Fehler — nur
+                           noch nicht anklickbar. Ein Warnzeichen hier wäre eine Lüge. */
+                        : (block.dateiId
+                            ? `<span class="datei-wartet">${esc(block.text || block.caption || 'Datei')}</span>`
+                            : `<span class="datei-gesperrt" title="Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.">${esc(block.text || block.caption || 'Datei')} ⚠</span>`)) +
                     (istPdf && rahmenSrc ? `<button data-a="pdf">${block.pdfAuf ? 'Vorschau zu' : 'Vorschau'}</button>` : '');
             zeile.addEventListener('click', e => {
                 if (!elVon(e)?.closest('[data-a="pdf"]'))
@@ -1029,6 +1073,32 @@ const Blocks = (() => {
                 App.zeichneSeite();
             });
             w.appendChild(zeile);
+            /* Kommt die Adresse nach, wird der Verweis nachgezogen — statt die
+               ganze Seite neu zu zeichnen und dabei den Schreibzeiger zu verlieren. */
+            nachtragen.push(u => {
+                const sicher = Sanitize.attachmentUrl(u);
+                if (!sicher)
+                    return;
+                const wartet = zeile.querySelector('.datei-wartet');
+                if (wartet) {
+                    const a2 = document.createElement('a');
+                    a2.href = sicher;
+                    a2.target = '_blank';
+                    a2.rel = 'noopener';
+                    a2.setAttribute('download', '');
+                    a2.textContent = wartet.textContent || 'Datei';
+                    wartet.replaceWith(a2);
+                }
+                else {
+                    const a2 = zeile.querySelector('a[href]');
+                    if (a2)
+                        a2.href = sicher;
+                }
+                const rahmen2 = w.querySelector('.pdf-rahmen iframe');
+                const frameU = Sanitize.frameUrl(u);
+                if (rahmen2 && frameU)
+                    rahmen2.src = frameU;
+            });
             /* PDF gleich hier ansehen — Notion zeigt nur einen Anhang zum Laden. */
             if (istPdf && rahmenSrc && block.pdfAuf) {
                 const rahmen = document.createElement('div');
@@ -1040,7 +1110,7 @@ const Blocks = (() => {
                 const fuss = document.createElement('div');
                 fuss.className = 'pdf-fuss';
                 fuss.innerHTML = '<button data-h="420">klein</button><button data-h="700">gross</button>' +
-                    `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
+                    `<a href="${esc(zielAdresse || '')}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
                 fuss.addEventListener('click', e => {
                     const b2 = elVon(e)?.closest('button[data-h]');
                     if (!b2)
@@ -1146,8 +1216,11 @@ const Blocks = (() => {
                             if (melder && melder.textContent !== undefined)
                                 melder.textContent = 'Wird abgelegt … ' + Math.round(anteil * 100) + ' %';
                         } });
-                    const url = await Dateien.adresse(satz.id);
-                    Store.updateBlock(block.id, { src: url, dateiId: satz.id, text: f.name });
+                    /* NUR die Kennung. Die blob-Adresse gilt nur für diese Sitzung und
+                       hat in den Daten nichts verloren (E98) — gespeichert war sie der
+                       Grund, warum jede grosse Datei nach dem Neustart unerreichbar war. */
+                    await Dateien.adresse(satz.id); /* baut sie für JETZT auf */
+                    Store.updateBlock(block.id, { dateiId: satz.id, text: f.name, typ: f.type });
                     if (melder && melder.remove)
                         melder.remove();
                     App.zeichneSeite();

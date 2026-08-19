@@ -1032,8 +1032,9 @@ const Austausch = (() => {
                     }
                     const b = Store.addBlock(eltern, art.block, { text: saeubern(datei) });
                     const satz = await Dateien.ablegen(new File([bytes], saeubern(datei), { type: art.typ }), { blockId: b.id });
-                    const url = await Dateien.adresse(satz.id);
-                    Store.updateBlock(b.id, { src: url, dateiId: satz.id });
+                    /* Nur die Kennung — siehe E98. */
+                    await Dateien.adresse(satz.id);
+                    Store.updateBlock(b.id, { dateiId: satz.id, typ: art.typ });
                     anhaenge++;
                 }
                 catch {

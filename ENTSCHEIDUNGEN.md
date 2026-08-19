@@ -6016,3 +6016,72 @@ noch nicht committet ist.
 **L18** führt damit die Zellformatierung im Austausch in beide
 Richtungen; offen bleiben Kommentare · Bilder · Diagramme · bedingte
 Formatierung im Austausch.
+
+
+## E98 · Abgelegte Dateien überleben den Browser-Neustart
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen · **Priorität:** 1 (§46)
+
+Beim Untersuchen des Untergrunds für Redurs PDF-Wunsch fiel etwas
+Schwereres auf als das PDF selbst. Eine Datei über 256 KB wandert in
+Stücke nach `dateien`/`stuecke` — richtig so. Dann aber holte der
+Aufrufer eine `blob:`-Adresse und schrieb sie **in den Block**. Eine
+solche Adresse gehört dem Dokument, das sie erzeugt hat: Browser zu,
+Adresse tot. Und `dateiId` las beim Zeichnen niemand zurück.
+
+Gemessen, mit echtem Neustart des Browsers:
+
+```txt
+Stücke in der Ablage    5     die Daten sind vollständig da
+Bildbreite              0     das Bild ist weg
+Anhang anklickbar       nein  die Adresse führt ins Leere
+```
+
+Die Daten waren nie verloren — sie waren **unerreichbar**. Betroffen
+war jedes Bild, jedes Video und jeder Anhang über 256 KB, also
+praktisch jedes PDF und jedes Foto vom Telefon. Seit es die
+Stücke-Ablage gibt.
+
+**Der Fehler war unter einer Prüfung versteckt, die es nicht gab —
+und wäre unter einer falschen Prüfung unsichtbar geblieben.** Die
+erste Fassung von test172 lud die Seite mit `reload()` neu. Grün.
+Der Bildzwischenspeicher von Chromium liefert das Bild dann nämlich
+weiter aus, obwohl `fetch(src)` schon scheitert — gemessen: Bild
+sichtbar, Adresse tot. Erst zwei echte Browser-Sitzungen
+(`launchPersistentContext`, schliessen, öffnen) zeigen die Wahrheit.
+Eine Prüfung, die neu LÄDT, ist keine Prüfung, die neu STARTET.
+
+**Die Reparatur:** die Adresse wird beim Zeichnen geholt, nie
+gespeichert. Zwei Wege tragen sie, und beide sind einzeln belegt:
+
+```txt
+nachtragen        die erste Zeichnung. Die Adresse kommt asynchron aus
+                  den Stücken und wird an Bild, Video, Ton und Verweis
+                  nachgereicht — ohne die Seite neu zu zeichnen und
+                  dabei den Schreibzeiger zu verlieren.
+adresseBekannt    jede weitere Zeichnung, synchron aus dem Zwischen-
+                  speicher. Trägt keine Korrektheit, verhindert aber
+                  das Flackern — gemessen im selben Tick.
+```
+
+Der **Bestand wird geheilt, nicht umgeschrieben**: eine gespeicherte
+tote `blob:`-Adresse bleibt im Block stehen und wird beim Zeichnen
+übergangen, sobald `dateiId` dasteht. Sie zu löschen wäre eine
+Datenänderung ohne Gewinn (§9). Neue Blöcke bekommen erst gar keine.
+
+**Geprüft** (test172, 14 Punkte): zwei echte Browser-Sitzungen, ein
+4,3-MB-Bild in fünf Stücken und ein Anhang; nach dem Neustart müssen
+Bild und Verweis wieder da sein. Dazu eine **kalte Seite**, die in der
+zweiten Sitzung noch nie gezeichnet wurde — dort kann nur das
+Nachreichen liefern, und genau das macht die Gegenproben trennscharf.
+Vier Arme, jeder einzeln: die asynchrone Beschaffung tot (Bild und
+Anhang fallen), das Nachtragen am Bild tot (nur die kalte Seite
+fällt), das am Anhang tot (nur der kalte Verweis fällt), der
+synchrone Weg tot (nur das Flackern fällt).
+
+**Eine Zeitannahme wurde dabei wieder gestrichen.** Ein Punkt hiess
+zuerst „anfangs steht dort noch nichts". Gemessen kam die Adresse
+einmal nach 40 ms und einmal nach 120 ms — eine Prüfung darauf wäre
+eine Behauptung über Langsamkeit und würde unter Last zufällig kippen
+(E82). Geblieben ist, was zählt: kein zweites Zeichnen, und das Bild
+ist da.

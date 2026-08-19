@@ -1791,6 +1791,9 @@ td .proz i{ flex:0 0 auto; }
    sieht, was dort liegt — aber ohne Verweis und sichtbar anders. Ein Anhang,
    der einfach verschwände, wäre schlimmer als einer, der sich erklärt. */
 .datei-gesperrt{flex:1; color:var(--text-dim); cursor:help}
+/* Wartet noch auf seine Adresse aus der Stücke-Ablage (E98) — kein
+   Fehler, nur noch nicht anklickbar. Deshalb blass statt rot. */
+.datei-wartet{flex:1; color:var(--text-dim)}
 .einbett-gesperrt{padding:12px 14px; border:1px dashed var(--line); border-radius:6px;
                   color:var(--text-dim); font-size:13px; line-height:1.5;
                   overflow-wrap:anywhere}

@@ -193,6 +193,10 @@ const Dateien = (() => {
      * Der Browser hält den Blob selbst; wir merken uns die Adresse, damit
      * dieselbe Datei nicht bei jedem Zeichnen neu zusammengesetzt wird.
      */
+    /* Schon gebaut? Dann synchron zurückgeben. Der Zeichner braucht das: er
+       läuft nicht asynchron, und beim zweiten Zeichnen derselben Seite soll
+       das Bild nicht kurz verschwinden und wiederkommen (E98). */
+    const adresseBekannt = (dateiId) => adressen.get(dateiId) || null;
     const adresse = async (dateiId) => {
         if (adressen.has(dateiId))
             return adressen.get(dateiId);
@@ -408,7 +412,7 @@ const Dateien = (() => {
     };
     return { STUECK, KLEIN, GRENZE,
         anmelden, stueckSchicken, bestaetigen, abbrechen, ablegen,
-        alsBlob, adresse, adresseWeg, herunterladen,
+        alsBlob, adresse, adresseBekannt, adresseWeg, herunterladen,
         weg, verwaist, aufraeumen, zahlen, groesseText, lohntSich, dialog };
 })();
 window.Dateien = Dateien;
