@@ -109,7 +109,18 @@ const PdfSeite = (() => {
             k.addEventListener('click', () => {
                 k.disabled = true;
                 k.textContent = 'wird gerechnet …';
-                PdfEinlesen.neuBerechnen(block.quelleId);
+                /* Der Erfolg zeichnet die Seite neu, und dieser Knopf ist dann
+                   ohnehin fort. Kommt aber KEIN Bild — das Original fehlt im
+                   Bestand, das Rechnen scheitert —, muss er wieder anfassbar sein:
+                   ein Knopf, der für immer „wird gerechnet …" sagt, ist schlimmer
+                   als gar keiner (E116). */
+                const zurueck = () => {
+                    if (!k.isConnected)
+                        return;
+                    k.disabled = false;
+                    k.textContent = 'Aus dem Original zurückholen';
+                };
+                PdfEinlesen.neuBerechnen(block.quelleId).then(zurueck, zurueck);
             });
             hinweis.appendChild(k);
         };

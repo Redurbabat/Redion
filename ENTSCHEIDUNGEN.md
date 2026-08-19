@@ -7477,3 +7477,225 @@ wiederherstellen · Vorlage einfügen, jeweils über den echten Weg und nicht
 toten Zeilen-Abdruck am Block. Zwei Arme: mit dem unbedingten `delete`
 fallen sechs Punkte über vier verschiedene Wege, und wird gar nicht mehr
 gelöscht, fällt der Datenbank-Punkt.
+
+
+## E115 · Wer merkt, wann eine Zeichenschicht aufhört zu leben
+
+**19. August 2026.** Zwei Fehler in `Marken.schicht`, und beide hatten
+dieselbe Ursache: niemand merkte, wann eine Schicht abgehängt wurde.
+
+### Der eine: Zuhörer, die sich stapeln
+
+```ts
+flaeche.addEventListener('pointerup', abschliessen);
+flaeche.addEventListener('pointercancel', abschliessen);
+flaeche.addEventListener('pointerleave', abschliessen);
+addEventListener('pagehide', abschliessen);      // ← am FENSTER
+```
+
+Die ersten drei hängen an `flaeche` und gehen mit ihr. Der vierte hängt am
+Fenster und bleibt — und `schicht()` wird je Block und bei jedem
+Neuzeichnen neu gebaut.
+
+Gemessen: eine Seite mit zwei Blättern und zwei PDF-Seiten, danach
+zwanzigmal `App.zeichneSeite()`.
+
+```txt
+pagehide-Anmeldungen   vorher 5   nachher 85
+svg.blatt-marken       vorher 4   nachher  4
+```
+
+Achtzig Zuhörer auf abgehängten Flächen, jeder mit einer tiefen Kopie von
+`block.marken` daran. `abschliessen` ist bei jedem von ihnen zwar sofort
+fertig (`if (!laufend) return`), aber gehalten wird der Speicher trotzdem.
+
+### Der andere, und der ist schwerer: ein Strich geht verloren
+
+Zwischen `pointerdown` und `pointerup` steht der laufende Strich **nur** in
+der Schliessungsvariablen `laufend` und als Knoten im SVG — nicht in
+`marken`, nicht im Speicher. Wird der Block in diesem Moment neu gezeichnet,
+ist die alte Fläche abgehängt, der Zeiger-Fang gelöst, und `pointerup`
+erreicht niemanden mehr. `abschliessen` läuft nie. Der Strich ist weg.
+
+Und Neuzeichnen kommt **von selbst**:
+
+```txt
+PdfEinlesen   zeichnet nach jeder fertig gerechneten Seite neu — während
+              man auf dem Notizblatt daneben schreibt. Genau der Aufbau,
+              den E104 gebaut hat.
+Abgleich      bei jeder fremden Änderung.
+Editor        an über dreissig Stellen.
+```
+
+Nachgestellt: `pointerdown`, acht `pointermove`, KEIN `pointerup`, dann
+`App.zeichneSeite()`. Ergebnis vorher: `marken.length === 0`. Der Strich war
+gezogen, sichtbar, und nach dem Neuzeichnen nicht mehr vorhanden.
+
+### Ein Verzeichnis, und beides ist weg
+
+```ts
+const lebende = new Set<Lebend>();
+```
+
+Jede Schicht meldet sich an. Ein `MutationObserver` meldet, wenn sich am
+Dokument etwas ändert; dann wird durchgesehen, welche Fläche nicht mehr
+hängt. Deren Strich wird abgeschlossen und **gespeichert**, und der Eintrag
+fällt weg. Ist das Verzeichnis leer, hört der Beobachter wieder auf.
+
+Der `pagehide`-Zuhörer steht jetzt einmal ganz oben und gilt für alle. Dazu
+`visibilitychange`, weil am Telefon oft nur der kommt.
+
+**Ein Nachtrag beim Prüfen.** Der Strich war nach dem ersten Anlauf zwar
+gesichert, aber unsichtbar: die neue Schicht wurde aus dem Stand **vor** dem
+Sichern gebaut. `marken.length === 1`, kein `[data-sid]` im Bild. Also
+zeichnet der Durchgang einmal neu — aber nur, wenn wirklich etwas gesichert
+wurde. Das dreht sich nicht im Kreis: die abgehängten Schichten sind dann
+schon aus dem Verzeichnis gestrichen.
+
+**Geprüft** (test189 §1–§2): vier Flächen bleiben vier, und nach zwanzig
+Neuzeichnungen ist kein einziger Zuhörer dazugekommen · ein Strich ohne
+`pointerup` überlebt das Neuzeichnen, mit allen Punkten, und ist danach auch
+wieder zu sehen. Ein Arm: mit dem alten Zuhörer je Schicht steigt die Zahl
+auf 85 und der Strich ist vollständig verloren.
+
+
+## E116 · Der Weg daneben: zweimal geklickt, abgebrochen, lange gewartet
+
+**19. August 2026.** E106 hat „Aus dem Original zurückholen" gebaut, und der
+Weg, auf dem alles klappt, war geprüft. Vier Dinge daneben nicht.
+
+### Zwei Klicks, eine Dateileiche
+
+Jede bildlose Seite bekommt einen eigenen Knopf, und jeder Knopf sperrte
+bisher nur **sich selbst**. Ein zweiter Klick auf einer anderen Seite
+startete einen vollständigen zweiten Lauf über dieselbe Liste. Beide legen
+für denselben Block eine Datei ab; danach steht nur die zuletzt geschriebene
+in `bildDateiId`.
+
+Die andere bleibt liegen — als fertiger Datei-Satz mit **lebendem**
+`blockId`. Und `Dateien.verwaist()` sucht nach Sätzen ohne Block, findet
+diesen also grundsätzlich nie. Eine Leiche, die kein Aufräumer je findet.
+
+Gemessen mit zwei gleichzeitigen Aufrufen an einem zweiseitigen PDF:
+
+```txt
+ohne Sperre   4 abgeleitete Dateien, davon 2 von keinem Block benutzt
+mit Sperre    2 abgeleitete Dateien, davon 0
+```
+
+Der Schlüssel der Sperre ist die Kennung des Originals, nicht ein globales
+Flag: zwei verschiedene Dokumente dürfen sehr wohl nebeneinander rechnen.
+
+### „Seite 80 von 1"
+
+```ts
+melder.textContent = 'Seite ' + n + ' von ' + offen.length + ' …';
+```
+
+Links die Seitennummer **im Dokument**, rechts die Anzahl der **noch zu
+rechnenden** Seiten. Zwei Zählungen in einem „N von M". Bei einem Skript mit
+achtzig Seiten, von dem eine fehlt, stand da „Seite 80 von 1".
+
+### Der Fortschritts-Melder verstummte
+
+```ts
+set textContent(v) { if (t.classList.contains('show')) t.textContent = v; }
+```
+
+`UI.toast` ist EIN Element mit EINEM Zeitgeber. Ein Fortschritt bittet um
+120 000 ms — aber jede fremde Meldung dazwischen setzt den Zeitgeber neu und
+nimmt ihre eigenen 2600 ms mit. Danach fehlt `show`, und der Fortschritt ist
+für den Rest des Laufs stumm. Genau im langen Lauf, für den er da ist.
+
+Jetzt setzt jede Fortschreibung Text, Sichtbarkeit **und** Uhr neu. Eine
+fremde Meldung dazwischen ist kurz zu sehen und wird von der nächsten
+Fortschreibung abgelöst, statt sie zu töten.
+
+Das half nebenbei drei weiteren Meldern, die es genauso brauchten: dem
+Ablegen grosser Dateien (E99), dem Anhängen aus dem Seitenmenü und dem
+ersten Einlesen eines PDFs.
+
+**Und die Gegenprobe war zuerst grün.** Der erste Anlauf setzte die fremde
+Meldung und schrieb 50 ms später weiter — da stand `show` noch, und die alte
+Fassung tat brav ihren Dienst. Der Fehler beginnt erst, wenn die **fremde**
+Uhr abgelaufen ist. Wer die Probe leichter macht als die Wirklichkeit, prüft
+nichts (§55.2).
+
+### Scheitert es, bleibt nichts stehen
+
+Der Erfolgsweg zeichnete die Seite neu, der Fehlerweg nicht. Bricht es bei
+Seite 40 von 80 ab, sind vierzig Bilder fertig und stehen am Block — sie
+erschienen nur nicht. Und der Knopf, über den man es erneut versuchen würde,
+stand für immer auf „wird gerechnet …", weil `k.disabled` niemand
+zurücksetzte.
+
+Beides erledigt jetzt ein `App.zeichneSeite()` im `catch` und ein
+`.then(zurueck, zurueck)` am Knopf.
+
+**Geprüft** (test189 §3–§7, zusammen 32 Punkte mit E115): der Melder
+schreibt nach einer fremden Meldung und deren Ablauf weiter · zwei
+gleichzeitige Aufrufe erzeugen zwei Seitenbilder und keine Leiche · der
+Fortschritt zählt nie höher, als es zu rechnen gibt · der Knopf kommt nach
+einem Fehlschlag zurück. Vier Arme, jeder einzeln nachgewiesen.
+
+
+## E117 · Ein Ausdruck mit einer Grenze, die sich meldet
+
+**19. August 2026.** `bilderSammeln` machte vor dem Drucken aus **jedem**
+Seitenbild eine Daten-Adresse und behielt sie alle zugleich — ohne
+Obergrenze, ohne Stückelung.
+
+Die Zeichenketten liegen dabei doppelt im Speicher: einmal in der Karte,
+einmal im zusammengebauten HTML des Druckrahmens. Base64 legt ein Drittel
+obendrauf.
+
+```txt
+ 80 Seiten à 200 KB    16 MB Bytes  →  21 MB Base64  →  43 MB doppelt
+500 Seiten à 200 KB   100 MB Bytes  → 133 MB Base64  → 266 MB doppelt
+```
+
+§36 sagt dazu: „Große Dateien nicht vollständig in RAM laden." Ein
+gescanntes Skript ist genau der Fall, für den E103 gebaut wurde.
+
+### Warum eine Grenze allein die falsche Hälfte wäre
+
+Ein Ausdruck, in dem stillschweigend die Hälfte der Seiten leer ist, sieht
+aus wie ein vollständiger — und man merkt es, wenn man ihn braucht. Das ist
+derselbe Fehler wie E111, nur auf Papier.
+
+Also drei Dinge zusammen:
+
+```txt
+DRUCK_BILDER_MAX = 40 MB   die Grenze, benannt und an einer Stelle
+im Ausdruck                „Seite 2 — dieses Dokument ist für einen
+                            Ausdruck am Stück zu gross. Die Striche stehen
+                            unten trotzdem; für das Seitenbild drucke das
+                            Dokument in Abschnitten."
+als Meldung                „1 Seitenbild ist für einen Ausdruck zu gross
+                            und bleibt leer — drucke das Dokument in
+                            Abschnitten."
+```
+
+Der Satz im Ausdruck ist ausdrücklich ein **anderer** als der für ein Bild,
+das im Bestand fehlt (E106). Wer eine leere Seite findet, muss wissen,
+welche der beiden Lagen vorliegt — die eine löst man mit „Aus dem Original
+zurückholen", die andere nicht.
+
+### Was trotzdem mitkommt
+
+Die **Handschrift**. Sie steht als `marken` am Block, geht als SVG in den
+Ausdruck und kostet nichts. Sie wegzulassen wäre die eigentliche
+Enttäuschung: das Seitenbild hat man notfalls im Original, die eigene
+Antwort nicht.
+
+Die Präsentation (E109) bekommt keine Grenze und braucht keine: sie nimmt
+`blob:`-Adressen, und deren Bytes hält der Browser ohnehin schon.
+
+**Geprüft** (test190, 18 Punkte): drei Seiten, eine davon zu gross — alle
+drei stehen im Ausdruck, zwei tragen ein Bild, die dritte nennt Seitenzahl
+und Grund im Klartext und ausdrücklich NICHT den falschen · beide Striche
+sind da, auch der auf der Seite ohne Bild · die Meldung nennt die Zahl · und
+ein gewöhnlicher Ausdruck aus drei kleinen Seiten bleibt unangetastet, ohne
+Warnung. Zwei Arme: ohne Grenze fallen fünf Punkte (die Seite bleibt leer
+und behauptet den falschen Grund), mit einer viel zu kleinen Grenze fallen
+sechs andere.

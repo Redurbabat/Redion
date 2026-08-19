@@ -24,6 +24,69 @@ const Marken = (() => {
     };
     const FARBEN = ['#111111', '#d64545', '#2f7ed8', '#3aa757', '#e0a419'];
     const BREITEN = [1.2, 2.4, 5];
+    const lebende = new Set();
+    let beobachter = null;
+    let durchsichtGeplant = false;
+    const durchsehen = () => {
+        durchsichtGeplant = false;
+        let gesichert = false;
+        for (const l of [...lebende]) {
+            if (l.flaeche.isConnected)
+                continue;
+            /* Abgehängt: was gerade gemalt wurde, gehört gesichert — genau dafür
+               ist dieser Durchgang da. */
+            if (l.abschliessen())
+                gesichert = true;
+            lebende.delete(l);
+        }
+        if (!lebende.size && beobachter) {
+            beobachter.disconnect();
+            beobachter = null;
+        }
+        /* UND EINMAL NEU ZEICHNEN, wenn wirklich etwas gesichert wurde.
+           Der Strich steht sonst zwar im Speicher — die neue Schicht wurde aber
+           aus dem Stand VOR dem Sichern gebaut und zeigt ihn nicht. Gemessen:
+           `marken.length === 1`, aber kein `[data-sid]` im Bild.
+           Das dreht sich nicht im Kreis: die abgehängten Schichten sind aus dem
+           Verzeichnis gestrichen, der nächste Durchgang findet nichts mehr zu
+           sichern und zeichnet also auch nicht. */
+        if (gesichert && typeof App !== 'undefined' && App.zeichneSeite)
+            App.zeichneSeite();
+    };
+    const anmelden = (l) => {
+        /* Hier wird NICHT durchgesehen. `anmelden` läuft mitten im Zeichnen,
+           und der Vorgänger dieser Schicht ist in derselben DOM-Änderung
+           abgehängt worden — der Beobachter meldet sie gleich, und der
+           Durchgang läuft eine Mikroaufgabe später. Hier zu sichern hiesse,
+           mitten im Aufbau `App.zeichneSeite()` zu rufen. */
+        lebende.add(l);
+        if (typeof MutationObserver === 'undefined')
+            return;
+        if (!beobachter) {
+            beobachter = new MutationObserver(() => {
+                /* Eine Änderung am Dokument sagt nicht, WELCHE — nachsehen kostet
+                   bei einer Handvoll Schichten nichts, aber nicht bei jedem
+                   Tastendruck einzeln. Also gebündelt, einmal je Aufgabenschlange. */
+                if (durchsichtGeplant)
+                    return;
+                durchsichtGeplant = true;
+                queueMicrotask(durchsehen);
+            });
+        }
+        beobachter.observe(document.documentElement, { childList: true, subtree: true });
+    };
+    /* Der EINE Zuhörer fürs Zumachen. Er meldet sich nie ab, weil es ihn nur
+       einmal gibt — das ist der Unterschied zu vorher. */
+    if (typeof addEventListener === 'function') {
+        addEventListener('pagehide', () => { for (const l of lebende)
+            l.abschliessen(); });
+        /* Am Telefon kommt `pagehide` oft gar nicht; `hidden` schon. */
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden')
+                for (const l of lebende)
+                    l.abschliessen();
+        });
+    }
     const zeichneMarke = (m) => {
         if (!m || !Array.isArray(m.pts) || m.pts.length < 2)
             return null;
@@ -71,18 +134,23 @@ const Marken = (() => {
         });
         let laufend = null;
         let laufKnoten = null;
+        /* Gibt zurück, ob wirklich etwas gesichert wurde — der Durchgang oben
+           zeichnet nur dann neu (E115). */
         const abschliessen = () => {
             if (!laufend)
-                return;
+                return false;
+            let gesichert = false;
             /* Ein Punkt ist kein Strich. */
             if (laufend.pts.length >= 2) {
                 marken.push(laufend);
                 sichern();
+                gesichert = true;
             }
             else if (laufKnoten && laufKnoten.parentNode)
                 laufKnoten.remove();
             laufend = null;
             laufKnoten = null;
+            return gesichert;
         };
         flaeche.addEventListener('pointerdown', (e) => {
             if (werkzeug === 'schreiben' || !e.isPrimary)
@@ -134,7 +202,10 @@ const Marken = (() => {
         flaeche.addEventListener('pointerup', abschliessen);
         flaeche.addEventListener('pointercancel', abschliessen);
         flaeche.addEventListener('pointerleave', abschliessen);
-        addEventListener('pagehide', abschliessen);
+        /* Diese drei hängen an `flaeche` und gehen mit ihr. Der vierte Weg —
+           „die Fläche ist weg, der Strich noch offen" — läuft über das
+           Verzeichnis oben (E115). */
+        anmelden({ flaeche, abschliessen });
         /* Zu Beginn wird geschrieben, nicht gemalt — die Schicht ist durchlässig. */
         flaeche.style.pointerEvents = 'none';
         const setzeWerkzeug = (w) => {

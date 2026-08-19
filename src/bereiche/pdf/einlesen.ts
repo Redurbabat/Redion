@@ -316,7 +316,29 @@ const PdfEinlesen = (() => {
    * Die fehlenden Seitenbilder eines Dokuments neu rechnen.
    * @param quelleId Kennung des abgelegten Originals
    */
-  const neuBerechnen = async (quelleId: string): Promise<any> => {
+  /* WER RECHNET GERADE AN WELCHEM DOKUMENT (E116).
+     Jede bildlose Seite bekommt einen eigenen Knopf, und jeder Knopf sperrte
+     bisher nur SICH SELBST. Ein zweiter Klick auf einer anderen Seite startete
+     einen vollständigen zweiten Lauf über dieselbe Liste: beide legen für
+     denselben Block eine Datei ab, aber nur die zuletzt geschriebene steht
+     danach in `bildDateiId`. Die andere bleibt als fertiger Datei-Satz mit
+     LEBENDEM `blockId` liegen — und `Dateien.verwaist()` sucht nach Sätzen
+     ohne Block, findet diesen also grundsätzlich nie. Eine Dateileiche, die
+     niemand mehr wegräumen kann.
+     Der Schlüssel ist die Kennung des Originals: zwei verschiedene Dokumente
+     dürfen sehr wohl nebeneinander rechnen. */
+  const laufendeRechnungen = new Map<string, Promise<any>>();
+
+  const neuBerechnen = (quelleId: string): Promise<any> => {
+    const schon = laufendeRechnungen.get(quelleId);
+    if (schon) return schon;
+    const lauf = neuBerechnenWirklich(quelleId)
+      .finally(() => { laufendeRechnungen.delete(quelleId); });
+    laufendeRechnungen.set(quelleId, lauf);
+    return lauf;
+  };
+
+  const neuBerechnenWirklich = async (quelleId: string): Promise<any> => {
     const offen = await ohneBild(quelleId);
     if (!offen.length) return { seiten: 0, grund: 'nichts offen' };
 
@@ -341,7 +363,12 @@ const PdfEinlesen = (() => {
       for (const b of offen) {
         const n = Number(b.nr) || 1;
         if (n > griff.seiten) continue;   /* Seite gibt es im Original nicht */
-        melder.textContent = 'Seite ' + n + ' von ' + offen.length + ' …';
+        /* Links wie rechts dieselbe Zählung. Vorher stand links die
+             Seitennummer IM DOKUMENT und rechts die Anzahl der noch zu
+             rechnenden Seiten — bei Seite 80 eines Skripts, von dem eine
+             fehlt, las man „Seite 80 von 1" (E116). */
+        melder.textContent = 'Seite ' + (fertig + 1) + ' von ' + offen.length +
+          ' wird gerechnet …';
         const bild = await griff.alsBild(n);
         const satz = await Dateien.ablegen(
           new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }),
@@ -361,6 +388,12 @@ const PdfEinlesen = (() => {
       return { seiten: fertig };
     } catch (e: unknown) {
       melder.remove();
+      /* AUCH HIER NEU ZEICHNEN (E116). Bricht es bei Seite 40 von 80 ab,
+         sind vierzig Bilder fertig und stehen am Block — sie erschienen nur
+         nicht, weil das Neuzeichnen allein am Erfolgsweg hing. Und der Knopf,
+         über den man es erneut versuchen würde, stand für immer auf „wird
+         gerechnet …". Beides erledigt dieser eine Aufruf. */
+      App.zeichneSeite();
       UI.toast('Die Seiten liessen sich nicht neu rechnen: ' +
                (e instanceof Error ? e.message : String(e)));
       return { seiten: fertig, fehler: true };

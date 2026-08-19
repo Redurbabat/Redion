@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**19. August 2026 · 154 Prüfläufe**
+**19. August 2026 · 156 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -1167,55 +1167,78 @@ Was dabei noch auffiel und mit behoben ist: `.praesi img{max-height:52vh}`
 deckelte das Seitenbild und brach damit sein Seitenverhältnis — zwei gleich
 grosse A4-Seiten standen 442 gegen 541 px hoch nebeneinander.
 
-## L39 · Was der Gegenlese-Durchgang am PDF-Teil gefunden hat
+## L39 · ~~Was der Gegenlese-Durchgang am PDF-Teil gefunden hat~~ · erledigt
 
 **19. August 2026.** Nachdem E103–E110 grün waren, habe ich den neuen Code
 noch einmal gegenlesen lassen — nicht auf „läuft es", sondern auf „was geht
 schief, wenn jemand etwas anderes tut als vorgesehen".
 
-Zwei Funde sind sofort behoben (E111 · das Manifest der Sicherung log ·
-E112 · drei Stellen, an denen fremder Text ungeprüft ins HTML ging). Diese
-hier stehen noch offen, in der Reihenfolge, in der sie wehtun:
+Zwei Funde waren sofort behoben (E111 · das Manifest der Sicherung log ·
+E112 · drei Stellen, an denen fremder Text ungeprüft ins HTML ging). **Die
+sieben hier sind es inzwischen auch** — E115, E116 und E117, am selben Tag.
+Sie bleiben stehen, weil die Liste zeigt, wonach zu suchen sich gelohnt hat:
 
 ```txt
-⚠ Ein Strich, der gerade gezogen wird, ist verloren, wenn der Block in
+✅ E115 · Ein Strich, der gerade gezogen wird, ist verloren, wenn der Block in
   diesem Moment neu gezeichnet wird. Zwischen `pointerdown` und `pointerup`
   steht er nur in einer Schliessungsvariablen und als Knoten im SVG — nicht
   in `marken`, nicht im Speicher. Neuzeichnen kommt beim PDF-Einlesen und
   beim Abgleich von selbst. Das ist Datenverlust, wenn auch kleiner.
 
-✗ „Aus dem Original zurückholen" hat keine Sperre gegen sich selbst. Jede
+✅ E116 · „Aus dem Original zurückholen" hat keine Sperre gegen sich selbst. Jede
   bildlose Seite hat einen eigenen Knopf; jeder Knopf sperrt nur SICH, und
   zwei Klicks starten zwei vollständige Läufe über dieselbe Liste. Das
   Seitenbild des Verlierers bleibt als fertiger Datei-Satz mit lebendigem
   `blockId` liegen, wo `Dateien.verwaist()` es grundsätzlich nicht findet.
 
-✗ Bricht das Zurückholen ab, bleibt der Knopf für immer auf „wird
+✅ E116 · Bricht das Zurückholen ab, bleibt der Knopf für immer auf „wird
   gerechnet …", und die bereits gerechneten Seiten erscheinen nicht — der
   Erfolgsweg zeichnet neu, der Fehlerweg nicht.
 
-✗ Der Fortschritt beim Zurückholen zählt zwei verschiedene Dinge
+✅ E116 · Der Fortschritt beim Zurückholen zählt zwei verschiedene Dinge
   gegeneinander: links die Seitennummer im Dokument, rechts die Anzahl der
   noch zu rechnenden Seiten. „Seite 80 von 1" ist das Ergebnis.
 
-✗ Der Fortschrittsbalken verstummt nach 120 Sekunden und nach jeder anderen
+✅ E116 · Der Fortschrittsbalken verstummt nach 120 Sekunden und nach jeder anderen
   Meldung — `UI.toast` ist EIN Element mit EINEM Zeitgeber. Genau im langen
   Lauf, für den er da ist.
 
-⚠ `Marken.schicht` meldet seinen `pagehide`-Zuhörer nie ab. Bei jedem
+✅ E115 · `Marken.schicht` meldet seinen `pagehide`-Zuhörer nie ab. Bei jedem
   Neuzeichnen kommt einer je Blatt und je PDF-Seite dazu, samt der tiefen
   Kopie von `block.marken` und dem abgehängten SVG.
 
-⚠ Drucken hält alle Seitenbilder eines Dokuments GLEICHZEITIG als
+✅ E117 · Drucken hält alle Seitenbilder eines Dokuments GLEICHZEITIG als
   Base64-Zeichenketten im Speicher — ohne Obergrenze, ohne Stückelung. Bei
   achtzig Seiten sind das mehrere hundert Megabyte, und §36 sagt das
   Gegenteil.
 ```
 
-Der gemeinsame Nenner der ersten vier: der Weg, auf dem alles klappt, ist
+Der gemeinsame Nenner der ersten vier: der Weg, auf dem alles klappt, war
 gebaut; der Weg daneben — zweimal geklickt, abgebrochen, lange gewartet —
 nicht. Das ist keine Nachlässigkeit im Einzelnen, sondern die Stelle, an der
 ein Prüflauf nachfragen muss, statt den Erfolgsfall noch einmal zu prüfen.
+`test189` und `test190` tun jetzt genau das.
+
+**Zwei Nachbarn habe ich beim Suchen mitgefunden und NICHT behoben** — sie
+gehören nicht in dieselbe Änderung, aber sie sollen nicht verschwiegen sein:
+
+```txt
+⚠ `Verweise.graph()` meldet seinen `resize`-Zuhörer nie ab
+  (verweise.ts:349). Wer den Graphen fünfzigmal öffnet, hat fünfzig
+  Zuhörer, jeder mit einer Zeichenfläche daran. Anders als bei E115 hängt
+  das aber am Öffnen von Hand, nicht am automatischen Neuzeichnen — es
+  wächst also nur, wenn jemand es wachsen lässt.
+
+⚠ Dasselbe im Rundgang (rundgang.ts:129), einmal je Rundgang. Noch
+  seltener, aber dieselbe Form.
+```
+
+**Was von der Liste bleibt, ist die Lehre, nicht der Rest.** Sieben Funde,
+und nicht einer davon war ein Fehler im Erfolgsfall — jeder sass daneben:
+beim zweiten Klick, beim Abbruch, nach zwanzig Neuzeichnungen, nach 120
+Sekunden, bei fünfhundert Seiten. Ein Prüflauf, der nur den Erfolgsfall
+abfährt, hätte keinen einzigen davon gefunden, und alle Prüfläufe vor E115
+haben genau das getan.
 
 ## L40 · Was der Markdown-Rundlauf noch nicht kann
 

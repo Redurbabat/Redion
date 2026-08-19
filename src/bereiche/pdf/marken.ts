@@ -26,6 +26,96 @@ const Marken = (() => {
   const FARBEN = ['#111111', '#d64545', '#2f7ed8', '#3aa757', '#e0a419'];
   const BREITEN = [1.2, 2.4, 5];
 
+  /* ==========================================================================
+   * DIE LEBENDEN SCHICHTEN — ein Verzeichnis, und zwei Fehler weniger (E115)
+   * --------------------------------------------------------------------------
+   * `schicht()` hängte bisher `addEventListener('pagehide', abschliessen)` ans
+   * FENSTER, ohne Gegenstück. Sie wird aber je Block und bei JEDEM Neuzeichnen
+   * neu gebaut. Gemessen: eine Seite mit zwei Blättern und zwei PDF-Seiten,
+   * danach zwanzigmal `App.zeichneSeite()` — 4 Zuhörer vorher, 84 nachher,
+   * bei unverändert 4 SVG-Flächen im Dokument. Jeder hielt die abgehängte
+   * Fläche und eine tiefe Kopie von `block.marken` fest.
+   *
+   * Und der schwerere Fehler sass daneben: zwischen `pointerdown` und
+   * `pointerup` steht der laufende Strich NUR in `laufend` und als Knoten im
+   * SVG — nicht in `marken`, nicht im Speicher. Wird der Block in diesem
+   * Moment neu gezeichnet, ist die alte Fläche abgehängt, der Zeiger-Fang
+   * gelöst, und `pointerup` erreicht niemanden mehr. `abschliessen` läuft nie,
+   * der Strich ist weg.
+   *
+   * Und Neuzeichnen kommt VON SELBST: `PdfEinlesen` zeichnet nach jeder
+   * fertigen Seite neu, während man auf dem Notizblatt daneben schreibt
+   * (genau der Aufbau aus E104), und der Abgleich tut es bei jeder fremden
+   * Änderung.
+   *
+   * Beides hat dieselbe Ursache — niemand merkte, wann eine Schicht aufhört
+   * zu leben. Also wird das jetzt gemerkt:
+   *
+   *   · EIN `pagehide`-Zuhörer für alle, hier oben, nicht einer je Schicht.
+   *   · Ein Beobachter meldet, wenn sich am Dokument etwas ändert; dann wird
+   *     durchgesehen, welche Fläche nicht mehr hängt. Deren Strich wird
+   *     abgeschlossen und GESPEICHERT, und der Eintrag fällt weg.
+   *   · Ist das Verzeichnis leer, hört der Beobachter wieder auf. Kein
+   *     Zuhörer bleibt zurück, wenn keine Schicht mehr da ist.
+   * ========================================================================*/
+  type Lebend = { flaeche: SVGSVGElement; abschliessen: () => boolean };
+  const lebende = new Set<Lebend>();
+  let beobachter: MutationObserver | null = null;
+  let durchsichtGeplant = false;
+
+  const durchsehen = (): void => {
+    durchsichtGeplant = false;
+    let gesichert = false;
+    for (const l of [...lebende]) {
+      if (l.flaeche.isConnected) continue;
+      /* Abgehängt: was gerade gemalt wurde, gehört gesichert — genau dafür
+         ist dieser Durchgang da. */
+      if (l.abschliessen()) gesichert = true;
+      lebende.delete(l);
+    }
+    if (!lebende.size && beobachter) { beobachter.disconnect(); beobachter = null; }
+    /* UND EINMAL NEU ZEICHNEN, wenn wirklich etwas gesichert wurde.
+       Der Strich steht sonst zwar im Speicher — die neue Schicht wurde aber
+       aus dem Stand VOR dem Sichern gebaut und zeigt ihn nicht. Gemessen:
+       `marken.length === 1`, aber kein `[data-sid]` im Bild.
+       Das dreht sich nicht im Kreis: die abgehängten Schichten sind aus dem
+       Verzeichnis gestrichen, der nächste Durchgang findet nichts mehr zu
+       sichern und zeichnet also auch nicht. */
+    if (gesichert && typeof App !== 'undefined' && App.zeichneSeite) App.zeichneSeite();
+  };
+
+  const anmelden = (l: Lebend): void => {
+    /* Hier wird NICHT durchgesehen. `anmelden` läuft mitten im Zeichnen,
+       und der Vorgänger dieser Schicht ist in derselben DOM-Änderung
+       abgehängt worden — der Beobachter meldet sie gleich, und der
+       Durchgang läuft eine Mikroaufgabe später. Hier zu sichern hiesse,
+       mitten im Aufbau `App.zeichneSeite()` zu rufen. */
+    lebende.add(l);
+    if (typeof MutationObserver === 'undefined') return;
+    if (!beobachter) {
+      beobachter = new MutationObserver(() => {
+        /* Eine Änderung am Dokument sagt nicht, WELCHE — nachsehen kostet
+           bei einer Handvoll Schichten nichts, aber nicht bei jedem
+           Tastendruck einzeln. Also gebündelt, einmal je Aufgabenschlange. */
+        if (durchsichtGeplant) return;
+        durchsichtGeplant = true;
+        queueMicrotask(durchsehen);
+      });
+    }
+    beobachter.observe(document.documentElement, { childList: true, subtree: true });
+  };
+
+  /* Der EINE Zuhörer fürs Zumachen. Er meldet sich nie ab, weil es ihn nur
+     einmal gibt — das ist der Unterschied zu vorher. */
+  if (typeof addEventListener === 'function') {
+    addEventListener('pagehide', () => { for (const l of lebende) l.abschliessen(); });
+    /* Am Telefon kommt `pagehide` oft gar nicht; `hidden` schon. */
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden')
+        for (const l of lebende) l.abschliessen();
+    });
+  }
+
   const zeichneMarke = (m: any): SVGElement | null => {
     if (!m || !Array.isArray(m.pts) || m.pts.length < 2) return null;
     const d = 'M' + m.pts.map((q: number[]) => q[0] + ' ' + q[1]).join(' L');
@@ -77,12 +167,16 @@ const Marken = (() => {
     let laufend: any = null;
     let laufKnoten: SVGElement | null = null;
 
-    const abschliessen = (): void => {
-      if (!laufend) return;
+    /* Gibt zurück, ob wirklich etwas gesichert wurde — der Durchgang oben
+       zeichnet nur dann neu (E115). */
+    const abschliessen = (): boolean => {
+      if (!laufend) return false;
+      let gesichert = false;
       /* Ein Punkt ist kein Strich. */
-      if (laufend.pts.length >= 2) { marken.push(laufend); sichern(); }
+      if (laufend.pts.length >= 2) { marken.push(laufend); sichern(); gesichert = true; }
       else if (laufKnoten && laufKnoten.parentNode) laufKnoten.remove();
       laufend = null; laufKnoten = null;
+      return gesichert;
     };
 
     flaeche.addEventListener('pointerdown', (e: PointerEvent) => {
@@ -128,7 +222,10 @@ const Marken = (() => {
     flaeche.addEventListener('pointerup', abschliessen);
     flaeche.addEventListener('pointercancel', abschliessen);
     flaeche.addEventListener('pointerleave', abschliessen);
-    addEventListener('pagehide', abschliessen);
+    /* Diese drei hängen an `flaeche` und gehen mit ihr. Der vierte Weg —
+       „die Fläche ist weg, der Strich noch offen" — läuft über das
+       Verzeichnis oben (E115). */
+    anmelden({ flaeche, abschliessen });
 
     /* Zu Beginn wird geschrieben, nicht gemalt — die Schicht ist durchlässig. */
     flaeche.style.pointerEvents = 'none';

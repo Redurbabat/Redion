@@ -418,12 +418,20 @@ const ohneKommentare = (t: string): string =>
 const quelle = ohneKommentare(
   fs.readFileSync(path.join(WURZEL, 'src/bereiche/pdf/einlesen.ts'), 'utf8'));
 
+/* AB DER ERSTEN FUNDSTELLE BIS ANS ENDE, nicht `split(...)[1]`.
+   `split` teilt an JEDER Fundstelle, und seit E116 gibt es zwei: den kleinen
+   Vorbau mit der Sperre und `neuBerechnenWirklich` dahinter. `[1]` war
+   danach der Vorbau — drei Zeugen, die plötzlich nichts mehr sahen und rot
+   wurden, ohne dass am Geprüften etwas falsch war. */
+const abZurueckholen = quelle.slice(quelle.indexOf('const neuBerechnen'));
+p('Es gibt das Zurückholen überhaupt', abZurueckholen.length > 200,
+  String(abZurueckholen.length));
 p('Das Zurückholen nimmt die Masse vom BLOCK, nicht aus einer neuen Messung',
-  !/geometrie\(/.test(quelle.split('const neuBerechnen')[1] || ''));
+  !/geometrie\(/.test(abZurueckholen));
 p('Die neuen Bilder tragen wieder `abgeleitet`',
-  /abgeleitet: true/.test(quelle.split('const neuBerechnen')[1] || ''));
+  /abgeleitet: true/.test(abZurueckholen));
 p('Und es wird eine Seite nach der anderen gerechnet',
-  /setTimeout\(r, 0\)/.test(quelle.split('const neuBerechnen')[1] || ''));
+  /setTimeout\(r, 0\)/.test(abZurueckholen));
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 

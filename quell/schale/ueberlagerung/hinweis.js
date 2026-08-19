@@ -46,8 +46,22 @@ const Hinweis = (() => {
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
         return {
-            set textContent(v) { if (t.classList.contains('show'))
-                t.textContent = v; },
+            /* JEDE MELDUNG HÄLT SICH SELBST AM LEBEN (E116).
+               Vorher stand hier `if (t.classList.contains('show'))` — geschrieben
+               wurde also nur, solange der Balken ohnehin noch stand. Das ist genau
+               andersherum gedacht als der Zweck: `dauer` ist bei einem Fortschritt
+               120 000 ms, aber JEDE fremde Meldung dazwischen setzt `toastTimer`
+               neu und nimmt die 120 Sekunden mit. Danach war der Fortschritt für
+               den Rest des Laufs stumm — im langen Lauf, für den er da ist.
+               Jetzt setzt jede Fortschreibung Text, Sichtbarkeit UND Uhr neu. Eine
+               fremde Meldung dazwischen ist damit kurz zu sehen und wird von der
+               nächsten Fortschreibung abgelöst, statt sie zu töten. */
+            set textContent(v) {
+                t.textContent = v;
+                t.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
+            },
             get textContent() { return t.textContent || ''; },
             remove() { clearTimeout(toastTimer); t.classList.remove('show'); }
         };

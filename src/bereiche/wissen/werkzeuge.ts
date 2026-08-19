@@ -747,7 +747,7 @@ const Werkzeuge = (() => {
   const praesentation = async (p: any) => {
     /* Die Seitenbilder vorher holen — `folieBlock` zeichnet synchron. Für
        den Bildschirm genügen blob-Adressen (E109). */
-    const bilder = await bilderSammeln(p, false);
+    const bilder = (await bilderSammeln(p, false)).adressen;
     const folien: any[] = [];
     /* Eine Folie: Titel und die Blöcke darauf, jeder mit seiner Tiefe. */
     type Folie = { titel: string; bloecke: { b: any; tiefe: number }[] };
@@ -1608,21 +1608,56 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
    * Dokument läuft, genügt die blob-Adresse: sie kostet nichts und lädt
    * sofort (E109).
    */
-  const bilderSammeln = async (p: any, alsDaten = true): Promise<Record<string, string>> => {
-    const karte: Record<string, string> = {};
+  /* EINE OBERGRENZE FÜR DEN DRUCK (E117).
+     Eine Daten-Adresse ist eine Zeichenkette im Arbeitsspeicher, und beim
+     Drucken werden ALLE zugleich gehalten: einmal in der Karte, einmal im
+     zusammengebauten HTML des Druckrahmens. Bei 200 KB je Seitenbild sind
+     das schon bei achtzig Seiten rund 43 MB — doppelt, plus Base64-Aufschlag
+     ein Drittel obendrauf. Ein Skript mit fünfhundert Seiten sprengt jedes
+     Telefon (§36: „Große Dateien nicht vollständig in RAM laden").
+     Also eine Grenze — und, weil §35 gilt, KEINE stille: was nicht mehr
+     hineinpasst, wird gezählt, im Ausdruck an seinem Platz benannt und dem
+     Menschen gesagt. Eine Prüfung, die schweigend die Hälfte weglässt, sieht
+     aus wie eine vollständige. */
+  const DRUCK_BILDER_MAX = 40 * 1024 * 1024;
+
+  const bilderSammeln = async (p: any, alsDaten = true):
+      Promise<{ adressen: Record<string, string>; ausgelassen: string[] }> => {
+    const adressen: Record<string, string> = {};
+    const ausgelassen: string[] = [];
+    let summe = 0;
     const gehe = async (id: string, tiefe: number): Promise<void> => {
       if (tiefe > 6) return;
       for (const b of Store.childrenOf(id)) {
         if (b.type === 'page') continue;
-        if (b.type === 'pdfseite' && b.bildDateiId)
-          karte[b.id] = alsDaten
-            ? await alsDatenAdresse(b.bildDateiId)
-            : ((await Dateien.adresse(b.bildDateiId)) || '');
+        if (b.type === 'pdfseite' && b.bildDateiId) {
+          if (!alsDaten) {
+            /* Für die Präsentation: eine `blob:`-Adresse kostet nichts —
+               der Browser hält die Bytes ohnehin schon (E109). */
+            adressen[b.id] = (await Dateien.adresse(b.bildDateiId)) || '';
+          } else {
+            const satz = await Store.dateiHolen(b.bildDateiId);
+            const gross = Number(satz?.groesse) || 0;
+            /* `summe > 0` ist die Ausnahme für den ersten: EIN Bild kommt
+               immer mit, auch wenn es allein die Grenze reisst. Sonst
+               druckte ein Dokument aus einer einzigen grossen Seite gar
+               nichts, und „gar nichts" ist ein schlechteres Ergebnis als
+               „einmal zu viel Speicher". Redions eigener Rasterer liefert
+               rund 200 KB je Seite; über 40 MB kommt nur, was von aussen
+               eingespielt wurde. */
+            if (summe + gross > DRUCK_BILDER_MAX && summe > 0) {
+              ausgelassen.push(b.id);
+            } else {
+              adressen[b.id] = await alsDatenAdresse(b.bildDateiId);
+              summe += gross;
+            }
+          }
+        }
         await gehe(b.id, tiefe + 1);
       }
     };
     await gehe(p.id, 0);
-    return karte;
+    return { adressen, ausgelassen };
   };
 
   /** Die Striche eines Blocks als SVG-Text. */
@@ -1651,7 +1686,12 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       'border:1px dashed #bbb}';
 
   const drucken = async (p: any) => {
-    const bilder = await bilderSammeln(p);
+    const { adressen: bilder, ausgelassen } = await bilderSammeln(p);
+    const zuGross = new Set(ausgelassen);
+    if (ausgelassen.length)
+      UI.toast(ausgelassen.length + ' Seitenbild' +
+        (ausgelassen.length === 1 ? '' : 'er') + ' ist für einen Ausdruck zu ' +
+        'gross und bleibt leer — drucke das Dokument in Abschnitten.', 8000);
     /* Der Sonderfall setzt PDF-Seiten und Blätter; alles andere macht die
        gewöhnliche Kette. `null` heisst „nicht meine Sache". */
     const inhalt = seiteAlsHtml(p, (b: any, tiefe: number, hinab): string | null => {
@@ -1667,10 +1707,17 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
            nichts: das Base64-Alphabet enthaelt keines der fuenf Zeichen.
            Die Folie daneben macht es seit E109 richtig; hier fehlte es
            schlicht (E112). */
+        /* Drei Fälle, drei Sätze. „Leer" ist keiner davon: wer eine leere
+           Seite im Ausdruck findet, muss wissen, WARUM sie leer ist (§35). */
+        const fehlt = zuGross.has(b.id)
+          ? `Seite ${esc(b.nr || '')} — dieses Dokument ist für einen ` +
+            'Ausdruck am Stück zu gross. Die Striche stehen unten trotzdem; ' +
+            'für das Seitenbild drucke das Dokument in Abschnitten.'
+          : `Seite ${esc(b.nr || '')} — das Bild fehlt in diesem Bestand. ` +
+            'Hol es in Redion aus dem Original zurück.';
         return '<figure class="blatt-druck">' +
           (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
-               : `<div class="fehlt">Seite ${esc(b.nr || '')} — das Bild fehlt ` +
-                 'in diesem Bestand. Hol es in Redion aus dem Original zurück.</div>') +
+               : `<div class="fehlt">${fehlt}</div>`) +
           markenAlsSvg(b, bw, bh) + '</figure>';
       }
       if (b.type === 'blatt') {
