@@ -7894,3 +7894,104 @@ Trennlinie, Bild) · und `/page` als die eine begründete Ausnahme, samt
 Nachweis, dass der Verweis auf der Elternseite wirklich öffnet. Ein Arm:
 mit dem Blatt-Stand vor E118 fallen zwei Punkte, und einer davon nennt
 `blatt` von selbst.
+
+
+## E120 · Einrückung ist Struktur
+
+**19. August 2026.** `alsMarkdown` schreibt sie seit jeher —
+`'  '.repeat(tiefe)`. `ausMarkdown` warf sie weg: jede Zeile wurde mit
+`trim()` beschnitten und mit `Store.addBlock(p.id, …)` direkt unter die Seite
+gehängt.
+
+Gemessen an einer dreistufigen Liste:
+
+```txt
+- Oben eins                bullet          bullet  Oben eins
+  - Darunter A               bullet        bullet  Darunter A
+    - Noch tiefer              bullet   →  bullet  Noch tiefer
+  - Darunter B               bullet        bullet  Darunter B
+- Oben zwei                bullet          bullet  Oben zwei
+- [ ] Aufgabe              todo            todo    Aufgabe
+  Unteraufgabe               text          text    Unteraufgabe
+```
+
+Der Text war da, die Ordnung nicht. Sieben Blöcke nebeneinander auf Ebene
+null.
+
+L40 hat das bei E113 ausdrücklich offen gelassen: „dieselbe Funktion bedient
+auch den `.md`-Import, und ein zweites Thema in einer Änderung geht gegen
+§45." Hier ist es als eigene Änderung.
+
+### Ein Stapel, mehr braucht es nicht
+
+```ts
+const stapel: string[] = [p.id];
+```
+
+`stapel[0]` ist die Seite. Wer auf Tiefe t schreibt, hängt unter
+`stapel[t]` und wird selbst zu `stapel[t+1]`. Zwei Schritte je Ebene, weil
+das ist, was `alsMarkdown` schreibt — und ein Tabulator zählt als zwei, weil
+Menschen ihn tippen.
+
+Zwei Entscheidungen darin sind Absicht:
+
+**Wer zu tief springt, landet eine Ebene tiefer, nicht im Nichts.** Markdown
+erlaubt den Sprung von Ebene 0 auf Ebene 6; `Math.min(…, stapel.length - 1)`
+fängt ihn ab. Ein verlorener Block wäre schlimmer als eine Ebene daneben.
+
+**Was über mehrere Zeilen läuft, hängt dort, wo es ANFING.** Ein Codeblock
+und eine Tabelle wurden bisher beim Abschluss angelegt — also mit der
+Einrückung der Zeile *danach*. Beide merken sich jetzt ihre erste Zeile.
+
+### Der `.md`-Import wird davon besser, nicht schlechter
+
+Das war die Sorge, die die Änderung aufgeschoben hat. Sie hat sich nicht
+bestätigt — im Gegenteil: in einer `.md`-Datei aus fremder Hand ist die
+Einrückung die **einzige** Strukturangabe, die es gibt. Gemessen an einer
+gewöhnlichen Datei:
+
+```txt
+- Obst                   →   bullet Obst
+  - Äpfel                       bullet Äpfel        (zwei Leerzeichen)
+- Gemüse                     bullet Gemüse
+    - Karotten                  bullet Karotten     (vier)
+	- Zwiebeln                  bullet Zwiebeln     (Tabulator)
+1. Erster Schritt            number Erster Schritt
+   1. Unterschritt              number Unterschritt (drei)
+```
+
+Alle vier Schreibweisen kommen richtig an. `test49` (Obsidian-Import) und
+`test66` bleiben unverändert grün.
+
+### Und ein Fehler, den erst die Reparatur sichtbar machte
+
+Ein eingerückter Codeblock behielt seine Einrückung IM CODE:
+
+```txt
+- Aufgabe
+  ```js
+  if (x) {
+    tuWas();
+  }
+  ```
+```
+
+`codeText.push(roh)` nahm die Zeile roh, also mit den zwei Leerzeichen des
+Zauns. Vor E120 war das selten — ein Codeblock in einem Listenpunkt landete
+ohnehin auf Ebene null. Jetzt ist es der Normalfall.
+
+`trim()` wäre die falsche Antwort: die zwei Leerzeichen vor `tuWas()`
+gehören dem **Code** und müssen bleiben. Abgezogen wird genau der Einzug des
+Zauns, keiner mehr.
+
+Gefunden hat das die eigene Prüfung beim ersten Lauf, nicht ein Mensch und
+nicht ein Gegenleser — der einzige Punkt in dieser Suite, der beim Schreiben
+rot war.
+
+**Geprüft** (test193, 25 Punkte): der Rundlauf mit einer dreistufigen Liste,
+zweimal hintereinander · eine gewöhnliche `.md`-Datei mit zwei, drei, vier
+Leerzeichen und einem Tabulator · ein Sprung um sechs Ebenen, der nichts
+verliert · Codeblock, Tabelle und Platzhalter an ihrem Platz, mit Inhalt,
+Sprache und Zeilen · Quelltext-Zeugen, darunter „keine Zeile hängt sich mehr
+blind an die Seite" (gezählt: 13 solcher Stellen vorher, 0 danach). Ein Arm:
+mit dem alten Zurückleser fallen sechzehn Punkte.

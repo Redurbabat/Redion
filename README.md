@@ -902,6 +902,42 @@ sonstige Dateien
 Dateien können lokal gespeichert und in Seiten oder Datenbanken verwendet werden.
 
 
+Ein A4-Blatt zum Schreiben und Malen
+
+`/blatt` legt ein leeres Blatt im A4-Format an. Darauf lässt sich beides:
+gewöhnlich tippen — es sind normale Blöcke im Satzspiegel — und mit dem
+Stift darüber malen, in fünf Farben und drei Strichbreiten, mit Radierer.
+
+Die Werkzeugleiste oben schaltet zwischen „Schreiben" und „Malen" um. Beim
+Schreiben geht der Zeiger an der Zeichenschicht vorbei, beim Malen liegt sie
+darüber — man markiert also nicht versehentlich Text, während man zeichnet.
+
+`＋ Seite` hängt eine weitere A4-Länge an, sodass ein Blatt so lang werden
+kann, wie es soll.
+
+Die Striche liegen in Blattkoordinaten, nicht in Bildschirmpunkten. Ein
+Blatt sieht deshalb am Telefon und am grossen Bildschirm gleich aus, und
+was man am einen malt, steht am anderen an derselben Stelle.
+
+
+Schriftgrösse, Schriftart und Farbe je Block
+
+Über das Blockmenü (⋮⋮) lassen sich für jeden einzelnen Block einstellen:
+
+    Farbe            Text- und Hintergrundfarbe, wie bisher
+    Schriftgrösse    von sehr klein bis sehr gross
+    Schriftart       Serifenlos, Serif, Schreibmaschine, Handschrift
+
+Das gilt je Block, nicht für die ganze Seite — eine Überschrift darf eine
+andere Schrift haben als der Absatz darunter. Für die ganze App gibt es das
+ebenfalls, in den Einstellungen.
+
+Eine Grenze, die man kennen sollte: Markdown kann davon nichts tragen. Wer
+eine Seite über „Quelltext ansehen" bearbeitet und übernimmt, verliert
+Farbe, Grösse und Schriftart. Der Dialog sagt es vorher, und eine Fassung
+wird gesichert.
+
+
 PDFs zum Draufschreiben
 
 Ein PDF, das man auf eine Seite zieht, wird zu einzelnen Seiten, durch die
@@ -925,6 +961,12 @@ Weitergeben lässt sich das trotzdem: **Strg + P** druckt die Seite mit allem
 darauf — Seitenbild, Striche, Notizblätter — oder speichert sie über den
 Druckdialog als PDF. Die Striche gehen dabei als Vektoren hinaus und bleiben
 scharf.
+
+Bei sehr langen Dokumenten hat das eine Grenze: die Seitenbilder müssen zum
+Drucken alle zugleich in den Speicher, und ab rund 40 MB hört Redion damit
+auf. Die betroffenen Seiten bleiben im Ausdruck leer und sagen an ihrem
+Platz, warum — die Striche darauf sind trotzdem da. Wer ein ganzes Skript
+ausdrucken will, druckt es in Abschnitten.
 
 Die Seitenbilder kommen NICHT in die Sicherung — bei einem Skript mit 500
 Seiten wären das sonst hundert Megabyte in jeder `.redion`. Das Original ist

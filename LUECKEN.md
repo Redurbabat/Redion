@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**19. August 2026 · 158 Prüfläufe**
+**19. August 2026 · 159 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -1254,21 +1254,28 @@ benannt statt still:
   nicht. Sie zu Platzhaltern zu machen hiesse, den Knopf abzuschaffen — von
   einer Seite mit farbigen Absätzen bliebe kein lesbarer Text übrig.
 
-⚠ Die Verschachtelung von Listen. `alsMarkdown` schreibt die Einrückung
-  (`'  '.repeat(tiefe)`), `ausMarkdown` liest sie nicht: jede Zeile wird
-  mit `trim()` beschnitten und landet direkt unter der Seite. Eine
-  Unterliste kommt eine Ebene flach zurück.
-
-  Das liesse sich heilen — ein Stapel von Eltern nach Einrücktiefe, zwölf
-  Zeilen. Es wurde hier NICHT mitgemacht, weil dieselbe Funktion auch den
-  Import von `.md`-Dateien bedient (test49) und ein zweites Thema in einer
-  Änderung gegen §45 geht.
+✅ E120 · Die Verschachtelung von Listen. `alsMarkdown` schrieb die
+  Einrückung schon immer, `ausMarkdown` las sie nicht — jede Zeile wurde
+  mit `trim()` beschnitten und landete direkt unter der Seite. Seit E120
+  gibt es einen Stapel von Eltern nach Einrücktiefe, und der `.md`-Import
+  wurde davon besser statt schlechter: dort ist die Einrückung die einzige
+  Strukturangabe, die es gibt.
 
 ✗ Ein `toggle` wird beim Zurücklesen zum `quote` — beide schreiben `> `.
   Seit E113 ist das folgenlos, weil `toggle` gar nicht mehr durch Markdown
-  geht, sondern als Platzhalter überlebt. Wer die Verschachtelung angeht,
-  sollte es trotzdem mitnehmen.
+  geht, sondern als Platzhalter überlebt. Beim Einlesen einer FREMDEN
+  `.md`-Datei bleibt es dabei: was dort `> ` heisst, kann Redion nicht
+  auseinanderhalten, und ein Zitat ist die harmlosere Wahl.
 ```
+
+**Was von L40 bleibt, ist eine Frage der Form, nicht des Formats.** Farbe,
+Schriftgrösse und Schriftart liessen sich nur retten, indem man beim
+Übernehmen die vorhandenen Blöcke WIEDERVERWENDET, statt sie zu leeren und
+neu zu bauen — Zeile für Zeile gegen den Bestand abgleichen und nur ändern,
+was sich geändert hat. Das brächte nebenbei stabile Kennungen und einen
+brauchbaren Rückgängig-Schritt. Es ist ein Umbau von `ausMarkdown` und
+keine Ergänzung, und deshalb steht es hier und nicht in einer Änderung
+nebenbei.
 
 Der Platzhalter selbst hat eine Eigenschaft, die man kennen muss: **wer die
 Zeile löscht, löscht den Block.** Das ist so gewollt — sonst wäre „Quelltext

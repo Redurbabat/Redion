@@ -239,6 +239,51 @@ const WissenDienst = (() => {
     let imCode = false, codeText: string[] = [], codeLang = '';
     const zeilen = text.split('\n');
 
+    /* ==========================================================================
+     * EINRÜCKUNG IST STRUKTUR (E120)
+     * --------------------------------------------------------------------------
+     * `alsMarkdown` schreibt sie seit jeher — `'  '.repeat(tiefe)` —, und
+     * `ausMarkdown` warf sie weg: jede Zeile wurde mit `trim()` beschnitten und
+     * landete direkt unter der Seite. Gemessen an einer dreistufigen Liste:
+     *
+     *     - Oben eins            bullet
+     *       - Darunter A           bullet        →   alle sieben Blöcke
+     *         - Noch tiefer          bullet          nebeneinander auf
+     *       - Darunter B           bullet          Ebene null
+     *     - Oben zwei            bullet
+     *
+     * Eine Unterliste kam eine Ebene flach zurück, und eine Aufgabe verlor
+     * ihre Unteraufgaben. Beim Einlesen einer `.md`-Datei dasselbe: dort ist
+     * die Einrückung sogar die einzige Strukturangabe, die es gibt.
+     *
+     * Der Stapel hält je Tiefe den Elternteil. `stapel[0]` ist die Seite; wer
+     * auf Tiefe t schreibt, hängt unter `stapel[t]` und wird selbst zu
+     * `stapel[t+1]`.
+     *
+     * ZWEI SCHRITTE JE EBENE, nicht vier: das ist, was `alsMarkdown` schreibt.
+     * Ein Tabulator zählt als zwei — Menschen tippen ihn, und in einer
+     * `.md`-Datei aus anderer Hand steht er oft.
+     *
+     * Und: WER TIEFER SPRINGT, ALS ES EBENEN GIBT, landet eine Ebene tiefer
+     * als der Vorgänger und nicht im Nichts (`Math.min`). Markdown erlaubt
+     * das, und ein verlorener Block wäre schlimmer als eine Ebene daneben. */
+    const stapel: string[] = [p.id];
+    const tiefeVon = (roh: string): number => {
+      const vorn = (roh.match(/^[ \t]*/)?.[0] || '').replace(/\t/g, '  ');
+      return Math.floor(vorn.length / 2);
+    };
+    const elternFuer = (roh: string): string => {
+      const t = Math.min(tiefeVon(roh), stapel.length - 1);
+      stapel.length = t + 1;
+      return stapel[t] as string;
+    };
+    /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken. */
+    const lege = (roh: string, typ: string, felder?: Record<string, unknown>): any => {
+      const b = Store.addBlock(elternFuer(roh), typ, felder);
+      stapel.push(b.id);
+      return b;
+    };
+
     /* --- Markdown-Tabellen -------------------------------------------------
      * | Kopf | Kopf |
      * |------|------|
@@ -251,22 +296,27 @@ const WissenDienst = (() => {
     const zellen = (z: any) => z.trim().replace(/^\||\|$/g, '').split('|').map((x: any) => x.trim());
 
     let tabelle: string[][] | null = null;   /* sammelt die Zeilen der laufenden Tabelle */
+    let tabelleZeile = '';                  /* ihre erste Zeile — für die Einrückung */
+    let codeZeile = '';                     /* dasselbe für den Codeblock */
+    let codeEinzug = '';                    /* und wie weit SEIN Zaun eingerückt war */
     const tabelleAbschliessen = (): void => {
       if (!tabelle) return;
       if (tabelle.length) {
         const breite = Math.max(...tabelle.map((r: any) => r.length));
         const rows = tabelle.map((r: any) => { const k = r.slice();
           while (k.length < breite) k.push(''); return k; });
-        Store.addBlock(p.id, 'table', { rows, kopfZeile: true });
+        /* Die Tabelle hängt dort, wo ihre ERSTE Zeile stand — nicht dort, wo
+           die Zeile danach steht (E120). */
+        lege(tabelleZeile, 'table', { rows, kopfZeile: true });
       }
-      tabelle = null;
+      tabelle = null; tabelleZeile = '';
     };
 
     zeilen.forEach((roh: any) => {
       /* Tabellen zuerst — sie laufen über mehrere Zeilen */
       if (!imCode && istTabellenzeile(roh)) {
-        if (istTrenner(roh)) { if (!tabelle) tabelle = []; return; }
-        if (!tabelle) tabelle = [];
+        if (istTrenner(roh)) { if (!tabelle) { tabelle = []; tabelleZeile = roh; } return; }
+        if (!tabelle) { tabelle = []; tabelleZeile = roh; }
         tabelle.push(zellen(roh));
         return;
       }
@@ -277,36 +327,61 @@ const WissenDienst = (() => {
          Kennung enthält — sonst könnte ein `-->` im Text die Zeile
          verschieben. */
       const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab|blk):([A-Za-z0-9_-]+)-->\s*(?:.*)$/);
-      if (platz?.[1] && alteDbs[platz[1]]) { Store.baumEinfuegen(alteDbs[platz[1]], p.id); return; }
+      if (platz?.[1] && alteDbs[platz[1]]) {
+        const neu = Store.baumEinfuegen(alteDbs[platz[1]], elternFuer(roh));
+        if (neu) stapel.push(neu.id);
+        return;
+      }
 
       if (roh.trim().startsWith('```')) {
         if (imCode) {
-          Store.addBlock(p.id, 'code', { text: codeText.join('\n'), lang: codeLang });
+          lege(codeZeile, 'code', { text: codeText.join('\n'), lang: codeLang });
           imCode = false; codeText = []; codeLang = '';
-        } else { imCode = true; codeLang = roh.trim().slice(3).trim(); }
+        } else {
+          imCode = true; codeLang = roh.trim().slice(3).trim(); codeZeile = roh;
+          codeEinzug = roh.match(/^[ \t]*/)?.[0] || '';
+        }
         return;
       }
-      if (imCode) { codeText.push(roh); return; }
+      if (imCode) {
+        /* NUR DEN EINZUG DES ZAUNS abziehen, nicht `trim()` (E120).
+           Ein Codeblock in einem Listenpunkt steht eingerückt:
+
+               - Aufgabe
+                 ```js
+                 if (x) {
+                   tuWas();
+                 }
+                 ```
+
+           Der Zaun hat zwei Leerzeichen, die zum Markdown gehören; die zwei
+           weiteren vor `tuWas()` gehören zum CODE. `trim()` nähme beide und
+           machte aus eingerücktem Code flachen. Also genau den Zaun-Einzug
+           abziehen und den Rest stehen lassen. */
+        codeText.push(codeEinzug && roh.startsWith(codeEinzug)
+          ? roh.slice(codeEinzug.length) : roh);
+        return;
+      }
 
       const z = roh.trim();
       if (!z) return;
-      if (/^(---|\*\*\*|___)$/.test(z)) { Store.addBlock(p.id, 'divider'); return; }
-      if (/^\$\$(.*)\$\$$/.test(z)) { Store.addBlock(p.id, 'equation', { text: z.slice(2, -2) }); return; }
+      if (/^(---|\*\*\*|___)$/.test(z)) { lege(roh, 'divider'); return; }
+      if (/^\$\$(.*)\$\$$/.test(z)) { lege(roh, 'equation', { text: z.slice(2, -2) }); return; }
       const bild = z.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
-      if (bild) { Store.addBlock(p.id, 'image', { src: bild[2], caption: bild[1] }); return; }
+      if (bild) { lege(roh, 'image', { src: bild[2], caption: bild[1] }); return; }
 
       const m = z.match(/^(#{1,3})\s+(.*)$/);
-      if (m) { Store.addBlock(p.id, ['h1','h2','h3'][m[1].length - 1], { text: m[2] }); return; }
+      if (m) { lege(roh, ['h1','h2','h3'][m[1].length - 1] as string, { text: m[2] }); return; }
       const todo = z.match(/^[-*+]\s+\[([ xX])\]\s+(.*)$/);
-      if (todo) { Store.addBlock(p.id, 'todo', { text: todo[2], checked: todo[1].toLowerCase() === 'x' }); return; }
-      if (/^[-*+]\s+/.test(z)) { Store.addBlock(p.id, 'bullet', { text: z.replace(/^[-*+]\s+/, '') }); return; }
-      if (/^\d+\.\s+/.test(z)) { Store.addBlock(p.id, 'number', { text: z.replace(/^\d+\.\s+/, '') }); return; }
-      if (/^>\s*💡\s*/.test(z)) { Store.addBlock(p.id, 'callout', { text: z.replace(/^>\s*💡\s*/, ''), icon: '💡' }); return; }
-      if (/^>\s+/.test(z)) { Store.addBlock(p.id, 'quote', { text: z.replace(/^>\s+/, '') }); return; }
-      if (/^\?\?\s+/.test(z)) { Store.addBlock(p.id, 'flashcard', { text: z.replace(/^\?\?\s+/, '') }); return; }
-      Store.addBlock(p.id, 'text', { text: z });
+      if (todo) { lege(roh, 'todo', { text: todo[2], checked: (todo[1] as string).toLowerCase() === 'x' }); return; }
+      if (/^[-*+]\s+/.test(z)) { lege(roh, 'bullet', { text: z.replace(/^[-*+]\s+/, '') }); return; }
+      if (/^\d+\.\s+/.test(z)) { lege(roh, 'number', { text: z.replace(/^\d+\.\s+/, '') }); return; }
+      if (/^>\s*💡\s*/.test(z)) { lege(roh, 'callout', { text: z.replace(/^>\s*💡\s*/, ''), icon: '💡' }); return; }
+      if (/^>\s+/.test(z)) { lege(roh, 'quote', { text: z.replace(/^>\s+/, '') }); return; }
+      if (/^\?\?\s+/.test(z)) { lege(roh, 'flashcard', { text: z.replace(/^\?\?\s+/, '') }); return; }
+      lege(roh, 'text', { text: z });
     });
-    if (imCode && codeText.length) Store.addBlock(p.id, 'code', { text: codeText.join('\n'), lang: codeLang });
+    if (imCode && codeText.length) lege(codeZeile, 'code', { text: codeText.join('\n'), lang: codeLang });
     tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
   };
 
