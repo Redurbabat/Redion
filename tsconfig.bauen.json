@@ -63,6 +63,7 @@
     "src/global.d.ts",
     "src/core/helpers/**/*.ts",
     "src/core/security/**/*.ts",
+    "src/core/sheet/**/*.ts",
     "src/core/spreadsheet/**/*.ts",
     "src/core/import/**/*.ts",
     "src/bereiche/**/*.ts",

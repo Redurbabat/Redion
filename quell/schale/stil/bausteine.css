@@ -2659,3 +2659,59 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
               border-radius:3px }
 .rs-fuss{ font-size:13px; color:var(--text-faint); margin-top:9px;
           line-height:1.4 }
+
+/* ── Das A4-Blatt (E100) ───────────────────────────────────────────────────
+   Das Papier ist weiss, auch im Dunkelmodus: ein Blatt, das die Farbe
+   wechselt, ist kein Blatt. Nur der Rahmen darum folgt dem Thema.        */
+/* `width:100%; min-width:0` ist hier nicht Zierde: die Hülle steht in einem
+   Flex-Elternteil, und ein Flex-Kind mit `min-width:auto` wächst mit seinem
+   Inhalt, statt zu schrumpfen. Gemessen: die Werkzeugleiste war 627 px breit
+   in einem 390-px-Fenster — sie stand über den Rand und rollte nicht, weil
+   sie gar nicht erst eingeengt war. Dieselbe Falle wie bei den
+   Tabellenkarten (E89). */
+.blatt-huelle{margin:10px 0; width:100%; min-width:0}
+.blatt-werk{display:flex; flex-wrap:wrap; align-items:center; gap:4px;
+            padding:6px 8px; background:var(--bg-card); border-radius:8px 8px 0 0;
+            border:1px solid var(--rand); border-bottom:none}
+.blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
+                   font-size:13px; color:var(--text); background:none; cursor:pointer}
+.blatt-werk button:hover{background:var(--bg-hover)}
+.blatt-werk button.on{background:var(--accent); color:#fff}
+.blatt-trenn{width:1px; height:20px; background:var(--rand); margin:0 4px}
+.blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
+             border:2px solid transparent}
+.blatt-farbe.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--bg-card) inset}
+.blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
+.blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
+
+.blatt-papier{position:relative; width:100%; background:#fff; color:#111;
+              border:1px solid var(--rand); border-radius:0 0 8px 8px;
+              box-shadow:0 2px 10px rgba(0,0,0,.18); overflow:hidden}
+.blatt-inhalt{position:relative; z-index:1; height:100%; overflow:auto}
+/* Der Text auf dem Papier ist schwarz — auch im Dunkelmodus. */
+.blatt-inhalt, .blatt-inhalt *{color:#111 !important}
+.blatt-inhalt .ct:empty::before{color:#999 !important}
+
+.blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
+              color:#111; touch-action:none}
+/* Beim Malen soll der Finger nicht die Seite rollen und nichts markieren. */
+.blatt-papier.malt{cursor:crosshair; user-select:none}
+.blatt-papier.malt .blatt-inhalt{user-select:none}
+
+.blatt-werk .zeichen{margin-right:5px}
+.blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
+
+@media (max-width:760px){
+  /* EINE Zeile, die seitlich rollt — nicht drei gestapelte. Mit Wörtern
+     brauchte die Leiste bei 390 px drei Zeilen und verdeckte das Papier
+     (E100, mit Augen gesehen). Dasselbe Muster wie die Auswahlleiste. */
+  .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+              max-width:100%; -webkit-overflow-scrolling:touch}
+  .blatt-werk::-webkit-scrollbar{display:none}
+  .blatt-werk > *{flex:0 0 auto}
+  .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
+  .blatt-werk .wort{display:none}
+  .blatt-werk .zeichen{margin:0; font-size:17px}
+  .blatt-farbe{width:30px; height:30px; min-width:30px}
+  .blatt-strich{min-width:38px}
+}

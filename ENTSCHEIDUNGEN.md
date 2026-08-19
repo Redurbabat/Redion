@@ -6121,3 +6121,120 @@ nicht eingetragen (zwei fallen).
 beim Ablegen absichtlich zur Unterseite, nicht zum Anhang. Die erste
 Fassung mass mit einer Textdatei und fand keinen Block — kein Fehler
 im Code, ein Fehler in der Probe.
+
+
+## E100 · Das A4-Blatt: schreiben und malen auf demselben Papier
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen
+
+Redur will ein leeres A4-Blatt neben dem PDF, auf das er direkt
+schreiben kann. Das Blatt kommt zuerst — es braucht keine fremde
+Bibliothek, und es ist der Untergrund, auf dem später die PDF-Seite
+liegt.
+
+**Der Text sind gewöhnliche Redion-Blöcke.** Sie liegen als Kinder im
+Blatt und werden von `Blocks.render` gezeichnet. Damit erbt das Blatt
+alles, was der Editor kann: Slash-Menü, Überschriften, Aufgabenlisten,
+Verweise, Suche, Export, Zurücknehmen. Ein eigener Texteditor auf dem
+Papier wäre eine zweite Maschine für dieselbe Frage (E29), und die
+zweite ist die, die niemand pflegt.
+
+**Gemalt wird auf einer SVG-Schicht darüber**, die Zeiger nur annimmt,
+wenn ein Stift gewählt ist. Sonst steht sie auf `pointer-events: none`
+— man schreibt durch sie hindurch, als wäre sie nicht da.
+
+### Warum ein eigener Blattraum, wo es doch das Whiteboard gibt
+
+Das Whiteboard rechnet in rohen Bildschirmpunkten:
+
+```js
+const r = flaeche.getBoundingClientRect();
+return [Math.round(e.clientX - r.left), Math.round(e.clientY - r.top)];
+```
+
+Das geht gut, solange die Fläche immer gleich breit ist. Ist sie es
+nicht — anderes Fenster, Seitenleiste zu, Telefon quer —, liegt jeder
+gespeicherte Strich woanders als beim Zeichnen. Ohne Fehlermeldung:
+die Zeichnung sieht aus wie eine Zeichnung, nur verrutscht.
+
+`src/core/sheet/space.ts` ist deshalb die **einzige** Stelle, die
+Bildschirm in Blatt übersetzt, und sie tut es über die Bildschirm-
+matrix des SVG (`getScreenCTM().inverse()`). Die berücksichtigt
+Breite, Zoom, Rollstand und jede CSS-Verwandlung darüber — was
+`getBoundingClientRect` nicht tut. Gespeichert werden Blattpunkte in
+A4-Massen (595,28 × 841,89 pt), also dieselbe Zahl auf jedem Schirm.
+
+`raumVersion: 1` steht von der ersten Zeile an in den Daten. Ändert
+sich je die Bedeutung der Zahlen, ist an ihr erkennbar, welche Deutung
+gilt. Das Whiteboard hat das nicht — und deshalb wäre dort jede
+Änderung eine stille Verschiebung.
+
+### Vier Dinge, die das Blatt anders macht
+
+```txt
+Koordinaten   Blattpunkte statt Bildschirmpunkte
+Zeichnen      ein DOM-Knoten je Strich. Das Whiteboard baut bei JEDEM
+              pointermove die ganze Fläche neu (innerHTML = '')
+Abbrechen     pointercancel und pagehide schliessen den Strich ab —
+              sonst bleibt er offen, wenn das Telefon dazwischenfunkt
+Ein Finger    nur isPrimary malt, sonst zieht die zweite Hand beim
+              Zoomen eine Linie quer übers Blatt
+```
+
+### Was bewusst nicht drin ist
+
+**Kein Textsatz.** Das Blatt hat A4-Mass und 20 mm Rand, mehr nicht.
+Alles Weitere wäre eine Textverarbeitung, und Redion ist keine.
+
+**Feste Seitenhöhe, Text rollt innen.** Ein Blatt, das mit dem Inhalt
+wächst, würde die Zeichenschicht mitdehnen und alle Striche
+verschieben. Wer mehr Platz braucht, hängt mit „＋ Seite" eine echte
+A4-Seite an; die gestrichelte Linie zeigt den Umbruch.
+
+**Kein Zoom in v1.** Die Breite macht das Fenster, gerollt wird
+gewöhnlich. Eine eigene Kamera bräuchte Mehrfinger-Behandlung.
+
+**Geprüft** (test174): derselbe Strich wird bei **1400, 900 und
+400 px** Fensterbreite gezogen — an derselben anteiligen Stelle des
+Papiers, nicht an derselben Pixelstelle. Die gespeicherten Blattpunkte
+müssen um weniger als 2 pt auseinanderliegen (0,7 mm — die
+Ungenauigkeit des Zeigers, nicht der Rechnung). Dazu: ein Strich fügt
+genau EINEN Knoten hinzu, die Striche überleben das Neuladen samt
+`raumVersion`, und der Radierer nimmt genau einen weg.
+
+### Was das Hinsehen fand, und kein Prüflauf gemeldet hätte
+
+Nach §55 wurde das Blatt am Rechner UND am Telefon wirklich gezeichnet —
+mit Text darauf und einer echten Skizze, mit der Maus gezogen.
+
+**Am Telefon brauchte die Werkzeugleiste drei Zeilen.** Bei 390 px
+verdeckte sie das halbe Papier, bevor die erste Aufgabe anfing.
+Behoben wie bei der Auswahlleiste (E84): eine Zeile, die seitlich
+rollt, am Telefon nur Zeichen statt Wörter.
+
+**Und darunter lag eine Flexbox-Falle.** Die neue Messung meldete
+`ueberDenRand: true` bei `rollbar: false` — die Leiste stand über den
+Rand und rollte trotzdem nicht. Gemessen war sie **627 px breit in
+einem 390-px-Fenster**: die Hülle steht in einem Flex-Elternteil, und
+ein Flex-Kind mit `min-width: auto` wächst mit seinem Inhalt, statt zu
+schrumpfen. `overflow-x` konnte gar nicht greifen, weil nie etwas
+eingeengt war. Dieselbe Falle wie bei den Tabellenkarten (E89) —
+zweite Auflage, diesmal beim ersten Mal gefunden, weil §37 zu jeder
+Telefonleiste eine Messung verlangt und nicht nur ein Bild.
+
+**Zwei Fehler lagen in meiner eigenen Probe, nicht im Code:** Der
+Text erschien nicht auf dem Papier, weil ich über `window.Blocks`
+zugriff — der Editor hängt sich aber nirgends an `window`, bei
+`module: none` teilen sich alle Dateien einen Namensraum. Und der
+Zeuge „im Code steht kein getBoundingClientRect" schlug an, weil der
+Kopf dieser Datei die alte Rechnung ZITIERT. Ein Zeuge, der
+Kommentare liest, bezeugt Prosa statt Code; er entfernt sie jetzt
+vorher.
+
+**Drei Gegenprobe-Arme, jeder einzeln.** Der wichtigste ist der
+erste: rechnet der Blattraum wieder in Bildschirmpunkten, liegt
+derselbe Strich bei 1400 / 900 / 400 px **82 pt und 116 pt
+auseinander** — knapp drei und vier Zentimeter auf dem Papier. Das
+ist der stille Fehler, den das Whiteboard heute hat, sichtbar
+gemacht. Dazu: die Fläche beim Ziehen neu bauen (7 Knoten statt
+einem), und die Raumfassung nicht mitspeichern.

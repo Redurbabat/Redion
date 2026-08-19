@@ -5640,6 +5640,62 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .rs-fuss{ font-size:13px; color:var(--text-faint); margin-top:9px;
           line-height:1.4 }
 
+/* ── Das A4-Blatt (E100) ───────────────────────────────────────────────────
+   Das Papier ist weiss, auch im Dunkelmodus: ein Blatt, das die Farbe
+   wechselt, ist kein Blatt. Nur der Rahmen darum folgt dem Thema.        */
+/* `width:100%; min-width:0` ist hier nicht Zierde: die Hülle steht in einem
+   Flex-Elternteil, und ein Flex-Kind mit `min-width:auto` wächst mit seinem
+   Inhalt, statt zu schrumpfen. Gemessen: die Werkzeugleiste war 627 px breit
+   in einem 390-px-Fenster — sie stand über den Rand und rollte nicht, weil
+   sie gar nicht erst eingeengt war. Dieselbe Falle wie bei den
+   Tabellenkarten (E89). */
+.blatt-huelle{margin:10px 0; width:100%; min-width:0}
+.blatt-werk{display:flex; flex-wrap:wrap; align-items:center; gap:4px;
+            padding:6px 8px; background:var(--bg-card); border-radius:8px 8px 0 0;
+            border:1px solid var(--rand); border-bottom:none}
+.blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
+                   font-size:13px; color:var(--text); background:none; cursor:pointer}
+.blatt-werk button:hover{background:var(--bg-hover)}
+.blatt-werk button.on{background:var(--accent); color:#fff}
+.blatt-trenn{width:1px; height:20px; background:var(--rand); margin:0 4px}
+.blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
+             border:2px solid transparent}
+.blatt-farbe.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--bg-card) inset}
+.blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
+.blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
+
+.blatt-papier{position:relative; width:100%; background:#fff; color:#111;
+              border:1px solid var(--rand); border-radius:0 0 8px 8px;
+              box-shadow:0 2px 10px rgba(0,0,0,.18); overflow:hidden}
+.blatt-inhalt{position:relative; z-index:1; height:100%; overflow:auto}
+/* Der Text auf dem Papier ist schwarz — auch im Dunkelmodus. */
+.blatt-inhalt, .blatt-inhalt *{color:#111 !important}
+.blatt-inhalt .ct:empty::before{color:#999 !important}
+
+.blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
+              color:#111; touch-action:none}
+/* Beim Malen soll der Finger nicht die Seite rollen und nichts markieren. */
+.blatt-papier.malt{cursor:crosshair; user-select:none}
+.blatt-papier.malt .blatt-inhalt{user-select:none}
+
+.blatt-werk .zeichen{margin-right:5px}
+.blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
+
+@media (max-width:760px){
+  /* EINE Zeile, die seitlich rollt — nicht drei gestapelte. Mit Wörtern
+     brauchte die Leiste bei 390 px drei Zeilen und verdeckte das Papier
+     (E100, mit Augen gesehen). Dasselbe Muster wie die Auswahlleiste. */
+  .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+              max-width:100%; -webkit-overflow-scrolling:touch}
+  .blatt-werk::-webkit-scrollbar{display:none}
+  .blatt-werk > *{flex:0 0 auto}
+  .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
+  .blatt-werk .wort{display:none}
+  .blatt-werk .zeichen{margin:0; font-size:17px}
+  .blatt-farbe{width:30px; height:30px; min-width:30px}
+  .blatt-strich{min-width:38px}
+}
+
 </style>
 
 <!-- =========================================================================
@@ -7867,6 +7923,77 @@ window.Sanitize = Sanitize;
 <!-- Der Tabellenkern. Rechnet mit der vorhandenen Formelmaschine, die
      weiter unten geladen wird — der Zugriff steht hinter typeof, also
      zaehlt hier nur, dass beide da sind, bevor jemand rechnet. -->
+<script>
+/* ===== quell/core/sheet/space.js ===== */
+"use strict";
+/* ============================================================================
+ * core/sheet/space.ts — der Blattraum
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/sheet/space.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/sheet/space.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * EINE STELLE, DIE BILDSCHIRM IN BLATT ÜBERSETZT — und keine zweite.
+ *
+ * Die vorhandene Zeichenfläche rechnet in rohen Bildschirmpunkten:
+ *
+ *     const r = flaeche.getBoundingClientRect();
+ *     return [Math.round(e.clientX - r.left), Math.round(e.clientY - r.top)];
+ *
+ * Das geht gut, solange die Fläche immer gleich breit ist. Ist sie es
+ * nicht — anderes Fenster, Seitenleiste zu, Telefon quer, Zoom —, dann
+ * liegt jeder gespeicherte Strich woanders als beim Zeichnen. Und zwar
+ * ohne Fehlermeldung: die Zeichnung sieht aus wie eine Zeichnung, nur
+ * verrutscht. Das ist die Sorte Verlust, die niemand bemerkt.
+ *
+ * Ein Blatt hat deshalb feste Masse in PUNKTEN, und das SVG trägt eine
+ * `viewBox`. Was gespeichert wird, sind Blattpunkte — dieselbe Zahl auf
+ * jedem Bildschirm. Die Umrechnung macht der Browser selbst über die
+ * Bildschirmmatrix des SVG; sie berücksichtigt Breite, Zoom, Rollstand
+ * und jede CSS-Verwandlung darüber, was `getBoundingClientRect` nicht tut.
+ *
+ * `raumVersion` steht von der ersten Zeile an in den Daten. Ändert sich je
+ * die Bedeutung der Zahlen, ist an ihr erkennbar, welche Deutung gilt —
+ * die Zeichenfläche hat das nicht, und deshalb wäre dort jede Änderung
+ * eine stille Verschiebung.
+ * ==========================================================================*/
+const SheetSpace = (() => {
+    /* A4 in Punkten, 1 pt = 1/72 Zoll: 210 × 297 mm. Krumme Zahlen, aber die
+       richtigen — 595/842 wären 0,05 mm daneben, und beim Drucken zählt das. */
+    const A4_BREITE = 595.28;
+    const A4_HOEHE = 841.89;
+    /* 20 mm Rand, wie auf einem Schulblatt. */
+    const RAND = 56.69;
+    const RAUM_VERSION = 1;
+    /** Zwei Nachkommastellen genügen: 0,01 pt sind 3,5 Tausendstel Millimeter. */
+    const rund = (n) => Math.round(n * 100) / 100;
+    /**
+     * Ein Zeigerpunkt vom Bildschirm in Blattpunkte.
+     *
+     * Gibt `null` zurück, wenn das SVG (noch) keine Bildschirmmatrix hat —
+     * das passiert bei einem Element, das nicht im Dokument hängt oder
+     * `display: none` ist. Dann wird NICHT geraten.
+     */
+    const zuBlatt = (svg, e) => {
+        if (!svg || !svg.getScreenCTM)
+            return null;
+        const matrix = svg.getScreenCTM();
+        if (!matrix)
+            return null;
+        const punkt = new DOMPoint(e.clientX, e.clientY).matrixTransform(matrix.inverse());
+        if (!isFinite(punkt.x) || !isFinite(punkt.y))
+            return null;
+        return [rund(punkt.x), rund(punkt.y)];
+    };
+    /** Wie viele Blattseiten hoch ist dieses Blatt? Mindestens eine. */
+    const seiten = (hoehe) => Math.max(1, Math.ceil((Number(hoehe) || A4_HOEHE) / A4_HOEHE));
+    return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, seiten };
+})();
+window.SheetSpace = SheetSpace;
+
+</script>
 <script>
 /* ===== quell/core/spreadsheet/address.js ===== */
 "use strict";
@@ -10249,6 +10376,7 @@ Register.bloecke = (() => {
         { id: 'html', name: 'HTML', icon: '</>', gruppe: 'Erweitert', cmd: ['html'] },
         /* --- Wissen ------------------------------------------------------------ */
         { id: 'flashcard', name: 'Karteikarte', icon: '🎴', gruppe: 'Wissen', cmd: ['karteikarte', 'flashcard', 'lernen'], ph: 'Frage :: Antwort' },
+        { id: 'blatt', name: 'A4-Blatt', icon: '📄', gruppe: 'Wissen', cmd: ['blatt', 'a4', 'papier', 'schreiben', 'malen'] },
         { id: 'whiteboard', name: 'Whiteboard', icon: '🖍', gruppe: 'Wissen', cmd: ['whiteboard', 'zeichnen', 'canvas', 'skizze'] },
         { id: 'chart', name: 'Diagramm', icon: '📊', gruppe: 'Wissen', cmd: ['diagramm', 'chart', 'balken', 'torte'] },
         { id: 'backlinks', name: 'Rückverweise', icon: '🔙', gruppe: 'Wissen', cmd: ['rueckverweise', 'backlinks'] },
@@ -18011,6 +18139,252 @@ window.Zusatz = Zusatz;
 
 </script>
 <script>
+/* ===== quell/bereiche/bloecke/arten/blatt.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/bloecke/arten/blatt.ts — das A4-Blatt
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/bloecke/arten/blatt.ts`.
+ * ----------------------------------------------------------------------------
+ * Ein Blatt Papier in A4, auf das man BEIDES kann: schreiben und malen.
+ *
+ * Geschrieben wird in gewöhnlichen Redion-Blöcken — sie sind Kinder dieses
+ * Blocks. Damit erbt das Blatt alles, was der Editor kann: Slash-Menü,
+ * Überschriften, Aufgabenlisten, Verweise, Suche, Export. Ein eigener
+ * Texteditor auf dem Blatt wäre eine zweite Maschine für dieselbe Frage
+ * (E29), und die zweite ist immer die schlechtere.
+ *
+ * Gemalt wird auf einer SVG-Schicht DARÜBER. Sie nimmt Zeiger nur an,
+ * wenn ein Zeichenwerkzeug gewählt ist — sonst schreibt man durch sie
+ * hindurch, als wäre sie nicht da.
+ *
+ * WAS HIER ANDERS IST ALS AM WHITEBOARD, und warum:
+ *
+ *   Koordinaten   Blattpunkte über `SheetSpace.zuBlatt`, nicht rohe
+ *                 Bildschirmpunkte. Ein Strich liegt auf jedem Bildschirm
+ *                 an derselben Stelle des Papiers.
+ *   Zeichnen      ein DOM-Knoten je Marke. Das Whiteboard baut bei JEDEM
+ *                 `pointermove` die ganze Fläche neu (`innerHTML = ''`) —
+ *                 bei zweihundert Strichen ruckelt das sichtbar.
+ *   Abbrechen     `pointercancel` und `pagehide` schliessen den Strich wie
+ *                 ein Loslassen. Sonst bleibt er halb offen liegen, wenn
+ *                 das Telefon dazwischenfunkt.
+ *   Ein Finger    nur `isPrimary` zeichnet. Sonst malt die zweite Hand beim
+ *                 Zoomen eine Linie quer übers Blatt.
+ * ==========================================================================*/
+const Blatt = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    const sv = (name, attr = {}) => {
+        const el = document.createElementNS(NS, name);
+        Object.entries(attr).forEach(([k, v]) => el.setAttribute(k, String(v)));
+        return el;
+    };
+    const FARBEN = ['#111111', '#d64545', '#2f7ed8', '#3aa757', '#e0a419'];
+    const BREITEN = [1.2, 2.4, 5];
+    /** Alle Marken eines Blocks, als eigene Kopie zum Arbeiten. */
+    const markenVon = (block) => Array.isArray(block.marken) ? JSON.parse(JSON.stringify(block.marken)) : [];
+    const zeichneMarke = (m) => {
+        if (!m || !Array.isArray(m.pts) || m.pts.length < 2)
+            return null;
+        const d = 'M' + m.pts.map((q) => q[0] + ' ' + q[1]).join(' L');
+        const pfad = sv('path', {
+            d, fill: 'none', stroke: m.farbe || FARBEN[0],
+            'stroke-width': m.breite || BREITEN[1],
+            'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+        });
+        /* An JEDEM Knoten, nicht nur am ersten — der Radierer trifft sonst
+           Teile, die zu niemandem gehören. */
+        pfad.setAttribute('data-sid', String(m.id));
+        return pfad;
+    };
+    const zeichne = (block) => {
+        const R = SheetSpace;
+        const marken = markenVon(block);
+        let werkzeug = 'schreiben';
+        let farbe = FARBEN[0];
+        let strich = BREITEN[1];
+        const hoehe = Number(block.blattHoehe) || R.A4_HOEHE;
+        const breite = Number(block.blattBreite) || R.A4_BREITE;
+        const w = document.createElement('div');
+        w.className = 'blatt-huelle';
+        /* --- Werkzeugleiste ------------------------------------------------- */
+        const werk = document.createElement('div');
+        werk.className = 'blatt-werk';
+        /* Zeichen und Wort getrennt: am Telefon bleibt nur das Zeichen stehen.
+           Mit Wörtern brauchte die Leiste bei 390 px DREI Zeilen und frass das
+           halbe Bild, bevor das Papier anfing — mit Augen gesehen, nicht
+           gemessen (§55). */
+        const knopf = (wz, zeichen, wort, titel) => `<button data-wz="${wz}"${wz === 'schreiben' ? ' class="on"' : ''} title="${titel}">` +
+            `<span class="zeichen">${zeichen}</span><span class="wort">${wort}</span></button>`;
+        werk.innerHTML =
+            knopf('schreiben', '✎', 'Schreiben', 'Schreiben — der Zeiger geht an der Zeichenschicht vorbei') +
+                knopf('stift', '🖍', 'Malen', 'Mit dem Stift malen') +
+                knopf('radierer', '⌫', 'Radieren', 'Striche entfernen') +
+                '<span class="blatt-trenn"></span>' +
+                FARBEN.map((c, i) => `<button class="blatt-farbe${i === 0 ? ' on' : ''}" data-c="${c}" style="background:${c}" title="Farbe"></button>`).join('') +
+                '<span class="blatt-trenn"></span>' +
+                BREITEN.map((b, i) => `<button class="blatt-strich${i === 1 ? ' on' : ''}" data-b="${b}" title="Strichbreite">` +
+                    `<i style="height:${Math.max(2, b)}px"></i></button>`).join('') +
+                '<span class="blatt-trenn"></span>' +
+                '<button data-a="seite" title="Eine Seite anhängen">' +
+                '<span class="zeichen">＋</span><span class="wort">Seite</span></button>';
+        w.appendChild(werk);
+        /* --- Das Papier ------------------------------------------------------ */
+        const papier = document.createElement('div');
+        papier.className = 'blatt-papier';
+        /* Die Höhe folgt der Breite über das Seitenverhältnis — dann stimmt das
+           Blatt bei jeder Fensterbreite, ohne eine einzige gerechnete Zahl. */
+        papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
+        w.appendChild(papier);
+        /* Der Text: gewöhnliche Blöcke, im Satzspiegel. */
+        const inhalt = document.createElement('div');
+        inhalt.className = 'blatt-inhalt';
+        /* Ein Prozent-Innenabstand bezieht sich in CSS auf die BREITE — auch
+           oben und unten. Also EIN Wert, sonst wären die Ränder oben schmaler
+           als seitlich, obwohl beide „20 mm" heissen sollten. */
+        inhalt.style.padding = (R.RAND / breite * 100) + '%';
+        /* `Blocks` liegt NICHT auf `window` — bei `module: none` teilen sich alle
+           Dateien einen Namensraum, und der Editor hängt sich nirgends an. Der
+           erste Wurf griff über `window.Blocks` und bekam `undefined`: der Text
+           fehlte auf dem Papier, ohne dass etwas geworfen wurde. */
+        Store.childrenOf(block.id).forEach((k) => {
+            inhalt.appendChild(Blocks.render(k, 0));
+        });
+        papier.appendChild(inhalt);
+        /* Die Zeichenschicht darüber. */
+        const flaeche = sv('svg', {
+            class: 'blatt-marken', viewBox: `0 0 ${breite} ${hoehe}`,
+            preserveAspectRatio: 'none'
+        });
+        papier.appendChild(flaeche);
+        /* Seitenumbrüche als gestrichelte Linien — Orientierung, kein Setzer. */
+        for (let s = 1; s < R.seiten(hoehe); s++) {
+            flaeche.appendChild(sv('line', {
+                x1: 0, x2: breite, y1: s * R.A4_HOEHE, y2: s * R.A4_HOEHE,
+                stroke: 'currentColor', 'stroke-width': 0.5,
+                'stroke-dasharray': '6 6', opacity: 0.35, class: 'blatt-umbruch'
+            }));
+        }
+        marken.forEach(m => { const k = zeichneMarke(m); if (k)
+            flaeche.appendChild(k); });
+        const sichern = () => Store.updateBlock(block.id, {
+            marken, raumVersion: R.RAUM_VERSION, blattBreite: breite, blattHoehe: hoehe
+        });
+        /* --- Malen ----------------------------------------------------------- */
+        let laufend = null;
+        let laufKnoten = null;
+        const abschliessen = () => {
+            if (!laufend)
+                return;
+            /* Ein Punkt ist kein Strich. Zwei gleiche auch nicht. */
+            if (laufend.pts.length >= 2) {
+                marken.push(laufend);
+                sichern();
+            }
+            else if (laufKnoten && laufKnoten.parentNode)
+                laufKnoten.remove();
+            laufend = null;
+            laufKnoten = null;
+        };
+        flaeche.addEventListener('pointerdown', (e) => {
+            if (werkzeug === 'schreiben' || !e.isPrimary)
+                return;
+            const punkt = R.zuBlatt(flaeche, e);
+            if (!punkt)
+                return;
+            e.preventDefault();
+            if (werkzeug === 'radierer') {
+                const ziel = e.target?.closest?.('[data-sid]');
+                const sid = ziel?.dataset?.sid;
+                if (!sid)
+                    return;
+                const i = marken.findIndex((m) => m.id === sid);
+                if (i < 0)
+                    return;
+                marken.splice(i, 1);
+                ziel.remove();
+                sichern();
+                return;
+            }
+            laufend = {
+                id: (typeof Ids !== 'undefined' ? Ids.short(8) : String(marken.length + 1)),
+                art: 'stift', farbe, breite: strich, pts: [punkt]
+            };
+            laufKnoten = zeichneMarke({ ...laufend, pts: [punkt, punkt] });
+            if (laufKnoten)
+                flaeche.appendChild(laufKnoten);
+            try {
+                flaeche.setPointerCapture(e.pointerId);
+            }
+            catch { /* egal */ }
+        });
+        flaeche.addEventListener('pointermove', (e) => {
+            if (!laufend || !e.isPrimary)
+                return;
+            const punkt = R.zuBlatt(flaeche, e);
+            if (!punkt)
+                return;
+            const letzt = laufend.pts[laufend.pts.length - 1];
+            /* Punkte, die dichter liegen als ein halber Millimeter, bringen nichts
+               ausser Datenmenge. */
+            if (letzt && Math.abs(letzt[0] - punkt[0]) < 1 && Math.abs(letzt[1] - punkt[1]) < 1)
+                return;
+            laufend.pts.push(punkt);
+            /* NUR den einen Pfad neu setzen — nicht die ganze Fläche neu bauen. */
+            if (laufKnoten)
+                laufKnoten.setAttribute('d', 'M' + laufend.pts.map((q) => q[0] + ' ' + q[1]).join(' L'));
+        });
+        /* Loslassen, Abbrechen und Wegblättern schliessen den Strich gleich ab.
+           Ohne `pointercancel` bleibt er offen, wenn das Telefon dazwischenfunkt. */
+        flaeche.addEventListener('pointerup', abschliessen);
+        flaeche.addEventListener('pointercancel', abschliessen);
+        flaeche.addEventListener('pointerleave', abschliessen);
+        addEventListener('pagehide', abschliessen);
+        /* --- Werkzeuge schalten ---------------------------------------------- */
+        werk.addEventListener('click', e => {
+            const b = e.target?.closest?.('button');
+            if (!b)
+                return;
+            if (b.dataset.wz) {
+                werkzeug = b.dataset.wz;
+                werk.querySelectorAll('[data-wz]').forEach(x => x.classList.remove('on'));
+                b.classList.add('on');
+                /* Die Schicht nimmt Zeiger nur, wenn wirklich gemalt wird. */
+                flaeche.style.pointerEvents = werkzeug === 'schreiben' ? 'none' : 'auto';
+                papier.classList.toggle('malt', werkzeug !== 'schreiben');
+                return;
+            }
+            if (b.dataset.c) {
+                farbe = b.dataset.c;
+                werk.querySelectorAll('.blatt-farbe').forEach(x => x.classList.remove('on'));
+                b.classList.add('on');
+                return;
+            }
+            if (b.dataset.b) {
+                strich = Number(b.dataset.b);
+                werk.querySelectorAll('.blatt-strich').forEach(x => x.classList.remove('on'));
+                b.classList.add('on');
+                return;
+            }
+            if (b.dataset.a === 'seite') {
+                Store.updateBlock(block.id, {
+                    blattHoehe: hoehe + R.A4_HOEHE, blattBreite: breite,
+                    marken, raumVersion: R.RAUM_VERSION
+                });
+                App.zeichneSeite();
+            }
+        });
+        /* Zu Beginn wird geschrieben, nicht gemalt — die Schicht ist durchlässig. */
+        flaeche.style.pointerEvents = 'none';
+        return w;
+    };
+    return { zeichne, FARBEN, BREITEN };
+})();
+window.Blatt = Blatt;
+
+</script>
+<script>
 /* ===== quell/bereiche/spreadsheet/ansicht.js ===== */
 "use strict";
 /* ============================================================================
@@ -21796,6 +22170,12 @@ const Blocks = (() => {
             case 'spreadsheet':
                 if (typeof SpreadsheetView !== 'undefined')
                     box.appendChild(SpreadsheetView.zeichne(block));
+                break;
+            /* Das A4-Blatt bringt seinen Text als eigene Kinder mit und zeichnet
+               sie selbst — deshalb steht es hier und nicht in der Kinderliste
+               weiter unten (E100). */
+            case 'blatt':
+                box.appendChild(window.Blatt.zeichne(block));
                 break;
             case 'whiteboard':
                 box.appendChild(Zusatz.whiteboard(block));

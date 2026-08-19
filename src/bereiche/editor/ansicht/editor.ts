@@ -770,6 +770,13 @@ const Blocks = (() => {
         if (typeof SpreadsheetView !== 'undefined') box.appendChild(SpreadsheetView.zeichne(block));
         break;
 
+      /* Das A4-Blatt bringt seinen Text als eigene Kinder mit und zeichnet
+         sie selbst — deshalb steht es hier und nicht in der Kinderliste
+         weiter unten (E100). */
+      case 'blatt':
+        box.appendChild((window as any).Blatt.zeichne(block));
+        break;
+
       case 'whiteboard':
         box.appendChild(Zusatz.whiteboard(block));
         break;
