@@ -7699,3 +7699,113 @@ ein gewöhnlicher Ausdruck aus drei kleinen Seiten bleibt unangetastet, ohne
 Warnung. Zwei Arme: ohne Grenze fallen fünf Punkte (die Seite bleibt leer
 und behauptet den falschen Grund), mit einer viel zu kleinen Grenze fallen
 sechs andere.
+
+
+## E118 · Drei Wege, die ins Leere führten
+
+**19. August 2026.** Drei Bausteine der letzten Woche funktionierten — auf
+dem Weg, auf dem sie gebaut wurden. Der Weg, den ein Mensch geht, war ein
+anderer.
+
+Alle drei sind dieselbe Form, und es ist die Form, die dieses Projekt
+verfolgt: **eine Stelle wurde erweitert, die Nachbarstelle nicht.**
+
+### `/blatt` gab Papier ohne Zeile
+
+E100 hat `blatt` in `Register.bloecke` eingetragen — damit ist es über das
+Slash-Menü erreichbar. `umwandeln` legt ihm aber keine Kinder an, und
+`Blatt.zeichne` zeichnete nur vorhandene:
+
+```ts
+Store.childrenOf(block.id).forEach((k: any) => {
+  inhalt.appendChild(Blocks.render(k, 0));
+});
+```
+
+Kein `else`. Gemessen, über den echten Weg (`/blatt` tippen, im Menü
+klicken):
+
+```txt
+kinder                        0
+contenteditable im Block      0
+.blatt-inhalt                 ""
+```
+
+Zum Vergleich derselbe Weg mit `/spalten`: zwei beschreibbare Felder. Man
+konnte auf das Blatt **malen und sonst nichts** — bei einer Blockart, deren
+Sinn „schreiben UND malen auf demselben Papier" ist.
+
+Alle Wege, die funktionierten, legten das Kind von Hand an: `alsSeiten` tut
+es (E104), `test174` tut es. Nur der Weg, den ein Mensch geht, tat es nicht.
+
+Die Spalte daneben löst genau dasselbe seit E102 — und die Reparatur ist
+wörtlich ihr Handgriff. Sie sitzt in `Blatt.zeichne` und nicht in
+`umwandeln`, weil `umwandeln` nur den Slash-Weg abdeckt: ein kinderloses
+Blatt aus einer alten Sicherung bekäme dort nichts.
+
+### Die Suchvorschau nannte volle Seiten leer
+
+`zeigeVorschau` las nur die **direkten** Kinder der Seite. Seit E104 ist
+„nebeneinander" die Vorgabe beim PDF-Einlesen, und dann ist das einzige
+direkte Kind ein `columns`-Block ohne `text`:
+
+```txt
+Store.childrenOf(seite) = [ { type: 'columns', text: '' } ]
+                          → '' → „Diese Seite ist noch leer."
+```
+
+Über eine ganze Schulaufgabe. Und es ist genau der Satz, den E107 mit
+`suchtext` abschaffen wollte — an genau der Anordnung, die Standard ist.
+
+Jetzt steigt die Vorschau hinab, aber nur in das, was selbst nichts zu sagen
+hat: `columns`, `columns3`, `spalte`, `blatt`, `toggle`. In einen Textblock
+mit Kindern nicht — der hat seinen eigenen Satz, und eine Vorschau ist eine
+Vorschau. Die Grenze von vierzehn Zeilen gilt **nach** dem Sammeln, sonst
+schnitte sie die Hüllen ab statt der Inhalte; bei einem 80-Seiten-Skript
+liegen achtzig `columns`-Blöcke unter der Seite, und der frühe Abbruch ist
+der Grund, warum das nichts kostet.
+
+Die Gegenprobe gehört dazu: **eine wirklich leere Seite sagt weiterhin, dass
+sie leer ist.** Sonst hätte man den Satz nur abgeschafft statt richtig
+gemacht.
+
+### Die Folie kannte nur die neue Spaltenform
+
+```ts
+Store.childrenOf(b.id).map(sp =>
+  '<div class="folie-spalte">' +
+  Store.childrenOf(sp.id).map(k => folieBlock(k, 0)).join('') +
+  '</div>')
+```
+
+Das nimmt an, jedes Kind eines Spaltenblocks sei eine `spalte`-Hülle. E102
+hat diese Hülle eingeführt und den Bestand von davor **ausdrücklich heil
+gelassen** — dort ist das Kind selbst die Spalte, und der Editor zeichnet
+ihn deshalb weiter (`case 'columns'`: `childrenOf(block.id)` direkt).
+
+Auf der Folie fiel er ersatzlos weg. Gemessen: der Folientext lautete
+`VortragNEULINKSNEURECHTS` — der alte Block war spurlos verschwunden, nicht
+gemeldet, nur leer. Der Druckweg macht es richtig; die Folie nicht.
+
+Das Bittere daran: zwei Zeilen über der Fundstelle steht der Kommentar, den
+E109 für L38 geschrieben hat — „nicht ‚vergessen', sondern ‚an einer Stelle
+getan und an der Nachbarstelle nicht'". Derselbe Fehler, eine Ebene tiefer,
+im selben Codeblock.
+
+### Woher die drei kamen
+
+Aus einem Gegenlese-Durchgang über E98–E110: 21 Funde aus vier Blickwinkeln,
+13 davon haben je drei Skeptiker überlebt. Zehn waren zu dem Zeitpunkt schon
+behoben (E111–E117). Diese drei waren neu, und keiner von ihnen wäre einem
+Prüflauf aufgefallen, der den Erfolgsfall abfährt — sie sitzen alle am
+**Eingang** der jeweiligen Funktion, nicht in ihr.
+
+**Geprüft** (test191, 23 Punkte): `/blatt` wirklich getippt und im Menü
+geklickt, dann hineingeschrieben und im Speicher nachgesehen · die Vorschau
+bei der Vorgabe-Anordnung, samt Gegenprobe an einer wirklich leeren Seite ·
+beide Spaltenformen auf einer Folie, mit dem Nachweis, dass der Editor die
+alte noch zeichnet. Drei Arme: ohne den Blatt-Handgriff fallen sechs Punkte
+(und es gibt nichts mehr zum Hineinklicken), ohne den Vorschau-Abstieg vier,
+ohne die Folien-Fallunterscheidung drei — dort werden die vier Spaltenkästen
+übrigens weiterhin gebaut, nur leer, weshalb erst das Zählen der GEFÜLLTEN
+die Prüfung überhaupt rot werden lässt (§55.2).

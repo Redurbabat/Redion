@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**19. August 2026 · 156 Prüfläufe**
+**19. August 2026 · 157 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -1273,3 +1273,40 @@ benannt statt still:
 Der Platzhalter selbst hat eine Eigenschaft, die man kennen muss: **wer die
 Zeile löscht, löscht den Block.** Das ist so gewollt — sonst wäre „Quelltext
 ansehen" nur noch zum Ansehen da — und `test187` §4 hält es fest.
+
+## L41 · Der Weg zu einem Baustein ist nicht der Baustein
+
+**19. August 2026, mit E118 geschlossen — aber die Frage bleibt offen.**
+
+Drei Fehler auf einmal, und alle drei sassen nicht IN einer Funktion,
+sondern an ihrem **Eingang**:
+
+```txt
+`/blatt`        legte Papier ohne beschreibbare Zeile an — die Blockart war
+                im Register eingetragen, aber `umwandeln` stellt keinen
+                Anfangszustand her.
+Suchvorschau    las nur die direkten Kinder und nannte volle Seiten leer.
+Folie           kannte nur die neue Spaltenform, nicht den Bestand.
+```
+
+Behoben sind sie. Was NICHT behoben ist, ist die Ursache dahinter: **es gibt
+keine Stelle, die sagt, was eine Blockart zum Leben braucht.** `Register.
+bloecke` sagt, wie sie heisst und wie man sie findet — nicht, ob sie ohne
+Kinder überhaupt bedienbar ist. `spalte` weiss es selbst, `blatt` wusste es
+nicht, und niemand hätte es gemerkt.
+
+Zwei Dinge wären denkbar und sind beide nicht gemacht:
+
+```txt
+✗ Ein Feld `braucht` am Registereintrag ('eine leere Textzeile'), das
+  `umwandeln` und die Zeichner gemeinsam lesen. Dann steht die Antwort an
+  EINER Stelle statt in jedem Zeichner einzeln.
+
+✗ Ein Prüflauf, der ALLE Blockarten aus dem Register über den Slash-Weg
+  anlegt und für jede fragt: kann man damit etwas anfangen? `test191` fragt
+  es für `blatt`, weil dort der Fehler war — die anderen sind ungeprüft,
+  und die Wahrscheinlichkeit, dass `blatt` der einzige war, ist nicht hoch.
+```
+
+Der zweite ist der billigere und würde den ersten überflüssig machen, falls
+sich zeigt, dass es wirklich nur einer war.

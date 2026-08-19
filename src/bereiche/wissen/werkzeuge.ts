@@ -826,9 +826,20 @@ const Werkzeuge = (() => {
       if (b.type === 'table') return tabelleHtml(b);
       if (b.type === 'database') return datenbankHtml(b);
       if (b.type === 'columns' || b.type === 'columns3') {
+        /* ZWEI BAUFORMEN, und beide gibt es wirklich (E118).
+           Seit E102 liegt zwischen dem Spaltenblock und seinem Inhalt eine
+           `spalte`-Hülle. Der Bestand von davor hat sie nicht — dort IST das
+           Kind die Spalte, und der Editor zeichnet ihn deshalb weiter
+           (editor.ts, `case 'columns'`: `childrenOf(block.id)` direkt).
+           Hier stand nur die neue Form. Ein alter Spaltenblock fiel auf der
+           Folie ersatzlos weg — nicht gemeldet, nur leer. Genau die Klasse
+           Fehler, gegen die der Kommentar zwei Zeilen weiter oben geschrieben
+           wurde: „an einer Stelle getan und an der Nachbarstelle nicht". */
         const spalten = Store.childrenOf(b.id)
           .map((sp: any) => '<div class="folie-spalte">' +
-            Store.childrenOf(sp.id).map((k: any) => folieBlock(k, 0)).join('') +
+            (sp.type === 'spalte'
+              ? Store.childrenOf(sp.id).map((k: any) => folieBlock(k, 0)).join('')
+              : folieBlock(sp, 0)) +
             '</div>').join('');
         return `<div class="folie-spalten">${spalten}</div>`;
       }

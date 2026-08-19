@@ -55,9 +55,23 @@ const Blatt = (() => {
         inhalt.style.padding = (R.RAND / breite * 100) + '%';
         /* `Blocks` liegt NICHT auf `window` — bei `module: none` teilen sich alle
            Dateien einen Namensraum, und der Editor hängt sich nirgends an. */
-        Store.childrenOf(block.id).forEach((k) => {
-            inhalt.appendChild(Blocks.render(k, 0));
-        });
+        const kinder = Store.childrenOf(block.id);
+        if (!kinder.length) {
+            /* EINE ZEILE MUSS DA SEIN (E118). Ohne sie ist das Papier eine Fläche
+               ohne einziges bearbeitbares Element — man kann darauf malen und
+               sonst nichts. Gemessen an einem Blatt aus dem Slash-Menü:
+               `contenteditable` im Block = 0.
+               Alle Wege, die bisher funktionierten, legten das Kind von Hand an
+               (`PdfEinlesen.alsSeiten` tut es, `test174` tut es). Nur der Weg,
+               den ein Mensch geht — `/blatt` tippen —, tat es nicht: `umwandeln`
+               kennt keine Anfangskinder.
+               Die Spalte daneben löst dasselbe seit E102 genau so. */
+            const leer = Store.addBlock(block.id, 'text', { text: '' });
+            inhalt.appendChild(Blocks.render(leer, 0));
+        }
+        else {
+            kinder.forEach((k) => { inhalt.appendChild(Blocks.render(k, 0)); });
+        }
         papier.appendChild(inhalt);
         papier.appendChild(schicht.flaeche);
         /* Beim Malen soll der Finger nicht durch den Text markieren. */

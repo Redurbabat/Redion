@@ -853,24 +853,45 @@ const App = (() => {
       const t = treffer[k];
       if (!t) { v.innerHTML = ''; return; }
       const p2 = t.page;
-      const inhalt = Store.childrenOf(p2.id).slice(0, 14).map((b: any) => {
-        if (b.type === 'database') {
-          const c = Store.getCollection(b.collectionId);
-          return `<div class="vs-db">🗂 ${esc(c ? c.name : 'Datenbank')} · ` +
-                 `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`;
+      /* HÜLLEN SIND KEIN INHALT (E118).
+         Gelesen wurden bisher nur die DIREKTEN Kinder der Seite. Seit E104
+         ist „nebeneinander" die Vorgabe beim PDF-Einlesen, und dann ist das
+         einzige direkte Kind ein `columns`-Block — der hat keinen `text`,
+         also kam '' zurück, und die Vorschau behauptete „Diese Seite ist
+         noch leer." über eine ganze Schulaufgabe. Genau der Satz, den E107
+         abschaffen wollte, an genau der Anordnung, die Standard ist.
+         Also hinabsteigen — aber nur in das, was selbst nichts zu sagen hat:
+         Spaltenblock, Spalte, Blatt. In einen Textblock mit Kindern nicht;
+         der hat seinen eigenen Satz, und die Vorschau ist eine Vorschau. */
+      const HUELLE = new Set(['columns', 'columns3', 'spalte', 'blatt', 'toggle']);
+      const zeilen: string[] = [];
+      const GRENZE = 14;
+      const sammle = (id: string, tiefe: number): void => {
+        if (tiefe > 4) return;
+        for (const b of Store.childrenOf(id) as any[]) {
+          if (zeilen.length >= GRENZE) return;
+          if (b.type === 'database') {
+            const c = Store.getCollection(b.collectionId);
+            zeilen.push(`<div class="vs-db">🗂 ${esc(c ? c.name : 'Datenbank')} · ` +
+                        `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`);
+            continue;
+          }
+          /* Eine PDF-Seite hat keinen `text` — sie ist ein Bild. Ihr erster
+             Satz steht seit E107 in `suchtext`. */
+          if (b.type === 'pdfseite') {
+            const erste = String(b.suchtext || '').split('\n')[0] || '';
+            zeilen.push(`<div class="vs-t">📄 Seite ${esc(b.nr || '?')}` +
+                        (erste ? ' · ' + esc(erste.slice(0, 80)) : '') + '</div>');
+            continue;
+          }
+          if (HUELLE.has(b.type)) { sammle(b.id, tiefe + 1); continue; }
+          if (!b.text) continue;
+          const marke = ({ h1:'vs-h1', h2:'vs-h2', h3:'vs-h3' } as Record<string, string>)[b.type] || 'vs-t';
+          zeilen.push(`<div class="${marke}">${esc(b.text.slice(0, 120))}</div>`);
         }
-        /* Eine PDF-Seite hat keinen `text` — sie ist ein Bild. Ihr erster
-           Satz steht seit E107 in `suchtext`, und ohne ihn behauptete die
-           Vorschau „Diese Seite ist noch leer." über ein ganzes Skript. */
-        if (b.type === 'pdfseite') {
-          const erste = String(b.suchtext || '').split('\n')[0] || '';
-          return `<div class="vs-t">📄 Seite ${esc(b.nr || '?')}` +
-                 (erste ? ' · ' + esc(erste.slice(0, 80)) : '') + '</div>';
-        }
-        if (!b.text) return '';
-        const marke = ({ h1:'vs-h1', h2:'vs-h2', h3:'vs-h3' } as Record<string, string>)[b.type] || 'vs-t';
-        return `<div class="${marke}">${esc(b.text.slice(0, 120))}</div>`;
-      }).join('');
+      };
+      sammle(p2.id, 0);
+      const inhalt = zeilen.join('');
       v.innerHTML =
         `<div class="vs-kopf">${esc(p2.icon || '📄')} <b>${esc(p2.text || 'Ohne Titel')}</b></div>` +
         `<div class="vs-meta">${esc(Store.pfadText(p2.id) || 'oberste Ebene')} · ` +
