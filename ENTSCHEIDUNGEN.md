@@ -7096,3 +7096,189 @@ Weg vom Fallenlassen bis zu zwei fertigen Seiten, mit einem Fehlversuch
 dazwischen · Abbrechen hängt die Datei vollständig an · das Passwort steht
 danach nirgends · Quelltext-Zeugen. Zwei Arme: ohne `onPassword` fallen die
 Fragepunkte, ohne das Passwortfeld drei.
+
+
+## E111 · Das Manifest der Sicherung log — gefunden im Archiv selbst
+
+**19. August 2026.** Nachdem alles grün war, habe ich eine `.redion` nicht
+mehr *vorbereitet*, sondern **geschrieben**: den Knopf gedrückt, die
+heruntergeladene Datei abgefangen und sie in Node als ZIP aufgemacht, Eintrag
+für Eintrag.
+
+Darin stand:
+
+    daten.json     hinweis: „Vollständig: die 4 Datei(en) liegen im
+                             Ordner „dateien" desselben Archivs."
+                   fehlt:   []
+
+    tatsächlich im Archiv:   dateien/klausur.pdf
+                             dateien/notizen.txt
+
+**Zwei von vier.** Die beiden fehlenden waren die gerasterten Seitenbilder,
+die E103 mit Absicht weglässt — und das Manifest wusste davon nichts:
+`exportVorbereiten` zählte `all('dateien')`, den ganzen Bestand, ohne den
+Filter, den `sicherungSpeichern` daneben anwendet.
+
+CLAUDE.md §52.10 sagt dazu genau einen Satz, und er ist der Grund, warum
+dieser Eintrag existiert:
+
+> Eine Sicherung, die nicht sagt, was sie auslässt, ist die gefährlichste
+> Sorte — man merkt es erst, wenn man sie braucht.
+
+Die Sicherung war inhaltlich in Ordnung: Original, Marken, Suchtext, alles
+darin, und die Bilder rechenbar. Falsch war nur der Zettel darauf. Das ist
+kein kleinerer Fehler, sondern derselbe in seiner unangenehmsten Form —
+einer, der beruhigt.
+
+### Was jetzt darin steht
+
+    hinweis: „Vollständig: die 2 Datei(en) liegen im Ordner „dateien"
+              desselben Archivs. 2 gerasterte Seitenbilder sind bewusst
+              NICHT dabei: sie entstehen aus den Originalen neu — in
+              Redion über den Knopf „Aus dem Original zurückholen" auf
+              der leeren Seite."
+
+    abgeleitetAusgelassen: 2
+
+Der Satz sagt, was fehlt **und wie man es zurückbekommt**. Die Zahl daneben
+ist für Maschinen: wer ein `.redion` ohne Redion aufmacht, soll nachrechnen
+können, statt einen deutschen Satz zu lesen.
+
+### Warum kein Prüflauf das sehen konnte
+
+`test177` §5 prüft, welche Datei-Sätze die Sicherung mitnehmen **würde** — es
+liest dieselbe gefilterte Liste, die `sicherungSpeichern` liest. Das ist
+richtig, und es hat einen blinden Fleck: es prüft eine **Absicht**, kein
+Archiv. Das Manifest entsteht aber woanders, in `exportAll`, aus einer
+anderen Zahl.
+
+`test185` drückt deshalb den Knopf, fängt den Download ab und liest das ZIP —
+und zwar **nicht** mit Redions eigenem `Austausch.zipLesen`. Ein Archiv mit
+dem Werkzeug zu prüfen, das es geschrieben hat, prüft die beiden gegen sich
+selbst; ein Fehler, den beide teilen, bleibt unsichtbar. Fünfzig Zeilen lesen
+das zentrale Verzeichnis nach der ZIP-Festlegung.
+
+Zwei Punkte daraus sind über diesen Fall hinaus nützlich: **zu jedem Satz in
+`dateien.json` müssen Bytes im Archiv liegen**, und **zu jeder Datei im
+Archiv ein Satz**. Beides zusammen schliesst die ganze Klasse aus, zu der
+dieser Fehler gehört.
+
+### Die Lehre
+
+Bei E103 habe ich geschrieben, eine Sicherung müsse sagen, was sie auslässt —
+und dann eine gebaut, die es nicht tat. Der Satz stand in der Doku, die
+Prüfung stand daneben, und beide sahen an derselben Stelle vorbei.
+
+**Ein Prüflauf, der die Absicht liest, prüft nicht das Ergebnis.** Wo es ein
+Artefakt gibt — eine Datei, ein Archiv, ein Druckdokument —, muss die Prüfung
+das Artefakt aufmachen.
+
+**Geprüft** (test185, 29 Punkte): das Archiv ist ein ZIP mit genau vier
+Einträgen · Original und Anhang byteweise gleich · kein Seitenbild darin ·
+der Hinweis nennt die Zahl, die wirklich im Archiv liegt, sagt was fehlt und
+wie man es zurückholt · `dateien.json` und das Archiv decken sich in beide
+Richtungen · und alles, was zum Zurückholen nötig ist (Original, Nummer,
+Masse, Suchtext), steht in `daten.json`. Ein Arm: zählt das Manifest wieder
+den ganzen Bestand, fallen drei Punkte.
+
+
+## E112 · Ein Dateiname ist kein HTML — drei Löcher aus derselben Familie
+
+**19. August 2026.** E110 gab einem Dialog zum ersten Mal FREMDEN Text: den
+Namen der Datei, die jemand hereingezogen hat.
+
+```
+Dialog.frage('Passwort für „' + datei.name + '"', '', 'passwort')
+```
+
+`Dialog.wahl`, fünfzig Zeilen tiefer in derselben Datei, escapte seinen
+Titel. `Dialog.frage` tat es nicht — sie setzte ihn roh ins `innerHTML`.
+Das war jahrelang folgenlos, weil jeder Aufrufer eine feste Zeichenkette
+übergab: „Blatt umbenennen", „Neuer Name". Mit E110 hörte das auf.
+
+Nachgestellt, nicht vermutet. Eine Datei mit dem Namen
+
+    <img src=x onerror="window.__geknackt=1">.pdf
+
+hereinziehen, warten, bis nach dem Passwort gefragt wird:
+
+    { geknackt: true, bilderImDialog: 1 }
+
+Das Bild lädt nie, also feuert `onerror` von selbst. Kein Klick, kein Zutun.
+§19 verbietet genau das, und die Lücke sass nicht im Aufrufer, sondern im
+Dialog.
+
+### Eine Escape-Funktion, ganz oben, für alle
+
+Die Reparatur ist nicht „auch in `frage` escapen". Zwei Kopien derselben
+Funktion in einer Datei sind der Grund, warum eine von beiden irgendwann
+fehlt. Also: eine, im Modulkopf, mit allen fünf Ersetzungen aus §19 — und
+`wahl` benutzt sie mit.
+
+Das `'` gehört dazu, obwohl es im Elementinhalt harmlos ist. Derselbe Text
+landet nebenan in einem Attribut, und eine Escape-Funktion, die je nach
+Fundort etwas anderes tut, ist keine.
+
+### Und dann habe ich nachgesehen, wo noch
+
+Ein bestätigtes Loch ist selten allein — es ist ein Muster, und das Muster
+hier heisst: **etwas, das früher immer aus eigener Hand kam, kommt jetzt aus
+fremder.** Zwei weitere Stellen aus derselben Woche:
+
+**Drucken setzte die Bild-Adresse roh ins `src`.** Die Folie daneben tut seit
+E109 `esc(adr)`, der Druck tat es nicht — eine Zeile Unterschied, keine
+Absicht. Die Daten-Adresse eines Seitenbildes trägt ihren MIME-Teil wörtlich
+aus dem Datei-Satz:
+
+    data:image/png;base64,…              so soll es sein
+    data:image/png" onerror="…" x=";…    so steht es da, wenn der Satz das sagt
+
+Und der Satz sagt, was in `dateien.json` stand — bei einer eingespielten
+`.redion` also, was der Absender hineingeschrieben hat. Der Blob-Bauer lässt
+das durch: er verwirft nur Zeichen ausserhalb U+0020–U+007E, und das
+Anführungszeichen gehört nicht dazu. Gemessen im Druckrahmen: das Bild trug
+`src`, `alt`, **`onerror`** und `x`, und der Handler lief.
+
+**Die Seitenzahl in der Werkzeugleiste war keine Zahl.** `Marken.leiste`
+setzt ihren Zusatz per `innerHTML`; der Zusatz der PDF-Seite baute `block.nr`
+sorgfältig über `Number()` ab und hängte `block.vonSeiten` roh daneben. Beim
+eigenen Einlesen ist das `doc.numPages` und harmlos; aus einer eingespielten
+Sicherung ist es, was dort steht. Hier hilft kein Escape, sondern die
+richtige Frage: eine Zahl kann nichts sein ausser einer Zahl.
+
+### Was daran allgemein ist
+
+Alle drei sind derselbe Fehler in drei Kleidern, und keiner davon war eine
+Unachtsamkeit beim Schreiben — jeder entstand, als sich die **Herkunft** des
+Wertes änderte, ohne dass die Stelle, die ihn ausgibt, davon erfuhr:
+
+| Wert | war früher | ist jetzt |
+|---|---|---|
+| Dialogtitel | feste Zeichenkette im Code | Name einer fremden Datei |
+| Bild-Adresse | selbst gerastert, MIME selbst gesetzt | MIME aus `dateien.json` |
+| `vonSeiten` | `doc.numPages` aus pdf.js | Feld eines eingespielten Blocks |
+
+Deshalb prüft `test186` nicht die drei Wege, sondern die drei **Löcher**: den
+Dialog mit vier Angriffszeichenketten in jedem Feld, den Druckrahmen mit
+einem echt vergifteten Datei-Satz, die Leiste mit einem vergifteten Block.
+Wer nur den Aufrufer prüft, hat beim nächsten Aufrufer dasselbe Loch.
+
+Ein Nebenbefund über Prüfungen: der erste Angriff im Druckrahmen war
+wirkungslos, weil `;base64,AQIDBA==` hinten an den Handler geriet und ihn zum
+Syntaxfehler machte — grün, aber aus dem falschen Grund. Erst der Angriff,
+der diesen Schwanz mit einem letzten Attribut auffängt, führte wirklich Code
+aus. **Wer die Probe leichter macht als die Wirklichkeit, prüft nichts.**
+
+Ebenso ein Quelltext-Zeuge, der `class="fh">${esc(titel)}` bloss *suchte*:
+er fand die Stelle in `wahl` auch dann noch, wenn die in `frage` daneben roh
+dastand. Er zählt jetzt — beide müssen es sein, keiner darf roh sein.
+
+**Geprüft** (test186, 27 Punkte): der echte Weg mit einer bösartig benannten
+Datei · beide Dialoge mit vier Angriffszeichenketten in Titel, Vorgabe, Text
+und Knopfbeschriftung · der Hinweisbalken daneben · der Druckrahmen mit
+einem Datei-Satz, dessen MIME-Typ aus dem Attribut ausbricht · die Leiste mit
+einem Block, dessen `vonSeiten` HTML ist · dazu Quelltext-Zeugen, dass es
+genau EINE Escape-Funktion gibt und keine Einsetzung an ihr vorbeigeht. Drei
+Arme, jeder einzeln nachgewiesen — und in jedem lief der Angriff wirklich:
+ohne den Escape im Dialog fallen sieben Punkte (`__geknackt=1`), ohne den im
+Druck vier (`__druck=1`), ohne `Number(vonSeiten)` vier (`__leiste=1`).

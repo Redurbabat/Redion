@@ -21,6 +21,7 @@ import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8927;
@@ -50,7 +51,7 @@ const gleich = (n: string, ist: unknown, soll: unknown): void =>
   p(n, ist === soll, `ist ${JSON.stringify(ist)}, soll ${JSON.stringify(soll)}`);
 
 const browser = await chromium.launch();
-const seite = await browser.newPage();
+const seite = await browser.newPage({ acceptDownloads: true });
 const fehler: string[] = [];
 seite.on('pageerror', e => fehler.push('PAGEERROR: ' + e.message));
 await seite.setViewportSize({ width: 1400, height: 900 });
@@ -199,6 +200,88 @@ p('Aber ohne Bild', !/<img/.test(alsHtml));
 p('Und ohne blob-Adresse', !/blob:/.test(alsHtml));
 p('Die Antwort auf dem Notizblatt steht drin',
   /x = 11/.test(alsHtml));
+
+/* ==========================================================================
+ * §4b · Und die HTML-Datei, die wirklich herauskommt
+ * --------------------------------------------------------------------------
+ * §4 ruft `seiteAlsHtml` auf und liest das Ergebnis — das ist die FUNKTION.
+ * Die Datei, die ein Mensch bekommt, entsteht daneben in `htmlExport`, mit
+ * Kopf, Stil und Rahmen darum. Bei E111 hat sich gezeigt, was zwischen
+ * Absicht und Artefakt passieren kann: das Manifest einer `.redion` behauptete
+ * „vollständig", während zwei Dateien fehlten, weil die Zahl aus einer
+ * anderen Quelle kam als das Archiv.
+ *
+ * Wo es ein Artefakt gibt, muss die Prüfung das Artefakt aufmachen. Also:
+ * herunterladen und lesen.
+ * ========================================================================*/
+console.log('\n4b · Und die HTML-Datei, die wirklich herauskommt');
+
+const listenSeite = await seite.evaluate(() => {
+  const s = Store.addPage(null, { text: 'Ausgabeprobe' });
+  Store.addBlock(s.id, 'h2', { text: 'Meine Loesungen' });
+  Store.addBlock(s.id, 'number', { text: 'x = 11' });
+  Store.addBlock(s.id, 'number', { text: '2/3' });
+  Store.addBlock(s.id, 'number', { text: '44 cm' });
+  Store.addBlock(s.id, 'text', { text: 'Dazwischen ein Satz.' });
+  Store.addBlock(s.id, 'bullet', { text: 'Punkt eins' });
+  Store.addBlock(s.id, 'bullet', { text: 'Punkt zwei' });
+  Store.addBlock(s.id, 'pdfseite', { text: '', nr: 7, vonSeiten: 9,
+    bw: 595, bh: 842, quelleId: 'q', suchtext: 'Aufgabenblatt 7' });
+  /* Ein Block, der beweist, dass Nutzertext escaped wird (§19). */
+  Store.addBlock(s.id, 'text', { text: '<script>alert(1)</script> & "Anführung"' });
+  App.oeffne(s.id);
+  return s.id;
+});
+await seite.waitForTimeout(400);
+
+const [herunter] = await Promise.all([
+  seite.waitForEvent('download', { timeout: 60000 }),
+  seite.evaluate((x: string) => { Werkzeuge.htmlExport(Store.getBlock(x)); }, listenSeite),
+]);
+const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'redion-html-'));
+const datei = path.join(ordner, herunter.suggestedFilename());
+await herunter.saveAs(datei);
+const ausgabe = fs.readFileSync(datei, 'utf8');
+
+p('Eine Datei kommt heraus', ausgabe.length > 200, ausgabe.length + ' Zeichen');
+
+/* NUMMERIERT BLEIBT NUMMERIERT. Jeder Listeneintrag ging seit jeher als
+   nacktes `<li>` hinaus, ohne `<ul>`/`<ol>` darum: die Nummern gingen
+   verloren, und das Ergebnis war ungültiges HTML. Aufgefallen im Druckbild
+   (E108), weil dort zum ersten Mal jemand eine nummerierte Antwort abgeben
+   wollte. */
+gleich('Die drei Antworten stehen in EINER nummerierten Liste',
+  (ausgabe.match(/<ol>/g) || []).length, 1);
+p('Mit ihren drei Einträgen',
+  /<ol><li>x = 11<\/li><li>2\/3<\/li><li>44 cm<\/li><\/ol>/.test(ausgabe),
+  (ausgabe.match(/<ol>[\s\S]{0,80}/) || [''])[0]);
+gleich('Die Aufzählung daneben ist eine eigene Liste',
+  (ausgabe.match(/<ul>/g) || []).length, 1);
+p('Der Satz dazwischen steht NICHT in einer Liste',
+  /<\/ol><p>Dazwischen ein Satz\.<\/p><ul>/.test(ausgabe));
+
+/* Wohlgeformt: jede geöffnete Liste wird geschlossen. */
+gleich('Jede Liste wird geschlossen',
+  (ausgabe.match(/<(ul|ol)>/g) || []).length,
+  (ausgabe.match(/<\/(ul|ol)>/g) || []).length);
+gleich('Und jeder Eintrag',
+  (ausgabe.match(/<li>/g) || []).length,
+  (ausgabe.match(/<\/li>/g) || []).length);
+p('Kein Eintrag steht ausserhalb einer Liste',
+  !/(<\/(p|h\d|div)>|<body>)\s*<li>/.test(ausgabe));
+
+p('Die PDF-Seite kommt vor', /Seite 7 von 9/.test(ausgabe));
+p('Aber ohne Bild — eine blob-Adresse wäre hier tot (E98)',
+  !/<img/.test(ausgabe));
+
+/* §19: Nutzertext darf niemals roh in der Ausgabe stehen. */
+p('Nutzertext ist escaped',
+  !/<script>alert\(1\)<\/script>/.test(ausgabe) && /&lt;script&gt;/.test(ausgabe),
+  (ausgabe.match(/.{0,40}script.{0,40}/) || [''])[0]);
+p('Auch Ampersand und Anführungszeichen',
+  /&amp;/.test(ausgabe) && /&quot;/.test(ausgabe));
+
+fs.rmSync(ordner, { recursive: true, force: true });
 
 /* ==========================================================================
  * §5 · Was der Quelltext verspricht

@@ -52,8 +52,13 @@ const PdfSeite = (() => {
       '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
         'title="Verweis auf genau diese Seite kopieren">🔗</button>' +
       '<span class="blatt-trenn"></span>' +
+      /* Beide Zahlen durch `Number` — `nr` war es schon, `vonSeiten` nicht.
+         Der Text hier geht ueber `Marken.leiste` in ein `innerHTML`, und ein
+         Block aus einer eingespielten Sicherung sagt, was er will. Eine Zahl
+         kann nichts sein ausser einer Zahl (E112). */
       '<span class="pdfs-nr">Seite ' + (Number(block.nr) || 1) +
-      (block.vonSeiten ? ' von ' + block.vonSeiten : '') + '</span>');
+      (Number(block.vonSeiten) ? ' von ' + Number(block.vonSeiten) : '') +
+      '</span>');
     werk.addEventListener('click', e => {
       const k = (e.target as HTMLElement)?.closest?.('button') as HTMLElement | null;
       if (k?.dataset.a !== 'anker') return;

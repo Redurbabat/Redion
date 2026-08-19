@@ -1788,8 +1788,17 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             if (b.type === 'pdfseite') {
                 const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
                 const adr = bilder[b.id] || '';
+                /* `esc(adr)` und nicht `adr`: die Daten-Adresse traegt ihren
+                   MIME-Teil WOERTLICH aus dem Datei-Satz — und der stammt bei einer
+                   eingespielten Sicherung aus fremder Hand. `image/png" onerror="…`
+                   ueberlebt den Blob-Bauer (nur Zeichen ausserhalb U+0020–U+007E
+                   werden dort verworfen, `"` gehoert nicht dazu) und stuende hier
+                   mitten im Attribut. Bei einer ECHTEN Daten-Adresse aendert `esc`
+                   nichts: das Base64-Alphabet enthaelt keines der fuenf Zeichen.
+                   Die Folie daneben macht es seit E109 richtig; hier fehlte es
+                   schlicht (E112). */
                 return '<figure class="blatt-druck">' +
-                    (adr ? `<img src="${adr}" alt="Seite ${esc(b.nr || '')}">`
+                    (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
                         : `<div class="fehlt">Seite ${esc(b.nr || '')} — das Bild fehlt ` +
                             'in diesem Bestand. Hol es in Redion aus dem Original zurück.</div>') +
                     markenAlsSvg(b, bw, bh) + '</figure>';

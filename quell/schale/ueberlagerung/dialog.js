@@ -17,6 +17,34 @@
  * andere Antwort als „abgebrochen".
  * ==========================================================================*/
 const Dialog = (() => {
+    /* ==========================================================================
+     * ESCAPEN, EINMAL, GANZ OBEN
+     * --------------------------------------------------------------------------
+     * `wahl` hatte diese Funktion in sich, `frage` hatte sie nicht — und
+     * `frage` setzte ihren `titel` roh ins `innerHTML`. Das war jahrelang
+     * folgenlos, weil jeder Aufrufer eine feste Zeichenkette übergab
+     * („Blatt umbenennen"). Mit E110 kam der erste Aufrufer mit FREMDEM Text:
+     * dem Dateinamen eines PDFs.
+     *
+     * Nachgestellt und bestätigt: eine Datei namens
+     *
+     *     <img src=x onerror="…">.pdf
+     *
+     * liess den Code laufen. Es genügt, sie hereinzuziehen. §19 verbietet
+     * genau das, und die Lücke sass nicht im Aufrufer, sondern hier — also
+     * wird sie hier geschlossen, für alle Aufrufer auf einmal (§34, E112).
+     *
+     * Fünf Ersetzungen, wie in CLAUDE.md §19 aufgeschrieben. `'` gehört dazu,
+     * auch wenn es im Elementinhalt harmlos ist: derselbe Text landet
+     * anderswo in einem Attribut, und eine Escape-Funktion, die je nach
+     * Fundort etwas anderes tut, ist keine.
+     * ========================================================================*/
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     /**
      * Eine Frage mit einem Eingabefeld.
      *
@@ -32,9 +60,9 @@ const Dialog = (() => {
             ? 'type="password" autocomplete="off" spellcheck="false"' : '';
         o.innerHTML =
             '<div class="finder" style="width:min(460px,94vw)">' +
-                `<div class="fh">${titel}</div>` +
+                `<div class="fh">${esc(titel)}</div>` +
                 `<div style="padding:16px 18px"><input id="fq" ${feldArt} ` +
-                `value="${String(vorgabe).replace(/"/g, '&quot;')}" ` +
+                `value="${esc(vorgabe)}" ` +
                 'style="width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line); ' +
                 'border-radius:8px; outline:none; font-size:15px"></div>' +
                 '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button>' +
@@ -83,8 +111,6 @@ const Dialog = (() => {
      * `if (!wahl) return;` schreibt, deckt damit beide Fälle.
      */
     const wahl = ({ titel, text, knoepfe = [] }) => new Promise(ok => {
-        const esc = (s) => String(s ?? '')
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML =

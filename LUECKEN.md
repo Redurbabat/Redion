@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**19. August 2026 · 142 Prüfläufe**
+**19. August 2026 · 152 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -1166,3 +1166,53 @@ nicht".
 Was dabei noch auffiel und mit behoben ist: `.praesi img{max-height:52vh}`
 deckelte das Seitenbild und brach damit sein Seitenverhältnis — zwei gleich
 grosse A4-Seiten standen 442 gegen 541 px hoch nebeneinander.
+
+## L39 · Was der Gegenlese-Durchgang am PDF-Teil gefunden hat
+
+**19. August 2026.** Nachdem E103–E110 grün waren, habe ich den neuen Code
+noch einmal gegenlesen lassen — nicht auf „läuft es", sondern auf „was geht
+schief, wenn jemand etwas anderes tut als vorgesehen".
+
+Zwei Funde sind sofort behoben (E111 · das Manifest der Sicherung log ·
+E112 · drei Stellen, an denen fremder Text ungeprüft ins HTML ging). Diese
+hier stehen noch offen, in der Reihenfolge, in der sie wehtun:
+
+```txt
+⚠ Ein Strich, der gerade gezogen wird, ist verloren, wenn der Block in
+  diesem Moment neu gezeichnet wird. Zwischen `pointerdown` und `pointerup`
+  steht er nur in einer Schliessungsvariablen und als Knoten im SVG — nicht
+  in `marken`, nicht im Speicher. Neuzeichnen kommt beim PDF-Einlesen und
+  beim Abgleich von selbst. Das ist Datenverlust, wenn auch kleiner.
+
+✗ „Aus dem Original zurückholen" hat keine Sperre gegen sich selbst. Jede
+  bildlose Seite hat einen eigenen Knopf; jeder Knopf sperrt nur SICH, und
+  zwei Klicks starten zwei vollständige Läufe über dieselbe Liste. Das
+  Seitenbild des Verlierers bleibt als fertiger Datei-Satz mit lebendigem
+  `blockId` liegen, wo `Dateien.verwaist()` es grundsätzlich nicht findet.
+
+✗ Bricht das Zurückholen ab, bleibt der Knopf für immer auf „wird
+  gerechnet …", und die bereits gerechneten Seiten erscheinen nicht — der
+  Erfolgsweg zeichnet neu, der Fehlerweg nicht.
+
+✗ Der Fortschritt beim Zurückholen zählt zwei verschiedene Dinge
+  gegeneinander: links die Seitennummer im Dokument, rechts die Anzahl der
+  noch zu rechnenden Seiten. „Seite 80 von 1" ist das Ergebnis.
+
+✗ Der Fortschrittsbalken verstummt nach 120 Sekunden und nach jeder anderen
+  Meldung — `UI.toast` ist EIN Element mit EINEM Zeitgeber. Genau im langen
+  Lauf, für den er da ist.
+
+⚠ `Marken.schicht` meldet seinen `pagehide`-Zuhörer nie ab. Bei jedem
+  Neuzeichnen kommt einer je Blatt und je PDF-Seite dazu, samt der tiefen
+  Kopie von `block.marken` und dem abgehängten SVG.
+
+⚠ Drucken hält alle Seitenbilder eines Dokuments GLEICHZEITIG als
+  Base64-Zeichenketten im Speicher — ohne Obergrenze, ohne Stückelung. Bei
+  achtzig Seiten sind das mehrere hundert Megabyte, und §36 sagt das
+  Gegenteil.
+```
+
+Der gemeinsame Nenner der ersten vier: der Weg, auf dem alles klappt, ist
+gebaut; der Weg daneben — zweimal geklickt, abgebrochen, lange gewartet —
+nicht. Das ist keine Nachlässigkeit im Einzelnen, sondern die Stelle, an der
+ein Prüflauf nachfragen muss, statt den Erfolgsfall noch einmal zu prüfen.

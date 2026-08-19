@@ -167,6 +167,13 @@ Bytes fehlen, wäre das ein Anhang, den der Block sucht und nicht findet —
 und man merkte es erst beim Einspielen. Lieber gar nicht erwähnt als
 falsch versprochen.
 
+**Und das Manifest sagt es.** `daten.json` nennt im Feld `hinweis` die Zahl
+der Dateien, die wirklich im Archiv liegen, dazu wie viele Seitenbilder
+bewusst fehlen und wie man sie zurückholt; `abgeleitetAusgelassen` trägt
+dieselbe Zahl noch einmal als Zahl, für Maschinen. Bis E111 stand dort
+„Vollständig: die 4 Datei(en) …" bei zwei Dateien im Archiv — der Zähler
+kannte den Filter nicht.
+
 **Beim Einspielen** stehen die Seiten deshalb zunächst leer da, mit einem
 Knopf „Aus dem Original zurückholen" darauf. Ein Klick rechnet das ganze
 Dokument neu; Nummer, Masse und Marken bleiben dabei unangetastet (E106).

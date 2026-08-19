@@ -1264,24 +1264,45 @@ const Store = (() => {
    */
   const exportAll = (mitAnhaengen = false) => {
     const dateienDa = zaehlerDateien();
+    const abgeleitetDa = zaehlerAbgeleitet();
     const fehlenAnhaenge = dateienDa && !mitAnhaengen;
+    /* Im Archiv liegen nur die NICHT abgeleiteten — siehe `sicherungSpeichern`
+       in der Schale, das genauso filtert. Die Zahl hier muss dieselbe sein,
+       sonst zählt das Manifest etwas anderes als das Archiv enthält. */
+    const echteImArchiv = dateienDa - abgeleitetDa;
+    /* Ein Satz über das, was bewusst fehlt. Er steht auch dann da, wenn sonst
+       „vollständig" gilt — vollständig ist eine Sicherung nur, wenn sie sagt,
+       was sie auslässt (§52.10, E111). */
+    const ueberAbgeleitete = !abgeleitetDa ? ''
+      : abgeleitetDa === 1
+        ? ' Ein gerastertes Seitenbild ist bewusst NICHT dabei: es entsteht ' +
+          'aus dem Original neu — in Redion über den Knopf „Aus dem Original ' +
+          'zurückholen" auf der leeren Seite.'
+        : ' ' + abgeleitetDa + ' gerasterte Seitenbilder sind bewusst NICHT ' +
+          'dabei: sie entstehen aus den Originalen neu — in Redion über den ' +
+          'Knopf „Aus dem Original zurückholen" auf der leeren Seite.';
     return JSON.stringify({
       version: VERSION,
       exportiert: now(),
       /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
       enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
-        .concat(mitAnhaengen && dateienDa ? ['dateien', 'stuecke'] : []),
+        .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
       fehlt: fehlenAnhaenge
         ? ['dateien', 'stuecke']
         : [],
+      /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
+         Einleser es nachrechnen kann, statt einen Satz zu lesen. */
+      abgeleitetAusgelassen: mitAnhaengen ? abgeleitetDa : 0,
       hinweis: fehlenAnhaenge
         ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
           'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
           'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
-        : dateienDa
-          ? 'Vollständig: die ' + dateienDa + ' Datei(en) liegen im Ordner ' +
-            '„dateien" desselben Archivs.'
-          : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+        : echteImArchiv
+          ? 'Vollständig: die ' + echteImArchiv + ' Datei(en) liegen im Ordner ' +
+            '„dateien" desselben Archivs.' + ueberAbgeleitete
+          : abgeleitetDa
+            ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
+            : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
       blocks: cache.blocks,
       collections: cache.collections,
       views: cache.views,
@@ -1294,7 +1315,16 @@ const Store = (() => {
      Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
   let exportVersionen: any[] = [];
   let exportDateien = 0;
+  /* WIE VIELE DAVON ABGELEITET SIND. Seit E103 packt das `.redion` nicht mehr
+     jede Datei ein: gerasterte PDF-Seitenbilder bleiben draussen, weil sie
+     sich aus dem mitgesicherten Original neu rechnen lassen. Das Manifest
+     wusste davon nichts und schrieb weiter „Vollständig: die 4 Datei(en)
+     liegen im Ordner dateien" — bei zwei Dateien im Archiv. Genau die Sorte
+     Sicherung, vor der §52.10 warnt: eine, die behauptet, vollständig zu
+     sein (E111). */
+  let exportAbgeleitet = 0;
   const zaehlerDateien = () => exportDateien;
+  const zaehlerAbgeleitet = () => exportAbgeleitet;
 
   /** Vor dem Sichern aufrufen: holt, was nicht im Zwischenspeicher liegt. */
   const exportVorbereiten = async () => {
@@ -1306,8 +1336,11 @@ const Store = (() => {
        behauptet, vollständig zu sein.
        Wer sichert, bekommt lieber einen Fehler als eine stille Lücke. */
     exportVersionen = await all('versions');
-    exportDateien = (await all('dateien')).length;
-    return { versionen: exportVersionen.length, dateien: exportDateien };
+    const alleDateien = await all('dateien');
+    exportDateien = alleDateien.length;
+    exportAbgeleitet = alleDateien.filter((d: any) => d && d.abgeleitet).length;
+    return { versionen: exportVersionen.length, dateien: exportDateien,
+             abgeleitet: exportAbgeleitet };
   };
 
   /**
