@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**19. August 2026 · 152 Prüfläufe**
+**19. August 2026 · 154 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -1216,3 +1216,37 @@ Der gemeinsame Nenner der ersten vier: der Weg, auf dem alles klappt, ist
 gebaut; der Weg daneben — zweimal geklickt, abgebrochen, lange gewartet —
 nicht. Das ist keine Nachlässigkeit im Einzelnen, sondern die Stelle, an der
 ein Prüflauf nachfragen muss, statt den Erfolgsfall noch einmal zu prüfen.
+
+## L40 · Was der Markdown-Rundlauf noch nicht kann
+
+**19. August 2026, mit E113 halb geschlossen.** „Quelltext ansehen →
+Übernehmen" löscht nichts mehr: alles, was Markdown nicht tragen kann, steht
+seither als Platzhalter im Text und bleibt unangetastet.
+
+Drei Dinge gehen trotzdem verloren, und sie sind jetzt wenigstens im Dialog
+benannt statt still:
+
+```txt
+⚠ Farbe, Schriftgrösse und Schriftart je Block (E101). Markdown kennt sie
+  nicht. Sie zu Platzhaltern zu machen hiesse, den Knopf abzuschaffen — von
+  einer Seite mit farbigen Absätzen bliebe kein lesbarer Text übrig.
+
+⚠ Die Verschachtelung von Listen. `alsMarkdown` schreibt die Einrückung
+  (`'  '.repeat(tiefe)`), `ausMarkdown` liest sie nicht: jede Zeile wird
+  mit `trim()` beschnitten und landet direkt unter der Seite. Eine
+  Unterliste kommt eine Ebene flach zurück.
+
+  Das liesse sich heilen — ein Stapel von Eltern nach Einrücktiefe, zwölf
+  Zeilen. Es wurde hier NICHT mitgemacht, weil dieselbe Funktion auch den
+  Import von `.md`-Dateien bedient (test49) und ein zweites Thema in einer
+  Änderung gegen §45 geht.
+
+✗ Ein `toggle` wird beim Zurücklesen zum `quote` — beide schreiben `> `.
+  Seit E113 ist das folgenlos, weil `toggle` gar nicht mehr durch Markdown
+  geht, sondern als Platzhalter überlebt. Wer die Verschachtelung angeht,
+  sollte es trotzdem mitnehmen.
+```
+
+Der Platzhalter selbst hat eine Eigenschaft, die man kennen muss: **wer die
+Zeile löscht, löscht den Block.** Das ist so gewollt — sonst wäre „Quelltext
+ansehen" nur noch zum Ansehen da — und `test187` §4 hält es fest.

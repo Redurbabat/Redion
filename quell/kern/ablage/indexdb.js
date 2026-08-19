@@ -1546,9 +1546,23 @@ const Store = (() => {
             delete patch.kinder;
             delete patch.collection;
             delete patch.views;
-            delete patch.rows;
             delete patch.content;
             patch.content = [];
+            /* `rows` HEISST AN ZWEI BLOCKARTEN ETWAS ANDERES (E114).
+               An einer Datenbank sind es die Zeilen-Blöcke, die `baum` daneben
+               eingesammelt hat — die werden unten einzeln neu angelegt, und der
+               alte Stand darf nicht am Block hängen bleiben.
+               Am `table`-Block sind es SEINE ZELLEN, und sonst nichts.
+      
+               Gelöscht wurde bis E114 unbedingt. Jede einfache Tabelle kam damit
+               leer wieder heraus — beim Verdoppeln, beim Einfügen, beim
+               Rückgängigmachen, beim Wiederherstellen einer Fassung, aus jeder
+               Vorlage und über den Markdown-Platzhalter. Gemessen: Zeilen
+               [['Jahr','Wert'],['2026','19']] hinein, `rows: undefined` heraus.
+      
+               Also nur dort löschen, wo es die Datenbankbedeutung hat. */
+            if (k.collection)
+                delete patch.rows;
             /* Datenbank: Sammlung, Ansichten und Zeilen mitkopieren */
             if (k.collection) {
                 const neueColl = uid();

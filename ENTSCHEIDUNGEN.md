@@ -7126,9 +7126,21 @@ dieser Eintrag existiert:
 > Sorte — man merkt es erst, wenn man sie braucht.
 
 Die Sicherung war inhaltlich in Ordnung: Original, Marken, Suchtext, alles
-darin, und die Bilder rechenbar. Falsch war nur der Zettel darauf. Das ist
-kein kleinerer Fehler, sondern derselbe in seiner unangenehmsten Form —
-einer, der beruhigt.
+darin, und die Bilder rechenbar. Falsch war nur der Zettel darauf.
+
+**Und wie schwer wiegt das?** Drei Gegenleser haben unabhängig widersprochen,
+das sei kein Datenverlust, und sie haben recht. `enthaelt` und `fehlt` sind
+laut §52.10 **Fächernamen**, keine Dateilisten — und die Fächer `dateien` und
+`stuecke` sind wirklich im Archiv. `fehlt: []` ist in der Sprache des Feldes
+also richtig. Auch löst der Satz nichts aus: `anhaengeEinspielen` entscheidet
+nach `dateien.json`, nicht nach `hinweis`. Und test180 fährt den ganzen Ring
+(sichern, alles löschen, einspielen, zurückholen) als **gewolltes** Verhalten
+ab.
+
+Bleibt: eine Zahl, die an zwei Stellen verschieden ausfällt — der Toast vor
+dem Sichern sagte 61, der danach 1. Das ist kein Verlust, sondern eine
+Meldung, die beruhigt, wo sie es nicht soll. Sie gehört gerichtet, und sie
+ist es; als Priorität-1-Fall verkaufen sollte man sie nicht.
 
 ### Was jetzt darin steht
 
@@ -7193,8 +7205,6 @@ Dialog.frage('Passwort für „' + datei.name + '"', '', 'passwort')
 
 `Dialog.wahl`, fünfzig Zeilen tiefer in derselben Datei, escapte seinen
 Titel. `Dialog.frage` tat es nicht — sie setzte ihn roh ins `innerHTML`.
-Das war jahrelang folgenlos, weil jeder Aufrufer eine feste Zeichenkette
-übergab: „Blatt umbenennen", „Neuer Name". Mit E110 hörte das auf.
 
 Nachgestellt, nicht vermutet. Eine Datei mit dem Namen
 
@@ -7207,6 +7217,31 @@ hereinziehen, warten, bis nach dem Passwort gefragt wird:
 Das Bild lädt nie, also feuert `onerror` von selbst. Kein Klick, kein Zutun.
 §19 verbietet genau das, und die Lücke sass nicht im Aufrufer, sondern im
 Dialog.
+
+**Nachtrag, und er macht die Sache schlimmer statt besser.** Beim Gegenlesen
+dieses Eintrags hiess es hier zuerst, die Lücke sei „jahrelang folgenlos"
+gewesen, weil jeder Aufrufer eine feste Zeichenkette übergeben habe. Das ist
+falsch, und ich habe es nachgesehen statt es zu glauben. `UI.frage` reicht
+nur durch (`ui.ts:36`), und vor E110 hingen daran schon:
+
+```txt
+faden.ts:37     'Kommentar zu „' + zitat.slice(0, 40) + '"'
+                — markierter Text aus dem Editor
+faden.ts:70     'Antwort auf „' + f.komm.text.slice(0, 40) + '"'
+                — der Text eines fremden Kommentars
+steuerung.ts:1124  'Welcher Wert für „' + coll.schema[kk].name + '"?'
+                — ein Spaltenname
+steuerung.ts:5580  `${def.name} ${ops[0]} …`
+```
+
+Wer `<img src=x onerror=…>` als Spaltennamen tippt, braucht dafür keine
+Datei über den Umweg USB-Stick. E110 war nicht der erste fremde Text, nur
+der auffälligste — und der, bei dem es endlich jemandem aufgefallen ist.
+
+Das ändert an der Reparatur nichts (sie sitzt in `frage` und deckt alle
+Aufrufer ab), aber es ändert, was hier stehen darf. Eine Lücke kleiner zu
+schreiben, als sie war, ist dieselbe Art Fehler wie ein Manifest, das
+„vollständig" behauptet.
 
 ### Eine Escape-Funktion, ganz oben, für alle
 
@@ -7282,3 +7317,163 @@ genau EINE Escape-Funktion gibt und keine Einsetzung an ihr vorbeigeht. Drei
 Arme, jeder einzeln nachgewiesen — und in jedem lief der Angriff wirklich:
 ohne den Escape im Dialog fallen sieben Punkte (`__geknackt=1`), ohne den im
 Druck vier (`__druck=1`), ohne `Number(vonSeiten)` vier (`__leiste=1`).
+
+
+## E113 · „Quelltext ansehen" war ein Löschknopf
+
+**19. August 2026.** `ausMarkdown` leert die Seite und baut sie aus dem Text
+neu auf. Gerettet wurden dabei vier Blockarten, namentlich:
+
+```js
+if (['database','whiteboard','chart','table'].includes(b.type))
+  alteDbs[b.id] = Store.baum(b.id);
+Store.kinderLeeren(p.id);
+```
+
+Alles andere fiel durch. Gemessen an einer Schulaufgabe — Spalten, PDF-Seite
+mit Strichen, A4-Blatt mit Strichen und Antworttext, Rechenblatt:
+
+```txt
+vorher   13 Blöcke · 1 PDF-Seite · 1 Blatt · 3 Spalten · 2 Striche
+nachher   7 Blöcke · 0           · 0       · 0         · 0
+```
+
+Ein Klick auf „Übernehmen", und die Klausur ist weg. Der Kopfkommentar
+derselben Funktion hat den Fall sogar vorhergesagt:
+
+> Ohne das wäre „Quelltext ansehen und schliessen" ein Datenverlust.
+
+Der Satz stand da. Die Liste darunter wurde trotzdem viermal vergessen: bei
+`spreadsheet` (E29), bei `columns`/`spalte` (E102), bei `blatt` (E100), bei
+`pdfseite` (E103).
+
+### Die Liste steht jetzt andersherum
+
+Nicht „diese vier sind sicher", sondern **„diese vierzehn kann Markdown
+wirklich tragen — alles andere bekommt einen Platzhalter"**:
+
+```ts
+const MD_TRAEGT = new Set([
+  'text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number',
+  'quote', 'callout', 'divider', 'code', 'equation', 'image', 'flashcard'
+]);
+```
+
+Der Unterschied ist nicht kosmetisch. Eine neue Blockart ist damit **von
+sich aus** sicher; sie muss sich das Durchreichen verdienen, statt es
+geschenkt zu bekommen und jemanden daran denken zu lassen. Genau daran hat
+es viermal gefehlt.
+
+Eine Allowlist, die bei jeder Erweiterung nachgepflegt werden muss, ist
+keine Sicherheit, sondern eine Verabredung — und Verabredungen halten in
+einem Projekt mit hundertfünfzig Blockarten nicht.
+
+### Manchmal entscheidet nicht die Art, sondern der Block
+
+Drei Blockarten stehen in der Liste und tragen trotzdem je nach Inhalt mehr,
+als Markdown abbilden kann:
+
+```txt
+image mit dateiId    Die Datei hängt an `dateiId`; `src` ist leer oder eine
+                     tote blob:-Adresse (E98). `![](…)` machte daraus ein
+                     Bild ohne Datei — sichtbar erst nach dem Neustart.
+flashcard mit sr     Der Lernstand ist das Wertvolle an einer Karte. Die
+                     Frage abzutippen kostet eine Minute, sechs Monate
+                     Wiederholung nicht.
+callout mit Zeichen  `> 💡` ist die einzige Form, die zurückgelesen wird —
+                     ein 🔥 käme als 💡 wieder.
+```
+
+Deshalb fragt der Code `mdTraegt(b)` und nicht `MD_TRAEGT.has(b.type)`.
+
+### Und der Mensch erfährt es vorher
+
+Der Dialog sagt jetzt, was der Knopf tut, statt es hinterher im
+Versionsverlauf zu verstecken: dass die `<!--blk:…-->`-Zeilen PDF-Seiten,
+Blätter, Tabellen und Spalten sind und unverändert bleiben, solange die
+Zeile stehen bleibt — und dass Farben, Schriftgrössen (E101) und die
+Verschachtelung von Listen wirklich verloren gehen. Diese drei kann Markdown
+nicht tragen, und sie zu Platzhaltern zu machen hiesse, den Knopf
+abzuschaffen: von einer Seite mit lauter farbigen Absätzen bliebe kein
+lesbarer Text übrig.
+
+Dass vorher eine Fassung gesichert wird, tat Redion schon immer. Nur wusste
+es niemand.
+
+**Geprüft** (test187, 41 Punkte): der volle Rundlauf mit dreizehn Blöcken —
+Anzahl, Reihenfolge, Art, Striche, Strichfarben, Suchtext, Zellen,
+Tabellenzeilen, der Text auf dem Blatt und der Satz im zugeklappten Toggle ·
+zweimal hin und her ändert nichts · was Markdown trägt, steht auch als
+Markdown da (sonst wäre der Knopf keiner) · nichts sickert aus einem
+Platzhalter heraus, gezählt an der Zeilenzahl · die drei bedingten Fälle ·
+eine gelöschte Platzhalter-Zeile löscht wirklich · der Hinweis im Dialog und
+die tatsächlich gesicherte Fassung. Ein Arm: mit der alten namentlichen
+Liste fallen elf Punkte, und aus dreizehn Blöcken werden sieben.
+
+
+## E114 · `rows` heisst an zwei Blockarten etwas anderes
+
+**19. August 2026, beim Schreiben von test187 gefunden.** Nach dem
+Markdown-Rundlauf stand die einfache Tabelle wieder da — leer.
+
+`Store.baum` hatte ihre Zellen korrekt eingesammelt. `Store.baumEinfuegen`
+warf sie weg:
+
+```js
+delete patch.id; delete patch.kinder; delete patch.collection;
+delete patch.views; delete patch.rows; delete patch.content;
+                            ^^^^^^^^^
+```
+
+Das `delete` hat einen guten Grund — nur einen anderen. An einer
+**Datenbank** sind `rows` die Zeilen-Blöcke, die `baum` daneben eingesammelt
+hat; die werden zwanzig Zeilen tiefer einzeln neu angelegt, und der alte
+Abdruck darf nicht am Block hängen bleiben, sonst stünden dieselben Zeilen
+zweimal im Bestand.
+
+Am **`table`-Block** heisst dasselbe Feld etwas ganz anderes: es sind seine
+Zellen, und sonst hat er nichts.
+
+```ts
+if (k.collection) delete patch.rows;
+```
+
+### Wie weit das reichte
+
+`baumEinfuegen` steht an siebzehn Stellen. Jede davon hat eine einfache
+Tabelle geleert:
+
+```txt
+Blockbefehl „Duplizieren"          editor.ts:2000
+Einfügen aus der Zwischenablage    editor.ts:2972
+Rückgängig (Strg + Z)              verlauf.ts:63
+Eine Fassung wiederherstellen      fassungen.ts:178, 328
+Vorlage einfügen                   werkzeuge.ts:452
+Seite entsperren                   werkzeuge.ts:696
+Zwischen Seiten ziehen             schale.ts:613
+```
+
+**Rückgängig** ist der schlimmste davon. Wer eine Tabelle füllte, danach
+irgendetwas anderes tat und einmal Strg + Z drückte, bekam die Tabelle leer
+zurück — und Strg + Z ist der Griff, zu dem man greift, WEIL man etwas
+retten will.
+
+Gemeldet hat es nichts. Der Block stand ja noch da.
+
+### Warum es keine Prüfung sah
+
+Die Tabellen-Prüfungen bauen ihre Tabelle, füllen sie und lesen sie zurück —
+alles am selben Block. Der Fehler sitzt aber im **Kopieren** des Blocks, und
+kopiert wird ein Block nur in Wegen, die niemand mit „Tabelle" verbunden
+hat: Rückgängig, Vorlage, Fassung.
+
+Der wiederkehrende Befund, wieder einmal: nicht die Funktion war ungeprüft,
+sondern die Verdrahtung (E93).
+
+**Geprüft** (test188, 21 Punkte): Verdoppeln · Rückgängig · Fassung
+wiederherstellen · Vorlage einfügen, jeweils über den echten Weg und nicht
+über `baumEinfuegen` direkt · und §5 in die Gegenrichtung: eine verdoppelte
+**Datenbank** hat zwei echte Zeilen, zwei getrennte Sammlungen und keinen
+toten Zeilen-Abdruck am Block. Zwei Arme: mit dem unbedingten `delete`
+fallen sechs Punkte über vier verschiedene Wege, und wird gar nicht mehr
+gelöscht, fällt der Datenbank-Punkt.

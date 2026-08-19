@@ -123,30 +123,94 @@ const WissenDienst = (() => {
     /* --------------------------------------------------------------------------
      * MARKDOWN hin und zurück
      * --------------------------------------------------------------------------
-     * Datenbanken, Zeichenflächen, Diagramme und Tabellen bleiben unangetastet:
-     * sie stehen als Platzhalter im Text und werden beim Zurücklesen an
-     * derselben Stelle wieder eingehängt. Ohne das wäre „Quelltext ansehen und
-     * schliessen" ein Datenverlust.
+     * „Quelltext ansehen" leert die Seite und baut sie aus dem Text neu auf.
+     * Alles, was Markdown nicht tragen kann, muss deshalb als Platzhalter
+     * überleben — sonst ist der Knopf ein Löschknopf.
+     *
+     * BIS E113 STAND DIE LISTE ANDERSHERUM: vier Blockarten (`database`,
+     * `whiteboard`, `chart`, `table`) waren namentlich gerettet, alle anderen
+     * fielen durch. Das ging so lange gut, wie es nur diese vier gab. Gemessen
+     * an einer Schulaufgabe aus Spalten, PDF-Seite, A4-Blatt und Rechenblatt:
+     *
+     *     vorher   9 Blöcke · 1 PDF-Seite · 1 Blatt · 3 Spalten · 2 Striche
+     *     nachher  3 Blöcke · 0           · 0       · 0         · 0
+     *     Text danach: „# Mathe\n\n  \n    \n  \n      Meine Antwort"
+     *
+     * Ein Klick, und die Klausur ist weg. Der Kopfkommentar dieser Funktion
+     * hat den Fall sogar vorhergesagt („Ohne das wäre … ein Datenverlust") —
+     * und die Liste darunter wurde trotzdem bei jeder neuen Blockart
+     * vergessen: bei `spreadsheet` (E29), bei `columns`/`spalte` (E102), bei
+     * `blatt` (E100), bei `pdfseite` (E103).
+     *
+     * DESHALB JETZT UMGEDREHT. `MD_TRAEGT` zählt auf, was Markdown WIRKLICH
+     * verlustfrei hin und zurück bringt. Alles andere bekommt einen
+     * Platzhalter, ohne dass jemand daran denken muss. Eine neue Blockart ist
+     * damit von sich aus sicher — sie muss sich das Durchreichen verdienen,
+     * statt es geschenkt zu bekommen.
      * ----------------------------------------------------------------------- */
+    /* Was `alsMarkdown` unten wirklich abbildet UND `ausMarkdown` wieder
+       einliest. Wer hier etwas einträgt, muss beide Richtungen belegen —
+       `test187` fährt sie ab. */
+    const MD_TRAEGT = new Set([
+        'text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number',
+        'quote', 'callout', 'divider', 'code', 'equation', 'image', 'flashcard'
+    ]);
+    /* Drei Blockarten stehen zwar in der Liste, tragen aber je nach Inhalt
+       mehr, als Markdown abbilden kann. Dann zählt der Block, nicht die Art. */
+    const mdTraegt = (b) => {
+        if (!MD_TRAEGT.has(b.type))
+            return false;
+        /* Ein Bild aus der eigenen Ablage hängt an `dateiId`; `src` ist dabei
+           leer oder eine tote `blob:`-Adresse (E98). `![](…)` würde daraus ein
+           Bild ohne Datei machen — sichtbar erst nach dem nächsten Neustart. */
+        if (b.type === 'image' && b.dateiId)
+            return false;
+        /* Eine gelernte Karteikarte trägt ihren Lernstand in `sr`. Der ist das
+           Wertvolle daran; die Frage abzutippen kostet eine Minute, sechs
+           Monate Wiederholung nicht. */
+        if (b.type === 'flashcard' && b.sr)
+            return false;
+        /* `> 💡` ist die einzige Callout-Form, die zurückgelesen wird — ein
+           anderes Zeichen käme als 💡 wieder. */
+        if (b.type === 'callout' && b.icon && b.icon !== '💡')
+            return false;
+        return true;
+    };
+    /* Die vier alten Marken bleiben, was sie waren — sie stehen in
+       `test89` und in jedem Text, den jemand herauskopiert und aufgehoben
+       hat. Alles Übrige bekommt `blk:`. */
+    const MD_MARKE = {
+        database: 'db', whiteboard: 'wb', chart: 'chart', table: 'tab'
+    };
+    /* Ein Satz, den ein Mensch neben dem Platzhalter lesen kann. Kein
+       Bestandteil des Formats — er wird beim Zurücklesen verworfen. */
+    const mdName = (b) => {
+        /* `pdfseite` und `spalte` stehen in keinem Register — sie sind
+           Bausteine ohne Menüeintrag (doku/BLOCKTYPEN.md). Ihr Name muss
+           deshalb hier stehen, sonst läse der Mensch „pdfseite". */
+        const OHNE_REGISTER = {
+            pdfseite: 'PDF-Seite', spalte: 'Spalte'
+        };
+        const art = OHNE_REGISTER[b.type] ||
+            ((typeof Register !== 'undefined' && Register.bloecke?.eines)
+                ? (Register.bloecke.eines(b.type)?.name || b.type)
+                : b.type);
+        const zusatz = b.type === 'pdfseite' && b.nr ? ' ' + Number(b.nr) : '';
+        const titel = String(b.text || '').trim().slice(0, 40);
+        return art + zusatz + (titel ? ': ' + titel : '');
+    };
     const alsMarkdown = (p) => {
         const zeilen = [];
         const raus = (id, tiefe) => {
             Store.childrenOf(id).forEach((b) => {
                 const ein = '  '.repeat(tiefe);
-                if (b.type === 'database') {
-                    zeilen.push(`<!--db:${b.id}-->`);
-                    return;
-                }
-                if (b.type === 'whiteboard') {
-                    zeilen.push(`<!--wb:${b.id}-->`);
-                    return;
-                }
-                if (b.type === 'chart') {
-                    zeilen.push(`<!--chart:${b.id}-->`);
-                    return;
-                }
-                if (b.type === 'table') {
-                    zeilen.push(`<!--tab:${b.id}-->`);
+                /* Kann Markdown das nicht tragen, kommt es als Platzhalter durch —
+                   samt allem, was darunter hängt. Der Satz dahinter ist für den
+                   Menschen: ein nackter Kommentar mit einer Kennung sagt ihm nicht,
+                   dass dort seine PDF-Seite steht. Gelesen wird nur die Kennung. */
+                if (!mdTraegt(b)) {
+                    const marke = MD_MARKE[b.type] || 'blk';
+                    zeilen.push(`<!--${marke}:${b.id}--> ${mdName(b)}`);
                     return;
                 }
                 if (b.type === 'divider') {
@@ -185,9 +249,13 @@ const WissenDienst = (() => {
     };
     /** Markdown zurück in Blöcke. Vorhandene Datenbanken werden erkannt. */
     const ausMarkdown = (p, text) => {
+        /* Dieselbe Regel wie beim Hinschreiben, nur andersherum gelesen:
+           gerettet wird, was NICHT durch Markdown gegangen ist. `Store.baum`
+           nimmt den ganzen Ast mit — bei einer Spalte also auch die PDF-Seite
+           darin und deren Striche. */
         const alteDbs = {};
         Store.childrenOf(p.id).forEach((b) => {
-            if (['database', 'whiteboard', 'chart', 'table'].includes(b.type))
+            if (!mdTraegt(b))
                 alteDbs[b.id] = Store.baum(b.id);
         });
         Store.kinderLeeren(p.id);
@@ -234,7 +302,11 @@ const WissenDienst = (() => {
             }
             if (tabelle)
                 tabelleAbschliessen();
-            const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab):([^>]+)-->$/);
+            /* Der Teil hinter `-->` ist der Lesehinweis für den Menschen und
+               wird verworfen. Die Kennung selbst darf nur enthalten, was eine
+               Kennung enthält — sonst könnte ein `-->` im Text die Zeile
+               verschieben. */
+            const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab|blk):([A-Za-z0-9_-]+)-->\s*(?:.*)$/);
             if (platz?.[1] && alteDbs[platz[1]]) {
                 Store.baumEinfuegen(alteDbs[platz[1]], p.id);
                 return;

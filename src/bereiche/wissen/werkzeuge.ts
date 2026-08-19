@@ -895,6 +895,20 @@ const Werkzeuge = (() => {
         '<div class="fh">Markdown-Quelltext <em>' + esc(p.text || 'Ohne Titel') + '</em>' +
           '<button class="icon-btn" data-a="zu">✕</button></div>' +
         '<textarea id="mdq" spellcheck="false"></textarea>' +
+        /* Was „Übernehmen" wirklich tut, steht daneben — nicht erst im
+           Nachhinein im Versionsverlauf. Markdown trägt keine Farben und
+           keine Schriftgrössen (E101), und verschachtelte Listen kommen
+           eine Ebene flach zurück. Alles, was Markdown gar nicht abbilden
+           kann, steht seit E113 als Platzhalter im Text und bleibt
+           unangetastet — man darf die Zeile nur nicht löschen. */
+        '<div class="hint" style="padding:0 14px 10px; line-height:1.5">' +
+          'Die Zeilen wie <code>&lt;!--blk:…--&gt;</code> sind PDF-Seiten, ' +
+          'Blätter, Tabellen und Spalten. Sie bleiben unverändert, solange ' +
+          'die Zeile stehen bleibt.<br>' +
+          'Farben, Schriftgrössen und die Verschachtelung von Listen kann ' +
+          'Markdown nicht tragen — sie gehen beim Übernehmen verloren. ' +
+          'Eine Fassung wird vorher gesichert.' +
+        '</div>' +
         '<div class="fbtns">' +
           '<button data-a="kopieren">Kopieren</button>' +
           '<button data-a="datei">Als .md speichern</button>' +
