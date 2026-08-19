@@ -6307,3 +6307,51 @@ Schriften, die das Gerät mitbringen muss (Segoe Script, Arial Narrow).
 Wo es sie nicht gibt — im Prüfstand etwa —, fällt die Anzeige auf die
 Standardschrift zurück. Eine Schriftdatei mitzuliefern hiesse, sie in
 jede weitergegebene Einzeldatei zu packen; das ist es nicht wert.
+
+
+## E102 · Spalten halten ihren Inhalt
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen
+
+Beim Bauen der Schulaufgaben-Seite gemessen: die Kinder eines
+Spaltenblocks WAREN die Spalten — je Spalte genau ein Block. Wer
+rechts eine zweite Aufgabe anfing und Enter drückte, legte ein
+Geschwister an, und daraus wurde eine dritte Spalte:
+
+```txt
+zwei Spalten + Enter  →  drei Spalten
+drei Spalten + Enter  →  vier Spalten
+```
+
+Die Seite zerfiel also beim ganz normalen Schreiben. Und der Wunsch,
+ein Blatt NEBEN etwas zu stellen, war damit gar nicht erfüllbar —
+neben dem Blatt hätte genau eine Zeile Platz gehabt.
+
+Jetzt liegt eine `spalte` dazwischen: `columns` → `spalte[]` → Inhalt.
+Der Elternteil des Inhalts ist die Spalte, ein Geschwister bleibt also
+IN ihr. Eine leere Spalte legt sich beim Zeichnen eine Zeile an —
+sonst wäre sie eine unsichtbare Fläche, in die man nicht hineinkommt.
+
+**Der Bestand bleibt heil.** Ist ein Kind KEINE `spalte`, wird es
+weiter direkt als Zelle gezeichnet. Alte Seiten sehen aus wie vorher
+und verhalten sich wie vorher; umgeschrieben wird nichts (§9).
+
+`.spalte` bekommt `min-width: 0`. Das ist Pflicht, nicht Zierde: eine
+Gitterzelle mit `min-width: auto` wächst mit ihrem breitesten Kind und
+sprengt das Raster — dieselbe Falle wie bei den Tabellenkarten (E89)
+und beim A4-Blatt (E100), dritte Auflage.
+
+**Geprüft** (test176, 16 Punkte): Enter im Inhalt lässt die Spaltenzahl
+bei zwei und legt die Zeile IN die Spalte; drei Spalten ebenso; ein
+Bestandsblock ohne Hüllen zeichnet unverändert samt Inhalt; alles
+überlebt das Neuladen. Zwei Arme, jeder einzeln: ohne Zwischenschicht
+beim Anlegen fallen drei Punkte, ohne den Zeichner-Zweig einer.
+
+**Drei Fehler lagen dabei in der Prüfung, nicht im Code** — und alle
+drei sind lehrreich genug, um sie aufzuschreiben. Erstens behauptete
+ein Punkt eine feste Zeilenzahl, obwohl die Spalte selbst eine leere
+Zeile mitbringt; gemessen wird jetzt der ZUWACHS. Zweitens kürzte die
+Probe den Zellentext auf zwölf Zeichen — die Griffe (`+`, `⋮⋮`) stehen
+mit im `textContent`, und übrig blieb „links, al". Drittens zitierte
+ein Quelltext-Zeuge einen Aufruf, den es so nie gab. Eine Prüfung, die
+rot wird, hat nicht automatisch recht.

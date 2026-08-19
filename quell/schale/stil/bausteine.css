@@ -2747,3 +2747,12 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* Im Menü sollen die Einträge zeigen, was sie tun. */
 .stil-probe{display:flex; align-items:center; justify-content:space-between; gap:10px}
 .stil-probe em{font-style:normal; color:var(--text-dim); font-size:12.5px}
+
+
+/* ── Spalte als Behälter (E102) ────────────────────────────────────────────
+   `min-width:0` ist Pflicht, nicht Zierde: eine Gitterzelle mit
+   `min-width:auto` wächst mit ihrem breitesten Kind und sprengt das Raster.
+   Genau daran lag es beim A4-Blatt (E100) und bei den Tabellenkarten (E89) —
+   dritte Auflage derselben Falle.                                         */
+.spalte{min-width:0; display:flex; flex-direction:column; gap:2px}
+.spalte > .blk{width:100%}

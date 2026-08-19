@@ -659,6 +659,30 @@ const Blocks = (() => {
         break;
       }
 
+      /* Eine SPALTE ist ein Behälter, kein Inhalt (E102). Vorher waren die
+         Kinder eines Spaltenblocks selbst die Spalten — je Spalte genau ein
+         Block. Wer rechts eine zweite Zeile anfing und Enter drückte, legte
+         ein Geschwister an, und daraus wurde eine DRITTE SPALTE: gemessen
+         wurden aus zwei drei und aus drei vier, die Seite zerfiel beim
+         normalen Schreiben.
+         Jetzt liegt die Spalte dazwischen — der Elternteil des Inhalts ist
+         sie, ein Geschwister bleibt also IN ihr. */
+      case 'spalte': {
+        const w = document.createElement('div');
+        w.className = 'spalte';
+        const kinder = Store.childrenOf(block.id);
+        if (!kinder.length) {
+          /* Eine leere Spalte wäre eine unsichtbare Fläche, in die man nicht
+             hineinkommt. Also immer eine Zeile zum Hineinschreiben. */
+          const leer = Store.addBlock(block.id, 'text', { text: '' });
+          w.appendChild(render(leer, tiefe));
+        } else {
+          kinder.forEach((k: any) => w.appendChild(render(k, tiefe)));
+        }
+        box.appendChild(w);
+        break;
+      }
+
       /* --- Verweis auf eine andere Seite (Notion „Link to page", Trilium-Klon) */
       case 'pageref': {
         const ziel = block.ziel ? Store.getBlock(block.ziel) : null;
@@ -1871,7 +1895,12 @@ const Blocks = (() => {
     if (neuerTyp === 'columns' || neuerTyp === 'columns3') {
       Store.updateBlock(id, { type: neuerTyp, text: '' });
       const n = neuerTyp === 'columns3' ? 3 : 2;
-      for (let i = Store.childrenOf(id).length; i < n; i++) Store.addBlock(id, 'text');
+      /* Je Spalte ein `spalte`-Behälter mit einer leeren Zeile darin —
+         nicht der Inhalt direkt (E102). */
+      for (let i = Store.childrenOf(id).length; i < n; i++) {
+        const sp = Store.addBlock(id, 'spalte', { text: '' });
+        Store.addBlock(sp.id, 'text', { text: '' });
+      }
       App.zeichneSeite();
       return;
     }
