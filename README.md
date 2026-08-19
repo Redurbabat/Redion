@@ -919,8 +919,12 @@ dort nicht. Gefragt wird jedes Mal; die zuletzt gewählte Anordnung steht
 nur vorn, sodass Ablegen und Enter genügt.
 
 Das Original bleibt unverändert als Anhang liegen. Redion schreibt nie in
-das PDF zurück — die Anmerkungen liegen daneben in Redion. Das heisst auch:
-wer die Datei mit Anmerkungen weitergeben will, kann das noch nicht.
+das PDF zurück — die Anmerkungen liegen daneben in Redion.
+
+Weitergeben lässt sich das trotzdem: **Strg + P** druckt die Seite mit allem
+darauf — Seitenbild, Striche, Notizblätter — oder speichert sie über den
+Druckdialog als PDF. Die Striche gehen dabei als Vektoren hinaus und bleiben
+scharf.
 
 Die Seitenbilder kommen NICHT in die Sicherung — bei einem Skript mit 500
 Seiten wären das sonst hundert Megabyte in jeder `.redion`. Das Original ist
@@ -928,6 +932,12 @@ natürlich darin, Byte für Byte, und auf jeder leeren Seite steht danach ein
 Knopf „Aus dem Original zurückholen", der das ganze Dokument in einem Zug
 neu rechnet. Deine Notizen und Striche darauf sind davon nie betroffen: sie
 hängen am Block, nicht am Bild.
+
+Der Text im PDF ist durchsuchbar: Redion nimmt ihn beim Hochladen einmal
+mit, und die Suche springt danach direkt zur Fundstelle — nicht bloss auf
+die Seite, sondern auf die Seite 63, wo das Wort steht. Eingescannte Blätter
+ohne Textebene sind davon ausgenommen; Text aus Bildern lesen kann Redion
+nicht.
 
 Jede Seite hat ausserdem neben ihrer Seitenzahl einen 🔗. Er kopiert einen
 Verweis auf genau diese Seite — eine Notiz kann so auf „Seite 14" zeigen und

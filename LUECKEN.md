@@ -1116,16 +1116,21 @@ Nachsehen stellte sich heraus, dass Redion solche Verweise seit Langem
 SCHRIEB (Strg + Umschalt + C) und nie las — der Link öffnete irgendeine
 Seite, und das sah aus wie ein Erfolg.
 
-**~~Neurasterung~~ · halb erledigt (E106).** Fehlende Seitenbilder holt ein
-Knopf aus dem Original zurück — das ist der Weg, den E103 versprochen und
-nicht gebaut hatte. Was noch fehlt, ist eine HÖHERE Auflösung als die 140
-dpi vom Einlesen: wer stark hineinzoomt, sieht weiterhin Unschärfe.
+**~~Neurasterung~~ · erledigt (E106) — und der Rest war ein Rechenfehler.**
+Fehlende Seitenbilder holt ein Knopf aus dem Original zurück; das ist der
+Weg, den E103 versprochen und nicht gebaut hatte.
 
-**Textsuche im PDF.** pdf.js liest die Textebene mit; Redion nutzt sie
-nicht. Nach der Rasterung ist eine Seite ein Bild, und die Suche findet
-darin nichts. Der Text liesse sich beim Einlesen **einmal** mitnehmen und
-am Block ablegen — dann fände die Suche ihn, ohne dass die Bibliothek
-später noch gebraucht würde. Passt zu L29.
+Die „höhere Auflösung", die hier noch als Lücke stand, gibt es nicht:
+1654 px über eine A4-Breite sind 1654 × 72 / 595,28 = **200 dpi**, nicht die
+140, die hier und in E103 standen. 200 dpi ist Scan-Qualität. Die Lücke war
+eine falsch gerechnete Zahl, nicht ein fehlendes Merkmal — nachgerechnet am
+19. August (E107).
+
+**~~Textsuche im PDF~~ · erledigt (E107).** Der Text jeder Seite wandert
+beim Einlesen an den Block und steht in der Sicherung; die Suche findet ihn
+und springt zur Fundstelle statt bloss zur Seite. Was bleibt: eine
+EINGESCANNTE Seite hat gar keine Textebene — dafür bräuchte es OCR, und das
+ist L29.
 
 **Neurasterung.** Seiten entstehen bei 1654 px Breite, rund 140 dpi. Wer
 stark hineinzoomt, sieht Unschärfe. Eine Seite liesse sich auf Wunsch
@@ -1141,3 +1146,19 @@ technische Zeile zu zeigen — aber eine Passwortabfrage gibt es nicht.
 zurück. Anmerkungen liegen daneben. Wer die Datei mit Anmerkungen
 weitergeben will, braucht einen Ausdruck oder einen Export — auch das
 gibt es noch nicht.
+
+## L38 · Die Präsentation kennt die neuen Blöcke nicht
+
+**19. August 2026, bei E108 nebenbei gefunden.** `Werkzeuge.praesentation`
+baut Folien über eine **eigene** Kette von Blockarten (`folieBlock`), getrennt
+von der des Exports. PDF-Seiten, A4-Blätter, Spalten und der Tabellenblock
+stehen darin nicht — eine Schulaufgabe als Folien vorzuführen zeigt also die
+Notizzeilen und sonst nichts.
+
+Dass es zwei Ketten gibt, ist dabei nicht von vornherein falsch: Folien sind
+ein anderes Medium als Fliesstext, mit anderem Aufbau und anderen Grössen.
+Falsch ist nur, dass die eine seit E108 alle Blockarten kennt und die andere
+den Stand von damals hält.
+
+Der wiederkehrende Befund dieses Projekts, wieder einmal: nicht „etwas
+vergessen", sondern „an einer Stelle getan und an der Nachbarstelle nicht".

@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**19. August 2026 · 146 Prüfläufe**
+**19. August 2026 · 148 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -87,11 +87,13 @@ L18  XLSX/ODS-Rest: Zellformatierung, Kommentare, ODS-Mehrblatt —
      Blatt: stille §13-Lücke)
 L20  ✅ komplett (9. August): Ausfüllen (E87), Markdown-Tabellen
      (E88), Alt+Umschalt+Klick (test158 §7)
-L37  Was am PDF noch fehlt — nach E103 bis E106 bleiben:
-     Textsuche im PDF (passt zu L29) · Neurasterung in HÖHERER
-     Auflösung (das Zurückholen gibt es seit E106, aber immer in
-     140 dpi) · verschlüsselte Dateien.
-     Erledigt: Seitenanker (E105) · Seitenbilder zurückholen (E106)
+L37  Was am PDF noch fehlt — nach E103 bis E107 bleiben:
+     verschlüsselte Dateien · OCR für eingescannte Seiten ohne
+     Textebene (das ist L29).
+     Die „Neurasterung" ist von der Liste: sie stand dort wegen einer
+     falsch gerechneten Zahl — 1654 px über A4 sind 200 dpi, nicht 140.
+     Erledigt: Seitenanker (E105) · Seitenbilder zurückholen (E106) ·
+     Textsuche im PDF (E107)
 ```
 
 **Redurs vier Wünsche für die Schulaufgaben** (11.–19. August) sind

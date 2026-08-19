@@ -6780,3 +6780,183 @@ ein Klick holt beide Seiten zurück, als WebP, wieder als `abgeleitet`
 gestempelt, ohne die Masse anzurühren · das Original bleibt Byte für Byte ·
 ein zweiter Lauf rechnet nichts noch einmal · ohne Original kein Knopf ·
 Quelltext-Zeugen.
+
+
+## E107 · Der Text im PDF ist auffindbar
+
+**19. August 2026.** Ein gerastertes Seitenbild ist für die Suche **stumm**.
+Wer sein Mathe-Skript hereinzog, konnte darin blättern und darauf schreiben —
+aber „Pythagoras" zu suchen fand nichts, auch wenn das Wort auf Seite 63
+stand. Bei achtzig Seiten ist das der Unterschied zwischen einem Dokument und
+einem Stapel Papier.
+
+pdf.js liest die Textebene ohnehin mit, und beim Einlesen ist die Bibliothek
+gerade da. Der Text wandert deshalb **einmal** an den Block; danach findet die
+Suche ihn ohne eine fremde Zeile. Dieselbe Aufteilung wie beim Bild (E103) —
+die Bibliothek ist Umwandler, nicht Betrieb.
+
+### Drei Entscheidungen im Kleinen
+
+**`suchtext`, nicht `text`.** `text` ist, was ein Mensch geschrieben hat, und
+die Oberfläche zeigt es an vielen Stellen — eine halbe Seite Skript in der
+Krümelspur wäre keine Verbesserung. Der Suchtext steht daneben.
+
+**Er kommt MIT in die Sicherung**, anders als die Bilder. Er ist klein (rund
+2 KB je Seite), und ohne ihn wäre ein eingespieltes Skript wieder stumm, bis
+jemand alle Seiten neu rechnet. Genau das prüft `test181` §4: Bilder weg,
+Text da, Suche findet.
+
+**Gekürzt wird bei 8000 Zeichen je Seite.** Eine dicht bedruckte A4-Seite hat
+rund 3000. Ohne Grenze wüchse der Bestand einer 500-Seiten-Datei um mehrere
+Megabyte — und die stehen, anders als die Bilder, in jeder Sicherung.
+
+Eine Seite ohne Textebene — ein eingescanntes Blatt — liefert nichts. Das ist
+kein Fehler, nur stumm; OCR steht weiterhin in L29.
+
+### Und der Treffer springt zum Block
+
+Möglich seit E105. `findInside` gibt jetzt `{ text, blockId }` zurück statt
+nur einer Zeichenkette, und die Suche geht damit zur **Fundstelle** statt zur
+Seite. Eine Fundstelle auf Seite 63 nützt wenig, wenn man danach 63 Seiten
+weit rollen muss.
+
+Auch das Zurückholen (E106) trägt fehlenden Text nach — für alles, was vor
+heute eingelesen wurde. Das Dokument ist dabei ohnehin offen.
+
+### Der Fund beim Hinsehen
+
+Im Suchfenster stand rechts in der Vorschau: **„Diese Seite ist noch leer."**
+Für eine Seite mit vier PDF-Seiten darauf. Die Vorschau liest `b.text`, und
+eine PDF-Seite hat keinen.
+
+Kein Prüflauf hatte etwas dagegen, weil keiner hinsah — und der Satz ist die
+unangenehmste Sorte Falschaussage: er klingt nach einer Information. Jetzt
+zählt die Vorschau die Seiten auf, mit der ersten Zeile jeder Seite. Aus
+einer Lüge ist ein Inhaltsverzeichnis geworden.
+
+### Und eine Zahl, die falsch dastand
+
+Beim Nachdenken darüber, ob die „Neurasterung in höherer Auflösung" aus L37
+das nächste Stück sein sollte, habe ich nachgerechnet statt geglaubt:
+
+    1654 px über eine A4-Breite
+    = 1654 × 72 / 595,28
+    = 200 dpi
+
+In `leser.ts`, in E103, in AUFGABEN.md und in LUECKEN.md stand „rund 140
+dpi". Das war schlicht falsch gerechnet, und die falsche Zahl hatte eine
+Lücke begründet: bei 140 dpi wäre starkes Hineinzoomen wirklich unscharf,
+bei 200 ist es Scan-Qualität. Die „Neurasterung" ist deshalb von der Liste —
+nicht weil sie gebaut wurde, sondern weil es sie als Lücke nie gab.
+
+Eine Zahl, die man von einer Stelle zur nächsten weiterträgt, wird dabei
+nicht wahrer. Sie wird nur schwerer zu widerrufen (§34).
+
+### Und einmal ein ganzes Skript gemessen
+
+Statt zu schätzen, wie sich das alles bei echter Grösse verhält: ein dicht
+bedrucktes Dokument mit 60 Seiten, 24 Textzeilen je Seite, eingelesen.
+
+    Dauer            21,1 s          352 ms je Seite
+    Seitenbilder     15,5 MB         265 KB je Seite
+    Original          202 KB
+    Suchtext          139 KB        2367 Zeichen je Seite
+    JS-Speicher        23 MB
+
+Drei Dinge stehen damit fest. Die Grenze von 8000 Zeichen je Seite ist
+grosszügig — eine dichte Seite braucht 2400. Der Speicher bleibt flach: eine
+Leinwand zur Zeit, wie gebaut. Und die Zeit ist erträglich, aber spürbar,
+also gehört sie in die Frage vor dem Einlesen.
+
+**Der Dialog log dabei**, wenn auch nur ein wenig: er kündigte „ungefähr
+12 MB" an (60 × 0,2) und es wurden 15,5. Eine Schätzung, die den Preis
+kleiner macht, als er ist, ist genau die Sorte Versprechen, die §33
+verbietet. Jetzt steht dort „bis zu 18 MB und etwa 21 Sekunden" — 0,3 MB je
+Seite liegt über dem dichtesten gemessenen Fall, und „bis zu" sagt, dass es
+eine Obergrenze ist. Dazu der Satz, der die Angst nimmt: in die Sicherung
+kommen diese Bilder nicht.
+
+**Geprüft** (test181, 30 Punkte): jede Seite bringt ihren Text mit und die
+Zeilen kleben nicht aneinander · die Suche findet das Wort auf Seite 3 und
+nicht auf Seite 1 · sie findet nichts, was nirgends steht · der Treffer nennt
+den Block und springt hin, von einer anderen Seite aus · nach Sicherung und
+Einspielen ohne Bilder findet sie es weiterhin · die Vorschau zählt die
+Seiten auf. Drei Arme, jeder einzeln: ohne `suchtext` in der Suche fallen
+fünf Punkte, ohne den Text am Block acht, ohne den Vorschau-Zweig drei.
+
+
+## E108 · Eine beschriebene Seite lässt sich weitergeben
+
+**19. August 2026.** Redurs Satz war „die aufgaben lösen". Danach kommt:
+abgeben. Und genau da hörte Redion auf.
+
+Wer eine Schulaufgabe mit Strg + P druckte, bekam die Notizzeilen und
+**nichts** von dem Blatt, auf dem sie stehen. Kein Seitenbild, keinen
+einzigen Strich. Nicht hässlich — leer.
+
+Der Grund ist banal und deshalb lehrreich: `seiteAlsHtml` ist eine Kette von
+Blockarten, und wer nicht darin steht, kommt nicht vor. `pdfseite` und
+`blatt` standen nicht darin, und beide haben keinen `text` — sie fielen
+durch jede Bedingung hindurch bis zum `else if (t)` und blieben dort liegen.
+Kein Fehler, keine Meldung, kein leerer Kasten: einfach nichts.
+
+### Ein Baum, ein Haken
+
+`seiteAlsHtml` bekommt einen optionalen `sonderfall`. Gibt er etwas zurück,
+gilt das statt der Kette **und** statt des Absteigens; der Sonderfall
+entscheidet selbst, ob er hinabsteigt.
+
+Damit setzt der Druckweg PDF-Seiten und Blätter mit Bild und Strichen, ohne
+dass es eine zweite Baumwanderung gäbe. Eine zweite hätte beim nächsten
+neuen Blocktyp genau eine Stelle nachgezogen bekommen — die, an die man
+gerade denkt.
+
+**Die Striche kommen aus `Marken.zeichneMarke`**, derselben Stelle, die sie
+auch auf dem Bildschirm zeichnet (§34). Sie gehen als SVG hinaus und bleiben
+deshalb scharf, egal wie fein der Drucker ist.
+
+**Zwei Wege, und das ist Absicht.** `seiteAlsHtml` bleibt synchron und ohne
+Bilder: es bedient auch den Archiv-Export und das Veröffentlichen, und dort
+wäre eine blob-Adresse nach der Sitzung tot (E98) — von einem Schulskript in
+einer öffentlichen Seite ganz abgesehen. Es sagt jetzt aber wenigstens, DASS
+eine Seite da ist, statt zu schweigen. Zum Drucken werden die Bilder vorher
+als Daten-Adressen eingesammelt; dann steht im Rahmen ein vollständiges
+Dokument.
+
+**Spalten werden beim Drucken untereinander gesetzt.** Nebeneinander auf A4
+hochkant wären zwei Spalten von je 90 mm — lesbar ist das nicht, und die
+Reihenfolge Seite, Blatt, Seite, Blatt bleibt ohnehin eindeutig.
+
+### Und ein Fund im Druckbild
+
+Die Antworten auf dem Notizblatt waren nummeriert und wurden als **Punkte**
+gedruckt. Jeder Listeneintrag ging als nacktes `<li>` hinaus, ohne `<ul>`
+oder `<ol>` darum — seit es den Export gibt. Zwei Folgen: eine nummerierte
+Liste verliert ihre Nummern, und das Ergebnis ist ungültiges HTML.
+
+Das betraf nicht nur den Druck, sondern auch den HTML-Export und das
+Veröffentlichen. Aufgefallen ist es im Druckbild, weil dort zum ersten Mal
+jemand eine nummerierte Antwort abgeben wollte.
+
+### Zwei falsche Zeugen auf dem Weg
+
+Der Punkt „es gibt nur eine Baumwanderung" war zweimal falsch formuliert,
+bevor er stimmte. Erst zählte er `const raus = ` und verlangte genau eins —
+davon gibt es drei, der Name ist eine gewöhnliche Vokabel. Dann zählte er
+`b.type === 'callout'` und verlangte genau eins — davon gibt es zwei, und
+die zweite ist berechtigt: die Präsentation (`folieBlock`) setzt Folien und
+nicht Fliesstext.
+
+Beide Male war die Absicht richtig und die Messung zu grob. Jetzt wird
+innerhalb von `seiteAlsHtml` gezählt und ausserdem geprüft, dass der
+Druckweg keine eigene Kette hat.
+
+**Nebenbefund, nicht behoben:** die Präsentation hat ihre eigene Kette und
+zeigt PDF-Seiten deshalb ebenfalls nicht. Steht als L38 in LUECKEN.md.
+
+**Geprüft** (test182, 24 Punkte): das Druckdokument enthält das Seitenbild
+als Daten-Adresse und keine blob-Adresse · beide Striche als SVG, in
+Seitenpunkten, mit dem Zeichenraum der Seite · nichts wird beim Umbruch
+zerschnitten · der gewöhnliche Export erfindet kein Bild, schweigt aber auch
+nicht mehr · Quelltext-Zeugen. Ein Arm: ohne den Sonderfall fallen sieben
+Punkte.

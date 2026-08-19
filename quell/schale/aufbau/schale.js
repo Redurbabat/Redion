@@ -907,7 +907,7 @@ const App = (() => {
             res.querySelectorAll('button[data-i]').forEach(b => {
                 b.addEventListener('click', () => {
                     merkeSuche(inp.value);
-                    oeffne(treffer[Number(b.dataset.i)]?.page.id);
+                    zumTreffer(treffer[Number(b.dataset.i)]);
                     o.remove();
                 });
                 b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
@@ -931,6 +931,14 @@ const App = (() => {
                     const c = Store.getCollection(b.collectionId);
                     return `<div class="vs-db">🗂 ${esc(c ? c.name : 'Datenbank')} · ` +
                         `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`;
+                }
+                /* Eine PDF-Seite hat keinen `text` — sie ist ein Bild. Ihr erster
+                   Satz steht seit E107 in `suchtext`, und ohne ihn behauptete die
+                   Vorschau „Diese Seite ist noch leer." über ein ganzes Skript. */
+                if (b.type === 'pdfseite') {
+                    const erste = String(b.suchtext || '').split('\n')[0] || '';
+                    return `<div class="vs-t">📄 Seite ${esc(b.nr || '?')}` +
+                        (erste ? ' · ' + esc(erste.slice(0, 80)) : '') + '</div>';
                 }
                 if (!b.text)
                     return '';
@@ -1068,7 +1076,7 @@ const App = (() => {
                 zeichne();
             }
             if (e.key === 'Enter' && treffer[i]) {
-                oeffne(treffer[i].page.id);
+                zumTreffer(treffer[i]);
                 o.remove();
             }
         });
@@ -1093,6 +1101,21 @@ const App = (() => {
            Genau dort gehören die letzten Suchbegriffe hin. */
         zeichne();
         inp.focus();
+    };
+    /**
+     * Einen Suchtreffer öffnen.
+     *
+     * Kennt die Suche den Block, geht es dorthin — sonst zur Seite. Für einen
+     * Treffer im Titel gibt es keinen Block, und für eine Seite, deren Inhalt
+     * eine Zeile weit oben ist, wäre das Hinrollen auch keine Hilfe. Wo es
+     * eine Hilfe ist: eine Fundstelle auf Seite 63 eines Skripts (E107).
+     */
+    const zumTreffer = (t) => {
+        if (!t)
+            return;
+        if (t.blockId && zeigeBlock(t.blockId))
+            return;
+        oeffne(t.page.id);
     };
     /** Suchen auf der offenen Seite — Strg + F. */
     const seitenSuche = () => {

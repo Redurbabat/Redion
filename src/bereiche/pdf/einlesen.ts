@@ -44,6 +44,9 @@ const PdfEinlesen = (() => {
      rund fünfzehn Megabyte Bilder — das soll ein Mensch entscheiden. */
   const OHNE_FRAGE = 30;
 
+  /* `%PDF-` als Bytes — siehe `alsSeiten`. */
+  const PDF_KOPF = [0x25, 0x50, 0x44, 0x46, 0x2d];
+
   const alsSeiten = async (datei: File, elternId: string): Promise<any> => {
     if (typeof PdfLeser === 'undefined')
       throw new Error('Der PDF-Leser ist nicht geladen.');
@@ -52,9 +55,16 @@ const PdfEinlesen = (() => {
        spart bei einer falsch benannten 20-MB-Datei das vollständige Ablegen
        und Einlesen, bevor jemand merkt, dass es keine ist. Wer hier
        herausfliegt, geht den gewöhnlichen Anhang-Weg — und der legt den
-       Block ZUERST an, sodass sofort etwas dasteht. */
-    const kopf = new Uint8Array(await datei.slice(0, 5).arrayBuffer());
-    if (String.fromCharCode(...Array.from(kopf)) !== '%PDF-')
+       Block ZUERST an, sodass sofort etwas dasteht.
+
+       VERGLICHEN WIRD ÜBER ZAHLEN, nicht über eine Zeichenkette. Der erste
+       Entwurf schrieb `String.fromCharCode(...kopf)`, und `test87` §9 hat
+       das zu Recht angestrichen: der Spread reicht jedes Byte als eigenen
+       Aufrufparameter weiter und sprengt bei grossen Puffern den Stapel.
+       Bei fünf Bytes wäre er harmlos — aber genau so wandert ein Muster
+       weiter, und die nächste Stelle hat dann ein Megabyte. */
+    const kopf = new Uint8Array(await datei.slice(0, PDF_KOPF.length).arrayBuffer());
+    if (PDF_KOPF.some((b, i) => kopf[i] !== b))
       throw new Error('Das ist keine PDF-Datei.');
 
     const melder = UI.toast('„' + datei.name + '" wird gelesen …', 120000);
@@ -140,8 +150,11 @@ const PdfEinlesen = (() => {
               titel: datei.name,
               text: 'Dieses Dokument hat ' + gesamt + ' Seiten.\n\n' +
                     'Jede Seite wird als Bild vorbereitet, damit du darauf ' +
-                    'schreiben kannst. Das kostet Zeit und Platz — ungefähr ' +
-                    Math.round(gesamt * 0.2) + ' MB.',
+                    'schreiben kannst. Das kostet Zeit und Platz — bis zu ' +
+                    Math.max(1, Math.round(gesamt * 0.3)) + ' MB und etwa ' +
+                    Math.max(1, Math.round(gesamt * 0.35)) + ' Sekunden.\n\n' +
+                    'In die Sicherung kommen diese Bilder nicht; sie lassen ' +
+                    'sich jederzeit aus dem Original zurückholen.',
               knoepfe: [
                 { id: 'alle',  text: 'Alle ' + gesamt + ' Seiten vorbereiten',
                   hinweis: 'Dauert am längsten, dafür ist alles fertig' },
@@ -199,8 +212,17 @@ const PdfEinlesen = (() => {
            Nur `bildDateiId` bleibt ein Nachtrag: die Ablage braucht die
            Block-Kennung, die es vorher noch nicht gibt. Diese eine Lücke
            kennt der Zeichner und schreibt „Seite wird vorbereitet …" hin. */
+        /* DER TEXT DER SEITE, damit die Suche sie findet (E107). Er steht
+           in `suchtext` und nicht in `text`: `text` ist, was ein Mensch
+           geschrieben hat, und die Oberfläche zeigt es an vielen Stellen —
+           eine halbe Seite Skript in der Krümelspur wäre keine Verbesserung.
+           Anders als die Bilder kommt der Text MIT in die Sicherung: er ist
+           klein, und ohne ihn wäre ein eingespieltes Skript stumm, bis
+           jemand alle Seiten neu rechnet. */
+        const seitenText = await griff.text(n);
+
         const b = Store.addBlock(wohin, 'pdfseite', {
-          text: '', nr: n, vonSeiten: gesamt,
+          text: '', suchtext: seitenText, nr: n, vonSeiten: gesamt,
           bw: geo.bw, bh: geo.bh, dreh: geo.dreh,
           quelleId: quelle.id, raumVersion: SheetSpace.RAUM_VERSION
         });
@@ -314,7 +336,11 @@ const PdfEinlesen = (() => {
         const satz = await Dateien.ablegen(
           new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }),
           { blockId: b.id, abgeleitet: true });
-        Store.updateBlock(b.id, { bildDateiId: satz.id });
+        /* Fehlt der Suchtext noch — bei allem, was vor E107 eingelesen
+           wurde —, kommt er jetzt mit. Das Dokument ist ohnehin offen. */
+        const nach: Record<string, unknown> = { bildDateiId: satz.id };
+        if (!b.suchtext) nach.suchtext = await griff.text(n);
+        Store.updateBlock(b.id, nach);
         fertig++;
         await new Promise(r => setTimeout(r, 0));
       }

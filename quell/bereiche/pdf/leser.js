@@ -23,10 +23,16 @@
  * Byte. Zurückgeschrieben wird nie — Anmerkungen liegen daneben in Redion.
  * ==========================================================================*/
 const PdfLeser = (() => {
-    /* Auf welche Breite eine Seite gezeichnet wird. 1654 px sind bei A4 rund
-       140 dpi: gut genug zum Lesen und Beschreiben, klein genug, dass eine
-       Seite nicht ein halbes Megabyte kostet. */
+    /* Auf welche Breite eine Seite gezeichnet wird. 1654 px sind bei A4
+       genau 200 dpi (1654 × 72 / 595,28) — Scan-Qualität: gut genug zum Lesen,
+       zum Beschreiben und zum Hineinzoomen, klein genug, dass eine Seite nicht
+       ein halbes Megabyte kostet.
+       Hier stand bis E107 „rund 140 dpi". Das war schlicht falsch gerechnet,
+       und die Zahl hatte sich in E103, in AUFGABEN.md und in LUECKEN.md
+       fortgepflanzt, wo sie eine Lücke begründete, die es so nicht gibt. */
     const BREITE_PX = 1654;
+    /* Wie viel Text je Seite höchstens mitgeschrieben wird. Siehe `text()`. */
+    const TEXT_MAX = 8000;
     /** Zahl auf zwei Stellen — Punkte sind fein genug. */
     const rund = (n) => Math.round(n * 100) / 100;
     /**
@@ -73,12 +79,54 @@ const PdfLeser = (() => {
                 throw new Error('Die Seite liess sich nicht in ein Bild verwandeln.');
             return blob;
         };
+        /**
+         * Der Text EINER Seite, wie er im PDF steht.
+         *
+         * DAS IST DER GRUND, WARUM pdf.js MEHR KANN ALS BILDER MALEN. Ein
+         * gerastertes Seitenbild ist für die Suche stumm: darin steht nichts,
+         * was sich finden liesse. Die Textebene liegt aber ohnehin im Dokument,
+         * und beim Einlesen ist die Bibliothek gerade da. Danach wird sie nicht
+         * mehr gebraucht — der Text steht am Block, und die Suche findet ihn
+         * ohne eine fremde Zeile (E107).
+         *
+         * GEKÜRZT WIRD BEI 8000 ZEICHEN. Eine dicht bedruckte A4-Seite hat rund
+         * 3000; 8000 lassen Luft und decken zugleich den Fall ab, dass ein
+         * Dokument seinen ganzen Text in eine einzige Seite legt. Ohne Grenze
+         * wäre der Bestand einer 500-Seiten-Datei um mehrere Megabyte gewachsen
+         * — und die stehen, anders als die Bilder, in JEDER Sicherung.
+         */
+        const text = async (nr) => {
+            try {
+                const seite = await doc.getPage(nr);
+                const inhalt = await seite.getTextContent();
+                const stuecke = (inhalt.items || [])
+                    .map((i) => (typeof i.str === 'string' ? i.str : ''))
+                    .filter(Boolean);
+                /* Zeilenenden kennt die Textebene als `hasEOL`; ohne sie klebten
+                   „Aufgabe 1" und „Aufgabe 2" zu „Aufgabe 1Aufgabe 2" zusammen. */
+                let roh = '';
+                (inhalt.items || []).forEach((i) => {
+                    if (typeof i.str === 'string')
+                        roh += i.str;
+                    if (i.hasEOL)
+                        roh += '\n';
+                });
+                if (!roh.trim())
+                    roh = stuecke.join(' ');
+                return roh.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n')
+                    .trim().slice(0, TEXT_MAX);
+            }
+            catch {
+                /* Eine Seite ohne Textebene ist ein Bild — kein Fehler, nur stumm. */
+                return '';
+            }
+        };
         const schliessen = () => { try {
             doc.destroy();
         }
         catch { /* egal */ } };
-        return { seiten: doc.numPages, geometrie, alsBild, schliessen };
+        return { seiten: doc.numPages, geometrie, alsBild, text, schliessen };
     };
-    return { oeffne, BREITE_PX };
+    return { oeffne, BREITE_PX, TEXT_MAX };
 })();
 window.PdfLeser = PdfLeser;

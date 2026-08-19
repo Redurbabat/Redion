@@ -1169,7 +1169,8 @@ const Store = (() => {
             if (wo !== 'titel') {
                 const hit = findInside(b.id, needle, 0);
                 if (hit)
-                    out.push({ page: b, treffer: 'Inhalt', snippet: hit, pfad: pfadText(b.id) });
+                    out.push({ page: b, treffer: 'Inhalt', snippet: hit.text,
+                        blockId: hit.blockId, pfad: pfadText(b.id) });
             }
         });
         return out.slice(0, 60);
@@ -1187,18 +1188,35 @@ const Store = (() => {
     /** Der Pfad als Text, ohne die Seite selbst — für die Trefferliste. */
     const pfadText = (id) => pathOf(id).slice(0, -1)
         .map(p => p.text || 'Ohne Titel').join(' / ');
+    /**
+     * Der erste Treffer INNERHALB einer Seite.
+     *
+     * Gibt `{ text, blockId }` zurück statt nur einer Zeichenkette: mit der
+     * Kennung kann die Suche seit E105 direkt zum Block springen statt bloss
+     * die Seite zu öffnen. Bei einem Skript mit achtzig Seiten ist das der
+     * Unterschied zwischen „steht da drin" und „steht hier".
+     *
+     * GESUCHT WIRD AUCH IN `suchtext`. Eine PDF-Seite hat keinen `text` — sie
+     * ist ein Bild. Ihr Text steht seit E107 daneben, sonst wäre ein
+     * eingelesenes Skript für die Suche stumm.
+     */
     const findInside = (pageId, needle, tiefe) => {
-        if (tiefe > 4)
+        if (tiefe > 5)
             return null;
         for (const kid of childrenOf(pageId)) {
             /* Unterseiten haben ihren eigenen Treffer — sonst würde die Elternseite
                mit fremdem Inhalt in der Liste stehen. */
             if (kid.type === 'page')
                 continue;
-            const t = (kid.text || '').toLowerCase();
-            if (t.includes(needle)) {
-                const i = t.indexOf(needle);
-                return '…' + kid.text.slice(Math.max(0, i - 30), i + 60) + '…';
+            for (const feld of ['text', 'suchtext']) {
+                const roh = String(kid[feld] || '');
+                if (!roh)
+                    continue;
+                const i = roh.toLowerCase().indexOf(needle);
+                if (i < 0)
+                    continue;
+                const aus = roh.slice(Math.max(0, i - 30), i + 60).replace(/\s+/g, ' ');
+                return { text: '…' + aus + '…', blockId: kid.id };
             }
             const tiefer = findInside(kid.id, needle, tiefe + 1);
             if (tiefer)

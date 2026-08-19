@@ -1526,11 +1526,39 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         lade(new Blob([doc], { type: 'text/html' }), 'notizen-archiv-' + heute() + '.html');
         UI.toast(seiten.length + ' Seiten in eine HTML-Datei gepackt');
     };
-    /** Eine Seite als HTML — für Archiv, Einzelexport und Drucken. */
-    const seiteAlsHtml = (p) => {
+    /**
+     * Eine Seite als HTML — für Archiv, Einzelexport und Drucken.
+     *
+     * `sonderfall` darf einzelne Blockarten selbst bauen. Gibt er etwas
+     * zurück, gilt das statt der Kette unten UND statt des Absteigens in die
+     * Kinder — der Sonderfall entscheidet dann selbst, ob er hinabsteigt.
+     * Damit kann der Druckweg PDF-Seiten und Blätter mit ihren Bildern und
+     * Strichen setzen, ohne dass es eine zweite Baumwanderung gäbe (E108).
+     */
+    const seiteAlsHtml = (p, sonderfall) => {
         const raus = (id, tiefe) => {
             let h = '';
+            /* Welche Liste gerade offen ist — siehe `listeHalten` unten. */
+            let offen = '';
+            const listeHalten = (art) => {
+                if (art === offen)
+                    return;
+                if (offen)
+                    h += '</' + offen + '>';
+                if (art)
+                    h += '<' + art + '>';
+                offen = art;
+            };
+            const LISTENART = { bullet: 'ul', todo: 'ul', number: 'ol' };
             Store.childrenOf(id).forEach((b) => {
+                listeHalten(LISTENART[b.type] || '');
+                if (sonderfall) {
+                    const eigen = sonderfall(b, tiefe, raus);
+                    if (eigen !== null && eigen !== undefined) {
+                        h += eigen;
+                        return;
+                    }
+                }
                 const t = b.text || '';
                 if (b.type === 'h1')
                     h += `<h3>${Blocks.inline(t)}</h3>`;
@@ -1564,6 +1592,15 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     h += datenbankHtml(b);
                 else if (b.type === 'page')
                     h += `<p>📄 <b>${esc(t || 'Ohne Titel')}</b></p>`;
+                /* Eine PDF-Seite hat keinen `text`, fiel also aus der Kette heraus und
+                   kam gar nicht vor. Im Export und in der Veröffentlichung steht
+                   jetzt wenigstens, DASS sie da ist — das Bild selbst gehört nicht
+                   hinein: es ist eine blob-Adresse, die nach der Sitzung tot wäre
+                   (E98), und in einer öffentlichen Seite hat ein Schulskript ohnehin
+                   nichts verloren. Zum DRUCKEN gibt es den Sonderfall (E108). */
+                else if (b.type === 'pdfseite')
+                    h += `<p>📄 Seite ${esc(b.nr || '?')}` +
+                        (b.vonSeiten ? ' von ' + esc(b.vonSeiten) : '') + '</p>';
                 else if (t)
                     h += `<p>${Blocks.inline(t)}</p>`;
                 /* NICHT in Unterseiten hineingehen. Eine Unterseite steht hier mit
@@ -1577,6 +1614,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 if (b.type !== 'toggle' && b.type !== 'page')
                     h += raus(b.id, tiefe + 1);
             });
+            listeHalten('');
             return h;
         };
         return raus(p.id, 0);
@@ -1606,7 +1644,106 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         lade(new Blob([doc], { type: 'text/html' }), sauber(p.text) + '.html');
         UI.toast('Als HTML gespeichert');
     };
-    const drucken = (p) => {
+    /* ========================================================================
+     * DRUCKEN: EINE BESCHRIEBENE SEITE ZUM WEITERGEBEN
+     * ------------------------------------------------------------------------
+     * Vorher kam beim Drucken einer Schulaufgabe die Notizzeile heraus und
+     * sonst nichts — kein Seitenbild, kein einziger Strich. Nicht hässlich,
+     * sondern LEER, und genau in dem Fall, für den Redur das alles wollte:
+     * lösen und abgeben.
+     *
+     * DIE STRICHE KOMMEN AUS `Marken.zeichneMarke`, derselben Stelle, die sie
+     * auch auf dem Bildschirm zeichnet. Ein zweiter Pfad-Bauer wäre eine
+     * zweite Wahrheit über dieselbe Linie (§34) — und als SVG bleiben sie beim
+     * Drucken scharf, egal wie fein der Drucker ist.
+     * ======================================================================*/
+    /** Eine abgelegte Datei als Daten-Adresse — der Druckrahmen braucht das. */
+    const alsDatenAdresse = async (dateiId) => {
+        try {
+            const blob = await Dateien.alsBlob(dateiId);
+            if (!blob)
+                return '';
+            return await new Promise(fertig => {
+                const leser = new FileReader();
+                leser.onload = () => fertig(String(leser.result || ''));
+                leser.onerror = () => fertig('');
+                leser.readAsDataURL(blob);
+            });
+        }
+        catch {
+            return '';
+        }
+    };
+    /** Alle Seitenbilder einer Seite einsammeln, bevor gedruckt wird. */
+    const bilderSammeln = async (p) => {
+        const karte = {};
+        const gehe = async (id, tiefe) => {
+            if (tiefe > 6)
+                return;
+            for (const b of Store.childrenOf(id)) {
+                if (b.type === 'page')
+                    continue;
+                if (b.type === 'pdfseite' && b.bildDateiId)
+                    karte[b.id] = await alsDatenAdresse(b.bildDateiId);
+                await gehe(b.id, tiefe + 1);
+            }
+        };
+        await gehe(p.id, 0);
+        return karte;
+    };
+    /** Die Striche eines Blocks als SVG-Text. */
+    const markenAlsSvg = (block, breite, hoehe) => {
+        const marken = Array.isArray(block.marken) ? block.marken : [];
+        if (!marken.length || typeof Marken === 'undefined')
+            return '';
+        const teile = marken
+            .map((m) => Marken.zeichneMarke(m))
+            .filter(Boolean)
+            .map((k) => k.outerHTML)
+            .join('');
+        if (!teile)
+            return '';
+        return `<svg class="marken" viewBox="0 0 ${breite} ${hoehe}" ` +
+            `preserveAspectRatio="none">${teile}</svg>`;
+    };
+    const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
+        'break-inside:avoid; page-break-inside:avoid}' +
+        '.blatt-druck img{display:block; width:100%}' +
+        '.blatt-druck.papier{background:#fff; border:1px solid #ccc}' +
+        '.blatt-druck .blatt-text{padding:9.5%; font-size:11pt}' +
+        '.blatt-druck .marken{position:absolute; inset:0; width:100%; height:100%; ' +
+        'color:#111}' +
+        '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
+        'border:1px dashed #bbb}';
+    const drucken = async (p) => {
+        const bilder = await bilderSammeln(p);
+        /* Der Sonderfall setzt PDF-Seiten und Blätter; alles andere macht die
+           gewöhnliche Kette. `null` heisst „nicht meine Sache". */
+        const inhalt = seiteAlsHtml(p, (b, tiefe, hinab) => {
+            if (b.type === 'pdfseite') {
+                const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
+                const adr = bilder[b.id] || '';
+                return '<figure class="blatt-druck">' +
+                    (adr ? `<img src="${adr}" alt="Seite ${esc(b.nr || '')}">`
+                        : `<div class="fehlt">Seite ${esc(b.nr || '')} — das Bild fehlt ` +
+                            'in diesem Bestand. Hol es in Redion aus dem Original zurück.</div>') +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            if (b.type === 'blatt') {
+                const bw = Number(b.blattBreite) || 595.28;
+                const bh = Number(b.blattHoehe) || 841.89;
+                return '<figure class="blatt-druck papier" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    '<div class="blatt-text">' + hinab(b.id, tiefe + 1) + '</div>' +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            /* Spalten kommen beim Drucken UNTEREINANDER. Nebeneinander auf A4
+               hochkant wären zwei Spalten von je 90 mm — lesbar ist das nicht, und
+               die Reihenfolge Seite, Blatt, Seite, Blatt bleibt eindeutig. */
+            if (b.type === 'columns' || b.type === 'columns3' || b.type === 'spalte')
+                return hinab(b.id, tiefe + 1);
+            return null;
+        });
         const f = document.createElement('iframe');
         f.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0';
         document.body.appendChild(f);
@@ -1621,8 +1758,9 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<style>body{font:12pt/1.6 Georgia,serif;margin:22mm}h1{font-size:22pt}h3{font-size:16pt}h4{font-size:13pt}' +
             'pre{background:#f2f2f2;padding:10px;white-space:pre-wrap}table{border-collapse:collapse;width:100%}' +
             'td,th{border:1px solid #999;padding:5px 8px;font-size:10.5pt}img{max-width:100%}' +
-            '.cal{background:#f2f2f2;padding:10px;border-radius:4px}</style></head><body>' +
-            '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + seiteAlsHtml(p) + '</body></html>');
+            '.cal{background:#f2f2f2;padding:10px;border-radius:4px}' + DRUCK_STIL +
+            '</style></head><body>' +
+            '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + inhalt + '</body></html>');
         d.close();
         setTimeout(() => {
             f.contentWindow?.focus();

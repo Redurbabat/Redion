@@ -14280,7 +14280,8 @@ const Store = (() => {
             if (wo !== 'titel') {
                 const hit = findInside(b.id, needle, 0);
                 if (hit)
-                    out.push({ page: b, treffer: 'Inhalt', snippet: hit, pfad: pfadText(b.id) });
+                    out.push({ page: b, treffer: 'Inhalt', snippet: hit.text,
+                        blockId: hit.blockId, pfad: pfadText(b.id) });
             }
         });
         return out.slice(0, 60);
@@ -14298,18 +14299,35 @@ const Store = (() => {
     /** Der Pfad als Text, ohne die Seite selbst — für die Trefferliste. */
     const pfadText = (id) => pathOf(id).slice(0, -1)
         .map(p => p.text || 'Ohne Titel').join(' / ');
+    /**
+     * Der erste Treffer INNERHALB einer Seite.
+     *
+     * Gibt `{ text, blockId }` zurück statt nur einer Zeichenkette: mit der
+     * Kennung kann die Suche seit E105 direkt zum Block springen statt bloss
+     * die Seite zu öffnen. Bei einem Skript mit achtzig Seiten ist das der
+     * Unterschied zwischen „steht da drin" und „steht hier".
+     *
+     * GESUCHT WIRD AUCH IN `suchtext`. Eine PDF-Seite hat keinen `text` — sie
+     * ist ein Bild. Ihr Text steht seit E107 daneben, sonst wäre ein
+     * eingelesenes Skript für die Suche stumm.
+     */
     const findInside = (pageId, needle, tiefe) => {
-        if (tiefe > 4)
+        if (tiefe > 5)
             return null;
         for (const kid of childrenOf(pageId)) {
             /* Unterseiten haben ihren eigenen Treffer — sonst würde die Elternseite
                mit fremdem Inhalt in der Liste stehen. */
             if (kid.type === 'page')
                 continue;
-            const t = (kid.text || '').toLowerCase();
-            if (t.includes(needle)) {
-                const i = t.indexOf(needle);
-                return '…' + kid.text.slice(Math.max(0, i - 30), i + 60) + '…';
+            for (const feld of ['text', 'suchtext']) {
+                const roh = String(kid[feld] || '');
+                if (!roh)
+                    continue;
+                const i = roh.toLowerCase().indexOf(needle);
+                if (i < 0)
+                    continue;
+                const aus = roh.slice(Math.max(0, i - 30), i + 60).replace(/\s+/g, ' ');
+                return { text: '…' + aus + '…', blockId: kid.id };
             }
             const tiefer = findInside(kid.id, needle, tiefe + 1);
             if (tiefer)
@@ -18672,10 +18690,16 @@ window.Marken = Marken;
  * Byte. Zurückgeschrieben wird nie — Anmerkungen liegen daneben in Redion.
  * ==========================================================================*/
 const PdfLeser = (() => {
-    /* Auf welche Breite eine Seite gezeichnet wird. 1654 px sind bei A4 rund
-       140 dpi: gut genug zum Lesen und Beschreiben, klein genug, dass eine
-       Seite nicht ein halbes Megabyte kostet. */
+    /* Auf welche Breite eine Seite gezeichnet wird. 1654 px sind bei A4
+       genau 200 dpi (1654 × 72 / 595,28) — Scan-Qualität: gut genug zum Lesen,
+       zum Beschreiben und zum Hineinzoomen, klein genug, dass eine Seite nicht
+       ein halbes Megabyte kostet.
+       Hier stand bis E107 „rund 140 dpi". Das war schlicht falsch gerechnet,
+       und die Zahl hatte sich in E103, in AUFGABEN.md und in LUECKEN.md
+       fortgepflanzt, wo sie eine Lücke begründete, die es so nicht gibt. */
     const BREITE_PX = 1654;
+    /* Wie viel Text je Seite höchstens mitgeschrieben wird. Siehe `text()`. */
+    const TEXT_MAX = 8000;
     /** Zahl auf zwei Stellen — Punkte sind fein genug. */
     const rund = (n) => Math.round(n * 100) / 100;
     /**
@@ -18722,13 +18746,55 @@ const PdfLeser = (() => {
                 throw new Error('Die Seite liess sich nicht in ein Bild verwandeln.');
             return blob;
         };
+        /**
+         * Der Text EINER Seite, wie er im PDF steht.
+         *
+         * DAS IST DER GRUND, WARUM pdf.js MEHR KANN ALS BILDER MALEN. Ein
+         * gerastertes Seitenbild ist für die Suche stumm: darin steht nichts,
+         * was sich finden liesse. Die Textebene liegt aber ohnehin im Dokument,
+         * und beim Einlesen ist die Bibliothek gerade da. Danach wird sie nicht
+         * mehr gebraucht — der Text steht am Block, und die Suche findet ihn
+         * ohne eine fremde Zeile (E107).
+         *
+         * GEKÜRZT WIRD BEI 8000 ZEICHEN. Eine dicht bedruckte A4-Seite hat rund
+         * 3000; 8000 lassen Luft und decken zugleich den Fall ab, dass ein
+         * Dokument seinen ganzen Text in eine einzige Seite legt. Ohne Grenze
+         * wäre der Bestand einer 500-Seiten-Datei um mehrere Megabyte gewachsen
+         * — und die stehen, anders als die Bilder, in JEDER Sicherung.
+         */
+        const text = async (nr) => {
+            try {
+                const seite = await doc.getPage(nr);
+                const inhalt = await seite.getTextContent();
+                const stuecke = (inhalt.items || [])
+                    .map((i) => (typeof i.str === 'string' ? i.str : ''))
+                    .filter(Boolean);
+                /* Zeilenenden kennt die Textebene als `hasEOL`; ohne sie klebten
+                   „Aufgabe 1" und „Aufgabe 2" zu „Aufgabe 1Aufgabe 2" zusammen. */
+                let roh = '';
+                (inhalt.items || []).forEach((i) => {
+                    if (typeof i.str === 'string')
+                        roh += i.str;
+                    if (i.hasEOL)
+                        roh += '\n';
+                });
+                if (!roh.trim())
+                    roh = stuecke.join(' ');
+                return roh.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n')
+                    .trim().slice(0, TEXT_MAX);
+            }
+            catch {
+                /* Eine Seite ohne Textebene ist ein Bild — kein Fehler, nur stumm. */
+                return '';
+            }
+        };
         const schliessen = () => { try {
             doc.destroy();
         }
         catch { /* egal */ } };
-        return { seiten: doc.numPages, geometrie, alsBild, schliessen };
+        return { seiten: doc.numPages, geometrie, alsBild, text, schliessen };
     };
-    return { oeffne, BREITE_PX };
+    return { oeffne, BREITE_PX, TEXT_MAX };
 })();
 window.PdfLeser = PdfLeser;
 
@@ -18922,6 +18988,8 @@ const PdfEinlesen = (() => {
     /* Ab hier wird nicht mehr ungefragt alles gerastert. Achtzig Seiten sind
        rund fünfzehn Megabyte Bilder — das soll ein Mensch entscheiden. */
     const OHNE_FRAGE = 30;
+    /* `%PDF-` als Bytes — siehe `alsSeiten`. */
+    const PDF_KOPF = [0x25, 0x50, 0x44, 0x46, 0x2d];
     const alsSeiten = async (datei, elternId) => {
         if (typeof PdfLeser === 'undefined')
             throw new Error('Der PDF-Leser ist nicht geladen.');
@@ -18929,9 +18997,16 @@ const PdfEinlesen = (() => {
            spart bei einer falsch benannten 20-MB-Datei das vollständige Ablegen
            und Einlesen, bevor jemand merkt, dass es keine ist. Wer hier
            herausfliegt, geht den gewöhnlichen Anhang-Weg — und der legt den
-           Block ZUERST an, sodass sofort etwas dasteht. */
-        const kopf = new Uint8Array(await datei.slice(0, 5).arrayBuffer());
-        if (String.fromCharCode(...Array.from(kopf)) !== '%PDF-')
+           Block ZUERST an, sodass sofort etwas dasteht.
+    
+           VERGLICHEN WIRD ÜBER ZAHLEN, nicht über eine Zeichenkette. Der erste
+           Entwurf schrieb `String.fromCharCode(...kopf)`, und `test87` §9 hat
+           das zu Recht angestrichen: der Spread reicht jedes Byte als eigenen
+           Aufrufparameter weiter und sprengt bei grossen Puffern den Stapel.
+           Bei fünf Bytes wäre er harmlos — aber genau so wandert ein Muster
+           weiter, und die nächste Stelle hat dann ein Megabyte. */
+        const kopf = new Uint8Array(await datei.slice(0, PDF_KOPF.length).arrayBuffer());
+        if (PDF_KOPF.some((b, i) => kopf[i] !== b))
             throw new Error('Das ist keine PDF-Datei.');
         const melder = UI.toast('„' + datei.name + '" wird gelesen …', 120000);
         const sageAn = (t) => {
@@ -19018,8 +19093,11 @@ const PdfEinlesen = (() => {
                         titel: datei.name,
                         text: 'Dieses Dokument hat ' + gesamt + ' Seiten.\n\n' +
                             'Jede Seite wird als Bild vorbereitet, damit du darauf ' +
-                            'schreiben kannst. Das kostet Zeit und Platz — ungefähr ' +
-                            Math.round(gesamt * 0.2) + ' MB.',
+                            'schreiben kannst. Das kostet Zeit und Platz — bis zu ' +
+                            Math.max(1, Math.round(gesamt * 0.3)) + ' MB und etwa ' +
+                            Math.max(1, Math.round(gesamt * 0.35)) + ' Sekunden.\n\n' +
+                            'In die Sicherung kommen diese Bilder nicht; sie lassen ' +
+                            'sich jederzeit aus dem Original zurückholen.',
                         knoepfe: [
                             { id: 'alle', text: 'Alle ' + gesamt + ' Seiten vorbereiten',
                                 hinweis: 'Dauert am längsten, dafür ist alles fertig' },
@@ -19076,8 +19154,16 @@ const PdfEinlesen = (() => {
                    Nur `bildDateiId` bleibt ein Nachtrag: die Ablage braucht die
                    Block-Kennung, die es vorher noch nicht gibt. Diese eine Lücke
                    kennt der Zeichner und schreibt „Seite wird vorbereitet …" hin. */
+                /* DER TEXT DER SEITE, damit die Suche sie findet (E107). Er steht
+                   in `suchtext` und nicht in `text`: `text` ist, was ein Mensch
+                   geschrieben hat, und die Oberfläche zeigt es an vielen Stellen —
+                   eine halbe Seite Skript in der Krümelspur wäre keine Verbesserung.
+                   Anders als die Bilder kommt der Text MIT in die Sicherung: er ist
+                   klein, und ohne ihn wäre ein eingespieltes Skript stumm, bis
+                   jemand alle Seiten neu rechnet. */
+                const seitenText = await griff.text(n);
                 const b = Store.addBlock(wohin, 'pdfseite', {
-                    text: '', nr: n, vonSeiten: gesamt,
+                    text: '', suchtext: seitenText, nr: n, vonSeiten: gesamt,
                     bw: geo.bw, bh: geo.bh, dreh: geo.dreh,
                     quelleId: quelle.id, raumVersion: SheetSpace.RAUM_VERSION
                 });
@@ -19189,7 +19275,12 @@ const PdfEinlesen = (() => {
                 melder.textContent = 'Seite ' + n + ' von ' + offen.length + ' …';
                 const bild = await griff.alsBild(n);
                 const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
-                Store.updateBlock(b.id, { bildDateiId: satz.id });
+                /* Fehlt der Suchtext noch — bei allem, was vor E107 eingelesen
+                   wurde —, kommt er jetzt mit. Das Dokument ist ohnehin offen. */
+                const nach = { bildDateiId: satz.id };
+                if (!b.suchtext)
+                    nach.suchtext = await griff.text(n);
+                Store.updateBlock(b.id, nach);
                 fertig++;
                 await new Promise(r => setTimeout(r, 0));
             }
@@ -37564,11 +37655,39 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         lade(new Blob([doc], { type: 'text/html' }), 'notizen-archiv-' + heute() + '.html');
         UI.toast(seiten.length + ' Seiten in eine HTML-Datei gepackt');
     };
-    /** Eine Seite als HTML — für Archiv, Einzelexport und Drucken. */
-    const seiteAlsHtml = (p) => {
+    /**
+     * Eine Seite als HTML — für Archiv, Einzelexport und Drucken.
+     *
+     * `sonderfall` darf einzelne Blockarten selbst bauen. Gibt er etwas
+     * zurück, gilt das statt der Kette unten UND statt des Absteigens in die
+     * Kinder — der Sonderfall entscheidet dann selbst, ob er hinabsteigt.
+     * Damit kann der Druckweg PDF-Seiten und Blätter mit ihren Bildern und
+     * Strichen setzen, ohne dass es eine zweite Baumwanderung gäbe (E108).
+     */
+    const seiteAlsHtml = (p, sonderfall) => {
         const raus = (id, tiefe) => {
             let h = '';
+            /* Welche Liste gerade offen ist — siehe `listeHalten` unten. */
+            let offen = '';
+            const listeHalten = (art) => {
+                if (art === offen)
+                    return;
+                if (offen)
+                    h += '</' + offen + '>';
+                if (art)
+                    h += '<' + art + '>';
+                offen = art;
+            };
+            const LISTENART = { bullet: 'ul', todo: 'ul', number: 'ol' };
             Store.childrenOf(id).forEach((b) => {
+                listeHalten(LISTENART[b.type] || '');
+                if (sonderfall) {
+                    const eigen = sonderfall(b, tiefe, raus);
+                    if (eigen !== null && eigen !== undefined) {
+                        h += eigen;
+                        return;
+                    }
+                }
                 const t = b.text || '';
                 if (b.type === 'h1')
                     h += `<h3>${Blocks.inline(t)}</h3>`;
@@ -37602,6 +37721,15 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     h += datenbankHtml(b);
                 else if (b.type === 'page')
                     h += `<p>📄 <b>${esc(t || 'Ohne Titel')}</b></p>`;
+                /* Eine PDF-Seite hat keinen `text`, fiel also aus der Kette heraus und
+                   kam gar nicht vor. Im Export und in der Veröffentlichung steht
+                   jetzt wenigstens, DASS sie da ist — das Bild selbst gehört nicht
+                   hinein: es ist eine blob-Adresse, die nach der Sitzung tot wäre
+                   (E98), und in einer öffentlichen Seite hat ein Schulskript ohnehin
+                   nichts verloren. Zum DRUCKEN gibt es den Sonderfall (E108). */
+                else if (b.type === 'pdfseite')
+                    h += `<p>📄 Seite ${esc(b.nr || '?')}` +
+                        (b.vonSeiten ? ' von ' + esc(b.vonSeiten) : '') + '</p>';
                 else if (t)
                     h += `<p>${Blocks.inline(t)}</p>`;
                 /* NICHT in Unterseiten hineingehen. Eine Unterseite steht hier mit
@@ -37615,6 +37743,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 if (b.type !== 'toggle' && b.type !== 'page')
                     h += raus(b.id, tiefe + 1);
             });
+            listeHalten('');
             return h;
         };
         return raus(p.id, 0);
@@ -37644,7 +37773,106 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         lade(new Blob([doc], { type: 'text/html' }), sauber(p.text) + '.html');
         UI.toast('Als HTML gespeichert');
     };
-    const drucken = (p) => {
+    /* ========================================================================
+     * DRUCKEN: EINE BESCHRIEBENE SEITE ZUM WEITERGEBEN
+     * ------------------------------------------------------------------------
+     * Vorher kam beim Drucken einer Schulaufgabe die Notizzeile heraus und
+     * sonst nichts — kein Seitenbild, kein einziger Strich. Nicht hässlich,
+     * sondern LEER, und genau in dem Fall, für den Redur das alles wollte:
+     * lösen und abgeben.
+     *
+     * DIE STRICHE KOMMEN AUS `Marken.zeichneMarke`, derselben Stelle, die sie
+     * auch auf dem Bildschirm zeichnet. Ein zweiter Pfad-Bauer wäre eine
+     * zweite Wahrheit über dieselbe Linie (§34) — und als SVG bleiben sie beim
+     * Drucken scharf, egal wie fein der Drucker ist.
+     * ======================================================================*/
+    /** Eine abgelegte Datei als Daten-Adresse — der Druckrahmen braucht das. */
+    const alsDatenAdresse = async (dateiId) => {
+        try {
+            const blob = await Dateien.alsBlob(dateiId);
+            if (!blob)
+                return '';
+            return await new Promise(fertig => {
+                const leser = new FileReader();
+                leser.onload = () => fertig(String(leser.result || ''));
+                leser.onerror = () => fertig('');
+                leser.readAsDataURL(blob);
+            });
+        }
+        catch {
+            return '';
+        }
+    };
+    /** Alle Seitenbilder einer Seite einsammeln, bevor gedruckt wird. */
+    const bilderSammeln = async (p) => {
+        const karte = {};
+        const gehe = async (id, tiefe) => {
+            if (tiefe > 6)
+                return;
+            for (const b of Store.childrenOf(id)) {
+                if (b.type === 'page')
+                    continue;
+                if (b.type === 'pdfseite' && b.bildDateiId)
+                    karte[b.id] = await alsDatenAdresse(b.bildDateiId);
+                await gehe(b.id, tiefe + 1);
+            }
+        };
+        await gehe(p.id, 0);
+        return karte;
+    };
+    /** Die Striche eines Blocks als SVG-Text. */
+    const markenAlsSvg = (block, breite, hoehe) => {
+        const marken = Array.isArray(block.marken) ? block.marken : [];
+        if (!marken.length || typeof Marken === 'undefined')
+            return '';
+        const teile = marken
+            .map((m) => Marken.zeichneMarke(m))
+            .filter(Boolean)
+            .map((k) => k.outerHTML)
+            .join('');
+        if (!teile)
+            return '';
+        return `<svg class="marken" viewBox="0 0 ${breite} ${hoehe}" ` +
+            `preserveAspectRatio="none">${teile}</svg>`;
+    };
+    const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
+        'break-inside:avoid; page-break-inside:avoid}' +
+        '.blatt-druck img{display:block; width:100%}' +
+        '.blatt-druck.papier{background:#fff; border:1px solid #ccc}' +
+        '.blatt-druck .blatt-text{padding:9.5%; font-size:11pt}' +
+        '.blatt-druck .marken{position:absolute; inset:0; width:100%; height:100%; ' +
+        'color:#111}' +
+        '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
+        'border:1px dashed #bbb}';
+    const drucken = async (p) => {
+        const bilder = await bilderSammeln(p);
+        /* Der Sonderfall setzt PDF-Seiten und Blätter; alles andere macht die
+           gewöhnliche Kette. `null` heisst „nicht meine Sache". */
+        const inhalt = seiteAlsHtml(p, (b, tiefe, hinab) => {
+            if (b.type === 'pdfseite') {
+                const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
+                const adr = bilder[b.id] || '';
+                return '<figure class="blatt-druck">' +
+                    (adr ? `<img src="${adr}" alt="Seite ${esc(b.nr || '')}">`
+                        : `<div class="fehlt">Seite ${esc(b.nr || '')} — das Bild fehlt ` +
+                            'in diesem Bestand. Hol es in Redion aus dem Original zurück.</div>') +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            if (b.type === 'blatt') {
+                const bw = Number(b.blattBreite) || 595.28;
+                const bh = Number(b.blattHoehe) || 841.89;
+                return '<figure class="blatt-druck papier" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    '<div class="blatt-text">' + hinab(b.id, tiefe + 1) + '</div>' +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            /* Spalten kommen beim Drucken UNTEREINANDER. Nebeneinander auf A4
+               hochkant wären zwei Spalten von je 90 mm — lesbar ist das nicht, und
+               die Reihenfolge Seite, Blatt, Seite, Blatt bleibt eindeutig. */
+            if (b.type === 'columns' || b.type === 'columns3' || b.type === 'spalte')
+                return hinab(b.id, tiefe + 1);
+            return null;
+        });
         const f = document.createElement('iframe');
         f.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0';
         document.body.appendChild(f);
@@ -37659,8 +37887,9 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<style>body{font:12pt/1.6 Georgia,serif;margin:22mm}h1{font-size:22pt}h3{font-size:16pt}h4{font-size:13pt}' +
             'pre{background:#f2f2f2;padding:10px;white-space:pre-wrap}table{border-collapse:collapse;width:100%}' +
             'td,th{border:1px solid #999;padding:5px 8px;font-size:10.5pt}img{max-width:100%}' +
-            '.cal{background:#f2f2f2;padding:10px;border-radius:4px}</style></head><body>' +
-            '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + seiteAlsHtml(p) + '</body></html>');
+            '.cal{background:#f2f2f2;padding:10px;border-radius:4px}' + DRUCK_STIL +
+            '</style></head><body>' +
+            '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + inhalt + '</body></html>');
         d.close();
         setTimeout(() => {
             f.contentWindow?.focus();
@@ -68889,7 +69118,7 @@ const App = (() => {
             res.querySelectorAll('button[data-i]').forEach(b => {
                 b.addEventListener('click', () => {
                     merkeSuche(inp.value);
-                    oeffne(treffer[Number(b.dataset.i)]?.page.id);
+                    zumTreffer(treffer[Number(b.dataset.i)]);
                     o.remove();
                 });
                 b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
@@ -68913,6 +69142,14 @@ const App = (() => {
                     const c = Store.getCollection(b.collectionId);
                     return `<div class="vs-db">🗂 ${esc(c ? c.name : 'Datenbank')} · ` +
                         `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`;
+                }
+                /* Eine PDF-Seite hat keinen `text` — sie ist ein Bild. Ihr erster
+                   Satz steht seit E107 in `suchtext`, und ohne ihn behauptete die
+                   Vorschau „Diese Seite ist noch leer." über ein ganzes Skript. */
+                if (b.type === 'pdfseite') {
+                    const erste = String(b.suchtext || '').split('\n')[0] || '';
+                    return `<div class="vs-t">📄 Seite ${esc(b.nr || '?')}` +
+                        (erste ? ' · ' + esc(erste.slice(0, 80)) : '') + '</div>';
                 }
                 if (!b.text)
                     return '';
@@ -69050,7 +69287,7 @@ const App = (() => {
                 zeichne();
             }
             if (e.key === 'Enter' && treffer[i]) {
-                oeffne(treffer[i].page.id);
+                zumTreffer(treffer[i]);
                 o.remove();
             }
         });
@@ -69075,6 +69312,21 @@ const App = (() => {
            Genau dort gehören die letzten Suchbegriffe hin. */
         zeichne();
         inp.focus();
+    };
+    /**
+     * Einen Suchtreffer öffnen.
+     *
+     * Kennt die Suche den Block, geht es dorthin — sonst zur Seite. Für einen
+     * Treffer im Titel gibt es keinen Block, und für eine Seite, deren Inhalt
+     * eine Zeile weit oben ist, wäre das Hinrollen auch keine Hilfe. Wo es
+     * eine Hilfe ist: eine Fundstelle auf Seite 63 eines Skripts (E107).
+     */
+    const zumTreffer = (t) => {
+        if (!t)
+            return;
+        if (t.blockId && zeigeBlock(t.blockId))
+            return;
+        oeffne(t.page.id);
     };
     /** Suchen auf der offenen Seite — Strg + F. */
     const seitenSuche = () => {
