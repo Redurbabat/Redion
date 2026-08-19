@@ -6504,3 +6504,98 @@ dynamische Importe und Arbeiter sonst gern verweigert werden.
 
 **Was noch fehlt**, steht in LUECKEN.md: Seitenanker, Textsuche im PDF,
 Neurasterung in höherer Auflösung, verschlüsselte Dateien.
+
+
+## E104 · Beim Einlesen steht das Notizblatt gleich daneben
+
+**19. August 2026.** Redurs Satz zum PDF hatte zwei Hälften. E103 baute die
+erste — durchblättern und darauf schreiben. Die zweite stand wörtlich da und
+war noch offen:
+
+> „wenn ich die pdf hochlade sollte ich neben es … so leeren a4 balat haben
+> die ich direk dort schreiben kann"
+
+Jetzt fragt das Einlesen, und bei „nebeneinander" bekommt jede Seite ein
+leeres Blatt neben sich:
+
+    columns
+      ├─ spalte → pdfseite      links die Seite
+      └─ spalte → blatt         rechts das Blatt, leer
+
+**Dieselbe Bauform wie von Hand.** Der Spaltenblock entsteht als
+`columns → spalte → Inhalt`, genau wie ihn das Slash-Menü baut (E102). Eine
+eigene Bauform für „vom PDF angelegt" wäre eine zweite Wahrheit über
+dasselbe Ding — und die zweite ist die, die man beim Umbauen vergisst.
+
+**Das Blatt bekommt die Masse der SEITE, nicht A4.** Ein querformatiges PDF
+neben einem hochkanten Blatt sähe aus wie ein Fehler, und keine Zeile links
+läge auf der Höhe der Zeile rechts. `blattBreite` und `blattHoehe` gibt es
+seit E100; hier zahlen sie sich aus. Das Prüf-PDF in `test178` hat deshalb
+eine hochkante und eine quere Seite — ohne die quere wären „Masse der Seite"
+und „A4" dasselbe, und der Punkt prüfte nichts.
+
+**Gefragt wird jedes Mal.** Die zuletzt gewählte Anordnung steht nur vorn,
+mit dem Fokus darauf — Ablegen und Enter genügt. Sie wird nicht heimlich
+angewandt. Ein gemerkter Zustand, den man nirgends sieht und nirgends
+ändert, ist die Sorte Falle, die man erst beim dritten PDF bemerkt.
+
+### Der Fund: `min-width` stand seit E102 eine Schicht zu tief
+
+Nebeneinander gestellt, sprengte das Gitter sofort das Fenster. Gemessen bei
+1500 px Fensterbreite:
+
+    Gitter                    708 px
+    Spur 1                    587 px
+    Spur 2                    544 px
+    zusammen mit Abstand    1 155 px      →  die rechte Spalte stand draussen
+
+Bei `grid-template-columns: 1fr 1fr` sollte das nicht möglich sein. Es ist
+möglich, wenn die Gitterzelle ihre automatische Mindestbreite behält — und
+`min-width: 0` stand am falschen Element. Der Editor packt jeden Block in
+eine Hülle `.blk`; Kind des Gitters ist also `.blk.b-spalte`, und `.spalte`
+liegt DARIN. E102 setzte die Regel auf die innere Schicht.
+
+Aufgefallen ist es nie, weil handgemachte Spalten Text enthalten und dessen
+Mindestbreite ein Wort ist. Eine Werkzeugleiste ist 479 px breit.
+
+Das ist die **vierte Auflage** derselben Falle — nach den Tabellenkarten
+(E89), dem A4-Blatt (E100) und den Spalten selbst (E102) — und die erste,
+bei der die Abhilfe danebenlag statt zu fehlen. `test178` §5 misst jetzt die
+Spurbreiten, den Überlauf und dass die Zellen wirklich `min-width: 0`
+tragen; der Arm ohne die Regel bringt sechs Punkte zu Fall.
+
+### Und ein zweiter Fund: eng ist nicht dasselbe wie Telefon
+
+In der Spalte brauchten beide Werkzeugleisten drei Zeilen übereinander —
+bei 1500 px Fensterbreite. Die Regel für die schmale Leiste hing seit E100
+an `@media (max-width:760px)`, also am FENSTER; schmal war hier aber der
+KASTEN. Dieselben Regeln stehen jetzt ein zweites Mal an `.spalte`.
+
+Zwei Umsetzungen derselben Sache sind ein Preis; die Alternative wäre eine
+Container-Abfrage gewesen, und die fällt auf genau den älteren Geräten aus,
+für die E103 die `legacy`-Fassung von pdf.js gewählt hat.
+
+### Halb gebaute Seiten gibt es nicht mehr
+
+Eine PDF-Seite entstand bisher leer und bekam Nummer, Masse und Herkunft
+nachgereicht, nachdem ihr Bild abgelegt war. Dazwischen lag ein Block ohne
+alles — ein paar Millisekunden je Seite, aber lang genug, dass zwei
+Prüfläufe genau dort hineinlasen und `nr: null` fanden. Beide sahen aus wie
+Fehler im Baum.
+
+Jetzt trägt der Block alles schon bei der Anlage. Nur `bildDateiId` bleibt
+ein Nachtrag, weil die Ablage die Block-Kennung braucht, die es vorher nicht
+gibt — und diese eine Lücke kennt der Zeichner und schreibt „Seite wird
+vorbereitet …" hin.
+
+Die Lehre ist nicht „länger warten". Ein Zustand, den es nicht gibt, muss
+auch nicht behandelt werden.
+
+**Geprüft** (test178, 47 Punkte): der Baum bei beiden Anordnungen · die
+Masse bei hochkanter und querer Seite · dass „Nur die Seiten" weiterhin
+genau das baut, was E103 baute · die Reihenfolge der Knöpfe und der Fokus ·
+Abbrechen hängt nur an · Spurbreiten und Überlauf · am Telefon eine Spalte
+mit dem Blatt UNTER der Seite · und auf beiden Blättern lässt sich getrennt
+malen. `test177` zieht nach: es beantwortet den neuen Dialog ausdrücklich
+über die Kennung, nicht über „der erste Knopf" — welcher vorn steht, hängt
+seit heute an der letzten Wahl.

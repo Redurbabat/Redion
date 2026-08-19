@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**19. August 2026 · 143 Prüfläufe**
+**19. August 2026 · 144 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -87,10 +87,9 @@ L18  XLSX/ODS-Rest: Zellformatierung, Kommentare, ODS-Mehrblatt —
      Blatt: stille §13-Lücke)
 L20  ✅ komplett (9. August): Ausfüllen (E87), Markdown-Tabellen
      (E88), Alt+Umschalt+Klick (test158 §7)
-L37  Was am PDF noch fehlt — neu am 19. August, nach E103:
-     Seitenanker („Notiz zeigt auf Seite 14", Redurs erster Wunsch) ·
-     Textsuche im PDF (passt zu L29) · Neurasterung feiner ·
-     verschlüsselte Dateien
+L37  Was am PDF noch fehlt — neu am 19. August, nach E103/E104:
+     Seitenanker („Notiz zeigt auf Seite 14") · Textsuche im PDF
+     (passt zu L29) · Neurasterung feiner · verschlüsselte Dateien
 ```
 
 **Redurs vier Wünsche für die Schulaufgaben** (11.–19. August) sind
@@ -101,6 +100,7 @@ leeres A4-Blatt zum Draufschreiben          E100  ✅
 daneben stellen (Spalten)                   E102  ✅
 Schriftgrösse, Farbe, Schriftart            E101  ✅  (Farbe gab es schon)
 PDF durchblättern und darauf schreiben      E103  ✅
+… und ein leeres Blatt gleich daneben       E104  ✅
 ```
 
 Mit E103 kommt die **erste fremde Laufzeitbibliothek** ins Verzeichnis:

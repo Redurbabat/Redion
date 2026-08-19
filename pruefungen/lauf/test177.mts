@@ -330,10 +330,20 @@ await seite.evaluate(async (hex: string) => {
     new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
 }, PDF.toString('hex'));
 
+/* Seit E104 fragt das Einlesen nach der Anordnung. Diese Suite prüft die
+   SEITEN, nicht das Nebeneinander — also „nur die Seiten". Ausdrücklich
+   über die Kennung und nicht über „der erste Knopf": welcher vorn steht,
+   hängt an der zuletzt getroffenen Wahl (test178 §3). */
+await seite.waitForSelector('.overlay [data-w="untereinander"]', { timeout: 20000 });
+await seite.click('.overlay [data-w="untereinander"]');
+
+/* Auf die Seiten MIT BILD warten. Das Bild ist der letzte Handgriff je
+   Seite; die blosse Anwesenheit des Blocks ist zu früh, und der Lauf las
+   dann `nr: null` aus einer Seite, die gerade erst entstand (E104). */
 await seite.waitForFunction(
   () => Object.values(Store.cache.blocks || {})
-    .filter((b: any) => b.type === 'pdfseite' && b.alive).length >= 3,
-  null, { timeout: 30000 }).catch(() => {});
+    .filter((b: any) => b.type === 'pdfseite' && b.alive && b.bildDateiId).length >= 3,
+  null, { timeout: 60000 });
 
 const gebaut = await seite.evaluate(async (sid: string) => {
   const kinder = (Store.getBlock(sid)?.content || [])

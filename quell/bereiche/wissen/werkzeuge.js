@@ -2196,9 +2196,13 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                         await PdfEinlesen.alsSeiten(f, seite);
                         continue;
                     }
-                    catch {
-                        continue;
-                    } /* die Meldung kam schon von dort */
+                    catch { /* Nichts verschlucken (E104): `alsSeiten` hängt die Datei
+                               selbst an, sobald es sie abgelegt hat, und wirft nur
+                               dann noch, wenn nicht einmal DAS ging. Dann ist der
+                               gewöhnliche Weg genau der richtige — vorher stand hier
+                               `continue`, und ein kaputtes PDF hinterliess eine leere
+                               Seite (test173). */
+                    }
                 }
                 /* Alles andere als Datei anhängen — ohne willkürliche Grenze. */
                 await anhaengen(seite, f, 'file');

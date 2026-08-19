@@ -906,8 +906,17 @@ PDFs zum Draufschreiben
 
 Ein PDF, das man auf eine Seite zieht, wird zu einzelnen Seiten, durch die
 man scrollt und auf die man direkt schreiben und malen kann — Stift in fünf
-Farben, drei Strichbreiten, Radierer. Daneben passt ein leeres A4-Blatt für
-die eigenen Antworten; „Zwei Spalten" stellt beides nebeneinander.
+Farben, drei Strichbreiten, Radierer.
+
+Beim Hochladen wird gefragt, wie es liegen soll:
+
+    Seite und Notizblatt nebeneinander    links die Seite, rechts ein
+                                          leeres Blatt in denselben Massen
+    Nur die Seiten                        Seite für Seite untereinander
+
+Am Telefon liegt das Notizblatt unter seiner Seite — nebeneinander gibt es
+dort nicht. Gefragt wird jedes Mal; die zuletzt gewählte Anordnung steht
+nur vorn, sodass Ablegen und Enter genügt.
 
 Das Original bleibt unverändert als Anhang liegen. Redion schreibt nie in
 das PDF zurück — die Anmerkungen liegen daneben in Redion. Das heisst auch:

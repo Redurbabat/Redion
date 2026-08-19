@@ -2707,10 +2707,33 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk .zeichen{margin-right:5px}
 .blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
 
+/* ── Die schmale Leiste ────────────────────────────────────────────────────
+   EINE Zeile, die seitlich rollt — nicht drei gestapelte. Mit Wörtern
+   brauchte die Leiste bei 390 px drei Zeilen und verdeckte das Papier
+   (E100, mit Augen gesehen). Dasselbe Muster wie die Auswahlleiste.
+
+   ZWEIMAL AUFGERUFEN, und das ist kein Versehen. Eng ist die Leiste in zwei
+   ganz verschiedenen Lagen: am Telefon, weil das Fenster schmal ist — und
+   in einer Spalte, weil der KASTEN schmal ist, egal wie breit das Fenster.
+   Seit E104 steht neben jeder PDF-Seite ein Notizblatt in einer Spalte, und
+   dort brauchten beide Leisten drei Zeilen übereinander (mit Augen gesehen,
+   §55). Das Fenster war dabei 1500 px breit; keine Fenster-Regel der Welt
+   hätte das getroffen. Deshalb steht dieselbe Sache zweimal da — einmal an
+   `.spalte`, einmal an der Fensterbreite. */
+/* In einer Spalte ist die Leiste immer eng — dort ist nie Platz für Wörter. */
+.spalte .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+                    max-width:100%; -webkit-overflow-scrolling:touch}
+.spalte .blatt-werk::-webkit-scrollbar{display:none}
+.spalte .blatt-werk > *{flex:0 0 auto}
+.spalte .blatt-werk button{min-height:36px; min-width:36px; padding:4px 7px}
+.spalte .blatt-werk .wort{display:none}
+.spalte .blatt-werk .zeichen{margin:0; font-size:16px}
+.spalte .blatt-farbe{width:24px; height:24px; min-width:24px}
+.spalte .blatt-strich{min-width:32px}
+.spalte .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
+.spalte .pdfs-nr{font-size:11.5px}
+
 @media (max-width:760px){
-  /* EINE Zeile, die seitlich rollt — nicht drei gestapelte. Mit Wörtern
-     brauchte die Leiste bei 390 px drei Zeilen und verdeckte das Papier
-     (E100, mit Augen gesehen). Dasselbe Muster wie die Auswahlleiste. */
   .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
               max-width:100%; -webkit-overflow-scrolling:touch}
   .blatt-werk::-webkit-scrollbar{display:none}
@@ -2763,6 +2786,18 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    `min-width:auto` wächst mit ihrem breitesten Kind und sprengt das Raster.
    Genau daran lag es beim A4-Blatt (E100) und bei den Tabellenkarten (E89) —
    dritte Auflage derselben Falle.                                         */
+/* MIN-WIDTH GEHÖRT AN DIE GITTERZELLE, und die Gitterzelle ist nicht
+   `.spalte`. Der Editor packt jeden Block in eine Hülle `.blk`; Kind des
+   Gitters ist also `.blk.b-spalte`, und `.spalte` liegt DARIN. E102 setzte
+   `min-width:0` auf die innere Schicht — wirkungslos für die Spurbreite,
+   und nicht aufgefallen, weil handgemachte Spalten Text enthalten: dessen
+   Mindestbreite ist ein Wort.
+   Mit E104 steht eine PDF-Seite samt Werkzeugleiste darin, und die
+   Mindestbreite ist plötzlich 587 px. Gemessen in einem 708 px breiten
+   Gitter: zwei Spuren zu 587 und 544 px, zusammen 1155 — die rechte Spalte
+   stand ausserhalb des Fensters. Vierte Auflage derselben Falle nach E89,
+   E100 und E102, und die erste, bei der die Abhilfe selbst danebenlag. */
+.spalten-block > *{min-width:0}
 .spalte{min-width:0; display:flex; flex-direction:column; gap:2px}
 .spalte > .blk{width:100%}
 
