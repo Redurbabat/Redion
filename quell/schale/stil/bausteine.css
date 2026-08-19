@@ -2715,3 +2715,35 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
   .blatt-strich{min-width:38px}
 }
+
+/* ── Schriftgrösse und Schriftart je Block (E101) ──────────────────────────
+   Kennungen aus `register/textstile.js` werden hier zu Klassen. Was nicht
+   in diesem Katalog steht, hat keine Klasse und damit keine Wirkung —
+   deshalb kann aus den Daten kein fremdes CSS kommen (§19).           */
+/* ZWEI Dinge, die hier falsch waren und beide gemessen wurden:
+   1. `.tg-gross` allein verliert gegen `.b-text .ct{font-size:16px}` —
+      zwei Klassen schlagen eine. Die Klasse hing am Block, die Schrift
+      blieb 16 px. Deshalb `.blk .ct.tg-…`.
+   2. `em` rechnet gegen den ELTERNTEIL, nicht gegen die eigene Grösse.
+      Eine Überschrift mit 30 px wäre mit „Gross" (1,3em von 16 px) auf
+      20,8 px GESCHRUMPFT. Deshalb feste Stufen in rem: „Gross" heisst
+      gross, egal an welchem Blocktyp. */
+.blk .ct.tg-klein     { font-size:.82rem; line-height:1.6 }
+.blk .ct.tg-gross     { font-size:1.35rem; line-height:1.45 }
+.blk .ct.tg-sehrgross { font-size:1.8rem;  line-height:1.35 }
+.blk .ct.tg-riesig    { font-size:2.4rem;  line-height:1.25 }
+
+.blk .ct.ts-serif { font-family:Georgia, "Times New Roman", "Noto Serif", serif }
+.blk .ct.ts-mono  { font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace }
+.blk .ct.ts-hand  { font-family:"Segoe Script", "Bradley Hand", "Comic Sans MS", cursive }
+.blk .ct.ts-schmal{ font-family:"Arial Narrow", "Roboto Condensed", "Liberation Sans Narrow", sans-serif }
+/* Im Menü zeigt die Probe sich selbst — dort ohne .blk davor. */
+.menu .tg-klein{font-size:.82rem} .menu .tg-gross{font-size:1.35rem}
+.menu .tg-sehrgross{font-size:1.8rem} .menu .tg-riesig{font-size:2.2rem}
+.menu .ts-serif{font-family:Georgia,serif} .menu .ts-mono{font-family:ui-monospace,monospace}
+.menu .ts-hand{font-family:"Segoe Script","Comic Sans MS",cursive}
+.menu .ts-schmal{font-family:"Arial Narrow",sans-serif}
+
+/* Im Menü sollen die Einträge zeigen, was sie tun. */
+.stil-probe{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.stil-probe em{font-style:normal; color:var(--text-dim); font-size:12.5px}

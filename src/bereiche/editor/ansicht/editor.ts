@@ -411,6 +411,10 @@ const Blocks = (() => {
       ct.dataset.ph = ph || t.ph || '';
       ct.innerHTML = inline(block.text || '');
       if (block.color) ct.classList.add(block.color.startsWith('bg-') ? block.color : 't-' + block.color);
+      /* Grösse und Schriftart als KLASSEN aus dem Katalog (E101). Was dort
+         nicht steht, ergibt keine Klasse — aus den Daten kann damit kein
+         fremdes CSS kommen (§19). */
+      Textstile.klassen(block.stil).forEach((k: string) => ct.classList.add(k));
 
       /* ÜBERSCHRIFTEN MÜSSEN AUCH ÜBERSCHRIFTEN SEIN.
          Jeder Block ist ein `<div>`, auch `h1`, `h2` und `h3` — sichtbar
@@ -2602,6 +2606,8 @@ const Blocks = (() => {
     const html =
       '<button data-a="turn"><span class="mi">⇄</span>Umwandeln in<span class="ms">▸</span></button>' +
       '<button data-a="color"><span class="mi">🎨</span>Farbe<span class="ms">▸</span></button>' +
+      '<button data-a="groesse"><span class="mi">🔠</span>Schriftgrösse<span class="ms">▸</span></button>' +
+      '<button data-a="schrift"><span class="mi">✍</span>Schriftart<span class="ms">▸</span></button>' +
       (b.type === 'callout'
         ? '<button data-a="ruficon"><span class="mi">😀</span>Symbol des Hinweises</button>' : '') +
       '<button data-a="ai"><span class="mi">✨</span>Mit KI bearbeiten</button>' +
@@ -2637,6 +2643,34 @@ const Blocks = (() => {
         menu.addEventListener('click', (ev) => {
           const t = elVon(ev)?.closest<HTMLElement>('button[data-t]');
           if (t) { menu.remove(); umwandeln(b.id, t.dataset.t); }
+        });
+        return;
+      }
+
+      /* Grösse und Schriftart teilen sich einen Bauplan — zwei fast gleiche
+         Menüs von Hand wären zwei Stellen zum Vergessen. Die Einträge zeigen
+         sich selbst: „Gross" steht gross da. */
+      if (a === 'groesse' || a === 'schrift') {
+        const istGroesse = a === 'groesse';
+        const liste = istGroesse ? Textstile.GROESSEN : Textstile.SCHRIFTEN;
+        const feld  = istGroesse ? 'groesse' : 'schrift';
+        const vorsatz = istGroesse ? 'tg-' : 'ts-';
+        const jetzt = ((b.stil || {}) as Record<string, unknown>)[feld] ||
+                      (istGroesse ? 'normal' : 'standard');
+        menu.innerHTML =
+          `<div class="grp">${istGroesse ? 'Schriftgrösse' : 'Schriftart'}</div>` +
+          liste.map(([id, name]: string[]) =>
+            `<button data-s="${id}">` +
+            `<span class="stil-probe"><span class="${id === 'normal' || id === 'standard' ? '' : vorsatz + id}">` +
+            `${esc(name)}</span>${jetzt === id ? '<em>✓</em>' : ''}</span></button>`).join('');
+        menu.addEventListener('click', (ev) => {
+          const s = elVon(ev)?.closest<HTMLElement>('button[data-s]');
+          if (!s) return;
+          const stil = { ...(b.stil || {}) } as Record<string, unknown>;
+          stil[feld] = s.dataset.s;
+          Store.updateBlock(b.id, { stil });
+          menu.remove();
+          App.zeichneSeite();
         });
         return;
       }

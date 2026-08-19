@@ -6238,3 +6238,72 @@ auseinander** — knapp drei und vier Zentimeter auf dem Papier. Das
 ist der stille Fehler, den das Whiteboard heute hat, sichtbar
 gemacht. Dazu: die Fläche beim Ziehen neu bauen (7 Knoten statt
 einem), und die Raumfassung nicht mitspeichern.
+
+
+## E101 · Schriftgrösse und Schriftart je Block
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen
+
+Redur wollte „wie in Word": Grösse, Farbe und Schriftart ändern.
+
+**Ein Drittel davon gab es schon.** Schriftfarbe UND Hintergrundfarbe
+stehen seit Langem im Blockmenü unter „🎨 Farbe" — zehn Textfarben,
+neun Hintergründe, gespeichert als `block.color`, gezeichnet als
+`.t-red` / `.bg-red`. Gefehlt haben nur Grösse und Schriftart. Wieder
+die E90-Klasse: der Wunsch klang vollständig neu und war es nicht.
+Nachsehen war auch hier billiger, als drei Dinge zu bauen.
+
+### Je Block, nicht mitten im Satz
+
+Der Editor liest den Text mit `ct.textContent` zurück (`bindeEditor`).
+Eine Auszeichnung INNERHALB einer Zeile wäre beim nächsten Tastendruck
+weg — aus `**fett** normal` würde `fett normal`. Das steht so im
+Quelltext, es ist nicht vermutet. Inline-Formate brauchen zuerst eine
+Rückübersetzung DOM → Text; die ist eine eigene Entscheidung mit
+eigenem Prüflauf. Bis dahin gilt der Stil für den ganzen Absatz.
+
+### Kennungen, keine Werte
+
+Gespeichert wird `'gross'`, nicht `1.35rem`; `'serif'`, nicht
+`Georgia, serif`. Zwei Gründe:
+
+```txt
+Sicherheit    Ein freier Wert aus den Daten landete sonst in einem
+              style-Feld. `groesse: "gross;background:url(…)"` ist
+              kein erfundener Fall (§19). Kennungen werden zu CSS-
+              KLASSEN, und was nicht im Katalog steht, wird verworfen.
+Änderbarkeit  Wird eine Schrift später eine andere, ändert sich eine
+              Zeile CSS — nicht jeder gespeicherte Block.
+```
+
+`src/register/textstile.ts` ist der EINE Katalog für alle Stellen der
+Oberfläche (§8, Regel 3).
+
+### Zwei Fehler, die erst der Prüflauf zeigte
+
+**1 · Die Klasse hing, die Schrift blieb.** `tg-gross` stand am Block,
+`getComputedStyle` meldete unverändert 16 px. Grund: `.b-text .ct`
+sind zwei Klassen, `.tg-gross` ist eine — zwei schlagen eine. Ohne den
+Punkt „Die Schrift ist wirklich grösser geworden" wäre eine
+Grössenfunktion ausgeliefert worden, die nichts tut, und sie hätte im
+Bild sogar richtig ausgesehen: das Menü zeigt die Stufen ja korrekt.
+
+**2 · `em` hätte Überschriften SCHRUMPFEN lassen.** `em` rechnet gegen
+den Elternteil, nicht gegen die eigene Grösse. Eine `h1` mit 30 px
+wäre mit „Gross" (1,3 em von 16 px) auf 20,8 px gefallen. Deshalb
+feste Stufen in `rem`: „Gross" heisst gross, an jedem Blocktyp.
+
+**Geprüft** (test175, 17 Punkte): der Weg über das ECHTE Blockmenü,
+die gemessene Schriftgrösse vorher/nachher, das Überleben des
+Neuladens, das Zusammenspiel mit der vorhandenen Farbe — und ein
+erfundener Wert (`"gross;background:url(x)"`), der weder Klasse noch
+style-Feld erzeugt. Drei Arme, jeder einzeln: der Katalog liefert
+keine Klassen (fünf Punkte fallen), die Gültigkeitsprüfung ist aus
+(zwei), die Spezifität fällt zurück (genau der Fehler von oben kehrt
+zurück).
+
+**Eine benannte Grenze:** „Handschrift" und „Schmal" hängen an
+Schriften, die das Gerät mitbringen muss (Segoe Script, Arial Narrow).
+Wo es sie nicht gibt — im Prüfstand etwa —, fällt die Anzeige auf die
+Standardschrift zurück. Eine Schriftdatei mitzuliefern hiesse, sie in
+jede weitergegebene Einzeldatei zu packen; das ist es nicht wert.
