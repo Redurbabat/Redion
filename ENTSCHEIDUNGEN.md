@@ -7809,3 +7809,88 @@ alte noch zeichnet. Drei Arme: ohne den Blatt-Handgriff fallen sechs Punkte
 ohne die Folien-Fallunterscheidung drei — dort werden die vier Spaltenkästen
 übrigens weiterhin gebaut, nur leer, weshalb erst das Zählen der GEFÜLLTEN
 die Prüfung überhaupt rot werden lässt (§55.2).
+
+
+## E119 · Die Frage an jede Blockart — und was sie NICHT beantwortet
+
+**19. August 2026.** E118 hat einen Fehler behoben: `/blatt` legte Papier an,
+in das man nicht schreiben konnte. `L41` hat dazu die unangenehme Frage
+gestellt — war `blatt` wirklich der einzige?
+
+Es gibt keine Stelle, die sagt, was eine Blockart zum Leben braucht.
+`Register.bloecke` sagt, wie sie heisst und wie man sie findet, nicht, ob
+sie ohne Kinder bedienbar ist. `spalte` weiss es selbst, `blatt` wusste es
+nicht, und gemerkt hätte es niemand.
+
+`test192` ist diese Stelle. Sie legt **jede** über das Slash-Menü
+erreichbare Blockart an — heute 66 — und fragt für jede dasselbe.
+
+### Das Ergebnis: keine weitere
+
+Alle 66 in Ordnung. Zwei Kandidaten sahen zuerst nach Fehlern aus und waren
+keine:
+
+```txt
+divider   0 beschreibbar, 0 Felder, 0 Knöpfe, kein Text — und trotzdem
+          richtig: er zeichnet ein echtes `<hr>`, 1 px hoch. Die Prüfung
+          sah nur nicht danach.
+
+page      „kein Kasten im Bild" — weil `/page` eine UNTERSEITE anlegt und
+          hineinspringt. Gemessen wurde also von der falschen Warte aus.
+          Auf der Elternseite steht danach „📄 Ohne Titel", anklickbar, und
+          der Klick öffnet die Unterseite wirklich.
+```
+
+Beide Male hätte die naheliegende Schlussfolgerung („zwei weitere Fehler")
+danebengelegen. Nachgesehen statt geschlossen — dasselbe wie bei E111.
+
+### Und der wichtigere Teil: die erste Fassung der Prüfung taugte nichts
+
+Die Frage lautete zuerst: **„ist der Block ein leeres Rechteck?"** Gemessen
+wurde, ob im Kasten irgendetwas steht — ein Feld, ein Knopf, ein Bild, Text.
+
+Dann die Gegenprobe: `blatt` auf den Stand vor E118 zurückgedreht.
+
+```txt
+✓ Keine einzige Blockart ist ein leeres Rechteck
+```
+
+**Grün.** Das kaputte Blatt war nicht leer — es hatte zwölf Knöpfe und eine
+Zeichenfläche. Es hatte nur nichts, in das man schreiben konnte, und genau
+darum ging es. Eine Prüfung, die den Fehler nicht findet, gegen den sie
+geschrieben wurde, ist keine (§55.2).
+
+Die zweite Frage ist die, die trägt:
+
+> **Hält diese Blockart andere Blöcke? Dann muss sie leer eine Stelle zum
+> Hineinschreiben bieten.**
+
+Und „hält Kinder" wird nicht geraten, sondern ausprobiert: ein Textblock
+hineingelegt, neu gezeichnet, nachgesehen, ob er im Kasten erscheint. Damit
+beantwortet sich die Frage für jede künftige Blockart von selbst, ohne dass
+jemand eine Liste pflegt.
+
+Gegen dieselbe Gegenprobe:
+
+```txt
+✗ Und jede von ihnen bietet leer eine Stelle zum Schreiben — ist 1, soll 0
+      → blatt (edit 0 · knopf 12 · bild 1 · Behälter · „✎Schreiben🖍Malen…")
+```
+
+Beim Namen genannt, ohne dass die Prüfung `blatt` kennt.
+
+### Was sie weiterhin nicht beantwortet
+
+Sie prüft, ob man **hineinkommt**. Ob das, was dann passiert, richtig ist,
+prüft sie nicht — dafür sind die Suiten je Blockart da. Und sie kennt nur
+den Weg über `umwandeln`; eine Blockart, die auf einem anderen Weg entsteht
+(`pdfseite`, `spalte`), steht in keinem Register und wird hier nicht
+erfasst. Beide Grenzen stehen in L41.
+
+**Geprüft** (test192, 15 Punkte): 66 Blockarten, jede angelegt und
+vermessen · keine ist ein leeres Rechteck · jede, die Kinder aufnimmt,
+bietet leer eine Schreibstelle · drei Stichproben im Klartext (Blatt,
+Trennlinie, Bild) · und `/page` als die eine begründete Ausnahme, samt
+Nachweis, dass der Verweis auf der Elternseite wirklich öffnet. Ein Arm:
+mit dem Blatt-Stand vor E118 fallen zwei Punkte, und einer davon nennt
+`blatt` von selbst.

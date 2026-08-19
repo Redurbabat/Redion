@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**19. August 2026 · 157 Prüfläufe**
+**19. August 2026 · 158 Prüfläufe**
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -1308,5 +1308,24 @@ Zwei Dinge wären denkbar und sind beide nicht gemacht:
   und die Wahrscheinlichkeit, dass `blatt` der einzige war, ist nicht hoch.
 ```
 
-Der zweite ist der billigere und würde den ersten überflüssig machen, falls
-sich zeigt, dass es wirklich nur einer war.
+**Der zweite ist inzwischen gemacht — `test192`, E119.** Er legt alle 66
+Blockarten an und fragt zwei Dinge: ist der Block ein leeres Rechteck, und —
+falls er andere Blöcke aufnimmt — bietet er leer eine Stelle zum
+Hineinschreiben? Ergebnis: `blatt` war wirklich der einzige.
+
+Damit erledigt sich auch der erste Punkt: ein Feld `braucht` am
+Registereintrag wäre eine zweite Wahrheit neben der Prüfung, und die Prüfung
+ist die verlässlichere — sie misst, statt zu behaupten.
+
+**Was offen bleibt, ist der Rand davon:**
+
+```txt
+⚠ `test192` kennt nur den Weg über `umwandeln`, also über das Slash-Menü.
+  Blockarten, die auf anderem Weg entstehen und in keinem Register stehen
+  — `pdfseite`, `spalte` —, erfasst er nicht. Beide sind heute in Ordnung,
+  aber nicht durch ihn.
+
+⚠ Er prüft, ob man HINEINKOMMT, nicht ob das Richtige passiert, wenn man
+  drin ist. Dafür sind die Suiten je Blockart da, und die gibt es nicht für
+  alle 66.
+```
