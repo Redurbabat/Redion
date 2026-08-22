@@ -575,6 +575,19 @@ const Krypto = (() => {
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss „ersetzen“ oder „zusammenfuehren“ gewählt sein.');
         const erg = await Store.importAll(paket.datenText, art);
+        /* ERST AUSSCHREIBEN, DANN DIE ANHÄNGE (E122).
+           `importAll` räumt die Fächer und schreibt den neuen Bestand — beides
+           geht gepuffert weiter, nachdem die Zusage schon zurück ist. Die
+           Anhangsstücke landeten deshalb MITTEN in dieses Aufräumen hinein und
+           wurden danach wieder weggewischt.
+           Gemessen: gleich nach dem Einspielen fand `dateiAlle()` den Satz,
+           `dateiHolen()` aber nicht — und mit einer Atempause von 600 ms war
+           gar keine Datei mehr da. Ein Wiederherstellen, das den Anhang still
+           verliert, ist schlimmer als eines, das scheitert (§46).
+           Also warten, bis der Bestand wirklich steht, und erst dann die
+           Stücke schreiben. */
+        if (typeof Store.flush === 'function')
+            await Store.flush();
         const saetze = new Map(paket.dateiliste.saetze.map(s => [String(s.id), s]));
         const eintragNachPfad = new Map(paket.manifest.eintraege.map(e => [e.pfad, e]));
         let anhaenge = 0;
@@ -799,6 +812,6 @@ const Krypto = (() => {
            Stand bis hierher nur als Code da und war von aussen nicht
            erreichbar; ohne diese Zeile kann niemand es aufrufen (E122). */
         paketBauen, paketSchreiben, paketOeffnen, paketEinspielen,
-        paketPasswortWechseln, sperreWechseln };
+        geoeffnetesPaketEinspielen, paketPasswortWechseln, sperreWechseln };
 })();
 window.Krypto = Krypto;

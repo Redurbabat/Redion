@@ -8041,3 +8041,77 @@ Die Gegenprobe setzte ausschliesslich die beiden Fehlerzweige wieder auf
 fehlender Sync-Fehler und gelöschter Dateisatz. Nach Wiederherstellung
 waren 42/42 wieder grün. Es gibt keine Schemaänderung und keine
 Datenmigration.
+
+## E122 · Das verschlüsselte Paket angeschlossen — und wieder abgeklemmt
+
+**22. August 2026.** Beim Zusammenführen der beiden Arbeitsstände kam aus
+`krypto.ts` eine fertige Fassung 2 des verschlüsselten `.redion` mit: 460
+Zeilen, zufälliger Datenschlüssel, Schlüsselhülle über PBKDF2, AES-GCM je
+Eintrag mit AAD, Anhänge in Stücken, Passwortwechsel ohne Neuverschlüsseln.
+Sorgfältig geschrieben.
+
+Und von aussen nicht erreichbar: die Einstiegspunkte standen nicht im
+`return`-Objekt, es gab keinen Prüflauf, und zwei Typstellen waren falsch.
+
+Redur hat entschieden, es fertig zu machen statt einzulagern. Das war die
+richtige Entscheidung — nicht weil es geklappt hat, sondern weil es das
+Gegenteil gezeigt hat.
+
+### Was jetzt nachweislich funktioniert
+
+```txt
+Das Paket entsteht         Fassung 2, 310 000 Runden, drei Eintragsarten
+Es ist wirklich dicht      weder Seitentitel noch Dateiname stehen im
+                           Klartext im Archiv — nachgesehen im Byte-Strom
+Falsches Passwort          abgelehnt, und ohne zu sagen, WAS falsch war
+Verändertes Manifest       fliegt auf (der Kern ist mitverschlüsselt)
+Fehlender Eintrag          fliegt auf
+Kein Passwort              wird gar nicht erst gebaut
+Nach allen Fehlversuchen   steht der Bestand unverändert da
+Passwortwechsel            geht, ohne die Nutzdaten anzufassen — und ein
+                           schon herausgegebenes Paket bleibt mit dem alten
+                           Passwort lesbar, weil man eine Datei, die jemand
+                           hat, nicht widerrufen kann
+```
+
+### Und was nicht
+
+**Das Zurückholen verliert den Anhang.** Gemessen, mehrfach und schwankend:
+gleich nach dem Einspielen findet `dateiAlle()` den Datei-Satz, während
+`dateiHolen()` ihn nicht findet; mit 600 ms Atempause ist gar keine Datei
+mehr da; die Stückzahl ist mal 0, mal 1.
+
+Das Schwanken ist die Unterschrift eines Wettlaufs. `Store.importAll` ist es
+nicht — seine Transaktion umfasst `blocks`, `collections`, `views`, `meta`,
+`versions` und `suchindex`, aber weder `dateien` noch `stuecke`. Ein
+`Store.flush()` zwischen Bestand und Anhängen hat nicht geholfen.
+
+### Die Entscheidung
+
+**Der Code bleibt, der Knopf nicht.** Die Karte im Sicherheitsdialog war
+schon geschrieben und ist wieder herausgenommen. Ein Wiederherstellen, das
+den Anhang STILL verliert, ist schlimmer als eines, das gar nicht erst
+angeboten wird — §46, Priorität 1.
+
+`test199` §3 hält das fest, und zwar als Prüfung, nicht als Notiz: solange
+der Fehler steht, darf im Dialog kein Knopf dafür sein. Wer die Funktion
+später anschliesst, ohne den Wettlauf zu beheben, wird rot.
+
+Die Einstiegspunkte bleiben im `return`-Objekt. Ohne sie liesse sich die
+Funktion nicht prüfen, und ungeprüfter Code ist genau der Zustand, aus dem
+sie gerade kommt.
+
+### Die Lehre
+
+Fertig aussehender Code ist kein fertiger Code. Diese 460 Zeilen lasen sich
+besser als vieles, was heute läuft — die Kommentare erklären sogar, warum
+`paketOeffnen` nichts schreibt, damit ein falsches Passwort keinen halben
+Import hinterlässt. Genau dieser Sorgfalt hätte man geglaubt.
+
+Was sie nie hatte, war ein einziger Aufruf. Und der erste Aufruf hat den
+Fehler in drei Minuten gefunden.
+
+**Geprüft** (test199, 36 Punkte): die Einstiegspunkte sind erreichbar · das
+Paket ist dicht, im Byte-Strom nachgesehen · alle fünf Fehlerwege lehnen ab,
+ohne etwas anzufassen · der Passwortwechsel · und §3 als Wächter, dass die
+Funktion unerreichbar bleibt, solange L42 offen ist.

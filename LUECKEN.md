@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**22. August 2026 · 163 Prüfläufe** — zwei Arbeitsstände zusammengeführt
+**22. August 2026 · 164 Prüfläufe** — zwei Arbeitsstände zusammengeführt
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -1294,3 +1294,48 @@ ist die verlässlichere — sie misst, statt zu behaupten.
   drin ist. Dafür sind die Suiten je Blockart da, und die gibt es nicht für
   alle 66.
 ```
+
+## L42 · Das verschlüsselte `.redion` schreibt, aber holt nicht zurück
+
+**22. August 2026.** In `krypto.ts` liegt eine vollständige Fassung 2 des
+verschlüsselten Pakets: Bestand, Verlauf und alle Anhänge, jeder Eintrag
+einzeln mit AES-GCM 256, Anhänge in Stücken, Passwortwechsel über die
+Schlüsselhülle. Sie kam vom Laptop-Stand und war dort nie angeschlossen.
+
+Angeschlossen und geprüft (test199) funktioniert davon das meiste:
+
+```txt
+✅ Das Paket entsteht, und von aussen ist nichts zu lesen — weder der
+   Seitentitel noch der Dateiname stehen im Klartext im Archiv.
+✅ Falsches Passwort, leeres Passwort, verändertes Manifest und ein
+   fehlender Eintrag werden alle abgelehnt, ohne etwas anzufassen.
+✅ Der Passwortwechsel geht, ohne die Nutzdaten neu zu verschlüsseln — und
+   ein bereits herausgegebenes Paket bleibt mit dem alten Passwort lesbar.
+✗  DAS ZURÜCKHOLEN VERLIERT DEN ANHANG.
+```
+
+Gemessen, mehrfach und schwankend:
+
+```txt
+gleich nach dem Einspielen   `dateiAlle()` findet den Datei-Satz,
+                             `dateiHolen()` findet ihn NICHT
+mit 600 ms Atempause         gar keine Datei mehr
+Stückzahl                    mal 0, mal 1 — je nach Lauf
+```
+
+Das Schwanken ist die Unterschrift eines Wettlaufs. `Store.importAll` ist
+NICHT der Verursacher: seine Transaktion umfasst `blocks`, `collections`,
+`views`, `meta`, `versions` und `suchindex` — `dateien` und `stuecke` fasst
+sie gar nicht an. Der einzige Löscher im Weg ist die Aufräumschleife am Ende
+von `geoeffnetesPaketEinspielen`, die alles wegwirft, was nicht im Paket
+steht. Warum sie die gerade geschriebenen Sätze trifft, ist noch offen; ein
+`Store.flush()` zwischen Bestand und Anhängen hat es nicht geheilt.
+
+**Deshalb ist die Funktion nicht im Sicherheitsdialog.** Der Code bleibt, der
+Weg dorthin nicht — ein Wiederherstellen, das den Anhang STILL verliert, ist
+schlimmer als eines, das gar nicht erst angeboten wird (§46). `test199` §3
+hält genau das fest: solange der Fehler steht, darf kein Knopf dafür da sein.
+
+Was heute stattdessen gilt: die verschlüsselte Sicherung der Fassung 1
+(ohne Anhänge) funktioniert unverändert, und das unverschlüsselte `.redion`
+nimmt die Anhänge vollständig mit.
