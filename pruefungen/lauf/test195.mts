@@ -170,8 +170,40 @@ try {
     grosseWege.domZeilen < 100 && grosseWege.seiten >= 700, JSON.stringify(grosseWege));
   pruef('Die Graphvorbereitung erfasst alle Prüfverweise',
     grosseWege.graphKnoten >= 700 && grosseWege.graphKanten >= 700, JSON.stringify(grosseWege));
-  pruef('Die quadratische Simulation benennt ihren 600er-Ausschnitt offen',
-    /600 von/.test(grosseWege.graphInfo), grosseWege.graphInfo);
+  /* ------------------------------------------------------------------------
+   * Hier stand: `/600 von/.test(...)`.
+   *
+   * Die 600 gehörte zur ALTEN Graph-Fassung, die den ganzen Bestand zeichnete
+   * und bei 600 Knoten abschnitt. Die neue Fassung in `verweise.ts` zeichnet
+   * einen NACHBARSCHAFTS-Ausschnitt um die offene Seite und begrenzt ihn bei
+   * `GRAPH_NODE_LIMIT = 320`. Gegen sie konnte der Punkt nie grün werden.
+   *
+   * Dass er trotzdem grün war, hat einen eigenen Grund: `quell/bereiche/
+   * wissen/verweise.js` war auf dem Laptop veraltet — der Browser lief auf
+   * dem alten Graphen, während die Quelle längst den neuen enthielt.
+   * `test105` („erzeugtes JavaScript passt zur Quelle") war dort rot und hat
+   * genau das gemeldet.
+   *
+   * Geprüft wird jetzt, was die neue Fassung verspricht: sie nennt beide
+   * Zahlen, überschreitet ihre Grenze nie, und wenn sie abschneidet, sagt
+   * sie es.
+   * --------------------------------------------------------------------- */
+  const zahlen = grosseWege.graphInfo.match(/^(\d+) von (\d+) Knoten/);
+  pruef('Der Ausschnitt nennt seine Grösse und den ganzen Bestand',
+    !!zahlen, grosseWege.graphInfo);
+  /* NICHT gleich, sondern mindestens: `index.nodes` zählt alles, was der
+     Graph kennt (auch Tags), `graphVorbereiten().knoten` nur das, was auf
+     der Fläche eine Position bekommt. Gemessen 771 gegen 713 — beides
+     richtig, nur nicht dasselbe. */
+  pruef('Der genannte Gesamtbestand deckt die vorbereiteten Knoten ab',
+    !!zahlen && Number(zahlen[2]) >= grosseWege.graphKnoten && Number(zahlen[2]) >= 700,
+    grosseWege.graphInfo + ' gegen ' + grosseWege.graphKnoten);
+  pruef('Der Ausschnitt bleibt innerhalb seiner Grenze von 320',
+    !!zahlen && Number(zahlen[1]) >= 1 && Number(zahlen[1]) <= 320,
+    grosseWege.graphInfo);
+  pruef('Und wenn er abschneidet, sagt er es',
+    !zahlen || Number(zahlen[1]) < 320 || /begrenzt/.test(grosseWege.graphInfo),
+    grosseWege.graphInfo);
 } finally {
   await browser.close();
   server.close();
