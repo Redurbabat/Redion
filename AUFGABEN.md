@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**19. August 2026 · 159 Prüfläufe**
+**22. August 2026 · 163 Prüfläufe**
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -87,6 +87,8 @@ L18  XLSX/ODS-Rest: Zellformatierung, Kommentare, ODS-Mehrblatt —
      Blatt: stille §13-Lücke)
 L20  ✅ komplett (9. August): Ausfüllen (E87), Markdown-Tabellen
      (E88), Alt+Umschalt+Klick (test158 §7)
+L35  ✅ geschlossen (15. August, E121): Stück-Lesefehler brechen
+     Sicherung, Sync und Löschen ab, ohne Dateisatz oder Bytes anzutasten
 L37  ✅ komplett (19. August): Seitenanker (E105) · Seitenbilder
      zurückholen (E106) · Textsuche im PDF (E107) · Drucken mit
      Strichen (E108) · geschützte Dateien (E110).
@@ -113,8 +115,8 @@ Was das kostet und warum es umkehrbar bleibt, steht in E103.
 
 **Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push
 (E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · L20 Markdown (E59) ·
-L15 bedingte Formatierung vollständig (E60) · der grösste Teil von L10
-und L12.
+L15 bedingte Formatierung vollständig (E60) · L35 Stück-Lesefehler (E121) ·
+der grösste Teil von L10 und L12.
 
 **Der Fund vom 8. August**, weil er die Art Fehler zeigt, auf die zu achten
 ist: `# Titel` wurde eine Überschrift namens `#Titel` — das Kürzelzeichen

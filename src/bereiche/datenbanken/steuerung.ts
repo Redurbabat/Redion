@@ -3658,6 +3658,20 @@ const Datenbank = (() => {
    * ======================================================================*/
   const zeilePeek = (row: any, coll: any) => {
     document.querySelectorAll<HTMLElement>('.peek').forEach(p => p.remove());
+
+    /* Ein 560-px-Seitenfenster wird auf 390 px nicht zu einer Vorschau,
+       sondern zu einer gequetschten zweiten Editoroberfläche. Auf Telefonen
+       ist die Zeile ohnehin eine vollwertige Seite: direkt öffnen, dieselbe
+       Daten- und Editorlogik benutzen, keinen mobilen Zwilling bauen. Das
+       gilt auch im iPhone-Querformat über die gemeinsame Geräteerkennung. */
+    const telefon = typeof AppEinstellung !== 'undefined'
+      ? AppEinstellung.amTelefon()
+      : typeof Menue !== 'undefined' && Menue.amTelefon();
+    if (telefon) {
+      App.oeffne(row.id);
+      return;
+    }
+
     const p = document.createElement('aside');
     p.className = 'peek';
 
@@ -6711,6 +6725,41 @@ const Datenbank = (() => {
       ? bedingungTrifft(b, row, coll, Object.assign({ automation: a }, ctx))
       : trifftZu(row, b, coll));
 
+  /**
+   * Gespeicherte Automationen dürfen nach dem Löschen oder Ändern einer
+   * Spalte nicht still so tun, als wäre ihre Bedingung bloss falsch. Dieser
+   * reine Vorabcheck liefert deshalb einen benannten Fehler für Vorschau und
+   * Laufverlauf; er verändert weder Automation noch Zeile.
+   */
+  const bedingungFehler = (b: any, coll: any): string => {
+    if (!b || typeof b !== 'object') return 'Die Bedingung ist leer oder beschädigt';
+    if (!b.art) {
+      if (!b.key || !coll.schema[b.key])
+        return 'Die Eigenschaft der Bedingung wurde nicht gefunden';
+      const erlaubt = OPERATOREN[coll.schema[b.key].type] || OPERATOREN['text'] || [];
+      if (!b.op || !erlaubt.includes(b.op))
+        return 'Der Operator „' + String(b.op || '—') + '“ ist für diese Eigenschaft ungültig';
+      return '';
+    }
+    const eintrag = BEDINGUNGEN.find(x => x[0] === b.art);
+    if (!eintrag) return 'Die Bedingungsart „' + String(b.art) + '“ ist unbekannt';
+    const braucht = String(eintrag[2] || '').split(',').filter(Boolean);
+    if (braucht.includes('spalte') && (!b.key || !coll.schema[b.key]))
+      return 'Die Eigenschaft der Bedingung wurde nicht gefunden';
+    if (braucht.includes('zahl') && (String(b.wert ?? '').trim() === '' || !isFinite(Number(b.wert))))
+      return 'Die Bedingung braucht eine gültige Zahl';
+    if ((braucht.includes('text') || braucht.includes('formel')) && String(b.wert ?? '').trim() === '')
+      return braucht.includes('formel') ? 'Die Bedingung braucht eine Formel' : 'Die Bedingung braucht einen Wert';
+    if (braucht.includes('ansicht') && !Store.getView(b.wert))
+      return 'Die Ansicht der Bedingung wurde nicht gefunden';
+    if (braucht.includes('wochentag') && !WOCHENTAGE.includes(String(b.wert || '')))
+      return 'Der Wochentag der Bedingung ist ungültig';
+    if (braucht.includes('zeitspanne') &&
+        (!/^\d{2}:\d{2}$/.test(String(b.von || '')) || !/^\d{2}:\d{2}$/.test(String(b.bis || ''))))
+      return 'Die Bedingung braucht zwei gültige Uhrzeiten';
+    return '';
+  };
+
   /* Die Takte für den wiederkehrenden Auslöser. Notion nennt in seiner Hilfe
      nur „every day, week, month, and so on" — hier sind sie ausgeschrieben. */
   const TAKTE = [
@@ -6775,14 +6824,65 @@ const Datenbank = (() => {
            (kurz ? '' : 'T' + p(d.getHours()) + ':' + p(d.getMinutes()));
   };
 
-  let imLauf = false;   /* verhindert, dass Automationen sich gegenseitig auslösen */
   /* Die Kettentiefe (E86): >0, solange gerade Aktionen einer Automation
      laufen. Der setProp-Hook fängt sie SYNCHRON und reicht sie in seinen
      verzögerten Lauf weiter — so weiss die nächste Automation, die
-     wievielte Stufe einer Kette sie ist. imLauf kann das nicht leisten:
-     der Riegel ist längst offen, wenn der verzögerte Hook feuert. */
+     wievielte Stufe einer Kette sie ist. Ein globaler Lauf-Riegel kann das
+     nicht leisten und würde bei kooperativen Mehrzeilenläufen sogar echte
+     Folgeereignisse verschlucken. */
   let laufKette = 0;
   let wdhZaehler = 0;   /* Notbremse gegen Ketten, die sich selbst nachlegen */
+
+  type AutomationsLauf = {
+    id: string;
+    origin: string;
+    schritte: number;
+    maxSchritte: number;
+    abgebrochen: boolean;
+    status: 'laeuft' | 'fertig' | 'abgebrochen' | 'fehler';
+    gestartet: string;
+  };
+  const aktiveAutomationsLaeufe = new Map<string, AutomationsLauf>();
+  let aktuellerAutomationsKontext: { lauf: AutomationsLauf; trace: string[]; kette: number } | null = null;
+  const automationsKontextKopie = () => aktuellerAutomationsKontext ? {
+    lauf: aktuellerAutomationsKontext.lauf,
+    trace: [...aktuellerAutomationsKontext.trace],
+    kette: aktuellerAutomationsKontext.kette
+  } : null;
+
+  const neuerAutomationsLauf = (origin = 'ereignis'): AutomationsLauf => {
+    const lauf: AutomationsLauf = {
+      id: 'auto-' + Store.uid().slice(0, 10), origin, schritte: 0,
+      maxSchritte: 1000, abgebrochen: false, status: 'laeuft',
+      gestartet: new Date().toISOString()
+    };
+    aktiveAutomationsLaeufe.set(lauf.id, lauf);
+    return lauf;
+  };
+
+  const automationAbbrechen = (laufId: string): boolean => {
+    const lauf = aktiveAutomationsLaeufe.get(laufId);
+    if (!lauf || lauf.status !== 'laeuft') return false;
+    lauf.abgebrochen = true;
+    lauf.status = 'abgebrochen';
+    return true;
+  };
+
+  const laufSchritt = (lauf: AutomationsLauf): boolean => {
+    if (lauf.abgebrochen) return false;
+    lauf.schritte++;
+    if (lauf.schritte <= lauf.maxSchritte) return true;
+    lauf.abgebrochen = true;
+    lauf.status = 'abgebrochen';
+    return false;
+  };
+
+  const SCHREIBAKTIONEN = new Set([
+    'setze-prop', 'ki-fuellen', 'erinnerung', 'unterseite', 'zaehler',
+    'wiederholen', 'fremd-setzen', 'neue-zeile', 'benachricht', 'mail',
+    'archivieren', 'loeschen', 'leeren', 'duplizieren', 'kommentar',
+    'zurueckstellen', 'webhook'
+  ]);
 
   /**
    * Was eine Aktion im Probelauf zu melden hat — der Wert, mit dem sie
@@ -6816,7 +6916,7 @@ const Datenbank = (() => {
       case 'unterseite':   return fuellen(d.titel || d.text);
       case 'wiederholen':  return String(naechstesDatum(wert(row, d.key, coll), d.takt) ?? '—');
       case 'variablen':    return (d.vars || []).map((v: any) => v?.name).filter(Boolean).join(', ');
-      case 'fremd-setzen': return 'in „' + (Store.getCollection(d.zielDb)?.name || '?') + '"';
+      case 'fremd-setzen': return 'in „' + (Store.getCollection(d.ziel)?.name || '?') + '“';
       case 'zurueckstellen': return String(d.takt || d.wert || '');
       default:             return fuellen(d.wert ?? '');
     }
@@ -6873,13 +6973,63 @@ const Datenbank = (() => {
     }, 900);
   };
 
-  const automationenLaufen = (row: any, coll: any, art: string, key?: any, neuerWert?: any, ctx?: any) => {
-    if (imLauf || !coll || !(coll.automationen || []).length) return;
+  /** Die eigene Datenbank für einen kontrollierten Mehrzeilenlauf auswählen. */
+  const fuerJedeZeilen = (a: any, coll: any) => {
+    const cfg = a.fuerJede || {};
+    let zeilen = Store.rowsOf(coll.id).slice();
+    const filter = cfg.filter || {};
+    if (filter.key && !coll.schema[filter.key]) return {
+      zeilen: [], gefunden: 0, maximum: 0, ausgelassen: 0,
+      fehler: 'Die Filtereigenschaft „' + filter.key + '“ wurde nicht gefunden'
+    };
+    if (filter.key && coll.schema[filter.key]) {
+      const erlaubte = OPERATOREN[coll.schema[filter.key].type] || OPERATOREN['text'] || [];
+      if (filter.op && !erlaubte.includes(filter.op)) return {
+        zeilen: [], gefunden: 0, maximum: 0, ausgelassen: 0,
+        fehler: 'Der Filteroperator „' + filter.op + '“ ist für diese Eigenschaft ungültig'
+      };
+      zeilen = zeilen.filter((z: any) => trifftZu(z, {
+        key: filter.key,
+        op: filter.op || (OPERATOREN[coll.schema[filter.key].type] || OPERATOREN['text'] || [])[0],
+        wert: filter.wert
+      }, coll));
+    }
+    const sort = cfg.sort || {};
+    if (sort.key && !coll.schema[sort.key]) return {
+      zeilen: [], gefunden: 0, maximum: 0, ausgelassen: 0,
+      fehler: 'Die Sortiereigenschaft „' + sort.key + '“ wurde nicht gefunden'
+    };
+    if (sort.key && coll.schema[sort.key]) {
+      const richtung = sort.richtung === 'ab' ? -1 : 1;
+      zeilen.sort((x: any, y: any) => {
+        const ax = wert(x, sort.key, coll), ay = wert(y, sort.key, coll);
+        const nx = Number(ax), ny = Number(ay);
+        if (String(ax ?? '') !== '' && String(ay ?? '') !== '' && isFinite(nx) && isFinite(ny))
+          return (nx - ny) * richtung;
+        return String(ax ?? '').localeCompare(String(ay ?? ''), 'de',
+          { numeric: true, sensitivity: 'base' }) * richtung;
+      });
+    }
+    const gefunden = zeilen.length;
+    const maximum = Math.max(1, Math.min(500, Number(cfg.max) || 100));
+    return { zeilen: zeilen.slice(0, maximum), gefunden, maximum,
+             ausgelassen: Math.max(0, gefunden - maximum) };
+  };
+
+  const automationenLaufen = async (row: any, coll: any, art: string, key?: any, neuerWert?: any, ctx?: any) => {
+    if (!coll || !(coll.automationen || []).length) return;
     ctx = ctx || {};
-    imLauf = true;
+    const eigenerLauf = !ctx.lauf;
+    ctx.lauf = ctx.lauf || neuerAutomationsLauf(ctx.probe ? 'vorschau' : art || 'ereignis');
+    ctx.trace = Array.isArray(ctx.trace) ? ctx.trace : [];
+    if (ctx.lauf.abgebrochen || ctx.signal?.aborted) {
+      ctx.lauf.abgebrochen = true;
+      ctx.lauf.status = 'abgebrochen';
+      return;
+    }
     try {
-      coll.automationen.forEach((a: any) => {
-        if (a.an === false) return;
+      for (const a of coll.automationen) {
+        if (a.an === false) continue;
 
         /* --- Mehrere Auslöser -------------------------------------------
          * Notion kennt „wenn einer davon eintritt" und „wenn alle eintreten".
@@ -6900,7 +7050,20 @@ const Datenbank = (() => {
           return true;
         };
         const getroffen = alleAusloeser.findIndex(passt);
-        if (getroffen < 0) return;
+        if (getroffen < 0) continue;
+
+        /* Dieselbe Automation darf in derselben Wirkungskette nicht wieder
+           zu sich zurückkehren. Das fängt insbesondere `zeile-neu → neue
+           Zeile` und `zeile-neu → duplizieren`, deren addRow-Hook früher
+           ohne Herkunft eine neue, endlose Kette begann. */
+        if (ctx.trace.includes(a.id)) {
+          a.verlauf = [{ wann: new Date().toISOString(), zeile: row?.text || '',
+            aktionen: [], fehler: 'Schleife gestoppt: Automation „' +
+              (a.name || 'Ohne Namen') + '“ kam in demselben Lauf erneut vor',
+            runId: ctx.lauf.id }, ...(a.verlauf || [])].slice(0, 100);
+          verlaufSichern(coll);
+          continue;
+        }
 
         /* --- Schleifenschutz, Stufe 2: der KETTEN-DECKEL (E86) ----------
          * Fünf Stufen Automation-löst-Automation-aus sind erlaubt — eine
@@ -6914,7 +7077,7 @@ const Datenbank = (() => {
             fehler: 'Ketten-Deckel: nach 5 Automations-Stufen angehalten — mögliche Endlosschleife' },
             ...(a.verlauf || [])].slice(0, 100);
           verlaufSichern(coll);
-          return;
+          continue;
         }
 
         if ((a.weitereWenn || []).length && a.wennModus === 'alle') {
@@ -6925,9 +7088,30 @@ const Datenbank = (() => {
           Object.keys(a.gefeuert).forEach(i => {
             if (jetztMs - a.gefeuert[i] > 3000) delete a.gefeuert[i];
           });
-          if (Object.keys(a.gefeuert).length < alleAusloeser.length) return;
+          if (Object.keys(a.gefeuert).length < alleAusloeser.length) continue;
           a.gefeuert = {};
         }
+
+        const eineZeileLaufen = (row: any) => {
+          if (!row || ctx.lauf.abgebrochen || ctx.signal?.aborted)
+            return { geaendert: false, fehler: false, uebersprungen: true };
+          const ungueltig = (a.bedingungen || [])
+            .map((b: any) => bedingungFehler(b, coll)).find(Boolean) || '';
+          if (ungueltig) {
+            if (ctx.probe) ctx.probe.push({ name: 'Bedingung der Automation',
+              art: 'bedingung', zeile: row?.text || '',
+              status: 'ungültige Bedingung', grund: ungueltig });
+            else {
+              a.verlauf = [{ wann: new Date().toISOString(), zeile: row?.text || '',
+                aktionen: [], fehler: 'Ungültige Bedingung: ' + ungueltig,
+                runId: ctx.lauf.id }, ...(a.verlauf || [])].slice(0, 100);
+              verlaufSichern(coll);
+            }
+            return { geaendert: false, fehler: true, uebersprungen: true };
+          }
+          const standVorher = (() => { try { return JSON.stringify(Store.getBlock(row.id)); }
+                                      catch { return ''; } })();
+          const probeStart = Array.isArray(ctx.probe) ? ctx.probe.length : 0;
 
         /* Zusätzliche Bedingungen — alle müssen zutreffen. Benannte
            Bedingungen dürfen auch nach dem alten Wert fragen.
@@ -6960,6 +7144,8 @@ const Datenbank = (() => {
                            fehler: string; zweig?: string } =
           { wann: new Date().toISOString(),
             zeile: (row && row.text) || '', aktionen: [], fehler: '' };
+        let rechteFehler = false;
+        let sonstigerFehler = false;
         if (!bedingungenOk) laufNotiz.zweig = 'sonst';
         /* Im Probelauf sagt die erste Zeile, welcher Zweig liefe — aber nur,
            wenn es überhaupt einen sonst-Zweig gibt: Automationen ohne ihn
@@ -7004,12 +7190,29 @@ const Datenbank = (() => {
         const eineAktion = (d: any) => {
           /* --- Bedingung an der einzelnen Aktion — das „sonst" von
                  Notions Automationen, das es dort nicht gibt ------------- */
-          if (d.wenn && d.wenn.key) {
+          if (d.wenn) {
+            const fehler = bedingungFehler(d.wenn, coll);
+            if (fehler) {
+              const name = (AKTIONEN.find(x => x[0] === d.art) || ['', d.art])[1];
+              if (ctx.probe) ctx.probe.push({ name, art: d.art,
+                zeile: row?.text || '', status: 'ungültige Bedingung', grund: fehler });
+              else laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                name + ': ungültige Bedingung — ' + fehler;
+              sonstigerFehler = true;
+              return;
+            }
             const ok2 = gruppeTrifftZu(row, { operator: 'and', rules: [{
               key: d.wenn.key,
               op:  d.wenn.op || (OPERATOREN[coll.schema[d.wenn.key]?.type] || OPERATOREN['text'] || [])[0],
               wert: mitVars(d.wenn.wert) }] }, coll);
-            if (d.wenn.umkehren ? ok2 : !ok2) return;
+            if (d.wenn.umkehren ? ok2 : !ok2) {
+              if (ctx.probe) ctx.probe.push({
+                name: (AKTIONEN.find(x => x[0] === d.art) || ['', d.art])[1],
+                art: d.art, zeile: row?.text || '', status: 'würde übersprungen',
+                grund: 'Bedingung der Aktion trifft nicht'
+              });
+              return;
+            }
           }
           /* --- Variablen festlegen ---------------------------------- */
           if (d.art === 'variablen') {
@@ -7044,13 +7247,47 @@ const Datenbank = (() => {
            * Ergebnis, sondern der Plan — welche Aktion mit welchen Werten
            * an der Reihe wäre.
            * =============================================================== */
+          const aktionsName = (AKTIONEN.find(x => x[0] === d.art) || ['', d.art])[1];
+          const brauchtEigenesFeld = ['setze-prop', 'ki-fuellen', 'zaehler', 'leeren'].includes(d.art);
+          const feldFehlt = brauchtEigenesFeld && (!d.key || !coll.schema[d.key]);
+          const ohneRecht = brauchtEigenesFeld && d.key && typeof Feldrechte !== 'undefined' &&
+            Feldrechte.inKraft() && !Feldrechte.darfSchreiben(coll.id, d.key);
+          const zielFehlt = d.art === 'neue-zeile' && !Store.getCollection(d.zielDb) ||
+            d.art === 'fremd-setzen' && (!Store.getCollection(d.ziel) ||
+              !Store.getCollection(d.ziel)?.schema?.[d.zielKey]);
+          if (feldFehlt || zielFehlt || ohneRecht) {
+            const status = ohneRecht ? 'keine Berechtigung' : 'nicht gefunden';
+            const grund = ohneRecht ? 'Die Zieleigenschaft ist schreibgeschützt'
+              : feldFehlt ? 'Die Zieleigenschaft gibt es nicht mehr'
+              : 'Zieldatenbank oder Zieleigenschaft gibt es nicht mehr';
+            if (ctx.probe) ctx.probe.push({ name: aktionsName, art: d.art,
+              zeile: row?.text || '', status, grund });
+            else laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+              aktionsName + ': ' + grund;
+            if (ohneRecht) rechteFehler = true;
+            else sonstigerFehler = true;
+            return;
+          }
+
           if (ctx.probe) {
+            let status = SCHREIBAKTIONEN.has(d.art) ? 'wird geändert' : 'würde ausgeführt';
+            const vorschauWert = probeWert(d, mitVars, coll, row);
+            if (d.art === 'setze-prop' && d.key &&
+                JSON.stringify(wert(row, d.key, coll)) === JSON.stringify(vorschauWert))
+              status = 'bleibt unverändert';
+            if (d.art === 'leeren' && d.key) {
+              const jetzt = wert(row, d.key, coll);
+              if (jetzt === '' || jetzt == null || (Array.isArray(jetzt) && !jetzt.length))
+                status = 'bleibt unverändert';
+            }
+            if (d.art === 'archivieren' && row.archiviert) status = 'bleibt unverändert';
             ctx.probe.push({
-              name: (AKTIONEN.find(x => x[0] === d.art) || ['', d.art])[1],
+              name: aktionsName,
               art: d.art,
               ziel: d.key ? (coll.schema[d.key]?.name || d.key) : '',
-              wert: probeWert(d, mitVars, coll, row),
-              zeile: row?.text || ''
+              wert: vorschauWert,
+              zeile: row?.text || '',
+              status
             });
             return;
           }
@@ -7255,29 +7492,122 @@ const Datenbank = (() => {
         /* Solange die Aktionen laufen, gilt die nächste Stufe der Kette —
            jeder setProp darin fängt sie synchron (E86). */
         const ketteVorher = laufKette;
+        const kontextVorher = aktuellerAutomationsKontext;
         laufKette = ((ctx && ctx.kette) || 0) + 1;
+        aktuellerAutomationsKontext = {
+          lauf: ctx.lauf,
+          trace: [...ctx.trace, a.id],
+          kette: laufKette
+        };
         try {
-          zweigListe.forEach((d: any) => {
+          for (const d of zweigListe) {
+            if (!laufSchritt(ctx.lauf) || ctx.signal?.aborted) {
+              ctx.lauf.abgebrochen = true;
+              ctx.lauf.status = 'abgebrochen';
+              laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
+                'Lauf abgebrochen oder Schrittmaximum erreicht';
+              break;
+            }
             try { eineAktion(d); }
             catch (e: unknown) {
               const name = (AKTIONEN.find((x: any) => x[0] === d.art) || ['', d.art])[1];
               const text = e instanceof Error ? e.message : String(e);
               laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
                                  name + ': ' + text;
+              sonstigerFehler = true;
               /* Nicht nur ins Protokoll: wer gerade zusieht, soll es sehen. */
-              if (!ctx.probe) UI.toast('⚠ „' + name + '" ging nicht: ' + text);
+              if (!ctx.probe) UI.toast('⚠ „' + name + '“ ging nicht: ' + text);
             }
-          });
+          }
         } finally {
           laufKette = ketteVorher;
+          aktuellerAutomationsKontext = kontextVorher;
         }
         /* Ein Probelauf ist nicht gelaufen. Er darf deshalb weder im
            Laufverlauf noch im gemeinsamen Protokoll stehen — sonst zeigte
            die Automation morgen zwanzig Läufe, von denen keiner stattfand. */
         if (!ctx.probe) notieren();
-      });
+        const standNachher = (() => { try { return JSON.stringify(Store.getBlock(row.id)); }
+                                      catch { return ''; } })();
+        const probeNeu = Array.isArray(ctx.probe) ? ctx.probe.slice(probeStart) : [];
+        const probeAendert = probeNeu.some((x: any) => x.status === 'wird geändert');
+        return {
+          geaendert: probeAendert || standVorher !== standNachher ||
+            laufNotiz.aktionen.some((name: string) => {
+              const artId = AKTIONEN.find(x => x[1] === name)?.[0];
+              return !!artId && SCHREIBAKTIONEN.has(artId);
+            }),
+          ohneRecht: rechteFehler || probeNeu.some((x: any) => x.status === 'keine Berechtigung'),
+          fehler: sonstigerFehler || probeNeu.some((x: any) =>
+            x.status === 'Fehler' || x.status === 'nicht gefunden' ||
+            x.status === 'ungültige Bedingung'),
+          uebersprungen: !laufNotiz.aktionen.length && !probeAendert &&
+            !probeNeu.some((x: any) => x.status === 'würde ausgeführt')
+        };
+        };
+
+        const auswahl = a.fuerJede?.an
+          ? fuerJedeZeilen(a, coll)
+          : { zeilen: [row], gefunden: 1, maximum: 1, ausgelassen: 0 };
+        const summe = {
+          geprueft: 0, geaendert: 0, unveraendert: 0, ohneRecht: 0,
+          fehler: 0, abgebrochen: 0, ausgelassen: auswahl.ausgelassen
+        };
+        if (auswahl.fehler) {
+          if (ctx.probe) ctx.probe.push({ name: 'Zeilenauswahl', art: 'fuer-jede',
+            status: 'ungültige Bedingung', grund: auswahl.fehler });
+          else {
+            a.verlauf = [{ wann: new Date().toISOString(), zeile: 'Mehrzeilenlauf',
+              aktionen: [], fehler: auswahl.fehler, runId: ctx.lauf.id },
+              ...(a.verlauf || [])].slice(0, 100);
+            verlaufSichern(coll);
+          }
+          continue;
+        }
+        for (let zeilenIndex = 0; zeilenIndex < auswahl.zeilen.length; zeilenIndex++) {
+          const zielZeile = auswahl.zeilen[zeilenIndex];
+          if (ctx.lauf.abgebrochen || ctx.signal?.aborted) {
+            ctx.lauf.abgebrochen = true;
+            ctx.lauf.status = 'abgebrochen';
+            summe.abgebrochen = auswahl.zeilen.length - summe.geprueft;
+            break;
+          }
+          summe.geprueft++;
+          const ergebnis = eineZeileLaufen(zielZeile);
+          if (ergebnis?.ohneRecht) summe.ohneRecht++;
+          else if (ergebnis?.fehler) summe.fehler++;
+          else if (ergebnis?.geaendert) summe.geaendert++;
+          else summe.unveraendert++;
+          /* Ein Mehrzeilenlauf gibt dem Browser regelmässig Luft. Nur so
+             kann der sichtbare Abbruchknopf während eines 500-Zeilen-Laufs
+             tatsächlich angeklickt werden; ein synchroner Knopf wäre bloss
+             Dekoration. Vorschauen bleiben synchron und schreiben nie. */
+          if (!ctx.probe && a.fuerJede?.an && zeilenIndex + 1 < auswahl.zeilen.length &&
+              (zeilenIndex + 1) % 8 === 0)
+            await new Promise<void>(resolve => setTimeout(resolve, 4));
+        }
+        if (a.fuerJede?.an) {
+          const zusammenfassung = `${summe.geprueft} Zeilen geprüft · ${summe.geaendert} geändert · ` +
+            `${summe.unveraendert} unverändert · ${summe.ohneRecht} ohne Recht · ${summe.fehler} Fehler` +
+            (summe.ausgelassen ? ` · ${summe.ausgelassen} wegen Maximum ausgelassen` : '') +
+            (summe.abgebrochen ? ` · ${summe.abgebrochen} nach Abbruch nicht bearbeitet` : '');
+          if (ctx.probe) ctx.probe.push({ name: zusammenfassung,
+            art: 'zusammenfassung', status: 'Zusammenfassung', zusammenfassung: summe });
+          else {
+            a.verlauf = [{ wann: new Date().toISOString(), zeile: 'Mehrzeilenlauf',
+              aktionen: [], fehler: summe.fehler ? summe.fehler + ' Zeilen mit Fehler' : '',
+              runId: ctx.lauf.id, zusammenfassung: summe, text: zusammenfassung },
+              ...(a.verlauf || [])].slice(0, 100);
+            verlaufSichern(coll);
+          }
+        }
+      }
     } finally {
-      imLauf = false;
+      if (eigenerLauf) {
+        if (ctx.lauf.status === 'laeuft')
+          ctx.lauf.status = ctx.lauf.abgebrochen ? 'abgebrochen' : 'fertig';
+        setTimeout(() => aktiveAutomationsLaeufe.delete(ctx.lauf.id), 1500);
+      }
     }
   };
 
@@ -7464,6 +7794,7 @@ const Datenbank = (() => {
 
     const altAddRow = Store.addRow;
     Store.addRow = function (collectionId, props) {
+      const ursprung = automationsKontextKopie();
       /* Standardwerte je Spalte — Notion kann das nur über Vorlagen. */
       const c0 = Store.getCollection(collectionId);
       if (c0) {
@@ -7477,11 +7808,13 @@ const Datenbank = (() => {
       }
       const r = altAddRow.call(Store, collectionId, props);
       const c = Store.getCollection(collectionId);
-      if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-neu'), 0);
+      if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-neu', undefined, undefined,
+        ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace, kette: ursprung.kette } : undefined), 0);
       return r;
     };
     const altSetProp = Store.setProp;
     Store.setProp = function (rowId, key, value) {
+      const ursprung = automationsKontextKopie();
       /* Erst prüfen, dann schreiben. Ein Wert, der gegen eine Regel
          verstösst, kommt gar nicht erst in die Datenbank — und der Mensch
          erfährt, warum. Wer das nicht will, schaltet es in den
@@ -7493,12 +7826,12 @@ const Datenbank = (() => {
       /* Gesperrt heisst gesperrt: eine gesperrte Zeile nimmt keine Werte an.
          Automationen dürfen weiter schreiben — sonst stünde die Sperre auch
          Aufräumarbeiten im Weg. */
-      if (zeile && zeile.gesperrt && !imLauf) {
+      if (zeile && zeile.gesperrt && !aktuellerAutomationsKontext) {
         try { UI.toast('🔒 Diese Zeile ist gesperrt'); } catch {}
         return zeile;
       }
 
-      if (samml && !imLauf) {
+      if (samml && !aktuellerAutomationsKontext) {
         const pr = pruefeWert(samml, key, zeile, value);
         if (!pr.ok) {
           const streng = Store.getMeta('regelnStreng', true) !== false;
@@ -7543,19 +7876,21 @@ const Datenbank = (() => {
        * Läuft dieser setProp aus einer Automation heraus, trägt er ihre
        * Tiefe weiter. Ping-Pong mit WECHSELNDEN Werten (a→b→a→…) fängt
        * Stufe 1 nicht — den fängt der Deckel im Läufer. */
-      const kette = laufKette;
+      const kette = ursprung?.kette ?? laufKette;
 
       if (c) setTimeout(() => {
         if (!gleichGeblieben) {
-          automationenLaufen(r, c, 'prop-geaendert', key, value, { alterWert, kette });
-          automationenLaufen(r, c, 'prop-wert', key, value, { alterWert, kette });
-          automationenLaufen(r, c, 'zeile-geaendert', key, value, { alterWert, kette });
+          const basis = ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace } : {};
+          automationenLaufen(r, c, 'prop-geaendert', key, value, { ...basis, alterWert, kette });
+          automationenLaufen(r, c, 'prop-wert', key, value, { ...basis, alterWert, kette });
+          automationenLaufen(r, c, 'zeile-geaendert', key, value, { ...basis, alterWert, kette });
         }
 
         /* Eine Datei ist dazugekommen */
         if ((c.schema[key] || {}).type === 'files' &&
             Array.isArray(value) && value.length > dateiVorher)
-          automationenLaufen(r, c, 'datei-neu', key, value, { alterWert, kette });
+          automationenLaufen(r, c, 'datei-neu', key, value,
+            { ...(ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace } : {}), alterWert, kette });
 
         /* Grenzübertritt in eine Ansicht — in beide Richtungen */
         const gesehen: Record<string, boolean> = {};
@@ -7567,8 +7902,9 @@ const Datenbank = (() => {
           if (!v) return;
           const nachher = gruppeTrifftZu(r, v.filters, c);
           if (nachher === !!vorher[vid]) return;
-          automationenLaufen(r, c, nachher ? 'ansicht-rein' : 'ansicht-raus',
-                             key, value, { alterWert, ansicht: vid, kette });
+          automationenLaufen(r, c, nachher ? 'ansicht-rein' : 'ansicht-raus', key, value,
+            { ...(ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace } : {}),
+              alterWert, ansicht: vid, kette });
         });
       }, 0);
       return erg;
@@ -7581,6 +7917,7 @@ const Datenbank = (() => {
      * ---------------------------------------------------------------- */
     const altUpdate = Store.updateBlock;
     Store.updateBlock = function (id, patch) {
+      const ursprung = automationsKontextKopie();
       let vorherAnzahl = -1, alteIds = null;
       if (patch && patch.kommentare) {
         const alt = Store.getBlock(id);
@@ -7596,10 +7933,12 @@ const Datenbank = (() => {
         const neuKomm = patch.kommentare.find((k: any) => !(alteIds && alteIds.has(k.id))) || {};
         if (c) setTimeout(() => {
           automationenLaufen(r, c, 'kommentar-neu', null, neuKomm.text || '',
-                             { kommentar: neuKomm });
+            { ...(ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace,
+                                kette: ursprung.kette } : {}), kommentar: neuKomm });
           if (/@[\wÄÖÜäöüß]/.test(String(neuKomm.text || '')))
             automationenLaufen(r, c, 'erwaehnung', null, neuKomm.text || '',
-                               { kommentar: neuKomm });
+              { ...(ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace,
+                                  kette: ursprung.kette } : {}), kommentar: neuKomm });
         }, 0);
       }
       return erg;
@@ -7608,11 +7947,13 @@ const Datenbank = (() => {
     /* Aus dem Papierkorb zurück — der Gegenpol zu „zeile-weg". */
     const altRestore = Store.restoreBlock;
     Store.restoreBlock = function (id) {
+      const ursprung = automationsKontextKopie();
       const erg = altRestore.call(Store, id);
       const r = Store.getBlock(id);
       if (r && r.parentTable === 'collection') {
         const c = Store.getCollection(r.parentId);
-        if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-zurueck'), 0);
+        if (c) setTimeout(() => automationenLaufen(r, c, 'zeile-zurueck', undefined, undefined,
+          ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace, kette: ursprung.kette } : undefined), 0);
       }
       return erg;
     };
@@ -7620,10 +7961,13 @@ const Datenbank = (() => {
     /* Wird ein Eintrag weggeworfen, feuert das noch, solange es ihn gibt. */
     const altTrash = Store.trashBlock;
     Store.trashBlock = function (id) {
+      const ursprung = automationsKontextKopie();
       const r = Store.getBlock(id);
       if (r && r.parentTable === 'collection') {
         const c = Store.getCollection(r.parentId);
-        if (c) { try { automationenLaufen(r, c, 'zeile-weg'); } catch (e) {} }
+        if (c) { try { automationenLaufen(r, c, 'zeile-weg', undefined, undefined,
+          ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace, kette: ursprung.kette } : undefined); }
+          catch (e) {} }
       }
       return altTrash.call(Store, id);
     };
@@ -7646,7 +7990,13 @@ const Datenbank = (() => {
 
     const namen = (k: any) => coll.schema[k]?.name || '?';
     const zeichne = () => {
-      fuelle(o, '#al', (coll.automationen || []).length
+      const laufHtml = [...aktiveAutomationsLaeufe.values()]
+        .filter(l => l.status === 'laeuft')
+        .map(l => '<div class="auto-zeile"><div class="auto-text"><b>Lauf ' +
+          esc(l.id) + '</b><span>' + esc(l.origin) + ' · ' + l.schritte +
+          ' Schritte</span></div><button data-abbruch="' + esc(l.id) +
+          '" class="danger">Abbrechen</button></div>').join('');
+      fuelle(o, '#al', laufHtml + ((coll.automationen || []).length
         ? coll.automationen.map((a: any, i: any) =>
             `<div class="auto-zeile">` +
               `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
@@ -7656,6 +8006,8 @@ const Datenbank = (() => {
               (a.wenn.art === 'prop-wert' ? ' = ' + esc(a.wenn.wert) : '') +
               (a.wenn.ansicht ? ' — ' + esc((Store.getView(a.wenn.ansicht) || {}).name || 'Ansicht') : '') +
               (a.wenn.zone ? ' · ' + esc(a.wenn.zone.replace(/_/g, ' ')) : '') +
+              (a.fuerJede?.an ? ' · Für jede eigene Zeile (max. ' +
+                esc(String(a.fuerJede.max || 100)) + ')' : '') +
               /* Bedingungen sichtbar machen — sonst rätselt man, warum eine
                  Automation nicht läuft, obwohl der Auslöser stimmt. */
               ((a.bedingungen || []).length
@@ -7675,12 +8027,85 @@ const Datenbank = (() => {
             '</div>').join('')
         : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
           'Noch keine Automation. Zum Beispiel: <i>Wenn Status auf „Erledigt" springt, ' +
-          'dann setze das Datum von heute.</i></div>');
+          'dann setze das Datum von heute.</i></div>'));
     };
     zeichne();
 
     o.addEventListener('click', async e => {
       if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
+
+      const abbruch = elVon(e)?.closest<HTMLElement>('[data-abbruch]');
+      if (abbruch) {
+        UI.toast(automationAbbrechen(abbruch.dataset.abbruch || '')
+          ? 'Automationslauf wird abgebrochen'
+          : 'Dieser Lauf ist bereits beendet');
+        zeichne();
+        return;
+      }
+
+      /* Der Knopf steht in DIESEM Fenster. Die frühere Behandlung lag
+         versehentlich im Kalenderquellen-Menü und war deshalb im Produkt
+         unerreichbar; Direktaufrufe in Prüfungen hatten das verdeckt. */
+      const test = elVon(e)?.closest<HTMLElement>('[data-test]');
+      if (test) {
+        const a = coll.automationen[Number(test.dataset.test)];
+        const zeile = Store.rowsOf(coll.id)[0];
+        if (!a || !zeile) {
+          UI.toast('Für einen Probelauf braucht es mindestens eine Zeile');
+          return;
+        }
+        const vorher = JSON.stringify({
+          blocks: Store.cache.blocks, collections: Store.cache.collections,
+          meta: Store.cache.meta
+        });
+        const plan: any[] = [];
+        automationenLaufen(zeile, coll, a.wenn.art, a.wenn.key,
+          a.wenn.art === 'prop-wert' ? a.wenn.wert : undefined, { probe: plan });
+        const nachher = JSON.stringify({
+          blocks: Store.cache.blocks, collections: Store.cache.collections,
+          meta: Store.cache.meta
+        });
+        const statusIcon: Record<string, string> = {
+          'wird geändert': '→', 'bleibt unverändert': '＝',
+          'würde übersprungen': '↷', 'keine Berechtigung': '⛔',
+          'ungültige Bedingung': '⚠', 'nicht gefunden': '?',
+          'Fehler': '⚠', 'Zusammenfassung': 'Σ',
+          'würde ausgeführt': '•'
+        };
+        UI.menu(
+          '<div class="grp">Probelauf — ' + esc(a.name || 'Automation') + '</div>' +
+          '<div class="grp" style="font-weight:400;text-transform:none">' +
+            (vorher === nachher
+              ? 'Vorschau bestätigt: Es wurde nichts geschrieben.'
+              : '⚠ Interner Fehler: Der Probelauf hat Daten verändert.') + '</div>' +
+          (plan.length ? plan.map(s =>
+            '<button disabled><span class="mi">' + esc(statusIcon[s.status] || '→') + '</span>' +
+            esc(s.status || 'würde ausgeführt') + ': ' + esc(s.name) +
+            (s.zeile ? '<span class="ms">' + esc(s.zeile) + '</span>' : '') +
+            (s.grund ? '<span class="sub">' + esc(s.grund) + '</span>' : '') +
+            '</button>').join('')
+          : '<button disabled>Keine Aktion käme zum Zug.</button>'),
+          test.getBoundingClientRect().left - 260,
+          test.getBoundingClientRect().bottom + 4,
+          { titel: 'Probelauf' });
+        return;
+      }
+
+      const verl = elVon(e)?.closest<HTMLElement>('[data-verlauf]');
+      if (verl) {
+        const a = coll.automationen[Number(verl.dataset.verlauf)];
+        const eintraege = a?.verlauf || [];
+        UI.menu('<div class="grp">Laufverlauf — ' + esc(a?.name || '') + '</div>' +
+          (eintraege.length ? eintraege.slice(0, 30).map((l: any) =>
+            '<button disabled><span class="mi">' + (l.fehler ? '⚠' : '✓') + '</span>' +
+            esc(Werkzeuge.zeitKurz(l.wann)) + ' — ' + esc(l.zeile || '(ohne Zeile)') +
+            (l.text ? '<span class="sub">' + esc(l.text) + '</span>' : '') +
+            '</button>').join('') : '<button disabled>Noch nie gelaufen</button>'),
+          verl.getBoundingClientRect().left - 240,
+          verl.getBoundingClientRect().bottom + 4,
+          { titel: 'Laufverlauf' });
+        return;
+      }
 
       const an = elVon(e)?.closest<HTMLElement>('[data-an]');
       if (an) {
@@ -7745,6 +8170,22 @@ const Datenbank = (() => {
             Object.values<any>(Store.cache.views).filter(v => v.collectionId === coll.id)
               .map(v => `<option value="${v.id}">${esc(v.name || 'Ansicht')}</option>`).join('') +
           '</select></label>' +
+          '<div class="ab-wenn"><label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
+            '<input type="checkbox" id="afuer" style="width:auto"> für jede eigene Zeile ausführen</label>' +
+            '<div id="afuer2" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px">' +
+              '<label>Filterspalte<br><select id="afuerk"><option value="">alle Zeilen</option>' +
+                keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
+              '</select></label>' +
+              '<label>Filterwert<br><input id="afuerw" placeholder="z. B. Offen"></label>' +
+              '<label>Sortieren nach<br><select id="afuers"><option value="">Einfügereihenfolge</option>' +
+                keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
+              '</select></label>' +
+              '<label>Richtung<br><select id="afuerr"><option value="auf">aufsteigend</option>' +
+                '<option value="ab">absteigend</option></select></label>' +
+              '<label>Maximale Anzahl (1–500)<br><input id="afuerm" type="number" min="1" max="500" value="100"></label>' +
+              '<div style="font-size:12px;color:var(--text-faint);align-self:end">Vorschau und Echtlauf verwenden exakt dieselbe Auswahl.</div>' +
+            '</div>' +
+          '</div>' +
           '<hr style="border:none;border-top:1px solid var(--line)">' +
           '<label>Dann …<br><select id="ad">' +
             AKTIONEN.map(([id, n]) => `<option value="${id}">${n}</option>`).join('') +
@@ -7905,6 +8346,10 @@ const Datenbank = (() => {
         awl.style.display = 'none';
       }
 
+      const fuerJedeAn = o.querySelector<HTMLInputElement>('#afuer')?.checked;
+      const fuerJedeFelder = o.querySelector<HTMLElement>('#afuer2');
+      if (fuerJedeFelder) fuerJedeFelder.style.display = fuerJedeAn ? 'grid' : 'none';
+
       /* Welche Felder braucht die gewählte Bedingung? */
       const bArt = o.querySelector<HTMLInputElement>('#abda')?.value;
       const eintrag = BEDINGUNGEN.find(x => x[0] === bArt);
@@ -7995,6 +8440,7 @@ const Datenbank = (() => {
     o.querySelector<HTMLElement>('#adwenn')?.addEventListener('change', auffrischen);
     o.querySelector<HTMLElement>('#adwk')?.addEventListener('change', auffrischen);
     o.querySelector<HTMLElement>('#abda')?.addEventListener('change', auffrischen);
+    o.querySelector<HTMLElement>('#afuer')?.addEventListener('change', auffrischen);
 
     const gesammelt: any[] = [];
     const gesammeltSonst: any[] = [];
@@ -8130,6 +8576,24 @@ const Datenbank = (() => {
                        ? o.querySelector<HTMLInputElement>('#aav')?.value : undefined },
         nurAnsicht: o.querySelector<HTMLInputElement>('#aw')?.value === 'wiederkehrend'
           ? (o.querySelector<HTMLInputElement>('#azv')?.value || null) : null,
+        fuerJede: o.querySelector<HTMLInputElement>('#afuer')?.checked ? (() => {
+          const filterKey = o.querySelector<HTMLInputElement>('#afuerk')?.value || '';
+          const typ = filterKey ? coll.schema[filterKey]?.type : '';
+          return {
+            an: true,
+            filter: filterKey ? {
+              key: filterKey,
+              op: (OPERATOREN[typ] || OPERATOREN['text'] || [])[0],
+              wert: o.querySelector<HTMLInputElement>('#afuerw')?.value || ''
+            } : null,
+            sort: {
+              key: o.querySelector<HTMLInputElement>('#afuers')?.value || '',
+              richtung: o.querySelector<HTMLInputElement>('#afuerr')?.value || 'auf'
+            },
+            max: Math.max(1, Math.min(500,
+              Number(o.querySelector<HTMLInputElement>('#afuerm')?.value) || 100))
+          };
+        })() : undefined,
         bedingungen: bedingungen,
         dann: gesammelt,
         sonst: gesammeltSonst
@@ -8328,7 +8792,9 @@ const Datenbank = (() => {
            /* `zelleBearbeiten` war nicht ausgeführt — der Mail-Bereich wollte
               es und griff deshalb ins Leere. */
            zelleBearbeiten,
-           automationenMenue, automationenLaufen, gewaehlteZeilen,
+           automationenMenue, automationenLaufen, automationAbbrechen,
+           automationsLaeufe: () => [...aktiveAutomationsLaeufe.values()].map(x => ({ ...x })),
+           fuerJedeZeilen, gewaehlteZeilen,
            relationSetzen, relationEinrichten, gruppeTrifftZu, regelAnzahl, zeitAutomationen,
            ortSuchen, alsKarte, fremdSetzen, vorlagenLaufen, naechstesDatum, platzhalter,
            rechne, zusammenfassen, dauerText, dauerLesen, RECHNUNGEN, KI_TYPEN, AUSLOESER, AKTIONEN, TAKTE,

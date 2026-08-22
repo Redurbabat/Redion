@@ -730,8 +730,8 @@ const App = (() => {
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder such" style="width:min(820px,95vw)">' +
-        '<input id="q" placeholder="' + (eng ? 'Seiten und Inhalte suchen'
-          : 'Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;') +
+        '<input id="q" placeholder="' + (eng ? 'Seiten, Zeilen und Inhalte suchen'
+          : 'Suchen — z. B. titel:&quot;Projekt&quot;, tag:arbeit, geändert:heute, status:offen') +
           '" autocomplete="off">' +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
@@ -757,9 +757,9 @@ const App = (() => {
            Stilblatt die eine Hälfte ausblenden kann und die andere nicht. */
         '<div class="hint">' +
           '<span class="hint-tasten">↑ ↓ auswählen · Enter öffnen · Esc schliessen · </span>' +
-          '<span class="hint-befehle">Befehle: <code>typ:seite</code> <code>in:Projekte</code> ' +
-          '<code>nach:2026-01</code> <code>tag:wichtig</code> <code>titel:Wort</code> ' +
-          '<code>"genauer Satz"</code></span></div>' +
+          '<span class="hint-befehle">Beispiele: <code>titel:&quot;Projekt&quot;</code> ' +
+          '<code>tag:arbeit</code> <code>typ:seite</code> <code>geändert:heute</code> ' +
+          '<code>status:offen</code></span></div>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -768,6 +768,7 @@ const App = (() => {
     if (!inp || !res) return;
     let treffer: any[] = [];
     let i = 0;
+    let queryError = '';
 
     /* ----------------------------------------------------------------------
      * „ZULETZT GESUCHT" (Vorgabe §17)
@@ -819,7 +820,10 @@ const App = (() => {
 
     const zeichne = () => {
       if (!treffer.length) {
-        res.innerHTML = inp.value
+        res.innerHTML = queryError
+          ? '<div class="such-leer" role="alert" data-query-error><b>Abfrage nicht verstanden</b>' +
+            `<span>${esc(queryError)}</span></div>`
+          : inp.value
           ? '<div class="such-leer"><b>Nichts gefunden</b>' +
             '<span>Versuche einen anderen Begriff — oder suche in den Befehlen ' +
             'mit <code>Strg ⇧ P</code>.</span></div>'
@@ -900,6 +904,7 @@ const App = (() => {
     };
 
     const zuletzt = () => {
+      queryError = '';
       treffer = Object.values<any>(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
         .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
@@ -910,89 +915,121 @@ const App = (() => {
     };
     zuletzt();
 
-    const filterLesen = () => ({
-      wo:   o.querySelector<HTMLSelectElement>('#f-wo')?.value ?? '',
-      typ:  o.querySelector<HTMLSelectElement>('#f-typ')?.value ?? '',
-      seit: o.querySelector<HTMLSelectElement>('#f-seit')?.value ?? '',
-      ort:  o.querySelector<HTMLSelectElement>('#f-ort')?.value ?? ''
-    });
+    const readUiFilters = (): SearchUiFilters => {
+      const scopeValue = o.querySelector<HTMLSelectElement>('#f-wo')?.value ?? 'alles';
+      const typeValue = o.querySelector<HTMLSelectElement>('#f-typ')?.value ?? 'alles';
+      const changedValue = o.querySelector<HTMLSelectElement>('#f-seit')?.value ?? 'alles';
+      return {
+        scope: scopeValue === 'titel' ? 'title' : scopeValue === 'inhalt' ? 'content' : 'all',
+        documentType: typeValue === 'seite' ? 'page' : typeValue === 'datenbank' ? 'database' : 'all',
+        changed: changedValue === 'tag' ? 'today' : changedValue === 'woche' ? 'week'
+          : changedValue === 'monat' ? 'month' : 'all',
+        location: o.querySelector<HTMLSelectElement>('#f-ort')?.value ?? ''
+      };
+    };
 
-    /* ------------------------------------------------------------------
-     * ABFRAGESPRACHE
-     * ------------------------------------------------------------------
-     * Notions Suche kennt nur Wörter. Hier lassen sich Bedingungen davor
-     * schreiben, wie in einer Suchmaschine:
-     *
-     *   typ:seite        nur Seiten ohne Datenbank
-     *   typ:datenbank    nur Seiten mit Datenbank
-     *   in:Projekte      nur unterhalb dieser Seite
-     *   nach:2026-01     nur seit diesem Datum geändert
-     *   vor:2026-08      nur davor
-     *   tag:wichtig      trägt dieses Schlagwort
-     *   titel:Rechnung   nur im Titel
-     *   "genauer Satz"   muss wörtlich vorkommen
-     * ---------------------------------------------------------------- */
-    const abfrageLesen = (roh: any) => {
-      const f = { wo: 'alles', typ: 'alles', seit: 'alles', ort: '' };
-      const woerter: any[] = [], genau: any[] = [];
-      let nach = null, vor = null, tag = null;
+    const valueList = (value: unknown, depth = 0): string[] => {
+      if (value === null || value === undefined || depth > 2) return [];
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+        return [String(value)];
+      if (Array.isArray(value)) return value.flatMap(item => valueList(item, depth + 1));
+      if (typeof value !== 'object') return [];
+      const record = value as Record<string, unknown>;
+      const named = record['name'] ?? record['value'] ?? record['text'];
+      return named === undefined ? [] : valueList(named, depth + 1);
+    };
 
-      /* Zuerst die Ausdrücke in Anführungszeichen herausnehmen */
-      const ohneGenau = roh.replace(/"([^"]+)"/g, (_: any, t: any) => { genau.push(t); return ' '; });
+    /* Der persistente Index aus Phase 18 liefert Seiten UND Datenbankzeilen.
+       Er ist nur Beschleuniger: kann er nicht gelesen werden, entsteht die
+       gleiche Dokumentform direkt aus dem echten Bestand. */
+    let documentCache: SearchDocument[] | null = null;
+    const queryDocuments = (): SearchDocument[] => {
+      if (documentCache) return documentCache;
+      let indexEntries: any[] = [];
+      try {
+        indexEntries = typeof Kontext !== 'undefined' && Kontext.holen
+          ? (Kontext.holen().eintraege || []) : [];
+      } catch { indexEntries = []; }
 
-      ohneGenau.split(/\s+/).filter(Boolean).forEach((w: any) => {
-        const m = w.match(/^(typ|in|nach|vor|tag|titel|inhalt):(.+)$/i);
-        if (!m) { woerter.push(w); return; }
-        const [, schluessel, wert] = m;
-        const k = schluessel.toLowerCase();
-        if (k === 'typ')    f.typ = /daten/i.test(wert) ? 'datenbank' : 'seite';
-        if (k === 'titel')  { f.wo = 'titel';  woerter.push(wert); }
-        if (k === 'inhalt') { f.wo = 'inhalt'; woerter.push(wert); }
-        if (k === 'in') {
-          const ziel = Store.rootPages().find(p2 =>
-            (p2.text || '').toLowerCase().startsWith(wert.toLowerCase()));
-          if (ziel) f.ort = ziel.id;
-        }
-        if (k === 'nach') nach = wert;
-        if (k === 'vor')  vor  = wert;
-        if (k === 'tag')  tag  = wert.toLowerCase();
-      });
+      if (!indexEntries.length) {
+        indexEntries = Object.values<any>(Store.cache.blocks)
+          .filter(block => block.alive && block.type === 'page')
+          .map(block => ({ id: block.id, seiteId: block.id,
+            art: block.parentTable === 'collection' ? 'zeile' : 'seite',
+            titel: block.text || '', text: Store.childrenOf(block.id)
+              .map((child: any) => child.text || '').join(' '),
+            geaendert: block.edited || block.created || '' }));
+      }
 
-      return { f, text: woerter.join(' '), genau, nach, vor, tag,
-               hatBefehl: woerter.length !== ohneGenau.split(/\s+/).filter(Boolean).length ||
-                          genau.length > 0 };
+      documentCache = indexEntries.map((entry: any): SearchDocument | null => {
+        const block = Store.getBlock(entry.seiteId || entry.id);
+        if (!block || !block.alive || block.type !== 'page') return null;
+        if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('lesen', block.id)) return null;
+        const isRow = block.parentTable === 'collection';
+        const collection = isRow ? Store.getCollection(block.parentId) : null;
+        const hasDatabase = !isRow && (block.content || [])
+          .some((id: string) => Store.getBlock(id)?.type === 'database');
+        const schema = collection?.schema || {};
+        const props = block.props || {};
+        const statuses: string[] = [];
+        const optionTags: string[] = [];
+        Object.keys(schema).forEach(key => {
+          const definition = schema[key] || {};
+          const values = valueList(props[key]);
+          const name = String(definition.name || '').toLocaleLowerCase('de-DE');
+          if (definition.type === 'status' || name === 'status' || name === 'zustand')
+            statuses.push(...values);
+          if (definition.type === 'multi' || name === 'tags' || name === 'schlagwörter')
+            optionTags.push(...values);
+        });
+        const title = String(entry.titel || block.text || 'Ohne Titel');
+        const content = String(entry.text || '');
+        const hashTags = [...(title + ' ' + content).matchAll(/#([\p{L}\p{N}_-]+)/gu)]
+          .map(match => match[1] || '').filter(Boolean);
+        const pathParts = isRow
+          ? [collection?.name || 'Datenbank']
+          : Store.pathOf(block.id).slice(0, -1).map((part: any) => part.text || 'Ohne Titel');
+        const locations = isRow
+          ? [String(collection?.id || ''), String(collection?.name || '')]
+          : Store.pathOf(block.id).flatMap((part: any) => [String(part.id), String(part.text || '')]);
+        return {
+          id: block.id,
+          title,
+          content,
+          path: pathParts.join(' / '),
+          documentType: isRow ? 'row' : hasDatabase ? 'database' : 'page',
+          changed: String(entry.geaendert || block.edited || block.created || ''),
+          tags: [...new Set([...hashTags, ...optionTags])],
+          statuses: [...new Set(statuses)],
+          locations: locations.filter(Boolean)
+        };
+      }).filter((document: SearchDocument | null): document is SearchDocument => document !== null);
+      return documentCache;
     };
 
     const suchen = () => {
       const roh = inp.value;
-      if (!roh.trim()) { zuletzt(); return; }
+      const uiFilters = readUiFilters();
+      const hasUiFilter = uiFilters.scope !== 'all' || uiFilters.documentType !== 'all' ||
+        uiFilters.changed !== 'all' || !!uiFilters.location;
+      if (!roh.trim() && !hasUiFilter) { zuletzt(); return; }
 
-      const q = abfrageLesen(roh);
-      /* Die Filterleiste hat Vorrang, wenn sie ausdrücklich gesetzt wurde */
-      const handFilter = filterLesen();
-      const filter = {
-        wo:   handFilter.wo   !== 'alles' ? handFilter.wo   : q.f.wo,
-        typ:  handFilter.typ  !== 'alles' ? handFilter.typ  : q.f.typ,
-        seit: handFilter.seit,
-        ort:  handFilter.ort  || q.f.ort
-      };
-
-      /* Ohne freie Wörter suchen wir mit den Ausdrücken in Anführungszeichen —
-         sonst käme die rohe Eingabe samt Anführungszeichen in die Suche. */
-      const suchtext = q.text || q.genau.join(' ') || roh;
-      treffer = Store.search(suchtext, filter);
-
-      /* Nachfiltern, was Store.search nicht kennt */
-      if (q.genau.length) treffer = treffer.filter(t => {
-        const text = ((t.page.text || '') + ' ' + (t.snippet || '')).toLowerCase();
-        return q.genau.every(g => text.includes(g.toLowerCase()));
-      });
-      const nachDatum = q.nach, vorDatum = q.vor;
-      if (nachDatum) treffer = treffer.filter(t => (t.page.edited || '') >= nachDatum);
-      if (vorDatum)  treffer = treffer.filter(t => (t.page.edited || '') <= vorDatum + '￿');
-      if (q.tag)  treffer = treffer.filter(t =>
-        Store.childrenOf(t.page.id).some((b: any) => (b.text || '').toLowerCase().includes('#' + q.tag)) ||
-        (t.page.text || '').toLowerCase().includes('#' + q.tag));
+      const parsed = QueryLanguage.parse(roh);
+      if (!parsed.ok) {
+        queryError = parsed.issues.map(issue => issue.message).join(' ');
+        treffer = [];
+        i = 0;
+        zeichne();
+        return;
+      }
+      queryError = '';
+      const query = QueryLanguage.applyUiFilters(parsed.query, uiFilters);
+      treffer = QueryLanguage.run(queryDocuments(), query).map(match => ({
+        page: Store.getBlock(match.document.id),
+        treffer: match.reason,
+        snippet: match.snippet,
+        pfad: match.document.path
+      })).filter(hit => !!hit.page);
 
       i = 0;
       zeichne();
@@ -1987,7 +2024,12 @@ const App = (() => {
                      reiterZu: () => Fenster.schliessen(Fenster.aktiv()) };
         for (const id of Object.keys(Aussehen.eigene())) {
           const fn = tu[id];
-          if (fn && Aussehen.ist(id, e)) { e.preventDefault(); fn(); return; }
+          /* Auch alte, bereits gespeicherte Belegungen dürfen keine
+             Browser- oder Bearbeitungstaste stehlen. Der Dialog verhindert
+             neue Konflikte; diese zweite Grenze schützt Bestandsdaten. */
+          if (fn && !Aussehen.reserviert(Aussehen.alsText(e)) && Aussehen.ist(id, e)) {
+            e.preventDefault(); fn(); return;
+          }
         }
         /* Ein eingebautes Kürzel, das jemand woandershin gelegt hat, darf
            an seiner alten Stelle nichts mehr auslösen. */

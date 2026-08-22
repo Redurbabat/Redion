@@ -12,21 +12,19 @@
  * Integrationen. Bei uns liegt ohnehin alles auf dem Gerät — deshalb kostet
  * Verschlüsselung hier fast nichts.
  *
- * Zwei Dinge stecken drin:
+ * Drei Dinge stecken drin:
  *
- *   1. VERSCHLÜSSELTE SICHERUNG — der Bestand OHNE Dateianhänge als eine
- *      Datei, mit AES-GCM 256 verschlüsselt. Der Schlüssel entsteht aus dem
- *      Passwort über PBKDF2 mit 310 000 Runden und einem zufälligen Salz.
- *      Ohne das Passwort ist die Datei ein Haufen Zufall.
+ *   1. VERSCHLÜSSELTES `.redion` — Bestand, Verlauf und alle Anhänge. Ein
+ *      zufälliger Datenschlüssel verschlüsselt jeden Eintrag einzeln mit
+ *      AES-GCM 256. Das Passwort schützt diesen Schlüssel über PBKDF2-SHA256
+ *      mit 310 000 Runden und zufälligem Salz. Anhänge bleiben in Stücken;
+ *      auch ein grosses Video geht nie vollständig durch den Arbeitsspeicher.
  *
- *      „Der vollständige Bestand" stand hier — und stimmte nicht:
- *      `bestandSammeln` ruft `exportAll()` ohne Anhänge, und das Manifest
- *      in der Datei sagt es sogar (`fehlt: ['dateien','stuecke']`), nur
- *      eben AES-verschlüsselt, wo es niemand liest. Vollständig mit
- *      Anhängen sichert das `.redion`-Paket; `exportAll(true)` hier wäre
- *      keine Lösung, denn die Blobs kämen trotzdem nicht mit.
+ *   2. SCHLÜSSELWECHSEL — das Passwort wird neu abgeleitet und der zufällige
+ *      Datenschlüssel neu eingehüllt. Die grossen verschlüsselten Einträge
+ *      müssen dafür weder entschlüsselt noch neu verschlüsselt werden.
  *
- *   2. SPERRE — beim Öffnen erst das Passwort. Sie schützt vor dem Blick über
+ *   3. SPERRE — beim Öffnen erst das Passwort. Sie schützt vor dem Blick über
  *      die Schulter, nicht vor jemandem mit Zugriff auf die Festplatte; das
  *      steht auch so im Dialog. Wer echten Schutz auf der Platte will, nimmt
  *      die Sicherung und löscht den lokalen Bestand.
@@ -50,10 +48,15 @@ const Krypto = (() => {
     const b64 = (buf) => Bytes.toBase64(buf);
     const ausB64 = (s) => Bytes.fromBase64(s);
     const RUNDEN = 310000; /* OWASP-Empfehlung für PBKDF2-SHA256 */
+    const PAKET_ART = 'redion-verschluesselt';
+    const PAKET_FASSUNG = 2;
+    const PAKET_MANIFEST = 'manifest.json';
+    const PAKET_RUNDEN_MIN = 100000;
+    const PAKET_RUNDEN_MAX = 2000000;
     /** Aus Passwort und Salz einen Schlüssel machen. */
-    const schluessel = async (passwort, salz) => {
+    const schluessel = async (passwort, salz, runden = RUNDEN) => {
         const roh = await crypto.subtle.importKey('raw', enc.encode(passwort), 'PBKDF2', false, ['deriveKey']);
-        return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salz, iterations: RUNDEN, hash: 'SHA-256' }, roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salz, iterations: runden, hash: 'SHA-256' }, roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
     };
     /**
      * Verschlüsselt einen Text.
@@ -256,6 +259,405 @@ const Krypto = (() => {
         wann: p.wann
     });
     /* ========================================================================
+     * VOLLSTÄNDIGES, VERSCHLÜSSELTES `.redion` — FORMATFASSUNG 2
+     * ------------------------------------------------------------------------
+     * Das äussere ZIP ist nur ein Behälter. Lesbar bleiben ausschliesslich die
+     * Kryptoparameter, zufällige Kennungen, Zahl und verschlüsselte Grösse der
+     * Einträge. Titel, Dateinamen, Medientypen, Datei-Kennungen und Inhalte
+     * stehen nur in AES-GCM-verschlüsselten Einträgen.
+     *
+     * Ein zufälliger Datenschlüssel schützt die Einträge. Das Passwort schützt
+     * diesen Schlüssel. Das ist keine eigene Chiffre, sondern das übliche
+     * Schlüsselhüllen-Muster mit zwei Anwendungen von AES-GCM. Es macht den
+     * Schlüsselwechsel möglich, ohne einen 500-MB-Anhang erneut zu lesen.
+     * ======================================================================*/
+    const zufall = (laenge) => crypto.getRandomValues(new Uint8Array(laenge));
+    const aad = (paketId, zweck) => enc.encode(`redion-paket-v${PAKET_FASSUNG}:${paketId}:${zweck}`);
+    const aesVerschluesseln = async (daten, key, zusatz) => {
+        const iv = zufall(12);
+        const inhalt = await crypto.subtle.encrypt({
+            name: 'AES-GCM', iv: iv,
+            additionalData: zusatz, tagLength: 128
+        }, key, daten);
+        return { iv: b64(iv), inhalt: new Uint8Array(inhalt) };
+    };
+    const aesEntschluesseln = async (daten, key, ivText, zusatz
+    /* `Uint8Array<ArrayBuffer>`, nicht bloss `Uint8Array`: seit den neueren
+       DOM-Typen ist das voreingestellte `ArrayBufferLike` auch ein
+       `SharedArrayBuffer`, und ein solcher taugt nicht als `BlobPart`. Der
+       Wert hier kommt aus `new Uint8Array(ArrayBuffer)` und ist immer der
+       engere Fall — sagen muss man es trotzdem. */
+    ) => {
+        const iv = ausB64(ivText);
+        if (iv.byteLength !== 12)
+            throw new Error('Die Nonce im Paket ist ungültig.');
+        const inhalt = await crypto.subtle.decrypt({
+            name: 'AES-GCM', iv: iv,
+            additionalData: zusatz, tagLength: 128
+        }, key, daten);
+        return new Uint8Array(inhalt);
+    };
+    /** Der authentifizierte, kanonische Teil des Manifests. */
+    const manifestKern = (m) => ({
+        art: m.art,
+        fassung: m.fassung,
+        paketId: m.paketId,
+        erstellt: m.erstellt,
+        kdf: m.kdf,
+        chiffre: m.chiffre,
+        schluessel: m.schluessel,
+        eintraege: m.eintraege
+    });
+    const manifestKernText = (m) => JSON.stringify(manifestKern(m));
+    const istObjekt = (wert) => !!wert && typeof wert === 'object' && !Array.isArray(wert);
+    /**
+     * Liest nur die öffentliche Hülle und begrenzt dabei auch PBKDF2. Ein
+     * manipuliertes Paket darf nicht mit Milliarden Runden den Browser
+     * festhalten, bevor überhaupt eine Authentifizierung möglich ist.
+     */
+    const manifestPruefen = (wert) => {
+        if (!istObjekt(wert) || wert.art !== PAKET_ART || wert.fassung !== PAKET_FASSUNG)
+            throw new Error('Das ist kein verschlüsseltes Redion-Paket der Fassung 2.');
+        const kdf = wert.kdf, chiffre = wert.chiffre;
+        if (!istObjekt(kdf) || kdf.name !== 'PBKDF2' || kdf.hash !== 'SHA-256' ||
+            !Number.isInteger(kdf.runden) || kdf.runden < PAKET_RUNDEN_MIN ||
+            kdf.runden > PAKET_RUNDEN_MAX || typeof kdf.salz !== 'string')
+            throw new Error('Die Schlüsselableitung im Paket ist ungültig.');
+        if (!istObjekt(chiffre) || chiffre.name !== 'AES-GCM' || chiffre.bits !== 256 ||
+            chiffre.tagBits !== 128)
+            throw new Error('Die Verschlüsselungsangabe im Paket ist ungültig.');
+        if (typeof wert.paketId !== 'string' || !/^[A-Za-z0-9_-]{16,80}$/.test(wert.paketId) ||
+            typeof wert.erstellt !== 'string' || !istObjekt(wert.schluessel) ||
+            typeof wert.schluessel.iv !== 'string' || typeof wert.schluessel.inhalt !== 'string' ||
+            !istObjekt(wert.pruef) || typeof wert.pruef.iv !== 'string' ||
+            typeof wert.pruef.inhalt !== 'string' || !Array.isArray(wert.eintraege))
+            throw new Error('Das Manifest des Pakets ist unvollständig.');
+        const pfade = new Set();
+        for (const roh of wert.eintraege) {
+            if (!istObjekt(roh) || typeof roh.pfad !== 'string' ||
+                !/^(daten\.enc|dateien\.enc|anhaenge\/[0-9]{6}\/[0-9]{6}\.enc)$/.test(roh.pfad) ||
+                !['daten', 'dateiliste', 'anhang'].includes(String(roh.art)) ||
+                typeof roh.iv !== 'string' || !Number.isSafeInteger(roh.bytes) || roh.bytes < 16 ||
+                pfade.has(roh.pfad))
+                throw new Error('Die Eintragsliste des Pakets ist ungültig.');
+            pfade.add(roh.pfad);
+        }
+        if (wert.eintraege.length > 1000000)
+            throw new Error('Das Paket kündigt unrealistisch viele Einträge an.');
+        if (ausB64(kdf.salz).byteLength !== 16)
+            throw new Error('Das Salz im Paket ist ungültig.');
+        return wert;
+    };
+    const eintragVon = (m, art) => {
+        const liste = m.eintraege.filter(e => e.art === art);
+        if (liste.length !== 1)
+            throw new Error(`Das Paket braucht genau einen Eintrag der Art „${art}“.`);
+        return liste[0];
+    };
+    const eintragEntschluesseln = async (zip, m, e, key) => {
+        const blob = await zip.alsBlob(e.pfad);
+        if (!blob || blob.size !== e.bytes)
+            throw new Error(`Der verschlüsselte Eintrag „${e.pfad}“ fehlt oder ist abgeschnitten.`);
+        try {
+            return await aesEntschluesseln(await blob.arrayBuffer(), key, e.iv, aad(m.paketId, 'eintrag:' + e.pfad));
+        }
+        catch {
+            throw new Error(`Der Eintrag „${e.pfad}“ ist beschädigt oder nicht authentisch.`);
+        }
+    };
+    /** Erstellt den zufälligen Datenschlüssel und seine passwortgeschützte Hülle. */
+    const paketSchluesselNeu = async (passwort, paketId) => {
+        if (!passwort)
+            throw new Error('Für eine verschlüsselte Sicherung ist ein Passwort nötig.');
+        const roh = zufall(32);
+        const datenSchluessel = await crypto.subtle.importKey('raw', roh, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+        const salz = zufall(16);
+        const passwortSchluessel = await schluessel(passwort, salz);
+        const huelle = await aesVerschluesseln(roh, passwortSchluessel, aad(paketId, 'schluessel'));
+        return {
+            roh,
+            datenSchluessel,
+            kdf: { name: 'PBKDF2', hash: 'SHA-256', runden: RUNDEN, salz: b64(salz) },
+            huelle: { iv: huelle.iv, inhalt: b64(huelle.inhalt) }
+        };
+    };
+    /**
+     * Öffnet nur den Datenschlüssel. Vor diesem Schritt wird weder eine
+     * Nutzdatei entschlüsselt noch irgendein Store-Schreibweg erreicht.
+     */
+    const paketSchluesselOeffnen = async (m, passwort) => {
+        try {
+            const salz = ausB64(m.kdf.salz);
+            const passwortSchluessel = await schluessel(passwort, salz, m.kdf.runden);
+            const roh = await aesEntschluesseln(ausB64(m.schluessel.inhalt), passwortSchluessel, m.schluessel.iv, aad(m.paketId, 'schluessel'));
+            if (roh.byteLength !== 32)
+                throw new Error('Schlüssellänge');
+            const datenSchluessel = await crypto.subtle.importKey('raw', roh, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+            const belegt = await aesEntschluesseln(ausB64(m.pruef.inhalt), datenSchluessel, m.pruef.iv, aad(m.paketId, 'manifest'));
+            if (dec.decode(belegt) !== manifestKernText(m))
+                throw new Error('Manifest stimmt nicht');
+            return { roh, datenSchluessel };
+        }
+        catch {
+            /* Falsches Passwort und manipulierte Hülle sind absichtlich nicht zu
+               unterscheiden. Beides muss vor der ersten Datenänderung enden. */
+            throw new Error('Falsches Passwort oder beschädigte Sicherung — nichts wurde verändert.');
+        }
+    };
+    /**
+     * Baut ein vollständiges verschlüsseltes Archiv. Jedes Anhangsstück wird
+     * einzeln gelesen und sofort wieder als verschlüsseltes Blob abgelegt.
+     */
+    const paketBauen = async (passwort) => {
+        if (!passwort)
+            throw new Error('Für eine verschlüsselte Sicherung ist ein Passwort nötig.');
+        await Store.exportVorbereiten();
+        const saetze = await Store.dateiAlle();
+        const paketId = b64(zufall(18)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        const schutz = await paketSchluesselNeu(passwort, paketId);
+        const eintraege = [];
+        const archiv = [];
+        const verschluesseltAblegen = async (pfad, art, roh) => {
+            const geheim = await aesVerschluesseln(roh, schutz.datenSchluessel, aad(paketId, 'eintrag:' + pfad));
+            eintraege.push({ pfad, art, iv: geheim.iv, bytes: geheim.inhalt.byteLength });
+            archiv.push({ name: pfad, inhalt: geheim.inhalt });
+        };
+        /* Die JSON behauptet nur dann, Anhänge seien enthalten, wenn jedes
+           Stück unten wirklich lesbar ist. Ein halber Upload bricht die ganze
+           Sicherung ab; er wird nie als vollständige Datei ausgegeben. */
+        await verschluesseltAblegen('daten.enc', 'daten', enc.encode(Store.exportAll(true)));
+        const dateien = [];
+        for (let dateiNr = 0; dateiNr < saetze.length; dateiNr++) {
+            const satz = saetze[dateiNr];
+            const stuecke = await Store.stueckeVon(satz.id);
+            const soll = Number(satz.teile);
+            if (satz.zustand !== 'fertig' || !Number.isInteger(soll) || soll < 1 ||
+                stuecke.length !== soll)
+                throw new Error(`Anhang „${satz.name || satz.id}“ ist unvollständig — ` +
+                    'die verschlüsselte Sicherung wurde nicht geschrieben.');
+            const teile = [];
+            let groesse = 0;
+            for (let nr = 0; nr < stuecke.length; nr++) {
+                const stueck = stuecke[nr];
+                if (stueck.nr !== nr)
+                    throw new Error(`Anhang „${satz.name || satz.id}“ hat eine Lücke bei Stück ${nr}.`);
+                const blob = stueck.blob instanceof Blob ? stueck.blob
+                    : stueck.teil instanceof Blob ? stueck.teil : null;
+                if (!blob)
+                    throw new Error(`Stück ${nr} von „${satz.name || satz.id}“ ist nicht lesbar.`);
+                groesse += blob.size;
+                const pfad = 'anhaenge/' + String(dateiNr).padStart(6, '0') + '/' +
+                    String(nr).padStart(6, '0') + '.enc';
+                await verschluesseltAblegen(pfad, 'anhang', await blob.arrayBuffer());
+                teile.push({ nr, pfad });
+            }
+            if (Number(satz.groesse) !== groesse)
+                throw new Error(`Anhang „${satz.name || satz.id}“ hat ${groesse} statt ` +
+                    `${Number(satz.groesse)} Byte — nichts wurde geschrieben.`);
+            dateien.push({ id: String(satz.id), teile });
+        }
+        const dateiliste = { version: 2, saetze, dateien };
+        await verschluesseltAblegen('dateien.enc', 'dateiliste', enc.encode(JSON.stringify(dateiliste)));
+        const manifest = {
+            art: PAKET_ART,
+            fassung: PAKET_FASSUNG,
+            paketId,
+            erstellt: new Date().toISOString(),
+            kdf: schutz.kdf,
+            chiffre: { name: 'AES-GCM', bits: 256, tagBits: 128 },
+            schluessel: schutz.huelle,
+            eintraege,
+            pruef: { iv: '', inhalt: '' }
+        };
+        const pruef = await aesVerschluesseln(enc.encode(manifestKernText(manifest)), schutz.datenSchluessel, aad(paketId, 'manifest'));
+        manifest.pruef = { iv: pruef.iv, inhalt: b64(pruef.inhalt) };
+        const blob = await Austausch.zipSchreiben([
+            { name: PAKET_MANIFEST, inhalt: JSON.stringify(manifest, null, 2) }, ...archiv
+        ]);
+        const name = 'redion-sicherung-' + new Date().toISOString().slice(0, 10) +
+            '.verschluesselt.redion';
+        return { blob, name, manifest, anhaenge: saetze.length };
+    };
+    const paketSchreiben = async (passwort) => {
+        const paket = await paketBauen(passwort);
+        Austausch.laden(paket.blob, paket.name);
+        Store.setMeta('sicherung:zuletzt', new Date().toISOString());
+        Store.setMeta('sicherung:art', 'redion-verschluesselt');
+        return paket.name;
+    };
+    /**
+     * Entschlüsselt und authentifiziert ALLES als Probelauf. Besonders wichtig:
+     * `Store.importAll`, `dateiPut` und `stueckPut` stehen nicht in dieser
+     * Funktion. Ein falsches Passwort oder beschädigtes letztes Stück kann
+     * deshalb keinen halben Import hinterlassen.
+     */
+    const paketOeffnen = async (blob, passwort) => {
+        const zip = await Einlesen.zipLesenAusBlob(blob);
+        const manifestText = await zip.text(PAKET_MANIFEST);
+        if (!manifestText)
+            throw new Error('Das Archiv hat kein verschlüsseltes Redion-Manifest.');
+        let manifestRoh;
+        try {
+            manifestRoh = JSON.parse(manifestText);
+        }
+        catch {
+            throw new Error('Das verschlüsselte Manifest ist nicht lesbar.');
+        }
+        const manifest = manifestPruefen(manifestRoh);
+        const erwartet = new Set([PAKET_MANIFEST, ...manifest.eintraege.map(e => e.pfad)]);
+        if (zip.namen.length !== erwartet.size || zip.namen.some((n) => !erwartet.has(n)))
+            throw new Error('Das Archiv enthält nicht deklarierte oder doppelte Einträge.');
+        const geoeffnet = await paketSchluesselOeffnen(manifest, passwort);
+        const datenBytes = await eintragEntschluesseln(zip, manifest, eintragVon(manifest, 'daten'), geoeffnet.datenSchluessel);
+        const dateiBytes = await eintragEntschluesseln(zip, manifest, eintragVon(manifest, 'dateiliste'), geoeffnet.datenSchluessel);
+        const datenText = dec.decode(datenBytes);
+        let daten, dateiliste;
+        try {
+            daten = JSON.parse(datenText);
+            dateiliste = JSON.parse(dec.decode(dateiBytes));
+        }
+        catch {
+            throw new Error('Der entschlüsselte Paketinhalt ist kein gültiges JSON.');
+        }
+        if (!istObjekt(daten) || !istObjekt(daten.blocks) ||
+            !Array.isArray(daten.enthaelt) || !daten.enthaelt.includes('dateien') ||
+            !daten.enthaelt.includes('stuecke') ||
+            !istObjekt(dateiliste) || dateiliste.version !== 2 ||
+            !Array.isArray(dateiliste.saetze) || !Array.isArray(dateiliste.dateien))
+            throw new Error('Der entschlüsselte Bestand ist keine vollständige Redion-Sicherung.');
+        const saetze = new Map();
+        for (const satz of dateiliste.saetze) {
+            if (!istObjekt(satz) || typeof satz.id !== 'string' || saetze.has(satz.id))
+                throw new Error('Die verschlüsselte Dateiliste enthält eine ungültige Kennung.');
+            saetze.set(satz.id, satz);
+        }
+        if (dateiliste.dateien.length !== saetze.size)
+            throw new Error('Dateisätze und verschlüsselte Anhänge sind nicht vollständig zugeordnet.');
+        const eintragNachPfad = new Map(manifest.eintraege.map(e => [e.pfad, e]));
+        const benutzt = new Set();
+        const dateiIds = new Set();
+        for (const datei of dateiliste.dateien) {
+            if (!istObjekt(datei) || typeof datei.id !== 'string' || dateiIds.has(datei.id) ||
+                !Array.isArray(datei.teile) || !saetze.has(datei.id))
+                throw new Error('Die verschlüsselte Stückliste ist ungültig.');
+            dateiIds.add(datei.id);
+            const satz = saetze.get(datei.id);
+            if (datei.teile.length !== Number(satz.teile))
+                throw new Error(`Der Anhang „${satz.name || datei.id}“ ist im Paket unvollständig.`);
+            let groesse = 0;
+            for (let nr = 0; nr < datei.teile.length; nr++) {
+                const teil = datei.teile[nr];
+                if (!istObjekt(teil) || teil.nr !== nr || typeof teil.pfad !== 'string' ||
+                    benutzt.has(teil.pfad))
+                    throw new Error(`Die Stückfolge von „${satz.name || datei.id}“ ist ungültig.`);
+                const e = eintragNachPfad.get(teil.pfad);
+                if (!e || e.art !== 'anhang')
+                    throw new Error(`Anhangsstück „${teil.pfad}“ fehlt.`);
+                benutzt.add(teil.pfad);
+                const roh = await eintragEntschluesseln(zip, manifest, e, geoeffnet.datenSchluessel);
+                groesse += roh.byteLength;
+            }
+            if (groesse !== Number(satz.groesse))
+                throw new Error(`Der Anhang „${satz.name || datei.id}“ hat nach dem Prüfen ` +
+                    `${groesse} statt ${Number(satz.groesse)} Byte.`);
+        }
+        const anhangEintraege = manifest.eintraege.filter(e => e.art === 'anhang');
+        if (benutzt.size !== anhangEintraege.length)
+            throw new Error('Das Paket enthält nicht zugeordnete verschlüsselte Anhangsstücke.');
+        return {
+            blob, zip, manifest, daten, datenText, dateiliste,
+            datenSchluessel: geoeffnet.datenSchluessel,
+            roherDatenSchluessel: geoeffnet.roh
+        };
+    };
+    /** Schreibt ein bereits vollständig geprüftes Paket in den Bestand. */
+    const geoeffnetesPaketEinspielen = async (paket, art) => {
+        if (art !== 'ersetzen' && art !== 'zusammenfuehren')
+            throw new Error('Beim Einspielen muss „ersetzen“ oder „zusammenfuehren“ gewählt sein.');
+        const erg = await Store.importAll(paket.datenText, art);
+        const saetze = new Map(paket.dateiliste.saetze.map(s => [String(s.id), s]));
+        const eintragNachPfad = new Map(paket.manifest.eintraege.map(e => [e.pfad, e]));
+        let anhaenge = 0;
+        for (const datei of paket.dateiliste.dateien) {
+            const satz = saetze.get(datei.id);
+            for (const alt of await Store.stueckeVon(datei.id))
+                await Store.stueckWeg(alt.id);
+            for (const teil of datei.teile) {
+                const e = eintragNachPfad.get(teil.pfad);
+                const roh = await eintragEntschluesseln(paket.zip, paket.manifest, e, paket.datenSchluessel);
+                await Store.stueckPut({
+                    id: datei.id + ':' + teil.nr, dateiId: datei.id, nr: teil.nr,
+                    blob: new Blob([roh], { type: satz.typ || 'application/octet-stream' })
+                });
+            }
+            await Store.dateiPut(Object.assign({}, satz, {
+                teile: datei.teile.length, angekommen: datei.teile.length,
+                zustand: 'fertig', groesse: Number(satz.groesse)
+            }));
+            anhaenge++;
+        }
+        if (art === 'ersetzen') {
+            const behalten = new Set(paket.dateiliste.saetze.map(s => String(s.id)));
+            for (const alt of await Store.dateiAlle()) {
+                if (behalten.has(String(alt.id)))
+                    continue;
+                for (const st of await Store.stueckeVon(alt.id))
+                    await Store.stueckWeg(st.id);
+                await Store.dateiWeg(alt.id);
+            }
+        }
+        return Object.assign({}, erg, { anhaenge });
+    };
+    const paketEinspielen = async (blob, passwort, art) => geoeffnetesPaketEinspielen(await paketOeffnen(blob, passwort), art);
+    /**
+     * Passwortwechsel per Schlüsselhülle. Die verschlüsselten Nutzdaten werden
+     * bytegleich übernommen; nur Salz, Passwortschlüssel, Schlüsselhülle und
+     * authentifiziertes Manifest sind neu. Alte Pakete bleiben mit dem alten
+     * Passwort lesbar — eine Datei, die jemand schon besitzt, lässt sich nicht
+     * nachträglich widerrufen.
+     */
+    const paketPasswortWechseln = async (blob, altesPasswort, neuesPasswort) => {
+        if (!neuesPasswort)
+            throw new Error('Das neue Passwort darf nicht leer sein.');
+        const offen = await paketOeffnen(blob, altesPasswort);
+        const salz = zufall(16);
+        const passwortSchluessel = await schluessel(neuesPasswort, salz, RUNDEN);
+        const huelle = await aesVerschluesseln(offen.roherDatenSchluessel, passwortSchluessel, aad(offen.manifest.paketId, 'schluessel'));
+        const manifest = Object.assign({}, offen.manifest, {
+            erstellt: new Date().toISOString(),
+            kdf: { name: 'PBKDF2', hash: 'SHA-256', runden: RUNDEN, salz: b64(salz) },
+            schluessel: { iv: huelle.iv, inhalt: b64(huelle.inhalt) },
+            pruef: { iv: '', inhalt: '' }
+        });
+        const pruef = await aesVerschluesseln(enc.encode(manifestKernText(manifest)), offen.datenSchluessel, aad(manifest.paketId, 'manifest'));
+        manifest.pruef = { iv: pruef.iv, inhalt: b64(pruef.inhalt) };
+        const archiv = [
+            { name: PAKET_MANIFEST, inhalt: JSON.stringify(manifest, null, 2) }
+        ];
+        for (const e of manifest.eintraege) {
+            const inhalt = await offen.zip.alsBlob(e.pfad);
+            if (!inhalt)
+                throw new Error(`Der Eintrag „${e.pfad}“ fehlt beim Schlüsselwechsel.`);
+            archiv.push({ name: e.pfad, inhalt });
+        }
+        const neu = await Austausch.zipSchreiben(archiv);
+        return {
+            blob: neu,
+            name: 'redion-sicherung-' + new Date().toISOString().slice(0, 10) +
+                '.schluessel-neu.verschluesselt.redion',
+            manifest
+        };
+    };
+    const sperreWechseln = async (alt, neu) => {
+        if (!sperreAn())
+            throw new Error('Die Sperre ist nicht eingeschaltet.');
+        if (!(await passwortStimmt(alt)))
+            throw new Error('Das bisherige Passwort stimmt nicht.');
+        if (!neu)
+            throw new Error('Das neue Passwort darf nicht leer sein.');
+        await sperreEinrichten(neu);
+    };
+    /* ========================================================================
      * DER DIALOG
      * ======================================================================*/
     const dialog = () => {
@@ -392,6 +794,11 @@ const Krypto = (() => {
     return { verschluesseln, entschluesseln, sperreAn, sperreEinrichten, sperreAus,
         passwortStimmt, sperrschirm, startPruefen, dialog,
         sicherungSchreiben, sicherungLesen, sicherungZahlen, bestandSammeln,
-        sicherungEinspielen };
+        sicherungEinspielen,
+        /* Fassung 2 — das vollständige verschlüsselte Paket MIT Anhängen.
+           Stand bis hierher nur als Code da und war von aussen nicht
+           erreichbar; ohne diese Zeile kann niemand es aufrufen (E122). */
+        paketBauen, paketSchreiben, paketOeffnen, paketEinspielen,
+        paketPasswortWechseln, sperreWechseln };
 })();
 window.Krypto = Krypto;

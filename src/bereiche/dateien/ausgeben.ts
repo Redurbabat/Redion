@@ -453,6 +453,85 @@ const Austausch = (() => {
     return s;
   };
 
+  /* XLSX speichert Funktionsnamen invariant auf Englisch, auch wenn Excel
+     selbst sie auf Deutsch anzeigt. Redions Maschine versteht beide
+     Richtungen; für den fremden Leser werden die gebräuchlichen deutschen
+     Namen beim Schreiben normalisiert. Unbekannte Namen bleiben erhalten,
+     zusammen mit dem berechneten Wert. */
+  const EXCEL_FUNKTION: Record<string, string> = {
+    summe: 'SUM', mittelwert: 'AVERAGE', wurzel: 'SQRT', rest: 'MOD',
+    runden: 'ROUND', abrunden: 'ROUNDDOWN', aufrunden: 'ROUNDUP',
+    produkt: 'PRODUCT', anzahl: 'COUNT', anzahl2: 'COUNTA', potenz: 'POWER',
+    ganzzahl: 'INT', wenn: 'IF', wenns: 'IFS', wennfehler: 'IFERROR',
+    istfehler: 'ISERROR', und: 'AND', oder: 'OR', nicht: 'NOT',
+    'zählenwenn': 'COUNTIF', 'zählenwenns': 'COUNTIFS',
+    summewenn: 'SUMIF', summewenns: 'SUMIFS',
+    mittelwertwenn: 'AVERAGEIF', mittelwertwenns: 'AVERAGEIFS',
+    sverweis: 'VLOOKUP', wverweis: 'HLOOKUP', xverweis: 'XLOOKUP'
+  };
+
+  /** Ein Zeichen nur ausserhalb von Zeichenketten austauschen. */
+  const ausserhalb = (text: string, von: string, zu: string): string => {
+    let raus = '', zitat = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i] ?? '';
+      if (c === '"') {
+        raus += c;
+        if (text[i + 1] === '"') { raus += '"'; i++; }
+        else zitat = !zitat;
+      } else raus += (!zitat && c === von) ? zu : c;
+    }
+    return raus;
+  };
+
+  /** Nur die freien Teile einer Formel ändern; Text in "..." bleibt exakt. */
+  const formelAussen = (text: string, aendere: (teil: string) => string): string => {
+    let raus = '', frei = '', i = 0;
+    const freiLeeren = () => { raus += aendere(frei); frei = ''; };
+    while (i < text.length) {
+      const c = text[i] ?? '';
+      if (c !== '"') { frei += c; i++; continue; }
+      freiLeeren();
+      raus += c; i++;
+      while (i < text.length) {
+        const innen = text[i] ?? '';
+        raus += innen; i++;
+        if (innen !== '"') continue;
+        if (text[i] === '"') { raus += '"'; i++; continue; }
+        break;
+      }
+    }
+    freiLeeren();
+    return raus;
+  };
+
+  const formelFuerExcel = (roh: unknown): string => {
+    let f = String(roh ?? '').trim().replace(/^=/, '');
+    f = formelAussen(f, teil => teil.replace(
+      /([A-Za-zÄÖÜäöüß][A-Za-z0-9_ÄÖÜäöüß.]*)\s*(?=\()/g,
+      n => EXCEL_FUNKTION[n.toLowerCase()] || n));
+    return ausserhalb(f, ';', ',');
+  };
+
+  /* ODF setzt Zellbezüge in eckige Klammern. Diese kleine Abbildung deckt
+     genau das Modell ab, das Redion selbst rechnet: A1 und A1:B9. Fremde
+     ODS-Sonderformen werden beim Einlesen im Verlustbericht genannt. */
+  const formelFuerOds = (roh: unknown): string => {
+    const marken: string[] = [];
+    let f = ausserhalb(formelFuerExcel(roh), ',', ';');
+    f = formelAussen(f, teil => {
+      let frei = teil.replace(/(\$?[A-Z]{1,3}\$?\d+):(\$?[A-Z]{1,3}\$?\d+)/g,
+        (_, a, b) => {
+          marken.push(`[.${a}:.${b}]`); return `@@r${marken.length - 1}@@`;
+        });
+      frei = frei.replace(/\$?[A-Z]{1,3}\$?\d+/g, a => {
+        marken.push(`[.${a}]`); return `@@r${marken.length - 1}@@`;
+      });
+      return frei;
+    });
+    return f.replace(/@@r(\d+)@@/g, (_, i) => marken[+i] || '');
+  };
+
   /** Eine Tabelle als Blatt-XML. Zahlen bleiben Zahlen.
    *
    * `stilIx` ist je Zelle der Verweis in die cellXfs der styles.xml —
@@ -460,7 +539,7 @@ const Austausch = (() => {
    * Datenbank-Ausgänge: Zeile 1 ist die Kopfzeile, immer Text und fett.
    * MIT `stilIx` (der Tabellenblock, E94) ist Zeile 1 gewöhnliche
    * Nutzerdaten — dort entscheidet allein der Zellstil. */
-  const blattXml = (zeilen: any, stilIx?: number[][]) =>
+  const blattXml = (zeilen: any, stilIx?: number[][], formeln?: (string | null)[][]) =>
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
     '<sheetData>' +
@@ -469,9 +548,18 @@ const Austausch = (() => {
         const bezug = spaltenName(s) + (r + 1);
         const ix = (stilIx && stilIx[r] && stilIx[r][s]) || 0;
         const kopf = !stilIx && r === 0;
+        const formel = formeln && formeln[r] && formeln[r][s];
         const zahl = typeof c === 'number'
           ? isFinite(c)
           : c !== '' && c !== null && c !== undefined && !isNaN(Number(String(c).replace(',', '.')));
+        if (formel) {
+          const f = esc(formelFuerExcel(formel));
+          if (typeof c === 'number' && isFinite(c))
+            return `<c r="${bezug}"${ix ? ` s="${ix}"` : ''}><f>${f}</f><v>${c}</v></c>`;
+          if (typeof c === 'boolean')
+            return `<c r="${bezug}" t="b"${ix ? ` s="${ix}"` : ''}><f>${f}</f><v>${c ? 1 : 0}</v></c>`;
+          return `<c r="${bezug}" t="str"${ix ? ` s="${ix}"` : ''}><f>${f}</f><v>${esc(c)}</v></c>`;
+        }
         if (!kopf && zahl) {
           const n = typeof c === 'number' ? c : Number(String(c).replace(',', '.'));
           return `<c r="${bezug}"${ix ? ` s="${ix}"` : ''}><v>${n}</v></c>`;
@@ -576,24 +664,26 @@ const Austausch = (() => {
     return { xml, je };
   };
 
-  const odsZelle = (w: any, anzeige?: string, stilName?: string): string => {
+  const odsZelle = (w: any, anzeige?: string, stilName?: string, formel?: string | null): string => {
     const stilA = stilName ? ` table:style-name="${stilName}"` : '';
+    const formelA = formel ? ` table:formula="of:=${esc(formelFuerOds(formel))}"` : '';
     const leer = w === null || w === undefined || w === '';
-    if (leer) return `<table:table-cell${stilA}/>`;
+    if (leer && !formel) return `<table:table-cell${stilA}/>`;
     const zahl = typeof w === 'number' ? (isFinite(w) ? w : null)
                : (typeof w === 'string' && w.trim() !== '' && Number.isFinite(Number(w))
                   ? Number(w) : null);
     if (zahl !== null)
-      return `<table:table-cell${stilA} office:value-type="float" office:value="${zahl}">` +
+      return `<table:table-cell${stilA}${formelA} office:value-type="float" office:value="${zahl}">` +
              `<text:p>${esc(String(anzeige ?? w))}</text:p></table:table-cell>`;
-    return `<table:table-cell${stilA} office:value-type="string">` +
-           String(w).split('\n').map(z => `<text:p>${esc(z)}</text:p>`).join('') +
+    return `<table:table-cell${stilA}${formelA} office:value-type="string">` +
+           String(w ?? '').split('\n').map(z => `<text:p>${esc(z)}</text:p>`).join('') +
            '</table:table-cell>';
   };
 
   const odsBlatt = (b: any, stilJe?: (string | null)[][]): string => {
     const zeilen: any[][] = b.zeilen || [];
     const anzeigen: any[][] = b.anzeigen || [];
+    const formeln: (string | null)[][] = b.formeln || [];
     const breite = zeilen.reduce((m, z) => Math.max(m, (z || []).length), 0);
     return `<table:table table:name="${esc(String(b.name || 'Blatt'))}">` +
       `<table:table-column table:number-columns-repeated="${Math.max(1, breite)}"/>` +
@@ -601,7 +691,8 @@ const Austausch = (() => {
         Array.from({ length: breite }, (_, i) =>
           odsZelle((z || [])[i],
                    anzeigen[r] ? anzeigen[r][i] : undefined,
-                   (stilJe && stilJe[r] && stilJe[r][i]) || undefined)).join('') +
+                   (stilJe && stilJe[r] && stilJe[r][i]) || undefined,
+                   (formeln[r] && formeln[r][i]) || undefined)).join('') +
         '</table:table-row>').join('') +
       '</table:table>';
   };
@@ -803,7 +894,7 @@ const Austausch = (() => {
       { name: 'xl/styles.xml', inhalt: stile.xml }
     ].concat(blaetter.map((b: any, i: any) =>
       ({ name: `xl/worksheets/sheet${i + 1}.xml`,
-         inhalt: blattXml(b.zeilen, stile.je[i] || undefined) })));
+         inhalt: blattXml(b.zeilen, stile.je[i] || undefined, b.formeln || undefined) })));
 
     const blob = await zipSchreiben(dateien);
     laden(blob, (dateiname || 'Redion') + '.xlsx');

@@ -96,7 +96,26 @@ const KI = (() => {
      * zweiter Versuch, das muss der Mensch richten.
      * ======================================================================*/
     const WIEDERHOLBAR = [408, 409, 425, 429, 500, 502, 503, 504];
-    const schlafen = (ms) => new Promise(r => setTimeout(r, ms));
+    /**
+     * Eine Wartezeit, die ein laufender Agent wirklich abbrechen kann. Ein
+     * `AbortSignal` nur am nächsten `fetch` reicht nicht: während eines
+     * Retry-Backoffs hinge der Lauf sonst trotz gedrücktem Abbruch weiter.
+     */
+    const schlafen = (ms, signal) => new Promise((ok, nein) => {
+        if (signal?.aborted) {
+            nein(new DOMException('Der Lauf wurde abgebrochen.', 'AbortError'));
+            return;
+        }
+        const timer = setTimeout(() => {
+            signal?.removeEventListener('abort', abbrechen);
+            ok();
+        }, ms);
+        const abbrechen = () => {
+            clearTimeout(timer);
+            nein(new DOMException('Der Lauf wurde abgebrochen.', 'AbortError'));
+        };
+        signal?.addEventListener('abort', abbrechen, { once: true });
+    });
     /** Was steckt hinter einem Fehlercode? Klartext statt nackter Zahl. */
     const FEHLERTEXT = {
         400: 'Die Anfrage war fehlerhaft (invalid_request).',
@@ -131,7 +150,7 @@ const KI = (() => {
                     throw e;
                 if (i === versuche - 1)
                     break;
-                await schlafen(basis * Math.pow(2, i));
+                await schlafen(basis * Math.pow(2, i), init.signal ?? undefined);
                 continue;
             }
             if (r.ok || !WIEDERHOLBAR.includes(r.status))
@@ -146,7 +165,7 @@ const KI = (() => {
                 : basis * Math.pow(2, i);
             if (opt.beiWartezeit)
                 opt.beiWartezeit(Math.round(warte / 100) / 10, i + 1, r.status);
-            await schlafen(warte);
+            await schlafen(warte, init.signal ?? undefined);
         }
         throw letzter || new Error('Die Anfrage hat nicht geklappt.');
     };
@@ -154,7 +173,7 @@ const KI = (() => {
      * Fragt einen Wolken-Anbieter. Streamt Stück für Stück, damit die Antwort
      * genauso erscheint wie bei den lokalen Modellen.
      */
-    const wolkeFragen = async function* (nachrichten, modell) {
+    const wolkeFragen = async function* (nachrichten, modell, signal) {
         const a = anbieter(zustand.anbieter);
         const key = schluessel(a.id);
         const url = a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url;
@@ -179,7 +198,7 @@ const KI = (() => {
             ? { model: modell, max_tokens: 2000, stream: true,
                 system: sys ? sys.content : undefined, messages: rest }
             : { model: modell, messages: nachrichten, stream: true };
-        const r = await holen(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper) }, { beiWartezeit: (sek, nr, code) => UI.toast(`${a.name}: ${code} — neuer Versuch ${nr + 1} in ${sek} s`) });
+        const r = await holen(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper), signal: signal ?? null }, { beiWartezeit: (sek, nr, code) => UI.toast(`${a.name}: ${code} — neuer Versuch ${nr + 1} in ${sek} s`) });
         if (!r.ok) {
             const txt = await r.text().catch(() => '');
             throw new Error(a.name + ' antwortet mit ' + r.status + '. ' +
@@ -411,11 +430,12 @@ const KI = (() => {
             return false;
         }
     };
-    const ollamaFragen = async function* (nachrichten, modell) {
+    const ollamaFragen = async function* (nachrichten, modell, signal) {
         const r = await fetch(OLLAMA + '/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: modell, messages: nachrichten, stream: true })
+            body: JSON.stringify({ model: modell, messages: nachrichten, stream: true }),
+            signal: signal ?? null
         });
         if (!r.ok)
             throw new Error('Ollama antwortet mit ' + r.status);
@@ -468,14 +488,35 @@ const KI = (() => {
         });
         return zustand.engine;
     };
-    const webllmFragen = async function* (nachrichten) {
-        const strom = await zustand.engine.chat.completions.create({
-            messages: nachrichten, stream: true, temperature: 0.7
-        });
-        for await (const teil of strom) {
-            const t = teil.choices?.[0]?.delta?.content;
-            if (t)
-                yield t;
+    const webllmFragen = async function* (nachrichten, signal) {
+        if (signal?.aborted)
+            throw new DOMException('Der Lauf wurde abgebrochen.', 'AbortError');
+        /* WebLLM benutzt keinen `fetch`, den wir mit einem Signal versehen
+           könnten. Seine eigene Unterbrechung wird deshalb an dasselbe Signal
+           gehängt. Ältere Fassungen ohne `interruptGenerate` bleiben kompatibel;
+           dort verhindert die Prüfung in der Schleife wenigstens jedes weitere
+           Textstück und damit jeden folgenden Agentenschritt. */
+        const abbrechen = () => {
+            try {
+                zustand.engine?.interruptGenerate?.();
+            }
+            catch { /* schon beendet */ }
+        };
+        signal?.addEventListener('abort', abbrechen, { once: true });
+        try {
+            const strom = await zustand.engine.chat.completions.create({
+                messages: nachrichten, stream: true, temperature: 0.7
+            });
+            for await (const teil of strom) {
+                if (signal?.aborted)
+                    throw new DOMException('Der Lauf wurde abgebrochen.', 'AbortError');
+                const t = teil.choices?.[0]?.delta?.content;
+                if (t)
+                    yield t;
+            }
+        }
+        finally {
+            signal?.removeEventListener('abort', abbrechen);
         }
     };
     /* ========================================================================
@@ -499,7 +540,7 @@ const KI = (() => {
             ? [{ role: 'system', content: systeme.join('\n\n') }, ...rest]
             : rest;
     };
-    const frage = async (nachrichten, beiText) => {
+    const frage = async (nachrichten, beiText, optionen) => {
         if (!zustand.modell)
             throw new Error('Es ist noch kein Modell gewählt.');
         const n = ordne(nachrichten);
@@ -509,28 +550,28 @@ const KI = (() => {
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('ki', 'KI gefragt (' + (zustand.quelle || 'lokal') + ')', { wie: zustand.modell || '' });
         if (zustand.quelle === 'ollama') {
-            for await (const t of ollamaFragen(n, zustand.modell))
+            for await (const t of ollamaFragen(n, zustand.modell, optionen?.signal))
                 beiText(t);
             return;
         }
         if (zustand.quelle === 'wolke') {
-            for await (const t of wolkeFragen(n, zustand.modell))
+            for await (const t of wolkeFragen(n, zustand.modell, optionen?.signal))
                 beiText(t);
             return;
         }
         if (!zustand.engine)
             throw new Error('Das Modell ist noch nicht geladen.');
-        for await (const t of webllmFragen(n))
+        for await (const t of webllmFragen(n, optionen?.signal))
             beiText(t);
     };
     /** Ein Rundruf ohne Streaming — für kurze Aufgaben. */
-    const frageKurz = async (prompt, system) => {
+    const frageKurz = async (prompt, system, optionen) => {
         let out = '';
         const n = [];
         if (system)
             n.push({ role: 'system', content: system });
         n.push({ role: 'user', content: prompt });
-        await frage(n, (t) => out += t);
+        await frage(n, (t) => out += t, optionen);
         return out.trim();
     };
     /* ========================================================================

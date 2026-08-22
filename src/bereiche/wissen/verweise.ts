@@ -29,6 +29,49 @@ const Links = (() => {
   const esc = (s: string) => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+  type KnowledgeNodeKind = 'page' | 'row' | 'decision' | 'source' | 'tag';
+  type KnowledgeEdgeKind = 'link' | 'relation' | 'tag' | 'tree';
+
+  interface KnowledgeGraphNode {
+    id: string;
+    rawId: string | null;
+    name: string;
+    icon: string;
+    kind: KnowledgeNodeKind;
+    edited: string;
+    degree: number;
+  }
+
+  interface KnowledgeGraphEdge {
+    source: string;
+    target: string;
+    kind: KnowledgeEdgeKind;
+  }
+
+  interface KnowledgeGraphIndex {
+    nodes: Map<string, KnowledgeGraphNode>;
+    edges: KnowledgeGraphEdge[];
+    adjacency: Map<string, KnowledgeGraphEdge[]>;
+    pageCount: number;
+    rowCount: number;
+  }
+
+  interface KnowledgeGraphFilters {
+    links: boolean;
+    backlinks: boolean;
+    relations: boolean;
+    tags: boolean;
+    tree: boolean;
+    nodeKind: KnowledgeNodeKind | 'all';
+  }
+
+  interface KnowledgeGraphSlice {
+    centerId: string;
+    nodes: KnowledgeGraphNode[];
+    edges: KnowledgeGraphEdge[];
+    truncated: boolean;
+  }
+
   /* ========================================================================
    * INLINE-DARSTELLUNG
    * ------------------------------------------------------------------------
@@ -275,182 +318,665 @@ const Links = (() => {
   /* ========================================================================
    * DER GRAPH
    * ------------------------------------------------------------------------
-   * Kein fertiges Diagrammpaket, sondern eine kleine Kräftesimulation:
-   * verbundene Punkte ziehen sich an, alle Punkte stossen sich ab.
+   * Der Graph ist eine ABLEITUNG aus den bestehenden Blöcken, Relationen und
+   * Schlagwörtern. Er wird weder gespeichert noch zur zweiten Link-Wahrheit.
+   * Für grosse Bestände wird nur die Nachbarschaft der aktuellen Seite
+   * gezeichnet; der vollständige lineare Index dient allein zum Nachschlagen.
    * ======================================================================*/
-  const graph = (): HTMLElement | undefined => {
-    const alle = seiten();
-    if (!alle.length) { UI.toast('Noch keine Seiten für den Graphen'); return undefined; }
+  const normalizeGraphText = (value: unknown): string => String(value ?? '')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
 
-    /* Knoten und Kanten aufbauen */
-    const idx = new Map(alle.map((p, i) => [p.id, i]));
-    const knoten = alle.map((p, i) => ({
-      id: p.id, name: p.text || 'Ohne Titel', icon: p.icon || '📄',
-      x: Math.cos(i / alle.length * 6.283) * 200 + (i % 7) * 9,
-      y: Math.sin(i / alle.length * 6.283) * 200 + (i % 5) * 9,
-      vx: 0, vy: 0, grad: 0
-    }));
-    const kanten: any[] = [];
-    const merke = (a: any, b: any, art: string) => {
-      if (a === b) return;
-      const ia = idx.get(a), ib = idx.get(b);
-      if (ia === undefined || ib === undefined) return;
-      const ka = knoten[ia], kb = knoten[ib];
-      if (!ka || !kb) return;
-      kanten.push({ a: ia, b: ib, art });
-      ka.grad++; kb.grad++;
+  const knowledgeKindForCollection = (collection: any): KnowledgeNodeKind => {
+    const name = normalizeGraphText(collection?.name);
+    const fields = Object.values<any>(collection?.schema || {})
+      .map(field => normalizeGraphText(field?.name));
+    const decisionSignals = ['entscheidung', 'begrundung', 'datum', 'status',
+      'quellen', 'betroffene seiten', 'alternativen'];
+    const sourceSignals = ['url', 'autor', 'datum', 'notiz', 'abrufdatum'];
+    const decisionScore = decisionSignals.filter(signal => fields.includes(signal)).length;
+    const sourceScore = sourceSignals.filter(signal => fields.includes(signal)).length;
+    if (name.includes('entscheidung') || decisionScore >= 3) return 'decision';
+    if (name.includes('quelle') || sourceScore >= 3) return 'source';
+    return 'row';
+  };
+
+  /**
+   * Baut einen flüchtigen Index in O(Blöcke + Relationen). `[[Links]]`
+   * bleiben Text im bestehenden Blockspeicher; der Index ist nur eine
+   * Lesesicht und darf jederzeit verworfen werden.
+   */
+  const buildGraphIndex = (): KnowledgeGraphIndex => {
+    const blocks = Object.values<any>(Store.cache.blocks).filter(block => block?.alive);
+    const collections = new Map<string, any>(Object.values<any>(Store.cache.collections)
+      .map(collection => [collection.id, collection]));
+    const nodes = new Map<string, KnowledgeGraphNode>();
+    const edges: KnowledgeGraphEdge[] = [];
+    const edgeKeys = new Set<string>();
+    const titleIndex = new Map<string, any>();
+
+    const pageBlocks = blocks.filter(block => block.type === 'page');
+    pageBlocks.forEach(block => {
+      const isRow = block.parentTable === 'collection';
+      const collection = isRow ? collections.get(block.parentId) : null;
+      const kind = isRow ? knowledgeKindForCollection(collection) : 'page';
+      nodes.set(block.id, {
+        id: block.id, rawId: block.id, name: block.text || 'Ohne Titel',
+        icon: block.icon || (kind === 'decision' ? '⚖' : kind === 'source' ? '🔖' : '📄'),
+        kind, edited: block.edited || '', degree: 0
+      });
+      if (!isRow) {
+        const normalizedTitle = normalizeGraphText(block.text);
+        if (normalizedTitle && !titleIndex.has(normalizedTitle)) titleIndex.set(normalizedTitle, block);
+      }
+    });
+
+    const addEdge = (source: string, target: string, kind: KnowledgeEdgeKind): void => {
+      if (source === target || !nodes.has(source) || !nodes.has(target)) return;
+      const undirected = kind !== 'link';
+      const first = undirected && source > target ? target : source;
+      const second = undirected && source > target ? source : target;
+      const key = `${kind}:${first}:${second}`;
+      if (edgeKeys.has(key)) return;
+      edgeKeys.add(key);
+      edges.push({ source: first, target: second, kind });
     };
 
-    alle.forEach(p => { if (p.parentId && idx.has(p.parentId)) merke(p.parentId, p.id, 'baum'); });
-    Object.values<any>(Store.cache.blocks).forEach(b => {
-      if (!b.alive || !b.text) return;
-      const quelle = seiteVon(b.id);
-      if (!quelle) return;
-      (b.text.match(/\[\[([^\[\]\n]{1,120})\]\]/g) || []).forEach((m: any) => {
-        const ziel = seiteMitTitel(m.slice(2, -2));
-        if (ziel) merke(quelle.id, ziel.id, 'link');
+    /* Die Seitenhierarchie ist eine vorhandene Beziehung, keine neue. */
+    pageBlocks.forEach(page => {
+      if (page.parentTable !== 'collection' && page.parentId && nodes.has(page.parentId))
+        addEdge(page.parentId, page.id, 'tree');
+    });
+
+    /* Eigentümer eines Inhaltsblocks. Datenbankzeilen sind selbst Seiten
+       und bleiben deshalb Endpunkt von Relationen und Links. */
+    const ownerCache = new Map<string, any>();
+    const ownerFor = (blockId: string): any => {
+      if (ownerCache.has(blockId)) return ownerCache.get(blockId);
+      let current = Store.getBlock(blockId);
+      const path: string[] = [];
+      let guard = 0;
+      while (current && guard++ < 60) {
+        path.push(current.id);
+        if (current.type === 'page' && nodes.has(current.id)) {
+          path.forEach(id => ownerCache.set(id, current));
+          return current;
+        }
+        current = current.parentTable === 'block' && current.parentId
+          ? Store.getBlock(current.parentId) : null;
+      }
+      path.forEach(id => ownerCache.set(id, null));
+      return null;
+    };
+
+    const tagsByOwner = new Map<string, Map<string, string>>();
+    blocks.forEach(block => {
+      if (!block.text) return;
+      const owner = ownerFor(block.id);
+      if (!owner) return;
+
+      for (const match of String(block.text).matchAll(/\[\[([^\[\]\n]{1,120})\]\]/g)) {
+        const target = titleIndex.get(normalizeGraphText(match[1]));
+        if (target) addEdge(owner.id, target.id, 'link');
+      }
+      for (const match of String(block.text).matchAll(/\(\(([0-9a-f-]{6,})\)\)/gi)) {
+        const targetOwner = ownerFor(match[1] || '');
+        if (targetOwner) addEdge(owner.id, targetOwner.id, 'link');
+      }
+      for (const match of String(block.text).matchAll(/(^|[\s(])#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-/]{1,40})/g)) {
+        const shown = match[2] || '';
+        const normalizedTag = normalizeGraphText(shown);
+        if (!normalizedTag) continue;
+        if (!tagsByOwner.has(owner.id)) tagsByOwner.set(owner.id, new Map());
+        tagsByOwner.get(owner.id)?.set(normalizedTag, shown);
+      }
+    });
+
+    /* Vorhandene Datenbankrelationen. Auch wechselseitige Relationen werden
+       dank der Kantenkennung nur einmal gezeichnet. */
+    pageBlocks.filter(row => row.parentTable === 'collection').forEach(row => {
+      const collection = collections.get(row.parentId);
+      if (!collection) return;
+      Object.entries<any>(collection.schema || {}).forEach(([key, definition]) => {
+        if (definition?.type !== 'relation') return;
+        const stored = row.props?.[key];
+        const ids = Array.isArray(stored) ? stored : (typeof stored === 'string' ? [stored] : []);
+        ids.forEach(id => { if (typeof id === 'string') addEdge(row.id, id, 'relation'); });
       });
     });
 
-    /* Oberfläche */
-    const o = document.createElement('div');
-    o.className = 'overlay graph-overlay';
-    o.innerHTML =
-      '<div class="graph-box">' +
-        '<div class="graph-head"><b>Graph</b>' +
-          `<span class="graph-info">${knoten.length} Seiten · ${kanten.length} Verbindungen</span>` +
-          '<button class="icon-btn" data-a="zu">✕</button>' +
-        '</div>' +
-        '<canvas></canvas>' +
-        '<div class="hint">Ziehen verschiebt die Ansicht · Klick öffnet die Seite · ' +
-          'Linien: durchgezogen = Unterseite, gestrichelt = [[Link]]</div>' +
-      '</div>';
-    document.body.appendChild(o);
+    /* Tags sind virtuelle Knoten. Sie speichern nichts und verschwinden beim
+       Schliessen des Graphen. #entscheidung und #quelle geben normalen
+       Seiten zugleich einen klaren Typ, ohne einen neuen Blocktyp zu bauen. */
+    tagsByOwner.forEach((tags, ownerId) => {
+      const owner = nodes.get(ownerId);
+      if (owner && tags.has('entscheidung')) { owner.kind = 'decision'; owner.icon = owner.icon || '⚖'; }
+      if (owner && tags.has('quelle')) { owner.kind = 'source'; owner.icon = owner.icon || '🔖'; }
+      tags.forEach((shown, normalizedTag) => {
+        const id = 'tag:' + normalizedTag;
+        if (!nodes.has(id)) nodes.set(id, {
+          id, rawId: null, name: '#' + shown, icon: '#', kind: 'tag', edited: '', degree: 0
+        });
+        addEdge(ownerId, id, 'tag');
+      });
+    });
 
-    /* Die Zeichenfläche und ihr Zeichenwerkzeug. Fehlt eines von beiden —
-       in einem Browser ohne Canvas oder wenn das Fenster schon wieder zu
-       ist —, gibt es keinen Graphen zu malen, und das Fenster bleibt mit
-       seinem Hinweis stehen statt zu werfen. */
-    const cv = o.querySelector('canvas');
-    const ctx = cv && cv.getContext('2d');
-    if (!cv || !ctx) return o;
-    let kx = 0, ky = 0, zoom = 1;
-
-    const groesse = () => {
-      const eltern = cv.parentElement;
-      if (!eltern) return;
-      const r = eltern.getBoundingClientRect();
-      cv.width = r.width * devicePixelRatio;
-      cv.height = (r.height - 92) * devicePixelRatio;
-      cv.style.width = r.width + 'px';
-      cv.style.height = (r.height - 92) + 'px';
+    const adjacency = new Map<string, KnowledgeGraphEdge[]>();
+    nodes.forEach((_node, id) => adjacency.set(id, []));
+    edges.forEach(edge => {
+      adjacency.get(edge.source)?.push(edge);
+      adjacency.get(edge.target)?.push(edge);
+      const source = nodes.get(edge.source), target = nodes.get(edge.target);
+      if (source) source.degree++;
+      if (target) target.degree++;
+    });
+    return {
+      nodes, edges, adjacency,
+      pageCount: pageBlocks.filter(page => page.parentTable !== 'collection').length,
+      rowCount: pageBlocks.filter(page => page.parentTable === 'collection').length
     };
-    groesse();
-    addEventListener('resize', groesse);
+  };
 
-    const farbe = (name: string) => getComputedStyle(document.body).getPropertyValue(name).trim();
+  const graphEdgeAllowedFrom = (
+    edge: KnowledgeGraphEdge, nodeId: string, filters: KnowledgeGraphFilters
+  ): boolean => {
+    if (edge.kind === 'link')
+      return edge.source === nodeId ? filters.links : filters.backlinks;
+    if (edge.kind === 'relation') return filters.relations;
+    if (edge.kind === 'tag') return filters.tags;
+    return filters.tree;
+  };
 
-    let laeuft = true;
-    const schritt = () => {
-      /* Abstossung */
-      for (let i = 0; i < knoten.length; i++) {
-        const ki = knoten[i];
-        if (!ki) continue;
-        for (let j = i + 1; j < knoten.length; j++) {
-          const kj = knoten[j];
-          if (!kj) continue;
-          const dx = kj.x - ki.x, dy = kj.y - ki.y;
-          const d2 = dx * dx + dy * dy + 0.01;
-          const f = 1400 / d2;
-          const d = Math.sqrt(d2);
-          ki.vx -= f * dx / d; ki.vy -= f * dy / d;
-          kj.vx += f * dx / d; kj.vy += f * dy / d;
+  const graphOtherEnd = (edge: KnowledgeGraphEdge, nodeId: string): string =>
+    edge.source === nodeId ? edge.target : edge.source;
+
+  const GRAPH_NODE_LIMIT = 320;
+  const DEFAULT_GRAPH_FILTERS: KnowledgeGraphFilters = {
+    links: true, backlinks: true, relations: true, tags: false, tree: true, nodeKind: 'all'
+  };
+
+  /** Eine begrenzte Nachbarschaft für Tiefe 1/2 plus ausdrücklich erweiterte Knoten. */
+  const buildGraphSlice = (
+    index: KnowledgeGraphIndex,
+    centerId: string,
+    depth = 1,
+    filters: KnowledgeGraphFilters = DEFAULT_GRAPH_FILTERS,
+    expandedIds: Iterable<string> = []
+  ): KnowledgeGraphSlice => {
+    if (!index.nodes.has(centerId))
+      return { centerId, nodes: [], edges: [], truncated: false };
+
+    const included = new Set<string>([centerId]);
+    let frontier = [centerId];
+    let truncated = false;
+    const kindAllowed = (id: string): boolean => id === centerId || filters.nodeKind === 'all' ||
+      index.nodes.get(id)?.kind === filters.nodeKind;
+
+    const includeNeighbors = (ids: Iterable<string>): string[] => {
+      const next: string[] = [];
+      for (const id of ids) {
+        for (const edge of index.adjacency.get(id) || []) {
+          if (!graphEdgeAllowedFrom(edge, id, filters)) continue;
+          const other = graphOtherEnd(edge, id);
+          if (!kindAllowed(other) || included.has(other)) continue;
+          if (included.size >= GRAPH_NODE_LIMIT) { truncated = true; continue; }
+          included.add(other);
+          next.push(other);
         }
       }
-      /* Anziehung entlang der Kanten */
-      kanten.forEach(k => {
-        const a = knoten[k.a], b = knoten[k.b];
-        if (!a || !b) return;
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const d = Math.sqrt(dx * dx + dy * dy) + 0.01;
-        const f = (d - 110) * 0.012;
-        a.vx += f * dx / d; a.vy += f * dy / d;
-        b.vx -= f * dx / d; b.vy -= f * dy / d;
-      });
-      /* Zur Mitte ziehen und bremsen */
-      knoten.forEach(n => {
-        n.vx -= n.x * 0.0016; n.vy -= n.y * 0.0016;
-        n.vx *= 0.86; n.vy *= 0.86;
-        n.x += n.vx; n.y += n.vy;
+      return next;
+    };
+
+    for (let level = 0; level < Math.max(1, Math.min(2, depth)); level++) {
+      frontier = includeNeighbors(frontier);
+      if (!frontier.length) break;
+    }
+    includeNeighbors([...expandedIds].filter(id => included.has(id)));
+
+    const edgeVisible = (edge: KnowledgeGraphEdge): boolean => {
+      if (edge.kind === 'link') return filters.links || filters.backlinks;
+      if (edge.kind === 'relation') return filters.relations;
+      if (edge.kind === 'tag') return filters.tags;
+      return filters.tree;
+    };
+    const nodes = [...included].map(id => index.nodes.get(id)).filter(Boolean) as KnowledgeGraphNode[];
+    nodes.sort((a, b) => (a.id === centerId ? -1 : b.id === centerId ? 1 :
+      b.degree - a.degree || a.name.localeCompare(b.name, 'de')));
+    const edges = index.edges.filter(edge => included.has(edge.source) && included.has(edge.target) &&
+      edgeVisible(edge));
+    return { centerId, nodes, edges, truncated };
+  };
+
+  const analyzeKnowledgeGraph = (index: KnowledgeGraphIndex): {
+    orphans: KnowledgeGraphNode[];
+    hubs: KnowledgeGraphNode[];
+    areas: Array<{ nodeIds: string[]; edgeCount: number; density: number }>;
+    decisions: number;
+    sources: number;
+  } => {
+    const entities = [...index.nodes.values()].filter(node => node.kind !== 'tag');
+    const structuralDegree = new Map(entities.map(node => [node.id, 0]));
+    index.edges.filter(edge => edge.kind !== 'tag').forEach(edge => {
+      if (structuralDegree.has(edge.source)) structuralDegree.set(edge.source, (structuralDegree.get(edge.source) || 0) + 1);
+      if (structuralDegree.has(edge.target)) structuralDegree.set(edge.target, (structuralDegree.get(edge.target) || 0) + 1);
+    });
+    const orphans = entities.filter(node => (structuralDegree.get(node.id) || 0) === 0)
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    const hubs = [...entities].sort((a, b) =>
+      (structuralDegree.get(b.id) || 0) - (structuralDegree.get(a.id) || 0) ||
+      a.name.localeCompare(b.name, 'de')).filter(node => (structuralDegree.get(node.id) || 0) >= 2).slice(0, 12);
+
+    const visited = new Set<string>();
+    const areas: Array<{ nodeIds: string[]; edgeCount: number; density: number }> = [];
+    for (const entity of entities) {
+      if (visited.has(entity.id)) continue;
+      const queue = [entity.id], component: string[] = [];
+      visited.add(entity.id);
+      while (queue.length) {
+        const id = queue.shift();
+        if (!id) continue;
+        component.push(id);
+        for (const edge of index.adjacency.get(id) || []) {
+          if (edge.kind === 'tag') continue;
+          const other = graphOtherEnd(edge, id);
+          if (!structuralDegree.has(other) || visited.has(other)) continue;
+          visited.add(other); queue.push(other);
+        }
+      }
+      if (component.length < 3) continue;
+      const ids = new Set(component);
+      const edgeCount = index.edges.filter(edge => edge.kind !== 'tag' &&
+        ids.has(edge.source) && ids.has(edge.target)).length;
+      /* Ein reiner Baum ist verbunden, aber noch kein stark verbundener
+         Bereich. Mindestens ein zusätzlicher Weg (Kreis/Querverweis) muss da sein. */
+      if (edgeCount < component.length) continue;
+      const density = 2 * edgeCount / (component.length * (component.length - 1));
+      areas.push({ nodeIds: component, edgeCount, density });
+    }
+    areas.sort((a, b) => b.density - a.density || b.edgeCount - a.edgeCount);
+    return {
+      orphans, hubs, areas,
+      decisions: entities.filter(node => node.kind === 'decision').length,
+      sources: entities.filter(node => node.kind === 'source').length
+    };
+  };
+
+  const createKnowledgeObject = (kind: 'decision' | 'source'): any => {
+    const today = new Date().toISOString().slice(0, 10);
+    const base = kind === 'decision' ? `Entscheidung · ${today}` : `Quelle · ${today}`;
+    let title = base, suffix = 2;
+    while (seiteMitTitel(title)) title = base + ' · ' + suffix++;
+    const current = Store.getBlock(App.aktuelleSeite?.());
+    const parentId = current?.type === 'page' && current.parentTable !== 'collection' ? current.id : null;
+    const page = Store.addPage(parentId, {
+      text: title, icon: kind === 'decision' ? '⚖' : '🔖'
+    });
+    const lines = kind === 'decision' ? [
+      '#entscheidung', 'Entscheidung: ', 'Begründung: ', `Datum: ${today}`,
+      'Status: vorgeschlagen', 'Quellen: [[Quelle]]',
+      'Betroffene Seiten: [[Seite]]', 'Alternativen: '
+    ] : [
+      '#quelle', 'URL: ', 'Autor: ', 'Datum: ', 'Notiz: ', `Abrufdatum: ${today}`
+    ];
+    lines.forEach(text => Store.addBlock(page.id, 'text', { text }));
+    App.zeichneBaum();
+    App.oeffne(page.id);
+    UI.toast(kind === 'decision' ? 'Entscheidungsseite angelegt' : 'Quellenseite angelegt');
+    return page;
+  };
+
+  /* Rückwärtsverträglicher Messweg aus P7. Die alte Form wird weiterhin
+     geliefert, aber aus demselben linearen Index wie der neue Teilgraph. */
+  const graphVorbereiten = (): any => {
+    const index = buildGraphIndex();
+    const entityNodes = [...index.nodes.values()].filter(node => node.kind !== 'tag');
+    const positions = new Map(entityNodes.map((node, i) => [node.id, i]));
+    const knoten = entityNodes.map((node, i) => ({
+      id: node.id, name: node.name, icon: node.icon,
+      x: Math.cos(i / Math.max(1, entityNodes.length) * Math.PI * 2) * 200,
+      y: Math.sin(i / Math.max(1, entityNodes.length) * Math.PI * 2) * 200,
+      vx: 0, vy: 0, grad: node.degree, kind: node.kind
+    }));
+    const kanten = index.edges.filter(edge => edge.kind !== 'tag')
+      .map(edge => ({ a: positions.get(edge.source), b: positions.get(edge.target),
+        art: edge.kind === 'tree' ? 'baum' : edge.kind }))
+      .filter(edge => edge.a !== undefined && edge.b !== undefined);
+    return { knoten, kanten, index };
+  };
+
+  const graph = (): HTMLElement | undefined => {
+    const index = buildGraphIndex();
+    const centerId = App.aktuelleSeite?.() || '';
+    const center = index.nodes.get(centerId);
+    if (!center) {
+      UI.toast(index.pageCount ? 'Öffne zuerst eine Seite für ihren Teilgraphen' : 'Noch keine Seiten für den Graphen');
+      return undefined;
+    }
+    const analysis = analyzeKnowledgeGraph(index);
+    const directLinks = index.edges.filter(edge => edge.kind === 'link' && edge.source === centerId).length;
+    const directBacklinks = index.edges.filter(edge => edge.kind === 'link' && edge.target === centerId).length;
+    const directRelations = index.edges.filter(edge => edge.kind === 'relation' &&
+      (edge.source === centerId || edge.target === centerId)).length;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay graph-overlay';
+    overlay.innerHTML =
+      '<div class="graph-box" role="dialog" aria-modal="true" aria-labelledby="graph-title">' +
+        '<div class="graph-head"><b id="graph-title">Wissensgraph</b>' +
+          `<span class="graph-info">Direkt: ${directLinks} Links · ${directBacklinks} Rückverweise · ` +
+            `${directRelations} Relationen</span>` +
+          '<button type="button" class="icon-btn" data-a="zu" aria-label="Graph schliessen">✕</button>' +
+        '</div>' +
+        '<div class="graph-controls" aria-label="Graph filtern">' +
+          '<fieldset><legend>Tiefe</legend>' +
+            '<button type="button" data-graph-depth="1" aria-pressed="true">1</button>' +
+            '<button type="button" data-graph-depth="2" aria-pressed="false">2</button></fieldset>' +
+          '<fieldset><legend>Verbindungen</legend>' +
+            '<label><input type="checkbox" data-graph-edge="links" checked> Links</label>' +
+            '<label><input type="checkbox" data-graph-edge="backlinks" checked> Rückverweise</label>' +
+            '<label><input type="checkbox" data-graph-edge="relations" checked> Relationen</label>' +
+            '<label><input type="checkbox" data-graph-edge="tags"> Tags</label>' +
+            '<label><input type="checkbox" data-graph-edge="tree" checked> Unterseiten</label></fieldset>' +
+          '<label class="graph-kind">Knotentyp<select data-graph-kind>' +
+            '<option value="all">Alle</option><option value="page">Seiten</option>' +
+            '<option value="decision">Entscheidungen</option><option value="source">Quellen</option>' +
+            '<option value="row">Datenbankzeilen</option><option value="tag">Tags</option>' +
+          '</select></label>' +
+          `<button type="button" data-graph-analysis="orphans">Verwaiste (${analysis.orphans.length})</button>` +
+          `<button type="button" data-graph-analysis="areas">Bereiche (${analysis.areas.length})</button>` +
+          '<span class="graph-grow"></span>' +
+          '<button type="button" data-graph-new="decision">+ Entscheidung</button>' +
+          '<button type="button" data-graph-new="source">+ Quelle</button>' +
+        '</div>' +
+        '<div class="graph-body"><div class="graph-stage">' +
+          '<canvas tabindex="0" aria-label="Teilgraph der aktuellen Seite"></canvas></div>' +
+          '<aside class="graph-panel" aria-live="polite"></aside></div>' +
+        '<div class="hint">Klick wählt einen Knoten · Doppelklick öffnet ihn · ' +
+          '„Nachbarn erweitern“ lädt genau eine weitere Stufe. Der Graph wird nur lokal berechnet.</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    const canvas = overlay.querySelector<HTMLCanvasElement>('canvas');
+    const context = canvas?.getContext('2d');
+    const panel = overlay.querySelector<HTMLElement>('.graph-panel');
+    const info = overlay.querySelector<HTMLElement>('.graph-info');
+    if (!canvas || !context || !panel || !info) return overlay;
+
+    const abort = new AbortController();
+    const signal = abort.signal;
+    let running = true, depth = 1, selectedId = centerId, panelMode: 'node' | 'orphans' | 'areas' = 'node';
+    let filters: KnowledgeGraphFilters = { ...DEFAULT_GRAPH_FILTERS };
+    const expanded = new Set<string>();
+    const positions = new Map<string, { x: number; y: number; vx: number; vy: number }>();
+    let visibleSlice = buildGraphSlice(index, centerId, depth, filters, expanded);
+    let offsetX = 0, offsetY = 0, zoom = 1, settleFrames = 0;
+
+    const color = (name: string): string =>
+      getComputedStyle(document.body).getPropertyValue(name).trim();
+    const kindName = (kind: KnowledgeNodeKind): string => ({
+      page: 'Seite', row: 'Datenbankzeile', decision: 'Entscheidung',
+      source: 'Quelle', tag: 'Schlagwort'
+    })[kind];
+
+    const close = (): void => {
+      if (!running) return;
+      running = false; abort.abort(); observer.disconnect(); overlay.remove();
+    };
+    const openNode = (id: string): void => {
+      const node = index.nodes.get(id);
+      if (!node?.rawId) return;
+      close(); App.oeffne(node.rawId);
+    };
+
+    const showPanel = (): void => {
+      if (panelMode === 'orphans') {
+        panel.innerHTML = '<h2>Verwaiste Seiten</h2>' +
+          '<p>Ohne Link, Rückverweis, Relation oder Unterseite. Tags allein zählen nicht als Verbindung.</p>' +
+          (analysis.orphans.length ? '<div class="graph-panel-list">' + analysis.orphans.slice(0, 120).map(node =>
+            `<button type="button" data-graph-open="${esc(node.id)}"><span>${esc(node.icon)}</span>` +
+              `<span>${esc(node.name)}</span></button>`).join('') + '</div>' :
+            '<div class="graph-empty">Keine verwaisten Seiten.</div>');
+        return;
+      }
+      if (panelMode === 'areas') {
+        panel.innerHTML = '<h2>Stark verbundene Bereiche</h2>' +
+          '<p>Mindestens drei Knoten und mindestens ein zusätzlicher Querweg; reine Bäume zählen nicht.</p>' +
+          (analysis.areas.length ? analysis.areas.slice(0, 12).map((area, i) => {
+            const areaNodes = area.nodeIds.map(id => index.nodes.get(id)).filter(Boolean) as KnowledgeGraphNode[];
+            return `<div class="graph-area"><b>Bereich ${i + 1}</b><span>${areaNodes.length} Knoten · ` +
+              `${area.edgeCount} Verbindungen</span><button type="button" data-graph-select="${esc(areaNodes[0]?.id || '')}">` +
+              `${esc(areaNodes.slice(0, 4).map(node => node.name).join(' · '))}</button></div>`;
+          }).join('') : '<div class="graph-empty">Noch kein Bereich mit einem Querweg.</div>') +
+          '<h3>Viele Verbindungen</h3><div class="graph-panel-list">' +
+          analysis.hubs.map(node => `<button type="button" data-graph-select="${esc(node.id)}">` +
+            `<span>${esc(node.icon)}</span><span>${esc(node.name)}</span><em>${node.degree}</em></button>`).join('') +
+          '</div>';
+        return;
+      }
+      const selected = index.nodes.get(selectedId) || center;
+      const canExpand = visibleSlice.nodes.some(node => node.id === selected.id);
+      panel.innerHTML = `<h2>${esc(selected.icon)} ${esc(selected.name)}</h2>` +
+        `<p>${kindName(selected.kind)} · ${selected.degree} Verbindungen` +
+          (selected.id === centerId ? ' · aktuelle Seite' : '') + '</p>' +
+        '<div class="graph-panel-actions">' +
+          (selected.rawId ? `<button type="button" data-graph-open="${esc(selected.id)}">Öffnen</button>` : '') +
+          (canExpand ? `<button type="button" data-graph-expand="${esc(selected.id)}"` +
+            (expanded.has(selected.id) ? ' disabled' : '') + '>' +
+            (expanded.has(selected.id) ? 'Nachbarn erweitert' : 'Nachbarn erweitern') + '</button>' : '') +
+        '</div><h3>Sichtbare Knoten</h3><div class="graph-panel-list">' +
+        visibleSlice.nodes.map(node => `<button type="button" data-graph-select="${esc(node.id)}"` +
+          (node.id === selected.id ? ' class="on" aria-current="true"' : '') + '>' +
+          `<span>${esc(node.icon)}</span><span>${esc(node.name)}</span><em>${kindName(node.kind)}</em></button>`).join('') +
+        '</div>';
+    };
+
+    const ensurePositions = (): void => {
+      visibleSlice.nodes.forEach((node, i) => {
+        if (positions.has(node.id)) return;
+        if (node.id === centerId) {
+          positions.set(node.id, { x: 0, y: 0, vx: 0, vy: 0 }); return;
+        }
+        const angle = (i * 2.399963229728653) % (Math.PI * 2);
+        const radius = 95 + Math.sqrt(i) * 34;
+        positions.set(node.id, {
+          x: Math.cos(angle) * radius, y: Math.sin(angle) * radius, vx: 0, vy: 0
+        });
       });
     };
 
-    const zeichne = () => {
-      const w = cv.width, h = cv.height, dpr = devicePixelRatio;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, w / 2 + kx * dpr, h / 2 + ky * dpr);
+    const resize = (): void => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      const ratio = devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(rect.width * ratio));
+      canvas.height = Math.max(1, Math.round(rect.height * ratio));
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      settleFrames = Math.max(settleFrames, 1);
+    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas.parentElement || canvas);
 
-      ctx.lineWidth = 1;
-      kanten.forEach(k => {
-        const a = knoten[k.a], b = knoten[k.b];
-        if (!a || !b) return;
-        ctx.strokeStyle = k.art === 'link' ? farbe('--accent') : farbe('--line');
-        ctx.setLineDash(k.art === 'link' ? [4, 4] : []);
-        ctx.globalAlpha = k.art === 'link' ? 0.75 : 0.5;
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    const render = (): void => {
+      visibleSlice = buildGraphSlice(index, centerId, depth, filters, expanded);
+      ensurePositions(); settleFrames = 260;
+      if (!visibleSlice.nodes.some(node => node.id === selectedId)) selectedId = centerId;
+      info.textContent = `${visibleSlice.nodes.length} von ${index.nodes.size} Knoten · ` +
+        `${visibleSlice.edges.length} Verbindungen` +
+        (visibleSlice.truncated ? ` · auf ${GRAPH_NODE_LIMIT} begrenzt` : '') +
+        ` · ${analysis.decisions} Entscheidungen · ${analysis.sources} Quellen`;
+      overlay.querySelectorAll<HTMLElement>('[data-graph-depth]').forEach(button =>
+        button.setAttribute('aria-pressed', String(Number(button.dataset.graphDepth) === depth)));
+      showPanel();
+    };
+
+    /* Räumliche Zellen vergleichen pro Knoten höchstens 9 × 28 Nachbarn.
+       Anders als die alte Paar-Schleife bleibt ein Bild damit O(Knoten +
+       Kanten), auch wenn der Teilgraph seine Obergrenze erreicht. */
+    const simulate = (): void => {
+      const bucketSize = 96, maxPerBucket = 28;
+      const buckets = new Map<string, string[]>();
+      visibleSlice.nodes.forEach(node => {
+        const point = positions.get(node.id); if (!point) return;
+        const key = `${Math.floor(point.x / bucketSize)}:${Math.floor(point.y / bucketSize)}`;
+        const bucket = buckets.get(key) || [];
+        if (bucket.length < maxPerBucket) bucket.push(node.id);
+        buckets.set(key, bucket);
       });
-      ctx.setLineDash([]); ctx.globalAlpha = 1;
-
-      ctx.textAlign = 'center';
-      ctx.font = '12px ' + farbe('--font');
-      knoten.forEach(n => {
-        const r = 5 + Math.min(9, n.grad * 1.6);
-        ctx.fillStyle = n.grad ? farbe('--accent') : farbe('--text-faint');
-        ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.284); ctx.fill();
-        ctx.fillStyle = farbe('--text');
-        ctx.fillText(n.name.slice(0, 22), n.x, n.y + r + 13);
+      visibleSlice.nodes.forEach(node => {
+        const point = positions.get(node.id); if (!point) return;
+        const cx = Math.floor(point.x / bucketSize), cy = Math.floor(point.y / bucketSize);
+        for (let dxCell = -1; dxCell <= 1; dxCell++) for (let dyCell = -1; dyCell <= 1; dyCell++) {
+          for (const otherId of buckets.get(`${cx + dxCell}:${cy + dyCell}`) || []) {
+            if (otherId <= node.id) continue;
+            const other = positions.get(otherId); if (!other) continue;
+            const dx = other.x - point.x, dy = other.y - point.y;
+            const distanceSquared = dx * dx + dy * dy + 4;
+            if (distanceSquared > bucketSize * bucketSize * 3) continue;
+            const distance = Math.sqrt(distanceSquared), force = 900 / distanceSquared;
+            point.vx -= force * dx / distance; point.vy -= force * dy / distance;
+            other.vx += force * dx / distance; other.vy += force * dy / distance;
+          }
+        }
+      });
+      visibleSlice.edges.forEach(edge => {
+        const source = positions.get(edge.source), target = positions.get(edge.target);
+        if (!source || !target) return;
+        const dx = target.x - source.x, dy = target.y - source.y;
+        const distance = Math.sqrt(dx * dx + dy * dy) + 0.01;
+        const desired = edge.kind === 'tag' ? 78 : 112;
+        const force = (distance - desired) * 0.012;
+        source.vx += force * dx / distance; source.vy += force * dy / distance;
+        target.vx -= force * dx / distance; target.vy -= force * dy / distance;
+      });
+      visibleSlice.nodes.forEach(node => {
+        const point = positions.get(node.id); if (!point) return;
+        if (node.id === centerId) { point.x = 0; point.y = 0; point.vx = 0; point.vy = 0; return; }
+        point.vx = (point.vx - point.x * 0.0015) * 0.84;
+        point.vy = (point.vy - point.y * 0.0015) * 0.84;
+        point.x += point.vx; point.y += point.vy;
       });
     };
 
-    const schleife = () => {
-      if (!laeuft || !document.body.contains(o)) return;
-      schritt(); zeichne();
-      requestAnimationFrame(schleife);
-    };
-    schleife();
-
-    /* Ziehen, Zoomen, Klicken */
-    let zieht = false, zx = 0, zy = 0, bewegt = 0;
-    cv.addEventListener('mousedown', e => { zieht = true; zx = e.clientX; zy = e.clientY; bewegt = 0; });
-    addEventListener('mousemove', e => {
-      if (!zieht) return;
-      kx += e.clientX - zx; ky += e.clientY - zy;
-      bewegt += Math.abs(e.clientX - zx) + Math.abs(e.clientY - zy);
-      zx = e.clientX; zy = e.clientY;
-    });
-    addEventListener('mouseup', () => { zieht = false; });
-    cv.addEventListener('wheel', e => {
-      e.preventDefault();
-      zoom = Math.max(0.25, Math.min(3, zoom * (e.deltaY < 0 ? 1.12 : 0.89)));
-    }, { passive: false });
-    cv.addEventListener('click', e => {
-      if (bewegt > 6) return;
-      const r = cv.getBoundingClientRect();
-      const mx = (e.clientX - r.left - r.width / 2 - kx) / zoom;
-      const my = (e.clientY - r.top - r.height / 2 - ky) / zoom;
-      let beste: any = null, bd = 26 * 26;
-      knoten.forEach(n => {
-        const d = (n.x - mx) ** 2 + (n.y - my) ** 2;
-        if (d < bd) { bd = d; beste = n; }
+    const draw = (): void => {
+      const width = canvas.width, height = canvas.height, ratio = devicePixelRatio || 1;
+      context.setTransform(1, 0, 0, 1, 0, 0); context.clearRect(0, 0, width, height);
+      context.setTransform(ratio * zoom, 0, 0, ratio * zoom,
+        width / 2 + offsetX * ratio, height / 2 + offsetY * ratio);
+      visibleSlice.edges.forEach(edge => {
+        const source = positions.get(edge.source), target = positions.get(edge.target);
+        if (!source || !target) return;
+        context.strokeStyle = edge.kind === 'link' ? color('--accent') :
+          edge.kind === 'relation' ? color('--c-green') :
+          edge.kind === 'tag' ? color('--c-yellow') : color('--line');
+        context.globalAlpha = edge.kind === 'tree' ? 0.45 : 0.78;
+        context.setLineDash(edge.kind === 'link' ? [5, 4] : edge.kind === 'tag' ? [2, 5] : []);
+        context.beginPath(); context.moveTo(source.x, source.y); context.lineTo(target.x, target.y); context.stroke();
       });
-      if (beste) { laeuft = false; o.remove(); App.oeffne(beste.id); }
-    });
+      context.setLineDash([]); context.globalAlpha = 1; context.textAlign = 'center';
+      context.font = '12px ' + color('--font');
+      visibleSlice.nodes.forEach(node => {
+        const point = positions.get(node.id); if (!point) return;
+        const radius = node.id === centerId ? 13 : 6 + Math.min(7, node.degree * 1.25);
+        context.fillStyle = node.kind === 'decision' ? color('--c-purple') :
+          node.kind === 'source' ? color('--c-yellow') : node.kind === 'row' ? color('--c-green') :
+          node.kind === 'tag' ? color('--text-faint') : color('--accent');
+        context.beginPath(); context.arc(point.x, point.y, radius, 0, Math.PI * 2); context.fill();
+        if (node.id === selectedId) {
+          context.strokeStyle = color('--text'); context.lineWidth = 2;
+          context.beginPath(); context.arc(point.x, point.y, radius + 4, 0, Math.PI * 2); context.stroke();
+        }
+        context.fillStyle = color('--text');
+        context.fillText(node.name.slice(0, 24), point.x, point.y + radius + 14);
+      });
+    };
 
-    o.addEventListener('click', e => {
-      if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { laeuft = false; o.remove(); }
-    });
-    return o;
+    const loop = (): void => {
+      if (!running || !overlay.isConnected) return;
+      if (settleFrames > 0) { simulate(); settleFrames--; }
+      draw(); requestAnimationFrame(loop);
+    };
+
+    const hitNode = (clientX: number, clientY: number): KnowledgeGraphNode | null => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left - rect.width / 2 - offsetX) / zoom;
+      const y = (clientY - rect.top - rect.height / 2 - offsetY) / zoom;
+      let hit: KnowledgeGraphNode | null = null, best = 28 * 28;
+      visibleSlice.nodes.forEach(node => {
+        const point = positions.get(node.id); if (!point) return;
+        const distance = (point.x - x) ** 2 + (point.y - y) ** 2;
+        if (distance < best) { best = distance; hit = node; }
+      });
+      return hit;
+    };
+
+    let dragging = false, lastX = 0, lastY = 0, moved = 0;
+    canvas.addEventListener('mousedown', event => {
+      dragging = true; lastX = event.clientX; lastY = event.clientY; moved = 0;
+    }, { signal });
+    addEventListener('mousemove', event => {
+      if (!dragging) return;
+      offsetX += event.clientX - lastX; offsetY += event.clientY - lastY;
+      moved += Math.abs(event.clientX - lastX) + Math.abs(event.clientY - lastY);
+      lastX = event.clientX; lastY = event.clientY;
+    }, { signal });
+    addEventListener('mouseup', () => { dragging = false; }, { signal });
+    canvas.addEventListener('wheel', event => {
+      event.preventDefault(); zoom = Math.max(0.3, Math.min(3, zoom * (event.deltaY < 0 ? 1.12 : 0.89)));
+    }, { passive: false, signal });
+    canvas.addEventListener('click', event => {
+      if (moved > 6) return;
+      const hit = hitNode(event.clientX, event.clientY);
+      if (hit) { selectedId = hit.id; panelMode = 'node'; showPanel(); }
+    }, { signal });
+    canvas.addEventListener('dblclick', event => {
+      const hit = hitNode(event.clientX, event.clientY); if (hit) openNode(hit.id);
+    }, { signal });
+
+    overlay.addEventListener('change', event => {
+      const input = elVon(event)?.closest<HTMLInputElement>('input[data-graph-edge]');
+      if (input) {
+        const key = input.dataset.graphEdge;
+        if (key === 'links') filters.links = input.checked;
+        if (key === 'backlinks') filters.backlinks = input.checked;
+        if (key === 'relations') filters.relations = input.checked;
+        if (key === 'tags') filters.tags = input.checked;
+        if (key === 'tree') filters.tree = input.checked;
+        panelMode = 'node'; render(); return;
+      }
+      const select = elVon(event)?.closest<HTMLSelectElement>('select[data-graph-kind]');
+      if (select) {
+        filters.nodeKind = select.value as KnowledgeNodeKind | 'all';
+        panelMode = 'node'; render();
+      }
+    }, { signal });
+    overlay.addEventListener('click', event => {
+      const element = elVon(event);
+      if (event.target === overlay || element?.closest('[data-a="zu"]')) { close(); return; }
+      const depthButton = element?.closest<HTMLElement>('[data-graph-depth]');
+      if (depthButton) { depth = Number(depthButton.dataset.graphDepth) === 2 ? 2 : 1; panelMode = 'node'; render(); return; }
+      const analysisButton = element?.closest<HTMLElement>('[data-graph-analysis]');
+      if (analysisButton) {
+        panelMode = analysisButton.dataset.graphAnalysis === 'orphans' ? 'orphans' : 'areas'; showPanel(); return;
+      }
+      const selectButton = element?.closest<HTMLElement>('[data-graph-select]');
+      if (selectButton?.dataset.graphSelect) {
+        selectedId = selectButton.dataset.graphSelect; panelMode = 'node'; showPanel(); return;
+      }
+      const expandButton = element?.closest<HTMLElement>('[data-graph-expand]');
+      if (expandButton?.dataset.graphExpand) {
+        expanded.add(expandButton.dataset.graphExpand); panelMode = 'node'; render(); return;
+      }
+      const openButton = element?.closest<HTMLElement>('[data-graph-open]');
+      if (openButton?.dataset.graphOpen) { openNode(openButton.dataset.graphOpen); return; }
+      const newButton = element?.closest<HTMLElement>('[data-graph-new]');
+      if (newButton?.dataset.graphNew === 'decision' || newButton?.dataset.graphNew === 'source') {
+        const kind = newButton.dataset.graphNew; close(); createKnowledgeObject(kind); return;
+      }
+    }, { signal });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); }, { capture: true, signal });
+    addEventListener('resize', resize, { signal });
+
+    resize(); render(); loop();
+    return overlay;
   };
 
   /* ========================================================================
@@ -559,7 +1085,7 @@ const Links = (() => {
 
   return {
     start, inline, seiten, seiteMitTitel, seiteVon, oeffneOderAnlegen,
-    verweiseAuf, unverlinkt, alleTags, fusszeile, graph, tagRegister
+    verweiseAuf, unverlinkt, alleTags, fusszeile, graphVorbereiten, graph, tagRegister
   };
 })();
 

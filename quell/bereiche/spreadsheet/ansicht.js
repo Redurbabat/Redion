@@ -64,8 +64,10 @@ const SpreadsheetView = (() => {
     const SB = 110; /* Spaltenbreite, Vorgabe — --tbl-sb */
     const SB_MIN = 48;
     const PUFFER = 6; /* Zeilen über und unter dem Sichtfenster */
-    const amTelefon = () => typeof window !== 'undefined' && window.matchMedia
-        ? window.matchMedia('(max-width: 760px)').matches : false;
+    const amTelefon = () => typeof window !== 'undefined' && typeof AppEinstellung !== 'undefined'
+        ? AppEinstellung.amTelefon()
+        : typeof window !== 'undefined' && window.matchMedia
+            ? window.matchMedia('(max-width: 760px)').matches : false;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
@@ -445,6 +447,10 @@ const SpreadsheetView = (() => {
      * ========================================================================*/
     const kartenAnsicht = (w, block, blatt, K, R) => {
         w.className = 'tblk-karten';
+        const rasterOeffnen = (zelle) => {
+            Store.updateBlock(block.id, { telefonRaster: true, telefonZelle: zelle });
+            App.zeichneSeite();
+        };
         /* Erst rechnen, dann zeigen — sonst stünden Formeln leer oder alt da.
            Das Raster tut dasselbe bei jedem Zeichnen. */
         try {
@@ -467,10 +473,7 @@ const SpreadsheetView = (() => {
         zumRaster.type = 'button';
         zumRaster.textContent = '⊞ Raster';
         zumRaster.title = 'Als Raster öffnen';
-        zumRaster.addEventListener('click', () => {
-            Store.updateBlock(block.id, { telefonRaster: true });
-            App.zeichneSeite();
-        });
+        zumRaster.addEventListener('click', () => rasterOeffnen('A1'));
         kopf.appendChild(name);
         kopf.appendChild(zumRaster);
         w.appendChild(kopf);
@@ -490,6 +493,9 @@ const SpreadsheetView = (() => {
         for (let z = 1; z < hochZ; z++) {
             const karte = document.createElement('div');
             karte.className = 'tblk-karte';
+            karte.tabIndex = 0;
+            karte.setAttribute('role', 'button');
+            karte.setAttribute('aria-label', 'Zeile ' + z + ' im Raster bearbeiten');
             let titelDa = false;
             for (let s = 0; s < hochS; s++) {
                 const adr = R.schreibe(z, s);
@@ -514,9 +520,13 @@ const SpreadsheetView = (() => {
             if (!karte.childElementCount)
                 continue; /* leere Zeile, keine leere Karte */
             /* Bearbeitet wird im Raster — die Karte ist der Weg dorthin. */
-            karte.addEventListener('click', () => {
-                Store.updateBlock(block.id, { telefonRaster: true });
-                App.zeichneSeite();
+            const oeffneZeile = () => rasterOeffnen(R.schreibe(z, 0));
+            karte.addEventListener('click', oeffneZeile);
+            karte.addEventListener('keydown', e => {
+                if (e.key !== 'Enter' && e.key !== ' ')
+                    return;
+                e.preventDefault();
+                oeffneZeile();
             });
             w.appendChild(karte);
         }
@@ -548,7 +558,7 @@ const SpreadsheetView = (() => {
         block.mappe.aktiv = blatt.id;
         if (!blatt.breiten)
             blatt.breiten = {};
-        /* --- Telefon: Karten statt Raster (E89, Vorschlag) -------------------
+        /* --- Telefon: Karten statt Raster (E89) ------------------------------
            Die Datenbank zeigt am Telefon längst Karten; der Tabellenblock
            blieb dasselbe Rechner-Raster, mit leeren Zeilen auf halbem
            Bildschirm. Jetzt: Zeilen als Karten, die Kopfzeile liefert die
@@ -572,8 +582,8 @@ const SpreadsheetView = (() => {
             w.appendChild(zurueck);
         }
         /* Die Auswahl lebt hier, nicht im DOM — sie überlebt jedes Neuzeichnen. */
-        let gewaehlt = 'A1';
-        let anker = 'A1'; /* für die Bereichsauswahl */
+        let gewaehlt = R.gueltig(block.telefonZelle) ? block.telefonZelle : 'A1';
+        let anker = gewaehlt; /* für die Bereichsauswahl */
         /* Beim Ziehen am Anfasser: wohin der Zeiger gerade zeigt. Nur das —
            ob überhaupt gezogen wird, steht in den Zuhörern, die `beimZiehen`
            auf- und wieder abbaut, und nicht noch einmal in einer Fahne hier. */
@@ -1708,32 +1718,37 @@ const SpreadsheetView = (() => {
             const zeilen = [];
             const anzeigen = [];
             const stile = [];
+            const formeln = [];
             let letzteVolle = 0;
             for (let z = 0; z < vonBlatt.zeilen; z++) {
                 const eine = [];
                 const anzeigeZeile = [];
                 const stilZeile = [];
+                const formelZeile = [];
                 let etwasDrin = false;
                 for (let s = 0; s < vonBlatt.spalten; s++) {
                     const zelle = vonBlatt.zellen[R.schreibe(z, s)];
                     const wert = zelle ? zelle.wert : '';
                     const text = zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
                     const roh = (typeof wert === 'number' && isFinite(wert)) ? wert : text;
-                    if (roh !== '')
+                    if (roh !== '' || (zelle && zelle.formel))
                         etwasDrin = true;
                     eine.push(roh);
                     anzeigeZeile.push(text);
                     stilZeile.push((zelle && zelle.stil) || null);
+                    formelZeile.push((zelle && zelle.formel) || null);
                 }
                 zeilen.push(eine);
                 anzeigen.push(anzeigeZeile);
                 stile.push(stilZeile);
+                formeln.push(formelZeile);
                 if (etwasDrin)
                     letzteVolle = zeilen.length;
             }
             return { zeilen: zeilen.slice(0, letzteVolle),
                 anzeigen: anzeigen.slice(0, letzteVolle),
-                stile: stile.slice(0, letzteVolle) };
+                stile: stile.slice(0, letzteVolle),
+                formeln: formeln.slice(0, letzteVolle) };
         };
         /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
            auch einliest. Zwei eigene Regeln fürs Anführen liefen auseinander,
@@ -1809,6 +1824,8 @@ const SpreadsheetView = (() => {
                     return;
                 let zeilen = [];
                 let stilMatrix = null;
+                let formelMatrix = null;
+                let importBericht = null;
                 /* Den gelesenen Zellstil an die Zelle tragen (E97). Je Zelle eine
                    KOPIE: der ODS-Leser gibt wiederholten Zellen dasselbe
                    Stil-Objekt, und ein geteiltes Objekt hiesse, dass Fett-Schalten
@@ -1819,6 +1836,16 @@ const SpreadsheetView = (() => {
                         return;
                     const zelle = ziel.zellen[adr] || (ziel.zellen[adr] = { wert: '' });
                     zelle.stil = JSON.parse(JSON.stringify(st));
+                };
+                /* Erst den gespeicherten Ergebniswert setzen, dann die Formel. So
+                   bleibt der Wert sichtbar, selbst wenn eine fremde Funktion in
+                   Redion nicht rechnet; die Formel selbst geht trotzdem nicht
+                   verloren. */
+                const setzeGelesen = (ziel, adr, wert, formel) => {
+                    if (wert !== '')
+                        K.setze(ziel, adr, wert);
+                    if (formel)
+                        K.setze(ziel, adr, formel);
                 };
                 let quelle = datei.name;
                 try {
@@ -1832,6 +1859,7 @@ const SpreadsheetView = (() => {
                             : await Einlesen.xlsxLesen(await datei.arrayBuffer());
                         if (!blaetter || !blaetter.length)
                             throw new Error('In dieser Datei steckt kein Tabellenblatt.');
+                        importBericht = blaetter.bericht || null;
                         /* Mehrere Blätter (E91): jedes wird ein EIGENES Blatt der
                            Mappe. Der Satz, der hier vorher stand, verneinte
                            Mehrblatt je Block — während die Blattreiter darunter es
@@ -1839,19 +1867,50 @@ const SpreadsheetView = (() => {
                            Weg: an den Schreibzeiger, mit Zählung des
                            Überschriebenen. */
                         if (blaetter.length > 1) {
-                            blaetter.forEach((gelesen) => {
-                                const neu = K.neuesBlatt(freierName(String(gelesen.name || 'Blatt')));
+                            /* Alles zuerst ausserhalb der Mappe vorbereiten. Scheitert
+                               Blatt 2, bleibt Blatt 1 nicht halb importiert zurück. */
+                            const belegt = new Set(block.mappe.blaetter.map((b) => String(b.name)));
+                            const importName = (roh) => {
+                                const basis = roh || 'Blatt';
+                                let n = basis, i = 2;
+                                while (belegt.has(n))
+                                    n = basis + ' ' + i++;
+                                belegt.add(n);
+                                return n;
+                            };
+                            const vorbereitet = blaetter.map((gelesen) => {
+                                const neu = K.neuesBlatt(importName(String(gelesen.name || 'Blatt')));
                                 const zl = gelesen.zeilen || [];
                                 neu.zeilen = Math.max(neu.zeilen, zl.length);
                                 neu.spalten = Math.max(neu.spalten, zl.reduce((m, x) => Math.max(m, x.length), 1));
                                 zl.forEach((zeileWerte, z) => zeileWerte.forEach((wert, s) => {
                                     const adr = R.schreibe(z, s);
-                                    if (wert !== '')
-                                        K.setze(neu, adr, wert);
+                                    setzeGelesen(neu, adr, wert, gelesen.formeln && gelesen.formeln[z] && gelesen.formeln[z][s]);
                                     stilDazu(neu, z, s, adr, gelesen.stile || null);
                                 }));
-                                block.mappe.blaetter.push(neu);
+                                return neu;
                             });
+                            const verlustText = Einlesen.tabellenBerichtText
+                                ? Einlesen.tabellenBerichtText(importBericht) : '';
+                            const blattText = blaetter.map((g) => {
+                                const zl = g.zeilen || [];
+                                return String(g.name || 'Blatt') + ': ' + zl.length + ' Zeilen × ' +
+                                    zl.reduce((m, z) => Math.max(m, z.length), 0) + ' Spalten';
+                            }).join('\n');
+                            const antwortMehr = typeof Dialog !== 'undefined'
+                                ? await Dialog.wahl({
+                                    titel: 'Einlesen: ' + datei.name,
+                                    text: blattText + (verlustText ? '\n\n' + verlustText : ''),
+                                    knoepfe: [
+                                        { id: 'rein', text: blaetter.length + ' Blätter anlegen',
+                                            hinweis: 'Bestehende Blätter bleiben unverändert' },
+                                        { id: '', text: 'Abbrechen', hinweis: 'Es wird nichts verändert' }
+                                    ]
+                                })
+                                : 'rein';
+                            if (!antwortMehr)
+                                return;
+                            block.mappe.blaetter.push(...vorbereitet);
                             const letztes = block.mappe.blaetter[block.mappe.blaetter.length - 1];
                             /* Über `zuBlatt`, nicht von Hand: es setzt auch `breiten`
                                und die Auswahl. Der handgeschriebene Wechsel liess
@@ -1866,6 +1925,7 @@ const SpreadsheetView = (() => {
                         }
                         zeilen = blaetter[0].zeilen || [];
                         stilMatrix = blaetter[0].stile || null;
+                        formelMatrix = blaetter[0].formeln || null;
                         quelle = datei.name;
                     }
                     else {
@@ -1914,7 +1974,9 @@ const SpreadsheetView = (() => {
                     ? await Dialog.wahl({
                         titel: 'Einlesen: ' + quelle,
                         text: zeilen.length + ' Zeilen × ' + breite + ' Spalten\n\n' + vorschau +
-                            (zeilen.length > 3 ? '\n…' : ''),
+                            (zeilen.length > 3 ? '\n…' : '') +
+                            (importBericht && Einlesen.tabellenBerichtText
+                                ? '\n\n' + Einlesen.tabellenBerichtText(importBericht) : ''),
                         knoepfe
                     })
                     : 'a1';
@@ -1931,7 +1993,7 @@ const SpreadsheetView = (() => {
                     blatt.spalten = vonS + breite;
                 zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) => {
                     const adr = R.schreibe(vonZ + z, vonS + sp);
-                    K.setze(blatt, adr, wert);
+                    setzeGelesen(blatt, adr, wert, formelMatrix && formelMatrix[z] && formelMatrix[z][sp]);
                     stilDazu(blatt, z, sp, adr, stilMatrix);
                 }));
                 gewaehlt = anker = R.schreibe(vonZ, vonS);
@@ -2239,6 +2301,13 @@ const SpreadsheetView = (() => {
             if (eine) {
                 const g = getComputedStyle(eine);
                 schriftBasis = g.fontSize + ' ' + g.fontFamily;
+            }
+            /* Eine angetippte Karte öffnet genau ihre Zeile, nicht wieder A1.
+               Erst jetzt ist die Feldhöhe bekannt und der Zielversatz ehrlich. */
+            if (handy && block.telefonZelle) {
+                const ziel = R.lies(gewaehlt);
+                if (ziel)
+                    feld.scrollTop = Math.max(0, ziel.zeile * zh - Math.max(0, feld.clientHeight - zh) / 2);
             }
             koerperZeichnen();
         }, 0);

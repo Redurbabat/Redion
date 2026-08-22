@@ -80,6 +80,7 @@ const GRUNDSTOCK = [
     './quell/schale/ueberlagerung/ui.js',
     './quell/kern/ablage/nachbarn.js',
     './quell/kern/ablage/indexdb.js',
+    './quell/kern/suche/query.js',
     './quell/bereiche/datenbanken/formeln/laufzeit.js',
     './quell/bereiche/wissen/verweise.js',
     './quell/bereiche/bloecke/arten/zeichenflaeche.js',

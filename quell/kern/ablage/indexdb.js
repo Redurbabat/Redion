@@ -33,7 +33,7 @@ const Store = (() => {
        kern/ablage/umzuege.js — dort steht auch, warum es jedes Fach gibt.
        Hier nur der Rückfall, falls diese Datei einmal allein geladen wird. */
     const NAME = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.ABLAGE_NAME : 'notizen';
-    const VERSION = (typeof Umzuege !== 'undefined') ? Umzuege.JETZIGE : 5;
+    const VERSION = (typeof Umzuege !== 'undefined') ? Umzuege.JETZIGE : 6;
     let db = null;
     /* Alle Änderungen laufen durch save(), das merkt sich Beobachter. */
     const listeners = new Set();
@@ -124,6 +124,11 @@ const Store = (() => {
                nichts ausser Zeit. */
             if (!d.objectStoreNames.contains('vorrat'))
                 d.createObjectStore('vorrat', { keyPath: 'id' });
+            /* Version 6: vorbereitete Suchwörter. Anders als `blocks` ist dieses
+               Fach niemals Nutzerdaten-Wahrheit. Es darf vollständig geleert und
+               aus Blöcken und Sammlungen neu gebaut werden. */
+            if (!d.objectStoreNames.contains('suchindex'))
+                d.createObjectStore('suchindex', { keyPath: 'id' });
         };
         req.onsuccess = () => {
             db = req.result;
@@ -229,7 +234,12 @@ const Store = (() => {
             fail(err);
         }
     });
-    const cache = { blocks: {}, collections: {}, views: {}, meta: {} };
+    const cache = { blocks: {}, collections: {}, views: {}, meta: {}, suchindex: {} };
+    /* Der Suchindex fragt diese Zahl ab, statt nach zwanzig Sekunden blind den
+       ganzen Bestand neu zu zerlegen. Sie ist nur ein Sitzungszähler: nach
+       einem Neustart prüft der Index seine gespeicherten Quellenstände. */
+    let datenFassung = 0;
+    const datenGeaendert = () => { datenFassung++; };
     const load = async () => {
         try {
             await open();
@@ -250,10 +260,16 @@ const Store = (() => {
            Jetzt bricht der Start ab und sagt, was los ist — die Daten auf der
            Platte bleiben unangetastet. */
         try {
-            (await all('blocks')).forEach((b) => cache.blocks[b.id] = b);
-            (await all('collections')).forEach((c) => cache.collections[c.id] = c);
-            (await all('views')).forEach((v) => cache.views[v.id] = v);
-            (await all('meta')).forEach((m) => cache.meta[m.k] = m.v);
+            /* Die vier Wahrheitsfächer hängen nicht voneinander ab. Parallel lesen
+               spart bei grossen Beständen messbar Startzeit, ohne die Reihenfolge
+               der Sätze oder ihre Bedeutung zu verändern. */
+            const [bloecke, sammlungen, ansichten, metadaten] = await Promise.all([
+                all('blocks'), all('collections'), all('views'), all('meta')
+            ]);
+            bloecke.forEach((b) => cache.blocks[b.id] = b);
+            sammlungen.forEach((c) => cache.collections[c.id] = c);
+            ansichten.forEach((v) => cache.views[v.id] = v);
+            metadaten.forEach((m) => cache.meta[m.k] = m.v);
         }
         catch (err) {
             db = null;
@@ -266,6 +282,20 @@ const Store = (() => {
                 'damit nichts überschrieben wird. Schliesse andere Fenster dieser App ' +
                 'und lade neu.');
             return;
+        }
+        /* Ein kaputter Beschleuniger darf den Bestand niemals in den Notbetrieb
+           schicken. Deshalb wird das Cache-Fach getrennt von den Nutzerdaten
+           gelesen. Jeder Fehler bedeutet hier ausschliesslich: leer anfangen. */
+        try {
+            (await all('suchindex')).forEach((e) => {
+                if (e && typeof e.id === 'string')
+                    cache.suchindex[e.id] = e;
+            });
+        }
+        catch (err) {
+            cache.suchindex = {};
+            if (typeof Reporter !== 'undefined')
+                Reporter.warn('Suche', 'Der Suchindex war nicht lesbar und wird repariert', err);
         }
         /* --- Selbstheilung ---------------------------------------------------
            Ein Satz, dem ein Feld fehlt, bringt die Oberfläche zu Fall — und zwar
@@ -442,6 +472,7 @@ const Store = (() => {
         purgeTief(id, gesammelt, geloescht);
         if (!gesammelt.length)
             return;
+        datenGeaendert();
         notify('purge');
         (async () => {
             /* Ein Löschen läuft nicht über `save()` und damit nicht über `flush()` —
@@ -958,6 +989,8 @@ const Store = (() => {
                 else {
                     delete cache[fach][id];
                 }
+                if (fach === 'blocks' || fach === 'collections')
+                    datenGeaendert();
                 geaendert++;
             }
             catch { /* ein Satz weniger ist kein Grund, die übrigen fallenzulassen */ }
@@ -976,6 +1009,7 @@ const Store = (() => {
             /* „Alles löschen" oder eine eingespielte Sicherung drüben. Einzelne
                Sätze nachzulesen hilft dann nicht — der ganze Bestand ist ein
                anderer. Die Oberfläche erfährt es und entscheidet selbst. */
+            datenGeaendert();
             notify('fremd-alles');
             return;
         }
@@ -988,6 +1022,8 @@ const Store = (() => {
     const pending = new Map();
     let timer = null;
     const save = (store, val) => {
+        if (store === 'blocks' || store === 'collections')
+            datenGeaendert();
         pending.set(store + ':' + val.id, { store, val });
         clearTimeout(timer);
         timer = setTimeout(flush, (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400);
@@ -1147,7 +1183,21 @@ const Store = (() => {
         const wo = filter.wo || 'alles';
         const grenze = { tag: 1, woche: 7, monat: 30 }[filter.seit];
         const seitDatum = grenze ? Date.now() - grenze * 86400000 : 0;
-        Object.values(cache.blocks).forEach(b => {
+        /* Wenn der Such-Cache eine sichere Wort-Schnittmenge kennt, werden nur
+           diese Seiten am echten Bestand geprüft. Die Prüfung selbst bleibt
+           unverändert — der Cache liefert Kandidaten, niemals die Wahrheit. Bei
+           kurzen Wörtern oder uneindeutigen Teilstrings gibt er `null` zurück,
+           und dieser Weg scannt wie früher vollständig. */
+        let zuPruefen = Object.values(cache.blocks);
+        try {
+            if (typeof Kontext !== 'undefined' && Kontext.kandidaten) {
+                const ids = Kontext.kandidaten(needle);
+                if (Array.isArray(ids))
+                    zuPruefen = ids.map((id) => cache.blocks[id]).filter(Boolean);
+            }
+        }
+        catch { /* Ein kaputter Beschleuniger darf die echte Suche nie verhindern. */ }
+        zuPruefen.forEach(b => {
             if (!b.alive)
                 return;
             if (b.type !== 'page' || b.parentTable === 'collection')
@@ -1403,7 +1453,7 @@ const Store = (() => {
             await new Promise((ok, nein) => {
                 let t;
                 try {
-                    t = tx(['blocks', 'collections', 'views', 'meta', 'versions'], 'readwrite');
+                    t = tx(['blocks', 'collections', 'views', 'meta', 'versions', 'suchindex'], 'readwrite');
                 }
                 catch (err) {
                     return nein(err);
@@ -1433,6 +1483,10 @@ const Store = (() => {
                     }
                 };
                 if (art === 'ersetzen') {
+                    /* Ein Index aus dem alten Bestand ist nach dem Ersetzen wertlos.
+                       Er gehört nicht zur Sicherung und wird in derselben Alles-oder-
+                       nichts-Transaktion verworfen. */
+                    t.objectStore('suchindex').clear();
                     /* Was in der Ablage steht und nicht in der Sicherung, muss weg —
                        sonst ist es kein Ersetzen, sondern ein Zusammenführen, das
                        sich als Ersetzen ausgibt. Die Schlüssel werden IN derselben
@@ -1492,6 +1546,7 @@ const Store = (() => {
             cache.collections = neu.collections;
             cache.views = neu.views;
             cache.meta = neu.meta;
+            cache.suchindex = {};
         }
         else {
             /* Zusammenführen: nichts wegwerfen, die Sicherung sticht bei gleicher
@@ -1501,6 +1556,7 @@ const Store = (() => {
             Object.assign(cache.views, neu.views);
             Object.assign(cache.meta, neu.meta);
         }
+        datenGeaendert();
         notify('import');
         /* Nach einer eingespielten Sicherung ist der ganze Bestand ein anderer.
            Einzelne Sätze nachzulesen hülfe den anderen Fenstern nichts — sie
@@ -1780,6 +1836,8 @@ const Store = (() => {
         cache.collections = {};
         cache.views = {};
         cache.meta = {};
+        cache.suchindex = {};
+        datenGeaendert();
         meldeAnAndereFenster('alles', []);
         if (geblieben.length) {
             const text = 'Nicht alles liess sich löschen. Diese Fächer sind noch da: ' +
@@ -1835,21 +1893,91 @@ const Store = (() => {
     const vorratHolen = (id) => get('vorrat', id);
     const vorratWeg = (id) => del('vorrat', id);
     const vorratAlle = () => all('vorrat');
+    /* --- Persistenter Suchindex ------------------------------------------- */
+    /**
+     * Schreibt nur den Such-Cache. Diese Wege berühren absichtlich weder
+     * `blocks` noch `collections`: selbst ein Abbruch kann darum niemals
+     * Nutzerdaten beschädigen. Der Speicherabzug wird erst nach `oncomplete`
+     * umgestellt; beim Neuladen sieht man entweder den alten oder den neuen
+     * Cache, nie einen behaupteten Zwischenstand.
+     */
+    const suchindexAendern = (setzen = [], loeschen = []) => new Promise((ok2, fail2) => {
+        const anwenden = () => {
+            loeschen.forEach(id => { delete cache.suchindex[id]; });
+            setzen.forEach(e => { if (e && typeof e.id === 'string')
+                cache.suchindex[e.id] = e; });
+        };
+        if (!db || !db.objectStoreNames.contains('suchindex')) {
+            anwenden();
+            ok2();
+            return;
+        }
+        try {
+            const t = tx(['suchindex'], 'readwrite');
+            const s = t.objectStore('suchindex');
+            loeschen.forEach(id => s.delete(id));
+            setzen.forEach(e => s.put(e));
+            t.oncomplete = () => { anwenden(); ok2(); };
+            t.onerror = t.onabort = () => fail2(t.error || new Error('Der Suchindex liess sich nicht speichern'));
+        }
+        catch (err) {
+            fail2(err);
+        }
+    });
+    const suchindexErsetzen = (eintraege) => new Promise((ok2, fail2) => {
+        const neu = {};
+        eintraege.forEach(e => { if (e && typeof e.id === 'string')
+            neu[e.id] = e; });
+        if (!db || !db.objectStoreNames.contains('suchindex')) {
+            cache.suchindex = neu;
+            ok2();
+            return;
+        }
+        try {
+            const t = tx(['suchindex'], 'readwrite');
+            const s = t.objectStore('suchindex');
+            s.clear();
+            Object.values(neu).forEach(e => s.put(e));
+            t.oncomplete = () => { cache.suchindex = neu; ok2(); };
+            t.onerror = t.onabort = () => fail2(t.error || new Error('Der Suchindex liess sich nicht ersetzen'));
+        }
+        catch (err) {
+            fail2(err);
+        }
+    });
+    const suchindexLeeren = () => suchindexErsetzen([]);
     const stueckPut = (satz) => put('stuecke', satz);
     const stueckHolen = (id) => get('stuecke', id);
     const stueckWeg = (id) => del('stuecke', id);
+    /**
+     * Ein Fehler beim Lesen der Stücke braucht zwei Gesichter: einen kurzen
+     * Satz für den Menschen und die technische Ursache für den Fehlerbericht.
+     * Dateiname und Inhalt gehören ausdrücklich nicht in den Bericht.
+     */
+    const chunkReadError = (dateiId, cause) => {
+        const error = new Error('Die Dateistücke konnten nicht aus dem Speicher gelesen werden. ' +
+            'Der Vorgang wurde abgebrochen.');
+        error.code = 'DATEISTUECKE_NICHT_LESBAR';
+        error.cause = cause;
+        if (typeof Reporter !== 'undefined') {
+            Reporter.error('ablage', 'Dateistücke konnten nicht gelesen werden', {
+                fileId: String(dateiId ?? ''), cause
+            });
+        }
+        return error;
+    };
     /** Alle Stücke einer Datei, in der richtigen Reihenfolge. */
-    const stueckeVon = (dateiId) => new Promise((ok2) => {
+    const stueckeVon = (dateiId) => new Promise((ok2, fail2) => {
         if (!db || !db.objectStoreNames.contains('stuecke'))
             return ok2([]);
         try {
             const r = tx(['stuecke'], 'readonly').objectStore('stuecke')
                 .index('datei').getAll(dateiId);
             r.onsuccess = () => ok2((r.result || []).sort((a, b) => a.nr - b.nr));
-            r.onerror = () => ok2([]);
+            r.onerror = () => fail2(chunkReadError(dateiId, r.error || new Error('Die IndexedDB-Anfrage ist fehlgeschlagen')));
         }
-        catch {
-            ok2([]);
+        catch (err) {
+            fail2(chunkReadError(dateiId, err));
         }
     });
     /* Wie viel Platz belegt die App? */
@@ -1874,11 +2002,13 @@ const Store = (() => {
         dateiPut, dateiHolen, dateiWeg, dateiAlle,
         basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
         vorratPut, vorratHolen, vorratWeg, vorratAlle,
+        suchindexAendern, suchindexErsetzen, suchindexLeeren,
         stueckPut, stueckHolen, stueckWeg, stueckeVon,
         speichertNicht: () => nurSpeicher,
         warnungText: () => warnung,
         beiWarnung: (fn) => { warner.add(fn); if (warnung)
             fn(warnung); },
+        datenFassung: () => datenFassung,
         on: (fn) => listeners.add(fn)
     };
 })();

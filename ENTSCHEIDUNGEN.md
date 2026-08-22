@@ -7995,3 +7995,49 @@ verliert · Codeblock, Tabelle und Platzhalter an ihrem Platz, mit Inhalt,
 Sprache und Zeilen · Quelltext-Zeugen, darunter „keine Zeile hängt sich mehr
 blind an die Seite" (gezählt: 13 solcher Stellen vorher, 0 danach). Ein Arm:
 mit dem alten Zurückleser fallen sechzehn Punkte.
+## E121 · Ein Stück-Lesefehler ist keine leere Datei
+
+> **Zur Nummer:** Dieser Eintrag hiess auf dem Laptop E98 und ist am
+> 15. August entstanden. In der Cloud lief zur selben Zeit ein zweiter
+> Strang, der die 98 ebenfalls vergab („Abgelegte Dateien überleben den
+> Browser-Neustart", 19. August). Beim Zusammenführen der beiden Stände
+> hat dieser hier die nächste freie Nummer bekommen, weil der andere
+> bereits veröffentlicht und von sechzehn Commits und mehreren Prüfläufen
+> in Bezug genommen war. Am Inhalt ändert das nichts.
+
+
+**Datum:** 15. August 2026 · **Status:** Beschlossen · **Lücke:** L35 geschlossen
+
+E71 zog die Grenze schon für ganze Fächer: „nicht lesbar" darf nie als
+„leer" weiterlaufen. Bei `stueckeVon` blieb aber genau diese Verwechslung
+stehen. Sowohl der Fehler der IndexedDB-Anfrage als auch ein synchroner
+Fehler antworteten mit `[]`. Dadurch konnte `alsBlob` „nicht gefunden"
+melden, die Sicherung einen falschen Erfolg herunterladen, der Abgleich
+ohne Inhalt weiterlaufen und `weg` den Dateisatz entfernen, obwohl die
+Stücke gar nicht gelesen und deshalb nicht gelöscht worden waren.
+
+`stueckeVon` lehnt beide Fehlerwege jetzt ab. `[]` bleibt nur die ehrliche
+Antwort, wenn die Stück-Ablage nicht existiert oder eine erfolgreiche
+Abfrage wirklich null Stücke findet. Der Fehler trägt einen kurzen Satz
+für den Menschen sowie Code und technische Ursache. Der Reporter erhält
+nur Dateikennung und Ursache — weder Dateiname noch Inhalt.
+
+Die vorhandenen Sicherungs- und Abgleichsgrenzen behandeln die Ablehnung
+bereits als Misserfolg. Das Dateifenster fängt Herunterladen, Löschen und
+Aufräumen nun ebenfalls ab: Eine Erfolgsmeldung kommt erst nach dem echten
+Erfolg; bei einem Lesefehler bleibt der Dateisatz stehen und der Mensch
+erfährt, dass der Vorgang abgebrochen wurde.
+
+**Geprüft** (`test144` §6, insgesamt 42 Punkte): echte Datei und echte
+Produktwege durch einen absichtlich fehlernden `datei`-Index — direktes
+Lesen, `alsBlob`, Bestätigen, `.redion`-Sicherung, Datei-Abgleich und der
+sichtbare Löschknopf. Ein echter Dateisatz mit null Stücken bleibt die
+Gegenklasse. Nach dem Fehler sind Metadaten, Stückzahl und Bytes
+unverändert; der Reporter enthält die technische Ursache, aber keinen
+privaten Dateinamen.
+
+Die Gegenprobe setzte ausschliesslich die beiden Fehlerzweige wieder auf
+`ok2([])`: 17 der 42 Punkte wurden rot, darunter falscher Download,
+fehlender Sync-Fehler und gelöschter Dateisatz. Nach Wiederherstellung
+waren 42/42 wieder grün. Es gibt keine Schemaänderung und keine
+Datenmigration.

@@ -137,7 +137,7 @@ console.log('\n4 · Der Bestand bleibt heil: alte Blöcke ohne Hüllen zeichnen 
 
 const alt = await seite.evaluate(async () => {
   const s = Store.addPage(null, { text: 'Altbestand' });
-  /* So sah ein Spaltenblock vor E98 aus: Inhalt direkt als Kind. */
+  /* So sah ein Spaltenblock vor E102 aus: Inhalt direkt als Kind. */
   const sp = Store.addBlock(s.id, 'columns', { text: '' });
   Store.addBlock(sp.id, 'text', { text: 'links, alt' });
   Store.addBlock(sp.id, 'text', { text: 'rechts, alt' });

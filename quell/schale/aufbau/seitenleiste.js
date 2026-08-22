@@ -309,6 +309,9 @@ const Seitenleiste = (() => {
            Schale warf das und die ganze Seitenleiste blieb leer. */
         if (!baum)
             return;
+        const altAufraeumen = baum.__seitenFensterAufraeumen;
+        if (typeof altAufraeumen === 'function')
+            altAufraeumen();
         baum.innerHTML = '';
         zeichneReiter();
         /* Der Chat-Reiter ersetzt den Baum durch Agenten und Verlauf */
@@ -497,7 +500,7 @@ const Seitenleiste = (() => {
                 leer.textContent = 'Noch leer';
                 baum.appendChild(leer);
             }
-            drin.forEach((p) => baum.appendChild(zeile(p, 0)));
+            seitenAnhaengen(baum, drin);
         });
         /* Privat */
         if (abschnittAn('privat')) {
@@ -515,12 +518,12 @@ const Seitenleiste = (() => {
                 leer.textContent = 'Noch keine Seiten';
                 baum.appendChild(leer);
             }
-            seiten.forEach((p) => baum.appendChild(zeile(p, 0)));
+            seitenAnhaengen(baum, seiten);
             /* Systemseiten (Journal, Vorlagen, Schnellnotizen) getrennt unten */
             const sys = Store.rootPages().filter((p) => p.system);
             if (sys.length) {
                 baum.appendChild(abschnitt('Angelegt von den Werkzeugen'));
-                sys.forEach((p) => baum.appendChild(zeile(p, 0)));
+                seitenAnhaengen(baum, sys);
             }
         }
         /* Meine Apps — bei Notion steht hier „Notion-Apps" ganz unten */
@@ -794,8 +797,91 @@ const Seitenleiste = (() => {
         d.appendChild(punkte);
         return d;
     };
-    const zeile = (p, tiefe) => {
+    let gemesseneZeilenHoehe = 30;
+    const FENSTER_SCHWELLE = 240;
+    const FENSTER_PUFFER = 12;
+    /** Sichtbare Seitenhierarchie als flache Folge. Nur aufgeklappte Kinder
+        gehören hinein — genau dieselbe Regel wie beim bisherigen rekursiven
+        Zeichnen. */
+    const sichtbareSeiten = (wurzeln) => {
+        const raus = [];
+        const nimm = (p, tiefe) => {
+            raus.push({ p, tiefe });
+            if (!p.aufgeklappt)
+                return;
+            Store.childrenOf(p.id)
+                .filter((k) => k.type === 'page' && !k.archiviert)
+                .forEach((k) => nimm(k, tiefe + 1));
+        };
+        wurzeln.forEach(p => nimm(p, 0));
+        return raus;
+    };
+    /**
+     * Ein echter Fenster-Renderer für grosse Seitenlisten. Der Scrollbereich
+     * bleibt so hoch wie die vollständige Liste; im DOM stehen nur die Zeilen
+     * im Bild plus zwölf darüber und darunter. Die Höhe wird an einer echten
+     * `.row` gemessen und nicht aus dem CSS abgeschrieben.
+     */
+    const seitenAnhaengen = (baum, wurzeln) => {
+        const liste = sichtbareSeiten(wurzeln);
+        if (liste.length <= FENSTER_SCHWELLE) {
+            wurzeln.forEach(p => baum.appendChild(zeile(p, 0)));
+            return;
+        }
+        const rahmen = document.createElement('div');
+        rahmen.className = 'seiten-fenster';
+        rahmen.setAttribute('role', 'list');
+        rahmen.setAttribute('aria-label', `${liste.length} Seiten`);
+        rahmen.style.cssText = `position:relative;height:${liste.length * gemesseneZeilenHoehe}px`;
+        baum.appendChild(rahmen);
+        let letzterVon = -1, letzterBis = -1;
+        const zeichnen = (erzwingen = false) => {
+            if (!rahmen.isConnected || rahmen.style.display === 'none')
+                return;
+            const relativ = baum.scrollTop - rahmen.offsetTop;
+            const von = Math.max(0, Math.floor(relativ / gemesseneZeilenHoehe) - FENSTER_PUFFER);
+            const bis = Math.min(liste.length, Math.max(von, Math.ceil((relativ + baum.clientHeight) / gemesseneZeilenHoehe) + FENSTER_PUFFER));
+            if (!erzwingen && von === letzterVon && bis === letzterBis)
+                return;
+            letzterVon = von;
+            letzterBis = bis;
+            rahmen.replaceChildren();
+            for (let i = von; i < bis; i++) {
+                const x = liste[i];
+                if (!x)
+                    continue;
+                const z = zeile(x.p, x.tiefe, true);
+                z.setAttribute('role', 'listitem');
+                z.setAttribute('aria-posinset', String(i + 1));
+                z.setAttribute('aria-setsize', String(liste.length));
+                z.style.cssText = `position:absolute;left:0;right:0;top:${i * gemesseneZeilenHoehe}px`;
+                rahmen.appendChild(z);
+            }
+        };
+        zeichnen(true);
+        requestAnimationFrame(() => {
+            if (!rahmen.isConnected)
+                return;
+            const h = rahmen.querySelector('.row')?.getBoundingClientRect().height || 0;
+            if (h > 10 && Math.abs(h - gemesseneZeilenHoehe) > 0.25) {
+                gemesseneZeilenHoehe = h;
+                rahmen.style.height = liste.length * h + 'px';
+                zeichnen(true);
+            }
+        });
+        const beiScroll = () => zeichnen();
+        baum.addEventListener('scroll', beiScroll, { passive: true });
+        const bisher = baum.__seitenFensterAufraeumen;
+        baum.__seitenFensterAufraeumen = () => {
+            if (typeof bisher === 'function')
+                bisher();
+            baum.removeEventListener('scroll', beiScroll);
+        };
+    };
+    const zeile = (p, tiefe, flach = false) => {
         const w = document.createElement('div');
+        if (flach && tiefe)
+            w.style.marginLeft = tiefe * 14 + 'px';
         const r = document.createElement('div');
         r.className = 'row' + (p.id === aktuelleSeite() ? ' on' : '');
         r.draggable = true;
@@ -854,7 +940,7 @@ const Seitenleiste = (() => {
             }
         });
         w.appendChild(r);
-        if (offen && kinder.length) {
+        if (!flach && offen && kinder.length) {
             const k = document.createElement('div');
             k.className = 'kids';
             kinder.forEach((kid) => k.appendChild(zeile(kid, tiefe + 1)));

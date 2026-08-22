@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**19. August 2026 · 159 Prüfläufe**
+**22. August 2026 · 163 Prüfläufe** — zwei Arbeitsstände zusammengeführt
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -53,6 +53,9 @@ L22  fensterweise Zeichnen rechnete mit 34 px je Zeile (E65) — bei „alle
 —    ein Lesefehler sah aus wie ein leerer Bestand (E71) — „Ersetzen"
      löschte dann nichts und meldete Erfolg; der Verlauf zeigte „0
      Fassungen", wenn er nicht lesbar war
+—    auch `stueckeVon` verwechselt einen Lesefehler nicht mehr mit einer
+     leeren Datei (E121, L35) — Sicherung, Sync und Löschen brechen ehrlich
+     ab; Dateisatz und Stücke bleiben unverändert
 —    Heilen überschrieb Inhalt mit Vorgaben (E72) — ein `text` in fremder
      Verpackung wurde bei jedem Start zu `''`; jetzt liegt er beiseite
 —    test100 prüfte eine Abschrift statt der echten Sicherung (E73) —
@@ -795,51 +798,6 @@ man ihn **lesen**, nicht abschreiben. Geht das nicht, weil das Rechnen ihn
 vor dem Zeichnen braucht, dann muss ein Prüflauf die Gleichheit nachrechnen.
 Ein Kommentar „muss übereinstimmen" reicht nicht: genau der stand bei
 `ZH_HANDY` und hat nichts verhindert.
-
-## L35 · `stueckeVon` schweigt noch bei einem Lesefehler
-
-**Wo** `src/kern/ablage/indexdb.ts`, in `stueckeVon`:
-
-```js
-r.onerror = () => ok2([]);
-```
-
-**Was das heisst.** Dieselbe Verwechslung, die E71 an drei Stellen aufgelöst
-hat, steht hier noch: „ich konnte die Stücke nicht lesen" sieht aus wie
-„diese Datei hat keine Stücke". Eine Datei besteht aus Stücken; null Stücke
-heisst, es gibt sie nicht.
-
-**Was daraus folgt, nach Aufrufer:**
-
-| Stelle | Folge bei `[]` |
-|---|---|
-| `dateien/ablage.ts:173` (`alsBlob`) | gibt `null` — der Mensch liest „Datei nicht gefunden", obwohl sie da ist |
-| `dateien/ablage.ts:214` (`weg`) | löscht **kein** Stück, entfernt aber den Dateisatz → die Stücke liegen für immer verwaist im Speicher |
-| `dateien/ablage.ts:109` (`bestaetigen`) | meldet „Es fehlen noch N Stücke" — zufällig ehrlich, aber aus dem falschen Grund |
-| `abgleich/maschine.ts:675, 698, 733` | Abgleich arbeitet mit einer Datei ohne Inhalt |
-
-Ein zusammengesetzter Blob aus null Stücken ist **0 Byte** — und ginge so in
-eine `.redion`-Sicherung, die dann einen Anhang nennt, den sie nicht hat.
-Das ist der Grund, warum diese Lücke nicht „später irgendwann" ist.
-
-**Warum sie trotzdem offen bleibt.** Drei der sieben Aufrufer liegen im
-Abgleich, und Abgleichslogik ist in dieser Sitzung ausdrücklich nicht zu
-ändern (Vorgabe von Redur). Ein `fail` ohne durchdachte Aufrufer wäre keine
-Verbesserung, sondern ein Absturz an einer Stelle, die heute wenigstens
-weiterläuft.
-
-**Woran man sich erinnert.** `test144` §6 hält den Zustand mit einem Punkt
-fest, der heute grün ist, **weil** die Lücke besteht:
-
-```txt
-✓ Bekannt und festgehalten: `stueckeVon` schweigt noch (L35)
-```
-
-Wird sie geschlossen, fällt dieser Punkt — und die Meldung daneben sagt, was
-dann zu tun ist: den Punkt umdrehen und L35 streichen. Eine Lücke, an die
-kein Prüflauf erinnert, wird vergessen.
-
----
 
 # Später
 
