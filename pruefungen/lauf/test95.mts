@@ -75,15 +75,23 @@ await new Promise<void>(f => { server.listen(PORT, () => f()); });
    selbst und wäre auch dann grün, wenn beide falsch sind. */
 /** Die Fassungen, die es je gab — als eigener Name, damit die Tabelle unten
     nur mit einer davon gelesen werden kann. */
-type Fassung = 1 | 2 | 3 | 4 | 5;
+type Fassung = 1 | 2 | 3 | 4 | 5 | 6;
 
 const FAECHER_BIS: Record<Fassung, string[]> = {
   1: ['blocks', 'collections', 'views', 'meta'],
   2: ['blocks', 'collections', 'views', 'meta', 'versions'],
   3: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke'],
   4: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke', 'basis'],
-  5: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke', 'basis', 'vorrat']
+  5: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke', 'basis', 'vorrat'],
+  /* Fassung 6 brachte den inkrementellen Suchindex mit. */
+  6: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke',
+      'basis', 'vorrat', 'suchindex']
 };
+
+/* Wogegen geprüft wird: der Stand von HEUTE. Steht hier eine Zahl zu
+   niedrig, meldet der Prüflauf einen Umzug als gelungen, der ein Fach
+   vergessen hat. */
+const HEUTE: Fassung = 6;
 
 const browser = await chromium.launch();
 
@@ -123,7 +131,7 @@ const altenBestandAnlegen = async (seite: Page, nr: Fassung) =>
   });
 }, [nr, FAECHER_BIS[nr]] as [number, string[]]);
 
-for (const fassung of [1, 2, 3, 4, 5] as Fassung[]) {
+for (const fassung of [1, 2, 3, 4, 5, 6] as Fassung[]) {
   console.log(`\n— Ein Bestand aus Fassung ${fassung} —`);
 
   const kontext = await browser.newContext();
@@ -166,7 +174,8 @@ for (const fassung of [1, 2, 3, 4, 5] as Fassung[]) {
     const r = indexedDB.open('notizen');
     r.onsuccess = () => { const n = [...r.result.objectStoreNames]; r.result.close(); f(n.sort()); };
   }));
-  gleich(`F${fassung}: Alle neun Fächer stehen danach bereit`, faecher, FAECHER_BIS[5]?.slice().sort());
+  gleich(`F${fassung}: Alle zehn Fächer stehen danach bereit`,
+         faecher, FAECHER_BIS[HEUTE]?.slice().sort());
 
   /* 3 · Und die App muss danach benutzbar sein, nicht nur lesbar. */
   const nachSchreiben = await seite.evaluate(async () => {

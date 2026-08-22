@@ -373,6 +373,23 @@ const ablage = ohneKommentare(
 p('Die Suche sieht in `text` UND `suchtext`',
   /\['text', 'suchtext'\]/.test(ablage));
 
+/* ES GIBT DREI SUCHWEGE, UND SIE MÜSSEN DASSELBE SAGEN. `Store.search` las
+   `suchtext` von Anfang an; das Suchfenster und sein Index taten es nicht.
+   Ergebnis: derselbe Begriff, zweimal gesucht, zweimal eine andere Antwort —
+   `Store.search` fand das eingelesene Skript, das Fenster sagte „Nichts
+   gefunden" (E124). §5 oben prüft das am Bild; hier steht, woran es lag. */
+const kontext = ohneKommentare(
+  fs.readFileSync(path.join(WURZEL, 'src/bereiche/ki/kontext.ts'), 'utf8'));
+p('Der Suchindex nimmt `suchtext` mit auf',
+  /if \(k\.suchtext\) text\.push\(k\.suchtext\);/.test(kontext));
+p('… und merkt sich ihn auch in der Signatur, sonst fällt eine Änderung nicht auf',
+  /teile\.push\(k\.id, k\.type, k\.edited, k\.alive, k\.text, k\.suchtext,/.test(kontext));
+
+const schaleQuelle = ohneKommentare(
+  fs.readFileSync(path.join(WURZEL, 'src/schale/aufbau/schale.ts'), 'utf8'));
+p('Und der Weg ohne Index tut dasselbe',
+  /child\.text \|\| child\.suchtext/.test(schaleQuelle));
+
 const einlesen = ohneKommentare(
   fs.readFileSync(path.join(WURZEL, 'src/bereiche/pdf/einlesen.ts'), 'utf8'));
 p('Auch das Zurückholen trägt fehlenden Text nach',

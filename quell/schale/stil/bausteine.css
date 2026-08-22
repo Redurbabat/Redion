@@ -1632,7 +1632,15 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .kr-zeile{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .kr-zeile input[type="password"]{ flex:1; min-width:120px; padding:7px 10px;
   border-radius:6px; background:var(--bg-input); border:1px solid var(--line); color:var(--text); }
-.kr-zeile button{ padding:7px 14px; border-radius:6px; }
+/* MIT AUGEN GESEHEN (§55): nur das Passwortfeld war biegsam. Ein Dateifeld
+   bringt seine eigene, ziemlich grosse Wunschbreite mit — es drückte den
+   Knopf daneben in die nächste Zeile, wo er allein und ohne Bezug stand.
+   `min-width:0` ist der Teil, der wirklich wirkt: ohne ihn schrumpft ein
+   Flex-Element nicht unter seinen Inhalt, und `flex:1` allein hilft nichts. */
+.kr-zeile input[type="file"]{ flex:1; min-width:0; font-size:12.5px;
+  padding:6px 8px; border-radius:6px; background:var(--bg-input);
+  border:1px solid var(--line); color:var(--text); }
+.kr-zeile button{ padding:7px 14px; border-radius:6px; white-space:nowrap; }
 
 /* Bewertung und Fortschritt — zwei Typen, die Notion nicht hat */
 .sterne{ display:inline-flex; gap:1px; cursor:pointer; }

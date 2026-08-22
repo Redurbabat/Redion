@@ -1038,7 +1038,10 @@ const App = (() => {
                     .map(block => ({ id: block.id, seiteId: block.id,
                     art: block.parentTable === 'collection' ? 'zeile' : 'seite',
                     titel: block.text || '', text: Store.childrenOf(block.id)
-                        .map((child) => child.text || '').join(' '),
+                        /* Auch `suchtext` — sonst findet dieser Weg eine PDF-Seite
+                           nicht, während `Store.search` sie findet (E124). Die beiden
+                           müssen dasselbe sagen. */
+                        .map((child) => (child.text || child.suchtext || '')).join(' '),
                     geaendert: block.edited || block.created || '' }));
             }
             documentCache = indexEntries.map((entry) => {

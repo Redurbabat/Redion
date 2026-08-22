@@ -4648,7 +4648,15 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .kr-zeile{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .kr-zeile input[type="password"]{ flex:1; min-width:120px; padding:7px 10px;
   border-radius:6px; background:var(--bg-input); border:1px solid var(--line); color:var(--text); }
-.kr-zeile button{ padding:7px 14px; border-radius:6px; }
+/* MIT AUGEN GESEHEN (§55): nur das Passwortfeld war biegsam. Ein Dateifeld
+   bringt seine eigene, ziemlich grosse Wunschbreite mit — es drückte den
+   Knopf daneben in die nächste Zeile, wo er allein und ohne Bezug stand.
+   `min-width:0` ist der Teil, der wirklich wirkt: ohne ihn schrumpft ein
+   Flex-Element nicht unter seinen Inhalt, und `flex:1` allein hilft nichts. */
+.kr-zeile input[type="file"]{ flex:1; min-width:0; font-size:12.5px;
+  padding:6px 8px; border-radius:6px; background:var(--bg-input);
+  border:1px solid var(--line); color:var(--text); }
+.kr-zeile button{ padding:7px 14px; border-radius:6px; white-space:nowrap; }
 
 /* Bewertung und Fortschritt — zwei Typen, die Notion nicht hat */
 .sterne{ display:inline-flex; gap:1px; cursor:pointer; }
@@ -13836,7 +13844,7 @@ const Store = (() => {
             return;
         datenGeaendert();
         notify('purge');
-        (async () => {
+        abloesen((async () => {
             /* Ein Löschen läuft nicht über `save()` und damit nicht über `flush()` —
                es muss den anderen Fenstern eigens gesagt werden, sonst zeigten sie
                eine Seite weiter an, die es nicht mehr gibt, und schrieben sie beim
@@ -13861,7 +13869,7 @@ const Store = (() => {
                     'nach dem Neuladen kann Gelöschtes wieder auftauchen', err);
             if (typeof UI !== 'undefined' && UI.toast)
                 UI.toast('Der Speicher hat das Löschen nicht angenommen — bitte neu laden.');
-        });
+        }));
     };
     /**
      * Einen ausstehenden Schreibvorgang zurücknehmen.
@@ -14379,6 +14387,58 @@ const Store = (() => {
         if (!fremdTimer)
             fremdTimer = setTimeout(fremdesEintragen, 120);
     };
+    /* --- Abgelöste Arbeit — und wie man auf sie wartet ----------------------
+     * `purgeBlock` kehrt sofort zurück und löscht die Anhänge danach im
+     * Hintergrund. Das ist richtig so: bei einer Seite mit fünfhundert Blöcken
+     * darf der Bildschirm nicht stehen bleiben.
+     *
+     * Es war aber nicht abwartbar, und das hat einen Anhang gekostet. Wer eine
+     * Seite endgültig löscht und gleich darauf eine Sicherung einspielt, bekam
+     * das hier:
+     *
+     *     Seite gelöscht           `purgeBlock` kehrt zurück, das Löschen der
+     *                              Anhänge läuft noch
+     *     Sicherung eingespielt    die Blöcke stehen wieder, der Anhang wird
+     *                              frisch geschrieben
+     *     … Wimpernschlag später   das alte Löschen kommt an und nimmt den
+     *                              NEUEN Anhang mit
+     *
+     * Gemessen, und immer anders: `dateiAlle()` fand den Satz, `dateiHolen()`
+     * einen Augenblick später nicht mehr; mal null Stücke, mal eins. Genau
+     * dieses Schwanken ist die Unterschrift eines Wettlaufs.
+     *
+     * Schlimmer noch: `purgeAnhaenge` liest den Block aus dem
+     * Zwischenspeicher — und der ist nach dem Einspielen der EINGESPIELTE.
+     * Das Löschen findet also die frisch zurückgeholte Kennung und trifft sie
+     * genau. Ein Zufall wäre halb so schlimm; das hier ist zielsicher.
+     *
+     * Deshalb wird jede abgelöste Arbeit hier vermerkt, und `settled()` wartet
+     * darauf. `importAll` ruft es vorn und hinten: vor dem Ersetzen muss
+     * gelandet sein, was noch unterwegs war, und danach muss gelandet sein,
+     * was das Einspielen selbst angestossen hat — erst dann darf jemand
+     * Anhänge daneben schreiben.
+     * ----------------------------------------------------------------------*/
+    const unterwegs = new Set();
+    /** Vermerkt eine Arbeit, die ohne Aufrufer weiterläuft. */
+    const abloesen = (p) => {
+        unterwegs.add(p);
+        const raus = () => { unterwegs.delete(p); };
+        p.then(raus, raus);
+        return p;
+    };
+    /**
+     * Wartet, bis nichts mehr unterwegs ist.
+     *
+     * In Runden, weil eine abgelöste Arbeit die nächste anstossen kann. Nach
+     * zwanzig Runden ist Schluss — ein Fehler, der sich selbst nachlegt, darf
+     * die App nicht anhalten; dann ist ein Wettlauf immer noch besser als ein
+     * Stillstand. Eine Ablehnung zählt als gelandet: behandelt wird sie dort,
+     * wo sie entsteht (siehe `purgeBlock`), nicht hier.
+     */
+    const settled = async () => {
+        for (let runde = 0; runde < 20 && unterwegs.size; runde++)
+            await Promise.all([...unterwegs].map(p => p.catch(() => { })));
+    };
     /* --- Schreiben mit Verzögerung ----------------------------------------- */
     /* Beim Tippen soll nicht jeder Tastendruck eine Transaktion auslösen.     */
     const pending = new Map();
@@ -14785,6 +14845,9 @@ const Store = (() => {
      * mit der Frage — und nicht die stille Entscheidung von jemand anderem.
      */
     const importAll = async (json, art) => {
+        /* Erst landen lassen, was noch unterwegs ist — sonst löscht ein
+           Aufräumen von vorhin in den neuen Bestand hinein (siehe `settled`). */
+        await settled();
         const d = JSON.parse(json);
         if (!d.blocks)
             throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
@@ -14924,6 +14987,11 @@ const Store = (() => {
            Einzelne Sätze nachzulesen hülfe den anderen Fenstern nichts — sie
            müssen von vorn anfangen. */
         meldeAnAndereFenster('alles', []);
+        /* Und noch einmal: `notify('import')` gerade eben kann selbst ein
+           endgültiges Löschen angestossen haben. Wer nach dem Einspielen
+           Anhänge danebenschreibt, muss sich darauf verlassen können, dass
+           nichts mehr unterwegs ist. */
+        await settled();
         return { bloecke: Object.keys(cache.blocks).length,
             versionen: Array.isArray(d.versions) ? d.versions.length : 0,
             fehlt: d.fehlt || [] };
@@ -15357,7 +15425,7 @@ const Store = (() => {
         addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
         rohSetzen,
         addRow, rowsOf, setProp,
-        setMeta, getMeta, flush,
+        setMeta, getMeta, flush, settled,
         baum, baumEinfuegen, kinderLeeren,
         versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
         search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
@@ -48115,7 +48183,9 @@ const Kontext = (() => {
                 if (!k.alive || k.type === 'page')
                     return; /* Unterseite = eigener Eintrag */
                 geaendert = spaeter(geaendert, k.edited || k.created || '');
-                teile.push(k.id, k.type, k.edited, k.alive, k.text, Array.isArray(k.rows) ? JSON.stringify(k.rows) : '', Array.isArray(k.content) ? k.content.join(',') : '');
+                /* `suchtext` gehört mit in die Signatur, sonst merkt der Index nicht,
+                   dass eine PDF-Seite ihren Text bekommen hat (E124). */
+                teile.push(k.id, k.type, k.edited, k.alive, k.text, k.suchtext, Array.isArray(k.rows) ? JSON.stringify(k.rows) : '', Array.isArray(k.content) ? k.content.join(',') : '');
                 if (k.type === 'database') {
                     const c = Store.getCollection(k.collectionId);
                     if (c) {
@@ -48126,6 +48196,13 @@ const Kontext = (() => {
                 }
                 if (k.text)
                     text.push(k.text);
+                /* EINE PDF-SEITE HAT KEINEN `text` — sie ist ein Bild. Ihr Wortlaut
+                   steht seit E107 in `suchtext`, und `Store.search` liest ihn auch.
+                   Der Index hier tat es nicht: die Suche im Fenster fand ein
+                   eingelesenes Skript nicht mehr, während `Store.search` es fand.
+                   Zwei Suchen mit zwei Antworten sind schlimmer als eine schlechte. */
+                if (k.suchtext)
+                    text.push(k.suchtext);
                 if (Array.isArray(k.rows))
                     text.push(k.rows.flat().join(' '));
                 if ((k.content || []).length)
@@ -55209,19 +55286,19 @@ const Krypto = (() => {
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss „ersetzen“ oder „zusammenfuehren“ gewählt sein.');
         const erg = await Store.importAll(paket.datenText, art);
-        /* ERST AUSSCHREIBEN, DANN DIE ANHÄNGE (E122).
-           `importAll` räumt die Fächer und schreibt den neuen Bestand — beides
-           geht gepuffert weiter, nachdem die Zusage schon zurück ist. Die
-           Anhangsstücke landeten deshalb MITTEN in dieses Aufräumen hinein und
-           wurden danach wieder weggewischt.
-           Gemessen: gleich nach dem Einspielen fand `dateiAlle()` den Satz,
-           `dateiHolen()` aber nicht — und mit einer Atempause von 600 ms war
-           gar keine Datei mehr da. Ein Wiederherstellen, das den Anhang still
-           verliert, ist schlimmer als eines, das scheitert (§46).
-           Also warten, bis der Bestand wirklich steht, und erst dann die
-           Stücke schreiben. */
-        if (typeof Store.flush === 'function')
-            await Store.flush();
+        /* ERST ALLES LANDEN LASSEN, DANN DIE ANHÄNGE (E123).
+           Hier stand ein `flush()` und daneben die Vermutung, `importAll`
+           schreibe gepuffert weiter. Das war falsch; gemessen hat es nichts
+           geändert. Der Wettlauf kam von `Store.purgeBlock`: das kehrt sofort
+           zurück und löscht die Anhänge in einer abgelösten Aufgabe hinterher —
+           die kam an, NACHDEM diese Schleife den Anhang neu geschrieben hatte,
+           und nahm ihn wieder mit.
+           `Store.importAll` wartet seit E123 vorn und hinten auf `settled()`.
+           Der Aufruf hier ist der Gürtel zum Hosenträger: zwischen dem
+           Einspielen und der ersten Anhangszeile darf nichts mehr unterwegs
+           sein — ein Wiederherstellen, das den Anhang STILL verliert, ist
+           schlimmer als eines, das scheitert (§46). */
+        await Store.settled();
         const saetze = new Map(paket.dateiliste.saetze.map(s => [String(s.id), s]));
         const eintragNachPfad = new Map(paket.manifest.eintraege.map(e => [e.pfad, e]));
         let anhaenge = 0;
@@ -55319,8 +55396,8 @@ const Krypto = (() => {
                 '<b>Verschlüsselte Sicherung</b>' +
                 '<div class="kr-text">Seiten, Datenbanken, Ansichten, Einstellungen und ' +
                 'Versionsverlauf in einer Datei, mit AES-GCM 256 verschlüsselt. ' +
-                'Dateianhänge sind <b>nicht</b> dabei — vollständig mit Anhängen sichert ' +
-                'nur die .redion-Sicherung in den Einstellungen. ' +
+                'Dateianhänge sind <b>nicht</b> dabei — die stehen im vollständigen ' +
+                'Paket eine Karte weiter. ' +
                 'Der Schlüssel entsteht aus deinem Passwort über 310 000 Runden. ' +
                 'Ohne Passwort ist die Datei nicht zu öffnen — auch nicht von mir.</div>' +
                 '<div class="kr-zeile">' +
@@ -55336,6 +55413,33 @@ const Krypto = (() => {
                     ? 'Zuletzt gesichert: ' + Werkzeuge.zeitKurz(Store.getMeta('sicherung:zuletzt'))
                     : 'Noch nie gesichert.') +
                 '</div>' +
+                '</div>' +
+                /* FASSUNG 2 — das vollständige Paket.
+                   Diese Karte war schon einmal geschrieben und wurde wieder
+                   ausgebaut: das Zurückholen verlor den Anhang, und ein Knopf,
+                   hinter dem Datenverlust liegt, gehört nicht in die App (L42).
+                   Seit E123 ist der Wettlauf behoben und gemessen — dreimal rot
+                   ohne die Behebung, dreimal grün mit ihr. Jetzt darf der Knopf
+                   da sein. */
+                '<div class="kr-karte">' +
+                '<b>Vollständiges Paket — verschlüsselt, mit Anhängen</b>' +
+                '<div class="kr-text">Alles: Seiten, Datenbanken, Ansichten, ' +
+                'Einstellungen, Versionsverlauf <b>und</b> die Dateianhänge. ' +
+                'Jeder Teil einzeln mit AES-GCM 256 verschlüsselt, die Anhänge ' +
+                'in Stücken — auch ein halbes Gigabyte geht durch, ohne dass es ' +
+                'je ganz im Arbeitsspeicher liegt. ' +
+                'Ohne Passwort ist nichts davon zu öffnen, nicht einmal die ' +
+                'Dateinamen.</div>' +
+                '<div class="kr-zeile">' +
+                '<input id="kr-pk-pw" type="password" placeholder="Passwort für das Paket">' +
+                '<button data-a="paket-sichern" class="prim">Paket sichern</button>' +
+                '</div>' +
+                '<div class="kr-zeile">' +
+                '<input id="kr-pk-datei" type="file" accept=".redion">' +
+                '<button data-a="paket-laden">Paket zurückholen</button>' +
+                '</div>' +
+                '<div class="kr-text">Zurückholen ersetzt den ganzen Bestand. ' +
+                'Vorher wird der jetzige Stand als Datei gesichert.</div>' +
                 '</div>' +
                 '<div class="kr-karte">' +
                 `<b>Sperre beim Öffnen ${an ? '— eingeschaltet' : ''}</b>` +
@@ -55407,6 +55511,65 @@ const Krypto = (() => {
                 o.remove();
                 UI.toast('Eingelesen — die Seite wird neu geladen');
                 setTimeout(() => location.reload(), 900);
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="paket-sichern"]')) {
+                const pw = o.querySelector('#kr-pk-pw')?.value ?? '';
+                if (!pw) {
+                    UI.toast('Ohne Passwort geht das Paket nicht');
+                    return;
+                }
+                try {
+                    const name = await paketSchreiben(pw);
+                    UI.toast('Paket gesichert: ' + name);
+                }
+                catch (err) {
+                    UI.banner('Das Paket kam nicht zustande: ' + satzVon(err), 'fehler');
+                }
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="paket-laden"]')) {
+                const f = o.querySelector('#kr-pk-datei')?.files?.[0];
+                if (!f) {
+                    UI.toast('Erst eine Datei wählen');
+                    return;
+                }
+                const pw = o.querySelector('#kr-pk-pw')?.value ?? '';
+                if (!pw) {
+                    UI.toast('Ohne Passwort ist das Paket nicht zu öffnen');
+                    return;
+                }
+                /* ERST ÖFFNEN, DANN FRAGEN. `paketOeffnen` entschlüsselt und prüft
+                   ALLES, ohne einen einzigen Satz zu schreiben. Ein falsches
+                   Passwort oder ein beschädigtes Stück scheitert also, bevor der
+                   Nutzer die Frage überhaupt sieht — und der Bestand ist zu diesem
+                   Zeitpunkt noch unangetastet. */
+                let offen;
+                try {
+                    offen = await paketOeffnen(f, pw);
+                }
+                catch (err) {
+                    UI.banner('Paket nicht lesbar: ' + satzVon(err), 'fehler');
+                    return;
+                }
+                const anhaenge = offen.dateiliste.dateien.length;
+                const ok = await UI.frage('Paket zurückholen?', `Es enthält den Bestand vom ${new Date(offen.manifest.erstellt).toLocaleString('de-DE')} ` +
+                    `und ${anhaenge} Dateianhang/Dateianhänge. ` +
+                    'Der jetzige Bestand wird davor als Datei gesichert und dann ersetzt: ' +
+                    'was nicht im Paket steht, wird gelöscht.');
+                if (!ok)
+                    return;
+                await sicherungSchreiben(); /* Netz unter dem Seil */
+                try {
+                    const erg = await geoeffnetesPaketEinspielen(offen, 'ersetzen');
+                    o.remove();
+                    UI.toast(`Zurückgeholt: ${erg.bloecke} Blöcke und ${erg.anhaenge} Anhang/Anhänge — ` +
+                        'die Seite wird neu geladen');
+                    setTimeout(() => location.reload(), 900);
+                }
+                catch (err) {
+                    UI.banner('Zurückholen fehlgeschlagen: ' + satzVon(err), 'fehler');
+                }
                 return;
             }
             if (elVon(e)?.closest('[data-a="sperre-an"]')) {
@@ -73042,7 +73205,10 @@ const App = (() => {
                     .map(block => ({ id: block.id, seiteId: block.id,
                     art: block.parentTable === 'collection' ? 'zeile' : 'seite',
                     titel: block.text || '', text: Store.childrenOf(block.id)
-                        .map((child) => child.text || '').join(' '),
+                        /* Auch `suchtext` — sonst findet dieser Weg eine PDF-Seite
+                           nicht, während `Store.search` sie findet (E124). Die beiden
+                           müssen dasselbe sagen. */
+                        .map((child) => (child.text || child.suchtext || '')).join(' '),
                     geaendert: block.edited || block.created || '' }));
             }
             documentCache = indexEntries.map((entry) => {

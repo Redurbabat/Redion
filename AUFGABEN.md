@@ -35,7 +35,74 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**22. August 2026 · 164 Prüfläufe**
+**22. August 2026 · 166 Prüfläufe**
+
+> ### ⏸ HIER WURDE ANGEHALTEN — 22. August, nachmittags
+>
+> Die Arbeit an E123/E124 ist inhaltlich fertig und committet. Was noch
+> aussteht, steht unten unter **„Offen beim Anhalten"**. Wer hier weitermacht,
+> liest zuerst diese drei Absätze und braucht sonst nichts.
+>
+> **Was zuletzt gemacht wurde**
+>
+> `Store.purgeBlock` löschte die Anhänge in einer abgelösten Aufgabe, auf die
+> niemand warten konnte. Wer eine Seite löschte und gleich darauf eine
+> Sicherung zurückholte, bekam die Seite zurück und den Anhang nicht — das
+> alte Löschen kam an, nachdem das Zurückholen den Anhang schon neu
+> geschrieben hatte. Betroffen war NICHT nur das verschlüsselte Paket,
+> sondern auch die gewöhnliche `.redion`-Sicherung.
+>
+> Behoben mit `Store.settled()`: abgelöste Arbeit wird vermerkt, `importAll`
+> wartet vorn und hinten darauf. Gemessen bei 1972 Blöcken im Bestand —
+> dreimal von drei Läufen der Anhang weg ohne die Behebung, dreimal von drei
+> Läufen 900 Bytes zurück mit ihr. Ganze Geschichte: `ENTSCHEIDUNGEN.md` E123.
+>
+> Nebenbefund beim Messen: das Suchfenster fand eingelesenen PDF-Text nicht
+> mehr, während `Store.search` ihn fand — zwei Suchen, zwei Antworten
+> (E124). Beide Wege lesen jetzt `text` UND `suchtext`.
+
+### Offen beim Anhalten
+
+```txt
+1. DER VOLLE PRÜFLAUF IST NICHT DURCHGELAUFEN.          ← das Wichtigste
+   `npm run pruefen` wurde nach 9 von 166 Läufen angehalten (alle 9 grün).
+   Einzeln geprüft und grün sind ausserdem: test85, test95, test133,
+   test152, test181, test199, test200.
+   Zu tun: `node pruefungen/alle.mts > /tmp/voll70.log 2>&1` und das
+   Ergebnis ansehen. Dauer etwa 50-60 Minuten.
+
+2. Der Zweig ist noch nicht geschoben.
+   Alles liegt auf `zusammenfuehrung`; `claude/redion-head2-desktop-move-j47chf`
+   muss daraufgesetzt und geschoben werden.
+
+3. L43 steht offen und ist Absicht.
+   Ein Anhang ohne `blockId` bleibt beim endgültigen Löschen für immer
+   liegen. Heute belanglos — alle sechs echten Aufrufer von
+   `Dateien.ablegen` übergeben `blockId`. Die naheliegende Behebung würde
+   MEHR löschen als heute, und das gehört in eine eigene Entscheidung mit
+   eigenen Prüfungen, nicht nebenbei in eine Fehlerbehebung (§46).
+
+4. Kleinigkeit: das Bild in Hell wurde nicht erzeugt.
+   `data-theme="light"` von aussen auf `documentElement` gesetzt hat die
+   App wieder überschrieben. Die geänderte CSS nutzt nur bestehende
+   Farbmarken (`--bg-input`, `--line`, `--text`), sollte also mitgehen —
+   nachgesehen wurde es aber nicht.
+```
+
+### Was dabei entstanden ist
+
+```txt
+src/kern/ablage/indexdb.ts      abloesen() + settled(), importAll wartet
+src/kern/sicherheit/krypto.ts   Karte „Vollständiges Paket" im Dialog
+src/bereiche/ki/kontext.ts      Suchindex liest suchtext
+src/schale/aufbau/schale.ts     der Weg ohne Index tut dasselbe
+quell/schale/stil/bausteine.css Dateifeld und Knopf auf einer Zeile
+pruefungen/lauf/test200.mts     NEU, 29 Punkte, Gegenprobe 10 rot
+pruefungen/lauf/test199.mts     §3 vom Wächter zum echten Rundlauf
+test85/95/133/152/181           Erwartungen auf den Stand nach dem
+                                Zusammenführen gebracht
+```
+
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem

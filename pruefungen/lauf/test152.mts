@@ -188,8 +188,11 @@ gleich('Und meta trägt den neuen Wert', (gesund as any).meta, 'NEUER Wert');
 
 console.log('\n3 · Die Quelle: eine Transaktion, Zwischenspeicher erst nach oncomplete');
 const quelle = fs.readFileSync(path.join(WURZEL, 'src/kern/ablage/indexdb.ts'), 'utf8');
-p('Das Einspielen läuft über EINE Transaktion über die fünf Fächer',
-  /tx\(\['blocks', 'collections', 'views', 'meta', 'versions'\], 'readwrite'\)/.test(quelle));
+/* Sechs, nicht mehr fünf: `suchindex` ist dazugekommen und wird beim
+   Ersetzen in derselben Transaktion geleert. Die Zahl im Text ist nicht der
+   Punkt — der Punkt ist, dass es EINE Transaktion ist. */
+p('Das Einspielen läuft über EINE Transaktion über die sechs Fächer',
+  /tx\(\['blocks', 'collections', 'views', 'meta', 'versions', 'suchindex'\], 'readwrite'\)/.test(quelle));
 p('Der Zwischenspeicher wird erst nach dem oncomplete umgestellt',
   /Erst JETZT, nach dem oncomplete, den Zwischenspeicher umstellen/.test(quelle));
 

@@ -224,9 +224,21 @@ const gefiltert = await seite.evaluate(() => {
   (Datenbank as any).automationenLaufen(zeile, coll, 'prop', 'status', 'Offen', { probe: liste });
   return { zeile: zeile.text, status: zeile.props?.status, plan: liste };
 });
-gleich('Von zwei Aktionen kommt nur eine zum Zug', (gefiltert as any).plan.length, 1);
+/* Hier stand `plan.length === 1`: die übersprungene Aktion tauchte gar
+   nicht auf. Das war eine Vorschau, die verschweigt — und wer eine Regel
+   baut, will genau wissen, WARUM eine Aktion nicht drankäme. Der Probelauf
+   führt sie deshalb mit auf und schreibt „würde übersprungen" daneben.
+   Geprüft wird jetzt beides: dass nur eine wirklich liefe, und dass die
+   andere mit Grund dasteht. */
+const zweige = (gefiltert as any).plan as any[];
+const uebersprungen = (x: any) => x.status === 'würde übersprungen';
+gleich('Der Probelauf führt beide Aktionen auf', zweige.length, 2);
+gleich('Aber nur eine käme zum Zug', zweige.filter(x => !uebersprungen(x)).length, 1);
 gleich('… und zwar die, deren Bedingung passt',
-  (gefiltert as any).plan[0]?.wert, 'nur wenn offen');
+  zweige.find(x => !uebersprungen(x))?.wert, 'nur wenn offen');
+p('Die andere steht mit Grund daneben, statt zu fehlen',
+  /Bedingung der Aktion trifft nicht/.test(zweige.find(uebersprungen)?.grund ?? ''),
+  JSON.stringify(zweige.find(uebersprungen)));
 
 console.log('\n5 · Ein Fehler stoppt nicht alles Weitere');
 /* `laufNotiz.fehler` gab es seit jeher, und der Laufverlauf zeigt dafür ein

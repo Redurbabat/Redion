@@ -1295,47 +1295,56 @@ ist die verlässlichere — sie misst, statt zu behaupten.
   alle 66.
 ```
 
-## L42 · Das verschlüsselte `.redion` schreibt, aber holt nicht zurück
+## L42 · ~~Das verschlüsselte `.redion` schreibt, aber holt nicht zurück~~ — GESCHLOSSEN
 
-**22. August 2026.** In `krypto.ts` liegt eine vollständige Fassung 2 des
-verschlüsselten Pakets: Bestand, Verlauf und alle Anhänge, jeder Eintrag
-einzeln mit AES-GCM 256, Anhänge in Stücken, Passwortwechsel über die
-Schlüsselhülle. Sie kam vom Laptop-Stand und war dort nie angeschlossen.
+**22. August 2026, geschlossen am selben Tag mit E123.**
 
-Angeschlossen und geprüft (test199) funktioniert davon das meiste:
+Der Befund stimmte, die Vermutung darin nicht. Es lag weder an der
+Aufräumschleife in `geoeffnetesPaketEinspielen` noch am verschlüsselten Paket
+überhaupt: `Store.purgeBlock` löschte die Anhänge in einer abgelösten Aufgabe,
+auf die niemand warten konnte, und die kam an, nachdem das Zurückholen sie
+schon neu geschrieben hatte.
+
+Betroffen war damit auch die gewöhnliche `.redion`-Sicherung — der Weg, den es
+heute in den Einstellungen gibt. Gemessen, 1972 Blöcke im Bestand, dreimal von
+drei Läufen der Anhang weg; mit der Behebung dreimal von drei Läufen 900 Bytes
+zurück.
+
+Die ganze Geschichte samt Messung steht in ENTSCHEIDUNGEN.md unter E123. Das
+verschlüsselte Paket ist seitdem im Sicherheitsdialog erreichbar.
+
+---
+
+## L43 · Ein Anhang ohne `blockId` bleibt für immer liegen
+
+**22. August 2026.** Beim Messen für E123 aufgefallen, nicht gesucht.
+
+`purgeAnhaenge` findet die Anhänge eines endgültig gelöschten Blocks auf zwei
+Wegen: über den Index `dateien.block` und über `cache.blocks[id].dateiId`. Der
+zweite Weg läuft ins Leere, weil der Block zu diesem Zeitpunkt schon aus dem
+Zwischenspeicher entfernt ist. Bleibt der erste — und der greift nur, wenn der
+Dateisatz ein `blockId` trägt.
+
+Gemessen mit `Dateien.ablegen(datei, {})`, also ohne `blockId`:
 
 ```txt
-✅ Das Paket entsteht, und von aussen ist nichts zu lesen — weder der
-   Seitentitel noch der Dateiname stehen im Klartext im Archiv.
-✅ Falsches Passwort, leeres Passwort, verändertes Manifest und ein
-   fehlender Eintrag werden alle abgelehnt, ohne etwas anzufassen.
-✅ Der Passwortwechsel geht, ohne die Nutzdaten neu zu verschlüsseln — und
-   ein bereits herausgegebenes Paket bleibt mit dem alten Passwort lesbar.
-✗  DAS ZURÜCKHOLEN VERLIERT DEN ANHANG.
+nach purgeBlock, sofort   dateiHolen=true
+nach settled()            dateiHolen=true
+nach 1200 ms              dateiHolen=true
 ```
 
-Gemessen, mehrfach und schwankend:
+Die Datei und ihre Stücke liegen für immer in der Ablage, ohne dass ein Block
+noch auf sie zeigt.
 
-```txt
-gleich nach dem Einspielen   `dateiAlle()` findet den Datei-Satz,
-                             `dateiHolen()` findet ihn NICHT
-mit 600 ms Atempause         gar keine Datei mehr
-Stückzahl                    mal 0, mal 1 — je nach Lauf
-```
+**Wie schlimm ist das heute?** Wenig. Alle sechs echten Aufrufer von
+`Dateien.ablegen` übergeben `blockId` — Editor, Wissen, Dateiablage und die
+drei PDF-Wege. Der Fall entsteht also nur über einen Aufruf, den es noch nicht
+gibt. `Dateien.verwaist()` und die Pflege-Seite finden solche Dateien, und der
+Mensch kann sie dort wegräumen.
 
-Das Schwanken ist die Unterschrift eines Wettlaufs. `Store.importAll` ist
-NICHT der Verursacher: seine Transaktion umfasst `blocks`, `collections`,
-`views`, `meta`, `versions` und `suchindex` — `dateien` und `stuecke` fasst
-sie gar nicht an. Der einzige Löscher im Weg ist die Aufräumschleife am Ende
-von `geoeffnetesPaketEinspielen`, die alles wegwirft, was nicht im Paket
-steht. Warum sie die gerade geschriebenen Sätze trifft, ist noch offen; ein
-`Store.flush()` zwischen Bestand und Anhängen hat es nicht geheilt.
+**Warum trotzdem nicht sofort behoben?** Weil die naheliegende Behebung —
+`purgeAnhaenge` die Kennung merken lassen, BEVOR der Block aus dem
+Zwischenspeicher fliegt — dazu führt, dass mehr gelöscht wird als heute. Mehr
+zu löschen ist die gefährliche Richtung (§46), und das gehört in eine eigene
+Entscheidung mit eigenen Prüfungen, nicht nebenbei in eine Fehlerbehebung.
 
-**Deshalb ist die Funktion nicht im Sicherheitsdialog.** Der Code bleibt, der
-Weg dorthin nicht — ein Wiederherstellen, das den Anhang STILL verliert, ist
-schlimmer als eines, das gar nicht erst angeboten wird (§46). `test199` §3
-hält genau das fest: solange der Fehler steht, darf kein Knopf dafür da sein.
-
-Was heute stattdessen gilt: die verschlüsselte Sicherung der Fassung 1
-(ohne Anhänge) funktioniert unverändert, und das unverschlüsselte `.redion`
-nimmt die Anhänge vollständig mit.

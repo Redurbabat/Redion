@@ -8115,3 +8115,144 @@ Fehler in drei Minuten gefunden.
 Paket ist dicht, im Byte-Strom nachgesehen · alle fünf Fehlerwege lehnen ab,
 ohne etwas anzufassen · der Passwortwechsel · und §3 als Wächter, dass die
 Funktion unerreichbar bleibt, solange L42 offen ist.
+
+
+## E123 · Der Wettlauf beim Zurückholen — abgelöste Arbeit muss abwartbar sein
+
+**22. August 2026.** L42 sagte: das verschlüsselte Paket verliert beim
+Zurückholen den Anhang, und der Verdacht lag auf der Aufräumschleife in
+`geoeffnetesPaketEinspielen`. Beides war zu kurz gedacht. Der Fehler saß
+tiefer, betraf auch die gewöhnliche `.redion`-Sicherung, die jeder benutzen
+kann — und ein `Store.flush()`, das dagegen helfen sollte, half messbar
+nichts.
+
+### Was wirklich los war
+
+`Store.purgeBlock` kehrt sofort zurück und löscht die Anhänge danach in einer
+abgelösten Aufgabe:
+
+```js
+purgeBlock = (id) => {
+  …
+  (async () => {                       // ← niemand hält das fest
+    await Promise.all(geloescht);
+    for (const x of gesammelt) await purgeAnhaenge(x);
+  })().catch(…);
+};
+```
+
+Das ist richtig so — bei einer Seite mit fünfhundert Blöcken darf der
+Bildschirm nicht stehen bleiben. Nur war auf diese Aufgabe nicht zu warten:
+
+```txt
+Seite gelöscht           purgeBlock kehrt zurück, das Löschen läuft noch
+Sicherung zurückgeholt   die Blöcke stehen wieder, der Anhang wird frisch
+                         geschrieben
+… Augenblick später      das alte Löschen kommt an und nimmt den NEUEN
+                         Anhang mit
+```
+
+Und zwar zielsicher, nicht zufällig. `purgeAnhaenge` liest den Block aus dem
+Zwischenspeicher:
+
+```js
+const b = cache.blocks[id];
+[hinweis.datei, b && b.dateiId, b && b.datei].forEach(x => { if (x) kennungen.add(x); });
+```
+
+Nach dem Einspielen ist `cache.blocks` der EINGESPIELTE Bestand. Das Löschen
+findet also genau die Kennung, die gerade zurückgeholt wurde, und trifft sie.
+
+### Gemessen
+
+Der Anhang wurde abgelegt, wie der Editor es tut — Block zuerst, dann
+`Dateien.ablegen(datei, { blockId })`; so machen es alle sechs echten
+Aufrufer. Bestand: 1972 Blöcke, also der Stand, mit dem Redion startet.
+
+```txt
+                     ohne die Behebung        mit der Behebung
+.redion              dateien=0 stuecke=0      dateien=1 stuecke=1
+                     alsBlob=0   → 3 von 3    alsBlob=900 → 3 von 3
+Paket (Fassung 2)    dasselbe                 dasselbe
+```
+
+### Die Behebung
+
+`indexdb.ts` merkt sich jede abgelöste Arbeit, und `settled()` wartet darauf:
+
+```ts
+const unterwegs = new Set<Promise<unknown>>();
+const abloesen = <T,>(p: Promise<T>): Promise<T> => { … };
+const settled = async (): Promise<void> => {
+  for (let runde = 0; runde < 20 && unterwegs.size; runde++)
+    await Promise.all([...unterwegs].map(p => p.catch(() => {})));
+};
+```
+
+In Runden, weil eine abgelöste Arbeit die nächste anstossen kann; nach zwanzig
+Runden ist Schluss, denn ein Fehler, der sich selbst nachlegt, darf die App
+nicht anhalten. `importAll` wartet **vorn und hinten**: vorn, damit ein
+Löschen von vorhin sein eigenes Zeug wegräumt und nicht das neue; hinten, weil
+`notify('import')` selbst noch eines anstossen kann. Damit ist JEDER Weg
+gedeckt, der über `importAll` läuft — `.json`, `.redion`, das verschlüsselte
+Paket und jeder künftige.
+
+### Warum es niemand gesehen hat
+
+Zwei Bedingungen müssen zusammenkommen, und beide fehlen in einem
+aufgeräumten Prüflauf:
+
+1. Das endgültige Löschen muss unmittelbar vor dem Zurückholen stehen.
+2. Der Bestand muss GROSS sein. Bei drei Blöcken ist die Löschkette durch,
+   bevor das Zurückholen anfängt — dann ist alles grün, obwohl der Fehler
+   dasteht.
+
+Die erste Fassung von test200 leerte den Bestand vorher und blieb in der
+Gegenprobe grün: nur die Quellenzeugen schlugen an, die Rundläufe nicht.
+Genau davor warnt §55.2 — eine Prüfung, die nicht rot werden KANN, ist keine.
+Deshalb leert `frisch` in test200 den Bestand nicht.
+
+Und deshalb hat test100 es jahrelang übersehen, obwohl es genau diesen Weg
+prüft: es fängt jedes Mal aufgeräumt an.
+
+### Damit ist L42 geschlossen
+
+Das verschlüsselte Paket steht jetzt im Sicherheitsdialog — zwei Knöpfe,
+eigenes Passwortfeld, `.redion` als Dateiwähler. Zurückholen fragt vorher und
+sichert den jetzigen Stand als Netz unter dem Seil. `paketOeffnen`
+entschlüsselt und prüft ALLES, bevor die Frage überhaupt erscheint: ein
+falsches Passwort scheitert, während der Bestand noch unangetastet ist.
+
+**Geprüft** (test200, 29 Punkte; Gegenprobe mit zurückgenommener Behebung:
+10 rot): dass `settled()` wirklich wartet · der `.redion`-Rundlauf mit
+Byte-Vergleich · derselbe mit dem verschlüsselten Paket · die Knöpfe im
+Dialog · und fünf Quellenzeugen. test199 §3 ist von „darf niemand anklicken"
+auf einen echten Rundlauf umgestellt.
+
+
+## E124 · Drei Suchen, zwei Antworten
+
+**22. August 2026.** Beim Zusammenführen der beiden Arbeitsstände kam das
+Suchfenster mit der Abfragesprache und dem inkrementellen Suchindex vom
+Laptop, der durchsuchbare PDF-Text (E107) aus der Cloud-Arbeit. Beide für
+sich in Ordnung — zusammen ergaben sie das hier:
+
+```txt
+Store.search('Pythagoras')     findet die Seite
+das Suchfenster                „Nichts gefunden"
+```
+
+Eine PDF-Seite hat keinen `text` — sie ist ein Bild; ihr Wortlaut steht seit
+E107 in `suchtext`. `Store.search` liest beide Felder. Der Suchindex in
+`kontext.ts` und der Weg ohne Index in `schale.ts` lasen nur `text`.
+
+Zwei Suchen mit zwei Antworten sind schlimmer als eine schlechte: wer sein
+eingelesenes Skript nicht findet, glaubt, es sei nicht da.
+
+Beide Wege lesen jetzt `text` UND `suchtext`, und `suchtext` steht auch in der
+Signatur des Index — sonst merkt er nicht, dass eine PDF-Seite ihren Text
+nachgetragen bekommen hat (das passiert beim Öffnen alter Dokumente).
+
+**Geprüft** (test181): §5 sieht am Bild nach, dass das Suchfenster die Seiten
+aufzählt — dieser Abschnitt war rot und ist der eigentliche Wächter. Dazu drei
+Quellenzeugen, einer je Suchweg.

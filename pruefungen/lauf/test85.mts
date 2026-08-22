@@ -294,8 +294,13 @@ r = await seite.evaluate(() => ({
   gelaufen: Umzuege.gelaufen().length,
   nochmal: Umzuege.laufen()
 }));
-p('Alle fünf Fassungen beschrieben', r.fassungen === 5 && r.jetzige === 5, JSON.stringify(r));
-p('Neun Fächer insgesamt',         r.faecher === 9, String(r.faecher));
+/* Die Zahlen stehen hier als Zahlen und nicht als `r.fassungen === r.jetzige`.
+   Das ist Absicht: eine Schema-Fassung dazuzunehmen muss eine bewusste
+   Handlung sein, und dieser Prüfpunkt ist der Ort, an dem sie bewusst wird.
+   Fassung 6 und das Fach `suchindex` kamen mit dem inkrementellen
+   Suchindex dazu. */
+p('Alle sechs Fassungen beschrieben', r.fassungen === 6 && r.jetzige === 6, JSON.stringify(r));
+p('Zehn Fächer insgesamt',         r.faecher === 10, String(r.faecher));
 p('Der Weg von 3 nach 5',          JSON.stringify(r.zwischen) === '[4,5]', JSON.stringify(r.zwischen));
 p('Eine zu alte App bekommt einen Satz', /neueren Fassung/.test(r.hinweis ?? ''), r.hinweis);
 p('Die Umzüge sind gelaufen',      r.gelaufen >= 2, String(r.gelaufen));

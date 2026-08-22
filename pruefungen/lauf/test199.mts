@@ -149,53 +149,39 @@ gleich('Der Seitentitel steht NICHT im Klartext im Archiv', rund.klartextDrin, f
 gleich('Der Dateiname auch nicht', rund.dateinameDrin, false);
 
 /* ==========================================================================
- * §3 · Das Zurückholen ist NOCH NICHT in Ordnung — und darum unerreichbar
+ * §3 · Und das Zurückholen bringt den Anhang mit
  * --------------------------------------------------------------------------
- * Hier stand ein Rundlauf: sichern, alles löschen, einspielen, Bytes
- * vergleichen. Er ist rot, und zwar aus einem echten Grund.
+ * Hier stand einmal das Gegenteil: ein Wächter, der prüfte, dass NIEMAND auf
+ * das Paket klicken kann, weil das Zurückholen den Anhang verlor. Der Grund
+ * dafür lag nicht in dieser Datei — `Store.purgeBlock` löschte die Anhänge
+ * in einer abgelösten Aufgabe, auf die niemand warten konnte, und die kam an,
+ * nachdem das Zurückholen sie schon neu geschrieben hatte (E123).
  *
- * Gemessen, mehrfach und schwankend:
- *
- *     gleich nach dem Einspielen   `dateiAlle()` findet den Satz,
- *                                  `dateiHolen()` findet ihn NICHT
- *     mit 600 ms Atempause         gar keine Datei mehr
- *     Stückzahl                    mal 0, mal 1 — je nach Lauf
- *
- * Das Schwanken ist die Unterschrift eines Wettlaufs: das Einspielen meldet
- * Erfolg, bevor die Anhänge stehen, und die Aufräumschleife am Ende räumt
- * sie mit weg. `Store.importAll` ist es nicht — dessen Transaktion fasst
- * `dateien` und `stuecke` gar nicht an.
- *
- * Ein Wiederherstellen, das den Anhang STILL verliert, ist schlimmer als
- * eines, das scheitert (§46). Deshalb ist die Fassung 2 nicht im
- * Sicherheitsdialog: der Code bleibt, der Weg dorthin nicht. Was hier
- * geprüft wird, ist genau das — solange der Fehler steht, darf niemand
- * darauf klicken können.
- *
- * Der Befund steht in LUECKEN.md unter L42.
+ * Der ausführliche Beweis samt Gegenprobe steht in test200. Hier bleibt der
+ * kurze Rundlauf: was diese Datei baut, muss diese Datei auch zurückholen.
  * ========================================================================*/
-console.log('\n3 · Das Zurückholen ist NOCH NICHT in Ordnung — und darum unerreichbar');
+console.log('\n3 · Und das Zurückholen bringt den Anhang mit');
+await frisch(BYTES);
 
-const unerreichbar = await seite.evaluate(async () => {
-  Krypto.dialog();
-  await new Promise(r => setTimeout(r, 300));
-  const o = document.querySelector('.overlay');
-  const antwort = {
-    knopfSichern: !!o?.querySelector('[data-a="paket-sichern"]'),
-    knopfLaden: !!o?.querySelector('[data-a="paket-laden"]'),
-    feld: !!o?.querySelector('#kr-pk-pw'),
-    text: (o?.textContent || '').replace(/\s+/g, ' '),
+const zurueck = await seite.evaluate(async (b: number[]) => {
+  const vorher = (await Store.dateiAlle())[0];
+  const gebaut = await Krypto.paketBauen('geheim123');
+  const erg = await Krypto.paketEinspielen(gebaut.blob, 'geheim123', 'ersetzen');
+  await new Promise(r => setTimeout(r, 600));
+  const blob = await Dateien.alsBlob(vorher.id);
+  const roh = blob ? [...new Uint8Array(await blob.arrayBuffer())] : [];
+  return {
+    anhaenge: erg.anhaenge,
+    laenge: roh.length,
+    gleich: roh.length === b.length && roh.every((x, i) => x === b[i]),
+    titel: Store.rootPages().some((x: any) => x.text === 'Geheime Klausur'),
   };
-  (o?.querySelector('[data-a="zu"]') as HTMLElement)?.click();
-  return antwort;
-});
+}, BYTES);
 
-p('Im Sicherheitsdialog gibt es keinen Knopf zum Paket-Sichern',
-  !unerreichbar.knopfSichern);
-p('Und keinen zum Paket-Einspielen', !unerreichbar.knopfLaden);
-p('Auch kein Passwortfeld dafür', !unerreichbar.feld);
-p('Die alte verschlüsselte Sicherung bleibt erreichbar',
-  /Verschlüsselte Sicherung/.test(unerreichbar.text), unerreichbar.text.slice(0, 80));
+gleich('Ein Anhang kommt zurück', zurueck.anhaenge, 1);
+gleich('Die Seite auch', zurueck.titel, true);
+gleich('Der Anhang hat wieder seine 900 Bytes', zurueck.laenge, 900);
+gleich('Und es sind Byte für Byte dieselben', zurueck.gleich, true);
 
 /* ==========================================================================
  * §4 · Und was schiefgehen kann, geht ehrlich schief
@@ -304,8 +290,11 @@ p('Ein unvollständiger Anhang bricht ab',
   /ist unvollständig — /.test(code));
 p('Und die Rundenzahl ist nach oben begrenzt',
   /PAKET_RUNDEN_MAX/.test(code));
-gleich('Aber im Dialog steht kein Knopf dafür (siehe §3)',
-  (code.match(/data-a="paket-/g) || []).length, 0);
+/* Zwei Knöpfe, je zweimal im Quelltext: einmal im Aufbau des Dialogs und
+   einmal in seiner Behandlung. Vier Fundstellen heisst: beide Knöpfe sind
+   da UND beide tun etwas. */
+gleich('Und im Dialog stehen die Knöpfe dafür',
+  (code.match(/data-a="paket-/g) || []).length, 4);
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 

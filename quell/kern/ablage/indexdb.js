@@ -474,7 +474,7 @@ const Store = (() => {
             return;
         datenGeaendert();
         notify('purge');
-        (async () => {
+        abloesen((async () => {
             /* Ein Löschen läuft nicht über `save()` und damit nicht über `flush()` —
                es muss den anderen Fenstern eigens gesagt werden, sonst zeigten sie
                eine Seite weiter an, die es nicht mehr gibt, und schrieben sie beim
@@ -499,7 +499,7 @@ const Store = (() => {
                     'nach dem Neuladen kann Gelöschtes wieder auftauchen', err);
             if (typeof UI !== 'undefined' && UI.toast)
                 UI.toast('Der Speicher hat das Löschen nicht angenommen — bitte neu laden.');
-        });
+        }));
     };
     /**
      * Einen ausstehenden Schreibvorgang zurücknehmen.
@@ -1017,6 +1017,58 @@ const Store = (() => {
         if (!fremdTimer)
             fremdTimer = setTimeout(fremdesEintragen, 120);
     };
+    /* --- Abgelöste Arbeit — und wie man auf sie wartet ----------------------
+     * `purgeBlock` kehrt sofort zurück und löscht die Anhänge danach im
+     * Hintergrund. Das ist richtig so: bei einer Seite mit fünfhundert Blöcken
+     * darf der Bildschirm nicht stehen bleiben.
+     *
+     * Es war aber nicht abwartbar, und das hat einen Anhang gekostet. Wer eine
+     * Seite endgültig löscht und gleich darauf eine Sicherung einspielt, bekam
+     * das hier:
+     *
+     *     Seite gelöscht           `purgeBlock` kehrt zurück, das Löschen der
+     *                              Anhänge läuft noch
+     *     Sicherung eingespielt    die Blöcke stehen wieder, der Anhang wird
+     *                              frisch geschrieben
+     *     … Wimpernschlag später   das alte Löschen kommt an und nimmt den
+     *                              NEUEN Anhang mit
+     *
+     * Gemessen, und immer anders: `dateiAlle()` fand den Satz, `dateiHolen()`
+     * einen Augenblick später nicht mehr; mal null Stücke, mal eins. Genau
+     * dieses Schwanken ist die Unterschrift eines Wettlaufs.
+     *
+     * Schlimmer noch: `purgeAnhaenge` liest den Block aus dem
+     * Zwischenspeicher — und der ist nach dem Einspielen der EINGESPIELTE.
+     * Das Löschen findet also die frisch zurückgeholte Kennung und trifft sie
+     * genau. Ein Zufall wäre halb so schlimm; das hier ist zielsicher.
+     *
+     * Deshalb wird jede abgelöste Arbeit hier vermerkt, und `settled()` wartet
+     * darauf. `importAll` ruft es vorn und hinten: vor dem Ersetzen muss
+     * gelandet sein, was noch unterwegs war, und danach muss gelandet sein,
+     * was das Einspielen selbst angestossen hat — erst dann darf jemand
+     * Anhänge daneben schreiben.
+     * ----------------------------------------------------------------------*/
+    const unterwegs = new Set();
+    /** Vermerkt eine Arbeit, die ohne Aufrufer weiterläuft. */
+    const abloesen = (p) => {
+        unterwegs.add(p);
+        const raus = () => { unterwegs.delete(p); };
+        p.then(raus, raus);
+        return p;
+    };
+    /**
+     * Wartet, bis nichts mehr unterwegs ist.
+     *
+     * In Runden, weil eine abgelöste Arbeit die nächste anstossen kann. Nach
+     * zwanzig Runden ist Schluss — ein Fehler, der sich selbst nachlegt, darf
+     * die App nicht anhalten; dann ist ein Wettlauf immer noch besser als ein
+     * Stillstand. Eine Ablehnung zählt als gelandet: behandelt wird sie dort,
+     * wo sie entsteht (siehe `purgeBlock`), nicht hier.
+     */
+    const settled = async () => {
+        for (let runde = 0; runde < 20 && unterwegs.size; runde++)
+            await Promise.all([...unterwegs].map(p => p.catch(() => { })));
+    };
     /* --- Schreiben mit Verzögerung ----------------------------------------- */
     /* Beim Tippen soll nicht jeder Tastendruck eine Transaktion auslösen.     */
     const pending = new Map();
@@ -1423,6 +1475,9 @@ const Store = (() => {
      * mit der Frage — und nicht die stille Entscheidung von jemand anderem.
      */
     const importAll = async (json, art) => {
+        /* Erst landen lassen, was noch unterwegs ist — sonst löscht ein
+           Aufräumen von vorhin in den neuen Bestand hinein (siehe `settled`). */
+        await settled();
         const d = JSON.parse(json);
         if (!d.blocks)
             throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
@@ -1562,6 +1617,11 @@ const Store = (() => {
            Einzelne Sätze nachzulesen hülfe den anderen Fenstern nichts — sie
            müssen von vorn anfangen. */
         meldeAnAndereFenster('alles', []);
+        /* Und noch einmal: `notify('import')` gerade eben kann selbst ein
+           endgültiges Löschen angestossen haben. Wer nach dem Einspielen
+           Anhänge danebenschreibt, muss sich darauf verlassen können, dass
+           nichts mehr unterwegs ist. */
+        await settled();
         return { bloecke: Object.keys(cache.blocks).length,
             versionen: Array.isArray(d.versions) ? d.versions.length : 0,
             fehlt: d.fehlt || [] };
@@ -1995,7 +2055,7 @@ const Store = (() => {
         addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
         rohSetzen,
         addRow, rowsOf, setProp,
-        setMeta, getMeta, flush,
+        setMeta, getMeta, flush, settled,
         baum, baumEinfuegen, kinderLeeren,
         versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
         search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,

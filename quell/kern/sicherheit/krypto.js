@@ -575,19 +575,19 @@ const Krypto = (() => {
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss „ersetzen“ oder „zusammenfuehren“ gewählt sein.');
         const erg = await Store.importAll(paket.datenText, art);
-        /* ERST AUSSCHREIBEN, DANN DIE ANHÄNGE (E122).
-           `importAll` räumt die Fächer und schreibt den neuen Bestand — beides
-           geht gepuffert weiter, nachdem die Zusage schon zurück ist. Die
-           Anhangsstücke landeten deshalb MITTEN in dieses Aufräumen hinein und
-           wurden danach wieder weggewischt.
-           Gemessen: gleich nach dem Einspielen fand `dateiAlle()` den Satz,
-           `dateiHolen()` aber nicht — und mit einer Atempause von 600 ms war
-           gar keine Datei mehr da. Ein Wiederherstellen, das den Anhang still
-           verliert, ist schlimmer als eines, das scheitert (§46).
-           Also warten, bis der Bestand wirklich steht, und erst dann die
-           Stücke schreiben. */
-        if (typeof Store.flush === 'function')
-            await Store.flush();
+        /* ERST ALLES LANDEN LASSEN, DANN DIE ANHÄNGE (E123).
+           Hier stand ein `flush()` und daneben die Vermutung, `importAll`
+           schreibe gepuffert weiter. Das war falsch; gemessen hat es nichts
+           geändert. Der Wettlauf kam von `Store.purgeBlock`: das kehrt sofort
+           zurück und löscht die Anhänge in einer abgelösten Aufgabe hinterher —
+           die kam an, NACHDEM diese Schleife den Anhang neu geschrieben hatte,
+           und nahm ihn wieder mit.
+           `Store.importAll` wartet seit E123 vorn und hinten auf `settled()`.
+           Der Aufruf hier ist der Gürtel zum Hosenträger: zwischen dem
+           Einspielen und der ersten Anhangszeile darf nichts mehr unterwegs
+           sein — ein Wiederherstellen, das den Anhang STILL verliert, ist
+           schlimmer als eines, das scheitert (§46). */
+        await Store.settled();
         const saetze = new Map(paket.dateiliste.saetze.map(s => [String(s.id), s]));
         const eintragNachPfad = new Map(paket.manifest.eintraege.map(e => [e.pfad, e]));
         let anhaenge = 0;
@@ -685,8 +685,8 @@ const Krypto = (() => {
                 '<b>Verschlüsselte Sicherung</b>' +
                 '<div class="kr-text">Seiten, Datenbanken, Ansichten, Einstellungen und ' +
                 'Versionsverlauf in einer Datei, mit AES-GCM 256 verschlüsselt. ' +
-                'Dateianhänge sind <b>nicht</b> dabei — vollständig mit Anhängen sichert ' +
-                'nur die .redion-Sicherung in den Einstellungen. ' +
+                'Dateianhänge sind <b>nicht</b> dabei — die stehen im vollständigen ' +
+                'Paket eine Karte weiter. ' +
                 'Der Schlüssel entsteht aus deinem Passwort über 310 000 Runden. ' +
                 'Ohne Passwort ist die Datei nicht zu öffnen — auch nicht von mir.</div>' +
                 '<div class="kr-zeile">' +
@@ -702,6 +702,33 @@ const Krypto = (() => {
                     ? 'Zuletzt gesichert: ' + Werkzeuge.zeitKurz(Store.getMeta('sicherung:zuletzt'))
                     : 'Noch nie gesichert.') +
                 '</div>' +
+                '</div>' +
+                /* FASSUNG 2 — das vollständige Paket.
+                   Diese Karte war schon einmal geschrieben und wurde wieder
+                   ausgebaut: das Zurückholen verlor den Anhang, und ein Knopf,
+                   hinter dem Datenverlust liegt, gehört nicht in die App (L42).
+                   Seit E123 ist der Wettlauf behoben und gemessen — dreimal rot
+                   ohne die Behebung, dreimal grün mit ihr. Jetzt darf der Knopf
+                   da sein. */
+                '<div class="kr-karte">' +
+                '<b>Vollständiges Paket — verschlüsselt, mit Anhängen</b>' +
+                '<div class="kr-text">Alles: Seiten, Datenbanken, Ansichten, ' +
+                'Einstellungen, Versionsverlauf <b>und</b> die Dateianhänge. ' +
+                'Jeder Teil einzeln mit AES-GCM 256 verschlüsselt, die Anhänge ' +
+                'in Stücken — auch ein halbes Gigabyte geht durch, ohne dass es ' +
+                'je ganz im Arbeitsspeicher liegt. ' +
+                'Ohne Passwort ist nichts davon zu öffnen, nicht einmal die ' +
+                'Dateinamen.</div>' +
+                '<div class="kr-zeile">' +
+                '<input id="kr-pk-pw" type="password" placeholder="Passwort für das Paket">' +
+                '<button data-a="paket-sichern" class="prim">Paket sichern</button>' +
+                '</div>' +
+                '<div class="kr-zeile">' +
+                '<input id="kr-pk-datei" type="file" accept=".redion">' +
+                '<button data-a="paket-laden">Paket zurückholen</button>' +
+                '</div>' +
+                '<div class="kr-text">Zurückholen ersetzt den ganzen Bestand. ' +
+                'Vorher wird der jetzige Stand als Datei gesichert.</div>' +
                 '</div>' +
                 '<div class="kr-karte">' +
                 `<b>Sperre beim Öffnen ${an ? '— eingeschaltet' : ''}</b>` +
@@ -773,6 +800,65 @@ const Krypto = (() => {
                 o.remove();
                 UI.toast('Eingelesen — die Seite wird neu geladen');
                 setTimeout(() => location.reload(), 900);
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="paket-sichern"]')) {
+                const pw = o.querySelector('#kr-pk-pw')?.value ?? '';
+                if (!pw) {
+                    UI.toast('Ohne Passwort geht das Paket nicht');
+                    return;
+                }
+                try {
+                    const name = await paketSchreiben(pw);
+                    UI.toast('Paket gesichert: ' + name);
+                }
+                catch (err) {
+                    UI.banner('Das Paket kam nicht zustande: ' + satzVon(err), 'fehler');
+                }
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="paket-laden"]')) {
+                const f = o.querySelector('#kr-pk-datei')?.files?.[0];
+                if (!f) {
+                    UI.toast('Erst eine Datei wählen');
+                    return;
+                }
+                const pw = o.querySelector('#kr-pk-pw')?.value ?? '';
+                if (!pw) {
+                    UI.toast('Ohne Passwort ist das Paket nicht zu öffnen');
+                    return;
+                }
+                /* ERST ÖFFNEN, DANN FRAGEN. `paketOeffnen` entschlüsselt und prüft
+                   ALLES, ohne einen einzigen Satz zu schreiben. Ein falsches
+                   Passwort oder ein beschädigtes Stück scheitert also, bevor der
+                   Nutzer die Frage überhaupt sieht — und der Bestand ist zu diesem
+                   Zeitpunkt noch unangetastet. */
+                let offen;
+                try {
+                    offen = await paketOeffnen(f, pw);
+                }
+                catch (err) {
+                    UI.banner('Paket nicht lesbar: ' + satzVon(err), 'fehler');
+                    return;
+                }
+                const anhaenge = offen.dateiliste.dateien.length;
+                const ok = await UI.frage('Paket zurückholen?', `Es enthält den Bestand vom ${new Date(offen.manifest.erstellt).toLocaleString('de-DE')} ` +
+                    `und ${anhaenge} Dateianhang/Dateianhänge. ` +
+                    'Der jetzige Bestand wird davor als Datei gesichert und dann ersetzt: ' +
+                    'was nicht im Paket steht, wird gelöscht.');
+                if (!ok)
+                    return;
+                await sicherungSchreiben(); /* Netz unter dem Seil */
+                try {
+                    const erg = await geoeffnetesPaketEinspielen(offen, 'ersetzen');
+                    o.remove();
+                    UI.toast(`Zurückgeholt: ${erg.bloecke} Blöcke und ${erg.anhaenge} Anhang/Anhänge — ` +
+                        'die Seite wird neu geladen');
+                    setTimeout(() => location.reload(), 900);
+                }
+                catch (err) {
+                    UI.banner('Zurückholen fehlgeschlagen: ' + satzVon(err), 'fehler');
+                }
                 return;
             }
             if (elVon(e)?.closest('[data-a="sperre-an"]')) {
