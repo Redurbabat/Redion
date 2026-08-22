@@ -371,7 +371,7 @@ p('Eine Seite ohne Textebene ist kein Fehler',
 const ablage = ohneKommentare(
   fs.readFileSync(path.join(WURZEL, 'src/kern/ablage/indexdb.ts'), 'utf8'));
 p('Die Suche sieht in `text` UND `suchtext`',
-  /\['text', 'suchtext'\]/.test(ablage));
+  /\['text',\s*'suchtext'(?:,\s*'[^']+')*\]/.test(ablage));
 
 /* ES GIBT DREI SUCHWEGE, UND SIE MÜSSEN DASSELBE SAGEN. `Store.search` las
    `suchtext` von Anfang an; das Suchfenster und sein Index taten es nicht.

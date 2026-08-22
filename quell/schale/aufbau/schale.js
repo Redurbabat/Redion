@@ -759,7 +759,13 @@ const App = (() => {
             zeichneCrumbs();
             return;
         }
-        Inhaltsflaeche.zeichne(wrap, p);
+        if (DocumentMode.active(p)) {
+            wrap.className = 'wide document-page';
+            DocumentMode.render(wrap, p);
+        }
+        else {
+            Inhaltsflaeche.zeichne(wrap, p);
+        }
         zeichneCrumbs();
         streifenZeichnen();
         /* Fokus setzen */
@@ -958,7 +964,7 @@ const App = (() => {
                     /* Eine PDF-Seite hat keinen `text` — sie ist ein Bild. Ihr erster
                        Satz steht seit E107 in `suchtext`. */
                     if (b.type === 'pdfseite') {
-                        const erste = String(b.suchtext || '').split('\n')[0] || '';
+                        const erste = String(b.suchtext || b.ocrText || '').split('\n')[0] || '';
                         zeilen.push(`<div class="vs-t">📄 Seite ${esc(b.nr || '?')}` +
                             (erste ? ' · ' + esc(erste.slice(0, 80)) : '') + '</div>');
                         continue;
@@ -1041,7 +1047,7 @@ const App = (() => {
                         /* Auch `suchtext` — sonst findet dieser Weg eine PDF-Seite
                            nicht, während `Store.search` sie findet (E124). Die beiden
                            müssen dasselbe sagen. */
-                        .map((child) => (child.text || child.suchtext || '')).join(' '),
+                        .map((child) => (child.text || child.suchtext || child.ocrText || '')).join(' '),
                     geaendert: block.edited || block.created || '' }));
             }
             documentCache = indexEntries.map((entry) => {
@@ -2081,6 +2087,7 @@ const App = (() => {
         ['tabelle', '📊', 'Neue Tabelle', 'Rechnen wie in Excel'],
         ['aufgabe', '☑', 'Aufgabe', 'Mit Datum planen'],
         ['karte', '📚', 'Karteikarte', 'Später wiederholen'],
+        ['scan', '📷', 'Dokument scannen', 'Kamera, Foto oder PDF in den Eingang'],
         ['datei', '📎', 'Datei hochladen', 'Bleibt auf diesem Gerät'],
         ['vorlage', '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
     ];
@@ -2107,6 +2114,8 @@ const App = (() => {
                     Werkzeuge.schnellnotizen();
                 else if (was === 'datei')
                     Werkzeuge.dateienLesen();
+                else if (was === 'scan')
+                    Recognition.scan();
                 else if (was === 'vorlage')
                     Werkzeuge.vorlagen();
                 else if (was === 'karte')
@@ -2440,10 +2449,32 @@ const App = (() => {
             UI.toast('Zu diesem Block führt kein Weg — seine Seite fehlt.');
             return false;
         }
+        /* Ein Dokumentmodus rendert absichtlich nur eine volle Seite. Ein
+           Deep-Link muss diese Seite daher VOR dem Öffnen wählen, sonst gäbe es
+           den Zielknoten im DOM noch nicht. */
+        const dokumentZiel = b.type === 'pdfseite' || b.type === 'blatt';
+        let ansichtGeaendert = false;
+        if (dokumentZiel && typeof DocumentMode !== 'undefined' && DocumentMode.select(seite, b.id)) {
+            /* `select` aendert nur den fluechtigen Ansichtsstand. Auch wenn der
+               Dokumentmodus schon offen ist, muss dieselbe Seite neu gezeichnet
+               werden, damit ein Link auf PDF-Seite 18 nicht weiter Seite 3 zeigt. */
+            ansichtGeaendert = true;
+            if (!seite.dokumentModus)
+                Store.updateBlock(seite.id, { dokumentModus: true });
+        }
+        else if (!dokumentZiel && seite.dokumentModus) {
+            /* Ein normaler Notiz-/Kartenblock kommt in der Ein-Seiten-Ansicht nicht
+               vor. Quellsuche und Backlinks muessen deshalb fuer dieses Ziel in die
+               normale Seite zurueckwechseln. */
+            Store.updateBlock(seite.id, { dokumentModus: false });
+            ansichtGeaendert = true;
+        }
         /* Ist die Seite schon offen, NICHT neu öffnen: `oeffne` setzt den Lauf
            zurück auf null und zählt einen Aufruf mit. Rollen genügt. */
         if (aktuelleSeite() !== seite.id)
             oeffne(seite.id);
+        else if (ansichtGeaendert)
+            zeichneSeite();
         rolleZu(blockId);
         return true;
     };

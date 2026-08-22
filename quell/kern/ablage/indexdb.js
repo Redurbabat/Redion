@@ -615,7 +615,7 @@ const Store = (() => {
      * ======================================================================*/
     const addPage = (parentId = null, patch = {}) => {
         const p = addBlock(parentId, 'page', Object.assign({
-            text: '', icon: '📄', cover: '', wide: false, font: 'default', small: false
+            text: '', aliases: [], icon: '📄', cover: '', wide: false, font: 'default', small: false
         }, patch));
         notify('pages');
         return p;
@@ -1264,8 +1264,12 @@ const Store = (() => {
             if (filter.typ === 'seite' && hatDb)
                 return;
             const t = (b.text || '').toLowerCase();
-            if (wo !== 'inhalt' && t.includes(needle)) {
-                out.push({ page: b, treffer: 'Titel', snippet: b.text, pfad: pfadText(b.id) });
+            const aliases = Array.isArray(b.aliases)
+                ? b.aliases.map((value) => String(value ?? '').trim()).filter(Boolean) : [];
+            const alias = aliases.find((value) => value.toLowerCase().includes(needle));
+            if (wo !== 'inhalt' && (t.includes(needle) || alias)) {
+                out.push({ page: b, treffer: t.includes(needle) ? 'Titel' : 'Alias',
+                    snippet: t.includes(needle) ? b.text : alias, pfad: pfadText(b.id) });
                 return;
             }
             if (wo !== 'titel') {
@@ -1310,7 +1314,7 @@ const Store = (() => {
                mit fremdem Inhalt in der Liste stehen. */
             if (kid.type === 'page')
                 continue;
-            for (const feld of ['text', 'suchtext']) {
+            for (const feld of ['text', 'suchtext', 'ocrText']) {
                 const roh = String(kid[feld] || '');
                 if (!roh)
                     continue;

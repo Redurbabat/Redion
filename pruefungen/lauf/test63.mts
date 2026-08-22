@@ -21,9 +21,10 @@ const pruef = (n: any, ist: any, soll: any) => {
     anzahl: Galerie.VORLAGEN.length,
     namen: Galerie.VORLAGEN.map(v => v.name)
   }));
-  pruef('Zehn Vorlagen in der Galerie', galerie.anzahl, 10);
+  pruef('Elf Vorlagen in der Galerie', galerie.anzahl, 11);
   pruef('Bauplan dabei',       (galerie.namen ?? '').includes('Bauplan'), true);
   pruef('Redaktionsplan dabei', (galerie.namen ?? '').includes('Redaktionsplan'), true);
+  pruef('Ausbildung dabei',     (galerie.namen ?? '').includes('Ausbildung'), true);
 
   /* --- Bauplan --------------------------------------------------------- */
   const bau = await p.evaluate(async () => {

@@ -47,6 +47,72 @@ const Werkzeuge = (() => {
         Store.setMeta('sys:' + schluessel, p.id);
         return p;
     };
+    const aliasDialog = (page) => {
+        if (!page?.id)
+            return;
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        const panel = document.createElement('div');
+        panel.className = 'finder';
+        const header = document.createElement('div');
+        header.className = 'fh';
+        header.textContent = 'Aliasse · ' + (page.text || 'Ohne Titel');
+        const close = document.createElement('button');
+        close.className = 'icon-btn';
+        close.textContent = '✕';
+        header.appendChild(close);
+        const content = document.createElement('div');
+        content.style.padding = '16px';
+        const hint = document.createElement('p');
+        hint.textContent = 'Ein Alias pro Zeile, zum Beispiel FI, RCD oder Residual Current Device. Mehrdeutige Aliasse werden nie automatisch verlinkt.';
+        hint.style.color = 'var(--text-dim)';
+        const area = document.createElement('textarea');
+        area.rows = 8;
+        area.style.cssText = 'width:100%;min-height:160px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)';
+        area.value = Links.aliasesVon(page).join('\n');
+        const actions = document.createElement('div');
+        actions.className = 'fbtns';
+        const cancel = document.createElement('button');
+        cancel.textContent = 'Abbrechen';
+        const save = document.createElement('button');
+        save.className = 'prim';
+        save.textContent = 'Speichern';
+        actions.append(cancel, save);
+        content.append(hint, area, actions);
+        panel.append(header, content);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        const remove = () => overlay.remove();
+        close.addEventListener('click', remove);
+        cancel.addEventListener('click', remove);
+        overlay.addEventListener('mousedown', event => { if (event.target === overlay)
+            remove(); });
+        save.addEventListener('click', () => {
+            const result = Links.aliasesSetzen(page.id, area.value.split(/[\n,;]+/));
+            if (!result)
+                return;
+            remove();
+            App.zeichneBaum();
+            App.zeichneSeite();
+            if (result.collisions.length) {
+                UI.banner('Gespeichert. Mehrdeutig und deshalb nicht automatisch verlinkt: ' +
+                    result.collisions.map((entry) => entry.alias).join(', '), 'warn');
+            }
+            else
+                UI.toast(result.aliases.length + (result.aliases.length === 1 ? ' Alias gespeichert' : ' Aliasse gespeichert'));
+        });
+        area.focus();
+    };
+    const obsidianVaultExport = async () => {
+        try {
+            await Austausch.alsObsidianVault('Redion-Obsidian-' + heute());
+            UI.toast('Obsidian-Vault mit stabilen IDs und Alias-Frontmatter gespeichert.');
+        }
+        catch (error) {
+            UI.banner('Obsidian-Vault konnte nicht erzeugt werden: ' +
+                (error instanceof Error ? error.message : String(error)), 'fehler');
+        }
+    };
     /* ========================================================================
      * 1. BEFEHLSPALETTE   (SilverBullet)
      * ------------------------------------------------------------------------
@@ -84,6 +150,7 @@ const Werkzeuge = (() => {
                     App.zeichneSeite();
                 }
             });
+            c('Seite', 'Aliasse bearbeiten', '', () => aliasDialog(p));
             c('Seite', 'Symbol ändern', '', () => document.querySelector('.pg-icon')?.click());
             c('Seite', p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen', '', () => { Store.updateBlock(p.id, { favorite: !p.favorite }); App.zeichneBaum(); });
             c('Seite', 'Duplizieren', '', () => { App.dupliziereSeite(p.id, p.parentId); App.zeichneBaum(); UI.toast('Dupliziert'); });
@@ -131,6 +198,7 @@ const Werkzeuge = (() => {
         c('Daten', 'Sicherung speichern', '', () => App.sicherungSpeichern());
         c('Daten', 'Sicherung laden', '', () => App.sicherungLaden());
         c('Daten', 'Alles in einen Ordner schreiben', '', () => ordnerSchreiben());
+        c('Daten', 'Als Obsidian-Vault (.zip)', '', () => void obsidianVaultExport());
         c('Daten', 'Ordner mit Markdown einlesen', '', () => ordnerLesen());
         c('Daten', 'Alles als eine HTML-Datei', '', () => einzelDatei());
         c('Daten', 'Aus Trello, Evernote, Obsidian oder Notion einlesen', '', () => Austausch.dialog());
@@ -498,13 +566,26 @@ const Werkzeuge = (() => {
     /* ========================================================================
      * 5. KARTEIKARTEN   (SiYuan, Anki-Verfahren SM-2)
      * ======================================================================*/
-    const karten = () => Object.values(Store.cache.blocks)
+    const lernModul = () => typeof window !== 'undefined'
+        ? window.Learning : null;
+    const karten = () => lernModul()?.cards?.() || Object.values(Store.cache.blocks)
         .filter(b => b.alive && b.type === 'flashcard');
     const faellig = () => {
+        const neu = lernModul();
+        if (neu?.due)
+            return neu.due();
         const jetzt = Date.now();
-        return karten().filter(k => !k.sr || !k.sr.faellig || new Date(k.sr.faellig).getTime() <= jetzt);
+        return karten().filter((k) => !k.sr || !k.sr.faellig || new Date(k.sr.faellig).getTime() <= jetzt);
     };
     const lernen = () => {
+        /* Learning V2 zeichnet Tagesqueue, Fehlertraining und Statistik. Der
+           alte Dialog bleibt als belastbarer Rückfall erhalten, falls das neue
+           Modul in einer eingebetteten Ein-Datei-Ausgabe noch nicht geladen ist. */
+        const neu = lernModul();
+        if (neu?.open) {
+            neu.open();
+            return;
+        }
         const stapel = faellig();
         const alle = karten();
         const o = document.createElement('div');
@@ -604,6 +685,9 @@ const Werkzeuge = (() => {
         });
     };
     const teileKarte = (k) => {
+        const neu = lernModul();
+        if (neu?.splitCard)
+            return neu.splitCard(k);
         const t = k.text || '';
         const i = t.indexOf('::');
         return i >= 0 ? [t.slice(0, i).trim(), t.slice(i + 2).trim()] : [t, '(noch keine Antwort — mit :: trennen)'];
@@ -2041,6 +2125,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<hr>' +
             '<button data-a="alles"><span class="mi">📦</span>Alles als eine HTML-Datei</button>' +
             '<button data-a="ordner"><span class="mi">📁</span>Alles als Markdown-Ordner</button>' +
+            '<button data-a="obsidian"><span class="mi">🔮</span>Als Obsidian-Vault (.zip)</button>' +
             '<hr>' +
             '<div class="teilen-hinweis">Es gibt keinen Server und kein Konto — ' +
             'deshalb auch keine Freigabe ins Netz. Weitergeben heisst hier: eine Datei erzeugen.</div>', r.right - 240, r.bottom + 6);
@@ -2075,6 +2160,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 einzelDatei();
             if (a === 'ordner')
                 ordnerSchreiben();
+            if (a === 'obsidian')
+                void obsidianVaultExport();
         });
     };
     /* ========================================================================

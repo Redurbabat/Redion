@@ -26,9 +26,9 @@ const pruef = (n: any, ist: any, soll: any) => {
     db.close();
     return namen.sort();
   });
-  pruef('Neun Fächer in der Ablage', faecher,
+  pruef('Zehn Fächer in der Ablage', faecher,
         ['basis', 'blocks', 'collections', 'dateien', 'meta', 'stuecke',
-         'versions', 'views', 'vorrat']);
+         'suchindex', 'versions', 'views', 'vorrat']);
 
   /* --- 1 · Die drei Schritte einzeln ------------------------------------- */
   const schritte = await p.evaluate(async () => {

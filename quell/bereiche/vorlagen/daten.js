@@ -690,9 +690,130 @@ const Galerie = (() => {
         return p;
     };
     /* ========================================================================
+     * AUSBILDUNG — normale Seiten und Datenbanken, idempotent und additiv
+     * ------------------------------------------------------------------------
+     * Keine Person, Schule oder Notenskala ist fest eingebaut. Beim zweiten
+     * Aufruf werden vorhandene Bausteine gefunden; nichts wird umbenannt,
+     * verschoben oder ueberschrieben (E128/E129).
+     * ======================================================================*/
+    const ausbildung = () => {
+        const blocks = Object.values(Store.cache.blocks);
+        let p = blocks.find(b => b.type === 'page' && b.alive !== false &&
+            (b.schoolRoot === true || b.systemRole === 'school-root'));
+        if (!p)
+            p = Store.addPage(null, {
+                text: 'Ausbildung', icon: '🎓', schoolRoot: true, systemRole: 'school-root',
+                gradeScale: { configured: false }, vorlage: 'ausbildung', vorlageFassung: 1,
+                vorlageWann: Store.now()
+            });
+        const direct = () => Store.childrenOf(p.id);
+        const ensureBlock = (role, type, data) => {
+            const found = direct().find((b) => b.schoolRole === role);
+            if (found)
+                return found;
+            return Store.addBlock(p.id, type, { ...data, schoolRole: role });
+        };
+        ensureBlock('school-intro', 'callout', {
+            icon: '🎓', color: 'bg-blue',
+            text: 'Dein Ausbildungsbereich nutzt normale Redion-Seiten, Datenbanken, PDFs, Aufgaben und Lernkarten. Notenskala und regionale Regeln legst du selbst fest.'
+        });
+        const ensurePage = (role, text, icon, extra = {}) => {
+            const found = Object.values(Store.cache.blocks).find(b => b.type === 'page' &&
+                b.alive !== false && b.schoolRole === role && b.parentId === p.id);
+            if (found)
+                return found;
+            return Store.addPage(p.id, { text, icon, schoolRole: role, ...extra });
+        };
+        const learning = ensurePage('school-learning', 'Lernstoff', '📚');
+        if (!Store.childrenOf(learning.id).some((b) => b.schoolRole === 'school-learning-hint'))
+            Store.addBlock(learning.id, 'callout', { schoolRole: 'school-learning-hint', icon: '📚',
+                text: 'Lege hier Skripte, Notizen, Formeln, Aufgaben und Karteikarten ab. Quellen bleiben direkt verknüpft.' });
+        const inboxExists = Object.values(Store.cache.blocks).some(b => b.type === 'page' &&
+            b.alive !== false && (b.captureInbox === true || b.systemRole === 'capture-inbox'));
+        if (!inboxExists) {
+            const inbox = ensurePage('school-inbox', 'Eingang & Ablage', '📥', {
+                captureInbox: true, systemRole: 'capture-inbox'
+            });
+            Store.addBlock(inbox.id, 'callout', { schoolRole: 'school-inbox-hint', icon: '📥',
+                text: 'Fotos, Scans und Dateien landen hier unverändert und können später verschoben werden.' });
+        }
+        const ensureDatabase = (kind, name, schema, layout = 'table') => {
+            const existing = Object.values(Store.cache.collections).find(c => c.schoolRootId === p.id && c.schoolKind === kind);
+            if (existing)
+                return { collectionId: existing.id, block: direct().find((b) => b.collectionId === existing.id) };
+            const byNameBlock = direct().find((b) => {
+                if (!b.collectionId)
+                    return false;
+                const collection = Store.getCollection(b.collectionId);
+                return collection && collection.name === name;
+            });
+            if (byNameBlock) {
+                const collection = Store.getCollection(byNameBlock.collectionId);
+                Store.updateCollection(collection.id, { schoolRootId: p.id, schoolKind: kind });
+                return { collectionId: collection.id, block: byNameBlock };
+            }
+            ensureBlock('school-heading-' + kind, 'h2', { text: name });
+            const made = Store.addDatabase(p.id, name, schema, layout);
+            Store.updateBlock(made.block.id, { schoolRole: 'school-db-' + kind });
+            Store.updateCollection(made.collectionId, { schoolRootId: p.id, schoolKind: kind });
+            return made;
+        };
+        const subjects = ensureDatabase('subjects', 'Fächer', {
+            title: { name: 'Fach', type: 'title' },
+            color: { name: 'Farbe', type: 'select', options: opt(['Blau', 'blue'], ['Grün', 'green'], ['Orange', 'orange'], ['Rot', 'red'], ['Grau', 'gray']) },
+            teacher: { name: 'Lehrperson', type: 'text' },
+            room: { name: 'Ort', type: 'text' },
+            active: { name: 'Aktiv', type: 'checkbox' }
+        });
+        const exams = ensureDatabase('exams', 'Prüfungen', {
+            title: { name: 'Prüfung', type: 'title' },
+            date: { name: 'Termin', type: 'date' },
+            subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+            status: { name: 'Status', type: 'status', options: opt(['Geplant', 'gray'], ['Vorbereiten', 'yellow'], ['Geschrieben', 'blue'], ['Abgeschlossen', 'green']) },
+            duration: { name: 'Dauer min', type: 'number' },
+            scope: { name: 'Lernstoff / Quelle', type: 'text' }
+        }, 'calendar');
+        ensureDatabase('grades', 'Noten', {
+            title: { name: 'Leistung', type: 'title' },
+            date: { name: 'Datum', type: 'date' },
+            subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+            exam: { name: 'Prüfung', type: 'relation', ziel: exams.collectionId },
+            points: { name: 'Punkte', type: 'number' },
+            maximum: { name: 'Maximum', type: 'number' },
+            grade: { name: 'Note (eigene Skala)', type: 'number' },
+            weight: { name: 'Gewichtung', type: 'number' },
+            note: { name: 'Rückmeldung', type: 'text' }
+        });
+        ensureDatabase('reports', 'Berichtsheft', {
+            title: { name: 'Tätigkeit', type: 'title' },
+            date: { name: 'Datum', type: 'date' },
+            subject: { name: 'Fach / Bereich', type: 'relation', ziel: subjects.collectionId },
+            hours: { name: 'Stunden', type: 'number' },
+            learned: { name: 'Gelernt / ausgeführt', type: 'text' },
+            reflection: { name: 'Reflexion', type: 'text' },
+            checked: { name: 'Geprüft', type: 'checkbox' }
+        });
+        ensureDatabase('materials', 'Lernmaterial', {
+            title: { name: 'Material', type: 'title' },
+            subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+            kind: { name: 'Art', type: 'select', options: opt(['PDF', 'red'], ['Notiz', 'blue'], ['Karteikarten', 'purple'], ['Aufgaben', 'green'], ['Webquelle', 'gray']) },
+            source: { name: 'Quelle / Seitenlink', type: 'text' },
+            status: { name: 'Stand', type: 'status', options: opt(['Neu', 'gray'], ['In Arbeit', 'yellow'], ['Gelernt', 'green']) }
+        });
+        ensureBlock('school-tools', 'callout', {
+            icon: '⚡', color: 'bg-yellow',
+            text: 'Der Elektrotechnik-Rechner in der Seitenwerkzeugleiste enthält nur normfreie Grundlagen. Normative Auslegung muss immer mit der für dich gültigen Quelle geprüft werden.'
+        });
+        Store.updateBlock(p.id, { schoolRoot: true, systemRole: 'school-root', vorlage: 'ausbildung' });
+        return p;
+    };
+    /* ========================================================================
      * DIE GALERIE
      * ======================================================================*/
     const VORLAGEN = [
+        { id: 'ausbildung', icon: '🎓', name: 'Ausbildung',
+            text: 'Fächer, Prüfungen, Noten, Berichtsheft, Lernmaterial und mobiler Eingang. Additiv und ohne fest eingebaute Person oder Notenskala.',
+            quelle: 'Redion Study Suite', bauen: ausbildung },
         { id: 'habit', icon: '📊', name: 'Habit-Tracker',
             text: '100-Punkte-Score aus Gym, Schlaf, Wasser, Lesen und Selbstkontrolle. Sechs Ansichten, drei Beispieltage.',
             quelle: 'Teil 12 der Doku', bauen: habitTracker },
@@ -766,6 +887,6 @@ const Galerie = (() => {
         const v = VORLAGEN.find(x => x.id === id);
         return v ? v.bauen() : null;
     };
-    return { oeffne, bauen, VORLAGEN, habitTracker, fitnessOS, musik, analyse };
+    return { oeffne, bauen, VORLAGEN, ausbildung, habitTracker, fitnessOS, musik, analyse };
 })();
 window.Galerie = Galerie;

@@ -267,6 +267,10 @@ const Kopfleiste = (() => {
       tools.innerHTML =
         '<button data-a="cover">🖼 Cover</button>' +
         '<button data-a="wide">' + (p.wide ? '↹ Normale Breite' : '↔ Volle Breite') + '</button>' +
+        (DocumentMode.available(p)
+          ? '<button data-a="document">▤ ' + (DocumentMode.active(p) ? 'Normale Seite' : 'Dokumentmodus') + '</button>'
+          : '') +
+        (p.schoolRoot ? '<button data-a="electrical">⚡ Rechner</button>' : '') +
         '<button data-a="font">🅰 Schrift</button>' +
         '<button data-a="vorlage">🧩 Vorlage</button>' +
         '<button data-a="ai">✨ Mit KI</button>';
@@ -276,6 +280,8 @@ const Kopfleiste = (() => {
         const a = b.dataset.a;
         if (a === 'cover') coverWaehlen(p);
         if (a === 'wide') { Store.updateBlock(p.id, { wide: !p.wide }); zeichneSeite(); }
+        if (a === 'document') DocumentMode.toggle(p);
+        if (a === 'electrical') Electrical.open(p);
         if (a === 'vorlage') Werkzeuge.vorlageEinfuegen(p);
         if (a === 'font') {
           const r = b.getBoundingClientRect();

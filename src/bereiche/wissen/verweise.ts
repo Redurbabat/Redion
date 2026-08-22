@@ -72,6 +72,23 @@ const Links = (() => {
     truncated: boolean;
   }
 
+  type PageReferenceStatus = 'eindeutig' | 'mehrdeutig' | 'fehlt';
+
+  interface PageReferenceResolution {
+    status: PageReferenceStatus;
+    name: string;
+    normalized: string;
+    page: any | null;
+    candidates: any[];
+    source: 'id' | 'pfad' | 'name' | 'keine';
+  }
+
+  interface PageReferenceIndex {
+    byName: Map<string, any[]>;
+    byPath: Map<string, any[]>;
+    pages: any[];
+  }
+
   /* ========================================================================
    * INLINE-DARSTELLUNG
    * ------------------------------------------------------------------------
@@ -88,11 +105,18 @@ const Links = (() => {
     })
 
     /* [[Seitenname]] */
-    .replace(/\[\[([^\[\]\n]{1,120})\]\]/g, (_, roh) => {
+    .replace(/\[\[([^\[\]\n|]{1,240})(?:\|([^\]\n]{1,240}))?\]\]/g, (_, roh, alias) => {
       const name = roh.trim();
-      const ziel = seiteMitTitel(name);
-      return `<a class="wl${ziel ? '' : ' neu'}" data-wl="${esc(name)}" ` +
-             `title="${ziel ? 'Seite öffnen' : 'Seite anlegen'}">${esc(name)}</a>`;
+      const anzeige = String(alias || name).trim() || name;
+      const aufloesung = loeseSeitenverweis(name);
+      const klasse = aufloesung.status === 'eindeutig' ? '' :
+        aufloesung.status === 'mehrdeutig' ? ' mehrdeutig' : ' neu';
+      const titel = aufloesung.status === 'eindeutig' ? 'Seite öffnen' :
+        aufloesung.status === 'mehrdeutig'
+          ? `${aufloesung.candidates.length} passende Seiten auswählen`
+          : 'Seite anlegen';
+      return `<a class="wl${klasse}" data-wl="${esc(name)}" ` +
+             `title="${esc(titel)}">${esc(anzeige)}</a>`;
     })
 
     /* #stichwort — nur am Wortanfang, damit URLs mit # unberührt bleiben */
@@ -107,9 +131,124 @@ const Links = (() => {
   const seiten = () => Object.values<any>(Store.cache.blocks)
     .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection');
 
-  const seiteMitTitel = (name: string) => {
-    const n = name.trim().toLowerCase();
-    return seiten().find(p => (p.text || '').trim().toLowerCase() === n) || null;
+  /** Leerzeichen und Grossschreibung sind für Seitennamen nicht bedeutend. */
+  const normalisiereSeitennamen = (value: unknown): string => String(value ?? '')
+    .normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('de');
+
+  /** Nur echte, nichtleere Aliasnamen gelangen in die Link-Wahrheit. */
+  const aliasesVon = (page: any): string[] => {
+    if (!Array.isArray(page?.aliases)) return [];
+    const seen = new Set<string>(), out: string[] = [];
+    for (const raw of page.aliases) {
+      const alias = String(raw ?? '').normalize('NFKC').trim().replace(/\s+/g, ' ').slice(0, 120);
+      const normalized = normalisiereSeitennamen(alias);
+      if (!normalized || seen.has(normalized)) continue;
+      seen.add(normalized); out.push(alias);
+    }
+    return out;
+  };
+
+  const normalisiereVaultPfad = (value: unknown): string => String(value ?? '')
+    .normalize('NFKC').replace(/\\/g, '/').replace(/^\.\//, '')
+    .replace(/\.(?:md|markdown)$/i, '').replace(/^\/+|\/+$/g, '')
+    .split('/').map(segment => segment.trim().replace(/\s+/g, ' ')).filter(Boolean)
+    .join('/').toLocaleLowerCase('de');
+
+  /** Hierarchischer Pfad für gleichnamige Seiten ausserhalb eines Vaults. */
+  const internerPfad = (page: any): string => {
+    if (!page?.id) return '';
+    const path = typeof Store.pathOf === 'function' ? Store.pathOf(page.id) : [];
+    return path.map((part: any) => part?.text || 'Ohne Titel').join('/');
+  };
+
+  const inIndex = (map: Map<string, any[]>, key: string, page: any): void => {
+    if (!key) return;
+    const list = map.get(key) || [];
+    if (!list.some(candidate => candidate.id === page.id)) list.push(page);
+    map.set(key, list);
+  };
+
+  /** Ein flüchtiger Index; er ist Ableitung und niemals ein zweiter Speicher. */
+  const baueSeitenIndex = (pages = seiten()): PageReferenceIndex => {
+    const byName = new Map<string, any[]>(), byPath = new Map<string, any[]>();
+    pages.forEach(page => {
+      inIndex(byName, normalisiereSeitennamen(page.text), page);
+      aliasesVon(page).forEach(alias => inIndex(byName, normalisiereSeitennamen(alias), page));
+      inIndex(byPath, normalisiereVaultPfad(page.obsidianPath), page);
+      inIndex(byPath, normalisiereVaultPfad(internerPfad(page)), page);
+    });
+    return { byName, byPath, pages };
+  };
+
+  /**
+   * Eine Referenz hat genau dann ein Ziel, wenn es genau einen Kandidaten
+   * gibt. Pfade und `redion:<id>` dürfen gleiche Titel ausdrücklich
+   * disambiguieren; ein Alias mit zwei Besitzern wählt niemals den ersten.
+   */
+  const loeseSeitenverweisMitIndex = (
+    name: string, index: PageReferenceIndex
+  ): PageReferenceResolution => {
+    const requested = String(name ?? '').trim();
+    /* Obsidian hängt Überschrift oder Blockkennung an das Seitensziel. Die
+       Stelle gehört nicht zur Identität der Seite und bleibt im Text stehen. */
+    const raw = requested.replace(/(?:#|\^).*$/, '').trim();
+    const direct = raw.match(/^redion:([0-9a-f-]{16,64})$/i);
+    if (direct) {
+      const page = index.pages.find(candidate => candidate.id.toLowerCase() === direct[1]?.toLowerCase());
+      return { status: page ? 'eindeutig' : 'fehlt', name: requested,
+        normalized: normalisiereSeitennamen(raw), page: page || null,
+        candidates: page ? [page] : [], source: page ? 'id' : 'keine' };
+    }
+
+    const pathKey = normalisiereVaultPfad(raw);
+    const pathCandidates = (raw.includes('/') || /\.(?:md|markdown)$/i.test(raw))
+      ? (index.byPath.get(pathKey) || []) : [];
+    if (pathCandidates.length) return {
+      status: pathCandidates.length === 1 ? 'eindeutig' : 'mehrdeutig', name: requested,
+      normalized: pathKey, page: pathCandidates.length === 1 ? pathCandidates[0] : null,
+      candidates: [...pathCandidates], source: 'pfad'
+    };
+
+    const normalized = normalisiereSeitennamen(raw);
+    const candidates = index.byName.get(normalized) || [];
+    return {
+      status: candidates.length === 1 ? 'eindeutig' : candidates.length ? 'mehrdeutig' : 'fehlt',
+      name: requested, normalized, page: candidates.length === 1 ? candidates[0] : null,
+      candidates: [...candidates], source: candidates.length ? 'name' : 'keine'
+    };
+  };
+
+  const loeseSeitenverweis = (name: string): PageReferenceResolution =>
+    loeseSeitenverweisMitIndex(name, baueSeitenIndex());
+
+  /** Kompatibler Name, aber jetzt Titel + Alias + Pfad und kollisionssicher. */
+  const seiteMitTitel = (name: string) => loeseSeitenverweis(name).page;
+
+  /** Kandidaten-API für Picker und Importe; sie verschweigt Kollisionen nicht. */
+  const seitenMitTitelOderAlias = (name: string): any[] => loeseSeitenverweis(name).candidates;
+
+  /** Die kürzeste Referenz, die diese eine Seite tatsächlich eindeutig meint. */
+  const referenzFuerSeite = (page: any): string => {
+    const index = baueSeitenIndex();
+    const title = String(page?.text || 'Ohne Titel').trim();
+    if (loeseSeitenverweisMitIndex(title, index).page?.id === page?.id) return title;
+    for (const path of [page?.obsidianPath, internerPfad(page)]) {
+      if (path && loeseSeitenverweisMitIndex(String(path), index).page?.id === page?.id)
+        return String(path).replace(/\.(?:md|markdown)$/i, '');
+    }
+    return `redion:${page?.id || ''}`;
+  };
+
+  /** Aliasfelder bleiben normale Page-Daten; diese Funktion säubert nur. */
+  const aliasesSetzen = (pageId: string, values: unknown[]): any => {
+    const page = Store.getBlock(pageId);
+    if (!page || page.type !== 'page' || page.parentTable === 'collection') return null;
+    const aliases = aliasesVon({ aliases: values })
+      .filter(alias => normalisiereSeitennamen(alias) !== normalisiereSeitennamen(page.text));
+    Store.updateBlock(page.id, { aliases });
+    const collisions = aliases.map(alias => ({ alias, candidates: seitenMitTitelOderAlias(alias) }))
+      .filter(entry => entry.candidates.length > 1);
+    return { page, aliases, collisions };
   };
 
   /** Zu welcher Seite gehört ein Block? Läuft den Baum nach oben. */
@@ -132,7 +271,23 @@ const Links = (() => {
 
   /** Öffnet die Seite mit diesem Titel — und legt sie an, wenn es sie nicht gibt. */
   const oeffneOderAnlegen = (name: string) => {
-    let z = seiteMitTitel(name);
+    const resolution = loeseSeitenverweis(name);
+    if (resolution.status === 'mehrdeutig') {
+      const menu = UI.menu(
+        '<div class="grp">Mehrere Seiten passen zu „' + esc(name) + '“</div>' +
+        resolution.candidates.map(page =>
+          `<button data-open="${esc(page.id)}"><span class="mi">${esc(page.icon || '📄')}</span>` +
+          `<span>${esc(page.text || 'Ohne Titel')}<small>${esc(Store.pfadText(page.id) || 'Oberste Ebene')}</small></span></button>`
+        ).join(''), Math.max(12, innerWidth / 2 - 180), Math.max(12, innerHeight / 3));
+      menu.addEventListener('click', (event: Event) => {
+        const button = elVon(event)?.closest<HTMLElement>('[data-open]');
+        if (!button?.dataset.open) return;
+        menu.remove(); App.oeffne(button.dataset.open);
+      });
+      UI.toast('Der Name ist mehrdeutig — bitte eine Seite wählen');
+      return;
+    }
+    let z = resolution.page;
     if (!z) {
       z = Store.addPage(null, { text: name.trim(), icon: '📄' });
       /* Ein leerer Absatz, damit die neue Seite gleich einen Platz zum
@@ -153,15 +308,15 @@ const Links = (() => {
   const verweiseAuf = (seiteId: string) => {
     const p = Store.getBlock(seiteId);
     if (!p) return [];
-    const titel = (p.text || '').trim().toLowerCase();
     const treffer = new Map();   /* seitenId -> { seite, stellen: [] } */
+    const index = baueSeitenIndex();
 
     Object.values<any>(Store.cache.blocks).forEach(b => {
       if (!b.alive || !b.text) return;
       if (b.id === seiteId) return;
 
-      const zeigtDarauf =
-        (titel && new RegExp('\\[\\[\\s*' + entschaerfe(titel) + '\\s*\\]\\]', 'i').test(b.text)) ||
+      const zeigtDarauf = [...String(b.text).matchAll(/\[\[([^\[\]\n|]{1,240})(?:\|[^\]\n]*)?\]\]/g)]
+        .some(match => loeseSeitenverweisMitIndex(match[1] || '', index).page?.id === seiteId) ||
         new RegExp('\\(\\(' + entschaerfe(seiteId) + '\\)\\)').test(b.text);
 
       if (!zeigtDarauf) return;
@@ -179,17 +334,23 @@ const Links = (() => {
   /** Seiten, die den Titel erwähnen, ohne ihn zu verlinken. */
   const unverlinkt = (seiteId: string) => {
     const p = Store.getBlock(seiteId);
-    const titel = (p?.text || '').trim();
-    if (titel.length < 3) return [];
-    const n = titel.toLowerCase();
+    if (!p) return [];
+    const index = baueSeitenIndex();
+    const namen = [p.text, ...aliasesVon(p)].map(value => String(value || '').trim())
+      .filter(value => value.length >= 3 &&
+        loeseSeitenverweisMitIndex(value, index).page?.id === seiteId)
+      .sort((a, b) => b.length - a.length);
+    if (!namen.length) return [];
     const schonVerlinkt = new Set(verweiseAuf(seiteId).map(v => v.seite.id));
     const out = new Map();
 
     Object.values<any>(Store.cache.blocks).forEach(b => {
       if (!b.alive || !b.text || b.id === seiteId) return;
       const t = b.text.toLowerCase();
-      if (!t.includes(n)) return;
-      if (t.includes('[[' + n)) return;
+      if (!namen.some(name => t.includes(name.toLocaleLowerCase('de')))) return;
+      const hatLink = [...String(b.text).matchAll(/\[\[([^\[\]\n|]{1,240})(?:\|[^\]\n]*)?\]\]/g)]
+        .some(match => loeseSeitenverweisMitIndex(match[1] || '', index).page?.id === seiteId);
+      if (hatLink) return;
       const quelle = seiteVon(b.id);
       if (!quelle || quelle.id === seiteId || schonVerlinkt.has(quelle.id)) return;
       if (!out.has(quelle.id)) out.set(quelle.id, { seite: quelle, stellen: [] });
@@ -289,15 +450,18 @@ const Links = (() => {
     pickerSchliessen();
     const q = suchbegriff.toLowerCase();
     const liste = seiten()
-      .filter(p => !q || (p.text || '').toLowerCase().includes(q))
+      .filter(p => !q || [p.text, ...aliasesVon(p), p.obsidianPath]
+        .some(value => String(value || '').toLocaleLowerCase('de').includes(q)))
       .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
       .slice(0, 8);
 
     const r = ct.getBoundingClientRect();
     let html = '<div class="grp">Auf Seite verlinken</div>';
     liste.forEach(p => {
-      html += `<button data-p="${esc(p.text || '')}"><span class="mi">${esc(p.icon || '📄')}</span>` +
-              `<span>${esc(p.text || 'Ohne Titel')}</span></button>`;
+      const reference = referenzFuerSeite(p);
+      html += `<button data-p="${esc(reference)}"><span class="mi">${esc(p.icon || '📄')}</span>` +
+              `<span>${esc(p.text || 'Ohne Titel')}` +
+              (reference !== p.text ? `<small>${esc(reference)}</small>` : '') + '</span></button>';
     });
     if (suchbegriff.trim()) {
       html += '<hr><button data-p="' + esc(suchbegriff.trim()) + '" data-neu="1">' +
@@ -352,7 +516,7 @@ const Links = (() => {
     const nodes = new Map<string, KnowledgeGraphNode>();
     const edges: KnowledgeGraphEdge[] = [];
     const edgeKeys = new Set<string>();
-    const titleIndex = new Map<string, any>();
+    const pageReferenceIndex = baueSeitenIndex();
 
     const pageBlocks = blocks.filter(block => block.type === 'page');
     pageBlocks.forEach(block => {
@@ -364,10 +528,6 @@ const Links = (() => {
         icon: block.icon || (kind === 'decision' ? '⚖' : kind === 'source' ? '🔖' : '📄'),
         kind, edited: block.edited || '', degree: 0
       });
-      if (!isRow) {
-        const normalizedTitle = normalizeGraphText(block.text);
-        if (normalizedTitle && !titleIndex.has(normalizedTitle)) titleIndex.set(normalizedTitle, block);
-      }
     });
 
     const addEdge = (source: string, target: string, kind: KnowledgeEdgeKind): void => {
@@ -414,8 +574,8 @@ const Links = (() => {
       const owner = ownerFor(block.id);
       if (!owner) return;
 
-      for (const match of String(block.text).matchAll(/\[\[([^\[\]\n]{1,120})\]\]/g)) {
-        const target = titleIndex.get(normalizeGraphText(match[1]));
+      for (const match of String(block.text).matchAll(/\[\[([^\[\]\n]{1,240})\]\]/g)) {
+        const target = loeseSeitenverweisMitIndex(String(match[1] || '').split('|')[0] || '', pageReferenceIndex).page;
         if (target) addEdge(owner.id, target.id, 'link');
       }
       for (const match of String(block.text).matchAll(/\(\(([0-9a-f-]{6,})\)\)/gi)) {
@@ -604,7 +764,7 @@ const Links = (() => {
     const today = new Date().toISOString().slice(0, 10);
     const base = kind === 'decision' ? `Entscheidung · ${today}` : `Quelle · ${today}`;
     let title = base, suffix = 2;
-    while (seiteMitTitel(title)) title = base + ' · ' + suffix++;
+    while (seitenMitTitelOderAlias(title).length) title = base + ' · ' + suffix++;
     const current = Store.getBlock(App.aktuelleSeite?.());
     const parentId = current?.type === 'page' && current.parentTable !== 'collection' ? current.id : null;
     const page = Store.addPage(parentId, {
@@ -1084,7 +1244,8 @@ const Links = (() => {
   };
 
   return {
-    start, inline, seiten, seiteMitTitel, seiteVon, oeffneOderAnlegen,
+    start, inline, seiten, seiteMitTitel, seitenMitTitelOderAlias, loeseSeitenverweis,
+    aliasesVon, aliasesSetzen, referenzFuerSeite, seiteVon, oeffneOderAnlegen,
     verweiseAuf, unverlinkt, alleTags, fusszeile, graphVorbereiten, graph, tagRegister
   };
 })();

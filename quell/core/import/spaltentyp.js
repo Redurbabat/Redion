@@ -111,8 +111,10 @@ const Spaltentyp = (() => {
             }
             if (monat < 1 || monat > 12 || tag < 1 || tag > 31)
                 return null;
-            const d = new Date(Number(de[3]), monat - 1, tag);
-            return isNaN(d.getTime()) ? null : d;
+            const jahr = Number(de[3]);
+            const d = new Date(jahr, monat - 1, tag);
+            return isNaN(d.getTime()) || d.getFullYear() !== jahr ||
+                d.getMonth() !== monat - 1 || d.getDate() !== tag ? null : d;
         }
         /* 2026-08-04 und ISO mit Uhrzeit. */
         if (/^\d{4}-\d{2}-\d{2}([T ]|$)/.test(t)) {
@@ -182,7 +184,9 @@ const Spaltentyp = (() => {
             }
             case 'date': {
                 const d = alsDatum(roh);
-                return d === null ? String(roh) : d.toISOString().slice(0, 10);
+                return d === null ? String(roh) :
+                    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-` +
+                        String(d.getDate()).padStart(2, '0');
             }
             default: return String(roh).trim();
         }

@@ -371,6 +371,53 @@ const Blocks = (() => {
     /* ========================================================================
      * RENDERN
      * ======================================================================*/
+    let zeitmarkenSpieler = null;
+    /** Springt zu einer Tonstelle. Zuerst wird der sichtbare Audio-Block
+        benutzt; bei einem Verweis von einer anderen Seite reicht auch die
+        stabile Datei-Kennung. Alte Audio-Blöcke mit `src` bleiben davon
+        unberührt und funktionieren weiterhin im normalen Player. */
+    const audioRefSpielen = async (ref) => {
+        const sek = Math.max(0, Number(ref?.sek) || 0);
+        const blockId = String(ref?.blockId || '');
+        const ziel = Array.from(document.querySelectorAll('.blk[data-bid]'))
+            .find(el2 => el2.dataset.bid === blockId);
+        const sichtbar = ziel?.querySelector('audio') || null;
+        const spiele = (audio) => {
+            const los = () => {
+                try {
+                    audio.currentTime = sek;
+                }
+                catch { /* Metadaten kommen gleich; `loadedmetadata` versucht erneut. */ }
+                audio.play().catch(err => UI.toast('Ton konnte nicht starten: ' +
+                    (err instanceof Error ? err.message : String(err))));
+            };
+            if (audio.readyState >= 1)
+                los();
+            else
+                audio.addEventListener('loadedmetadata', los, { once: true });
+        };
+        if (sichtbar) {
+            spiele(sichtbar);
+            return;
+        }
+        if (!ref?.dateiId || typeof Dateien === 'undefined') {
+            UI.toast('Der zugehörige Audio-Block ist auf dieser Seite nicht verfügbar.');
+            return;
+        }
+        const adresse = await Dateien.adresse(String(ref.dateiId));
+        if (!adresse) {
+            UI.toast('Die Tondatei gibt es nicht mehr.');
+            return;
+        }
+        if (zeitmarkenSpieler) {
+            try {
+                zeitmarkenSpieler.pause();
+            }
+            catch { }
+        }
+        zeitmarkenSpieler = new Audio(adresse);
+        spiele(zeitmarkenSpieler);
+    };
     /** Baut das DOM für einen Block samt Kindern. */
     const render = (block, tiefe = 0) => {
         const t = typ(block.type);
@@ -869,6 +916,25 @@ const Blocks = (() => {
             default:
                 box.appendChild(machText());
         }
+        /* Eine normale Notiz kann auf eine Sekunde in einem Audio-Block zeigen.
+           Der Text bleibt editierbar; der kleine Knopf ist nur die Navigation. */
+        if (block.audioRef && Number.isFinite(Number(block.audioRef.sek))) {
+            const marke = document.createElement('button');
+            marke.className = 'audio-ref-marke';
+            const sek = Math.max(0, Math.round(Number(block.audioRef.sek) || 0));
+            marke.textContent = '▶ ' + String(Math.floor(sek / 60)).padStart(2, '0') + ':' +
+                String(sek % 60).padStart(2, '0');
+            marke.title = 'Ton ab dieser Stelle abspielen';
+            marke.style.cssText = 'flex:0 0 auto; margin:2px 4px; padding:3px 7px; ' +
+                'border:1px solid var(--line); border-radius:999px; color:var(--accent); font-size:12px';
+            marke.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                audioRefSpielen(block.audioRef).catch(err => UI.toast('Ton konnte nicht geöffnet werden: ' +
+                    (err instanceof Error ? err.message : String(err))));
+            });
+            el.appendChild(marke);
+        }
         /* Kommentarmarke */
         if ((block.kommentare || []).length) {
             const k = document.createElement('button');
@@ -1026,7 +1092,8 @@ const Blocks = (() => {
                 [['25', 'S'], ['50', 'M'], ['75', 'L'], ['100', 'Voll']].map(([b2, n]) => `<button data-b="${b2}" class="${String(block.breite || 100) === b2 ? 'an' : ''}">${n}</button>`).join('') +
                     '<span class="bw-trenn"></span>' +
                     [['links', '⭰'], ['mitte', '⭤'], ['rechts', '⭲']].map(([a2, ic]) => `<button data-aus="${a2}" class="${(block.ausricht || 'links') === a2 ? 'an' : ''}">${ic}</button>`).join('') +
-                    '<span class="bw-trenn"></span><button data-a="voll" title="Gross ansehen">⛶</button>';
+                    '<span class="bw-trenn"></span><button data-a="voll" title="Gross ansehen">⛶</button>' +
+                    (block.dateiId ? '<button data-a="ocr" title="Text mit lokalem OCR-Dienst erkennen">⌁</button>' : '');
             werk.addEventListener('click', e => {
                 const b2 = elVon(e)?.closest('button');
                 if (!b2)
@@ -1043,6 +1110,11 @@ const Blocks = (() => {
                 }
                 if (b2.dataset.a === 'voll')
                     bildGross(i.src || quelle, block.caption);
+                if (b2.dataset.a === 'ocr') {
+                    const page = Links.seiteVon(block.id);
+                    if (page && typeof Recognition !== 'undefined')
+                        void Recognition.fromImageBlock(page, block);
+                }
             });
             rahmen.appendChild(werk);
             /* Rechter Rand zum Ziehen */
@@ -1078,11 +1150,19 @@ const Blocks = (() => {
         }
         else if (block.type === 'audio') {
             const a = document.createElement('audio');
-            a.src = quelle;
+            if (quelle)
+                a.src = quelle;
             a.controls = true;
             a.style.width = '100%';
+            a.dataset.audioBlock = block.id;
             nachtragen.push(u => { a.src = u; });
             w.appendChild(a);
+            if (block.caption || block.text) {
+                const beschriftung = document.createElement('div');
+                beschriftung.style.cssText = 'font-size:12px;color:var(--text-dim);padding:3px 2px';
+                beschriftung.textContent = block.caption || block.text;
+                w.appendChild(beschriftung);
+            }
         }
         else if (block.type === 'file') {
             /* `istPdf` schaut nur auf die Endung — die entscheidet, ob eine Vorschau

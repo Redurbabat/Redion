@@ -60,7 +60,9 @@ const Dateien = (() => {
 
   /* Blob-Adressen, die schon gebaut wurden — damit dieselbe Datei nicht
      zehnmal zusammengesetzt wird. */
-  const adressen = new Map();
+  const adressen = new Map<string, string>();
+  const laufendeAdressen = new Map<string, Promise<string | null>>();
+  const adressVersionen = new Map<string, number>();
 
   /* ========================================================================
    * 1 · ANMELDEN — Notions „create file upload"
@@ -151,10 +153,14 @@ const Dateien = (() => {
    * @param {object} opt  { blockId, name, beiFortschritt(anteil, nr, von) }
    * @returns {Promise<object>} der Dateisatz
    */
-  const ablegen = async (datei: File, opt?: any): Promise<any> => {
+  const ablegen = async (datei: File | Blob, opt?: any): Promise<any> => {
     opt = opt || {};
+    /* MediaRecorder liefert einen Blob, keinen File. Der Name gehört deshalb
+       zur Option; bei einem echten File bleibt sein eigener Name der
+       Rückfall. Audio muss dadurch nie erst als Data-URL aufgebläht werden. */
+    const dateiName = typeof File !== 'undefined' && datei instanceof File ? datei.name : '';
     const satz = await anmelden({
-      name: opt.name || datei.name || 'Datei',
+      name: opt.name || dateiName || 'Datei',
       groesse: datei.size, typ: datei.type, blockId: opt.blockId,
       abgeleitet: !!opt.abgeleitet });
 
@@ -171,6 +177,20 @@ const Dateien = (() => {
       await weg(satz.id);
       throw e;
     }
+  };
+
+  /**
+   * Verbindet eine bereits abgelegte Datei nachträglich mit ihrem Block.
+   * Normalerweise ist die Blockkennung schon beim Ablegen bekannt. Dieser
+   * Weg bleibt für Importe und alte Aufnahmen, deren Block erst danach
+   * angelegt wird. Die Datei selbst wird dabei nicht neu geschrieben.
+   */
+  const verknuepfen = async (dateiId: string, blockId: string): Promise<any> => {
+    const satz = await Store.dateiHolen(dateiId);
+    if (!satz) throw new Error('Diese Datei gibt es nicht mehr.');
+    satz.blockId = blockId || null;
+    await Store.dateiPut(satz);
+    return satz;
   };
 
   /* ========================================================================
@@ -210,16 +230,30 @@ const Dateien = (() => {
   const adresseBekannt = (dateiId: string): string | null =>
     adressen.get(dateiId) || null;
 
-  const adresse = async (dateiId: string): Promise<string | null> => {
-    if (adressen.has(dateiId)) return adressen.get(dateiId);
-    const blob = await alsBlob(dateiId);
-    if (!blob) return null;
-    const url = URL.createObjectURL(blob);
-    adressen.set(dateiId, url);
-    return url;
+  const adresse = (dateiId: string): Promise<string | null> => {
+    const bekannte = adressen.get(dateiId);
+    if (bekannte) return Promise.resolve(bekannte);
+    const laufende = laufendeAdressen.get(dateiId);
+    if (laufende) return laufende;
+    const version = adressVersionen.get(dateiId) || 0;
+    const arbeit: Promise<string | null> = alsBlob(dateiId).then(blob => {
+      /* Wurde die Datei waehrend des Lesens entfernt, darf die spaete
+         Antwort weder eine neue URL lecken noch den geloeschten Satz im
+         Adresscache scheinbar wiederbeleben. */
+      if (!blob || version !== (adressVersionen.get(dateiId) || 0)) return null;
+      const url = URL.createObjectURL(blob);
+      adressen.set(dateiId, url);
+      return url;
+    }).finally(() => {
+      if (laufendeAdressen.get(dateiId) === arbeit) laufendeAdressen.delete(dateiId);
+    });
+    laufendeAdressen.set(dateiId, arbeit);
+    return arbeit;
   };
 
   const adresseWeg = (dateiId: string): void => {
+    adressVersionen.set(dateiId, (adressVersionen.get(dateiId) || 0) + 1);
+    laufendeAdressen.delete(dateiId);
     const url = adressen.get(dateiId);
     if (url) { try { URL.revokeObjectURL(url); } catch {} adressen.delete(dateiId); }
   };
@@ -430,6 +464,7 @@ const Dateien = (() => {
 
   return { STUECK, KLEIN, GRENZE,
            anmelden, stueckSchicken, bestaetigen, abbrechen, ablegen,
+           verknuepfen,
            alsBlob, adresse, adresseBekannt, adresseWeg, herunterladen,
            weg, verwaist, aufraeumen, zahlen, groesseText, lohntSich, dialog };
 })();

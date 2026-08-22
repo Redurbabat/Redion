@@ -97,6 +97,16 @@ const WissenDienst = (() => {
   /** SM-2 in kurz: leichter beantwortet = längerer Abstand. */
   const planen = (k: any, note: number): any => {
     const sr = Object.assign({ ease: 2.5, intervall: 0, wdh: 0 }, k.sr || {});
+    /* Der Verlauf ist additiv. Die Rechnung darunter bleibt absichtlich
+       dieselbe SM-2-Rechnung wie bisher; insbesondere verändert ein Fehler
+       die Leichtigkeit nicht. Statistik und Fehlertraining lesen nur dieses
+       objektbasierte Protokoll und verschieben keinen Termin von selbst. */
+    const vorher = {
+      due: String(sr.faellig || ''),
+      interval: Number(sr.intervall) || 0,
+      ease: Number(sr.ease) || 2.5,
+      repetitions: Number(sr.wdh) || 0
+    };
     if (note < 3) { sr.wdh = 0; sr.intervall = note === 1 ? 0 : 1; }
     else {
       sr.wdh++;
@@ -108,7 +118,37 @@ const WissenDienst = (() => {
     else d.setDate(d.getDate() + sr.intervall);
     sr.faellig = d.toISOString();
     sr.zuletzt = Store.now();
-    Store.updateBlock(k.id, { sr });
+    const alt: Record<string, any> = Array.isArray(k.reviewVerlauf)
+      ? Object.fromEntries(k.reviewVerlauf
+          .filter((entry: any) => entry && typeof entry === 'object')
+          .map((entry: any, index: number) => [String(entry.id || 'legacy-' + index + '-' + (entry.at || '')), entry]))
+      : (k.reviewVerlauf && typeof k.reviewVerlauf === 'object' ? { ...k.reviewVerlauf } : {});
+    /* `WissenDienst` bleibt als reine Logik auch mit einem kleinen Store-
+       Adapter pruefbar. In der App kommt die kanonische Kennung vom Store;
+       der Rueckfall braucht nur innerhalb dieses Verlaufs eindeutig zu sein. */
+    const reviewId = typeof Store.uid === 'function'
+      ? Store.uid()
+      : 'review-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+    alt[reviewId] = {
+      id: reviewId,
+      version: 1,
+      at: sr.zuletzt,
+      rating: Number(note),
+      algorithm: 'sm2',
+      lapse: note < 3,
+      before: vorher,
+      after: {
+        due: sr.faellig,
+        interval: sr.intervall,
+        ease: sr.ease,
+        repetitions: sr.wdh
+      }
+    };
+    const behalten = Object.values<any>(alt)
+      .sort((a, b) => String(a.at || '').localeCompare(String(b.at || '')) || String(a.id || '').localeCompare(String(b.id || '')))
+      .slice(-500);
+    const reviewVerlauf = Object.fromEntries(behalten.map(entry => [String(entry.id), entry]));
+    Store.updateBlock(k.id, { sr, reviewVerlauf, lernAlgorithmus: 'sm2' });
     return sr;
   };
 
@@ -223,18 +263,67 @@ const WissenDienst = (() => {
     return zeilen.join('\n');
   };
 
-  /** Markdown zurück in Blöcke. Vorhandene Datenbanken werden erkannt. */
-  const ausMarkdown = (p: any, text: string): void => {
+  type MarkdownImportOptionen = { preserveOpaqueIds?: boolean };
+
+  /** Markdown zurück in Blöcke. Vorhandene Datenbanken werden erkannt.
+      Beim Reimport eines von Redion exportierten Vaults bleiben die IDs der
+      nicht verlustfrei in Markdown darstellbaren Teilbaeume erhalten. */
+  const ausMarkdown = (p: any, text: string, optionen: MarkdownImportOptionen = {}): void => {
     /* Dieselbe Regel wie beim Hinschreiben, nur andersherum gelesen:
        gerettet wird, was NICHT durch Markdown gegangen ist. `Store.baum`
        nimmt den ganzen Ast mit — bei einer Spalte also auch die PDF-Seite
        darin und deren Striche. */
     const alteDbs: Record<string, any> = {};
-    Store.childrenOf(p.id).forEach((b: any) => {
-      if (!mdTraegt(b)) alteDbs[b.id] = Store.baum(b.id);
-    });
+    const erhaltene = new Map<string, any>();
+    if (optionen.preserveOpaqueIds) {
+      /* Nicht kopieren: Eine Kopie bekaeme frische Block-IDs. Dateien sind
+         aber ueber genau diese ID mit PDF-, Bild- und Audiobloecken
+         verbunden. Deshalb den aeussersten opaken Ast kurz aus der
+         `content`-Kette nehmen, bevor die Markdown-Bloecke geloescht werden. */
+      const detach = (parentId: string): void => {
+        [...Store.childrenOf(parentId)].forEach((b: any) => {
+          if (mdTraegt(b)) { detach(b.id); return; }
+          erhaltene.set(b.id, b);
+          const parent = Store.getBlock(parentId);
+          if (parent) Store.updateBlock(parent.id, {
+            content: (parent.content || []).filter((id: string) => id !== b.id)
+          });
+          /* Bis der Platzhalter gelesen ist, gehoert der lebende Block zur
+             Importseite, steht aber absichtlich noch nicht in deren Liste. */
+          Store.updateBlock(b.id, { parentId: p.id, parentTable: 'block' });
+        });
+      };
+      detach(p.id);
+    } else {
+      Store.childrenOf(p.id).forEach((b: any) => {
+        if (!mdTraegt(b)) alteDbs[b.id] = Store.baum(b.id);
+      });
+    }
 
-    Store.kinderLeeren(p.id);
+    const attachErhaltenen = (id: string, parentId: string): any => {
+      const block = erhaltene.get(id);
+      const parent = Store.getBlock(parentId);
+      if (!block || !parent || block.alive === false) return null;
+      const vorher = Store.getBlock(block.parentId);
+      if (vorher && vorher.id !== parent.id && (vorher.content || []).includes(block.id))
+        Store.updateBlock(vorher.id, {
+          content: vorher.content.filter((kind: string) => kind !== block.id)
+        });
+      if (!(parent.content || []).includes(block.id))
+        Store.updateBlock(parent.id, { content: [...(parent.content || []), block.id] });
+      Store.updateBlock(block.id, { parentId: parent.id, parentTable: 'block' });
+      erhaltene.delete(id);
+      return block;
+    };
+    const retteUebrige = (): void => {
+      /* Ein extern geloeschter oder verschobener Platzhalter darf niemals
+         still echte Dateien/Unterseiten loeschen. Ohne eindeutigen Ort
+         landen solche Bloecke sichtbar am Ende der Seite. */
+      [...erhaltene.keys()].forEach(id => attachErhaltenen(id, p.id));
+    };
+
+    try {
+      Store.kinderLeeren(p.id);
 
     let imCode = false, codeText: string[] = [], codeLang = '';
     const zeilen = text.split('\n');
@@ -327,8 +416,10 @@ const WissenDienst = (() => {
          Kennung enthält — sonst könnte ein `-->` im Text die Zeile
          verschieben. */
       const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab|blk):([A-Za-z0-9_-]+)-->\s*(?:.*)$/);
-      if (platz?.[1] && alteDbs[platz[1]]) {
-        const neu = Store.baumEinfuegen(alteDbs[platz[1]], elternFuer(roh));
+      if (platz?.[1] && (erhaltene.has(platz[1]) || alteDbs[platz[1]])) {
+        const neu = erhaltene.has(platz[1])
+          ? attachErhaltenen(platz[1], elternFuer(roh))
+          : Store.baumEinfuegen(alteDbs[platz[1]], elternFuer(roh));
         if (neu) stapel.push(neu.id);
         return;
       }
@@ -382,7 +473,10 @@ const WissenDienst = (() => {
       lege(roh, 'text', { text: z });
     });
     if (imCode && codeText.length) lege(codeZeile, 'code', { text: codeText.join('\n'), lang: codeLang });
-    tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
+      tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
+    } finally {
+      retteUebrige();
+    }
   };
 
   /* --------------------------------------------------------------------------

@@ -35,9 +35,35 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**22. August 2026 · 166 Prüfläufe**
+**22. August 2026 · 167 Prüfläufe**
 
-> ### ⏸ HIER WURDE ANGEHALTEN — 22. August, nachmittags
+> ### ✅ STUDY SUITE · PHASE 1 INK V2 ABGESCHLOSSEN
+>
+> Die gemeinsame Zeichenschicht von A4-Blatt und PDF-Seite kann jetzt
+> transparenten Marker, Linie, Pfeil, Rechteck, Ellipse und sichere
+> Textanmerkungen. Auswahlrechteck, Mehrfachauswahl, gemeinsames Verschieben
+> und Löschen sowie Aktions-Undo/Redo sind angeschlossen.
+>
+> `src/core/ink/geometry.ts` ist der neutrale, DOM-freie Geometriekern. Es
+> gibt keine zweite Ink-Datenbank und keinen PDF-zu-Whiteboard-Import; die
+> additiven Markendaten laufen durch vorhandene Sicherung und Sync.
+>
+> `test201` (Suite 167, 32 Punkte) hält Markertransparenz, Formen, Text,
+> Druckwerte, Coalesced Events, Reduktion, Auswahl/Bewegung/Undo/Redo,
+> 390×844, 1366×768, 1440×900, Druck, Backup/Restore und Sync fest.
+
+> ### ✅ STUDY SUITE · PHASEN 2–9 IM CODE ABGESCHLOSSEN
+>
+> Dokumentmodus · PDF/Notiz → Lernen · Lernen V2 · Audio V2 · Alias/Vault ·
+> Scanner/OCR · Ausbildung · Schulbibliothek sind auf den vorhandenen Seiten,
+> Blöcken, Anhängen, dem Graphen und SM-2 aufgebaut. Es gibt keinen zweiten
+> Store, Graph, PDF-Viewer oder Lernkartenbestand.
+>
+> Der bewusst gebündelte Abschlusslauf folgt nach Erzeugen der Browserdateien;
+> Zwischenläufe wurden auf Wunsch nicht ausgeführt. Der Umsetzungsnachtrag
+> steht in `doku/REDION-STUDY-SUITE-AUDIT.md`.
+
+> ### Historischer Übergabestand vor Ink V2 — 22. August, nachmittags
 >
 > Die Arbeit an E123/E124 ist inhaltlich fertig und committet. Was noch
 > aussteht, steht unten unter **„Offen beim Anhalten"**. Wer hier weitermacht,

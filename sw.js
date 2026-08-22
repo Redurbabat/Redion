@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v20';
+const VERSION = 'notizen-v21';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -54,6 +54,8 @@ const GRUNDSTOCK = [
     './quell/kern/zugang/rollen.js',
     './quell/core/security/sanitize.js',
     './quell/core/sheet/space.js',
+    './quell/core/ink/geometry.js',
+    './quell/core/electrical/calculations.js',
     './quell/core/spreadsheet/address.js',
     './quell/core/spreadsheet/engine.js',
     './quell/core/spreadsheet/csv.js',
@@ -91,6 +93,7 @@ const GRUNDSTOCK = [
     './quell/bereiche/pdf/seite.js',
     './quell/bereiche/pdf/einlesen.js',
     './quell/bereiche/bloecke/arten/blatt.js',
+    './quell/bereiche/pdf/document-mode.js',
     './quell/bereiche/spreadsheet/ansicht.js',
     './quell/bereiche/datenbanken/raster.js',
     './quell/bereiche/editor/ansicht/editor.js',
@@ -98,6 +101,7 @@ const GRUNDSTOCK = [
     './quell/bereiche/datenbanken/steuerung.js',
     './quell/bereiche/wissen/dienst.js',
     './quell/bereiche/wissen/werkzeuge.js',
+    './quell/bereiche/wissen/learning.js',
     './quell/kern/zustand/verlauf.js',
     './quell/bereiche/editor/ansicht/auswahlleiste.js',
     './quell/bereiche/erwaehnungen/ansicht/menue.js',
@@ -140,6 +144,8 @@ const GRUNDSTOCK = [
     './quell/kern/ablage/befehle.js',
     './quell/kern/ereignisse/protokoll.js',
     './quell/bereiche/dateien/ablage.js',
+    './quell/bereiche/dateien/recognition.js',
+    './quell/bereiche/wissen/electrical.js',
     './quell/kern/abgleich/zusammenfuehren.js',
     './quell/kern/zugang/rechte.js',
     './quell/bereiche/datenbanken/probelauf/dienst.js',

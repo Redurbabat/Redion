@@ -711,8 +711,9 @@ const blattNeu = await seite.evaluate(() => {
 
 p('Der Stift öffnet ein Blatt', !!blattNeu, 'er legte vorher sofort eine Seite an');
 p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.titel);
-p('Es führt zu acht Sachen, nicht zu einer',
-  (blattNeu?.wege.length ?? 0) === 8, (blattNeu?.wege ?? []).join(', '));
+p('Es führt zu neun Sachen inklusive Scanner, nicht zu einer',
+  (blattNeu?.wege.length ?? 0) === 9 && (blattNeu?.wege ?? []).includes('scan'),
+  (blattNeu?.wege ?? []).join(', '));
 p('Datenbank, Tabelle, Aufgabe und Karteikarte sind dabei',
   ['db', 'tabelle', 'aufgabe', 'karte'].every(w => (blattNeu?.wege ?? []).includes(w)),
   (blattNeu?.wege ?? []).join(', '));

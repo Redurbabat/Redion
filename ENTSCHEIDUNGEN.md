@@ -8256,3 +8256,90 @@ nachgetragen bekommen hat (das passiert beim Öffnen alter Dokumente).
 **Geprüft** (test181): §5 sieht am Bild nach, dass das Suchfenster die Seiten
 aufzählt — dieser Abschnitt war rot und ist der eigentliche Wächter. Dazu drei
 Quellenzeugen, einer je Suchweg.
+
+
+## E125 · Ink V2 erweitert den Dokumentraum, nicht die Zahl der Zeichenmaschinen
+
+**22. August 2026.** A4-Blatt und PDF-Seite besassen bereits dieselbe
+Markenschicht und stabile Blattkoordinaten. Die allgemeine Zeichenfläche
+kannte zwar Formen, speicherte aber rohe Bildschirmpixel und hatte nur ein
+`pop()`-Rückgängig. Sie zu importieren hätte zwei unvereinbare Wahrheiten
+über dieselbe Geometrie geschaffen.
+
+### Die Entscheidung
+
+`src/core/ink/geometry.ts` ist ein kleiner DOM-freier Kern für Punkte,
+Begrenzungen, Treffer, Verschieben, geglättete SVG-Pfade und
+Ramer-Douglas-Peucker-Reduktion. Die bestehende `Marken`-Schicht verwendet
+ihn für Stift, transparenten Marker, Linie, Pfeil, Rechteck, Ellipse und
+Text. Ein PDF wird nicht ins Whiteboard umgewandelt; spätere Flächen dürfen
+den neutralen Kern verwenden, nicht die Dokumentdaten übernehmen.
+
+Neue Druckwerte stehen getrennt als `pressure` neben den unveränderten
+zweidimensionalen `pts`. Alte Sicherungen bleiben damit ohne Migration
+lesbar. Während `pointermove` wird nur der bestehende SVG-Knoten verändert;
+Store und Verlauf werden erst beim Abschluss einer Aktion geschrieben.
+Auswahl, Mehrfachverschieben, Löschen und Textänderung sichern jeweils einen
+Vorher-Stand. Undo/Redo ist damit aktionsbasiert und auf 100 Schritte
+begrenzt.
+
+### Warum keine Sonderablage
+
+Marken bleiben additive Felder des Blocks. Der vorhandene Store, `.redion`,
+verschlüsselte Pakete und der Drei-Wege-Abgleich transportieren sie bereits.
+Eine Ink-IndexedDB oder ein eigenes Sicherungsformat hätte nur einen zweiten
+Fehlerweg geschaffen.
+
+**Geprüft** (`test201`, Suite 167, 32 Punkte): Rückwärtskompatibilität,
+Markertransparenz, alle Formen, sicherer Text, Druckwerte, Coalesced Events,
+Punktreduktion, Auswahl/Mehrfachauswahl, Bewegung, Löschen, Undo/Redo,
+390×844, 1366×768, 1440×900, Druck, Sicherungsrundlauf und Sync. Die
+bestehenden Suiten 174, 177, 178, 180, 182 und 189 bleiben grün.
+
+## E126 · Dokumentmodus ist eine Ansicht, kein zweites Dokument
+
+**22. August 2026.** Der Arbeitsraum verwendet dieselben `pdfseite`- und
+`blatt`-Blöcke, auch innerhalb bestehender Spalten. Nur die gewählte Seite
+wird vollständig gerendert; Miniaturen lesen vorhandene Seitenbilder. Desktop
+zeigt drei Spalten, kleine Laptops einen Inspector-Drawer und Telefone
+Bottom-Sheets mit 44-px-Zielen. Deep Links wählen den Block vor dem Rendern.
+
+## E127 · Lernquellen und Wiederholungen bleiben Blockdaten
+
+**22. August 2026.** Notizen, Karten, Aufgaben, kleine Ausschnitte und Links
+tragen einen additiven `sourceRef` zur echten PDF-/Blatt-/Textquelle. Der
+exakte Sprung verwendet die Blockkennung. Cloze und Tagesrunde arbeiten auf
+normalen Flashcards. SM-2 bleibt unverändert; Review-Ereignisse erhalten
+eindeutige IDs für den Drei-Wege-Abgleich. FSRS wird nicht still eingeführt.
+
+## E128 · Neue Audioaufnahmen sind Anhänge, keine Zeichenketten
+
+**22. August 2026.** MediaRecorder-Blobs laufen durch den vorhandenen
+Chunk-Speicher und werden per stabiler `dateiId` referenziert. Alte DataURLs
+bleiben lesbar. Eine Zeitmarke ist ein normaler Textblock mit `audioRef`.
+Optionale Transkription sendet erst nach Knopfdruck und sichtbarer Zustimmung.
+
+## E129 · Ein Resolver für Titel, Aliasse und Vault-Pfade
+
+**22. August 2026.** Suche, Wikilinks, Backlinks, Picker, Graph und Vault
+verwenden dieselbe Auflösung. Nur ein eindeutiger Treffer wird geöffnet;
+Kollisionen liefern Kandidaten. Obsidian-Roundtrips tragen `redion-id`, Pfad
+und Aliasse und mergen niemals allein nach Seitentitel.
+
+## E130 · Erkennung ist ein Derivat mit Provenienz
+
+**22. August 2026.** Kamera und Dateien werden zuerst unverändert im normalen
+Anhangspeicher abgelegt. OCR ist ein optionaler localhost-Adapter mit
+Zustimmung, Größen-/Pixelgrenzen und Zeitlimit. Erkanntes überschreibt weder
+PDF-Text noch Bild noch Ink, sondern speichert Text, Sprache, Engine, Version,
+Vertrauen und Region zusätzlich. Handschrift-zu-Text/Formel ist ein bestätigter
+Vorschlag; Ink bleibt erhalten.
+
+## E131 · Ausbildung ist Vorlage plus bestehende Bibliothek
+
+**22. August 2026.** Fächer, Prüfungen, Noten, Berichtsheft, Lernmaterial und
+Capture-Eingang sind normale Seiten/Datenbanken. Die Vorlage ist idempotent
+und additiv, ohne Person, Schule oder Notenskala fest einzubauen. Der
+Elektrorechner enthält nur normfreie Mathematik. Fragen sind ein validiertes,
+versioniertes Lernpaket. Das Schuldashboard speichert nichts Eigenes, sondern
+führt vorhandene PDFs, Karten, Aufgaben und Termine begrenzt zusammen.

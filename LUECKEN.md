@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**22. August 2026 · 164 Prüfläufe** — zwei Arbeitsstände zusammengeführt
+**22. August 2026 · 167 Prüfläufe** — Ink V2 abgeschlossen
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -25,6 +25,9 @@ Versionen · Papierkorb · `.json`- und `.redion`-Sicherung mit Anhängen, auch
 **Was seit dem 7. August dazukam**
 
 ```txt
+—    Ink V2 (E125) — Marker, Linie, Pfeil, Rechteck, Ellipse, sichere
+     Textanmerkung, Mehrfachauswahl, Verschieben/Löschen und Aktionsverlauf
+     auf derselben stabilen A4-/PDF-Zeichenschicht
 L11  Grenzen für Agenten (E52) — Notaus, Tageslimit, Rückfrage, und
      ohne Aufsicht nur lesen
 L12  Barrierefreiheit gemessen und behoben (E51) — 106 Überlagerungen
@@ -822,13 +825,19 @@ Suche über Titel, Inhalt, Zeilen und Kennungen mit einfacher Syntax.
 
 ## L24 · Entscheidungs- und Wissensgraph
 
-Backlinks gibt es; der Graph, die Entscheidungsblöcke und die Quellenpflege
-fehlen.
+**Stand — ✅ geschlossen.** Redion besitzt einen einzigen abgeleiteten Graphen
+für Seiten, Zeilen, Entscheidungen, Quellen und Schlagwörter. Backlinks,
+Relationen, Baumkanten, Filter und begrenzte 1-/2-Hop-Ausschnitte verwenden
+denselben Bestand; Lernquellen werden am normalen Block verknüpft. Ink-Striche
+werden bewusst nicht zu Graphknoten.
 
 ## L25 · Universelle Begriffe und Aliase
 
-Ein Begriff, viele Schreibweisen — damit Suche und Verknüpfung ihn trotzdem
-finden.
+**Stand — ✅ geschlossen mit E129.** Seiten tragen additive `aliases`. Titel,
+Alias, Vault-/Hierarchiepfad und `redion:<id>` laufen durch einen zentralen
+Resolver. Suche, Wikilinks, Picker, Backlinks, unverlinkte Erwähnungen, Graph
+und Obsidian-Import verwenden ihn. Eine Kollision liefert Kandidaten und nie
+willkürlich den ersten Treffer.
 
 ## L26 · Import aus anderen Werkzeugen
 
@@ -847,7 +856,17 @@ einfache Optimierung.
 
 ## L29 · Suche in Bildern, PDFs und Audio
 
-OCR für Bilder und PDFs · Audio-Transkription · Suchindex erweitern.
+**Stand — ◐ die local-first Grundstufe steht (E130).** Native PDF-Textebene
+und optionale OCR bleiben getrennt. Bilder, PDF-Ausschnitte und Ink-Regionen
+können nach sichtbarer Zustimmung an einen konfigurierten localhost-Dienst
+gehen; Text, Engine, Sprache, Vertrauen und Region werden zusätzlich
+gespeichert und durchsucht, das Original wird nie überschrieben. Audio-
+Transkripte sind normale durchsuchbare Textblöcke mit Zeitmarken.
+
+Bewusst offen bleiben eine eingebettete OCR-Engine samt Grössen-/Lizenzbudget,
+automatische Perspektivkorrektur mehrseitiger Kamera-Scans und fortlaufende
+Segmenttranskription während sehr langer Aufnahmen. Ohne diese Zusätze bleibt
+Erfassen, Lesen und Aufnehmen vollständig benutzbar.
 
 ## L30 · Erweiterungen und Marktplatz
 
@@ -1348,3 +1367,18 @@ Zwischenspeicher fliegt — dazu führt, dass mehr gelöscht wird als heute. Meh
 zu löschen ist die gefährliche Richtung (§46), und das gehört in eine eigene
 Entscheidung mit eigenen Prüfungen, nicht nebenbei in eine Fehlerbehebung.
 
+---
+
+## L44 · ~~Dokument-Ink war nur Freihand und Radierer~~ — GESCHLOSSEN
+
+**22. August 2026, geschlossen mit E125.** Die gemeinsame Markenschicht von
+A4-Blatt und PDF-Seite trägt jetzt Marker, Linie, Pfeil, Rechteck, Ellipse
+und sichere Textanmerkungen. Mehrere Marken lassen sich auswählen, gemeinsam
+verschieben oder löschen; Rückgängig/Wiederholen arbeitet je abgeschlossener
+Aktion. Stifteingaben nutzen Druckwerte, zusammengefasste Zeigerereignisse,
+Glättung und Punktreduktion.
+
+Bewusst offen ist kein fehlender Teil davon, sondern eine Grenze: Redion
+importiert PDF-Markierungen nicht in die pixelgebundene alte Zeichenfläche.
+Der neutrale Geometriekern kann später von weiteren Flächen verwendet werden,
+ohne zwei gespeicherte Wahrheiten zu erzeugen. Geprüft in `test201`.

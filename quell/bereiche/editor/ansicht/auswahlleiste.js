@@ -38,6 +38,29 @@ const Auswahl = (() => {
         const blk = n?.closest('.blk');
         return blk ? Store.getBlock(blk.dataset['bid']) : null;
     };
+    /** Textposition innerhalb des sichtbaren Blockinhalts. Bei schlichtem Text
+        ist sie auch die gespeicherte Position; bei gerendertem Markdown faellt
+        der Lernweg bewusst auf die bisherige Textsuche zurueck. */
+    const auswahlOffset = () => {
+        const selection = auswahl();
+        if (!selection)
+            return -1;
+        const range = selection.getRangeAt(0);
+        const node = range.startContainer.nodeType === 3
+            ? range.startContainer.parentElement : range.startContainer;
+        const content = node?.closest('.ct');
+        if (!content)
+            return -1;
+        try {
+            const before = range.cloneRange();
+            before.selectNodeContents(content);
+            before.setEnd(range.startContainer, range.startOffset);
+            return before.toString().length;
+        }
+        catch {
+            return -1;
+        }
+    };
     /** Legt Marken um die Auswahl — genau wie Notions Strg + B. */
     const umschliesse = (marke) => {
         const txt = getSelection()?.toString() ?? '';
@@ -101,6 +124,7 @@ const Auswahl = (() => {
                 '<button data-a="s" title="Durchgestrichen — Strg Shift S"><s>S</s></button>' +
                 '<button data-a="c" title="Code — Strg E">&lt;/&gt;</button>' +
                 '<button data-a="m" title="Formel">∑</button>' +
+                '<button data-a="cloze" title="Aus der Auswahl eine Lückenkarte anlegen">▣ Lücke</button>' +
                 '<button data-a="link" title="Link — Strg K">🔗</button>' +
                 '<span class="tr"></span>' +
                 '<button data-a="komm" title="Kommentar — Strg Shift M">💬</button>' +
@@ -118,6 +142,7 @@ const Auswahl = (() => {
             const a = b.dataset['a'];
             const block = markierterBlock();
             const text = getSelection()?.toString() ?? '';
+            const textOffset = auswahlOffset();
             if (a === 'b')
                 return umschliesse('**');
             if (a === 'i')
@@ -130,6 +155,15 @@ const Auswahl = (() => {
                 return umschliesse('`');
             if (a === 'm')
                 return umschliesse('$');
+            if (a === 'cloze') {
+                weg();
+                const learning = window.Learning;
+                if (block && learning?.clozeFromSelection)
+                    learning.clozeFromSelection(block, text, textOffset);
+                else
+                    UI.toast('Die Lernwerkzeuge sind noch nicht geladen.');
+                return;
+            }
             if (a === 'link') {
                 linkSetzen();
                 return;

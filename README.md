@@ -181,6 +181,31 @@ redion-einzeldatei.html
 
 
 
+Study Suite
+
+Redion enthält eine local-first Arbeitsumgebung für Schule und Ausbildung:
+
+- Dokumentmodus mit Seitenminiaturen, bestehendem PDF-/Ink-Werkzeug und
+  verknüpften Notizen, Karten und Aufgaben
+- Karten aus PDF-/Blattquelle, Cloze, Tagesrunde, Fehlertraining, Statistik
+  und exaktem Quellsprung; bestehende SM-2-Termine bleiben unverändert
+- lange Audioaufnahmen als stückweise Anhänge mit stabiler Datei-ID und
+  anklickbaren Zeitmarken; alte DataURL-Aufnahmen bleiben lesbar
+- Seitenaliase und kollisionssicherer Obsidian-Vault-Roundtrip mit stabilen IDs
+- Kamera-/Datei-Eingang sowie optionale OCR für Bild, PDF und Handschrift über
+  einen ausdrücklich eingerichteten lokalen Dienst
+- additive Ausbildungsvorlage mit Fächern, Prüfungen, Noten, Berichtsheft,
+  Lernmaterial und Eingang
+- normfreie Elektrotechnik-Rechnungen und ein versioniertes, validiertes
+  Grundlagen-Lernpaket; keine automatische Schutz- oder Leiterdimensionierung
+- Schulansicht in der bestehenden Bibliothek mit Ordnern, letzten PDFs,
+  fälligen Karten, offenen Aufgaben und Prüfungsterminen
+
+Alle Inhalte bleiben normale Redion-Seiten und -Blöcke und laufen damit durch
+Offlinebetrieb, Papierkorb, Sicherung, Wiederherstellung und optionalen Sync.
+
+
+
 Variante 5: Prüfungen ausführen
 
 npm install
@@ -905,17 +930,23 @@ Dateien können lokal gespeichert und in Seiten oder Datenbanken verwendet werde
 Ein A4-Blatt zum Schreiben und Malen
 
 `/blatt` legt ein leeres Blatt im A4-Format an. Darauf lässt sich beides:
-gewöhnlich tippen — es sind normale Blöcke im Satzspiegel — und mit dem
-Stift darüber malen, in fünf Farben und drei Strichbreiten, mit Radierer.
+gewöhnlich tippen — es sind normale Blöcke im Satzspiegel — und mit einer
+gemeinsamen Ink-Schicht darüber arbeiten. Sie bietet Stift, transparenten
+Marker, Linie, Pfeil, Rechteck, Ellipse und sichere Textanmerkungen in fünf
+Farben und drei Strichbreiten.
 
-Die Werkzeugleiste oben schaltet zwischen „Schreiben" und „Malen" um. Beim
+Die Werkzeugleiste oben schaltet zwischen „Schreiben" und den Ink-Werkzeugen um. Beim
 Schreiben geht der Zeiger an der Zeichenschicht vorbei, beim Malen liegt sie
 darüber — man markiert also nicht versehentlich Text, während man zeichnet.
+Mit „Auswahl" lassen sich eine oder mehrere Marken gemeinsam verschieben
+oder löschen. Zurück und Wiederholen arbeiten je abgeschlossener Aktion,
+nicht je einzelner Zeigerbewegung.
 
 `＋ Seite` hängt eine weitere A4-Länge an, sodass ein Blatt so lang werden
 kann, wie es soll.
 
-Die Striche liegen in Blattkoordinaten, nicht in Bildschirmpunkten. Ein
+Striche, Formen und Texte liegen in Blattkoordinaten, nicht in
+Bildschirmpunkten. Ein
 Blatt sieht deshalb am Telefon und am grossen Bildschirm gleich aus, und
 was man am einen malt, steht am anderen an derselben Stelle.
 
@@ -941,8 +972,9 @@ wird gesichert.
 PDFs zum Draufschreiben
 
 Ein PDF, das man auf eine Seite zieht, wird zu einzelnen Seiten, durch die
-man scrollt und auf die man direkt schreiben und malen kann — Stift in fünf
-Farben, drei Strichbreiten, Radierer.
+man scrollt und auf die man direkt schreiben und malen kann. PDF-Seiten
+verwenden dieselbe Ink-Schicht wie das A4-Blatt: Stift, Marker, Formen,
+Text, Mehrfachauswahl sowie Zurück/Wiederholen.
 
 Beim Hochladen wird gefragt, wie es liegen soll:
 

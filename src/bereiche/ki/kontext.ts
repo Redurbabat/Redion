@@ -149,7 +149,7 @@ const Kontext = (() => {
         geaendert = spaeter(geaendert, k.edited || k.created || '');
         /* `suchtext` gehört mit in die Signatur, sonst merkt der Index nicht,
            dass eine PDF-Seite ihren Text bekommen hat (E124). */
-        teile.push(k.id, k.type, k.edited, k.alive, k.text, k.suchtext,
+        teile.push(k.id, k.type, k.edited, k.alive, k.text, k.suchtext, k.ocrText,
           Array.isArray(k.rows) ? JSON.stringify(k.rows) : '',
           Array.isArray(k.content) ? k.content.join(',') : '');
         if (k.type === 'database') {
@@ -167,6 +167,7 @@ const Kontext = (() => {
            eingelesenes Skript nicht mehr, während `Store.search` es fand.
            Zwei Suchen mit zwei Antworten sind schlimmer als eine schlechte. */
         if (k.suchtext) text.push(k.suchtext);
+        if (k.ocrText) text.push(k.ocrText);
         if (Array.isArray(k.rows)) text.push(k.rows.flat().join(' '));
         if ((k.content || []).length) hinab(k.id, tiefe + 1);
       });
@@ -200,7 +201,8 @@ const Kontext = (() => {
       }
       const pfad = Store.pfadText(b.id);
       raus.push({ art: 'seite', b, innen, pfad,
-        stand: signatur([b.id, b.text, b.edited, b.alive, pfad, innen.stand]) });
+        stand: signatur([b.id, b.text, JSON.stringify(Array.isArray(b.aliases) ? b.aliases : []),
+          b.edited, b.alive, pfad, innen.stand]) });
     });
     return raus;
   };
@@ -208,13 +210,15 @@ const Kontext = (() => {
   const eintragVon = (q: any): any => {
     const b = q.b;
     if (q.art === 'seite') {
-      const roh = (b.text || '') + ' ' + q.innen.text;
+      const aliases = Array.isArray(b.aliases)
+        ? b.aliases.map((value: unknown) => String(value ?? '').trim()).filter(Boolean).join(' ') : '';
+      const roh = (b.text || '') + ' ' + aliases + ' ' + q.innen.text;
       return {
         id: b.id, seiteId: b.id, art: 'seite', stand: q.stand,
         titel: b.text || 'Ohne Titel', pfad: q.pfad,
         text: roh.slice(0, 6000),
         geaendert: spaeter(b.edited || b.created || '', q.innen.geaendert),
-        ...wortdaten((b.text || '') + ' ' + (b.text || '') + ' ' + roh)
+        ...wortdaten((b.text || '') + ' ' + (b.text || '') + ' ' + aliases + ' ' + roh)
       };
     }
     const c = q.c;

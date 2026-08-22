@@ -811,7 +811,7 @@ const Krypto = (() => {
             '<div class="kr-text">Seiten, Datenbanken, Ansichten, Einstellungen und ' +
               'Versionsverlauf in einer Datei, mit AES-GCM 256 verschlüsselt. ' +
               'Dateianhänge sind <b>nicht</b> dabei — die stehen im vollständigen ' +
-              'Paket eine Karte weiter. ' +
+              'Paket eine Karte weiter (.redion-Datei). ' +
               'Der Schlüssel entsteht aus deinem Passwort über 310 000 Runden. ' +
               'Ohne Passwort ist die Datei nicht zu öffnen — auch nicht von mir.</div>' +
             '<div class="kr-zeile">' +

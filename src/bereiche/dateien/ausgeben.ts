@@ -1028,63 +1028,532 @@ const Austausch = (() => {
     return { seite: wurzel, hinweis: notizen.length + ' Notizen übernommen' };
   };
 
-  /* --- Obsidian / Markdown-Ordner ---------------------------------------
-   * Mehrere .md-Dateien auf einmal. Ordner werden zu Unterseiten, und
-   * [[Wikilinks]] werden danach zu echten Verweisen aufgelöst.
+  /* --- Obsidian / Markdown-Vault ----------------------------------------
+   * Jede Seite bleibt eine normale Redion-Seite. Frontmatter trägt nur die
+   * stabilen Anker für den nächsten Roundtrip; es entsteht kein zweites
+   * Seitenmodell. Wikilinks bleiben Wikilinks und werden vom gemeinsamen
+   * `Links`-Resolver gelesen, statt destruktiv in `#id`-Links umzuwandeln.
    * --------------------------------------------------------------------- */
-  const ausMarkdownOrdner = async (dateien: any, zielSeite: any) => {
-    const wurzel = Store.addBlock(zielSeite || null, 'page', { text: 'Aus Obsidian' });
-    const ordner = new Map([['', wurzel.id]]);
-    const nachName = new Map();
 
-    /* Der Pfad ist ein Text wie „Notizen/2026/Mai", nicht eine Liste. Er
-       legt jede Ebene an, die noch fehlt, und merkt sie sich. */
-    const ordnerFuer = (pfad: string): string => {
-      const da = ordner.get(pfad);
-      if (da !== undefined) return da;
-      const teile = pfad.split('/');
-      const name = teile.pop() ?? 'Ordner';
-      const eltern = ordnerFuer(teile.join('/'));
-      const s = Store.addBlock(eltern, 'page', { text: name, icon: '📁' });
-      ordner.set(pfad, s.id);
-      return s.id;
-    };
+  interface VaultFrontmatter {
+    redionId: string;
+    redionPath: string;
+    redionTitle: string;
+    aliases: string[];
+  }
 
-    for (const f of dateien) {
-      const pfad = (f.webkitRelativePath || f.name).replace(/^[^/]*\//, '');
-      if (!/\.(md|markdown|txt)$/i.test(pfad)) continue;
-      const teile = pfad.split('/');
-      const datei = teile.pop();
-      const eltern = ordnerFuer(teile.join('/'));
-      const titel = datei.replace(/\.(md|markdown|txt)$/i, '');
-      const seite = Store.addBlock(eltern, 'page', { text: titel });
-      const text = await f.text();
-      Werkzeuge.ausMarkdown(seite, text);
-      nachName.set(titel.toLowerCase(), seite.id);
+  interface VaultImportEntry {
+    file: any;
+    path: string;
+    stem: string;
+    folder: string;
+    title: string;
+    body: string;
+    meta: VaultFrontmatter;
+    page: any | null;
+    conflict: string;
+    authoritative: boolean;
+  }
+
+  const normalizeVaultKey = (value: unknown): string => String(value ?? '')
+    .normalize('NFKC').replace(/\\/g, '/').replace(/^\.\//, '')
+    .replace(/^\/+|\/+$/g, '')
+    .split('/').map(segment => segment.trim().replace(/\s+/g, ' ')).filter(Boolean)
+    .join('/').toLocaleLowerCase('de');
+
+  const WINDOWS_RESERVED = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
+
+  /** Pfade aus fremden Dateien dürfen den gewählten Vault nie verlassen. */
+  const safeVaultPath = (value: unknown, allowText = false): string | null => {
+    const raw = String(value ?? '').normalize('NFKC').replace(/\\/g, '/').trim();
+    if (!raw || raw.length > 1024 || raw.startsWith('/') || /^[A-Za-z]:/.test(raw) ||
+        /[<>:"|?*\u0000-\u001F]/.test(raw)) return null;
+    const parts = raw.split('/');
+    if (parts.some(part => !part || part === '.' || part === '..' || part.length > 240 ||
+        WINDOWS_RESERVED.test(part))) return null;
+    if (!allowText && !/\.(?:md|markdown)$/i.test(parts[parts.length - 1] || '')) return null;
+    if (allowText && !/\.(?:md|markdown|txt)$/i.test(parts[parts.length - 1] || '')) return null;
+    return parts.join('/');
+  };
+
+  const safeDeclaredVaultPath = (value: unknown): string => {
+    const raw = String(value ?? '').normalize('NFKC').replace(/\\/g, '/').trim();
+    if (!raw) return '';
+    /* Die angehaengte Endung ist nur der Validierungsrahmen und wird danach
+       wieder entfernt. Eine echte Seite namens `Foo.md` bleibt dadurch
+       `Foo.md` statt unbemerkt zu `Foo` zu kollabieren. */
+    const safe = safeVaultPath(raw + '.md');
+    return safe ? safe.slice(0, -3) : '';
+  };
+
+  const yamlValue = (raw: string): string => {
+    const value = raw.trim();
+    if (!value) return '';
+    if (value.startsWith('"') && value.endsWith('"')) {
+      try { const parsed = JSON.parse(value); return typeof parsed === 'string' ? parsed : ''; }
+      catch { return value.slice(1, -1); }
     }
+    if (value.startsWith("'") && value.endsWith("'"))
+      return value.slice(1, -1).replace(/''/g, "'");
+    return value.replace(/\s+#.*$/, '').trim();
+  };
 
-    /* [[Wikilinks]] auflösen — erst jetzt, wenn alle Seiten da sind. */
-    let verweise = 0;
-    const aufloesen = (id: string) => {
-      Store.childrenOf(id).forEach((b: any) => {
-        if (b.text && /\[\[[^\]]+\]\]/.test(b.text)) {
-          const neu = b.text.replace(/\[\[([^\]|]+)(\|[^\]]+)?\]\]/g, (ganz: any, ziel: any, text2: any) => {
-            const zid = nachName.get(String(ziel).trim().toLowerCase());
-            if (!zid) return ganz;
-            verweise++;
-            return `[${(text2 || '').slice(1) || ziel}](#${zid})`;
-          });
-          if (neu !== b.text) Store.updateBlock(b.id, { text: neu });
+  const yamlAliases = (raw: string): string[] => {
+    const value = raw.trim();
+    if (!value) return [];
+    if (value.startsWith('[') && value.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed.map(item => String(item ?? ''));
+      } catch { /* Einfache YAML-Liste ohne JSON-Anführungszeichen folgt. */ }
+      return value.slice(1, -1).split(',').map(yamlValue);
+    }
+    return [yamlValue(value)];
+  };
+
+  const cleanAliases = (values: unknown[], title = ''): string[] => {
+    const seen = new Set<string>(), out: string[] = [];
+    const titleKey = String(title).trim().toLocaleLowerCase('de');
+    for (const raw of values || []) {
+      const alias = String(raw ?? '').normalize('NFKC').trim().replace(/\s+/g, ' ').slice(0, 120);
+      const key = alias.toLocaleLowerCase('de');
+      if (!key || key === titleKey || seen.has(key)) continue;
+      seen.add(key); out.push(alias);
+    }
+    return out;
+  };
+
+  const parseVaultFrontmatter = (text: string): { meta: VaultFrontmatter; body: string } => {
+    const empty: VaultFrontmatter = { redionId: '', redionPath: '', redionTitle: '', aliases: [] };
+    const normalized = String(text ?? '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+    if (!normalized.startsWith('---\n')) return { meta: empty, body: normalized };
+    let end = normalized.indexOf('\n---\n', 4);
+    let bodyStart = end + 5;
+    if (end < 0 && normalized.endsWith('\n---')) {
+      end = normalized.length - 4; bodyStart = normalized.length;
+    }
+    if (end < 0) return { meta: empty, body: normalized };
+    const lines = normalized.slice(4, end).split('\n');
+    const meta: VaultFrontmatter = { ...empty };
+    let listKey = '';
+    for (const line of lines) {
+      const list = line.match(/^\s+-\s+(.*)$/);
+      if (list && listKey === 'aliases') { meta.aliases.push(yamlValue(list[1] || '')); continue; }
+      const field = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+      if (!field) { listKey = ''; continue; }
+      const key = String(field[1] || '').toLocaleLowerCase('de');
+      const value = field[2] || '';
+      listKey = key;
+      if (key === 'redion-id') meta.redionId = yamlValue(value);
+      if (key === 'redion-path') meta.redionPath = yamlValue(value);
+      if (key === 'redion-title') meta.redionTitle = yamlValue(value);
+      if (key === 'aliases') meta.aliases.push(...yamlAliases(value));
+    }
+    meta.aliases = cleanAliases(meta.aliases);
+    return { meta, body: normalized.slice(bodyStart) };
+  };
+
+  const yamlQuoted = (value: unknown): string => JSON.stringify(String(value ?? ''));
+
+  const vaultFrontmatter = (page: any, path: string): string => {
+    const aliases = cleanAliases(Array.isArray(page.aliases) ? page.aliases : [], page.text);
+    return [
+      '---',
+      'redion-id: ' + yamlQuoted(page.id),
+      'redion-path: ' + yamlQuoted(path),
+      'redion-title: ' + yamlQuoted(String(page.text || 'Ohne Titel').replace(/[\r\n]+/g, ' ')),
+      ...(aliases.length ? ['aliases:', ...aliases.map(alias => '  - ' + yamlQuoted(alias))] : ['aliases: []']),
+      '---'
+    ].join('\n');
+  };
+
+  const safeVaultSegment = (value: unknown): string => {
+    let segment = String(value || 'Ohne Titel').normalize('NFKC')
+      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, ' ').replace(/\s+/g, ' ').trim()
+      .replace(/[. ]+$/g, '').slice(0, 80);
+    if (!segment) segment = 'Ohne Titel';
+    if (WINDOWS_RESERVED.test(segment)) segment = '_' + segment;
+    return segment;
+  };
+
+  const vaultDarf = (recht: string, seiteId?: string | null): boolean => {
+    if (typeof Konten === 'undefined' || typeof Konten.darf !== 'function') return true;
+    if (seiteId) return Konten.darf(recht, seiteId);
+    /* Eine Wurzeloperation hat absichtlich keine Seite. `Konten.darf` wuerde
+       ohne ID auf die gerade sichtbare Seite ausweichen; massgeblich ist hier
+       stattdessen die aktive Kontorolle selbst. */
+    const konto = typeof Konten.aktiv === 'function' ? Konten.aktiv() : null;
+    const rolle = typeof Konten.rolle === 'function' ? Konten.rolle(konto?.rolle || 'voll') : null;
+    return !rolle || (rolle.darf || []).includes(recht);
+  };
+
+  /** Plant erst alle Namen, damit gleiche Geschwister keinen Pfad teilen. */
+  const planVaultPaths = (erlaubt: (page: any) => boolean = () => true): Map<string, string> => {
+    const paths = new Map<string, string>(), visited = new Set<string>();
+    const walk = (pages: any[], parentPath: string, namespace?: Set<string>): void => {
+      const used = namespace || new Set<string>();
+      pages.forEach(page => {
+        if (!page?.id || visited.has(page.id)) return;
+        visited.add(page.id);
+        const children = Store.childrenOf(page.id)
+          .filter((child: any) => child.type === 'page' && child.parentTable !== 'collection');
+        /* Eine explizit freigegebene Unterseite darf exportierbar sein, ohne
+           dass dadurch ihr gesperrter Elterninhalt mit hinausgeht. */
+        if (!erlaubt(page)) { walk(children, parentPath, used); return; }
+        const base = safeVaultSegment(page.text);
+        let segment = base, key = segment.toLocaleLowerCase('de');
+        if (used.has(key)) {
+          segment = `${base} · ${String(page.id).slice(0, 8)}`;
+          key = segment.toLocaleLowerCase('de');
+          let suffix = 2;
+          while (used.has(key)) {
+            segment = `${base} · ${String(page.id).slice(0, 8)} · ${suffix++}`;
+            key = segment.toLocaleLowerCase('de');
+          }
         }
-        aufloesen(b.id);
+        used.add(key);
+        const path = parentPath ? parentPath + '/' + segment : segment;
+        paths.set(page.id, path);
+        walk(children, path);
       });
     };
-    aufloesen(wurzel.id);
+    walk(Store.rootPages(), '');
+    return paths;
+  };
 
-    Store.updateBlock(wurzel.id, { aufgeklappt: true });
-    return { seite: wurzel,
-             hinweis: nachName.size + ' Notizen, ' + (ordner.size - 1) + ' Ordner, ' +
-                      verweise + ' Wikilinks aufgelöst' };
+  const vaultMarkdown = (page: any, path: string, paths: Map<string, string>): string => {
+    let body = Werkzeuge.alsMarkdown(page);
+    /* `alsMarkdown` bewahrt Unterseiten als Platzhalter. Eine fuer diesen
+       Export nicht freigegebene Kindseite darf dabei weder ID noch Titel in
+       der Datei des erlaubten Elternteils verraten. */
+    body = body.split('\n').filter((line: string) => {
+      const marker = line.trim().match(/^<!--(?:db|wb|chart|tab|blk):([A-Za-z0-9_-]+)-->/);
+      if (!marker?.[1]) return true;
+      const target = Store.getBlock(marker[1]);
+      return !(target?.type === 'page' && !paths.has(target.id));
+    }).join('\n');
+    /* Alte Obsidian-Importe haben Wikilinks als #id-Links gespeichert. Beim
+       neuen Export werden sie, soweit das Ziel noch existiert, repariert. */
+    body = body.replace(/\[([^\]\n]+)\]\(#([0-9a-f-]{6,64})\)/gi,
+      (whole: string, label: string, id: string) => {
+        const target = Store.getBlock(id);
+        if (!target || target.type !== 'page' || !target.alive) return whole;
+        const targetPath = paths.get(target.id);
+        if (!targetPath) return whole;
+        return `[[${targetPath}${label === target.text ? '' : '|' + label}]]`;
+      });
+    /* Auch zwei gleichnamige Seiten bleiben im Vault verlinkbar. Normale
+       eindeutige Links bekommen den stabilen Pfad; bei einem vom Exporter
+       erzeugten Unterseiten-Link kennt die Elternseite das Ziel selbst dann,
+       wenn der blosse Titel global mehrdeutig ist. */
+    body = body.replace(/\[\[([^\[\]\n|]{1,240})(?:\|([^\]\n]{1,240}))?\]\]/g,
+      (whole: string, rawTarget: string, rawLabel: string) => {
+        const suffixAt = String(rawTarget).search(/[#^]/);
+        const suffix = suffixAt >= 0 ? String(rawTarget).slice(suffixAt) : '';
+        const targetName = suffixAt >= 0 ? String(rawTarget).slice(0, suffixAt) : String(rawTarget);
+        let target = typeof Links !== 'undefined' ? Links.loeseSeitenverweis(targetName).page : null;
+        if (!target) {
+          const children = Store.childrenOf(page.id).filter((child: any) => child.type === 'page' &&
+            String(child.text || '').trim().toLocaleLowerCase('de') ===
+              targetName.trim().toLocaleLowerCase('de'));
+          if (children.length === 1) target = children[0];
+        }
+        const targetPath = target && paths.get(target.id);
+        if (!targetPath) return whole;
+        const label = String(rawLabel || (targetPath !== targetName ? target.text || targetName : '')).trim();
+        return `[[${targetPath}${suffix}${label ? '|' + label : ''}]]`;
+      });
+    return vaultFrontmatter(page, path) + '\n# ' + (page.text || 'Ohne Titel') +
+      (body ? '\n\n' + body : '') + '\n';
+  };
+
+  /** Vollständiger Obsidian-Vault als ZIP; die Oberfläche kann diese API anbinden. */
+  const alsObsidianVault = async (dateiname = 'Redion-Obsidian'): Promise<Blob> => {
+    const paths = planVaultPaths(page => vaultDarf('teilen', page.id));
+    const files = [...paths.entries()].map(([id, path]) => ({
+      name: path + '.md', inhalt: vaultMarkdown(Store.getBlock(id), path, paths)
+    }));
+    const blob = await zipSchreiben(files);
+    laden(blob, safeVaultSegment(dateiname) + '.zip');
+    return blob;
+  };
+
+  const validRedionId = (value: unknown): string => {
+    const id = String(value ?? '').trim();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      ? id : '';
+  };
+
+  const movePage = (page: any, parentId: string | null): boolean => {
+    if (!page || page.parentId === parentId) return true;
+    let current = Store.getBlock(parentId), guard = 0;
+    while (current && guard++ < 80) {
+      if (current.id === page.id) return false;
+      current = current.parentId ? Store.getBlock(current.parentId) : null;
+    }
+    const oldParent = Store.getBlock(page.parentId);
+    const newParent = Store.getBlock(parentId);
+    if (!vaultDarf('bearbeiten', page.id) ||
+        !(oldParent ? vaultDarf('bearbeiten', oldParent.id) : vaultDarf('bearbeiten')) ||
+        !(newParent ? vaultDarf('bearbeiten', newParent.id) : vaultDarf('bearbeiten')))
+      return false;
+    if (oldParent) Store.updateBlock(oldParent.id, {
+      content: (oldParent.content || []).filter((id: string) => id !== page.id)
+    });
+    Store.updateBlock(page.id, { parentId, parentTable: 'block' });
+    const parent = newParent;
+    if (parent && !(parent.content || []).includes(page.id))
+      Store.updateBlock(parent.id, { content: [...(parent.content || []), page.id], aufgeklappt: true });
+    return true;
+  };
+
+  /**
+   * Zwei Durchgänge: erst Identitäten/Pfade anlegen, danach Inhalte lesen.
+   * So bleiben Wikilinks vorwärts wie rückwärts erhalten. Titel werden nie
+   * als Import-Schlüssel benutzt; gleiche Titel dürfen nebeneinander leben.
+   */
+  const ausMarkdownOrdner = async (dateien: any, zielSeite: any) => {
+    const allFiles = Array.from<any>(dateien || []);
+    const firstRelative = String(allFiles.find(file => file.webkitRelativePath)?.webkitRelativePath || '')
+      .replace(/\\/g, '/');
+    const vaultName = safeVaultSegment(firstRelative.split('/')[0] || 'Obsidian');
+    let conflicts = 0, unsafe = 0, reused = 0, created = 0, links = 0, aliasConflicts = 0;
+    /* Vor dem Anlegen der Importwurzel: diese Pfade entsprechen genau einem
+       vorherigen Export und sind deshalb ein zulässiger Rückfall ohne ID. */
+    const existingPlannedPaths = planVaultPaths();
+
+    const entries = (await Promise.all(allFiles.map(async file => {
+      const rawRelative = String(file.webkitRelativePath || file.name || '').replace(/\\/g, '/');
+      const withoutRoot = file.webkitRelativePath ? rawRelative.split('/').slice(1).join('/') : rawRelative;
+      const path = safeVaultPath(withoutRoot, true);
+      if (!path) { unsafe++; return null; }
+      const parsed = parseVaultFrontmatter(await file.text());
+      if (parsed.meta.redionId && !validRedionId(parsed.meta.redionId)) {
+        parsed.meta.redionId = ''; unsafe++;
+      }
+      const declaredPath = safeDeclaredVaultPath(parsed.meta.redionPath);
+      if (parsed.meta.redionPath && !declaredPath) unsafe++;
+      parsed.meta.redionPath = declaredPath;
+      const stem = path.replace(/\.(?:md|markdown|txt)$/i, '');
+      const parts = stem.split('/');
+      const fileTitle = parts.pop() || 'Ohne Titel';
+      const declaredFileTitle = parsed.meta.redionPath.split('/').pop() || '';
+      const renamedInVault = !!declaredFileTitle &&
+        normalizeVaultKey(fileTitle) !== normalizeVaultKey(declaredFileTitle);
+      const title = String(renamedInVault ? fileTitle : (parsed.meta.redionTitle || fileTitle))
+        .normalize('NFKC').replace(/[\r\n]+/g, ' ').trim().slice(0, 500) || fileTitle;
+      return {
+        file, path, stem, folder: parts.join('/'), title,
+        body: parsed.body, meta: parsed.meta, page: null, conflict: '', authoritative: false
+      } as VaultImportEntry;
+    }))).filter(Boolean) as VaultImportEntry[];
+
+    if (!entries.length)
+      return { seite: null, hinweis: 'Keine sichere Markdown-Datei zum Importieren gefunden.' };
+
+    const eigeneMetadaten = entries.filter(entry => !!entry.meta.redionPath).length;
+    if (eigeneMetadaten > 0 && eigeneMetadaten < entries.length) {
+      /* Nie halb als eigener Roundtrip und halb als fremder Vault arbeiten:
+         sonst wuerden stabile Seiten bereits verschoben, waehrend ihr
+         ID-Schutz fuer denselben Lauf abgeschaltet ist. */
+      return { seite: null,
+        hinweis: 'Import abgebrochen: Redion-Vault und fremde Markdown-Dateien sind gemischt. Bitte getrennt auswählen.' };
+    }
+    const isRedionVault = eigeneMetadaten === entries.length;
+
+    /* Doppelbelegte Dateien/IDs werden sichtbar getrennt angelegt statt in
+       eine zufällige Seite zusammenzufallen. */
+    const pathClaims = new Map<string, VaultImportEntry[]>();
+    const idClaims = new Map<string, VaultImportEntry[]>();
+    entries.forEach(entry => {
+      const pathKey = normalizeVaultKey(entry.stem);
+      pathClaims.set(pathKey, [...(pathClaims.get(pathKey) || []), entry]);
+      const id = validRedionId(entry.meta.redionId);
+      if (id) idClaims.set(id.toLowerCase(), [...(idClaims.get(id.toLowerCase()) || []), entry]);
+    });
+    [...pathClaims.values(), ...idClaims.values()].filter(list => list.length > 1).forEach(list => {
+      list.forEach(entry => { if (!entry.conflict) { entry.conflict = 'doppelte Identität'; conflicts++; } });
+    });
+
+    /* `redion-path` kennzeichnet den eigenen Export auch dann noch, wenn ein
+       Werkzeug die optionale ID entfernt hat — genau dafür existiert der
+       Pfad-Rückfall. */
+    const targetPage = zielSeite ? Store.getBlock(zielSeite) : null;
+    if ((targetPage && !vaultDarf('bearbeiten', targetPage.id)) ||
+        (!targetPage && !vaultDarf('bearbeiten'))) {
+      return { seite: null, hinweis: 'Für dieses Importziel fehlt die Bearbeitungsberechtigung.' };
+    }
+    const topParentId = targetPage?.type === 'page' && targetPage.alive ? targetPage.id : null;
+    let root: any = null;
+    if (!isRedionVault) {
+      /* Ein fremder Vault hat keine stabile Identitaet. Derselbe lokale
+         Ordnername ist kein Beweis, dass es derselbe Bestand ist; jeder Lauf
+         bekommt daher eine eigene Wurzel statt alte Notizen zu ueberschreiben. */
+      root = Store.addBlock(topParentId, 'page', {
+        text: 'Aus Obsidian · ' + vaultName, icon: '🔮',
+        obsidianVaultRoot: true, obsidianVaultName: vaultName
+      });
+    }
+
+    const folderIds = new Map<string, string>();
+    if (root) folderIds.set('', root.id);
+    const folderFor = (path: string): string => {
+      const known = folderIds.get(path);
+      if (known) return known;
+      const parts = path.split('/');
+      const name = parts.pop() || 'Ordner';
+      const parentId = folderFor(parts.join('/'));
+      const candidates = Object.values<any>(Store.cache.blocks).filter(page => page?.alive &&
+        page.type === 'page' && page.parentTable !== 'collection' &&
+        page.obsidianVaultName === vaultName && page.obsidianVaultRootId === root?.id &&
+        normalizeVaultKey(page.obsidianFolderPath) === normalizeVaultKey(path));
+      let folder: any;
+      if (candidates.length === 1) { folder = candidates[0]; movePage(folder, parentId); }
+      else {
+        if (candidates.length > 1) conflicts++;
+        folder = Store.addBlock(parentId, 'page', { text: name, icon: '📁',
+          obsidianFolderPath: path, obsidianVaultName: vaultName,
+          obsidianVaultRootId: root?.id || '' });
+      }
+      Store.updateBlock(folder.id, { text: name, icon: '📁',
+        obsidianFolderPath: path, obsidianVaultName: vaultName,
+        obsidianVaultRootId: root?.id || '' });
+      folderIds.set(path, folder.id);
+      return folder.id;
+    };
+
+    const existingPages = () => Object.values<any>(Store.cache.blocks).filter(page => page?.alive &&
+      page.type === 'page' && page.parentTable !== 'collection' && !page.obsidianVaultRoot &&
+      vaultDarf('bearbeiten', page.id));
+    const pathCandidates = (storedKeys: string[], exportedKeys: string[]): any[] => {
+      const wantedStored = new Set(storedKeys.map(normalizeVaultKey).filter(Boolean));
+      const wantedExported = new Set(exportedKeys.map(normalizeVaultKey).filter(Boolean));
+      const found = new Map<string, any>();
+      existingPages().forEach(page => {
+        if ((page.obsidianVaultName === vaultName &&
+             page.obsidianVaultRootId === (root?.id || '') &&
+             (wantedStored.has(normalizeVaultKey(page.obsidianPath)) ||
+              wantedStored.has(normalizeVaultKey(page.obsidianDeclaredPath)))) ||
+            wantedExported.has(normalizeVaultKey(existingPlannedPaths.get(page.id)))) found.set(page.id, page);
+      });
+      return [...found.values()];
+    };
+
+    const uniqueEntryByPath = new Map<string, VaultImportEntry>();
+    pathClaims.forEach((list, key) => { if (list.length === 1 && list[0]) uniqueEntryByPath.set(key, list[0]); });
+    const orderedEntries = [...entries].sort((a, b) =>
+      a.stem.split('/').length - b.stem.split('/').length || a.stem.localeCompare(b.stem, 'de'));
+
+    /* PASS 1: Identität, Alias und Hierarchie. Elternpfade stehen wegen der
+       Sortierung bereits fest, bevor ihre Kinder verschoben werden. */
+    for (const entry of orderedEntries) {
+      const parentEntry = entry.folder ? uniqueEntryByPath.get(normalizeVaultKey(entry.folder)) : null;
+      let parentId = isRedionVault
+        ? (parentEntry?.authoritative ? parentEntry.page?.id : topParentId)
+        : folderFor(entry.folder);
+      const missingParent = isRedionVault && !!entry.folder && !parentEntry?.authoritative;
+      const claimedTwice = !!entry.conflict;
+      const wantedId = claimedTwice ? '' : validRedionId(entry.meta.redionId);
+      const byId = wantedId ? Store.getBlock(wantedId) : null;
+      /* Den berechneten Redion-Pfad nur mit ausdrücklich exportiertem
+         `redion-path` vergleichen. Eine fremde `Foo.md` darf nicht bloss
+         wegen ihres Namens eine vorhandene lokale Seite Foo überschreiben. */
+      const paths = claimedTwice ? [] : pathCandidates(
+        [entry.meta.redionPath], [entry.meta.redionPath]);
+      let page: any = null;
+
+      if (byId && (byId.type !== 'page' || !byId.alive || byId.parentTable === 'collection')) {
+        entry.conflict = 'redion-id gehört zu einem anderen Datensatz'; conflicts++;
+      } else if (byId && !vaultDarf('bearbeiten', byId.id)) {
+        entry.conflict = 'redion-id gehört zu einer nicht bearbeitbaren Seite'; conflicts++;
+      } else if (byId && paths.length === 1 && paths[0]?.id === byId.id) {
+        /* Nur beide stabilen Anker gemeinsam erlauben ein destruktives
+           Update. Eine passende ID ODER ein passender Pfad allein kann aus
+           einer fremden Datei kopiert sein und erzeugt deshalb eine
+           getrennte Konfliktseite. */
+        page = byId; entry.authoritative = true; reused++;
+      } else if (byId) {
+        entry.conflict = paths.length
+          ? 'redion-id und redion-path zeigen nicht eindeutig auf dieselbe Seite'
+          : 'redion-id hat keinen bestätigenden redion-path';
+        conflicts++;
+      } else if (wantedId && paths.length) {
+        entry.conflict = 'redion-id ist neu, redion-path aber schon belegt'; conflicts++;
+      } else if (!wantedId && paths.length) {
+        entry.conflict = paths.length > 1
+          ? 'redion-path ist mehrdeutig'
+          : 'redion-path ohne bestätigende redion-id';
+        conflicts++;
+      }
+
+      /* Bei einem Teil-Vault fehlt die Eltern-Datei. Eine bestätigte lokale
+         Seite bleibt dann an ihrem bisherigen Ort; sie wird nie bloss wegen
+         einer unvollständigen Dateiauswahl an die Wurzel verschoben. */
+      if (missingParent && page) parentId = page.parentId || null;
+
+      /* Konflikte werden nicht gemergt. Eine neue Seite erhält bewusst eine
+         neue ID; beide Fassungen bleiben erhalten und der Hinweis zählt sie. */
+      if (!page) {
+        const patch: Record<string, any> = { text: entry.title };
+        if (!entry.conflict && wantedId && !Store.getBlock(wantedId)) patch.id = wantedId;
+        page = Store.addBlock(parentId, 'page', patch);
+        entry.authoritative = !entry.conflict;
+        created++;
+      } else if (!movePage(page, parentId)) {
+        entry.conflict = 'Seite konnte wegen Hierarchie oder Rechten nicht verschoben werden'; conflicts++;
+        page = Store.addBlock(parentId, 'page', { text: entry.title }); created++;
+        entry.authoritative = false;
+      }
+
+      if (missingParent && !entry.conflict) {
+        entry.conflict = 'Elterndatei fehlt; vorhandene Hierarchie wurde beibehalten';
+        conflicts++;
+      }
+
+      const aliases = cleanAliases(entry.meta.aliases, entry.title);
+      Store.updateBlock(page.id, {
+        text: entry.title, aliases, obsidianPath: entry.stem,
+        obsidianDeclaredPath: entry.meta.redionPath || '', obsidianVaultName: vaultName,
+        obsidianVaultRootId: root?.id || ''
+      });
+      entry.page = page;
+    }
+
+    /* PASS 2: Erst jetzt sind auch Vorwärtslinks und Aliase bekannt. */
+    for (const entry of orderedEntries) {
+      if (!entry.page) continue;
+      if (!vaultDarf('bearbeiten', entry.page.id)) { conflicts++; continue; }
+      let body = entry.body;
+      const firstHeading = body.match(/^#\s+([^\n]+)\n+/);
+      if (firstHeading && String(firstHeading[1] || '').trim().toLocaleLowerCase('de') ===
+          entry.title.trim().toLocaleLowerCase('de')) body = body.slice(firstHeading[0].length);
+      Werkzeuge.ausMarkdown(entry.page, body,
+        isRedionVault ? { preserveOpaqueIds: true } : undefined);
+      for (const match of body.matchAll(/\[\[([^\[\]\n|]{1,240})(?:\|[^\]\n]*)?\]\]/g)) {
+        if (typeof Links !== 'undefined' && Links.loeseSeitenverweis(match[1] || '').status === 'eindeutig') links++;
+      }
+    }
+
+    if (typeof Links !== 'undefined') {
+      const collided = new Set<string>();
+      entries.forEach(entry => (entry.page?.aliases || []).forEach((alias: string) => {
+        if (Links.loeseSeitenverweis(alias).status === 'mehrdeutig')
+          collided.add(alias.toLocaleLowerCase('de'));
+      }));
+      aliasConflicts = collided.size;
+    }
+
+    if (root) Store.updateBlock(root.id, { aufgeklappt: true });
+    const firstPage = root || orderedEntries.find(entry => !entry.folder)?.page || orderedEntries[0]?.page || null;
+    const folderCount = isRedionVault
+      ? new Set(entries.map(entry => entry.folder).filter(Boolean)).size
+      : Math.max(0, folderIds.size - 1);
+    return { seite: firstPage,
+      hinweis: `${entries.length} Notizen (${created} neu, ${reused} wiedererkannt), ` +
+        `${folderCount} Ordner, ${links} eindeutige Wikilinks` +
+        (conflicts ? ` · ${conflicts} Konflikte getrennt behalten` : '') +
+        (aliasConflicts ? ` · ${aliasConflicts} mehrdeutige Aliase markiert` : '') +
+        (unsafe ? ` · ${unsafe} unsichere/ungeeignete Pfade übersprungen` : '') };
   };
 
   /* --- Notion-Export (ZIP) -----------------------------------------------
@@ -1321,7 +1790,7 @@ const Austausch = (() => {
 
   return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
            allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
-           ausTrello, ausEvernote, ausMarkdownOrdner, ausNotionZip, ausNotionJson,
+           ausTrello, ausEvernote, ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
            dialog, QUELLEN,
            /* Nur für Prüfläufe — siehe die Erklärung bei `grenzen`. Wer sie
               im Betrieb verstellt, schreibt ZIP64, wo es keines braucht:

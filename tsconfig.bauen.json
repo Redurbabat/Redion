@@ -62,6 +62,8 @@
   "include": [
     "src/global.d.ts",
     "src/core/helpers/**/*.ts",
+    "src/core/ink/**/*.ts",
+    "src/core/electrical/**/*.ts",
     "src/core/security/**/*.ts",
     "src/core/sheet/**/*.ts",
     "src/core/spreadsheet/**/*.ts",

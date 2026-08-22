@@ -25,7 +25,7 @@ const pruef = (n: any, ist: any, soll: any) => {
   }));
   pruef('Acht Farbschemata',     anfang.schemata, 8);
   pruef('Fünf Schriften',        anfang.schriften, 5);
-  pruef('22 belegbare Kürzel',   anfang.kuerzel, 22);
+  pruef('22 registrierte Kürzel', anfang.kuerzel, 22);
 
   /* Schema wechseln */
   const nacht = await p.evaluate(() => {
@@ -163,9 +163,10 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.waitForTimeout(250);
   const tastenReiter = await p.evaluate(() => ({
     zeilen: document.querySelectorAll('.au-t').length,
+    erwartet: Aussehen.umbelegbar().length,
     geaendert: document.querySelectorAll('.au-t button.geaendert').length
   }));
-  pruef('Alle Kürzel gelistet',        tastenReiter.zeilen, 22);
+  pruef('Alle umbelegbaren Kürzel gelistet', tastenReiter.zeilen, tastenReiter.erwartet);
   pruef('Geändertes ist markiert',     tastenReiter.geaendert, 1);
 
   /* Ein Kürzel neu belegen — mit echten Tastendrücken */

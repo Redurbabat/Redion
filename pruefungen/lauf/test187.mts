@@ -296,8 +296,8 @@ const code = roh.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 gleich('Die Liste steht GENAU EINMAL da',
   (code.match(/const MD_TRAEGT = /g) || []).length, 1);
-gleich('Und beide Richtungen fragen dieselbe Funktion',
-  (code.match(/mdTraegt\(b\)/g) || []).length, 2);
+gleich('Beide Richtungen und der ID-erhaltende Vault-Weg fragen dieselbe Funktion',
+  (code.match(/mdTraegt\(b\)/g) || []).length, 3);
 p('Die alte namentliche Liste gibt es nicht mehr',
   !/\['database','whiteboard','chart','table'\]\.includes/.test(code),
   (code.match(/.{0,50}includes\(b\.type\).{0,20}/) || [''])[0]);
