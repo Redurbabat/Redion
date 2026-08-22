@@ -342,23 +342,46 @@ const Dateien = (() => {
     o.addEventListener('click', async e => {
       if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
       const lade = elVon(e)?.closest<HTMLElement>('[data-lade]');
-      if (lade?.dataset["lade"]) { await herunterladen(lade.dataset["lade"]); return; }
+      if (lade?.dataset["lade"]) {
+        try { await herunterladen(lade.dataset["lade"]); }
+        catch (err) {
+          if (typeof Reporter !== 'undefined')
+            Reporter.error('dateien', 'Herunterladen abgebrochen', err);
+          UI.toast('Datei konnte nicht heruntergeladen werden: ' +
+            (err instanceof Error ? err.message : String(err)));
+        }
+        return;
+      }
       const w = elVon(e)?.closest<HTMLElement>('[data-weg]');
       if (w) {
         if (!w.dataset["weg"]) return;
-        await weg(w.dataset["weg"]);
-        await zeichne();
-        UI.toast('Datei gelöscht');
+        try {
+          await weg(w.dataset["weg"]);
+          await zeichne();
+          UI.toast('Datei gelöscht');
+        } catch (err) {
+          if (typeof Reporter !== 'undefined')
+            Reporter.error('dateien', 'Löschen abgebrochen', err);
+          UI.toast('Datei wurde nicht gelöscht: ' +
+            (err instanceof Error ? err.message : String(err)));
+        }
         return;
       }
       const a = elVon(e)?.closest<HTMLElement>('[data-a]');
       if (!a) return;
       if (a.dataset['a'] === 'putz') {
-        const erg = await aufraeumen();
-        await zeichne();
-        UI.toast(erg.anzahl
-          ? erg.anzahl + ' aufgeräumt, ' + groesseText(erg.bytes) + ' frei'
-          : 'Nichts aufzuräumen');
+        try {
+          const erg = await aufraeumen();
+          await zeichne();
+          UI.toast(erg.anzahl
+            ? erg.anzahl + ' aufgeräumt, ' + groesseText(erg.bytes) + ' frei'
+            : 'Nichts aufzuräumen');
+        } catch (err) {
+          if (typeof Reporter !== 'undefined')
+            Reporter.error('dateien', 'Aufräumen abgebrochen', err);
+          UI.toast('Aufräumen abgebrochen: ' +
+            (err instanceof Error ? err.message : String(err)));
+        }
       }
       if (a.dataset['a'] === 'neu') {
         const inp = document.createElement('input');

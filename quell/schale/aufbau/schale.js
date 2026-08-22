@@ -2097,7 +2097,10 @@ const App = (() => {
                     reiterZu: () => Fenster.schliessen(Fenster.aktiv()) };
                 for (const id of Object.keys(Aussehen.eigene())) {
                     const fn = tu[id];
-                    if (fn && Aussehen.ist(id, e)) {
+                    /* Auch alte, bereits gespeicherte Belegungen dürfen keine
+                       Browser- oder Bearbeitungstaste stehlen. Der Dialog verhindert
+                       neue Konflikte; diese zweite Grenze schützt Bestandsdaten. */
+                    if (fn && !Aussehen.reserviert(Aussehen.alsText(e)) && Aussehen.ist(id, e)) {
                         e.preventDefault();
                         fn();
                         return;

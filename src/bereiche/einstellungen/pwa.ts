@@ -41,7 +41,9 @@ const PWA = (() => {
     /* `navigator.standalone` gibt es nur auf dem iPhone; die Typen kennen
        es nicht. Deshalb hier nachgefragt statt behauptet. */
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  const istTelefon = () => window.matchMedia('(max-width: 760px)').matches;
+  const istTelefon = () => typeof AppEinstellung !== 'undefined'
+    ? AppEinstellung.amTelefon()
+    : window.matchMedia('(max-width: 760px)').matches;
 
   /* ------------------------------------------------------------------------
    * SERVICE WORKER
@@ -682,8 +684,11 @@ const PWA = (() => {
     }, { passive: true });
 
     /* Die echte Höhe des Fensters — iOS zählt die Adressleiste sonst mit */
-    const hoehe = () => document.documentElement.style
-      .setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    const hoehe = () => {
+      if (typeof AppEinstellung !== 'undefined') AppEinstellung.viewportAktualisieren();
+      else document.documentElement.style
+        .setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    };
     hoehe();
     window.addEventListener('resize', hoehe);
     window.addEventListener('orientationchange', () => setTimeout(hoehe, 250));

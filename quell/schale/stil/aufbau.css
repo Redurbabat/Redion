@@ -220,6 +220,13 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:700;
   display:flex; align-items:flex-start; justify-content:center; padding-top:14vh;
 }
+@media(max-width:760px), (max-height:500px) and (pointer:coarse){
+  /* Der untere Rand ist die Oberkante der Softwaretastatur. Damit bleiben
+     Suche, Reminder, Datenbankdialoge und ihre Primärknöpfe im wirklich
+     sichtbaren Ausschnitt statt hinter der Tastatur. */
+  .overlay{bottom:var(--visual-bottom, 0px); padding-top:min(10vh, 72px)}
+  .finder{max-height:calc(var(--visual-height, 100vh) - 24px)}
+}
 .finder{
   width:min(640px,92vw); background:var(--bg-side); border:1px solid var(--line);
   border-radius:10px; box-shadow:var(--shadow); overflow:hidden;

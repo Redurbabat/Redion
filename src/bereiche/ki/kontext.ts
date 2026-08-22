@@ -104,86 +104,252 @@ const Kontext = (() => {
   };
 
   /* ------------------------------------------------------------------------
-   * DER INDEX
+   * DER INDEX — PERSISTENT, INKREMENTELL, REPARIERBAR
    * ------------------------------------------------------------------------
-   * Jede Seite und jede Datenbankzeile wird ein Eintrag. Der Index lebt im
-   * Arbeitsspeicher und wird bei Bedarf neu gebaut — bei ein paar tausend
-   * Seiten dauert das Millisekunden.
+   * Jede Seite und jede Datenbankzeile wird ein Eintrag. Die Einträge liegen
+   * im IndexedDB-Fach `suchindex`; Blöcke und Sammlungen bleiben jedoch immer
+   * die Wahrheit. Ein fehlender, alter oder unlesbarer Eintrag wird aus ihnen
+   * neu gebaut. Kein Reparaturweg schreibt jemals Nutzerdaten.
    * ----------------------------------------------------------------------*/
+  const INDEX_FASSUNG = 1;
+  const KOPF_ID = '@suchindex';
   let index: any = null;
-  let indexZeit = 0;
+  let letzterDatenStand = -1;
+  let letzterBericht: any = null;
+  let schreibkette: Promise<any> = Promise.resolve();
+  let letzterSchreibfehler = '';
 
-  const textVonSeite = (seiteId: string, tiefe = 0): string => {
-    if (tiefe > 3) return '';
-    let t = '';
-    Store.childrenOf(seiteId).forEach((k: any) => {
-      if (!k.alive) return;
-      if (k.type === 'page') return;              /* Unterseiten sind eigene Einträge */
-      if (k.type === 'database') {
-        const c = Store.getCollection(k.collectionId);
-        if (c) t += ' ' + c.name;
+  /** Zwei kleine, unabhängige 32-Bit-Prüfsummen. Kein Sicherheits-Hash —
+      nur eine billige Antwort auf „hat sich diese Quelle verändert?". */
+  const signatur = (teile: unknown[]): string => {
+    let a = 2166136261, b = 0x9e3779b9;
+    for (const teil of teile) {
+      const s = String(teil ?? '') + '\u0000';
+      for (let i = 0; i < s.length; i++) {
+        const c = s.charCodeAt(i);
+        a = Math.imul(a ^ c, 16777619) >>> 0;
+        b = (Math.imul(b ^ (c + i), 2246822519) + 3266489917) >>> 0;
+      }
+    }
+    return a.toString(36) + '-' + b.toString(36);
+  };
+
+  const spaeter = (a: string, b: string): string => String(a || '') > String(b || '') ? a : b;
+
+  /** Inhalt plus Quellenstand. Der Stand enthält auch Text und Reihenfolge;
+      dadurch heilt der Index sogar Sicherungen, deren `edited`-Zeitstempel
+      fälschlich gleich geblieben ist. */
+  const inhaltVonSeite = (seiteId: string): any => {
+    const text: string[] = [], teile: unknown[] = [];
+    let geaendert = '';
+    const hinab = (id: string, tiefe: number): void => {
+      if (tiefe > 3) return;
+      Store.childrenOf(id).forEach((k: any) => {
+        if (!k.alive || k.type === 'page') return; /* Unterseite = eigener Eintrag */
+        geaendert = spaeter(geaendert, k.edited || k.created || '');
+        teile.push(k.id, k.type, k.edited, k.alive, k.text,
+          Array.isArray(k.rows) ? JSON.stringify(k.rows) : '',
+          Array.isArray(k.content) ? k.content.join(',') : '');
+        if (k.type === 'database') {
+          const c = Store.getCollection(k.collectionId);
+          if (c) {
+            text.push(c.name || '');
+            teile.push(c.id, c.name, c.edited, JSON.stringify(c.schema || {}));
+          }
+          return;
+        }
+        if (k.text) text.push(k.text);
+        if (Array.isArray(k.rows)) text.push(k.rows.flat().join(' '));
+        if ((k.content || []).length) hinab(k.id, tiefe + 1);
+      });
+    };
+    hinab(seiteId, 0);
+    return { text: text.join(' '), stand: signatur(teile), geaendert };
+  };
+
+  const textVonSeite = (seiteId: string): string => inhaltVonSeite(seiteId).text;
+
+  const wortdaten = (text: string): any => {
+    const woerter = zerlegen(text);
+    const zaehler: Record<string, number> = {};
+    woerter.forEach(w => { zaehler[w] = (zaehler[w] || 0) + 1; });
+    return { zaehler, laenge: woerter.length };
+  };
+
+  /** Ein Durchgang über `blocks`, keine Vollsuche je Sammlung. */
+  const indexQuellen = (): any[] => {
+    const raus: any[] = [];
+    Object.values<any>(Store.cache.blocks).forEach(b => {
+      if (!b.alive || b.type !== 'page') return;
+      const innen = inhaltVonSeite(b.id);
+      if (b.parentTable === 'collection') {
+        const c = Store.getCollection(b.parentId);
+        if (!c) return;
+        raus.push({ art: 'zeile', b, c, innen,
+          stand: signatur([b.id, b.text, b.edited, JSON.stringify(b.props || {}),
+            c.id, c.name, c.edited, JSON.stringify(c.schema || {}), innen.stand]) });
         return;
       }
-      if (k.text) t += ' ' + k.text;
-      if (Array.isArray(k.rows)) t += ' ' + k.rows.flat().join(' ');
-      if ((k.content || []).length) t += ' ' + textVonSeite(k.id, tiefe + 1);
+      const pfad = Store.pfadText(b.id);
+      raus.push({ art: 'seite', b, innen, pfad,
+        stand: signatur([b.id, b.text, b.edited, b.alive, pfad, innen.stand]) });
     });
-    return t;
+    return raus;
   };
 
-  const bauen = (): any => {
-    const eintraege: any[] = [];
-
-    /* Seiten */
-    Object.values(Store.cache.blocks).forEach((b: any) => {
-      if (!b.alive || b.type !== 'page') return;
-      if (b.parentTable === 'collection') return;   /* Zeilen kommen gleich */
-      const roh = (b.text || '') + ' ' + textVonSeite(b.id);
-      eintraege.push({
-        id: b.id, seiteId: b.id, art: 'seite',
-        titel: b.text || 'Ohne Titel',
-        pfad: Store.pfadText(b.id),
+  const eintragVon = (q: any): any => {
+    const b = q.b;
+    if (q.art === 'seite') {
+      const roh = (b.text || '') + ' ' + q.innen.text;
+      return {
+        id: b.id, seiteId: b.id, art: 'seite', stand: q.stand,
+        titel: b.text || 'Ohne Titel', pfad: q.pfad,
         text: roh.slice(0, 6000),
-        geaendert: b.edited || b.created,
-        woerter: zerlegen((b.text || '') + ' ' + (b.text || '') + ' ' + roh)  /* Titel zählt doppelt */
-      });
-    });
+        geaendert: spaeter(b.edited || b.created || '', q.innen.geaendert),
+        ...wortdaten((b.text || '') + ' ' + (b.text || '') + ' ' + roh)
+      };
+    }
+    const c = q.c;
+    const felder = Object.keys(c.schema || {})
+      .filter(k => !['formula','rollup','uid','button'].includes(c.schema[k].type))
+      .map(k => c.schema[k].name + ': ' + Formula.anzeige(Datenbank.wert(b, k, c)))
+      .join(' · ');
+    const roh = (b.text || '') + ' ' + felder + ' ' + q.innen.text;
+    return {
+      id: b.id, seiteId: b.id, art: 'zeile', datenbank: c.name, stand: q.stand,
+      titel: b.text || 'Ohne Titel', pfad: c.name,
+      text: roh.slice(0, 4000),
+      geaendert: spaeter(b.edited || b.created || '', q.innen.geaendert),
+      ...wortdaten((b.text || '') + ' ' + c.name + ' ' + roh)
+    };
+  };
 
-    /* Datenbankzeilen — auch Mails, Termine, Issues landen so im Index */
-    Object.values(Store.cache.collections).forEach((c: any) => {
-      Store.rowsOf(c.id).forEach((r: any) => {
-        const felder = Object.keys(c.schema)
-          .filter(k => !['formula','rollup','uid','button'].includes(c.schema[k].type))
-          .map(k => c.schema[k].name + ': ' + Formula.anzeige(Datenbank.wert(r, k, c)))
-          .join(' · ');
-        const roh = (r.text || '') + ' ' + felder + ' ' + textVonSeite(r.id);
-        eintraege.push({
-          id: r.id, seiteId: r.id, art: 'zeile', datenbank: c.name,
-          titel: r.text || 'Ohne Titel',
-          pfad: c.name,
-          text: roh.slice(0, 4000),
-          geaendert: r.edited || r.created,
-          woerter: zerlegen((r.text || '') + ' ' + c.name + ' ' + roh)
-        });
-      });
-    });
+  const gueltig = (e: any): boolean => !!e && typeof e.id === 'string' &&
+    typeof e.stand === 'string' && (e.art === 'seite' || e.art === 'zeile') &&
+    e.zaehler && typeof e.zaehler === 'object' && Number.isFinite(e.laenge);
 
-    /* Dokumentfrequenzen für BM25 */
+  const indexAus = (eintraege: any[], bericht: any): any => {
     const df = new Map<string, number>();
-    eintraege.forEach(e => {
-      new Set<string>(e.woerter).forEach(w => df.set(w, (df.get(w) || 0) + 1));
+    const posting = new Map<string, number[]>();
+    let gesamt = 0;
+    eintraege.forEach((e, nr) => {
+      gesamt += e.laenge || 0;
+      Object.keys(e.zaehler || {}).forEach(w => {
+        df.set(w, (df.get(w) || 0) + 1);
+        if (!posting.has(w)) posting.set(w, []);
+        posting.get(w)!.push(nr);
+      });
     });
-    const laengeSchnitt = eintraege.reduce((s, e) => s + e.woerter.length, 0) /
-                          Math.max(1, eintraege.length);
+    return { eintraege, df, posting,
+      laengeSchnitt: gesamt / Math.max(1, eintraege.length),
+      anzahl: eintraege.length, bericht };
+  };
 
-    index = { eintraege, df, laengeSchnitt, anzahl: eintraege.length };
-    indexZeit = Date.now();
+  const kopf = (anzahl: number): any => ({
+    id: KOPF_ID, art: 'kopf', fassung: INDEX_FASSUNG,
+    anzahl, gebaut: new Date().toISOString()
+  });
+
+  const schreibe = (tun: () => Promise<any>): void => {
+    /* Immer in Reihenfolge: ein langsamer Vollaufbau darf nicht nachträglich
+       einen jüngeren inkrementellen Stand überschreiben. */
+    schreibkette = schreibkette.catch(() => undefined).then(tun).then(() => {
+      letzterSchreibfehler = '';
+    }, (err: unknown) => {
+      letzterSchreibfehler = err instanceof Error ? err.message : String(err);
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('Suche', 'Der Suchindex bleibt für diese Sitzung im Arbeitsspeicher', err);
+    });
+  };
+
+  const abgleichen = (allesNeu = false): any => {
+    const begonnen = performance.now();
+    const gespeichert = Store.cache.suchindex || {};
+    const alterKopf = gespeichert[KOPF_ID];
+    const fassungStimmt = !!alterKopf && alterKopf.fassung === INDEX_FASSUNG;
+    const alt: Record<string, any> = {};
+    if (!allesNeu && fassungStimmt) Object.values<any>(gespeichert).forEach(e => {
+      if (e && e.id !== KOPF_ID) alt[e.id] = e;
+    });
+
+    const eintraege: any[] = [], setzen: any[] = [], gesehen = new Set<string>();
+    let neu = 0, geaendert = 0, wiederverwendet = 0, repariert = 0;
+    indexQuellen().forEach(q => {
+      gesehen.add(q.b.id);
+      const vorher = alt[q.b.id];
+      if (gueltig(vorher) && vorher.stand === q.stand) {
+        eintraege.push(vorher); wiederverwendet++; return;
+      }
+      const e = eintragVon(q);
+      eintraege.push(e); setzen.push(e);
+      if (!vorher) neu++;
+      else if (!gueltig(vorher)) repariert++;
+      else geaendert++;
+    });
+
+    const loeschen = Object.keys(alt).filter(id => !gesehen.has(id));
+    eintraege.sort((a, b) => a.id.localeCompare(b.id));
+    const bericht = {
+      fassung: INDEX_FASSUNG, anzahl: eintraege.length, neu, geaendert,
+      geloescht: loeschen.length, wiederverwendet, repariert,
+      quelle: fassungStimmt && !allesNeu ? 'persistiert' : 'neu',
+      ms: Math.round((performance.now() - begonnen) * 10) / 10
+    };
+    letzterBericht = bericht;
+    index = indexAus(eintraege, bericht);
+    letzterDatenStand = Store.datenFassung ? Store.datenFassung() : 0;
+
+    const k = kopf(eintraege.length);
+    if (allesNeu || !fassungStimmt) schreibe(() => Store.suchindexErsetzen([k, ...eintraege]));
+    else if (setzen.length || loeschen.length || alterKopf.anzahl !== eintraege.length)
+      schreibe(() => Store.suchindexAendern([k, ...setzen], loeschen));
     return index;
   };
+
+  /** Der ausdrückliche Neuaufbau aus den Nutzerdaten. */
+  const bauen = (): any => abgleichen(true);
 
   const holen = (frisch = false): any => {
-    if (frisch || !index || Date.now() - indexZeit > 20000) bauen();
+    const stand = Store.datenFassung ? Store.datenFassung() : 0;
+    if (frisch) return bauen();
+    if (!index || stand !== letzterDatenStand) return abgleichen(false);
     return index;
+  };
+
+  const reparieren = (): any => {
+    index = null;
+    return abgleichen(true);
+  };
+
+  const warten = async (): Promise<any> => { await schreibkette; return status(); };
+  const status = (): any => ({
+    fassung: INDEX_FASSUNG,
+    persistierteFassung: Store.cache.suchindex?.[KOPF_ID]?.fassung || 0,
+    persistiert: Math.max(0, Object.keys(Store.cache.suchindex || {}).length - 1),
+    bericht: letzterBericht,
+    schreibfehler: letzterSchreibfehler
+  });
+
+  /** Kandidaten für Quick Find. `null` bedeutet: nicht sicher eingrenzbar,
+      also den echten Bestand vollständig prüfen. Eine leere Liste bedeutet:
+      die Wortmengen sind sicher disjunkt. So verliert der Cache nie Treffer. */
+  const kandidaten = (frage: string): string[] | null => {
+    const ix = holen();
+    const ws = [...new Set(zerlegen(frage))];
+    if (!ws.length) return null;
+    let menge: Set<number> | null = null;
+    for (const w of ws) {
+      const liste = ix.posting.get(w);
+      if (!liste) return null;
+      const seiten = new Set<number>(liste.filter((nr: number) => ix.eintraege[nr]?.art === 'seite'));
+      if (menge === null) menge = seiten;
+      else {
+        const vorher: number[] = Array.from(menge as Set<number>);
+        menge = new Set<number>(vorher.filter((nr: number) => seiten.has(nr)));
+      }
+      if (!menge.size) return [];
+    }
+    return [...(menge || [])].map(nr => ix.eintraege[nr].seiteId);
   };
 
   /* ------------------------------------------------------------------------
@@ -191,16 +357,14 @@ const Kontext = (() => {
    * ----------------------------------------------------------------------*/
   const bm25 = (eintrag: any, frageWoerter: string[], ix: any): number => {
     const k1 = 1.5, b = 0.75;
-    const zaehler = new Map();
-    eintrag.woerter.forEach((w: any) => zaehler.set(w, (zaehler.get(w) || 0) + 1));
     let punkte = 0;
     frageWoerter.forEach((w: any) => {
-      const tf = zaehler.get(w) || 0;
+      const tf = eintrag.zaehler?.[w] || 0;
       if (!tf) return;
       const n = ix.df.get(w) || 0;
       const idf = Math.log(1 + (ix.anzahl - n + 0.5) / (n + 0.5));
       punkte += idf * (tf * (k1 + 1)) /
-                (tf + k1 * (1 - b + b * eintrag.woerter.length / Math.max(1, ix.laengeSchnitt)));
+                (tf + k1 * (1 - b + b * eintrag.laenge / Math.max(1, ix.laengeSchnitt)));
     });
     return punkte;
   };
@@ -209,7 +373,8 @@ const Kontext = (() => {
   const unschaerfe = (eintrag: any, frageWoerter: string[]): number => {
     if (!frageWoerter.length) return 0;
     const ziel = new Set();
-    eintrag.woerter.slice(0, 400).forEach((w: any) => dreier(w).forEach(d => ziel.add(d)));
+    Object.keys(eintrag.zaehler || {}).slice(0, 400)
+      .forEach((w: any) => dreier(w).forEach(d => ziel.add(d)));
     let treffer = 0, gesamt = 0;
     frageWoerter.forEach((w: any) => {
       const d = dreier(w);
@@ -233,7 +398,16 @@ const Kontext = (() => {
     const jetzt = Date.now();
     const q = quellen();
 
-    const bewertet = ix.eintraege.map((e: any) => {
+    /* Die invertierte Wortliste macht den Normalfall abhängig von der Zahl
+       der Treffer, nicht von der Zahl aller Seiten. Nur wenn kein Wort exakt
+       vorkommt, läuft die absichtlich teurere Tippfehler-Gegenprobe. */
+    const nummern = new Set<number>();
+    woerter.forEach(w => (ix.posting.get(w) || []).forEach((nr: number) => nummern.add(nr)));
+    const pool = nummern.size
+      ? [...nummern].map(nr => ix.eintraege[nr]).filter(Boolean)
+      : ix.eintraege;
+
+    const bewertet = pool.map((e: any) => {
       /* --- Berechtigungsschicht: was nicht gelesen werden darf, fliegt raus */
       if (!Konten.darf('lesen', e.seiteId)) return null;
       if (opt.nurSeite && e.seiteId !== opt.nurSeite && !istUnter(e.seiteId, opt.nurSeite)) return null;
@@ -241,7 +415,8 @@ const Kontext = (() => {
       if (e.art === 'seite' && !q.arbeitsbereich) return null;
 
       const basis = bm25(e, woerter, ix);
-      if (basis <= 0 && unschaerfe(e, roh) < 0.34) return null;
+      const fuzzy = basis > 0 ? 0 : unschaerfe(e, roh);
+      if (basis <= 0 && fuzzy < 0.34) return null;
 
       const titelWoerter = zerlegen(e.titel);
       const imTitel = roh.filter(w => titelWoerter.includes(w)).length;
@@ -250,7 +425,7 @@ const Kontext = (() => {
 
       const punkte = basis
         + imTitel * 2.2                          /* Titeltreffer wiegen schwer */
-        + unschaerfe(e, roh) * 1.6
+        + fuzzy * 1.6
         + frische
         + (e.seiteId === App.aktuelleSeite() ? 1.4 : 0);
 
@@ -437,7 +612,8 @@ const Kontext = (() => {
     return raus.slice(0, anzahl);
   };
 
-  return { bauen, holen, finden, findenMitVektoren, ausschnitt, bauenFuerFrage,
+  return { bauen, abgleichen, reparieren, holen, warten, status, kandidaten,
+           finden, findenMitVektoren, ausschnitt, bauenFuerFrage,
            quellen, quelleSetzen, QUELLEN_STANDARD, zerlegen, stamm, erweitern,
            embeddingsAn, embeddingsBauen, embeddingHolen, cosinus, textVonSeite };
 })();

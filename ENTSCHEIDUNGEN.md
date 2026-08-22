@@ -6016,3 +6016,42 @@ noch nicht committet ist.
 **L18** führt damit die Zellformatierung im Austausch in beide
 Richtungen; offen bleiben Kommentare · Bilder · Diagramme · bedingte
 Formatierung im Austausch.
+
+
+## E98 · Ein Stück-Lesefehler ist keine leere Datei
+
+**Datum:** 15. August 2026 · **Status:** Beschlossen · **Lücke:** L35 geschlossen
+
+E71 zog die Grenze schon für ganze Fächer: „nicht lesbar" darf nie als
+„leer" weiterlaufen. Bei `stueckeVon` blieb aber genau diese Verwechslung
+stehen. Sowohl der Fehler der IndexedDB-Anfrage als auch ein synchroner
+Fehler antworteten mit `[]`. Dadurch konnte `alsBlob` „nicht gefunden"
+melden, die Sicherung einen falschen Erfolg herunterladen, der Abgleich
+ohne Inhalt weiterlaufen und `weg` den Dateisatz entfernen, obwohl die
+Stücke gar nicht gelesen und deshalb nicht gelöscht worden waren.
+
+`stueckeVon` lehnt beide Fehlerwege jetzt ab. `[]` bleibt nur die ehrliche
+Antwort, wenn die Stück-Ablage nicht existiert oder eine erfolgreiche
+Abfrage wirklich null Stücke findet. Der Fehler trägt einen kurzen Satz
+für den Menschen sowie Code und technische Ursache. Der Reporter erhält
+nur Dateikennung und Ursache — weder Dateiname noch Inhalt.
+
+Die vorhandenen Sicherungs- und Abgleichsgrenzen behandeln die Ablehnung
+bereits als Misserfolg. Das Dateifenster fängt Herunterladen, Löschen und
+Aufräumen nun ebenfalls ab: Eine Erfolgsmeldung kommt erst nach dem echten
+Erfolg; bei einem Lesefehler bleibt der Dateisatz stehen und der Mensch
+erfährt, dass der Vorgang abgebrochen wurde.
+
+**Geprüft** (`test144` §6, insgesamt 42 Punkte): echte Datei und echte
+Produktwege durch einen absichtlich fehlernden `datei`-Index — direktes
+Lesen, `alsBlob`, Bestätigen, `.redion`-Sicherung, Datei-Abgleich und der
+sichtbare Löschknopf. Ein echter Dateisatz mit null Stücken bleibt die
+Gegenklasse. Nach dem Fehler sind Metadaten, Stückzahl und Bytes
+unverändert; der Reporter enthält die technische Ursache, aber keinen
+privaten Dateinamen.
+
+Die Gegenprobe setzte ausschliesslich die beiden Fehlerzweige wieder auf
+`ok2([])`: 17 der 42 Punkte wurden rot, darunter falscher Download,
+fehlender Sync-Fehler und gelöschter Dateisatz. Nach Wiederherstellung
+waren 42/42 wieder grün. Es gibt keine Schemaänderung und keine
+Datenmigration.

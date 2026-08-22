@@ -292,7 +292,169 @@ const ohne = await seite.evaluate(async () => {
 p('Ein heiles Fach antwortet weiterhin mit einer Liste',
   (ohne as any).istListe === true);
 
-console.log('\n6 · Die Quelle sagt dasselbe');
+console.log('\n6 · L35: Ein Stück-Lesefehler bleibt ein Fehler');
+/* Der frühere Erinnerungs-Punkt unten war grün, WENN die Lücke bestand.
+   Jetzt gehen die echten Produktwege durch denselben kaputten IDB-Index:
+   Zusammensetzen, Bestätigen, Sicherung, Sync und Löschen im Dateifenster.
+   Keine Abschrift der Produktlogik entscheidet hier über das Ergebnis. */
+const l35 = await seite.evaluate(async (bau) => {
+  const fileName = 'l35-private-bytes.bin';
+  const expectedBytes = new Uint8Array([17, 34, 51, 68]);
+  const satz = await Dateien.ablegen(new File([expectedBytes], fileName,
+    { type: 'application/octet-stream' }));
+  const healthyBefore = await Dateien.alsBlob(satz.id);
+  const healthyBeforeBytes = healthyBefore
+    ? [...new Uint8Array(await healthyBefore.arrayBuffer())].join(',') : '';
+
+  /* Null Stücke bleiben ein gültiges, vom Lesefehler verschiedenes Ergebnis.
+     Der Dateisatz macht den Fall echt — es ist nicht bloss eine unbekannte ID. */
+  const emptyId = 'l35-empty-' + Store.uid();
+  await Store.dateiPut({ id: emptyId, name: 'leer.bin', groesse: 0,
+    typ: 'application/octet-stream', blockId: null, teile: 0, angekommen: 0,
+    zustand: 'wartet', angelegt: Store.now(), fertigAm: null });
+  const realEmpty = await Store.stueckeVon(emptyId);
+  await Store.dateiWeg(emptyId);
+
+  Reporter.clear();
+  const previousFetch = window.fetch;
+  const previousAlert = window.alert;
+  const previousAbove = Store.getMeta('wolkeDateienOben', []);
+  const previousSyncError = Wolke.zustand.fehlerDateien;
+  const restoreIndex = (new Function('return ' + bau)())('datei');
+
+  let direct = '', blobResult = '', confirmation = '';
+  let backupResult: unknown = null, backupAlert = '', backupDownloads = 0;
+  let syncResult: unknown = 'nicht gelaufen', syncError = '', syncCalls: string[] = [];
+  let uiButton = false, uiToast = '', fileStillDuring = false;
+
+  try {
+    try { await Store.stueckeVon(satz.id); direct = 'kam durch'; }
+    catch (err) { direct = err instanceof Error ? err.message : String(err); }
+
+    try {
+      const blob = await Dateien.alsBlob(satz.id);
+      blobResult = blob ? 'Blob:' + blob.size : 'null';
+    } catch (err) { blobResult = 'abgelehnt: ' +
+      (err instanceof Error ? err.message : String(err)); }
+
+    try { await Dateien.bestaetigen(satz.id); confirmation = 'kam durch'; }
+    catch (err) { confirmation = err instanceof Error ? err.message : String(err); }
+
+    /* Die echte Sicherungsfunktion: Download und Meldung werden nur
+       abgefangen, die Sicherung selbst läuft unverändert. */
+    const previousCreateObjectURL = URL.createObjectURL;
+    const previousClick = HTMLAnchorElement.prototype.click;
+    (URL as any).createObjectURL = () => { backupDownloads++; return 'blob:l35'; };
+    HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
+      if (this.download) { backupDownloads++; return; }
+      return previousClick.call(this);
+    };
+    window.alert = (text?: any) => { backupAlert = String(text ?? ''); };
+    try { backupResult = await App.sicherungSpeichern(); }
+    finally {
+      (URL as any).createObjectURL = previousCreateObjectURL;
+      HTMLAnchorElement.prototype.click = previousClick;
+      window.alert = previousAlert;
+    }
+
+    /* Der Sync bekommt einen heilen leeren Serverstand. Der einzige Fehler
+       entsteht beim lokalen Stück-Lesen; es darf danach kein Melden/Upload
+       an den Server folgen. */
+    Store.setMeta('wolkeDateienOben', []);
+    Wolke.zustand.fehlerDateien = '';
+    (window as any).fetch = async (input: any) => {
+      const url = String(typeof input === 'string' ? input : (input?.url ?? input));
+      syncCalls.push(url);
+      if (url.endsWith('/datei/stand')) return new Response(JSON.stringify({
+        dateien: [], marke: '', mehr: false
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ message: 'Unerwarteter Aufruf' }), {
+        status: 500, headers: { 'Content-Type': 'application/json' }
+      });
+    };
+    syncResult = await Wolke.dateienAbgleichen();
+    syncError = String(Wolke.zustand.fehlerDateien || '');
+    window.fetch = previousFetch;
+
+    /* Und der sichtbare Löschweg: der Knopf darf den Dateisatz nicht
+       entfernen und muss dem Menschen den Abbruch sagen. */
+    document.querySelectorAll<HTMLElement>('.overlay').forEach(x => x.remove());
+    await Dateien.dialog();
+    const button = [...document.querySelectorAll<HTMLElement>('[data-weg]')]
+      .find(x => x.dataset.weg === satz.id);
+    uiButton = !!button;
+    button?.click();
+    await new Promise(resolve => setTimeout(resolve, 250));
+    uiToast = document.getElementById('toast')?.textContent || '';
+    fileStillDuring = !!(await Store.dateiHolen(satz.id));
+  } finally {
+    restoreIndex();
+    window.fetch = previousFetch;
+    window.alert = previousAlert;
+    Store.setMeta('wolkeDateienOben', previousAbove);
+    if (previousSyncError === undefined) delete Wolke.zustand.fehlerDateien;
+    else Wolke.zustand.fehlerDateien = previousSyncError;
+    document.querySelectorAll<HTMLElement>('.overlay').forEach(x => x.remove());
+  }
+
+  const chunksAfter = await Store.stueckeVon(satz.id);
+  const fileAfter = await Store.dateiHolen(satz.id);
+  const blobAfter = await Dateien.alsBlob(satz.id);
+  const afterBytes = blobAfter
+    ? [...new Uint8Array(await blobAfter.arrayBuffer())].join(',') : '';
+
+  const reports = Reporter.all('fehler').filter((entry: any) =>
+    entry.wo === 'ablage' && entry.text === 'Dateistücke konnten nicht gelesen werden');
+  const reportTechnical = reports.some((entry: any) =>
+    entry.daten && entry.daten.fileId === satz.id && 'cause' in entry.daten);
+  const reportLeaksName = JSON.stringify(reports).includes(fileName);
+
+  /* Auch nach einer roten Gegenprobe den Prüfbestand sauber hinterlassen:
+     `weg` findet nach Wiederherstellung selbst verwaiste Stücke. */
+  await Dateien.weg(satz.id);
+
+  return {
+    realEmpty: realEmpty.length, direct, blobResult, confirmation,
+    backupResult, backupAlert, backupDownloads,
+    syncResult, syncError, syncCalls,
+    uiButton, uiToast, fileStillDuring,
+    fileAfter: !!fileAfter, chunksAfter: chunksAfter.length,
+    healthyBeforeBytes, afterBytes,
+    reports: reports.length, reportTechnical, reportLeaksName
+  };
+}, indexKaputt) as any;
+
+gleich('Eine echte Datei mit 0 Stücken bleibt eine leere Liste', l35.realEmpty, 0);
+p('`stueckeVon` lehnt den Lesefehler ab',
+  /Dateistücke.*nicht.*gelesen/i.test(l35.direct), l35.direct);
+p('`alsBlob` baut weder null noch einen 0-Byte-Blob',
+  String(l35.blobResult).startsWith('abgelehnt:'), l35.blobResult);
+p('Bestätigen nennt den Lesefehler statt angeblich fehlender Stücke',
+  /Dateistücke/i.test(l35.confirmation) && !/fehlen/i.test(l35.confirmation),
+  l35.confirmation);
+gleich('Die Sicherung meldet Misserfolg', l35.backupResult, false);
+gleich('… und löst keinen falschen Download aus', l35.backupDownloads, 0);
+p('… mit einer verständlichen Meldung',
+  /Sicherung kam nicht zustande[\s\S]*Dateistücke/i.test(l35.backupAlert), l35.backupAlert);
+gleich('Der Sync behandelt den Lesefehler als Fehler', l35.syncResult, null);
+p('… und hält ihn im eigenen Fehlerzustand fest',
+  /Dateistücke/i.test(l35.syncError), l35.syncError);
+p('… ohne danach Datei-Metadaten oder Stücke hochzuladen',
+  l35.syncCalls.length === 1 && /\/datei\/stand$/.test(l35.syncCalls[0] || ''),
+  JSON.stringify(l35.syncCalls));
+p('Der echte Löschknopf wurde gefunden', l35.uiButton === true);
+p('Das Dateifenster sagt, dass NICHT gelöscht wurde',
+  /nicht gelöscht[\s\S]*Dateistücke/i.test(l35.uiToast), l35.uiToast);
+p('Der Dateisatz bleibt während des Fehlers erhalten', l35.fileStillDuring === true);
+p('Nach der Störung sind Dateisatz und Stück weiter da',
+  l35.fileAfter === true && l35.chunksAfter === 1,
+  JSON.stringify({ file: l35.fileAfter, chunks: l35.chunksAfter }));
+gleich('Die normalen Bytes sind danach unverändert', l35.afterBytes, l35.healthyBeforeBytes);
+p('Der Reporter bekommt technische Einzelheiten',
+  l35.reports > 0 && l35.reportTechnical === true, String(l35.reports));
+p('… aber keinen privaten Dateinamen', l35.reportLeaksName === false);
+
+console.log('\n7 · Die Quelle sagt dasselbe');
 const quelle = fs.readFileSync(path.join(WURZEL, 'src/kern/ablage/indexdb.ts'), 'utf8');
 
 /* Der Text wird stückweise geprüft, nicht als Ganzes. Eine Regel „nirgends
@@ -320,15 +482,20 @@ p('Die toten `.catch(() => [])` beim Sichern sind weg',
 p('Ein fehlendes Fach ist weiterhin einfach leer',
   /objectStoreNames\.contains\('versions'\)\) return ok\(\[\]\)/.test(quelle));
 
-/* Und was NOCH schweigt, steht hier beim Namen — als Lücke L35, nicht als
-   grüner Haken. `stueckeVon` liegt im Weg des Abgleichs, und der ist in
-   dieser Sitzung ausdrücklich nicht anzufassen. */
-const stueckeSchweigt = /r\.onerror\s*=\s*\(\)\s*=>\s*ok2\(\[\]\)/.test(stueck('const stueckeVon ='));
-p('Bekannt und festgehalten: `stueckeVon` schweigt noch (L35)',
-  stueckeSchweigt === true,
-  'Wenn dieser Punkt fällt, ist es behoben — dann L35 schliessen und den Punkt umdrehen');
+/* Der alte Erinnerungs-Punkt war absichtlich grün, solange `ok2([])` im
+   Fehlerzweig stand. Jetzt ist die Zusicherung positiv: beide Fehlerwege
+   lehnen ab, und nur ein wirklich fehlendes Fach darf `[]` liefern. */
+const stueckeQuelle = stueck('const stueckeVon =');
+p('`stueckeVon` besitzt einen Ablehnungsweg',
+  /new Promise<any\[\]>\(\(ok2,\s*fail2\)/.test(stueckeQuelle));
+p('… und lehnt beim IDB-Fehler ab',
+  /r\.onerror\s*=\s*\(\)\s*=>\s*fail2\(chunkReadError/.test(stueckeQuelle));
+p('… ebenso beim synchronen Fehler',
+  /catch\s*\(err\)\s*\{\s*fail2\(chunkReadError/.test(stueckeQuelle));
+p('Der alte L35-Schweigeweg ist verschwunden',
+  !/r\.onerror\s*=\s*\(\)\s*=>\s*ok2\(\[\]\)/.test(stueckeQuelle));
 
-console.log('\n7 · Die Konsole');
+console.log('\n8 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 
 await browser.close();

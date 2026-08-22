@@ -38,6 +38,86 @@ const Agent = (() => {
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    /* Harte Grenzen: darüber wird nichts geschrieben und nichts „in kleine
+       Stücke" zerlegt. Die kleinere Schwelle ist kein Verbot, sondern erzwingt
+       eine ausdrückliche Vorschau-Bestätigung — auch bei „gar nicht fragen". */
+    const AKTION_OBJEKTE_MAX = 500;
+    const AKTION_BYTES_MAX = 4 * 1024 * 1024;
+    const LAUF_OBJEKTE_MAX = 1000;
+    const LAUF_BYTES_MAX = 8 * 1024 * 1024;
+    const GROSS_OBJEKTE_AB = 25;
+    const GROSS_BYTES_AB = 256 * 1024;
+    const WORKER_EINGABE_MAX_BYTES = 1024 * 1024;
+    const WORKER_AUSGABE_MAX_BYTES = 1024 * 1024;
+    const WORKER_ZEITLIMIT_MS = 5000;
+    const WORKER_AUFRUFE_MAX = 5;
+    const bytesVon = (wert) => {
+        try {
+            const text = JSON.stringify(wert);
+            return text === undefined ? 0 : new TextEncoder().encode(text).byteLength;
+        }
+        catch {
+            return Number.POSITIVE_INFINITY;
+        }
+    };
+    const groesseText = (bytes) => !Number.isFinite(bytes) ? 'nicht messbar'
+        : bytes < 1024 ? bytes + ' Byte'
+            : bytes < 1024 * 1024 ? Math.ceil(bytes / 1024) + ' KB'
+                : (Math.round(bytes / 1024 / 1024 * 10) / 10) + ' MB';
+    const laufIdNeu = () => 'lauf-' + Store.uid().replace(/[^A-Za-z0-9_-]/g, '').slice(0, 18);
+    const aktiveLaeufe = new Map();
+    const sicherheitsFehler = (code, text, name = 'Error') => {
+        const e = name === 'AbortError' ? new DOMException(text, name) : new Error(text);
+        /* `DOMException.code` ist im Browser eine schreibgeschützte Zahl. Eine
+           Zuweisung darauf wirft im strikten Modus selbst einen TypeError — genau
+           im Moment des Abbruchs. Darum hat nur der normale Fehler `code`; beim
+           Abort reichen sein standardisierter Name und der eigene Schlüssel. */
+        if (name === 'AbortError')
+            Object.defineProperty(e, 'redionCode', { value: code, enumerable: true });
+        else
+            e.code = code;
+        return e;
+    };
+    const mitAbbruch = (versprechen, signal) => new Promise((ok, nein) => {
+        if (signal.aborted) {
+            nein(sicherheitsFehler('LAUF_ABGEBROCHEN', 'Der Lauf wurde abgebrochen.', 'AbortError'));
+            return;
+        }
+        const stop = () => nein(sicherheitsFehler('LAUF_ABGEBROCHEN', 'Der Lauf wurde abgebrochen.', 'AbortError'));
+        signal.addEventListener('abort', stop, { once: true });
+        versprechen.then(v => {
+            signal.removeEventListener('abort', stop);
+            ok(v);
+        }, e => {
+            signal.removeEventListener('abort', stop);
+            nein(e);
+        });
+    });
+    /** Nur harmlose Auskunft nach aussen — Controller und Worker bleiben intern. */
+    const aktive = () => [...aktiveLaeufe.values()].map(l => ({
+        id: l.id, agentId: l.agentId, agent: l.protokoll.agent,
+        auftrag: l.protokoll.auftrag, status: l.protokoll.status,
+        begonnen: l.protokoll.begonnen,
+        wirkung: { ...l.protokoll.wirkung }, worker: l.worker.size
+    }));
+    const laufAbbrechen = (id, grund = 'Vom Menschen abgebrochen.') => {
+        const lauf = aktiveLaeufe.get(id);
+        if (!lauf || lauf.protokoll.status !== 'laeuft')
+            return false;
+        lauf.protokoll.status = 'abgebrochen';
+        lauf.protokoll.abbruchGrund = grund;
+        lauf.controller.abort(sicherheitsFehler('LAUF_ABGEBROCHEN', grund, 'AbortError'));
+        lauf.worker.forEach(w => { try {
+            w.terminate();
+        }
+        catch { /* schon beendet */ } });
+        lauf.worker.clear();
+        try {
+            UI.toast('⏹ Agentenlauf abgebrochen');
+        }
+        catch { /* Schale noch nicht da */ }
+        return true;
+    };
     /* ========================================================================
      * DIE WERKZEUGE
      * ------------------------------------------------------------------------
@@ -233,24 +313,28 @@ const Agent = (() => {
         worker: {
             recht: 'bearbeiten',
             beschreibung: 'Führt einen gespeicherten Worker aus. Argument: {"name":"…","eingabe":{}}',
-            lauf: async (a, protokoll) => {
+            lauf: async (a, protokoll, lauf) => {
                 const w = worker().find((x) => x.name === a.name);
                 if (!w)
-                    return 'Keinen Worker namens „' + a.name + '" gefunden. Vorhanden: ' +
+                    return 'Keinen Worker namens „' + a.name + '“ gefunden. Vorhanden: ' +
                         (worker().map((x) => x.name).join(', ') || 'keiner');
                 /* Was ein Worker verändert, weiss niemand — sein Code ist fremd.
                    Zurücknehmen kann das nicht; also steht es im Protokoll, und der
                    Knopf sagt es, statt so zu tun, als ginge es. */
                 if (protokoll && protokoll.bleibt && !protokoll.bleibt.includes('worker'))
                     protokoll.bleibt.push('worker');
-                try {
-                    const raus = await workerLaufen(w, a.eingabe || {});
-                    return 'Worker „' + w.name + '" sagt: ' + JSON.stringify(raus).slice(0, 1200);
-                }
-                catch (e) {
-                    return 'Worker „' + w.name + '" ist gescheitert: ' +
-                        (e instanceof Error ? e.message : String(e));
-                }
+                if (protokoll && (protokoll.workerAufrufe || 0) >= WORKER_AUFRUFE_MAX)
+                    throw sicherheitsFehler('WORKER_BUDGET_AUFgebraucht'.toUpperCase(), 'Dieser Lauf hat sein Worker-Budget von ' + WORKER_AUFRUFE_MAX +
+                        ' Aufrufen verbraucht. Kein weiterer Worker wurde gestartet.');
+                if (protokoll)
+                    protokoll.workerAufrufe = (protokoll.workerAufrufe || 0) + 1;
+                const raus = await workerLaufen(w, a.eingabe || {}, {
+                    signal: lauf?.controller.signal,
+                    lauf,
+                    laufId: lauf?.id,
+                    agentId: lauf?.agentId
+                });
+                return 'Worker „' + w.name + '" sagt: ' + JSON.stringify(raus).slice(0, 1200);
             }
         },
         fertig: {
@@ -258,6 +342,68 @@ const Agent = (() => {
             beschreibung: 'Beendet die Arbeit. Argument: {"antwort":"Das Ergebnis für den Menschen"}',
             lauf: async (a) => a.antwort || 'Fertig.'
         }
+    };
+    /**
+     * Die Wirkung wird VOR dem Werkzeug aus den echten Argumenten und dem
+     * aktuellen Bestand berechnet. Das ist bewusst eine Obergrenze: lieber
+     * „höchstens 16 Werte" bestätigen als nachher entdecken, dass eine
+     * scheinbar kleine Handlung doch die ganze Datenbank meinte.
+     */
+    const wirkungPlanen = (werkzeug, a) => {
+        const bytes = bytesVon(a || {});
+        let objekte = 0;
+        let text = 'Keine gespeicherten Objekte';
+        if (werkzeug === 'seiteAnlegen') {
+            objekte = 1 + (Array.isArray(a?.bloecke) ? a.bloecke.length : 0);
+            text = 'eine Seite und ' + Math.max(0, objekte - 1) + ' Block/Blöcke';
+        }
+        else if (werkzeug === 'datenbankAnlegen') {
+            const zeilen = Math.min(30, Array.isArray(a?.zeilen) ? a.zeilen.length : 0);
+            objekte = 2 + zeilen; /* Datenbankblock, Sammlung, Zeilen */
+            text = 'eine Datenbank mit höchstens ' + zeilen + ' Zeile(n)';
+        }
+        else if (werkzeug === 'zeileAnlegen') {
+            objekte = 1;
+            text = 'ein Eintrag in „' + String(a?.datenbank || '?') + '"';
+        }
+        else if (werkzeug === 'feldFuellen') {
+            const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase().includes(String(a?.datenbank || '').toLowerCase()));
+            objekte = c ? Math.min(15, Store.rowsOf(c.id).length) + 1 : 1;
+            text = 'höchstens ' + Math.max(0, objekte - 1) + ' Feldwert(e) und die Spalteneinstellung';
+        }
+        else if (werkzeug === 'worker') {
+            text = 'Worker-Eingabe und -Ergebnis, keine direkten Arbeitsbereichsdaten';
+        }
+        else if (WERKZEUGE[werkzeug]?.recht === 'bearbeiten') {
+            /* Neue Schreibwerkzeuge bekommen automatisch wenigstens die kleine
+               Ein-Objekt-Grenze, bis sie eine genauere Planung mitbringen. */
+            objekte = 1;
+            text = 'höchstens ein gespeichertes Objekt';
+        }
+        return { objekte, bytes, text,
+            gross: objekte >= GROSS_OBJEKTE_AB || bytes >= GROSS_BYTES_AB };
+    };
+    const wirkungGrenze = (lauf, w) => {
+        if (!Number.isFinite(w.bytes))
+            return sicherheitsFehler('AKTION_NICHT_MESSBAR', 'Die Größe dieser Handlung lässt sich nicht sicher bestimmen. Sie wurde nicht ausgeführt.');
+        if (w.objekte > AKTION_OBJEKTE_MAX)
+            return sicherheitsFehler('AKTION_ZU_VIELE_OBJEKTE', 'Diese eine Handlung würde ' + w.objekte + ' Objekte betreffen. Erlaubt sind höchstens ' +
+                AKTION_OBJEKTE_MAX + '. Sie wurde nicht aufgeteilt und nicht ausgeführt.');
+        if (w.bytes > AKTION_BYTES_MAX)
+            return sicherheitsFehler('AKTION_ZU_GROSS', 'Diese eine Handlung ist ' + groesseText(w.bytes) + ' groß. Erlaubt sind höchstens ' +
+                groesseText(AKTION_BYTES_MAX) + '. Sie wurde nicht aufgeteilt und nicht ausgeführt.');
+        if (lauf.reserviert.objekte + w.objekte > LAUF_OBJEKTE_MAX)
+            return sicherheitsFehler('LAUF_ZU_VIELE_OBJEKTE', 'Dieser Lauf würde insgesamt mehr als ' + LAUF_OBJEKTE_MAX +
+                ' Objekte schreiben. Weitere Werkzeuge wurden verhindert.');
+        if (lauf.reserviert.bytes + w.bytes > LAUF_BYTES_MAX)
+            return sicherheitsFehler('LAUF_ZU_GROSS', 'Dieser Lauf würde insgesamt mehr als ' + groesseText(LAUF_BYTES_MAX) +
+                ' schreiben. Weitere Werkzeuge wurden verhindert.');
+        return null;
+    };
+    const wirkungReservieren = (lauf, w) => {
+        lauf.reserviert.objekte += w.objekte;
+        lauf.reserviert.bytes += w.bytes;
+        lauf.protokoll.wirkung = { ...lauf.reserviert };
     };
     /* ========================================================================
      * DIE VIER TYPEN
@@ -310,42 +456,118 @@ const Agent = (() => {
         'return { summe, schnitt: zahlen.length ? summe / zahlen.length : 0, anzahl: zahlen.length };';
     const worker = () => Store.getMeta('agent:worker', []) || [];
     const workerSpeichern = (l) => Store.setMeta('agent:worker', l);
-    const workerLaufen = (w, eingabe) => new Promise((ok, fehler) => {
+    const workerLaufen = (w, eingabe, optionen = {}) => new Promise((ok, fehler) => {
+        /* Worker erhalten nur eine echte JSON-Kopie. Sonst würde etwa ein
+           riesiger ArrayBuffer als `{}` gemessen und danach doch vollständig
+           per Structured Clone übertragen — die Bytegrenze wäre nur Dekoration. */
+        let workerEingabe;
+        try {
+            const text = JSON.stringify(eingabe ?? {});
+            if (text === undefined)
+                throw new Error('nicht als JSON darstellbar');
+            workerEingabe = JSON.parse(text);
+        }
+        catch (e) {
+            fehler(sicherheitsFehler('WORKER_EINGABE_UNGUELTIG', 'Die Worker-Eingabe muss vollständig als JSON darstellbar sein: ' +
+                (e instanceof Error ? e.message : String(e))));
+            return;
+        }
+        const eingabeBytes = bytesVon({ code: String(w?.code || ''), eingabe: workerEingabe });
+        if (!Number.isFinite(eingabeBytes) || eingabeBytes > WORKER_EINGABE_MAX_BYTES) {
+            fehler(sicherheitsFehler('WORKER_EINGABE_ZU_GROSS', 'Die Worker-Eingabe samt Code ist ' + groesseText(eingabeBytes) +
+                ' groß. Erlaubt sind höchstens ' + groesseText(WORKER_EINGABE_MAX_BYTES) + '.'));
+            return;
+        }
+        if (optionen.signal?.aborted) {
+            fehler(sicherheitsFehler('LAUF_ABGEBROCHEN', 'Der Lauf wurde abgebrochen.', 'AbortError'));
+            return;
+        }
+        /* Die Ergebnisgröße wird IM Worker geprüft. Würde erst der Hauptfaden
+           nachsehen, wäre ein 500-MB-Objekt bereits vollständig geklont und
+           der eigentliche Schutz käme zu spät. */
         const quelle = 'self.onmessage = async (e) => {\n' +
             '  const eingabe = e.data;\n' +
             '  try {\n' +
             '    const fn = new Function("eingabe", ' + JSON.stringify('return (async () => {' + w.code + '})();') + ');\n' +
             '    const r = await fn(eingabe);\n' +
-            '    self.postMessage({ ok: true, wert: r });\n' +
-            '  } catch (err) { self.postMessage({ ok: false, fehler: String(err && err.message || err) }); }\n' +
+            '    const text = JSON.stringify(r);\n' +
+            '    if (text === undefined) throw Object.assign(new Error("Das Ergebnis ist nicht als JSON übertragbar."), { code: "WORKER_AUSGABE_UNGUELTIG" });\n' +
+            '    const bytes = new TextEncoder().encode(text).byteLength;\n' +
+            '    if (bytes > ' + WORKER_AUSGABE_MAX_BYTES + ') throw Object.assign(new Error("Das Worker-Ergebnis ist zu groß (" + bytes + " Byte)."), { code: "WORKER_AUSGABE_ZU_GROSS" });\n' +
+            '    self.postMessage({ ok: true, wert: JSON.parse(text), bytes });\n' +
+            '  } catch (err) { self.postMessage({ ok: false, code: String(err && err.code || "WORKER_FEHLER"), fehler: String(err && err.message || err) }); }\n' +
             '};';
-        let u;
+        let u = '';
+        let wk;
         try {
             u = URL.createObjectURL(new Blob([quelle], { type: 'text/javascript' }));
+            wk = new Worker(u);
         }
-        catch (e) {
-            fehler(new Error('Worker lassen sich hier nicht starten.'));
+        catch {
+            if (u)
+                URL.revokeObjectURL(u);
+            fehler(sicherheitsFehler('WORKER_NICHT_VERFUEGBAR', 'Worker lassen sich hier nicht starten.'));
             return;
         }
-        const wk = new Worker(u);
-        const wache = setTimeout(() => {
-            wk.terminate();
+        let erledigt = false;
+        let wache = null;
+        const aufraeumen = () => {
+            if (erledigt)
+                return false;
+            erledigt = true;
+            if (wache !== null)
+                clearTimeout(wache);
+            optionen.signal?.removeEventListener('abort', abbrechen);
+            optionen.lauf?.worker.delete(wk);
+            try {
+                wk.terminate();
+            }
+            catch { /* schon beendet */ }
             URL.revokeObjectURL(u);
-            fehler(new Error('Der Worker hat zu lange gebraucht (über 5 Sekunden).'));
-        }, 5000);
+            return true;
+        };
+        const abbrechen = () => {
+            if (!aufraeumen())
+                return;
+            fehler(sicherheitsFehler('LAUF_ABGEBROCHEN', 'Der Worker wurde mit dem Agentenlauf abgebrochen.', 'AbortError'));
+        };
+        optionen.lauf?.worker.add(wk);
+        optionen.signal?.addEventListener('abort', abbrechen, { once: true });
+        wache = setTimeout(() => {
+            if (!aufraeumen())
+                return;
+            fehler(sicherheitsFehler('WORKER_ZEITLIMIT', 'Der Worker hat zu lange gebraucht (über ' +
+                Math.round(WORKER_ZEITLIMIT_MS / 1000) + ' Sekunden).'));
+        }, WORKER_ZEITLIMIT_MS);
         wk.onmessage = (e) => {
-            clearTimeout(wache);
-            wk.terminate();
-            URL.revokeObjectURL(u);
-            e.data.ok ? ok(e.data.wert) : fehler(new Error(e.data.fehler));
+            if (!aufraeumen())
+                return;
+            if (!e.data?.ok) {
+                fehler(sicherheitsFehler(e.data?.code || 'WORKER_FEHLER', e.data?.fehler || 'Fehler im Worker'));
+                return;
+            }
+            /* Zweites Netz gegen einen veränderten oder alten Worker-Rumpf. */
+            const ausgabeBytes = Number(e.data.bytes) || bytesVon(e.data.wert);
+            if (ausgabeBytes > WORKER_AUSGABE_MAX_BYTES) {
+                fehler(sicherheitsFehler('WORKER_AUSGABE_ZU_GROSS', 'Das Worker-Ergebnis ist ' + groesseText(ausgabeBytes) + ' groß.'));
+                return;
+            }
+            ok(e.data.wert);
         };
         wk.onerror = (e) => {
-            clearTimeout(wache);
-            wk.terminate();
-            URL.revokeObjectURL(u);
-            fehler(new Error(e.message || 'Fehler im Worker'));
+            if (!aufraeumen())
+                return;
+            fehler(sicherheitsFehler('WORKER_FEHLER', e.message || 'Fehler im Worker'));
         };
-        wk.postMessage(eingabe || {});
+        try {
+            wk.postMessage(workerEingabe);
+        }
+        catch (e) {
+            if (!aufraeumen())
+                return;
+            fehler(sicherheitsFehler('WORKER_EINGABE_UNGUELTIG', 'Die Worker-Eingabe lässt sich nicht übertragen: ' +
+                (e instanceof Error ? e.message : String(e))));
+        }
     });
     /* ========================================================================
      * DIE SCHLEIFE
@@ -424,6 +646,8 @@ const Agent = (() => {
     const notaus = () => !!Store.getMeta('agent:notaus', false);
     const notausSetzen = (an) => {
         Store.setMeta('agent:notaus', !!an);
+        if (an)
+            [...aktiveLaeufe.keys()].forEach(id => laufAbbrechen(id, 'Der globale Notausschalter wurde umgelegt.'));
         try {
             UI.toast(an ? '⛔ Agenten angehalten — auch die Auslöser'
                 : '▶️ Agenten dürfen wieder');
@@ -472,48 +696,63 @@ const Agent = (() => {
      */
     const laufen = async (agentId, auftrag, beiSchritt, optionen) => {
         const a = holen(agentId);
-        const guthaben = Number(a.guthaben) || 8;
+        const guthaben = Math.max(1, Math.min(30, Number(a.guthaben) || 8));
         const ohneAufsicht = !!optionen?.unbeaufsichtigt;
         const erlaubt = (a.werkzeuge || []).filter((n) => WERKZEUGE[n]);
+        const id = optionen?.laufId || laufIdNeu();
+        const begonnen = Store.now();
+        const protokoll = {
+            id, agentId: String(a.id || agentId || ''), agent: a.name, auftrag,
+            schritte: [], ids: [], felder: [], bleibt: [], zeit: begonnen, begonnen,
+            status: 'laeuft', wirkung: { objekte: 0, bytes: 0 }, workerAufrufe: 0
+        };
+        const lauf = {
+            id, agentId: protokoll.agentId, controller: new AbortController(),
+            worker: new Set(), protokoll, reserviert: { objekte: 0, bytes: 0 }
+        };
+        let gespeichert = false;
+        let hatFehler = false;
+        const sichern = () => {
+            if (gespeichert)
+                return;
+            gespeichert = true;
+            const liste = laeufe();
+            liste.unshift(protokoll);
+            Store.setMeta('agent:laeufe', liste.slice(0, 30));
+        };
+        const melden = (s) => {
+            protokoll.schritte.push(s);
+            if (beiSchritt)
+                beiSchritt(s, protokoll);
+        };
+        /* Ein vor dem Start abgelehnter Lauf bleibt nachvollziehbar, ist aber
+           nicht „abgebrochen": es lief noch nichts. */
+        const vorStartAblehnen = (grund) => {
+            protokoll.status = 'abgelehnt';
+            protokoll.beendet = Store.now();
+            melden({ nr: 1, gedanke: 'Grenze erreicht', werkzeug: 'fertig', ergebnis: grund });
+            sichern();
+            return protokoll;
+        };
+        if (aktiveLaeufe.has(id))
+            return vorStartAblehnen('Die Lauf-ID „' + id + '“ wird bereits benutzt. Der zweite Lauf wurde nicht gestartet.');
+        if (notaus())
+            return vorStartAblehnen('Der Notausschalter steht. Kein Agent läuft, auch kein Auslöser. ' +
+                'Wieder freigeben unter 🤖 Agent → Grenzen.');
+        if (tagesgrenze() > 0 && tagesRest() <= 0)
+            return vorStartAblehnen('Das Tageslimit von ' + tagesgrenze() + ' Schritten ist aufgebraucht. ' +
+                'Morgen geht es weiter, oder du hebst die Grenze unter 🤖 Agent → Grenzen an.');
         /* Berechtigungsschicht: kein Werkzeug, das der angemeldete Mensch selbst
            nicht dürfte. Der Agent kann nicht mehr als du. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
-        const protokoll = { agent: a.name, auftrag, schritte: [], ids: [],
-            felder: [], bleibt: [], zeit: Store.now() };
-        /* Ein abgebrochener Lauf ist trotzdem ein Lauf. Er kommt ins Protokoll,
-           mit dem Grund — sonst sucht man den Agenten, der „nichts getan hat". */
-        const abbrechen = (grund) => {
-            protokoll.schritte.push({ nr: 1, gedanke: 'Grenze erreicht',
-                werkzeug: 'fertig', ergebnis: grund });
-            const l0 = laeufe();
-            l0.unshift(protokoll);
-            Store.setMeta('agent:laeufe', l0.slice(0, 30));
-            if (beiSchritt)
-                beiSchritt(protokoll.schritte[0], protokoll);
-            return protokoll;
-        };
-        /* ---- NOTAUS ---------------------------------------------------- */
-        if (notaus())
-            return abbrechen('Der Notausschalter steht. Kein Agent läuft, auch kein Auslöser. ' +
-                'Wieder freigeben unter 🤖 Agent → Grenzen.');
-        /* ---- TAGESLIMIT -------------------------------------------------- */
-        if (tagesgrenze() > 0 && tagesRest() <= 0)
-            return abbrechen('Das Tageslimit von ' + tagesgrenze() + ' Schritten ist aufgebraucht. ' +
-                'Morgen geht es weiter, oder du hebst die Grenze unter 🤖 Agent → Grenzen an.');
-        /* ---- OHNE AUFSICHT NUR LESEN ------------------------------------- */
-        /* Ein Auslöser läuft, während niemand hinsieht. Eine Rückfrage wäre
-           dort keine Sicherung, sondern eine Sperre, die nie beantwortet wird
-           — also fallen die ändernden Werkzeuge ganz weg, es sei denn, der
-           Agent trägt die Erlaubnis ausdrücklich. */
         if (ohneAufsicht && !a.darfAllein) {
             const nurLesen = nutzbar.filter((n) => WERKZEUGE[n].recht === 'lesen');
             gesperrt = gesperrt.concat(nutzbar.filter((n) => !nurLesen.includes(n)));
             nutzbar = nurLesen;
         }
-        /* Wissensquellen des Agenten kommen gleich mit in den Kontext */
-        const wissen = (a.wissen || []).map((id) => {
-            const p = Store.getBlock(id);
+        const wissen = (a.wissen || []).map((wissensId) => {
+            const p = Store.getBlock(wissensId);
             return p && Konten.darf('lesen', p.id)
                 ? '## ' + (p.text || 'Ohne Titel') + '\n' + Kontext.textVonSeite(p.id).slice(0, 1500) : '';
         }).filter(Boolean).join('\n\n');
@@ -533,118 +772,160 @@ const Agent = (() => {
                 : '') +
             (wissen ? '\n\nDas ist dein hinterlegtes Wissen:\n' + wissen : '');
         const verlauf = [{ role: 'user', content: auftrag }];
-        /* Eine Zusage gilt für diesen Lauf — bei `fragen: 'einmal'`. */
         let zugesagt = false;
-        for (let i = 0; i < guthaben; i++) {
-            /* Das Tageslimit gilt AUCH MITTEN IM LAUF. Sonst wäre es keine
-               Grenze, sondern eine Bedingung fürs Anfangen: acht Schritte kämen
-               immer noch durch, egal wie voll der Tag schon war. */
-            if (tagesgrenze() > 0 && tagesRest() <= 0) {
-                protokoll.schritte.push({ nr: i + 1, gedanke: 'Tageslimit erreicht',
-                    werkzeug: 'fertig',
-                    ergebnis: 'Das Tageslimit von ' + tagesgrenze() + ' Schritten ist erreicht. ' +
-                        'Was bis hierhin herauskam, steht oben.' });
-                if (beiSchritt)
-                    beiSchritt(protokoll.schritte[protokoll.schritte.length - 1], protokoll);
-                break;
-            }
-            /* Und der Notaus wirkt sofort, nicht erst beim nächsten Lauf — sonst
-               wäre er kein Notaus. */
-            if (notaus()) {
-                protokoll.schritte.push({ nr: i + 1, gedanke: 'Notaus', werkzeug: 'fertig',
-                    ergebnis: 'Angehalten. Der Notausschalter wurde umgelegt.' });
-                if (beiSchritt)
-                    beiSchritt(protokoll.schritte[protokoll.schritte.length - 1], protokoll);
-                break;
-            }
-            schrittZaehlen();
-            const antwort = await KI.frageKurz(verlauf.map(m => (m.role === 'user' ? 'MENSCH: ' : 'DU: ') + m.content).join('\n\n') +
-                '\n\nDein nächster Schritt als JSON:', system);
-            const plan = JSON_HOLEN(antwort);
-            if (!plan || !plan.werkzeug) {
-                protokoll.schritte.push({ nr: i + 1, gedanke: 'Antwort ohne Plan', werkzeug: 'fertig',
-                    ergebnis: String(antwort).slice(0, 2000) });
-                break;
-            }
-            const schritt = { nr: i + 1, gedanke: plan.gedanke || '', werkzeug: plan.werkzeug,
-                argument: plan.argument || {} };
-            if (plan.werkzeug === 'fertig') {
-                schritt.ergebnis = (plan.argument && plan.argument.antwort) || 'Fertig.';
-                protokoll.schritte.push(schritt);
-                if (beiSchritt)
-                    beiSchritt(schritt, protokoll);
-                break;
-            }
-            const wz = WERKZEUGE[plan.werkzeug];
-            if (!wz || !nutzbar.includes(plan.werkzeug)) {
-                schritt.ergebnis = 'Dieses Werkzeug gibt es nicht oder du darfst es nicht. ' +
-                    'Erlaubt sind: ' + nutzbar.join(', ');
-            }
-            else if (wz.recht === 'bearbeiten' && !ohneAufsicht &&
-                (fragenModus() === 'immer' || (fragenModus() === 'einmal' && !zugesagt))) {
-                /* `!ohneAufsicht` IST DER WICHTIGSTE TEIL DIESER BEDINGUNG, und er
-                   hat beim Bauen gefehlt. Ein Agent mit „darf allein ändern" bekam
-                   sein Werkzeug zurück — und danach die Rückfrage, die um acht Uhr
-                   früh niemand beantwortet. Der Prüflauf blieb genau dort stehen,
-                   und in der App wäre der Lauf bis zum nächsten Klick irgendwo
-                   hängen geblieben, mit einem Dialog über dem Bildschirm.
-                   „Darf allein" heisst: ohne mich. Dann auch ohne Frage. */
-                /* VOR DER ÄNDERUNG FRAGEN. Nicht danach: Zurücknehmen gab es zwar,
-                   aber nur für ANGELEGTES — was ein Agent überschrieben hat, war
-                   weg. Gefragt wird mit dem, was wirklich geschehen soll, im Text;
-                   „Der Agent möchte etwas ändern" ist keine Grundlage für ein Ja. */
-                const antwortJa = await Dialog.wahl({
-                    titel: '🤖 ' + a.name + ' möchte etwas ändern',
-                    text: 'Werkzeug: ' + plan.werkzeug + '\n' +
-                        (plan.gedanke ? 'Vorhaben: ' + plan.gedanke + '\n' : '') +
-                        'Damit: ' + JSON.stringify(plan.argument || {}).slice(0, 400),
-                    knoepfe: [
-                        { id: 'nein', text: 'Nicht ändern',
-                            hinweis: 'Der Agent bekommt eine Absage und arbeitet ohne diesen Schritt weiter.' },
-                        { id: 'ja', text: 'Einmal erlauben', hinweis: 'Nur dieser eine Schritt.' },
-                        { id: 'lauf', text: 'Für diesen Lauf erlauben',
-                            hinweis: 'Bis dieser Auftrag fertig ist. Danach wird wieder gefragt.' }
-                    ]
-                });
-                if (antwortJa === 'lauf')
-                    zugesagt = true;
-                if (antwortJa !== 'ja' && antwortJa !== 'lauf') {
-                    schritt.ergebnis = 'Der Mensch hat diesen Schritt abgelehnt. ' +
-                        'Arbeite ohne ihn weiter oder werde fertig.';
+        aktiveLaeufe.set(id, lauf);
+        try {
+            for (let i = 0; i < guthaben; i++) {
+                if (lauf.controller.signal.aborted)
+                    throw lauf.controller.signal.reason ||
+                        sicherheitsFehler('LAUF_ABGEBROCHEN', 'Der Lauf wurde abgebrochen.', 'AbortError');
+                if (tagesgrenze() > 0 && tagesRest() <= 0) {
+                    melden({ nr: i + 1, gedanke: 'Tageslimit erreicht', werkzeug: 'fertig',
+                        ergebnis: 'Das Tageslimit von ' + tagesgrenze() + ' Schritten ist erreicht. ' +
+                            'Was bis hierhin herauskam, steht oben.' });
+                    break;
+                }
+                if (notaus()) {
+                    laufAbbrechen(id, 'Der globale Notausschalter wurde umgelegt.');
+                    throw lauf.controller.signal.reason || sicherheitsFehler('LAUF_ABGEBROCHEN', 'Der Notausschalter wurde umgelegt.', 'AbortError');
+                }
+                schrittZaehlen();
+                const antwort = await mitAbbruch(KI.frageKurz(verlauf.map(m => (m.role === 'user' ? 'MENSCH: ' : 'DU: ') + m.content).join('\n\n') +
+                    '\n\nDein nächster Schritt als JSON:', system, { signal: lauf.controller.signal }), lauf.controller.signal);
+                const plan = JSON_HOLEN(antwort);
+                if (!plan || !plan.werkzeug) {
+                    melden({ nr: i + 1, gedanke: 'Antwort ohne Plan', werkzeug: 'fertig',
+                        ergebnis: String(antwort).slice(0, 2000), fehler: true });
+                    hatFehler = true;
+                    break;
+                }
+                const schritt = { nr: i + 1, gedanke: plan.gedanke || '',
+                    werkzeug: plan.werkzeug, argument: plan.argument || {} };
+                if (plan.werkzeug === 'fertig') {
+                    const ergebnis = String((plan.argument && plan.argument.antwort) || 'Fertig.');
+                    schritt.ergebnis = ergebnis;
+                    protokoll.antwort = ergebnis;
+                    melden(schritt);
+                    break;
+                }
+                const wz = WERKZEUGE[plan.werkzeug];
+                if (!wz || !nutzbar.includes(plan.werkzeug)) {
+                    schritt.ergebnis = 'Dieses Werkzeug gibt es nicht oder du darfst es nicht. ' +
+                        'Erlaubt sind: ' + nutzbar.join(', ');
+                    schritt.fehler = true;
+                    hatFehler = true;
                 }
                 else {
-                    try {
-                        schritt.ergebnis = String(await wz.lauf(plan.argument || {}, protokoll) || '').slice(0, 4000);
+                    let darfAusfuehren = true;
+                    if (wz.recht === 'bearbeiten') {
+                        const wirkung = wirkungPlanen(plan.werkzeug, plan.argument || {});
+                        schritt.wirkung = wirkung;
+                        const grenze = wirkungGrenze(lauf, wirkung);
+                        if (grenze) {
+                            schritt.ergebnis = 'Sicherheitsgrenze: ' + grenze.message;
+                            schritt.fehler = true;
+                            hatFehler = true;
+                            darfAusfuehren = false;
+                        }
+                        else if (wirkung.gross && ohneAufsicht) {
+                            schritt.ergebnis = 'Große Änderung nicht ausgeführt: ' + wirkung.text + ' (' +
+                                wirkung.objekte + ' Objekte, ' + groesseText(wirkung.bytes) +
+                                '). Dafür ist eine ausdrückliche Bestätigung nötig.';
+                            schritt.fehler = true;
+                            hatFehler = true;
+                            darfAusfuehren = false;
+                        }
+                        else {
+                            const normalFragen = !ohneAufsicht &&
+                                (fragenModus() === 'immer' || (fragenModus() === 'einmal' && !zugesagt));
+                            if (wirkung.gross || normalFragen) {
+                                const knoepfe = [
+                                    { id: 'nein', text: 'Nicht ändern',
+                                        hinweis: 'Der Agent bekommt eine Absage und arbeitet ohne diesen Schritt weiter.' },
+                                    { id: 'ja', text: wirkung.gross ? 'Diese Größe ausdrücklich erlauben' : 'Einmal erlauben',
+                                        hinweis: 'Nur diese eine, oben bezifferte Handlung.' }
+                                ];
+                                if (!wirkung.gross)
+                                    knoepfe.push({ id: 'lauf', text: 'Für diesen Lauf erlauben',
+                                        hinweis: 'Bis dieser Auftrag fertig ist. Große Änderungen fragen trotzdem eigens.' });
+                                const antwortJa = await mitAbbruch(Dialog.wahl({
+                                    titel: wirkung.gross
+                                        ? '🛡 Große Agentenänderung bestätigen'
+                                        : '🤖 ' + a.name + ' möchte etwas ändern',
+                                    text: 'Werkzeug: ' + plan.werkzeug + '\n' +
+                                        (plan.gedanke ? 'Vorhaben: ' + plan.gedanke + '\n' : '') +
+                                        'Vorschau: ' + wirkung.text + '\n' +
+                                        'Betroffene Objekte: ' + wirkung.objekte + '\n' +
+                                        'Größe der Handlung: ' + groesseText(wirkung.bytes) + '\n' +
+                                        'Argumente: ' + JSON.stringify(plan.argument || {}).slice(0, 400),
+                                    knoepfe
+                                }), lauf.controller.signal);
+                                if (antwortJa === 'lauf' && !wirkung.gross)
+                                    zugesagt = true;
+                                if (antwortJa !== 'ja' && antwortJa !== 'lauf') {
+                                    schritt.ergebnis = 'Der Mensch hat diesen Schritt abgelehnt. ' +
+                                        'Arbeite ohne ihn weiter oder werde fertig.';
+                                    darfAusfuehren = false;
+                                }
+                            }
+                        }
+                        if (darfAusfuehren)
+                            wirkungReservieren(lauf, wirkung);
                     }
-                    catch (e) {
-                        schritt.ergebnis = 'Das Werkzeug ist gescheitert: ' +
-                            (e instanceof Error ? e.message : String(e));
+                    if (darfAusfuehren) {
+                        try {
+                            schritt.ergebnis = String(await wz.lauf(plan.argument || {}, protokoll, lauf) || '')
+                                .slice(0, 4000);
+                        }
+                        catch (e) {
+                            if (lauf.controller.signal.aborted || (e instanceof Error && e.name === 'AbortError'))
+                                throw e;
+                            const code = e instanceof Error ? e.code : '';
+                            schritt.ergebnis = 'Das Werkzeug ist gescheitert' + (code ? ' [' + code + ']' : '') + ': ' +
+                                (e instanceof Error ? e.message : String(e));
+                            schritt.fehler = true;
+                            hatFehler = true;
+                        }
                     }
                 }
+                melden(schritt);
+                verlauf.push({ role: 'assistant', content: JSON.stringify(plan) });
+                verlauf.push({ role: 'user', content: 'Ergebnis von ' + plan.werkzeug + ':\n' + schritt.ergebnis });
+                if (i === guthaben - 1)
+                    melden({ nr: i + 2, gedanke: 'Guthaben aufgebraucht', werkzeug: 'fertig',
+                        ergebnis: 'Das Guthaben von ' + guthaben + ' Schritten ist aufgebraucht. ' +
+                            'Was bis hierhin herauskam, steht oben.' });
+            }
+            if (protokoll.status === 'laeuft')
+                protokoll.status = hatFehler ? 'fehler' : 'fertig';
+        }
+        catch (e) {
+            const abgebrochen = lauf.controller.signal.aborted ||
+                (e instanceof Error && e.name === 'AbortError');
+            if (abgebrochen) {
+                protokoll.status = 'abgebrochen';
+                const grund = protokoll.abbruchGrund || (e instanceof Error ? e.message : 'Vom Menschen abgebrochen.');
+                if (!protokoll.schritte.some(s => s.gedanke === 'Abgebrochen'))
+                    melden({ nr: protokoll.schritte.length + 1, gedanke: 'Abgebrochen', werkzeug: 'fertig',
+                        ergebnis: grund });
             }
             else {
-                try {
-                    schritt.ergebnis = String(await wz.lauf(plan.argument || {}, protokoll) || '').slice(0, 4000);
-                }
-                catch (e) {
-                    schritt.ergebnis = 'Das Werkzeug ist gescheitert: ' +
-                        (e instanceof Error ? e.message : String(e));
-                }
-            }
-            protokoll.schritte.push(schritt);
-            if (beiSchritt)
-                beiSchritt(schritt, protokoll);
-            verlauf.push({ role: 'assistant', content: JSON.stringify(plan) });
-            verlauf.push({ role: 'user', content: 'Ergebnis von ' + plan.werkzeug + ':\n' + schritt.ergebnis });
-            if (i === guthaben - 1) {
-                protokoll.schritte.push({ nr: i + 2, gedanke: 'Guthaben aufgebraucht', werkzeug: 'fertig',
-                    ergebnis: 'Das Guthaben von ' + guthaben + ' Schritten ist aufgebraucht. ' +
-                        'Was bis hierhin herauskam, steht oben.' });
+                protokoll.status = 'fehler';
+                melden({ nr: protokoll.schritte.length + 1, gedanke: 'Lauf gescheitert',
+                    werkzeug: 'fertig', fehler: true,
+                    ergebnis: e instanceof Error ? e.message : String(e) });
             }
         }
-        const l = laeufe();
-        l.unshift(protokoll);
-        Store.setMeta('agent:laeufe', l.slice(0, 30));
+        finally {
+            lauf.worker.forEach(w => { try {
+                w.terminate();
+            }
+            catch { /* schon beendet */ } });
+            lauf.worker.clear();
+            aktiveLaeufe.delete(id);
+            protokoll.beendet = Store.now();
+            sichern();
+        }
         return protokoll;
     };
     /**
@@ -743,6 +1024,7 @@ const Agent = (() => {
             '</div>' +
             '<div class="res" id="al" style="max-height:44vh"></div>' +
             '<div class="fbtns"><button data-a="los" class="prim">Loslegen</button>' +
+            '<button data-a="abbrechen" class="warn" hidden>⏹ Diesen Lauf abbrechen</button>' +
             '<button data-a="eigen">Eigener Agent</button>' +
             '<button data-a="worker">Workers</button>' +
             '<button data-a="verlauf">Frühere Läufe</button>' +
@@ -771,6 +1053,7 @@ const Agent = (() => {
         };
         zeichneNotaus();
         let gewaehlt = Store.getMeta('agent:zuletzt', 'assistent');
+        let laufImFenster = '';
         const zeichneTypen = () => {
             const kasten = o.querySelector('#at');
             if (!kasten)
@@ -836,6 +1119,11 @@ const Agent = (() => {
                 zeichneNotaus();
                 return;
             }
+            if (b.dataset.a === 'abbrechen') {
+                if (laufImFenster)
+                    laufAbbrechen(laufImFenster);
+                return;
+            }
             if (b.dataset.a === 'los') {
                 const auftrag = (o.querySelector('#aa')?.value || '').trim();
                 const liste = o.querySelector('#al');
@@ -847,19 +1135,24 @@ const Agent = (() => {
                     return;
                 liste.innerHTML = '<div class="agent-laeuft">Der Agent denkt nach …</div>';
                 b.disabled = true;
+                laufImFenster = laufIdNeu();
+                const stopp = o.querySelector('[data-a="abbrechen"]');
+                if (stopp)
+                    stopp.hidden = false;
                 try {
                     const erst = o.querySelector('.agent-laeuft');
                     const p = await laufen(gewaehlt, auftrag, (s) => {
                         if (erst)
                             erst.remove();
                         zeigeSchritt(s);
-                    });
+                    }, { laufId: laufImFenster });
                     const letzte = p.schritte[p.schritte.length - 1];
                     const fertig = document.createElement('div');
                     fertig.className = 'agent-fertig';
-                    fertig.innerHTML = '<b>Ergebnis</b><div>' +
+                    fertig.innerHTML = '<b>Ergebnis · ' + esc(p.status || 'fertig') + '</b><div>' +
                         esc(String(letzte?.ergebnis || '')).replace(/\n/g, '<br>') + '</div>' +
-                        (p.ids.length ? `<button data-zurueck="1">${p.ids.length} angelegte Seiten zurücknehmen</button>` : '');
+                        ((p.ids.length || p.felder.length)
+                            ? `<button data-zurueck="1">Änderungen dieses Laufs zurücknehmen</button>` : '');
                     liste.appendChild(fertig);
                     fertig.querySelector('[data-zurueck]')?.addEventListener('click', () => {
                         UI.toast(zuruecknehmen(p));
@@ -870,6 +1163,9 @@ const Agent = (() => {
                     liste.innerHTML = '<div class="agent-fehler">' +
                         esc(err instanceof Error ? err.message : String(err)) + '</div>';
                 }
+                laufImFenster = '';
+                if (stopp)
+                    stopp.hidden = true;
                 b.disabled = false;
             }
         });
@@ -1221,13 +1517,15 @@ const Agent = (() => {
                 return;
             kasten.innerHTML = l.length
                 ? l.map((p, i) => `<details class="lauf"><summary><b>${esc(p.agent)}</b> · ${esc(p.auftrag).slice(0, 60)}` +
-                    `<em>${p.schritte.length} Schritte · ${esc(String(p.zeit).slice(0, 16).replace('T', ' '))}</em>` +
+                    `<em>${esc(p.status || 'fertig')} · ${p.schritte.length} Schritte · ` +
+                    `${esc(String(p.zeit).slice(0, 16).replace('T', ' '))}</em>` +
                     '</summary>' +
                     p.schritte.map((s) => `<div class="agent-schritt"><div class="as-kopf">` +
                         `<span class="as-nr">${s.nr}</span><b>${esc(s.werkzeug)}</b>` +
                         `<span class="as-gedanke">${esc(s.gedanke || '')}</span></div>` +
                         `<div class="as-erg">${esc(String(s.ergebnis || '')).slice(0, 700)}</div></div>`).join('') +
-                    (p.ids && p.ids.length ? `<button data-zurueck="${i}">Angelegtes zurücknehmen</button>` : '') +
+                    ((p.ids && p.ids.length) || (p.felder && p.felder.length)
+                        ? `<button data-zurueck="${i}">Änderungen dieses Laufs zurücknehmen</button>` : '') +
                     '</details>').join('')
                 : '<div style="padding:18px;color:var(--text-faint);font-size:14px">Noch kein Lauf.</div>';
         };
@@ -1254,6 +1552,11 @@ const Agent = (() => {
         /* Die Grenzen — auch von aussen sichtbar, damit Einstellungen und
            Prüfläufe sie lesen können, ohne im Speicher zu graben. */
         notaus, notausSetzen, tagesgrenze, tagesstand, tagesRest, fragenModus,
+        aktive, laufAbbrechen, wirkungPlanen,
+        AKTION_OBJEKTE_MAX, AKTION_BYTES_MAX, LAUF_OBJEKTE_MAX, LAUF_BYTES_MAX,
+        GROSS_OBJEKTE_AB, GROSS_BYTES_AB,
+        WORKER_EINGABE_MAX_BYTES, WORKER_AUSGABE_MAX_BYTES, WORKER_ZEITLIMIT_MS,
+        WORKER_AUFRUFE_MAX,
         TAGESGRENZE_VORGABE };
 })();
 window.Agent = Agent;

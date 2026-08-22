@@ -43,8 +43,15 @@ const Fokus = (() => {
     /** Was die Tastatur erreichen kann. */
     const GREIFBAR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
         'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
-    /** Die Überlagerungen, um die es geht. */
-    const DIALOGE = '.overlay, .menu-grund';
+    /**
+     * Die Überlagerungen, um die es geht.
+     *
+     * Der dunkle `.menu-grund` ist nur der Hintergrund eines mobilen Blatts.
+     * Ihn zum Dialog zu erklären stellte den Fokus auf eine leere Fläche und
+     * liess das eigentliche Blatt für Vorleseprogramme namenlos. Dialog ist das
+     * Blatt selbst. Ein mobiler Peek darf dieselbe zentrale Behandlung nutzen.
+     */
+    const DIALOGE = '.overlay, .menu.blatt, .peek.peek-mobil';
     /** Woher man kam — je offener Überlagerung eine Erinnerung. */
     const herkunft = new WeakMap();
     /**
@@ -60,6 +67,8 @@ const Fokus = (() => {
      * ausgerechnet der, der seinen Fokus gar nicht setzte.
      */
     let letzterAussen = null;
+    /** Nur Elemente, die DIESE Stelle stillgelegt hat, werden zurückgestellt. */
+    const stillgelegt = new Set();
     const sichtbar = (el) => {
         const r = el.getBoundingClientRect();
         return !!(r.width || r.height);
@@ -69,6 +78,35 @@ const Fokus = (() => {
     const oberste = () => {
         const alle = [...document.querySelectorAll(DIALOGE)];
         return alle.length ? alle[alle.length - 1] : null;
+    };
+    /**
+     * Nicht nur `aria-modal`, sondern echtes `inert`.
+     *
+     * Der direkte Körper-Kindknoten, in dem der oberste Dialog liegt, bleibt
+     * bedienbar. Alles andere wird für Tastatur, Zeiger und Vorleseprogramm
+     * stillgelegt. Der dunkle Blattgrund bleibt absichtlich anklickbar: er ist
+     * die Schliessfläche, aber niemals selbst der Dialog.
+     */
+    const inertAktualisieren = () => {
+        stillgelegt.forEach(el => { if (el.isConnected)
+            el.inert = false; });
+        stillgelegt.clear();
+        const d = oberste();
+        if (!d || !document.body)
+            return;
+        let traeger = d;
+        while (traeger.parentElement && traeger.parentElement !== document.body)
+            traeger = traeger.parentElement;
+        [...document.body.children].forEach(kind => {
+            if (!(kind instanceof HTMLElement))
+                return;
+            if (kind === traeger || kind.matches('.menu-grund'))
+                return;
+            if (kind.inert)
+                return; /* fremden Zustand bewahren */
+            kind.inert = true;
+            stillgelegt.add(kind);
+        });
     };
     /**
      * Einer neu erschienenen Überlagerung geben, was ihr fehlt.
@@ -90,7 +128,7 @@ const Fokus = (() => {
            erste Überschrift. Ein Dialog ohne Namen heisst beim Vorlesen nur
            „Dialog" — richtig, aber nutzlos. */
         if (!d.getAttribute('aria-label') && !d.getAttribute('aria-labelledby')) {
-            const kopf = d.querySelector('.fh, .mt-titel, h2, h3');
+            const kopf = d.querySelector('.fh, .mt-titel, .blatt-titel, .peek-pfad, h2, h3');
             /* Kein Kopf? Dann der Platzhalter des ersten Feldes. „Seiten und
                Inhalte suchen" ist ein besserer Dialogname als „Dialog". */
             const name = (kopf?.textContent || '').trim() ||
@@ -169,9 +207,15 @@ const Fokus = (() => {
      * ganze Seitenleiste.
      */
     const gegangen = (weg) => {
+        const dialoge = [];
         for (const n of weg) {
             if (!(n instanceof HTMLElement))
                 continue;
+            if (n.matches(DIALOGE))
+                dialoge.push(n);
+            dialoge.push(...n.querySelectorAll(DIALOGE));
+        }
+        for (const n of dialoge) {
             const ziel = herkunft.get(n);
             herkunft.delete(n);
             if (!ziel || !document.contains(ziel))
@@ -193,7 +237,9 @@ const Fokus = (() => {
             return;
         laeuft = true;
         document.querySelectorAll(DIALOGE).forEach(anmelden);
+        inertAktualisieren();
         new MutationObserver(aend => {
+            const entfernt = [];
             for (const a of aend) {
                 a.addedNodes.forEach(n => {
                     if (!(n instanceof HTMLElement))
@@ -204,8 +250,13 @@ const Fokus = (() => {
                         n.querySelectorAll(DIALOGE).forEach(anmelden);
                 });
                 if (a.removedNodes.length)
-                    gegangen([...a.removedNodes]);
+                    entfernt.push(...a.removedNodes);
             }
+            /* Erst den Hintergrund wieder freigeben, dann den Fokus dorthin
+               zurückbringen. Ein `focus()` auf einem noch inerten Knopf tut nichts. */
+            inertAktualisieren();
+            if (entfernt.length)
+                gegangen(entfernt);
         }).observe(document.body, { childList: true, subtree: true });
         /* In der Aufnahmephase, damit die Falle vor den Feldern im Dialog
            greift — sonst schiebt der Browser den Fokus schon hinaus, bevor
@@ -221,7 +272,7 @@ const Fokus = (() => {
             letzterAussen = z;
         }, true);
     };
-    return { start, anmelden, greifbareIn, oberste };
+    return { start, anmelden, greifbareIn, oberste, inertAktualisieren };
 })();
 if (typeof window !== 'undefined') {
     if (document.body)

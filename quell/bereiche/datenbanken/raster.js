@@ -65,8 +65,10 @@ const DbRaster = (() => {
        zusammen; `test137` §2b misst es jetzt auch für das Raster. */
     const ZH_HANDY = 44;
     const PUFFER = 6;
-    const amTelefon = () => typeof window !== 'undefined' && window.matchMedia
-        ? window.matchMedia('(max-width: 760px)').matches : false;
+    const amTelefon = () => typeof window !== 'undefined' && typeof AppEinstellung !== 'undefined'
+        ? AppEinstellung.amTelefon()
+        : typeof window !== 'undefined' && window.matchMedia
+            ? window.matchMedia('(max-width: 760px)').matches : false;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');

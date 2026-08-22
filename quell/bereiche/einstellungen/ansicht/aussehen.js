@@ -157,10 +157,39 @@ const Aussehen = (() => {
         ['unter', 'Unterstrichen', 'Ctrl+U'],
         ['durch', 'Durchgestrichen', 'Ctrl+Shift+S'],
         ['codeText', 'Code im Text', 'Ctrl+E'],
-        ['link', 'Link setzen', 'Ctrl+L'],
+        /* Im Editor mit Auswahl; ohne Auswahl bleibt Ctrl+K die globale Suche. */
+        ['link', 'Link setzen', 'Ctrl+K'],
         ['duplizieren', 'Block duplizieren', 'Ctrl+D']
     ];
-    const eigene = () => Store.getMeta('kuerzel', {}) || {};
+    /* Nur globale Befehle, für die `schale.ts` tatsächlich einen Aufruf
+       besitzt, dürfen hier umbelegt werden. Formatierung und Blockaktionen
+       hängen am Editor-Kontext; sie im Dialog anzubieten, ohne den neuen
+       Griff dort auszuwerten, war ein falsches Versprechen. */
+    const UMBELEGBAR = new Set([
+        'suche', 'palette', 'neu', 'ki', 'chat', 'seitenleiste',
+        'reiterNeu', 'reiterZu', 'teilen', 'zurueck', 'vor', 'hell',
+        'hilfe', 'einstellung'
+    ]);
+    /* Browser- und Bearbeitungskürzel, die eine Web-App nicht neu vergeben
+       darf. Der Default-Konflikttest schützte nur den Auslieferungszustand;
+       über den Dialog konnte man danach trotzdem Strg+C oder Strg+W stehlen. */
+    const RESERVIERT = new Set([
+        'ctrl+c', 'ctrl+v', 'ctrl+x', 'ctrl+a', 'ctrl+z', 'ctrl+y',
+        'ctrl+b', 'ctrl+i', 'ctrl+u', 'ctrl+e', 'ctrl+d', 'ctrl+k',
+        'ctrl+l', 'ctrl+f', 'ctrl+r', 'ctrl+shift+r', 'ctrl+s',
+        'ctrl+t', 'ctrl+shift+t', 'ctrl+w', 'ctrl+shift+w',
+        'ctrl+tab', 'ctrl+shift+tab', 'ctrl+shift+s', 'ctrl+shift+m',
+        'ctrl+1', 'ctrl+2', 'ctrl+3', 'ctrl+4', 'ctrl+5',
+        'ctrl+6', 'ctrl+7', 'ctrl+8', 'ctrl+9'
+    ]);
+    const normalisiereTaste = (text) => String(text ?? '').trim().toLowerCase().replace(/\s+/g, '');
+    const reserviert = (text) => RESERVIERT.has(normalisiereTaste(text));
+    const umbelegbar = () => [...UMBELEGBAR];
+    const eigene = () => {
+        const roh = (Store.getMeta('kuerzel', {}) || {});
+        return Object.fromEntries(Object.entries(roh)
+            .filter(([id, taste]) => UMBELEGBAR.has(id) && typeof taste === 'string'));
+    };
     const kuerzelVon = (id) => {
         const e = eigene();
         if (e[id])
@@ -267,8 +296,9 @@ const Aussehen = (() => {
                 const e = eigene();
                 inhalt.innerHTML =
                     '<div class="au-hinweis">Auf ein Kürzel klicken, dann die gewünschten Tasten drücken. ' +
-                        'Esc bricht ab, Entf setzt zurück.</div>' +
-                        '<div class="au-tasten">' + KUERZEL.map(([id, name]) => `<div class="au-t"><span>${esc(name)}</span>` +
+                        'Esc bricht ab, Entf setzt zurück. Browser- und Bearbeitungstasten wie ' +
+                        'Strg+C, Strg+V, Strg+R und Strg+W bleiben geschützt.</div>' +
+                        '<div class="au-tasten">' + KUERZEL.filter(([id]) => UMBELEGBAR.has(id ?? '')).map(([id, name]) => `<div class="au-t"><span>${esc(name)}</span>` +
                         `<button data-k="${id}" class="${id && e[id] ? 'geaendert' : ''}">` +
                         `${esc(kuerzelVon(id ?? ''))}</button></div>`).join('') + '</div>';
             }
@@ -298,7 +328,18 @@ const Aussehen = (() => {
             if (['Control', 'Meta', 'Alt', 'Shift'].includes(ev.key))
                 return;
             const neu = alsText(ev);
-            const doppelt = KUERZEL.find(([k]) => k !== id &&
+            /* Der globale Ausführer arbeitet absichtlich nur mit Ctrl/Cmd-
+               Kombinationen. Eine einzelne Taste hier zu speichern sah nach
+               Erfolg aus und konnte anschliessend nie auslösen. */
+            if (!(ev.ctrlKey || ev.metaKey)) {
+                UI.toast('Bitte Strg oder Cmd zusammen mit der Taste verwenden');
+                return;
+            }
+            if (reserviert(neu)) {
+                UI.toast('„' + neu + '“ gehört dem Browser oder der Textbearbeitung');
+                return;
+            }
+            const doppelt = KUERZEL.filter(([k]) => UMBELEGBAR.has(k ?? '')).find(([k]) => k !== id &&
                 kuerzelVon(k ?? '').toLowerCase() === neu.toLowerCase());
             if (doppelt) {
                 UI.toast('„' + neu + '" ist schon für „' + doppelt[1] + '" belegt');
@@ -386,6 +427,7 @@ const Aussehen = (() => {
     };
     const start = () => { anwenden(); };
     return { start, anwenden, setzen, einstellung, dialog,
-        SCHEMATA, SCHRIFTEN, KUERZEL, kuerzelVon, alsText, ist, eigene };
+        SCHEMATA, SCHRIFTEN, KUERZEL, kuerzelVon, alsText, ist, eigene,
+        reserviert, umbelegbar };
 })();
 window.Aussehen = Aussehen;

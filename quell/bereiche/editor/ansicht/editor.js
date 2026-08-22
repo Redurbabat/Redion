@@ -184,6 +184,24 @@ const Blocks = (() => {
             }
             if (!t)
                 continue; /* Leerzeilen weg */
+            /* Verschachtelte Zitate tragen ihre Tiefe in den `>`-Marken, nicht
+               zwingend in Leerzeichen: `> > Innen` ist eine Stufe unter
+               `> Aussen`. Vorher wurde nur die erste Marke entfernt; die zweite
+               blieb sichtbar im Text und beide Zitate lagen nebeneinander. */
+            if (t.startsWith('>')) {
+                let rest = t;
+                let zitatStufen = 0;
+                while (rest.startsWith('>')) {
+                    zitatStufen++;
+                    rest = rest.slice(1).replace(/^\s?/, '');
+                }
+                const zitatTiefe = tiefe + Math.max(0, zitatStufen - 1);
+                if (/^💡\s*/.test(rest))
+                    raus.push({ typ: 'callout', text: rest.replace(/^💡\s*/, ''), tiefe: zitatTiefe });
+                else
+                    raus.push({ typ: 'quote', text: rest, tiefe: zitatTiefe });
+                continue;
+            }
             /* Markdown-Tabelle (L20): eine |-Zeile, unmittelbar gefolgt von der
                Trennzeile (|---|---|). Alle |-Zeilen danach gehören dazu. Ohne
                Trennzeile ist es keine Tabelle — dann bleibt die Zeile Text,
@@ -217,15 +235,6 @@ const Blocks = (() => {
             }
             if ((m = /^\[([ xX])\]\s+(.*)$/.exec(t))) {
                 raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' });
-                continue;
-            }
-            /* „> 💡 " ist unser Callout — auswahlAlsText() schreibt ihn so. */
-            if ((m = /^>\s*💡\s*(.*)$/.exec(t))) {
-                raus.push({ typ: 'callout', text: m[1] ?? '', tiefe });
-                continue;
-            }
-            if ((m = /^>\s+(.*)$/.exec(t))) {
-                raus.push({ typ: 'quote', text: m[1] ?? '', tiefe });
                 continue;
             }
             if ((m = /^[-*+]\s+(.*)$/.exec(t))) {
@@ -1349,12 +1358,30 @@ const Blocks = (() => {
             const text = e.clipboardData?.getData('text/plain');
             if (!text)
                 return;
+            /* Eine Webadresse über markiertem Text legt den Link DARÜBER,
+               statt den lesbaren Text durch die Adresse zu ersetzen. Die
+               Kürzelreferenz versprach diesen Notion-Weg bereits, der allgemeine
+               Paste-Griff kannte ihn aber nicht. In Rohtextblöcken bleibt eine
+               Adresse wörtlicher Inhalt. */
+            const ROHTEXT = ['code', 'equation', 'html', 'flashcard'];
+            const markiert = getSelection()?.toString() ?? '';
+            let webAdresse = false;
+            try {
+                const u = new URL(text.trim());
+                webAdresse = u.protocol === 'http:' || u.protocol === 'https:';
+            }
+            catch { /* Gewöhnlicher Text, kein Link. */ }
+            if (markiert && webAdresse && !ROHTEXT.includes(b.type) &&
+                typeof Auswahl !== 'undefined' && Auswahl.linkSetzen) {
+                e.preventDefault();
+                if (Auswahl.linkSetzen(text.trim()))
+                    return;
+            }
             /* Wo roher Text der Inhalt IST, wird kein Markdown gelesen. In einem
                Codeblock ist „# hallo" eine Kommentarzeile, in einer Formel steht
                TeX, und im HTML-Block steht HTML. Alles andere darf gliedern —
                auch ein Listenpunkt: wer eine Liste in eine Liste einfügt, will
                Punkte und keinen Absatz mit Bindestrichen darin. */
-            const ROHTEXT = ['code', 'equation', 'html', 'flashcard'];
             const strukturiert = !ROHTEXT.includes(b.type) && mdIstStruktur(text);
             /* Immer selbst einsetzen: sonst legt der Browser das mitkopierte HTML
                mit all seinen Stilen in den Block, und beim nächsten Zeichnen ist
@@ -1633,6 +1660,15 @@ const Blocks = (() => {
             /* Inline-Formatierung */
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const k = e.key.toLowerCase();
+                /* Im Editor bedeutet Strg/Cmd+K bei einer Textauswahl „Link". Ohne
+                   Auswahl darf das Ereignis weiter zur globalen Suche blubbern. */
+                if (k === 'k' && String(getSelection() || '')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof Auswahl !== 'undefined' && Auswahl.linkSetzen)
+                        Auswahl.linkSetzen();
+                    return;
+                }
                 if (k === 'b') {
                     e.preventDefault();
                     umschliesse('**');

@@ -523,7 +523,7 @@
  * --------------------------------------------------------------------------
  * Drei Dinge, und das dritte ist das, was man sonst erst auf dem Gerät merkt.
  * ========================================================================*/
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 500px) and (pointer: coarse) {
   .tbl {
     /* 44 px, weil CLAUDE.md §37 das als Mindestmass für alles nennt, was
        mit dem Finger getroffen wird — und eine Zelle wird angetippt, um sie
@@ -531,8 +531,8 @@
        dem Finger nicht": richtig erkannt, nur nicht zu Ende gerechnet.
        DIESE ZAHL MUSS ZU `ZH_HANDY` IN `ansicht.ts` PASSEN — das
        fensterweise Zeichnen rechnet damit, welche Zeilen im Bild sind. */
-    --tbl-zh: 44px;
-    --tbl-kb: 44px;
+    --tbl-zh: var(--table-row-touch);
+    --tbl-kb: var(--touch-min);
     /* 128 statt 110 — gemessen: bei 16 px Schrift ist `1’450.00 CHF` 99 px
        breit, mit Innenabstand also 114. In 110 px stand deshalb bei jedem
        Betrag `###`. Die Zahl steht auch im Kopf von `ansicht.ts`; hier
@@ -540,6 +540,9 @@
     --tbl-sb: 128px;
   }
   .tbl-feld { max-height: 60vh; }
+  body.tastatur-offen .tbl-feld {
+    max-height:max(132px, calc(var(--visual-height, 100vh) - 210px));
+  }
   .tbl-z { font-size: 16px; }
 
   /* 16 px, und zwar unbedingt: Safari zoomt die ganze Seite hinein, sobald
@@ -552,8 +555,8 @@
 
   /* Reiter am Finger: 44 px hoch, und die Schrift so gross, dass man den
      Namen lesen kann, ohne heranzuzoomen. */
-  .tbl-reiter-eins { padding: 12px 14px; font-size: 14px; min-height: 44px; }
-  .tbl-reiter-plus { width: 44px; min-height: 44px; font-size: 20px; }
+  .tbl-reiter-eins { padding: 12px 14px; font-size: 14px; min-height: var(--touch-min); }
+  .tbl-reiter-plus { width: var(--touch-min); min-height: var(--touch-min); font-size: 20px; }
 
   /* ------------------------------------------------------------------------
    * ZWEI ZEILEN STATT EINER — und das ist kein Feinschliff.
@@ -575,7 +578,7 @@
      Eingabefeld wird angetippt — §37 gilt auch dort. Gemessen waren es 32,
      weil nur `padding: 7px 10px` die Höhe machte und niemand nachgerechnet
      hat, was dabei herauskommt. */
-  .tbl-eingabe { flex: 1 1 120px; min-height: 44px; }
+  .tbl-eingabe { flex: 1 1 120px; min-height: var(--touch-min); }
   .tbl-werkzeuge {
     flex: 1 0 100%;
     border-top: 1px solid var(--line-soft);

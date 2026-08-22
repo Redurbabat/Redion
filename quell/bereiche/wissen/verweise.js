@@ -269,14 +269,49 @@ const Links = (() => {
      * Kein fertiges Diagrammpaket, sondern eine kleine Kräftesimulation:
      * verbundene Punkte ziehen sich an, alle Punkte stossen sich ab.
      * ======================================================================*/
-    const graph = () => {
+    /**
+     * Baut Knoten und Kanten ohne Oberfläche. Vorher suchte jeder `[[Link]]`
+     * sein Ziel mit `seiten().find(...)`: bei 10 000 Seiten und 10 000 Links
+     * waren das bis zu hundert Millionen Vergleiche. Titel, Sammlungen und
+     * Blockbesitzer werden jetzt je einmal indiziert. Der Helfer ist zugleich
+     * der messbare Produktweg für den Grossbestandslauf.
+     */
+    const graphVorbereiten = () => {
         const alle = seiten();
-        if (!alle.length) {
-            UI.toast('Noch keine Seiten für den Graphen');
-            return undefined;
-        }
-        /* Knoten und Kanten aufbauen */
         const idx = new Map(alle.map((p, i) => [p.id, i]));
+        const titel = new Map();
+        alle.forEach(p => {
+            const n = (p.text || '').trim().toLowerCase();
+            if (n && !titel.has(n))
+                titel.set(n, p);
+        });
+        const dbNachSammlung = new Map();
+        Object.values(Store.cache.blocks).forEach(b => {
+            if (b.alive && b.type === 'database' && b.collectionId)
+                dbNachSammlung.set(b.collectionId, b);
+        });
+        const besitzer = new Map();
+        const seiteFuer = (blockId) => {
+            if (besitzer.has(blockId))
+                return besitzer.get(blockId);
+            let cur = Store.getBlock(blockId), n = 0;
+            const weg = [];
+            while (cur && n++ < 60) {
+                weg.push(cur.id);
+                if (cur.type === 'page' && cur.parentTable !== 'collection') {
+                    weg.forEach(id => besitzer.set(id, cur));
+                    return cur;
+                }
+                if (cur.parentTable === 'collection') {
+                    const dbBlock = dbNachSammlung.get(cur.parentId);
+                    cur = dbBlock ? Store.getBlock(dbBlock.parentId) : null;
+                }
+                else
+                    cur = cur.parentId ? Store.getBlock(cur.parentId) : null;
+            }
+            weg.forEach(id => besitzer.set(id, null));
+            return null;
+        };
         const knoten = alle.map((p, i) => ({
             id: p.id, name: p.text || 'Ohne Titel', icon: p.icon || '📄',
             x: Math.cos(i / alle.length * 6.283) * 200 + (i % 7) * 9,
@@ -302,26 +337,63 @@ const Links = (() => {
         Object.values(Store.cache.blocks).forEach(b => {
             if (!b.alive || !b.text)
                 return;
-            const quelle = seiteVon(b.id);
+            const quelle = seiteFuer(b.id);
             if (!quelle)
                 return;
             (b.text.match(/\[\[([^\[\]\n]{1,120})\]\]/g) || []).forEach((m) => {
-                const ziel = seiteMitTitel(m.slice(2, -2));
+                const ziel = titel.get(m.slice(2, -2).trim().toLowerCase());
                 if (ziel)
                     merke(quelle.id, ziel.id, 'link');
             });
         });
+        return { knoten, kanten };
+    };
+    const graph = () => {
+        const vorbereitet = graphVorbereiten();
+        let knoten = vorbereitet.knoten;
+        let kanten = vorbereitet.kanten;
+        if (!knoten.length) {
+            UI.toast('Noch keine Seiten für den Graphen');
+            return undefined;
+        }
+        /* Die Kräftesimulation vergleicht jedes Paar. 10 000² Vergleiche pro
+           Bild frieren den Tab ein; die Messung lag schon für die reine alte
+           Vorbereitung bei 3,5 s. Ab 600 zeigt der Graph daher den verbundensten
+           Ausschnitt und sagt das offen. Sämtliche Daten bleiben im Bestand und
+           die Vorbereitung zählt weiterhin alle Kanten. */
+        const gesamtKnoten = knoten.length;
+        const gesamtKanten = kanten.length;
+        const MAX_GRAPH_KNOTEN = 600;
+        if (knoten.length > MAX_GRAPH_KNOTEN) {
+            const aktuell = typeof App !== 'undefined' ? App.aktuelleSeite() : '';
+            const ausgewaehlt = knoten.map((n, i) => ({ i, n }))
+                .sort((a, b) => (b.n.id === aktuell ? 1 : 0) - (a.n.id === aktuell ? 1 : 0) ||
+                b.n.grad - a.n.grad || a.n.name.localeCompare(b.n.name))
+                .slice(0, MAX_GRAPH_KNOTEN);
+            const altZuNeu = new Map();
+            ausgewaehlt.forEach((x, i) => altZuNeu.set(x.i, i));
+            knoten = ausgewaehlt.map((x, i) => ({ ...x.n,
+                x: Math.cos(i / MAX_GRAPH_KNOTEN * 6.283) * 200 + (i % 7) * 9,
+                y: Math.sin(i / MAX_GRAPH_KNOTEN * 6.283) * 200 + (i % 5) * 9,
+                vx: 0, vy: 0 }));
+            kanten = kanten.filter((k) => altZuNeu.has(k.a) && altZuNeu.has(k.b))
+                .map((k) => ({ ...k, a: altZuNeu.get(k.a), b: altZuNeu.get(k.b) }));
+        }
         /* Oberfläche */
         const o = document.createElement('div');
         o.className = 'overlay graph-overlay';
         o.innerHTML =
             '<div class="graph-box">' +
                 '<div class="graph-head"><b>Graph</b>' +
-                `<span class="graph-info">${knoten.length} Seiten · ${kanten.length} Verbindungen</span>` +
+                `<span class="graph-info">${gesamtKnoten > knoten.length ?
+                    (knoten.length + ' von ' + gesamtKnoten) : knoten.length} Seiten · ` +
+                `${kanten.length}${gesamtKanten > kanten.length ? ' von ' + gesamtKanten : ''} Verbindungen</span>` +
                 '<button class="icon-btn" data-a="zu">✕</button>' +
                 '</div>' +
                 '<canvas></canvas>' +
-                '<div class="hint">Ziehen verschiebt die Ansicht · Klick öffnet die Seite · ' +
+                '<div class="hint">' + (gesamtKnoten > knoten.length
+                ? 'Ausschnitt der am stärksten verbundenen Seiten · ' : '') +
+                'Ziehen verschiebt die Ansicht · Klick öffnet die Seite · ' +
                 'Linien: durchgezogen = Unterseite, gestrichelt = [[Link]]</div>' +
                 '</div>';
         document.body.appendChild(o);
@@ -604,7 +676,7 @@ const Links = (() => {
     };
     return {
         start, inline, seiten, seiteMitTitel, seiteVon, oeffneOderAnlegen,
-        verweiseAuf, unverlinkt, alleTags, fusszeile, graph, tagRegister
+        verweiseAuf, unverlinkt, alleTags, fusszeile, graphVorbereiten, graph, tagRegister
     };
 })();
 window.Links = Links;

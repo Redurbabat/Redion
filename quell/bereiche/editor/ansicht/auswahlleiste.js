@@ -51,6 +51,28 @@ const Auswahl = (() => {
         App.zeichneSeite(b.id, 'ende');
         weg();
     };
+    /**
+     * Legt die markierte Stelle als Markdown-Link ab.
+     *
+     * Ein gemeinsamer Weg für die Auswahlleiste, Strg/Cmd+K und das Einfügen
+     * einer Adresse. Vorher versprach die Kürzelliste Strg+K, tatsächlich
+     * öffnete aber der globale Griff die Suche.
+     */
+    const linkSetzen = (adresse) => {
+        const text = getSelection()?.toString() ?? '';
+        if (!text)
+            return false;
+        const bl = markierterBlock();
+        if (!bl)
+            return false;
+        const url = adresse ?? prompt('Adresse des Links', 'https://') ?? '';
+        if (!url || url === 'https://')
+            return false;
+        Store.updateBlock(bl.id, { text: (bl.text || '').replace(text, `[${text}](${url})`) });
+        App.zeichneSeite(bl.id, 'ende');
+        weg();
+        return true;
+    };
     const zeigen = () => {
         const s = auswahl();
         const txt = s?.toString().trim();
@@ -109,15 +131,7 @@ const Auswahl = (() => {
             if (a === 'm')
                 return umschliesse('$');
             if (a === 'link') {
-                const url = prompt('Adresse des Links', 'https://');
-                if (!url || url === 'https://')
-                    return;
-                const bl = markierterBlock();
-                if (!bl)
-                    return;
-                Store.updateBlock(bl.id, { text: (bl.text || '').replace(text, `[${text}](${url})`) });
-                App.zeichneSeite(bl.id, 'ende');
-                weg();
+                linkSetzen();
                 return;
             }
             if (a === 'ki') {
@@ -190,7 +204,7 @@ const Auswahl = (() => {
         });
         document.addEventListener('scroll', weg, true);
     };
-    return { start, zeigen, weg, umschliesse, letzteFarbeAnwenden };
+    return { start, zeigen, weg, umschliesse, linkSetzen, letzteFarbeAnwenden };
 })();
 window.Auswahl = Auswahl;
 /* ==========================================================================

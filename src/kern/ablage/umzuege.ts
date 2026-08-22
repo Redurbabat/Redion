@@ -69,7 +69,14 @@ const Umzuege = (() => {
     { nr: 5, was: 'Vorberechnete Werte',
       faecher: ['vorrat'],
       warum: 'Formeln und Rollups einmal rechnen und behalten. Ein Beschleuniger, ' +
-             'kein Inhalt: wer ihn wegwirft, verliert nichts ausser Zeit.' }
+             'kein Inhalt: wer ihn wegwirft, verliert nichts ausser Zeit.' },
+
+    { nr: 6, was: 'Inkrementeller Suchindex',
+      faecher: ['suchindex'],
+      warum: 'Vorbereitete Suchwörter je Seite und Datenbankzeile. Auch dieses ' +
+             'Fach ist nur ein Cache: Redions Blöcke und Sammlungen bleiben die ' +
+             'Wahrheit. Fehlt der Index oder ist er beschädigt, wird er aus ihnen ' +
+             'neu aufgebaut.' }
   ];
 
   /* Die letzte Fassung — und die Liste ist nie leer, sonst gäbe es keine

@@ -68,8 +68,10 @@ const DbRaster = (() => {
   const PUFFER = 6;
 
   const amTelefon = (): boolean =>
-    typeof window !== 'undefined' && window.matchMedia
-      ? window.matchMedia('(max-width: 760px)').matches : false;
+    typeof window !== 'undefined' && typeof AppEinstellung !== 'undefined'
+      ? AppEinstellung.amTelefon()
+      : typeof window !== 'undefined' && window.matchMedia
+        ? window.matchMedia('(max-width: 760px)').matches : false;
 
   const esc = (s: unknown): string => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
