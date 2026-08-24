@@ -19,6 +19,72 @@
  * ==========================================================================*/
 
 const Blatt = (() => {
+
+  /* ==========================================================================
+   * PAPIERVORLAGEN
+   * --------------------------------------------------------------------------
+   * Blanko, liniert, kariert, Punktraster, Millimeterpapier — mehr braucht
+   * niemand, und mehr wäre auch nicht mehr nachzuhalten.
+   *
+   * Es ist NUR Darstellung. Kein zweites Dokumentformat, kein zweiter
+   * Speicher: ein Feld am Block, ein Hintergrundbild im Stilblatt. Wer eine
+   * Vorlage wechselt, ändert nichts an seinem Text und nichts an seinen
+   * Strichen — deshalb kann man beliebig hin- und herwechseln, ohne etwas zu
+   * verlieren.
+   *
+   * DIE ABSTÄNDE STEHEN IN BLATTMASSEN, NICHT IN BILDSCHIRMPUNKTEN. Das ist
+   * dieselbe Regel wie in E100, und sie ist hier genauso wichtig: das Blatt
+   * folgt der Fensterbreite über `aspect-ratio`. Ein Kästchen in Pixeln wäre
+   * am Telefon ein anderes Kästchen als am Rechner — und dann ist es kein
+   * Karopapier mehr, sondern ein Muster. Gerechnet wird deshalb in Prozent
+   * der Blattmasse, und die Prozentzahlen entstehen aus dem Block: bei einem
+   * dreiseitigen Blatt ist die Höhe dreimal A4, und 5 mm sind dort ein
+   * Drittel so viel Prozent. Der Abstand auf dem Papier bleibt derselbe.
+   * ========================================================================*/
+  const MM = 2.8346457;                 /* ein Millimeter in Punkt (72/25,4) */
+
+  const PAPIERE = [
+    { id: 'blanko',  name: 'Blanko' },
+    { id: 'liniert', name: 'Liniert' },
+    { id: 'kariert', name: 'Kariert' },
+    { id: 'punkte',  name: 'Punktraster' },
+    { id: 'mm',      name: 'Millimeterpapier' },
+  ] as const;
+
+  type PapierArt = typeof PAPIERE[number]['id'];
+
+  /** Was am Block steht — und bei allem Unbekannten: blanko. */
+  const papierVon = (block: any): PapierArt => {
+    const wert = String(block?.papier ?? 'blanko');
+    return PAPIERE.some(x => x.id === wert) ? wert as PapierArt : 'blanko';
+  };
+
+  /** Die Abstände als Prozentzahlen, damit CSS sie einsetzen kann. */
+  const masse = (breite: number, hoehe: number): Record<string, string> => {
+    const quer  = (mm: number) => (mm * MM / breite * 100) + '%';
+    const hoch  = (mm: number) => (mm * MM / hoehe  * 100) + '%';
+    return {
+      /* Schulheft-Lineatur: 8,75 mm. */
+      '--blatt-zeile':       hoch(8.75),
+      /* Karo: 5 mm, und quer wie hoch derselbe absolute Abstand. */
+      '--blatt-karo-quer':   quer(5),
+      '--blatt-karo-hoch':   hoch(5),
+      /* Millimeterpapier: das feine Netz und die kräftige Zehnerlinie. */
+      '--blatt-mm-quer':     quer(1),
+      '--blatt-mm-hoch':     hoch(1),
+      '--blatt-mm-zehn-quer': quer(10),
+      '--blatt-mm-zehn-hoch': hoch(10),
+    };
+  };
+
+  const waehler = (jetzt: PapierArt): string =>
+    '<span class="blatt-trenn"></span>' +
+    PAPIERE.map(art =>
+      `<button class="blatt-papierwahl${art.id === jetzt ? ' on' : ''}" ` +
+      `data-papier="${art.id}" title="Papier: ${art.name}" aria-label="Papier: ${art.name}" ` +
+      `aria-pressed="${art.id === jetzt ? 'true' : 'false'}">` +
+      `<i data-vorschau="${art.id}"></i></button>`).join('');
+
   const zeichne = (block: any): HTMLElement => {
     const R = SheetSpace;
     const hoehe = Number(block.blattHoehe) || R.A4_HOEHE;
@@ -30,19 +96,12 @@ const Blatt = (() => {
     /* Die Zeichenschicht zuerst — die Leiste braucht ihre Schalter. */
     const schicht = Marken.schicht(block, breite, hoehe, R.A4_HOEHE);
 
+    const jetzt = papierVon(block);
     const werk = Marken.leiste(schicht,
       '<span class="blatt-trenn"></span>' +
       '<button data-a="seite" title="Eine Seite anhängen">' +
-        '<span class="zeichen">＋</span><span class="wort">Seite</span></button>');
-    werk.addEventListener('click', e => {
-      const b = (e.target as HTMLElement)?.closest?.('button') as HTMLElement | null;
-      if (b?.dataset.a !== 'seite') return;
-      Store.updateBlock(block.id, {
-        blattHoehe: hoehe + R.A4_HOEHE, blattBreite: breite,
-        raumVersion: R.RAUM_VERSION
-      });
-      App.zeichneSeite();
-    });
+        '<span class="zeichen">＋</span><span class="wort">Seite</span></button>' +
+      waehler(jetzt));
     w.appendChild(werk);
 
     const papier = document.createElement('div');
@@ -50,7 +109,39 @@ const Blatt = (() => {
     /* Die Höhe folgt der Breite über das Seitenverhältnis — dann stimmt das
        Blatt bei jeder Fensterbreite, ohne eine einzige gerechnete Zahl. */
     papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
+    papier.dataset.papier = jetzt;
+    for (const [name, wert] of Object.entries(masse(breite, hoehe)))
+      papier.style.setProperty(name, wert);
     w.appendChild(papier);
+
+    werk.addEventListener('click', e => {
+      const b = (e.target as HTMLElement)?.closest?.('button') as HTMLElement | null;
+      if (!b) return;
+
+      if (b.dataset.papier) {
+        /* NUR DAS FELD, SONST NICHTS. Kein Neuzeichnen der Seite: der Text
+           steht in Kindblöcken, die Striche in der Zeichenschicht, und
+           beide würden beim Neuaufbau ihren Bearbeitungsstand verlieren —
+           der Cursor spränge mitten im Satz weg. Der Hintergrund ist eine
+           Eigenschaft des Papiers, also wird das Papier umgestellt. */
+        const art = b.dataset.papier;
+        Store.updateBlock(block.id, { papier: art });
+        papier.dataset.papier = art;
+        werk.querySelectorAll<HTMLElement>('[data-papier]').forEach(k => {
+          const an = k.dataset.papier === art;
+          k.classList.toggle('on', an);
+          k.setAttribute('aria-pressed', an ? 'true' : 'false');
+        });
+        return;
+      }
+
+      if (b.dataset.a !== 'seite') return;
+      Store.updateBlock(block.id, {
+        blattHoehe: hoehe + R.A4_HOEHE, blattBreite: breite,
+        raumVersion: R.RAUM_VERSION
+      });
+      App.zeichneSeite();
+    });
 
     /* Der Text: gewöhnliche Blöcke, im Satzspiegel. Ein Prozent-Innenabstand
        bezieht sich in CSS auf die BREITE — auch oben und unten. Also EIN
@@ -89,7 +180,7 @@ const Blatt = (() => {
     return w;
   };
 
-  return { zeichne };
+  return { zeichne, PAPIERE, papierVon, masse };
 })();
 
 (window as any).Blatt = Blatt;

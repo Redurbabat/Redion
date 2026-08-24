@@ -2727,6 +2727,72 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-papier.malt{cursor:crosshair; user-select:none}
 .blatt-papier.malt .blatt-inhalt{user-select:none}
 
+/* --- PAPIERVORLAGEN (Auftrag §21) -----------------------------------------
+   Das Papier ist in beiden Themen weiss (siehe `.blatt-papier` oben) — es ist
+   Papier, kein Fenster. Deshalb braucht die Lineatur KEINE zweite Farbe für
+   den Dunkelmodus; ein hell/dunkel-Paar hier wäre eine Farbe, die sich am
+   Bildschirm ändert, während das gedruckte Blatt gleich bleibt.
+
+   Die Abstände kommen als Prozentzahlen aus `blatt.ts` und beziehen sich auf
+   das BLATT, nicht auf den Bildschirm. Darum bleibt ein Karo 5 mm gross,
+   egal wie breit das Fenster ist und über wie viele Seiten das Blatt geht. */
+.blatt-papier{--blatt-linie:#b9c6d8; --blatt-linie-stark:#8ea3bd}
+
+.blatt-papier[data-papier="liniert"]{
+  background-image:linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:100% var(--blatt-zeile)}
+
+.blatt-papier[data-papier="kariert"]{
+  background-image:
+    linear-gradient(to right,  var(--blatt-linie) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:var(--blatt-karo-quer) 100%, 100% var(--blatt-karo-hoch)}
+
+.blatt-papier[data-papier="punkte"]{
+  background-image:radial-gradient(circle at center,
+                   var(--blatt-linie-stark) 0 1.1px, transparent 1.2px);
+  background-size:var(--blatt-karo-quer) var(--blatt-karo-hoch)}
+
+/* Millimeterpapier: das feine Netz, darüber die kräftige Zehnerlinie.
+   Vier Verläufe, und die Reihenfolge entscheidet — der Zehner liegt oben. */
+.blatt-papier[data-papier="mm"]{
+  background-image:
+    linear-gradient(to right,  var(--blatt-linie-stark) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie-stark) 0 1px, transparent 1px),
+    linear-gradient(to right,  var(--blatt-linie) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:
+    var(--blatt-mm-zehn-quer) 100%, 100% var(--blatt-mm-zehn-hoch),
+    var(--blatt-mm-quer) 100%,      100% var(--blatt-mm-hoch)}
+
+/* --- Der Wähler in der Werkzeugleiste --------------------------------------
+   Jeder Knopf zeigt SEIN Papier, nicht ein Sinnbild dafür. Bei den
+   Ausrichtungsknöpfen hat ein Sinnbild schon einmal wie eine Klammer
+   ausgesehen (§55.1); ein Muster kann man nicht falsch verstehen. */
+.blatt-papierwahl{padding:3px !important; width:26px; height:26px;
+                  display:inline-flex; align-items:center; justify-content:center}
+.blatt-papierwahl i{display:block; width:100%; height:100%; border-radius:3px;
+                    background-color:#fff; border:1px solid var(--rand)}
+.blatt-papierwahl.on i{border-color:var(--akzent, #2f7ed8); box-shadow:0 0 0 1px var(--akzent, #2f7ed8)}
+.blatt-papierwahl i[data-vorschau="liniert"]{
+  background-image:linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:100% 4px}
+.blatt-papierwahl i[data-vorschau="kariert"]{
+  background-image:
+    linear-gradient(to right,  var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:4px 100%, 100% 4px}
+.blatt-papierwahl i[data-vorschau="punkte"]{
+  background-image:radial-gradient(circle at center, #8ea3bd 0 1px, transparent 1.1px);
+  background-size:4px 4px}
+.blatt-papierwahl i[data-vorschau="mm"]{
+  background-image:
+    linear-gradient(to right,  #8ea3bd 0 1px, transparent 1px),
+    linear-gradient(to bottom, #8ea3bd 0 1px, transparent 1px),
+    linear-gradient(to right,  var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
+
 .blatt-werk .zeichen{margin-right:5px}
 .blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
 
