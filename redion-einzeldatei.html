@@ -75964,6 +75964,25 @@ const Lernwelt = (() => {
         return text.split(/[,;|\n]/).map(teil => teil.trim()).filter(Boolean);
     };
     const datum = (wert) => {
+        /* EIN `Date` IST SCHON EIN DATUM (E128).
+           Hier stand nur der Hüllen-Zweig: „ist es ein Objekt, dann lies `.start`,
+           `.date` oder `.from`". Ein `Date` IST ein Objekt und hat keines dieser
+           drei Felder — also war `roh` undefined und die Funktion gab `null`
+           zurück. Jeder Aufruf mit einem echten Datum lief ins Leere, und weil
+           `tag()`, `datumText()` und `tageBis()` alle darüber gehen, nahm das
+           halbe Dashboard es mit:
+    
+               tag(new Date())        ''      → „heute" traf nie zu
+               Lernziel heute         0 / 20  → bewegte sich nie
+               Streak                 0       → auch nach dem Lernen
+               Verlaufsbalken         leer    → 7 und 30 Tage
+               Prüfungs-Countdown     null    → auf dem Schirm stand „null Tage"
+    
+           Eine Zeile, fünf falsche Zahlen — und keine davon sah nach einem
+           Fehler aus, weil 0 und „leer" plausible Werte für einen frischen
+           Bestand sind. Genau diese Sorte findet kein Prüflauf von selbst. */
+        if (wert instanceof Date)
+            return Number.isFinite(wert.getTime()) ? wert : null;
         const roh = wert && typeof wert === 'object'
             ? wert.start ?? wert.date ?? wert.from
             : wert;
@@ -76135,9 +76154,34 @@ const Lernwelt = (() => {
             updatedAt: String(card?.edited || '')
         };
     };
+    /**
+     * Ein leerer Lernstand IST KEIN LERNSTAND (E128).
+     *
+     * `leererLernzustand` in `lebensbereiche.ts` gibt `sr: {}` zurück — ein
+     * leeres Objekt, und ein leeres Objekt ist wahr. `stand?.sr || null` liess
+     * es deshalb stehen, und danach galt in `warteschlange`:
+     *
+     *     neu     = alle.filter(card => !card.sr)          → nie eine Karte
+     *     fällig  = alle.filter(card => card.sr && …)      → immer alle
+     *
+     * Gemessen mit vier fabrikneuen Karten: „0 neu, 5 fällig". Die Kachel
+     * „neue Karten" konnte gar nichts anderes anzeigen als null, und der
+     * Lernplan legte Karten, die noch niemand gesehen hat, unter „gelernt und
+     * jetzt wieder dran".
+     *
+     * Geändert wird hier und nicht in `leererLernzustand`: dessen Form ist ein
+     * Vertrag, an dem andere Leser hängen (`sm2(zustand.sr)` erwartet ein
+     * Objekt). Was fehlt, ist die Unterscheidung — und die gehört an die
+     * Stelle, die sie braucht.
+     */
+    const hatLernstand = (sr) => !!sr && typeof sr === 'object' && Object.keys(sr).length > 0;
     const karteMitStand = (card) => {
         const stand = persoenlicherStand(card);
-        return { ...card, sr: stand?.sr || null, reviewVerlauf: stand?.reviewVerlauf || {} };
+        return {
+            ...card,
+            sr: hatLernstand(stand?.sr) ? stand.sr : null,
+            reviewVerlauf: stand?.reviewVerlauf || {},
+        };
     };
     const lernkarten = () => lernkartenRoh().map(karteMitStand);
     const verlauf = (card) => {
