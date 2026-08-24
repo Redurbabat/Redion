@@ -43,7 +43,7 @@ const Zusatz = (() => {
   const whiteboard = (block: any) => {
     const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
     let werkzeug = 'stift';
-    let farbe = PALETTE[0];
+    let farbe: string = PALETTE[0] ?? '#529cca';
     const hoehe = block.hoehe || 380;
 
     /* DIE FLÄCHE IST GRÖSSER ALS DAS FENSTER (E138, Auftrag §22).
@@ -102,7 +102,8 @@ const Zusatz = (() => {
           '<button data-a="passend" title="Alles ins Bild holen">⤢</button>' +
         '</span>' +
         '<span class="wb-sep"></span>' +
-        '<button data-a="zurueck" title="Letztes rückgängig">↶</button>' +
+        '<button data-a="zurueck" title="Schritt zurück" disabled>↶</button>' +
+        '<button data-a="vor" title="Schritt vorwärts" disabled>↷</button>' +
         '<button data-a="leeren" title="Alles löschen">🗑</button>' +
         '<button data-a="png" title="Als Bild speichern">⭳</button>' +
       '</div>';
@@ -117,6 +118,39 @@ const Zusatz = (() => {
     w.appendChild(griff);
 
     /* --- Zeichnen ------------------------------------------------------- */
+    /* MEHRSTUFIGES ZURÜCK (E144, L54). `↶` war `daten.pop()` — es nahm die
+       zuletzt ANGEHÄNGTE Form weg, egal was zuletzt passiert war. Ein
+       Verschieben liess sich damit nicht zurücknehmen, ein Radieren auch
+       nicht, und zweimal drücken warf die vorletzte Form weg statt den
+       vorletzten Schritt.
+
+       Jetzt liegt vor jeder Änderung ein Abbild auf einem Stapel. Vierzig
+       Schritte weit; darüber fällt das älteste heraus. Vierzig, weil ein
+       Abbild einer vollen Fläche einige Kilobyte hat und der Stapel nur im
+       Arbeitsspeicher lebt — er wird bewusst NICHT mitgespeichert. Wer die
+       Seite neu lädt, hat seine Zeichnung, aber keine Schrittfolge; das ist
+       die ehrlichere Grenze, als den Block mit Verlauf aufzublähen. */
+    const SCHRITTE = 40;
+    const zurueckStapel: string[] = [];
+    const vorStapel: string[] = [];
+    const abbild = (): string => JSON.stringify(daten);
+    const merken = (): void => {
+      zurueckStapel.push(abbild());
+      if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift();
+      vorStapel.length = 0;
+      standZeigen();
+    };
+    const einsetzen = (roh: string): void => {
+      daten.length = 0;
+      JSON.parse(roh).forEach((form: any) => daten.push(form));
+    };
+    const standZeigen = (): void => {
+      const zurueck = w.querySelector<HTMLButtonElement>('[data-a="zurueck"]');
+      const vor = w.querySelector<HTMLButtonElement>('[data-a="vor"]');
+      if (zurueck) zurueck.disabled = !zurueckStapel.length;
+      if (vor) vor.disabled = !vorStapel.length;
+    };
+
     const sichern = () => Store.updateBlock(block.id, { shapes: daten });
 
     /* Der Ausschnitt in Formkoordinaten. Solange der Kasten noch nicht im
@@ -178,6 +212,19 @@ const Zusatz = (() => {
         .forEach((s: any) => { const linie = verbindungZeichnen(s); if (linie) flaeche.appendChild(linie); });
       daten.filter((s: any) => s.art !== 'verbindung')
         .forEach((s: any) => flaeche.appendChild(formZeichnen(s)));
+      if (werkzeug === 'zeiger' && gewaehlt) {
+        const s = daten.find((q: any) => q.id === gewaehlt);
+        if (s && groessenFaehig(s)) {
+          const rahmen = rahmenVon(s);
+          const kante = GRIFF / sicht.z;
+          flaeche.appendChild(sv('rect', {
+            x: rahmen.x + rahmen.w - kante / 2, y: rahmen.y + rahmen.h - kante / 2,
+            width: kante, height: kante, rx: kante / 4,
+            fill: 'var(--accent)', stroke: 'var(--bg-card)',
+            'stroke-width': 1 / sicht.z, class: 'wb-griffpunkt'
+          }));
+        }
+      }
       const anzeige = w.querySelector('.wb-massstab');
       if (anzeige) anzeige.textContent = Math.round(sicht.z * 100) + ' %';
     };
@@ -218,6 +265,7 @@ const Zusatz = (() => {
             probe.src = URL.createObjectURL(datei);
           });
           const breite = Math.min(360, masse.w);
+          merken();
           daten.push({ id: Store.uid().slice(0, 8), art: 'bild', x, y,
                        w: Math.round(breite), h: Math.round(breite * masse.h / (masse.w || 1)),
                        farbe, dateiId: String(satz.id) });
@@ -228,6 +276,52 @@ const Zusatz = (() => {
       });
       feld.click();
     };
+
+    /* SCHREIBEN AUF DER FLÄCHE, NICHT IM BROWSERFENSTER (E144, L54).
+       Hier stand `prompt()`. Das ist ein Fenster des Browsers: es steht in
+       der Mitte des Bildschirms, sagt nichts darüber, WO der Text hinkommt,
+       nimmt am Telefon die halbe Höhe weg und kennt keine zweite Zeile.
+
+       Jetzt steht das Feld genau dort, wo die Notiz entsteht, in derselben
+       Grösse und Farbe. Enter schliesst ab (bei der Haftnotiz erst mit
+       Strg), Escape wirft weg, ein Klick daneben übernimmt. */
+    const textErfassen = (x: number, y: number, breite: number, hoehe: number,
+                          vorgabe: string): Promise<string | null> =>
+      new Promise(fertig => {
+        const r = flaeche.getBoundingClientRect();
+        const wRect = w.getBoundingClientRect();
+        const feld = document.createElement('textarea');
+        feld.className = 'wb-eingabe';
+        feld.value = vorgabe;
+        feld.style.left = Math.round((x - sicht.x) * sicht.z + (r.left - wRect.left)) + 'px';
+        feld.style.top = Math.round((y - sicht.y) * sicht.z + (r.top - wRect.top)) + 'px';
+        feld.style.width = Math.round(breite * sicht.z) + 'px';
+        feld.style.height = Math.round(hoehe * sicht.z) + 'px';
+        feld.style.color = farbe;
+        w.appendChild(feld);
+        let erledigt = false;
+        const schliessen = (wert: string | null): void => {
+          if (erledigt) return;
+          erledigt = true;
+          feld.remove();
+          fertig(wert);
+        };
+        feld.addEventListener('keydown', e => {
+          if (e.key === 'Escape') { e.preventDefault(); schliessen(null); return; }
+          if (e.key === 'Enter' && (hoehe < 40 || e.ctrlKey || e.metaKey)) {
+            e.preventDefault(); schliessen(feld.value);
+          }
+        });
+        feld.addEventListener('blur', () => schliessen(feld.value));
+        setTimeout(() => { feld.focus(); feld.select(); }, 0);
+      });
+
+    /* Was sich in der Grösse ändern lässt: alles mit einem echten Rechteck.
+       Ein Stiftstrich hat Punkte statt Kanten, eine Verbindung hängt an zwei
+       Formen, und ein Text hat nur eine Schriftgrösse — die drei bleiben
+       draussen. */
+    const groessenFaehig = (s: any): boolean =>
+      s && s.art !== 'stift' && s.art !== 'verbindung' && s.art !== 'text';
 
     const verbindungZeichnen = (s: any): Element | null => {
       const a = daten.find((q: any) => q.id === s.von);
@@ -255,7 +349,18 @@ const Zusatz = (() => {
         });
         if (s.art === 'pfeil') p.setAttribute('marker-end', `url(#p${block.id.slice(0, 6)})`);
         p.dataset.sid = s.id;
-        return p;
+        /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
+           ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
+           breit und durchsichtig: er fängt den Griff, malt aber nichts. */
+        const fang = sv('path', {
+          d: p.getAttribute('d') || '', stroke: 'transparent', 'stroke-width': 16,
+          fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+        });
+        fang.dataset.sid = s.id;
+        const gruppe = sv('g');
+        gruppe.appendChild(fang);
+        gruppe.appendChild(p);
+        return gruppe;
       }
       if (s.art === 'rechteck' || s.art === 'notiz') {
         const g = sv('g');
@@ -263,7 +368,15 @@ const Zusatz = (() => {
           x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
           width: Math.abs(s.w), height: Math.abs(s.h), rx: s.art === 'notiz' ? 3 : 5,
           fill: s.art === 'notiz' ? s.farbe : 'none', stroke: s.farbe, 'stroke-width': 2,
-          'fill-opacity': s.art === 'notiz' ? .85 : 1
+          'fill-opacity': s.art === 'notiz' ? .85 : 1,
+          /* EIN RECHTECK OHNE FÜLLUNG NIMMT KEINE KLICKS AN (E144). SVG
+             trifft standardmässig nur, was GEMALT ist — bei `fill: none` ist
+             das allein der zwei Pixel breite Strich. „Auswählen und
+             verschieben" ging deshalb nur, wenn man die Kante traf; in der
+             Mitte griff man durch die Form hindurch ins Raster.
+             Gemessen mit `elementFromPoint` mitten im Rechteck: es kam der
+             Hintergrund zurück, nicht die Form. */
+          'pointer-events': 'all'
         });
         r.dataset.sid = s.id;
         g.appendChild(r);
@@ -319,7 +432,8 @@ const Zusatz = (() => {
         const e = sv('ellipse', {
           cx: s.x + s.w / 2, cy: s.y + s.h / 2,
           rx: Math.abs(s.w / 2), ry: Math.abs(s.h / 2),
-          fill: 'none', stroke: s.farbe, 'stroke-width': 2
+          fill: 'none', stroke: s.farbe, 'stroke-width': 2,
+          'pointer-events': 'all'   /* wie beim Rechteck, siehe dort */
         });
         e.dataset.sid = s.id;
         return e;
@@ -390,7 +504,16 @@ const Zusatz = (() => {
       sichtSichern();
     };
 
-    let aktiv: any = null, verschiebt: any = null, schiebt: any = null;
+    /* GRÖSSE ÄNDERN (E144, L54). Wer ein Rechteck zu klein gezogen hatte,
+       musste es löschen und neu ziehen — Verschieben ging, Skalieren nicht.
+
+       Der Griff sitzt an der rechten unteren Ecke und wird NUR für die
+       zuletzt angefasste Form gezeichnet. Ein Griff an jeder Form wäre auf
+       einer vollen Fläche ein Punktemeer; einer ohne sichtbaren Griff wäre
+       ein Geheimnis. */
+    let gewaehlt: string | null = null;
+    const GRIFF = 9;
+    let aktiv: any = null, verschiebt: any = null, schiebt: any = null, groesst: any = null;
     const finger = new Map<number, { x: number; y: number }>();
     let kneifen: { abstand: number; z: number } | null = null;
 
@@ -420,6 +543,7 @@ const Zusatz = (() => {
         if (!s) { UI.toast('Tippe zuerst auf die Form, von der die Verbindung ausgeht'); return; }
         if (!verbindeVon) { verbindeVon = s.id; UI.toast('Und jetzt auf die zweite Form'); return; }
         if (verbindeVon === s.id) { verbindeVon = null; return; }
+        merken();
         daten.push({ id: Store.uid().slice(0, 8), art: 'verbindung', von: verbindeVon, nach: s.id, farbe });
         verbindeVon = null;
         male(); sichern();
@@ -430,6 +554,7 @@ const Zusatz = (() => {
         if (sid) {
           const i = daten.findIndex((s: any) => s.id === sid);
           if (i >= 0) {
+            merken();
             /* Mit der Form gehen ihre Verbindungen. Sonst bliebe ein Pfeil
                stehen, der nichts mehr verbindet — gezeichnet wird er dann
                gar nicht, aber er läge weiter in den Daten. */
@@ -443,21 +568,50 @@ const Zusatz = (() => {
         return;
       }
       if (werkzeug === 'zeiger') {
+        /* Erst der Griff: er liegt über der Form und muss deshalb zuerst
+           gefragt werden, sonst schiebt man beim Ziehen daran. */
+        const gewaehlteForm = daten.find((q: any) => q.id === gewaehlt);
+        if (gewaehlteForm && groessenFaehig(gewaehlteForm)) {
+          const rahmen = rahmenVon(gewaehlteForm);
+          const nah = GRIFF / sicht.z + 3;
+          if (Math.abs(x - (rahmen.x + rahmen.w)) <= nah &&
+              Math.abs(y - (rahmen.y + rahmen.h)) <= nah) {
+            merken();
+            groesst = { s: gewaehlteForm, x, y };
+            return;
+          }
+        }
         const sid = e.target.dataset?.sid;
         const s = daten.find((q: any) => q.id === sid);
-        if (s) verschiebt = { s, x, y };
+        gewaehlt = s ? String(s.id) : null;
+        if (s) { merken(); verschiebt = { s, x, y }; }
+        /* HIER DARF NICHT NEU GEZEICHNET WERDEN. `male()` setzt
+           `flaeche.innerHTML = ''` — und damit verschwindet genau das
+           Element, auf dem der Zeiger gerade heruntergegangen ist. Chrome
+           gibt daraufhin die Zeigerhaltung frei und schickt ein
+           `pointercancel`; `fertig()` setzt `verschiebt` auf null, und das
+           Ziehen war vorbei, bevor es angefangen hat.
+
+           Gemessen: der Kasten lag nach einem Zug über 200 px immer noch bei
+           x = 60. Der Griff wird deshalb erst beim Loslassen gezeichnet —
+           dort steht `male()` ohnehin. */
         return;
       }
       if (werkzeug === 'bild') { bildWaehlen(x, y); return; }
       if (werkzeug === 'text' || werkzeug === 'notiz') {
-        const text = prompt(werkzeug === 'notiz' ? 'Text der Haftnotiz' : 'Text');
-        if (text === null) return;
-        daten.push(werkzeug === 'notiz'
-          ? { id: Store.uid().slice(0, 8), art: 'notiz', x, y, w: 170, h: 110, farbe, text }
-          : { id: Store.uid().slice(0, 8), art: 'text', x, y, farbe, text });
-        male(); sichern();
+        const art = werkzeug;
+        void textErfassen(x, y, art === 'notiz' ? 170 : 220, art === 'notiz' ? 110 : 28, '')
+          .then(text => {
+            if (text === null || !text.trim()) return;
+            merken();
+            daten.push(art === 'notiz'
+              ? { id: Store.uid().slice(0, 8), art: 'notiz', x, y, w: 170, h: 110, farbe, text }
+              : { id: Store.uid().slice(0, 8), art: 'text', x, y, farbe, text });
+            male(); sichern();
+          });
         return;
       }
+      merken();
       aktiv = werkzeug === 'stift'
         ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[x, y]], farbe }
         : { id: Store.uid().slice(0, 8), art: werkzeug, x, y, w: 0, h: 0, farbe };
@@ -482,6 +636,17 @@ const Zusatz = (() => {
         return;
       }
       const [x, y] = punkt(e);
+      if (groesst) {
+        const s = groesst.s;
+        /* Von der linken oberen Ecke aus, damit die Form nicht wegläuft:
+           bei negativer Breite läge sie sonst plötzlich woanders. */
+        const links = Math.min(s.x, s.x + s.w), oben = Math.min(s.y, s.y + s.h);
+        s.x = links; s.y = oben;
+        s.w = Math.max(8, Math.round(x - links));
+        s.h = Math.max(8, Math.round(y - oben));
+        male();
+        return;
+      }
       if (verschiebt) {
         const dx = x - verschiebt.x, dy = y - verschiebt.y;
         const s = verschiebt.s;
@@ -504,14 +669,40 @@ const Zusatz = (() => {
       if (aktiv) {
         /* Winzige Kritzler wieder entfernen */
         const klein = aktiv.art === 'stift' ? aktiv.pts.length < 2 : Math.abs(aktiv.w) < 4 && Math.abs(aktiv.h) < 4;
-        if (klein) daten.pop();
+        if (klein) {
+          daten.pop();
+          /* Und mit dem Kritzler auch den Schritt: sonst läge ein Abbild auf
+             dem Stapel, das genau denselben Stand beschreibt — `↶` täte dann
+             einmal scheinbar nichts. */
+          zurueckStapel.pop();
+          standZeigen();
+        }
         aktiv = null; sichern(); male();
       }
-      if (verschiebt) { verschiebt = null; sichern(); }
+      if (verschiebt) { verschiebt = null; sichern(); male(); }
+      if (groesst) { groesst = null; sichern(); male(); }
     };
     flaeche.addEventListener('pointerup', fertig);
     flaeche.addEventListener('pointercancel', fertig);
     flaeche.addEventListener('pointerleave', fertig);
+
+    /* ZWEIMAL TIPPEN ÄNDERT DEN TEXT. Bisher gab es keinen Weg dazu: eine
+       vertippte Haftnotiz musste man radieren und neu schreiben. */
+    flaeche.addEventListener('dblclick', (e: any) => {
+      const sid = e.target?.dataset?.sid;
+      const s = daten.find((q: any) => q.id === sid);
+      if (!s || (s.art !== 'notiz' && s.art !== 'text')) return;
+      e.preventDefault();
+      const rahmen = rahmenVon(s);
+      void textErfassen(rahmen.x, rahmen.y, Math.max(120, rahmen.w),
+                        s.art === 'notiz' ? Math.max(60, rahmen.h) : 28, String(s.text || ''))
+        .then(text => {
+          if (text === null || text === s.text) return;
+          merken();
+          s.text = text;
+          male(); sichern();
+        });
+    });
 
     /* Am Rechner ist das Rad der gewohnte Weg. `passive: false` steht da,
        weil `preventDefault` sonst nichts tut und die ganze Seite mitrollt. */
@@ -529,21 +720,36 @@ const Zusatz = (() => {
       if (wz) {
         werkzeug = wz.dataset.wz ?? werkzeug;
         verbindeVon = null;
+        if (werkzeug !== 'zeiger') gewaehlt = null;
         w.classList.toggle('wb-schiebt', werkzeug === 'hand');
         w.querySelectorAll('[data-wz]').forEach(b => b.classList.toggle('on', b === wz));
+        /* Der Griff gehört zum Zeiger. Bleibt er beim Wechsel stehen, sieht
+           die Fläche aus, als wäre noch etwas ausgewählt. */
+        male();
         return;
       }
       const c = elVon(e)?.closest<HTMLElement>('[data-c]');
       if (c) {
-        farbe = c.dataset.c;
+        farbe = c.dataset.c ?? farbe;
         w.querySelectorAll('.wb-farbe').forEach(b => b.classList.toggle('on', b === c));
         return;
       }
       const a = elVon(e)?.closest<HTMLElement>('[data-a]');
       if (!a) return;
-      if (a.dataset.a === 'zurueck') { daten.pop(); male(); sichern(); }
+      if (a.dataset.a === 'zurueck' && zurueckStapel.length) {
+        vorStapel.push(abbild());
+        einsetzen(zurueckStapel.pop() as string);
+        standZeigen(); male(); sichern();
+      }
+      if (a.dataset.a === 'vor' && vorStapel.length) {
+        zurueckStapel.push(abbild());
+        einsetzen(vorStapel.pop() as string);
+        standZeigen(); male(); sichern();
+      }
       if (a.dataset.a === 'leeren') {
-        if (!daten.length || confirm('Die ganze Zeichenfläche leeren?')) { daten.length = 0; male(); sichern(); }
+        if (!daten.length || confirm('Die ganze Zeichenfläche leeren?')) {
+          merken(); daten.length = 0; male(); sichern();
+        }
       }
       if (a.dataset.a === 'kleiner') massstab(sicht.z / 1.25);
       if (a.dataset.a === 'groesser') massstab(sicht.z * 1.25);

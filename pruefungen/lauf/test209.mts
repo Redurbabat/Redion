@@ -469,6 +469,154 @@ const leiste = await handy.evaluate(async () => {
 p('Die Werkzeugleiste ist vollständig da', leiste.knoepfe >= 18, `${leiste.knoepfe} Knöpfe`);
 gleich('Und kein Werkzeug steht ausserhalb des Bildes', leiste.raus, 0);
 
+/* ==========================================================================
+ * §10 · Zurück, Vorwärts, Schreiben und Grösse ändern (E144, L54)
+ * --------------------------------------------------------------------------
+ * Drei Dinge, die L54 als fehlend festgehalten hat:
+ *
+ *   · `↶` war `daten.pop()` — es nahm die zuletzt ANGEHÄNGTE Form weg, egal
+ *     was zuletzt geschehen war. Ein Verschieben liess sich nicht
+ *     zurücknehmen, ein Radieren auch nicht.
+ *   · Der Text einer Haftnotiz kam aus `prompt()`: ein Fenster in der Mitte
+ *     des Bildschirms, das nicht sagt, wohin der Text kommt.
+ *   · Eine zu klein gezogene Form musste man löschen und neu ziehen.
+ *
+ * Gegenproben: ohne den Stapel bleibt `↶` gesperrt und der verschobene
+ * Kasten liegt weiter am neuen Ort; ohne `groessenFaehig` gibt es keinen
+ * Griff und das Ziehen an der Ecke verschiebt statt zu vergrössern.
+ * ========================================================================*/
+console.log('\n10 · Zurück, Vorwärts, Schreiben und Grösse ändern');
+
+const stand = await seite.evaluate(async (ids: any) => {
+  /* ZURÜCK AUF DIE EIGENE SEITE. §8 hat über „Neues Whiteboard" eine ZWEITE
+     Fläche angelegt und geöffnet — die sichtbare `.wb-flaeche` gehört seither
+     ihr. Ohne diese Zeile schrieb der Abschnitt seine Formen in den einen
+     Block und klickte auf den anderen; gemessen blieb `x` bei 60, weil die
+     Maus über einer leeren Fläche zog. */
+  App.oeffne(ids.seite);
+  await new Promise(r => setTimeout(r, 600));
+  Store.updateBlock(ids.block, {
+    sicht: { x: 0, y: 0, z: 1 },
+    shapes: [{ id: 'r1', art: 'rechteck', x: 60, y: 60, w: 180, h: 120, farbe: '#529cca' }]
+  });
+  await Store.flush();
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 700));
+  const zurueck = document.querySelector('.wb-tools [data-a="zurueck"]') as HTMLButtonElement | null;
+  const vor = document.querySelector('.wb-tools [data-a="vor"]') as HTMLButtonElement | null;
+  return { zurueckGesperrt: !!zurueck?.disabled, vorGesperrt: !!vor?.disabled, beideDa: !!zurueck && !!vor };
+}, gebaut);
+p('Es gibt einen Weg zurück und einen vorwärts', stand.beideDa);
+gleich('Am Anfang sind beide gesperrt',
+  [stand.zurueckGesperrt, stand.vorGesperrt], [true, true]);
+
+/* Verschieben, dann zurücknehmen — genau der Fall, den `daten.pop()` nicht konnte. */
+await werkzeug('zeiger');
+const kasten3 = await seite.locator('.wb-flaeche').boundingBox();
+const beiFlaeche = async (x: number, y: number, zx: number, zy: number): Promise<void> => {
+  await seite.mouse.move((kasten3?.x ?? 0) + x, (kasten3?.y ?? 0) + y);
+  await seite.mouse.down();
+  await seite.mouse.move((kasten3?.x ?? 0) + zx, (kasten3?.y ?? 0) + zy, { steps: 8 });
+  await seite.mouse.up();
+  await seite.waitForTimeout(260);
+};
+await beiFlaeche(150, 120, 350, 320);
+
+const verschoben = (await formen(gebaut.block))[0];
+p('Der Kasten ist verschoben', Number(verschoben?.x) > 200,
+  `x = ${verschoben?.x}`);
+
+await seite.locator('.wb-tools [data-a="zurueck"]').click();
+await seite.waitForTimeout(300);
+const zurueckgenommen = (await formen(gebaut.block))[0];
+gleich('Ein Schritt zurück stellt die alte Stelle wieder her',
+  [Number(zurueckgenommen?.x), Number(zurueckgenommen?.y)], [60, 60]);
+gleich('Und die Form ist noch da', (await formen(gebaut.block)).length, 1);
+
+await seite.locator('.wb-tools [data-a="vor"]').click();
+await seite.waitForTimeout(300);
+const wieder = (await formen(gebaut.block))[0];
+p('Vorwärts holt die Verschiebung zurück', Number(wieder?.x) > 200,
+  `x = ${wieder?.x}`);
+
+/* Radieren und zurücknehmen — der zweite Fall, den `pop()` nicht konnte. */
+await werkzeug('radierer');
+await seite.mouse.click((kasten3?.x ?? 0) + 350, (kasten3?.y ?? 0) + 320);
+await seite.waitForTimeout(300);
+gleich('Radieren nimmt die Form weg', (await formen(gebaut.block)).length, 0);
+await seite.locator('.wb-tools [data-a="zurueck"]').click();
+await seite.waitForTimeout(300);
+gleich('Und ein Schritt zurück holt sie wieder', (await formen(gebaut.block)).length, 1);
+
+/* Schreiben auf der Fläche statt im Browserfenster. */
+let promptGerufen = 0;
+await seite.exposeFunction('__promptGezaehlt', () => { promptGerufen++; });
+await seite.evaluate(() => {
+  const alt = window.prompt;
+  (window as any).prompt = (...a: any[]) => { (window as any).__promptGezaehlt(); return alt.apply(window, a as any); };
+});
+await werkzeug('notiz');
+await seite.mouse.click((kasten3?.x ?? 0) + 500, (kasten3?.y ?? 0) + 200);
+await seite.waitForTimeout(400);
+const feldDa = await seite.evaluate(() => {
+  const feld = document.querySelector('.wb-eingabe') as HTMLTextAreaElement | null;
+  if (!feld) return null;
+  const kasten = feld.getBoundingClientRect();
+  return { breit: Math.round(kasten.width), fokus: document.activeElement === feld };
+});
+p('Das Schreibfeld steht auf der Fläche', !!feldDa, 'keine .wb-eingabe');
+p('Und hat gleich den Schreibzeiger', feldDa?.fokus === true, JSON.stringify(feldDa));
+gleich('prompt() wurde dabei nicht gerufen', promptGerufen, 0);
+
+await seite.keyboard.type('Nachgetragen am Montag');
+await seite.keyboard.press('Control+Enter');
+await seite.waitForTimeout(400);
+const mitNotiz = await formen(gebaut.block);
+p('Der getippte Text steht in der Haftnotiz',
+  mitNotiz.some(s => s.art === 'notiz' && /Nachgetragen am Montag/.test(String(s.text || ''))),
+  JSON.stringify(mitNotiz.map(s => s.text)));
+
+/* Grösse ändern am Griff.
+   VORHER ZURÜCK AUF EINEN BEKANNTEN PLATZ. Nach Verschieben, Zurück und
+   Vorwärts lag das Rechteck bei 260/260 — seine rechte untere Ecke damit
+   bei 440/380, und die Fläche ist genau 380 hoch. Der Zug begann also
+   ausserhalb, und gemessen blieb die Grösse bei 180×120. */
+await seite.evaluate(async (ids: any) => {
+  const block = Store.getBlock(ids.block);
+  const formen = (block.shapes || []).map((s: any) =>
+    s.art === 'rechteck' ? { ...s, x: 60, y: 60, w: 180, h: 120 } : s);
+  Store.updateBlock(ids.block, { shapes: formen });
+  await Store.flush();
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 700));
+}, gebaut);
+await werkzeug('zeiger');
+await seite.mouse.click((kasten3?.x ?? 0) + 150, (kasten3?.y ?? 0) + 120);
+await seite.waitForTimeout(300);
+const griffDa = await seite.evaluate(() =>
+  document.querySelectorAll('.wb-flaeche .wb-griffpunkt').length);
+gleich('Die angefasste Form bekommt einen Griff', griffDa, 1);
+
+const vorherRahmen = (await formen(gebaut.block)).find(s => s.art === 'rechteck');
+const eckeX = Number(vorherRahmen.x) + Number(vorherRahmen.w);
+const eckeY = Number(vorherRahmen.y) + Number(vorherRahmen.h);
+await beiFlaeche(eckeX, eckeY, eckeX + 120, eckeY + 90);
+const nachherRahmen = (await formen(gebaut.block)).find(s => s.art === 'rechteck');
+p('Ziehen am Griff macht die Form grösser',
+  Number(nachherRahmen.w) > Number(vorherRahmen.w) + 80 &&
+  Number(nachherRahmen.h) > Number(vorherRahmen.h) + 60,
+  `${vorherRahmen.w}×${vorherRahmen.h} → ${nachherRahmen.w}×${nachherRahmen.h}`);
+gleich('Und ihre linke obere Ecke bleibt, wo sie war',
+  [Number(nachherRahmen.x), Number(nachherRahmen.y)],
+  [Number(vorherRahmen.x), Number(vorherRahmen.y)]);
+
+await seite.locator('.wb-tools [data-a="zurueck"]').click();
+await seite.waitForTimeout(300);
+const nachZurueck = (await formen(gebaut.block)).find(s => s.art === 'rechteck');
+gleich('Auch das Vergrössern lässt sich zurücknehmen',
+  [Number(nachZurueck.w), Number(nachZurueck.h)],
+  [Number(vorherRahmen.w), Number(vorherRahmen.h)]);
+
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);
 if (fehler.length) console.log('Browserfehler:\n  ' + fehler.join('\n  '));

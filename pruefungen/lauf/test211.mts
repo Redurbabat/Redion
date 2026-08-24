@@ -223,8 +223,12 @@ p('Der Dialog öffnet sich', !!durchDenDialog, 'keine .electrical-dialog');
 if (durchDenDialog) {
   p('Er bietet mehrere Rechnungen an', durchDenDialog.modi.length >= 6,
     durchDenDialog.modi.join(' | '));
+  /* `2’300 W`, NICHT `2300 W`. Die Ausgabe geht durch `Intl.NumberFormat`
+     mit `de-CH`, und die Schweiz trennt Tausender mit einem hohen Komma
+     (U+2019). Meine erste Erwartung war `/2300/` und wurde rot — an einer
+     Stelle, an der das Produkt genau richtig ist. */
   p('Die Ausgabe nennt Zahl und Formel',
-    /2300/.test(durchDenDialog.ausgabe) && /P = U · I/.test(durchDenDialog.ausgabe),
+    /2.?300 W/.test(durchDenDialog.ausgabe) && /P = U · I/.test(durchDenDialog.ausgabe),
     durchDenDialog.ausgabe);
   p('Auf der Seite steht ein Formelblock',
     durchDenDialog.arten.includes('equation'), durchDenDialog.arten.join(', '));

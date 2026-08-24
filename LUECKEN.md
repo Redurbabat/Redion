@@ -1490,7 +1490,7 @@ Der neutrale Geometriekern kann später von weiteren Flächen verwendet werden,
 ohne zwei gespeicherte Wahrheiten zu erzeugen. Geprüft in `test201`.
 
 
-## L54 · Was das Whiteboard noch nicht kann
+## L54 · ~~Was das Whiteboard noch nicht kann~~ — grösstenteils geschlossen
 
 **24. August 2026.** E138 hat die Fläche unendlich gemacht, Verbindungen und
 Bilder gebracht und ihr einen eigenen Bereich gegeben. Vier Dinge fehlen
@@ -1512,8 +1512,16 @@ löscht endgültig.
 des Browsers, kein Feld auf der Fläche: man sieht beim Tippen nicht, wohin
 der Text kommt, und am Telefon nimmt es den halben Bildschirm.
 
-Alle vier sind Arbeit an derselben Datei und sollten zusammen gemacht
-werden, nicht einzeln.
+**Drei davon sind mit E144 erledigt:** Grösse ändern am Griff, vierzig
+Schritte zurück und vorwärts, Text auf der Fläche statt im Browserfenster
+(mit Doppeltipp zum Ändern). Dabei kamen zwei Fehler heraus, die niemand
+gesucht hatte: ein Rechteck ohne Füllung nahm in SVG gar keine Klicks an,
+und ein Strich mit 2,5 px war mit dem Finger nicht zu treffen.
+
+**Offen bleibt der erste Punkt:** die Miniatur im Whiteboard-Bereich
+zeichnet weiterhin keine Verbindungen. Sie ist ein Wiedererkennungszeichen,
+keine Vorschau — wer seine Karte an der Struktur erkennen will, findet sie
+dort nicht.
 
 
 ## L55 · Die Suche findet keine Dateinamen

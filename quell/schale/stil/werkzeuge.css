@@ -758,3 +758,15 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .wb-zoom{display:inline-flex;align-items:center;gap:2px}
 .wb.wb-schiebt .wb-flaeche{cursor:grab}
 .wb.wb-schiebt .wb-flaeche:active{cursor:grabbing}
+
+/* Das Schreibfeld auf der Fläche (E144). Es sitzt im Kasten `.wb`, nicht im
+   rollenden SVG — ein Feld im SVG würde beim Schieben mitwandern und wäre
+   genau dann weg, wenn man tippt. */
+.wb{position:relative}
+.wb-eingabe{
+  position:absolute; z-index:4; margin:0; padding:6px 8px; resize:none;
+  border:2px solid var(--accent); border-radius:5px;
+  background:var(--bg-card); font:inherit; font-size:14px; line-height:1.35;
+  box-shadow:0 6px 18px rgba(0,0,0,.22); outline:none;
+}
+.wb-griffpunkt{cursor:nwse-resize}

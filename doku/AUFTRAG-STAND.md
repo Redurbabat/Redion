@@ -44,7 +44,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 19 | PDF → Notizen | ✅ | E104, test182 |
 | 20 | Ink V2 | ✅ | `marken.ts`; test204 §1 (übersteht einen echten Reload), test210 §2 und §4 (Beschriftung, rollende Leiste) |
 | 21 | Papiervorlagen | ✅ | test207, `bilder.mts papier` |
-| 22 | Whiteboard | ✅ | test209, `bilder.mts whiteboard`/`whiteboards` (E138). Offen: Grösse ändern, mehrstufiges Zurück, Text ohne `prompt()` — L54 |
+| 22 | Whiteboard | ✅ | test209 (zehn Abschnitte, 55 Punkte), `bilder.mts whiteboard`/`whiteboards` (E138, E144). Offen nur noch: Verbindungen in der Miniatur — L54 |
 | 23 | Dokumente (Word-artig) | ◐ | Seitenansicht, Überschriften, Listen, Tabellen, Bilder, Druck/PDF stehen. Vorschlagsmodus fehlt |
 | 24 | Tabellen (Excel-artig) | ✅ | `spreadsheet/`, test110 (Kern), test111 (Block), test116 (ODS), test123, test130 |
 | 25 | Bibliothek | ✅ | `bibliothek.ts`, test33 (Bibliothek, Reiter, Spalten, Favoriten) |
@@ -59,8 +59,8 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 34 | Responsive | ✅ | test114 misst 320–1440 px |
 | 35 | Gemeinsam | ◐ | Server, Rechte, öffentliche Seiten stehen (test119 Anhänge, test120 Konto, test121 Rechte und Freigaben). Ohne Server bleibt Teilen ein Export |
 | 36 | Persönlicher Lernstand bei geteilten Karten | ✅ | `lebensbereiche.ts`, test204 §4 (übersteht Reload und Zweitgeräte-Merge) |
-| 37 | Elektro-Ausbildung | ? | `electrical.ts`, 398 Zeilen. Kein Prüflauf, kein Bildschirmfoto |
-| 38 | Elektro-Rechner | ? | `calculations.ts`. Kein Prüflauf |
+| 37 | Elektro-Ausbildung | ✅ | test211 §5 und §6 (Paketprüfung, Einbau als gewöhnliche Karteikarten, Quarantäne bleibt draussen) |
+| 38 | Elektro-Rechner | ✅ | test211 §1–§4 (neun Rechnungen von Hand nachgerechnet, Fehlersätze statt NaN, Annahmen, Ergebnis als normaler Block), `bilder.mts elektro` |
 | 39 | OCR / Capture | ◐ | `recognition.ts` steht, der Dienst dahinter fehlt (L53) |
 | 40 | Audio | ✅ | `besprechung.ts`, Anhänge statt Zeichenketten (E128) |
 | 41 | Meetings | ◐ | `besprechung.ts` steht mit Aufnahme, Marken und Auswertung. Welcher Prüflauf sie deckt, habe ich nicht nachgesehen — bis dahin gilt ◐ |
@@ -90,15 +90,17 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 
 Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 
-1. **§37/§38 ansehen.** Zwei Module, rund 600 Zeilen, kein Prüflauf und kein
-   Bild. Genau die Lage, in der E135 und E141 sassen.
-2. **§22 fertig machen** (L54): Grösse ändern, mehrstufiges Zurück,
-   Text ohne `prompt()`.
-3. **§23 Vorschlagsmodus** — das einzige, was am Dokumentmodus noch fehlt.
-4. **§39 entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
+1. **§23 Vorschlagsmodus** — das einzige, was am Dokumentmodus noch fehlt.
+2. **§39 entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
    beschriften. Ein Knopf, hinter dem nichts ist, ist die schlechteste der
    drei Möglichkeiten.
-5. **§16 Reiter prüfen** — sie stehen, aber nichts hält sie fest.
+3. **§28 Suche verbreitern** (L55): Dateinamen und Quellenangaben.
+4. **§16 Reiter prüfen** — sie stehen, aber nichts hält sie fest.
+5. **§9/§14 Prüfläufe** für Lernpfad und Arbeit — beide stehen, beide
+   ungeprüft.
+
+Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
+Punkte) und der Rest von §22 (E144).
 
 ---
 

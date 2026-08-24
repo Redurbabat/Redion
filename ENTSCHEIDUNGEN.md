@@ -9161,3 +9161,104 @@ Abschnitten voll ist), der Bestand ohne Ausbildungsseite, die drei Fächer
 beim Namen, das stehengebliebene Angebot, der ehrliche Satz und der
 verschwundene Widerspruch. Gegenprobe: mit der alten Wand werden fünf Punkte
 rot.
+
+
+## E144 · Drei Sachen, die L54 als fehlend festgehalten hat
+
+**24. August 2026.** E138 hat die Whiteboard-Fläche unendlich gemacht und
+ihr Verbindungen, Bilder und einen eigenen Bereich gegeben. Was dabei offen
+blieb, stand ehrlich in L54. Hier ist es.
+
+### 1. `↶` nahm den falschen Schritt zurück
+
+```ts
+if (a.dataset.a === 'zurueck') { daten.pop(); male(); sichern(); }
+```
+
+`pop()` nimmt die zuletzt ANGEHÄNGTE Form weg — nicht den zuletzt getanen
+Schritt. Der Unterschied ist der ganze Fehler:
+
+```txt
+Form verschoben    → ↶ nahm eine andere Form weg
+Form radiert       → ↶ konnte sie nicht wiederholen
+zweimal gedrückt   → die vorletzte Form war weg, nicht der vorletzte Schritt
+```
+
+Jetzt liegt vor jeder Änderung ein Abbild auf einem Stapel, vierzig Schritte
+weit, und daneben ein zweiter für `↷`. Beide Knöpfe sind gesperrt, solange
+es nichts zu holen gibt — ein Knopf, der nichts tut und trotzdem anklickbar
+aussieht, ist eine Lüge.
+
+Der Stapel wird **nicht mitgespeichert**. Wer neu lädt, hat seine Zeichnung,
+aber keine Schrittfolge. Das ist die ehrlichere Grenze, als jeden Block mit
+vierzig Abbildern seiner selbst aufzublähen — und §9 der Projektregeln sagt
+genau das über stilles Wachstum im Speicher.
+
+Ein Detail, das erst beim Nachdenken auffiel: ein zu kleiner Kritzler wird
+nach dem Zeichnen wieder verworfen. Ohne Gegenmassnahme läge dann ein Abbild
+auf dem Stapel, das denselben Stand beschreibt — `↶` täte einmal scheinbar
+nichts. Der Kritzler nimmt seinen Schritt jetzt mit.
+
+### 2. Der Text kam aus einem Fenster des Browsers
+
+`prompt()` steht in der Mitte des Bildschirms. Es sagt nicht, WO der Text
+hinkommt, es kennt keine zweite Zeile, und am Telefon nimmt es die halbe
+Höhe weg.
+
+Jetzt steht das Feld dort, wo die Notiz entsteht, in ihrer Grösse und in der
+gewählten Farbe. Enter schliesst ab — bei der Haftnotiz erst mit Strg, weil
+sie mehrzeilig ist —, Escape wirft weg, ein Klick daneben übernimmt.
+
+Und weil es jetzt ein Feld gibt, gibt es auch einen Weg, den es vorher gar
+nicht gab: **zweimal tippen ändert einen bestehenden Text.** Bisher musste
+man eine vertippte Haftnotiz radieren und neu schreiben.
+
+### 3. Eine zu klein gezogene Form blieb zu klein
+
+Verschieben ging, Skalieren nicht. Der Griff sitzt an der rechten unteren
+Ecke und wird nur für die zuletzt angefasste Form gezeichnet — ein Griff an
+jeder Form wäre auf einer vollen Fläche ein Punktemeer, einer ohne
+sichtbaren Griff wäre ein Geheimnis.
+
+Gezogen wird von der linken oberen Ecke aus. Ohne diese Festlegung läuft
+eine Form mit negativer Breite beim ersten Ziehen weg, weil `x` und `w`
+zusammen zwei verschiedene Ecken beschreiben können.
+
+Stift, Verbindung und Text bleiben draussen: ein Stiftstrich hat Punkte
+statt Kanten, eine Verbindung hängt an zwei Formen, und ein Text hat nur
+eine Schriftgrösse.
+
+### 4. Und ein Fehler, der nur beim Prüfen auffiel
+
+Beim Schreiben der Prüfung blieb der Kasten bei jedem Zug an derselben
+Stelle. Zweimal geraten (Seite falsch, Fläche ausserhalb des Bildes), beide
+Male daneben. Dann gemessen, was unter dem Zeiger liegt:
+
+```txt
+elementFromPoint(mitten im Rechteck)  →  das Raster, nicht die Form
+```
+
+**Ein Rechteck ohne Füllung nimmt in SVG keine Klicks an.** Getroffen wird
+nur, was gemalt ist — bei `fill: none` also allein der zwei Pixel breite
+Strich. „Auswählen und verschieben" ging seit jeher nur, wenn man die Kante
+erwischte; in der Mitte griff man durch die Form hindurch.
+
+Rechteck und Ellipse bekommen deshalb `pointer-events: all`. Und weil ein
+Strich mit 2,5 px am Telefon ohnehin nicht zu treffen ist, liegt unter jeder
+Linie derselbe Pfad noch einmal: 16 px breit, durchsichtig, er fängt nur den
+Griff.
+
+### 5. Und einer, den ich selbst eingebaut hatte
+
+Der erste Entwurf zeichnete beim Anfassen sofort neu, damit der Griff
+erscheint. `male()` setzt aber `flaeche.innerHTML = ''` — und damit
+verschwand genau das Element, auf dem der Zeiger heruntergegangen war.
+Chrome gibt daraufhin die Zeigerhaltung frei und schickt `pointercancel`;
+das Ziehen war vorbei, bevor es angefangen hatte. Der Griff wird jetzt erst
+beim Loslassen gezeichnet.
+
+**Geprüft:** test209 §10, siebzehn Punkte — beide Richtungen des Stapels,
+Verschieben UND Radieren zurückgenommen, das Schreibfeld statt `prompt()`
+(gezählt, nicht vermutet), der Griff und das Vergrössern mit festgehaltener
+oberer Ecke. Vier Gegenproben einzeln zurückgenommen; die vierte — das
+Rechteck wieder ohne `pointer-events` — macht schon den ersten Punkt rot.
