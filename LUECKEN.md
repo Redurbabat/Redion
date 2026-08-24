@@ -1514,3 +1514,26 @@ der Text kommt, und am Telefon nimmt es den halben Bildschirm.
 
 Alle vier sind Arbeit an derselben Datei und sollten zusammen gemacht
 werden, nicht einzeln.
+
+
+## L55 · Die Suche findet keine Dateinamen
+
+**24. August 2026.** Beim Schreiben von `doku/AUFTRAG-STAND.md` nachgesehen
+statt behauptet: §28 des Auftrags zählt zwölf Dinge auf, die die globale
+Suche finden soll. Elf davon findet sie — weil sie alle Blocktext sind oder
+in `suchtext`/`ocrText` daneben stehen.
+
+Zwei nicht:
+
+**Dateinamen.** Das Fach `dateien` hat einen `name`, und `findInside` sieht
+nur `text`, `suchtext` und `ocrText` an Blöcken. Wer „Rechnung-2026-08.pdf"
+sucht, findet sie nur, wenn der Name zufällig auch im Blocktext steht.
+
+**Quellenangaben.** Sie stehen an Lernkarten aus Paketen unter
+`quiz.source.title` und an erkannten Inhalten unter der Provenienz — beides
+ausserhalb der drei durchsuchten Felder.
+
+Beides ist dieselbe Art Arbeit: ein weiteres Feld in die Schleife, und für
+die Dateien ein eigener Durchgang über das Fach. Nicht schwierig, aber eine
+Änderung an der Suche — und die Suche ist die Stelle, an der ein Fehler alle
+anderen Wege gleichzeitig trifft. Deshalb steht sie hier und nicht nebenbei.

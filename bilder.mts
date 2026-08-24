@@ -545,6 +545,33 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  elektro: {
+    titel: 'Der Elektrotechnik-Rechner mit Annahme und Ergebnis',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Elektro-Notizen', icon: '⚡' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 500));
+      (window as any).Electrical.open();
+      await new Promise(r => setTimeout(r, 400));
+      const dialog = document.querySelector('.electrical-dialog') as HTMLElement | null;
+      if (!dialog) return;
+      const wahl = dialog.querySelector('select') as HTMLSelectElement;
+      const leistung = [...wahl.options].findIndex(o => /Leistung/.test(o.textContent || ''));
+      wahl.selectedIndex = Math.max(0, leistung);
+      wahl.dispatchEvent(new Event('change'));
+      await new Promise(r => setTimeout(r, 200));
+      dialog.querySelectorAll<HTMLInputElement>('input[data-field]').forEach((feld, i) => {
+        feld.value = i === 0 ? '230' : '10';
+      });
+      (dialog.querySelector('[data-action="calculate"]') as HTMLElement | null)?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   whiteboard: {
     titel: 'Die freie Fläche mit Ausschnitt, Massstab und Verbindungen',
     bauen: async () => {

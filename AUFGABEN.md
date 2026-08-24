@@ -1010,6 +1010,25 @@ die Redion installiert und einen Server betreibt, ist heute klein.
 
 ---
 
+## Wo der grosse Auftrag steht
+
+Der Stand aller 60 Abschnitte steht in **`doku/AUFTRAG-STAND.md`** — mit
+Belegen, nicht mit Absichten. Drei Zeichen: ✅ gebaut und geprüft, ◐ gebaut
+und teilweise, ✗ offen, ? gebaut und nie laufen gesehen.
+
+Die fünf nächsten Arbeiten, nach Nutzen sortiert:
+
+1. **§37/§38 Elektro ansehen** — zwei Module ohne Prüflauf und ohne Bild.
+   test211 ist geschrieben; er muss noch laufen.
+2. **§22 Whiteboard fertig machen** (L54): Grösse ändern, mehrstufiges
+   Zurück, Text ohne `prompt()`.
+3. **§23 Vorschlagsmodus** — das Letzte, was am Dokumentmodus fehlt.
+4. **§39 OCR entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
+   beschriften.
+5. **§28 Suche verbreitern** (L55): Dateinamen und Quellenangaben.
+
+---
+
 ## Dauerhafte Regeln
 
 **Nach jeder Codeänderung**
