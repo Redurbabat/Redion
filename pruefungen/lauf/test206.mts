@@ -29,7 +29,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8959;
+/* 8967 und nicht 8959, den test204 schon hat. Das ist kein Fehler, den ich
+   behebe — ein Dutzend Suiten teilen sich Ports, und weil der Läufer sie
+   nacheinander abarbeitet, geht das gut. Ein freier Port kostet aber nichts,
+   und beim Nebeneinanderlaufen wäre er der Unterschied. */
+const PORT = 8967;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
@@ -118,14 +122,22 @@ const welt = async (fn: string, arg: string): Promise<Record<string, unknown>> =
     const wurzel = (document.querySelector('.lernwelt, .arbeitswelt') ||
                     document.getElementById('inhalt')) as HTMLElement | null;
     const text = (wurzel?.textContent || '').replace(/\s+/g, ' ').trim();
-    return { aktiv: P.aktiv?.() ?? null, text: text.slice(0, 200), hatInhalt: text.length > 40 };
+    /* DER WOCHENTAG WIRD AM GANZEN TEXT GESUCHT, NICHT AN DEN ERSTEN 200
+       ZEICHEN. Seit E137 steht die Einrichtung als Karte oben auf dem
+       Heute-Bild; damit rutschte die Begrüssung aus dem Ausschnitt, und die
+       Prüfung meldete einen Fehler, der auf dem Bildschirm nicht existierte.
+       Der Ausschnitt ist zum Anschauen da, nicht zum Messen. */
+    return {
+      aktiv: P.aktiv?.() ?? null,
+      text: text.slice(0, 200),
+      hatInhalt: text.length > 40,
+      wochentag: /Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag/.test(text)
+    };
   }, { fn, arg });
 
 const heute = await welt('lernen', 'heute');
 p('„Lernen & Alltag / Heute" zeigt etwas', heute.hatInhalt, String(heute.text).slice(0, 90));
-p('… und begrüsst mit einem Datum',
-  /Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag/.test(String(heute.text)),
-  String(heute.text).slice(0, 90));
+p('… und begrüsst mit einem Datum', heute.wochentag, String(heute.text).slice(0, 90));
 
 const lernen = await welt('lernen', 'lernen');
 p('„Lernen" zeigt etwas', lernen.hatInhalt, String(lernen.text).slice(0, 90));
@@ -207,6 +219,12 @@ console.log('\n5 · Neu laden behält den Bestand');
 
 await seite.reload();
 await seite.waitForTimeout(2600);
+/* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+   sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 const nachNeu = await seite.evaluate(async (id: string) => ({
   seite: Store.rootPages().some((x: any) => x.text === 'Kapitel 4 Lampenschaltungen'),
   datei: !!(await Store.dateiHolen(id)),
@@ -243,12 +261,142 @@ for (const [breite, hoehe, name] of
 }
 
 /* ==========================================================================
- * §7 · Der alte Arbeitsweg lebt weiter
+ * §7 · Am Rechner steht jede Reiterbeschriftung im Bild
+ * --------------------------------------------------------------------------
+ * Mit Augen gesehen (§55): auf dem Heute-Bild hing „Schule / Ausbildung"
+ * halb ausserhalb der Leiste, und Uni, Arbeit und Fortschritt waren gar
+ * nicht zu ahnen. Die Leiste kann gescrollt werden — nur zeigt das nichts
+ * an: kein Schatten, kein Pfeil, keine angeschnittene Beschriftung. Neun
+ * Reiter brauchen 1016 px, die Leiste hatte 706.
+ *
+ * Gemessen wird nicht „ist scrollbar", sondern „steht drin": jeder Knopf
+ * muss mit seiner ganzen Breite innerhalb der Leiste liegen.
+ * ========================================================================*/
+console.log('\n7 · Am Rechner steht jede Reiterbeschriftung im Bild');
+
+await seite.evaluate(() => (globalThis as any).Produktwelten.lernen('heute'));
+await seite.waitForTimeout(900);
+const reiter = await seite.evaluate(() => {
+  const leiste = document.querySelector('.lw-nav') as HTMLElement | null;
+  if (!leiste) return null;
+  const kasten = leiste.getBoundingClientRect();
+  const knoepfe = [...leiste.querySelectorAll('button')].map(k => {
+    const r = k.getBoundingClientRect();
+    return {
+      text: (k.textContent || '').trim().slice(0, 24),
+      drin: r.left >= kasten.left - 1 && r.right <= kasten.right + 1,
+    };
+  });
+  return { anzahl: knoepfe.length, draussen: knoepfe.filter(k => !k.drin).map(k => k.text) };
+});
+
+p('Die Reiterleiste ist da', !!reiter, 'keine .lw-nav gefunden');
+if (reiter) {
+  gleich('Sie hat neun Reiter', reiter.anzahl, 9);
+  gleich('Und keiner steht ausserhalb', reiter.draussen, []);
+}
+
+/* ==========================================================================
+ * §8 · „Ausbildung einrichten" legt wirklich etwas an
+ * --------------------------------------------------------------------------
+ * Der Reiter „Schule / Ausbildung" zeigt im frischen Bestand nur ein
+ * Leerbild mit einem Knopf. Das ist ehrlich — aber nur, wenn der Knopf hält,
+ * was er verspricht: „Die additive Vorlage erstellt normale Seiten und
+ * Datenbanken." Additiv heisst: dazu, nicht anstelle.
+ * ========================================================================*/
+console.log('\n8 · „Ausbildung einrichten" legt wirklich etwas an');
+
+const ausbildung = await seite.evaluate(async () => {
+  (globalThis as any).Produktwelten.lernen('schule');
+  await new Promise(r => setTimeout(r, 900));
+  const wurzel = document.querySelector('.lernwelt') as HTMLElement;
+  const vorher = {
+    bloecke: Object.keys(Store.cache.blocks).length,
+    sammlungen: Object.keys(Store.cache.collections).length,
+    seiten: Store.rootPages().length,
+  };
+  const knopf = wurzel.querySelector('[data-lw-action="school-install"]') as HTMLElement | null;
+  const beschriftung = knopf?.textContent?.trim() ?? '(kein Knopf)';
+  knopf?.click();
+  await new Promise(r => setTimeout(r, 2500));
+  const text = (wurzel.textContent || '').replace(/\s+/g, ' ');
+  return {
+    beschriftung,
+    vorher,
+    nachher: {
+      bloecke: Object.keys(Store.cache.blocks).length,
+      sammlungen: Object.keys(Store.cache.collections).length,
+      seiten: Store.rootPages().length,
+    },
+    nochLeer: /noch nicht eingerichtet/.test(text),
+    text: text.slice(text.indexOf('Fortschritt') + 11, text.indexOf('Fortschritt') + 160),
+  };
+});
+
+gleich('Der Knopf heisst „Ausbildung einrichten"', ausbildung.beschriftung, 'Ausbildung einrichten');
+p('Danach ist der Bestand grösser — es wurde wirklich etwas angelegt',
+  ausbildung.nachher.bloecke > ausbildung.vorher.bloecke,
+  `${ausbildung.vorher.bloecke} → ${ausbildung.nachher.bloecke} Blöcke`);
+p('… darunter neue Datenbanken für Fächer, Prüfungen, Noten',
+  ausbildung.nachher.sammlungen > ausbildung.vorher.sammlungen,
+  `${ausbildung.vorher.sammlungen} → ${ausbildung.nachher.sammlungen} Sammlungen`);
+p('ADDITIV: die vorhandenen Seiten sind noch da',
+  ausbildung.nachher.seiten >= ausbildung.vorher.seiten,
+  `${ausbildung.vorher.seiten} → ${ausbildung.nachher.seiten} oberste Seiten`);
+gleich('Und das Leerbild ist weg', ausbildung.nochLeer, false);
+p('Stattdessen steht dort die Ausbildungssicht',
+  /Ausbildung/.test(ausbildung.text) && !/noch nicht/.test(ausbildung.text),
+  ausbildung.text.slice(0, 90));
+
+/* ==========================================================================
+ * §9 · Die Schnellaktionen des Workspace legen wirklich etwas an
+ * --------------------------------------------------------------------------
+ * „Alle Aktionen schreiben über die bestehenden Redion-Dienste in denselben
+ * Bestand", sagt die Übersicht über sich selbst. Geprüft wird das am
+ * Whiteboard (Auftrag §22): ein Klick, ein Block mehr, und er zeichnet.
+ * ========================================================================*/
+console.log('\n9 · Die Schnellaktionen des Workspace legen wirklich etwas an');
+
+const schnell = await seite.evaluate(async () => {
+  (globalThis as any).Produktwelten.workspace('start');
+  await new Promise(r => setTimeout(r, 1000));
+  const wurzel = document.querySelector('.arbeitswelt') as HTMLElement | null;
+  if (!wurzel) return null;
+  const zaehle = () => Object.values<any>(Store.cache.blocks)
+    .filter(b => b.type === 'whiteboard' && b.alive).length;
+  const vorher = zaehle();
+  /* DIE AKTION, NICHT DER REITER (E138). „Den ersten Knopf nehmen, auf dem
+     Whiteboard steht" war eindeutig, solange es nur einen gab. Seit die
+     Whiteboards einen eigenen Bereich haben, steht der REITER weiter oben
+     im Baum — ein Klick darauf wechselt die Ansicht und legt nichts an, und
+     die Prüfung meldete „0 → 0" für einen Knopf, der genau das tat, was auf
+     ihm steht. Die Schnellaktion trägt eine eigene Kennung. */
+  const knopf = wurzel.querySelector('[data-aw-action="new-whiteboard"]') as HTMLElement | null;
+  knopf?.click();
+  await new Promise(r => setTimeout(r, 1600));
+  return {
+    beschriftung: knopf?.textContent?.trim() ?? '(keine Schnellaktion)',
+    vorher, nachher: zaehle(),
+    gezeichnet: document.querySelectorAll('[class*="whiteboard"], .wb').length,
+  };
+});
+
+p('Die Workspace-Übersicht ist da', !!schnell, 'keine .arbeitswelt gefunden');
+if (schnell) {
+  p('Es gibt eine Schnellaktion „Whiteboard"',
+    /Whiteboard/.test(schnell.beschriftung), schnell.beschriftung);
+  p('Ein Klick legt einen Whiteboard-Block an',
+    schnell.nachher > schnell.vorher, `${schnell.vorher} → ${schnell.nachher}`);
+  p('Und er wird auch gezeichnet', schnell.gezeichnet > 0, String(schnell.gezeichnet));
+}
+
+/* ==========================================================================
+ * §10 · Der alte Arbeitsweg lebt weiter
  * --------------------------------------------------------------------------
  * Zwei neue Hauptwelten dürfen das nicht kaputt machen, was Redion schon
  * konnte. Also: eine Seite anlegen, einen Block schreiben, nachlesen.
  * ========================================================================*/
-console.log('\n7 · Der alte Arbeitsweg lebt weiter');
+console.log('\n10 · Der alte Arbeitsweg lebt weiter');
 
 const alt = await seite.evaluate(async () => {
   const s = Store.addPage(null, { text: 'Ganz gewöhnliche Seite' });

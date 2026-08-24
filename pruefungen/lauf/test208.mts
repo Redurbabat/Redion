@@ -235,9 +235,125 @@ gleich('Die alte Klausur steht nicht unter den kommenden', zeiten.alteUnterKomme
 gleich('Und keine Prüfung steht ohne Termin da', zeiten.ohneTermin, 0);
 
 /* ==========================================================================
- * §5 · Was der Quelltext dazu sagt
+ * §5 · Die Tastatur bedient die Lernrunde
+ * --------------------------------------------------------------------------
+ * Der Code dafür stand da und wurde nie erreicht: der keydown-Horcher hing
+ * an der Wurzel der Lernwelt, und der Fokus liegt nach dem Öffnen auf
+ * `BODY`. Ereignisse steigen aufwärts, nicht abwärts — body ist der Vorfahr
+ * der Wurzel, nicht ihr Nachfahr. Gemessen: Leertaste tat nichts, „3" tat
+ * nichts, die Karte blieb bei 1 von 4.
  * ========================================================================*/
-console.log('\n5 · Was der Quelltext dazu sagt');
+console.log('\n5 · Die Tastatur bedient die Lernrunde');
+
+const mitTasten = await seite.evaluate(async () => {
+  (document.querySelector('[data-lw-nav="lernen"]') as HTMLElement)?.click();
+  await new Promise(r => setTimeout(r, 800));
+  (document.querySelector('[data-lw-train="today"]') as HTMLElement)?.click();
+  await new Promise(r => setTimeout(r, 800));
+  const lies = () => {
+    const txt = ((document.querySelector('.lernwelt') as HTMLElement)?.textContent || '')
+      .replace(/\s+/g, ' ');
+    return {
+      aufgedeckt: !!document.querySelector('[data-lw-rate]'),
+      karte: (/Karte (\d+) von (\d+)/.exec(txt) || ['?'])[0],
+      fokus: (document.activeElement as HTMLElement)?.tagName ?? '?',
+    };
+  };
+  const vorher = lies();
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+  await new Promise(r => setTimeout(r, 500));
+  const nachLeer = lies();
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }));
+  await new Promise(r => setTimeout(r, 900));
+  return { vorher, nachLeer, nachDrei: lies() };
+});
+
+gleich('Der Fokus liegt auf BODY — deshalb muss der Horcher am Dokument hängen',
+       mitTasten.vorher.fokus, 'BODY');
+gleich('Vor der Leertaste ist die Antwort verdeckt', mitTasten.vorher.aufgedeckt, false);
+gleich('Die Leertaste deckt sie auf', mitTasten.nachLeer.aufgedeckt, true);
+p('Die Taste 3 bewertet und geht zur nächsten Karte',
+  mitTasten.nachDrei.karte !== mitTasten.nachLeer.karte,
+  `${mitTasten.nachLeer.karte} → ${mitTasten.nachDrei.karte}`);
+
+/* UND DIE ANDERE RICHTUNG — beinahe schiefgegangen.
+   Ein Horcher am Dokument hört ÜBERALL zu. `zustand.root` ist der
+   wiederverwendete Inhaltsbereich der Schale und hängt auch dann noch im
+   Dokument, wenn längst eine gewöhnliche Seite darin steht. Gemessen mit
+   dem ersten Wurf der Behebung: Runde starten, eine Seite öffnen, im Editor
+   die Leertaste — und die Lernwelt sprang zurück über die Seite, in der
+   gerade geschrieben wurde. */
+const nichtMehrDa = await seite.evaluate(async () => {
+  const seiten = Store.rootPages()[0];
+  App.oeffne(seiten.id);
+  await new Promise(r => setTimeout(r, 900));
+  const wegVorTasten = !document.querySelector('.lernwelt');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }));
+  await new Promise(r => setTimeout(r, 600));
+  return { wegVorTasten, wegNachTasten: !document.querySelector('.lernwelt') };
+});
+gleich('Nach dem Öffnen einer Seite ist die Lernwelt weg',
+       nichtMehrDa.wegVorTasten, true);
+gleich('Und sie kommt durch einen Tastendruck NICHT zurück',
+       nichtMehrDa.wegNachTasten, true);
+
+/* ==========================================================================
+ * §6 · Der Prüfungsfokus übt wirklich — und nur das Passende
+ * --------------------------------------------------------------------------
+ * Die Kachel versprach „Karten passend zur nächsten Prüfung mischen" und
+ * trug einen Knopf, der nur den Reiter wechselte. Und `passendeKarten` fällt
+ * bei null Treffern auf ALLE Karten zurück — für eine Simulation vertretbar,
+ * für ein Versprechen „passend zu" nicht.
+ * ========================================================================*/
+console.log('\n6 · Der Prüfungsfokus übt wirklich');
+
+const fokus = await seite.evaluate(async () => {
+  /* ZURÜCK IN DIE LERNWELT. §5 hat sie am Ende absichtlich verlassen, um zu
+     prüfen, dass Tastendrücke sie nicht zurückholen. Dieser Abschnitt
+     braucht sie wieder — sonst gäbe es keinen Reiter zum Klicken, und der
+     Prüfpunkt wäre rot, ohne dass am Prüfungsfokus etwas fehlt. */
+  (globalThis as any).Produktwelten.lernen('lernen');
+  await new Promise(r => setTimeout(r, 900));
+
+  /* Eine Karte, die NICHT zur Klausur gehört — sie darf nicht mitkommen. */
+  const seiten = Store.rootPages().find((x: any) => x.text === 'Elektrotechnik');
+  if (seiten) Store.addBlock(seiten.id, 'flashcard', { text: 'Kochrezept :: Salz' });
+  const coll = Object.values<any>(Store.cache.collections).find(c => c?.schoolKind === 'exams');
+  const zeile = Store.rowsOf(coll.id).find((r: any) => /Elektrotechnik Klausur/.test(r.text));
+  if (zeile) Store.updateBlock(zeile.id, { text: 'Ohm und Leistung' });
+  await Store.flush();
+
+  (document.querySelector('[data-lw-nav="lernen"]') as HTMLElement)?.click();
+  await new Promise(r => setTimeout(r, 900));
+  const knopf = document.querySelector('[data-lw-train="exam"]') as HTMLElement | null;
+  const beschriftung = knopf?.textContent?.trim() ?? '(kein Üben-Knopf)';
+  knopf?.click();
+  await new Promise(r => setTimeout(r, 900));
+  const txt = ((document.querySelector('.lernwelt') as HTMLElement)?.textContent || '')
+    .replace(/\s+/g, ' ');
+  return {
+    beschriftung,
+    titel: (/Prüfungsfokus[^K]{0,40}/.exec(txt) || ['(kein Titel)'])[0],
+    karte: (/Karte (\d+) von (\d+)/.exec(txt) || ['(keine Runde)'])[0],
+    kartenGesamt: Object.values<any>(Store.cache.blocks)
+      .filter(b => b.type === 'flashcard' && b.alive).length,
+  };
+});
+
+p('Der Knopf heisst „Üben" und nennt eine Zahl',
+  /^Üben · \d+$/.test(fokus.beschriftung), fokus.beschriftung);
+p('Er startet eine Runde', /Karte \d+ von \d+/.test(fokus.karte), fokus.karte);
+p('Und die Runde heisst nach der Prüfung',
+  /Prüfungsfokus/.test(fokus.titel), fokus.titel);
+p('Es sind weniger Karten als der ganze Bestand — es wird wirklich gefiltert',
+  Number((/von (\d+)/.exec(fokus.karte) || [])[1] ?? 0) < fokus.kartenGesamt,
+  `${fokus.karte} bei ${fokus.kartenGesamt} Karten im Bestand`);
+
+/* ==========================================================================
+ * §7 · Was der Quelltext dazu sagt
+ * ========================================================================*/
+console.log('\n7 · Was der Quelltext dazu sagt');
 
 const quelle = fs.readFileSync(path.join(WURZEL, 'src/bereiche/wissen/lernwelt.ts'), 'utf8');
 p('`datum` behandelt ein `Date` als Datum, nicht als Hülle',
@@ -245,6 +361,13 @@ p('`datum` behandelt ein `Date` als Datum, nicht als Hülle',
 p('Ein leerer Lernstand zählt nicht als Lernstand',
   /const hatLernstand = /.test(quelle) &&
   /sr: hatLernstand\(stand\?\.sr\) \? stand\.sr : null/.test(quelle));
+p('Der Tastenhorcher hängt am Dokument, nicht an der Wurzel',
+  /document\.addEventListener\('keydown', taste\)/.test(quelle) &&
+  !/ziel\.addEventListener\('keydown', taste\)/.test(quelle));
+p('… und fragt vorher, ob die Lernwelt noch die sichtbare Ansicht ist',
+  /zustand\.root\.querySelector\('\.lernwelt'\)/.test(quelle));
+p('Der Prüfungsfokus hat eine eigene Auswahl ohne Rückfall auf alles',
+  /const nurPassendeKarten = /.test(quelle) && /art === 'exam'/.test(quelle));
 p('Und `leererLernzustand` liefert weiterhin `sr: {}` — dort wurde nichts geändert',
   /sr: \{\},/.test(fs.readFileSync(
     path.join(WURZEL, 'src/bereiche/wissen/lebensbereiche.ts'), 'utf8')));

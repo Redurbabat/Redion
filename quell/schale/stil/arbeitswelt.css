@@ -493,3 +493,124 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   }
   .arbeitswelt :where(button,.aw-vorlage):active{transform:none}
 }
+
+/* --- Whiteboards als eigener Bereich (E138, Auftrag §22) ------------------ */
+/* Karten statt Listenzeilen, weil ein Whiteboard kein Titel ist, sondern ein
+   Bild. Zehn Zeilen „Whiteboard" wären zehnmal dasselbe Wort; die Miniatur
+   ist das einzige, woran man seines wiedererkennt. */
+/* 185 px, NICHT 210 — NACHGEMESSEN (§55). Der Inhaltsbereich der
+   Arbeitswelt ist am 1280er Bildschirm 404 px breit (links die Bereiche,
+   rechts die Reiter). Bei 210 px passte rechnerisch genau EINE Spalte
+   hinein: 2 × 210 + 12 = 432 > 404. Auf dem Bild stand deshalb eine
+   Karte über die andere, obwohl daneben Platz war.
+   Mit 185: 2 × 185 + 12 = 382 ≤ 404. */
+.arbeitswelt .aw-boards{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px
+}
+.arbeitswelt .aw-board{
+  position:relative;display:grid;border:1px solid var(--line);
+  border-radius:var(--aw-radius-lg);background:var(--bg-side);overflow:hidden
+}
+.arbeitswelt .aw-board-oeffnen{
+  display:grid;gap:6px;padding:0 0 12px;text-align:left;align-content:start
+}
+.arbeitswelt .aw-board-bild{
+  display:block;width:100%;height:118px;background:var(--bg-card);
+  border-bottom:1px solid var(--line)
+}
+.arbeitswelt .aw-board-leer{
+  display:grid;place-items:center;height:118px;background:var(--bg-card);
+  border-bottom:1px solid var(--line);font-size:30px
+}
+.arbeitswelt .aw-board-titel{
+  padding:0 13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:13.5px;font-weight:700
+}
+.arbeitswelt .aw-board-meta{padding:0 13px;color:var(--text-dim);font-size:11.5px}
+.arbeitswelt .aw-board-aktionen{
+  position:absolute;top:7px;right:7px;display:flex;gap:4px;opacity:0;transition:opacity .12s
+}
+.arbeitswelt .aw-board:hover .aw-board-aktionen,
+.arbeitswelt .aw-board:focus-within .aw-board-aktionen{opacity:1}
+/* Am Telefon gibt es kein Überfahren — dort stehen die zwei Knöpfe immer da,
+   sonst wären sie unerreichbar (§37). */
+@media(max-width:760px){
+  .arbeitswelt .aw-board-aktionen{opacity:1}
+  .arbeitswelt .aw-boards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+
+/* --- Der Lebensbereich-Wähler (E138) ------------------------------------- */
+/* MIT AUGEN GESEHEN (§55): oben rechts im Kopf stand ein weisser Kasten auf
+   dunklem Grund, und das Wort „Lebensbereich" klebte an ihm. Der Grund war
+   nicht ein falscher Wert, sondern gar keiner — für `.aw-bereichsfilter`
+   gab es in dieser Datei keine einzige Regel. Ein Auswahlfeld ohne Stil
+   nimmt die Farben des Browsers, und die kennen den Dunkelmodus nicht.
+
+   §48 sagt: neue Oberflächen müssen in hell UND dunkel funktionieren. Ein
+   Feld, das nur in einem von beiden lesbar ist, ist keine halbe Lösung —
+   es ist die Stelle, an der ein Bildschirm billig aussieht. */
+.arbeitswelt .aw-bereichsfilter{display:flex;align-items:center}
+.arbeitswelt .aw-bereichsfilter-label{
+  display:flex;align-items:center;gap:8px;
+  color:var(--text-dim);font-size:12px;font-weight:600;white-space:nowrap
+}
+.arbeitswelt .aw-bereichsfilter-auswahl{
+  min-height:var(--aw-touch);padding:0 30px 0 11px;
+  border:1px solid var(--line);border-radius:9px;
+  background:var(--bg-card);color:var(--text);
+  font:inherit;font-size:12.5px;font-weight:600;
+  /* Der eigene Pfeil, weil `appearance:none` den des Browsers mitnimmt —
+     und mit ihm den einzigen Hinweis, dass das Feld sich öffnen lässt. */
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),
+                   linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 16px) center,calc(100% - 11px) center;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat
+}
+.arbeitswelt .aw-bereichsfilter-auswahl:hover{border-color:var(--accent)}
+.arbeitswelt .aw-bereichsfilter-auswahl:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px
+}
+/* Die Liste selbst zeichnet das Betriebssystem. Ohne diese zwei Zeilen
+   steht schwarz auf schwarz, sobald der Rechner im Dunkelmodus läuft. */
+.arbeitswelt .aw-bereichsfilter-auswahl option{
+  background:var(--bg-card);color:var(--text)
+}
+/* AM TELEFON UMBRECHEN, NICHT QUETSCHEN. Mit Augen gesehen (§55): auf dem
+   iPhone-Bild stand „Lebensbereich (" und dann der Rand — das Auswahlfeld
+   lag zur Hälfte ausserhalb des Bildschirms. `.aw-kopf` ist eine Zeile mit
+   `space-between`, und drei Kinder (Titel, Filter, ☰) passen bei 390 px
+   nicht nebeneinander.
+   `width:100%` allein half nicht: ohne `flex-wrap` bleibt eine Flexzeile
+   eine Zeile, und 100 % werden einfach zusammengedrückt. */
+@media(max-width:760px){
+  .arbeitswelt .aw-kopf{flex-wrap:wrap;align-items:center;row-gap:12px}
+  /* Der Titel nimmt die erste Zeile ganz, darunter stehen Filter und ☰
+     nebeneinander. Mit dem ☰ allein in einer Zeile blieb daneben eine
+     handbreite leere Fläche — Platz, den ein Telefon nicht hat. */
+  .arbeitswelt .aw-titelgruppe{flex:1 1 100%;min-width:0;order:1}
+  .arbeitswelt .aw-bereichsfilter{flex:1 1 auto;min-width:0;order:2}
+  .arbeitswelt .aw-mobile-nav{order:3;flex:0 0 auto}
+  .arbeitswelt .aw-bereichsfilter-label{width:100%;gap:10px}
+  .arbeitswelt .aw-bereichsfilter-auswahl{flex:1 1 auto;min-width:0}
+}
+
+/* DAS WORT „LEBENSBEREICH" KOSTET 170 PX, DIE ES NICHT GIBT. Bei 390 px
+   bleiben im Kopf rund 335 px: Beschriftung 170 + Feld 150 + ☰ 56 sind 376.
+   Gemessen stand danach „◎ Alle Bereicl" da, und das ☰ rutschte in eine
+   eigene Zeile.
+
+   Verschwiegen wird nichts: das Feld trägt `aria-label="Workspace nach
+   Lebensbereich filtern"`, und das Symbol ◎ steht weiter davor. Ein
+   Screenreader liest also mehr, als vorher auf dem Bildschirm stand (§38).
+
+   DIESER BLOCK STEHT AM DATEIENDE, und das ist kein Zufall: der erste
+   Versuch stand oben im 470er Medienblock und wurde von der Grundregel
+   `.aw-bereichsfilter-label` weiter unten wieder überschrieben — gleiche
+   Spezifität, spätere Regel gewinnt. Das Bild sah danach aus wie vorher,
+   obwohl die Zahlen im Stil richtig dastanden. Derselbe Fehler wie in E137
+   an der Telefonleiste. */
+@media(max-width:470px){
+  .arbeitswelt .aw-bereichsfilter-label{font-size:0;gap:0}
+  .arbeitswelt .aw-bereichsfilter-auswahl{font-size:12.5px}
+}

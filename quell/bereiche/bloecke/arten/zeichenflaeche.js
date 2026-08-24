@@ -39,11 +39,33 @@ const Zusatz = (() => {
         let werkzeug = 'stift';
         let farbe = PALETTE[0];
         const hoehe = block.hoehe || 380;
+        /* DIE FLÄCHE IST GRÖSSER ALS DAS FENSTER (E138, Auftrag §22).
+           Bis hierher war das Whiteboard genau so gross wie sein Kasten: was
+           rechts hinausging, war weg. Die Formen behalten ihre Koordinaten —
+           neu ist nur ein AUSSCHNITT darüber. `sicht.x/y` ist die linke obere
+           Ecke des Ausschnitts in Formkoordinaten, `sicht.z` der Massstab.
+    
+           Damit bleiben alte Boards Zeichen für Zeichen gültig: ohne
+           gespeicherte Sicht ist der Ausschnitt 0/0 bei Massstab 1, und das ist
+           genau das Bild von vorher. */
+        const zahl = (wert, ersatz) => typeof wert === 'number' && Number.isFinite(wert) ? wert : ersatz;
+        const gespeichert = block.sicht && typeof block.sicht === 'object' ? block.sicht : {};
+        /* DER KLEINSTE MASSSTAB IST 10 %, NICHT 25 %. Gemessen an einer Fläche
+           mit 900 × 380 px und einer Haftnotiz bei 2600/1800: „alles ins Bild"
+           brauchte 22,7 % und bekam 25 % — die Notiz blieb unten draussen, und
+           der Knopf hielt sein Versprechen nicht.
+           Ein Knopf, der „alles" sagt und nicht alles zeigt, ist schlimmer als
+           keiner: man glaubt ihm und sucht nicht weiter. */
+        const KLEINSTER = .1, GROESSTER = 4;
+        const sicht = { x: zahl(gespeichert.x, 0), y: zahl(gespeichert.y, 0),
+            z: Math.min(GROESSTER, Math.max(KLEINSTER, zahl(gespeichert.z, 1))) };
+        let verbindeVon = null;
         const w = document.createElement('div');
         w.className = 'wb';
         w.innerHTML =
             '<div class="wb-tools">' +
                 [['zeiger', '⭠', 'Auswählen und verschieben'],
+                    ['hand', '✋', 'Fläche schieben'],
                     ['stift', '✎', 'Freihand zeichnen'],
                     ['linie', '╱', 'Linie'],
                     ['pfeil', '→', 'Pfeil'],
@@ -51,10 +73,24 @@ const Zusatz = (() => {
                     ['ellipse', '◯', 'Ellipse'],
                     ['notiz', '🗒', 'Haftnotiz'],
                     ['text', 'T', 'Text'],
+                    ['bild', '🖼', 'Bild einfügen'],
+                    ['verbindung', '⇢', 'Zwei Formen verbinden'],
                     ['radierer', '⌫', 'Radierer']]
                     .map(([id, ico, titel]) => `<button data-wz="${id}" title="${titel}"${id === 'stift' ? ' class="on"' : ''}>${ico}</button>`).join('') +
                 '<span class="wb-sep"></span>' +
                 PALETTE.map(c => `<button class="wb-farbe" data-c="${c}" style="background:${c}"></button>`).join('') +
+                '<span class="wb-sep"></span>' +
+                /* DIE VIER ZOOMKNÖPFE SIND EINE GRUPPE, kein loser Haufen. Am
+                   Telefon bricht die Leiste in drei Zeilen um, und ohne diese
+                   Klammer stand gemessen „−" am Ende der zweiten Zeile und „＋"
+                   am Anfang der dritten — zwei Hälften eines Reglers, getrennt
+                   durch einen Zeilenumbruch. */
+                '<span class="wb-zoom">' +
+                '<button data-a="kleiner" title="Verkleinern">−</button>' +
+                '<b class="wb-massstab" aria-live="polite">100 %</b>' +
+                '<button data-a="groesser" title="Vergrössern">＋</button>' +
+                '<button data-a="passend" title="Alles ins Bild holen">⤢</button>' +
+                '</span>' +
                 '<span class="wb-sep"></span>' +
                 '<button data-a="zurueck" title="Letztes rückgängig">↶</button>' +
                 '<button data-a="leeren" title="Alles löschen">🗑</button>' +
@@ -69,8 +105,46 @@ const Zusatz = (() => {
         w.appendChild(griff);
         /* --- Zeichnen ------------------------------------------------------- */
         const sichern = () => Store.updateBlock(block.id, { shapes: daten });
+        /* Der Ausschnitt in Formkoordinaten. Solange der Kasten noch nicht im
+           Dokument hängt, misst der Browser 0 — dann rechnen wir mit einer
+           Ersatzbreite und zeichnen beim ersten Anblick neu (ResizeObserver
+           weiter unten). Ohne das stünde beim ersten Bild ein viewBox von
+           Breite 0, und die Fläche bliebe leer. */
+        const ausschnitt = () => {
+            const r = flaeche.getBoundingClientRect();
+            const breite = r.width > 4 ? r.width : 900;
+            const hoch = r.height > 4 ? r.height : hoehe;
+            return { x: sicht.x, y: sicht.y, w: breite / sicht.z, h: hoch / sicht.z };
+        };
+        /* Der Platzbedarf einer Form — für „alles ins Bild" und für die
+           Verbindungen. Jede Art rechnet anders, und `text` lässt sich nur
+           schätzen; das reicht, weil beides nur Anhaltspunkte braucht. */
+        const rahmenVon = (s) => {
+            if (s.art === 'stift') {
+                const xs = s.pts.map((q) => q[0]), ys = s.pts.map((q) => q[1]);
+                const x = Math.min(...xs), y = Math.min(...ys);
+                return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+            }
+            if (s.art === 'text')
+                return { x: s.x, y: s.y - 14, w: Math.max(20, String(s.text || '').length * 8), h: 20 };
+            return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
+                w: Math.abs(s.w), h: Math.abs(s.h) };
+        };
+        /* Wo eine Verbindung den Rand ihrer Form trifft. Ohne das steckte die
+           Pfeilspitze mitten in der Haftnotiz. */
+        const randPunkt = (rahmen, zielX, zielY) => {
+            const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
+            const dx = zielX - mx, dy = zielY - my;
+            if (!dx && !dy)
+                return [mx, my];
+            const halbW = Math.max(1, rahmen.w / 2), halbH = Math.max(1, rahmen.h / 2);
+            const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001));
+            return [mx + dx * anteil, my + dy * anteil];
+        };
         const male = () => {
             flaeche.innerHTML = '';
+            const feld = ausschnitt();
+            flaeche.setAttribute('viewBox', `${feld.x} ${feld.y} ${feld.w} ${feld.h}`);
             const raster = sv('pattern', { id: 'r' + block.id.slice(0, 6), width: 24, height: 24, patternUnits: 'userSpaceOnUse' });
             raster.appendChild(sv('circle', { cx: 1, cy: 1, r: 1, fill: 'currentColor', opacity: .18 }));
             const defs = sv('defs');
@@ -80,8 +154,87 @@ const Zusatz = (() => {
             spitze.appendChild(sv('path', { d: 'M0,0 L9,3 L0,6 z', fill: 'context-stroke' }));
             defs.appendChild(spitze);
             flaeche.appendChild(defs);
-            flaeche.appendChild(sv('rect', { width: '100%', height: '100%', fill: `url(#r${block.id.slice(0, 6)})` }));
-            daten.forEach((s) => flaeche.appendChild(formZeichnen(s)));
+            flaeche.appendChild(sv('rect', { x: feld.x, y: feld.y, width: feld.w, height: feld.h,
+                fill: `url(#r${block.id.slice(0, 6)})` }));
+            /* Verbindungen zuerst — sie gehören unter die Formen, die sie verbinden. */
+            daten.filter((s) => s.art === 'verbindung')
+                .forEach((s) => { const linie = verbindungZeichnen(s); if (linie)
+                flaeche.appendChild(linie); });
+            daten.filter((s) => s.art !== 'verbindung')
+                .forEach((s) => flaeche.appendChild(formZeichnen(s)));
+            const anzeige = w.querySelector('.wb-massstab');
+            if (anzeige)
+                anzeige.textContent = Math.round(sicht.z * 100) + ' %';
+        };
+        /* `undefined` heisst „noch nicht gefragt", `null` heisst „gibt es nicht
+           mehr", eine Zeichenkette ist die Adresse. Drei Zustände, weil zwei zu
+           wenig sind: ohne den Unterschied fragte die Fläche bei jeder
+           Neuzeichnung wieder nach einer Datei, die gelöscht ist. */
+        const bildAdressen = new Map();
+        const bildHolen = (dateiId) => {
+            const ablage = globalThis.Dateien;
+            if (!ablage?.adresse) {
+                bildAdressen.set(dateiId, null);
+                return;
+            }
+            bildAdressen.set(dateiId, null);
+            Promise.resolve(ablage.adresse(dateiId)).then((url) => {
+                bildAdressen.set(dateiId, url || null);
+                if (url)
+                    male();
+            }).catch(() => { bildAdressen.set(dateiId, null); });
+        };
+        /* Ein Bild von der Festplatte auf die Fläche. Die Datei geht denselben
+           Weg wie jeder andere Anhang — in Stücken in die Ablage, verknüpft mit
+           diesem Block, damit sie beim Löschen der Seite mitgeht. */
+        const bildWaehlen = (x, y) => {
+            const ablage = globalThis.Dateien;
+            if (!ablage?.ablegen) {
+                UI.toast('Die Dateiablage ist noch nicht geladen');
+                return;
+            }
+            const feld = document.createElement('input');
+            feld.type = 'file';
+            feld.accept = 'image/*';
+            feld.addEventListener('change', async () => {
+                const datei = feld.files?.[0];
+                if (!datei)
+                    return;
+                try {
+                    const satz = await ablage.ablegen(datei, { blockId: block.id });
+                    const masse = await new Promise(fertig => {
+                        const probe = new Image();
+                        probe.onload = () => fertig({ w: probe.naturalWidth || 320, h: probe.naturalHeight || 240 });
+                        probe.onerror = () => fertig({ w: 320, h: 240 });
+                        probe.src = URL.createObjectURL(datei);
+                    });
+                    const breite = Math.min(360, masse.w);
+                    daten.push({ id: Store.uid().slice(0, 8), art: 'bild', x, y,
+                        w: Math.round(breite), h: Math.round(breite * masse.h / (masse.w || 1)),
+                        farbe, dateiId: String(satz.id) });
+                    male();
+                    sichern();
+                }
+                catch (fehler) {
+                    UI.toast(fehler instanceof Error ? fehler.message : 'Das Bild liess sich nicht ablegen');
+                }
+            });
+            feld.click();
+        };
+        const verbindungZeichnen = (s) => {
+            const a = daten.find((q) => q.id === s.von);
+            const b = daten.find((q) => q.id === s.nach);
+            if (!a || !b)
+                return null;
+            const ra = rahmenVon(a), rb = rahmenVon(b);
+            const [x1, y1] = randPunkt(ra, rb.x + rb.w / 2, rb.y + rb.h / 2);
+            const [x2, y2] = randPunkt(rb, ra.x + ra.w / 2, ra.y + ra.h / 2);
+            const p = sv('path', {
+                d: `M${x1} ${y1} L${x2} ${y2}`, stroke: s.farbe, 'stroke-width': 2,
+                fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#p${block.id.slice(0, 6)})`
+            });
+            p.dataset.sid = s.id;
+            return p;
         };
         const formZeichnen = (s) => {
             if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
@@ -121,6 +274,41 @@ const Zusatz = (() => {
                 }
                 return g;
             }
+            if (s.art === 'bild') {
+                /* DAS BILD LIEGT IN DER DATEIABLAGE, NICHT IN DEN FORMEN (§14).
+                   In `shapes` steht nur die Kennung; die Adresse ist ein Blob-Link,
+                   den erst `Dateien.adresse()` herausgibt — und das dauert. Solange
+                   sie fehlt, steht ein Platzhalter da und `male()` wird einmal
+                   nachgeholt, sobald die Adresse kommt.
+        
+                   Ein Bild als Data-URL in `shapes` wäre der kurze Weg gewesen. Er
+                   bläht jeden Block, jede Sicherung und jeden Versionsstand um die
+                   volle Bildgrösse auf — genau das, was §14 verbietet. */
+                const bekannt = bildAdressen.get(String(s.dateiId || ''));
+                if (bekannt === undefined && s.dateiId)
+                    bildHolen(String(s.dateiId));
+                const rahmen = {
+                    x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
+                    w: Math.abs(s.w) || 160, h: Math.abs(s.h) || 120
+                };
+                if (!bekannt) {
+                    const platz = sv('g');
+                    platz.appendChild(sv('rect', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
+                        rx: 5, fill: 'none', stroke: s.farbe, 'stroke-width': 2,
+                        'stroke-dasharray': '5 4' }));
+                    const wort = sv('text', { x: rahmen.x + rahmen.w / 2, y: rahmen.y + rahmen.h / 2,
+                        fill: s.farbe, 'font-size': 13, 'text-anchor': 'middle' });
+                    wort.textContent = bekannt === null ? 'Bild fehlt' : 'Bild lädt …';
+                    platz.appendChild(wort);
+                    platz.dataset.sid = s.id;
+                    return platz;
+                }
+                const bild = sv('image', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
+                    preserveAspectRatio: 'xMidYMid meet' });
+                bild.setAttribute('href', bekannt);
+                bild.dataset.sid = s.id;
+                return bild;
+            }
             if (s.art === 'ellipse') {
                 const e = sv('ellipse', {
                     cx: s.x + s.w / 2, cy: s.y + s.h / 2,
@@ -153,20 +341,115 @@ const Zusatz = (() => {
                 out.push(zeile.trim());
             return out.slice(0, 8);
         };
+        /* VON BILDSCHIRM AUF FLÄCHE. Vorher war beides dasselbe; mit Ausschnitt
+           und Massstab ist es das nicht mehr, und ohne diese Umrechnung landete
+           jeder Strich an der falschen Stelle, sobald man einmal geschoben hat. */
         const punkt = (e) => {
             const r = flaeche.getBoundingClientRect();
-            return [Math.round(e.clientX - r.left), Math.round(e.clientY - r.top)];
+            return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z),
+                Math.round(sicht.y + (e.clientY - r.top) / sicht.z)];
         };
-        let aktiv = null, verschiebt = null;
+        const sichtSichern = () => Store.updateBlock(block.id, {
+            sicht: { x: Math.round(sicht.x), y: Math.round(sicht.y),
+                z: Math.round(sicht.z * 100) / 100 }
+        });
+        /* Vergrössern um den festgehaltenen Punkt: was unter dem Finger liegt,
+           bleibt unter dem Finger. Ohne Mittelpunkt springt das Bild bei jedem
+           Schritt weg, und man sucht seine Zeichnung wieder. */
+        const massstab = (neuZ, haltX, haltY) => {
+            const r = flaeche.getBoundingClientRect();
+            const z = Math.min(GROESSTER, Math.max(KLEINSTER, neuZ));
+            const mx = haltX ?? sicht.x + (r.width || 900) / sicht.z / 2;
+            const my = haltY ?? sicht.y + (r.height || hoehe) / sicht.z / 2;
+            sicht.x = mx - (mx - sicht.x) * (sicht.z / z);
+            sicht.y = my - (my - sicht.y) * (sicht.z / z);
+            sicht.z = z;
+            male();
+            sichtSichern();
+        };
+        const insBild = () => {
+            const formen = daten.filter((s) => s.art !== 'verbindung');
+            if (!formen.length) {
+                sicht.x = 0;
+                sicht.y = 0;
+                sicht.z = 1;
+                male();
+                sichtSichern();
+                return;
+            }
+            const rahmen = formen.map(rahmenVon);
+            const x1 = Math.min(...rahmen.map(r => r.x)) - 30;
+            const y1 = Math.min(...rahmen.map(r => r.y)) - 30;
+            const x2 = Math.max(...rahmen.map(r => r.x + r.w)) + 30;
+            const y2 = Math.max(...rahmen.map(r => r.y + r.h)) + 30;
+            const r = flaeche.getBoundingClientRect();
+            const breite = r.width > 4 ? r.width : 900, hoch = r.height > 4 ? r.height : hoehe;
+            sicht.z = Math.min(GROESSTER, Math.max(KLEINSTER, Math.min(breite / Math.max(1, x2 - x1), hoch / Math.max(1, y2 - y1))));
+            sicht.x = x1 - (breite / sicht.z - (x2 - x1)) / 2;
+            sicht.y = y1 - (hoch / sicht.z - (y2 - y1)) / 2;
+            male();
+            sichtSichern();
+        };
+        let aktiv = null, verschiebt = null, schiebt = null;
+        const finger = new Map();
+        let kneifen = null;
         flaeche.addEventListener('pointerdown', (e) => {
             flaeche.setPointerCapture(e.pointerId);
+            finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (finger.size === 2) {
+                /* ZWEI FINGER SIND IMMER ZOOM, egal welches Werkzeug gewählt ist.
+                   Am Telefon ist das die einzige Geste, die man dafür kennt — und
+                   ein angefangener Strich wird dabei zurückgenommen, sonst bleibt
+                   bei jedem Kneifen ein Kritzel liegen. */
+                if (aktiv) {
+                    daten.pop();
+                    aktiv = null;
+                    male();
+                }
+                const zwei = [...finger.values()];
+                const dx = zwei[0].x - zwei[1].x, dy = zwei[0].y - zwei[1].y;
+                kneifen = { abstand: Math.hypot(dx, dy) || 1, z: sicht.z };
+                return;
+            }
             const [x, y] = punkt(e);
+            if (werkzeug === 'hand') {
+                schiebt = { x: e.clientX, y: e.clientY, sx: sicht.x, sy: sicht.y };
+                return;
+            }
+            if (werkzeug === 'verbindung') {
+                const sid = e.target.dataset?.sid;
+                const s = daten.find((q) => q.id === sid && q.art !== 'verbindung');
+                if (!s) {
+                    UI.toast('Tippe zuerst auf die Form, von der die Verbindung ausgeht');
+                    return;
+                }
+                if (!verbindeVon) {
+                    verbindeVon = s.id;
+                    UI.toast('Und jetzt auf die zweite Form');
+                    return;
+                }
+                if (verbindeVon === s.id) {
+                    verbindeVon = null;
+                    return;
+                }
+                daten.push({ id: Store.uid().slice(0, 8), art: 'verbindung', von: verbindeVon, nach: s.id, farbe });
+                verbindeVon = null;
+                male();
+                sichern();
+                return;
+            }
             if (werkzeug === 'radierer') {
                 const sid = e.target.dataset?.sid;
                 if (sid) {
                     const i = daten.findIndex((s) => s.id === sid);
                     if (i >= 0) {
+                        /* Mit der Form gehen ihre Verbindungen. Sonst bliebe ein Pfeil
+                           stehen, der nichts mehr verbindet — gezeichnet wird er dann
+                           gar nicht, aber er läge weiter in den Daten. */
                         daten.splice(i, 1);
+                        for (let j = daten.length - 1; j >= 0; j--)
+                            if (daten[j].art === 'verbindung' && (daten[j].von === sid || daten[j].nach === sid))
+                                daten.splice(j, 1);
                         male();
                         sichern();
                     }
@@ -178,6 +461,10 @@ const Zusatz = (() => {
                 const s = daten.find((q) => q.id === sid);
                 if (s)
                     verschiebt = { s, x, y };
+                return;
+            }
+            if (werkzeug === 'bild') {
+                bildWaehlen(x, y);
                 return;
             }
             if (werkzeug === 'text' || werkzeug === 'notiz') {
@@ -197,6 +484,23 @@ const Zusatz = (() => {
             daten.push(aktiv);
         });
         flaeche.addEventListener('pointermove', (e) => {
+            if (finger.has(e.pointerId))
+                finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (kneifen && finger.size >= 2) {
+                const zwei = [...finger.values()];
+                const dx = zwei[0].x - zwei[1].x, dy = zwei[0].y - zwei[1].y;
+                const r = flaeche.getBoundingClientRect();
+                const mitteX = sicht.x + ((zwei[0].x + zwei[1].x) / 2 - r.left) / sicht.z;
+                const mitteY = sicht.y + ((zwei[0].y + zwei[1].y) / 2 - r.top) / sicht.z;
+                massstab(kneifen.z * (Math.hypot(dx, dy) / kneifen.abstand), mitteX, mitteY);
+                return;
+            }
+            if (schiebt) {
+                sicht.x = schiebt.sx - (e.clientX - schiebt.x) / sicht.z;
+                sicht.y = schiebt.sy - (e.clientY - schiebt.y) / sicht.z;
+                male();
+                return;
+            }
             const [x, y] = punkt(e);
             if (verschiebt) {
                 const dx = x - verschiebt.x, dy = y - verschiebt.y;
@@ -222,7 +526,15 @@ const Zusatz = (() => {
             }
             male();
         });
-        const fertig = () => {
+        const fertig = (e) => {
+            if (e && typeof e.pointerId === 'number')
+                finger.delete(e.pointerId);
+            if (finger.size < 2)
+                kneifen = null;
+            if (schiebt) {
+                schiebt = null;
+                sichtSichern();
+            }
             if (aktiv) {
                 /* Winzige Kritzler wieder entfernen */
                 const klein = aktiv.art === 'stift' ? aktiv.pts.length < 2 : Math.abs(aktiv.w) < 4 && Math.abs(aktiv.h) < 4;
@@ -238,12 +550,22 @@ const Zusatz = (() => {
             }
         };
         flaeche.addEventListener('pointerup', fertig);
+        flaeche.addEventListener('pointercancel', fertig);
         flaeche.addEventListener('pointerleave', fertig);
+        /* Am Rechner ist das Rad der gewohnte Weg. `passive: false` steht da,
+           weil `preventDefault` sonst nichts tut und die ganze Seite mitrollt. */
+        flaeche.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const r = flaeche.getBoundingClientRect();
+            massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), sicht.x + (e.clientX - r.left) / sicht.z, sicht.y + (e.clientY - r.top) / sicht.z);
+        }, { passive: false });
         /* --- Werkzeugleiste -------------------------------------------------- */
         w.querySelector('.wb-tools')?.addEventListener('click', e => {
             const wz = elVon(e)?.closest('[data-wz]');
             if (wz) {
                 werkzeug = wz.dataset.wz ?? werkzeug;
+                verbindeVon = null;
+                w.classList.toggle('wb-schiebt', werkzeug === 'hand');
                 w.querySelectorAll('[data-wz]').forEach(b => b.classList.toggle('on', b === wz));
                 return;
             }
@@ -268,6 +590,12 @@ const Zusatz = (() => {
                     sichern();
                 }
             }
+            if (a.dataset.a === 'kleiner')
+                massstab(sicht.z / 1.25);
+            if (a.dataset.a === 'groesser')
+                massstab(sicht.z * 1.25);
+            if (a.dataset.a === 'passend')
+                insBild();
             if (a.dataset.a === 'png')
                 alsBild(flaeche, hoehe);
         });
@@ -288,6 +616,24 @@ const Zusatz = (() => {
             addEventListener('pointermove', zug);
             addEventListener('pointerup', stop);
         });
+        /* Erst wenn der Kasten wirklich Breite hat, stimmt der Ausschnitt.
+           Vorher zeichnet `male()` mit der Ersatzbreite — sichtbar wäre das als
+           falscher Massstab beim allerersten Bild. */
+        if (typeof ResizeObserver === 'function') {
+            let letzte = '';
+            new ResizeObserver(() => {
+                /* BEIDE MASSE, nicht nur die Breite: der Höhengriff verändert nur
+                   die Höhe, und mit einer nur auf Breite wachenden Prüfung behielt
+                   der Ausschnitt danach seine alte Höhe — sichtbar als gestauchtes
+                   oder gedehntes Bild. */
+                const kasten = flaeche.getBoundingClientRect();
+                const masse = Math.round(kasten.width) + '×' + Math.round(kasten.height);
+                if (masse === letzte)
+                    return;
+                letzte = masse;
+                male();
+            }).observe(w);
+        }
         male();
         return w;
     };

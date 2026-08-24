@@ -266,6 +266,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
   await p.reload();
   await p.waitForTimeout(2200);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nachNeustart = await p.evaluate(async (id) => {
     const satz = await Store.dateiHolen(id);
     const blob = await Dateien.alsBlob(id);

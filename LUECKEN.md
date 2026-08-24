@@ -1341,15 +1341,11 @@ gegengeprüft. Was hier steht, ist NICHT von mir einzeln nachgemessen — die
 Fundstellen sind belegt, die Wirkung nicht überall. Wer daran arbeitet, misst
 zuerst nach.
 
+**Zwei davon sind mit E136 erledigt** — und die Erklärung stimmte bei beiden
+nicht ganz: die Tastatur scheiterte nicht am Neuzeichnen, sondern an der
+Richtung, in die Ereignisse steigen. Was bleibt:
+
 ```txt
-Die Tastatur ist im Training nicht benutzbar. Der Code steht da
-(lernwelt.ts:1897-1912), aber der keydown-Horcher hängt am Wurzelelement,
-und `zeichnen()` ersetzt es bei jeder Bewertung. Nach dem ersten Klick
-hört niemand mehr zu.
-
-Die vierte Startkachel „Prüfungsfokus" trainiert nicht, sondern wechselt
-den Reiter: sie trägt `data-lw-nav="pruefungen"` (lernwelt.ts:1108).
-
 Die Zuordnung Prüfung → Karten ist reine Wortsuche (`passendeKarten`
 :868-877) und fällt bei null Treffern auf ALLE Karten zurück.
 
@@ -1399,12 +1395,17 @@ ist für jede Übersicht unsichtbar, auch für die nächste Prüfung, die „all
 Bereiche" durchgehen will.
 
 
-## L52 · Zwei Willkommensdialoge an zwei aufeinanderfolgenden Starts
+## L52 · ~~Zwei Willkommensdialoge~~ — die Prüfseite bleibt offen
 
-**24. August 2026.** Die Einrichtung der Hauptwelten setzt `rundgangGesehen`
-nicht. `schale.ts:2556-2558` startet den Rundgang nur, wenn das Onboarding
-NICHT gezeigt wurde — beim nächsten Start ist das Onboarding durch, und der
-Rundgang kommt dann doch. Zwei Begrüssungen an zwei Tagen hintereinander.
+**24. August 2026.** Die Einrichtung der Hauptwelten setzte `rundgangGesehen`
+nicht. `schale.ts` startete den Rundgang nur, wenn das Onboarding NICHT
+gezeigt wurde — beim nächsten Start war das Onboarding durch, und der
+Rundgang kam dann doch. Zwei Begrüssungen an zwei Tagen hintereinander.
+
+**Der Produktteil ist behoben** (E137, Nummer 1): die Einrichtung öffnet
+sich nicht mehr von selbst, der Willkommensbildschirm gehört wieder dem
+Rundgang. Was offen bleibt, steht unten — und es ist die Hälfte, die beim
+nächsten Mal wieder zubeisst.
 
 Selbst gesehen, und es kostete mehr als einen Prüflauf: das Onboarding legt
 sich beim ersten Start über alles und fängt Klicks ab. Im vollen Durchgang
@@ -1487,3 +1488,29 @@ Bewusst offen ist kein fehlender Teil davon, sondern eine Grenze: Redion
 importiert PDF-Markierungen nicht in die pixelgebundene alte Zeichenfläche.
 Der neutrale Geometriekern kann später von weiteren Flächen verwendet werden,
 ohne zwei gespeicherte Wahrheiten zu erzeugen. Geprüft in `test201`.
+
+
+## L54 · Was das Whiteboard noch nicht kann
+
+**24. August 2026.** E138 hat die Fläche unendlich gemacht, Verbindungen und
+Bilder gebracht und ihr einen eigenen Bereich gegeben. Vier Dinge fehlen
+weiterhin, und keines davon ist versteckt:
+
+**Die Miniatur zeichnet keine Verbindungen.** `miniatur()` filtert sie
+heraus und malt nur Formen. Für ein Wiedererkennungszeichen reicht das; wer
+seine Karte an der Struktur erkennen will, findet sie dort nicht.
+
+**Formen lassen sich nicht in der Grösse ändern.** Wer ein Rechteck zu klein
+gezogen hat, muss es löschen und neu ziehen. Verschieben geht, Skalieren
+nicht.
+
+**Es gibt kein Wiederherstellen.** `↶` nimmt die letzte Form zurück, mehr
+nicht — kein zweiter Schritt zurück, kein Schritt vorwärts. Der Radierer
+löscht endgültig.
+
+**Der Text auf einer Haftnotiz kommt aus `prompt()`.** Das ist ein Fenster
+des Browsers, kein Feld auf der Fläche: man sieht beim Tippen nicht, wohin
+der Text kommt, und am Telefon nimmt es den halben Bildschirm.
+
+Alle vier sind Arbeit an derselben Datei und sollten zusammen gemacht
+werden, nicht einzeln.

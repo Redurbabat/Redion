@@ -1933,6 +1933,13 @@ const App = (() => {
     ['tabelle',  '📊', 'Neue Tabelle',     'Rechnen wie in Excel'],
     ['aufgabe',  '☑', 'Aufgabe',          'Mit Datum planen'],
     ['karte',    '📚', 'Karteikarte',      'Später wiederholen'],
+    /* AUFNAHME UND WHITEBOARD FEHLTEN (E138, Auftrag §46). Beide Wege gab es
+       längst — die Besprechungsaufnahme und den Whiteboard-Block —, nur
+       nicht an der Stelle, an der man am Telefon etwas Neues anfängt. Ein
+       Weg, den man nur über die Befehlspalette findet, ist am Telefon kein
+       Weg: dort gibt es keine Tastatur mit Strg. */
+    ['aufnahme', '🎙', 'Aufnahme',         'Mitschnitt mit Marken und Notizen'],
+    ['board',    '🖍', 'Whiteboard',       'Freie Fläche zum Skizzieren'],
     ['scan',     '📷', 'Dokument scannen', 'Kamera, Foto oder PDF in den Eingang'],
     ['datei',    '📎', 'Datei hochladen',  'Bleibt auf diesem Gerät'],
     ['vorlage',  '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
@@ -1961,6 +1968,10 @@ const App = (() => {
         else if (was === 'scan')    Recognition.scan();
         else if (was === 'vorlage') Werkzeuge.vorlagen();
         else if (was === 'karte')   Werkzeuge.lernen();
+        else if (was === 'aufnahme') {
+          if (typeof Meeting !== 'undefined' && Meeting.panel) Meeting.panel();
+          else UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+        }
         else {
           /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
              gibt sie nicht ohne eine. Also erst die Seite, dann der Block
@@ -1969,6 +1980,7 @@ const App = (() => {
           setTimeout(() => {
             if (was === 'db')           Store.addDatabase(p.id, 'Ohne Namen');
             else if (was === 'tabelle') Store.addBlock(p.id, 'tabelle', {});
+            else if (was === 'board')   Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
             else if (was === 'aufgabe') Store.addBlock(p.id, 'todo', { text: '' });
             zeichneSeite();
           }, 80);
@@ -2503,17 +2515,54 @@ const App = (() => {
 
     /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
     const wunsch = Store.getMeta('startAnsicht', 'start');
+    let startAnsichtZeigen: (() => void) | null = null;
+    /* DIE STARTANSICHT DARF NICHT ÜBERSCHREIBEN, WAS SCHON OFFEN IST (E138).
+       Hier stand ein blankes `setTimeout(…, 60)`. Wer in diesen 60 ms eine
+       Seite anklickt — und beim Start liegt der Baum längst da —, sah sie
+       einen Wimpernschlag lang und dann das Heute-Bild.
+
+       Gemessen mit einem Whiteboard, das direkt nach dem Laden geöffnet
+       wurde:
+
+           sofort      Zeichenfläche da
+           nach 600 ms Zeichenfläche weg, Lernwelt da
+
+       Das war auch der wahre Grund für das falsche Papier-Bild in E136.
+       Dort steht, `App.oeffne` räume die Sonderansicht nicht weg — das
+       stimmt nicht: sie räumt sie weg, und die verspätete Startansicht holt
+       sie zurück.
+
+       Die Bedingung ist deshalb: nur zeigen, wenn seither niemand etwas
+       anderes geöffnet hat. */
+    /* NICHT „IN 60 MILLISEKUNDEN", SONDERN „AM ENDE VON start()" (E138).
+
+       Hier stand `setTimeout(…, 60)`, und der Grund dafür ist gut: die
+       Startansicht braucht `Produktwelten.start()`, und das läuft erst
+       weiter unten. Nur ist eine Zeitspanne die falsche Art, auf eine
+       Reihenfolge zu warten — sie ist ein Versprechen ohne Deckung.
+
+       Was in diesen 60 ms passieren kann, ist alles: ein Klick im Baum,
+       ein Aufruf von aussen. Gemessen mit `bilder.mts`, zwei Durchgänge
+       hintereinander mit demselben Code:
+
+           dunkel   Zeichenfläche da
+           hell     Zeichenfläche weg, Heute-Bild da
+
+       Zwei verschiedene Bilder aus demselben Aufruf — das ist ein Wettlauf,
+       kein Fehler in der Ansicht. Die Startansicht wird deshalb GEMERKT und
+       ganz am Ende von `start()` ausgeführt, wenn alle Module stehen. Danach
+       kommt jedes `oeffne()` von aussen garantiert später und gewinnt. */
     if (!ausHash && !produktRoute) {
-      if (wunsch === 'start') setTimeout(() => Produktwelten.lernen('heute'), 60);
-      if (wunsch === 'workspace') setTimeout(() => Produktwelten.workspace('start'), 60);
-      if (wunsch === 'posteingang') setTimeout(() => Ansichten.posteingang(), 60);
-      if (wunsch === 'journal') setTimeout(() => Werkzeuge.journal(), 60);
+      if (wunsch === 'start') startAnsichtZeigen = () => Produktwelten.lernen('heute');
+      if (wunsch === 'workspace') startAnsichtZeigen = () => Produktwelten.workspace('start');
+      if (wunsch === 'posteingang') startAnsichtZeigen = () => Ansichten.posteingang();
+      if (wunsch === 'journal') startAnsichtZeigen = () => Werkzeuge.journal();
       if (wunsch === 'seite' && Store.getMeta('startSeite')) {
         const z = Store.getBlock(Store.getMeta('startSeite'));
         if (z) oeffne(z.id);
       }
     }
-    if (produktRoute) setTimeout(() => Produktwelten.routeOeffnen(produktRoute), 60);
+    if (produktRoute) startAnsichtZeigen = () => Produktwelten.routeOeffnen(produktRoute);
 
     /* Name und Symbol des Arbeitsbereichs */
     const wsBtn = document.getElementById('btn-settings');
@@ -2553,9 +2602,24 @@ const App = (() => {
     Wolke.start();
     Produktwelten.start();
     Blocks.auswahlEinklinken();
-    void ProduktOnboarding.vielleichtStarten().then(gezeigt => {
-      if (!gezeigt) Rundgang.vielleichtStarten();
-    });
+    /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
+       Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der
+       Rundgang nur, „wenn das Onboarding nichts gezeigt hat". Damit hat die
+       Einrichtung der Hauptwelten den Bildschirm übernommen, den E55
+       ausdrücklich für den Rundgang beschlossen hatte — und E55 begründet
+       das mit dem Satz, der auch für die Einrichtung gilt: „ein Fenster,
+       das den Bildschirm nimmt, bevor man etwas getan hat, ist zudringlich."
+
+       Nebenwirkungen, gemessen: der Rundgang kam beim ZWEITEN Start doch
+       noch — zwei Begrüssungen an zwei Tagen (L52) —, und die Einrichtung
+       fing als Modal jeden Klick ab, woran im vollen Durchgang mehrere
+       Prüfläufe hängenblieben.
+
+       Die Einrichtung ist deshalb ein Angebot statt einer Pflicht: sie steht
+       in der Befehlspalette und als Karte auf dem Heute-Bild, solange sie
+       noch nicht durchlaufen ist. `vielleichtStarten` bleibt im Modul — wer
+       sie wieder von selbst öffnen lassen will, ruft sie hier auf. */
+    Rundgang.vielleichtStarten();
 
     /* Seitenleiste und Kopfzeile */
     const an = (id: any, fn: any) => document.getElementById(id)?.addEventListener('click', fn);
@@ -2762,6 +2826,14 @@ const App = (() => {
 
     /* Beim Verlassen noch schnell alles sichern */
     addEventListener('beforeunload', () => { Store.flush().catch(() => {}); });
+
+    /* GANZ ZUM SCHLUSS die Startansicht — siehe die Begründung oben. Alle
+       Module stehen jetzt, und wer danach eine Seite öffnet, kommt später
+       und bleibt sichtbar. */
+    if (startAnsichtZeigen) {
+      try { startAnsichtZeigen(); }
+      catch { /* Ohne Startbildschirm bleibt die zuletzt geöffnete Seite. */ }
+    }
   };
 
   /* --- Beispielinhalt beim ersten Start ----------------------------------- */

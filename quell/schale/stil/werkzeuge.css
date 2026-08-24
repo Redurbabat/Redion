@@ -745,3 +745,16 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   from{ opacity:0; transform:translateY(6px) }
   to{ opacity:1; transform:translateY(0) }
 }
+
+/* --- Massstab und Schiebehand (E138, Auftrag §22) ------------------------------------------- */
+/* Die Fläche ist seit E138 grösser als ihr Kasten. Zwei Dinge braucht das
+   sichtbar: WO man ist (der Prozentwert) und WOMIT man schiebt (die Hand).
+   Ohne den Prozentwert weiss niemand, warum die Zeichnung plötzlich klein
+   ist; ohne den Zeiger sieht die Hand aus wie ein Zeichenwerkzeug. */
+.wb-massstab{
+  min-width:46px; padding:0 4px; text-align:center; font-size:11px; font-weight:600;
+  color:var(--text-dim); font-variant-numeric:tabular-nums;
+}
+.wb-zoom{display:inline-flex;align-items:center;gap:2px}
+.wb.wb-schiebt .wb-flaeche{cursor:grab}
+.wb.wb-schiebt .wb-flaeche:active{cursor:grabbing}

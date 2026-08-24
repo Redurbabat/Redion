@@ -115,6 +115,7 @@ const Werkzeuge = (() => {
     c('Navigation', 'Workspace', '', () => Produktwelten.workspace('start'));
     c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
     c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
+    c('Navigation', 'Whiteboards', '', () => Produktwelten.whiteboards());
     c('Navigation', 'Planung und Termine', '', () => Produktwelten.planung());
     c('Navigation', 'Hauptwelten und Lebensbereiche einrichten', '', () => ProduktOnboarding.oeffnen());
     c('Navigation', 'Posteingang', '', () => Ansichten.posteingang());

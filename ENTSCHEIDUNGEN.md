@@ -8577,3 +8577,308 @@ tut test208 jetzt — und zwar über die Oberfläche, mit Klicks auf
 Ein Prüfpunkt war zuerst rot, obwohl „5 Tage" gut sichtbar dastand: gesucht
 wurde `\b5\s*Tage\b`, und der Wortlaut ist „29. Aug. 20265 Tage" — zwischen
 zwei Ziffern gibt es keine Wortgrenze.
+
+
+## E136 · Drei Dinge, die dastanden und nicht funktionierten
+
+**24. August 2026.** Nach E135 blieben in der Lernwelt drei Stellen, die
+aussahen wie fertig. Alle drei sind kleine Ursachen mit sichtbarer Wirkung.
+
+### 1. Die Tastatur kam nie an
+
+Der Code für die Tastenkürzel war vollständig: Leertaste deckt auf, 1 bis 4
+bewerten. Er wurde nur nie ausgeführt.
+
+```ts
+ziel.addEventListener('keydown', taste);     // ziel = die Wurzel der Lernwelt
+```
+
+Ereignisse steigen AUFWÄRTS, nicht abwärts. Gemessen liegt der Fokus nach
+dem Öffnen auf `BODY`, und body ist der Vorfahr der Wurzel, nicht ihr
+Nachfahr — der Tastendruck lief in die andere Richtung.
+
+```txt
+nach Start        Fokus BODY, Karte 1 von 4
+Leertaste         nichts — nicht aufgedeckt
+Maus aufgedeckt   ja
+Taste 3           nichts — immer noch Karte 1 von 4
+```
+
+Der Horcher hängt jetzt am Dokument und fragt zuerst, ob die Lernwelt
+überhaupt noch im Dokument steht. `abmelden()` nimmt ihn wieder ab.
+
+Ein zweiter Vorbehalt musste bleiben, aber genauer werden: Leertaste und
+Enter BETÄTIGEN einen Knopf, der den Fokus hat — ohne Vorbehalt deckte ein
+Druck auf „Antwort zeigen" die Karte zweimal auf. Die Ziffern 1 bis 4
+betätigen nichts und dürfen deshalb immer.
+
+### 2. Die vierte Startkachel tat nicht, was auf ihr stand
+
+„Prüfungsfokus — Karten passend zur nächsten Prüfung mischen." Der Knopf
+darunter hiess „Prüfungen öffnen" und wechselte den Reiter.
+
+Jetzt übt sie wirklich, mit einer eigenen Auswahl: `nurPassendeKarten`.
+`passendeKarten` gibt bei null Treffern den ganzen Bestand zurück — für eine
+Simulation vertretbar (lieber eine Übungsklausur aus allem als gar keine),
+für ein Versprechen „passend zu" nicht. Gibt es keine passenden Karten, sagt
+die Kachel das, statt einen Knopf anzubieten, hinter dem alles käme.
+
+Gemessen mit drei Karten und einer Klausur „Ohmsches Gesetz und Leistung":
+Knopf „Üben · 2", Runde „Prüfungsfokus: Ohmsches Gesetz und Leistung, Karte
+1 von 2". Die dritte Karte hiess „Kochrezept :: Salz" und blieb draussen.
+
+### 3. Vier Reiter standen ausserhalb des Bildes
+
+Mit Augen gesehen (§55): auf dem Heute-Bild hing „Schule / Ausbildung" halb
+draussen, und Uni, Arbeit und Fortschritt waren gar nicht zu ahnen. Die
+Leiste kann gescrollt werden — nur zeigt das nichts an: kein Schatten, kein
+Pfeil, keine angeschnittene Beschriftung. Neun Reiter brauchen 1016 px, die
+Leiste hatte 706.
+
+Am Rechner brechen sie jetzt in zwei Reihen um. Am Telefon bleibt es beim
+Scrollen: dort ist die waagerechte Leiste die vertraute Form, und zwei
+Reihen kosteten zu viel Höhe.
+
+### Und warum das alles so lange dastand
+
+`bilder.mts` kannte die Lernwelt nicht. Die Ansicht kam in keinem
+Bildschirmfoto-Durchgang vor — also hat sie nie jemand angesehen, und §55
+sagt genau dafür: „Öffne die Seite wirklich, statt nur den Code zu lesen."
+
+Vier Ansichten sind jetzt eingetragen: `heute`, `lernzentrale`, `workspace`
+und `papier`. `node bilder.mts heute` zeigt in zehn Sekunden alle Zahlen,
+die in E135 falsch waren.
+
+Beim Bauen des Papier-Bildes fiel nebenbei auf, dass `App.oeffne` die
+Sonderansicht der Produktwelten nicht wegräumt — das Bild zeigte das
+Heute-Dashboard statt des Blattes. Die Ansicht baut sich jetzt ihren eigenen
+Kasten, so wie die Tabellen-Ansichten es längst tun.
+
+**Geprüft:** test208 §5 und §6 (Tastatur und Prüfungsfokus), test206 §7
+(kein Reiter ausserhalb) und §8 („Ausbildung einrichten" legt wirklich etwas
+an — additiv, die vorhandenen Seiten bleiben). Gegenprobe je Behebung
+zurückgenommen: 5 rot für die Lernwelt, 1 rot für die Reiterleiste — und die
+nennt die vier Reiter beim Namen, die draussen standen.
+
+
+## E137 · Drei Wege, die nach dem Start nicht mehr stimmten
+
+**24. August 2026.** Die zwei Hauptwelten (E132) haben die Startansicht
+verändert: Redion öffnet nicht mehr eine Seite, sondern das Heute-Bild. Drei
+Stellen im Bestand hatten die alte Annahme fest eingebaut und wurden dadurch
+falsch — jede einzelne erst im Betrieb sichtbar, keine davon durch eine
+Prüfung gemeldet.
+
+### 1. Der Willkommensbildschirm gehört dem Rundgang
+
+Die Einrichtung der Hauptwelten hatte sich beim ersten Start vor den
+Rundgang geschoben:
+
+```ts
+void ProduktOnboarding.vielleichtStarten().then(gezeigt => {
+  if (!gezeigt) Rundgang.vielleichtStarten();
+});
+```
+
+E55 hat diesen Bildschirm für den Rundgang beschlossen, und zwar mit einem
+Satz, der für die Einrichtung genauso gilt: *ein Fenster, das den Bildschirm
+nimmt, bevor man etwas getan hat, ist zudringlich.* Zwei Nebenwirkungen kamen
+dazu, beide gemessen:
+
+```txt
+Start 1   Einrichtung der Hauptwelten (Modal, fängt jeden Klick ab)
+Start 2   Rundgang — denn die Einrichtung setzt `rundgangGesehen` nicht
+```
+
+Zwei Begrüssungen an zwei aufeinanderfolgenden Tagen (L52). Und weil das
+Modal jeden Klick abfängt, blieben im vollen Durchgang mehrere Prüfläufe
+daran hängen — test32 mit einer Zeitüberschreitung, ohne dass irgendwo ein
+Fehler stand.
+
+Die Einrichtung ist jetzt ein **Angebot statt einer Pflicht**: sie steht in
+der Befehlspalette und als Karte auf dem Heute-Bild, solange sie noch nicht
+durchlaufen ist. `vielleichtStarten` bleibt im Modul — wer sie wieder von
+selbst öffnen lassen will, ruft eine Zeile auf.
+
+### 2. Der Graph sagte „Öffne zuerst eine Seite" — und meinte den Normalfall
+
+```ts
+const centerId = App.aktuelleSeite();
+if (!centerId) { UI.toast('Öffne zuerst eine Seite für ihren Teilgraphen'); return; }
+```
+
+Solange die App auf einer Seite startete, war das die Ausnahme. Seit dem
+Heute-Bild ist es der Regelfall: Strg+Umschalt+G direkt nach dem Start
+bekam eine Absage statt eines Graphen.
+
+Die zuletzt bearbeitete Seite ist die ehrlichste Wahl — sie ist das, woran
+man zuletzt war. Gibt es überhaupt keine Seite, bleibt die Absage; dann ist
+sie wahr. Gemessen nach dem Start, ohne eine Seite zu öffnen:
+
+```txt
+vorher    graphInfo leer, kein Kasten
+nachher   1 von 71 Knoten · 0 Verbindungen · 0 Entscheidungen · 0 Quellen
+```
+
+### 3. Sechs Pillen passen nicht in die Rechnung für fünf
+
+Die Produktwelten stellen „Lernen" vor die vier Bereiche — sechs statt fünf
+Tasten in der oberen Leiste am Telefon. Die Stufen von E88 waren für fünf
+gerechnet:
+
+```txt
+428 px   Heute 3 px zu viel, Seiten 6 px zu viel
+390 px   vier von fünf ragen heraus, bis zu 44 px
+```
+
+Gespart wird am Weissraum, nicht an der Daumenfläche: die Tasten bleiben
+56 px hoch, mindestens 48 px (ab 400 px: 44 px) breit — §37 verlangt 44.
+Kleiner werden nur das Polster in der Pille und der Abstand zwischen Sinnbild
+und Wort.
+
+Dabei fiel eine eigene Sorte Fehler auf, die nichts mit Zahlen zu tun hat:
+meine neuen Medienabfragen standen **vor** der Grundregel für
+`#handy-oben button`. Gleiche Spezifität, spätere Regel gewinnt — die
+Grundregel hat meine Werte einfach wieder überschrieben, und die Leiste blieb
+zu breit, obwohl die Zahlen im Stil richtig dastanden. Die Abfragen stehen
+jetzt hinter der Grundregel.
+
+**Geprüft:** test195 (Graph nach dem Start, ohne offene Seite), test54 §
+Bedienleiste und test37/40/67/114 (sechs Pillen, kurze Namen), test31
+(Offline-Probe). Zwölf Läufe, die im vollen Durchgang rot standen, sind
+wieder grün — zehn davon nur, weil sie die neue Startansicht noch nicht
+kannten, zwei wegen echter Produktfehler (dieser Abschnitt, Nummer 1 und 2).
+
+
+## E138 · Das Whiteboard ist eine Fläche, kein Fenster
+
+**24. August 2026.** §22 des Auftrags verlangt das Whiteboard als eigenen
+Top-Level-Arbeitsbereich, mit „freie Fläche", „Zoom/Pan", „Verbindungen" und
+„Bilder". Vorhanden war ein Whiteboard-Block mit Stift, Formen, Haftnotizen
+und Radierer — gut gebaut, aber genau so gross wie sein Kasten.
+
+Was rechts hinausging, war nicht „weiter draussen". Es war weg.
+
+### Ein Ausschnitt statt einer Leinwand
+
+Die Formen behalten ihre Koordinaten. Neu ist ein AUSSCHNITT darüber:
+
+```ts
+sicht = { x, y, z }       // linke obere Ecke in Formkoordinaten, Massstab
+viewBox = `${x} ${y} ${breite / z} ${hoehe / z}`
+```
+
+Alte Boards bleiben damit Zeichen für Zeichen gültig: ohne gespeicherte
+Sicht ist der Ausschnitt 0/0 bei Massstab 1, und das ist genau das Bild von
+vorher.
+
+Der Fehler, den ein Ausschnitt einbaut, sitzt woanders — im Zeiger. Solange
+Ausschnitt und Bildschirm dasselbe sind, stimmt `clientX - rect.left`. Ab
+dem ersten Schieben stimmt es nicht mehr, und zwar um genau den Schiebeweg.
+Das sieht man erst beim zweiten Strich, und dann sieht es aus wie ein
+Zeichenfehler, nicht wie ein Rechenfehler:
+
+```ts
+punkt = [sicht.x + (clientX - rect.left) / sicht.z,
+         sicht.y + (clientY - rect.top)  / sicht.z]
+```
+
+test209 §3 misst genau das: gezeichnet bei Bildschirm-x, gespeichert bei
+Flächen-x. Mit der Umrechnung zurückgenommen lag das Rechteck bei 112 statt
+332 — um 220 daneben, den Schiebeweg aus §2.
+
+### Bilder gehören in die Ablage
+
+Der kurze Weg wäre eine Data-URL in `shapes` gewesen. Dann steckte das ganze
+Bild in jedem Block, in jeder Sicherung und in jedem Versionsstand — genau
+das, was §14 verbietet. Das Bild geht deshalb denselben Weg wie jeder andere
+Anhang: in Stücken in die Dateiablage, verknüpft mit diesem Block. In der
+Form steht nur die Kennung.
+
+Das kostet einen dritten Zustand: `undefined` heisst „noch nicht gefragt",
+`null` heisst „gibt es nicht mehr", eine Zeichenkette ist die Adresse. Mit
+nur zwei Zuständen fragte die Fläche bei jeder Neuzeichnung wieder nach
+einer Datei, die gelöscht ist.
+
+### Verbindungen merken sich Formen, nicht Punkte
+
+Eine Verbindung speichert `von` und `nach` — zwei Formkennungen. Gezeichnet
+wird sie erst beim Malen, von Rand zu Rand. Deshalb geht sie mit, wenn man
+eine Form verschiebt, und verschwindet mit ihr, wenn man sie radiert.
+
+Mit Koordinaten statt Kennungen wäre der Pfeil liegengeblieben; test209 §6
+misst beide Richtungen.
+
+### Der eigene Bereich
+
+Die Flächen lagen längst im Schnappschuss der Arbeitswelt — sichtbar waren
+sie als eine Zeile in der Übersicht, zusammen mit den Tabellen. §22 verlangt
+einen eigenen Bereich, §52 verbietet dafür eine zweite Datenhaltung. Beides
+zusammen heisst: ein Reiter mehr auf denselben Daten.
+
+Karten statt Listenzeilen, weil ein Whiteboard kein Titel ist, sondern ein
+Bild. Zehn Zeilen „Whiteboard" wären zehnmal dasselbe Wort; die Miniatur ist
+das einzige, woran man seines wiedererkennt. Sie liest den Block, den es
+ohnehin gibt, und zeichnet höchstens 60 Formen nach.
+
+**Geprüft:** test209, neun Abschnitte — Ausschnitt und Massstab, Schieben mit
+Neustart, Zeichnen nach dem Schieben, Zoom und „alles ins Bild", Bild in der
+Ablage, Verbindungen in beide Richtungen, der Reiter samt Adresse, „Neues
+Whiteboard", und das Telefon.
+
+### Und zwei Funde, die erst das Hinsehen gebracht hat
+
+**Die Startansicht überschrieb, was schon offen war.** In `schale.ts` stand
+
+```ts
+setTimeout(() => Produktwelten.lernen('heute'), 60);
+```
+
+Der Grund für die Verzögerung ist gut: die Startansicht braucht
+`Produktwelten.start()`, und das läuft weiter unten in derselben Funktion.
+Nur ist eine Zeitspanne die falsche Art, auf eine Reihenfolge zu warten.
+
+Gemessen mit einem Whiteboard, das direkt nach dem Laden geöffnet wurde:
+
+```txt
+sofort       Zeichenfläche da
+nach 600 ms  Zeichenfläche weg, Heute-Bild da
+```
+
+Und weil es ein Wettlauf ist, kam er nicht immer: zwei Durchgänge von
+`bilder.mts` hintereinander, derselbe Code — das dunkle Bild zeigte die
+Fläche, das helle das Heute-Bild.
+
+Die Startansicht wird jetzt gemerkt und ganz am Ende von `start()`
+ausgeführt. Danach kommt jedes `oeffne()` von aussen garantiert später.
+
+Das war auch der wahre Grund für das falsche Papier-Bild in E136. Dort
+steht, `App.oeffne` räume die Sonderansicht nicht weg — das stimmt nicht:
+sie räumt sie weg, und die verspätete Startansicht holt sie zurück. Und es
+war der Grund für test90, der im vollen Durchgang rot stand: dieselbe Stelle
+öffnet dort eine Seite und misst gleich darauf ihren Randstreifen.
+
+**Der Lebensbereich-Wähler hatte gar keinen Stil.** Oben rechts im
+Workspace-Kopf stand ein weisser Kasten auf dunklem Grund, und das Wort
+„Lebensbereich" klebte an ihm. Für `.aw-bereichsfilter` gab es in
+`arbeitswelt.css` keine einzige Regel; ein Auswahlfeld ohne Stil nimmt die
+Farben des Browsers, und die kennen den Dunkelmodus nicht (§48).
+
+Am Telefon kam dazu, dass er zur Hälfte ausserhalb des Bildschirms lag: der
+Kopf ist eine Flexzeile mit drei Kindern, und bei 390 px passen Titel,
+Filter und ☰ nicht nebeneinander. Jetzt bricht der Kopf um, und unter 470 px
+verschwindet das WORT „Lebensbereich" — 170 px, die es dort nicht gibt. Das
+Feld trägt weiterhin `aria-label`, ein Screenreader liest also mehr, als
+vorher auf dem Bildschirm stand.
+
+Beim zweiten dieser Fixes bin ich in dieselbe Falle getappt wie in E137: die
+neue Medienabfrage stand VOR der Grundregel, gleiche Spezifität, spätere
+Regel gewinnt — das Bild sah aus wie vorher, obwohl die Zahlen im Stil
+richtig dastanden.
+
+### Was §22 noch nicht hat
+
+Die Miniatur im Bereich zeichnet Formen, keine Verbindungen. Das ist eine
+bewusste Vereinfachung — sie ist ein Wiedererkennungszeichen, keine
+Vorschau. Steht in L54.
+

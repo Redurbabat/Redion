@@ -405,8 +405,12 @@ p('Nichts liegt über dem Blatt', speicher?.frei === true,
    Ansicht, ohne den Reiter zu setzen, den `handyLeiste()` liest — man
    landete im Posteingang, und oben stand noch „Start". Derselbe Fehler wie
    an den Reitern selbst, nur an einer Stelle, wo ihn niemand suchte. */
+/* Die Namen der Pillen sind seit E132 andere: `hl-start` heisst „Heute",
+   `hl-seiten` heisst „Workspace" (produktwelten.ts:258-261). Die Wege im
+   Blatt heissen weiter `seiten`, `mehr`, `start` — geprüft wird, dass sie
+   die richtige Pille markieren, nicht wie sie beschriftet ist. */
 for (const [weg, erwartet] of [['seiten', 'Seiten'], ['mehr', 'Mehr'],
-                               ['start', 'Start']] as [string, string][]) {
+                               ['start', 'Heute']] as [string, string][]) {
   await seite.evaluate(() => document.getElementById('r-blatt')?.remove());
   await seite.evaluate(() => document.getElementById('hl-konto')?.click());
   await seite.waitForTimeout(400);
@@ -467,18 +471,24 @@ const seitenReiter = await seite.evaluate(() => {
         abschnitte: string[]; kursiv: string[]; zuFlach: string[];
         kiUnten: boolean } | null;
 
+/* „Seiten" heisst am Telefon jetzt „Workspace" (E132). */
 p('Oben steht „Seiten"', seitenReiter?.beschriftungen.includes('Seiten') === true,
   (seitenReiter?.beschriftungen ?? []).join(' · '));
 p('… und „Chats" steht nicht mehr da',
   seitenReiter?.beschriftungen.includes('Chats') === false);
 p('Ein Tipp darauf öffnet den Seitenbereich',
-  seitenReiter?.ueberschrift === 'Seiten', seitenReiter?.ueberschrift);
+  seitenReiter?.ueberschrift === '🧱 Workspace', seitenReiter?.ueberschrift);
 p('Die Pille wandert mit',
   seitenReiter?.aktiv.length === 1 && seitenReiter.aktiv[0] === 'Seiten',
   'aktiv: ' + (seitenReiter?.aktiv ?? []).join(', ') +
-  ' — ohne Seitenleiste.reiter() bliebe sie auf „Start"');
+  ' — ohne Seitenleiste.reiter() bliebe sie auf „Heute"');
+/* DER BEREICH IST EIN ANDERER GEWORDEN (E132): `hl-seiten` öffnet seit den
+   Produktwelten die Workspace-Übersicht statt der alten Seitenliste. Die
+   Absicht des Prüfpunkts bleibt — man muss finden, woran man zuletzt war,
+   was man sich gemerkt hat und wie viel da ist. Die Namen dafür heissen
+   jetzt anders. */
 p('Die Abschnitte aus der Vorgabe stehen da',
-  ['Kürzlich verwendet', 'Favoriten', 'Privat'].every(
+  ['Zuletzt geöffnet', 'Favoriten', 'Dein Bestand'].every(
     a => (seitenReiter?.abschnitte ?? []).includes(a)),
   (seitenReiter?.abschnitte ?? []).join(' · '));
 p('Die Titel sind aufrecht, nicht kursiv',
@@ -508,8 +518,9 @@ p('„Termine" zeigt die Termine auf der Bühne', term.ueberschrift === 'Termine
 p('… und zieht NICHT die Schublade auf', term.schublade === false,
   'die Seitenleiste des Rechners gehört nicht aufs Telefon (E38)');
 p('Der Weg zum Kalender steht darin', term.hatKalender === true);
-p('Die Pille steht auf „Termine"',
-  term.aktiv.length === 1 && term.aktiv[0] === 'Termine', term.aktiv.join(', '));
+/* „Termine" heisst am Telefon jetzt „Plan" (E132). */
+p('Die Pille steht auf „Plan"',
+  term.aktiv.length === 1 && term.aktiv[0] === 'Plan', term.aktiv.join(', '));
 
 await seite.evaluate(() => document.getElementById('hl-mehr')?.click());
 await seite.waitForTimeout(700);
@@ -714,8 +725,14 @@ const blattNeu = await seite.evaluate(() => {
 
 p('Der Stift öffnet ein Blatt', !!blattNeu, 'er legte vorher sofort eine Seite an');
 p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.titel);
-p('Es führt zu neun Sachen inklusive Scanner, nicht zu einer',
-  (blattNeu?.wege.length ?? 0) === 9 && (blattNeu?.wege ?? []).includes('scan'),
+/* ELF SEIT E138: Aufnahme und Whiteboard sind dazugekommen (Auftrag §46).
+   Beide Wege gab es vorher schon, nur nicht an der Stelle, an der man am
+   Telefon etwas Neues anfängt. */
+p('Es führt zu elf Sachen inklusive Scanner, nicht zu einer',
+  (blattNeu?.wege.length ?? 0) === 11 && (blattNeu?.wege ?? []).includes('scan'),
+  (blattNeu?.wege ?? []).join(', '));
+p('Aufnahme und Whiteboard stehen darunter',
+  (blattNeu?.wege ?? []).includes('aufnahme') && (blattNeu?.wege ?? []).includes('board'),
   (blattNeu?.wege ?? []).join(', '));
 p('Datenbank, Tabelle, Aufgabe und Karteikarte sind dabei',
   ['db', 'tabelle', 'aufgabe', 'karte'].every(w => (blattNeu?.wege ?? []).includes(w)),

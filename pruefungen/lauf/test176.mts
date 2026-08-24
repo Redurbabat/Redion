@@ -166,6 +166,12 @@ console.log('\n5 · Nach dem Neuladen steht alles noch so da');
 
 await seite.reload();
 await seite.waitForTimeout(2600);
+/* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+   sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 const nachher = await seite.evaluate(async (arg: any) => {
   App.oeffne(arg.seite);
   await new Promise(r => setTimeout(r, 600));

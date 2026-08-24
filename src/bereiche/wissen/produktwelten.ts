@@ -13,8 +13,8 @@ const Produktwelten = (() => {
   type Lernansicht = 'heute' | 'lernen' | 'lernweg' | 'pfad' | 'fehler' |
     'pruefungen' | 'schule' | 'ausbildung' | 'uni' | 'arbeit' | 'fortschritt';
   type Arbeitsansicht = 'start' | 'uebersicht' | 'seiten' | 'bibliothek' |
-    'aufgaben' | 'kalender' | 'datenbanken' | 'projekte' | 'dateien' | 'wiki' |
-    'vorlagen';
+    'aufgaben' | 'kalender' | 'datenbanken' | 'whiteboards' | 'projekte' |
+    'dateien' | 'wiki' | 'vorlagen';
 
   const WELT_META = 'produkt:welt';
   const LERN_META = 'produkt:lernansicht';
@@ -75,7 +75,8 @@ const Produktwelten = (() => {
     const welt = sichereWelt(treffer[1]);
     const erlaubte = welt === 'lernen'
       ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt'])
-      : new Set(['uebersicht', 'bibliothek', 'aufgaben', 'kalender', 'datenbanken', 'wiki', 'vorlagen']);
+      : new Set(['uebersicht', 'bibliothek', 'aufgaben', 'kalender', 'datenbanken',
+                 'whiteboards', 'wiki', 'vorlagen']);
     return erlaubte.has(treffer[2] as string) ? { welt, ansicht: treffer[2] as string } : null;
   };
 
@@ -110,6 +111,7 @@ const Produktwelten = (() => {
 
   const bibliothek = (): void => workspace('bibliothek');
   const aufgaben = (): void => workspace('aufgaben');
+  const whiteboards = (): void => workspace('whiteboards');
 
   const planung = (): void => {
     weltSetzen('lernen');
@@ -255,9 +257,16 @@ const Produktwelten = (() => {
       const name = startReiter.querySelector('b');
       if (name) name.textContent = 'Heute';
     }
+    /* DER DRITTE WERT IST DIE KURZFORM AM TELEFON, und „Workspace" ist keine
+       (E137). Gemessen bei 390 px: vier von fünf Pillen liefen über den Rand
+       — „Workspace" um 78 px, „Heute" um 41. §30 des Auftrags verlangt
+       ausdrücklich, dass am iPhone nichts überläuft, und test114 misst es
+       Breite für Breite.
+       Der lange Name bleibt als Titel stehen; auf der Pille steht das kurze
+       Wort, das Redion schon vorher benutzt hat. */
     mobileBeschriftung('hl-start', 'Heute', 'Heute');
-    mobileBeschriftung('hl-lernen', 'Lernen', 'Lernen');
-    mobileBeschriftung('hl-seiten', 'Workspace', 'Workspace');
+    mobileBeschriftung('hl-lernen', 'Lernen & Alltag', 'Lernen');
+    mobileBeschriftung('hl-seiten', 'Workspace', 'Seiten');
     mobileBeschriftung('hl-bespr', 'Planung und Termine', 'Plan');
     if (gestartet) return;
     gestartet = true;
@@ -273,7 +282,7 @@ const Produktwelten = (() => {
 
   return {
     start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
-    lernen, workspace, bibliothek, aufgaben, planung, bereicheDialog,
+    lernen, workspace, bibliothek, aufgaben, whiteboards, planung, bereicheDialog,
     routeAusHash, routeOeffnen
   };
 })();

@@ -1614,6 +1614,19 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   to{ opacity:1; transform:translateY(0) }
 }
 
+/* --- Massstab und Schiebehand (E138, Auftrag §22) ------------------------------------------- */
+/* Die Fläche ist seit E138 grösser als ihr Kasten. Zwei Dinge braucht das
+   sichtbar: WO man ist (der Prozentwert) und WOMIT man schiebt (die Hand).
+   Ohne den Prozentwert weiss niemand, warum die Zeichnung plötzlich klein
+   ist; ohne den Zeiger sieht die Hand aus wie ein Zeichenwerkzeug. */
+.wb-massstab{
+  min-width:46px; padding:0 4px; text-align:center; font-size:11px; font-weight:600;
+  color:var(--text-dim); font-variant-numeric:tabular-nums;
+}
+.wb-zoom{display:inline-flex;align-items:center;gap:2px}
+.wb.wb-schiebt .wb-flaeche{cursor:grab}
+.wb.wb-schiebt .wb-flaeche:active{cursor:grabbing}
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */
@@ -3592,6 +3605,127 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   .arbeitswelt :where(button,.aw-vorlage):active{transform:none}
 }
 
+/* --- Whiteboards als eigener Bereich (E138, Auftrag §22) ------------------ */
+/* Karten statt Listenzeilen, weil ein Whiteboard kein Titel ist, sondern ein
+   Bild. Zehn Zeilen „Whiteboard" wären zehnmal dasselbe Wort; die Miniatur
+   ist das einzige, woran man seines wiedererkennt. */
+/* 185 px, NICHT 210 — NACHGEMESSEN (§55). Der Inhaltsbereich der
+   Arbeitswelt ist am 1280er Bildschirm 404 px breit (links die Bereiche,
+   rechts die Reiter). Bei 210 px passte rechnerisch genau EINE Spalte
+   hinein: 2 × 210 + 12 = 432 > 404. Auf dem Bild stand deshalb eine
+   Karte über die andere, obwohl daneben Platz war.
+   Mit 185: 2 × 185 + 12 = 382 ≤ 404. */
+.arbeitswelt .aw-boards{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px
+}
+.arbeitswelt .aw-board{
+  position:relative;display:grid;border:1px solid var(--line);
+  border-radius:var(--aw-radius-lg);background:var(--bg-side);overflow:hidden
+}
+.arbeitswelt .aw-board-oeffnen{
+  display:grid;gap:6px;padding:0 0 12px;text-align:left;align-content:start
+}
+.arbeitswelt .aw-board-bild{
+  display:block;width:100%;height:118px;background:var(--bg-card);
+  border-bottom:1px solid var(--line)
+}
+.arbeitswelt .aw-board-leer{
+  display:grid;place-items:center;height:118px;background:var(--bg-card);
+  border-bottom:1px solid var(--line);font-size:30px
+}
+.arbeitswelt .aw-board-titel{
+  padding:0 13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:13.5px;font-weight:700
+}
+.arbeitswelt .aw-board-meta{padding:0 13px;color:var(--text-dim);font-size:11.5px}
+.arbeitswelt .aw-board-aktionen{
+  position:absolute;top:7px;right:7px;display:flex;gap:4px;opacity:0;transition:opacity .12s
+}
+.arbeitswelt .aw-board:hover .aw-board-aktionen,
+.arbeitswelt .aw-board:focus-within .aw-board-aktionen{opacity:1}
+/* Am Telefon gibt es kein Überfahren — dort stehen die zwei Knöpfe immer da,
+   sonst wären sie unerreichbar (§37). */
+@media(max-width:760px){
+  .arbeitswelt .aw-board-aktionen{opacity:1}
+  .arbeitswelt .aw-boards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+
+/* --- Der Lebensbereich-Wähler (E138) ------------------------------------- */
+/* MIT AUGEN GESEHEN (§55): oben rechts im Kopf stand ein weisser Kasten auf
+   dunklem Grund, und das Wort „Lebensbereich" klebte an ihm. Der Grund war
+   nicht ein falscher Wert, sondern gar keiner — für `.aw-bereichsfilter`
+   gab es in dieser Datei keine einzige Regel. Ein Auswahlfeld ohne Stil
+   nimmt die Farben des Browsers, und die kennen den Dunkelmodus nicht.
+
+   §48 sagt: neue Oberflächen müssen in hell UND dunkel funktionieren. Ein
+   Feld, das nur in einem von beiden lesbar ist, ist keine halbe Lösung —
+   es ist die Stelle, an der ein Bildschirm billig aussieht. */
+.arbeitswelt .aw-bereichsfilter{display:flex;align-items:center}
+.arbeitswelt .aw-bereichsfilter-label{
+  display:flex;align-items:center;gap:8px;
+  color:var(--text-dim);font-size:12px;font-weight:600;white-space:nowrap
+}
+.arbeitswelt .aw-bereichsfilter-auswahl{
+  min-height:var(--aw-touch);padding:0 30px 0 11px;
+  border:1px solid var(--line);border-radius:9px;
+  background:var(--bg-card);color:var(--text);
+  font:inherit;font-size:12.5px;font-weight:600;
+  /* Der eigene Pfeil, weil `appearance:none` den des Browsers mitnimmt —
+     und mit ihm den einzigen Hinweis, dass das Feld sich öffnen lässt. */
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),
+                   linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 16px) center,calc(100% - 11px) center;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat
+}
+.arbeitswelt .aw-bereichsfilter-auswahl:hover{border-color:var(--accent)}
+.arbeitswelt .aw-bereichsfilter-auswahl:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px
+}
+/* Die Liste selbst zeichnet das Betriebssystem. Ohne diese zwei Zeilen
+   steht schwarz auf schwarz, sobald der Rechner im Dunkelmodus läuft. */
+.arbeitswelt .aw-bereichsfilter-auswahl option{
+  background:var(--bg-card);color:var(--text)
+}
+/* AM TELEFON UMBRECHEN, NICHT QUETSCHEN. Mit Augen gesehen (§55): auf dem
+   iPhone-Bild stand „Lebensbereich (" und dann der Rand — das Auswahlfeld
+   lag zur Hälfte ausserhalb des Bildschirms. `.aw-kopf` ist eine Zeile mit
+   `space-between`, und drei Kinder (Titel, Filter, ☰) passen bei 390 px
+   nicht nebeneinander.
+   `width:100%` allein half nicht: ohne `flex-wrap` bleibt eine Flexzeile
+   eine Zeile, und 100 % werden einfach zusammengedrückt. */
+@media(max-width:760px){
+  .arbeitswelt .aw-kopf{flex-wrap:wrap;align-items:center;row-gap:12px}
+  /* Der Titel nimmt die erste Zeile ganz, darunter stehen Filter und ☰
+     nebeneinander. Mit dem ☰ allein in einer Zeile blieb daneben eine
+     handbreite leere Fläche — Platz, den ein Telefon nicht hat. */
+  .arbeitswelt .aw-titelgruppe{flex:1 1 100%;min-width:0;order:1}
+  .arbeitswelt .aw-bereichsfilter{flex:1 1 auto;min-width:0;order:2}
+  .arbeitswelt .aw-mobile-nav{order:3;flex:0 0 auto}
+  .arbeitswelt .aw-bereichsfilter-label{width:100%;gap:10px}
+  .arbeitswelt .aw-bereichsfilter-auswahl{flex:1 1 auto;min-width:0}
+}
+
+/* DAS WORT „LEBENSBEREICH" KOSTET 170 PX, DIE ES NICHT GIBT. Bei 390 px
+   bleiben im Kopf rund 335 px: Beschriftung 170 + Feld 150 + ☰ 56 sind 376.
+   Gemessen stand danach „◎ Alle Bereicl" da, und das ☰ rutschte in eine
+   eigene Zeile.
+
+   Verschwiegen wird nichts: das Feld trägt `aria-label="Workspace nach
+   Lebensbereich filtern"`, und das Symbol ◎ steht weiter davor. Ein
+   Screenreader liest also mehr, als vorher auf dem Bildschirm stand (§38).
+
+   DIESER BLOCK STEHT AM DATEIENDE, und das ist kein Zufall: der erste
+   Versuch stand oben im 470er Medienblock und wurde von der Grundregel
+   `.aw-bereichsfilter-label` weiter unten wieder überschrieben — gleiche
+   Spezifität, spätere Regel gewinnt. Das Bild sah danach aus wie vorher,
+   obwohl die Zahlen im Stil richtig dastanden. Derselbe Fehler wie in E137
+   an der Telefonleiste. */
+@media(max-width:470px){
+  .arbeitswelt .aw-bereichsfilter-label{font-size:0;gap:0}
+  .arbeitswelt .aw-bereichsfilter-auswahl{font-size:12.5px}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/lernwelt.css ===== */
@@ -3694,6 +3828,30 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
     border-color var(--motion-fast,130ms) ease,transform var(--motion-fast,130ms) ease
 }
 .lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
+
+/* Die Einrichtungskarte auf dem Heute-Bild: ein Angebot, kein Sperrschirm.
+   Sie öffnete sich früher von selbst über alles (E137). */
+.lernwelt .lw-setup{display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;margin-bottom:var(--lw-gap)}
+.lernwelt .lw-setup p{margin:4px 0 0;color:var(--text-dim);font-size:13px}
+.lernwelt .lw-setup button{flex:0 0 auto;min-height:var(--lw-touch);padding:9px 16px;
+  border-radius:10px;border:1px solid var(--line);font-weight:620;
+  background:var(--bg-side);color:var(--text)}
+.lernwelt .lw-setup button:hover{background:var(--bg-hover,#f1f2f5)}
+
+/* AM RECHNER STEHEN ALLE NEUN REITER DA, statt zu scrollen.
+   Mit Augen gesehen (§55): auf dem Heute-Bild hing „Schule / Ausbildung"
+   halb ausserhalb der Leiste, und die drei dahinter — Uni, Arbeit,
+   Fortschritt — waren gar nicht zu ahnen. Die Leiste kann zwar gescrollt
+   werden (`overflow-x:auto`), aber nichts zeigt das an: kein Schatten,
+   kein Pfeil, keine angeschnittene Beschriftung. Neun Reiter brauchen
+   1016 px, die Leiste hatte 706.
+   Am Telefon bleibt es beim Scrollen — dort ist eine waagerechte Reiter-
+   leiste die vertraute Form, und zwei Reihen kosteten zu viel Höhe. */
+@media (min-width:900px){
+  .lernwelt .lw-nav{flex-wrap:wrap;overflow-x:visible;row-gap:5px}
+  .lernwelt .lw-nav button{flex:0 1 auto}
+}
 .lernwelt .lw-nav button.is-active,
 .lernwelt .lw-nav button[aria-current="page"]{
   border-color:var(--line-stark,var(--line));background:var(--lw-accent-soft);
@@ -5381,10 +5539,18 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
      geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
      nichts mehr zu holen ist. */
-  @media(max-width:440px){
-    #handy-oben{ gap:5px; padding-left:17px; padding-right:17px }
-  }
-  @media(max-width:380px){ #handy-oben{ gap:4px; padding-left:10px; padding-right:10px } }
+  /* NACHGEMESSEN AM 24. AUGUST, weil eine SECHSTE Pille dazugekommen ist:
+     die Produktwelten stellen „Lernen" vor die vier Bereiche (E132). Die
+     Rechnung oben galt für fünf, und mit sechs lief sie über — gemessen
+     mit den kurzen Namen (Heute, Lernen, Seiten, Plan, Mehr):
+
+       428 px   Heute 3 px zu viel, Seiten 6 px
+       390 px   vier von fünf zu viel, bis 44 px
+
+     Gespart wird weiter am Weissraum und nicht an der Daumenfläche: die
+     Tasten bleiben 56 px hoch und mindestens 56 px breit. Kleiner werden
+     nur das Polster in der Pille und der Abstand zwischen Sinnbild und
+     Wort. */
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
@@ -5399,6 +5565,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     transition:background .14s, color .14s;
   }
   #handy-oben button:active{ background:var(--bg-hover) }
+
+  @media(max-width:440px){
+    #handy-oben{ gap:5px; padding-left:14px; padding-right:14px }
+    /* Die HÖHE bleibt 56 px — das ist die Fläche, die der Daumen trifft.
+       Schmaler darf eine Taste werden: §37 verlangt 44 px, und 48 × 56 ist
+       immer noch deutlich darüber. Sechs Kreise à 56 px plus die eine
+       beschriftete Pille brauchten bei 390 px rechnerisch 439 px. */
+    #handy-oben button{ min-width:48px; padding:0 9px; gap:6px }
+  }
+  @media(max-width:400px){
+    #handy-oben{ gap:4px; padding-left:8px; padding-right:8px }
+    #handy-oben button{ min-width:44px; padding:0 7px; gap:5px }
+  }
 
   /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
   /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
@@ -20342,10 +20521,36 @@ const Links = (() => {
     };
     const graph = () => {
         const index = buildGraphIndex();
-        const centerId = App.aktuelleSeite?.() || '';
+        /* OHNE OFFENE SEITE NIMMT DER GRAPH DIE ZULETZT BEARBEITETE (E137).
+           Vorher stand hier nur „Öffne zuerst eine Seite für ihren Teilgraphen".
+           Das war richtig, solange die App auf einer Seite startete. Seit E132
+           ist die Startansicht das Heute-Dashboard, und das ist KEINE Seite —
+           `App.aktuelleSeite()` gibt dort nichts zurück. Damit war der Satz
+           nicht mehr die Ausnahme, sondern der Normalfall: wer nach dem Start
+           Strg+Umschalt+G drückte, bekam eine Absage statt eines Graphen.
+    
+           Die zuletzt bearbeitete Seite ist die ehrlichste Wahl — sie ist das,
+           woran man zuletzt war. Gibt es überhaupt keine Seite, bleibt es bei
+           der Absage; dann ist sie wahr. */
+        const offen = App.aktuelleSeite?.() || '';
+        const zuletzt = () => {
+            let beste = '', wann = '';
+            index.nodes.forEach((_knoten, id) => {
+                const block = Store.getBlock(id);
+                if (!block || block.type !== 'page' || block.alive === false)
+                    return;
+                const zeit = String(block.edited || block.created || '');
+                if (zeit > wann) {
+                    wann = zeit;
+                    beste = id;
+                }
+            });
+            return beste;
+        };
+        const centerId = index.nodes.has(offen) ? offen : zuletzt();
         const center = index.nodes.get(centerId);
         if (!center) {
-            UI.toast(index.pageCount ? 'Öffne zuerst eine Seite für ihren Teilgraphen' : 'Noch keine Seiten für den Graphen');
+            UI.toast('Noch keine Seiten für den Graphen');
             return undefined;
         }
         const analysis = analyzeKnowledgeGraph(index);
@@ -20941,11 +21146,33 @@ const Zusatz = (() => {
         let werkzeug = 'stift';
         let farbe = PALETTE[0];
         const hoehe = block.hoehe || 380;
+        /* DIE FLÄCHE IST GRÖSSER ALS DAS FENSTER (E138, Auftrag §22).
+           Bis hierher war das Whiteboard genau so gross wie sein Kasten: was
+           rechts hinausging, war weg. Die Formen behalten ihre Koordinaten —
+           neu ist nur ein AUSSCHNITT darüber. `sicht.x/y` ist die linke obere
+           Ecke des Ausschnitts in Formkoordinaten, `sicht.z` der Massstab.
+    
+           Damit bleiben alte Boards Zeichen für Zeichen gültig: ohne
+           gespeicherte Sicht ist der Ausschnitt 0/0 bei Massstab 1, und das ist
+           genau das Bild von vorher. */
+        const zahl = (wert, ersatz) => typeof wert === 'number' && Number.isFinite(wert) ? wert : ersatz;
+        const gespeichert = block.sicht && typeof block.sicht === 'object' ? block.sicht : {};
+        /* DER KLEINSTE MASSSTAB IST 10 %, NICHT 25 %. Gemessen an einer Fläche
+           mit 900 × 380 px und einer Haftnotiz bei 2600/1800: „alles ins Bild"
+           brauchte 22,7 % und bekam 25 % — die Notiz blieb unten draussen, und
+           der Knopf hielt sein Versprechen nicht.
+           Ein Knopf, der „alles" sagt und nicht alles zeigt, ist schlimmer als
+           keiner: man glaubt ihm und sucht nicht weiter. */
+        const KLEINSTER = .1, GROESSTER = 4;
+        const sicht = { x: zahl(gespeichert.x, 0), y: zahl(gespeichert.y, 0),
+            z: Math.min(GROESSTER, Math.max(KLEINSTER, zahl(gespeichert.z, 1))) };
+        let verbindeVon = null;
         const w = document.createElement('div');
         w.className = 'wb';
         w.innerHTML =
             '<div class="wb-tools">' +
                 [['zeiger', '⭠', 'Auswählen und verschieben'],
+                    ['hand', '✋', 'Fläche schieben'],
                     ['stift', '✎', 'Freihand zeichnen'],
                     ['linie', '╱', 'Linie'],
                     ['pfeil', '→', 'Pfeil'],
@@ -20953,10 +21180,24 @@ const Zusatz = (() => {
                     ['ellipse', '◯', 'Ellipse'],
                     ['notiz', '🗒', 'Haftnotiz'],
                     ['text', 'T', 'Text'],
+                    ['bild', '🖼', 'Bild einfügen'],
+                    ['verbindung', '⇢', 'Zwei Formen verbinden'],
                     ['radierer', '⌫', 'Radierer']]
                     .map(([id, ico, titel]) => `<button data-wz="${id}" title="${titel}"${id === 'stift' ? ' class="on"' : ''}>${ico}</button>`).join('') +
                 '<span class="wb-sep"></span>' +
                 PALETTE.map(c => `<button class="wb-farbe" data-c="${c}" style="background:${c}"></button>`).join('') +
+                '<span class="wb-sep"></span>' +
+                /* DIE VIER ZOOMKNÖPFE SIND EINE GRUPPE, kein loser Haufen. Am
+                   Telefon bricht die Leiste in drei Zeilen um, und ohne diese
+                   Klammer stand gemessen „−" am Ende der zweiten Zeile und „＋"
+                   am Anfang der dritten — zwei Hälften eines Reglers, getrennt
+                   durch einen Zeilenumbruch. */
+                '<span class="wb-zoom">' +
+                '<button data-a="kleiner" title="Verkleinern">−</button>' +
+                '<b class="wb-massstab" aria-live="polite">100 %</b>' +
+                '<button data-a="groesser" title="Vergrössern">＋</button>' +
+                '<button data-a="passend" title="Alles ins Bild holen">⤢</button>' +
+                '</span>' +
                 '<span class="wb-sep"></span>' +
                 '<button data-a="zurueck" title="Letztes rückgängig">↶</button>' +
                 '<button data-a="leeren" title="Alles löschen">🗑</button>' +
@@ -20971,8 +21212,46 @@ const Zusatz = (() => {
         w.appendChild(griff);
         /* --- Zeichnen ------------------------------------------------------- */
         const sichern = () => Store.updateBlock(block.id, { shapes: daten });
+        /* Der Ausschnitt in Formkoordinaten. Solange der Kasten noch nicht im
+           Dokument hängt, misst der Browser 0 — dann rechnen wir mit einer
+           Ersatzbreite und zeichnen beim ersten Anblick neu (ResizeObserver
+           weiter unten). Ohne das stünde beim ersten Bild ein viewBox von
+           Breite 0, und die Fläche bliebe leer. */
+        const ausschnitt = () => {
+            const r = flaeche.getBoundingClientRect();
+            const breite = r.width > 4 ? r.width : 900;
+            const hoch = r.height > 4 ? r.height : hoehe;
+            return { x: sicht.x, y: sicht.y, w: breite / sicht.z, h: hoch / sicht.z };
+        };
+        /* Der Platzbedarf einer Form — für „alles ins Bild" und für die
+           Verbindungen. Jede Art rechnet anders, und `text` lässt sich nur
+           schätzen; das reicht, weil beides nur Anhaltspunkte braucht. */
+        const rahmenVon = (s) => {
+            if (s.art === 'stift') {
+                const xs = s.pts.map((q) => q[0]), ys = s.pts.map((q) => q[1]);
+                const x = Math.min(...xs), y = Math.min(...ys);
+                return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+            }
+            if (s.art === 'text')
+                return { x: s.x, y: s.y - 14, w: Math.max(20, String(s.text || '').length * 8), h: 20 };
+            return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
+                w: Math.abs(s.w), h: Math.abs(s.h) };
+        };
+        /* Wo eine Verbindung den Rand ihrer Form trifft. Ohne das steckte die
+           Pfeilspitze mitten in der Haftnotiz. */
+        const randPunkt = (rahmen, zielX, zielY) => {
+            const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
+            const dx = zielX - mx, dy = zielY - my;
+            if (!dx && !dy)
+                return [mx, my];
+            const halbW = Math.max(1, rahmen.w / 2), halbH = Math.max(1, rahmen.h / 2);
+            const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001));
+            return [mx + dx * anteil, my + dy * anteil];
+        };
         const male = () => {
             flaeche.innerHTML = '';
+            const feld = ausschnitt();
+            flaeche.setAttribute('viewBox', `${feld.x} ${feld.y} ${feld.w} ${feld.h}`);
             const raster = sv('pattern', { id: 'r' + block.id.slice(0, 6), width: 24, height: 24, patternUnits: 'userSpaceOnUse' });
             raster.appendChild(sv('circle', { cx: 1, cy: 1, r: 1, fill: 'currentColor', opacity: .18 }));
             const defs = sv('defs');
@@ -20982,8 +21261,87 @@ const Zusatz = (() => {
             spitze.appendChild(sv('path', { d: 'M0,0 L9,3 L0,6 z', fill: 'context-stroke' }));
             defs.appendChild(spitze);
             flaeche.appendChild(defs);
-            flaeche.appendChild(sv('rect', { width: '100%', height: '100%', fill: `url(#r${block.id.slice(0, 6)})` }));
-            daten.forEach((s) => flaeche.appendChild(formZeichnen(s)));
+            flaeche.appendChild(sv('rect', { x: feld.x, y: feld.y, width: feld.w, height: feld.h,
+                fill: `url(#r${block.id.slice(0, 6)})` }));
+            /* Verbindungen zuerst — sie gehören unter die Formen, die sie verbinden. */
+            daten.filter((s) => s.art === 'verbindung')
+                .forEach((s) => { const linie = verbindungZeichnen(s); if (linie)
+                flaeche.appendChild(linie); });
+            daten.filter((s) => s.art !== 'verbindung')
+                .forEach((s) => flaeche.appendChild(formZeichnen(s)));
+            const anzeige = w.querySelector('.wb-massstab');
+            if (anzeige)
+                anzeige.textContent = Math.round(sicht.z * 100) + ' %';
+        };
+        /* `undefined` heisst „noch nicht gefragt", `null` heisst „gibt es nicht
+           mehr", eine Zeichenkette ist die Adresse. Drei Zustände, weil zwei zu
+           wenig sind: ohne den Unterschied fragte die Fläche bei jeder
+           Neuzeichnung wieder nach einer Datei, die gelöscht ist. */
+        const bildAdressen = new Map();
+        const bildHolen = (dateiId) => {
+            const ablage = globalThis.Dateien;
+            if (!ablage?.adresse) {
+                bildAdressen.set(dateiId, null);
+                return;
+            }
+            bildAdressen.set(dateiId, null);
+            Promise.resolve(ablage.adresse(dateiId)).then((url) => {
+                bildAdressen.set(dateiId, url || null);
+                if (url)
+                    male();
+            }).catch(() => { bildAdressen.set(dateiId, null); });
+        };
+        /* Ein Bild von der Festplatte auf die Fläche. Die Datei geht denselben
+           Weg wie jeder andere Anhang — in Stücken in die Ablage, verknüpft mit
+           diesem Block, damit sie beim Löschen der Seite mitgeht. */
+        const bildWaehlen = (x, y) => {
+            const ablage = globalThis.Dateien;
+            if (!ablage?.ablegen) {
+                UI.toast('Die Dateiablage ist noch nicht geladen');
+                return;
+            }
+            const feld = document.createElement('input');
+            feld.type = 'file';
+            feld.accept = 'image/*';
+            feld.addEventListener('change', async () => {
+                const datei = feld.files?.[0];
+                if (!datei)
+                    return;
+                try {
+                    const satz = await ablage.ablegen(datei, { blockId: block.id });
+                    const masse = await new Promise(fertig => {
+                        const probe = new Image();
+                        probe.onload = () => fertig({ w: probe.naturalWidth || 320, h: probe.naturalHeight || 240 });
+                        probe.onerror = () => fertig({ w: 320, h: 240 });
+                        probe.src = URL.createObjectURL(datei);
+                    });
+                    const breite = Math.min(360, masse.w);
+                    daten.push({ id: Store.uid().slice(0, 8), art: 'bild', x, y,
+                        w: Math.round(breite), h: Math.round(breite * masse.h / (masse.w || 1)),
+                        farbe, dateiId: String(satz.id) });
+                    male();
+                    sichern();
+                }
+                catch (fehler) {
+                    UI.toast(fehler instanceof Error ? fehler.message : 'Das Bild liess sich nicht ablegen');
+                }
+            });
+            feld.click();
+        };
+        const verbindungZeichnen = (s) => {
+            const a = daten.find((q) => q.id === s.von);
+            const b = daten.find((q) => q.id === s.nach);
+            if (!a || !b)
+                return null;
+            const ra = rahmenVon(a), rb = rahmenVon(b);
+            const [x1, y1] = randPunkt(ra, rb.x + rb.w / 2, rb.y + rb.h / 2);
+            const [x2, y2] = randPunkt(rb, ra.x + ra.w / 2, ra.y + ra.h / 2);
+            const p = sv('path', {
+                d: `M${x1} ${y1} L${x2} ${y2}`, stroke: s.farbe, 'stroke-width': 2,
+                fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#p${block.id.slice(0, 6)})`
+            });
+            p.dataset.sid = s.id;
+            return p;
         };
         const formZeichnen = (s) => {
             if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
@@ -21023,6 +21381,41 @@ const Zusatz = (() => {
                 }
                 return g;
             }
+            if (s.art === 'bild') {
+                /* DAS BILD LIEGT IN DER DATEIABLAGE, NICHT IN DEN FORMEN (§14).
+                   In `shapes` steht nur die Kennung; die Adresse ist ein Blob-Link,
+                   den erst `Dateien.adresse()` herausgibt — und das dauert. Solange
+                   sie fehlt, steht ein Platzhalter da und `male()` wird einmal
+                   nachgeholt, sobald die Adresse kommt.
+        
+                   Ein Bild als Data-URL in `shapes` wäre der kurze Weg gewesen. Er
+                   bläht jeden Block, jede Sicherung und jeden Versionsstand um die
+                   volle Bildgrösse auf — genau das, was §14 verbietet. */
+                const bekannt = bildAdressen.get(String(s.dateiId || ''));
+                if (bekannt === undefined && s.dateiId)
+                    bildHolen(String(s.dateiId));
+                const rahmen = {
+                    x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
+                    w: Math.abs(s.w) || 160, h: Math.abs(s.h) || 120
+                };
+                if (!bekannt) {
+                    const platz = sv('g');
+                    platz.appendChild(sv('rect', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
+                        rx: 5, fill: 'none', stroke: s.farbe, 'stroke-width': 2,
+                        'stroke-dasharray': '5 4' }));
+                    const wort = sv('text', { x: rahmen.x + rahmen.w / 2, y: rahmen.y + rahmen.h / 2,
+                        fill: s.farbe, 'font-size': 13, 'text-anchor': 'middle' });
+                    wort.textContent = bekannt === null ? 'Bild fehlt' : 'Bild lädt …';
+                    platz.appendChild(wort);
+                    platz.dataset.sid = s.id;
+                    return platz;
+                }
+                const bild = sv('image', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
+                    preserveAspectRatio: 'xMidYMid meet' });
+                bild.setAttribute('href', bekannt);
+                bild.dataset.sid = s.id;
+                return bild;
+            }
             if (s.art === 'ellipse') {
                 const e = sv('ellipse', {
                     cx: s.x + s.w / 2, cy: s.y + s.h / 2,
@@ -21055,20 +21448,115 @@ const Zusatz = (() => {
                 out.push(zeile.trim());
             return out.slice(0, 8);
         };
+        /* VON BILDSCHIRM AUF FLÄCHE. Vorher war beides dasselbe; mit Ausschnitt
+           und Massstab ist es das nicht mehr, und ohne diese Umrechnung landete
+           jeder Strich an der falschen Stelle, sobald man einmal geschoben hat. */
         const punkt = (e) => {
             const r = flaeche.getBoundingClientRect();
-            return [Math.round(e.clientX - r.left), Math.round(e.clientY - r.top)];
+            return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z),
+                Math.round(sicht.y + (e.clientY - r.top) / sicht.z)];
         };
-        let aktiv = null, verschiebt = null;
+        const sichtSichern = () => Store.updateBlock(block.id, {
+            sicht: { x: Math.round(sicht.x), y: Math.round(sicht.y),
+                z: Math.round(sicht.z * 100) / 100 }
+        });
+        /* Vergrössern um den festgehaltenen Punkt: was unter dem Finger liegt,
+           bleibt unter dem Finger. Ohne Mittelpunkt springt das Bild bei jedem
+           Schritt weg, und man sucht seine Zeichnung wieder. */
+        const massstab = (neuZ, haltX, haltY) => {
+            const r = flaeche.getBoundingClientRect();
+            const z = Math.min(GROESSTER, Math.max(KLEINSTER, neuZ));
+            const mx = haltX ?? sicht.x + (r.width || 900) / sicht.z / 2;
+            const my = haltY ?? sicht.y + (r.height || hoehe) / sicht.z / 2;
+            sicht.x = mx - (mx - sicht.x) * (sicht.z / z);
+            sicht.y = my - (my - sicht.y) * (sicht.z / z);
+            sicht.z = z;
+            male();
+            sichtSichern();
+        };
+        const insBild = () => {
+            const formen = daten.filter((s) => s.art !== 'verbindung');
+            if (!formen.length) {
+                sicht.x = 0;
+                sicht.y = 0;
+                sicht.z = 1;
+                male();
+                sichtSichern();
+                return;
+            }
+            const rahmen = formen.map(rahmenVon);
+            const x1 = Math.min(...rahmen.map(r => r.x)) - 30;
+            const y1 = Math.min(...rahmen.map(r => r.y)) - 30;
+            const x2 = Math.max(...rahmen.map(r => r.x + r.w)) + 30;
+            const y2 = Math.max(...rahmen.map(r => r.y + r.h)) + 30;
+            const r = flaeche.getBoundingClientRect();
+            const breite = r.width > 4 ? r.width : 900, hoch = r.height > 4 ? r.height : hoehe;
+            sicht.z = Math.min(GROESSTER, Math.max(KLEINSTER, Math.min(breite / Math.max(1, x2 - x1), hoch / Math.max(1, y2 - y1))));
+            sicht.x = x1 - (breite / sicht.z - (x2 - x1)) / 2;
+            sicht.y = y1 - (hoch / sicht.z - (y2 - y1)) / 2;
+            male();
+            sichtSichern();
+        };
+        let aktiv = null, verschiebt = null, schiebt = null;
+        const finger = new Map();
+        let kneifen = null;
         flaeche.addEventListener('pointerdown', (e) => {
             flaeche.setPointerCapture(e.pointerId);
+            finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (finger.size === 2) {
+                /* ZWEI FINGER SIND IMMER ZOOM, egal welches Werkzeug gewählt ist.
+                   Am Telefon ist das die einzige Geste, die man dafür kennt — und
+                   ein angefangener Strich wird dabei zurückgenommen, sonst bleibt
+                   bei jedem Kneifen ein Kritzel liegen. */
+                if (aktiv) {
+                    daten.pop();
+                    aktiv = null;
+                    male();
+                }
+                const zwei = [...finger.values()];
+                const dx = zwei[0].x - zwei[1].x, dy = zwei[0].y - zwei[1].y;
+                kneifen = { abstand: Math.hypot(dx, dy) || 1, z: sicht.z };
+                return;
+            }
             const [x, y] = punkt(e);
+            if (werkzeug === 'hand') {
+                schiebt = { x: e.clientX, y: e.clientY, sx: sicht.x, sy: sicht.y };
+                return;
+            }
+            if (werkzeug === 'verbindung') {
+                const sid = e.target.dataset?.sid;
+                const s = daten.find((q) => q.id === sid && q.art !== 'verbindung');
+                if (!s) {
+                    UI.toast('Tippe zuerst auf die Form, von der die Verbindung ausgeht');
+                    return;
+                }
+                if (!verbindeVon) {
+                    verbindeVon = s.id;
+                    UI.toast('Und jetzt auf die zweite Form');
+                    return;
+                }
+                if (verbindeVon === s.id) {
+                    verbindeVon = null;
+                    return;
+                }
+                daten.push({ id: Store.uid().slice(0, 8), art: 'verbindung', von: verbindeVon, nach: s.id, farbe });
+                verbindeVon = null;
+                male();
+                sichern();
+                return;
+            }
             if (werkzeug === 'radierer') {
                 const sid = e.target.dataset?.sid;
                 if (sid) {
                     const i = daten.findIndex((s) => s.id === sid);
                     if (i >= 0) {
+                        /* Mit der Form gehen ihre Verbindungen. Sonst bliebe ein Pfeil
+                           stehen, der nichts mehr verbindet — gezeichnet wird er dann
+                           gar nicht, aber er läge weiter in den Daten. */
                         daten.splice(i, 1);
+                        for (let j = daten.length - 1; j >= 0; j--)
+                            if (daten[j].art === 'verbindung' && (daten[j].von === sid || daten[j].nach === sid))
+                                daten.splice(j, 1);
                         male();
                         sichern();
                     }
@@ -21080,6 +21568,10 @@ const Zusatz = (() => {
                 const s = daten.find((q) => q.id === sid);
                 if (s)
                     verschiebt = { s, x, y };
+                return;
+            }
+            if (werkzeug === 'bild') {
+                bildWaehlen(x, y);
                 return;
             }
             if (werkzeug === 'text' || werkzeug === 'notiz') {
@@ -21099,6 +21591,23 @@ const Zusatz = (() => {
             daten.push(aktiv);
         });
         flaeche.addEventListener('pointermove', (e) => {
+            if (finger.has(e.pointerId))
+                finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (kneifen && finger.size >= 2) {
+                const zwei = [...finger.values()];
+                const dx = zwei[0].x - zwei[1].x, dy = zwei[0].y - zwei[1].y;
+                const r = flaeche.getBoundingClientRect();
+                const mitteX = sicht.x + ((zwei[0].x + zwei[1].x) / 2 - r.left) / sicht.z;
+                const mitteY = sicht.y + ((zwei[0].y + zwei[1].y) / 2 - r.top) / sicht.z;
+                massstab(kneifen.z * (Math.hypot(dx, dy) / kneifen.abstand), mitteX, mitteY);
+                return;
+            }
+            if (schiebt) {
+                sicht.x = schiebt.sx - (e.clientX - schiebt.x) / sicht.z;
+                sicht.y = schiebt.sy - (e.clientY - schiebt.y) / sicht.z;
+                male();
+                return;
+            }
             const [x, y] = punkt(e);
             if (verschiebt) {
                 const dx = x - verschiebt.x, dy = y - verschiebt.y;
@@ -21124,7 +21633,15 @@ const Zusatz = (() => {
             }
             male();
         });
-        const fertig = () => {
+        const fertig = (e) => {
+            if (e && typeof e.pointerId === 'number')
+                finger.delete(e.pointerId);
+            if (finger.size < 2)
+                kneifen = null;
+            if (schiebt) {
+                schiebt = null;
+                sichtSichern();
+            }
             if (aktiv) {
                 /* Winzige Kritzler wieder entfernen */
                 const klein = aktiv.art === 'stift' ? aktiv.pts.length < 2 : Math.abs(aktiv.w) < 4 && Math.abs(aktiv.h) < 4;
@@ -21140,12 +21657,22 @@ const Zusatz = (() => {
             }
         };
         flaeche.addEventListener('pointerup', fertig);
+        flaeche.addEventListener('pointercancel', fertig);
         flaeche.addEventListener('pointerleave', fertig);
+        /* Am Rechner ist das Rad der gewohnte Weg. `passive: false` steht da,
+           weil `preventDefault` sonst nichts tut und die ganze Seite mitrollt. */
+        flaeche.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const r = flaeche.getBoundingClientRect();
+            massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), sicht.x + (e.clientX - r.left) / sicht.z, sicht.y + (e.clientY - r.top) / sicht.z);
+        }, { passive: false });
         /* --- Werkzeugleiste -------------------------------------------------- */
         w.querySelector('.wb-tools')?.addEventListener('click', e => {
             const wz = elVon(e)?.closest('[data-wz]');
             if (wz) {
                 werkzeug = wz.dataset.wz ?? werkzeug;
+                verbindeVon = null;
+                w.classList.toggle('wb-schiebt', werkzeug === 'hand');
                 w.querySelectorAll('[data-wz]').forEach(b => b.classList.toggle('on', b === wz));
                 return;
             }
@@ -21170,6 +21697,12 @@ const Zusatz = (() => {
                     sichern();
                 }
             }
+            if (a.dataset.a === 'kleiner')
+                massstab(sicht.z / 1.25);
+            if (a.dataset.a === 'groesser')
+                massstab(sicht.z * 1.25);
+            if (a.dataset.a === 'passend')
+                insBild();
             if (a.dataset.a === 'png')
                 alsBild(flaeche, hoehe);
         });
@@ -21190,6 +21723,24 @@ const Zusatz = (() => {
             addEventListener('pointermove', zug);
             addEventListener('pointerup', stop);
         });
+        /* Erst wenn der Kasten wirklich Breite hat, stimmt der Ausschnitt.
+           Vorher zeichnet `male()` mit der Ersatzbreite — sichtbar wäre das als
+           falscher Massstab beim allerersten Bild. */
+        if (typeof ResizeObserver === 'function') {
+            let letzte = '';
+            new ResizeObserver(() => {
+                /* BEIDE MASSE, nicht nur die Breite: der Höhengriff verändert nur
+                   die Höhe, und mit einer nur auf Breite wachenden Prüfung behielt
+                   der Ausschnitt danach seine alte Höhe — sichtbar als gestauchtes
+                   oder gedehntes Bild. */
+                const kasten = flaeche.getBoundingClientRect();
+                const masse = Math.round(kasten.width) + '×' + Math.round(kasten.height);
+                if (masse === letzte)
+                    return;
+                letzte = masse;
+                male();
+            }).observe(w);
+        }
         male();
         return w;
     };
@@ -41596,6 +42147,7 @@ const Werkzeuge = (() => {
         c('Navigation', 'Workspace', '', () => Produktwelten.workspace('start'));
         c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
         c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
+        c('Navigation', 'Whiteboards', '', () => Produktwelten.whiteboards());
         c('Navigation', 'Planung und Termine', '', () => Produktwelten.planung());
         c('Navigation', 'Hauptwelten und Lebensbereiche einrichten', '', () => ProduktOnboarding.oeffnen());
         c('Navigation', 'Posteingang', '', () => Ansichten.posteingang());
@@ -75964,7 +76516,7 @@ const Lernwelt = (() => {
         return text.split(/[,;|\n]/).map(teil => teil.trim()).filter(Boolean);
     };
     const datum = (wert) => {
-        /* EIN `Date` IST SCHON EIN DATUM (E128).
+        /* EIN `Date` IST SCHON EIN DATUM (E135).
            Hier stand nur der Hüllen-Zweig: „ist es ein Objekt, dann lies `.start`,
            `.date` oder `.from`". Ein `Date` IST ein Objekt und hat keines dieser
            drei Felder — also war `roh` undefined und die Funktion gab `null`
@@ -76155,7 +76707,7 @@ const Lernwelt = (() => {
         };
     };
     /**
-     * Ein leerer Lernstand IST KEIN LERNSTAND (E128).
+     * Ein leerer Lernstand IST KEIN LERNSTAND (E135).
      *
      * `leererLernzustand` in `lebensbereiche.ts` gibt `sr: {}` zurück — ein
      * leeres Objekt, und ein leeres Objekt ist wahr. `stand?.sr || null` liess
@@ -76699,6 +77251,27 @@ const Lernwelt = (() => {
     }).filter((item) => !!item)
         .sort((a, b) => Number(a.stabil) - Number(b.stabil) ||
         String(b.zuletzt).localeCompare(String(a.zuletzt)));
+    /**
+     * Nur die Karten, die WIRKLICH zur Prüfung passen — ohne den Rückfall auf
+     * alle (E136).
+     *
+     * `passendeKarten` gibt bei null Treffern den ganzen Bestand zurück. Für
+     * die Simulation ist das vertretbar: lieber eine Übungsklausur aus allem
+     * als gar keine. Für die Kachel „Prüfungsfokus" wäre es eine Unwahrheit —
+     * sie verspricht „passend zur nächsten Prüfung", und wer dann alles
+     * bekommt, merkt es nicht.
+     */
+    const nurPassendeKarten = (pruefung) => {
+        const woerter = (pruefung.titel + ' ' + pruefung.fach + ' ' + pruefung.lernstoff)
+            .toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(wort => wort.length >= 3);
+        if (!woerter.length)
+            return [];
+        return lernkarten().filter(card => {
+            const suchtext = (themaVon(card) + ' ' + fachVon(card) + ' ' +
+                String(card.text || '')).toLowerCase();
+            return woerter.some(wort => suchtext.includes(wort));
+        });
+    };
     const passendeKarten = (pruefung) => {
         const woerter = (pruefung.titel + ' ' + pruefung.fach + ' ' + pruefung.lernstoff)
             .toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(wort => wort.length >= 3);
@@ -76791,7 +77364,29 @@ const Lernwelt = (() => {
                 : naechstePruefung.tage === 1 ? 'morgen'
                     : naechstePruefung.tage + ' Tage'
             : 'keine geplant';
+        /* DIE EINRICHTUNG ALS ANGEBOT, NICHT ALS SPERRE (E137).
+           Sie öffnete sich früher von selbst über alles. Jetzt steht sie hier,
+           solange sie noch nicht durchlaufen ist — sichtbar für jeden, der neu
+           ist, und im Weg für niemanden. Wer sie überspringt oder abschliesst,
+           sieht die Karte nicht mehr. */
+        const einrichtung = (() => {
+            const modul = globalThis.ProduktOnboarding;
+            let neuHier = false;
+            try {
+                neuHier = modul?.profil?.().status === 'neu';
+            }
+            catch {
+                neuHier = false;
+            }
+            if (!neuHier)
+                return '';
+            return '<section class="lw-note lw-setup"><div><strong>Redion einrichten</strong>' +
+                '<p>Zwei Hauptwelten, ein Bestand: lege fest, womit du anfangen willst. ' +
+                'Deine Inhalte bleiben, wo sie sind.</p></div>' +
+                '<button type="button" data-lw-action="setup">Einrichten</button></section>';
+        })();
         return '<div class="lw-today">' +
+            einrichtung +
             '<section class="lw-hero"><div><p>' + esc(gruss + ', ' + aktor().name) + '</p><h2>' +
             esc(new Date().toLocaleDateString('de-CH', {
                 weekday: 'long', day: 'numeric', month: 'long'
@@ -76905,8 +77500,25 @@ const Lernwelt = (() => {
             '<article><span aria-hidden="true">✨</span><h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
             '<button type="button" data-lw-train="new"' +
             (queue.newCards.length ? '' : ' disabled') + '>Lernen · ' + queue.newCards.length + '</button></article>' +
-            '<article><span aria-hidden="true">📝</span><h3>Prüfungsfokus</h3><p>Karten passend zur nächsten Prüfung mischen.</p>' +
-            '<button type="button" data-lw-nav="pruefungen">Prüfungen öffnen</button></article>' +
+            /* DIE KACHEL TUT JETZT, WAS AUF IHR STEHT (E136). Sie versprach
+               „Karten passend zur nächsten Prüfung mischen" und trug einen Knopf,
+               der nur den Reiter wechselte. Gibt es keine passenden Karten, sagt
+               sie das — statt einen Knopf anzubieten, hinter dem der ganze
+               Bestand käme. */
+            (() => {
+                const naechste = pruefungen().find(item => item.tage !== null && item.tage >= 0)
+                    || pruefungen().find(item => item.tage === null) || null;
+                const passend = naechste ? nurPassendeKarten(naechste) : [];
+                return '<article><span aria-hidden="true">📝</span><h3>Prüfungsfokus</h3><p>' +
+                    (naechste
+                        ? esc('Karten passend zu „' + naechste.titel + '" mischen.')
+                        : 'Sobald eine Prüfung eingetragen ist, wird hier gezielt geübt.') +
+                    '</p>' +
+                    (passend.length
+                        ? '<button type="button" data-lw-train="exam">Üben · ' + passend.length + '</button>'
+                        : '<button type="button" data-lw-nav="pruefungen">Prüfungen öffnen</button>') +
+                    '</article>';
+            })() +
             '</div>' +
             '<div class="lw-dashboard-grid">' +
             sektion('Warum diese Reihenfolge?', '<ol class="lw-explanation"><li><strong>Fehler zuerst</strong><span>Unsichere Inhalte bekommen unmittelbar Aufmerksamkeit.</span></li>' +
@@ -77448,6 +78060,12 @@ const Lernwelt = (() => {
             const thema = liste(statistik().topics).find(item => item.id === zustand.themaId);
             titel = thema ? 'Thema: ' + thema.label : 'Themenrunde';
         }
+        if (art === 'exam') {
+            const naechste = pruefungen().find(item => item.tage !== null && item.tage >= 0)
+                || pruefungen().find(item => item.tage === null) || null;
+            karten = naechste ? nurPassendeKarten(naechste) : [];
+            titel = naechste ? 'Prüfungsfokus: ' + naechste.titel : 'Prüfungsfokus';
+        }
         if (art === 'single') {
             const card = lernkarten().find(item => String(item.id) === einzelneId);
             karten = card ? [card] : [];
@@ -77712,6 +78330,12 @@ const Lernwelt = (() => {
             zeichnen();
             return;
         }
+        if (element.closest('[data-lw-action="setup"]')) {
+            const modul = globalThis.ProduktOnboarding;
+            if (modul?.oeffnen)
+                void modul.oeffnen().then(() => zeichnen());
+            return;
+        }
         const rate = element.closest('[data-lw-rate]');
         if (rate?.dataset.lwRate && zustand.training && !zustand.training.beschaeftigt) {
             const note = zahl(rate.dataset.lwRate);
@@ -77749,24 +78373,60 @@ const Lernwelt = (() => {
         Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
         zeichnen();
     };
+    /**
+     * Tastenkürzel in der Lernrunde: Leertaste deckt auf, 1 bis 4 bewerten.
+     *
+     * DER HORCHER HÄNGT AM DOKUMENT, NICHT AN DER WURZEL (E136).
+     *
+     * Vorher stand er auf `zustand.root`. Ereignisse steigen aber AUFWÄRTS,
+     * nicht abwärts: gemessen liegt der Fokus nach dem Öffnen auf `BODY`, und
+     * body ist der Vorfahr der Wurzel, nicht ihr Nachfahr. Der Tastendruck kam
+     * nie an. Bildschirmweise gemessen:
+     *
+     *     nach Start        Fokus BODY, Karte 1 von 4
+     *     Leertaste         nichts — nicht aufgedeckt
+     *     Maus aufgedeckt   ja
+     *     Taste 3           nichts — immer noch Karte 1 von 4
+     *
+     * Am Dokument kommt er an. Damit er nicht in fremden Ansichten mitredet,
+     * fragt er zuerst, ob die Lernwelt überhaupt noch im Dokument hängt;
+     * `abmelden()` nimmt ihn ausserdem wieder ab.
+     */
     const taste = (event) => {
+        /* IST DIE LERNWELT ÜBERHAUPT NOCH DIE SICHTBARE ANSICHT?
+           `isConnected` allein genügt NICHT, und das wäre beinahe schiefgegangen:
+           `zustand.root` ist der wiederverwendete Inhaltsbereich der Schale, und
+           der hängt auch dann noch im Dokument, wenn längst eine gewöhnliche
+           Seite darin steht. Gemessen: Runde starten, `App.oeffne(seite)`, dann
+           im Editor die Leertaste — und die Lernwelt sprang zurück über die
+           Seite, in der gerade geschrieben wurde.
+           Gefragt wird deshalb nach dem eigenen Markup: steht die Lernwelt noch
+           in ihrer Wurzel, gehört die Taste ihr. Sonst nicht. */
+        if (!zustand.root?.isConnected)
+            return;
+        if (!zustand.root.classList.contains('lernwelt') &&
+            !zustand.root.querySelector('.lernwelt'))
+            return;
         const ziel = event.target instanceof HTMLElement ? event.target : null;
         if (ziel?.matches('input, textarea, select, [contenteditable="true"]'))
             return;
-        if (ziel?.closest('button, a'))
+        if (!zustand.training)
             return;
-        if (zustand.training) {
-            if (!zustand.training.aufgedeckt && (event.key === ' ' || event.key === 'Enter')) {
-                event.preventDefault();
-                zustand.training.aufgedeckt = true;
-                zeichnen();
-                return;
-            }
-            if (zustand.training.aufgedeckt && /^[1-4]$/.test(event.key)) {
-                event.preventDefault();
-                const button = zustand.root?.querySelector('[data-lw-rate="' + event.key + '"]');
-                button?.click();
-            }
+        /* Leertaste und Enter BETÄTIGEN einen Knopf, der den Fokus hat. Läge
+           hier kein Vorbehalt, deckte ein Druck auf „Antwort zeigen" die Karte
+           zweimal auf — einmal über den Knopf, einmal über das Kürzel. Die
+           Ziffern 1 bis 4 betätigen nichts und dürfen deshalb immer. */
+        const aufKnopf = !!ziel?.closest('button, a');
+        if (!zustand.training.aufgedeckt && !aufKnopf &&
+            (event.key === ' ' || event.key === 'Enter')) {
+            event.preventDefault();
+            zustand.training.aufgedeckt = true;
+            zeichnen();
+            return;
+        }
+        if (zustand.training.aufgedeckt && /^[1-4]$/.test(event.key)) {
+            event.preventDefault();
+            zustand.root.querySelector('[data-lw-rate="' + event.key + '"]')?.click();
         }
     };
     const abmelden = () => {
@@ -77775,8 +78435,8 @@ const Lernwelt = (() => {
         if (zustand.root) {
             zustand.root.removeEventListener('click', klick);
             zustand.root.removeEventListener('change', aenderung);
-            zustand.root.removeEventListener('keydown', taste);
         }
+        document.removeEventListener('keydown', taste);
         zustand.root = null;
     };
     const render = (ziel, ansicht) => {
@@ -77793,7 +78453,8 @@ const Lernwelt = (() => {
         zustand.ladeSchluessel = '';
         ziel.addEventListener('click', klick);
         ziel.addEventListener('change', aenderung);
-        ziel.addEventListener('keydown', taste);
+        /* Am Dokument, nicht am Ziel — siehe `taste`. */
+        document.addEventListener('keydown', taste);
         zeichnen();
     };
     const oeffnen = (ansicht = 'heute') => {
@@ -77862,6 +78523,7 @@ const Arbeitswelt = (() => {
         { id: 'aufgaben', icon: '☑', name: 'Aufgaben' },
         { id: 'kalender', icon: '📅', name: 'Kalender' },
         { id: 'datenbanken', icon: '▦', name: 'Datenbanken' },
+        { id: 'whiteboards', icon: '🖍', name: 'Whiteboards' },
         { id: 'wiki', icon: '🕸', name: 'Wiki & Verweise' },
         { id: 'vorlagen', icon: '🧩', name: 'Vorlagen' }
     ]);
@@ -78374,7 +79036,8 @@ const Arbeitswelt = (() => {
                 id: String(block.id), pageId: String(page.id),
                 titel: String(block.text || page.text || (art === 'blatt' ? 'Tabelle' : 'Whiteboard')),
                 art, icon: art === 'blatt' ? '📊' : '🎨',
-                bearbeitet: alsZeit(block.edited || block.created), bereichIds
+                bearbeitet: alsZeit(block.edited || block.created),
+                formen: Array.isArray(block.shapes) ? block.shapes.length : 0, bereichIds
             };
         }).filter((flaeche) => !!flaeche)
             .sort((a, b) => b.bearbeitet - a.bearbeitet);
@@ -78667,7 +79330,7 @@ const Arbeitswelt = (() => {
         main.append(quick);
         const summary = bereich('aw-bestand', 'Dein Bestand');
         const cards = element('div', 'aw-zaehler-grid');
-        cards.append(zaehlerKarte('📄', 'Seiten', daten.zaehler.seiten || 0, 'bibliothek'), zaehlerKarte('▦', 'Datenbanken', daten.zaehler.datenbanken || 0, 'datenbanken'), zaehlerKarte('☐', 'Offene Aufgaben', daten.zaehler.offeneAufgaben || 0, 'aufgaben'), zaehlerKarte('📅', 'Termine', daten.zaehler.termine || 0, 'kalender'), zaehlerKarte('🕸', 'Wiki-Seiten', daten.zaehler.wiki || 0, 'wiki'), zaehlerKarte('🧩', 'Vorlagen', daten.zaehler.vorlagen || 0, 'vorlagen'));
+        cards.append(zaehlerKarte('📄', 'Seiten', daten.zaehler.seiten || 0, 'bibliothek'), zaehlerKarte('▦', 'Datenbanken', daten.zaehler.datenbanken || 0, 'datenbanken'), zaehlerKarte('☐', 'Offene Aufgaben', daten.zaehler.offeneAufgaben || 0, 'aufgaben'), zaehlerKarte('📅', 'Termine', daten.zaehler.termine || 0, 'kalender'), zaehlerKarte('🖍', 'Whiteboards', daten.zaehler.whiteboards || 0, 'whiteboards'), zaehlerKarte('🕸', 'Wiki-Seiten', daten.zaehler.wiki || 0, 'wiki'), zaehlerKarte('🧩', 'Vorlagen', daten.zaehler.vorlagen || 0, 'vorlagen'));
         summary.append(cards);
         main.append(summary);
         const grid = element('div', 'aw-uebersicht-grid');
@@ -78806,6 +79469,134 @@ const Arbeitswelt = (() => {
         });
         main.append(databases.length ? liste : leer('Keine Datenbank gefunden', 'Lege eine Datenbank an; ihre Ansichten erscheinen hier automatisch.', 'new-database', 'Datenbank anlegen'));
     };
+    /* ==========================================================================
+     * WHITEBOARDS ALS EIGENER ARBEITSBEREICH (E138, Auftrag §22)
+     * --------------------------------------------------------------------------
+     * Die Flächen lagen schon im Schnappschuss — sichtbar waren sie nur als
+     * eine Zeile in der Übersicht, zusammen mit den Tabellen. §22 verlangt
+     * einen eigenen Top-Level-Bereich; §52 verbietet dafür eine zweite
+     * Datenhaltung. Beides zusammen heisst: EIN Reiter mehr auf denselben
+     * Daten, und die Vorschau liest den Block, den es ohnehin schon gibt.
+     * ========================================================================*/
+    /** Ein kleines Abbild der Fläche — dieselben Formen, nur klein und ohne
+        Bedienung. Ohne Vorschau sähen zehn Whiteboards gleich aus, und man
+        müsste jedes öffnen, um seines zu finden. */
+    const MINIATUR_FORMEN = 60;
+    const miniatur = (blockId) => {
+        const block = typeof Store.getBlock === 'function' ? Store.getBlock(blockId) : null;
+        const formen = Array.isArray(block?.shapes) ? block.shapes : [];
+        const sichtbar = formen.filter(form => form && form.art !== 'verbindung').slice(0, MINIATUR_FORMEN);
+        if (!sichtbar.length)
+            return null;
+        const rahmen = sichtbar.map(form => {
+            if (form.art === 'stift' && Array.isArray(form.pts) && form.pts.length) {
+                const xs = form.pts.map((punkt) => Number(punkt?.[0]) || 0);
+                const ys = form.pts.map((punkt) => Number(punkt?.[1]) || 0);
+                return { x: Math.min(...xs), y: Math.min(...ys),
+                    w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+            }
+            const x = Number(form.x) || 0, y = Number(form.y) || 0;
+            const w = Number(form.w) || 0, h = Number(form.h) || 0;
+            return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w) || 40, h: Math.abs(h) || 20 };
+        });
+        const x1 = Math.min(...rahmen.map(r => r.x)) - 8;
+        const y1 = Math.min(...rahmen.map(r => r.y)) - 8;
+        const x2 = Math.max(...rahmen.map(r => r.x + r.w)) + 8;
+        const y2 = Math.max(...rahmen.map(r => r.y + r.h)) + 8;
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('class', 'aw-board-bild');
+        svg.setAttribute('viewBox', `${x1} ${y1} ${Math.max(1, x2 - x1)} ${Math.max(1, y2 - y1)}`);
+        svg.setAttribute('aria-hidden', 'true');
+        sichtbar.forEach((form, index) => {
+            const farbe = String(form.farbe || '#9b9a97');
+            const kasten = rahmen[index];
+            if (form.art === 'stift' && Array.isArray(form.pts) && form.pts.length > 1) {
+                const pfad = document.createElementNS(ns, 'path');
+                pfad.setAttribute('d', 'M' + form.pts.map((punkt) => `${Number(punkt?.[0]) || 0} ${Number(punkt?.[1]) || 0}`).join(' L'));
+                pfad.setAttribute('stroke', farbe);
+                pfad.setAttribute('fill', 'none');
+                pfad.setAttribute('stroke-width', '3');
+                pfad.setAttribute('stroke-linecap', 'round');
+                svg.append(pfad);
+                return;
+            }
+            if (form.art === 'linie' || form.art === 'pfeil') {
+                const linie = document.createElementNS(ns, 'path');
+                linie.setAttribute('d', `M${Number(form.x) || 0} ${Number(form.y) || 0} ` +
+                    `L${(Number(form.x) || 0) + (Number(form.w) || 0)} ${(Number(form.y) || 0) + (Number(form.h) || 0)}`);
+                linie.setAttribute('stroke', farbe);
+                linie.setAttribute('fill', 'none');
+                linie.setAttribute('stroke-width', '3');
+                svg.append(linie);
+                return;
+            }
+            if (form.art === 'ellipse') {
+                const kreis = document.createElementNS(ns, 'ellipse');
+                kreis.setAttribute('cx', String(kasten.x + kasten.w / 2));
+                kreis.setAttribute('cy', String(kasten.y + kasten.h / 2));
+                kreis.setAttribute('rx', String(Math.max(1, kasten.w / 2)));
+                kreis.setAttribute('ry', String(Math.max(1, kasten.h / 2)));
+                kreis.setAttribute('fill', 'none');
+                kreis.setAttribute('stroke', farbe);
+                kreis.setAttribute('stroke-width', '3');
+                svg.append(kreis);
+                return;
+            }
+            const feld = document.createElementNS(ns, 'rect');
+            feld.setAttribute('x', String(kasten.x));
+            feld.setAttribute('y', String(kasten.y));
+            feld.setAttribute('width', String(Math.max(1, kasten.w)));
+            feld.setAttribute('height', String(Math.max(1, kasten.h)));
+            feld.setAttribute('rx', '4');
+            feld.setAttribute('fill', form.art === 'notiz' ? farbe : 'none');
+            feld.setAttribute('fill-opacity', form.art === 'notiz' ? '.7' : '1');
+            feld.setAttribute('stroke', farbe);
+            feld.setAttribute('stroke-width', '3');
+            svg.append(feld);
+        });
+        return svg;
+    };
+    const zeichneWhiteboards = (main, daten, zustand) => {
+        const header = bereich('aw-boards-kopf', 'Whiteboards', 'Freie Flächen auf denselben Seiten: schieben, zoomen, Formen verbinden. ' +
+            'Ein Whiteboard ist ein Block auf einer normalen Seite – keine zweite Datenhaltung.');
+        header.append(sucheKopf(zustand, 'Whiteboard oder Seite …'));
+        const neu = aktionsKnopf('＋', 'Neues Whiteboard', 'new-whiteboard');
+        header.append(neu);
+        main.append(header);
+        const boards = daten.flaechen.filter(item => item.art === 'whiteboard' &&
+            passt(zustand.suche, item.titel));
+        if (!boards.length) {
+            main.append(leer('Noch kein Whiteboard', 'Ein Whiteboard ist eine freie Fläche für Skizzen, Haftnotizen und Verbindungen. ' +
+                'Es entsteht als Block auf einer normalen Seite und wandert damit in Sicherung, Suche und Freigabe mit.', 'new-whiteboard', 'Whiteboard anlegen'));
+            return;
+        }
+        const liste = element('div', 'aw-boards');
+        boards.slice(0, MAX_LISTE).forEach(board => {
+            const karte = element('article', 'aw-board');
+            const oeffnen = knopf('', 'aw-board-oeffnen');
+            oeffnen.dataset.awBlock = board.id;
+            const bild = miniatur(board.id);
+            if (bild)
+                oeffnen.append(bild);
+            else
+                oeffnen.append(element('span', 'aw-board-leer', '🖍'));
+            oeffnen.append(element('strong', 'aw-board-titel', board.titel));
+            oeffnen.append(element('small', 'aw-board-meta', `${board.formen} ${board.formen === 1 ? 'Form' : 'Formen'} · ${datumText(board.bearbeitet)}`));
+            karte.append(oeffnen);
+            const aktionen = element('span', 'aw-board-aktionen');
+            const reiter = knopf('↗', 'aw-mini');
+            reiter.title = 'In neuem Reiter öffnen';
+            reiter.dataset.awOpenTab = board.pageId;
+            const geteilt = knopf('⊞', 'aw-mini');
+            geteilt.title = 'Geteilt öffnen';
+            geteilt.dataset.awSplit = board.pageId;
+            aktionen.append(reiter, geteilt);
+            karte.append(aktionen);
+            liste.append(karte);
+        });
+        main.append(liste);
+    };
     const zeichneWiki = (main, daten, zustand) => {
         const header = bereich('aw-wiki-kopf', 'Wiki, Aliasse & Rückverweise', 'Die Kennzahlen werden aus vorhandenen [[Seitenlinks]] und Aliasfeldern abgeleitet.');
         header.append(sucheKopf(zustand, 'Wiki-Seite oder Alias …'));
@@ -78861,6 +79652,10 @@ const Arbeitswelt = (() => {
         }
         if (zustand.ansicht === 'datenbanken') {
             zeichneDatenbanken(main, daten, zustand);
+            return;
+        }
+        if (zustand.ansicht === 'whiteboards') {
+            zeichneWhiteboards(main, daten, zustand);
             return;
         }
         if (zustand.ansicht === 'wiki') {
@@ -79899,7 +80694,8 @@ const Produktwelten = (() => {
         const welt = sichereWelt(treffer[1]);
         const erlaubte = welt === 'lernen'
             ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt'])
-            : new Set(['uebersicht', 'bibliothek', 'aufgaben', 'kalender', 'datenbanken', 'wiki', 'vorlagen']);
+            : new Set(['uebersicht', 'bibliothek', 'aufgaben', 'kalender', 'datenbanken',
+                'whiteboards', 'wiki', 'vorlagen']);
         return erlaubte.has(treffer[2]) ? { welt, ansicht: treffer[2] } : null;
     };
     const lernen = (ansicht = 'heute') => {
@@ -79952,6 +80748,7 @@ const Produktwelten = (() => {
     };
     const bibliothek = () => workspace('bibliothek');
     const aufgaben = () => workspace('aufgaben');
+    const whiteboards = () => workspace('whiteboards');
     const planung = () => {
         weltSetzen('lernen');
         reiterSetzen('bespr');
@@ -80104,9 +80901,16 @@ const Produktwelten = (() => {
             if (name)
                 name.textContent = 'Heute';
         }
+        /* DER DRITTE WERT IST DIE KURZFORM AM TELEFON, und „Workspace" ist keine
+           (E137). Gemessen bei 390 px: vier von fünf Pillen liefen über den Rand
+           — „Workspace" um 78 px, „Heute" um 41. §30 des Auftrags verlangt
+           ausdrücklich, dass am iPhone nichts überläuft, und test114 misst es
+           Breite für Breite.
+           Der lange Name bleibt als Titel stehen; auf der Pille steht das kurze
+           Wort, das Redion schon vorher benutzt hat. */
         mobileBeschriftung('hl-start', 'Heute', 'Heute');
-        mobileBeschriftung('hl-lernen', 'Lernen', 'Lernen');
-        mobileBeschriftung('hl-seiten', 'Workspace', 'Workspace');
+        mobileBeschriftung('hl-lernen', 'Lernen & Alltag', 'Lernen');
+        mobileBeschriftung('hl-seiten', 'Workspace', 'Seiten');
         mobileBeschriftung('hl-bespr', 'Planung und Termine', 'Plan');
         if (gestartet)
             return;
@@ -80124,7 +80928,7 @@ const Produktwelten = (() => {
     };
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
-        lernen, workspace, bibliothek, aufgaben, planung, bereicheDialog,
+        lernen, workspace, bibliothek, aufgaben, whiteboards, planung, bereicheDialog,
         routeAusHash, routeOeffnen
     };
 })();
@@ -85790,6 +86594,13 @@ const App = (() => {
         ['tabelle', '📊', 'Neue Tabelle', 'Rechnen wie in Excel'],
         ['aufgabe', '☑', 'Aufgabe', 'Mit Datum planen'],
         ['karte', '📚', 'Karteikarte', 'Später wiederholen'],
+        /* AUFNAHME UND WHITEBOARD FEHLTEN (E138, Auftrag §46). Beide Wege gab es
+           längst — die Besprechungsaufnahme und den Whiteboard-Block —, nur
+           nicht an der Stelle, an der man am Telefon etwas Neues anfängt. Ein
+           Weg, den man nur über die Befehlspalette findet, ist am Telefon kein
+           Weg: dort gibt es keine Tastatur mit Strg. */
+        ['aufnahme', '🎙', 'Aufnahme', 'Mitschnitt mit Marken und Notizen'],
+        ['board', '🖍', 'Whiteboard', 'Freie Fläche zum Skizzieren'],
         ['scan', '📷', 'Dokument scannen', 'Kamera, Foto oder PDF in den Eingang'],
         ['datei', '📎', 'Datei hochladen', 'Bleibt auf diesem Gerät'],
         ['vorlage', '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
@@ -85823,6 +86634,12 @@ const App = (() => {
                     Werkzeuge.vorlagen();
                 else if (was === 'karte')
                     Werkzeuge.lernen();
+                else if (was === 'aufnahme') {
+                    if (typeof Meeting !== 'undefined' && Meeting.panel)
+                        Meeting.panel();
+                    else
+                        UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+                }
                 else {
                     /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
                        gibt sie nicht ohne eine. Also erst die Seite, dann der Block
@@ -85833,6 +86650,8 @@ const App = (() => {
                             Store.addDatabase(p.id, 'Ohne Namen');
                         else if (was === 'tabelle')
                             Store.addBlock(p.id, 'tabelle', {});
+                        else if (was === 'board')
+                            Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
                         else if (was === 'aufgabe')
                             Store.addBlock(p.id, 'todo', { text: '' });
                         zeichneSeite();
@@ -86427,15 +87246,52 @@ const App = (() => {
         });
         /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
         const wunsch = Store.getMeta('startAnsicht', 'start');
+        let startAnsichtZeigen = null;
+        /* DIE STARTANSICHT DARF NICHT ÜBERSCHREIBEN, WAS SCHON OFFEN IST (E138).
+           Hier stand ein blankes `setTimeout(…, 60)`. Wer in diesen 60 ms eine
+           Seite anklickt — und beim Start liegt der Baum längst da —, sah sie
+           einen Wimpernschlag lang und dann das Heute-Bild.
+    
+           Gemessen mit einem Whiteboard, das direkt nach dem Laden geöffnet
+           wurde:
+    
+               sofort      Zeichenfläche da
+               nach 600 ms Zeichenfläche weg, Lernwelt da
+    
+           Das war auch der wahre Grund für das falsche Papier-Bild in E136.
+           Dort steht, `App.oeffne` räume die Sonderansicht nicht weg — das
+           stimmt nicht: sie räumt sie weg, und die verspätete Startansicht holt
+           sie zurück.
+    
+           Die Bedingung ist deshalb: nur zeigen, wenn seither niemand etwas
+           anderes geöffnet hat. */
+        /* NICHT „IN 60 MILLISEKUNDEN", SONDERN „AM ENDE VON start()" (E138).
+    
+           Hier stand `setTimeout(…, 60)`, und der Grund dafür ist gut: die
+           Startansicht braucht `Produktwelten.start()`, und das läuft erst
+           weiter unten. Nur ist eine Zeitspanne die falsche Art, auf eine
+           Reihenfolge zu warten — sie ist ein Versprechen ohne Deckung.
+    
+           Was in diesen 60 ms passieren kann, ist alles: ein Klick im Baum,
+           ein Aufruf von aussen. Gemessen mit `bilder.mts`, zwei Durchgänge
+           hintereinander mit demselben Code:
+    
+               dunkel   Zeichenfläche da
+               hell     Zeichenfläche weg, Heute-Bild da
+    
+           Zwei verschiedene Bilder aus demselben Aufruf — das ist ein Wettlauf,
+           kein Fehler in der Ansicht. Die Startansicht wird deshalb GEMERKT und
+           ganz am Ende von `start()` ausgeführt, wenn alle Module stehen. Danach
+           kommt jedes `oeffne()` von aussen garantiert später und gewinnt. */
         if (!ausHash && !produktRoute) {
             if (wunsch === 'start')
-                setTimeout(() => Produktwelten.lernen('heute'), 60);
+                startAnsichtZeigen = () => Produktwelten.lernen('heute');
             if (wunsch === 'workspace')
-                setTimeout(() => Produktwelten.workspace('start'), 60);
+                startAnsichtZeigen = () => Produktwelten.workspace('start');
             if (wunsch === 'posteingang')
-                setTimeout(() => Ansichten.posteingang(), 60);
+                startAnsichtZeigen = () => Ansichten.posteingang();
             if (wunsch === 'journal')
-                setTimeout(() => Werkzeuge.journal(), 60);
+                startAnsichtZeigen = () => Werkzeuge.journal();
             if (wunsch === 'seite' && Store.getMeta('startSeite')) {
                 const z = Store.getBlock(Store.getMeta('startSeite'));
                 if (z)
@@ -86443,7 +87299,7 @@ const App = (() => {
             }
         }
         if (produktRoute)
-            setTimeout(() => Produktwelten.routeOeffnen(produktRoute), 60);
+            startAnsichtZeigen = () => Produktwelten.routeOeffnen(produktRoute);
         /* Name und Symbol des Arbeitsbereichs */
         const wsBtn = document.getElementById('btn-settings');
         const wsIcon = wsBtn?.querySelector('.ws-icon');
@@ -86482,10 +87338,24 @@ const App = (() => {
         Wolke.start();
         Produktwelten.start();
         Blocks.auswahlEinklinken();
-        void ProduktOnboarding.vielleichtStarten().then(gezeigt => {
-            if (!gezeigt)
-                Rundgang.vielleichtStarten();
-        });
+        /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
+           Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der
+           Rundgang nur, „wenn das Onboarding nichts gezeigt hat". Damit hat die
+           Einrichtung der Hauptwelten den Bildschirm übernommen, den E55
+           ausdrücklich für den Rundgang beschlossen hatte — und E55 begründet
+           das mit dem Satz, der auch für die Einrichtung gilt: „ein Fenster,
+           das den Bildschirm nimmt, bevor man etwas getan hat, ist zudringlich."
+    
+           Nebenwirkungen, gemessen: der Rundgang kam beim ZWEITEN Start doch
+           noch — zwei Begrüssungen an zwei Tagen (L52) —, und die Einrichtung
+           fing als Modal jeden Klick ab, woran im vollen Durchgang mehrere
+           Prüfläufe hängenblieben.
+    
+           Die Einrichtung ist deshalb ein Angebot statt einer Pflicht: sie steht
+           in der Befehlspalette und als Karte auf dem Heute-Bild, solange sie
+           noch nicht durchlaufen ist. `vielleichtStarten` bleibt im Modul — wer
+           sie wieder von selbst öffnen lassen will, ruft sie hier auf. */
+        Rundgang.vielleichtStarten();
         /* Seitenleiste und Kopfzeile */
         const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
         an('btn-search', suche);
@@ -86733,6 +87603,15 @@ const App = (() => {
         });
         /* Beim Verlassen noch schnell alles sichern */
         addEventListener('beforeunload', () => { Store.flush().catch(() => { }); });
+        /* GANZ ZUM SCHLUSS die Startansicht — siehe die Begründung oben. Alle
+           Module stehen jetzt, und wer danach eine Seite öffnet, kommt später
+           und bleibt sichtbar. */
+        if (startAnsichtZeigen) {
+            try {
+                startAnsichtZeigen();
+            }
+            catch { /* Ohne Startbildschirm bleibt die zuletzt geöffnete Seite. */ }
+        }
     };
     /* --- Beispielinhalt beim ersten Start ----------------------------------- */
     const beispielAnlegen = () => {

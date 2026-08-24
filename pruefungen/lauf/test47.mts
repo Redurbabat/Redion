@@ -109,6 +109,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.evaluate(async () => { await Store.flush(); });
   await p.reload();
   await p.waitForTimeout(1600);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nachNeustart = await p.evaluate(() => ({
     akzent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
     groesse: document.body?.style.fontSize,

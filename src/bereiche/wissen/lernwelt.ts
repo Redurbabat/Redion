@@ -920,6 +920,27 @@ const Lernwelt = (() => {
     .sort((a, b) => Number(a.stabil) - Number(b.stabil) ||
       String(b.zuletzt).localeCompare(String(a.zuletzt)));
 
+  /**
+   * Nur die Karten, die WIRKLICH zur Prüfung passen — ohne den Rückfall auf
+   * alle (E136).
+   *
+   * `passendeKarten` gibt bei null Treffern den ganzen Bestand zurück. Für
+   * die Simulation ist das vertretbar: lieber eine Übungsklausur aus allem
+   * als gar keine. Für die Kachel „Prüfungsfokus" wäre es eine Unwahrheit —
+   * sie verspricht „passend zur nächsten Prüfung", und wer dann alles
+   * bekommt, merkt es nicht.
+   */
+  const nurPassendeKarten = (pruefung: LernweltPruefung): any[] => {
+    const woerter = (pruefung.titel + ' ' + pruefung.fach + ' ' + pruefung.lernstoff)
+      .toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(wort => wort.length >= 3);
+    if (!woerter.length) return [];
+    return lernkarten().filter(card => {
+      const suchtext = (themaVon(card) + ' ' + fachVon(card) + ' ' +
+                        String(card.text || '')).toLowerCase();
+      return woerter.some(wort => suchtext.includes(wort));
+    });
+  };
+
   const passendeKarten = (pruefung: LernweltPruefung): any[] => {
     const woerter = (pruefung.titel + ' ' + pruefung.fach + ' ' + pruefung.lernstoff)
       .toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(wort => wort.length >= 3);
@@ -1033,7 +1054,24 @@ const Lernwelt = (() => {
         : naechstePruefung.tage === 1 ? 'morgen'
         : naechstePruefung.tage + ' Tage'
       : 'keine geplant';
+    /* DIE EINRICHTUNG ALS ANGEBOT, NICHT ALS SPERRE (E137).
+       Sie öffnete sich früher von selbst über alles. Jetzt steht sie hier,
+       solange sie noch nicht durchlaufen ist — sichtbar für jeden, der neu
+       ist, und im Weg für niemanden. Wer sie überspringt oder abschliesst,
+       sieht die Karte nicht mehr. */
+    const einrichtung = (() => {
+      const modul = (globalThis as any).ProduktOnboarding;
+      let neuHier = false;
+      try { neuHier = modul?.profil?.().status === 'neu'; } catch { neuHier = false; }
+      if (!neuHier) return '';
+      return '<section class="lw-note lw-setup"><div><strong>Redion einrichten</strong>' +
+        '<p>Zwei Hauptwelten, ein Bestand: lege fest, womit du anfangen willst. ' +
+        'Deine Inhalte bleiben, wo sie sind.</p></div>' +
+        '<button type="button" data-lw-action="setup">Einrichten</button></section>';
+    })();
+
     return '<div class="lw-today">' +
+      einrichtung +
       '<section class="lw-hero"><div><p>' + esc(gruss + ', ' + aktor().name) + '</p><h2>' +
         esc(new Date().toLocaleDateString('de-CH', {
           weekday: 'long', day: 'numeric', month: 'long'
@@ -1151,8 +1189,25 @@ const Lernwelt = (() => {
         '<article><span aria-hidden="true">✨</span><h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
           '<button type="button" data-lw-train="new"' +
           (queue.newCards.length ? '' : ' disabled') + '>Lernen · ' + queue.newCards.length + '</button></article>' +
-        '<article><span aria-hidden="true">📝</span><h3>Prüfungsfokus</h3><p>Karten passend zur nächsten Prüfung mischen.</p>' +
-          '<button type="button" data-lw-nav="pruefungen">Prüfungen öffnen</button></article>' +
+        /* DIE KACHEL TUT JETZT, WAS AUF IHR STEHT (E136). Sie versprach
+           „Karten passend zur nächsten Prüfung mischen" und trug einen Knopf,
+           der nur den Reiter wechselte. Gibt es keine passenden Karten, sagt
+           sie das — statt einen Knopf anzubieten, hinter dem der ganze
+           Bestand käme. */
+        (() => {
+          const naechste = pruefungen().find(item => item.tage !== null && item.tage >= 0)
+            || pruefungen().find(item => item.tage === null) || null;
+          const passend = naechste ? nurPassendeKarten(naechste) : [];
+          return '<article><span aria-hidden="true">📝</span><h3>Prüfungsfokus</h3><p>' +
+            (naechste
+              ? esc('Karten passend zu „' + naechste.titel + '" mischen.')
+              : 'Sobald eine Prüfung eingetragen ist, wird hier gezielt geübt.') +
+            '</p>' +
+            (passend.length
+              ? '<button type="button" data-lw-train="exam">Üben · ' + passend.length + '</button>'
+              : '<button type="button" data-lw-nav="pruefungen">Prüfungen öffnen</button>') +
+            '</article>';
+        })() +
       '</div>' +
       '<div class="lw-dashboard-grid">' +
         sektion('Warum diese Reihenfolge?', '<ol class="lw-explanation"><li><strong>Fehler zuerst</strong><span>Unsichere Inhalte bekommen unmittelbar Aufmerksamkeit.</span></li>' +
@@ -1714,6 +1769,12 @@ const Lernwelt = (() => {
       const thema = liste(statistik().topics).find(item => item.id === zustand.themaId);
       titel = thema ? 'Thema: ' + thema.label : 'Themenrunde';
     }
+    if (art === 'exam') {
+      const naechste = pruefungen().find(item => item.tage !== null && item.tage >= 0)
+        || pruefungen().find(item => item.tage === null) || null;
+      karten = naechste ? nurPassendeKarten(naechste) : [];
+      titel = naechste ? 'Prüfungsfokus: ' + naechste.titel : 'Prüfungsfokus';
+    }
     if (art === 'single') {
       const card = lernkarten().find(item => String(item.id) === einzelneId);
       karten = card ? [card] : [];
@@ -1905,6 +1966,11 @@ const Lernwelt = (() => {
       zeichnen();
       return;
     }
+    if (element.closest<HTMLElement>('[data-lw-action="setup"]')) {
+      const modul = (globalThis as any).ProduktOnboarding;
+      if (modul?.oeffnen) void modul.oeffnen().then(() => zeichnen());
+      return;
+    }
     const rate = element.closest<HTMLElement>('[data-lw-rate]');
     if (rate?.dataset.lwRate && zustand.training && !zustand.training.beschaeftigt) {
       const note = zahl(rate.dataset.lwRate);
@@ -1942,19 +2008,58 @@ const Lernwelt = (() => {
     zeichnen();
   };
 
+  /**
+   * Tastenkürzel in der Lernrunde: Leertaste deckt auf, 1 bis 4 bewerten.
+   *
+   * DER HORCHER HÄNGT AM DOKUMENT, NICHT AN DER WURZEL (E136).
+   *
+   * Vorher stand er auf `zustand.root`. Ereignisse steigen aber AUFWÄRTS,
+   * nicht abwärts: gemessen liegt der Fokus nach dem Öffnen auf `BODY`, und
+   * body ist der Vorfahr der Wurzel, nicht ihr Nachfahr. Der Tastendruck kam
+   * nie an. Bildschirmweise gemessen:
+   *
+   *     nach Start        Fokus BODY, Karte 1 von 4
+   *     Leertaste         nichts — nicht aufgedeckt
+   *     Maus aufgedeckt   ja
+   *     Taste 3           nichts — immer noch Karte 1 von 4
+   *
+   * Am Dokument kommt er an. Damit er nicht in fremden Ansichten mitredet,
+   * fragt er zuerst, ob die Lernwelt überhaupt noch im Dokument hängt;
+   * `abmelden()` nimmt ihn ausserdem wieder ab.
+   */
   const taste = (event: KeyboardEvent): void => {
+    /* IST DIE LERNWELT ÜBERHAUPT NOCH DIE SICHTBARE ANSICHT?
+       `isConnected` allein genügt NICHT, und das wäre beinahe schiefgegangen:
+       `zustand.root` ist der wiederverwendete Inhaltsbereich der Schale, und
+       der hängt auch dann noch im Dokument, wenn längst eine gewöhnliche
+       Seite darin steht. Gemessen: Runde starten, `App.oeffne(seite)`, dann
+       im Editor die Leertaste — und die Lernwelt sprang zurück über die
+       Seite, in der gerade geschrieben wurde.
+       Gefragt wird deshalb nach dem eigenen Markup: steht die Lernwelt noch
+       in ihrer Wurzel, gehört die Taste ihr. Sonst nicht. */
+    if (!zustand.root?.isConnected) return;
+    if (!zustand.root.classList.contains('lernwelt') &&
+        !zustand.root.querySelector('.lernwelt')) return;
     const ziel = event.target instanceof HTMLElement ? event.target : null;
     if (ziel?.matches('input, textarea, select, [contenteditable="true"]')) return;
-    if (ziel?.closest('button, a')) return;
-    if (zustand.training) {
-      if (!zustand.training.aufgedeckt && (event.key === ' ' || event.key === 'Enter')) {
-        event.preventDefault(); zustand.training.aufgedeckt = true; zeichnen(); return;
-      }
-      if (zustand.training.aufgedeckt && /^[1-4]$/.test(event.key)) {
-        event.preventDefault();
-        const button = zustand.root?.querySelector<HTMLElement>('[data-lw-rate="' + event.key + '"]');
-        button?.click();
-      }
+    if (!zustand.training) return;
+
+    /* Leertaste und Enter BETÄTIGEN einen Knopf, der den Fokus hat. Läge
+       hier kein Vorbehalt, deckte ein Druck auf „Antwort zeigen" die Karte
+       zweimal auf — einmal über den Knopf, einmal über das Kürzel. Die
+       Ziffern 1 bis 4 betätigen nichts und dürfen deshalb immer. */
+    const aufKnopf = !!ziel?.closest('button, a');
+
+    if (!zustand.training.aufgedeckt && !aufKnopf &&
+        (event.key === ' ' || event.key === 'Enter')) {
+      event.preventDefault();
+      zustand.training.aufgedeckt = true;
+      zeichnen();
+      return;
+    }
+    if (zustand.training.aufgedeckt && /^[1-4]$/.test(event.key)) {
+      event.preventDefault();
+      zustand.root.querySelector<HTMLElement>('[data-lw-rate="' + event.key + '"]')?.click();
     }
   };
 
@@ -1964,8 +2069,8 @@ const Lernwelt = (() => {
     if (zustand.root) {
       zustand.root.removeEventListener('click', klick);
       zustand.root.removeEventListener('change', aenderung);
-      zustand.root.removeEventListener('keydown', taste);
     }
+    document.removeEventListener('keydown', taste);
     zustand.root = null;
   };
 
@@ -1983,7 +2088,8 @@ const Lernwelt = (() => {
     zustand.ladeSchluessel = '';
     ziel.addEventListener('click', klick);
     ziel.addEventListener('change', aenderung);
-    ziel.addEventListener('keydown', taste);
+    /* Am Dokument, nicht am Ziel — siehe `taste`. */
+    document.addEventListener('keydown', taste);
     zeichnen();
   };
 

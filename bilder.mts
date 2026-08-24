@@ -85,7 +85,117 @@ const server = createServer((a, b) => {
  * zeigt nichts — die Daten hier sind bewusst die, an denen etwas schiefgeht:
  * lange Zahlen, ein Fehlerwert, Währung, Fettes, ein Zirkelbezug.
  * ========================================================================*/
-const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
+/* `bauen` darf ein Versprechen zurückgeben. `page.evaluate` wartet darauf,
+   und die Produktwelten zeichnen asynchron — ohne das Warten stünde auf dem
+   Bild der Zustand von davor. */
+const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<void> }> = {
+
+  /* --- Die zwei Produktwelten ---------------------------------------------
+     Sie fehlten hier, und das hat gekostet: vier falsche Zahlen im
+     Heute-Bild — „0 neu" bei fabrikneuen Karten, „null Tage" beim
+     Prüfungs-Countdown, ein Lernziel, das sich nie bewegt — blieben
+     unbemerkt, weil niemand hingesehen hat (E135). §55 sagt: öffne die
+     Seite wirklich, statt nur den Code zu lesen. Dafür muss sie in dieser
+     Liste stehen. */
+
+  heute: {
+    titel: 'Lernen & Alltag — Heute',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+
+      const fach = Store.addPage(null, { text: 'Elektrotechnik' });
+      for (const q of ['Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I',
+                       'Arbeit :: W = P · t', 'Reihenschaltung :: R = R1 + R2'])
+        Store.addBlock(fach.id, 'flashcard', { text: q });
+
+      /* Eine Prüfung, damit der Countdown etwas zu rechnen hat. */
+      const plan = Store.addPage(null, { text: 'Klausurplan' });
+      const db = Store.addDatabase(plan.id, 'Klausuren', {
+        title: { name: 'Name', type: 'title' },
+        wann: { name: 'Datum', type: 'date' } });
+      Store.updateCollection(db.collectionId, { schoolKind: 'exams' });
+      const in5 = new Date(); in5.setDate(in5.getDate() + 5);
+      const zeile = Store.addRow(db.collectionId, { title: 'Ohmsches Gesetz und Leistung' });
+      Store.setProp(zeile.id, 'wann', in5.toISOString().slice(0, 10));
+
+      w.Produktwelten.lernen('heute');
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  lernzentrale: {
+    titel: 'Die Lernzentrale mit ihren vier Startkacheln',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const fach = Store.addPage(null, { text: 'Elektrotechnik' });
+      for (const q of ['Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I',
+                       'Arbeit :: W = P · t'])
+        Store.addBlock(fach.id, 'flashcard', { text: q });
+      const plan = Store.addPage(null, { text: 'Klausurplan' });
+      const db = Store.addDatabase(plan.id, 'Klausuren', {
+        title: { name: 'Name', type: 'title' }, wann: { name: 'Datum', type: 'date' } });
+      Store.updateCollection(db.collectionId, { schoolKind: 'exams' });
+      const in5 = new Date(); in5.setDate(in5.getDate() + 5);
+      const zeile = Store.addRow(db.collectionId, { title: 'Ohmsches Gesetz und Leistung' });
+      Store.setProp(zeile.id, 'wann', in5.toISOString().slice(0, 10));
+      w.Produktwelten.lernen('lernen');
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  workspace: {
+    titel: 'Workspace — die Übersicht',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.workspace('start');
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  papier: {
+    titel: 'Die Papiervorlagen am A4-Blatt',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* ÜBER DIE SONDERANSICHT LEGEN, NICHT DURCH SIE HINDURCH NAVIGIEREN.
+         Der erste Wurf rief `App.oeffne(seite.id)` — und bekam das
+         Heute-Dashboard aufs Bild: seit den Produktwelten steht beim Start
+         eine Sonderansicht davor, und `oeffne` räumt sie nicht weg. Die
+         anderen Ansichten hier bauen sich deshalb längst ihren eigenen
+         Kasten; das ist auch der ehrlichere Weg für ein Bauteilbild. */
+      const seite = Object.values(Store.cache.blocks)
+        .find((b: any) => b.type === 'page' && b.alive) as any;
+      const blatt = Store.addBlock(seite.id, 'blatt', { text: '' });
+      Store.updateBlock(blatt.id, { papier: 'kariert' });
+      /* Das Kind VOR dem Zeichnen anlegen: `Blatt.zeichne` legt selbst eines
+         an, wenn keines da ist — danach zu schreiben käme zu spät. */
+      Store.addBlock(blatt.id, 'text', { text: 'Ohmsches Gesetz: U = R · I' });
+
+      const kasten = document.createElement('div');
+      kasten.id = 'bildkasten';
+      kasten.style.cssText = 'position:fixed; inset:0; z-index:600; background:var(--bg);' +
+                             'padding:20px; overflow:auto';
+      kasten.innerHTML = '<div id="bildinhalt" style="max-width:820px;margin:0 auto">' +
+        '<h1 style="font:700 28px var(--font);color:var(--text);margin:0 0 14px">' +
+        'Papiervorlagen</h1></div>';
+      document.body.appendChild(kasten);
+      document.getElementById('bildinhalt')!.appendChild(w.Blatt.zeichne(Store.getBlock(blatt.id)));
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
 
   tabelle: {
     titel: 'Der Tabellenblock',
@@ -315,6 +425,66 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void }> = {
           { id: '', text: 'Abbrechen', hinweis: 'Es wird nichts verändert' }
         ]
       }), 200);
+    }
+  },
+
+  whiteboard: {
+    titel: 'Die freie Fläche mit Ausschnitt, Massstab und Verbindungen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Projektskizze', icon: '🖍' });
+      Store.addBlock(seite.id, 'whiteboard', {
+        text: 'Whiteboard',
+        hoehe: 460,
+        shapes: [
+          { id: 'k1', art: 'notiz', x: 70, y: 60, w: 190, h: 110, farbe: '#529cca',
+            text: 'Aufnahme im Unterricht' },
+          { id: 'k2', art: 'notiz', x: 380, y: 200, w: 190, h: 110, farbe: '#4dab9a',
+            text: 'Karten daraus erzeugen' },
+          { id: 'k3', art: 'notiz', x: 700, y: 70, w: 190, h: 110, farbe: '#ffa344',
+            text: 'Prüfung in fünf Tagen' },
+          { id: 'v1', art: 'verbindung', von: 'k1', nach: 'k2', farbe: '#9b9a97' },
+          { id: 'v2', art: 'verbindung', von: 'k2', nach: 'k3', farbe: '#9b9a97' },
+          { id: 'e1', art: 'ellipse', x: 330, y: 30, w: 120, h: 90, farbe: '#9a6dd7' },
+          { id: 's1', art: 'stift', farbe: '#ff7369',
+            pts: [[120, 250], [160, 300], [210, 260], [260, 320], [310, 270]] },
+          { id: 't1', art: 'text', x: 640, y: 330, farbe: '#e255a1', text: 'Skizze vom Montag' }
+        ]
+      });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  whiteboards: {
+    titel: 'Whiteboards als eigener Bereich im Workspace',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const machen = (name: string, farbe: string, versatz: number): void => {
+        const seite = Store.addPage(null, { text: name, icon: '🖍' });
+        Store.addBlock(seite.id, 'whiteboard', {
+          text: name,
+          shapes: [
+            { id: 'a' + versatz, art: 'notiz', x: 40 + versatz, y: 40, w: 160, h: 100, farbe, text: name },
+            { id: 'b' + versatz, art: 'rechteck', x: 250, y: 120 + versatz, w: 180, h: 110, farbe },
+            { id: 'c' + versatz, art: 'stift', farbe,
+              pts: [[60, 220], [110, 260], [170, 210], [230, 280]] },
+            { id: 'd' + versatz, art: 'verbindung', von: 'a' + versatz, nach: 'b' + versatz, farbe }
+          ]
+        });
+      };
+      machen('Projektskizze', '#529cca', 0);
+      machen('Schaltplan Übung 3', '#4dab9a', 30);
+      machen('Lernplan Sommer', '#ffa344', 60);
+      w.Produktwelten.whiteboards();
+      await new Promise(r => setTimeout(r, 1100));
     }
   },
 

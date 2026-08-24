@@ -297,6 +297,12 @@ import { chromium } from 'playwright';
    * ================================================================== */
   await p.reload();
   await p.waitForTimeout(1800);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const danach = await p.evaluate(() => ({
     anweisung: /Überschrift/.test(Store.getMeta('ki:persoenlich', '')),
     faehig: KI.faehigkeiten().some((x: any) => x.name === 'Menütest-Fähigkeit'),

@@ -120,6 +120,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   }, seiten);
   await p.reload();
   await p.waitForTimeout(1600);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nachNeustart = await p.evaluate(() => ({
     anzahl: Fenster.reiter().length,
     tabs: [...document.querySelectorAll<HTMLElement>('.rt-tab span')].map(x => x.textContent)
@@ -189,6 +195,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   /* Teilung überlebt den Neustart und lässt sich schliessen */
   await p.reload();
   await p.waitForTimeout(1600);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nachNeu2 = await p.evaluate(() => !!document.getElementById('teil'));
   pruef('Teilung nach dem Neustart wieder da', nachNeu2, true);
 

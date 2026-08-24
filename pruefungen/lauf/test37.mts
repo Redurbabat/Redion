@@ -70,8 +70,12 @@ import { chromium } from 'playwright';
   console.log('   Bereichsleiste:', JSON.stringify(leiste));
   ok('Die Bereichsleiste steht oben auf dem Telefon', leiste.sichtbar && leiste.obenBuendig);
   ok('Sie geht über die volle Breite', leiste.breite === 428);
-  ok('Konto, Start, Seiten, Termine, Mehr',
-     leiste.knoepfe.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-mehr', leiste.knoepfe.join(','));
+  /* SECHS, nicht mehr fünf: `hl-lernen` ist mit den Produktwelten
+     dazugekommen (E132). Die Reihenfolge steht hier weiterhin ausgeschrieben
+     und nicht als Zahl — sie ist der Punkt, nicht die Anzahl. */
+  ok('Konto, Lernen, Start, Seiten, Termine, Mehr',
+     leiste.knoepfe.join(',') === 'hl-konto,hl-lernen,hl-start,hl-seiten,hl-bespr,hl-mehr',
+     leiste.knoepfe.join(','));
   ok('Unten stehen Suchen, KI und Neu', leiste.untenBuendig &&
      leiste.untenKnoepfe.join(',') === 'hu-suche,hu-ki,hu-neu', leiste.untenKnoepfe.join(','));
   ok('Die Mitte ist die KI', /KI/.test(leiste.kiText || ''), leiste.kiText);
@@ -394,6 +398,12 @@ import { chromium } from 'playwright';
   /* Nach dem Neuladen */
   await p.reload();
   await p.waitForTimeout(1900);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   ok('Der Cover bleibt', await p.evaluate(() =>
     Object.values(Store.cache.blocks).some(b2 => b2.cover)));
   ok('Zugeklappte Abschnitte bleiben gemerkt', await p.evaluate(() =>

@@ -141,6 +141,12 @@ await umstellen('kariert');
 await seite.evaluate(() => Store.flush());
 await seite.reload();
 await seite.waitForTimeout(2800);
+/* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+   sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 const nachNeu = await seite.evaluate((id: string) => ({
   amBlock: Store.getBlock(id)?.papier ?? '',
   amPapier: (document.querySelector('.blatt-papier') as HTMLElement | null)?.dataset.papier ?? '(kein Blatt)',

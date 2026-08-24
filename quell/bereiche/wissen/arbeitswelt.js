@@ -26,6 +26,7 @@ const Arbeitswelt = (() => {
         { id: 'aufgaben', icon: '☑', name: 'Aufgaben' },
         { id: 'kalender', icon: '📅', name: 'Kalender' },
         { id: 'datenbanken', icon: '▦', name: 'Datenbanken' },
+        { id: 'whiteboards', icon: '🖍', name: 'Whiteboards' },
         { id: 'wiki', icon: '🕸', name: 'Wiki & Verweise' },
         { id: 'vorlagen', icon: '🧩', name: 'Vorlagen' }
     ]);
@@ -538,7 +539,8 @@ const Arbeitswelt = (() => {
                 id: String(block.id), pageId: String(page.id),
                 titel: String(block.text || page.text || (art === 'blatt' ? 'Tabelle' : 'Whiteboard')),
                 art, icon: art === 'blatt' ? '📊' : '🎨',
-                bearbeitet: alsZeit(block.edited || block.created), bereichIds
+                bearbeitet: alsZeit(block.edited || block.created),
+                formen: Array.isArray(block.shapes) ? block.shapes.length : 0, bereichIds
             };
         }).filter((flaeche) => !!flaeche)
             .sort((a, b) => b.bearbeitet - a.bearbeitet);
@@ -831,7 +833,7 @@ const Arbeitswelt = (() => {
         main.append(quick);
         const summary = bereich('aw-bestand', 'Dein Bestand');
         const cards = element('div', 'aw-zaehler-grid');
-        cards.append(zaehlerKarte('📄', 'Seiten', daten.zaehler.seiten || 0, 'bibliothek'), zaehlerKarte('▦', 'Datenbanken', daten.zaehler.datenbanken || 0, 'datenbanken'), zaehlerKarte('☐', 'Offene Aufgaben', daten.zaehler.offeneAufgaben || 0, 'aufgaben'), zaehlerKarte('📅', 'Termine', daten.zaehler.termine || 0, 'kalender'), zaehlerKarte('🕸', 'Wiki-Seiten', daten.zaehler.wiki || 0, 'wiki'), zaehlerKarte('🧩', 'Vorlagen', daten.zaehler.vorlagen || 0, 'vorlagen'));
+        cards.append(zaehlerKarte('📄', 'Seiten', daten.zaehler.seiten || 0, 'bibliothek'), zaehlerKarte('▦', 'Datenbanken', daten.zaehler.datenbanken || 0, 'datenbanken'), zaehlerKarte('☐', 'Offene Aufgaben', daten.zaehler.offeneAufgaben || 0, 'aufgaben'), zaehlerKarte('📅', 'Termine', daten.zaehler.termine || 0, 'kalender'), zaehlerKarte('🖍', 'Whiteboards', daten.zaehler.whiteboards || 0, 'whiteboards'), zaehlerKarte('🕸', 'Wiki-Seiten', daten.zaehler.wiki || 0, 'wiki'), zaehlerKarte('🧩', 'Vorlagen', daten.zaehler.vorlagen || 0, 'vorlagen'));
         summary.append(cards);
         main.append(summary);
         const grid = element('div', 'aw-uebersicht-grid');
@@ -970,6 +972,134 @@ const Arbeitswelt = (() => {
         });
         main.append(databases.length ? liste : leer('Keine Datenbank gefunden', 'Lege eine Datenbank an; ihre Ansichten erscheinen hier automatisch.', 'new-database', 'Datenbank anlegen'));
     };
+    /* ==========================================================================
+     * WHITEBOARDS ALS EIGENER ARBEITSBEREICH (E138, Auftrag §22)
+     * --------------------------------------------------------------------------
+     * Die Flächen lagen schon im Schnappschuss — sichtbar waren sie nur als
+     * eine Zeile in der Übersicht, zusammen mit den Tabellen. §22 verlangt
+     * einen eigenen Top-Level-Bereich; §52 verbietet dafür eine zweite
+     * Datenhaltung. Beides zusammen heisst: EIN Reiter mehr auf denselben
+     * Daten, und die Vorschau liest den Block, den es ohnehin schon gibt.
+     * ========================================================================*/
+    /** Ein kleines Abbild der Fläche — dieselben Formen, nur klein und ohne
+        Bedienung. Ohne Vorschau sähen zehn Whiteboards gleich aus, und man
+        müsste jedes öffnen, um seines zu finden. */
+    const MINIATUR_FORMEN = 60;
+    const miniatur = (blockId) => {
+        const block = typeof Store.getBlock === 'function' ? Store.getBlock(blockId) : null;
+        const formen = Array.isArray(block?.shapes) ? block.shapes : [];
+        const sichtbar = formen.filter(form => form && form.art !== 'verbindung').slice(0, MINIATUR_FORMEN);
+        if (!sichtbar.length)
+            return null;
+        const rahmen = sichtbar.map(form => {
+            if (form.art === 'stift' && Array.isArray(form.pts) && form.pts.length) {
+                const xs = form.pts.map((punkt) => Number(punkt?.[0]) || 0);
+                const ys = form.pts.map((punkt) => Number(punkt?.[1]) || 0);
+                return { x: Math.min(...xs), y: Math.min(...ys),
+                    w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+            }
+            const x = Number(form.x) || 0, y = Number(form.y) || 0;
+            const w = Number(form.w) || 0, h = Number(form.h) || 0;
+            return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w) || 40, h: Math.abs(h) || 20 };
+        });
+        const x1 = Math.min(...rahmen.map(r => r.x)) - 8;
+        const y1 = Math.min(...rahmen.map(r => r.y)) - 8;
+        const x2 = Math.max(...rahmen.map(r => r.x + r.w)) + 8;
+        const y2 = Math.max(...rahmen.map(r => r.y + r.h)) + 8;
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('class', 'aw-board-bild');
+        svg.setAttribute('viewBox', `${x1} ${y1} ${Math.max(1, x2 - x1)} ${Math.max(1, y2 - y1)}`);
+        svg.setAttribute('aria-hidden', 'true');
+        sichtbar.forEach((form, index) => {
+            const farbe = String(form.farbe || '#9b9a97');
+            const kasten = rahmen[index];
+            if (form.art === 'stift' && Array.isArray(form.pts) && form.pts.length > 1) {
+                const pfad = document.createElementNS(ns, 'path');
+                pfad.setAttribute('d', 'M' + form.pts.map((punkt) => `${Number(punkt?.[0]) || 0} ${Number(punkt?.[1]) || 0}`).join(' L'));
+                pfad.setAttribute('stroke', farbe);
+                pfad.setAttribute('fill', 'none');
+                pfad.setAttribute('stroke-width', '3');
+                pfad.setAttribute('stroke-linecap', 'round');
+                svg.append(pfad);
+                return;
+            }
+            if (form.art === 'linie' || form.art === 'pfeil') {
+                const linie = document.createElementNS(ns, 'path');
+                linie.setAttribute('d', `M${Number(form.x) || 0} ${Number(form.y) || 0} ` +
+                    `L${(Number(form.x) || 0) + (Number(form.w) || 0)} ${(Number(form.y) || 0) + (Number(form.h) || 0)}`);
+                linie.setAttribute('stroke', farbe);
+                linie.setAttribute('fill', 'none');
+                linie.setAttribute('stroke-width', '3');
+                svg.append(linie);
+                return;
+            }
+            if (form.art === 'ellipse') {
+                const kreis = document.createElementNS(ns, 'ellipse');
+                kreis.setAttribute('cx', String(kasten.x + kasten.w / 2));
+                kreis.setAttribute('cy', String(kasten.y + kasten.h / 2));
+                kreis.setAttribute('rx', String(Math.max(1, kasten.w / 2)));
+                kreis.setAttribute('ry', String(Math.max(1, kasten.h / 2)));
+                kreis.setAttribute('fill', 'none');
+                kreis.setAttribute('stroke', farbe);
+                kreis.setAttribute('stroke-width', '3');
+                svg.append(kreis);
+                return;
+            }
+            const feld = document.createElementNS(ns, 'rect');
+            feld.setAttribute('x', String(kasten.x));
+            feld.setAttribute('y', String(kasten.y));
+            feld.setAttribute('width', String(Math.max(1, kasten.w)));
+            feld.setAttribute('height', String(Math.max(1, kasten.h)));
+            feld.setAttribute('rx', '4');
+            feld.setAttribute('fill', form.art === 'notiz' ? farbe : 'none');
+            feld.setAttribute('fill-opacity', form.art === 'notiz' ? '.7' : '1');
+            feld.setAttribute('stroke', farbe);
+            feld.setAttribute('stroke-width', '3');
+            svg.append(feld);
+        });
+        return svg;
+    };
+    const zeichneWhiteboards = (main, daten, zustand) => {
+        const header = bereich('aw-boards-kopf', 'Whiteboards', 'Freie Flächen auf denselben Seiten: schieben, zoomen, Formen verbinden. ' +
+            'Ein Whiteboard ist ein Block auf einer normalen Seite – keine zweite Datenhaltung.');
+        header.append(sucheKopf(zustand, 'Whiteboard oder Seite …'));
+        const neu = aktionsKnopf('＋', 'Neues Whiteboard', 'new-whiteboard');
+        header.append(neu);
+        main.append(header);
+        const boards = daten.flaechen.filter(item => item.art === 'whiteboard' &&
+            passt(zustand.suche, item.titel));
+        if (!boards.length) {
+            main.append(leer('Noch kein Whiteboard', 'Ein Whiteboard ist eine freie Fläche für Skizzen, Haftnotizen und Verbindungen. ' +
+                'Es entsteht als Block auf einer normalen Seite und wandert damit in Sicherung, Suche und Freigabe mit.', 'new-whiteboard', 'Whiteboard anlegen'));
+            return;
+        }
+        const liste = element('div', 'aw-boards');
+        boards.slice(0, MAX_LISTE).forEach(board => {
+            const karte = element('article', 'aw-board');
+            const oeffnen = knopf('', 'aw-board-oeffnen');
+            oeffnen.dataset.awBlock = board.id;
+            const bild = miniatur(board.id);
+            if (bild)
+                oeffnen.append(bild);
+            else
+                oeffnen.append(element('span', 'aw-board-leer', '🖍'));
+            oeffnen.append(element('strong', 'aw-board-titel', board.titel));
+            oeffnen.append(element('small', 'aw-board-meta', `${board.formen} ${board.formen === 1 ? 'Form' : 'Formen'} · ${datumText(board.bearbeitet)}`));
+            karte.append(oeffnen);
+            const aktionen = element('span', 'aw-board-aktionen');
+            const reiter = knopf('↗', 'aw-mini');
+            reiter.title = 'In neuem Reiter öffnen';
+            reiter.dataset.awOpenTab = board.pageId;
+            const geteilt = knopf('⊞', 'aw-mini');
+            geteilt.title = 'Geteilt öffnen';
+            geteilt.dataset.awSplit = board.pageId;
+            aktionen.append(reiter, geteilt);
+            karte.append(aktionen);
+            liste.append(karte);
+        });
+        main.append(liste);
+    };
     const zeichneWiki = (main, daten, zustand) => {
         const header = bereich('aw-wiki-kopf', 'Wiki, Aliasse & Rückverweise', 'Die Kennzahlen werden aus vorhandenen [[Seitenlinks]] und Aliasfeldern abgeleitet.');
         header.append(sucheKopf(zustand, 'Wiki-Seite oder Alias …'));
@@ -1025,6 +1155,10 @@ const Arbeitswelt = (() => {
         }
         if (zustand.ansicht === 'datenbanken') {
             zeichneDatenbanken(main, daten, zustand);
+            return;
+        }
+        if (zustand.ansicht === 'whiteboards') {
+            zeichneWhiteboards(main, daten, zustand);
             return;
         }
         if (zustand.ansicht === 'wiki') {

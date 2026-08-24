@@ -100,9 +100,11 @@ import { chromium } from 'playwright';
      unten die drei Dinge, die man von überall aus will. Geprüft wird beides
      — vorher stand hier nur die untere Leiste, und die gab es damals auch
      nur einmal. */
-  ok('Oben stehen Konto und die vier Bereiche als Pillen',
+  /* Fünf Bereiche seit E132: „Lernen" ist mit den Produktwelten
+     dazugekommen. */
+  ok('Oben stehen Konto und die fünf Bereiche als Pillen',
      handy.obenSichtbar &&
-     handy.obenLeiste.join(',') === 'hl-konto,hl-start,hl-seiten,hl-bespr,hl-mehr',
+     handy.obenLeiste.join(',') === 'hl-konto,hl-lernen,hl-start,hl-seiten,hl-bespr,hl-mehr',
      handy.obenLeiste.join(','));
   ok('Unten stehen Suchen, KI fragen und Neu',
      handy.untenSichtbar &&
@@ -164,10 +166,13 @@ import { chromium } from 'playwright';
   await t.waitForTimeout(400);
   await t.click('#r-blatt [data-r="start"]');
   await t.waitForTimeout(500);
-  ok('Und „Start" im Blatt führt hinaus UND dorthin', await t.evaluate(() =>
+  /* DIE PILLE HEISST JETZT „HEUTE". `produktwelten.ts:258` benennt
+     `hl-start` am Telefon in „Heute" um (E132) — dieselbe Taste, dasselbe
+     Ziel, ein anderer Name. Geprüft wird deshalb die Kennung und nicht mehr
+     der Text: ein Name kann sich ändern, ohne dass der Weg kaputt ist. */
+  ok('Und „Heute" im Blatt führt hinaus UND dorthin', await t.evaluate(() =>
     !document.getElementById('r-blatt') &&
-    [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')]
-      .some(b => (b.textContent ?? '').trim() === 'Start')));
+    document.getElementById('hl-start')?.classList.contains('an') === true));
 
   /* ================= TEIL B — Windows-Desktop ======================== */
   const d = await b.newPage({ viewport: { width: 1400, height: 900 } });

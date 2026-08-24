@@ -734,10 +734,36 @@ const Links = (() => {
     };
     const graph = () => {
         const index = buildGraphIndex();
-        const centerId = App.aktuelleSeite?.() || '';
+        /* OHNE OFFENE SEITE NIMMT DER GRAPH DIE ZULETZT BEARBEITETE (E137).
+           Vorher stand hier nur „Öffne zuerst eine Seite für ihren Teilgraphen".
+           Das war richtig, solange die App auf einer Seite startete. Seit E132
+           ist die Startansicht das Heute-Dashboard, und das ist KEINE Seite —
+           `App.aktuelleSeite()` gibt dort nichts zurück. Damit war der Satz
+           nicht mehr die Ausnahme, sondern der Normalfall: wer nach dem Start
+           Strg+Umschalt+G drückte, bekam eine Absage statt eines Graphen.
+    
+           Die zuletzt bearbeitete Seite ist die ehrlichste Wahl — sie ist das,
+           woran man zuletzt war. Gibt es überhaupt keine Seite, bleibt es bei
+           der Absage; dann ist sie wahr. */
+        const offen = App.aktuelleSeite?.() || '';
+        const zuletzt = () => {
+            let beste = '', wann = '';
+            index.nodes.forEach((_knoten, id) => {
+                const block = Store.getBlock(id);
+                if (!block || block.type !== 'page' || block.alive === false)
+                    return;
+                const zeit = String(block.edited || block.created || '');
+                if (zeit > wann) {
+                    wann = zeit;
+                    beste = id;
+                }
+            });
+            return beste;
+        };
+        const centerId = index.nodes.has(offen) ? offen : zuletzt();
         const center = index.nodes.get(centerId);
         if (!center) {
-            UI.toast(index.pageCount ? 'Öffne zuerst eine Seite für ihren Teilgraphen' : 'Noch keine Seiten für den Graphen');
+            UI.toast('Noch keine Seiten für den Graphen');
             return undefined;
         }
         const analysis = analyzeKnowledgeGraph(index);

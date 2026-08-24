@@ -881,10 +881,18 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
      geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
      nichts mehr zu holen ist. */
-  @media(max-width:440px){
-    #handy-oben{ gap:5px; padding-left:17px; padding-right:17px }
-  }
-  @media(max-width:380px){ #handy-oben{ gap:4px; padding-left:10px; padding-right:10px } }
+  /* NACHGEMESSEN AM 24. AUGUST, weil eine SECHSTE Pille dazugekommen ist:
+     die Produktwelten stellen „Lernen" vor die vier Bereiche (E132). Die
+     Rechnung oben galt für fünf, und mit sechs lief sie über — gemessen
+     mit den kurzen Namen (Heute, Lernen, Seiten, Plan, Mehr):
+
+       428 px   Heute 3 px zu viel, Seiten 6 px
+       390 px   vier von fünf zu viel, bis 44 px
+
+     Gespart wird weiter am Weissraum und nicht an der Daumenfläche: die
+     Tasten bleiben 56 px hoch und mindestens 56 px breit. Kleiner werden
+     nur das Polster in der Pille und der Abstand zwischen Sinnbild und
+     Wort. */
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
@@ -899,6 +907,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     transition:background .14s, color .14s;
   }
   #handy-oben button:active{ background:var(--bg-hover) }
+
+  @media(max-width:440px){
+    #handy-oben{ gap:5px; padding-left:14px; padding-right:14px }
+    /* Die HÖHE bleibt 56 px — das ist die Fläche, die der Daumen trifft.
+       Schmaler darf eine Taste werden: §37 verlangt 44 px, und 48 × 56 ist
+       immer noch deutlich darüber. Sechs Kreise à 56 px plus die eine
+       beschriftete Pille brauchten bei 390 px rechnerisch 439 px. */
+    #handy-oben button{ min-width:48px; padding:0 9px; gap:6px }
+  }
+  @media(max-width:400px){
+    #handy-oben{ gap:4px; padding-left:8px; padding-right:8px }
+    #handy-oben button{ min-width:44px; padding:0 7px; gap:5px }
+  }
 
   /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
   /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
