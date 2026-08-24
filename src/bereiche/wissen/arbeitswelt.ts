@@ -320,10 +320,20 @@ const Arbeitswelt = (() => {
       `meta.lebensbereiche`; der Fallback hält zusätzlich das alte
       Einzelattribut `bereich` lesbar. */
   const direkteBereichIds = (satz: any): string[] => {
-    let roh: unknown = null;
+    /* `unknown` stand hier, und darüber lief `for (const wert of roh)` — das
+       kann TypeScript nicht durchlassen, und `npm run typecheck` brach
+       genau daran ab. Weil `bauen:ts` erst nach dem typecheck läuft, wurde
+       KEINE der fünf neuen Dateien je nach `quell/` geschrieben; `index.html`
+       lud sie trotzdem, und die ganze Produktwelt war im Browser tot (404).
+       Ein Zeichen Typ, fünf tote Module — deshalb steht das hier so
+       ausführlich. */
+    let roh: unknown[] | null = null;
     try {
       const api = lebensbereichApi();
-      if (typeof api?.direkteBereichIds === 'function') roh = api.direkteBereichIds(satz);
+      if (typeof api?.direkteBereichIds === 'function') {
+        const geliefert = api.direkteBereichIds(satz);
+        roh = Array.isArray(geliefert) ? geliefert : null;
+      }
     } catch { roh = null; }
     if (!Array.isArray(roh)) {
       const meta = satz?.meta && typeof satz.meta === 'object' && !Array.isArray(satz.meta)

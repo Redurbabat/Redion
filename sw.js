@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v22';
+const VERSION = 'notizen-v23';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -156,6 +156,11 @@ const GRUNDSTOCK = [
     './quell/kern/abgleich/maschine.js',
     './quell/bereiche/verbinden/ansicht/wolke.js',
     './quell/bereiche/wissen/bibliothek.js',
+    './quell/bereiche/wissen/lebensbereiche.js',
+    './quell/bereiche/wissen/lernwelt.js',
+    './quell/bereiche/wissen/arbeitswelt.js',
+    './quell/bereiche/wissen/produkt_onboarding.js',
+    './quell/bereiche/wissen/produktwelten.js',
     './quell/bereiche/ki/dienst.js',
     './quell/schale/aufbau/seitenleiste.js',
     './quell/schale/aufbau/kopfleiste.js',
@@ -174,6 +179,9 @@ const GRUNDSTOCK = [
     './quell/schale/stil/einstellungen.css',
     './quell/schale/stil/tabelle.css',
     './quell/schale/stil/bausteine.css',
+    './quell/schale/stil/produktwelten.css',
+    './quell/schale/stil/arbeitswelt.css',
+    './quell/schale/stil/lernwelt.css',
     './oeffentlich/manifest.webmanifest',
     './oeffentlich/favicon.ico',
     './oeffentlich/icons/icon-180.png',

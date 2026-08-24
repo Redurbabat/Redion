@@ -13,6 +13,7 @@
  * ========================================================================*/
 
 import http from 'node:http';
+import type { Socket } from 'node:net';
 import { beantworte } from './kern.ts';
 import { ablageSpeicher, blobsSpeicher } from './ablage.ts';
 import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.ts';
@@ -69,9 +70,55 @@ export const starte = async (port = 8790, opt: StartOpt = {}) => {
     res.end(a.koerper);
   });
 
+  /* --- ANHALTEN, DAS WIRKLICH ANHAELT ------------------------------------
+     Hier stand `stopp: () => new Promise(f => server.close(() => f()))`, und
+     das sah aus, als warte es. Gemessen tat es das nicht:
+
+         vor stopp:     Server, Socket, Socket
+         stopp() nach   0 ms — "fertig"
+         nach stopp:    Server, Socket, Socket, Socket
+
+     Nach null Millisekunden Erfolg gemeldet, mit dem Server-Handle und drei
+     Sockets noch am Leben. Danach kommt in den Prüfläufen `process.exit()`,
+     und der reisst lebende Handles ab. Unter Linux fällt das nicht auf;
+     unter Windows endete test101 genau deshalb mit einer libuv-Assertion,
+     NACHDEM alle fachlichen Punkte grün waren.
+
+     Zwei Dinge fehlten:
+
+       1. `server.close()` hört nur auf, NEUE Verbindungen anzunehmen. Auf
+          eine bestehende Keep-Alive-Verbindung wartet es — und die geht von
+          sich aus nicht. `fetch` in Node hält genau solche offen.
+       2. Zweimal anhalten rief `close()` auf einem geschlossenen Server. Der
+          meldet `ERR_SERVER_NOT_RUNNING` an einen Rückruf, den niemand liest.
+
+     Kein Sleep, keine Wartezeit: die Verbindungen werden beendet, und das
+     Versprechen löst erst auf, wenn der Server sein `close` wirklich
+     gemeldet hat. Zehn Prüfläufe hängen an diesem Server, nicht nur test101.
+     ---------------------------------------------------------------------- */
+  const verbindungen = new Set<Socket>();
+  server.on('connection', (draht: Socket) => {
+    verbindungen.add(draht);
+    draht.on('close', () => { verbindungen.delete(draht); });
+  });
+
+  let anhalten: Promise<void> | null = null;
+  const stopp = (): Promise<void> => {
+    if (anhalten) return anhalten;          /* zweimal anhalten ist einmal */
+    anhalten = new Promise<void>(fertig => {
+      server.close(() => fertig());
+      /* Erst zuhören aufhören, DANN die offenen Verbindungen beenden —
+         sonst kommt der Rückruf oben nie. */
+      const alle = (server as unknown as { closeAllConnections?: () => void }).closeAllConnections;
+      if (typeof alle === 'function') alle.call(server);
+      else for (const draht of verbindungen) draht.destroy();
+      verbindungen.clear();
+    });
+    return anhalten;
+  };
+
   await new Promise<void>(fertig => { server.listen(port, () => fertig()); });
-  return { server, ablage, blobs, port, adresse: 'http://localhost:' + port,
-           stopp: () => new Promise<void>(fertig => { server.close(() => fertig()); }) };
+  return { server, ablage, blobs, port, adresse: 'http://localhost:' + port, stopp };
 };
 
 /* Direkt gestartet? Dann laufen lassen. */

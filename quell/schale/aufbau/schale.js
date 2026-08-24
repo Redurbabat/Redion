@@ -389,6 +389,8 @@ const App = (() => {
     };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();
+        const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
+            ? Lebensbereiche.direkteBereichIds(p).length : 0;
         const m = UI.menuMitSuche(
         /* Darstellung */
         '<div class="schrift-kacheln">' +
@@ -427,6 +429,8 @@ const App = (() => {
                 : '') +
             `<button data-a="fav"><span class="mi">${p.favorite ? '★' : '☆'}</span>` +
             `${p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten'}</button>` +
+            `<button data-a="produkt-bereiche"><span class="mi">◎</span>Lebensbereiche` +
+            `<span class="ms">${bereichAnzahl || 'Keine'} ▸</span></button>` +
             '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
             '<button data-a="icon"><span class="mi">😀</span>Symbol ändern</button>' +
             '<button data-a="cover"><span class="mi">🖼</span>Cover ändern</button>' +
@@ -564,6 +568,10 @@ const App = (() => {
                 return;
             }
             m.remove();
+            if (a === 'produkt-bereiche') {
+                await Produktwelten.bereicheDialog(p);
+                return;
+            }
             if (Werkzeuge.seitenMenueAktion(a, p))
                 return;
             /* Die vier, die auf dem Telefon aus der Kopfzeile hierher gewandert sind */
@@ -2643,8 +2651,9 @@ const App = (() => {
         /* Ein Blocklink nennt keine Seite, sondern einen Block. Welche Seite
            aufgehen muss, steht erst nach dem Hochlaufen fest — deshalb hier die
            Seite DES BLOCKS, und nicht der Hash selbst (E105). */
-        const zielBlock = blockAusHash(location.hash);
-        const ausHash = zielBlock
+        const produktRoute = Produktwelten.routeAusHash(location.hash);
+        const zielBlock = produktRoute ? '' : blockAusHash(location.hash);
+        const ausHash = produktRoute ? '' : zielBlock
             ? ((typeof Links !== 'undefined' && Links.seiteVon)
                 ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
             : location.hash.slice(1).split(':')[0];
@@ -2678,9 +2687,9 @@ const App = (() => {
         /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
            die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
            gesetzt. Die Bedingung war damit nie wahr. */
-        if (window.matchMedia('(max-width: 760px)').matches && !ausHash) {
+        if (window.matchMedia('(max-width: 760px)').matches && !ausHash && !produktRoute) {
             try {
-                Ansichten.start();
+                Produktwelten.lernen('heute');
             }
             catch { /* ohne Startbildschirm bleibt die Seite */ }
         }
@@ -2722,10 +2731,12 @@ const App = (() => {
             zeichneSeite();
         });
         /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
-        const wunsch = Store.getMeta('startAnsicht', 'letzte');
-        if (!location.hash) {
+        const wunsch = Store.getMeta('startAnsicht', 'start');
+        if (!ausHash && !produktRoute) {
             if (wunsch === 'start')
-                setTimeout(() => Ansichten.start(), 60);
+                setTimeout(() => Produktwelten.lernen('heute'), 60);
+            if (wunsch === 'workspace')
+                setTimeout(() => Produktwelten.workspace('start'), 60);
             if (wunsch === 'posteingang')
                 setTimeout(() => Ansichten.posteingang(), 60);
             if (wunsch === 'journal')
@@ -2736,6 +2747,8 @@ const App = (() => {
                     oeffne(z.id);
             }
         }
+        if (produktRoute)
+            setTimeout(() => Produktwelten.routeOeffnen(produktRoute), 60);
         /* Name und Symbol des Arbeitsbereichs */
         const wsBtn = document.getElementById('btn-settings');
         const wsIcon = wsBtn?.querySelector('.ws-icon');
@@ -2772,13 +2785,21 @@ const App = (() => {
         Fassung.start();
         Vorrat.start();
         Wolke.start();
+        Produktwelten.start();
         Blocks.auswahlEinklinken();
-        Rundgang.vielleichtStarten();
+        void ProduktOnboarding.vielleichtStarten().then(gezeigt => {
+            if (!gezeigt)
+                Rundgang.vielleichtStarten();
+        });
         /* Seitenleiste und Kopfzeile */
         const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
         an('btn-search', suche);
         an('btn-cmd', () => Werkzeuge.palette());
-        an('btn-home', () => Ansichten.start());
+        an('btn-home', () => Produktwelten.lernen('heute'));
+        an('btn-learning', () => Produktwelten.lernen('lernen'));
+        an('btn-workspace', () => Produktwelten.workspace('start'));
+        an('btn-library', () => Produktwelten.bibliothek());
+        an('btn-tasks', () => Produktwelten.aufgaben());
         an('btn-inbox', () => Ansichten.posteingang());
         an('btn-ai', () => kiPanel());
         an('btn-trash', papierkorb);
@@ -2800,9 +2821,12 @@ const App = (() => {
          * ---------------------------------------------------------------- */
         an('hl-start', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('start');
-            zeichneBaum();
-            Ansichten.start();
+            Produktwelten.lernen('heute');
+            handyLeiste();
+        });
+        an('hl-lernen', () => {
+            PWA.schubladeZu && PWA.schubladeZu();
+            Produktwelten.lernen('lernen');
             handyLeiste();
         });
         /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
@@ -2813,8 +2837,7 @@ const App = (() => {
             /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
                liest ihn, und ohne ihn bliebe die Pille auf „Start"
                stehen, während daneben schon die Seiten stünden. */
-            Seitenleiste.reiter('seiten');
-            Ansichten.seiten();
+            Produktwelten.workspace('start');
             handyLeiste();
         });
         /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
@@ -2824,16 +2847,8 @@ const App = (() => {
            Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('bespr');
-            if (window.matchMedia('(max-width: 760px)').matches) {
-                Ansichten.termine();
-                handyLeiste();
-                return;
-            }
-            zeichneBaum();
+            Produktwelten.planung();
             handyLeiste();
-            if (PWA.schubladeAuf)
-                PWA.schubladeAuf();
         });
         /* Die KI sitzt jetzt unten in der Mitte, nicht mehr in der Reiterleiste. */
         an('hu-ki', () => kiPanel(true));
@@ -2894,6 +2909,10 @@ const App = (() => {
                 return;
             if (r === Seitenleiste.reiter() && Seitenleiste.reiter() === 'start') {
                 abschnitteAnpassen();
+                return;
+            }
+            if (r === 'start') {
+                Produktwelten.lernen('heute');
                 return;
             }
             reiterWechseln(r);

@@ -55,6 +55,13 @@ await seite.evaluate(() => {
   Store.setMeta('rundgangGesehen', true);
   document.getElementById('rg-willkommen')?.remove();
   document.getElementById('rg-einladung')?.remove();
+  /* Und die Einrichtung der Hauptwelten. Sie legt sich beim allerersten
+     Start über alles — richtig für einen Menschen, tödlich für einen
+     Prüflauf, der klickt: Playwright wartete hier vergeblich darauf, dass
+     `.produkt-onboarding-lage` die Klicks durchlässt.
+     `zuruecksetzen()` löscht nur die Vorliebe, niemals Inhalte; hier wird
+     umgekehrt vermerkt, dass sie schon durch ist. */
+  document.querySelector('.produkt-onboarding-lage')?.remove();
 });
 
 /* ========================================================================== *

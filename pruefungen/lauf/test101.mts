@@ -199,4 +199,9 @@ p('… und zwar bevor gesäubert wird, nicht danach',
   'sauber() läuft sonst über die volle Länge — die Grenze käme zu spät');
 
 console.log(`\n  Suite 66 — Eingabegrenzen: ${ok} ok, ${weg} offen`);
-process.exit(weg ? 1 : 0);
+/* KEIN `process.exit()`. Der reisst den Prozess ab, auch wenn noch etwas
+   offen ist — unter Windows endete dieser Lauf genau daran mit einer
+   libuv-Assertion, nachdem alle fachlichen Punkte grün waren. `exitCode`
+   sagt dasselbe und lässt Node zu Ende räumen. Möglich wurde das erst,
+   seit `srv.stopp()` wirklich anhält (E125, test205). */
+process.exitCode = weg ? 1 : 0;
