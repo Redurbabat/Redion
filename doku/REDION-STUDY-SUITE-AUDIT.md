@@ -517,3 +517,130 @@ Migration; eingebettete OCR erst nach Bundle-/Lizenzmessung; mehrseitige
 Perspektivkorrektur; Image Occlusion; normative Elektroinhalte nur mit
 exakter Region, Ausgabe, Quelle und Lizenz. Sie sind keine heimlich als
 fertig behaupteten Bestandteile dieses Stands.
+
+
+================================================================================
+# NACHTRAG · 24. August 2026 — was der Stand wirklich tat
+================================================================================
+
+Dieser Nachtrag ist nicht die Fortsetzung des Umbaus, sondern sein Befund.
+Er steht hier, weil der Audit oben den Ausgangsbestand beschreibt und der
+ausgelieferte Stand etwas anderes war.
+
+## 1. Der Stand lief nicht
+
+Die beiden Codex-Commits — Study Suite und grosser Produktumbau — brachten
+rund 40 000 Zeilen mit. Davon lief nichts.
+
+```txt
+src/bereiche/wissen/arbeitswelt.ts:337   let roh: unknown = null
+                                          … darüber: for (const wert of roh)
+```
+
+`npm run typecheck` brach daran ab. Weil `bauen:ts` erst danach läuft, wurde
+keine der fünf neuen Dateien je nach `quell/` geschrieben:
+
+```txt
+quell/bereiche/wissen/lebensbereiche.js       fehlte
+quell/bereiche/wissen/lernwelt.js             fehlte
+quell/bereiche/wissen/arbeitswelt.js          fehlte
+quell/bereiche/wissen/produkt_onboarding.js   fehlte
+quell/bereiche/wissen/produktwelten.js        fehlte
+```
+
+`index.html` lud sie trotzdem. Ein `<script src>` auf eine fehlende Datei ist
+im Browser kein Fehler — die Seite lädt weiter, das Modul ist nicht da.
+
+```txt
+                       vorher            nachher
+404er beim Start       5                 keine
+Lebensbereiche         undefined         object
+Lernwelt               undefined         object
+Startseite heisst      „Start"           „Heute"
+Einzeldatei            4688 KB           5596 KB
+```
+
+Ganze Ursache: ein Zeichen Typ. Siehe ENTSCHEIDUNGEN.md E132.
+
+## 2. Was danach zu sehen war
+
+Viel, und es ist echt. Mit Augen geprüft, am Rechner (1300×900, 1440×900),
+am Tablet (760×900) und an zwei Telefongrössen (390×844, 428×926), jeweils
+ohne waagerechten Überlauf und ohne Skriptfehler:
+
+```txt
+Heute-Dashboard      Begrüssung, Datum, Lernziel, vier Kennzahlen,
+                     Tagesrunde, nächste Prüfung, Aufgaben, Termine
+Lernzentrale         Tagesrunde, Fehlertraining, neue Karten
+Lernpfad             geordnete Themenliste mit Fortschritt
+Meine Fehler         Fehlerzentrum
+Prüfungszentrale     kommende Prüfungen mit Countdown und Simulation
+Schule / Uni / Arbeit
+Workspace-Übersicht  Zählerkarten, zuletzt geöffnet, Favoriten,
+                     als Nächstes, nächste Termine, Reiter
+Bibliothek           Seiten, Blöcke, Dateien, PDFs, Whiteboards, Tabellen
+Einrichtung          dreistufiger Assistent für Hauptwelt und Bereiche
+```
+
+## 3. Was dabei an Fehlern gefunden wurde
+
+```txt
+E132  Die Bauschranke (oben) · der Prüfserver hielt nicht an, `stopp()`
+      wartete unendlich auf jede offene Verbindung · das Onboarding
+      blockierte test202 · drei Stilblätter standen hinter bausteine.css
+      und die Kaskade sprang zurück
+E135  Die Lernwelt rechnete falsch. Zwei Ursachen:
+        · ein leerer Lernstand (`sr: {}`) galt als Lernstand → keine Karte
+          war je „neu", jede galt als „fällig" (gemessen: 0 neu, 5 fällig
+          bei fünf fabrikneuen Karten)
+        · `datum()` gab für jedes echte `Date` null zurück → Lernziel,
+          Streak, Verlaufsbalken und Prüfungs-Countdown standen still;
+          auf dem Bildschirm stand wörtlich „null Tage"
+```
+
+## 4. Was neu gebaut wurde
+
+```txt
+E134  Papiervorlagen am A4-Blatt: blanko, liniert, kariert, Punktraster,
+      Millimeterpapier. Ein Feld am Block, ein Hintergrundbild im
+      Stilblatt — kein zweites Dokumentformat (Auftrag §21). Die Abstände
+      stehen in Blattmassen: ein Karo ist 5 mm, auch am Telefon und auch
+      auf einem dreiseitigen Blatt.
+E133  test206 — die erste Prüfung, die die Produktwelten wirklich öffnet,
+      samt der Regel „ein Objekt, viele Ansichten" an Zählwerten gemessen.
+```
+
+## 5. Prüfstand
+
+| Prüfung | Ergebnis am 24. August |
+|---|---|
+| `npm run typecheck` | grün |
+| `npm run bauen:ts` | grün |
+| `node bauen.mts` | grün, 5596 KB |
+| `test87` Architektur und Sicherheit | 125 ok, 0 offen |
+| `test101` Eingabegrenzen | 30 ok, 0 offen, Exit 0 ohne `process.exit()` |
+| `test105` gebaut ↔ Quelle | grün |
+| `test109` kein neues handgeschriebenes JS | 20 ok, 0 offen |
+| `test202` Study Suite | 84 ok, 0 offen |
+| `test205` Prüfserver hält an — NEU | 11 ok, Gegenprobe 1 rot |
+| `test206` Produktwelten — NEU | 33 ok, Gegenprobe 4 rot |
+| `test207` Papiervorlagen — NEU | 37 ok, Gegenprobe 4 rot |
+| `test208` Lernwelt — NEU | 18 ok, Gegenprobe 5 bzw. 3 rot |
+| Viewports 390×844 · 428×926 · 760×900 · 1300×900 · 1440×900 | kein waagerechter Überlauf |
+
+Jede neue Prüfung wurde gegen die zurückgenommene Behebung laufen gelassen
+und ist dabei rot geworden (§55.2). Eine Prüfung, die nicht rot werden kann,
+ist keine.
+
+## 6. Was dieser Nachtrag NICHT behauptet
+
+Der grosse Auftrag ist nicht abgearbeitet. Umgesetzt sind seine Abschnitte 3
+(die zwei Prüfläufe), 21 (Papiervorlagen) und 56 (Prüfungen für die
+Produktwege) — und die Voraussetzung für alles andere, dass die Module
+überhaupt laufen.
+
+Offen und in LUECKEN.md unter L49–L53 festgehalten: Fassaden in der Lernwelt
+(Tastatur im Training, Prüfungsfokus-Kachel, Simulationsgedächtnis) · zwei
+Rechenwege für dieselben Aggregate · die Hauptwelten stehen in keinem
+Register · zwei Willkommensdialoge an zwei aufeinanderfolgenden Starts ·
+„⌁ Erkennen" braucht einen OCR-Dienst, den Redion nicht mitliefert.

@@ -35,7 +35,55 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**24. August 2026 · 170 Prüfläufe**
+**24. August 2026 · 174 Prüfläufe**
+
+> ### Stand vom 24. August, abends — Zweig `codex-study-suite`
+>
+> **Der grösste Einzelbefund des Tages:** rund 40 000 Zeilen Codex-Arbeit
+> waren im Browser nicht vorhanden. Ein Typfehler in `arbeitswelt.ts:337`
+> brach `npm run typecheck` ab, dadurch lief `bauen:ts` nie durch, und fünf
+> `quell/*.js` fehlten. `index.html` lud sie trotzdem — fünf 404er bei jedem
+> Start, ohne Meldung, ohne rote Konsole. Lernwelt, Arbeitswelt,
+> Lebensbereiche, Produktwelten und die Einrichtung der Hauptwelten waren
+> geschrieben und tot (E132).
+>
+> Danach war zu sehen, was Codex gebaut hat, und es ist viel: Heute-Dashboard,
+> Lernzentrale, Lernpfad, Fehlerzentrum, Prüfungszentrale, Schule, Uni,
+> Arbeit, Workspace-Übersicht, Bibliothek, Dokumentmodus, Elektro-Rechner.
+> Am Rechner wie am Telefon, ohne waagerechten Überlauf.
+>
+> **Was an diesem Tag entstand**
+>
+> ```txt
+> E132  Bauschranke gelöst; test101 (der Prüfserver hielt nicht an),
+>       test202 (Onboarding blockierte den Lauf), test87 (Kaskade sprang
+>       von Stufe 3 auf 2 zurück)
+> E133  test206 — die erste Prüfung, die die Produktwelten wirklich öffnet
+> E134  Papiervorlagen: blanko, liniert, kariert, Punktraster, Millimeter
+> E135  Die Lernwelt rechnete falsch — zwei Ursachen, sieben falsche Zahlen
+> ```
+>
+> **Was offen ist**
+>
+> ```txt
+> 1. L49-L53 sind neu: Fassaden in der Lernwelt · zwei Rechenwege für
+>    dieselben Aggregate · die Hauptwelten stehen in keinem Register ·
+>    zwei Willkommensdialoge an zwei Starts · „Erkennen" braucht einen
+>    Dienst, den Redion nicht mitliefert.
+>
+> 2. Der grosse Auftrag ist NICHT abgearbeitet. Umgesetzt sind §3 (die
+>    zwei Prüfläufe), §21 (Papiervorlagen), §56 (Prüfungen für die
+>    Produktwege) und die Voraussetzung für alles andere: dass die Module
+>    überhaupt laufen. Offen bleiben unter anderem Uni mit Semestern,
+>    Projekte und Meetings in der Arbeitswelt, Whiteboard als eigener
+>    Bereich und eine Prüfungssimulation mit Gedächtnis.
+>
+> 3. Drei Verweise auf Entscheidungen stimmen nicht: electrical.ts:6,
+>    calculations.ts:10 und daten.ts:851 nennen E128, und E128 ist „Neue
+>    Audioaufnahmen sind Anhänge". Nicht angefasst — welche Entscheidung
+>    gemeint war, lässt sich nicht raten.
+> ```
+
 
 > ### ✅ STUDY SUITE · PHASE 1 INK V2 ABGESCHLOSSEN
 >

@@ -8343,3 +8343,237 @@ und additiv, ohne Person, Schule oder Notenskala fest einzubauen. Der
 Elektrorechner enthält nur normfreie Mathematik. Fragen sind ein validiertes,
 versioniertes Lernpaket. Das Schuldashboard speichert nichts Eigenes, sondern
 führt vorhandene PDFs, Karten, Aufgaben und Termine begrenzt zusammen.
+
+
+## E132 · Vierzigtausend Zeilen, die der Browser nie gesehen hat
+
+> **Zur Nummerierung:** die Commits zu E132–E135 tragen in ihren Meldungen
+> noch die Nummern E125–E128. Beim Schreiben war nicht gesehen worden, dass
+> der Codex-Stand E125–E131 bereits vergeben hatte. Die Einträge stehen hier
+> als E132–E135, die Verweise im Quelltext zeigen darauf, und die
+> Commit-Meldungen bleiben, wie sie sind — eine Meldung nachträglich zu
+> ändern hiesse, die Geschichte umzuschreiben.
+
+**24. August 2026.** Der Zweig `codex/red` brachte zwei grosse Commits mit:
+Study Suite, Ink, Lernen, PDF, Elektro — und darauf den „grossen
+Produktumbau" mit Lernwelt, Arbeitswelt, Lebensbereichen, Produktwelten und
+einer Einrichtung der Hauptwelten. Zusammen rund 40 000 Zeilen.
+
+Davon lief nichts.
+
+```txt
+src/bereiche/wissen/arbeitswelt.ts:337   let roh: unknown = null
+                                          … darüber: for (const wert of roh)
+```
+
+TypeScript lässt das nicht durch, `npm run typecheck` brach ab — und weil
+`bauen:ts` erst danach läuft, wurde KEINE der fünf neuen Dateien je nach
+`quell/` geschrieben:
+
+```txt
+quell/bereiche/wissen/lebensbereiche.js       fehlte
+quell/bereiche/wissen/lernwelt.js             fehlte
+quell/bereiche/wissen/arbeitswelt.js          fehlte
+quell/bereiche/wissen/produkt_onboarding.js   fehlte
+quell/bereiche/wissen/produktwelten.js        fehlte
+```
+
+`index.html` lud sie trotzdem. Ein `<script src>` auf eine Datei, die es
+nicht gibt, ist im Browser kein Fehler: die Seite lädt weiter, das Modul ist
+einfach nicht da. Fünf 404er bei jedem Start, keine Meldung, keine rote
+Konsole.
+
+Gemessen vorher und nachher:
+
+```txt
+                       vorher            nachher
+404er beim Start       5                 keine
+Lebensbereiche         undefined         object
+Lernwelt               undefined         object
+Startseite heisst      „Start"           „Heute"
+Einzeldatei            4688 KB           5586 KB
+```
+
+Ein Zeichen Typ. Das ist die ganze Ursache.
+
+### Was daraus für Prüfungen folgt
+
+Kein Prüflauf konnte es merken, weil keiner die Welten je geöffnet hat. Ein
+Modul, das nur in `index.html` steht und sonst nirgends, ist für die
+Prüfsuite unsichtbar. Deshalb gibt es seit E126 test206 — und der erste
+Prüfpunkt darin ist die Frage, ob die Module überhaupt geladen sind.
+
+### Drei Prüfläufe im selben Zug
+
+**test101** — der Prüfserver hielt nicht an. `stopp()` war:
+
+```ts
+stopp: () => new Promise(f => { server.close(() => f()); })
+```
+
+`server.close()` hört nur auf, NEUE Verbindungen anzunehmen; auf jede
+bestehende wartet es, und eine Verbindung, die offen ist und nichts tut, geht
+von sich aus nicht weg. Gemessen mit einer einzigen rohen Verbindung:
+
+```txt
+alt   stopp() nach 3000 ms aufgelöst?   false   ← hängt
+neu   stopp() nach 3000 ms aufgelöst?   true
+```
+
+Unter Linux fiel es nie auf, weil `fetch` seine Verbindungen selbst
+schliesst. Es genügt ein Client, der es nicht tut — und unter Windows endete
+test101 genau daran mit einer libuv-Assertion, NACHDEM alle fachlichen Punkte
+grün waren. Kein Sleep: die Verbindungen werden beendet, zweimal anhalten ist
+einmal, und test101 setzt `process.exitCode`, statt den Prozess abzureissen.
+Zehn Prüfläufe hängen an diesem Server.
+
+Unterwegs war `process._getActiveHandles()` eine falsche Spur: es führt das
+Server-Objekt bis zur Speicherbereinigung weiter auf. Nach `stopp()` standen
+dort „Server, Socket, Socket, Socket", und der Server war längst zu. Das
+ehrliche Signal ist, ob der Port sofort wieder frei ist.
+
+**test202** — die 50/67-Statistik aus dem Auftrag war schon repariert.
+Blockiert hat die Einrichtung der Hauptwelten: seit dem Bauen legt sie sich
+beim ersten Start über alles und fängt Klicks ab. Der Lauf entlässt sie jetzt
+wie den Rundgang.
+
+**test87** — Codex' drei neue Stilblätter standen hinter `bausteine.css`. Die
+Kaskade sprang damit von Stufe 3 auf 2 zurück, und die Basis überschrieb die
+neuen Bereiche. Jetzt davor.
+
+
+## E133 · Eine Prüfung, die die Produktwelten wirklich öffnet
+
+**24. August 2026.** Der Auftrag verlangt unter §56 Prüfungen für die grossen
+Produktwege. test206 ist das, und E125 ist der Anlass: 40 000 Zeilen konnten
+tot sein, ohne dass ein einziger von 171 Läufen etwas merkte.
+
+Geprüft wird, was ein Mensch tut: beide Hauptwelten öffnen, Bibliothek,
+Aufgaben, am Rechner, am Tablet und an zwei Telefongrössen.
+
+Dazu die wichtigste Produktregel des Auftrags (§51): ein Objekt, viele
+Ansichten, keine Kopien. Gemessen wird sie nicht an Worten, sondern an
+Zählwerten — eine Datei anlegen, durch fünf Ansichten laufen, nachsehen, ob
+Blöcke, Sammlungen, Dateien oder Stücke mehr geworden sind. Sind sie nicht,
+und die Datei trägt danach noch ihre Kennung, ihren Namen und ihre Bytes.
+
+**Gegenprobe:** eine der fünf gebauten Dateien gelöscht → vier Punkte rot.
+
+Ein Prüfpunkt war zuerst rot, obwohl das Datum gut sichtbar auf dem
+Bildschirm stand: gemessen wurde an `#inhalt`, gezeichnet wird aber in
+`.lernwelt`. Eine Prüfung, die am falschen Element misst, ist schlimmer als
+keine — sie behauptet einen Fehler, den es nicht gibt, und lenkt vom echten
+ab.
+
+
+## E134 · Papiervorlagen — fünf Muster, kein zweites Dokumentformat
+
+**24. August 2026.** Blanko, liniert, kariert, Punktraster,
+Millimeterpapier. Der Auftrag (§21) gibt die Bauweise in einem Satz vor:
+„Nur Darstellung/Metadaten, kein paralleles Dokumentformat."
+
+Also ein Feld am Block und ein Hintergrundbild im Stilblatt. Kein zweiter
+Blocktyp, kein zweiter Speicher, keine Kopie des Blattes je Vorlage. Wer die
+Vorlage wechselt, ändert nichts an seinem Text und nichts an seinen Strichen
+— deshalb kann man beliebig hin- und herwechseln, ohne etwas zu verlieren,
+und deshalb muss beim Wechsel auch nicht neu gezeichnet werden.
+
+### Die Abstände stehen in Blattmassen, nicht in Bildschirmpunkten
+
+Dieselbe Regel wie in E100, und hier genauso wichtig: das Blatt folgt der
+Fensterbreite über `aspect-ratio`. Ein Kästchen in Pixeln wäre am Telefon ein
+anderes als am Rechner — dann ist es kein Karopapier mehr, sondern ein
+Muster. Und für beide Achsen dieselbe Prozentzahl zu nehmen ergibt Rechtecke
+im Verhältnis 1 : √2, weil A4 nun einmal so aussieht.
+
+Gemessen an einem 548 px breiten Blatt:
+
+```txt
+kariert   2,380 % von 548 = 13,05 px quer
+          1,684 % von 775 = 13,05 px hoch     → quadratisch
+mm        0,476 % von 548 =  2,61 px          → genau 1 mm
+Zehner    4,762 % von 548 = 26,10 px          → genau 10 mm
+```
+
+Bei einem zweiseitigen Blatt halbieren sich die Prozentzahlen, und der
+Abstand auf dem Papier bleibt derselbe.
+
+**Gegenprobe:** beide Achsen mit derselben Prozentzahl gerechnet →
+10,91 gegen 15,43 px, auf zwei Seiten 5,45 gegen 15,43. Vier Punkte rot.
+
+Die fünf Knöpfe zeigen jeder SEIN Muster statt eines Sinnbilds dafür. Bei den
+Ausrichtungsknöpfen hat ein Sinnbild schon einmal wie eine Klammer ausgesehen
+(§55.1); ein Muster kann man nicht falsch verstehen.
+
+Das Papier ist in beiden Themen weiss — es ist Papier, kein Fenster. Die
+Lineatur braucht deshalb keine zweite Farbe für den Dunkelmodus.
+
+
+## E135 · Die Lernwelt rechnete falsch — zwei Ursachen, sieben falsche Zahlen
+
+**24. August 2026.** Über 173 Prüfläufe hinweg fasste kein einziger die
+Lernwelt an. Sie ist die grösste der neuen Ansichten — Tagesrunde,
+Fehlertraining, Lernpfad, Prüfungszentrale, Fortschritt — und stand
+ungeprüft da.
+
+Was darin lag, ist die stille Sorte: sie zeigt 0 und „leer", und 0 ist für
+einen frischen Bestand eine völlig glaubwürdige Zahl.
+
+### Ursache 1 — ein leerer Lernstand ist kein Lernstand
+
+`leererLernzustand` in `lebensbereiche.ts` liefert `sr: {}`. Ein leeres
+Objekt ist wahr. `karteMitStand` schrieb `stand?.sr || null` und liess es
+damit stehen — und danach galt in `warteschlange`:
+
+```ts
+neu    = alle.filter(card => !card.sr)       // nie eine Karte
+fällig = alle.filter(card => card.sr && …)   // immer alle
+```
+
+Gemessen mit fünf fabrikneuen Karten: **0 neu, 5 fällig**. Die Kachel „neue
+Karten" konnte gar nichts anderes anzeigen als null, und der Lernplan legte
+Karten, die noch niemand gesehen hat, unter „gelernt und jetzt wieder dran".
+
+Geändert wurde in `lernwelt.ts`, nicht in `leererLernzustand`: dessen Form
+ist ein Vertrag, an dem andere Leser hängen (`sm2(zustand.sr)` erwartet ein
+Objekt). Was fehlte, war die Unterscheidung, und die gehört an die Stelle,
+die sie braucht.
+
+### Ursache 2 — ein `Date` ist schon ein Datum
+
+```ts
+const roh = wert && typeof wert === 'object'
+  ? (wert as any).start ?? (wert as any).date ?? (wert as any).from
+  : wert;
+```
+
+Ein `Date` IST ein Objekt und hat keines dieser drei Felder. `roh` wurde
+undefined, die Funktion gab `null` zurück, und weil `tag()`, `datumText()`
+und `tageBis()` alle darüber gehen, nahm das halbe Dashboard es mit.
+
+Gemessen, eine Karte mit „Gut" bewertet:
+
+```txt
+                       ohne den Zweig    mit ihm
+Lernziel heute         0 / 20            1 / 20
+Streak                 0 Tage            1 Tag
+Prüfungs-Countdown     „null Tage"       „5 Tage"
+Verlaufsbalken         leer              gefüllt
+```
+
+„null Tage" stand wörtlich auf dem Bildschirm: `naechstePruefung.tage + '
+Tage'` mit `tage === null`.
+
+### Warum das keine Prüfung gefunden hat
+
+Weil keine da war. Beide Fehler zeigen plausible Zahlen; nur wer eine Karte
+bewertet und DANACH nachsieht, merkt, dass sich nichts bewegt hat. Genau das
+tut test208 jetzt — und zwar über die Oberfläche, mit Klicks auf
+„Tagesrunde starten", „Antwort zeigen" und „Gut".
+
+**Gegenprobe**, je Ursache einzeln zurückgenommen: ohne den Date-Zweig 5 rot
+(darunter „null Tage" wörtlich im Prüfbericht), ohne `hatLernstand` 3 rot.
+
+Ein Prüfpunkt war zuerst rot, obwohl „5 Tage" gut sichtbar dastand: gesucht
+wurde `\b5\s*Tage\b`, und der Wortlaut ist „29. Aug. 20265 Tage" — zwischen
+zwei Ziffern gibt es keine Wortgrenze.

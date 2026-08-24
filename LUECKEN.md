@@ -1334,6 +1334,100 @@ verschlüsselte Paket ist seitdem im Sicherheitsdialog erreichbar.
 
 ---
 
+## L49 · Was in der Lernwelt noch Fassade ist
+
+**24. August 2026.** Beim Beheben von E128 mit acht Agenten durchgesehen und
+gegengeprüft. Was hier steht, ist NICHT von mir einzeln nachgemessen — die
+Fundstellen sind belegt, die Wirkung nicht überall. Wer daran arbeitet, misst
+zuerst nach.
+
+```txt
+Die Tastatur ist im Training nicht benutzbar. Der Code steht da
+(lernwelt.ts:1897-1912), aber der keydown-Horcher hängt am Wurzelelement,
+und `zeichnen()` ersetzt es bei jeder Bewertung. Nach dem ersten Klick
+hört niemand mehr zu.
+
+Die vierte Startkachel „Prüfungsfokus" trainiert nicht, sondern wechselt
+den Reiter: sie trägt `data-lw-nav="pruefungen"` (lernwelt.ts:1108).
+
+Die Zuordnung Prüfung → Karten ist reine Wortsuche (`passendeKarten`
+:868-877) und fällt bei null Treffern auf ALLE Karten zurück.
+
+Die Prüfungszentrale hat kein Gedächtnis: Simulationsergebnisse liegen nur
+in `zustand.simulation` und sind nach dem Reiterwechsel weg.
+
+Der Lernpfad ist eine geordnete Liste, kein Lernpfad im Sinne des
+Auftrags — und seine Reihenfolge ist auf elf deutsche Elektro-Stichwörter
+fest verdrahtet (:1127-1128).
+```
+
+Nachgemessen habe ich davon nur eines: `bilder.mts` kennt die Lernwelt
+nicht, die Ansicht taucht in keinem Bildschirmfoto-Durchgang auf. Genau
+deshalb sind die vier Zahlen aus E128 so lange unbemerkt geblieben.
+
+
+## L50 · Zwei Wahrheiten über dieselben Aggregate
+
+**24. August 2026.** `Lebensbereiche` bietet `heute`, `aufgaben`, `termine`,
+`zuletzt`, `projekte`, `pdfs` und `lernkarten` an. Die Arbeitswelt benutzt
+KEINE davon, sondern baut Aufgaben, Termine und PDFs ein zweites Mal nach
+(arbeitswelt.ts:683-787).
+
+Das ist keine Kopie von Daten — beide lesen denselben Bestand, und die
+Produktregel „ein Objekt, viele Ansichten" bleibt gewahrt (test206 misst
+das). Es sind zwei Rechenwege für dieselbe Frage, und der zweite ist immer
+der schlechtere (§34). Wer eine Regel ändert, muss sie künftig an zwei
+Stellen ändern und wird die zweite vergessen.
+
+Zusammenlegen ist Arbeit mit Prüfungen dran, nicht nebenbei.
+
+
+## L51 · Die zwei Hauptwelten stehen in keinem Register
+
+**24. August 2026.** CLAUDE.md §5 Regel 2: „Neuer Bereich = zwei
+Register-Einträge." `Register.module` kennt editor, datenbanken, wissen, ki,
+verbinden, dateien — aber weder Lernwelt noch Arbeitswelt noch
+Lebensbereiche. Sie hängen ausschliesslich an `produktwelten.ts:63-64`, das
+sie über `globalThis` sucht.
+
+Dasselbe gilt für Electrical, Recognition und DocumentMode: kein
+Register-Eintrag, kein Befehl, kein Tastenkürzel.
+
+Das ist kein Fehler im Betrieb — es läuft. Es ist eine Abweichung von der
+Architekturregel, und sie hat einen Preis: ein Modul ohne Register-Eintrag
+ist für jede Übersicht unsichtbar, auch für die nächste Prüfung, die „alle
+Bereiche" durchgehen will.
+
+
+## L52 · Zwei Willkommensdialoge an zwei aufeinanderfolgenden Starts
+
+**24. August 2026.** Die Einrichtung der Hauptwelten setzt `rundgangGesehen`
+nicht. `schale.ts:2556-2558` startet den Rundgang nur, wenn das Onboarding
+NICHT gezeigt wurde — beim nächsten Start ist das Onboarding durch, und der
+Rundgang kommt dann doch. Zwei Begrüssungen an zwei Tagen hintereinander.
+
+Selbst gesehen: das Onboarding legt sich beim ersten Start über alles und
+fängt Klicks ab. Für Prüfläufe ist das entschärft (test202/206/207/208
+entlassen es), für den Menschen ist es richtig so — nur eben einmal, nicht
+zweimal.
+
+
+## L53 · „⌁ Erkennen" braucht einen Dienst, den Redion nicht mitliefert
+
+**24. August 2026.** `recognition.ts:405-409` erwartet einen selbst
+betriebenen Dienst unter `http://127.0.0.1:8765/ocr`. Im Verzeichnis liegt
+keiner, und es gibt keine Anleitung dafür. Der Knopf ist damit für jeden
+Nutzer eine Sackgasse — der Code dahinter ist echt, der Weg endet im Nichts.
+
+Dazu widerspricht die Doku dem ausgelieferten Stand:
+`doku/WAS-REDION-MEHR-KANN.md:962` sagt weiterhin „Kein OCR, keine
+Transkripte".
+
+Entweder einen Dienst mitliefern und beschreiben, oder den Knopf ausbauen,
+oder ehrlich beschriften. Ein Knopf, hinter dem nichts ist, ist die
+schlechteste der drei Möglichkeiten.
+
+
 ## L43 · Ein Anhang ohne `blockId` bleibt für immer liegen
 
 **22. August 2026.** Beim Messen für E123 aufgefallen, nicht gesucht.

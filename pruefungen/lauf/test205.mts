@@ -1,4 +1,4 @@
-/* Suite 171 — Der Prüfserver hält wirklich an (E125)
+/* Suite 171 — Der Prüfserver hält wirklich an (E132)
  * ============================================================================
  * test101 lief unter Windows fachlich grün durch und endete danach mit einer
  * libuv-Assertion. Der Verdacht lag auf `process.exit()`. Der lag daneben —

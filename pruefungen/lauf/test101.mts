@@ -203,5 +203,5 @@ console.log(`\n  Suite 66 — Eingabegrenzen: ${ok} ok, ${weg} offen`);
    offen ist — unter Windows endete dieser Lauf genau daran mit einer
    libuv-Assertion, nachdem alle fachlichen Punkte grün waren. `exitCode`
    sagt dasselbe und lässt Node zu Ende räumen. Möglich wurde das erst,
-   seit `srv.stopp()` wirklich anhält (E125, test205). */
+   seit `srv.stopp()` wirklich anhält (E132, test205). */
 process.exitCode = weg ? 1 : 0;

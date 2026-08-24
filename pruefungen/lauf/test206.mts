@@ -1,4 +1,4 @@
-/* Suite 172 — Die zwei Produktwelten tragen (E126)
+/* Suite 172 — Die zwei Produktwelten tragen (E133)
  * ============================================================================
  * Der Auftrag verlangt unter §56 ausdrücklich Prüfungen für die grossen
  * Produktwege. Diese Suite ist das — und sie hat einen konkreten Anlass.
@@ -7,7 +7,7 @@
  * der Hauptwelten lagen als rund 40 000 Zeilen im Verzeichnis und waren im
  * Browser NICHT VORHANDEN: ein Typfehler hatte `bauen:ts` abgebrochen, die
  * fünf `quell/*.js` fehlten, `index.html` lud sie trotzdem, und niemandem
- * fiel es auf (E125).
+ * fiel es auf (E132).
  *
  * Kein Prüflauf konnte es merken, weil keiner die Welten je geöffnet hat.
  * Genau das tut diese Suite jetzt.

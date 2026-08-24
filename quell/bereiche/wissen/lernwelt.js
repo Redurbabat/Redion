@@ -58,7 +58,7 @@ const Lernwelt = (() => {
         return text.split(/[,;|\n]/).map(teil => teil.trim()).filter(Boolean);
     };
     const datum = (wert) => {
-        /* EIN `Date` IST SCHON EIN DATUM (E128).
+        /* EIN `Date` IST SCHON EIN DATUM (E135).
            Hier stand nur der Hüllen-Zweig: „ist es ein Objekt, dann lies `.start`,
            `.date` oder `.from`". Ein `Date` IST ein Objekt und hat keines dieser
            drei Felder — also war `roh` undefined und die Funktion gab `null`
@@ -249,7 +249,7 @@ const Lernwelt = (() => {
         };
     };
     /**
-     * Ein leerer Lernstand IST KEIN LERNSTAND (E128).
+     * Ein leerer Lernstand IST KEIN LERNSTAND (E135).
      *
      * `leererLernzustand` in `lebensbereiche.ts` gibt `sr: {}` zurück — ein
      * leeres Objekt, und ein leeres Objekt ist wahr. `stand?.sr || null` liess
