@@ -20,6 +20,20 @@ const Learning = (() => {
             return '';
         return String(Links.seiteVon(block.id)?.id || '');
     };
+    /** Die echte Datenbankseite; verknüpfte Ansichten erteilen keine Rechte. */
+    const collectionPageId = (collectionId) => {
+        const views = Object.values(Store.cache.blocks)
+            .filter(block => block?.alive !== false && block.type === 'database' &&
+            block.collectionId === collectionId);
+        const view = views.find(block => !block.verknuepft) || views[0];
+        return view ? ownerPageId(view) : '';
+    };
+    const canReadCollection = (collectionId) => {
+        if (!rightsActive())
+            return true;
+        const pageId = collectionPageId(collectionId);
+        return !!pageId && permitted('lesen', pageId);
+    };
     const sourcePageId = (card) => {
         const ref = card?.sourceRef || card?.lernquelle;
         return String(ref?.pageId || ownerPageId(card));
@@ -56,13 +70,146 @@ const Learning = (() => {
         const log = reviewLog(card);
         return log.length ? log[log.length - 1] : null;
     };
-    const isMistake = (card) => Number(lastReview(card)?.rating) < 3;
+    const ratingOf = (entry) => {
+        const rating = Number(entry?.rating);
+        return Number.isInteger(rating) && rating >= 1 && rating <= 4 ? rating : null;
+    };
+    const isMistake = (card) => {
+        const review = lastReview(card);
+        const rating = ratingOf(review);
+        return review?.correct === false || (rating !== null && rating < 3);
+    };
+    const localDay = (value) => {
+        const date = value ? new Date(value) : new Date();
+        if (!Number.isFinite(date.getTime()))
+            return '';
+        return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')].join('-');
+    };
+    /** Datumsspalten sind Kalendertage. Diese Auswertung bleibt auch an einem
+        Wechsel zwischen Sommer- und Winterzeit bei exakt einem Tag pro Datum. */
+    const calendarDayNumber = (date) => Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
+    const dateFrom = (value) => {
+        if (value instanceof Date) {
+            const copy = new Date(value.getTime());
+            return Number.isFinite(copy.getTime()) ? copy : null;
+        }
+        if (typeof value === 'number') {
+            const date = new Date(value);
+            return Number.isFinite(date.getTime()) ? date : null;
+        }
+        const nested = value && typeof value === 'object'
+            ? value.start ?? value.date ?? value.from
+            : value;
+        const text = String(nested || '').trim();
+        const plain = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+        if (plain) {
+            const year = Number(plain[1]), month = Number(plain[2]) - 1, day = Number(plain[3]);
+            const date = new Date(year, month, day);
+            if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day)
+                return date;
+            return null;
+        }
+        const date = new Date(text);
+        return Number.isFinite(date.getTime()) ? date : null;
+    };
+    const topicLabel = (card) => {
+        const explicit = card?.quiz?.topic ?? card?.lernThema ?? card?.topic;
+        if (String(explicit || '').trim())
+            return String(explicit).trim().slice(0, 120);
+        const ref = card?.sourceRef || card?.lernquelle;
+        const sourcePage = ref?.pageId ? Store.getBlock(String(ref.pageId)) : null;
+        const sourceTitle = String(sourcePage?.text || ref?.label || '').trim();
+        if (sourceTitle)
+            return sourceTitle.slice(0, 120);
+        const owner = Store.getBlock(ownerPageId(card));
+        return String(owner?.text || 'Ohne Thema').trim().slice(0, 120) || 'Ohne Thema';
+    };
+    /**
+     * Fortschritt benutzt ausschliesslich den vorhandenen SM-2-Stand:
+     * noch keine erfolgreiche Wiederholung = 0 %, eine = 50 %, zwei oder mehr
+     * konsekutive Wiederholungen = 100 %. Ein Fehler setzt `wdh` wie bisher
+     * zurück und wird dadurch sofort sichtbar, ohne eine zweite Fortschrittszahl.
+     */
+    const topicProgress = (allCards = cards(), now = Date.now()) => {
+        const groups = new Map();
+        allCards.forEach(card => {
+            const label = topicLabel(card);
+            const id = label.toLocaleLowerCase('de-CH');
+            const group = groups.get(id) || {
+                id, label, total: 0, learned: 0, stable: 0, due: 0, errors: 0, progress: 0, points: 0
+            };
+            const repetitions = Math.max(0, Math.floor(Number(card?.sr?.wdh) || 0));
+            group.total++;
+            if (card?.sr || reviewLog(card).length)
+                group.learned++;
+            if (repetitions >= 2)
+                group.stable++;
+            if (card?.sr && (!card.sr.faellig || validDate(card.sr.faellig) <= now))
+                group.due++;
+            if (isMistake(card))
+                group.errors++;
+            group.points += Math.min(2, repetitions);
+            groups.set(id, group);
+        });
+        return [...groups.values()].map(group => ({
+            id: group.id,
+            label: group.label,
+            total: group.total,
+            learned: group.learned,
+            stable: group.stable,
+            due: group.due,
+            errors: group.errors,
+            progress: group.total ? Math.round(group.points / (group.total * 2) * 100) : 0
+        })).sort((left, right) => right.errors - left.errors || right.due - left.due ||
+            left.label.localeCompare(right.label, 'de-CH'));
+    };
+    const nextExam = (nowValue = new Date()) => {
+        const now = dateFrom(nowValue) || new Date();
+        const today = calendarDayNumber(now);
+        const upcoming = [];
+        Object.values(Store.cache.collections)
+            .filter(collection => collection?.schoolKind === 'exams' && canReadCollection(collection.id))
+            .forEach(collection => {
+            const schema = collection.schema || {};
+            const keys = Object.keys(schema);
+            const dateKey = keys.find(key => schema[key]?.type === 'date');
+            const titleKey = keys.find(key => schema[key]?.type === 'title');
+            const statusKey = keys.find(key => schema[key]?.type === 'status');
+            if (!dateKey)
+                return;
+            Store.rowsOf(collection.id).forEach((row) => {
+                if (!row || row.alive === false)
+                    return;
+                const status = String(statusKey ? row.props?.[statusKey] || '' : '').trim();
+                if (/^(geschrieben|abgeschlossen|abgesagt|erledigt)$/i.test(status))
+                    return;
+                const date = dateFrom(row.props?.[dateKey]);
+                if (!date)
+                    return;
+                const days = calendarDayNumber(date) - today;
+                if (days < 0)
+                    return;
+                upcoming.push({
+                    collectionId: String(collection.id),
+                    rowId: String(row.id),
+                    title: String(row.text || (titleKey ? row.props?.[titleKey] : '') || 'Prüfung').trim(),
+                    date: localDay(date),
+                    days
+                });
+            });
+        });
+        upcoming.sort((left, right) => left.days - right.days ||
+            left.title.localeCompare(right.title, 'de-CH') || left.rowId.localeCompare(right.rowId));
+        return upcoming[0] || null;
+    };
     /**
      * Die Tageswarteschlange ist nur eine Sicht auf vorhandene Karten.
      * Neue Karten werden pro Öffnen auf zwanzig begrenzt, fällige nie.
      */
-    const dailyQueue = (newLimit = 20) => {
-        const now = Date.now();
+    const dailyQueue = (newLimit = 20, nowValue = new Date()) => {
+        const nowDate = dateFrom(nowValue) || new Date();
+        const now = nowDate.getTime();
         const allCards = cards();
         const fresh = allCards.filter(card => !card.sr).slice(0, Math.max(0, newLimit));
         const scheduledDue = allCards.filter(card => card.sr &&
@@ -78,24 +225,21 @@ const Learning = (() => {
             newCards: fresh,
             all: [...errors, ...due, ...fresh],
             future,
-            nextAt: future[0]?.sr?.faellig || ''
+            nextAt: future[0]?.sr?.faellig || '',
+            exam: nextExam(nowDate)
         };
     };
     const due = () => dailyQueue(Number.MAX_SAFE_INTEGER).all;
-    const statistics = () => {
+    const statistics = (queue = dailyQueue()) => {
         const allCards = cards();
         const logs = allCards.flatMap(reviewLog);
-        const localDay = (value) => {
-            const date = value ? new Date(String(value)) : new Date();
-            if (!Number.isFinite(date.getTime()))
-                return '';
-            return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
-                String(date.getDate()).padStart(2, '0')].join('-');
-        };
         const today = localDay(null);
         const todayLogs = logs.filter(entry => localDay(entry.at) === today);
-        const successful = logs.filter(entry => Number(entry.rating) >= 3).length;
-        const queue = dailyQueue();
+        const rated = logs.filter(entry => ratingOf(entry) !== null);
+        const todayRated = todayLogs.filter(entry => ratingOf(entry) !== null);
+        const successful = rated.filter(entry => Number(entry.rating) >= 3).length;
+        const againReviews = rated.filter(entry => ratingOf(entry) === 1).length;
+        const todayAgain = todayRated.filter(entry => ratingOf(entry) === 1).length;
         return {
             total: allCards.length,
             learned: allCards.filter(card => !!card.sr).length,
@@ -104,8 +248,12 @@ const Learning = (() => {
             mistakes: allCards.filter(isMistake).length,
             reviewedToday: todayLogs.length,
             reviews: logs.length,
-            successRate: logs.length ? Math.round(successful / logs.length * 100) : 0,
-            nextAt: queue.nextAt
+            againReviews,
+            againRate: rated.length ? Math.round(againReviews / rated.length * 100) : 0,
+            againRateToday: todayRated.length ? Math.round(todayAgain / todayRated.length * 100) : 0,
+            successRate: rated.length ? Math.round(successful / rated.length * 100) : 0,
+            nextAt: queue.nextAt,
+            topics: topicProgress(allCards)
         };
     };
     const clozeParts = (text) => {
@@ -485,6 +633,69 @@ const Learning = (() => {
         card.append(value, label);
         return card;
     };
+    const examWhen = (exam) => {
+        if (!exam)
+            return '–';
+        if (exam.days === 0)
+            return 'heute';
+        if (exam.days === 1)
+            return 'morgen';
+        return 'in ' + exam.days + ' Tagen';
+    };
+    const topicSection = (topics) => {
+        const section = document.createElement('section');
+        section.style.marginTop = '20px';
+        const title = document.createElement('h3');
+        title.textContent = 'Themenfortschritt';
+        title.style.marginBottom = '10px';
+        section.appendChild(title);
+        if (!topics.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'Noch keine Themen mit Lernkarten.';
+            empty.style.color = 'var(--text-dim)';
+            section.appendChild(empty);
+            return section;
+        }
+        const list = document.createElement('div');
+        list.style.display = 'grid';
+        list.style.gap = '10px';
+        topics.forEach(topic => {
+            const row = document.createElement('div');
+            row.style.padding = '11px 12px';
+            row.style.border = '1px solid var(--line)';
+            row.style.borderRadius = '9px';
+            const heading = document.createElement('div');
+            heading.style.display = 'flex';
+            heading.style.justifyContent = 'space-between';
+            heading.style.gap = '12px';
+            const label = document.createElement('strong');
+            label.textContent = topic.label;
+            const percent = document.createElement('span');
+            percent.textContent = topic.progress + ' %';
+            percent.style.whiteSpace = 'nowrap';
+            heading.append(label, percent);
+            const progress = document.createElement('progress');
+            progress.max = 100;
+            progress.value = topic.progress;
+            progress.setAttribute('aria-label', 'Fortschritt für ' + topic.label);
+            progress.style.display = 'block';
+            progress.style.width = '100%';
+            progress.style.margin = '8px 0 5px';
+            const detail = document.createElement('small');
+            detail.style.color = 'var(--text-dim)';
+            const parts = [topic.learned + ' von ' + topic.total + ' begonnen',
+                topic.stable + ' stabil'];
+            if (topic.due)
+                parts.push(topic.due + ' fällig');
+            if (topic.errors)
+                parts.push(topic.errors + ' Fehler');
+            detail.textContent = parts.join(' · ');
+            row.append(heading, progress, detail);
+            list.appendChild(row);
+        });
+        section.appendChild(list);
+        return section;
+    };
     const open = () => {
         const view = overlay('🎴 Lernen');
         let session = [];
@@ -493,16 +704,20 @@ const Learning = (() => {
         let learned = 0;
         const renderDashboard = () => {
             const queue = dailyQueue();
-            const stats = statistics();
+            const stats = statistics(queue);
             view.body.replaceChildren();
             const grid = document.createElement('div');
             grid.style.display = 'grid';
             grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
             grid.style.gap = '10px';
-            const nextShort = queue.nextAt
-                ? new Date(queue.nextAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
-                : '–';
-            grid.append(statCard(String(queue.errors.length), 'fällige Fehler'), statCard(String(queue.due.length), 'weitere fällige'), statCard(String(queue.newCards.length), 'neu in der Runde'), statCard(nextShort, 'nächster Termin'));
+            grid.append(statCard(String(queue.errors.length + queue.due.length), 'Karten fällig'), statCard(String(queue.newCards.length), 'neue Karten'), statCard(String(queue.errors.length), 'Fehler'), statCard(examWhen(queue.exam), queue.exam ? 'Prüfung · ' + queue.exam.title : 'Prüfung'));
+            const exam = document.createElement('p');
+            exam.style.color = 'var(--text-dim)';
+            exam.style.fontSize = '13px';
+            exam.textContent = queue.exam
+                ? 'Prüfung ' + examWhen(queue.exam) + ': ' + queue.exam.title + ' · ' +
+                    new Date(queue.exam.date + 'T12:00:00').toLocaleDateString('de-CH')
+                : 'Keine anstehende Prüfung in den Ausbildungsdaten gefunden.';
             const explanation = document.createElement('p');
             explanation.textContent = queue.all.length
                 ? 'Deine Tagesrunde: zuerst fällige Fehler, dann fällige Karten und bis zu 20 neue.'
@@ -523,7 +738,7 @@ const Learning = (() => {
             details.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
             details.style.gap = '10px';
             details.style.marginTop = '16px';
-            details.append(statCard(String(stats.learned) + ' / ' + String(stats.total), 'Karten mit Lernstand'), statCard(String(stats.reviewedToday), 'heute gelernt'), statCard(String(stats.successRate) + ' %', 'Antworten gut/leicht'), statCard(String(stats.reviews), 'Wiederholungen'));
+            details.append(statCard(String(stats.learned) + ' / ' + String(stats.total), 'Karten mit Lernstand'), statCard(String(stats.reviewedToday), 'heute gelernt'), statCard(String(stats.againRate) + ' %', 'Nochmal-Rate'), statCard(String(stats.reviews), 'Wiederholungen'));
             const next = document.createElement('p');
             next.style.color = 'var(--text-dim)';
             next.style.fontSize = '13px';
@@ -534,7 +749,7 @@ const Learning = (() => {
             algorithm.style.color = 'var(--text-dim)';
             algorithm.style.fontSize = '12px';
             algorithm.textContent = 'Lernplan: SM-2 bleibt der Standard. Es findet keine automatische FSRS-Migration statt.';
-            view.body.append(grid, explanation, actions, details, next, algorithm);
+            view.body.append(grid, exam, explanation, actions, details, topicSection(stats.topics), next, algorithm);
         };
         const renderSession = () => {
             view.body.replaceChildren();
@@ -689,7 +904,7 @@ const Learning = (() => {
         renderDashboard();
     };
     return {
-        cards, due, dailyQueue, statistics, reviewLog, splitCard,
+        cards, due, dailyQueue, statistics, reviewLog, topicProgress, nextExam, splitCard,
         canReadCard, canEditCard,
         sourceOf, sourceLabel, makeSourceRef, jumpToSource,
         sourceMenu, createCrop, clozeFromSelection, open

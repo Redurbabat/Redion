@@ -15,7 +15,7 @@ Zeichen: ✅ vorhanden · ◐ teilweise · ✗ fehlt · ⚠ Risiko
 
 ## Stand
 
-**22. August 2026 · 167 Prüfläufe** — Ink V2 abgeschlossen
+**24. August 2026 · 170 Prüfläufe** — Study Suite im Abschlusslauf
 
 Stark in: local-first · Offline · blockbasierter Editor · Datenbanken ·
 Formeln · Tabellenblock mit bedingter Formatierung · lokale KI mit Grenzen ·
@@ -321,7 +321,7 @@ keine: sie sieht wie Erfolg aus.
 
 **Stand** — ✅ geschlossen (6. August). 0 ohne Beschreibung, 0 ohne Funktion.
 
-Es waren zuletzt 169, nicht 180 — die alte Zahl stammte aus einer Zählung
+Es waren zuletzt 170, nicht 180 — die alte Zahl stammte aus einer Zählung
 vor den deutschen Excel-Namen. Jede hat jetzt Gruppe, Argumente und einen
 Satz, und **jeder Satz ist am Quelltext gemessen**, nicht aus dem Namen
 geraten. Wo die Maschine etwas anderes tut, als der Name vermuten lässt,

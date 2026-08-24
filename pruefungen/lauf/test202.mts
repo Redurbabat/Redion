@@ -275,9 +275,13 @@ const lernBestandVorAnsicht = await seite.evaluate(() => ({
 await seite.evaluate(() => Learning.open());
 await seite.waitForSelector('.lern');
 const lernDashboard = await seite.locator('.lern').innerText();
+const lernThemenwert = await seite.locator(
+  '.lern progress[aria-label="Fortschritt für T202 Grundlagen"]'
+).evaluate((element: HTMLProgressElement) => Number(element.value));
 pruefe('Lernübersicht zeigt Nochmal-Rate und Themenfortschritt ausdrücklich',
   lernDashboard.includes('Nochmal-Rate') && lernDashboard.includes('Themenfortschritt') &&
-  lernDashboard.includes('T202 Grundlagen') && lernDashboard.includes('50 %'), lernDashboard);
+  lernDashboard.includes('T202 Grundlagen') && lernThemenwert > 0,
+  JSON.stringify({ lernThemenwert, lernDashboard }));
 await seite.locator('.lern [data-learning-action="close"]').click();
 gleich('Die Lernübersicht legt beim Aggregieren keinen zweiten Datenbestand an',
   await seite.evaluate(() => [

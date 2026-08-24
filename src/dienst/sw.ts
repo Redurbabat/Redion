@@ -36,7 +36,7 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v21';
+const VERSION = 'notizen-v23';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -148,6 +148,7 @@ const GRUNDSTOCK = [
   './quell/kern/ereignisse/protokoll.js',
   './quell/bereiche/dateien/ablage.js',
   './quell/bereiche/dateien/recognition.js',
+  './lernpakete/babat-red-elektrofragen-1.0.0.json',
   './quell/bereiche/wissen/electrical.js',
   './quell/kern/abgleich/zusammenfuehren.js',
   './quell/kern/zugang/rechte.js',
@@ -158,6 +159,11 @@ const GRUNDSTOCK = [
   './quell/kern/abgleich/maschine.js',
   './quell/bereiche/verbinden/ansicht/wolke.js',
   './quell/bereiche/wissen/bibliothek.js',
+  './quell/bereiche/wissen/lebensbereiche.js',
+  './quell/bereiche/wissen/lernwelt.js',
+  './quell/bereiche/wissen/arbeitswelt.js',
+  './quell/bereiche/wissen/produkt_onboarding.js',
+  './quell/bereiche/wissen/produktwelten.js',
   './quell/bereiche/ki/dienst.js',
   './quell/schale/aufbau/seitenleiste.js',
   './quell/schale/aufbau/kopfleiste.js',
@@ -176,6 +182,9 @@ const GRUNDSTOCK = [
   './quell/schale/stil/einstellungen.css',
   './quell/schale/stil/tabelle.css',
   './quell/schale/stil/bausteine.css',
+  './quell/schale/stil/produktwelten.css',
+  './quell/schale/stil/arbeitswelt.css',
+  './quell/schale/stil/lernwelt.css',
   './oeffentlich/manifest.webmanifest',
   './oeffentlich/favicon.ico',
   './oeffentlich/icons/icon-180.png',

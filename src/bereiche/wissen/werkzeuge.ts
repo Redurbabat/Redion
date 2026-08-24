@@ -107,7 +107,16 @@ const Werkzeuge = (() => {
 
     c('Navigation', 'Suchen', 'Strg P', () => App.suche());
     c('Navigation', 'Neue Seite', 'Strg N', () => App.neueSeite());
-    c('Navigation', 'Startseite', '', () => Ansichten.start());
+    c('Navigation', 'Heute – Lernen & Alltag', '', () => Produktwelten.lernen('heute'));
+    c('Navigation', 'Lernzentrum', '', () => Produktwelten.lernen('lernen'));
+    c('Navigation', 'Lernpfad', '', () => Produktwelten.lernen('pfad'));
+    c('Navigation', 'Fehlertraining', '', () => Produktwelten.lernen('fehler'));
+    c('Navigation', 'Prüfungszentrum', '', () => Produktwelten.lernen('pruefungen'));
+    c('Navigation', 'Workspace', '', () => Produktwelten.workspace('start'));
+    c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
+    c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
+    c('Navigation', 'Planung und Termine', '', () => Produktwelten.planung());
+    c('Navigation', 'Hauptwelten und Lebensbereiche einrichten', '', () => ProduktOnboarding.oeffnen());
     c('Navigation', 'Posteingang', '', () => Ansichten.posteingang());
     c('Navigation', 'Tagesjournal öffnen', 'Strg Shift J', () => journal());
     c('Navigation', 'Schnellnotizen', 'Strg Shift M', () => schnellnotizen());
@@ -125,6 +134,7 @@ const Werkzeuge = (() => {
     c('Navigation', 'Vorwärts', 'Strg ]', () => App.vorwaerts());
 
     if (p) {
+      c('Seite', 'Lebensbereiche zuordnen', '', () => Produktwelten.bereicheDialog(p));
       c('Seite', 'Seite umbenennen', '', () => {
         const n = prompt('Neuer Titel', p.text); if (n !== null) { Store.updateBlock(p.id, { text: n }); App.zeichneBaum(); App.zeichneSeite(); }
       });

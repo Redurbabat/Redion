@@ -1,0 +1,78 @@
+/* ============================================================================
+   PRODUKTWELTEN — Lernen & Alltag / Workspace
+   Zwei Oberflächen über demselben lokalen Datenbestand.
+   ========================================================================== */
+
+/* Semantische Aliasse für die neuen, bereichsübergreifenden Oberflächen.
+   Die zugrunde liegenden Farben bleiben vollständig in Hell/Dunkel definiert. */
+:root{
+  --border:var(--line);
+  --border-soft:var(--line-soft);
+  --accent-soft:color-mix(in srgb,var(--accent) 14%,transparent);
+  --bg-sub:var(--bg-side);
+  --bg-subtle:var(--bg-side);
+  --shadow-sm:0 2px 10px rgba(0,0,0,.14);
+  --shadow-lg:var(--shadow)
+}
+
+.weltwechsel{
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:2px 10px 7px;
+  padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg-sub)
+}
+.weltwechsel button{
+  min-width:0;min-height:34px;display:flex;align-items:center;justify-content:center;
+  gap:6px;padding:6px 8px;border:0;border-radius:8px;background:transparent;
+  color:var(--text-dim);cursor:pointer;font:inherit
+}
+.weltwechsel button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
+.weltwechsel button:hover{background:var(--bg-hover);color:var(--text)}
+.weltwechsel button.an,.weltwechsel button[aria-pressed="true"]{
+  color:var(--text);background:var(--bg-card);box-shadow:0 1px 5px rgba(0,0,0,.13)
+}
+body[data-produktwelt="lernen"] #btn-learning,
+body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);color:var(--text)}
+
+.produkt-bereiche-dialog{width:min(460px,calc(100vw - 24px));max-height:min(720px,90dvh);overflow:auto}
+.produkt-bereiche-hinweis{margin:0;padding:12px 16px;color:var(--text-dim);font-size:13px;line-height:1.5}
+.produkt-bereiche-liste{display:grid;gap:5px;padding:0 10px 10px}
+.produkt-bereiche-liste>button{
+  width:100%;min-height:44px;display:grid;grid-template-columns:28px minmax(0,1fr) auto;
+  align-items:center;gap:8px;padding:8px 10px;border:1px solid transparent;border-radius:9px;
+  background:transparent;color:var(--text);text-align:left;cursor:pointer
+}
+.produkt-bereiche-liste>button:hover{background:var(--bg-hover)}
+.produkt-bereiche-liste>button[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.produkt-bereiche-stand{font-size:11.5px;color:var(--text-dim);white-space:nowrap}
+.produkt-bereiche-leer{padding:26px 16px;text-align:center;color:var(--text-dim);line-height:1.55}
+.produkt-bereiche-fuss{display:flex;gap:7px;padding:10px 14px 14px;border-top:1px solid var(--line)}
+.produkt-bereiche-fuss button{min-height:40px;padding:7px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer}
+.produkt-bereiche-fuss button:hover{background:var(--bg-hover)}
+
+/* Gemeinsames Bühnengerüst. Die Module liefern nur Sichten und keine zweite
+   Datenspur; deshalb teilen sie auch dieselbe visuelle Grammatik. */
+.produkt-welt{width:min(100%,1380px);margin:0 auto;padding:18px 24px 72px;color:var(--text)}
+.produkt-welt button,.produkt-welt input,.produkt-welt select,.produkt-welt textarea{font:inherit}
+.produkt-welt button{touch-action:manipulation}
+
+@media(max-width:760px){
+  .weltwechsel{display:none}
+  #handy-oben #hl-konto{order:0}
+  #handy-oben #hl-start{order:1}
+  #handy-oben #hl-lernen{order:2}
+  #handy-oben #hl-seiten{order:3}
+  #handy-oben #hl-bespr{order:4}
+  #handy-oben #hl-mehr{order:5}
+  .produkt-welt{padding:10px 12px calc(112px + env(safe-area-inset-bottom))}
+  .produkt-bereiche-dialog{width:100vw;max-height:82dvh;margin-top:auto;border-radius:18px 18px 0 0}
+  .produkt-bereiche-fuss{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  .produkt-bereiche-fuss button{min-height:44px;flex:1}
+}
+
+@media(min-width:761px) and (max-width:1000px){
+  .weltwechsel button b{font-size:10.5px}
+  .produkt-welt{padding-inline:18px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .produkt-welt *{scroll-behavior:auto!important}
+}

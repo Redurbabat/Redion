@@ -7,15 +7,41 @@
  * ==========================================================================*/
 
 const Electrical = (() => {
+  type LicenseStatus = 'cleared' | 'self-declared' | 'not-cleared';
+  type ProvenanceStatus = 'verified' | 'self-declared' | 'not-cleared';
+  type ReviewStatus = 'curated-norm-free' | 'source-verified';
   type Question = {
     id: string; topic: string; question: string; options: string[]; correct: number;
     explanation: string; difficulty: number; region: string; norm: null | string;
     source: { title: string; edition?: string; license?: string };
+    review?: { status: ReviewStatus; note?: string };
+  };
+  type QuarantinedQuestion = Question & {
+    quarantine: {
+      status: 'quarantined'; reasonCodes: string[]; note?: string;
+      occurrences?: Array<{ file: string; line: number }>;
+    };
+  };
+  type SourceInventory = {
+    sourceFiles: string[]; rawQuestionRecords: number; uniqueQuarantinedQuestions: number;
+    activeCuratedQuestions: number; extractionMethod: string;
+  };
+  type PackageManifest = {
+    id: string; version: string; title: string; language: string;
+    license: string; licenseStatus: LicenseStatus; provenanceStatus: ProvenanceStatus;
+    source: string; region: string | null; created: string;
+    normPolicy?: { active: string; quarantine: string; region: string };
+    sourceInventory?: SourceInventory;
   };
   type LearningPackage = {
-    manifest: { id: string; version: string; title: string; license: string; source: string };
-    questions: Question[];
+    schema: 'redion.learning-package/v1'; manifest: PackageManifest;
+    questions: Question[]; quarantine: QuarantinedQuestion[];
   };
+  type InstallResult = { added: number; skipped: number; quarantined: number };
+
+  const PACKAGE_SCHEMA = 'redion.learning-package/v1' as const;
+  const BABAT_PACKAGE_ELEMENT = 'redion-learning-package-babat';
+  const BABAT_PACKAGE_FILE = 'babat-red-elektrofragen-1.0.0.json';
 
   const rightsActive = (): boolean =>
     typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
@@ -24,10 +50,13 @@ const Electrical = (() => {
     !rightsActive() || (pageId ? Konten.darf(action, pageId) : Konten.darf(action));
 
   const BASIC_PACKAGE: LearningPackage = {
+    schema: PACKAGE_SCHEMA,
     manifest: {
       id: 'redion.electrical.fundamentals', version: '1.0.0',
       title: 'Elektrotechnik – reine Grundlagenrechnungen', license: 'CC0-1.0',
-      source: 'Redion-Lernredaktion; algebraische Definitionen ohne Normregeln'
+      licenseStatus: 'cleared', provenanceStatus: 'verified', language: 'de-CH',
+      source: 'Redion-Lernredaktion; algebraische Definitionen ohne Normregeln',
+      region: 'all', created: '2026-08-22'
     },
     questions: [
       { id:'ohm-current-1', topic:'Ohmsches Gesetz', question:'An 12 V liegen 6 Ω. Wie gross ist der Strom?',
@@ -54,7 +83,8 @@ const Electrical = (() => {
       { id:'unit-1', topic:'Einheiten', question:'Welche Einheit gehört zum elektrischen Widerstand?',
         options:['Ampere','Volt','Ohm','Wattstunde'], correct:2, explanation:'Der elektrische Widerstand wird in Ohm (Ω) angegeben.',
         difficulty:1, region:'all', norm:null, source:{title:'SI-Einheiten der Elektrotechnik',edition:'SI Brochure, 9th edition',license:'CC0-1.0'} }
-    ]
+    ],
+    quarantine: []
   };
 
   const pageForLearning = (): any => {
@@ -78,14 +108,26 @@ const Electrical = (() => {
   const validate = (raw: any): LearningPackage => {
     if (!raw || typeof raw !== 'object' || !raw.manifest || !Array.isArray(raw.questions))
       throw new Error('Manifest oder Fragenliste fehlt.');
+    if (raw.schema !== undefined && raw.schema !== PACKAGE_SCHEMA)
+      throw new Error('Unbekanntes Lernpaket-Schema.');
     const id = String(raw.manifest.id || '');
     const version = String(raw.manifest.version || '');
     if (!/^[a-z0-9][a-z0-9._-]{2,79}$/i.test(id)) throw new Error('Ungültige Paket-ID.');
     if (!/^\d+\.\d+\.\d+(?:[-+][a-z0-9.-]+)?$/i.test(version)) throw new Error('Ungültige Paketversion.');
     if (!String(raw.manifest.license || '').trim()) throw new Error('Lizenz fehlt.');
-    if (raw.questions.length > 5000) throw new Error('Das Paket enthält mehr als 5000 Fragen.');
+    const licenseStatuses = new Set<LicenseStatus>(['cleared', 'self-declared', 'not-cleared']);
+    const provenanceStatuses = new Set<ProvenanceStatus>(['verified', 'self-declared', 'not-cleared']);
+    const licenseStatus = String(raw.manifest.licenseStatus || 'self-declared') as LicenseStatus;
+    const provenanceStatus =
+      String(raw.manifest.provenanceStatus || 'self-declared') as ProvenanceStatus;
+    if (!licenseStatuses.has(licenseStatus) || !provenanceStatuses.has(provenanceStatus))
+      throw new Error('Lizenz- oder Provenienzstatus ist ungültig.');
+    const rawQuarantine = raw.quarantine === undefined ? [] : raw.quarantine;
+    if (!Array.isArray(rawQuarantine)) throw new Error('Quarantäneliste ist ungültig.');
+    if (raw.questions.length + rawQuarantine.length > 5000)
+      throw new Error('Das Paket enthält mehr als 5000 aktive und quarantänisierte Fragen.');
     const ids = new Set<string>();
-    const questions: Question[] = (raw.questions as any[]).map((entry: any, index: number): Question => {
+    const readQuestion = (entry: any, index: number, quarantined: boolean): Question => {
       const qid = String(entry?.id || '');
       if (!/^[a-z0-9][a-z0-9._-]{1,99}$/i.test(qid) || ids.has(qid))
         throw new Error('Frage ' + (index + 1) + ' hat keine eindeutige gültige ID.');
@@ -95,28 +137,83 @@ const Electrical = (() => {
       if (options.length < 2 || options.length > 8 || !Number.isInteger(correct) || correct < 0 || correct >= options.length)
         throw new Error('Antworten von Frage ' + qid + ' sind ungültig.');
       if (!entry.source?.title) throw new Error('Quelle von Frage ' + qid + ' fehlt.');
-      if (entry.norm && !entry.source.edition)
+      if (!quarantined && entry.quarantine)
+        throw new Error('Quarantänisierte Frage ' + qid + ' darf nicht aktiv sein.');
+      if (!quarantined && entry.norm && !entry.source.edition)
         throw new Error('Normative Frage ' + qid + ' braucht eine belegte Ausgabe.');
+      const reviewStatus = entry.review?.status ? String(entry.review.status) : '';
+      if (reviewStatus && reviewStatus !== 'curated-norm-free' && reviewStatus !== 'source-verified')
+        throw new Error('Prüfstatus von Frage ' + qid + ' ist ungültig.');
+      const region = String(entry.region || 'unknown').slice(0, 40);
+      const norm = entry.norm ? String(entry.norm).slice(0, 160) : null;
+      if (!quarantined && (licenseStatus === 'not-cleared' || provenanceStatus === 'not-cleared') &&
+          (reviewStatus !== 'curated-norm-free' || norm !== null || !['all', 'unknown'].includes(region)))
+        throw new Error('Ungeklärte Frage ' + qid +
+          ' muss normfrei kuratiert oder quarantänisiert sein.');
       return {
         id: qid, topic: String(entry.topic || 'Allgemein').slice(0, 120),
         question: String(entry.question || '').trim().slice(0, 4000), options, correct,
         explanation: String(entry.explanation || '').slice(0, 6000),
         difficulty: Math.max(1, Math.min(5, Number(entry.difficulty) || 1)),
-        region: String(entry.region || 'unknown').slice(0, 40),
-        norm: entry.norm ? String(entry.norm).slice(0, 160) : null,
+        region, norm,
         source: { title: String(entry.source.title).slice(0, 300),
           ...(entry.source.edition ? { edition: String(entry.source.edition).slice(0, 120) } : {}),
-          ...(entry.source.license ? { license: String(entry.source.license).slice(0, 80) } : {}) }
+          ...(entry.source.license ? { license: String(entry.source.license).slice(0, 80) } : {}) },
+        ...(reviewStatus ? { review: { status: reviewStatus as ReviewStatus,
+          ...(entry.review?.note ? { note: String(entry.review.note).slice(0, 1000) } : {}) } } : {})
       };
-    });
+    };
+    const questions: Question[] = (raw.questions as any[])
+      .map((entry: any, index: number): Question => readQuestion(entry, index, false));
     if (questions.some(question => !question.question)) throw new Error('Eine Frage ist leer.');
-    return { manifest: { id, version,
+    const quarantine: QuarantinedQuestion[] = (rawQuarantine as any[]).map((entry: any, index: number) => {
+      if (entry?.quarantine?.status !== 'quarantined' ||
+          !Array.isArray(entry.quarantine.reasonCodes) || entry.quarantine.reasonCodes.length === 0)
+        throw new Error('Quarantäne-Eintrag ' + (index + 1) + ' hat keinen Sperrgrund.');
+      const base = readQuestion(entry, raw.questions.length + index, true);
+      const reasonCodes = entry.quarantine.reasonCodes.map((reason: unknown) => String(reason).slice(0, 100));
+      if (reasonCodes.some((reason: string) => !/^[a-z0-9][a-z0-9.-]{2,99}$/i.test(reason)))
+        throw new Error('Quarantäne-Eintrag ' + base.id + ' hat einen ungültigen Sperrgrund.');
+      const rawOccurrences = Array.isArray(entry.quarantine.occurrences) ?
+        entry.quarantine.occurrences.slice(0, 100) : [];
+      const occurrences = rawOccurrences.map((occurrence: any) => ({
+        file: String(occurrence?.file || '').slice(0, 200),
+        line: Math.max(1, Math.floor(Number(occurrence?.line) || 1))
+      })).filter((occurrence: { file: string; line: number }) => occurrence.file);
+      return { ...base, quarantine: { status: 'quarantined', reasonCodes,
+        ...(entry.quarantine.note ? { note: String(entry.quarantine.note).slice(0, 2000) } : {}),
+        ...(occurrences.length ? { occurrences } : {}) } };
+    });
+    const normPolicy = raw.manifest.normPolicy && typeof raw.manifest.normPolicy === 'object' ? {
+      active: String(raw.manifest.normPolicy.active || '').slice(0, 1000),
+      quarantine: String(raw.manifest.normPolicy.quarantine || '').slice(0, 1000),
+      region: String(raw.manifest.normPolicy.region || '').slice(0, 1000)
+    } : null;
+    const inventory = raw.manifest.sourceInventory && typeof raw.manifest.sourceInventory === 'object' ? {
+      sourceFiles: Array.isArray(raw.manifest.sourceInventory.sourceFiles) ?
+        raw.manifest.sourceInventory.sourceFiles.slice(0, 100).map((file: unknown) => String(file).slice(0, 200)) : [],
+      rawQuestionRecords: Math.max(0, Math.floor(Number(raw.manifest.sourceInventory.rawQuestionRecords) || 0)),
+      uniqueQuarantinedQuestions: Math.max(0,
+        Math.floor(Number(raw.manifest.sourceInventory.uniqueQuarantinedQuestions) || 0)),
+      activeCuratedQuestions: Math.max(0,
+        Math.floor(Number(raw.manifest.sourceInventory.activeCuratedQuestions) || 0)),
+      extractionMethod: String(raw.manifest.sourceInventory.extractionMethod || '').slice(0, 500)
+    } : null;
+    return { schema: PACKAGE_SCHEMA, manifest: { id, version,
       title: String(raw.manifest.title || id).slice(0, 200),
+      language: String(raw.manifest.language || 'und').slice(0, 30),
       license: String(raw.manifest.license).slice(0, 100),
-      source: String(raw.manifest.source || '').slice(0, 500) }, questions };
+      licenseStatus, provenanceStatus,
+      source: String(raw.manifest.source || '').slice(0, 1000),
+      region: raw.manifest.region === null || raw.manifest.region === undefined ? null :
+        String(raw.manifest.region).slice(0, 40),
+      created: String(raw.manifest.created || '').slice(0, 40),
+      ...(normPolicy ? { normPolicy } : {}),
+      ...(inventory ? { sourceInventory: inventory } : {})
+    }, questions, quarantine };
   };
 
-  const installPackage = (raw: any): { added: number; skipped: number } => {
+  const installPackage = (raw: any): InstallResult => {
     const pack = validate(raw); const page = pageForLearning();
     if (!permitted('bearbeiten', page.id)) throw new Error('Die Lernpaket-Seite ist nur lesbar.');
     const blocks = Store.childrenOf(page.id);
@@ -135,12 +232,14 @@ const Electrical = (() => {
           difficulty: question.difficulty, region: question.region, norm: question.norm,
           source: question.source },
         learningPackage: { key, packageId: pack.manifest.id, version: pack.manifest.version,
-          itemId: question.id, license: pack.manifest.license }
+          itemId: question.id, license: pack.manifest.license,
+          licenseStatus: pack.manifest.licenseStatus,
+          provenanceStatus: pack.manifest.provenanceStatus }
       });
       added++;
     });
     App.zeichneBaum(); App.oeffne(page.id);
-    return { added, skipped };
+    return { added, skipped, quarantined: pack.quarantine.length };
   };
 
   const download = (value: unknown, name: string): void => {
@@ -156,10 +255,28 @@ const Electrical = (() => {
       if (file.size > 2 * 1024 * 1024) { UI.toast('Lernpaket ist grösser als 2 MB.'); return; }
       try {
         const result = installPackage(JSON.parse(await file.text()));
-        UI.toast(result.added + ' Karten importiert, ' + result.skipped + ' schon vorhanden.');
+        UI.toast(result.added + ' Karten importiert, ' + result.skipped + ' schon vorhanden' +
+          (result.quarantined ? ', ' + result.quarantined + ' sicher in Quarantäne.' : '.'));
       } catch (error) { UI.banner('Lernpaket abgelehnt: ' + (error instanceof Error ? error.message : String(error)), 'fehler'); }
     });
     input.click();
+  };
+
+  const bundledPackage = async (): Promise<LearningPackage> => {
+    const element = document.getElementById(BABAT_PACKAGE_ELEMENT) as HTMLElement | null;
+    const embedded = element?.textContent?.trim() || '';
+    if (embedded) return validate(JSON.parse(embedded));
+    const source = element?.dataset.src;
+    if (!source) throw new Error('Das mitgelieferte BABAT-RED-Paket ist nicht verknüpft.');
+    try {
+      const response = await fetch(source);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return validate(JSON.parse(await response.text()));
+    } catch (error) {
+      throw new Error('Paket konnte offline nicht geladen werden. Wähle die Datei „' +
+        BABAT_PACKAGE_FILE + '“ über „Lernpaket importieren“. (' +
+        (error instanceof Error ? error.message : String(error)) + ')');
+    }
   };
 
   const MODES: Record<string, { label: string; fields: Array<[string,string,string]>; run: (v: Record<string,string>) => ElectricalResult }> = {
@@ -195,7 +312,9 @@ const Electrical = (() => {
     };
     actions.append(button('calculate','Rechnen'), button('insert','Ergebnis in Seite'),
       button('install','Grundlagenkarten installieren'), button('import','Lernpaket importieren'),
-      button('export','Beispielpaket exportieren'));
+      button('export','Beispielpaket exportieren'),
+      button('babat-install','BABAT-Paket installieren'),
+      button('babat-export','BABAT-Paket exportieren'));
     dialog.append(header, notice, select, fields, output, actions); overlay.appendChild(dialog); document.body.appendChild(overlay);
     let latest: ElectricalResult | null = null;
     const drawFields = (): void => {
@@ -226,7 +345,7 @@ const Electrical = (() => {
     select.addEventListener('change', drawFields); drawFields();
     close.addEventListener('click', () => overlay.remove());
     overlay.addEventListener('mousedown', event => { if (event.target === overlay) overlay.remove(); });
-    actions.addEventListener('click', event => {
+    actions.addEventListener('click', async event => {
       const action = (event.target instanceof Element ? event.target.closest<HTMLElement>('[data-action]') : null)?.dataset.action;
       if (action === 'calculate') calculate();
       if (action === 'insert') {
@@ -250,10 +369,30 @@ const Electrical = (() => {
       }
       if (action === 'import') importFile();
       if (action === 'export') download(BASIC_PACKAGE, 'redion-elektrotechnik-grundlagen-1.0.0.json');
+      if (action === 'babat-install') {
+        try {
+          const result = installPackage(await bundledPackage());
+          UI.toast(result.added + ' kuratierte Karten installiert, ' + result.skipped +
+            ' schon vorhanden; ' + result.quarantined + ' Rohfragen bleiben in Quarantäne.');
+          overlay.remove();
+        } catch (error) {
+          UI.banner('BABAT-RED-Paket abgelehnt: ' +
+            (error instanceof Error ? error.message : String(error)), 'fehler');
+        }
+      }
+      if (action === 'babat-export') {
+        try {
+          download(await bundledPackage(), BABAT_PACKAGE_FILE);
+          UI.toast('Geprüftes Paketartefakt exportiert. Quarantäne bleibt enthalten.');
+        } catch (error) {
+          UI.banner(error instanceof Error ? error.message : String(error), 'fehler');
+        }
+      }
     });
   };
 
-  return { open, installPackage, importFile, BASIC_PACKAGE };
+  return { open, installPackage, validatePackage: validate, importFile,
+    loadBundledPackage: bundledPackage, BASIC_PACKAGE, BABAT_PACKAGE_FILE };
 })();
 
 (window as any).Electrical = Electrical;

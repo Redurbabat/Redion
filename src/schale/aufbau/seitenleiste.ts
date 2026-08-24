@@ -238,8 +238,11 @@ const Seitenleiste = (() => {
     /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
        stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
        kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
-    const karte: Record<string, string> = { start: 'hl-start', seiten: 'hl-seiten',
-                                            bespr: 'hl-bespr', mehr: 'hl-mehr' };
+    const karte: Record<string, string> = {
+      start: 'hl-start', lernen: 'hl-lernen',
+      seiten: 'hl-seiten', workspace: 'hl-seiten',
+      bespr: 'hl-bespr', mehr: 'hl-mehr'
+    };
     l.querySelectorAll('button[role="tab"]').forEach(b => {
       b.classList.remove('an');
       /* `aria-selected` gehört zu `role="tab"` wie das Ziel zum Verweis.
