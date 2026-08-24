@@ -488,6 +488,70 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  dokument: {
+    titel: 'Der PDF-Arbeitsplatz: Miniaturen, Dokument, Inspector',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+
+      /* Eine „gescannte" Seite selbst zeichnen — der Arbeitsplatz braucht
+         echte Bilder, und ein PDF einzulesen wäre für ein Bildschirmfoto
+         der falsche Aufwand. */
+      const blattBild = async (nr: number): Promise<Blob> => {
+        const c = document.createElement('canvas');
+        c.width = 595; c.height = 842;
+        const g = c.getContext('2d');
+        if (!g) throw new Error('Kein Zeichenkontext');
+        g.fillStyle = '#fdfdfb'; g.fillRect(0, 0, c.width, c.height);
+        g.fillStyle = '#1c1c1c';
+        g.font = '600 30px system-ui, sans-serif';
+        g.fillText('Grundlagen der Elektrotechnik', 56, 96);
+        g.font = '17px system-ui, sans-serif';
+        g.fillText('Kapitel ' + nr, 56, 132);
+        g.fillStyle = '#4a4a48';
+        g.font = '15px system-ui, sans-serif';
+        const zeilen = [
+          'Der elektrische Widerstand eines Leiters hängt von seinem',
+          'Werkstoff, seiner Länge und seinem Querschnitt ab. Für einen',
+          'homogenen Leiter gilt R = ρ · l / A.',
+          '',
+          'Das ohmsche Gesetz verknüpft Spannung, Stromstärke und',
+          'Widerstand: U = R · I. Aus ihm folgt unmittelbar die',
+          'Leistungsformel P = U · I und daraus P = R · I².',
+          '',
+          'In einer Reihenschaltung addieren sich die Widerstände,',
+          'in einer Parallelschaltung die Leitwerte.'
+        ];
+        zeilen.forEach((z, i) => g.fillText(z, 56, 186 + i * 27));
+        g.strokeStyle = '#d7d7d3';
+        g.strokeRect(56, 500, 483, 220);
+        g.fillStyle = '#9b9a97';
+        g.font = '13px system-ui, sans-serif';
+        g.fillText('Abb. ' + nr + ' · Reihen- und Parallelschaltung', 56, 748);
+        return await new Promise<Blob>(fertig =>
+          c.toBlob(blob => fertig(blob as Blob), 'image/png'));
+      };
+
+      const seite = Store.addPage(null, { text: 'Elektrotechnik – Skript', icon: '📕' });
+      for (let nr = 1; nr <= 4; nr++) {
+        const block = Store.addBlock(seite.id, 'pdfseite', {
+          text: '', suchtext: 'Ohmsches Gesetz Leistung Widerstand',
+          nr, vonSeiten: 4, bw: 595, bh: 842, quelleId: 'skript-1'
+        });
+        const satz = await Dateien.ablegen(
+          new File([await blattBild(nr)], 'skript-s' + nr + '.png', { type: 'image/png' }),
+          { blockId: block.id, abgeleitet: true });
+        Store.updateBlock(block.id, { bildDateiId: satz.id });
+      }
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      await Store.flush();
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  },
+
   tabelleLeer: {
     titel: 'Der leere Zustand',
     bauen: () => {

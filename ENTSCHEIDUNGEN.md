@@ -8925,3 +8925,44 @@ alle acht Punkte rot, vorher waren es fünf.
 
 **Geprüft:** test206 §11, neun Punkte — die acht Sätze aus §29 und einer,
 der wirklich klickt: „Neue Lernkarte" bringt den Bestand von 1 auf 2.
+
+
+## E140 · Vier Knöpfe ohne Umlaut — und die Prüfung, die das künftig sieht
+
+**24. August 2026.** Beim ersten Bildschirmfoto des PDF-Arbeitsplatzes (§17)
+standen in der Zeichenleiste zwei Knöpfe:
+
+```txt
+↶ Zurueck        🗑 Loeschen
+```
+
+Dazu drei Erklärungen: „Rueckgaengig", „Auswahl loeschen", „Marken
+auswaehlen, gemeinsam bewegen oder loeschen", „Schreiben — die Zeichenschicht
+ist durchlaessig", „Freihand mit geglaetteter Linie".
+
+Alle funktionierten. Kein Prüflauf hatte etwas dagegen, und keiner hätte
+etwas dagegen haben können — Umlaute sind kein Verhalten. Gefunden hat sie
+ein Blick auf ein Bild (§55).
+
+CLAUDE.md §53 trennt: Deutsch für Menschen, Englisch für Code. Deutsch heisst
+mit Umlaut; `ue` ist kein Kompromiss, sondern ein Fehler.
+
+### Die Prüfung sucht nicht nach `ue`
+
+Im Quelltext ist `ue` fast überall richtig: `loeschen` als Datenschlüssel,
+`auswaehlen` als Funktionsname, `kartenGroesse` als Feld. Ein Verbot auf
+Quelltextebene wäre in fünf Minuten mit Ausnahmen zugepflastert.
+
+test87 §10 liest deshalb nur, was der Browser wirklich ANZEIGT: `title=`,
+`placeholder=`, `aria-label=` und den Text in `<span class="wort">`. Dazu
+eine kurze Wortliste, bei der `ae/oe/ue` sicher ein Umlaut sein muss —
+bewusst kurz, lieber ein Fall übersehen als ein richtiger Text angemeckert.
+
+„Schliessen", „grosse" und „muss" bleiben unangetastet: das ist Schweizer
+Rechtschreibung, und die kennt kein ß. Verboten ist nur die Ersatzform für
+einen Umlaut.
+
+Die Prüfung trägt ihre Gegenprobe im Lauf: sie füttert die Wortliste mit
+„Rueckgaengig" und „Loeschen" und verlangt, dass beide anschlagen. Eine
+Regel, die auf nichts anschlägt, ist keine Regel. Gegen den Stand von vorher
+laufend nennt sie alle vier Beschriftungen beim Namen.

@@ -491,9 +491,9 @@ const Marken = (() => {
         const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} title="${title}">` +
             `<span class="zeichen">${icon}</span><span class="wort">${word}</span></button>`;
         tools.innerHTML =
-            button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlaessig') +
-                button('select', '⌖', 'Auswahl', 'Marken auswaehlen, gemeinsam bewegen oder loeschen') +
-                button('stift', '🖍', 'Stift', 'Freihand mit geglaetteter Linie') +
+            button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlässig') +
+                button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
+                button('stift', '🖍', 'Stift', 'Freihand mit geglätteter Linie') +
                 button('marker', '▰', 'Marker', 'Transparenter Marker') +
                 button('line', '╱', 'Linie', 'Gerade Linie') +
                 button('arrow', '→', 'Pfeil', 'Pfeil') +
@@ -502,9 +502,9 @@ const Marken = (() => {
                 button('text', 'T', 'Text', 'Textanmerkung') +
                 button('radierer', '⌫', 'Radieren', 'Eine Marke entfernen') +
                 '<span class="blatt-trenn"></span>' +
-                '<button data-act="undo" title="Rueckgaengig" disabled><span class="zeichen">↶</span><span class="wort">Zurueck</span></button>' +
+                '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
                 '<button data-act="redo" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
-                '<button data-act="delete" title="Auswahl loeschen" disabled><span class="zeichen">🗑</span><span class="wort">Loeschen</span></button>' +
+                '<button data-act="delete" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
                 '<span class="blatt-trenn"></span>' +
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
