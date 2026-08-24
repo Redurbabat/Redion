@@ -7378,6 +7378,33 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:#fff}
 .blatt-werk button:disabled{opacity:.38; cursor:not-allowed}
+/* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
+
+   ERSTER VERSUCH, UND ER WAR FALSCH: ein Verlauf an `.blatt-reihe::after`,
+   also am rechten Rand der ganzen REIHE. Dort steht aber `.blatt-fest` mit
+   dem 🔗 — der Verlauf lag über einem Knopf und nicht über der Kante, an
+   der die Leiste abgeschnitten wird. Auf dem Bild war er nicht zu sehen,
+   und das war richtig so.
+
+   Für rechts gibt es die Anzeige längst: `.blatt-fest` wirft seinen Schatten
+   nach LINKS, genau auf diese Kante (E103). Sie war nur immer da — auch am
+   Ende der Leiste, wo nichts mehr zu holen ist. Jetzt schaltet sie mit.
+
+   Links dagegen ist die Kante wirklich die Kante der Reihe, und dort steht
+   ein Verlauf. */
+.blatt-reihe{position:relative}
+.blatt-reihe::before{
+  content:""; position:absolute; top:1px; bottom:1px; left:1px; width:26px;
+  pointer-events:none; opacity:0; transition:opacity .12s; z-index:2;
+  background:linear-gradient(to right, var(--bg-card), transparent)}
+.blatt-reihe[data-mehr="links"]::before,
+.blatt-reihe[data-mehr="beides"]::before{opacity:1}
+.blatt-reihe[data-mehr="nein"] .blatt-fest,
+.blatt-reihe[data-mehr="links"] .blatt-fest{box-shadow:none}
+.blatt-reihe[data-mehr="rechts"] .blatt-fest,
+.blatt-reihe[data-mehr="beides"] .blatt-fest{
+  box-shadow:-14px 0 14px -8px rgba(0,0,0,.5)}
+
 .blatt-trenn{width:1px; height:20px; background:var(--rand); margin:0 4px}
 .blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
              border:2px solid transparent}
@@ -7519,6 +7546,20 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */
   .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
+  /* DIESELBE ZAHL ZWEIMAL AUF EINEM 390-PX-BILDSCHIRM (E140). Im
+     Dokumentmodus steht die Seitenzahl schon oben in der Kopfzeile —
+     „Seite 1/4", gross und mit den Pfeilen daneben. Unten sagte
+     `.blatt-fest` dasselbe noch einmal in Worten: „Seite 1 von 4".
+
+     Gemessen bei 390 px: die Werkzeugleiste war 211 px breit, ihr Inhalt
+     1059 px. Von 21 Knöpfen standen 17 draussen. Der doppelte Satz kostete
+     davon rund 100 px — fast die Hälfte dessen, was die Leiste überhaupt
+     hatte.
+
+     Nur im Dokumentmodus. Eine PDF-Seite auf einer gewöhnlichen Seite hat
+     keine Kopfzeile über sich; dort ist die Zahl die einzige. */
+  .document-workspace .blatt-fest .pdfs-nr,
+  .document-workspace .blatt-fest .blatt-trenn{display:none}
   .blatt-fest .wort{display:none}
   .blatt-fest .zeichen{margin:0; font-size:17px}
   .blatt-fest button{min-height:44px; min-width:44px}
@@ -22946,9 +22987,9 @@ const Marken = (() => {
         const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} title="${title}">` +
             `<span class="zeichen">${icon}</span><span class="wort">${word}</span></button>`;
         tools.innerHTML =
-            button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlaessig') +
-                button('select', '⌖', 'Auswahl', 'Marken auswaehlen, gemeinsam bewegen oder loeschen') +
-                button('stift', '🖍', 'Stift', 'Freihand mit geglaetteter Linie') +
+            button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlässig') +
+                button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
+                button('stift', '🖍', 'Stift', 'Freihand mit geglätteter Linie') +
                 button('marker', '▰', 'Marker', 'Transparenter Marker') +
                 button('line', '╱', 'Linie', 'Gerade Linie') +
                 button('arrow', '→', 'Pfeil', 'Pfeil') +
@@ -22957,15 +22998,37 @@ const Marken = (() => {
                 button('text', 'T', 'Text', 'Textanmerkung') +
                 button('radierer', '⌫', 'Radieren', 'Eine Marke entfernen') +
                 '<span class="blatt-trenn"></span>' +
-                '<button data-act="undo" title="Rueckgaengig" disabled><span class="zeichen">↶</span><span class="wort">Zurueck</span></button>' +
+                '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
                 '<button data-act="redo" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
-                '<button data-act="delete" title="Auswahl loeschen" disabled><span class="zeichen">🗑</span><span class="wort">Loeschen</span></button>' +
+                '<button data-act="delete" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
                 '<span class="blatt-trenn"></span>' +
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
                 '<span class="blatt-trenn"></span>' +
                 BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" ` +
                     `data-b="${value}" title="Strichbreite"><i style="height:${Math.max(2, value)}px"></i></button>`).join('');
+        /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
+           Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
+           Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
+           längst; nur zeigt das nichts an, und eine abgeschnittene Leiste sieht
+           aus wie eine vollständige. Genau dieser Befund steht in §55.1 über die
+           Tabellenleiste, und er gilt hier noch einmal.
+    
+           `.blatt-fest` hat seinen Schatten für die Seite LINKS. Nach rechts gab
+           es nichts — dabei ist beim Öffnen alles Verdeckte rechts.
+    
+           Kein Dauerverlauf: der würde am Ende der Leiste eine Andeutung zeigen,
+           wo nichts mehr kommt. Die zwei Kennzeichen stehen nur, solange es
+           wirklich etwas zu holen gibt. */
+        const rollstand = () => {
+            const links = tools.scrollLeft > 2;
+            const rechts = tools.scrollLeft + tools.clientWidth < tools.scrollWidth - 2;
+            row.dataset['mehr'] = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+        };
+        tools.addEventListener('scroll', rollstand, { passive: true });
+        if (typeof ResizeObserver === 'function')
+            new ResizeObserver(rollstand).observe(tools);
+        setTimeout(rollstand, 0);
         const updateState = (next) => {
             const undo = tools.querySelector('[data-act="undo"]');
             const redo = tools.querySelector('[data-act="redo"]');

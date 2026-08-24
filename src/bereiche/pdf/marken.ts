@@ -438,6 +438,28 @@ const Marken = (() => {
       BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" ` +
         `data-b="${value}" title="Strichbreite"><i style="height:${Math.max(2, value)}px"></i></button>`).join('');
 
+    /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
+       Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
+       Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
+       längst; nur zeigt das nichts an, und eine abgeschnittene Leiste sieht
+       aus wie eine vollständige. Genau dieser Befund steht in §55.1 über die
+       Tabellenleiste, und er gilt hier noch einmal.
+
+       `.blatt-fest` hat seinen Schatten für die Seite LINKS. Nach rechts gab
+       es nichts — dabei ist beim Öffnen alles Verdeckte rechts.
+
+       Kein Dauerverlauf: der würde am Ende der Leiste eine Andeutung zeigen,
+       wo nichts mehr kommt. Die zwei Kennzeichen stehen nur, solange es
+       wirklich etwas zu holen gibt. */
+    const rollstand = (): void => {
+      const links = tools.scrollLeft > 2;
+      const rechts = tools.scrollLeft + tools.clientWidth < tools.scrollWidth - 2;
+      row.dataset['mehr'] = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+    };
+    tools.addEventListener('scroll', rollstand, { passive: true });
+    if (typeof ResizeObserver === 'function') new ResizeObserver(rollstand).observe(tools);
+    setTimeout(rollstand, 0);
+
     const updateState = (next: any): void => {
       const undo = tools.querySelector<HTMLButtonElement>('[data-act="undo"]');
       const redo = tools.querySelector<HTMLButtonElement>('[data-act="redo"]');

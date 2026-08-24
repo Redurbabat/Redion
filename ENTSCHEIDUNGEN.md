@@ -8966,3 +8966,61 @@ Die Prüfung trägt ihre Gegenprobe im Lauf: sie füttert die Wortliste mit
 „Rueckgaengig" und „Loeschen" und verlangt, dass beide anschlagen. Eine
 Regel, die auf nichts anschlägt, ist keine Regel. Gegen den Stand von vorher
 laufend nennt sie alle vier Beschriftungen beim Namen.
+
+
+## E141 · Der PDF-Arbeitsplatz am Telefon: 211 von 1059 Pixeln
+
+**24. August 2026.** §17 des Auftrags zeichnet den Arbeitsplatz als Bild —
+Miniaturen, Dokument, Inspector — und schreibt für das Telefon dazu: „volle
+Breite, keine gequetschten drei Spalten". Gebaut war das (E126). Angesehen
+hatte es niemand, und geprüft war es auch nicht.
+
+Am Rechner stimmt es. Am Telefon standen die Werkzeuge so:
+
+```txt
+Fenster        390 px
+Zeichenleiste  211 px      Inhalt 1059 px
+draussen       17 von 21 Knöpfen
+```
+
+### Der doppelte Seitenzähler
+
+Von den 179 px, die der Leiste fehlten, gingen rund 100 an einen zweiten
+Seitenzähler. „Seite 1 von 4" stand unten in der Werkzeugleiste — vier
+Zentimeter über dem „Seite 1/4" der Kopfzeile, mit den Blätterpfeilen
+daneben.
+
+Er verschwindet nur im DOKUMENTMODUS. Eine PDF-Seite auf einer gewöhnlichen
+Seite hat keine Kopfzeile über sich; dort ist die Zahl die einzige Angabe,
+und test210 §6 hält genau das fest.
+
+Danach: 310 px statt 211.
+
+### Eine Leiste, die rollt, muss zeigen, dass sie rollt
+
+21 Werkzeuge brauchen 1059 px. Auf ein Telefon passen sie nicht, und das ist
+in Ordnung — die Leiste rollt seit E103. Nicht in Ordnung ist, dass eine
+abgeschnittene Leiste aussieht wie eine vollständige. Genau dieser Befund
+steht in §55.1 über den Tabellenblock, und er galt hier ein zweites Mal.
+
+**Der erste Versuch war falsch**, und das gehört dazu: ein Verlauf an
+`.blatt-reihe::after`, also am rechten Rand der ganzen Reihe. Dort steht aber
+`.blatt-fest` mit dem 🔗-Knopf — der Verlauf lag über einem Knopf, nicht über
+der Kante. Auf dem Bild war er nicht zu sehen, und das war richtig so.
+
+Für rechts gibt es die Anzeige längst: `.blatt-fest` wirft seinen Schatten
+nach LINKS, genau auf diese Kante. Sie war nur immer da, auch am Ende der
+Leiste. Jetzt schaltet sie mit — gemessen `rechts → beides → links`.
+
+### Und was das Bild sonst noch gezeigt hat
+
+„Zurueck" und „Loeschen". Dazu fünf Erklärungen derselben Machart. Steht in
+E140, mitsamt der Prüfung, die das künftig sieht.
+
+**Geprüft:** test210, sechs Abschnitte, 25 Punkte — die drei Bereiche am
+Rechner, die deutschen Beschriftungen, das Telefon ohne gequetschte Spalten,
+die rollende Leiste mit ihren drei Zuständen, der Zähler einmal statt zweimal
+und der Zähler, der auf einer gewöhnlichen Seite bleibt. Vier Gegenproben
+einzeln zurückgenommen; eine davon hat meine Erwartung widerlegt: am Telefon
+STAPELN sich die drei Bereiche, sie quetschen sich nicht. Die Breite der
+Mitte allein hätte den Fehler nie gesehen.
