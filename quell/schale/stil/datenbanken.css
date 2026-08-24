@@ -31,7 +31,7 @@
 }
 .db-tools button:hover{background:var(--bg-hover); color:var(--text)}
 .db-tools .new{
-  background:var(--accent); color:#fff; font-weight:500; padding:5px 12px;
+  background:var(--accent); color:var(--auf-accent); font-weight:500; padding:5px 12px;
 }
 .db-tools .new:hover{filter:brightness(1.1); color:#fff}
 .chip{
@@ -97,7 +97,7 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .cal .dow{background:var(--bg); padding:6px; font-size:12px; color:var(--text-dim); text-align:center}
 .cal .day{background:var(--bg); min-height:96px; padding:5px; font-size:12px}
 .cal .day.out{opacity:.35}
-.cal .day.today .n{background:var(--accent); color:#fff; border-radius:50%; width:20px; height:20px;
+.cal .day.today .n{background:var(--accent); color:var(--auf-accent); border-radius:50%; width:20px; height:20px;
                    display:grid; place-items:center}
 .cal .day .n{color:var(--text-dim); margin-bottom:4px}
 .cal .ev{

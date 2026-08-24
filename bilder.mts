@@ -428,6 +428,123 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Die Lernwelt jenseits von „Heute" ----------------------------------
+     Fünf Ansichten, die in keinem Bilddurchgang vorkamen: Lernpfad,
+     Fehlertraining, Prüfungszentrale und die drei Domänen. Genau dort sass
+     E135 (sieben falsche Zahlen) und E136 (drei Dinge, die dastanden und
+     nicht funktionierten) — beide unbemerkt, weil niemand hingesehen hat. */
+
+  lernpfad: {
+    titel: 'Der Lernpfad: Etappen, Fortschritt, nächste Runde',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '⚡' });
+      const karten = [
+        'Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I',
+        'Arbeit :: W = P · t', 'Reihenschaltung :: R = R1 + R2',
+        'Parallelschaltung :: 1/R = 1/R1 + 1/R2', 'Widerstand :: R = ρ · l / A',
+        'Kurzschlussstrom :: Ik = U / Zk', 'Schutzleiter :: PE ist grün-gelb'
+      ];
+      karten.forEach((q, i) => {
+        const b = Store.addBlock(fach.id, 'flashcard', { text: q });
+        /* Die ersten vier sind gelernt, zwei davon sicher — sonst zeigt der
+           Pfad überall dieselbe Null. */
+        if (i < 4) Store.updateBlock(b.id, {
+          sr: { wdh: i < 2 ? 3 : 1, ef: 2.5, faellig: new Date(Date.now() + 864e5 * (i + 2)).toISOString() }
+        });
+      });
+      w.Produktwelten.lernen('lernweg');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  },
+
+  pruefungen: {
+    titel: 'Die Prüfungszentrale mit Countdown und Simulation',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '⚡' });
+      ['Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I',
+       'Arbeit :: W = P · t', 'Reihenschaltung :: R = R1 + R2']
+        .forEach(q => Store.addBlock(fach.id, 'flashcard', { text: q }));
+      const plan = Store.addPage(null, { text: 'Klausurplan', icon: '📝' });
+      const db = Store.addDatabase(plan.id, 'Klausuren', {
+        title: { name: 'Name', type: 'title' },
+        wann: { name: 'Datum', type: 'date' },
+        fach: { name: 'Fach', type: 'text' } });
+      Store.updateCollection(db.collectionId, { schoolKind: 'exams' });
+      const tage = (n: number): string => {
+        const d = new Date(); d.setDate(d.getDate() + n);
+        return d.toISOString().slice(0, 10);
+      };
+      [['Ohmsches Gesetz und Leistung', 5, 'Elektrotechnik'],
+       ['Schutzmassnahmen', 19, 'Elektrotechnik'],
+       ['Mathematik: Vektoren', 33, 'Mathematik']].forEach(([name, n, f]) => {
+        const zeile = Store.addRow(db.collectionId, { title: String(name) });
+        Store.setProp(zeile.id, 'wann', tage(Number(n)));
+        Store.setProp(zeile.id, 'fach', String(f));
+      });
+      w.Produktwelten.lernen('pruefungen');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  },
+
+  schule: {
+    titel: 'Schule und Ausbildung: Fächer, Aufgaben, Material',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      ['Elektrotechnik', 'Mathematik', 'Deutsch', 'Betriebskunde'].forEach(name => {
+        const fach = Store.addPage(null, { text: name, icon: '📘' });
+        Store.addBlock(fach.id, 'flashcard', { text: name + ' :: erste Karte' });
+        Store.addBlock(fach.id, 'todo', { text: 'Aufgabenblatt ' + name + ' abgeben' });
+      });
+      const plan = Store.addPage(null, { text: 'Noten', icon: '🎓' });
+      const db = Store.addDatabase(plan.id, 'Noten', {
+        title: { name: 'Fach', type: 'title' },
+        note: { name: 'Note', type: 'number' } });
+      Store.updateCollection(db.collectionId, { schoolKind: 'grades' });
+      [['Elektrotechnik', 5], ['Mathematik', 4.5], ['Deutsch', 5.5]].forEach(([f, n]) => {
+        const zeile = Store.addRow(db.collectionId, { title: String(f) });
+        Store.setProp(zeile.id, 'note', Number(n));
+      });
+      w.Produktwelten.lernen('schule');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  },
+
+  arbeit: {
+    titel: 'Arbeit: Projekte, Meetings, Termine, Wissen',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      ['Umbau Halle 3', 'Wartungsplan 2026'].forEach(name => {
+        const s = Store.addPage(null, { text: name, icon: '💼' });
+        Store.addBlock(s.id, 'todo', { text: 'Material bestellen für ' + name });
+      });
+      const bespr = Store.addPage(null, { text: 'Baustellenbesprechung KW 34', icon: '🎙' });
+      Store.updateBlock(bespr.id, { besprechung: true });
+      Store.addBlock(bespr.id, 'text', { text: 'Termin für die Abnahme steht.' });
+      const wissen = Store.addPage(null, { text: 'Entscheidung: Kabeltyp NYM', icon: '💡' });
+      Store.addBlock(wissen.id, 'text', { text: 'NYM-J 5×2,5 für alle Zuleitungen.' });
+      w.Produktwelten.lernen('arbeit');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  },
+
   whiteboard: {
     titel: 'Die freie Fläche mit Ausschnitt, Massstab und Verbindungen',
     bauen: async () => {

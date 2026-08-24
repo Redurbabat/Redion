@@ -47,7 +47,7 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
                 background:transparent; color:var(--text-dim); cursor:pointer}
 .zs-zoom button:last-child{border-right:0}
 .zs-zoom button:hover{background:var(--bg-hover)}
-.zs-zoom button.an{background:var(--accent); color:#fff}
+.zs-zoom button.an{background:var(--accent); color:var(--auf-accent)}
 .zs-info{font-size:12px; color:var(--text-faint)}
 .zs-leiste>button{font-size:12px; padding:3px 9px; border-radius:5px; border:1px solid var(--line)}
 .zs-leiste>button:hover{background:var(--bg-hover)}
@@ -110,7 +110,7 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 .form-mehr label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:13px}
 .form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent)}
 .form-fuss{display:flex; gap:10px; align-items:center; margin-top:18px}
-.form-fuss .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:7px; font-weight:500}
+.form-fuss .prim{background:var(--accent); color:var(--auf-accent); padding:9px 20px; border-radius:7px; font-weight:500}
 .form-fuss button:not(.prim){font-size:13px; color:var(--text-dim); padding:6px 10px; border-radius:6px; border:1px solid var(--line)}
 .form-zahl{margin-left:auto; font-size:12px; color:var(--text-faint)}
 

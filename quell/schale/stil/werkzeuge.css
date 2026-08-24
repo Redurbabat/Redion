@@ -40,7 +40,7 @@
 }
 .fbtns button{padding:7px 14px; border:1px solid var(--line); border-radius:7px; font-size:14px}
 .fbtns button:hover{background:var(--bg-hover)}
-.fbtns .prim{background:var(--accent); color:#fff; border-color:transparent; font-weight:500}
+.fbtns .prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
 .fbtns .prim:hover{filter:brightness(1.1)}
 #mdq{
   width:100%; height:52vh; padding:16px 18px; background:var(--bg); border:none;
@@ -114,7 +114,7 @@ a.bl:hover{color:var(--text)}
   padding:9px 12px; outline:none; resize:vertical; font:14px/1.5 var(--font); color:var(--text);
 }
 .memo-neu textarea:focus{border-color:var(--accent)}
-.memo-neu .prim{background:var(--accent); color:#fff; padding:9px 14px; border-radius:8px; font-weight:500}
+.memo-neu .prim{background:var(--accent); color:var(--auf-accent); padding:9px 14px; border-radius:8px; font-weight:500}
 .heatmap{
   display:grid; grid-template-rows:repeat(7,10px); grid-auto-flow:column; gap:3px;
   padding:12px 16px; border-bottom:1px solid var(--line); overflow-x:auto;
@@ -153,7 +153,7 @@ a.bl:hover{color:var(--text)}
   background:var(--bg-input); border:1px solid var(--line); border-radius:8px; outline:none;
   color:var(--text); text-align:center;
 }
-.gesperrt .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:8px; font-weight:500}
+.gesperrt .prim{background:var(--accent); color:var(--auf-accent); padding:9px 20px; border-radius:8px; font-weight:500}
 .sperrhinweis{
   background:var(--b-yellow); border-radius:7px; padding:9px 14px; font-size:13.5px;
   margin:6px 0 12px; display:flex; align-items:center; gap:10px;
@@ -280,7 +280,7 @@ a.bl:hover{color:var(--text)}
 .home-sich .hs-still:hover{background:var(--bg-hover); color:var(--text)}
 .home-sich .hs-tun{
   flex:0 0 auto; font-size:13px; font-weight:500; padding:8px 14px;
-  border-radius:7px; background:var(--accent); color:#fff; white-space:nowrap;
+  border-radius:7px; background:var(--accent); color:var(--auf-accent); white-space:nowrap;
 }
 .home-sich .hs-tun:hover{filter:brightness(1.07)}
 .home-sich .hs-tun:active{transform:translateY(1px)}
@@ -405,7 +405,7 @@ a.bl:hover{color:var(--text)}
   display:grid; place-items:center;
 }
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
-.wb-tools button.on{background:var(--accent); color:#fff}
+.wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
 .wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
@@ -423,7 +423,7 @@ a.bl:hover{color:var(--text)}
 .chart-typen{display:flex; gap:2px}
 .chart-typen button{font-size:12px; padding:3px 9px; border-radius:12px; color:var(--text-dim)}
 .chart-typen button:hover{background:var(--bg-hover)}
-.chart-typen button.on{background:var(--accent); color:#fff}
+.chart-typen button.on{background:var(--accent); color:var(--auf-accent)}
 .chart-daten{font-size:12.5px; color:var(--text-dim); padding:3px 8px; border-radius:5px}
 .chart-daten:hover{background:var(--bg-hover); color:var(--text)}
 .chart-svg{width:100%; height:auto; color:var(--text)}

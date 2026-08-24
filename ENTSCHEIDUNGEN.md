@@ -9024,3 +9024,78 @@ und der Zähler, der auf einer gewöhnlichen Seite bleibt. Vier Gegenproben
 einzeln zurückgenommen; eine davon hat meine Erwartung widerlegt: am Telefon
 STAPELN sich die drei Bereiche, sie quetschen sich nicht. Die Breite der
 Mitte allein hätte den Fehler nie gesehen.
+
+
+## E142 · Weisse Schrift auf weissem Grund — und der Farbwert, der fehlte
+
+**24. August 2026.** In der Prüfungszentrale stand „Simulation starten". Der
+Knopf war da, war anklickbar, war nicht gesperrt — und er war nicht zu sehen.
+
+```txt
+Hellmodus   Schrift rgb(255,255,255)   Grund rgb(251,251,250)   1,02 zu 1
+```
+
+### Die Ursache war die Kaskade, nicht die Farbwahl
+
+```css
+.lernwelt .lw-exam-list footer button{ … background:var(--bg-side) … }   /* 0,2,2 */
+.lernwelt button.is-primary{ … background:var(--accent); color:#fff }    /* 0,2,1 */
+```
+
+Die Fussleistenregel ist spezifischer und steht davor. Sie setzt den
+Hintergrund neu — und weil sie KEINE Schriftfarbe setzt, kam die weisse aus
+`is-primary` trotzdem durch. Weiss auf hell.
+
+Im Dunkelmodus fiel nichts auf, weil `--bg-side` dort dunkel ist. §48 des
+Auftrags verlangt beides, und genau dafür ist er da.
+
+Der Weg ist nicht `!important`, sondern dieselbe Spezifität: die Fussleiste
+steht jetzt in der Aufzählung von `is-primary` mit drin.
+
+### Und dabei kam ein zweiter, grösserer Fehler heraus
+
+Die neue Kontrastmessung fand danach denselben Knopf noch einmal — diesmal
+im DUNKELMODUS, mit 2,80 zu 1. Kein Kaskadenfehler, sondern die Farbe selbst:
+
+```txt
+hell    --accent #c2410c   Weiss darauf   5,9 zu 1     gut
+dunkel  --accent #f97316   Weiss darauf   2,8 zu 1     zu wenig
+```
+
+Derselbe Akzent, zwei Helligkeiten, eine Schriftfarbe. Weiss auf einem
+hellen Orange ist blass, egal wo es steht — und `background:var(--accent)`
+kommt an 70 Stellen im Stil vor.
+
+Neu ist deshalb ein eigener Farbwert:
+
+```css
+hell    --auf-accent: #ffffff
+dunkel  --auf-accent: #1a1a1a      /* 6,6 zu 1 auf demselben Orange */
+```
+
+46 Regeln, die Akzentfläche und weisse Schrift zusammen setzen, benutzen ihn
+jetzt. Am Hellmodus ändert sich damit nichts — dort ist der Wert weiss.
+
+### Die Prüfung misst das Ergebnis, nicht die Regel
+
+test128 §9 rechnet für jeden sichtbaren, beschrifteten, nicht gesperrten
+Knopf die relative Leuchtdichte nach WCAG aus und verlangt 3,0 zu 1 — die
+Grenze für Bedienelemente, nicht die 4,5 für Fliesstext. Es geht hier um
+„gar nicht zu sehen", nicht um Feinheiten.
+
+Zwei Dinge daran waren beim ersten Versuch falsch, und beide sind lehrreich:
+
+**Das Messgerät log.** Chrome gibt `color(srgb 0.94 0.87 0.83)` zurück,
+sobald eine Farbe aus `color-mix()` kommt — Zahlen von 0 bis 1, nicht von 0
+bis 255. Mein Zahlenleser nahm sie als 0–255 und meldete den aktiven Reiter
+„Prüfungen" mit 1,70 zu 1, obwohl er dunkelgrau auf hellem Pfirsich steht.
+Ein Messgerät mit Fehlalarmen wird abgeschaltet, und dann sieht es auch den
+echten Fall nicht mehr.
+
+**Die Prüfung stand am falschen Ort.** Sie öffnete die Prüfungszentrale
+eines LEEREN Bestandes — dort gibt es keine Prüfungskarte und damit keinen
+Knopf „Simulation starten". Die Gegenprobe blieb grün, obwohl der Fehler
+wieder eingebaut war. Jetzt legt der Abschnitt zuerst eine Prüfung an und
+prüft in einer eigenen Zeile, dass der Knopf überhaupt dasteht.
+
+Erst danach war die Gegenprobe echt: 1,04 zu 1, beim Namen genannt.

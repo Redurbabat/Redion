@@ -175,7 +175,7 @@
   min-height:var(--aw-touch);padding:8px 13px;border:1px solid var(--line);
   border-radius:var(--aw-radius-sm);background:var(--bg-side);font-size:12.5px;font-weight:650
 }
-.arbeitswelt .aw-suche-knopf{border-color:var(--accent);background:var(--accent);color:#fff}
+.arbeitswelt .aw-suche-knopf{border-color:var(--accent);background:var(--accent);color:var(--auf-accent)}
 
 /* Nur visuell verborgen; Screenreader behalten Bezeichnung und Zusammenhang. */
 .arbeitswelt .aw-visuell-versteckt{
@@ -307,7 +307,7 @@
 .arbeitswelt .aw-vorlage-nutzen{
   grid-column:1/-1;align-self:end;min-height:var(--aw-touch);margin-top:10px;
   padding:9px 12px;border:1px solid var(--accent);border-radius:var(--aw-radius-sm);
-  background:var(--accent);color:#fff;font-size:12.5px;font-weight:720
+  background:var(--accent);color:var(--auf-accent);font-size:12.5px;font-weight:720
 }
 
 /* --- Reiter- und Split-Vertrag ------------------------------------------ */

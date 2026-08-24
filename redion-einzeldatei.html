@@ -186,6 +186,12 @@
      mit 5.8:1 überall darüber. Rot bleibt deshalb, was es sein muss: das
      Zeichen für etwas Unwiderrufliches. */
   --accent:        #f97316;
+  /* SCHRIFT AUF DER AKZENTFLÄCHE (E142). Im Dunkelmodus ist der Akzent
+     HELL (#f97316). Weiss darauf hat gemessen 2,80 zu 1 — unter der
+     WCAG-Grenze von 3,0 für Bedienelemente, und man sieht es: der Knopf
+     „Simulation starten" verschwamm mit seiner eigenen Fläche.
+     Dunkel auf demselben Orange sind 6,6 zu 1. */
+  --auf-accent:  #1a1a1a;
   --accent-warm:   #fb923c;
   --gefahr:        #ef4444;
   --erfolg:        #22c55e;
@@ -283,6 +289,9 @@ html[data-theme="light"]{
   --bg-press:    #e6e6e4;
   --line-stark:  rgba(15,15,15,.22);
   --accent:      #c2410c;
+  /* Schrift auf der Akzentfläche. Im Hellmodus ist der Akzent dunkel
+     (#c2410c) — Weiss darauf hat 5,9 zu 1. */
+  --auf-accent:  #ffffff;
   --accent-warm: #ea580c;
   --gefahr:      #dc2626;
   --erfolg:      #15803d;
@@ -388,7 +397,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .ws-btn:hover{background:var(--bg-hover)}
 .ws-btn .ws-icon{
   width:22px; height:22px; border-radius:5px; background:var(--accent);
-  color:#fff; display:grid; place-items:center; font-size:12px; font-weight:700; flex:0 0 22px;
+  color:var(--auf-accent); display:grid; place-items:center; font-size:12px; font-weight:700; flex:0 0 22px;
 }
 .ws-btn span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 
@@ -656,7 +665,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .db-tools button:hover{background:var(--bg-hover); color:var(--text)}
 .db-tools .new{
-  background:var(--accent); color:#fff; font-weight:500; padding:5px 12px;
+  background:var(--accent); color:var(--auf-accent); font-weight:500; padding:5px 12px;
 }
 .db-tools .new:hover{filter:brightness(1.1); color:#fff}
 .chip{
@@ -722,7 +731,7 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .cal .dow{background:var(--bg); padding:6px; font-size:12px; color:var(--text-dim); text-align:center}
 .cal .day{background:var(--bg); min-height:96px; padding:5px; font-size:12px}
 .cal .day.out{opacity:.35}
-.cal .day.today .n{background:var(--accent); color:#fff; border-radius:50%; width:20px; height:20px;
+.cal .day.today .n{background:var(--accent); color:var(--auf-accent); border-radius:50%; width:20px; height:20px;
                    display:grid; place-items:center}
 .cal .day .n{color:var(--text-dim); margin-bottom:4px}
 .cal .ev{
@@ -908,7 +917,7 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 }
 .fbtns button{padding:7px 14px; border:1px solid var(--line); border-radius:7px; font-size:14px}
 .fbtns button:hover{background:var(--bg-hover)}
-.fbtns .prim{background:var(--accent); color:#fff; border-color:transparent; font-weight:500}
+.fbtns .prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
 .fbtns .prim:hover{filter:brightness(1.1)}
 #mdq{
   width:100%; height:52vh; padding:16px 18px; background:var(--bg); border:none;
@@ -982,7 +991,7 @@ a.bl:hover{color:var(--text)}
   padding:9px 12px; outline:none; resize:vertical; font:14px/1.5 var(--font); color:var(--text);
 }
 .memo-neu textarea:focus{border-color:var(--accent)}
-.memo-neu .prim{background:var(--accent); color:#fff; padding:9px 14px; border-radius:8px; font-weight:500}
+.memo-neu .prim{background:var(--accent); color:var(--auf-accent); padding:9px 14px; border-radius:8px; font-weight:500}
 .heatmap{
   display:grid; grid-template-rows:repeat(7,10px); grid-auto-flow:column; gap:3px;
   padding:12px 16px; border-bottom:1px solid var(--line); overflow-x:auto;
@@ -1021,7 +1030,7 @@ a.bl:hover{color:var(--text)}
   background:var(--bg-input); border:1px solid var(--line); border-radius:8px; outline:none;
   color:var(--text); text-align:center;
 }
-.gesperrt .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:8px; font-weight:500}
+.gesperrt .prim{background:var(--accent); color:var(--auf-accent); padding:9px 20px; border-radius:8px; font-weight:500}
 .sperrhinweis{
   background:var(--b-yellow); border-radius:7px; padding:9px 14px; font-size:13.5px;
   margin:6px 0 12px; display:flex; align-items:center; gap:10px;
@@ -1148,7 +1157,7 @@ a.bl:hover{color:var(--text)}
 .home-sich .hs-still:hover{background:var(--bg-hover); color:var(--text)}
 .home-sich .hs-tun{
   flex:0 0 auto; font-size:13px; font-weight:500; padding:8px 14px;
-  border-radius:7px; background:var(--accent); color:#fff; white-space:nowrap;
+  border-radius:7px; background:var(--accent); color:var(--auf-accent); white-space:nowrap;
 }
 .home-sich .hs-tun:hover{filter:brightness(1.07)}
 .home-sich .hs-tun:active{transform:translateY(1px)}
@@ -1273,7 +1282,7 @@ a.bl:hover{color:var(--text)}
   display:grid; place-items:center;
 }
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
-.wb-tools button.on{background:var(--accent); color:#fff}
+.wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
 .wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
@@ -1291,7 +1300,7 @@ a.bl:hover{color:var(--text)}
 .chart-typen{display:flex; gap:2px}
 .chart-typen button{font-size:12px; padding:3px 9px; border-radius:12px; color:var(--text-dim)}
 .chart-typen button:hover{background:var(--bg-hover)}
-.chart-typen button.on{background:var(--accent); color:#fff}
+.chart-typen button.on{background:var(--accent); color:var(--auf-accent)}
 .chart-daten{font-size:12.5px; color:var(--text-dim); padding:3px 8px; border-radius:5px}
 .chart-daten:hover{background:var(--bg-hover); color:var(--text)}
 .chart-svg{width:100%; height:auto; color:var(--text)}
@@ -1679,7 +1688,7 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
                 background:transparent; color:var(--text-dim); cursor:pointer}
 .zs-zoom button:last-child{border-right:0}
 .zs-zoom button:hover{background:var(--bg-hover)}
-.zs-zoom button.an{background:var(--accent); color:#fff}
+.zs-zoom button.an{background:var(--accent); color:var(--auf-accent)}
 .zs-info{font-size:12px; color:var(--text-faint)}
 .zs-leiste>button{font-size:12px; padding:3px 9px; border-radius:5px; border:1px solid var(--line)}
 .zs-leiste>button:hover{background:var(--bg-hover)}
@@ -1742,7 +1751,7 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 .form-mehr label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:13px}
 .form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent)}
 .form-fuss{display:flex; gap:10px; align-items:center; margin-top:18px}
-.form-fuss .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:7px; font-weight:500}
+.form-fuss .prim{background:var(--accent); color:var(--auf-accent); padding:9px 20px; border-radius:7px; font-weight:500}
 .form-fuss button:not(.prim){font-size:13px; color:var(--text-dim); padding:6px 10px; border-radius:6px; border:1px solid var(--line)}
 .form-zahl{margin-left:auto; font-size:12px; color:var(--text-faint)}
 
@@ -2113,7 +2122,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
   font-size:11.5px; background:var(--bg-side); border:1px solid var(--line); border-radius:5px;
   padding:1px 6px; margin-top:3px; white-space:nowrap; max-width:150px; overflow:hidden; text-overflow:ellipsis;
 }
-.nadel:hover .n-text{background:var(--accent); color:#fff}
+.nadel:hover .n-text{background:var(--accent); color:var(--auf-accent)}
 .karte-zoom{position:absolute; right:10px; top:10px; display:flex; flex-direction:column; gap:3px; z-index:4}
 .karte-zoom button{
   width:28px; height:28px; background:var(--bg-side); border:1px solid var(--line);
@@ -2154,8 +2163,8 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .kal-kopf button:hover{background:var(--bg-hover); color:var(--text)}
 .kal-stufen{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-right:6px}
 .kal-stufen button{border-radius:0; padding:3px 11px}
-.kal-stufen button.on{background:var(--accent); color:#fff}
-.kal-stufen button.on:hover{background:var(--accent); color:#fff}
+.kal-stufen button.on{background:var(--accent); color:var(--auf-accent)}
+.kal-stufen button.on:hover{background:var(--accent); color:var(--auf-accent)}
 .cal.woche .day{min-height:190px}
 .cal.woche .dow.jetzt{color:var(--accent); font-weight:600}
 /* Farbpunkt je Kalender */
@@ -2257,7 +2266,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 /* Web Clipper */
 .clip-zieh{display:flex; justify-content:center; padding:16px; background:var(--bg-card);
   border-radius:8px; margin:6px 0}
-.clip-knopf{display:inline-block; background:var(--accent); color:#fff; padding:9px 20px;
+.clip-knopf{display:inline-block; background:var(--accent); color:var(--auf-accent); padding:9px 20px;
   border-radius:7px; font-size:14px; font-weight:500; text-decoration:none; cursor:grab}
 .clip-knopf:active{cursor:grabbing}
 
@@ -3286,7 +3295,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
   min-height:var(--aw-touch);padding:8px 13px;border:1px solid var(--line);
   border-radius:var(--aw-radius-sm);background:var(--bg-side);font-size:12.5px;font-weight:650
 }
-.arbeitswelt .aw-suche-knopf{border-color:var(--accent);background:var(--accent);color:#fff}
+.arbeitswelt .aw-suche-knopf{border-color:var(--accent);background:var(--accent);color:var(--auf-accent)}
 
 /* Nur visuell verborgen; Screenreader behalten Bezeichnung und Zusammenhang. */
 .arbeitswelt .aw-visuell-versteckt{
@@ -3418,7 +3427,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
 .arbeitswelt .aw-vorlage-nutzen{
   grid-column:1/-1;align-self:end;min-height:var(--aw-touch);margin-top:10px;
   padding:9px 12px;border:1px solid var(--accent);border-radius:var(--aw-radius-sm);
-  background:var(--accent);color:#fff;font-size:12.5px;font-weight:720
+  background:var(--accent);color:var(--auf-accent);font-size:12.5px;font-weight:720
 }
 
 /* --- Reiter- und Split-Vertrag ------------------------------------------ */
@@ -4015,10 +4024,23 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   min-height:var(--lw-touch);padding:9px 13px;border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:12.5px;font-weight:680
 }
+/* WEISSE SCHRIFT AUF WEISSEM GRUND (E142). `.lw-exam-list footer button`
+   steht weiter oben und ist spezifischer (2 Klassen + 2 Elemente gegen
+   2 Klassen + 1 Element). Es setzte `background:var(--bg-side)` — und weil
+   es KEINE Schriftfarbe setzt, kam die weisse aus `is-primary` durch.
+
+   Gemessen im Hellmodus: Schrift rgb(255,255,255) auf rgb(251,251,250).
+   Das ist ein Kontrast von 1,02 zu 1 — der Knopf „Simulation starten" war
+   da, war anklickbar, und man sah ihn nicht. Im Dunkelmodus fiel es nicht
+   auf, weil `--bg-side` dort dunkel ist; §48 verlangt beides.
+
+   Der Weg ist nicht `!important`, sondern dieselbe Spezifität: die
+   Fussleiste steht jetzt in der Aufzählung mit drin. */
 .lernwelt button.is-primary,
 .lernwelt .lw-actions button.is-primary,
+.lernwelt .lw-exam-list footer button.is-primary,
 .lernwelt .lw-rating button.is-primary{
-  border-color:var(--accent);background:var(--accent);color:#fff;
+  border-color:var(--accent);background:var(--accent);color:var(--auf-accent);
   box-shadow:0 7px 18px rgba(0,0,0,.1)
 }
 
@@ -4131,7 +4153,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   width:100%;min-height:var(--lw-touch);padding:8px 10px;border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:11.5px;font-weight:680
 }
-.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent);background:var(--accent);color:#fff}
+.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent);background:var(--accent);color:var(--auf-accent)}
 .lernwelt .lw-explanation{display:grid;gap:5px;margin:0;padding:0;list-style:none;counter-reset:lw-plan}
 .lernwelt .lw-explanation li{
   position:relative;display:grid;gap:2px;min-height:52px;padding:8px 8px 8px 43px;
@@ -4442,7 +4464,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   }
   .lernwelt :where(button.is-primary,.lw-actions button.is-primary,
     .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
-    border-color:var(--accent);background:var(--accent);color:#fff;filter:brightness(1.08)
+    border-color:var(--accent);background:var(--accent);color:var(--auf-accent);filter:brightness(1.08)
   }
   .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
     .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,
@@ -4725,7 +4747,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .ag-grenzstreifen button:hover{background:var(--bg-hover)}
 .ag-grenzstreifen.aus{background:var(--b-red, rgba(239,68,68,.14))}
 .ag-grenzstreifen.aus, .ag-grenzstreifen.aus b{color:var(--text)}
-.ag-grenzstreifen.aus button.prim{background:var(--accent); color:#fff; border-color:transparent}
+.ag-grenzstreifen.aus button.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent}
 @media(max-width:760px){
   .ag-grenzstreifen{flex-wrap:wrap}
   .ag-grenzstreifen button{min-height:44px; width:100%}
@@ -4738,7 +4760,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 #aa:focus, #mtx:focus{border-color:var(--accent)}
 .agent-schritt{border-bottom:1px solid var(--line-soft); padding:9px 16px}
 .as-kopf{display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:4px}
-.as-nr{width:19px; height:19px; border-radius:50%; background:var(--accent); color:#fff;
+.as-nr{width:19px; height:19px; border-radius:50%; background:var(--accent); color:var(--auf-accent);
   display:flex; align-items:center; justify-content:center; font-size:11px; flex:0 0 auto}
 .as-gedanke{color:var(--text-faint); font-size:12px; overflow:hidden; text-overflow:ellipsis;
   white-space:nowrap}
@@ -5025,7 +5047,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .rg-liste .fr-zeile button:hover{background:var(--bg-hover); color:var(--text)}
 .rg-neu{display:flex; align-items:center; gap:7px; flex-wrap:wrap;
   padding:12px 18px; border-top:1px solid var(--line)}
-.rg-neu button.prim{background:var(--accent); color:#fff; border-color:transparent;
+.rg-neu button.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent;
   font-weight:500}
 .rg-neu input, .rg-neu select{
   padding:8px 10px; background:var(--bg-input); border:1px solid var(--line);
@@ -5129,7 +5151,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-werkzeuge button{padding:5px 8px; border-radius:6px; color:var(--text-dim);
   background:none; font-size:14px}
 .bib-werkzeuge button:hover{background:var(--bg-hover); color:var(--text)}
-.bib-werkzeuge .prim{background:var(--accent); color:#fff; font-size:13.5px;
+.bib-werkzeuge .prim{background:var(--accent); color:var(--auf-accent); font-size:13.5px;
   padding:6px 13px; font-weight:500}
 .bib-werkzeuge .prim:hover{filter:brightness(1.08); color:#fff}
 .bib-suchzeile{display:flex; align-items:center; gap:8px; padding:8px 2px; font-size:14px}
@@ -5199,7 +5221,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .pk-chips{display:flex; gap:6px; padding:0 12px 10px; flex-wrap:wrap}
 .pk-chip{display:flex; align-items:center; gap:5px; font-size:12.5px; padding:4px 9px;
   border-radius:6px; background:var(--bg-hover); color:var(--text-dim)}
-.pk-chip.on{background:var(--accent); color:#fff}
+.pk-chip.on{background:var(--accent); color:var(--auf-accent)}
 .pk-chip span{font-size:9px; opacity:.7}
 .pk-res{min-height:150px}
 .pk-tat{padding:3px 7px; border-radius:5px; color:var(--text-faint); cursor:pointer; font-size:14px}
@@ -5232,7 +5254,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .vor-neu{font-size:13.5px; color:var(--c-green, #4dab9a); padding:2px 0; word-break:break-word}
 .vor-tat{display:flex; gap:7px; margin-top:7px}
 .vor-tat button{font-size:12.5px; padding:4px 11px; border-radius:5px; background:var(--bg-hover)}
-.vor-tat button:first-child{background:var(--accent); color:#fff}
+.vor-tat button:first-child{background:var(--accent); color:var(--auf-accent)}
 .banner.info u{cursor:pointer}
 
 /* Felder aus Verbindungen: Google Drive, Figma, GitHub-PR, Zendesk */
@@ -5242,7 +5264,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .dienst-chip:hover{background:var(--line)}
 .dc-t{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .dc-z{font-size:11px; color:var(--text-faint); flex:none}
-.bib-werkzeuge button.an{background:var(--accent); color:#fff}
+.bib-werkzeuge button.an{background:var(--accent); color:var(--auf-accent)}
 
 /* Unter-Elemente, Archiv, Abhängigkeiten (Notion: Sub-items / Dependencies) */
 .tt-klapp{background:none; color:var(--text-faint); font-size:10px; padding:0 3px;
@@ -5262,7 +5284,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .we-baum{font-size:13px; line-height:1.9}
 .we-baum .ein{padding-left:22px; color:var(--text-dim)}
 .we-fuss{padding:0 16px 16px}
-.we-knopf{width:100%; background:var(--accent); color:#fff; padding:9px;
+.we-knopf{width:100%; background:var(--accent); color:var(--auf-accent); padding:9px;
   border-radius:7px; font-size:14px; font-weight:500}
 .we-knopf:hover{filter:brightness(1.08); color:#fff}
 .we-liste{padding:4px 6px 12px; max-height:60vh; overflow:auto}
@@ -5292,7 +5314,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .side-item.anpass{opacity:1}
 .side-item.anpass.aus{opacity:.45}
 .anpass-fertig{display:block; width:calc(100% - 20px); margin:14px 10px;
-  background:var(--accent); color:#fff; padding:8px; border-radius:7px;
+  background:var(--accent); color:var(--auf-accent); padding:8px; border-radius:7px;
   font-size:14px; font-weight:500}
 .anpass-fertig:hover{filter:brightness(1.08); color:#fff}
 
@@ -5386,7 +5408,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .mschalter.an{background:var(--accent)}
 .mschalter.an i{left:15px}
 .menu .kenn{font-size:10px; padding:1px 5px; border-radius:4px; background:var(--accent);
-  color:#fff; margin-left:6px; letter-spacing:.02em}
+  color:var(--auf-accent); margin-left:6px; letter-spacing:.02em}
 .menu button .sub{display:block; width:100%; font-size:11.5px; color:var(--text-faint);
   margin-top:2px; line-height:1.35; white-space:normal}
 
@@ -5997,7 +6019,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .cover-gitter button:hover{outline:2px solid var(--accent)}
 .cover-gitter button.on{outline:2px solid var(--accent)}
 .cb-mitte{padding:34px 0; text-align:center}
-.cb-knopf{background:var(--accent); color:#fff; padding:10px 20px; border-radius:8px;
+.cb-knopf{background:var(--accent); color:var(--auf-accent); padding:10px 20px; border-radius:8px;
   font-size:14.5px}
 .cb-knopf:hover{filter:brightness(1.08); color:#fff}
 #cb-link{width:min(360px,90%); display:block; margin:0 auto 14px; padding:10px 12px;
@@ -6066,7 +6088,7 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
     background:var(--bg-hover); border:1px solid var(--line);
     color:var(--text); font-size:15px;
   }
-  #tastenleiste button:active{ background:var(--accent); color:#fff; }
+  #tastenleiste button:active{ background:var(--accent); color:var(--auf-accent); }
   /* Angepinnt: elf Knöpfe rollen seitlich, aber der Weg zurück (Tastatur
      schliessen) darf nicht mitrollen — er stand ausserhalb des Bildes.
      Der Schatten deckt zu, was darunter durchrollt. */
@@ -6174,7 +6196,7 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
                       background:var(--bg-hover); border:1px solid var(--line);
                       max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pf-tun{ margin-top:9px; padding:6px 12px; border-radius:6px;
-         background:var(--accent); color:#fff; font-size:12.5px; }
+         background:var(--accent); color:var(--auf-accent); font-size:12.5px; }
 .pf-gut{ padding:28px 22px; text-align:center; color:var(--text-dim); font-size:14px; }
 .pf-zahlen{ font-size:12.5px; color:var(--text-faint); margin-bottom:4px; }
 .eh-knopf{ display:flex; flex-direction:column; align-items:flex-start; gap:2px;
@@ -6218,7 +6240,7 @@ body[data-bewegung="ruhig"] *, body[data-bewegung="ruhig"] *::before{
       Seitenleiste vorbei. Sichtbar erst, wenn er den Fokus hat. */
 #zum-inhalt{
   position:fixed; left:8px; top:-60px; z-index:9999;
-  padding:10px 16px; border-radius:8px; background:var(--accent); color:#fff;
+  padding:10px 16px; border-radius:8px; background:var(--accent); color:var(--auf-accent);
   transition:top .15s ease;
 }
 #zum-inhalt:focus{ top:8px; }
@@ -6301,7 +6323,7 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 #sp-pw{ width:100%; padding:11px 14px; border-radius:9px; font-size:16px;
         background:var(--bg-input); border:1px solid var(--line); color:var(--text); }
 #sp-ok{ width:100%; padding:11px; border-radius:9px; background:var(--accent);
-        color:#fff; font-size:15px; }
+        color:var(--auf-accent); font-size:15px; }
 .sp-fehler{ font-size:12.5px; color:var(--c-red, #e03e3e); min-height:16px; }
 
 .kr-karte{ border:1px solid var(--line); border-radius:10px; padding:13px 15px;
@@ -6417,7 +6439,7 @@ td .proz i{ flex:0 0 auto; }
 .so-zeile button:hover{background:var(--bg-hover); color:var(--text)}
 .fr-vgl{border:1px solid var(--line); background:transparent; border-radius:5px;
         padding:2px 6px; cursor:pointer; color:var(--text-faint)}
-.fr-vgl.an{background:var(--accent); color:#fff; border-color:var(--accent)}
+.fr-vgl.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .fr-feld{border:1px solid var(--line); border-radius:5px; padding:3px 5px; font-size:12.5px;
          background:var(--bg-card); color:var(--text)}
 
@@ -6444,7 +6466,7 @@ td .proz i{ flex:0 0 auto; }
 .code-werk{position:absolute; top:8px; right:120px; display:flex; gap:3px; z-index:2}
 .code-werk button{border:1px solid var(--line); background:var(--bg-input); color:var(--text-dim);
                   border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer}
-.code-werk button.an{background:var(--accent); color:#fff; border-color:var(--accent)}
+.code-werk button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .code-werk button:hover{filter:brightness(1.1)}
 .code-nr{position:absolute; left:0; top:0; padding:12px 0; width:38px; text-align:right;
          font:12.5px/1.6 var(--mono); color:var(--text-faint); user-select:none; z-index:1}
@@ -6460,7 +6482,7 @@ td .proz i{ flex:0 0 auto; }
 .bild-rahmen:hover .bild-werk{display:flex}
 .bild-werk button{border:0; background:transparent; color:var(--text-dim); font-size:11px;
                   padding:2px 6px; border-radius:4px; cursor:pointer}
-.bild-werk button.an{background:var(--accent); color:#fff}
+.bild-werk button.an{background:var(--accent); color:var(--auf-accent)}
 .bild-werk button:hover{background:var(--bg-hover)}
 .bw-trenn{width:1px; background:var(--line); margin:2px 2px}
 .bild-griff{position:absolute; right:-3px; top:20%; bottom:20%; width:6px; border-radius:3px;
@@ -6616,7 +6638,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
              min-width:96px}
 .au-t button:hover{border-color:var(--accent)}
 .au-t button.geaendert{border-color:var(--accent); color:var(--accent)}
-.au-t button.faengt{background:var(--accent); color:#fff; border-color:var(--accent)}
+.au-t button.faengt{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 #au-inhalt input[type=range]{width:100%; accent-color:var(--accent)}
 body[data-abstand="eng"]   .ct{line-height:1.4}
 body[data-abstand="weit"]  .ct{line-height:2.05}
@@ -6648,7 +6670,7 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-inhalt{flex:1; word-break:break-word}
 .vg-zeile button{border:1px solid var(--line); background:transparent; color:var(--text-faint);
                  border-radius:5px; padding:1px 7px; cursor:pointer; font-size:12px}
-.vg-zeile button:hover{background:var(--accent); color:#fff; border-color:var(--accent)}
+.vg-zeile button:hover{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .vg-neu .vg-zeichen{color:var(--c-green)}
 .vg-weg .vg-zeichen{color:var(--c-red)}
 .vg-geaendert .vg-zeichen{color:var(--c-yellow)}
@@ -6859,7 +6881,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .fd-knoepfe{display:flex; gap:8px; margin-top:9px}
 .fd-knoepfe button{padding:7px 15px; border-radius:7px; border:1px solid var(--line);
                    font-size:13.5px}
-.fd-knoepfe button.prim{background:var(--accent); color:#fff; border-color:var(--accent)}
+.fd-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .fd-zahl{font-size:12px; color:var(--text-faint); margin-top:6px}
 
 /* Eingänge von aussen */
@@ -6885,7 +6907,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border-radius:6px; padding:8px 10px; color:var(--text); font-size:13px; outline:none}
 .eg-wurf textarea{font:12.5px/1.6 var(--mono); resize:vertical}
 .eg-wurf button{align-self:flex-start; padding:6px 14px; border-radius:7px;
-                background:var(--accent); color:#fff; border:0}
+                background:var(--accent); color:var(--auf-accent); border:0}
 .eg-adresse{font-size:12.5px; color:var(--text-dim); line-height:1.7}
 .eg-adresse code{display:block; background:var(--bg-input); border-radius:6px;
                  padding:8px 10px; margin:7px 0; font-size:11.5px; word-break:break-all}
@@ -6917,7 +6939,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    border:1px solid var(--line); color:var(--text-dim)}
 .rg-knoepfe button:first-child{margin-right:auto; border-color:transparent;
                                color:var(--text-faint)}
-.rg-knoepfe button.prim{background:var(--accent); color:#fff; border-color:var(--accent)}
+.rg-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .rg-koerper{padding:14px 18px; max-height:64vh; overflow:auto}
 .rg-vorwort{font-size:13px; color:var(--text-faint); line-height:1.6; margin-bottom:14px}
 .rg-thema{margin-bottom:15px}
@@ -6936,7 +6958,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .rge-text span{font-size:11.5px; color:var(--text-faint)}
 #rg-einladung button{font-size:12.5px; padding:5px 11px; border-radius:6px;
                      border:1px solid var(--line); color:var(--text-dim)}
-#rg-einladung button.prim{background:var(--accent); color:#fff; border-color:var(--accent)}
+#rg-einladung button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 #rg-einladung button[data-a="nie"]{border:0; padding:4px 6px; color:var(--text-faint)}
 @media(max-width:760px){ #rg-einladung{left:8px; right:8px; bottom:74px; max-width:none} }
 
@@ -6968,7 +6990,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wk-kopf{ text-align:center; margin-bottom:22px }
 .wk-zeichen{
   width:56px; height:56px; margin:0 auto 14px; border-radius:16px;
-  background:var(--accent); color:#fff;
+  background:var(--accent); color:var(--auf-accent);
   display:flex; align-items:center; justify-content:center;
   font-size:26px; font-weight:700;
 }
@@ -7376,7 +7398,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-werk button:hover{background:var(--bg-hover)}
-.blatt-werk button.on{background:var(--accent); color:#fff}
+.blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
 .blatt-werk button:disabled{opacity:.38; cursor:not-allowed}
 /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
 

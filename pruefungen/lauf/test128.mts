@@ -316,6 +316,139 @@ p('Es gibt einen Hauptbereich', grund.main >= 1, String(grund.main));
 p('Es gibt Navigationsbereiche', grund.nav >= 1, String(grund.nav));
 p('Und einen Weg an der Seitenleiste vorbei', grund.sprung === true);
 
+/* ==========================================================================
+ * 9 · KEIN KNOPF SCHREIBT WEISS AUF WEISS
+ * --------------------------------------------------------------------------
+ * In der Prüfungszentrale stand „Simulation starten" da, war anklickbar —
+ * und war nicht zu sehen. Gemessen im Hellmodus: Schrift rgb(255,255,255)
+ * auf rgb(251,251,250), ein Kontrast von 1,02 zu 1.
+ *
+ * Die Ursache war die Kaskade, nicht die Farbwahl: eine spezifischere Regel
+ * setzte den Hintergrund neu und liess die Schriftfarbe stehen. Genau das
+ * kann jederzeit wieder passieren — deshalb misst diese Prüfung nicht die
+ * eine Regel, sondern das Ergebnis an jedem sichtbaren Knopf.
+ *
+ * GEPRÜFT WIRD IN BEIDEN LAGEN. Im Dunkelmodus fiel der Fehler nicht auf,
+ * weil `--bg-side` dort dunkel ist; §48 verlangt beides.
+ *
+ * Die Schwelle ist 3,0 — das ist die WCAG-Grenze für grosse Schrift und für
+ * Bedienelemente, nicht die 4,5 für Fliesstext. Eine strengere Zahl würde
+ * heute an gestalterisch gewollten Stellen anschlagen; darum geht es hier
+ * nicht. Es geht um „gar nicht zu sehen".
+ * ========================================================================*/
+console.log('\n9 · Kein Knopf schreibt weiss auf weiss');
+
+/* Relative Leuchtdichte nach WCAG 2.1 — dieselbe Formel wie jedes
+   Prüfwerkzeug, hier von Hand, weil kein Paket dazukommen soll. */
+const KONTRAST_MESSUNG = `(async () => {
+  /* ZWEI SCHREIBWEISEN, ZWEI ZAHLENBEREICHE. \`rgb(55, 53, 47)\` zählt in
+     0–255, \`color(srgb 0.94 0.87 0.83)\` in 0–1 — und Chrome gibt die
+     zweite Form zurück, sobald eine Farbe aus \`color-mix()\` kommt.
+
+     Mein erster Versuch las beide gleich. Ergebnis: der aktive Reiter
+     „Prüfungen" wurde als 1,70 zu 1 gemeldet, obwohl er dunkelgrau auf
+     hellem Pfirsich steht und rund 10 zu 1 hat. Ein Messgerät, das
+     Fehlalarme erzeugt, wird abgeschaltet — und dann sieht es auch den
+     echten Fall nicht mehr. */
+  const zahl = (farbe) => {
+    const roh = (String(farbe).match(/[\\d.]+(?=[\\s,)])|[\\d.]+$/g) || []).map(Number);
+    if (!/^color\\(/.test(String(farbe))) return roh;
+    return roh.map((wert, i) => i < 3 ? wert * 255 : wert);
+  };
+  const helligkeit = (rgb) => {
+    const teil = rgb.slice(0, 3).map(wert => {
+      const v = wert / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * teil[0] + 0.7152 * teil[1] + 0.0722 * teil[2];
+  };
+  /* Der Grund eines Knopfes kann durchsichtig sein — dann zählt der Grund
+     dahinter. Ohne diesen Aufstieg misst man Transparenz gegen Transparenz
+     und bekommt für jeden schlichten Knopf einen Fehlalarm. */
+  const grundVon = (el) => {
+    let knoten = el;
+    while (knoten && knoten !== document.documentElement) {
+      const farbe = getComputedStyle(knoten).backgroundColor;
+      const teile = zahl(farbe);
+      if (teile.length >= 3 && (teile.length < 4 || teile[3] > 0.05)) return teile;
+      knoten = knoten.parentElement;
+    }
+    return [255, 255, 255];
+  };
+  const schlecht = [];
+  document.querySelectorAll('button').forEach(knopf => {
+    const kasten = knopf.getBoundingClientRect();
+    if (kasten.width < 8 || kasten.height < 8) return;
+    const stil = getComputedStyle(knopf);
+    if (stil.visibility === 'hidden' || stil.opacity === '0') return;
+    if (knopf.disabled) return;
+    if (!(knopf.textContent || '').trim()) return;
+    const vorne = zahl(stil.color);
+    if (vorne.length >= 4 && vorne[3] < 0.5) return;
+    const hell1 = helligkeit(vorne), hell2 = helligkeit(grundVon(knopf));
+    const kontrast = (Math.max(hell1, hell2) + 0.05) / (Math.min(hell1, hell2) + 0.05);
+    if (kontrast < 3)
+      schlecht.push(((knopf.textContent || '').trim().slice(0, 34)) +
+        ' [' + kontrast.toFixed(2) + ':1]');
+  });
+  return schlecht;
+})()`;
+
+/* ERST EINE PRÜFUNG ANLEGEN, DANN MESSEN. Die erste Fassung öffnete die
+   Prüfungszentrale eines leeren Bestandes — dort gibt es keine Prüfungskarte
+   und damit auch keinen Knopf „Simulation starten". Die Gegenprobe blieb
+   deshalb grün, obwohl der Fehler wieder eingebaut war: gemessen wurde eine
+   Seite, auf der das Gesuchte gar nicht vorkommt.
+   Eine Prüfung, die nichts sieht, weil sie am falschen Ort steht, ist die
+   gefährlichste Sorte — sie meldet Erfolg. */
+const pruefungAngelegt = await seite.evaluate(async () => {
+  const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '⚡' });
+  ['Ohm :: U = R · I', 'Leistung :: P = U · I']
+    .forEach(q => Store.addBlock(fach.id, 'flashcard', { text: q }));
+  const plan = Store.addPage(null, { text: 'Klausurplan', icon: '📝' });
+  const db = Store.addDatabase(plan.id, 'Klausuren', {
+    title: { name: 'Name', type: 'title' }, wann: { name: 'Datum', type: 'date' } });
+  Store.updateCollection(db.collectionId, { schoolKind: 'exams' });
+  const inTagen = new Date(); inTagen.setDate(inTagen.getDate() + 6);
+  const zeile = Store.addRow(db.collectionId, { title: 'Ohmsches Gesetz und Leistung' });
+  Store.setProp(zeile.id, 'wann', inTagen.toISOString().slice(0, 10));
+  await Store.flush();
+  (globalThis as any).Produktwelten?.lernen?.('pruefungen');
+  await new Promise(r => setTimeout(r, 1100));
+  return [...document.querySelectorAll('.lernwelt button')]
+    .filter(b => /Simulation starten/.test(b.textContent || '')).length;
+});
+p('Der Knopf, um den es geht, steht überhaupt da', pruefungAngelegt >= 1,
+  `${pruefungAngelegt} mal „Simulation starten"`);
+
+for (const lage of ['light', 'dark']) {
+  const gefunden = await seite.evaluate(async (wunsch: string) => {
+    document.documentElement.setAttribute('data-theme', wunsch);
+    await new Promise(r => setTimeout(r, 120));
+    (globalThis as any).Produktwelten?.lernen?.('pruefungen');
+    await new Promise(r => setTimeout(r, 900));
+  }, lage).then(() => seite.evaluate(KONTRAST_MESSUNG)) as string[];
+  p(`Prüfungszentrale, ${lage === 'light' ? 'hell' : 'dunkel'}: jeder Knopf ist lesbar`,
+    gefunden.length === 0, gefunden.slice(0, 5).join(' · '));
+}
+
+/* Gegenprobe im Lauf: die Messung muss einen wirklich blassen Knopf finden.
+   Sonst ist „0 Treffer" kein Ergebnis, sondern ein defektes Messgerät. */
+const erkannt = await seite.evaluate(async (code: string) => {
+  const probe = document.createElement('button');
+  probe.textContent = 'Unsichtbar';
+  probe.style.cssText = 'color:#fff;background:#fbfbfa;padding:10px;position:fixed;top:0;left:0;z-index:9';
+  document.body.appendChild(probe);
+  await new Promise(r => setTimeout(r, 60));
+  const treffer = await eval(code) as string[];
+  probe.remove();
+  return treffer.filter(x => x.startsWith('Unsichtbar'));
+}, KONTRAST_MESSUNG);
+p('Die Messung erkennt einen weiss-auf-weiss-Knopf', erkannt.length === 1,
+  JSON.stringify(erkannt));
+
+await seite.evaluate(() => document.documentElement.removeAttribute('data-theme'));
+
 await browser.close();
 server.close();
 

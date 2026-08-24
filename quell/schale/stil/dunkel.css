@@ -53,6 +53,12 @@
      mit 5.8:1 überall darüber. Rot bleibt deshalb, was es sein muss: das
      Zeichen für etwas Unwiderrufliches. */
   --accent:        #f97316;
+  /* SCHRIFT AUF DER AKZENTFLÄCHE (E142). Im Dunkelmodus ist der Akzent
+     HELL (#f97316). Weiss darauf hat gemessen 2,80 zu 1 — unter der
+     WCAG-Grenze von 3,0 für Bedienelemente, und man sieht es: der Knopf
+     „Simulation starten" verschwamm mit seiner eigenen Fläche.
+     Dunkel auf demselben Orange sind 6,6 zu 1. */
+  --auf-accent:  #1a1a1a;
   --accent-warm:   #fb923c;
   --gefahr:        #ef4444;
   --erfolg:        #22c55e;
