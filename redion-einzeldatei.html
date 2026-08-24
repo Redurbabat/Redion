@@ -42148,6 +42148,14 @@ const Werkzeuge = (() => {
         c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
         c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
         c('Navigation', 'Whiteboards', '', () => Produktwelten.whiteboards());
+        /* DIE DREI DOMÄNEN FEHLTEN (Auftrag §29). Die Palette kannte „Lernpfad"
+           und „Prüfungszentrum", aber nicht „Schule öffnen" — obwohl §29 genau
+           diesen Satz als Beispiel nennt. Über die Reiter kommt man hin; wer
+           Strg+Umschalt+P benutzt, sucht aber nicht erst die Reiterleiste. */
+        c('Navigation', 'Schule und Ausbildung öffnen', '', () => Produktwelten.lernen('schule'));
+        c('Navigation', 'Uni öffnen', '', () => Produktwelten.lernen('uni'));
+        c('Navigation', 'Arbeit öffnen', '', () => Produktwelten.lernen('arbeit'));
+        c('Navigation', 'Lernfortschritt', '', () => Produktwelten.lernen('fortschritt'));
         c('Navigation', 'Planung und Termine', '', () => Produktwelten.planung());
         c('Navigation', 'Hauptwelten und Lebensbereiche einrichten', '', () => ProduktOnboarding.oeffnen());
         c('Navigation', 'Posteingang', '', () => Ansichten.posteingang());
@@ -42159,6 +42167,42 @@ const Werkzeuge = (() => {
         c('Navigation', 'Vorlagengalerie', '', () => Galerie.oeffne());
         c('Navigation', 'Karteikarten lernen', '', () => lernen());
         c('Navigation', 'Papierkorb', '', () => App.papierkorb());
+        /* ANLEGEN, NICHT NUR HINGEHEN (Auftrag §29 und §46). Bis hierher konnte
+           die Palette eine Ansicht öffnen, aber nichts Neues erzeugen ausser
+           einer Seite. Die fünf Wege dahinter gibt es alle — sie standen nur
+           nicht in der Liste, in der man sie sucht. */
+        c('Anlegen', 'Neue Seite anlegen', 'Strg N', () => App.neueSeite());
+        c('Anlegen', 'Neue Aufgabe', '', () => {
+            const seite = App.neueSeite();
+            setTimeout(() => {
+                if (seite?.id)
+                    Store.addBlock(seite.id, 'todo', { text: '' });
+                App.zeichneSeite();
+            }, 80);
+        });
+        c('Anlegen', 'Neue Lernkarte', '', () => {
+            const seite = App.neueSeite();
+            setTimeout(() => {
+                if (seite?.id)
+                    Store.addBlock(seite.id, 'flashcard', { text: '' });
+                App.zeichneSeite();
+            }, 80);
+        });
+        c('Anlegen', 'Neues Whiteboard', '', () => {
+            const seite = App.neueSeite();
+            setTimeout(() => {
+                if (seite?.id)
+                    Store.addBlock(seite.id, 'whiteboard', { text: 'Whiteboard' });
+                App.zeichneSeite();
+            }, 80);
+        });
+        c('Anlegen', 'PDF oder Datei importieren', '', () => dateienLesen());
+        c('Anlegen', 'Aufnahme starten', '', () => {
+            if (typeof Meeting !== 'undefined' && Meeting.panel)
+                Meeting.panel();
+            else
+                UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+        });
         c('Planen', 'Tagesplan', '', () => Plan.tagesplan());
         c('Planen', 'Wochenrückblick', '', () => Plan.wochenrueckblick());
         c('Planen', 'Zurückgestelltes ansehen', '', () => Plan.uebersicht());
