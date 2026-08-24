@@ -62,6 +62,9 @@ console.log('\n1 · Der Export trägt ALLE Blätter — bis zum echten Download'
 await seite.evaluate(async () => {
   Store.setMeta('rundgangGesehen', true);
   document.getElementById('rg-willkommen')?.remove();
+  /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+     über alles und fängt Klicks ab (E132). */
+  document.querySelector('.produkt-onboarding-lage')?.remove();
   document.getElementById('rg-einladung')?.remove();
   const s = Store.addBlock(null, 'page', { text: 'Mehrblatt' });
   const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Bericht' });

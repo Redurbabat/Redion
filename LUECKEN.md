@@ -1406,10 +1406,21 @@ nicht. `schale.ts:2556-2558` startet den Rundgang nur, wenn das Onboarding
 NICHT gezeigt wurde — beim nächsten Start ist das Onboarding durch, und der
 Rundgang kommt dann doch. Zwei Begrüssungen an zwei Tagen hintereinander.
 
-Selbst gesehen: das Onboarding legt sich beim ersten Start über alles und
-fängt Klicks ab. Für Prüfläufe ist das entschärft (test202/206/207/208
-entlassen es), für den Menschen ist es richtig so — nur eben einmal, nicht
-zweimal.
+Selbst gesehen, und es kostete mehr als einen Prüflauf: das Onboarding legt
+sich beim ersten Start über alles und fängt Klicks ab. Im vollen Durchgang
+scheiterte test32 daran mit einer Zeitüberschreitung, und 76 weitere Läufe
+hätten dasselbe getan — sie entlassen den Rundgang nach dem Laden, kannten
+den neuen Überlager aber nicht.
+
+Nachgezogen wurde die bestehende Konvention: 74 Läufe entlassen ihn jetzt
+mit derselben Zeile, mit der sie den Rundgang entlassen. Das ist eine
+Reparatur an der Prüfseite, keine am Produkt — und damit bleibt die Falle
+für den NÄCHSTEN Prüflauf bestehen, der klickt und die Zeile vergisst.
+
+Die saubere Lösung wäre eine gemeinsame Vorbereitung für alle Läufe, statt
+derselben acht Zeilen in achtzig Dateien. Das ist eine eigene Aufgabe: sie
+fasst achtzig Dateien an, und dabei will man nichts anderes gleichzeitig
+ändern.
 
 
 ## L53 · „⌁ Erkennen" braucht einen Dienst, den Redion nicht mitliefert

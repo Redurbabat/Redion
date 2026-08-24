@@ -86,6 +86,9 @@ check('Freihand mit mehreren Punkten wird geglaettet', geometry.smooth.includes(
 const built = await page.evaluate(async () => {
   Store.setMeta('rundgangGesehen', true);
   document.getElementById('rg-willkommen')?.remove();
+  /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+     über alles und fängt Klicks ab (E132). */
+  document.querySelector('.produkt-onboarding-lage')?.remove();
   document.getElementById('rg-einladung')?.remove();
   const pageBlock = Store.addPage(null, { text: 'Ink V2' });
   const sheet = Store.addBlock(pageBlock.id, 'blatt', { text: '',

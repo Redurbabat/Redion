@@ -83,6 +83,9 @@ console.log('\n3 · Der echte Weg: 25-mal „Rechts einfügen", 25-mal richtig')
 const echt = await seite.evaluate(async () => {
   Store.setMeta('rundgangGesehen', true);
   document.getElementById('rg-willkommen')?.remove();
+  /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+     über alles und fängt Klicks ab (E132). */
+  document.querySelector('.produkt-onboarding-lage')?.remove();
   document.getElementById('rg-einladung')?.remove();
   /* UI.frage stellt sonst eine echte Frage — hier antwortet der Prüfstand. */
   (UI as any).frage = async () => 'Dazwischen';
