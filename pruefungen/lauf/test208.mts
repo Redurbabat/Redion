@@ -199,9 +199,45 @@ p('Und das Heute-Bild nennt sie ebenfalls',
   (/.{0,60}nächste Prüfung.{0,60}/.exec(heute3) ?? ['(nicht gefunden)'])[0]);
 
 /* ==========================================================================
- * §4 · Was der Quelltext dazu sagt
+ * §4 · Eine vergangene Prüfung steht nicht unter „Kommende"
+ * --------------------------------------------------------------------------
+ * Dieselbe Ursache, dritte Folge. Weil `tage` immer null war, nahm
+ * `kommende` ausnahmslos alles auf und `vergangene` blieb leer — der
+ * Ausklapper „Vergangene Prüfungen" konnte gar nicht erscheinen, und eine
+ * Klausur von vorletzter Woche stand unter den kommenden.
  * ========================================================================*/
-console.log('\n4 · Was der Quelltext dazu sagt');
+console.log('\n4 · Eine vergangene Prüfung steht nicht unter „Kommende"');
+
+const zeiten = await seite.evaluate(async () => {
+  const alt2 = new Date(); alt2.setDate(alt2.getDate() - 10);
+  const coll = Object.values<any>(Store.cache.collections)
+    .find(c => c?.schoolKind === 'exams');
+  const zeile = Store.addRow(coll.id, { title: 'Klausur von vorletzter Woche' });
+  const datumKey = Object.keys(coll.schema).find(k => coll.schema[k]?.type === 'date');
+  Store.setProp(zeile.id, datumKey, alt2.toISOString().slice(0, 10));
+  await Store.flush();
+  (globalThis as any).Produktwelten.lernen('pruefungen');
+  await new Promise(r => setTimeout(r, 1100));
+  const text = ((document.querySelector('.lernwelt') as HTMLElement)?.textContent || '')
+    .replace(/\s+/g, ' ');
+  const komm = text.indexOf('Kommende');
+  const verg = text.indexOf('Vergangene');
+  return {
+    hatGruppe: verg >= 0,
+    alteUnterKommenden: komm >= 0 && verg > komm
+      ? text.slice(komm, verg).includes('von vorletzter Woche')
+      : text.includes('von vorletzter Woche'),
+    ohneTermin: (text.match(/ohne Termin/g) || []).length,
+  };
+});
+gleich('Es gibt eine Gruppe „Vergangene Prüfungen"', zeiten.hatGruppe, true);
+gleich('Die alte Klausur steht nicht unter den kommenden', zeiten.alteUnterKommenden, false);
+gleich('Und keine Prüfung steht ohne Termin da', zeiten.ohneTermin, 0);
+
+/* ==========================================================================
+ * §5 · Was der Quelltext dazu sagt
+ * ========================================================================*/
+console.log('\n5 · Was der Quelltext dazu sagt');
 
 const quelle = fs.readFileSync(path.join(WURZEL, 'src/bereiche/wissen/lernwelt.ts'), 'utf8');
 p('`datum` behandelt ein `Date` als Datum, nicht als Hülle',
