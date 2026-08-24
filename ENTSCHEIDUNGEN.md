@@ -9099,3 +9099,65 @@ wieder eingebaut war. Jetzt legt der Abschnitt zuerst eine Prüfung an und
 prüft in einer eigenen Zeile, dass der Knopf überhaupt dasteht.
 
 Erst danach war die Gegenprobe echt: 1,04 zu 1, beim Namen genannt.
+
+
+## E143 · Die leere Wand stand auch vor vollen Regalen
+
+**24. August 2026.** Die Schulansicht sagte „Ausbildung noch nicht
+eingerichtet" — vor vier Fächern, einer Notendatenbank, sechs Aufgaben und
+einem Dutzend Karteikarten. Alles war da. Die Ansicht schaute an einer
+einzigen Stelle nach und gab auf:
+
+```ts
+const root = schoolRoot();          // Seite mit der Marke `schoolRoot`
+if (!root) return leer(…)           // und sonst nichts
+```
+
+Die Marke setzt nur die Einrichtung. Wer seine Fächer von Hand angelegt hat —
+also jeder, der Redion schon benutzt hat, bevor es diese Vorlage gab —, bekam
+eine Wand.
+
+Das widerspricht §51 des Auftrags: **eine Ansicht ist ein Blick auf
+vorhandene Objekte, keine Belohnung fürs Drücken eines Knopfes.**
+
+Jetzt zeigt sie den Bestand, sobald es einen gibt, mit einem Satz darüber:
+„Das hier kommt aus deinem vorhandenen Bestand. Eine Ausbildungsseite gibt es
+noch nicht. Die Vorlage legt sie zusätzlich an — sie ersetzt nichts und
+löscht nichts." Die Einrichtung bleibt als Knopf im Kopf stehen. Die Wand
+bleibt für den Fall, dass wirklich nichts da ist.
+
+### Ein zweiter Widerspruch auf demselben Bildschirm
+
+Darunter stand „Noch keine Fächer angelegt" — direkt über einer Liste, in der
+Betriebskunde, Deutsch und Elektrotechnik untereinander standen. Der
+Fächerkasten liest die Sammlung `subjects` aus der Vorlage; die Themenliste
+liest die Karteikarten. Ohne Vorlage sagt der eine, es gebe nichts, und der
+andere zeigt es.
+
+Zwei Sätze, die einander widersprechen, sind schlimmer als ein fehlender.
+Ohne Ausbildungsseite entfällt der leere Kasten; der Themenkasten übernimmt.
+
+### Und der Fehler, den ich dabei selbst gemacht habe
+
+Meine erste Bedingung war:
+
+```ts
+schulSammlungen().length > 0 || …
+```
+
+`schulSammlungen()` OHNE Argument liefert aber ALLE Sammlungen. Die beiden
+Filterzeilen darin greifen nur, wenn `kind` gesetzt ist. Damit zählte „Meine
+Aufgaben" aus dem Beispielinhalt als schulischer Bestand — und die Einladung
+war überhaupt nicht mehr zu sehen, auch in einem frischen Redion nicht.
+
+Zweimal habe ich stattdessen geraten, woran es liegt: erst an übrig
+gebliebenen Karteikarten, dann am Namen der Klausurdatenbank. Beide Male war
+die Prüfung danach immer noch rot. Erst das Messen der vier Werte EINZELN hat
+es gezeigt — genau die Regel aus AUFGABEN.md, Punkt 1: nachsehen statt raten.
+
+**Geprüft:** test208 §8, zehn Punkte — die Einladung im leeren Bestand (in
+einem eigenen, weggeworfenen Browserfenster, weil dieses hier nach sieben
+Abschnitten voll ist), der Bestand ohne Ausbildungsseite, die drei Fächer
+beim Namen, das stehengebliebene Angebot, der ehrliche Satz und der
+verschwundene Widerspruch. Gegenprobe: mit der alten Wand werden fünf Punkte
+rot.

@@ -372,6 +372,95 @@ p('Und `leererLernzustand` liefert weiterhin `sr: {}` — dort wurde nichts geä
   /sr: \{\},/.test(fs.readFileSync(
     path.join(WURZEL, 'src/bereiche/wissen/lebensbereiche.ts'), 'utf8')));
 
+/* ==========================================================================
+ * §8 · Die Schulansicht zeigt, was da ist — auch ohne Ausbildungsseite
+ * --------------------------------------------------------------------------
+ * `schoolRoot()` sucht eine Seite mit der Marke `schoolRoot`, und die setzt
+ * nur die Einrichtung. Wer Fächer, Noten und Karteikarten von Hand angelegt
+ * hat, bekam „Ausbildung noch nicht eingerichtet" und sonst NICHTS — sein
+ * eigener Bestand lag da und wurde nicht gezeigt (E143).
+ *
+ * Das widerspricht §51 des Auftrags: eine Ansicht ist ein Blick auf
+ * vorhandene Objekte, keine Belohnung fürs Drücken eines Knopfes.
+ *
+ * Gegenprobe (`schonDa` entfernt): der Wortlaut war „🎓 Ausbildung noch
+ * nicht eingerichtet Die additive Vorlage erstellt normale Seiten …",
+ * 137 Zeichen, und keines der drei Fächer kam vor.
+ * ========================================================================*/
+console.log('\n8 · Die Schulansicht zeigt, was da ist — auch ohne Ausbildungsseite');
+
+/* DER LEERE FALL BRAUCHT EIN LEERES FENSTER. In DIESEM Fenster liegen nach
+   sieben Abschnitten Karten, eine Klausurdatenbank und Aufgaben — und die
+   Ansicht zeigt sie zu Recht. Karten auf `alive:false` zu setzen reichte
+   nicht: `pruefungen()` erkennt eine Sammlung auch am NAMEN „Klausuren".
+   Gemessen: `{karten:0, sammlungen:0}` und trotzdem die volle Ansicht, weil
+   die Datenbank weiter so hiess.
+   Ein zweites Fenster ist ein zweiter Browserkontext und damit eine leere
+   IndexedDB — das ist der ehrliche Weg zum leeren Fall, statt in diesem
+   Fenster Daten kaputtzumachen. */
+const frisch = await browser.newPage({ viewport: { width: 1300, height: 950 } });
+frisch.on('pageerror', e => fehler.push('PAGEERROR (frisch): ' + e.message.slice(0, 140)));
+await frisch.goto(`http://localhost:${PORT}/index.html`);
+await frisch.waitForTimeout(2700);
+const leer = await frisch.evaluate(async () => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+  document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+  /* AUCH EIN FRISCHES REDION IST NICHT LEER: der Beispielinhalt bringt eine
+     Karteikarte und eine Aufgabendatenbank mit. Gemessen zeigte die Ansicht
+     deshalb auch hier den Bestand — richtig, aber nicht der Fall, der hier
+     geprüft werden soll. Dieses Fenster ist ein Wegwerfkontext; was hier
+     gelöscht wird, ist Beispielinhalt und keine Nutzerarbeit. */
+  Object.values<any>(Store.cache.blocks).forEach(block => {
+    if (block?.type === 'flashcard' && block.alive !== false)
+      Store.updateBlock(block.id, { alive: false });
+  });
+  Object.values<any>(Store.cache.collections).forEach(sammlung => {
+    if (sammlung?.schoolKind) Store.updateCollection(sammlung.id, { schoolKind: '' });
+    if (/prüfung|pruefung|exam|klausur/i.test(String(sammlung?.name || '')))
+      Store.updateCollection(sammlung.id, { name: 'Ohne Namen' });
+  });
+  await Store.flush();
+  (globalThis as any).Produktwelten.lernen('schule');
+  await new Promise(r => setTimeout(r, 900));
+  return ((document.querySelector('.lernwelt') as HTMLElement | null)?.textContent || '')
+    .replace(/\s+/g, ' ').trim();
+});
+await frisch.close();
+
+const schule = await seite.evaluate(async () => {
+  /* Bestand anlegen — aber weiterhin OHNE Ausbildungsseite. */
+  ['Elektrotechnik', 'Mathematik', 'Betriebskunde'].forEach(name => {
+    const fach = Store.addPage(null, { text: name, icon: '📘' });
+    Store.addBlock(fach.id, 'flashcard', { text: name + ' :: erste Karte' });
+  });
+  await Store.flush();
+  (globalThis as any).Produktwelten.lernen('schule');
+  await new Promise(r => setTimeout(r, 900));
+  const wurzel = document.querySelector('.lernwelt') as HTMLElement | null;
+  return {
+    voll: (wurzel?.textContent || '').replace(/\s+/g, ' ').trim(),
+    ausbildungsseite: Object.values<any>(Store.cache.blocks)
+      .filter((b: any) => b?.schoolRoot === true || b?.systemRole === 'school-root').length,
+    einrichtenKnopf: [...(wurzel?.querySelectorAll('button') || [])]
+      .filter(b => /Ausbildung einrichten/.test(b.textContent || '')).length,
+    widerspruch: /Noch keine Fächer angelegt/.test(wurzel?.textContent || '')
+  };
+});
+
+p('In einem leeren Bestand steht die Einladung da',
+  /noch nicht eingerichtet/.test(leer), leer.slice(0, 100));
+gleich('Es gibt weiterhin keine Ausbildungsseite', schule.ausbildungsseite, 0);
+p('Mit Bestand steht der Bestand da', /Aktuelle Themen/.test(schule.voll),
+  schule.voll.slice(0, 110));
+for (const fach of ['Elektrotechnik', 'Mathematik', 'Betriebskunde'])
+  p(`… und „${fach}" kommt darin vor`, schule.voll.includes(fach));
+p('Die Einrichtung bleibt als Angebot stehen', schule.einrichtenKnopf >= 1,
+  `${schule.einrichtenKnopf} Knöpfe`);
+p('Und sie sagt ehrlich, woher das kommt',
+  /aus deinem vorhandenen Bestand/.test(schule.voll));
+gleich('Kein „Noch keine Fächer" über einer Fächerliste', schule.widerspruch, false);
+
 gleich('Kein Skriptfehler', fehler.join(' | '), '');
 
 console.log(`\n  Suite 174 — Die Lernwelt rechnet richtig: ${ok} ok, ${weg} offen`);

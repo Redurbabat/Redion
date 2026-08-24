@@ -1342,7 +1342,28 @@ const Lernwelt = (() => {
     };
     const schuleAnsicht = () => {
         const root = schoolRoot();
-        if (!root)
+        /* DIE LEERE WAND STAND AUCH VOR VOLLEN REGALEN (E143).
+           `schoolRoot()` sucht eine Seite mit der Marke `schoolRoot` — die setzt
+           nur die Einrichtung. Wer seine Fächer, Noten und Karteikarten von Hand
+           angelegt hat, bekam „Ausbildung noch nicht eingerichtet" und sonst
+           nichts. Sein Bestand war da; die Ansicht schaute nur an einer einzigen
+           Stelle nach und gab auf.
+    
+           Das widerspricht §51 des Auftrags („ein Objekt, viele Ansichten"):
+           eine Ansicht ist ein BLICK auf vorhandene Objekte, keine Belohnung
+           fürs Drücken eines Knopfes.
+    
+           Die Wand bleibt — aber nur, wenn wirklich nichts da ist. */
+        /* `schulSammlungen()` OHNE ARGUMENT LIEFERT ALLE SAMMLUNGEN. Die zwei
+           Bedingungen darin greifen nur, wenn `kind` gesetzt ist — ohne
+           Argument fällt jede lesbare Sammlung durch. Meine erste Fassung
+           zählte deshalb „Meine Aufgaben" aus dem Beispielinhalt als
+           schulischen Bestand, und die Einladung war nie zu sehen.
+           Zweimal geraten, zweimal daneben; erst das Messen der vier Werte
+           einzeln hat es gezeigt. */
+        const schonDa = !root && (schulSammlungen().some(sammlung => sammlung?.schoolKind) ||
+            pruefungen().length > 0 || lernkarten().length > 0 || fachZeilen().length > 0);
+        if (!root && !schonDa)
             return '<div class="lw-school">' + leer('🎓', 'Ausbildung noch nicht eingerichtet', 'Die additive Vorlage erstellt normale Seiten und Datenbanken für Fächer, Prüfungen, Noten und Material.', 'school-install', 'Ausbildung einrichten') + '</div>';
         const faecher = fachZeilen();
         const fokus = faecher.find(item => item.row.id === zustand.fachId);
@@ -1354,23 +1375,41 @@ const Lernwelt = (() => {
         const gradeEntries = sammlungsEintraege('grades', '🏅', 6);
         const reportEntries = sammlungsEintraege('reports', '📓', 6);
         const materialEntries = sammlungsEintraege('materials', '📚', 8);
+        /* Ohne Ausbildungsseite gibt es nichts zu öffnen — dort steht statt des
+           Knopfes das Angebot, die Vorlage nachzuziehen. */
         return '<div class="lw-school"><header class="lw-page-head"><div><p>Schule / Ausbildung</p><h2>' +
-            esc(root.text || 'Ausbildung') + '</h2><span>Fächer, Unterricht, Material und Lernen in einer gemeinsamen Sicht.</span></div>' +
+            esc(root?.text || 'Ausbildung') + '</h2><span>Fächer, Unterricht, Material und Lernen in einer gemeinsamen Sicht.</span></div>' +
             '<div class="lw-actions"><button type="button" data-lw-action="capture">Material erfassen</button>' +
-            '<button type="button" data-lw-open="' + esc(root.id) + '">Ausbildungsseite öffnen</button></div></header>' +
-            '<section class="lw-subject-grid" aria-label="Fächer">' +
-            (faecher.length ? faecher.map(item => {
-                const cards = lernkarten().filter(card => fachVon(card).toLowerCase().includes(item.titel.toLowerCase()));
-                const progress = cards.length
-                    ? Math.round(cards.reduce((summe, card) => summe + Math.min(2, zahl(card?.sr?.wdh)), 0) /
-                        (cards.length * 2) * 100)
-                    : 0;
-                return '<button type="button" data-lw-subject="' + esc(item.row.id) + '"><span aria-hidden="true">📘</span>' +
-                    '<strong>' + esc(item.titel) + '</strong><small>' + cards.length + ' Karten · ' + progress +
-                    ' %</small><progress max="100" value="' + progress + '" aria-label="Fortschritt ' +
-                    esc(item.titel) + '"></progress></button>';
-            }).join('') : '<div class="lw-subject-empty"><p>Noch keine Fächer angelegt.</p>' +
-                '<button type="button" data-lw-open="' + esc(root.id) + '">Fächer hinzufügen</button></div>') + '</section>' +
+            (root
+                ? '<button type="button" data-lw-open="' + esc(root.id) + '">Ausbildungsseite öffnen</button>'
+                : '<button type="button" class="is-primary" data-lw-action="school-install">Ausbildung einrichten</button>') +
+            '</div></header>' +
+            (root ? '' : '<aside class="lw-note"><strong>Das hier kommt aus deinem vorhandenen Bestand.</strong>' +
+                '<p>Eine Ausbildungsseite gibt es noch nicht. Die Vorlage legt sie zusätzlich an — ' +
+                'sie ersetzt nichts und löscht nichts.</p></aside>') +
+            /* OHNE FÄCHERDATENBANK GAR KEIN FÄCHERKASTEN. `fachZeilen()` liest die
+               Sammlung `subjects` aus der Vorlage. Fehlt sie, stand „Noch keine
+               Fächer angelegt" — direkt über „Aktuelle Themen", wo Betriebskunde,
+               Deutsch und Elektrotechnik untereinander aufgelistet waren.
+      
+               Zwei Sätze auf einem Bildschirm, die einander widersprechen, sind
+               schlimmer als ein fehlender: der eine sagt, es gebe nichts, der
+               andere zeigt es. Ohne Ausbildungsseite übernimmt der Themenkasten
+               die Aufgabe, und der leere Kasten entfällt. */
+            (faecher.length || root ? '<section class="lw-subject-grid" aria-label="Fächer">' +
+                (faecher.length ? faecher.map(item => {
+                    const cards = lernkarten().filter(card => fachVon(card).toLowerCase().includes(item.titel.toLowerCase()));
+                    const progress = cards.length
+                        ? Math.round(cards.reduce((summe, card) => summe + Math.min(2, zahl(card?.sr?.wdh)), 0) /
+                            (cards.length * 2) * 100)
+                        : 0;
+                    return '<button type="button" data-lw-subject="' + esc(item.row.id) + '"><span aria-hidden="true">📘</span>' +
+                        '<strong>' + esc(item.titel) + '</strong><small>' + cards.length + ' Karten · ' + progress +
+                        ' %</small><progress max="100" value="' + progress + '" aria-label="Fortschritt ' +
+                        esc(item.titel) + '"></progress></button>';
+                }).join('') : '<div class="lw-subject-empty"><p>Noch keine Fächer angelegt.</p>' +
+                    '<button type="button" data-lw-open="' + esc(root?.id || '') + '">Fächer hinzufügen</button>' +
+                    '</div>') + '</section>' : '') +
             '<div class="lw-dashboard-grid">' +
             sektion('Aktuelle Themen', themenListe(themen, 8), 'aus deinen Lernkarten') +
             sektion('Aufgaben', aufgabenListe(tasks, 'Keine offene Ausbildungsaufgabe.')) +
@@ -1382,7 +1421,8 @@ const Lernwelt = (() => {
                 .slice(0, 8), 'Noch kein Lernmaterial abgelegt.')) +
             sektion('Noten', eintragListe(gradeEntries, 'Noch keine Note eingetragen.')) +
             sektion('Berichtsheft', eintragListe(reportEntries, 'Noch kein Berichtsheft-Eintrag.')) +
-            '</div><div class="lw-quick"><button type="button" data-lw-open="' + esc(root.id) + '">📅 Stundenplan</button>' +
+            '</div><div class="lw-quick">' +
+            (root ? '<button type="button" data-lw-open="' + esc(root.id) + '">📅 Stundenplan</button>' : '') +
             '<button type="button" data-lw-nav="lernen">🎴 Lernkarten</button>' +
             '<button type="button" data-lw-nav="fortschritt">📈 Lernfortschritt</button></div></div>';
     };
