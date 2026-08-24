@@ -412,6 +412,74 @@ gleich('Eine neue Seite entsteht', alt.seiteDa, true);
 gleich('Ihr Block trägt den Text', alt.text, 'Ein Satz von Hand.');
 gleich('Und hängt an der Seite', alt.kinder, 1);
 
+/* ==========================================================================
+ * §11 · Die Befehlspalette führt zu den Welten UND legt an (E138, §29/§46)
+ * --------------------------------------------------------------------------
+ * §29 des Auftrags nennt acht Beispielsätze, die man tippen können soll.
+ * Vier davon fanden nichts: „Neue Aufgabe", „PDF importieren", „Neue Karte",
+ * „Schule öffnen". Die Wege dahinter gab es alle — sie standen nur nicht in
+ * der Liste, in der man sie sucht.
+ *
+ * Diese Prüfung tippt jeden der acht Sätze und sieht nach, was oben steht.
+ * Gegenprobe: mit den neuen Einträgen entfernt kamen für „Neue Aufgabe",
+ * „Neue Lernkarte", „Neues Whiteboard" und „Aufnahme" gar keine Treffer,
+ * für „Schule" stand „Sicherung laden" oben.
+ * ========================================================================*/
+console.log('\n11 · Die Befehlspalette führt zu den Welten und legt an');
+
+/* MIT GRUPPE, NICHT NUR MIT WORT. Die Palette findet auch SEITEN, und §9
+   legt weiter oben eine Seite namens „Neues Whiteboard" an — die Zeile
+   „Neues Whiteboard" stand also auch dann da, als es den Befehl gar nicht
+   gab. Gemessen in der Gegenprobe: fünf Punkte wurden rot, dieser eine
+   blieb grün, obwohl er dasselbe prüfen sollte.
+   Mit der Gruppe davor ist „Anlegen › Neues Whiteboard" etwas anderes als
+   „Seiten › 📄 Neues Whiteboard". */
+const paletteSucht = (frage: string): Promise<string[]> => seite.evaluate(async (q: string) => {
+  document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+  Werkzeuge.palette(q);
+  await new Promise(r => setTimeout(r, 380));
+  const treffer: string[] = [];
+  let gruppe = '?';
+  [...(document.querySelector('.overlay .res')?.children || [])].forEach(kind => {
+    if (kind.classList.contains('grp')) { gruppe = (kind.textContent || '').trim(); return; }
+    if (kind.tagName === 'BUTTON')
+      treffer.push(gruppe + ' › ' + (kind.textContent || '').replace(/\s+/g, ' ').trim());
+  });
+  document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+  return treffer;
+}, frage);
+
+for (const [frage, erwartet] of [
+  ['Neue Seite', 'Anlegen › Neue Seite'],
+  ['Neue Aufgabe', 'Anlegen › Neue Aufgabe'],
+  ['Neue Lernkarte', 'Anlegen › Neue Lernkarte'],
+  ['Neues Whiteboard', 'Anlegen › Neues Whiteboard'],
+  ['PDF importieren', 'Anlegen › PDF oder Datei importieren'],
+  ['Aufnahme', 'Anlegen › Aufnahme starten'],
+  ['Schule', 'Navigation › Schule und Ausbildung öffnen'],
+  ['Prüfungen', 'Navigation › Prüfungszentrum']
+] as [string, string][]) {
+  const treffer = await paletteSucht(frage);
+  p(`„${frage}" findet „${erwartet}"`,
+    treffer.slice(0, 4).some(zeile => zeile.includes(erwartet)),
+    treffer.slice(0, 3).join(' | ') || '(nichts gefunden)');
+}
+
+/* Und einer davon wirklich ausgeführt — eine Liste, die nur aussieht wie
+   eine Liste, wäre schlimmer als keine. */
+const ausgefuehrt = await seite.evaluate(async () => {
+  const zaehle = () => Object.values<any>(Store.cache.blocks)
+    .filter(b => b.type === 'flashcard' && b.alive !== false).length;
+  const vorher = zaehle();
+  document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+  Werkzeuge.palette('Neue Lernkarte');
+  await new Promise(r => setTimeout(r, 380));
+  (document.querySelector('.overlay .res button') as HTMLElement | null)?.click();
+  await new Promise(r => setTimeout(r, 800));
+  return { vorher, nachher: zaehle() };
+});
+gleich('„Neue Lernkarte" legt wirklich eine an', ausgefuehrt.nachher, ausgefuehrt.vorher + 1);
+
 gleich('Kein Skriptfehler auf keiner Ansicht', fehler.join(' | '), '');
 
 console.log(`\n  Suite 172 — Die zwei Produktwelten tragen: ${ok} ok, ${weg} offen`);

@@ -8882,3 +8882,46 @@ Die Miniatur im Bereich zeichnet Formen, keine Verbindungen. Das ist eine
 bewusste Vereinfachung — sie ist ein Wiedererkennungszeichen, keine
 Vorschau. Steht in L54.
 
+
+
+## E139 · Die Palette konnte hingehen, aber nichts anlegen
+
+**24. August 2026.** §29 des Auftrags nennt acht Sätze, die man in die
+Befehlspalette tippen können soll. Vier davon fanden nichts:
+
+```txt
+Neue Aufgabe        kein Treffer
+Neue Karte          kein Treffer
+PDF importieren     kein Treffer
+Schule öffnen       „Sicherung laden", „Gesundheitsbericht und Erste Hilfe"
+```
+
+Die Palette war eine Navigationsliste: sie kannte jeden Ort in Redion und
+keinen einzigen Vorgang ausser „Neue Seite". Wer etwas ANLEGEN wollte,
+musste den Weg über eine Ansicht kennen — am Rechner unbequem, am Telefon
+gar nicht möglich, weil es dort kein Strg gibt.
+
+Neu ist eine Gruppe **Anlegen** mit sechs Einträgen: Seite, Aufgabe,
+Lernkarte, Whiteboard, PDF/Datei, Aufnahme. Kein einziger davon ist neuer
+Code — die Wege gab es alle, sie standen nur nicht in der Liste, in der man
+sie sucht. Dazu vier Navigationsbefehle für die Domänen: Schule und
+Ausbildung, Uni, Arbeit, Lernfortschritt.
+
+### Warum die Prüfung die Gruppe mitliest
+
+Die erste Fassung suchte nur nach dem Wort. Bei der Gegenprobe blieb
+ausgerechnet „Neues Whiteboard" grün, obwohl der Befehl entfernt war — denn
+die Palette findet auch SEITEN, und ein Abschnitt weiter oben legt eine
+Seite namens „Neues Whiteboard" an.
+
+```txt
+mit Befehl     Anlegen › Neues Whiteboard
+ohne Befehl    Seiten › 🎨 Neues Whiteboard
+```
+
+Zwei Zeilen, die gleich aussehen und Verschiedenes bedeuten. Die Prüfung
+liest deshalb die Gruppenüberschrift mit. Mit ihr werden in der Gegenprobe
+alle acht Punkte rot, vorher waren es fünf.
+
+**Geprüft:** test206 §11, neun Punkte — die acht Sätze aus §29 und einer,
+der wirklich klickt: „Neue Lernkarte" bringt den Bestand von 1 auf 2.
