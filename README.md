@@ -193,7 +193,11 @@ Redion enthält eine local-first Arbeitsumgebung für Schule und Ausbildung:
   anklickbaren Zeitmarken; alte DataURL-Aufnahmen bleiben lesbar
 - Seitenaliase und kollisionssicherer Obsidian-Vault-Roundtrip mit stabilen IDs
 - Kamera-/Datei-Eingang sowie optionale OCR für Bild, PDF und Handschrift über
-  einen ausdrücklich eingerichteten lokalen Dienst
+  einen lokalen Dienst, der **mitgeliefert** wird: `node dienste/ocr.mts`,
+  Anleitung in `doku/OCR-DIENST.md`. Er hört nur auf `127.0.0.1`, und Redion
+  lässt gar keine andere Adresse zu — der Ausschnitt verlässt den Rechner nie
+- ein Rücksprung von jedem abgeleiteten Objekt zu seiner Quelle: von der
+  Lernkarte zur PDF-Seite samt Ausschnitt, von der Aufgabe zur Besprechung
 - additive Ausbildungsvorlage mit Fächern, Prüfungen, Noten, Berichtsheft,
   Lernmaterial und Eingang
 - normfreie Elektrotechnik-Rechnungen und ein versioniertes, validiertes
@@ -378,6 +382,9 @@ Redion/
 │
 ├─ doku/
 │  └─ Architektur und Entscheidungen
+│
+├─ dienste/
+│  └─ ocr.mts        lokaler Erkennungsdienst, optional
 │
 ├─ pruefungen/
 │  ├─ alle.mts
