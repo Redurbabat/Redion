@@ -125,6 +125,8 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | §47 | E159, test221/217 | ein schwarzer Schatten auf schwarzem Grund; **L58 zu** |
 | CLAUDE.md §5 | E160, test222 §5 | drei Registereinträge waren falsch, weil sie niemand las |
 | §44 | E161, test223 | Besprechungsaufgaben bekommen ihre Herkunft — und die Sekunde |
+| §11 | E162, test224 | eine Prüfung zählte den ganzen Bestand als ihren Stoff |
+| §11 | E163, test224 §5 | Simulationsergebnisse überleben jetzt den Reiterwechsel |
 
 Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
 test206, test218 und test86. Gezählt, nicht geschätzt:

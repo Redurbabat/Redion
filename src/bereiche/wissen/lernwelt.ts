@@ -89,6 +89,8 @@ type LernweltSimulationAntwort = {
 
 type LernweltSimulation = {
   titel: string;
+  /** Woraus sie entstand — leer bei der freien Wochenprüfung. */
+  pruefungId: string;
   karten: any[];
   index: number;
   aufgedeckt: boolean;
@@ -96,6 +98,26 @@ type LernweltSimulation = {
   endet: number;
   antworten: LernweltSimulationAntwort[];
   fertig: boolean;
+};
+
+/**
+ * Was von einer Simulation übrig bleibt.
+ *
+ * Die Karten selbst stehen NICHT darin. Sie sind Blöcke im Bestand und
+ * können umbenannt, verschoben oder gelöscht werden; eine Zweitschrift
+ * davon wäre genau die zweite Wahrheit, die §17 verbietet. Festgehalten
+ * wird das Ergebnis — Zahlen und Themennamen —, und das ist auch das,
+ * was man später ansehen will.
+ */
+type LernweltSimulationErgebnis = {
+  id: string;
+  pruefungId: string;
+  titel: string;
+  beendet: string;
+  richtig: number;
+  gesamt: number;
+  dauerMin: number;
+  themen: Array<{ thema: string; gesamt: number; fehler: number }>;
 };
 
 type LernweltTraining = {
@@ -921,14 +943,23 @@ const Lernwelt = (() => {
       String(b.zuletzt).localeCompare(String(a.zuletzt)));
 
   /**
-   * Nur die Karten, die WIRKLICH zur Prüfung passen — ohne den Rückfall auf
-   * alle (E136).
+   * Die Karten, die WIRKLICH zur Prüfung passen. Kein Rückfall auf alle.
    *
-   * `passendeKarten` gibt bei null Treffern den ganzen Bestand zurück. Für
-   * die Simulation ist das vertretbar: lieber eine Übungsklausur aus allem
-   * als gar keine. Für die Kachel „Prüfungsfokus" wäre es eine Unwahrheit —
-   * sie verspricht „passend zur nächsten Prüfung", und wer dann alles
-   * bekommt, merkt es nicht.
+   * E136 hat diese Fassung neben `passendeKarten` gestellt, weil dort der
+   * Rückfall stand: bei null Treffern der ganze Bestand. Für die Kachel
+   * „Prüfungsfokus" wäre das eine Unwahrheit, hiess es damals — sie
+   * verspricht „passend zur nächsten Prüfung", und wer dann alles bekommt,
+   * merkt es nicht.
+   *
+   * DERSELBE SATZ GALT AN DREI WEITEREN STELLEN, und dort stand er nicht
+   * (E162). Die Prüfungsliste zeigte „Karten: 47" für eine Prüfung, zu der
+   * keine einzige Karte passt — es war der ganze Bestand. Der Balken
+   * „Fachlicher Lernstand" rechnete daneben denselben Bestand aus. Und die
+   * Simulation zog stillschweigend aus allem.
+   *
+   * Also gibt es jetzt nur noch diese eine Funktion. Wo der Rückfall
+   * gewollt ist — bei der Simulation, denn eine Übungsklausur aus allem ist
+   * besser als keine —, steht er an der Aufrufstelle und SAGT es.
    */
   const nurPassendeKarten = (pruefung: LernweltPruefung): any[] => {
     const woerter = (pruefung.titel + ' ' + pruefung.fach + ' ' + pruefung.lernstoff)
@@ -939,17 +970,6 @@ const Lernwelt = (() => {
                         String(card.text || '')).toLowerCase();
       return woerter.some(wort => suchtext.includes(wort));
     });
-  };
-
-  const passendeKarten = (pruefung: LernweltPruefung): any[] => {
-    const woerter = (pruefung.titel + ' ' + pruefung.fach + ' ' + pruefung.lernstoff)
-      .toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(wort => wort.length >= 3);
-    if (!woerter.length) return lernkarten();
-    const passend = lernkarten().filter(card => {
-      const suchtext = (themaVon(card) + ' ' + fachVon(card) + ' ' + String(card.text || '')).toLowerCase();
-      return woerter.some(wort => suchtext.includes(wort));
-    });
-    return passend.length ? passend : lernkarten();
   };
 
   const aktiverBereich = (): LernweltBereich => bereiche().find(item => item.id === zustand.bereichId)
@@ -1289,10 +1309,41 @@ const Lernwelt = (() => {
   };
 
   const pruefungsFortschritt = (pruefung: LernweltPruefung): number => {
-    const karten = passendeKarten(pruefung);
+    /* Mit `passendeKarten` rechnete dieser Balken bei einer Prüfung ohne
+       eigenen Stoff den GANZEN Bestand durch und zeigte dessen Stand als
+       „Fachlicher Lernstand" dieser Prüfung an (E162). */
+    const karten = nurPassendeKarten(pruefung);
     if (!karten.length) return 0;
     return Math.round(karten.reduce((summe, card) =>
       summe + Math.min(2, Math.max(0, zahl(card?.sr?.wdh))), 0) / (karten.length * 2) * 100);
+  };
+
+  /**
+   * Was von den letzten Simulationen übrig ist.
+   *
+   * Ohne diesen Abschnitt wäre das Gedächtnis aus `simulationAbschliessen`
+   * ein Datensatz, den niemand sieht — und ein Wert, den man nicht ansehen
+   * kann, ist so gut wie keiner (E118).
+   *
+   * Gezeigt werden fünf; alles Weitere steckt in der Aufklappzeile. Zwanzig
+   * Zeilen unter einer Prüfungsliste wären mehr Verlauf als Zentrale.
+   */
+  const simulationsVerlauf = (): string => {
+    const alle = simulationen();
+    if (!alle.length) return '';
+    const zeile = (item: LernweltSimulationErgebnis): string => {
+      const quote = item.gesamt ? Math.round(item.richtig / item.gesamt * 100) : 0;
+      const wann = new Date(item.beendet);
+      return '<li><span><strong>' + esc(item.titel) + '</strong><small>' +
+        esc(Number.isNaN(wann.getTime()) ? '' : datumText(wann)) + ' · ' +
+        item.richtig + ' von ' + item.gesamt + ' richtig · ' + item.dauerMin +
+        ' Min.</small></span><b>' + quote + ' %</b></li>';
+    };
+    const oben = alle.slice(0, 5), rest = alle.slice(5);
+    return '<section class="lw-sim-history"><h3>Letzte Simulationen</h3><ul>' +
+      oben.map(zeile).join('') + '</ul>' +
+      (rest.length ? '<details><summary>Ältere (' + rest.length + ')</summary><ul>' +
+        rest.map(zeile).join('') + '</ul></details>' : '') + '</section>';
   };
 
   const pruefungenAnsicht = (): string => {
@@ -1306,7 +1357,10 @@ const Lernwelt = (() => {
       '>Wochenprüfung simulieren</button></header>' +
       (kommende.length
         ? '<div class="lw-exam-list">' + kommende.map(item => {
-            const karten = passendeKarten(item);
+            /* Nur der eigene Stoff. Vorher stand hier `passendeKarten`, und
+               eine Prüfung ohne passende Karte zeigte die Zahl des ganzen
+               Bestands — mitsamt seinen Fehlern (E162). */
+            const karten = nurPassendeKarten(item);
             const fehler = karten.filter(card => verlauf(card).some(istFehler)).length;
             const passendeAufgaben = sichtbareAufgaben().filter(aufgabe =>
               (aufgabe.titel + ' ' + aufgabe.quelle).toLowerCase().includes(item.titel.toLowerCase())).length;
@@ -1321,12 +1375,19 @@ const Lernwelt = (() => {
               fehler + '</dd></div><div><dt>Aufgaben</dt><dd>' + passendeAufgaben +
               '</dd></div><div><dt>Zeitlimit</dt><dd>' + item.dauer + ' Min.</dd></div></dl><footer>' +
               '<button type="button" data-lw-open="' + esc(item.id) + '">Prüfung öffnen</button>' +
+              /* Der Knopf bleibt bedienbar, solange es überhaupt Karten
+                 gibt: eine Übungsklausur aus allem ist besser als keine.
+                 Er sagt aber, dass es eine aus allem wird — vorher hiess er
+                 in beiden Fällen gleich, und die Zahl daneben log dazu. */
               '<button type="button" class="is-primary" data-lw-simulate="' + esc(item.id) + '"' +
-              (karten.length ? '' : ' disabled') + '>Simulation starten</button></footer></article>';
+              (lernkarten().length ? '' : ' disabled') + '>' +
+              (karten.length ? 'Simulation starten' : 'Simulation aus allen Karten') +
+              '</button></footer></article>';
           }).join('') + '</div>'
         : leer('🗓️', 'Keine Prüfung geplant',
             'Prüfungen bleiben normale Datenbankzeilen. Lege einen Termin in der Ausbildung an.',
             'school-setup', 'Ausbildung einrichten')) +
+      simulationsVerlauf() +
       (vergangene.length ? '<details class="lw-past-exams"><summary>Vergangene Prüfungen (' +
         vergangene.length + ')</summary><ul>' + vergangene.slice(-12).reverse().map(item =>
           '<li><button type="button" data-lw-open="' + esc(item.id) + '"><span>' + esc(item.titel) +
@@ -1337,7 +1398,11 @@ const Lernwelt = (() => {
   const simulationAnsicht = (): string => {
     const simulation = zustand.simulation;
     if (!simulation) return '';
+    /* Auch dieser Weg endet die Simulation — beim Neuzeichnen einer, deren
+       Karten aufgebraucht sind. Ohne die Sicherung hier bliebe genau der
+       Fall unbewahrt, in dem der letzte Klick woanders ausgelöst wurde. */
     if (simulation.fertig || simulation.index >= simulation.karten.length) {
+      simulationAbschliessen(simulation);
       const richtig = simulation.antworten.filter(item => item.richtig).length;
       const gesamt = simulation.antworten.length;
       const quote = gesamt ? Math.round(richtig / gesamt * 100) : 0;
@@ -1741,7 +1806,7 @@ const Lernwelt = (() => {
     if (!zustand.root?.querySelector('.lernwelt, .lw-main')) { timerStoppen(); return; }
     const rest = Math.max(0, simulation.endet - Date.now());
     if (rest <= 0) {
-      simulation.fertig = true;
+      simulationAbschliessen(simulation);
       zeichnen();
       return;
     }
@@ -1858,16 +1923,91 @@ const Lernwelt = (() => {
     zeichnen();
   };
 
+  /* ------------------------------------------------------------------------
+   * DAS GEDÄCHTNIS DER PRÜFUNGSZENTRALE (L49, E163)
+   * ------------------------------------------------------------------------
+   * Bis hierher lag ein Simulationsergebnis nur in `zustand.simulation`.
+   * Ein Reiterwechsel setzte es auf null, und die Bewertung von zwanzig
+   * Aufgaben war weg — ohne Warnung, ohne Wiederkehr. Wer wissen wollte,
+   * ob er sich verbessert, konnte es nicht.
+   *
+   * Abgelegt wird in `Store.setMeta`, wie schon `tagesziel` und `ansicht`
+   * derselben Welt. Das ist der richtige Ort und nicht bloss der bequeme:
+   * `meta` gehört zum Sicherungsformat (§52.10), das Ergebnis überlebt
+   * also Export und Import.
+   *
+   * BEGRENZT AUF ZWANZIG. Ein Verlauf, der still unbegrenzt wächst, ist
+   * genau das, was §15 verbietet. Zwanzig Simulationen sind mehr, als ein
+   * Mensch je vergleicht, und kosten ein paar Kilobyte.
+   * ----------------------------------------------------------------------*/
+  const SIM_MAX = 20;
+
+  const simulationen = (): LernweltSimulationErgebnis[] => {
+    const roh = Store.getMeta(metaSchluessel('simulationen'), []);
+    return Array.isArray(roh)
+      ? roh.filter((x: any) => x && typeof x === 'object' && Number(x.gesamt) > 0)
+      : [];
+  };
+
+  /**
+   * Eine Simulation beenden und festhalten.
+   *
+   * DIESE FUNKTION LÄUFT MEHRFACH, und das ist Absicht: `fertig` wird an
+   * drei Stellen erreicht (letzte Antwort, abgelaufene Zeit, Neuzeichnen
+   * einer aufgebrauchten Simulation), und jedes weitere Zeichnen kommt
+   * wieder hier vorbei.
+   *
+   * Was Doppelte verhindert, ist die KENNUNG: `sim-<gestartet>` ist für
+   * einen Durchgang immer dieselbe, und der Eintrag ersetzt seinen
+   * Vorgänger, statt sich danebenzustellen. Eine Sperrvariable stand hier
+   * einmal daneben — sie war nicht zu prüfen, weil die Kennung ohnehin
+   * schon reichte, und ein zweites Schloss an derselben Tür führt den
+   * nächsten Leser in die Irre (E163).
+   */
+  const simulationAbschliessen = (simulation: LernweltSimulation): void => {
+    simulation.fertig = true;
+    if (!simulation.antworten.length) return;
+    const themen = new Map<string, { gesamt: number; fehler: number }>();
+    simulation.antworten.forEach(item => {
+      const wert = themen.get(item.thema) || { gesamt: 0, fehler: 0 };
+      wert.gesamt++;
+      if (!item.richtig) wert.fehler++;
+      themen.set(item.thema, wert);
+    });
+    const eintrag: LernweltSimulationErgebnis = {
+      id: 'sim-' + simulation.gestartet,
+      pruefungId: simulation.pruefungId,
+      titel: simulation.titel,
+      beendet: new Date().toISOString(),
+      richtig: simulation.antworten.filter(item => item.richtig).length,
+      gesamt: simulation.antworten.length,
+      dauerMin: Math.max(1, Math.round((Date.now() - simulation.gestartet) / 60000)),
+      themen: [...themen.entries()].map(([thema, wert]) =>
+        ({ thema, gesamt: wert.gesamt, fehler: wert.fehler }))
+    };
+    const vorher = simulationen().filter(item => item.id !== eintrag.id);
+    Store.setMeta(metaSchluessel('simulationen'), [eintrag, ...vorher].slice(0, SIM_MAX));
+  };
+
   const simulationStarten = (id: string): void => {
     const pruefung = pruefungen().find(item => item.id === id) || null;
-    const karten = pruefung ? passendeKarten(pruefung) : lernkarten();
+    /* DER RÜCKFALL STEHT JETZT HIER, UND ER SAGT SICH AN. Vorher lag er in
+       `passendeKarten` und war von aussen nicht zu sehen: wer „Simulation
+       starten" bei einer Prüfung ohne eigenen Stoff drückte, bekam eine
+       Klausur aus dem gesamten Bestand und hielt sie für die passende. */
+    const eigene = pruefung ? nurPassendeKarten(pruefung) : [];
+    const karten = eigene.length ? eigene : lernkarten();
     const anzahl = Math.min(pruefung ? 30 : 15, karten.length);
     if (!anzahl) { UI.toast('Für eine Simulation fehlen noch Lernkarten.'); return; }
+    if (pruefung && !eigene.length)
+      UI.toast('Zu „' + pruefung.titel + '" passt keine Karte. Die Simulation nimmt ' +
+               'deshalb aus allen ' + karten.length + ' Karten.', 4200);
     const dauer = pruefung?.dauer || Math.max(10, anzahl * 2);
     const gestartet = Date.now();
     zustand.training = null;
     zustand.simulation = {
       titel: pruefung?.titel || 'Wochenprüfung',
+      pruefungId: pruefung?.id || '',
       karten: mischen(karten, anzahl),
       index: 0,
       aufgedeckt: false,
@@ -2016,7 +2156,8 @@ const Lernwelt = (() => {
       });
       zustand.simulation.index++;
       zustand.simulation.aufgedeckt = false;
-      if (zustand.simulation.index >= zustand.simulation.karten.length) zustand.simulation.fertig = true;
+      if (zustand.simulation.index >= zustand.simulation.karten.length)
+        simulationAbschliessen(zustand.simulation);
       zeichnen();
       return;
     }

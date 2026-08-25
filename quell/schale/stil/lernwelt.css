@@ -127,6 +127,27 @@
 .lernwelt .lw-nav[data-mehr="rechts"]::after,
 .lernwelt .lw-nav[data-mehr="beides"]::after{opacity:1}
 
+/* --- Letzte Simulationen (E163) -----------------------------------------
+   Eine Liste, kein Kasten je Zeile: es sind Zahlen zum Vergleichen, und
+   fünf Karten nebeneinander lenken davon ab, was sich verändert hat. */
+.lernwelt .lw-sim-history{margin-top:var(--lw-gap)}
+.lernwelt .lw-sim-history h3{margin:0 0 8px;font-size:13px;font-weight:640;
+  color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em}
+.lernwelt .lw-sim-history ul{list-style:none;margin:0;padding:0;
+  border:1px solid var(--line);border-radius:var(--lw-radius-sm);overflow:hidden}
+.lernwelt .lw-sim-history li{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:9px 12px;background:var(--bg-side)}
+.lernwelt .lw-sim-history li + li{border-top:1px solid var(--line)}
+.lernwelt .lw-sim-history li span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lernwelt .lw-sim-history li strong{font-size:13px;font-weight:620;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lernwelt .lw-sim-history li small{font-size:11.5px;color:var(--text-dim)}
+.lernwelt .lw-sim-history li b{flex:0 0 auto;font-size:14px;font-weight:660;color:var(--text)}
+.lernwelt .lw-sim-history details{margin-top:6px}
+.lernwelt .lw-sim-history summary{font-size:12px;color:var(--text-dim);cursor:pointer;
+  padding:4px 2px;min-height:var(--lw-touch);display:flex;align-items:center}
+.lernwelt .lw-sim-history details ul{margin-top:6px}
+
 /* Die Einrichtungskarte auf dem Heute-Bild: ein Angebot, kein Sperrschirm.
    Sie öffnete sich früher von selbst über alles (E137). */
 .lernwelt .lw-setup{display:flex;align-items:center;justify-content:space-between;

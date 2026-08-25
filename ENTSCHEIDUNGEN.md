@@ -10827,3 +10827,177 @@ Ob ein echtes Modell brauchbare Sekunden liefert, steht hier nicht. Geprüft
 ist die Hälfte, die Code ist: die Frage wird gestellt, und eine falsche
 Antwort wird verworfen. Die andere Hälfte braucht ein Modell zum Messen und
 bleibt in L57 stehen — kleiner als vorher, aber offen.
+
+
+## E162 · „Karten: 3, Lernstand 67 %" — für eine Prüfung ohne eine einzige Karte (L49)
+
+**25. August 2026.** L49 stand seit dem 24. mit dem Satz da:
+
+> Die Zuordnung Prüfung → Karten ist reine Wortsuche (`passendeKarten`) und
+> fällt bei null Treffern auf ALLE Karten zurück.
+
+E136 hatte darauf reagiert und `nurPassendeKarten` neben `passendeKarten`
+gestellt — ohne Rückfall, für die Kachel „Prüfungsfokus". Der Kommentar
+dazu ist bemerkenswert genau:
+
+> Für die Kachel „Prüfungsfokus" wäre es eine Unwahrheit — sie verspricht
+> „passend zur nächsten Prüfung", und wer dann alles bekommt, merkt es nicht.
+
+Derselbe Satz galt an drei weiteren Stellen, und dort stand er nicht.
+
+### Was zu sehen war
+
+Zwei Karteikarten über Photosynthese im Bestand, eine Prüfung „Ohmsches
+Gesetz". Die Prüfungszentrale zeigte:
+
+```txt
+Ohmsches Gesetz
+Fachlicher Lernstand              67 %
+KARTEN 3   FEHLER 0   AUFGABEN 0   ZEITLIMIT 45 Min.
+[Simulation starten]
+```
+
+Drei Karten, von denen keine mit der Prüfung zu tun hat. Ein Lernstand von
+67 %, der den Stand der Biologie-Karten misst. Und ein Knopf, der eine
+Übungsklausur aus eben diesen Karten startet, ohne es zu sagen.
+
+Wer sich darauf vorbereitet, sieht „67 % — läuft doch" und lernt nichts.
+
+### Was jetzt dasteht
+
+```txt
+Ohmsches Gesetz
+Fachlicher Lernstand               0 %
+KARTEN 0   FEHLER 0   AUFGABEN 0   ZEITLIMIT 45 Min.
+[Simulation aus allen Karten]
+```
+
+`passendeKarten` gibt es nicht mehr; es blieb nur die ehrliche Fassung.
+Drei Aufrufer waren umzustellen: die Zahl in der Liste, der Balken und die
+Simulation.
+
+**Der Rückfall selbst bleibt** — bei der Simulation, denn eine Übungsklausur
+aus allem ist besser als keine. Er steht jetzt an der Aufrufstelle statt
+versteckt in der Funktion, und er sagt sich zweimal an: im Knopftext und
+beim Starten.
+
+```txt
+Zu „Ohmsches Gesetz" passt keine Karte.
+Die Simulation nimmt deshalb aus allen 3 Karten.
+```
+
+Der Unterschied ist nicht, dass etwas weniger geht. Es geht genau so viel
+wie vorher — nur wird nichts Falsches mehr behauptet.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · den Rückfall wieder in die Funktion legen | 5 |
+| B · `nurPassendeKarten` gibt immer nichts zurück | 3 |
+| C · stumm zurückfallen, ohne Meldung | 2 |
+
+B ist die, die es braucht. Ohne §4 — die Prüfung MIT eigenem Stoff — hätte
+man diese Suite auch mit „überall 0" bestanden, und das wäre kein
+Fortschritt, sondern der nächste Fehler.
+
+### Und ein Punkt, der aus dem falschen Grund grün war
+
+Die erste Fassung von §1 prüfte „Der Lernstand ist 0 %" mit Karteikarten
+ohne jeden Lernstand. Er war damit in BEIDEN Fassungen 0 % — der Punkt wäre
+auch ohne die Behebung grün gewesen, und das Bildschirmfoto vorher/nachher
+sah an dieser Stelle gleich aus.
+
+Die Karten der Prüfung tragen jetzt `wdh: 2`. Damit zeigt die alte Fassung
+67 % und die neue 0 %, und der Punkt misst etwas. Das ist derselbe Fehler
+wie in §55.2 beschrieben, nur an meiner eigenen Prüfung — und er fiel beim
+Ansehen des Bildes auf, nicht beim Lesen des Codes.
+
+### Was von L49 bleibt
+
+Zwei Punkte, beide unberührt:
+
+* Die Prüfungszentrale hat kein Gedächtnis — Simulationsergebnisse liegen
+  in `zustand.simulation` und sind nach dem Reiterwechsel weg.
+* Der Lernpfad ist eine geordnete Liste, und seine Reihenfolge hängt an elf
+  fest verdrahteten deutschen Elektro-Stichwörtern.
+
+Und eine Zeile in L49 stimmt nicht mehr: „`bilder.mts` kennt die Lernwelt
+nicht". Es gibt `lernzentrale`, `lernpfad`, `fehler` und `pruefungen` als
+Ansichten. Berichtigt.
+
+
+## E163 · Zwanzig bewertete Aufgaben, weg mit einem Klick (L49)
+
+**25. August 2026.** L49 hielt fest: „Die Prüfungszentrale hat kein
+Gedächtnis: Simulationsergebnisse liegen nur in `zustand.simulation` und
+sind nach dem Reiterwechsel weg."
+
+Nachgesehen, und es ist genau so. `wechseln()` setzt `zustand.simulation`
+auf null. Wer eine Simulation zu Ende macht, das Ergebnis ansieht und dann
+auf „Heute" tippt, hat die Bewertung von bis zu dreissig Aufgaben verloren —
+ohne Warnung und ohne Weg zurück.
+
+Das ist nicht der schlimmste Datenverlust, den es gibt: gespeichert war es
+nie. Aber es ist Arbeit, die der Mensch geleistet hat, und die Frage „werde
+ich besser?" lässt sich ohne sie gar nicht stellen.
+
+### Wo es hingehört
+
+`Store.setMeta(metaSchluessel('simulationen'), …)` — dieselbe Ablage, in der
+schon `tagesziel` und `ansicht` derselben Welt stehen. Das ist der richtige
+Ort und nicht bloss der bequeme: `meta` gehört zum Sicherungsformat
+(§52.10), das Ergebnis überlebt also Export und Import.
+
+**Die Karten stehen NICHT darin.** Sie sind Blöcke im Bestand und dürfen
+umbenannt, verschoben oder gelöscht werden; eine Zweitschrift wäre die
+zweite Wahrheit, die §17 verbietet. Festgehalten wird das Ergebnis — Zahlen
+und Themennamen —, und das ist auch das, was man später ansehen will.
+
+**Begrenzt auf zwanzig.** Ein Verlauf, der still unbegrenzt wächst, ist
+genau das, was §15 verbietet.
+
+### Und man sieht es
+
+```txt
+LETZTE SIMULATIONEN
+Photosynthese Test                                          50 %
+25. Aug. 2026 · 1 von 2 richtig · 1 Min.
+```
+
+Fünf Zeilen, der Rest in einer Aufklappzeile. Ohne diesen Abschnitt wäre die
+Ablage ein Datensatz, den niemand sieht — und ein Wert, den man nicht
+ansehen kann, ist so gut wie keiner (E118).
+
+### Ein zweites Schloss an derselben Tür
+
+Die erste Fassung hatte neben der Kennung noch eine Sperrvariable
+`gesichert`, damit ein zweites Zeichnen nicht doppelt schreibt.
+
+Die Gegenprobe entfernte sie — und die Prüfung blieb grün. Dann entfernte
+sie beides — immer noch grün. Der Grund: `simulationAbschliessen` lief in
+der Prüfung überhaupt nur EINMAL, und der Punkt „genau ein Eintrag, nicht
+drei" prüfte damit gar nichts.
+
+Zwei Berichtigungen daraus:
+
+* Die Prüfung zeichnet jetzt dreimal neu, bevor sie zählt. Damit läuft die
+  Funktion wirklich mehrfach, und der Punkt kann rot werden: mit einer
+  unstabilen Kennung meldet er „ist 7, soll 1".
+* Die Sperrvariable ist weg. Was Doppelte verhindert, ist die KENNUNG —
+  `sim-<gestartet>` ist für einen Durchgang immer dieselbe, und der Eintrag
+  ersetzt seinen Vorgänger. Ein zweites Schloss an derselben Tür, das sich
+  nicht prüfen lässt, führt den nächsten Leser in die Irre.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · nichts festhalten | 3 |
+| B · die Kennung nicht stabil halten | 1 („ist 7, soll 1") |
+
+### Was von L49 bleibt
+
+Ein Punkt: der Lernpfad ist eine geordnete Liste, und seine Reihenfolge
+hängt an elf fest verdrahteten deutschen Elektro-Stichwörtern. Das ist kein
+Fehler, sondern eine Grenze — und die nächste eigene Aufgabe.

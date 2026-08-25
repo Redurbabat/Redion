@@ -1346,20 +1346,39 @@ nicht ganz: die Tastatur scheiterte nicht am Neuzeichnen, sondern an der
 Richtung, in die Ereignisse steigen. Was bleibt:
 
 ```txt
-Die Zuordnung Prüfung → Karten ist reine Wortsuche (`passendeKarten`
-:868-877) und fällt bei null Treffern auf ALLE Karten zurück.
-
-Die Prüfungszentrale hat kein Gedächtnis: Simulationsergebnisse liegen nur
-in `zustand.simulation` und sind nach dem Reiterwechsel weg.
-
 Der Lernpfad ist eine geordnete Liste, kein Lernpfad im Sinne des
 Auftrags — und seine Reihenfolge ist auf elf deutsche Elektro-Stichwörter
 fest verdrahtet (:1127-1128).
 ```
 
-Nachgemessen habe ich davon nur eines: `bilder.mts` kennt die Lernwelt
-nicht, die Ansicht taucht in keinem Bildschirmfoto-Durchgang auf. Genau
-deshalb sind die vier Zahlen aus E128 so lange unbemerkt geblieben.
+**Das fehlende Gedächtnis ist erledigt (E163, 25. August).** `wechseln()`
+setzte `zustand.simulation` auf null — wer eine Simulation beendete, das
+Ergebnis ansah und dann auf „Heute" tippte, verlor die Bewertung von bis zu
+dreissig Aufgaben ohne Warnung. Beendete Simulationen stehen jetzt in
+`Store.setMeta` (also auch in der Sicherung, §52.10), begrenzt auf zwanzig,
+und die Prüfungszentrale zeigt sie unter „Letzte Simulationen". test224 §5,
+mit der Gegenprobe „unstabile Kennung → sieben Einträge statt einem".
+
+**Der Rückfall auf alle Karten ist erledigt (E162, 25. August)** — und er
+war schlimmer als hier stand. E136 hatte `nurPassendeKarten` neben
+`passendeKarten` gestellt und nur die Kachel „Prüfungsfokus" umgestellt.
+Drei Stellen blieben, und alle drei standen sichtbar auf dem Bildschirm:
+
+```txt
+Ohmsches Gesetz                    (dazu passt keine einzige Karte)
+Fachlicher Lernstand        67 %
+KARTEN 3   FEHLER 0
+[Simulation starten]
+```
+
+Die Zahl, der Balken und die Simulation nahmen den ganzen Bestand. Jetzt
+gibt es nur noch die ehrliche Funktion; der Rückfall steht an der einen
+Stelle, wo er gewollt ist — der Simulation —, und sagt sich an. test224,
+14 Punkte, mit der Gegenrichtung als §4.
+
+**Berichtigt.** Der letzte Absatz behauptete, `bilder.mts` kenne die
+Lernwelt nicht. Das stimmt seit E128/E151 nicht mehr: es gibt
+`lernzentrale`, `lernpfad`, `fehler` und `pruefungen`.
 
 
 ## L50 · Zwei Wahrheiten über dieselben Aggregate
