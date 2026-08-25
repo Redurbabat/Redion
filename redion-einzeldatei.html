@@ -8524,6 +8524,198 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .fh-gesucht button{min-height:38px; padding:0 14px}
 }
 
+/* ==========================================================================
+ * ÜBEN, PRÜFEN, ARBEITEN (E189)
+ * --------------------------------------------------------------------------
+ * Eine Übungsfläche ist kein Formular. Was zählt, ist die REIHENFOLGE, in
+ * der das Auge etwas findet: erst die Frage, dann die Möglichkeiten, dann —
+ * und erst dann — die Auflösung. Deshalb steht die Frage gross und allein,
+ * und die Auflösung erscheint darunter, statt neben der Frage zu warten.
+ * ==========================================================================*/
+.ea-wrap{display:flex; flex-direction:column; min-height:0; height:100%;
+  background:var(--bg); color:var(--text)}
+
+.ea-leiste{display:flex; align-items:center; gap:8px; padding:8px 12px;
+  border-bottom:1px solid var(--line); background:var(--bg-card); flex:0 0 auto}
+.ea-artwahl{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
+  flex:1; min-width:0}
+.ea-artwahl::-webkit-scrollbar{display:none}
+/* Elf Aufgabenarten passen in keine Leiste. Ohne auslaufenden Rand endet
+   „Schaltung erkennen" scharf an der Kante, und niemand ahnt, dass rechts
+   noch drei weitere stehen — gemessen: 1401 px Inhalt in 1154 px Leiste.
+   Derselbe Fall wie E159 und wie das Kapitelband im Formelheft. */
+.ea-leiste{position:relative}
+.ea-leiste::before, .ea-leiste::after{content:''; position:absolute; top:0; bottom:0;
+  width:26px; pointer-events:none; opacity:0; transition:opacity .15s; z-index:1}
+.ea-leiste::before{left:0;  background:linear-gradient(to right, var(--bg-card), transparent)}
+.ea-leiste::after{ right:0; background:linear-gradient(to left,  var(--bg-card), transparent)}
+.ea-leiste[data-mehr="links"]::before,
+.ea-leiste[data-mehr="beides"]::before{opacity:1}
+.ea-leiste[data-mehr="rechts"]::after,
+.ea-leiste[data-mehr="beides"]::after{opacity:1}
+.ea-art{padding:5px 11px; border:1px solid var(--line); border-radius:20px;
+  background:var(--bg); color:var(--text-dim); cursor:pointer; font-size:11.5px;
+  white-space:nowrap; flex:0 0 auto}
+.ea-art:hover{background:var(--bg-hover); color:var(--text)}
+.ea-art.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+
+.ea-buehne{flex:1; overflow-y:auto; padding:20px; display:flex;
+  justify-content:center; align-items:flex-start}
+.ea-aufgabe{width:min(560px, 100%); display:flex; flex-direction:column; gap:12px}
+.ea-kopfzeile{display:flex; align-items:center; justify-content:space-between;
+  font-size:11px; color:var(--text-faint)}
+.ea-artname{text-transform:uppercase; letter-spacing:.06em}
+/* Die Schwierigkeit steht als drei Punkte da, von denen einige blass sind —
+   eine Zahl „2" beantwortet die Frage „von wie vielen?" nicht. */
+.ea-stufe{color:var(--accent); letter-spacing:2px}
+.ea-stufe-aus{color:var(--line-stark)}
+
+.ea-bild{display:flex; justify-content:center; padding:14px;
+  background:var(--bg-card); border-radius:10px; color:var(--text)}
+.ea-bild svg{max-width:100%; height:auto}
+.ea-bild:not(.ea-plan) svg{width:96px; height:96px}
+.ea-plan svg{max-height:260px}
+
+.ea-frage{margin:0; font-size:17px; line-height:1.45; font-weight:600;
+  white-space:pre-wrap}
+/* Ziffern untereinander (`tabular-nums`), aber KEINE Schreibmaschinenschrift:
+   die Zusatzzeile trägt bei Rechenaufgaben „Gegeben/Gesucht" und bei
+   Schaltungsaufgaben einen gewöhnlichen Satz. Der Satz sah in Monospace aus
+   wie Quelltext. */
+.ea-frage-zusatz{margin:0; font-size:14px; color:var(--text-dim);
+  font-variant-numeric:tabular-nums; line-height:1.5}
+
+/* `auto-fit` statt `1fr 1fr`: der Umbruch hängt an der BREITE DER SPALTE und
+   nicht an der des Bildschirms. Im Arbeitsplatz ist die Aufgabenspalte 280 px
+   breit, während das Fenster 1180 hat — zwei Spalten ergaben dort 140 px je
+   Möglichkeit, und „Wechselschalter Schema 3" stand zur Hälfte draussen.
+   Eine Medienabfrage hätte das nie gesehen: der Bildschirm war ja breit. */
+.ea-wahl{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+  gap:8px}
+.ea-option{display:flex; align-items:center; gap:9px; padding:11px 13px;
+  border:1px solid var(--line); border-radius:10px; background:var(--bg-card);
+  color:var(--text); cursor:pointer; font-size:13.5px; text-align:left;
+  min-height:48px; transition:background .12s, border-color .12s}
+.ea-option:hover:not(:disabled){background:var(--bg-hover); border-color:var(--text-faint)}
+.ea-optionbild{flex:0 0 40px; display:flex; align-items:center; justify-content:center}
+.ea-optionbild svg{width:40px; height:40px}
+.ea-optiontext{flex:1; min-width:0}
+/* Richtig und falsch dürfen nicht NUR Farben sein (§38): die Lösung bekommt
+   einen dicken Rand und ein Häkchen, der Fehlgriff ein Kreuz. Wer keine
+   Farben unterscheidet, sieht beides trotzdem. */
+.ea-option.loesung{border-color:var(--erfolg); border-width:2px;
+  background:color-mix(in srgb, var(--erfolg) 12%, transparent)}
+.ea-option.loesung .ea-optiontext::after{content:' ✓'; color:var(--erfolg); font-weight:700}
+.ea-option.daneben{border-color:var(--gefahr); border-width:2px;
+  background:color-mix(in srgb, var(--gefahr) 10%, transparent)}
+.ea-option.daneben .ea-optiontext::after{content:' ✗'; color:var(--gefahr); font-weight:700}
+.ea-option:disabled{cursor:default}
+
+.ea-eingabe{display:flex; align-items:center; gap:8px}
+.ea-antwort{flex:1; min-width:0; padding:11px 13px; border:1px solid var(--line);
+  border-radius:10px; background:var(--bg-input); color:var(--text);
+  font-size:16px; font-variant-numeric:tabular-nums}
+.ea-einheit{color:var(--text-dim); font-size:14px; min-width:3em}
+
+.ea-aufloesung{padding:12px 14px; border-radius:10px; display:flex;
+  flex-direction:column; gap:7px}
+.ea-aufloesung.gut{background:color-mix(in srgb, var(--erfolg) 12%, transparent)}
+.ea-aufloesung.daneben{background:color-mix(in srgb, var(--gefahr) 10%, transparent)}
+.ea-aufloesung.still{background:var(--bg-card)}
+.ea-urteil{margin:0; font-weight:600; font-size:14px}
+.ea-aufloesung.gut .ea-urteil{color:var(--erfolg)}
+.ea-aufloesung.daneben .ea-urteil{color:var(--gefahr)}
+.ea-warum{margin:0; font-size:12.5px; color:var(--text-dim); line-height:1.55}
+.ea-weg{margin:2px 0 0; padding-left:20px; font-size:12.5px; color:var(--text-dim);
+  line-height:1.8; font-variant-numeric:tabular-nums}
+
+.ea-fuss{display:flex; align-items:center; gap:10px; padding:10px 14px;
+  border-top:1px solid var(--line); background:var(--bg-card); flex:0 0 auto}
+.ea-stand{flex:1; min-width:0; font-size:12px; color:var(--text-dim);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ea-fuss button{padding:9px 16px; border:1px solid var(--line); border-radius:9px;
+  background:var(--bg); color:var(--text); cursor:pointer; font-size:13px;
+  min-height:40px}
+.ea-fuss button.prim{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent); font-weight:600}
+.ea-fuss button:disabled{opacity:.45; cursor:default}
+
+/* ---- Prüfung ------------------------------------------------------------ */
+.ea-fortschritt{font-size:12.5px; color:var(--text-dim); white-space:nowrap}
+.ea-balken{flex:1; height:5px; border-radius:3px; background:var(--bg-hover);
+  overflow:hidden; margin-left:10px}
+.ea-balken i{display:block; height:100%; background:var(--accent);
+  transition:width .25s}
+.ea-ergebnis{padding:24px; display:flex; flex-direction:column; gap:12px;
+  max-width:560px; margin:0 auto}
+.ea-ergebnis h3{margin:0; font-size:22px}
+.ea-note{margin:0; font-size:15px; color:var(--text-dim)}
+.ea-liste{margin:6px 0 0; padding-left:20px; display:flex; flex-direction:column;
+  gap:5px; font-size:13px}
+.ea-liste li.gut{color:var(--erfolg)}
+.ea-liste li.daneben{color:var(--gefahr)}
+.ea-saat{margin:4px 0 0; font-size:11.5px; color:var(--text-faint)}
+.ea-saat code{background:var(--bg-hover); padding:2px 6px; border-radius:5px;
+  font-family:ui-monospace, Menlo, monospace}
+.ea-durchgang{padding:20px; display:flex; flex-direction:column; gap:26px;
+  max-width:600px; margin:0 auto}
+
+/* ---- Der Arbeitsplatz: drei Spalten ------------------------------------- */
+.ea-platz{display:grid; grid-template-columns:minmax(280px, 1fr) minmax(0, 1.6fr)
+  minmax(240px, .9fr); gap:1px; background:var(--line); height:100%; min-height:0}
+.ea-spalte{background:var(--bg); display:flex; flex-direction:column;
+  min-width:0; min-height:0; overflow:hidden}
+.ea-spaltenkopf{padding:9px 14px; border-bottom:1px solid var(--line);
+  background:var(--bg-card); font-size:11px; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--text-faint); flex:0 0 auto}
+.ea-mitte{overflow:auto}
+.ea-notizen{flex:1; min-height:120px; margin:12px; padding:11px;
+  border:1px solid var(--line); border-radius:9px; background:var(--bg-input);
+  color:var(--text); font-size:13px; line-height:1.6; resize:none;
+  font-family:inherit}
+.ea-werkzeuge{display:flex; flex-direction:column; gap:6px; padding:0 12px 12px}
+.ea-werkzeuge button{padding:10px 12px; border:1px solid var(--line);
+  border-radius:9px; background:var(--bg-card); color:var(--text);
+  cursor:pointer; font-size:13px; text-align:left; min-height:42px}
+.ea-werkzeuge button:hover{background:var(--bg-hover)}
+
+.ea-leer{flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:9px; padding:28px; text-align:center;
+  color:var(--text-dim)}
+.ea-leer p{margin:0; line-height:1.6}
+.ea-klein{font-size:11.5px; color:var(--text-faint); max-width:34ch}
+
+/* `.overlay` setzt `padding-top:14vh` und `align-items:flex-start` — richtig
+   für einen Suchdialog, falsch für eine Arbeitsfläche: bei 900 px Höhe fing
+   das Fenster bei 126 an, war 800 hoch und endete damit bei 926. Der Fuss mit
+   „Nächste Aufgabe" stand 26 px UNTER dem Bildschirmrand — gemessen, nicht
+   vermutet. Eine Übung, deren Weiter-Knopf man nicht sieht, ist zu Ende. */
+.ea-overlay{align-items:center; padding-top:0}
+.ea-overlay .ea-fenster{width:min(1180px, 96vw);
+  height:min(820px, 92vh); max-height:92vh;
+  display:flex; flex-direction:column; padding:0}
+.ea-inhalt{flex:1; min-height:0; display:flex; flex-direction:column}
+.ea-inhalt > *{flex:1; min-height:0}
+
+/* Am Telefon werden aus drei Spalten drei Abschnitte untereinander — §37.
+   Nebeneinander wäre jede 130 px breit, und darin steht nichts mehr. */
+@media (max-width: 900px){
+  .ea-platz{grid-template-columns:1fr; grid-template-rows:auto auto auto;
+    height:auto; overflow:auto}
+  .ea-spalte{max-height:none}
+  .ea-links .ea-wrap{min-height:420px}
+}
+@media (max-width: 640px){
+  .ea-wahl{grid-template-columns:1fr}
+  .ea-buehne{padding:14px}
+  .ea-frage{font-size:16px}
+  .ea-option{min-height:52px}
+  .ea-fuss button{min-height:46px; flex:1}
+  .ea-antwort{min-height:48px}
+  .ea-overlay .ea-fenster{width:100vw; height:100vh; max-width:none;
+    border-radius:0}
+}
+
 </style>
 
 <!-- =========================================================================
@@ -30393,6 +30585,1404 @@ const Formelheft = (() => {
         pdfLaden, pdfLoesen };
 })();
 window.Formelheft = Formelheft;
+
+</script>
+<script>
+/* ===== quell/bereiche/elektro/aufgaben.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/elektro/aufgaben.ts — Übungen, die sich selbst erzeugen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/elektro/aufgaben.ts`. `npm run bauen:ts`
+ * schreibt daraus `quell/bereiche/elektro/aufgaben.js`.
+ * ----------------------------------------------------------------------------
+ * WARUM KEINE AUFGABENSAMMLUNG
+ *
+ * Der naheliegende Weg wäre eine Liste: dreihundert Fragen, von Hand
+ * geschrieben, mit Antworten daneben. Sie hat drei Nachteile, und der dritte
+ * ist der schlimme.
+ *
+ *   Sie ist nach zwei Wochen durch. Wer sie zweimal gemacht hat, kennt die
+ *   Reihenfolge und nicht den Stoff.
+ *
+ *   Sie veraltet. Kommt ein Symbol ins Register, fehlt es in den Aufgaben,
+ *   und niemand merkt es — es fehlt ja nur eine Frage, die es nie gab.
+ *
+ *   Sie kann falsch sein. Eine von Hand geschriebene Antwort ist eine zweite
+ *   Wahrheit neben der im Register. Zwei Wahrheiten laufen auseinander, und
+ *   dann lernt jemand etwas Falsches und bekommt dafür einen Haken.
+ *
+ * Deshalb ERZEUGT dieses Modul die Aufgaben aus dem, was ohnehin da ist:
+ *
+ *   Register.fachzeichen     100 Symbole mit Namen, Gruppe, Anschlüssen
+ *   Register.elektroformeln  ~50 Formeln, die sich lösen lassen
+ *   Stromfluss               rechnet jede gezeichnete Schaltung
+ *
+ * Eine Frage nach dem Namen eines Symbols kann damit nicht falsch sein: die
+ * Antwort kommt aus derselben Zeile, aus der die Palette den Namen nimmt.
+ * Und kommt morgen ein Symbol dazu, gibt es morgen Fragen dazu.
+ *
+ * DER ZUFALL IST GESÄT
+ *
+ * `Math.random()` wäre bequem und würde jede Prüfung wertlos machen: eine
+ * Aufgabe, die bei jedem Lauf anders ist, lässt sich nicht nachrechnen. Der
+ * Zufall kommt deshalb aus einem Startwert. Derselbe Startwert gibt dieselbe
+ * Aufgabe — im Prüflauf, im Unterricht und beim Nachbesprechen einer Prüfung.
+ * ==========================================================================*/
+const Elektroaufgaben = (() => {
+    /* ------------------------------------------------------------------------
+     * DER GESÄTE ZUFALL
+     * ------------------------------------------------------------------------
+     * mulberry32 — klein, schnell, und für Aufgaben mehr als gut genug. Er ist
+     * kein Kryptozufall und soll keiner sein; er soll REPRODUZIERBAR sein.
+     * ----------------------------------------------------------------------*/
+    const wuerfel = (saat) => {
+        let a = saat >>> 0;
+        const naechste = () => {
+            a = (a + 0x6D2B79F5) >>> 0;
+            let t = Math.imul(a ^ (a >>> 15), 1 | a);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        return {
+            /** Eine ganze Zahl von 0 bis `n-1`. */
+            bis: (n) => Math.floor(naechste() * n),
+            /** Ein Element aus der Liste. */
+            aus: (liste) => liste[Math.floor(naechste() * liste.length)],
+            /** Die Liste gemischt — als Kopie, das Original bleibt heil. */
+            misch: (liste) => {
+                const k = liste.slice();
+                for (let i = k.length - 1; i > 0; i--) {
+                    const j = Math.floor(naechste() * (i + 1));
+                    const h = k[i];
+                    k[i] = k[j];
+                    k[j] = h;
+                }
+                return k;
+            },
+            /** Eine „schöne" Zahl aus einem Bereich — Aufgaben mit 47,3819 Ω übt niemand. */
+            wert: (von, bis) => {
+                const stufen = [1, 1.2, 1.5, 1.8, 2, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2];
+                const kandidaten = [];
+                for (let e = -3; e <= 6; e++)
+                    for (const s of stufen) {
+                        const w = s * Math.pow(10, e);
+                        if (w >= von && w <= bis)
+                            kandidaten.push(Number(w.toPrecision(3)));
+                    }
+                if (!kandidaten.length)
+                    return Number(((von + bis) / 2).toPrecision(3));
+                return kandidaten[Math.floor(naechste() * kandidaten.length)];
+            }
+        };
+    };
+    const FZ = () => (typeof Register !== 'undefined' && Register.fachzeichen)
+        ? Register.fachzeichen : null;
+    const FORMELN = () => (typeof Register !== 'undefined' && Register.elektroformeln)
+        ? Register.elektroformeln : null;
+    /** Symbol sehen, Namen wählen (Punkt 2). */
+    const zeichenName = (w, saat) => {
+        const fz = FZ();
+        if (!fz)
+            return null;
+        const alle = fz.alle();
+        if (alle.length < 4)
+            return null;
+        const richtig = w.aus(alle);
+        /* Die Ablenker kommen möglichst aus DERSELBEN Gruppe. Vier Symbole aus
+           vier Gruppen sind keine Frage, sondern ein Bilderrätsel — der Schalter
+           zwischen drei Motoren ist erkannt, bevor man ihn angesehen hat. */
+        const nachbarn = fz.inGruppe(richtig.gruppe).filter((x) => x.id !== richtig.id);
+        const fremde = alle.filter((x) => x.gruppe !== richtig.gruppe);
+        const ablenker = w.misch(nachbarn).slice(0, 3);
+        while (ablenker.length < 3 && fremde.length) {
+            const k = w.aus(fremde);
+            if (!ablenker.some((x) => x.id === k.id))
+                ablenker.push(k);
+        }
+        const auswahl = w.misch([richtig, ...ablenker]);
+        return {
+            art: 'zeichen-name', antwortart: 'wahl',
+            frage: 'Wie heisst dieses Fachzeichen?',
+            zeichen: richtig.id,
+            optionen: auswahl.map((x) => x.name),
+            loesung: richtig.name,
+            erklaerung: richtig.erklaerung,
+            stufe: nachbarn.length >= 3 ? 2 : 1, saat
+        };
+    };
+    /** Namen lesen, Symbol wählen (Punkt 3) — die Gegenrichtung. */
+    const nameZeichen = (w, saat) => {
+        const fz = FZ();
+        if (!fz)
+            return null;
+        const alle = fz.alle();
+        if (alle.length < 4)
+            return null;
+        const richtig = w.aus(alle);
+        const nachbarn = fz.inGruppe(richtig.gruppe).filter((x) => x.id !== richtig.id);
+        const ablenker = w.misch(nachbarn).slice(0, 3);
+        while (ablenker.length < 3) {
+            const k = w.aus(alle);
+            if (k.id !== richtig.id && !ablenker.some((x) => x.id === k.id))
+                ablenker.push(k);
+        }
+        const auswahl = w.misch([richtig, ...ablenker]);
+        return {
+            art: 'name-zeichen', antwortart: 'wahl',
+            frage: `Welches Zeichen ist „${richtig.name}"?`,
+            optionen: auswahl.map((x) => x.name),
+            optionZeichen: auswahl.map((x) => x.id),
+            loesung: richtig.name,
+            erklaerung: richtig.erklaerung,
+            stufe: 2, saat
+        };
+    };
+    /** Zu welcher Gruppe gehört es (Punkt 6). */
+    const zeichenGruppe = (w, saat) => {
+        const fz = FZ();
+        if (!fz)
+            return null;
+        const gruppen = fz.gruppen();
+        if (gruppen.length < 4)
+            return null;
+        const richtig = w.aus(fz.alle());
+        const andere = gruppen.filter((g) => g[0] !== richtig.gruppe);
+        const auswahl = w.misch([richtig.gruppe, ...w.misch(andere).slice(0, 3).map((g) => g[0])]);
+        return {
+            art: 'zeichen-gruppe', antwortart: 'wahl',
+            frage: `Zu welcher Gruppe gehört „${richtig.name}"?`,
+            zeichen: richtig.id,
+            optionen: auswahl.map((g) => fz.gruppenName(g)),
+            loesung: fz.gruppenName(richtig.gruppe),
+            erklaerung: `${richtig.name} steht bei „${fz.gruppenName(richtig.gruppe)}". ${richtig.erklaerung}`,
+            stufe: 1, saat
+        };
+    };
+    /** Die Anschlussnummern eines Bauteils (Punkt 58). */
+    const anschluesse = (w, saat) => {
+        const fz = FZ();
+        if (!fz)
+            return null;
+        /* Nur Bauteile, deren Nummern etwas bedeuten — bei einem Symbol mit
+           „1" und „2" ist die Frage keine. */
+        const taugt = fz.alle().filter((x) => (x.anschluesse || []).length >= 2 &&
+            (x.anschluesse || []).some((a) => a.nr && !/^[12]$/.test(a.nr)));
+        if (taugt.length < 4)
+            return null;
+        const richtig = w.aus(taugt);
+        const nummern = richtig.anschluesse.map(a => a.nr).join(', ');
+        /* Zwei verschiedene Bauteile können DIESELBE Anschlussliste haben — „1, 2"
+           gibt es ein Dutzend Mal. Zwei gleich lautende Möglichkeiten sind keine
+           Frage, sondern ein Fehler: was immer man anklickt, eine davon ist
+           richtig und die Prüfung sagt trotzdem Nein. */
+        const ablenker = [];
+        for (const x of w.misch(taugt.filter(y => y.id !== richtig.id))) {
+            const kandidat = x.anschluesse.map(a => a.nr).join(', ');
+            if (kandidat !== nummern && !ablenker.includes(kandidat))
+                ablenker.push(kandidat);
+            if (ablenker.length === 3)
+                break;
+        }
+        if (ablenker.length < 3)
+            return null;
+        const auswahl = w.misch([nummern, ...ablenker]);
+        return {
+            art: 'anschluesse', antwortart: 'wahl',
+            frage: `Welche Anschlussnummern hat „${richtig.name}"?`,
+            zeichen: richtig.id,
+            optionen: auswahl,
+            loesung: nummern,
+            erklaerung: `${richtig.name} hat die Anschlüsse ${nummern}. ${richtig.erklaerung}`,
+            stufe: 3, saat
+        };
+    };
+    /** Das Kennbuchstabe-Spiel (Punkt 19 als Frage). */
+    const kennbuchstabe = (w, saat) => {
+        const fz = FZ();
+        if (!fz)
+            return null;
+        const mitBuchstabe = fz.alle().filter((x) => x.kennbuchstabe);
+        if (mitBuchstabe.length < 4)
+            return null;
+        const richtig = w.aus(mitBuchstabe);
+        const buchstaben = [...new Set(mitBuchstabe.map((x) => x.kennbuchstabe))];
+        if (buchstaben.length < 4)
+            return null;
+        const auswahl = w.misch([richtig.kennbuchstabe,
+            ...w.misch(buchstaben.filter(b => b !== richtig.kennbuchstabe)).slice(0, 3)]);
+        return {
+            art: 'kennbuchstabe', antwortart: 'wahl',
+            frage: `Welchen Kennbuchstaben trägt „${richtig.name}" im Betriebsmittelkennzeichen?`,
+            zeichen: richtig.id,
+            optionen: auswahl,
+            loesung: richtig.kennbuchstabe,
+            erklaerung: `${richtig.name} bekommt den Kennbuchstaben ${richtig.kennbuchstabe} — ` +
+                `also ${richtig.kennbuchstabe}1, ${richtig.kennbuchstabe}2 und so weiter.`,
+            stufe: 2, saat
+        };
+    };
+    /* ------------------------------------------------------------------------
+     * RECHENAUFGABEN (Punkte 61–90)
+     * ------------------------------------------------------------------------
+     * Sie entstehen aus dem Formelregister: eine Formel wählen, eine gesuchte
+     * Grösse wählen, für die übrigen schöne Werte würfeln — und die Antwort
+     * vom Register selbst ausrechnen lassen.
+     *
+     * Das ist der Punkt: die Musterlösung wird nicht danebengeschrieben,
+     * sondern GERECHNET, mit demselben Code, der auch im Formelheft rechnet.
+     * Eine Aufgabe mit falscher Musterlösung kann so nicht entstehen.
+     * ----------------------------------------------------------------------*/
+    const BEREICHE = {
+        U: [1, 400], I: [0.01, 63], R: [1, 100000], P: [1, 10000],
+        t: [0.1, 24], W: [1, 100], l: [1, 200], A: [0.75, 35],
+        n: [1, 20], f: [16, 400], C: [1e-6, 1e-3], L: [0.001, 1]
+    };
+    /**
+     * Dasselbe noch einmal, aber nach der EINHEIT.
+     *
+     * Die Tabelle oben trifft `I`, aber nicht `I₁`, `I₂` oder `I_N` — und
+     * genau die kommen in Reihen-, Parallel- und Drehstromformeln vor. Ohne
+     * diese zweite Tabelle fielen sie in den Auffangbereich und ergaben
+     * Aufgaben mit 254 Ampere. Die Einheit steht ohnehin an jeder Grösse, und
+     * sie ist die verlässlichere Auskunft: was in Ampere gemessen wird, ist
+     * ein Strom, wie auch immer sein Formelzeichen aussieht.
+     */
+    const BEREICH_EINHEIT = {
+        V: [0.1, 1000], A: [1e-4, 100], Ω: [0.1, 1e6], W: [0.1, 20000],
+        Hz: [1, 1000], s: [1e-3, 100000], F: [1e-9, 0.01], H: [1e-4, 10],
+        'kWh': [0.01, 5000], 'mm²': [0.5, 240], m: [0.5, 1000], 'V/A': [0.1, 1e6]
+    };
+    const rechnen = (w, saat) => {
+        const R = FORMELN();
+        if (!R)
+            return null;
+        const alle = R.alle().filter((f) => Object.keys(f.loese || {}).length);
+        if (!alle.length)
+            return null;
+        /* Bis zu zwölf Versuche: nicht jede Würfelung ergibt eine sinnvolle
+           Aufgabe (eine Division durch fast null, ein Ergebnis von 4e-9). Wer
+           das nicht abfängt, stellt Fragen, die niemand beantworten kann. */
+        for (let versuch = 0; versuch < 30; versuch++) {
+            const f = w.aus(alle);
+            const loesbar = R.loesbarNach(f.id);
+            if (!loesbar.length)
+                continue;
+            const gesucht = w.aus(loesbar);
+            const einheitVon = (z) => (f.groessen.find(g => g.zeichen === z) || { einheit: '' }).einheit || '';
+            const werte = {};
+            f.groessen.forEach(g => {
+                if (g.zeichen === gesucht)
+                    return;
+                const b = BEREICHE[g.zeichen] || [1, 100];
+                werte[g.zeichen] = w.wert(b[0], b[1]);
+            });
+            const erg = R.rechne(f.id, gesucht, werte);
+            if (!erg || !erg.ok)
+                continue;
+            const wert = erg.wert;
+            if (!Number.isFinite(wert))
+                continue;
+            /* Und jetzt der Punkt, den der erste Entwurf übersehen hat: die
+               EINZELNEN Werte waren plausibel (82 kΩ ist ein Widerstand, 3,9 A ist
+               ein Strom), ihre KOMBINATION war es nicht — heraus kam eine Aufgabe
+               mit 320 000 V. Wer so etwas rechnet, lernt nicht rechnen, sondern
+               gewöhnt sich ab, das Ergebnis anzusehen. Und genau das Ansehen ist
+               im Beruf die einzige Sicherung gegen einen Zahlendreher.
+      
+               Also muss auch das ERGEBNIS in seinem Bereich liegen. Der Bereich ist
+               grosszügig gefasst (Faktor 3 nach beiden Seiten), damit es noch
+               Aufgaben gibt — aber 320 kV fällt heraus. */
+            /* Negative Ergebnisse fallen ganz weg. Keine der Grössen hier kann
+               kleiner als null sein — ein Strom von −5,48 A ist kein schwieriger
+               Fall, sondern ein Vorzeichen aus einer Formel, die in dieser
+               Richtung nicht gemeint war. Im Unterricht ist er nur verwirrend. */
+            if (wert <= 0)
+                continue;
+            /* Erst nach dem Formelzeichen, dann nach der Einheit. Beim Zeichen ist
+               ein Faktor 3 Spielraum sinnvoll (die Tabelle nennt den ÜBLICHEN
+               Bereich, nicht den möglichen); bei der Einheit nicht, denn die
+               Bänder dort sind schon weit. Mit Spielraum kam 254 A durch, und
+               254 A gibt es in keiner Lehrlingsaufgabe. */
+            const nachZeichen = BEREICHE[gesucht];
+            const nachEinheit = BEREICH_EINHEIT[einheitVon(gesucht)];
+            if (nachZeichen) {
+                if (wert < nachZeichen[0] / 3 || wert > nachZeichen[1] * 3)
+                    continue;
+            }
+            else if (nachEinheit) {
+                if (wert < nachEinheit[0] || wert > nachEinheit[1])
+                    continue;
+            }
+            else if (wert < 1e-6 || wert > 1e7)
+                continue;
+            const gegeben = f.groessen
+                .filter(g => g.zeichen !== gesucht)
+                .map(g => `${g.zeichen} = ${werte[g.zeichen]} ${g.einheit}`.trim())
+                .join(', ');
+            const aufgabe = {
+                art: 'rechnen', antwortart: 'zahl',
+                frage: `${f.schreibweise}\nGegeben: ${gegeben}\nGesucht: ${gesucht}`,
+                loesung: String(Number(wert.toPrecision(6))),
+                toleranz: 1,
+                einheit: einheitVon(gesucht),
+                erklaerung: f.erklaerung,
+                stufe: f.groessen.length > 3 ? 3 : 2, saat
+            };
+            /* `weg` wird nur GESETZT, wenn es einen gibt — ein gesetztes undefined
+               ist bei `exactOptionalPropertyTypes` etwas anderes als ein fehlendes
+               Feld, und die Oberfläche fragt „gibt es einen Rechenweg?". */
+            if (erg.weg && erg.weg.length)
+                aufgabe.weg = erg.weg;
+            return aufgabe;
+        }
+        return null;
+    };
+    /* ------------------------------------------------------------------------
+     * EINHEITEN UMRECHNEN (Punkte 67–70)
+     * ------------------------------------------------------------------------
+     * Der Fehler, der im Beruf am meisten kostet, ist nicht die falsche Formel,
+     * sondern das falsche Komma. 30 mA und 30 A trennen einen Fehlerstrom-
+     * schutzschalter von einem Kabelbrand.
+     * ----------------------------------------------------------------------*/
+    const VORSAETZE = [
+        ['p', 1e-12], ['n', 1e-9], ['µ', 1e-6], ['m', 1e-3], ['', 1],
+        ['k', 1e3], ['M', 1e6], ['G', 1e9]
+    ];
+    const GROESSEN = [
+        ['A', 'Strom', ['µ', 'm', '', 'k']],
+        ['V', 'Spannung', ['m', '', 'k']],
+        ['Ω', 'Widerstand', ['m', '', 'k', 'M']],
+        ['W', 'Leistung', ['m', '', 'k', 'M']],
+        ['F', 'Kapazität', ['p', 'n', 'µ', 'm']],
+        ['H', 'Induktivität', ['µ', 'm', '']],
+        ['Hz', 'Frequenz', ['', 'k', 'M']],
+        ['s', 'Zeit', ['n', 'µ', 'm', '']]
+    ];
+    const faktor = (vorsatz) => (VORSAETZE.find(v => v[0] === vorsatz) || ['', 1])[1];
+    /** Zahl ohne Rundungsmüll — 0.1+0.2 darf hier nicht auftauchen. */
+    const sauber = (x) => Number(x.toPrecision(12));
+    const umrechnen = (w, saat) => {
+        const [einheit, name, erlaubt] = w.aus(GROESSEN);
+        const von = w.aus(erlaubt);
+        /* Höchstens ZWEI Stufen auseinander. „120 µA sind wie viel kA" stand hier
+           im ersten Entwurf und ist keine Aufgabe aus dem Beruf, sondern eine
+           Zehnerpotenz-Übung mit neun Nullen. Wer umrechnet, geht mA → A → kA —
+           und der Fehler, der etwas kostet, passiert bei EINEM Schritt. */
+        const abstand = (a, b) => Math.abs(Math.log10(faktor(a) / faktor(b)));
+        const nah = erlaubt.filter(x => x !== von && abstand(x, von) <= 6.5);
+        if (!nah.length)
+            return null;
+        const nach = w.aus(nah);
+        const zahl = w.wert(1, 1000);
+        const wert = sauber(zahl * faktor(von) / faktor(nach));
+        if (!Number.isFinite(wert) || wert === 0)
+            return null;
+        return {
+            art: 'umrechnen', antwortart: 'zahl',
+            frage: `${name}: ${zahl} ${von}${einheit} sind wie viel ${nach}${einheit}?`,
+            loesung: String(wert),
+            toleranz: 0.01,
+            einheit: nach + einheit,
+            erklaerung: `${von || 'Ohne Vorsatz'}${einheit} ist ${faktor(von)} ${einheit}, ` +
+                `${nach || 'ohne Vorsatz'}${einheit} ist ${faktor(nach)} ${einheit}. ` +
+                `Also mal ${sauber(faktor(von) / faktor(nach))}.`,
+            /* Der Schritt „in die Grundeinheit" und der Schritt „in die Zieleinheit"
+               sind derselbe, wenn das Ziel die Grundeinheit IST. Zweimal dieselbe
+               Zeile sieht aus wie ein Fehler im Rechenweg. */
+            weg: (nach === '')
+                ? [`${zahl} ${von}${einheit}`,
+                    `= ${zahl} · ${faktor(von)} ${einheit}`,
+                    `= ${wert} ${einheit}`]
+                : [`${zahl} ${von}${einheit}`,
+                    `= ${zahl} · ${faktor(von)} ${einheit} = ${sauber(zahl * faktor(von))} ${einheit}`,
+                    `= ${wert} ${nach}${einheit}`],
+            stufe: Math.abs(Math.log10(faktor(von) / faktor(nach))) > 3 ? 3 : 2, saat
+        };
+    };
+    /* ------------------------------------------------------------------------
+     * SCHALTUNGSAUFGABEN (Punkte 51–60, 91–98)
+     * ------------------------------------------------------------------------
+     * Sie brauchen einen Plan, und der wird ebenfalls erzeugt — aus einer
+     * Vorlage, aus der ein Stück entfernt wird. Die Musterlösung ist das, was
+     * entfernt wurde; auch hier gibt es keine zweite Wahrheit.
+     * ----------------------------------------------------------------------*/
+    /** Baut einen kleinen Stromlaufplan aus einer Bauteilliste. */
+    const planBauen = (teile, draehte) => {
+        const SP = (typeof Schaltplan !== 'undefined') ? Schaltplan : null;
+        if (!SP)
+            return null;
+        const plan = SP.neuerPlan('stromlauf-aufgeloest');
+        plan.breite = 620;
+        plan.hoehe = 360;
+        plan.teile = [];
+        plan.leitungen = [];
+        plan.texte = [];
+        /* Senkrecht gelesen: die Bauteile stehen in einer Spalte übereinander,
+           weil dann jede Leitung eine gerade Strecke ist und keine zufällig
+           durch einen fremden Anschluss läuft. Genau der Fehler ist beim ersten
+           Bau von test239 §11 passiert. */
+        teile.forEach(([zeichen, bmk], i) => {
+            plan.teile.push({
+                id: 't' + (i + 1), zeichen, bmk,
+                x: 60 + (i % 3) * 180, y: 40 + Math.floor(i / 3) * 140,
+                drehung: 0, gespiegelt: false, nummern: {}, gruppe: '', ebene: 'plan'
+            });
+        });
+        const ort = (i, nr) => {
+            const t = plan.teile[i];
+            if (!t)
+                return { x: 0, y: 0 };
+            const a = SP.anschluesseVon(t).find((x) => x.nr === nr);
+            return a ? { x: a.x, y: a.y } : { x: t.x, y: t.y };
+        };
+        draehte.forEach(([a, an, b, bn], i) => {
+            const A = ort(a, an), B = ort(b, bn);
+            /* Ein eigener Korridor je Leitung — sonst überlappen sich zwei und
+               sind damit EINE. Die Simulation meldet das („überbrückt"), aber eine
+               Aufgabe mit dieser Meldung ist eine kaputte Aufgabe. */
+            const y = 20 + i * 12;
+            const ta = plan.teile[a], tb = plan.teile[b];
+            if (!ta || !tb)
+                return;
+            plan.leitungen.push({
+                id: 'l' + (i + 1), ebene: 'plan',
+                punkte: (A.x === B.x) ? [A, B] : [A, { x: A.x, y }, { x: B.x, y }, B],
+                vonTeil: ta.id, vonNr: an, nachTeil: tb.id, nachNr: bn
+            });
+        });
+        /* Und jetzt die Blattgrösse auf das ZUSAMMENSCHRUMPFEN, was wirklich
+           darauf steht.
+           -----------------------------------------------------------------
+           Ohne das ist der Plan 620 × 360 gross, egal ob drei Bauteile darauf
+           stehen oder zehn. In der Aufgabenspalte des Arbeitsplatzes — 280 px
+           breit — wird daraus ein Bild, auf dem die Betriebsmittelkennzeichen
+           drei Pixel hoch sind. Und die Frage lautet ausgerechnet „welches
+           Betriebsmittel ist das?".
+    
+           Gemessen beim ersten Bild: die Zeichnung nutzte etwa ein Drittel der
+           Fläche, der Rest war Luft, und die Luft wurde mitskaliert. */
+        let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+        const dazu = (x, y) => {
+            if (x < x1)
+                x1 = x;
+            if (x > x2)
+                x2 = x;
+            if (y < y1)
+                y1 = y;
+            if (y > y2)
+                y2 = y;
+        };
+        plan.teile.forEach(t => {
+            const m = (typeof Register !== 'undefined' && Register.fachzeichen)
+                ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { w: 60, h: 60 };
+            dazu(t.x, t.y);
+            /* Rechts steht das Betriebsmittelkennzeichen NEBEN dem Symbol —
+               `alsSvg` schreibt es bei `mass.w + 6`. Ohne diesen Zuschlag wäre es
+               genau das, was abgeschnitten würde. */
+            dazu(t.x + m.w + 34, t.y + m.h + 4);
+        });
+        plan.leitungen.forEach(l => l.punkte.forEach(pt => dazu(pt.x, pt.y)));
+        if (Number.isFinite(x1)) {
+            const rand = 24;
+            const dx = x1 - rand, dy = y1 - rand;
+            plan.teile.forEach(t => { t.x -= dx; t.y -= dy; });
+            plan.leitungen.forEach(l => l.punkte.forEach(pt => { pt.x -= dx; pt.y -= dy; }));
+            plan.breite = Math.max(120, Math.round(x2 - x1 + rand * 2));
+            plan.hoehe = Math.max(120, Math.round(y2 - y1 + rand * 2));
+        }
+        return plan;
+    };
+    /** Vorlagen für Schaltungsaufgaben — Bauteile, Drähte, Text. */
+    const SCHALTUNGEN = [
+        { name: 'Ausschaltung', wozu: 'Eine Leuchte von einer Stelle schalten.', stufe: 1,
+            teile: [['wechselspannung', 'G1'], ['ch-schema0', 'S1'], ['lampe', 'E1']],
+            draehte: [[0, 'L', 1, '3'], [1, '4', 2, 'X1'], [2, 'X2', 0, 'N']] },
+        { name: 'Serienschaltung zweier Leuchten',
+            wozu: 'Zwei Leuchten in Reihe — beide bekommen die halbe Spannung.', stufe: 2,
+            teile: [['wechselspannung', 'G1'], ['lampe', 'E1'], ['lampe', 'E2']],
+            draehte: [[0, 'L', 1, 'X1'], [1, 'X2', 2, 'X1'], [2, 'X2', 0, 'N']] },
+        { name: 'Parallelschaltung zweier Leuchten',
+            wozu: 'Zwei Leuchten parallel — jede bekommt die volle Spannung.', stufe: 2,
+            teile: [['wechselspannung', 'G1'], ['lampe', 'E1'], ['lampe', 'E2']],
+            draehte: [[0, 'L', 1, 'X1'], [0, 'L', 2, 'X1'], [1, 'X2', 0, 'N'], [2, 'X2', 0, 'N']] },
+        { name: 'Wechselschaltung (Schema 3)',
+            wozu: 'Eine Leuchte von zwei Stellen schalten.', stufe: 2,
+            teile: [['wechselspannung', 'G1'], ['ch-schema3', 'S1'], ['ch-schema3', 'S2'],
+                ['lampe', 'E1']],
+            draehte: [[0, 'L', 1, '3'], [1, '1', 2, '1'], [1, '2', 2, '2'],
+                [2, '3', 3, 'X1'], [3, 'X2', 0, 'N']] },
+        { name: 'Selbsthaltung', wozu: 'Start drücken, loslassen, das Schütz hält sich.', stufe: 3,
+            teile: [['wechselspannung', 'G1'], ['taster-oeffner', 'S0'], ['taster-schliesser', 'S1'],
+                ['schuetz-schliesser', 'K1'], ['spule', 'K1']],
+            draehte: [[0, 'L', 1, '1'], [1, '2', 2, '3'], [1, '2', 3, '13'],
+                [2, '4', 4, 'A1'], [3, '14', 4, 'A1'], [4, 'A2', 0, 'N']] },
+        { name: 'Motor mit Schütz und Überlastrelais',
+            wozu: 'Ein Motor wird nicht von Hand geschaltet, sondern über ein Schütz.', stufe: 3,
+            teile: [['wechselspannung', 'G1'], ['leitungsschutzschalter', 'F1'],
+                ['schuetz-hauptkontakt', 'K1'], ['motor-wechselstrom', 'M1']],
+            draehte: [[0, 'L', 1, '1'], [1, '2', 2, '1'], [2, '2', 3, 'U1'],
+                [3, 'U2', 0, 'N']] },
+        /* --- Die Verknüpfungen (Punkt 95) ------------------------------------
+           UND und ODER sind im Steuerstromkreis keine Theorie, sondern zwei
+           Zeichnungen: hintereinander heisst UND, nebeneinander heisst ODER.
+           Wer das einmal gezeichnet hat, braucht keine Wahrheitstabelle mehr. */
+        { name: 'UND-Verknüpfung',
+            wozu: 'Zwei Kontakte HINTEREINANDER: die Spule zieht nur an, wenn beide zu sind.',
+            stufe: 2,
+            teile: [['wechselspannung', 'G1'], ['taster-schliesser', 'S1'],
+                ['taster-schliesser', 'S2'], ['spule', 'K1'], ['signalleuchte', 'H1']],
+            draehte: [[0, 'L', 1, '3'], [1, '4', 2, '3'], [2, '4', 3, 'A1'],
+                [3, 'A2', 0, 'N'], [2, '4', 4, 'X1'], [4, 'X2', 0, 'N']] },
+        { name: 'ODER-Verknüpfung',
+            wozu: 'Zwei Kontakte NEBENEINANDER: einer genügt, damit die Spule anzieht.',
+            stufe: 2,
+            teile: [['wechselspannung', 'G1'], ['taster-schliesser', 'S1'],
+                ['taster-schliesser', 'S2'], ['spule', 'K1'], ['signalleuchte', 'H1']],
+            draehte: [[0, 'L', 1, '3'], [0, 'L', 2, '3'], [1, '4', 3, 'A1'],
+                [2, '4', 3, 'A1'], [3, 'A2', 0, 'N'], [3, 'A1', 4, 'X1'],
+                [4, 'X2', 0, 'N']] },
+        /* --- Zeitrelais und Meldung (Punkte 92, 96) --------------------------- */
+        { name: 'Zeitrelais, anzugsverzögert',
+            wozu: 'Nach dem Einschalten vergeht Zeit, bevor der Kontakt schliesst.',
+            stufe: 3,
+            teile: [['wechselspannung', 'G1'], ['taster-schliesser', 'S1'],
+                ['spule-anzugsverzoegert', 'K1'], ['schuetz-schliesser', 'K1'],
+                ['signalleuchte', 'H1']],
+            draehte: [[0, 'L', 1, '3'], [1, '4', 2, 'A1'], [2, 'A2', 0, 'N'],
+                [0, 'L', 3, '13'], [3, '14', 4, 'X1'], [4, 'X2', 0, 'N']] },
+        { name: 'Schützschaltung mit Meldeleuchte',
+            wozu: 'Die Leuchte zeigt an, dass das Schütz angezogen hat.', stufe: 3,
+            teile: [['wechselspannung', 'G1'], ['taster-oeffner', 'S0'],
+                ['taster-schliesser', 'S1'], ['spule', 'K1'],
+                ['schuetz-schliesser', 'K1'], ['signalleuchte', 'H1']],
+            draehte: [[0, 'L', 1, '1'], [1, '2', 2, '3'], [2, '4', 3, 'A1'],
+                [3, 'A2', 0, 'N'], [0, 'L', 4, '13'], [4, '14', 5, 'X1'],
+                [5, 'X2', 0, 'N']] },
+        /* --- Und zwei aus dem Schweizer Bauplan (Punkte 91, 97) --------------- */
+        { name: 'Treppenhausautomat',
+            wozu: 'Von mehreren Stellen drücken, das Licht geht nach einer Zeit von selbst aus.',
+            stufe: 2,
+            teile: [['wechselspannung', 'G1'], ['bp-minuterie', 'K1'],
+                ['taster-schliesser', 'S1'], ['taster-schliesser', 'S2'],
+                ['lampe', 'E1']],
+            draehte: [[0, 'L', 1, '1'], [1, '2', 4, 'X1'], [4, 'X2', 0, 'N'],
+                [0, 'L', 2, '3'], [0, 'L', 3, '3'], [2, '4', 1, '1'],
+                [3, '4', 1, '1']] },
+        { name: 'Sonnerie mit Drucktaster',
+            wozu: 'Die Türklingel — der einfachste Kreis, den es im Haus gibt.', stufe: 1,
+            teile: [['wechselspannung', 'G1'], ['taster-schliesser', 'S1'],
+                ['bp-sonnerie', 'H1']],
+            draehte: [[0, 'L', 1, '3'], [1, '4', 2, 'X1'], [2, 'X2', 0, 'N']] }
+    ];
+    /** Welches Bauteil fehlt im Plan (Punkt 51). */
+    const planLuecke = (w, saat) => {
+        const fz = FZ();
+        if (!fz || typeof Schaltplan === 'undefined')
+            return null;
+        const v = w.aus(SCHALTUNGEN);
+        const plan = planBauen(v.teile, v.draehte);
+        if (!plan)
+            return null;
+        /* Ein Bauteil herausnehmen — aber nie die Quelle: ein Plan ohne Quelle
+           ist keine Aufgabe, sondern ein Rätsel. */
+        const wahl = plan.teile
+            .map((t, i) => ({ t, i }))
+            .filter(x => x.t.zeichen !== 'wechselspannung');
+        if (!wahl.length)
+            return null;
+        const raus = w.aus(wahl);
+        const fehlt = fz.holen(raus.t.zeichen);
+        if (!fehlt)
+            return null;
+        plan.teile.splice(raus.i, 1);
+        /* Und die Leitungen, die daran hingen — sonst zeigen sie ins Leere und
+           die Aufgabe verrät durch die Lücke, was fehlt. */
+        plan.leitungen = plan.leitungen.filter((l) => l.vonTeil !== raus.t.id && l.nachTeil !== raus.t.id);
+        /* Die Ablenker müssen an DIESER Stelle überhaupt stehen können. Beim
+           ersten Bild lauteten drei von vier Möglichkeiten „Betätigung: Drücken",
+           „Betätigung: Drehen" und „Betätigung: Schlüssel" — Beischriften ohne
+           einen einzigen Anschluss. Sie stammten aus derselben Gruppe wie der
+           gesuchte Schalter, und die Auswahl war damit keine Frage mehr: wer
+           weiss, dass ein Bauteil Klemmen braucht, hat sie ohne Nachdenken.
+    
+           Also: mindestens zwei Anschlüsse, sonst kein Ablenker. */
+        const anschliessbar = (x) => (x.anschluesse || []).length >= 2;
+        const gleicheGruppe = fz.inGruppe(fehlt.gruppe)
+            .filter(x => x.id !== fehlt.id && anschliessbar(x));
+        const ablenker = w.misch(gleicheGruppe).slice(0, 3);
+        const rest = w.misch(fz.alle().filter(anschliessbar));
+        for (const k of rest) {
+            if (ablenker.length >= 3)
+                break;
+            if (k.id !== fehlt.id && !ablenker.some(x => x.id === k.id))
+                ablenker.push(k);
+        }
+        if (ablenker.length < 3)
+            return null;
+        const auswahl = w.misch([fehlt, ...ablenker]);
+        return {
+            art: 'plan-luecke', antwortart: 'wahl',
+            frage: `${v.name}: ${v.wozu}\nWelches Bauteil fehlt in diesem Plan (${raus.t.bmk})?`,
+            plan,
+            optionen: auswahl.map((x) => x.name),
+            optionZeichen: auswahl.map((x) => x.id),
+            loesung: fehlt.name,
+            erklaerung: `${raus.t.bmk} ist ein ${fehlt.name}. ${fehlt.erklaerung}`,
+            stufe: v.stufe, saat
+        };
+    };
+    /** Was tut diese Schaltung (Punkt 55, umgekehrt). */
+    const planFunktion = (w, saat) => {
+        if (typeof Schaltplan === 'undefined')
+            return null;
+        const v = w.aus(SCHALTUNGEN);
+        const plan = planBauen(v.teile, v.draehte);
+        if (!plan)
+            return null;
+        const andere = w.misch(SCHALTUNGEN.filter(x => x.name !== v.name)).slice(0, 3);
+        const auswahl = w.misch([v, ...andere]);
+        return {
+            art: 'plan-funktion', antwortart: 'wahl',
+            frage: 'Was ist das für eine Schaltung?',
+            plan,
+            optionen: auswahl.map(x => x.name),
+            loesung: v.name,
+            erklaerung: v.wozu,
+            stufe: v.stufe, saat
+        };
+    };
+    /** Betriebsmittel benennen (Punkt 57). */
+    const bmkBenennen = (w, saat) => {
+        const fz = FZ();
+        if (!fz || typeof Schaltplan === 'undefined')
+            return null;
+        const v = w.aus(SCHALTUNGEN);
+        const plan = planBauen(v.teile, v.draehte);
+        if (!plan)
+            return null;
+        const t = w.aus(plan.teile);
+        const zeichen = fz.holen(t.zeichen);
+        if (!zeichen)
+            return null;
+        /* Vier Möglichkeiten, wie überall — eine Frage mit drei Antworten ist
+           leichter als eine mit vier, und wer Aufgaben mischt, will sie gleich
+           schwer. Schaltungen mit zu wenig Betriebsmitteln fallen deshalb weg. */
+        const alleBmk = [...new Set(plan.teile.map(x => x.bmk))];
+        if (alleBmk.length < 4)
+            return null;
+        return {
+            art: 'bmk-benennen', antwortart: 'wahl',
+            frage: `${v.name}: Welches Betriebsmittel ist der/die/das „${zeichen.name}"?`,
+            plan,
+            /* EINMAL mischen und dann entscheiden. Der erste Entwurf rief `w.misch`
+               in der Bedingung und noch einmal im Zweig — und weil jeder Aufruf den
+               Würfel weiterdreht, prüfte die Bedingung eine andere Mischung als die
+               zurückgegebene. Die richtige Antwort hätte fehlen können. */
+            optionen: w.misch([t.bmk, ...w.misch(alleBmk.filter(b => b !== t.bmk)).slice(0, 3)]),
+            loesung: t.bmk,
+            erklaerung: `${t.bmk} ist ${zeichen.name}. Der Kennbuchstabe ` +
+                `${zeichen.kennbuchstabe} sagt schon, um welche Art Bauteil es geht.`,
+            stufe: 2, saat
+        };
+    };
+    /**
+     * Messaufgabe (Punkt 98): wohin gehört das Messgerät?
+     *
+     * Das ist die Frage, bei der im Beruf etwas kaputtgeht. Ein Amperemeter
+     * parallel zur Last ist ein Kurzschluss über das Messgerät — deshalb steht
+     * es hier als eigene Art und nicht als eine Wahlmöglichkeit unter vielen.
+     */
+    const messenWo = (w, saat) => {
+        const geraet = w.aus(['Amperemeter', 'Voltmeter']);
+        const strom = geraet === 'Amperemeter';
+        const optionen = w.misch([
+            'in Reihe mit dem Verbraucher',
+            'parallel zum Verbraucher',
+            'zwischen L und PE',
+            'parallel zur Quelle und in Reihe zum Verbraucher zugleich'
+        ]);
+        return {
+            art: 'messen-wo', antwortart: 'wahl',
+            frage: `Wie wird ein ${geraet} angeschlossen?`,
+            optionen,
+            loesung: strom ? 'in Reihe mit dem Verbraucher' : 'parallel zum Verbraucher',
+            erklaerung: strom
+                ? 'Ein Amperemeter misst den Strom, der DURCH es hindurchfliesst — es muss ' +
+                    'also im Stromweg liegen. Sein Innenwiderstand ist fast null; parallel ' +
+                    'geschaltet wäre es ein Kurzschluss.'
+                : 'Ein Voltmeter misst den Unterschied ZWISCHEN zwei Punkten — es liegt ' +
+                    'also daneben. Sein Innenwiderstand ist sehr hoch; in Reihe geschaltet ' +
+                    'würde es den Stromkreis unterbrechen.',
+            stufe: 2, saat
+        };
+    };
+    /** Alle Arten, die es gibt. Neue tragen sich hier ein (§8). */
+    const ARTEN = [
+        { id: 'zeichen-name', name: 'Zeichen benennen', gruppe: 'Fachzeichen', mach: zeichenName },
+        { id: 'name-zeichen', name: 'Zeichen erkennen', gruppe: 'Fachzeichen', mach: nameZeichen },
+        { id: 'zeichen-gruppe', name: 'Gruppe zuordnen', gruppe: 'Fachzeichen', mach: zeichenGruppe },
+        { id: 'anschluesse', name: 'Anschlüsse kennen', gruppe: 'Fachzeichen', mach: anschluesse },
+        { id: 'kennbuchstabe', name: 'Kennbuchstaben', gruppe: 'Fachzeichen', mach: kennbuchstabe },
+        { id: 'rechnen', name: 'Rechnen', gruppe: 'Rechnen', mach: rechnen },
+        { id: 'umrechnen', name: 'Einheiten umrechnen', gruppe: 'Rechnen', mach: umrechnen },
+        { id: 'plan-luecke', name: 'Fehlendes Bauteil', gruppe: 'Schaltungen', mach: planLuecke },
+        { id: 'plan-funktion', name: 'Schaltung erkennen', gruppe: 'Schaltungen', mach: planFunktion },
+        { id: 'bmk-benennen', name: 'Betriebsmittel finden', gruppe: 'Schaltungen', mach: bmkBenennen },
+        { id: 'messen-wo', name: 'Richtig messen', gruppe: 'Messen', mach: messenWo }
+    ];
+    const artVon = (id) => ARTEN.find(a => a.id === id) || null;
+    const gruppen = () => [...new Set(ARTEN.map(a => a.gruppe))];
+    /**
+     * Eine Aufgabe erzeugen.
+     *
+     * `saat` macht sie wiederholbar: derselbe Startwert gibt dieselbe Aufgabe.
+     * Ohne Startwert wird einer gezogen — dann steht er im Ergebnis, sodass man
+     * dieselbe Aufgabe später wieder herstellen kann.
+     */
+    const erzeuge = (artId, saat) => {
+        const s = (typeof saat === 'number') ? saat : Math.floor(Math.random() * 2147483647);
+        const w = wuerfel(s);
+        const art = artId ? artVon(artId) : null;
+        if (artId && !art)
+            return null;
+        /* Ohne Wunsch: eine Art würfeln. Schlägt sie fehl (weil ein Register
+           fehlt), die nächste versuchen — statt nichts zu liefern. */
+        /* Eine Art darf `null` liefern, wenn die Würfelung keine FAIRE Aufgabe
+           ergibt — etwa wenn eine Schaltung zu wenig Betriebsmittel für vier
+           Antwortmöglichkeiten hat. Dann wird mit einem anderen Startwert
+           weitergewürfelt und nicht aufgegeben: wer „Betriebsmittel finden"
+           auswählt, bekommt sonst einen leeren Bildschirm und weiss nicht, ob
+           die App kaputt ist oder er etwas falsch gemacht hat. */
+        if (art) {
+            for (let i = 0; i < 40; i++) {
+                const versuchSaat = s + i * 7919;
+                const a = art.mach(wuerfel(versuchSaat), versuchSaat);
+                if (a)
+                    return a;
+            }
+            return null;
+        }
+        for (const k of w.misch(ARTEN)) {
+            for (let i = 0; i < 8; i++) {
+                const versuchSaat = s + i * 7919;
+                const a = k.mach(wuerfel(versuchSaat), versuchSaat);
+                if (a)
+                    return a;
+            }
+        }
+        return null;
+    };
+    /**
+     * Eine Reihe von Aufgaben — für den Prüfungsmodus (Punkt 99).
+     *
+     * Die Arten werden REIHUM genommen und nicht gewürfelt: bei zehn Aufgaben
+     * aus vier Arten will man vier Arten sehen und nicht siebenmal dieselbe.
+     * Das ist der Unterschied zwischen einer Prüfung und einem Glücksspiel.
+     */
+    const reihe = (anzahl, opt = {}) => {
+        const s0 = (typeof opt.saat === 'number') ? opt.saat
+            : Math.floor(Math.random() * 2147483647);
+        const w = wuerfel(s0);
+        const erlaubt = (opt.arten && opt.arten.length)
+            ? ARTEN.filter(a => opt.arten.includes(a.id))
+            : ARTEN;
+        if (!erlaubt.length)
+            return [];
+        const reihenfolge = w.misch(erlaubt);
+        const raus = [];
+        let versuche = 0;
+        while (raus.length < anzahl && versuche < anzahl * 12) {
+            const art = reihenfolge[raus.length % reihenfolge.length];
+            const a = art.mach(wuerfel(s0 + versuche * 7919), s0 + versuche * 7919);
+            versuche++;
+            if (!a)
+                continue;
+            if (opt.stufe && a.stufe !== opt.stufe)
+                continue;
+            /* Keine zwei gleichen Fragen in einer Prüfung. */
+            if (raus.some(x => x.frage === a.frage))
+                continue;
+            raus.push(a);
+        }
+        return raus;
+    };
+    /**
+     * Eine Antwort prüfen.
+     *
+     * Bei Zahlen wird mit Toleranz verglichen und das Komma als Dezimaltrenner
+     * angenommen — wer „0,5" tippt, meint eine halbe und nicht fünf.
+     */
+    const pruefe = (aufgabe, antwort) => {
+        if (!aufgabe)
+            return { richtig: false, hinweis: 'Keine Aufgabe.' };
+        const roh = String(antwort ?? '').trim();
+        if (!roh)
+            return { richtig: false, hinweis: 'Da steht noch nichts.' };
+        if (aufgabe.antwortart === 'zahl') {
+            const zahl = Number(roh.replace(',', '.').replace(/\s/g, ''));
+            if (!Number.isFinite(zahl))
+                return { richtig: false, hinweis: 'Das ist keine Zahl.' };
+            const soll = Number(aufgabe.loesung);
+            const tol = (aufgabe.toleranz ?? 1) / 100;
+            const richtig = Math.abs(zahl - soll) <= Math.abs(soll) * tol + 1e-12;
+            if (richtig)
+                return { richtig: true, hinweis: 'Richtig.' };
+            /* Der häufigste Fehler ist ein Faktor tausend. Das zu SAGEN ist mehr
+               wert als ein rotes Kreuz: der Rechenweg war richtig, das Komma nicht. */
+            const verhaeltnis = soll !== 0 ? zahl / soll : 0;
+            for (const [name, f] of [['tausendmal zu gross', 1000], ['tausendmal zu klein', 0.001],
+                ['hundertmal zu gross', 100], ['hundertmal zu klein', 0.01],
+                ['zehnmal zu gross', 10], ['zehnmal zu klein', 0.1]]) {
+                if (Math.abs(verhaeltnis - f) <= f * 0.02)
+                    return { richtig: false,
+                        hinweis: `Fast — der Wert ist ${name}. Sieh dir die Einheit an.` };
+            }
+            return { richtig: false, hinweis: `Richtig wäre ${aufgabe.loesung} ${aufgabe.einheit || ''}`.trim() };
+        }
+        const gleich = roh.toLowerCase() === String(aufgabe.loesung).toLowerCase();
+        return gleich
+            ? { richtig: true, hinweis: 'Richtig.' }
+            : { richtig: false, hinweis: `Richtig wäre „${aufgabe.loesung}".` };
+    };
+    return { ARTEN, artVon, gruppen, erzeuge, reihe, pruefe,
+        SCHALTUNGEN, planBauen, wuerfel };
+})();
+window.Elektroaufgaben = Elektroaufgaben;
+
+</script>
+<script>
+/* ===== quell/bereiche/elektro/arbeitsplatz.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/elektro/arbeitsplatz.ts — üben, prüfen, arbeiten
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/elektro/arbeitsplatz.ts`.
+ * ----------------------------------------------------------------------------
+ * DREI SPALTEN, EINE ARBEIT (Punkt 100)
+ *
+ * Redur hat den Arbeitsplatz so beschrieben: „links Aufgaben/Fachzeichen, in
+ * der Mitte PDF oder Schaltplan und rechts Formelblatt, Werte, Lösung und
+ * persönliche Notizen."
+ *
+ * Der Grund für drei Spalten ist nicht Platz, sondern ZEIT. Eine Aufgabe
+ * lösen heisst: lesen, zeichnen, nachschlagen, rechnen, aufschreiben — und
+ * zwischen diesen fünf Dingen springt man ein Dutzend Mal hin und her. Wer
+ * dafür die Ansicht wechseln muss, verliert bei jedem Sprung den Faden, und
+ * am Ende hat er die Aufgabe dreimal neu gelesen.
+ *
+ * WAS HIER NICHT NEU IST
+ *
+ * Die Mitte ist ein gewöhnlicher Redion-Block — ein Schaltplan oder eine
+ * PDF-Seite. Rechts steht das Formelheft, das es schon gibt. Links stehen
+ * Aufgaben, die `Elektroaufgaben` erzeugt. Dieses Modul erfindet nichts
+ * davon neu; es stellt es nebeneinander. Ein zweiter Schaltplaneditor „für
+ * den Arbeitsplatz" wäre L34 in gross: zwei Editoren, die auseinanderlaufen,
+ * und niemand merkt es, bis einer etwas kann, was der andere nicht kann.
+ *
+ * DER PRÜFUNGSMODUS (Punkt 99)
+ *
+ * Er ist dieselbe Aufgabenliste mit drei Unterschieden: die Erklärung kommt
+ * erst am Schluss, die Aufgaben sind gemischt, und es gibt eine Auswertung.
+ * Der Startwert der Prüfung wird angezeigt — damit lässt sich dieselbe
+ * Prüfung noch einmal stellen, im Unterricht für alle gleich, und beim
+ * Nachbesprechen zeigt sie wieder genau dieselben Aufgaben.
+ * ==========================================================================*/
+const Elektroarbeitsplatz = (() => {
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /* Was sich der Arbeitsplatz merkt. Alles in `Store.meta` — es gehört dem
+       Menschen und nicht einem Dokument. */
+    const M_STAND = 'elektro:uebungsstand'; /* richtig/falsch je Art */
+    const M_ARTEN = 'elektro:uebungsarten'; /* welche Arten gewählt sind */
+    const M_PRUEFUNG = 'elektro:letztePruefung'; /* Startwert und Ergebnis */
+    const merke = (k, w) => {
+        if (typeof Store !== 'undefined')
+            Store.setMeta(k, w);
+    };
+    const gemerkt = (k, vorgabe) => (typeof Store !== 'undefined') ? Store.getMeta(k, vorgabe) : vorgabe;
+    const stand = () => {
+        const roh = gemerkt(M_STAND, {});
+        return (roh && typeof roh === 'object') ? roh : {};
+    };
+    /**
+     * Einen Versuch verbuchen.
+     *
+     * Gezählt wird JE ART und nicht je Aufgabe: die einzelne Aufgabe ist
+     * gewürfelt und kommt nie wieder, die Art bleibt. „Bei Anschlussnummern
+     * liege ich in der Hälfte der Fälle daneben" ist eine Auskunft, mit der
+     * man etwas anfangen kann; „Aufgabe 4711 war falsch" ist keine.
+     */
+    const verbuche = (art, richtig) => {
+        const s = stand();
+        const e = s[art] || { richtig: 0, falsch: 0 };
+        if (richtig)
+            e.richtig++;
+        else
+            e.falsch++;
+        s[art] = e;
+        merke(M_STAND, s);
+        return s;
+    };
+    /** Die schwächste Art — die, die als Nächste drankommen sollte. */
+    const schwaeche = () => {
+        const s = stand();
+        let schlechteste = null;
+        let quote = 1;
+        Object.keys(s).forEach(art => {
+            const e = s[art];
+            const gesamt = e.richtig + e.falsch;
+            if (gesamt < 3)
+                return; /* zu wenig, um etwas zu sagen */
+            const q = e.richtig / gesamt;
+            if (q < quote) {
+                quote = q;
+                schlechteste = art;
+            }
+        });
+        return quote < 0.8 ? schlechteste : null;
+    };
+    const A = () => (typeof Elektroaufgaben !== 'undefined') ? Elektroaufgaben : null;
+    /* ------------------------------------------------------------------------
+     * EINE AUFGABE ZEICHNEN
+     * ------------------------------------------------------------------------
+     * Nur HTML, kein Zustand. Die Fläche unten hängt die Ereignisse dran.
+     * ----------------------------------------------------------------------*/
+    const aufgabeHtml = (a, opt = {}) => {
+        if (!a)
+            return `<div class="ea-leer"><p>Keine Aufgabe.</p></div>`;
+        const fz = (typeof Register !== 'undefined' && Register.fachzeichen)
+            ? Register.fachzeichen : null;
+        /* Das Bild zur Frage: ein einzelnes Zeichen oder ein ganzer Plan. */
+        let bild = '';
+        if (a.zeichen && fz) {
+            bild = `<div class="ea-bild">${fz.alsSvg(a.zeichen, { farbe: 'currentColor' })}</div>`;
+        }
+        else if (a.plan && typeof Schaltplan !== 'undefined') {
+            bild = `<div class="ea-bild ea-plan">${Schaltplan.alsSvg(a.plan, {
+                raster: false, anschluesse: false, nummern: false
+            })}</div>`;
+        }
+        /* Die Frage kann mehrzeilig sein (Rechenaufgaben haben Gegeben/Gesucht). */
+        const frage = String(a.frage).split('\n')
+            .map((z, i) => i === 0
+            ? `<p class="ea-frage">${esc(z)}</p>`
+            : `<p class="ea-frage-zusatz">${esc(z)}</p>`).join('');
+        let antwortfeld = '';
+        if (a.antwortart === 'wahl') {
+            antwortfeld = `<div class="ea-wahl">` + a.optionen.map((o, i) => {
+                const gewaehlt = opt.antwort === o;
+                const istLoesung = o === a.loesung;
+                /* Nach dem Antworten wird die richtige Antwort IMMER markiert — auch
+                   wenn man sie getroffen hat. Wer nur sieht „falsch", weiss immer
+                   noch nicht, was stimmt, und rät beim nächsten Mal wieder. */
+                const klasse = !opt.beantwortet ? ''
+                    : istLoesung ? ' loesung'
+                        : gewaehlt ? ' daneben' : '';
+                const svg = (a.optionZeichen && fz)
+                    ? fz.alsSvg(a.optionZeichen[i], { farbe: 'currentColor' }) : '';
+                return `<button class="ea-option${klasse}${gewaehlt ? ' gewaehlt' : ''}" ` +
+                    `data-wahl="${esc(o)}"${opt.beantwortet ? ' disabled' : ''}>` +
+                    (svg ? `<span class="ea-optionbild">${svg}</span>` : '') +
+                    `<span class="ea-optiontext">${esc(o)}</span></button>`;
+            }).join('') + `</div>`;
+        }
+        else {
+            antwortfeld =
+                `<div class="ea-eingabe">` +
+                    `<input type="text" inputmode="decimal" class="ea-antwort" ` +
+                    `value="${esc(opt.antwort ?? '')}" placeholder="Antwort" ` +
+                    `aria-label="Antwort"${opt.beantwortet ? ' disabled' : ''}>` +
+                    (a.einheit ? `<span class="ea-einheit">${esc(a.einheit)}</span>` : '') +
+                    (opt.beantwortet ? '' : `<button class="prim" data-a="pruefen">Prüfen</button>`) +
+                    `</div>`;
+        }
+        /* Die Auflösung. Im Prüfungsmodus kommt sie erst am Schluss — sonst
+           wäre die Prüfung eine Übung mit Zeitdruck. */
+        const aufloesung = (opt.beantwortet && !opt.pruefung)
+            ? `<div class="ea-aufloesung ${opt.richtig ? 'gut' : 'daneben'}">` +
+                `<p class="ea-urteil">${opt.richtig ? '✓ Richtig' : '✗ ' + esc(opt.hinweis || '')}</p>` +
+                `<p class="ea-warum">${esc(a.erklaerung)}</p>` +
+                (a.weg ? `<ol class="ea-weg">` + a.weg
+                    .map(z => `<li>${esc(z)}</li>`).join('') + `</ol>` : '') +
+                `</div>`
+            : (opt.beantwortet && opt.pruefung)
+                ? `<div class="ea-aufloesung still"><p class="ea-urteil">Antwort notiert.</p></div>`
+                : '';
+        return `<article class="ea-aufgabe" data-art="${esc(a.art)}" data-saat="${esc(a.saat)}">` +
+            `<div class="ea-kopfzeile"><span class="ea-artname">` +
+            esc((A()?.artVon(a.art) || { name: a.art }).name) + `</span>` +
+            `<span class="ea-stufe" title="Schwierigkeit">${'●'.repeat(a.stufe)}` +
+            `<span class="ea-stufe-aus">${'●'.repeat(3 - a.stufe)}</span></span></div>` +
+            bild + frage + antwortfeld + aufloesung + `</article>`;
+    };
+    /* ------------------------------------------------------------------------
+     * DIE ÜBUNGSFLÄCHE
+     * ----------------------------------------------------------------------*/
+    const uebung = () => {
+        const wurzel = document.createElement('div');
+        wurzel.className = 'ea-wrap';
+        const arten = () => {
+            const roh = gemerkt(M_ARTEN, []);
+            return Array.isArray(roh) ? roh : [];
+        };
+        let jetzt = null;
+        let beantwortet = false;
+        let antwort = '';
+        let letzte = null;
+        const naechste = (artWunsch) => {
+            const a = A();
+            if (!a)
+                return;
+            const gewaehlt = arten();
+            /* Ohne Wunsch: die schwächste Art bevorzugen, wenn es eine gibt. Das
+               ist der ganze Sinn einer Statistik — sonst übt man weiter das, was
+               man ohnehin kann. */
+            const art = artWunsch
+                || (gewaehlt.length === 1 ? gewaehlt[0] : undefined)
+                || (gewaehlt.length ? undefined : schwaeche() || undefined);
+            let neu = a.erzeuge(art);
+            /* Ist eine Auswahl getroffen, muss die Aufgabe dazu passen. */
+            if (gewaehlt.length && neu && !gewaehlt.includes(neu.art)) {
+                for (let i = 0; i < 20 && neu && !gewaehlt.includes(neu.art); i++)
+                    neu = a.erzeuge(gewaehlt[i % gewaehlt.length]);
+            }
+            jetzt = neu;
+            beantwortet = false;
+            antwort = '';
+            letzte = null;
+            male();
+        };
+        const antworte = (wert) => {
+            const a = A();
+            if (!a || !jetzt || beantwortet)
+                return;
+            antwort = wert;
+            letzte = a.pruefe(jetzt, wert);
+            beantwortet = true;
+            verbuche(jetzt.art, letzte.richtig);
+            male();
+        };
+        const male = () => {
+            const a = A();
+            const s = stand();
+            const gewaehlt = arten();
+            const gesamt = Object.values(s).reduce((n, e) => n + e.richtig + e.falsch, 0);
+            const richtig = Object.values(s).reduce((n, e) => n + e.richtig, 0);
+            wurzel.innerHTML =
+                `<div class="ea-leiste">` +
+                    `<div class="ea-artwahl">` +
+                    `<button class="ea-art${gewaehlt.length ? '' : ' an'}" data-art="">Alles gemischt</button>` +
+                    (a ? a.ARTEN.map(x => `<button class="ea-art${gewaehlt.includes(x.id) ? ' an' : ''}" ` +
+                        `data-art="${esc(x.id)}" title="${esc(x.gruppe)}">${esc(x.name)}</button>`).join('') : '') +
+                    `</div></div>` +
+                    `<div class="ea-buehne">${aufgabeHtml(jetzt, {
+                        beantwortet, antwort, richtig: letzte?.richtig ?? false,
+                        hinweis: letzte?.hinweis ?? ''
+                    })}</div>` +
+                    `<div class="ea-fuss">` +
+                    `<span class="ea-stand">` +
+                    (gesamt
+                        ? `${richtig} von ${gesamt} richtig` +
+                            (schwaeche() ? ` · schwach: ${esc((a?.artVon(schwaeche()) || { name: '' }).name)}` : '')
+                        : 'Noch nichts geübt') + `</span>` +
+                    `<button class="prim" data-a="weiter">${beantwortet ? 'Nächste Aufgabe' : 'Überspringen'}</button>` +
+                    `</div>`;
+            /* Der auslaufende Rand an der Artenleiste — über `Rollrand`, wie
+               überall sonst auch (E141, E151, E159, E188). Die Kante gehört an
+               `.ea-leiste`: ein Pseudo-Element im Rollfeld rollte mit. */
+            const band = wurzel.querySelector('.ea-artwahl');
+            if (band && typeof Rollrand !== 'undefined')
+                Rollrand.binde(band, { art: 'mehr',
+                    an: band.closest('.ea-leiste') });
+            /* Und die gewählte Art ins Bild holen, sonst sieht man nicht, wo man ist. */
+            const aktiv = band?.querySelector('.an');
+            if (aktiv)
+                aktiv.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        };
+        wurzel.addEventListener('click', e => {
+            const b = e.target.closest('[data-a],[data-wahl],[data-art]');
+            if (!b)
+                return;
+            if (b.dataset.art !== undefined) {
+                /* Mehrfachauswahl: mit gedrückter Umschalttaste dazu, sonst nur die
+                   eine. „Alles gemischt" leert die Auswahl. */
+                const id = b.dataset.art;
+                const alt = arten();
+                const neu = !id ? []
+                    : e.shiftKey
+                        ? (alt.includes(id) ? alt.filter(x => x !== id) : [...alt, id])
+                        : (alt.length === 1 && alt[0] === id ? [] : [id]);
+                merke(M_ARTEN, neu);
+                naechste();
+                return;
+            }
+            if (b.dataset.wahl !== undefined) {
+                antworte(b.dataset.wahl);
+                return;
+            }
+            if (b.dataset.a === 'weiter') {
+                naechste();
+                return;
+            }
+            if (b.dataset.a === 'pruefen') {
+                const f = wurzel.querySelector('.ea-antwort');
+                if (f)
+                    antworte(f.value);
+                return;
+            }
+        });
+        wurzel.addEventListener('keydown', e => {
+            if (e.key !== 'Enter')
+                return;
+            const f = e.target;
+            if (!f.classList.contains('ea-antwort'))
+                return;
+            e.preventDefault();
+            if (beantwortet)
+                naechste();
+            else
+                antworte(f.value);
+        });
+        naechste();
+        return wurzel;
+    };
+    const pruefungStarten = (anzahl = 10, saat) => {
+        const a = A();
+        if (!a)
+            return null;
+        const s = (typeof saat === 'number') ? saat : Math.floor(Math.random() * 2147483647);
+        const aufgaben = a.reihe(anzahl, { saat: s });
+        if (!aufgaben.length)
+            return null;
+        return { saat: s, aufgaben, antworten: aufgaben.map(() => ''),
+            jetzt: 0, fertig: false };
+    };
+    /** Auswerten — je Aufgabe und in der Summe. */
+    const auswerten = (p) => {
+        const a = A();
+        const einzeln = p.aufgaben.map((auf, i) => {
+            const pr = a ? a.pruefe(auf, p.antworten[i]) : { richtig: false, hinweis: '' };
+            return { art: auf.art, richtig: pr.richtig, hinweis: pr.hinweis };
+        });
+        const richtig = einzeln.filter(x => x.richtig).length;
+        const gesamt = einzeln.length;
+        const prozent = gesamt ? Math.round(richtig / gesamt * 100) : 0;
+        /* Die Schweizer Notenskala, linear von 1 bis 6. Sie steht hier, weil
+           Redion für die Schweizer Grundbildung gebaut wird — und sie steht
+           als FORMEL da, damit niemand sie für eine amtliche Bewertung hält. */
+        const note = gesamt ? (1 + 5 * richtig / gesamt).toFixed(1) : '—';
+        return { richtig, gesamt, prozent, note, einzeln };
+    };
+    const pruefungFlaeche = (anzahl = 10, saat) => {
+        const wurzel = document.createElement('div');
+        wurzel.className = 'ea-wrap ea-pruefung';
+        let p = pruefungStarten(anzahl, saat);
+        const male = () => {
+            if (!p) {
+                wurzel.innerHTML = `<div class="ea-leer"><p>Es lassen sich keine ` +
+                    `Aufgaben erzeugen. Fehlt ein Register?</p></div>`;
+                return;
+            }
+            if (p.fertig) {
+                const e = auswerten(p);
+                merke(M_PRUEFUNG, { saat: p.saat, richtig: e.richtig, gesamt: e.gesamt });
+                wurzel.innerHTML =
+                    `<div class="ea-ergebnis">` +
+                        `<h3>${e.richtig} von ${e.gesamt} richtig</h3>` +
+                        `<p class="ea-note">Note ${esc(e.note)} · ${e.prozent} %</p>` +
+                        `<ol class="ea-liste">` + e.einzeln.map((x, i) => `<li class="${x.richtig ? 'gut' : 'daneben'}">` +
+                        `<b>${i + 1}.</b> ${esc((A()?.artVon(x.art) || { name: x.art }).name)}` +
+                        (x.richtig ? '' : ` — ${esc(x.hinweis)}`) + `</li>`).join('') + `</ol>` +
+                        /* Der Startwert wird angezeigt: damit lässt sich dieselbe Prüfung
+                           im Unterricht für alle gleich stellen und später Wort für Wort
+                           nachbesprechen. Ohne ihn ist jede Prüfung einmalig und die
+                           Besprechung eine Erinnerungsübung. */
+                        `<p class="ea-saat">Startwert dieser Prüfung: <code>${esc(p.saat)}</code>` +
+                        ` — damit kommt sie genau so wieder.</p>` +
+                        `<div class="ea-fuss"><button data-a="durchgehen">Aufgaben durchgehen</button>` +
+                        `<button class="prim" data-a="neu">Neue Prüfung</button></div></div>`;
+                return;
+            }
+            const a = p.aufgaben[p.jetzt];
+            wurzel.innerHTML =
+                `<div class="ea-leiste"><span class="ea-fortschritt">` +
+                    `Aufgabe ${p.jetzt + 1} von ${p.aufgaben.length}</span>` +
+                    `<span class="ea-balken"><i style="width:${(p.jetzt / p.aufgaben.length * 100).toFixed(0)}%"></i></span>` +
+                    `</div>` +
+                    `<div class="ea-buehne">${aufgabeHtml(a, {
+                        beantwortet: false, antwort: p.antworten[p.jetzt] ?? '', pruefung: true
+                    })}</div>` +
+                    `<div class="ea-fuss">` +
+                    `<button data-a="zurueck"${p.jetzt ? '' : ' disabled'}>Zurück</button>` +
+                    `<button class="prim" data-a="vor">` +
+                    (p.jetzt + 1 === p.aufgaben.length ? 'Abgeben' : 'Weiter') + `</button></div>`;
+        };
+        const merkeAntwort = () => {
+            if (!p)
+                return;
+            const feld = wurzel.querySelector('.ea-antwort');
+            if (feld)
+                p.antworten[p.jetzt] = feld.value;
+        };
+        wurzel.addEventListener('click', e => {
+            const b = e.target.closest('[data-a],[data-wahl]');
+            if (!b || !p)
+                return;
+            if (b.dataset.wahl !== undefined) {
+                p.antworten[p.jetzt] = b.dataset.wahl;
+                /* In der Prüfung geht es nach der Wahl WEITER — aber ohne Auflösung.
+                   Wer zurückblättert, sieht seine Antwort noch stehen und kann sie
+                   ändern; das ist bei jeder Prüfung auf Papier auch so. */
+                if (p.jetzt + 1 < p.aufgaben.length)
+                    p.jetzt++;
+                else
+                    p.fertig = true;
+                male();
+                return;
+            }
+            const was = b.dataset.a;
+            if (was === 'vor') {
+                merkeAntwort();
+                if (p.jetzt + 1 < p.aufgaben.length)
+                    p.jetzt++;
+                else
+                    p.fertig = true;
+                male();
+                return;
+            }
+            if (was === 'zurueck') {
+                merkeAntwort();
+                p.jetzt = Math.max(0, p.jetzt - 1);
+                male();
+                return;
+            }
+            if (was === 'neu') {
+                p = pruefungStarten(anzahl);
+                male();
+                return;
+            }
+            if (was === 'durchgehen') {
+                /* Nach der Abgabe darf alles gezeigt werden — jetzt ist es Lernstoff
+                   und keine Prüfung mehr. */
+                const e2 = auswerten(p);
+                wurzel.innerHTML = `<div class="ea-durchgang">` +
+                    p.aufgaben.map((auf, i) => aufgabeHtml(auf, {
+                        beantwortet: true, antwort: p.antworten[i] ?? '',
+                        richtig: e2.einzeln[i].richtig, hinweis: e2.einzeln[i].hinweis
+                    })).join('') +
+                    `<div class="ea-fuss"><button class="prim" data-a="neu">Neue Prüfung</button></div>` +
+                    `</div>`;
+                return;
+            }
+        });
+        male();
+        return wurzel;
+    };
+    /* ------------------------------------------------------------------------
+     * DER ARBEITSPLATZ SELBST (Punkt 100)
+     * ----------------------------------------------------------------------*/
+    const arbeitsplatz = (mitte) => {
+        const wurzel = document.createElement('div');
+        wurzel.className = 'ea-platz';
+        const links = document.createElement('div');
+        links.className = 'ea-spalte ea-links';
+        const mittel = document.createElement('div');
+        mittel.className = 'ea-spalte ea-mitte';
+        const rechts = document.createElement('div');
+        rechts.className = 'ea-spalte ea-rechts';
+        links.innerHTML = `<div class="ea-spaltenkopf">Aufgaben</div>`;
+        links.appendChild(uebung());
+        mittel.innerHTML = `<div class="ea-spaltenkopf">Plan</div>`;
+        if (mitte)
+            mittel.appendChild(mitte);
+        else
+            mittel.insertAdjacentHTML('beforeend', `<div class="ea-leer"><p>Hier steht dein Schaltplan oder eine PDF-Seite.</p>` +
+                `<p class="ea-klein">Öffne eine Seite mit einem Schaltplan-Block, oder ` +
+                `füge über das Plus einen neuen ein.</p></div>`);
+        rechts.innerHTML = `<div class="ea-spaltenkopf">Notizen</div>` +
+            `<textarea class="ea-notizen" placeholder="Eigene Notizen zu dieser Aufgabe …" ` +
+            `aria-label="Notizen"></textarea>` +
+            `<div class="ea-werkzeuge">` +
+            `<button data-a="heft">📐 Formelheft</button>` +
+            `<button data-a="pruefung">📝 Prüfung starten</button>` +
+            `</div>`;
+        /* Die Notizen gehören dem Menschen und überleben den Neustart. */
+        const feld = rechts.querySelector('.ea-notizen');
+        feld.value = String(gemerkt('elektro:notizen', ''));
+        let warten;
+        feld.addEventListener('input', () => {
+            window.clearTimeout(warten);
+            warten = window.setTimeout(() => merke('elektro:notizen', feld.value), 400);
+        });
+        rechts.addEventListener('click', e => {
+            const b = e.target.closest('[data-a]');
+            if (!b)
+                return;
+            if (b.dataset.a === 'heft' && typeof Formelheft !== 'undefined')
+                Formelheft.umschalten();
+            if (b.dataset.a === 'pruefung') {
+                mittel.querySelectorAll('.ea-wrap, .ea-leer').forEach(x => x.remove());
+                mittel.appendChild(pruefungFlaeche(10));
+            }
+        });
+        wurzel.appendChild(links);
+        wurzel.appendChild(mittel);
+        wurzel.appendChild(rechts);
+        return wurzel;
+    };
+    /* Zwei Befehle, damit man überhaupt hierher kommt. */
+    if (typeof Register !== 'undefined' && Register.befehle) {
+        Register.befehle.melde({
+            titel: 'Elektro: üben', gruppe: 'Elektro',
+            tun: () => zeigeAls('Elektro üben', uebung())
+        });
+        Register.befehle.melde({
+            titel: 'Elektro: Prüfung starten', gruppe: 'Elektro',
+            tun: () => zeigeAls('Elektro-Prüfung', pruefungFlaeche(10))
+        });
+        Register.befehle.melde({
+            titel: 'Elektro: Arbeitsplatz', gruppe: 'Elektro',
+            tun: () => zeigeAls('Elektro-Arbeitsplatz', arbeitsplatz())
+        });
+    }
+    /**
+     * Etwas in einem grossen Fenster zeigen.
+     *
+     * Absichtlich schlicht: eine Überlagerung mit Titel und Schliessknopf.
+     * Ein eigener Bereich mit eigener Navigation wäre mehr Bauwerk als Nutzen,
+     * solange nicht klar ist, ob der Arbeitsplatz täglich oder wöchentlich
+     * gebraucht wird.
+     */
+    const zeigeAls = (titel, inhalt) => {
+        const o = document.createElement('div');
+        o.className = 'overlay ea-overlay';
+        o.innerHTML = `<div class="finder ea-fenster">` +
+            `<div class="fh"><span>${esc(titel)}</span>` +
+            `<button class="icon-btn" data-a="zu" aria-label="Schliessen">✕</button></div>` +
+            `<div class="ea-inhalt"></div></div>`;
+        o.querySelector('.ea-inhalt').appendChild(inhalt);
+        document.body.appendChild(o);
+        o.addEventListener('click', e => {
+            const b = e.target.closest('[data-a]');
+            if (e.target === o || (b && b.dataset.a === 'zu'))
+                o.remove();
+        });
+        const beiTaste = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            o.remove();
+            document.removeEventListener('keydown', beiTaste);
+        };
+        document.addEventListener('keydown', beiTaste);
+    };
+    return { uebung, pruefungFlaeche, arbeitsplatz, aufgabeHtml, zeigeAls,
+        stand, verbuche, schwaeche, pruefungStarten, auswerten };
+})();
+window.Elektroarbeitsplatz = Elektroarbeitsplatz;
 
 </script>
 <script>

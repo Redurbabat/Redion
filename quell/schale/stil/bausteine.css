@@ -3702,3 +3702,195 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .fh-formel header{padding-right:48px}
   .fh-gesucht button{min-height:38px; padding:0 14px}
 }
+
+/* ==========================================================================
+ * ÜBEN, PRÜFEN, ARBEITEN (E189)
+ * --------------------------------------------------------------------------
+ * Eine Übungsfläche ist kein Formular. Was zählt, ist die REIHENFOLGE, in
+ * der das Auge etwas findet: erst die Frage, dann die Möglichkeiten, dann —
+ * und erst dann — die Auflösung. Deshalb steht die Frage gross und allein,
+ * und die Auflösung erscheint darunter, statt neben der Frage zu warten.
+ * ==========================================================================*/
+.ea-wrap{display:flex; flex-direction:column; min-height:0; height:100%;
+  background:var(--bg); color:var(--text)}
+
+.ea-leiste{display:flex; align-items:center; gap:8px; padding:8px 12px;
+  border-bottom:1px solid var(--line); background:var(--bg-card); flex:0 0 auto}
+.ea-artwahl{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
+  flex:1; min-width:0}
+.ea-artwahl::-webkit-scrollbar{display:none}
+/* Elf Aufgabenarten passen in keine Leiste. Ohne auslaufenden Rand endet
+   „Schaltung erkennen" scharf an der Kante, und niemand ahnt, dass rechts
+   noch drei weitere stehen — gemessen: 1401 px Inhalt in 1154 px Leiste.
+   Derselbe Fall wie E159 und wie das Kapitelband im Formelheft. */
+.ea-leiste{position:relative}
+.ea-leiste::before, .ea-leiste::after{content:''; position:absolute; top:0; bottom:0;
+  width:26px; pointer-events:none; opacity:0; transition:opacity .15s; z-index:1}
+.ea-leiste::before{left:0;  background:linear-gradient(to right, var(--bg-card), transparent)}
+.ea-leiste::after{ right:0; background:linear-gradient(to left,  var(--bg-card), transparent)}
+.ea-leiste[data-mehr="links"]::before,
+.ea-leiste[data-mehr="beides"]::before{opacity:1}
+.ea-leiste[data-mehr="rechts"]::after,
+.ea-leiste[data-mehr="beides"]::after{opacity:1}
+.ea-art{padding:5px 11px; border:1px solid var(--line); border-radius:20px;
+  background:var(--bg); color:var(--text-dim); cursor:pointer; font-size:11.5px;
+  white-space:nowrap; flex:0 0 auto}
+.ea-art:hover{background:var(--bg-hover); color:var(--text)}
+.ea-art.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+
+.ea-buehne{flex:1; overflow-y:auto; padding:20px; display:flex;
+  justify-content:center; align-items:flex-start}
+.ea-aufgabe{width:min(560px, 100%); display:flex; flex-direction:column; gap:12px}
+.ea-kopfzeile{display:flex; align-items:center; justify-content:space-between;
+  font-size:11px; color:var(--text-faint)}
+.ea-artname{text-transform:uppercase; letter-spacing:.06em}
+/* Die Schwierigkeit steht als drei Punkte da, von denen einige blass sind —
+   eine Zahl „2" beantwortet die Frage „von wie vielen?" nicht. */
+.ea-stufe{color:var(--accent); letter-spacing:2px}
+.ea-stufe-aus{color:var(--line-stark)}
+
+.ea-bild{display:flex; justify-content:center; padding:14px;
+  background:var(--bg-card); border-radius:10px; color:var(--text)}
+.ea-bild svg{max-width:100%; height:auto}
+.ea-bild:not(.ea-plan) svg{width:96px; height:96px}
+.ea-plan svg{max-height:260px}
+
+.ea-frage{margin:0; font-size:17px; line-height:1.45; font-weight:600;
+  white-space:pre-wrap}
+/* Ziffern untereinander (`tabular-nums`), aber KEINE Schreibmaschinenschrift:
+   die Zusatzzeile trägt bei Rechenaufgaben „Gegeben/Gesucht" und bei
+   Schaltungsaufgaben einen gewöhnlichen Satz. Der Satz sah in Monospace aus
+   wie Quelltext. */
+.ea-frage-zusatz{margin:0; font-size:14px; color:var(--text-dim);
+  font-variant-numeric:tabular-nums; line-height:1.5}
+
+/* `auto-fit` statt `1fr 1fr`: der Umbruch hängt an der BREITE DER SPALTE und
+   nicht an der des Bildschirms. Im Arbeitsplatz ist die Aufgabenspalte 280 px
+   breit, während das Fenster 1180 hat — zwei Spalten ergaben dort 140 px je
+   Möglichkeit, und „Wechselschalter Schema 3" stand zur Hälfte draussen.
+   Eine Medienabfrage hätte das nie gesehen: der Bildschirm war ja breit. */
+.ea-wahl{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+  gap:8px}
+.ea-option{display:flex; align-items:center; gap:9px; padding:11px 13px;
+  border:1px solid var(--line); border-radius:10px; background:var(--bg-card);
+  color:var(--text); cursor:pointer; font-size:13.5px; text-align:left;
+  min-height:48px; transition:background .12s, border-color .12s}
+.ea-option:hover:not(:disabled){background:var(--bg-hover); border-color:var(--text-faint)}
+.ea-optionbild{flex:0 0 40px; display:flex; align-items:center; justify-content:center}
+.ea-optionbild svg{width:40px; height:40px}
+.ea-optiontext{flex:1; min-width:0}
+/* Richtig und falsch dürfen nicht NUR Farben sein (§38): die Lösung bekommt
+   einen dicken Rand und ein Häkchen, der Fehlgriff ein Kreuz. Wer keine
+   Farben unterscheidet, sieht beides trotzdem. */
+.ea-option.loesung{border-color:var(--erfolg); border-width:2px;
+  background:color-mix(in srgb, var(--erfolg) 12%, transparent)}
+.ea-option.loesung .ea-optiontext::after{content:' ✓'; color:var(--erfolg); font-weight:700}
+.ea-option.daneben{border-color:var(--gefahr); border-width:2px;
+  background:color-mix(in srgb, var(--gefahr) 10%, transparent)}
+.ea-option.daneben .ea-optiontext::after{content:' ✗'; color:var(--gefahr); font-weight:700}
+.ea-option:disabled{cursor:default}
+
+.ea-eingabe{display:flex; align-items:center; gap:8px}
+.ea-antwort{flex:1; min-width:0; padding:11px 13px; border:1px solid var(--line);
+  border-radius:10px; background:var(--bg-input); color:var(--text);
+  font-size:16px; font-variant-numeric:tabular-nums}
+.ea-einheit{color:var(--text-dim); font-size:14px; min-width:3em}
+
+.ea-aufloesung{padding:12px 14px; border-radius:10px; display:flex;
+  flex-direction:column; gap:7px}
+.ea-aufloesung.gut{background:color-mix(in srgb, var(--erfolg) 12%, transparent)}
+.ea-aufloesung.daneben{background:color-mix(in srgb, var(--gefahr) 10%, transparent)}
+.ea-aufloesung.still{background:var(--bg-card)}
+.ea-urteil{margin:0; font-weight:600; font-size:14px}
+.ea-aufloesung.gut .ea-urteil{color:var(--erfolg)}
+.ea-aufloesung.daneben .ea-urteil{color:var(--gefahr)}
+.ea-warum{margin:0; font-size:12.5px; color:var(--text-dim); line-height:1.55}
+.ea-weg{margin:2px 0 0; padding-left:20px; font-size:12.5px; color:var(--text-dim);
+  line-height:1.8; font-variant-numeric:tabular-nums}
+
+.ea-fuss{display:flex; align-items:center; gap:10px; padding:10px 14px;
+  border-top:1px solid var(--line); background:var(--bg-card); flex:0 0 auto}
+.ea-stand{flex:1; min-width:0; font-size:12px; color:var(--text-dim);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ea-fuss button{padding:9px 16px; border:1px solid var(--line); border-radius:9px;
+  background:var(--bg); color:var(--text); cursor:pointer; font-size:13px;
+  min-height:40px}
+.ea-fuss button.prim{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent); font-weight:600}
+.ea-fuss button:disabled{opacity:.45; cursor:default}
+
+/* ---- Prüfung ------------------------------------------------------------ */
+.ea-fortschritt{font-size:12.5px; color:var(--text-dim); white-space:nowrap}
+.ea-balken{flex:1; height:5px; border-radius:3px; background:var(--bg-hover);
+  overflow:hidden; margin-left:10px}
+.ea-balken i{display:block; height:100%; background:var(--accent);
+  transition:width .25s}
+.ea-ergebnis{padding:24px; display:flex; flex-direction:column; gap:12px;
+  max-width:560px; margin:0 auto}
+.ea-ergebnis h3{margin:0; font-size:22px}
+.ea-note{margin:0; font-size:15px; color:var(--text-dim)}
+.ea-liste{margin:6px 0 0; padding-left:20px; display:flex; flex-direction:column;
+  gap:5px; font-size:13px}
+.ea-liste li.gut{color:var(--erfolg)}
+.ea-liste li.daneben{color:var(--gefahr)}
+.ea-saat{margin:4px 0 0; font-size:11.5px; color:var(--text-faint)}
+.ea-saat code{background:var(--bg-hover); padding:2px 6px; border-radius:5px;
+  font-family:ui-monospace, Menlo, monospace}
+.ea-durchgang{padding:20px; display:flex; flex-direction:column; gap:26px;
+  max-width:600px; margin:0 auto}
+
+/* ---- Der Arbeitsplatz: drei Spalten ------------------------------------- */
+.ea-platz{display:grid; grid-template-columns:minmax(280px, 1fr) minmax(0, 1.6fr)
+  minmax(240px, .9fr); gap:1px; background:var(--line); height:100%; min-height:0}
+.ea-spalte{background:var(--bg); display:flex; flex-direction:column;
+  min-width:0; min-height:0; overflow:hidden}
+.ea-spaltenkopf{padding:9px 14px; border-bottom:1px solid var(--line);
+  background:var(--bg-card); font-size:11px; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--text-faint); flex:0 0 auto}
+.ea-mitte{overflow:auto}
+.ea-notizen{flex:1; min-height:120px; margin:12px; padding:11px;
+  border:1px solid var(--line); border-radius:9px; background:var(--bg-input);
+  color:var(--text); font-size:13px; line-height:1.6; resize:none;
+  font-family:inherit}
+.ea-werkzeuge{display:flex; flex-direction:column; gap:6px; padding:0 12px 12px}
+.ea-werkzeuge button{padding:10px 12px; border:1px solid var(--line);
+  border-radius:9px; background:var(--bg-card); color:var(--text);
+  cursor:pointer; font-size:13px; text-align:left; min-height:42px}
+.ea-werkzeuge button:hover{background:var(--bg-hover)}
+
+.ea-leer{flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:9px; padding:28px; text-align:center;
+  color:var(--text-dim)}
+.ea-leer p{margin:0; line-height:1.6}
+.ea-klein{font-size:11.5px; color:var(--text-faint); max-width:34ch}
+
+/* `.overlay` setzt `padding-top:14vh` und `align-items:flex-start` — richtig
+   für einen Suchdialog, falsch für eine Arbeitsfläche: bei 900 px Höhe fing
+   das Fenster bei 126 an, war 800 hoch und endete damit bei 926. Der Fuss mit
+   „Nächste Aufgabe" stand 26 px UNTER dem Bildschirmrand — gemessen, nicht
+   vermutet. Eine Übung, deren Weiter-Knopf man nicht sieht, ist zu Ende. */
+.ea-overlay{align-items:center; padding-top:0}
+.ea-overlay .ea-fenster{width:min(1180px, 96vw);
+  height:min(820px, 92vh); max-height:92vh;
+  display:flex; flex-direction:column; padding:0}
+.ea-inhalt{flex:1; min-height:0; display:flex; flex-direction:column}
+.ea-inhalt > *{flex:1; min-height:0}
+
+/* Am Telefon werden aus drei Spalten drei Abschnitte untereinander — §37.
+   Nebeneinander wäre jede 130 px breit, und darin steht nichts mehr. */
+@media (max-width: 900px){
+  .ea-platz{grid-template-columns:1fr; grid-template-rows:auto auto auto;
+    height:auto; overflow:auto}
+  .ea-spalte{max-height:none}
+  .ea-links .ea-wrap{min-height:420px}
+}
+@media (max-width: 640px){
+  .ea-wahl{grid-template-columns:1fr}
+  .ea-buehne{padding:14px}
+  .ea-frage{font-size:16px}
+  .ea-option{min-height:52px}
+  .ea-fuss button{min-height:46px; flex:1}
+  .ea-antwort{min-height:48px}
+  .ea-overlay .ea-fenster{width:100vw; height:100vh; max-width:none;
+    border-radius:0}
+}

@@ -13169,3 +13169,109 @@ Heft zusätzlich in der Befehlspalette unter der Gruppe „Elektro". Beide
 Eingänge zeigen dasselbe Fenster — es gibt nur eines.
 
 Prüflauf: `test240`, 65 Punkte.
+
+
+## E189 · Aufgaben, die sich selbst erzeugen
+
+*25. August 2026*
+
+Der Elektro-Modus brauchte Übungen. Der naheliegende Weg wäre eine Sammlung
+gewesen: dreihundert Fragen, von Hand geschrieben, mit den Antworten daneben.
+Sie hat drei Nachteile, und der dritte ist der schlimme.
+
+Sie ist nach zwei Wochen durch — wer sie zweimal gemacht hat, kennt die
+Reihenfolge und nicht den Stoff. Sie veraltet — kommt ein Symbol ins Register,
+fehlt es in den Aufgaben, und niemand merkt es, denn es fehlt ja nur eine
+Frage, die es nie gab. **Und sie kann falsch sein.** Eine von Hand
+geschriebene Antwort ist eine zweite Wahrheit neben der im Register. Zwei
+Wahrheiten laufen auseinander, und dann lernt jemand etwas Falsches und
+bekommt dafür einen Haken.
+
+Deshalb ERZEUGT `bereiche/elektro/aufgaben.ts` die Aufgaben aus dem, was
+ohnehin da ist: den hundert Symbolen, den fünfzig Formeln und einem Dutzend
+Schaltungen. Elf Arten in vier Gruppen — Fachzeichen, Rechnen, Schaltungen,
+Messen. Eine Frage nach dem Namen eines Symbols kann damit nicht falsch sein:
+die Antwort kommt aus derselben Zeile, aus der auch die Palette den Namen
+nimmt. Und bei einer Rechenaufgabe wird die Musterlösung nicht
+danebengeschrieben, sondern GERECHNET — mit demselben Code, der auch im
+Formelheft rechnet.
+
+### Der Zufall ist gesät
+
+`Math.random()` wäre bequem und würde jede Prüfung wertlos machen: eine
+Aufgabe, die bei jedem Lauf anders ist, lässt sich nicht nachrechnen. Der
+Zufall kommt aus einem Startwert (mulberry32). Derselbe Startwert gibt
+dieselbe Aufgabe — im Prüflauf, im Unterricht für alle gleich, und beim
+Nachbesprechen wieder Wort für Wort dieselbe. Der Startwert steht deshalb
+nach jeder Prüfung sichtbar da.
+
+### Fünf Fehler, die beim Messen herausfielen
+
+Alle fünf sahen im Bild völlig normal aus.
+
+**Zwei gleiche Antwortmöglichkeiten.** Zwei Bauteile können dieselbe
+Anschlussliste haben — „1, 2" gibt es ein Dutzend Mal. Standen sie
+nebeneinander, war die Frage keine mehr: wer die zweite anklickte, bekam ein
+rotes Kreuz für dieselbe Antwort.
+
+**Eine Aufgabe mit 320 000 Volt.** 82 kΩ ist ein plausibler Widerstand,
+3,9 A ein plausibler Strom — ihre KOMBINATION ist es nicht. Wer so etwas
+rechnet, gewöhnt sich ab, das Ergebnis anzusehen, und genau das Ansehen ist
+im Beruf die einzige Sicherung gegen einen Zahlendreher. Jetzt muss auch das
+Ergebnis in seinem Bereich liegen, geprüft erst nach dem Formelzeichen und
+sonst nach der EINHEIT: `I` stand in der Tabelle, `I₁` und `I_N` nicht, und
+über die kam ein Strom von 254 A herein. Negative Ergebnisse fallen ganz weg.
+
+**„120 µA sind wie viel kA?"** Neun Zehnerpotenzen sind keine Aufgabe aus dem
+Beruf. Umgerechnet wird jetzt höchstens zwei Stufen weit — und der Fehler,
+der etwas kostet, passiert ohnehin bei einem Schritt.
+
+**Drei von vier Möglichkeiten waren Beischriften.** Gefragt war, welches
+Bauteil im Plan fehlt; zur Auswahl standen „Betätigung: Drücken", „Betätigung:
+Drehen" und „Betätigung: Schlüssel" — Symbole ohne einen einzigen Anschluss.
+Sie stammten aus derselben Gruppe wie der gesuchte Schalter. Wer weiss, dass
+ein Bauteil Klemmen braucht, hatte die Antwort ohne Nachdenken. Ablenker
+brauchen jetzt mindestens zwei Anschlüsse.
+
+**Und einer im Code selbst.** Die Auswahl der Betriebsmittel rief `w.misch`
+in der Bedingung und noch einmal im Zweig — und weil jeder Aufruf den Würfel
+weiterdreht, prüfte die Bedingung eine andere Mischung als die
+zurückgegebene. Die richtige Antwort hätte fehlen können.
+
+### Der Arbeitsplatz (Punkt 100)
+
+Drei Spalten: links Aufgaben, in der Mitte der Plan, rechts Notizen und der
+Weg zum Formelheft. Der Grund für drei Spalten ist nicht Platz, sondern ZEIT.
+Eine Aufgabe lösen heisst lesen, zeichnen, nachschlagen, rechnen,
+aufschreiben — und dazwischen springt man ein Dutzend Mal hin und her. Wer
+dafür die Ansicht wechseln muss, liest die Aufgabe am Ende dreimal.
+
+Die Mitte ist ein gewöhnlicher Redion-Block. Ein zweiter Schaltplaneditor
+„für den Arbeitsplatz" wäre L34 in gross gewesen.
+
+### Und was das Hinsehen fand
+
+**Der Weiter-Knopf stand unter dem Bildschirmrand.** `.overlay` setzt
+`padding-top:14vh` — richtig für einen Suchdialog. Bei 900 px Höhe fing das
+Fenster damit bei 126 an, war 800 hoch und endete bei 926. Eine Übung, deren
+Weiter-Knopf man nicht sieht, ist zu Ende.
+
+**Die Antwortmöglichkeiten standen zur Hälfte draussen.** Im Arbeitsplatz ist
+die Aufgabenspalte 280 px breit, während das Fenster 1180 hat. Zwei Spalten
+ergaben dort 140 px je Möglichkeit. Eine Medienabfrage nach Bildschirmbreite
+hätte das nie gesehen — der Bildschirm war ja breit. `auto-fit` bricht nach
+der Breite der SPALTE um.
+
+**Der Plan war unlesbar.** Er wurde immer 620 × 360 gross gezeichnet, egal
+wie viel darauf stand — und in der schmalen Spalte waren die
+Betriebsmittelkennzeichen drei Pixel hoch. Die Frage lautete ausgerechnet
+„welches Betriebsmittel ist das?". Die Blattgrösse folgt jetzt dem Inhalt.
+
+**Und die Prosa stand in Schreibmaschinenschrift.** Die Zusatzzeile ist für
+„Gegeben/Gesucht" gedacht; bei Schaltungsaufgaben trägt sie einen
+gewöhnlichen Satz, und der sah aus wie Quelltext.
+
+Prüflauf: `test241`, 91 Punkte. Darunter für jede der elf Arten vierzig
+Würfelungen und die Frage, ob die Aufgabe ihre EIGENE Lösung als richtig
+durchgehen lässt — mit Gegenproben, damit ein `pruefe`, das immer Ja sagt,
+nicht alles grün macht.
