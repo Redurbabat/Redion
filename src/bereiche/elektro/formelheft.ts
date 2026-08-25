@@ -214,16 +214,27 @@ const Formelheft = (() => {
 
     /* Wo es zuletzt stand — aber nie ausserhalb des Bildes. Ein Fenster,
        das nach einem Bildschirmwechsel unerreichbar ist, ist verloren. */
-    const ort = gemerkt<{ x: number; y: number; w: number; h: number }>(
-      M_ORT, { x: 0, y: 0, w: 0, h: 0 });
-    const breite = Math.min(Math.max(ort.w || 420, 320), window.innerWidth - 20);
-    const hoehe = Math.min(Math.max(ort.h || 520, 260), window.innerHeight - 20);
+    /* `null` heisst „noch nie gemerkt" — und das ist NICHT dasselbe wie
+       „gemerkt bei 0". Hier stand `ort.x || vorgabe`, und damit vergass das
+       Heft seinen Platz genau dann, wenn man es an den linken oder oberen
+       Rand geschoben hatte: 0 ist falsch im Sinne von JavaScript und richtig
+       im Sinne des Menschen. Derselbe Fehler wie eine Zahl, die zu einer
+       anderen Zahl wird — er sieht aus wie Absicht. */
+    const ort = gemerkt<{ x: number; y: number; w: number; h: number } | null>(
+      M_ORT, null);
+    const zahl = (wert: unknown, vorgabe: number): number =>
+      (typeof wert === 'number' && Number.isFinite(wert)) ? wert : vorgabe;
+
+    const breite = Math.min(Math.max(zahl(ort?.w, 420), 320), window.innerWidth - 20);
+    const hoehe = Math.min(Math.max(zahl(ort?.h, 520), 260), window.innerHeight - 20);
     f.style.width = breite + 'px';
     f.style.height = hoehe + 'px';
-    f.style.left = Math.max(8, Math.min(ort.x || (window.innerWidth - breite - 30),
-                                        window.innerWidth - breite - 8)) + 'px';
-    f.style.top = Math.max(8, Math.min(ort.y || 90,
-                                       window.innerHeight - hoehe - 8)) + 'px';
+    /* Im Bild bleiben, aber die Kante DARF die Kante sein. Ein erzwungener
+       Rand von 8 px verschiebt jedes gemerkte Fenster bei jedem Öffnen. */
+    f.style.left = Math.max(0, Math.min(zahl(ort?.x, window.innerWidth - breite - 30),
+                                        Math.max(0, window.innerWidth - breite))) + 'px';
+    f.style.top = Math.max(0, Math.min(zahl(ort?.y, 90),
+                                       Math.max(0, window.innerHeight - hoehe))) + 'px';
 
     document.body.appendChild(f);
 
@@ -296,17 +307,40 @@ const Formelheft = (() => {
       f.innerHTML = kopf +
         `<div class="fh-suche"><input type="search" placeholder="Formel oder Grösse suchen …" ` +
         `value="${esc(suchtext)}" aria-label="Formel suchen"></div>` +
-        `<div class="fh-kapitel">` +
+        `<div class="fh-band"><div class="fh-kapitel">` +
         (fav.length ? `<button data-k="fav"${kapitel === 'fav' && !suchtext ? ' class="an"' : ''}>` +
           `★ ${fav.length}</button>` : '') +
         kapitelListe.map(k =>
           `<button data-k="${esc(k[0])}"${k[0] === kapitel && !suchtext ? ' class="an"' : ''}>` +
-          `${esc(k[1])}</button>`).join('') + `</div>` +
+          `${esc(k[1])}</button>`).join('') + `</div></div>` +
         `<div class="fh-inhalt">` +
         (treffer.length
           ? treffer.map((x: any) => formelHtml(x, fav)).join('')
           : `<div class="fh-leer"><p>Nichts gefunden.</p></div>`) +
         `</div>`;
+
+      /* Zwei Dinge am Kapitelband, und beide fielen erst beim Hinsehen auf:
+         es lief rechts scharf aus dem Fenster („Leistung und E…"), und das
+         aktive Kapitel stand ausserhalb des Bildes, sodass gar kein Kapitel
+         hervorgehoben AUSSAH. Wer nicht weiss, wo er ist, blättert nicht
+         weiter — er sucht.
+
+         Der auslaufende Rand kommt von `Rollrand` und nicht von einer
+         vierten abgeschriebenen Rechnung (E141, E151, E159 sind die drei
+         vorigen). */
+      const band = f.querySelector('.fh-kapitel') as HTMLElement | null;
+      if (band) {
+        /* Der Verlauf gehört an die HÜLLE `.fh-band`, nicht ans Rollfeld: ein
+           Pseudo-Element im Rollfeld rollt mit und wäre nach dem ersten Wisch
+           weg. Die Hülle steht deshalb im Markup und wird nicht nachträglich
+           gesucht — `parentElement` wäre hier das ganze Fenster gewesen, und
+           der Verlauf hätte über die volle Höhe gelegen. */
+        const huelle = band.closest('.fh-band') as HTMLElement | null;
+        if (typeof Rollrand !== 'undefined')
+          Rollrand.binde(band, { art: 'mehr', an: huelle });
+        const aktiv = band.querySelector('.an') as HTMLElement | null;
+        if (aktiv) aktiv.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
     };
 
     neuMalen = () => { void male(); };
@@ -474,6 +508,35 @@ const Formelheft = (() => {
   const umschalten = (kapitel?: string): void => {
     if (offen()) schliessen(); else oeffne(kapitel);
   };
+
+  /* ------------------------------------------------------------------------
+   * DER WEG HIERHER
+   * ------------------------------------------------------------------------
+   * Zwei Eingänge, und beide sind nötig.
+   *
+   * Der Knopf in der Planfläche ist der wichtigere — dort wird gezeichnet,
+   * und dort wird nachgeschlagen. Aber eine Formel braucht man auch beim
+   * Schreiben einer Aufgabe, beim Ausfüllen einer Tabelle und beim
+   * Nachrechnen einer Rechnung, und für diese Fälle steht der Befehl in der
+   * Palette (Strg K → „Formelheft"). Beides zeigt DASSELBE Fenster: es gibt
+   * nur eines, und `umschalten` findet es wieder.
+   *
+   * Angemeldet wird beim Laden, nicht beim ersten Öffnen. Ein Befehl, der
+   * erst existiert, nachdem man ihn einmal anders benutzt hat, ist kein
+   * Befehl — er ist ein Andenken.
+   * ----------------------------------------------------------------------*/
+  if (typeof Register !== 'undefined' && Register.befehle) {
+    Register.befehle.melde({
+      titel: 'Formelheft öffnen',
+      gruppe: 'Elektro',
+      tun: () => umschalten()
+    });
+    Register.befehle.melde({
+      titel: 'Formelheft: eigenes PDF laden',
+      gruppe: 'Elektro',
+      tun: () => { oeffne(); void pdfLaden(); }
+    });
+  }
 
   return { oeffne, schliessen, umschalten, offen,
            favoriten, favoritUmschalten, seitenFavoriten, seiteUmschalten,

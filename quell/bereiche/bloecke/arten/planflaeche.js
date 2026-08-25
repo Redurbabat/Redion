@@ -188,6 +188,9 @@ const Planflaeche = (() => {
                     `aria-pressed="${z.simulation}" ` +
                     `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
                     `${z.simulation ? '◼' : '▶'} Strom</button>` +
+                    `<button class="sp-heft${heftOffen() ? ' an' : ''}" data-a="heft" ` +
+                    `title="Formelheft — beim Zeichnen nachschlagen und rechnen" ` +
+                    `aria-pressed="${heftOffen()}" aria-label="Formelheft">📐</button>` +
                     `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.zurueck.length ? '' : ' disabled'}>↶</button>` +
                     `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.vorwaerts.length ? '' : ' disabled'}>↷</button>` +
                     `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button></span>`;
@@ -703,6 +706,62 @@ const Planflaeche = (() => {
             });
             o.querySelector('#sp-bmk')?.focus();
         };
+        /* --- Das Formelheft (Punkt 61) ---------------------------------------
+         * Redur hat es genau so beschrieben: „wenn ich zeichne und dort bei
+         * einfügen Formelheft klicke, sollte das Formelheft dort kommen, und ich
+         * kann es bewegen." Der Punkt ist das WÄHREND. Ein Nachschlagewerk, das
+         * man erst öffnen und dann wieder schliessen muss, um weiterzuzeichnen,
+         * ist keins — man merkt sich die Formel falsch und zeichnet weiter.
+         *
+         * Deshalb ist es ein schwebendes Fenster und kein Dialog: der Plan
+         * bleibt darunter bedienbar, das Heft bleibt offen, und man kann in der
+         * einen Hand die Formel und in der anderen den Schaltplan haben.
+         * -------------------------------------------------------------------- */
+        const heftOffen = () => typeof Formelheft !== 'undefined' && Formelheft.offen();
+        const heftUmschalten = () => {
+            if (typeof Formelheft === 'undefined') {
+                UI.toast('Das Formelheft ist nicht geladen.');
+                return;
+            }
+            /* Beim Öffnen gleich das passende Kapitel: wer einen Motor gezeichnet
+               hat, sucht Drehstrom, und wer eine Lampe gezeichnet hat, Leistung.
+               Das erspart drei Klicks in genau dem Moment, in dem man sie am
+               wenigsten machen will. */
+            Formelheft.umschalten(kapitelZumPlan());
+            kopfMalen();
+        };
+        /**
+         * Welches Kapitel zum Plan passt — abgelesen an dem, was darin steht.
+         *
+         * Die Kennungen kommen aus `Register.elektroformeln.kapitel()` und werden
+         * NICHT geraten: der erste Versuch schrieb hier „drehstrom", „steuerung"
+         * und „installation", und keines der drei gibt es. Das Heft wäre stumm
+         * beim vorgesehenen Kapitel gelandet, ohne dass irgendwo etwas kaputt
+         * ausgesehen hätte.
+         */
+        const KAPITEL_ZU_ZEICHEN = [
+            ['dreh', ['motor-drehstrom', 'motorschutzschalter', 'thermorelais']],
+            ['motor', ['motor-wechselstrom', 'motor-gleichstrom']],
+            ['trafo', ['transformator']],
+            ['konden', ['kondensator', 'elko']],
+            /* Eine Lampe im Stromlaufplan ist ein VERBRAUCHER. Zuerst stand sie
+               hier bei „Lichttechnik", und das Heft öffnete beim Zeichnen eines
+               gewöhnlichen Stromkreises die Beleuchtungsstärke — richtig geraten
+               nach dem Symbol, falsch geraten nach der Frage. Lichttechnik gehört
+               zum Bauplan, nicht zum Stromlauf. */
+            ['leistung', ['lampe', 'signalleuchte', 'hupe', 'klingel', 'ch-kontrolllampe']],
+            ['licht', ['bp-leuchte', 'bp-einbauleuchte', 'bp-leuchtstelle']],
+            ['quelle', ['batterie', 'gleichspannung', 'generator']],
+            ['wechsel', ['spule-induktivitaet', 'wechselspannung']],
+            ['leiter', ['leitungsschutzschalter', 'sicherung', 'widerstand']]
+        ];
+        const kapitelZumPlan = () => {
+            const zeichen = new Set(z.plan.teile.map(t => t.zeichen));
+            for (const [kapitel, ausloeser] of KAPITEL_ZU_ZEICHEN)
+                if (ausloeser.some(x => zeichen.has(x)))
+                    return kapitel;
+            return undefined;
+        };
         /**
          * Den Strom ein- und ausschalten.
          *
@@ -745,6 +804,8 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
+            if (b.dataset.a === 'heft')
+                return heftUmschalten();
             if (b.dataset.a === 'simulation')
                 return simulationUmschalten();
             if (b.dataset.a === 'zurueck')

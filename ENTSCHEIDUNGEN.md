@@ -13083,3 +13083,89 @@ Kreuzschaltung, die Selbsthaltung über sechs Bedienschritte und die
 Wheatstone-Brücke — abgeglichen und verstimmt. Die Brücke steht dort nicht
 zur Zierde: sie lässt sich nicht in Reihe und Parallel zerlegen, und eine
 Simulation, die nur das kann, muss dort unauffällig falsch liegen.
+
+
+## E188 · Ein Formelheft, das offen bleibt, während man zeichnet
+
+*25. August 2026*
+
+Redur hat es genau beschrieben: „wenn ich zeichne und dort bei einfügen
+Formelheft klicke, sollte das Formelheft dort kommen, und ich es bewegen
+können, und auf alle Seiten gehen können und die Seiten auch in Favoriten
+speichern können."
+
+Das entscheidende Wort ist **während**. Ein Nachschlagewerk, das die Arbeit
+ersetzt, statt daneben zu stehen, ist keines: man schlägt nach, schliesst es,
+merkt sich die Formel — und merkt sie sich falsch. Deshalb ist das Heft ein
+schwebendes Fenster und kein Dialog. Kein abdunkelnder Hintergrund, kein
+Überlagerungsschleier; der Plan darunter bleibt sichtbar und nimmt weiter
+Klicks entgegen. `test240` §3 prüft genau das, mit `elementFromPoint`.
+
+### Zwei Hefte in einem
+
+**Redions eigene Sammlung** — rund fünfzig Formeln in vierzehn Kapiteln, von
+Grundformeln bis Kompensation. Jede erklärt sich in einem Satz, nennt ihre
+Grössen mit Zeichen und Einheit, und rechnet: Gesuchte wählen, Werte
+eintippen, Ergebnis ablesen — samt Rechenweg, weil im Unterricht der Weg
+bewertet wird und nicht die Zahl.
+
+**Das eigene PDF** — einmal geladen, danach durchblättert, Seiten merkbar. Es
+liegt als gewöhnlicher Redion-Anhang in der IndexedDB und geht damit durch
+`.redion`-Sicherung und Wiederherstellung wie jede andere Datei.
+
+Warum kein Heft mitgeliefert wird: eine gescannte Formelsammlung ist fremdes
+Lehrmaterial mit eigenem Urheberrecht. Redion liefert die FÄHIGKEIT, ein Heft
+zu benutzen, und eine eigene, selbst geschriebene Sammlung dazu. Die Formeln
+selbst gehören niemandem; die Auswahl und der Satz eines fremden Hefts schon.
+
+### Kein eval()
+
+§20 verbietet es, und die Formeln lösen deshalb über echte Funktionen —
+`loese: { I: v => v.U / v.R }` statt einer Zeichenkette, die jemand auswertet.
+`test240` §6 durchsucht die drei erzeugten Dateien und hat eine Gegenprobe
+dabei, damit die Regel nicht stumm wird.
+
+### Vier Fehler, gefunden durch Hinsehen und Messen
+
+* **Das Heft öffnete das falsche Kapitel.** Beim Zeichnen eines gewöhnlichen
+  Stromkreises schlug es die *Beleuchtungsstärke* auf — weil eine Lampe im
+  Plan stand und `lampe` auf „Lichttechnik" zeigte. Eine Lampe im
+  Stromlaufplan ist ein Verbraucher; Lichttechnik gehört zum Bauplan. Nach
+  dem Symbol richtig geraten, nach der Frage falsch.
+* **Die Kapitelnamen brachen scharf am Fensterrand ab** — „Leistung und E".
+  Dasselbe Bild wie E159, wo „Meine Fehler" mitten im Wort endete. Der Rand
+  läuft jetzt aus, über `Rollrand` und nicht über eine vierte abgeschriebene
+  Rechnung.
+* **Das aktive Kapitel stand ausserhalb des Bildes.** Es war hervorgehoben,
+  aber man sah es nicht — und wer nicht weiss, wo er ist, blättert nicht
+  weiter, sondern sucht.
+* **Das Heft vergass seinen Platz, wenn man es an den linken oder oberen
+  Rand geschoben hatte.** `ort.x || vorgabe`: die Null ist im Sinne von
+  JavaScript falsch und im Sinne des Menschen richtig. Derselbe Fehler wie
+  eine Zahl, die zu einer anderen Zahl wird — er sieht aus wie Absicht.
+
+### Und zwei Fehler in den Prüfungen selbst
+
+Sie sind hier festgehalten, weil beide dieselbe Versuchung hatten.
+
+`test240` §9 mass die Knopfgrössen am Telefon und fand den Stern bei 43×27
+und die Kapitelknöpfe bei 27 hoch. §37 nennt 44 px. Die bequeme Lösung wäre
+gewesen, die Prüfung auf 30 zu setzen — sie wäre grün geworden, und der
+Knopf wäre weiter zu klein. Stattdessen steht 44 in der Prüfung und die
+Knöpfe sind gewachsen.
+
+`test240` §1 verlangte für jede Grösse eine Einheit und machte damit fünf
+RICHTIGE Einträge rot: Wirkungsgrad, cos φ, Dielektrizitätszahl,
+Windungszahl und Polpaarzahl sind Verhältnisse und haben keine. Die Prüfung
+verlangt jetzt das Feld (vergessen fällt auf) und führt daneben die Liste
+der vierzehn einheitenlosen Grössen. Wer eine hinzufügt und die Einheit
+vergisst, muss diese Zeile anfassen — und merkt es dabei.
+
+### Der zweite Weg hinein
+
+Der Knopf in der Planfläche ist der wichtigere, aber eine Formel braucht man
+auch beim Schreiben einer Aufgabe und beim Nachrechnen. Deshalb steht das
+Heft zusätzlich in der Befehlspalette unter der Gruppe „Elektro". Beide
+Eingänge zeigen dasselbe Fenster — es gibt nur eines.
+
+Prüflauf: `test240`, 65 Punkte.

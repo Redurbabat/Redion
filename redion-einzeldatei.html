@@ -8276,6 +8276,13 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .sp-buehne.sp-laeuft{background:
   linear-gradient(0deg, color-mix(in srgb, var(--sp-strom) 6%, transparent), transparent 60px),
   var(--bg)}
+/* Der Knopf trägt Text, die Nachbarn tragen nur ein Zeichen. Ohne eigene
+   Breite erbt er die 34 px der Icon-Knöpfe und schneidet „Strom" zu „Stron"
+   ab — gemessen, nicht vermutet: scrollWidth 40 gegen clientWidth 34. Das
+   ist derselbe Fehler wie die abgeschnittene Zahl in CLAUDE.md §55.1, nur
+   in Buchstaben. */
+.sp-start{width:auto !important; min-width:max-content; padding:0 11px; gap:5px;
+  display:inline-flex; align-items:center; white-space:nowrap; flex:0 0 auto}
 .sp-start.an{background:var(--sp-strom); color:#231000; border-color:var(--sp-strom)}
 
 .sp-simzahlen{color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap}
@@ -8336,6 +8343,185 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .sp-wz, .sp-rechts button{width:44px; height:44px}
   .sp-auswahl button{width:40px; height:40px}
   .sp-ebene{padding:8px 12px}
+}
+
+/* ==========================================================================
+ * DAS FORMELHEFT (E188)
+ * --------------------------------------------------------------------------
+ * Ein Fenster, das ÜBER der Arbeit schwebt und sie nicht verdeckt. Der
+ * Unterschied ist wichtig: ein Dialog nimmt die Seite in Beschlag und muss
+ * geschlossen werden, bevor man weiterzeichnet. Ein Formelheft, das man
+ * schliessen muss, um die Formel anzuwenden, ist kein Formelheft.
+ *
+ * Deshalb `position:fixed` statt Overlay, kein abdunkelnder Hintergrund,
+ * und die Seite darunter bleibt bedienbar. Bewegen am Kopf, Grösse an der
+ * Ecke — beides bleibt im Bild, damit das Heft nicht verlorengehen kann.
+ * ==========================================================================*/
+.fh-fenster{position:fixed; z-index:640; display:flex; flex-direction:column;
+  background:var(--bg-card); border:1px solid var(--line-stark);
+  border-radius:12px; box-shadow:var(--shadow); overflow:hidden;
+  color:var(--text); font-size:13px}
+.fh-kopf{display:flex; align-items:center; gap:8px; padding:8px 8px 8px 12px;
+  border-bottom:1px solid var(--line); background:var(--bg-tief);
+  cursor:grab; user-select:none; touch-action:none; flex:0 0 auto}
+.fh-kopf:active{cursor:grabbing}
+.fh-titel{font-weight:600; flex:1; min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap}
+.fh-kopfknoepfe{display:flex; gap:2px}
+.fh-kopfknoepfe button{width:28px; height:28px; border:0; border-radius:7px;
+  background:transparent; color:var(--text-dim); cursor:pointer; font-size:13px}
+.fh-kopfknoepfe button:hover{background:var(--bg-hover); color:var(--text)}
+.fh-kopfknoepfe button.an{background:var(--accent); color:var(--auf-accent)}
+
+.fh-suche{padding:8px 10px 0; flex:0 0 auto}
+.fh-suche input{width:100%; padding:7px 10px; border:1px solid var(--line);
+  border-radius:8px; background:var(--bg-input); color:var(--text); font-size:12.5px}
+/* Das Kapitelband rollt quer, und es sagt das auch. Ohne diesen auslaufenden
+   Rand endete „Leistung und Energie" scharf am Fensterrand als „Leistung und
+   E" — dasselbe Bild wie E159, wo „Meine Fehler" mitten im Wort abbrach und
+   die Prüfung trotzdem grün war. Der Verlauf liegt an der KANTE und nicht als
+   Maske auf dem Feld, damit die Knöpfe voll deckend bleiben.
+   `Rollrand.binde(band, { art: 'mehr' })` setzt `data-mehr`. */
+.fh-kapitel{display:flex; gap:4px; padding:8px 10px; overflow-x:auto;
+  flex:0 0 auto; scrollbar-width:none; position:relative}
+.fh-kapitel::-webkit-scrollbar{display:none}
+.fh-band{position:relative; flex:0 0 auto}
+.fh-band::before, .fh-band::after{content:''; position:absolute; top:0; bottom:0;
+  width:26px; pointer-events:none; opacity:0; transition:opacity .15s; z-index:1}
+.fh-band::before{left:0;  background:linear-gradient(to right, var(--bg-card), transparent)}
+.fh-band::after{ right:0; background:linear-gradient(to left,  var(--bg-card), transparent)}
+.fh-band[data-mehr="links"]::before,
+.fh-band[data-mehr="beides"]::before{opacity:1}
+.fh-band[data-mehr="rechts"]::after,
+.fh-band[data-mehr="beides"]::after{opacity:1}
+.fh-kapitel button{padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; background:var(--bg); color:var(--text-dim);
+  cursor:pointer; font-size:11.5px; white-space:nowrap; flex:0 0 auto}
+.fh-kapitel button.an{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent)}
+.fh-inhalt{flex:1; overflow-y:auto; padding:0 10px 12px;
+  display:flex; flex-direction:column; gap:8px}
+
+.fh-formel{border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+  background:var(--bg); display:flex; flex-direction:column; gap:6px;
+  position:relative}
+/* Die Schreibweise ist die Formel selbst („P = U · I") und damit das
+   Wichtigste im Kasten — sie steht gross und in der Akzentfarbe, damit man
+   sie beim Durchblättern erkennt, ohne zu lesen. */
+.fh-formel header{display:block; padding-right:26px}
+.fh-formel header b{font-size:14px; font-weight:700; color:var(--accent);
+  font-family:ui-monospace, "SF Mono", Menlo, monospace; letter-spacing:.01em}
+.fh-erkl{margin:0; font-size:12px; color:var(--text-dim); line-height:1.5}
+.fh-groessen{display:flex; flex-wrap:wrap; gap:4px; font-size:11px;
+  color:var(--text-faint)}
+.fh-groessen span{background:var(--bg-hover); padding:2px 7px; border-radius:5px;
+  display:inline-flex; align-items:baseline; gap:4px}
+.fh-groessen i{font-style:normal; font-weight:700; color:var(--text-dim)}
+.fh-groessen em{font-style:normal; opacity:.75}
+/* Der Stern ist ein Umschalter, kein Schmuck: gefüllt heisst gemerkt.
+   Die Aussage steckt in der Form (☆ gegen ★), nicht nur in der Farbe — §38. */
+.fh-stern{position:absolute; top:8px; right:8px; width:24px; height:24px;
+  border:0; border-radius:6px; background:transparent; cursor:pointer;
+  color:var(--text-faint); font-size:13px; line-height:1}
+.fh-stern:hover{background:var(--bg-hover)}
+.fh-stern.an{color:var(--accent)}
+
+/* ---- Der Rechner in der Formel --------------------------------------- */
+.fh-rechner{border-top:1px dashed var(--line); margin-top:2px; padding-top:8px;
+  display:flex; flex-direction:column; gap:7px}
+.fh-gesucht{display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  font-size:11.5px; color:var(--text-dim)}
+.fh-gesucht button{padding:3px 9px; border:1px solid var(--line);
+  border-radius:16px; background:var(--bg-card); color:var(--text-dim);
+  cursor:pointer; font-size:11.5px; font-weight:600}
+.fh-gesucht button.an{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent)}
+.fh-felder{display:grid; grid-template-columns:repeat(auto-fit, minmax(112px, 1fr));
+  gap:6px}
+.fh-feld{display:flex; align-items:center; gap:5px; border:1px solid var(--line);
+  border-radius:8px; padding:4px 7px; background:var(--bg-card)}
+/* Das gesuchte Feld wird NICHT ausgegraut, sondern gestrichelt umrandet:
+   ausgegraut sieht aus wie kaputt, gestrichelt wie „das kommt heraus". */
+.fh-feld.gesucht{border-style:dashed; border-color:var(--accent);
+  background:transparent}
+.fh-feld.gesucht input{color:var(--text-faint)}
+.fh-zeichen{font-weight:700; color:var(--accent); min-width:1.6em}
+.fh-feld input{flex:1; min-width:0; border:0; background:transparent;
+  color:var(--text); font-size:12.5px; font-variant-numeric:tabular-nums;
+  -moz-appearance:textfield}
+.fh-feld input::-webkit-outer-spin-button,
+.fh-feld input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.fh-einheit{color:var(--text-faint); font-size:11px}
+.fh-annahme{margin:0; font-size:11px; color:var(--warnung); line-height:1.45}
+.fh-ergebnis{min-height:1.6em; font-size:13px; font-weight:600;
+  font-variant-numeric:tabular-nums}
+.fh-ergebnis.fh-wartet{color:var(--text-faint); font-weight:400}
+.fh-ergebnis.fh-fertig{color:var(--erfolg)}
+.fh-weg{margin:6px 0 0; padding-left:18px; font-size:11.5px;
+  color:var(--text-dim); font-weight:400; line-height:1.7}
+.fh-weg li{font-variant-numeric:tabular-nums}
+
+/* ---- Das eigene Heft als PDF ------------------------------------------ */
+.fh-pdf{flex:1; overflow:auto; padding:10px; display:flex;
+  align-items:flex-start; justify-content:center; background:var(--bg-tief)}
+.fh-pdf img{max-width:100%; height:auto; border-radius:4px;
+  box-shadow:0 1px 6px rgba(0,0,0,.25); background:#fff}
+.fh-pdffuss{display:flex; align-items:center; gap:5px; padding:7px 10px;
+  border-top:1px solid var(--line); background:var(--bg-card); flex:0 0 auto;
+  flex-wrap:wrap}
+.fh-pdffuss button{min-width:30px; height:30px; padding:0 8px; border:1px solid var(--line);
+  border-radius:7px; background:var(--bg); color:var(--text-dim); cursor:pointer}
+.fh-pdffuss button:hover{background:var(--bg-hover); color:var(--text)}
+.fh-nr{width:58px; height:30px; padding:0 6px; border:1px solid var(--line);
+  border-radius:7px; background:var(--bg-input); color:var(--text);
+  text-align:center; font-variant-numeric:tabular-nums}
+.fh-von{color:var(--text-faint); font-size:11.5px; white-space:nowrap}
+.fh-favseiten{display:flex; gap:3px; margin-left:auto; overflow-x:auto;
+  max-width:52%}
+.fh-favseiten button{min-width:26px; height:26px; padding:0 5px; font-size:11px;
+  border-radius:14px}
+.fh-favseiten button.an{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent)}
+.fh-loesen{margin-left:4px}
+
+.fh-leer{flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:10px; padding:24px; text-align:center;
+  color:var(--text-dim)}
+.fh-leer p{margin:0; line-height:1.6}
+.fh-klein{font-size:11.5px; color:var(--text-faint); max-width:34ch}
+
+/* Der Griff für die Grösse. Er sitzt in der Ecke und ist als solcher zu
+   sehen — ein unsichtbarer Griff wird nie gefunden. */
+.fh-groesse{position:absolute; right:0; bottom:0; width:18px; height:18px;
+  cursor:nwse-resize; touch-action:none;
+  background:linear-gradient(135deg, transparent 50%, var(--text-faint) 50%,
+    var(--text-faint) 60%, transparent 60%, transparent 72%,
+    var(--text-faint) 72%, var(--text-faint) 82%, transparent 82%);
+  opacity:.5}
+.fh-groesse:hover{opacity:1}
+
+/* Am Telefon nimmt das Heft die untere Hälfte und wird nicht geschoben —
+   ein 420-px-Fenster auf einem 360-px-Bildschirm ist kein Fenster (§37). */
+@media (max-width: 640px){
+  .fh-fenster{left:0 !important; right:0; top:auto !important; bottom:0;
+    width:100% !important; height:62vh !important; border-radius:14px 14px 0 0;
+    border-left:0; border-right:0; border-bottom:0}
+  .fh-kopf{cursor:default}
+  .fh-groesse{display:none}
+  /* §37: mit dem Finger getroffen wird ab 44 px. Gemessen wurde das Gegen-
+     teil — der Stern kam auf 43x27, die Kapitelknöpfe auf 27 hoch. Ein Knopf,
+     den man dreimal antippen muss, ist kein Knopf. */
+  .fh-kopfknoepfe button{width:44px; height:44px}
+  .fh-pdffuss button{min-width:44px; height:44px}
+  .fh-nr{height:44px}
+  .fh-kapitel{padding:8px 10px}
+  .fh-kapitel button{min-height:44px; padding:0 14px; font-size:12.5px}
+  .fh-favseiten button{min-width:44px; height:44px; border-radius:22px}
+  /* Der Stern wächst mit — und die Überschrift macht ihm Platz, statt sich
+     von ihm überdecken zu lassen. */
+  .fh-stern{width:44px; height:44px; top:2px; right:2px; font-size:16px}
+  .fh-formel header{padding-right:48px}
+  .fh-gesucht button{min-height:38px; padding:0 14px}
 }
 
 </style>
@@ -27631,6 +27817,14 @@ const Stromfluss = (() => {
      * zugleich der Wert, der die Selbsthaltung überhaupt erst rechenbar macht.
      */
     const KONTAKT = 1e-3;
+    /**
+     * Unterhalb dieser Schwelle ist ein Strom keine Messung mehr, sondern
+     * Rechenrauschen — der Leckstrom über GMIN, der jedes Netz bestimmbar
+     * macht. Er lag beim ersten Bild als „grösster Strom 4.71e-10 A" im Fuss
+     * und behauptete damit, es fliesse etwas, während die Lampe aus war.
+     * Ein Nanoampere ist auch für ein gutes Messgerät die untere Grenze.
+     */
+    const SCHWELLE = 1e-9;
     /** Der Widerstand eines Bauteils — eigener Wert schlägt Vorgabe. */
     const widerstandVon = (t, v) => {
         const eigen = t && t.werte && typeof t.werte.R === 'number' ? t.werte.R : NaN;
@@ -27827,11 +28021,11 @@ const Stromfluss = (() => {
             if (!alt || strom > Math.abs(alt.I)) {
                 werte[e.t.id] = {
                     teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
-                    U: u, I: i, P: Math.abs(u * i), fliesst: strom > 1e-9
+                    U: u, I: i, P: Math.abs(u * i), fliesst: strom > SCHWELLE
                 };
             }
             else if (alt) {
-                alt.fliesst = alt.fliesst || strom > 1e-9;
+                alt.fliesst = alt.fliesst || strom > SCHWELLE;
             }
             netzStrom[e.a] = Math.max(netzStrom[e.a], strom);
             netzStrom[e.b] = Math.max(netzStrom[e.b], strom);
@@ -27853,7 +28047,7 @@ const Stromfluss = (() => {
             w.helligkeit = pNenn > 0 ? Math.max(0, Math.min(1, w.P / pNenn)) : 0;
         });
         const stromNetze = [];
-        netzStrom.forEach((s, i) => { if (s > 1e-9)
+        netzStrom.forEach((s, i) => { if (s > SCHWELLE)
             stromNetze.push(i); });
         /* Welche Spulen haben angezogen? Die Schwelle ist bewusst grob: eine
            Spule zieht an, wenn mindestens die halbe Nennspannung anliegt. Genauer
@@ -27870,8 +28064,12 @@ const Stromfluss = (() => {
             spulen[`#${t.id}`] = an;
         });
         let maxStrom = 0;
-        netzStrom.forEach(s => { if (s > maxStrom)
-            maxStrom = s; });
+        for (let i = 0; i < netzStrom.length; i++) {
+            if (netzStrom[i] <= SCHWELLE)
+                netzStrom[i] = 0;
+            else if (netzStrom[i] > maxStrom)
+                maxStrom = netzStrom[i];
+        }
         return {
             ok: true, fehler: '', spannung, werte, stromNetze, netzStrom, spulen,
             annahmen: Array.from(annahmen), warnungen, durchgaenge: 1,
@@ -27938,7 +28136,7 @@ const Stromfluss = (() => {
                 if (!v || v.art !== 'diode')
                     return;
                 const w = erg.werte[t.id];
-                naechster[`d:${t.id}`] = (w && w.I < -1e-9) ? 1 : 0;
+                naechster[`d:${t.id}`] = (w && w.I < -SCHWELLE) ? 1 : 0;
             });
             const schluessel = JSON.stringify(naechster);
             if (schluessel === JSON.stringify(stand))
@@ -27957,6 +28155,46 @@ const Stromfluss = (() => {
             runde++;
         }
         erg.durchgaenge = runde;
+        /* Überbrückte Bauteile melden.
+           -----------------------------------------------------------------
+           Liegen zwei Anschlüsse DESSELBEN Bauteils im selben Netz, ist es
+           kurzgeschlossen: der Schalter schaltet nichts, die Lampe leuchtet
+           nie, der Widerstand begrenzt nichts.
+    
+           Das passiert fast immer aus einem Grund, und der ist rein zeichne-
+           risch: zwei Leitungen laufen auf derselben Höhe und ÜBERLAPPEN sich.
+           Im Bild sieht das aus wie zwei getrennte Leitungen nebeneinander, in
+           Wahrheit ist es eine. Diese Prüfung wurde geschrieben, weil genau
+           das beim ersten Bildschirmfoto der Wechselschaltung passiert ist —
+           drei Leitungen auf y=130, und die Lampe leuchtete aus dem falschen
+           Grund. Ohne Hinsehen wäre es niemandem aufgefallen, und ohne diese
+           Meldung fällt es der Lernenden auch nicht auf. */
+        const gemeldet = new Set();
+        teile.forEach(t => {
+            const v = verhalten(t.zeichen);
+            if (!v)
+                return;
+            if (t.zeichen === 'verbindungspunkt' || t.zeichen === 'abzweigdose'
+                || t.zeichen === 'bp-abzweigdose')
+                return; /* die SOLLEN das */
+            const eigene = netzInfo.klemmen.filter(k => k.teil === t.id);
+            for (let i = 0; i < eigene.length; i++) {
+                for (let j = i + 1; j < eigene.length; j++) {
+                    const a = eigene[i], b = eigene[j];
+                    if (a.nr === b.nr)
+                        continue; /* Durchgangsklemmen wie L1–L1 */
+                    if (netzInfo.netzVon.get(a.schluessel) !== netzInfo.netzVon.get(b.schluessel))
+                        continue;
+                    const schluessel = `${t.id}:${a.nr}:${b.nr}`;
+                    if (gemeldet.has(schluessel))
+                        continue;
+                    gemeldet.add(schluessel);
+                    erg.warnungen.push(`${t.bmk || t.zeichen}: die Anschlüsse ${a.nr} und ${b.nr} hängen am ` +
+                        `selben Netz — das Bauteil ist überbrückt. Meist laufen zwei ` +
+                        `Leitungen auf derselben Höhe übereinander.`);
+                }
+            }
+        });
         /* Offene Klemmen melden — nicht als Fehler, aber als Hinweis. Der
            häufigste Anfängerfehler ist eine Leitung, die zwei Pixel neben dem
            Anschluss endet, und der Plan sieht dabei völlig richtig aus. */
@@ -27983,7 +28221,9 @@ const Stromfluss = (() => {
         if (!Number.isFinite(wert))
             return '—';
         const b = Math.abs(wert);
-        if (b === 0)
+        /* Unter der Schwelle ist es eine Null. „4.71e-10 A" ist keine Auskunft,
+           sondern eine Behauptung, die der Lernende nicht widerlegen kann. */
+        if (b <= SCHWELLE)
             return `0 ${einheit}`;
         const stufen = [
             [1e9, 'G'], [1e6, 'M'], [1e3, 'k'], [1, ''],
@@ -28768,6 +29008,9 @@ const Planflaeche = (() => {
                     `aria-pressed="${z.simulation}" ` +
                     `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
                     `${z.simulation ? '◼' : '▶'} Strom</button>` +
+                    `<button class="sp-heft${heftOffen() ? ' an' : ''}" data-a="heft" ` +
+                    `title="Formelheft — beim Zeichnen nachschlagen und rechnen" ` +
+                    `aria-pressed="${heftOffen()}" aria-label="Formelheft">📐</button>` +
                     `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.zurueck.length ? '' : ' disabled'}>↶</button>` +
                     `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.vorwaerts.length ? '' : ' disabled'}>↷</button>` +
                     `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button></span>`;
@@ -28800,11 +29043,11 @@ const Planflaeche = (() => {
             if (z.simulation) {
                 const e = z.ergebnis;
                 const leuchtet = e && e.ok
-                    ? Object.keys(e.werte).filter(k => (e.werte[k].helligkeit || 0) > 0.02).length : 0;
+                    ? Object.keys(e.werte).filter(k => (e.werte[k].helligkeit || 0) > 0.01).length : 0;
                 fuss.innerHTML =
                     `<span class="sp-simzahlen">` +
                         (e && e.ok
-                            ? `${leuchtet} leuchtet${leuchtet === 1 ? '' : 'en'} · ` +
+                            ? `${leuchtet} ${leuchtet === 1 ? 'leuchtet' : 'leuchten'} · ` +
                                 `grösster Strom ${esc(Stromfluss.zeige(e.maxStrom, 'A'))}` +
                                 (e.durchgaenge > 1 ? ` · ${e.durchgaenge} Durchgänge` : '')
                             : 'nichts gerechnet') + `</span>` +
@@ -29283,6 +29526,62 @@ const Planflaeche = (() => {
             });
             o.querySelector('#sp-bmk')?.focus();
         };
+        /* --- Das Formelheft (Punkt 61) ---------------------------------------
+         * Redur hat es genau so beschrieben: „wenn ich zeichne und dort bei
+         * einfügen Formelheft klicke, sollte das Formelheft dort kommen, und ich
+         * kann es bewegen." Der Punkt ist das WÄHREND. Ein Nachschlagewerk, das
+         * man erst öffnen und dann wieder schliessen muss, um weiterzuzeichnen,
+         * ist keins — man merkt sich die Formel falsch und zeichnet weiter.
+         *
+         * Deshalb ist es ein schwebendes Fenster und kein Dialog: der Plan
+         * bleibt darunter bedienbar, das Heft bleibt offen, und man kann in der
+         * einen Hand die Formel und in der anderen den Schaltplan haben.
+         * -------------------------------------------------------------------- */
+        const heftOffen = () => typeof Formelheft !== 'undefined' && Formelheft.offen();
+        const heftUmschalten = () => {
+            if (typeof Formelheft === 'undefined') {
+                UI.toast('Das Formelheft ist nicht geladen.');
+                return;
+            }
+            /* Beim Öffnen gleich das passende Kapitel: wer einen Motor gezeichnet
+               hat, sucht Drehstrom, und wer eine Lampe gezeichnet hat, Leistung.
+               Das erspart drei Klicks in genau dem Moment, in dem man sie am
+               wenigsten machen will. */
+            Formelheft.umschalten(kapitelZumPlan());
+            kopfMalen();
+        };
+        /**
+         * Welches Kapitel zum Plan passt — abgelesen an dem, was darin steht.
+         *
+         * Die Kennungen kommen aus `Register.elektroformeln.kapitel()` und werden
+         * NICHT geraten: der erste Versuch schrieb hier „drehstrom", „steuerung"
+         * und „installation", und keines der drei gibt es. Das Heft wäre stumm
+         * beim vorgesehenen Kapitel gelandet, ohne dass irgendwo etwas kaputt
+         * ausgesehen hätte.
+         */
+        const KAPITEL_ZU_ZEICHEN = [
+            ['dreh', ['motor-drehstrom', 'motorschutzschalter', 'thermorelais']],
+            ['motor', ['motor-wechselstrom', 'motor-gleichstrom']],
+            ['trafo', ['transformator']],
+            ['konden', ['kondensator', 'elko']],
+            /* Eine Lampe im Stromlaufplan ist ein VERBRAUCHER. Zuerst stand sie
+               hier bei „Lichttechnik", und das Heft öffnete beim Zeichnen eines
+               gewöhnlichen Stromkreises die Beleuchtungsstärke — richtig geraten
+               nach dem Symbol, falsch geraten nach der Frage. Lichttechnik gehört
+               zum Bauplan, nicht zum Stromlauf. */
+            ['leistung', ['lampe', 'signalleuchte', 'hupe', 'klingel', 'ch-kontrolllampe']],
+            ['licht', ['bp-leuchte', 'bp-einbauleuchte', 'bp-leuchtstelle']],
+            ['quelle', ['batterie', 'gleichspannung', 'generator']],
+            ['wechsel', ['spule-induktivitaet', 'wechselspannung']],
+            ['leiter', ['leitungsschutzschalter', 'sicherung', 'widerstand']]
+        ];
+        const kapitelZumPlan = () => {
+            const zeichen = new Set(z.plan.teile.map(t => t.zeichen));
+            for (const [kapitel, ausloeser] of KAPITEL_ZU_ZEICHEN)
+                if (ausloeser.some(x => zeichen.has(x)))
+                    return kapitel;
+            return undefined;
+        };
         /**
          * Den Strom ein- und ausschalten.
          *
@@ -29325,6 +29624,8 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
+            if (b.dataset.a === 'heft')
+                return heftUmschalten();
             if (b.dataset.a === 'simulation')
                 return simulationUmschalten();
             if (b.dataset.a === 'zurueck')
@@ -29750,13 +30051,22 @@ const Formelheft = (() => {
         fenster = f;
         /* Wo es zuletzt stand — aber nie ausserhalb des Bildes. Ein Fenster,
            das nach einem Bildschirmwechsel unerreichbar ist, ist verloren. */
-        const ort = gemerkt(M_ORT, { x: 0, y: 0, w: 0, h: 0 });
-        const breite = Math.min(Math.max(ort.w || 420, 320), window.innerWidth - 20);
-        const hoehe = Math.min(Math.max(ort.h || 520, 260), window.innerHeight - 20);
+        /* `null` heisst „noch nie gemerkt" — und das ist NICHT dasselbe wie
+           „gemerkt bei 0". Hier stand `ort.x || vorgabe`, und damit vergass das
+           Heft seinen Platz genau dann, wenn man es an den linken oder oberen
+           Rand geschoben hatte: 0 ist falsch im Sinne von JavaScript und richtig
+           im Sinne des Menschen. Derselbe Fehler wie eine Zahl, die zu einer
+           anderen Zahl wird — er sieht aus wie Absicht. */
+        const ort = gemerkt(M_ORT, null);
+        const zahl = (wert, vorgabe) => (typeof wert === 'number' && Number.isFinite(wert)) ? wert : vorgabe;
+        const breite = Math.min(Math.max(zahl(ort?.w, 420), 320), window.innerWidth - 20);
+        const hoehe = Math.min(Math.max(zahl(ort?.h, 520), 260), window.innerHeight - 20);
         f.style.width = breite + 'px';
         f.style.height = hoehe + 'px';
-        f.style.left = Math.max(8, Math.min(ort.x || (window.innerWidth - breite - 30), window.innerWidth - breite - 8)) + 'px';
-        f.style.top = Math.max(8, Math.min(ort.y || 90, window.innerHeight - hoehe - 8)) + 'px';
+        /* Im Bild bleiben, aber die Kante DARF die Kante sein. Ein erzwungener
+           Rand von 8 px verschiebt jedes gemerkte Fenster bei jedem Öffnen. */
+        f.style.left = Math.max(0, Math.min(zahl(ort?.x, window.innerWidth - breite - 30), Math.max(0, window.innerWidth - breite))) + 'px';
+        f.style.top = Math.max(0, Math.min(zahl(ort?.y, 90), Math.max(0, window.innerHeight - hoehe))) + 'px';
         document.body.appendChild(f);
         /* --- Inhalt ---------------------------------------------------------- */
         let suchtext = '';
@@ -29824,16 +30134,39 @@ const Formelheft = (() => {
             f.innerHTML = kopf +
                 `<div class="fh-suche"><input type="search" placeholder="Formel oder Grösse suchen …" ` +
                 `value="${esc(suchtext)}" aria-label="Formel suchen"></div>` +
-                `<div class="fh-kapitel">` +
+                `<div class="fh-band"><div class="fh-kapitel">` +
                 (fav.length ? `<button data-k="fav"${kapitel === 'fav' && !suchtext ? ' class="an"' : ''}>` +
                     `★ ${fav.length}</button>` : '') +
                 kapitelListe.map(k => `<button data-k="${esc(k[0])}"${k[0] === kapitel && !suchtext ? ' class="an"' : ''}>` +
-                    `${esc(k[1])}</button>`).join('') + `</div>` +
+                    `${esc(k[1])}</button>`).join('') + `</div></div>` +
                 `<div class="fh-inhalt">` +
                 (treffer.length
                     ? treffer.map((x) => formelHtml(x, fav)).join('')
                     : `<div class="fh-leer"><p>Nichts gefunden.</p></div>`) +
                 `</div>`;
+            /* Zwei Dinge am Kapitelband, und beide fielen erst beim Hinsehen auf:
+               es lief rechts scharf aus dem Fenster („Leistung und E…"), und das
+               aktive Kapitel stand ausserhalb des Bildes, sodass gar kein Kapitel
+               hervorgehoben AUSSAH. Wer nicht weiss, wo er ist, blättert nicht
+               weiter — er sucht.
+      
+               Der auslaufende Rand kommt von `Rollrand` und nicht von einer
+               vierten abgeschriebenen Rechnung (E141, E151, E159 sind die drei
+               vorigen). */
+            const band = f.querySelector('.fh-kapitel');
+            if (band) {
+                /* Der Verlauf gehört an die HÜLLE `.fh-band`, nicht ans Rollfeld: ein
+                   Pseudo-Element im Rollfeld rollt mit und wäre nach dem ersten Wisch
+                   weg. Die Hülle steht deshalb im Markup und wird nicht nachträglich
+                   gesucht — `parentElement` wäre hier das ganze Fenster gewesen, und
+                   der Verlauf hätte über die volle Höhe gelegen. */
+                const huelle = band.closest('.fh-band');
+                if (typeof Rollrand !== 'undefined')
+                    Rollrand.binde(band, { art: 'mehr', an: huelle });
+                const aktiv = band.querySelector('.an');
+                if (aktiv)
+                    aktiv.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }
         };
         neuMalen = () => { void male(); };
         /* --- Verschieben und Grösse ändern ------------------------------------ */
@@ -30027,6 +30360,34 @@ const Formelheft = (() => {
         else
             oeffne(kapitel);
     };
+    /* ------------------------------------------------------------------------
+     * DER WEG HIERHER
+     * ------------------------------------------------------------------------
+     * Zwei Eingänge, und beide sind nötig.
+     *
+     * Der Knopf in der Planfläche ist der wichtigere — dort wird gezeichnet,
+     * und dort wird nachgeschlagen. Aber eine Formel braucht man auch beim
+     * Schreiben einer Aufgabe, beim Ausfüllen einer Tabelle und beim
+     * Nachrechnen einer Rechnung, und für diese Fälle steht der Befehl in der
+     * Palette (Strg K → „Formelheft"). Beides zeigt DASSELBE Fenster: es gibt
+     * nur eines, und `umschalten` findet es wieder.
+     *
+     * Angemeldet wird beim Laden, nicht beim ersten Öffnen. Ein Befehl, der
+     * erst existiert, nachdem man ihn einmal anders benutzt hat, ist kein
+     * Befehl — er ist ein Andenken.
+     * ----------------------------------------------------------------------*/
+    if (typeof Register !== 'undefined' && Register.befehle) {
+        Register.befehle.melde({
+            titel: 'Formelheft öffnen',
+            gruppe: 'Elektro',
+            tun: () => umschalten()
+        });
+        Register.befehle.melde({
+            titel: 'Formelheft: eigenes PDF laden',
+            gruppe: 'Elektro',
+            tun: () => { oeffne(); void pdfLaden(); }
+        });
+    }
     return { oeffne, schliessen, umschalten, offen,
         favoriten, favoritUmschalten, seitenFavoriten, seiteUmschalten,
         pdfLaden, pdfLoesen };
