@@ -1,4 +1,4 @@
-# Der grosse Auftrag — Stand nach dem 24. August 2026
+# Der grosse Auftrag — Stand nach dem 25. August 2026
 
 Diese Datei beantwortet eine Frage: **was von den 60 Abschnitten steht, was
 steht halb, und was steht nicht.**
@@ -69,7 +69,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 44 | Quellenwahrheit | ◐ | Jedes abgeleitete Objekt trägt seinen `sourceRef` (E129/E130) und findet seit E155 auch zurück: ein Knopf, der das Ziel benennt („↩ PDF · Seite 14"), test220 (21 Punkte), `bilder.mts quelle`. Offen bleibt die Sekunde bei Aufgaben aus Besprechungen — die Angabe existiert nicht (L57) |
 | 45 | Startseite | ✅ | Heute-Dashboard, test208 |
 | 46 | Schnellaktionen | ✅ | elf Wege im Neu-Blatt, test114 (E138/E139) |
-| 47 | Visuelle Qualität | ◐ | laufende Arbeit; E140–E142 sind drei Schritte davon |
+| 47 | Visuelle Qualität | ◐ | Laufende Arbeit, und sie hört nicht auf: E140 (Umlaute), E141 (PDF-Leiste am Telefon), E142 (Kontrast), E148 (abgeschnittene Zähler, Streifen über der Produktwelt, Platzhalter, 120 verlorene Pixel), E151 (Handlung über der Falz). Festgehalten in test214 und test217 — was gemessen ist, kann nicht zurückrutschen |
 | 48 | Dark/Light | ✅ | test128 §9 rechnet den Kontrast jedes Knopfes in beiden Lagen (E142) |
 | 49 | Empty States | ✅ | E143 ist der Musterfall; test208 §8 |
 | 50 | Onboarding der Hauptbereiche | ✅ | Angebot statt Pflicht (E137), test206 §8 |
@@ -78,9 +78,9 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 53 | Performance | ✅ | test195 §5 (Fenster ab 240 Seiten) |
 | 54 | Offline first | ✅ | test31 §3 (Service Worker, Server aus, Seite neu geladen) |
 | 55 | Tests während der Arbeit | ✅ | jede Behebung mit Gegenprobe |
-| 56 | Neue Tests | ✅ | test200, 205–210 |
+| 56 | Neue Tests | ✅ | test200, test205–test220 — sechzehn Suiten, jede mit einzeln zurückgenommenen Gegenproben |
 | 57 | Build | ✅ | `npm run bauen:ts`, `node bauen.mts`, test105 |
-| 58 | Dokumentation | ✅ | diese Datei, ENTSCHEIDUNGEN.md E132–E143, LUECKEN.md L49–L54 |
+| 58 | Dokumentation | ✅ | diese Datei, ENTSCHEIDUNGEN.md E132–E155, LUECKEN.md L49–L57 (L53, L55, L56 geschlossen) |
 | 59 | Git | ✅ | `claude/redion-head2-desktop-move-j47chf` und `codex-study-suite`, main unberührt |
 | 60 | Arbeitsweise | ✅ | ohne Pause, in einem Strang |
 
@@ -88,18 +88,57 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 
 ## Was als Nächstes drankäme
 
-Nach Nutzen sortiert, nicht nach Abschnittsnummer:
+Keiner der 60 Abschnitte ist mehr offen; vier stehen halb, und bei jedem
+steht dabei, warum. Was bleibt, ist klein und benannt:
 
 1. **L57** — die Aufgabe aus einer Besprechung findet ihr Meeting, aber nicht
-   die Minute. Braucht eine Änderung an der KI-Anweisung und ein Modell zum
-   Messen.
-3. **§47 Visuelle Qualität** — laufende Arbeit, E140–E142 und E148 sind
-   vier Schritte davon.
+   die Minute. Die Angabe existiert nicht: die KI gibt `{ was, wer, bis }`
+   zurück, ohne Zeit. Der saubere Weg wäre, sie mitzufragen — das braucht
+   eine Änderung an der KI-Anweisung und ein Modell zum Messen.
+2. **§13 Uni** und **§35 Gemeinsam** bleiben halb, aber nicht aus Versäumnis:
+   Semester aus Titeln zu erkennen ist so gewollt (§13 verbietet ein zweites
+   Datensystem), und ohne Server ist Teilen nun einmal ein Export.
+3. **§47 Visuelle Qualität** hört nicht auf. E140, E141, E142, E148 und E151
+   sind fünf Schritte; der sechste findet sich, sobald wieder jemand
+   hinsieht statt zu lesen (§55).
 
-Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
-Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
-falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen). Und §31 (test217, E151) sowie §41 (test218, E152). Dabei fiel L56 auf und ist geschlossen: wer sich
-einen Namen gab, sah seine Aufgabenliste leer (E153). Und §43 (test219, E154). §44 ist mit E155/test220 fast fertig — offen nur L57.
+## Was seit der ersten Fassung dieser Datei dazukam
+
+| Abschnitt | Womit | Was dabei herauskam |
+| --- | --- | --- |
+| §37, §38 | test211 | 50 Punkte für Elektro und Rechnen |
+| §22 | E144 | der Rest des Whiteboards |
+| §23 | E145, test212 | war nie offen — falsch als fehlend eingetragen |
+| §16 | E146, test206 §12 | „Geteilt öffnen" zeichnete das Feld nicht neu |
+| §28 | E147, test213 | Dateinamen und Quellen suchbar; **L55 geschlossen** |
+| §9, §14 | E149, test215 | Lernpfad und Arbeit, XP getrennt von Wissen |
+| §18, §39 | E150, test216 | der OCR-Dienst liegt bei; **L53 geschlossen** |
+| §31 | E151, test217 | der Startknopf stand 188 px unter der Falz |
+| §41 | E152, test218 | die unverteilte Aufgabe war für niemanden da |
+| — | E153, test218 §8 | wer sich einen Namen gab, verlor seine Liste; **L56** |
+| §43 | E154, test219 | der Obsidian-Rundlauf, einmal ganz durchgelaufen |
+| §44 | E155, test220 | der Weg zurück zur Quelle; offen bleibt **L57** |
+| §47 | E148, test214 | vier Sachen, die nur das Hinsehen fand |
+
+Neun neue Prüfläufe (test212 bis test220), dazu neue Abschnitte in test181,
+test206 und test218. Gezählt, nicht geschätzt:
+
+```txt
+5   fanden einen Fehler im Produkt      E146 · E147 · E148 · E151 · E152/E153
+2   bauten etwas, das fehlte            E150 (OCR-Dienst) · E155 (Rücksprung)
+2   fanden nichts — und das ist gut     test215, test219 hielten fest, was
+                                        steht, damit es nicht wegrutscht
+```
+
+Und in **sechs** davon steckte ein Fehler nicht im Produkt, sondern in meiner
+eigenen Messung: ein `textContent`, das kein Tippen ist (E145); ein `|| -1`
+auf einem Zähler, der bei 0 anfängt (E146); ein `clientWidth`, das die
+Innenabstände mitzählt (E148); ein Suchbereich, der die Notiz auch woanders
+fand (E149); ein `\b2\b`, das die 2 aus „SM-2" nahm (E151); und eine
+Zuordnung, auf der ich `.find()` aufrief (E155).
+
+Das ist die teurere Sorte, und deshalb steht sie bei jedem Eintrag dabei: ein
+Punkt, der aus dem falschen Grund grün ist, fällt niemandem auf.
 
 ---
 
