@@ -476,7 +476,8 @@ const Store = (() => {
   const purgeBlock = (id: string) => {
     const gesammelt: any[] = [];
     const geloescht: Promise<void>[] = [];
-    purgeTief(id, gesammelt, geloescht);
+    const anhaenge: Record<string, string[]> = {};
+    purgeTief(id, gesammelt, geloescht, anhaenge);
     if (!gesammelt.length) return;
     datenGeaendert();
     notify('purge');
@@ -491,7 +492,13 @@ const Store = (() => {
          behielte ihn. */
       await Promise.all(geloescht);
       meldeAnAndereFenster('geaendert', gesammelt.map(x => 'blocks:' + x));
-      for (const x of gesammelt) await purgeAnhaenge(x);
+      /* EINMAL für den ganzen Vorgang, nicht je Block. Bei einer Seite mit
+         fünfhundert Blöcken wäre das fünfhundertmal ein Durchgang durch alle
+         Blöcke — dieselbe Falle, die weiter oben schon den `Promise.all`
+         gekostet hat. */
+      const anspruch = dateiAnspruch();
+      for (const x of gesammelt)
+        await purgeAnhaenge(x, { dateien: anhaenge[x] || [], anspruch });
     })().catch(err => {
       /* Seit `del` ablehnt, kann hier auch der BLOCK selbst liegenbleiben,
          nicht nur seine Anhänge — und dann steht er nach dem Neuladen wieder
@@ -525,12 +532,56 @@ const Store = (() => {
   const vergissAusstehendes = (store: any, id: string) => pending.delete(store + ':' + id);
 
   /** Der eigentliche Abstieg. Sammelt, was danach noch aufzuräumen ist. */
-  const purgeTief = (id: string, gesammelt: any[], geloescht: Promise<void>[] = []) => {
+  /**
+   * Welche Dateien ein Block zeigt.
+   *
+   * Drei Felder, historisch gewachsen: `dateiId` bei Bild-, Datei- und
+   * Videoblöcken, `datei` als ältere Form desselben, `bildDateiId` bei der
+   * gerasterten PDF-Seite (E103).
+   */
+  const dateienAmBlock = (b: any): string[] =>
+    [b && b.dateiId, b && b.datei, b && b.bildDateiId]
+      .filter(Boolean).map((x: any) => String(x));
+
+  /**
+   * Wer eine Datei noch braucht — Dateikennung auf den Block, der sie zeigt.
+   *
+   * DAS IST DIE FRAGE, DIE VOR E171 NIEMAND GESTELLT HAT. Ein Duplikat trägt
+   * dieselbe `dateiId` wie das Original: `baum` nimmt den ganzen Satz mit,
+   * `baumEinfuegen` legt ihn so wieder hin. Wird danach das Original
+   * endgültig gelöscht, ging die Datei mit — und das Duplikat zeigte auf
+   * nichts. Gemessen, nicht vermutet.
+   *
+   * `nurLebende` trennt zwei Fragen, die verschieden zu beantworten sind:
+   *
+   *   false   Darf ich sie ENDGÜLTIG löschen? Dann zählt auch ein Block im
+   *           Papierkorb — der ist umkehrbar, das Löschen nicht (§46).
+   *   true    Ist sie herrenlos? Dann zählt nur, wer sie heute zeigt. Sonst
+   *           räumte die Pflegeseite nie wieder etwas weg.
+   */
+  const dateiAnspruch = (nurLebende = false): Map<string, string> => {
+    const raus = new Map<string, string>();
+    for (const b of Object.values<any>(cache.blocks)) {
+      if (!b) continue;
+      if (nurLebende && b.alive === false) continue;
+      for (const datei of dateienAmBlock(b))
+        if (!raus.has(datei)) raus.set(datei, b.id);
+    }
+    return raus;
+  };
+
+  const purgeTief = (id: string, gesammelt: any[], geloescht: Promise<void>[] = [],
+                     anhaenge: Record<string, string[]> = {}) => {
     const b = cache.blocks[id];
     if (!b) return;
     gesammelt.push(id);
+    /* JETZT merken, nicht später. Nach dieser Funktion ist der Block aus dem
+       Zwischenspeicher, und `purgeAnhaenge` fand seine Datei nie wieder —
+       genau das war L43. */
+    const eigene = dateienAmBlock(b);
+    if (eigene.length) anhaenge[id] = eigene;
     vergissAusstehendes('blocks', id);
-    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt, geloescht));
+    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt, geloescht, anhaenge));
     /* Eine verknüpfte Ansicht zeigt fremde Daten — die bleiben bestehen. */
     if (b.collectionId && !b.verknuepft) {
       const c = cache.collections[b.collectionId];
@@ -540,6 +591,8 @@ const Store = (() => {
            tiefer, und die Ebene sieht niemand. */
         rowsOf(b.collectionId).forEach(r => {
           gesammelt.push(r.id); vergissAusstehendes('blocks', r.id);
+          const ihre = dateienAmBlock(r);
+          if (ihre.length) anhaenge[r.id] = ihre;
           delete cache.blocks[r.id]; geloescht.push(del('blocks', r.id));
         });
         (c.viewIds || []).forEach((v: any) => {
@@ -574,7 +627,9 @@ const Store = (() => {
    * nie gehabt" unterscheiden. Wer ihn mitnimmt, holt sich die Seite beim
    * nächsten Abgleich vom anderen Gerät zurück.
    */
-  const purgeAnhaenge = async (id: string, hinweis: { datei?: string } = {}) => {
+  const purgeAnhaenge = async (id: string, hinweis: {
+      datei?: string; dateien?: string[]; anspruch?: Map<string, string>
+    } = {}) => {
     for (const v of await versionen(id)) await del('versions', v.id);
 
     /* Auch hier: „kein Anhang" und „nicht nachsehen können" sind zweierlei.
@@ -590,13 +645,29 @@ const Store = (() => {
     });
     /* Manche Blockarten merken sich die Datei am Block statt umgekehrt.
        Beide Wege werden gegangen, doppelt gelöscht wird nichts. */
-    const kennungen = new Set<string>(dateien.map((d: any) => d.id));
-    const b = cache.blocks[id];
-    [hinweis.datei, b && b.dateiId, b && b.datei].forEach(x => { if (x) kennungen.add(x); });
+    const kennungen = new Set<string>(dateien.map((d: any) => String(d.id)));
+    /* Der Block ist an dieser Stelle schon aus dem Zwischenspeicher —
+       `purgeTief` reicht seine Dateien deshalb in `hinweis.dateien` herüber.
+       Der Griff in den Cache bleibt trotzdem stehen: `purgeAnhaenge` wird
+       auch einzeln gerufen, und dann ist der Block noch da. */
+    [hinweis.datei, ...(hinweis.dateien || []), ...dateienAmBlock(cache.blocks[id])]
+      .forEach(x => { if (x) kennungen.add(String(x)); });
 
+    const anspruch = hinweis.anspruch || dateiAnspruch();
     for (const dateiId of kennungen) {
+      const wer = anspruch.get(dateiId);
+      if (wer) {
+        /* BEHALTEN — und den Satz dem übergeben, der sie noch zeigt. Ohne
+           die Übergabe hielte `Dateien.verwaist()` sie für herrenlos, weil
+           ihr `blockId` auf den eben gelöschten Block zeigt, und die
+           Pflegeseite böte an, sie wegzuräumen. */
+        const satz = await dateiHolen(dateiId);
+        if (satz && satz.blockId !== wer)
+          await dateiPut(Object.assign({}, satz, { blockId: wer }));
+        continue;
+      }
       for (const st of await stueckeVon(dateiId)) await del('stuecke', st.id);
-      await del('dateien', dateiId);
+      await dateiWeg(dateiId);
     }
   };
 
@@ -2089,7 +2160,7 @@ const Store = (() => {
   return {
     load, uid, now, cache,
     addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
-    purgeAnhaenge, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
+    purgeAnhaenge, dateiAnspruch, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
     addPage, rootPages, trashed, favorites, pathOf,
     addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
     rohSetzen,

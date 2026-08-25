@@ -289,8 +289,15 @@ const Dateien = (() => {
    */
   const verwaist = async (): Promise<any[]> => {
     const alle = await Store.dateiAlle();
+    /* WER SIE HEUTE ZEIGT. Ein Duplikat trägt dieselbe `dateiId` wie das
+       Original (E171). Liegt das Original im Papierkorb, zeigte diese Liste
+       die Datei als herrenlos an — und ein Klick auf „Aufräumen" nahm dem
+       lebenden Duplikat sein Bild. */
+    const beansprucht: Map<string, string> = Store.dateiAnspruch
+      ? Store.dateiAnspruch(true) : new Map();
     return alle.filter((d: any) => {
       if (d.zustand !== 'fertig') return true;
+      if (beansprucht.has(String(d.id))) return false;
       if (!d.blockId) return false;
       const b = Store.getBlock(d.blockId);
       return !b || b.alive === false;

@@ -1606,7 +1606,7 @@ oder ehrlich beschriften. Ein Knopf, hinter dem nichts ist, ist die
 schlechteste der drei Möglichkeiten.
 
 
-## L43 · Ein Anhang ohne `blockId` bleibt für immer liegen
+## L43 · ~~Ein Anhang ohne `blockId` bleibt für immer liegen~~ — GESCHLOSSEN
 
 **22. August 2026.** Beim Messen für E123 aufgefallen, nicht gesucht.
 
@@ -1638,6 +1638,58 @@ Mensch kann sie dort wegräumen.
 Zwischenspeicher fliegt — dazu führt, dass mehr gelöscht wird als heute. Mehr
 zu löschen ist die gefährliche Richtung (§46), und das gehört in eine eigene
 Entscheidung mit eigenen Prüfungen, nicht nebenbei in eine Fehlerbehebung.
+
+---
+
+**25. August 2026 — E171. Diese Sorge war berechtigt, und zwei Sätze oben
+waren falsch.**
+
+Die Sorge zuerst: sie stimmt. Gegengeprobt, indem nur das Merken eingebaut
+und die Anspruchsfrage weggelassen wurde — dann nimmt das Löschen eines
+Duplikats dem Original sein Bild. Genau der Schaden, den dieser Absatz
+befürchtet hat.
+
+Beim Nachmessen kam aber heraus, dass er schon vorher da war, nur durch die
+andere Tür:
+
+```txt
+Bild einfügen · duplizieren · das ORIGINAL endgültig löschen
+  → das Duplikat lebt, seine dateiId zeigt auf nichts, das Bild ist weg
+```
+
+`Store.baum` nimmt den ganzen Satz mit, also tragen beide Blöcke dieselbe
+`dateiId`. Der Dateisatz zeigte über seinen Index auf das Original — mit ihm
+ging er. Datenverlust im Normalbetrieb, ohne dass jemand etwas falsch macht.
+
+Behoben wurde deshalb nicht die Lücke, sondern ihre Ursache: **es wird
+gefragt, ob eine Datei noch jemand zeigt, bevor sie weggeht.** Damit ist das
+Merken sicher, und L43 fällt nebenbei mit.
+
+Und die zwei falschen Sätze:
+
+```txt
+„`Dateien.verwaist()` und die Pflege-Seite finden solche Dateien"
+    Nein. `verwaist()` sagte `if (!d.blockId) return false` — eine Datei ohne
+    Blockangabe galt als in Ordnung. Gemessen: 0 verwaiste, während die Datei
+    aus dem Fall oben in der Ablage lag.
+
+„Der Fall entsteht nur über einen Aufruf, den es noch nicht gibt"
+    Für den Weg über `blockId` stimmt es. Der Weg über `dateiId` am Block
+    brauchte gar keinen neuen Aufruf — Duplizieren genügte.
+```
+
+`verwaist()` stellt jetzt dieselbe Frage, aber eine Stufe schärfer: dort
+zählt nur, wer die Datei HEUTE zeigt. Beim endgültigen Löschen zählt auch
+ein Block im Papierkorb, weil Löschen nicht umkehrbar ist.
+
+**Was offen bleibt:** eine Datei, die nie an einem Block hing — ein Upload,
+dessen Verknüpfung nie kam — findet `verwaist()` weiterhin nicht. Alle sechs
+echten Aufrufer von `Dateien.ablegen` übergeben `blockId`, der Fall entsteht
+also nur über einen Aufruf, den es noch nicht gibt. Ihn automatisch zu
+löschen wäre wieder die gefährliche Richtung: zwischen „abgelegt" und
+„verknüpft" liegen Millisekunden, in denen die Datei echt und herrenlos ist.
+
+Prüflauf: `test226`.
 
 ---
 

@@ -11680,3 +11680,114 @@ nachher  68 Wege — dieselben 65, dazu `spalte`, `spalte-leer`, `pdfseite`
 Randpunkt abgearbeitet — dass die Prüfung fragt, ob man HINEINKOMMT, und
 nicht, ob drinnen das Richtige passiert. Dafür sind die Suiten je Blockart
 da, und die gibt es nicht für alle 66.
+
+---
+
+## E171 · Eine Datei, die noch jemand zeigt, darf nicht mitgelöscht werden (L43)
+
+**25. August 2026.**
+
+L43 stand seit dem 22. August in den Lücken und sah harmlos aus: ein Anhang,
+dessen Dateisatz kein `blockId` trägt, bleibt beim endgültigen Löschen des
+Blocks liegen. Alle sechs echten Aufrufer übergeben `blockId`, also entstand
+der Fall nur über einen Aufruf, den es noch nicht gibt.
+
+Beim Nachmessen kam etwas anderes heraus, und es stand in keiner Lücke:
+
+```txt
+Bild einfügen · Strg+D · das ORIGINAL endgültig löschen
+  → das Duplikat lebt, seine dateiId zeigt auf nichts, das Bild ist weg
+```
+
+`Store.baum` nimmt den ganzen Satz mit, `baumEinfuegen` legt ihn so wieder
+hin — beide Blöcke tragen **dieselbe** `dateiId`. Der Dateisatz zeigt über
+seinen Index auf das Original; wird das gelöscht, geht die Datei mit.
+Datenverlust im Normalbetrieb, ohne dass jemand etwas falsch macht (§46,
+Priorität 1).
+
+### Die Frage, die niemand gestellt hat
+
+Beide Fehler haben dieselbe Ursache: das Löschen fragt nicht, ob die Datei
+noch jemand braucht. Also fragt es das jetzt.
+
+```ts
+const dateiAnspruch = (nurLebende = false): Map<string, string> => …
+```
+
+Dateikennung → der Block, der sie zeigt. Drei Felder werden gelesen, weil es
+historisch drei gibt: `dateiId` bei Bild-, Datei- und Videoblöcken, `datei`
+als ältere Form desselben, `bildDateiId` bei der gerasterten PDF-Seite
+(E103).
+
+`nurLebende` trennt zwei Fragen, die verschieden zu beantworten sind:
+
+```txt
+false   Darf ich endgültig löschen? Dann zählt auch ein Block im Papierkorb.
+        Der Papierkorb ist umkehrbar, das Löschen nicht.
+true    Ist sie herrenlos? Dann zählt nur, wer sie heute zeigt. Sonst räumte
+        die Pflegeseite nie wieder etwas weg.
+```
+
+Wird eine Datei behalten, weil ein anderer Block sie zeigt, bekommt ihr Satz
+dessen `blockId`. Ohne diese Übergabe hielte `Dateien.verwaist()` sie für
+herrenlos — ihr `blockId` zeigte ja auf den eben gelöschten Block — und die
+Pflegeseite böte an, sie wegzuräumen. Derselbe Schaden, eine Tür weiter.
+
+### Und erst dadurch wird L43 sicher behebbar
+
+L43 hat seine eigene Behebung mit dem Satz aufgeschoben, sie würde *mehr*
+löschen als heute, und mehr zu löschen sei die gefährliche Richtung. Das war
+richtig. Gegengeprobt: nur das Merken eingebaut, die Anspruchsfrage
+weggelassen — dann nimmt das Löschen eines Duplikats dem Original sein Bild.
+
+Mit der Anspruchsfrage davor ist es sicher, und `purgeTief` merkt sich die
+Dateien des Blocks jetzt beim Absteigen, solange er noch im Zwischenspeicher
+ist. Einmal je Vorgang, nicht je Block: bei einer Seite mit fünfhundert
+Blöcken wäre ein Durchgang durch alle Blöcke pro Block dieselbe Falle, die
+weiter oben schon den `Promise.all` gekostet hat.
+
+### Was gemessen wurde, vorher und nachher
+
+```txt
+                                          vorher    nachher
+A  Anhang ohne blockId, Block gelöscht     bleibt    weg
+B  Anhang mit blockId, Block gelöscht      weg       weg
+C  dupliziert, ORIGINAL gelöscht           WEG       bleibt
+D  dupliziert, DUPLIKAT gelöscht           bleibt    bleibt
+E  PDF-Seite (bildDateiId), gelöscht       bleibt    weg
+F  ganze Seite mit beiden gelöscht         weg       weg
+G  Original im Papierkorb, Duplikat lebt   verwaist  nicht verwaist
+H  dasselbe ohne Duplikat                  verwaist  verwaist
+```
+
+C ist der teure Fall. F und H sind die Gegenprobe zum Behalten: „im Zweifel
+behalten" darf nicht „nie mehr löschen" heissen.
+
+### Zwei Sätze in L43 waren falsch
+
+```txt
+„`Dateien.verwaist()` und die Pflege-Seite finden solche Dateien"
+    Nein. `verwaist()` sagte `if (!d.blockId) return false`.
+    Gemessen: 0 verwaiste, während die Datei aus Fall A in der Ablage lag.
+
+„Der Fall entsteht nur über einen Aufruf, den es noch nicht gibt"
+    Für den Weg über `blockId` stimmt es. Der Weg über `dateiId` am Block
+    brauchte keinen neuen Aufruf — Duplizieren genügte.
+```
+
+### Gegenproben
+
+```txt
+alles zurückgedreht                          9 rot
+nur die Anspruchsfrage aus                   3 rot  (C, C-Übergabe, D)
+nur das Merken beim Absteigen aus            3 rot  (A, A-Stücke, E)
+verwaist() ohne die Anspruchsfrage           1 rot  (G)
+dateiAnspruch ohne `nurLebende`              1 rot  (H)
+```
+
+Prüflauf: `test226`, 24 Punkte.
+
+**Was offen bleibt:** eine Datei, die nie an einem Block hing, findet
+`verwaist()` weiterhin nicht. Sie automatisch zu löschen wäre wieder die
+gefährliche Richtung — zwischen „abgelegt" und „verknüpft" liegen
+Millisekunden, in denen sie echt und herrenlos ist.
