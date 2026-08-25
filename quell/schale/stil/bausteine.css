@@ -2627,7 +2627,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                      text-align:left; padding:11px 14px; border:1px solid var(--line);
                      border-radius:8px; background:var(--bg-card); color:var(--text)}
 .wahl-knoepfe button:hover{background:var(--bg-hover)}
-.wahl-knoepfe button.prim{border-color:var(--akzent)}
+.wahl-knoepfe button.prim{border-color:var(--accent)}
 .wahl-knoepfe button b{font-size:14.5px; font-weight:600}
 .wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
 
@@ -2956,7 +2956,12 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                   display:inline-flex; align-items:center; justify-content:center}
 .blatt-papierwahl i{display:block; width:100%; height:100%; border-radius:3px;
                     background-color:#fff; border:1px solid var(--rand)}
-.blatt-papierwahl.on i{border-color:var(--akzent, #2f7ed8); box-shadow:0 0 0 1px var(--akzent, #2f7ed8)}
+/* Auch hier stand `--akzent`, das es nicht gibt (gefunden beim Bau des
+   Schaltplans). Der Ersatzwert rettete vor der Unsichtbarkeit — aber die
+   gewählte Papierart leuchtete seit E100 immer blau, in keinem der beiden
+   Themen in der Akzentfarbe. Ein Ersatzwert verdeckt einen Tippfehler, er
+   behebt ihn nicht. */
+.blatt-papierwahl.on i{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
 .blatt-papierwahl i[data-vorschau="liniert"]{
   background-image:linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:100% 4px}
@@ -3351,3 +3356,170 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .db-grenze button{ padding:3px 10px; border-radius:6px; font-size:13px;
   color:var(--text); background:var(--bg-hover) }
 .db-grenze button:hover{ background:var(--rand) }
+
+/* ============================================================================
+ * SCHALTPLAN (Punkte 11–40)
+ * ----------------------------------------------------------------------------
+ * Links die Symbole, rechts die Fläche, oben die Werkzeuge, unten die Ebenen.
+ * Am Telefon klappt die Palette unter die Fläche — sie quer daneben zu lassen
+ * hiesse, von 390 px zweihundert an eine Liste zu verlieren, die man nur
+ * beim Setzen braucht.
+ * ==========================================================================*/
+.sp-wrap{border:1px solid var(--line); border-radius:10px; overflow:hidden;
+  background:var(--bg); display:flex; flex-direction:column; outline:none}
+.sp-wrap:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+
+.sp-kopf{display:flex; align-items:center; gap:10px; padding:8px 10px;
+  border-bottom:1px solid var(--line); background:var(--bg-card); flex-wrap:wrap}
+.sp-art{font-size:13px; padding:5px 8px; border-radius:7px; border:1px solid var(--line);
+  background:var(--bg); color:var(--text); max-width:230px}
+.sp-arterkl{font-size:11.5px; color:var(--text-faint); flex:1; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sp-werkzeuge, .sp-rechts{display:flex; gap:3px; flex:0 0 auto}
+.sp-wz, .sp-rechts button{width:34px; height:34px; border:0; border-radius:7px;
+  background:transparent; color:var(--text-dim); font-size:15px; cursor:pointer; line-height:1}
+.sp-wz:hover, .sp-rechts button:hover:not(:disabled){background:var(--bg-hover); color:var(--text)}
+/* `--accent` UND `--auf-accent` — das Paar gibt es in hell.css und dunkel.css
+   seit jeher, und es ist je Thema richtig gesetzt. Hier stand zuerst ein
+   erfundenes `--akzent` mit einer von Hand gewählten Schriftfarbe: die
+   Variable gab es nicht, der Hintergrund blieb durchsichtig, und `#231000`
+   landete auf fast schwarzem Grund. Das AKTIVE Werkzeug war damit das
+   einzige unsichtbare. */
+.sp-wz.an{background:var(--accent); color:var(--auf-accent)}
+.sp-rechts button:disabled{opacity:.3; cursor:default}
+
+/* DIE PALETTE DARF DEN BLOCK NICHT DEHNEN. Ohne Deckel wird ein Flex-Kasten
+   so hoch wie sein höchstes Kind — und das ist die Liste mit 72 Symbolen.
+   Gemessen: der Block wurde über 1500 px hoch, und der Fuss mit den Ebenen
+   stand ausserhalb des Bildes. Jetzt hat der Körper eine Höhe, und die Liste
+   rollt darin. */
+.sp-koerper{display:flex; min-height:340px; height:min(64vh, 600px)}
+.sp-palette{width:208px; flex:0 0 auto; border-right:1px solid var(--line);
+  display:flex; flex-direction:column; background:var(--bg-card)}
+.sp-suche{padding:8px}
+.sp-suche input{width:100%; font-size:12.5px; padding:6px 8px; border-radius:7px;
+  border:1px solid var(--line); background:var(--bg); color:var(--text)}
+.sp-liste{flex:1; overflow:auto; padding:0 8px 10px}
+.sp-grp{font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--text-faint); margin:10px 0 5px; font-weight:600}
+.sp-syms{display:grid; grid-template-columns:repeat(2,1fr); gap:4px}
+.sp-sym{display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 3px;
+  border:1px solid transparent; border-radius:7px; background:var(--bg);
+  color:var(--text-dim); cursor:pointer}
+.sp-sym:hover{background:var(--bg-hover); border-color:var(--line)}
+.sp-sym.an{border-color:var(--accent); background:var(--bg-hover); color:var(--text)}
+.sp-sym-bild{height:42px; display:flex; align-items:center; justify-content:center}
+.sp-sym-bild svg{max-width:38px; max-height:40px; width:auto; height:auto}
+.sp-sym-name{font-size:9.5px; line-height:1.15; text-align:center;
+  overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
+.sp-sym.sp-fav .sp-sym-name::before{content:'★ '; color:var(--accent)}
+
+.sp-buehne{flex:1; overflow:auto; padding:14px; background:var(--bg);
+  display:flex; align-items:flex-start; justify-content:center}
+.sp-flaeche{max-width:100%; height:auto; color:var(--text); touch-action:none;
+  background:var(--bg); border-radius:6px}
+.sp-teil, .sp-leitung, .sp-text{cursor:pointer}
+/* Die Auswahl darf NICHT nur über die Farbe gehen (§38): sie bekommt einen
+   gestrichelten Rahmen, den man auch ohne Farbsehen erkennt. */
+.sp-gewaehlt{filter:drop-shadow(0 0 0 var(--accent))}
+.sp-teil.sp-gewaehlt rect[fill="transparent"]{fill:var(--accent); fill-opacity:.14;
+  stroke:var(--accent); stroke-width:1.5; stroke-dasharray:4 3}
+.sp-leitung.sp-gewaehlt{stroke:var(--accent); stroke-width:3.5}
+.sp-knoten{pointer-events:none}
+
+/* ---- Die Simulation: der Strom fliesst -----------------------------------
+   Die laufenden Striche liegen als ZWEITER Pfad über der Leitung, nicht als
+   Ersatz. Wer „weniger Bewegung" eingestellt hat, sieht die Strichelung
+   trotzdem — die Information steckt im Muster, nicht bloss in der Bewegung.
+   Genau das verlangt §38: keine Aussage nur über die Farbe. */
+:root{--sp-strom:#e8a020; --sp-schein:#ffd54a}
+:root:not([data-theme="light"]){--sp-strom:#ffb838; --sp-schein:#ffe07a}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--sp-strom:#c47a00}}
+[data-theme="light"]{--sp-strom:#c47a00; --sp-schein:#ffd54a}
+
+.sp-fluss{stroke:var(--sp-strom); stroke-dasharray:7 9; pointer-events:none;
+  animation:sp-fliessen 1s linear infinite}
+@keyframes sp-fliessen{to{stroke-dashoffset:-16}}
+@media (prefers-reduced-motion: reduce){.sp-fluss{animation:none}}
+.sp-leuchtet{pointer-events:none}
+.sp-messwert{fill:var(--sp-strom); font-variant-numeric:tabular-nums;
+  paint-order:stroke; stroke:var(--bg); stroke-width:3px; stroke-linejoin:round}
+/* Ein schaltbares Bauteil zeigt sich als solches, sonst probiert niemand.
+   Der Ring ist gestrichelt und nicht nur eingefärbt — dieselbe Regel. */
+.sp-laeuft .sp-schaltbar{cursor:pointer}
+.sp-laeuft .sp-schaltbar rect[fill="transparent"]{stroke:var(--accent);
+  stroke-width:1.2; stroke-dasharray:3 3; opacity:.55}
+.sp-laeuft .sp-schaltbar:hover rect[fill="transparent"]{opacity:1;
+  fill:var(--accent); fill-opacity:.1}
+/* Während die Simulation läuft, wird nicht gezeichnet — das muss man sehen. */
+.sp-buehne.sp-laeuft{background:
+  linear-gradient(0deg, color-mix(in srgb, var(--sp-strom) 6%, transparent), transparent 60px),
+  var(--bg)}
+/* Der Knopf trägt Text, die Nachbarn tragen nur ein Zeichen. Ohne eigene
+   Breite erbt er die 34 px der Icon-Knöpfe und schneidet „Strom" zu „Stron"
+   ab — gemessen, nicht vermutet: scrollWidth 40 gegen clientWidth 34. Das
+   ist derselbe Fehler wie die abgeschnittene Zahl in CLAUDE.md §55.1, nur
+   in Buchstaben. */
+.sp-start{width:auto !important; min-width:max-content; padding:0 11px; gap:5px;
+  display:inline-flex; align-items:center; white-space:nowrap; flex:0 0 auto}
+.sp-start.an{background:var(--sp-strom); color:#231000; border-color:var(--sp-strom)}
+
+.sp-simzahlen{color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap}
+.sp-meldung{display:inline-flex; align-items:center; gap:5px; padding:3px 9px;
+  border-radius:20px; font-size:11.5px; max-width:46ch; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap}
+.sp-meldung.fehler{background:color-mix(in srgb, var(--gefahr) 16%, transparent);
+  color:var(--gefahr)}
+.sp-meldung.warnung{background:color-mix(in srgb, var(--sp-strom) 16%, transparent);
+  color:var(--sp-strom)}
+.sp-meldung.annahme{background:var(--bg-hover); color:var(--text-dim); cursor:pointer}
+.sp-meldung.gut{color:var(--erfolg)}
+.sp-simhinweis{margin-left:auto; display:flex; align-items:center; gap:8px;
+  color:var(--text-faint)}
+.sp-simhinweis button{padding:4px 10px; border:1px solid var(--line);
+  border-radius:20px; background:var(--bg); color:var(--text-dim);
+  cursor:pointer; font-size:11.5px}
+.sp-simhinweis button:hover{background:var(--bg-hover); color:var(--text)}
+
+.sp-fuss{display:flex; align-items:center; gap:12px; padding:7px 10px;
+  border-top:1px solid var(--line); background:var(--bg-card); flex-wrap:wrap;
+  font-size:12px; color:var(--text-dim)}
+.sp-ebenen{display:flex; gap:4px}
+.sp-ebene{display:inline-flex; align-items:center; gap:5px; padding:4px 9px;
+  border:1px solid var(--line); border-radius:20px; background:var(--bg);
+  color:var(--text-faint); font-size:11.5px; cursor:pointer}
+.sp-ebene i{width:9px; height:9px; border-radius:50%; display:inline-block}
+/* Ausgeblendet heisst durchgestrichen, nicht nur blass — sonst sieht man bei
+   drei Ebenen nicht, welche gerade weg ist. */
+.sp-ebene:not(.an){opacity:.55; text-decoration:line-through}
+.sp-ebene.an{color:var(--text); border-color:var(--text-faint)}
+.sp-auswahl{display:flex; align-items:center; gap:4px; color:var(--text)}
+.sp-auswahl button{width:28px; height:28px; border:0; border-radius:6px;
+  background:var(--bg-hover); color:var(--text-dim); cursor:pointer; font-size:13px; line-height:1}
+.sp-auswahl button:hover{background:var(--bg-input); color:var(--text)}
+.sp-hinweis{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sp-zahlen{margin-left:auto; color:var(--text-faint); font-variant-numeric:tabular-nums}
+
+.sp-dialog{padding:14px 18px; display:flex; flex-direction:column; gap:12px}
+.sp-erkl{margin:0; font-size:12.5px; color:var(--text-dim); line-height:1.5}
+.sp-dialog label{display:flex; flex-direction:column; gap:4px; font-size:12px;
+  color:var(--text-dim)}
+.sp-dialog input{font-size:13.5px; padding:7px 9px; border-radius:7px;
+  border:1px solid var(--line); background:var(--bg-input); color:var(--text)}
+.sp-nrs{display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-dim)}
+.sp-nr{flex-direction:row !important; align-items:center; gap:8px !important}
+.sp-nr i{font-style:normal; font-size:11px; width:34px; flex:0 0 auto;
+  color:var(--text-faint); font-variant-numeric:tabular-nums}
+.sp-nr input{flex:1}
+
+@media (max-width:760px){
+  .sp-koerper{flex-direction:column-reverse}
+  .sp-palette{width:auto; border-right:0; border-top:1px solid var(--line);
+    max-height:230px}
+  .sp-syms{grid-template-columns:repeat(4,1fr)}
+  .sp-arterkl{display:none}
+  /* §37: am Telefon mindestens 44 px für alles, was man treffen muss. */
+  .sp-wz, .sp-rechts button{width:44px; height:44px}
+  .sp-auswahl button{width:40px; height:40px}
+  .sp-ebene{padding:8px 12px}
+}

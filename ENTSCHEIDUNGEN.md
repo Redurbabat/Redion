@@ -12949,3 +12949,137 @@ Dazu kamen zwei Abschnitte, die es vorher nicht gab: was ein Dashboard kann,
 und aus welchen Werkzeugen Redion Daten übernimmt. §33 verlangt, dass die
 README wichtige Nutzerfunktionen nennt — eine README, die weniger verspricht
 als die App kann, ist auch eine falsche README, nur in die andere Richtung.
+
+
+## E187 · Der Strom fliesst wirklich — eine Simulation, die rechnet
+
+*25. August 2026*
+
+Redur hat es in einem Satz gesagt: „es sollte bei der Zeichnungen die strom
+direkt flissen könenn wie echte simulationen". Die Frage war, was „echt"
+heisst.
+
+**Die billige Antwort wäre eine Wegsuche gewesen.** Schauen, ob es von L nach
+N einen durchgängigen Pfad gibt, und auf diesem Pfad gestrichelte Linien
+laufen lassen. Das ist in einer Stunde gebaut, sieht in einer Vorführung gut
+aus — und beantwortet keine einzige Frage, die im Unterricht gestellt wird.
+Was fällt an der Lampe ab, wenn zwei in Reihe hängen? Warum wird der
+Vorwiderstand warm? Was zeigt das Amperemeter, wenn es an der falschen Stelle
+sitzt? Eine Animation weiss das nicht. Sie weiss nur, dass es leuchtet.
+
+Deshalb steht in `src/bereiche/elektro/simulation.ts` eine
+**Knotenpotentialanalyse**. Sie stellt aus der Zeichnung ein lineares
+Gleichungssystem auf, löst es mit Gauss und Spaltenpivot und liefert für
+jedes Bauteil Spannung, Strom und Leistung. Zwei gleiche Lampen in Reihe an
+230 V ergeben 115 V und ein Viertel der Helligkeit — nicht, weil das
+irgendwo einprogrammiert wäre, sondern weil es herauskommt.
+
+### Die Netzliste steht nirgends — sie ergibt sich
+
+Was mit was verbunden ist, wird nicht gespeichert. Es wird aus der Zeichnung
+GELESEN: eine Leitung, die an einer Klemme endet, verbindet sie; zwei
+Leitungen, die sich an einem Punkt berühren, sind ein Netz; eine Klemme
+mitten auf einer Leitung zapft sie an. Eine Verbandsuche fasst das zusammen.
+
+Genau deshalb muss man den Plan malen und nicht tippen — und genau deshalb
+ist ein Zeichenfehler auch ein Schaltungsfehler. Das ist keine Härte,
+sondern der Beruf.
+
+### Der Kontakt, der einen Widerstand hat
+
+Zuerst stand hier der Lehrbuchweg: eine ideale Leitung als Spannungsquelle
+mit 0 V, damit 1/0 die Matrix nicht sprengt. Exakt, elegant — und an der
+**Selbsthaltung** gescheitert, dem meistgezeichneten Steuerstromkreis
+überhaupt. Sobald der Haltekontakt zumacht, liegen zwei ideale Kurzschlüsse
+parallel, und dann ist nicht bestimmt, wie sich der Strom auf sie verteilt:
+zwei Zeilen der Matrix sind identisch, das System hat keine eindeutige
+Lösung. Das war kein Rechenfehler, sondern eine ehrliche Auskunft über ein
+zu ideales Modell.
+
+Ein geschlossener Kontakt bekommt jetzt **1 mΩ**. Keine Notlösung, sondern
+die Wirklichkeit: ein Relaiskontakt liegt bei etwa 5 mΩ, ein Schalter bei 10,
+ein Meter Draht mit 1,5 mm² bei 12. Der Strom teilt sich damit auf zwei
+parallele Kontakte so auf, wie er es in der Schaltung auch tut, und der
+Spannungsabfall bleibt bei 0,2 A unter einem Zehntel Millivolt.
+
+Das Amperemeter bleibt die 0-V-Quelle — der Strom durch eine Spannungsquelle
+ist eine Unbekannte des Systems, und ihr Wert IST damit der Messwert.
+
+### Ein Nanoampere von nirgendwo
+
+Jedes Netz bekommt zusätzlich 1 TΩ nach Masse. Ohne das ist jede Schaltung
+mit einem freischwebenden Netz unlösbar, und freischwebende Netze sind der
+Normalfall: bei einer Wechselschaltung führt IMMER eine der beiden
+Korrespondierenden ins Leere. Denselben Weg geht SPICE, und aus demselben
+Grund.
+
+Der Preis stand danach im Fuss der Fläche: „grösster Strom 4.71e-10 A",
+während die Lampe aus war. Eine Behauptung, die niemand widerlegen kann.
+Alles unter einem Nanoampere ist jetzt eine glatte Null — auch für ein gutes
+Messgerät ist dort Schluss.
+
+### Die Schaltung hat ein Gedächtnis
+
+Ein Schütz, das anzieht, schliesst seine Hilfskontakte, und die verändern die
+Schaltung, die gerade gerechnet wurde. Also wird gerechnet, nachgeführt und
+wieder gerechnet, bis sich nichts mehr ändert. Ein Blinkrelais ist der Fall,
+in dem sich nie etwas beruhigt — er wird als „kommt nicht zur Ruhe" gemeldet
+statt endlos gerechnet.
+
+Und zwischen zwei Bedienschritten wird der Spulenzustand MITGENOMMEN. Ohne
+das fiele das Schütz beim Loslassen des Startknopfs sofort wieder ab, und die
+Selbsthaltung — der erste Steuerstromkreis, den jeder lernt — ginge nicht.
+
+### Was die Zeichnung zeigt
+
+Über jeder stromführenden Leitung liegt ein zweiter, laufender Strich; die
+Geschwindigkeit folgt dem Logarithmus des Stroms, weil zwischen einer
+Meldeleuchte mit 10 mA und einem Motor mit 10 A drei Grössenordnungen
+liegen und linear die eine stillstünde, während die andere flimmert. Wer
+„weniger Bewegung" eingestellt hat, sieht die Strichelung trotzdem — §38
+verlangt, dass die Aussage nicht nur in der Farbe steckt.
+
+Leuchten bekommen einen Schein, dessen Stärke der LEISTUNG folgt, nicht dem
+Strom: eine Lampe an halber Spannung ist ein Viertel so hell, und genau das
+soll man an der Reihenschaltung sehen.
+
+Solange der Strom läuft, ist die Fläche eine Schalttafel und kein
+Zeichenbrett: ein Tipp schaltet, nichts wird verschoben, nichts gelöscht.
+Die Schalterstellungen landen **nicht** im Block. Ein Plan ist eine
+Zeichnung, kein Zustand — wer ihn morgen öffnet, will ihn so sehen, wie er
+gezeichnet ist, und nicht mit dem Licht an, das gestern jemand angelassen
+hat.
+
+### Und was das Hinsehen gefunden hat
+
+Vier Dinge, von denen drei keine Prüfung hatte (§55):
+
+* Der Knopf „▶ Strom" erbte die 34 px der Icon-Knöpfe und zeigte „Stron".
+  Gemessen: `scrollWidth` 40 gegen `clientWidth` 34. Derselbe Fehler wie die
+  abgeschnittene Zahl in §55.1, nur in Buchstaben.
+* Der Fuss meldete „0 leuchteten" statt „0 leuchten".
+* Der Leckstrom stand als Messwert da (oben).
+* Und der wichtigste: im ersten Bild führten **alle fünf** Leitungen der
+  Wechselschaltung Strom, obwohl nur vier dürfen. Die Rechnung stimmte —
+  drei Leitungen lagen auf derselben Höhe und ÜBERLAPPTEN sich, waren also
+  eine einzige. Die Lampe brannte aus dem falschen Grund.
+
+Der letzte Punkt hat eine Meldung nach sich gezogen, die es vorher nicht
+gab: liegen zwei Anschlüsse DESSELBEN Bauteils im selben Netz, ist es
+überbrückt, und die Fläche sagt es. Diese Meldung hat sich sofort bezahlt
+gemacht — sie hat beim Schreiben von `test239` §11 zweimal eine Prüfung
+davor bewahrt, grün über eine kaputte Schaltung zu berichten.
+
+### Grenzen, die benannt werden
+
+Gleichstrom, eingeschwungen, linear. Ein Kondensator ist eine Unterbrechung,
+eine Spule eine Verbindung, eine Zeitverzögerung gibt es nicht. Wo eine
+Annahme getroffen wird, steht sie in `annahmen` und ist im Fuss antippbar —
+statt einer Zahl, die niemand nachprüfen kann.
+
+Prüflauf: `test239`, 68 Punkte. Darunter die Wahrheitstafel der
+Wechselschaltung (alle vier Zeilen), alle acht Stellungen der
+Kreuzschaltung, die Selbsthaltung über sechs Bedienschritte und die
+Wheatstone-Brücke — abgeglichen und verstimmt. Die Brücke steht dort nicht
+zur Zierde: sie lässt sich nicht in Reihe und Parallel zerlegen, und eine
+Simulation, die nur das kann, muss dort unauffällig falsch liegen.

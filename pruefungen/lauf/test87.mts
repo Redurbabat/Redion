@@ -664,12 +664,22 @@ const UMLAUTWOERTER = [
   'moeglich', 'koennen', 'muessen', 'fuer ', 'ueber '
 ];
 
+/* Was in `${…}` steht, ist CODE und kein Text. `title="${esc(z.erklaerung)}"`
+   zeigt zur Laufzeit eine Erklärung mit Umlaut an; im Quelltext steht dort
+   ein Feldname, und Feldnamen sind Daten (§53.3) — sie werden nicht
+   übersetzt. Die Löcher fliegen deshalb raus, BEVOR gesucht wird.
+
+   Was übrig bleibt, wird weiter geprüft: bei `title="Naechste ${n} Seiten"`
+   bleibt „Naechste  Seiten" stehen, und das ist zu Recht rot. Die Regel
+   wird also nicht stumpfer, nur genauer. */
+const ohneLoecher = (text: string): string => text.replace(/\$\{[^}]*\}/g, ' ');
+
 const sichtbarerText = (quelle: string): string[] => {
   const raus: string[] = [];
   for (const treffer of quelle.matchAll(/(?:title|placeholder|aria-label)="([^"]{2,90})"/g))
-    raus.push(treffer[1] ?? '');
+    raus.push(ohneLoecher(treffer[1] ?? ''));
   for (const treffer of quelle.matchAll(/<span class="wort">([^<]{2,60})<\/span>/g))
-    raus.push(treffer[1] ?? '');
+    raus.push(ohneLoecher(treffer[1] ?? ''));
   return raus;
 };
 
@@ -689,6 +699,15 @@ p('Keine Beschriftung schreibt einen Umlaut aus', ohneUmlaut.length === 0,
    Eine Regel, die auf nichts anschlägt, ist keine Regel (§55.2). */
 const probe = sichtbarerText('<button title="Rueckgaengig">x</button>' +
   '<span class="wort">Loeschen</span>');
+/* Und die zweite Gegenprobe zur Lochregel: ein Feldname im Loch darf NICHT
+   anschlagen, ein echtes Wort daneben schon. Ohne diese Zeile könnte
+   `ohneLoecher` alles wegwerfen und die Regel wäre still tot. */
+const lochProbe = sichtbarerText('<i title="${esc(z.erklaerung)}">a</i>' +
+  '<i title="Naechste ${n} Seiten">b</i>');
+p('Ein Feldname in ${…} ist kein deutscher Text',
+  !(lochProbe[0] ?? '').toLowerCase().includes('erklaerung'), lochProbe[0] ?? '');
+p('… ein echtes Wort daneben aber schon',
+  (lochProbe[1] ?? '').toLowerCase().includes('naechste'), lochProbe[1] ?? '');
 p('Die Wortliste erkennt „Rueckgaengig" und „Loeschen"',
   probe.length === 2 &&
   probe.every(text => UMLAUTWOERTER.some(w => text.toLowerCase().includes(w))),

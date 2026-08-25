@@ -866,6 +866,11 @@ const Blocks = (() => {
         box.appendChild(Zusatz.whiteboard(block));
         break;
 
+      /* Ein Schaltplan: Symbolpalette links, Zeichenfläche rechts (Punkt 11). */
+      case 'schaltplan':
+        box.appendChild(Planflaeche.zeichne(block));
+        break;
+
       case 'chart':
         box.appendChild(Zusatz.diagramm(block));
         break;
