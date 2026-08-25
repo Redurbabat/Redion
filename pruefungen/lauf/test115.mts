@@ -99,6 +99,12 @@ console.log('\n2 · Beim zweiten Öffnen nicht mehr');
 
 await seite.reload();
 await seite.waitForTimeout(3200);
+/* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+   sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 const zweit = await nachsehen();
 p('Die Begrüssung kommt nicht wieder', !zweit.gruss,
   'genau das war der Fehler: sie kam bei jedem Öffnen');
@@ -113,6 +119,12 @@ console.log('\n3 · Beim dritten auch nicht');
 
 await seite.reload();
 await seite.waitForTimeout(3200);
+/* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+   sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 const dritt = await nachsehen();
 p('Weiterhin nichts', !dritt.gruss && !dritt.neu);
 
@@ -127,6 +139,12 @@ p('Es gibt überhaupt Einträge', hoechste >= 2, String(hoechste));
 await seite.evaluate(() => Store.setMeta('neuerungenGesehen', 1));
 await seite.reload();
 await seite.waitForTimeout(3200);
+/* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+   sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 const nach = await nachsehen();
 p('Der Kasten „Neu in Redion" erscheint', nach.neu);
 /* ALLES SEIT DEM LETZTEN MAL, nicht nur das Neueste. Wer lange nicht da
@@ -139,6 +157,12 @@ console.log('\n5 · Und danach wieder Ruhe');
 
 await seite.reload();
 await seite.waitForTimeout(3200);
+/* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+   sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+await seite.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 const ruhe = await nachsehen();
 p('Nichts mehr, bis das nächste Mal etwas dazukommt', !ruhe.neu && !ruhe.gruss);
 

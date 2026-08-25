@@ -1,0 +1,1004 @@
+/* ============================================================================
+ * lernwelt.css — Hauptwelt „🎓 Lernen & Alltag"
+ * ----------------------------------------------------------------------------
+ * Freundlich und motivierend, aber weiterhin Redion: warme Akzente, ruhige
+ * Flächen, nachvollziehbarer Fortschritt und keine künstlich gesperrten
+ * Lernknoten. Alle Regeln bleiben unter `.lernwelt` und den stabilen
+ * `lw-*`-Haken. Farben stammen ausschliesslich aus Redions Theme-Vertrag.
+ * ==========================================================================*/
+
+.lernwelt{
+  --lw-radius-xl:24px;
+  --lw-radius-lg:18px;
+  --lw-radius-md:14px;
+  --lw-radius-sm:10px;
+  --lw-gap:18px;
+  --lw-touch:var(--touch-min,44px);
+  --lw-panel:var(--bg-card);
+  --lw-surface:var(--bg-side);
+  --lw-accent-soft:var(--bg-hover);
+  --lw-success-soft:var(--b-green);
+  --lw-danger-soft:var(--b-red);
+  --lw-info-soft:var(--b-blue);
+  --lw-warning-soft:var(--b-yellow);
+  width:min(100%,1380px);
+  min-width:0;
+  overflow-x:clip;
+  color:var(--text);
+  font-family:var(--font);
+  container-type:inline-size;
+}
+
+@supports(background:color-mix(in srgb,black,white)){
+  .lernwelt{
+    --lw-accent-soft:color-mix(in srgb,var(--accent) 14%,var(--bg-card));
+    --lw-success-soft:color-mix(in srgb,var(--erfolg) 13%,var(--bg-card));
+    --lw-danger-soft:color-mix(in srgb,var(--gefahr) 11%,var(--bg-card));
+    --lw-info-soft:color-mix(in srgb,var(--info) 11%,var(--bg-card));
+    --lw-warning-soft:color-mix(in srgb,var(--warnung) 12%,var(--bg-card));
+  }
+}
+
+.lernwelt [hidden]{display:none!important}
+.lernwelt :where(button,input,select){font:inherit}
+.lernwelt button{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.lernwelt button:disabled{cursor:not-allowed;opacity:.46;filter:saturate(.55)}
+.lernwelt :where(.lw-main,.lw-head,.lw-nav,.lw-hero,.lw-page-head,.lw-section,
+  .lw-primary-grid,.lw-dashboard-grid,.lw-study-actions,.lw-error-list,
+  .lw-exam-list,.lw-subject-grid,.lw-study-card,.lw-object-list li,
+  .lw-task-list li,.lw-event-list li){min-width:0;max-width:100%}
+.lernwelt :where(h1,h2,h3,strong,p,span,small,dd,dt){overflow-wrap:anywhere}
+
+/* --- Produktkopf und Bereichsauswahl ------------------------------------ */
+.lernwelt .lw-head{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  width:100%;margin-bottom:12px;padding:8px 4px;
+}
+.lernwelt .lw-brand{display:flex;align-items:center;gap:11px;min-width:0}
+.lernwelt .lw-brand-icon{
+  display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;
+  border:1px solid var(--line-stark,var(--line));border-radius:13px;
+  background:linear-gradient(145deg,var(--lw-accent-soft),var(--bg-card));
+  box-shadow:0 7px 20px rgba(0,0,0,.08);font-size:21px
+}
+.lernwelt .lw-brand p{
+  margin:0 0 1px;color:var(--accent);font-size:10px;font-weight:850;
+  letter-spacing:.14em;text-transform:uppercase
+}
+.lernwelt .lw-brand h1{
+  margin:0;font-size:19px;line-height:1.2;font-weight:760;letter-spacing:-.025em
+}
+.lernwelt .lw-area{
+  display:grid;grid-template-columns:auto minmax(150px,230px);align-items:center;gap:8px;
+  color:var(--text-dim);font-size:12px;font-weight:650
+}
+.lernwelt .lw-area select{
+  width:100%;min-width:0;min-height:var(--lw-touch);padding:8px 34px 8px 11px;
+  border:1px solid var(--line);border-radius:var(--lw-radius-sm);
+  outline:none;background:var(--bg-input);color:var(--text);cursor:pointer
+}
+
+/* --- Hauptnavigation ---------------------------------------------------- */
+.lernwelt .lw-nav{
+  position:relative;display:flex;align-items:center;gap:5px;width:100%;
+  margin-bottom:var(--lw-gap);padding:6px;border:1px solid var(--line);
+  border-radius:15px;background:var(--bg-side);overflow-x:auto;
+  overscroll-behavior-inline:contain;scrollbar-width:thin
+}
+.lernwelt .lw-nav button{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1 0 auto;
+  min-width:max-content;min-height:var(--lw-touch);padding:8px 11px;
+  border:1px solid transparent;border-radius:10px;color:var(--text-dim);
+  font-size:12px;font-weight:620;white-space:nowrap;
+  transition:background var(--motion-fast,130ms) ease,color var(--motion-fast,130ms) ease,
+    border-color var(--motion-fast,130ms) ease,transform var(--motion-fast,130ms) ease
+}
+.lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
+
+/* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
+   wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
+   in `lernwelt.ts`; steht es auf „nein", ist die Leiste vollständig zu sehen
+   und beide Kanten sind aus.
+
+   HIER STAND EIN SCHATTEN, UND ER WAR AUF DEM TELEFON NICHT ZU SEHEN
+   (E159). `rgba(0,0,0,.34)` über `--bg-side` heisst im dunklen Thema
+   schwarz auf #1a1a1a. Auf dem Bildschirmfoto vom 25. August endete
+   „Meine Fehler" mitten im Wort an einer scharfen Kante — genau der
+   Zustand, den E151 beheben wollte. Die Prüfung war grün, weil sie die
+   Deckkraft mass und nicht das Bild.
+
+   Ein Verlauf endet dagegen in der Fläche, auf der er liegt, und trägt in
+   beiden Themen. Die negativen Aussenabstände halten ihn layoutfrei. */
+.lernwelt .lw-nav::before,
+.lernwelt .lw-nav::after{
+  content:"";position:sticky;z-index:1;align-self:stretch;
+  flex:0 0 26px;width:26px;
+  opacity:0;transition:opacity var(--motion-fast,130ms) ease;pointer-events:none
+}
+.lernwelt .lw-nav::before{left:0;margin-right:-26px;
+  background:linear-gradient(to right, var(--bg-side), transparent)}
+.lernwelt .lw-nav::after{right:0;margin-left:-26px;
+  background:linear-gradient(to left,  var(--bg-side), transparent)}
+.lernwelt .lw-nav[data-mehr="links"]::before,
+.lernwelt .lw-nav[data-mehr="beides"]::before{opacity:1}
+.lernwelt .lw-nav[data-mehr="rechts"]::after,
+.lernwelt .lw-nav[data-mehr="beides"]::after{opacity:1}
+
+/* --- Letzte Simulationen (E163) -----------------------------------------
+   Eine Liste, kein Kasten je Zeile: es sind Zahlen zum Vergleichen, und
+   fünf Karten nebeneinander lenken davon ab, was sich verändert hat. */
+.lernwelt .lw-sim-history{margin-top:var(--lw-gap)}
+.lernwelt .lw-sim-history h3{margin:0 0 8px;font-size:13px;font-weight:640;
+  color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em}
+.lernwelt .lw-sim-history ul{list-style:none;margin:0;padding:0;
+  border:1px solid var(--line);border-radius:var(--lw-radius-sm);overflow:hidden}
+.lernwelt .lw-sim-history li{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:9px 12px;background:var(--bg-side)}
+.lernwelt .lw-sim-history li + li{border-top:1px solid var(--line)}
+.lernwelt .lw-sim-history li span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lernwelt .lw-sim-history li strong{font-size:13px;font-weight:620;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lernwelt .lw-sim-history li small{font-size:11.5px;color:var(--text-dim)}
+.lernwelt .lw-sim-history li b{flex:0 0 auto;font-size:14px;font-weight:660;color:var(--text)}
+.lernwelt .lw-sim-history details{margin-top:6px}
+.lernwelt .lw-sim-history summary{font-size:12px;color:var(--text-dim);cursor:pointer;
+  padding:4px 2px;min-height:var(--lw-touch);display:flex;align-items:center}
+.lernwelt .lw-sim-history details ul{margin-top:6px}
+
+/* Die Einrichtungskarte auf dem Heute-Bild: ein Angebot, kein Sperrschirm.
+   Sie öffnete sich früher von selbst über alles (E137). */
+.lernwelt .lw-setup{display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;margin-bottom:var(--lw-gap)}
+.lernwelt .lw-setup p{margin:4px 0 0;color:var(--text-dim);font-size:13px}
+.lernwelt .lw-setup button{flex:0 0 auto;min-height:var(--lw-touch);padding:9px 16px;
+  border-radius:10px;border:1px solid var(--line);font-weight:620;
+  background:var(--bg-side);color:var(--text)}
+.lernwelt .lw-setup button:hover{background:var(--bg-hover,#f1f2f5)}
+
+/* AM RECHNER STEHEN ALLE NEUN REITER DA, statt zu scrollen.
+   Mit Augen gesehen (§55): auf dem Heute-Bild hing „Schule / Ausbildung"
+   halb ausserhalb der Leiste, und die drei dahinter — Uni, Arbeit,
+   Fortschritt — waren gar nicht zu ahnen. Die Leiste kann zwar gescrollt
+   werden (`overflow-x:auto`), aber nichts zeigt das an: kein Schatten,
+   kein Pfeil, keine angeschnittene Beschriftung. Neun Reiter brauchen
+   1016 px, die Leiste hatte 706.
+   Am Telefon bleibt es beim Scrollen — dort ist eine waagerechte Reiter-
+   leiste die vertraute Form, und zwei Reihen kosteten zu viel Höhe. */
+@media (min-width:900px){
+  .lernwelt .lw-nav{flex-wrap:wrap;overflow-x:visible;row-gap:5px}
+  .lernwelt .lw-nav button{flex:0 1 auto}
+}
+.lernwelt .lw-nav button.is-active,
+.lernwelt .lw-nav button[aria-current="page"]{
+  border-color:var(--line-stark,var(--line));background:var(--lw-accent-soft);
+  color:var(--text);box-shadow:inset 0 -3px 0 var(--accent);font-weight:760
+}
+
+.lernwelt .lw-main{display:grid;align-content:start;gap:var(--lw-gap);outline:none}
+.lernwelt :where(.lw-today,.lw-learning,.lw-path-page,.lw-errors,.lw-exams,
+  .lw-school,.lw-subject,.lw-domain,.lw-progress-page){display:grid;gap:var(--lw-gap)}
+
+/* --- Gemeinsamer Seitenkopf -------------------------------------------- */
+.lernwelt .lw-page-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+  padding:22px 24px;border:1px solid var(--line-stark,var(--line));
+  border-radius:var(--lw-radius-lg);
+  background:linear-gradient(135deg,var(--lw-accent-soft),var(--bg-card) 58%,var(--bg-side));
+  box-shadow:0 12px 32px rgba(0,0,0,.055)
+}
+.lernwelt .lw-page-head>div:first-child{min-width:0;max-width:780px}
+.lernwelt .lw-page-head p{
+  margin:0 0 4px;color:var(--accent);font-size:10.5px;font-weight:850;
+  letter-spacing:.12em;text-transform:uppercase
+}
+.lernwelt .lw-page-head h2{
+  margin:0;font-size:clamp(25px,3vw,38px);line-height:1.08;
+  letter-spacing:-.04em;font-weight:780;text-wrap:balance
+}
+.lernwelt .lw-page-head>div:first-child>span{
+  display:block;max-width:680px;margin-top:8px;color:var(--text-dim);
+  font-size:13.5px;line-height:1.5
+}
+.lernwelt .lw-page-head>button,
+.lernwelt .lw-page-head>.lw-actions button,
+.lernwelt .lw-back{
+  flex:0 0 auto;min-height:var(--lw-touch);padding:9px 13px;
+  border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-sm);
+  background:var(--bg-side);color:var(--text);font-size:12.5px;font-weight:680
+}
+.lernwelt .lw-back{
+  display:block;margin:0 0 12px;padding:5px 0;border:0;background:transparent;
+  color:var(--text-dim);font-size:12px;text-align:left
+}
+
+/* --- Heute: Begrüssung und Tagesziel ----------------------------------- */
+.lernwelt .lw-hero{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:flex;align-items:center;justify-content:space-between;gap:28px;
+  min-height:178px;padding:28px 30px;border:1px solid var(--line-stark,var(--line));
+  border-radius:var(--lw-radius-xl);
+  background:linear-gradient(125deg,var(--lw-accent-soft),var(--bg-card) 52%,var(--lw-info-soft));
+  box-shadow:0 18px 46px rgba(0,0,0,.075)
+}
+.lernwelt .lw-hero::after{
+  content:"";position:absolute;z-index:-1;right:-82px;bottom:-138px;
+  width:300px;height:300px;border:56px solid var(--line-soft);
+  border-radius:50%;opacity:.65;pointer-events:none
+}
+.lernwelt .lw-hero>div:first-child{min-width:0;max-width:760px}
+.lernwelt .lw-hero>div:first-child>p{
+  margin:0 0 5px;color:var(--accent);font-size:12px;font-weight:820
+}
+.lernwelt .lw-hero h2{
+  margin:0;font-size:clamp(29px,4vw,48px);line-height:1.04;
+  letter-spacing:-.045em;font-weight:790;text-wrap:balance
+}
+.lernwelt .lw-hero>div:first-child>span{
+  display:inline-flex;align-items:center;min-height:30px;margin-top:13px;padding:4px 10px;
+  border:1px solid var(--line);border-radius:999px;background:var(--bg-side);
+  color:var(--text-dim);font-size:11.5px;font-weight:650
+}
+.lernwelt .lw-goal{
+  display:grid;justify-items:center;flex:0 0 176px;gap:9px;padding:17px;
+  border:1px solid var(--line-stark,var(--line));border-radius:19px;
+  background:var(--bg-side);box-shadow:0 10px 28px rgba(0,0,0,.08)
+}
+.lernwelt .lw-goal button{
+  display:grid;justify-items:center;width:100%;min-height:64px;padding:5px;
+  border-radius:12px;text-align:center
+}
+.lernwelt .lw-goal button span{
+  color:var(--text);font-size:26px;line-height:1;font-weight:820;font-variant-numeric:tabular-nums
+}
+.lernwelt .lw-goal button small{margin-top:7px;color:var(--text-dim);font-size:11.5px;font-weight:650}
+
+/* --- Fortschrittsbalken ------------------------------------------------- */
+.lernwelt progress{
+  overflow:hidden;display:block;width:100%;height:8px;border:0;border-radius:999px;
+  appearance:none;-webkit-appearance:none;background:var(--bg-hover);accent-color:var(--accent)
+}
+.lernwelt progress::-webkit-progress-bar{border-radius:999px;background:var(--bg-hover)}
+.lernwelt progress::-webkit-progress-value{
+  border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));
+  transition:width var(--motion-normal,220ms) ease
+}
+.lernwelt progress::-moz-progress-bar{
+  border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-warm))
+}
+.lernwelt .lw-goal>progress{height:10px}
+.lernwelt .lw-progress{display:grid;gap:6px;min-width:0}
+.lernwelt .lw-progress>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lernwelt .lw-progress span{min-width:0;color:var(--text-dim);font-size:11.5px}
+.lernwelt .lw-progress strong{flex:none;font-size:11.5px;font-variant-numeric:tabular-nums}
+
+/* --- Kennzahlen --------------------------------------------------------- */
+.lernwelt .lw-metrics{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px
+}
+.lernwelt .lw-metrik{
+  display:grid;align-content:center;min-height:90px;padding:14px 15px;
+  border:1px solid var(--line);border-radius:var(--lw-radius-md);
+  background:var(--lw-surface);box-shadow:0 6px 18px rgba(0,0,0,.025)
+}
+.lernwelt .lw-metrik strong{
+  overflow:hidden;color:var(--text);font-size:clamp(19px,2vw,25px);line-height:1.15;
+  font-weight:790;letter-spacing:-.025em;text-overflow:ellipsis;font-variant-numeric:tabular-nums
+}
+.lernwelt .lw-metrik>span{margin-top:5px;color:var(--text-dim);font-size:11.5px;font-weight:650}
+.lernwelt .lw-metrik small{margin-top:3px;color:var(--text-faint);font-size:10.5px;line-height:1.3}
+
+/* --- Hauptkarten -------------------------------------------------------- */
+.lernwelt .lw-primary-grid{
+  display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:var(--lw-gap)
+}
+.lernwelt .lw-focus-card,
+.lernwelt .lw-exam-card{
+  display:grid;align-content:start;min-width:0;min-height:224px;padding:22px;
+  border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-lg);
+  background:var(--lw-panel);box-shadow:0 10px 30px rgba(0,0,0,.045)
+}
+.lernwelt .lw-focus-card{background:linear-gradient(135deg,var(--lw-success-soft),var(--bg-card) 68%)}
+.lernwelt .lw-exam-card{background:linear-gradient(145deg,var(--lw-warning-soft),var(--bg-card) 72%)}
+.lernwelt :where(.lw-focus-card,.lw-exam-card)>header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px
+}
+.lernwelt :where(.lw-focus-card,.lw-exam-card)>header p{
+  margin:0 0 4px;color:var(--text-dim);font-size:10.5px;font-weight:780;
+  letter-spacing:.08em;text-transform:uppercase
+}
+.lernwelt :where(.lw-focus-card,.lw-exam-card)>header>span{font-size:28px}
+.lernwelt .lw-focus-card h2,.lernwelt .lw-exam-card h2{
+  margin:0;font-size:clamp(20px,2.4vw,29px);line-height:1.15;font-weight:770;letter-spacing:-.03em
+}
+.lernwelt .lw-focus-card>p,.lernwelt .lw-exam-card>p{
+  max-width:660px;margin:14px 0 18px;color:var(--text-dim);font-size:13px;line-height:1.55
+}
+.lernwelt .lw-exam-card>strong{
+  display:inline-flex;justify-self:start;margin-top:12px;padding:5px 9px;border-radius:999px;
+  background:var(--bg-side);color:var(--warnung);font-size:12px;font-weight:780
+}
+.lernwelt .lw-exam-card>button{
+  align-self:end;justify-self:start;min-height:var(--lw-touch);padding:9px 13px;
+  border:1px solid var(--line);border-radius:var(--lw-radius-sm);background:var(--bg-side);font-weight:680
+}
+
+/* --- Aktionen ----------------------------------------------------------- */
+.lernwelt .lw-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.lernwelt .lw-actions button,
+.lernwelt .lw-rating button,
+.lernwelt .lw-error-list footer button,
+.lernwelt .lw-exam-list footer button{
+  min-height:var(--lw-touch);padding:9px 13px;border:1px solid var(--line);
+  border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:12.5px;font-weight:680
+}
+/* WEISSE SCHRIFT AUF WEISSEM GRUND (E142). `.lw-exam-list footer button`
+   steht weiter oben und ist spezifischer (2 Klassen + 2 Elemente gegen
+   2 Klassen + 1 Element). Es setzte `background:var(--bg-side)` — und weil
+   es KEINE Schriftfarbe setzt, kam die weisse aus `is-primary` durch.
+
+   Gemessen im Hellmodus: Schrift rgb(255,255,255) auf rgb(251,251,250).
+   Das ist ein Kontrast von 1,02 zu 1 — der Knopf „Simulation starten" war
+   da, war anklickbar, und man sah ihn nicht. Im Dunkelmodus fiel es nicht
+   auf, weil `--bg-side` dort dunkel ist; §48 verlangt beides.
+
+   Der Weg ist nicht `!important`, sondern dieselbe Spezifität: die
+   Fussleiste steht jetzt in der Aufzählung mit drin. */
+.lernwelt button.is-primary,
+.lernwelt .lw-actions button.is-primary,
+.lernwelt .lw-exam-list footer button.is-primary,
+.lernwelt .lw-rating button.is-primary{
+  border-color:var(--accent);background:var(--accent);color:var(--auf-accent);
+  box-shadow:0 7px 18px rgba(0,0,0,.1)
+}
+
+/* --- Dashboard-Sektionen und Objektlisten ------------------------------ */
+.lernwelt .lw-dashboard-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:var(--lw-gap)
+}
+.lernwelt .lw-section{
+  overflow:hidden;padding:17px;border:1px solid var(--line);
+  border-radius:var(--lw-radius-lg);background:var(--lw-panel);
+  box-shadow:0 8px 24px rgba(0,0,0,.035)
+}
+.lernwelt .lw-section>header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px
+}
+.lernwelt .lw-section>header h2{margin:0;font-size:15px;line-height:1.3;font-weight:750;letter-spacing:-.015em}
+.lernwelt .lw-section>header p{margin:3px 0 0;color:var(--text-dim);font-size:10.5px;line-height:1.35}
+.lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list,.lw-compact-errors,
+  .lw-analysis,.lw-past-exams ul){display:grid;list-style:none;margin:0;padding:0}
+.lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list)>li{
+  border-top:1px solid var(--line-soft)
+}
+.lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list)>li:first-child{border-top:0}
+.lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button{
+  display:grid;align-items:center;width:100%;min-width:0;min-height:54px;
+  padding:7px 5px;border-radius:9px;text-align:left
+}
+.lernwelt .lw-object-list button{grid-template-columns:auto minmax(0,1fr) auto;gap:9px}
+.lernwelt .lw-task-list button{grid-template-columns:24px minmax(0,1fr);gap:8px}
+.lernwelt .lw-event-list button{grid-template-columns:66px minmax(0,1fr);gap:10px}
+.lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button>span:nth-child(2){display:grid;min-width:0;gap:1px}
+.lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) strong{
+  overflow:hidden;font-size:12.8px;line-height:1.35;font-weight:680;text-overflow:ellipsis;white-space:nowrap
+}
+.lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) small{
+  overflow:hidden;color:var(--text-dim);font-size:10.8px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap
+}
+.lernwelt .lw-object-list button>span:last-child{color:var(--text-faint);font-size:18px}
+.lernwelt .lw-object-icon{
+  display:grid;place-items:center;width:32px;height:32px;border-radius:9px;
+  background:var(--bg-hover);font-size:15px
+}
+.lernwelt .lw-task-list button>span:first-child{color:var(--text-dim);font-size:17px;text-align:center}
+.lernwelt .lw-event-list time{
+  color:var(--accent);font-size:11.5px;font-weight:760;font-variant-numeric:tabular-nums
+}
+.lernwelt .lw-none{margin:0;padding:18px 6px;color:var(--text-dim);font-size:12px;line-height:1.5;text-align:center}
+
+/* --- Themenfortschritt -------------------------------------------------- */
+.lernwelt .lw-topic-list{display:grid;gap:7px}
+.lernwelt .lw-topic-list>button{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 12px;
+  width:100%;min-height:58px;padding:9px 10px;border:1px solid var(--line-soft);
+  border-radius:11px;background:var(--bg-side);text-align:left
+}
+.lernwelt .lw-topic-list>button>span:first-child{display:grid;min-width:0;gap:2px}
+.lernwelt .lw-topic-list strong{
+  overflow:hidden;font-size:12.5px;font-weight:690;text-overflow:ellipsis;white-space:nowrap
+}
+.lernwelt .lw-topic-list small{color:var(--text-dim);font-size:10.5px;line-height:1.35}
+.lernwelt .lw-topic-score{color:var(--text);font-size:11.5px;font-weight:760;font-variant-numeric:tabular-nums}
+.lernwelt .lw-topic-list progress{grid-column:1/-1;height:6px}
+
+/* --- Lernroutine und Schnellzugriff ------------------------------------ */
+.lernwelt .lw-engagement,
+.lernwelt .lw-knowledge{
+  display:grid;gap:15px;padding:20px;border:1px solid var(--line-stark,var(--line));
+  border-radius:var(--lw-radius-lg);background:linear-gradient(135deg,var(--lw-info-soft),var(--bg-card) 70%)
+}
+.lernwelt .lw-knowledge{background:linear-gradient(135deg,var(--lw-success-soft),var(--bg-card) 70%)}
+.lernwelt :where(.lw-engagement,.lw-knowledge)>header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:16px
+}
+.lernwelt :where(.lw-engagement,.lw-knowledge)>header p{
+  margin:0 0 3px;color:var(--text-dim);font-size:10.5px;font-weight:780;text-transform:uppercase;letter-spacing:.08em
+}
+.lernwelt :where(.lw-engagement,.lw-knowledge)>header h2,
+.lernwelt :where(.lw-engagement,.lw-knowledge)>header h3{margin:0;font-size:20px;line-height:1.2;font-weight:760}
+.lernwelt :where(.lw-engagement,.lw-knowledge)>header>span{
+  flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;
+  background:var(--bg-side);color:var(--text-dim);font-size:10.5px
+}
+.lernwelt .lw-knowledge>header>strong{font-size:28px;font-variant-numeric:tabular-nums}
+.lernwelt .lw-engagement .lw-metrik,.lernwelt .lw-knowledge .lw-metrik{min-height:78px;background:var(--bg-side)}
+.lernwelt .lw-quick{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px
+}
+.lernwelt .lw-quick button{
+  display:flex;align-items:center;justify-content:center;gap:8px;min-height:var(--lw-touch);
+  padding:9px 11px;border:1px solid var(--line);border-radius:var(--lw-radius-sm);
+  background:var(--bg-side);color:var(--text-dim);font-size:12px;font-weight:650
+}
+
+/* --- Lernzentrale ------------------------------------------------------- */
+.lernwelt .lw-study-actions{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px
+}
+.lernwelt .lw-study-actions article{
+  display:grid;grid-template-rows:auto auto 1fr auto;align-content:start;min-width:0;min-height:210px;
+  padding:16px;border:1px solid var(--line);border-radius:var(--lw-radius-md);
+  background:var(--lw-panel)
+}
+.lernwelt .lw-study-actions article>span{
+  display:grid;place-items:center;width:38px;height:38px;margin-bottom:12px;
+  border-radius:12px;background:var(--lw-accent-soft);font-size:19px
+}
+.lernwelt .lw-study-actions h3{margin:0;font-size:14px;font-weight:740}
+.lernwelt .lw-study-actions p{margin:7px 0 14px;color:var(--text-dim);font-size:11.5px;line-height:1.45}
+.lernwelt .lw-study-actions button{
+  width:100%;min-height:var(--lw-touch);padding:8px 10px;border:1px solid var(--line);
+  border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:11.5px;font-weight:680
+}
+.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent);background:var(--accent);color:var(--auf-accent)}
+.lernwelt .lw-explanation{display:grid;gap:5px;margin:0;padding:0;list-style:none;counter-reset:lw-plan}
+.lernwelt .lw-explanation li{
+  position:relative;display:grid;gap:2px;min-height:52px;padding:8px 8px 8px 43px;
+  border-top:1px solid var(--line-soft);counter-increment:lw-plan
+}
+.lernwelt .lw-explanation li:first-child{border-top:0}
+.lernwelt .lw-explanation li::before{
+  content:counter(lw-plan);position:absolute;left:6px;top:9px;display:grid;place-items:center;
+  width:27px;height:27px;border-radius:50%;background:var(--lw-accent-soft);
+  color:var(--accent);font-size:11px;font-weight:820
+}
+.lernwelt .lw-explanation strong{font-size:12.5px}
+.lernwelt .lw-explanation span{color:var(--text-dim);font-size:10.8px;line-height:1.4}
+.lernwelt .lw-card-types{display:grid;gap:1px;margin:0}
+.lernwelt .lw-card-types>div{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:43px;
+  padding:7px 4px;border-top:1px solid var(--line-soft)
+}
+.lernwelt .lw-card-types>div:first-child{border-top:0}
+.lernwelt .lw-card-types dt{color:var(--text-dim);font-size:12px}
+.lernwelt .lw-card-types dd{font-size:13px;font-weight:740;font-variant-numeric:tabular-nums}
+
+/* Lernhistorie: native Progress-Elemente bleiben semantisch, stehen hier hochkant. */
+.lernwelt .lw-history{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(24px,1fr));align-items:end;gap:5px;
+  min-height:132px;padding:8px 2px 0
+}
+.lernwelt .lw-history>div{display:grid;justify-items:center;align-content:end;gap:4px;min-width:0}
+.lernwelt .lw-history span{color:var(--text-dim);font-size:9.5px;font-variant-numeric:tabular-nums}
+.lernwelt .lw-history progress{
+  width:9px;height:82px;writing-mode:vertical-rl;direction:rtl;border-radius:999px
+}
+.lernwelt .lw-history small{
+  overflow:hidden;width:100%;color:var(--text-faint);font-size:9px;text-align:center;
+  text-overflow:ellipsis;white-space:nowrap
+}
+
+/* --- Duolingo-artiger, aber frei zugänglicher Lernpfad ----------------- */
+.lernwelt .lw-path{
+  position:relative;isolation:isolate;display:grid;gap:8px;width:min(100%,820px);
+  margin:0 auto;padding:18px 34px 22px;list-style:none;overflow:hidden
+}
+.lernwelt .lw-path::before{
+  content:"";position:absolute;z-index:-2;top:18px;bottom:22px;left:50%;width:3px;
+  border-radius:999px;background:var(--line-stark,var(--line));transform:translateX(-50%)
+}
+.lernwelt .lw-path li{position:relative;display:grid;min-width:0;padding-right:70px}
+.lernwelt .lw-path li:nth-child(even){padding-right:0;padding-left:70px}
+.lernwelt .lw-path-line{display:none}
+.lernwelt .lw-path li>button{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:13px;
+  width:100%;min-height:108px;padding:14px 15px;border:1px solid var(--line-stark,var(--line));
+  border-radius:20px;background:var(--lw-panel);box-shadow:0 10px 28px rgba(0,0,0,.055);
+  text-align:left;
+  transition:transform var(--motion-normal,180ms) var(--ease-standard,ease),
+    border-color var(--motion-fast,130ms) ease,box-shadow var(--motion-fast,130ms) ease
+}
+.lernwelt .lw-path-step{
+  display:grid;place-items:center;width:50px;height:50px;border:2px solid var(--accent);
+  border-radius:50%;background:var(--lw-accent-soft);color:var(--accent);
+  box-shadow:0 0 0 7px var(--bg);font-size:15px;font-weight:840;font-variant-numeric:tabular-nums
+}
+.lernwelt .lw-path li.is-stable .lw-path-step{
+  border-color:var(--erfolg);background:var(--lw-success-soft);color:var(--erfolg)
+}
+.lernwelt .lw-path li.is-stable .lw-path-copy progress{accent-color:var(--erfolg)}
+.lernwelt .lw-path li.is-stable .lw-path-copy progress::-webkit-progress-value{background:var(--erfolg)}
+.lernwelt .lw-path li.is-stable .lw-path-copy progress::-moz-progress-bar{background:var(--erfolg)}
+.lernwelt .lw-path li.is-new>button{border-style:dashed}
+.lernwelt .lw-path-copy{display:grid;min-width:0;gap:3px}
+.lernwelt .lw-path-copy>small{
+  color:var(--accent);font-size:9.5px;font-weight:820;letter-spacing:.08em;text-transform:uppercase
+}
+.lernwelt .lw-path li.is-stable .lw-path-copy>small{color:var(--erfolg)}
+.lernwelt .lw-path-copy>strong{font-size:14.5px;line-height:1.3;font-weight:750}
+.lernwelt .lw-path-copy>span{color:var(--text-dim);font-size:10.5px;line-height:1.35}
+.lernwelt .lw-path-copy progress{height:6px;margin-top:4px}
+.lernwelt .lw-path-open{
+  display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:5px 9px;
+  border:1px solid var(--line);border-radius:999px;background:var(--bg-side);
+  color:var(--text-dim);font-size:10.5px;font-weight:690
+}
+
+/* --- Fehlerzentrum ------------------------------------------------------ */
+.lernwelt .lw-error-list{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:var(--lw-gap)
+}
+.lernwelt .lw-error-list>article{
+  overflow:hidden;display:grid;gap:14px;min-width:0;padding:18px;
+  border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-lg);
+  background:var(--lw-panel);box-shadow:0 8px 25px rgba(0,0,0,.04)
+}
+.lernwelt .lw-error-list>article.is-open{background:linear-gradient(145deg,var(--lw-danger-soft),var(--bg-card) 52%)}
+.lernwelt .lw-error-list>article.is-stable{background:linear-gradient(145deg,var(--lw-success-soft),var(--bg-card) 52%)}
+.lernwelt .lw-error-list article>header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px
+}
+.lernwelt .lw-error-list article>header>div{min-width:0}
+.lernwelt .lw-error-list article>header span{
+  display:block;margin-bottom:4px;color:var(--text-dim);font-size:10px;font-weight:750;text-transform:uppercase
+}
+.lernwelt .lw-error-list h3{margin:0;font-size:15px;line-height:1.4;font-weight:730}
+.lernwelt .lw-error-list article>header>strong{
+  flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;
+  background:var(--bg-side);color:var(--gefahr);font-size:10.5px
+}
+.lernwelt .lw-error-list article.is-stable>header>strong{color:var(--erfolg)}
+.lernwelt .lw-error-list dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.lernwelt .lw-error-list dl>div{
+  min-width:0;padding:9px;border:1px solid var(--line-soft);border-radius:10px;background:var(--bg-side)
+}
+.lernwelt .lw-error-list dt{color:var(--text-dim);font-size:9.5px;font-weight:720;text-transform:uppercase}
+.lernwelt .lw-error-list dd{margin:4px 0 0;font-size:11.5px;line-height:1.42}
+.lernwelt .lw-error-list footer{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+
+/* --- Prüfungszentrale --------------------------------------------------- */
+.lernwelt .lw-exam-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:var(--lw-gap)}
+.lernwelt .lw-exam-list>article{
+  display:grid;gap:13px;min-width:0;padding:19px;border:1px solid var(--line-stark,var(--line));
+  border-radius:var(--lw-radius-lg);background:linear-gradient(145deg,var(--lw-warning-soft),var(--bg-card) 48%);
+  box-shadow:0 9px 28px rgba(0,0,0,.04)
+}
+.lernwelt .lw-exam-list article>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.lernwelt .lw-exam-list article>header>div{min-width:0}
+.lernwelt .lw-exam-list article>header span{color:var(--text-dim);font-size:10px;font-weight:730;text-transform:uppercase}
+.lernwelt .lw-exam-list h3{margin:3px 0;font-size:18px;line-height:1.28;font-weight:760}
+.lernwelt .lw-exam-list time{color:var(--text-dim);font-size:11px}
+.lernwelt .lw-exam-list article>header>strong{
+  flex:none;padding:5px 9px;border-radius:999px;background:var(--bg-side);
+  color:var(--warnung);font-size:11px;font-weight:800
+}
+.lernwelt .lw-exam-list article>p{margin:0;color:var(--text-dim);font-size:12px;line-height:1.5}
+.lernwelt .lw-exam-list dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0}
+.lernwelt .lw-exam-list dl>div{padding:8px;border-radius:9px;background:var(--bg-side);text-align:center}
+.lernwelt .lw-exam-list dt{color:var(--text-dim);font-size:9px;text-transform:uppercase}
+.lernwelt .lw-exam-list dd{margin:3px 0 0;font-size:12px;font-weight:740}
+.lernwelt .lw-exam-list footer{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.lernwelt .lw-past-exams{
+  overflow:hidden;border:1px solid var(--line);border-radius:var(--lw-radius-md);background:var(--lw-panel)
+}
+.lernwelt .lw-past-exams summary{
+  min-height:var(--lw-touch);padding:11px 14px;color:var(--text-dim);
+  font-size:12px;font-weight:680;cursor:pointer
+}
+.lernwelt .lw-past-exams ul{padding:0 12px 12px}
+.lernwelt .lw-past-exams li{border-top:1px solid var(--line-soft)}
+.lernwelt .lw-past-exams button{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
+  min-height:var(--lw-touch);padding:7px;border-radius:8px;text-align:left;font-size:12px
+}
+.lernwelt .lw-past-exams time{flex:none;color:var(--text-dim);font-size:10.5px}
+
+/* --- Lernrunde und Prüfungssimulation ---------------------------------- */
+.lernwelt :where(.lw-training,.lw-simulation){
+  display:grid;gap:16px;width:min(100%,900px);margin:10px auto;padding:20px;
+  border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-xl);
+  background:var(--lw-panel);box-shadow:0 20px 52px rgba(0,0,0,.1)
+}
+.lernwelt .lw-session-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.lernwelt .lw-session-head p{margin:0 0 3px;color:var(--accent);font-size:10.5px;font-weight:800;text-transform:uppercase}
+.lernwelt .lw-session-head h2{margin:0;font-size:18px;line-height:1.3;font-weight:740}
+.lernwelt .lw-session-head>button{
+  flex:none;min-height:var(--lw-touch);padding:8px 11px;border:1px solid var(--line);
+  border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:12px
+}
+.lernwelt .lw-session-head time{
+  flex:none;min-width:94px;padding:8px 12px;border:1px solid var(--line-stark,var(--line));
+  border-radius:12px;background:var(--lw-warning-soft);color:var(--warnung);
+  font-size:20px;font-weight:820;text-align:center;font-variant-numeric:tabular-nums
+}
+.lernwelt .lw-study-card{
+  display:grid;align-content:center;gap:16px;min-height:320px;padding:30px;
+  border:1px solid var(--line-stark,var(--line));border-radius:21px;
+  background:linear-gradient(145deg,var(--bg-side),var(--bg-card));text-align:center
+}
+.lernwelt .lw-study-card>small{
+  justify-self:center;padding:4px 9px;border-radius:999px;background:var(--lw-accent-soft);
+  color:var(--accent);font-size:10.5px;font-weight:750
+}
+.lernwelt .lw-study-card h3{
+  max-width:720px;margin:0 auto;font-size:clamp(21px,3vw,31px);line-height:1.35;
+  font-weight:720;letter-spacing:-.025em;text-wrap:balance
+}
+.lernwelt .lw-answer{
+  display:grid;gap:6px;max-width:720px;width:100%;margin:2px auto 0;padding:18px;
+  border-top:1px solid var(--line-stark,var(--line));color:var(--text);text-align:left
+}
+.lernwelt .lw-answer>span{color:var(--erfolg);font-size:10px;font-weight:820;text-transform:uppercase}
+.lernwelt .lw-answer p{margin:0;font-size:16px;line-height:1.55;white-space:pre-wrap}
+.lernwelt .lw-source{
+  justify-self:center;max-width:100%;min-height:var(--lw-touch);padding:8px 11px;
+  overflow:hidden;border:1px solid var(--line);border-radius:999px;background:var(--bg-card);
+  color:var(--text-dim);font-size:10.5px;text-overflow:ellipsis;white-space:nowrap
+}
+.lernwelt .lw-rating{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.lernwelt .lw-rating button{width:100%}
+.lernwelt .lw-session-note{margin:0;color:var(--text-faint);font-size:10.5px;line-height:1.4;text-align:center}
+.lernwelt .lw-training-result,
+.lernwelt .lw-simulation-result{
+  display:grid;justify-items:center;gap:11px;width:min(100%,820px);margin:18px auto;padding:42px 26px;
+  border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-xl);
+  background:linear-gradient(145deg,var(--lw-success-soft),var(--bg-card) 58%);
+  box-shadow:0 18px 50px rgba(0,0,0,.08);text-align:center
+}
+.lernwelt .lw-training-result>span{font-size:42px}
+.lernwelt .lw-training-result>p,
+.lernwelt .lw-simulation-result>header>p{margin:0;color:var(--text-dim);font-size:11px;font-weight:750;text-transform:uppercase}
+.lernwelt .lw-training-result h2,
+.lernwelt .lw-simulation-result>header h2{margin:0;font-size:clamp(24px,4vw,36px);line-height:1.15}
+.lernwelt .lw-training-result>strong{font-size:14px}
+.lernwelt .lw-simulation-result{justify-items:stretch;text-align:left}
+.lernwelt .lw-simulation-result>header{display:grid;justify-items:center;gap:5px;text-align:center}
+.lernwelt .lw-simulation-result>header>span{font-size:38px}
+.lernwelt .lw-simulation-result>header>strong{color:var(--erfolg);font-size:36px;font-variant-numeric:tabular-nums}
+.lernwelt .lw-analysis{gap:5px}
+.lernwelt .lw-analysis li{
+  display:grid;grid-template-columns:minmax(160px,.7fr) minmax(180px,1fr);align-items:center;gap:14px;
+  min-height:58px;padding:8px;border-top:1px solid var(--line-soft)
+}
+.lernwelt .lw-analysis li:first-child{border-top:0}
+.lernwelt .lw-analysis li>span{display:grid;gap:2px;min-width:0}
+.lernwelt .lw-analysis strong{font-size:12.5px}
+.lernwelt .lw-analysis small{color:var(--text-dim);font-size:10.5px}
+
+/* --- Schule, Fach, Uni und Arbeit -------------------------------------- */
+.lernwelt .lw-subject-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px
+}
+.lernwelt .lw-subject-grid>button{
+  display:grid;align-content:start;justify-items:start;gap:7px;min-width:0;min-height:160px;
+  padding:16px;border:1px solid var(--line);border-radius:var(--lw-radius-md);
+  background:var(--lw-panel);text-align:left
+}
+.lernwelt .lw-subject-grid>button>span{
+  display:grid;place-items:center;width:38px;height:38px;border-radius:12px;
+  background:var(--lw-info-soft);font-size:19px
+}
+.lernwelt .lw-subject-grid strong{font-size:14px;line-height:1.35;font-weight:730}
+.lernwelt .lw-subject-grid small{color:var(--text-dim);font-size:10.5px}
+.lernwelt .lw-subject-grid progress{align-self:end;height:7px;margin-top:auto}
+.lernwelt .lw-subject-empty{
+  grid-column:1/-1;display:grid;justify-items:center;gap:10px;padding:30px;
+  border:1px dashed var(--line-stark,var(--line));border-radius:var(--lw-radius-md);
+  background:var(--bg-side);color:var(--text-dim);text-align:center
+}
+.lernwelt .lw-subject-empty button{
+  min-height:var(--lw-touch);padding:8px 12px;border:1px solid var(--line);
+  border-radius:var(--lw-radius-sm);background:var(--bg-card);color:var(--text)
+}
+.lernwelt .lw-subject>.lw-progress{padding:14px 16px;border:1px solid var(--line);border-radius:var(--lw-radius-md);background:var(--bg-side)}
+.lernwelt .lw-compact-errors{gap:3px}
+.lernwelt .lw-compact-errors li{border-top:1px solid var(--line-soft)}
+.lernwelt .lw-compact-errors li:first-child{border-top:0}
+.lernwelt .lw-compact-errors button{
+  display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:8px;
+  width:100%;min-height:50px;padding:7px 5px;border-radius:9px;text-align:left
+}
+.lernwelt .lw-compact-errors strong{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.lernwelt .lw-compact-errors small{color:var(--text-dim);font-size:10px}
+
+/* --- Leere Zustände und Erklärhinweise --------------------------------- */
+.lernwelt .lw-leer{
+  display:grid;justify-items:center;align-content:center;gap:8px;min-height:190px;padding:24px;
+  border:1px dashed var(--line-stark,var(--line));border-radius:var(--lw-radius-md);
+  background:var(--bg-side);text-align:center
+}
+.lernwelt .lw-leer-icon{
+  display:grid;place-items:center;width:48px;height:48px;border-radius:15px;
+  background:var(--lw-accent-soft);font-size:24px
+}
+.lernwelt .lw-leer h3{margin:0;font-size:15px;font-weight:740}
+.lernwelt .lw-leer p{max-width:520px;margin:0;color:var(--text-dim);font-size:12px;line-height:1.5}
+.lernwelt .lw-leer button{
+  min-height:var(--lw-touch);margin-top:3px;padding:8px 13px;border:1px solid var(--line);
+  border-radius:var(--lw-radius-sm);background:var(--bg-card);font-size:12px;font-weight:680
+}
+.lernwelt .lw-exam-card>.lw-leer{min-height:130px;padding:12px;border:0;background:transparent}
+.lernwelt .lw-note{
+  display:grid;gap:4px;padding:14px 16px;border:1px solid var(--line);
+  border-left:4px solid var(--accent);border-radius:var(--lw-radius-md);background:var(--lw-accent-soft)
+}
+.lernwelt .lw-note strong{font-size:12.5px}
+.lernwelt .lw-note p{margin:0;color:var(--text-dim);font-size:11.5px;line-height:1.5}
+
+/* --- Interaktion und Fokus --------------------------------------------- */
+.lernwelt :where(button,select):focus-visible{
+  outline:3px solid var(--accent);outline-offset:2px;
+  box-shadow:0 0 0 5px var(--bg);border-radius:10px
+}
+.lernwelt .lw-area select:focus-visible{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--lw-accent-soft)
+}
+
+@media(hover:hover){
+  .lernwelt .lw-nav button:hover,
+  .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:hover,
+  .lernwelt .lw-topic-list>button:hover,
+  .lernwelt .lw-past-exams button:hover,
+  .lernwelt .lw-compact-errors button:hover,
+  .lernwelt .lw-back:hover{
+    background:var(--bg-hover);color:var(--text)
+  }
+  .lernwelt :where(.lw-page-head>button,.lw-page-head>.lw-actions button,
+    .lw-actions button,.lw-rating button,.lw-error-list footer button,
+    .lw-exam-list footer button,.lw-exam-card>button,.lw-quick button,
+    .lw-study-actions button,.lw-subject-empty button,.lw-leer button):hover{
+    border-color:var(--line-stark,var(--line));background:var(--bg-hover);color:var(--text)
+  }
+  .lernwelt :where(button.is-primary,.lw-actions button.is-primary,
+    .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
+    border-color:var(--accent);background:var(--accent);color:var(--auf-accent);filter:brightness(1.08)
+  }
+  .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
+    .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,
+    .lw-subject-grid>button):hover{
+    border-color:var(--line-stark,var(--line));box-shadow:0 12px 30px rgba(0,0,0,.07)
+  }
+  .lernwelt .lw-path li>button:hover{
+    z-index:1;border-color:var(--accent);box-shadow:0 15px 34px rgba(0,0,0,.1);transform:translateY(-2px)
+  }
+  .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
+}
+
+.lernwelt :where(.lw-nav button,.lw-actions button,.lw-rating button,.lw-quick button,
+  .lw-study-actions button,.lw-object-list button,.lw-task-list button,.lw-event-list button,
+  .lw-topic-list>button,.lw-path li>button,.lw-subject-grid>button):active{
+  transform:scale(var(--press-scale,.97))
+}
+
+/* --- Breite Desktops: drei ruhige Dashboard-Spalten -------------------- */
+@container (min-width:1180px){
+  .lernwelt .lw-dashboard-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lernwelt .lw-error-list,.lernwelt .lw-exam-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media(min-width:1280px){
+  .lernwelt .lw-nav button{padding-inline:13px}
+}
+
+/* --- Tablet quer und kleinere Desktopfenster --------------------------- */
+@media(max-width:1120px){
+  .lernwelt .lw-nav button{flex:0 0 auto}
+  .lernwelt .lw-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lernwelt .lw-study-actions,.lernwelt .lw-subject-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lernwelt .lw-exam-list dl{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:900px){
+  .lernwelt{--lw-gap:14px;--lw-radius-xl:20px;--lw-radius-lg:16px}
+  .lernwelt .lw-hero{min-height:158px;padding:23px 24px}
+  .lernwelt .lw-goal{flex-basis:154px;padding:14px}
+  .lernwelt .lw-primary-grid{grid-template-columns:1fr 1fr;gap:14px}
+  .lernwelt .lw-focus-card,.lernwelt .lw-exam-card{min-height:218px;padding:18px}
+  .lernwelt .lw-dashboard-grid{gap:14px}
+  .lernwelt .lw-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lernwelt .lw-error-list,.lernwelt .lw-exam-list{gap:14px}
+  .lernwelt .lw-error-list dl{grid-template-columns:1fr}
+}
+
+/* --- 760 × 900 und Telefonklasse --------------------------------------- */
+@media(max-width:760px){
+  .lernwelt{
+    --lw-gap:12px;--lw-radius-xl:18px;--lw-radius-lg:15px;--lw-radius-md:13px;
+    overflow-x:hidden
+  }
+  .lernwelt .lw-head{align-items:flex-start;margin-bottom:8px;padding:4px 1px}
+  .lernwelt .lw-brand-icon{flex-basis:39px;width:39px;height:39px;border-radius:12px;font-size:19px}
+  .lernwelt .lw-brand h1{font-size:17px}
+  .lernwelt .lw-area{grid-template-columns:1fr;gap:2px;min-width:min(46vw,220px)}
+  .lernwelt .lw-area>span{padding-left:2px;font-size:9.5px}
+  .lernwelt .lw-area select{min-height:44px;padding-block:7px;font-size:11.5px}
+  .lernwelt .lw-nav{
+    position:sticky;z-index:5;top:0;margin-bottom:12px;padding:5px;border-radius:13px;
+    box-shadow:0 8px 20px rgba(0,0,0,.07)
+  }
+  .lernwelt .lw-nav button{min-height:44px;padding:7px 10px;font-size:11.5px}
+  .lernwelt .lw-page-head{align-items:flex-start;flex-direction:column;gap:14px;padding:18px 16px}
+  .lernwelt .lw-page-head h2{font-size:clamp(24px,7vw,32px)}
+  .lernwelt .lw-page-head>div:first-child>span{font-size:12.5px}
+  .lernwelt .lw-page-head>button,.lernwelt .lw-page-head>.lw-actions{width:100%}
+  .lernwelt .lw-page-head>button,.lernwelt .lw-page-head>.lw-actions button{flex:1}
+  /* --- §31: DIE HANDLUNG NACH OBEN ------------------------------------
+     Gemessen am 25. August auf 390 × 844: „Tagesrunde starten" stand bei
+     y = 1032, also 188 px UNTER der Falz. Davor lagen Begrüssung, das Datum
+     als Überschrift und das Lernziel — zusammen 322 px, bevor überhaupt
+     etwas zur Lernrunde kam, und die vier Zahlen (fällig, neu, Fehler,
+     nächste Prüfung) reichten zur Hälfte darunter.
+
+     §31 verlangt genau das Umgekehrte: grosse klare Karten mit den Zahlen
+     und einem Knopf. Am Rechner stimmt die Reihenfolge — dort ist alles
+     gleichzeitig zu sehen. Nur am Telefon wird sie gedreht, und zwar mit
+     `order`, nicht mit einer zweiten Baumstruktur: derselbe Inhalt, dieselbe
+     Reihenfolge für ein Vorleseprogramm, nur anders gestapelt. */
+  .lernwelt .lw-today>*{order:5}
+  .lernwelt .lw-today>.lw-metrics{order:1}
+  .lernwelt .lw-today>.lw-primary-grid{order:2}
+  .lernwelt .lw-today>.lw-setup{order:3}
+  .lernwelt .lw-today>.lw-hero{order:4}
+
+  .lernwelt .lw-hero{align-items:stretch;min-height:0;padding:20px 16px}
+  .lernwelt .lw-hero h2{font-size:clamp(27px,8vw,37px)}
+  .lernwelt .lw-goal{align-self:center;flex-basis:142px;padding:12px}
+  .lernwelt .lw-goal button span{font-size:23px}
+  .lernwelt .lw-primary-grid{grid-template-columns:1fr}
+  .lernwelt .lw-focus-card,.lernwelt .lw-exam-card{min-height:0;padding:17px}
+  .lernwelt .lw-dashboard-grid{grid-template-columns:1fr}
+  .lernwelt .lw-section{padding:14px}
+  .lernwelt .lw-engagement,.lernwelt .lw-knowledge{padding:16px}
+  .lernwelt .lw-engagement .lw-metrics,.lernwelt .lw-knowledge .lw-metrics{
+    grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+  .lernwelt .lw-quick{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lernwelt .lw-study-actions{gap:8px}
+  .lernwelt .lw-study-actions article{min-height:196px;padding:14px}
+  .lernwelt .lw-path{padding-inline:12px}
+  .lernwelt .lw-path li{padding-right:24px}
+  .lernwelt .lw-path li:nth-child(even){padding-right:0;padding-left:24px}
+  .lernwelt .lw-path li>button{grid-template-columns:auto minmax(0,1fr);min-height:102px;padding:12px}
+  .lernwelt .lw-path-step{width:44px;height:44px;box-shadow:0 0 0 5px var(--bg)}
+  .lernwelt .lw-path-open{grid-column:2;justify-self:start;min-height:30px}
+  .lernwelt .lw-error-list,.lernwelt .lw-exam-list{grid-template-columns:1fr}
+  .lernwelt .lw-error-list>article,.lernwelt .lw-exam-list>article{padding:16px}
+  .lernwelt :where(.lw-training,.lw-simulation){margin:0;padding:15px;border-radius:17px}
+  .lernwelt .lw-study-card{min-height:280px;padding:22px 17px;border-radius:17px}
+  .lernwelt .lw-study-card h3{font-size:clamp(20px,5.5vw,27px)}
+  .lernwelt .lw-answer{padding:15px 4px}
+  .lernwelt .lw-analysis li{grid-template-columns:1fr;gap:7px}
+  .lernwelt .lw-subject-grid{gap:8px}
+  .lernwelt .lw-subject-grid>button{min-height:145px;padding:14px}
+  .lernwelt .lw-training-result,.lernwelt .lw-simulation-result{margin:0;padding:30px 17px;border-radius:18px}
+}
+
+/* --- 428 × 926 und 390 × 844 ------------------------------------------ */
+@media(max-width:470px){
+  .lernwelt .lw-head{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
+  .lernwelt .lw-area{grid-template-columns:64px minmax(0,1fr);gap:7px;width:100%;min-width:0}
+  .lernwelt .lw-area>span{padding:0;font-size:10px}
+  .lernwelt .lw-nav button{padding-inline:9px}
+  .lernwelt .lw-nav button>span:last-child{font-size:11px}
+  .lernwelt .lw-hero{display:grid;gap:15px;padding:17px 14px}
+  .lernwelt .lw-hero::after{right:-142px;bottom:-172px;opacity:.4}
+  .lernwelt .lw-hero>div:first-child>span{margin-top:10px}
+  .lernwelt .lw-goal{
+    grid-template-columns:minmax(0,1fr) minmax(100px,1fr);align-items:center;justify-items:stretch;
+    width:100%;padding:9px 11px
+  }
+  .lernwelt .lw-goal button{justify-items:start;min-height:48px;text-align:left}
+  .lernwelt .lw-goal button span{font-size:21px}
+  .lernwelt .lw-goal button small{margin-top:4px}
+  .lernwelt .lw-metrik{min-height:82px;padding:12px}
+  .lernwelt .lw-metrik strong{font-size:19px}
+  .lernwelt .lw-focus-card h2,.lernwelt .lw-exam-card h2{font-size:21px}
+  .lernwelt .lw-actions{display:grid;grid-template-columns:1fr;width:100%}
+  .lernwelt .lw-actions button{width:100%}
+  .lernwelt .lw-study-actions{grid-template-columns:1fr}
+  .lernwelt .lw-study-actions article{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto;min-height:0;gap:3px 11px}
+  .lernwelt .lw-study-actions article>span{grid-row:1/3;margin:0}
+  .lernwelt .lw-study-actions article>p{grid-column:1/-1;margin:8px 0 11px}
+  .lernwelt .lw-study-actions article>button{grid-column:1/-1}
+  .lernwelt .lw-event-list button{grid-template-columns:56px minmax(0,1fr)}
+  .lernwelt .lw-topic-list>button{padding-inline:8px}
+  .lernwelt :where(.lw-engagement,.lw-knowledge)>header{display:grid;gap:8px}
+  .lernwelt :where(.lw-engagement,.lw-knowledge)>header>span{justify-self:start}
+  .lernwelt .lw-path{padding-inline:2px}
+  .lernwelt .lw-path::before{left:26px;transform:none}
+  .lernwelt .lw-path li,.lernwelt .lw-path li:nth-child(even){padding:0 0 0 8px}
+  .lernwelt .lw-path li>button{grid-template-columns:auto minmax(0,1fr);gap:10px;border-radius:16px}
+  .lernwelt .lw-path-step{width:40px;height:40px;box-shadow:0 0 0 4px var(--bg);font-size:13px}
+  .lernwelt .lw-path-copy>strong{font-size:13.5px}
+  .lernwelt .lw-path-open{grid-column:2}
+  .lernwelt .lw-error-list article>header,.lernwelt .lw-exam-list article>header{display:grid;gap:8px}
+  .lernwelt .lw-error-list article>header>strong,.lernwelt .lw-exam-list article>header>strong{justify-self:start}
+  .lernwelt .lw-error-list dl{grid-template-columns:1fr}
+  .lernwelt .lw-exam-list dl{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lernwelt .lw-session-head{align-items:flex-start}
+  .lernwelt .lw-session-head time{min-width:82px;padding-inline:8px;font-size:17px}
+  .lernwelt .lw-study-card{min-height:255px;padding:19px 13px}
+  .lernwelt .lw-rating{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lernwelt .lw-subject-grid{grid-template-columns:1fr 1fr}
+  .lernwelt .lw-subject-grid>button{min-height:136px;padding:12px}
+  .lernwelt .lw-compact-errors button{grid-template-columns:22px minmax(0,1fr)}
+  .lernwelt .lw-compact-errors small{grid-column:2}
+}
+
+@media(max-width:390px){
+  .lernwelt .lw-nav{margin-inline:-1px}
+  .lernwelt .lw-nav button{padding-inline:8px}
+  .lernwelt .lw-metrics{gap:7px}
+  .lernwelt .lw-metrik{padding:10px}
+  .lernwelt .lw-quick{grid-template-columns:1fr 1fr}
+  .lernwelt .lw-subject-grid{grid-template-columns:1fr}
+  .lernwelt .lw-subject-grid>button{min-height:126px}
+}
+
+/* 1366 × 768: oberhalb des Falzes mehr Inhalt zeigen, ohne Touchziele zu kürzen. */
+@media(max-height:780px) and (min-width:761px){
+  .lernwelt{--lw-gap:14px}
+  .lernwelt .lw-head{padding-block:3px;margin-bottom:7px}
+  .lernwelt .lw-nav{margin-bottom:14px}
+  .lernwelt .lw-hero{min-height:146px;padding-block:22px}
+  .lernwelt .lw-page-head{padding-block:18px}
+  .lernwelt .lw-metrik{min-height:80px}
+}
+
+@media(pointer:coarse){
+  .lernwelt :where(button,select){min-height:var(--lw-touch)}
+  .lernwelt .lw-nav{scroll-snap-type:x proximity}
+  .lernwelt .lw-nav button{scroll-snap-align:start}
+}
+
+/* Stärkerer Kontrast nutzt dieselben Marken, nur mit deutlicheren Rändern. */
+body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
+  .lw-exam-card,.lw-section,.lw-engagement,.lw-knowledge,.lw-study-actions article,
+  .lw-path li>button,.lw-error-list>article,.lw-exam-list>article,.lw-study-card,
+  .lw-subject-grid>button){border-color:var(--line-stark,var(--line))}
+
+@media(prefers-contrast:more){
+  .lernwelt{--lw-accent-soft:var(--bg-hover)}
+  .lernwelt :where(button,select,.lw-section,.lw-metrik,.lw-study-card){border-color:var(--line-stark,var(--line))}
+  .lernwelt .lw-nav button.is-active{outline:2px solid var(--accent);outline-offset:-2px}
+}
+
+@media(forced-colors:active){
+  .lernwelt :where(button,select,.lw-hero,.lw-page-head,.lw-section,.lw-metrik,
+    .lw-study-card,.lw-path li>button){border:1px solid CanvasText}
+  .lernwelt button.is-primary{background:Highlight;color:HighlightText}
+  .lernwelt progress{forced-color-adjust:auto}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .lernwelt *,
+  .lernwelt *::before,
+  .lernwelt *::after{
+    animation:none!important;transition:none!important;scroll-behavior:auto!important
+  }
+  .lernwelt :where(button,.lw-path li>button):active,
+  .lernwelt .lw-path li>button:hover{transform:none}
+}

@@ -56,10 +56,12 @@ const Dateien = (() => {
     /* Blob-Adressen, die schon gebaut wurden — damit dieselbe Datei nicht
        zehnmal zusammengesetzt wird. */
     const adressen = new Map();
+    const laufendeAdressen = new Map();
+    const adressVersionen = new Map();
     /* ========================================================================
      * 1 · ANMELDEN — Notions „create file upload"
      * ======================================================================*/
-    const anmelden = async ({ name, groesse, typ, blockId }) => {
+    const anmelden = async ({ name, groesse, typ, blockId, abgeleitet }) => {
         if (!groesse && groesse !== 0)
             throw new Error('Es fehlt die Grösse.');
         if (groesse > GRENZE)
@@ -70,6 +72,13 @@ const Dateien = (() => {
         const satz = {
             id, name: name || 'Datei', groesse, typ: typ || 'application/octet-stream',
             blockId: blockId || null, teile, angekommen: 0,
+            /* ABGELEITET heisst: aus etwas anderem in Sekunden neu herstellbar —
+               ein gerastertes PDF-Seitenbild etwa. Solche Dateien gehören NICHT
+               in jede Sicherung und nicht in jeden Abgleich: bei 200 KB je Seite
+               und 500 Seiten wären das 100 MB in jedem `.redion`, für etwas, das
+               sich neu berechnen lässt. Eine Sicherung, die man auf dem Telefon
+               nicht mehr herunterladen kann, ist keine Sicherung (E103). */
+            abgeleitet: !!abgeleitet,
             zustand: 'wartet', angelegt: Store.now(), fertigAm: null
         };
         await Store.dateiPut(satz);
@@ -140,9 +149,14 @@ const Dateien = (() => {
      */
     const ablegen = async (datei, opt) => {
         opt = opt || {};
+        /* MediaRecorder liefert einen Blob, keinen File. Der Name gehört deshalb
+           zur Option; bei einem echten File bleibt sein eigener Name der
+           Rückfall. Audio muss dadurch nie erst als Data-URL aufgebläht werden. */
+        const dateiName = typeof File !== 'undefined' && datei instanceof File ? datei.name : '';
         const satz = await anmelden({
-            name: opt.name || datei.name || 'Datei',
-            groesse: datei.size, typ: datei.type, blockId: opt.blockId
+            name: opt.name || dateiName || 'Datei',
+            groesse: datei.size, typ: datei.type, blockId: opt.blockId,
+            abgeleitet: !!opt.abgeleitet
         });
         try {
             for (let nr = 0; nr < satz.teile; nr++) {
@@ -160,6 +174,20 @@ const Dateien = (() => {
             await weg(satz.id);
             throw e;
         }
+    };
+    /**
+     * Verbindet eine bereits abgelegte Datei nachträglich mit ihrem Block.
+     * Normalerweise ist die Blockkennung schon beim Ablegen bekannt. Dieser
+     * Weg bleibt für Importe und alte Aufnahmen, deren Block erst danach
+     * angelegt wird. Die Datei selbst wird dabei nicht neu geschrieben.
+     */
+    const verknuepfen = async (dateiId, blockId) => {
+        const satz = await Store.dateiHolen(dateiId);
+        if (!satz)
+            throw new Error('Diese Datei gibt es nicht mehr.');
+        satz.blockId = blockId || null;
+        await Store.dateiPut(satz);
+        return satz;
     };
     /* ========================================================================
      * 5 · WIEDER HERAUS
@@ -193,17 +221,37 @@ const Dateien = (() => {
      * Der Browser hält den Blob selbst; wir merken uns die Adresse, damit
      * dieselbe Datei nicht bei jedem Zeichnen neu zusammengesetzt wird.
      */
-    const adresse = async (dateiId) => {
-        if (adressen.has(dateiId))
-            return adressen.get(dateiId);
-        const blob = await alsBlob(dateiId);
-        if (!blob)
-            return null;
-        const url = URL.createObjectURL(blob);
-        adressen.set(dateiId, url);
-        return url;
+    /* Schon gebaut? Dann synchron zurückgeben. Der Zeichner braucht das: er
+       läuft nicht asynchron, und beim zweiten Zeichnen derselben Seite soll
+       das Bild nicht kurz verschwinden und wiederkommen (E98). */
+    const adresseBekannt = (dateiId) => adressen.get(dateiId) || null;
+    const adresse = (dateiId) => {
+        const bekannte = adressen.get(dateiId);
+        if (bekannte)
+            return Promise.resolve(bekannte);
+        const laufende = laufendeAdressen.get(dateiId);
+        if (laufende)
+            return laufende;
+        const version = adressVersionen.get(dateiId) || 0;
+        const arbeit = alsBlob(dateiId).then(blob => {
+            /* Wurde die Datei waehrend des Lesens entfernt, darf die spaete
+               Antwort weder eine neue URL lecken noch den geloeschten Satz im
+               Adresscache scheinbar wiederbeleben. */
+            if (!blob || version !== (adressVersionen.get(dateiId) || 0))
+                return null;
+            const url = URL.createObjectURL(blob);
+            adressen.set(dateiId, url);
+            return url;
+        }).finally(() => {
+            if (laufendeAdressen.get(dateiId) === arbeit)
+                laufendeAdressen.delete(dateiId);
+        });
+        laufendeAdressen.set(dateiId, arbeit);
+        return arbeit;
     };
     const adresseWeg = (dateiId) => {
+        adressVersionen.set(dateiId, (adressVersionen.get(dateiId) || 0) + 1);
+        laufendeAdressen.delete(dateiId);
         const url = adressen.get(dateiId);
         if (url) {
             try {
@@ -247,9 +295,17 @@ const Dateien = (() => {
      */
     const verwaist = async () => {
         const alle = await Store.dateiAlle();
+        /* WER SIE HEUTE ZEIGT. Ein Duplikat trägt dieselbe `dateiId` wie das
+           Original (E171). Liegt das Original im Papierkorb, zeigte diese Liste
+           die Datei als herrenlos an — und ein Klick auf „Aufräumen" nahm dem
+           lebenden Duplikat sein Bild. */
+        const beansprucht = Store.dateiAnspruch
+            ? Store.dateiAnspruch(true) : new Map();
         return alle.filter((d) => {
             if (d.zustand !== 'fertig')
                 return true;
+            if (beansprucht.has(String(d.id)))
+                return false;
             if (!d.blockId)
                 return false;
             const b = Store.getBlock(d.blockId);
@@ -353,27 +409,51 @@ const Dateien = (() => {
             }
             const lade = elVon(e)?.closest('[data-lade]');
             if (lade?.dataset["lade"]) {
-                await herunterladen(lade.dataset["lade"]);
+                try {
+                    await herunterladen(lade.dataset["lade"]);
+                }
+                catch (err) {
+                    if (typeof Reporter !== 'undefined')
+                        Reporter.error('dateien', 'Herunterladen abgebrochen', err);
+                    UI.toast('Datei konnte nicht heruntergeladen werden: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                }
                 return;
             }
             const w = elVon(e)?.closest('[data-weg]');
             if (w) {
                 if (!w.dataset["weg"])
                     return;
-                await weg(w.dataset["weg"]);
-                await zeichne();
-                UI.toast('Datei gelöscht');
+                try {
+                    await weg(w.dataset["weg"]);
+                    await zeichne();
+                    UI.toast('Datei gelöscht');
+                }
+                catch (err) {
+                    if (typeof Reporter !== 'undefined')
+                        Reporter.error('dateien', 'Löschen abgebrochen', err);
+                    UI.toast('Datei wurde nicht gelöscht: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                }
                 return;
             }
             const a = elVon(e)?.closest('[data-a]');
             if (!a)
                 return;
             if (a.dataset['a'] === 'putz') {
-                const erg = await aufraeumen();
-                await zeichne();
-                UI.toast(erg.anzahl
-                    ? erg.anzahl + ' aufgeräumt, ' + groesseText(erg.bytes) + ' frei'
-                    : 'Nichts aufzuräumen');
+                try {
+                    const erg = await aufraeumen();
+                    await zeichne();
+                    UI.toast(erg.anzahl
+                        ? erg.anzahl + ' aufgeräumt, ' + groesseText(erg.bytes) + ' frei'
+                        : 'Nichts aufzuräumen');
+                }
+                catch (err) {
+                    if (typeof Reporter !== 'undefined')
+                        Reporter.error('dateien', 'Aufräumen abgebrochen', err);
+                    UI.toast('Aufräumen abgebrochen: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                }
             }
             if (a.dataset['a'] === 'neu') {
                 const inp = document.createElement('input');
@@ -408,7 +488,8 @@ const Dateien = (() => {
     };
     return { STUECK, KLEIN, GRENZE,
         anmelden, stueckSchicken, bestaetigen, abbrechen, ablegen,
-        alsBlob, adresse, adresseWeg, herunterladen,
+        verknuepfen,
+        alsBlob, adresse, adresseBekannt, adresseWeg, herunterladen,
         weg, verwaist, aufraeumen, zahlen, groesseText, lohntSich, dialog };
 })();
 window.Dateien = Dateien;

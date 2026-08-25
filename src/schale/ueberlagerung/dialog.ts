@@ -28,14 +28,56 @@ type DialogKnopf = { id: string; text: string; hinweis?: string };
 
 const Dialog = (() => {
 
-  const frage = (titel: string, vorgabe = ''): Promise<string | null> =>
+  /* ==========================================================================
+   * ESCAPEN, EINMAL, GANZ OBEN
+   * --------------------------------------------------------------------------
+   * `wahl` hatte diese Funktion in sich, `frage` hatte sie nicht — und
+   * `frage` setzte ihren `titel` roh ins `innerHTML`. Das war jahrelang
+   * folgenlos, weil jeder Aufrufer eine feste Zeichenkette übergab
+   * („Blatt umbenennen"). Mit E110 kam der erste Aufrufer mit FREMDEM Text:
+   * dem Dateinamen eines PDFs.
+   *
+   * Nachgestellt und bestätigt: eine Datei namens
+   *
+   *     <img src=x onerror="…">.pdf
+   *
+   * liess den Code laufen. Es genügt, sie hereinzuziehen. §19 verbietet
+   * genau das, und die Lücke sass nicht im Aufrufer, sondern hier — also
+   * wird sie hier geschlossen, für alle Aufrufer auf einmal (§34, E112).
+   *
+   * Fünf Ersetzungen, wie in CLAUDE.md §19 aufgeschrieben. `'` gehört dazu,
+   * auch wenn es im Elementinhalt harmlos ist: derselbe Text landet
+   * anderswo in einem Attribut, und eine Escape-Funktion, die je nach
+   * Fundort etwas anderes tut, ist keine.
+   * ========================================================================*/
+  const esc = (s: unknown): string => String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+
+  /**
+   * Eine Frage mit einem Eingabefeld.
+   *
+   * `art: 'passwort'` macht daraus ein Passwortfeld: der Text wird nicht
+   * angezeigt, der Browser bietet keine Vervollständigung an, und er merkt
+   * ihn sich auch nicht. Ein PDF-Passwort gehört niemandem ausser dem
+   * Menschen davor — es wird weitergereicht und nirgends abgelegt (E110).
+   */
+  const frage = (titel: string, vorgabe = '',
+                 art: 'text' | 'passwort' = 'text'): Promise<string | null> =>
     new Promise<string | null>(ok => {
     const o = document.createElement('div');
     o.className = 'overlay';
+    const feldArt = art === 'passwort'
+      ? 'type="password" autocomplete="off" spellcheck="false"' : '';
     o.innerHTML =
       '<div class="finder" style="width:min(460px,94vw)">' +
-        `<div class="fh">${titel}</div>` +
-        `<div style="padding:16px 18px"><input id="fq" value="${String(vorgabe).replace(/"/g, '&quot;')}" ` +
+        `<div class="fh">${esc(titel)}</div>` +
+        `<div style="padding:16px 18px"><input id="fq" ${feldArt} ` +
+        `value="${esc(vorgabe)}" ` +
         'style="width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line); ' +
         'border-radius:8px; outline:none; font-size:15px"></div>' +
         '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button>' +
@@ -80,9 +122,6 @@ const Dialog = (() => {
     { titel, text, knoepfe = [] }:
     { titel: string; text: string; knoepfe?: DialogKnopf[] }
   ): Promise<string> => new Promise<string>(ok => {
-    const esc = (s: unknown): string => String(s ?? '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =

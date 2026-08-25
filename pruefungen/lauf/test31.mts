@@ -129,14 +129,31 @@ import http from 'node:http';
   await new Promise(r => srv.close(r));
   await p.reload();
   await p.waitForTimeout(2000);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const offline = await p.evaluate(() => ({
     titel: document.getElementById('title')?.textContent,
     seitenleiste: !!document.getElementById('sidebar'),
     store: typeof Store !== 'undefined',
-    bloecke: document.querySelectorAll('.blk').length
+    bloecke: document.querySelectorAll('.blk').length,
+    /* SEIT E132 IST DIE STARTANSICHT DAS HEUTE-DASHBOARD, und das zeichnet
+       keine `.blk`-Blöcke, sondern seine eigenen Karten. Der Prüfpunkt
+       „bloecke > 0" wurde dadurch rot, obwohl offline alles ansprang:
+       Seitenleiste da, Store da, Bestand gelesen. Gemessen wird deshalb,
+       ob überhaupt etwas Gezeichnetes dasteht — Blöcke ODER die
+       Produktwelt — und zusätzlich, ob der Bestand wirklich gelesen wurde.
+       Ein leerer Bildschirm fiele bei beidem durch. */
+    produktwelt: !!document.querySelector('.lernwelt, .arbeitswelt'),
+    imBestand: (() => { try { return Object.keys(Store.cache.blocks).length; }
+                        catch { return 0; } })()
   }));
   console.log('   Offline:', JSON.stringify(offline));
-  ok('App startet ohne Server', offline.seitenleiste && offline.store && offline.bloecke > 0);
+  ok('App startet ohne Server', offline.seitenleiste && offline.store &&
+     (offline.bloecke > 0 || offline.produktwelt) && offline.imBestand > 0);
 
   /* --- 4) Telefon-Oberfläche ------------------------------------------ */
   await p.setViewportSize({ width: 428, height: 926 });   /* iPhone 13 Pro Max */

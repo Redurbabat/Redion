@@ -35,7 +35,201 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**8. August 2026 · 118 Prüfläufe**
+**25. August 2026 · 184 Prüfläufe**
+
+> ### Stand vom 25. August — Zweig `codex-study-suite`
+>
+> Alle 60 Abschnitte des grossen Auftrags sind gebaut. 56 tragen einen
+> Prüflauf, der rot wird, wenn sie kaputtgehen; vier stehen halb, und bei
+> jedem steht dabei, warum. Kein `✗` und kein `?` mehr in
+> `doku/AUFTRAG-STAND.md`.
+>
+> **Was an diesem Tag entstand**
+>
+> ```txt
+> E145  §23 stand als fehlend da und war vollständig gebaut — falsche Lücke
+> E146  „Geteilt öffnen" setzte den Zustand, zeichnete das Feld aber nicht neu
+> E147  Dateinamen und Quellenangaben suchbar; EINE Funktion für beide Suchen
+> E148  Vier Sachen, die nur das Hinsehen fand — darunter 120 von 390 Pixeln,
+>       die am Telefon eine Kennung-vor-Klasse-Regel gefressen hat
+> E149  Lernpfad und Arbeitssicht festgehalten; XP bewegt kein Wissen
+> E150  Der OCR-Dienst liegt jetzt bei — dienste/ocr.mts, doku/OCR-DIENST.md
+> E151  Am Telefon stand „Tagesrunde starten" 188 px unter der Falz
+> E152  Die unverteilte Aufgabe aus einer Besprechung war für niemanden da
+> E153  Wer sich einen Namen gab, verlor SEINE GANZE Aufgabenliste
+> E154  Der Obsidian-Rundlauf, einmal ganz durchgelaufen
+> E155  Der Weg zurück zur Quelle: ↩ PDF · Seite 14
+> ```
+>
+> **Geschlossen:** L53 (Dienst fehlte), L55 (Suche fand keine Dateinamen),
+> L56 (benanntes Konto leerte die Liste). **Neu:** L57 (die Aufgabe findet
+> ihr Meeting, aber nicht die Minute).
+>
+> **Was offen ist**
+>
+> ```txt
+> 1. L57 — braucht eine Änderung an der KI-Anweisung und ein Modell zum
+>    Messen. Raten wäre schlechter als weglassen.
+>
+> 2. §13 Uni und §35 Gemeinsam bleiben halb, aber nicht aus Versäumnis:
+>    Semester aus Titeln zu erkennen ist so gewollt, und ohne Server ist
+>    Teilen nun einmal ein Export.
+>
+> 3. §47 Visuelle Qualität hört nicht auf. Der nächste Fund kommt, sobald
+>    wieder jemand hinsieht statt zu lesen (§55) — genau so kamen E148 und
+>    E151 zustande.
+> ```
+>
+> **Die teuerste Lehre des Tages** steht nicht im Produkt: in sechs von neun
+> neuen Prüfläufen war der erste Fehler MEINER, nicht der der App. Ein
+> `textContent`, das kein Tippen ist. Ein `|| -1` auf einem Zähler, der bei 0
+> anfängt. Ein `clientWidth`, das die Innenabstände mitzählt. Ein `\b2\b`,
+> das die 2 aus „SM-2" nahm — und damit einen Punkt aus dem falschen Grund
+> GRÜN machte. Der fällt niemandem auf; deshalb steht jede Gegenprobe
+> einzeln zurückgenommen in den Einträgen.
+
+**24. August 2026 · 174 Prüfläufe**
+
+> ### Stand vom 24. August, abends — Zweig `codex-study-suite`
+>
+> **Der grösste Einzelbefund des Tages:** rund 40 000 Zeilen Codex-Arbeit
+> waren im Browser nicht vorhanden. Ein Typfehler in `arbeitswelt.ts:337`
+> brach `npm run typecheck` ab, dadurch lief `bauen:ts` nie durch, und fünf
+> `quell/*.js` fehlten. `index.html` lud sie trotzdem — fünf 404er bei jedem
+> Start, ohne Meldung, ohne rote Konsole. Lernwelt, Arbeitswelt,
+> Lebensbereiche, Produktwelten und die Einrichtung der Hauptwelten waren
+> geschrieben und tot (E132).
+>
+> Danach war zu sehen, was Codex gebaut hat, und es ist viel: Heute-Dashboard,
+> Lernzentrale, Lernpfad, Fehlerzentrum, Prüfungszentrale, Schule, Uni,
+> Arbeit, Workspace-Übersicht, Bibliothek, Dokumentmodus, Elektro-Rechner.
+> Am Rechner wie am Telefon, ohne waagerechten Überlauf.
+>
+> **Was an diesem Tag entstand**
+>
+> ```txt
+> E132  Bauschranke gelöst; test101 (der Prüfserver hielt nicht an),
+>       test202 (Onboarding blockierte den Lauf), test87 (Kaskade sprang
+>       von Stufe 3 auf 2 zurück)
+> E133  test206 — die erste Prüfung, die die Produktwelten wirklich öffnet
+> E134  Papiervorlagen: blanko, liniert, kariert, Punktraster, Millimeter
+> E135  Die Lernwelt rechnete falsch — zwei Ursachen, sieben falsche Zahlen
+> ```
+>
+> **Was offen ist**
+>
+> ```txt
+> 1. L49-L53 sind neu: Fassaden in der Lernwelt · zwei Rechenwege für
+>    dieselben Aggregate · die Hauptwelten stehen in keinem Register ·
+>    zwei Willkommensdialoge an zwei Starts · „Erkennen" braucht einen
+>    Dienst, den Redion nicht mitliefert.
+>
+> 2. Der grosse Auftrag ist NICHT abgearbeitet. Umgesetzt sind §3 (die
+>    zwei Prüfläufe), §21 (Papiervorlagen), §56 (Prüfungen für die
+>    Produktwege) und die Voraussetzung für alles andere: dass die Module
+>    überhaupt laufen. Offen bleiben unter anderem Uni mit Semestern,
+>    Projekte und Meetings in der Arbeitswelt, Whiteboard als eigener
+>    Bereich und eine Prüfungssimulation mit Gedächtnis.
+>
+> 3. Drei Verweise auf Entscheidungen stimmen nicht: electrical.ts:6,
+>    calculations.ts:10 und daten.ts:851 nennen E128, und E128 ist „Neue
+>    Audioaufnahmen sind Anhänge". Nicht angefasst — welche Entscheidung
+>    gemeint war, lässt sich nicht raten.
+> ```
+
+
+> ### ✅ STUDY SUITE · PHASE 1 INK V2 ABGESCHLOSSEN
+>
+> Die gemeinsame Zeichenschicht von A4-Blatt und PDF-Seite kann jetzt
+> transparenten Marker, Linie, Pfeil, Rechteck, Ellipse und sichere
+> Textanmerkungen. Auswahlrechteck, Mehrfachauswahl, gemeinsames Verschieben
+> und Löschen sowie Aktions-Undo/Redo sind angeschlossen.
+>
+> `src/core/ink/geometry.ts` ist der neutrale, DOM-freie Geometriekern. Es
+> gibt keine zweite Ink-Datenbank und keinen PDF-zu-Whiteboard-Import; die
+> additiven Markendaten laufen durch vorhandene Sicherung und Sync.
+>
+> `test201` (Suite 167, 32 Punkte) hält Markertransparenz, Formen, Text,
+> Druckwerte, Coalesced Events, Reduktion, Auswahl/Bewegung/Undo/Redo,
+> 390×844, 1366×768, 1440×900, Druck, Backup/Restore und Sync fest.
+
+> ### ✅ STUDY SUITE · PHASEN 2–9 IM CODE ABGESCHLOSSEN
+>
+> Dokumentmodus · PDF/Notiz → Lernen · Lernen V2 · Audio V2 · Alias/Vault ·
+> Scanner/OCR · Ausbildung · Schulbibliothek sind auf den vorhandenen Seiten,
+> Blöcken, Anhängen, dem Graphen und SM-2 aufgebaut. Es gibt keinen zweiten
+> Store, Graph, PDF-Viewer oder Lernkartenbestand.
+>
+> Der bewusst gebündelte Abschlusslauf folgt nach Erzeugen der Browserdateien;
+> Zwischenläufe wurden auf Wunsch nicht ausgeführt. Der Umsetzungsnachtrag
+> steht in `doku/REDION-STUDY-SUITE-AUDIT.md`.
+
+> ### Historischer Übergabestand vor Ink V2 — 22. August, nachmittags
+>
+> Die Arbeit an E123/E124 ist inhaltlich fertig und committet. Was noch
+> aussteht, steht unten unter **„Offen beim Anhalten"**. Wer hier weitermacht,
+> liest zuerst diese drei Absätze und braucht sonst nichts.
+>
+> **Was zuletzt gemacht wurde**
+>
+> `Store.purgeBlock` löschte die Anhänge in einer abgelösten Aufgabe, auf die
+> niemand warten konnte. Wer eine Seite löschte und gleich darauf eine
+> Sicherung zurückholte, bekam die Seite zurück und den Anhang nicht — das
+> alte Löschen kam an, nachdem das Zurückholen den Anhang schon neu
+> geschrieben hatte. Betroffen war NICHT nur das verschlüsselte Paket,
+> sondern auch die gewöhnliche `.redion`-Sicherung.
+>
+> Behoben mit `Store.settled()`: abgelöste Arbeit wird vermerkt, `importAll`
+> wartet vorn und hinten darauf. Gemessen bei 1972 Blöcken im Bestand —
+> dreimal von drei Läufen der Anhang weg ohne die Behebung, dreimal von drei
+> Läufen 900 Bytes zurück mit ihr. Ganze Geschichte: `ENTSCHEIDUNGEN.md` E123.
+>
+> Nebenbefund beim Messen: das Suchfenster fand eingelesenen PDF-Text nicht
+> mehr, während `Store.search` ihn fand — zwei Suchen, zwei Antworten
+> (E124). Beide Wege lesen jetzt `text` UND `suchtext`.
+
+### Offen beim Anhalten
+
+```txt
+1. DER VOLLE PRÜFLAUF IST NICHT DURCHGELAUFEN.          ← das Wichtigste
+   `npm run pruefen` wurde nach 9 von 166 Läufen angehalten (alle 9 grün).
+   Einzeln geprüft und grün sind ausserdem: test85, test95, test133,
+   test152, test181, test199, test200.
+   Zu tun: `node pruefungen/alle.mts > /tmp/voll70.log 2>&1` und das
+   Ergebnis ansehen. Dauer etwa 50-60 Minuten.
+
+2. Der Zweig ist noch nicht geschoben.
+   Alles liegt auf `zusammenfuehrung`; `claude/redion-head2-desktop-move-j47chf`
+   muss daraufgesetzt und geschoben werden.
+
+3. L43 steht offen und ist Absicht.
+   Ein Anhang ohne `blockId` bleibt beim endgültigen Löschen für immer
+   liegen. Heute belanglos — alle sechs echten Aufrufer von
+   `Dateien.ablegen` übergeben `blockId`. Die naheliegende Behebung würde
+   MEHR löschen als heute, und das gehört in eine eigene Entscheidung mit
+   eigenen Prüfungen, nicht nebenbei in eine Fehlerbehebung (§46).
+
+4. Kleinigkeit: das Bild in Hell wurde nicht erzeugt.
+   `data-theme="light"` von aussen auf `documentElement` gesetzt hat die
+   App wieder überschrieben. Die geänderte CSS nutzt nur bestehende
+   Farbmarken (`--bg-input`, `--line`, `--text`), sollte also mitgehen —
+   nachgesehen wurde es aber nicht.
+```
+
+### Was dabei entstanden ist
+
+```txt
+src/kern/ablage/indexdb.ts      abloesen() + settled(), importAll wartet
+src/kern/sicherheit/krypto.ts   Karte „Vollständiges Paket" im Dialog
+src/bereiche/ki/kontext.ts      Suchindex liest suchtext
+src/schale/aufbau/schale.ts     der Weg ohne Index tut dasselbe
+quell/schale/stil/bausteine.css Dateifeld und Knopf auf einer Zeile
+pruefungen/lauf/test200.mts     NEU, 29 Punkte, Gegenprobe 10 rot
+pruefungen/lauf/test199.mts     §3 vom Wächter zum echten Rundlauf
+test85/95/133/152/181           Erwartungen auf den Stand nach dem
+                                Zusammenführen gebracht
+```
+
 
 Redion kann heute: lokal starten · offline arbeiten · Seiten und Blöcke
 speichern · Datenbanken · Formeln (158 Funktionen, davon 61 unter deutschem
@@ -44,6 +238,10 @@ lokale KI mit Grenzen für Agenten (E52) · Versionen · Papierkorb ·
 `.json`- und `.redion`-Sicherung mit Anhängen, auch über 4 GB (E39) ·
 grosse Dateien stückweise · `.ods` lesen und schreiben · als App
 installierbar, mit Erinnerungen, die auch ankommen (E40/E41).
+
+**Der React-Umbau (E78) ist widerrufen** — Redur hat ihn am 9. August
+nach Ansicht des Rohbaus entfernt (E80). Geblieben sind die Reparaturen
+der echten App: E71–E77, E79, test148/152/155.
 
 **Die drei wichtigsten offenen Punkte**
 
@@ -67,23 +265,52 @@ gleitende Reiterpille · eine 56-px-Leiste, deren Höhe an einer Stelle steht.
 **Was jetzt obenauf liegt:**
 
 ```txt
-L10  Mobile — die Schale steht, die Bereiche darin noch nicht ganz.
-     Offen: Willkommensbildschirm (§11) · Einstellungen als Karten (§12) ·
-     Zustandswechsel der Sicherungskarte · Datenbank- und Tabellenansicht
-     fürs Telefon entworfen · Prüfung auf einem echten Gerät
+L10  Mobile — die Bereiche sind durch: Willkommensbildschirm (E55),
+     Einstellungen (E58), Sicherungskarte (E57), Menü-Blätter
+     (test155), Formatleiste (E81), Ziehen (E83), Mehrfachauswahl
+     (E84), Tabellenblock als Karten (E89, Vorschlag — Redur
+     entscheidet am Bild). Offen bleibt allein die Prüfung auf einem
+     echten Gerät
 L12  Barrierefreiheit — gemessen und behoben (E51); es fehlt der
      Durchlauf mit einem echten Vorleseprogramm
-L16  Automationen: sonst-Zweig in der Oberfläche und eine Schleife
-     über die eigenen Zeilen — Vorschau und Protokoll sind da (E61)
-L18  XLSX und ODS über das einfache Lesen und Schreiben hinaus
-L20  die 33 fehlenden Tastenkürzel · Konflikte mit Browser und
-     Betriebssystem systematisch prüfen · Markdown-Tabellen beim Einfügen
+L16  ✅ komplett (9. August): sonst-Zweig (E85), Schleifenschutz
+     gegen Automations-Kreisel (E86), Schleife über eigene Zeilen
+     (gab es längst — erst jetzt gefahrlos)
+L18  XLSX/ODS-Rest: Zellformatierung, Kommentare, ODS-Mehrblatt —
+     Mehrblatt-XLSX kam mit E91 (Export trug vorher nur das aktive
+     Blatt: stille §13-Lücke)
+L20  ✅ komplett (9. August): Ausfüllen (E87), Markdown-Tabellen
+     (E88), Alt+Umschalt+Klick (test158 §7)
+L35  ✅ geschlossen (15. August, E121): Stück-Lesefehler brechen
+     Sicherung, Sync und Löschen ab, ohne Dateisatz oder Bytes anzutasten
+L37  ✅ komplett (19. August): Seitenanker (E105) · Seitenbilder
+     zurückholen (E106) · Textsuche im PDF (E107) · Drucken mit
+     Strichen (E108) · geschützte Dateien (E110).
+     Die „Neurasterung" war kein Merkmal, sondern ein Rechenfehler:
+     1654 px über A4 sind 200 dpi, nicht 140.
+     Offen bleibt allein OCR für eingescannte Seiten ohne Textebene —
+     und das ist L29, nicht L37.
 ```
+
+**Redurs vier Wünsche für die Schulaufgaben** (11.–19. August) sind
+abgearbeitet:
+
+```txt
+leeres A4-Blatt zum Draufschreiben          E100  ✅
+daneben stellen (Spalten)                   E102  ✅
+Schriftgrösse, Farbe, Schriftart            E101  ✅  (Farbe gab es schon)
+PDF durchblättern und darauf schreiben      E103  ✅
+… und ein leeres Blatt gleich daneben       E104  ✅
+```
+
+Mit E103 kommt die **erste fremde Laufzeitbibliothek** ins Verzeichnis:
+pdf.js, Apache-2.0, als Umwandler beim Einlesen — nicht im Anzeigeweg.
+Was das kostet und warum es umkehrbar bleibt, steht in E103.
 
 **Erledigt seit dem 6. August:** L11 Agenten-Grenzen (E52) · L33 Web Push
 (E54) · L14 ZIP64 (E39) · L4 Fehlerwerte (E36) · L20 Markdown (E59) ·
-L15 bedingte Formatierung vollständig (E60) · der grösste Teil von L10
-und L12.
+L15 bedingte Formatierung vollständig (E60) · L35 Stück-Lesefehler (E121) ·
+der grösste Teil von L10 und L12.
 
 **Der Fund vom 8. August**, weil er die Art Fehler zeigt, auf die zu achten
 ist: `# Titel` wurde eine Überschrift namens `#Titel` — das Kürzelzeichen
@@ -833,6 +1060,25 @@ HH:MM".
 
 **Priorität** — mittel. Der Nutzen ist gross, aber die Zahl der Menschen,
 die Redion installiert und einen Server betreibt, ist heute klein.
+
+---
+
+## Wo der grosse Auftrag steht
+
+Der Stand aller 60 Abschnitte steht in **`doku/AUFTRAG-STAND.md`** — mit
+Belegen, nicht mit Absichten. Drei Zeichen: ✅ gebaut und geprüft, ◐ gebaut
+und teilweise, ✗ offen, ? gebaut und nie laufen gesehen.
+
+Die fünf nächsten Arbeiten, nach Nutzen sortiert:
+
+1. **§37/§38 Elektro ansehen** — zwei Module ohne Prüflauf und ohne Bild.
+   test211 ist geschrieben; er muss noch laufen.
+2. **§22 Whiteboard fertig machen** (L54): Grösse ändern, mehrstufiges
+   Zurück, Text ohne `prompt()`.
+3. **§23 Vorschlagsmodus** — das Letzte, was am Dokumentmodus fehlt.
+4. **§39 OCR entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
+   beschriften.
+5. **§28 Suche verbreitern** (L55): Dateinamen und Quellenangaben.
 
 ---
 

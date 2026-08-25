@@ -18,6 +18,9 @@ import { chromium } from 'playwright';
   await p.evaluate(() => {
     Store.setMeta('rundgangGesehen', true);
     document.getElementById('rg-willkommen')?.remove();
+    /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+       über alles und fängt Klicks ab (E132). */
+    document.querySelector('.produkt-onboarding-lage')?.remove();
     document.getElementById('rg-einladung')?.remove();
   });
 
@@ -437,11 +440,18 @@ import { chromium } from 'playwright';
      Folge. */
   /* FEHLT DER NAME, IST DAS KEIN FREIBRIEF — und genau das stand hier.
      `!menueVon` galt als „richtiges Menü", also lief die Prüfung auch dann,
-     wenn gar nicht festzustellen war, wozu das offene Menü gehört. Unter
-     Last ist das der häufigste Fall, und die Folge war eine rote Zeile
-     über die Spaltenfolge, die mit der Spaltenfolge nichts zu tun hatte:
-     gemessen kam ["Dazwischen","Name","Menge","Art"] — die Spalte landete
-     vorn, weil das Menü einer anderen Spalte offen war.
+     wenn gar nicht festzustellen war, wozu das offene Menü gehört.
+
+     UND EINE DIAGNOSE HIER WAR FALSCH. An dieser Stelle stand: „die
+     Spalte landete vorn, weil das Menü einer anderen Spalte offen war."
+     Ein falsches Menü setzt die Spalte woandershin — aber nie an
+     Position 0. Vorn landete sie, wenn der Zufallsschlüssel rein
+     numerisch ausfiel („77577"): Integer-artige Schlüssel sortiert
+     JavaScript in Object.keys VOR alle String-Schlüssel, und
+     `uid().slice(0, 5)` ist Hex — das traf 9,6 % aller neuen Spalten.
+     Behoben in E96 (`Ids.short` beginnt nie mit einer Ziffer),
+     festgehalten in test170. Der Wächter hier bleibt trotzdem — gegen
+     den echten Fall des fremden Menüs, der die Folge ANDERS verschiebt.
 
      Wer nicht weiss, worauf er zeigt, darf nichts behaupten. */
   const richtigesMenue = !!menueVon && /Menge/.test(menueVon);
@@ -651,6 +661,12 @@ import { chromium } from 'playwright';
    * ================================================================== */
   await p.reload();
   await p.waitForTimeout(1800);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   /* Was von einer Spalte hier gelesen wird — `Object.values` eines formlosen
      Schemas gibt sonst `unknown` zurück. */
   type Spalte = { name?: string; icon?: string };

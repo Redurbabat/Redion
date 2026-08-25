@@ -638,5 +638,69 @@ p('Niemand baut Base64 mit dem Spread', mitSpread.length === 0,
 p('Der Helfer für Base64 wird geladen', (skripte ?? '').includes(HELFER),
   skripte.filter(s => (s ?? '').includes('bytes')).join(', '));
 
+/* ========================================================================= *
+ * 10 · DEUTSCHE BESCHRIFTUNGEN HABEN UMLAUTE
+ * ---------------------------------------------------------------------------
+ * Auf dem PDF-Arbeitsplatz standen zwei Knöpfe: „Zurueck" und „Loeschen".
+ * Beide funktionierten, beide waren erklärt, und beide sahen aus wie aus
+ * einem Programm von 1995. Gefunden hat sie kein Prüflauf, sondern ein Blick
+ * auf ein Bildschirmfoto (§55).
+ *
+ * CLAUDE.md §53 trennt sauber: Deutsch für Menschen, Englisch für Code. Was
+ * ein Mensch liest, wird deutsch geschrieben — und deutsch heisst mit
+ * Umlaut. `ue` ist kein Kompromiss, sondern ein Fehler.
+ *
+ * WAS DIESE PRÜFUNG NICHT TUT: sie sucht nicht nach `ue` im Quelltext. Dort
+ * ist es überall richtig — `loeschen` als Datenschlüssel, `auswaehlen` als
+ * Funktionsname, `bereichAuswahl` als Klasse. Geprüft wird nur, was der
+ * Browser wirklich ANZEIGT: `title="…"`, `placeholder="…"` und der Text in
+ * `<span class="wort">…</span>`.
+ *
+ * Und „Schliessen", „grosse", „muss" bleiben, wie sie sind: das ist Schweizer
+ * Rechtschreibung, und die schreibt kein ß. Verboten ist nur die Ersatzform
+ * für einen Umlaut.
+ * ========================================================================= */
+console.log('\n10 · Deutsche Beschriftungen haben Umlaute');
+
+/* Wörter, bei denen `ae/oe/ue` sicher ein Umlaut sein muss. Bewusst kurz:
+   lieber ein paar Fälle übersehen als einen richtigen Text anmeckern.
+   `Goethe` und `Poesie` stehen deshalb nicht drin, und `Zoe` auch nicht. */
+const UMLAUTWOERTER = [
+  'zurueck', 'loesch', 'oeffn', 'auswaehl', 'waehl', 'aendern', 'groesse',
+  'rueckgaengig', 'naechst', 'ueberschrift', 'hoehe', 'zurueckset',
+  'durchlaessig', 'geglaettet', 'schliessl', 'pruefung', 'erklaerung',
+  'moeglich', 'koennen', 'muessen', 'fuer ', 'ueber '
+];
+
+const sichtbarerText = (quelle: string): string[] => {
+  const raus: string[] = [];
+  for (const treffer of quelle.matchAll(/(?:title|placeholder|aria-label)="([^"]{2,90})"/g))
+    raus.push(treffer[1] ?? '');
+  for (const treffer of quelle.matchAll(/<span class="wort">([^<]{2,60})<\/span>/g))
+    raus.push(treffer[1] ?? '');
+  return raus;
+};
+
+const ohneUmlaut: string[] = [];
+for (const s of skripte) {
+  const quelle = _lies(_dazu(WURZEL, s), 'utf8');
+  for (const text of sichtbarerText(quelle)) {
+    const klein = text.toLowerCase();
+    for (const wort of UMLAUTWOERTER)
+      if (klein.includes(wort)) { ohneUmlaut.push(`${s}: „${text}"`); break; }
+  }
+}
+p('Keine Beschriftung schreibt einen Umlaut aus', ohneUmlaut.length === 0,
+  ohneUmlaut.slice(0, 6).join(' · '));
+
+/* Gegenprobe im Lauf selbst: die Wortliste muss überhaupt greifen können.
+   Eine Regel, die auf nichts anschlägt, ist keine Regel (§55.2). */
+const probe = sichtbarerText('<button title="Rueckgaengig">x</button>' +
+  '<span class="wort">Loeschen</span>');
+p('Die Wortliste erkennt „Rueckgaengig" und „Loeschen"',
+  probe.length === 2 &&
+  probe.every(text => UMLAUTWOERTER.some(w => text.toLowerCase().includes(w))),
+  JSON.stringify(probe));
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

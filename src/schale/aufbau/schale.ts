@@ -377,6 +377,8 @@ const App = (() => {
 
   const seitenMenue = (anker: any, p: any) => {
     const r = anker.getBoundingClientRect();
+    const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
+      ? Lebensbereiche.direkteBereichIds(p).length : 0;
     const m = UI.menuMitSuche(
       /* Darstellung */
       '<div class="schrift-kacheln">' +
@@ -416,6 +418,8 @@ const App = (() => {
         : '') +
       `<button data-a="fav"><span class="mi">${p.favorite ? '★' : '☆'}</span>` +
       `${p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten'}</button>` +
+      `<button data-a="produkt-bereiche"><span class="mi">◎</span>Lebensbereiche` +
+        `<span class="ms">${bereichAnzahl || 'Keine'} ▸</span></button>` +
       '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
       '<button data-a="icon"><span class="mi">😀</span>Symbol ändern</button>' +
       '<button data-a="cover"><span class="mi">🖼</span>Cover ändern</button>' +
@@ -550,6 +554,11 @@ const App = (() => {
       }
 
       m.remove();
+
+      if (a === 'produkt-bereiche') {
+        await Produktwelten.bereicheDialog(p);
+        return;
+      }
 
       if (Werkzeuge.seitenMenueAktion(a, p)) return;
 
@@ -695,7 +704,12 @@ const App = (() => {
 
     if (!Kopfleiste.zeichne(wrap, p)) { zeichneCrumbs(); return; }
 
-    Inhaltsflaeche.zeichne(wrap, p);
+    if (DocumentMode.active(p)) {
+      wrap.className = 'wide document-page';
+      DocumentMode.render(wrap, p);
+    } else {
+      Inhaltsflaeche.zeichne(wrap, p);
+    }
 
     zeichneCrumbs();
     streifenZeichnen();
@@ -730,8 +744,8 @@ const App = (() => {
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder such" style="width:min(820px,95vw)">' +
-        '<input id="q" placeholder="' + (eng ? 'Seiten und Inhalte suchen'
-          : 'Suchen — auch typ:seite, in:Projekte, nach:2026-01, tag:wichtig, &quot;genauer Satz&quot;') +
+        '<input id="q" placeholder="' + (eng ? 'Seiten, Zeilen und Inhalte suchen'
+          : 'Suchen — z. B. titel:&quot;Projekt&quot;, tag:arbeit, geändert:heute, status:offen') +
           '" autocomplete="off">' +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
@@ -757,9 +771,9 @@ const App = (() => {
            Stilblatt die eine Hälfte ausblenden kann und die andere nicht. */
         '<div class="hint">' +
           '<span class="hint-tasten">↑ ↓ auswählen · Enter öffnen · Esc schliessen · </span>' +
-          '<span class="hint-befehle">Befehle: <code>typ:seite</code> <code>in:Projekte</code> ' +
-          '<code>nach:2026-01</code> <code>tag:wichtig</code> <code>titel:Wort</code> ' +
-          '<code>"genauer Satz"</code></span></div>' +
+          '<span class="hint-befehle">Beispiele: <code>titel:&quot;Projekt&quot;</code> ' +
+          '<code>tag:arbeit</code> <code>typ:seite</code> <code>geändert:heute</code> ' +
+          '<code>status:offen</code></span></div>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -768,6 +782,7 @@ const App = (() => {
     if (!inp || !res) return;
     let treffer: any[] = [];
     let i = 0;
+    let queryError = '';
 
     /* ----------------------------------------------------------------------
      * „ZULETZT GESUCHT" (Vorgabe §17)
@@ -819,7 +834,10 @@ const App = (() => {
 
     const zeichne = () => {
       if (!treffer.length) {
-        res.innerHTML = inp.value
+        res.innerHTML = queryError
+          ? '<div class="such-leer" role="alert" data-query-error><b>Abfrage nicht verstanden</b>' +
+            `<span>${esc(queryError)}</span></div>`
+          : inp.value
           ? '<div class="such-leer"><b>Nichts gefunden</b>' +
             '<span>Versuche einen anderen Begriff — oder suche in den Befehlen ' +
             'mit <code>Strg ⇧ P</code>.</span></div>'
@@ -838,7 +856,7 @@ const App = (() => {
       res.querySelectorAll<HTMLElement>('button[data-i]').forEach(b => {
         b.addEventListener('click', () => {
           merkeSuche(inp.value);
-          oeffne(treffer[Number(b.dataset.i)]?.page.id); o.remove();
+          zumTreffer(treffer[Number(b.dataset.i)]); o.remove();
         });
         b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
       });
@@ -853,16 +871,45 @@ const App = (() => {
       const t = treffer[k];
       if (!t) { v.innerHTML = ''; return; }
       const p2 = t.page;
-      const inhalt = Store.childrenOf(p2.id).slice(0, 14).map((b: any) => {
-        if (b.type === 'database') {
-          const c = Store.getCollection(b.collectionId);
-          return `<div class="vs-db">🗂 ${esc(c ? c.name : 'Datenbank')} · ` +
-                 `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`;
+      /* HÜLLEN SIND KEIN INHALT (E118).
+         Gelesen wurden bisher nur die DIREKTEN Kinder der Seite. Seit E104
+         ist „nebeneinander" die Vorgabe beim PDF-Einlesen, und dann ist das
+         einzige direkte Kind ein `columns`-Block — der hat keinen `text`,
+         also kam '' zurück, und die Vorschau behauptete „Diese Seite ist
+         noch leer." über eine ganze Schulaufgabe. Genau der Satz, den E107
+         abschaffen wollte, an genau der Anordnung, die Standard ist.
+         Also hinabsteigen — aber nur in das, was selbst nichts zu sagen hat:
+         Spaltenblock, Spalte, Blatt. In einen Textblock mit Kindern nicht;
+         der hat seinen eigenen Satz, und die Vorschau ist eine Vorschau. */
+      const HUELLE = new Set(['columns', 'columns3', 'spalte', 'blatt', 'toggle']);
+      const zeilen: string[] = [];
+      const GRENZE = 14;
+      const sammle = (id: string, tiefe: number): void => {
+        if (tiefe > 4) return;
+        for (const b of Store.childrenOf(id) as any[]) {
+          if (zeilen.length >= GRENZE) return;
+          if (b.type === 'database') {
+            const c = Store.getCollection(b.collectionId);
+            zeilen.push(`<div class="vs-db">🗂 ${esc(c ? c.name : 'Datenbank')} · ` +
+                        `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`);
+            continue;
+          }
+          /* Eine PDF-Seite hat keinen `text` — sie ist ein Bild. Ihr erster
+             Satz steht seit E107 in `suchtext`. */
+          if (b.type === 'pdfseite') {
+            const erste = String(b.suchtext || b.ocrText || '').split('\n')[0] || '';
+            zeilen.push(`<div class="vs-t">📄 Seite ${esc(b.nr || '?')}` +
+                        (erste ? ' · ' + esc(erste.slice(0, 80)) : '') + '</div>');
+            continue;
+          }
+          if (HUELLE.has(b.type)) { sammle(b.id, tiefe + 1); continue; }
+          if (!b.text) continue;
+          const marke = ({ h1:'vs-h1', h2:'vs-h2', h3:'vs-h3' } as Record<string, string>)[b.type] || 'vs-t';
+          zeilen.push(`<div class="${marke}">${esc(b.text.slice(0, 120))}</div>`);
         }
-        if (!b.text) return '';
-        const marke = ({ h1:'vs-h1', h2:'vs-h2', h3:'vs-h3' } as Record<string, string>)[b.type] || 'vs-t';
-        return `<div class="${marke}">${esc(b.text.slice(0, 120))}</div>`;
-      }).join('');
+      };
+      sammle(p2.id, 0);
+      const inhalt = zeilen.join('');
       v.innerHTML =
         `<div class="vs-kopf">${esc(p2.icon || '📄')} <b>${esc(p2.text || 'Ohne Titel')}</b></div>` +
         `<div class="vs-meta">${esc(Store.pfadText(p2.id) || 'oberste Ebene')} · ` +
@@ -871,6 +918,7 @@ const App = (() => {
     };
 
     const zuletzt = () => {
+      queryError = '';
       treffer = Object.values<any>(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
         .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
@@ -881,89 +929,124 @@ const App = (() => {
     };
     zuletzt();
 
-    const filterLesen = () => ({
-      wo:   o.querySelector<HTMLSelectElement>('#f-wo')?.value ?? '',
-      typ:  o.querySelector<HTMLSelectElement>('#f-typ')?.value ?? '',
-      seit: o.querySelector<HTMLSelectElement>('#f-seit')?.value ?? '',
-      ort:  o.querySelector<HTMLSelectElement>('#f-ort')?.value ?? ''
-    });
+    const readUiFilters = (): SearchUiFilters => {
+      const scopeValue = o.querySelector<HTMLSelectElement>('#f-wo')?.value ?? 'alles';
+      const typeValue = o.querySelector<HTMLSelectElement>('#f-typ')?.value ?? 'alles';
+      const changedValue = o.querySelector<HTMLSelectElement>('#f-seit')?.value ?? 'alles';
+      return {
+        scope: scopeValue === 'titel' ? 'title' : scopeValue === 'inhalt' ? 'content' : 'all',
+        documentType: typeValue === 'seite' ? 'page' : typeValue === 'datenbank' ? 'database' : 'all',
+        changed: changedValue === 'tag' ? 'today' : changedValue === 'woche' ? 'week'
+          : changedValue === 'monat' ? 'month' : 'all',
+        location: o.querySelector<HTMLSelectElement>('#f-ort')?.value ?? ''
+      };
+    };
 
-    /* ------------------------------------------------------------------
-     * ABFRAGESPRACHE
-     * ------------------------------------------------------------------
-     * Notions Suche kennt nur Wörter. Hier lassen sich Bedingungen davor
-     * schreiben, wie in einer Suchmaschine:
-     *
-     *   typ:seite        nur Seiten ohne Datenbank
-     *   typ:datenbank    nur Seiten mit Datenbank
-     *   in:Projekte      nur unterhalb dieser Seite
-     *   nach:2026-01     nur seit diesem Datum geändert
-     *   vor:2026-08      nur davor
-     *   tag:wichtig      trägt dieses Schlagwort
-     *   titel:Rechnung   nur im Titel
-     *   "genauer Satz"   muss wörtlich vorkommen
-     * ---------------------------------------------------------------- */
-    const abfrageLesen = (roh: any) => {
-      const f = { wo: 'alles', typ: 'alles', seit: 'alles', ort: '' };
-      const woerter: any[] = [], genau: any[] = [];
-      let nach = null, vor = null, tag = null;
+    const valueList = (value: unknown, depth = 0): string[] => {
+      if (value === null || value === undefined || depth > 2) return [];
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+        return [String(value)];
+      if (Array.isArray(value)) return value.flatMap(item => valueList(item, depth + 1));
+      if (typeof value !== 'object') return [];
+      const record = value as Record<string, unknown>;
+      const named = record['name'] ?? record['value'] ?? record['text'];
+      return named === undefined ? [] : valueList(named, depth + 1);
+    };
 
-      /* Zuerst die Ausdrücke in Anführungszeichen herausnehmen */
-      const ohneGenau = roh.replace(/"([^"]+)"/g, (_: any, t: any) => { genau.push(t); return ' '; });
+    /* Der persistente Index aus Phase 18 liefert Seiten UND Datenbankzeilen.
+       Er ist nur Beschleuniger: kann er nicht gelesen werden, entsteht die
+       gleiche Dokumentform direkt aus dem echten Bestand. */
+    let documentCache: SearchDocument[] | null = null;
+    const queryDocuments = (): SearchDocument[] => {
+      if (documentCache) return documentCache;
+      let indexEntries: any[] = [];
+      try {
+        indexEntries = typeof Kontext !== 'undefined' && Kontext.holen
+          ? (Kontext.holen().eintraege || []) : [];
+      } catch { indexEntries = []; }
 
-      ohneGenau.split(/\s+/).filter(Boolean).forEach((w: any) => {
-        const m = w.match(/^(typ|in|nach|vor|tag|titel|inhalt):(.+)$/i);
-        if (!m) { woerter.push(w); return; }
-        const [, schluessel, wert] = m;
-        const k = schluessel.toLowerCase();
-        if (k === 'typ')    f.typ = /daten/i.test(wert) ? 'datenbank' : 'seite';
-        if (k === 'titel')  { f.wo = 'titel';  woerter.push(wert); }
-        if (k === 'inhalt') { f.wo = 'inhalt'; woerter.push(wert); }
-        if (k === 'in') {
-          const ziel = Store.rootPages().find(p2 =>
-            (p2.text || '').toLowerCase().startsWith(wert.toLowerCase()));
-          if (ziel) f.ort = ziel.id;
-        }
-        if (k === 'nach') nach = wert;
-        if (k === 'vor')  vor  = wert;
-        if (k === 'tag')  tag  = wert.toLowerCase();
-      });
+      if (!indexEntries.length) {
+        indexEntries = Object.values<any>(Store.cache.blocks)
+          .filter(block => block.alive && block.type === 'page')
+          .map(block => ({ id: block.id, seiteId: block.id,
+            art: block.parentTable === 'collection' ? 'zeile' : 'seite',
+            titel: block.text || '', text: Store.childrenOf(block.id)
+              /* Auch `suchtext` — sonst findet dieser Weg eine PDF-Seite
+                 nicht, während `Store.search` sie findet (E124). Die beiden
+                 müssen dasselbe sagen. */
+              .map((child: any) => (child.text || child.suchtext || child.ocrText || '')).join(' '),
+            geaendert: block.edited || block.created || '' }));
+      }
 
-      return { f, text: woerter.join(' '), genau, nach, vor, tag,
-               hatBefehl: woerter.length !== ohneGenau.split(/\s+/).filter(Boolean).length ||
-                          genau.length > 0 };
+      documentCache = indexEntries.map((entry: any): SearchDocument | null => {
+        const block = Store.getBlock(entry.seiteId || entry.id);
+        if (!block || !block.alive || block.type !== 'page') return null;
+        if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('lesen', block.id)) return null;
+        const isRow = block.parentTable === 'collection';
+        const collection = isRow ? Store.getCollection(block.parentId) : null;
+        const hasDatabase = !isRow && (block.content || [])
+          .some((id: string) => Store.getBlock(id)?.type === 'database');
+        const schema = collection?.schema || {};
+        const props = block.props || {};
+        const statuses: string[] = [];
+        const optionTags: string[] = [];
+        Object.keys(schema).forEach(key => {
+          const definition = schema[key] || {};
+          const values = valueList(props[key]);
+          const name = String(definition.name || '').toLocaleLowerCase('de-DE');
+          if (definition.type === 'status' || name === 'status' || name === 'zustand')
+            statuses.push(...values);
+          if (definition.type === 'multi' || name === 'tags' || name === 'schlagwörter')
+            optionTags.push(...values);
+        });
+        const title = String(entry.titel || block.text || 'Ohne Titel');
+        const content = String(entry.text || '');
+        const hashTags = [...(title + ' ' + content).matchAll(/#([\p{L}\p{N}_-]+)/gu)]
+          .map(match => match[1] || '').filter(Boolean);
+        const pathParts = isRow
+          ? [collection?.name || 'Datenbank']
+          : Store.pathOf(block.id).slice(0, -1).map((part: any) => part.text || 'Ohne Titel');
+        const locations = isRow
+          ? [String(collection?.id || ''), String(collection?.name || '')]
+          : Store.pathOf(block.id).flatMap((part: any) => [String(part.id), String(part.text || '')]);
+        return {
+          id: block.id,
+          title,
+          content,
+          path: pathParts.join(' / '),
+          documentType: isRow ? 'row' : hasDatabase ? 'database' : 'page',
+          changed: String(entry.geaendert || block.edited || block.created || ''),
+          tags: [...new Set([...hashTags, ...optionTags])],
+          statuses: [...new Set(statuses)],
+          locations: locations.filter(Boolean)
+        };
+      }).filter((document: SearchDocument | null): document is SearchDocument => document !== null);
+      return documentCache;
     };
 
     const suchen = () => {
       const roh = inp.value;
-      if (!roh.trim()) { zuletzt(); return; }
+      const uiFilters = readUiFilters();
+      const hasUiFilter = uiFilters.scope !== 'all' || uiFilters.documentType !== 'all' ||
+        uiFilters.changed !== 'all' || !!uiFilters.location;
+      if (!roh.trim() && !hasUiFilter) { zuletzt(); return; }
 
-      const q = abfrageLesen(roh);
-      /* Die Filterleiste hat Vorrang, wenn sie ausdrücklich gesetzt wurde */
-      const handFilter = filterLesen();
-      const filter = {
-        wo:   handFilter.wo   !== 'alles' ? handFilter.wo   : q.f.wo,
-        typ:  handFilter.typ  !== 'alles' ? handFilter.typ  : q.f.typ,
-        seit: handFilter.seit,
-        ort:  handFilter.ort  || q.f.ort
-      };
-
-      /* Ohne freie Wörter suchen wir mit den Ausdrücken in Anführungszeichen —
-         sonst käme die rohe Eingabe samt Anführungszeichen in die Suche. */
-      const suchtext = q.text || q.genau.join(' ') || roh;
-      treffer = Store.search(suchtext, filter);
-
-      /* Nachfiltern, was Store.search nicht kennt */
-      if (q.genau.length) treffer = treffer.filter(t => {
-        const text = ((t.page.text || '') + ' ' + (t.snippet || '')).toLowerCase();
-        return q.genau.every(g => text.includes(g.toLowerCase()));
-      });
-      const nachDatum = q.nach, vorDatum = q.vor;
-      if (nachDatum) treffer = treffer.filter(t => (t.page.edited || '') >= nachDatum);
-      if (vorDatum)  treffer = treffer.filter(t => (t.page.edited || '') <= vorDatum + '￿');
-      if (q.tag)  treffer = treffer.filter(t =>
-        Store.childrenOf(t.page.id).some((b: any) => (b.text || '').toLowerCase().includes('#' + q.tag)) ||
-        (t.page.text || '').toLowerCase().includes('#' + q.tag));
+      const parsed = QueryLanguage.parse(roh);
+      if (!parsed.ok) {
+        queryError = parsed.issues.map(issue => issue.message).join(' ');
+        treffer = [];
+        i = 0;
+        zeichne();
+        return;
+      }
+      queryError = '';
+      const query = QueryLanguage.applyUiFilters(parsed.query, uiFilters);
+      treffer = QueryLanguage.run(queryDocuments(), query).map(match => ({
+        page: Store.getBlock(match.document.id),
+        treffer: match.reason,
+        snippet: match.snippet,
+        pfad: match.document.path
+      })).filter(hit => !!hit.page);
 
       i = 0;
       zeichne();
@@ -975,7 +1058,7 @@ const App = (() => {
       if (e.key === 'Escape') { o.remove(); return; }
       if (e.key === 'ArrowDown') { e.preventDefault(); i = Math.min(i + 1, treffer.length - 1); zeichne(); }
       if (e.key === 'ArrowUp')   { e.preventDefault(); i = Math.max(i - 1, 0); zeichne(); }
-      if (e.key === 'Enter' && treffer[i]) { oeffne(treffer[i].page.id); o.remove(); }
+      if (e.key === 'Enter' && treffer[i]) { zumTreffer(treffer[i]); o.remove(); }
     });
 
     /* WELCHER FILTER IST GESETZT? Am Telefon sind die Filter Marken, und
@@ -999,6 +1082,20 @@ const App = (() => {
        Genau dort gehören die letzten Suchbegriffe hin. */
     zeichne();
     inp.focus();
+  };
+
+  /**
+   * Einen Suchtreffer öffnen.
+   *
+   * Kennt die Suche den Block, geht es dorthin — sonst zur Seite. Für einen
+   * Treffer im Titel gibt es keinen Block, und für eine Seite, deren Inhalt
+   * eine Zeile weit oben ist, wäre das Hinrollen auch keine Hilfe. Wo es
+   * eine Hilfe ist: eine Fundstelle auf Seite 63 eines Skripts (E107).
+   */
+  const zumTreffer = (t: any): void => {
+    if (!t) return;
+    if (t.blockId && zeigeBlock(t.blockId)) return;
+    oeffne(t.page.id);
   };
 
   /** Suchen auf der offenen Seite — Strg + F. */
@@ -1530,7 +1627,17 @@ const App = (() => {
 
     UI.toast(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
     try {
-      const saetze = await Store.dateiAlle();
+      /* ABGELEITETES BLEIBT DRAUSSEN (E103). Ein gerastertes PDF-Seiten-
+         bild entsteht beim Einlesen in Sekunden neu; mitgepackt kostet es
+         bei 200 KB je Seite und 500 Seiten hundert Megabyte in JEDER
+         Sicherung. Eine Sicherung, die man auf dem Telefon nicht mehr
+         herunterladen kann, ist keine Sicherung.
+         Gefiltert wird HIER und nicht in der Schleife unten, weil
+         `dateien.json` aus derselben Liste entsteht: ein Satz darin, dessen
+         Bytes fehlen, wäre ein Anhang, den der Block sucht und nicht
+         findet. Lieber gar nicht erwähnt als falsch versprochen. */
+      const saetze = (await Store.dateiAlle())
+        .filter((s: any) => !(s && s.abgeleitet));
       const eintraege: { name: string; inhalt: any; kennung?: string }[] =
         [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
       const belegt = new Set(['daten.json']);
@@ -1651,6 +1758,9 @@ const App = (() => {
         if (gehoertDazu.has(alt.id)) continue;
         for (const st of await Store.stueckeVon(alt.id)) await Store.stueckWeg(st.id);
         await Store.dateiWeg(alt.id);
+        /* Und die Adresse aus dem Zwischenspeicher — sonst zeigt ein Block,
+           der noch auf diese Kennung zeigt, weiter das alte Bild (E106). */
+        Dateien.adresseWeg(alt.id);
       }
     }
     return wieViele;
@@ -1823,6 +1933,14 @@ const App = (() => {
     ['tabelle',  '📊', 'Neue Tabelle',     'Rechnen wie in Excel'],
     ['aufgabe',  '☑', 'Aufgabe',          'Mit Datum planen'],
     ['karte',    '📚', 'Karteikarte',      'Später wiederholen'],
+    /* AUFNAHME UND WHITEBOARD FEHLTEN (E138, Auftrag §46). Beide Wege gab es
+       längst — die Besprechungsaufnahme und den Whiteboard-Block —, nur
+       nicht an der Stelle, an der man am Telefon etwas Neues anfängt. Ein
+       Weg, den man nur über die Befehlspalette findet, ist am Telefon kein
+       Weg: dort gibt es keine Tastatur mit Strg. */
+    ['aufnahme', '🎙', 'Aufnahme',         'Mitschnitt mit Marken und Notizen'],
+    ['board',    '🖍', 'Whiteboard',       'Freie Fläche zum Skizzieren'],
+    ['scan',     '📷', 'Dokument scannen', 'Kamera, Foto oder PDF in den Eingang'],
     ['datei',    '📎', 'Datei hochladen',  'Bleibt auf diesem Gerät'],
     ['vorlage',  '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
   ];
@@ -1847,8 +1965,13 @@ const App = (() => {
         if (was === 'seite')        neueSeite();
         else if (was === 'memo')    Werkzeuge.schnellnotizen();
         else if (was === 'datei')   Werkzeuge.dateienLesen();
+        else if (was === 'scan')    Recognition.scan();
         else if (was === 'vorlage') Werkzeuge.vorlagen();
         else if (was === 'karte')   Werkzeuge.lernen();
+        else if (was === 'aufnahme') {
+          if (typeof Meeting !== 'undefined' && Meeting.panel) Meeting.panel();
+          else UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+        }
         else {
           /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
              gibt sie nicht ohne eine. Also erst die Seite, dann der Block
@@ -1857,6 +1980,7 @@ const App = (() => {
           setTimeout(() => {
             if (was === 'db')           Store.addDatabase(p.id, 'Ohne Namen');
             else if (was === 'tabelle') Store.addBlock(p.id, 'tabelle', {});
+            else if (was === 'board')   Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
             else if (was === 'aufgabe') Store.addBlock(p.id, 'todo', { text: '' });
             zeichneSeite();
           }, 80);
@@ -1931,7 +2055,12 @@ const App = (() => {
                      reiterZu: () => Fenster.schliessen(Fenster.aktiv()) };
         for (const id of Object.keys(Aussehen.eigene())) {
           const fn = tu[id];
-          if (fn && Aussehen.ist(id, e)) { e.preventDefault(); fn(); return; }
+          /* Auch alte, bereits gespeicherte Belegungen dürfen keine
+             Browser- oder Bearbeitungstaste stehlen. Der Dialog verhindert
+             neue Konflikte; diese zweite Grenze schützt Bestandsdaten. */
+          if (fn && !Aussehen.reserviert(Aussehen.alsText(e)) && Aussehen.ist(id, e)) {
+            e.preventDefault(); fn(); return;
+          }
         }
         /* Ein eingebautes Kürzel, das jemand woandershin gelegt hat, darf
            an seiner alten Stelle nichts mehr auslösen. */
@@ -2053,6 +2182,127 @@ const App = (() => {
   /* ========================================================================
    * START
    * ======================================================================*/
+  /* ==========================================================================
+   * EIN LINK AUF GENAU EINEN BLOCK
+   * --------------------------------------------------------------------------
+   * Strg + Umschalt + C legt seit Langem eine Adresse der Form
+   * `…#block=<kennung>` in die Zwischenablage und meldet „Link auf diesen
+   * Block kopiert". GELESEN HAT SIE NIE JEMAND. Beim Start wurde der Hash als
+   * Seitenkennung genommen — `Store.getBlock('block=abc')` gibt nichts, also
+   * fiel der Start auf die zuletzt geöffnete Seite zurück. Der Link tat
+   * etwas, nur nicht das Versprochene, und gemerkt hat es niemand, weil
+   * „irgendeine Seite geht auf" wie ein Erfolg aussieht (E105).
+   *
+   * Jetzt führt er hin: Seite des Blocks suchen, sie öffnen, zum Block
+   * rollen, ihn kurz hervorheben.
+   * ========================================================================*/
+
+  /** Erst rollen, wenn der Zeichner durch ist — und noch einmal, wenn ein
+   *  Bild darin nachlädt und alles darunter verschiebt. */
+  const rolleZu = (blockId: string): void => {
+    const hin = (): boolean => {
+      const ziel = document.querySelector(`[data-bid="${blockId}"]`);
+      if (!ziel) return false;
+      ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      ziel.classList.add('hebe-hervor');
+      setTimeout(() => ziel.classList.remove('hebe-hervor'), 1400);
+      /* Ein PDF-Seitenbild kommt aus der Stücke-Ablage und ist beim ersten
+         Rollen oft noch nicht da. Es ist genau das, was die Seite hoch
+         macht — also noch einmal, wenn es steht. Kein fester Zeitwert:
+         gewartet wird auf das Bild, nicht auf die Uhr. */
+      const bild = ziel.querySelector('img');
+      if (bild && !bild.complete)
+        bild.addEventListener('load', () =>
+          ziel.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+          { once: true });
+      return true;
+    };
+    /* Zwei Bilder Zeit: `oeffne` setzt am Ende `scrollTop = 0`, und davor
+       zu rollen hiesse, gegen diese Zeile anzurollen. */
+    requestAnimationFrame(() => { if (!hin()) requestAnimationFrame(hin); });
+  };
+
+  /**
+   * Aufklappzeilen über einem Ziel öffnen.
+   *
+   * EIN ZIEL IN EINER ZUGEKLAPPTEN AUFKLAPPZEILE IST DA UND UNSICHTBAR.
+   * `.toggle-kids` steht auf `display:none`, die Kinder werden aber sehr
+   * wohl gezeichnet — `rolleZu` findet `[data-bid=…]`, meldet Erfolg, und
+   * auf dem Bildschirm passiert nichts.
+   *
+   * Aufgefallen beim Weg zurück in die Besprechung (E161): das volle
+   * Transkript steht in einer Aufklappzeile, die zu ist. Der Sprung auf
+   * „01:02" traf die richtige Zeile und zeigte sie nicht. Betroffen war
+   * jeder Tieflink dorthin, nicht nur dieser.
+   *
+   * Die Tiefe ist begrenzt: eine kaputte Elternkette darf hier nicht
+   * hängenbleiben.
+   */
+  const klappeAuf = (blockId: string): boolean => {
+    let geaendert = false;
+    let b = Store.getBlock(blockId);
+    let tiefe = 0;
+    while (b && b.parentTable === 'block' && b.parentId && tiefe++ < 64) {
+      const eltern = Store.getBlock(String(b.parentId));
+      if (!eltern) break;
+      if ((eltern.type === 'toggle' || eltern.toggleKopf) && !eltern.open) {
+        Store.updateBlock(eltern.id, { open: true });
+        geaendert = true;
+      }
+      b = eltern;
+    }
+    return geaendert;
+  };
+
+  /**
+   * Zu einem Block springen — Seite öffnen, hinrollen, hervorheben.
+   * Gibt zurück, ob es geklappt hat.
+   */
+  const zeigeBlock = (blockId: string): boolean => {
+    const b = blockId ? Store.getBlock(blockId) : null;
+    if (!b || b.alive === false) {
+      UI.toast('Dieser Block ist nicht mehr da.');
+      return false;
+    }
+    const seite = (typeof Links !== 'undefined' && Links.seiteVon)
+      ? Links.seiteVon(blockId) : null;
+    if (!seite) {
+      UI.toast('Zu diesem Block führt kein Weg — seine Seite fehlt.');
+      return false;
+    }
+    /* Ein Dokumentmodus rendert absichtlich nur eine volle Seite. Ein
+       Deep-Link muss diese Seite daher VOR dem Öffnen wählen, sonst gäbe es
+       den Zielknoten im DOM noch nicht. */
+    const dokumentZiel = b.type === 'pdfseite' || b.type === 'blatt';
+    let ansichtGeaendert = false;
+    if (dokumentZiel && typeof DocumentMode !== 'undefined' && DocumentMode.select(seite, b.id)) {
+      /* `select` aendert nur den fluechtigen Ansichtsstand. Auch wenn der
+         Dokumentmodus schon offen ist, muss dieselbe Seite neu gezeichnet
+         werden, damit ein Link auf PDF-Seite 18 nicht weiter Seite 3 zeigt. */
+      ansichtGeaendert = true;
+      if (!seite.dokumentModus) Store.updateBlock(seite.id, { dokumentModus: true });
+    } else if (!dokumentZiel && seite.dokumentModus) {
+      /* Ein normaler Notiz-/Kartenblock kommt in der Ein-Seiten-Ansicht nicht
+         vor. Quellsuche und Backlinks muessen deshalb fuer dieses Ziel in die
+         normale Seite zurueckwechseln. */
+      Store.updateBlock(seite.id, { dokumentModus: false });
+      ansichtGeaendert = true;
+    }
+    /* Ist die Seite schon offen, NICHT neu öffnen: `oeffne` setzt den Lauf
+       zurück auf null und zählt einen Aufruf mit. Rollen genügt. */
+    const aufgeklappt = klappeAuf(blockId);
+    if (aktuelleSeite() !== seite.id) oeffne(seite.id);
+    else if (ansichtGeaendert || aufgeklappt) zeichneSeite();
+    rolleZu(blockId);
+    return true;
+  };
+
+  /** `#block=<kennung>` aus einer Adresse holen, sonst leer. */
+  const blockAusHash = (roh: string): string => {
+    const m = String(roh || '').replace(/^#/, '').match(/^block=(.+)$/);
+    return m && m[1] ? decodeURIComponent(m[1]) : '';
+  };
+
   const start = async () => {
     /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
        Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
@@ -2215,7 +2465,15 @@ const App = (() => {
     /* Fehler sammeln, Papierkorb nach Frist aufräumen */
     Pflege.start();
 
-    const ausHash = location.hash.slice(1).split(':')[0];
+    /* Ein Blocklink nennt keine Seite, sondern einen Block. Welche Seite
+       aufgehen muss, steht erst nach dem Hochlaufen fest — deshalb hier die
+       Seite DES BLOCKS, und nicht der Hash selbst (E105). */
+    const produktRoute = Produktwelten.routeAusHash(location.hash);
+    const zielBlock = produktRoute ? '' : blockAusHash(location.hash);
+    const ausHash = produktRoute ? '' : zielBlock
+      ? ((typeof Links !== 'undefined' && Links.seiteVon)
+          ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
+      : location.hash.slice(1).split(':')[0];
     const startSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash
                 : (Store.getMeta('letzte') && Store.getBlock(Store.getMeta('letzte')))
                   ? Store.getMeta('letzte')
@@ -2223,6 +2481,18 @@ const App = (() => {
 
     zeichneBaum();
     oeffne(startSeite);
+
+    /* Kam der Start über einen Blocklink, steht jetzt die richtige Seite —
+       aber oben. Also noch hinrollen. */
+    if (zielBlock) zeigeBlock(zielBlock);
+
+    /* Und für jeden Blocklink, der SPÄTER angeklickt wird. `oeffne` schreibt
+       die Seitenkennung selbst in die Adresse; solche Änderungen laufen hier
+       durch, weil sie nicht mit `block=` beginnen. */
+    addEventListener('hashchange', () => {
+      const b = blockAusHash(location.hash);
+      if (b) zeigeBlock(b);
+    });
 
     /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
        Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
@@ -2236,8 +2506,8 @@ const App = (() => {
     /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
        die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
        gesetzt. Die Bedingung war damit nie wahr. */
-    if (window.matchMedia('(max-width: 760px)').matches && !ausHash) {
-      try { Ansichten.start(); } catch { /* ohne Startbildschirm bleibt die Seite */ }
+    if (window.matchMedia('(max-width: 760px)').matches && !ausHash && !produktRoute) {
+      try { Produktwelten.lernen('heute'); } catch { /* ohne Startbildschirm bleibt die Seite */ }
     }
 
     /* ----------------------------------------------------------------------
@@ -2277,16 +2547,55 @@ const App = (() => {
     });
 
     /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
-    const wunsch = Store.getMeta('startAnsicht', 'letzte');
-    if (!location.hash) {
-      if (wunsch === 'start') setTimeout(() => Ansichten.start(), 60);
-      if (wunsch === 'posteingang') setTimeout(() => Ansichten.posteingang(), 60);
-      if (wunsch === 'journal') setTimeout(() => Werkzeuge.journal(), 60);
+    const wunsch = Store.getMeta('startAnsicht', 'start');
+    let startAnsichtZeigen: (() => void) | null = null;
+    /* DIE STARTANSICHT DARF NICHT ÜBERSCHREIBEN, WAS SCHON OFFEN IST (E138).
+       Hier stand ein blankes `setTimeout(…, 60)`. Wer in diesen 60 ms eine
+       Seite anklickt — und beim Start liegt der Baum längst da —, sah sie
+       einen Wimpernschlag lang und dann das Heute-Bild.
+
+       Gemessen mit einem Whiteboard, das direkt nach dem Laden geöffnet
+       wurde:
+
+           sofort      Zeichenfläche da
+           nach 600 ms Zeichenfläche weg, Lernwelt da
+
+       Das war auch der wahre Grund für das falsche Papier-Bild in E136.
+       Dort steht, `App.oeffne` räume die Sonderansicht nicht weg — das
+       stimmt nicht: sie räumt sie weg, und die verspätete Startansicht holt
+       sie zurück.
+
+       Die Bedingung ist deshalb: nur zeigen, wenn seither niemand etwas
+       anderes geöffnet hat. */
+    /* NICHT „IN 60 MILLISEKUNDEN", SONDERN „AM ENDE VON start()" (E138).
+
+       Hier stand `setTimeout(…, 60)`, und der Grund dafür ist gut: die
+       Startansicht braucht `Produktwelten.start()`, und das läuft erst
+       weiter unten. Nur ist eine Zeitspanne die falsche Art, auf eine
+       Reihenfolge zu warten — sie ist ein Versprechen ohne Deckung.
+
+       Was in diesen 60 ms passieren kann, ist alles: ein Klick im Baum,
+       ein Aufruf von aussen. Gemessen mit `bilder.mts`, zwei Durchgänge
+       hintereinander mit demselben Code:
+
+           dunkel   Zeichenfläche da
+           hell     Zeichenfläche weg, Heute-Bild da
+
+       Zwei verschiedene Bilder aus demselben Aufruf — das ist ein Wettlauf,
+       kein Fehler in der Ansicht. Die Startansicht wird deshalb GEMERKT und
+       ganz am Ende von `start()` ausgeführt, wenn alle Module stehen. Danach
+       kommt jedes `oeffne()` von aussen garantiert später und gewinnt. */
+    if (!ausHash && !produktRoute) {
+      if (wunsch === 'start') startAnsichtZeigen = () => Produktwelten.lernen('heute');
+      if (wunsch === 'workspace') startAnsichtZeigen = () => Produktwelten.workspace('start');
+      if (wunsch === 'posteingang') startAnsichtZeigen = () => Ansichten.posteingang();
+      if (wunsch === 'journal') startAnsichtZeigen = () => Werkzeuge.journal();
       if (wunsch === 'seite' && Store.getMeta('startSeite')) {
         const z = Store.getBlock(Store.getMeta('startSeite'));
         if (z) oeffne(z.id);
       }
     }
+    if (produktRoute) startAnsichtZeigen = () => Produktwelten.routeOeffnen(produktRoute);
 
     /* Name und Symbol des Arbeitsbereichs */
     const wsBtn = document.getElementById('btn-settings');
@@ -2324,17 +2633,58 @@ const App = (() => {
     Fassung.start();
     Vorrat.start();
     Wolke.start();
+    Produktwelten.start();
     Blocks.auswahlEinklinken();
+    /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
+       Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der
+       Rundgang nur, „wenn das Onboarding nichts gezeigt hat". Damit hat die
+       Einrichtung der Hauptwelten den Bildschirm übernommen, den E55
+       ausdrücklich für den Rundgang beschlossen hatte — und E55 begründet
+       das mit dem Satz, der auch für die Einrichtung gilt: „ein Fenster,
+       das den Bildschirm nimmt, bevor man etwas getan hat, ist zudringlich."
+
+       Nebenwirkungen, gemessen: der Rundgang kam beim ZWEITEN Start doch
+       noch — zwei Begrüssungen an zwei Tagen (L52) —, und die Einrichtung
+       fing als Modal jeden Klick ab, woran im vollen Durchgang mehrere
+       Prüfläufe hängenblieben.
+
+       Die Einrichtung ist deshalb ein Angebot statt einer Pflicht: sie steht
+       in der Befehlspalette und als Karte auf dem Heute-Bild, solange sie
+       noch nicht durchlaufen ist. `vielleichtStarten` bleibt im Modul — wer
+       sie wieder von selbst öffnen lassen will, ruft sie hier auf. */
     Rundgang.vielleichtStarten();
 
     /* Seitenleiste und Kopfzeile */
     const an = (id: any, fn: any) => document.getElementById(id)?.addEventListener('click', fn);
-    an('btn-search', suche);
-    an('btn-cmd', () => Werkzeuge.palette());
-    an('btn-home', () => Ansichten.start());
-    an('btn-inbox', () => Ansichten.posteingang());
+    /* DIE OBERSTE GRUPPE HÄNGT AM REGISTER (L51, E160).
+       Hier standen acht Zeilen `an('btn-…', …)`, und daneben stand ein
+       Register, das dieselben Zeilen anders beschrieb — „Suchen" öffnete
+       dort die Befehlspalette, „Posteingang" die Meldungsliste. Beides fiel
+       nicht auf, weil das Register nie ausgeführt wurde.
+
+       Jetzt gibt es die Handlung nur einmal. Das Aussehen bleibt in
+       index.html, wo es hingehört; `knopfId` verbindet beide, und test222
+       §5 vergleicht Markup und Register Zeile für Zeile. */
+    if (typeof Register !== 'undefined' && Register.navigation) {
+      /* Zwei Plätze, dieselbe Verdrahtung: die oberste Gruppe und der Fuss
+         (E167). Beide tragen ihr Aussehen in index.html und ihre Handlung
+         im Register. */
+      [...Register.navigation.anPlatz('oben'),
+       ...Register.navigation.anPlatz('fuss')].forEach((e: any) => {
+        if (e.knopfId && e.tun) an(e.knopfId, () => {
+          try { e.tun(); }
+          catch (fehler: unknown) {
+            if (typeof Reporter !== 'undefined')
+              Reporter.error('Seitenleiste',
+                e.knopfId + ': ' + (fehler instanceof Error ? fehler.message : String(fehler)), fehler);
+          }
+        });
+      });
+    }
     an('btn-ai', () => kiPanel());
-    an('btn-trash', papierkorb);
+    /* `btn-trash` hängt seit E167 am Register — die Zeile hier wäre die
+       zweite Verdrahtung desselben Knopfes, und wohin das führt, steht in
+       E160: ein Klick auf „Neue Seite" legte zwei Seiten an. */
     an('btn-settings', einstellungen);
     an('btn-theme', () => theme());
     an('btn-side', () => document.getElementById('sidebar')?.classList.toggle('collapsed'));
@@ -2342,7 +2692,14 @@ const App = (() => {
     /* Breite der Seitenleiste ziehen — Notion kann das, aber merkt sie sich
        nicht je Gerät; hier bleibt sie gespeichert. */
     seitenleisteBreite();
-    an('btn-new', () => neueSeite());
+    /* `btn-new` HING HIER EINMAL ZU VIEL. Die Schleife oben hängt jede Zeile
+       der obersten Gruppe an, „Neue Seite" eingeschlossen — die Zeile hier
+       kam dazu, und ein Klick legte ZWEI Seiten an. Gemessen: 13 Seiten
+       vorher, 15 nachher.
+
+       Keine Prüfung sah das. „Macht die Zeile etwas auf?" ist bei zwei
+       Seiten genauso grün wie bei einer. test222 §5 zählt jetzt nach
+       (E160). `btn-new-bottom` bleibt: den kennt das Register nicht. */
     an('btn-new-bottom', () => neueSeite());
     an('btn-neuer-chat', () => { Seitenleiste.reiter('chat'); zeichneBaum(); KI.neuerChat(); });
 
@@ -2354,7 +2711,9 @@ const App = (() => {
      * gibt. Der Kreis in der Mitte bleibt die KI.
      * ---------------------------------------------------------------- */
     an('hl-start', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           Seitenleiste.reiter('start'); zeichneBaum(); Ansichten.start(); handyLeiste(); });
+                           Produktwelten.lernen('heute'); handyLeiste(); });
+    an('hl-lernen', () => { PWA.schubladeZu && PWA.schubladeZu();
+                            Produktwelten.lernen('lernen'); handyLeiste(); });
     /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
        unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
        gehört dem, was man täglich sucht — den eigenen Seiten. */
@@ -2362,20 +2721,14 @@ const App = (() => {
                             /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
                                liest ihn, und ohne ihn bliebe die Pille auf „Start"
                                stehen, während daneben schon die Seiten stünden. */
-                            Seitenleiste.reiter('seiten');
-                            Ansichten.seiten(); handyLeiste(); });
+                            Produktwelten.workspace('start'); handyLeiste(); });
     /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
        dieser Reiter auch am Telefon die Schublade auf — also die
        Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
        33-px-Zeilen. Genau davon ist das R-Blatt weggekommen (E38); ein
        Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
     an('hl-bespr', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           Seitenleiste.reiter('bespr');
-                           if (window.matchMedia('(max-width: 760px)').matches) {
-                             Ansichten.termine(); handyLeiste(); return;
-                           }
-                           zeichneBaum(); handyLeiste();
-                           if (PWA.schubladeAuf) PWA.schubladeAuf(); });
+                           Produktwelten.planung(); handyLeiste(); });
     /* Die KI sitzt jetzt unten in der Mitte, nicht mehr in der Reiterleiste. */
     an('hu-ki', () => kiPanel(true));
     an('hu-suche', () => suche());
@@ -2426,6 +2779,7 @@ const App = (() => {
       if (r === Seitenleiste.reiter() && Seitenleiste.reiter() === 'start') {
         abschnitteAnpassen(); return;
       }
+      if (r === 'start') { Produktwelten.lernen('heute'); return; }
       reiterWechseln(r);
     });
     an('btn-import', (e: any) => {
@@ -2456,7 +2810,7 @@ const App = (() => {
         else Werkzeuge.ordnerLesen();
       });
     });
-    an('btn-hilfe', () => Werkzeuge.tastenkuerzel());
+    /* `btn-hilfe` ebenfalls — siehe E167. */
     an('btn-back', zurueck);
     an('btn-fwd', vorwaerts);
     an('btn-komm', () => seiteId && Kommentare.panel(seiteId));
@@ -2531,6 +2885,14 @@ const App = (() => {
 
     /* Beim Verlassen noch schnell alles sichern */
     addEventListener('beforeunload', () => { Store.flush().catch(() => {}); });
+
+    /* GANZ ZUM SCHLUSS die Startansicht — siehe die Begründung oben. Alle
+       Module stehen jetzt, und wer danach eine Seite öffnet, kommt später
+       und bleibt sichtbar. */
+    if (startAnsichtZeigen) {
+      try { startAnsichtZeigen(); }
+      catch { /* Ohne Startbildschirm bleibt die zuletzt geöffnete Seite. */ }
+    }
   };
 
   /* --- Beispielinhalt beim ersten Start ----------------------------------- */
@@ -2589,6 +2951,7 @@ const App = (() => {
 
   return {
     start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
+    zeigeBlock, blockAusHash,
     kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
     markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
     kuerzlich, kommendeTermine,

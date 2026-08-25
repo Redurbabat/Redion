@@ -19,7 +19,11 @@
  * ==========================================================================*/
 const Menue = (() => {
     /** Auf dem Telefon werden aus Menüs Blätter, die von unten hochfahren. */
-    const amTelefon = () => innerWidth <= 760;
+    const amTelefon = () => typeof AppEinstellung !== 'undefined'
+        ? AppEinstellung.amTelefon()
+        : innerWidth <= 760 ||
+            ((window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0) &&
+                innerHeight <= 500);
     /**
      * Ein Menü öffnen. `opt.titel` ist die Überschrift des Blattes auf dem
      * Telefon — am Rechner gibt es keine, weil das Menü dort beim Zeiger steht
@@ -30,39 +34,88 @@ const Menue = (() => {
         const m = document.createElement('div');
         m.className = 'menu';
         m.innerHTML = html;
+        let grund = null;
+        const schliessen = () => {
+            m.remove();
+            grund?.remove();
+        };
+        const escape = (e) => {
+            if (e.key !== 'Escape' || !m.isConnected)
+                return;
+            e.preventDefault();
+            e.stopPropagation();
+            schliessen();
+        };
+        document.addEventListener('keydown', escape, true);
+        /* Aufrufer entfernen ein Menü gewöhnlich selbst. Dann dürfen weder der
+           Escape-Zuhörer noch der mobile Grund zurückbleiben. */
+        const waechter = new MutationObserver(() => {
+            if (m.isConnected)
+                return;
+            grund?.remove();
+            document.removeEventListener('keydown', escape, true);
+            waechter.disconnect();
+        });
         if (amTelefon()) {
             /* Blatt von unten — genau wie in Notions Telefon-App */
             m.classList.add('blatt');
-            m.innerHTML = '<div class="blatt-griff"></div>' +
-                (opt.titel ? `<div class="blatt-titel">${opt.titel}</div>` : '') + html;
-            const grund = document.createElement('div');
+            m.setAttribute('aria-label', (opt.titel || 'Menü').slice(0, 80));
+            const griff = document.createElement('div');
+            griff.className = 'blatt-griff';
+            griff.setAttribute('aria-hidden', 'true');
+            m.prepend(griff);
+            if (opt.titel) {
+                const titel = document.createElement('div');
+                titel.className = 'blatt-titel';
+                titel.textContent = opt.titel; /* kein Nutzertext als HTML */
+                griff.after(titel);
+            }
+            /* Auch ein schlichtes, langes Menü braucht einen eigenen Rollbereich.
+               Vorher rollte nur die Suchvariante; Primäraktionen konnten unter der
+               Blattkante verschwinden. */
+            let liste = m.querySelector(':scope > .menu-liste');
+            if (!liste) {
+                liste = document.createElement('div');
+                liste.className = 'menu-liste menu-liste-ohne-suche';
+                [...m.childNodes].filter(n => n !== griff &&
+                    (!(n instanceof HTMLElement) || !n.classList.contains('blatt-titel')))
+                    .forEach(n => liste.appendChild(n));
+                m.appendChild(liste);
+            }
+            grund = document.createElement('div');
             grund.className = 'menu-grund';
-            grund.addEventListener('click', () => { m.remove(); grund.remove(); });
+            grund.setAttribute('aria-hidden', 'true');
+            grund.addEventListener('click', schliessen);
             document.body.appendChild(grund);
             document.body.appendChild(m);
+            /* Fast alle Aufrufer schliessen ihr Menü nach einer Aktion mit
+               `menu.remove()` — vom Grund wissen sie nichts, den gibt es nur am
+               Telefon. Er blieb dann als unsichtbare dunkle Wand stehen und
+               frass genau einen Tipp. Der Wächter nimmt ihn mit, sobald das
+               Menü aus dem Baum verschwindet — egal, wer es entfernt hat. */
+            waechter.observe(document.body, { childList: true });
             /* Nach unten wischen schliesst es */
-            let start = 0;
+            let start = null;
             /* `touches[0]` ist bei einem `touchstart` immer da — aber der Typ sagt
                es nicht, und eine Wischgeste, die auf `undefined` zugreift, wäre ein
                Fehler mitten in einer Berührung. Fehlt der Finger, passiert nichts. */
             m.addEventListener('touchstart', e => {
                 const f = e.touches[0];
-                if (f)
-                    start = f.clientY;
+                const ziel = e.target instanceof Element ? e.target : null;
+                start = f && ziel?.closest('.blatt-griff, .blatt-titel') ? f.clientY : null;
             }, { passive: true });
             m.addEventListener('touchend', e => {
                 const f = e.changedTouches[0];
-                if (!f)
+                if (!f || start === null)
                     return;
                 const weg = f.clientY - start;
-                if (weg > 90 && m.scrollTop <= 0) {
-                    m.remove();
-                    grund.remove();
-                }
+                start = null;
+                if (weg > 90 && (liste?.scrollTop || 0) <= 0)
+                    schliessen();
             });
             /* Einträge in Karten gruppieren — iOS-Art, wie in Notions App:
                was zwischen zwei Trennlinien steht, kommt in eine Karte. */
-            const ziel = m.querySelector('.menu-liste') || m;
+            const ziel = liste;
             const kinder = [...ziel.children];
             let karte = null;
             kinder.forEach(el => {
@@ -90,6 +143,7 @@ const Menue = (() => {
             return m;
         }
         document.body.appendChild(m);
+        waechter.observe(document.body, { childList: true });
         /* Nicht über den Rand hinausragen lassen */
         const r = m.getBoundingClientRect();
         m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';

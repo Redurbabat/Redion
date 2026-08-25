@@ -35,7 +35,7 @@ const Store = (() => {
      kern/ablage/umzuege.js — dort steht auch, warum es jedes Fach gibt.
      Hier nur der Rückfall, falls diese Datei einmal allein geladen wird. */
   const NAME = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.ABLAGE_NAME : 'notizen';
-  const VERSION = (typeof Umzuege !== 'undefined') ? Umzuege.JETZIGE : 5;
+  const VERSION = (typeof Umzuege !== 'undefined') ? Umzuege.JETZIGE : 6;
   let db: any = null;
 
   /* Alle Änderungen laufen durch save(), das merkt sich Beobachter. */
@@ -117,6 +117,11 @@ const Store = (() => {
          ist ein Beschleuniger, kein Inhalt. Wer ihn wegwirft, verliert
          nichts ausser Zeit. */
       if (!d.objectStoreNames.contains('vorrat')) d.createObjectStore('vorrat', { keyPath: 'id' });
+      /* Version 6: vorbereitete Suchwörter. Anders als `blocks` ist dieses
+         Fach niemals Nutzerdaten-Wahrheit. Es darf vollständig geleert und
+         aus Blöcken und Sammlungen neu gebaut werden. */
+      if (!d.objectStoreNames.contains('suchindex'))
+        d.createObjectStore('suchindex', { keyPath: 'id' });
     };
 
     req.onsuccess = () => {
@@ -224,8 +229,14 @@ const Store = (() => {
      `{}` für ein Objekt ohne jedes Feld und kein `cache.blocks[id]` geht. */
   type Verzeichnis = Record<string, any>;
   const cache: { blocks: Verzeichnis; collections: Verzeichnis;
-                 views: Verzeichnis; meta: Verzeichnis } =
-    { blocks:{}, collections:{}, views:{}, meta:{} };
+                 views: Verzeichnis; meta: Verzeichnis; suchindex: Verzeichnis } =
+    { blocks:{}, collections:{}, views:{}, meta:{}, suchindex:{} };
+
+  /* Der Suchindex fragt diese Zahl ab, statt nach zwanzig Sekunden blind den
+     ganzen Bestand neu zu zerlegen. Sie ist nur ein Sitzungszähler: nach
+     einem Neustart prüft der Index seine gespeicherten Quellenstände. */
+  let datenFassung = 0;
+  const datenGeaendert = () => { datenFassung++; };
 
   const load = async () => {
     try {
@@ -246,10 +257,16 @@ const Store = (() => {
        Jetzt bricht der Start ab und sagt, was los ist — die Daten auf der
        Platte bleiben unangetastet. */
     try {
-      (await all('blocks')).forEach((b: any)      => cache.blocks[b.id] = b);
-      (await all('collections')).forEach((c: any) => cache.collections[c.id] = c);
-      (await all('views')).forEach((v: any)       => cache.views[v.id] = v);
-      (await all('meta')).forEach((m: any)        => cache.meta[m.k] = m.v);
+      /* Die vier Wahrheitsfächer hängen nicht voneinander ab. Parallel lesen
+         spart bei grossen Beständen messbar Startzeit, ohne die Reihenfolge
+         der Sätze oder ihre Bedeutung zu verändern. */
+      const [bloecke, sammlungen, ansichten, metadaten] = await Promise.all([
+        all('blocks'), all('collections'), all('views'), all('meta')
+      ]);
+      bloecke.forEach((b: any)      => cache.blocks[b.id] = b);
+      sammlungen.forEach((c: any)   => cache.collections[c.id] = c);
+      ansichten.forEach((v: any)    => cache.views[v.id] = v);
+      metadaten.forEach((m: any)    => cache.meta[m.k] = m.v);
     } catch (err) {
       db = null;
       nurSpeicher = true;
@@ -261,6 +278,29 @@ const Store = (() => {
             'damit nichts überschrieben wird. Schliesse andere Fenster dieser App ' +
             'und lade neu.');
       return;
+    }
+
+    /* Ein kaputter Beschleuniger darf den Bestand niemals in den Notbetrieb
+       schicken. Deshalb wird das Cache-Fach getrennt von den Nutzerdaten
+       gelesen. Jeder Fehler bedeutet hier ausschliesslich: leer anfangen. */
+    try {
+      (await all('suchindex')).forEach((e: any) => {
+        if (e && typeof e.id === 'string') cache.suchindex[e.id] = e;
+      });
+    } catch (err) {
+      cache.suchindex = {};
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('Suche', 'Der Suchindex war nicht lesbar und wird repariert', err);
+    }
+
+    /* Und einmal die Dateinamen — aus demselben Grund getrennt gekapselt:
+       ohne sie sucht es sich schlechter, aber der Bestand steht. */
+    try {
+      (await all('dateien')).forEach(dateiNameMerken);
+    } catch (err) {
+      dateiNamen.clear();
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('Suche', 'Die Dateinamen waren nicht lesbar; die Suche findet sie diesmal nicht', err);
     }
 
     /* --- Selbstheilung ---------------------------------------------------
@@ -436,10 +476,12 @@ const Store = (() => {
   const purgeBlock = (id: string) => {
     const gesammelt: any[] = [];
     const geloescht: Promise<void>[] = [];
-    purgeTief(id, gesammelt, geloescht);
+    const anhaenge: Record<string, string[]> = {};
+    purgeTief(id, gesammelt, geloescht, anhaenge);
     if (!gesammelt.length) return;
+    datenGeaendert();
     notify('purge');
-    (async () => {
+    abloesen((async () => {
       /* Ein Löschen läuft nicht über `save()` und damit nicht über `flush()` —
          es muss den anderen Fenstern eigens gesagt werden, sonst zeigten sie
          eine Seite weiter an, die es nicht mehr gibt, und schrieben sie beim
@@ -450,7 +492,13 @@ const Store = (() => {
          behielte ihn. */
       await Promise.all(geloescht);
       meldeAnAndereFenster('geaendert', gesammelt.map(x => 'blocks:' + x));
-      for (const x of gesammelt) await purgeAnhaenge(x);
+      /* EINMAL für den ganzen Vorgang, nicht je Block. Bei einer Seite mit
+         fünfhundert Blöcken wäre das fünfhundertmal ein Durchgang durch alle
+         Blöcke — dieselbe Falle, die weiter oben schon den `Promise.all`
+         gekostet hat. */
+      const anspruch = dateiAnspruch();
+      for (const x of gesammelt)
+        await purgeAnhaenge(x, { dateien: anhaenge[x] || [], anspruch });
     })().catch(err => {
       /* Seit `del` ablehnt, kann hier auch der BLOCK selbst liegenbleiben,
          nicht nur seine Anhänge — und dann steht er nach dem Neuladen wieder
@@ -463,7 +511,7 @@ const Store = (() => {
           'nach dem Neuladen kann Gelöschtes wieder auftauchen', err);
       if (typeof UI !== 'undefined' && UI.toast)
         UI.toast('Der Speicher hat das Löschen nicht angenommen — bitte neu laden.');
-    });
+    }));
   };
 
   /**
@@ -484,12 +532,56 @@ const Store = (() => {
   const vergissAusstehendes = (store: any, id: string) => pending.delete(store + ':' + id);
 
   /** Der eigentliche Abstieg. Sammelt, was danach noch aufzuräumen ist. */
-  const purgeTief = (id: string, gesammelt: any[], geloescht: Promise<void>[] = []) => {
+  /**
+   * Welche Dateien ein Block zeigt.
+   *
+   * Drei Felder, historisch gewachsen: `dateiId` bei Bild-, Datei- und
+   * Videoblöcken, `datei` als ältere Form desselben, `bildDateiId` bei der
+   * gerasterten PDF-Seite (E103).
+   */
+  const dateienAmBlock = (b: any): string[] =>
+    [b && b.dateiId, b && b.datei, b && b.bildDateiId]
+      .filter(Boolean).map((x: any) => String(x));
+
+  /**
+   * Wer eine Datei noch braucht — Dateikennung auf den Block, der sie zeigt.
+   *
+   * DAS IST DIE FRAGE, DIE VOR E171 NIEMAND GESTELLT HAT. Ein Duplikat trägt
+   * dieselbe `dateiId` wie das Original: `baum` nimmt den ganzen Satz mit,
+   * `baumEinfuegen` legt ihn so wieder hin. Wird danach das Original
+   * endgültig gelöscht, ging die Datei mit — und das Duplikat zeigte auf
+   * nichts. Gemessen, nicht vermutet.
+   *
+   * `nurLebende` trennt zwei Fragen, die verschieden zu beantworten sind:
+   *
+   *   false   Darf ich sie ENDGÜLTIG löschen? Dann zählt auch ein Block im
+   *           Papierkorb — der ist umkehrbar, das Löschen nicht (§46).
+   *   true    Ist sie herrenlos? Dann zählt nur, wer sie heute zeigt. Sonst
+   *           räumte die Pflegeseite nie wieder etwas weg.
+   */
+  const dateiAnspruch = (nurLebende = false): Map<string, string> => {
+    const raus = new Map<string, string>();
+    for (const b of Object.values<any>(cache.blocks)) {
+      if (!b) continue;
+      if (nurLebende && b.alive === false) continue;
+      for (const datei of dateienAmBlock(b))
+        if (!raus.has(datei)) raus.set(datei, b.id);
+    }
+    return raus;
+  };
+
+  const purgeTief = (id: string, gesammelt: any[], geloescht: Promise<void>[] = [],
+                     anhaenge: Record<string, string[]> = {}) => {
     const b = cache.blocks[id];
     if (!b) return;
     gesammelt.push(id);
+    /* JETZT merken, nicht später. Nach dieser Funktion ist der Block aus dem
+       Zwischenspeicher, und `purgeAnhaenge` fand seine Datei nie wieder —
+       genau das war L43. */
+    const eigene = dateienAmBlock(b);
+    if (eigene.length) anhaenge[id] = eigene;
     vergissAusstehendes('blocks', id);
-    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt, geloescht));
+    [...(b.content || [])].forEach(k => purgeTief(k, gesammelt, geloescht, anhaenge));
     /* Eine verknüpfte Ansicht zeigt fremde Daten — die bleiben bestehen. */
     if (b.collectionId && !b.verknuepft) {
       const c = cache.collections[b.collectionId];
@@ -499,6 +591,8 @@ const Store = (() => {
            tiefer, und die Ebene sieht niemand. */
         rowsOf(b.collectionId).forEach(r => {
           gesammelt.push(r.id); vergissAusstehendes('blocks', r.id);
+          const ihre = dateienAmBlock(r);
+          if (ihre.length) anhaenge[r.id] = ihre;
           delete cache.blocks[r.id]; geloescht.push(del('blocks', r.id));
         });
         (c.viewIds || []).forEach((v: any) => {
@@ -533,7 +627,9 @@ const Store = (() => {
    * nie gehabt" unterscheiden. Wer ihn mitnimmt, holt sich die Seite beim
    * nächsten Abgleich vom anderen Gerät zurück.
    */
-  const purgeAnhaenge = async (id: string, hinweis: { datei?: string } = {}) => {
+  const purgeAnhaenge = async (id: string, hinweis: {
+      datei?: string; dateien?: string[]; anspruch?: Map<string, string>
+    } = {}) => {
     for (const v of await versionen(id)) await del('versions', v.id);
 
     /* Auch hier: „kein Anhang" und „nicht nachsehen können" sind zweierlei.
@@ -549,13 +645,29 @@ const Store = (() => {
     });
     /* Manche Blockarten merken sich die Datei am Block statt umgekehrt.
        Beide Wege werden gegangen, doppelt gelöscht wird nichts. */
-    const kennungen = new Set<string>(dateien.map((d: any) => d.id));
-    const b = cache.blocks[id];
-    [hinweis.datei, b && b.dateiId, b && b.datei].forEach(x => { if (x) kennungen.add(x); });
+    const kennungen = new Set<string>(dateien.map((d: any) => String(d.id)));
+    /* Der Block ist an dieser Stelle schon aus dem Zwischenspeicher —
+       `purgeTief` reicht seine Dateien deshalb in `hinweis.dateien` herüber.
+       Der Griff in den Cache bleibt trotzdem stehen: `purgeAnhaenge` wird
+       auch einzeln gerufen, und dann ist der Block noch da. */
+    [hinweis.datei, ...(hinweis.dateien || []), ...dateienAmBlock(cache.blocks[id])]
+      .forEach(x => { if (x) kennungen.add(String(x)); });
 
+    const anspruch = hinweis.anspruch || dateiAnspruch();
     for (const dateiId of kennungen) {
+      const wer = anspruch.get(dateiId);
+      if (wer) {
+        /* BEHALTEN — und den Satz dem übergeben, der sie noch zeigt. Ohne
+           die Übergabe hielte `Dateien.verwaist()` sie für herrenlos, weil
+           ihr `blockId` auf den eben gelöschten Block zeigt, und die
+           Pflegeseite böte an, sie wegzuräumen. */
+        const satz = await dateiHolen(dateiId);
+        if (satz && satz.blockId !== wer)
+          await dateiPut(Object.assign({}, satz, { blockId: wer }));
+        continue;
+      }
       for (const st of await stueckeVon(dateiId)) await del('stuecke', st.id);
-      await del('dateien', dateiId);
+      await dateiWeg(dateiId);
     }
   };
 
@@ -571,7 +683,7 @@ const Store = (() => {
    * ======================================================================*/
   const addPage = (parentId: string | null = null, patch: Record<string, any> = {}) => {
     const p = addBlock(parentId, 'page', Object.assign({
-      text: '', icon: '📄', cover: '', wide: false, font: 'default', small: false
+      text: '', aliases: [], icon: '📄', cover: '', wide: false, font: 'default', small: false
     }, patch));
     notify('pages');
     return p;
@@ -692,14 +804,21 @@ const Store = (() => {
     const colId  = uid();
     const viewId = uid();
 
+    /* Schema-Schlüssel über Ids.short, nie roh aus uid(): ein rein
+       numerischer Schnipsel („2345") ist ein Integer-Schlüssel und stünde
+       in Object.keys VOR dem Titel — bei vier Hex-Zeichen trifft das 15 %
+       aller Schlüssel (E96). Der Rückfall greift nur, wenn diese Datei
+       allein geladen wird, und stellt dann einen Buchstaben voran. */
+    const kurz = (n: number): string => (typeof Ids !== 'undefined')
+      ? Ids.short(n) : 'k' + uid().slice(0, n - 1);
     const s = schema || {
       title: { name: 'Name',   type: 'title'  },
-      [uid().slice(0,4)]: { name: 'Status', type: 'select', options: [
+      [kurz(4)]: { name: 'Status', type: 'select', options: [
         { name: 'Offen',    color: 'gray'   },
         { name: 'In Arbeit',color: 'blue'   },
         { name: 'Erledigt', color: 'green'  }
       ]},
-      [uid().slice(0,4)]: { name: 'Datum',  type: 'date' }
+      [kurz(4)]: { name: 'Datum',  type: 'date' }
     };
 
     cache.collections[colId] = {
@@ -826,6 +945,12 @@ const Store = (() => {
     const r = {
       id: uid(), type: 'page', text: props.title || '', icon: '',
       props, content: [], parentId: collectionId, parentTable: 'collection',
+      /* WIE BEI JEDEM ANDEREN BLOCK (Zeile 378). Hier fehlte es, und das kostete:
+         `Bibliothek.meineAufgaben` fragt für eine Datenbank ohne Personenspalte
+         `row.erstelltVon`, bekam `undefined` und verglich den Ersatzwert „Ich"
+         mit dem eingestellten Namen. Wer sich in den Einstellungen „Redur"
+         nannte, sah seine Aufgabenliste leer (L56, E153). */
+      erstelltVon: getMeta('nutzer', '') || 'Ich',
       created: now(), edited: now(), folge: ++folgeZaehler, alive: true
     };
     cache.blocks[r.id] = r;
@@ -951,6 +1076,7 @@ const Store = (() => {
         } else {
           delete (cache as Record<string, Record<string, any>>)[fach]![id];
         }
+        if (fach === 'blocks' || fach === 'collections') datenGeaendert();
         geaendert++;
       } catch { /* ein Satz weniger ist kein Grund, die übrigen fallenzulassen */ }
     }
@@ -967,11 +1093,67 @@ const Store = (() => {
       /* „Alles löschen" oder eine eingespielte Sicherung drüben. Einzelne
          Sätze nachzulesen hilft dann nicht — der ganze Bestand ist ein
          anderer. Die Oberfläche erfährt es und entscheidet selbst. */
+      datenGeaendert();
       notify('fremd-alles');
       return;
     }
     ((n.schluessel as string[]) || []).forEach((k: string) => fremdWartend.add(k));
     if (!fremdTimer) fremdTimer = setTimeout(fremdesEintragen, 120);
+  };
+
+  /* --- Abgelöste Arbeit — und wie man auf sie wartet ----------------------
+   * `purgeBlock` kehrt sofort zurück und löscht die Anhänge danach im
+   * Hintergrund. Das ist richtig so: bei einer Seite mit fünfhundert Blöcken
+   * darf der Bildschirm nicht stehen bleiben.
+   *
+   * Es war aber nicht abwartbar, und das hat einen Anhang gekostet. Wer eine
+   * Seite endgültig löscht und gleich darauf eine Sicherung einspielt, bekam
+   * das hier:
+   *
+   *     Seite gelöscht           `purgeBlock` kehrt zurück, das Löschen der
+   *                              Anhänge läuft noch
+   *     Sicherung eingespielt    die Blöcke stehen wieder, der Anhang wird
+   *                              frisch geschrieben
+   *     … Wimpernschlag später   das alte Löschen kommt an und nimmt den
+   *                              NEUEN Anhang mit
+   *
+   * Gemessen, und immer anders: `dateiAlle()` fand den Satz, `dateiHolen()`
+   * einen Augenblick später nicht mehr; mal null Stücke, mal eins. Genau
+   * dieses Schwanken ist die Unterschrift eines Wettlaufs.
+   *
+   * Schlimmer noch: `purgeAnhaenge` liest den Block aus dem
+   * Zwischenspeicher — und der ist nach dem Einspielen der EINGESPIELTE.
+   * Das Löschen findet also die frisch zurückgeholte Kennung und trifft sie
+   * genau. Ein Zufall wäre halb so schlimm; das hier ist zielsicher.
+   *
+   * Deshalb wird jede abgelöste Arbeit hier vermerkt, und `settled()` wartet
+   * darauf. `importAll` ruft es vorn und hinten: vor dem Ersetzen muss
+   * gelandet sein, was noch unterwegs war, und danach muss gelandet sein,
+   * was das Einspielen selbst angestossen hat — erst dann darf jemand
+   * Anhänge daneben schreiben.
+   * ----------------------------------------------------------------------*/
+  const unterwegs = new Set<Promise<unknown>>();
+
+  /** Vermerkt eine Arbeit, die ohne Aufrufer weiterläuft. */
+  const abloesen = <T,>(p: Promise<T>): Promise<T> => {
+    unterwegs.add(p);
+    const raus = () => { unterwegs.delete(p); };
+    p.then(raus, raus);
+    return p;
+  };
+
+  /**
+   * Wartet, bis nichts mehr unterwegs ist.
+   *
+   * In Runden, weil eine abgelöste Arbeit die nächste anstossen kann. Nach
+   * zwanzig Runden ist Schluss — ein Fehler, der sich selbst nachlegt, darf
+   * die App nicht anhalten; dann ist ein Wettlauf immer noch besser als ein
+   * Stillstand. Eine Ablehnung zählt als gelandet: behandelt wird sie dort,
+   * wo sie entsteht (siehe `purgeBlock`), nicht hier.
+   */
+  const settled = async (): Promise<void> => {
+    for (let runde = 0; runde < 20 && unterwegs.size; runde++)
+      await Promise.all([...unterwegs].map(p => p.catch(() => {})));
   };
 
   /* --- Schreiben mit Verzögerung ----------------------------------------- */
@@ -980,6 +1162,7 @@ const Store = (() => {
   let timer: any = null;
 
   const save = (store: any, val: any) => {
+    if (store === 'blocks' || store === 'collections') datenGeaendert();
     pending.set(store + ':' + val.id, { store, val });
     clearTimeout(timer);
     timer = setTimeout(flush,
@@ -1141,7 +1324,20 @@ const Store = (() => {
     const grenze = ({ tag: 1, woche: 7, monat: 30 } as Record<string, number>)[filter.seit];
     const seitDatum = grenze ? Date.now() - grenze * 86400000 : 0;
 
-    Object.values<any>(cache.blocks).forEach(b => {
+    /* Wenn der Such-Cache eine sichere Wort-Schnittmenge kennt, werden nur
+       diese Seiten am echten Bestand geprüft. Die Prüfung selbst bleibt
+       unverändert — der Cache liefert Kandidaten, niemals die Wahrheit. Bei
+       kurzen Wörtern oder uneindeutigen Teilstrings gibt er `null` zurück,
+       und dieser Weg scannt wie früher vollständig. */
+    let zuPruefen = Object.values<any>(cache.blocks);
+    try {
+      if (typeof Kontext !== 'undefined' && Kontext.kandidaten) {
+        const ids = Kontext.kandidaten(needle);
+        if (Array.isArray(ids)) zuPruefen = ids.map((id: string) => cache.blocks[id]).filter(Boolean);
+      }
+    } catch { /* Ein kaputter Beschleuniger darf die echte Suche nie verhindern. */ }
+
+    zuPruefen.forEach(b => {
       if (!b.alive) return;
       if (b.type !== 'page' || b.parentTable === 'collection') return;
 
@@ -1153,13 +1349,18 @@ const Store = (() => {
       if (filter.typ === 'seite' && hatDb) return;
 
       const t = (b.text || '').toLowerCase();
-      if (wo !== 'inhalt' && t.includes(needle)) {
-        out.push({ page: b, treffer: 'Titel', snippet: b.text, pfad: pfadText(b.id) });
+      const aliases = Array.isArray(b.aliases)
+        ? b.aliases.map((value: unknown) => String(value ?? '').trim()).filter(Boolean) : [];
+      const alias = aliases.find((value: string) => value.toLowerCase().includes(needle));
+      if (wo !== 'inhalt' && (t.includes(needle) || alias)) {
+        out.push({ page: b, treffer: t.includes(needle) ? 'Titel' : 'Alias',
+                   snippet: t.includes(needle) ? b.text : alias, pfad: pfadText(b.id) });
         return;
       }
       if (wo !== 'titel') {
         const hit = findInside(b.id, needle, 0);
-        if (hit) out.push({ page: b, treffer: 'Inhalt', snippet: hit, pfad: pfadText(b.id) });
+        if (hit) out.push({ page: b, treffer: 'Inhalt', snippet: hit.text,
+                            blockId: hit.blockId, pfad: pfadText(b.id) });
       }
     });
 
@@ -1180,17 +1381,64 @@ const Store = (() => {
   const pfadText = (id: string) => pathOf(id).slice(0, -1)
     .map(p => p.text || 'Ohne Titel').join(' / ');
 
+  /**
+   * Der erste Treffer INNERHALB einer Seite.
+   *
+   * Gibt `{ text, blockId }` zurück statt nur einer Zeichenkette: mit der
+   * Kennung kann die Suche seit E105 direkt zum Block springen statt bloss
+   * die Seite zu öffnen. Bei einem Skript mit achtzig Seiten ist das der
+   * Unterschied zwischen „steht da drin" und „steht hier".
+   *
+   * GESUCHT WIRD AUCH IN `suchtext`. Eine PDF-Seite hat keinen `text` — sie
+   * ist ein Bild. Ihr Text steht seit E107 daneben, sonst wäre ein
+   * eingelesenes Skript für die Suche stumm.
+   */
+  /**
+   * Was an einem Block durchsucht wird.
+   *
+   * Drei Felder standen hier lange: `text`, `suchtext`, `ocrText`. §28 des
+   * Auftrags zählt zwölf Dinge auf, die auffindbar sein sollen, und zwei
+   * davon lagen ausserhalb:
+   *
+   * DER DATEINAME. Er steht im Fach `dateien`, nicht am Block. In der Praxis
+   * fiel das kaum auf, weil jeder Weg, der eine Datei anlegt, den Namen auch
+   * als Blocktext setzt — `recognition.ts`, `pdf/einlesen.ts`. Wer den Text
+   * aber überschreibt („Vertrag Wohnung"), verliert den Namen für die Suche.
+   * Gemessen am 25. August: Block mit Namen im Text gefunden, derselbe Block
+   * ohne Text nicht.
+   *
+   * DIE QUELLENANGABE. Lernkarten aus Paketen tragen sie unter
+   * `quiz.source.title`, die Lizenz unter `learningPackage.license`
+   * (`electrical.ts`). Beides ist am Block, nur eine Ebene tiefer — nachgesehen,
+   * nicht geraten.
+   *
+   * Die Reihenfolge ist Absicht: der eigene Text zuerst, damit der Schnipsel
+   * in der Trefferliste das zeigt, was der Mensch geschrieben hat.
+   */
+  const durchsuchbar = (b: any): string[] => {
+    const raus = [String(b.text || ''), String(b.suchtext || ''), String(b.ocrText || '')];
+    if (b.dateiId) raus.push(dateiNamen.get(String(b.dateiId)) || '');
+    const quelle = b.quiz && b.quiz.source;
+    if (quelle) raus.push(String(quelle.title || ''), String(quelle.edition || ''));
+    if (b.learningPackage) raus.push(String(b.learningPackage.license || ''));
+    return raus;
+  };
+
   const findInside = (pageId: any, needle: any, tiefe: number): any => {
-    if (tiefe > 4) return null;
+    if (tiefe > 5) return null;
     for (const kid of childrenOf(pageId)) {
       /* Unterseiten haben ihren eigenen Treffer — sonst würde die Elternseite
          mit fremdem Inhalt in der Liste stehen. */
       if (kid.type === 'page') continue;
-      const t = (kid.text || '').toLowerCase();
-      if (t.includes(needle)) {
-        const i = t.indexOf(needle);
-        return '…' + kid.text.slice(Math.max(0, i - 30), i + 60) + '…';
+
+      for (const roh of durchsuchbar(kid)) {
+        if (!roh) continue;
+        const i = roh.toLowerCase().indexOf(needle);
+        if (i < 0) continue;
+        const aus = roh.slice(Math.max(0, i - 30), i + 60).replace(/\s+/g, ' ');
+        return { text: '…' + aus + '…', blockId: kid.id };
       }
+
       const tiefer = findInside(kid.id, needle, tiefe + 1);
       if (tiefer) return tiefer;
     }
@@ -1239,24 +1487,45 @@ const Store = (() => {
    */
   const exportAll = (mitAnhaengen = false) => {
     const dateienDa = zaehlerDateien();
+    const abgeleitetDa = zaehlerAbgeleitet();
     const fehlenAnhaenge = dateienDa && !mitAnhaengen;
+    /* Im Archiv liegen nur die NICHT abgeleiteten — siehe `sicherungSpeichern`
+       in der Schale, das genauso filtert. Die Zahl hier muss dieselbe sein,
+       sonst zählt das Manifest etwas anderes als das Archiv enthält. */
+    const echteImArchiv = dateienDa - abgeleitetDa;
+    /* Ein Satz über das, was bewusst fehlt. Er steht auch dann da, wenn sonst
+       „vollständig" gilt — vollständig ist eine Sicherung nur, wenn sie sagt,
+       was sie auslässt (§52.10, E111). */
+    const ueberAbgeleitete = !abgeleitetDa ? ''
+      : abgeleitetDa === 1
+        ? ' Ein gerastertes Seitenbild ist bewusst NICHT dabei: es entsteht ' +
+          'aus dem Original neu — in Redion über den Knopf „Aus dem Original ' +
+          'zurückholen" auf der leeren Seite.'
+        : ' ' + abgeleitetDa + ' gerasterte Seitenbilder sind bewusst NICHT ' +
+          'dabei: sie entstehen aus den Originalen neu — in Redion über den ' +
+          'Knopf „Aus dem Original zurückholen" auf der leeren Seite.';
     return JSON.stringify({
       version: VERSION,
       exportiert: now(),
       /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
       enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
-        .concat(mitAnhaengen && dateienDa ? ['dateien', 'stuecke'] : []),
+        .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
       fehlt: fehlenAnhaenge
         ? ['dateien', 'stuecke']
         : [],
+      /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
+         Einleser es nachrechnen kann, statt einen Satz zu lesen. */
+      abgeleitetAusgelassen: mitAnhaengen ? abgeleitetDa : 0,
       hinweis: fehlenAnhaenge
         ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
           'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
           'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
-        : dateienDa
-          ? 'Vollständig: die ' + dateienDa + ' Datei(en) liegen im Ordner ' +
-            '„dateien" desselben Archivs.'
-          : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+        : echteImArchiv
+          ? 'Vollständig: die ' + echteImArchiv + ' Datei(en) liegen im Ordner ' +
+            '„dateien" desselben Archivs.' + ueberAbgeleitete
+          : abgeleitetDa
+            ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
+            : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
       blocks: cache.blocks,
       collections: cache.collections,
       views: cache.views,
@@ -1269,7 +1538,16 @@ const Store = (() => {
      Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
   let exportVersionen: any[] = [];
   let exportDateien = 0;
+  /* WIE VIELE DAVON ABGELEITET SIND. Seit E103 packt das `.redion` nicht mehr
+     jede Datei ein: gerasterte PDF-Seitenbilder bleiben draussen, weil sie
+     sich aus dem mitgesicherten Original neu rechnen lassen. Das Manifest
+     wusste davon nichts und schrieb weiter „Vollständig: die 4 Datei(en)
+     liegen im Ordner dateien" — bei zwei Dateien im Archiv. Genau die Sorte
+     Sicherung, vor der §52.10 warnt: eine, die behauptet, vollständig zu
+     sein (E111). */
+  let exportAbgeleitet = 0;
   const zaehlerDateien = () => exportDateien;
+  const zaehlerAbgeleitet = () => exportAbgeleitet;
 
   /** Vor dem Sichern aufrufen: holt, was nicht im Zwischenspeicher liegt. */
   const exportVorbereiten = async () => {
@@ -1281,8 +1559,11 @@ const Store = (() => {
        behauptet, vollständig zu sein.
        Wer sichert, bekommt lieber einen Fehler als eine stille Lücke. */
     exportVersionen = await all('versions');
-    exportDateien = (await all('dateien')).length;
-    return { versionen: exportVersionen.length, dateien: exportDateien };
+    const alleDateien = await all('dateien');
+    exportDateien = alleDateien.length;
+    exportAbgeleitet = alleDateien.filter((d: any) => d && d.abgeleitet).length;
+    return { versionen: exportVersionen.length, dateien: exportDateien,
+             abgeleitet: exportAbgeleitet };
   };
 
   /**
@@ -1316,6 +1597,9 @@ const Store = (() => {
    * mit der Frage — und nicht die stille Entscheidung von jemand anderem.
    */
   const importAll = async (json: any, art: string) => {
+    /* Erst landen lassen, was noch unterwegs ist — sonst löscht ein
+       Aufräumen von vorhin in den neuen Bestand hinein (siehe `settled`). */
+    await settled();
     const d = JSON.parse(json);
     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
     if (art !== 'ersetzen' && art !== 'zusammenfuehren')
@@ -1330,41 +1614,95 @@ const Store = (() => {
       meta:        d.meta        || {}
     };
 
-    if (art === 'ersetzen') {
-      /* Was in der Ablage steht und nicht in der Sicherung, muss weg — sonst
-         ist es kein Ersetzen, sondern ein Zusammenführen, das sich als
-         Ersetzen ausgibt. Und zwar von der PLATTE, nicht nur aus dem
-         Zwischenspeicher: genau daran hing der Fehler. */
-      /* HIER WIRD ABGEBROCHEN, NICHT WEITERGEMACHT. Vorher stand an beiden
-         Stellen `.catch(() => [])`: konnte die Platte nicht gelesen werden,
-         lief die Löschschleife null Mal, die neuen Sätze wurden darübergelegt
-         und der Nutzer las „Sicherung geladen" — während der alte Bestand
-         darunter stehen blieb. Nach dem Neuladen war er wieder da.
-         Ein halb ausgeführtes „Ersetzen" ist schlimmer als ein
-         abgebrochenes: das eine merkt man erst nach Tagen, das andere
-         sofort. */
-      try {
-        for (const [fach, schluessel] of
-             [['blocks', 'id'], ['collections', 'id'], ['views', 'id']] as [string, string][]) {
-          const vorhanden = await all(fach);
-          for (const satz of vorhanden)
-            if (!(neu as Record<string, any>)[fach][satz[schluessel]]) await del(fach, satz[schluessel]);
-        }
-        const metaVorhanden = await all('meta');
-        for (const m of metaVorhanden)
-          if (!(m.k in neu.meta)) await del('meta', m.k);
-      } catch (err) {
-        if (typeof Reporter !== 'undefined')
-          Reporter.error('Ablage', 'Ersetzen abgebrochen', err);
-        throw new Error('Die Sicherung wurde NICHT eingespielt: der vorhandene ' +
-          'Bestand liess sich nicht vollständig löschen (' +
-          (err instanceof Error ? err.message : String(err)) + '). ' +
-          'Es ist nichts verändert worden. Schliesse andere Fenster dieser App ' +
-          'und versuche es noch einmal.');
-      }
+    /* --- ALLES IN EINER TRANSAKTION -----------------------------------
+       Löschen und Schreiben liefen hier als hunderte einzelne
+       Transaktionen. E71 hat den Abbruch VOR dem ersten Anfassen sauber
+       gemacht — aber wer zwischen Löschen und Schreiben den Rechner
+       verlor (Tab zu, Strom weg, Quota voll), behielt einen halben
+       Bestand: die eine Hälfte gelöscht, die andere noch nicht da.
 
+       Eine IndexedDB-Transaktion ist ganz oder gar nicht. Also passiert
+       das ganze Einspielen — Löschen, Schreiben, der Verlauf — in EINER
+       Transaktion über die fünf Fächer. Bricht irgendetwas ab, rollt der
+       Browser ALLES zurück, und der Zwischenspeicher wird erst nach dem
+       `oncomplete` umgestellt: der Speicher lügt dem Bildschirm nie
+       einen Stand vor, der nicht auf der Platte steht. */
+    if (db) {
+      await new Promise<void>((ok, nein) => {
+        let t: IDBTransaction;
+        try { t = tx(['blocks', 'collections', 'views', 'meta', 'versions', 'suchindex'], 'readwrite'); }
+        catch (err) { return nein(err); }
+        t.oncomplete = () => ok();
+        t.onerror = t.onabort = () =>
+          nein((t as any).error || new Error('Das Einspielen wurde abgebrochen'));
+
+        const schreiben = (): void => {
+          try {
+            for (const b of Object.values<any>(neu.blocks))      t.objectStore('blocks').put(b);
+            for (const c of Object.values<any>(neu.collections)) t.objectStore('collections').put(c);
+            for (const v of Object.values<any>(neu.views))       t.objectStore('views').put(v);
+            for (const [k, v] of Object.entries<any>(neu.meta))  t.objectStore('meta').put({ k, v });
+            if (Array.isArray(d.versions))
+              for (const v of d.versions) t.objectStore('versions').put(v);
+          } catch (err) { try { t.abort(); } catch { /* schon abgebrochen */ } nein(err); }
+        };
+
+        if (art === 'ersetzen') {
+          /* Ein Index aus dem alten Bestand ist nach dem Ersetzen wertlos.
+             Er gehört nicht zur Sicherung und wird in derselben Alles-oder-
+             nichts-Transaktion verworfen. */
+          t.objectStore('suchindex').clear();
+          /* Was in der Ablage steht und nicht in der Sicherung, muss weg —
+             sonst ist es kein Ersetzen, sondern ein Zusammenführen, das
+             sich als Ersetzen ausgibt. Die Schlüssel werden IN derselben
+             Transaktion gelesen: was sie sieht, ist auch das, was sie
+             löscht. */
+          const faecher: [string, Record<string, any>][] =
+            [['blocks', neu.blocks], ['collections', neu.collections], ['views', neu.views]];
+          let offen = faecher.length + 1;
+          const dann = () => { if (--offen === 0) schreiben(); };
+          /* Jede Leseanfrage bekommt ihr EIGENES onerror, das die
+             Transaktion abbricht. Ein echter Fehler würde auch ohne das
+             zur Transaktion hochsteigen — aber „würde" ist keine
+             Zusicherung, und ein Fach, das nie antwortet, liesse die
+             Transaktion sonst LEER durchgehen: nichts geschrieben,
+             nichts gelöscht, und oncomplete meldete Erfolg. */
+          const lesen = (fach: string, weiter: (keys: IDBValidKey[]) => void): void => {
+            const r = t.objectStore(fach).getAllKeys();
+            r.onsuccess = () => weiter(r.result);
+            r.onerror = () => {
+              try { t.abort(); } catch { /* schon abgebrochen */ }
+              nein(r.error || new Error('Fach „' + fach + '" nicht lesbar'));
+            };
+          };
+          for (const [fach, behalten] of faecher)
+            lesen(fach, (keys) => {
+              for (const k of keys) if (!behalten[String(k)]) t.objectStore(fach).delete(k);
+              dann();
+            });
+          lesen('meta', (keys) => {
+            for (const k of keys) if (!(String(k) in neu.meta)) t.objectStore('meta').delete(k);
+            dann();
+          });
+        } else {
+          schreiben();
+        }
+      }).catch((err: unknown) => {
+        if (typeof Reporter !== 'undefined')
+          Reporter.error('Ablage', 'Einspielen abgebrochen — alles zurückgerollt', err);
+        throw new Error('Die Sicherung wurde NICHT eingespielt: ' +
+          (err instanceof Error ? err.message : String(err)) + '. ' +
+          'Es ist nichts verändert worden — die Transaktion hat alles ' +
+          'zurückgerollt. Schliesse andere Fenster dieser App und versuche ' +
+          'es noch einmal.');
+      });
+    }
+
+    /* Erst JETZT, nach dem oncomplete, den Zwischenspeicher umstellen. */
+    if (art === 'ersetzen') {
       cache.blocks = neu.blocks; cache.collections = neu.collections;
       cache.views = neu.views;   cache.meta = neu.meta;
+      cache.suchindex = {};
     } else {
       /* Zusammenführen: nichts wegwerfen, die Sicherung sticht bei gleicher
          Kennung. */
@@ -1374,23 +1712,19 @@ const Store = (() => {
       Object.assign(cache.meta, neu.meta);
     }
 
-    await Promise.all([
-      ...Object.values<any>(cache.blocks).map(b      => put('blocks', b)),
-      ...Object.values<any>(cache.collections).map(c => put('collections', c)),
-      ...Object.values<any>(cache.views).map(v       => put('views', v)),
-      ...Object.entries<any>(cache.meta).map(([k,v]) => put('meta', { k, v }))
-    ]);
-
-    /* Der Verlauf, falls die Sicherung ihn mitbringt. Ältere Sicherungen
-       haben ihn nicht — die sind deshalb nicht kaputt, nur älter. */
-    if (Array.isArray(d.versions))
-      await Promise.all(d.versions.map((v: any) => put('versions', v)));
-
+    datenGeaendert();
     notify('import');
     /* Nach einer eingespielten Sicherung ist der ganze Bestand ein anderer.
        Einzelne Sätze nachzulesen hülfe den anderen Fenstern nichts — sie
        müssen von vorn anfangen. */
     meldeAnAndereFenster('alles', []);
+
+    /* Und noch einmal: `notify('import')` gerade eben kann selbst ein
+       endgültiges Löschen angestossen haben. Wer nach dem Einspielen
+       Anhänge danebenschreibt, muss sich darauf verlassen können, dass
+       nichts mehr unterwegs ist. */
+    await settled();
+
     return { bloecke: Object.keys(cache.blocks).length,
              versionen: Array.isArray(d.versions) ? d.versions.length : 0,
              fehlt: d.fehlt || [] };
@@ -1429,8 +1763,23 @@ const Store = (() => {
     const rein = (k: any, eltern: any, idx: any) => {
       const patch = Object.assign({}, k);
       delete patch.id; delete patch.kinder; delete patch.collection;
-      delete patch.views; delete patch.rows; delete patch.content;
+      delete patch.views; delete patch.content;
       patch.content = [];
+
+      /* `rows` HEISST AN ZWEI BLOCKARTEN ETWAS ANDERES (E114).
+         An einer Datenbank sind es die Zeilen-Blöcke, die `baum` daneben
+         eingesammelt hat — die werden unten einzeln neu angelegt, und der
+         alte Stand darf nicht am Block hängen bleiben.
+         Am `table`-Block sind es SEINE ZELLEN, und sonst nichts.
+
+         Gelöscht wurde bis E114 unbedingt. Jede einfache Tabelle kam damit
+         leer wieder heraus — beim Verdoppeln, beim Einfügen, beim
+         Rückgängigmachen, beim Wiederherstellen einer Fassung, aus jeder
+         Vorlage und über den Markdown-Platzhalter. Gemessen: Zeilen
+         [['Jahr','Wert'],['2026','19']] hinein, `rows: undefined` heraus.
+
+         Also nur dort löschen, wo es die Datenbankbedeutung hat. */
+      if (k.collection) delete patch.rows;
 
       /* Datenbank: Sammlung, Ansichten und Zeilen mitkopieren */
       if (k.collection) {
@@ -1643,6 +1992,8 @@ const Store = (() => {
       } catch { geblieben.push(s); ok(); }
     })));
     cache.blocks = {}; cache.collections = {}; cache.views = {}; cache.meta = {};
+    cache.suchindex = {};
+    datenGeaendert();
     meldeAnAndereFenster('alles', []);
     if (geblieben.length) {
       const text = 'Nicht alles liess sich löschen. Diese Fächer sind noch da: ' +
@@ -1659,10 +2010,34 @@ const Store = (() => {
    * Schritten, wieder zusammensetzen, aufräumen — steht in dateien.js.
    * Hier steht nur, wie ein Stück hinein- und wieder herauskommt.
    * ======================================================================*/
-  const dateiPut   = (satz: any) => put('dateien', satz);
-  const dateiHolen = (id: string)   => get('dateien', id);
-  const dateiWeg   = (id: string)   => del('dateien', id);
-  const dateiAlle  = ()     => all('dateien');
+  /* --- Dateinamen für die Suche ----------------------------------------
+     NUR KENNUNG → NAME, sonst nichts. Die Sätze selbst bleiben in der
+     Datenbank; hier steht je Datei eine Zeichenkette.
+
+     Warum überhaupt: `search()` ist synchron — die Befehlspalette tippt mit,
+     und ein `await` je Tastendruck wäre spürbar. Das Fach `dateien` liegt
+     aber in IndexedDB. Ohne dieses kleine Verzeichnis könnte die Suche
+     Dateinamen nur mit einem Umbau auf asynchron erreichen.
+
+     Die Sätze sind leicht: Name, Grösse, Typ, Anzahl Stücke. Die Bytes
+     liegen im Fach `stuecke` und werden hier nie angefasst (§36). */
+  const dateiNamen = new Map<string, string>();
+  const dateiNameMerken = (satz: any): void => {
+    if (satz && satz.id) dateiNamen.set(String(satz.id), String(satz.name || ''));
+  };
+
+  const dateiPut   = (satz: any) => { dateiNameMerken(satz); return put('dateien', satz); };
+  const dateiHolen = async (id: string) => {
+    const satz = await get('dateien', id);
+    dateiNameMerken(satz);
+    return satz;
+  };
+  const dateiWeg   = (id: string) => { dateiNamen.delete(String(id)); return del('dateien', id); };
+  const dateiAlle  = async () => {
+    const alle = await all('dateien');
+    alle.forEach(dateiNameMerken);
+    return alle;
+  };
 
   /* --- Der letzte gemeinsame Stand (für den Abgleich) -------------------- */
 
@@ -1694,19 +2069,85 @@ const Store = (() => {
   const vorratWeg    = (id: string) => del('vorrat', id);
   const vorratAlle   = ()   => all('vorrat');
 
+  /* --- Persistenter Suchindex ------------------------------------------- */
+  /**
+   * Schreibt nur den Such-Cache. Diese Wege berühren absichtlich weder
+   * `blocks` noch `collections`: selbst ein Abbruch kann darum niemals
+   * Nutzerdaten beschädigen. Der Speicherabzug wird erst nach `oncomplete`
+   * umgestellt; beim Neuladen sieht man entweder den alten oder den neuen
+   * Cache, nie einen behaupteten Zwischenstand.
+   */
+  const suchindexAendern = (setzen: any[] = [], loeschen: string[] = []) =>
+    new Promise<void>((ok2, fail2) => {
+      const anwenden = () => {
+        loeschen.forEach(id => { delete cache.suchindex[id]; });
+        setzen.forEach(e => { if (e && typeof e.id === 'string') cache.suchindex[e.id] = e; });
+      };
+      if (!db || !db.objectStoreNames.contains('suchindex')) { anwenden(); ok2(); return; }
+      try {
+        const t = tx(['suchindex'], 'readwrite');
+        const s = t.objectStore('suchindex');
+        loeschen.forEach(id => s.delete(id));
+        setzen.forEach(e => s.put(e));
+        t.oncomplete = () => { anwenden(); ok2(); };
+        t.onerror = t.onabort = () =>
+          fail2((t as any).error || new Error('Der Suchindex liess sich nicht speichern'));
+      } catch (err) { fail2(err); }
+    });
+
+  const suchindexErsetzen = (eintraege: any[]) =>
+    new Promise<void>((ok2, fail2) => {
+      const neu: Verzeichnis = {};
+      eintraege.forEach(e => { if (e && typeof e.id === 'string') neu[e.id] = e; });
+      if (!db || !db.objectStoreNames.contains('suchindex')) {
+        cache.suchindex = neu; ok2(); return;
+      }
+      try {
+        const t = tx(['suchindex'], 'readwrite');
+        const s = t.objectStore('suchindex');
+        s.clear();
+        Object.values(neu).forEach(e => s.put(e));
+        t.oncomplete = () => { cache.suchindex = neu; ok2(); };
+        t.onerror = t.onabort = () =>
+          fail2((t as any).error || new Error('Der Suchindex liess sich nicht ersetzen'));
+      } catch (err) { fail2(err); }
+    });
+
+  const suchindexLeeren = () => suchindexErsetzen([]);
+
   const stueckPut   = (satz: any) => put('stuecke', satz);
   const stueckHolen = (id: string)   => get('stuecke', id);
   const stueckWeg   = (id: string)   => del('stuecke', id);
 
+  /**
+   * Ein Fehler beim Lesen der Stücke braucht zwei Gesichter: einen kurzen
+   * Satz für den Menschen und die technische Ursache für den Fehlerbericht.
+   * Dateiname und Inhalt gehören ausdrücklich nicht in den Bericht.
+   */
+  const chunkReadError = (dateiId: unknown, cause: unknown): Error => {
+    const error = new Error(
+      'Die Dateistücke konnten nicht aus dem Speicher gelesen werden. ' +
+      'Der Vorgang wurde abgebrochen.'
+    ) as Error & { code: string; cause: unknown };
+    error.code = 'DATEISTUECKE_NICHT_LESBAR';
+    error.cause = cause;
+    if (typeof Reporter !== 'undefined') {
+      Reporter.error('ablage', 'Dateistücke konnten nicht gelesen werden', {
+        fileId: String(dateiId ?? ''), cause
+      });
+    }
+    return error;
+  };
   /** Alle Stücke einer Datei, in der richtigen Reihenfolge. */
-  const stueckeVon = (dateiId: any) => new Promise<any[]>((ok2) => {
+  const stueckeVon = (dateiId: any) => new Promise<any[]>((ok2, fail2) => {
     if (!db || !db.objectStoreNames.contains('stuecke')) return ok2([]);
     try {
       const r = tx(['stuecke'], 'readonly').objectStore('stuecke')
         .index('datei').getAll(dateiId);
       r.onsuccess = () => ok2((r.result || []).sort((a: any, b: any) => a.nr - b.nr));
-      r.onerror   = () => ok2([]);
-    } catch { ok2([]); }
+      r.onerror   = () => fail2(chunkReadError(dateiId,
+        r.error || new Error('Die IndexedDB-Anfrage ist fehlgeschlagen')));
+    } catch (err) { fail2(chunkReadError(dateiId, err)); }
   });
 
   /* Wie viel Platz belegt die App? */
@@ -1719,22 +2160,24 @@ const Store = (() => {
   return {
     load, uid, now, cache,
     addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
-    purgeAnhaenge, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
+    purgeAnhaenge, dateiAnspruch, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
     addPage, rootPages, trashed, favorites, pathOf,
     addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
     rohSetzen,
     addRow, rowsOf, setProp,
-    setMeta, getMeta, flush,
+    setMeta, getMeta, flush, settled,
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
-    search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
+    search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
     vorratPut, vorratHolen, vorratWeg, vorratAlle,
+    suchindexAendern, suchindexErsetzen, suchindexLeeren,
     stueckPut, stueckHolen, stueckWeg, stueckeVon,
     speichertNicht: () => nurSpeicher,
     warnungText: () => warnung,
     beiWarnung: (fn: any) => { warner.add(fn); if (warnung) fn(warnung); },
+    datenFassung: () => datenFassung,
     on: (fn: any) => listeners.add(fn)
   };
 })();

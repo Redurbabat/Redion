@@ -71,6 +71,9 @@ await seite.waitForTimeout(2400);
 await seite.evaluate(() => {
   Store.setMeta('rundgangGesehen', true);
   document.getElementById('rg-willkommen')?.remove();
+  /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+     über alles und fängt Klicks ab (E132). */
+  document.querySelector('.produkt-onboarding-lage')?.remove();
   document.getElementById('rg-einladung')?.remove();
 });
 
@@ -80,7 +83,10 @@ const bauen = () => seite.evaluate(async () => {
   const s = Store.addBlock(null, 'page', { text: 'Fingerprobe' });
   App.oeffne(s.id);
   await new Promise(r => setTimeout(r, 350));
-  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Haushalt' });
+  /* Seit E89 zeigt das Telefon standardmässig Karten; diese Prüfung misst
+     das RASTER unter dem Finger — also gleich mit offenem Raster anlegen,
+     wie es der ⊞-Umschalter täte. Die Karten selbst prüft test163. */
+  const blk = Store.addBlock(s.id, 'spreadsheet', { text: 'Haushalt', telefonRaster: true });
   App.zeichneSeite();
   await new Promise(r => setTimeout(r, 700));
   const b2 = Store.getBlock(blk.id);

@@ -376,6 +376,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   const vorher = await p.evaluate(async () => { await Store.flush(); return Api.tokenHolen(); });
   await p.reload();
   await p.waitForTimeout(2000);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nachher = await p.evaluate(() => Api.tokenHolen());
   pruef('Das Token überlebt den Neustart', nachher, vorher);
 

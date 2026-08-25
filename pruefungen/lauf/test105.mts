@@ -39,6 +39,7 @@ import { execFileSync as _lauf } from 'node:child_process';
 import { tmpdir as _tmp } from 'node:os';
 
 const WURZEL = _loese(_ordner(_alsPfad(import.meta.url)), '../..');
+const TSC = _dazu(WURZEL, 'node_modules', 'typescript', 'bin', 'tsc');
 
 let ok = 0, weg = 0;
 const p = (n: any, b: any, extra = '') => { if (b) { ok++; console.log('  ✓ ' + n); }
@@ -107,7 +108,7 @@ console.log('\n2 · Das erzeugte JavaScript ist auf dem Stand der Quellen');
 const nachTmp = _tmpOrdner(_dazu(_tmp(), 'redion-ts-'));
 let baufehler = null;
 try {
-  _lauf('npx', ['tsc', '-p', 'tsconfig.bauen.json', '--outDir', nachTmp],
+  _lauf(process.execPath, [TSC, '-p', 'tsconfig.bauen.json', '--outDir', nachTmp],
         { cwd: WURZEL, stdio: 'pipe' });
 } catch (e: unknown) {
   baufehler = String((e as { stdout?: string }).stdout || (e instanceof Error ? e.message : String(e))).slice(0, 400);
@@ -198,7 +199,7 @@ if (_da(swTs)) {
   const swTmp = _tmpOrdner(_dazu(_tmp(), 'redion-sw-'));
   let swFehler = null;
   try {
-    _lauf('npx', ['tsc', '-p', 'tsconfig.sw.json', '--outDir', swTmp],
+    _lauf(process.execPath, [TSC, '-p', 'tsconfig.sw.json', '--outDir', swTmp],
           { cwd: WURZEL, stdio: 'pipe' });
   } catch (e: unknown) {
     swFehler = String((e as { stdout?: string }).stdout || (e instanceof Error ? e.message : String(e))).slice(0, 400);

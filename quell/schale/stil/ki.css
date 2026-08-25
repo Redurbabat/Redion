@@ -101,6 +101,16 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   .blk > .handles{left:-40px}
 }
 
+@media(max-width:760px), (max-height:500px) and (pointer:coarse){
+  #ai{
+    top:auto;
+    bottom:var(--visual-bottom, 0px);
+    height:var(--visual-height, 100vh);
+    max-height:var(--visual-height, 100vh);
+  }
+  .ai-foot textarea{min-height:var(--touch-min); font-size:16px}
+}
+
 /* Auf schmalen Bildschirmen stapelt Notion die Spalten untereinander,
    und die Mehrfachauswahl von Blöcken entfällt. Genauso hier. */
 @media(max-width:380px){ #page{padding-left:22px; padding-right:22px} }
@@ -115,4 +125,3 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   #topbar .top-btn.schmal{padding:0 6px}
   .kt-std{width:58px}
 }
-

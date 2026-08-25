@@ -35,9 +35,13 @@ import { readFileSync as _lies } from 'node:fs';
 
 const WURZEL = _loese(_ordner(_alsPfad(import.meta.url)), '../..');
 
-let ok = 0, weg = 0;
+let ok = 0, weg = 0, uebersprungen = 0;
 const p = (n: any, b: any, extra = '') => { if (b) { ok++; console.log('  ✓ ' + n); }
   else { weg++; console.log('  ✗ ' + n + (extra ? ' — ' + extra : '')); } };
+const skip = (n: string, grund: string) => {
+  uebersprungen++;
+  console.log('  ↷ ' + n + ' — übersprungen: ' + grund);
+};
 
 const quelle = _lies(_dazu(WURZEL, 'quell/bereiche/dateien/ausgeben.js'), 'utf8');
 const Austausch = new Function('window', 'document',
@@ -290,11 +294,26 @@ const zip64Ende = () => {
  * =========================================================================*/
 console.log('\n5 · Der Rundlauf, bezeugt von einem fremden Werkzeug');
 
-import { execFileSync as _fuehreAus } from 'node:child_process';
+import { execFileSync as _fuehreAus, spawnSync as _starte } from 'node:child_process';
 import { writeFileSync as _schreib, mkdtempSync as _tmpOrdner } from 'node:fs';
 import { tmpdir as _tmp } from 'node:os';
 
 const ordner = _tmpOrdner(_dazu(_tmp(), 'redion-zip-'));
+
+/**
+ * Verfügbarkeit ohne Shell prüfen. `command -v` wäre selbst wieder ein
+ * Unix-Werkzeug und `where` ein Windows-Sonderweg. `spawnSync` benutzt die
+ * normale Programmsuche der jeweiligen Plattform; nur ENOENT bedeutet hier
+ * „nicht installiert“. Ein vorhandenes, aber defektes Werkzeug wird dagegen
+ * NICHT übersprungen — seine Gegenprobe soll dann ehrlich fehlschlagen.
+ */
+const werkzeugDa = (name: string): boolean => {
+  const probe = _starte(name, ['-h'], { stdio: 'ignore', windowsHide: true });
+  return !probe.error || (probe.error as NodeJS.ErrnoException).code !== 'ENOENT';
+};
+
+const hatUnzip = werkzeugDa('unzip');
+const hatZipinfo = werkzeugDa('zipinfo');
 
 /**
  * Ein Archiv auf die Platte legen und ein fremdes Werkzeug darauf loslassen.
@@ -333,14 +352,21 @@ const fremdGelesen = (blob: Uint8Array, datei: string, nurSumme = false) => {
   Austausch.grenzen.bytes = alt;
   const bytes = new Uint8Array(await blob.arrayBuffer());
 
-  const fremd = fremdGelesen(bytes, 'zip64.zip');
-  p('`unzip` liest Redions ZIP64 ohne Klage', fremd.ok, fremd.text.slice(0, 200));
-  p('… und findet alle drei Einträge',
-    ['daten.json', 'dateien/bild.txt', 'dateien/zweit.txt'].every(n => fremd.text.includes(n)),
-    fremd.text.slice(0, 200));
-  p('… mit den richtigen Längen',
-    fremd.text.includes('27') && fremd.text.includes('34') && fremd.text.includes('16'),
-    fremd.text.slice(0, 200));
+  if (hatUnzip) {
+    const fremd = fremdGelesen(bytes, 'zip64.zip');
+    p('`unzip` liest Redions ZIP64 ohne Klage', fremd.ok, fremd.text.slice(0, 200));
+    p('… und findet alle drei Einträge',
+      ['daten.json', 'dateien/bild.txt', 'dateien/zweit.txt'].every(n => fremd.text.includes(n)),
+      fremd.text.slice(0, 200));
+    p('… mit den richtigen Längen',
+      fremd.text.includes('27') && fremd.text.includes('34') && fremd.text.includes('16'),
+      fremd.text.slice(0, 200));
+  } else {
+    const grund = '`unzip` ist auf dieser Plattform nicht installiert';
+    skip('`unzip` liest Redions ZIP64 ohne Klage', grund);
+    skip('… und findet alle drei Einträge', grund);
+    skip('… mit den richtigen Längen', grund);
+  }
 
   /* Und derselbe Weg zurück, durch beide Leser. */
   const ausPuffer = await Einlesen.zipLesen(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length));
@@ -362,9 +388,15 @@ const fremdGelesen = (blob: Uint8Array, datei: string, nurSumme = false) => {
      und danach liest ein FREMDES Werkzeug nach, dass die Zahl stimmt. */
   const blob = await Austausch.zipSchreiben(vieleEintraege(70000));
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  const fremd = fremdGelesen(bytes, 'viele.zip', true);
-  p('`zipinfo` liest ein Archiv mit 70 000 Einträgen', fremd.ok, fremd.text.slice(-200));
-  p('… und zählt alle 70 000', /70000 files/.test(fremd.text), fremd.text.trim());
+  if (hatZipinfo) {
+    const fremd = fremdGelesen(bytes, 'viele.zip', true);
+    p('`zipinfo` liest ein Archiv mit 70 000 Einträgen', fremd.ok, fremd.text.slice(-200));
+    p('… und zählt alle 70 000', /70000 files/.test(fremd.text), fremd.text.trim());
+  } else {
+    const grund = '`zipinfo` ist auf dieser Plattform nicht installiert';
+    skip('`zipinfo` liest ein Archiv mit 70 000 Einträgen', grund);
+    skip('… und zählt alle 70 000', grund);
+  }
 
   const zip = await Einlesen.zipLesenAusBlob(blob);
   p('Und Redion selbst findet sie wieder', zip.namen.length === 70000,
@@ -387,5 +419,5 @@ const fremdGelesen = (blob: Uint8Array, datei: string, nurSumme = false) => {
     (await zip.text('daten.json')) === '{"echt":true}');
 }
 
-console.log(`\n  Suite 68 — ZIP-Grenzen: ${ok} ok, ${weg} offen`);
+console.log(`\n  Suite 68 — ZIP-Grenzen: ${ok} ok, ${weg} offen, ${uebersprungen} übersprungen`);
 process.exit(weg ? 1 : 0);

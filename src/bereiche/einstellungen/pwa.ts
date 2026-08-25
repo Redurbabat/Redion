@@ -41,7 +41,9 @@ const PWA = (() => {
     /* `navigator.standalone` gibt es nur auf dem iPhone; die Typen kennen
        es nicht. Deshalb hier nachgefragt statt behauptet. */
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  const istTelefon = () => window.matchMedia('(max-width: 760px)').matches;
+  const istTelefon = () => typeof AppEinstellung !== 'undefined'
+    ? AppEinstellung.amTelefon()
+    : window.matchMedia('(max-width: 760px)').matches;
 
   /* ------------------------------------------------------------------------
    * SERVICE WORKER
@@ -244,14 +246,29 @@ const PWA = (() => {
     if (!leiste) return;
     let aktiv: any = null;                       /* das Feld, in dem geschrieben wird */
 
+    /* `bottom:0` allein genügt nicht: die Bildschirmtastatur legt sich am
+       iPhone ÜBER die Seite, ohne das Layout zu verkleinern — die Leiste
+       stünde exakt HINTER der Tastatur, unsichtbar und unerreichbar. Der
+       sichtbare Ausschnitt (visualViewport) kennt die wahre Höhe; die
+       Differenz schiebt die Leiste über die Tastatur. */
+    const lege = () => {
+      const vv = window.visualViewport;
+      const unten = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+      leiste.style.bottom = unten + 'px';
+    };
+    window.visualViewport?.addEventListener('resize', lege);
+    window.visualViewport?.addEventListener('scroll', lege);
+
     const zeigen = (feld: any) => {
       if (!istTelefon()) return;
       aktiv = feld;
       leiste.hidden = false;
       document.body.classList.add('schreibt');
+      lege();
     };
     const verstecken = () => {
       leiste.hidden = true;
+      leiste.style.bottom = '';
       document.body.classList.remove('schreibt');
       aktiv = null;
     };
@@ -352,12 +369,99 @@ const PWA = (() => {
    * --------------------------------------------------------------------- */
   const beruehrung = () => {
     let halten: any = null, startX = 0, startY = 0, gezogen: any = null, verschoben = 0;
+    /* Das Tragen (E83): nach langem Drücken ist der Block „gehoben". Der
+       Finger trägt ihn, die Fallmarke zeigt die Lücke, Loslassen legt ab.
+       Loslassen OHNE Bewegung öffnet das Menü — die alte Geste bleibt,
+       sie wird nur um das Tragen reicher. */
+    let hebung: any = null;                      /* { id, el } — der getragene Block */
+    let fallZiel: any = null;                    /* { id, danach } — wohin er fällt */
+    let getragen = false;                        /* hat der Finger ihn wirklich bewegt? */
+    let marke: HTMLElement | null = null;
 
     const aufraeumen = () => {
       clearTimeout(halten); halten = null;
       if (gezogen) { gezogen.style.transform = ''; gezogen.style.opacity = ''; gezogen = null; }
       verschoben = 0;
+      absetzen();
     };
+
+    /* Beim Loslassen schickt der Browser der Berührung noch mousedown,
+       mouseup und click hinterher. Nach dem Heben träfen die den Text oder
+       den frisch geöffneten Menü-Grund — und schlössen das Menü im selben
+       Atemzug, in dem es aufging. Die Nachzügler werden deshalb einmal
+       geschluckt.
+
+       Aber: nach einem WISCH synthetisiert der Browser gar keine Klicks —
+       die Fänger blieben scharf und frassen die NÄCHSTE Berührung.
+       Wischen, sofort tippen: nichts passierte (gefunden mit test157 §7).
+       Deshalb räumt jede neue Berührung die alten Fänger weg — deren
+       Nachzügler wären längst da gewesen —, und die Uhr bleibt nur als
+       letzte Besenkammer. */
+    let schluckerWeg: (() => void) | null = null;
+    const nachzuegler = () => {
+      const schlucken = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
+      const arten = ['mousedown', 'mouseup', 'click'];
+      arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
+      const weg = () => {
+        arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
+        /* Nur das EIGENE Merkzeichen löschen. Die 800-ms-Uhr eines alten
+           Fängers darf nicht das Merkzeichen eines neueren nullen — sonst
+           hängt der neue fest und frisst wieder den nächsten Tipp. */
+        if (schluckerWeg === weg) schluckerWeg = null;
+      };
+      schluckerWeg = weg;
+      setTimeout(weg, 800);
+    };
+
+    /* Der Finger trägt. Ein EIGENER Zuhörer, nicht der gemeinsame: der ist
+       passiv, und hier muss preventDefault das Rollen der Seite anhalten —
+       der Finger zielt, er blättert nicht. */
+    const tragen = (e: TouchEvent) => {
+      if (!hebung) return;
+      const t = e.touches[0];
+      if (!t) return;
+      e.preventDefault();
+      if (Math.abs(t.clientX - startX) > 12 || Math.abs(t.clientY - startY) > 12) getragen = true;
+      /* Nahe der Kante rollt die Seite mit — sonst endet jedes Ziehen am
+         Bildrand, und lange Seiten wären unerreichbar. */
+      const roller = document.getElementById('scroll');
+      if (roller) {
+        if (t.clientY < 150) roller.scrollTop -= (150 - t.clientY) / 5;
+        else if (t.clientY > innerHeight - 170) roller.scrollTop += (t.clientY - (innerHeight - 170)) / 5;
+      }
+      const unter = document.elementFromPoint(t.clientX, t.clientY);
+      const blk = unter ? unter.closest<HTMLElement>('.blk') : null;
+      if (!blk || !blk.dataset.bid || blk.dataset.bid === hebung.id) return;
+      const r = blk.getBoundingClientRect();
+      const danach = t.clientY > r.top + r.height / 2;
+      fallZiel = { id: blk.dataset.bid, danach };
+      if (!marke) {
+        marke = document.createElement('div');
+        marke.className = 'fallmarke';
+        document.body.appendChild(marke);
+      }
+      marke.style.top = ((danach ? r.bottom : r.top) - 1) + 'px';
+      marke.style.left = r.left + 'px';
+      marke.style.width = r.width + 'px';
+    };
+
+    const absetzen = () => {
+      if (hebung && hebung.el) hebung.el.classList.remove('gehoben');
+      hebung = null; fallZiel = null; getragen = false;
+      if (marke) { marke.remove(); marke = null; }
+      document.removeEventListener('touchmove', tragen);
+    };
+
+    /* Ein Neuzeichnen ersetzt die Blöcke mitten in der Geste — die
+       Berührungsereignisse zielen danach auf abgehängte Elemente und
+       erreichen das Dokument nie mehr (gemessen am 9. August: nicht
+       einmal touchend kommt noch an). Kein Ereignis heisst: niemand
+       räumt auf, die Fallmarke stünde für immer im Bild. Der Beobachter
+       setzt deshalb ab, sobald der gehobene Block aus dem Baum fällt —
+       er braucht dafür keine Berührung. */
+    new MutationObserver(() => {
+      if (hebung && !hebung.el.isConnected) absetzen();
+    }).observe(document.body, { childList: true, subtree: true });
 
     document.addEventListener('touchstart', (e) => {
       if (!istTelefon() || e.touches.length !== 1) return;
@@ -365,36 +469,92 @@ const PWA = (() => {
       if (!t) return;
       startX = t.clientX; startY = t.clientY;
 
-      /* Langes Drücken auf einem Block öffnet sein Menü */
+      /* Eine neue Berührung heisst: die Nachzügler der alten sind durch. */
+      if (schluckerWeg) schluckerWeg();
+
+      /* Eine Hebung, die ein neues touchstart noch vorfindet, ist eine
+         Leiche: ihr Berührungsstrom starb mit einem Neuzeichnen — die
+         Ereignisse zielen seither auf ein abgehängtes Element und
+         erreichen das Dokument nie mehr. Läge sie weiter herum, wäre das
+         Wischen tot (der Wächter oben) und der nächste Zug belebte die
+         alte Geste wieder. Aufräumen, bevor die neue beginnt. */
+      if (hebung) absetzen();
+
+      /* Langes Drücken HEBT den Block an (E83). Ob daraus Tragen oder das
+         Menü wird, entscheidet sich erst beim Loslassen — siehe touchend.
+
+         NICHT gehoben wird in einem fokussierten Schreibfeld: dort heisst
+         langes Drücken „Wort auswählen", und wer schreibt, will keinen
+         davonschwebenden Block. Dieselbe Regel wie beim Wischen. */
       const blk = elVon(e)?.closest<HTMLElement>('.blk');
-      if (blk && !elVon(e)?.closest<HTMLElement>('#tastenleiste, .handles')) {
+      const imSchreibfeld = (() => {
+        const feld = elVon(e)?.closest<HTMLElement>('[contenteditable="true"]');
+        return !!(feld && feld === document.activeElement);
+      })();
+      const rollerVorher = document.getElementById('scroll');
+      const scrollVorher = rollerVorher ? rollerVorher.scrollTop : 0;
+      if (blk && !imSchreibfeld && !elVon(e)?.closest<HTMLElement>('#tastenleiste, .handles')) {
         halten = setTimeout(() => {
+          halten = null;
+          /* Hat die Seite seit dem Auflegen gerollt, war das ein Blättern
+             mit ruhendem Ende — kein Drücken. Ein Heben mitten im
+             laufenden Rollen könnte das Rollen auch nicht mehr anhalten
+             (preventDefault greift nur vor dem ersten Rollzug). */
+          const rollerJetzt = document.getElementById('scroll');
+          if (rollerJetzt && Math.abs(rollerJetzt.scrollTop - scrollVorher) > 4) return;
           const b = Store.getBlock(blk.dataset.bid);
           if (!b) return;
-          const griff = blk.querySelector('.handles button[data-act="menu"]');
+          /* Hat ein Neuzeichnen den Block während der 500 ms ersetzt, wäre
+             blk ein Geist: Vibration ohne sichtbare Hebung. Nachschlagen —
+             und ohne lebendes Element gar nicht erst heben. */
+          const blkJetzt = blk.isConnected ? blk
+            : document.querySelector<HTMLElement>(`.blk[data-bid="${b.id}"]`);
+          if (!blkJetzt) return;
           if (navigator.vibrate) navigator.vibrate(12);
-          /* Beim Loslassen schickt der Browser der Berührung noch mousedown,
-             mouseup und click hinterher. Die träfen den frisch geöffneten
-             Menü-Grund — und schlössen das Menü im selben Atemzug, in dem es
-             aufging. Die Nachzügler werden deshalb einmal geschluckt; falls
-             keiner kommt, räumt die Uhr die Fänger wieder weg. */
-          const schlucken = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
-          const arten = ['mousedown', 'mouseup', 'click'];
-          arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
-          setTimeout(() => arten.forEach(t =>
-            document.removeEventListener(t, schlucken, { capture: true })), 800);
-          Blocks.blockMenue(griff || blk, b);
-          halten = null;
+          hebung = { id: b.id, el: blkJetzt };
+          blkJetzt.classList.add('gehoben');
+          /* Ein angefangener Wisch gibt seine Spuren zurück, bevor er
+             zurücktritt — sonst klebte translateX auf der Zeile fest. */
+          if (gezogen) { gezogen.style.transform = ''; gezogen.style.opacity = ''; }
+          gezogen = null; verschoben = 0;
+          document.addEventListener('touchmove', tragen, { passive: false });
         }, 500);
       }
 
-      /* Wischen auf einer Aufgabe oder Datenbankzeile */
+      /* Wischen auf einer Aufgabe oder Datenbankzeile.
+
+         Hier stand: nicht auf `input, [contenteditable]` beginnen. Das las
+         sich vorsichtig und machte das Wischen UNERREICHBAR — der Finger
+         ist keine Nadelspitze, der Berührungsradius trifft fast immer die
+         Checkbox oder den Schreibtext, denn aus beidem BESTEHT die Zeile.
+         Gefunden mit test157, nachdem es seit dem Bau nie gegriffen hatte.
+
+         Die ehrliche Regel: Beginnen darf das Wischen überall — ob es ein
+         Wisch oder ein Tipp war, entscheidet ohnehin erst die 70-px-
+         Schwelle beim Loslassen. Tabu ist nur ein FOKUSSIERTES
+         Schreibfeld, denn dort zieht der Finger die Textauswahl. */
       const zeile = elVon(e)?.closest<HTMLElement>('tbody tr[data-rid], .blk.b-todo, .liste-zeile[data-rid]');
-      if (zeile && !elVon(e)?.closest<HTMLElement>('input, [contenteditable]')) gezogen = zeile;
+      const schreibfeld = elVon(e)?.closest<HTMLElement>(
+        '[contenteditable="true"], textarea, input:not([type="checkbox"]):not([type="radio"])');
+      /* Und nicht in einem seitlich rollenden Feld (Tabellenblock, breite
+         Datenbank): dort ist die waagrechte Bewegung zum ROLLEN da — ein
+         Wisch, der beim Blättern archiviert, wäre eine Falle. */
+      const rolltSeitlich = (von: HTMLElement | null): boolean => {
+        for (let p = von; p && p !== document.body; p = p.parentElement) {
+          if (p.scrollWidth > p.clientWidth + 4) {
+            const ueber = getComputedStyle(p).overflowX;
+            if (ueber === 'auto' || ueber === 'scroll') return true;
+          }
+        }
+        return false;
+      };
+      if (zeile && !(schreibfeld && schreibfeld === document.activeElement) &&
+          !rolltSeitlich(zeile)) gezogen = zeile;
     }, { passive: true });
 
     document.addEventListener('touchmove', (e) => {
       if (!istTelefon() || e.touches.length !== 1) return;
+      if (hebung) return;                        /* der eigene Zuhörer trägt */
       const t = e.touches[0];
       if (!t) return;
       const dx = t.clientX - startX, dy = t.clientY - startY;
@@ -407,8 +567,33 @@ const PWA = (() => {
       gezogen.style.opacity = String(1 - Math.abs(verschoben) / 260);
     }, { passive: true });
 
-    document.addEventListener('touchend', () => {
+    document.addEventListener('touchend', (e) => {
+      /* Erst wenn der LETZTE Finger geht. Ein zweiter Finger — oft nur der
+         Handballen — beendete sonst das Tragen des ersten mitten im Flug. */
+      if (e.touches && e.touches.length) return;
       if (halten) { clearTimeout(halten); halten = null; }
+
+      /* Der gehobene Block: getragen und über einem Ziel → ablegen.
+         Nicht getragen → das Menü, wie es das lange Drücken immer tat. */
+      if (hebung) {
+        const id = hebung.id;
+        /* Frisch nachschlagen: hat ein Neuzeichnen den Block während der
+           Hebung ersetzt, wäre hebung.el ein abgehängtes Element — das
+           Menü öffnete sich dann an einem Geist. */
+        const el = document.querySelector<HTMLElement>(`.blk[data-bid="${id}"]`) || hebung.el;
+        const ziel = fallZiel, trug = getragen;
+        absetzen();
+        nachzuegler();
+        if (trug && ziel) {
+          Blocks.lege(id, ziel.id, ziel.danach);
+          if (navigator.vibrate) navigator.vibrate(8);
+        } else if (!trug) {
+          const b = Store.getBlock(id);
+          const griff = el.querySelector('.handles button[data-act="menu"]');
+          if (b) Blocks.blockMenue(griff || el, b);
+        }
+        return;
+      }
       if (!gezogen) return;
       const el = gezogen, weg = verschoben;
       el.style.transition = 'transform .18s ease, opacity .18s ease';
@@ -416,6 +601,11 @@ const PWA = (() => {
       setTimeout(() => { el.style.transition = ''; }, 200);
       gezogen = null; verschoben = 0;
       if (Math.abs(weg) < 70) return;
+
+      /* Der Wisch ist vollzogen — die Klick-Nachzügler der Berührung
+         werden geschluckt. Sonst schaltete ein Wisch, der auf der
+         Checkbox begann, sie per nachgereichtem Klick gleich wieder um. */
+      nachzuegler();
 
       /* Nach rechts: abhaken. Nach links: archivieren. */
       const rid = el.dataset.rid;
@@ -494,8 +684,11 @@ const PWA = (() => {
     }, { passive: true });
 
     /* Die echte Höhe des Fensters — iOS zählt die Adressleiste sonst mit */
-    const hoehe = () => document.documentElement.style
-      .setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    const hoehe = () => {
+      if (typeof AppEinstellung !== 'undefined') AppEinstellung.viewportAktualisieren();
+      else document.documentElement.style
+        .setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    };
     hoehe();
     window.addEventListener('resize', hoehe);
     window.addEventListener('orientationchange', () => setTimeout(hoehe, 250));

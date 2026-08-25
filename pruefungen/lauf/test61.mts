@@ -15,7 +15,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   const fehler: any[] = [];
   p.on('pageerror', e => fehler.push('JS: ' + e.message));
   await p.goto('file://' + WURZEL + '/index.html');
-  await p.waitForTimeout(2800);      /* das Willkommen erscheint nach 1,4 s */
+  /* Auf das Willkommen WARTEN, nicht die Uhr raten: es erscheint nach
+     rund 1,4 s — unter Volllast der ganzen Suite aber auch mal deutlich
+     später (dieselbe Lehre wie E82: der Prüfstand hungert, nicht die
+     App). Kommt es nie, wird der Punkt unten ehrlich rot. */
+  await p.waitForSelector('#rg-willkommen', { timeout: 15000 }).catch(() => {});
+  await p.waitForTimeout(300);
 
   /* --- BEIM ERSTEN MAL STEHT SEIT E55 EIN WILLKOMMEN DA ------------------
      Vorher war es eine kleine Einladung unten links: „Neu hier? — Führung".
@@ -122,6 +127,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   /* Startet nicht noch einmal */
   await p.reload();
   await p.waitForTimeout(2800);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nochmal = await p.evaluate(() => ({
     kasten: !!document.getElementById('rg-kasten'),
     einladung: !!document.getElementById('rg-einladung')

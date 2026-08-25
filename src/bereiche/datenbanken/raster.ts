@@ -68,8 +68,10 @@ const DbRaster = (() => {
   const PUFFER = 6;
 
   const amTelefon = (): boolean =>
-    typeof window !== 'undefined' && window.matchMedia
-      ? window.matchMedia('(max-width: 760px)').matches : false;
+    typeof window !== 'undefined' && typeof AppEinstellung !== 'undefined'
+      ? AppEinstellung.amTelefon()
+      : typeof window !== 'undefined' && window.matchMedia
+        ? window.matchMedia('(max-width: 760px)').matches : false;
 
   const esc = (s: unknown): string => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -438,6 +440,14 @@ const DbRaster = (() => {
     koerper.addEventListener('mousedown', (e) => {
       const z = (e.target as HTMLElement).closest('.tbl-z') as HTMLElement | null;
       if (!z || z.dataset.z === undefined) return;
+      /* Ohne preventDefault ging die Tastatur nach einem Zellklick ins
+         LEERE: waehle() zeichnet neu, das Ereignisziel hängt damit ab, und
+         die Browser-Standardaktion nach mousedown findet am abgehängten
+         Ziel keinen fokussierbaren Vorfahren mehr — sie warf den Fokus auf
+         BODY, NACHDEM feld.focus() unten schon gelaufen war. Pfeile,
+         Kopieren, Enter: alles erst nach einem Tab. Gefunden beim Bau der
+         Ausfüll-Kürzel (L20). */
+      e.preventDefault();
       waehle(Number(z.dataset.z), Number(z.dataset.s), e.shiftKey);
       feld.focus();
       beimZiehen((ev) => {
@@ -526,6 +536,49 @@ const DbRaster = (() => {
           for (let s = b.vonS; s <= b.bisS; s++) if (schreibe(z, s, '')) n++;
         alles();
         if (typeof UI !== 'undefined' && UI.toast && n > 1) UI.toast(n + ' Zellen geleert');
+        return;
+      }
+
+      /* Ausfüllen wie in Excel und Notion (L20): Strg+D nimmt die oberste
+         Zeile der Auswahl für alle darunter — bei einer einzelnen den Wert
+         DARÜBER. Strg+R dasselbe nach rechts. Nur hier im fokussierten
+         Raster: global gehört Strg+R dem Browser und Strg+D dem
+         Duplizieren (E62). stopPropagation, damit Strg+D nicht zugleich
+         den ganzen Datenbank-Block dupliziert. */
+      if (strg && (k === 'd' || k === 'D' || k === 'r' || k === 'R')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const runter = (k === 'd' || k === 'D');
+        const b = bereich();
+        let n = 0;
+        if (runter) {
+          if (b.bisZ > b.vonZ) {
+            for (let s = b.vonS; s <= b.bisS; s++) {
+              const w = alsText(zeilen[b.vonZ], String(spalten[s]), coll);
+              for (let z = b.vonZ + 1; z <= b.bisZ; z++) if (schreibe(z, s, w)) n++;
+            }
+          } else if (b.vonZ > 0) {
+            for (let s = b.vonS; s <= b.bisS; s++)
+              if (schreibe(b.vonZ, s, alsText(zeilen[b.vonZ - 1], String(spalten[s]), coll))) n++;
+          }
+        } else {
+          if (b.bisS > b.vonS) {
+            for (let z = b.vonZ; z <= b.bisZ; z++) {
+              const w = alsText(zeilen[z], String(spalten[b.vonS]), coll);
+              for (let s = b.vonS + 1; s <= b.bisS; s++) if (schreibe(z, s, w)) n++;
+            }
+          } else if (b.vonS > 0) {
+            for (let z = b.vonZ; z <= b.bisZ; z++)
+              if (schreibe(z, b.vonS, alsText(zeilen[z], String(spalten[b.vonS - 1]), coll))) n++;
+          }
+        }
+        alles();
+        /* Auch das Nichts wird gesagt — ein Kürzel, das still nichts tut,
+           lässt einen an der eigenen Hand zweifeln. */
+        if (typeof UI !== 'undefined' && UI.toast)
+          UI.toast(n
+            ? n + (n === 1 ? ' Zelle' : ' Zellen') + (runter ? ' nach unten' : ' nach rechts') + ' ausgefüllt'
+            : 'Nichts auszufüllen — ' + (runter ? 'darüber' : 'links davon') + ' ist keine Zelle');
         return;
       }
       if (k.length === 1 && !strg && !e.altKey) { e.preventDefault(); return bearbeite(k); }

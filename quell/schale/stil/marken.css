@@ -56,4 +56,21 @@
   --press-scale: 0.96;
   --card-press-scale: 0.985;
   --sheet-dim: rgba(0,0,0,0.35);
+
+  /* Semantische Telefonmasse. Gleiche Zahl bedeutet nur dann dieselbe
+     Marke, wenn sie dieselbe Aufgabe hat: Trefferfläche, Seitenrand,
+     Navigationshöhe oder Blattgeometrie. */
+  --touch-min: 44px;
+  --mobile-gutter: 28px;
+  --mobile-gutter-small: 22px;
+  --mobile-topbar: 46px;
+  --mobile-nav-height: 56px;
+  --sheet-radius: 16px;
+  --sheet-max-height: 88vh;
+  --table-row-touch: 44px;
+
+  /* Werden beim Start aus `visualViewport` gemessen. Die Rückfälle halten
+     Einzeldatei und ältere Browser weiterhin bedienbar. */
+  --visual-bottom: 0px;
+  --visual-height: 100vh;
 }

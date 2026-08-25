@@ -274,6 +274,10 @@ const Kopfleiste = (() => {
             tools.innerHTML =
                 '<button data-a="cover">🖼 Cover</button>' +
                     '<button data-a="wide">' + (p.wide ? '↹ Normale Breite' : '↔ Volle Breite') + '</button>' +
+                    (DocumentMode.available(p)
+                        ? '<button data-a="document">▤ ' + (DocumentMode.active(p) ? 'Normale Seite' : 'Dokumentmodus') + '</button>'
+                        : '') +
+                    (p.schoolRoot ? '<button data-a="electrical">⚡ Rechner</button>' : '') +
                     '<button data-a="font">🅰 Schrift</button>' +
                     '<button data-a="vorlage">🧩 Vorlage</button>' +
                     '<button data-a="ai">✨ Mit KI</button>';
@@ -288,6 +292,10 @@ const Kopfleiste = (() => {
                     Store.updateBlock(p.id, { wide: !p.wide });
                     zeichneSeite();
                 }
+                if (a === 'document')
+                    DocumentMode.toggle(p);
+                if (a === 'electrical')
+                    Electrical.open(p);
                 if (a === 'vorlage')
                     Werkzeuge.vorlageEinfuegen(p);
                 if (a === 'font') {
@@ -312,6 +320,14 @@ const Kopfleiste = (() => {
                     kiPanel(true);
             });
             wrap.appendChild(tools);
+            /* SIE ROLLT — UND SAGTE ES NICHT (L58, E159).
+               Am Telefon gemessen: 617 px Inhalt in einem 390 px breiten Kasten.
+               Erreichbar war damit alles; sichtbar war es nicht, und ein
+               abgeschnittenes Wort sieht aus wie ein Fehler statt wie eine
+               Einladung zum Wischen. Dieselbe Antwort wie bei der Reiterleiste
+               der Lernwelt und der Markierungsleiste im PDF — jetzt aus einer
+               Hand statt zum dritten Mal abgeschrieben. */
+            Rollrand.binde(tools, { art: 'mehr' });
         }
         return true;
     };

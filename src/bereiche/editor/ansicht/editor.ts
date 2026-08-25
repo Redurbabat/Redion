@@ -160,7 +160,7 @@ const Blocks = (() => {
 
   /** Ein gelesener Block: was er ist, was drinsteht, wie tief er sitzt. */
   type MdBlock = { typ: string; text: string; tiefe: number;
-                   checked?: boolean; lang?: string };
+                   checked?: boolean; lang?: string; zellen?: string[][] };
 
   /** Wie viele Stufen ist die Zeile eingerückt? Vier Leerzeichen = ein Tab. */
   const mdTiefe = (roh: string): number => {
@@ -202,6 +202,44 @@ const Blocks = (() => {
       }
 
       if (!t) continue;                                  /* Leerzeilen weg */
+
+      /* Verschachtelte Zitate tragen ihre Tiefe in den `>`-Marken, nicht
+         zwingend in Leerzeichen: `> > Innen` ist eine Stufe unter
+         `> Aussen`. Vorher wurde nur die erste Marke entfernt; die zweite
+         blieb sichtbar im Text und beide Zitate lagen nebeneinander. */
+      if (t.startsWith('>')) {
+        let rest = t;
+        let zitatStufen = 0;
+        while (rest.startsWith('>')) {
+          zitatStufen++;
+          rest = rest.slice(1).replace(/^\s?/, '');
+        }
+        const zitatTiefe = tiefe + Math.max(0, zitatStufen - 1);
+        if (/^💡\s*/.test(rest))
+          raus.push({ typ: 'callout', text: rest.replace(/^💡\s*/, ''), tiefe: zitatTiefe });
+        else
+          raus.push({ typ: 'quote', text: rest, tiefe: zitatTiefe });
+        continue;
+      }
+
+      /* Markdown-Tabelle (L20): eine |-Zeile, unmittelbar gefolgt von der
+         Trennzeile (|---|---|). Alle |-Zeilen danach gehören dazu. Ohne
+         Trennzeile ist es keine Tabelle — dann bleibt die Zeile Text,
+         denn „| a | b |" kann auch einfach so gemeint sein. */
+      if (/^\|.*\|$/.test(t)) {
+        const naechste = (zeilen[i + 1] ?? '').trim();
+        if (/^\|?[\s:|-]+\|?$/.test(naechste) && naechste.includes('-')) {
+          const spaltenVon = (z: string) =>
+            z.replace(/^\|/, '').replace(/\|$/, '').split('|').map(x => x.trim());
+          const daten: string[][] = [spaltenVon(t)];
+          i++;                                 /* die Trennzeile überspringen */
+          while (i + 1 < zeilen.length && /^\|.*\|$/.test((zeilen[i + 1] ?? '').trim()))
+            daten.push(spaltenVon((zeilen[++i] ?? '').trim()));
+          raus.push({ typ: 'tabelle', text: '', tiefe, zellen: daten });
+          continue;
+        }
+      }
+
       if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { raus.push({ typ: 'divider', text: '', tiefe }); continue; }
 
       let m;
@@ -213,11 +251,6 @@ const Blocks = (() => {
         { raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' }); continue; }
       if ((m = /^\[([ xX])\]\s+(.*)$/.exec(t)))
         { raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' }); continue; }
-      /* „> 💡 " ist unser Callout — auswahlAlsText() schreibt ihn so. */
-      if ((m = /^>\s*💡\s*(.*)$/.exec(t)))
-        { raus.push({ typ: 'callout', text: m[1] ?? '', tiefe }); continue; }
-      if ((m = /^>\s+(.*)$/.exec(t)))
-        { raus.push({ typ: 'quote', text: m[1] ?? '', tiefe }); continue; }
       if ((m = /^[-*+]\s+(.*)$/.exec(t)))
         { raus.push({ typ: 'bullet', text: m[1] ?? '', tiefe }); continue; }
       if ((m = /^(?:\d{1,9}|[a-zA-Z]|[ivxIVX]{1,6})[.)]\s+(.*)$/.exec(t)))
@@ -249,6 +282,33 @@ const Blocks = (() => {
       const tiefe = Math.min(teil.tiefe, stapel.length - 1);
       const ziel = tiefe === 0 ? elternId : stapel[tiefe];
       if (!ziel) return;
+
+      /* Eine Markdown-Tabelle wird ein Tabellenblock (E88). Die Zellen
+         gehen durch Spreadsheet.setze, damit aus „12" eine Zahl wird und
+         aus „=A1+B1" eine Formel — genau wie beim Tippen. */
+      if (teil.typ === 'tabelle' && teil.zellen &&
+          typeof Spreadsheet !== 'undefined' && typeof CellRefs !== 'undefined') {
+        const neuT = tiefe === 0
+          ? Store.addBlock(ziel, 'spreadsheet', { text: 'Tabelle' }, idx++)
+          : Store.addBlock(ziel, 'spreadsheet', { text: 'Tabelle' });
+        const mappe = Spreadsheet.neueMappe('Tabelle');
+        const blatt = mappe.blaetter[0];
+        blatt.zeilen  = Math.max(blatt.zeilen,  teil.zellen.length);
+        blatt.spalten = Math.max(blatt.spalten,
+          teil.zellen.reduce((m, z) => Math.max(m, z.length), 1));
+        teil.zellen.forEach((zeile, z) => zeile.forEach((wert, s) => {
+          if (wert !== '') Spreadsheet.setze(blatt, CellRefs.schreibe(z, s), wert);
+        }));
+        /* Einmal durchrechnen: eingefügte =Formeln sollen ihren Wert
+           tragen, auch wenn das Raster nie geöffnet wird. */
+        try { Spreadsheet.rechneMappe(mappe); } catch { /* Zirkel zeigt die Zelle */ }
+        Store.updateBlock(neuT.id, { mappe });
+        stapel.length = tiefe + 1;
+        stapel.push(neuT.id);
+        gesetzt.push(neuT.id);
+        return;
+      }
+
       const props: any = { text: teil.text };
       if (teil.checked) props.checked = true;
       if (teil.lang) props.lang = teil.lang;
@@ -328,6 +388,44 @@ const Blocks = (() => {
    * RENDERN
    * ======================================================================*/
 
+  let zeitmarkenSpieler: HTMLAudioElement | null = null;
+
+  /** Springt zu einer Tonstelle. Zuerst wird der sichtbare Audio-Block
+      benutzt; bei einem Verweis von einer anderen Seite reicht auch die
+      stabile Datei-Kennung. Alte Audio-Blöcke mit `src` bleiben davon
+      unberührt und funktionieren weiterhin im normalen Player. */
+  const audioRefSpielen = async (ref: any): Promise<void> => {
+    const sek = Math.max(0, Number(ref?.sek) || 0);
+    const blockId = String(ref?.blockId || '');
+    const ziel = Array.from(document.querySelectorAll<HTMLElement>('.blk[data-bid]'))
+      .find(el2 => el2.dataset.bid === blockId);
+    const sichtbar = ziel?.querySelector<HTMLAudioElement>('audio') || null;
+
+    const spiele = (audio: HTMLAudioElement) => {
+      const los = () => {
+        try { audio.currentTime = sek; }
+        catch { /* Metadaten kommen gleich; `loadedmetadata` versucht erneut. */ }
+        audio.play().catch(err => UI.toast('Ton konnte nicht starten: ' +
+          (err instanceof Error ? err.message : String(err))));
+      };
+      if (audio.readyState >= 1) los();
+      else audio.addEventListener('loadedmetadata', los, { once: true });
+    };
+
+    if (sichtbar) { spiele(sichtbar); return; }
+    if (!ref?.dateiId || typeof Dateien === 'undefined') {
+      UI.toast('Der zugehörige Audio-Block ist auf dieser Seite nicht verfügbar.');
+      return;
+    }
+    const adresse = await Dateien.adresse(String(ref.dateiId));
+    if (!adresse) { UI.toast('Die Tondatei gibt es nicht mehr.'); return; }
+    if (zeitmarkenSpieler) {
+      try { zeitmarkenSpieler.pause(); } catch {}
+    }
+    zeitmarkenSpieler = new Audio(adresse);
+    spiele(zeitmarkenSpieler);
+  };
+
   /** Baut das DOM für einen Block samt Kindern. */
   const render = (block: any, tiefe = 0) => {
     const t = typ(block.type);
@@ -365,6 +463,10 @@ const Blocks = (() => {
       ct.dataset.ph = ph || t.ph || '';
       ct.innerHTML = inline(block.text || '');
       if (block.color) ct.classList.add(block.color.startsWith('bg-') ? block.color : 't-' + block.color);
+      /* Grösse und Schriftart als KLASSEN aus dem Katalog (E101). Was dort
+         nicht steht, ergibt keine Klasse — aus den Daten kann damit kein
+         fremdes CSS kommen (§19). */
+      Textstile.klassen(block.stil).forEach((k: string) => ct.classList.add(k));
 
       /* ÜBERSCHRIFTEN MÜSSEN AUCH ÜBERSCHRIFTEN SEIN.
          Jeder Block ist ein `<div>`, auch `h1`, `h2` und `h3` — sichtbar
@@ -609,6 +711,30 @@ const Blocks = (() => {
         break;
       }
 
+      /* Eine SPALTE ist ein Behälter, kein Inhalt (E102). Vorher waren die
+         Kinder eines Spaltenblocks selbst die Spalten — je Spalte genau ein
+         Block. Wer rechts eine zweite Zeile anfing und Enter drückte, legte
+         ein Geschwister an, und daraus wurde eine DRITTE SPALTE: gemessen
+         wurden aus zwei drei und aus drei vier, die Seite zerfiel beim
+         normalen Schreiben.
+         Jetzt liegt die Spalte dazwischen — der Elternteil des Inhalts ist
+         sie, ein Geschwister bleibt also IN ihr. */
+      case 'spalte': {
+        const w = document.createElement('div');
+        w.className = 'spalte';
+        const kinder = Store.childrenOf(block.id);
+        if (!kinder.length) {
+          /* Eine leere Spalte wäre eine unsichtbare Fläche, in die man nicht
+             hineinkommt. Also immer eine Zeile zum Hineinschreiben. */
+          const leer = Store.addBlock(block.id, 'text', { text: '' });
+          w.appendChild(render(leer, tiefe));
+        } else {
+          kinder.forEach((k: any) => w.appendChild(render(k, tiefe)));
+        }
+        box.appendChild(w);
+        break;
+      }
+
       /* --- Verweis auf eine andere Seite (Notion „Link to page", Trilium-Klon) */
       case 'pageref': {
         const ziel = block.ziel ? Store.getBlock(block.ziel) : null;
@@ -724,6 +850,18 @@ const Blocks = (() => {
         if (typeof SpreadsheetView !== 'undefined') box.appendChild(SpreadsheetView.zeichne(block));
         break;
 
+      /* Das A4-Blatt bringt seinen Text als eigene Kinder mit und zeichnet
+         sie selbst — deshalb steht es hier und nicht in der Kinderliste
+         weiter unten (E100). */
+      case 'blatt':
+        box.appendChild(Blatt.zeichne(block));
+        break;
+
+      /* Eine PDF-Seite: Bild unten, Zeichenschicht darüber (E103). */
+      case 'pdfseite':
+        box.appendChild(PdfSeite.zeichne(block));
+        break;
+
       case 'whiteboard':
         box.appendChild(Zusatz.whiteboard(block));
         break;
@@ -782,6 +920,72 @@ const Blocks = (() => {
 
       default:
         box.appendChild(machText());
+    }
+
+    /* Eine normale Notiz kann auf eine Sekunde in einem Audio-Block zeigen.
+       Der Text bleibt editierbar; der kleine Knopf ist nur die Navigation. */
+    if (block.audioRef && Number.isFinite(Number(block.audioRef.sek))) {
+      const marke = document.createElement('button');
+      marke.className = 'audio-ref-marke';
+      const sek = Math.max(0, Math.round(Number(block.audioRef.sek) || 0));
+      marke.textContent = '▶ ' + String(Math.floor(sek / 60)).padStart(2, '0') + ':' +
+        String(sek % 60).padStart(2, '0');
+      marke.title = 'Ton ab dieser Stelle abspielen';
+      marke.style.cssText = 'flex:0 0 auto; margin:2px 4px; padding:3px 7px; ' +
+        'border:1px solid var(--line); border-radius:999px; color:var(--accent); font-size:12px';
+      marke.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        audioRefSpielen(block.audioRef).catch(err => UI.toast('Ton konnte nicht geöffnet werden: ' +
+          (err instanceof Error ? err.message : String(err))));
+      });
+      el.appendChild(marke);
+    }
+
+    /* --- Zurück zur Quelle (§44) ------------------------------------------
+       Eine Lernkarte, eine Notiz, eine erkannte Zeile: alles, was aus etwas
+       anderem entstanden ist, trägt seit E130/E129 einen `sourceRef` — mit
+       Seite, Block, Seitenzahl und sogar dem Ausschnitt. Bis zum 25. August
+       las das nur der Dokumentmodus, und zwar in die andere Richtung: „welche
+       Karten gehören zu dieser PDF-Seite".
+
+       Der Weg zurück fehlte. Wer eine Karte vor sich hatte, kam nicht zu der
+       Stelle, aus der sie stammt — obwohl die Angabe im Block stand und
+       `App.zeigeBlock` sie hätte anspringen können.
+
+       Der Knopf sagt, wohin er führt: „PDF · Seite 14" statt „Quelle". Ein
+       Ziel, das es nicht mehr gibt, wird gar nicht erst angeboten — ein
+       Knopf, der nichts tut, ist schlimmer als keiner. */
+    const quelle = block.sourceRef || block.lernquelle;
+    if (quelle && (quelle.blockId || quelle.pageId)) {
+      const zielId = String(quelle.blockId || quelle.pageId || '');
+      const ziel = zielId ? Store.getBlock(zielId) : null;
+      if (ziel && ziel.alive !== false) {
+        const seite = quelle.pageId ? Store.getBlock(String(quelle.pageId)) : null;
+        const nr = Number(quelle.pageNumber);
+        const wohin = quelle.kind === 'pdfseite' && Number.isFinite(nr) && nr > 0
+          ? 'PDF · Seite ' + nr
+          : quelle.kind === 'blatt' ? 'A4-Blatt'
+          : String(seite?.text || quelle.label || 'Quelle');
+        /* Und die Sekunde, wenn es eine gibt (§44, E161). `zeit` ist fertig
+           formatiert, weil der Editor `bereiche/verbinden` nicht kennen darf
+           (CLAUDE.md §5 Regel 1) — die Zahl daneben (`sek`) bleibt die
+           Wahrheit, der Text ist nur die Beschriftung. */
+        const zeit = String(quelle.zeit || '').trim();
+        const knopf = document.createElement('button');
+        knopf.className = 'quell-marke';
+        knopf.type = 'button';
+        knopf.textContent = '↩ ' + wohin + (zeit ? ' · ' + zeit : '');
+        knopf.title = 'Dorthin springen, woraus das hier entstanden ist' +
+          (zeit ? ' — bei ' + zeit : '') +
+          (quelle.region ? ' — der Ausschnitt wird hervorgehoben' : '');
+        knopf.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          App.zeigeBlock(zielId);
+        });
+        el.appendChild(knopf);
+      }
     }
 
     /* Kommentarmarke */
@@ -861,7 +1065,36 @@ const Blocks = (() => {
     const w = document.createElement('div');
     w.style.width = '100%';
 
-    if (!block.src) {
+    /* ======================================================================
+     * WOHER DIE ADRESSE KOMMT (E98)
+     * ----------------------------------------------------------------------
+     * Eine in Stücken abgelegte Datei liegt in `dateien`/`stuecke`. Ihre
+     * `blob:`-Adresse gehört dem Dokument, das sie erzeugt hat — Browser zu,
+     * Adresse tot. Sie wurde trotzdem IN DEN BLOCK geschrieben, und niemand
+     * las `dateiId` je zurück: gemessen lagen nach einem Neustart alle fünf
+     * Stücke unversehrt da, und das Bild hatte Breite 0.
+     *
+     * Also: die Adresse wird beim ZEICHNEN geholt, nie gespeichert. Ist sie
+     * schon gebaut, kommt sie synchron; sonst wird sie nachgereicht. Eine
+     * gespeicherte tote `blob:`-Adresse wird übergangen — sie ist schlechter
+     * als gar keine, weil der Browser sonst ein kaputtes Bild zeigt.
+     * ====================================================================*/
+    const nachtragen: Array<(u: string) => void> = [];
+    const ausAblage = (): string => {
+      const gespeichert = String(block.src || '');
+      if (!block.dateiId || typeof Dateien === 'undefined') return gespeichert;
+      const schonDa = Dateien.adresseBekannt ? Dateien.adresseBekannt(block.dateiId) : null;
+      if (schonDa) return schonDa;
+      Dateien.adresse(block.dateiId)
+        .then((u: string | null) => { if (u) nachtragen.forEach(f => f(u)); })
+        .catch(() => {});
+      return gespeichert.startsWith('blob:') ? '' : gespeichert;
+    };
+    const quelle = ausAblage();
+
+    /* Ohne Quelle UND ohne Kennung gibt es nichts zu zeigen. Die Kennung
+       allein genügt: die Adresse kommt gleich nach. */
+    if (!block.src && !block.dateiId) {
       /* Noch keine Quelle: Eingabefeld anzeigen */
       const feld = document.createElement('div');
       feld.style.cssText = 'display:flex; gap:8px; padding:12px 14px; background:var(--bg-card); ' +
@@ -901,9 +1134,10 @@ const Blocks = (() => {
       const rahmen = document.createElement('div');
       rahmen.className = 'bild-rahmen aus-' + (block.ausricht || 'links');
       const i = document.createElement('img');
-      i.src = block.src; i.alt = block.caption || block.text || '';
+      i.src = quelle; i.alt = block.caption || block.text || '';
+      nachtragen.push(u => { i.src = u; });
       i.style.width = (block.breite || 100) + '%';
-      i.addEventListener('click', () => bildGross(block.src, block.caption));
+      i.addEventListener('click', () => bildGross(i.src || quelle, block.caption));
       rahmen.appendChild(i);
 
       const werk = document.createElement('div');
@@ -914,13 +1148,18 @@ const Blocks = (() => {
         '<span class="bw-trenn"></span>' +
         [['links','⭰'],['mitte','⭤'],['rechts','⭲']].map(([a2, ic]) =>
           `<button data-aus="${a2}" class="${(block.ausricht || 'links') === a2 ? 'an' : ''}">${ic}</button>`).join('') +
-        '<span class="bw-trenn"></span><button data-a="voll" title="Gross ansehen">⛶</button>';
+        '<span class="bw-trenn"></span><button data-a="voll" title="Gross ansehen">⛶</button>' +
+        (block.dateiId ? '<button data-a="ocr" title="Text mit lokalem OCR-Dienst erkennen">⌁</button>' : '');
       werk.addEventListener('click', e => {
         const b2 = elVon(e)?.closest<HTMLElement>('button');
         if (!b2) return;
         if (b2.dataset.b)    { Store.updateBlock(block.id, { breite: +b2.dataset.b }); App.zeichneSeite(); return; }
         if (b2.dataset.aus)  { Store.updateBlock(block.id, { ausricht: b2.dataset.aus }); App.zeichneSeite(); return; }
-        if (b2.dataset.a === 'voll') bildGross(block.src, block.caption);
+        if (b2.dataset.a === 'voll') bildGross(i.src || quelle, block.caption);
+        if (b2.dataset.a === 'ocr') {
+          const page = Links.seiteVon(block.id);
+          if (page && typeof Recognition !== 'undefined') void Recognition.fromImageBlock(page, block);
+        }
       });
       rahmen.appendChild(werk);
 
@@ -948,21 +1187,37 @@ const Blocks = (() => {
       w.appendChild(rahmen);
     } else if (block.type === 'video') {
       const v = document.createElement('video');
-      v.src = block.src; v.controls = true; v.style.maxWidth = '100%';
+      v.src = quelle; v.controls = true; v.style.maxWidth = '100%';
+      nachtragen.push(u => { v.src = u; });
       w.appendChild(v);
     } else if (block.type === 'audio') {
       const a = document.createElement('audio');
-      a.src = block.src; a.controls = true; a.style.width = '100%';
+      if (quelle) a.src = quelle;
+      a.controls = true; a.style.width = '100%';
+      a.dataset.audioBlock = block.id;
+      nachtragen.push(u => { a.src = u; });
       w.appendChild(a);
+      if (block.caption || block.text) {
+        const beschriftung = document.createElement('div');
+        beschriftung.style.cssText = 'font-size:12px;color:var(--text-dim);padding:3px 2px';
+        beschriftung.textContent = block.caption || block.text;
+        w.appendChild(beschriftung);
+      }
     } else if (block.type === 'file') {
       /* `istPdf` schaut nur auf die Endung — die entscheidet, ob eine Vorschau
          angeboten wird. Das genügt für die Frage „welches Symbol zeige ich",
          aber nicht als Erlaubnis, die Adresse in einen Rahmen zu setzen:
          `javascript:…//.pdf` besteht diese Prüfung. Deshalb geht jede Adresse
          hier durch Saeubern, und zwar durch die zum Ort passende. */
-      const istPdf = /\.pdf(\?|$)/i.test(block.src) || /^data:application\/pdf/i.test(block.src);
-      const zielAdresse = Sanitize.attachmentUrl(block.src);
-      const rahmenSrc = Sanitize.frameUrl(block.src);
+      /* Der NAME entscheidet mit: eine in Stücken abgelegte Datei hat ihre
+         Adresse erst, wenn sie nachgereicht wurde — bis dahin steht dort
+         nichts, wonach man die Endung fragen könnte (E98). */
+      const dateiName = String(block.text || block.caption || '');
+      const istPdf = /\.pdf(\?|$)/i.test(quelle) || /^data:application\/pdf/i.test(quelle)
+                  || /\.pdf$/i.test(dateiName)
+                  || String(block.typ || '') === 'application/pdf';
+      const zielAdresse = Sanitize.attachmentUrl(quelle);
+      const rahmenSrc = Sanitize.frameUrl(quelle);
       const zeile = document.createElement('div');
       zeile.className = 'datei-zeile';
       zeile.innerHTML =
@@ -971,7 +1226,11 @@ const Blocks = (() => {
           ? `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>`
           /* Kein stiller Fehlschlag: der Name bleibt stehen und sagt, warum
              er nicht anklickbar ist. Wegwerfen tun wir hier nichts. */
-          : `<span class="datei-gesperrt" title="Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.">${esc(block.text || block.caption || 'Datei')} ⚠</span>`) +
+          /* Solange die Adresse noch kommt, ist der Name KEIN Fehler — nur
+             noch nicht anklickbar. Ein Warnzeichen hier wäre eine Lüge. */
+          : (block.dateiId
+              ? `<span class="datei-wartet">${esc(block.text || block.caption || 'Datei')}</span>`
+              : `<span class="datei-gesperrt" title="Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.">${esc(block.text || block.caption || 'Datei')} ⚠</span>`)) +
         (istPdf && rahmenSrc ? `<button data-a="pdf">${block.pdfAuf ? 'Vorschau zu' : 'Vorschau'}</button>` : '');
       zeile.addEventListener('click', e => {
         if (!elVon(e)?.closest<HTMLElement>('[data-a="pdf"]')) return;
@@ -979,6 +1238,26 @@ const Blocks = (() => {
         App.zeichneSeite();
       });
       w.appendChild(zeile);
+      /* Kommt die Adresse nach, wird der Verweis nachgezogen — statt die
+         ganze Seite neu zu zeichnen und dabei den Schreibzeiger zu verlieren. */
+      nachtragen.push(u => {
+        const sicher = Sanitize.attachmentUrl(u);
+        if (!sicher) return;
+        const wartet = zeile.querySelector('.datei-wartet');
+        if (wartet) {
+          const a2 = document.createElement('a');
+          a2.href = sicher; a2.target = '_blank'; a2.rel = 'noopener';
+          a2.setAttribute('download', '');
+          a2.textContent = wartet.textContent || 'Datei';
+          wartet.replaceWith(a2);
+        } else {
+          const a2 = zeile.querySelector<HTMLAnchorElement>('a[href]');
+          if (a2) a2.href = sicher;
+        }
+        const rahmen2 = w.querySelector<HTMLIFrameElement>('.pdf-rahmen iframe');
+        const frameU = Sanitize.frameUrl(u);
+        if (rahmen2 && frameU) rahmen2.src = frameU;
+      });
       /* PDF gleich hier ansehen — Notion zeigt nur einen Anhang zum Laden. */
       if (istPdf && rahmenSrc && block.pdfAuf) {
         const rahmen = document.createElement('div');
@@ -990,7 +1269,7 @@ const Blocks = (() => {
         const fuss = document.createElement('div');
         fuss.className = 'pdf-fuss';
         fuss.innerHTML = '<button data-h="420">klein</button><button data-h="700">gross</button>' +
-                         `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
+                         `<a href="${esc(zielAdresse || '')}" target="_blank" rel="noopener">In neuem Fenster ↗</a>`;
         fuss.addEventListener('click', e => {
           const b2 = elVon(e)?.closest<HTMLElement>('button[data-h]');
           if (!b2) return;
@@ -1086,8 +1365,11 @@ const Blocks = (() => {
               if (melder && melder.textContent !== undefined)
                 melder.textContent = 'Wird abgelegt … ' + Math.round(anteil * 100) + ' %';
             } });
-          const url = await Dateien.adresse(satz.id);
-          Store.updateBlock(block.id, { src: url, dateiId: satz.id, text: f.name });
+          /* NUR die Kennung. Die blob-Adresse gilt nur für diese Sitzung und
+             hat in den Daten nichts verloren (E98) — gespeichert war sie der
+             Grund, warum jede grosse Datei nach dem Neustart unerreichbar war. */
+          await Dateien.adresse(satz.id);          /* baut sie für JETZT auf */
+          Store.updateBlock(block.id, { dateiId: satz.id, text: f.name, typ: f.type });
           if (melder && melder.remove) melder.remove();
           App.zeichneSeite();
           UI.toast('„' + f.name + '" abgelegt (' + Dateien.groesseText(f.size) +
@@ -1289,12 +1571,29 @@ const Blocks = (() => {
       const text = e.clipboardData?.getData('text/plain');
       if (!text) return;
 
+      /* Eine Webadresse über markiertem Text legt den Link DARÜBER,
+         statt den lesbaren Text durch die Adresse zu ersetzen. Die
+         Kürzelreferenz versprach diesen Notion-Weg bereits, der allgemeine
+         Paste-Griff kannte ihn aber nicht. In Rohtextblöcken bleibt eine
+         Adresse wörtlicher Inhalt. */
+      const ROHTEXT = ['code', 'equation', 'html', 'flashcard'];
+      const markiert = getSelection()?.toString() ?? '';
+      let webAdresse = false;
+      try {
+        const u = new URL(text.trim());
+        webAdresse = u.protocol === 'http:' || u.protocol === 'https:';
+      } catch { /* Gewöhnlicher Text, kein Link. */ }
+      if (markiert && webAdresse && !ROHTEXT.includes(b.type) &&
+          typeof Auswahl !== 'undefined' && Auswahl.linkSetzen) {
+        e.preventDefault();
+        if (Auswahl.linkSetzen(text.trim())) return;
+      }
+
       /* Wo roher Text der Inhalt IST, wird kein Markdown gelesen. In einem
          Codeblock ist „# hallo" eine Kommentarzeile, in einer Formel steht
          TeX, und im HTML-Block steht HTML. Alles andere darf gliedern —
          auch ein Listenpunkt: wer eine Liste in eine Liste einfügt, will
          Punkte und keinen Absatz mit Bindestrichen darin. */
-      const ROHTEXT = ['code', 'equation', 'html', 'flashcard'];
       const strukturiert = !ROHTEXT.includes(b.type) && mdIstStruktur(text);
 
       /* Immer selbst einsetzen: sonst legt der Browser das mitkopierte HTML
@@ -1562,6 +1861,14 @@ const Blocks = (() => {
       /* Inline-Formatierung */
       if ((e.ctrlKey || e.metaKey) && !e.altKey) {
         const k = e.key.toLowerCase();
+        /* Im Editor bedeutet Strg/Cmd+K bei einer Textauswahl „Link". Ohne
+           Auswahl darf das Ereignis weiter zur globalen Suche blubbern. */
+        if (k === 'k' && String(getSelection() || '')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof Auswahl !== 'undefined' && Auswahl.linkSetzen) Auswahl.linkSetzen();
+          return;
+        }
         if (k === 'b') { e.preventDefault(); umschliesse('**'); return; }
         if (k === 'i') { e.preventDefault(); umschliesse('*');  return; }
         if (k === 'u') { e.preventDefault(); umschliesse('__'); return; }
@@ -1577,6 +1884,11 @@ const Blocks = (() => {
      * Browsers stehen — dort will man Rechtschreibung und Einfügen.
      * -------------------------------------------------------------------- */
     wurzel.addEventListener('contextmenu', (e: any) => {
+      /* Am Telefon gehört das lange Drücken der Hebe-Geste (E83). Android
+         feuert trotzdem contextmenu — das öffnete das Rechner-Menü mitten
+         ins Tragen hinein. Hier unterdrücken, die Geste liefert das Menü
+         selbst beim Loslassen. */
+      if (window.matchMedia('(max-width: 760px)').matches) { e.preventDefault(); return; }
       if (e.shiftKey) return;                       /* Umschalt = Browsermenü */
       const blk = elVon(e)?.closest<HTMLElement>('.blk');
       if (!blk) return;
@@ -1744,7 +2056,12 @@ const Blocks = (() => {
     if (neuerTyp === 'columns' || neuerTyp === 'columns3') {
       Store.updateBlock(id, { type: neuerTyp, text: '' });
       const n = neuerTyp === 'columns3' ? 3 : 2;
-      for (let i = Store.childrenOf(id).length; i < n; i++) Store.addBlock(id, 'text');
+      /* Je Spalte ein `spalte`-Behälter mit einer leeren Zeile darin —
+         nicht der Inhalt direkt (E102). */
+      for (let i = Store.childrenOf(id).length; i < n; i++) {
+        const sp = Store.addBlock(id, 'spalte', { text: '' });
+        Store.addBlock(sp.id, 'text', { text: '' });
+      }
       App.zeichneSeite();
       return;
     }
@@ -1804,6 +2121,23 @@ const Blocks = (() => {
   const lege = (quelleId: any, zielId: any, danach = false) => {
     const q = Store.getBlock(quelleId), z = Store.getBlock(zielId);
     if (!q || !z) return;
+
+    /* Ein Block darf nicht in sein eigenes Inneres fallen. Landet er neben
+       einem seiner NACHKOMMEN, zeigt seine neue Elternkette auf ihn selbst
+       zurück — der ganze Teilbaum hängt im Kreis und verschwindet von der
+       Seite, ohne gelöscht zu sein. Das Loch war so alt wie das Ziehen am
+       Rechner; gefunden hat es erst der Review der Telefon-Geste (E83).
+
+       Mit Schranke, wie bei seiteVon: wäre der Bestand schon zyklisch
+       kaputt (ein Elternkreis OHNE die Quelle), liefe die Kette sonst
+       endlos — die Sicherung gegen den Kreis darf selbst keiner werden. */
+    for (let el = z, tiefe = 0; el && tiefe < 100; el = Store.getBlock(el.parentId), tiefe++) {
+      if (el.id === quelleId) {
+        UI.toast('Ein Block lässt sich nicht in sein eigenes Inneres verschieben.');
+        return;
+      }
+    }
+
     const qe = Store.getBlock(q.parentId), ze = Store.getBlock(z.parentId);
     if (!qe || !ze) return;
     qe.content = qe.content.filter((x: any) => x !== quelleId);
@@ -2462,11 +2796,14 @@ const Blocks = (() => {
     const html =
       '<button data-a="turn"><span class="mi">⇄</span>Umwandeln in<span class="ms">▸</span></button>' +
       '<button data-a="color"><span class="mi">🎨</span>Farbe<span class="ms">▸</span></button>' +
+      '<button data-a="groesse"><span class="mi">🔠</span>Schriftgrösse<span class="ms">▸</span></button>' +
+      '<button data-a="schrift"><span class="mi">✍</span>Schriftart<span class="ms">▸</span></button>' +
       (b.type === 'callout'
         ? '<button data-a="ruficon"><span class="mi">😀</span>Symbol des Hinweises</button>' : '') +
       '<button data-a="ai"><span class="mi">✨</span>Mit KI bearbeiten</button>' +
       '<button data-a="komm"><span class="mi">💬</span>Kommentar<span class="ms">Ctrl+Shift+M</span></button>' +
       '<hr>' +
+      '<button data-a="auswahl"><span class="mi">☑</span>Auswählen</button>' +
       '<button data-a="dup"><span class="mi">⧉</span>Duplizieren<span class="ms">Ctrl+D</span></button>' +
       '<button data-a="up"><span class="mi">↑</span>Nach oben<span class="ms">Ctrl+Shift+↑</span></button>' +
       '<button data-a="down"><span class="mi">↓</span>Nach unten<span class="ms">Ctrl+Shift+↓</span></button>' +
@@ -2500,6 +2837,34 @@ const Blocks = (() => {
         return;
       }
 
+      /* Grösse und Schriftart teilen sich einen Bauplan — zwei fast gleiche
+         Menüs von Hand wären zwei Stellen zum Vergessen. Die Einträge zeigen
+         sich selbst: „Gross" steht gross da. */
+      if (a === 'groesse' || a === 'schrift') {
+        const istGroesse = a === 'groesse';
+        const liste = istGroesse ? Textstile.GROESSEN : Textstile.SCHRIFTEN;
+        const feld  = istGroesse ? 'groesse' : 'schrift';
+        const vorsatz = istGroesse ? 'tg-' : 'ts-';
+        const jetzt = ((b.stil || {}) as Record<string, unknown>)[feld] ||
+                      (istGroesse ? 'normal' : 'standard');
+        menu.innerHTML =
+          `<div class="grp">${istGroesse ? 'Schriftgrösse' : 'Schriftart'}</div>` +
+          liste.map(([id, name]: string[]) =>
+            `<button data-s="${id}">` +
+            `<span class="stil-probe"><span class="${id === 'normal' || id === 'standard' ? '' : vorsatz + id}">` +
+            `${esc(name)}</span>${jetzt === id ? '<em>✓</em>' : ''}</span></button>`).join('');
+        menu.addEventListener('click', (ev) => {
+          const s = elVon(ev)?.closest<HTMLElement>('button[data-s]');
+          if (!s) return;
+          const stil = { ...(b.stil || {}) } as Record<string, unknown>;
+          stil[feld] = s.dataset.s;
+          Store.updateBlock(b.id, { stil });
+          menu.remove();
+          App.zeichneSeite();
+        });
+        return;
+      }
+
       if (a === 'color') {
         menu.innerHTML = '<div class="grp">Textfarbe</div><div class="swatches">' +
           FARBEN.map(([f, n]) =>
@@ -2520,6 +2885,10 @@ const Blocks = (() => {
       }
 
       menu.remove();
+      /* Der Einstieg in die Mehrfachauswahl — am Telefon der EINZIGE
+         (E84): dort gibt es weder Esc noch Umschalt-Klick. Danach
+         schaltet ein Tipp weitere Blöcke dazu, siehe auswahlEinklinken. */
+      if (a === 'auswahl') { ankerId = b.id; auswahlSetzen([b.id]); }
       if (a === 'dup')  dupliziere(b);
       if (a === 'up')   verschiebe(b, -1);
       if (a === 'down') verschiebe(b, 1);
@@ -2629,7 +2998,12 @@ const Blocks = (() => {
       if (el) el.classList.add('gewaehlt');
     });
     let leiste = document.getElementById('auswahl-leiste');
-    if (ausgewaehlt.length < 2) { if (leiste) leiste.remove(); return; }
+    /* Am Rechner erscheint die Leiste ab zwei Blöcken — EIN gewählter
+       Block hat dort seine Griffe und das Kontextmenü. Am Telefon ist
+       sie ab dem ersten da: sie ist dort der einzige Beleg, dass man
+       im Auswahl-Zustand ist, und der einzige Weg zu den Aktionen. */
+    const mindest = window.matchMedia('(max-width: 760px)').matches ? 1 : 2;
+    if (ausgewaehlt.length < mindest) { if (leiste) leiste.remove(); return; }
     if (!leiste) {
       leiste = document.createElement('div');
       leiste.id = 'auswahl-leiste';
@@ -2645,7 +3019,7 @@ const Blocks = (() => {
       });
     }
     leiste.innerHTML =
-      `<b>${ausgewaehlt.length} Blöcke</b>` +
+      `<b>${ausgewaehlt.length} ${ausgewaehlt.length === 1 ? 'Block' : 'Blöcke'}</b>` +
       '<button data-a="typ">Umwandeln ▾</button>' +
       '<button data-a="dup" title="Strg D">Duplizieren</button>' +
       '<button data-a="kopie" title="Strg C">Kopieren</button>' +
@@ -2697,6 +3071,30 @@ const Blocks = (() => {
       callout: '> 💡 ' } as Record<string, string>)[b.type] || '';
     if (b.type === 'divider') return '---';
     if (b.type === 'code') return '```' + (b.lang || '') + '\n' + (b.text || '') + '\n```';
+
+    /* Der Tabellenblock geht als Markdown-Tabelle hinaus (E88) — die
+       Gegenrichtung zum Einfügen. Was er sonst schriebe, wäre sein leerer
+       `text`: die Tabelle wäre beim Kopieren einfach verschwunden. */
+    if (b.type === 'spreadsheet' && b.mappe && b.mappe.blaetter &&
+        typeof Spreadsheet !== 'undefined' && typeof CellRefs !== 'undefined') {
+      const blatt = b.mappe.blaetter.find((x: any) => x.id === b.mappe.aktiv)
+                 || b.mappe.blaetter[0];
+      if (blatt) {
+        let hochZ = 0, hochS = 0;
+        Object.keys(blatt.zellen || {}).forEach(a => {
+          const p = CellRefs.lies(a);
+          if (p) { hochZ = Math.max(hochZ, p.zeile + 1); hochS = Math.max(hochS, p.spalte + 1); }
+        });
+        if (hochZ && hochS) {
+          const zeile = (z: number) => '| ' + Array.from({ length: hochS }, (_, s) =>
+            String(Spreadsheet.eingabe(blatt, CellRefs.schreibe(z, s)) ?? '')
+              .replace(/\|/g, '\\|').replace(/\n/g, ' ')).join(' | ') + ' |';
+          const trenner = '|' + Array.from({ length: hochS }, () => ' --- |').join('');
+          return [zeile(0), trenner,
+                  ...Array.from({ length: hochZ - 1 }, (_, z) => zeile(z + 1))].join('\n');
+        }
+      }
+    }
     return marke + (b.text || '');
   }).join('\n');
 
@@ -2755,25 +3153,25 @@ const Blocks = (() => {
 
   const auswahlTypMenue = (anker: any) => {
     const r = anker.getBoundingClientRect();
-    const m = document.createElement('div');
-    m.className = 'menu';
-    m.style.cssText = `position:fixed; left:${Math.max(8, r.left)}px; ` +
-                      `bottom:${window.innerHeight - r.top + 6}px; z-index:1400`;
+    /* Über `Menue.menu` statt von Hand: von Hand wurde dieses Menü am
+       Telefon nie zum Blatt. Am Rechner stand es ÜBER dem Anker (die
+       Auswahl-Leiste sitzt unten) — das Modul klemmt die Lage selbst ins
+       Bild, also reicht ein Wunschpunkt oberhalb. */
     /* `EINFACHE_TYPEN`, nicht dieselbe Liste zum zweiten Mal. Sie stand
        dreiundzwanzig Zeilen weiter oben wörtlich genauso — und dieses Menü
        darf genau die Typen anbieten, die `auswahlUmwandeln` auch direkt
        setzen kann. Zwei Listen hiessen: ein Knopf, der nichts tut, oder ein
        Typ, den man nicht auswählen kann. */
-    m.innerHTML = TYPEN.filter((t: any) => EINFACHE_TYPEN.includes(t.id))
-      .map((t: any) => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`).join('');
-    document.body.appendChild(m);
-    const weg = () => m.remove();
+    const m = Menue.menu(
+      TYPEN.filter((t: any) => EINFACHE_TYPEN.includes(t.id))
+        .map((t: any) => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`).join(''),
+      Math.max(8, r.left), Math.max(8, r.top - 8 - 44 * EINFACHE_TYPEN.length),
+      { titel: 'Umwandeln in' });
     m.addEventListener('click', e => {
       const b2 = elVon(e)?.closest<HTMLElement>('[data-t]');
       if (b2) auswahlUmwandeln(b2.dataset.t);
-      weg();
+      document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
     });
-    setTimeout(() => document.addEventListener('click', weg, { once: true }), 0);
   };
 
   const auswahlEinruecken = (raus: any) => {
@@ -2913,7 +3311,9 @@ const Blocks = (() => {
     document.addEventListener('click', (e) => {
       const blk = elVon(e)?.closest<HTMLElement>('#page .blk[data-bid]');
       if (!blk) { if (ausgewaehlt.length && !elVon(e)?.closest<HTMLElement>('#auswahl-leiste, .menu')) auswahlLeeren(); return; }
-      if (e.shiftKey && ankerId && blk.dataset.bid) { e.preventDefault(); auswahlBis(blk.dataset.bid); return; }
+      /* Ohne Alt: mit Alt+Umschalt gehört der Klick dem Einzel-Umschalter
+         weiter unten — sonst fräse „bis hierher" jeden zweiten Alt-Klick. */
+      if (e.shiftKey && !e.altKey && ankerId && blk.dataset.bid) { e.preventDefault(); auswahlBis(blk.dataset.bid); return; }
       if ((e.ctrlKey || e.metaKey) && ausgewaehlt.length) {
         e.preventDefault();
         const id = blk.dataset.bid;
@@ -2921,13 +3321,47 @@ const Blocks = (() => {
           ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
         return;
       }
+      /* Alt+Umschalt+Klick wählt den Block — auch als ERSTEN (Notions
+         Griff, letzter L20-Rest). Strg+Klick kann nur erweitern, weil
+         der blosse Klick dem Schreibzeiger gehört; diese Kombination
+         darf die Auswahl auch beginnen. */
+      if (e.altKey && e.shiftKey && blk.dataset.bid) {
+        e.preventDefault();
+        const id = blk.dataset.bid;
+        ankerId = id;
+        auswahlSetzen(ausgewaehlt.includes(id)
+          ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
+        return;
+      }
+      /* Am Telefon gibt es keine Strg-Taste: solange die Auswahl steht,
+         schaltet ein Tipp den Block dazu oder wieder weg (E84). Der
+         letzte weggetippte Block beendet die Auswahl von selbst. */
+      if (window.matchMedia('(max-width: 760px)').matches &&
+          ausgewaehlt.length && blk.dataset.bid) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = blk.dataset.bid;
+        ankerId = id;
+        auswahlSetzen(ausgewaehlt.includes(id)
+          ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
+        return;
+      }
       if (ausgewaehlt.length) auswahlLeeren();
+    }, true);
+
+    /* Der Tipp, der einen Block dazuschaltet, darf nicht nebenbei das
+       Schreibfeld öffnen — der Fokus fällt beim mousedown, nicht beim
+       click. Bei stehender Auswahl wird er am Telefon deshalb hier
+       abgefangen; die Tastatur bleibt unten. */
+    document.addEventListener('mousedown', (e) => {
+      if (!window.matchMedia('(max-width: 760px)').matches || !ausgewaehlt.length) return;
+      if (elVon(e)?.closest<HTMLElement>('#page .blk[data-bid]')) e.preventDefault();
     }, true);
   };
 
   return {
     TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc,
-    cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe,
+    cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe, lege,
     blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
     knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
     DIENSTE, einbettungsAdresse,
@@ -2935,7 +3369,7 @@ const Blocks = (() => {
     auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
     auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
     auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,
-    auswahlAlsText, auswahlTaste, sichtbareBloecke,
+    auswahlAlsText, auswahlTaste, sichtbareBloecke, auswahlTypMenue,
     /* Markdown in beide Richtungen */
     mdLesen, mdEinsetzen, mdIstStruktur, sprachName,
     auswahl: () => ausgewaehlt.slice()

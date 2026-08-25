@@ -723,6 +723,10 @@ const amHandy = await handy.evaluate((id: string) => {
   kasten.id = 'pruef-tabelle';
   kasten.style.cssText = 'width:390px; position:fixed; left:0; top:0; z-index:99999';
   document.body?.appendChild(kasten);
+  /* Seit E89 zeigt das Telefon standardmässig KARTEN; gemessen wird hier
+     aber das Raster (Fingermasse, Werkzeugleiste) — also ehrlich den Weg
+     gehen, den der Mensch per ⊞ geht. */
+  Store.updateBlock(id, { telefonRaster: true });
   kasten.appendChild(w.SpreadsheetView.zeichne(Store.getBlock(id)));
   const t = kasten.querySelector<HTMLTableElement>('.tbl') as HTMLElement;
   const z = t.querySelector('.tbl-z') as HTMLElement;

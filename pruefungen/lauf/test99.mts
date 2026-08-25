@@ -152,9 +152,14 @@ const seiteId = await A.evaluate(async () => {
   await Store.flush();
   return s.id;
 });
-await new Promise(f => setTimeout(f, 500));
-
-const kenntB = await B.evaluate(([id]) => !!Store.getBlock(id), [seiteId]);
+/* Auf die Botschaft WARTEN, nicht die Uhr raten: der BroadcastChannel
+   liefert unter Volllast auch mal später als 500 ms (E82-Klasse). Kommt
+   sie nie, läuft die Schleife aus und der Punkt wird ehrlich rot. */
+let kenntB = false;
+for (let i = 0; i < 60 && !kenntB; i++) {
+  kenntB = await B.evaluate(([id]) => !!Store.getBlock(id), [seiteId]);
+  if (!kenntB) await new Promise(f => setTimeout(f, 250));
+}
 p('B kennt die neue Seite aus A', kenntB,
   'ohne Draht wüsste B nichts davon — und überschriebe sie beim nächsten Anlass');
 

@@ -135,7 +135,8 @@ const pruef = (n: any, ist: any, soll: any) => {
     aktionen: [...document.querySelectorAll<HTMLElement>('#handy-unten button')].map(x => x.id)
   }));
   pruef('Bereichsleiste oben sichtbar', unten.oben !== 'none', true);
-  pruef('Konto und vier Bereiche',      unten.bereiche.length, 5);
+  /* Sechs seit E132: „Lernen" ist mit den Produktwelten dazugekommen. */
+  pruef('Konto und fünf Bereiche',      unten.bereiche.length, 6);
   pruef('Aktionsleiste unten sichtbar', unten.unten !== 'none', true);
   pruef('Suchen, KI und Neu',           unten.aktionen.length, 3);
 

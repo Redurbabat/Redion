@@ -114,7 +114,7 @@ heisst Papierkorb — gelöscht, aber wiederherstellbar.
   "saetze": [
     { "id": "d7f3…", "name": "foto.jpg", "groesse": 2481003,
       "typ": "image/jpeg", "blockId": "b91…", "teile": 3,
-      "angekommen": 3, "zustand": "fertig",
+      "angekommen": 3, "zustand": "fertig", "abgeleitet": false,
       "angelegt": "2026-07-01T…", "fertigAm": "2026-07-01T…" }
   ],
   "zuordnung": {
@@ -132,6 +132,61 @@ niemand mehr, welcher Block welches Bild meint.
 
 Namensregel: `\ / : * ? " < > |` werden zu `-`; bei Kollision wird
 `-2`, `-3`, … vor die Endung gesetzt.
+
+---
+
+## Was NICHT mitkommt: abgeleitete Dateien
+
+Seit E103 (19. August 2026) trägt ein Datei-Satz das Feld `abgeleitet`.
+Steht es auf `true`, heisst das: **diese Datei entsteht aus einer anderen
+in Sekunden neu.** Der einzige Fall bisher sind die gerasterten
+Seitenbilder eines PDFs.
+
+Solche Dateien kommen **nicht** in die Sicherung — weder ihre Bytes noch
+ihr Satz in `dateien.json`.
+
+**Warum.** Ein Skript mit 500 Seiten sind rund hundert Megabyte
+Seitenbilder. In jeder Sicherung, jedes Mal. Eine Sicherung, die man auf
+dem Telefon nicht mehr herunterladen kann, ist keine Sicherung — und der
+Inhalt wäre nichts, was verloren gehen könnte: das **Original-PDF** liegt
+als gewöhnlicher Anhang mit im Archiv, Byte für Byte, und daraus entstehen
+die Seiten wieder.
+
+**Was mitkommt, ist das, worauf es ankommt:**
+
+| | in der Sicherung |
+|---|---|
+| das Original-PDF | **ja** — unverändert, mit Prüfsumme nachgerechnet |
+| die Marken auf den Seiten | **ja** — sie stehen am Block, nicht in einer Datei |
+| Seitenzahl, Masse, Verweise | **ja** — ebenfalls am Block |
+| die gerasterten Seitenbilder | nein — `abgeleitet: true` |
+
+**Weggelassen wird beim Holen, nicht beim Packen.** `dateien.json`
+entsteht aus derselben Liste wie das Archiv. Stünde ein Satz darin, dessen
+Bytes fehlen, wäre das ein Anhang, den der Block sucht und nicht findet —
+und man merkte es erst beim Einspielen. Lieber gar nicht erwähnt als
+falsch versprochen.
+
+**Und das Manifest sagt es.** `daten.json` nennt im Feld `hinweis` die Zahl
+der Dateien, die wirklich im Archiv liegen, dazu wie viele Seitenbilder
+bewusst fehlen und wie man sie zurückholt; `abgeleitetAusgelassen` trägt
+dieselbe Zahl noch einmal als Zahl, für Maschinen. Bis E111 stand dort
+„Vollständig: die 4 Datei(en) …" bei zwei Dateien im Archiv — der Zähler
+kannte den Filter nicht.
+
+**Beim Einspielen** stehen die Seiten deshalb zunächst leer da, mit einem
+Knopf „Aus dem Original zurückholen" darauf. Ein Klick rechnet das ganze
+Dokument neu; Nummer, Masse und Marken bleiben dabei unangetastet (E106).
+Der Block trägt seine alte `bildDateiId` noch — sie zeigt ins Leere, bis der
+Knopf gedrückt wurde.
+
+**Für Fremdlesende:** wer ein `.redion` ohne Redion auspackt, findet das
+PDF unter `dateien/` und die Anmerkungen im Block-Datensatz von
+`daten.json` (Feld `marken`, Koordinaten in PDF-Punkten). Die Seitenbilder
+fehlen dort — mit Absicht.
+
+Dieselbe Regel gilt für den Abgleich mit dem Server: Abgeleitetes wandert
+nicht hinauf.
 
 ---
 

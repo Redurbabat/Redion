@@ -97,6 +97,16 @@ const WissenDienst = (() => {
   /** SM-2 in kurz: leichter beantwortet = längerer Abstand. */
   const planen = (k: any, note: number): any => {
     const sr = Object.assign({ ease: 2.5, intervall: 0, wdh: 0 }, k.sr || {});
+    /* Der Verlauf ist additiv. Die Rechnung darunter bleibt absichtlich
+       dieselbe SM-2-Rechnung wie bisher; insbesondere verändert ein Fehler
+       die Leichtigkeit nicht. Statistik und Fehlertraining lesen nur dieses
+       objektbasierte Protokoll und verschieben keinen Termin von selbst. */
+    const vorher = {
+      due: String(sr.faellig || ''),
+      interval: Number(sr.intervall) || 0,
+      ease: Number(sr.ease) || 2.5,
+      repetitions: Number(sr.wdh) || 0
+    };
     if (note < 3) { sr.wdh = 0; sr.intervall = note === 1 ? 0 : 1; }
     else {
       sr.wdh++;
@@ -108,27 +118,133 @@ const WissenDienst = (() => {
     else d.setDate(d.getDate() + sr.intervall);
     sr.faellig = d.toISOString();
     sr.zuletzt = Store.now();
-    Store.updateBlock(k.id, { sr });
+    const alt: Record<string, any> = Array.isArray(k.reviewVerlauf)
+      ? Object.fromEntries(k.reviewVerlauf
+          .filter((entry: any) => entry && typeof entry === 'object')
+          .map((entry: any, index: number) => [String(entry.id || 'legacy-' + index + '-' + (entry.at || '')), entry]))
+      : (k.reviewVerlauf && typeof k.reviewVerlauf === 'object' ? { ...k.reviewVerlauf } : {});
+    /* `WissenDienst` bleibt als reine Logik auch mit einem kleinen Store-
+       Adapter pruefbar. In der App kommt die kanonische Kennung vom Store;
+       der Rueckfall braucht nur innerhalb dieses Verlaufs eindeutig zu sein. */
+    const reviewId = typeof Store.uid === 'function'
+      ? Store.uid()
+      : 'review-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+    alt[reviewId] = {
+      id: reviewId,
+      version: 1,
+      at: sr.zuletzt,
+      rating: Number(note),
+      algorithm: 'sm2',
+      lapse: note < 3,
+      before: vorher,
+      after: {
+        due: sr.faellig,
+        interval: sr.intervall,
+        ease: sr.ease,
+        repetitions: sr.wdh
+      }
+    };
+    const behalten = Object.values<any>(alt)
+      .sort((a, b) => String(a.at || '').localeCompare(String(b.at || '')) || String(a.id || '').localeCompare(String(b.id || '')))
+      .slice(-500);
+    const reviewVerlauf = Object.fromEntries(behalten.map(entry => [String(entry.id), entry]));
+    Store.updateBlock(k.id, { sr, reviewVerlauf, lernAlgorithmus: 'sm2' });
     return sr;
   };
 
   /* --------------------------------------------------------------------------
    * MARKDOWN hin und zurück
    * --------------------------------------------------------------------------
-   * Datenbanken, Zeichenflächen, Diagramme und Tabellen bleiben unangetastet:
-   * sie stehen als Platzhalter im Text und werden beim Zurücklesen an
-   * derselben Stelle wieder eingehängt. Ohne das wäre „Quelltext ansehen und
-   * schliessen" ein Datenverlust.
+   * „Quelltext ansehen" leert die Seite und baut sie aus dem Text neu auf.
+   * Alles, was Markdown nicht tragen kann, muss deshalb als Platzhalter
+   * überleben — sonst ist der Knopf ein Löschknopf.
+   *
+   * BIS E113 STAND DIE LISTE ANDERSHERUM: vier Blockarten (`database`,
+   * `whiteboard`, `chart`, `table`) waren namentlich gerettet, alle anderen
+   * fielen durch. Das ging so lange gut, wie es nur diese vier gab. Gemessen
+   * an einer Schulaufgabe aus Spalten, PDF-Seite, A4-Blatt und Rechenblatt:
+   *
+   *     vorher   9 Blöcke · 1 PDF-Seite · 1 Blatt · 3 Spalten · 2 Striche
+   *     nachher  3 Blöcke · 0           · 0       · 0         · 0
+   *     Text danach: „# Mathe\n\n  \n    \n  \n      Meine Antwort"
+   *
+   * Ein Klick, und die Klausur ist weg. Der Kopfkommentar dieser Funktion
+   * hat den Fall sogar vorhergesagt („Ohne das wäre … ein Datenverlust") —
+   * und die Liste darunter wurde trotzdem bei jeder neuen Blockart
+   * vergessen: bei `spreadsheet` (E29), bei `columns`/`spalte` (E102), bei
+   * `blatt` (E100), bei `pdfseite` (E103).
+   *
+   * DESHALB JETZT UMGEDREHT. `MD_TRAEGT` zählt auf, was Markdown WIRKLICH
+   * verlustfrei hin und zurück bringt. Alles andere bekommt einen
+   * Platzhalter, ohne dass jemand daran denken muss. Eine neue Blockart ist
+   * damit von sich aus sicher — sie muss sich das Durchreichen verdienen,
+   * statt es geschenkt zu bekommen.
    * ----------------------------------------------------------------------- */
+
+  /* Was `alsMarkdown` unten wirklich abbildet UND `ausMarkdown` wieder
+     einliest. Wer hier etwas einträgt, muss beide Richtungen belegen —
+     `test187` fährt sie ab. */
+  const MD_TRAEGT = new Set([
+    'text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number',
+    'quote', 'callout', 'divider', 'code', 'equation', 'image', 'flashcard'
+  ]);
+
+  /* Drei Blockarten stehen zwar in der Liste, tragen aber je nach Inhalt
+     mehr, als Markdown abbilden kann. Dann zählt der Block, nicht die Art. */
+  const mdTraegt = (b: any): boolean => {
+    if (!MD_TRAEGT.has(b.type)) return false;
+    /* Ein Bild aus der eigenen Ablage hängt an `dateiId`; `src` ist dabei
+       leer oder eine tote `blob:`-Adresse (E98). `![](…)` würde daraus ein
+       Bild ohne Datei machen — sichtbar erst nach dem nächsten Neustart. */
+    if (b.type === 'image' && b.dateiId) return false;
+    /* Eine gelernte Karteikarte trägt ihren Lernstand in `sr`. Der ist das
+       Wertvolle daran; die Frage abzutippen kostet eine Minute, sechs
+       Monate Wiederholung nicht. */
+    if (b.type === 'flashcard' && b.sr) return false;
+    /* `> 💡` ist die einzige Callout-Form, die zurückgelesen wird — ein
+       anderes Zeichen käme als 💡 wieder. */
+    if (b.type === 'callout' && b.icon && b.icon !== '💡') return false;
+    return true;
+  };
+
+  /* Die vier alten Marken bleiben, was sie waren — sie stehen in
+     `test89` und in jedem Text, den jemand herauskopiert und aufgehoben
+     hat. Alles Übrige bekommt `blk:`. */
+  const MD_MARKE: Record<string, string> = {
+    database: 'db', whiteboard: 'wb', chart: 'chart', table: 'tab'
+  };
+  /* Ein Satz, den ein Mensch neben dem Platzhalter lesen kann. Kein
+     Bestandteil des Formats — er wird beim Zurücklesen verworfen. */
+  const mdName = (b: any): string => {
+    /* `pdfseite` und `spalte` stehen in keinem Register — sie sind
+       Bausteine ohne Menüeintrag (doku/BLOCKTYPEN.md). Ihr Name muss
+       deshalb hier stehen, sonst läse der Mensch „pdfseite". */
+    const OHNE_REGISTER: Record<string, string> = {
+      pdfseite: 'PDF-Seite', spalte: 'Spalte'
+    };
+    const art = OHNE_REGISTER[b.type] ||
+      ((typeof Register !== 'undefined' && Register.bloecke?.eines)
+        ? (Register.bloecke.eines(b.type)?.name || b.type)
+        : b.type);
+    const zusatz = b.type === 'pdfseite' && b.nr ? ' ' + Number(b.nr) : '';
+    const titel = String(b.text || '').trim().slice(0, 40);
+    return art + zusatz + (titel ? ': ' + titel : '');
+  };
+
   const alsMarkdown = (p: any): string => {
     const zeilen: string[] = [];
     const raus = (id: string, tiefe: number): void => {
       Store.childrenOf(id).forEach((b: any) => {
         const ein = '  '.repeat(tiefe);
-        if (b.type === 'database') { zeilen.push(`<!--db:${b.id}-->`); return; }
-        if (b.type === 'whiteboard') { zeilen.push(`<!--wb:${b.id}-->`); return; }
-        if (b.type === 'chart') { zeilen.push(`<!--chart:${b.id}-->`); return; }
-        if (b.type === 'table') { zeilen.push(`<!--tab:${b.id}-->`); return; }
+        /* Kann Markdown das nicht tragen, kommt es als Platzhalter durch —
+           samt allem, was darunter hängt. Der Satz dahinter ist für den
+           Menschen: ein nackter Kommentar mit einer Kennung sagt ihm nicht,
+           dass dort seine PDF-Seite steht. Gelesen wird nur die Kennung. */
+        if (!mdTraegt(b)) {
+          const marke = MD_MARKE[b.type] || 'blk';
+          zeilen.push(`<!--${marke}:${b.id}--> ${mdName(b)}`);
+          return;
+        }
         if (b.type === 'divider') { zeilen.push('---'); return; }
         if (b.type === 'code') { zeilen.push('```' + (b.lang || '')); zeilen.push(b.text || ''); zeilen.push('```'); return; }
         if (b.type === 'equation') { zeilen.push('$$' + (b.text || '') + '$$'); return; }
@@ -147,17 +263,174 @@ const WissenDienst = (() => {
     return zeilen.join('\n');
   };
 
-  /** Markdown zurück in Blöcke. Vorhandene Datenbanken werden erkannt. */
-  const ausMarkdown = (p: any, text: string): void => {
-    const alteDbs: Record<string, any> = {};
-    Store.childrenOf(p.id).forEach((b: any) => {
-      if (['database','whiteboard','chart','table'].includes(b.type)) alteDbs[b.id] = Store.baum(b.id);
-    });
+  type MarkdownImportOptionen = { preserveOpaqueIds?: boolean };
 
-    Store.kinderLeeren(p.id);
+  /** Markdown zurück in Blöcke. Vorhandene Datenbanken werden erkannt.
+      Beim Reimport eines von Redion exportierten Vaults bleiben die IDs der
+      nicht verlustfrei in Markdown darstellbaren Teilbaeume erhalten. */
+  const ausMarkdown = (p: any, text: string, optionen: MarkdownImportOptionen = {}): void => {
+    /* Dieselbe Regel wie beim Hinschreiben, nur andersherum gelesen:
+       gerettet wird, was NICHT durch Markdown gegangen ist. `Store.baum`
+       nimmt den ganzen Ast mit — bei einer Spalte also auch die PDF-Seite
+       darin und deren Striche. */
+    const alteDbs: Record<string, any> = {};
+    const erhaltene = new Map<string, any>();
+    if (optionen.preserveOpaqueIds) {
+      /* Nicht kopieren: Eine Kopie bekaeme frische Block-IDs. Dateien sind
+         aber ueber genau diese ID mit PDF-, Bild- und Audiobloecken
+         verbunden. Deshalb den aeussersten opaken Ast kurz aus der
+         `content`-Kette nehmen, bevor die Markdown-Bloecke geloescht werden. */
+      const detach = (parentId: string): void => {
+        [...Store.childrenOf(parentId)].forEach((b: any) => {
+          if (mdTraegt(b)) { detach(b.id); return; }
+          erhaltene.set(b.id, b);
+          const parent = Store.getBlock(parentId);
+          if (parent) Store.updateBlock(parent.id, {
+            content: (parent.content || []).filter((id: string) => id !== b.id)
+          });
+          /* Bis der Platzhalter gelesen ist, gehoert der lebende Block zur
+             Importseite, steht aber absichtlich noch nicht in deren Liste. */
+          Store.updateBlock(b.id, { parentId: p.id, parentTable: 'block' });
+        });
+      };
+      detach(p.id);
+    } else {
+      Store.childrenOf(p.id).forEach((b: any) => {
+        if (!mdTraegt(b)) alteDbs[b.id] = Store.baum(b.id);
+      });
+    }
+
+    const attachErhaltenen = (id: string, parentId: string): any => {
+      const block = erhaltene.get(id);
+      const parent = Store.getBlock(parentId);
+      if (!block || !parent || block.alive === false) return null;
+      const vorher = Store.getBlock(block.parentId);
+      if (vorher && vorher.id !== parent.id && (vorher.content || []).includes(block.id))
+        Store.updateBlock(vorher.id, {
+          content: vorher.content.filter((kind: string) => kind !== block.id)
+        });
+      if (!(parent.content || []).includes(block.id))
+        Store.updateBlock(parent.id, { content: [...(parent.content || []), block.id] });
+      Store.updateBlock(block.id, { parentId: parent.id, parentTable: 'block' });
+      erhaltene.delete(id);
+      return block;
+    };
+    const retteUebrige = (): void => {
+      /* Ein extern geloeschter oder verschobener Platzhalter darf niemals
+         still echte Dateien/Unterseiten loeschen. Ohne eindeutigen Ort
+         landen solche Bloecke sichtbar am Ende der Seite. */
+      [...erhaltene.keys()].forEach(id => attachErhaltenen(id, p.id));
+    };
+
+    /* ------------------------------------------------------------------------
+     * FARBE UND SCHRIFT ÜBERLEBEN (L40, E165)
+     * ------------------------------------------------------------------------
+     * Markdown kann sie nicht tragen: `block.color` (E-Farben) und
+     * `block.stil` mit Grösse und Schriftart (E101) haben keine Schreibweise
+     * in `# `, `- ` oder `> `. Bis hierher hiess das: „Quelltext ansehen →
+     * Übernehmen" ohne eine einzige Änderung machte aus einer farbigen Seite
+     * eine graue. Der Knopf sah aus, als täte er nichts, und nahm etwas mit.
+     *
+     * L40 nennt den sauberen Weg — die Blöcke WIEDERVERWENDEN statt sie zu
+     * leeren und neu zu bauen. Das ist ein Umbau von `ausMarkdown` und
+     * bringt nebenbei stabile Kennungen. Hier steht das Kleinere davon: die
+     * Formatierung wird gemerkt und danach wieder aufgesetzt, wo Art UND
+     * Text unverändert geblieben sind.
+     *
+     * WARUM (Art, Text) UND NICHT DIE POSITION. Wer eine Zeile einfügt,
+     * verschiebt alle darunter. Nach Position zugeordnet bekäme dann jede
+     * Zeile die Farbe ihrer Vorgängerin — schlimmer als keine Farbe, weil
+     * es aussieht wie eine Entscheidung. Nach Text zugeordnet folgt die
+     * Farbe ihrem Satz, auch wenn er umzieht. Wer den Text ändert, verliert
+     * die Formatierung dieser Zeile: das ist ehrlich, denn es ist eine neue
+     * Zeile.
+     *
+     * Jeder gemerkte Eintrag wird HÖCHSTENS EINMAL vergeben. Zwei gleiche
+     * Sätze mit verschiedenen Farben behalten so ihre eigene, statt beide
+     * die erste zu bekommen.
+     * ----------------------------------------------------------------------*/
+    type Formatgedaechtnis = { type: string; text: string; color?: string; stil?: any };
+    const gemerkt: Formatgedaechtnis[] = [];
+    const merke = (id: string): void => {
+      Store.childrenOf(id).forEach((b: any) => {
+        if (!mdTraegt(b)) return;
+        const stil = b.stil && typeof b.stil === 'object' && Object.keys(b.stil).length
+          ? { ...b.stil } : null;
+        if (b.color || stil)
+          gemerkt.push({ type: String(b.type || ''), text: String(b.text || ''),
+                         ...(b.color ? { color: String(b.color) } : {}),
+                         ...(stil ? { stil } : {}) });
+        merke(b.id);
+      });
+    };
+    merke(p.id);
+
+    const setzeWiederAuf = (id: string): void => {
+      Store.childrenOf(id).forEach((b: any) => {
+        if (!mdTraegt(b)) return;
+        const i = gemerkt.findIndex(x => x.type === String(b.type || '') &&
+                                         x.text === String(b.text || ''));
+        if (i >= 0) {
+          const [treffer] = gemerkt.splice(i, 1);
+          const aenderung: Record<string, unknown> = {};
+          if (treffer && treffer.color) aenderung['color'] = treffer.color;
+          if (treffer && treffer.stil) aenderung['stil'] = treffer.stil;
+          if (Object.keys(aenderung).length) Store.updateBlock(b.id, aenderung);
+        }
+        setzeWiederAuf(b.id);
+      });
+    };
+
+    try {
+      Store.kinderLeeren(p.id);
 
     let imCode = false, codeText: string[] = [], codeLang = '';
     const zeilen = text.split('\n');
+
+    /* ==========================================================================
+     * EINRÜCKUNG IST STRUKTUR (E120)
+     * --------------------------------------------------------------------------
+     * `alsMarkdown` schreibt sie seit jeher — `'  '.repeat(tiefe)` —, und
+     * `ausMarkdown` warf sie weg: jede Zeile wurde mit `trim()` beschnitten und
+     * landete direkt unter der Seite. Gemessen an einer dreistufigen Liste:
+     *
+     *     - Oben eins            bullet
+     *       - Darunter A           bullet        →   alle sieben Blöcke
+     *         - Noch tiefer          bullet          nebeneinander auf
+     *       - Darunter B           bullet          Ebene null
+     *     - Oben zwei            bullet
+     *
+     * Eine Unterliste kam eine Ebene flach zurück, und eine Aufgabe verlor
+     * ihre Unteraufgaben. Beim Einlesen einer `.md`-Datei dasselbe: dort ist
+     * die Einrückung sogar die einzige Strukturangabe, die es gibt.
+     *
+     * Der Stapel hält je Tiefe den Elternteil. `stapel[0]` ist die Seite; wer
+     * auf Tiefe t schreibt, hängt unter `stapel[t]` und wird selbst zu
+     * `stapel[t+1]`.
+     *
+     * ZWEI SCHRITTE JE EBENE, nicht vier: das ist, was `alsMarkdown` schreibt.
+     * Ein Tabulator zählt als zwei — Menschen tippen ihn, und in einer
+     * `.md`-Datei aus anderer Hand steht er oft.
+     *
+     * Und: WER TIEFER SPRINGT, ALS ES EBENEN GIBT, landet eine Ebene tiefer
+     * als der Vorgänger und nicht im Nichts (`Math.min`). Markdown erlaubt
+     * das, und ein verlorener Block wäre schlimmer als eine Ebene daneben. */
+    const stapel: string[] = [p.id];
+    const tiefeVon = (roh: string): number => {
+      const vorn = (roh.match(/^[ \t]*/)?.[0] || '').replace(/\t/g, '  ');
+      return Math.floor(vorn.length / 2);
+    };
+    const elternFuer = (roh: string): string => {
+      const t = Math.min(tiefeVon(roh), stapel.length - 1);
+      stapel.length = t + 1;
+      return stapel[t] as string;
+    };
+    /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken. */
+    const lege = (roh: string, typ: string, felder?: Record<string, unknown>): any => {
+      const b = Store.addBlock(elternFuer(roh), typ, felder);
+      stapel.push(b.id);
+      return b;
+    };
 
     /* --- Markdown-Tabellen -------------------------------------------------
      * | Kopf | Kopf |
@@ -171,59 +444,101 @@ const WissenDienst = (() => {
     const zellen = (z: any) => z.trim().replace(/^\||\|$/g, '').split('|').map((x: any) => x.trim());
 
     let tabelle: string[][] | null = null;   /* sammelt die Zeilen der laufenden Tabelle */
+    let tabelleZeile = '';                  /* ihre erste Zeile — für die Einrückung */
+    let codeZeile = '';                     /* dasselbe für den Codeblock */
+    let codeEinzug = '';                    /* und wie weit SEIN Zaun eingerückt war */
     const tabelleAbschliessen = (): void => {
       if (!tabelle) return;
       if (tabelle.length) {
         const breite = Math.max(...tabelle.map((r: any) => r.length));
         const rows = tabelle.map((r: any) => { const k = r.slice();
           while (k.length < breite) k.push(''); return k; });
-        Store.addBlock(p.id, 'table', { rows, kopfZeile: true });
+        /* Die Tabelle hängt dort, wo ihre ERSTE Zeile stand — nicht dort, wo
+           die Zeile danach steht (E120). */
+        lege(tabelleZeile, 'table', { rows, kopfZeile: true });
       }
-      tabelle = null;
+      tabelle = null; tabelleZeile = '';
     };
 
     zeilen.forEach((roh: any) => {
       /* Tabellen zuerst — sie laufen über mehrere Zeilen */
       if (!imCode && istTabellenzeile(roh)) {
-        if (istTrenner(roh)) { if (!tabelle) tabelle = []; return; }
-        if (!tabelle) tabelle = [];
+        if (istTrenner(roh)) { if (!tabelle) { tabelle = []; tabelleZeile = roh; } return; }
+        if (!tabelle) { tabelle = []; tabelleZeile = roh; }
         tabelle.push(zellen(roh));
         return;
       }
       if (tabelle) tabelleAbschliessen();
 
-      const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab):([^>]+)-->$/);
-      if (platz?.[1] && alteDbs[platz[1]]) { Store.baumEinfuegen(alteDbs[platz[1]], p.id); return; }
+      /* Der Teil hinter `-->` ist der Lesehinweis für den Menschen und
+         wird verworfen. Die Kennung selbst darf nur enthalten, was eine
+         Kennung enthält — sonst könnte ein `-->` im Text die Zeile
+         verschieben. */
+      const platz = roh.trim().match(/^<!--(?:db|wb|chart|tab|blk):([A-Za-z0-9_-]+)-->\s*(?:.*)$/);
+      if (platz?.[1] && (erhaltene.has(platz[1]) || alteDbs[platz[1]])) {
+        const neu = erhaltene.has(platz[1])
+          ? attachErhaltenen(platz[1], elternFuer(roh))
+          : Store.baumEinfuegen(alteDbs[platz[1]], elternFuer(roh));
+        if (neu) stapel.push(neu.id);
+        return;
+      }
 
       if (roh.trim().startsWith('```')) {
         if (imCode) {
-          Store.addBlock(p.id, 'code', { text: codeText.join('\n'), lang: codeLang });
+          lege(codeZeile, 'code', { text: codeText.join('\n'), lang: codeLang });
           imCode = false; codeText = []; codeLang = '';
-        } else { imCode = true; codeLang = roh.trim().slice(3).trim(); }
+        } else {
+          imCode = true; codeLang = roh.trim().slice(3).trim(); codeZeile = roh;
+          codeEinzug = roh.match(/^[ \t]*/)?.[0] || '';
+        }
         return;
       }
-      if (imCode) { codeText.push(roh); return; }
+      if (imCode) {
+        /* NUR DEN EINZUG DES ZAUNS abziehen, nicht `trim()` (E120).
+           Ein Codeblock in einem Listenpunkt steht eingerückt:
+
+               - Aufgabe
+                 ```js
+                 if (x) {
+                   tuWas();
+                 }
+                 ```
+
+           Der Zaun hat zwei Leerzeichen, die zum Markdown gehören; die zwei
+           weiteren vor `tuWas()` gehören zum CODE. `trim()` nähme beide und
+           machte aus eingerücktem Code flachen. Also genau den Zaun-Einzug
+           abziehen und den Rest stehen lassen. */
+        codeText.push(codeEinzug && roh.startsWith(codeEinzug)
+          ? roh.slice(codeEinzug.length) : roh);
+        return;
+      }
 
       const z = roh.trim();
       if (!z) return;
-      if (/^(---|\*\*\*|___)$/.test(z)) { Store.addBlock(p.id, 'divider'); return; }
-      if (/^\$\$(.*)\$\$$/.test(z)) { Store.addBlock(p.id, 'equation', { text: z.slice(2, -2) }); return; }
+      if (/^(---|\*\*\*|___)$/.test(z)) { lege(roh, 'divider'); return; }
+      if (/^\$\$(.*)\$\$$/.test(z)) { lege(roh, 'equation', { text: z.slice(2, -2) }); return; }
       const bild = z.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
-      if (bild) { Store.addBlock(p.id, 'image', { src: bild[2], caption: bild[1] }); return; }
+      if (bild) { lege(roh, 'image', { src: bild[2], caption: bild[1] }); return; }
 
       const m = z.match(/^(#{1,3})\s+(.*)$/);
-      if (m) { Store.addBlock(p.id, ['h1','h2','h3'][m[1].length - 1], { text: m[2] }); return; }
+      if (m) { lege(roh, ['h1','h2','h3'][m[1].length - 1] as string, { text: m[2] }); return; }
       const todo = z.match(/^[-*+]\s+\[([ xX])\]\s+(.*)$/);
-      if (todo) { Store.addBlock(p.id, 'todo', { text: todo[2], checked: todo[1].toLowerCase() === 'x' }); return; }
-      if (/^[-*+]\s+/.test(z)) { Store.addBlock(p.id, 'bullet', { text: z.replace(/^[-*+]\s+/, '') }); return; }
-      if (/^\d+\.\s+/.test(z)) { Store.addBlock(p.id, 'number', { text: z.replace(/^\d+\.\s+/, '') }); return; }
-      if (/^>\s*💡\s*/.test(z)) { Store.addBlock(p.id, 'callout', { text: z.replace(/^>\s*💡\s*/, ''), icon: '💡' }); return; }
-      if (/^>\s+/.test(z)) { Store.addBlock(p.id, 'quote', { text: z.replace(/^>\s+/, '') }); return; }
-      if (/^\?\?\s+/.test(z)) { Store.addBlock(p.id, 'flashcard', { text: z.replace(/^\?\?\s+/, '') }); return; }
-      Store.addBlock(p.id, 'text', { text: z });
+      if (todo) { lege(roh, 'todo', { text: todo[2], checked: (todo[1] as string).toLowerCase() === 'x' }); return; }
+      if (/^[-*+]\s+/.test(z)) { lege(roh, 'bullet', { text: z.replace(/^[-*+]\s+/, '') }); return; }
+      if (/^\d+\.\s+/.test(z)) { lege(roh, 'number', { text: z.replace(/^\d+\.\s+/, '') }); return; }
+      if (/^>\s*💡\s*/.test(z)) { lege(roh, 'callout', { text: z.replace(/^>\s*💡\s*/, ''), icon: '💡' }); return; }
+      if (/^>\s+/.test(z)) { lege(roh, 'quote', { text: z.replace(/^>\s+/, '') }); return; }
+      if (/^\?\?\s+/.test(z)) { lege(roh, 'flashcard', { text: z.replace(/^\?\?\s+/, '') }); return; }
+      lege(roh, 'text', { text: z });
     });
-    if (imCode && codeText.length) Store.addBlock(p.id, 'code', { text: codeText.join('\n'), lang: codeLang });
-    tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
+    if (imCode && codeText.length) lege(codeZeile, 'code', { text: codeText.join('\n'), lang: codeLang });
+      tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
+    } finally {
+      retteUebrige();
+      /* Erst NACH `retteUebrige`: die zurückgehängten Blöcke gehören zum
+         Baum, und ein Platzhalter kann ebenso gefärbt gewesen sein. */
+      if (gemerkt.length) setzeWiederAuf(p.id);
+    }
   };
 
   /* --------------------------------------------------------------------------

@@ -47,6 +47,72 @@ const Werkzeuge = (() => {
         Store.setMeta('sys:' + schluessel, p.id);
         return p;
     };
+    const aliasDialog = (page) => {
+        if (!page?.id)
+            return;
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        const panel = document.createElement('div');
+        panel.className = 'finder';
+        const header = document.createElement('div');
+        header.className = 'fh';
+        header.textContent = 'Aliasse · ' + (page.text || 'Ohne Titel');
+        const close = document.createElement('button');
+        close.className = 'icon-btn';
+        close.textContent = '✕';
+        header.appendChild(close);
+        const content = document.createElement('div');
+        content.style.padding = '16px';
+        const hint = document.createElement('p');
+        hint.textContent = 'Ein Alias pro Zeile, zum Beispiel FI, RCD oder Residual Current Device. Mehrdeutige Aliasse werden nie automatisch verlinkt.';
+        hint.style.color = 'var(--text-dim)';
+        const area = document.createElement('textarea');
+        area.rows = 8;
+        area.style.cssText = 'width:100%;min-height:160px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)';
+        area.value = Links.aliasesVon(page).join('\n');
+        const actions = document.createElement('div');
+        actions.className = 'fbtns';
+        const cancel = document.createElement('button');
+        cancel.textContent = 'Abbrechen';
+        const save = document.createElement('button');
+        save.className = 'prim';
+        save.textContent = 'Speichern';
+        actions.append(cancel, save);
+        content.append(hint, area, actions);
+        panel.append(header, content);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        const remove = () => overlay.remove();
+        close.addEventListener('click', remove);
+        cancel.addEventListener('click', remove);
+        overlay.addEventListener('mousedown', event => { if (event.target === overlay)
+            remove(); });
+        save.addEventListener('click', () => {
+            const result = Links.aliasesSetzen(page.id, area.value.split(/[\n,;]+/));
+            if (!result)
+                return;
+            remove();
+            App.zeichneBaum();
+            App.zeichneSeite();
+            if (result.collisions.length) {
+                UI.banner('Gespeichert. Mehrdeutig und deshalb nicht automatisch verlinkt: ' +
+                    result.collisions.map((entry) => entry.alias).join(', '), 'warn');
+            }
+            else
+                UI.toast(result.aliases.length + (result.aliases.length === 1 ? ' Alias gespeichert' : ' Aliasse gespeichert'));
+        });
+        area.focus();
+    };
+    const obsidianVaultExport = async () => {
+        try {
+            await Austausch.alsObsidianVault('Redion-Obsidian-' + heute());
+            UI.toast('Obsidian-Vault mit stabilen IDs und Alias-Frontmatter gespeichert.');
+        }
+        catch (error) {
+            UI.banner('Obsidian-Vault konnte nicht erzeugt werden: ' +
+                (error instanceof Error ? error.message : String(error)), 'fehler');
+        }
+    };
     /* ========================================================================
      * 1. BEFEHLSPALETTE   (SilverBullet)
      * ------------------------------------------------------------------------
@@ -59,7 +125,25 @@ const Werkzeuge = (() => {
         const c = (gruppe, name, kurz, fn) => b.push({ gruppe, name, kurz, fn });
         c('Navigation', 'Suchen', 'Strg P', () => App.suche());
         c('Navigation', 'Neue Seite', 'Strg N', () => App.neueSeite());
-        c('Navigation', 'Startseite', '', () => Ansichten.start());
+        c('Navigation', 'Heute – Lernen & Alltag', '', () => Produktwelten.lernen('heute'));
+        c('Navigation', 'Lernzentrum', '', () => Produktwelten.lernen('lernen'));
+        c('Navigation', 'Lernpfad', '', () => Produktwelten.lernen('pfad'));
+        c('Navigation', 'Fehlertraining', '', () => Produktwelten.lernen('fehler'));
+        c('Navigation', 'Prüfungszentrum', '', () => Produktwelten.lernen('pruefungen'));
+        c('Navigation', 'Workspace', '', () => Produktwelten.workspace('start'));
+        c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
+        c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
+        c('Navigation', 'Whiteboards', '', () => Produktwelten.whiteboards());
+        /* DIE DREI DOMÄNEN FEHLTEN (Auftrag §29). Die Palette kannte „Lernpfad"
+           und „Prüfungszentrum", aber nicht „Schule öffnen" — obwohl §29 genau
+           diesen Satz als Beispiel nennt. Über die Reiter kommt man hin; wer
+           Strg+Umschalt+P benutzt, sucht aber nicht erst die Reiterleiste. */
+        c('Navigation', 'Schule und Ausbildung öffnen', '', () => Produktwelten.lernen('schule'));
+        c('Navigation', 'Uni öffnen', '', () => Produktwelten.lernen('uni'));
+        c('Navigation', 'Arbeit öffnen', '', () => Produktwelten.lernen('arbeit'));
+        c('Navigation', 'Lernfortschritt', '', () => Produktwelten.lernen('fortschritt'));
+        c('Navigation', 'Planung und Termine', '', () => Produktwelten.planung());
+        c('Navigation', 'Hauptwelten und Lebensbereiche einrichten', '', () => ProduktOnboarding.oeffnen());
         c('Navigation', 'Posteingang', '', () => Ansichten.posteingang());
         c('Navigation', 'Tagesjournal öffnen', 'Strg Shift J', () => journal());
         c('Navigation', 'Schnellnotizen', 'Strg Shift M', () => schnellnotizen());
@@ -69,6 +153,42 @@ const Werkzeuge = (() => {
         c('Navigation', 'Vorlagengalerie', '', () => Galerie.oeffne());
         c('Navigation', 'Karteikarten lernen', '', () => lernen());
         c('Navigation', 'Papierkorb', '', () => App.papierkorb());
+        /* ANLEGEN, NICHT NUR HINGEHEN (Auftrag §29 und §46). Bis hierher konnte
+           die Palette eine Ansicht öffnen, aber nichts Neues erzeugen ausser
+           einer Seite. Die fünf Wege dahinter gibt es alle — sie standen nur
+           nicht in der Liste, in der man sie sucht. */
+        c('Anlegen', 'Neue Seite anlegen', 'Strg N', () => App.neueSeite());
+        c('Anlegen', 'Neue Aufgabe', '', () => {
+            const seite = App.neueSeite();
+            setTimeout(() => {
+                if (seite?.id)
+                    Store.addBlock(seite.id, 'todo', { text: '' });
+                App.zeichneSeite();
+            }, 80);
+        });
+        c('Anlegen', 'Neue Lernkarte', '', () => {
+            const seite = App.neueSeite();
+            setTimeout(() => {
+                if (seite?.id)
+                    Store.addBlock(seite.id, 'flashcard', { text: '' });
+                App.zeichneSeite();
+            }, 80);
+        });
+        c('Anlegen', 'Neues Whiteboard', '', () => {
+            const seite = App.neueSeite();
+            setTimeout(() => {
+                if (seite?.id)
+                    Store.addBlock(seite.id, 'whiteboard', { text: 'Whiteboard' });
+                App.zeichneSeite();
+            }, 80);
+        });
+        c('Anlegen', 'PDF oder Datei importieren', '', () => dateienLesen());
+        c('Anlegen', 'Aufnahme starten', '', () => {
+            if (typeof Meeting !== 'undefined' && Meeting.panel)
+                Meeting.panel();
+            else
+                UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+        });
         c('Planen', 'Tagesplan', '', () => Plan.tagesplan());
         c('Planen', 'Wochenrückblick', '', () => Plan.wochenrueckblick());
         c('Planen', 'Zurückgestelltes ansehen', '', () => Plan.uebersicht());
@@ -76,6 +196,7 @@ const Werkzeuge = (() => {
         c('Navigation', 'Zurück', 'Strg [', () => App.zurueck());
         c('Navigation', 'Vorwärts', 'Strg ]', () => App.vorwaerts());
         if (p) {
+            c('Seite', 'Lebensbereiche zuordnen', '', () => Produktwelten.bereicheDialog(p));
             c('Seite', 'Seite umbenennen', '', () => {
                 const n = prompt('Neuer Titel', p.text);
                 if (n !== null) {
@@ -84,6 +205,7 @@ const Werkzeuge = (() => {
                     App.zeichneSeite();
                 }
             });
+            c('Seite', 'Aliasse bearbeiten', '', () => aliasDialog(p));
             c('Seite', 'Symbol ändern', '', () => document.querySelector('.pg-icon')?.click());
             c('Seite', p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen', '', () => { Store.updateBlock(p.id, { favorite: !p.favorite }); App.zeichneBaum(); });
             c('Seite', 'Duplizieren', '', () => { App.dupliziereSeite(p.id, p.parentId); App.zeichneBaum(); UI.toast('Dupliziert'); });
@@ -131,6 +253,7 @@ const Werkzeuge = (() => {
         c('Daten', 'Sicherung speichern', '', () => App.sicherungSpeichern());
         c('Daten', 'Sicherung laden', '', () => App.sicherungLaden());
         c('Daten', 'Alles in einen Ordner schreiben', '', () => ordnerSchreiben());
+        c('Daten', 'Als Obsidian-Vault (.zip)', '', () => void obsidianVaultExport());
         c('Daten', 'Ordner mit Markdown einlesen', '', () => ordnerLesen());
         c('Daten', 'Alles als eine HTML-Datei', '', () => einzelDatei());
         c('Daten', 'Aus Trello, Evernote, Obsidian oder Notion einlesen', '', () => Austausch.dialog());
@@ -498,13 +621,26 @@ const Werkzeuge = (() => {
     /* ========================================================================
      * 5. KARTEIKARTEN   (SiYuan, Anki-Verfahren SM-2)
      * ======================================================================*/
-    const karten = () => Object.values(Store.cache.blocks)
+    const lernModul = () => typeof window !== 'undefined'
+        ? window.Learning : null;
+    const karten = () => lernModul()?.cards?.() || Object.values(Store.cache.blocks)
         .filter(b => b.alive && b.type === 'flashcard');
     const faellig = () => {
+        const neu = lernModul();
+        if (neu?.due)
+            return neu.due();
         const jetzt = Date.now();
-        return karten().filter(k => !k.sr || !k.sr.faellig || new Date(k.sr.faellig).getTime() <= jetzt);
+        return karten().filter((k) => !k.sr || !k.sr.faellig || new Date(k.sr.faellig).getTime() <= jetzt);
     };
     const lernen = () => {
+        /* Learning V2 zeichnet Tagesqueue, Fehlertraining und Statistik. Der
+           alte Dialog bleibt als belastbarer Rückfall erhalten, falls das neue
+           Modul in einer eingebetteten Ein-Datei-Ausgabe noch nicht geladen ist. */
+        const neu = lernModul();
+        if (neu?.open) {
+            neu.open();
+            return;
+        }
         const stapel = faellig();
         const alle = karten();
         const o = document.createElement('div');
@@ -604,6 +740,9 @@ const Werkzeuge = (() => {
         });
     };
     const teileKarte = (k) => {
+        const neu = lernModul();
+        if (neu?.splitCard)
+            return neu.splitCard(k);
         const t = k.text || '';
         const i = t.indexOf('::');
         return i >= 0 ? [t.slice(0, i).trim(), t.slice(i + 2).trim()] : [t, '(noch keine Antwort — mit :: trennen)'];
@@ -823,7 +962,10 @@ const Werkzeuge = (() => {
      * ------------------------------------------------------------------------
      * Jede Überschrift 1 oder jede Trennlinie beginnt eine neue Folie.
      * ======================================================================*/
-    const praesentation = (p) => {
+    const praesentation = async (p) => {
+        /* Die Seitenbilder vorher holen — `folieBlock` zeichnet synchron. Für
+           den Bildschirm genügen blob-Adressen (E109). */
+        const bilder = (await bilderSammeln(p, false)).adressen;
         const folien = [];
         let aktuell = { titel: p.text || '', bloecke: [] };
         /* Eine neue Folie beginnt bei einer Trennlinie und bei jeder
@@ -838,7 +980,18 @@ const Werkzeuge = (() => {
                     aktuell = { titel: b.type === 'divider' ? '' : (b.text || ''), bloecke: [] };
                     return;
                 }
+                /* SPALTEN BLEIBEN SPALTEN. Vorher stieg `sammle` in einen
+                   Spaltenblock gar nicht hinab, und eine Schulaufgabe — die seit
+                   E104 immer in Spalten liegt — war als Vortrag vollständig leer.
+                   Untereinander wäre auch falsch: eine Folie ist breit und flach,
+                   zwei hochkante Blätter übereinander passen nicht darauf und
+                   schieben die Überschrift aus dem Bild (mit Augen gesehen, §55).
+                   Nebeneinander ist genau das, was das Dokument sagt. */
                 aktuell.bloecke.push({ b, tiefe });
+                /* Diese drei zeichnen ihren Inhalt selbst — sonst stünde er zweimal
+                   da, einmal darin und einmal daneben. */
+                if (['columns', 'columns3', 'blatt'].includes(b.type))
+                    return;
                 if (['bullet', 'number', 'todo', 'toggle'].includes(b.type))
                     sammle(b.id, tiefe + 1);
             });
@@ -887,6 +1040,57 @@ const Werkzeuge = (() => {
                 return `<div class="eqp">${Zusatz.mathe(b.text || '')}</div>`;
             if (b.type === 'divider')
                 return '<hr>';
+            /* WAS SEIT DAMALS DAZUKAM. Diese Kette ist die zweite in dieser Datei,
+               und das ist in Ordnung — Folien sind ein anderes Medium als
+               Fliesstext. Nicht in Ordnung war, dass sie beim Stand von damals
+               stehen blieb: Tabelle, Datenbank, PDF-Seite und A4-Blatt gab es
+               hier nicht, und jede Folie mit so etwas darauf war leer. Der
+               wiederkehrende Befund dieses Projekts: nicht „vergessen", sondern
+               „an einer Stelle getan und an der Nachbarstelle nicht" (L38). */
+            if (b.type === 'table')
+                return tabelleHtml(b);
+            if (b.type === 'database')
+                return datenbankHtml(b);
+            if (b.type === 'columns' || b.type === 'columns3') {
+                /* ZWEI BAUFORMEN, und beide gibt es wirklich (E118).
+                   Seit E102 liegt zwischen dem Spaltenblock und seinem Inhalt eine
+                   `spalte`-Hülle. Der Bestand von davor hat sie nicht — dort IST das
+                   Kind die Spalte, und der Editor zeichnet ihn deshalb weiter
+                   (editor.ts, `case 'columns'`: `childrenOf(block.id)` direkt).
+                   Hier stand nur die neue Form. Ein alter Spaltenblock fiel auf der
+                   Folie ersatzlos weg — nicht gemeldet, nur leer. Genau die Klasse
+                   Fehler, gegen die der Kommentar zwei Zeilen weiter oben geschrieben
+                   wurde: „an einer Stelle getan und an der Nachbarstelle nicht". */
+                const spalten = Store.childrenOf(b.id)
+                    .map((sp) => '<div class="folie-spalte">' +
+                    (sp.type === 'spalte'
+                        ? Store.childrenOf(sp.id).map((k) => folieBlock(k, 0)).join('')
+                        : folieBlock(sp, 0)) +
+                    '</div>').join('');
+                return `<div class="folie-spalten">${spalten}</div>`;
+            }
+            if (b.type === 'pdfseite') {
+                const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
+                const adr = bilder[b.id] || '';
+                /* Das Seitenverhältnis steht am KASTEN, nicht am Bild — genau wie
+                   beim Blatt daneben. Sonst regiert `.praesi img{max-height:52vh}`
+                   die Höhe, und zwei gleich grosse A4-Seiten stehen unterschiedlich
+                   hoch nebeneinander (gemessen: 442 gegen 541 px, §55). */
+                return '<figure class="folie-blatt" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
+                        : `<div class="fehlt">Seite ${esc(b.nr || '')} — kein Bild</div>`) +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            if (b.type === 'blatt') {
+                const bw = Number(b.blattBreite) || 595.28;
+                const bh = Number(b.blattHoehe) || 841.89;
+                return '<figure class="folie-blatt papier" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    '<div class="blatt-text">' +
+                    Store.childrenOf(b.id).map((k) => folieBlock(k, 0)).join('') +
+                    '</div>' + markenAlsSvg(b, bw, bh) + '</figure>';
+            }
             return b.text ? `<p${ein}>${Blocks.inline(b.text)}</p>` : '';
         };
         const weiter = (n) => { i = Math.max(0, Math.min(folien.length - 1, i + n)); zeichne(); };
@@ -941,6 +1145,20 @@ const Werkzeuge = (() => {
                 '<div class="fh">Markdown-Quelltext <em>' + esc(p.text || 'Ohne Titel') + '</em>' +
                 '<button class="icon-btn" data-a="zu">✕</button></div>' +
                 '<textarea id="mdq" spellcheck="false"></textarea>' +
+                /* Was „Übernehmen" wirklich tut, steht daneben — nicht erst im
+                   Nachhinein im Versionsverlauf. Markdown trägt keine Farben und
+                   keine Schriftgrössen (E101), und verschachtelte Listen kommen
+                   eine Ebene flach zurück. Alles, was Markdown gar nicht abbilden
+                   kann, steht seit E113 als Platzhalter im Text und bleibt
+                   unangetastet — man darf die Zeile nur nicht löschen. */
+                '<div class="hint" style="padding:0 14px 10px; line-height:1.5">' +
+                'Die Zeilen wie <code>&lt;!--blk:…--&gt;</code> sind PDF-Seiten, ' +
+                'Blätter, Tabellen und Spalten. Sie bleiben unverändert, solange ' +
+                'die Zeile stehen bleibt.<br>' +
+                'Farben, Schriftgrössen und die Verschachtelung von Listen kann ' +
+                'Markdown nicht tragen — sie gehen beim Übernehmen verloren. ' +
+                'Eine Fassung wird vorher gesichert.' +
+                '</div>' +
                 '<div class="fbtns">' +
                 '<button data-a="kopieren">Kopieren</button>' +
                 '<button data-a="datei">Als .md speichern</button>' +
@@ -1526,11 +1744,39 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         lade(new Blob([doc], { type: 'text/html' }), 'notizen-archiv-' + heute() + '.html');
         UI.toast(seiten.length + ' Seiten in eine HTML-Datei gepackt');
     };
-    /** Eine Seite als HTML — für Archiv, Einzelexport und Drucken. */
-    const seiteAlsHtml = (p) => {
+    /**
+     * Eine Seite als HTML — für Archiv, Einzelexport und Drucken.
+     *
+     * `sonderfall` darf einzelne Blockarten selbst bauen. Gibt er etwas
+     * zurück, gilt das statt der Kette unten UND statt des Absteigens in die
+     * Kinder — der Sonderfall entscheidet dann selbst, ob er hinabsteigt.
+     * Damit kann der Druckweg PDF-Seiten und Blätter mit ihren Bildern und
+     * Strichen setzen, ohne dass es eine zweite Baumwanderung gäbe (E108).
+     */
+    const seiteAlsHtml = (p, sonderfall) => {
         const raus = (id, tiefe) => {
             let h = '';
+            /* Welche Liste gerade offen ist — siehe `listeHalten` unten. */
+            let offen = '';
+            const listeHalten = (art) => {
+                if (art === offen)
+                    return;
+                if (offen)
+                    h += '</' + offen + '>';
+                if (art)
+                    h += '<' + art + '>';
+                offen = art;
+            };
+            const LISTENART = { bullet: 'ul', todo: 'ul', number: 'ol' };
             Store.childrenOf(id).forEach((b) => {
+                listeHalten(LISTENART[b.type] || '');
+                if (sonderfall) {
+                    const eigen = sonderfall(b, tiefe, raus);
+                    if (eigen !== null && eigen !== undefined) {
+                        h += eigen;
+                        return;
+                    }
+                }
                 const t = b.text || '';
                 if (b.type === 'h1')
                     h += `<h3>${Blocks.inline(t)}</h3>`;
@@ -1564,6 +1810,15 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     h += datenbankHtml(b);
                 else if (b.type === 'page')
                     h += `<p>📄 <b>${esc(t || 'Ohne Titel')}</b></p>`;
+                /* Eine PDF-Seite hat keinen `text`, fiel also aus der Kette heraus und
+                   kam gar nicht vor. Im Export und in der Veröffentlichung steht
+                   jetzt wenigstens, DASS sie da ist — das Bild selbst gehört nicht
+                   hinein: es ist eine blob-Adresse, die nach der Sitzung tot wäre
+                   (E98), und in einer öffentlichen Seite hat ein Schulskript ohnehin
+                   nichts verloren. Zum DRUCKEN gibt es den Sonderfall (E108). */
+                else if (b.type === 'pdfseite')
+                    h += `<p>📄 Seite ${esc(b.nr || '?')}` +
+                        (b.vonSeiten ? ' von ' + esc(b.vonSeiten) : '') + '</p>';
                 else if (t)
                     h += `<p>${Blocks.inline(t)}</p>`;
                 /* NICHT in Unterseiten hineingehen. Eine Unterseite steht hier mit
@@ -1577,6 +1832,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 if (b.type !== 'toggle' && b.type !== 'page')
                     h += raus(b.id, tiefe + 1);
             });
+            listeHalten('');
             return h;
         };
         return raus(p.id, 0);
@@ -1606,7 +1862,173 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         lade(new Blob([doc], { type: 'text/html' }), sauber(p.text) + '.html');
         UI.toast('Als HTML gespeichert');
     };
-    const drucken = (p) => {
+    /* ========================================================================
+     * DRUCKEN: EINE BESCHRIEBENE SEITE ZUM WEITERGEBEN
+     * ------------------------------------------------------------------------
+     * Vorher kam beim Drucken einer Schulaufgabe die Notizzeile heraus und
+     * sonst nichts — kein Seitenbild, kein einziger Strich. Nicht hässlich,
+     * sondern LEER, und genau in dem Fall, für den Redur das alles wollte:
+     * lösen und abgeben.
+     *
+     * DIE STRICHE KOMMEN AUS `Marken.zeichneMarke`, derselben Stelle, die sie
+     * auch auf dem Bildschirm zeichnet. Ein zweiter Pfad-Bauer wäre eine
+     * zweite Wahrheit über dieselbe Linie (§34) — und als SVG bleiben sie beim
+     * Drucken scharf, egal wie fein der Drucker ist.
+     * ======================================================================*/
+    /** Eine abgelegte Datei als Daten-Adresse — der Druckrahmen braucht das. */
+    const alsDatenAdresse = async (dateiId) => {
+        try {
+            const blob = await Dateien.alsBlob(dateiId);
+            if (!blob)
+                return '';
+            return await new Promise(fertig => {
+                const leser = new FileReader();
+                leser.onload = () => fertig(String(leser.result || ''));
+                leser.onerror = () => fertig('');
+                leser.readAsDataURL(blob);
+            });
+        }
+        catch {
+            return '';
+        }
+    };
+    /**
+     * Alle Seitenbilder einer Seite einsammeln, bevor gezeichnet wird.
+     *
+     * `alsDaten` entscheidet, WELCHE Adresse. Zum Drucken muss es eine
+     * Daten-Adresse sein: der Druckrahmen ist ein eigenes Dokument, und eine
+     * blob-Adresse wäre dort — und erst recht in einer gespeicherten Datei —
+     * nach der Sitzung tot (E98). Für die Präsentation, die im selben
+     * Dokument läuft, genügt die blob-Adresse: sie kostet nichts und lädt
+     * sofort (E109).
+     */
+    /* EINE OBERGRENZE FÜR DEN DRUCK (E117).
+       Eine Daten-Adresse ist eine Zeichenkette im Arbeitsspeicher, und beim
+       Drucken werden ALLE zugleich gehalten: einmal in der Karte, einmal im
+       zusammengebauten HTML des Druckrahmens. Bei 200 KB je Seitenbild sind
+       das schon bei achtzig Seiten rund 43 MB — doppelt, plus Base64-Aufschlag
+       ein Drittel obendrauf. Ein Skript mit fünfhundert Seiten sprengt jedes
+       Telefon (§36: „Große Dateien nicht vollständig in RAM laden").
+       Also eine Grenze — und, weil §35 gilt, KEINE stille: was nicht mehr
+       hineinpasst, wird gezählt, im Ausdruck an seinem Platz benannt und dem
+       Menschen gesagt. Eine Prüfung, die schweigend die Hälfte weglässt, sieht
+       aus wie eine vollständige. */
+    const DRUCK_BILDER_MAX = 40 * 1024 * 1024;
+    const bilderSammeln = async (p, alsDaten = true) => {
+        const adressen = {};
+        const ausgelassen = [];
+        let summe = 0;
+        const gehe = async (id, tiefe) => {
+            if (tiefe > 6)
+                return;
+            for (const b of Store.childrenOf(id)) {
+                if (b.type === 'page')
+                    continue;
+                if (b.type === 'pdfseite' && b.bildDateiId) {
+                    if (!alsDaten) {
+                        /* Für die Präsentation: eine `blob:`-Adresse kostet nichts —
+                           der Browser hält die Bytes ohnehin schon (E109). */
+                        adressen[b.id] = (await Dateien.adresse(b.bildDateiId)) || '';
+                    }
+                    else {
+                        const satz = await Store.dateiHolen(b.bildDateiId);
+                        const gross = Number(satz?.groesse) || 0;
+                        /* `summe > 0` ist die Ausnahme für den ersten: EIN Bild kommt
+                           immer mit, auch wenn es allein die Grenze reisst. Sonst
+                           druckte ein Dokument aus einer einzigen grossen Seite gar
+                           nichts, und „gar nichts" ist ein schlechteres Ergebnis als
+                           „einmal zu viel Speicher". Redions eigener Rasterer liefert
+                           rund 200 KB je Seite; über 40 MB kommt nur, was von aussen
+                           eingespielt wurde. */
+                        if (summe + gross > DRUCK_BILDER_MAX && summe > 0) {
+                            ausgelassen.push(b.id);
+                        }
+                        else {
+                            adressen[b.id] = await alsDatenAdresse(b.bildDateiId);
+                            summe += gross;
+                        }
+                    }
+                }
+                await gehe(b.id, tiefe + 1);
+            }
+        };
+        await gehe(p.id, 0);
+        return { adressen, ausgelassen };
+    };
+    /** Die Striche eines Blocks als SVG-Text. */
+    const markenAlsSvg = (block, breite, hoehe) => {
+        const marken = Array.isArray(block.marken) ? block.marken : [];
+        if (!marken.length || typeof Marken === 'undefined')
+            return '';
+        const teile = marken
+            .map((m) => Marken.zeichneMarke(m))
+            .filter(Boolean)
+            .map((k) => k.outerHTML)
+            .join('');
+        if (!teile)
+            return '';
+        return `<svg class="marken" viewBox="0 0 ${breite} ${hoehe}" ` +
+            `preserveAspectRatio="none">${teile}</svg>`;
+    };
+    const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
+        'break-inside:avoid; page-break-inside:avoid}' +
+        '.blatt-druck img{display:block; width:100%}' +
+        '.blatt-druck.papier{background:#fff; border:1px solid #ccc}' +
+        '.blatt-druck .blatt-text{padding:9.5%; font-size:11pt}' +
+        '.blatt-druck .marken{position:absolute; inset:0; width:100%; height:100%; ' +
+        'color:#111}' +
+        '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
+        'border:1px dashed #bbb}';
+    const drucken = async (p) => {
+        const { adressen: bilder, ausgelassen } = await bilderSammeln(p);
+        const zuGross = new Set(ausgelassen);
+        if (ausgelassen.length)
+            UI.toast(ausgelassen.length + ' Seitenbild' +
+                (ausgelassen.length === 1 ? '' : 'er') + ' ist für einen Ausdruck zu ' +
+                'gross und bleibt leer — drucke das Dokument in Abschnitten.', 8000);
+        /* Der Sonderfall setzt PDF-Seiten und Blätter; alles andere macht die
+           gewöhnliche Kette. `null` heisst „nicht meine Sache". */
+        const inhalt = seiteAlsHtml(p, (b, tiefe, hinab) => {
+            if (b.type === 'pdfseite') {
+                const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
+                const adr = bilder[b.id] || '';
+                /* `esc(adr)` und nicht `adr`: die Daten-Adresse traegt ihren
+                   MIME-Teil WOERTLICH aus dem Datei-Satz — und der stammt bei einer
+                   eingespielten Sicherung aus fremder Hand. `image/png" onerror="…`
+                   ueberlebt den Blob-Bauer (nur Zeichen ausserhalb U+0020–U+007E
+                   werden dort verworfen, `"` gehoert nicht dazu) und stuende hier
+                   mitten im Attribut. Bei einer ECHTEN Daten-Adresse aendert `esc`
+                   nichts: das Base64-Alphabet enthaelt keines der fuenf Zeichen.
+                   Die Folie daneben macht es seit E109 richtig; hier fehlte es
+                   schlicht (E112). */
+                /* Drei Fälle, drei Sätze. „Leer" ist keiner davon: wer eine leere
+                   Seite im Ausdruck findet, muss wissen, WARUM sie leer ist (§35). */
+                const fehlt = zuGross.has(b.id)
+                    ? `Seite ${esc(b.nr || '')} — dieses Dokument ist für einen ` +
+                        'Ausdruck am Stück zu gross. Die Striche stehen unten trotzdem; ' +
+                        'für das Seitenbild drucke das Dokument in Abschnitten.'
+                    : `Seite ${esc(b.nr || '')} — das Bild fehlt in diesem Bestand. ` +
+                        'Hol es in Redion aus dem Original zurück.';
+                return '<figure class="blatt-druck">' +
+                    (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
+                        : `<div class="fehlt">${fehlt}</div>`) +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            if (b.type === 'blatt') {
+                const bw = Number(b.blattBreite) || 595.28;
+                const bh = Number(b.blattHoehe) || 841.89;
+                return '<figure class="blatt-druck papier" ' +
+                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    '<div class="blatt-text">' + hinab(b.id, tiefe + 1) + '</div>' +
+                    markenAlsSvg(b, bw, bh) + '</figure>';
+            }
+            /* Spalten kommen beim Drucken UNTEREINANDER. Nebeneinander auf A4
+               hochkant wären zwei Spalten von je 90 mm — lesbar ist das nicht, und
+               die Reihenfolge Seite, Blatt, Seite, Blatt bleibt eindeutig. */
+            if (b.type === 'columns' || b.type === 'columns3' || b.type === 'spalte')
+                return hinab(b.id, tiefe + 1);
+            return null;
+        });
         const f = document.createElement('iframe');
         f.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0';
         document.body.appendChild(f);
@@ -1621,8 +2043,9 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<style>body{font:12pt/1.6 Georgia,serif;margin:22mm}h1{font-size:22pt}h3{font-size:16pt}h4{font-size:13pt}' +
             'pre{background:#f2f2f2;padding:10px;white-space:pre-wrap}table{border-collapse:collapse;width:100%}' +
             'td,th{border:1px solid #999;padding:5px 8px;font-size:10.5pt}img{max-width:100%}' +
-            '.cal{background:#f2f2f2;padding:10px;border-radius:4px}</style></head><body>' +
-            '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + seiteAlsHtml(p) + '</body></html>');
+            '.cal{background:#f2f2f2;padding:10px;border-radius:4px}' + DRUCK_STIL +
+            '</style></head><body>' +
+            '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + inhalt + '</body></html>');
         d.close();
         setTimeout(() => {
             f.contentWindow?.focus();
@@ -1757,6 +2180,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<hr>' +
             '<button data-a="alles"><span class="mi">📦</span>Alles als eine HTML-Datei</button>' +
             '<button data-a="ordner"><span class="mi">📁</span>Alles als Markdown-Ordner</button>' +
+            '<button data-a="obsidian"><span class="mi">🔮</span>Als Obsidian-Vault (.zip)</button>' +
             '<hr>' +
             '<div class="teilen-hinweis">Es gibt keinen Server und kein Konto — ' +
             'deshalb auch keine Freigabe ins Netz. Weitergeben heisst hier: eine Datei erzeugen.</div>', r.right - 240, r.bottom + 6);
@@ -1791,6 +2215,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 einzelDatei();
             if (a === 'ordner')
                 ordnerSchreiben();
+            if (a === 'obsidian')
+                void obsidianVaultExport();
         });
     };
     /* ========================================================================
@@ -2066,6 +2492,61 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             if (e.target === bereich)
                 bereich.classList.remove('ablegen');
         });
+        /* ======================================================================
+         * EINE GRENZE STATT ZWEIER (E99)
+         * ----------------------------------------------------------------------
+         * Bis hierher nahm das Ziehen-und-Ablegen Dateien bis 12 MB als
+         * Data-Adresse und warf alles Grössere mit einem Hinweis weg — während
+         * der Knopf am Datei-Block dieselbe Datei bis 500 MB in Stücken ablegte.
+         * Dieselbe Datei, zwei Ergebnisse, je nachdem wie man sie hereinbrachte.
+         * §14 nennt genau diese 12-MB-Grenze als nicht endgültig.
+         *
+         * Jetzt entscheidet `Dateien.lohntSich` an EINER Stelle, wie beim Knopf.
+         * ====================================================================*/
+        const anhaengen = async (seite, f, art) => {
+            const grund = art === 'image'
+                ? { caption: f.name } : { text: f.name };
+            if (typeof Dateien !== 'undefined' && Dateien.lohntSich(f.size)) {
+                if (f.size > Dateien.GRENZE) {
+                    UI.toast('„' + f.name + '" ist grösser als ' +
+                        Dateien.groesseText(Dateien.GRENZE) + '. So viel hält der Browser nicht.');
+                    return;
+                }
+                const b = Store.addBlock(seite, art, grund);
+                const melder = UI.toast('„' + f.name + '" wird abgelegt … 0 %', 60000);
+                try {
+                    const satz = await Dateien.ablegen(f, { blockId: b.id,
+                        beiFortschritt: (anteil) => {
+                            if (melder && melder.textContent !== undefined)
+                                melder.textContent = '„' + f.name + '" wird abgelegt … ' +
+                                    Math.round(anteil * 100) + ' %';
+                        } });
+                    /* Nur die Kennung in den Block — die blob-Adresse gilt nur für
+                       diese Sitzung (E98). */
+                    await Dateien.adresse(satz.id);
+                    Store.updateBlock(b.id, { dateiId: satz.id, typ: f.type });
+                    if (melder && melder.remove)
+                        melder.remove();
+                    UI.toast('„' + f.name + '" abgelegt (' + Dateien.groesseText(f.size) +
+                        ' in ' + satz.teile + ' Stücken)');
+                }
+                catch (err) {
+                    if (melder && melder.remove)
+                        melder.remove();
+                    UI.toast('„' + f.name + '" ging nicht: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                }
+                return;
+            }
+            /* Kleines geht weiter den kurzen Weg — für ein Bild von 40 KB wäre
+               der Apparat oben Unfug. */
+            const daten = await new Promise(ok => {
+                const r = new FileReader();
+                r.onload = () => ok(r.result);
+                r.readAsDataURL(f);
+            });
+            Store.addBlock(seite, art, { ...grund, src: daten });
+        };
         bereich.addEventListener('drop', async (e) => {
             if (!e.dataTransfer?.files?.length)
                 return;
@@ -2079,16 +2560,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             for (const f of e.dataTransfer.files) {
                 const name = f.name.toLowerCase();
                 if (f.type.startsWith('image/')) {
-                    if (f.size > 12 * 1024 * 1024) {
-                        UI.toast(f.name + ' ist grösser als 12 MB');
-                        continue;
-                    }
-                    const daten = await new Promise(ok => {
-                        const r = new FileReader();
-                        r.onload = () => ok(r.result);
-                        r.readAsDataURL(f);
-                    });
-                    Store.addBlock(seite, 'image', { src: daten, caption: f.name });
+                    await anhaengen(seite, f, 'image');
                     continue;
                 }
                 /* Excel, Word und EPUB laufen über den eigenen ZIP-Leser */
@@ -2143,17 +2615,23 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     UI.toast(f.name + ' als Unterseite angelegt');
                     continue;
                 }
-                /* Alles andere als Datei anhängen */
-                if (f.size <= 12 * 1024 * 1024) {
-                    const daten = await new Promise(ok => {
-                        const r = new FileReader();
-                        r.onload = () => ok(r.result);
-                        r.readAsDataURL(f);
-                    });
-                    Store.addBlock(seite, 'file', { src: daten, text: f.name });
+                /* Ein PDF wird zu beschreibbaren Seiten (E103) — das Original
+                   legt `alsSeiten` selbst als Anhang ab, Byte für Byte. */
+                if (/\.pdf$/i.test(name) && typeof PdfEinlesen !== 'undefined') {
+                    try {
+                        await PdfEinlesen.alsSeiten(f, seite);
+                        continue;
+                    }
+                    catch { /* Nichts verschlucken (E104): `alsSeiten` hängt die Datei
+                               selbst an, sobald es sie abgelegt hat, und wirft nur
+                               dann noch, wenn nicht einmal DAS ging. Dann ist der
+                               gewöhnliche Weg genau der richtige — vorher stand hier
+                               `continue`, und ein kaputtes PDF hinterliess eine leere
+                               Seite (test173). */
+                    }
                 }
-                else
-                    UI.toast(f.name + ' ist grösser als 12 MB');
+                /* Alles andere als Datei anhängen — ohne willkürliche Grenze. */
+                await anhaengen(seite, f, 'file');
             }
             App.zeichneSeite();
             App.zeichneBaum();

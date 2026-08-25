@@ -75,7 +75,11 @@ const Seitenleiste = (() => {
     const kommendeTermine = braucht('kommendeTermine');
     const seitenMenue = braucht('seitenMenue');
     const suche = braucht('suche');
-    const papierkorb = braucht('papierkorb');
+    /* `papierkorb` stand hier, solange die Apps-Kette ihn selbst aufrief. Der
+       Registereintrag ruft jetzt `App.papierkorb()`; die durchgereichte
+       Fassung wäre eine zweite Adresse für dieselbe Handlung (E166).
+       `binde` nimmt den Schlüssel weiterhin entgegen — er schadet nicht, und
+       ein Bereich, der ihn morgen wieder braucht, holt ihn mit `braucht`. */
     /* ========================================================================
      * SEITENLEISTE
      * ======================================================================*/
@@ -227,8 +231,11 @@ const Seitenleiste = (() => {
         /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
            stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
            kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
-        const karte = { start: 'hl-start', seiten: 'hl-seiten',
-            bespr: 'hl-bespr', mehr: 'hl-mehr' };
+        const karte = {
+            start: 'hl-start', lernen: 'hl-lernen',
+            seiten: 'hl-seiten', workspace: 'hl-seiten',
+            bespr: 'hl-bespr', mehr: 'hl-mehr'
+        };
         l.querySelectorAll('button[role="tab"]').forEach(b => {
             b.classList.remove('an');
             /* `aria-selected` gehört zu `role="tab"` wie das Ziel zum Verweis.
@@ -309,6 +316,9 @@ const Seitenleiste = (() => {
            Schale warf das und die ganze Seitenleiste blieb leer. */
         if (!baum)
             return;
+        const altAufraeumen = baum.__seitenFensterAufraeumen;
+        if (typeof altAufraeumen === 'function')
+            altAufraeumen();
         baum.innerHTML = '';
         zeichneReiter();
         /* Der Chat-Reiter ersetzt den Baum durch Agenten und Verlauf */
@@ -497,7 +507,7 @@ const Seitenleiste = (() => {
                 leer.textContent = 'Noch leer';
                 baum.appendChild(leer);
             }
-            drin.forEach((p) => baum.appendChild(zeile(p, 0)));
+            seitenAnhaengen(baum, drin);
         });
         /* Privat */
         if (abschnittAn('privat')) {
@@ -515,42 +525,33 @@ const Seitenleiste = (() => {
                 leer.textContent = 'Noch keine Seiten';
                 baum.appendChild(leer);
             }
-            seiten.forEach((p) => baum.appendChild(zeile(p, 0)));
+            seitenAnhaengen(baum, seiten);
             /* Systemseiten (Journal, Vorlagen, Schnellnotizen) getrennt unten */
             const sys = Store.rootPages().filter((p) => p.system);
             if (sys.length) {
                 baum.appendChild(abschnitt('Angelegt von den Werkzeugen'));
-                sys.forEach((p) => baum.appendChild(zeile(p, 0)));
+                seitenAnhaengen(baum, sys);
             }
         }
         /* Meine Apps — bei Notion steht hier „Notion-Apps" ganz unten */
         if (!abschnittAn('apps'))
             return;
         baum.appendChild(abschnitt('Meine Apps', null, () => abschnitteAnpassen()));
+        /* AUS DEM REGISTER, NICHT AUS ZWEI LISTEN (L58, E166).
+           Hier standen die zwanzig Apps als Datentabelle und darunter eine Kette
+           aus zwanzig `if (a === '…')`. Zwei Listen für dieselben zwanzig Dinge:
+           wer eine hinzufügte, musste an beide denken, und wer eine umbenannte,
+           an eine. Dieselbe Lage, die E160 eine Gruppe weiter oben aufgelöst hat.
+    
+           `esc` ist Pflicht, auch wenn heute nur eingebaute Einträge kommen:
+           `melde` steht jedem Bereich offen, und ein Erweiterungsname ist
+           Nutzertext (CLAUDE.md §19). */
         const apps = document.createElement('div');
         apps.className = 'wz-block apps-block';
-        apps.innerHTML = [
-            ['kalender', '📅', 'Kalender', 'Termine aus allen Quellen'],
-            ['pwa', '📱', 'App installieren', 'Auf dem Telefon oder Rechner ablegen'],
-            ['bib', '📚', 'Bibliothek', 'Alle Seiten, sortierbar'],
-            ['aufgaben', '☑', 'Meine Aufgaben', 'Was dir zugewiesen ist'],
-            ['markt', '🛍', 'Marktplatz', 'Fertige Vorlagen'],
-            ['wissen', '📖', 'Notion-Wissen', 'Alles über Notion und Redion, in acht Teilen'],
-            ['pflege', '🧰', 'Erste Hilfe', 'Prüfen, reparieren, sichern'],
-            ['modell', '🗺', 'Datenmodell', 'Alle Datenbanken und ihre Verknüpfungen'],
-            ['kennzahl', '📊', 'Kennzahlen', 'Zahlen aus mehreren Datenbanken'],
-            ['krypto', '🔐', 'Passwort', 'Verschlüsselte Sicherung und Sperre'],
-            ['aussehen', '🎨', 'Aussehen', 'Farben, Schrift und Tastenkürzel'],
-            ['tempo', '⏱', 'Tempo', 'Wie schnell gezeichnet und gerechnet wird'],
-            ['kann', '⭐', 'Was Redion kann', 'Alles auf einen Blick, mit Führung'],
-            ['erweitern', '🧩', 'Erweiterungen', 'Eigene Befehle, Knöpfe und Formeln'],
-            ['eingang', '📨', 'Was hereinkommt', 'Daten von aussen abholen und einwerfen'],
-            ['tagesplan', '☀', 'Tagesplan', 'Was heute ansteht'],
-            ['woche', '📅', 'Wochenrückblick', 'Was lief, was blieb liegen'],
-            ['spaeter', '⏰', 'Zurückgestellt', 'Was später wieder hochkommt'],
-            ['hilfe', '？', 'Hilfe', 'Tastenkürzel — Strg /'],
-            ['papier', '🗑', 'Papierkorb', 'Gelöschte Seiten']
-        ].map(([a, i, n, t]) => `<button class="side-item" data-app="${a}" title="${t}"><span>${i}</span><span>${n}</span></button>`).join('');
+        const appliste = (typeof Register !== 'undefined' && Register.navigation)
+            ? Register.navigation.anPlatz('apps') : [];
+        apps.innerHTML = appliste.map((x) => `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
+            `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`).join('');
         /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
         setTimeout(() => {
             let versteckt = false;
@@ -564,51 +565,23 @@ const Seitenleiste = (() => {
                     el.style.display = versteckt ? 'none' : '';
             });
         }, 0);
+        /* Die Handlung steht am Eintrag. Ein Fehler darin darf die Leiste nicht
+           mitreissen — er gehört in den Reporter, wie beim Anhängepunkt unten. */
         apps.addEventListener('click', e => {
             const b = elVon(e)?.closest('[data-app]');
             if (!b)
                 return;
-            const a = b.dataset.app;
-            if (a === 'kalender')
-                Kalender.dialog();
-            if (a === 'pwa')
-                PWA.installieren();
-            if (a === 'bib')
-                Bibliothek.oeffne();
-            if (a === 'aufgaben')
-                Bibliothek.aufgaben();
-            if (a === 'markt')
-                Werkzeuge.vorlagen();
-            if (a === 'wissen')
-                Wissen.oeffnen();
-            if (a === 'pflege')
-                Pflege.ersteHilfe();
-            if (a === 'modell')
-                Schema.ansicht();
-            if (a === 'kennzahl')
-                Schema.tafel();
-            if (a === 'krypto')
-                Krypto.dialog();
-            if (a === 'aussehen')
-                Aussehen.dialog();
-            if (a === 'tempo')
-                Tempo.dialog();
-            if (a === 'kann')
-                Rundgang.uebersicht();
-            if (a === 'erweitern')
-                Erweiterung.dialog();
-            if (a === 'eingang')
-                Eingang.dialog();
-            if (a === 'tagesplan')
-                Plan.tagesplan();
-            if (a === 'woche')
-                Plan.wochenrueckblick();
-            if (a === 'spaeter')
-                Plan.uebersicht();
-            if (a === 'hilfe')
-                Werkzeuge.tastenkuerzel();
-            if (a === 'papier')
-                papierkorb();
+            const eintrag = appliste.find((x) => (x.marke || x.id) === b.dataset.app);
+            if (!eintrag?.tun)
+                return;
+            try {
+                eintrag.tun();
+            }
+            catch (fehler) {
+                if (typeof Reporter !== 'undefined')
+                    Reporter.error('Seitenleiste', String(b.dataset.app) + ': ' +
+                        (fehler instanceof Error ? fehler.message : String(fehler)), fehler);
+            }
         });
         baum.appendChild(apps);
         /* --- Was das Register beisteuert -------------------------------------
@@ -702,30 +675,31 @@ const Seitenleiste = (() => {
         const zu = abschnittZu(name);
         const folge = abschnitteGeordnet().map(x => x[0]);
         const i = id ? folge.indexOf(id) : -1;
+        /* Über `Menue.menu`, nicht von Hand: von Hand gebaut wurde dieses Menü
+           am Telefon NIE zum Blatt — es stand als Rechner-Kästchen mitten auf
+           dem kleinen Bildschirm, ohne Wischgeste, ohne Karten. Das Modul kann
+           das alles; man muss es nur benutzen (§8-Gedanke, auf Menüs gewandt). */
         const r = anker.getBoundingClientRect();
-        const m = document.createElement('div');
-        m.className = 'menu';
-        m.style.cssText = `position:fixed; left:${Math.min(r.left, innerWidth - 230)}px; ` +
-            `top:${r.bottom + 4}px; z-index:1400; min-width:210px`;
-        m.innerHTML =
-            `<button data-a="klappen"><span class="mi">${zu ? '⌄' : '›'}</span>` +
-                `${zu ? 'Aufklappen' : 'Zuklappen'}</button>` +
-                '<button data-a="alleZu"><span class="mi">⌃</span>Alle Abschnitte zuklappen</button>' +
-                '<button data-a="alleAuf"><span class="mi">⌄</span>Alle aufklappen</button>' +
-                (id ? '<hr>' +
-                    `<button data-a="hoch"${i <= 0 ? ' disabled' : ''}><span class="mi">↑</span>Weiter nach oben</button>` +
-                    `<button data-a="runter"${i < 0 || i >= folge.length - 1 ? ' disabled' : ''}>` +
-                    '<span class="mi">↓</span>Weiter nach unten</button>' +
-                    '<button data-a="aus"><span class="mi">🚫</span>Diesen Abschnitt ausblenden</button>' : '') +
-                '<hr>' +
-                '<button data-a="anpassen"><span class="mi">⚙</span>Abschnitte anpassen</button>';
-        document.body.appendChild(m);
+        const m = Menue.menu(`<button data-a="klappen"><span class="mi">${zu ? '⌄' : '›'}</span>` +
+            `${zu ? 'Aufklappen' : 'Zuklappen'}</button>` +
+            '<button data-a="alleZu"><span class="mi">⌃</span>Alle Abschnitte zuklappen</button>' +
+            '<button data-a="alleAuf"><span class="mi">⌄</span>Alle aufklappen</button>' +
+            (id ? '<hr>' +
+                `<button data-a="hoch"${i <= 0 ? ' disabled' : ''}><span class="mi">↑</span>Weiter nach oben</button>` +
+                `<button data-a="runter"${i < 0 || i >= folge.length - 1 ? ' disabled' : ''}>` +
+                '<span class="mi">↓</span>Weiter nach unten</button>' +
+                '<button data-a="aus"><span class="mi">🚫</span>Diesen Abschnitt ausblenden</button>' : '') +
+            '<hr>' +
+            '<button data-a="anpassen"><span class="mi">⚙</span>Abschnitte anpassen</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4, { titel: name });
+        m.style.minWidth = '210px';
         m.addEventListener('click', (e) => {
             const b = elVon(e)?.closest('[data-a]');
             if (!b || b.disabled)
                 return;
             const a = b.dataset.a;
-            m.remove();
+            /* Beides weg — am Telefon steht hinter dem Blatt der dunkle Grund,
+               und ein Grund ohne Blatt wäre eine unsichtbare Wand vor der App. */
+            document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
             if (a === 'klappen')
                 abschnittKlappen(name);
             if (a === 'alleZu') {
@@ -751,7 +725,10 @@ const Seitenleiste = (() => {
             if (a === 'anpassen')
                 abschnitteAnpassen();
         });
-        setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }), 0);
+        /* Das Schliessen von aussen übernimmt das Modul: am Rechner der
+           mousedown daneben, am Telefon der Grund und die Wischgeste. Der
+           once-Klick-Schliesser, der hier stand, hätte am Telefon das Blatt
+           entfernt und den Grund stehen lassen — eine unsichtbare Wand. */
     };
     const abschnitt = (name, beiPlus, beiZahnrad) => {
         const d = document.createElement('div');
@@ -790,8 +767,91 @@ const Seitenleiste = (() => {
         d.appendChild(punkte);
         return d;
     };
-    const zeile = (p, tiefe) => {
+    let gemesseneZeilenHoehe = 30;
+    const FENSTER_SCHWELLE = 240;
+    const FENSTER_PUFFER = 12;
+    /** Sichtbare Seitenhierarchie als flache Folge. Nur aufgeklappte Kinder
+        gehören hinein — genau dieselbe Regel wie beim bisherigen rekursiven
+        Zeichnen. */
+    const sichtbareSeiten = (wurzeln) => {
+        const raus = [];
+        const nimm = (p, tiefe) => {
+            raus.push({ p, tiefe });
+            if (!p.aufgeklappt)
+                return;
+            Store.childrenOf(p.id)
+                .filter((k) => k.type === 'page' && !k.archiviert)
+                .forEach((k) => nimm(k, tiefe + 1));
+        };
+        wurzeln.forEach(p => nimm(p, 0));
+        return raus;
+    };
+    /**
+     * Ein echter Fenster-Renderer für grosse Seitenlisten. Der Scrollbereich
+     * bleibt so hoch wie die vollständige Liste; im DOM stehen nur die Zeilen
+     * im Bild plus zwölf darüber und darunter. Die Höhe wird an einer echten
+     * `.row` gemessen und nicht aus dem CSS abgeschrieben.
+     */
+    const seitenAnhaengen = (baum, wurzeln) => {
+        const liste = sichtbareSeiten(wurzeln);
+        if (liste.length <= FENSTER_SCHWELLE) {
+            wurzeln.forEach(p => baum.appendChild(zeile(p, 0)));
+            return;
+        }
+        const rahmen = document.createElement('div');
+        rahmen.className = 'seiten-fenster';
+        rahmen.setAttribute('role', 'list');
+        rahmen.setAttribute('aria-label', `${liste.length} Seiten`);
+        rahmen.style.cssText = `position:relative;height:${liste.length * gemesseneZeilenHoehe}px`;
+        baum.appendChild(rahmen);
+        let letzterVon = -1, letzterBis = -1;
+        const zeichnen = (erzwingen = false) => {
+            if (!rahmen.isConnected || rahmen.style.display === 'none')
+                return;
+            const relativ = baum.scrollTop - rahmen.offsetTop;
+            const von = Math.max(0, Math.floor(relativ / gemesseneZeilenHoehe) - FENSTER_PUFFER);
+            const bis = Math.min(liste.length, Math.max(von, Math.ceil((relativ + baum.clientHeight) / gemesseneZeilenHoehe) + FENSTER_PUFFER));
+            if (!erzwingen && von === letzterVon && bis === letzterBis)
+                return;
+            letzterVon = von;
+            letzterBis = bis;
+            rahmen.replaceChildren();
+            for (let i = von; i < bis; i++) {
+                const x = liste[i];
+                if (!x)
+                    continue;
+                const z = zeile(x.p, x.tiefe, true);
+                z.setAttribute('role', 'listitem');
+                z.setAttribute('aria-posinset', String(i + 1));
+                z.setAttribute('aria-setsize', String(liste.length));
+                z.style.cssText = `position:absolute;left:0;right:0;top:${i * gemesseneZeilenHoehe}px`;
+                rahmen.appendChild(z);
+            }
+        };
+        zeichnen(true);
+        requestAnimationFrame(() => {
+            if (!rahmen.isConnected)
+                return;
+            const h = rahmen.querySelector('.row')?.getBoundingClientRect().height || 0;
+            if (h > 10 && Math.abs(h - gemesseneZeilenHoehe) > 0.25) {
+                gemesseneZeilenHoehe = h;
+                rahmen.style.height = liste.length * h + 'px';
+                zeichnen(true);
+            }
+        });
+        const beiScroll = () => zeichnen();
+        baum.addEventListener('scroll', beiScroll, { passive: true });
+        const bisher = baum.__seitenFensterAufraeumen;
+        baum.__seitenFensterAufraeumen = () => {
+            if (typeof bisher === 'function')
+                bisher();
+            baum.removeEventListener('scroll', beiScroll);
+        };
+    };
+    const zeile = (p, tiefe, flach = false) => {
         const w = document.createElement('div');
+        if (flach && tiefe)
+            w.style.marginLeft = tiefe * 14 + 'px';
         const r = document.createElement('div');
         r.className = 'row' + (p.id === aktuelleSeite() ? ' on' : '');
         r.draggable = true;
@@ -850,7 +910,7 @@ const Seitenleiste = (() => {
             }
         });
         w.appendChild(r);
-        if (offen && kinder.length) {
+        if (!flach && offen && kinder.length) {
             const k = document.createElement('div');
             k.className = 'kids';
             kinder.forEach((kid) => k.appendChild(zeile(kid, tiefe + 1)));
@@ -876,7 +936,8 @@ const Seitenleiste = (() => {
         abschnittAn,
         abschnittSchalten,
         abschnitteAnpassen,
-        abschnitteGeordnet
+        abschnitteGeordnet,
+        abschnittMenue
     };
 })();
 window.Seitenleiste = Seitenleiste;

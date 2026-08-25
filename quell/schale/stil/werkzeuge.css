@@ -40,7 +40,7 @@
 }
 .fbtns button{padding:7px 14px; border:1px solid var(--line); border-radius:7px; font-size:14px}
 .fbtns button:hover{background:var(--bg-hover)}
-.fbtns .prim{background:var(--accent); color:#fff; border-color:transparent; font-weight:500}
+.fbtns .prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
 .fbtns .prim:hover{filter:brightness(1.1)}
 #mdq{
   width:100%; height:52vh; padding:16px 18px; background:var(--bg); border:none;
@@ -114,7 +114,7 @@ a.bl:hover{color:var(--text)}
   padding:9px 12px; outline:none; resize:vertical; font:14px/1.5 var(--font); color:var(--text);
 }
 .memo-neu textarea:focus{border-color:var(--accent)}
-.memo-neu .prim{background:var(--accent); color:#fff; padding:9px 14px; border-radius:8px; font-weight:500}
+.memo-neu .prim{background:var(--accent); color:var(--auf-accent); padding:9px 14px; border-radius:8px; font-weight:500}
 .heatmap{
   display:grid; grid-template-rows:repeat(7,10px); grid-auto-flow:column; gap:3px;
   padding:12px 16px; border-bottom:1px solid var(--line); overflow-x:auto;
@@ -153,7 +153,7 @@ a.bl:hover{color:var(--text)}
   background:var(--bg-input); border:1px solid var(--line); border-radius:8px; outline:none;
   color:var(--text); text-align:center;
 }
-.gesperrt .prim{background:var(--accent); color:#fff; padding:9px 20px; border-radius:8px; font-weight:500}
+.gesperrt .prim{background:var(--accent); color:var(--auf-accent); padding:9px 20px; border-radius:8px; font-weight:500}
 .sperrhinweis{
   background:var(--b-yellow); border-radius:7px; padding:9px 14px; font-size:13.5px;
   margin:6px 0 12px; display:flex; align-items:center; gap:10px;
@@ -280,7 +280,7 @@ a.bl:hover{color:var(--text)}
 .home-sich .hs-still:hover{background:var(--bg-hover); color:var(--text)}
 .home-sich .hs-tun{
   flex:0 0 auto; font-size:13px; font-weight:500; padding:8px 14px;
-  border-radius:7px; background:var(--accent); color:#fff; white-space:nowrap;
+  border-radius:7px; background:var(--accent); color:var(--auf-accent); white-space:nowrap;
 }
 .home-sich .hs-tun:hover{filter:brightness(1.07)}
 .home-sich .hs-tun:active{transform:translateY(1px)}
@@ -357,6 +357,17 @@ a.bl:hover{color:var(--text)}
 .auswahlleiste button:hover{background:var(--bg-hover); color:var(--text)}
 .auswahlleiste .ki{color:var(--accent); font-weight:500}
 .auswahlleiste .tr{width:1px; height:18px; background:var(--line); margin:0 3px}
+/* Am Telefon (Hinsehen, 9. August): die Leiste war 442 px breit bei 390 px
+   Bild — Farbe und Kommentar lagen AUSSERHALB, und 28×31-px-Knöpfe trifft
+   kein Finger (§37). Jetzt: nie breiter als das Bild, innen rollbar, Knöpfe
+   44 px. `flex:0 0 auto`, weil Flexbox sonst staucht statt überstehen zu
+   lassen — die Lehre aus §55.2. */
+@media(max-width:760px){
+  .auswahlleiste{max-width:calc(100vw - 16px); overflow-x:auto;
+                 -webkit-overflow-scrolling:touch}
+  .auswahlleiste button{flex:0 0 auto; min-width:44px; min-height:44px}
+  .auswahlleiste .tr{flex:0 0 auto}
+}
 
 /* --- Kommentare ------------------------------------------------------------------------ */
 .komm{padding:12px 16px; border-bottom:1px solid var(--line-soft)}
@@ -371,6 +382,22 @@ a.bl:hover{color:var(--text)}
   background:var(--bg-card); border-radius:10px; padding:1px 6px;
 }
 .komm-marke:hover{opacity:1; background:var(--bg-hover)}
+
+/* Der Weg zurück zur Quelle (§44, E155).
+   IN DER ZEILE, NICHT AM RAND. Die Kommentarmarke steht mit `right:-30px`
+   ausserhalb des Textes — sie soll ja nur andeuten, dass es sie gibt. Dieser
+   Knopf trägt dagegen eine Auskunft („PDF · Seite 14"), die gelesen werden
+   soll, und am rechten Rand hätte sie keinen Platz. Am Telefon erst recht
+   nicht: dort ist der Rand, wo `-30px` hinzeigen, gar nicht mehr da. */
+.quell-marke{
+  flex:0 0 auto; margin:2px 4px; padding:3px 8px; min-height:24px;
+  border:1px solid var(--line); border-radius:999px;
+  background:var(--bg-card); color:var(--text-dim);
+  font-size:11.5px; white-space:nowrap;
+  transition:color var(--motion-fast,130ms) ease, border-color var(--motion-fast,130ms) ease;
+}
+.quell-marke:hover,.quell-marke:focus-visible{color:var(--accent); border-color:var(--accent)}
+@media(max-width:760px){ .quell-marke{min-height:32px; padding-inline:10px} }
 
 /* --- Emoji-Auswahl ----------------------------------------------------------------------- */
 .swatches.emojis{grid-template-columns:repeat(9,1fr); max-height:230px; overflow-y:auto}
@@ -394,7 +421,7 @@ a.bl:hover{color:var(--text)}
   display:grid; place-items:center;
 }
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
-.wb-tools button.on{background:var(--accent); color:#fff}
+.wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
 .wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
@@ -412,7 +439,7 @@ a.bl:hover{color:var(--text)}
 .chart-typen{display:flex; gap:2px}
 .chart-typen button{font-size:12px; padding:3px 9px; border-radius:12px; color:var(--text-dim)}
 .chart-typen button:hover{background:var(--bg-hover)}
-.chart-typen button.on{background:var(--accent); color:#fff}
+.chart-typen button.on{background:var(--accent); color:var(--auf-accent)}
 .chart-daten{font-size:12.5px; color:var(--text-dim); padding:3px 8px; border-radius:5px}
 .chart-daten:hover{background:var(--bg-hover); color:var(--text)}
 .chart-svg{width:100%; height:auto; color:var(--text)}
@@ -734,3 +761,28 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   from{ opacity:0; transform:translateY(6px) }
   to{ opacity:1; transform:translateY(0) }
 }
+
+/* --- Massstab und Schiebehand (E138, Auftrag §22) ------------------------------------------- */
+/* Die Fläche ist seit E138 grösser als ihr Kasten. Zwei Dinge braucht das
+   sichtbar: WO man ist (der Prozentwert) und WOMIT man schiebt (die Hand).
+   Ohne den Prozentwert weiss niemand, warum die Zeichnung plötzlich klein
+   ist; ohne den Zeiger sieht die Hand aus wie ein Zeichenwerkzeug. */
+.wb-massstab{
+  min-width:46px; padding:0 4px; text-align:center; font-size:11px; font-weight:600;
+  color:var(--text-dim); font-variant-numeric:tabular-nums;
+}
+.wb-zoom{display:inline-flex;align-items:center;gap:2px}
+.wb.wb-schiebt .wb-flaeche{cursor:grab}
+.wb.wb-schiebt .wb-flaeche:active{cursor:grabbing}
+
+/* Das Schreibfeld auf der Fläche (E144). Es sitzt im Kasten `.wb`, nicht im
+   rollenden SVG — ein Feld im SVG würde beim Schieben mitwandern und wäre
+   genau dann weg, wenn man tippt. */
+.wb{position:relative}
+.wb-eingabe{
+  position:absolute; z-index:4; margin:0; padding:6px 8px; resize:none;
+  border:2px solid var(--accent); border-radius:5px;
+  background:var(--bg-card); font:inherit; font-size:14px; line-height:1.35;
+  box-shadow:0 6px 18px rgba(0,0,0,.22); outline:none;
+}
+.wb-griffpunkt{cursor:nwse-resize}

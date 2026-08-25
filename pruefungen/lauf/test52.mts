@@ -24,6 +24,9 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.evaluate(() => {
     Store.setMeta('rundgangGesehen', true);
     document.getElementById('rg-willkommen')?.remove();
+    /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+       über alles und fängt Klicks ab (E132). */
+    document.querySelector('.produkt-onboarding-lage')?.remove();
     document.getElementById('rg-einladung')?.remove();
   });
 
@@ -102,6 +105,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.evaluate(async () => { Store.setMeta('seiteBreite', 330); await Store.flush(); });
   await p.reload();
   await p.waitForTimeout(1600);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nachNeustart = await p.evaluate(() =>
     Math.round(document.querySelector<HTMLElement>('#sidebar')?.getBoundingClientRect().width ?? -1) ?? -1);
   pruef('Breite nach dem Neustart', nachNeustart, 330);

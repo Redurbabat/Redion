@@ -201,14 +201,21 @@ const pruef = (n: any, ist: any, soll: any) => {
     const kinder = Store.childrenOf(erg.seite.id);
     const start = kinder.find((k: any) => k.text === 'Start');
     const ordner = kinder.find((k: any) => k.text === 'Unterordner');
+    const zweite = ordner ? Store.childrenOf(ordner.id).find((k: any) => k.text === 'Zweite Notiz') : null;
+    const aufgeloest = Links.loeseSeitenverweis('Zweite Notiz');
     return { hinweis: erg.hinweis,
              oben: kinder.map((k: any) => k.text).sort(),
              imOrdner: ordner ? Store.childrenOf(ordner.id).map((k: any) => k.text) : [],
-             linkText: Store.childrenOf(start.id).map((b: any) => b.text).join(' ') };
+             linkText: Store.childrenOf(start.id).map((b: any) => b.text).join(' '),
+             linkStatus: aufgeloest.status,
+             linkZiel: aufgeloest.page?.id || '', zweiteId: zweite?.id || '' };
   });
   pruef('Ordner wurde Unterseite', obsidian.oben, ['Start', 'Unterordner']);
   pruef('Notiz im Ordner',         obsidian.imOrdner, ['Zweite Notiz']);
-  pruef('Wikilink aufgelöst',      /\]\(#[0-9a-f-]{8}/.test(obsidian.linkText ?? ''), true);
+  pruef('Bekannter Wikilink bleibt unverändert',
+        (obsidian.linkText ?? '').includes('[[Zweite Notiz]]'), true);
+  pruef('Bewahrter Wikilink wird eindeutig aufgelöst',
+        [obsidian.linkStatus, obsidian.linkZiel], ['eindeutig', obsidian.zweiteId]);
   pruef('Unbekannter Wikilink bleibt stehen', (obsidian.linkText ?? '').includes('[[Fehlt]]'), true);
   pruef('Nur Markdown gezählt',    (obsidian.hinweis ?? '').includes('2 Notizen'), true);
 

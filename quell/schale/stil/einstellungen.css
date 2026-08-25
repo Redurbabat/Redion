@@ -296,7 +296,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
   font-size:11.5px; background:var(--bg-side); border:1px solid var(--line); border-radius:5px;
   padding:1px 6px; margin-top:3px; white-space:nowrap; max-width:150px; overflow:hidden; text-overflow:ellipsis;
 }
-.nadel:hover .n-text{background:var(--accent); color:#fff}
+.nadel:hover .n-text{background:var(--accent); color:var(--auf-accent)}
 .karte-zoom{position:absolute; right:10px; top:10px; display:flex; flex-direction:column; gap:3px; z-index:4}
 .karte-zoom button{
   width:28px; height:28px; background:var(--bg-side); border:1px solid var(--line);
@@ -337,8 +337,8 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .kal-kopf button:hover{background:var(--bg-hover); color:var(--text)}
 .kal-stufen{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-right:6px}
 .kal-stufen button{border-radius:0; padding:3px 11px}
-.kal-stufen button.on{background:var(--accent); color:#fff}
-.kal-stufen button.on:hover{background:var(--accent); color:#fff}
+.kal-stufen button.on{background:var(--accent); color:var(--auf-accent)}
+.kal-stufen button.on:hover{background:var(--accent); color:var(--auf-accent)}
 .cal.woche .day{min-height:190px}
 .cal.woche .dow.jetzt{color:var(--accent); font-weight:600}
 /* Farbpunkt je Kalender */
@@ -440,7 +440,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 /* Web Clipper */
 .clip-zieh{display:flex; justify-content:center; padding:16px; background:var(--bg-card);
   border-radius:8px; margin:6px 0}
-.clip-knopf{display:inline-block; background:var(--accent); color:#fff; padding:9px 20px;
+.clip-knopf{display:inline-block; background:var(--accent); color:var(--auf-accent); padding:9px 20px;
   border-radius:7px; font-size:14px; font-weight:500; text-decoration:none; cursor:grab}
 .clip-knopf:active{cursor:grabbing}
 

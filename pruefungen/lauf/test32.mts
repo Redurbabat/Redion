@@ -18,6 +18,9 @@ import { chromium } from 'playwright';
   await p.evaluate(() => {
     Store.setMeta('rundgangGesehen', true);
     document.getElementById('rg-willkommen')?.remove();
+    /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+       über alles und fängt Klicks ab (E132). */
+    document.querySelector('.produkt-onboarding-lage')?.remove();
     document.getElementById('rg-einladung')?.remove();
   });
 
@@ -354,6 +357,12 @@ import { chromium } from 'playwright';
   await p.waitForTimeout(700);
   await p.reload();
   await p.waitForTimeout(1700);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   const nach = await p.evaluate((d) => {
     const v = Store.getView(d.view);
     return { farbregeln: (v.farbregeln || []).length,

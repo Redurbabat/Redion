@@ -181,6 +181,70 @@ redion-einzeldatei.html
 
 
 
+Study Suite
+
+Redion enthält eine local-first Arbeitsumgebung für Schule und Ausbildung:
+
+- Dokumentmodus mit Seitenminiaturen, bestehendem PDF-/Ink-Werkzeug und
+  verknüpften Notizen, Karten und Aufgaben
+- Karten aus PDF-/Blattquelle, Cloze, Tagesrunde, Fehlertraining, Statistik
+  und exaktem Quellsprung; bestehende SM-2-Termine bleiben unverändert
+- lange Audioaufnahmen als stückweise Anhänge mit stabiler Datei-ID und
+  anklickbaren Zeitmarken; alte DataURL-Aufnahmen bleiben lesbar
+- Seitenaliase und kollisionssicherer Obsidian-Vault-Roundtrip mit stabilen IDs
+- Kamera-/Datei-Eingang sowie optionale OCR für Bild, PDF und Handschrift über
+  einen lokalen Dienst, der **mitgeliefert** wird: `node dienste/ocr.mts`,
+  Anleitung in `doku/OCR-DIENST.md`. Er hört nur auf `127.0.0.1`, und Redion
+  lässt gar keine andere Adresse zu — der Ausschnitt verlässt den Rechner nie
+- ein Rücksprung von jedem abgeleiteten Objekt zu seiner Quelle: von der
+  Lernkarte zur PDF-Seite samt Ausschnitt, von der Aufgabe zur Besprechung
+- additive Ausbildungsvorlage mit Fächern, Prüfungen, Noten, Berichtsheft,
+  Lernmaterial und Eingang
+- normfreie Elektrotechnik-Rechnungen und ein versioniertes, validiertes
+  Grundlagen-Lernpaket; keine automatische Schutz- oder Leiterdimensionierung
+- Schulansicht in der bestehenden Bibliothek mit Ordnern, letzten PDFs,
+  fälligen Karten, offenen Aufgaben und Prüfungsterminen
+
+Alle Inhalte bleiben normale Redion-Seiten und -Blöcke und laufen damit durch
+Offlinebetrieb, Papierkorb, Sicherung, Wiederherstellung und optionalen Sync.
+
+
+Zwei Hauptwelten, ein Bestand
+
+Redion hat zwei Oberflächen auf denselben Daten. Umgeschaltet wird oben
+links; nichts wird dabei kopiert.
+
+**Lernen & Alltag** — Heute mit Tagesrunde und Prüfungs-Countdown,
+Lernzentrum, Lernpfad, Fehlertraining, Prüfungszentrale mit Simulation, und
+je eine Sicht für Schule/Ausbildung, Uni, Arbeit und Fortschritt. Die
+Schulansicht zeigt auch dann etwas, wenn die Ausbildungsvorlage nie
+eingerichtet wurde — sie liest, was ohnehin da ist.
+
+**Workspace** — Übersicht, Bibliothek, Aufgaben, Kalender, Datenbanken,
+Whiteboards, Wiki und Vorlagen, dazu Reiter und geteilte Ansicht.
+
+
+Whiteboards
+
+Eine freie Fläche als Block auf einer gewöhnlichen Seite — keine zweite
+Datenhaltung:
+
+- schieben und zoomen (Hand, Rad, zwei Finger, 10 % bis 400 %,
+  „alles ins Bild")
+- Stift, Linie, Pfeil, Rechteck, Ellipse, Haftnotiz, Text
+- Bilder aus der Dateiablage, nicht als Data-URL in den Block
+- Verbindungen, die an den Formen hängen: sie gehen beim Verschieben mit
+  und beim Löschen weg
+- vierzig Schritte zurück und vorwärts; der Verlauf lebt nur im
+  Arbeitsspeicher und wird nicht mitgesichert
+- Text direkt auf der Fläche, zweimal tippen ändert ihn
+- Grösse ändern am Griff
+- als PNG speichern
+
+Im Workspace gibt es dafür einen eigenen Bereich mit Miniaturen.
+
+
+
 Variante 5: Prüfungen ausführen
 
 npm install
@@ -318,6 +382,9 @@ Redion/
 │
 ├─ doku/
 │  └─ Architektur und Entscheidungen
+│
+├─ dienste/
+│  └─ ocr.mts        lokaler Erkennungsdienst, optional
 │
 ├─ pruefungen/
 │  ├─ alle.mts
@@ -900,6 +967,106 @@ Dokumente
 sonstige Dateien
 
 Dateien können lokal gespeichert und in Seiten oder Datenbanken verwendet werden.
+
+
+Ein A4-Blatt zum Schreiben und Malen
+
+`/blatt` legt ein leeres Blatt im A4-Format an. Darauf lässt sich beides:
+gewöhnlich tippen — es sind normale Blöcke im Satzspiegel — und mit einer
+gemeinsamen Ink-Schicht darüber arbeiten. Sie bietet Stift, transparenten
+Marker, Linie, Pfeil, Rechteck, Ellipse und sichere Textanmerkungen in fünf
+Farben und drei Strichbreiten.
+
+Die Werkzeugleiste oben schaltet zwischen „Schreiben" und den Ink-Werkzeugen um. Beim
+Schreiben geht der Zeiger an der Zeichenschicht vorbei, beim Malen liegt sie
+darüber — man markiert also nicht versehentlich Text, während man zeichnet.
+Mit „Auswahl" lassen sich eine oder mehrere Marken gemeinsam verschieben
+oder löschen. Zurück und Wiederholen arbeiten je abgeschlossener Aktion,
+nicht je einzelner Zeigerbewegung.
+
+`＋ Seite` hängt eine weitere A4-Länge an, sodass ein Blatt so lang werden
+kann, wie es soll.
+
+Striche, Formen und Texte liegen in Blattkoordinaten, nicht in
+Bildschirmpunkten. Ein
+Blatt sieht deshalb am Telefon und am grossen Bildschirm gleich aus, und
+was man am einen malt, steht am anderen an derselben Stelle.
+
+
+Schriftgrösse, Schriftart und Farbe je Block
+
+Über das Blockmenü (⋮⋮) lassen sich für jeden einzelnen Block einstellen:
+
+    Farbe            Text- und Hintergrundfarbe, wie bisher
+    Schriftgrösse    von sehr klein bis sehr gross
+    Schriftart       Serifenlos, Serif, Schreibmaschine, Handschrift
+
+Das gilt je Block, nicht für die ganze Seite — eine Überschrift darf eine
+andere Schrift haben als der Absatz darunter. Für die ganze App gibt es das
+ebenfalls, in den Einstellungen.
+
+Eine Grenze, die man kennen sollte: Markdown kann davon nichts tragen. Wer
+eine Seite über „Quelltext ansehen" bearbeitet und übernimmt, verliert
+Farbe, Grösse und Schriftart. Der Dialog sagt es vorher, und eine Fassung
+wird gesichert.
+
+
+PDFs zum Draufschreiben
+
+Ein PDF, das man auf eine Seite zieht, wird zu einzelnen Seiten, durch die
+man scrollt und auf die man direkt schreiben und malen kann. PDF-Seiten
+verwenden dieselbe Ink-Schicht wie das A4-Blatt: Stift, Marker, Formen,
+Text, Mehrfachauswahl sowie Zurück/Wiederholen.
+
+Beim Hochladen wird gefragt, wie es liegen soll:
+
+    Seite und Notizblatt nebeneinander    links die Seite, rechts ein
+                                          leeres Blatt in denselben Massen
+    Nur die Seiten                        Seite für Seite untereinander
+
+Am Telefon liegt das Notizblatt unter seiner Seite — nebeneinander gibt es
+dort nicht. Gefragt wird jedes Mal; die zuletzt gewählte Anordnung steht
+nur vorn, sodass Ablegen und Enter genügt.
+
+Das Original bleibt unverändert als Anhang liegen. Redion schreibt nie in
+das PDF zurück — die Anmerkungen liegen daneben in Redion.
+
+Weitergeben lässt sich das trotzdem: **Strg + P** druckt die Seite mit allem
+darauf — Seitenbild, Striche, Notizblätter — oder speichert sie über den
+Druckdialog als PDF. Die Striche gehen dabei als Vektoren hinaus und bleiben
+scharf.
+
+Bei sehr langen Dokumenten hat das eine Grenze: die Seitenbilder müssen zum
+Drucken alle zugleich in den Speicher, und ab rund 40 MB hört Redion damit
+auf. Die betroffenen Seiten bleiben im Ausdruck leer und sagen an ihrem
+Platz, warum — die Striche darauf sind trotzdem da. Wer ein ganzes Skript
+ausdrucken will, druckt es in Abschnitten.
+
+Die Seitenbilder kommen NICHT in die Sicherung — bei einem Skript mit 500
+Seiten wären das sonst hundert Megabyte in jeder `.redion`. Das Original ist
+natürlich darin, Byte für Byte, und auf jeder leeren Seite steht danach ein
+Knopf „Aus dem Original zurückholen", der das ganze Dokument in einem Zug
+neu rechnet. Deine Notizen und Striche darauf sind davon nie betroffen: sie
+hängen am Block, nicht am Bild.
+
+Der Text im PDF ist durchsuchbar: Redion nimmt ihn beim Hochladen einmal
+mit, und die Suche springt danach direkt zur Fundstelle — nicht bloss auf
+die Seite, sondern auf die Seite 63, wo das Wort steht. Eingescannte Blätter
+ohne Textebene sind davon ausgenommen; Text aus Bildern lesen kann Redion
+nicht.
+
+Jede Seite hat ausserdem neben ihrer Seitenzahl einen 🔗. Er kopiert einen
+Verweis auf genau diese Seite — eine Notiz kann so auf „Seite 14" zeigen und
+beim Anklicken dorthin springen.
+
+Ein Dokument mit mehr als 30 Seiten fragt vorher nach. Ist die Datei mit
+einem Passwort geschützt, fragt Redion danach — das Passwort wird nur
+weitergereicht und nirgends gespeichert, auch nicht in der Sicherung.
+
+Dafür ist als einzige fremde Bibliothek pdf.js eingebaut (Apache-2.0,
+eingepackt in `quell/fremd/pdfjs/`). Sie läuft einmal je Dokument beim
+Einlesen — danach zeigt Redion die Seiten selbst.
+
 
 Wichtige Regeln:
 

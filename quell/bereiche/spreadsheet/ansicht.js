@@ -64,8 +64,10 @@ const SpreadsheetView = (() => {
     const SB = 110; /* Spaltenbreite, Vorgabe — --tbl-sb */
     const SB_MIN = 48;
     const PUFFER = 6; /* Zeilen über und unter dem Sichtfenster */
-    const amTelefon = () => typeof window !== 'undefined' && window.matchMedia
-        ? window.matchMedia('(max-width: 760px)').matches : false;
+    const amTelefon = () => typeof window !== 'undefined' && typeof AppEinstellung !== 'undefined'
+        ? AppEinstellung.amTelefon()
+        : typeof window !== 'undefined' && window.matchMedia
+            ? window.matchMedia('(max-width: 760px)').matches : false;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
@@ -436,6 +438,101 @@ const SpreadsheetView = (() => {
         return null;
     };
     /* ==========================================================================
+     * TELEFON: ZEILEN ALS KARTEN (E89)
+     * ------------------------------------------------------------------------
+     * Eine Karte je Zeile: der erste gefüllte Wert ist der Titel, die
+     * übrigen stehen als Name/Wert-Paare darunter — die Namen kommen aus der
+     * Kopfzeile, ersatzweise aus dem Spaltenbuchstaben. Formeln stehen
+     * AUSGERECHNET da: die Karte zeigt, was das Raster zeigt.
+     * ========================================================================*/
+    const kartenAnsicht = (w, block, blatt, K, R) => {
+        w.className = 'tblk-karten';
+        const rasterOeffnen = (zelle) => {
+            Store.updateBlock(block.id, { telefonRaster: true, telefonZelle: zelle });
+            App.zeichneSeite();
+        };
+        /* Erst rechnen, dann zeigen — sonst stünden Formeln leer oder alt da.
+           Das Raster tut dasselbe bei jedem Zeichnen. */
+        try {
+            K.rechneMappe(block.mappe);
+        }
+        catch { /* Zirkel etc. zeigt die Zelle selbst */ }
+        let hochZ = 0, hochS = 0;
+        Object.keys(blatt.zellen || {}).forEach((a) => {
+            const p = R.lies(a);
+            if (p) {
+                hochZ = Math.max(hochZ, p.zeile + 1);
+                hochS = Math.max(hochS, p.spalte + 1);
+            }
+        });
+        const kopf = document.createElement('div');
+        kopf.className = 'tblk-kopf';
+        const name = document.createElement('b');
+        name.textContent = blatt.name || block.text || 'Tabelle';
+        const zumRaster = document.createElement('button');
+        zumRaster.type = 'button';
+        zumRaster.textContent = '⊞ Raster';
+        zumRaster.title = 'Als Raster öffnen';
+        zumRaster.addEventListener('click', () => rasterOeffnen('A1'));
+        kopf.appendChild(name);
+        kopf.appendChild(zumRaster);
+        w.appendChild(kopf);
+        if (hochZ < 2) {
+            const leer = document.createElement('div');
+            leer.className = 'tblk-leer';
+            leer.textContent = hochZ === 0
+                ? 'Noch keine Zellen — zum Ausfüllen das Raster öffnen.'
+                : 'Nur die Kopfzeile ist gefüllt — Zeilen kommen im Raster dazu.';
+            w.appendChild(leer);
+            return w;
+        }
+        const feldname = (s) => {
+            const k = K.eingabe(blatt, R.schreibe(0, s));
+            return k !== '' && k != null ? String(k) : R.spalteZuText(s);
+        };
+        for (let z = 1; z < hochZ; z++) {
+            const karte = document.createElement('div');
+            karte.className = 'tblk-karte';
+            karte.tabIndex = 0;
+            karte.setAttribute('role', 'button');
+            karte.setAttribute('aria-label', 'Zeile ' + z + ' im Raster bearbeiten');
+            let titelDa = false;
+            for (let s = 0; s < hochS; s++) {
+                const adr = R.schreibe(z, s);
+                const zelle = blatt.zellen[adr];
+                const anzeige = zeigeWert(K.wert(blatt, adr), zelle && zelle.format);
+                if (anzeige === '')
+                    continue;
+                if (!titelDa) {
+                    const t = document.createElement('div');
+                    t.className = 'tblk-titel';
+                    t.textContent = anzeige;
+                    karte.appendChild(t);
+                    titelDa = true;
+                    continue;
+                }
+                const f = document.createElement('div');
+                f.className = 'tblk-feld';
+                f.innerHTML = '<span class="tblk-name">' + esc(feldname(s)) + '</span>' +
+                    '<span class="tblk-wert">' + esc(anzeige) + '</span>';
+                karte.appendChild(f);
+            }
+            if (!karte.childElementCount)
+                continue; /* leere Zeile, keine leere Karte */
+            /* Bearbeitet wird im Raster — die Karte ist der Weg dorthin. */
+            const oeffneZeile = () => rasterOeffnen(R.schreibe(z, 0));
+            karte.addEventListener('click', oeffneZeile);
+            karte.addEventListener('keydown', e => {
+                if (e.key !== 'Enter' && e.key !== ' ')
+                    return;
+                e.preventDefault();
+                oeffneZeile();
+            });
+            w.appendChild(karte);
+        }
+        return w;
+    };
+    /* ==========================================================================
      * DER BLOCK
      * ========================================================================*/
     const zeichne = (block) => {
@@ -461,9 +558,32 @@ const SpreadsheetView = (() => {
         block.mappe.aktiv = blatt.id;
         if (!blatt.breiten)
             blatt.breiten = {};
+        /* --- Telefon: Karten statt Raster (E89) ------------------------------
+           Die Datenbank zeigt am Telefon längst Karten; der Tabellenblock
+           blieb dasselbe Rechner-Raster, mit leeren Zeilen auf halbem
+           Bildschirm. Jetzt: Zeilen als Karten, die Kopfzeile liefert die
+           Feldnamen, Formeln stehen ausgerechnet da. Der Umschalter ⊞ bleibt
+           sichtbar — wer das Raster will, ist einen Tipp entfernt
+           (`telefonRaster`, je Block gespeichert; der Feldname ist deutsch,
+           weil er so gespeichert wird). */
+        if (amTelefon() && !block.telefonRaster)
+            return kartenAnsicht(w, block, blatt, K, R);
+        /* Und im Raster der Rückweg — sonst wäre der Umschalter eine Einbahn. */
+        if (amTelefon()) {
+            const zurueck = document.createElement('button');
+            zurueck.type = 'button';
+            zurueck.className = 'tblk-zurueck';
+            zurueck.textContent = '☰ Karten';
+            zurueck.title = 'Zurück zur Kartenansicht';
+            zurueck.addEventListener('click', () => {
+                Store.updateBlock(block.id, { telefonRaster: false });
+                App.zeichneSeite();
+            });
+            w.appendChild(zurueck);
+        }
         /* Die Auswahl lebt hier, nicht im DOM — sie überlebt jedes Neuzeichnen. */
-        let gewaehlt = 'A1';
-        let anker = 'A1'; /* für die Bereichsauswahl */
+        let gewaehlt = R.gueltig(block.telefonZelle) ? block.telefonZelle : 'A1';
+        let anker = gewaehlt; /* für die Bereichsauswahl */
         /* Beim Ziehen am Anfasser: wohin der Zeiger gerade zeigt. Nur das —
            ob überhaupt gezogen wird, steht in den Zuhörern, die `beimZiehen`
            auf- und wieder abbaut, und nicht noch einmal in einer Fahne hier. */
@@ -1564,14 +1684,17 @@ const SpreadsheetView = (() => {
          * kann. Eine zweite ZIP-Schreiberei für xlsx wäre die Sorte Arbeit, die
          * man zweimal pflegt und einmal vergisst.
          * ====================================================================*/
-        const alsZeilen = () => {
+        /* Je Blatt, nicht nur fürs aktive: der Excel-Ausgang nimmt seit E91
+           die GANZE Mappe mit — eine Mappe mit drei Blättern, die als eines
+           herauskam, war stiller Datenverlust (§13). */
+        const alsZeilenVon = (vonBlatt) => {
             const raus = [];
             let letzteVolle = 0;
-            for (let z = 0; z < blatt.zeilen; z++) {
+            for (let z = 0; z < vonBlatt.zeilen; z++) {
                 const eine = [];
                 let etwasDrin = false;
-                for (let s = 0; s < blatt.spalten; s++) {
-                    const zelle = blatt.zellen[R.schreibe(z, s)];
+                for (let s = 0; s < vonBlatt.spalten; s++) {
+                    const zelle = vonBlatt.zellen[R.schreibe(z, s)];
                     const wert = zelle ? zelle.wert : '';
                     const t = zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
                     if (t !== '')
@@ -1587,16 +1710,74 @@ const SpreadsheetView = (() => {
                Ende sieht in jedem anderen Programm nach einem Fehler aus. */
             return raus.slice(0, letzteVolle);
         };
+        const alsZeilen = () => alsZeilenVon(blatt);
+        /* Rohwerte samt Zellstil je Zelle — für den Excel-Ausgang (E94). Der
+           ANZEIGETEXT machte dort aus 0.15 „15 %" und aus jeder grossen Zahl
+           per Tausenderzeichen Text; Summen in Excel ergaben 0. */
+        const alsRohVon = (vonBlatt) => {
+            const zeilen = [];
+            const anzeigen = [];
+            const stile = [];
+            const formeln = [];
+            let letzteVolle = 0;
+            for (let z = 0; z < vonBlatt.zeilen; z++) {
+                const eine = [];
+                const anzeigeZeile = [];
+                const stilZeile = [];
+                const formelZeile = [];
+                let etwasDrin = false;
+                for (let s = 0; s < vonBlatt.spalten; s++) {
+                    const zelle = vonBlatt.zellen[R.schreibe(z, s)];
+                    const wert = zelle ? zelle.wert : '';
+                    const text = zeigeWert(wert, zelle && zelle.stil && zelle.stil.format);
+                    const roh = (typeof wert === 'number' && isFinite(wert)) ? wert : text;
+                    if (roh !== '' || (zelle && zelle.formel))
+                        etwasDrin = true;
+                    eine.push(roh);
+                    anzeigeZeile.push(text);
+                    stilZeile.push((zelle && zelle.stil) || null);
+                    formelZeile.push((zelle && zelle.formel) || null);
+                }
+                zeilen.push(eine);
+                anzeigen.push(anzeigeZeile);
+                stile.push(stilZeile);
+                formeln.push(formelZeile);
+                if (etwasDrin)
+                    letzteVolle = zeilen.length;
+            }
+            return { zeilen: zeilen.slice(0, letzteVolle),
+                anzeigen: anzeigen.slice(0, letzteVolle),
+                stile: stile.slice(0, letzteVolle),
+                formeln: formeln.slice(0, letzteVolle) };
+        };
         /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
            auch einliest. Zwei eigene Regeln fürs Anführen liefen auseinander,
            und dann öffnet die eigene Datei sich selbst nicht mehr richtig. */
         const alsCsv = () => Csv.schreibe(alsZeilen(), ';');
         const gibAus = (art) => {
             const name = (blatt.name || block.mappe.name || 'Tabelle').replace(/[\\/:*?"<>|]/g, '-');
+            /* Beide Ausgänge nehmen die GANZE Mappe (E91) — der Rückfall aufs
+               aktive Blatt war stiller Datenverlust — und beide tragen seit
+               E94/E95 Rohwerte samt Zellstil statt des Anzeigetexts. */
             if (art === 'xlsx') {
                 if (typeof Austausch === 'undefined')
                     return;
-                Austausch.alsExcel([{ name: blatt.name || 'Tabelle', zeilen: alsZeilen() }], name);
+                /* Rohwerte samt Zellstil (E94), nicht ganzeMappe(): dort steht der
+                   Anzeigetext, und aus „15 %" würde in Excel Text. */
+                Austausch.alsExcel(block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), ...alsRohVon(b) })), name);
+                return;
+            }
+            if (art === 'ods') {
+                if (typeof Austausch === 'undefined')
+                    return;
+                /* Fürs Fehlschlagen gibt es einen Satz: alsOds ist asynchron, und
+                   ein stilles Scheitern sähe aus wie ein vergessener Klick. */
+                Austausch.alsOds(block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), ...alsRohVon(b) })), name)
+                    .catch((e) => {
+                    if (typeof UI !== 'undefined' && UI.toast)
+                        UI.toast('Die .ods kam nicht zustande: ' +
+                            (e instanceof Error ? e.message : String(e)));
+                });
                 return;
             }
             /* CSV mit Semikolon und BOM: so öffnet Excel im deutschen Sprachraum
@@ -1633,7 +1814,7 @@ const SpreadsheetView = (() => {
         const einlesen = () => {
             const eingang = document.createElement('input');
             eingang.type = 'file';
-            eingang.accept = '.csv,.tsv,.txt,.xlsx,.xlsm';
+            eingang.accept = '.csv,.tsv,.txt,.xlsx,.xlsm,.ods';
             eingang.style.display = 'none';
             document.body.appendChild(eingang);
             eingang.addEventListener('change', async () => {
@@ -1642,20 +1823,110 @@ const SpreadsheetView = (() => {
                 if (!datei)
                     return;
                 let zeilen = [];
+                let stilMatrix = null;
+                let formelMatrix = null;
+                let importBericht = null;
+                /* Den gelesenen Zellstil an die Zelle tragen (E97). Je Zelle eine
+                   KOPIE: der ODS-Leser gibt wiederholten Zellen dasselbe
+                   Stil-Objekt, und ein geteiltes Objekt hiesse, dass Fett-Schalten
+                   in einer Zelle alle Geschwister mitschaltet. */
+                const stilDazu = (ziel, z, sp, adr, matrix) => {
+                    const st = matrix && matrix[z] && matrix[z][sp];
+                    if (!st)
+                        return;
+                    const zelle = ziel.zellen[adr] || (ziel.zellen[adr] = { wert: '' });
+                    zelle.stil = JSON.parse(JSON.stringify(st));
+                };
+                /* Erst den gespeicherten Ergebniswert setzen, dann die Formel. So
+                   bleibt der Wert sichtbar, selbst wenn eine fremde Funktion in
+                   Redion nicht rechnet; die Formel selbst geht trotzdem nicht
+                   verloren. */
+                const setzeGelesen = (ziel, adr, wert, formel) => {
+                    if (wert !== '')
+                        K.setze(ziel, adr, wert);
+                    if (formel)
+                        K.setze(ziel, adr, formel);
+                };
                 let quelle = datei.name;
                 try {
-                    if (/\.(xlsx|xlsm)$/i.test(datei.name)) {
+                    if (/\.(xlsx|xlsm|ods)$/i.test(datei.name)) {
                         if (typeof Einlesen === 'undefined')
-                            throw new Error('Der Excel-Leser ist nicht geladen.');
-                        const blaetter = await Einlesen.xlsxLesen(await datei.arrayBuffer());
+                            throw new Error('Der Tabellen-Leser ist nicht geladen.');
+                        /* .ods geht an den ODS-Leser — er liefert Zahlen als echte
+                           Zahlen (office:value), und `setze` normalisiert selbst. */
+                        const blaetter = /\.ods$/i.test(datei.name)
+                            ? await Einlesen.odsLesen(await datei.arrayBuffer())
+                            : await Einlesen.xlsxLesen(await datei.arrayBuffer());
                         if (!blaetter || !blaetter.length)
                             throw new Error('In dieser Datei steckt kein Tabellenblatt.');
-                        /* Nur das erste Blatt — mehrere Blätter je Block gibt es noch
-                           nicht, und es stillschweigend zu verschlucken wäre schlimmer,
-                           als es zu sagen. */
+                        importBericht = blaetter.bericht || null;
+                        /* Mehrere Blätter (E91): jedes wird ein EIGENES Blatt der
+                           Mappe. Der Satz, der hier vorher stand, verneinte
+                           Mehrblatt je Block — während die Blattreiter darunter es
+                           längst konnten. Ein einzelnes Blatt geht weiter den alten
+                           Weg: an den Schreibzeiger, mit Zählung des
+                           Überschriebenen. */
+                        if (blaetter.length > 1) {
+                            /* Alles zuerst ausserhalb der Mappe vorbereiten. Scheitert
+                               Blatt 2, bleibt Blatt 1 nicht halb importiert zurück. */
+                            const belegt = new Set(block.mappe.blaetter.map((b) => String(b.name)));
+                            const importName = (roh) => {
+                                const basis = roh || 'Blatt';
+                                let n = basis, i = 2;
+                                while (belegt.has(n))
+                                    n = basis + ' ' + i++;
+                                belegt.add(n);
+                                return n;
+                            };
+                            const vorbereitet = blaetter.map((gelesen) => {
+                                const neu = K.neuesBlatt(importName(String(gelesen.name || 'Blatt')));
+                                const zl = gelesen.zeilen || [];
+                                neu.zeilen = Math.max(neu.zeilen, zl.length);
+                                neu.spalten = Math.max(neu.spalten, zl.reduce((m, x) => Math.max(m, x.length), 1));
+                                zl.forEach((zeileWerte, z) => zeileWerte.forEach((wert, s) => {
+                                    const adr = R.schreibe(z, s);
+                                    setzeGelesen(neu, adr, wert, gelesen.formeln && gelesen.formeln[z] && gelesen.formeln[z][s]);
+                                    stilDazu(neu, z, s, adr, gelesen.stile || null);
+                                }));
+                                return neu;
+                            });
+                            const verlustText = Einlesen.tabellenBerichtText
+                                ? Einlesen.tabellenBerichtText(importBericht) : '';
+                            const blattText = blaetter.map((g) => {
+                                const zl = g.zeilen || [];
+                                return String(g.name || 'Blatt') + ': ' + zl.length + ' Zeilen × ' +
+                                    zl.reduce((m, z) => Math.max(m, z.length), 0) + ' Spalten';
+                            }).join('\n');
+                            const antwortMehr = typeof Dialog !== 'undefined'
+                                ? await Dialog.wahl({
+                                    titel: 'Einlesen: ' + datei.name,
+                                    text: blattText + (verlustText ? '\n\n' + verlustText : ''),
+                                    knoepfe: [
+                                        { id: 'rein', text: blaetter.length + ' Blätter anlegen',
+                                            hinweis: 'Bestehende Blätter bleiben unverändert' },
+                                        { id: '', text: 'Abbrechen', hinweis: 'Es wird nichts verändert' }
+                                    ]
+                                })
+                                : 'rein';
+                            if (!antwortMehr)
+                                return;
+                            block.mappe.blaetter.push(...vorbereitet);
+                            const letztes = block.mappe.blaetter[block.mappe.blaetter.length - 1];
+                            /* Über `zuBlatt`, nicht von Hand: es setzt auch `breiten`
+                               und die Auswahl. Der handgeschriebene Wechsel liess
+                               `breiten` aus, und `alles()` stürzte gleich nach dem
+                               Anlegen — unsichtbar, solange die Prüfung die Logik
+                               nachbaute, statt durch den echten Dateiwähler zu gehen. */
+                            zuBlatt(letztes.id);
+                            rechneUndZeichne();
+                            if (typeof UI !== 'undefined' && UI.toast)
+                                UI.toast(blaetter.length + ' Blätter aus „' + datei.name + '" angelegt');
+                            return;
+                        }
                         zeilen = blaetter[0].zeilen || [];
-                        quelle = datei.name + (blaetter.length > 1
-                            ? ' · Blatt „' + (blaetter[0].name || '1') + '" von ' + blaetter.length : '');
+                        stilMatrix = blaetter[0].stile || null;
+                        formelMatrix = blaetter[0].formeln || null;
+                        quelle = datei.name;
                     }
                     else {
                         zeilen = Csv.zerlege(await datei.text());
@@ -1703,7 +1974,9 @@ const SpreadsheetView = (() => {
                     ? await Dialog.wahl({
                         titel: 'Einlesen: ' + quelle,
                         text: zeilen.length + ' Zeilen × ' + breite + ' Spalten\n\n' + vorschau +
-                            (zeilen.length > 3 ? '\n…' : ''),
+                            (zeilen.length > 3 ? '\n…' : '') +
+                            (importBericht && Einlesen.tabellenBerichtText
+                                ? '\n\n' + Einlesen.tabellenBerichtText(importBericht) : ''),
                         knoepfe
                     })
                     : 'a1';
@@ -1718,7 +1991,11 @@ const SpreadsheetView = (() => {
                     blatt.zeilen = vonZ + zeilen.length;
                 if (vonS + breite > blatt.spalten)
                     blatt.spalten = vonS + breite;
-                zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) => K.setze(blatt, R.schreibe(vonZ + z, vonS + sp), wert)));
+                zeilen.forEach((zeile, z) => (zeile || []).forEach((wert, sp) => {
+                    const adr = R.schreibe(vonZ + z, vonS + sp);
+                    setzeGelesen(blatt, adr, wert, formelMatrix && formelMatrix[z] && formelMatrix[z][sp]);
+                    stilDazu(blatt, z, sp, adr, stilMatrix);
+                }));
                 gewaehlt = anker = R.schreibe(vonZ, vonS);
                 rechneUndZeichne();
                 if (typeof UI !== 'undefined' && UI.toast)
@@ -1812,9 +2089,10 @@ const SpreadsheetView = (() => {
                 if (typeof Menue === 'undefined')
                     return;
                 const r = b.getBoundingClientRect();
-                const m = Menue.menu('<button data-a="oeffnen"><span class="mi">📂</span>Excel oder CSV öffnen</button><hr>' +
+                const m = Menue.menu('<button data-a="oeffnen"><span class="mi">📂</span>Tabelle öffnen (Excel, CSV, ODS)</button><hr>' +
                     '<button data-a="xlsx"><span class="mi">📊</span>Als Excel speichern</button>' +
-                    '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button><hr>' +
+                    '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button>' +
+                    '<button data-a="ods"><span class="mi">📙</span>Als OpenDocument (.ods) speichern</button><hr>' +
                     '<button data-a="regeln"><span class="mi">🎨</span>Bedingte Formatierung' +
                     ((blatt.regeln || []).length
                         ? '<span class="ms">' + (blatt.regeln || []).length + '</span>' : '') +
@@ -1834,6 +2112,8 @@ const SpreadsheetView = (() => {
                         return gibAus('xlsx');
                     if (t.dataset.a === 'csv')
                         return gibAus('csv');
+                    if (t.dataset.a === 'ods')
+                        return gibAus('ods');
                     if (t.dataset.a === 'regeln')
                         return regelFenster();
                     if (t.dataset.a === 'zeilen')
@@ -2021,6 +2301,13 @@ const SpreadsheetView = (() => {
             if (eine) {
                 const g = getComputedStyle(eine);
                 schriftBasis = g.fontSize + ' ' + g.fontFamily;
+            }
+            /* Eine angetippte Karte öffnet genau ihre Zeile, nicht wieder A1.
+               Erst jetzt ist die Feldhöhe bekannt und der Zielversatz ehrlich. */
+            if (handy && block.telefonZelle) {
+                const ziel = R.lies(gewaehlt);
+                if (ziel)
+                    feld.scrollTop = Math.max(0, ziel.zeile * zh - Math.max(0, feld.clientHeight - zh) / 2);
             }
             koerperZeichnen();
         }, 0);

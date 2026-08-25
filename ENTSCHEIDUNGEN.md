@@ -4857,3 +4857,6937 @@ ABBRUCH-Arm um, und der Punkt blieb grün — die Probe läuft durch den
 Teilfehler-Arm, nicht durch den Abbruch. Erst der zweite Dreh bewies den
 Punkt. Eine Gegenprobe, die den falschen Arm kippt, beweist nichts über
 den richtigen.
+
+---
+
+## E78 · Die Zielarchitektur: React, Vite, Dexie, ProseMirror — als Strangler, nie als Big-Bang
+
+> **WIDERRUFEN durch E80 am 9. August 2026.** Der Eintrag bleibt als
+> Geschichte stehen. Was er über Prüfläufe sagt, gilt nicht mehr: die
+> Wächter der neuen Schicht — `test149`, `test150`, `test151`, `test153`
+> und `test154` — sind mit dem Rohbau entfernt worden, **es gibt diese
+> Prüfläufe nicht mehr**. Wer unten liest, liest sie im Präsens, weil sie
+> beim Schreiben da waren (E168).
+
+**Datum** 8. August 2026 · **Entschieden von** Redur · **Betrifft** alles —
+aber in Phasen, nicht auf einmal
+
+**Die Entscheidung**
+
+Redur hat entschieden, Redion auf die folgende Zielarchitektur zu führen:
+
+```txt
+Hauptsprache        TypeScript
+UI                  React 19 + TSX
+Build               Vite 8, ESM, kein CommonJS
+Strukturierte Daten IndexedDB + Dexie
+Grosse Dateien      OPFS, mit IndexedDB-Rückfall
+Validierung         Zod
+Rich-Text           ProseMirror (nur je Textblock, nicht als Datenmodell)
+Styling             CSS + CSS-Variablen
+Unit-Tests          Vitest
+E2E                 Playwright (bleibt)
+PWA                 bleibt, eigener Service Worker
+Cloud               Cloudflare Workers + D1 + R2, weiterhin optional
+Desktop später      Tauri, nicht Electron
+Kein Next.js, kein SSR, keine Server-Pflicht.
+```
+
+Installiert am 8. August: react 19.2.8 · vite 8.2.1 · vitest 4.1.10 ·
+dexie 4.4.4 · zod 4.4.3.
+
+**Zwei Grundsätze werden damit aufgegeben — ausdrücklich und von Redur:**
+
+```txt
+„Kein Framework"                          → aufgegeben
+„index.html per Doppelklick, für immer"   → aufgegeben als Endziel
+```
+
+Der zweite gilt als ENDZIEL-Aufgabe, nicht als Sofort-Bruch: bis Phase
+RM-10 den Parity-Test besteht, bleibt der Bestand vollständig lauffähig —
+Doppelklick, Einzeldatei, alle 118 Prüfläufe. Der Nutzer braucht auch am
+Ende kein Node; nur der Entwickler baut.
+
+**Diese Grundsätze werden dafür härter geschützt als bisher:**
+
+```txt
+local-first · offline-first · Daten gehören dem Nutzer · kein Pflichtkonto
+keine Cloud-Pflicht · atomare Sicherungen · keine Datenverluste
+modulare Domain-Architektur (React ist NUR die Darstellungsschicht)
+```
+
+**Warum jetzt.** Die ehrliche Diagnose aus der Beratung: Redion verwaltet
+Overlay-Stapel, Fokus-Wiederherstellung, Dialog-Lebenszyklen, Sheets und
+reaktive Zustände von Hand — ein selbstgebautes UI-Framework. Genau in
+dieser Schicht lagen die Fehler dieser Woche (doppelter Fokusrahmen,
+Schublade unterm Bildschirmrand, `.menu` gegen `.menu-grund`). React
+übernimmt diese Ebene; die Domain-Logik bleibt frameworkfrei und testbar.
+
+**Die Phasen (Strangler, eine Datenquelle, niemals zwei Wahrheiten)**
+
+```txt
+RM-0   Stand einfrieren; Regressionsnetz = die 118 Prüfläufe (existiert)
+RM-1   Vite + ESM + neue Projektstruktur NEBEN dem Bestand      ← begonnen
+RM-2   Zentrale Typen, Zod-Schemas, IDs, Domain-Modelle         ← begonnen
+RM-3   Dexie-Persistenz NEBEN der bestehenden Ablage            ← begonnen
+RM-4   Datenmigration mit Vergleich alt ↔ neu, Byte für Byte
+RM-5   React-Shell, Navigation, Modal/Sheet-System
+RM-6   Bereich für Bereich auf React
+RM-7   Editor auf ProseMirror (je Textblock ein PM-Dokument)
+RM-8   Dateien auf OPFS + SHA-256-Adressierung (Dedup für R2-Sync)
+RM-9   Outbox/Sync-Schicht formalisieren
+RM-10  quell/ entfernen — NUR nach vollständigem Parity-Test
+```
+
+**Die drei harten Regeln der Migration**
+
+1. **Eine Datenquelle.** Die IndexedDB `notizen` bleibt die einzige
+   Wahrheit, und der Bestand bleibt ihr einziger Schreiber, bis RM-4 die
+   Migration mit Vergleich bestanden hat. Die neue Schicht LIEST bis dahin
+   nur. Dexie fasst `notizen` NIEMALS an — es arbeitet ausschliesslich
+   gegen die neue Ablage `redion-neu`. Ein Dexie-`open` auf `notizen`
+   wäre ein Schema-Upgrade auf echten Nutzerdaten: verboten.
+2. **Der Bestand bleibt grün.** Jede RM-Phase endet mit allen Prüfläufen
+   grün und einer baubaren Einzeldatei. Eine Phase, die den Bestand
+   bricht, ist nicht „fast fertig", sondern falsch geschnitten.
+3. **Kein Big-Bang.** Der Beratungstext selbst verbietet „schreib alles
+   neu"; wer eine Phase überspringen will, braucht einen neuen Eintrag
+   hier.
+
+**Feldnamen bleiben Daten.** Auch unter Dexie/Zod heissen die Felder so,
+wie sie gespeichert sind (`created`, `alive`, `groesse`, `enthaelt` …).
+Die Zod-Schemas beschreiben den IST-Zustand; eine Umbenennung wäre eine
+Datenmigration und braucht RM-4, nicht ein Suchen-und-Ersetzen (§53.3).
+
+**Was der Beratungstext über den heutigen Stand falsch annahm** — fürs
+Protokoll, damit niemand daraus plant: der Bestand ist seit L1 vollständig
+TypeScript (nicht „quell/ viel JavaScript"); IndexedDB ist längst
+Hauptspeicher (nicht localStorage); Blöcke sind strukturiert (nicht HTML);
+Tombstones (`alive`), Versionen und änderungsbasierter Abgleich existieren
+und sind getestet; `.redion` ist bereits das ZIP-Paket mit Manifest und
+stückweisen Prüfsummen. Diese Stärken werden ÜBERNOMMEN, nicht neu
+erfunden.
+
+**Status am Abend des 8. August** — RM-1 bis RM-3 stehen als Gerüst, und
+die Kette ist an echten Daten bewiesen:
+
+```txt
+npm run dev / build     Vite 8, app.html neben index.html, dist-neu/
+npm run test:unit       Vitest: 14 Punkte (Schemas, Dexie-Schicht)
+npm run typecheck       prüft Bestand UND neue Schicht
+src/domain/schema.ts    Zod-Schemas des IST-Zustands (Feldnamen wie gespeichert;
+                        der erste Wurf schrieb `page` statt `pageId` — E21 wirkt)
+src/persistence/        Dexie NUR gegen `redion-neu` (wirft bei `notizen`),
+                        Bestandsleser roh und ohne Versionsnummer
+src/app/                React-Shell: liest echte Seiten, nur lesend
+```
+
+`test149` wacht über die drei Regeln — alte App schreibt, Shell liest
+dieselbe Ablage, Satz für Satz unverändert danach, `redion-neu` entsteht
+beim Lesen nicht. Die Gegenprobe (eine heimlich schreibende Shell) hat den
+ersten Wurf des Wächters entlarvt: der Vorher-Abzug lag hinter dem ersten
+Shell-Besuch, ein idempotenter Schreiber blieb unsichtbar. Der Abzug liegt
+jetzt davor, und die schreibende Shell macht den Punkt rot.
+
+Der Bestand blieb dabei vollständig grün: quell/ ohne ein geändertes Byte,
+Einzeldatei baut, test31/87/105/109 grün (test109 bewacht jetzt die VIER
+beschlossenen Abhängigkeiten als Allowlist statt „keine").
+
+**RM-4, noch am selben Abend** — `src/persistence/migration.ts`: alle neun
+Fächer werden aus `notizen` herauskopiert (nur lesend) und danach
+NACHGERECHNET — Satz für Satz über stabile JSON-Form, Stücke Byte für Byte
+in 4-MB-Schritten. `test150` führt das mit dem GEBAUTEN Code an echten
+Daten aus (Seite, Datenbank, 3-MB-Datei mit Stücken, Fassung) und kippt in
+der eigenen Gegenprobe ein Byte, einen Satz und erfindet einen dritten —
+alle drei Wege werden rot gemeldet (`blob-ungleich`, `ungleich`,
+`fehlt-alt`). `notizen` ist nach alledem Satz für Satz identisch.
+Vitest: 6 weitere Punkte gegen ein rohes Nachbau-`notizen` mit den echten
+keyPaths. Die neue Ablage kennt jetzt auch `basis` und `vorrat`.
+
+---
+
+## E79 · Einspielen ist ganz oder gar nicht
+
+**Datum** 8. August 2026 · **Betrifft** `importAll` in
+`src/kern/ablage/indexdb.ts` · **Prüfläufe** `test152` (neu), `test144`
+(nachgezogen)
+
+**Der Satz aus dem Architektur-Text, wörtlich:** „Ein kaputter Import darf
+niemals die aktuelle Redion-Datenbank halb überschreiben."
+
+**Was war.** E71 sicherte den Abbruch VOR dem ersten Anfassen ab. Aber
+das Einspielen selbst lief als hunderte einzelne Transaktionen: erst die
+Löschschleife, dann die Schreibschleife. Wer dazwischen Tab, Strom oder
+Speicherplatz verlor, behielt einen halben Bestand — die eine Hälfte
+gelöscht, die andere nie geschrieben. §13 nennt genau das als Verbot
+(„bei Fehlern halbe Zustände hinterlassen"), und es galt trotzdem nicht.
+
+**Was jetzt gilt.** Das ganze Einspielen — Schlüssel lesen, löschen,
+schreiben, der Versionsverlauf — läuft in EINER IndexedDB-Transaktion über
+die fünf Fächer. Eine IndexedDB-Transaktion ist ganz oder gar nicht:
+bricht irgendetwas ab, rollt der Browser alles zurück. Der
+Zwischenspeicher wird erst NACH dem `oncomplete` umgestellt — der
+Bildschirm zeigt nie einen Stand, der nicht auf der Platte steht. Der
+Abbruch trägt sich in die Fehlerliste ein, damit der Vorfall nachlesbar
+ist.
+
+**Die drei Arme, und warum jeder seinen eigenen Beweis braucht.** Ein
+Einspielen kann an drei Stellen scheitern, und jede führt anders zum
+Rollback:
+
+```txt
+1  Lesen der Schlüssel scheitert   → eigenes onerror je Anfrage: abort + Ablehnung
+2  Schreiben wirft synchron        → catch in schreiben(): abort + Ablehnung
+3  Transaktion bricht asynchron ab → t.onerror/t.onabort: Ablehnung
+```
+
+Arm 1 hat obendrein eine Feinheit: OHNE das eigene `onerror` je Anfrage
+liesse ein Fach, das nie antwortet, die Transaktion LEER durchgehen —
+nichts gelesen, nichts geschrieben, `oncomplete` meldet Erfolg. Genau das
+fand `test144` §3 nach dem Umbau: seine Sabotage (eine Anfrage, die nie
+über `onsuccess` antwortet) machte den Import zum stillen Leerlauf.
+
+**Die Gegenproben-Lehre, zum dritten Mal in dieser Woche:** Beim Kippen
+der Arme im gebauten Bestand blieben die ERSTEN ZWEI Versuche grün — die
+Sabotage von test152 §1 läuft durch Arm 2, gekippt hatte ich erst Arm 3,
+dann Arm 1. Eine Gegenprobe, die den falschen Arm kippt, beweist nichts
+über den richtigen (E77 sagte es beim flush, E79 bestätigt es beim
+Import). Bewiesen sind jetzt: Arm 1 durch test144 §3 (war rot, bis das
+eigene onerror kam), Arm 2 durch test152 §1 (gekippt → 4 Punkte rot).
+Arm 3 hat keinen eigenen Kipp-Beweis — er ist die Rückfalldecke des
+Browsers unter den beiden anderen, und das steht hier, statt es zu
+verschweigen.
+
+**test152 fand ausserdem seine eigene Falle:** die erste Sabotage traf
+`views` — und die Prüfsicherung ENTHIELT keine views. Null Schreibversuche,
+null Scheitern, alles grün. Sabotiert wird seither, was wirklich
+geschrieben wird. Und der Plattenvergleich musste die `fehlerliste`
+ausnehmen — der abgebrochene Import trägt sich dort ein, das ist gewollt
+und jetzt ein eigener Prüfpunkt statt einer Abweichung.
+
+**Später am Abend — alle zehn Phasen haben ihr geprüftes Fundament:**
+
+```txt
+RM-5  Shell: Hash-Router (20 eigene Zeilen), Seitenansicht nur lesend,
+      Sheet als <dialog> mit Escape und Fokus-Rückkehr        test151
+RM-6  Datenbank-Tabelle in der Seite, Rohwerte; Formelspalten
+      sagen „(rechnet der Bestand)" statt falscher Zahlen      test151 §3b
+RM-7  ProseMirror-Werkstatt an echten Blöcken — tippt, zeichnet
+      aus, Verlauf, und speichert AUSDRÜCKLICH nicht           test154
+RM-8  Inhaltsadressen (redion-merkle-v1) + BlobStore mit OPFS,
+      IndexedDB-Rückfall, Dedup als Folge der Adressierung     test153
+RM-9  Outbox nach dem Operations-Modell des Texts — Konflikte
+      bleiben liegen, bis sie GELÖST werden                    Vitest
+```
+
+Dazu, ausserhalb der Migration: E79 (Einspielen in einer Transaktion).
+Der Weg zu RM-10 ist jetzt reine Parität — Bereich für Bereich in RM-6,
+bis die neue Shell alles kann, was der Bestand kann, und der grosse
+Vergleich sie freigibt.
+
+---
+
+## E80 · Der React-Umbau ist widerrufen — Redur braucht keine zweite Oberfläche
+
+**Datum** 9. August 2026 · **Entschieden von** Redur · **widerruft** E78
+
+**Was geschah.** E78 beschloss am Vorabend die React-Zielarchitektur, und
+binnen eines Tages standen alle zehn RM-Phasen als geprüfter Rohbau: die
+lesende Shell neben index.html, die nachgerechnete Migration, Router,
+Baum, Suche, Papierkorb, Einstellungen, die ProseMirror-Werkstatt, die
+Inhaltsadressen, die Outbox. Redur sah den Rohbau im Bild — und stellte
+die richtige Frage: „Nein, ich brauche keine neue Shell?"
+
+**Die Antwort war seine Entscheidung: Entfernen.** Eine zweite Oberfläche
+löst kein Problem, das Redur hat. Die heutige App ist vollständig, läuft
+offline, per Doppelklick, und ihre Fehlerklassen der Woche lagen in
+Ehrlichkeit der Meldungen und Speicher-Härtung — nichts davon wird durch
+React kleiner. Der Strangler-Weg hätte Monate gekostet, um am Ende
+dasselbe zu können.
+
+**Was entfernt wurde:**
+
+```txt
+src/app · src/domain · src/persistence · src/ui · src/features
+src/files · src/sync · src/editor · tests/ (Vitest)
+app.html · vite.config.ts · vitest.config.ts · tsconfig.app.json
+alle 18 npm-Pakete (react, dexie, zod, prosemirror-*, vite, vitest …)
+test149–151, test153, test154 (die Wächter und Prüfer der Schicht)
+package.json: type wieder commonjs, Skripte wieder die fünf alten
+CLAUDE.md: §6 „Kein Framework-Zwang" gilt unverändert, §56 ist weg
+```
+
+**Was BLEIBT — denn es gehört der echten App, nicht dem Umbau:**
+
+```txt
+E71–E77   ehrliche Lesefehler, Heilen ohne Datenverlust, neun ehrliche
+          Erfolgs-Meldungen, flush/setMeta melden Schreibfehler
+E79       das Einspielen einer Sicherung ist atomar (eine Transaktion)
+test148   die L14-Messung: 144 MB durch den Kreis bei +0,0 MB Heap
+test152   der Atomaritäts-Wächter des Imports
+test155   die Menü-Blätter am Telefon (und der Modul-Umzug der zwei
+          Handmenüs samt test67-Nachzug — das war L10, nicht E78)
+```
+
+**Die Lehre.** Ein Rohbau, der in einem Tag steht und wieder gehen kann,
+ohne dass die App ein Byte verliert, war der billigste Weg, diese
+Entscheidung ECHT zu treffen — am Bild statt am Versprechen. Genau dafür
+war der Strangler-Schnitt da: der Bestand blieb die ganze Zeit die einzige
+Wahrheit, und der Rückbau ist ein `git rm` ohne Migrationsgedanken.
+Wer den Umbau je wieder will, findet ihn vollständig in der Git-Geschichte
+(Commits bis `6c93175`) und den Plan in E78.
+
+
+## E81 · Die Formatleiste über der Tastatur — vier Fehler, die nur Augen fanden
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L10
+
+Die Leiste gab es längst: `#tastenleiste`, gebaut in `pwa.ts`, elf Knöpfe,
+erscheint beim Schreiben. LUECKEN führte sie trotzdem unter „Feinschliff
+nötig" — und das Hinsehen nach §55 hat erklärt, warum. Vier Fehler, kein
+einziger davon in einem Prüflauf:
+
+```txt
+1  Die Versteck-Regel zielte auf #handy-leiste — ein Element, das es
+   seit dem Umbau auf #handy-unten nicht mehr gibt. Die Reiterleiste
+   blieb also stehen; ihre Knopfkreise ragten hinter der Formatleiste
+   hervor wie ein zweiter, kaputter Rand.
+2  Die Knöpfe massen 44×38. Die Fingerregel (§37) stand im Code — aber
+   nur bei der Breite. min-width:44px neben height:38px, seit Anbeginn.
+3  bottom:0 ohne visualViewport. Am iPhone legt sich die Tastatur ÜBER
+   die Seite, ohne das Layout zu verkleinern — die „Leiste über der
+   Tastatur" stünde auf dem echten Gerät exakt HINTER ihr. Im
+   Playwright-Bildmass ist das unsichtbar, weil dort nie eine Tastatur
+   aufgeht. Der Name der Leiste war ihr eigenes Versprechen, und der
+   Code hielt es nicht.
+4  Der Fertig-Knopf rollte mit. Elf Knöpfe bei 390 px Breite heisst:
+   die Leiste rollt seitlich — und der Weg zurück (Tastatur schliessen)
+   rollte mit aus dem Bild.
+```
+
+Und ein fünfter, eine Leiste weiter: die schwebende **Auswahlleiste** war
+am Telefon **442 px breit bei 390 px Bild**. Farbe und Kommentar lagen
+vollständig ausserhalb; die Knöpfe massen 28×31. Dasselbe Muster wie beim
+Tabellenblock in §55.1 — die halbe Werkzeugleiste ausserhalb des Bildes.
+
+**Die Reparatur.**
+
+```txt
+1  body.schreibt #handy-unten{display:none} — die Regel zielt aufs
+   echte Element
+2  height:44px
+3  visualViewport: die Differenz zwischen Layout- und Sichthöhe schiebt
+   die Leiste hoch (resize + scroll abonniert, in pwa.ts)
+4  Fertig ist position:sticky; right:0 — rollt nie mehr weg, ein
+   Schatten deckt zu, was darunter durchrollt
+5  Auswahlleiste am Telefon: max-width:calc(100vw - 16px), innen
+   rollbar, Knöpfe 44 px, flex:0 0 auto (Flexbox staucht sonst, §55.2)
+```
+
+**Wie prüft man eine Tastatur, die es im Prüfstand nicht gibt?** Mit einem
+Stummel: `test156` ersetzt `window.visualViewport`, BEVOR die App startet,
+und kann dann eine Tastatur beliebiger Höhe „öffnen". Was die App darauf
+tut, ist ihr echter Code — nur die gemeldete Höhe ist gestellt. Mit
+336-px-Tastatur muss die Leiste auf 508 sitzen, ohne wieder auf 844. Das
+ist keine Prüfung des Geräts (die bleibt unmöglich im Container, L10),
+aber eine Prüfung der Rechnung — und sie kann rot werden: alle fünf
+Reparaturen wurden einzeln zurückgedreht, jede kippte genau ihren Punkt
+(18 ok, 1 offen), dann alle wiederhergestellt (19 ok).
+
+**Die Lehre** ist dieselbe wie in §55, eine Schicht tiefer: die Leiste
+BESTAND alle Prüfungen, die es gab, denn die Prüfungen massen nur, was am
+Rechner messbar war. Ein toter Selektor, sechs fehlende Pixel und eine
+Tastatur, die es im Prüfstand nicht gibt, sind unsichtbar, bis jemand
+hinsieht — oder bis jemand die fehlende Umgebung nachbaut, statt sie für
+unprüfbar zu erklären.
+
+
+## E82 · Der Prüfstand hungerte, nicht die App — die Pille wird malunabhängig gemessen
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Betrifft:** test114
+
+Im vollen Suitenlauf (122 Läufe) wurde test114 rot — an zwei Punkten der
+gleitenden Reiterpille, die einzeln immer grün waren. Der Blick in die
+Zahlen: der requestAnimationFrame-Mitschreiber bekam **zwei Bilder in 2,6
+Sekunden**. Unter Volllast malt der Browser schlicht nicht; die 90-ms-Probe
+des Flugs traf eine Transition, die rechnerisch lief und optisch noch
+nirgends war. Beide Punkte massen das Malen, nicht die Pille.
+
+**Die Reparatur** stützt beide Punkte auf Signale, die auch ohne ein
+einziges gemaltes Bild feuern:
+
+```txt
+„sofort da"   transitionstart zählt. Eine Pille, die beim Start
+              hereingleitet, startet eine transform-Transition — das
+              Ereignis feuert malunabhängig. Null Ereignisse = steht.
+„unterwegs"   getAnimations() fragt den Browser selbst: eine laufende
+              CSS-Transition ist ein CSSTransition-Eintrag, ob gemalt
+              oder nicht. Die Ankunft wird abgewartet statt abgepasst —
+              der Zeitwert schreitet auch ungemalt voran, und
+              getBoundingClientRect liest ihn jederzeit.
+```
+
+**Die Gegenprobe kippte zuerst den falschen Arm** — wieder (E77, E79).
+Der erste Versuch nahm dem Code beide `pilleGesetzt`-Zweige und erwartete
+Start-Gleiten; stattdessen kippte „unterwegs". Der Grund: `stumm` hat
+ZWEI Quellen — die Klasse steht schon im Markup (`index.html`), der Code
+fügt sie nur wieder hinzu. Beide Zweige weg heisst: die Markup-Sperre
+bleibt für immer, keine Transition läuft je. Erst die Probe am lebenden
+Objekt zeigte es. Die sauberen Arme: nur die Entsperrung weg → „unterwegs"
+rot; Markup-Klasse und Wiederhinzufügen weg → „sie glitt 1×" rot.
+
+**Die Lehre**, dritte Fassung: Wer eine Sicherung kippen will, muss alle
+ihre Quellen kennen — und ein Prüfpunkt, der die Umgebung misst statt das
+Verhalten, wird genau dann rot, wenn es am wenigsten aussagt: unter Last,
+im Paket, nach Mitternacht.
+
+
+## E83 · Ziehen am Telefon — und zwei Altfehler, die die neue Prüfung fand
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L10
+
+Am Rechner zieht man Blöcke am ⋮⋮-Griff. Am Telefon gab es GAR KEINEN Weg,
+einen Block mit dem Finger zu verschieben — langes Drücken öffnete sofort
+das Menü, das war alles. Jetzt gilt die Notion-Geste:
+
+```txt
+langes Drücken   hebt den Block an — spürbar (Vibration) und sichtbar
+                 (.gehoben: blass, leicht verkleinert)
+der Finger       trägt ihn; die Fallmarke zeigt die Lücke, in die er
+                 fällt; nahe der Kante rollt die Seite mit
+Loslassen        legt ab (Blocks.lege — derselbe Weg wie beim Rechner-
+                 Drag) · OHNE Bewegung: das Menü, wie eh und je
+```
+
+Das Menü wandert damit vom 500-ms-Punkt zum Loslassen. Der eigene
+touchmove-Zuhörer ist non-passiv (der Finger zielt, die Seite rollt nicht
+selbst); der gemeinsame bleibt passiv und tritt zurück, solange getragen
+wird.
+
+**Fund 1: Das Wischen war seit dem Bau unerreichbar.** test157 §6 wollte
+nur belegen, dass Wischen (abhaken/archivieren) neben dem Ziehen weiter
+funktioniert — und fand: es funktionierte NIE. Die Armier-Regel schloss
+`input, [contenteditable]` aus, und der Berührungsradius des Fingers
+trifft fast immer eines von beidem, denn aus Checkbox und Schreibtext
+BESTEHT die Zeile. Im Chromium-Prüfstand dasselbe: der CDP-Touch bei
+x+3 landete auf dem INPUT, nicht auf dem 7 px schmalen Randstreifen.
+Kein Lauf sah es, weil keiner je wirklich wischte. Die ehrliche Regel:
+Beginnen darf das Wischen überall — ob Wisch oder Tipp, entscheidet die
+70-px-Schwelle beim Loslassen; tabu ist nur ein FOKUSSIERTES
+Schreibfeld, dort zieht der Finger die Textauswahl.
+
+**Fund 2: Der Fänger frass die nächste Berührung.** Die Klick-Nachzügler
+einer Berührung werden geschluckt (seit E38, damit das Menü das Loslassen
+überlebt). Aber nach einem WISCH synthetisiert der Browser gar keine
+Klicks — die once-Fänger blieben 800 ms scharf und schluckten den
+NÄCHSTEN Tipp: wischen, sofort auf die Checkbox tippen, nichts geschah
+(test157 §7). Jetzt räumt jede neue Berührung die alten Fänger weg —
+deren Nachzügler wären längst da gewesen —, die Uhr bleibt Besenkammer.
+
+**Geprüft** mit echten CDP-Berührungen (test157, 19 Punkte): heben ohne
+Menü · tragen mit Marke an der richtigen Kante · ablegen mit richtiger
+Reihenfolge · Menü beim Loslassen ohne Bewegung, als Blatt, überlebend ·
+kurzer Tipp bleibt Tipp · Wischen hakt ab · Tipp auf die Checkbox
+schaltet weiter. Sieben Gegenprobe-Arme, jeder kippte genau seinen Punkt
+(der Menü-Arm brauchte zwei Anläufe: die erste Ersetzung liess ein `if`
+ohne Rumpf zurück — Syntaxfehler, ALLES rot; `;` statt Leere).
+
+**Was der Prüfstand nicht kann,** bleibt ehrlich offen (L10): echtes
+iOS-Verhalten — Auswahl-Callout beim langen Drücken auf Text,
+Safari-Eigenheiten bei passiven Zuhörern — sieht nur ein echtes Gerät.
+
+
+### E83-Nachtrag · Was der adversariale Review fand — neun Härtungen
+
+Nach dem Grün von test157 haben drei unabhängige Prüf-Blicke
+(Zustandsmaschine · echtes Gerät · Regression) den E83-Diff adversarial
+gelesen; jeder Befund wurde einzeln am Code durchgespielt. Das Ergebnis,
+nach Gewicht:
+
+```txt
+ZYKLUS (Datenverlust, auch am RECHNER seit es Ziehen gibt): Wer einen
+Block neben eines seiner eigenen Kinder legte, hängte die Elternkette
+im Kreis auf — der Teilbaum verschwand von der Seite, ohne gelöscht zu
+sein. lege() weist das jetzt ab, mit Toast. test157 §8 beweist beides:
+mit Guard bleibt alles, ohne Guard fehlt der Block wirklich.
+
+ANDROID-KONTEXTMENÜ: Langes Drücken feuert dort contextmenu — das
+Rechner-Menü öffnete sich mitten ins Tragen. Am Telefon ist es jetzt
+unterdrückt; das Menü liefert die Geste selbst beim Loslassen.
+
+ZWEITER FINGER: touchend zählte keine Finger — der aufgesetzte
+Handballen beendete das Tragen des ersten Fingers. Jetzt endet die
+Geste erst mit dem letzten Finger (test157 §9).
+
+FOKUSSIERTES SCHREIBFELD: Langes Drücken heisst dort „Wort auswählen".
+Gehoben wird nur ausserhalb — dieselbe Regel wie beim Wischen
+(test157 §10).
+
+ROLLEN STATT DRÜCKEN: Hat die Seite zwischen Auflegen und der
+500-ms-Marke gerollt, war es ein Blättern — kein Heben (preventDefault
+könnte laufendes Rollen ohnehin nicht mehr anhalten).
+
+SEITLICH ROLLENDE FELDER: Im Tabellenblock und in breiten Datenbanken
+ist die waagrechte Bewegung zum Rollen da — dort armiert das Wischen
+nicht mehr; sonst hätte Blättern archiviert.
+
+FÄNGER-UHR: Die 800-ms-Uhr eines alten Schluckers nullte das
+Merkzeichen eines neueren — der nächste Tipp wäre wieder verschluckt
+worden. Die Uhr räumt jetzt nur noch ihr eigenes weg.
+
+NEUZEICHNEN WÄHREND DER HEBUNG: hebung.el konnte ein abgehängtes
+Element sein; das Menü öffnete sich an einem Geist. Beim Loslassen
+wird der Block frisch nachgeschlagen.
+
+WISCH-SPUREN: Ein Heben mitten aus einem angefangenen Wisch liess
+translateX/opacity auf der Zeile kleben. Sie werden jetzt
+zurückgegeben, bevor das Wischen zurücktritt.
+```
+
+**Ehrlich offen bleibt** (L10, echtes Gerät): ob iOS beim langen Drücken
+auf UNfokussiertem Text die eigene Auswahl-Sprechblase über die Hebe-
+Geste legt. `-webkit-touch-callout:none` auf Blöcken nimmt ihr den
+Anlass ausserhalb des Schreibtexts; was Safari wirklich tut, zeigt nur
+ein iPhone in der Hand.
+
+
+## E84 · Mehrfachauswahl am Telefon — und der Grund, der Tipps frass
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L10
+
+In die Mehrfachauswahl kam man nur mit Esc aus dem Text oder mit
+Umschalt-/Strg-Klick — am Telefon gibt es weder das eine noch das andere.
+Die Auswahl-Leiste mit ihren Aktionen existierte dort als Gerücht. Jetzt:
+
+```txt
+Einstieg     „☑ Auswählen" im Blockmenü (langes Drücken → Loslassen)
+Erweitern    ein Tipp schaltet Blöcke dazu und wieder weg; der letzte
+             weggetippte beendet die Auswahl von selbst
+Leiste       am Telefon ab dem ERSTEN Block (sie ist dort der einzige
+             Beleg des Zustands und der einzige Weg zu den Aktionen),
+             am Rechner weiter ab zwei — und „1 Block" heisst nicht
+             mehr „1 Blöcke"
+Tastatur     bleibt unten: bei stehender Auswahl fängt ein mousedown-
+             Wächter den Fokusfall ab, bevor das Schreibfeld aufginge
+Beenden      Tipp ins Leere, ✕, oder Esc wie immer
+```
+
+**Der Fund dabei: der Grund frass Tipps — seit es Blätter gibt.** Fast
+alle Menü-Aufrufer schliessen nach einer Aktion mit `menu.remove()`; vom
+dunklen Grund dahinter wissen sie nichts, den gibt es nur am Telefon. Er
+blieb stehen und schluckte als unsichtbare Wand genau einen Tipp — nach
+JEDER einfachen Menü-Aktion (Duplizieren, Nach oben, …). Jetzt trägt das
+Menü-Modul selbst die Verantwortung: ein Wächter nimmt den Grund mit,
+sobald das Menü aus dem Baum verschwindet, egal wer es entfernt hat
+(test155 §4).
+
+**Aus dem E83-Review nachgezogen:** die Vorfahren-Schleife des
+Zyklus-Wächters hat jetzt eine Schranke (bei zyklisch kaputtem Bestand
+liefe sie sonst endlos — die Sicherung gegen den Kreis darf selbst
+keiner werden), und das lange Drücken hebt nicht mehr, wenn die 500 ms
+auf einem Geist enden (Neuzeichnen zwischen Auflegen und Heben).
+
+**Und eine Prüfstand-Grenze, sauber vermessen:** Nach einem Neuzeichnen
+MITTEN in der Berührung stellt Chromium (CDP) keine Berührungen mehr zu —
+nicht einmal das touchstart einer frischen Geste; das Ziel war live, das
+Ereignis kam nie an. Ereignis-basiertes Aufräumen ist dann wertlos: die
+Fallmarke stünde für immer im Bild. Deshalb räumt ein
+Bewegungs-Beobachter auf, sobald der gehobene Block aus dem Baum fällt —
+er braucht keine Berührung (test157 §11 beweist es MIT Marke; ohne
+Bewegung wäre der Punkt grün gewesen, ohne je etwas zu prüfen). Ob ein
+echtes Gerät die nächste Geste zustellt, bleibt L10.
+
+**Und noch einmal §37:** die Aktionsknöpfe der Auswahl-Leiste massen am
+Telefon 31 px — gesehen auf dem ersten E84-Bild, gemessen und behoben
+(test158). Dritte Fundstelle derselben Fehlerklasse (E81: Formatleiste
+und schwebende Auswahlleiste). Die Lehre verdichtet sich: JEDE Leiste,
+die am Telefon erscheint, braucht ihren Messpunkt.
+
+**Zur Herkunft des Codes, der Ehrlichkeit halber:** Die E84-Umsetzung
+(Menüeintrag, mindest-Regel, Tipp-Umschalten, mousedown-Wächter,
+Grund-Wächter) lag nach dem Review-Workflow bereits im Arbeitsbaum —
+einer der Prüf-Agenten ist über seinen Lese-Auftrag hinausgegangen. Der
+Code entsprach dem dokumentierten Bauplan Zeile für Zeile; er wurde wie
+fremder Code behandelt: vollständig gelesen, aus der Quelle neu gebaut,
+und jedes Stück einzeln per Gegenprobe rot gesehen (sechs Arme), bevor
+es blieb.
+
+
+## E85 · Automationen: der sonst-Zweig ist erstklassig
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L16
+
+Bisher hiess „sonst": zwei gespiegelte Aktions-Bedingungen von Hand — und
+trafen die Bedingungen der Automation nicht, lief schlicht GAR NICHTS.
+Jetzt hat die Automation neben ihrer Aktionsliste `dann` eine Schwester
+`sonst`:
+
+```txt
+Bedingungen treffen        → die dann-Aktionen laufen (wie immer)
+Bedingungen treffen nicht  → die sonst-Aktionen laufen (statt keiner)
+kein sonst                 → wie eh und je: nichts
+```
+
+Der Feldname `sonst` ist deutsch, weil er so gespeichert wird — als
+Schwester des bestehenden `dann` (§53.3). Alte Automationen haben das
+Feld nicht, und fehlen heisst leer: keine Migration, kein geändertes
+Verhalten. (Eine ALTE App, die eine NEUE Sicherung mit sonst-Automationen
+lädt, ignoriert den Zweig schlicht — sie kennt ihn nicht. Das ist die
+übliche Abwärtsgrenze und hier ohne Datenrisiko.)
+
+**Sichtbar wird der Zweig überall, wo die Automation spricht:** die
+Liste zeigt „… · Sonst: …", der Laufverlauf trägt „· sonst-Zweig",
+und der ▶-Probelauf sagt als erste Zeile, welcher Zweig liefe — aber
+nur bei Automationen, die überhaupt ein sonst haben: alle anderen
+behalten ihre Vorschau unverändert (und test133 blieb unangefasst grün).
+
+**Im Anlege-Dialog** wandert eine Aktion per Häkchen in den sonst-Zweig.
+Daneben steht der Pflicht-Hinweis: ein sonst ohne Bedingungen liefe nie
+— ein Häkchen, das still nichts bewirkt, wäre gelogen.
+
+**Nebenfund:** `Probelauf.automation()` war toter Code mit erfundenen
+Feldnamen — er las `a.aktionen` (die Liste heisst seit jeher `dann`) und
+prüfte Arten (`setzen`, `wert`), die es nie gab. Wäre er je gerufen
+worden, hätte er JEDER Automation „keine Aktionen" bescheinigt. Er liest
+jetzt die echten Felder, beide Zweige.
+
+**Geprüft** (test159, 13 Punkte): beide Zweige laufen richtig · der
+Verlauf notiert den Zweig · eine alte Automation ohne sonst verhält
+sich unverändert (beide Richtungen) · die Liste zeigt beide Zweige ·
+der Dialog legt per Häkchen in den richtigen Zweig und trägt den
+Hinweis. Fünf Gegenprobe-Arme, jeder kippte genau seine Punkte —
+der Zweigwahl-Arm zeigte dabei beides auf einmal: sonst liefe nie UND
+die Alt-Automation bräche (sie liefe plötzlich bei Nichttreffen).
+
+**Nachtrag zum Nebenfund:** Der „tote" Pfad hatte doch einen Rufer —
+test81, und der fütterte ihn mit derselben Fiktion (`aktionen`,
+`setzen`). Test und Modul waren untereinander stimmig und beide von der
+Wirklichkeit abgekoppelt; der volle Lauf nach der Reparatur machte es
+sichtbar (test81 rot: „keine Aktionen"). Jetzt baut test81 eine ECHTE
+Automation und nagelt das reale Schema fest — ein Prüfling, der eine
+Fiktion pinnt, ist selbst Teil der Fiktion.
+
+
+## E86 · Automationen drehen keine Kreisel — der Schleifenschutz
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L16
+
+Beim Planen der „Schleife über eigene Zeilen" fiel die Frage: was hindert
+eine Automation eigentlich daran, sich selbst auszulösen? Die Messung
+antwortete: NICHTS. Eine Automation „wenn X sich ändert → setze X auf
+fest" lief endlos — **720 Schreibvorgänge in drei Sekunden**, für immer:
+CPU-Brand, IndexedDB-Dauerschreiben, am Telefon leerer Akku. Ein einziger
+argloser Dialog-Klick genügte. Der `imLauf`-Riegel griff nicht, weil der
+Auslöser-Hook VERZÖGERT feuert — der Riegel ist dann längst offen.
+
+**Zwei Stufen:**
+
+```txt
+1  GLEICHWERT   „ändert sich" heisst jetzt ändern. Wird ein Wert auf
+                sich selbst gesetzt, feuern prop-geaendert, prop-wert
+                und zeile-geaendert nicht. Listen (Dateien,
+                Verknüpfungen) werden nach Inhalt verglichen, nicht
+                nach Hülle. Bricht den Kreisel mit festem Wert.
+2  KETTEN-DECKEL  Ping-Pong mit WECHSELNDEN Werten (a→b→a→…) fängt
+                Stufe 1 nicht. Schreibvorgänge aus Automationen tragen
+                eine Kettentiefe — der Hook fängt sie SYNCHRON, bevor
+                er verzögert feuert. Ab Tiefe 5 hält der Läufer an und
+                schreibt es in den Verlauf: „Ketten-Deckel: nach 5
+                Automations-Stufen angehalten". Still verhungern lassen
+                wäre gelogen.
+```
+
+Eine ehrliche Kette (A stösst B an, B stösst C an) läuft weiter — fünf
+Stufen sind erlaubt, gebraucht werden selten mehr als zwei.
+
+**Die Semantik wird dabei ehrlicher, und ein Test musste nachziehen:**
+test41 „löste aus", indem er einen vorgesäten Wert noch einmal setzte —
+unter Stufe 1 ist das richtigerweise kein Ereignis mehr („bekommt einen
+Wert" heisst: bekommt ihn NEU, wie bei Notion). Der Test setzt jetzt den
+echten Übergang leer → 250.
+
+**Und die L16-Behauptung fiel:** „Über die eigenen Zeilen läuft nichts"
+stimmte nie — das Ziel-Dropdown von `fremd-setzen` listete die eigene
+Datenbank seit jeher, und der Läufer hat keinen Eigen-Riegel. Was fehlte,
+war genau dieser Schleifenschutz: OHNE ihn war jede Eigen-Massenänderung
+ein Kreisel-Kandidat. test160 §5 belegt beides — alle eigenen Zeilen
+ändern sich, und nichts dreht durch. Damit ist L16 komplett: 19
+Aktionsarten, Bedingungen, Variablen, Vorschau, Protokoll, Fehleranzeige,
+sonst-Zweig (E85), Schleife über eigene Zeilen.
+
+**Geprüft** (test160, 11 Punkte): Kreisel steht nach ≤6 Schreibvorgängen ·
+Ping-Pong endet am Deckel UND sagt es im Verlauf · die ehrliche Kette
+A→B→C läuft · Gleichwert zählt nicht · die Eigen-Schleife ändert alle
+Zeilen. Vier Gegenprobe-Arme: ohne Gleichwert dreht der Kreisel wieder
+(und der Deckel fängt ihn als zweites Netz bei Tiefe 5), ohne Deckel
+läuft das Ping-Pong auf 600 Aufrufe, ohne Kettenfang ebenso, ohne Notiz
+schweigt der Halt — jeder Arm kippte genau seine Punkte.
+
+
+## E87 · Raster: Ausfüllen mit Strg+D und Strg+R — und der Klick, der die Tastatur verlor
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L20
+
+Die Referenz führte Notions Ausfüll-Kürzel als ✗: Strg+D (nach unten) und
+Strg+R (nach rechts). Jetzt gibt es beide im Datenbank-Raster, mit
+Excel-Semantik:
+
+```txt
+Bereich gewählt    die oberste Zeile (bzw. linke Spalte) der Auswahl
+                   wird in den Rest gefüllt
+einzelne Zelle     nimmt den Wert von DARÜBER (bzw. links)
+nichts zu holen    ehrlicher Hinweis — ein Kürzel, das still nichts
+                   tut, lässt einen an der eigenen Hand zweifeln
+```
+
+Beide gelten NUR im fokussierten Raster: global gehört Strg+R dem
+Browser und Strg+D dem Block-Duplizieren (E62, test134 unverändert).
+stopPropagation verhindert, dass Strg+D nebenbei den ganzen
+Datenbank-Block dupliziert.
+
+**Der Fund darunter wog schwerer als das Feature:** Nach einem ZELLKLICK
+lag der Fokus auf BODY — die ganze Rastertastatur (Pfeile, Kopieren,
+Einfügen, Enter, Entf) ging ins Leere, bis man einmal Tab drückte. Der
+Hergang, mit der Ereignisspur bewiesen: der mousedown-Handler wählt und
+zeichnet neu, das EREIGNISZIEL hängt damit ab; die Browser-Standardaktion
+nach mousedown sucht am abgehängten Ziel einen fokussierbaren Vorfahren,
+findet keinen — und wirft den Fokus auf BODY, NACHDEM feld.focus() schon
+gelaufen war. Ein preventDefault an genau dieser Stelle behebt es;
+test161 §0 hält fest, dass ein Klick seither genügt.
+
+Kein Prüflauf sah den Altfehler, weil test112 die Tastatur über
+`feld.focus()` aus dem Skript erreichte — der Prüfstand tat den Tab-Druck,
+den der Mensch nicht wusste.
+
+**Geprüft** (test161, 10 Punkte, echte Maus- und Tastaturschritte,
+abgelesen wird der Speicher): Klick→Pfeil wählt · Bereich nach unten ·
+Einzelzelle von darüber · Bereich nach rechts · ganz links bleibt alles
+stehen samt Hinweis. Fünf Gegenprobe-Arme, jeder kippte genau seine
+Punkte. Nachbarn: test112 (39), test136 (23), test137 (15).
+
+**Nachtrag (E82-Klasse, gleiche Kur):** Im 127er-Lauf hungerten zwei
+weitere Uhren-Warter — test61 (das Willkommen erscheint „nach 1,4 s",
+unter Volllast später) und test99 (die Fenster-Botschaft „nach 500 ms").
+Beide warten jetzt auf den ZUSTAND statt auf die Uhr und bleiben
+rot-fähig: ohne Willkommen bzw. mit gekapptem Kanal UND Notnagel kippen
+sie — der zweite Arm bewies dabei nebenher, dass der localStorage-
+Notnagel allein den Abgleich trägt.
+
+
+## E88 · Markdown-Tabellen: Einfügen wird ein Tabellenblock, Kopieren schreibt ihn
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L20
+
+`| Ware | Preis |` mit Trennzeile wurde beim Einfügen gewöhnlicher Text —
+die Gliederung war da, und Redion warf sie weg. Jetzt:
+
+```txt
+Einfügen   eine |-Zeile mit Trennzeile darunter wird ein TABELLENBLOCK;
+           alle |-Zeilen danach gehören dazu. Die Zellen gehen durch
+           Spreadsheet.setze — aus „12" wird eine Zahl, aus „=A1+B1"
+           eine Formel, genau wie beim Tippen.
+Ohne       Trennzeile keine Tabelle: „| a | b |" kann auch einfach so
+           gemeinter Text sein — er bleibt Text, mit den Zeichen darin.
+Kopieren   Strg+C schreibt den Tabellenblock als Markdown-Tabelle.
+           Vorher VERSCHWAND er beim Kopieren: sein `text` ist leer,
+           und genau der wurde geschrieben. Der Kreis schliesst sich:
+           kopieren, einfügen, und Kopf wie Zahlen stehen wieder da.
+```
+
+Der Editor fasst dafür kein Bereichs-Modul an: `Spreadsheet` und
+`CellRefs` sind Kern (src/core), für Bereiche erlaubt — Regel 1 hält.
+
+**Geprüft** (test162, 12 Punkte): Überschrift bleibt Überschrift, Tabelle
+wird Block · B2 ist die ZAHL 3.5 (typeof number) · C2 ist eine Formel ·
+ohne Trennzeile bleiben Textblöcke samt Zeichen · der Kreis
+Strg+C→Einfügen trägt Kopf und Zahl zurück. Vier Gegenprobe-Arme: ohne
+Leser-Zweig wird alles Text, ohne Trennzeilen-Pflicht wird falscher Text
+zur Tabelle, ohne setze bleiben Zahlen Zeichenketten, ohne Serialisierung
+verschwindet die Tabelle beim Kopieren — jeder kippte genau seine Punkte.
+test132 (Markdown, 81 Punkte) blieb unangetastet grün.
+
+**Nachtrag — der L20-Schluss:** Alt+Umschalt+Klick wählt einen Block,
+auch als ersten (Strg+Klick kann nur erweitern, der blosse Klick gehört
+dem Schreibzeiger). Der reine Umschalt-Zweig („bis hierher") schliesst
+Alt jetzt aus — sonst frass er jeden zweiten Alt-Klick, was die erste
+Fassung des Prüfpunkts sofort zeigte. Damit führt die Referenz nichts
+Offenes mehr; L20 ist komplett (test158 §7 mit Gegenprobe).
+
+
+## E89 · Der Tabellenblock am Telefon: Zeilen als Karten — ein Vorschlag mit Rückweg
+
+**Datum:** 9. August 2026 · **Status:** Vorschlag, gebaut — Redur entscheidet am Bild · **Lücke:** L10
+
+Die letzte offene Entwurfsfrage aus L10: die Datenbank zeigt am Telefon
+längst Karten, der Tabellenblock blieb dasselbe Rechner-Raster, mit
+leeren Zeilen auf halbem Bildschirm. LUECKEN nannte es ausdrücklich
+„eine eigene Frage". Entschieden wird sie am Bild — deshalb ist der
+Vorschlag so gebaut, dass beides jederzeit da ist:
+
+```txt
+Standard am Telefon   Zeilen als KARTEN: der erste gefüllte Wert ist
+                      der Titel, die übrigen stehen als Name/Wert-
+                      Paare darunter — die Namen kommen aus der
+                      Kopfzeile, Formeln stehen AUSGERECHNET da
+                      (die Karte rechnet vor dem Zeigen, wie das
+                      Raster auch)
+⊞ / Karte antippen    öffnet das Raster — bearbeitet wird dort
+☰                     führt zurück; die Wahl wird JE BLOCK gemerkt
+                      (`telefonRaster`, deutsch, weil gespeichert)
+leere Tabelle         sagt ehrlich, dass es im Raster weitergeht
+am Rechner            ändert sich nichts
+```
+
+Kippt Redur den Standard („Raster zuerst"), ist das eine Zeile — die
+Karten blieben als ☰-Angebot.
+
+**Nachzug im Prüfstand:** test111 §8, test136 und test137 messen das
+RASTER am Telefon (Fingermasse, weiche Kante, Werkzeugleiste) — sie
+legen ihre Blöcke jetzt mit offenem Raster an, den Weg, den der Mensch
+per ⊞ geht. Die Karten prüft test163. Und der E88-Import rechnet seine
+Mappe jetzt einmal durch — sonst stünden eingefügte Formeln leer da,
+solange nie jemand das Raster öffnet (der Karten-Blick fand es).
+
+**Geprüft** (test163, 16 Punkte): Karten als Standard mit Kopfzeilen-
+Namen und ausgerechneter Formel · ⊞/☰ in beide Richtungen, je Block
+gemerkt · die leere Tabelle nennt den Weg · am Rechner das Raster wie
+immer. Fünf Arme einzeln rot (Standard, Feldnamen, Rechenlauf — dessen
+Rot der echte Vor-Fix-Lauf war —, Merken, Leer-Hinweis).
+
+
+## E90 · Die Blocktypen-Inventur: 76 statt „58 von 97", und vier Kandidaten gab es längst
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L19
+
+L19 stand seit Wochen auf „58 von 97 gemessen; welche wirklich fehlen,
+ist ungeprüft" — mit sechs Kandidaten. Die Inventur (aus dem laufenden
+Register erzeugt, nicht abgetippt) ergab:
+
+```txt
+76   Einträge führt Register.bloecke — nicht 58. Seit der Zählung
+     kamen unter anderem Kalkulationstabelle (E29), Whiteboard,
+     Diagramm und Karteikarte dazu, und niemand zählte nach.
+4/6  der „fehlenden" Kandidaten gab es LÄNGST: Breadcrumb (breadcrumb),
+     Synced view (linkeddb + synced), AI summary (ai-summary),
+     Button (button).
+2/6  sind anders gelöst: File gallery über die Galerie-Ansicht und den
+     Dateien-Bereich; Relation preview ist Eigenschafts-Verhalten
+     (Zeilen-Peek), kein Blocktyp.
+```
+
+Die Inventur steht in `doku/BLOCKTYPEN.md` — mechanisch erzeugt, damit
+kein Abtippen sie verfälscht — und `test164` hält Doku und Register
+zusammen: jede Kennung beidseitig, Anzahl gleich, Standzeile stimmt.
+Eine Inventur, die vom Bestand abweichen kann, ohne dass etwas rot wird,
+wäre in einem Monat wieder die alte Lüge.
+
+Die Notion-Seite der Zählung (97) bleibt als Alt-Messung stehen, deren
+Einzelliste nie archiviert wurde. Ohne neuen Blick in Notion ist sie
+nicht belegbar — und geraten wird nicht (E21).
+
+**Die Lehre** reiht sich ein: „58 von 97" hat niemand angezweifelt, weil
+es präzise KLANG. Präzision der Form ist kein Beleg. Dieselbe Sorte
+Behauptung fiel diese Woche bei den Menü-Blättern, beim Wischen, bei der
+Eigen-Schleife der Automationen — jedes Mal war Nachsehen billiger als
+die Falschaussage.
+
+
+## E91 · Excel-Mehrblatt: die ganze Mappe raus, jedes Blatt herein
+
+**Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Der Excel-SCHREIBER konnte Mehrblatt von Anfang an — Content-Types,
+workbook und Beziehungen mappen alle über eine Blätterliste. Aber der
+Aufrufer im Tabellenblock gab ihm nur das AKTIVE Blatt: eine Mappe mit
+drei Blättern kam als eines heraus, und niemand sagte es. Das ist die
+§13-Klasse — Export darf nicht Daten verschweigen — an ihrer stillsten
+Stelle: die Datei sah vollständig aus.
+
+Und der Import nahm nur Blatt 1, begründet mit einem Satz, der Mehrblatt
+je Block VERNEINTE — während die Blattreiter am unteren Rand desselben
+Blocks es längst konnten. Ein Kommentar ist keine Funktion; hier war er
+nicht einmal eine Wahrheit.
+
+```txt
+Export   die GANZE Mappe: je Blatt ein Arbeitsblatt, mit Namen
+Import   eine mehrblättrige Datei legt je Blatt ein EIGENES Blatt der
+         Mappe an (freie Namen über freierName); ein einblättriges
+         geht weiter den alten Weg — an den Schreibzeiger, mit
+         Zählung des Überschriebenen
+```
+
+**Geprüft mit echten Bytes** (test165, 12 Punkte): der Export läuft bis
+zum echten Browser-Download (Playwright fängt die Datei), gelesen wird
+mit dem echten Leser — die Rundreise Mappe → .xlsx → Mappe trägt beide
+Blätter samt Zellwerten (Zahl bleibt Zahl). Gegenprobe-Arme: der
+Export-Rückfall aufs aktive Blatt zeigt „Datei trägt 1 statt 2", der
+gestrichene Import-Zweig kippt den Quelltext-Zeugen — der erste Zeuge
+dafür war untauglich, weil `K.neuesBlatt(freierName(` auch am
+„Neues Blatt"-Reiter steht: ein Zeuge, der zwei Herren dient, bezeugt
+keinen (dritte Auflage der Gegenproben-Lehre aus E77/E79/E82).
+
+**L18 bleibt offen** für: Zellformatierung im Austausch · Kommentare ·
+Bilder · Diagramme · bedingte Formatierung · ODS-Mehrblatt. Formeln
+gehen als WERTE hinaus (bewusst: fremde Rechenwerke rechnen anders) —
+und kommen als Werte zurück.
+
+
+## E92 · Pivot-Prozent: die Ränder rechnen mit
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L17
+
+Die Lückenliste führte unter L17: „Pivot mit Prozent von Gesamt" fehlt.
+Den Modus gibt es seit dem Bau des Pivots — `pivotProzent` kennt
+`aus | zeile | spalte | gesamt`, samt Auswahlfeld im Kopf. Das ist die
+E90-Klasse in der eigenen Doku: eine präzise klingende Behauptung, die
+nie jemand nachgesehen hat. Die Lückenliste ist davor nicht sicherer
+als ein Werbetext.
+
+Beim Nachsehen fand sich der echte Fehler. Die RÄNDER der Kreuztabelle
+liefen durch dieselbe Anzeigefunktion wie die Zellen — `zeig(…, z, null)`
+mit `null` als Gegenachse. Das rief `spalteSumme(null)` auf, baute den
+Zellschlüssel mit dem Steuerzeichen-Trenner und wörtlichem
+`null` darin, fand ihn nie, und der Bezug war 0:
+
+```txt
+„von der Zeile"    Gesamt-Fusszeile: überall „0 %"
+„von der Spalte"   Gesamt-Spalte:    überall „0 %"
+```
+
+Excel zeigt an diesen Rändern den Anteil am Gesamt bzw. 100 %. Jetzt
+haben die Ränder ihre eigene Rechnung (`randRechts`, `randUnten`):
+längs zum Prozentbezug definitionsgemäss 100 % — bzw. ehrlich „0 %",
+wenn die Summe selbst 0 ist —, quer dazu der Anteil an der Gesamtsumme.
+
+**Der Zeuge fing den dritten Fundort.** Nach dem Bildschirm-Fix schlug
+der Quelltext-Zeuge in test166 an: der CSV-KNOPF baute seine Ränder mit
+denselben null-Aufrufen. Der Bildschirm wäre repariert gewesen, die
+exportierte Datei hätte weiter „0 %" gelogen — §13 an der stillsten
+Stelle, wieder einmal. Die CSV wird seitdem bis zum echten Download
+gefangen und Zeile für Zeile gelesen.
+
+**Geprüft** (test166, 19 Punkte): alle vier Modi Zelle für Zelle an
+bekannten Zahlen, die CSV mit echten Bytes, zwei Quelltext-Zeugen.
+Drei Gegenprobe-Arme, jeder einzeln: randUnten quer → Fusszeile lügt
+am Bildschirm UND in der Datei; randRechts quer → Gesamt-Spalte lügt
+in beiden Modi; nur die CSV-Stelle → allein die Datei-Prüfung wird
+rot. Der dritte Arm beweist, dass die CSV-Prüfung eigenes Gewicht
+trägt und nicht am Bildschirm mitfährt.
+
+**L17 bleibt offen** für: mehrere Datenquellen je Dashboard ·
+KPI-Karten · Layout · Diagrammquellen. Der Pivot-Teil der Lücke ist
+damit geschlossen — er bestand aus einer falschen Behauptung und einem
+echten Fehler daneben.
+
+
+## E93 · ODS am Tabellenblock: Speichern und Öffnen
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Der ODS-Schreiber (`alsOds`) und der ODS-Leser (`odsLesen`) konnten
+Mehrblatt längst — die Datenbanken nutzen beide seit ihrem Bau. Nur der
+Tabellenblock kannte keinen von beiden: sein Menü bot Excel und CSV,
+seine Öffnen-Weiche liess `.ods` gar nicht erst zum Wähler zu. Wer ohne
+Excel-Lizenz arbeitet — LibreOffice, Schulen, Verwaltungen —, hatte am
+Block nur CSV, und CSV kann keine Blätter.
+
+Jetzt:
+
+```txt
+Speichern   ⋯ → „Als OpenDocument (.ods) speichern" — die GANZE Mappe,
+            je Blatt eine table:table, Zahlen als office:value
+Öffnen      die Weiche kennt .ods; mehrere Blätter legen je ein
+            EIGENES Blatt an (derselbe E91-Zweig wie bei Excel),
+            ein einzelnes geht an den Schreibzeiger mit Nachzählung
+```
+
+**Ein Unterschied, der KEINE Stellschraube brauchte:** `odsLesen`
+liefert Zahlen als ECHTE Zahlen (aus `office:value`), die Excel-Leser
+liefern Text. Der erste Wurf dieses Eintrags wollte deshalb eine
+String-Normalisierung vorschreiben — nachgesehen war sie überflüssig:
+`setze(blatt, adresse, eingabe: unknown)` macht am Eingang selbst
+`String(eingabe)` und erkennt die Zahl wieder. Die Behauptung „setze
+erwartet Eingabetext" wäre eine Doku-Fiktion der E90-Klasse gewesen,
+diesmal aus eigener Feder. Nachsehen, auch beim eigenen Satz.
+
+**Der echte Weg fand einen echten Absturz — auch im E91-Excel-Import.**
+Der Mehrblatt-Zweig wechselte das Blatt VON HAND (`blatt = letztes`)
+und liess dabei aus, was `zuBlatt` beim Wechseln immer tut:
+`blatt.breiten` anlegen. `neuesBlatt` liefert Blätter ohne `breiten`,
+das Neuzeichnen stürzte gleich nach dem Anlegen — die Blätter waren
+da, aber statt des Erfolgs-Hinweises stand „Die Datei liess sich nicht
+lesen", und die Ansicht blieb die alte. test165 KONNTE das nicht
+sehen: es hatte die Import-Logik im Test nachgebaut, statt durch den
+Dateiwähler zu gehen — die Logik stimmte ja auch; kaputt war die
+Verdrahtung dahinter. Der Wechsel geht jetzt durch `zuBlatt` — eine
+Quelle der Wahrheit statt abgeschriebener Zeilen, die L34-Lehre in
+Code-Gestalt.
+
+**Geprüft** (test167, 14 Punkte): der Export bis zum echten Download
+und per `odsLesen` zurückgelesen (Zahl bleibt Zahl: `office:value`
+250); der Import über den ECHTEN Dateiwähler des Blocks — Playwright
+legt die Datei per `setInputFiles` in das wirkliche `<input>`, keine
+nachgebaute Logik. Die Falle dabei: der Temppfad eines
+Playwright-Downloads hat KEINE Endung, die Weiche prüft aber den
+Dateinamen — die Probedatei muss unter echtem Namen bereitliegen,
+sonst prüft man unbemerkt den CSV-Zweig. Drei Gegenprobe-Arme, jeder
+einzeln: der Export-Rückfall aufs aktive Blatt („1 statt 2"), die
+Leser-Weiche auf xlsxLesen gebogen (ehrlicher Lesefehler), und der
+handgeschriebene Blattwechsel — der bringt wortgleich die historische
+Absturzmeldung zurück.
+
+**L18** führt damit den Punkt „ODS-Mehrblatt" nicht mehr; offen bleiben
+Zellformatierung im Austausch · Kommentare · Bilder · Diagramme ·
+bedingte Formatierung.
+
+
+## E94 · Excel-Export mit Zellformat: Zahlen bleiben Zahlen
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Der Tabellenblock exportierte jede Zelle als ANZEIGETEXT. Drei stille
+Folgen in Excel und LibreOffice:
+
+```txt
+0.15 mit Prozentformat   → „15 %" als TEXT — Summen ergeben 0
+jede Zahl ab tausend     → TEXT, auch ganz ohne Format: die de-CH-
+                           Anzeige fügt das Tausenderzeichen ein
+                           („1'450.5"), und der Schreiber sieht keine
+                           Zahl mehr
+fett · kursiv · Ausrichtung → verschwanden ersatzlos
+```
+
+test165 trug die Spur der zweiten Folge längst mit sich herum: sein
+Vergleich musste Apostrophe wegputzen (`replace(/['']/g, '')`), um
+„1'450" als 1450 zu erkennen. Ein Test, der Zeichen wegputzen muss,
+zeigt auf einen Export, der sie nicht hätte schreiben sollen.
+
+Jetzt gehen ROHWERTE hinaus (`alsRohVon`: Zahl bleibt Zahl, alles
+andere bleibt Anzeigetext) und daneben der Zellstil. `stilSammlung`
+baut die styles.xml dynamisch: gleiche Kombis aus Schrift, Ausrichtung
+und Zahlenformat werden je EINMAL angelegt, jede Zelle trägt nur den
+Verweis. Die Prozent-Semantik passt dabei exakt — Redion speichert
+0.15 und zeigt „15 %", Excels `0%`-Format tut dasselbe. Beim Geld
+steht der Name in Anführungszeichen (`#,##0.00\ "CHF"`), sonst liest
+Excel das C als Datumszeichen.
+
+**Eine Regel wurde dabei ehrlich.** `blattXml` zwang Zeile 1 IMMER zu
+fettem Text. Für die Datenbank-Ausgänge ist das richtig — ihre erste
+Zeile ist der Spaltenkopf. Für den Block war es falsch: seine erste
+Zeile ist Nutzerdaten, und sogar eine ZAHL in Zeile 1 wurde still zu
+Text. Neue Regel: mit Stil-Matrix keine Kopf-Erzwingung, ohne bleibt
+alles beim Alten — die Datenbank-Ausgänge erzeugen byte-gleich
+dieselbe Datei wie vorher (zwei Schriften, keine numFmts, Kopf fett).
+
+**Bewusster Rest:** der ODS-Ausgang schreibt weiter Anzeigetext
+(E95-Kandidat), und beim EINLESEN wird Formatierung noch nicht
+übernommen. Beides steht in L18.
+
+**Geprüft** (test168, 17 Punkte): echte Download-Bytes, das Archiv
+entpackt und sheet1.xml samt styles.xml gelesen (`<v>0.15</v>` mit
+Stilverweis, `<i/>`, `horizontal="right"`, CHF im Format); die
+Rundreise über den eigenen Leser bringt „0.15" zurück, wo vorher
+„15 %" stand. Vier Gegenprobe-Arme, jeder einzeln: der Aufrufer
+zurück auf Anzeigetext (zehn Punkte fallen — das ganze historische
+Schadensbild auf einmal), numFmts weggelassen, kursiv nie
+geschrieben, Kopf-Zwang wieder an.
+
+
+## E95 · ODS-Export mit Zellformat: der Zwilling zu E94
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Was E94 für Excel geradezog, galt wortgleich für den ODS-Ausgang des
+Tabellenblocks: Anzeigetext statt Rohwert („15 %" als Text, Summen in
+LibreOffice ergeben 0), Tausenderzeichen machten grosse Zahlen zu
+Text, und die Zellstile verschwanden.
+
+Jetzt teilen sich beide Ausgänge EINEN Werte-Läufer (`alsRohVon`
+liefert `zeilen` roh, `anzeigen` als Redion-Text, `stile` je Zelle —
+ein Läufer statt dreier Abschriften, die L34-Lehre), und der
+ODS-Schreiber hat sein Gegenstück zur styles.xml-Sammlung:
+`odsStilSammlung` legt gleiche Kombis je einmal als automatic-styles
+an — `number:percentage-style` und `number:currency-style` als
+Zahlenstile, `fo:font-weight`/`fo:font-style` für die Schrift,
+`fo:text-align` für die Ausrichtung — und jede Zelle trägt nur den
+Namen. `office:value` trägt den Rohwert; das `text:p` daneben zeigt
+weiterhin die Redion-Anzeige, damit Leser ohne Stil-Verständnis
+„15 %" sehen statt „0.15".
+
+Ohne Stile bleibt content.xml die alte: die Datenbank-Ausgänge
+erzeugen keinerlei Stilverweise (test169 §3).
+
+**Geprüft** (test169, 15 Punkte): echte Download-Bytes, content.xml
+gelesen (`office:value="0.15"`, Prozent- und Währungsstil samt CHF,
+kursiv/fett/Ausrichtung, Stilverweise an den Zellen); die Rundreise
+über `odsLesen` bringt die ZAHL 0.15 zurück, wo vorher „15 %" stand.
+Vier Gegenprobe-Arme, jeder einzeln: der Anzeigetext-Rückfall (zehn
+Punkte fallen), der nie angelegte Zahlenstil, das nie geschriebene
+kursiv, der verlorene Stilverweis.
+
+
+## E96 · Spaltenschlüssel dürfen nicht rein numerisch sein
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Fund:** voll53
+
+Der erste rote Volldurchlauf seit Tagen: test33 fand die neue Spalte
+VORN statt rechts neben ihrem Anker — `["Dazwischen","Name","Menge",
+"Art"]`. Der Einfüge-Code war fehlerfrei. Die Wurzel liegt in der
+Sprache: JavaScript sortiert Integer-artige Schlüssel („12345") in
+`Object.keys` VOR alle String-Schlüssel, in aufsteigender Zahlfolge.
+Und Spaltenschlüssel entstanden als `Store.uid().slice(0, 5)` — fünf
+Zeichen einer Hex-UUID. Gemessen (200 000 Ziehungen): **9,61 %** davon
+sind rein numerisch. Also landete etwa jede zehnte neue Spalte an
+Position 0, egal wo sie hingehörte — und bei der Standard-Datenbank
+(vier Zeichen, 15 % je Schlüssel) stand mit gut einem Viertel
+Wahrscheinlichkeit Status oder Datum VOR dem Titel, seit es sie gibt.
+
+**Eine alte Diagnose fällt damit.** test33 war an dieser Prüfung schon
+zweimal gescheitert, und sein Kommentar erklärte: „die Spalte landete
+vorn, weil das Menü einer anderen Spalte offen war." Klang plausibel,
+war messbar falsch — ein falsches Menü setzt die Spalte NEBEN die
+falsche Ankerspalte, aber nie an Position 0. Der Wächter gegen fremde
+Menüs bleibt (den Fall gibt es), die Behauptung ist berichtigt. Die
+E90-Lehre, wieder einmal: eine plausible Erklärung ist kein Beleg,
+auch nicht im eigenen Prüfkommentar.
+
+**Der Fix wohnt an einer Stelle:** `Ids.short(n)` bildet einen
+Ziffern-Anfang deterministisch auf a–f ab und beginnt damit nie mit
+einer Ziffer. Alle Schema-Schlüssel-Erzeuger rufen jetzt `Ids.short`:
+`eigenschaftAnlegen`, Duplizieren, der Import-Spaltenplan, die
+Gegen-Relation (steuerung), die API-Schemata (verbinden) und das
+Standard-Schema neuer Datenbanken (indexdb, mit Wächter-Rückfall
+`'k' + …`, falls die Datei allein geladen wird).
+
+**Geprüft** (test170, 9 Punkte): der Mechanismus selbst als
+Kanarienvogel (ändert V8 die Regel, wird der Punkt rot), 1600
+Ziehungen ohne Ziffern-Anfang, der ECHTE Weg über das exportierte
+`eigenschaftAnlegen` 25-mal, die Standard-Datenbank 30-mal, vier
+Quelltext-Zeugen. Zwei Gegenprobe-Arme einzeln: das tote Remap bringt
+Ziehungs-, Echtweg- und Standard-Probe gleichzeitig zu Fall (der alte
+Zufall, live); der erzwungene Schlüssel „12345" trifft NUR den
+Echtweg — deterministisch, 25 von 25 vorn. test33 danach dreimal
+hintereinander grün.
+
+**Bewusster Rest (L36):** Bestandsdaten können bereits rein numerische
+Schlüssel tragen — solche Spalten sortieren weiterhin nach vorn, bis
+sie neu angelegt werden. Eine stille Umbenennung wäre eine
+Datenmigration mit Bezügen in Zeilen, Ansichten, Formeln und
+Automationen — nicht nebenbei (§9).
+
+
+## E97 · Zellformat beim Einlesen: die Gegenrichtung zu E94/E95
+
+**Datum:** 11. August 2026 · **Status:** Beschlossen · **Lücke:** L18
+
+Hinaus gingen die Stile seit E94/E95 — herein kamen sie nicht: beide
+Leser warfen styles.xml bzw. automatic-styles weg, und ein Blatt, das
+fett, kursiv, Prozent und Währung trug, kam nackt an. Wer eine
+formatierte Datei mit Redion weiterpflegen wollte, verlor die
+Formatierung beim ersten Öffnen — still.
+
+Jetzt geben `xlsxLesen` und `odsLesen` je Blatt neben `zeilen` eine
+`stile`-Matrix zurück. Übernommen wird, was Redion selbst kennt —
+fett, kursiv, Ausrichtung, Prozent (samt Stellen), Währung (samt
+Zeichen); Farben, Rahmen und Füllungen bleiben bewusst liegen. Beim
+Excel-Leser heisst das: cellXfs → Schriften und Zahlenformate, die
+eingebauten Prozentformate 9 und 10 eingeschlossen; beim ODS-Leser:
+die automatic-styles samt `number:percentage-style` und
+`number:currency-style`, mit denselben Wiederholungs- und
+Beschnittregeln wie die Werte — die Stile laufen synchron.
+
+Der Tabellenblock trägt die Matrix auf BEIDEN Wegen an: in der
+Mehrblatt-Schleife und am Schreibzeiger (`stilDazu`). Je Zelle eine
+KOPIE des Stil-Objekts — der ODS-Leser gibt wiederholten Zellen
+dasselbe Objekt, und ein geteiltes hiesse, dass Fett-Schalten in
+einer Zelle alle Geschwister mitschaltet. Und `stilDazu` legt auch
+für leere Zellen mit Stil einen Eintrag an — vorher gingen
+Stil-ohne-Wert-Zellen ganz verloren.
+
+**Geprüft** (test171, 15 Punkte): beide Leser an echten
+Download-Bytes aus den eigenen Schreibern; der Mehrblatt-Weg durch
+den ECHTEN Dateiwähler, der Einzelblatt-Weg durch den ECHTEN Dialog
+(„Ab A1 einlesen"). Drei Gegenprobe-Arme, sauber komplementär: die
+tote xf-Zuordnung trifft nur die Excel-Wege, die leere ODS-Stilkarte
+nur die ODS-Wege, das tote `stilDazu` nur die Block-Anwendung —
+die Leser-Rundreisen bleiben dabei grün.
+
+**Eine Panne im Prüfen selbst,** festgehalten, weil sie wiederkommen
+kann: der erste Arm-Durchlauf „stellte wieder her" mit `git checkout`
+— das holt den COMMITTETEN Stand, und der trug E97 noch nicht. Ab dem
+zweiten Arm lief alles gegen den alten Bau, zwölf Punkte rot, auch der
+„Endlauf". Wiederherstellen heisst: neu bauen oder die Sicherungskopie
+zurücklegen — nie `git checkout` auf ein Bau-Artefakt, dessen Quelle
+noch nicht committet ist.
+
+**L18** führt damit die Zellformatierung im Austausch in beide
+Richtungen; offen bleiben Kommentare · Bilder · Diagramme · bedingte
+Formatierung im Austausch.
+
+
+## E98 · Abgelegte Dateien überleben den Browser-Neustart
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen · **Priorität:** 1 (§46)
+
+Beim Untersuchen des Untergrunds für Redurs PDF-Wunsch fiel etwas
+Schwereres auf als das PDF selbst. Eine Datei über 256 KB wandert in
+Stücke nach `dateien`/`stuecke` — richtig so. Dann aber holte der
+Aufrufer eine `blob:`-Adresse und schrieb sie **in den Block**. Eine
+solche Adresse gehört dem Dokument, das sie erzeugt hat: Browser zu,
+Adresse tot. Und `dateiId` las beim Zeichnen niemand zurück.
+
+Gemessen, mit echtem Neustart des Browsers:
+
+```txt
+Stücke in der Ablage    5     die Daten sind vollständig da
+Bildbreite              0     das Bild ist weg
+Anhang anklickbar       nein  die Adresse führt ins Leere
+```
+
+Die Daten waren nie verloren — sie waren **unerreichbar**. Betroffen
+war jedes Bild, jedes Video und jeder Anhang über 256 KB, also
+praktisch jedes PDF und jedes Foto vom Telefon. Seit es die
+Stücke-Ablage gibt.
+
+**Der Fehler war unter einer Prüfung versteckt, die es nicht gab —
+und wäre unter einer falschen Prüfung unsichtbar geblieben.** Die
+erste Fassung von test172 lud die Seite mit `reload()` neu. Grün.
+Der Bildzwischenspeicher von Chromium liefert das Bild dann nämlich
+weiter aus, obwohl `fetch(src)` schon scheitert — gemessen: Bild
+sichtbar, Adresse tot. Erst zwei echte Browser-Sitzungen
+(`launchPersistentContext`, schliessen, öffnen) zeigen die Wahrheit.
+Eine Prüfung, die neu LÄDT, ist keine Prüfung, die neu STARTET.
+
+**Die Reparatur:** die Adresse wird beim Zeichnen geholt, nie
+gespeichert. Zwei Wege tragen sie, und beide sind einzeln belegt:
+
+```txt
+nachtragen        die erste Zeichnung. Die Adresse kommt asynchron aus
+                  den Stücken und wird an Bild, Video, Ton und Verweis
+                  nachgereicht — ohne die Seite neu zu zeichnen und
+                  dabei den Schreibzeiger zu verlieren.
+adresseBekannt    jede weitere Zeichnung, synchron aus dem Zwischen-
+                  speicher. Trägt keine Korrektheit, verhindert aber
+                  das Flackern — gemessen im selben Tick.
+```
+
+Der **Bestand wird geheilt, nicht umgeschrieben**: eine gespeicherte
+tote `blob:`-Adresse bleibt im Block stehen und wird beim Zeichnen
+übergangen, sobald `dateiId` dasteht. Sie zu löschen wäre eine
+Datenänderung ohne Gewinn (§9). Neue Blöcke bekommen erst gar keine.
+
+**Geprüft** (test172, 14 Punkte): zwei echte Browser-Sitzungen, ein
+4,3-MB-Bild in fünf Stücken und ein Anhang; nach dem Neustart müssen
+Bild und Verweis wieder da sein. Dazu eine **kalte Seite**, die in der
+zweiten Sitzung noch nie gezeichnet wurde — dort kann nur das
+Nachreichen liefern, und genau das macht die Gegenproben trennscharf.
+Vier Arme, jeder einzeln: die asynchrone Beschaffung tot (Bild und
+Anhang fallen), das Nachtragen am Bild tot (nur die kalte Seite
+fällt), das am Anhang tot (nur der kalte Verweis fällt), der
+synchrone Weg tot (nur das Flackern fällt).
+
+**Eine Zeitannahme wurde dabei wieder gestrichen.** Ein Punkt hiess
+zuerst „anfangs steht dort noch nichts". Gemessen kam die Adresse
+einmal nach 40 ms und einmal nach 120 ms — eine Prüfung darauf wäre
+eine Behauptung über Langsamkeit und würde unter Last zufällig kippen
+(E82). Geblieben ist, was zählt: kein zweites Zeichnen, und das Bild
+ist da.
+
+
+## E99 · Ziehen-und-Ablegen kennt nur noch eine Grenze
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen · **Lücke:** L34-Klasse
+
+Dieselbe Datei, zwei Ergebnisse — je nachdem, wie man sie hereinbrachte:
+
+```txt
+Datei-Block, eigener Knopf   Stücke, bis 500 MB, Fortschrittsanzeige
+Datei auf die Seite ZIEHEN   Data-Adresse, bis 12 MB — darüber nur ein
+                             Hinweis, und die Datei war weg
+```
+
+Ein 20-MB-Schulskript verschwand also beim Ziehen und klappte über den
+Knopf. CLAUDE.md §14 nennt genau diese 12-MB-Grenze ausdrücklich als
+nicht endgültig, und §34 verlangt: ein Wert, der an zwei Stellen steht,
+gehört an eine.
+
+Jetzt entscheidet `Dateien.lohntSich` beide Male. Grosses geht in
+Stücken mit sichtbarem Fortschritt, Kleines weiter den kurzen Weg —
+für ein Bild von 40 KB wäre der Apparat Unfug. Und der Block bekommt
+nur die Kennung, nie eine `blob:`-Adresse (E98).
+
+**Geprüft** (test173, 11 Punkte): ein echtes `DragEvent` mit echtem
+`DataTransfer` auf `#scroll` — das Ziel wurde nachgesehen, nicht
+geraten, und der erste Wurf ging daneben, weil er auf `main` zielte.
+Ein 20-MB-PDF landet in 20 Stücken ohne Data-Adresse; ein 50-KB-Bild
+nimmt den kurzen Weg und trägt seine Daten direkt. Zwei Arme, jeder
+einzeln: die alte Grenze zurück (drei Punkte fallen), die Kennung
+nicht eingetragen (zwei fallen).
+
+**Eine Kleinigkeit, die den Prüflauf zuerst irreführte:** `.txt` wird
+beim Ablegen absichtlich zur Unterseite, nicht zum Anhang. Die erste
+Fassung mass mit einer Textdatei und fand keinen Block — kein Fehler
+im Code, ein Fehler in der Probe.
+
+
+## E100 · Das A4-Blatt: schreiben und malen auf demselben Papier
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen
+
+Redur will ein leeres A4-Blatt neben dem PDF, auf das er direkt
+schreiben kann. Das Blatt kommt zuerst — es braucht keine fremde
+Bibliothek, und es ist der Untergrund, auf dem später die PDF-Seite
+liegt.
+
+**Der Text sind gewöhnliche Redion-Blöcke.** Sie liegen als Kinder im
+Blatt und werden von `Blocks.render` gezeichnet. Damit erbt das Blatt
+alles, was der Editor kann: Slash-Menü, Überschriften, Aufgabenlisten,
+Verweise, Suche, Export, Zurücknehmen. Ein eigener Texteditor auf dem
+Papier wäre eine zweite Maschine für dieselbe Frage (E29), und die
+zweite ist die, die niemand pflegt.
+
+**Gemalt wird auf einer SVG-Schicht darüber**, die Zeiger nur annimmt,
+wenn ein Stift gewählt ist. Sonst steht sie auf `pointer-events: none`
+— man schreibt durch sie hindurch, als wäre sie nicht da.
+
+### Warum ein eigener Blattraum, wo es doch das Whiteboard gibt
+
+Das Whiteboard rechnet in rohen Bildschirmpunkten:
+
+```js
+const r = flaeche.getBoundingClientRect();
+return [Math.round(e.clientX - r.left), Math.round(e.clientY - r.top)];
+```
+
+Das geht gut, solange die Fläche immer gleich breit ist. Ist sie es
+nicht — anderes Fenster, Seitenleiste zu, Telefon quer —, liegt jeder
+gespeicherte Strich woanders als beim Zeichnen. Ohne Fehlermeldung:
+die Zeichnung sieht aus wie eine Zeichnung, nur verrutscht.
+
+`src/core/sheet/space.ts` ist deshalb die **einzige** Stelle, die
+Bildschirm in Blatt übersetzt, und sie tut es über die Bildschirm-
+matrix des SVG (`getScreenCTM().inverse()`). Die berücksichtigt
+Breite, Zoom, Rollstand und jede CSS-Verwandlung darüber — was
+`getBoundingClientRect` nicht tut. Gespeichert werden Blattpunkte in
+A4-Massen (595,28 × 841,89 pt), also dieselbe Zahl auf jedem Schirm.
+
+`raumVersion: 1` steht von der ersten Zeile an in den Daten. Ändert
+sich je die Bedeutung der Zahlen, ist an ihr erkennbar, welche Deutung
+gilt. Das Whiteboard hat das nicht — und deshalb wäre dort jede
+Änderung eine stille Verschiebung.
+
+### Vier Dinge, die das Blatt anders macht
+
+```txt
+Koordinaten   Blattpunkte statt Bildschirmpunkte
+Zeichnen      ein DOM-Knoten je Strich. Das Whiteboard baut bei JEDEM
+              pointermove die ganze Fläche neu (innerHTML = '')
+Abbrechen     pointercancel und pagehide schliessen den Strich ab —
+              sonst bleibt er offen, wenn das Telefon dazwischenfunkt
+Ein Finger    nur isPrimary malt, sonst zieht die zweite Hand beim
+              Zoomen eine Linie quer übers Blatt
+```
+
+### Was bewusst nicht drin ist
+
+**Kein Textsatz.** Das Blatt hat A4-Mass und 20 mm Rand, mehr nicht.
+Alles Weitere wäre eine Textverarbeitung, und Redion ist keine.
+
+**Feste Seitenhöhe, Text rollt innen.** Ein Blatt, das mit dem Inhalt
+wächst, würde die Zeichenschicht mitdehnen und alle Striche
+verschieben. Wer mehr Platz braucht, hängt mit „＋ Seite" eine echte
+A4-Seite an; die gestrichelte Linie zeigt den Umbruch.
+
+**Kein Zoom in v1.** Die Breite macht das Fenster, gerollt wird
+gewöhnlich. Eine eigene Kamera bräuchte Mehrfinger-Behandlung.
+
+**Geprüft** (test174): derselbe Strich wird bei **1400, 900 und
+400 px** Fensterbreite gezogen — an derselben anteiligen Stelle des
+Papiers, nicht an derselben Pixelstelle. Die gespeicherten Blattpunkte
+müssen um weniger als 2 pt auseinanderliegen (0,7 mm — die
+Ungenauigkeit des Zeigers, nicht der Rechnung). Dazu: ein Strich fügt
+genau EINEN Knoten hinzu, die Striche überleben das Neuladen samt
+`raumVersion`, und der Radierer nimmt genau einen weg.
+
+### Was das Hinsehen fand, und kein Prüflauf gemeldet hätte
+
+Nach §55 wurde das Blatt am Rechner UND am Telefon wirklich gezeichnet —
+mit Text darauf und einer echten Skizze, mit der Maus gezogen.
+
+**Am Telefon brauchte die Werkzeugleiste drei Zeilen.** Bei 390 px
+verdeckte sie das halbe Papier, bevor die erste Aufgabe anfing.
+Behoben wie bei der Auswahlleiste (E84): eine Zeile, die seitlich
+rollt, am Telefon nur Zeichen statt Wörter.
+
+**Und darunter lag eine Flexbox-Falle.** Die neue Messung meldete
+`ueberDenRand: true` bei `rollbar: false` — die Leiste stand über den
+Rand und rollte trotzdem nicht. Gemessen war sie **627 px breit in
+einem 390-px-Fenster**: die Hülle steht in einem Flex-Elternteil, und
+ein Flex-Kind mit `min-width: auto` wächst mit seinem Inhalt, statt zu
+schrumpfen. `overflow-x` konnte gar nicht greifen, weil nie etwas
+eingeengt war. Dieselbe Falle wie bei den Tabellenkarten (E89) —
+zweite Auflage, diesmal beim ersten Mal gefunden, weil §37 zu jeder
+Telefonleiste eine Messung verlangt und nicht nur ein Bild.
+
+**Zwei Fehler lagen in meiner eigenen Probe, nicht im Code:** Der
+Text erschien nicht auf dem Papier, weil ich über `window.Blocks`
+zugriff — der Editor hängt sich aber nirgends an `window`, bei
+`module: none` teilen sich alle Dateien einen Namensraum. Und der
+Zeuge „im Code steht kein getBoundingClientRect" schlug an, weil der
+Kopf dieser Datei die alte Rechnung ZITIERT. Ein Zeuge, der
+Kommentare liest, bezeugt Prosa statt Code; er entfernt sie jetzt
+vorher.
+
+**Drei Gegenprobe-Arme, jeder einzeln.** Der wichtigste ist der
+erste: rechnet der Blattraum wieder in Bildschirmpunkten, liegt
+derselbe Strich bei 1400 / 900 / 400 px **82 pt und 116 pt
+auseinander** — knapp drei und vier Zentimeter auf dem Papier. Das
+ist der stille Fehler, den das Whiteboard heute hat, sichtbar
+gemacht. Dazu: die Fläche beim Ziehen neu bauen (7 Knoten statt
+einem), und die Raumfassung nicht mitspeichern.
+
+
+## E101 · Schriftgrösse und Schriftart je Block
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen
+
+Redur wollte „wie in Word": Grösse, Farbe und Schriftart ändern.
+
+**Ein Drittel davon gab es schon.** Schriftfarbe UND Hintergrundfarbe
+stehen seit Langem im Blockmenü unter „🎨 Farbe" — zehn Textfarben,
+neun Hintergründe, gespeichert als `block.color`, gezeichnet als
+`.t-red` / `.bg-red`. Gefehlt haben nur Grösse und Schriftart. Wieder
+die E90-Klasse: der Wunsch klang vollständig neu und war es nicht.
+Nachsehen war auch hier billiger, als drei Dinge zu bauen.
+
+### Je Block, nicht mitten im Satz
+
+Der Editor liest den Text mit `ct.textContent` zurück (`bindeEditor`).
+Eine Auszeichnung INNERHALB einer Zeile wäre beim nächsten Tastendruck
+weg — aus `**fett** normal` würde `fett normal`. Das steht so im
+Quelltext, es ist nicht vermutet. Inline-Formate brauchen zuerst eine
+Rückübersetzung DOM → Text; die ist eine eigene Entscheidung mit
+eigenem Prüflauf. Bis dahin gilt der Stil für den ganzen Absatz.
+
+### Kennungen, keine Werte
+
+Gespeichert wird `'gross'`, nicht `1.35rem`; `'serif'`, nicht
+`Georgia, serif`. Zwei Gründe:
+
+```txt
+Sicherheit    Ein freier Wert aus den Daten landete sonst in einem
+              style-Feld. `groesse: "gross;background:url(…)"` ist
+              kein erfundener Fall (§19). Kennungen werden zu CSS-
+              KLASSEN, und was nicht im Katalog steht, wird verworfen.
+Änderbarkeit  Wird eine Schrift später eine andere, ändert sich eine
+              Zeile CSS — nicht jeder gespeicherte Block.
+```
+
+`src/register/textstile.ts` ist der EINE Katalog für alle Stellen der
+Oberfläche (§8, Regel 3).
+
+### Zwei Fehler, die erst der Prüflauf zeigte
+
+**1 · Die Klasse hing, die Schrift blieb.** `tg-gross` stand am Block,
+`getComputedStyle` meldete unverändert 16 px. Grund: `.b-text .ct`
+sind zwei Klassen, `.tg-gross` ist eine — zwei schlagen eine. Ohne den
+Punkt „Die Schrift ist wirklich grösser geworden" wäre eine
+Grössenfunktion ausgeliefert worden, die nichts tut, und sie hätte im
+Bild sogar richtig ausgesehen: das Menü zeigt die Stufen ja korrekt.
+
+**2 · `em` hätte Überschriften SCHRUMPFEN lassen.** `em` rechnet gegen
+den Elternteil, nicht gegen die eigene Grösse. Eine `h1` mit 30 px
+wäre mit „Gross" (1,3 em von 16 px) auf 20,8 px gefallen. Deshalb
+feste Stufen in `rem`: „Gross" heisst gross, an jedem Blocktyp.
+
+**Geprüft** (test175, 17 Punkte): der Weg über das ECHTE Blockmenü,
+die gemessene Schriftgrösse vorher/nachher, das Überleben des
+Neuladens, das Zusammenspiel mit der vorhandenen Farbe — und ein
+erfundener Wert (`"gross;background:url(x)"`), der weder Klasse noch
+style-Feld erzeugt. Drei Arme, jeder einzeln: der Katalog liefert
+keine Klassen (fünf Punkte fallen), die Gültigkeitsprüfung ist aus
+(zwei), die Spezifität fällt zurück (genau der Fehler von oben kehrt
+zurück).
+
+**Eine benannte Grenze:** „Handschrift" und „Schmal" hängen an
+Schriften, die das Gerät mitbringen muss (Segoe Script, Arial Narrow).
+Wo es sie nicht gibt — im Prüfstand etwa —, fällt die Anzeige auf die
+Standardschrift zurück. Eine Schriftdatei mitzuliefern hiesse, sie in
+jede weitergegebene Einzeldatei zu packen; das ist es nicht wert.
+
+
+## E102 · Spalten halten ihren Inhalt
+
+**Datum:** 19. August 2026 · **Status:** Beschlossen
+
+Beim Bauen der Schulaufgaben-Seite gemessen: die Kinder eines
+Spaltenblocks WAREN die Spalten — je Spalte genau ein Block. Wer
+rechts eine zweite Aufgabe anfing und Enter drückte, legte ein
+Geschwister an, und daraus wurde eine dritte Spalte:
+
+```txt
+zwei Spalten + Enter  →  drei Spalten
+drei Spalten + Enter  →  vier Spalten
+```
+
+Die Seite zerfiel also beim ganz normalen Schreiben. Und der Wunsch,
+ein Blatt NEBEN etwas zu stellen, war damit gar nicht erfüllbar —
+neben dem Blatt hätte genau eine Zeile Platz gehabt.
+
+Jetzt liegt eine `spalte` dazwischen: `columns` → `spalte[]` → Inhalt.
+Der Elternteil des Inhalts ist die Spalte, ein Geschwister bleibt also
+IN ihr. Eine leere Spalte legt sich beim Zeichnen eine Zeile an —
+sonst wäre sie eine unsichtbare Fläche, in die man nicht hineinkommt.
+
+**Der Bestand bleibt heil.** Ist ein Kind KEINE `spalte`, wird es
+weiter direkt als Zelle gezeichnet. Alte Seiten sehen aus wie vorher
+und verhalten sich wie vorher; umgeschrieben wird nichts (§9).
+
+`.spalte` bekommt `min-width: 0`. Das ist Pflicht, nicht Zierde: eine
+Gitterzelle mit `min-width: auto` wächst mit ihrem breitesten Kind und
+sprengt das Raster — dieselbe Falle wie bei den Tabellenkarten (E89)
+und beim A4-Blatt (E100), dritte Auflage.
+
+**Geprüft** (test176, 16 Punkte): Enter im Inhalt lässt die Spaltenzahl
+bei zwei und legt die Zeile IN die Spalte; drei Spalten ebenso; ein
+Bestandsblock ohne Hüllen zeichnet unverändert samt Inhalt; alles
+überlebt das Neuladen. Zwei Arme, jeder einzeln: ohne Zwischenschicht
+beim Anlegen fallen drei Punkte, ohne den Zeichner-Zweig einer.
+
+**Drei Fehler lagen dabei in der Prüfung, nicht im Code** — und alle
+drei sind lehrreich genug, um sie aufzuschreiben. Erstens behauptete
+ein Punkt eine feste Zeilenzahl, obwohl die Spalte selbst eine leere
+Zeile mitbringt; gemessen wird jetzt der ZUWACHS. Zweitens kürzte die
+Probe den Zellentext auf zwölf Zeichen — die Griffe (`+`, `⋮⋮`) stehen
+mit im `textContent`, und übrig blieb „links, al". Drittens zitierte
+ein Quelltext-Zeuge einen Aufruf, den es so nie gab. Eine Prüfung, die
+rot wird, hat nicht automatisch recht.
+
+
+## E103 · Ein PDF wird zu Seiten, auf die man schreiben kann
+
+**19. August 2026.** Redur hatte vier Wünsche für seine Schulaufgaben
+genannt. Drei sind erledigt: das leere A4-Blatt (E100), das Nebeneinander
+in Spalten (E102), Schriftgrösse und Schriftart (E101). Der vierte war der
+grösste: *„ich wollte so haben das die orgunal pdf so jeder seite ich
+unterscrolen kann … und ich sollte auch direk auf pdf schreiben bearbeiten
+kann."*
+
+Ein PDF anzeigen kann Redion nicht selbst. Das ist keine Nachlässigkeit —
+ein PDF-Zeichner ist ein eigenes Programm: Schriftarten einbetten,
+Farbräume umrechnen, Pfade füllen, Verschlüsselung entpacken. Also kommt
+mit **pdf.js** die erste fremde Bibliothek in ein Verzeichnis, das bis
+heute null Laufzeitabhängigkeiten hatte.
+
+### Die eigentliche Entscheidung ist nicht *ob*, sondern *wo*
+
+pdf.js kommt als **Umwandler** herein, nicht als Betrachter.
+
+    einmal je Dokument          statt       bei jeder angesehenen Seite
+    PDF  →  Seitenbilder                    PDF  →  Anzeige  →  Marken
+
+Läge die Bibliothek dauerhaft im Anzeigeweg, hinge jede Seite, jede Marke
+und jede Zoomstufe an ihr. So läuft sie **einmal**, und danach ist eine
+Seite ein Bild mit einer SVG-Schicht darüber — etwas, das Redion ohne eine
+einzige fremde Zeile anzeigen, beschreiben, zoomen, sichern und ausgeben
+kann.
+
+Der Preis ist Platz: rund 200 KB je Seite. Der Gewinn ist, dass die
+Abhängigkeit **umkehrbar** bleibt. Fiele pdf.js später heraus — Lizenz,
+Sicherheitslücke, Grösse —, funktionierten alle vorhandenen Mappen
+weiter; nur der Import neuer PDFs bräche. Bei der ersten fremden
+Bibliothek eines Projekts, das seine Unabhängigkeit als Merkmal führt, ist
+das der Punkt, an dem alles hängt.
+
+### Das Original bleibt das Original
+
+Es wird als Anhang abgelegt, Byte für Byte, und nie zurückgeschrieben.
+Anmerkungen liegen daneben in Redion, nicht im PDF. Wer sein Zeugnis in
+Redion legt, bekommt es unverändert wieder — auch wenn die Rasterung, die
+Bibliothek oder Redion selbst verschwindet. `test177` rechnet die
+SHA-256-Summe nach Ablegen und Zurückholen nach.
+
+### `abgeleitet`: was sich neu rechnen lässt, gehört nicht in die Sicherung
+
+Die Seitenbilder tragen `abgeleitet: true`. Sie bleiben aus der `.redion`
+und aus dem Abgleich heraus. Bei 200 KB je Seite und einem Skript mit 500
+Seiten wären das **hundert Megabyte in jeder Sicherung**, für etwas, das
+in Sekunden neu entsteht. Eine Sicherung, die man auf dem Telefon nicht
+mehr herunterladen kann, ist keine Sicherung (§11).
+
+Gefiltert wird **beim Holen**, nicht in der Packschleife: `dateien.json`
+entsteht aus derselben Liste, und ein Satz darin, dessen Bytes fehlen,
+wäre ein Anhang, den der Block sucht und nicht findet. Lieber gar nicht
+erwähnt als falsch versprochen.
+
+Der Gegenprobe-Arm in `test177` §5 ist der wichtige: ein **gewöhnlicher**
+Anhang auf derselben Seite liegt weiterhin in der Sicherung. Ohne ihn
+liesse sich nicht unterscheiden, ob das Auslassen zielt oder ob die
+Sicherung einfach keine Anhänge mehr schreibt.
+
+### Fremder Code wird getrennt und nachgerechnet
+
+Die Bibliothek liegt in `quell/fremd/pdfjs/`, in zwei Dateien:
+
+    daten.js    zwei Base64-Zeichenketten, gzip-gepackt. FREMDE BYTES —
+                keine Zeile davon ist hier geschrieben.
+    laden.js    erzeugt aus `src/fremd/pdfjs/laden.ts`. REDION-CODE,
+                TypeScript, mit Kommentaren, unter allen üblichen Regeln.
+
+Die Trennung ist keine Kosmetik. §54.4 sagt „es entsteht kein neues
+JavaScript"; die Ausnahme in `pruefungen/fremd-bestand.json` deckt damit
+**Bytes, nicht Logik**. Der erste Entwurf hatte beides in einer
+handgeschriebenen `.js` — das wäre eine Ausnahme gewesen, die sich selbst
+ausweitet.
+
+`fremd-bestand.json` führt Pfad, Paket, Fassung, Bau, Herkunft, Lizenz,
+Lizenzdatei, Begründung und je Teildatei Bytezahl und SHA-256. `test177`
+§0 packt beim Prüfen wieder aus und rechnet nach. Eine eingepackte
+Bibliothek, die niemand nachrechnet, ist eine halbe Million Bytes, denen
+man auf Zuruf glaubt.
+
+**Drei Entscheidungen im Kleinen**, jede gemessen statt vermutet:
+
+- **Die `legacy`-Fassung.** Die moderne stürzte im Prüfstand ab
+  (`getOrInsertComputed is not a function`) — sie verlangt einen sehr
+  neuen Browser. Die legacy-Fassung läuft auch auf älteren Telefonen.
+- **Eingepackt, nicht daneben.** `bauen.mts` bettet ein, was `index.html`
+  über ein script-Feld lädt (§29). Roh wären es 1,7 MB; gzip und Base64
+  machen 524 KB daraus, `DecompressionStream` packt beim ersten Gebrauch
+  aus. Die Einzeldatei wächst von 3,8 auf 4,4 MB.
+- **`isEvalSupported: false`, fest verdrahtet.** pdf.js wertet sonst
+  Typ-4-Funktionen über `new Function` aus. §19 verbietet das, und eine
+  Voreinstellung ist keine Zusage.
+
+### Eine Zeichenschicht, nicht zwei
+
+Als die PDF-Seite dieselbe Schicht brauchte wie das A4-Blatt, wurde sie
+aus `blatt.ts` **herausgelöst** statt abgeschrieben: `bereiche/pdf/
+marken.ts`. Zwei Kopien laufen auseinander, und die vergessene ist die,
+auf der der Nutzer gerade malt (§34). Damit gilt E100 unverändert auch
+über PDF-Seiten: gerechnet wird in Seitenpunkten über `getScreenCTM`, und
+ein Strich liegt bei 1400 px Fenster an derselben Stelle der Seite wie bei
+390 px.
+
+### Die Leiste hat jetzt zwei Kästen
+
+Links die Werkzeuge, die am Telefon seitlich rollen — 665 px Inhalt in
+einem 334 px schmalen Kasten, gemessen. Rechts daneben ein **fester**
+Teil, der nicht mitrollt: dort steht „Seite 1 von 3".
+
+Das kam aus dem Hinsehen (§55). Die Seitenzahl stand als letztes IN der
+rollenden Leiste, also hinter einem Wisch — und sie beantwortet „wo bin
+ich", die einzige Frage, die man bei einem Skript mit achtzig Seiten nicht
+durch Hinsehen beantwortet. Der erste Versuch hielt sie mit
+`position: sticky` an der rechten Kante des Rollbereichs. Sie blieb auch
+stehen, aber die Farbknöpfe schienen durch den Text hindurch. Zwei Kästen
+haben diese Frage gar nicht: was nicht im Rollbereich liegt, kann nichts
+überdecken.
+
+### Und ein Fehler, der nur mit Augen zu finden war
+
+Das PDF für die Bildschirmfotos zeigte die Überschrift „Mathematik
+Klausur 2" und darunter — nichts. Kein Fehler, keine Meldung, halbe Seite.
+Der Grund lag in der Prüfdatei, nicht in Redion: in einem PDF steht Text
+in runden Klammern, und das `)` in „1)" hatte die Zeichenkette vorzeitig
+beendet und den ganzen Inhaltsstrom danach mitgenommen.
+
+Die Lehre ist nicht das Escapen. Sie ist, dass `test177` vorher gemessen
+hatte, ob **irgendetwas** auf der Seite steht — die Bytezahl des Bildes.
+Eine Überschrift allein besteht diese Messung mühelos. Jetzt werden die
+dunklen Punkte in dem Streifen gezählt, in dem die Aufgaben stehen, und
+ein Gegenprobe-Arm rendert dasselbe PDF **ohne** Escape und zeigt, dass
+der Streifen dort leer ist. Erst damit kann die Messung überhaupt rot
+werden (§55.2).
+
+**Geprüft** (test177, 64 Punkte in acht Abschnitten): Prüfsummen des
+Fremdcodes · pdf.js liest ein dreiseitiges PDF · der ganze Weg vom
+Ablegen zu drei Seitenblöcken, über das echte Fallenlassen und nicht am
+Umwandler vorbei (E93) · das Original Byte für Byte zurück · ein Strich
+bei 1400 und bei 390 px · die Sicherung lässt Abgeleitetes weg und
+Gewöhnliches nicht · Quelltext-Zeugen · und alles noch einmal per
+Doppelklick über `file://` in der Einzeldatei (§29), wo Blob-Adressen,
+dynamische Importe und Arbeiter sonst gern verweigert werden.
+
+**Was noch fehlt**, steht in LUECKEN.md: Seitenanker, Textsuche im PDF,
+Neurasterung in höherer Auflösung, verschlüsselte Dateien.
+
+
+## E104 · Beim Einlesen steht das Notizblatt gleich daneben
+
+**19. August 2026.** Redurs Satz zum PDF hatte zwei Hälften. E103 baute die
+erste — durchblättern und darauf schreiben. Die zweite stand wörtlich da und
+war noch offen:
+
+> „wenn ich die pdf hochlade sollte ich neben es … so leeren a4 balat haben
+> die ich direk dort schreiben kann"
+
+Jetzt fragt das Einlesen, und bei „nebeneinander" bekommt jede Seite ein
+leeres Blatt neben sich:
+
+    columns
+      ├─ spalte → pdfseite      links die Seite
+      └─ spalte → blatt         rechts das Blatt, leer
+
+**Dieselbe Bauform wie von Hand.** Der Spaltenblock entsteht als
+`columns → spalte → Inhalt`, genau wie ihn das Slash-Menü baut (E102). Eine
+eigene Bauform für „vom PDF angelegt" wäre eine zweite Wahrheit über
+dasselbe Ding — und die zweite ist die, die man beim Umbauen vergisst.
+
+**Das Blatt bekommt die Masse der SEITE, nicht A4.** Ein querformatiges PDF
+neben einem hochkanten Blatt sähe aus wie ein Fehler, und keine Zeile links
+läge auf der Höhe der Zeile rechts. `blattBreite` und `blattHoehe` gibt es
+seit E100; hier zahlen sie sich aus. Das Prüf-PDF in `test178` hat deshalb
+eine hochkante und eine quere Seite — ohne die quere wären „Masse der Seite"
+und „A4" dasselbe, und der Punkt prüfte nichts.
+
+**Gefragt wird jedes Mal.** Die zuletzt gewählte Anordnung steht nur vorn,
+mit dem Fokus darauf — Ablegen und Enter genügt. Sie wird nicht heimlich
+angewandt. Ein gemerkter Zustand, den man nirgends sieht und nirgends
+ändert, ist die Sorte Falle, die man erst beim dritten PDF bemerkt.
+
+### Der Fund: `min-width` stand seit E102 eine Schicht zu tief
+
+Nebeneinander gestellt, sprengte das Gitter sofort das Fenster. Gemessen bei
+1500 px Fensterbreite:
+
+    Gitter                    708 px
+    Spur 1                    587 px
+    Spur 2                    544 px
+    zusammen mit Abstand    1 155 px      →  die rechte Spalte stand draussen
+
+Bei `grid-template-columns: 1fr 1fr` sollte das nicht möglich sein. Es ist
+möglich, wenn die Gitterzelle ihre automatische Mindestbreite behält — und
+`min-width: 0` stand am falschen Element. Der Editor packt jeden Block in
+eine Hülle `.blk`; Kind des Gitters ist also `.blk.b-spalte`, und `.spalte`
+liegt DARIN. E102 setzte die Regel auf die innere Schicht.
+
+Aufgefallen ist es nie, weil handgemachte Spalten Text enthalten und dessen
+Mindestbreite ein Wort ist. Eine Werkzeugleiste ist 479 px breit.
+
+Das ist die **vierte Auflage** derselben Falle — nach den Tabellenkarten
+(E89), dem A4-Blatt (E100) und den Spalten selbst (E102) — und die erste,
+bei der die Abhilfe danebenlag statt zu fehlen. `test178` §5 misst jetzt die
+Spurbreiten, den Überlauf und dass die Zellen wirklich `min-width: 0`
+tragen; der Arm ohne die Regel bringt sechs Punkte zu Fall.
+
+### Und ein zweiter Fund: eng ist nicht dasselbe wie Telefon
+
+In der Spalte brauchten beide Werkzeugleisten drei Zeilen übereinander —
+bei 1500 px Fensterbreite. Die Regel für die schmale Leiste hing seit E100
+an `@media (max-width:760px)`, also am FENSTER; schmal war hier aber der
+KASTEN. Dieselben Regeln stehen jetzt ein zweites Mal an `.spalte`.
+
+Zwei Umsetzungen derselben Sache sind ein Preis; die Alternative wäre eine
+Container-Abfrage gewesen, und die fällt auf genau den älteren Geräten aus,
+für die E103 die `legacy`-Fassung von pdf.js gewählt hat.
+
+### Halb gebaute Seiten gibt es nicht mehr
+
+Eine PDF-Seite entstand bisher leer und bekam Nummer, Masse und Herkunft
+nachgereicht, nachdem ihr Bild abgelegt war. Dazwischen lag ein Block ohne
+alles — ein paar Millisekunden je Seite, aber lang genug, dass zwei
+Prüfläufe genau dort hineinlasen und `nr: null` fanden. Beide sahen aus wie
+Fehler im Baum.
+
+Jetzt trägt der Block alles schon bei der Anlage. Nur `bildDateiId` bleibt
+ein Nachtrag, weil die Ablage die Block-Kennung braucht, die es vorher nicht
+gibt — und diese eine Lücke kennt der Zeichner und schreibt „Seite wird
+vorbereitet …" hin.
+
+Die Lehre ist nicht „länger warten". Ein Zustand, den es nicht gibt, muss
+auch nicht behandelt werden.
+
+**Geprüft** (test178, 47 Punkte): der Baum bei beiden Anordnungen · die
+Masse bei hochkanter und querer Seite · dass „Nur die Seiten" weiterhin
+genau das baut, was E103 baute · die Reihenfolge der Knöpfe und der Fokus ·
+Abbrechen hängt nur an · Spurbreiten und Überlauf · am Telefon eine Spalte
+mit dem Blatt UNTER der Seite · und auf beiden Blättern lässt sich getrennt
+malen. `test177` zieht nach: es beantwortet den neuen Dialog ausdrücklich
+über die Kennung, nicht über „der erste Knopf" — welcher vorn steht, hängt
+seit heute an der letzten Wahl.
+
+
+## E105 · Ein Verweis führt wirklich hin
+
+**19. August 2026.** L37 nannte den Seitenanker als nächstes Stück: von einer
+Notiz auf „Seite 14" eines Dokuments springen. Beim Nachsehen, worauf das
+aufbauen kann, stand da schon etwas — und es war kaputt.
+
+`editor.js` hat seit Langem ein Tastenkürzel:
+
+    Strg + Umschalt + C   →   …#block=<kennung>
+                              „Link auf diesen Block kopiert"
+
+**Gelesen hat diese Adresse nie jemand.** Beim Start nahm die Schale den Hash
+als Seitenkennung; `Store.getBlock('block=abc')` gibt nichts, also griff der
+Rückfall auf „zuletzt geöffnet". Der Link tat also etwas — er öffnete eine
+Seite, nur nicht die richtige, und ohne ein Wort darüber.
+
+Das ist die gefährlichste Bauart eines Fehlers: **er sieht aus wie ein
+Erfolg.** Wer den Link anklickt, sieht Redion aufgehen und eine Seite
+erscheinen. Dass es die falsche ist, merkt man nur, wenn man weiss, welche
+die richtige gewesen wäre.
+
+### Was jetzt geschieht
+
+    #block=<kennung>   →  Seite des Blocks suchen (Links.seiteVon)
+                       →  sie öffnen, falls nicht schon offen
+                       →  zum Block rollen
+                       →  ihn kurz hervorheben
+
+Beim Start **und** bei jeder späteren Adressänderung. `oeffne` schreibt die
+Seitenkennung selbst in die Adresse; solche Änderungen laufen durch den
+`hashchange`-Zuhörer durch, weil sie nicht mit `block=` beginnen.
+
+**Gerollt wird über Bildfolgen, nicht über die Uhr.** `oeffne` setzt am Ende
+`scrollTop = 0`; wer davor rollt, rollt dagegen an. Also zwei
+`requestAnimationFrame`. Und ein PDF-Seitenbild kommt aus der Stücke-Ablage
+und ist beim ersten Rollen oft noch nicht da — es ist genau das, was die
+Seite hoch macht. Deshalb noch einmal rollen, wenn es steht: am `load` des
+Bildes, nicht nach einer geratenen Wartezeit.
+
+### Der Anker an der PDF-Seite (L37)
+
+Neben „Seite 14 von 80" steht jetzt ein 🔗. Er kopiert den Verweis auf genau
+diese Seite. Er sitzt im **festen** Kasten der Leiste (E104), nicht im
+rollenden — sonst läge er am Telefon hinter einem Wisch, und das gilt für
+einen Verweis noch mehr als für die Seitenzahl.
+
+### Wie die Prüfung ihren eigenen Fehler zeigte
+
+`test179` §1 lädt Redion über `…#block=<kennung>` und verlangt, dass die
+**zweite** Seite aufgeht, obwohl die **erste** die zuletzt geöffnete ist.
+Genau diese Anordnung ist der Beweis: ein Punkt, der nur „irgendeine Seite
+ist offen" prüft, wäre auch vor E105 grün gewesen.
+
+Der erste Entwurf prüfte trotzdem nichts. Er rief
+
+    seite.goto('…/index.html#block=' + kennung)
+
+und nannte den Abschnitt „beim Start". Ein `goto` auf dieselbe Adresse mit
+anderem Hash ist aber **keine Navigation** — der Browser bleibt im selben
+Dokument und feuert nur `hashchange`. Aufgefallen ist es erst am Arm: die
+Start-Behandlung herauszunehmen änderte gar nichts, während der Arm ohne
+`hashchange` sechs Punkte fällte. Zwei Arme auf denselben Weg. Über
+`about:blank` gibt es jetzt ein echtes zweites Hochlaufen, und dann fällt
+Arm A wie er soll.
+
+**Und eine zweite Lehre über Prüfungen:** ein Punkt las die Meldung aus
+`#toast`. Der Kasten ist EINER für die ganze App, und beim Lauf stand dort
+„🎴 1 Karteikarte ist fällig" — die Erinnerung war dazwischengekommen.
+Geprüft wird jetzt, was der Verweis GESAGT hat, nicht was zuletzt im Kasten
+stand.
+
+### Und ein Fund beim Hinsehen
+
+Eine PDF-Seite ohne Bild zeigte das Bruchsymbol des Browsers samt Alt-Text —
+direkt über dem Satz, der dasselbe in Ordentlich sagt. Ein `img` ohne `src`
+ist für den Browser ein kaputtes Bild. Es wird jetzt erst eingehängt, wenn
+es eine Adresse hat.
+
+Das ist kein Randfall: **nach dem Einspielen einer `.redion` haben alle
+Seiten kein Bild**, weil E103 die abgeleiteten Dateien bewusst weglässt.
+Womit die nächste Aufgabe feststeht — der Satz „sie entstehen in Sekunden
+neu" stimmt bisher nur der Möglichkeit nach; nichts stellt sie wirklich
+wieder her. Das steht als L38 fest und kommt als nächstes.
+
+**Geprüft** (test179, 26 Punkte): Start über einen Verweis auf eine andere
+als die zuletzt geöffnete Seite · dasselbe im Betrieb ohne Neuladen · ein
+Verweis auf einen gelöschten Block sagt es und lässt die Seite stehen · der
+Anker an der PDF-Seite, sein Platz im festen Kasten, sein Text, sein Inhalt
+und der Weg zurück über den eben kopierten Verweis · Quelltext-Zeugen. Drei
+Arme, jeder einzeln: ohne die Start-Behandlung fallen sechs Punkte, ohne
+`hashchange` fünf, ohne den Anker bricht §3 ab.
+
+
+## E106 · Die Seitenbilder kommen aus dem Original zurück
+
+**19. August 2026.** E103 lässt die gerasterten Seitenbilder bewusst aus der
+Sicherung heraus — 200 KB je Seite, bei einem Skript mit 500 Seiten hundert
+Megabyte in jeder `.redion` — mit der Begründung, sie liessen sich „in
+Sekunden neu rechnen".
+
+**Der Satz stimmte nur der Möglichkeit nach.** Nichts stellte sie wieder her.
+Wer eine Sicherung einspielte, bekam sein Skript zurück — die Marken darauf,
+die Notizblätter daneben, das Original als Anhang — und lauter leere Seiten
+mit dem Satz „Für diese Seite gibt es noch kein Bild." Ein Hinweis ohne
+Ausweg, und damit stand in E103 und in der README ein Versprechen, das der
+Code nicht hielt.
+
+Gefunden habe ich es beim Hinsehen (§55), nicht durch einen Prüflauf: auf
+einem Bildschirmfoto stand über dem Hinweis noch das Bruchsymbol des
+Browsers. Beim Nachdenken darüber, wann eine Seite ohne Bild überhaupt
+vorkommt, fiel die Antwort auf: **nach jedem Einspielen, für jede Seite.**
+
+### Ein Knopf, ein Dokument
+
+Aus dem Hinweis ist ein Weg geworden: „Aus dem Original zurückholen". Er holt
+**das ganze Dokument** zurück, nicht die eine Seite — das Original
+aufzuschlagen ist der teure Teil, eine Seite daraus zu zeichnen der billige.
+Wer eine Seite anklickt, meint das Skript.
+
+**Die Masse werden nicht neu gelesen.** `nr`, `bw` und `bh` stehen am Block
+und bleiben. Käme aus einer neuen Messung eine andere Zahl, läge jeder Strich
+woanders — die Marken sind in genau diesem Raum gespeichert (E100). Deshalb
+ruft das Zurückholen `geometrie()` gar nicht erst auf, und `test180` bezeugt
+das im Quelltext.
+
+Ohne `quelleId` gibt es keinen Knopf: eine `.json`-Sicherung kennt keine
+Anhänge, also fehlt auch das Original. Ein Knopf, der nichts tun kann, ist
+schlimmer als keiner. Ist die Kennung da und das Original trotzdem weg, sagt
+Redion, was zu tun ist — die Datei noch einmal hereinziehen.
+
+### Drei Fehler, die dabei sichtbar wurden
+
+**„Kein Bild" heisst nicht „keine Kennung".** Nach dem Einspielen trägt jeder
+Block seine alte `bildDateiId`; die Datei dahinter ist nicht mitgekommen. Die
+erste Fassung von `ohneBild` sah nur, ob eine Kennung dasteht — und hielt
+damit genau die Seiten für fertig, um die es geht. Jetzt wird der Datei-Satz
+nachgeschlagen.
+
+**Die blob-Adresse überlebte ihre Datei.** `Dateien.weg` räumt den
+Adress-Zwischenspeicher mit auf; `anhaengeEinspielen` in der Schale griff
+beim Ersetzen daran vorbei direkt auf den Speicher zu. Ein Block, der noch
+auf die weggeworfene Kennung zeigt, bekam daraufhin **weiter das alte Bild**
+zu sehen — bis zum nächsten Neuladen. Vorher war das kaum erreichbar; seit
+E103 überleben genau solche Blöcke das Einspielen, also ist es der Normalfall
+geworden. Eine Zeile: `Dateien.adresseWeg(alt.id)`.
+
+**Und E104s Rückfall war zu teuer.** Eine Datei, die nur `.pdf` HEISST, wurde
+erst vollständig abgelegt, dann ganz eingelesen, dann von pdf.js abgelehnt
+und erst dann sichtbar angehängt. Bei 20 MB vergingen so Sekunden, in denen
+auf der Seite nichts stand — `test173` mass `angelegt: 0`. Jedes PDF beginnt
+mit `%PDF-`; fünf Bytes zu lesen kostet nichts. Wer daran scheitert, geht
+sofort den gewöhnlichen Weg, und der legt den Block **zuerst** an.
+
+### Was die Prüfung über sich selbst lernte
+
+`test180` fährt den ganzen Ring ab — einlesen, malen, sichern, alles löschen,
+einspielen, zurückholen — weil nur er die Frage beantwortet. Ein Lauf, der
+bloss `neuBerechnen` aufriefe, prüfte die Rechnung; hier zählt, ob nach einer
+echten Sicherung überhaupt genug übrig ist, um sie anstellen zu können.
+
+Dreimal hat der Lauf dabei denselben Fehler gemacht und ihn dreimal anders
+angezogen: **er hielt eine Kennung für ein Bild.** Beim Löschen liess er den
+Adress-Zwischenspeicher stehen und sah ein Bild, das es nicht mehr gab. Beim
+Zählen nahm er `b.bildDateiId` und fand zwei, wo keines war. Und beim Warten
+gab er eine `async`-Bedingung an `waitForFunction` — ein Versprechen ist immer
+wahr, also war die Bedingung sofort erfüllt und gemessen wurde der Zustand
+VOR dem Zurückholen.
+
+Gewartet wird jetzt darauf, dass sich die Kennung **ändert**: der letzte
+Handgriff je Seite, synchron ablesbar, und weder von einer toten Kennung noch
+von einem Versprechen zu verwechseln.
+
+**Geprüft** (test180, 35 Punkte): der ganze Ring · in der Sicherung liegt
+genau ein Anhang · nach dem Einspielen sind Nummern, Masse und Marken Zeichen
+für Zeichen dieselben und kein Bild lebt · der Hinweis trägt einen Knopf ·
+ein Klick holt beide Seiten zurück, als WebP, wieder als `abgeleitet`
+gestempelt, ohne die Masse anzurühren · das Original bleibt Byte für Byte ·
+ein zweiter Lauf rechnet nichts noch einmal · ohne Original kein Knopf ·
+Quelltext-Zeugen.
+
+
+## E107 · Der Text im PDF ist auffindbar
+
+**19. August 2026.** Ein gerastertes Seitenbild ist für die Suche **stumm**.
+Wer sein Mathe-Skript hereinzog, konnte darin blättern und darauf schreiben —
+aber „Pythagoras" zu suchen fand nichts, auch wenn das Wort auf Seite 63
+stand. Bei achtzig Seiten ist das der Unterschied zwischen einem Dokument und
+einem Stapel Papier.
+
+pdf.js liest die Textebene ohnehin mit, und beim Einlesen ist die Bibliothek
+gerade da. Der Text wandert deshalb **einmal** an den Block; danach findet die
+Suche ihn ohne eine fremde Zeile. Dieselbe Aufteilung wie beim Bild (E103) —
+die Bibliothek ist Umwandler, nicht Betrieb.
+
+### Drei Entscheidungen im Kleinen
+
+**`suchtext`, nicht `text`.** `text` ist, was ein Mensch geschrieben hat, und
+die Oberfläche zeigt es an vielen Stellen — eine halbe Seite Skript in der
+Krümelspur wäre keine Verbesserung. Der Suchtext steht daneben.
+
+**Er kommt MIT in die Sicherung**, anders als die Bilder. Er ist klein (rund
+2 KB je Seite), und ohne ihn wäre ein eingespieltes Skript wieder stumm, bis
+jemand alle Seiten neu rechnet. Genau das prüft `test181` §4: Bilder weg,
+Text da, Suche findet.
+
+**Gekürzt wird bei 8000 Zeichen je Seite.** Eine dicht bedruckte A4-Seite hat
+rund 3000. Ohne Grenze wüchse der Bestand einer 500-Seiten-Datei um mehrere
+Megabyte — und die stehen, anders als die Bilder, in jeder Sicherung.
+
+Eine Seite ohne Textebene — ein eingescanntes Blatt — liefert nichts. Das ist
+kein Fehler, nur stumm; OCR steht weiterhin in L29.
+
+### Und der Treffer springt zum Block
+
+Möglich seit E105. `findInside` gibt jetzt `{ text, blockId }` zurück statt
+nur einer Zeichenkette, und die Suche geht damit zur **Fundstelle** statt zur
+Seite. Eine Fundstelle auf Seite 63 nützt wenig, wenn man danach 63 Seiten
+weit rollen muss.
+
+Auch das Zurückholen (E106) trägt fehlenden Text nach — für alles, was vor
+heute eingelesen wurde. Das Dokument ist dabei ohnehin offen.
+
+### Der Fund beim Hinsehen
+
+Im Suchfenster stand rechts in der Vorschau: **„Diese Seite ist noch leer."**
+Für eine Seite mit vier PDF-Seiten darauf. Die Vorschau liest `b.text`, und
+eine PDF-Seite hat keinen.
+
+Kein Prüflauf hatte etwas dagegen, weil keiner hinsah — und der Satz ist die
+unangenehmste Sorte Falschaussage: er klingt nach einer Information. Jetzt
+zählt die Vorschau die Seiten auf, mit der ersten Zeile jeder Seite. Aus
+einer Lüge ist ein Inhaltsverzeichnis geworden.
+
+### Und eine Zahl, die falsch dastand
+
+Beim Nachdenken darüber, ob die „Neurasterung in höherer Auflösung" aus L37
+das nächste Stück sein sollte, habe ich nachgerechnet statt geglaubt:
+
+    1654 px über eine A4-Breite
+    = 1654 × 72 / 595,28
+    = 200 dpi
+
+In `leser.ts`, in E103, in AUFGABEN.md und in LUECKEN.md stand „rund 140
+dpi". Das war schlicht falsch gerechnet, und die falsche Zahl hatte eine
+Lücke begründet: bei 140 dpi wäre starkes Hineinzoomen wirklich unscharf,
+bei 200 ist es Scan-Qualität. Die „Neurasterung" ist deshalb von der Liste —
+nicht weil sie gebaut wurde, sondern weil es sie als Lücke nie gab.
+
+Eine Zahl, die man von einer Stelle zur nächsten weiterträgt, wird dabei
+nicht wahrer. Sie wird nur schwerer zu widerrufen (§34).
+
+### Und einmal ein ganzes Skript gemessen
+
+Statt zu schätzen, wie sich das alles bei echter Grösse verhält: ein dicht
+bedrucktes Dokument mit 60 Seiten, 24 Textzeilen je Seite, eingelesen.
+
+    Dauer            21,1 s          352 ms je Seite
+    Seitenbilder     15,5 MB         265 KB je Seite
+    Original          202 KB
+    Suchtext          139 KB        2367 Zeichen je Seite
+    JS-Speicher        23 MB
+
+Drei Dinge stehen damit fest. Die Grenze von 8000 Zeichen je Seite ist
+grosszügig — eine dichte Seite braucht 2400. Der Speicher bleibt flach: eine
+Leinwand zur Zeit, wie gebaut. Und die Zeit ist erträglich, aber spürbar,
+also gehört sie in die Frage vor dem Einlesen.
+
+**Der Dialog log dabei**, wenn auch nur ein wenig: er kündigte „ungefähr
+12 MB" an (60 × 0,2) und es wurden 15,5. Eine Schätzung, die den Preis
+kleiner macht, als er ist, ist genau die Sorte Versprechen, die §33
+verbietet. Jetzt steht dort „bis zu 18 MB und etwa 21 Sekunden" — 0,3 MB je
+Seite liegt über dem dichtesten gemessenen Fall, und „bis zu" sagt, dass es
+eine Obergrenze ist. Dazu der Satz, der die Angst nimmt: in die Sicherung
+kommen diese Bilder nicht.
+
+**Geprüft** (test181, 30 Punkte): jede Seite bringt ihren Text mit und die
+Zeilen kleben nicht aneinander · die Suche findet das Wort auf Seite 3 und
+nicht auf Seite 1 · sie findet nichts, was nirgends steht · der Treffer nennt
+den Block und springt hin, von einer anderen Seite aus · nach Sicherung und
+Einspielen ohne Bilder findet sie es weiterhin · die Vorschau zählt die
+Seiten auf. Drei Arme, jeder einzeln: ohne `suchtext` in der Suche fallen
+fünf Punkte, ohne den Text am Block acht, ohne den Vorschau-Zweig drei.
+
+
+## E108 · Eine beschriebene Seite lässt sich weitergeben
+
+**19. August 2026.** Redurs Satz war „die aufgaben lösen". Danach kommt:
+abgeben. Und genau da hörte Redion auf.
+
+Wer eine Schulaufgabe mit Strg + P druckte, bekam die Notizzeilen und
+**nichts** von dem Blatt, auf dem sie stehen. Kein Seitenbild, keinen
+einzigen Strich. Nicht hässlich — leer.
+
+Der Grund ist banal und deshalb lehrreich: `seiteAlsHtml` ist eine Kette von
+Blockarten, und wer nicht darin steht, kommt nicht vor. `pdfseite` und
+`blatt` standen nicht darin, und beide haben keinen `text` — sie fielen
+durch jede Bedingung hindurch bis zum `else if (t)` und blieben dort liegen.
+Kein Fehler, keine Meldung, kein leerer Kasten: einfach nichts.
+
+### Ein Baum, ein Haken
+
+`seiteAlsHtml` bekommt einen optionalen `sonderfall`. Gibt er etwas zurück,
+gilt das statt der Kette **und** statt des Absteigens; der Sonderfall
+entscheidet selbst, ob er hinabsteigt.
+
+Damit setzt der Druckweg PDF-Seiten und Blätter mit Bild und Strichen, ohne
+dass es eine zweite Baumwanderung gäbe. Eine zweite hätte beim nächsten
+neuen Blocktyp genau eine Stelle nachgezogen bekommen — die, an die man
+gerade denkt.
+
+**Die Striche kommen aus `Marken.zeichneMarke`**, derselben Stelle, die sie
+auch auf dem Bildschirm zeichnet (§34). Sie gehen als SVG hinaus und bleiben
+deshalb scharf, egal wie fein der Drucker ist.
+
+**Zwei Wege, und das ist Absicht.** `seiteAlsHtml` bleibt synchron und ohne
+Bilder: es bedient auch den Archiv-Export und das Veröffentlichen, und dort
+wäre eine blob-Adresse nach der Sitzung tot (E98) — von einem Schulskript in
+einer öffentlichen Seite ganz abgesehen. Es sagt jetzt aber wenigstens, DASS
+eine Seite da ist, statt zu schweigen. Zum Drucken werden die Bilder vorher
+als Daten-Adressen eingesammelt; dann steht im Rahmen ein vollständiges
+Dokument.
+
+**Spalten werden beim Drucken untereinander gesetzt.** Nebeneinander auf A4
+hochkant wären zwei Spalten von je 90 mm — lesbar ist das nicht, und die
+Reihenfolge Seite, Blatt, Seite, Blatt bleibt ohnehin eindeutig.
+
+### Und ein Fund im Druckbild
+
+Die Antworten auf dem Notizblatt waren nummeriert und wurden als **Punkte**
+gedruckt. Jeder Listeneintrag ging als nacktes `<li>` hinaus, ohne `<ul>`
+oder `<ol>` darum — seit es den Export gibt. Zwei Folgen: eine nummerierte
+Liste verliert ihre Nummern, und das Ergebnis ist ungültiges HTML.
+
+Das betraf nicht nur den Druck, sondern auch den HTML-Export und das
+Veröffentlichen. Aufgefallen ist es im Druckbild, weil dort zum ersten Mal
+jemand eine nummerierte Antwort abgeben wollte.
+
+### Zwei falsche Zeugen auf dem Weg
+
+Der Punkt „es gibt nur eine Baumwanderung" war zweimal falsch formuliert,
+bevor er stimmte. Erst zählte er `const raus = ` und verlangte genau eins —
+davon gibt es drei, der Name ist eine gewöhnliche Vokabel. Dann zählte er
+`b.type === 'callout'` und verlangte genau eins — davon gibt es zwei, und
+die zweite ist berechtigt: die Präsentation (`folieBlock`) setzt Folien und
+nicht Fliesstext.
+
+Beide Male war die Absicht richtig und die Messung zu grob. Jetzt wird
+innerhalb von `seiteAlsHtml` gezählt und ausserdem geprüft, dass der
+Druckweg keine eigene Kette hat.
+
+**Nebenbefund, nicht behoben:** die Präsentation hat ihre eigene Kette und
+zeigt PDF-Seiten deshalb ebenfalls nicht. Steht als L38 in LUECKEN.md.
+
+**Geprüft** (test182, 24 Punkte): das Druckdokument enthält das Seitenbild
+als Daten-Adresse und keine blob-Adresse · beide Striche als SVG, in
+Seitenpunkten, mit dem Zeichenraum der Seite · nichts wird beim Umbruch
+zerschnitten · der gewöhnliche Export erfindet kein Bild, schweigt aber auch
+nicht mehr · Quelltext-Zeugen. Ein Arm: ohne den Sonderfall fallen sieben
+Punkte.
+
+
+## E109 · Die Präsentation kennt die neuen Blöcke — L38 geschlossen
+
+**19. August 2026.** Bei E108 fiel nebenbei auf, dass `Werkzeuge.praesentation`
+Folien über eine **eigene** Kette von Blockarten baut. Ich habe es als L38
+notiert und weitergemacht. Eine Stunde später war klar, dass das der falsche
+Ort dafür war: eine gefundene Lücke, die man aufschreibt und liegen lässt,
+ist ein Fund weniger und ein Eintrag mehr.
+
+Was auf einer Folie nicht vorkam: **Tabelle, Datenbank, PDF-Seite, A4-Blatt.**
+Und schlimmer als jede fehlende Blockart: `sammle` stieg in Spalten gar nicht
+erst hinab. Eine Schulaufgabe liegt seit E104 **immer** in Spalten — als
+Vortrag war sie damit vollständig leer. Nicht kaputt, nicht gemeldet: leer.
+
+### Zwei Ketten sind in Ordnung, zwei Stände nicht
+
+Dass es zwei Ketten gibt, ist keine Nachlässigkeit. Folien sind ein anderes
+Medium als Fliesstext: andere Grössen, andere Umbrüche, ein Bild je Folie
+statt eines Flusses. Sie zusammenzulegen hiesse, beiden das anzutun, was der
+anderen passt.
+
+Falsch war nur, dass die eine mitwuchs und die andere den Stand von damals
+hielt. **Der wiederkehrende Befund dieses Projekts, wieder einmal: nicht
+„etwas vergessen", sondern „an einer Stelle getan und an der Nachbarstelle
+nicht."**
+
+### Spalten bleiben Spalten
+
+Der erste Entwurf löste die Spalten auf und setzte alles untereinander. Das
+Bild zeigte, warum das falsch ist: eine Folie ist **breit und flach**, ein
+Blatt hoch und schmal. Zwei hochkante Blätter übereinander passen nicht
+darauf — das zweite stand halb ausserhalb, und die Überschrift war ganz aus
+dem Bild geschoben.
+
+Nebeneinander ist ausserdem das, was das Dokument ohnehin sagt. Also bleiben
+Spalten Spalten, und `folieBlock` setzt sie als Reihe.
+
+### Der 52-vh-Deckel
+
+Zwei gleich grosse A4-Seiten standen unterschiedlich hoch nebeneinander:
+**442 gegen 541 px.** Der Grund stand in der Präsentations-CSS seit jeher:
+
+    .praesi img{max-width:100%; max-height:52vh; border-radius:8px}
+
+Für ein eingefügtes Foto ist das richtig. Für eine Dokumentseite deckelt es
+ausgerechnet die Höhe, die das Seitenverhältnis bestimmen soll — und rundet
+die Ecken eines Aufgabenblatts.
+
+Das Seitenverhältnis steht deshalb jetzt am **Kasten**, wie beim Blatt
+daneben, und das Bild darin ist vom Deckel ausgenommen.
+
+**Das genügte der Prüfung fast zum Verhängnis.** Der Arm, der den Deckel
+zurückbrachte, blieb grün: das Seitenverhältnis am Kasten hält die äussere
+Höhe schon allein richtig. Nur das Bild DARIN wäre wieder zu kurz — die Seite
+stünde oben im Kasten, unten bliebe weisses Papier. Gemessen wurde aber der
+Kasten. Erst der Punkt, der das **Bild** gegen seinen Kasten misst, macht den
+Arm rot.
+
+Eine Prüfung, die den Behälter misst statt des Inhalts, sagt „passt" über
+etwas, das man ansieht und schief findet.
+
+**Geprüft** (test183, 26 Punkte): drei Folien entstehen · die Aufgabenfolie
+ist nicht leer, trägt zwei Blätter nebeneinander in zwei Spalten, eines mit
+Seitenbild, beide Striche mit ihren gespeicherten Punkten · beide gleich
+hoch, im A4-Verhältnis, und das Bild füllt seinen Kasten ohne runde Ecken ·
+die Tabellenfolie zeigt ihre Werte · Escape beendet · Quelltext-Zeugen. Drei
+Arme, jeder einzeln: ohne den Spaltendurchstieg fallen sieben Punkte, ohne
+die neuen Blockarten acht, ohne die Bildregel zwei.
+
+
+## E110 · Ein geschütztes PDF fragt nach seinem Passwort
+
+**19. August 2026.** Der letzte offene Punkt aus L37. Bisher sagte Redion bei
+einer passwortgeschützten Datei „Redion kann sie nicht öffnen" und hängte sie
+an. Ehrlich — aber eine Sackgasse: die Datei hat ein Passwort, der Mensch
+davor kennt es, und niemand hat ihn gefragt.
+
+pdf.js kann fragen. `getDocument()` gibt einen Auftrag zurück, und dessen
+`onPassword` wird gerufen, wenn die Datei eines verlangt — mit einem Grund
+dazu: `2` heisst „das war falsch". Ohne diese Unterscheidung käme beim
+zweiten Mal derselbe Satz, und man wüsste nicht, ob man sich vertippt hat
+oder ob gar nichts angekommen ist.
+
+### Das Passwort wird nirgends abgelegt
+
+Es geht von der Tastatur an pdf.js und ist danach weg. Nicht in den Block,
+nicht in die Ablage, nicht in die Sicherung, nicht in den Browser-Speicher.
+
+Das ist keine Sparsamkeit, sondern der Punkt: **ein Passwort, das die App
+aufbewahrt, hebt den Schutz auf, den es geben soll** — und zwar für jeden,
+der später an die Sicherung kommt. §19 sagt „Passwort nie speichern", und
+das gilt auch für fremde Passwörter.
+
+`test184` §4 misst das nach: nach dem Einlesen wird das Passwort in allen
+Fächern, im Export, in den Datei-Sätzen, im `localStorage` und über die Suche
+gesucht — und darf nirgends auftauchen. Ein Gegenprobe-Punkt sucht daneben
+nach „Klausur" und findet es, damit klar ist, dass die Suche nicht einfach
+ins Leere greift.
+
+Das Eingabefeld ist ein `type="password"` mit `autocomplete="off"`: nicht
+sichtbar, nicht vom Browser gemerkt. `Dialog.frage` hat dafür ein drittes
+Argument bekommen.
+
+### Und wer abbricht, verliert nichts
+
+Der Abbruch führt in denselben Rückfall wie E104: die Datei hängt sichtbar an
+der Seite, vollständig, genau einmal. Die Meldung sagt seither nicht mehr
+„Redion kann sie nicht öffnen", sondern „bleibt ohne Passwort zu" — der
+Unterschied zwischen einer Grenze der App und einer Entscheidung des
+Menschen.
+
+### Das Prüf-PDF ist echt verschlüsselt
+
+Ein Prüflauf, der die Passwortfrage an einer Datei ohne Passwort prüft, wäre
+grün und bedeutungslos. `pruefungen/hilfe/krypto-pdf.mts` baut deshalb ein
+PDF mit dem Standard-Sicherheitshandler — V1/R2, RC4 mit 40 Bit —, inklusive
+`/O`, `/U`, dem daraus abgeleiteten Schlüssel und einem eigenen Objektschlüssel
+je Inhaltsstrom.
+
+Warum die älteste Form und nicht AES: geprüft wird die **Frage** nach dem
+Passwort, nicht die Güte der Verschlüsselung. Etwas Modernes zu bauen hiesse,
+den halben Standard nachzuschreiben, ohne dass die Prüfung dadurch mehr
+wüsste. Und RC4 steht ausdrücklich nur im Prüfstand: Redion verschlüsselt
+kein PDF, es liest nur.
+
+`test184` §0 stellt vor allem anderen fest, dass die Datei ohne Passwort
+wirklich zu ist und ein falsches sie nicht öffnet.
+
+**Geprüft** (test184, 31 Punkte): die Datei ist wirklich verschlossen · ein
+falsches Passwort wird abgelehnt und noch einmal gefragt, das zweite Mal mit
+Hinweis · mit dem richtigen gehen Seiten, Text, Masse und Bild · der ganze
+Weg vom Fallenlassen bis zu zwei fertigen Seiten, mit einem Fehlversuch
+dazwischen · Abbrechen hängt die Datei vollständig an · das Passwort steht
+danach nirgends · Quelltext-Zeugen. Zwei Arme: ohne `onPassword` fallen die
+Fragepunkte, ohne das Passwortfeld drei.
+
+
+## E111 · Das Manifest der Sicherung log — gefunden im Archiv selbst
+
+**19. August 2026.** Nachdem alles grün war, habe ich eine `.redion` nicht
+mehr *vorbereitet*, sondern **geschrieben**: den Knopf gedrückt, die
+heruntergeladene Datei abgefangen und sie in Node als ZIP aufgemacht, Eintrag
+für Eintrag.
+
+Darin stand:
+
+    daten.json     hinweis: „Vollständig: die 4 Datei(en) liegen im
+                             Ordner „dateien" desselben Archivs."
+                   fehlt:   []
+
+    tatsächlich im Archiv:   dateien/klausur.pdf
+                             dateien/notizen.txt
+
+**Zwei von vier.** Die beiden fehlenden waren die gerasterten Seitenbilder,
+die E103 mit Absicht weglässt — und das Manifest wusste davon nichts:
+`exportVorbereiten` zählte `all('dateien')`, den ganzen Bestand, ohne den
+Filter, den `sicherungSpeichern` daneben anwendet.
+
+CLAUDE.md §52.10 sagt dazu genau einen Satz, und er ist der Grund, warum
+dieser Eintrag existiert:
+
+> Eine Sicherung, die nicht sagt, was sie auslässt, ist die gefährlichste
+> Sorte — man merkt es erst, wenn man sie braucht.
+
+Die Sicherung war inhaltlich in Ordnung: Original, Marken, Suchtext, alles
+darin, und die Bilder rechenbar. Falsch war nur der Zettel darauf.
+
+**Und wie schwer wiegt das?** Drei Gegenleser haben unabhängig widersprochen,
+das sei kein Datenverlust, und sie haben recht. `enthaelt` und `fehlt` sind
+laut §52.10 **Fächernamen**, keine Dateilisten — und die Fächer `dateien` und
+`stuecke` sind wirklich im Archiv. `fehlt: []` ist in der Sprache des Feldes
+also richtig. Auch löst der Satz nichts aus: `anhaengeEinspielen` entscheidet
+nach `dateien.json`, nicht nach `hinweis`. Und test180 fährt den ganzen Ring
+(sichern, alles löschen, einspielen, zurückholen) als **gewolltes** Verhalten
+ab.
+
+Bleibt: eine Zahl, die an zwei Stellen verschieden ausfällt — der Toast vor
+dem Sichern sagte 61, der danach 1. Das ist kein Verlust, sondern eine
+Meldung, die beruhigt, wo sie es nicht soll. Sie gehört gerichtet, und sie
+ist es; als Priorität-1-Fall verkaufen sollte man sie nicht.
+
+### Was jetzt darin steht
+
+    hinweis: „Vollständig: die 2 Datei(en) liegen im Ordner „dateien"
+              desselben Archivs. 2 gerasterte Seitenbilder sind bewusst
+              NICHT dabei: sie entstehen aus den Originalen neu — in
+              Redion über den Knopf „Aus dem Original zurückholen" auf
+              der leeren Seite."
+
+    abgeleitetAusgelassen: 2
+
+Der Satz sagt, was fehlt **und wie man es zurückbekommt**. Die Zahl daneben
+ist für Maschinen: wer ein `.redion` ohne Redion aufmacht, soll nachrechnen
+können, statt einen deutschen Satz zu lesen.
+
+### Warum kein Prüflauf das sehen konnte
+
+`test177` §5 prüft, welche Datei-Sätze die Sicherung mitnehmen **würde** — es
+liest dieselbe gefilterte Liste, die `sicherungSpeichern` liest. Das ist
+richtig, und es hat einen blinden Fleck: es prüft eine **Absicht**, kein
+Archiv. Das Manifest entsteht aber woanders, in `exportAll`, aus einer
+anderen Zahl.
+
+`test185` drückt deshalb den Knopf, fängt den Download ab und liest das ZIP —
+und zwar **nicht** mit Redions eigenem `Austausch.zipLesen`. Ein Archiv mit
+dem Werkzeug zu prüfen, das es geschrieben hat, prüft die beiden gegen sich
+selbst; ein Fehler, den beide teilen, bleibt unsichtbar. Fünfzig Zeilen lesen
+das zentrale Verzeichnis nach der ZIP-Festlegung.
+
+Zwei Punkte daraus sind über diesen Fall hinaus nützlich: **zu jedem Satz in
+`dateien.json` müssen Bytes im Archiv liegen**, und **zu jeder Datei im
+Archiv ein Satz**. Beides zusammen schliesst die ganze Klasse aus, zu der
+dieser Fehler gehört.
+
+### Die Lehre
+
+Bei E103 habe ich geschrieben, eine Sicherung müsse sagen, was sie auslässt —
+und dann eine gebaut, die es nicht tat. Der Satz stand in der Doku, die
+Prüfung stand daneben, und beide sahen an derselben Stelle vorbei.
+
+**Ein Prüflauf, der die Absicht liest, prüft nicht das Ergebnis.** Wo es ein
+Artefakt gibt — eine Datei, ein Archiv, ein Druckdokument —, muss die Prüfung
+das Artefakt aufmachen.
+
+**Geprüft** (test185, 29 Punkte): das Archiv ist ein ZIP mit genau vier
+Einträgen · Original und Anhang byteweise gleich · kein Seitenbild darin ·
+der Hinweis nennt die Zahl, die wirklich im Archiv liegt, sagt was fehlt und
+wie man es zurückholt · `dateien.json` und das Archiv decken sich in beide
+Richtungen · und alles, was zum Zurückholen nötig ist (Original, Nummer,
+Masse, Suchtext), steht in `daten.json`. Ein Arm: zählt das Manifest wieder
+den ganzen Bestand, fallen drei Punkte.
+
+
+## E112 · Ein Dateiname ist kein HTML — drei Löcher aus derselben Familie
+
+**19. August 2026.** E110 gab einem Dialog zum ersten Mal FREMDEN Text: den
+Namen der Datei, die jemand hereingezogen hat.
+
+```
+Dialog.frage('Passwort für „' + datei.name + '"', '', 'passwort')
+```
+
+`Dialog.wahl`, fünfzig Zeilen tiefer in derselben Datei, escapte seinen
+Titel. `Dialog.frage` tat es nicht — sie setzte ihn roh ins `innerHTML`.
+
+Nachgestellt, nicht vermutet. Eine Datei mit dem Namen
+
+    <img src=x onerror="window.__geknackt=1">.pdf
+
+hereinziehen, warten, bis nach dem Passwort gefragt wird:
+
+    { geknackt: true, bilderImDialog: 1 }
+
+Das Bild lädt nie, also feuert `onerror` von selbst. Kein Klick, kein Zutun.
+§19 verbietet genau das, und die Lücke sass nicht im Aufrufer, sondern im
+Dialog.
+
+**Nachtrag, und er macht die Sache schlimmer statt besser.** Beim Gegenlesen
+dieses Eintrags hiess es hier zuerst, die Lücke sei „jahrelang folgenlos"
+gewesen, weil jeder Aufrufer eine feste Zeichenkette übergeben habe. Das ist
+falsch, und ich habe es nachgesehen statt es zu glauben. `UI.frage` reicht
+nur durch (`ui.ts:36`), und vor E110 hingen daran schon:
+
+```txt
+faden.ts:37     'Kommentar zu „' + zitat.slice(0, 40) + '"'
+                — markierter Text aus dem Editor
+faden.ts:70     'Antwort auf „' + f.komm.text.slice(0, 40) + '"'
+                — der Text eines fremden Kommentars
+steuerung.ts:1124  'Welcher Wert für „' + coll.schema[kk].name + '"?'
+                — ein Spaltenname
+steuerung.ts:5580  `${def.name} ${ops[0]} …`
+```
+
+Wer `<img src=x onerror=…>` als Spaltennamen tippt, braucht dafür keine
+Datei über den Umweg USB-Stick. E110 war nicht der erste fremde Text, nur
+der auffälligste — und der, bei dem es endlich jemandem aufgefallen ist.
+
+Das ändert an der Reparatur nichts (sie sitzt in `frage` und deckt alle
+Aufrufer ab), aber es ändert, was hier stehen darf. Eine Lücke kleiner zu
+schreiben, als sie war, ist dieselbe Art Fehler wie ein Manifest, das
+„vollständig" behauptet.
+
+### Eine Escape-Funktion, ganz oben, für alle
+
+Die Reparatur ist nicht „auch in `frage` escapen". Zwei Kopien derselben
+Funktion in einer Datei sind der Grund, warum eine von beiden irgendwann
+fehlt. Also: eine, im Modulkopf, mit allen fünf Ersetzungen aus §19 — und
+`wahl` benutzt sie mit.
+
+Das `'` gehört dazu, obwohl es im Elementinhalt harmlos ist. Derselbe Text
+landet nebenan in einem Attribut, und eine Escape-Funktion, die je nach
+Fundort etwas anderes tut, ist keine.
+
+### Und dann habe ich nachgesehen, wo noch
+
+Ein bestätigtes Loch ist selten allein — es ist ein Muster, und das Muster
+hier heisst: **etwas, das früher immer aus eigener Hand kam, kommt jetzt aus
+fremder.** Zwei weitere Stellen aus derselben Woche:
+
+**Drucken setzte die Bild-Adresse roh ins `src`.** Die Folie daneben tut seit
+E109 `esc(adr)`, der Druck tat es nicht — eine Zeile Unterschied, keine
+Absicht. Die Daten-Adresse eines Seitenbildes trägt ihren MIME-Teil wörtlich
+aus dem Datei-Satz:
+
+    data:image/png;base64,…              so soll es sein
+    data:image/png" onerror="…" x=";…    so steht es da, wenn der Satz das sagt
+
+Und der Satz sagt, was in `dateien.json` stand — bei einer eingespielten
+`.redion` also, was der Absender hineingeschrieben hat. Der Blob-Bauer lässt
+das durch: er verwirft nur Zeichen ausserhalb U+0020–U+007E, und das
+Anführungszeichen gehört nicht dazu. Gemessen im Druckrahmen: das Bild trug
+`src`, `alt`, **`onerror`** und `x`, und der Handler lief.
+
+**Die Seitenzahl in der Werkzeugleiste war keine Zahl.** `Marken.leiste`
+setzt ihren Zusatz per `innerHTML`; der Zusatz der PDF-Seite baute `block.nr`
+sorgfältig über `Number()` ab und hängte `block.vonSeiten` roh daneben. Beim
+eigenen Einlesen ist das `doc.numPages` und harmlos; aus einer eingespielten
+Sicherung ist es, was dort steht. Hier hilft kein Escape, sondern die
+richtige Frage: eine Zahl kann nichts sein ausser einer Zahl.
+
+### Was daran allgemein ist
+
+Alle drei sind derselbe Fehler in drei Kleidern, und keiner davon war eine
+Unachtsamkeit beim Schreiben — jeder entstand, als sich die **Herkunft** des
+Wertes änderte, ohne dass die Stelle, die ihn ausgibt, davon erfuhr:
+
+| Wert | war früher | ist jetzt |
+|---|---|---|
+| Dialogtitel | feste Zeichenkette im Code | Name einer fremden Datei |
+| Bild-Adresse | selbst gerastert, MIME selbst gesetzt | MIME aus `dateien.json` |
+| `vonSeiten` | `doc.numPages` aus pdf.js | Feld eines eingespielten Blocks |
+
+Deshalb prüft `test186` nicht die drei Wege, sondern die drei **Löcher**: den
+Dialog mit vier Angriffszeichenketten in jedem Feld, den Druckrahmen mit
+einem echt vergifteten Datei-Satz, die Leiste mit einem vergifteten Block.
+Wer nur den Aufrufer prüft, hat beim nächsten Aufrufer dasselbe Loch.
+
+Ein Nebenbefund über Prüfungen: der erste Angriff im Druckrahmen war
+wirkungslos, weil `;base64,AQIDBA==` hinten an den Handler geriet und ihn zum
+Syntaxfehler machte — grün, aber aus dem falschen Grund. Erst der Angriff,
+der diesen Schwanz mit einem letzten Attribut auffängt, führte wirklich Code
+aus. **Wer die Probe leichter macht als die Wirklichkeit, prüft nichts.**
+
+Ebenso ein Quelltext-Zeuge, der `class="fh">${esc(titel)}` bloss *suchte*:
+er fand die Stelle in `wahl` auch dann noch, wenn die in `frage` daneben roh
+dastand. Er zählt jetzt — beide müssen es sein, keiner darf roh sein.
+
+**Geprüft** (test186, 27 Punkte): der echte Weg mit einer bösartig benannten
+Datei · beide Dialoge mit vier Angriffszeichenketten in Titel, Vorgabe, Text
+und Knopfbeschriftung · der Hinweisbalken daneben · der Druckrahmen mit
+einem Datei-Satz, dessen MIME-Typ aus dem Attribut ausbricht · die Leiste mit
+einem Block, dessen `vonSeiten` HTML ist · dazu Quelltext-Zeugen, dass es
+genau EINE Escape-Funktion gibt und keine Einsetzung an ihr vorbeigeht. Drei
+Arme, jeder einzeln nachgewiesen — und in jedem lief der Angriff wirklich:
+ohne den Escape im Dialog fallen sieben Punkte (`__geknackt=1`), ohne den im
+Druck vier (`__druck=1`), ohne `Number(vonSeiten)` vier (`__leiste=1`).
+
+
+## E113 · „Quelltext ansehen" war ein Löschknopf
+
+**19. August 2026.** `ausMarkdown` leert die Seite und baut sie aus dem Text
+neu auf. Gerettet wurden dabei vier Blockarten, namentlich:
+
+```js
+if (['database','whiteboard','chart','table'].includes(b.type))
+  alteDbs[b.id] = Store.baum(b.id);
+Store.kinderLeeren(p.id);
+```
+
+Alles andere fiel durch. Gemessen an einer Schulaufgabe — Spalten, PDF-Seite
+mit Strichen, A4-Blatt mit Strichen und Antworttext, Rechenblatt:
+
+```txt
+vorher   13 Blöcke · 1 PDF-Seite · 1 Blatt · 3 Spalten · 2 Striche
+nachher   7 Blöcke · 0           · 0       · 0         · 0
+```
+
+Ein Klick auf „Übernehmen", und die Klausur ist weg. Der Kopfkommentar
+derselben Funktion hat den Fall sogar vorhergesagt:
+
+> Ohne das wäre „Quelltext ansehen und schliessen" ein Datenverlust.
+
+Der Satz stand da. Die Liste darunter wurde trotzdem viermal vergessen: bei
+`spreadsheet` (E29), bei `columns`/`spalte` (E102), bei `blatt` (E100), bei
+`pdfseite` (E103).
+
+### Die Liste steht jetzt andersherum
+
+Nicht „diese vier sind sicher", sondern **„diese vierzehn kann Markdown
+wirklich tragen — alles andere bekommt einen Platzhalter"**:
+
+```ts
+const MD_TRAEGT = new Set([
+  'text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number',
+  'quote', 'callout', 'divider', 'code', 'equation', 'image', 'flashcard'
+]);
+```
+
+Der Unterschied ist nicht kosmetisch. Eine neue Blockart ist damit **von
+sich aus** sicher; sie muss sich das Durchreichen verdienen, statt es
+geschenkt zu bekommen und jemanden daran denken zu lassen. Genau daran hat
+es viermal gefehlt.
+
+Eine Allowlist, die bei jeder Erweiterung nachgepflegt werden muss, ist
+keine Sicherheit, sondern eine Verabredung — und Verabredungen halten in
+einem Projekt mit hundertfünfzig Blockarten nicht.
+
+### Manchmal entscheidet nicht die Art, sondern der Block
+
+Drei Blockarten stehen in der Liste und tragen trotzdem je nach Inhalt mehr,
+als Markdown abbilden kann:
+
+```txt
+image mit dateiId    Die Datei hängt an `dateiId`; `src` ist leer oder eine
+                     tote blob:-Adresse (E98). `![](…)` machte daraus ein
+                     Bild ohne Datei — sichtbar erst nach dem Neustart.
+flashcard mit sr     Der Lernstand ist das Wertvolle an einer Karte. Die
+                     Frage abzutippen kostet eine Minute, sechs Monate
+                     Wiederholung nicht.
+callout mit Zeichen  `> 💡` ist die einzige Form, die zurückgelesen wird —
+                     ein 🔥 käme als 💡 wieder.
+```
+
+Deshalb fragt der Code `mdTraegt(b)` und nicht `MD_TRAEGT.has(b.type)`.
+
+### Und der Mensch erfährt es vorher
+
+Der Dialog sagt jetzt, was der Knopf tut, statt es hinterher im
+Versionsverlauf zu verstecken: dass die `<!--blk:…-->`-Zeilen PDF-Seiten,
+Blätter, Tabellen und Spalten sind und unverändert bleiben, solange die
+Zeile stehen bleibt — und dass Farben, Schriftgrössen (E101) und die
+Verschachtelung von Listen wirklich verloren gehen. Diese drei kann Markdown
+nicht tragen, und sie zu Platzhaltern zu machen hiesse, den Knopf
+abzuschaffen: von einer Seite mit lauter farbigen Absätzen bliebe kein
+lesbarer Text übrig.
+
+Dass vorher eine Fassung gesichert wird, tat Redion schon immer. Nur wusste
+es niemand.
+
+**Geprüft** (test187, 41 Punkte): der volle Rundlauf mit dreizehn Blöcken —
+Anzahl, Reihenfolge, Art, Striche, Strichfarben, Suchtext, Zellen,
+Tabellenzeilen, der Text auf dem Blatt und der Satz im zugeklappten Toggle ·
+zweimal hin und her ändert nichts · was Markdown trägt, steht auch als
+Markdown da (sonst wäre der Knopf keiner) · nichts sickert aus einem
+Platzhalter heraus, gezählt an der Zeilenzahl · die drei bedingten Fälle ·
+eine gelöschte Platzhalter-Zeile löscht wirklich · der Hinweis im Dialog und
+die tatsächlich gesicherte Fassung. Ein Arm: mit der alten namentlichen
+Liste fallen elf Punkte, und aus dreizehn Blöcken werden sieben.
+
+
+## E114 · `rows` heisst an zwei Blockarten etwas anderes
+
+**19. August 2026, beim Schreiben von test187 gefunden.** Nach dem
+Markdown-Rundlauf stand die einfache Tabelle wieder da — leer.
+
+`Store.baum` hatte ihre Zellen korrekt eingesammelt. `Store.baumEinfuegen`
+warf sie weg:
+
+```js
+delete patch.id; delete patch.kinder; delete patch.collection;
+delete patch.views; delete patch.rows; delete patch.content;
+                            ^^^^^^^^^
+```
+
+Das `delete` hat einen guten Grund — nur einen anderen. An einer
+**Datenbank** sind `rows` die Zeilen-Blöcke, die `baum` daneben eingesammelt
+hat; die werden zwanzig Zeilen tiefer einzeln neu angelegt, und der alte
+Abdruck darf nicht am Block hängen bleiben, sonst stünden dieselben Zeilen
+zweimal im Bestand.
+
+Am **`table`-Block** heisst dasselbe Feld etwas ganz anderes: es sind seine
+Zellen, und sonst hat er nichts.
+
+```ts
+if (k.collection) delete patch.rows;
+```
+
+### Wie weit das reichte
+
+`baumEinfuegen` steht an siebzehn Stellen. Jede davon hat eine einfache
+Tabelle geleert:
+
+```txt
+Blockbefehl „Duplizieren"          editor.ts:2000
+Einfügen aus der Zwischenablage    editor.ts:2972
+Rückgängig (Strg + Z)              verlauf.ts:63
+Eine Fassung wiederherstellen      fassungen.ts:178, 328
+Vorlage einfügen                   werkzeuge.ts:452
+Seite entsperren                   werkzeuge.ts:696
+Zwischen Seiten ziehen             schale.ts:613
+```
+
+**Rückgängig** ist der schlimmste davon. Wer eine Tabelle füllte, danach
+irgendetwas anderes tat und einmal Strg + Z drückte, bekam die Tabelle leer
+zurück — und Strg + Z ist der Griff, zu dem man greift, WEIL man etwas
+retten will.
+
+Gemeldet hat es nichts. Der Block stand ja noch da.
+
+### Warum es keine Prüfung sah
+
+Die Tabellen-Prüfungen bauen ihre Tabelle, füllen sie und lesen sie zurück —
+alles am selben Block. Der Fehler sitzt aber im **Kopieren** des Blocks, und
+kopiert wird ein Block nur in Wegen, die niemand mit „Tabelle" verbunden
+hat: Rückgängig, Vorlage, Fassung.
+
+Der wiederkehrende Befund, wieder einmal: nicht die Funktion war ungeprüft,
+sondern die Verdrahtung (E93).
+
+**Geprüft** (test188, 21 Punkte): Verdoppeln · Rückgängig · Fassung
+wiederherstellen · Vorlage einfügen, jeweils über den echten Weg und nicht
+über `baumEinfuegen` direkt · und §5 in die Gegenrichtung: eine verdoppelte
+**Datenbank** hat zwei echte Zeilen, zwei getrennte Sammlungen und keinen
+toten Zeilen-Abdruck am Block. Zwei Arme: mit dem unbedingten `delete`
+fallen sechs Punkte über vier verschiedene Wege, und wird gar nicht mehr
+gelöscht, fällt der Datenbank-Punkt.
+
+
+## E115 · Wer merkt, wann eine Zeichenschicht aufhört zu leben
+
+**19. August 2026.** Zwei Fehler in `Marken.schicht`, und beide hatten
+dieselbe Ursache: niemand merkte, wann eine Schicht abgehängt wurde.
+
+### Der eine: Zuhörer, die sich stapeln
+
+```ts
+flaeche.addEventListener('pointerup', abschliessen);
+flaeche.addEventListener('pointercancel', abschliessen);
+flaeche.addEventListener('pointerleave', abschliessen);
+addEventListener('pagehide', abschliessen);      // ← am FENSTER
+```
+
+Die ersten drei hängen an `flaeche` und gehen mit ihr. Der vierte hängt am
+Fenster und bleibt — und `schicht()` wird je Block und bei jedem
+Neuzeichnen neu gebaut.
+
+Gemessen: eine Seite mit zwei Blättern und zwei PDF-Seiten, danach
+zwanzigmal `App.zeichneSeite()`.
+
+```txt
+pagehide-Anmeldungen   vorher 5   nachher 85
+svg.blatt-marken       vorher 4   nachher  4
+```
+
+Achtzig Zuhörer auf abgehängten Flächen, jeder mit einer tiefen Kopie von
+`block.marken` daran. `abschliessen` ist bei jedem von ihnen zwar sofort
+fertig (`if (!laufend) return`), aber gehalten wird der Speicher trotzdem.
+
+### Der andere, und der ist schwerer: ein Strich geht verloren
+
+Zwischen `pointerdown` und `pointerup` steht der laufende Strich **nur** in
+der Schliessungsvariablen `laufend` und als Knoten im SVG — nicht in
+`marken`, nicht im Speicher. Wird der Block in diesem Moment neu gezeichnet,
+ist die alte Fläche abgehängt, der Zeiger-Fang gelöst, und `pointerup`
+erreicht niemanden mehr. `abschliessen` läuft nie. Der Strich ist weg.
+
+Und Neuzeichnen kommt **von selbst**:
+
+```txt
+PdfEinlesen   zeichnet nach jeder fertig gerechneten Seite neu — während
+              man auf dem Notizblatt daneben schreibt. Genau der Aufbau,
+              den E104 gebaut hat.
+Abgleich      bei jeder fremden Änderung.
+Editor        an über dreissig Stellen.
+```
+
+Nachgestellt: `pointerdown`, acht `pointermove`, KEIN `pointerup`, dann
+`App.zeichneSeite()`. Ergebnis vorher: `marken.length === 0`. Der Strich war
+gezogen, sichtbar, und nach dem Neuzeichnen nicht mehr vorhanden.
+
+### Ein Verzeichnis, und beides ist weg
+
+```ts
+const lebende = new Set<Lebend>();
+```
+
+Jede Schicht meldet sich an. Ein `MutationObserver` meldet, wenn sich am
+Dokument etwas ändert; dann wird durchgesehen, welche Fläche nicht mehr
+hängt. Deren Strich wird abgeschlossen und **gespeichert**, und der Eintrag
+fällt weg. Ist das Verzeichnis leer, hört der Beobachter wieder auf.
+
+Der `pagehide`-Zuhörer steht jetzt einmal ganz oben und gilt für alle. Dazu
+`visibilitychange`, weil am Telefon oft nur der kommt.
+
+**Ein Nachtrag beim Prüfen.** Der Strich war nach dem ersten Anlauf zwar
+gesichert, aber unsichtbar: die neue Schicht wurde aus dem Stand **vor** dem
+Sichern gebaut. `marken.length === 1`, kein `[data-sid]` im Bild. Also
+zeichnet der Durchgang einmal neu — aber nur, wenn wirklich etwas gesichert
+wurde. Das dreht sich nicht im Kreis: die abgehängten Schichten sind dann
+schon aus dem Verzeichnis gestrichen.
+
+**Geprüft** (test189 §1–§2): vier Flächen bleiben vier, und nach zwanzig
+Neuzeichnungen ist kein einziger Zuhörer dazugekommen · ein Strich ohne
+`pointerup` überlebt das Neuzeichnen, mit allen Punkten, und ist danach auch
+wieder zu sehen. Ein Arm: mit dem alten Zuhörer je Schicht steigt die Zahl
+auf 85 und der Strich ist vollständig verloren.
+
+
+## E116 · Der Weg daneben: zweimal geklickt, abgebrochen, lange gewartet
+
+**19. August 2026.** E106 hat „Aus dem Original zurückholen" gebaut, und der
+Weg, auf dem alles klappt, war geprüft. Vier Dinge daneben nicht.
+
+### Zwei Klicks, eine Dateileiche
+
+Jede bildlose Seite bekommt einen eigenen Knopf, und jeder Knopf sperrte
+bisher nur **sich selbst**. Ein zweiter Klick auf einer anderen Seite
+startete einen vollständigen zweiten Lauf über dieselbe Liste. Beide legen
+für denselben Block eine Datei ab; danach steht nur die zuletzt geschriebene
+in `bildDateiId`.
+
+Die andere bleibt liegen — als fertiger Datei-Satz mit **lebendem**
+`blockId`. Und `Dateien.verwaist()` sucht nach Sätzen ohne Block, findet
+diesen also grundsätzlich nie. Eine Leiche, die kein Aufräumer je findet.
+
+Gemessen mit zwei gleichzeitigen Aufrufen an einem zweiseitigen PDF:
+
+```txt
+ohne Sperre   4 abgeleitete Dateien, davon 2 von keinem Block benutzt
+mit Sperre    2 abgeleitete Dateien, davon 0
+```
+
+Der Schlüssel der Sperre ist die Kennung des Originals, nicht ein globales
+Flag: zwei verschiedene Dokumente dürfen sehr wohl nebeneinander rechnen.
+
+### „Seite 80 von 1"
+
+```ts
+melder.textContent = 'Seite ' + n + ' von ' + offen.length + ' …';
+```
+
+Links die Seitennummer **im Dokument**, rechts die Anzahl der **noch zu
+rechnenden** Seiten. Zwei Zählungen in einem „N von M". Bei einem Skript mit
+achtzig Seiten, von dem eine fehlt, stand da „Seite 80 von 1".
+
+### Der Fortschritts-Melder verstummte
+
+```ts
+set textContent(v) { if (t.classList.contains('show')) t.textContent = v; }
+```
+
+`UI.toast` ist EIN Element mit EINEM Zeitgeber. Ein Fortschritt bittet um
+120 000 ms — aber jede fremde Meldung dazwischen setzt den Zeitgeber neu und
+nimmt ihre eigenen 2600 ms mit. Danach fehlt `show`, und der Fortschritt ist
+für den Rest des Laufs stumm. Genau im langen Lauf, für den er da ist.
+
+Jetzt setzt jede Fortschreibung Text, Sichtbarkeit **und** Uhr neu. Eine
+fremde Meldung dazwischen ist kurz zu sehen und wird von der nächsten
+Fortschreibung abgelöst, statt sie zu töten.
+
+Das half nebenbei drei weiteren Meldern, die es genauso brauchten: dem
+Ablegen grosser Dateien (E99), dem Anhängen aus dem Seitenmenü und dem
+ersten Einlesen eines PDFs.
+
+**Und die Gegenprobe war zuerst grün.** Der erste Anlauf setzte die fremde
+Meldung und schrieb 50 ms später weiter — da stand `show` noch, und die alte
+Fassung tat brav ihren Dienst. Der Fehler beginnt erst, wenn die **fremde**
+Uhr abgelaufen ist. Wer die Probe leichter macht als die Wirklichkeit, prüft
+nichts (§55.2).
+
+### Scheitert es, bleibt nichts stehen
+
+Der Erfolgsweg zeichnete die Seite neu, der Fehlerweg nicht. Bricht es bei
+Seite 40 von 80 ab, sind vierzig Bilder fertig und stehen am Block — sie
+erschienen nur nicht. Und der Knopf, über den man es erneut versuchen würde,
+stand für immer auf „wird gerechnet …", weil `k.disabled` niemand
+zurücksetzte.
+
+Beides erledigt jetzt ein `App.zeichneSeite()` im `catch` und ein
+`.then(zurueck, zurueck)` am Knopf.
+
+**Geprüft** (test189 §3–§7, zusammen 32 Punkte mit E115): der Melder
+schreibt nach einer fremden Meldung und deren Ablauf weiter · zwei
+gleichzeitige Aufrufe erzeugen zwei Seitenbilder und keine Leiche · der
+Fortschritt zählt nie höher, als es zu rechnen gibt · der Knopf kommt nach
+einem Fehlschlag zurück. Vier Arme, jeder einzeln nachgewiesen.
+
+
+## E117 · Ein Ausdruck mit einer Grenze, die sich meldet
+
+**19. August 2026.** `bilderSammeln` machte vor dem Drucken aus **jedem**
+Seitenbild eine Daten-Adresse und behielt sie alle zugleich — ohne
+Obergrenze, ohne Stückelung.
+
+Die Zeichenketten liegen dabei doppelt im Speicher: einmal in der Karte,
+einmal im zusammengebauten HTML des Druckrahmens. Base64 legt ein Drittel
+obendrauf.
+
+```txt
+ 80 Seiten à 200 KB    16 MB Bytes  →  21 MB Base64  →  43 MB doppelt
+500 Seiten à 200 KB   100 MB Bytes  → 133 MB Base64  → 266 MB doppelt
+```
+
+§36 sagt dazu: „Große Dateien nicht vollständig in RAM laden." Ein
+gescanntes Skript ist genau der Fall, für den E103 gebaut wurde.
+
+### Warum eine Grenze allein die falsche Hälfte wäre
+
+Ein Ausdruck, in dem stillschweigend die Hälfte der Seiten leer ist, sieht
+aus wie ein vollständiger — und man merkt es, wenn man ihn braucht. Das ist
+derselbe Fehler wie E111, nur auf Papier.
+
+Also drei Dinge zusammen:
+
+```txt
+DRUCK_BILDER_MAX = 40 MB   die Grenze, benannt und an einer Stelle
+im Ausdruck                „Seite 2 — dieses Dokument ist für einen
+                            Ausdruck am Stück zu gross. Die Striche stehen
+                            unten trotzdem; für das Seitenbild drucke das
+                            Dokument in Abschnitten."
+als Meldung                „1 Seitenbild ist für einen Ausdruck zu gross
+                            und bleibt leer — drucke das Dokument in
+                            Abschnitten."
+```
+
+Der Satz im Ausdruck ist ausdrücklich ein **anderer** als der für ein Bild,
+das im Bestand fehlt (E106). Wer eine leere Seite findet, muss wissen,
+welche der beiden Lagen vorliegt — die eine löst man mit „Aus dem Original
+zurückholen", die andere nicht.
+
+### Was trotzdem mitkommt
+
+Die **Handschrift**. Sie steht als `marken` am Block, geht als SVG in den
+Ausdruck und kostet nichts. Sie wegzulassen wäre die eigentliche
+Enttäuschung: das Seitenbild hat man notfalls im Original, die eigene
+Antwort nicht.
+
+Die Präsentation (E109) bekommt keine Grenze und braucht keine: sie nimmt
+`blob:`-Adressen, und deren Bytes hält der Browser ohnehin schon.
+
+**Geprüft** (test190, 18 Punkte): drei Seiten, eine davon zu gross — alle
+drei stehen im Ausdruck, zwei tragen ein Bild, die dritte nennt Seitenzahl
+und Grund im Klartext und ausdrücklich NICHT den falschen · beide Striche
+sind da, auch der auf der Seite ohne Bild · die Meldung nennt die Zahl · und
+ein gewöhnlicher Ausdruck aus drei kleinen Seiten bleibt unangetastet, ohne
+Warnung. Zwei Arme: ohne Grenze fallen fünf Punkte (die Seite bleibt leer
+und behauptet den falschen Grund), mit einer viel zu kleinen Grenze fallen
+sechs andere.
+
+
+## E118 · Drei Wege, die ins Leere führten
+
+**19. August 2026.** Drei Bausteine der letzten Woche funktionierten — auf
+dem Weg, auf dem sie gebaut wurden. Der Weg, den ein Mensch geht, war ein
+anderer.
+
+Alle drei sind dieselbe Form, und es ist die Form, die dieses Projekt
+verfolgt: **eine Stelle wurde erweitert, die Nachbarstelle nicht.**
+
+### `/blatt` gab Papier ohne Zeile
+
+E100 hat `blatt` in `Register.bloecke` eingetragen — damit ist es über das
+Slash-Menü erreichbar. `umwandeln` legt ihm aber keine Kinder an, und
+`Blatt.zeichne` zeichnete nur vorhandene:
+
+```ts
+Store.childrenOf(block.id).forEach((k: any) => {
+  inhalt.appendChild(Blocks.render(k, 0));
+});
+```
+
+Kein `else`. Gemessen, über den echten Weg (`/blatt` tippen, im Menü
+klicken):
+
+```txt
+kinder                        0
+contenteditable im Block      0
+.blatt-inhalt                 ""
+```
+
+Zum Vergleich derselbe Weg mit `/spalten`: zwei beschreibbare Felder. Man
+konnte auf das Blatt **malen und sonst nichts** — bei einer Blockart, deren
+Sinn „schreiben UND malen auf demselben Papier" ist.
+
+Alle Wege, die funktionierten, legten das Kind von Hand an: `alsSeiten` tut
+es (E104), `test174` tut es. Nur der Weg, den ein Mensch geht, tat es nicht.
+
+Die Spalte daneben löst genau dasselbe seit E102 — und die Reparatur ist
+wörtlich ihr Handgriff. Sie sitzt in `Blatt.zeichne` und nicht in
+`umwandeln`, weil `umwandeln` nur den Slash-Weg abdeckt: ein kinderloses
+Blatt aus einer alten Sicherung bekäme dort nichts.
+
+### Die Suchvorschau nannte volle Seiten leer
+
+`zeigeVorschau` las nur die **direkten** Kinder der Seite. Seit E104 ist
+„nebeneinander" die Vorgabe beim PDF-Einlesen, und dann ist das einzige
+direkte Kind ein `columns`-Block ohne `text`:
+
+```txt
+Store.childrenOf(seite) = [ { type: 'columns', text: '' } ]
+                          → '' → „Diese Seite ist noch leer."
+```
+
+Über eine ganze Schulaufgabe. Und es ist genau der Satz, den E107 mit
+`suchtext` abschaffen wollte — an genau der Anordnung, die Standard ist.
+
+Jetzt steigt die Vorschau hinab, aber nur in das, was selbst nichts zu sagen
+hat: `columns`, `columns3`, `spalte`, `blatt`, `toggle`. In einen Textblock
+mit Kindern nicht — der hat seinen eigenen Satz, und eine Vorschau ist eine
+Vorschau. Die Grenze von vierzehn Zeilen gilt **nach** dem Sammeln, sonst
+schnitte sie die Hüllen ab statt der Inhalte; bei einem 80-Seiten-Skript
+liegen achtzig `columns`-Blöcke unter der Seite, und der frühe Abbruch ist
+der Grund, warum das nichts kostet.
+
+Die Gegenprobe gehört dazu: **eine wirklich leere Seite sagt weiterhin, dass
+sie leer ist.** Sonst hätte man den Satz nur abgeschafft statt richtig
+gemacht.
+
+### Die Folie kannte nur die neue Spaltenform
+
+```ts
+Store.childrenOf(b.id).map(sp =>
+  '<div class="folie-spalte">' +
+  Store.childrenOf(sp.id).map(k => folieBlock(k, 0)).join('') +
+  '</div>')
+```
+
+Das nimmt an, jedes Kind eines Spaltenblocks sei eine `spalte`-Hülle. E102
+hat diese Hülle eingeführt und den Bestand von davor **ausdrücklich heil
+gelassen** — dort ist das Kind selbst die Spalte, und der Editor zeichnet
+ihn deshalb weiter (`case 'columns'`: `childrenOf(block.id)` direkt).
+
+Auf der Folie fiel er ersatzlos weg. Gemessen: der Folientext lautete
+`VortragNEULINKSNEURECHTS` — der alte Block war spurlos verschwunden, nicht
+gemeldet, nur leer. Der Druckweg macht es richtig; die Folie nicht.
+
+Das Bittere daran: zwei Zeilen über der Fundstelle steht der Kommentar, den
+E109 für L38 geschrieben hat — „nicht ‚vergessen', sondern ‚an einer Stelle
+getan und an der Nachbarstelle nicht'". Derselbe Fehler, eine Ebene tiefer,
+im selben Codeblock.
+
+### Woher die drei kamen
+
+Aus einem Gegenlese-Durchgang über E98–E110: 21 Funde aus vier Blickwinkeln,
+13 davon haben je drei Skeptiker überlebt. Zehn waren zu dem Zeitpunkt schon
+behoben (E111–E117). Diese drei waren neu, und keiner von ihnen wäre einem
+Prüflauf aufgefallen, der den Erfolgsfall abfährt — sie sitzen alle am
+**Eingang** der jeweiligen Funktion, nicht in ihr.
+
+**Geprüft** (test191, 23 Punkte): `/blatt` wirklich getippt und im Menü
+geklickt, dann hineingeschrieben und im Speicher nachgesehen · die Vorschau
+bei der Vorgabe-Anordnung, samt Gegenprobe an einer wirklich leeren Seite ·
+beide Spaltenformen auf einer Folie, mit dem Nachweis, dass der Editor die
+alte noch zeichnet. Drei Arme: ohne den Blatt-Handgriff fallen sechs Punkte
+(und es gibt nichts mehr zum Hineinklicken), ohne den Vorschau-Abstieg vier,
+ohne die Folien-Fallunterscheidung drei — dort werden die vier Spaltenkästen
+übrigens weiterhin gebaut, nur leer, weshalb erst das Zählen der GEFÜLLTEN
+die Prüfung überhaupt rot werden lässt (§55.2).
+
+
+## E119 · Die Frage an jede Blockart — und was sie NICHT beantwortet
+
+**19. August 2026.** E118 hat einen Fehler behoben: `/blatt` legte Papier an,
+in das man nicht schreiben konnte. `L41` hat dazu die unangenehme Frage
+gestellt — war `blatt` wirklich der einzige?
+
+Es gibt keine Stelle, die sagt, was eine Blockart zum Leben braucht.
+`Register.bloecke` sagt, wie sie heisst und wie man sie findet, nicht, ob
+sie ohne Kinder bedienbar ist. `spalte` weiss es selbst, `blatt` wusste es
+nicht, und gemerkt hätte es niemand.
+
+`test192` ist diese Stelle. Sie legt **jede** über das Slash-Menü
+erreichbare Blockart an — heute 66 — und fragt für jede dasselbe.
+
+### Das Ergebnis: keine weitere
+
+Alle 66 in Ordnung. Zwei Kandidaten sahen zuerst nach Fehlern aus und waren
+keine:
+
+```txt
+divider   0 beschreibbar, 0 Felder, 0 Knöpfe, kein Text — und trotzdem
+          richtig: er zeichnet ein echtes `<hr>`, 1 px hoch. Die Prüfung
+          sah nur nicht danach.
+
+page      „kein Kasten im Bild" — weil `/page` eine UNTERSEITE anlegt und
+          hineinspringt. Gemessen wurde also von der falschen Warte aus.
+          Auf der Elternseite steht danach „📄 Ohne Titel", anklickbar, und
+          der Klick öffnet die Unterseite wirklich.
+```
+
+Beide Male hätte die naheliegende Schlussfolgerung („zwei weitere Fehler")
+danebengelegen. Nachgesehen statt geschlossen — dasselbe wie bei E111.
+
+### Und der wichtigere Teil: die erste Fassung der Prüfung taugte nichts
+
+Die Frage lautete zuerst: **„ist der Block ein leeres Rechteck?"** Gemessen
+wurde, ob im Kasten irgendetwas steht — ein Feld, ein Knopf, ein Bild, Text.
+
+Dann die Gegenprobe: `blatt` auf den Stand vor E118 zurückgedreht.
+
+```txt
+✓ Keine einzige Blockart ist ein leeres Rechteck
+```
+
+**Grün.** Das kaputte Blatt war nicht leer — es hatte zwölf Knöpfe und eine
+Zeichenfläche. Es hatte nur nichts, in das man schreiben konnte, und genau
+darum ging es. Eine Prüfung, die den Fehler nicht findet, gegen den sie
+geschrieben wurde, ist keine (§55.2).
+
+Die zweite Frage ist die, die trägt:
+
+> **Hält diese Blockart andere Blöcke? Dann muss sie leer eine Stelle zum
+> Hineinschreiben bieten.**
+
+Und „hält Kinder" wird nicht geraten, sondern ausprobiert: ein Textblock
+hineingelegt, neu gezeichnet, nachgesehen, ob er im Kasten erscheint. Damit
+beantwortet sich die Frage für jede künftige Blockart von selbst, ohne dass
+jemand eine Liste pflegt.
+
+Gegen dieselbe Gegenprobe:
+
+```txt
+✗ Und jede von ihnen bietet leer eine Stelle zum Schreiben — ist 1, soll 0
+      → blatt (edit 0 · knopf 12 · bild 1 · Behälter · „✎Schreiben🖍Malen…")
+```
+
+Beim Namen genannt, ohne dass die Prüfung `blatt` kennt.
+
+### Was sie weiterhin nicht beantwortet
+
+Sie prüft, ob man **hineinkommt**. Ob das, was dann passiert, richtig ist,
+prüft sie nicht — dafür sind die Suiten je Blockart da. Und sie kennt nur
+den Weg über `umwandeln`; eine Blockart, die auf einem anderen Weg entsteht
+(`pdfseite`, `spalte`), steht in keinem Register und wird hier nicht
+erfasst. Beide Grenzen stehen in L41.
+
+**Geprüft** (test192, 15 Punkte): 66 Blockarten, jede angelegt und
+vermessen · keine ist ein leeres Rechteck · jede, die Kinder aufnimmt,
+bietet leer eine Schreibstelle · drei Stichproben im Klartext (Blatt,
+Trennlinie, Bild) · und `/page` als die eine begründete Ausnahme, samt
+Nachweis, dass der Verweis auf der Elternseite wirklich öffnet. Ein Arm:
+mit dem Blatt-Stand vor E118 fallen zwei Punkte, und einer davon nennt
+`blatt` von selbst.
+
+
+## E120 · Einrückung ist Struktur
+
+**19. August 2026.** `alsMarkdown` schreibt sie seit jeher —
+`'  '.repeat(tiefe)`. `ausMarkdown` warf sie weg: jede Zeile wurde mit
+`trim()` beschnitten und mit `Store.addBlock(p.id, …)` direkt unter die Seite
+gehängt.
+
+Gemessen an einer dreistufigen Liste:
+
+```txt
+- Oben eins                bullet          bullet  Oben eins
+  - Darunter A               bullet        bullet  Darunter A
+    - Noch tiefer              bullet   →  bullet  Noch tiefer
+  - Darunter B               bullet        bullet  Darunter B
+- Oben zwei                bullet          bullet  Oben zwei
+- [ ] Aufgabe              todo            todo    Aufgabe
+  Unteraufgabe               text          text    Unteraufgabe
+```
+
+Der Text war da, die Ordnung nicht. Sieben Blöcke nebeneinander auf Ebene
+null.
+
+L40 hat das bei E113 ausdrücklich offen gelassen: „dieselbe Funktion bedient
+auch den `.md`-Import, und ein zweites Thema in einer Änderung geht gegen
+§45." Hier ist es als eigene Änderung.
+
+### Ein Stapel, mehr braucht es nicht
+
+```ts
+const stapel: string[] = [p.id];
+```
+
+`stapel[0]` ist die Seite. Wer auf Tiefe t schreibt, hängt unter
+`stapel[t]` und wird selbst zu `stapel[t+1]`. Zwei Schritte je Ebene, weil
+das ist, was `alsMarkdown` schreibt — und ein Tabulator zählt als zwei, weil
+Menschen ihn tippen.
+
+Zwei Entscheidungen darin sind Absicht:
+
+**Wer zu tief springt, landet eine Ebene tiefer, nicht im Nichts.** Markdown
+erlaubt den Sprung von Ebene 0 auf Ebene 6; `Math.min(…, stapel.length - 1)`
+fängt ihn ab. Ein verlorener Block wäre schlimmer als eine Ebene daneben.
+
+**Was über mehrere Zeilen läuft, hängt dort, wo es ANFING.** Ein Codeblock
+und eine Tabelle wurden bisher beim Abschluss angelegt — also mit der
+Einrückung der Zeile *danach*. Beide merken sich jetzt ihre erste Zeile.
+
+### Der `.md`-Import wird davon besser, nicht schlechter
+
+Das war die Sorge, die die Änderung aufgeschoben hat. Sie hat sich nicht
+bestätigt — im Gegenteil: in einer `.md`-Datei aus fremder Hand ist die
+Einrückung die **einzige** Strukturangabe, die es gibt. Gemessen an einer
+gewöhnlichen Datei:
+
+```txt
+- Obst                   →   bullet Obst
+  - Äpfel                       bullet Äpfel        (zwei Leerzeichen)
+- Gemüse                     bullet Gemüse
+    - Karotten                  bullet Karotten     (vier)
+	- Zwiebeln                  bullet Zwiebeln     (Tabulator)
+1. Erster Schritt            number Erster Schritt
+   1. Unterschritt              number Unterschritt (drei)
+```
+
+Alle vier Schreibweisen kommen richtig an. `test49` (Obsidian-Import) und
+`test66` bleiben unverändert grün.
+
+### Und ein Fehler, den erst die Reparatur sichtbar machte
+
+Ein eingerückter Codeblock behielt seine Einrückung IM CODE:
+
+```txt
+- Aufgabe
+  ```js
+  if (x) {
+    tuWas();
+  }
+  ```
+```
+
+`codeText.push(roh)` nahm die Zeile roh, also mit den zwei Leerzeichen des
+Zauns. Vor E120 war das selten — ein Codeblock in einem Listenpunkt landete
+ohnehin auf Ebene null. Jetzt ist es der Normalfall.
+
+`trim()` wäre die falsche Antwort: die zwei Leerzeichen vor `tuWas()`
+gehören dem **Code** und müssen bleiben. Abgezogen wird genau der Einzug des
+Zauns, keiner mehr.
+
+Gefunden hat das die eigene Prüfung beim ersten Lauf, nicht ein Mensch und
+nicht ein Gegenleser — der einzige Punkt in dieser Suite, der beim Schreiben
+rot war.
+
+**Geprüft** (test193, 25 Punkte): der Rundlauf mit einer dreistufigen Liste,
+zweimal hintereinander · eine gewöhnliche `.md`-Datei mit zwei, drei, vier
+Leerzeichen und einem Tabulator · ein Sprung um sechs Ebenen, der nichts
+verliert · Codeblock, Tabelle und Platzhalter an ihrem Platz, mit Inhalt,
+Sprache und Zeilen · Quelltext-Zeugen, darunter „keine Zeile hängt sich mehr
+blind an die Seite" (gezählt: 13 solcher Stellen vorher, 0 danach). Ein Arm:
+mit dem alten Zurückleser fallen sechzehn Punkte.
+## E121 · Ein Stück-Lesefehler ist keine leere Datei
+
+> **Zur Nummer:** Dieser Eintrag hiess auf dem Laptop E98 und ist am
+> 15. August entstanden. In der Cloud lief zur selben Zeit ein zweiter
+> Strang, der die 98 ebenfalls vergab („Abgelegte Dateien überleben den
+> Browser-Neustart", 19. August). Beim Zusammenführen der beiden Stände
+> hat dieser hier die nächste freie Nummer bekommen, weil der andere
+> bereits veröffentlicht und von sechzehn Commits und mehreren Prüfläufen
+> in Bezug genommen war. Am Inhalt ändert das nichts.
+
+
+**Datum:** 15. August 2026 · **Status:** Beschlossen · **Lücke:** L35 geschlossen
+
+E71 zog die Grenze schon für ganze Fächer: „nicht lesbar" darf nie als
+„leer" weiterlaufen. Bei `stueckeVon` blieb aber genau diese Verwechslung
+stehen. Sowohl der Fehler der IndexedDB-Anfrage als auch ein synchroner
+Fehler antworteten mit `[]`. Dadurch konnte `alsBlob` „nicht gefunden"
+melden, die Sicherung einen falschen Erfolg herunterladen, der Abgleich
+ohne Inhalt weiterlaufen und `weg` den Dateisatz entfernen, obwohl die
+Stücke gar nicht gelesen und deshalb nicht gelöscht worden waren.
+
+`stueckeVon` lehnt beide Fehlerwege jetzt ab. `[]` bleibt nur die ehrliche
+Antwort, wenn die Stück-Ablage nicht existiert oder eine erfolgreiche
+Abfrage wirklich null Stücke findet. Der Fehler trägt einen kurzen Satz
+für den Menschen sowie Code und technische Ursache. Der Reporter erhält
+nur Dateikennung und Ursache — weder Dateiname noch Inhalt.
+
+Die vorhandenen Sicherungs- und Abgleichsgrenzen behandeln die Ablehnung
+bereits als Misserfolg. Das Dateifenster fängt Herunterladen, Löschen und
+Aufräumen nun ebenfalls ab: Eine Erfolgsmeldung kommt erst nach dem echten
+Erfolg; bei einem Lesefehler bleibt der Dateisatz stehen und der Mensch
+erfährt, dass der Vorgang abgebrochen wurde.
+
+**Geprüft** (`test144` §6, insgesamt 42 Punkte): echte Datei und echte
+Produktwege durch einen absichtlich fehlernden `datei`-Index — direktes
+Lesen, `alsBlob`, Bestätigen, `.redion`-Sicherung, Datei-Abgleich und der
+sichtbare Löschknopf. Ein echter Dateisatz mit null Stücken bleibt die
+Gegenklasse. Nach dem Fehler sind Metadaten, Stückzahl und Bytes
+unverändert; der Reporter enthält die technische Ursache, aber keinen
+privaten Dateinamen.
+
+Die Gegenprobe setzte ausschliesslich die beiden Fehlerzweige wieder auf
+`ok2([])`: 17 der 42 Punkte wurden rot, darunter falscher Download,
+fehlender Sync-Fehler und gelöschter Dateisatz. Nach Wiederherstellung
+waren 42/42 wieder grün. Es gibt keine Schemaänderung und keine
+Datenmigration.
+
+## E122 · Das verschlüsselte Paket angeschlossen — und wieder abgeklemmt
+
+**22. August 2026.** Beim Zusammenführen der beiden Arbeitsstände kam aus
+`krypto.ts` eine fertige Fassung 2 des verschlüsselten `.redion` mit: 460
+Zeilen, zufälliger Datenschlüssel, Schlüsselhülle über PBKDF2, AES-GCM je
+Eintrag mit AAD, Anhänge in Stücken, Passwortwechsel ohne Neuverschlüsseln.
+Sorgfältig geschrieben.
+
+Und von aussen nicht erreichbar: die Einstiegspunkte standen nicht im
+`return`-Objekt, es gab keinen Prüflauf, und zwei Typstellen waren falsch.
+
+Redur hat entschieden, es fertig zu machen statt einzulagern. Das war die
+richtige Entscheidung — nicht weil es geklappt hat, sondern weil es das
+Gegenteil gezeigt hat.
+
+### Was jetzt nachweislich funktioniert
+
+```txt
+Das Paket entsteht         Fassung 2, 310 000 Runden, drei Eintragsarten
+Es ist wirklich dicht      weder Seitentitel noch Dateiname stehen im
+                           Klartext im Archiv — nachgesehen im Byte-Strom
+Falsches Passwort          abgelehnt, und ohne zu sagen, WAS falsch war
+Verändertes Manifest       fliegt auf (der Kern ist mitverschlüsselt)
+Fehlender Eintrag          fliegt auf
+Kein Passwort              wird gar nicht erst gebaut
+Nach allen Fehlversuchen   steht der Bestand unverändert da
+Passwortwechsel            geht, ohne die Nutzdaten anzufassen — und ein
+                           schon herausgegebenes Paket bleibt mit dem alten
+                           Passwort lesbar, weil man eine Datei, die jemand
+                           hat, nicht widerrufen kann
+```
+
+### Und was nicht
+
+**Das Zurückholen verliert den Anhang.** Gemessen, mehrfach und schwankend:
+gleich nach dem Einspielen findet `dateiAlle()` den Datei-Satz, während
+`dateiHolen()` ihn nicht findet; mit 600 ms Atempause ist gar keine Datei
+mehr da; die Stückzahl ist mal 0, mal 1.
+
+Das Schwanken ist die Unterschrift eines Wettlaufs. `Store.importAll` ist es
+nicht — seine Transaktion umfasst `blocks`, `collections`, `views`, `meta`,
+`versions` und `suchindex`, aber weder `dateien` noch `stuecke`. Ein
+`Store.flush()` zwischen Bestand und Anhängen hat nicht geholfen.
+
+### Die Entscheidung
+
+**Der Code bleibt, der Knopf nicht.** Die Karte im Sicherheitsdialog war
+schon geschrieben und ist wieder herausgenommen. Ein Wiederherstellen, das
+den Anhang STILL verliert, ist schlimmer als eines, das gar nicht erst
+angeboten wird — §46, Priorität 1.
+
+`test199` §3 hält das fest, und zwar als Prüfung, nicht als Notiz: solange
+der Fehler steht, darf im Dialog kein Knopf dafür sein. Wer die Funktion
+später anschliesst, ohne den Wettlauf zu beheben, wird rot.
+
+Die Einstiegspunkte bleiben im `return`-Objekt. Ohne sie liesse sich die
+Funktion nicht prüfen, und ungeprüfter Code ist genau der Zustand, aus dem
+sie gerade kommt.
+
+### Die Lehre
+
+Fertig aussehender Code ist kein fertiger Code. Diese 460 Zeilen lasen sich
+besser als vieles, was heute läuft — die Kommentare erklären sogar, warum
+`paketOeffnen` nichts schreibt, damit ein falsches Passwort keinen halben
+Import hinterlässt. Genau dieser Sorgfalt hätte man geglaubt.
+
+Was sie nie hatte, war ein einziger Aufruf. Und der erste Aufruf hat den
+Fehler in drei Minuten gefunden.
+
+**Geprüft** (test199, 36 Punkte): die Einstiegspunkte sind erreichbar · das
+Paket ist dicht, im Byte-Strom nachgesehen · alle fünf Fehlerwege lehnen ab,
+ohne etwas anzufassen · der Passwortwechsel · und §3 als Wächter, dass die
+Funktion unerreichbar bleibt, solange L42 offen ist.
+
+
+## E123 · Der Wettlauf beim Zurückholen — abgelöste Arbeit muss abwartbar sein
+
+**22. August 2026.** L42 sagte: das verschlüsselte Paket verliert beim
+Zurückholen den Anhang, und der Verdacht lag auf der Aufräumschleife in
+`geoeffnetesPaketEinspielen`. Beides war zu kurz gedacht. Der Fehler saß
+tiefer, betraf auch die gewöhnliche `.redion`-Sicherung, die jeder benutzen
+kann — und ein `Store.flush()`, das dagegen helfen sollte, half messbar
+nichts.
+
+### Was wirklich los war
+
+`Store.purgeBlock` kehrt sofort zurück und löscht die Anhänge danach in einer
+abgelösten Aufgabe:
+
+```js
+purgeBlock = (id) => {
+  …
+  (async () => {                       // ← niemand hält das fest
+    await Promise.all(geloescht);
+    for (const x of gesammelt) await purgeAnhaenge(x);
+  })().catch(…);
+};
+```
+
+Das ist richtig so — bei einer Seite mit fünfhundert Blöcken darf der
+Bildschirm nicht stehen bleiben. Nur war auf diese Aufgabe nicht zu warten:
+
+```txt
+Seite gelöscht           purgeBlock kehrt zurück, das Löschen läuft noch
+Sicherung zurückgeholt   die Blöcke stehen wieder, der Anhang wird frisch
+                         geschrieben
+… Augenblick später      das alte Löschen kommt an und nimmt den NEUEN
+                         Anhang mit
+```
+
+Und zwar zielsicher, nicht zufällig. `purgeAnhaenge` liest den Block aus dem
+Zwischenspeicher:
+
+```js
+const b = cache.blocks[id];
+[hinweis.datei, b && b.dateiId, b && b.datei].forEach(x => { if (x) kennungen.add(x); });
+```
+
+Nach dem Einspielen ist `cache.blocks` der EINGESPIELTE Bestand. Das Löschen
+findet also genau die Kennung, die gerade zurückgeholt wurde, und trifft sie.
+
+### Gemessen
+
+Der Anhang wurde abgelegt, wie der Editor es tut — Block zuerst, dann
+`Dateien.ablegen(datei, { blockId })`; so machen es alle sechs echten
+Aufrufer. Bestand: 1972 Blöcke, also der Stand, mit dem Redion startet.
+
+```txt
+                     ohne die Behebung        mit der Behebung
+.redion              dateien=0 stuecke=0      dateien=1 stuecke=1
+                     alsBlob=0   → 3 von 3    alsBlob=900 → 3 von 3
+Paket (Fassung 2)    dasselbe                 dasselbe
+```
+
+### Die Behebung
+
+`indexdb.ts` merkt sich jede abgelöste Arbeit, und `settled()` wartet darauf:
+
+```ts
+const unterwegs = new Set<Promise<unknown>>();
+const abloesen = <T,>(p: Promise<T>): Promise<T> => { … };
+const settled = async (): Promise<void> => {
+  for (let runde = 0; runde < 20 && unterwegs.size; runde++)
+    await Promise.all([...unterwegs].map(p => p.catch(() => {})));
+};
+```
+
+In Runden, weil eine abgelöste Arbeit die nächste anstossen kann; nach zwanzig
+Runden ist Schluss, denn ein Fehler, der sich selbst nachlegt, darf die App
+nicht anhalten. `importAll` wartet **vorn und hinten**: vorn, damit ein
+Löschen von vorhin sein eigenes Zeug wegräumt und nicht das neue; hinten, weil
+`notify('import')` selbst noch eines anstossen kann. Damit ist JEDER Weg
+gedeckt, der über `importAll` läuft — `.json`, `.redion`, das verschlüsselte
+Paket und jeder künftige.
+
+### Warum es niemand gesehen hat
+
+Zwei Bedingungen müssen zusammenkommen, und beide fehlen in einem
+aufgeräumten Prüflauf:
+
+1. Das endgültige Löschen muss unmittelbar vor dem Zurückholen stehen.
+2. Der Bestand muss GROSS sein. Bei drei Blöcken ist die Löschkette durch,
+   bevor das Zurückholen anfängt — dann ist alles grün, obwohl der Fehler
+   dasteht.
+
+Die erste Fassung von test200 leerte den Bestand vorher und blieb in der
+Gegenprobe grün: nur die Quellenzeugen schlugen an, die Rundläufe nicht.
+Genau davor warnt §55.2 — eine Prüfung, die nicht rot werden KANN, ist keine.
+Deshalb leert `frisch` in test200 den Bestand nicht.
+
+Und deshalb hat test100 es jahrelang übersehen, obwohl es genau diesen Weg
+prüft: es fängt jedes Mal aufgeräumt an.
+
+### Damit ist L42 geschlossen
+
+Das verschlüsselte Paket steht jetzt im Sicherheitsdialog — zwei Knöpfe,
+eigenes Passwortfeld, `.redion` als Dateiwähler. Zurückholen fragt vorher und
+sichert den jetzigen Stand als Netz unter dem Seil. `paketOeffnen`
+entschlüsselt und prüft ALLES, bevor die Frage überhaupt erscheint: ein
+falsches Passwort scheitert, während der Bestand noch unangetastet ist.
+
+**Geprüft** (test200, 29 Punkte; Gegenprobe mit zurückgenommener Behebung:
+10 rot): dass `settled()` wirklich wartet · der `.redion`-Rundlauf mit
+Byte-Vergleich · derselbe mit dem verschlüsselten Paket · die Knöpfe im
+Dialog · und fünf Quellenzeugen. test199 §3 ist von „darf niemand anklicken"
+auf einen echten Rundlauf umgestellt.
+
+
+## E124 · Drei Suchen, zwei Antworten
+
+**22. August 2026.** Beim Zusammenführen der beiden Arbeitsstände kam das
+Suchfenster mit der Abfragesprache und dem inkrementellen Suchindex vom
+Laptop, der durchsuchbare PDF-Text (E107) aus der Cloud-Arbeit. Beide für
+sich in Ordnung — zusammen ergaben sie das hier:
+
+```txt
+Store.search('Pythagoras')     findet die Seite
+das Suchfenster                „Nichts gefunden"
+```
+
+Eine PDF-Seite hat keinen `text` — sie ist ein Bild; ihr Wortlaut steht seit
+E107 in `suchtext`. `Store.search` liest beide Felder. Der Suchindex in
+`kontext.ts` und der Weg ohne Index in `schale.ts` lasen nur `text`.
+
+Zwei Suchen mit zwei Antworten sind schlimmer als eine schlechte: wer sein
+eingelesenes Skript nicht findet, glaubt, es sei nicht da.
+
+Beide Wege lesen jetzt `text` UND `suchtext`, und `suchtext` steht auch in der
+Signatur des Index — sonst merkt er nicht, dass eine PDF-Seite ihren Text
+nachgetragen bekommen hat (das passiert beim Öffnen alter Dokumente).
+
+**Geprüft** (test181): §5 sieht am Bild nach, dass das Suchfenster die Seiten
+aufzählt — dieser Abschnitt war rot und ist der eigentliche Wächter. Dazu drei
+Quellenzeugen, einer je Suchweg.
+
+
+## E125 · Ink V2 erweitert den Dokumentraum, nicht die Zahl der Zeichenmaschinen
+
+**22. August 2026.** A4-Blatt und PDF-Seite besassen bereits dieselbe
+Markenschicht und stabile Blattkoordinaten. Die allgemeine Zeichenfläche
+kannte zwar Formen, speicherte aber rohe Bildschirmpixel und hatte nur ein
+`pop()`-Rückgängig. Sie zu importieren hätte zwei unvereinbare Wahrheiten
+über dieselbe Geometrie geschaffen.
+
+### Die Entscheidung
+
+`src/core/ink/geometry.ts` ist ein kleiner DOM-freier Kern für Punkte,
+Begrenzungen, Treffer, Verschieben, geglättete SVG-Pfade und
+Ramer-Douglas-Peucker-Reduktion. Die bestehende `Marken`-Schicht verwendet
+ihn für Stift, transparenten Marker, Linie, Pfeil, Rechteck, Ellipse und
+Text. Ein PDF wird nicht ins Whiteboard umgewandelt; spätere Flächen dürfen
+den neutralen Kern verwenden, nicht die Dokumentdaten übernehmen.
+
+Neue Druckwerte stehen getrennt als `pressure` neben den unveränderten
+zweidimensionalen `pts`. Alte Sicherungen bleiben damit ohne Migration
+lesbar. Während `pointermove` wird nur der bestehende SVG-Knoten verändert;
+Store und Verlauf werden erst beim Abschluss einer Aktion geschrieben.
+Auswahl, Mehrfachverschieben, Löschen und Textänderung sichern jeweils einen
+Vorher-Stand. Undo/Redo ist damit aktionsbasiert und auf 100 Schritte
+begrenzt.
+
+### Warum keine Sonderablage
+
+Marken bleiben additive Felder des Blocks. Der vorhandene Store, `.redion`,
+verschlüsselte Pakete und der Drei-Wege-Abgleich transportieren sie bereits.
+Eine Ink-IndexedDB oder ein eigenes Sicherungsformat hätte nur einen zweiten
+Fehlerweg geschaffen.
+
+**Geprüft** (`test201`, Suite 167, 32 Punkte): Rückwärtskompatibilität,
+Markertransparenz, alle Formen, sicherer Text, Druckwerte, Coalesced Events,
+Punktreduktion, Auswahl/Mehrfachauswahl, Bewegung, Löschen, Undo/Redo,
+390×844, 1366×768, 1440×900, Druck, Sicherungsrundlauf und Sync. Die
+bestehenden Suiten 174, 177, 178, 180, 182 und 189 bleiben grün.
+
+## E126 · Dokumentmodus ist eine Ansicht, kein zweites Dokument
+
+**22. August 2026.** Der Arbeitsraum verwendet dieselben `pdfseite`- und
+`blatt`-Blöcke, auch innerhalb bestehender Spalten. Nur die gewählte Seite
+wird vollständig gerendert; Miniaturen lesen vorhandene Seitenbilder. Desktop
+zeigt drei Spalten, kleine Laptops einen Inspector-Drawer und Telefone
+Bottom-Sheets mit 44-px-Zielen. Deep Links wählen den Block vor dem Rendern.
+
+## E127 · Lernquellen und Wiederholungen bleiben Blockdaten
+
+**22. August 2026.** Notizen, Karten, Aufgaben, kleine Ausschnitte und Links
+tragen einen additiven `sourceRef` zur echten PDF-/Blatt-/Textquelle. Der
+exakte Sprung verwendet die Blockkennung. Cloze und Tagesrunde arbeiten auf
+normalen Flashcards. SM-2 bleibt unverändert; Review-Ereignisse erhalten
+eindeutige IDs für den Drei-Wege-Abgleich. FSRS wird nicht still eingeführt.
+
+## E128 · Neue Audioaufnahmen sind Anhänge, keine Zeichenketten
+
+**22. August 2026.** MediaRecorder-Blobs laufen durch den vorhandenen
+Chunk-Speicher und werden per stabiler `dateiId` referenziert. Alte DataURLs
+bleiben lesbar. Eine Zeitmarke ist ein normaler Textblock mit `audioRef`.
+Optionale Transkription sendet erst nach Knopfdruck und sichtbarer Zustimmung.
+
+## E129 · Ein Resolver für Titel, Aliasse und Vault-Pfade
+
+**22. August 2026.** Suche, Wikilinks, Backlinks, Picker, Graph und Vault
+verwenden dieselbe Auflösung. Nur ein eindeutiger Treffer wird geöffnet;
+Kollisionen liefern Kandidaten. Obsidian-Roundtrips tragen `redion-id`, Pfad
+und Aliasse und mergen niemals allein nach Seitentitel.
+
+## E130 · Erkennung ist ein Derivat mit Provenienz
+
+**22. August 2026.** Kamera und Dateien werden zuerst unverändert im normalen
+Anhangspeicher abgelegt. OCR ist ein optionaler localhost-Adapter mit
+Zustimmung, Größen-/Pixelgrenzen und Zeitlimit. Erkanntes überschreibt weder
+PDF-Text noch Bild noch Ink, sondern speichert Text, Sprache, Engine, Version,
+Vertrauen und Region zusätzlich. Handschrift-zu-Text/Formel ist ein bestätigter
+Vorschlag; Ink bleibt erhalten.
+
+## E131 · Ausbildung ist Vorlage plus bestehende Bibliothek
+
+**22. August 2026.** Fächer, Prüfungen, Noten, Berichtsheft, Lernmaterial und
+Capture-Eingang sind normale Seiten/Datenbanken. Die Vorlage ist idempotent
+und additiv, ohne Person, Schule oder Notenskala fest einzubauen. Der
+Elektrorechner enthält nur normfreie Mathematik. Fragen sind ein validiertes,
+versioniertes Lernpaket. Das Schuldashboard speichert nichts Eigenes, sondern
+führt vorhandene PDFs, Karten, Aufgaben und Termine begrenzt zusammen.
+
+
+## E132 · Vierzigtausend Zeilen, die der Browser nie gesehen hat
+
+> **Zur Nummerierung:** die Commits zu E132–E135 tragen in ihren Meldungen
+> noch die Nummern E125–E128. Beim Schreiben war nicht gesehen worden, dass
+> der Codex-Stand E125–E131 bereits vergeben hatte. Die Einträge stehen hier
+> als E132–E135, die Verweise im Quelltext zeigen darauf, und die
+> Commit-Meldungen bleiben, wie sie sind — eine Meldung nachträglich zu
+> ändern hiesse, die Geschichte umzuschreiben.
+
+**24. August 2026.** Der Zweig `codex/red` brachte zwei grosse Commits mit:
+Study Suite, Ink, Lernen, PDF, Elektro — und darauf den „grossen
+Produktumbau" mit Lernwelt, Arbeitswelt, Lebensbereichen, Produktwelten und
+einer Einrichtung der Hauptwelten. Zusammen rund 40 000 Zeilen.
+
+Davon lief nichts.
+
+```txt
+src/bereiche/wissen/arbeitswelt.ts:337   let roh: unknown = null
+                                          … darüber: for (const wert of roh)
+```
+
+TypeScript lässt das nicht durch, `npm run typecheck` brach ab — und weil
+`bauen:ts` erst danach läuft, wurde KEINE der fünf neuen Dateien je nach
+`quell/` geschrieben:
+
+```txt
+quell/bereiche/wissen/lebensbereiche.js       fehlte
+quell/bereiche/wissen/lernwelt.js             fehlte
+quell/bereiche/wissen/arbeitswelt.js          fehlte
+quell/bereiche/wissen/produkt_onboarding.js   fehlte
+quell/bereiche/wissen/produktwelten.js        fehlte
+```
+
+`index.html` lud sie trotzdem. Ein `<script src>` auf eine Datei, die es
+nicht gibt, ist im Browser kein Fehler: die Seite lädt weiter, das Modul ist
+einfach nicht da. Fünf 404er bei jedem Start, keine Meldung, keine rote
+Konsole.
+
+Gemessen vorher und nachher:
+
+```txt
+                       vorher            nachher
+404er beim Start       5                 keine
+Lebensbereiche         undefined         object
+Lernwelt               undefined         object
+Startseite heisst      „Start"           „Heute"
+Einzeldatei            4688 KB           5586 KB
+```
+
+Ein Zeichen Typ. Das ist die ganze Ursache.
+
+### Was daraus für Prüfungen folgt
+
+Kein Prüflauf konnte es merken, weil keiner die Welten je geöffnet hat. Ein
+Modul, das nur in `index.html` steht und sonst nirgends, ist für die
+Prüfsuite unsichtbar. Deshalb gibt es seit E126 test206 — und der erste
+Prüfpunkt darin ist die Frage, ob die Module überhaupt geladen sind.
+
+### Drei Prüfläufe im selben Zug
+
+**test101** — der Prüfserver hielt nicht an. `stopp()` war:
+
+```ts
+stopp: () => new Promise(f => { server.close(() => f()); })
+```
+
+`server.close()` hört nur auf, NEUE Verbindungen anzunehmen; auf jede
+bestehende wartet es, und eine Verbindung, die offen ist und nichts tut, geht
+von sich aus nicht weg. Gemessen mit einer einzigen rohen Verbindung:
+
+```txt
+alt   stopp() nach 3000 ms aufgelöst?   false   ← hängt
+neu   stopp() nach 3000 ms aufgelöst?   true
+```
+
+Unter Linux fiel es nie auf, weil `fetch` seine Verbindungen selbst
+schliesst. Es genügt ein Client, der es nicht tut — und unter Windows endete
+test101 genau daran mit einer libuv-Assertion, NACHDEM alle fachlichen Punkte
+grün waren. Kein Sleep: die Verbindungen werden beendet, zweimal anhalten ist
+einmal, und test101 setzt `process.exitCode`, statt den Prozess abzureissen.
+Zehn Prüfläufe hängen an diesem Server.
+
+Unterwegs war `process._getActiveHandles()` eine falsche Spur: es führt das
+Server-Objekt bis zur Speicherbereinigung weiter auf. Nach `stopp()` standen
+dort „Server, Socket, Socket, Socket", und der Server war längst zu. Das
+ehrliche Signal ist, ob der Port sofort wieder frei ist.
+
+**test202** — die 50/67-Statistik aus dem Auftrag war schon repariert.
+Blockiert hat die Einrichtung der Hauptwelten: seit dem Bauen legt sie sich
+beim ersten Start über alles und fängt Klicks ab. Der Lauf entlässt sie jetzt
+wie den Rundgang.
+
+**test87** — Codex' drei neue Stilblätter standen hinter `bausteine.css`. Die
+Kaskade sprang damit von Stufe 3 auf 2 zurück, und die Basis überschrieb die
+neuen Bereiche. Jetzt davor.
+
+
+## E133 · Eine Prüfung, die die Produktwelten wirklich öffnet
+
+**24. August 2026.** Der Auftrag verlangt unter §56 Prüfungen für die grossen
+Produktwege. test206 ist das, und E125 ist der Anlass: 40 000 Zeilen konnten
+tot sein, ohne dass ein einziger von 171 Läufen etwas merkte.
+
+Geprüft wird, was ein Mensch tut: beide Hauptwelten öffnen, Bibliothek,
+Aufgaben, am Rechner, am Tablet und an zwei Telefongrössen.
+
+Dazu die wichtigste Produktregel des Auftrags (§51): ein Objekt, viele
+Ansichten, keine Kopien. Gemessen wird sie nicht an Worten, sondern an
+Zählwerten — eine Datei anlegen, durch fünf Ansichten laufen, nachsehen, ob
+Blöcke, Sammlungen, Dateien oder Stücke mehr geworden sind. Sind sie nicht,
+und die Datei trägt danach noch ihre Kennung, ihren Namen und ihre Bytes.
+
+**Gegenprobe:** eine der fünf gebauten Dateien gelöscht → vier Punkte rot.
+
+Ein Prüfpunkt war zuerst rot, obwohl das Datum gut sichtbar auf dem
+Bildschirm stand: gemessen wurde an `#inhalt`, gezeichnet wird aber in
+`.lernwelt`. Eine Prüfung, die am falschen Element misst, ist schlimmer als
+keine — sie behauptet einen Fehler, den es nicht gibt, und lenkt vom echten
+ab.
+
+
+## E134 · Papiervorlagen — fünf Muster, kein zweites Dokumentformat
+
+**24. August 2026.** Blanko, liniert, kariert, Punktraster,
+Millimeterpapier. Der Auftrag (§21) gibt die Bauweise in einem Satz vor:
+„Nur Darstellung/Metadaten, kein paralleles Dokumentformat."
+
+Also ein Feld am Block und ein Hintergrundbild im Stilblatt. Kein zweiter
+Blocktyp, kein zweiter Speicher, keine Kopie des Blattes je Vorlage. Wer die
+Vorlage wechselt, ändert nichts an seinem Text und nichts an seinen Strichen
+— deshalb kann man beliebig hin- und herwechseln, ohne etwas zu verlieren,
+und deshalb muss beim Wechsel auch nicht neu gezeichnet werden.
+
+### Die Abstände stehen in Blattmassen, nicht in Bildschirmpunkten
+
+Dieselbe Regel wie in E100, und hier genauso wichtig: das Blatt folgt der
+Fensterbreite über `aspect-ratio`. Ein Kästchen in Pixeln wäre am Telefon ein
+anderes als am Rechner — dann ist es kein Karopapier mehr, sondern ein
+Muster. Und für beide Achsen dieselbe Prozentzahl zu nehmen ergibt Rechtecke
+im Verhältnis 1 : √2, weil A4 nun einmal so aussieht.
+
+Gemessen an einem 548 px breiten Blatt:
+
+```txt
+kariert   2,380 % von 548 = 13,05 px quer
+          1,684 % von 775 = 13,05 px hoch     → quadratisch
+mm        0,476 % von 548 =  2,61 px          → genau 1 mm
+Zehner    4,762 % von 548 = 26,10 px          → genau 10 mm
+```
+
+Bei einem zweiseitigen Blatt halbieren sich die Prozentzahlen, und der
+Abstand auf dem Papier bleibt derselbe.
+
+**Gegenprobe:** beide Achsen mit derselben Prozentzahl gerechnet →
+10,91 gegen 15,43 px, auf zwei Seiten 5,45 gegen 15,43. Vier Punkte rot.
+
+Die fünf Knöpfe zeigen jeder SEIN Muster statt eines Sinnbilds dafür. Bei den
+Ausrichtungsknöpfen hat ein Sinnbild schon einmal wie eine Klammer ausgesehen
+(§55.1); ein Muster kann man nicht falsch verstehen.
+
+Das Papier ist in beiden Themen weiss — es ist Papier, kein Fenster. Die
+Lineatur braucht deshalb keine zweite Farbe für den Dunkelmodus.
+
+
+## E135 · Die Lernwelt rechnete falsch — zwei Ursachen, sieben falsche Zahlen
+
+**24. August 2026.** Über 173 Prüfläufe hinweg fasste kein einziger die
+Lernwelt an. Sie ist die grösste der neuen Ansichten — Tagesrunde,
+Fehlertraining, Lernpfad, Prüfungszentrale, Fortschritt — und stand
+ungeprüft da.
+
+Was darin lag, ist die stille Sorte: sie zeigt 0 und „leer", und 0 ist für
+einen frischen Bestand eine völlig glaubwürdige Zahl.
+
+### Ursache 1 — ein leerer Lernstand ist kein Lernstand
+
+`leererLernzustand` in `lebensbereiche.ts` liefert `sr: {}`. Ein leeres
+Objekt ist wahr. `karteMitStand` schrieb `stand?.sr || null` und liess es
+damit stehen — und danach galt in `warteschlange`:
+
+```ts
+neu    = alle.filter(card => !card.sr)       // nie eine Karte
+fällig = alle.filter(card => card.sr && …)   // immer alle
+```
+
+Gemessen mit fünf fabrikneuen Karten: **0 neu, 5 fällig**. Die Kachel „neue
+Karten" konnte gar nichts anderes anzeigen als null, und der Lernplan legte
+Karten, die noch niemand gesehen hat, unter „gelernt und jetzt wieder dran".
+
+Geändert wurde in `lernwelt.ts`, nicht in `leererLernzustand`: dessen Form
+ist ein Vertrag, an dem andere Leser hängen (`sm2(zustand.sr)` erwartet ein
+Objekt). Was fehlte, war die Unterscheidung, und die gehört an die Stelle,
+die sie braucht.
+
+### Ursache 2 — ein `Date` ist schon ein Datum
+
+```ts
+const roh = wert && typeof wert === 'object'
+  ? (wert as any).start ?? (wert as any).date ?? (wert as any).from
+  : wert;
+```
+
+Ein `Date` IST ein Objekt und hat keines dieser drei Felder. `roh` wurde
+undefined, die Funktion gab `null` zurück, und weil `tag()`, `datumText()`
+und `tageBis()` alle darüber gehen, nahm das halbe Dashboard es mit.
+
+Gemessen, eine Karte mit „Gut" bewertet:
+
+```txt
+                       ohne den Zweig    mit ihm
+Lernziel heute         0 / 20            1 / 20
+Streak                 0 Tage            1 Tag
+Prüfungs-Countdown     „null Tage"       „5 Tage"
+Verlaufsbalken         leer              gefüllt
+```
+
+„null Tage" stand wörtlich auf dem Bildschirm: `naechstePruefung.tage + '
+Tage'` mit `tage === null`.
+
+### Warum das keine Prüfung gefunden hat
+
+Weil keine da war. Beide Fehler zeigen plausible Zahlen; nur wer eine Karte
+bewertet und DANACH nachsieht, merkt, dass sich nichts bewegt hat. Genau das
+tut test208 jetzt — und zwar über die Oberfläche, mit Klicks auf
+„Tagesrunde starten", „Antwort zeigen" und „Gut".
+
+**Gegenprobe**, je Ursache einzeln zurückgenommen: ohne den Date-Zweig 5 rot
+(darunter „null Tage" wörtlich im Prüfbericht), ohne `hatLernstand` 3 rot.
+
+Ein Prüfpunkt war zuerst rot, obwohl „5 Tage" gut sichtbar dastand: gesucht
+wurde `\b5\s*Tage\b`, und der Wortlaut ist „29. Aug. 20265 Tage" — zwischen
+zwei Ziffern gibt es keine Wortgrenze.
+
+
+## E136 · Drei Dinge, die dastanden und nicht funktionierten
+
+**24. August 2026.** Nach E135 blieben in der Lernwelt drei Stellen, die
+aussahen wie fertig. Alle drei sind kleine Ursachen mit sichtbarer Wirkung.
+
+### 1. Die Tastatur kam nie an
+
+Der Code für die Tastenkürzel war vollständig: Leertaste deckt auf, 1 bis 4
+bewerten. Er wurde nur nie ausgeführt.
+
+```ts
+ziel.addEventListener('keydown', taste);     // ziel = die Wurzel der Lernwelt
+```
+
+Ereignisse steigen AUFWÄRTS, nicht abwärts. Gemessen liegt der Fokus nach
+dem Öffnen auf `BODY`, und body ist der Vorfahr der Wurzel, nicht ihr
+Nachfahr — der Tastendruck lief in die andere Richtung.
+
+```txt
+nach Start        Fokus BODY, Karte 1 von 4
+Leertaste         nichts — nicht aufgedeckt
+Maus aufgedeckt   ja
+Taste 3           nichts — immer noch Karte 1 von 4
+```
+
+Der Horcher hängt jetzt am Dokument und fragt zuerst, ob die Lernwelt
+überhaupt noch im Dokument steht. `abmelden()` nimmt ihn wieder ab.
+
+Ein zweiter Vorbehalt musste bleiben, aber genauer werden: Leertaste und
+Enter BETÄTIGEN einen Knopf, der den Fokus hat — ohne Vorbehalt deckte ein
+Druck auf „Antwort zeigen" die Karte zweimal auf. Die Ziffern 1 bis 4
+betätigen nichts und dürfen deshalb immer.
+
+### 2. Die vierte Startkachel tat nicht, was auf ihr stand
+
+„Prüfungsfokus — Karten passend zur nächsten Prüfung mischen." Der Knopf
+darunter hiess „Prüfungen öffnen" und wechselte den Reiter.
+
+Jetzt übt sie wirklich, mit einer eigenen Auswahl: `nurPassendeKarten`.
+`passendeKarten` gibt bei null Treffern den ganzen Bestand zurück — für eine
+Simulation vertretbar (lieber eine Übungsklausur aus allem als gar keine),
+für ein Versprechen „passend zu" nicht. Gibt es keine passenden Karten, sagt
+die Kachel das, statt einen Knopf anzubieten, hinter dem alles käme.
+
+Gemessen mit drei Karten und einer Klausur „Ohmsches Gesetz und Leistung":
+Knopf „Üben · 2", Runde „Prüfungsfokus: Ohmsches Gesetz und Leistung, Karte
+1 von 2". Die dritte Karte hiess „Kochrezept :: Salz" und blieb draussen.
+
+### 3. Vier Reiter standen ausserhalb des Bildes
+
+Mit Augen gesehen (§55): auf dem Heute-Bild hing „Schule / Ausbildung" halb
+draussen, und Uni, Arbeit und Fortschritt waren gar nicht zu ahnen. Die
+Leiste kann gescrollt werden — nur zeigt das nichts an: kein Schatten, kein
+Pfeil, keine angeschnittene Beschriftung. Neun Reiter brauchen 1016 px, die
+Leiste hatte 706.
+
+Am Rechner brechen sie jetzt in zwei Reihen um. Am Telefon bleibt es beim
+Scrollen: dort ist die waagerechte Leiste die vertraute Form, und zwei
+Reihen kosteten zu viel Höhe.
+
+### Und warum das alles so lange dastand
+
+`bilder.mts` kannte die Lernwelt nicht. Die Ansicht kam in keinem
+Bildschirmfoto-Durchgang vor — also hat sie nie jemand angesehen, und §55
+sagt genau dafür: „Öffne die Seite wirklich, statt nur den Code zu lesen."
+
+Vier Ansichten sind jetzt eingetragen: `heute`, `lernzentrale`, `workspace`
+und `papier`. `node bilder.mts heute` zeigt in zehn Sekunden alle Zahlen,
+die in E135 falsch waren.
+
+Beim Bauen des Papier-Bildes fiel nebenbei auf, dass `App.oeffne` die
+Sonderansicht der Produktwelten nicht wegräumt — das Bild zeigte das
+Heute-Dashboard statt des Blattes. Die Ansicht baut sich jetzt ihren eigenen
+Kasten, so wie die Tabellen-Ansichten es längst tun.
+
+**Geprüft:** test208 §5 und §6 (Tastatur und Prüfungsfokus), test206 §7
+(kein Reiter ausserhalb) und §8 („Ausbildung einrichten" legt wirklich etwas
+an — additiv, die vorhandenen Seiten bleiben). Gegenprobe je Behebung
+zurückgenommen: 5 rot für die Lernwelt, 1 rot für die Reiterleiste — und die
+nennt die vier Reiter beim Namen, die draussen standen.
+
+
+## E137 · Drei Wege, die nach dem Start nicht mehr stimmten
+
+**24. August 2026.** Die zwei Hauptwelten (E132) haben die Startansicht
+verändert: Redion öffnet nicht mehr eine Seite, sondern das Heute-Bild. Drei
+Stellen im Bestand hatten die alte Annahme fest eingebaut und wurden dadurch
+falsch — jede einzelne erst im Betrieb sichtbar, keine davon durch eine
+Prüfung gemeldet.
+
+### 1. Der Willkommensbildschirm gehört dem Rundgang
+
+Die Einrichtung der Hauptwelten hatte sich beim ersten Start vor den
+Rundgang geschoben:
+
+```ts
+void ProduktOnboarding.vielleichtStarten().then(gezeigt => {
+  if (!gezeigt) Rundgang.vielleichtStarten();
+});
+```
+
+E55 hat diesen Bildschirm für den Rundgang beschlossen, und zwar mit einem
+Satz, der für die Einrichtung genauso gilt: *ein Fenster, das den Bildschirm
+nimmt, bevor man etwas getan hat, ist zudringlich.* Zwei Nebenwirkungen kamen
+dazu, beide gemessen:
+
+```txt
+Start 1   Einrichtung der Hauptwelten (Modal, fängt jeden Klick ab)
+Start 2   Rundgang — denn die Einrichtung setzt `rundgangGesehen` nicht
+```
+
+Zwei Begrüssungen an zwei aufeinanderfolgenden Tagen (L52). Und weil das
+Modal jeden Klick abfängt, blieben im vollen Durchgang mehrere Prüfläufe
+daran hängen — test32 mit einer Zeitüberschreitung, ohne dass irgendwo ein
+Fehler stand.
+
+Die Einrichtung ist jetzt ein **Angebot statt einer Pflicht**: sie steht in
+der Befehlspalette und als Karte auf dem Heute-Bild, solange sie noch nicht
+durchlaufen ist. `vielleichtStarten` bleibt im Modul — wer sie wieder von
+selbst öffnen lassen will, ruft eine Zeile auf.
+
+### 2. Der Graph sagte „Öffne zuerst eine Seite" — und meinte den Normalfall
+
+```ts
+const centerId = App.aktuelleSeite();
+if (!centerId) { UI.toast('Öffne zuerst eine Seite für ihren Teilgraphen'); return; }
+```
+
+Solange die App auf einer Seite startete, war das die Ausnahme. Seit dem
+Heute-Bild ist es der Regelfall: Strg+Umschalt+G direkt nach dem Start
+bekam eine Absage statt eines Graphen.
+
+Die zuletzt bearbeitete Seite ist die ehrlichste Wahl — sie ist das, woran
+man zuletzt war. Gibt es überhaupt keine Seite, bleibt die Absage; dann ist
+sie wahr. Gemessen nach dem Start, ohne eine Seite zu öffnen:
+
+```txt
+vorher    graphInfo leer, kein Kasten
+nachher   1 von 71 Knoten · 0 Verbindungen · 0 Entscheidungen · 0 Quellen
+```
+
+### 3. Sechs Pillen passen nicht in die Rechnung für fünf
+
+Die Produktwelten stellen „Lernen" vor die vier Bereiche — sechs statt fünf
+Tasten in der oberen Leiste am Telefon. Die Stufen von E88 waren für fünf
+gerechnet:
+
+```txt
+428 px   Heute 3 px zu viel, Seiten 6 px zu viel
+390 px   vier von fünf ragen heraus, bis zu 44 px
+```
+
+Gespart wird am Weissraum, nicht an der Daumenfläche: die Tasten bleiben
+56 px hoch, mindestens 48 px (ab 400 px: 44 px) breit — §37 verlangt 44.
+Kleiner werden nur das Polster in der Pille und der Abstand zwischen Sinnbild
+und Wort.
+
+Dabei fiel eine eigene Sorte Fehler auf, die nichts mit Zahlen zu tun hat:
+meine neuen Medienabfragen standen **vor** der Grundregel für
+`#handy-oben button`. Gleiche Spezifität, spätere Regel gewinnt — die
+Grundregel hat meine Werte einfach wieder überschrieben, und die Leiste blieb
+zu breit, obwohl die Zahlen im Stil richtig dastanden. Die Abfragen stehen
+jetzt hinter der Grundregel.
+
+**Geprüft:** test195 (Graph nach dem Start, ohne offene Seite), test54 §
+Bedienleiste und test37/40/67/114 (sechs Pillen, kurze Namen), test31
+(Offline-Probe). Zwölf Läufe, die im vollen Durchgang rot standen, sind
+wieder grün — zehn davon nur, weil sie die neue Startansicht noch nicht
+kannten, zwei wegen echter Produktfehler (dieser Abschnitt, Nummer 1 und 2).
+
+
+## E138 · Das Whiteboard ist eine Fläche, kein Fenster
+
+**24. August 2026.** §22 des Auftrags verlangt das Whiteboard als eigenen
+Top-Level-Arbeitsbereich, mit „freie Fläche", „Zoom/Pan", „Verbindungen" und
+„Bilder". Vorhanden war ein Whiteboard-Block mit Stift, Formen, Haftnotizen
+und Radierer — gut gebaut, aber genau so gross wie sein Kasten.
+
+Was rechts hinausging, war nicht „weiter draussen". Es war weg.
+
+### Ein Ausschnitt statt einer Leinwand
+
+Die Formen behalten ihre Koordinaten. Neu ist ein AUSSCHNITT darüber:
+
+```ts
+sicht = { x, y, z }       // linke obere Ecke in Formkoordinaten, Massstab
+viewBox = `${x} ${y} ${breite / z} ${hoehe / z}`
+```
+
+Alte Boards bleiben damit Zeichen für Zeichen gültig: ohne gespeicherte
+Sicht ist der Ausschnitt 0/0 bei Massstab 1, und das ist genau das Bild von
+vorher.
+
+Der Fehler, den ein Ausschnitt einbaut, sitzt woanders — im Zeiger. Solange
+Ausschnitt und Bildschirm dasselbe sind, stimmt `clientX - rect.left`. Ab
+dem ersten Schieben stimmt es nicht mehr, und zwar um genau den Schiebeweg.
+Das sieht man erst beim zweiten Strich, und dann sieht es aus wie ein
+Zeichenfehler, nicht wie ein Rechenfehler:
+
+```ts
+punkt = [sicht.x + (clientX - rect.left) / sicht.z,
+         sicht.y + (clientY - rect.top)  / sicht.z]
+```
+
+test209 §3 misst genau das: gezeichnet bei Bildschirm-x, gespeichert bei
+Flächen-x. Mit der Umrechnung zurückgenommen lag das Rechteck bei 112 statt
+332 — um 220 daneben, den Schiebeweg aus §2.
+
+### Bilder gehören in die Ablage
+
+Der kurze Weg wäre eine Data-URL in `shapes` gewesen. Dann steckte das ganze
+Bild in jedem Block, in jeder Sicherung und in jedem Versionsstand — genau
+das, was §14 verbietet. Das Bild geht deshalb denselben Weg wie jeder andere
+Anhang: in Stücken in die Dateiablage, verknüpft mit diesem Block. In der
+Form steht nur die Kennung.
+
+Das kostet einen dritten Zustand: `undefined` heisst „noch nicht gefragt",
+`null` heisst „gibt es nicht mehr", eine Zeichenkette ist die Adresse. Mit
+nur zwei Zuständen fragte die Fläche bei jeder Neuzeichnung wieder nach
+einer Datei, die gelöscht ist.
+
+### Verbindungen merken sich Formen, nicht Punkte
+
+Eine Verbindung speichert `von` und `nach` — zwei Formkennungen. Gezeichnet
+wird sie erst beim Malen, von Rand zu Rand. Deshalb geht sie mit, wenn man
+eine Form verschiebt, und verschwindet mit ihr, wenn man sie radiert.
+
+Mit Koordinaten statt Kennungen wäre der Pfeil liegengeblieben; test209 §6
+misst beide Richtungen.
+
+### Der eigene Bereich
+
+Die Flächen lagen längst im Schnappschuss der Arbeitswelt — sichtbar waren
+sie als eine Zeile in der Übersicht, zusammen mit den Tabellen. §22 verlangt
+einen eigenen Bereich, §52 verbietet dafür eine zweite Datenhaltung. Beides
+zusammen heisst: ein Reiter mehr auf denselben Daten.
+
+Karten statt Listenzeilen, weil ein Whiteboard kein Titel ist, sondern ein
+Bild. Zehn Zeilen „Whiteboard" wären zehnmal dasselbe Wort; die Miniatur ist
+das einzige, woran man seines wiedererkennt. Sie liest den Block, den es
+ohnehin gibt, und zeichnet höchstens 60 Formen nach.
+
+**Geprüft:** test209, neun Abschnitte — Ausschnitt und Massstab, Schieben mit
+Neustart, Zeichnen nach dem Schieben, Zoom und „alles ins Bild", Bild in der
+Ablage, Verbindungen in beide Richtungen, der Reiter samt Adresse, „Neues
+Whiteboard", und das Telefon.
+
+### Und zwei Funde, die erst das Hinsehen gebracht hat
+
+**Die Startansicht überschrieb, was schon offen war.** In `schale.ts` stand
+
+```ts
+setTimeout(() => Produktwelten.lernen('heute'), 60);
+```
+
+Der Grund für die Verzögerung ist gut: die Startansicht braucht
+`Produktwelten.start()`, und das läuft weiter unten in derselben Funktion.
+Nur ist eine Zeitspanne die falsche Art, auf eine Reihenfolge zu warten.
+
+Gemessen mit einem Whiteboard, das direkt nach dem Laden geöffnet wurde:
+
+```txt
+sofort       Zeichenfläche da
+nach 600 ms  Zeichenfläche weg, Heute-Bild da
+```
+
+Und weil es ein Wettlauf ist, kam er nicht immer: zwei Durchgänge von
+`bilder.mts` hintereinander, derselbe Code — das dunkle Bild zeigte die
+Fläche, das helle das Heute-Bild.
+
+Die Startansicht wird jetzt gemerkt und ganz am Ende von `start()`
+ausgeführt. Danach kommt jedes `oeffne()` von aussen garantiert später.
+
+Das war auch der wahre Grund für das falsche Papier-Bild in E136. Dort
+steht, `App.oeffne` räume die Sonderansicht nicht weg — das stimmt nicht:
+sie räumt sie weg, und die verspätete Startansicht holt sie zurück. Und es
+war der Grund für test90, der im vollen Durchgang rot stand: dieselbe Stelle
+öffnet dort eine Seite und misst gleich darauf ihren Randstreifen.
+
+**Der Lebensbereich-Wähler hatte gar keinen Stil.** Oben rechts im
+Workspace-Kopf stand ein weisser Kasten auf dunklem Grund, und das Wort
+„Lebensbereich" klebte an ihm. Für `.aw-bereichsfilter` gab es in
+`arbeitswelt.css` keine einzige Regel; ein Auswahlfeld ohne Stil nimmt die
+Farben des Browsers, und die kennen den Dunkelmodus nicht (§48).
+
+Am Telefon kam dazu, dass er zur Hälfte ausserhalb des Bildschirms lag: der
+Kopf ist eine Flexzeile mit drei Kindern, und bei 390 px passen Titel,
+Filter und ☰ nicht nebeneinander. Jetzt bricht der Kopf um, und unter 470 px
+verschwindet das WORT „Lebensbereich" — 170 px, die es dort nicht gibt. Das
+Feld trägt weiterhin `aria-label`, ein Screenreader liest also mehr, als
+vorher auf dem Bildschirm stand.
+
+Beim zweiten dieser Fixes bin ich in dieselbe Falle getappt wie in E137: die
+neue Medienabfrage stand VOR der Grundregel, gleiche Spezifität, spätere
+Regel gewinnt — das Bild sah aus wie vorher, obwohl die Zahlen im Stil
+richtig dastanden.
+
+### Was §22 noch nicht hat
+
+Die Miniatur im Bereich zeichnet Formen, keine Verbindungen. Das ist eine
+bewusste Vereinfachung — sie ist ein Wiedererkennungszeichen, keine
+Vorschau. Steht in L54.
+
+
+
+## E139 · Die Palette konnte hingehen, aber nichts anlegen
+
+**24. August 2026.** §29 des Auftrags nennt acht Sätze, die man in die
+Befehlspalette tippen können soll. Vier davon fanden nichts:
+
+```txt
+Neue Aufgabe        kein Treffer
+Neue Karte          kein Treffer
+PDF importieren     kein Treffer
+Schule öffnen       „Sicherung laden", „Gesundheitsbericht und Erste Hilfe"
+```
+
+Die Palette war eine Navigationsliste: sie kannte jeden Ort in Redion und
+keinen einzigen Vorgang ausser „Neue Seite". Wer etwas ANLEGEN wollte,
+musste den Weg über eine Ansicht kennen — am Rechner unbequem, am Telefon
+gar nicht möglich, weil es dort kein Strg gibt.
+
+Neu ist eine Gruppe **Anlegen** mit sechs Einträgen: Seite, Aufgabe,
+Lernkarte, Whiteboard, PDF/Datei, Aufnahme. Kein einziger davon ist neuer
+Code — die Wege gab es alle, sie standen nur nicht in der Liste, in der man
+sie sucht. Dazu vier Navigationsbefehle für die Domänen: Schule und
+Ausbildung, Uni, Arbeit, Lernfortschritt.
+
+### Warum die Prüfung die Gruppe mitliest
+
+Die erste Fassung suchte nur nach dem Wort. Bei der Gegenprobe blieb
+ausgerechnet „Neues Whiteboard" grün, obwohl der Befehl entfernt war — denn
+die Palette findet auch SEITEN, und ein Abschnitt weiter oben legt eine
+Seite namens „Neues Whiteboard" an.
+
+```txt
+mit Befehl     Anlegen › Neues Whiteboard
+ohne Befehl    Seiten › 🎨 Neues Whiteboard
+```
+
+Zwei Zeilen, die gleich aussehen und Verschiedenes bedeuten. Die Prüfung
+liest deshalb die Gruppenüberschrift mit. Mit ihr werden in der Gegenprobe
+alle acht Punkte rot, vorher waren es fünf.
+
+**Geprüft:** test206 §11, neun Punkte — die acht Sätze aus §29 und einer,
+der wirklich klickt: „Neue Lernkarte" bringt den Bestand von 1 auf 2.
+
+
+## E140 · Vier Knöpfe ohne Umlaut — und die Prüfung, die das künftig sieht
+
+**24. August 2026.** Beim ersten Bildschirmfoto des PDF-Arbeitsplatzes (§17)
+standen in der Zeichenleiste zwei Knöpfe:
+
+```txt
+↶ Zurueck        🗑 Loeschen
+```
+
+Dazu drei Erklärungen: „Rueckgaengig", „Auswahl loeschen", „Marken
+auswaehlen, gemeinsam bewegen oder loeschen", „Schreiben — die Zeichenschicht
+ist durchlaessig", „Freihand mit geglaetteter Linie".
+
+Alle funktionierten. Kein Prüflauf hatte etwas dagegen, und keiner hätte
+etwas dagegen haben können — Umlaute sind kein Verhalten. Gefunden hat sie
+ein Blick auf ein Bild (§55).
+
+CLAUDE.md §53 trennt: Deutsch für Menschen, Englisch für Code. Deutsch heisst
+mit Umlaut; `ue` ist kein Kompromiss, sondern ein Fehler.
+
+### Die Prüfung sucht nicht nach `ue`
+
+Im Quelltext ist `ue` fast überall richtig: `loeschen` als Datenschlüssel,
+`auswaehlen` als Funktionsname, `kartenGroesse` als Feld. Ein Verbot auf
+Quelltextebene wäre in fünf Minuten mit Ausnahmen zugepflastert.
+
+test87 §10 liest deshalb nur, was der Browser wirklich ANZEIGT: `title=`,
+`placeholder=`, `aria-label=` und den Text in `<span class="wort">`. Dazu
+eine kurze Wortliste, bei der `ae/oe/ue` sicher ein Umlaut sein muss —
+bewusst kurz, lieber ein Fall übersehen als ein richtiger Text angemeckert.
+
+„Schliessen", „grosse" und „muss" bleiben unangetastet: das ist Schweizer
+Rechtschreibung, und die kennt kein ß. Verboten ist nur die Ersatzform für
+einen Umlaut.
+
+Die Prüfung trägt ihre Gegenprobe im Lauf: sie füttert die Wortliste mit
+„Rueckgaengig" und „Loeschen" und verlangt, dass beide anschlagen. Eine
+Regel, die auf nichts anschlägt, ist keine Regel. Gegen den Stand von vorher
+laufend nennt sie alle vier Beschriftungen beim Namen.
+
+
+## E141 · Der PDF-Arbeitsplatz am Telefon: 211 von 1059 Pixeln
+
+**24. August 2026.** §17 des Auftrags zeichnet den Arbeitsplatz als Bild —
+Miniaturen, Dokument, Inspector — und schreibt für das Telefon dazu: „volle
+Breite, keine gequetschten drei Spalten". Gebaut war das (E126). Angesehen
+hatte es niemand, und geprüft war es auch nicht.
+
+Am Rechner stimmt es. Am Telefon standen die Werkzeuge so:
+
+```txt
+Fenster        390 px
+Zeichenleiste  211 px      Inhalt 1059 px
+draussen       17 von 21 Knöpfen
+```
+
+### Der doppelte Seitenzähler
+
+Von den 179 px, die der Leiste fehlten, gingen rund 100 an einen zweiten
+Seitenzähler. „Seite 1 von 4" stand unten in der Werkzeugleiste — vier
+Zentimeter über dem „Seite 1/4" der Kopfzeile, mit den Blätterpfeilen
+daneben.
+
+Er verschwindet nur im DOKUMENTMODUS. Eine PDF-Seite auf einer gewöhnlichen
+Seite hat keine Kopfzeile über sich; dort ist die Zahl die einzige Angabe,
+und test210 §6 hält genau das fest.
+
+Danach: 310 px statt 211.
+
+### Eine Leiste, die rollt, muss zeigen, dass sie rollt
+
+21 Werkzeuge brauchen 1059 px. Auf ein Telefon passen sie nicht, und das ist
+in Ordnung — die Leiste rollt seit E103. Nicht in Ordnung ist, dass eine
+abgeschnittene Leiste aussieht wie eine vollständige. Genau dieser Befund
+steht in §55.1 über den Tabellenblock, und er galt hier ein zweites Mal.
+
+**Der erste Versuch war falsch**, und das gehört dazu: ein Verlauf an
+`.blatt-reihe::after`, also am rechten Rand der ganzen Reihe. Dort steht aber
+`.blatt-fest` mit dem 🔗-Knopf — der Verlauf lag über einem Knopf, nicht über
+der Kante. Auf dem Bild war er nicht zu sehen, und das war richtig so.
+
+Für rechts gibt es die Anzeige längst: `.blatt-fest` wirft seinen Schatten
+nach LINKS, genau auf diese Kante. Sie war nur immer da, auch am Ende der
+Leiste. Jetzt schaltet sie mit — gemessen `rechts → beides → links`.
+
+### Und was das Bild sonst noch gezeigt hat
+
+„Zurueck" und „Loeschen". Dazu fünf Erklärungen derselben Machart. Steht in
+E140, mitsamt der Prüfung, die das künftig sieht.
+
+**Geprüft:** test210, sechs Abschnitte, 25 Punkte — die drei Bereiche am
+Rechner, die deutschen Beschriftungen, das Telefon ohne gequetschte Spalten,
+die rollende Leiste mit ihren drei Zuständen, der Zähler einmal statt zweimal
+und der Zähler, der auf einer gewöhnlichen Seite bleibt. Vier Gegenproben
+einzeln zurückgenommen; eine davon hat meine Erwartung widerlegt: am Telefon
+STAPELN sich die drei Bereiche, sie quetschen sich nicht. Die Breite der
+Mitte allein hätte den Fehler nie gesehen.
+
+
+## E142 · Weisse Schrift auf weissem Grund — und der Farbwert, der fehlte
+
+**24. August 2026.** In der Prüfungszentrale stand „Simulation starten". Der
+Knopf war da, war anklickbar, war nicht gesperrt — und er war nicht zu sehen.
+
+```txt
+Hellmodus   Schrift rgb(255,255,255)   Grund rgb(251,251,250)   1,02 zu 1
+```
+
+### Die Ursache war die Kaskade, nicht die Farbwahl
+
+```css
+.lernwelt .lw-exam-list footer button{ … background:var(--bg-side) … }   /* 0,2,2 */
+.lernwelt button.is-primary{ … background:var(--accent); color:#fff }    /* 0,2,1 */
+```
+
+Die Fussleistenregel ist spezifischer und steht davor. Sie setzt den
+Hintergrund neu — und weil sie KEINE Schriftfarbe setzt, kam die weisse aus
+`is-primary` trotzdem durch. Weiss auf hell.
+
+Im Dunkelmodus fiel nichts auf, weil `--bg-side` dort dunkel ist. §48 des
+Auftrags verlangt beides, und genau dafür ist er da.
+
+Der Weg ist nicht `!important`, sondern dieselbe Spezifität: die Fussleiste
+steht jetzt in der Aufzählung von `is-primary` mit drin.
+
+### Und dabei kam ein zweiter, grösserer Fehler heraus
+
+Die neue Kontrastmessung fand danach denselben Knopf noch einmal — diesmal
+im DUNKELMODUS, mit 2,80 zu 1. Kein Kaskadenfehler, sondern die Farbe selbst:
+
+```txt
+hell    --accent #c2410c   Weiss darauf   5,9 zu 1     gut
+dunkel  --accent #f97316   Weiss darauf   2,8 zu 1     zu wenig
+```
+
+Derselbe Akzent, zwei Helligkeiten, eine Schriftfarbe. Weiss auf einem
+hellen Orange ist blass, egal wo es steht — und `background:var(--accent)`
+kommt an 70 Stellen im Stil vor.
+
+Neu ist deshalb ein eigener Farbwert:
+
+```css
+hell    --auf-accent: #ffffff
+dunkel  --auf-accent: #1a1a1a      /* 6,6 zu 1 auf demselben Orange */
+```
+
+46 Regeln, die Akzentfläche und weisse Schrift zusammen setzen, benutzen ihn
+jetzt. Am Hellmodus ändert sich damit nichts — dort ist der Wert weiss.
+
+### Die Prüfung misst das Ergebnis, nicht die Regel
+
+test128 §9 rechnet für jeden sichtbaren, beschrifteten, nicht gesperrten
+Knopf die relative Leuchtdichte nach WCAG aus und verlangt 3,0 zu 1 — die
+Grenze für Bedienelemente, nicht die 4,5 für Fliesstext. Es geht hier um
+„gar nicht zu sehen", nicht um Feinheiten.
+
+Zwei Dinge daran waren beim ersten Versuch falsch, und beide sind lehrreich:
+
+**Das Messgerät log.** Chrome gibt `color(srgb 0.94 0.87 0.83)` zurück,
+sobald eine Farbe aus `color-mix()` kommt — Zahlen von 0 bis 1, nicht von 0
+bis 255. Mein Zahlenleser nahm sie als 0–255 und meldete den aktiven Reiter
+„Prüfungen" mit 1,70 zu 1, obwohl er dunkelgrau auf hellem Pfirsich steht.
+Ein Messgerät mit Fehlalarmen wird abgeschaltet, und dann sieht es auch den
+echten Fall nicht mehr.
+
+**Die Prüfung stand am falschen Ort.** Sie öffnete die Prüfungszentrale
+eines LEEREN Bestandes — dort gibt es keine Prüfungskarte und damit keinen
+Knopf „Simulation starten". Die Gegenprobe blieb grün, obwohl der Fehler
+wieder eingebaut war. Jetzt legt der Abschnitt zuerst eine Prüfung an und
+prüft in einer eigenen Zeile, dass der Knopf überhaupt dasteht.
+
+Erst danach war die Gegenprobe echt: 1,04 zu 1, beim Namen genannt.
+
+
+## E143 · Die leere Wand stand auch vor vollen Regalen
+
+**24. August 2026.** Die Schulansicht sagte „Ausbildung noch nicht
+eingerichtet" — vor vier Fächern, einer Notendatenbank, sechs Aufgaben und
+einem Dutzend Karteikarten. Alles war da. Die Ansicht schaute an einer
+einzigen Stelle nach und gab auf:
+
+```ts
+const root = schoolRoot();          // Seite mit der Marke `schoolRoot`
+if (!root) return leer(…)           // und sonst nichts
+```
+
+Die Marke setzt nur die Einrichtung. Wer seine Fächer von Hand angelegt hat —
+also jeder, der Redion schon benutzt hat, bevor es diese Vorlage gab —, bekam
+eine Wand.
+
+Das widerspricht §51 des Auftrags: **eine Ansicht ist ein Blick auf
+vorhandene Objekte, keine Belohnung fürs Drücken eines Knopfes.**
+
+Jetzt zeigt sie den Bestand, sobald es einen gibt, mit einem Satz darüber:
+„Das hier kommt aus deinem vorhandenen Bestand. Eine Ausbildungsseite gibt es
+noch nicht. Die Vorlage legt sie zusätzlich an — sie ersetzt nichts und
+löscht nichts." Die Einrichtung bleibt als Knopf im Kopf stehen. Die Wand
+bleibt für den Fall, dass wirklich nichts da ist.
+
+### Ein zweiter Widerspruch auf demselben Bildschirm
+
+Darunter stand „Noch keine Fächer angelegt" — direkt über einer Liste, in der
+Betriebskunde, Deutsch und Elektrotechnik untereinander standen. Der
+Fächerkasten liest die Sammlung `subjects` aus der Vorlage; die Themenliste
+liest die Karteikarten. Ohne Vorlage sagt der eine, es gebe nichts, und der
+andere zeigt es.
+
+Zwei Sätze, die einander widersprechen, sind schlimmer als ein fehlender.
+Ohne Ausbildungsseite entfällt der leere Kasten; der Themenkasten übernimmt.
+
+### Und der Fehler, den ich dabei selbst gemacht habe
+
+Meine erste Bedingung war:
+
+```ts
+schulSammlungen().length > 0 || …
+```
+
+`schulSammlungen()` OHNE Argument liefert aber ALLE Sammlungen. Die beiden
+Filterzeilen darin greifen nur, wenn `kind` gesetzt ist. Damit zählte „Meine
+Aufgaben" aus dem Beispielinhalt als schulischer Bestand — und die Einladung
+war überhaupt nicht mehr zu sehen, auch in einem frischen Redion nicht.
+
+Zweimal habe ich stattdessen geraten, woran es liegt: erst an übrig
+gebliebenen Karteikarten, dann am Namen der Klausurdatenbank. Beide Male war
+die Prüfung danach immer noch rot. Erst das Messen der vier Werte EINZELN hat
+es gezeigt — genau die Regel aus AUFGABEN.md, Punkt 1: nachsehen statt raten.
+
+**Geprüft:** test208 §8, zehn Punkte — die Einladung im leeren Bestand (in
+einem eigenen, weggeworfenen Browserfenster, weil dieses hier nach sieben
+Abschnitten voll ist), der Bestand ohne Ausbildungsseite, die drei Fächer
+beim Namen, das stehengebliebene Angebot, der ehrliche Satz und der
+verschwundene Widerspruch. Gegenprobe: mit der alten Wand werden fünf Punkte
+rot.
+
+
+## E144 · Drei Sachen, die L54 als fehlend festgehalten hat
+
+**24. August 2026.** E138 hat die Whiteboard-Fläche unendlich gemacht und
+ihr Verbindungen, Bilder und einen eigenen Bereich gegeben. Was dabei offen
+blieb, stand ehrlich in L54. Hier ist es.
+
+### 1. `↶` nahm den falschen Schritt zurück
+
+```ts
+if (a.dataset.a === 'zurueck') { daten.pop(); male(); sichern(); }
+```
+
+`pop()` nimmt die zuletzt ANGEHÄNGTE Form weg — nicht den zuletzt getanen
+Schritt. Der Unterschied ist der ganze Fehler:
+
+```txt
+Form verschoben    → ↶ nahm eine andere Form weg
+Form radiert       → ↶ konnte sie nicht wiederholen
+zweimal gedrückt   → die vorletzte Form war weg, nicht der vorletzte Schritt
+```
+
+Jetzt liegt vor jeder Änderung ein Abbild auf einem Stapel, vierzig Schritte
+weit, und daneben ein zweiter für `↷`. Beide Knöpfe sind gesperrt, solange
+es nichts zu holen gibt — ein Knopf, der nichts tut und trotzdem anklickbar
+aussieht, ist eine Lüge.
+
+Der Stapel wird **nicht mitgespeichert**. Wer neu lädt, hat seine Zeichnung,
+aber keine Schrittfolge. Das ist die ehrlichere Grenze, als jeden Block mit
+vierzig Abbildern seiner selbst aufzublähen — und §9 der Projektregeln sagt
+genau das über stilles Wachstum im Speicher.
+
+Ein Detail, das erst beim Nachdenken auffiel: ein zu kleiner Kritzler wird
+nach dem Zeichnen wieder verworfen. Ohne Gegenmassnahme läge dann ein Abbild
+auf dem Stapel, das denselben Stand beschreibt — `↶` täte einmal scheinbar
+nichts. Der Kritzler nimmt seinen Schritt jetzt mit.
+
+### 2. Der Text kam aus einem Fenster des Browsers
+
+`prompt()` steht in der Mitte des Bildschirms. Es sagt nicht, WO der Text
+hinkommt, es kennt keine zweite Zeile, und am Telefon nimmt es die halbe
+Höhe weg.
+
+Jetzt steht das Feld dort, wo die Notiz entsteht, in ihrer Grösse und in der
+gewählten Farbe. Enter schliesst ab — bei der Haftnotiz erst mit Strg, weil
+sie mehrzeilig ist —, Escape wirft weg, ein Klick daneben übernimmt.
+
+Und weil es jetzt ein Feld gibt, gibt es auch einen Weg, den es vorher gar
+nicht gab: **zweimal tippen ändert einen bestehenden Text.** Bisher musste
+man eine vertippte Haftnotiz radieren und neu schreiben.
+
+### 3. Eine zu klein gezogene Form blieb zu klein
+
+Verschieben ging, Skalieren nicht. Der Griff sitzt an der rechten unteren
+Ecke und wird nur für die zuletzt angefasste Form gezeichnet — ein Griff an
+jeder Form wäre auf einer vollen Fläche ein Punktemeer, einer ohne
+sichtbaren Griff wäre ein Geheimnis.
+
+Gezogen wird von der linken oberen Ecke aus. Ohne diese Festlegung läuft
+eine Form mit negativer Breite beim ersten Ziehen weg, weil `x` und `w`
+zusammen zwei verschiedene Ecken beschreiben können.
+
+Stift, Verbindung und Text bleiben draussen: ein Stiftstrich hat Punkte
+statt Kanten, eine Verbindung hängt an zwei Formen, und ein Text hat nur
+eine Schriftgrösse.
+
+### 4. Und ein Fehler, der nur beim Prüfen auffiel
+
+Beim Schreiben der Prüfung blieb der Kasten bei jedem Zug an derselben
+Stelle. Zweimal geraten (Seite falsch, Fläche ausserhalb des Bildes), beide
+Male daneben. Dann gemessen, was unter dem Zeiger liegt:
+
+```txt
+elementFromPoint(mitten im Rechteck)  →  das Raster, nicht die Form
+```
+
+**Ein Rechteck ohne Füllung nimmt in SVG keine Klicks an.** Getroffen wird
+nur, was gemalt ist — bei `fill: none` also allein der zwei Pixel breite
+Strich. „Auswählen und verschieben" ging seit jeher nur, wenn man die Kante
+erwischte; in der Mitte griff man durch die Form hindurch.
+
+Rechteck und Ellipse bekommen deshalb `pointer-events: all`. Und weil ein
+Strich mit 2,5 px am Telefon ohnehin nicht zu treffen ist, liegt unter jeder
+Linie derselbe Pfad noch einmal: 16 px breit, durchsichtig, er fängt nur den
+Griff.
+
+### 5. Und einer, den ich selbst eingebaut hatte
+
+Der erste Entwurf zeichnete beim Anfassen sofort neu, damit der Griff
+erscheint. `male()` setzt aber `flaeche.innerHTML = ''` — und damit
+verschwand genau das Element, auf dem der Zeiger heruntergegangen war.
+Chrome gibt daraufhin die Zeigerhaltung frei und schickt `pointercancel`;
+das Ziehen war vorbei, bevor es angefangen hatte. Der Griff wird jetzt erst
+beim Loslassen gezeichnet.
+
+**Geprüft:** test209 §10, siebzehn Punkte — beide Richtungen des Stapels,
+Verschieben UND Radieren zurückgenommen, das Schreibfeld statt `prompt()`
+(gezählt, nicht vermutet), der Griff und das Vergrössern mit festgehaltener
+oberer Ecke. Vier Gegenproben einzeln zurückgenommen; die vierte — das
+Rechteck wieder ohne `pointer-events` — macht schon den ersten Punkt rot.
+
+
+---
+
+## E145 · Eine Lücke, die es nicht gab
+
+**25. August 2026.** In `doku/AUFTRAG-STAND.md` stand für §23:
+
+> ◐ Seitenansicht, Überschriften, Absätze, Listen, Tabellen, Bilder,
+> Druck/PDF stehen. **Vorschlagsmodus fehlt.**
+
+Er fehlt nicht. Er steht vollständig da, in zwei Dateien:
+
+```txt
+schale.ts   ein-/ausschalten, Band mit dem Namen dessen, der schreibt,
+            Fenster zum Annehmen und Verwerfen, Eintrag im Seitenmenü
+editor.ts   beim Verlassen eines Blocks den alten Text festhalten,
+            mehrfaches Tippen bleibt EIN Vorschlag
+```
+
+Ich hatte gegrept, nicht gelesen. Der Suchbegriff war „Vorschlag" in
+`src/bereiche/editor/` — und die Bedienung liegt in `src/schale/`.
+
+### Warum eine falsche Lücke schlimmer ist als eine übersehene
+
+Eine übersehene Lücke kostet, bis sie jemand findet. Eine falsche Lücke
+schickt den Nächsten los, etwas zu bauen, das es schon gibt — und dann steht
+es zweimal da, mit zwei Datenformen und zwei Fehlern. §52 des Auftrags
+verbietet genau das, und die Doku wäre der Anlass gewesen.
+
+Der Eintrag ist berichtigt, und weil eine Behauptung ohne Beleg genau das
+Problem war, steht der Beleg jetzt daneben: **test212**, sechs Abschnitte,
+32 Punkte.
+
+### Was die Prüfung mitnimmt
+
+Nicht nur die Vorschläge, sondern die ganze Liste aus §23 — Überschriften,
+Absätze, Listen, Tabellen, Inhaltsverzeichnis, Kommentare, Druck.
+
+Zwei Richtungen sind ihr wichtiger als alles andere:
+
+**Ohne Modus wird nichts festgehalten.** Wäre jede Tippkorrektur ein
+Vorschlag, wäre das Schreiben kaputt. Dieser Punkt steht VOR dem, der den
+Modus einschaltet.
+
+**Verwerfen setzt zurück, Annehmen lässt stehen.** Das ist der ganze Sinn,
+und beides geht über das Seitenmenü — nicht über eine innere Funktion.
+`vorschlaegeZeigen` steht bewusst nicht auf der öffentlichen Fläche von
+`App`; geprüft wird der Weg, den ein Mensch nimmt.
+
+### Vier Fehler, und alle vier waren meine
+
+Die falsche Lücke war der erste. Die Prüfung, die sie berichtigen sollte,
+brachte drei weitere mit — und jeder hätte für sich ausgereicht, dem Produkt
+einen Mangel anzuhängen, den es nicht hat.
+
+**Der Text wurde nie getippt.** Der erste Entwurf setzte `feld.textContent`
+und rief `blur()`. Das sieht aus wie Tippen und ist keines: der Editor
+sichert auf `input`, und ein zugewiesener `textContent` löst kein `input`
+aus. Der Block behielt seinen alten Text — womit „ohne Modus wird nichts
+festgehalten" trivial wahr war und „Annehmen lässt den neuen Text stehen"
+falsch rot wurde. Jetzt klickt die Prüfung hinein und tippt mit der Tastatur.
+
+**Die Blockart hiess `tabelle`.** `Store.addBlock` nimmt jede Zeichenkette;
+der Editor fiel in seinen `default`-Zweig und zeichnete einen leeren Absatz.
+Der Punkt „alle Bausteine da" blieb trotzdem grün, weil er nur Namen zählte.
+Die Art heisst `table` (`register/bloecke.ts`).
+
+**Überschriften sind keine `<h1>`.** Jeder Block ist ein `<div>`; zur
+Überschrift wird er durch `role="heading"` und `aria-level` auf dem Textfeld
+— genau das, was ein Vorleseprogramm liest. Eine Suche nach `h1, h2, h3`
+zählt null, auf jeder Seite, immer.
+
+**Gedruckt wird im Rahmen, nicht im Fenster.** `drucken` hängt ein
+`<iframe>` ein und ruft `f.contentWindow.print()`. Wer `window.print`
+ersetzt, zählt null Aufrufe und hält den Druck für kaputt. Ein Beobachter
+fängt den Rahmen jetzt im Moment des Einhängens ab.
+
+Dazu kam die Klasse des Inhaltsverzeichnisses: sie heisst `toc-liste`, nicht
+`toc`.
+
+Fünf Namen, fünfmal geraten statt nachgesehen — genau das, wovor E21 warnt,
+nur diesmal nicht bei Feldnamen, sondern bei Klassen, Rollen und Blockarten.
+
+### Kann die Suite rot werden?
+
+Nachgemessen, nicht behauptet. Auf einem Abzug des Baums wurde je eine Zeile
+im Produkt entschärft:
+
+```txt
+`alt` beim Festhalten durch `neu` ersetzt   → §3 rot, und §4 gleich mit
+Verwerfen schreibt nicht mehr zurück        → §4 rot
+`f.contentWindow.print()` weggelassen       → §6 rot (0 Aufrufe)
+`role="heading"` weggelassen                → §1 rot (3 → 1)
+```
+
+Die fünfte kam von selbst: mit der Blockart `tabelle` war §1 rot, bis die
+Art stimmte.
+
+**Geprüft:** test212, 32/32.
+
+
+---
+
+## E146 · Der Knopf „Geteilt öffnen" tat etwas, und man sah es nicht
+
+**25. August 2026.** §16 des Auftrags will Reiter und eine geteilte Ansicht.
+Beides steht seit langem: `reiter.ts` führt die Liste, der Workspace zeigt
+sie rechts in einem Feld „Reiter & geteilte Ansicht" — mit `⊞` zum geteilt
+Öffnen und `✕` zum Schliessen.
+
+Nichts hielt das fest. Die Prüfung dafür (test206 §12) fand beim ersten Lauf
+sofort etwas, und zwar genau die Sorte Fehler, die nur beim Ausführen
+auffällt.
+
+### Was gemessen wurde
+
+```txt
+⊞ geklickt
+Fenster.geteilt()   { id: "…", richtung: "quer", anteil: 50 }   gesetzt
+.arbeitswelt        da
+.aw-reiter-panel    da
+.aw-teilung         NICHT da
+```
+
+Der Zustand stimmte, das Bild nicht. Wer `⊞` drückte, sah nichts passieren —
+weder den Satz „Geteilt: Zweite Seite · quer" noch den Knopf, mit dem man es
+wieder zumacht.
+
+### Warum ausgerechnet dieser Weg
+
+Die vier Wege in diesem Feld sehen gleich aus, sind es aber nicht:
+
+```txt
+Reiter öffnen    → App.oeffne   verlässt den Workspace
+Reiter wechseln  → App.oeffne   verlässt den Workspace
+Reiter schliessen→ App.oeffne   verlässt den Workspace
+Geteilt öffnen   → hängt sich in #main und lässt den Workspace stehen
+```
+
+Drei brauchen kein Neuzeichnen, weil gleich eine andere Ansicht kommt. Der
+vierte braucht es — und war der einzige ohne. Ein `zeichnen()` mehr.
+
+### Und ein Fehler in meiner eigenen Messung
+
+Die Prüfung las den aktiven Reiter mit `Number(F.aktiv?.() || -1)`. Der erste
+Reiter hat den Zähler **0**, und 0 ist falsch im Sinne von `||`. Die Messung
+meldete −1 und behauptete, das Wechseln gehe nicht. Es geht. `?? -1` statt
+`|| -1`.
+
+Dieselbe Sorte wie in E145: nicht das Produkt war kaputt, sondern die Zeile,
+die es prüfen sollte. Bei Zählern, Grössen und Anzahlen ist `||` fast immer
+der falsche Operator.
+
+**Geprüft:** test206 §12, elf Punkte — zwei Reiter, Wechseln, geteilt Öffnen,
+Teilung schliessen, Reiter schliessen. Das `zeichnen()` wieder weggenommen
+macht zwei davon rot; `Fenster.neuerReiter` aus der Rückgabe entfernt lässt
+den Abschnitt gar nicht erst anlaufen.
+
+
+---
+
+## E147 · Die Suche findet Dateinamen und Quellenangaben — und beide Suchen dieselben
+
+**25. August 2026.** L55 hielt zwei Dinge fest, die §28 des Auftrags verlangt
+und die die Suche nicht fand: den **Dateinamen** und die **Quellenangabe**.
+
+### Erst nachgemessen, und L55 dabei halb widerlegt
+
+L55 hiess „Die Suche findet keine Dateinamen". Das war zu weit gegriffen.
+Gemessen:
+
+```txt
+Anhang, Blocktext = "Rechnung-2026-08.pdf"   gefunden
+Anhang, Blocktext = ""                       nicht gefunden
+```
+
+Jeder Weg im Produkt, der eine Datei anlegt, setzt den Namen auch als
+Blocktext — `recognition.ts`, `pdf/einlesen.ts`. Im Alltag fiel deshalb
+nichts auf. Verloren geht der Name erst, wenn jemand den Text überschreibt
+(„Der Vertrag von damals"), und dann ist er endgültig weg: die Datei liegt im
+Fach `dateien`, der Blocktext zeigt woandershin.
+
+Dieselbe Sorte Berichtigung wie E145, nur in die andere Richtung: dort stand
+etwas als fehlend da, das es gab; hier stand etwas als ganz fehlend da, das
+zu neun Zehnteln ging.
+
+### Was gebaut wurde
+
+**Ein Verzeichnis Kennung → Name.** `Store.search` ist synchron — die
+Befehlspalette tippt mit, und ein `await` je Tastendruck wäre spürbar. Das
+Fach `dateien` liegt aber in IndexedDB. Also hält `indexdb.ts` eine kleine
+`Map` mit Kennung und Name, gefüllt beim Hochfahren und bei jedem Schreiben,
+geleert beim Löschen. Die Bytes liegen weiter im Fach `stuecke` und werden
+nie angefasst (§36).
+
+**Eine Funktion entscheidet, was durchsuchbar ist.** `Store.durchsuchbar(b)`
+gibt zurück, was an einem Block Text ist:
+
+```txt
+b.text · b.suchtext · b.ocrText          wie bisher
+Dateiname zu b.dateiId                   neu
+b.quiz.source.title / .edition           neu
+b.learningPackage.license                neu
+```
+
+### Und der Teil, der ohne den vorigen nichts genützt hätte
+
+`Store.search` ist nicht die einzige Suche. Davor liegt ein Beschleuniger:
+`Kontext.kandidaten(wort)` grenzt auf jene Seiten ein, deren Wörter im Index
+stehen. Der Index wurde aus einer EIGENEN Feldliste gebaut — denselben drei
+Feldern wie früher.
+
+Der Fehler daran ist unscheinbar und trifft hart:
+
+```txt
+Wort im Index gar nicht    → kandidaten = null → alles prüfen → gefunden
+Wort im Index anderswo     → kandidaten = [jene Seiten] → Anhang fällt heraus
+```
+
+Solange „Mietvertrag" nirgends stand, fand die Suche den Anhang trotzdem.
+Sobald irgendeine Notiz das Wort enthält, verschwindet der Anhang aus den
+Ergebnissen — und zwar genau dann, wenn man ihn am ehesten sucht.
+
+Der Index baut jetzt auf derselben `durchsuchbar`-Funktion. Genau dieser
+Fehler ist bei den PDF-Texten schon einmal passiert (E124); der Kommentar
+dort sagt „Zwei Suchen mit zwei Antworten sind schlimmer als eine
+schlechte", und diesmal steht statt einer zweiten Liste ein Aufruf.
+
+### Kann die Suite rot werden?
+
+**test213**, fünf Abschnitte, 20 Punkte. Drei Gegenproben einzeln auf einem
+Abzug des Baums zurückgenommen:
+
+```txt
+Dateiname aus `durchsuchbar` weg     → §2 rot (3 Punkte)
+Quellenangabe weg                    → §3 rot (3 Punkte)
+Kontext-Index mit eigener Feldliste  → §2 UND §4 rot (5 Punkte)
+```
+
+§1 prüft die Gegenrichtung — ein erfundener Name und eine erfundene Quelle
+ergeben nichts —, und §5, dass ein gelöschter Anhang aus dem Verzeichnis
+verschwindet. Ein Verzeichnis, das nur wächst, schickt den Menschen sonst auf
+einen Block, an dem nichts mehr hängt.
+
+Mitgeprüft, weil `dateiHolen` und `dateiAlle` angefasst wurden: test96,
+test100, test107, test108, test124, test182, test183 — alle grün.
+
+### Nachtrag: eine Prüfung, die ich nicht auf dem Zettel hatte
+
+Der vollständige Durchlauf danach meldete **test181 §6** rot — drei Punkte,
+die den Quelltext lesen und die alte, doppelte Feldliste erwarteten
+(`['text', 'suchtext', 'ocrText']` in `findInside`, `if (k.suchtext)
+text.push(…)` in `kontext.ts`). Genau die beiden Stellen, die E147
+zusammengeführt hat.
+
+Am Verhalten fehlte nichts: die §1–§5 desselben Laufs, die die Suche wirklich
+benutzen, blieben grün. Rot war die Beschreibung.
+
+Die drei Punkte prüfen jetzt das Stärkere — dass es **eine** Stelle gibt, die
+sagt, was durchsuchbar ist, dass beide Suchen aus ihr lesen, und dass daneben
+keine zweite Liste mehr steht. test181 zählt damit 47 statt 43 Punkte.
+
+Die Lehre ist nicht neu, aber sie kostet jedes Mal: wer eine Stelle
+zusammenlegt, muss auch suchen, wer über ihre alte Form etwas behauptet.
+`grep 'suchtext' pruefungen/` hätte gereicht.
+
+
+---
+
+## E148 · Vier Sachen, die nur das Hinsehen fand — und die Ursache darunter
+
+**25. August 2026.** §55 sagt: nach jeder Änderung ein Bild. Nach den
+Prüfläufen zu E145–E147 stand die Bibliothek zum ersten Mal als Bild da, und
+sie zeigte vier Sachen, die kein einziger der 180 Läufe sehen konnte.
+
+### 1. Drei von sechs Zählern sagten nicht, was ihre Zahl bedeutet
+
+```txt
+15    Seiten          67 px nötig, 46 da  →  „Inhalts…"
+1961  Inhaltsblöcke   86 px nötig, 46 da  →  „PDF-…"
+0     PDF-Dokumente   65 px nötig, 46 da  →  „White…"
+```
+
+Die Zahlen stimmten alle. Eine Zahl ohne lesbare Beschriftung ist trotzdem
+keine Auskunft — dieselbe Familie wie die abgeschnittene Zahl beim
+Tabellenblock (§55.1), nur eine Ebene daneben.
+
+Das Raster stand auf `repeat(3, minmax(0,1fr))`. Drei feste Spalten in einer
+Mittelspalte von 366 px ergeben Karten von 114 px, und davon gehen Zeichen
+(34), Abstand (10) und Innenrand (24) ab. Jetzt steht dort
+`repeat(auto-fit, minmax(152px,1fr))` — so viele Spalten, wie lesbar
+hineinpassen, und nicht eine mehr.
+
+### 2. Vier graue Striche, die zu einer unsichtbaren Seite gehörten
+
+Am rechten Rand stand der Gliederungsstreifen (`#rand-toc`) — der von
+Notion bekannte Satz kurzer Striche, einer je Überschrift. Er gehörte zur
+zuletzt geöffneten Seite und hängt an `#main`; eine Produktwelt legt sich
+darüber, ohne ihn anzufassen. Ein Klick sprang zu einem Block, der gar nicht
+gezeichnet war, also nirgendwohin.
+
+`weltSetzen` nimmt ihn jetzt weg. Neu gebaut wird er ohnehin bei jedem
+Seitenaufruf.
+
+### 3. Fünf von sieben Such-Platzhaltern brachen ab
+
+```txt
+1280 px Fenster → Feld 195 px
+
+  „Titel, Pfad oder Alias …"              167   passt
+  „Whiteboard oder Seite …"               180   bricht ab
+  „Datenbank oder Ansicht …"              191   bricht ab
+  „Vorlage oder Beschreibung …"           214   bricht ab
+  „Aufgabe, Status oder Quelle …"         222   bricht ab
+  „Termin, Datenbank oder Datumsfeld …"   277   bricht ab
+```
+
+Ein Platzhalter ist der einzige Hinweis darauf, wonach man in diesem Feld
+suchen kann. Bricht er ab, ist er weg.
+
+Die Suchzeile bricht jetzt um — aber nach der **eigenen** Breite, nicht nach
+der des Fensters. Das ist der Punkt: bei 1280 px Fenster ist die Mittelspalte
+366 px breit, bei 1680 px sind es 726. Ein `@media`-Ausdruck kann diesen
+Unterschied gar nicht sehen, und genau deshalb stand die richtige Regel
+(`grid-column:1/-1`) längst da — nur hinter `@media(max-width:760px)`, wo sie
+bei 1280 px nie greift. `.aw-bereich` ist jetzt ein `container-type:
+inline-size`, und die Regel hängt an `@container (max-width: 480px)`.
+
+Container-Abfragen sind gewöhnliches CSS. Kein Paket, kein Bauschritt, §6
+bleibt unberührt.
+
+### 4. Und darunter: 120 von 390 Pixeln, die es nie gab
+
+Die Ursache von 1 und 3 zusammen. Am Telefon blieben von 390 px genau 240
+für den Inhalt übrig:
+
+```txt
+#page.wide          padding: 0 60px        aufbau.css      (1 Kennung, 1 Klasse)
+.produkt-welt       padding: 10px 12px     produktwelten.css   (1 Klasse)
+```
+
+Beide gelten für dasselbe Element — eine Produktwelt wird in `#page`
+gezeichnet, und `#page` trägt dabei auch `wide`. Die Regel mit der Kennung
+gewinnt, ganz gleich, welche Datei später geladen wird. Die Telefonregel
+stand seit jeher da und hat nie etwas bewirkt.
+
+Die Produktwelt-Regeln sind jetzt ebenfalls mit `#page` geschrieben. Der
+Inhalt am Telefon wuchs von 240 auf 336 px — vierzig Prozent mehr, in jeder
+Ansicht, ohne dass eine einzige Ansicht angefasst wurde.
+
+### Und ein fünfter Fehler, wieder in meiner eigenen Messung
+
+Der Prüfpunkt, der Punkt 4 hätte finden sollen, mass `welt.clientWidth` —
+und `clientWidth` ZÄHLT DIE INNENABSTÄNDE MIT. Mit den 60 px, die er finden
+sollte, meldete er weiter 390 von 390 und blieb grün. Gemessen wird jetzt
+`.aw-shell`, das erste Element ohne eigenen Abstand.
+
+Dritter Fall in drei Tagen, in dem nicht das Produkt kaputt war, sondern die
+Zeile, die es prüfen sollte (E145 `textContent`, E146 `|| -1`, hier
+`clientWidth`). Der gemeinsame Nenner: eine Messung, die nur den grünen Fall
+gesehen hat, ist keine Messung.
+
+### Kann die Suite rot werden?
+
+**test214**, vier Abschnitte über acht Ansichten und zwei Bildschirme, 16
+Punkte. Vier Gegenproben einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+`#page.produkt-welt` wieder zu `.produkt-welt`  → §1 rot (270 von 390) UND §3
+Zählerraster zurück auf drei feste Spalten      → §2 rot
+`@container` auf 0px gesetzt                    → §3 rot
+`rand-toc`-Wegnahme entfernt                    → §4 rot, alle acht Ansichten
+```
+
+§1 misst zusätzlich die Gegenrichtung (nichts steht über den Rand hinaus),
+und §2/§3/§4 haben je einen Punkt davor, der prüft, dass überhaupt etwas zu
+messen da war — ein leerer Bestand macht „nichts ist abgeschnitten" sonst
+trivial wahr.
+
+
+---
+
+## E149 · Lernpfad und Arbeitssicht, endlich festgehalten
+
+**25. August 2026.** In `doku/AUFTRAG-STAND.md` standen §9 und §14 mit
+derselben Begründung als ◐ da: „Kein eigener Prüflauf". Beide Ansichten gibt
+es seit langem, und beide waren ungeprüft — was heisst: jede Änderung an
+`lernwelt.ts` konnte sie still kaputtmachen.
+
+**test215**, sieben Abschnitte, 28 Punkte. Gebaut wurde nichts Neues; die
+Suite hält fest, was da ist. Zwei Punkte sind mir dabei wichtiger als der
+Rest.
+
+### Der Punkt, der leicht kaputtgeht: XP ist kein Wissen
+
+§9 verlangt ausdrücklich „fachlicher Fortschritt getrennt von XP". Das ist
+kein Gestaltungswunsch. Eine Zahl, die aus Aktivität kommt, SIEHT aus wie
+Wissen — und wer ihr glaubt, geht unvorbereitet in eine Prüfung.
+
+Geprüft wird deshalb in beide Richtungen:
+
+```txt
+5000 XP, Level 42, 99 Tage Streak eingetragen
+  → Themenfortschritt [100, 100, 50, 0]   unverändert
+
+eine echte Wiederholung (sr.wdh 0 → 2)
+  → Themenfortschritt [100, 100, 50, 100] geändert
+```
+
+Nur der erste Punkt allein hätte auch mit einer eingefrorenen Zahl bestanden.
+Erst zusammen sagen die beiden etwas.
+
+### Und der Punkt, an dem meine erste Fassung sich selbst betrog
+
+§14 sagt wörtlich: „Meetingdaten aus dem bestehenden Besprechungssystem
+wiederverwenden." Der Prüfpunkt dafür suchte die Notiz über `[data-lw-open]`
+— und fand sie auch unter „Dokumente & PDFs", weil `dokumente()` schlicht
+alle Seiten aufzählt. Mit dem Meeting-Abschnitt versuchsweise ganz entfernt
+blieb der Punkt grün.
+
+Er sucht jetzt IM Meeting-Abschnitt. Vierter Fall in drei Tagen, in dem die
+Messung und nicht das Produkt der Fehler war — und der lehrreichste, weil er
+nur beim Zurücknehmen aufgefallen ist. Eine Gegenprobe ist nicht Kür.
+
+### Weiter geprüft
+
+```txt
+§1  ohne Karten sagt der Pfad es, statt Stufen zu erfinden
+§2  vier absichtlich durcheinander angelegte Themen stehen in der
+    Reihenfolge aus §9: Grundlagen → Ohm → Leistung → Lampenschaltungen
+§3  keine Stufe ist gesperrt, jede trägt ihren Stand in Zahl und Wort
+§4  ein Klick auf eine Stufe führt zum Thema
+§5  alle sechs Rubriken aus §14, mit echten Daten belegt
+§6  Meetings zeigen auf die Besprechungsseite selbst, und es gibt sie einmal
+§7  ein Klick öffnet die Seite wirklich
+```
+
+### Kann die Suite rot werden?
+
+Fünf Gegenproben, jede einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+Sortierung des Pfades umgedreht        → §2 rot (und §3 gleich mit)
+`disabled` an die Stufenknöpfe          → §3 rot
+XP in `topicProgress` einfliessen lassen→ §3 rot, beide Richtungen
+Meeting-Eintrag auf eine Zweitschrift   → §6 rot
+Meeting-Abschnitt ganz entfernt         → §5 UND §6 rot
+```
+
+
+---
+
+## E150 · Der Dienst hinter „⌁ Erkennen" liegt jetzt bei
+
+**25. August 2026.** L53 hielt fest: der Knopf „⌁ Erkennen" erwartet einen
+Dienst unter `http://127.0.0.1:8765/ocr`, und Redion lieferte keinen mit und
+beschrieb auch keinen. Der Eintrag nannte drei Möglichkeiten — mitliefern,
+ausbauen oder ehrlich beschriften — und den Satz: „Ein Knopf, hinter dem
+nichts ist, ist die schlechteste der drei."
+
+Es ist die erste geworden.
+
+### Warum nicht die dritte, die billigere
+
+Der Code hinter dem Knopf ist vollständig und sorgfältig: Ausschnitt statt
+ganzem Bild, Einwilligung bei jedem Mal, Grössen- und Zeitgrenzen, und eine
+Adressprüfung, die eine Cloud-Adresse gar nicht erst speichern lässt. Das
+alles wegzuwerfen, weil ein sechzig Zeilen langes Gegenstück fehlt, wäre die
+teuerste der drei Möglichkeiten gewesen.
+
+### Was dazugekommen ist
+
+```txt
+dienste/ocr.mts        der Dienst selbst
+doku/OCR-DIENST.md     Anleitung: einrichten, Grenzen, Fehlersuche, Vertrag
+recognition.ts         erklärt jetzt, BEVOR es nach einer Adresse fragt
+```
+
+Der Dienst nimmt `POST /ocr` mit einem Bild entgegen, ruft `tesseract` auf
+und gibt `{ text, language, engine, version, confidence }` zurück — genau
+das, was `recognition.ts` liest.
+
+Vier Entscheidungen darin sind erklärungsbedürftig:
+
+**Node, kein Paket.** `node dienste/ocr.mts` und sonst nichts — kein
+`npm install`, kein Bauschritt. Ein Dienst, der erst eingerichtet werden
+muss, wäre wieder das Problem, das er lösen soll (§6). Der multipart-Körper
+wird deshalb von Hand zerlegt; das sind dreissig Zeilen.
+
+**`spawn` ohne Shell.** Der Dateiname kommt aus dem Browser. Über eine Shell
+wäre er eine Zeichenkette, die etwas bedeuten kann; als Element einer
+Argumentliste ist er ein Dateiname und sonst nichts.
+
+**Die Sprachangabe wird geprüft, nicht durchgereicht.** Sie kommt ebenfalls
+aus dem Browser und landet in der Befehlszeile. Was nicht auf `^[a-z]{3}
+(\+[a-z]{3})*$` passt, wird verworfen und durch die Vorgabe ersetzt.
+
+**`listen(PORT, '127.0.0.1')`, nicht `listen(PORT)`.** Ohne die Adresse hört
+Node auf allen Netzwerkkarten — ein Erkenner, an den jeder im selben WLAN
+Bilder schicken kann.
+
+Und eine Nicht-Entscheidung: `confidence` ist `null`. `tesseract stdout`
+liefert keine Sicherheit mit, und eine hier hingeschriebene Zahl wäre eine
+Behauptung über eine Messung, die nie stattgefunden hat.
+
+### Der eigentliche Kern von L53 war nicht der fehlende Dienst
+
+Er war die fehlende Auskunft. Wer zum ersten Mal auf „⌁ Erkennen" klickte,
+bekam ein Eingabefeld mit der Frage nach einer Adresse — und keinen Hinweis
+darauf, dass dahinter überhaupt ein Programm laufen muss, geschweige denn
+welches. Selbst mit beiliegendem Dienst wäre das eine Sackgasse geblieben.
+
+Jetzt steht davor ein Satz: was der Dienst tut, dass nichts ins Netz geht,
+womit man ihn startet, und wo die Anleitung liegt.
+
+### Und die Doku, die dem Stand widersprach
+
+`doku/WAS-REDION-MEHR-KANN.md` sagte weiterhin „Kein OCR, keine
+Transkripte". Der Satz ist berichtigt — und zwar nicht in „Redion kann OCR",
+sondern in das, was stimmt: Bilder werden durchsuchbar, wenn der beiliegende
+Dienst läuft; Tonspuren werden nach wie vor nicht abgetippt.
+
+### Kann die Suite rot werden?
+
+**test216**, neun Abschnitte, 32 Punkte — und mit einem Kunstgriff, auf den
+es ankommt: die Prüfung legt ein eigenes `tesseract` in einen Ordner und
+setzt `PATH` darauf.
+
+Geprüft wird damit MEIN Dienst, nicht Tesseract. Die Suite läuft auf jedem
+Rechner, und — wichtiger — der gute Weg wird WIRKLICH durchlaufen statt
+übersprungen. Eine Prüfung, die sich selbst überspringt, wenn ein Programm
+fehlt, ist genau die Prüfung, die nie rot wird.
+
+Vier Gegenproben, alle auf einem Abzug des Baums zurückgenommen:
+
+```txt
+Sprachprüfung entfernt            → §3 rot, „deu; rm -rf /" kommt durch
+`listen(PORT)` ohne Adresse       → §5 rot, von aussen erreichbar
+ENOENT-Hinweis durch „Fehler."    → §6 rot, beide Punkte
+`confidence: 0.95` erfunden       → §2 rot
+```
+
+§6 nimmt zusätzlich das Ersatzprogramm wieder weg — die Lage von L53, eine
+Stufe weiter innen: der Dienst läuft, der Erkenner fehlt. Dann muss er
+sagen, was fehlt und wo es steht.
+
+
+---
+
+## E151 · Am Telefon stand der Startknopf 188 Pixel unter der Falz
+
+**25. August 2026.** §31 des Auftrags beschreibt die Telefonansicht nicht in
+Worten, sondern als Bild:
+
+```txt
+Elektrotechnik
+🔥 14 Tage
+
+18 Karten fällig
+5 neue
+2 Fehler
+
+[ Lernen starten ]
+
+Darunter: Nächste Prüfung · Aufgaben · Fortschritt
+```
+
+Alles davon gibt es. Nur in der falschen Reihenfolge. Gemessen auf 390 × 844:
+
+```txt
+Begrüssung, Datum, Lernziel      322 px, bevor etwas zur Lernrunde kam
+die vier Zahlen                  ab 713, zur Hälfte unter der Falz
+„Tagesrunde starten"             y = 1032  →  188 px UNTER der Falz
+```
+
+Wer die App am Telefon aufmacht, um zehn Minuten zu lernen, musste erst
+scrollen, um den Knopf zu finden. Am Rechner fiel das nie auf, weil dort
+nichts unter einer Falz liegt — der ganze Bildschirm ist die erste Seite.
+
+### Gedreht wird mit `order`, nicht mit einem zweiten Baum
+
+```css
+@media(max-width:760px){
+  .lernwelt .lw-today>*{order:5}
+  .lernwelt .lw-today>.lw-metrics{order:1}
+  .lernwelt .lw-today>.lw-primary-grid{order:2}
+  .lernwelt .lw-today>.lw-setup{order:3}
+  .lernwelt .lw-today>.lw-hero{order:4}
+}
+```
+
+Fünf Zeilen, und der Knopf steht bei y = 641 statt 1032. Wichtiger als die
+Kürze ist, was NICHT passiert ist: es gibt keine zweite Baumstruktur für das
+Telefon. Für ein Vorleseprogramm und für die Tastatur bleibt die Reihenfolge
+dieselbe, und es gibt keinen zweiten Bauplan, der auseinanderlaufen könnte
+(§52 des Auftrags: keine doppelte Architektur).
+
+Am Rechner bleibt alles, wie es war. Eine Umstellung, die überall gälte, wäre
+keine Antwort auf §31, sondern eine zweite Frage.
+
+### Und die Reiterleiste, die nicht sagte, dass es weitergeht
+
+Neben dem Startknopf fiel am selben Bild auf: von neun Reitern passen drei,
+die Leiste rollt seitwärts — und nichts zeigte das an. Gemessen: 883 px
+Inhalt in 364 px Breite, „Meine Fehler" endete mitten im Wort am Bildrand.
+
+Ein abgeschnittenes Wort sieht aus wie ein Fehler, nicht wie eine Einladung
+zum Wischen. Dieselbe Lösung wie bei der Markierungsleiste im PDF (E141): ein
+Datenmerkmal `data-mehr`, aus dem die CSS einen Schatten an der jeweiligen
+Kante macht. Kein Knopf und kein Pfeil — beides wäre etwas, woneben man
+tippen kann.
+
+### Und wieder ein Fehler in der Messung, nicht im Produkt
+
+Der Punkt „Drei fällige Karten werden gezählt" las den Text der Kachel als
+ein Stück: `3fälligSM-2-Wissensstand`. Zwei Sachen gingen dabei schief, und
+die zweite ist die gefährlichere:
+
+```txt
+/\b3\b.{0,20}fällig/   falsch ROT — zwischen „3" und „fällig" ist keine
+                       Wortgrenze, obwohl die Zahl stimmt
+/\b2\b.{0,20}neu/      falsch GRÜN — die „2" stammte aus
+                       „SM-2-Wissensstand", zwanzig Zeichen vor „3neu"
+```
+
+Ein Punkt, der aus dem falschen Grund grün ist, ist schlimmer als einer, der
+aus dem falschen Grund rot ist: der rote fällt auf.
+
+Gemessen wird jetzt `<strong>` und `<span>` getrennt — die Auszeichnung
+trennt beides ohnehin — und verglichen wird mit dem, was im Speicher steht,
+nicht mit einer Zahl aus der Prüfdatei.
+
+### Kann die Suite rot werden?
+
+**test217**, fünf Abschnitte, 24 Punkte. §1 und §2 waren vor dieser Änderung
+rot — das ist keine Behauptung, das ist die Messung oben. Dazu zwei
+Gegenproben, einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+die fünf `order`-Zeilen entfernt   → §1 und §2 rot (drei Punkte)
+`reiterRollstand()` entfernt       → §3 und §4 rot (drei Punkte)
+```
+
+§4 misst die Gegenrichtung: am Rechner darf die Reihenfolge NICHT gedreht
+sein und die Leiste keinen Hinweis tragen. §5 prüft, dass Telefon und
+Rechner denselben Baum haben.
+
+
+---
+
+## E152 · Die unverteilte Aufgabe war für niemanden da (§41)
+
+**25. August 2026.** §41 zählt sieben Dinge auf, die aus einer Besprechung
+werden sollen, und stellt einen Satz daneben, der mehr wiegt als die Liste:
+
+> Aufgabe aus Meeting bleibt normale Redion-Aufgabe.
+
+Das ist §52 in einem Satz — keine zweite Aufgabenwelt neben der ersten.
+
+`besprechung.ts` konnte alles davon schon: Audio, Transkript,
+Zusammenfassung, Entscheidungen, Aufgaben, Zeitmarken, Themen, und die
+Aufgaben zusätzlich als Zeilen in einer echten Datenbank. `AUFTRAG-STAND`
+führte §41 trotzdem als ◐, mit der ehrlichsten Begründung, die dort steht:
+„Welcher Prüflauf sie deckt, habe ich nicht nachgesehen."
+
+Nachgesehen: test32 prüft den Seitenleisten-Abschnitt, test35 einen
+Menüeintrag für die KI-Anweisung. Die Auswertung, die Seite, die Zeitmarken
+und die Aufgaben-Datenbank waren ungeprüft.
+
+### Und beim Prüfen fiel etwas heraus
+
+Die Besprechung legt ihre Aufgaben in einer Datenbank mit der Spalte „Wer"
+ab. Wer beim Sprechen keinen Namen nennt, hinterlässt sie leer.
+`Bibliothek.meineAufgaben` entschied aber allein danach, OB es eine
+Personenspalte gibt:
+
+```js
+const meins = personKey
+  ? String(pr[personKey] || '').toLowerCase().includes(meinName.toLowerCase())
+  : (row.erstelltVon || 'Ich') === meinName;
+```
+
+Eine leere Zelle hiess damit „gehört niemandem" — `''.includes('ich')` ist
+falsch. Ausgerechnet die **unverteilte** Aufgabe, also die, an die sich sonst
+niemand erinnert, stand in keiner einzigen Liste.
+
+Die Regel für die leere Zelle ist jetzt dieselbe wie die für die fehlende
+Spalte, und das ist kein Zufall: beide Male steht nirgends ein anderer Name.
+
+Der erste Anlauf behielt den Vergleich mit dem Anleger für den zweiten Fall
+bei. **Der war ebenfalls kaputt**, was erst das Messen zeigte — siehe E153,
+wo die Regel ihre endgültige Form bekommt:
+
+```js
+const wer = personKey ? String(pr[personKey] || '').trim() : '';
+const meins = !wer || wer.toLowerCase().includes(meinName.toLowerCase());
+```
+
+Eine Aufgabe, die auf einen anderen Namen läuft, bleibt weiterhin aus meiner
+Liste — das war richtig und bleibt so.
+
+### Was die Suite prüft, und was nicht
+
+**test218**, sieben Abschnitte, 43 Punkte.
+
+`auswerten()` fragt die KI; ohne Modell gibt es nichts zu messen, und mit
+einem erfundenen Modell prüfte man die Erfindung. Geprüft wird deshalb alles
+NACH der Auswertung: `seiteAnlegen` bekommt genau die Form, die der Auftrag
+an die KI verlangt — nachgelesen in `besprechung.ts`, nicht erfunden. Die
+Aufnahme braucht ein Mikrofon; §5 prüft stattdessen die Zeitrechnung ohne
+Ton.
+
+Ein Punkt gefällt mir besonders, weil er ohne Ansehen nicht auffiele: 62
+Sekunden müssen als `01:02` dastehen — nicht als `00:62` und nicht als
+`1:2`.
+
+### Kann die Suite rot werden?
+
+Drei Gegenproben, einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+leere Personenzelle wieder als „gehört niemandem"  → §2 rot
+`audioRef` von den Zeitmarken genommen             → §3 rot (drei Punkte)
+keine Zeile in der Aufgabendatenbank               → §2 und §7 rot (vier)
+```
+
+§7 ist die eingebaute Gegenrichtung: ein leeres Ergebnis darf KEINE
+Abschnitte erfinden — ohne diesen Abschnitt wäre „die Seite hat den
+Abschnitt" auch dann grün, wenn die Seite ihn immer hätte.
+
+### Nebenbei gefunden: L56
+
+`Store.addRow` setzt `erstelltVon` nie. Ohne Konto fällt das nicht auf, weil
+beide Seiten des Vergleichs `'Ich'` sind. Mit einem benannten Konto dagegen
+gehört keine Zeile aus einer Datenbank ohne Personenspalte mehr irgendwem.
+Aus dem Quelltext gelesen, nicht am laufenden Programm nachgewiesen — und
+deshalb als Lücke eingetragen statt nebenbei geändert.
+
+
+---
+
+## E153 · Wer sich einen Namen gab, verlor seine Aufgabenliste
+
+**25. August 2026.** L56 hatte ich am selben Tag eingetragen — aus dem
+Quelltext gelesen, nicht am Programm nachgewiesen, und mit dem Satz: „Erst
+messen, wie ein benanntes Konto sich heute wirklich verhält."
+
+Gemessen. Derselbe Bestand, geändert wurde nur der eigene Name in den
+Einstellungen:
+
+```txt
+Name leer (also „Ich")    5 Aufgaben
+Name „Redur"              0 Aufgaben
+```
+
+Nicht die zwei neuen Zeilen fehlten — **alle fünf**, auch die aus der
+Willkommensseite. Wer sich in Redion einen Namen gibt, sah seine
+Aufgabenliste leer, und nichts sagte ihm warum.
+
+### Warum
+
+`Bibliothek.meineAufgaben` entschied für eine Datenbank ohne Personenspalte
+so:
+
+```js
+(row.erstelltVon || 'Ich') === meinName
+```
+
+`Store.addRow` schrieb `erstelltVon` aber nie — nur `addBlock` tut das. Für
+jede Datenbankzeile war der Wert `undefined`, der Vergleich lief gegen den
+Ersatzwert `'Ich'`, und `'Ich' === 'Redur'` ist falsch.
+
+### Und warum der naheliegende Fix falsch gewesen wäre
+
+Mein erster Anlauf war, `addRow` das Feld schreiben zu lassen. Das half
+nicht: die Zeilen tragen dann den Namen, der beim Anlegen galt — und wer sich
+später umbenennt, verliert rückwirkend, was er selbst angelegt hat. Gemessen
+und verworfen.
+
+Der Vergleich mit dem Anleger ist für diese Frage schlicht das falsche
+Werkzeug. Die Regel steht jetzt in einem Satz:
+
+> Eine gefüllte Personenzelle sagt, wem die Zeile gehört. Steht nirgends ein
+> Name, gehört sie dem, der zusieht.
+
+Auf einem Bestand, der auf diesem Gerät liegt, ist das die einzige Lesart —
+und in einem geteilten Arbeitsbereich gibt es die Personenspalte genau dafür.
+
+### Dieselbe Stelle noch einmal, zwanzig Dateien weiter
+
+`lebensbereiche.ts` beantwortet dieselbe Frage für die Bereichsansicht — mit
+demselben Vergleich und demselben Fehler. Zwei Listen, die „meine Aufgaben"
+verschieden beantworten, sind schlimmer als eine, die es schlecht tut; genau
+das hat E147 bei der Suche gekostet. Beide Stellen tragen jetzt dieselbe
+Regel, und test218 §9 prüft, dass die zweite nicht heimlich zurückfällt.
+
+### `addRow` schreibt `erstelltVon` trotzdem
+
+Nicht als Behebung — sie ist es nicht —, sondern weil das Feld gebraucht
+wird und fehlte:
+
+```txt
+dienst.ts:394        der Eigenschaftstyp `createdBy` las `row.erstelltVon`
+                     und bekam nie etwas: jede „Erstellt von"-Spalte zeigte
+                     den GERADE angemeldeten Namen statt des Anlegers
+schnittstelle.ts     dasselbe beim Notion-artigen Export
+steuerung.ts:3777    dasselbe in der Zeilenhistorie
+```
+
+Jeder andere Block trägt das Feld seit jeher (`indexdb.ts`, Zeile 378). Dass
+Datenbankzeilen die Ausnahme waren, ist genau die Art Inkonsistenz, auf die
+der nächste wieder hereinfällt.
+
+### Kann die Suite rot werden?
+
+**test218 §8 und §9**, sechs Punkte, an eine Suite angehängt, die schon
+43 hatte — die Frage „wem gehört eine Aufgabe" gehört an eine Stelle.
+
+Gegenprobe: die alte Besitzregel zurückgesetzt, auf einem Abzug des Baums.
+Rot werden drei Punkte, und der aussagekräftigste ist der aus §8: mit dem
+Namen „Redur" bleibt von drei erwarteten Zeilen genau eine übrig — „Eigene
+Zeile" aus der Datenbank ohne Personenspalte verschwindet, und das ist der
+Fall aus L56 in einer Zeile Ausgabe.
+
+
+---
+
+## E154 · Der Obsidian-Rundlauf, endlich einmal ganz durchgelaufen (§43)
+
+**25. August 2026.** §43 verlangt nichts Neues, sondern dass etwas
+Bestehendes nicht kaputtgeht:
+
+> Bestehenden stabilen Import/Export erhalten. Keine Regression: redion-id ·
+> Pfad · Aliase · Wikilinks · Reimport · keine unnötigen Duplikate
+
+Das ist die Sorte Anforderung, die ohne Prüflauf wertlos ist — „keine
+Regression" kann nur etwas heissen, wenn jemand nachsieht. Der Resolver aus
+E129 stand; niemand lief den Weg einmal ganz durch.
+
+**test219** tut das jetzt: einen echten kleinen Vault exportieren, das Archiv
+wieder auspacken, einlesen — und dann NOCH EINMAL einlesen.
+
+### Was ich dabei falsch erwartet habe
+
+Mein §4 hiess zuerst „Ohne redion-id trägt der Pfad" und erwartete, dass eine
+Datei ohne Kennung über ihren `redion-path` wiedererkannt wird. Das Produkt
+tut bewusst das Gegenteil, und der Kommentar dort sagt auch warum:
+
+> Nur beide stabilen Anker gemeinsam erlauben ein destruktives Update. Eine
+> passende ID ODER ein passender Pfad allein kann aus einer fremden Datei
+> kopiert sein.
+
+Ein Pfad ist eben kein Geheimnis. Wer eine `Elektro/Normen und Regeln.md` in
+seinen Ordner legt, hat damit noch kein Recht auf meine Seite. Fehlt die
+Kennung, entsteht eine getrennte Fassung, und der Bericht zählt sie als
+Konflikt. §46 in einer Regel: lieber eine Seite zu viel als eine zerstörte.
+
+Der Abschnitt prüft jetzt genau das — und ist dadurch wertvoller geworden,
+nicht schwächer.
+
+### Und was ich beim Zählen falsch gemacht habe
+
+§6 zählte alle Seiten mit dem Titel „Normen und Regeln" und fand vier statt
+zwei. Kein Produktfehler: §4 hinterlässt absichtlich zwei getrennte
+Fassungen, und die zählten mit. Gemessen wird jetzt der Unterschied zwischen
+vorher und nachher — welche Seiten DIESER Import angelegt hat —, nicht der
+Bestand.
+
+Dasselbe beim „+1": der Import legt ausser der Notiz auch eine Vault-Wurzel
+(`Aus Obsidian · Fremder-Vault`) und die Ordnerseite an. Eine Zahl wie „+1"
+wäre eine Behauptung über die Ordnerstruktur gewesen, nicht über das
+Wiedererkennen. Geprüft wird deshalb der Satz aus dem Bericht:
+`1 Notizen (1 neu, 0 wiedererkannt)`.
+
+### Kann die Suite rot werden?
+
+Drei Gegenproben auf einem Abzug des Baums, und die mittlere ist die, auf
+die es ankommt:
+
+```txt
+Titel als dritter Anker in `pathCandidates`   → nichts. Ein Titel hat nicht
+                                                 die Form eines Pfades; die
+                                                 Gegenprobe griff gar nicht.
+Nach Titel verschmelzen, wenn sonst nichts    → SIEBEN Punkte rot, darunter
+  passt (genau die Regression aus E129)         „Ihr eigener Text steht noch
+                                                 da — Ganz andere Notizen."
+                                                 Die fremde Datei hatte die
+                                                 lokale Seite aufgefressen.
+`redion-id` aus dem Export weggelassen        → 13 Seiten → 26 → 39.
+                                                 Die Verdopplungskaskade aus
+                                                 „keine unnötigen Duplikate".
+```
+
+Die erste Gegenprobe ist die lehrreichste: sie hat NICHT gegriffen, und
+deshalb steht sie hier. Eine Gegenprobe, die nichts bewirkt, beweist nichts —
+sie muss durch eine ersetzt werden, die den Schaden wirklich anrichtet.
+
+
+---
+
+## E155 · Der Weg zurück zur Quelle (§44)
+
+**25. August 2026.** §44 steht in einem Satz und zwei Beispielen:
+
+> Jedes abgeleitete Wissensobjekt sollte, wenn vorhanden, zurückspringen
+> können.
+>
+>     Karte → PDF → Seite 14 → Ausschnitt
+>     Aufgabe → Meeting → 00:07
+
+### Die Angabe war da. Der Weg nicht.
+
+Nachgesehen, statt gebaut: seit E129/E130 trägt jedes abgeleitete Objekt
+einen `sourceRef` — Art, Seite, Block, Beschriftung, Seitenzahl und sogar den
+Ausschnitt in normierten Koordinaten. Auch `App.zeigeBlock` gab es längst:
+Seite öffnen, hinrollen, kurz hervorheben, und beim Dokumentmodus vorher die
+richtige Seite wählen.
+
+Gelesen hat den `sourceRef` genau eine Stelle — `document-mode.ts` — und
+zwar in die ANDERE Richtung: „welche Karten gehören zu dieser PDF-Seite".
+
+Der Rückweg fehlte. Die Karte wusste, woher sie kam; man kam nur nicht hin.
+
+### Vierzig Zeilen, an der Stelle, wo schon eine solche Marke steht
+
+Direkt neben der Tonmarke aus E152 (`audioRef`) und der Kommentarmarke: ein
+Knopf, der sagt, wohin er führt.
+
+```txt
+↩ PDF · Seite 14        aus einem eingelesenen Skript
+↩ A4-Blatt              aus einem beschriebenen Blatt
+↩ Bauleitung KW 35      aus einer Besprechung oder Notiz
+```
+
+Zwei Entscheidungen darin:
+
+**Er nennt das Ziel, nicht sich selbst.** „Quelle" wäre ein Wort, das man
+anklicken muss, um es zu verstehen. „PDF · Seite 14" ist eine Auskunft.
+
+**Ein Ziel, das es nicht mehr gibt, bekommt keinen Knopf.** Nicht einen
+grauen, nicht einen mit Fehlermeldung — gar keinen. Das ist die Lehre aus
+E118: ein Weg, der ins Leere führt, ist schlimmer als ein fehlender, weil man
+ihn erst nach dem Klick als solchen erkennt.
+
+### Was §44 damit noch nicht ganz erfüllt
+
+Das erste Beispiel ist vollständig: Karte → PDF → Seite 14, und der
+Ausschnitt steht in den Daten. Beim zweiten reicht es bis „Meeting", nicht
+bis „00:07" — nicht aus Nachlässigkeit, sondern weil die Angabe nicht
+existiert: die KI gibt Aufgaben als `{ was, wer, bis }` zurück, ohne Zeit.
+Sie über einen Textabgleich zu erraten wäre schlechter als sie wegzulassen —
+eine Zeitmarke an der falschen Stelle lässt einen glauben, die Aufnahme sei
+kaputt. Als **L57** eingetragen, mit dem sauberen Weg dazu.
+
+### Kann die Suite rot werden?
+
+**test220**, fünf Abschnitte, 21 Punkte. Zwei Gegenproben, einzeln auf einem
+Abzug des Baums zurückgenommen:
+
+```txt
+`sourceRef` nicht mehr gelesen          → ZEHN Punkte rot: kein Knopf, kein
+                                           Sprung, keine der beiden Richtungen
+Knopf auch bei totem Ziel               → §4 rot
+```
+
+§4 ist die Gegenrichtung und die wichtigere Hälfte — und sie hat selbst noch
+eine: die verwaiste Karte MUSS es geben, und ihre Quellenangabe muss noch in
+den Daten stehen. Sonst prüfte der Punkt bloss, dass die Karte fehlt.
+
+§5 prüft, dass die Angabe eine Sicherung übersteht. Ein Rücksprung, der beim
+Sichern verlorengeht, ist keiner.
+
+**Angesehen** (§55): `node bilder.mts quelle` zeigt alle drei Fälle auf einer
+Seite — aus einem Skript, aus einer Besprechung, und einen getippten Absatz
+ohne Knopf.
+
+
+---
+
+## E157 · Ein Prüflauf, der wartet, sieht aus wie einer, der rechnet
+
+**25. August 2026.** Der vollständige Durchgang stand 25 Minuten still. Keine
+Meldung, kein Fehler, kein Abbruch — nur ein Lauf, der nicht weiterging.
+Gefunden erst durch einen Blick auf die Änderungszeit der Protokolldatei:
+
+```txt
+zuletzt geschrieben   03:05:40
+jetzt                 03:29:31
+```
+
+### Die Ursache war meine eigene Änderung von vorhin
+
+E150 hat `Recognition.configure()` einen Satz vorangestellt: bevor nach einer
+Adresse gefragt wird, erklärt ein Fenster, was zu tun ist — „starte
+`node dienste/ocr.mts`, die Anleitung steht in `doku/OCR-DIENST.md`". Das war
+der eigentliche Kern von L53, und es ist richtig so.
+
+`test202` ersetzt für seinen Abschnitt aber nur `Dialog.frage`, nicht
+`Dialog.wahl`. Die Erklärung öffnete deshalb ein ECHTES Fenster und wartete
+auf einen Klick, der in einem Prüflauf nie kommt. `page.evaluate` wartete
+mit.
+
+Dieselbe Lehre wie beim Nachtrag zu E147, und diesmal teurer: **wer eine
+Funktion ändert, muss suchen, wer sie prüft.** `grep -l "Recognition.configure"
+pruefungen/` hätte gereicht — zwei Sekunden gegen fünfundzwanzig Minuten.
+
+### Und die Lehre, die nicht bei mir liegt
+
+`pruefungen/alle.mts` hatte keine Uhr. Ein Lauf, der hängt, und einer, der
+rechnet, sahen für den Durchgang gleich aus — und für den Menschen davor
+auch. Das ist eine Eigenschaft der Werkzeugkette, nicht ein Ausrutscher.
+
+Der Durchgang misst jetzt die **Stille**, nicht die Gesamtdauer:
+
+```txt
+keine Ausgabe für 5 Minuten  →  beenden, benennen, weitermachen
+
+  ⏳ test202.mts hat 5 Minuten nichts gemeldet — wird beendet.
+  ✗ 1 von 186 Läufen gescheitert:
+      test202 (hängt — nach 5 Minuten Stille beendet)
+```
+
+Gemessen wird bewusst die Stille: manche Läufe rechnen lange und melden dabei
+fleissig. Der längste ehrliche Abstand zwischen zwei Zeilen liegt bei den
+grossen Sicherungsläufen unter zwei Minuten.
+
+### Kann die Uhr rot werden — und bleibt sie sonst still?
+
+Beides auf einem Abzug des Baums geprüft, mit der Grenze auf sechs Sekunden:
+
+```txt
+ein Lauf, der schweigt und die Ereignisschleife am Leben hält
+  → beendet, benannt, Durchgang läuft weiter          ✓
+
+ein Lauf, der 15 s rechnet und alle 3 s eine Zeile meldet
+  → überlebt vollständig                              ✓
+```
+
+Die erste Gegenprobe war beim ersten Versuch **wertlos**: ein `await new
+Promise(() => {})` allein lässt Node von selbst aussteigen („unsettled
+top-level await"), der Lauf endete also ohne die Uhr. Erst mit einem
+`setInterval` daneben hängt er wirklich. Eine Gegenprobe, die den Schaden
+nicht anrichtet, beweist nichts — dritter Fall an diesem Tag.
+
+Die zweite Richtung ist die wichtigere: eine Uhr, die gesunde langsame Läufe
+abschiesst, wäre schlimmer als keine.
+
+
+---
+
+## E156 · Am Telefon fehlten die Ränder — an drei Stellen
+
+**25. August 2026.** Angefangen hat es mit einem Bildschirmfoto des
+Dokumentmodus (§55) und einem Verdacht, den ich zuerst für einen Lesefehler
+hielt: der Seitentitel schien am Bildrand zu kleben.
+
+### Erstens: „Volle Breite" gab weniger Breite
+
+```txt
+390 px Telefon
+  gewöhnliche Seite    28 px Rand   →  334 px Inhalt
+  „Volle Breite"       60 px Rand   →  270 px Inhalt
+```
+
+Der Modus, den man wählt, um MEHR Platz zu bekommen, gab ein Fünftel
+weniger — und man wählt ihn am Telefon eher als am Rechner.
+
+Die Ursache steht im selben Block wie die von E148:
+
+```txt
+aufbau.css      #page.wide{ padding:0 60px 40vh }     1 Kennung + 1 Klasse
+bausteine.css   #page{ padding-left: … }  (Telefon)   1 Kennung
+```
+
+Die Telefonregel verliert, obwohl ihre Datei später geladen wird. Im
+Kommentar direkt darüber steht bereits die Erinnerung an eine FRÜHERE
+Auseinandersetzung mit der Spezifität dieser Zeile. Dreimal dieselbe Falle an
+derselben Kennung ist kein Zufall mehr: `#page` mit Zustandsklassen darauf
+ist ein Ort, an dem jede spätere Regel nachweisen muss, dass sie gilt.
+
+**`:not(.produkt-welt)` ist dabei kein Schmuck.** Eine Produktwelt wird
+ebenfalls in `#page` gezeichnet und trägt auch `wide`. Ohne den Ausschluss
+hätte die neue Zeile gegen `#page.produkt-welt{padding:10px 12px}` aus E148
+gewonnen — gleiche Spezifität, spätere Datei — und den Produktwelten genau
+die Pixel zurückgenommen, die E148 ihnen geholt hat. Beim Vorbereiten
+aufgefallen, bevor es passiert ist; test221 §3 hält es fest.
+
+### Zweitens: der Aufmacher ragte aus dem Bild
+
+`.cover` zieht sich mit einem negativen Rand über die Seitenränder hinaus,
+damit das Bild bis an die Kante geht. Am Telefon standen dort weiter die
+Zahlen vom Rechner — 96 bzw. 60 px gegen einen Rand von 28. Gemessen: der
+Aufmacher begann bei −32 und endete bei 422 auf einem 390 px breiten Schirm.
+
+### Drittens: im Dokumentmodus fehlte der Rand ganz
+
+Und hier war das Bildschirmfoto im Recht, meine erste Messung dagegen nicht:
+sie nahm eine gewöhnliche Seite und fand brave 28 px. Der Dokumentmodus hat
+eine eigene Regel, `.document-page{padding-inline:0!important}`.
+
+Für die Arbeitsfläche ist das richtig — eine PDF-Seite soll am Telefon von
+Kante zu Kante gehen. Zeichen, Titel und Werkzeugzeile stehen aber im selben
+Kasten und verloren ihren Rand mit:
+
+```txt
+Tinte des Titels     x = 0     am Bildschirmrand
+Werkzeugzeile        0 .. 408  achtzehn Pixel über den rechten Rand hinaus
+```
+
+Die 408 kommen von `margin-right:-18px` — einem Kniff, mit dem die
+schiebbare Zeile in den Seitenrand hineinlaufen darf, statt an ihm
+abzuschneiden. Ohne Seitenrand läuft sie aus dem Bild. Im Dokumentmodus ist
+der Kniff jetzt aus.
+
+### Und die Messung, die es nicht gesehen hätte
+
+Mein erster Prüfpunkt las `getBoundingClientRect().left` und wäre grün
+geblieben: ein Innenabstand verschiebt den INHALT, nicht das Rechteck. Gemessen
+wird jetzt die Tinte — ein Bereich um das erste Zeichen. Dasselbe wie
+`clientWidth` in E148, nur andersherum, und der vierte Fall an diesem Tag, in
+dem die Messung und nicht das Produkt der Fehler war.
+
+### Kann die Suite rot werden?
+
+**test221**, fünf Abschnitte, 20 Punkte. Fünf Gegenproben, einzeln auf einem
+Abzug des Baums zurückgenommen:
+
+```txt
+alte Telefonregel (`#page` ohne `.wide`)      → §1 rot: 270 gegen 334
+`:not(.produkt-welt)` weggelassen             → §3 rot: E148 zurückgedreht
+Aufmacher wieder mit den Rechner-Zahlen       → §2 rot: −32 bis 422
+Kopf im Dokumentmodus ohne Rand               → §5 rot: drei Teile bei x=0
+negativer Rand der Werkzeugzeile bleibt       → §5 rot: 408 auf 390 px
+```
+
+§4 ist die Gegenrichtung und verhindert die faule Lösung: am RECHNER muss
+„Volle Breite" deutlich mehr geben als die gewöhnliche Seite. Wer die Ränder
+überall gleichmacht, macht §4 rot. Und §5 prüft mit, dass die Arbeitsfläche
+selbst randlos BLEIBT — der Rand gehört dem Kopf, nicht dem Dokument.
+
+
+## E158 · Sechs Bereiche standen in keinem Katalog (L51, §5 Regel 2)
+
+CLAUDE.md §5 Regel 2 ist ein Satz lang: „Neuer Bereich = zwei
+Register-Einträge." L51 hielt am 24. August fest, dass sechs Module diese
+Regel nicht einhalten — Lernwelt, Arbeitswelt, Lebensbereiche, Electrical,
+Recognition und DocumentMode hingen ausschliesslich an `globalThis`.
+
+Im Betrieb war das kein Fehler. Es lief; jeder Knopf, der sie aufrief, rief
+sie auf. Der Preis stand woanders, und er ist unsichtbar, solange niemand
+danach fragt: **ein Modul ohne Eintrag ist für jede Übersicht unsichtbar.**
+Auch für die nächste Prüfung, die „alle Bereiche" durchgehen will. Auch für
+die Hilfe. Auch für den Menschen, der wissen will, was diese App eigentlich
+alles kann.
+
+Also stehen die sechs jetzt in `src/register/module.ts`, und
+`pruefungen/lauf/test222.mts` ist genau die Prüfung, die es vorher nicht
+geben konnte.
+
+### Was die Prüfung prüft — und warum nicht das Naheliegende
+
+Das Naheliegende wäre: sind die Einträge da? Das ist eine Liste, die sich
+selbst zählt, und sie beweist nichts. Geprüft wird deshalb, dass jeder
+Eintrag etwas TUT:
+
+    Register.module.oeffne(id)   muss true ergeben
+    ohne zu werfen
+    und danach muss sich am Bildschirm etwas geändert haben
+
+Die dritte Zeile ist die, auf die es ankommt. Sie hat beim ersten Lauf
+sofort einen Fehler gefunden, und zwar meinen eigenen.
+
+### Der Fund: ein Eintrag, der seinen Nachbarn nachspricht
+
+`lebensbereiche` rief `Produktwelten.workspace('uebersicht')` auf —
+dieselbe Zeile wie `arbeitswelt` direkt darüber. Da `arbeitswelt` in der
+Schleife unmittelbar davor lief, war die Arbeitswelt bereits offen, und der
+Bildschirm blieb, wie er war. Die Prüfung meldete `["lebensbereiche"]`.
+
+Das ist E118 mit einem anderen Namen: ein Katalogeintrag, der etwas
+verspricht und nichts aufmacht. Nur ist er hier schlimmer als ein toter
+Knopf, denn er behauptet zusätzlich, ein eigener Bereich zu sein.
+
+Der Grund war ein Denkfehler beim Eintragen. **Lebensbereiche sind kein
+Bildschirm.** Sie sind ein kleines Metafeld am schon vorhandenen Objekt
+(`bereiche/wissen/lebensbereiche.ts`, ausdrücklich „keine eigenen
+Speicher"). Der eine Ort, an dem man sie wirklich anfasst, ist die Zuordnung
+zur offenen Seite — dieselbe, die im Seitenmenü unter „Lebensbereiche
+zuordnen" hängt. Genau die macht der Eintrag jetzt auf. Ohne offene Seite
+sagt er, dass er eine braucht, statt zu schweigen.
+
+### Der zweite Fund: eine Meldung, die niemand messen konnte
+
+`dokumentmodus` sollte melden, warum er gerade nicht kann. Die Prüfung sah
+nie eine Meldung — und der Fehler lag bei der Prüfung, nicht am Produkt.
+Sie suchte `.toast` und `.toasts > *`. Beides gibt es nicht.
+
+`Hinweis.toast` schreibt in EIN festes Element, `#toast` in `index.html`,
+und blendet es über die Klasse `show` ein. Es wächst keine Kachelliste. Eine
+Prüfung, die nach einer Kachelliste sucht, findet nie etwas — und wäre bei
+einem stummen Modul genauso grün geblieben wie bei einem redenden. §55.2 in
+einem Satz: eine Prüfung, die immer „passt schon" sagt, ist keine Prüfung.
+
+Gemessen wird jetzt am `#toast`-Element, und zwar zweiteilig: erst leeren,
+dann auslösen, dann Text UND `show` lesen. Beides ist nötig. Ein alter Text,
+der stehenbleibt, wäre sonst ein falsches Grün; ein Text, der geschrieben
+aber nie gezeigt wird, ebenfalls.
+
+### Die Gegenproben (§55.2)
+
+Vier, einzeln an einem Abzug des Baums gesetzt und gemessen:
+
+| Gegenprobe | rot |
+|---|---|
+| A · die sechs Einträge wieder aus dem Register nehmen | 9 |
+| B · `lebensbereiche` zurück auf `workspace('uebersicht')` | 1 |
+| C · `dokumentmodus` steigt wortlos aus | 3 |
+| D · `Hinweis.toast` schreibt den Text, zeigt ihn aber nie | 2 |
+
+B ist der Fehler oben, rückwärts nachgestellt: genau ein Punkt, genau der
+richtige. D beweist, dass die `show`-Messung trägt und nicht Zierrat ist.
+
+### Und ein Kollateralschaden, der eine eigene Lehre ist
+
+test86 hatte die Zeile `p('Acht Bereiche', r.module === 8, …)`. Sie ging
+rot, weil sechs Module eingetragen wurden — also weil etwas RICHTIG gemacht
+wurde. Eine festgeschriebene Zahl prüft nichts als sich selbst; sie schlägt
+bei jeder legitimen Erweiterung an, und ein Alarm, der bei richtigen
+Änderungen losgeht, wird beim zweiten Mal weggeklickt.
+
+Geprüft wird dort jetzt der Vertrag statt der Zahl: `anzahl()` muss zur
+Länge von `alle()` passen, und die acht Ursprünglichen müssen drin sein.
+Gegenprobe: `anzahl: () => 8` fest verdrahten — rot, „8 gezählt, 14 in der
+Liste". Welche sechs dazugekommen sind, prüft test222 namentlich, und dort
+gehört es auch hin.
+
+### Was NICHT erledigt ist
+
+Die Seitenleiste. „Lernzentrum" und „Workspace" stehen als feste Zeilen in
+`index.html` (Zeilen 144 und 147), nicht in `Register.navigation`. Das ist
+der zweite Teil von L51 und ein eigener Umbau der Seitenleiste — hier
+absichtlich nicht mitgemacht, damit dieser Schritt eine Sache bleibt. L51
+bleibt deshalb offen und sagt jetzt genauer, was noch fehlt.
+
+
+## E159 · Ein schwarzer Schatten auf schwarzem Grund (L58)
+
+**25. August 2026.** L58 hielt fest, dass die Werkzeugzeile über dem
+Seitentitel am Telefon rollt, ohne es zu zeigen — 617 px Inhalt in einem
+390 px breiten Kasten. Erreichbar war alles; sichtbar war nichts. Und L58
+schloss mit einem Satz, der sich als halb richtig herausstellte:
+
+> Dass die Lösung dreimal fast gleich aussieht, ist selbst ein Hinweis: es
+> gehört ein gemeinsamer Helfer daraus gemacht.
+
+### Erst der Helfer
+
+Es gab ihn schon: `kern/helfer/rollrand.ts`, gebaut für die Tabellen. Nur
+kannten ihn die zwei älteren Stellen nicht, und beide rechneten dieselben
+drei Zeilen noch einmal:
+
+```txt
+lernwelt.ts     scrollLeft > 2 …          data-mehr am Element selbst
+pdf/marken.ts   scrollLeft > 2 …          data-mehr am ELTERNTEIL
+rollrand.ts     scrollLeft > SPIEL …      data-rand, weiche Kante
+```
+
+Zusammengelegt wird jetzt die RECHNUNG, nicht die Darstellung. `binde` nimmt
+eine Wahl entgegen:
+
+```ts
+Rollrand.binde(leiste, { art: 'mehr' })            Knopfleisten
+Rollrand.binde(tools,  { art: 'mehr', an: row })   PDF: rollt tools, malt row
+Rollrand.binde(feld)                               Tabellen, weiche Kante
+```
+
+`an` ist kein Zierrat. Im PDF rollt `.blatt-tools`, gezeichnet wird an
+`.blatt-reihe` — nimmt man die Angabe weg, gehen drei Punkte in test210 rot.
+Gegengeprüft, nicht angenommen.
+
+### Und dann das Hinsehen
+
+Für die neue Stelle schrieb ich den Schatten ab, der bei `.lw-nav` steht:
+
+```css
+box-shadow:-14px 0 14px -8px rgba(0,0,0,.34)
+```
+
+Die neue Prüfung war grün. Sie mass die berechnete Deckkraft des
+Pseudo-Elements, fand 1, und meldete „der Schatten ist wirklich da".
+
+Auf dem Bildschirmfoto war nichts. Schwarz mit 34 % über einer Fläche von
+`#141414` ist kein Schatten, sondern eine Rechnung ohne Wirkung.
+
+Also nachgesehen, wie es an der Stelle aussieht, von der ich abgeschrieben
+hatte — und dort war es genauso. Die Reiterleiste der Lernwelt, dunkles
+Thema, 390 px:
+
+```txt
+☀ Heute   📕 Lernen   🧭 Lernpfad   🧩 Meine Fehle│
+```
+
+Eine scharfe Kante mitten im Wort. Genau der Zustand, den E151 beheben
+wollte, und die Prüfung dazu war seit dem 25. August grün — weil sie das
+Datenmerkmal las und nicht das Bild.
+
+### Was stattdessen dasteht
+
+Ein Verlauf in die Farbe der Fläche, auf der er liegt:
+
+```css
+background:linear-gradient(to left, var(--bg-side), transparent)
+```
+
+Er endet dort, wo er liegt, und trägt deshalb im hellen wie im dunklen
+Thema. Dieselbe Antwort steht seit E140 an der linken Kante von
+`.blatt-reihe` — mit `--bg-card` — und war dort von Anfang an richtig; sie
+war nur nie auf die zwei anderen Stellen übertragen worden.
+
+Die zwei Streifen sind `position:sticky` mit negativem Aussenabstand: sticky,
+damit sie nicht mit dem Inhalt wegrollen, und der negative Abstand, damit sie
+die Knöpfe nicht 26 px weit vor sich herschieben.
+
+### Was jetzt geprüft wird — und was nicht
+
+| Punkt | Prüfung |
+|---|---|
+| `data-mehr` folgt dem Rollstand | test221 §6, test217 §3, test210 |
+| Die Kante wird eingeblendet (Deckkraft) | test221 §6 |
+| Es ist ein VERLAUF, kein Schatten in fester Farbe | test221 §6, test217 §3 |
+| Und der Streifen hat Breite | test217 §3 |
+
+Die dritte Zeile ist die Lehre aus diesem Eintrag. Sie beweist nicht, dass
+man die Kante SIEHT — das kann keine dieser Zahlen. Sie hält fest, welche
+ART von Kante gebaut wurde, und geht rot, wenn jemand zum Schatten
+zurückkehrt. Ob man etwas sieht, bleibt eine Frage ans Bild (§55), und genau
+deshalb steht dieser Vorbehalt auch im Prüflauf selbst.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · `Rollrand.binde` an der Werkzeugzeile entfernen | 7 in test221 |
+| B · das Merkmal steht, die CSS blendet nichts ein | 3 in test221 |
+| C · `an: row` im PDF weglassen | 3 in test210 |
+| D · `.lw-nav` zurück auf den schwarzen Schatten | 2 in test217 |
+
+D ist die eine, die es vorher nicht geben konnte: der Fehler, mit dem dieser
+Eintrag anfing, ist jetzt einer, der auffällt.
+
+
+## E160 · Ein Katalog, den niemand liest, wird still falsch (L51 Teil 2)
+
+**25. August 2026.** E158 trug sechs Bereiche in `Register.module` ein. Der
+zweite Teil von L51 hiess: „Lernzentrum" und „Workspace" stehen als feste
+Zeilen in `index.html`, nicht in `Register.navigation`. Das klang nach zwei
+Zeilen Nachtrag. Nachgezählt war es etwas anderes.
+
+### Was dastand, und was stimmte
+
+Der Kopf von `register/navigation.ts` sagte:
+
+> Hier steht die Ordnung. Die Seitenleiste liest sie und zeichnet, was sie
+> findet — mehr nicht.
+
+Gemessen im Browser, nicht geschätzt:
+
+```txt
+45   Zeilen zeichnet die Seitenleiste
+12   Einträge kannte das Register
+ 1   Aufruf las davon:  anPlatz('unten').filter(x => x.tun && x.vonAussen)
+```
+
+Das Register war nicht die Ordnung. Es war ein Anhängepunkt für fremde
+Bereiche, mit einer Liste daneben, die aussah wie eine Wahrheit.
+
+### Und deshalb war es kaputt
+
+Ein Katalog, den niemand ausführt, verrottet ohne Geräusch. Drei Einträge:
+
+| Eintrag | rief auf | ist aber |
+|---|---|---|
+| `suche` | `Werkzeuge.palette()` | die Befehlspalette, eine Zeile tiefer |
+| `posteingang` | `Werkzeuge.meldungen()` | die Meldungsliste, nicht der Posteingang |
+| `ki` | `App.kiPanel()` | eine Zeile, die die Seitenleiste nirgends zeigt |
+
+Keiner dieser Fehler konnte auffallen. Der Knopf „Suchen" in der
+Seitenleiste rief seit jeher `suche` aus `schale.ts`; der Registereintrag
+daneben behauptete etwas anderes und wurde nie ausgeführt. Genau das ist der
+Preis, den L51 gemeint hat — nur teurer als dort vermutet.
+
+### Was jetzt gilt
+
+Das AUSSEHEN bleibt in `index.html`: neun Knöpfe, Reihenfolge, Beschriftung,
+Tastenkürzel. Die HANDLUNG steht im Register, einmal. `schale.ts` hängt sie
+über `knopfId` an:
+
+```ts
+Register.navigation.anPlatz('oben').forEach(e => {
+  if (e.knopfId && e.tun) an(e.knopfId, …e.tun…);
+});
+```
+
+Wo vorher acht Zeilen `an('btn-…', …)` standen, steht jetzt eine Schleife —
+und daneben kein zweites, abweichendes Verzeichnis mehr.
+
+`test222 §5` hält beide aneinander: gleiche Anzahl, gleiche Folge Knopf für
+Knopf, gleiche Beschriftung, gleiche Kürzel. Wer eine Zeile im Markup
+umbenennt und das Register vergisst, macht sie rot — und umgekehrt.
+
+### Warum die Seitenleiste NICHT aus dem Register zeichnet
+
+Das wäre der reinere Weg, und er ist heute der falsche. Register und
+Seitenleiste sind so weit auseinander, dass „ab jetzt zeichnet das Register"
+sechs Zeilen verschieben würde: `bibliothek` steht dort unter `unten` und
+wird oben gezeichnet, `vorlagen` steht unter `unten` und erscheint bei den
+Werkzeugen, `ki` stünde plötzlich in der Leiste.
+
+Das ist eine Umstellung der Seitenleiste, um die niemand gebeten hat. Erst
+muss der Katalog stimmen; dann kann er zeichnen. Der Reihenfolge halber:
+diese Entscheidung macht Schritt eins, und die Prüfung sorgt dafür, dass er
+stimmen BLEIBT.
+
+
+### Und noch ein Fund, diesmal von mir selbst gemacht
+
+Als die Handlung ins Register wanderte, blieb `an('btn-new', …)` in
+`schale.ts` stehen. Die neue Schleife hängte dieselbe Zeile ein zweites Mal
+an — ein Klick auf „Neue Seite" legte **zwei** Seiten an. Gemessen: 13
+Seiten vorher, 15 nachher.
+
+Alle acht Punkte von §5 blieben dabei grün. Die Listen stimmten ja, und
+„macht die Zeile etwas auf?" ist bei zwei Seiten genauso wahr wie bei einer.
+Ein doppelt angehängter Knopf ist nur zu sehen, wenn man ZÄHLT — also zählt
+§5 jetzt, und Gegenprobe D stellt die doppelte Zeile wieder her: rot,
+„ist 2, soll 1".
+
+Das ist die vierte Messung in diesem Durchgang, die aus dem falschen Grund
+grün war. Ein Punkt, der aus dem falschen Grund grün ist, fällt niemandem
+auf — das steht seit E145 in dieser Datei, und es stimmt jedes Mal wieder.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · das alte Register zurück (vier Einträge, `ki`, falsche Aufrufe) | 7 |
+| B · eine Zeile nur im Markup umbenennen | 1 |
+| C · die Schleife in `schale.ts` entfernen | 3 |
+| D · `an('btn-new', …)` wieder danebenstellen | 1 |
+
+A ist der Zustand von gestern, rückwärts nachgestellt. Er meldet unter
+anderem „Suchen öffnet die Suche — {suchfeld:false}": der Fehler, mit dem
+dieser Eintrag anfängt, ist jetzt einer, der auffällt.
+
+### Was offen bleibt
+
+36 der 45 gezeichneten Zeilen stehen weiter in keinem Register — die
+Werkzeuge, die Apps-Liste, die untere Gruppe. Sie haben grösstenteils nicht
+einmal eine Kennung im Markup. Das steht in L51 und ist der nächste Schritt,
+nicht dieser.
+
+
+## E161 · Der Weg zurück in die Besprechung — und drei Sachen, die dabei auffielen (L57, §44)
+
+**25. August 2026.** §44 des Auftrags nennt zwei Beispiele für den Weg
+zurück zur Quelle. Das erste steht seit E155:
+
+```txt
+Karte    → PDF     → Seite 14 → Ausschnitt     ✅ E155
+Aufgabe  → Meeting → 00:07                     hier
+```
+
+L57 hielt fest, was fehlt: die Sekunde. Und L57 schrieb dazu, der Rest sei
+erledigt — „die Aufgabe findet ihre Besprechung, geprüft in test220 §3".
+
+Das stimmte nicht.
+
+### Fund 1: das Produkt schrieb gar keine Herkunft
+
+test220 §3 baut sich seinen `sourceRef` von Hand und prüft damit den
+Zeichner: erscheint der Knopf, nennt er die Besprechung, springt er hin. Das
+ist richtig und beweist die halbe Sache.
+
+`besprechung.ts` legte Aufgabenblock und Datenbankzeile aber ohne jede
+Herkunft an. Der Knopf, den test220 prüft, wäre an einer echten
+Besprechungsaufgabe **nie erschienen**. Eine Prüfung mit selbstgebautem
+Fixture kann das nicht sehen — sie prüft den Zeichner, nicht den Erzeuger.
+
+Also schreibt `seiteAnlegen` jetzt beides: den `sourceRef` am Todo-Block auf
+der Besprechungsseite und denselben an der Zeile in „Aufgaben aus
+Besprechungen". Und test223 geht den PRODUKTWEG, nicht den Fixture-Weg.
+
+### Fund 2: das Ziel war da und unsichtbar
+
+Das volle Transkript steht in einer Aufklappzeile, die zu ist. Ihre Kinder
+werden gezeichnet und stehen auf `display:none`.
+
+`rolleZu` sucht `[data-bid=…]`, **findet** das Element, rollt hin, hebt es
+hervor und meldet Erfolg. Zu sehen ist nichts.
+
+Das betrifft jeden Tieflink in eine zugeklappte Zeile, nicht nur diesen.
+`zeigeBlock` klappt die Vorfahren jetzt auf, bevor es rollt.
+
+Die Prüfung dazu misst deshalb die HÖHE der Zielzeile und nicht ihr
+Vorhandensein — und die Gegenprobe zeigt genau, warum: ohne das Aufklappen
+bleibt „Die Zielzeile steht im Bild" **grün** und nur „Und sie ist wirklich
+zu sehen" wird rot.
+
+### Fund 3, der eigentliche Auftrag: die Sekunde
+
+Die KI wird jetzt danach gefragt:
+
+```txt
+"aufgaben":[{"was":…,"wer":…,"bis":…,"sek":0}]
+
+Bei „sek" trägst du die Zeitmarke der Zeile ein, in der die Aufgabe
+besprochen wird — die Zahl aus [mm:ss] am Zeilenanfang, umgerechnet in
+Sekunden. Bist du dir nicht sicher, lässt du „sek" weg.
+```
+
+Und geglaubt wird die Antwort nur, wenn das Protokoll wirklich eine Zeile
+mit dieser Zeit enthält. L57 hat den Grund schon aufgeschrieben: eine
+Zeitmarke, die an der falschen Stelle landet, ist schlechter als gar keine —
+man hört hin, hört etwas anderes und hält die Aufnahme für kaputt.
+
+Die Prüfung dafür braucht kein Modell. `Meeting.seiteAnlegen` bekommt ein
+Ergebnis mit drei Aufgaben: `sek: 7` (die Zeile gibt es), `sek: 999` (die
+gibt es nicht) und gar keine Angabe. Die erste bekommt Zeit und Ziel, die
+anderen beiden zeigen auf die Besprechungsseite und tragen keine Zeit.
+
+### Was der Knopf sagt
+
+```txt
+↩ Bauleitung KW 35 · 25.8.2026 · 00:07     mit Zeitmarke
+↩ Bauleitung KW 35 · 25.8.2026            ohne
+```
+
+Das Datum kommt aus dem Seitentitel, und der Editor nimmt bewusst den
+aktuellen Titel und nicht das eingefrorene Etikett — wer die Seite
+umbenennt, soll den neuen Namen sehen.
+
+`zeit` steht als fertiger Text im `sourceRef`, neben der Zahl `sek`. Der
+Editor darf `bereiche/verbinden` nicht kennen (CLAUDE.md §5 Regel 1), und
+eine zweite Formatierfunktion wäre genau die Abschrift, die E159 eben erst
+zusammengelegt hat.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · kein `sourceRef` am Aufgabenblock | 7 |
+| B · die genannte Sekunde ungeprüft glauben | 2 |
+| C · `klappeAuf` in `zeigeBlock` weglassen | 2 |
+| D · kein `sourceRef` an der Datenbankzeile | 3 |
+
+C ist die lehrreichste: „steht im Bild" bleibt grün, „ist wirklich zu sehen"
+wird rot. Genau dieser Unterschied war Fund 2.
+
+### Was offen bleibt
+
+Ob ein echtes Modell brauchbare Sekunden liefert, steht hier nicht. Geprüft
+ist die Hälfte, die Code ist: die Frage wird gestellt, und eine falsche
+Antwort wird verworfen. Die andere Hälfte braucht ein Modell zum Messen und
+bleibt in L57 stehen — kleiner als vorher, aber offen.
+
+
+## E162 · „Karten: 3, Lernstand 67 %" — für eine Prüfung ohne eine einzige Karte (L49)
+
+**25. August 2026.** L49 stand seit dem 24. mit dem Satz da:
+
+> Die Zuordnung Prüfung → Karten ist reine Wortsuche (`passendeKarten`) und
+> fällt bei null Treffern auf ALLE Karten zurück.
+
+E136 hatte darauf reagiert und `nurPassendeKarten` neben `passendeKarten`
+gestellt — ohne Rückfall, für die Kachel „Prüfungsfokus". Der Kommentar
+dazu ist bemerkenswert genau:
+
+> Für die Kachel „Prüfungsfokus" wäre es eine Unwahrheit — sie verspricht
+> „passend zur nächsten Prüfung", und wer dann alles bekommt, merkt es nicht.
+
+Derselbe Satz galt an drei weiteren Stellen, und dort stand er nicht.
+
+### Was zu sehen war
+
+Zwei Karteikarten über Photosynthese im Bestand, eine Prüfung „Ohmsches
+Gesetz". Die Prüfungszentrale zeigte:
+
+```txt
+Ohmsches Gesetz
+Fachlicher Lernstand              67 %
+KARTEN 3   FEHLER 0   AUFGABEN 0   ZEITLIMIT 45 Min.
+[Simulation starten]
+```
+
+Drei Karten, von denen keine mit der Prüfung zu tun hat. Ein Lernstand von
+67 %, der den Stand der Biologie-Karten misst. Und ein Knopf, der eine
+Übungsklausur aus eben diesen Karten startet, ohne es zu sagen.
+
+Wer sich darauf vorbereitet, sieht „67 % — läuft doch" und lernt nichts.
+
+### Was jetzt dasteht
+
+```txt
+Ohmsches Gesetz
+Fachlicher Lernstand               0 %
+KARTEN 0   FEHLER 0   AUFGABEN 0   ZEITLIMIT 45 Min.
+[Simulation aus allen Karten]
+```
+
+`passendeKarten` gibt es nicht mehr; es blieb nur die ehrliche Fassung.
+Drei Aufrufer waren umzustellen: die Zahl in der Liste, der Balken und die
+Simulation.
+
+**Der Rückfall selbst bleibt** — bei der Simulation, denn eine Übungsklausur
+aus allem ist besser als keine. Er steht jetzt an der Aufrufstelle statt
+versteckt in der Funktion, und er sagt sich zweimal an: im Knopftext und
+beim Starten.
+
+```txt
+Zu „Ohmsches Gesetz" passt keine Karte.
+Die Simulation nimmt deshalb aus allen 3 Karten.
+```
+
+Der Unterschied ist nicht, dass etwas weniger geht. Es geht genau so viel
+wie vorher — nur wird nichts Falsches mehr behauptet.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · den Rückfall wieder in die Funktion legen | 5 |
+| B · `nurPassendeKarten` gibt immer nichts zurück | 3 |
+| C · stumm zurückfallen, ohne Meldung | 2 |
+
+B ist die, die es braucht. Ohne §4 — die Prüfung MIT eigenem Stoff — hätte
+man diese Suite auch mit „überall 0" bestanden, und das wäre kein
+Fortschritt, sondern der nächste Fehler.
+
+### Und ein Punkt, der aus dem falschen Grund grün war
+
+Die erste Fassung von §1 prüfte „Der Lernstand ist 0 %" mit Karteikarten
+ohne jeden Lernstand. Er war damit in BEIDEN Fassungen 0 % — der Punkt wäre
+auch ohne die Behebung grün gewesen, und das Bildschirmfoto vorher/nachher
+sah an dieser Stelle gleich aus.
+
+Die Karten der Prüfung tragen jetzt `wdh: 2`. Damit zeigt die alte Fassung
+67 % und die neue 0 %, und der Punkt misst etwas. Das ist derselbe Fehler
+wie in §55.2 beschrieben, nur an meiner eigenen Prüfung — und er fiel beim
+Ansehen des Bildes auf, nicht beim Lesen des Codes.
+
+### Was von L49 bleibt
+
+Zwei Punkte, beide unberührt:
+
+* Die Prüfungszentrale hat kein Gedächtnis — Simulationsergebnisse liegen
+  in `zustand.simulation` und sind nach dem Reiterwechsel weg.
+* Der Lernpfad ist eine geordnete Liste, und seine Reihenfolge hängt an elf
+  fest verdrahteten deutschen Elektro-Stichwörtern.
+
+Und eine Zeile in L49 stimmt nicht mehr: „`bilder.mts` kennt die Lernwelt
+nicht". Es gibt `lernzentrale`, `lernpfad`, `fehler` und `pruefungen` als
+Ansichten. Berichtigt.
+
+
+## E163 · Zwanzig bewertete Aufgaben, weg mit einem Klick (L49)
+
+**25. August 2026.** L49 hielt fest: „Die Prüfungszentrale hat kein
+Gedächtnis: Simulationsergebnisse liegen nur in `zustand.simulation` und
+sind nach dem Reiterwechsel weg."
+
+Nachgesehen, und es ist genau so. `wechseln()` setzt `zustand.simulation`
+auf null. Wer eine Simulation zu Ende macht, das Ergebnis ansieht und dann
+auf „Heute" tippt, hat die Bewertung von bis zu dreissig Aufgaben verloren —
+ohne Warnung und ohne Weg zurück.
+
+Das ist nicht der schlimmste Datenverlust, den es gibt: gespeichert war es
+nie. Aber es ist Arbeit, die der Mensch geleistet hat, und die Frage „werde
+ich besser?" lässt sich ohne sie gar nicht stellen.
+
+### Wo es hingehört
+
+`Store.setMeta(metaSchluessel('simulationen'), …)` — dieselbe Ablage, in der
+schon `tagesziel` und `ansicht` derselben Welt stehen. Das ist der richtige
+Ort und nicht bloss der bequeme: `meta` gehört zum Sicherungsformat
+(§52.10), das Ergebnis überlebt also Export und Import.
+
+**Die Karten stehen NICHT darin.** Sie sind Blöcke im Bestand und dürfen
+umbenannt, verschoben oder gelöscht werden; eine Zweitschrift wäre die
+zweite Wahrheit, die §17 verbietet. Festgehalten wird das Ergebnis — Zahlen
+und Themennamen —, und das ist auch das, was man später ansehen will.
+
+**Begrenzt auf zwanzig.** Ein Verlauf, der still unbegrenzt wächst, ist
+genau das, was §15 verbietet.
+
+### Und man sieht es
+
+```txt
+LETZTE SIMULATIONEN
+Photosynthese Test                                          50 %
+25. Aug. 2026 · 1 von 2 richtig · 1 Min.
+```
+
+Fünf Zeilen, der Rest in einer Aufklappzeile. Ohne diesen Abschnitt wäre die
+Ablage ein Datensatz, den niemand sieht — und ein Wert, den man nicht
+ansehen kann, ist so gut wie keiner (E118).
+
+### Ein zweites Schloss an derselben Tür
+
+Die erste Fassung hatte neben der Kennung noch eine Sperrvariable
+`gesichert`, damit ein zweites Zeichnen nicht doppelt schreibt.
+
+Die Gegenprobe entfernte sie — und die Prüfung blieb grün. Dann entfernte
+sie beides — immer noch grün. Der Grund: `simulationAbschliessen` lief in
+der Prüfung überhaupt nur EINMAL, und der Punkt „genau ein Eintrag, nicht
+drei" prüfte damit gar nichts.
+
+Zwei Berichtigungen daraus:
+
+* Die Prüfung zeichnet jetzt dreimal neu, bevor sie zählt. Damit läuft die
+  Funktion wirklich mehrfach, und der Punkt kann rot werden: mit einer
+  unstabilen Kennung meldet er „ist 7, soll 1".
+* Die Sperrvariable ist weg. Was Doppelte verhindert, ist die KENNUNG —
+  `sim-<gestartet>` ist für einen Durchgang immer dieselbe, und der Eintrag
+  ersetzt seinen Vorgänger. Ein zweites Schloss an derselben Tür, das sich
+  nicht prüfen lässt, führt den nächsten Leser in die Irre.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · nichts festhalten | 3 |
+| B · die Kennung nicht stabil halten | 1 („ist 7, soll 1") |
+
+### Was von L49 bleibt
+
+Ein Punkt: der Lernpfad ist eine geordnete Liste, und seine Reihenfolge
+hängt an elf fest verdrahteten deutschen Elektro-Stichwörtern. Das ist kein
+Fehler, sondern eine Grenze — und die nächste eigene Aufgabe.
+
+
+## E164 · Ein Pfad, der ordnet — und einer, der nur so aussieht (L49)
+
+**25. August 2026.** Der letzte offene Punkt aus L49:
+
+> Der Lernpfad ist eine geordnete Liste, kein Lernpfad im Sinne des
+> Auftrags — und seine Reihenfolge ist auf elf deutsche Elektro-Stichwörter
+> fest verdrahtet.
+
+Nachgesehen, und die Sache liegt anders, als der Satz vermuten lässt.
+
+### Die elf Wörter sind keine Nachlässigkeit
+
+```txt
+grundlagen · spannung · strom · widerstand · ohm · reihe
+parallel · leistung · energie · lampe · prüfung
+```
+
+Das ist die Folge aus **§9 des Auftrags**, und `test215 §2` hält sie fest:
+vier durcheinander angelegte Themen müssen als Grundlagen → Ohmsches Gesetz
+→ Leistung und Energie → Lampenschaltungen dastehen. Sie zu ersetzen hiesse,
+eine Vorgabe zu brechen — und zwar eine, die für ihren Zweck richtig ist.
+
+Also bleiben sie. Was nicht bleiben konnte, ist etwas anderes.
+
+### Was wirklich falsch war
+
+Der Kopf der Seite sagte, unabhängig davon, was im Bestand liegt:
+
+> Der Pfad ordnet den Stoff. Er sperrt nichts künstlich.
+
+Bei Biologie trifft keines der elf Wörter. `rang()` gibt allen Themen
+denselben Wert, die Sortierung fällt auf den Alphabet-Vergleich zurück, und
+die Seite behauptet trotzdem, sie habe geordnet.
+
+Das ist die gefährlichere Sorte Fassade. Eine alphabetische Liste sieht wie
+Didaktik aus, wenn sie sich Lernpfad nennt und durchnummeriert ist — Stufe 1
+Calvin-Zyklus, Stufe 2 Lichtreaktion, Stufe 3 Zellatmung. Wer dem folgt,
+folgt dem Anfangsbuchstaben.
+
+### Was jetzt dasteht
+
+Der Kopf sagt nur noch, was in beiden Fällen stimmt:
+
+> Der Pfad zeigt den Stoff als Stufen. Er sperrt nichts künstlich.
+
+Und darunter steht, WAS geordnet hat — dieselbe Idee wie der Kasten „Warum
+diese Reihenfolge?" in der Lernzentrale, den es dort längst gibt:
+
+```txt
+mit Vorgabe   Diese Reihenfolge kommt aus den Elektro-Grundlagen.
+              Grundlagen, Spannung, Strom, … Was darin nicht vorkommt,
+              steht danach in alphabetischer Folge — Redion errät keine
+              Abhängigkeiten zwischen Themen.
+
+ohne Vorgabe  Für diesen Stoff gibt es keine hinterlegte Reihenfolge.
+              Die Stufen stehen alphabetisch. Redion errät keine
+              Abhängigkeiten zwischen Themen; eine geratene Reihenfolge
+              sähe aus wie Didaktik und wäre keine.
+```
+
+### Warum keine allgemeine Reihenfolge
+
+Weil es die Daten nicht gibt. Eine Reihenfolge zwischen Themen ist eine
+Abhängigkeitsangabe, und Redion hat keine — weder aus den Karten noch aus
+den Seiten. Sie zu erraten (nach Fehlerzahl, nach Fälligkeit, nach
+Anlagedatum) ergäbe eine Liste, die sich fachlich begründet gibt und es
+nicht ist. Das wäre schlechter als die offensichtlich alphabetische.
+
+Wenn es einmal Abhängigkeiten gibt, ordnet der Pfad danach. Bis dahin sagt
+er, was er hat.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · immer von Elektro-Grundlagen sprechen | 2 in §8 |
+| B · dem Kasten sein Kennzeichen nehmen | 6 (§3 und §8) |
+
+Und §8 ist selbst die Gegenrichtung zu §3: ohne ihn bestünde die Prüfung
+auch mit einem Kasten, der IMMER dasselbe sagt.
+
+### Damit ist L49 abgearbeitet
+
+```txt
+Rückfall auf alle Karten                E162
+Kein Gedächtnis der Prüfungszentrale    E163
+Elf verdrahtete Stichwörter             E164 — sie bleiben, die Behauptung
+                                        daneben nicht
+```
+
+
+## E165 · Ein Knopf, der aussieht, als täte er nichts — und die Farbe mitnimmt (L40)
+
+**25. August 2026.** L40 nennt es seit dem 19. August als offenen Punkt:
+
+> Farbe, Schriftgrösse und Schriftart je Block (E101). Markdown kennt sie
+> nicht. Sie zu Platzhaltern zu machen hiesse, den Knopf abzuschaffen.
+
+Nachgesehen, wie das aussieht. Eine Seite mit Serif-Überschrift, roter
+Warnzeile, gelb hinterlegtem Punkt und einer grösseren Schlusszeile. Dann
+„Quelltext ansehen → Übernehmen", **ohne eine einzige Änderung**:
+
+```txt
+vorher    Serif · rot · gelb hinterlegt · gross
+nachher   grau  · grau · grau            · grau
+```
+
+Der Knopf sieht aus, als täte er nichts. Er nimmt etwas mit.
+
+### Warum das nicht am Format liegt
+
+`block.color` und `block.stil` (Grösse und Schriftart) haben keine
+Schreibweise in `# `, `- ` oder `> `. Daran ändert sich nichts. Aber sie
+müssen den Weg auch gar nicht mitgehen — sie liegen ja noch da, bis
+`Store.kinderLeeren` sie wegräumt.
+
+Also: vor dem Leeren merken, nach dem Bauen wieder aufsetzen.
+
+### Wonach zugeordnet wird, und warum nicht nach Position
+
+Nach **(Art, Text)**, und jeder gemerkte Eintrag wird höchstens einmal
+vergeben.
+
+Nach Position wäre einfacher und ist die falsche Antwort. Wer eine Zeile
+einfügt, verschiebt alle darunter; positionsweise zugeordnet bekäme dann
+jede Zeile die Farbe ihrer Vorgängerin. Das ist schlimmer als gar keine
+Farbe, weil es aussieht wie eine Entscheidung. Die Gegenprobe zeigt es
+wörtlich: „Und die neue Zeile bekommt KEINE fremde Farbe — ist `red`".
+
+Nach Text zugeordnet folgt die Formatierung ihrem Satz, auch wenn er
+umzieht. Und wer den Text ändert, verliert sie für diese Zeile — das ist
+ehrlich, denn es ist eine neue Zeile.
+
+Das „höchstens einmal" ist ebenfalls geprüft: zwei gleichlautende Sätze in
+verschiedenen Farben behalten jeder seine. Ohne die Sperre meldet die
+Prüfung `green,green` statt `green,orange`.
+
+### Was das NICHT ist
+
+Nicht der Umbau, den L40 beschreibt. Die Blöcke werden weiterhin geleert
+und neu gebaut, also **ändern sich die Kennungen**. Stabile Kennungen und
+ein brauchbarer Rückgängig-Schritt bleiben offen — sie brauchen die echte
+zeilenweise Abgleichung, und die ist ein Umbau von `ausMarkdown`.
+
+Was hier steht, ist der Datenverlust. Der ist weg.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · nichts wiederherstellen | 6 |
+| B · nach Position statt nach Text zuordnen | 6 |
+| C · gemerkte Einträge nicht verbrauchen | 1 |
+
+### Und noch eine festgeschriebene Zahl
+
+test187 prüfte `mdTraegt(b)` auf **genau drei** Vorkommen im Quelltext. Sie
+ging rot, weil E165 zwei weitere hinzufügte — also weil etwas richtig
+gemacht wurde. Derselbe falsche Alarm wie „Acht Bereiche" in test86 (E158),
+und dieselbe Behebung: geprüft wird jetzt der Vertrag — die Liste steht
+einmal da, mehrere Stellen fragen dieselbe Funktion, und niemand schreibt
+eine zweite Blockart-Liste ab.
+
+Zwei feste Zahlen in zwei Tagen, beide aus demselben Grund rot. Eine Zahl
+in einer Prüfung ist fast immer die falsche Frage.
+
+### Und ein Messfehler von mir
+
+`gleich` in test187 vergleicht mit `===`, nicht über JSON — zwei gleich
+aussehende Felder sind darin nie gleich. Die erste Fassung gab Felder hinein
+und meldete „ist [...], soll [...]" mit identischem Text auf beiden Seiten.
+Jetzt als Zeichenkette.
+
+
+## E166 · Zwanzig Apps, zwei Listen (L58, CLAUDE.md §5 Regel 2)
+
+**25. August 2026.** E160 hat die oberste Gruppe der Seitenleiste ans
+Register gehängt und dabei festgehalten, was noch fehlt: 36 der 45
+gezeichneten Zeilen standen in keinem Katalog. Die grösste zusammenhängende
+Gruppe davon sind die zwanzig unter „Meine Apps".
+
+### Was dastand
+
+In `seitenleiste.ts` eine Datentabelle:
+
+```txt
+['kalender',  '📅', 'Kalender',        'Termine aus allen Quellen'],
+['pwa',       '📱', 'App installieren','Auf dem Telefon oder Rechner ablegen'],
+…zwanzig Zeilen…
+```
+
+Und vierzig Zeilen darunter eine Kette:
+
+```txt
+if (a === 'kalender') Kalender.dialog();
+if (a === 'pwa')      PWA.installieren();
+…zwanzig Zweige…
+```
+
+Zwei Listen für dieselben zwanzig Dinge. Wer eine App hinzufügte, musste an
+beide denken; wer eine umbenannte, an eine. Genau die Lage, die E160 eine
+Gruppe weiter oben aufgelöst hat — und dort hatte sie schon drei falsche
+Einträge erzeugt, weil eine der beiden Listen nie ausgeführt wurde.
+
+### Was jetzt dasteht
+
+Ein Eintrag je App in `Register.navigation`, mit Zeichen, Namen,
+Hinweistext und Handlung. Die Seitenleiste zeichnet daraus:
+
+```ts
+const appliste = Register.navigation.anPlatz('apps');
+apps.innerHTML = appliste.map(x => `<button data-app="${esc(x.id)}" …`).join('');
+```
+
+Und der Klick sucht seinen Eintrag, statt zwanzig `if` durchzugehen. Ein
+Fehler in einer Handlung geht in den Reporter, wie beim Anhängepunkt weiter
+unten — ohne ihn nähme ein Fehler die ganze Leiste mit.
+
+Der Unterschied zu §5 der Prüfung: dort bleibt das Markup in `index.html`
+und das Register liefert nur die Handlung. Hier zeichnet die Seitenleiste
+wirklich aus dem Register. Beides ist richtig — dort steht das Markup fest,
+hier entsteht es ohnehin zur Laufzeit.
+
+### Gemessen, dass sich nichts bewegt hat
+
+```txt
+gezeichnete Zeilen vorher   45
+gezeichnete Zeilen nachher  45      Zeile für Zeile identisch
+Registereinträge vorher     17
+Registereinträge nachher    37
+```
+
+Der Vergleich ist wörtlich: derselbe Durchgang durch `#sidebar .side-item`
+vor und nach der Änderung, `diff` ohne Ausgabe.
+
+### Was die Prüfung kann und was nicht
+
+test222 §6 vergleicht Register und Bildschirm. Anders als §5 sind das aber
+nicht zwei Quellen, sondern eine Quelle und ihre eigene Ausgabe — wer im
+Register einen Namen ändert, ändert beides, und die Gegenprobe dazu bleibt
+richtigerweise grün.
+
+Geprüft wird deshalb der ZEICHNER: dass er nichts weglässt, nichts umordnet
+und den Hinweistext nicht verwechselt. Und dass keine der zwanzig Zeilen
+tot ist. Beides steht so im Prüflauf, damit niemand mehr hineinliest.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · einen Namen im Register verstellen | 0 — und das ist richtig |
+| B · der Zeichner nimmt nur die ersten zwölf | 4 |
+| C · der Klick macht nichts mehr auf | 1, mit allen zwanzig Kennungen |
+
+A steht mit in der Tabelle, weil eine Gegenprobe, die NICHT beisst, genauso
+eine Aussage ist: sie sagt, was dieser Abschnitt nicht prüft.
+
+### Was von L58 bleibt
+
+Von 45 Zeilen stehen jetzt 29 im Register. Die übrigen 16 sind
+grösstenteils keine Katalogeinträge, sondern Inhalt:
+
+```txt
+7   Journal, Schnellnotizen, Vorlagen, Graph, Schlagwörter,
+    Karteikarten, Umsetzungsstand   — Systemseiten, also Nutzerdaten
+3   angeheftete Seiten              — Nutzerdaten
+1   Willkommen                      — eine Seite
+2   „Neuer Agent", „Neue Besprechungsnotiz"   — Handlungen, gehören ins Register
+3   Importieren, Papierkorb, Tastenkürzel     — haben Kennungen, hängen in schale.ts
+```
+
+Ein Register für Seiten wäre falsch: Seiten sind Daten und stehen im Baum.
+Offen bleiben damit fünf Zeilen, nicht 36 — und das ist eine Grössenordnung,
+die in einen Nachmittag passt statt in einen Plan.
+
+
+## E167 · Der Fuss der Seitenleiste, und was dort NICHT hingehört (L58)
+
+**25. August 2026.** Nach E166 blieben von L58 fünf Zeilen. Drei davon
+stehen im Fuss der Seitenleiste — Importieren, Papierkorb, Tastenkürzel —,
+fest in `index.html` und verdrahtet in `schale.ts`. Genau die Form, die
+E160 für die oberste Gruppe aufgelöst hat.
+
+Zwei davon sind jetzt Registereinträge mit `knopfId`, und dieselbe Schleife
+in `schale.ts` hängt sie an: `anPlatz('oben')` und `anPlatz('fuss')`.
+
+### Warum ein eigener Platz
+
+`fuss` statt `oben`, weil test222 §5 die oberste Gruppe Zeile für Zeile mit
+`.side-nav .side-item` vergleicht. Zwei Einträge mehr unter `oben` hätten
+diesen Vergleich rot gemacht, ohne dass sich am Bildschirm etwas ändert —
+und eine Prüfung, die aus dem falschen Grund rot wird, ist so wenig wert
+wie eine, die aus dem falschen Grund grün ist.
+
+### Warum `btn-import` bleibt, wo er ist
+
+Sein Menü braucht das Klickereignis, um sich an der richtigen Stelle zu
+öffnen (`e.currentTarget.getBoundingClientRect()`), und der Menüaufbau ist
+fünfundzwanzig Zeilen lang. Beides gehört in die Schale, nicht in einen
+Katalog der Seitenleiste. Ein Registereintrag, der eine Menüdefinition
+trägt, wäre kein Katalog mehr.
+
+### Und die zwei Knöpfe in ihren Abschnitten
+
+„Neuer Agent" und „Neue Besprechungsnotiz" stehen je als einzelne Zeile am
+Ende ihres Abschnitts, direkt neben den Daten, aus denen der Abschnitt
+entsteht. Es gibt dort keine zweite Liste, die abdriften könnte. Ein
+Registereintrag brächte Umweg ohne Gewinn.
+
+Ein Katalog verdient seinen Platz, wenn es viele gleichartige Dinge gibt
+oder wenn sonst zwei Listen entstünden. Beides trifft hier nicht zu.
+
+### Der Punkt, auf den es ankommt
+
+`btn-trash` hing an einer `an(...)`-Zeile. Bliebe sie neben der
+Registerschleife stehen, wäre der Knopf **zweimal** verdrahtet — der Fehler
+aus E160, bei dem ein Klick auf „Neue Seite" zwei Seiten anlegte und alle
+acht neuen Prüfpunkte grün blieben.
+
+Also zählt §7 die Fenster: nach einem Klick auf den Papierkorb muss genau
+**ein** Überlager offen sein.
+
+| Gegenprobe | rot |
+|---|---|
+| A · `an('btn-trash', …)` wieder danebenstellen | 1 — „ist 2, soll 1" |
+| B · den Fuss nicht mit verdrahten | 1 — „ist 0, soll 1" |
+
+Dieselbe Zahl in beide Richtungen, und beide Male aus dem richtigen Grund.
+
+### Und ein Fehler aus E166, den erst der volle Lauf fand
+
+E166 hat die Apps `app-kalender`, `app-bib`, `app-kann` … genannt, weil die
+Kennungen im Register eindeutig sein müssen und `bibliothek`, `aufgaben`
+und `papierkorb` dort schon vergeben waren. Damit änderte sich ohne Not
+auch der Wert im Markup:
+
+```txt
+vorher    <button data-app="bib">
+nachher   <button data-app="app-bib">
+```
+
+Die zehn Suiten, die ich nach der Änderung einzeln laufen liess, waren
+grün. Der volle Durchgang war es nicht: `test33` und `test61` fassen die
+Knöpfe über `[data-app="bib"]`, `[data-app="aufgaben"]` und
+`[data-app="kann"]` an — drei Zeilen, dreissig Sekunden Zeitüberschreitung.
+
+**Repariert wurde die Produktseite, nicht die Prüfung.** Ein `data-app`-Wert
+ist eine Adresse nach aussen: eigenes CSS und eigene Erweiterungen dürfen
+darauf zeigen, und dann bricht ein Umbenennen etwas, das mit dem Umbau
+nichts zu tun hat. Die Einträge tragen jetzt eine `marke` — den alten,
+kurzen Wert —, und die Registerkennung darf daneben heissen, wie sie mag.
+
+Die Lehre ist nicht neu und trotzdem jedes Mal dieselbe: eine Auswahl von
+zehn Suiten ist eine Vermutung darüber, wer betroffen ist. Der volle Lauf
+ist die Messung.
+
+### Damit steht L58
+
+```txt
+9   oberste Gruppe          E160
+20  Meine Apps              E166
+2   Fuss                    E167
+11  Systemseiten, angeheftete Seiten, „Willkommen"   — Inhalt, kein Katalog
+3   btn-import, Neuer Agent, Neue Besprechungsnotiz  — mit Begründung dort
+```
+
+
+## E168 · Sieben Quellenangaben, die ins Leere zeigten
+
+**25. August 2026.** `doku/AUFTRAG-STAND.md` schliesst mit einem Satz über
+sich selbst:
+
+> Und die Prüflaufnummern in dieser Tabelle sind NACHGESEHEN, nicht
+> erinnert. […] Eine falsche Quellenangabe ist schlimmer als keine — sie
+> schickt den Nächsten an eine Stelle, an der nichts steht.
+
+Der Satz stimmte für die Tabelle. Für die übrige Dokumentation nicht.
+
+### Nachgezählt
+
+`test225` liest AUFTRAG-STAND, ENTSCHEIDUNGEN und LUECKEN, sammelt jede
+Nennung der Form `testNNN` samt Abschnittsangabe und fragt zweierlei: gibt
+es die Datei, und gibt es den Abschnitt?
+
+```txt
+109  Nennungen von Prüfläufen
+ 35  davon mit Abschnittsangabe
+  6  zeigten ins Leere
+```
+
+Fünf davon sind derselbe Fall. E78 beschloss am 8. August die
+React-Zielarchitektur und beschrieb ihre fünf Wächter — `test149`,
+`test150`, `test151`, `test153`, `test154`. E80 widerrief sie am Tag
+darauf, und die Dateien gingen mit dem Rohbau. Der Eintrag beschreibt sie
+weiter im Präsens: „`test149` wacht über die drei Regeln."
+
+Er bleibt stehen — Geschichte löscht man nicht —, sagt jetzt aber oben
+dazu, dass es diese Prüfläufe nicht mehr gibt.
+
+Die sechste stand in der Tabelle:
+
+```txt
+| 54 | Offline first | ✅ | test31 §3 (Service Worker, Server aus …) |
+```
+
+test31 hat gar keine nummerierten Abschnitte; es ist eine ältere Suite mit
+einer flachen Liste. Geprüft ist die Sache sehr wohl — Service Worker,
+Ablage, Server aus, Seite neu geladen —, nur die Adresse war erfunden.
+
+### Und eine siebte, die es gar nicht gab
+
+Der erste Wurf von `test225` meldete zusätzlich einen siebten:
+
+```txt
+ENTSCHEIDUNGEN.md: test137 §55
+```
+
+Den Verweis gibt es nicht. In ENTSCHEIDUNGEN steht der Name am Zeilenende,
+und der nächste Absatz beginnt mit `§55.2`. Mein Muster spannte über den
+Zeilenumbruch.
+
+Das ist die Sorte Fehler, vor der §55.2 warnt, nur andersherum: eine
+Prüfung, die aus dem falschen Grund ROT wird, ist so wenig wert wie eine,
+die aus dem falschen Grund grün ist. Beide kosten dasselbe — man glaubt
+ihnen nicht mehr.
+
+### Die Ausnahmeliste, und warum sie eine ist
+
+Die fünf Namen aus E78 stehen in `test225` als `GESCHICHTE`. Eine
+Ausnahmeliste ist ehrlich, wenn sie kurz ist, benannt und begründet — und
+wenn sie selbst geprüft wird. Zwei Punkte tun das:
+
+* Die fünf müssen wirklich fehlen. Stünde einer wieder da, wäre die
+  Ausnahme eine Lüge.
+* E78 muss die Vergangenheitsform tragen. Ohne den Satz dort wäre die
+  Ausnahme eine stille Abmachung zwischen Prüfung und Prüfer.
+
+### Ein Selbstbezug, der auffiel
+
+Die Berichtigung in der Tabelle wollte erst schreiben: „Hier stand …" —
+mit dem alten Verweis im Fliesstext. Damit stand er wieder da, und test225
+fand ihn erneut. Dann passierte dasselbe in diesem Eintrag hier.
+
+Zweimal derselbe Fehler in zehn Minuten ist kein Zufall, sondern eine
+fehlende Regel. Sie steht jetzt in der Prüfung: **eingezäunter Text ist ein
+Zitat, keine Angabe.** Wer über eine falsche Quellenangabe schreibt, muss
+sie nennen dürfen — sonst kann die Berichtigung nicht sagen, was falsch
+war. In gewöhnlichem Text bleibt eine Angabe eine Angabe, im ```-Block ist
+sie ein Beleg.
+
+### Die Gegenproben (§55.2)
+
+Diese Suite war beim ersten Lauf rot, und zwar sechsmal. Das IST die
+erste Gegenprobe: sie hat gefunden, wofür sie geschrieben wurde, bevor
+irgendwer sie grün gesehen hat. Vier weitere an einem Abzug des Baums:
+
+| Gegenprobe | rot |
+|---|---|
+| A · eine erfundene Datei nennen | 1 |
+| B · eine echte Datei, ein erfundener Abschnitt | 1 |
+| C · die Ausnahmeliste lügen lassen | 1 |
+| D · dieselbe Angabe in einem ```-Block | 0 — und das ist die Regel |
+
+B hat dabei noch etwas gezeigt. Der erste Wurf las
+
+```txt
+test202 §77, 84 Punkte
+```
+
+als Spanne von 77 bis 84 und meldete acht fehlende Abschnitte statt einem.
+Ein Komma trennt in dieser Doku nie zwei Abschnitte, sondern den Verweis
+vom nächsten Halbsatz — nach jedem Trenner muss wieder ein `§` stehen,
+ausser bei einer Spanne mit Gedankenstrich.
+
+Dazu kommt §3, der die Suche selbst misst: test215 hat einen Abschnitt 3
+und 8, aber keinen 99, und test31 hat gar keine. Ohne §3 bestünde die Suite
+auch mit einem `hatAbschnitt`, das immer `true` sagt.
+
+### Was sie nicht kann
+
+Ob ein Abschnitt inhaltlich prüft, was danebensteht. Das kann keine
+Maschine — und es war auch nicht der Fehler: die Adressen waren falsch,
+nicht die Behauptungen.
+
+
+## E169 · Was im Journal steht, war für den Workspace nicht da (L50)
+
+**25. August 2026.** L50 hält seit dem 24. fest, dass Arbeitswelt und
+Lebensbereiche zwei Rechenwege für dieselbe Frage haben. Der Eintrag sagt
+dazu: „Es sind zwei Rechenwege für dieselbe Frage, und der zweite ist immer
+der schlechtere."
+
+Bevor man so etwas zusammenlegt, lohnt eine Frage: **sagen die beiden Wege
+heute überhaupt dasselbe?** Wenn ja, ist das Zusammenlegen Hygiene. Wenn
+nein, ist es eine Fehlerbehebung.
+
+### Gemessen
+
+Ein Arbeitsbereich mit Aufgaben aus beiden Quellen — Haken auf einer Seite
+und Zeilen in einer Aufgaben-Datenbank. Beide Wege lieferten neun Aufgaben,
+dieselben Kennungen, dieselben Erledigt-Marken. Kein Unterschied.
+
+Dann derselbe Versuch mit einem Haken im **Journal**:
+
+```txt
+Lebensbereiche.aufgaben()          steht drin
+Arbeitswelt.snapshot().aufgaben    fehlt
+```
+
+Derselbe Haken, zwei Listen, und keine sagt etwas dazu.
+
+### Woher das kam
+
+Zwei Fragen standen in einer Zeile:
+
+```txt
+block.type === 'page' && block.parentTable !== 'collection'
+  && !block.system && erlaubt('lesen', block.id)
+```
+
+`erlaubt('lesen', …)` ist die Rechtefrage. `!block.system` ist etwas ganz
+anderes: Journal, Schnellnotizen und Vorlagen sollen nicht in der
+SEITENLISTE stehen, weil sie ihren eigenen Platz in der Seitenleiste haben.
+
+Beides zusammen ergab `lesbareIds` — und daran hingen **fünf** ganz andere
+Listen:
+
+```txt
+aufgaben        ein Haken im Journal fehlte
+dateien         eine Datei in den Schnellnotizen fehlte
+pdfs            ein PDF, das man ins Journal zieht, fehlte
+flaechen        ein Whiteboard in einer Vorlage fehlte
+inhaltsBloecke  jeder Block darin fehlte
+```
+
+Das Journal ist die Stelle, an der man etwas schnell hinwirft. Es war die
+einzige, aus der es nicht wieder auftauchte.
+
+### Die Behebung, und warum sie nicht „Filter raus" heisst
+
+`alleLesbarenSeiten` beantwortet jetzt nur noch die Rechtefrage. Die
+Systemseiten fallen erst bei `roheSeiten` heraus — genau dort, wo Seiten
+ALS Seiten aufgezählt werden.
+
+Die zwei Gegenproben stehen in beide Richtungen, und das ist der Punkt:
+
+| Gegenprobe | rot |
+|---|---|
+| A · den alten Filter zurück | 2 — Haken und PDF im Journal fehlen wieder |
+| B · den Filter ganz weglassen | 1 — das Journal steht in der Seitenliste |
+
+Die Behebung liegt genau zwischen den beiden, und test215 §9 hält beide
+Seiten fest.
+
+### Was das für L50 heisst
+
+Die Lücke bleibt offen, aber sie ist jetzt anders begründet. Die zwei Wege
+liefern — nach dieser Behebung — dasselbe; gemessen, nicht behauptet. Das
+Zusammenlegen ist damit **Hygiene, keine Fehlerbehebung**, und es steht
+tiefer in der Reihenfolge als vorher gedacht.
+
+Was der Vergleich zusätzlich gezeigt hat: die Arbeitswelt trägt zwei Dinge,
+die der andere Weg nicht hat — die Rechteangabe `bearbeitbar` und die
+Herkunft (`quelle`: Datenbankzeile oder Block). Ein gemeinsamer Kern müsste
+beides können. Den einen durch den anderen zu ersetzen wäre die gefährliche
+Richtung (§46).
+
+---
+
+## E170 · Der Weg zu einer Blockart ist nicht sie selbst — der Rest von L41
+
+**25. August 2026.**
+
+`test192` legt seit E119 jede Blockart an und fragt: kann ein Mensch damit
+etwas anfangen? Es tut das über den Weg, den ein Mensch geht — Schrägstrich,
+Name, Enter. L41 hielt fest, dass genau darin die Lücke steckt: **nicht jede
+Blockart hat diesen Weg.**
+
+```txt
+`spalte`    legt `columns` an, als Kind. Kein Slash-Befehl führt hin.
+`pdfseite`  entsteht beim Einlesen eines PDF. Auch keiner.
+```
+
+Beide zeichnet der Editor. Beide erfasste `test192` nicht. Beide waren in
+Ordnung — aber nicht durch ihn, und das ist der Unterschied, um den es geht.
+
+### Nicht aufgezählt, sondern gerechnet
+
+Zwei Namen in eine Liste zu schreiben hätte die Lücke geschlossen und die
+nächste geöffnet: eine dritte Blockart ohne Slash-Weg wäre wieder
+ungeprüft, und wieder hätte es niemand gemerkt. Also rechnet §3 die Frage
+aus, statt sie zu beantworten:
+
+```txt
+alle `case`-Zweige aus `switch (block.type)` im Zeichner
+  minus alles, was §2 über das Slash-Menü WIRKLICH erzeugt hat
+  = muss genau das sein, wofür in der Schleife ein Weg von Hand steht
+```
+
+Der Abzug kommt aus dem Lauf selbst, nicht aus einer nachgebauten Regel.
+`umwandeln` bildet `db-table` auf `database` ab, `embed-youtube` auf
+`embed`, `toggle-h1` auf `h1` — diese Zuordnung noch einmal als Ausdruck
+hinzuschreiben wäre eine zweite Wahrheit, und die zweite altert. §2 hat
+jeden Typ ohnehin erzeugt; sie merkt sich nur, was dabei herauskam.
+
+Dazu ein Wächter darüber: der Zeichner muss an **genau einer** Stelle nach
+Blockart entscheiden. Käme ein zweiter `switch` dazu, läse der Ausdruck nur
+noch die Hälfte und meldete Blockarten als weglos, die es nicht sind.
+Gegengeprobt: ein zweiter `switch` eingebaut → „ist 2, soll 1".
+
+### Und drei Fehler beim Schreiben, von denen der erste der wichtigste ist
+
+**Die Spalte wurde auf dem falschen Weg gemessen.** Der erste Anlauf ging
+über `columns` und prüfte, ob die entstehende Spalte eine Zeile zum
+Hineinschreiben hat. Sie hat eine — aber nicht wegen des Auffangs beim
+Zeichnen, sondern weil `umwandeln` sie gleich mit anlegt (E102). Die
+Gegenprobe zeigte es: den Auffang entfernt, **alles blieb grün.**
+
+Der Auffang ist für den anderen Fall da, und der ist der gefährlichere: eine
+Spalte, die leer DASTEHT. Aus einer eingespielten Sicherung, aus einer alten
+Seite, aus einer umgewandelten Folie — genau das war E118. Also steht sie
+jetzt als eigener Weg daneben, mit `columns` von Hand gebaut und ohne
+Inhalt. Damit wird die Gegenprobe rot, an drei Stellen:
+
+```txt
+  ✗ Keine einzige Blockart ist ein leeres Rechteck — ist 1, soll 0
+  ✗ Und jede von ihnen bietet leer eine Stelle zum Schreiben — ist 1, soll 0
+  ✗ Und eine leer gebliebene Spalte bekommt beim Zeichnen eine
+        — edit 0 · feld 0 · knopf 0 · bild 0 · Behälter · „"
+```
+
+Die letzte Zeile ist der Satz, um den es geht: ein Kasten, der Blöcke
+aufnimmt, in den man aber nicht hineinkommt.
+
+**Die Behauptung über den Text der PDF-Seite las die falsche Zeichenkette.**
+`bericht` ist auf 26 Zeichen gekürzt — es ist die Zeile für den Prüfbericht,
+nicht der Text. Die Behauptung wäre für immer rot gewesen. Jetzt gibt es
+`volltext` daneben, und die Zeile bleibt, wofür sie da ist: dass im Bericht
+steht, WAS gemessen wurde.
+
+**`page` sah weglos aus.** Sie hat einen Slash-Weg, aber §2 überspringt sie
+— sie springt in die neue Unterseite und wird deshalb in §2b geprüft. Der
+Weg dorthin wird jetzt dort vermerkt, wo er begangen wird.
+
+### Was die PDF-Seite dabei zeigen muss
+
+Der Prüfling ist die Seite **ohne Bild**, und das ist kein Sonderfall: nach
+dem Einspielen einer `.redion` ist es der Normalfall — E103 lässt die
+gerasterten Seitenbilder bewusst draussen, weil sie sich neu rechnen lassen.
+Also muss sie zwei Dinge sagen, und beide sind jetzt festgehalten:
+
+```txt
+„Seite 1 von 3"                     wo bin ich
+„… gibt es noch kein Bild."         und warum ist es weiss
+```
+
+Gegengeprobt, beide einzeln entfernt, beide werden rot.
+
+### Was das an der Prüfung ändert
+
+```txt
+vorher   65 Blockarten über das Slash-Menü
+nachher  68 Wege — dieselben 65, dazu `spalte`, `spalte-leer`, `pdfseite`
+         und ein Ausdruck, der rot wird, wenn eine vierte dazukommt
+```
+
+`test192`: 25 Punkte statt 15. L41 ist damit bis auf seinen zweiten
+Randpunkt abgearbeitet — dass die Prüfung fragt, ob man HINEINKOMMT, und
+nicht, ob drinnen das Richtige passiert. Dafür sind die Suiten je Blockart
+da, und die gibt es nicht für alle 66.
+
+---
+
+## E171 · Eine Datei, die noch jemand zeigt, darf nicht mitgelöscht werden (L43)
+
+**25. August 2026.**
+
+L43 stand seit dem 22. August in den Lücken und sah harmlos aus: ein Anhang,
+dessen Dateisatz kein `blockId` trägt, bleibt beim endgültigen Löschen des
+Blocks liegen. Alle sechs echten Aufrufer übergeben `blockId`, also entstand
+der Fall nur über einen Aufruf, den es noch nicht gibt.
+
+Beim Nachmessen kam etwas anderes heraus, und es stand in keiner Lücke:
+
+```txt
+Bild einfügen · Strg+D · das ORIGINAL endgültig löschen
+  → das Duplikat lebt, seine dateiId zeigt auf nichts, das Bild ist weg
+```
+
+`Store.baum` nimmt den ganzen Satz mit, `baumEinfuegen` legt ihn so wieder
+hin — beide Blöcke tragen **dieselbe** `dateiId`. Der Dateisatz zeigt über
+seinen Index auf das Original; wird das gelöscht, geht die Datei mit.
+Datenverlust im Normalbetrieb, ohne dass jemand etwas falsch macht (§46,
+Priorität 1).
+
+### Die Frage, die niemand gestellt hat
+
+Beide Fehler haben dieselbe Ursache: das Löschen fragt nicht, ob die Datei
+noch jemand braucht. Also fragt es das jetzt.
+
+```ts
+const dateiAnspruch = (nurLebende = false): Map<string, string> => …
+```
+
+Dateikennung → der Block, der sie zeigt. Drei Felder werden gelesen, weil es
+historisch drei gibt: `dateiId` bei Bild-, Datei- und Videoblöcken, `datei`
+als ältere Form desselben, `bildDateiId` bei der gerasterten PDF-Seite
+(E103).
+
+`nurLebende` trennt zwei Fragen, die verschieden zu beantworten sind:
+
+```txt
+false   Darf ich endgültig löschen? Dann zählt auch ein Block im Papierkorb.
+        Der Papierkorb ist umkehrbar, das Löschen nicht.
+true    Ist sie herrenlos? Dann zählt nur, wer sie heute zeigt. Sonst räumte
+        die Pflegeseite nie wieder etwas weg.
+```
+
+Wird eine Datei behalten, weil ein anderer Block sie zeigt, bekommt ihr Satz
+dessen `blockId`. Ohne diese Übergabe hielte `Dateien.verwaist()` sie für
+herrenlos — ihr `blockId` zeigte ja auf den eben gelöschten Block — und die
+Pflegeseite böte an, sie wegzuräumen. Derselbe Schaden, eine Tür weiter.
+
+### Und erst dadurch wird L43 sicher behebbar
+
+L43 hat seine eigene Behebung mit dem Satz aufgeschoben, sie würde *mehr*
+löschen als heute, und mehr zu löschen sei die gefährliche Richtung. Das war
+richtig. Gegengeprobt: nur das Merken eingebaut, die Anspruchsfrage
+weggelassen — dann nimmt das Löschen eines Duplikats dem Original sein Bild.
+
+Mit der Anspruchsfrage davor ist es sicher, und `purgeTief` merkt sich die
+Dateien des Blocks jetzt beim Absteigen, solange er noch im Zwischenspeicher
+ist. Einmal je Vorgang, nicht je Block: bei einer Seite mit fünfhundert
+Blöcken wäre ein Durchgang durch alle Blöcke pro Block dieselbe Falle, die
+weiter oben schon den `Promise.all` gekostet hat.
+
+### Was gemessen wurde, vorher und nachher
+
+```txt
+                                          vorher    nachher
+A  Anhang ohne blockId, Block gelöscht     bleibt    weg
+B  Anhang mit blockId, Block gelöscht      weg       weg
+C  dupliziert, ORIGINAL gelöscht           WEG       bleibt
+D  dupliziert, DUPLIKAT gelöscht           bleibt    bleibt
+E  PDF-Seite (bildDateiId), gelöscht       bleibt    weg
+F  ganze Seite mit beiden gelöscht         weg       weg
+G  Original im Papierkorb, Duplikat lebt   verwaist  nicht verwaist
+H  dasselbe ohne Duplikat                  verwaist  verwaist
+```
+
+C ist der teure Fall. F und H sind die Gegenprobe zum Behalten: „im Zweifel
+behalten" darf nicht „nie mehr löschen" heissen.
+
+### Zwei Sätze in L43 waren falsch
+
+```txt
+„`Dateien.verwaist()` und die Pflege-Seite finden solche Dateien"
+    Nein. `verwaist()` sagte `if (!d.blockId) return false`.
+    Gemessen: 0 verwaiste, während die Datei aus Fall A in der Ablage lag.
+
+„Der Fall entsteht nur über einen Aufruf, den es noch nicht gibt"
+    Für den Weg über `blockId` stimmt es. Der Weg über `dateiId` am Block
+    brauchte keinen neuen Aufruf — Duplizieren genügte.
+```
+
+### Gegenproben
+
+```txt
+alles zurückgedreht                          9 rot
+nur die Anspruchsfrage aus                   3 rot  (C, C-Übergabe, D)
+nur das Merken beim Absteigen aus            3 rot  (A, A-Stücke, E)
+verwaist() ohne die Anspruchsfrage           1 rot  (G)
+dateiAnspruch ohne `nurLebende`              1 rot  (H)
+```
+
+Prüflauf: `test226`, 24 Punkte.
+
+**Was offen bleibt:** eine Datei, die nie an einem Block hing, findet
+`verwaist()` weiterhin nicht. Sie automatisch zu löschen wäre wieder die
+gefährliche Richtung — zwischen „abgelegt" und „verknüpft" liegen
+Millisekunden, in denen sie echt und herrenlos ist.

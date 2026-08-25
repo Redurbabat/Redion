@@ -33,6 +33,20 @@ html = html.replace(/<script src="(quell\/[^"]+)"><\/script>/g,
   (_m: string, datei: string) =>
     '<script>\n/* ===== ' + datei + ' ===== */\n' + lies(datei) + '\n</script>');
 
+/* Das BABAT-RED-Lernpaket bleibt im Projekt ein eigenständiges JSON-Artefakt.
+   Die Einzeldatei darf jedoch keine Neben-Datei voraussetzen. Deshalb wird
+   nur beim Einzeldatei-Bau der Inhalt in das vorhandene application/json-
+   Element eingesetzt. \`<\` wird als JSON-Escape geschrieben, damit selbst
+   ein Quelltextfragment \`</script>\` das Element nicht vorzeitig beendet. */
+html = html.replace(
+  /<script type="application\/json" id="redion-learning-package-babat"\s+data-src="([^"]+)"><\/script>/,
+  (_m: string, datei: string) => {
+    const paket = JSON.parse(lies(datei));
+    const sicher = JSON.stringify(paket).replace(/</g, '\\u003c');
+    return '<script type="application/json" id="redion-learning-package-babat" ' +
+      'data-src="' + datei + '">\n' + sicher + '\n</script>';
+  });
+
 fs.writeFileSync(pfad.join(wurzel, 'redion-einzeldatei.html'), html);
 const kb = (fs.statSync(pfad.join(wurzel, 'redion-einzeldatei.html')).size / 1024).toFixed(0);
 console.log('redion-einzeldatei.html geschrieben — ' + kb + ' KB');

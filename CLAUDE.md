@@ -68,7 +68,8 @@ erweiterbar
 
 Redion ist nicht:
 
-ein React-Projekt
+ein React-Projekt (E78 hat es kurz beschlossen, E80 hat es nach
+Ansicht des Rohbaus widerrufen — Redur braucht keine zweite Oberfläche)
 
 ein schweres Framework-Projekt
 
@@ -247,7 +248,10 @@ Nicht überall verstreut neue Sonderfälle einbauen.
 
 6. Kein Framework-Zwang
 
-Redion läuft bewusst ohne Browser-Framework.
+Redion läuft bewusst ohne Browser-Framework. (Am 8. August 2026 wurde mit
+E78 kurz eine React-Zielarchitektur beschlossen und als Rohbau begonnen;
+Redur hat sie am 9. August nach Ansicht des Rohbaus widerrufen — E80. Die
+Regel hier gilt damit wieder unverändert.)
 
 Nicht einführen ohne sehr starken Grund:
 
@@ -1449,9 +1453,9 @@ Neue Features sind weniger wichtig als Datenintegrität.
 
 Nicht tun:
 
-React einbauen
+React einbauen (E80: der Versuch ist widerrufen)
 
-Vite als Pflicht für normale Nutzung einführen
+die App von einem Bauschritt abhängig machen
 
 IndexedDB durch LocalStorage ersetzen
 

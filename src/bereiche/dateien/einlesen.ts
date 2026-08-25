@@ -333,6 +333,102 @@ const Einlesen = (() => {
     return n - 1;
   };
 
+  type TabellenVerluste = {
+    formelnOhneAusdruck: number;
+    kommentare: number;
+    bedingteFormatierungen: number;
+    bilder: number;
+    diagramme: number;
+    makros: number;
+    zellformate: number;
+    verbundeneZellen: number;
+  };
+
+  type TabellenImportBericht = {
+    formeln: number;
+    ausgelassen: TabellenVerluste;
+  };
+
+  const neuerTabellenBericht = (): TabellenImportBericht => ({
+    formeln: 0,
+    ausgelassen: {
+      formelnOhneAusdruck: 0, kommentare: 0, bedingteFormatierungen: 0,
+      bilder: 0, diagramme: 0, makros: 0, zellformate: 0,
+      verbundeneZellen: 0
+    }
+  });
+
+  const berichtAn = (blaetter: any[], bericht: TabellenImportBericht): any[] => {
+    (blaetter as any).bericht = bericht;
+    return blaetter;
+  };
+
+  /** Nutzertext für die Vorschau vor der ersten Mutation. */
+  const tabellenBerichtText = (bericht: TabellenImportBericht | null | undefined): string => {
+    if (!bericht) return '';
+    const namen: Record<string, string> = {
+      formelnOhneAusdruck: 'Formeln ohne Redion-kompatiblen Ausdruck',
+      kommentare: 'Zellkommentare',
+      bedingteFormatierungen: 'bedingte Formatierungen',
+      bilder: 'Bilder', diagramme: 'Diagramme', makros: 'Makros',
+      zellformate: 'nicht unterstützte Zellformate',
+      verbundeneZellen: 'verbundene Zellen'
+    };
+    const verloren = Object.entries(bericht.ausgelassen || {})
+      .filter(([, n]) => Number(n) > 0)
+      .map(([k, n]) => `${n} ${namen[k] || k}`);
+    const teile: string[] = [];
+    if (bericht.formeln) teile.push(`${bericht.formeln} Formeln werden als Formeln übernommen`);
+    if (verloren.length) teile.push('Nicht übernommen: ' + verloren.join(' · '));
+    return teile.join('\n');
+  };
+
+  /** Ziel eines OPC-Bezugs relativ zur Quelldatei normalisieren. */
+  const paketZiel = (quelle: string, ziel: string): string => {
+    if (ziel.startsWith('/')) return ziel.replace(/^\/+/, '');
+    const teile = quelle.split('/');
+    teile.pop();
+    for (const t of ziel.replace(/\\/g, '/').split('/')) {
+      if (!t || t === '.') continue;
+      if (t === '..') teile.pop(); else teile.push(t);
+    }
+    return teile.join('/');
+  };
+
+  /** ODF-Zellbezüge zurück in Redions A1-Schreibweise. */
+  const formelAussen = (text: string, aendere: (teil: string) => string): string => {
+    let raus = '', frei = '', i = 0;
+    const freiLeeren = () => { raus += aendere(frei); frei = ''; };
+    while (i < text.length) {
+      const c = text[i] ?? '';
+      if (c !== '"') { frei += c; i++; continue; }
+      freiLeeren(); raus += c; i++;
+      while (i < text.length) {
+        const innen = text[i] ?? '';
+        raus += innen; i++;
+        if (innen !== '"') continue;
+        if (text[i] === '"') { raus += '"'; i++; continue; }
+        break;
+      }
+    }
+    freiLeeren();
+    return raus;
+  };
+
+  const formelAusOds = (roh: unknown): string | null => {
+    let f = String(roh ?? '').trim();
+    if (!f) return null;
+    f = f.replace(/^[A-Za-z0-9_-]+:=/, '');
+    f = formelAussen(f, teil => teil
+      .replace(/\[\.(\$?[A-Z]{1,3}\$?\d+):\.(\$?[A-Z]{1,3}\$?\d+)\]/g, '$1:$2')
+      .replace(/\[\.(\$?[A-Z]{1,3}\$?\d+)\]/g, '$1'));
+    /* Blatt-, Datei- und Matrixbezüge in eckigen Klammern gehören nicht zu
+       Redions Formelmodell. Den zwischengespeicherten Wert behalten wir,
+       aber behaupten im Bericht nicht, der Ausdruck sei übernommen. */
+    if (formelAussen(f, teil => /[\[\]]/.test(teil) ? '[' : '').includes('[')) return null;
+    return '=' + f.replace(/^=/, '');
+  };
+
   /* ==========================================================================
    * ODS — das Tabellenformat von LibreOffice und OpenOffice
    * --------------------------------------------------------------------------
@@ -368,10 +464,62 @@ const Einlesen = (() => {
 
   const odsLesen = async (puffer: ArrayBuffer): Promise<any[]> => {
     const zip = await zipLesen(puffer);
+    const bericht = neuerTabellenBericht();
     const text = await zip.text('content.xml');
     if (!text) throw new Error('Diese .ods-Datei hat keine content.xml — ' +
                                'entweder ist sie beschädigt oder es ist keine.');
     const doc = xml(text);
+    bericht.ausgelassen.bilder = zip.namen.filter((n: string) => /^Pictures\/.+/.test(n)).length;
+    bericht.ausgelassen.diagramme = doc.getElementsByTagName('draw:object').length;
+    bericht.ausgelassen.makros = zip.namen.filter((n: string) => /^(Basic|Scripts)\//.test(n)).length;
+    bericht.ausgelassen.kommentare = doc.getElementsByTagName('office:annotation').length;
+    bericht.ausgelassen.bedingteFormatierungen = doc.getElementsByTagName('style:map').length;
+    bericht.ausgelassen.verbundeneZellen = [...doc.getElementsByTagName('table:table-cell')]
+      .filter(c => +(c.getAttribute('table:number-columns-spanned') || 1) > 1 ||
+                   +(c.getAttribute('table:number-rows-spanned') || 1) > 1).length;
+
+    /* Die Zellstile (E97) aus den automatic-styles — übernommen wird, was
+       Redion kennt: fett, kursiv, Ausrichtung, Prozent, Währung. */
+    const zellStil = new Map<string, any>();
+    const zellStilVerlust = new Set<string>();
+    {
+      const daten = new Map<string, any>();
+      for (const n of [...doc.getElementsByTagName('number:percentage-style')]) {
+        const dp = +(n.getElementsByTagName('number:number')[0]
+          ?.getAttribute('number:decimal-places') || 0);
+        daten.set(n.getAttribute('style:name') || '', { art: 'prozent', stellen: dp });
+      }
+      for (const n of [...doc.getElementsByTagName('number:currency-style')]) {
+        const dp = +(n.getElementsByTagName('number:number')[0]
+          ?.getAttribute('number:decimal-places') || 0);
+        const sym = (n.getElementsByTagName('number:currency-symbol')[0]
+          ?.textContent || 'CHF').trim();
+        daten.set(n.getAttribute('style:name') || '',
+          { art: 'waehrung', stellen: dp, waehrung: sym });
+      }
+      for (const s of [...doc.getElementsByTagName('style:style')]) {
+        if (s.getAttribute('style:family') !== 'table-cell') continue;
+        const stilName = s.getAttribute('style:name') || '';
+        const st: any = {};
+        const schrift = s.getElementsByTagName('style:text-properties')[0];
+        if (schrift?.getAttribute('fo:font-weight') === 'bold') st.fett = true;
+        if (schrift?.getAttribute('fo:font-style') === 'italic') st.kursiv = true;
+        const absatz = s.getElementsByTagName('style:paragraph-properties')[0];
+        const quer = absatz?.getAttribute('fo:text-align') || '';
+        if (quer === 'start' || quer === 'left') st.ausrichtung = 'links';
+        if (quer === 'center') st.ausrichtung = 'mitte';
+        if (quer === 'end' || quer === 'right') st.ausrichtung = 'rechts';
+        const dsn = s.getAttribute('style:data-style-name');
+        if (dsn && daten.has(dsn)) st.format = daten.get(dsn);
+        if (Object.keys(st).length) zellStil.set(stilName, st);
+        const zellEig = s.getElementsByTagName('style:table-cell-properties')[0];
+        if ((schrift && [...schrift.attributes].some(a =>
+              !['fo:font-weight', 'fo:font-style'].includes(a.name))) ||
+            (zellEig && zellEig.attributes.length) ||
+            (absatz && [...absatz.attributes].some(a => a.name !== 'fo:text-align')) ||
+            (dsn && !daten.has(dsn))) zellStilVerlust.add(stilName);
+      }
+    }
 
     /* `getElementsByTagName` mit dem vollen Namen: `querySelectorAll` kommt
        mit dem Doppelpunkt im Namensraum nicht zurecht. */
@@ -381,40 +529,82 @@ const Einlesen = (() => {
     for (const tab of tabellen) {
       const name = tab.getAttribute('table:name') || 'Blatt';
       const zeilen: any[][] = [];
+      const stile: any[][] = [];
+      const formeln: (string | null)[][] = [];
 
       for (const row of [...tab.getElementsByTagName('table:table-row')]) {
         const wieOft = Math.min(
           Number(row.getAttribute('table:number-rows-repeated') || 1) || 1,
           ODS_MAX_WIEDERHOLUNG);
         const werte: any[] = [];
+        const stilWerte: any[] = [];
+        const formelWerte: (string | null)[] = [];
 
         for (const c of [...row.getElementsByTagName('table:table-cell')]) {
           const malSo = Math.min(
             Number(c.getAttribute('table:number-columns-repeated') || 1) || 1,
             ODS_MAX_WIEDERHOLUNG);
           const zahl = c.getAttribute('office:value');
+          const absatzIstKommentar = (p: Element): boolean => {
+            let el = p.parentElement;
+            while (el && el !== c) {
+              if (el.localName === 'annotation' || el.tagName === 'office:annotation') return true;
+              el = el.parentElement;
+            }
+            return false;
+          };
           const wert = zahl !== null && zahl !== ''
             ? Number(zahl)
-            : [...c.getElementsByTagName('text:p')].map(x => x.textContent ?? '').join('\n');
-          for (let i = 0; i < malSo; i++) werte.push(wert);
+            : [...c.getElementsByTagName('text:p')]
+                .filter(p => !absatzIstKommentar(p))
+                .map(x => x.textContent ?? '').join('\n');
+          const stName = c.getAttribute('table:style-name');
+          const st = stName ? (zellStil.get(stName) ?? null) : null;
+          const formelAttribut = c.getAttribute('table:formula');
+          const formel = formelAttribut ? formelAusOds(formelAttribut) : null;
+          const vorkommen = malSo * wieOft;
+          if (formelAttribut) {
+            if (formel) bericht.formeln += vorkommen;
+            else bericht.ausgelassen.formelnOhneAusdruck += vorkommen;
+          }
+          if (stName && zellStilVerlust.has(stName))
+            bericht.ausgelassen.zellformate += vorkommen;
+          for (let i = 0; i < malSo; i++) {
+            werte.push(wert); stilWerte.push(st); formelWerte.push(formel);
+          }
         }
 
         /* Rechts abschneiden, was leer ist — sonst schleppt jede Zeile die
-           ausgerollten Wiederholungen mit. */
+           ausgerollten Wiederholungen mit. Die Stile laufen synchron. */
         while (werte.length && (werte[werte.length - 1] === '' ||
-                                werte[werte.length - 1] === undefined)) werte.pop();
-        for (let i = 0; i < wieOft; i++) zeilen.push([...werte]);
+                                werte[werte.length - 1] === undefined) &&
+               !formelWerte[werte.length - 1] && !stilWerte[werte.length - 1]) werte.pop();
+        stilWerte.length = werte.length;
+        formelWerte.length = werte.length;
+        for (let i = 0; i < wieOft; i++) {
+          zeilen.push([...werte]); stile.push([...stilWerte]); formeln.push([...formelWerte]);
+        }
       }
 
       /* Und unten dasselbe. */
       while (zeilen.length && !(zeilen[zeilen.length - 1] ?? []).length) zeilen.pop();
-      blaetter.push({ name, zeilen });
+      stile.length = zeilen.length;
+      formeln.length = zeilen.length;
+      blaetter.push({ name, zeilen, stile, formeln });
     }
-    return blaetter;
+    return berichtAn(blaetter, bericht);
   };
 
   const xlsxLesen = async (puffer: ArrayBuffer): Promise<any[]> => {
     const zip = await zipLesen(puffer);
+    const bericht = neuerTabellenBericht();
+    bericht.ausgelassen.bilder = zip.namen.filter((n: string) => /^xl\/media\/.+/.test(n)).length;
+    bericht.ausgelassen.diagramme = zip.namen.filter((n: string) => /^xl\/charts\/.+\.xml$/i.test(n)).length;
+    bericht.ausgelassen.makros = zip.namen.filter((n: string) => /vbaProject\.bin$/i.test(n)).length;
+    for (const name of zip.namen.filter((n: string) => /^xl\/comments\d*\.xml$/i.test(n))) {
+      const kommentarText = await zip.text(name);
+      if (kommentarText) bericht.ausgelassen.kommentare += xml(kommentarText).querySelectorAll('comment').length;
+    }
 
     /* Gemeinsame Texte */
     const stText = await zip.text('xl/sharedStrings.xml');
@@ -425,24 +615,113 @@ const Einlesen = (() => {
       });
     }
 
-    /* Blattnamen aus der Mappe */
+    /* Die Zellstile (E97): cellXfs verweisen auf Schriften und
+       Zahlenformate. Übernommen wird, was Redion selbst kennt —
+       fett, kursiv, Ausrichtung, Prozent, Währung. Der Rest der
+       styles.xml (Farben, Rahmen, Füllungen) bleibt bewusst liegen. */
+    const stilText = await zip.text('xl/styles.xml');
+    let xfListe: any[] = [];
+    let xfVerlust: boolean[] = [];
+    if (stilText) {
+      const sdoc = xml(stilText);
+      const schriften = [...sdoc.querySelectorAll('fonts > font')].map(f => ({
+        fett: !!f.querySelector('b'), kursiv: !!f.querySelector('i')
+      }));
+      const eigene = new Map<string, string>();
+      sdoc.querySelectorAll('numFmts > numFmt').forEach(n =>
+        eigene.set(n.getAttribute('numFmtId') || '', n.getAttribute('formatCode') || ''));
+      const formatVon = (id: number): any => {
+        if (!id) return undefined;
+        /* 9 und 10 sind Excels eingebaute Prozentformate. */
+        if (id === 9) return { art: 'prozent', stellen: 0 };
+        if (id === 10) return { art: 'prozent', stellen: 2 };
+        const code = eigene.get(String(id)) || '';
+        if (!code) return undefined;
+        if (code.includes('%')) {
+          const m = /0\.(0+)%/.exec(code);
+          return { art: 'prozent', stellen: m && m[1] ? m[1].length : 0 };
+        }
+        const w = /"([^"]+)"/.exec(code);
+        if (w && w[1]) {
+          const m = /0\.(0+)/.exec(code);
+          return { art: 'waehrung', stellen: m && m[1] ? m[1].length : 0,
+                   waehrung: w[1].trim() };
+        }
+        return undefined;
+      };
+      xfListe = [...sdoc.querySelectorAll('cellXfs > xf')].map(x => {
+        const schrift = schriften[+(x.getAttribute('fontId') || 0)] ||
+                        { fett: false, kursiv: false };
+        const quer = x.querySelector('alignment')?.getAttribute('horizontal') || '';
+        const aus = quer === 'left' ? 'links' : quer === 'center' ? 'mitte'
+                  : quer === 'right' ? 'rechts' : undefined;
+        const format = formatVon(+(x.getAttribute('numFmtId') || 0));
+        const st: any = {};
+        if (schrift.fett) st.fett = true;
+        if (schrift.kursiv) st.kursiv = true;
+        if (aus) st.ausrichtung = aus;
+        if (format) st.format = format;
+        return Object.keys(st).length ? st : null;
+      });
+      xfVerlust = [...sdoc.querySelectorAll('cellXfs > xf')].map(x => {
+        const numFmtId = +(x.getAttribute('numFmtId') || 0);
+        const originalFont = sdoc.querySelectorAll('fonts > font')[+(x.getAttribute('fontId') || 0)];
+        const ausrichtung = x.querySelector('alignment');
+        const unbekannteAusrichtung = !!ausrichtung && [...ausrichtung.attributes]
+          .some(a => a.name !== 'horizontal');
+        const unbekannteSchrift = !!originalFont && !!originalFont.querySelector('color,u,strike,vertAlign');
+        return +(x.getAttribute('fillId') || 0) > 0 ||
+               +(x.getAttribute('borderId') || 0) > 0 ||
+               !!x.querySelector('protection') || unbekannteAusrichtung ||
+               unbekannteSchrift || (!!numFmtId && !formatVon(numFmtId));
+      });
+    }
+
+    /* Blattnamen UND ihre echten OPC-Beziehungen aus der Mappe. `sheet1.xml`
+       muss nicht Blatt 1 sein; fremde Schreiber dürfen beliebige Dateinamen
+       und Relationship-Reihenfolgen verwenden. Die alte numerische Sortierung
+       konnte deshalb Namen und Inhalt vertauschen. */
     const wbText = await zip.text('xl/workbook.xml');
-    const namen: (string | null)[] = [];
-    if (wbText) xml(wbText).querySelectorAll('sheet').forEach(s => namen.push(s.getAttribute('name')));
+    const meta: { name: string; id: string }[] = [];
+    if (wbText) xml(wbText).querySelectorAll('sheet').forEach(s => meta.push({
+      name: s.getAttribute('name') || '',
+      id: s.getAttribute('r:id') ||
+          s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id') || ''
+    }));
+    const beziehungen = new Map<string, string>();
+    const relText = await zip.text('xl/_rels/workbook.xml.rels');
+    if (relText) xml(relText).querySelectorAll('Relationship').forEach(r => {
+      if (r.getAttribute('TargetMode') === 'External') return;
+      const id = r.getAttribute('Id') || '';
+      const ziel = r.getAttribute('Target') || '';
+      if (id && ziel) beziehungen.set(id, paketZiel('xl/workbook.xml', ziel));
+    });
 
     /* Jedes Blatt einlesen */
     const blaetter = [];
-    const blattDateien = zip.namen.filter((n: any) => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
+    const rueckfall = zip.namen.filter((n: any) => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
       .sort((a: any, b: any) => (+a.match(/\d+/)[0]) - (+b.match(/\d+/)[0]));
+    const blattDateien = meta.length
+      ? meta.map((m, i) => ({ name: m.name || ('Blatt ' + (i + 1)),
+                             datei: beziehungen.get(m.id) || rueckfall[i] || '' }))
+            .filter(x => !!x.datei && zip.namen.includes(x.datei))
+      : rueckfall.map((datei: string, i: number) => ({ name: 'Blatt ' + (i + 1), datei }));
 
     for (let i = 0; i < blattDateien.length; i++) {
-      const t = await zip.text(blattDateien[i]);
+      const quelle = blattDateien[i]!;
+      const t = await zip.text(quelle.datei);
       if (!t) continue;
       const doc = xml(t);
       const zeilen: any[][] = [];
+      const stile: any[][] = [];
+      const formeln: (string | null)[][] = [];
+      bericht.ausgelassen.bedingteFormatierungen += doc.querySelectorAll('conditionalFormatting').length;
+      bericht.ausgelassen.verbundeneZellen += doc.querySelectorAll('mergeCell').length;
 
       doc.querySelectorAll('row').forEach(row => {
         const werte = [];
+        const stilWerte: any[] = [];
+        const formelWerte: (string | null)[] = [];
         row.querySelectorAll('c').forEach(c => {
           const spalte = spalteZuNummer(c.getAttribute('r') || '');
           const typ = c.getAttribute('t');
@@ -456,14 +735,30 @@ const Einlesen = (() => {
             wert = c.querySelector('v')?.textContent || '';
           }
           werte[spalte] = wert;
+          const sIx = c.getAttribute('s');
+          stilWerte[spalte] = sIx !== null ? (xfListe[+sIx] ?? null) : null;
+          if (sIx !== null && xfVerlust[+sIx]) bericht.ausgelassen.zellformate++;
+          const f = c.querySelector('f');
+          if (f) {
+            const ausdruck = (f.textContent || '').trim();
+            formelWerte[spalte] = ausdruck ? '=' + ausdruck : null;
+            if (ausdruck) bericht.formeln++;
+            else bericht.ausgelassen.formelnOhneAusdruck++;
+          } else formelWerte[spalte] = null;
         });
-        for (let k = 0; k < werte.length; k++) if (werte[k] === undefined) werte[k] = '';
+        for (let k = 0; k < werte.length; k++) {
+          if (werte[k] === undefined) werte[k] = '';
+          if (stilWerte[k] === undefined) stilWerte[k] = null;
+          if (formelWerte[k] === undefined) formelWerte[k] = null;
+        }
+        stile.push(stilWerte);
+        formeln.push(formelWerte);
         zeilen.push(werte);
       });
 
-      blaetter.push({ name: namen[i] || ('Blatt ' + (i + 1)), zeilen });
+      blaetter.push({ name: quelle.name, zeilen, stile, formeln });
     }
-    return blaetter;
+    return berichtAn(blaetter, bericht);
   };
 
   /* ========================================================================
@@ -642,7 +937,8 @@ const Einlesen = (() => {
     return null;
   };
 
-  return { zipLesen, zipLesenAusBlob, xlsxLesen, odsLesen, docxLesen, epubLesen,
+  return { zipLesen, zipLesenAusBlob, xlsxLesen, odsLesen, tabellenBerichtText,
+           docxLesen, epubLesen,
            alsDatenbank, datei };
 })();
 

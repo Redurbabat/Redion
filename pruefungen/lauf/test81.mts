@@ -23,6 +23,9 @@ await seite.goto('file://' + WURZEL + '/index.html');
 await seite.evaluate(() => {
   Store.setMeta('rundgangGesehen', true);
   document.getElementById('rg-willkommen')?.remove();
+  /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+     über alles und fängt Klicks ab (E132). */
+  document.querySelector('.produkt-onboarding-lage')?.remove();
   document.getElementById('rg-einladung')?.remove();
 });
 await seite.waitForFunction(() => typeof App !== 'undefined' && typeof Probelauf !== 'undefined',
@@ -54,7 +57,12 @@ const bau = await seite.evaluate(() => {
   /* Eine Automation, die den Betrag anfasst */
   Store.updateCollection(c.id, { automationen: [{
     name: 'Alles auf null', ausloeser: 'manuell',
-    bedingungen: [], aktionen: [{ art: 'setzen', key: 'betrag', wert: '0' }] }] });
+    /* Hier stand `aktionen: [{ art: 'setzen', … }]` — ein Schema, das es in
+       der App nie gab. Test und Probelauf-Modul waren untereinander stimmig
+       und beide von der Wirklichkeit abgekoppelt: echte Automationen heissen
+       `dann` und `setze-prop` (seit E85 liest das Modul die echten Felder,
+       und dieser Test füttert sie). */
+    bedingungen: [], dann: [{ art: 'setze-prop', key: 'betrag', wert: '0' }] }] });
 
   return { seite: s.id, coll: c.id, view: v.id };
 });

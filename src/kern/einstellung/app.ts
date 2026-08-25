@@ -59,10 +59,55 @@ const AppEinstellung = (() => {
   const amTelefon = () => {
     /* `<=`, nicht `<`. Die CSS sagt `max-width: 760px`, und das schliesst
        760 EIN. Mit `<` hätte genau die Breite 760 hier „Rechner" geheissen
-       und dort „Telefon" — ein Pixel breites Band, das man nie findet. */
-    try { return window.innerWidth <= (typeof KONSTANTEN !== 'undefined'
-            ? KONSTANTEN.TELEFON_BREITE : 760); }
-    catch { return false; }
+       und dort „Telefon" — ein Pixel breites Band, das man nie findet.
+
+       EIN IPHONE IM QUERFORMAT IST BREITER ALS 760 PX. Breite allein machte
+       daraus deshalb einen Rechner: keine Blätter, keine Touch-Leiste, kein
+       Kartenraster. Die zweite Hälfte erkennt bewusst nur ein grobes
+       Zeigegerät UND eine kurze Bildschirmseite. Ein schmales Rechnerfenster
+       bleibt damit schmal, ein berührbarer Laptop aber weiterhin Rechner. */
+    try {
+      const grenze = typeof KONSTANTEN !== 'undefined'
+        ? KONSTANTEN.TELEFON_BREITE : 760;
+      const grob = window.matchMedia?.('(pointer: coarse)').matches ||
+                   navigator.maxTouchPoints > 0;
+      return window.innerWidth <= grenze || (grob && window.innerHeight <= 500);
+    } catch { return false; }
+  };
+
+  /* ----------------------------------------------------------------------
+   * DER SICHTBARE AUSSCHNITT
+   * --------------------------------------------------------------------
+   * iOS verkleinert bei geöffneter Tastatur nicht immer `innerHeight`.
+   * `visualViewport` kennt dagegen die wirklich sichtbare Fläche. Früher
+   * rechnete nur die Editorleiste damit; jedes Blatt und jeder Dialog hatte
+   * wieder seine eigene, meist fehlende Rechnung.
+   *
+   * Die Werte sind reine Darstellung. Sie speichern nichts und bleiben auch
+   * in Browsern ohne `visualViewport` sinnvoll (unten 0, Höhe innerHeight).
+   */
+  const viewportAktualisieren = (): void => {
+    try {
+      const vv = window.visualViewport;
+      const hoehe = vv?.height ?? window.innerHeight;
+      const unten = vv
+        ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+        : 0;
+      const wurzel = document.documentElement;
+      wurzel.style.setProperty('--vh', (hoehe * 0.01) + 'px');
+      wurzel.style.setProperty('--visual-height', hoehe + 'px');
+      wurzel.style.setProperty('--visual-bottom', unten + 'px');
+      document.body?.classList.toggle('tastatur-offen', unten > 80);
+    } catch { /* Darstellung darf den Start nicht verhindern. */ }
+  };
+
+  const viewportStart = (): void => {
+    viewportAktualisieren();
+    window.addEventListener('resize', viewportAktualisieren, { passive: true });
+    window.addEventListener('orientationchange', () =>
+      setTimeout(viewportAktualisieren, 250), { passive: true });
+    window.visualViewport?.addEventListener('resize', viewportAktualisieren, { passive: true });
+    window.visualViewport?.addEventListener('scroll', viewportAktualisieren, { passive: true });
   };
 
   /* --- Was geht hier? ----------------------------------------------------- */
@@ -134,7 +179,9 @@ const AppEinstellung = (() => {
   };
 
   return { NAME, FASSUNG, herkunft, einzeldatei, alsApp, amTelefon,
+           viewportAktualisieren, viewportStart,
            kann, steckbrief, platz, speicherSichern };
 })();
 
 (window as any).AppEinstellung = AppEinstellung;
+AppEinstellung.viewportStart();

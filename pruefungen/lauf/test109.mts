@@ -79,9 +79,24 @@ const erzeugt = new Set<string>(
    prüft, dass die erzeugte Datei zu ihrer Quelle passt. */
 if ((alles ?? '').includes('src/dienst/sw.ts')) erzeugt.add('sw.js');
 
+/* FREMDER CODE zählt auch nicht — er ist nichts, was hier jemand
+   geschrieben hat, und ihn zu migrieren wäre sinnlos. Er steht mit Pfad,
+   Fassung, Lizenz, Herkunft und Prüfsumme in `pruefungen/fremd-bestand.json`;
+   `test177` rechnet die Prüfsummen nach. `js-bestand.json` bleibt dabei
+   leer — §54.4 sagt „darf nur schrumpfen", und eine fremde Bibliothek ist
+   kein Rückschritt in der Migration, sondern eine eigene Entscheidung
+   (E103). */
+const FREMD = dazu(WURZEL, 'pruefungen/fremd-bestand.json');
+const fremd = new Set<string>(
+  da(FREMD)
+    ? (JSON.parse(lies(FREMD, 'utf8')).eintraege || [])
+        .map((e: { pfad: string }) => e.pfad)
+    : []);
+
 const vonHand = alles
   .filter(f => /\.(js|mjs|cjs)$/.test(f))
   .filter(f => !erzeugt.has(f))
+  .filter(f => !fremd.has(f))
   .sort();
 
 /* ==========================================================================
@@ -283,8 +298,18 @@ p('… und in tsconfig.bauen.json ausdrücklich aus',
 const paketRoh = lies(dazu(WURZEL, 'package.json'), 'utf8');
 p('@types/node steht bei den Entwicklungsabhängigkeiten',
   /"devDependencies"[\s\S]*"@types\/node"/.test(paketRoh));
-p('… und nicht bei den echten',
-  !/"dependencies"\s*:/.test(paketRoh));
+/* Bis zum 8. August galt: gar keine echten Abhängigkeiten. Seit E78 gibt
+   es GENAU VIER — react, react-dom, dexie, zod, die beschlossene
+   Zielarchitektur. Der Punkt bleibt ein Wächter, nur die Regel ist neu:
+   jede WEITERE Laufzeit-Abhängigkeit braucht ihren eigenen E-Eintrag,
+   und bis dahin ist sie hier rot. */
+/* Seit E80 gilt wieder der alte Satz: KEINE Laufzeit-Abhängigkeiten.
+   Zwischen E78 und E80 stand hier eine Allowlist (react, dexie, zod,
+   prosemirror …) — Redur hat den React-Umbau nach Ansicht des Rohbaus
+   widerrufen, und mit ihm gingen alle elf Pakete wieder. */
+const echte = Object.keys(JSON.parse(paketRoh).dependencies || {});
+p('… und echte Laufzeit-Abhängigkeiten gibt es KEINE (E80)',
+  echte.length === 0, 'gefunden: ' + echte.join(', '));
 
 console.log(`\n  Suite 73 — Keine neue JavaScript-Datei: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

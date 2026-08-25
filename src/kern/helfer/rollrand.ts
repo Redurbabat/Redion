@@ -51,15 +51,57 @@ const Rollrand = (() => {
    */
   const SPIEL = 2;
 
-  /** Setzt `data-rand` auf „links", „rechts", „links rechts" oder nichts. */
-  const pruefe = (feld: HTMLElement): void => {
-    const links  = feld.scrollLeft > SPIEL;
-    const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
+  /**
+   * ZWEI ANTWORTEN, EINE MESSUNG.
+   *
+   * Gezeichnet wird an zwei Sorten Rollfeld, und beide brauchen dieselbe
+   * Rechnung, aber ein anderes Wort dafür:
+   *
+   *     art 'rand'   data-rand="links rechts"      Tabellen
+   *     art 'mehr'   data-mehr="beides|rechts|…"   Knopfleisten
+   *
+   * Der Unterschied ist nur, WO der Verlauf liegt. Bei den Tabellen ist es
+   * eine Maske auf dem Feld selbst; bei den Knopfleisten ein Streifen an der
+   * Kante, damit die Knöpfe voll deckend bleiben und nur der letzte am Rand
+   * ausläuft.
+   *
+   * KEIN SCHATTEN. Hier stand einmal, für die Knopfleisten gehöre ein
+   * Schatten an die Kante. Nachgesehen am 25. August: `rgba(0,0,0,.34)` über
+   * `#1a1a1a` ist kein Schatten, und „Meine Fehler" endete trotz grüner
+   * Prüfung mitten im Wort an einer scharfen Kante (E159). Ein Verlauf endet
+   * in der Fläche, auf der er liegt, und trägt deshalb in beiden Themen.
+   *
+   * `data-mehr` hat immer einen Wert, auch „nein" — so steht in den beiden
+   * bereits gebauten Fassungen (E141, E151), und die CSS und die Prüfläufe
+   * test210/test217 lesen ihn so. `data-rand` verschwindet stattdessen,
+   * wenn nichts anzuzeigen ist. Beide Verträge bleiben, wie sie sind; hier
+   * wird nur die dreifach abgeschriebene Rechnung zusammengelegt.
+   */
+  type Art = 'rand' | 'mehr';
+
+  /** Wohin, und in welcher Sprache. `an` ist nötig, weil die
+      Markierungsleiste im PDF das Merkmal an ihrem ELTERNTEIL trägt: gerollt
+      wird `.blatt-tools`, den Schatten zeichnet `.blatt-reihe`. */
+  type Wahl = { art?: Art; an?: HTMLElement | null };
+
+  const schreibe = (ziel: HTMLElement, art: Art, links: boolean, rechts: boolean): void => {
+    if (art === 'mehr') {
+      const wert = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+      if (ziel.dataset['mehr'] !== wert) ziel.dataset['mehr'] = wert;
+      return;
+    }
     const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
     /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
        Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
-    if (wert) { if (feld.dataset['rand'] !== wert) feld.dataset['rand'] = wert; }
-    else if (feld.dataset['rand'] !== undefined) delete feld.dataset['rand'];
+    if (wert) { if (ziel.dataset['rand'] !== wert) ziel.dataset['rand'] = wert; }
+    else if (ziel.dataset['rand'] !== undefined) delete ziel.dataset['rand'];
+  };
+
+  /** Setzt `data-rand` bzw. `data-mehr` nach dem aktuellen Rollstand. */
+  const pruefe = (feld: HTMLElement, wahl: Wahl = {}): void => {
+    const links  = feld.scrollLeft > SPIEL;
+    const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
+    schreibe(wahl.an || feld, wahl.art || 'rand', links, rechts);
   };
 
   /**
@@ -67,9 +109,9 @@ const Rollrand = (() => {
    * löst — gebraucht wird sie bisher nicht, aber ein Beobachter ohne
    * Abmeldung ist ein Leck, das man erst bemerkt, wenn es zu spät ist.
    */
-  const binde = (feld: HTMLElement | null): (() => void) => {
+  const binde = (feld: HTMLElement | null, wahl: Wahl = {}): (() => void) => {
     if (!feld) return () => {};
-    const nachsehen = () => pruefe(feld);
+    const nachsehen = () => pruefe(feld, wahl);
     feld.addEventListener('scroll', nachsehen, { passive: true });
 
     /* Die Breite ändert sich auch ohne Rollen: das Fenster dreht sich, eine

@@ -67,7 +67,7 @@
 .ag-grenzstreifen button:hover{background:var(--bg-hover)}
 .ag-grenzstreifen.aus{background:var(--b-red, rgba(239,68,68,.14))}
 .ag-grenzstreifen.aus, .ag-grenzstreifen.aus b{color:var(--text)}
-.ag-grenzstreifen.aus button.prim{background:var(--accent); color:#fff; border-color:transparent}
+.ag-grenzstreifen.aus button.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent}
 @media(max-width:760px){
   .ag-grenzstreifen{flex-wrap:wrap}
   .ag-grenzstreifen button{min-height:44px; width:100%}
@@ -80,7 +80,7 @@
 #aa:focus, #mtx:focus{border-color:var(--accent)}
 .agent-schritt{border-bottom:1px solid var(--line-soft); padding:9px 16px}
 .as-kopf{display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:4px}
-.as-nr{width:19px; height:19px; border-radius:50%; background:var(--accent); color:#fff;
+.as-nr{width:19px; height:19px; border-radius:50%; background:var(--accent); color:var(--auf-accent);
   display:flex; align-items:center; justify-content:center; font-size:11px; flex:0 0 auto}
 .as-gedanke{color:var(--text-faint); font-size:12px; overflow:hidden; text-overflow:ellipsis;
   white-space:nowrap}
@@ -142,19 +142,48 @@
 
   /* Rand um Kerbe und Streifen */
   #topbar{ padding-top:env(safe-area-inset-top);
-           height:calc(46px + env(safe-area-inset-top)); }
+           height:calc(var(--mobile-topbar) + env(safe-area-inset-top)); }
   #sidebar{ padding-top:env(safe-area-inset-top);
             padding-bottom:env(safe-area-inset-bottom); }
   /* 28 px, nicht 18. Die Zahl steht auch in `ki.css`, aber DIESE Regel
      gewinnt (gleiche Spezifität, spätere Datei) — gemessen kamen 18 px
      heraus, während der Start-Bildschirm daneben mit 28 gebaut war. Zwei
-     Ränder in einer App sind einer zu viel. */
-  #page{ padding-left:max(28px, env(safe-area-inset-left));
-         padding-right:max(28px, env(safe-area-inset-right));
+     Ränder in einer App sind einer zu viel.
+
+     UND `#page.wide` MUSS DANEBENSTEHEN. `#page` allein ist eine Kennung;
+     `#page.wide` aus `aufbau.css` ist eine Kennung PLUS eine Klasse und
+     gewinnt damit gegen die Zeile hier — auch am Telefon, auch wenn sie
+     später geladen wird. Gemessen am 25. August auf 390 px:
+
+         gewöhnliche Seite    28 px Rand   →  334 px Inhalt
+         „Volle Breite"       60 px Rand   →  270 px Inhalt
+
+     Der Modus, den man wählt, um MEHR Platz zu bekommen, gab weniger. Das
+     ist derselbe Fehler wie in E148 bei den Produktwelten, an derselben
+     Kennung, im selben Block — das dritte Mal in dieser Datei.
+
+     `:not(.produkt-welt)` IST KEIN SCHMUCK. Eine Produktwelt wird ebenfalls
+     in `#page` gezeichnet und trägt dabei auch `wide`. Ohne den Ausschluss
+     gewönne diese Zeile gegen `#page.produkt-welt{padding:10px 12px}` aus
+     E148 — gleiche Spezifität, spätere Datei — und die Produktwelten
+     bekämen 28 px statt 12 zurück. Genau die Pixel, die E148 geholt hat. */
+  #page,
+  #page.wide:not(.produkt-welt){
+         padding-left:max(var(--mobile-gutter), env(safe-area-inset-left));
+         padding-right:max(var(--mobile-gutter), env(safe-area-inset-right));
          padding-bottom:calc(30vh + env(safe-area-inset-bottom)); }
+  /* Der Aufmacher zieht sich über den Rand hinaus — mit dem Rand, der hier
+     wirklich gilt, nicht mit den 96 bzw. 60 px vom Rechner. Vorher ragte er
+     um bis zu 68 px aus dem Bild. */
+  .cover, #page.wide .cover{
+    margin-inline:calc(-1 * max(var(--mobile-gutter), env(safe-area-inset-left))); }
   @media(max-width:380px){
-    #page{ padding-left:max(22px, env(safe-area-inset-left));
-           padding-right:max(22px, env(safe-area-inset-right)); }
+    #page,
+    #page.wide:not(.produkt-welt){
+           padding-left:max(var(--mobile-gutter-small), env(safe-area-inset-left));
+           padding-right:max(var(--mobile-gutter-small), env(safe-area-inset-right)); }
+    .cover, #page.wide .cover{
+      margin-inline:calc(-1 * max(var(--mobile-gutter-small), env(safe-area-inset-left))); }
   }
   #ai{ padding-bottom:env(safe-area-inset-bottom); }
 
@@ -367,7 +396,7 @@
 .rg-liste .fr-zeile button:hover{background:var(--bg-hover); color:var(--text)}
 .rg-neu{display:flex; align-items:center; gap:7px; flex-wrap:wrap;
   padding:12px 18px; border-top:1px solid var(--line)}
-.rg-neu button.prim{background:var(--accent); color:#fff; border-color:transparent;
+.rg-neu button.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent;
   font-weight:500}
 .rg-neu input, .rg-neu select{
   padding:8px 10px; background:var(--bg-input); border:1px solid var(--line);
@@ -471,7 +500,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-werkzeuge button{padding:5px 8px; border-radius:6px; color:var(--text-dim);
   background:none; font-size:14px}
 .bib-werkzeuge button:hover{background:var(--bg-hover); color:var(--text)}
-.bib-werkzeuge .prim{background:var(--accent); color:#fff; font-size:13.5px;
+.bib-werkzeuge .prim{background:var(--accent); color:var(--auf-accent); font-size:13.5px;
   padding:6px 13px; font-weight:500}
 .bib-werkzeuge .prim:hover{filter:brightness(1.08); color:#fff}
 .bib-suchzeile{display:flex; align-items:center; gap:8px; padding:8px 2px; font-size:14px}
@@ -541,7 +570,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .pk-chips{display:flex; gap:6px; padding:0 12px 10px; flex-wrap:wrap}
 .pk-chip{display:flex; align-items:center; gap:5px; font-size:12.5px; padding:4px 9px;
   border-radius:6px; background:var(--bg-hover); color:var(--text-dim)}
-.pk-chip.on{background:var(--accent); color:#fff}
+.pk-chip.on{background:var(--accent); color:var(--auf-accent)}
 .pk-chip span{font-size:9px; opacity:.7}
 .pk-res{min-height:150px}
 .pk-tat{padding:3px 7px; border-radius:5px; color:var(--text-faint); cursor:pointer; font-size:14px}
@@ -574,7 +603,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .vor-neu{font-size:13.5px; color:var(--c-green, #4dab9a); padding:2px 0; word-break:break-word}
 .vor-tat{display:flex; gap:7px; margin-top:7px}
 .vor-tat button{font-size:12.5px; padding:4px 11px; border-radius:5px; background:var(--bg-hover)}
-.vor-tat button:first-child{background:var(--accent); color:#fff}
+.vor-tat button:first-child{background:var(--accent); color:var(--auf-accent)}
 .banner.info u{cursor:pointer}
 
 /* Felder aus Verbindungen: Google Drive, Figma, GitHub-PR, Zendesk */
@@ -584,7 +613,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .dienst-chip:hover{background:var(--line)}
 .dc-t{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .dc-z{font-size:11px; color:var(--text-faint); flex:none}
-.bib-werkzeuge button.an{background:var(--accent); color:#fff}
+.bib-werkzeuge button.an{background:var(--accent); color:var(--auf-accent)}
 
 /* Unter-Elemente, Archiv, Abhängigkeiten (Notion: Sub-items / Dependencies) */
 .tt-klapp{background:none; color:var(--text-faint); font-size:10px; padding:0 3px;
@@ -604,7 +633,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .we-baum{font-size:13px; line-height:1.9}
 .we-baum .ein{padding-left:22px; color:var(--text-dim)}
 .we-fuss{padding:0 16px 16px}
-.we-knopf{width:100%; background:var(--accent); color:#fff; padding:9px;
+.we-knopf{width:100%; background:var(--accent); color:var(--auf-accent); padding:9px;
   border-radius:7px; font-size:14px; font-weight:500}
 .we-knopf:hover{filter:brightness(1.08); color:#fff}
 .we-liste{padding:4px 6px 12px; max-height:60vh; overflow:auto}
@@ -634,7 +663,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .side-item.anpass{opacity:1}
 .side-item.anpass.aus{opacity:.45}
 .anpass-fertig{display:block; width:calc(100% - 20px); margin:14px 10px;
-  background:var(--accent); color:#fff; padding:8px; border-radius:7px;
+  background:var(--accent); color:var(--auf-accent); padding:8px; border-radius:7px;
   font-size:14px; font-weight:500}
 .anpass-fertig:hover{filter:brightness(1.08); color:#fff}
 
@@ -728,7 +757,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .mschalter.an{background:var(--accent)}
 .mschalter.an i{left:15px}
 .menu .kenn{font-size:10px; padding:1px 5px; border-radius:4px; background:var(--accent);
-  color:#fff; margin-left:6px; letter-spacing:.02em}
+  color:var(--auf-accent); margin-left:6px; letter-spacing:.02em}
 .menu button .sub{display:block; width:100%; font-size:11.5px; color:var(--text-faint);
   margin-top:2px; line-height:1.35; white-space:normal}
 
@@ -737,8 +766,10 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
  * ======================================================================== */
 .menu-grund{position:fixed; inset:0; z-index:590; background:rgba(0,0,0,.45)}
 .menu.blatt{
-  position:fixed; left:0; right:0; bottom:0; top:auto; width:100%;
-  max-width:none; max-height:88vh; border-radius:16px 16px 0 0;
+  position:fixed; left:0; right:0; bottom:var(--visual-bottom, 0px); top:auto; width:100%;
+  max-width:none;
+  max-height:min(var(--sheet-max-height), calc(var(--visual-height, 100vh) - env(safe-area-inset-top) - 8px));
+  border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;
   border:none; border-top:1px solid var(--line); padding:0 0 env(safe-area-inset-bottom);
   transform:translateY(100%); transition:transform .22s cubic-bezier(.2,.8,.3,1);
   overflow:hidden; display:flex; flex-direction:column;
@@ -749,9 +780,10 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .blatt-titel{text-align:center; font-size:15px; font-weight:600; padding:4px 16px 12px;
   border-bottom:1px solid var(--line-soft); flex:none}
 .menu.blatt > .menu-suche{flex:none; padding:10px 14px}
-.menu.blatt .menu-liste{max-height:none; flex:1; overflow-y:auto; padding:4px 8px 12px}
+.menu.blatt .menu-liste{max-height:none; min-height:0; flex:1; overflow-y:auto;
+  overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:4px 8px 12px}
 .menu.blatt .menu-fuss{flex:none}
-.menu.blatt button{padding:13px 14px; font-size:16px; border-radius:9px}
+.menu.blatt button{min-height:var(--touch-min); padding:10px 14px; font-size:16px; border-radius:9px}
 .menu.blatt button .mi{font-size:17px; width:26px}
 .menu.blatt .grp{padding:14px 14px 6px; font-size:12px}
 .menu.blatt hr{margin:6px 10px}
@@ -773,7 +805,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .db-vollkopf{font-size:34px; font-weight:700; letter-spacing:-.02em; margin:6px 0 18px}
 
 /* Datenbank-Werkzeuge auf dem Telefon: nur Symbole, wie in der Notion-App */
-@media(max-width:760px){
+@media(max-width:760px), (max-height:500px) and (pointer:coarse){
   .db-tools{gap:2px}
   .db-tools button{padding:6px 9px}
   .db-tools button[data-a="filter"],
@@ -878,10 +910,18 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
      geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
      nichts mehr zu holen ist. */
-  @media(max-width:440px){
-    #handy-oben{ gap:5px; padding-left:17px; padding-right:17px }
-  }
-  @media(max-width:380px){ #handy-oben{ gap:4px; padding-left:10px; padding-right:10px } }
+  /* NACHGEMESSEN AM 24. AUGUST, weil eine SECHSTE Pille dazugekommen ist:
+     die Produktwelten stellen „Lernen" vor die vier Bereiche (E132). Die
+     Rechnung oben galt für fünf, und mit sechs lief sie über — gemessen
+     mit den kurzen Namen (Heute, Lernen, Seiten, Plan, Mehr):
+
+       428 px   Heute 3 px zu viel, Seiten 6 px
+       390 px   vier von fünf zu viel, bis 44 px
+
+     Gespart wird weiter am Weissraum und nicht an der Daumenfläche: die
+     Tasten bleiben 56 px hoch und mindestens 56 px breit. Kleiner werden
+     nur das Polster in der Pille und der Abstand zwischen Sinnbild und
+     Wort. */
   #handy-oben::-webkit-scrollbar{ display:none }
 
   #handy-oben button{
@@ -896,6 +936,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     transition:background .14s, color .14s;
   }
   #handy-oben button:active{ background:var(--bg-hover) }
+
+  @media(max-width:440px){
+    #handy-oben{ gap:5px; padding-left:14px; padding-right:14px }
+    /* Die HÖHE bleibt 56 px — das ist die Fläche, die der Daumen trifft.
+       Schmaler darf eine Taste werden: §37 verlangt 44 px, und 48 × 56 ist
+       immer noch deutlich darüber. Sechs Kreise à 56 px plus die eine
+       beschriftete Pille brauchten bei 390 px rechnerisch 439 px. */
+    #handy-oben button{ min-width:48px; padding:0 9px; gap:6px }
+  }
+  @media(max-width:400px){
+    #handy-oben{ gap:4px; padding-left:8px; padding-right:8px }
+    #handy-oben button{ min-width:44px; padding:0 7px; gap:5px }
+  }
 
   /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
   /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
@@ -998,6 +1051,41 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   .pg-tools::-webkit-scrollbar{ display:none }
   .pg-tools button{ flex:0 0 auto }
+
+  /* UND SIE ZEIGT, DASS SIE ROLLT (L58, E159).
+     Gemessen auf 390 px: 617 px Inhalt in einem 390 px breiten Kasten.
+     Schiebbar war die Zeile schon; nur sagte es nichts, und ein
+     abgeschnittenes Wort liest sich als Fehler, nicht als Einladung.
+
+     EIN VERLAUF, KEIN SCHATTEN — und das ist der zweite Anlauf. Der erste
+     schrieb `box-shadow:14px 0 14px -8px rgba(0,0,0,.34)` ab, wie es bei
+     `.lw-nav` stand. Die Prüfung war grün (Deckkraft 1), und auf dem
+     Bildschirmfoto war NICHTS zu sehen: ein schwarzer Schatten auf einer
+     Fläche von #141414 ist kein Schatten. Genau §55 — hinsehen, nicht nur
+     messen.
+
+     Der Verlauf endet dagegen in der Fläche, auf der er liegt, und trägt
+     damit in beiden Themen. Dieselbe Antwort steht seit E140 an der linken
+     Kante von `.blatt-reihe`, dort mit `--bg-card`.
+
+     `position:sticky` statt eines aufgelegten Elements: ein gewöhnliches
+     Pseudo-Element würde MIT dem Inhalt wegrollen und wäre nach dem ersten
+     Wisch nicht mehr am Rand. Die negativen Aussenabstände halten den
+     Streifen dabei layoutfrei — er legt sich über den Knopf am Rand, statt
+     ihn 26 px weit zu schieben. */
+  .pg-tools::before,
+  .pg-tools::after{
+    content:""; position:sticky; z-index:1; align-self:stretch;
+    flex:0 0 26px; width:26px; opacity:0; pointer-events:none;
+    transition:opacity var(--motion-fast,130ms) ease }
+  .pg-tools::before{ left:0;  margin-right:-26px;
+    background:linear-gradient(to right, var(--bg), transparent) }
+  .pg-tools::after{  right:0; margin-left:-26px;
+    background:linear-gradient(to left,  var(--bg), transparent) }
+  .pg-tools[data-mehr="links"]::before,
+  .pg-tools[data-mehr="beides"]::before{ opacity:1 }
+  .pg-tools[data-mehr="rechts"]::after,
+  .pg-tools[data-mehr="beides"]::after{ opacity:1 }
 
   /* --- CODEBLOCK: die Werkzeuge STANDEN AUF DEM CODE ------------------- *
      Gemessen am 6. August bei 390 px: der Kasten mit ⧉ № ↩ lag von x=175
@@ -1315,7 +1403,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .cover-gitter button:hover{outline:2px solid var(--accent)}
 .cover-gitter button.on{outline:2px solid var(--accent)}
 .cb-mitte{padding:34px 0; text-align:center}
-.cb-knopf{background:var(--accent); color:#fff; padding:10px 20px; border-radius:8px;
+.cb-knopf{background:var(--accent); color:var(--auf-accent); padding:10px 20px; border-radius:8px;
   font-size:14.5px}
 .cb-knopf:hover{filter:brightness(1.08); color:#fff}
 #cb-link{width:min(360px,90%); display:block; margin:0 auto 14px; padding:10px 12px;
@@ -1377,15 +1465,68 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
     background:var(--bg-side); border-top:1px solid var(--line);
     overflow-x:auto; -webkit-overflow-scrolling:touch;
   }
+  /* 44, nicht 38: die Fingerregel (§37) galt für die Breite und wurde bei
+     der Höhe vergessen — gemessen am 9. August, 44×38. */
   #tastenleiste button{
-    flex:0 0 auto; min-width:44px; height:38px; border-radius:9px;
+    flex:0 0 auto; min-width:44px; height:44px; border-radius:9px;
     background:var(--bg-hover); border:1px solid var(--line);
     color:var(--text); font-size:15px;
   }
-  #tastenleiste button:active{ background:var(--accent); color:#fff; }
-  #tastenleiste button[data-t="fertig"]{ margin-left:auto; }
-  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück */
-  body.schreibt #handy-leiste{ display:none; }
+  #tastenleiste button:active{ background:var(--accent); color:var(--auf-accent); }
+  /* Angepinnt: elf Knöpfe rollen seitlich, aber der Weg zurück (Tastatur
+     schliessen) darf nicht mitrollen — er stand ausserhalb des Bildes.
+     Der Schatten deckt zu, was darunter durchrollt. */
+  #tastenleiste button[data-t="fertig"]{
+    margin-left:auto; position:sticky; right:0;
+    background:var(--bg-side); box-shadow:-6px 0 6px var(--bg-side);
+  }
+  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück.
+     Hier stand `#handy-leiste` — ein Element, das es nicht mehr gibt
+     (siehe den Kommentar bei der Schubladen-Höhe weiter unten). Die
+     echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
+     Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
+     hervor. */
+  body.schreibt #handy-unten{ display:none; }
+
+  /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
+     leicht und durchscheinend —, die Fallmarke zeigt die Lücke, in die er
+     fällt. user-select aus, damit das Halten keinen Text markiert. */
+  .blk.gehoben{ opacity:.55; transform:scale(.98);
+                transition:transform .12s ease, opacity .12s ease;
+                -webkit-user-select:none; user-select:none; }
+  .fallmarke{ position:fixed; height:3px; border-radius:2px;
+              background:var(--accent); z-index:530; pointer-events:none; }
+  /* iOS legt beim langen Drücken gern seine Sprechblase (Kopieren/Nach-
+     schlagen) über alles. Auf Blöcken gehört das lange Drücken der
+     Hebe-Geste; die Sprechblase bleibt nur im Schreibtext erlaubt.
+     Ob das auf echtem iOS reicht, kann nur ein echtes Gerät zeigen (L10). */
+  .blk{ -webkit-touch-callout:none; }
+  .blk [contenteditable="true"]{ -webkit-touch-callout:default; }
+}
+
+/* ==========================================================================
+ * TELEFON: TABELLENBLOCK ALS KARTEN (E89)
+ * Zeilen als Karten, wie es die Datenbank vormacht; die Kopfzeile liefert
+ * die Feldnamen, ⊞/☰ schalten zwischen Karten und Raster um.
+ * ======================================================================== */
+@media(max-width:760px), (max-height:500px) and (pointer:coarse){
+  .tblk-karten{ display:flex; flex-direction:column; gap:8px; margin:6px 0 12px;
+                width:100%; min-width:0 }
+  .tblk-kopf{ display:flex; align-items:center; gap:8px }
+  .tblk-kopf b{ flex:1; font-size:15.5px }
+  .tblk-kopf button, .tblk-zurueck{
+    min-height:var(--touch-min); min-width:var(--touch-min); padding:0 12px; border-radius:9px;
+    background:var(--bg-hover); border:1px solid var(--line); color:var(--text);
+    font-size:14px }
+  .tblk-zurueck{ align-self:flex-start; margin:4px 0 6px }
+  .tblk-karte{ background:var(--bg-card, var(--bg-hover)); border:1px solid var(--line);
+               border-radius:12px; padding:11px 13px; cursor:pointer }
+  .tblk-karte:active{ background:var(--bg-hover) }
+  .tblk-titel{ font-size:15.5px; font-weight:600; margin-bottom:6px }
+  .tblk-feld{ display:flex; gap:10px; align-items:baseline; font-size:13px }
+  .tblk-name{ flex:0 0 38%; color:var(--text-faint) }
+  .tblk-wert{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis }
+  .tblk-leer{ padding:18px; text-align:center; color:var(--text-faint); font-size:14px }
 }
 
 /* ==========================================================================
@@ -1439,7 +1580,7 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
                       background:var(--bg-hover); border:1px solid var(--line);
                       max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pf-tun{ margin-top:9px; padding:6px 12px; border-radius:6px;
-         background:var(--accent); color:#fff; font-size:12.5px; }
+         background:var(--accent); color:var(--auf-accent); font-size:12.5px; }
 .pf-gut{ padding:28px 22px; text-align:center; color:var(--text-dim); font-size:14px; }
 .pf-zahlen{ font-size:12.5px; color:var(--text-faint); margin-bottom:4px; }
 .eh-knopf{ display:flex; flex-direction:column; align-items:flex-start; gap:2px;
@@ -1483,7 +1624,7 @@ body[data-bewegung="ruhig"] *, body[data-bewegung="ruhig"] *::before{
       Seitenleiste vorbei. Sichtbar erst, wenn er den Fokus hat. */
 #zum-inhalt{
   position:fixed; left:8px; top:-60px; z-index:9999;
-  padding:10px 16px; border-radius:8px; background:var(--accent); color:#fff;
+  padding:10px 16px; border-radius:8px; background:var(--accent); color:var(--auf-accent);
   transition:top .15s ease;
 }
 #zum-inhalt:focus{ top:8px; }
@@ -1566,7 +1707,7 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 #sp-pw{ width:100%; padding:11px 14px; border-radius:9px; font-size:16px;
         background:var(--bg-input); border:1px solid var(--line); color:var(--text); }
 #sp-ok{ width:100%; padding:11px; border-radius:9px; background:var(--accent);
-        color:#fff; font-size:15px; }
+        color:var(--auf-accent); font-size:15px; }
 .sp-fehler{ font-size:12.5px; color:var(--c-red, #e03e3e); min-height:16px; }
 
 .kr-karte{ border:1px solid var(--line); border-radius:10px; padding:13px 15px;
@@ -1576,7 +1717,15 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .kr-zeile{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .kr-zeile input[type="password"]{ flex:1; min-width:120px; padding:7px 10px;
   border-radius:6px; background:var(--bg-input); border:1px solid var(--line); color:var(--text); }
-.kr-zeile button{ padding:7px 14px; border-radius:6px; }
+/* MIT AUGEN GESEHEN (§55): nur das Passwortfeld war biegsam. Ein Dateifeld
+   bringt seine eigene, ziemlich grosse Wunschbreite mit — es drückte den
+   Knopf daneben in die nächste Zeile, wo er allein und ohne Bezug stand.
+   `min-width:0` ist der Teil, der wirklich wirkt: ohne ihn schrumpft ein
+   Flex-Element nicht unter seinen Inhalt, und `flex:1` allein hilft nichts. */
+.kr-zeile input[type="file"]{ flex:1; min-width:0; font-size:12.5px;
+  padding:6px 8px; border-radius:6px; background:var(--bg-input);
+  border:1px solid var(--line); color:var(--text); }
+.kr-zeile button{ padding:7px 14px; border-radius:6px; white-space:nowrap; }
 
 /* Bewertung und Fortschritt — zwei Typen, die Notion nicht hat */
 .sterne{ display:inline-flex; gap:1px; cursor:pointer; }
@@ -1674,7 +1823,7 @@ td .proz i{ flex:0 0 auto; }
 .so-zeile button:hover{background:var(--bg-hover); color:var(--text)}
 .fr-vgl{border:1px solid var(--line); background:transparent; border-radius:5px;
         padding:2px 6px; cursor:pointer; color:var(--text-faint)}
-.fr-vgl.an{background:var(--accent); color:#fff; border-color:var(--accent)}
+.fr-vgl.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .fr-feld{border:1px solid var(--line); border-radius:5px; padding:3px 5px; font-size:12.5px;
          background:var(--bg-card); color:var(--text)}
 
@@ -1701,7 +1850,7 @@ td .proz i{ flex:0 0 auto; }
 .code-werk{position:absolute; top:8px; right:120px; display:flex; gap:3px; z-index:2}
 .code-werk button{border:1px solid var(--line); background:var(--bg-input); color:var(--text-dim);
                   border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer}
-.code-werk button.an{background:var(--accent); color:#fff; border-color:var(--accent)}
+.code-werk button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .code-werk button:hover{filter:brightness(1.1)}
 .code-nr{position:absolute; left:0; top:0; padding:12px 0; width:38px; text-align:right;
          font:12.5px/1.6 var(--mono); color:var(--text-faint); user-select:none; z-index:1}
@@ -1717,7 +1866,7 @@ td .proz i{ flex:0 0 auto; }
 .bild-rahmen:hover .bild-werk{display:flex}
 .bild-werk button{border:0; background:transparent; color:var(--text-dim); font-size:11px;
                   padding:2px 6px; border-radius:4px; cursor:pointer}
-.bild-werk button.an{background:var(--accent); color:#fff}
+.bild-werk button.an{background:var(--accent); color:var(--auf-accent)}
 .bild-werk button:hover{background:var(--bg-hover)}
 .bw-trenn{width:1px; background:var(--line); margin:2px 2px}
 .bild-griff{position:absolute; right:-3px; top:20%; bottom:20%; width:6px; border-radius:3px;
@@ -1738,6 +1887,9 @@ td .proz i{ flex:0 0 auto; }
    sieht, was dort liegt — aber ohne Verweis und sichtbar anders. Ein Anhang,
    der einfach verschwände, wäre schlimmer als einer, der sich erklärt. */
 .datei-gesperrt{flex:1; color:var(--text-dim); cursor:help}
+/* Wartet noch auf seine Adresse aus der Stücke-Ablage (E98) — kein
+   Fehler, nur noch nicht anklickbar. Deshalb blass statt rot. */
+.datei-wartet{flex:1; color:var(--text-dim)}
 .einbett-gesperrt{padding:12px 14px; border:1px dashed var(--line); border-radius:6px;
                   color:var(--text-dim); font-size:13px; line-height:1.5;
                   overflow-wrap:anywhere}
@@ -1870,7 +2022,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
              min-width:96px}
 .au-t button:hover{border-color:var(--accent)}
 .au-t button.geaendert{border-color:var(--accent); color:var(--accent)}
-.au-t button.faengt{background:var(--accent); color:#fff; border-color:var(--accent)}
+.au-t button.faengt{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 #au-inhalt input[type=range]{width:100%; accent-color:var(--accent)}
 body[data-abstand="eng"]   .ct{line-height:1.4}
 body[data-abstand="weit"]  .ct{line-height:2.05}
@@ -1902,7 +2054,7 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-inhalt{flex:1; word-break:break-word}
 .vg-zeile button{border:1px solid var(--line); background:transparent; color:var(--text-faint);
                  border-radius:5px; padding:1px 7px; cursor:pointer; font-size:12px}
-.vg-zeile button:hover{background:var(--accent); color:#fff; border-color:var(--accent)}
+.vg-zeile button:hover{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .vg-neu .vg-zeichen{color:var(--c-green)}
 .vg-weg .vg-zeichen{color:var(--c-red)}
 .vg-geaendert .vg-zeichen{color:var(--c-yellow)}
@@ -2113,7 +2265,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .fd-knoepfe{display:flex; gap:8px; margin-top:9px}
 .fd-knoepfe button{padding:7px 15px; border-radius:7px; border:1px solid var(--line);
                    font-size:13.5px}
-.fd-knoepfe button.prim{background:var(--accent); color:#fff; border-color:var(--accent)}
+.fd-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .fd-zahl{font-size:12px; color:var(--text-faint); margin-top:6px}
 
 /* Eingänge von aussen */
@@ -2139,7 +2291,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border-radius:6px; padding:8px 10px; color:var(--text); font-size:13px; outline:none}
 .eg-wurf textarea{font:12.5px/1.6 var(--mono); resize:vertical}
 .eg-wurf button{align-self:flex-start; padding:6px 14px; border-radius:7px;
-                background:var(--accent); color:#fff; border:0}
+                background:var(--accent); color:var(--auf-accent); border:0}
 .eg-adresse{font-size:12.5px; color:var(--text-dim); line-height:1.7}
 .eg-adresse code{display:block; background:var(--bg-input); border-radius:6px;
                  padding:8px 10px; margin:7px 0; font-size:11.5px; word-break:break-all}
@@ -2171,7 +2323,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    border:1px solid var(--line); color:var(--text-dim)}
 .rg-knoepfe button:first-child{margin-right:auto; border-color:transparent;
                                color:var(--text-faint)}
-.rg-knoepfe button.prim{background:var(--accent); color:#fff; border-color:var(--accent)}
+.rg-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 .rg-koerper{padding:14px 18px; max-height:64vh; overflow:auto}
 .rg-vorwort{font-size:13px; color:var(--text-faint); line-height:1.6; margin-bottom:14px}
 .rg-thema{margin-bottom:15px}
@@ -2190,7 +2342,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .rge-text span{font-size:11.5px; color:var(--text-faint)}
 #rg-einladung button{font-size:12.5px; padding:5px 11px; border-radius:6px;
                      border:1px solid var(--line); color:var(--text-dim)}
-#rg-einladung button.prim{background:var(--accent); color:#fff; border-color:var(--accent)}
+#rg-einladung button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
 #rg-einladung button[data-a="nie"]{border:0; padding:4px 6px; color:var(--text-faint)}
 @media(max-width:760px){ #rg-einladung{left:8px; right:8px; bottom:74px; max-width:none} }
 
@@ -2222,7 +2374,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wk-kopf{ text-align:center; margin-bottom:22px }
 .wk-zeichen{
   width:56px; height:56px; margin:0 auto 14px; border-radius:16px;
-  background:var(--accent); color:#fff;
+  background:var(--accent); color:var(--auf-accent);
   display:flex; align-items:center; justify-content:center;
   font-size:26px; font-weight:700;
 }
@@ -2328,7 +2480,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 #auswahl-leiste button.rot{ color:var(--rot,#d64545) }
 @media(max-width:760px){
   #auswahl-leiste{ left:8px; right:8px; transform:none; bottom:74px;
-                   flex-wrap:wrap; justify-content:center } }
+                   flex-wrap:wrap; justify-content:center }
+  /* Die Fingerregel (§37) galt auch hier nicht: die Aktionsknöpfe der
+     Auswahl-Leiste massen ~30 px — gesehen auf dem E84-Bild, dieselbe
+     Fehlerklasse wie bei der Formatleiste (E81). */
+  #auswahl-leiste button{ min-height:44px; min-width:44px } }
 
 /* ── Untere Leiste am Telefon: die vier Bereiche ──────────────────────────
    Notion hat unten Start, Chats, Besprechungen und Posteingang — bei uns
@@ -2599,3 +2755,446 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
               border-radius:3px }
 .rs-fuss{ font-size:13px; color:var(--text-faint); margin-top:9px;
           line-height:1.4 }
+
+/* ── Das A4-Blatt (E100) ───────────────────────────────────────────────────
+   Das Papier ist weiss, auch im Dunkelmodus: ein Blatt, das die Farbe
+   wechselt, ist kein Blatt. Nur der Rahmen darum folgt dem Thema.        */
+/* `width:100%; min-width:0` ist hier nicht Zierde: die Hülle steht in einem
+   Flex-Elternteil, und ein Flex-Kind mit `min-width:auto` wächst mit seinem
+   Inhalt, statt zu schrumpfen. Gemessen: die Werkzeugleiste war 627 px breit
+   in einem 390-px-Fenster — sie stand über den Rand und rollte nicht, weil
+   sie gar nicht erst eingeengt war. Dieselbe Falle wie bei den
+   Tabellenkarten (E89). */
+.blatt-huelle{margin:10px 0; width:100%; min-width:0}
+/* Der Rahmen sitzt auf der REIHE, nicht auf dem Rollkasten darin — sonst
+   stünde der feste Teil rechts ausserhalb des Kastens (E103). */
+.blatt-reihe{display:flex; align-items:stretch; min-width:0;
+             background:var(--bg-card); border-radius:8px 8px 0 0;
+             border:1px solid var(--rand); border-bottom:none}
+.blatt-werk{display:flex; flex-wrap:wrap; align-items:center; gap:4px;
+            padding:6px 8px; min-width:0; flex:1 1 auto}
+.blatt-fest{display:flex; align-items:center; gap:4px; flex:0 0 auto;
+            padding:6px 8px 6px 0}
+.blatt-fest button{min-height:32px; padding:4px 9px; border-radius:6px;
+                   font-size:13px; color:var(--text); background:none; cursor:pointer}
+.blatt-fest button:hover{background:var(--bg-hover)}
+.blatt-fest .zeichen{margin-right:5px}
+.blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
+                   font-size:13px; color:var(--text); background:none; cursor:pointer}
+.blatt-werk button:hover{background:var(--bg-hover)}
+.blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
+.blatt-werk button:disabled{opacity:.38; cursor:not-allowed}
+/* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
+
+   ERSTER VERSUCH, UND ER WAR FALSCH: ein Verlauf an `.blatt-reihe::after`,
+   also am rechten Rand der ganzen REIHE. Dort steht aber `.blatt-fest` mit
+   dem 🔗 — der Verlauf lag über einem Knopf und nicht über der Kante, an
+   der die Leiste abgeschnitten wird. Auf dem Bild war er nicht zu sehen,
+   und das war richtig so.
+
+   Für rechts gibt es die Anzeige längst: `.blatt-fest` wirft seinen Schatten
+   nach LINKS, genau auf diese Kante (E103). Sie war nur immer da — auch am
+   Ende der Leiste, wo nichts mehr zu holen ist. Jetzt schaltet sie mit.
+
+   Links dagegen ist die Kante wirklich die Kante der Reihe, und dort steht
+   ein Verlauf. */
+.blatt-reihe{position:relative}
+.blatt-reihe::before{
+  content:""; position:absolute; top:1px; bottom:1px; left:1px; width:26px;
+  pointer-events:none; opacity:0; transition:opacity .12s; z-index:2;
+  background:linear-gradient(to right, var(--bg-card), transparent)}
+.blatt-reihe[data-mehr="links"]::before,
+.blatt-reihe[data-mehr="beides"]::before{opacity:1}
+.blatt-reihe[data-mehr="nein"] .blatt-fest,
+.blatt-reihe[data-mehr="links"] .blatt-fest{box-shadow:none}
+.blatt-reihe[data-mehr="rechts"] .blatt-fest,
+.blatt-reihe[data-mehr="beides"] .blatt-fest{
+  box-shadow:-14px 0 14px -8px rgba(0,0,0,.5)}
+
+.blatt-trenn{width:1px; height:20px; background:var(--rand); margin:0 4px}
+.blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
+             border:2px solid transparent}
+.blatt-farbe.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--bg-card) inset}
+.blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
+.blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
+
+.blatt-papier{position:relative; width:100%; background:#fff; color:#111;
+              border:1px solid var(--rand); border-radius:0 0 8px 8px;
+              box-shadow:0 2px 10px rgba(0,0,0,.18); overflow:hidden}
+.blatt-inhalt{position:relative; z-index:1; height:100%; overflow:auto}
+/* Der Text auf dem Papier ist schwarz — auch im Dunkelmodus. */
+.blatt-inhalt, .blatt-inhalt *{color:#111 !important}
+.blatt-inhalt .ct:empty::before{color:#999 !important}
+
+.blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
+              color:#111; touch-action:none}
+.blatt-marken[data-tool="select"]{cursor:default}
+.blatt-auswahlrahmen{fill:rgba(47,126,216,.08); stroke:#2f7ed8;
+                     stroke-width:1.5; stroke-dasharray:5 4;
+                     vector-effect:non-scaling-stroke; pointer-events:none}
+.blatt-auswahlfeld{fill:rgba(47,126,216,.12); stroke:#2f7ed8;
+                   stroke-width:1.5; stroke-dasharray:6 4;
+                   vector-effect:non-scaling-stroke; pointer-events:none}
+/* Beim Malen soll der Finger nicht die Seite rollen und nichts markieren. */
+.blatt-papier.malt{cursor:crosshair; user-select:none}
+.blatt-papier.malt .blatt-inhalt{user-select:none}
+
+/* --- PAPIERVORLAGEN (Auftrag §21) -----------------------------------------
+   Das Papier ist in beiden Themen weiss (siehe `.blatt-papier` oben) — es ist
+   Papier, kein Fenster. Deshalb braucht die Lineatur KEINE zweite Farbe für
+   den Dunkelmodus; ein hell/dunkel-Paar hier wäre eine Farbe, die sich am
+   Bildschirm ändert, während das gedruckte Blatt gleich bleibt.
+
+   Die Abstände kommen als Prozentzahlen aus `blatt.ts` und beziehen sich auf
+   das BLATT, nicht auf den Bildschirm. Darum bleibt ein Karo 5 mm gross,
+   egal wie breit das Fenster ist und über wie viele Seiten das Blatt geht. */
+.blatt-papier{--blatt-linie:#b9c6d8; --blatt-linie-stark:#8ea3bd}
+
+.blatt-papier[data-papier="liniert"]{
+  background-image:linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:100% var(--blatt-zeile)}
+
+.blatt-papier[data-papier="kariert"]{
+  background-image:
+    linear-gradient(to right,  var(--blatt-linie) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:var(--blatt-karo-quer) 100%, 100% var(--blatt-karo-hoch)}
+
+.blatt-papier[data-papier="punkte"]{
+  background-image:radial-gradient(circle at center,
+                   var(--blatt-linie-stark) 0 1.1px, transparent 1.2px);
+  background-size:var(--blatt-karo-quer) var(--blatt-karo-hoch)}
+
+/* Millimeterpapier: das feine Netz, darüber die kräftige Zehnerlinie.
+   Vier Verläufe, und die Reihenfolge entscheidet — der Zehner liegt oben. */
+.blatt-papier[data-papier="mm"]{
+  background-image:
+    linear-gradient(to right,  var(--blatt-linie-stark) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie-stark) 0 1px, transparent 1px),
+    linear-gradient(to right,  var(--blatt-linie) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:
+    var(--blatt-mm-zehn-quer) 100%, 100% var(--blatt-mm-zehn-hoch),
+    var(--blatt-mm-quer) 100%,      100% var(--blatt-mm-hoch)}
+
+/* --- Der Wähler in der Werkzeugleiste --------------------------------------
+   Jeder Knopf zeigt SEIN Papier, nicht ein Sinnbild dafür. Bei den
+   Ausrichtungsknöpfen hat ein Sinnbild schon einmal wie eine Klammer
+   ausgesehen (§55.1); ein Muster kann man nicht falsch verstehen. */
+.blatt-papierwahl{padding:3px !important; width:26px; height:26px;
+                  display:inline-flex; align-items:center; justify-content:center}
+.blatt-papierwahl i{display:block; width:100%; height:100%; border-radius:3px;
+                    background-color:#fff; border:1px solid var(--rand)}
+.blatt-papierwahl.on i{border-color:var(--akzent, #2f7ed8); box-shadow:0 0 0 1px var(--akzent, #2f7ed8)}
+.blatt-papierwahl i[data-vorschau="liniert"]{
+  background-image:linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:100% 4px}
+.blatt-papierwahl i[data-vorschau="kariert"]{
+  background-image:
+    linear-gradient(to right,  var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:4px 100%, 100% 4px}
+.blatt-papierwahl i[data-vorschau="punkte"]{
+  background-image:radial-gradient(circle at center, #8ea3bd 0 1px, transparent 1.1px);
+  background-size:4px 4px}
+.blatt-papierwahl i[data-vorschau="mm"]{
+  background-image:
+    linear-gradient(to right,  #8ea3bd 0 1px, transparent 1px),
+    linear-gradient(to bottom, #8ea3bd 0 1px, transparent 1px),
+    linear-gradient(to right,  var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
+
+.blatt-werk .zeichen{margin-right:5px}
+.blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
+
+/* ── Die schmale Leiste ────────────────────────────────────────────────────
+   EINE Zeile, die seitlich rollt — nicht drei gestapelte. Mit Wörtern
+   brauchte die Leiste bei 390 px drei Zeilen und verdeckte das Papier
+   (E100, mit Augen gesehen). Dasselbe Muster wie die Auswahlleiste.
+
+   ZWEIMAL AUFGERUFEN, und das ist kein Versehen. Eng ist die Leiste in zwei
+   ganz verschiedenen Lagen: am Telefon, weil das Fenster schmal ist — und
+   in einer Spalte, weil der KASTEN schmal ist, egal wie breit das Fenster.
+   Seit E104 steht neben jeder PDF-Seite ein Notizblatt in einer Spalte, und
+   dort brauchten beide Leisten drei Zeilen übereinander (mit Augen gesehen,
+   §55). Das Fenster war dabei 1500 px breit; keine Fenster-Regel der Welt
+   hätte das getroffen. Deshalb steht dieselbe Sache zweimal da — einmal an
+   `.spalte`, einmal an der Fensterbreite. */
+/* In einer Spalte ist die Leiste immer eng — dort ist nie Platz für Wörter. */
+.spalte .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+                    max-width:100%; -webkit-overflow-scrolling:touch}
+.spalte .blatt-werk::-webkit-scrollbar{display:none}
+.spalte .blatt-werk > *{flex:0 0 auto}
+.spalte .blatt-werk button{min-height:36px; min-width:36px; padding:4px 7px}
+.spalte .blatt-werk .wort{display:none}
+.spalte .blatt-werk .zeichen{margin:0; font-size:16px}
+.spalte .blatt-farbe{width:24px; height:24px; min-width:24px}
+.spalte .blatt-strich{min-width:32px}
+.spalte .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
+.spalte .blatt-fest .wort{display:none}
+.spalte .blatt-fest .zeichen{margin:0}
+.spalte .blatt-fest button{min-height:36px; min-width:36px; padding:4px 7px;
+                           border-radius:6px; color:var(--text);
+                           background:none; cursor:pointer; font-size:15px}
+.spalte .pdfs-nr{font-size:11.5px}
+
+@media (max-width:760px){
+  .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+              max-width:100%; -webkit-overflow-scrolling:touch}
+  .blatt-werk::-webkit-scrollbar{display:none}
+  .blatt-werk > *{flex:0 0 auto}
+  .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
+  .blatt-werk .wort{display:none}
+  .blatt-werk .zeichen{margin:0; font-size:17px}
+  .blatt-farbe{width:30px; height:30px; min-width:30px}
+  .blatt-strich{min-width:38px}
+  /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
+     eine abgeschnittene Leiste aus wie eine vollständige (E103). */
+  .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
+  /* DIESELBE ZAHL ZWEIMAL AUF EINEM 390-PX-BILDSCHIRM (E140). Im
+     Dokumentmodus steht die Seitenzahl schon oben in der Kopfzeile —
+     „Seite 1/4", gross und mit den Pfeilen daneben. Unten sagte
+     `.blatt-fest` dasselbe noch einmal in Worten: „Seite 1 von 4".
+
+     Gemessen bei 390 px: die Werkzeugleiste war 211 px breit, ihr Inhalt
+     1059 px. Von 21 Knöpfen standen 17 draussen. Der doppelte Satz kostete
+     davon rund 100 px — fast die Hälfte dessen, was die Leiste überhaupt
+     hatte.
+
+     Nur im Dokumentmodus. Eine PDF-Seite auf einer gewöhnlichen Seite hat
+     keine Kopfzeile über sich; dort ist die Zahl die einzige. */
+  .document-workspace .blatt-fest .pdfs-nr,
+  .document-workspace .blatt-fest .blatt-trenn{display:none}
+  .blatt-fest .wort{display:none}
+  .blatt-fest .zeichen{margin:0; font-size:17px}
+  .blatt-fest button{min-height:44px; min-width:44px}
+}
+
+/* ── Ausbildung / Schulbibliothek (E128/E129) ───────────────────────────── */
+.school-home{max-width:1180px;margin:0 auto;padding:18px 4px 54px}
+.school-hero{display:flex;justify-content:space-between;gap:22px;padding:24px;
+  border:1px solid var(--border);border-radius:16px;background:linear-gradient(135deg,var(--accent-soft),var(--bg-card))}
+.school-hero h1{margin:3px 0 6px;font-size:30px}.school-hero p{margin:0;color:var(--text-dim)}
+.school-hero>div>span{font-size:12px;font-weight:750;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.school-quick{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-self:center}
+.school-quick button,.school-folder,.school-card button,.school-empty button,.electrical-actions button{
+  border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);cursor:pointer}
+.school-quick button{min-height:40px;padding:8px 12px;white-space:nowrap}
+.school-section{margin-top:24px}.school-section h2,.school-card h2{font-size:15px;margin:0 0 10px}
+.school-folders{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.school-folder{display:grid;grid-template-columns:auto 1fr;gap:2px 9px;padding:13px;text-align:left}
+.school-folder>span{grid-row:1/3;font-size:25px}.school-folder b{overflow:hidden;text-overflow:ellipsis}.school-folder em{
+  color:var(--text-dim);font-size:11px;font-style:normal}
+.school-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+.school-card{min-width:0;padding:15px;border:1px solid var(--border);border-radius:14px;background:var(--bg-card)}
+.school-card button{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;
+  gap:8px;padding:9px;margin-top:6px;text-align:left}
+.school-card button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.school-card button em{
+  color:var(--text-dim);font-size:11px;font-style:normal;white-space:nowrap}.school-none{color:var(--text-dim);font-size:13px}
+.school-empty{text-align:center;padding-top:15vh}.school-empty-icon{font-size:52px}.school-empty p{color:var(--text-dim)}
+.school-empty button{padding:10px 16px}.electrical-dialog{width:min(620px,95vw)}
+.electrical-dialog>.callout{margin:10px 14px}.electrical-mode{width:calc(100% - 28px);margin:4px 14px 12px;
+  min-height:42px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:6px 9px}
+.electrical-fields{display:grid;gap:8px;padding:0 14px}.electrical-field{display:grid;grid-template-columns:1fr 180px 90px;align-items:center;gap:8px}
+.electrical-field input{min-height:40px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
+.electrical-field em{font-style:normal;color:var(--text-dim);font-size:12px}
+.electrical-output{display:grid;gap:3px;min-height:68px;margin:14px;padding:12px;border-radius:10px;background:var(--bg-hover)}
+.electrical-output strong{font-size:21px}.electrical-output span,.electrical-output small{color:var(--text-dim)}
+.electrical-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}.electrical-actions button{min-height:40px;padding:7px 11px}
+@media(max-width:760px){
+  .school-home{padding:8px 10px 38px}.school-hero{display:block;padding:17px}.school-hero h1{font-size:25px}
+  .school-quick{margin-top:16px}.school-quick button,.school-folder,.school-card button,.school-empty button,
+  .electrical-actions button{min-height:44px}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
+  .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh;overflow:auto}
+}
+
+/* ── Schriftgrösse und Schriftart je Block (E101) ──────────────────────────
+   Kennungen aus `register/textstile.js` werden hier zu Klassen. Was nicht
+   in diesem Katalog steht, hat keine Klasse und damit keine Wirkung —
+   deshalb kann aus den Daten kein fremdes CSS kommen (§19).           */
+/* ZWEI Dinge, die hier falsch waren und beide gemessen wurden:
+   1. `.tg-gross` allein verliert gegen `.b-text .ct{font-size:16px}` —
+      zwei Klassen schlagen eine. Die Klasse hing am Block, die Schrift
+      blieb 16 px. Deshalb `.blk .ct.tg-…`.
+   2. `em` rechnet gegen den ELTERNTEIL, nicht gegen die eigene Grösse.
+      Eine Überschrift mit 30 px wäre mit „Gross" (1,3em von 16 px) auf
+      20,8 px GESCHRUMPFT. Deshalb feste Stufen in rem: „Gross" heisst
+      gross, egal an welchem Blocktyp. */
+.blk .ct.tg-klein     { font-size:.82rem; line-height:1.6 }
+.blk .ct.tg-gross     { font-size:1.35rem; line-height:1.45 }
+.blk .ct.tg-sehrgross { font-size:1.8rem;  line-height:1.35 }
+.blk .ct.tg-riesig    { font-size:2.4rem;  line-height:1.25 }
+
+.blk .ct.ts-serif { font-family:Georgia, "Times New Roman", "Noto Serif", serif }
+.blk .ct.ts-mono  { font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace }
+.blk .ct.ts-hand  { font-family:"Segoe Script", "Bradley Hand", "Comic Sans MS", cursive }
+.blk .ct.ts-schmal{ font-family:"Arial Narrow", "Roboto Condensed", "Liberation Sans Narrow", sans-serif }
+/* Im Menü zeigt die Probe sich selbst — dort ohne .blk davor. */
+.menu .tg-klein{font-size:.82rem} .menu .tg-gross{font-size:1.35rem}
+.menu .tg-sehrgross{font-size:1.8rem} .menu .tg-riesig{font-size:2.2rem}
+.menu .ts-serif{font-family:Georgia,serif} .menu .ts-mono{font-family:ui-monospace,monospace}
+.menu .ts-hand{font-family:"Segoe Script","Comic Sans MS",cursive}
+.menu .ts-schmal{font-family:"Arial Narrow",sans-serif}
+
+/* Im Menü sollen die Einträge zeigen, was sie tun. */
+.stil-probe{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.stil-probe em{font-style:normal; color:var(--text-dim); font-size:12.5px}
+
+
+/* ── Spalte als Behälter (E102) ────────────────────────────────────────────
+   `min-width:0` ist Pflicht, nicht Zierde: eine Gitterzelle mit
+   `min-width:auto` wächst mit ihrem breitesten Kind und sprengt das Raster.
+   Genau daran lag es beim A4-Blatt (E100) und bei den Tabellenkarten (E89) —
+   dritte Auflage derselben Falle.                                         */
+/* MIN-WIDTH GEHÖRT AN DIE GITTERZELLE, und die Gitterzelle ist nicht
+   `.spalte`. Der Editor packt jeden Block in eine Hülle `.blk`; Kind des
+   Gitters ist also `.blk.b-spalte`, und `.spalte` liegt DARIN. E102 setzte
+   `min-width:0` auf die innere Schicht — wirkungslos für die Spurbreite,
+   und nicht aufgefallen, weil handgemachte Spalten Text enthalten: dessen
+   Mindestbreite ist ein Wort.
+   Mit E104 steht eine PDF-Seite samt Werkzeugleiste darin, und die
+   Mindestbreite ist plötzlich 587 px. Gemessen in einem 708 px breiten
+   Gitter: zwei Spuren zu 587 und 544 px, zusammen 1155 — die rechte Spalte
+   stand ausserhalb des Fensters. Vierte Auflage derselben Falle nach E89,
+   E100 und E102, und die erste, bei der die Abhilfe selbst danebenlag. */
+.spalten-block > *{min-width:0}
+.spalte{min-width:0; display:flex; flex-direction:column; gap:2px}
+.spalte > .blk{width:100%}
+
+/* ── PDF-Seite (E103) ──────────────────────────────────────────────────────
+   Dieselbe Hülle wie das A4-Blatt, nur liegt unten ein Bild statt Text.   */
+.pdfs-papier{background:#fff}
+.pdfs-bild{position:absolute; inset:0; width:100%; height:100%;
+           object-fit:contain; z-index:1; display:block}
+.pdfs-wartet{position:absolute; inset:0; z-index:1; display:flex;
+             align-items:center; justify-content:center;
+             color:#666; font-size:14px; text-align:center; padding:20px}
+.pdfs-nr{font-size:12.5px; color:var(--text-dim); padding:0 6px; white-space:nowrap}
+/* Der Weg zurück auf einer Seite ohne Bild (E106). Dunkel auf dem weissen
+   Papier — der Hinweis darüber liegt ebenfalls auf Papier, nicht auf der
+   App-Fläche, und erbt deren Farben deshalb nicht. */
+/* Untereinander, nicht nebeneinander: `.pdfs-wartet` ist ein Flex-Kasten,
+   und Satz und Knopf drängelten sich in einer Zeile (mit Augen gesehen). */
+.pdfs-wartet{flex-direction:column; gap:2px; text-align:center; padding:0 16px}
+/* Ein Blatt auf einer Folie (E109). Die HÖHE ist der begrenzende Wert —
+   eine Folie ist breit und flach, ein Blatt hoch und schmal. `45vh` Breite
+   ergibt bei A4 rund 64vh Höhe; zwei davon stehen nebeneinander bequem. */
+.folie-spalten{display:flex; gap:3vh; justify-content:center; align-items:flex-start}
+.folie-spalte{flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:1vh}
+.folie-blatt{position:relative; margin:0 auto; width:100%;
+             max-width:min(100%, 45vh); background:#fff; color:#111}
+/* `.praesi img{max-height:52vh; border-radius:8px}` gilt sonst auch hier —
+   und deckelt ausgerechnet die Höhe, die das Seitenverhältnis bestimmen
+   soll. Ein Aufgabenblatt hat auch keine runden Ecken. */
+.folie-blatt img{display:block; width:100%; height:100%;
+                 max-height:none; border-radius:0; object-fit:contain}
+.folie-blatt.papier{border:1px solid #ccc}
+.folie-blatt .blatt-text{padding:8%; font-size:1.8vh; text-align:left; line-height:1.5}
+.folie-blatt .blatt-text h2{font-size:2.4vh; margin:0 0 .6em}
+.folie-blatt .marken{position:absolute; inset:0; width:100%; height:100%; color:#111}
+.folie-blatt .fehlt{padding:14vh 2vh; text-align:center; color:#666}
+
+.pdfs-neu{margin-top:10px; padding:8px 14px; min-height:36px; border-radius:8px;
+          border:1px solid #c8c8c8; background:#f3f3f3; color:#111;
+          font-size:13px; cursor:pointer}
+.pdfs-neu:hover{background:#e8e8e8}
+.pdfs-neu:disabled{opacity:.6; cursor:default}
+@media (max-width:760px){ .pdfs-neu{min-height:44px; padding:10px 16px} }
+@media (max-width:760px){ .pdfs-nr{font-size:12px} }
+
+/* ── Dokumentmodus (E126) ─────────────────────────────────────────────────
+   Nur die gewählte Seite wird als echtes PDF/Blatt gerendert. Die linke
+   Übersicht verwendet kleine vorhandene Vorschaubilder; Inhalte werden
+   weder kopiert noch in einem zweiten Dokumentmodell gespeichert. */
+.document-page{max-width:none!important; padding-inline:12px!important}
+.document-workspace{height:calc(100vh - 150px); min-height:520px; display:flex;
+  flex-direction:column; overflow:hidden; border:1px solid var(--border);
+  border-radius:12px; background:var(--bg); box-shadow:var(--shadow-sm)}
+.document-topbar{min-height:48px; display:flex; align-items:center; gap:6px;
+  padding:5px 8px; border-bottom:1px solid var(--border); background:var(--bg-card)}
+.document-topbar button,.document-inspector button,.document-panel-header button{
+  min-height:36px; border:1px solid var(--border); border-radius:8px;
+  background:var(--bg); color:var(--text); cursor:pointer}
+.document-topbar button{padding:6px 10px}.document-position{margin-left:4px;font-weight:650}
+.document-topbar input[type=range]{width:min(150px,18vw); margin-left:auto}
+.document-zoom-label{min-width:48px;color:var(--text-dim);font-size:12px}
+.document-body{min-height:0; flex:1; display:grid; grid-template-columns:190px minmax(0,1fr) 280px}
+.document-thumbnails,.document-inspector{min-width:0; overflow:auto; background:var(--bg-card)}
+.document-thumbnails{padding:8px; border-right:1px solid var(--border)}
+.document-inspector{padding:10px; border-left:1px solid var(--border)}
+.document-panel-header,.document-inspector-heading{display:flex; align-items:center;
+  justify-content:space-between; gap:8px; margin-bottom:8px}
+.document-panel-header button,.document-inspector-heading button{display:none;width:36px;padding:0}
+.document-thumbnail{width:100%; display:flex; flex-direction:column; gap:4px; padding:7px;
+  margin-bottom:8px; border:1px solid transparent; border-radius:9px; background:transparent;
+  color:var(--text); text-align:left; cursor:pointer}
+.document-thumbnail:hover,.document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-soft)}
+.document-thumbnail-preview{display:flex; width:100%; aspect-ratio:210/297; align-items:center;
+  justify-content:center; overflow:hidden; background:#fff; border:1px solid #cfd1d4;border-radius:4px}
+.document-thumbnail-preview img{width:100%;height:100%;object-fit:contain}
+.document-thumbnail-blank{color:#444;font-size:28px}.document-thumbnail-label{font-size:12px}
+.document-center{min-width:0; overflow:auto; padding:18px; background:var(--bg-subtle,var(--bg-hover))}
+.document-stage{min-width:360px; max-width:none; margin:0 auto; transform-origin:top center}
+.document-stage>.blatt-huelle,.document-stage>.blk{margin-inline:auto}
+.document-inspector-source{font-size:13px;color:var(--text-dim);margin-bottom:10px}
+.document-inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.document-inspector-actions button{padding:7px}.document-inspector-actions button:first-child{grid-column:1/-1}
+.document-inspector-summary{display:grid;gap:5px;padding:10px 0;border-block:1px solid var(--border)}
+.document-inspector-summary>div{display:flex;justify-content:space-between;gap:8px}
+.document-inspector-list{display:grid;gap:5px;margin-top:10px}
+.document-inspector-list button{padding:8px;text-align:left}.document-inspector-list p{color:var(--text-dim);font-size:13px}
+.document-selecting{position:relative}.document-region-overlay{position:absolute;inset:0;z-index:30;
+  cursor:crosshair;touch-action:none;background:rgba(40,110,220,.04)}
+.document-region-box{position:absolute;border:2px solid var(--accent);background:rgba(40,110,220,.13);
+  pointer-events:none}
+
+@media (max-width:1100px){
+  .document-body{grid-template-columns:170px minmax(0,1fr)}
+  .document-inspector{display:none;position:fixed;z-index:95;right:12px;top:82px;bottom:12px;
+    width:min(340px,calc(100vw - 24px));border:1px solid var(--border);border-radius:12px;
+    box-shadow:var(--shadow-lg)}
+  .document-inspector.is-open{display:block}.document-inspector-heading button{display:block}
+}
+@media (max-width:760px){
+  /* RANDLOS GILT FÜR DAS DOKUMENT, NICHT FÜR DEN KOPF DARÜBER.
+     `padding-inline:0` ist für die Arbeitsfläche richtig — eine PDF-Seite
+     soll am Telefon von Kante zu Kante gehen. Zeichen, Titel und
+     Werkzeugzeile stehen aber im selben Kasten und verloren ihren Rand mit.
+
+     Gemessen am 25. August auf 390 px: die Tinte des Titels begann bei x=0,
+     also am Bildschirmrand, und die Werkzeugzeile reichte bis 408 — achtzehn
+     Pixel über den rechten Rand hinaus, mit „Schrift" halb im Nichts. */
+  .document-page{padding-inline:0!important}
+  .document-page>.pg-icon,
+  .document-page>#title,
+  .document-page>.pg-tools{
+    padding-inline:max(var(--mobile-gutter), env(safe-area-inset-left)); }
+  /* Und was dann immer noch nicht hineinpasst, bleibt erreichbar statt
+     abgeschnitten — dieselbe Regel wie bei der Markierungsleiste (E141).
+
+     `margin-inline:0` GEHÖRT DAZU. Die gewöhnliche Regel gibt der Zeile
+     `margin-right:-18px`, damit sie beim Schieben in den Seitenrand
+     hineinlaufen darf statt an ihm abzuschneiden. Im Dokumentmodus gibt es
+     diesen Rand nicht — der Kasten ragte damit 18 px über den Bildschirm
+     hinaus (gemessen: 0..408 auf 390 px). */
+  .document-page>.pg-tools{
+    margin-inline:0;
+    overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
+  .document-workspace{height:calc(100dvh - 116px);
+    min-height:420px;border-inline:0;border-radius:0}
+  .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:44px;min-height:44px;padding:6px}
+  .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}
+  .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto;min-width:40px}
+  .document-position{font-size:12px;white-space:nowrap}.document-body{display:block}
+  .document-center{height:100%;padding:10px}.document-stage{min-width:280px}
+  .document-thumbnails{display:none;position:fixed;z-index:96;left:0;right:0;bottom:0;
+    max-height:68dvh;padding:12px 14px calc(14px + env(safe-area-inset-bottom));
+    border:1px solid var(--border);border-radius:16px 16px 0 0;box-shadow:0 -12px 30px rgba(0,0,0,.22)}
+  .document-thumbnails.is-open{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .document-thumbnails .document-panel-header{grid-column:1/-1}.document-panel-header button{display:block;min-width:44px;min-height:44px}
+  .document-thumbnail{margin:0;padding:5px}.document-thumbnail-label{font-size:11px}
+  .document-inspector{top:auto;left:0;right:0;bottom:0;width:auto;max-height:72dvh;
+    padding:14px 14px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
+  .document-inspector button{min-height:44px}.document-inspector-heading button{min-width:44px}
+}

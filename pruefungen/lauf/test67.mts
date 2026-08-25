@@ -26,6 +26,9 @@ const pruef = (n: any, ist: any, soll: any) => {
     await p.evaluate(() => {
       Store.setMeta('rundgangGesehen', true);
       document.getElementById('rg-willkommen')?.remove();
+      /* Und die Einrichtung der Hauptwelten: sie legt sich beim ersten Start
+         über alles und fängt Klicks ab (E132). */
+      document.querySelector('.produkt-onboarding-lage')?.remove();
       document.getElementById('rg-einladung')?.remove();
     });
   };
@@ -195,6 +198,11 @@ const pruef = (n: any, ist: any, soll: any) => {
     abschnitt?.querySelector<HTMLElement>('button:last-child')?.click();
     await new Promise(r => setTimeout(r, 250));
     const offen = !!document.querySelector('.menu');
+    /* mousedown UND click, wie ein echter Zeiger: seit das ⋯-Menü über
+       `Menue.menu` läuft (test155), schliesst es auf mousedown daneben —
+       so wie jedes Modulmenü. Das nackte click-Ereignis hier war eine
+       Simulation, die kein Gerät je erzeugt. */
+    musselement('#page').dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     musselement('#page').dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await new Promise(r => setTimeout(r, 250));
     return { offen, danach: !document.querySelector('.menu') };
@@ -234,10 +242,15 @@ const pruef = (n: any, ist: any, soll: any) => {
   pruef('Die Leiste steht am Telefon', leiste.sichtbar, true);
   /* Seit E38: „Seiten" statt „Chats". Der Platz oben gehört dem, was man
      täglich sucht; die KI steht unten in der Leiste und im R-Blatt. */
-  pruef('Konto und vier Bereiche', leiste.ids,
-        ['hl-konto', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']);
+  /* SEIT E132 SIND ES FÜNF BEREICHE, und drei heissen anders: die
+     Produktwelten benennen `hl-start` in „Heute", `hl-seiten` in
+     „Seiten" (der Titel bleibt „Workspace") und `hl-bespr` in „Plan" um und
+     stellen „Lernen" davor. Dieselben Tasten, dieselben Ziele, andere
+     Namen. */
+  pruef('Konto und fünf Bereiche', leiste.ids,
+        ['hl-konto', 'hl-lernen', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']);
   pruef('Jeder hat seinen Namen dabei', leiste.beschriftung,
-        ['Start', 'Seiten', 'Termine', 'Mehr']);
+        ['Lernen', 'Heute', 'Seiten', 'Plan', 'Mehr']);
   pruef('Start ist markiert', leiste.markiert, ['hl-start']);
   /* DAS IST DIE REGEL, DIE DEN PLATZ MACHT. Stünden alle vier Namen da,
      bliebe für den Inhalt nichts; stünde keiner da, müsste man raten. */
@@ -291,7 +304,8 @@ const pruef = (n: any, ist: any, soll: any) => {
              titelText: (titel?.textContent ?? '').trim(),
              obenLiegt: !!(oben && oben.closest('#handy-oben')) };
   });
-  pruef('Der Seitenbereich ist wirklich offen', deckung.titelText, 'Seiten');
+  /* „Seiten" heisst jetzt „🧱 Workspace" (E132). */
+  pruef('Der Seitenbereich ist wirklich offen', deckung.titelText, '🧱 Workspace');
   pruef('Sein Inhalt beginnt unter der Leiste', deckung.inhaltBeginntDarunter, true);
   pruef('Und die Leiste ist anklickbar',                deckung.obenLiegt, true);
 
@@ -397,6 +411,12 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
   await p.reload();
   await p.waitForTimeout(2000);
+  /* Nach dem Neuladen ist die Einrichtung der Hauptwelten wieder da —
+     sie erscheint 300 ms nach dem Start und fängt Klicks ab (E132). */
+  await p.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
   await willkommenWeg();
   const nach = await p.evaluate(() => ({
     zu: Store.getMeta('sidebarZu', []),

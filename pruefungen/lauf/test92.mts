@@ -306,4 +306,10 @@ gleich('Eine fremde Vorabfrage bekommt nichts',
 await srv.stopp();
 
 console.log(`\n  Suite 57 — Anmeldeschlüssel und CORS: ${ok} ok, ${weg} offen`);
-process.exit(weg ? 1 : 0);
+/* Nach dem Schliessen des echten HTTP-Servers muessen dessen libuv-Handles
+   unter Windows noch ihren normalen Abschluss-Tick bekommen. Ein sofortiges
+   process.exit() kann Node 24 mitten in diesem Tick beenden und loest dann
+   eine native UV_HANDLE_CLOSING-Assertion aus, obwohl alle Pruefungen gruen
+   waren. exitCode bewahrt denselben Fehlercode, laesst Node aber sauber
+   auslaufen. */
+process.exitCode = weg ? 1 : 0;

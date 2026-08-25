@@ -48,7 +48,11 @@ const Meeting = (() => {
   const E = {
     audioBehalten: () => Store.getMeta('meet:audio', true),
     transkriptLoeschen: () => Store.getMeta('meet:transkriptWeg', false),
-    sprache: () => Store.getMeta('meet:sprache', 'de-DE')
+    sprache: () => Store.getMeta('meet:sprache', 'de-DE'),
+    /* Der Sidecar wird nie von selbst angesprochen. Eine Adresse allein
+       schaltet nichts ein; erst der ausdrückliche Knopf nach der Aufnahme
+       und eine Zustimmung schicken Ton dorthin. */
+    sidecar: () => String(Store.getMeta('meet:sidecar', '') || '').trim()
   };
 
   /* Die Spracherkennung gibt es nur in Chrome und Edge, in Safari unter
@@ -69,33 +73,75 @@ const Meeting = (() => {
   /* ------------------------------------------------------------------------
    * DIE AUFNAHME
    * ----------------------------------------------------------------------*/
-  let laeuft: any = null;
+  type AudioMarke = { sek: number; text: string };
+  type Lauf = {
+    start: number;
+    stuecke: Blob[];
+    transkript: { sek: number; text: string }[];
+    marken: AudioMarke[];
+    teil: string;
+    recorder: MediaRecorder | null;
+    erkennung: any;
+    strom: MediaStream | null;
+    uhr: ReturnType<typeof setInterval> | null;
+    mime: string;
+    fehler: string;
+  };
+  type AufnahmeErgebnis = {
+    transkript: { sek: number; text: string }[];
+    marken: AudioMarke[];
+    dauer: number;
+    blob: Blob | null;
+    typ: string;
+    warnung: string;
+  };
+
+  let laeuft: Lauf | null = null;
+
+  /** Der Browser entscheidet letztlich. Wir bevorzugen Opus, greifen aber
+      nicht zu einem Typ, den seine MediaRecorder-Implementierung ablehnt. */
+  const aufnahmeTyp = (): string => {
+    const moeglich = [
+      'audio/webm;codecs=opus',
+      'audio/ogg;codecs=opus',
+      'audio/mp4;codecs=mp4a.40.2',
+      'audio/webm',
+      'audio/mp4'
+    ];
+    if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+    return moeglich.find(t => MediaRecorder.isTypeSupported(t)) || '';
+  };
 
   const starten = async (beiText: any, beiZeit: any) => {
     if (laeuft) throw new Error('Es läuft schon eine Aufnahme.');
 
-    /* Ein Lauf: was mitgeschnitten wurde, was mitgeschrieben, und die drei
-       Dinge, die am Ende wieder abgestellt werden müssen. */
-    type Lauf = {
-      start: number; stuecke: Blob[]; transkript: { sek: number; text: string }[];
-      teil: string; recorder: MediaRecorder | null; erkennung: any;
-      strom: MediaStream | null; uhr: ReturnType<typeof setInterval> | null;
-    };
     const zustand: Lauf = {
-      start: Date.now(), stuecke: [], transkript: [], teil: '',
-      recorder: null, erkennung: null, strom: null, uhr: null
+      start: Date.now(), stuecke: [], transkript: [], marken: [], teil: '',
+      recorder: null, erkennung: null, strom: null, uhr: null,
+      mime: '', fehler: ''
     };
 
     /* 1. Mitschnitt */
     if (kannAufnehmen()) {
       try {
         zustand.strom = await navigator.mediaDevices.getUserMedia({ audio: true });
-        zustand.recorder = new MediaRecorder(zustand.strom);
+        const wunsch = aufnahmeTyp();
+        zustand.recorder = wunsch
+          ? new MediaRecorder(zustand.strom, { mimeType: wunsch })
+          : new MediaRecorder(zustand.strom);
+        zustand.mime = zustand.recorder.mimeType || wunsch;
         zustand.recorder.ondataavailable = (e: BlobEvent) => {
           if (e.data && e.data.size) zustand.stuecke.push(e.data);
         };
+        zustand.recorder.onerror = (e: Event) => {
+          const meldung = (e as any).error?.message || 'Der Browser meldet einen Aufnahmefehler.';
+          zustand.fehler = String(meldung);
+          UI.banner('Mitschnitt: ' + zustand.fehler +
+            ' Bereits empfangene Teile bleiben erhalten.', 'warn');
+        };
         zustand.recorder.start(1000);
       } catch (e: unknown) {
+        zustand.strom?.getTracks().forEach(t => t.stop());
         throw new Error('Das Mikrofon wurde nicht freigegeben: ' +
           (e instanceof Error ? e.message : String(e)));
       }
@@ -104,31 +150,32 @@ const Meeting = (() => {
     /* 2. Mitschreiben */
     if (kannZuhoeren()) {
       const SR = erkennungsBau();
-      if (!SR) return;
-      const r = new SR();
-      r.lang = E.sprache();
-      r.continuous = true;
-      r.interimResults = true;
-      r.onresult = (e: any) => {
-        let teil = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          if (e.results[i].isFinal) {
-            const sek = Math.round((Date.now() - zustand.start) / 1000);
-            zustand.transkript.push({ sek, text: t.trim() });
-          } else teil += t;
-        }
-        zustand.teil = teil;
-        if (beiText) beiText(zustand.transkript, teil);
-      };
-      /* Die Erkennung hört von selbst auf — dann eben wieder anfangen. */
-      r.onend = () => { if (laeuft === zustand) { try { r.start(); } catch {} } };
-      r.onerror = (e: any) => {
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-          UI.banner('Die Spracherkennung wurde nicht erlaubt. Es wird nur aufgenommen.', 'warn');
-        }
-      };
-      try { r.start(); zustand.erkennung = r; } catch {}
+      if (SR) {
+        const r = new SR();
+        r.lang = E.sprache();
+        r.continuous = true;
+        r.interimResults = true;
+        r.onresult = (e: any) => {
+          let teil = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) {
+              const sek = Math.round((Date.now() - zustand.start) / 1000);
+              zustand.transkript.push({ sek, text: t.trim() });
+            } else teil += t;
+          }
+          zustand.teil = teil;
+          if (beiText) beiText(zustand.transkript, teil);
+        };
+        /* Die Erkennung hört von selbst auf — dann eben wieder anfangen. */
+        r.onend = () => { if (laeuft === zustand) { try { r.start(); } catch {} } };
+        r.onerror = (e: any) => {
+          if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+            UI.banner('Die Spracherkennung wurde nicht erlaubt. Es wird nur aufgenommen.', 'warn');
+          }
+        };
+        try { r.start(); zustand.erkennung = r; } catch {}
+      }
     }
 
     zustand.uhr = setInterval(() => {
@@ -139,17 +186,48 @@ const Meeting = (() => {
     return zustand;
   };
 
-  const stoppen = () => new Promise((ok) => {
+  /** Eine bewusste Marke während der laufenden Aufnahme. Sie wird später als
+      normaler Textblock gespeichert und verweist auf die Tonstelle. */
+  const markieren = (text = ''): AudioMarke | null => {
+    if (!laeuft) return null;
+    const marke = {
+      sek: Math.max(0, Math.round((Date.now() - laeuft.start) / 1000)),
+      text: String(text || '').trim() || 'Zeitmarke'
+    };
+    laeuft.marken.push(marke);
+    return marke;
+  };
+
+  const stoppen = () => new Promise<AufnahmeErgebnis | null>((ok) => {
     const z = laeuft;
     if (!z) { ok(null); return; }
     laeuft = null;
-    clearInterval(z.uhr);
+    if (z.uhr) clearInterval(z.uhr);
     if (z.erkennung) { try { z.erkennung.stop(); } catch {} }
 
+    let beendet = false;
     const fertig = () => {
+      if (beendet) return;
+      beendet = true;
       if (z.strom) z.strom.getTracks().forEach((t: any) => t.stop());
-      const blob = z.stuecke.length ? new Blob(z.stuecke, { type: 'audio/webm' }) : null;
-      ok({ transkript: z.transkript, dauer: Math.round((Date.now() - z.start) / 1000), blob });
+      /* Ein noch nicht als „final“ gemeldeter Satz darf beim Stoppen nicht
+         verschwinden. Er bleibt mit seiner Zeit im normalen Transkript. */
+      const rest = String(z.teil || '').trim();
+      if (rest && z.transkript[z.transkript.length - 1]?.text !== rest)
+        z.transkript.push({
+          sek: Math.round((Date.now() - z.start) / 1000),
+          text: rest
+        });
+      const typ = z.recorder?.mimeType || z.mime || z.stuecke.find(s => !!s.type)?.type || 'audio/webm';
+      const blob = z.stuecke.length ? new Blob(z.stuecke, { type: typ }) : null;
+      ok({
+        transkript: z.transkript,
+        marken: z.marken,
+        dauer: Math.round((Date.now() - z.start) / 1000),
+        blob,
+        typ,
+        warnung: z.fehler
+      });
     };
 
     if (z.recorder && z.recorder.state !== 'inactive') {
@@ -162,6 +240,81 @@ const Meeting = (() => {
 
   const transkriptText = (liste: any) =>
     (liste || []).map((z: any) => '[' + zeitText(z.sek) + '] ' + z.text).join('\n');
+
+  type AudioAblage = {
+    dateiId: string;
+    blockId: string;
+    name: string;
+    typ: string;
+    marken: AudioMarke[];
+  };
+
+  const audioEndung = (typ: string): string => {
+    const rein = String(typ || '').split(';')[0]!.toLowerCase();
+    if (rein === 'audio/ogg') return 'ogg';
+    if (rein === 'audio/mp4' || rein === 'audio/m4a' || rein === 'audio/x-m4a') return 'm4a';
+    if (rein === 'audio/mpeg') return 'mp3';
+    if (rein === 'audio/wav' || rein === 'audio/x-wav') return 'wav';
+    return 'webm';
+  };
+
+  /** Speichert einen Mitschnitt in derselben Stück-Ablage wie andere
+      Anhänge. Die reservierte Blockkennung macht eine unterbrochene
+      Seitenanlage als verwaist erkennbar und damit aufräumbar. */
+  const audioAblegen = async (
+    blob: Blob,
+    dauer: number,
+    marken: AudioMarke[] = [],
+    blockId = Store.uid()
+  ): Promise<AudioAblage> => {
+    if (!blob || !blob.size) throw new Error('Der Mitschnitt enthält keine Audiodaten.');
+    const typ = blob.type || 'audio/webm';
+    const laenge = Math.max(0, Math.round(Number(dauer) || 0));
+    const name = 'Mitschnitt-' + new Date().toISOString().replace(/[:.]/g, '-') +
+      '-' + Math.floor(laenge / 60) + 'm' + (laenge % 60) + 's.' + audioEndung(typ);
+    const satz = await Dateien.ablegen(blob, {
+      name,
+      blockId,
+      beiFortschritt: (_anteil: number) => { /* Die Oberfläche zeigt den Speicherzustand. */ }
+    });
+    return {
+      dateiId: satz.id,
+      blockId,
+      name,
+      typ: satz.typ || typ,
+      marken: marken.map(m => ({ sek: Math.max(0, Number(m.sek) || 0), text: String(m.text || '') }))
+    };
+  };
+
+  /** Ein optionaler Sidecar ist ein bewusster Export. Ohne gültige Adresse,
+      Knopfdruck und anschliessende Zustimmung bleibt der Ton lokal. */
+  const sidecarTranskribieren = async (blob: Blob): Promise<string> => {
+    const roh = E.sidecar();
+    if (!roh) throw new Error('In den Einstellungen ist kein Transkriptionsdienst eingetragen.');
+    let adresse: URL;
+    try { adresse = new URL(roh); }
+    catch { throw new Error('Die Adresse des Transkriptionsdiensts ist ungültig.'); }
+    if (!['http:', 'https:'].includes(adresse.protocol))
+      throw new Error('Der Transkriptionsdienst braucht eine HTTP- oder HTTPS-Adresse.');
+    if (!confirm('Tonaufnahme an „' + adresse.host + '“ senden und dort transkribieren lassen?'))
+      throw new Error('Übertragung nicht bestätigt.');
+
+    const daten = new FormData();
+    daten.append('audio', blob, 'mitschnitt.' + audioEndung(blob.type));
+    daten.append('language', E.sprache());
+    const antwort = await fetch(adresse.toString(), { method: 'POST', body: daten });
+    if (!antwort.ok) throw new Error('Der Transkriptionsdienst antwortet mit ' + antwort.status + '.');
+    const typ = String(antwort.headers.get('content-type') || '');
+    if (typ.includes('application/json')) {
+      const json = await antwort.json();
+      const text = String(json?.text || json?.transcript || json?.transkript || '').trim();
+      if (!text) throw new Error('Die Antwort enthält kein Transkript.');
+      return text.slice(0, 500000);
+    }
+    const text = (await antwort.text()).trim();
+    if (!text) throw new Error('Die Antwort enthält kein Transkript.');
+    return text.slice(0, 500000);
+  };
 
   /* ------------------------------------------------------------------------
    * AUSWERTEN
@@ -179,10 +332,19 @@ const Meeting = (() => {
       '{"titel":"kurzer Titel der Besprechung",' +
       '"zusammenfassung":["Punkt 1","Punkt 2"],' +
       '"entscheidungen":["Was beschlossen wurde"],' +
-      '"aufgaben":[{"was":"Aufgabe","wer":"Name oder leer","bis":"JJJJ-MM-TT oder leer"}],' +
+      '"aufgaben":[{"was":"Aufgabe","wer":"Name oder leer","bis":"JJJJ-MM-TT oder leer",' +
+        '"sek":0}],' +
       '"themen":["Thema"],"beteiligte":["Name"]}\n' +
       'Höchstens sechs Punkte je Liste. Alles auf Deutsch. ' +
-      'Erfinde nichts — was nicht im Text steht, lässt du weg.';
+      'Erfinde nichts — was nicht im Text steht, lässt du weg.\n' +
+      /* §44 will den Weg zurück bis auf die Sekunde. Die Zeiten stehen im
+         Protokoll ([mm:ss] am Zeilenanfang); welche Zeile zu welcher
+         Aufgabe gehört, weiss nur, wer den Text gelesen hat. Also fragen
+         wir danach — und glauben die Antwort nur, wenn es die Zeile
+         wirklich gibt (siehe `sekundeAusText`, E161). */
+      'Bei „sek" trägst du die Zeitmarke der Zeile ein, in der die Aufgabe ' +
+      'besprochen wird — die Zahl aus [mm:ss] am Zeilenanfang, umgerechnet ' +
+      'in Sekunden. Bist du dir nicht sicher, lässt du „sek" weg.';
 
     if (beiFortschritt) beiFortschritt('Die KI liest mit …');
     const roh = await KI.frageKurz('Das Protokoll:\n\n' + String(text).slice(0, 12000), anweisung);
@@ -194,7 +356,8 @@ const Meeting = (() => {
   /* ------------------------------------------------------------------------
    * DIE SEITE
    * ----------------------------------------------------------------------*/
-  const seiteAnlegen = (ergebnis: any, transkript: any, dauer: number, audioUrl: any) => {
+  const seiteAnlegen = (ergebnis: any, transkript: any, dauer: number,
+      audio: AudioAblage | string | null) => {
     const jetzt = new Date();
     const p = Store.addPage(App.aktuelleSeite(), {
       text: (ergebnis.titel || 'Besprechung') + ' · ' + jetzt.toLocaleDateString('de-DE'),
@@ -217,11 +380,39 @@ const Meeting = (() => {
       ergebnis.entscheidungen.forEach((x: any) => Store.addBlock(p.id, 'quote', { text: String(x) }));
     }
 
+    /* WELCHE SEKUNDEN ES IM PROTOKOLL WIRKLICH GIBT.
+       Die KI darf zu jeder Aufgabe eine Zeitmarke nennen. Geglaubt wird sie
+       nur, wenn eine Zeile mit genau dieser Zeit dasteht — geraten wäre
+       schlimmer als gar nichts: man springt hin, hört etwas anderes und
+       hält die Aufnahme für kaputt (L57).
+
+       Dasselbe Muster wie unten beim Transkript, absichtlich Zeichen für
+       Zeichen: was hier nicht als Zeitmarke gilt, bekommt dort auch keinen
+       `audioRef`, und dann zeigte der Sprung ins Leere. */
+    const ZEITMARKE = /^\[(?:(\d+):)?(\d{1,2}):(\d{2})\]\s*/;
+    const sekundenImText = new Set<number>();
+    String(transkript || '').split('\n').forEach(z => {
+      const m = ZEITMARKE.exec(z.trim());
+      if (m) sekundenImText.add(Number(m[1] || 0) * 3600 + Number(m[2]) * 60 + Number(m[3]));
+    });
+    const sekundeAusText = (a: any): number | null => {
+      const s = Math.round(Number(a?.sek));
+      if (!Number.isFinite(s) || s < 0) return null;
+      return sekundenImText.has(s) ? s : null;
+    };
+
+    /* Die Aufgabenblöcke entstehen VOR dem Transkript, ihr Ziel liegt aber
+       darin. Also erst anlegen und merken, den `sourceRef` weiter unten
+       nachtragen — das ist billiger, als die Seite umzusortieren. */
+    const aufgabenBloecke: Array<{ id: string; sek: number | null }> = [];
     if ((ergebnis.aufgaben || []).length) {
       Store.addBlock(p.id, 'h2', { text: 'Aufgaben' });
-      ergebnis.aufgaben.forEach((a: any) => Store.addBlock(p.id, 'todo', {
-        text: String(a.was || a) + (a.wer ? ' — ' + a.wer : '') + (a.bis ? ' (bis ' + a.bis + ')' : '')
-      }));
+      ergebnis.aufgaben.forEach((a: any) => {
+        const b = Store.addBlock(p.id, 'todo', {
+          text: String(a.was || a) + (a.wer ? ' — ' + a.wer : '') + (a.bis ? ' (bis ' + a.bis + ')' : '')
+        });
+        aufgabenBloecke.push({ id: b.id, sek: sekundeAusText(a) });
+      });
     }
 
     if ((ergebnis.themen || []).length) {
@@ -229,28 +420,97 @@ const Meeting = (() => {
       Store.addBlock(p.id, 'text', { text: ergebnis.themen.map((t: any) => '#' + String(t).replace(/\s+/g, '-')).join(' ') });
     }
 
-    if (audioUrl && E.audioBehalten()) {
+    let audioBlock: any = null;
+    if (audio && E.audioBehalten()) {
       Store.addBlock(p.id, 'h2', { text: 'Aufnahme' });
-      Store.addBlock(p.id, 'audio', { src: audioUrl, caption: 'Mitschnitt · ' + zeitText(dauer || 0) });
+      /* `string` ist der Altbestand: vorhandene Data-URL-Aufnahmen bleiben
+         abspielbar. Neue Aufnahmen tragen nur die stabile Datei-Kennung. */
+      audioBlock = typeof audio === 'string'
+        ? Store.addBlock(p.id, 'audio', {
+            src: audio,
+            caption: 'Mitschnitt · ' + zeitText(dauer || 0)
+          })
+        : Store.addBlock(p.id, 'audio', {
+            id: audio.blockId,
+            dateiId: audio.dateiId,
+            typ: audio.typ,
+            text: audio.name,
+            caption: 'Mitschnitt · ' + zeitText(dauer || 0)
+          });
+
+      if (typeof audio !== 'string' && audio.marken.length) {
+        Store.addBlock(p.id, 'h2', { text: 'Zeitmarken' });
+        audio.marken.forEach(m => Store.addBlock(p.id, 'text', {
+          text: zeitText(m.sek) + ' · ' + (m.text || 'Zeitmarke'),
+          audioRef: { blockId: audioBlock.id, dateiId: audio.dateiId, sek: m.sek }
+        }));
+      }
     }
 
+    /* Welche Zeile zu welcher Sekunde gehört — für den Rücksprung unten. */
+    const zeileZurSekunde = new Map<number, string>();
     if (transkript && !E.transkriptLoeschen()) {
       const t = Store.addBlock(p.id, 'toggle', { text: 'Volles Transkript', open: false });
       String(transkript).split('\n').slice(0, 400).forEach(z => {
-        if (z.trim()) Store.addBlock(t.id, 'text', { text: z });
+        if (!z.trim()) return;
+        const m = ZEITMARKE.exec(z.trim());
+        const sek = m ? (Number(m[1] || 0) * 3600 + Number(m[2]) * 60 + Number(m[3])) : null;
+        const zeile = Store.addBlock(t.id, 'text', Object.assign(
+          { text: z },
+          audioBlock && sek !== null
+            ? { audioRef: {
+                blockId: audioBlock.id,
+                dateiId: typeof audio === 'string' ? undefined : audio?.dateiId,
+                sek
+              } }
+            : {}
+        ));
+        if (sek !== null && !zeileZurSekunde.has(sek)) zeileZurSekunde.set(sek, zeile.id);
       });
     }
+
+    /* DER WEG ZURÜCK (§44, E161).
+       Bis hierher schrieb `seiteAnlegen` gar keine Herkunft — eine Aufgabe
+       aus einer Besprechung wusste nicht, woher sie kam. Der Rücksprung im
+       Editor gab es zwar, aber nur für Blöcke, die anderswo einen
+       `sourceRef` bekamen; für Besprechungsaufgaben war er tote Mechanik.
+
+       Mit Sekunde zeigt der Knopf sie an: „↩ Bauleitung KW 35 · 01:02".
+       `zeit` steht als fertiger Text daneben, damit der Editor die Zahl
+       nicht formatieren muss — er darf `bereiche/verbinden` nicht kennen
+       (CLAUDE.md §5 Regel 1), und eine zweite Formatierfunktion wäre genau
+       die Abschrift, die E159 gerade zusammengelegt hat. */
+    const quelleFuer = (sek: number | null) => {
+      const zielId = sek !== null ? zeileZurSekunde.get(sek) : undefined;
+      return Object.assign({
+        version: 1,
+        kind: zielId ? 'block' : 'seite',
+        pageId: p.id,
+        blockId: zielId || p.id,
+        label: String(p.text || 'Besprechung'),
+        createdAt: Store.now()
+      }, sek !== null ? { sek, zeit: zeitText(sek) } : {});
+    };
+    aufgabenBloecke.forEach(x => {
+      const quelle = quelleFuer(x.sek);
+      Store.updateBlock(x.id, { sourceRef: quelle, lernquelle: quelle });
+    });
 
     /* Aufgaben zusätzlich in eine Datenbank, damit sie nicht nur auf dieser
        Seite stehen — genau das macht Notion auch. */
     if ((ergebnis.aufgaben || []).length) {
       const db = aufgabenDatenbank();
-      ergebnis.aufgaben.forEach((a: any) => {
+      ergebnis.aufgaben.forEach((a: any, i: number) => {
         const r = Store.addRow(db.id, {
           wer: a.wer || '', bis: a.bis || '', status: 'Offen',
           quelle: ergebnis.titel || 'Besprechung', seite: p.id
         });
-        Store.updateBlock(r.id, { text: String(a.was || a) });
+        /* Die Zeile in der Datenbank ist dieselbe Aufgabe wie der Block auf
+           der Seite — sie bekommt denselben Weg zurück. Ohne ihn steht in
+           „Meine Aufgaben" eine Zeile ohne Herkunft, und die Spalte
+           „quelle" nennt nur einen Titel, den man nicht anklicken kann. */
+        const quelle = quelleFuer(aufgabenBloecke[i]?.sek ?? null);
+        Store.updateBlock(r.id, { text: String(a.was || a), sourceRef: quelle });
       });
     }
 
@@ -291,8 +551,13 @@ const Meeting = (() => {
       '<div class="fbtns" id="mf"></div></div>';
     document.body.appendChild(o);
 
-    let phase = 'bereit';       /* bereit · laeuft · fertig · ausgewertet */
-    let ergebnisAudio: any = null;
+    let phase = 'bereit';       /* bereit · laeuft · speichert · fertig · ausgewertet */
+    let ergebnisAudio: AudioAblage | null = null;
+    let ergebnisRohBlob: Blob | null = null;
+    let ergebnisMarken: AudioMarke[] = [];
+    let audioBlockId = '';
+    let audioSpeichert = false;
+    let aufnahmeWarnung = '';
     let ergebnisText = '';
     let ergebnisDauer = 0;
     let auswertung: any = null;
@@ -313,18 +578,40 @@ const Meeting = (() => {
             'Du kannst trotzdem ein vorhandenes Transkript einfügen und auswerten lassen.</div>');
       }
       if (phase === 'laeuft') {
+        const marken = laeuft?.marken || [];
+        const letzte = marken.length ? marken[marken.length - 1] : null;
         k.innerHTML = '<div class="meet-laeuft"><span class="meet-punkt"></span>' +
-                      '<b id="muhr">00:00</b><span>läuft — sprich einfach weiter</span></div>';
+                      '<b id="muhr">00:00</b><span>läuft — sprich einfach weiter</span></div>' +
+          (letzte
+            ? '<div class="verb-text">' + marken.length + ' Zeitmarke(n) · zuletzt ' +
+              zeitText(letzte.sek) + ' „' + esc(letzte.text) + '“</div>'
+            : '');
+      }
+      if (phase === 'speichert') {
+        k.innerHTML = '<div class="agent-laeuft">Der Mitschnitt wird lokal in Stücken gespeichert …</div>';
       }
       if (phase === 'fertig') {
         k.innerHTML = '<div class="verb-text">Aufnahme beendet nach ' + zeitText(ergebnisDauer) +
-          '. Der Text unten lässt sich noch bearbeiten, bevor die KI ihn liest.</div>';
+          '. Der Text unten lässt sich noch bearbeiten, bevor die KI ihn liest.</div>' +
+          (ergebnisAudio
+            ? '<div class="meet-ok">✓ Mitschnitt lokal gespeichert · ' +
+              esc(ergebnisAudio.name) + '</div>'
+            : (ergebnisRohBlob && E.audioBehalten()
+                ? '<div class="meet-warn">Der Ton ist noch nicht dauerhaft gespeichert. ' +
+                  'Du kannst erneut speichern oder ihn herunterladen.</div>'
+                : '')) +
+          (ergebnisMarken.length
+            ? '<div class="verb-text">' + ergebnisMarken.length +
+              ' Zeitmarke(n) werden als normale Notizen angelegt.</div>' : '') +
+          (aufnahmeWarnung ? '<div class="meet-warn">' + esc(aufnahmeWarnung) + '</div>' : '');
       }
       if (phase === 'ausgewertet') {
         k.innerHTML = '<div class="meet-ok">✓ Ausgewertet: ' +
           (auswertung.zusammenfassung || []).length + ' Punkte, ' +
           (auswertung.entscheidungen || []).length + ' Entscheidungen, ' +
-          (auswertung.aufgaben || []).length + ' Aufgaben.</div>';
+          (auswertung.aufgaben || []).length + ' Aufgaben.</div>' +
+          (ergebnisRohBlob && E.audioBehalten() && !ergebnisAudio
+            ? '<div class="meet-warn">Der Ton ist noch nicht dauerhaft gespeichert.</div>' : '');
       }
     };
 
@@ -338,14 +625,34 @@ const Meeting = (() => {
                       '<button data-a="einst">Einstellungen</button>' +
                       '<button data-a="zu">Schliessen</button>';
       if (phase === 'laeuft')
-        f.innerHTML = '<button data-a="stopp" class="prim">■ Beenden</button>';
-      if (phase === 'fertig')
+        f.innerHTML = '<input id="mmark" maxlength="120" placeholder="Zeitmarke benennen" ' +
+                      'style="min-width:150px;flex:1">' +
+                      '<button data-a="marke">＋ Zeitmarke</button>' +
+                      '<button data-a="stopp" class="prim">■ Beenden</button>';
+      if (phase === 'speichert')
+        f.innerHTML = '<button disabled>Ton wird lokal gespeichert …</button>';
+      if (phase === 'fertig') {
+        const audioWerkzeuge =
+          (ergebnisRohBlob && E.audioBehalten() && !ergebnisAudio
+            ? '<button data-a="retryaudio">Mitschnitt erneut speichern</button>' : '') +
+          (ergebnisRohBlob && !ergebnisAudio
+            ? '<button data-a="ladeaudio">Mitschnitt herunterladen</button>' : '') +
+          (E.sidecar() && (ergebnisRohBlob || ergebnisAudio)
+            ? '<button data-a="sidecar">Sidecar-Transkript</button>' : '');
         f.innerHTML = '<button data-a="werten" class="prim">✨ Auswerten lassen</button>' +
                       '<button data-a="nurseite">Nur als Seite ablegen</button>' +
+                      audioWerkzeuge +
                       '<button data-a="zu">Verwerfen</button>';
-      if (phase === 'ausgewertet')
+      }
+      if (phase === 'ausgewertet') {
+        const retten = ergebnisRohBlob && E.audioBehalten() && !ergebnisAudio
+          ? '<button data-a="retryaudio">Mitschnitt erneut speichern</button>' +
+            '<button data-a="ladeaudio">Mitschnitt herunterladen</button>'
+          : '';
         f.innerHTML = '<button data-a="seite" class="prim">Seite anlegen</button>' +
-                      '<button data-a="zu">Schliessen</button>';
+                      retten +
+                      '<button data-a="zu">Verwerfen</button>';
+      }
     };
 
     const textFeld = (wert: any, lesbar: any): void => {
@@ -356,12 +663,98 @@ const Meeting = (() => {
         : `<textarea id="mtx" rows="10" placeholder="Hier steht das Transkript.">${esc(wert)}</textarea>`;
     };
 
+    const audioSichern = async (): Promise<AudioAblage | null> => {
+      if (!ergebnisRohBlob || !E.audioBehalten()) return null;
+      if (audioSpeichert) throw new Error('Der Mitschnitt wird bereits gespeichert.');
+      audioBlockId = audioBlockId || Store.uid();
+      const vorher = phase;
+      audioSpeichert = true;
+      phase = 'speichert'; kopf(); fuss();
+      try {
+        ergebnisAudio = await audioAblegen(
+          ergebnisRohBlob, ergebnisDauer, ergebnisMarken, audioBlockId);
+        return ergebnisAudio;
+      } finally {
+        audioSpeichert = false;
+        phase = vorher === 'ausgewertet' ? 'ausgewertet' : 'fertig';
+        kopf(); fuss();
+      }
+    };
+
+    const audioBlob = async (): Promise<Blob | null> => {
+      if (ergebnisRohBlob) return ergebnisRohBlob;
+      return ergebnisAudio ? Dateien.alsBlob(ergebnisAudio.dateiId) : null;
+    };
+
+    const aufnahmeUebernehmen = async (r: AufnahmeErgebnis | null, feldText = ''): Promise<void> => {
+      if (!r) return;
+      ergebnisDauer = r.dauer;
+      ergebnisMarken = r.marken || [];
+      ergebnisRohBlob = r.blob;
+      aufnahmeWarnung = r.warnung || '';
+      if (!r.blob && E.audioBehalten() && kannAufnehmen() && !aufnahmeWarnung)
+        aufnahmeWarnung = 'Der Browser hat keine Audiodaten geliefert; das Transkript bleibt erhalten.';
+      const browserText = transkriptText(r.transkript);
+      /* Das sichtbare Feld enthält oft schon den letzten Interim-Satz; die
+         Ergebnisliste dafür eventuell einen etwas späteren finalen Satz.
+         Der längere Stand ist der weniger verlustreiche. */
+      ergebnisText = String(feldText || '').trim().length >= browserText.trim().length
+        ? (feldText || ergebnisText)
+        : (browserText || ergebnisText);
+      phase = 'fertig'; kopf(); fuss(); textFeld(ergebnisText, false);
+      if (ergebnisRohBlob && E.audioBehalten()) {
+        try { await audioSichern(); }
+        catch (err) {
+          UI.banner('Der Ton ist noch im Arbeitsspeicher, aber nicht dauerhaft abgelegt: ' +
+            (err instanceof Error ? err.message : String(err)) +
+            '. Erneut speichern oder herunterladen.', 'warn');
+          phase = 'fertig'; kopf(); fuss();
+        }
+      }
+    };
+
+    const verwerfen = async (): Promise<void> => {
+      if (audioSpeichert) {
+        UI.toast('Der Mitschnitt wird noch gespeichert. Bitte einen Moment warten.');
+        return;
+      }
+      if (laeuft) {
+        if (!confirm('Aufnahme jetzt beenden? Der Mitschnitt bleibt zunächst im Fenster, damit nichts verloren geht.'))
+          return;
+        const feldText = o.querySelector<HTMLTextAreaElement>('#mtx')?.value || '';
+        await aufnahmeUebernehmen(await stoppen(), feldText);
+        return;
+      }
+      const hatInhalt = phase !== 'bereit' &&
+        (!!ergebnisText.trim() || !!ergebnisRohBlob || !!ergebnisAudio);
+      if (hatInhalt && !confirm('Besprechungsnotiz und noch nicht angelegte Aufnahme wirklich verwerfen?'))
+        return;
+      if (ergebnisAudio) {
+        /* Erst schliessen, wenn auch die reservierte Datei weg ist. Ein
+           Fehler bleibt sichtbar und erzeugt keinen stillen Waisen. */
+        await Dateien.weg(ergebnisAudio.dateiId);
+        ergebnisAudio = null;
+      }
+      ergebnisRohBlob = null;
+      o.remove();
+    };
+
+    const audioFuerSeite = async (): Promise<AudioAblage | null> => {
+      if (E.audioBehalten() && ergebnisRohBlob && !ergebnisAudio)
+        await audioSichern();
+      return E.audioBehalten() ? ergebnisAudio : null;
+    };
+
     kopf(); fuss(); textFeld('', false);
 
     o.addEventListener('click', async e => {
       if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) {
-        if (laeuft) await stoppen();
-        o.remove(); return;
+        try { await verwerfen(); }
+        catch (err) {
+          UI.banner('Die Aufnahme wurde nicht verworfen: ' +
+            (err instanceof Error ? err.message : String(err)), 'warn');
+        }
+        return;
       }
       const b = elVon(e)?.closest<HTMLElement>('button[data-a]');
       if (!b) return;
@@ -408,26 +801,56 @@ const Meeting = (() => {
           return;
         }
 
+        if (a === 'marke') {
+          const eingabe = o.querySelector<HTMLInputElement>('#mmark');
+          const marke = markieren(eingabe?.value || '');
+          if (!marke) throw new Error('Es läuft gerade keine Aufnahme.');
+          kopf(); fuss();
+          const u = o.querySelector('#muhr');
+          if (u) u.textContent = zeitText(marke.sek);
+          UI.toast('Zeitmarke bei ' + zeitText(marke.sek));
+          return;
+        }
+
         if (a === 'stopp') {
-          const r = await stoppen() as { dauer: number; transkript: any[]; blob: Blob | null } | null;
-          if (!r) return;
-          ergebnisDauer = r.dauer;
-          ergebnisText = transkriptText(r.transkript) ||
-            (o.querySelector<HTMLTextAreaElement>('#mtx')?.value || '');
-          const mitschnitt = r.blob;
-          if (mitschnitt && E.audioBehalten()) {
-            ergebnisAudio = await new Promise(ok => {
-              const fr = new FileReader();
-              fr.onload = () => ok(fr.result);
-              fr.readAsDataURL(mitschnitt);
-            });
-            /* Sehr lange Aufnahmen sprengen den Speicher — dann lieber ohne */
-            if (ergebnisAudio.length > 9000000) {
-              ergebnisAudio = null;
-              UI.toast('Die Aufnahme war zu lang zum Behalten — Text bleibt.');
-            }
+          const feldText = o.querySelector<HTMLTextAreaElement>('#mtx')?.value || '';
+          await aufnahmeUebernehmen(await stoppen(), feldText);
+          return;
+        }
+
+        if (a === 'retryaudio') {
+          await audioSichern();
+          UI.toast('Mitschnitt lokal gespeichert');
+          return;
+        }
+
+        if (a === 'ladeaudio') {
+          const blob = await audioBlob();
+          if (!blob) throw new Error('Es gibt keinen Mitschnitt zum Herunterladen.');
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'Mitschnitt.' + audioEndung(blob.type);
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          return;
+        }
+
+        if (a === 'sidecar') {
+          const blob = await audioBlob();
+          if (!blob) throw new Error('Es gibt keinen Mitschnitt zum Transkribieren.');
+          const alterText = b.textContent || 'Sidecar-Transkript';
+          (b as HTMLButtonElement).disabled = true;
+          b.textContent = 'Wird transkribiert …';
+          try {
+            const text = await sidecarTranskribieren(blob);
+            ergebnisText = text;
+            textFeld(text, false);
+            UI.toast('Transkript vom Sidecar übernommen');
+          } finally {
+            (b as HTMLButtonElement).disabled = false;
+            b.textContent = alterText;
           }
-          phase = 'fertig'; kopf(); fuss(); textFeld(ergebnisText, false);
           return;
         }
 
@@ -455,15 +878,21 @@ const Meeting = (() => {
 
         if (a === 'nurseite') {
           ergebnisText = o.querySelector<HTMLTextAreaElement>('#mtx')?.value || ergebnisText;
+          const audio = await audioFuerSeite();
           const p = seiteAnlegen({ titel: 'Besprechung', zusammenfassung: [], aufgaben: [] },
-                                 ergebnisText, ergebnisDauer, ergebnisAudio);
+                                 ergebnisText, ergebnisDauer, audio);
+          ergebnisAudio = null;
+          ergebnisRohBlob = null;
           o.remove(); App.oeffne(p.id);
           UI.toast('Als Seite abgelegt');
           return;
         }
 
         if (a === 'seite') {
-          const p = seiteAnlegen(auswertung, ergebnisText, ergebnisDauer, ergebnisAudio);
+          const audio = await audioFuerSeite();
+          const p = seiteAnlegen(auswertung, ergebnisText, ergebnisDauer, audio);
+          ergebnisAudio = null;
+          ergebnisRohBlob = null;
           o.remove(); App.oeffne(p.id);
           UI.toast('Besprechungsnotiz angelegt');
           return;
@@ -495,19 +924,31 @@ const Meeting = (() => {
           ['de-DE','de-CH','de-AT','en-US','en-GB','tr-TR','fr-FR','it-IT','es-ES']
             .map(s => `<option${E.sprache() === s ? ' selected' : ''}>${s}</option>`).join('') +
         '</select></label>' +
+        '<label>Optionaler Transkriptionsdienst<br>' +
+          `<input id="mts" type="url" value="${esc(E.sidecar())}" ` +
+          'placeholder="http://127.0.0.1:…/transcribe" style="width:100%"></label>' +
+        '<div class="verb-text" style="margin:-8px 0 0">Diese Adresse wird nie automatisch ' +
+          'aufgerufen. Nach einer Aufnahme erscheint ein eigener Knopf; erst nach deiner ' +
+          'Bestätigung wird der Ton an diesen Dienst gesendet.</div>' +
       '</div>' +
       '<div class="fbtns"><button data-a="zu" class="prim">Fertig</button></div></div>';
     document.body.appendChild(o);
-    o.addEventListener('change', () => {
+    const uebernehmen = () => {
       const ma = o.querySelector<HTMLInputElement>('#ma');
       const mtw = o.querySelector<HTMLInputElement>('#mtw');
       const ms = o.querySelector<HTMLSelectElement>('#ms');
+      const mts = o.querySelector<HTMLInputElement>('#mts');
       if (ma) Store.setMeta('meet:audio', ma.checked);
       if (mtw) Store.setMeta('meet:transkriptWeg', mtw.checked);
       if (ms) Store.setMeta('meet:sprache', ms.value);
-    });
+      if (mts) Store.setMeta('meet:sidecar', mts.value.trim());
+    };
+    o.addEventListener('change', uebernehmen);
     o.addEventListener('click', e => {
-      if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) o.remove();
+      if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) {
+        uebernehmen();
+        o.remove();
+      }
     });
   };
 
@@ -577,7 +1018,8 @@ const Meeting = (() => {
     baum.appendChild(unten);
   };
 
-  return { starten, stoppen, auswerten, seiteAnlegen, aufgabenDatenbank,
+  return { starten, stoppen, markieren, auswerten, seiteAnlegen, aufgabenDatenbank,
+           audioAblegen, sidecarTranskribieren,
            transkriptText, zeitText, kannZuhoeren, kannAufnehmen,
            panel, einstellungenDialog, seitenleiste, E };
 })();

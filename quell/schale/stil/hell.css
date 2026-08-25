@@ -61,6 +61,9 @@ html[data-theme="light"]{
   --bg-press:    #e6e6e4;
   --line-stark:  rgba(15,15,15,.22);
   --accent:      #c2410c;
+  /* Schrift auf der Akzentfläche. Im Hellmodus ist der Akzent dunkel
+     (#c2410c) — Weiss darauf hat 5,9 zu 1. */
+  --auf-accent:  #ffffff;
   --accent-warm: #ea580c;
   --gefahr:      #dc2626;
   --erfolg:      #15803d;

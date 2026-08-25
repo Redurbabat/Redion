@@ -24,12 +24,33 @@ const Bibliothek = (() => {
        kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
+    const rightsActive = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
+    const permitted = (action, pageId) => !rightsActive() || (pageId ? Konten.darf(action, pageId) : Konten.darf(action));
+    /** Die kanonische Datenbankseite, nicht eine verknüpfte Zweitansicht. */
+    const collectionPageId = (collectionId) => {
+        const blocks = Object.values(Store.cache.blocks)
+            .filter(block => block?.alive !== false && block.type === 'database' &&
+            block.collectionId === collectionId);
+        const block = blocks.find(item => !item.verknuepft) || blocks[0];
+        if (!block || typeof Links === 'undefined' || !Links.seiteVon)
+            return '';
+        return String(Links.seiteVon(block.id)?.id || '');
+    };
+    const collectionPermitted = (action, collectionId) => {
+        if (!rightsActive())
+            return true;
+        const pageId = collectionPageId(collectionId);
+        return !!pageId && permitted(action, pageId);
+    };
     /* ------------------------------------------------------------------ *
      * Hilfen
      * ------------------------------------------------------------------ */
     /** Alle echten Seiten — ohne Systemseiten, ohne Papierkorb. */
     const alleSeiten = () => Object.values(Store.cache.blocks)
-        .filter(b => b.type === 'page' && b.alive !== false && !b.system);
+        .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
+        (b.parentTable === 'collection'
+            ? collectionPermitted('lesen', b.parentId)
+            : permitted('lesen', b.id)));
     /** Woher kommt die Seite: aus einer Datenbank, aus einem Bereich, privat? */
     const quelleVon = (p) => {
         if (p.parentTable === 'collection') {
@@ -42,8 +63,12 @@ const Bibliothek = (() => {
                 return { icon: b.icon || '👥', text: b.name, id: '' };
         }
         const pfad = Store.pathOf(p.id);
-        if (pfad.length > 1)
-            return { icon: pfad[0].icon || '📄', text: pfad[0].text || 'Ohne Titel', id: pfad[0].id };
+        if (pfad.length > 1) {
+            const sichtbar = pfad.slice(0, -1).find((item) => permitted('lesen', item.id));
+            if (sichtbar)
+                return { icon: sichtbar.icon || '📄', text: sichtbar.text || 'Ohne Titel', id: sichtbar.id };
+            return { icon: '👥', text: 'Direkt freigegeben', id: '' };
+        }
         return { icon: '🔒', text: 'Privat', id: '' };
     };
     /** Zeitstempel als Zahl — egal ob ISO-Text oder Millisekunden. */
@@ -79,6 +104,7 @@ const Bibliothek = (() => {
         { id: 'favoriten', icon: '☆', name: 'Favoriten' },
         { id: 'geteilt', icon: '👥', name: 'Geteilt' },
         { id: 'privat', icon: '🔒', name: 'Privat' },
+        { id: 'schule', icon: '🎓', name: 'Ausbildung' },
         { id: 'datenbank', icon: '▦', name: 'In Datenbanken' },
         { id: 'alle', icon: '▤', name: 'Alle' }
     ];
@@ -90,9 +116,127 @@ const Bibliothek = (() => {
     ];
     let zustand = { reiter: 'kuerzlich', sortier: 'wann', richtung: 'ab',
         suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id) };
+    /** Eine zusammengefuehrte Sicht auf bestehende Redion-Daten. Sie speichert
+        weder Dashboard-Karten noch PDF-Kopien; alle Listen sind begrenzt. */
+    const zeichneSchule = (wrap) => {
+        const blocks = Object.values(Store.cache.blocks);
+        const root = blocks.find(block => block?.alive !== false && block.type === 'page' &&
+            (block.schoolRoot === true || block.systemRole === 'school-root') && permitted('lesen', block.id));
+        if (!root) {
+            wrap.innerHTML = '<div class="school-home school-empty"><div class="school-empty-icon">🎓</div>' +
+                '<h1>Ausbildungsbereich</h1><p>Lege die additive Ausbildungsvorlage an. Sie erstellt normale Seiten und Datenbanken.</p>' +
+                '<button data-school-action="install" class="prim">Ausbildung einrichten</button></div>';
+            wrap.querySelector('[data-school-action="install"]')?.addEventListener('click', () => {
+                if (!permitted('bearbeiten')) {
+                    UI.toast('Du darfst hier keinen Ausbildungsbereich anlegen.');
+                    return;
+                }
+                const page = Galerie.bauen('ausbildung');
+                if (page) {
+                    App.zeichneBaum();
+                    App.oeffne(page.id);
+                }
+            });
+            return;
+        }
+        const children = Store.childrenOf(root.id)
+            .filter((block) => block.alive !== false && block.type === 'page' &&
+            block.parentTable !== 'collection' && permitted('lesen', block.id))
+            .slice(0, 18);
+        const documentPages = new Map();
+        blocks.filter(block => block?.alive !== false && block.type === 'pdfseite')
+            .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
+            .forEach(block => {
+            if (documentPages.size >= 6)
+                return;
+            const page = Links.seiteVon(block.id);
+            if (page && permitted('lesen', page.id) && !documentPages.has(page.id))
+                documentPages.set(page.id, { page, block });
+        });
+        const due = typeof Learning !== 'undefined' && Learning.dailyQueue
+            ? Learning.dailyQueue().all.slice(0, 6)
+            : (Werkzeuge.faellig ? Werkzeuge.faellig().slice(0, 6) : []);
+        const tasks = meineAufgaben().filter(task => !task.fertig).slice(0, 6);
+        const examCollections = Object.values(Store.cache.collections)
+            .filter(collection => collection.schoolRootId === root.id && collection.schoolKind === 'exams' &&
+            collectionPermitted('lesen', collection.id));
+        const exams = [];
+        const now = Date.now(), horizon = now + 120 * 86400000;
+        examCollections.forEach(collection => {
+            const dateKey = Object.keys(collection.schema || {}).find(key => collection.schema[key].type === 'date');
+            if (!dateKey)
+                return;
+            Store.rowsOf(collection.id).forEach((row) => {
+                const date = Date.parse(String(row.props?.[dateKey] || ''));
+                if (Number.isFinite(date) && date >= now - 86400000 && date <= horizon)
+                    exams.push({ row, date, collection });
+            });
+        });
+        exams.sort((a, b) => a.date - b.date);
+        const list = (items, make, empty) => items.length ? items.map(make).join('') : '<p class="school-none">' + esc(empty) + '</p>';
+        wrap.innerHTML =
+            '<div class="school-home">' +
+                '<div class="school-hero"><div><span>🎓 Ausbildung</span><h1>' + esc(root.text || 'Ausbildung') +
+                '</h1><p>Seiten, Lernstoff und Termine an einem Ort – alles bleibt normale Redion-Struktur.</p></div>' +
+                '<div class="school-quick"><button data-school-action="capture">📷 Erfassen</button>' +
+                '<button data-school-action="learn">🎴 Lernen</button>' +
+                '<button data-school-action="calculate">⚡ Rechnen</button>' +
+                '<button data-school-open="' + esc(root.id) + '">↗ Seite öffnen</button></div></div>' +
+                '<section class="school-section"><h2>Ordner & Bereiche</h2><div class="school-folders">' +
+                list(children, page => '<button class="school-folder" data-school-open="' + esc(page.id) + '">' +
+                    '<span>' + esc(page.icon || '📁') + '</span><b>' + esc(page.text || 'Ohne Titel') + '</b>' +
+                    '<em>' + Store.childrenOf(page.id).filter((child) => child.type !== 'page' ||
+                    permitted('lesen', child.id)).length + ' Einträge</em></button>', 'Noch keine Unterseiten.') + '</div></section>' +
+                '<div class="school-grid">' +
+                '<section class="school-card"><h2>Zuletzt verwendete PDFs</h2>' +
+                list([...documentPages.values()], item => '<button data-school-doc="' + esc(item.page.id) + '">' +
+                    '<span>📄</span><b>' + esc(item.page.text || 'PDF-Seite') + '</b><em>Seite ' +
+                    esc(item.block.nr || 1) + '</em></button>', 'Noch kein PDF abgelegt.') + '</section>' +
+                '<section class="school-card"><h2>Heute lernen</h2>' +
+                list(due, item => {
+                    const card = item.card || item;
+                    return '<button data-school-block="' + esc(card.id) + '"><span>🎴</span><b>' +
+                        esc((String(card.text || 'Karte').split('::')[0] || 'Karte').replace(/\{\{|\}\}/g, '')) +
+                        '</b><em>' + esc(item.reason || 'fällig') + '</em></button>';
+                }, 'Keine Karten fällig.') + '</section>' +
+                '<section class="school-card"><h2>Offene Aufgaben</h2>' +
+                list(tasks, task => '<button data-school-open="' + esc(task.id) + '"><span>☐</span><b>' +
+                    esc(task.titel) + '</b><em>' + esc(task.datum ? String(task.datum).slice(0, 10) : task.coll.name) +
+                    '</em></button>', 'Keine offene Aufgabe gefunden.') + '</section>' +
+                '<section class="school-card"><h2>Nächste Prüfungen</h2>' +
+                list(exams.slice(0, 6), exam => '<button data-school-open="' + esc(exam.row.id) + '"><span>📅</span><b>' +
+                    esc(exam.row.text || exam.row.props?.title || 'Prüfung') + '</b><em>' +
+                    esc(new Date(exam.date).toLocaleDateString('de-CH')) + '</em></button>', 'Noch kein Prüfungstermin eingetragen.') + '</section>' +
+                '</div>' +
+                '</div>';
+        wrap.querySelectorAll('[data-school-open]').forEach(button => button.addEventListener('click', () => button.dataset.schoolOpen && App.oeffne(button.dataset.schoolOpen)));
+        wrap.querySelectorAll('[data-school-block]').forEach(button => button.addEventListener('click', () => button.dataset.schoolBlock && App.zeigeBlock(button.dataset.schoolBlock)));
+        wrap.querySelectorAll('[data-school-doc]').forEach(button => button.addEventListener('click', () => {
+            const page = button.dataset.schoolDoc ? Store.getBlock(button.dataset.schoolDoc) : null;
+            if (!page || !permitted('lesen', page.id))
+                return;
+            if (permitted('bearbeiten', page.id))
+                Store.updateBlock(page.id, { dokumentModus: true });
+            App.oeffne(page.id);
+        }));
+        wrap.querySelector('[data-school-action="capture"]')?.addEventListener('click', () => {
+            if (!permitted('bearbeiten', root.id)) {
+                UI.toast('Du darfst im Ausbildungsbereich nichts erfassen.');
+                return;
+            }
+            Recognition.scan();
+        });
+        wrap.querySelector('[data-school-action="learn"]')?.addEventListener('click', () => Werkzeuge.lernen());
+        wrap.querySelector('[data-school-action="calculate"]')?.addEventListener('click', () => Electrical.open(root));
+    };
     const gefiltert = () => {
         const alle = alleSeiten();
-        const freigaben = (p) => (Konten.freigabenVon ? Konten.freigabenVon(p.id) : []).length > 0;
+        const freigaben = (p) => {
+            if (typeof Konten === 'undefined' || !Konten.freigabenVon)
+                return false;
+            const entries = Konten.freigabenVon(p.id) || {};
+            return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
+        };
         let liste = alle;
         if (zustand.reiter === 'kuerzlich')
             liste = alle.filter(p => p.zuletztGeoeffnet || p.edited)
@@ -125,6 +269,10 @@ const Bibliothek = (() => {
         return liste;
     };
     const zeichnen = (wrap) => {
+        if (zustand.reiter === 'schule') {
+            zeichneSchule(wrap);
+            return;
+        }
         const liste = gefiltert();
         const spalten = SPALTEN.filter(s => zustand.spalten.includes(s.id));
         const raster = spalten.map(s => s.breit).join(' ');
@@ -156,7 +304,11 @@ const Bibliothek = (() => {
                 (liste.length
                     ? liste.map(p => {
                         const q = quelleVon(p);
-                        const kinder = Store.childrenOf(p.id).filter((k) => k.type === 'page').length;
+                        const kinder = Store.childrenOf(p.id)
+                            .filter((k) => k.type === 'page' &&
+                            (k.parentTable === 'collection'
+                                ? collectionPermitted('lesen', k.parentId)
+                                : permitted('lesen', k.id))).length;
                         const zellen = {
                             name: `<div class="bib-name">${kinder ? '<b class="bib-pfeil">▸</b>' : '<b class="bib-pfeil leer"></b>'}` +
                                 `<span class="bib-ico">${p.icon || (p.parentTable === 'collection' ? '▦' : '📄')}</span>` +
@@ -208,6 +360,10 @@ const Bibliothek = (() => {
         wrap.querySelectorAll('.bib-werkzeuge button, [data-a="suchzu"]').forEach((b) => b.addEventListener('click', () => {
             const a = b.dataset.a;
             if (a === 'neu') {
+                if (!permitted('bearbeiten')) {
+                    UI.toast('Du darfst hier keine neue Seite anlegen.');
+                    return;
+                }
                 const p = Store.addPage(null, { text: '' });
                 App.oeffne(p.id);
                 setTimeout(() => document.getElementById('title')?.focus(), 60);
@@ -286,13 +442,15 @@ const Bibliothek = (() => {
      * eigener Schalter unter Weitere Einstellungen.
      */
     const moegliche = () => Object.values(Store.cache.collections).filter(c => {
+        if (!collectionPermitted('lesen', c.id))
+            return false;
         if (c.istAufgaben)
             return true;
         const t = Object.values(c.schema || {}).map(d => d.type);
         return t.includes('checkbox') || t.includes('status');
     });
     const meineAufgaben = () => {
-        const konto = Konten.aktiv();
+        const konto = typeof Konten !== 'undefined' && Konten.aktiv ? Konten.aktiv() : null;
         const meinName = (konto && konto.name) || 'Ich';
         const gewaehlt = quellenLesen();
         const quellen = moegliche().filter(c => !gewaehlt || gewaehlt.includes(c.id));
@@ -306,20 +464,41 @@ const Bibliothek = (() => {
             const titelKey = Object.keys(schema).find(k => schema[k].type === 'title') || 'name';
             Store.rowsOf(coll.id).forEach((row) => {
                 const pr = row.props || {};
-                /* Ohne Person-Spalte gilt: was ich angelegt habe, ist meins. */
-                const meins = personKey
-                    ? String(pr[personKey] || '').toLowerCase().includes(meinName.toLowerCase())
-                    : (row.erstelltVon || 'Ich') === meinName;
+                /* WEM GEHÖRT EINE ZEILE?
+                   Die Personenspalte sagt es, wenn sie gefüllt ist. Sonst gehört die
+                   Zeile dem, der sie ansieht — auf einem Bestand, der auf diesem
+                   Gerät liegt, ist das die einzige Lesart, und in einem geteilten
+                   Arbeitsbereich gibt es die Personenspalte genau dafür.
+        
+                   VORHER STAND HIER EIN VERGLEICH MIT DEM ANLEGER, und der hat
+                   gekostet: `Store.addRow` schrieb `erstelltVon` gar nicht, also lief
+                   der Vergleich gegen den Ersatzwert „Ich". Gemessen am 25. August —
+                   derselbe Bestand, nur der Name in den Einstellungen geändert:
+        
+                       Name leer („Ich")   5 Aufgaben
+                       Name „Redur"        0 Aufgaben
+        
+                   Die ganze Aufgabenliste war weg, und nichts sagte warum. Und selbst
+                   mit geschriebenem `erstelltVon` wäre es falsch geblieben: wer sich
+                   umbenennt, verliert sonst rückwirkend, was er angelegt hat.
+        
+                   Eine leere Personenzelle zählt aus demselben Grund wie eine
+                   fehlende Spalte — beide Male steht nirgends ein anderer Name
+                   (E152). */
+                const wer = personKey ? String(pr[personKey] || '').trim() : '';
+                const meins = !wer || wer.toLowerCase().includes(meinName.toLowerCase());
                 if (!meins)
                     return;
                 const fertig = hakenKey ? !!pr[hakenKey]
                     : statusKey ? /fertig|erledigt|done|abgeschlossen/i.test(String(pr[statusKey] || '')) : false;
                 raus.push({
                     id: row.id, coll,
+                    pageId: collectionPageId(coll.id),
                     titel: pr[titelKey] || row.text || 'Ohne Titel',
                     status: statusKey ? (pr[statusKey] || '—') : (fertig ? 'Fertig' : 'Offen'),
                     datum: datumKey ? pr[datumKey] : '',
-                    fertig, hakenKey, statusKey
+                    fertig, hakenKey, statusKey,
+                    bearbeitbar: collectionPermitted('bearbeiten', coll.id)
                 });
             });
         });
@@ -425,9 +604,9 @@ const Bibliothek = (() => {
                 }
             });
         wrap.querySelector('[data-a="neu"]')?.addEventListener('click', () => {
-            const dbs = moegliche();
+            const dbs = moegliche().filter(coll => collectionPermitted('bearbeiten', coll.id));
             if (!dbs.length) {
-                UI.toast('Lege zuerst eine Datenbank mit Status oder Kontrollkästchen an');
+                UI.toast('Keine bearbeitbare Aufgabendatenbank verfügbar.');
                 return;
             }
             const coll = dbs[0];
@@ -440,6 +619,10 @@ const Bibliothek = (() => {
                 const a = liste.find(x => x.id === z.dataset.id);
                 if (!a)
                     return;
+                if (!a.bearbeitbar || !permitted('bearbeiten', a.pageId)) {
+                    UI.toast('Du darfst diese Aufgabe nicht ändern.');
+                    return;
+                }
                 const row = Store.getBlock(a.id);
                 const props = { ...(row.props || {}) };
                 if (a.hakenKey)
@@ -453,7 +636,8 @@ const Bibliothek = (() => {
         });
     };
     const zeileHtml = (a) => `<div class="auf-zeile${a.fertig ? ' fertig' : ''}" data-id="${a.id}">` +
-        `<button class="auf-haken">${a.fertig ? '☑' : '☐'}</button>` +
+        `<button class="auf-haken"${a.bearbeitbar ? '' : ' disabled title="Nur Leserechte"'}>` +
+        `${a.fertig ? '☑' : '☐'}</button>` +
         `<span class="auf-titel">${esc(a.titel)}</span>` +
         `<span class="auf-db">▦ ${esc(a.coll.name)}</span>` +
         (a.datum ? `<span class="auf-datum">${esc(String(a.datum).slice(0, 10))}</span>` : '') +
@@ -490,6 +674,10 @@ const Bibliothek = (() => {
             const b = elVon(e)?.closest('[data-c]');
             if (!b)
                 return;
+            if (!permitted('bearbeiten')) {
+                UI.toast('Du darfst die Aufgabenquellen nicht ändern.');
+                return;
+            }
             const alle = dbs.map(c => c.id);
             const jetzt = quellenLesen() || alle;
             const neu = jetzt.includes(b.dataset.c) ? jetzt.filter((x) => x !== b.dataset.c) : [...jetzt, b.dataset.c];
