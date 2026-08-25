@@ -722,16 +722,71 @@ Seiten
 
 Ansichten
 
-Geplante/unterstützte Ansichten:
+Dreizehn Ansichten auf dieselben Zeilen. Umgeschaltet wird oben an der
+Datenbank; jede Ansicht behält ihre eigenen Filter, Sortierungen und
+Gruppierungen.
 
 Tabelle
+Raster — dieselben Daten mit der Bedienung eines Tabellenprogramms:
+  Pfeiltasten, Bereichsauswahl, dreissig Zeilen aus Excel auf einmal einfügen
 Board
 Liste
 Galerie
 Kalender
-Zeitstrahl
+Zeitleiste — mit Abhängigkeitspfeilen und fünf Zoomstufen
 Diagramm
+Feed
+Karte
+Dashboard — Kennzahlen, auch aus anderen Datenbanken
+Pivot — Zeilen × Spalten × Werte
 Formular
+
+Die Liste steht an einer Stelle: `quell/register/ansichten.js`. Wer eine
+Ansicht hinzufügt, trägt sie dort ein — nicht an dreizehn Stellen verstreut.
+
+
+Dashboard
+
+Ein Dashboard ist eine Ansicht aus Kacheln. Jede Kachel sagt selbst, woher
+ihre Zahl kommt:
+
+Anzahl der Einträge
+Summe oder Durchschnitt einer Zahlenspalte
+Kennzahl mit Ziel — „408 000 von 500 000", mit Richtung: ein Ziel zum
+  Erreichen oder eine Obergrenze, die gehalten werden soll
+Verteilung nach einer Auswahl-, Status- oder Personenspalte — gezählt oder
+  über eine Zahlenspalte summiert („Umsatz nach Region", nicht nur „Aufträge
+  nach Region")
+
+Eine Kachel darf ihre Zahlen aus einer ANDEREN Datenbank holen. Dann steht
+der Name der Quelle unter der Karte, und die Zeilen kommen ungefiltert: ein
+Filter gehört zu einer Ansicht, und die fremde Datenbank hat ihre eigenen.
+Eine Zahl, deren Bedeutung von einer Einstellung anderswo abhängt, wäre eine
+Zahl, der man nicht trauen kann.
+
+
+Aus anderen Werkzeugen übernehmen
+
+Befehlspalette → „Aus Trello, Evernote, Obsidian oder Notion einlesen", oder
+Seitenleiste → Importieren.
+
+Trello — das JSON eines Boards; Listen werden Status, Karten Zeilen,
+  Etiketten eine Mehrfachauswahl, Beschreibung und Checklisten der
+  Zeileninhalt
+Evernote — eine .enex-Datei; jede Notiz wird eine Seite
+Obsidian — ein ganzer Ordner mit .md-Dateien; Wikilinks bleiben Wikilinks
+Notion-Export — das ZIP aus Notions eigenem Export
+Asana — der CSV-Export, mit den Spalten, die Asana wirklich schreibt:
+  Abschnitte werden Status und gruppieren das Board, Fälligkeit wird ein
+  Datum, Etiketten werden eine Mehrfachauswahl, „Completed At" wird der
+  Haken, und die Beschreibung wird der Seiteninhalt statt einer Tabellenzelle
+Apple Notes — der Ordner mit den HTML-Dateien; Unterordner bleiben
+  Unterordner, Checklisten werden echte Aufgaben
+Jira, Monday, sonstige CSV — irgendeine Tabelle wird zur Datenbank, mit
+  Typerkennung je Spalte
+Einzelne Dateien — Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB
+
+Alles wird im Browser gelesen. Keine Datei geht an einen Server.
 
 
 

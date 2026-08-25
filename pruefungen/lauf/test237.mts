@@ -412,6 +412,63 @@ p('… und der Block ist schmal genug, dass die Überschrift anstösst',
   (handy?.blockBreit ?? 999) < 400, JSON.stringify(handy));
 p('… die Überschrift bricht um und liegt frei', handy?.ueber === false, JSON.stringify(handy));
 
+/* ==========================================================================
+ * §8 · Das Menü wächst mit dem Arbeitsbereich (E186)
+ * ------------------------------------------------------------------------
+ * Je Datenbank: eine Anzahl-Zeile, drei je Zahlenspalte, eine je Gruppen-
+ * spalte und eine je Paar aus beiden. Eine Datenbank mit drei Zahlen- und
+ * zwei Gruppenspalten macht 18 Einträge — seit E185 stehen dort ALLE
+ * Datenbanken, und bei fünfzig sind es neunhundert.
+ *
+ * Ein Suchfeld allein reicht dafür nicht. Der Filter liest den KNOPFTEXT;
+ * stand der Datenbankname nur in der Gruppenüberschrift, fand „Rechnung"
+ * null von dreiundzwanzig Einträgen — gemessen, nicht vermutet.
+ * ========================================================================*/
+console.log('\n8 · Das Menü wächst mit dem Arbeitsbereich');
+
+await zeichne([{ art: 'anzahl' }]);
+await seite.click('.dash .cal-fuss button[data-a="kacheln"]');
+await seite.waitForTimeout(500);
+
+const menue = await seite.evaluate(() => ({
+  suchfeld: !!document.querySelector('.menu-suche input'),
+  eintraege: document.querySelectorAll('.menu-liste [data-neu]').length,
+  gruppen: [...document.querySelectorAll('.menu-liste .grp')].map(g => g.textContent || ''),
+  fremdeMitNamen: [...document.querySelectorAll('.menu-liste [data-neu]')]
+    .filter(b => (b as HTMLElement).dataset['neu']?.includes('@'))
+    .filter(b => /Rechnungen/.test(b.textContent || '')).length
+}));
+p('Das Menü hat ein Suchfeld', menue.suchfeld);
+p('Es bietet die eigene und die fremde Datenbank an',
+  menue.gruppen.some(g => /dieser Datenbank/.test(g)) &&
+  menue.gruppen.some(g => /Rechnungen/.test(g)), JSON.stringify(menue.gruppen));
+p('Es sind genug Einträge, dass Suchen etwas bringt — sonst misst das nichts',
+  menue.eintraege >= 12, String(menue.eintraege));
+p('Jeder fremde Eintrag trägt den Namen seiner Datenbank im TEXT',
+  menue.fremdeMitNamen > 0, String(menue.fremdeMitNamen));
+
+/* Und jetzt wirklich filtern — das ist der Punkt, an dem die erste Fassung
+   scheiterte. */
+await seite.fill('.menu-suche input', 'Rechnung');
+await seite.waitForTimeout(400);
+const nachFilter = await seite.evaluate(() =>
+  [...document.querySelectorAll('.menu-liste [data-neu]')]
+    .filter(b => (b as HTMLElement).style.display !== 'none').length);
+p('Die Suche nach dem Datenbanknamen findet ihre Einträge',
+  nachFilter > 0 && nachFilter < menue.eintraege,
+  nachFilter + ' von ' + menue.eintraege);
+
+await seite.fill('.menu-suche input', 'Kennzahl');
+await seite.waitForTimeout(400);
+const nachKennzahl = await seite.evaluate(() =>
+  [...document.querySelectorAll('.menu-liste [data-neu]')]
+    .filter(b => (b as HTMLElement).style.display !== 'none').length);
+p('Und die Suche nach der Kachelart auch',
+  nachKennzahl > 0 && nachKennzahl < menue.eintraege,
+  nachKennzahl + ' von ' + menue.eintraege);
+
+await seite.evaluate(() => document.querySelectorAll('.menu, .overlay').forEach(x => x.remove()));
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' · '));
 
 console.log(`\n${ok} bestanden, ${weg} gescheitert`);
