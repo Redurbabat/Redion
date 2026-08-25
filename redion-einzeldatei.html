@@ -1260,6 +1260,22 @@ a.bl:hover{color:var(--text)}
 }
 .komm-marke:hover{opacity:1; background:var(--bg-hover)}
 
+/* Der Weg zurück zur Quelle (§44, E155).
+   IN DER ZEILE, NICHT AM RAND. Die Kommentarmarke steht mit `right:-30px`
+   ausserhalb des Textes — sie soll ja nur andeuten, dass es sie gibt. Dieser
+   Knopf trägt dagegen eine Auskunft („PDF · Seite 14"), die gelesen werden
+   soll, und am rechten Rand hätte sie keinen Platz. Am Telefon erst recht
+   nicht: dort ist der Rand, wo `-30px` hinzeigen, gar nicht mehr da. */
+.quell-marke{
+  flex:0 0 auto; margin:2px 4px; padding:3px 8px; min-height:24px;
+  border:1px solid var(--line); border-radius:999px;
+  background:var(--bg-card); color:var(--text-dim);
+  font-size:11.5px; white-space:nowrap;
+  transition:color var(--motion-fast,130ms) ease, border-color var(--motion-fast,130ms) ease;
+}
+.quell-marke:hover,.quell-marke:focus-visible{color:var(--accent); border-color:var(--accent)}
+@media(max-width:760px){ .quell-marke{min-height:32px; padding-inline:10px} }
+
 /* --- Emoji-Auswahl ----------------------------------------------------------------------- */
 .swatches.emojis{grid-template-columns:repeat(9,1fr); max-height:230px; overflow-y:auto}
 .swatches.emojis button{
@@ -28874,6 +28890,45 @@ const Blocks = (() => {
                     (err instanceof Error ? err.message : String(err))));
             });
             el.appendChild(marke);
+        }
+        /* --- Zurück zur Quelle (§44) ------------------------------------------
+           Eine Lernkarte, eine Notiz, eine erkannte Zeile: alles, was aus etwas
+           anderem entstanden ist, trägt seit E130/E129 einen `sourceRef` — mit
+           Seite, Block, Seitenzahl und sogar dem Ausschnitt. Bis zum 25. August
+           las das nur der Dokumentmodus, und zwar in die andere Richtung: „welche
+           Karten gehören zu dieser PDF-Seite".
+    
+           Der Weg zurück fehlte. Wer eine Karte vor sich hatte, kam nicht zu der
+           Stelle, aus der sie stammt — obwohl die Angabe im Block stand und
+           `App.zeigeBlock` sie hätte anspringen können.
+    
+           Der Knopf sagt, wohin er führt: „PDF · Seite 14" statt „Quelle". Ein
+           Ziel, das es nicht mehr gibt, wird gar nicht erst angeboten — ein
+           Knopf, der nichts tut, ist schlimmer als keiner. */
+        const quelle = block.sourceRef || block.lernquelle;
+        if (quelle && (quelle.blockId || quelle.pageId)) {
+            const zielId = String(quelle.blockId || quelle.pageId || '');
+            const ziel = zielId ? Store.getBlock(zielId) : null;
+            if (ziel && ziel.alive !== false) {
+                const seite = quelle.pageId ? Store.getBlock(String(quelle.pageId)) : null;
+                const nr = Number(quelle.pageNumber);
+                const wohin = quelle.kind === 'pdfseite' && Number.isFinite(nr) && nr > 0
+                    ? 'PDF · Seite ' + nr
+                    : quelle.kind === 'blatt' ? 'A4-Blatt'
+                        : String(seite?.text || quelle.label || 'Quelle');
+                const knopf = document.createElement('button');
+                knopf.className = 'quell-marke';
+                knopf.type = 'button';
+                knopf.textContent = '↩ ' + wohin;
+                knopf.title = 'Dorthin springen, woraus das hier entstanden ist' +
+                    (quelle.region ? ' — der Ausschnitt wird hervorgehoben' : '');
+                knopf.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    App.zeigeBlock(zielId);
+                });
+                el.appendChild(knopf);
+            }
         }
         /* Kommentarmarke */
         if ((block.kommentare || []).length) {

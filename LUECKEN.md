@@ -1617,3 +1617,37 @@ Gedanken:
 Erst messen, wie ein benanntes Konto sich heute wirklich verhält — die
 Vermutung oben ist aus dem Quelltext gelesen, nicht am laufenden Programm
 nachgewiesen.
+
+
+## L57 · Die Aufgabe aus der Besprechung findet die Minute nicht
+
+**25. August 2026.** Beim Bauen von E155 gemessen, nicht gesucht.
+
+§44 des Auftrags nennt zwei Beispiele für den Weg zurück zur Quelle:
+
+```txt
+Karte    → PDF     → Seite 14 → Ausschnitt     seit E155 vollständig
+Aufgabe  → Meeting → 00:07                     nur bis „Meeting"
+```
+
+Die Aufgabe findet ihre Besprechung — der Rücksprung steht, geprüft in
+test220 §3. Was fehlt, ist die **Sekunde**.
+
+Der Grund ist kein Versäumnis, sondern eine fehlende Angabe: `auswerten()`
+lässt die KI Aufgaben aus dem Protokoll ziehen, und die Antwort enthält
+`{ was, wer, bis }` — keine Zeit. Die Transkriptzeilen tragen ihre Sekunde
+sehr wohl (`audioRef.sek`, E152), aber welche Zeile zu welcher Aufgabe
+gehört, weiss niemand.
+
+**Warum nicht einfach den Text vergleichen.** Weil es raten wäre. Eine
+Aufgabe heisst „Verteiler UV3 versetzen", im Protokoll steht „dann müssen wir
+den Verteiler halt noch verschieben". Ein Textabgleich träfe manchmal, und
+manchmal spränge er an die falsche Stelle — und eine Zeitmarke, die an der
+falschen Stelle landet, ist schlechter als gar keine: man hört hin, hört
+etwas anderes und glaubt, die Aufnahme sei kaputt.
+
+**Der saubere Weg** wäre, die KI nach der Sekunde mitzufragen — das Protokoll
+trägt die Zeiten ja im Text (`[01:02] …`). Also: `{ was, wer, bis, sek }`,
+und `sek` nur übernehmen, wenn im Protokoll wirklich eine Zeile mit dieser
+Zeit steht. Das ist eine Änderung an der KI-Anweisung und braucht ein Modell
+zum Messen; ohne eines liesse sich nur behaupten, dass es geht.

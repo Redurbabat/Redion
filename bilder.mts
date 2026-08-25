@@ -462,6 +462,46 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Der Weg zurück zur Quelle (§44, E155) -----------------------------
+     Ein Knopf, der nur unter einer Bedingung erscheint, ist genau die Sorte
+     Sache, die man auf keinem Bild sieht, solange man ihn nicht absichtlich
+     herstellt. */
+  quelle: {
+    titel: 'Abgeleitete Objekte finden zurück zu ihrer Quelle',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+
+      const skript = Store.addPage(null, { text: 'Elektrotechnik Skript', icon: '📕' });
+      const s14 = Store.addBlock(skript.id, 'pdfseite',
+        { nr: 14, suchtext: 'Kabelquerschnitt und Spannungsfall' });
+      const bespr = Store.addPage(null, { text: 'Bauleitung KW 35', icon: '🎙', besprechung: true });
+      const zeile = Store.addBlock(bespr.id, 'text', { text: '01:02 · Verteiler versetzen' });
+
+      const lernen = Store.addPage(null, { text: 'Woher das alles kommt', icon: '🧭' });
+      Store.addBlock(lernen.id, 'h2', { text: 'Aus einem Skript' });
+      Store.addBlock(lernen.id, 'flashcard', {
+        text: 'Welcher Querschnitt bei 25 A? :: 4 mm²',
+        sourceRef: { version: 1, kind: 'pdfseite', pageId: skript.id, blockId: s14.id,
+          label: 'Elektrotechnik Skript', pageNumber: 14,
+          region: { x: .1, y: .2, width: .5, height: .25 }, createdAt: Store.now() } });
+      Store.addBlock(lernen.id, 'h2', { text: 'Aus einer Besprechung' });
+      Store.addBlock(lernen.id, 'todo', {
+        text: 'Verteiler UV3 versetzen',
+        sourceRef: { version: 1, kind: 'block', pageId: bespr.id, blockId: zeile.id,
+          label: 'Bauleitung KW 35', createdAt: Store.now() } });
+      Store.addBlock(lernen.id, 'h2', { text: 'Und ohne Quelle' });
+      Store.addBlock(lernen.id, 'text',
+        { text: 'Einfach so getippt — hier steht bewusst kein Knopf.' });
+
+      await Store.flush();
+      App.oeffne(lernen.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   pruefungen: {
     titel: 'Die Prüfungszentrale mit Countdown und Simulation',
     bauen: async () => {

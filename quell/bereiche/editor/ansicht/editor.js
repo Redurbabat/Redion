@@ -935,6 +935,45 @@ const Blocks = (() => {
             });
             el.appendChild(marke);
         }
+        /* --- Zurück zur Quelle (§44) ------------------------------------------
+           Eine Lernkarte, eine Notiz, eine erkannte Zeile: alles, was aus etwas
+           anderem entstanden ist, trägt seit E130/E129 einen `sourceRef` — mit
+           Seite, Block, Seitenzahl und sogar dem Ausschnitt. Bis zum 25. August
+           las das nur der Dokumentmodus, und zwar in die andere Richtung: „welche
+           Karten gehören zu dieser PDF-Seite".
+    
+           Der Weg zurück fehlte. Wer eine Karte vor sich hatte, kam nicht zu der
+           Stelle, aus der sie stammt — obwohl die Angabe im Block stand und
+           `App.zeigeBlock` sie hätte anspringen können.
+    
+           Der Knopf sagt, wohin er führt: „PDF · Seite 14" statt „Quelle". Ein
+           Ziel, das es nicht mehr gibt, wird gar nicht erst angeboten — ein
+           Knopf, der nichts tut, ist schlimmer als keiner. */
+        const quelle = block.sourceRef || block.lernquelle;
+        if (quelle && (quelle.blockId || quelle.pageId)) {
+            const zielId = String(quelle.blockId || quelle.pageId || '');
+            const ziel = zielId ? Store.getBlock(zielId) : null;
+            if (ziel && ziel.alive !== false) {
+                const seite = quelle.pageId ? Store.getBlock(String(quelle.pageId)) : null;
+                const nr = Number(quelle.pageNumber);
+                const wohin = quelle.kind === 'pdfseite' && Number.isFinite(nr) && nr > 0
+                    ? 'PDF · Seite ' + nr
+                    : quelle.kind === 'blatt' ? 'A4-Blatt'
+                        : String(seite?.text || quelle.label || 'Quelle');
+                const knopf = document.createElement('button');
+                knopf.className = 'quell-marke';
+                knopf.type = 'button';
+                knopf.textContent = '↩ ' + wohin;
+                knopf.title = 'Dorthin springen, woraus das hier entstanden ist' +
+                    (quelle.region ? ' — der Ausschnitt wird hervorgehoben' : '');
+                knopf.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    App.zeigeBlock(zielId);
+                });
+                el.appendChild(knopf);
+            }
+        }
         /* Kommentarmarke */
         if ((block.kommentare || []).length) {
             const k = document.createElement('button');

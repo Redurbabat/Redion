@@ -10159,3 +10159,82 @@ Nach Titel verschmelzen, wenn sonst nichts    → SIEBEN Punkte rot, darunter
 Die erste Gegenprobe ist die lehrreichste: sie hat NICHT gegriffen, und
 deshalb steht sie hier. Eine Gegenprobe, die nichts bewirkt, beweist nichts —
 sie muss durch eine ersetzt werden, die den Schaden wirklich anrichtet.
+
+
+---
+
+## E155 · Der Weg zurück zur Quelle (§44)
+
+**25. August 2026.** §44 steht in einem Satz und zwei Beispielen:
+
+> Jedes abgeleitete Wissensobjekt sollte, wenn vorhanden, zurückspringen
+> können.
+>
+>     Karte → PDF → Seite 14 → Ausschnitt
+>     Aufgabe → Meeting → 00:07
+
+### Die Angabe war da. Der Weg nicht.
+
+Nachgesehen, statt gebaut: seit E129/E130 trägt jedes abgeleitete Objekt
+einen `sourceRef` — Art, Seite, Block, Beschriftung, Seitenzahl und sogar den
+Ausschnitt in normierten Koordinaten. Auch `App.zeigeBlock` gab es längst:
+Seite öffnen, hinrollen, kurz hervorheben, und beim Dokumentmodus vorher die
+richtige Seite wählen.
+
+Gelesen hat den `sourceRef` genau eine Stelle — `document-mode.ts` — und
+zwar in die ANDERE Richtung: „welche Karten gehören zu dieser PDF-Seite".
+
+Der Rückweg fehlte. Die Karte wusste, woher sie kam; man kam nur nicht hin.
+
+### Vierzig Zeilen, an der Stelle, wo schon eine solche Marke steht
+
+Direkt neben der Tonmarke aus E152 (`audioRef`) und der Kommentarmarke: ein
+Knopf, der sagt, wohin er führt.
+
+```txt
+↩ PDF · Seite 14        aus einem eingelesenen Skript
+↩ A4-Blatt              aus einem beschriebenen Blatt
+↩ Bauleitung KW 35      aus einer Besprechung oder Notiz
+```
+
+Zwei Entscheidungen darin:
+
+**Er nennt das Ziel, nicht sich selbst.** „Quelle" wäre ein Wort, das man
+anklicken muss, um es zu verstehen. „PDF · Seite 14" ist eine Auskunft.
+
+**Ein Ziel, das es nicht mehr gibt, bekommt keinen Knopf.** Nicht einen
+grauen, nicht einen mit Fehlermeldung — gar keinen. Das ist die Lehre aus
+E118: ein Weg, der ins Leere führt, ist schlimmer als ein fehlender, weil man
+ihn erst nach dem Klick als solchen erkennt.
+
+### Was §44 damit noch nicht ganz erfüllt
+
+Das erste Beispiel ist vollständig: Karte → PDF → Seite 14, und der
+Ausschnitt steht in den Daten. Beim zweiten reicht es bis „Meeting", nicht
+bis „00:07" — nicht aus Nachlässigkeit, sondern weil die Angabe nicht
+existiert: die KI gibt Aufgaben als `{ was, wer, bis }` zurück, ohne Zeit.
+Sie über einen Textabgleich zu erraten wäre schlechter als sie wegzulassen —
+eine Zeitmarke an der falschen Stelle lässt einen glauben, die Aufnahme sei
+kaputt. Als **L57** eingetragen, mit dem sauberen Weg dazu.
+
+### Kann die Suite rot werden?
+
+**test220**, fünf Abschnitte, 21 Punkte. Zwei Gegenproben, einzeln auf einem
+Abzug des Baums zurückgenommen:
+
+```txt
+`sourceRef` nicht mehr gelesen          → ZEHN Punkte rot: kein Knopf, kein
+                                           Sprung, keine der beiden Richtungen
+Knopf auch bei totem Ziel               → §4 rot
+```
+
+§4 ist die Gegenrichtung und die wichtigere Hälfte — und sie hat selbst noch
+eine: die verwaiste Karte MUSS es geben, und ihre Quellenangabe muss noch in
+den Daten stehen. Sonst prüfte der Punkt bloss, dass die Karte fehlt.
+
+§5 prüft, dass die Angabe eine Sicherung übersteht. Ein Rücksprung, der beim
+Sichern verlorengeht, ist keiner.
+
+**Angesehen** (§55): `node bilder.mts quelle` zeigt alle drei Fälle auf einer
+Seite — aus einem Skript, aus einer Besprechung, und einen getippten Absatz
+ohne Knopf.

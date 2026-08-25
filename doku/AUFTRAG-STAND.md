@@ -66,7 +66,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 41 | Meetings | ✅ | `besprechung.ts` mit Aufnahme, Marken und Auswertung. NACHGESEHEN: test32 deckte nur den Seitenleisten-Abschnitt, test35 einen Menüeintrag. Der fehlende Lauf ist test218 (sieben Abschnitte, 43 Punkte) — er fand, dass die unverteilte Aufgabe in keiner Liste stand (E152) |
 | 42 | Wissen | ✅ | `verweise.ts`, test195 |
 | 43 | Obsidian / Vault | ✅ | Resolver für Titel, Aliasse, Vault-Pfade (E129). Der Rundlauf läuft jetzt einmal ganz durch: test219 (sechs Abschnitte, 31 Punkte) — Export, Einlesen, nochmal Einlesen, ohne Kennung, mit kaputter Kennung, und ein fremder Vault mit gleichem Titel (E154) |
-| 44 | Quellenwahrheit | ◐ | Provenienz an Erkennung und Elektro. Nicht überall |
+| 44 | Quellenwahrheit | ◐ | Jedes abgeleitete Objekt trägt seinen `sourceRef` (E129/E130) und findet seit E155 auch zurück: ein Knopf, der das Ziel benennt („↩ PDF · Seite 14"), test220 (21 Punkte), `bilder.mts quelle`. Offen bleibt die Sekunde bei Aufgaben aus Besprechungen — die Angabe existiert nicht (L57) |
 | 45 | Startseite | ✅ | Heute-Dashboard, test208 |
 | 46 | Schnellaktionen | ✅ | elf Wege im Neu-Blatt, test114 (E138/E139) |
 | 47 | Visuelle Qualität | ◐ | laufende Arbeit; E140–E142 sind drei Schritte davon |
@@ -90,14 +90,16 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 
 Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 
-1. **§44 Quellenwahrheit** — Provenienz an Erkennung und Elektro, nicht überall.
+1. **L57** — die Aufgabe aus einer Besprechung findet ihr Meeting, aber nicht
+   die Minute. Braucht eine Änderung an der KI-Anweisung und ein Modell zum
+   Messen.
 3. **§47 Visuelle Qualität** — laufende Arbeit, E140–E142 und E148 sind
    vier Schritte davon.
 
 Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
 Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
 falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen). Und §31 (test217, E151) sowie §41 (test218, E152). Dabei fiel L56 auf und ist geschlossen: wer sich
-einen Namen gab, sah seine Aufgabenliste leer (E153). Und §43 (test219, E154).
+einen Namen gab, sah seine Aufgabenliste leer (E153). Und §43 (test219, E154). §44 ist mit E155/test220 fast fertig — offen nur L57.
 
 ---
 
