@@ -1569,3 +1569,41 @@ Beides ist dieselbe Art Arbeit: ein weiteres Feld in die Schleife, und für
 die Dateien ein eigener Durchgang über das Fach. Nicht schwierig, aber eine
 Änderung an der Suche — und die Suche ist die Stelle, an der ein Fehler alle
 anderen Wege gleichzeitig trifft. Deshalb steht sie hier und nicht nebenbei.
+
+
+## L56 · Mit einem benannten Konto gehört keine Zeile mehr irgendwem
+
+**25. August 2026.** Beim Bauen von E152 nebenbei gemessen, nicht gesucht.
+
+`Bibliothek.meineAufgaben` entscheidet für eine Datenbank **ohne**
+Personenspalte so:
+
+```js
+(row.erstelltVon || 'Ich') === meinName
+```
+
+`Store.addRow` setzt `erstelltVon` aber gar nicht — nur `addBlock` tut das.
+Für jede Datenbankzeile ist der Wert also `undefined` und damit `'Ich'`.
+
+Solange niemand ein Konto anlegt, geht das gut: `meinName` ist ebenfalls
+`'Ich'`, und alles zählt. Sobald ein Konto einen Namen hat — sagen wir
+`Redur` —, ist `'Ich' === 'Redur'` falsch, und **keine einzige** Zeile aus
+einer Datenbank ohne Personenspalte erscheint noch in der Aufgabenliste. Die
+Zeilen sind da, die Datenbank ist da, die Liste ist leer.
+
+**Wie schlimm ist das heute?** Ungeprüft — und genau deshalb steht es hier.
+Der lokale Normalfall ohne Konto ist nicht betroffen. Wer aber ein Konto
+anlegt, verliert stillschweigend seine Aufgabenliste, und nichts sagt ihm
+warum.
+
+**Warum nicht sofort behoben.** Zwei Wege, und beide brauchen einen eigenen
+Gedanken:
+
+* `addRow` schreibt künftig `erstelltVon`. Dann gilt es nur für neue Zeilen;
+  alte bleiben herrenlos, und ein Nachtragen wäre eine Datenmigration (§9).
+* Ohne Personenspalte zählt jede Zeile als meine. Einfacher, aber in einem
+  geteilten Arbeitsbereich falsch.
+
+Erst messen, wie ein benanntes Konto sich heute wirklich verhält — die
+Vermutung oben ist aus dem Quelltext gelesen, nicht am laufenden Programm
+nachgewiesen.

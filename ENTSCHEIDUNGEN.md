@@ -9909,3 +9909,91 @@ die fünf `order`-Zeilen entfernt   → §1 und §2 rot (drei Punkte)
 §4 misst die Gegenrichtung: am Rechner darf die Reihenfolge NICHT gedreht
 sein und die Leiste keinen Hinweis tragen. §5 prüft, dass Telefon und
 Rechner denselben Baum haben.
+
+
+---
+
+## E152 · Die unverteilte Aufgabe war für niemanden da (§41)
+
+**25. August 2026.** §41 zählt sieben Dinge auf, die aus einer Besprechung
+werden sollen, und stellt einen Satz daneben, der mehr wiegt als die Liste:
+
+> Aufgabe aus Meeting bleibt normale Redion-Aufgabe.
+
+Das ist §52 in einem Satz — keine zweite Aufgabenwelt neben der ersten.
+
+`besprechung.ts` konnte alles davon schon: Audio, Transkript,
+Zusammenfassung, Entscheidungen, Aufgaben, Zeitmarken, Themen, und die
+Aufgaben zusätzlich als Zeilen in einer echten Datenbank. `AUFTRAG-STAND`
+führte §41 trotzdem als ◐, mit der ehrlichsten Begründung, die dort steht:
+„Welcher Prüflauf sie deckt, habe ich nicht nachgesehen."
+
+Nachgesehen: test32 prüft den Seitenleisten-Abschnitt, test35 einen
+Menüeintrag für die KI-Anweisung. Die Auswertung, die Seite, die Zeitmarken
+und die Aufgaben-Datenbank waren ungeprüft.
+
+### Und beim Prüfen fiel etwas heraus
+
+Die Besprechung legt ihre Aufgaben in einer Datenbank mit der Spalte „Wer"
+ab. Wer beim Sprechen keinen Namen nennt, hinterlässt sie leer.
+`Bibliothek.meineAufgaben` entschied aber allein danach, OB es eine
+Personenspalte gibt:
+
+```js
+const meins = personKey
+  ? String(pr[personKey] || '').toLowerCase().includes(meinName.toLowerCase())
+  : (row.erstelltVon || 'Ich') === meinName;
+```
+
+Eine leere Zelle hiess damit „gehört niemandem" — `''.includes('ich')` ist
+falsch. Ausgerechnet die **unverteilte** Aufgabe, also die, an die sich sonst
+niemand erinnert, stand in keiner einzigen Liste.
+
+Die Regel für die leere Zelle ist jetzt dieselbe wie die für die fehlende
+Spalte, und das ist kein Zufall: beide Male steht nirgends ein anderer Name.
+
+```js
+const wer = personKey ? String(pr[personKey] || '').trim() : '';
+const meins = wer ? wer.toLowerCase().includes(meinName.toLowerCase())
+                  : (row.erstelltVon || 'Ich') === meinName;
+```
+
+Eine Aufgabe, die auf einen anderen Namen läuft, bleibt weiterhin aus meiner
+Liste — das war richtig und bleibt so.
+
+### Was die Suite prüft, und was nicht
+
+**test218**, sieben Abschnitte, 43 Punkte.
+
+`auswerten()` fragt die KI; ohne Modell gibt es nichts zu messen, und mit
+einem erfundenen Modell prüfte man die Erfindung. Geprüft wird deshalb alles
+NACH der Auswertung: `seiteAnlegen` bekommt genau die Form, die der Auftrag
+an die KI verlangt — nachgelesen in `besprechung.ts`, nicht erfunden. Die
+Aufnahme braucht ein Mikrofon; §5 prüft stattdessen die Zeitrechnung ohne
+Ton.
+
+Ein Punkt gefällt mir besonders, weil er ohne Ansehen nicht auffiele: 62
+Sekunden müssen als `01:02` dastehen — nicht als `00:62` und nicht als
+`1:2`.
+
+### Kann die Suite rot werden?
+
+Drei Gegenproben, einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+leere Personenzelle wieder als „gehört niemandem"  → §2 rot
+`audioRef` von den Zeitmarken genommen             → §3 rot (drei Punkte)
+keine Zeile in der Aufgabendatenbank               → §2 und §7 rot (vier)
+```
+
+§7 ist die eingebaute Gegenrichtung: ein leeres Ergebnis darf KEINE
+Abschnitte erfinden — ohne diesen Abschnitt wäre „die Seite hat den
+Abschnitt" auch dann grün, wenn die Seite ihn immer hätte.
+
+### Nebenbei gefunden: L56
+
+`Store.addRow` setzt `erstelltVon` nie. Ohne Konto fällt das nicht auf, weil
+beide Seiten des Vergleichs `'Ich'` sind. Mit einem benannten Konto dagegen
+gehört keine Zeile aus einer Datenbank ohne Personenspalte mehr irgendwem.
+Aus dem Quelltext gelesen, nicht am laufenden Programm nachgewiesen — und
+deshalb als Lücke eingetragen statt nebenbei geändert.

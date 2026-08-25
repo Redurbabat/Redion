@@ -63,7 +63,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 38 | Elektro-Rechner | ✅ | test211 §1–§4 (neun Rechnungen von Hand nachgerechnet, Fehlersätze statt NaN, Annahmen, Ergebnis als normaler Block), `bilder.mts elektro` |
 | 39 | OCR / Capture | ✅ | `recognition.ts` steht, und der Dienst dahinter liegt seit E150 bei: `dienste/ocr.mts` (nur 127.0.0.1, `spawn` ohne Shell, geprüfte Sprachangabe), `doku/OCR-DIENST.md`, test216 (32 Punkte) |
 | 40 | Audio | ✅ | `besprechung.ts`, Anhänge statt Zeichenketten (E128) |
-| 41 | Meetings | ◐ | `besprechung.ts` steht mit Aufnahme, Marken und Auswertung. Welcher Prüflauf sie deckt, habe ich nicht nachgesehen — bis dahin gilt ◐ |
+| 41 | Meetings | ✅ | `besprechung.ts` mit Aufnahme, Marken und Auswertung. NACHGESEHEN: test32 deckte nur den Seitenleisten-Abschnitt, test35 einen Menüeintrag. Der fehlende Lauf ist test218 (sieben Abschnitte, 43 Punkte) — er fand, dass die unverteilte Aufgabe in keiner Liste stand (E152) |
 | 42 | Wissen | ✅ | `verweise.ts`, test195 |
 | 43 | Obsidian / Vault | ◐ | Resolver für Titel, Aliasse, Vault-Pfade (E129). Kein Rundlauf-Prüflauf |
 | 44 | Quellenwahrheit | ◐ | Provenienz an Erkennung und Elektro. Nicht überall |
@@ -90,13 +90,14 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 
 Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 
-1. **§41 Meetings** — welcher Prüflauf sie deckt, ist nicht nachgesehen.
-2. **§43 Obsidian** — Resolver steht, kein Rundlauf-Prüflauf.
-3. **§44 Quellenwahrheit** — Provenienz an Erkennung und Elektro, nicht überall.
+1. **§43 Obsidian** — Resolver steht, kein Rundlauf-Prüflauf.
+2. **§44 Quellenwahrheit** — Provenienz an Erkennung und Elektro, nicht überall.
+3. **L56** — mit einem benannten Konto gehört womöglich keine Datenbankzeile
+   mehr irgendwem. Aus dem Quelltext gelesen, noch nicht am Programm gemessen.
 
 Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
 Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
-falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen). Und §31 (test217, E151).
+falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen). Und §31 (test217, E151) sowie §41 (test218, E152).
 
 ---
 

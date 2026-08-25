@@ -464,9 +464,25 @@ const Bibliothek = (() => {
             const titelKey = Object.keys(schema).find(k => schema[k].type === 'title') || 'name';
             Store.rowsOf(coll.id).forEach((row) => {
                 const pr = row.props || {};
-                /* Ohne Person-Spalte gilt: was ich angelegt habe, ist meins. */
-                const meins = personKey
-                    ? String(pr[personKey] || '').toLowerCase().includes(meinName.toLowerCase())
+                /* Ohne Person-Spalte gilt: was ich angelegt habe, ist meins.
+                   UND OHNE EINGETRAGENE PERSON GILT DASSELBE. Bis zum 25. August
+                   entschied allein, OB es eine Personenspalte gibt — eine leere Zelle
+                   darin hiess dann „gehört niemandem", und die Zeile tauchte in
+                   keiner einzigen Liste auf.
+        
+                   Gefunden an §41: eine Besprechung legt ihre Aufgaben in einer
+                   Datenbank mit der Spalte „Wer" ab, und wer beim Sprechen keinen
+                   Namen nennt, hinterlässt sie leer. Genau diese Aufgabe — die
+                   unverteilte, also die, an die sich sonst niemand erinnert — war
+                   für die Aufgabenliste unsichtbar. Der Auftrag verlangt in §41
+                   wörtlich, dass sie eine normale Redion-Aufgabe bleibt.
+        
+                   Die Regel für die leere Zelle ist dieselbe wie die für die
+                   fehlende Spalte, und das ist kein Zufall: beide Male steht nirgends
+                   ein anderer Name. */
+                const wer = personKey ? String(pr[personKey] || '').trim() : '';
+                const meins = wer
+                    ? wer.toLowerCase().includes(meinName.toLowerCase())
                     : (row.erstelltVon || 'Ich') === meinName;
                 if (!meins)
                     return;
