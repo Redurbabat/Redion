@@ -331,8 +331,10 @@ console.log('\n6 · „Meine Apps" kommt aus dem Register');
 
 const apps = await seite.evaluate(() => {
   const reg = Register.navigation.anPlatz('apps').map((x: any) => ({
-    id: String(x.id), name: String(x.name || ''),
+    id: String(x.marke || x.id), name: String(x.name || ''),
     hinweis: String(x.hinweis || ''), hatTun: typeof x.tun === 'function' }));
+  /* `data-app` trägt die MARKE, nicht die Registerkennung — sie ist eine
+     Adresse nach aussen und bleibt, wie sie war (E167). */
   const gezeichnet = [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]
     .map(b => ({ id: b.dataset['app'] || '',
                  name: (b.children[1]?.textContent || '').trim(),
@@ -344,6 +346,14 @@ p('Es gibt zwanzig Apps', apps.reg.length === 20, String(apps.reg.length));
 gleich('Und genauso viele stehen da', apps.gezeichnet.length, apps.reg.length);
 gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
   apps.reg.map((x: any) => x.id));
+/* UND DIE MARKEN SIND DIE ALTEN. E166 hatte sie ohne Not auf `app-…`
+   umbenannt; der volle Prüflauf fand drei Zeilen in test33 und test61, die
+   die Knöpfe über `[data-app="bib"]` anfassen. Ein solcher Wert ist eine
+   Adresse nach aussen — eigenes CSS und eigene Erweiterungen dürfen darauf
+   zeigen (E167). */
+gleich('Und die Marken sind die kurzen, unveränderten',
+  apps.gezeichnet.slice(0, 4).map((x: any) => x.id),
+  ['kalender', 'pwa', 'bib', 'aufgaben']);
 gleich('Mit denselben Namen', apps.gezeichnet.map((x: any) => x.name),
   apps.reg.map((x: any) => x.name));
 gleich('Und denselben Hinweistexten', apps.gezeichnet.map((x: any) => x.hinweis),
@@ -367,6 +377,41 @@ const totApps = await seite.evaluate(async () => {
   return raus;
 });
 gleich('Und jede macht etwas auf', totApps, []);
+
+/* ==========================================================================
+ * §7 · Und der Fuss der Seitenleiste (L58, E167)
+ * --------------------------------------------------------------------------
+ * Drei feste Zeilen ganz unten. Zwei davon hängen seit E167 am Register;
+ * `btn-import` nicht, und der Grund steht im Register selbst: sein Menü
+ * braucht das Klickereignis, um sich an der richtigen Stelle zu öffnen.
+ *
+ * DER ZWEITE PUNKT IST DER WICHTIGERE. `btn-trash` hing vorher an einer
+ * `an(...)`-Zeile in `schale.ts`. Bliebe sie neben der Registerschleife
+ * stehen, wäre der Knopf zweimal verdrahtet — genau der Fehler aus E160,
+ * bei dem ein Klick auf „Neue Seite" zwei Seiten anlegte. Ein doppelt
+ * angehängter Papierkorb-Knopf öffnet den Papierkorb zweimal, und das
+ * sieht man nicht.
+ * ========================================================================*/
+console.log('\n7 · Und der Fuss der Seitenleiste');
+
+const fuss = await seite.evaluate(async () => {
+  const reg = Register.navigation.anPlatz('fuss').map((x: any) => ({
+    id: String(x.id), knopfId: String(x.knopfId || ''), hatTun: typeof x.tun === 'function' }));
+  /* Zählen, wie oft der Papierkorb wirklich aufgeht: ein doppelt
+     angehängter Knopf zeichnet ihn zweimal hintereinander. */
+  document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+  document.getElementById('btn-trash')?.click();
+  await new Promise(r => setTimeout(r, 700));
+  const offen = document.querySelectorAll('.overlay').length;
+  document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+  return { reg, offen };
+});
+
+gleich('Zwei Fusszeilen stehen im Register', fuss.reg.map((x: any) => x.knopfId),
+  ['btn-trash', 'btn-hilfe']);
+gleich('Beide wissen, was sie tun',
+  fuss.reg.filter((x: any) => !x.hatTun).map((x: any) => x.id), []);
+gleich('Und der Papierkorb geht GENAU EINMAL auf', fuss.offen, 1);
 
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);

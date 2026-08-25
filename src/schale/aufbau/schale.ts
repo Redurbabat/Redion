@@ -2666,7 +2666,11 @@ const App = (() => {
        index.html, wo es hingehört; `knopfId` verbindet beide, und test222
        §5 vergleicht Markup und Register Zeile für Zeile. */
     if (typeof Register !== 'undefined' && Register.navigation) {
-      Register.navigation.anPlatz('oben').forEach((e: any) => {
+      /* Zwei Plätze, dieselbe Verdrahtung: die oberste Gruppe und der Fuss
+         (E167). Beide tragen ihr Aussehen in index.html und ihre Handlung
+         im Register. */
+      [...Register.navigation.anPlatz('oben'),
+       ...Register.navigation.anPlatz('fuss')].forEach((e: any) => {
         if (e.knopfId && e.tun) an(e.knopfId, () => {
           try { e.tun(); }
           catch (fehler: unknown) {
@@ -2678,7 +2682,9 @@ const App = (() => {
       });
     }
     an('btn-ai', () => kiPanel());
-    an('btn-trash', papierkorb);
+    /* `btn-trash` hängt seit E167 am Register — die Zeile hier wäre die
+       zweite Verdrahtung desselben Knopfes, und wohin das führt, steht in
+       E160: ein Klick auf „Neue Seite" legte zwei Seiten an. */
     an('btn-settings', einstellungen);
     an('btn-theme', () => theme());
     an('btn-side', () => document.getElementById('sidebar')?.classList.toggle('collapsed'));
@@ -2804,7 +2810,7 @@ const App = (() => {
         else Werkzeuge.ordnerLesen();
       });
     });
-    an('btn-hilfe', () => Werkzeuge.tastenkuerzel());
+    /* `btn-hilfe` ebenfalls — siehe E167. */
     an('btn-back', zurueck);
     an('btn-fwd', vorwaerts);
     an('btn-komm', () => seiteId && Kommentare.panel(seiteId));

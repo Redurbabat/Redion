@@ -550,7 +550,7 @@ const Seitenleiste = (() => {
         apps.className = 'wz-block apps-block';
         const appliste = (typeof Register !== 'undefined' && Register.navigation)
             ? Register.navigation.anPlatz('apps') : [];
-        apps.innerHTML = appliste.map((x) => `<button class="side-item" data-app="${esc(x.id)}" title="${esc(x.hinweis || x.name)}">` +
+        apps.innerHTML = appliste.map((x) => `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
             `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`).join('');
         /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
         setTimeout(() => {
@@ -571,7 +571,7 @@ const Seitenleiste = (() => {
             const b = elVon(e)?.closest('[data-app]');
             if (!b)
                 return;
-            const eintrag = appliste.find((x) => x.id === b.dataset.app);
+            const eintrag = appliste.find((x) => (x.marke || x.id) === b.dataset.app);
             if (!eintrag?.tun)
                 return;
             try {

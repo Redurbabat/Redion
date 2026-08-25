@@ -11277,3 +11277,94 @@ grösstenteils keine Katalogeinträge, sondern Inhalt:
 Ein Register für Seiten wäre falsch: Seiten sind Daten und stehen im Baum.
 Offen bleiben damit fünf Zeilen, nicht 36 — und das ist eine Grössenordnung,
 die in einen Nachmittag passt statt in einen Plan.
+
+
+## E167 · Der Fuss der Seitenleiste, und was dort NICHT hingehört (L58)
+
+**25. August 2026.** Nach E166 blieben von L58 fünf Zeilen. Drei davon
+stehen im Fuss der Seitenleiste — Importieren, Papierkorb, Tastenkürzel —,
+fest in `index.html` und verdrahtet in `schale.ts`. Genau die Form, die
+E160 für die oberste Gruppe aufgelöst hat.
+
+Zwei davon sind jetzt Registereinträge mit `knopfId`, und dieselbe Schleife
+in `schale.ts` hängt sie an: `anPlatz('oben')` und `anPlatz('fuss')`.
+
+### Warum ein eigener Platz
+
+`fuss` statt `oben`, weil test222 §5 die oberste Gruppe Zeile für Zeile mit
+`.side-nav .side-item` vergleicht. Zwei Einträge mehr unter `oben` hätten
+diesen Vergleich rot gemacht, ohne dass sich am Bildschirm etwas ändert —
+und eine Prüfung, die aus dem falschen Grund rot wird, ist so wenig wert
+wie eine, die aus dem falschen Grund grün ist.
+
+### Warum `btn-import` bleibt, wo er ist
+
+Sein Menü braucht das Klickereignis, um sich an der richtigen Stelle zu
+öffnen (`e.currentTarget.getBoundingClientRect()`), und der Menüaufbau ist
+fünfundzwanzig Zeilen lang. Beides gehört in die Schale, nicht in einen
+Katalog der Seitenleiste. Ein Registereintrag, der eine Menüdefinition
+trägt, wäre kein Katalog mehr.
+
+### Und die zwei Knöpfe in ihren Abschnitten
+
+„Neuer Agent" und „Neue Besprechungsnotiz" stehen je als einzelne Zeile am
+Ende ihres Abschnitts, direkt neben den Daten, aus denen der Abschnitt
+entsteht. Es gibt dort keine zweite Liste, die abdriften könnte. Ein
+Registereintrag brächte Umweg ohne Gewinn.
+
+Ein Katalog verdient seinen Platz, wenn es viele gleichartige Dinge gibt
+oder wenn sonst zwei Listen entstünden. Beides trifft hier nicht zu.
+
+### Der Punkt, auf den es ankommt
+
+`btn-trash` hing an einer `an(...)`-Zeile. Bliebe sie neben der
+Registerschleife stehen, wäre der Knopf **zweimal** verdrahtet — der Fehler
+aus E160, bei dem ein Klick auf „Neue Seite" zwei Seiten anlegte und alle
+acht neuen Prüfpunkte grün blieben.
+
+Also zählt §7 die Fenster: nach einem Klick auf den Papierkorb muss genau
+**ein** Überlager offen sein.
+
+| Gegenprobe | rot |
+|---|---|
+| A · `an('btn-trash', …)` wieder danebenstellen | 1 — „ist 2, soll 1" |
+| B · den Fuss nicht mit verdrahten | 1 — „ist 0, soll 1" |
+
+Dieselbe Zahl in beide Richtungen, und beide Male aus dem richtigen Grund.
+
+### Und ein Fehler aus E166, den erst der volle Lauf fand
+
+E166 hat die Apps `app-kalender`, `app-bib`, `app-kann` … genannt, weil die
+Kennungen im Register eindeutig sein müssen und `bibliothek`, `aufgaben`
+und `papierkorb` dort schon vergeben waren. Damit änderte sich ohne Not
+auch der Wert im Markup:
+
+```txt
+vorher    <button data-app="bib">
+nachher   <button data-app="app-bib">
+```
+
+Die zehn Suiten, die ich nach der Änderung einzeln laufen liess, waren
+grün. Der volle Durchgang war es nicht: `test33` und `test61` fassen die
+Knöpfe über `[data-app="bib"]`, `[data-app="aufgaben"]` und
+`[data-app="kann"]` an — drei Zeilen, dreissig Sekunden Zeitüberschreitung.
+
+**Repariert wurde die Produktseite, nicht die Prüfung.** Ein `data-app`-Wert
+ist eine Adresse nach aussen: eigenes CSS und eigene Erweiterungen dürfen
+darauf zeigen, und dann bricht ein Umbenennen etwas, das mit dem Umbau
+nichts zu tun hat. Die Einträge tragen jetzt eine `marke` — den alten,
+kurzen Wert —, und die Registerkennung darf daneben heissen, wie sie mag.
+
+Die Lehre ist nicht neu und trotzdem jedes Mal dieselbe: eine Auswahl von
+zehn Suiten ist eine Vermutung darüber, wer betroffen ist. Der volle Lauf
+ist die Messung.
+
+### Damit steht L58
+
+```txt
+9   oberste Gruppe          E160
+20  Meine Apps              E166
+2   Fuss                    E167
+11  Systemseiten, angeheftete Seiten, „Willkommen"   — Inhalt, kein Katalog
+3   btn-import, Neuer Agent, Neue Besprechungsnotiz  — mit Begründung dort
+```

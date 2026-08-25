@@ -1481,9 +1481,26 @@ sondern INHALT — sieben Systemseiten (Journal, Schnellnotizen, Vorlagen,
 Graph, Schlagwörter, Karteikarten, Umsetzungsstand), drei angeheftete
 Seiten und „Willkommen". Seiten gehören in den Baum, nicht in ein Register.
 
-Übrig bleiben fünf: „Neuer Agent" und „Neue Besprechungsnotiz" (Handlungen
-ohne Eintrag) sowie Importieren, Papierkorb und Tastenkürzel (haben
-Kennungen, hängen aber weiter fest in `schale.ts`).
+**Vierter Teil erledigt** (E167): Papierkorb und Tastenkürzel im Fuss
+hängen ebenfalls am Register, über einen eigenen Platz `fuss` — unter
+`oben` hätten sie den Zeilenvergleich in test222 §5 rot gemacht, ohne dass
+sich am Bildschirm etwas ändert.
+
+**Und damit steht L58.** Was übrig bleibt, bleibt mit Begründung:
+
+```txt
+btn-import                 sein Menü braucht das Klickereignis, und
+                           fünfundzwanzig Zeilen Menüaufbau gehören in die
+                           Schale, nicht in einen Katalog
+Neuer Agent                je eine einzelne Zeile am Ende ihres Abschnitts,
+Neue Besprechungsnotiz     direkt neben den Daten. Keine zweite Liste, die
+                           abdriften könnte — ein Eintrag brächte Umweg
+                           ohne Gewinn
+```
+
+Ein Katalog verdient seinen Platz, wenn es viele gleichartige Dinge gibt
+oder wenn sonst zwei Listen entstünden. Beides trifft auf diese drei nicht
+zu.
 
 Und die Seitenleiste zeichnet weiterhin selbst, statt aus dem Register zu
 lesen. Das ist Absicht, kein Rest: Register und Leiste sind so weit

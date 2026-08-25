@@ -130,6 +130,7 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | §9 | E164, test215 §3/§8 | der Pfad sagt jetzt, was ihn geordnet hat — und wann nichts; **L49 zu** |
 | §43 | E165, test187 §6 | „Übernehmen" nahm Farbe und Schrift mit; jetzt überleben sie |
 | CLAUDE.md §5 | E166, test222 §6 | „Meine Apps" stand in zwei Listen; jetzt im Register |
+| CLAUDE.md §5 | E167, test222 §7 | der Fuss dazu; **L58 steht**, drei Zeilen bleiben mit Begründung |
 
 Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
 test206, test218 und test86. Gezählt, nicht geschätzt:

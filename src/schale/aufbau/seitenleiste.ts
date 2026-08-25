@@ -527,7 +527,7 @@ const Seitenleiste = (() => {
     const appliste = (typeof Register !== 'undefined' && Register.navigation)
       ? Register.navigation.anPlatz('apps') : [];
     apps.innerHTML = appliste.map((x: any) =>
-      `<button class="side-item" data-app="${esc(x.id)}" title="${esc(x.hinweis || x.name)}">` +
+      `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
       `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`
     ).join('');
     /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
@@ -548,7 +548,7 @@ const Seitenleiste = (() => {
     apps.addEventListener('click', e => {
       const b = elVon(e)?.closest<HTMLElement>('[data-app]');
       if (!b) return;
-      const eintrag = appliste.find((x: any) => x.id === b.dataset.app);
+      const eintrag = appliste.find((x: any) => (x.marke || x.id) === b.dataset.app);
       if (!eintrag?.tun) return;
       try { eintrag.tun(); }
       catch (fehler: unknown) {

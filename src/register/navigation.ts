@@ -27,6 +27,8 @@
  *                     steht in index.html, die HANDLUNG hier — `schale.ts`
  *                     hängt sie über `knopfId` an. test222 §5 vergleicht
  *                     beide Listen Zeile für Zeile.
+ *     platz 'fuss'    die festen Zeilen ganz unten. Wie 'oben': Markup in
+ *                     index.html, Handlung hier, verbunden über `knopfId`.
  *     platz 'apps'    „Meine Apps". Die Seitenleiste zeichnet sie von hier;
  *                     der Eintrag trägt Zeichen, Namen, Hinweistext und
  *                     Handlung. test222 §6 vergleicht Liste und Bildschirm.
@@ -106,51 +108,72 @@ Register.navigation = (() => {
        `hinweis` ist der Text, der beim Darüberfahren erscheint. Er gehört
        zum Eintrag und nicht zum Zeichner: wer die App beschreibt, beschreibt
        sie hier. */
-    { id: 'app-kalender',  name: 'Kalender',        icon: '📅', platz: 'apps', rang: 10,
+    { id: 'app-kalender', marke: 'kalender',  name: 'Kalender',        icon: '📅', platz: 'apps', rang: 10,
       hinweis: 'Termine aus allen Quellen',                tun: () => Kalender.dialog() },
-    { id: 'app-pwa',       name: 'App installieren', icon: '📱', platz: 'apps', rang: 20,
+    { id: 'app-pwa', marke: 'pwa',       name: 'App installieren', icon: '📱', platz: 'apps', rang: 20,
       hinweis: 'Auf dem Telefon oder Rechner ablegen',     tun: () => PWA.installieren() },
-    { id: 'app-bib',       name: 'Bibliothek',      icon: '📚', platz: 'apps', rang: 30,
+    { id: 'app-bib', marke: 'bib',       name: 'Bibliothek',      icon: '📚', platz: 'apps', rang: 30,
       hinweis: 'Alle Seiten, sortierbar',                  tun: () => Bibliothek.oeffne() },
-    { id: 'app-aufgaben',  name: 'Meine Aufgaben',  icon: '☑',  platz: 'apps', rang: 40,
+    { id: 'app-aufgaben', marke: 'aufgaben',  name: 'Meine Aufgaben',  icon: '☑',  platz: 'apps', rang: 40,
       hinweis: 'Was dir zugewiesen ist',                   tun: () => Bibliothek.aufgaben() },
-    { id: 'app-markt',     name: 'Marktplatz',      icon: '🛍', platz: 'apps', rang: 50,
+    { id: 'app-markt', marke: 'markt',     name: 'Marktplatz',      icon: '🛍', platz: 'apps', rang: 50,
       hinweis: 'Fertige Vorlagen',                         tun: () => Werkzeuge.vorlagen() },
-    { id: 'app-wissen',    name: 'Notion-Wissen',   icon: '📖', platz: 'apps', rang: 60,
+    { id: 'app-wissen', marke: 'wissen',    name: 'Notion-Wissen',   icon: '📖', platz: 'apps', rang: 60,
       hinweis: 'Alles über Notion und Redion, in acht Teilen', tun: () => Wissen.oeffnen() },
-    { id: 'app-pflege',    name: 'Erste Hilfe',     icon: '🧰', platz: 'apps', rang: 70,
+    { id: 'app-pflege', marke: 'pflege',    name: 'Erste Hilfe',     icon: '🧰', platz: 'apps', rang: 70,
       hinweis: 'Prüfen, reparieren, sichern',              tun: () => Pflege.ersteHilfe() },
-    { id: 'app-modell',    name: 'Datenmodell',     icon: '🗺', platz: 'apps', rang: 80,
+    { id: 'app-modell', marke: 'modell',    name: 'Datenmodell',     icon: '🗺', platz: 'apps', rang: 80,
       hinweis: 'Alle Datenbanken und ihre Verknüpfungen',  tun: () => Schema.ansicht() },
-    { id: 'app-kennzahl',  name: 'Kennzahlen',      icon: '📊', platz: 'apps', rang: 90,
+    { id: 'app-kennzahl', marke: 'kennzahl',  name: 'Kennzahlen',      icon: '📊', platz: 'apps', rang: 90,
       hinweis: 'Zahlen aus mehreren Datenbanken',          tun: () => Schema.tafel() },
-    { id: 'app-krypto',    name: 'Passwort',        icon: '🔐', platz: 'apps', rang: 100,
+    { id: 'app-krypto', marke: 'krypto',    name: 'Passwort',        icon: '🔐', platz: 'apps', rang: 100,
       hinweis: 'Verschlüsselte Sicherung und Sperre',      tun: () => Krypto.dialog() },
-    { id: 'app-aussehen',  name: 'Aussehen',        icon: '🎨', platz: 'apps', rang: 110,
+    { id: 'app-aussehen', marke: 'aussehen',  name: 'Aussehen',        icon: '🎨', platz: 'apps', rang: 110,
       hinweis: 'Farben, Schrift und Tastenkürzel',         tun: () => Aussehen.dialog() },
-    { id: 'app-tempo',     name: 'Tempo',           icon: '⏱', platz: 'apps', rang: 120,
+    { id: 'app-tempo', marke: 'tempo',     name: 'Tempo',           icon: '⏱', platz: 'apps', rang: 120,
       hinweis: 'Wie schnell gezeichnet und gerechnet wird', tun: () => Tempo.dialog() },
-    { id: 'app-kann',      name: 'Was Redion kann', icon: '⭐', platz: 'apps', rang: 130,
+    { id: 'app-kann', marke: 'kann',      name: 'Was Redion kann', icon: '⭐', platz: 'apps', rang: 130,
       hinweis: 'Alles auf einen Blick, mit Führung',       tun: () => Rundgang.uebersicht() },
-    { id: 'app-erweitern', name: 'Erweiterungen',   icon: '🧩', platz: 'apps', rang: 140,
+    { id: 'app-erweitern', marke: 'erweitern', name: 'Erweiterungen',   icon: '🧩', platz: 'apps', rang: 140,
       hinweis: 'Eigene Befehle, Knöpfe und Formeln',       tun: () => Erweiterung.dialog() },
-    { id: 'app-eingang',   name: 'Was hereinkommt', icon: '📨', platz: 'apps', rang: 150,
+    { id: 'app-eingang', marke: 'eingang',   name: 'Was hereinkommt', icon: '📨', platz: 'apps', rang: 150,
       hinweis: 'Daten von aussen abholen und einwerfen',   tun: () => Eingang.dialog() },
-    { id: 'app-tagesplan', name: 'Tagesplan',       icon: '☀',  platz: 'apps', rang: 160,
+    { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan',       icon: '☀',  platz: 'apps', rang: 160,
       hinweis: 'Was heute ansteht',                        tun: () => Plan.tagesplan() },
-    { id: 'app-woche',     name: 'Wochenrückblick', icon: '📅', platz: 'apps', rang: 170,
+    { id: 'app-woche', marke: 'woche',     name: 'Wochenrückblick', icon: '📅', platz: 'apps', rang: 170,
       hinweis: 'Was lief, was blieb liegen',               tun: () => Plan.wochenrueckblick() },
-    { id: 'app-spaeter',   name: 'Zurückgestellt',  icon: '⏰', platz: 'apps', rang: 180,
+    { id: 'app-spaeter', marke: 'spaeter',   name: 'Zurückgestellt',  icon: '⏰', platz: 'apps', rang: 180,
       hinweis: 'Was später wieder hochkommt',              tun: () => Plan.uebersicht() },
-    { id: 'app-hilfe',     name: 'Hilfe',           icon: '？', platz: 'apps', rang: 190,
+    { id: 'app-hilfe', marke: 'hilfe',     name: 'Hilfe',           icon: '？', platz: 'apps', rang: 190,
       hinweis: 'Tastenkürzel — Strg /',                    tun: () => Werkzeuge.tastenkuerzel() },
-    { id: 'app-papier',    name: 'Papierkorb',      icon: '🗑', platz: 'apps', rang: 200,
+    { id: 'app-papier', marke: 'papier',    name: 'Papierkorb',      icon: '🗑', platz: 'apps', rang: 200,
       hinweis: 'Gelöschte Seiten',                         tun: () => App.papierkorb() },
 
     { id: 'favoriten',  name: 'Favoriten',         icon: '★',  platz: 'baum',  rang: 10 },
     { id: 'seiten',     name: 'Seiten',            icon: '📄', platz: 'baum',  rang: 20 },
     { id: 'geteilt',    name: 'Geteilt',           icon: '👥', platz: 'baum',  rang: 30,
       zeigen: () => da('Wolke') && Wolke.angemeldet() },
+
+    /* DER FUSS DER SEITENLEISTE (E167). Drei Zeilen stehen dort fest in
+       index.html; zwei davon passen ohne Umstände hierher — Aussehen im
+       Markup, Handlung im Register, verbunden über `knopfId`, genau wie
+       oben.
+
+       `btn-import` fehlt bewusst und nicht aus Vergesslichkeit: sein Menü
+       braucht das Klickereignis, um sich an der richtigen Stelle zu öffnen,
+       und die fünfundzwanzig Zeilen Menüaufbau gehören in die Schale, nicht
+       in einen Katalog der Seitenleiste.
+
+       Eigener Platz, nicht `oben`: die drei stehen im Fuss und nicht in
+       `.side-nav`. Ein gemeinsamer Platz für beides machte den Vergleich in
+       test222 §5 falsch, ohne dass sich am Bildschirm etwas ändert — und
+       eine Prüfung, die aus dem falschen Grund rot wird, ist so wenig wert
+       wie eine, die aus dem falschen Grund grün ist. */
+    { id: 'papierkorbFuss', name: 'Papierkorb',     icon: '🗑', platz: 'fuss', rang: 20,
+      knopfId: 'btn-trash',  tun: () => App.papierkorb() },
+    { id: 'tastenkuerzel',  name: 'Tastenkürzel',   icon: '?',  platz: 'fuss', rang: 30,
+      knopfId: 'btn-hilfe',  kuerzel: 'Strg /',
+      tun: () => Werkzeuge.tastenkuerzel() },
 
     { id: 'vorlagen',   name: 'Vorlagen',          icon: '🧩', platz: 'unten', rang: 10,
       tun: () => Galerie.oeffne() },
@@ -183,6 +206,22 @@ Register.navigation = (() => {
     kuerzel?: string;
     /** Der Text beim Darüberfahren. Nur bei „Meine Apps" gebraucht. */
     hinweis?: string;
+    /**
+     * Der Wert von `data-app` am gezeichneten Knopf.
+     *
+     * WARUM NICHT EINFACH DIE KENNUNG. Weil die Kennungen im Register
+     * eindeutig sein müssen und `bibliothek`, `aufgaben` und `papierkorb`
+     * dort schon vergeben sind. E166 hat die Apps deshalb `app-bib`,
+     * `app-aufgaben` … genannt — und damit ohne Not den Wert im Markup
+     * mitgeändert. Der volle Prüflauf fand es: drei Zeilen in test33 und
+     * test61 fassen die Knöpfe über `[data-app="bib"]` an.
+     *
+     * Der Wert ist eine Adresse nach aussen. Eigene Erweiterungen und
+     * eigenes CSS dürfen darauf zeigen, und dann bricht ein Umbenennen
+     * etwas, das mit dem Umbau nichts zu tun hat. Also bleibt er, wie er
+     * war, und die Registerkennung darf daneben heissen, wie sie mag.
+     */
+    marke?: string;
   };
 
   const LISTE: Eintrag[] = EINGEBAUT.slice();
