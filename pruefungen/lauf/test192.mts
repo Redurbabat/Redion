@@ -103,21 +103,74 @@ const tot: string[] = [];
 const behaelter: string[] = [];
 const verschlossen: string[] = [];
 const bericht: Record<string, string> = {};
+const wirklich: Record<string, string> = {};
+const volltext: Record<string, string> = {};
 
-for (const art of arten) {
-  if (art === 'page') continue;          /* siehe §2b */
-  const r = await seite.evaluate(async (typ: string) => {
-    const s = Store.addPage(null, { text: 'Probe ' + typ });
+/* Der Weg zu einer Blockart ist nicht sie selbst (L41). Die meisten kommen
+   durchs Slash-Menü — `weg: 'slash'`. Zwei kommen anders, und genau die
+   fehlten bis E170. Sie stehen hier als eigene Aufträge, damit sie durch
+   DIESELBE Messung gehen und nicht durch eine zweite, die altert. */
+type Auftrag = { art: string; weg: 'slash' | 'spalte' | 'spalte-leer' | 'pdfseite' };
+const wege: Auftrag[] = [
+  ...arten.filter(a => a !== 'page').map(a => ({ art: a, weg: 'slash' as const })),
+  { art: 'spalte',      weg: 'spalte' },
+  { art: 'spalte-leer', weg: 'spalte-leer' },
+  { art: 'pdfseite',    weg: 'pdfseite' },
+];
+
+for (const auftrag of wege) {
+  const art = auftrag.art;
+  const r = await seite.evaluate(async (auf: { art: string; weg: string }) => {
+    const warte = (ms: number) => new Promise(r => setTimeout(r, ms));
+    const s = Store.addPage(null, { text: 'Probe ' + auf.art });
     App.oeffne(s.id);
-    await new Promise(r => setTimeout(r, 200));
+    await warte(200);
     const erste = Store.childrenOf(s.id)[0];
     if (!erste) return { grund: 'keine Startzeile' };
-    try { Blocks.umwandeln(erste.id, typ); }
-    catch (e) { return { grund: 'wirft: ' + String(e).slice(0, 70) }; }
-    await new Promise(r => setTimeout(r, 300));
 
-    const bloecke = Store.childrenOf(s.id);
-    const b = bloecke.find((x: any) => x.type === typ) || bloecke[0];
+    let b: any = null;
+    if (auf.weg === 'slash') {
+      try { Blocks.umwandeln(erste.id, auf.art); }
+      catch (e) { return { grund: 'wirft: ' + String(e).slice(0, 70) }; }
+      await warte(300);
+      const bloecke = Store.childrenOf(s.id);
+      b = bloecke.find((x: any) => x.type === auf.art) || bloecke[0];
+    }
+    else if (auf.weg === 'spalte') {
+      /* Eine Spalte legt niemand an — `columns` legt sie an (E102). Also
+         den echten Weg gehen und das Kind nehmen, das dabei entsteht. */
+      try { Blocks.umwandeln(erste.id, 'columns'); }
+      catch (e) { return { grund: 'wirft: ' + String(e).slice(0, 70) }; }
+      await warte(300);
+      const rahmen = Store.childrenOf(s.id).find((x: any) => x.type === 'columns');
+      b = rahmen ? Store.childrenOf(rahmen.id).find((x: any) => x.type === 'spalte') : null;
+    }
+    else if (auf.weg === 'spalte-leer') {
+      /* UND DERSELBE BEHÄLTER OHNE INHALT.
+         `columns` legt die Zeile darin gleich mit an — die leere Spalte
+         entsteht also nicht beim Anlegen, sondern SPÄTER: aus einer
+         eingespielten Sicherung, aus einer alten Seite, aus einer
+         umgewandelten Folie (E118). Genau dafür gibt es den Auffang beim
+         Zeichnen, und genau der wird hier gemessen. Der Weg darüber misst
+         ihn nicht: dort ist die Spalte nie leer. */
+      const rahmen = Store.addBlock(s.id, 'columns', { text: '' });
+      b = Store.addBlock(rahmen.id, 'spalte', { text: '' });
+      Store.addBlock(rahmen.id, 'spalte', { text: '' });
+      App.zeichneSeite();
+      await warte(300);
+    }
+    else if (auf.weg === 'pdfseite') {
+      /* Die Felder sind die aus `PdfEinlesen` — ohne `bildDateiId`, denn
+         GENAU SO steht eine PDF-Seite nach dem Einspielen einer `.redion`
+         da: die Bilder bleiben draussen und werden neu gerechnet (E103). */
+      b = Store.addBlock(s.id, 'pdfseite', {
+        text: '', suchtext: 'Probeseite', nr: 1, vonSeiten: 3,
+        bw: 595.28, bh: 841.89, dreh: 0
+      });
+      App.zeichneSeite();
+      await warte(300);
+    }
+
     if (!b) return { grund: 'kein Block entstanden' };
     const kasten = document.querySelector(`.blk[data-bid="${b.id}"]`) as HTMLElement | null;
     if (!kasten) return { grund: 'kein Kasten im Bild' };
@@ -154,7 +207,7 @@ for (const art of arten) {
     const haeltKinder = !!kasten2 && (kasten2.textContent || '').includes('HINEINGELEGT');
 
     return { brauchbar, zahl, echterTyp: b.type, haeltKinder, schreibbarLeer: vorher };
-  }, art);
+  }, auftrag);
 
   const kurz = (r as any).grund
     ? (r as any).grund
@@ -163,6 +216,8 @@ for (const art of arten) {
       `${(r as any).haeltKinder ? 'Behälter · ' : ''}` +
       `„${((r as any).zahl.text || '').slice(0, 26)}"`;
   bericht[art] = kurz;
+  if ((r as any).echterTyp) wirklich[art] = (r as any).echterTyp;
+  volltext[art] = (r as any).zahl ? String((r as any).zahl.text || '') : '';
   if (!(r as any).brauchbar) tot.push(art + ' (' + kurz + ')');
   if ((r as any).haeltKinder) {
     behaelter.push(art);
@@ -172,8 +227,8 @@ for (const art of arten) {
 
 gleich('Keine einzige Blockart ist ein leeres Rechteck', tot.length, 0);
 if (tot.length) for (const t of tot) console.log('      → ' + t);
-p('Und alle wurden wirklich geprüft', Object.keys(bericht).length === arten.length - 1,
-  Object.keys(bericht).length + ' von ' + (arten.length - 1));
+p('Und alle wurden wirklich geprüft', Object.keys(bericht).length === wege.length,
+  Object.keys(bericht).length + ' von ' + wege.length);
 
 /* ==========================================================================
  * §2a · Und was Kinder hält, muss auch aufnehmen können
@@ -222,16 +277,90 @@ const unterseite = await seite.evaluate(async () => {
     await new Promise(r => setTimeout(r, 500));
     geoeffnet = App.aktuelleSeite() === b!.id;
   }
-  return { gesprungen, kastenDa: !!kasten,
+  return { gesprungen, kastenDa: !!kasten, echterTyp: b ? b.type : '',
            text: kasten ? (kasten.textContent || '').replace(/\s+/g, ' ').trim() : '',
            geoeffnet };
 });
+
+/* §2b IST der Weg zu `page` — nur ein anderer als der der Schleife. Also
+   hier vermerken, sonst hält §3 die Seite gleich für weglos. */
+if (unterseite.echterTyp) wirklich['page'] = unterseite.echterTyp;
 
 p('`/page` springt in die neue Unterseite', unterseite.gesprungen);
 p('Auf der Elternseite steht danach ein Verweis', unterseite.kastenDa);
 p('Er trägt ein Blattzeichen und einen Titel',
   /📄/.test(unterseite.text), unterseite.text);
 p('Und ein Klick öffnet die Unterseite wirklich', unterseite.geoeffnet);
+
+/* ==========================================================================
+ * §3 · Und die, die keinen Weg durchs Slash-Menü haben
+ * --------------------------------------------------------------------------
+ * §2 geht den Weg, den ein Mensch geht: Schrägstrich, Name, Enter. Nicht
+ * jede Blockart hat den. `spalte` legt `columns` an, `pdfseite` entsteht
+ * beim Einlesen eines PDF — gezeichnet werden beide, erreichbar ist keine
+ * von beiden, und genau das war der Rest, den L41 offenliess.
+ *
+ * Oben stehen sie jetzt als eigene Aufträge in derselben Schleife. Hier
+ * steht die Frage dahinter, und sie wird nicht aufgezählt, sondern
+ * GERECHNET: alle `case`-Zweige des Zeichners minus alles, was §2 über das
+ * Slash-Menü wirklich erzeugt hat. Übrig bleiben muss genau das, wofür oben
+ * ein Weg von Hand steht.
+ *
+ * Kommt eine dritte Blockart ohne Slash-Weg dazu, wächst die Differenz und
+ * dieser Punkt wird rot — das ist sein einziger Zweck. Die beiden von heute
+ * sind in Ordnung; die dritte ist die, um die es geht.
+ * ========================================================================*/
+console.log('\n3 · Und die, die keinen Weg durchs Slash-Menü haben');
+
+const zeichnerQuelle = fs.readFileSync(
+  path.join(WURZEL, 'quell/bereiche/editor/ansicht/editor.js'), 'utf8');
+
+/* Die Zweige stehen in EINEM `switch`. Käme ein zweiter dazu, läse der
+   Ausdruck unten nur noch die Hälfte und dieser Punkt sagt es. */
+const schalter = [...zeichnerQuelle.matchAll(/switch\s*\(\s*block\.type\s*\)/g)];
+gleich('Der Zeichner entscheidet an genau einer Stelle nach Blockart',
+  schalter.length, 1);
+
+const gezeichnet = new Set([...zeichnerQuelle.matchAll(/^\s*case '([a-z0-9_-]+)':/gim)]
+  .map(m => m[1] as string));
+p('Und er kennt eine ganze Reihe von ihnen beim Namen', gezeichnet.size >= 30,
+  String(gezeichnet.size));
+
+const durchSlash = new Set([...wege.filter(w => w.weg === 'slash')
+  .map(w => wirklich[w.art]), wirklich['page']].filter(Boolean));
+const ohneWeg = [...gezeichnet].filter(x => !durchSlash.has(x)).sort();
+
+gleich('Zwei Blockarten zeichnet er, ohne dass das Slash-Menü sie anbietet',
+  JSON.stringify(ohneWeg), JSON.stringify(['pdfseite', 'spalte']));
+
+/* Und für beide steht oben ein Weg — sonst wären sie hier nur genannt und
+   nicht geprüft. */
+p('Für beide steht in der Schleife ein eigener Weg',
+  ohneWeg.every(x => wege.some(w => w.weg !== 'slash' && wirklich[w.art] === x)),
+  wege.filter(w => w.weg !== 'slash')
+    .map(w => w.art + ' → ' + (wirklich[w.art] || '?')).join(', '));
+
+/* Die zwei Berichte im Klartext — damit im Prüfbericht steht, WAS an ihnen
+   gemessen wurde, und nicht nur, dass es gut war. */
+p('Die Spalte, die `columns` anlegt, hat gleich eine Zeile (E102)',
+  /edit [1-9]/.test(bericht['spalte'] || ''), bericht['spalte']);
+/* UND DIE OHNE — der Fall aus dem Bestand. Ohne den Auffang beim Zeichnen
+   wäre sie eine unsichtbare Fläche, in die niemand hineinkommt. */
+p('Und eine leer gebliebene Spalte bekommt beim Zeichnen eine',
+  /edit [1-9]/.test(bericht['spalte-leer'] || ''), bericht['spalte-leer']);
+p('Beide nehmen einen Block auf',
+  /Behälter/.test(bericht['spalte'] || '') &&
+  /Behälter/.test(bericht['spalte-leer'] || ''),
+  bericht['spalte'] + ' | ' + bericht['spalte-leer']);
+p('Die PDF-Seite nennt ihre Nummer und wie viele es sind',
+  /Seite 1 von 3/.test(volltext['pdfseite'] || ''), volltext['pdfseite']);
+/* Und der Fall, der nach dem Einspielen einer `.redion` der NORMALFALL ist:
+   die Seite steht da, das Bild ist noch nicht gerechnet. Dann muss ein Satz
+   dastehen und kein leeres Papier (E103, E116). */
+p('Und ohne Bild sagt sie in Worten, was los ist',
+  /kein Bild/.test(volltext['pdfseite'] || ''), volltext['pdfseite']);
+p('Und sie ist kein leeres Rechteck',
+  !tot.some(x => x.startsWith('pdfseite')), bericht['pdfseite']);
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 

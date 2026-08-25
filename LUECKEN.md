@@ -753,7 +753,7 @@ Fehlt: Messungen mit zehntausend Seiten · virtualisierte Listen ·
 Suchindex, der nicht bei jedem Start neu entsteht · Speichermessung bei
 Export und Import.
 
-## L34 · Ein Wert, der an zwei Stellen steht
+## L34 · ~~Ein Wert, der an zwei Stellen steht~~ — abgearbeitet
 
 **Stand** — ◐ dreimal behoben (E64 zweimal, E65), der Rest ist gelistet.
 
@@ -823,7 +823,7 @@ Sicherungen) — die gibt es nur mit eigenem Plan und Tests (§9).
 
 Suche über Titel, Inhalt, Zeilen und Kennungen mit einfacher Syntax.
 
-## L24 · Entscheidungs- und Wissensgraph
+## L24 · ~~Entscheidungs- und Wissensgraph~~ — geschlossen
 
 **Stand — ✅ geschlossen.** Redion besitzt einen einzigen abgeleiteten Graphen
 für Seiten, Zeilen, Entscheidungen, Quellen und Schlagwörter. Backlinks,
@@ -1302,17 +1302,43 @@ Damit erledigt sich auch der erste Punkt: ein Feld `braucht` am
 Registereintrag wäre eine zweite Wahrheit neben der Prüfung, und die Prüfung
 ist die verlässlichere — sie misst, statt zu behaupten.
 
-**Was offen bleibt, ist der Rand davon:**
+**Der Rand davon ist seit E170 mitgeprüft.**
+
+Die erste der beiden Randbemerkungen lautete: `test192` kennt nur den Weg
+über `umwandeln`, also über das Slash-Menü, und `pdfseite` und `spalte`
+entstehen anders. Das stimmt nicht mehr — beide gehen jetzt durch dieselbe
+Messung, und `test192 §3` rechnet aus, ob es eine dritte gibt:
 
 ```txt
-⚠ `test192` kennt nur den Weg über `umwandeln`, also über das Slash-Menü.
-  Blockarten, die auf anderem Weg entstehen und in keinem Register stehen
-  — `pdfseite`, `spalte` —, erfasst er nicht. Beide sind heute in Ordnung,
-  aber nicht durch ihn.
+alle `case`-Zweige des Zeichners
+  minus alles, was §2 über das Slash-Menü wirklich erzeugt hat
+  = muss genau das sein, wofür oben ein Weg von Hand steht
+```
 
-⚠ Er prüft, ob man HINEINKOMMT, nicht ob das Richtige passiert, wenn man
-  drin ist. Dafür sind die Suiten je Blockart da, und die gibt es nicht für
-  alle 66.
+Beim Schreiben fand das drei Dinge, und das dritte ist das eigentliche
+Ergebnis:
+
+```txt
+· Der erste Anlauf mass die Spalte auf dem falschen Weg. `columns` legt die
+  Zeile darin GLEICH MIT an — der Auffang beim Zeichnen kommt dort nie zum
+  Zug. Gegengeprobt: E102 zurückgedreht, alles blieb grün. Jetzt steht die
+  leere Spalte als eigener Weg daneben — der Fall aus dem Bestand, aus der
+  eingespielten Sicherung, aus der umgewandelten Folie (E118). Damit wird
+  sie rot.
+
+· Die Behauptung über den Text der PDF-Seite las die GEKÜRZTE Berichtszeile
+  (26 Zeichen) statt den Text. Sie wäre für immer rot gewesen.
+
+· `page` sah weglos aus, weil §2b sie prüft und nicht §2. Der Weg dorthin
+  wird jetzt dort vermerkt, wo er begangen wird.
+```
+
+**Was weiterhin offen bleibt:**
+
+```txt
+⚠ `test192` prüft, ob man HINEINKOMMT, nicht ob das Richtige passiert, wenn
+  man drin ist. Dafür sind die Suiten je Blockart da, und die gibt es nicht
+  für alle 66.
 ```
 
 ## L42 · ~~Das verschlüsselte `.redion` schreibt, aber holt nicht zurück~~ — GESCHLOSSEN

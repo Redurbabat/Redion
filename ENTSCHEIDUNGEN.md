@@ -11576,3 +11576,107 @@ die der andere Weg nicht hat — die Rechteangabe `bearbeitbar` und die
 Herkunft (`quelle`: Datenbankzeile oder Block). Ein gemeinsamer Kern müsste
 beides können. Den einen durch den anderen zu ersetzen wäre die gefährliche
 Richtung (§46).
+
+---
+
+## E170 · Der Weg zu einer Blockart ist nicht sie selbst — der Rest von L41
+
+**25. August 2026.**
+
+`test192` legt seit E119 jede Blockart an und fragt: kann ein Mensch damit
+etwas anfangen? Es tut das über den Weg, den ein Mensch geht — Schrägstrich,
+Name, Enter. L41 hielt fest, dass genau darin die Lücke steckt: **nicht jede
+Blockart hat diesen Weg.**
+
+```txt
+`spalte`    legt `columns` an, als Kind. Kein Slash-Befehl führt hin.
+`pdfseite`  entsteht beim Einlesen eines PDF. Auch keiner.
+```
+
+Beide zeichnet der Editor. Beide erfasste `test192` nicht. Beide waren in
+Ordnung — aber nicht durch ihn, und das ist der Unterschied, um den es geht.
+
+### Nicht aufgezählt, sondern gerechnet
+
+Zwei Namen in eine Liste zu schreiben hätte die Lücke geschlossen und die
+nächste geöffnet: eine dritte Blockart ohne Slash-Weg wäre wieder
+ungeprüft, und wieder hätte es niemand gemerkt. Also rechnet §3 die Frage
+aus, statt sie zu beantworten:
+
+```txt
+alle `case`-Zweige aus `switch (block.type)` im Zeichner
+  minus alles, was §2 über das Slash-Menü WIRKLICH erzeugt hat
+  = muss genau das sein, wofür in der Schleife ein Weg von Hand steht
+```
+
+Der Abzug kommt aus dem Lauf selbst, nicht aus einer nachgebauten Regel.
+`umwandeln` bildet `db-table` auf `database` ab, `embed-youtube` auf
+`embed`, `toggle-h1` auf `h1` — diese Zuordnung noch einmal als Ausdruck
+hinzuschreiben wäre eine zweite Wahrheit, und die zweite altert. §2 hat
+jeden Typ ohnehin erzeugt; sie merkt sich nur, was dabei herauskam.
+
+Dazu ein Wächter darüber: der Zeichner muss an **genau einer** Stelle nach
+Blockart entscheiden. Käme ein zweiter `switch` dazu, läse der Ausdruck nur
+noch die Hälfte und meldete Blockarten als weglos, die es nicht sind.
+Gegengeprobt: ein zweiter `switch` eingebaut → „ist 2, soll 1".
+
+### Und drei Fehler beim Schreiben, von denen der erste der wichtigste ist
+
+**Die Spalte wurde auf dem falschen Weg gemessen.** Der erste Anlauf ging
+über `columns` und prüfte, ob die entstehende Spalte eine Zeile zum
+Hineinschreiben hat. Sie hat eine — aber nicht wegen des Auffangs beim
+Zeichnen, sondern weil `umwandeln` sie gleich mit anlegt (E102). Die
+Gegenprobe zeigte es: den Auffang entfernt, **alles blieb grün.**
+
+Der Auffang ist für den anderen Fall da, und der ist der gefährlichere: eine
+Spalte, die leer DASTEHT. Aus einer eingespielten Sicherung, aus einer alten
+Seite, aus einer umgewandelten Folie — genau das war E118. Also steht sie
+jetzt als eigener Weg daneben, mit `columns` von Hand gebaut und ohne
+Inhalt. Damit wird die Gegenprobe rot, an drei Stellen:
+
+```txt
+  ✗ Keine einzige Blockart ist ein leeres Rechteck — ist 1, soll 0
+  ✗ Und jede von ihnen bietet leer eine Stelle zum Schreiben — ist 1, soll 0
+  ✗ Und eine leer gebliebene Spalte bekommt beim Zeichnen eine
+        — edit 0 · feld 0 · knopf 0 · bild 0 · Behälter · „"
+```
+
+Die letzte Zeile ist der Satz, um den es geht: ein Kasten, der Blöcke
+aufnimmt, in den man aber nicht hineinkommt.
+
+**Die Behauptung über den Text der PDF-Seite las die falsche Zeichenkette.**
+`bericht` ist auf 26 Zeichen gekürzt — es ist die Zeile für den Prüfbericht,
+nicht der Text. Die Behauptung wäre für immer rot gewesen. Jetzt gibt es
+`volltext` daneben, und die Zeile bleibt, wofür sie da ist: dass im Bericht
+steht, WAS gemessen wurde.
+
+**`page` sah weglos aus.** Sie hat einen Slash-Weg, aber §2 überspringt sie
+— sie springt in die neue Unterseite und wird deshalb in §2b geprüft. Der
+Weg dorthin wird jetzt dort vermerkt, wo er begangen wird.
+
+### Was die PDF-Seite dabei zeigen muss
+
+Der Prüfling ist die Seite **ohne Bild**, und das ist kein Sonderfall: nach
+dem Einspielen einer `.redion` ist es der Normalfall — E103 lässt die
+gerasterten Seitenbilder bewusst draussen, weil sie sich neu rechnen lassen.
+Also muss sie zwei Dinge sagen, und beide sind jetzt festgehalten:
+
+```txt
+„Seite 1 von 3"                     wo bin ich
+„… gibt es noch kein Bild."         und warum ist es weiss
+```
+
+Gegengeprobt, beide einzeln entfernt, beide werden rot.
+
+### Was das an der Prüfung ändert
+
+```txt
+vorher   65 Blockarten über das Slash-Menü
+nachher  68 Wege — dieselben 65, dazu `spalte`, `spalte-leer`, `pdfseite`
+         und ein Ausdruck, der rot wird, wenn eine vierte dazukommt
+```
+
+`test192`: 25 Punkte statt 15. L41 ist damit bis auf seinen zweiten
+Randpunkt abgearbeitet — dass die Prüfung fragt, ob man HINEINKOMMT, und
+nicht, ob drinnen das Richtige passiert. Dafür sind die Suiten je Blockart
+da, und die gibt es nicht für alle 66.
