@@ -312,6 +312,60 @@ const geoeffnet = await seite.evaluate(async (ids: any) => {
 gleich('Das Projekt ist danach offen', geoeffnet.offen, geoeffnet.soll);
 
 /* ==========================================================================
+ * §9 · Was im Journal steht, steht auch in der Arbeitssicht (L50, E169)
+ * --------------------------------------------------------------------------
+ * Journal, Schnellnotizen und Vorlagen tragen `system: true`. Die
+ * Arbeitswelt schloss solche Seiten aus der Menge „lesbare Seiten" aus —
+ * und an dieser Menge hingen fünf ganz andere Listen: Aufgaben, Dateien,
+ * PDFs, Flächen und Inhaltsblöcke.
+ *
+ * Damit verschwand alles, was auf einer Systemseite steht. Gemessen an
+ * einem Haken im Journal: `Lebensbereiche.aufgaben()` kannte ihn,
+ * `Arbeitswelt.snapshot().aufgaben` nicht. Derselbe Haken, zwei Listen, und
+ * keine sagte etwas dazu.
+ *
+ * DIE GEGENRICHTUNG STEHT MIT DABEI, und sie ist der Grund, warum die
+ * Behebung nicht einfach „Filter raus" heisst: das Journal selbst darf
+ * NICHT in der Seitenliste auftauchen. Es hat seinen eigenen Platz in der
+ * Seitenleiste, und zweimal dazustehen wäre keine Verbesserung.
+ * ========================================================================*/
+console.log('\n9 · Was im Journal steht, steht auch in der Arbeitssicht');
+
+const ausSystemseite = await seite.evaluate(async () => {
+  const journal = Store.rootPages().find((x: any) => x.system && x.alive !== false)
+    || Store.addPage(null, { text: 'Journal', icon: '📔', system: true });
+  const haken = Store.addBlock(journal.id, 'todo',
+    { text: 'Aus dem Journal heraus', checked: false });
+  const pdf = Store.addBlock(journal.id, 'pdfseite', { nr: 1, suchtext: 'Skizze' });
+  await Store.flush();
+
+  const schnapp = Arbeitswelt.snapshot();
+  const lb = (globalThis as any).Lebensbereiche;
+  const lbRoh = lb && typeof lb.aufgaben === 'function'
+    ? await lb.aufgaben({ einschliesslichErledigt: true }) : [];
+
+  return {
+    journalId: String(journal.id),
+    hakenId: String(haken.id),
+    inArbeitswelt: (schnapp.aufgaben || []).some((x: any) => String(x.id) === String(haken.id)),
+    inLebensbereiche: (lbRoh || []).some((x: any) =>
+      String(x?.ref?.id || x?.id) === String(haken.id)),
+    pdfDaSeite: (schnapp.pdfs || []).some((x: any) => String(x.pageId) === String(journal.id)),
+    /* Und die Gegenrichtung: die Systemseite selbst bleibt aus der
+       Seitenliste heraus. */
+    journalInSeiten: (schnapp.seiten || []).some((x: any) => String(x.id) === String(journal.id)),
+    pdfBlockId: String(pdf.id)
+  };
+});
+
+p('Es gibt eine Systemseite zum Prüfen', !!ausSystemseite.journalId);
+p('Lebensbereiche kennt den Haken', ausSystemseite.inLebensbereiche);
+p('Und die Arbeitssicht jetzt auch', ausSystemseite.inArbeitswelt);
+p('Auch ein PDF im Journal zählt mit', ausSystemseite.pdfDaSeite);
+p('Die Systemseite selbst bleibt aus der Seitenliste',
+  !ausSystemseite.journalInSeiten);
+
+/* ==========================================================================
  * §8 · Und bei fremdem Stoff sagt der Pfad, dass er nichts ordnen kann
  * --------------------------------------------------------------------------
  * DIE GEGENRICHTUNG ZU §3. Die elf Stichwörter aus §9 sind Elektrotechnik.

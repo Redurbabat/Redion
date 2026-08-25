@@ -132,6 +132,7 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | CLAUDE.md §5 | E166, test222 §6 | „Meine Apps" stand in zwei Listen; jetzt im Register |
 | CLAUDE.md §5 | E167, test222 §7 | der Fuss dazu; **L58 steht**, drei Zeilen bleiben mit Begründung |
 | — | E168, test225 | sechs Quellenangaben in dieser Doku zeigten ins Leere |
+| §14 | E169, test215 §9 | ein Haken im Journal fehlte in der Arbeitssicht — mit ihm PDFs, Dateien und Flächen |
 
 Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
 test206, test218 und test86. Gezählt, nicht geschätzt:

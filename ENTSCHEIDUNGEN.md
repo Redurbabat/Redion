@@ -11493,3 +11493,86 @@ auch mit einem `hatAbschnitt`, das immer `true` sagt.
 Ob ein Abschnitt inhaltlich prüft, was danebensteht. Das kann keine
 Maschine — und es war auch nicht der Fehler: die Adressen waren falsch,
 nicht die Behauptungen.
+
+
+## E169 · Was im Journal steht, war für den Workspace nicht da (L50)
+
+**25. August 2026.** L50 hält seit dem 24. fest, dass Arbeitswelt und
+Lebensbereiche zwei Rechenwege für dieselbe Frage haben. Der Eintrag sagt
+dazu: „Es sind zwei Rechenwege für dieselbe Frage, und der zweite ist immer
+der schlechtere."
+
+Bevor man so etwas zusammenlegt, lohnt eine Frage: **sagen die beiden Wege
+heute überhaupt dasselbe?** Wenn ja, ist das Zusammenlegen Hygiene. Wenn
+nein, ist es eine Fehlerbehebung.
+
+### Gemessen
+
+Ein Arbeitsbereich mit Aufgaben aus beiden Quellen — Haken auf einer Seite
+und Zeilen in einer Aufgaben-Datenbank. Beide Wege lieferten neun Aufgaben,
+dieselben Kennungen, dieselben Erledigt-Marken. Kein Unterschied.
+
+Dann derselbe Versuch mit einem Haken im **Journal**:
+
+```txt
+Lebensbereiche.aufgaben()          steht drin
+Arbeitswelt.snapshot().aufgaben    fehlt
+```
+
+Derselbe Haken, zwei Listen, und keine sagt etwas dazu.
+
+### Woher das kam
+
+Zwei Fragen standen in einer Zeile:
+
+```txt
+block.type === 'page' && block.parentTable !== 'collection'
+  && !block.system && erlaubt('lesen', block.id)
+```
+
+`erlaubt('lesen', …)` ist die Rechtefrage. `!block.system` ist etwas ganz
+anderes: Journal, Schnellnotizen und Vorlagen sollen nicht in der
+SEITENLISTE stehen, weil sie ihren eigenen Platz in der Seitenleiste haben.
+
+Beides zusammen ergab `lesbareIds` — und daran hingen **fünf** ganz andere
+Listen:
+
+```txt
+aufgaben        ein Haken im Journal fehlte
+dateien         eine Datei in den Schnellnotizen fehlte
+pdfs            ein PDF, das man ins Journal zieht, fehlte
+flaechen        ein Whiteboard in einer Vorlage fehlte
+inhaltsBloecke  jeder Block darin fehlte
+```
+
+Das Journal ist die Stelle, an der man etwas schnell hinwirft. Es war die
+einzige, aus der es nicht wieder auftauchte.
+
+### Die Behebung, und warum sie nicht „Filter raus" heisst
+
+`alleLesbarenSeiten` beantwortet jetzt nur noch die Rechtefrage. Die
+Systemseiten fallen erst bei `roheSeiten` heraus — genau dort, wo Seiten
+ALS Seiten aufgezählt werden.
+
+Die zwei Gegenproben stehen in beide Richtungen, und das ist der Punkt:
+
+| Gegenprobe | rot |
+|---|---|
+| A · den alten Filter zurück | 2 — Haken und PDF im Journal fehlen wieder |
+| B · den Filter ganz weglassen | 1 — das Journal steht in der Seitenliste |
+
+Die Behebung liegt genau zwischen den beiden, und test215 §9 hält beide
+Seiten fest.
+
+### Was das für L50 heisst
+
+Die Lücke bleibt offen, aber sie ist jetzt anders begründet. Die zwei Wege
+liefern — nach dieser Behebung — dasselbe; gemessen, nicht behauptet. Das
+Zusammenlegen ist damit **Hygiene, keine Fehlerbehebung**, und es steht
+tiefer in der Reihenfolge als vorher gedacht.
+
+Was der Vergleich zusätzlich gezeigt hat: die Arbeitswelt trägt zwei Dinge,
+die der andere Weg nicht hat — die Rechteangabe `bearbeitbar` und die
+Herkunft (`quelle`: Datenbankzeile oder Block). Ein gemeinsamer Kern müsste
+beides können. Den einen durch den anderen zu ersetzen wäre die gefährliche
+Richtung (§46).

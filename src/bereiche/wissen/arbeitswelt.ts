@@ -534,12 +534,35 @@ const Arbeitswelt = (() => {
       seitenCache.set(id, page || null);
       return page || null;
     };
+    /* ZWEI FRAGEN, DIE IN EINER ZEILE STANDEN (L50, E169).
+       `erlaubt('lesen', …)` ist die Rechtefrage: darf ich diese Seite
+       sehen? `!block.system` ist etwas ganz anderes: Journal,
+       Schnellnotizen und Vorlagen sollen nicht in der SEITENLISTE stehen,
+       weil sie ihren eigenen Platz in der Seitenleiste haben.
+
+       Beides zusammen ergab `lesbareIds`, und daran hingen fünf ganz andere
+       Listen: Aufgaben, Dateien, PDFs, Flächen und Inhaltsblöcke. Damit
+       verschwand alles, was auf einer Systemseite steht — gemessen an einem
+       Haken im Journal:
+
+           Lebensbereiche.aufgaben()          steht drin
+           Arbeitswelt.snapshot().aufgaben    fehlt
+
+       Derselbe Haken, zwei Listen, und keine sagt etwas. Genauso ein PDF,
+       das man ins Journal zieht, ein Whiteboard in den Schnellnotizen, eine
+       Datei in einer Vorlage. Das Journal ist die Stelle, an der man etwas
+       schnell hinwirft — und war die einzige, aus der es nicht wieder
+       auftauchte.
+
+       Getrennt: `alleLesbarenSeiten` beantwortet nur noch die Rechtefrage;
+       die Systemseiten fallen erst bei `roheSeiten` heraus, also genau
+       dort, wo Seiten ALS Seiten aufgezählt werden. */
     const alleLesbarenSeiten = bloecke.filter(block => block.type === 'page' &&
-      block.parentTable !== 'collection' && !block.system && erlaubt('lesen', block.id));
+      block.parentTable !== 'collection' && erlaubt('lesen', block.id));
     const lesbareIds = new Set(alleLesbarenSeiten.map(page => String(page.id)));
     const bereicheNachSeite = new Map<string, string[]>(alleLesbarenSeiten
       .map((page): [string, string[]] => [String(page.id), bereicheVonBlock(page)]));
-    const roheSeiten = alleLesbarenSeiten.filter(page =>
+    const roheSeiten = alleLesbarenSeiten.filter(page => !page.system &&
       passtBereich(bereicheNachSeite.get(String(page.id)) || []));
     const sichtbareSeitenIds = new Set(roheSeiten.map(page => String(page.id)));
     const direkteKinder = new Map<string, number>();

@@ -1429,6 +1429,23 @@ vorhandenen Formen als dünne Sichten darauf. Nicht: den einen durch den
 anderen ersetzen — dabei fiele die Rechteprüfung weg, und das ist die
 gefährliche Richtung (§46).
 
+**Und einmal verglichen (E169, 25. August).** Bevor man zusammenlegt, lohnt
+die Frage, ob die zwei Wege heute überhaupt dasselbe sagen. Antwort: fast.
+Bei Aufgaben aus Seiten und aus Datenbanken kam Zeichen für Zeichen
+dasselbe heraus — bis auf einen Fall.
+
+Ein Haken im JOURNAL stand in `Lebensbereiche.aufgaben()` und fehlte in
+`Arbeitswelt.snapshot().aufgaben`. Der Grund waren zwei Fragen in einer
+Zeile: die Rechtefrage und der Ausschluss von Systemseiten aus der
+Seitenliste. Am gemeinsamen Ergebnis hingen fünf ganz andere Listen —
+Aufgaben, Dateien, PDFs, Flächen, Inhaltsblöcke —, und damit verschwand
+alles, was in Journal, Schnellnotizen oder Vorlagen steht. Behoben; test215
+§9 hält beide Richtungen fest.
+
+**Damit ist diese Lücke Hygiene, keine Fehlerbehebung.** Die zwei Wege
+liefern dasselbe — gemessen, nicht behauptet. Das Zusammenlegen steht
+tiefer in der Reihenfolge als vorher gedacht.
+
 
 ## L51 · ~~Die Hauptwelten stehen in keinem Register~~ — 36 Zeilen fehlen noch
 
