@@ -493,7 +493,8 @@ const Schaltplan = (() => {
                     `text-anchor="middle" font-size="10" stroke="none">${esc(s)}</text>`).join('');
             }
             teile.push(`<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
-                `${w && w.fliesst ? ' sp-fuehrt' : ''}" data-id="${esc(t.id)}" ` +
+                `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
+                `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
                 `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
                 /* Eine unsichtbare Fläche, damit auch die Lücken im Symbol greifbar

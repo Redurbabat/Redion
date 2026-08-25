@@ -13275,3 +13275,73 @@ Prüflauf: `test241`, 91 Punkte. Darunter für jede der elf Arten vierzig
 Würfelungen und die Frage, ob die Aufgabe ihre EIGENE Lösung als richtig
 durchgehen lässt — mit Gegenproben, damit ein `pruefe`, das immer Ja sagt,
 nicht alles grün macht.
+
+
+## E190 · Zwei Bilder, die mehr erklären als ein Absatz
+
+*25. August 2026*
+
+Aus der Liste der hundert Elektro-Funktionen blieben in der Rechner-Hälfte
+drei Punkte offen, die keine Rechnung sind, sondern eine Ansicht.
+
+### Das Formeldreieck (Punkt 65)
+
+Die älteste Merkhilfe der Elektrotechnik und immer noch die beste: oben die
+Grösse, die aus den beiden unteren hervorgeht, und wer eine davon zuhält,
+sieht die Formel für sie. U zuhalten ergibt R · I, R zuhalten ergibt U / I.
+Dreissig Sekunden zum Lernen, und man vergisst es nicht mehr.
+
+Es wird nicht von Hand gezeichnet, sondern aus der SCHREIBWEISE der Formel
+gelesen. `U = R · I` und `I = U / R` beschreiben dasselbe Dreieck — das Modul
+erkennt beide Formen und legt sie über die sortierte Menge der drei Grössen
+zusammen. Aus dem Register kommen so sieben Dreiecke, und wenn morgen eine
+Produktformel dazukommt, gibt es morgen ihr Dreieck.
+
+Alles, was nicht die Form `A = B · C` oder `A = B / C` hat, bekommt **kein**
+Dreieck. Das ist der wichtigere Teil: für `X_C = 1 / (2 · π · f · C)` eines zu
+erfinden wäre eine Merkhilfe, die falsch merkt. `test240` §10 prüft beide
+Richtungen — dass die richtigen erkannt werden UND dass fünf ungeeignete
+Schreibweisen abgelehnt werden.
+
+### Die Sinuskurve (Punkt 90)
+
+Sie beantwortet die Frage, an der im Wechselstrom die meisten hängenbleiben:
+warum sind 230 V nicht 230 V. Der Scheitelwert ist 325, der Effektivwert 230,
+der Momentanwert irgendwas dazwischen — drei Zahlen für dieselbe Spannung,
+und in einer Zeichnung sind sie in einem Blick auseinander.
+
+Der Effektivwert steht als LINIE da und nicht als Zahl am Rand: dass er unter
+dem Scheitel liegt, ist die ganze Aussage, und eine Zahl daneben zeigt das
+nicht.
+
+Bewegt wird mit einem `input[type=range]` und nicht mit einem gezogenen Punkt
+im SVG. Das ist keine Bequemlichkeit: ein Schieber lässt sich mit der Tastatur
+bedienen, hat einen Namen für den Screenreader und braucht am Telefon keine
+Zielgenauigkeit (§37, §38).
+
+Ein schöner Prüfstein steckt in der Sache selbst: bei 45° ist sin = 1/√2, und
+û/√2 ist genau der Effektivwert. Der Momentanwert liegt dort also exakt auf
+der Effektivwertlinie — kein Zufall, sondern die Definition, und damit eine
+Prüfung, die eine falsche Formel sofort auffliegen lässt.
+
+### Der gesuchte Wert im Plan (Punkt 80)
+
+In einer Aufgabe steht „gesucht: der Strom durch R2", und dann muss man R2 im
+Plan auch finden. Ohne Hervorhebung fängt die Aufgabe mit einer Suchübung an,
+die niemand gestellt hat. `alsSvg` nimmt jetzt `hervor` und legt einen
+gestrichelten Ring um das genannte Bauteil — einen Ring und keinen Farbwechsel,
+denn ein zweiter Farbton heisst in dieser Zeichnung schon „führt Strom".
+
+### Und ein Fehler in einer Prüfung
+
+`test241` §6 war bei etwa jedem zweiten Lauf rot, an einer Stelle, die nichts
+mit dem Fehler zu tun hatte: die Übungsfläche würfelt die Aufgabenart, und
+bei „Rechnen" oder „Einheiten umrechnen" gibt es gar keine
+Antwortmöglichkeiten zum Anklicken. Die Art wird jetzt vorgegeben — und der
+Zahlenweg bekam gleich drei eigene Prüfpunkte, denn vorher prüfte §6 nur die
+eine Hälfte.
+
+Eine Prüfung, die würfelt, was sie misst, misst nichts.
+
+Prüflauf: `test240` §10–§12, dreiunddreissig neue Punkte (97 gesamt);
+`test241` 95 Punkte.

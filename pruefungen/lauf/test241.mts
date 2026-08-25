@@ -279,9 +279,16 @@ p('Eine Reihe lässt sich auf eine Art einschränken',
  * ========================================================================*/
 console.log('\n6 · Üben');
 
+/* Die Art wird VORGEGEBEN, und zwar eine mit Antwortmöglichkeiten.
+   -----------------------------------------------------------------
+   Ohne diese Zeile würfelt die Fläche, und bei „Rechnen" oder „Einheiten
+   umrechnen" gibt es gar keine Möglichkeiten zum Anklicken — die Prüfung
+   war bei etwa jedem zweiten Lauf rot, und zwar an einer Stelle, die nichts
+   mit dem Fehler zu tun hatte. Eine Prüfung, die würfelt, was sie misst,
+   misst nichts. */
 await seite.evaluate(() => {
   Store.setMeta('elektro:uebungsstand', {});
-  Store.setMeta('elektro:uebungsarten', []);
+  Store.setMeta('elektro:uebungsarten', ['zeichen-name']);
   Elektroarbeitsplatz.zeigeAls('Üben', Elektroarbeitsplatz.uebung());
 });
 await seite.waitForTimeout(700);
@@ -329,6 +336,20 @@ await seite.waitForTimeout(400);
 p('Eine gewählte Art gilt',
   /einheiten/i.test(await seite.locator('.ea-artname').innerText()),
   await seite.locator('.ea-artname').innerText());
+/* Und der Zahlenweg funktioniert auch — er hat keine Möglichkeiten, sondern
+   ein Feld. Ohne diese drei Zeilen prüfte §6 nur die eine Hälfte. */
+p('Bei einer Zahlenaufgabe steht ein Eingabefeld',
+  await seite.locator('.ea-antwort').count() === 1);
+const zahlLoesung = await seite.evaluate(() =>
+  (document.querySelector('.ea-aufgabe') as HTMLElement).dataset.saat);
+p('… mit einem Startwert am Kasten', !!zahlLoesung, String(zahlLoesung));
+await seite.locator('.ea-antwort').fill('0');
+await seite.locator('[data-a="pruefen"]').click();
+await seite.waitForTimeout(400);
+p('… und nach dem Prüfen kommt eine Auflösung',
+  await seite.locator('.ea-aufloesung').count() === 1);
+p('… mit dem Rechenweg', await seite.locator('.ea-weg li').count() >= 2,
+  `${await seite.locator('.ea-weg li').count()}`);
 p('Und der Knopf ist als gewählt zu sehen',
   await seite.locator('.ea-art[data-art="umrechnen"].an').count() === 1);
 

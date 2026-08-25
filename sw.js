@@ -101,6 +101,7 @@ const GRUNDSTOCK = [
     './quell/bereiche/elektro/formelheft.js',
     './quell/bereiche/elektro/aufgaben.js',
     './quell/bereiche/elektro/arbeitsplatz.js',
+    './quell/bereiche/elektro/lernbilder.js',
     './quell/bereiche/pdf/document-mode.js',
     './quell/bereiche/spreadsheet/ansicht.js',
     './quell/bereiche/datenbanken/raster.js',

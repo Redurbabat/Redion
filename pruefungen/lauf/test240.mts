@@ -28,6 +28,7 @@ import path from 'node:path';
 
 declare const Store: any; declare const App: any; declare const Register: any;
 declare const Schaltplan: any; declare const Formelheft: any;
+declare const Elektrolernbilder: any; declare const Elektroarbeitsplatz: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8999;
@@ -467,6 +468,190 @@ const abgeschnitten = await seite.evaluate(() => {
 });
 p('Keine Formel und kein Ergebnis wird abgeschnitten', abgeschnitten.length === 0,
   abgeschnitten.slice(0, 3).join(' · '));
+
+/* ==========================================================================
+ * §10 · Das Formeldreieck (Punkt 65)
+ * ------------------------------------------------------------------------
+ * Es wird nicht gezeichnet, sondern aus der SCHREIBWEISE gelesen. Damit gibt
+ * es genau so viele Dreiecke wie dreiteilige Produktformeln — und keines für
+ * eine Formel, die keines hat. Ein erfundenes Dreieck wäre eine Merkhilfe,
+ * die falsch merkt.
+ * ========================================================================*/
+console.log('\n10 · Formeldreieck');
+
+await seite.setViewportSize({ width: 1200, height: 860 });
+await seite.evaluate(() => Formelheft.schliessen());
+await seite.waitForTimeout(300);
+
+const dreiecke = await seite.evaluate(() => {
+  const L = Elektrolernbilder;
+  return {
+    alle: L.alleDreiecke().map((d: any) => `${d.oben}=${d.links}·${d.rechts}`),
+    ausProdukt: L.ausSchreibweise('U = R · I'),
+    ausBruch: L.ausSchreibweise('I = U / R'),
+    keinDreieck: [
+      L.ausSchreibweise('X_C = 1 / (2 · π · f · C)'),
+      L.ausSchreibweise('P = U · I · cosφ'),
+      L.ausSchreibweise('U = U'),
+      L.ausSchreibweise(''),
+      L.ausSchreibweise('R = R · R')
+    ].filter(Boolean).length
+  };
+});
+p('Es gibt Dreiecke', dreiecke.alle.length >= 4, dreiecke.alle.join('  '));
+p('U = R · I ist dabei', dreiecke.alle.includes('U=R·I'), dreiecke.alle.join('  '));
+p('P = U · I auch', dreiecke.alle.includes('P=U·I'));
+p('Keine Doppelten', new Set(dreiecke.alle).size === dreiecke.alle.length);
+/* `U = R · I` und `I = U / R` beschreiben DASSELBE Dreieck — oben U. Wer sie
+   als zwei behandelt, zeigt dieselbe Merkhilfe zweimal mit anderer Spitze. */
+p('Produkt und Bruch geben dieselbe Spitze',
+  dreiecke.ausProdukt.oben === 'U' && dreiecke.ausBruch.oben === 'U',
+  `${dreiecke.ausProdukt.oben} / ${dreiecke.ausBruch.oben}`);
+p('Aus dem Dreieck lassen sich drei Formeln ablesen',
+  dreiecke.ausProdukt.ablesbar.length === 3,
+  JSON.stringify(dreiecke.ausProdukt.ablesbar));
+p('… und sie stimmen',
+  JSON.stringify(dreiecke.ausProdukt.ablesbar) ===
+  JSON.stringify(['U = R · I', 'R = U / I', 'I = U / R']),
+  JSON.stringify(dreiecke.ausProdukt.ablesbar));
+/* Und die Gegenprobe: Formeln OHNE Dreieck bekommen keines. Ohne diese Zeile
+   könnte `ausSchreibweise` alles annehmen und §10 wäre trotzdem grün. */
+p('Formeln ohne Dreieck bekommen keines', dreiecke.keinDreieck === 0,
+  `${dreiecke.keinDreieck} von 5 fälschlich angenommen`);
+
+await seite.evaluate(() =>
+  Elektroarbeitsplatz.zeigeAls('Formeldreieck', Elektrolernbilder.dreieckFlaeche()));
+await seite.waitForTimeout(600);
+p('Die Fläche steht', await seite.locator('.fd-dreieck').count() === 1);
+p('Mit einem Knopf je Dreieck',
+  await seite.locator('.fd-knopf').count() === dreiecke.alle.length,
+  `${await seite.locator('.fd-knopf').count()}`);
+p('Drei Grössen im Bild', await seite.locator('.fd-feld').count() === 3);
+
+await seite.locator('.fd-feld').first().click();
+await seite.waitForTimeout(300);
+const zugehalten = await seite.locator('.fd-hinweis').innerText();
+p('Eine Grösse zuhalten zeigt ihre Formel', /U = R · I/.test(zugehalten), zugehalten);
+p('… und sie ist im Bild als verdeckt zu sehen',
+  await seite.locator('.fd-feld.verdeckt').count() === 1);
+await seite.locator('.fd-feld').nth(1).click();
+await seite.waitForTimeout(300);
+p('Eine andere zuhalten ergibt eine andere Formel',
+  /R = U \/ I/.test(await seite.locator('.fd-hinweis').innerText()),
+  await seite.locator('.fd-hinweis').innerText());
+
+await seite.evaluate(() => document.querySelectorAll('.overlay').forEach(x => x.remove()));
+
+/* ==========================================================================
+ * §11 · Die Sinuskurve (Punkt 90)
+ * ------------------------------------------------------------------------
+ * Warum sind 230 V nicht 230 V. Die drei Zahlen müssen stimmen, sonst lernt
+ * jemand den Zusammenhang falsch — und der zwischen Scheitel- und
+ * Effektivwert ist der, nach dem in jeder Prüfung gefragt wird.
+ * ========================================================================*/
+console.log('\n11 · Sinuskurve');
+
+const kurve = await seite.evaluate(() => {
+  const L = Elektrolernbilder;
+  return {
+    bei0:   L.werte({ ueff: 230, f: 50, winkel: 0 }),
+    bei45:  L.werte({ ueff: 230, f: 50, winkel: 45 }),
+    bei90:  L.werte({ ueff: 230, f: 50, winkel: 90 }),
+    bei270: L.werte({ ueff: 230, f: 50, winkel: 270 }),
+    bei60Hz: L.werte({ ueff: 230, f: 60, winkel: 0 })
+  };
+});
+const nahe = (a: number, b: number, t = 0.01) => Math.abs(a - b) <= t * Math.max(1, Math.abs(b));
+p('Scheitelwert ist 230 · √2 = 325,27 V', nahe(kurve.bei0.scheitel, 230 * Math.SQRT2),
+  `${kurve.bei0.scheitel.toFixed(2)}`);
+p('Bei 0° ist der Momentanwert null', Math.abs(kurve.bei0.momentan) < 1e-9);
+/* Bei 45° ist sin = 1/√2, und û/√2 ist genau der Effektivwert. Das ist kein
+   Zufall, sondern die Definition — und ein schöner Prüfstein. */
+p('Bei 45° liegt der Momentanwert genau auf dem Effektivwert',
+  nahe(kurve.bei45.momentan, 230), `${kurve.bei45.momentan.toFixed(2)}`);
+p('Bei 90° ist er der Scheitelwert',
+  nahe(kurve.bei90.momentan, 230 * Math.SQRT2), `${kurve.bei90.momentan.toFixed(2)}`);
+p('Bei 270° ist er negativ', kurve.bei270.momentan < -300,
+  `${kurve.bei270.momentan.toFixed(2)}`);
+p('Periodendauer bei 50 Hz ist 20 ms', nahe(kurve.bei0.periode, 0.02),
+  `${(kurve.bei0.periode * 1000).toFixed(2)} ms`);
+p('Bei 60 Hz sind es 16,67 ms', nahe(kurve.bei60Hz.periode, 1 / 60),
+  `${(kurve.bei60Hz.periode * 1000).toFixed(2)} ms`);
+
+await seite.evaluate(() =>
+  Elektroarbeitsplatz.zeigeAls('Sinuskurve', Elektrolernbilder.sinusFlaeche()));
+await seite.waitForTimeout(600);
+p('Die Kurve steht', await seite.locator('.sk-kurve').count() === 1);
+p('Mit Scheitel- und Effektivwertlinie',
+  await seite.locator('.sk-scheitel').count() >= 1 &&
+  await seite.locator('.sk-effektiv').count() >= 2);
+p('Und fünf Zahlen darunter', await seite.locator('.sk-zahl').count() === 5,
+  `${await seite.locator('.sk-zahl').count()}`);
+
+/* Nichts darf aus der Zeichnung ragen. Die Beschriftung „û 325.3" steht
+   rechtsbündig am linken Rand — bei zu schmalem Rand war sie angeschnitten. */
+const ragtRaus = await seite.evaluate(() => {
+  const svg = document.querySelector('.sk-kurve') as SVGSVGElement;
+  const rs = svg.getBoundingClientRect();
+  const raus: string[] = [];
+  svg.querySelectorAll<SVGTextElement>('.sk-mass, .sk-grad, .sk-jetzt').forEach(t => {
+    const r = t.getBoundingClientRect();
+    if (r.left < rs.left - 0.5 || r.right > rs.right + 0.5)
+      raus.push(`"${t.textContent}"`);
+  });
+  return raus;
+});
+p('Keine Beschriftung ragt aus der Zeichnung', ragtRaus.length === 0,
+  ragtRaus.join(' · '));
+
+/* Der Schieber muss wirken — sonst ist die Kurve ein Bild. */
+const vorher90 = await seite.locator('.sk-zahl b').nth(2).innerText();
+await seite.locator('.sk-winkel').fill('90');
+await seite.dispatchEvent('.sk-winkel', 'input');
+await seite.waitForTimeout(300);
+const nachher90 = await seite.locator('.sk-zahl b').nth(2).innerText();
+p('Der Schieber ändert den Momentanwert', vorher90 !== nachher90,
+  `${vorher90} → ${nachher90}`);
+p('… und er trifft den Scheitelwert', /325/.test(nachher90), nachher90);
+p('Der Scheitelwert selbst bleibt',
+  /325/.test(await seite.locator('.sk-zahl b').first().innerText()));
+
+/* Ein anderer Effektivwert ändert alles Übrige mit. */
+await seite.locator('.sk-ueff').fill('400');
+await seite.dispatchEvent('.sk-ueff', 'input');
+await seite.waitForTimeout(300);
+p('Ein anderer Effektivwert ändert den Scheitel',
+  /565/.test(await seite.locator('.sk-zahl b').first().innerText()),
+  await seite.locator('.sk-zahl b').first().innerText());
+
+await seite.evaluate(() => document.querySelectorAll('.overlay').forEach(x => x.remove()));
+
+/* ==========================================================================
+ * §12 · Den gesuchten Wert im Plan markieren (Punkt 80)
+ * ========================================================================*/
+console.log('\n12 · Gesucht im Plan');
+
+const markiert = await seite.evaluate(() => {
+  const plan = Schaltplan.neuerPlan('stromlauf-aufgeloest');
+  plan.teile = [
+    { id: 'a', zeichen: 'widerstand', x: 40, y: 40, drehung: 0, gespiegelt: false,
+      bmk: 'R1', nummern: {}, gruppe: '', ebene: 'plan' },
+    { id: 'b', zeichen: 'widerstand', x: 160, y: 40, drehung: 0, gespiegelt: false,
+      bmk: 'R2', nummern: {}, gruppe: '', ebene: 'plan' }
+  ];
+  plan.leitungen = [];
+  const ohne = Schaltplan.alsSvg(plan, {});
+  const mit = Schaltplan.alsSvg(plan, { hervor: 'b' });
+  return {
+    ohne: (ohne.match(/sp-gesucht/g) || []).length,
+    mit: (mit.match(/sp-gesucht/g) || []).length,
+    /* Und es muss das RICHTIGE sein. */
+    amRichtigen: /data-id="b"/.test(mit.split('sp-gesucht')[1]?.slice(0, 60) || '')
+  };
+});
+p('Ohne Angabe ist nichts markiert', markiert.ohne === 0);
+p('Mit Angabe genau eines', markiert.mit === 1, `${markiert.mit}`);
+p('… und zwar das genannte', markiert.amRichtigen);
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' · '));
 

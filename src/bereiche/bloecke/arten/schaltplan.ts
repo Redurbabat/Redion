@@ -423,6 +423,15 @@ const Schaltplan = (() => {
     strom?: Strombild;
     /** Messwerte als Text an die Bauteile schreiben. */
     messwerte?: boolean;
+    /**
+     * Ein Bauteil hervorheben (Punkt 80) — das, nach dem gefragt ist.
+     *
+     * In einer Aufgabe steht „gesucht: der Strom durch R2", und dann muss
+     * man R2 im Plan auch FINDEN. Ohne Hervorhebung sucht man in einer
+     * Zeichnung mit acht Bauteilen erst einmal, und die Aufgabe fängt mit
+     * einer Suchübung an, die niemand gestellt hat.
+     */
+    hervor?: string;
   } = {}): string => {
     const sichtbar = (ebene: string): boolean => {
       if (opt.nurEbenen) return opt.nurEbenen.includes(ebene);
@@ -545,7 +554,8 @@ const Schaltplan = (() => {
 
       teile.push(
         `<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
-        `${w && w.fliesst ? ' sp-fuehrt' : ''}" data-id="${esc(t.id)}" ` +
+        `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
+        `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
         `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
         `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
         /* Eine unsichtbare Fläche, damit auch die Lücken im Symbol greifbar
