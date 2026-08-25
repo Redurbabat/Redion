@@ -2065,7 +2065,24 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-titel del{background:var(--b-red); color:var(--c-red)}
 
 /* Aus anderen Werkzeugen übernehmen */
-.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:56vh; overflow:auto}
+/* 62vh statt 56: am Rechner fehlten mit acht Quellen genau 28 px, und die
+   Höhe war ohne Grund knapper als der Platz im Fenster (E183). */
+.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:62vh; overflow:auto}
+/* Und wo es doch nicht reicht — am Telefon reicht es nie —, läuft die Kante
+   aus, statt scharf abzuschneiden. `Rollrand` setzt `data-rand` mit den
+   Wörtern der senkrechten Achse. Eine MASKE, kein aufgelegtes Element: ein
+   Pseudo-Element im Rollfeld rollte mit und wäre nach dem ersten Wisch weg. */
+.ax-liste[data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent)}
+.ax-liste[data-rand~="oben"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px)}
+.ax-liste[data-rand~="oben"][data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent)}
 .ax-liste button{display:flex; gap:12px; align-items:center; padding:10px 12px; border:0;
                  background:transparent; border-radius:8px; cursor:pointer; text-align:left; width:100%}
 .ax-liste button:hover{background:var(--bg-hover)}
@@ -3270,3 +3287,13 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .blatt-fest{ flex:1 1 100%; justify-content:flex-end;
                padding:0 8px 6px; border-top:1px solid var(--rand) }
 }
+
+/* --- „50 von 300 Zeilen" (L22, E180) --------------------------------------
+   Unter der Ansicht, nicht im Tabellenfuss: `begrenzen` gilt für jede
+   Ansichtsart, und in den Tabellenfuss geschrieben hätten Board, Galerie
+   und Feed weiter stumm abgeschnitten. */
+.db-grenze{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:8px 4px 2px; font-size:13px; color:var(--text-faint) }
+.db-grenze button{ padding:3px 10px; border-radius:6px; font-size:13px;
+  color:var(--text); background:var(--bg-hover) }
+.db-grenze button:hover{ background:var(--rand) }

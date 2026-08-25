@@ -386,11 +386,13 @@ const Arbeitswelt = (() => {
     } catch { /* Eine nicht speicherbare UI-Präferenz blockiert die Sicht nicht. */ }
   };
 
-  const rechteAktiv = (): boolean =>
-    typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
+  /* Die Rechtefrage steht seit E181 in `kern/zugang/lesefrage.ts` — sie war
+     hier und in `lebensbereiche.ts` je einmal ausgeschrieben, und die zwei
+     Fassungen antworteten bei leerer Seitenkennung verschieden (L50). */
+  const rechteAktiv = (): boolean => Lesefrage.aktiv();
 
   const erlaubt = (aktion: 'lesen' | 'bearbeiten', pageId?: string): boolean =>
-    !rechteAktiv() || (pageId ? Konten.darf(aktion, pageId) : Konten.darf(aktion));
+    pageId === undefined ? Lesefrage.erlaubt(aktion) : Lesefrage.erlaubt(aktion, pageId);
 
   const hinweis = (text: string): void => {
     if (typeof UI !== 'undefined' && typeof UI.toast === 'function') UI.toast(text);

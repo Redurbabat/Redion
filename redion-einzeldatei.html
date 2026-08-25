@@ -6886,7 +6886,24 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-titel del{background:var(--b-red); color:var(--c-red)}
 
 /* Aus anderen Werkzeugen übernehmen */
-.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:56vh; overflow:auto}
+/* 62vh statt 56: am Rechner fehlten mit acht Quellen genau 28 px, und die
+   Höhe war ohne Grund knapper als der Platz im Fenster (E183). */
+.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:62vh; overflow:auto}
+/* Und wo es doch nicht reicht — am Telefon reicht es nie —, läuft die Kante
+   aus, statt scharf abzuschneiden. `Rollrand` setzt `data-rand` mit den
+   Wörtern der senkrechten Achse. Eine MASKE, kein aufgelegtes Element: ein
+   Pseudo-Element im Rollfeld rollte mit und wäre nach dem ersten Wisch weg. */
+.ax-liste[data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent)}
+.ax-liste[data-rand~="oben"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px)}
+.ax-liste[data-rand~="oben"][data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent)}
 .ax-liste button{display:flex; gap:12px; align-items:center; padding:10px 12px; border:0;
                  background:transparent; border-radius:8px; cursor:pointer; text-align:left; width:100%}
 .ax-liste button:hover{background:var(--bg-hover)}
@@ -8091,6 +8108,16 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .blatt-fest{ flex:1 1 100%; justify-content:flex-end;
                padding:0 8px 6px; border-top:1px solid var(--rand) }
 }
+
+/* --- „50 von 300 Zeilen" (L22, E180) --------------------------------------
+   Unter der Ansicht, nicht im Tabellenfuss: `begrenzen` gilt für jede
+   Ansichtsart, und in den Tabellenfuss geschrieben hätten Board, Galerie
+   und Feed weiter stumm abgeschnitten. */
+.db-grenze{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:8px 4px 2px; font-size:13px; color:var(--text-faint) }
+.db-grenze button{ padding:3px 10px; border-radius:6px; font-size:13px;
+  color:var(--text); background:var(--bg-hover) }
+.db-grenze button:hover{ background:var(--rand) }
 
 </style>
 
@@ -33636,6 +33663,44 @@ const Datenbank = (() => {
         else
             koerper.appendChild(alsTabelle(coll, view, rows, block));
         w.appendChild(koerper);
+        /* ----------------------------------------------------------------------
+         * WAS NICHT DASTEHT, MUSS DASTEHEN (L22, E180)
+         * ----------------------------------------------------------------------
+         * `begrenzen` zeigt 50 Zeilen und nimmt die übrigen weg. Gemessen an
+         * 300 Zeilen: die Tabelle endet nach der fünfzigsten mit „+ Neu", und
+         * NICHTS sagt, dass zweihundertfünfzig fehlen. Eine Tabelle, die einen
+         * Teil zeigt und aussieht wie das Ganze, ist die gefährlichere Sorte
+         * Unvollständigkeit — man merkt sie erst, wenn man etwas sucht, das
+         * dasteht und nicht gefunden wird.
+         *
+         * HIER UND NICHT IN DER TABELLE: `begrenzen` gilt für jede Ansichtsart.
+         * In den Tabellenfuss geschrieben, hätten Board, Galerie und Feed
+         * weiter stumm abgeschnitten.
+         *
+         * Der Weg heraus steht daneben, nicht in einem Menü drei Ebenen tiefer:
+         * die Ladegrenze gibt es zwar unter „Layout", aber wer nicht weiss,
+         * dass abgeschnitten wird, sucht sie nicht.
+         * -------------------------------------------------------------------- */
+        const gesamt = zeilenGesamt(coll, view);
+        if (gesamt > rows.length) {
+            const fuss = document.createElement('div');
+            fuss.className = 'db-grenze';
+            fuss.innerHTML =
+                `<span>${rows.length} von ${gesamt} Zeilen</span>` +
+                    '<button data-a="mehr">Mehr laden</button>' +
+                    '<button data-a="alle">Alle zeigen</button>';
+            fuss.addEventListener('click', e => {
+                const b = elVon(e)?.closest('button[data-a]');
+                if (!b)
+                    return;
+                /* Die Grenze steht an der ANSICHT und bleibt damit stehen — wer
+                   einmal alle sehen wollte, will es beim nächsten Öffnen wieder. */
+                const jetzt = view.limit === 0 ? 0 : (view.limit || 50);
+                Store.updateView(view.id, { limit: b.dataset.a === 'alle' ? 0 : jetzt + 50 });
+                App.zeichneSeite();
+            });
+            w.appendChild(fuss);
+        }
         return w;
     };
     /* ========================================================================
@@ -64242,6 +64307,8 @@ window.Vergleich = Vergleich;
  *   AUSGEBEN  · .docx — eine echte Word-Datei, ohne fremde Pakete
  *             · .xlsx — eine echte Excel-Mappe, eine Tabelle je Ansicht
  *
+ *   EINLESEN  · Asana (CSV)        — Abschnitte werden Status, Notizen Seiten
+ *   EINLESEN  · Apple Notes (Ordner)— je HTML-Datei eine Seite, Ordner bleiben
  *   EINLESEN  · Trello (JSON)      — Listen werden Status, Karten Zeilen
  *             · Evernote (.enex)   — jede Notiz eine Seite
  *             · Obsidian (Ordner)  — [[Wikilinks]] werden echte Verweise
@@ -65171,6 +65238,49 @@ const Austausch = (() => {
         });
         return { seite, hinweis: n + ' Karten aus ' + listen.size + ' Listen übernommen' };
     };
+    /* --- HTML in Markdown, einmal fuer alle -------------------------------
+     * Evernote (ENML) und Apple Notes liefern beide HTML, und beide brauchen
+     * daraus dieselben Bloecke. Diese Funktion stand frueher IN `ausEvernote`;
+     * Apple Notes haette sie kopiert, und dann waere sie zweimal dagewesen —
+     * genau die Sorte doppelte Wahrheit, die L34 beschreibt.
+     *
+     * ABGEHAKTES bleibt abgehakt: Apple Notes schreibt Checklisten als
+     * `<li>` mit einem Datenattribut oder einem vorangestellten Kaestchen.
+     * Beides wird zu `- [ ]` / `- [x]`, und `ausMarkdown` macht daraus
+     * echte Aufgabenbloecke statt Strichlisten mit einem Kaestchen im Text.
+     * --------------------------------------------------------------------- */
+    const HAKEN_AN = /^\s*(?:\u2611|\u2612|\u2714|\u2713|\[x\]|\[X\])\s*/;
+    const HAKEN_AUS = /^\s*(?:\u2610|\[\s?\])\s*/;
+    const htmlZuMarkdown = (html) => {
+        const roh = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
+        if (!roh.body)
+            return '';
+        return [...roh.body.querySelectorAll('div, p, li, h1, h2, h3')]
+            .map(el => {
+            let t = (el.textContent || '').trim();
+            if (!t)
+                return '';
+            if (el.tagName === 'H1')
+                return '# ' + t;
+            if (el.tagName === 'H2')
+                return '## ' + t;
+            if (el.tagName === 'H3')
+                return '### ' + t;
+            if (el.tagName === 'LI') {
+                /* Apple Notes kennt drei Schreibweisen fuer denselben Haken. */
+                const attr = el.getAttribute('data-apple-checklist-item')
+                    || el.getAttribute('data-checked') || '';
+                if (HAKEN_AN.test(t))
+                    return '- [x] ' + t.replace(HAKEN_AN, '');
+                if (HAKEN_AUS.test(t))
+                    return '- [ ] ' + t.replace(HAKEN_AUS, '');
+                if (attr)
+                    return (attr === 'true' || attr === 'checked' ? '- [x] ' : '- [ ] ') + t;
+                return '- ' + t;
+            }
+            return t;
+        }).filter(Boolean).join('\n\n');
+    };
     /* --- Evernote (.enex) --------------------------------------------------
      * Eine XML-Datei mit <note>-Einträgen. Der Inhalt steckt in ENML, das
      * nah genug an HTML ist, um es über den HTML-Weg einzulesen.
@@ -65185,23 +65295,7 @@ const Austausch = (() => {
             const titel = (n.querySelector('title') || {}).textContent || 'Ohne Titel';
             const inhalt = (n.querySelector('content') || {}).textContent || '';
             const seite = Store.addBlock(wurzel.id, 'page', { text: titel });
-            /* ENML in einfachen Text mit Absätzen verwandeln */
-            const roh = new DOMParser().parseFromString(inhalt, 'text/html');
-            const md = [...roh.body.querySelectorAll('div, p, li, h1, h2, h3')]
-                .map(el => {
-                const t = el.textContent.trim();
-                if (!t)
-                    return '';
-                if (el.tagName === 'H1')
-                    return '# ' + t;
-                if (el.tagName === 'H2')
-                    return '## ' + t;
-                if (el.tagName === 'H3')
-                    return '### ' + t;
-                if (el.tagName === 'LI')
-                    return '- ' + t;
-                return t;
-            }).filter(Boolean).join('\n\n');
+            const md = htmlZuMarkdown(inhalt);
             if (md)
                 Werkzeuge.ausMarkdown(seite, md);
             const tags = [...n.querySelectorAll('tag')].map(t => t.textContent);
@@ -65919,6 +66013,233 @@ const Austausch = (() => {
         });
         return { werte, formeln, tabellen };
     };
+    /* --- Asana (.csv) ------------------------------------------------------
+     * Asana schreibt seinen Export als CSV mit festen Spaltennamen. Der
+     * allgemeine CSV-Weg liest das auch — aber er liest ALLES als Text:
+     *
+     *     Section/Column  ->  Text          statt  Status (und Gruppierung)
+     *     Due Date        ->  Text          statt  Datum
+     *     Tags            ->  Text          statt  Mehrfachauswahl
+     *     Completed At    ->  Text          statt  Haken
+     *     Notes           ->  eine Zelle mit vier Absaetzen darin
+     *
+     * Das Letzte ist das Schlimmste: die Beschreibung einer Aufgabe landet in
+     * einer Tabellenzelle, wo man sie nicht lesen und nicht gliedern kann.
+     * Hier wird sie zum Seiteninhalt, wo sie hingehört.
+     *
+     * WAS NICHT ERKANNT WIRD, GEHT TROTZDEM MIT. Asana hängt eigene Felder
+     * als weitere Spalten an, und die heissen bei jedem anders. Sie werden
+     * als Textspalten übernommen — lieber eine Spalte zu viel als ein
+     * verlorenes Feld.
+     * --------------------------------------------------------------------- */
+    /** Was Asana schreibt -> was Redion daraus macht. */
+    const ASANA_FELDER = [
+        /* Muster auf den Spaltennamen | Schlüssel | Anzeigename | Typ */
+        [/^name$|^task name$/i, 'title', 'Aufgabe', 'title'],
+        [/^section\/column$|^section$/i, 'abschnitt', 'Abschnitt', 'status'],
+        [/^assignee$/i, 'wer', 'Zuständig', 'text'],
+        [/^due date$/i, 'faellig', 'Fällig', 'date'],
+        [/^start date$/i, 'beginn', 'Beginn', 'date'],
+        [/^tags$/i, 'tags', 'Etiketten', 'multi'],
+        [/^projects$/i, 'projekt', 'Projekt', 'text'],
+        [/^parent task$/i, 'ueber', 'Gehört zu', 'text'],
+        [/^priority$/i, 'prio', 'Priorität', 'select'],
+    ];
+    /* Diese vier werden gelesen, aber NICHT zu Spalten: `Notes` wird der
+       Seiteninhalt, `Completed At` wird der Haken, die beiden Kennungen
+       interessieren niemanden mehr, sobald die Daten hier sind. */
+    const ASANA_STUMM = /^notes$|^completed at$|^task id$|^assignee email$|^created at$|^last modified$/i;
+    /** Ein Wert wie „a, b, c" wird zur Liste — Asana trennt Etiketten so. */
+    const asanaListe = (v) => String(v ?? '').split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
+    const ausAsana = (text, zielSeite, name) => {
+        const zeilen = (typeof Csv !== 'undefined')
+            ? Csv.zerlege(text).filter((z) => z.some(x => String(x).trim()))
+            : csvZerlegenNot(text);
+        if (zeilen.length < 2)
+            throw new Error('Die Datei enthält keine Zeilen');
+        const kopf = (zeilen[0] ?? []).map((x) => String(x ?? '').replace(/^﻿/, '').trim());
+        const saetze = zeilen.slice(1);
+        /* Erkennt Asana daran, dass „Name" ODER „Task Name" dasteht. Ohne das
+           wäre jede beliebige CSV ein Asana-Export, und die Zuordnung unten
+           würde raten statt lesen. */
+        const titelSpalte = kopf.findIndex(k => /^name$|^task name$/i.test(k));
+        if (titelSpalte < 0)
+            throw new Error('Das sieht nicht nach einem Asana-Export aus — die Spalte „Name" fehlt');
+        const zuordnung = [];
+        const schema = {};
+        let eigene = 0;
+        kopf.forEach((spaltenName, i) => {
+            if (!spaltenName)
+                return;
+            if (ASANA_STUMM.test(spaltenName))
+                return;
+            const treffer = ASANA_FELDER.find(([muster]) => muster.test(spaltenName));
+            if (treffer) {
+                const [, key, anzeige, typ] = treffer;
+                if (schema[key])
+                    return; /* zweimal dieselbe Spalte: die erste gewinnt */
+                schema[key] = { name: anzeige, type: typ };
+                zuordnung.push({ i, key, typ });
+            }
+            else {
+                /* Ein eigenes Feld von Asana. Der Schlüssel darf nicht rein
+                   numerisch sein — siehe E96/E172. */
+                const key = 'a' + eigene++;
+                schema[key] = { name: spaltenName, type: 'text' };
+                zuordnung.push({ i, key, typ: 'text' });
+            }
+        });
+        /* Der Haken kommt aus `Completed At`: dort steht ein Datum, wenn die
+           Aufgabe fertig ist, und nichts, wenn nicht. */
+        const fertigSpalte = kopf.findIndex(k => /^completed at$/i.test(k));
+        if (fertigSpalte >= 0)
+            schema['fertig'] = { name: 'Erledigt', type: 'checkbox' };
+        const notizSpalte = kopf.findIndex(k => /^notes$/i.test(k));
+        /* Die Auswahlspalten brauchen ihre Werte, bevor die erste Zeile da ist —
+           sonst steht die Zeile auf einer Option, die es nicht gibt. */
+        const werteVon = (i) => saetze.map((z) => String(z[i] ?? '').trim());
+        const FARBEN = ['gray', 'blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow'];
+        zuordnung.forEach(z => {
+            if (z.typ !== 'status' && z.typ !== 'select' && z.typ !== 'multi')
+                return;
+            const roh = werteVon(z.i);
+            const alle = z.typ === 'multi'
+                ? [...new Set(roh.flatMap(asanaListe))]
+                : [...new Set(roh.filter(Boolean))];
+            schema[z.key].options = alle.map((n, k) => ({ name: n, color: FARBEN[k % FARBEN.length] }));
+        });
+        const titel = name || 'Aus Asana';
+        const seite = Store.addBlock(zielSeite || null, 'page', { text: titel, icon: '✓' });
+        const hatAbschnitt = !!schema['abschnitt'];
+        const db = Store.addDatabase(seite.id, titel, schema, hatAbschnitt ? 'board' : 'table');
+        if (hatAbschnitt)
+            Store.updateView(db.viewId, { groupBy: 'abschnitt' });
+        let n = 0, mitText = 0;
+        saetze.forEach((z) => {
+            const props = {};
+            zuordnung.forEach(zu => {
+                const roh = String(z[zu.i] ?? '').trim();
+                if (zu.key === 'title') {
+                    props['title'] = roh || 'Ohne Titel';
+                    return;
+                }
+                if (!roh)
+                    return;
+                props[zu.key] = zu.typ === 'multi' ? asanaListe(roh)
+                    : zu.typ === 'date' ? roh.slice(0, 10)
+                        : roh;
+            });
+            if (fertigSpalte >= 0)
+                props['fertig'] = !!String(z[fertigSpalte] ?? '').trim();
+            if (props['title'] === undefined)
+                props['title'] = 'Ohne Titel';
+            const zeile = Store.addRow(db.collectionId, props);
+            n++;
+            /* Die Beschreibung wird Seiteninhalt, nicht Zellinhalt. */
+            const notiz = notizSpalte >= 0 ? String(z[notizSpalte] ?? '').trim() : '';
+            if (notiz) {
+                Werkzeuge.ausMarkdown(zeile, notiz);
+                mitText++;
+            }
+        });
+        return { seite, hinweis: n + ' Aufgaben übernommen, ' + mitText + ' mit Beschreibung' };
+    };
+    /* Der Not-Zerleger, falls `core/spreadsheet/csv.js` fehlt. Er trennt nur
+       bei Komma; das ist schlechter als `Csv.zerlege`, aber besser als nichts,
+       und es macht `ausAsana` nicht von einer zweiten Datei abhängig. */
+    const csvZerlegenNot = (text) => {
+        const raus = [];
+        let feld = '', zeile = [], inAnf = false;
+        for (let i = 0; i < text.length; i++) {
+            const c = text[i];
+            if (inAnf) {
+                if (c === '"' && text[i + 1] === '"') {
+                    feld += '"';
+                    i++;
+                }
+                else if (c === '"')
+                    inAnf = false;
+                else
+                    feld += c;
+            }
+            else if (c === '"')
+                inAnf = true;
+            else if (c === ',') {
+                zeile.push(feld);
+                feld = '';
+            }
+            else if (c === '\n') {
+                zeile.push(feld);
+                raus.push(zeile);
+                zeile = [];
+                feld = '';
+            }
+            else if (c !== '\r')
+                feld += c;
+        }
+        if (feld || zeile.length) {
+            zeile.push(feld);
+            raus.push(zeile);
+        }
+        return raus.filter(z => z.some(x => String(x).trim()));
+    };
+    /* --- Apple Notes (Ordner mit .html) ------------------------------------
+     * Apple Notes kann nicht selbst in einem Rutsch exportieren; die üblichen
+     * Wege liefern einen ORDNER mit einer HTML-Datei je Notiz, und die Ordner
+     * der App werden zu Unterordnern. Beides wird hier abgebildet:
+     *
+     *     Notizen/Rezepte/Brot.html   ->  Seite „Rezepte" > Seite „Brot"
+     *
+     * Der Titel kommt aus `<title>`, aus der ersten Überschrift oder aus dem
+     * Dateinamen — in dieser Reihenfolge, weil die ersten beiden Umlaute und
+     * Satzzeichen behalten, die der Dateiname verloren hat.
+     * --------------------------------------------------------------------- */
+    const ausAppleNotes = async (dateien, zielSeite) => {
+        const htmls = dateien.filter(d => /\.html?$/i.test(d.name || ''));
+        if (!htmls.length)
+            throw new Error('Keine .html-Dateien in diesem Ordner');
+        const wurzel = Store.addBlock(zielSeite || null, 'page', { text: 'Aus Apple Notes', icon: '📒' });
+        /* Ordnerpfad -> Seite. Wird beim ersten Bedarf angelegt, damit ein leerer
+           Ordner keine leere Seite hinterlaesst. */
+        const ordner = new Map();
+        const ordnerSeite = (pfad) => {
+            if (!pfad)
+                return wurzel;
+            const da = ordner.get(pfad);
+            if (da)
+                return da;
+            const teile = pfad.split('/');
+            const letzter = teile[teile.length - 1] || pfad;
+            const eltern = ordnerSeite(teile.slice(0, -1).join('/'));
+            const s = Store.addBlock(eltern.id, 'page', { text: letzter, icon: '📁' });
+            ordner.set(pfad, s);
+            return s;
+        };
+        let n = 0;
+        for (const d of htmls) {
+            const roh = await d.text();
+            const doc = new DOMParser().parseFromString(roh, 'text/html');
+            const ausDatei = String(d.name || '').replace(/\.html?$/i, '');
+            const titel = (doc.querySelector('title')?.textContent || '').trim()
+                || (doc.querySelector('h1, h2')?.textContent || '').trim()
+                || ausDatei;
+            /* Der Pfad OHNE das oberste Verzeichnis: das ist der Name des
+               gewählten Ordners und steht schon als Wurzelseite da. */
+            const voll = String(d.webkitRelativePath || d.name || '');
+            const teile = voll.split('/').slice(1, -1);
+            const seite = Store.addBlock(ordnerSeite(teile.join('/')).id, 'page', { text: titel });
+            /* Die Überschrift, die schon der Titel ist, nicht noch einmal. */
+            const erste = doc.querySelector('h1, h2');
+            if (erste && (erste.textContent || '').trim() === titel)
+                erste.remove();
+            const md = htmlZuMarkdown(doc.body ? doc.body.innerHTML : roh);
+            if (md)
+                Werkzeuge.ausMarkdown(seite, md);
+            n++;
+        }
+        Store.updateBlock(wurzel.id, { aufgeklappt: true });
+        return { seite: wurzel, hinweis: n + ' Notizen aus ' + (ordner.size || 1) + ' Ordnern übernommen' };
+    };
     /* ========================================================================
      * 5. DAS FENSTER
      * ======================================================================*/
@@ -65927,7 +66248,9 @@ const Austausch = (() => {
         ['evernote', '🐘', 'Evernote', 'Eine .enex-Datei — jede Notiz wird eine Seite', '.enex,.xml'],
         ['obsidian', '🔮', 'Obsidian', 'Ein ganzer Ordner mit .md-Dateien, Wikilinks werden aufgelöst', 'ordner'],
         ['notion', '📓', 'Notion-Export', 'Das ZIP aus Notions eigenem Export', '.zip'],
-        ['asana', '🗒', 'Asana / Jira / Monday', 'Der CSV-Export — wird zur Datenbank', '.csv'],
+        ['asana', '🗒', 'Asana', 'Der CSV-Export — Abschnitte werden Status, Notizen werden Seiten', '.csv'],
+        ['apple', '📒', 'Apple Notes', 'Der Ordner mit den HTML-Dateien — Unterordner bleiben Unterordner', 'ordner'],
+        ['csv', '📊', 'Jira, Monday, sonstige CSV', 'Irgendeine Tabelle — wird zur Datenbank', '.csv'],
         ['markdown', '📄', 'Einzelne Dateien',
             'Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB',
             '.md,.txt,.csv,.docx,.xlsx,.ods,.epub']
@@ -65946,6 +66269,12 @@ const Austausch = (() => {
                 '<div class="fbtns"><button data-a="zu">Schliessen</button></div>' +
                 '</div>';
         document.body.appendChild(o);
+        /* DIE LISTE ROLLT, UND MAN SOLL DAS SEHEN (E183). Mit acht Quellen passt
+           sie am Rechner um 28 px nicht mehr, am Telefon um 127. Erreichbar war
+           die letzte immer — sichtbar war nur, dass sie keine Beschreibung hat.
+           Dieselbe Antwort wie an der Tabelle: eine weiche Kante, kein Hinweis. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(o.querySelector('.ax-liste'), { achse: 'hoch' });
         o.addEventListener('click', async (e) => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
                 o.remove();
@@ -65989,7 +66318,11 @@ const Austausch = (() => {
                         erg = ausEvernote(await erste.text(), null);
                     else if (art === 'notion')
                         erg = await ausNotionZip(await erste.arrayBuffer(), null);
-                    else if (art === 'asana') {
+                    else if (art === 'apple')
+                        erg = await ausAppleNotes(dateien, null);
+                    else if (art === 'asana')
+                        erg = ausAsana(await erste.text(), null, erste.name.replace(/\.csv$/i, ''));
+                    else if (art === 'csv') {
                         const text = await erste.text();
                         const s = Store.addBlock(null, 'page', { text: erste.name.replace(/\.csv$/i, '') });
                         Einlesen.alsDatenbank(s.id, erste.name.replace(/\.csv$/i, ''), Datenbank.csvZerlegen(text));
@@ -66015,7 +66348,8 @@ const Austausch = (() => {
     };
     return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
         allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
-        ausTrello, ausEvernote, ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
+        ausTrello, ausEvernote, ausAsana, ausAppleNotes, htmlZuMarkdown,
+        ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
         dialog, QUELLEN,
         /* Nur für Prüfläufe — siehe die Erklärung bei `grenzen`. Wer sie
            im Betrieb verstellt, schreibt ZIP64, wo es keines braucht:
@@ -66603,14 +66937,20 @@ const Rollrand = (() => {
      * ist.
      */
     const SPIEL = 2;
-    const schreibe = (ziel, art, links, rechts) => {
+    /** Die Wörter je Achse: [vor dem sichtbaren Teil, danach]. */
+    const WORTE = {
+        quer: ['links', 'rechts'],
+        hoch: ['oben', 'unten']
+    };
+    const schreibe = (ziel, art, achse, davor, danach) => {
+        const [a, b] = WORTE[achse];
         if (art === 'mehr') {
-            const wert = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+            const wert = davor && danach ? 'beides' : danach ? b : davor ? a : 'nein';
             if (ziel.dataset['mehr'] !== wert)
                 ziel.dataset['mehr'] = wert;
             return;
         }
-        const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
+        const wert = [davor ? a : '', danach ? b : ''].filter(Boolean).join(' ');
         /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
            Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
         if (wert) {
@@ -66622,9 +66962,12 @@ const Rollrand = (() => {
     };
     /** Setzt `data-rand` bzw. `data-mehr` nach dem aktuellen Rollstand. */
     const pruefe = (feld, wahl = {}) => {
-        const links = feld.scrollLeft > SPIEL;
-        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
-        schreibe(wahl.an || feld, wahl.art || 'rand', links, rechts);
+        const achse = wahl.achse || 'quer';
+        const hoch = achse === 'hoch';
+        const stand = hoch ? feld.scrollTop : feld.scrollLeft;
+        const sicht = hoch ? feld.clientHeight : feld.clientWidth;
+        const ganz = hoch ? feld.scrollHeight : feld.scrollWidth;
+        schreibe(wahl.an || feld, wahl.art || 'rand', achse, stand > SPIEL, stand + sicht < ganz - SPIEL);
     };
     /**
      * Ein Rollfeld beobachten. Gibt eine Funktion zurück, die das wieder
@@ -66644,7 +66987,8 @@ const Rollrand = (() => {
             beobachter = new ResizeObserver(nachsehen);
             beobachter.observe(feld);
             /* Auch der Inhalt zählt — eine neue Spalte macht `scrollWidth` grösser,
-               ohne dass sich am Feld selbst etwas ändert. */
+               beim Hochen eine neue Zeile `scrollHeight`, ohne dass sich am Feld
+               selbst etwas ändert. */
             const inhalt = feld.firstElementChild;
             if (inhalt)
                 beobachter.observe(inhalt);
@@ -73253,6 +73597,68 @@ window.Feldrechte = Feldrechte;
 
 </script>
 <script>
+/* ===== quell/kern/zugang/lesefrage.js ===== */
+"use strict";
+/* ============================================================================
+ * lesefrage.ts — dieselbe Rechtefrage, einmal beantwortet (L50)
+ * ----------------------------------------------------------------------------
+ * `Arbeitswelt` und `Lebensbereiche` fragen beide dasselbe: darf ich diese
+ * Seite lesen, darf ich sie ändern. Beide hatten dafür eine eigene Funktion,
+ * beide hiessen `erlaubt` — und sie antworteten VERSCHIEDEN:
+ *
+ *     arbeitswelt     pageId ? Konten.darf(a, pageId) : Konten.darf(a)
+ *     lebensbereiche  !!pageId && Konten.darf(a, pageId)
+ *
+ * Bei einer LEEREN Seitenkennung sagte die eine „frag den Arbeitsbereich" und
+ * die andere „nein". Derselbe Block war in der einen Ansicht sichtbar und in
+ * der anderen nicht — genau die Sorte Abweichung, die E169 gekostet hat, nur
+ * eine Ebene höher. L34 nennt sie beim Namen: ein Wert steht an zwei Stellen,
+ * nichts erzwingt Gleichheit, und die Abweichung sieht man erst spät.
+ *
+ * DIE REGEL, EINMAL AUSGESCHRIEBEN:
+ *
+ *   Rechte aus            → alles erlaubt. Ohne Konten gibt es keine Rechte,
+ *                           und Redion ohne Server hat keine Konten.
+ *   Seitenkennung da      → die Seitenfrage: darf ich DIESE Seite.
+ *   Seitenkennung leer    → NEIN. Ein Block ohne Seite gehört zu keiner, und
+ *                           eine fremde Seite darf nicht für ihn antworten.
+ *   Kennung weggelassen   → die Werkstattfrage: darf ich hier überhaupt
+ *                           etwas ändern. `Konten.darf` fällt dafür auf die
+ *                           offene Seite zurück; das ist lose, aber es ist
+ *                           genau die Frage, die „Neue Seite anlegen" stellt.
+ *
+ * Der Unterschied zwischen „leer" und „weggelassen" ist Absicht: er ist der
+ * Grund, warum beide alten Fassungen zusammenfallen konnten, ohne dass sich
+ * für einen einzigen Aufrufer etwas ändert.
+ *
+ * WARUM NICHT `rechte.ts`: den Namen gibt es schon — dort wohnen die
+ * FELDrechte (Rechte je Spalte). Beim Schreiben dieser Datei wurde er beim
+ * ersten Versuch überschrieben; `npm run typecheck` hat es gemeldet, weil
+ * `Feldrechte` plötzlich unbekannt war.
+ * ==========================================================================*/
+const Lesefrage = (() => {
+    /** Gibt es überhaupt Konten? Ohne sie gibt es keine Rechte. */
+    const aktiv = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
+    /**
+     * Darf ich das?
+     *
+     * @param aktion  lesen, bearbeiten, …
+     * @param pageId  die Seite. WEGLASSEN heisst „im Arbeitsbereich überhaupt",
+     *                ein LEERER Text heisst „zu keiner Seite" und damit nein.
+     */
+    const erlaubt = (aktion, pageId) => {
+        if (!aktiv())
+            return true;
+        if (pageId === undefined)
+            return Konten.darf(aktion);
+        return !!pageId && Konten.darf(aktion, pageId);
+    };
+    return { aktiv, erlaubt };
+})();
+window.Lesefrage = Lesefrage;
+
+</script>
+<script>
 /* ===== quell/bereiche/datenbanken/probelauf/dienst.js ===== */
 "use strict";
 /* ============================================================================
@@ -77624,8 +78030,10 @@ const Lebensbereiche = (() => {
     };
     const jetztIso = () => typeof Store.now === 'function'
         ? String(Store.now()) : new Date().toISOString();
-    const rightsActive = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
-    const erlaubt = (aktion, pageId) => !rightsActive() || (!!pageId && Konten.darf(aktion, pageId));
+    /* Siehe `kern/zugang/lesefrage.ts` — dieselbe Frage stand hier und in
+       `arbeitswelt.ts` je einmal, mit zwei Antworten (L50, E181). */
+    const rightsActive = () => Lesefrage.aktiv();
+    const erlaubt = (aktion, pageId) => Lesefrage.erlaubt(aktion, pageId);
     const globalBearbeitbar = (pageId = '') => {
         if (!rightsActive())
             return true;
@@ -81070,8 +81478,11 @@ const Arbeitswelt = (() => {
         }
         catch { /* Eine nicht speicherbare UI-Präferenz blockiert die Sicht nicht. */ }
     };
-    const rechteAktiv = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
-    const erlaubt = (aktion, pageId) => !rechteAktiv() || (pageId ? Konten.darf(aktion, pageId) : Konten.darf(aktion));
+    /* Die Rechtefrage steht seit E181 in `kern/zugang/lesefrage.ts` — sie war
+       hier und in `lebensbereiche.ts` je einmal ausgeschrieben, und die zwei
+       Fassungen antworteten bei leerer Seitenkennung verschieden (L50). */
+    const rechteAktiv = () => Lesefrage.aktiv();
+    const erlaubt = (aktion, pageId) => pageId === undefined ? Lesefrage.erlaubt(aktion) : Lesefrage.erlaubt(aktion, pageId);
     const hinweis = (text) => {
         if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
             UI.toast(text);

@@ -35,7 +35,42 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**25. August 2026 · 184 Prüfläufe**
+**25. August 2026 · 200 Prüfläufe · LUECKEN.md ist abgearbeitet**
+
+> ### Die Lückenliste, zu Ende gegangen (E170–E182)
+>
+> Jede der 54 Lücken hat jetzt einen Ausgang: gebaut, gemessen, oder mit
+> Begründung bewusst nicht gebaut. Keine steht mehr da, ohne zu sagen, was
+> mit ihr ist.
+>
+> **Drei echte Fehler fand dabei nicht das Lesen, sondern das Messen:**
+>
+> ```txt
+> E171  Zwei Blöcke am selben Bild — den einen löschen nahm dem anderen
+>       das Bild. Datenverlust, still.
+> E174  Der Markdown-Rundlauf gab jedem Block eine neue Kennung; jeder
+>       Verweis darauf zeigte danach ins Leere.
+> E180  Eine Datenbankansicht zeigte 50 von 2000 Zeilen und sagte es nicht.
+> ```
+>
+> **Vier Lücken waren gar keine — sie waren nie nachgesehen worden:**
+>
+> ```txt
+> L21   verlangte drei Dinge, die es seit E122 gibt (test199, 33 Punkte)
+> L22   vermutete Langsamkeit; gemessen sind es 68 ms für die Volltextsuche
+>       über 8000 Blöcke (test233)
+> L26   „Asana fehlt" — es kam herein, nur als lauter Textspalten (E182)
+> L50   „zwei Wahrheiten"; gemessen sagen beide dasselbe (E169)
+> ```
+>
+> **Und vier sind entschieden statt offen**, mit dem Grund dabei: L29 (keine
+> eingebettete OCR-Engine — sie wiegt bei jedem Start), L30 (kein
+> Erweiterungssystem — fremder Code im selben Fenster wie die Notizen),
+> L32 (kein OAuth-Geheimnis im Browser), L50 (kein gemeinsamer Aggregatkern
+> für ein Ergebnis, das der Mensch nicht sieht).
+>
+> Eine bekannte Lücke ist besser als ein stiller Fehler — und eine Lücke,
+> die nur auf dem Papier steht, ist auch eine Art Falschaussage.
 
 > ### Stand vom 25. August — Zweig `codex-study-suite`
 >
@@ -1069,16 +1104,29 @@ Der Stand aller 60 Abschnitte steht in **`doku/AUFTRAG-STAND.md`** — mit
 Belegen, nicht mit Absichten. Drei Zeichen: ✅ gebaut und geprüft, ◐ gebaut
 und teilweise, ✗ offen, ? gebaut und nie laufen gesehen.
 
-Die fünf nächsten Arbeiten, nach Nutzen sortiert:
+Diese fünf standen hier als „die nächsten Arbeiten", und alle fünf sind
+inzwischen erledigt:
 
-1. **§37/§38 Elektro ansehen** — zwei Module ohne Prüflauf und ohne Bild.
-   test211 ist geschrieben; er muss noch laufen.
-2. **§22 Whiteboard fertig machen** (L54): Grösse ändern, mehrstufiges
-   Zurück, Text ohne `prompt()`.
-3. **§23 Vorschlagsmodus** — das Letzte, was am Dokumentmodus fehlt.
-4. **§39 OCR entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
-   beschriften.
-5. **§28 Suche verbreitern** (L55): Dateinamen und Quellenangaben.
+```txt
+§37/§38 Elektro ansehen           test211 läuft
+§22 Whiteboard fertig machen      L54, E144
+§23 Vorschlagsmodus               E145 — war schon gebaut
+§39 OCR entscheiden               L53, E150 — Dienst liegt bei
+§28 Suche verbreitern             L55, E147
+```
+
+**Was jetzt oben liegt**, nach Nutzen sortiert — und alle drei sind
+Entscheidungen, keine Fleissarbeit:
+
+1. **Cloudflare wirklich aufsetzen** (L5–L8, Phase 9). Server, Konto und
+   Sync sind geschrieben und geprüft, aber nie gegen echtes D1/R2 gelaufen.
+   Solange das so ist, ist „optionaler Server" eine Absicht, keine Aussage.
+2. **ZIP64 entscheiden** (L14). Über 4 GB gibt es heute eine klare
+   Fehlermeldung statt eines kaputten Archivs. Das ist ehrlich, aber es ist
+   keine Lösung für den, der 5 GB sichern will.
+3. **Die Migration zu Ende bringen** (L1, L2). `pruefungen/js-bestand.json`
+   darf nur schrumpfen; die Reihenfolge steht in
+   `doku/TYPESCRIPT-MIGRATION.md`.
 
 ---
 

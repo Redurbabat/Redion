@@ -740,18 +740,69 @@ Fehlt noch: ein Weg, Browserkürzel wirklich zu messen · die 33 fehlenden
 Tastenkürzel · Markdown-Tabellen beim Einfügen (`| a | b |`) ·
 verschachtelte Zitate.
 
-## L21 · Vollständige Verschlüsselung
+## L21 · ~~Vollständige Verschlüsselung~~ — GESCHLOSSEN
 
-**Stand** — ◐ einzelne Seiten und die Sicherung lassen sich verschlüsseln.
+**Stand — ✅ die drei genannten Punkte gibt es seit E122.** Dieser Absatz
+stand hier, seit er geschrieben wurde, und wurde danach nie nachgesehen:
 
-Fehlt: verschlüsseltes `.redion` (heute deckt die verschlüsselte Sicherung
-nur den Textbestand ab) · verschlüsselte Anhänge · Schlüsselwechsel.
+```txt
+verschlüsseltes `.redion` mit Anhängen   Paketfassung 2, `paketBauen`
+verschlüsselte Anhänge                   als eigene Einträge im Paket
+Schlüsselwechsel                         `paketPasswortWechseln`
+```
 
-## L22 · Leistung bei sehr grossen Arbeitsbereichen
+Alle drei fährt `test199` ab — mit einem echten Anhang, dem Zurückholen
+daraus und dem Passwortwechsel ohne Neuverschlüsseln (33 Punkte).
 
-Fehlt: Messungen mit zehntausend Seiten · virtualisierte Listen ·
-Suchindex, der nicht bei jedem Start neu entsteht · Speichermessung bei
-Export und Import.
+**Was NICHT gebaut ist und auch nicht gemeint war:** Verschlüsselung des
+LAUFENDEN Bestands. Heute liegt die IndexedDB im Klartext, und einzelne
+Seiten lassen sich sperren. Alles zu verschlüsseln hiesse: jeder Lese- und
+Schreibvorgang durch AES, ein verschlüsselter Suchindex — und ein
+vergessenes Passwort bedeutet Totalverlust, nicht eine gesperrte Seite. Das
+ist eine eigene Entscheidung mit eigenen Abwägungen und keine Lücke, die man
+nebenbei schliesst.
+
+## L22 · ~~Leistung bei sehr grossen Arbeitsbereichen~~ — GEMESSEN
+
+**Stand — ✅ gemessen mit E180 (25. August 2026).** Diese Lücke bestand aus
+einer Vermutung. Nachgemessen an 8000 Blöcken sieht es so aus:
+
+```txt
+8000 Blöcke anlegen und einmal schreiben        1,5 s
+Neu laden, bis der Bestand steht                0,5 s
+`Store.search` über alles                       68 ms
+`Store.baum` über den ganzen Baum               20 ms
+`exportAll` über 4,9 MB                         29 ms
+2000 Zeilen filtern und sortieren                2 ms
+Eine Seite mit 201 Kindern zeichnen             53 ms
+```
+
+Die vier genannten Punkte einzeln:
+
+```txt
+Messungen mit zehntausend Seiten   jetzt da — `test233`, an 8000 Blöcken
+virtualisierte Listen              die Ansicht zeigt 50 von 2000; das ist
+                                   die Begrenzung, nicht das Problem
+Suchindex, der nicht neu entsteht  liegt im Fach `suchindex` und wird beim
+                                   Start gelesen, nicht gebaut
+Speichermessung bei Export/Import  eine 4,9-MB-Sicherung entsteht in 29 ms
+```
+
+**Und der eine Fund, der dabei herauskam, ist kein Leistungsproblem.** Eine
+Ansicht zeigte 50 von 2000 Zeilen und sagte es nicht. Eine Tabelle, die
+einen Teil zeigt und aussieht wie das Ganze, ist die gefährlichere Sorte
+Unvollständigkeit: man merkt sie erst, wenn man etwas sucht, das dasteht und
+nicht gefunden wird. Jetzt steht „50 von 2000 Zeilen" darunter, mit „Mehr
+laden" und „Alle zeigen" daneben.
+
+**Was offen bleibt:** die Zahlen oben stammen von einer Maschine. Ob sie auf
+einem sechs Jahre alten Telefon ebenso aussehen, sagt kein Prüflauf im
+Container. `test233` misst deshalb Formen und Zahlen — wie viele Sätze
+angefasst werden, wie viele Knoten im Bild stehen — und setzt Zeitschranken
+so weit, dass sie eine langsame Maschine nicht reissen und ein quadratischer
+Algorithmus sofort.
+
+Prüflauf: `test233`, 22 Punkte.
 
 ## L34 · ~~Ein Wert, der an zwei Stellen steht~~ — abgearbeitet
 
@@ -899,21 +950,44 @@ Resolver. Suche, Wikilinks, Picker, Backlinks, unverlinkte Erwähnungen, Graph
 und Obsidian-Import verwenden ihn. Eine Kollision liefert Kandidaten und nie
 willkürlich den ersten Treffer.
 
-## L26 · Import aus anderen Werkzeugen
+## L26 · ~~Import aus anderen Werkzeugen~~ — GESCHLOSSEN
 
-Trello, Evernote, Obsidian, Notion-Export und CSV gibt es. Asana, Jira und
-Apple Notes fehlen.
+**Stand — ✅ seit E182 (25. August 2026).**
 
-**Nachgesehen am 25. August 2026:** Jira gibt es sehr wohl — als
-gespiegelte Datenbank über `datenbanken/spiegel/dienst.ts`, zusammen mit
-GitHub. Das ist etwas anderes als ein einmaliger Import (es hält die
-Verbindung), deckt aber denselben Wunsch. Bleiben Asana und Apple Notes.
+Trello, Evernote, Obsidian, Notion-Export, CSV — und jetzt Asana und Apple
+Notes mit eigenem Einleser. Jira gibt es als gespiegelte Datenbank über
+`datenbanken/spiegel/dienst.ts`, zusammen mit GitHub; das ist etwas anderes
+als ein einmaliger Import (es hält die Verbindung), deckt aber denselben
+Wunsch.
 
-Beide liefern ihre Daten als CSV beziehungsweise als Ordner mit HTML-
-Dateien, und beide Wege stehen: CSV einlesen mit Typerkennung (E97) und
-seit E178 mit Aufräumen danach. Was fehlt, ist ein Knopf, der die
-Eigenheiten des jeweiligen Exports kennt — nicht die Fähigkeit, die Daten
-hereinzuholen.
+**Der Knopf, der den Export kennt, war der ganze Unterschied.** Asana kam
+schon über den allgemeinen CSV-Weg herein — aber als lauter Textspalten:
+
+```txt
+Section/Column  →  Text     statt  Status (und Gruppierung)
+Due Date        →  Text     statt  Datum
+Tags            →  Text     statt  Mehrfachauswahl
+Completed At    →  Text     statt  Haken
+Notes           →  EINE ZELLE mit der ganzen Beschreibung darin
+```
+
+Die letzte Zeile ist der eigentliche Verlust: eine Aufgabenbeschreibung in
+einer Tabellenzelle kann man nicht lesen und nicht gliedern. Sie steht da
+und ist unbenutzbar, und das sieht nicht nach einem Fehler aus, sondern nach
+einer langen Spalte. Jetzt wird sie Seiteninhalt.
+
+Apple Notes kam gar nicht herein; jetzt wird der Ordner mit den HTML-Dateien
+gelesen, Unterordner bleiben Unterordner, und Checklisten werden echte
+Aufgaben statt Aufzählungspunkte mit einem Kästchen im Text.
+
+**Was NICHT gebaut ist:** ein Einleser je Werkzeug für alles Übrige. Der
+allgemeine CSV-Weg steht weiter daneben — jetzt unter eigenem Namen („Jira,
+Monday, sonstige CSV") statt als Anhängsel von Asana — und er liest jede
+Tabelle. Ein eigener Knopf lohnt erst, wenn ein Export feste Spaltennamen
+hat, die man kennen KANN. Bei Asana und Apple Notes ist das so; bei „irgend
+eine CSV" ist es das nicht.
+
+Prüflauf: `test235`, 63 Punkte, mit fünf nachgewiesenen Gegenproben.
 
 ## L27 · ~~Import-Assistent (Power-Query-ähnlich)~~ — GESCHLOSSEN
 
@@ -963,7 +1037,7 @@ Kurve ist, und fand gar nichts. `Datenbank.wertFrisch` rechnet ohne beide.
 
 Prüflauf: `test230`, 36 Punkte, zwei Gegenproben.
 
-## L29 · Suche in Bildern, PDFs und Audio
+## L29 · Suche in Bildern, PDFs und Audio — GRUNDSTUFE STEHT, REST ENTSCHIEDEN
 
 **Stand — ◐ die local-first Grundstufe steht (E130).** Native PDF-Textebene
 und optionale OCR bleiben getrennt. Bilder, PDF-Ausschnitte und Ink-Regionen
@@ -977,10 +1051,42 @@ automatische Perspektivkorrektur mehrseitiger Kamera-Scans und fortlaufende
 Segmenttranskription während sehr langer Aufnahmen. Ohne diese Zusätze bleibt
 Erfassen, Lesen und Aufnehmen vollständig benutzbar.
 
-## L30 · Erweiterungen und Marktplatz
+**25. August 2026 — warum die eingebettete Engine nicht kommt.** Eine OCR-
+Engine im Browser wiegt zweistellige Megabyte, und sie wiegt sie bei JEDEM
+Start, für jeden Nutzer, auch für die grosse Mehrheit, die nie ein Bild
+durchsuchen will. Das steht gegen §36 (Redion soll auf schwachen Geräten
+laufen) und gegen §29 (die Einzeldatei bleibt handhabbar). Der eingerichtete
+localhost-Dienst kostet dagegen nichts, solange man ihn nicht benutzt — und
+er verlässt den Rechner nicht.
 
-Erweiterung installieren · Rechte anzeigen · Sandbox · deaktivieren ·
-löschen · Signaturen.
+Das ist dieselbe Abwägung wie bei WebLLM (§21: „nicht automatisch laden"),
+und sie fällt hier genauso aus. Nicht gebaut, mit Grund, nicht vergessen.
+
+## L30 · Erweiterungen und Marktplatz — BEWUSST NICHT GEBAUT
+
+**25. August 2026 — entschieden statt offengelassen (E181).**
+
+Diese Zeile stand als Wunschliste da, ohne einen Satz dazu, ob sie überhaupt
+zu Redion passt. Sie tut es nicht ohne Weiteres:
+
+```txt
+Eine Erweiterung ist FREMDER CODE im selben Fenster wie die Notizen.
+Er sieht IndexedDB, `Store`, die Zwischenablage und jedes offene Dokument.
+```
+
+CLAUDE.md §19 verbietet `eval()` und ungeprüftes `innerHTML`; §47 verbietet
+fremden Code aus Formeln. Ein Erweiterungssystem wäre die grösste Ausnahme
+von beidem, die es je gäbe.
+
+Es sicher zu bauen bräuchte: eine echte Sandbox (eigener Ursprung, `iframe`,
+Nachrichten statt Zugriff), ein Rechtemodell je Erweiterung, Signaturen und
+einen Weg, eine Erweiterung im Nachhinein zurückzuziehen. Das ist ein
+eigenes Projekt und nicht eine Zeile in einer Lückenliste.
+
+**Also: nicht gebaut, und das ist die Entscheidung — kein Versäumnis.** Wer
+Redion erweitern will, hat heute drei Wege, die ohne Fremdcode auskommen:
+die Register (`bloecke`, `eigenschaften`, `formeln`, `befehle`), die
+Automationen, und `.redion`-Sicherungen als Datenschnittstelle.
 
 ## L31 · ~~Öffentliche Seiten, SEO und Demo~~ — GESCHLOSSEN
 
@@ -1015,11 +1121,27 @@ Zwei Fehler, die nur das Hinsehen fand (§55):
 
 Prüflauf: `test231`, 29 Punkte.
 
-## L32 · Die 62 Integrationen
+## L32 · Die 62 Integrationen — ENTSCHIEDEN, NICHT OFFEN
 
-**Stand** — ◐ 8 von 62. Die meisten brauchen OAuth-Geheimnisse und damit
-einen Server; ohne ihn geht nur, was einen persönlichen Schlüssel
-akzeptiert. Siehe `ENTSCHEIDUNGEN.md` E23.
+**Stand — ◐ 8 von 62, und die Zahl ist kein Rückstand.**
+
+Die meisten der 62 brauchen ein OAuth-Geheimnis. Ein OAuth-Geheimnis im
+Browser ist kein Geheimnis — es steht im Quelltext jeder ausgelieferten
+Seite. Also gehen ohne Server nur die, die einen persönlichen Schlüssel
+akzeptieren, den der Nutzer selbst einträgt. Das sind die 8.
+
+Der Rest hängt an E2 (Cloudflare) und wird dort eingeordnet, nicht hier.
+Die vollständige Begründung steht in `ENTSCHEIDUNGEN.md` E23.
+
+**Was daneben schon geht, ohne in dieser Zahl zu stehen:** gespiegelte
+Datenbanken zu Jira und GitHub (`datenbanken/spiegel/dienst.ts`), Import aus
+Trello, Evernote, Obsidian, Notion, Asana, Apple Notes und beliebiger CSV
+(L26, E182), und `.redion` als Datenschnittstelle in beide Richtungen. Der
+Wunsch hinter „Integration" ist meistens „meine Daten aus X hier haben" —
+und dafür braucht es keinen OAuth-Server.
+
+**Nicht tun:** Integrationen zählen, ohne zu prüfen, ob sie ohne Server
+überhaupt gehen können.
 
 ---
 
@@ -1644,6 +1766,37 @@ alles, was in Journal, Schnellnotizen oder Vorlagen steht. Behoben; test215
 **Damit ist diese Lücke Hygiene, keine Fehlerbehebung.** Die zwei Wege
 liefern dasselbe — gemessen, nicht behauptet. Das Zusammenlegen steht
 tiefer in der Reihenfolge als vorher gedacht.
+
+---
+
+**25. August 2026 — E181. Das Zusammenlegen ist kleiner als gedacht, und
+eine Hälfte davon war überfällig.**
+
+Beim Nachsehen, WAS die zwei Wege wirklich teilen, stand die Rechtefrage
+zweimal da — in zwei Funktionen mit demselben Namen und zwei Antworten:
+
+```txt
+arbeitswelt     pageId ? Konten.darf(a, pageId) : Konten.darf(a)
+lebensbereiche  !!pageId && Konten.darf(a, pageId)
+```
+
+Bei einer LEEREN Seitenkennung sagte die eine „frag den Arbeitsbereich" und
+die andere „nein". Derselbe Block war in der einen Ansicht sichtbar und in
+der anderen nicht. Das ist L34 in Reinform, eine Ebene höher: ein Wert steht
+an zwei Stellen, nichts erzwingt Gleichheit.
+
+Sie steht jetzt einmal in `kern/zugang/lesefrage.ts`, mit einer
+ausgeschriebenen Regel — und der Unterschied zwischen „leer" und
+„weggelassen" ist Absicht, denn nur dadurch fallen beide alten Fassungen
+zusammen, ohne dass sich für einen Aufrufer etwas ändert.
+
+**Der grosse Aggregatkern bleibt ungebaut, und das ist die Entscheidung.**
+Die zwei Wege liefern dasselbe (E169, gemessen), und der eine trägt die
+Rechteprüfung, die der andere nicht hat. Sie zusammenzulegen hiesse, diese
+Prüfung neu zu verdrahten — für ein Ergebnis, das der Mensch nicht sieht.
+Die gemeinsame Frage ist jetzt gemeinsam; das war der Teil mit dem Risiko.
+
+Prüflauf: `test234`, 14 Punkte.
 
 
 ## L51 · ~~Die Hauptwelten stehen in keinem Register~~ — 36 Zeilen fehlen noch

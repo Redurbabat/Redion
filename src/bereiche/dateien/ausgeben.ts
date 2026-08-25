@@ -14,6 +14,8 @@
  *   AUSGEBEN  · .docx — eine echte Word-Datei, ohne fremde Pakete
  *             · .xlsx — eine echte Excel-Mappe, eine Tabelle je Ansicht
  *
+ *   EINLESEN  · Asana (CSV)        — Abschnitte werden Status, Notizen Seiten
+ *   EINLESEN  · Apple Notes (Ordner)— je HTML-Datei eine Seite, Ordner bleiben
  *   EINLESEN  · Trello (JSON)      — Listen werden Status, Karten Zeilen
  *             · Evernote (.enex)   — jede Notiz eine Seite
  *             · Obsidian (Ordner)  — [[Wikilinks]] werden echte Verweise
@@ -994,6 +996,43 @@ const Austausch = (() => {
     return { seite, hinweis: n + ' Karten aus ' + listen.size + ' Listen übernommen' };
   };
 
+  /* --- HTML in Markdown, einmal fuer alle -------------------------------
+   * Evernote (ENML) und Apple Notes liefern beide HTML, und beide brauchen
+   * daraus dieselben Bloecke. Diese Funktion stand frueher IN `ausEvernote`;
+   * Apple Notes haette sie kopiert, und dann waere sie zweimal dagewesen —
+   * genau die Sorte doppelte Wahrheit, die L34 beschreibt.
+   *
+   * ABGEHAKTES bleibt abgehakt: Apple Notes schreibt Checklisten als
+   * `<li>` mit einem Datenattribut oder einem vorangestellten Kaestchen.
+   * Beides wird zu `- [ ]` / `- [x]`, und `ausMarkdown` macht daraus
+   * echte Aufgabenbloecke statt Strichlisten mit einem Kaestchen im Text.
+   * --------------------------------------------------------------------- */
+  const HAKEN_AN = /^\s*(?:\u2611|\u2612|\u2714|\u2713|\[x\]|\[X\])\s*/;
+  const HAKEN_AUS = /^\s*(?:\u2610|\[\s?\])\s*/;
+
+  const htmlZuMarkdown = (html: string): string => {
+    const roh = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
+    if (!roh.body) return '';
+    return [...roh.body.querySelectorAll('div, p, li, h1, h2, h3')]
+      .map(el => {
+        let t = (el.textContent || '').trim();
+        if (!t) return '';
+        if (el.tagName === 'H1') return '# ' + t;
+        if (el.tagName === 'H2') return '## ' + t;
+        if (el.tagName === 'H3') return '### ' + t;
+        if (el.tagName === 'LI') {
+          /* Apple Notes kennt drei Schreibweisen fuer denselben Haken. */
+          const attr = el.getAttribute('data-apple-checklist-item')
+                    || el.getAttribute('data-checked') || '';
+          if (HAKEN_AN.test(t))  return '- [x] ' + t.replace(HAKEN_AN, '');
+          if (HAKEN_AUS.test(t)) return '- [ ] ' + t.replace(HAKEN_AUS, '');
+          if (attr) return (attr === 'true' || attr === 'checked' ? '- [x] ' : '- [ ] ') + t;
+          return '- ' + t;
+        }
+        return t;
+      }).filter(Boolean).join('\n\n');
+  };
+
   /* --- Evernote (.enex) --------------------------------------------------
    * Eine XML-Datei mit <note>-Einträgen. Der Inhalt steckt in ENML, das
    * nah genug an HTML ist, um es über den HTML-Weg einzulesen.
@@ -1008,18 +1047,7 @@ const Austausch = (() => {
       const titel = (n.querySelector('title') || {}).textContent || 'Ohne Titel';
       const inhalt = (n.querySelector('content') || {}).textContent || '';
       const seite = Store.addBlock(wurzel.id, 'page', { text: titel });
-      /* ENML in einfachen Text mit Absätzen verwandeln */
-      const roh = new DOMParser().parseFromString(inhalt, 'text/html');
-      const md = [...roh.body.querySelectorAll('div, p, li, h1, h2, h3')]
-        .map(el => {
-          const t = el.textContent.trim();
-          if (!t) return '';
-          if (el.tagName === 'H1') return '# ' + t;
-          if (el.tagName === 'H2') return '## ' + t;
-          if (el.tagName === 'H3') return '### ' + t;
-          if (el.tagName === 'LI') return '- ' + t;
-          return t;
-        }).filter(Boolean).join('\n\n');
+      const md = htmlZuMarkdown(inhalt);
       if (md) Werkzeuge.ausMarkdown(seite, md);
       const tags = [...n.querySelectorAll('tag')].map(t => t.textContent);
       if (tags.length) Store.updateBlock(seite.id, { tags });
@@ -1710,6 +1738,214 @@ const Austausch = (() => {
     return { werte, formeln, tabellen };
   };
 
+  /* --- Asana (.csv) ------------------------------------------------------
+   * Asana schreibt seinen Export als CSV mit festen Spaltennamen. Der
+   * allgemeine CSV-Weg liest das auch — aber er liest ALLES als Text:
+   *
+   *     Section/Column  ->  Text          statt  Status (und Gruppierung)
+   *     Due Date        ->  Text          statt  Datum
+   *     Tags            ->  Text          statt  Mehrfachauswahl
+   *     Completed At    ->  Text          statt  Haken
+   *     Notes           ->  eine Zelle mit vier Absaetzen darin
+   *
+   * Das Letzte ist das Schlimmste: die Beschreibung einer Aufgabe landet in
+   * einer Tabellenzelle, wo man sie nicht lesen und nicht gliedern kann.
+   * Hier wird sie zum Seiteninhalt, wo sie hingehört.
+   *
+   * WAS NICHT ERKANNT WIRD, GEHT TROTZDEM MIT. Asana hängt eigene Felder
+   * als weitere Spalten an, und die heissen bei jedem anders. Sie werden
+   * als Textspalten übernommen — lieber eine Spalte zu viel als ein
+   * verlorenes Feld.
+   * --------------------------------------------------------------------- */
+
+  /** Was Asana schreibt -> was Redion daraus macht. */
+  const ASANA_FELDER: Array<[RegExp, string, string, string]> = [
+    /* Muster auf den Spaltennamen | Schlüssel | Anzeigename | Typ */
+    [/^name$|^task name$/i,          'title',    'Aufgabe',     'title'],
+    [/^section\/column$|^section$/i, 'abschnitt','Abschnitt',   'status'],
+    [/^assignee$/i,                  'wer',      'Zuständig',  'text'],
+    [/^due date$/i,                  'faellig',  'Fällig',     'date'],
+    [/^start date$/i,                'beginn',   'Beginn',      'date'],
+    [/^tags$/i,                      'tags',     'Etiketten',   'multi'],
+    [/^projects$/i,                  'projekt',  'Projekt',     'text'],
+    [/^parent task$/i,               'ueber',    'Gehört zu',  'text'],
+    [/^priority$/i,                  'prio',     'Priorität',  'select'],
+  ];
+  /* Diese vier werden gelesen, aber NICHT zu Spalten: `Notes` wird der
+     Seiteninhalt, `Completed At` wird der Haken, die beiden Kennungen
+     interessieren niemanden mehr, sobald die Daten hier sind. */
+  const ASANA_STUMM = /^notes$|^completed at$|^task id$|^assignee email$|^created at$|^last modified$/i;
+
+  /** Ein Wert wie „a, b, c" wird zur Liste — Asana trennt Etiketten so. */
+  const asanaListe = (v: string): string[] =>
+    String(v ?? '').split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
+
+  const ausAsana = (text: string, zielSeite: any, name?: string) => {
+    const zeilen = (typeof Csv !== 'undefined')
+      ? Csv.zerlege(text).filter((z: string[]) => z.some(x => String(x).trim()))
+      : csvZerlegenNot(text);
+    if (zeilen.length < 2) throw new Error('Die Datei enthält keine Zeilen');
+
+    const kopf = (zeilen[0] ?? []).map((x: unknown) => String(x ?? '').replace(/^﻿/, '').trim());
+    const saetze = zeilen.slice(1);
+
+    /* Erkennt Asana daran, dass „Name" ODER „Task Name" dasteht. Ohne das
+       wäre jede beliebige CSV ein Asana-Export, und die Zuordnung unten
+       würde raten statt lesen. */
+    const titelSpalte = kopf.findIndex(k => /^name$|^task name$/i.test(k));
+    if (titelSpalte < 0) throw new Error('Das sieht nicht nach einem Asana-Export aus — die Spalte „Name" fehlt');
+
+    /* Welche Spalte der Datei wird was. */
+    type Zuordnung = { i: number; key: string; typ: string };
+    const zuordnung: Zuordnung[] = [];
+    const schema: Record<string, any> = {};
+    let eigene = 0;
+
+    kopf.forEach((spaltenName, i) => {
+      if (!spaltenName) return;
+      if (ASANA_STUMM.test(spaltenName)) return;
+      const treffer = ASANA_FELDER.find(([muster]) => muster.test(spaltenName));
+      if (treffer) {
+        const [, key, anzeige, typ] = treffer;
+        if (schema[key]) return;                 /* zweimal dieselbe Spalte: die erste gewinnt */
+        schema[key] = { name: anzeige, type: typ };
+        zuordnung.push({ i, key, typ });
+      } else {
+        /* Ein eigenes Feld von Asana. Der Schlüssel darf nicht rein
+           numerisch sein — siehe E96/E172. */
+        const key = 'a' + eigene++;
+        schema[key] = { name: spaltenName, type: 'text' };
+        zuordnung.push({ i, key, typ: 'text' });
+      }
+    });
+
+    /* Der Haken kommt aus `Completed At`: dort steht ein Datum, wenn die
+       Aufgabe fertig ist, und nichts, wenn nicht. */
+    const fertigSpalte = kopf.findIndex(k => /^completed at$/i.test(k));
+    if (fertigSpalte >= 0) schema['fertig'] = { name: 'Erledigt', type: 'checkbox' };
+    const notizSpalte = kopf.findIndex(k => /^notes$/i.test(k));
+
+    /* Die Auswahlspalten brauchen ihre Werte, bevor die erste Zeile da ist —
+       sonst steht die Zeile auf einer Option, die es nicht gibt. */
+    const werteVon = (i: number) => saetze.map((z: string[]) => String(z[i] ?? '').trim());
+    const FARBEN = ['gray', 'blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow'];
+    zuordnung.forEach(z => {
+      if (z.typ !== 'status' && z.typ !== 'select' && z.typ !== 'multi') return;
+      const roh = werteVon(z.i);
+      const alle = z.typ === 'multi'
+        ? [...new Set(roh.flatMap(asanaListe))]
+        : [...new Set(roh.filter(Boolean))];
+      schema[z.key].options = alle.map((n, k) => ({ name: n, color: FARBEN[k % FARBEN.length] }));
+    });
+
+    const titel = name || 'Aus Asana';
+    const seite = Store.addBlock(zielSeite || null, 'page', { text: titel, icon: '✓' });
+    const hatAbschnitt = !!schema['abschnitt'];
+    const db = Store.addDatabase(seite.id, titel, schema, hatAbschnitt ? 'board' : 'table');
+    if (hatAbschnitt) Store.updateView(db.viewId, { groupBy: 'abschnitt' });
+
+    let n = 0, mitText = 0;
+    saetze.forEach((z: string[]) => {
+      const props: Record<string, any> = {};
+      zuordnung.forEach(zu => {
+        const roh = String(z[zu.i] ?? '').trim();
+        if (zu.key === 'title') { props['title'] = roh || 'Ohne Titel'; return; }
+        if (!roh) return;
+        props[zu.key] = zu.typ === 'multi' ? asanaListe(roh)
+                      : zu.typ === 'date'  ? roh.slice(0, 10)
+                      : roh;
+      });
+      if (fertigSpalte >= 0) props['fertig'] = !!String(z[fertigSpalte] ?? '').trim();
+      if (props['title'] === undefined) props['title'] = 'Ohne Titel';
+
+      const zeile = Store.addRow(db.collectionId, props);
+      n++;
+      /* Die Beschreibung wird Seiteninhalt, nicht Zellinhalt. */
+      const notiz = notizSpalte >= 0 ? String(z[notizSpalte] ?? '').trim() : '';
+      if (notiz) { Werkzeuge.ausMarkdown(zeile, notiz); mitText++; }
+    });
+
+    return { seite, hinweis: n + ' Aufgaben übernommen, ' + mitText + ' mit Beschreibung' };
+  };
+
+  /* Der Not-Zerleger, falls `core/spreadsheet/csv.js` fehlt. Er trennt nur
+     bei Komma; das ist schlechter als `Csv.zerlege`, aber besser als nichts,
+     und es macht `ausAsana` nicht von einer zweiten Datei abhängig. */
+  const csvZerlegenNot = (text: string): string[][] => {
+    const raus: string[][] = [];
+    let feld = '', zeile: string[] = [], inAnf = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inAnf) {
+        if (c === '"' && text[i + 1] === '"') { feld += '"'; i++; }
+        else if (c === '"') inAnf = false;
+        else feld += c;
+      } else if (c === '"') inAnf = true;
+      else if (c === ',') { zeile.push(feld); feld = ''; }
+      else if (c === '\n') { zeile.push(feld); raus.push(zeile); zeile = []; feld = ''; }
+      else if (c !== '\r') feld += c;
+    }
+    if (feld || zeile.length) { zeile.push(feld); raus.push(zeile); }
+    return raus.filter(z => z.some(x => String(x).trim()));
+  };
+
+  /* --- Apple Notes (Ordner mit .html) ------------------------------------
+   * Apple Notes kann nicht selbst in einem Rutsch exportieren; die üblichen
+   * Wege liefern einen ORDNER mit einer HTML-Datei je Notiz, und die Ordner
+   * der App werden zu Unterordnern. Beides wird hier abgebildet:
+   *
+   *     Notizen/Rezepte/Brot.html   ->  Seite „Rezepte" > Seite „Brot"
+   *
+   * Der Titel kommt aus `<title>`, aus der ersten Überschrift oder aus dem
+   * Dateinamen — in dieser Reihenfolge, weil die ersten beiden Umlaute und
+   * Satzzeichen behalten, die der Dateiname verloren hat.
+   * --------------------------------------------------------------------- */
+  const ausAppleNotes = async (dateien: any[], zielSeite: any) => {
+    const htmls = dateien.filter(d => /\.html?$/i.test(d.name || ''));
+    if (!htmls.length) throw new Error('Keine .html-Dateien in diesem Ordner');
+
+    const wurzel = Store.addBlock(zielSeite || null, 'page', { text: 'Aus Apple Notes', icon: '📒' });
+    /* Ordnerpfad -> Seite. Wird beim ersten Bedarf angelegt, damit ein leerer
+       Ordner keine leere Seite hinterlaesst. */
+    const ordner = new Map<string, any>();
+    const ordnerSeite = (pfad: string): any => {
+      if (!pfad) return wurzel;
+      const da = ordner.get(pfad);
+      if (da) return da;
+      const teile = pfad.split('/');
+      const letzter = teile[teile.length - 1] || pfad;
+      const eltern = ordnerSeite(teile.slice(0, -1).join('/'));
+      const s = Store.addBlock(eltern.id, 'page', { text: letzter, icon: '📁' });
+      ordner.set(pfad, s);
+      return s;
+    };
+
+    let n = 0;
+    for (const d of htmls) {
+      const roh = await d.text();
+      const doc = new DOMParser().parseFromString(roh, 'text/html');
+      const ausDatei = String(d.name || '').replace(/\.html?$/i, '');
+      const titel = (doc.querySelector('title')?.textContent || '').trim()
+                 || (doc.querySelector('h1, h2')?.textContent || '').trim()
+                 || ausDatei;
+
+      /* Der Pfad OHNE das oberste Verzeichnis: das ist der Name des
+         gewählten Ordners und steht schon als Wurzelseite da. */
+      const voll = String(d.webkitRelativePath || d.name || '');
+      const teile = voll.split('/').slice(1, -1);
+      const seite = Store.addBlock(ordnerSeite(teile.join('/')).id, 'page', { text: titel });
+
+      /* Die Überschrift, die schon der Titel ist, nicht noch einmal. */
+      const erste = doc.querySelector('h1, h2');
+      if (erste && (erste.textContent || '').trim() === titel) erste.remove();
+      const md = htmlZuMarkdown(doc.body ? doc.body.innerHTML : roh);
+      if (md) Werkzeuge.ausMarkdown(seite, md);
+      n++;
+    }
+    Store.updateBlock(wurzel.id, { aufgeklappt: true });
+    return { seite: wurzel, hinweis: n + ' Notizen aus ' + (ordner.size || 1) + ' Ordnern übernommen' };
+  };
+
   /* ========================================================================
    * 5. DAS FENSTER
    * ======================================================================*/
@@ -1718,7 +1954,9 @@ const Austausch = (() => {
     ['evernote', '🐘', 'Evernote',     'Eine .enex-Datei — jede Notiz wird eine Seite', '.enex,.xml'],
     ['obsidian', '🔮', 'Obsidian',     'Ein ganzer Ordner mit .md-Dateien, Wikilinks werden aufgelöst', 'ordner'],
     ['notion',   '📓', 'Notion-Export','Das ZIP aus Notions eigenem Export', '.zip'],
-    ['asana',    '🗒', 'Asana / Jira / Monday', 'Der CSV-Export — wird zur Datenbank', '.csv'],
+    ['asana',    '🗒', 'Asana',         'Der CSV-Export — Abschnitte werden Status, Notizen werden Seiten', '.csv'],
+    ['apple',    '📒', 'Apple Notes',   'Der Ordner mit den HTML-Dateien — Unterordner bleiben Unterordner', 'ordner'],
+    ['csv',      '📊', 'Jira, Monday, sonstige CSV', 'Irgendeine Tabelle — wird zur Datenbank', '.csv'],
     ['markdown', '📄', 'Einzelne Dateien',
      'Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB',
      '.md,.txt,.csv,.docx,.xlsx,.ods,.epub']
@@ -1739,6 +1977,13 @@ const Austausch = (() => {
         '<div class="fbtns"><button data-a="zu">Schliessen</button></div>' +
       '</div>';
     document.body.appendChild(o);
+
+    /* DIE LISTE ROLLT, UND MAN SOLL DAS SEHEN (E183). Mit acht Quellen passt
+       sie am Rechner um 28 px nicht mehr, am Telefon um 127. Erreichbar war
+       die letzte immer — sichtbar war nur, dass sie keine Beschreibung hat.
+       Dieselbe Antwort wie an der Tabelle: eine weiche Kante, kein Hinweis. */
+    if (typeof Rollrand !== 'undefined')
+      Rollrand.binde(o.querySelector<HTMLElement>('.ax-liste'), { achse: 'hoch' });
 
     o.addEventListener('click', async e => {
       if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
@@ -1768,7 +2013,10 @@ const Austausch = (() => {
           else if (art === 'trello')   erg = ausTrello(await erste.text(), null);
           else if (art === 'evernote') erg = ausEvernote(await erste.text(), null);
           else if (art === 'notion')   erg = await ausNotionZip(await erste.arrayBuffer(), null);
-          else if (art === 'asana') {
+          else if (art === 'apple')    erg = await ausAppleNotes(dateien, null);
+          else if (art === 'asana')
+            erg = ausAsana(await erste.text(), null, erste.name.replace(/\.csv$/i, ''));
+          else if (art === 'csv') {
             const text = await erste.text();
             const s = Store.addBlock(null, 'page', { text: erste.name.replace(/\.csv$/i, '') });
             Einlesen.alsDatenbank(s.id, erste.name.replace(/\.csv$/i, ''), Datenbank.csvZerlegen(text));
@@ -1790,7 +2038,8 @@ const Austausch = (() => {
 
   return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
            allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
-           ausTrello, ausEvernote, ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
+           ausTrello, ausEvernote, ausAsana, ausAppleNotes, htmlZuMarkdown,
+           ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
            dialog, QUELLEN,
            /* Nur für Prüfläufe — siehe die Erklärung bei `grenzen`. Wer sie
               im Betrieb verstellt, schreibt ZIP64, wo es keines braucht:

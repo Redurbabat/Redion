@@ -97,8 +97,10 @@ const Lebensbereiche = (() => {
     };
     const jetztIso = () => typeof Store.now === 'function'
         ? String(Store.now()) : new Date().toISOString();
-    const rightsActive = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
-    const erlaubt = (aktion, pageId) => !rightsActive() || (!!pageId && Konten.darf(aktion, pageId));
+    /* Siehe `kern/zugang/lesefrage.ts` — dieselbe Frage stand hier und in
+       `arbeitswelt.ts` je einmal, mit zwei Antworten (L50, E181). */
+    const rightsActive = () => Lesefrage.aktiv();
+    const erlaubt = (aktion, pageId) => Lesefrage.erlaubt(aktion, pageId);
     const globalBearbeitbar = (pageId = '') => {
         if (!rightsActive())
             return true;

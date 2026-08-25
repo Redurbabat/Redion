@@ -248,6 +248,44 @@ const Datenbank = (() => {
     else                                 koerper.appendChild(alsTabelle(coll, view, rows, block));
     w.appendChild(koerper);
 
+    /* ----------------------------------------------------------------------
+     * WAS NICHT DASTEHT, MUSS DASTEHEN (L22, E180)
+     * ----------------------------------------------------------------------
+     * `begrenzen` zeigt 50 Zeilen und nimmt die übrigen weg. Gemessen an
+     * 300 Zeilen: die Tabelle endet nach der fünfzigsten mit „+ Neu", und
+     * NICHTS sagt, dass zweihundertfünfzig fehlen. Eine Tabelle, die einen
+     * Teil zeigt und aussieht wie das Ganze, ist die gefährlichere Sorte
+     * Unvollständigkeit — man merkt sie erst, wenn man etwas sucht, das
+     * dasteht und nicht gefunden wird.
+     *
+     * HIER UND NICHT IN DER TABELLE: `begrenzen` gilt für jede Ansichtsart.
+     * In den Tabellenfuss geschrieben, hätten Board, Galerie und Feed
+     * weiter stumm abgeschnitten.
+     *
+     * Der Weg heraus steht daneben, nicht in einem Menü drei Ebenen tiefer:
+     * die Ladegrenze gibt es zwar unter „Layout", aber wer nicht weiss,
+     * dass abgeschnitten wird, sucht sie nicht.
+     * -------------------------------------------------------------------- */
+    const gesamt = zeilenGesamt(coll, view);
+    if (gesamt > rows.length) {
+      const fuss = document.createElement('div');
+      fuss.className = 'db-grenze';
+      fuss.innerHTML =
+        `<span>${rows.length} von ${gesamt} Zeilen</span>` +
+        '<button data-a="mehr">Mehr laden</button>' +
+        '<button data-a="alle">Alle zeigen</button>';
+      fuss.addEventListener('click', e => {
+        const b = elVon(e)?.closest<HTMLElement>('button[data-a]');
+        if (!b) return;
+        /* Die Grenze steht an der ANSICHT und bleibt damit stehen — wer
+           einmal alle sehen wollte, will es beim nächsten Öffnen wieder. */
+        const jetzt = view.limit === 0 ? 0 : (view.limit || 50);
+        Store.updateView(view.id, { limit: b.dataset.a === 'alle' ? 0 : jetzt + 50 });
+        App.zeichneSeite();
+      });
+      w.appendChild(fuss);
+    }
+
     return w;
   };
 

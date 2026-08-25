@@ -12404,3 +12404,341 @@ Beide Fehler waren unsichtbar, solange man nur die neuen Prüfungen laufen
 liess. Der volle Lauf ist der einzige Ort, an dem eine Änderung auf die
 Prüfungen trifft, an die niemand gedacht hat — und beide Male hat eine
 ältere Prüfung eine jüngere Entscheidung berichtigt.
+
+---
+
+## E180 · Was die Ansicht verschweigt (L22)
+
+**25. August 2026.**
+
+L22 bestand aus einer Vermutung: Redion könnte bei sehr grossen
+Arbeitsbereichen langsam sein. Nachgemessen an 8000 Blöcken — 200 Seiten mit
+je 20 Absätzen und eine Datenbank mit 2000 Zeilen — stimmt sie nicht:
+
+```txt
+8000 Blöcke anlegen und einmal schreiben        1,5 s
+Neu laden, bis der Bestand steht                0,5 s
+`Store.search` über alles                       68 ms
+`Store.baum` über den ganzen Baum               20 ms
+`exportAll` über 4,9 MB                         29 ms
+2000 Zeilen filtern und sortieren                2 ms
+```
+
+### Der Fund ist ein anderer
+
+Eine Datenbankansicht zeigt 50 Zeilen von 2000 — `begrenzen`, seit jeher,
+mit einer Ladegrenze im Layout-Menü. **Und sie sagte es nicht.** Die Tabelle
+endete nach der fünfzigsten Zeile mit „+ Neu", und nichts wies darauf hin,
+dass eintausendneunhundertfünfzig fehlen.
+
+Das ist kein Leistungsproblem, sondern die gefährlichere Sorte
+Unvollständigkeit: man merkt sie erst, wenn man etwas sucht, das dasteht und
+nicht gefunden wird. Der Weg heraus existierte — drei Ebenen tief unter
+„Layout" —, aber wer nicht weiss, dass abgeschnitten wird, sucht ihn nicht.
+
+Jetzt steht unter der Ansicht: **„50 von 2000 Zeilen · Mehr laden · Alle
+zeigen"**. Die Wahl bleibt an der Ansicht stehen; wer einmal alle sehen
+wollte, will es beim nächsten Öffnen wieder.
+
+**Unter der ANSICHT, nicht im Tabellenfuss.** `begrenzen` gilt für jede
+Ansichtsart; in den Tabellenfuss geschrieben hätten Board, Galerie und Feed
+weiter stumm abgeschnitten.
+
+### Was diese Prüfung misst und was nicht
+
+Keine Millisekunden als Schranke. Die hängen an der Maschine, und eine
+Prüfung, die auf einem langsamen Rechner rot wird, wird abgeschaltet statt
+gelesen. Gemessen werden **Zahlen und Formen**: wie viele Sätze angefasst
+werden, wie viele Knoten im Bild stehen, was die Ansicht über sich selbst
+sagt. Dazu ein paar sehr weite Zeitschranken — dreissig Sekunden für etwas,
+das 1,5 braucht —, die keine gesunde Maschine reisst und ein quadratischer
+Algorithmus sofort.
+
+### Und ein Messfehler beim Schreiben
+
+Nach `seite.reload()` wartete die Suite darauf, dass der BESTAND steht. Der
+steht früher als die Oberfläche; `App.oeffne` lief danach ins Leere, und die
+Seite hatte keinen einzigen Block. Das sah aus wie ein Fehler in der
+Ansicht und war einer in der Prüfung. Jetzt wird auch auf `#scroll`
+gewartet.
+
+Und §3a hat einen Wächter bekommen: fehlt der Hinweis, wird die Suite ROT
+statt abzustürzen — ein Absturz mitten im vollen Lauf ist schwerer zu lesen
+als ein roter Punkt.
+
+### Gegenprobe
+
+```txt
+kein Hinweis auf die Grenze     7 rot
+```
+
+`test233`, 22 Punkte.
+
+---
+
+## E181 · Dieselbe Frage, zwei Antworten (L50, L21, L30)
+
+**25. August 2026.**
+
+L50 stand seit E169 als „Hygiene, keine Fehlerbehebung" da: `Arbeitswelt`
+und `Lebensbereiche` sind zwei Wege zu denselben Blöcken, und gemessen
+liefern sie dasselbe. Beim Nachsehen, WAS die zwei Wege eigentlich teilen,
+stand eine Sache zweimal da, die nicht dasselbe lieferte.
+
+### Der Fund
+
+Beide hatten eine Funktion namens `erlaubt`. Beide beantworteten die
+Rechtefrage. Sie beantworteten sie verschieden:
+
+```txt
+arbeitswelt     pageId ? Konten.darf(a, pageId) : Konten.darf(a)
+lebensbereiche  !!pageId && Konten.darf(a, pageId)
+```
+
+Bei einer LEEREN Seitenkennung — ein Block, der zu keiner Seite gehört —
+sagte die eine „dann frag den Arbeitsbereich" und die andere „nein".
+Derselbe Block war in der einen Ansicht sichtbar und in der anderen nicht.
+
+Der Grund liegt in `Konten.darf` selbst:
+
+```ts
+const id = seiteId || App.aktuelleSeite();
+if (!id) return true;
+```
+
+Ein leerer Text fällt auf die gerade offene Seite zurück. Das ist für die
+Werkstattfrage richtig („darf ich hier überhaupt etwas ändern") und für die
+Seitenfrage falsch („darf ich DIESE Seite"). Die eine Fassung hat den
+Unterschied gesehen, die andere nicht.
+
+Das ist L34 in Reinform, nur eine Ebene höher: ein Wert steht an zwei
+Stellen, nichts erzwingt Gleichheit, und die Abweichung sieht man erst,
+wenn jemand sie sucht.
+
+### Die Antwort steht jetzt einmal da
+
+`kern/zugang/lesefrage.ts`, mit der Regel ausgeschrieben:
+
+```txt
+Rechte aus            → alles erlaubt (ohne Konten keine Rechte)
+Seitenkennung da      → die Seitenfrage
+Seitenkennung leer    → NEIN
+Kennung weggelassen   → die Werkstattfrage
+```
+
+Der Unterschied zwischen „leer" und „weggelassen" ist Absicht und nicht
+Zufall: nur dadurch fallen beide alten Fassungen zusammen, ohne dass sich
+für einen einzigen Aufrufer etwas ändert.
+
+**Nicht `rechte.ts`.** Den Namen gibt es schon — dort wohnen die Feldrechte.
+Der erste Versuch hat die Datei überschrieben; `npm run typecheck` hat es
+gemeldet, weil `Feldrechte` plötzlich unbekannt war. Der Vorfall steht im
+Kopf der neuen Datei, damit der nächste Versuch nicht dieselbe Stelle trifft.
+
+### Der grosse Kern bleibt ungebaut
+
+L50 wollte ursprünglich beide Bereiche auf einen gemeinsamen Aggregatkern
+stellen. Das passiert nicht, und das ist eine Entscheidung, kein Rückstand:
+die zwei Wege liefern dasselbe (E169, gemessen), und der eine trägt die
+Rechteprüfung, die der andere nicht braucht. Sie zusammenzulegen hiesse,
+diese Prüfung neu zu verdrahten — für ein Ergebnis, das der Mensch nicht
+sieht. Der Teil mit dem Risiko war die gemeinsame Frage, und die ist
+gemeinsam.
+
+### Zwei Lücken nebenbei, beide durch Hinsehen
+
+**L21 war seit E122 zu.** Der Eintrag verlangte drei Dinge —
+verschlüsseltes `.redion`, verschlüsselte Anhänge, Schlüsselwechsel — und
+alle drei gibt es seit Paketfassung 2; `test199` fährt sie mit 33 Punkten
+ab. Der Absatz wurde nach dem Schreiben nie wieder nachgesehen. Eine Lücke,
+die nur auf dem Papier steht, ist auch eine Art Falschaussage.
+
+**L30 war eine Wunschliste ohne Urteil.** „Erweiterungen und Marktplatz",
+sechs Stichworte, kein Satz dazu, ob das zu Redion passt. Es passt nicht
+ohne Weiteres: eine Erweiterung ist fremder Code im selben Fenster wie die
+Notizen und sieht IndexedDB, `Store` und jedes offene Dokument. §19 verbietet
+`eval()` und ungeprüftes `innerHTML`, §47 fremden Code aus Formeln — ein
+Erweiterungssystem wäre die grösste Ausnahme von beidem. Sicher gebaut
+bräuchte es eigenen Ursprung, `iframe`, Nachrichten statt Zugriff, ein
+Rechtemodell je Erweiterung, Signaturen und einen Rückruf. Das ist ein
+eigenes Projekt. Es steht jetzt als „bewusst nicht gebaut" da, mit den drei
+Wegen, die ohne Fremdcode auskommen: Register, Automationen, `.redion`.
+
+Prüflauf: `test234`, 14 Punkte, mit zwei Gegenproben — das `!!pageId &&`
+entfernt macht einen Punkt rot, `Lebensbereiche` wieder mit eigener Regel
+zwei.
+
+---
+
+## E182 · Der Knopf, der den Export kennt (L26)
+
+**25. August 2026.**
+
+L26 stand als „Asana und Apple Notes fehlen" da. Beim Nachsehen stimmte das
+nur halb, und die Hälfte, die stimmte, war die interessantere.
+
+**Asana kam schon herein** — über den allgemeinen CSV-Weg. Nur eben so:
+
+```txt
+Section/Column  →  Text     statt  Status (und Gruppierung)
+Due Date        →  Text     statt  Datum
+Tags            →  Text     statt  Mehrfachauswahl
+Completed At    →  Text     statt  Haken
+Notes           →  EINE ZELLE mit der ganzen Beschreibung darin
+```
+
+Die letzte Zeile ist der eigentliche Verlust. Eine Aufgabenbeschreibung in
+einer Tabellenzelle kann man nicht lesen, nicht gliedern, nicht durchsuchen
+wie eine Seite. Sie steht da, aber sie ist unbenutzbar — und das sieht nicht
+nach einem Fehler aus, sondern nach einer langen Spalte.
+
+Die vorletzte ist die zweitschlimmste: in einer Aufgabenliste ist „erledigt
+oder nicht" die Information, nach der man zuerst sucht. Asana schreibt sie
+nicht als Ja/Nein, sondern als Datum in `Completed At` — leer heisst offen.
+Wer das nicht weiss, bekommt eine Textspalte voller Zeitstempel.
+
+**Apple Notes kam gar nicht herein.** Es liefert einen ORDNER mit einer
+HTML-Datei je Notiz; die Ordner der App werden zu Unterordnern.
+
+### Was jetzt dasteht
+
+`ausAsana` liest die Spaltennamen und bildet sie typgerecht ab, `Notes` wird
+Seiteninhalt statt Zellinhalt, `Completed At` wird der Haken, und die Ansicht
+ist ein nach Abschnitt gruppiertes Board.
+
+**Was nicht erkannt wird, geht trotzdem mit.** Asana hängt eigene Felder als
+weitere Spalten an, und die heissen bei jedem anders. Sie werden Textspalten
+mit ihrem Namen aus der Datei — lieber eine Spalte zu viel als ein verlorenes
+Feld. Ihre Schlüssel sind `a0`, `a1`, … und nicht `0`, `1`, weil rein
+numerische Schlüssel seit E96/E172 kaputte Verweise machen.
+
+`ausAppleNotes` legt je HTML-Datei eine Seite an und behält die Ordner. Der
+Titel kommt aus `<title>`, sonst aus der ersten Überschrift, sonst aus dem
+Dateinamen — in dieser Reihenfolge, weil die ersten beiden Umlaute und
+Satzzeichen behalten haben, die der Dateiname verloren hat.
+
+### Eine Grenze, die es geben muss
+
+`ausAsana` verlangt eine Spalte `Name` oder `Task Name` und lehnt sonst ab.
+Ohne diese Grenze wäre jede beliebige CSV ein Asana-Export, und die
+Zuordnung würde raten statt lesen — aus „Betrag" würde ein Abschnitt. Der
+allgemeine CSV-Weg steht weiterhin daneben im Fenster, jetzt unter seinem
+eigenen Namen („Jira, Monday, sonstige CSV") statt als Anhängsel von Asana.
+
+### Ein HTML-Leser, nicht zwei
+
+Apple Notes braucht dasselbe wie Evernote: HTML zu Blöcken. Die Funktion
+stand IN `ausEvernote`; sie zu kopieren hiesse, sie zweimal zu haben — L34
+in Reinform. Sie heisst jetzt `htmlZuMarkdown` und gehört beiden.
+
+Dadurch bekam Evernote nebenbei etwas dazu: **Kästchen werden Aufgaben.**
+Apple Notes schreibt Checklisten auf drei Arten (`☑`, `[x]`, ein
+Datenattribut), und alle drei werden zu `- [x]` / `- [ ]`, aus denen
+`ausMarkdown` echte Aufgabenblöcke macht. Vorher wäre daraus ein
+Aufzählungspunkt geworden, in dessen Text ein Kästchen steht, das man nicht
+anklicken kann.
+
+### Was die Prüfung misst
+
+`test235`, 63 Punkte, mit fünf Gegenproben, die einzeln nachgewiesen sind:
+
+```txt
+alle Typen wieder auf Text            5 Punkte rot
+`Notes` nicht mehr als Seiteninhalt   3 Punkte rot
+Kästchen nicht mehr als Aufgabe       5 Punkte rot
+Unterordner flach                     1 Punkt  rot
+die stummen Spalten doch als Spalten  5 Punkte rot
+```
+
+Zwei Punkte mussten dabei berichtigt werden, und beide waren grün aus dem
+falschen Grund. „Eine Datei ohne Zeilen wird abgelehnt" prüfte nur, dass
+etwas geworfen wurde — das war auch dann grün, als `ausAsana` noch gar nicht
+existierte und der Aufruf an `undefined` scheiterte; jetzt wird die MELDUNG
+gelesen. Und „ein abgehakter Punkt wird eine erledigte Aufgabe" prüfte nur
+die Blockart, nicht den Haken — grün auch dann, wenn beide Punkte unerledigt
+ankommen, also genau im Verlustfall.
+
+`test49` zählte „Sechs Quellen zur Wahl". Eine Zahl allein ist auch dann
+grün, wenn zwei falsche Einträge dastehen; die Prüfung nennt jetzt die
+Namen.
+
+---
+
+## E183 · Die Liste rollte, ohne es zu zeigen
+
+**25. August 2026.**
+
+Zwei Quellen mehr im Einlesefenster (E182), und ein Bild später stand da:
+
+```txt
+📊 Jira, Monday, sonstige CSV
+   Irgendeine Tabelle — wird zur Datenbank
+📄 Einzelne Dateien
+   ⟵ hier hörte es auf
+```
+
+Die achte Quelle war 28 px unter der Kante. Erreichbar war sie immer — die
+Liste rollt. Aber sie sah aus wie ein Eintrag ohne Beschreibung, und nichts
+sagte, dass da noch etwas ist. Am Telefon fehlten 127 px statt 28.
+
+**Das ist E180 noch einmal, nur senkrecht.** Dort zeigte eine Tabelle 50 von
+2000 Zeilen und sagte es nicht; hier zeigt eine Liste sechs von acht
+Einträgen und sagt es nicht. Beide Male ist der Inhalt vollständig da, beide
+Male sieht der Ausschnitt aus wie das Ganze.
+
+Und keine Prüfung konnte es finden, weil keine danach sah. Gefunden hat es
+`node bilder.mts` — CLAUDE.md §55, wörtlich: *öffne die Seite wirklich,
+statt nur den Code zu lesen.*
+
+### Zwei Antworten, eine für jeden Fall
+
+**Am Rechner war die Höhe ohne Grund knapper als der Platz.** `max-height:
+56vh` liess 482 px zu, das Fenster hatte 753 von 860 zur Verfügung, gebraucht
+werden 518. Jetzt 62vh, und alle acht stehen da.
+
+**Am Telefon reicht es nie** — 608 px Inhalt in 523 px Fenster, und das
+bleibt so, egal welche Zahl dort steht. Dafür läuft die Kante aus, statt
+scharf abzuschneiden. Eine weiche Kante liest sich als „hier geht es weiter";
+eine scharfe liest sich als Ende.
+
+### Warum `Rollrand` und nicht eine zweite Rechnung
+
+Für die weiche Kante gibt es die Datei schon: `kern/helfer/rollrand.ts`, aus
+demselben Grund gebaut (E141, E151, E159). Sie mass nur die **Waagerechte** —
+Tabellen und Knopfleisten rollen zur Seite.
+
+Es wäre die kürzere Arbeit gewesen, für die Senkrechte vier Zeilen daneben zu
+schreiben. Genau das ist L34: ein Wert an zwei Stellen, nichts erzwingt
+Gleichheit, und die Abweichung sieht man erst spät. Also misst dieselbe
+Funktion jetzt beide Achsen:
+
+```ts
+const stand = hoch ? feld.scrollTop    : feld.scrollLeft;
+const sicht = hoch ? feld.clientHeight : feld.clientWidth;
+const ganz  = hoch ? feld.scrollHeight : feld.scrollWidth;
+```
+
+`quer` bleibt die Vorgabe, damit sich für keinen der sechs bisherigen
+Aufrufer etwas ändert — test210 und test221 laufen unverändert grün. Die
+Wörter sind je Achse andere (`links rechts` gegen `oben unten`), weil sie in
+der CSS stehen und dort etwas bedeuten.
+
+Eine Maske, kein aufgelegtes Element: ein Pseudo-Element im Rollfeld rollt
+mit dem Inhalt und wäre nach dem ersten Wisch weg.
+
+### Was die Prüfung misst
+
+`test235` §9, neun Punkte. Der wichtigste steht dort nicht wegen des
+Ergebnisses, sondern wegen der Messbarkeit:
+
+```ts
+p('Am Telefon rollt die Liste — sonst misst der Rest nichts', amHandy.rollt);
+```
+
+Passt eines Tages alles auch aufs Telefon, wird dieser Punkt rot — und das
+ist richtig, denn dann messen die zwei Punkte darunter nichts mehr. Eine
+Prüfung, die nicht rot werden kann, ist keine (§55.2).
+
+Zwei Gegenproben, einzeln nachgewiesen: die senkrechte Achse auf die
+waagerechte zurückgedreht macht 2 Punkte rot, die Höhe zurück auf 56vh macht
+4 rot.

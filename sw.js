@@ -149,6 +149,7 @@ const GRUNDSTOCK = [
     './quell/bereiche/wissen/electrical.js',
     './quell/kern/abgleich/zusammenfuehren.js',
     './quell/kern/zugang/rechte.js',
+    './quell/kern/zugang/lesefrage.js',
     './quell/bereiche/datenbanken/probelauf/dienst.js',
     './quell/bereiche/datenbanken/whatif.js',
     './quell/bereiche/datenbanken/cleanup.js',
