@@ -48,6 +48,14 @@ const PdfSeite = (() => {
            auch nennt (§38). */
         '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
             'title="Verweis auf genau diese Seite kopieren">🔗</button>' +
+            /* SCHÄRFER RECHNEN (L37, E173). Nur wenn es überhaupt geht: ohne das
+               Original in der Ablage gibt es nichts, woraus man rechnen könnte,
+               und ein Knopf, der nur eine Entschuldigung zeigt, ist kein Knopf.
+               Auch nur dann, wenn noch Luft nach oben ist. */
+            (block.quelleId && (Number(block.bildBreite) || 1654) < 3308
+                ? '<button data-a="feiner" aria-label="Diese Seite feiner rechnen" ' +
+                    'title="Diese Seite feiner rechnen — schärfer beim Hineinzoomen">⊕</button>'
+                : '') +
             '<span class="blatt-trenn"></span>' +
             /* Beide Zahlen durch `Number` — `nr` war es schon, `vonSeiten` nicht.
                Der Text hier geht ueber `Marken.leiste` in ein `innerHTML`, und ein
@@ -58,6 +66,24 @@ const PdfSeite = (() => {
             '</span>');
         werk.addEventListener('click', e => {
             const k = e.target?.closest?.('button');
+            if (k?.dataset.a === 'feiner') {
+                /* Sperren, solange gerechnet wird — sonst startet ein zweiter Klick
+                   einen zweiten Lauf, und der legt für denselben Block eine zweite
+                   Datei ab (derselbe Fehler wie E116). */
+                k.setAttribute('disabled', 'disabled');
+                k.textContent = '…';
+                PdfEinlesen.schaerfer(block).then((erg) => {
+                    if (erg && erg.ok)
+                        return; /* neu gezeichnet, Knopf ist fort */
+                    if (!k.isConnected)
+                        return;
+                    k.removeAttribute('disabled');
+                    k.textContent = '⊕';
+                    if (erg && erg.grund)
+                        UI.toast(erg.grund);
+                });
+                return;
+            }
             if (k?.dataset.a !== 'anker')
                 return;
             /* `location.href` ohne Hash — dieselbe Form wie Strg + Umschalt + C,

@@ -11791,3 +11791,286 @@ Prüflauf: `test226`, 24 Punkte.
 `verwaist()` weiterhin nicht. Sie automatisch zu löschen wäre wieder die
 gefährliche Richtung — zwischen „abgelegt" und „verknüpft" liegen
 Millisekunden, in denen sie echt und herrenlos ist.
+
+---
+
+## E172 · Ein Spaltenschlüssel aus lauter Ziffern (L36)
+
+**25. August 2026.**
+
+Bis E96 entstanden Spaltenschlüssel als Hex-Schnipsel, und knapp jeder zehnte
+bestand nur aus Ziffern. JavaScript behandelt so einen Schlüssel als
+Feldindex: `Object.keys` gibt ihn VOR allen anderen zurück, aufsteigend
+sortiert. Die Spalte steht dann immer ganz links.
+
+Das ist nicht bloss unschön. `spalteEinordnen` — was beim Ziehen einer
+Tabellenüberschrift passiert — baut das Schema in der neuen Reihenfolge auf.
+Beim nächsten Lesen zieht `Object.keys` den Zifferschlüssel wieder nach vorn.
+**Die Spalte lässt sich nicht bewegen**, und nichts sagt warum.
+
+E96 hat dafür gesorgt, dass so ein Schlüssel nicht mehr entsteht. L36 hielt
+den Bestand offen, mit dem richtigen Grund: eine Umbenennung ist eine
+Datenmigration, und die gibt es nur mit eigenem Plan und eigenen Prüfungen
+(§9).
+
+### Wo ein Spaltenschlüssel überall steht
+
+Nachgesehen, nicht geraten — zwölf Stellen:
+
+```txt
+schema[key]                die Spalte selbst
+zeile.props[key]           jeder Wert in jeder Zeile
+                           … auch in den Zeilen im Papierkorb
+ansicht.groupBy            die Gruppierung
+ansicht.sorts[].key        die Sortierung
+ansicht.filters.rules[]    der Filter, auch in verschachtelten Gruppen
+ansicht.hidden[]           versteckte Spalten
+ansicht.calc{}             Zusammenfassung — der Schlüssel ist der Objektname
+ansicht.breiten{}          Spaltenbreite, ebenso
+automationen.wenn.key      worauf die Automation hört
+automationen.dann[]        worauf sie schreibt
+schema[x].relation         die Verknüpfung, auf der ein Rollup sitzt
+schema[x].zielKey          die Spalte DRÜBEN, die er einsammelt
+```
+
+Und eine Stelle, an der ausdrücklich nichts geändert wird: **Formeln.**
+`prop("Punkte")` spricht die Spalte über ihren Anzeigenamen an, nicht über
+den Schlüssel (`dienst.ts`, `formelRechnen`). Ein Schlüsselwechsel geht daran
+vorbei.
+
+### Warum nicht einfach alles ersetzen
+
+Weil „4711" nicht immer eine Spalte ist. In einer Farbregel ist es ein WERT
+(„Fach ist gleich 4711"), in einer Zelle ist es Inhalt, in einer Auswahlliste
+ein Optionsname. Also:
+
+```txt
+OBJEKTSCHLÜSSEL   überall ersetzt — ein Feldname aus lauter Ziffern kommt
+                  im Code nicht vor
+WERTE             nur an benannten Stellen: key, groupBy, zielKey, relation,
+                  setzeKey, filterKey, bildKey, dateKey, …
+```
+
+Gegengeprobt, indem `wert` in die Liste der Schlüsselfelder aufgenommen
+wurde: die Farbregel bricht, `test227 §4` wird rot.
+
+### Die Stelle, an der der Umzug nichts erfinden darf
+
+Wo die Spalte ursprünglich STAND, weiss niemand mehr. Die Reihenfolge war nie
+gespeichert; sie ergibt sich aus `Object.keys`, und das hat den
+Zifferschlüssel schon beim Anlegen nach vorn gezogen. Ein Umzug, der eine
+Stelle errät und die Spalte verschiebt, sieht für den Menschen aus wie ein
+Fehler.
+
+Also lässt er sie, wo sie zu sehen war — und macht sie beweglich. Das ist der
+ganze Gewinn, und `test227 §2` misst genau ihn:
+
+```txt
+vorher    ans Ende geschoben  →  ["4711","title","abc"]   wieder vorn
+nachher   ans Ende geschoben  →  ["title","abc","s4711"]  geblieben
+```
+
+### Und der Weg, auf dem der Fall heute überhaupt noch auftritt
+
+Wer Redion neu öffnet, hat keine Zifferschlüssel — die gibt es seit E96 nicht
+mehr. Wer eine Sicherung von damals einspielt, hat sie.
+
+Und genau dort lief der Umzug nicht: die Umzüge laufen beim Start, die
+Sicherung kommt danach, und die Merkliste sagt „schon gelaufen" — für den
+vorigen Bestand stimmte das ja. Der Umzug wäre für alles zuständig gewesen
+ausser für den einen Weg, auf dem sein Fall wirklich hereinkommt.
+
+`importAll` stösst die Umzüge jetzt noch einmal an, mit
+`zuruecksetzen()` davor. Das ist zulässig, weil jeder Inhaltsumzug ohnehin
+zweimal laufen können muss, ohne zu schaden — die Regel steht seit jeher im
+Kopf von `umzuege.ts`.
+
+### Der neue Name ist berechenbar, nicht zufällig
+
+`4711` wird `s4711`, und bei Kollision `s4711-2`. Das ist Absicht: zwei
+Geräte, die dieselbe Sammlung abgleichen, führen den Umzug jedes für sich
+aus und müssen beim GLEICHEN Namen ankommen. Ein zufälliger neuer Schlüssel
+hätte aus einem Abgleich zwei Spalten gemacht.
+
+Und geschrieben wird mit `rohSetzen`, nicht mit `updateCollection`: das
+setzt `edited` auf jetzt und schickte damit den ganzen Bestand in den
+nächsten Abgleich.
+
+### Was gemessen wird
+
+`test227` misst nicht Feldnamen, sondern VERHALTEN — vorher und nachher
+derselbe Zustand:
+
+```txt
+dieselben Spalten · dieselben Werte · dieselben gefilterten Zeilen (durch
+Datenbank.zeilen, die echte Strecke) · Gruppierung, Sortierung, Filter,
+versteckte Spalten, Zusammenfassung, Breite · die Automation · der Rollup
+drüben · die Zeile im Papierkorb
+```
+
+Dazu ein Durchgang, der den ganzen Bestand nach Resten absucht — nicht nach
+einer Liste von Feldnamen, sonst prüfte die Prüfung dieselbe Aufzählung, die
+auch der Umzug benutzt. Zurückgedreht meldet er die zwölf Stellen von oben
+namentlich.
+
+### Gegenproben
+
+```txt
+der Umzug tut gar nichts                     7 rot
+'key', 'groupBy', 'zielKey' fehlen           5 rot
+Schritt 4 (fremde Rollups) fehlt             2 rot
+der Papierkorb bleibt aussen vor             2 rot
+auch 'wert' würde ersetzt                    1 rot
+nach dem Import laufen die Umzüge nicht      2 rot
+```
+
+`test227`, 29 Punkte.
+
+---
+
+## E173 · Eine PDF-Seite feiner rechnen (L37)
+
+**25. August 2026.**
+
+Seiten entstehen bei 1654 px Breite — bei A4 genau 200 dpi, Scan-Qualität.
+Wer stark hineinzoomt, sieht trotzdem Unschärfe, und L37 hielt das als
+offene Arbeit fest.
+
+Beim Nachsehen war fast alles schon da und wurde nur nie gerufen:
+
+```txt
+PdfLeser.alsBild(nr, breitePx)     nimmt seit E103 eine Breite entgegen
+Dateien.alsBlob(quelleId)          das Original liegt in der Ablage
+Marken in SEITENPUNKTEN            E100 — sie hängen nicht am Bild
+```
+
+Der dritte Punkt ist der, an dem es hängt. Die Markenschicht ist ein SVG mit
+`viewBox: 0 0 bw bh`, und `bw`/`bh` sind PDF-Punkte. Unter den Strichen darf
+sich das Bild deshalb ändern, ohne dass sie wandern — ein Strich, der beim
+feineren Rechnen verrutscht, wäre schlimmer als Unschärfe. `test228 §4` misst
+genau das.
+
+### Was dazukam
+
+Neben der Seitenzahl steht ein ⊕, das die Breite verdoppelt: 1654 → 3308 px,
+also 400 dpi bei A4. Das ist die Grenze; darüber wird eine Seite als WebP
+schnell mehrere Megabyte, und das trägt ein Telefon nicht (§36, §37). Ist sie
+erreicht, verschwindet der Knopf — er hätte nichts mehr zu tun.
+
+Drei Dinge, die dabei nicht offensichtlich sind:
+
+```txt
+· ERST die neue Kennung an den Block, DANN die alte Datei weg. Andersherum
+  stünde dazwischen eine Seite ohne Bild, und bricht es dort ab, ist das
+  Bild fort und das neue nicht da. In dieser Reihenfolge ist der schlimmste
+  Fall eine Datei zu viel.
+
+· Die alte Bilddatei MUSS weg. Sie zeigt auf einen lebenden Block, also
+  findet `Dateien.verwaist()` sie grundsätzlich nie (E116) — sie wäre eine
+  Leiche, die niemand mehr wegräumen kann. Gemessen wird deshalb nicht
+  „nichts Herrenloses", sondern „diese Seite hat genau ein Bild".
+
+· Die gewählte Breite steht am Block (`bildBreite`) und kommt mit in die
+  Sicherung. Ohne sie käme die Seite beim Zurückholen aus dem Original
+  wieder grob zurück, und die Arbeit wäre still verloren — `.redion` lässt
+  die Seitenbilder ja bewusst draussen (E103).
+```
+
+Der Knopf sperrt sich, solange gerechnet wird. Zwei Klicks würden zwei Läufe
+starten, und beide legten für denselben Block eine Datei ab — derselbe
+Fehler, den E116 für das Zurückholen behoben hat.
+
+### Und eine Zahl, die zweimal in derselben Lücke stand
+
+L37 sagte weiter oben „200 dpi, nicht die 140, die hier und in E103 standen"
+— und ein paar Absätze tiefer wieder „rund 140 dpi". E107 hatte die falsche
+Rechnung berichtigt, aber nur an einer der beiden Stellen. Jetzt an keiner.
+
+### Gegenproben
+
+```txt
+der Knopf fehlt                              1 rot (und ein Klick ins Leere)
+die alte Bilddatei bleibt liegen             3 rot
+neuBerechnen vergisst die gemerkte Breite    1 rot
+```
+
+Mit Augen gesehen (§55): vorher steht das ⊕ neben dem 🔗, nachher ist es
+fort und die Meldung sagt „Seite 1 ist jetzt bei 400 dpi".
+
+`test228`, 24 Punkte.
+
+---
+
+## E174 · Die Kennungen überleben den Quelltext-Rundlauf (L40)
+
+**25. August 2026.**
+
+L40 hielt als Rest fest, die Blöcke würden beim Übernehmen weiterhin geleert
+und neu gebaut, also änderten sich die Kennungen — und beschrieb das als
+„Frage der Form, nicht des Formats". Nachgemessen ist es keine Formfrage:
+
+```txt
+vier Absätze · EINEN im Quelltext geändert · übernommen
+  → keine einzige der vier Kennungen überlebt
+  → ein Blockverweis (#block=…, E105) zeigt ins Leere
+  → ein Kommentar hängt an einem Block, den es nicht mehr gibt
+```
+
+Eine Kennung ist die ADRESSE eines Absatzes. Wer eine Zeile berichtigt,
+verliert die Verweise auf alle anderen mit.
+
+### Der Umbau war nicht nötig
+
+L40 nannte als Weg die „echte zeilenweise Abgleichung" und stufte sie als
+Umbau ein. Beim Nachsehen legt `ausMarkdown` Blöcke an **genau einer**
+Stelle an — `lege`, das den Stapel für die Einrückung führt (E120). Alles,
+was es brauchte, steht dort:
+
+```ts
+const alt = holeGemerktes(typ, felder ? felder['text'] : '');
+if (alt) { mit['id'] = alt.id; … }
+Store.addBlock(elternFuer(roh), typ, mit);
+```
+
+`Store.addBlock` nimmt seit jeher einen `patch` und legt ihn ÜBER die
+Vorgaben — eine mitgegebene Kennung gilt also. Und `kinderLeeren` hat den
+alten Block eben endgültig gelöscht, seine Kennung ist frei.
+
+### Ein Gedächtnis statt zweier
+
+E165 merkte sich die Blöcke MIT Farbe, um sie danach in einem zweiten
+Durchgang wieder aufzusetzen. Gemerkt wird jetzt jeder tragende Block, samt
+Kennung, Farbe und Schrift — und alles davon gibt `lege` beim Anlegen mit.
+
+```txt
+vorher   merke → bauen → setzeWiederAuf     zwei Durchgänge, zwei Zuordnungen
+nachher  merke → bauen (mit Kennung+Farbe)  ein Durchgang, eine Zuordnung
+```
+
+Zwei Zuordnungen nach derselben Regel sind eine Regel zu viel: sie können
+auseinanderlaufen, und dann bekäme ein Block die Kennung des einen und die
+Farbe des anderen.
+
+### Die Regel ist die von E165, und aus demselben Grund
+
+Zugeordnet wird nach **(Art, Text)**, nicht nach Position. Wer eine Zeile
+einfügt, verschiebt alle darunter; nach Position zugeordnet bekäme dann jede
+Zeile die Kennung ihrer Vorgängerin — ein Verweis zeigte danach auf den
+falschen Absatz, und das ist schlimmer als ein toter Verweis.
+
+Wer den Text ändert, bekommt eine neue Kennung. Das ist ehrlich: es ist ein
+neuer Satz.
+
+Und jeder gemerkte Eintrag wird **höchstens einmal** vergeben. Zwei Blöcke
+mit derselben Kennung wären ein kaputter Bestand, kein Merkmal —
+gegengeprobt: `splice` durch einen blossen Zugriff ersetzt, und die Prüfung
+zeigt dieselbe Kennung zweimal.
+
+### Gegenproben
+
+```txt
+die Kennung wird nicht wiederverwendet        5 rot
+ein Eintrag darf mehrfach vergeben werden     3 rot
+```
+
+`test187` §7, acht neue Punkte (55 → 63).

@@ -349,36 +349,53 @@ const WissenDienst = (() => {
      * Sätze mit verschiedenen Farben behalten so ihre eigene, statt beide
      * die erste zu bekommen.
      * ----------------------------------------------------------------------*/
-    type Formatgedaechtnis = { type: string; text: string; color?: string; stil?: any };
-    const gemerkt: Formatgedaechtnis[] = [];
+    /* ------------------------------------------------------------------------
+     * UND DIE KENNUNG DAZU (L40, E174)
+     * ------------------------------------------------------------------------
+     * E165 merkte sich nur Blöcke MIT Farbe. Gemerkt wird jetzt jeder
+     * tragende Block, samt seiner Kennung — und die bekommt der neue Block
+     * beim Anlegen zurück.
+     *
+     * Warum das mehr ist als Ordnungsliebe: eine Kennung ist die Adresse
+     * eines Absatzes. Ein Blockverweis (`#block=…`, E105), ein Kommentar,
+     * eine Erwähnung zeigen darauf. Gemessen vor E174: von vier Absätzen,
+     * von denen EINER geändert wurde, überlebte KEINE EINZIGE Kennung — der
+     * Verweis zeigte danach ins Leere und der Kommentar hing an einem Block,
+     * den es nicht mehr gibt.
+     *
+     * Zugeordnet wird nach (Art, Text) — dieselbe Regel wie bei der Farbe
+     * seit E165, und aus demselben Grund: nach Position zugeordnet bekäme
+     * nach dem Einfügen einer Zeile jede Zeile die Kennung ihrer
+     * Vorgängerin, und das wäre schlimmer als eine neue. Wer den Text
+     * ändert, bekommt eine neue Kennung; das ist ehrlich, denn es ist ein
+     * neuer Satz.
+     *
+     * Ein Eintrag wird HÖCHSTENS EINMAL vergeben — zwei Blöcke mit
+     * derselben Kennung wären ein kaputter Bestand, kein Feature.
+     * ----------------------------------------------------------------------*/
+    type Blockgedaechtnis = { id: string; type: string; text: string;
+                              color?: string; stil?: any };
+    const gemerkt: Blockgedaechtnis[] = [];
     const merke = (id: string): void => {
       Store.childrenOf(id).forEach((b: any) => {
         if (!mdTraegt(b)) return;
         const stil = b.stil && typeof b.stil === 'object' && Object.keys(b.stil).length
           ? { ...b.stil } : null;
-        if (b.color || stil)
-          gemerkt.push({ type: String(b.type || ''), text: String(b.text || ''),
-                         ...(b.color ? { color: String(b.color) } : {}),
-                         ...(stil ? { stil } : {}) });
+        gemerkt.push({ id: String(b.id), type: String(b.type || ''),
+                       text: String(b.text || ''),
+                       ...(b.color ? { color: String(b.color) } : {}),
+                       ...(stil ? { stil } : {}) });
         merke(b.id);
       });
     };
     merke(p.id);
 
-    const setzeWiederAuf = (id: string): void => {
-      Store.childrenOf(id).forEach((b: any) => {
-        if (!mdTraegt(b)) return;
-        const i = gemerkt.findIndex(x => x.type === String(b.type || '') &&
-                                         x.text === String(b.text || ''));
-        if (i >= 0) {
-          const [treffer] = gemerkt.splice(i, 1);
-          const aenderung: Record<string, unknown> = {};
-          if (treffer && treffer.color) aenderung['color'] = treffer.color;
-          if (treffer && treffer.stil) aenderung['stil'] = treffer.stil;
-          if (Object.keys(aenderung).length) Store.updateBlock(b.id, aenderung);
-        }
-        setzeWiederAuf(b.id);
-      });
+    /** Was dieser Block einmal war — Kennung, Farbe, Schrift. Höchstens einmal. */
+    const holeGemerktes = (typ: string, text: unknown): Blockgedaechtnis | null => {
+      const i = gemerkt.findIndex(x => x.type === typ && x.text === String(text ?? ''));
+      if (i < 0) return null;
+      const [treffer] = gemerkt.splice(i, 1);
+      return treffer ?? null;
     };
 
     try {
@@ -425,9 +442,20 @@ const WissenDienst = (() => {
       stapel.length = t + 1;
       return stapel[t] as string;
     };
-    /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken. */
+    /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken.
+       Die EINZIGE Stelle, an der beim Übernehmen ein Block entsteht —
+       deshalb steht die Wiederverwendung genau hier und nirgends sonst. */
     const lege = (roh: string, typ: string, felder?: Record<string, unknown>): any => {
-      const b = Store.addBlock(elternFuer(roh), typ, felder);
+      const alt = holeGemerktes(typ, felder ? felder['text'] : '');
+      const mit: Record<string, unknown> = { ...(felder || {}) };
+      if (alt) {
+        /* Die Kennung des Blocks, der hier stand. `Store.kinderLeeren` hat
+           ihn eben endgültig gelöscht, sie ist also frei. */
+        mit['id'] = alt.id;
+        if (alt.color) mit['color'] = alt.color;
+        if (alt.stil)  mit['stil']  = alt.stil;
+      }
+      const b = Store.addBlock(elternFuer(roh), typ, mit);
       stapel.push(b.id);
       return b;
     };
@@ -535,9 +563,11 @@ const WissenDienst = (() => {
       tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
     } finally {
       retteUebrige();
-      /* Erst NACH `retteUebrige`: die zurückgehängten Blöcke gehören zum
-         Baum, und ein Platzhalter kann ebenso gefärbt gewesen sein. */
-      if (gemerkt.length) setzeWiederAuf(p.id);
+      /* Hier stand bis E174 ein zweiter Durchgang, der die Farben nachträglich
+         wieder aufsetzte. Er ist fort: `lege` gibt sie jetzt beim Anlegen mit,
+         zusammen mit der Kennung und nach derselben Regel. Ein Durchgang
+         statt zwei, und eine Zuordnung statt zweier, die auseinanderlaufen
+         können. */
     }
   };
 

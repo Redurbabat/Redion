@@ -304,7 +304,7 @@ Marke mit `lesen` konnte nichts lesen. Die drei stehen in E35.
 Seite, zu der die Zeile gehört) und ein Weg, eine Freigabe zeitlich zu
 begrenzen — beides ist eine eigene Entscheidung, kein Loch.
 
-## L8b · Der Service Worker und die ehrliche Ersatzantwort
+## L8b · ~~Der Service Worker und die ehrliche Ersatzantwort~~ — GESCHLOSSEN
 
 **Stand** — ✅ behoben, aber der Gedanke gilt weiter.
 
@@ -317,7 +317,7 @@ Ursache nichts zu tun hatte („Wissen is not defined").
 sie zur Frage passt. Eine Antwort in der falschen Form ist schlimmer als
 keine: sie sieht wie Erfolg aus.
 
-## L9 · Formelfunktionen ohne Beschreibung
+## L9 · ~~Formelfunktionen ohne Beschreibung~~ — GESCHLOSSEN
 
 **Stand** — ✅ geschlossen (6. August). 0 ohne Beschreibung, 0 ohne Funktion.
 
@@ -483,7 +483,7 @@ wirklich klingt. Ausserdem ungeprüft: die Bereiche unterhalb der Schale
 (Datenbankansichten, Tabellenblatt, KI-Fenster) und die Bedienung ganz
 ohne Maus über einen längeren Arbeitsablauf.
 
-## L13 · Prüfläufe für migrierten TypeScript-Code
+## L13 · ~~Prüfläufe für migrierten TypeScript-Code~~ — GESCHLOSSEN
 
 **Stand** — ✅ erledigt.
 
@@ -545,7 +545,7 @@ Blob dieser Grösse zusammensetzen und herunterladen, entscheidet der
 Browser; dafür braucht es ein echtes Gerät mit Platz und Geduld — im
 Prüfcontainer geht es nicht.
 
-## L15 · Bedingte Formatierung
+## L15 · ~~Bedingte Formatierung~~ — GESCHLOSSEN
 
 **Stand** — ✅ vollständig (8. August, E53 und E60).
 
@@ -666,7 +666,7 @@ Richtungen geschlossen.
 Fehlt: Kommentare · Bilder · Diagramme · bedingte Formatierung im
 Austausch.
 
-## L19 · Fehlende oder ungeprüfte Blocktypen
+## L19 · ~~Fehlende oder ungeprüfte Blocktypen~~ — GESCHLOSSEN
 
 **Stand** — ✅ inventarisiert am 9. August (E90): das Register führt
 **76** Einträge, aufgeschrieben in `doku/BLOCKTYPEN.md` — erzeugt aus
@@ -804,7 +804,7 @@ Ein Kommentar „muss übereinstimmen" reicht nicht: genau der stand bei
 
 # Später
 
-## L36 · Rein numerische Spaltenschlüssel im Bestand
+## L36 · ~~Rein numerische Spaltenschlüssel im Bestand~~ — GESCHLOSSEN
 
 Bis E96 entstanden Spaltenschlüssel als Hex-Schnipsel — 9,6 % davon
 rein numerisch, und solche Schlüssel sortiert JavaScript in
@@ -819,6 +819,47 @@ bis sie neu angelegt wird. Eine stille Umbenennung wäre eine
 Datenmigration (Bezüge in Zeilen, Ansichten, Formeln, Automationen,
 Sicherungen) — die gibt es nur mit eigenem Plan und Tests (§9).
 
+---
+
+**25. August 2026 — E172. Der Plan und die Tests sind da.**
+
+Der Umzug `spaltenschluessel-ohne-ziffer` benennt `4711` in `s4711` um und
+zieht den Namen überall mit — nachgesehen ergaben sich zwölf Stellen:
+
+```txt
+schema[key] · props[key] in jeder Zeile · auch im Papierkorb
+groupBy · sorts[].key · filters.rules[].key · hidden[] · calc{} · breiten{}
+automationen: wenn.key und die dann-Schritte
+Rollups: relation hier, zielKey drüben
+```
+
+Und eine Stelle, an der ausdrücklich NICHTS geändert wird: Formeln.
+`prop("Punkte")` spricht die Spalte über ihren Anzeigenamen an, nicht über
+den Schlüssel — nachgesehen in `dienst.ts`, `formelRechnen`.
+
+Drei Dinge, die beim Bauen herauskamen:
+
+```txt
+· Die ursprüngliche Stelle der Spalte ist NICHT wiederherstellbar. Sie war
+  nie gespeichert; `Object.keys` hat sie schon beim Anlegen nach vorn
+  gezogen. Der Umzug erfindet sie deshalb nicht — er lässt die Spalte, wo
+  sie zu sehen war, und macht sie beweglich. Das ist der ganze Gewinn, und
+  test227 §2 misst genau ihn: vorher ans Ende geschoben und wieder vorn,
+  nachher ans Ende geschoben und dort geblieben.
+
+· Stumpfes Ersetzen wäre falsch. „4711" ist in einer Farbregel ein WERT und
+  in einer Zelle Inhalt. Also: Objektschlüssel überall, Werte nur an
+  benannten Stellen. Gegengeprobt, indem `wert` in die Liste aufgenommen
+  wurde — die Farbregel bricht.
+
+· Der Weg, auf dem der Fall heute überhaupt noch auftritt, ist die
+  eingespielte Sicherung — und genau dort lief der Umzug nicht. Er läuft
+  beim Start, die Sicherung kommt danach. `importAll` stösst die Umzüge
+  jetzt noch einmal an.
+```
+
+Prüflauf: `test227`, 29 Punkte, sechs Gegenproben.
+
 ## L23 · Abfragesprache für normale Nutzer
 
 Suche über Titel, Inhalt, Zeilen und Kennungen mit einfacher Syntax.
@@ -831,7 +872,7 @@ Relationen, Baumkanten, Filter und begrenzte 1-/2-Hop-Ausschnitte verwenden
 denselben Bestand; Lernquellen werden am normalen Block verknüpft. Ink-Striche
 werden bewusst nicht zu Graphknoten.
 
-## L25 · Universelle Begriffe und Aliase
+## L25 · ~~Universelle Begriffe und Aliase~~ — GESCHLOSSEN
 
 **Stand — ✅ geschlossen mit E129.** Seiten tragen additive `aliases`. Titel,
 Alias, Vault-/Hierarchiepfad und `redion:<id>` laufen durch einen zentralen
@@ -1030,7 +1071,7 @@ Die Prüfung hätte für immer grün gesagt.
 |---|---|---|
 | S1 | Die Ausgangsschlange konnte eine Millisekunde zerschneiden: `edited <= marke` schloss den Rest **für immer** aus. Der Satz stand auf dem Gerät und kam nie in der Wolke an — kein Fehler, keine Meldung | `test113` |
 
-## L33 · Erinnerungen, wenn Redion geschlossen ist
+## L33 · ~~Erinnerungen, wenn Redion geschlossen ist~~ — GESCHLOSSEN (E54)
 
 **Stand** — ✅ mit Server (8. August, E54); ohne Server melden sie sich
 weiterhin beim nächsten Öffnen.
@@ -1081,11 +1122,22 @@ sagt das jetzt, statt es den Menschen herausfinden zu lassen.
 **Regel** — was die App verspricht, muss sie halten können. Lieber „meldet
 sich beim nächsten Öffnen" als eine Weckerfunktion, die schweigt.
 
-## L37 · Was am PDF noch fehlt
+**25. August 2026 — die Überschrift war die letzte offene Stelle.** Der Text
+darunter sagt seit dem 8. August „✅ mit Server (E54)"; gebaut ist Web Push,
+geprüft mit `test131` (44 Punkte), und „ohne Server beim nächsten Öffnen"
+ist keine Lücke, sondern die Regel drei Zeilen darüber. Dieselbe Sorte
+Papierlücke wie L24 und L34: im Text erledigt, in der Überschrift offen.
+
+## L37 · ~~Was am PDF noch fehlt~~ — GESCHLOSSEN
 
 **19. August 2026, nach E103.** Ein PDF wird jetzt zu Seiten, die man
 durchblättert und beschreibt. Vier Dinge kann es noch nicht, und keines
 davon ist ein Fehler — es ist Arbeit, die nicht getan ist.
+
+**25. August 2026 — alle vier sind erledigt.** Seitenanker (E105),
+Zurückholen (E106), Textsuche (E107), feiner rechnen (E173). Was von dieser
+Lücke bleibt, ist eine Grenze, die bleiben soll (unten) und ein Verweis auf
+L29 für eingescannte Seiten ohne Textebene.
 
 **~~Seitenanker~~ · erledigt (E105).** Jede PDF-Seite hat neben ihrer
 Seitenzahl einen 🔗, der einen Verweis auf genau sie kopiert. Beim
@@ -1109,11 +1161,17 @@ und springt zur Fundstelle statt bloss zur Seite. Was bleibt: eine
 EINGESCANNTE Seite hat gar keine Textebene — dafür bräuchte es OCR, und das
 ist L29.
 
-**Neurasterung.** Seiten entstehen bei 1654 px Breite, rund 140 dpi. Wer
-stark hineinzoomt, sieht Unschärfe. Eine Seite liesse sich auf Wunsch
-neu und feiner rechnen — die Marken blieben dabei liegen, weil sie in
-Seitenpunkten gespeichert sind und nicht in Bildpunkten (E100). Nötig
-dafür ist, dass das Original noch da ist; es ist da (E103).
+**~~Feiner rechnen~~ · erledigt (E173).** Neben der Seitenzahl steht ein ⊕,
+das diese eine Seite auf 3308 px neu rechnet — 400 dpi bei A4. Die Marken
+bleiben liegen, weil sie in Seitenpunkten gespeichert sind und nicht in
+Bildpunkten (E100); die alte Bilddatei geht weg, sonst wüchse der Bestand
+mit jedem Klick; und die gewählte Breite steht am Block, damit ein
+Zurückholen aus dem Original sie nicht still auf grob zurückstellt.
+
+Dieser Absatz stand hier zweimal mit zwei verschiedenen Zahlen: weiter
+oben „200 dpi, nicht die 140, die hier standen" — und dann wieder „rund 140
+dpi". Die zweite war die alte, falsch gerechnete, die E107 schon berichtigt
+hatte; sie stand nur an zwei Stellen. 1654 px über 595,28 pt sind 200 dpi.
 
 **~~Verschlüsselte PDFs~~ · erledigt (E110).** Redion fragt jetzt nach dem
 Passwort, sagt beim zweiten Anlauf, dass das erste falsch war, und legt es
@@ -1217,7 +1275,7 @@ Sekunden, bei fünfhundert Seiten. Ein Prüflauf, der nur den Erfolgsfall
 abfährt, hätte keinen einzigen davon gefunden, und alle Prüfläufe vor E115
 haben genau das getan.
 
-## L40 · Was der Markdown-Rundlauf noch nicht kann
+## L40 · ~~Was der Markdown-Rundlauf noch nicht kann~~ — GESCHLOSSEN
 
 **19. August 2026, mit E113 halb geschlossen.** „Quelltext ansehen →
 Übernehmen" löscht nichts mehr: alles, was Markdown nicht tragen kann, steht
@@ -1247,13 +1305,32 @@ benannt statt still:
   auseinanderhalten, und ein Zitat ist die harmlosere Wahl.
 ```
 
-**Was von L40 bleibt, ist eine Frage der Form, nicht des Formats.** Die
-Blöcke werden weiterhin geleert und neu gebaut — E165 rettet die
-Formatierung darüber hinweg, aber die KENNUNGEN ändern sich weiter. Stabile
-Kennungen und ein brauchbarer Rückgängig-Schritt brauchen die echte
-zeilenweise Abgleichung: vorhandene Blöcke wiederverwenden und nur ändern,
-was sich geändert hat. Das ist ein Umbau von `ausMarkdown` und keine
-Ergänzung, und deshalb steht es weiter hier.
+**Was von L40 blieb, war als „Frage der Form" beschrieben — und war
+keine.** Dieser Absatz sagte, die Kennungen änderten sich weiter, und liess
+offen, was das kostet. Nachgemessen kostet es das hier:
+
+```txt
+vier Absätze · EINEN im Quelltext geändert · übernommen
+  → keine einzige der vier Kennungen überlebt
+  → ein Blockverweis (#block=…, E105) zeigt ins Leere
+  → ein Kommentar hängt an einem Block, den es nicht mehr gibt
+```
+
+Eine Kennung ist die Adresse eines Absatzes. Sie zu verlieren heisst, jeden
+Verweis darauf zu verlieren — und zwar auch für Zeilen, die niemand
+angefasst hat.
+
+**25. August 2026 — E174 schliesst das.** Der beschriebene grosse Umbau war
+nicht nötig: `ausMarkdown` legt Blöcke an genau EINER Stelle an (`lege`).
+Dort wird jetzt nachgesehen, ob es diesen Block (Art, Text) schon gab, und
+wenn ja, bekommt der neue Block dessen Kennung zurück. `kinderLeeren` hat
+sie eben endgültig gelöscht, sie ist also frei.
+
+Nach derselben Regel wie die Farbe seit E165 — und deshalb gibt es jetzt nur
+noch EIN Gedächtnis für beides und einen Durchgang statt zweier.
+`setzeWiederAuf` ist fort.
+
+Prüflauf: `test187` §7.
 
 Der Platzhalter selbst hat eine Eigenschaft, die man kennen muss: **wer die
 Zeile löscht, löscht den Block.** Das ist so gewollt — sonst wäre „Quelltext

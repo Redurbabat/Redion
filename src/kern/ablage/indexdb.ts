@@ -1712,6 +1712,24 @@ const Store = (() => {
       Object.assign(cache.meta, neu.meta);
     }
 
+    /* UND DIE UMZÜGE NOCH EINMAL.
+       Sie laufen beim Start, und beim Start stand hier ein anderer Bestand.
+       Eine eingespielte Sicherung kann jahrealt sein — sie bringt genau die
+       Formen mit, gegen die es die Umzüge gibt. Ohne diesen Aufruf wäre ein
+       Umzug für alles zuständig ausser für den einen Weg, auf dem alte Daten
+       heute wirklich hereinkommen (E172).
+
+       `zuruecksetzen` davor, weil die Merkliste sagt „schon gelaufen" — für
+       den vorigen Bestand stimmte das. Jeder Umzug muss ohnehin zweimal
+       laufen können, ohne zu schaden; das ist die Regel, unter der sie
+       geschrieben sind. */
+    if (typeof Umzuege !== 'undefined') {
+      try { Umzuege.zuruecksetzen(); Umzuege.laufen(); }
+      catch (e: unknown) { if (typeof Reporter !== 'undefined')
+        Reporter.error('Ablage', 'Umzug nach dem Einspielen: ' +
+          (e instanceof Error ? e.message : String(e)), e); }
+    }
+
     datenGeaendert();
     notify('import');
     /* Nach einer eingespielten Sicherung ist der ganze Bestand ein anderer.

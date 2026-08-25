@@ -12593,6 +12593,178 @@ const Umzuege = (() => {
      * Jeder Eintrag: eine Kennung, ein Satz, und eine Funktion, die einmal
      * über den Bestand läuft. Sie muss zweimal laufen können, ohne zu schaden.
      * ======================================================================*/
+    /* ------------------------------------------------------------------------
+     * Spaltenschlüssel ohne Ziffer am Anfang (L36, E172)
+     * ------------------------------------------------------------------------
+     * Ein Schlüssel ist nur ein Name für eine Spalte. Besteht er aus lauter
+     * Ziffern, behandelt JavaScript ihn als Feldindex: `Object.keys` gibt ihn
+     * VOR allen anderen zurück, aufsteigend sortiert. Die Spalte steht dann
+     * immer ganz links, und keine Bedienung der Welt schiebt sie weg.
+     *
+     * WO EIN SCHLÜSSEL ÜBERALL STEHT. Das ist die eigentliche Arbeit, und die
+     * Liste ist nachgesehen, nicht geraten:
+     *
+     *   schema[key]           die Spalte selbst
+     *   zeile.props[key]      jeder Wert in jeder Zeile
+     *   schema[x].relation    die Verknüpfung, auf der ein Rollup sitzt
+     *   schema[x].zielKey     die Spalte DRÜBEN, die er einsammelt
+     *   ansicht.groupBy       … und zwei Dutzend weitere Felder der Ansicht
+     *   ansicht.hidden[]      Listen von Schlüsseln
+     *   ansicht.calc{}        Objekte, deren SCHLÜSSEL Spaltenschlüssel sind
+     *   automationen          wenn.key, dann-Schritte, Filter und Sortierung
+     *
+     * WAS NICHT MITGEHT: Formeln. `prop("Name")` spricht die Spalte über ihren
+     * ANZEIGENAMEN an (`dienst.ts`, `formelRechnen`) — ein Schlüsselwechsel
+     * geht daran vorbei. Nachgesehen, nicht angenommen.
+     *
+     * UND WARUM NICHT EINFACH ALLES ERSETZEN. Ein Wert, der zufällig „4711"
+     * heisst, ist keine Spalte: eine Filterbedingung „Zahl ist gleich 4711",
+     * eine Auswahloption mit diesem Namen, eine Zelle mit dieser Zahl. Deshalb
+     * werden OBJEKTSCHLÜSSEL überall ersetzt — ein Feldname aus lauter Ziffern
+     * kommt im Code nicht vor —, WERTE aber nur an benannten Stellen.
+     * ----------------------------------------------------------------------*/
+    /** Ein Schlüssel, den `Object.keys` als Feldindex behandelt. */
+    const nurZiffern = (k) => /^\d+$/.test(k);
+    /** Feldnamen, deren WERT ein Spaltenschlüssel ist. */
+    const SCHLUESSELFELDER = new Set([
+        'key', 'groupBy', 'zielKey', 'relation', 'setzeKey', 'filterKey',
+        'bildKey', 'dateKey', 'datumKey', 'startKey', 'endeKey', 'ortKey',
+        'bahnKey', 'abhKey', 'titelKey', 'summeKey',
+        'pivotZeile', 'pivotSpalte', 'pivotWert',
+        'chartGruppe', 'chartWert', 'chartStufe'
+    ]);
+    /** Feldnamen, deren Wert eine LISTE von Spaltenschlüsseln ist. */
+    const SCHLUESSELLISTEN = new Set([
+        'hidden', 'pflicht', 'fixiert', 'zuGruppen', 'bahnenZu', 'spalten'
+    ]);
+    /**
+     * Einen Satz umschreiben. Gibt zurück, ob sich etwas geändert hat.
+     *
+     * Läuft rekursiv, weil Filter Gruppen enthalten können und Automationen
+     * Schritte, die wieder Filter enthalten. Ein flacher Durchgang hätte
+     * genau die Stellen ausgelassen, an denen es niemand nachsieht.
+     */
+    const satzUmschreiben = (wert, alt, neu) => {
+        if (!wert || typeof wert !== 'object')
+            return false;
+        let geaendert = false;
+        if (Array.isArray(wert)) {
+            for (const teil of wert)
+                if (satzUmschreiben(teil, alt, neu))
+                    geaendert = true;
+            return geaendert;
+        }
+        for (const feld of Object.keys(wert)) {
+            const inhalt = wert[feld];
+            if (SCHLUESSELFELDER.has(feld) && inhalt === alt) {
+                wert[feld] = neu;
+                geaendert = true;
+            }
+            else if (SCHLUESSELLISTEN.has(feld) && Array.isArray(inhalt)) {
+                for (let i = 0; i < inhalt.length; i++)
+                    if (inhalt[i] === alt) {
+                        inhalt[i] = neu;
+                        geaendert = true;
+                    }
+            }
+            else if (satzUmschreiben(inhalt, alt, neu))
+                geaendert = true;
+        }
+        /* Und die Objektschlüssel — `props`, `calc`, `breiten`, `schema`.
+           ZUM SCHLUSS und über eine neu gebaute Reihenfolge: `delete` und dann
+           `set` würde die Spalte ans Ende hängen, und dann stünde sie nach dem
+           Umzug woanders als vorher. Ein Umzug, den man sieht, ist ein Umzug,
+           den man für einen Fehler hält. */
+        if (Object.prototype.hasOwnProperty.call(wert, alt)) {
+            const neuerSatz = {};
+            for (const feld of Object.keys(wert))
+                neuerSatz[feld === alt ? neu : feld] = wert[feld];
+            for (const feld of Object.keys(wert))
+                delete wert[feld];
+            Object.assign(wert, neuerSatz);
+            geaendert = true;
+        }
+        return geaendert;
+    };
+    /** Ein freier Schlüssel, der wie der alte aussieht und keiner ist. */
+    const freierSchluessel = (schema, alt) => {
+        let neu = 's' + alt;
+        let n = 2;
+        while (Object.prototype.hasOwnProperty.call(schema, neu))
+            neu = 's' + alt + '-' + n++;
+        return neu;
+    };
+    const spaltenschluesselHeilen = () => {
+        let n = 0;
+        const sammlungen = Object.values(Store.cache.collections);
+        for (const coll of sammlungen) {
+            const betroffen = Object.keys(coll.schema || {}).filter(nurZiffern);
+            if (!betroffen.length)
+                continue;
+            for (const alt of betroffen) {
+                const neu = freierSchluessel(coll.schema, alt);
+                /* 1 · Die Sammlung selbst — Schema und alles, was drinsteckt
+                       (`relation` und `zielKey` an Rollups, die Automationen). */
+                if (satzUmschreiben(coll, alt, neu)) {
+                    Store.rohSetzen('collections', coll);
+                    n++;
+                }
+                /* 2 · Die Ansichten dieser Sammlung. */
+                for (const vid of coll.viewIds || []) {
+                    const view = Store.cache.views[vid];
+                    if (view && satzUmschreiben(view, alt, neu)) {
+                        Store.rohSetzen('views', view);
+                        n++;
+                    }
+                }
+                /* 3 · Die Zeilen. `rowsOf` gibt nur die lebenden zurück — der
+                       Papierkorb muss aber mit, sonst kommt eine zurückgeholte Zeile
+                       mit dem alten Schlüssel wieder. */
+                for (const block of Object.values(Store.cache.blocks)) {
+                    if (block && block.parentTable === 'collection' && block.parentId === coll.id
+                        && satzUmschreiben(block, alt, neu)) {
+                        Store.rohSetzen('blocks', block);
+                        n++;
+                    }
+                }
+                /* 4 · Und die FREMDEN Sammlungen: ein Rollup drüben sammelt über
+                       `zielKey` eine Spalte von HIER ein. Ohne diesen Durchgang
+                       zeigte er nach dem Umzug ins Leere.
+        
+                       NUR `zielKey`, nicht der ganze Satz. Die fremde Sammlung kann
+                       denselben Zifferschlüssel selbst tragen — dann ist das ihre
+                       eigene Spalte, sie bekommt ihren eigenen neuen Namen, wenn sie
+                       an der Reihe ist. Sie hier mitzuziehen hiesse, ihr einen
+                       Schlüssel zu geben, der in IHREM Schema schon vergeben sein
+                       kann. */
+                for (const fremd of sammlungen) {
+                    if (fremd.id === coll.id)
+                        continue;
+                    let fremdGeaendert = false;
+                    for (const sp of Object.values(fremd.schema || {})) {
+                        if (!sp || sp.type !== 'rollup' || sp.zielKey !== alt)
+                            continue;
+                        const rel = fremd.schema[sp.relation];
+                        if (!rel || rel.ziel !== coll.id)
+                            continue;
+                        sp.zielKey = neu;
+                        fremdGeaendert = true;
+                    }
+                    if (fremdGeaendert) {
+                        Store.rohSetzen('collections', fremd);
+                        n++;
+                    }
+                }
+                /* 5 · Die vorberechneten Werte dieser Sammlung sind nach Schlüssel
+                       abgelegt. Sie sind ABGELEITET — wegwerfen kostet eine
+                       Neuberechnung und kann nichts verlieren; sie umzuschreiben
+                       wäre eine weitere Stelle, die man vergessen kann. */
+                if (Store.vorratWeg)
+                    Store.vorratWeg(coll.id).catch(() => { });
+            }
+        }
+        return n;
+    };
     const INHALT = [
         {
             id: 'zeitstempel-an-sammlungen',
@@ -12616,6 +12788,16 @@ const Umzuege = (() => {
                 });
                 return n;
             }
+        },
+        {
+            id: 'spaltenschluessel-ohne-ziffer',
+            was: 'Spaltenschlüssel aus lauter Ziffern bekommen einen Buchstaben davor',
+            warum: 'JavaScript sortiert einen Schlüssel wie „4711" in `Object.keys` VOR ' +
+                'alle anderen. Die Spalte stand dadurch immer ganz links, egal wohin ' +
+                'man sie schob — nicht als Fehler zu erkennen, weil sie ja da war. ' +
+                'Seit E96 entstehen solche Schlüssel nicht mehr; der Bestand von ' +
+                'vorher blieb offen (L36).',
+            lauf: () => spaltenschluesselHeilen()
         },
         {
             id: 'alive-ergaenzen',
@@ -17646,6 +17828,28 @@ const Store = (() => {
             Object.assign(cache.collections, neu.collections);
             Object.assign(cache.views, neu.views);
             Object.assign(cache.meta, neu.meta);
+        }
+        /* UND DIE UMZÜGE NOCH EINMAL.
+           Sie laufen beim Start, und beim Start stand hier ein anderer Bestand.
+           Eine eingespielte Sicherung kann jahrealt sein — sie bringt genau die
+           Formen mit, gegen die es die Umzüge gibt. Ohne diesen Aufruf wäre ein
+           Umzug für alles zuständig ausser für den einen Weg, auf dem alte Daten
+           heute wirklich hereinkommen (E172).
+    
+           `zuruecksetzen` davor, weil die Merkliste sagt „schon gelaufen" — für
+           den vorigen Bestand stimmte das. Jeder Umzug muss ohnehin zweimal
+           laufen können, ohne zu schaden; das ist die Regel, unter der sie
+           geschrieben sind. */
+        if (typeof Umzuege !== 'undefined') {
+            try {
+                Umzuege.zuruecksetzen();
+                Umzuege.laufen();
+            }
+            catch (e) {
+                if (typeof Reporter !== 'undefined')
+                    Reporter.error('Ablage', 'Umzug nach dem Einspielen: ' +
+                        (e instanceof Error ? e.message : String(e)), e);
+            }
         }
         datenGeaendert();
         notify('import');
@@ -24084,6 +24288,14 @@ const PdfSeite = (() => {
            auch nennt (§38). */
         '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
             'title="Verweis auf genau diese Seite kopieren">🔗</button>' +
+            /* SCHÄRFER RECHNEN (L37, E173). Nur wenn es überhaupt geht: ohne das
+               Original in der Ablage gibt es nichts, woraus man rechnen könnte,
+               und ein Knopf, der nur eine Entschuldigung zeigt, ist kein Knopf.
+               Auch nur dann, wenn noch Luft nach oben ist. */
+            (block.quelleId && (Number(block.bildBreite) || 1654) < 3308
+                ? '<button data-a="feiner" aria-label="Diese Seite feiner rechnen" ' +
+                    'title="Diese Seite feiner rechnen — schärfer beim Hineinzoomen">⊕</button>'
+                : '') +
             '<span class="blatt-trenn"></span>' +
             /* Beide Zahlen durch `Number` — `nr` war es schon, `vonSeiten` nicht.
                Der Text hier geht ueber `Marken.leiste` in ein `innerHTML`, und ein
@@ -24094,6 +24306,24 @@ const PdfSeite = (() => {
             '</span>');
         werk.addEventListener('click', e => {
             const k = e.target?.closest?.('button');
+            if (k?.dataset.a === 'feiner') {
+                /* Sperren, solange gerechnet wird — sonst startet ein zweiter Klick
+                   einen zweiten Lauf, und der legt für denselben Block eine zweite
+                   Datei ab (derselbe Fehler wie E116). */
+                k.setAttribute('disabled', 'disabled');
+                k.textContent = '…';
+                PdfEinlesen.schaerfer(block).then((erg) => {
+                    if (erg && erg.ok)
+                        return; /* neu gezeichnet, Knopf ist fort */
+                    if (!k.isConnected)
+                        return;
+                    k.removeAttribute('disabled');
+                    k.textContent = '⊕';
+                    if (erg && erg.grund)
+                        UI.toast(erg.grund);
+                });
+                return;
+            }
             if (k?.dataset.a !== 'anker')
                 return;
             /* `location.href` ohne Hash — dieselbe Form wie Strg + Umschalt + C,
@@ -24557,7 +24787,10 @@ const PdfEinlesen = (() => {
                      fehlt, las man „Seite 80 von 1" (E116). */
                 melder.textContent = 'Seite ' + (fertig + 1) + ' von ' + offen.length +
                     ' wird gerechnet …';
-                const bild = await griff.alsBild(n);
+                /* Wer diese Seite einmal schärfer gerechnet hat, will sie nicht
+                   beim nächsten Zurückholen wieder grob haben. Die Breite steht am
+                   Block und kommt mit in die Sicherung (E173). */
+                const bild = await griff.alsBild(n, Number(b.bildBreite) || undefined);
                 const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
                 /* Fehlt der Suchtext noch — bei allem, was vor E107 eingelesen
                    wurde —, kommt er jetzt mit. Das Dokument ist ohnehin offen. */
@@ -24591,7 +24824,78 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    return { alsSeiten, neuBerechnen, ohneBild, OHNE_FRAGE };
+    /* ========================================================================
+     * EINE SEITE SCHÄRFER RECHNEN (L37, E173)
+     * ------------------------------------------------------------------------
+     * Seiten entstehen bei 1654 px Breite — bei A4 genau 200 dpi, Scan-
+     * Qualität. Wer stark hineinzoomt, sieht trotzdem Unschärfe, und L37 hielt
+     * das als offene Arbeit fest: eine Seite auf Wunsch feiner rechnen.
+     *
+     * Alles dafür war schon da und wurde nur nie gerufen: `alsBild` nimmt seit
+     * jeher eine Breite entgegen, das Original liegt in der Ablage (E103), und
+     * die Marken liegen in SEITENPUNKTEN und nicht in Bildpunkten (E100) —
+     * sie bleiben deshalb liegen, wo sie liegen. Das ist der Grund, warum das
+     * hier überhaupt gefahrlos geht.
+     *
+     * Die Grenze ist 3308 px, also 400 dpi bei A4. Darüber wird eine Seite als
+     * WebP schnell ein paar Megabyte, und das trägt ein Telefon nicht mehr
+     * (§36, §37).
+     * ======================================================================*/
+    const BREITE_MAX = 3308;
+    const schaerfer = async (block) => {
+        if (!block || block.type !== 'pdfseite')
+            return { ok: false, grund: 'keine PDF-Seite' };
+        if (!block.quelleId)
+            return { ok: false, grund: 'Ohne das Original lässt sich nichts neu rechnen.' };
+        const jetzt = Number(block.bildBreite) || PdfLeser.BREITE_PX;
+        if (jetzt >= BREITE_MAX)
+            return { ok: false, grund: 'Diese Seite ist schon so fein gerechnet, ' +
+                    'wie Redion es anbietet.' };
+        const ziel = Math.min(BREITE_MAX, jetzt * 2);
+        const roh = await Dateien.alsBlob(block.quelleId);
+        if (!roh)
+            return { ok: false, grund: 'Das Original fehlt in diesem Bestand — zieh ' +
+                    'die PDF-Datei noch einmal herein.' };
+        const melder = UI.toast('Seite wird feiner gerechnet …', 120000);
+        let griff = null;
+        try {
+            griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+            const n = Number(block.nr) || 1;
+            if (n > griff.seiten)
+                return { ok: false, grund: 'Diese Seite gibt es im Original nicht.' };
+            const bild = await griff.alsBild(n, ziel);
+            const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '-' + ziel + '.webp', { type: 'image/webp' }), { blockId: block.id, abgeleitet: true });
+            /* ERST DIE NEUE KENNUNG AN DEN BLOCK, DANN DIE ALTE DATEI WEG.
+               Andersherum stünde zwischen beiden Schritten eine Seite ohne Bild da,
+               und bricht es dazwischen ab, ist das Bild fort und das neue nicht da.
+               In dieser Reihenfolge ist der schlimmste Fall eine Datei zu viel —
+               die findet die Pflegeseite (E171). */
+            const alt = block.bildDateiId;
+            Store.updateBlock(block.id, { bildDateiId: satz.id, bildBreite: ziel });
+            if (alt && alt !== satz.id) {
+                try {
+                    await Dateien.weg(alt);
+                }
+                catch { }
+            }
+            melder.remove();
+            App.zeichneSeite();
+            UI.toast('Seite ' + n + ' ist jetzt bei ' +
+                Math.round(ziel * 72 / (Number(block.bw) || 595.28)) + ' dpi');
+            return { ok: true, breite: ziel };
+        }
+        catch (e) {
+            melder.remove();
+            const grund = e instanceof Error ? e.message : String(e);
+            UI.toast('Die Seite liess sich nicht feiner rechnen: ' + grund);
+            return { ok: false, grund };
+        }
+        finally {
+            if (griff)
+                griff.schliessen();
+        }
+    };
+    return { alsSeiten, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
 })();
 window.PdfEinlesen = PdfEinlesen;
 
@@ -42639,32 +42943,21 @@ const WissenDienst = (() => {
                     return;
                 const stil = b.stil && typeof b.stil === 'object' && Object.keys(b.stil).length
                     ? { ...b.stil } : null;
-                if (b.color || stil)
-                    gemerkt.push({ type: String(b.type || ''), text: String(b.text || ''),
-                        ...(b.color ? { color: String(b.color) } : {}),
-                        ...(stil ? { stil } : {}) });
+                gemerkt.push({ id: String(b.id), type: String(b.type || ''),
+                    text: String(b.text || ''),
+                    ...(b.color ? { color: String(b.color) } : {}),
+                    ...(stil ? { stil } : {}) });
                 merke(b.id);
             });
         };
         merke(p.id);
-        const setzeWiederAuf = (id) => {
-            Store.childrenOf(id).forEach((b) => {
-                if (!mdTraegt(b))
-                    return;
-                const i = gemerkt.findIndex(x => x.type === String(b.type || '') &&
-                    x.text === String(b.text || ''));
-                if (i >= 0) {
-                    const [treffer] = gemerkt.splice(i, 1);
-                    const aenderung = {};
-                    if (treffer && treffer.color)
-                        aenderung['color'] = treffer.color;
-                    if (treffer && treffer.stil)
-                        aenderung['stil'] = treffer.stil;
-                    if (Object.keys(aenderung).length)
-                        Store.updateBlock(b.id, aenderung);
-                }
-                setzeWiederAuf(b.id);
-            });
+        /** Was dieser Block einmal war — Kennung, Farbe, Schrift. Höchstens einmal. */
+        const holeGemerktes = (typ, text) => {
+            const i = gemerkt.findIndex(x => x.type === typ && x.text === String(text ?? ''));
+            if (i < 0)
+                return null;
+            const [treffer] = gemerkt.splice(i, 1);
+            return treffer ?? null;
         };
         try {
             Store.kinderLeeren(p.id);
@@ -42708,9 +43001,22 @@ const WissenDienst = (() => {
                 stapel.length = t + 1;
                 return stapel[t];
             };
-            /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken. */
+            /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken.
+               Die EINZIGE Stelle, an der beim Übernehmen ein Block entsteht —
+               deshalb steht die Wiederverwendung genau hier und nirgends sonst. */
             const lege = (roh, typ, felder) => {
-                const b = Store.addBlock(elternFuer(roh), typ, felder);
+                const alt = holeGemerktes(typ, felder ? felder['text'] : '');
+                const mit = { ...(felder || {}) };
+                if (alt) {
+                    /* Die Kennung des Blocks, der hier stand. `Store.kinderLeeren` hat
+                       ihn eben endgültig gelöscht, sie ist also frei. */
+                    mit['id'] = alt.id;
+                    if (alt.color)
+                        mit['color'] = alt.color;
+                    if (alt.stil)
+                        mit['stil'] = alt.stil;
+                }
+                const b = Store.addBlock(elternFuer(roh), typ, mit);
                 stapel.push(b.id);
                 return b;
             };
@@ -42866,10 +43172,11 @@ const WissenDienst = (() => {
         }
         finally {
             retteUebrige();
-            /* Erst NACH `retteUebrige`: die zurückgehängten Blöcke gehören zum
-               Baum, und ein Platzhalter kann ebenso gefärbt gewesen sein. */
-            if (gemerkt.length)
-                setzeWiederAuf(p.id);
+            /* Hier stand bis E174 ein zweiter Durchgang, der die Farben nachträglich
+               wieder aufsetzte. Er ist fort: `lege` gibt sie jetzt beim Anlegen mit,
+               zusammen mit der Kennung und nach derselben Regel. Ein Durchgang
+               statt zwei, und eine Zuordnung statt zweier, die auseinanderlaufen
+               können. */
         }
     };
     /* --------------------------------------------------------------------------
