@@ -31,12 +31,12 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 6 | Bereiche / Profile | ✅ | `lebensbereiche.ts`, test204 |
 | 7 | Heute-Dashboard | ✅ | test208 §1–§4, `bilder.mts heute` |
 | 8 | Lernzentrale | ✅ | test208, `bilder.mts lernzentrale` |
-| 9 | Lernpfad | ◐ | steht und rechnet; `bilder.mts lernpfad`. Kein eigener Prüflauf für die Etappenlogik |
+| 9 | Lernpfad | ✅ | test215 §1–§4: Reihenfolge aus §9, keine gesperrte Stufe, Stand aus SM-2 — 5000 XP ändern ihn nicht, eine echte Wiederholung schon. `bilder.mts lernpfad` |
 | 10 | Fehlertraining | ✅ | test208 §4 |
 | 11 | Prüfungen | ✅ | test208 §6, `bilder.mts pruefungen`. Simulationsergebnisse werden bewusst NICHT in den SM-2-Stand geschrieben |
 | 12 | Schule / Ausbildung | ✅ | test208 §8 (E143), `bilder.mts schule` |
 | 13 | Uni | ◐ | Ansicht steht über vorhandenen Objekten. Semester und Module werden aus Titeln erkannt, nicht als eigene Struktur — so gewollt (§13: „nicht als komplett anderes Datensystem") |
-| 14 | Arbeit | ◐ | Ansicht steht, `bilder.mts arbeit`. Kein eigener Prüflauf |
+| 14 | Arbeit | ✅ | test215 §5–§7: alle sechs Rubriken mit echten Daten, Meetings zeigen auf die Besprechungsseite selbst (keine Zweitschrift), Klick öffnet. `bilder.mts arbeit` |
 | 15 | Workspace | ✅ | `arbeitswelt.ts`, test206 |
 | 16 | Tabs und Arbeitsfluss | ✅ | test206 §12 (elf Punkte): zwei Reiter, Wechseln, geteilt Öffnen, Teilung schliessen, Reiter schliessen. Der Prüflauf fand dabei, dass „Geteilt öffnen“ das Feld nicht neu zeichnete — E146 |
 | 17 | PDF-Arbeitsplatz | ✅ | test210 (sechs Abschnitte), test204 §2 (1366×768 und mobiler Drawer), `bilder.mts dokument` (E141) |
@@ -93,12 +93,10 @@ Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 1. **§39 entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
    beschriften. Ein Knopf, hinter dem nichts ist, ist die schlechteste der
    drei Möglichkeiten.
-2. **§9/§14 Prüfläufe** für Lernpfad und Arbeit — beide stehen, beide
-   ungeprüft.
 
 Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
 Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
-falsch eingetragen (E145, test212), §16 (test206 §12, E146) und §28 (test213, E147 — L55 geschlossen).
+falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149).
 
 ---
 

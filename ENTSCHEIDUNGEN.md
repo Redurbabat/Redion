@@ -9622,3 +9622,73 @@ Zählerraster zurück auf drei feste Spalten      → §2 rot
 und §2/§3/§4 haben je einen Punkt davor, der prüft, dass überhaupt etwas zu
 messen da war — ein leerer Bestand macht „nichts ist abgeschnitten" sonst
 trivial wahr.
+
+
+---
+
+## E149 · Lernpfad und Arbeitssicht, endlich festgehalten
+
+**25. August 2026.** In `doku/AUFTRAG-STAND.md` standen §9 und §14 mit
+derselben Begründung als ◐ da: „Kein eigener Prüflauf". Beide Ansichten gibt
+es seit langem, und beide waren ungeprüft — was heisst: jede Änderung an
+`lernwelt.ts` konnte sie still kaputtmachen.
+
+**test215**, sieben Abschnitte, 28 Punkte. Gebaut wurde nichts Neues; die
+Suite hält fest, was da ist. Zwei Punkte sind mir dabei wichtiger als der
+Rest.
+
+### Der Punkt, der leicht kaputtgeht: XP ist kein Wissen
+
+§9 verlangt ausdrücklich „fachlicher Fortschritt getrennt von XP". Das ist
+kein Gestaltungswunsch. Eine Zahl, die aus Aktivität kommt, SIEHT aus wie
+Wissen — und wer ihr glaubt, geht unvorbereitet in eine Prüfung.
+
+Geprüft wird deshalb in beide Richtungen:
+
+```txt
+5000 XP, Level 42, 99 Tage Streak eingetragen
+  → Themenfortschritt [100, 100, 50, 0]   unverändert
+
+eine echte Wiederholung (sr.wdh 0 → 2)
+  → Themenfortschritt [100, 100, 50, 100] geändert
+```
+
+Nur der erste Punkt allein hätte auch mit einer eingefrorenen Zahl bestanden.
+Erst zusammen sagen die beiden etwas.
+
+### Und der Punkt, an dem meine erste Fassung sich selbst betrog
+
+§14 sagt wörtlich: „Meetingdaten aus dem bestehenden Besprechungssystem
+wiederverwenden." Der Prüfpunkt dafür suchte die Notiz über `[data-lw-open]`
+— und fand sie auch unter „Dokumente & PDFs", weil `dokumente()` schlicht
+alle Seiten aufzählt. Mit dem Meeting-Abschnitt versuchsweise ganz entfernt
+blieb der Punkt grün.
+
+Er sucht jetzt IM Meeting-Abschnitt. Vierter Fall in drei Tagen, in dem die
+Messung und nicht das Produkt der Fehler war — und der lehrreichste, weil er
+nur beim Zurücknehmen aufgefallen ist. Eine Gegenprobe ist nicht Kür.
+
+### Weiter geprüft
+
+```txt
+§1  ohne Karten sagt der Pfad es, statt Stufen zu erfinden
+§2  vier absichtlich durcheinander angelegte Themen stehen in der
+    Reihenfolge aus §9: Grundlagen → Ohm → Leistung → Lampenschaltungen
+§3  keine Stufe ist gesperrt, jede trägt ihren Stand in Zahl und Wort
+§4  ein Klick auf eine Stufe führt zum Thema
+§5  alle sechs Rubriken aus §14, mit echten Daten belegt
+§6  Meetings zeigen auf die Besprechungsseite selbst, und es gibt sie einmal
+§7  ein Klick öffnet die Seite wirklich
+```
+
+### Kann die Suite rot werden?
+
+Fünf Gegenproben, jede einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+Sortierung des Pfades umgedreht        → §2 rot (und §3 gleich mit)
+`disabled` an die Stufenknöpfe          → §3 rot
+XP in `topicProgress` einfliessen lassen→ §3 rot, beide Richtungen
+Meeting-Eintrag auf eine Zweitschrift   → §6 rot
+Meeting-Abschnitt ganz entfernt         → §5 UND §6 rot
+```
