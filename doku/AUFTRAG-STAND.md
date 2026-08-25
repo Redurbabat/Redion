@@ -76,7 +76,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 51 | Ein Objekt, viele Ansichten | ✅ | test206 §3, E143 |
 | 52 | Keine Duplikat-Architektur | ✅ | test206 §3 und §4, E138 |
 | 53 | Performance | ✅ | test195 §5 (Fenster ab 240 Seiten) |
-| 54 | Offline first | ✅ | test31 §3 (Service Worker, Server aus, Seite neu geladen) |
+| 54 | Offline first | ✅ | test31 (Service Worker angemeldet, Ablage gefüllt, Server aus, Seite neu geladen). Hier stand ein Abschnittsverweis auf diese Datei — sie hat aber gar keine nummerierten Abschnitte, und die Adresse schickte den Nächsten ins Leere (E168). Den alten Verweis hier auszuschreiben ginge nicht: test225 fände ihn wieder |
 | 55 | Tests während der Arbeit | ✅ | jede Behebung mit Gegenprobe |
 | 56 | Neue Tests | ✅ | test200, test205–test220 — sechzehn Suiten, jede mit einzeln zurückgenommenen Gegenproben |
 | 57 | Build | ✅ | `npm run bauen:ts`, `node bauen.mts`, test105 |
@@ -131,6 +131,7 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | §43 | E165, test187 §6 | „Übernehmen" nahm Farbe und Schrift mit; jetzt überleben sie |
 | CLAUDE.md §5 | E166, test222 §6 | „Meine Apps" stand in zwei Listen; jetzt im Register |
 | CLAUDE.md §5 | E167, test222 §7 | der Fuss dazu; **L58 steht**, drei Zeilen bleiben mit Begründung |
+| — | E168, test225 | sechs Quellenangaben in dieser Doku zeigten ins Leere |
 
 Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
 test206, test218 und test86. Gezählt, nicht geschätzt:

@@ -4862,6 +4862,13 @@ den richtigen.
 
 ## E78 · Die Zielarchitektur: React, Vite, Dexie, ProseMirror — als Strangler, nie als Big-Bang
 
+> **WIDERRUFEN durch E80 am 9. August 2026.** Der Eintrag bleibt als
+> Geschichte stehen. Was er über Prüfläufe sagt, gilt nicht mehr: die
+> Wächter der neuen Schicht — `test149`, `test150`, `test151`, `test153`
+> und `test154` — sind mit dem Rohbau entfernt worden, **es gibt diese
+> Prüfläufe nicht mehr**. Wer unten liest, liest sie im Präsens, weil sie
+> beim Schreiben da waren (E168).
+
 **Datum** 8. August 2026 · **Entschieden von** Redur · **Betrifft** alles —
 aber in Phasen, nicht auf einmal
 
@@ -11368,3 +11375,121 @@ ist die Messung.
 11  Systemseiten, angeheftete Seiten, „Willkommen"   — Inhalt, kein Katalog
 3   btn-import, Neuer Agent, Neue Besprechungsnotiz  — mit Begründung dort
 ```
+
+
+## E168 · Sieben Quellenangaben, die ins Leere zeigten
+
+**25. August 2026.** `doku/AUFTRAG-STAND.md` schliesst mit einem Satz über
+sich selbst:
+
+> Und die Prüflaufnummern in dieser Tabelle sind NACHGESEHEN, nicht
+> erinnert. […] Eine falsche Quellenangabe ist schlimmer als keine — sie
+> schickt den Nächsten an eine Stelle, an der nichts steht.
+
+Der Satz stimmte für die Tabelle. Für die übrige Dokumentation nicht.
+
+### Nachgezählt
+
+`test225` liest AUFTRAG-STAND, ENTSCHEIDUNGEN und LUECKEN, sammelt jede
+Nennung der Form `testNNN` samt Abschnittsangabe und fragt zweierlei: gibt
+es die Datei, und gibt es den Abschnitt?
+
+```txt
+109  Nennungen von Prüfläufen
+ 35  davon mit Abschnittsangabe
+  6  zeigten ins Leere
+```
+
+Fünf davon sind derselbe Fall. E78 beschloss am 8. August die
+React-Zielarchitektur und beschrieb ihre fünf Wächter — `test149`,
+`test150`, `test151`, `test153`, `test154`. E80 widerrief sie am Tag
+darauf, und die Dateien gingen mit dem Rohbau. Der Eintrag beschreibt sie
+weiter im Präsens: „`test149` wacht über die drei Regeln."
+
+Er bleibt stehen — Geschichte löscht man nicht —, sagt jetzt aber oben
+dazu, dass es diese Prüfläufe nicht mehr gibt.
+
+Die sechste stand in der Tabelle:
+
+```txt
+| 54 | Offline first | ✅ | test31 §3 (Service Worker, Server aus …) |
+```
+
+test31 hat gar keine nummerierten Abschnitte; es ist eine ältere Suite mit
+einer flachen Liste. Geprüft ist die Sache sehr wohl — Service Worker,
+Ablage, Server aus, Seite neu geladen —, nur die Adresse war erfunden.
+
+### Und eine siebte, die es gar nicht gab
+
+Der erste Wurf von `test225` meldete zusätzlich einen siebten:
+
+```txt
+ENTSCHEIDUNGEN.md: test137 §55
+```
+
+Den Verweis gibt es nicht. In ENTSCHEIDUNGEN steht der Name am Zeilenende,
+und der nächste Absatz beginnt mit `§55.2`. Mein Muster spannte über den
+Zeilenumbruch.
+
+Das ist die Sorte Fehler, vor der §55.2 warnt, nur andersherum: eine
+Prüfung, die aus dem falschen Grund ROT wird, ist so wenig wert wie eine,
+die aus dem falschen Grund grün ist. Beide kosten dasselbe — man glaubt
+ihnen nicht mehr.
+
+### Die Ausnahmeliste, und warum sie eine ist
+
+Die fünf Namen aus E78 stehen in `test225` als `GESCHICHTE`. Eine
+Ausnahmeliste ist ehrlich, wenn sie kurz ist, benannt und begründet — und
+wenn sie selbst geprüft wird. Zwei Punkte tun das:
+
+* Die fünf müssen wirklich fehlen. Stünde einer wieder da, wäre die
+  Ausnahme eine Lüge.
+* E78 muss die Vergangenheitsform tragen. Ohne den Satz dort wäre die
+  Ausnahme eine stille Abmachung zwischen Prüfung und Prüfer.
+
+### Ein Selbstbezug, der auffiel
+
+Die Berichtigung in der Tabelle wollte erst schreiben: „Hier stand …" —
+mit dem alten Verweis im Fliesstext. Damit stand er wieder da, und test225
+fand ihn erneut. Dann passierte dasselbe in diesem Eintrag hier.
+
+Zweimal derselbe Fehler in zehn Minuten ist kein Zufall, sondern eine
+fehlende Regel. Sie steht jetzt in der Prüfung: **eingezäunter Text ist ein
+Zitat, keine Angabe.** Wer über eine falsche Quellenangabe schreibt, muss
+sie nennen dürfen — sonst kann die Berichtigung nicht sagen, was falsch
+war. In gewöhnlichem Text bleibt eine Angabe eine Angabe, im ```-Block ist
+sie ein Beleg.
+
+### Die Gegenproben (§55.2)
+
+Diese Suite war beim ersten Lauf rot, und zwar sechsmal. Das IST die
+erste Gegenprobe: sie hat gefunden, wofür sie geschrieben wurde, bevor
+irgendwer sie grün gesehen hat. Vier weitere an einem Abzug des Baums:
+
+| Gegenprobe | rot |
+|---|---|
+| A · eine erfundene Datei nennen | 1 |
+| B · eine echte Datei, ein erfundener Abschnitt | 1 |
+| C · die Ausnahmeliste lügen lassen | 1 |
+| D · dieselbe Angabe in einem ```-Block | 0 — und das ist die Regel |
+
+B hat dabei noch etwas gezeigt. Der erste Wurf las
+
+```txt
+test202 §77, 84 Punkte
+```
+
+als Spanne von 77 bis 84 und meldete acht fehlende Abschnitte statt einem.
+Ein Komma trennt in dieser Doku nie zwei Abschnitte, sondern den Verweis
+vom nächsten Halbsatz — nach jedem Trenner muss wieder ein `§` stehen,
+ausser bei einer Spanne mit Gedankenstrich.
+
+Dazu kommt §3, der die Suche selbst misst: test215 hat einen Abschnitt 3
+und 8, aber keinen 99, und test31 hat gar keine. Ohne §3 bestünde die Suite
+auch mit einem `hatAbschnitt`, das immer `true` sagt.
+
+### Was sie nicht kann
+
+Ob ein Abschnitt inhaltlich prüft, was danebensteht. Das kann keine
+Maschine — und es war auch nicht der Fehler: die Adressen waren falsch,
+nicht die Behauptungen.
