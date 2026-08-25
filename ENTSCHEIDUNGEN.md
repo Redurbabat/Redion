@@ -10086,3 +10086,76 @@ Rot werden drei Punkte, und der aussagekräftigste ist der aus §8: mit dem
 Namen „Redur" bleibt von drei erwarteten Zeilen genau eine übrig — „Eigene
 Zeile" aus der Datenbank ohne Personenspalte verschwindet, und das ist der
 Fall aus L56 in einer Zeile Ausgabe.
+
+
+---
+
+## E154 · Der Obsidian-Rundlauf, endlich einmal ganz durchgelaufen (§43)
+
+**25. August 2026.** §43 verlangt nichts Neues, sondern dass etwas
+Bestehendes nicht kaputtgeht:
+
+> Bestehenden stabilen Import/Export erhalten. Keine Regression: redion-id ·
+> Pfad · Aliase · Wikilinks · Reimport · keine unnötigen Duplikate
+
+Das ist die Sorte Anforderung, die ohne Prüflauf wertlos ist — „keine
+Regression" kann nur etwas heissen, wenn jemand nachsieht. Der Resolver aus
+E129 stand; niemand lief den Weg einmal ganz durch.
+
+**test219** tut das jetzt: einen echten kleinen Vault exportieren, das Archiv
+wieder auspacken, einlesen — und dann NOCH EINMAL einlesen.
+
+### Was ich dabei falsch erwartet habe
+
+Mein §4 hiess zuerst „Ohne redion-id trägt der Pfad" und erwartete, dass eine
+Datei ohne Kennung über ihren `redion-path` wiedererkannt wird. Das Produkt
+tut bewusst das Gegenteil, und der Kommentar dort sagt auch warum:
+
+> Nur beide stabilen Anker gemeinsam erlauben ein destruktives Update. Eine
+> passende ID ODER ein passender Pfad allein kann aus einer fremden Datei
+> kopiert sein.
+
+Ein Pfad ist eben kein Geheimnis. Wer eine `Elektro/Normen und Regeln.md` in
+seinen Ordner legt, hat damit noch kein Recht auf meine Seite. Fehlt die
+Kennung, entsteht eine getrennte Fassung, und der Bericht zählt sie als
+Konflikt. §46 in einer Regel: lieber eine Seite zu viel als eine zerstörte.
+
+Der Abschnitt prüft jetzt genau das — und ist dadurch wertvoller geworden,
+nicht schwächer.
+
+### Und was ich beim Zählen falsch gemacht habe
+
+§6 zählte alle Seiten mit dem Titel „Normen und Regeln" und fand vier statt
+zwei. Kein Produktfehler: §4 hinterlässt absichtlich zwei getrennte
+Fassungen, und die zählten mit. Gemessen wird jetzt der Unterschied zwischen
+vorher und nachher — welche Seiten DIESER Import angelegt hat —, nicht der
+Bestand.
+
+Dasselbe beim „+1": der Import legt ausser der Notiz auch eine Vault-Wurzel
+(`Aus Obsidian · Fremder-Vault`) und die Ordnerseite an. Eine Zahl wie „+1"
+wäre eine Behauptung über die Ordnerstruktur gewesen, nicht über das
+Wiedererkennen. Geprüft wird deshalb der Satz aus dem Bericht:
+`1 Notizen (1 neu, 0 wiedererkannt)`.
+
+### Kann die Suite rot werden?
+
+Drei Gegenproben auf einem Abzug des Baums, und die mittlere ist die, auf
+die es ankommt:
+
+```txt
+Titel als dritter Anker in `pathCandidates`   → nichts. Ein Titel hat nicht
+                                                 die Form eines Pfades; die
+                                                 Gegenprobe griff gar nicht.
+Nach Titel verschmelzen, wenn sonst nichts    → SIEBEN Punkte rot, darunter
+  passt (genau die Regression aus E129)         „Ihr eigener Text steht noch
+                                                 da — Ganz andere Notizen."
+                                                 Die fremde Datei hatte die
+                                                 lokale Seite aufgefressen.
+`redion-id` aus dem Export weggelassen        → 13 Seiten → 26 → 39.
+                                                 Die Verdopplungskaskade aus
+                                                 „keine unnötigen Duplikate".
+```
+
+Die erste Gegenprobe ist die lehrreichste: sie hat NICHT gegriffen, und
+deshalb steht sie hier. Eine Gegenprobe, die nichts bewirkt, beweist nichts —
+sie muss durch eine ersetzt werden, die den Schaden wirklich anrichtet.
