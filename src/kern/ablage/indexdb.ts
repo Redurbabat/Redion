@@ -34,7 +34,20 @@ const Store = (() => {
   /* Name und Fassung stehen in kern/einstellung/konstanten.js beziehungsweise
      kern/ablage/umzuege.js — dort steht auch, warum es jedes Fach gibt.
      Hier nur der Rückfall, falls diese Datei einmal allein geladen wird. */
-  const NAME = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.ABLAGE_NAME : 'notizen';
+  /* DER VORFÜHRMODUS (L31, E177).
+     `index.html?demo` öffnet eine EIGENE Ablage. Wer Redion vorführen oder
+     ausprobieren will, soll das können, ohne dass danach fremde
+     Beispielseiten in seinen eigenen Notizen stehen — und vor allem, ohne
+     dass sein Bestand dabei überhaupt angefasst wird.
+
+     EIN ANDERER NAME, KEIN SCHALTER IM CODE. Zwei Namen sind zwei
+     Datenbanken, und die Trennung setzt der Browser durch. Ein Schalter,
+     der an dreissig Stellen abgefragt wird, ist an der einunddreissigsten
+     vergessen — und dann steht die Vorführung in den echten Daten (§46). */
+  const DEMO = typeof location !== 'undefined' &&
+               /(^|[?&])demo(=|&|$)/.test(location.search || '');
+  const NAME = ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.ABLAGE_NAME : 'notizen') +
+               (DEMO ? '-demo' : '');
   const VERSION = (typeof Umzuege !== 'undefined') ? Umzuege.JETZIGE : 6;
   let db: any = null;
 
@@ -821,14 +834,27 @@ const Store = (() => {
       [kurz(4)]: { name: 'Datum',  type: 'date' }
     };
 
+    /* `edited` GLEICH MIT (E179). Es fehlte hier, und der Umzug
+       `zeitstempel-an-sammlungen` trug es beim nächsten Start nach — das
+       war für ALTE Sätze gedacht, nicht für neue. Seit E172 laufen die
+       Umzüge auch nach einer eingespielten Sicherung, und damit fiel es
+       auf: `test96` vergleicht den Bestand vor dem Export mit dem nach dem
+       Einspielen, Feld für Feld, und fand zwei geänderte `edited`.
+
+       Der Umzug hatte recht — hier fehlte etwas. Ihn abzuschalten wäre die
+       falsche Richtung gewesen: dann käme eine Sicherung von 2025 wieder
+       ohne Zeitstempel herein, und der Abgleich hielte jede Schemaänderung
+       darin für nie geschehen. */
     cache.collections[colId] = {
-      id: colId, name, icon: '🗂️', schema: s, viewIds: [viewId], created: now()
+      id: colId, name, icon: '🗂️', schema: s, viewIds: [viewId],
+      created: now(), edited: now()
     };
 
     cache.views[viewId] = {
       id: viewId, collectionId: colId, name: 'Tabelle', layout,
       filters: { operator: 'and', rules: [] },
-      sorts: [], groupBy: '', hidden: [], calc: {}, created: now()
+      sorts: [], groupBy: '', hidden: [], calc: {},
+      created: now(), edited: now()
     };
 
     const blk = addBlock(parentId, 'database', { collectionId: colId, text: name });
@@ -898,7 +924,8 @@ const Store = (() => {
       id: uid(), collectionId, layout,
       name: name || namen[layout] || 'Ansicht',
       filters: { operator: 'and', rules: [] },
-      sorts: [], groupBy: '', hidden: [], calc: {}, created: now()
+      sorts: [], groupBy: '', hidden: [], calc: {},
+      created: now(), edited: now()      /* siehe `addDatabase` — E179 */
     };
     cache.views[v.id] = v;
     c.viewIds.push(v.id);
@@ -2176,7 +2203,7 @@ const Store = (() => {
   };
 
   return {
-    load, uid, now, cache,
+    load, uid, now, cache, istDemo: () => DEMO,
     addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
     purgeAnhaenge, dateiAnspruch, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
     addPage, rootPages, trashed, favorites, pathOf,

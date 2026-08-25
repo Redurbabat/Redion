@@ -860,9 +860,28 @@ Drei Dinge, die beim Bauen herauskamen:
 
 Prüflauf: `test227`, 29 Punkte, sechs Gegenproben.
 
-## L23 · Abfragesprache für normale Nutzer
+## L23 · ~~Abfragesprache für normale Nutzer~~ — GESCHLOSSEN
 
-Suche über Titel, Inhalt, Zeilen und Kennungen mit einfacher Syntax.
+**Stand — ✅ geschlossen mit E175 (25. August 2026).**
+
+Diese Lücke bestand aus einem Satz, und der Satz war zur Hälfte schon
+erfüllt: die Abfragesprache steht seit dem 22. August in
+`src/kern/suche/query.ts` — neun Suchbefehle (`titel:`, `inhalt:`, `tag:`,
+`typ:`, `geändert:`, `status:`, `in:`, `nach:`, `vor:`), Anführungszeichen
+für die genaue Wendung, Erkennung widersprüchlicher Angaben und
+Fehlermeldungen in Worten statt null Treffern.
+
+**Und kein einziger Prüflauf nannte sie.** Das ist die gefährlichere
+Hälfte: bei E122 lag genauso viel fertiger Code herum, dessen
+Einstiegspunkte gar nicht erreichbar waren, und niemand hatte es gemerkt.
+`test229` fährt die Sprache jetzt über das echte Suchfenster ab.
+
+Beim Abfahren fand sich der Teil, der wirklich fehlte: **Kennungen.**
+`Store.search` findet eine Seite über ihre Kennung, schneidet sie sogar aus
+einer ganzen Adresse heraus — das Suchfenster ging seit der Abfragesprache
+daran vorbei und sagte „Nichts gefunden". Der Zweig steht jetzt in der
+Schale und nicht in `query.ts`: die Sprache kennt weder DOM noch Ablage,
+und das soll so bleiben.
 
 ## L24 · ~~Entscheidungs- und Wissensgraph~~ — geschlossen
 
@@ -885,15 +904,64 @@ willkürlich den ersten Treffer.
 Trello, Evernote, Obsidian, Notion-Export und CSV gibt es. Asana, Jira und
 Apple Notes fehlen.
 
-## L27 · Import-Assistent (Power-Query-ähnlich)
+**Nachgesehen am 25. August 2026:** Jira gibt es sehr wohl — als
+gespiegelte Datenbank über `datenbanken/spiegel/dienst.ts`, zusammen mit
+GitHub. Das ist etwas anderes als ein einmaliger Import (es hält die
+Verbindung), deckt aber denselben Wunsch. Bleiben Asana und Apple Notes.
 
-Spalten bereinigen · Typen erkennen · Werte ersetzen · Duplikate entfernen ·
-Dateien kombinieren · Vorschau vor dem Übernehmen.
+Beide liefern ihre Daten als CSV beziehungsweise als Ordner mit HTML-
+Dateien, und beide Wege stehen: CSV einlesen mit Typerkennung (E97) und
+seit E178 mit Aufräumen danach. Was fehlt, ist ein Knopf, der die
+Eigenheiten des jeweiligen Exports kennt — nicht die Fähigkeit, die Daten
+hereinzuholen.
 
-## L28 · Was-wäre-wenn: Zielwertsuche, Szenarien, Solver
+## L27 · ~~Import-Assistent (Power-Query-ähnlich)~~ — GESCHLOSSEN
 
-Zielwert eingeben und rückwärts rechnen · Best/Normal/Worst Case ·
-einfache Optimierung.
+**Stand — ✅ geschlossen mit E178 (25. August 2026).**
+
+Vier der sechs Handgriffe gab es schon, als diese Lücke geschrieben wurde —
+nachgesehen, nicht angenommen:
+
+```txt
+Typen erkennen                `Spaltentyp.erkenne`, beim CSV-Einlesen
+Vorschau vor dem Übernehmen   derselbe Weg: erst nachsehen, dann fragen
+Duplikate entfernen           `Pflege.dublettenDialog`
+Dateien kombinieren           ein zweites CSV in dieselbe Datenbank
+```
+
+Die zwei fehlenden — **Spalten bereinigen** und **Werte ersetzen** — stehen
+jetzt unter „Spalten aufräumen …" im Datenbankmenü, mit Vorschau davor und
+einer Prüfung des Plans gegen den Bestand beim Übernehmen.
+
+Prüflauf: `test232`, 32 Punkte.
+
+## L28 · ~~Was-wäre-wenn: Zielwertsuche, Szenarien, Solver~~ — GESCHLOSSEN
+
+**Stand — ✅ geschlossen mit E176 (25. August 2026).**
+
+Alle drei laufen über dieselbe kleine Maschine in
+`src/bereiche/datenbanken/whatif.ts`: eine Stellschraube (eine schreibbare
+Zahlenspalte) und ein Ziel (eine gerechnete Spalte) in derselben Zeile.
+
+```txt
+Zielwertsuche   Fenster öffnen, dann halbieren — keine Ableitung nötig,
+                also auch bei Formeln mit WENN belastbar
+Optimierung     Goldener Schnitt zwischen zwei Grenzen
+Szenarien       benannte Sätze von Annahmen an der Sammlung, mit Vorschau
+```
+
+**Die Regel, an der alles hängt: beim Suchen wird nichts geschrieben.**
+Gerechnet wird auf einer Kopie der Zeile; erst „Übernehmen" schreibt.
+Gegengeprobt, indem der Probewert doch in die Zelle geschrieben wurde —
+danach steht in der Zelle irgendein Zwischenwert, die Optimierung läuft an
+den Rand und der Zeitstempel der Zeile ist verschoben.
+
+Und ein Fehler, der ohne Messung nicht aufgefallen wäre: die Probezeile
+trägt dieselbe Kennung wie das Original, und `Tempo` wie `Vorrat` merken
+sich Formelwerte unter der Zeilenkennung. Die Suche sah eine Gerade, wo eine
+Kurve ist, und fand gar nichts. `Datenbank.wertFrisch` rechnet ohne beide.
+
+Prüflauf: `test230`, 36 Punkte, zwei Gegenproben.
 
 ## L29 · Suche in Bildern, PDFs und Audio
 
@@ -914,10 +982,38 @@ Erfassen, Lesen und Aufnehmen vollständig benutzbar.
 Erweiterung installieren · Rechte anzeigen · Sandbox · deaktivieren ·
 löschen · Signaturen.
 
-## L31 · Öffentliche Seiten, SEO und Demo
+## L31 · ~~Öffentliche Seiten, SEO und Demo~~ — GESCHLOSSEN
 
-Demo-Modus · `robots.txt` · `sitemap.xml` · `ai.txt` · Export als statische
-Seite · keine privaten Daten für Crawler.
+**Stand — ✅ geschlossen mit E177 (25. August 2026).**
+
+```txt
+Export als statische Seite   gab es schon — `Werkzeuge.htmlExport`
+robots.txt · ai.txt          neu in `oeffentlich/`
+sitemap.xml                  neu, mit EINER Adresse: ohne Server gibt es
+                             keine zweite, und eine erfundene Liste altert
+Demo-Modus                   `index.html?demo` — eine EIGENE Ablage
+keine privaten Daten         gemessen, nicht behauptet: `test231 §2` liest
+                             das ausgelieferte HTML und sucht darin nach
+                             Notizinhalt
+```
+
+Der Vorführmodus trennt über den ABLAGENAMEN (`notizen-demo`), nicht über
+einen Schalter im Code: zwei Namen sind zwei Datenbanken, und die Trennung
+setzt der Browser durch. Ein Schalter, der an dreissig Stellen abgefragt
+wird, ist an der einunddreissigsten vergessen.
+
+Zwei Fehler, die nur das Hinsehen fand (§55):
+
+```txt
+· Der Balken war `position:sticky` und damit ein Flex-Element von `body` —
+  und `body` ist eine Flex-ZEILE. Er bekam eine eigene Spalte über die
+  volle Höhe: der halbe Bildschirm orange, der Text ein Streifen am Rand.
+  „Ein Balken steht da" war dabei grün.
+· Weiss auf dem Orange ergibt 2,6:1 — unter den 4,5:1 aus §38. Jetzt
+  dunkles Braun, 7,7:1, und `test231` misst das Verhältnis.
+```
+
+Prüflauf: `test231`, 29 Punkte.
 
 ## L32 · Die 62 Integrationen
 

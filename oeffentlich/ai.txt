@@ -1,0 +1,21 @@
+# ===========================================================================
+#  ai.txt — was ein KI-Dienst mit Redion tun darf
+# ---------------------------------------------------------------------------
+#  Dieselbe Lage wie in robots.txt: die Notizen liegen im Browser des
+#  Menschen, nicht hier. Was hier steht, ist die App selbst — freie Software,
+#  und über sie zu lernen ist ausdrücklich erwünscht.
+#
+#  Was NICHT erwünscht ist, steht ebenso deutlich da: veröffentlichte Seiten
+#  unter `/p/` gehören dem Menschen, der sie veröffentlicht hat. Er hat sie
+#  für Leser freigegeben, nicht für ein Trainingsdatensatz. Das ist keine
+#  technische Sperre — `robots.txt` und diese Datei sind Bitten, keine
+#  Schlösser —, aber eine Bitte, die nicht dasteht, kann niemand befolgen.
+# ===========================================================================
+
+User-agent: *
+Allow: /
+Disallow: /p/
+
+# Wer die App verstehen will, findet die Quelle hier:
+Source: https://github.com/Redurbabat/Redion
+Contact: https://github.com/Redurbabat/Redion/issues

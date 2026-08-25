@@ -59,7 +59,7 @@ const Datenbank = (() => {
         if (el)
             el.style.display = ob ? wie : 'none';
     };
-    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, zeilen, zeilenGesamt, zelle, zusammenfassen } = DatenbankDienst;
+    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, zelle, zusammenfassen } = DatenbankDienst;
     /* ========================================================================
      * RENDERN
      * ======================================================================*/
@@ -6057,6 +6057,202 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
+    /* ========================================================================
+     * SPALTEN AUFRÄUMEN (L27, E178)
+     * ------------------------------------------------------------------------
+     * Die Rechnung steht in `cleanup.ts` und ändert nichts. Hier steht der
+     * Weg dorthin und — der eigentliche Punkt — die VORSCHAU: welche Zeile
+     * sähe danach wie aus. Erst dann gibt es einen Knopf, der schreibt.
+     * ======================================================================*/
+    const aufraeumenDialog = (coll) => {
+        const spalten = Aufraeumen.spalten(coll);
+        if (!spalten.length) {
+            UI.toast('In dieser Tabelle steht kein Text zum Aufräumen.');
+            return;
+        }
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML =
+            '<div class="finder" style="width:min(720px,95vw)">' +
+                '<div class="fh">Spalten aufräumen<button class="icon-btn" data-a="zu">✕</button></div>' +
+                '<div style="padding:14px; display:grid; gap:10px">' +
+                '<label>Spalte <select id="au-spalte">' +
+                spalten.map(k => `<option value="${esc(k)}">${esc(coll.schema[k].name)}</option>`).join('') +
+                '</select></label>' +
+                '<div class="au-griffe">' +
+                Aufraeumen.GRIFFE.map((g) => `<label class="au-griff"><input type="checkbox" data-griff="${esc(g.id)}"` +
+                    `${g.id === 'rand' ? ' checked' : ''}> ${esc(g.name)}` +
+                    `<span class="au-was">${esc(g.was)}</span></label>`).join('') +
+                '</div>' +
+                '<div class="au-ersetzen">' +
+                '<label>Ersetze <input id="au-suche" placeholder="Text, wörtlich"></label>' +
+                '<label>durch <input id="au-durch" placeholder="(leer = löschen)"></label>' +
+                '<label class="au-ganz"><input type="checkbox" id="au-ganz"> nur ganze Zelle</label>' +
+                '</div>' +
+                '<div id="au-vorschau" class="au-vorschau" role="status"></div>' +
+                '</div>' +
+                '<div class="fbtns">' +
+                '<button data-a="zu">Abbrechen</button>' +
+                '<button data-a="tu" class="prim" disabled>Übernehmen</button>' +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        let vorschau = null;
+        const knopf = o.querySelector('[data-a="tu"]');
+        const kasten = o.querySelector('#au-vorschau');
+        const rechne = () => {
+            const key = o.querySelector('#au-spalte').value;
+            const griffe = [...o.querySelectorAll('[data-griff]')]
+                .filter(x => x.checked).map(x => x.dataset.griff);
+            vorschau = Aufraeumen.plan(coll, key, {
+                griffe,
+                ersetze: o.querySelector('#au-suche').value,
+                durch: o.querySelector('#au-durch').value,
+                nurGanz: o.querySelector('#au-ganz').checked
+            });
+            knopf.disabled = vorschau.betroffen === 0;
+            if (!vorschau.betroffen) {
+                kasten.innerHTML = '<div class="au-nichts">Nichts zu tun — in „' +
+                    esc(vorschau.spalte) + '" ist keine Zeile betroffen.</div>';
+                return;
+            }
+            /* HÖCHSTENS ZEHN ZEILEN ZEIGEN, und sagen, dass es mehr sind. Eine
+               Vorschau mit dreihundert Zeilen liest niemand, und eine, die
+               schweigend abschneidet, verspricht dreihundert und zeigt zehn. */
+            const zeige = vorschau.zeilen.slice(0, 10);
+            kasten.innerHTML =
+                '<div class="au-kopf">' + vorschau.betroffen + ' von ' + vorschau.gesamt +
+                    ' Zeilen ändern sich</div>' +
+                    zeige.map((z) => '<div class="au-zeile"><span class="au-alt">' + esc(z.vorher || '(leer)') + '</span>' +
+                        '<span class="au-pfeil">→</span>' +
+                        '<span class="au-neu">' + esc(z.nachher || '(leer)') + '</span></div>').join('') +
+                    (vorschau.betroffen > zeige.length
+                        ? '<div class="au-mehr">… und ' + (vorschau.betroffen - zeige.length) +
+                            ' weitere</div>' : '');
+        };
+        o.addEventListener('input', rechne);
+        o.addEventListener('change', rechne);
+        rechne();
+        o.addEventListener('click', e => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="tu"]')) {
+                if (!vorschau || !vorschau.betroffen)
+                    return;
+                const erg = Aufraeumen.wende(vorschau);
+                App.zeichneSeite();
+                o.remove();
+                UI.toast(erg.geaendert + ' Zeile(n) aufgeräumt' +
+                    (erg.ausgelassen ? ', ' + erg.ausgelassen + ' inzwischen anders und ausgelassen' : ''));
+            }
+        });
+    };
+    /* ========================================================================
+     * WAS WÄRE, WENN (L28, E176)
+     * ------------------------------------------------------------------------
+     * Die Rechnung steht in `whatif.ts` und schreibt beim Suchen nichts. Hier
+     * steht nur der Weg dorthin: welche Zeile, welche Stellschraube, welches
+     * Ziel — und ein Knopf, der das Ergebnis übernimmt, wenn ein Mensch das
+     * will.
+     *
+     * DAS ERGEBNIS WIRD ANGEZEIGT, NICHT EINGETRAGEN. Eine Zielwertsuche ist
+     * eine Frage, keine Anweisung; wer sie stellt, will erst einmal die
+     * Antwort sehen. Excel schreibt sofort und bietet danach „Rückgängig" an
+     * — das ist einen Klick billiger und einen Gedanken teurer.
+     * ======================================================================*/
+    const wasWaereWenn = (coll, view) => {
+        const zeilen = Datenbank.zeilen ? Datenbank.zeilen(coll, view) : Store.rowsOf(coll.id);
+        if (!zeilen.length) {
+            UI.toast('Diese Tabelle hat noch keine Zeile.');
+            return;
+        }
+        const stellen = Object.keys(coll.schema).filter(k => WhatIf.stellbar(coll, k));
+        const ziele = Object.keys(coll.schema).filter(k => WhatIf.zielbar(coll, k));
+        if (!stellen.length) {
+            UI.toast('Dafür braucht es eine Zahlenspalte zum Verstellen.');
+            return;
+        }
+        if (!ziele.length) {
+            UI.toast('Dafür braucht es eine gerechnete Spalte als Ziel.');
+            return;
+        }
+        const auswahl = (id, keys) => `<select id="${id}">` + keys.map(k => `<option value="${esc(k)}">${esc(coll.schema[k].name)}</option>`).join('') + '</select>';
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML =
+            '<div class="finder" style="width:min(620px,95vw)">' +
+                '<div class="fh">Was wäre, wenn<button class="icon-btn" data-a="zu">✕</button></div>' +
+                '<div class="ww-form" style="padding:14px; display:grid; gap:10px">' +
+                '<label>Zeile ' +
+                '<select id="ww-zeile">' + zeilen.map((z, i) => `<option value="${esc(z.id)}"${i === 0 ? ' selected' : ''}>` +
+                `${esc(z.text || 'Ohne Titel')}</option>`).join('') + '</select></label>' +
+                /* Der heutige Wert gehört NEBEN die Spalte, um die es geht, nicht
+                   darüber: mit Augen gesehen stand „Ziel steht gerade bei 600"
+                   eine Zeile über der Auswahl und sagte etwas über eine Spalte,
+                   die man noch gar nicht gewählt hatte (§55). */
+                '<label>Diese Spalte soll … ' + auswahl('ww-ziel', ziele) +
+                '<span id="ww-jetzt" class="ww-jetzt"></span></label>' +
+                '<label>… diesen Wert erreichen <input id="ww-wunsch" type="number" step="any"></label>' +
+                '<label>… indem sich diese ändert ' + auswahl('ww-stell', stellen) + '</label>' +
+                /* Die Antwort auf die gestellte Frage — nicht in Hinweisgrau. */
+                '<div id="ww-ergebnis" class="ww-ergebnis" role="status"></div>' +
+                '</div>' +
+                '<div class="fbtns">' +
+                '<button data-a="rechne" class="prim">Ausrechnen</button>' +
+                '<button data-a="uebernimm" disabled>Übernehmen</button>' +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        const el = (id) => o.querySelector('#' + id);
+        const erg = o.querySelector('#ww-ergebnis');
+        const knopfUebernimm = o.querySelector('[data-a="uebernimm"]');
+        let gefunden = null;
+        const zeigeJetzt = () => {
+            const row = Store.getBlock(el('ww-zeile').value);
+            const w = row ? Datenbank.wert(row, el('ww-ziel').value, coll) : null;
+            o.querySelector('#ww-jetzt').textContent =
+                'steht gerade bei ' + (w === null || w === undefined || w === '' ? '—' : String(w));
+            gefunden = null;
+            knopfUebernimm.disabled = true;
+            erg.textContent = '';
+        };
+        ['ww-zeile', 'ww-ziel', 'ww-stell'].forEach(id => el(id).addEventListener('change', zeigeJetzt));
+        zeigeJetzt();
+        o.addEventListener('click', e => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="rechne"]')) {
+                const row = Store.getBlock(el('ww-zeile').value);
+                const r = WhatIf.zielwert(coll, row, el('ww-stell').value, el('ww-ziel').value, el('ww-wunsch').value);
+                if (!r.ok) {
+                    gefunden = null;
+                    knopfUebernimm.disabled = true;
+                    erg.textContent = r.grund;
+                    return;
+                }
+                gefunden = r.wert;
+                knopfUebernimm.disabled = false;
+                /* Gerundet ANGEZEIGT, ungerundet übernommen: „104,00000000001" liest
+                   sich falsch, und „104" wäre gelogen, wenn es 104,3 heissen müsste. */
+                erg.textContent = esc(coll.schema[el('ww-stell').value].name) + ' = ' +
+                    (Math.round(r.wert * 1e6) / 1e6) + ' — dann steht ' +
+                    esc(coll.schema[el('ww-ziel').value].name) + ' bei ' +
+                    (Math.round(r.erreicht * 1e6) / 1e6) + '.';
+            }
+            if (elVon(e)?.closest('[data-a="uebernimm"]')) {
+                if (gefunden === null)
+                    return;
+                Store.setProp(el('ww-zeile').value, el('ww-stell').value, gefunden);
+                App.zeichneSeite();
+                UI.toast('Übernommen');
+                o.remove();
+            }
+        });
+    };
     const dbMenue = (anker, coll, view, block) => {
         const r = anker.getBoundingClientRect();
         const m = UI.menu('<button data-a="rename"><span class="mi">✎</span>Datenbank umbenennen</button>' +
@@ -6098,6 +6294,15 @@ const Datenbank = (() => {
             '<button data-a="csvin"><span class="mi">⭱</span>CSV einlesen</button>' +
             '<button data-a="ai"><span class="mi">✨</span>Mit KI auswerten</button>' +
             '<button data-a="dubletten"><span class="mi">⧉</span>Dubletten finden</button>' +
+            /* Nur wo Text steht: eine Datenbank aus lauter Zahlen und Daten hat
+               keine Leerzeichen am Rand (L27, E178). */
+            (Aufraeumen.spalten(coll).length
+                ? '<button data-a="putzen"><span class="mi">🧹</span>Spalten aufräumen …</button>' : '') +
+            /* Nur wo es etwas zu rechnen gibt: ohne gerechnete Spalte hat eine
+               Zielwertsuche kein Ziel, und ein Eintrag, der nur eine Absage
+               zeigt, ist kein Eintrag (L28, E176). */
+            (Object.values(coll.schema).some((d) => d && (d.type === 'formula' || d.type === 'rollup'))
+                ? '<button data-a="wenn"><span class="mi">⚖</span>Was wäre, wenn …</button>' : '') +
             (typeof Pruefsatz !== 'undefined'
                 ? `<button data-a="pruefsaetze"><span class="mi">✔</span>Prüfsätze` +
                     `<span class="ms">${Pruefsatz.alle(coll).length || 'keine'}</span></button>` : '') +
@@ -6281,6 +6486,16 @@ const Datenbank = (() => {
             if (a === 'dubletten') {
                 m.remove();
                 Pflege.dublettenDialog(coll);
+                return;
+            }
+            if (a === 'putzen') {
+                m.remove();
+                aufraeumenDialog(coll);
+                return;
+            }
+            if (a === 'wenn') {
+                m.remove();
+                wasWaereWenn(coll, view);
                 return;
             }
             if (a === 'gsort') {
@@ -9266,7 +9481,7 @@ const Datenbank = (() => {
             .find((b) => b && b.collectionId && b.alive !== false);
         return kind ? kind.collectionId : null;
     };
-    return { render, sammlungAufSeite, spaltenMenue, TYPEN, propTyp, wert, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
+    return { render, sammlungAufSeite, spaltenMenue, TYPEN, propTyp, wert, wertFrisch, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
         /* `zelleBearbeiten` war nicht ausgeführt — der Mail-Bereich wollte
            es und griff deshalb ins Leere. */
         zelleBearbeiten,

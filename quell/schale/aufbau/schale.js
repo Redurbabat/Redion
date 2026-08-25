@@ -1114,6 +1114,37 @@ const App = (() => {
                 zuletzt();
                 return;
             }
+            /* EINE KENNUNG IST KEINE ABFRAGE (L23, E175).
+               L23 nennt ausdrücklich „Titel, Inhalt, Zeilen UND KENNUNGEN".
+               `Store.search` kann das seit Langem — es schneidet die Kennung sogar
+               aus einer ganzen Seitenadresse heraus und findet auch Blöcke im
+               Papierkorb, was bei einer Verwaltungssuche der Sinn der Sache ist.
+               Das Suchfenster ging seit der Abfragesprache daran vorbei: es fragt
+               `QueryLanguage.run` über die Dokumentenform, und die kennt nur
+               Titel, Inhalt, Schlagwörter und Status. Wer eine Kennung einfügte,
+               bekam „Nichts gefunden".
+      
+               Der Zweig steht hier und nicht in `query.ts`: die Sprache kennt
+               weder DOM noch Ablage, und das soll so bleiben.
+      
+               WAS IHN SICHER MACHT, ist nicht der Ausdruck, sondern die zweite
+               Bedingung: `Store.search` muss WIRKLICH über die Kennung gefunden
+               haben. Der Zweig geht an der Abfragesprache vorbei und damit an
+               ihren Filtern; griffe er schon, wenn der Text zufällig wie eine
+               Kennung aussieht, zeigte „nur Titel" plötzlich Inhaltstreffer
+               (test229 §4, gegengeprobt). Der Ausdruck davor spart nur den
+               Aufruf bei jedem Tastendruck. */
+            const alsKennung = roh.trim().replace(/^.*#block=/, '');
+            if (/^[0-9a-f]{8}-?[0-9a-f]{4}/i.test(alsKennung)) {
+                const gefunden = Store.search(alsKennung);
+                if (gefunden.length && gefunden[0].treffer === 'Seiten-ID') {
+                    queryError = '';
+                    treffer = gefunden;
+                    i = 0;
+                    zeichne();
+                    return;
+                }
+            }
             const parsed = QueryLanguage.parse(roh);
             if (!parsed.ok) {
                 queryError = parsed.issues.map(issue => issue.message).join(' ');
@@ -2540,6 +2571,28 @@ const App = (() => {
         return m && m[1] ? decodeURIComponent(m[1]) : '';
     };
     const start = async () => {
+        /* VORFÜHRMODUS: EIN BALKEN, DER NICHT ZU ÜBERSEHEN IST (L31, E177).
+           `?demo` öffnet eine eigene Ablage (`notizen-demo`) — die echten Notizen
+           liegen unberührt daneben. Genau das muss aber dastehen: eine App, die
+           aussieht wie die eigene und es nicht ist, ist die unangenehmste Sorte
+           Überraschung. Der Balken steht ganz oben, bleibt stehen und nennt den
+           Weg zurück. */
+        if (typeof Store !== 'undefined' && Store.istDemo && Store.istDemo()) {
+            const balken = document.createElement('div');
+            balken.id = 'demo-balken';
+            balken.setAttribute('role', 'status');
+            balken.innerHTML = '<b>Vorführung</b> — hier liegen Beispieldaten in ' +
+                'einer eigenen Ablage. Deine eigenen Notizen sind davon nicht ' +
+                'berührt. <a href="./index.html">Zu deinen Notizen</a>';
+            document.body.prepend(balken);
+            document.body.classList.add('hat-demo');
+            /* Die Höhe GEMESSEN, nicht geschätzt: am Telefon bricht der Satz um,
+               und eine feste Zahl läge dann über der App. */
+            const hoeheSetzen = () => document.documentElement.style
+                .setProperty('--demo-hoehe', balken.offsetHeight + 'px');
+            hoeheSetzen();
+            addEventListener('resize', hoeheSetzen);
+        }
         /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
            Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
            es `zeichneBaum`, und das läuft dann schon nach drüben. */

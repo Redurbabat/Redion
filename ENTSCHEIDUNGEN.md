@@ -12074,3 +12074,333 @@ ein Eintrag darf mehrfach vergeben werden     3 rot
 ```
 
 `test187` §7, acht neue Punkte (55 → 63).
+
+---
+
+## E175 · Eine Kennung ist keine Abfrage (L23)
+
+**25. August 2026.**
+
+L23 stand als ein Satz in den Lücken: „Suche über Titel, Inhalt, Zeilen und
+Kennungen mit einfacher Syntax."
+
+Beim Nachsehen ist die Sprache **gebaut** — `src/kern/suche/query.ts`, seit
+dem 22. August, mit neun Suchbefehlen, Anführungszeichen für die genaue
+Wendung, Erkennung widersprüchlicher Angaben und Fehlermeldungen in Worten:
+
+```txt
+titel:"Projekt"   tag:arbeit   typ:seite   geändert:heute   status:offen
+in:Projekte       nach:2026-01   vor:2026-06   inhalt:Zebras
+```
+
+**Und kein einziger Prüflauf nannte sie.** Das ist die gefährlichere Hälfte
+und schon einmal dagewesen: bei E122 lagen 460 Zeilen für ein verschlüsseltes
+`.redion` herum, deren Einstiegspunkte nicht im `return` standen. Fertiger
+Code, den nie jemand ausgeführt hat, sieht von aussen genauso aus wie
+fertiger Code.
+
+`test229` fährt die Sprache jetzt über das ECHTE Suchfenster ab — nicht über
+`QueryLanguage.parse`: das prüfte den Parser und liesse die Verdrahtung offen
+(E93). Beim Schreiben der Prüfung fielen zwei eigene Fehler an:
+
+```txt
+· Die erste Fassung las `.f-item` als Treffer. Ein Treffer ist ein
+  `button[data-i]`. Vierzehn rote Punkte, kein einziger am geprüften Code —
+  und einer davon („typ:seite lässt die Zeile weg") war GRÜN, weil beide
+  Listen leer waren.
+· `Store.addRow(coll, { text: … })` gibt der Zeile keinen Titel. `addRow`
+  liest `props.title`; der Titel einer Zeile ist ihre Titelspalte.
+```
+
+### Und der Teil, der wirklich fehlte
+
+**Kennungen.** `Store.search` findet eine Seite über ihre Kennung und
+schneidet sie sogar aus einer ganzen Adresse heraus — das ist der Weg, auf
+dem ein Blockverweis aus der Zwischenablage wieder zu seiner Seite führt
+(E105). Das Suchfenster ging seit der Abfragesprache daran vorbei: es fragt
+`QueryLanguage.run` über eine Dokumentform, die Titel, Inhalt, Schlagwörter
+und Status kennt — und keine Kennungen. Wer eine einfügte, bekam „Nichts
+gefunden".
+
+Der Zweig steht in der Schale und nicht in `query.ts`: die Sprache kennt
+weder DOM noch Ablage, und das soll sie nicht lernen.
+
+**Was ihn sicher macht, ist nicht der Ausdruck davor**, sondern die zweite
+Bedingung: `Store.search` muss WIRKLICH über die Kennung gefunden haben. Der
+Zweig geht an der Abfragesprache vorbei und damit an ihren Filtern; griffe er
+schon, wenn ein Text zufällig wie eine Kennung aussieht, zeigte „nur Titel"
+plötzlich Inhaltstreffer. Genau so gegengeprobt.
+
+`test229`, 20 Punkte.
+
+---
+
+## E176 · Was wäre, wenn (L28)
+
+**25. August 2026.**
+
+L28 stand als drei Halbsätze da: „Zielwert eingeben und rückwärts rechnen ·
+Best/Normal/Worst Case · einfache Optimierung." Alle drei laufen über
+dieselbe kleine Maschine: eine **Stellschraube** (eine schreibbare
+Zahlenspalte) und ein **Ziel** (eine gerechnete Spalte) in derselben Zeile.
+
+```txt
+Zielwertsuche   „Der Gewinn soll 10 000 sein. Wie hoch muss der Preis?"
+Optimierung     „Bei welchem Preis ist der Erlös am grössten?"
+Szenarien       „Zeig mir dasselbe für schlecht, normal und gut."
+```
+
+### Die Regel, an der alles hängt
+
+**Beim Suchen wird nichts geschrieben.**
+
+Der naheliegende Weg wäre, den Probewert in die Zelle zu schreiben, die
+Formel lesen zu lassen und weiterzuprobieren. Damit stünden bei dreissig
+Schritten neunundzwanzig falsche Werte in den Daten, jeder in einer Fassung
+und im Abgleich — und bricht es in der Mitte ab, bleibt der letzte stehen.
+Bei einer Suche, die auch scheitern darf, ist das die gefährliche Richtung
+(§46).
+
+Gerechnet wird auf einer **Kopie** der Zeile. Dasselbe Muster benutzt
+`dienst.ts` seit Langem für die Regelprüfung („die Zeile MIT dem neuen
+Wert"). `test230 §5` misst es nicht am Wert — der wäre auch dann richtig,
+wenn zwischendurch dreissig andere darin standen —, sondern am Zeitstempel
+der Zeile und an der Zahl der Fassungen.
+
+### Der Fehler, den ohne Messung niemand gefunden hätte
+
+Die Probezeile trägt dieselbe Kennung wie das Original. `Tempo` und `Vorrat`
+merken sich Formelwerte **unter der Zeilenkennung** — also kam bei jedem
+Probewert derselbe gespeicherte Wert zurück. Die Suche sah eine Gerade, wo
+eine Kurve ist:
+
+```txt
+Zielwertsuche   fand gar nichts („Kein Wert führt zu diesem Ziel")
+Optimierung     lief an den Rand: Preis 50 statt 25
+```
+
+Beide Speicher stehen ohnehin still, solange `formelTiefe` über null ist —
+das ist der Weg, den eine Formel nimmt, die eine andere aufruft.
+`Datenbank.wertFrisch` geht denselben Weg, absichtlich.
+
+### Warum halbieren und nicht Newton
+
+Excel nimmt Newton und scheitert daran regelmässig: eine Formel mit `WENN`
+hat Sprungstellen, und die Ableitung zeigt dort in die falsche Richtung.
+Halbieren braucht keine Ableitung, nur zwei Stellen mit verschiedenem
+Vorzeichen — und die sucht der erste Teil, indem er das Fenster vom heutigen
+Wert aus verdoppelt.
+
+Und es halbiert **bis das Fenster zu ist**, nicht bis der Rest klein genug
+ist. Der erste Anlauf hörte bei der Toleranz auf; die ist relativ zum Ziel,
+bei 2000 also 2·10⁻⁴, und heraus kam „Preis = 15.999999", wo 16 richtig ist.
+Rechnerisch einwandfrei und für einen Menschen falsch.
+
+### Der Weg dorthin
+
+Datenbankmenü → „Was wäre, wenn …" — und nur dort, wo es eine gerechnete
+Spalte gibt; ein Eintrag, der nur eine Absage zeigt, ist kein Eintrag.
+
+Das Ergebnis wird **angezeigt, nicht eingetragen**. Eine Zielwertsuche ist
+eine Frage, keine Anweisung; wer sie stellt, will erst die Antwort sehen.
+Excel schreibt sofort und bietet danach „Rückgängig" an — das ist einen Klick
+billiger und einen Gedanken teurer.
+
+Mit Augen gesehen (§55): der heutige Wert stand zuerst eine Zeile ÜBER der
+Spaltenauswahl und sagte etwas über eine Spalte, die man noch nicht gewählt
+hatte. Er steht jetzt darunter. Und die Antwort stand in Hinweisgrau — sie
+ist das, wofür der Dialog da ist, und steht jetzt in Textfarbe.
+
+### Gegenproben
+
+```txt
+probiere() geht über den Zwischenspeicher     7 rot
+die Suche schreibt in die Zelle               7 rot
+```
+
+`test230`, 36 Punkte.
+
+---
+
+## E177 · Öffentlich, ohne dass Privates mitgeht (L31)
+
+**25. August 2026.**
+
+L31 nannte fünf Dinge und darüber die eigentliche Bedingung: keine privaten
+Daten für Crawler.
+
+```txt
+Export als statische Seite   gab es schon — `Werkzeuge.htmlExport`
+robots.txt · ai.txt          neu
+sitemap.xml                  neu
+Demo-Modus                   neu
+keine privaten Daten         war schon wahr, stand aber nirgends
+```
+
+### Die Bedingung wird gemessen, nicht behauptet
+
+Redion ist local-first: die Notizen liegen in der IndexedDB des Browsers. Ein
+Crawler bekommt die leere App — es gibt buchstäblich nichts Privates zu
+holen. Das ist leicht gesagt und genau die Sorte Satz, die durch eine
+Änderung still falsch wird: ein `<script>`, das eine Beispielnotiz einbettet,
+und niemand merkt es.
+
+`test231 §2` liest deshalb das AUSGELIEFERTE HTML und sucht darin nach
+gezeichneten Blöcken und nach Starterinhalt.
+
+Und ein Punkt, der ausdrücklich dasteht, weil er sonst missverstanden wird:
+`robots.txt` sperrt `/quell/` und `/pruefungen/` aus — und die Dateien sind
+trotzdem abrufbar. Eine `robots.txt` ist eine Bitte, kein Schloss. Die
+Prüfung hält das fest, damit niemand sie später für eine Sperre hält.
+
+### Der Vorführmodus trennt über den Namen
+
+`index.html?demo` öffnet eine EIGENE Ablage: `notizen-demo`.
+
+```txt
+Zwei Namen  = zwei Datenbanken, und die Trennung setzt der Browser durch.
+Ein Schalter = an dreissig Stellen abgefragt und an der einunddreissigsten
+               vergessen — und dann steht die Vorführung in den echten Daten.
+```
+
+`test231 §3` legt in der echten Ablage eine Seite an, öffnet danach die
+Vorführung und sieht nach, ob sie dort auftaucht. Und in der Gegenrichtung,
+ob die echte Seite danach noch da ist.
+
+**Und dabei fiel ein Messfehler auf, der die wichtigste Behauptung wertlos
+machte:** `browser.newPage()` legt in Playwright jedes Mal einen EIGENEN
+Kontext an, und ein eigener Kontext hat eine eigene IndexedDB. Die erste
+Fassung mass damit Playwrights Trennung statt Redions — die Gegenprobe
+(beide Ablagen gleich benannt) liess „Die eigene Seite ist dort NICHT zu
+sehen" grün stehen. Jetzt: ein Kontext, zwei Seiten.
+
+### Zwei Fehler, die nur das Hinsehen fand (§55)
+
+```txt
+· `position:sticky` machte den Balken zu einem Flex-Element von `body` —
+  und `body` ist eine Flex-ZEILE (Seitenleiste | Inhalt). Der Balken bekam
+  eine eigene Spalte über die volle Höhe: der halbe Bildschirm orange, der
+  Text ein schmaler Streifen am Rand. „Ein Balken steht da" war grün.
+· Weiss auf dem Orange (`#f97316`) ergibt 2,6:1 — unter den 4,5:1, die §38
+  für gewöhnlichen Text verlangt. Auf dem Bild sah es genau danach aus.
+  Jetzt dunkles Braun: 7,7:1.
+```
+
+Beides steht jetzt als Punkt in `test231`: die Lage (`position: fixed`, und
+`body` beginnt genau unter dem Balken) und das Kontrastverhältnis, gerechnet
+statt geschätzt. Die Höhe des Abstands wird gemessen und nicht gesetzt — am
+Telefon bricht der Satz um, und eine feste Zahl läge dann über der App.
+
+### Gegenproben
+
+```txt
+die Vorführung nutzt dieselbe Ablage    2 rot
+der Vorführbalken fehlt                 3 rot
+```
+
+`test231`, 29 Punkte.
+
+---
+
+## E178 · Spalten aufräumen, mit Vorschau (L27)
+
+**25. August 2026.**
+
+L27 nennt sechs Handgriffe eines Import-Assistenten. Vier gab es schon, als
+die Lücke geschrieben wurde — nachgesehen, nicht angenommen:
+
+```txt
+Typen erkennen                `Spaltentyp.erkenne`, beim CSV-Einlesen
+Vorschau vor dem Übernehmen   derselbe Weg: erst nachsehen, dann fragen
+Duplikate entfernen           `Pflege.dublettenDialog`
+Dateien kombinieren           ein zweites CSV in dieselbe Datenbank
+```
+
+Zwei fehlten, und beide braucht man nach jedem Import als Erstes: **Spalten
+bereinigen** und **Werte ersetzen**. Beides steht jetzt unter „Spalten
+aufräumen …" im Datenbankmenü.
+
+### Die Regel ist die von `probelauf.ts`
+
+Erst zeigen, was passieren würde, dann erst tun. `plan()` ändert nichts und
+zählt echt nach; `wende` schreibt. Ein Aufräumen, das dreihundert Zeilen
+anfasst und erst danach zeigt, was es getan hat, ist kein Werkzeug, sondern
+ein Risiko (§46).
+
+Die Vorschau zeigt höchstens zehn Zeilen und sagt, dass es mehr sind — eine
+mit dreihundert liest niemand, und eine, die schweigend abschneidet,
+verspricht dreihundert und zeigt zehn.
+
+### Und der Plan wird gegen den Bestand gehalten
+
+Zwischen Vorschau und Zusage kann ein zweites Fenster oder ein Abgleich
+dazwischenkommen. `wende` schreibt deshalb DEN PLAN und rechnet nicht neu —
+und lässt jede Zeile aus, deren Wert inzwischen ein anderer ist. Sonst
+stünde in der Zelle etwas, das dem Menschen nie gezeigt wurde.
+
+Gegengeprobt: die Prüfung weggenommen, und der von Hand geänderte Wert wird
+mit dem alten überschrieben.
+
+### Das Ersetzen ist wörtlich
+
+Wer „(GmbH)" ersetzen will, tippt „(GmbH)" und nicht „\(GmbH\)". Ein
+Suchfeld, das heimlich ein regulärer Ausdruck ist, macht aus einem Punkt ein
+Jokerzeichen — gegengeprobt: „." durch „" ersetzt, und statt einer Zelle
+sind alle sechs leer.
+
+### Und die unsichtbaren Zeichen stehen als Escape da
+
+` `, ` `, ` ` und die drei Nullbreiten plus BOM. Sie im
+Quelltext als Zeichen zu schreiben wäre eine Regex, der niemand ansieht, ob
+sie noch enthält, was sie enthalten soll — und die kein Kopieren übersteht.
+
+`test232`, 32 Punkte.
+
+---
+
+## E179 · Zwei Regressionen, die der volle Lauf gefunden hat
+
+**25. August 2026.** `voll92` war rot: `test96` und `test210`. Beide gehören
+zu Entscheidungen aus demselben Tag, und beide Prüfungen hatten recht.
+
+### `test96` · Ein Zeitstempel, den es beim Anlegen nie gab
+
+E172 lässt die Inhaltsumzüge nach einer eingespielten Sicherung noch einmal
+laufen. Der Umzug `zeitstempel-an-sammlungen` trägt `edited` nach, wo es
+fehlt — für ALTE Sätze gedacht. `test96` exportiert den Bestand, löscht
+alles, spielt ein und vergleicht Feld für Feld; danach standen zwei `edited`
+da, die vorher nicht da waren.
+
+Der Umzug hatte recht: **`addDatabase` und `addView` setzten `edited`
+schlicht nie.** Eine frisch angelegte Sammlung hatte keinen, bis irgendetwas
+sie änderte.
+
+Ihn abzuschalten wäre die falsche Richtung gewesen — dann käme eine
+Sicherung von 2025 wieder ohne Zeitstempel herein, und der Abgleich hielte
+jede Schemaänderung darin für nie geschehen. Also steht `edited` jetzt beim
+Anlegen da, und der Umzug ist für neue Daten ein Leerlauf.
+
+### `test210` · Ein Knopf, der einer Werkzeugleiste die Breite nimmt
+
+E173 hat der PDF-Seite ein ⊕ neben die Seitenzahl gestellt. `.blatt-reihe`
+ist eine Zeile: links die rollende Zeichenleiste, rechts der feste Teil.
+Jeder Knopf rechts nimmt links Platz weg.
+
+```txt
+390 px Fensterbreite · die Zeichenleiste vorher 290 px, nachher 262
+```
+
+`test210 §4` verlangt, dass sie mehr als ein Drittel bekommt, und hatte
+recht: eine Zeichenleiste, die ein Viertel ihrer Breite an eine Seitenzahl
+verliert, ist am Telefon keine. Unter 760 px bricht die Reihe jetzt um —
+oben die volle Breite zum Zeichnen, darunter Seitenzahl, 🔗 und ⊕.
+
+Mit Augen nachgesehen (§55): die Zeichenleiste läuft jetzt über die ganze
+Breite, die Angaben stehen rechtsbündig auf einer eigenen Zeile.
+
+### Was daran allgemein ist
+
+Beide Fehler waren unsichtbar, solange man nur die neuen Prüfungen laufen
+liess. Der volle Lauf ist der einzige Ort, an dem eine Änderung auf die
+Prüfungen trifft, an die niemand gedacht hat — und beide Male hat eine
+ältere Prüfung eine jüngere Entscheidung berichtigt.

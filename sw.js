@@ -150,6 +150,8 @@ const GRUNDSTOCK = [
     './quell/kern/abgleich/zusammenfuehren.js',
     './quell/kern/zugang/rechte.js',
     './quell/bereiche/datenbanken/probelauf/dienst.js',
+    './quell/bereiche/datenbanken/whatif.js',
+    './quell/bereiche/datenbanken/cleanup.js',
     './quell/bereiche/datenbanken/pruefsaetze/dienst.js',
     './quell/bereiche/vorlagen/dienst.js',
     './quell/bereiche/datenbanken/vorrat/dienst.js',
