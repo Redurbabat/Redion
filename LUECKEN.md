@@ -1571,7 +1571,17 @@ die Dateien ein eigener Durchgang über das Fach. Nicht schwierig, aber eine
 anderen Wege gleichzeitig trifft. Deshalb steht sie hier und nicht nebenbei.
 
 
-## L56 · Mit einem benannten Konto gehört keine Zeile mehr irgendwem
+## L56 · Mit einem benannten Konto gehört keine Zeile mehr irgendwem — GESCHLOSSEN am 25. August 2026
+
+**Gemessen und behoben mit E153, geprüft mit test218 §8/§9.** Die Vermutung
+unten stimmte, und es war schlimmer: nicht einzelne Zeilen fehlten, sondern
+die ganze Liste. Der naheliegende Fix — `addRow` schreibt `erstelltVon` —
+reichte nicht: wer sich umbenennt, verlöre sonst rückwirkend, was er selbst
+angelegt hat. Die Regel lautet jetzt: eine gefüllte Personenzelle sagt, wem
+die Zeile gehört; steht nirgends ein Name, gehört sie dem, der zusieht.
+Dieselbe Regel steht auch in `lebensbereiche.ts`, wo derselbe Fehler war.
+Der Rest dieses Eintrags bleibt als Aufnahme vom Vormittag.
+
 
 **25. August 2026.** Beim Bauen von E152 nebenbei gemessen, nicht gesucht.
 

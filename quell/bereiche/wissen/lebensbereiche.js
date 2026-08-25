@@ -452,9 +452,19 @@ const Lebensbereiche = (() => {
         const personen = allePersonen.filter(key => feldSichtbar(idText(collection.id), key));
         if (allePersonen.length && !personen.length)
             return false;
-        if (personen.length)
-            return personen.some(key => text(propsWert(row, key), 500).toLocaleLowerCase('de-CH').includes(name));
-        return text(row?.erstelltVon || 'Ich', 160).toLocaleLowerCase('de-CH') === name;
+        /* DIESELBE REGEL WIE IN `bibliothek.ts`, und das ist der Punkt: zwei
+           Listen, die „meine Aufgaben" verschieden beantworten, sind schlimmer
+           als eine, die es schlecht tut (E147). Eine gefüllte Personenzelle sagt,
+           wem die Zeile gehört; steht in keiner ein Name, gehört sie dem, der
+           zusieht. Der Vergleich mit `erstelltVon` stand hier wie dort und war
+           hier wie dort falsch — `Store.addRow` schrieb das Feld gar nicht
+           (L56, E153). */
+        const eingetragen = personen
+            .map(key => text(propsWert(row, key), 500).toLocaleLowerCase('de-CH'))
+            .filter(Boolean);
+        if (!eingetragen.length)
+            return true;
+        return eingetragen.some(wert => wert.includes(name));
     };
     const aufgaben = async (optionen = {}) => {
         const gesucht = optionBereiche(optionen), limit = limitVon(optionen.limit);

@@ -874,6 +874,12 @@ const Store = (() => {
     const r = {
       id: uid(), type: 'page', text: props.title || '', icon: '',
       props, content: [], parentId: collectionId, parentTable: 'collection',
+      /* WIE BEI JEDEM ANDEREN BLOCK (Zeile 378). Hier fehlte es, und das kostete:
+         `Bibliothek.meineAufgaben` fragt für eine Datenbank ohne Personenspalte
+         `row.erstelltVon`, bekam `undefined` und verglich den Ersatzwert „Ich"
+         mit dem eingestellten Namen. Wer sich in den Einstellungen „Redur"
+         nannte, sah seine Aufgabenliste leer (L56, E153). */
+      erstelltVon: getMeta('nutzer', '') || 'Ich',
       created: now(), edited: now(), folge: ++folgeZaehler, alive: true
     };
     cache.blocks[r.id] = r;

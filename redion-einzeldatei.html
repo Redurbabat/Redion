@@ -16477,6 +16477,12 @@ const Store = (() => {
         const r = {
             id: uid(), type: 'page', text: props.title || '', icon: '',
             props, content: [], parentId: collectionId, parentTable: 'collection',
+            /* WIE BEI JEDEM ANDEREN BLOCK (Zeile 378). Hier fehlte es, und das kostete:
+               `Bibliothek.meineAufgaben` fragt für eine Datenbank ohne Personenspalte
+               `row.erstelltVon`, bekam `undefined` und verglich den Ersatzwert „Ich"
+               mit dem eingestellten Namen. Wer sich in den Einstellungen „Redur"
+               nannte, sah seine Aufgabenliste leer (L56, E153). */
+            erstelltVon: getMeta('nutzer', '') || 'Ich',
             created: now(), edited: now(), folge: ++folgeZaehler, alive: true
         };
         cache.blocks[r.id] = r;
@@ -75713,26 +75719,29 @@ const Bibliothek = (() => {
             const titelKey = Object.keys(schema).find(k => schema[k].type === 'title') || 'name';
             Store.rowsOf(coll.id).forEach((row) => {
                 const pr = row.props || {};
-                /* Ohne Person-Spalte gilt: was ich angelegt habe, ist meins.
-                   UND OHNE EINGETRAGENE PERSON GILT DASSELBE. Bis zum 25. August
-                   entschied allein, OB es eine Personenspalte gibt — eine leere Zelle
-                   darin hiess dann „gehört niemandem", und die Zeile tauchte in
-                   keiner einzigen Liste auf.
+                /* WEM GEHÖRT EINE ZEILE?
+                   Die Personenspalte sagt es, wenn sie gefüllt ist. Sonst gehört die
+                   Zeile dem, der sie ansieht — auf einem Bestand, der auf diesem
+                   Gerät liegt, ist das die einzige Lesart, und in einem geteilten
+                   Arbeitsbereich gibt es die Personenspalte genau dafür.
         
-                   Gefunden an §41: eine Besprechung legt ihre Aufgaben in einer
-                   Datenbank mit der Spalte „Wer" ab, und wer beim Sprechen keinen
-                   Namen nennt, hinterlässt sie leer. Genau diese Aufgabe — die
-                   unverteilte, also die, an die sich sonst niemand erinnert — war
-                   für die Aufgabenliste unsichtbar. Der Auftrag verlangt in §41
-                   wörtlich, dass sie eine normale Redion-Aufgabe bleibt.
+                   VORHER STAND HIER EIN VERGLEICH MIT DEM ANLEGER, und der hat
+                   gekostet: `Store.addRow` schrieb `erstelltVon` gar nicht, also lief
+                   der Vergleich gegen den Ersatzwert „Ich". Gemessen am 25. August —
+                   derselbe Bestand, nur der Name in den Einstellungen geändert:
         
-                   Die Regel für die leere Zelle ist dieselbe wie die für die
-                   fehlende Spalte, und das ist kein Zufall: beide Male steht nirgends
-                   ein anderer Name. */
+                       Name leer („Ich")   5 Aufgaben
+                       Name „Redur"        0 Aufgaben
+        
+                   Die ganze Aufgabenliste war weg, und nichts sagte warum. Und selbst
+                   mit geschriebenem `erstelltVon` wäre es falsch geblieben: wer sich
+                   umbenennt, verliert sonst rückwirkend, was er angelegt hat.
+        
+                   Eine leere Personenzelle zählt aus demselben Grund wie eine
+                   fehlende Spalte — beide Male steht nirgends ein anderer Name
+                   (E152). */
                 const wer = personKey ? String(pr[personKey] || '').trim() : '';
-                const meins = wer
-                    ? wer.toLowerCase().includes(meinName.toLowerCase())
-                    : (row.erstelltVon || 'Ich') === meinName;
+                const meins = !wer || wer.toLowerCase().includes(meinName.toLowerCase());
                 if (!meins)
                     return;
                 const fertig = hakenKey ? !!pr[hakenKey]
@@ -76395,9 +76404,19 @@ const Lebensbereiche = (() => {
         const personen = allePersonen.filter(key => feldSichtbar(idText(collection.id), key));
         if (allePersonen.length && !personen.length)
             return false;
-        if (personen.length)
-            return personen.some(key => text(propsWert(row, key), 500).toLocaleLowerCase('de-CH').includes(name));
-        return text(row?.erstelltVon || 'Ich', 160).toLocaleLowerCase('de-CH') === name;
+        /* DIESELBE REGEL WIE IN `bibliothek.ts`, und das ist der Punkt: zwei
+           Listen, die „meine Aufgaben" verschieden beantworten, sind schlimmer
+           als eine, die es schlecht tut (E147). Eine gefüllte Personenzelle sagt,
+           wem die Zeile gehört; steht in keiner ein Name, gehört sie dem, der
+           zusieht. Der Vergleich mit `erstelltVon` stand hier wie dort und war
+           hier wie dort falsch — `Store.addRow` schrieb das Feld gar nicht
+           (L56, E153). */
+        const eingetragen = personen
+            .map(key => text(propsWert(row, key), 500).toLocaleLowerCase('de-CH'))
+            .filter(Boolean);
+        if (!eingetragen.length)
+            return true;
+        return eingetragen.some(wert => wert.includes(name));
     };
     const aufgaben = async (optionen = {}) => {
         const gesucht = optionBereiche(optionen), limit = limitVon(optionen.limit);

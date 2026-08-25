@@ -92,12 +92,13 @@ Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 
 1. **§43 Obsidian** — Resolver steht, kein Rundlauf-Prüflauf.
 2. **§44 Quellenwahrheit** — Provenienz an Erkennung und Elektro, nicht überall.
-3. **L56** — mit einem benannten Konto gehört womöglich keine Datenbankzeile
-   mehr irgendwem. Aus dem Quelltext gelesen, noch nicht am Programm gemessen.
+3. **§47 Visuelle Qualität** — laufende Arbeit, E140–E142 und E148 sind
+   vier Schritte davon.
 
 Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
 Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
-falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen). Und §31 (test217, E151) sowie §41 (test218, E152).
+falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen). Und §31 (test217, E151) sowie §41 (test218, E152). Dabei fiel L56 auf und ist geschlossen: wer sich
+einen Namen gab, sah seine Aufgabenliste leer (E153).
 
 ---
 

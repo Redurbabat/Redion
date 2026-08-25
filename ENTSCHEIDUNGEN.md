@@ -9952,10 +9952,13 @@ niemand erinnert, stand in keiner einzigen Liste.
 Die Regel für die leere Zelle ist jetzt dieselbe wie die für die fehlende
 Spalte, und das ist kein Zufall: beide Male steht nirgends ein anderer Name.
 
+Der erste Anlauf behielt den Vergleich mit dem Anleger für den zweiten Fall
+bei. **Der war ebenfalls kaputt**, was erst das Messen zeigte — siehe E153,
+wo die Regel ihre endgültige Form bekommt:
+
 ```js
 const wer = personKey ? String(pr[personKey] || '').trim() : '';
-const meins = wer ? wer.toLowerCase().includes(meinName.toLowerCase())
-                  : (row.erstelltVon || 'Ich') === meinName;
+const meins = !wer || wer.toLowerCase().includes(meinName.toLowerCase());
 ```
 
 Eine Aufgabe, die auf einen anderen Namen läuft, bleibt weiterhin aus meiner
@@ -9997,3 +10000,89 @@ beide Seiten des Vergleichs `'Ich'` sind. Mit einem benannten Konto dagegen
 gehört keine Zeile aus einer Datenbank ohne Personenspalte mehr irgendwem.
 Aus dem Quelltext gelesen, nicht am laufenden Programm nachgewiesen — und
 deshalb als Lücke eingetragen statt nebenbei geändert.
+
+
+---
+
+## E153 · Wer sich einen Namen gab, verlor seine Aufgabenliste
+
+**25. August 2026.** L56 hatte ich am selben Tag eingetragen — aus dem
+Quelltext gelesen, nicht am Programm nachgewiesen, und mit dem Satz: „Erst
+messen, wie ein benanntes Konto sich heute wirklich verhält."
+
+Gemessen. Derselbe Bestand, geändert wurde nur der eigene Name in den
+Einstellungen:
+
+```txt
+Name leer (also „Ich")    5 Aufgaben
+Name „Redur"              0 Aufgaben
+```
+
+Nicht die zwei neuen Zeilen fehlten — **alle fünf**, auch die aus der
+Willkommensseite. Wer sich in Redion einen Namen gibt, sah seine
+Aufgabenliste leer, und nichts sagte ihm warum.
+
+### Warum
+
+`Bibliothek.meineAufgaben` entschied für eine Datenbank ohne Personenspalte
+so:
+
+```js
+(row.erstelltVon || 'Ich') === meinName
+```
+
+`Store.addRow` schrieb `erstelltVon` aber nie — nur `addBlock` tut das. Für
+jede Datenbankzeile war der Wert `undefined`, der Vergleich lief gegen den
+Ersatzwert `'Ich'`, und `'Ich' === 'Redur'` ist falsch.
+
+### Und warum der naheliegende Fix falsch gewesen wäre
+
+Mein erster Anlauf war, `addRow` das Feld schreiben zu lassen. Das half
+nicht: die Zeilen tragen dann den Namen, der beim Anlegen galt — und wer sich
+später umbenennt, verliert rückwirkend, was er selbst angelegt hat. Gemessen
+und verworfen.
+
+Der Vergleich mit dem Anleger ist für diese Frage schlicht das falsche
+Werkzeug. Die Regel steht jetzt in einem Satz:
+
+> Eine gefüllte Personenzelle sagt, wem die Zeile gehört. Steht nirgends ein
+> Name, gehört sie dem, der zusieht.
+
+Auf einem Bestand, der auf diesem Gerät liegt, ist das die einzige Lesart —
+und in einem geteilten Arbeitsbereich gibt es die Personenspalte genau dafür.
+
+### Dieselbe Stelle noch einmal, zwanzig Dateien weiter
+
+`lebensbereiche.ts` beantwortet dieselbe Frage für die Bereichsansicht — mit
+demselben Vergleich und demselben Fehler. Zwei Listen, die „meine Aufgaben"
+verschieden beantworten, sind schlimmer als eine, die es schlecht tut; genau
+das hat E147 bei der Suche gekostet. Beide Stellen tragen jetzt dieselbe
+Regel, und test218 §9 prüft, dass die zweite nicht heimlich zurückfällt.
+
+### `addRow` schreibt `erstelltVon` trotzdem
+
+Nicht als Behebung — sie ist es nicht —, sondern weil das Feld gebraucht
+wird und fehlte:
+
+```txt
+dienst.ts:394        der Eigenschaftstyp `createdBy` las `row.erstelltVon`
+                     und bekam nie etwas: jede „Erstellt von"-Spalte zeigte
+                     den GERADE angemeldeten Namen statt des Anlegers
+schnittstelle.ts     dasselbe beim Notion-artigen Export
+steuerung.ts:3777    dasselbe in der Zeilenhistorie
+```
+
+Jeder andere Block trägt das Feld seit jeher (`indexdb.ts`, Zeile 378). Dass
+Datenbankzeilen die Ausnahme waren, ist genau die Art Inkonsistenz, auf die
+der nächste wieder hereinfällt.
+
+### Kann die Suite rot werden?
+
+**test218 §8 und §9**, sechs Punkte, an eine Suite angehängt, die schon
+43 hatte — die Frage „wem gehört eine Aufgabe" gehört an eine Stelle.
+
+Gegenprobe: die alte Besitzregel zurückgesetzt, auf einem Abzug des Baums.
+Rot werden drei Punkte, und der aussagekräftigste ist der aus §8: mit dem
+Namen „Redur" bleibt von drei erwarteten Zeilen genau eine übrig — „Eigene
+Zeile" aus der Datenbank ohne Personenspalte verschwindet, und das ist der
+Fall aus L56 in einer Zeile Ausgabe.

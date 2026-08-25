@@ -468,26 +468,29 @@ const Bibliothek = (() => {
 
       Store.rowsOf(coll.id).forEach((row: any) => {
         const pr = row.props || {};
-        /* Ohne Person-Spalte gilt: was ich angelegt habe, ist meins.
-           UND OHNE EINGETRAGENE PERSON GILT DASSELBE. Bis zum 25. August
-           entschied allein, OB es eine Personenspalte gibt — eine leere Zelle
-           darin hiess dann „gehört niemandem", und die Zeile tauchte in
-           keiner einzigen Liste auf.
+        /* WEM GEHÖRT EINE ZEILE?
+           Die Personenspalte sagt es, wenn sie gefüllt ist. Sonst gehört die
+           Zeile dem, der sie ansieht — auf einem Bestand, der auf diesem
+           Gerät liegt, ist das die einzige Lesart, und in einem geteilten
+           Arbeitsbereich gibt es die Personenspalte genau dafür.
 
-           Gefunden an §41: eine Besprechung legt ihre Aufgaben in einer
-           Datenbank mit der Spalte „Wer" ab, und wer beim Sprechen keinen
-           Namen nennt, hinterlässt sie leer. Genau diese Aufgabe — die
-           unverteilte, also die, an die sich sonst niemand erinnert — war
-           für die Aufgabenliste unsichtbar. Der Auftrag verlangt in §41
-           wörtlich, dass sie eine normale Redion-Aufgabe bleibt.
+           VORHER STAND HIER EIN VERGLEICH MIT DEM ANLEGER, und der hat
+           gekostet: `Store.addRow` schrieb `erstelltVon` gar nicht, also lief
+           der Vergleich gegen den Ersatzwert „Ich". Gemessen am 25. August —
+           derselbe Bestand, nur der Name in den Einstellungen geändert:
 
-           Die Regel für die leere Zelle ist dieselbe wie die für die
-           fehlende Spalte, und das ist kein Zufall: beide Male steht nirgends
-           ein anderer Name. */
+               Name leer („Ich")   5 Aufgaben
+               Name „Redur"        0 Aufgaben
+
+           Die ganze Aufgabenliste war weg, und nichts sagte warum. Und selbst
+           mit geschriebenem `erstelltVon` wäre es falsch geblieben: wer sich
+           umbenennt, verliert sonst rückwirkend, was er angelegt hat.
+
+           Eine leere Personenzelle zählt aus demselben Grund wie eine
+           fehlende Spalte — beide Male steht nirgends ein anderer Name
+           (E152). */
         const wer = personKey ? String(pr[personKey] || '').trim() : '';
-        const meins = wer
-          ? wer.toLowerCase().includes(meinName.toLowerCase())
-          : (row.erstelltVon || 'Ich') === meinName;
+        const meins = !wer || wer.toLowerCase().includes(meinName.toLowerCase());
         if (!meins) return;
         const fertig = hakenKey ? !!pr[hakenKey]
           : statusKey ? /fertig|erledigt|done|abgeschlossen/i.test(String(pr[statusKey] || '')) : false;

@@ -348,6 +348,88 @@ gleich('Kein Audio, kein Aufklapper, kein Häkchen',
 p('Nur der Kopf mit Datum und Dauer', leer.arten.includes('callout'), leer.arten.join(', '));
 gleich('Und die Aufgabendatenbank wächst nicht', leer.zeilen, 2);
 
+/* ==========================================================================
+ * §8 · Wem eine Aufgabe gehört — und wem nicht
+ * --------------------------------------------------------------------------
+ * Steht hier, weil §2 die Frage aufgeworfen hat. Beim Messen dafür kam etwas
+ * heraus, das mit Besprechungen nichts zu tun hat und schwerer wiegt:
+ *
+ *     Name in den Einstellungen leer („Ich")   5 Aufgaben
+ *     Name „Redur"                             0 Aufgaben
+ *
+ * Derselbe Bestand, nur der eigene Name geändert — und die ganze
+ * Aufgabenliste war weg. `Store.addRow` schrieb `erstelltVon` gar nicht, und
+ * der Vergleich lief gegen den Ersatzwert (L56, E153).
+ *
+ * Die Regel ist jetzt in einem Satz zu sagen: eine gefüllte Personenzelle
+ * sagt, wem die Zeile gehört; steht nirgends ein Name, gehört sie dem, der
+ * zusieht. Und sie steht an zwei Stellen gleich — `bibliothek.ts` und
+ * `lebensbereiche.ts` —, was §4 nachprüft.
+ * ========================================================================*/
+console.log('\n8 · Wem eine Aufgabe gehört — und wem nicht');
+
+const besitz = await seite.evaluate(async () => {
+  const B = (globalThis as any).Bibliothek;
+  const s = Store.addPage(null, { text: 'Baustelle' });
+
+  /* Eine Datenbank OHNE Personenspalte — der Normalfall für eine eigene
+     Liste. */
+  const ohne = Store.addDatabase(s.id, 'Ohne Personen',
+    { title: { name: 'Aufgabe', type: 'title' }, fertig: { name: 'Fertig', type: 'checkbox' } });
+  const z1 = Store.addRow(ohne.collectionId, { fertig: false });
+  Store.updateBlock(z1.id, { text: 'Eigene Zeile' });
+
+  /* Und eine MIT Personenspalte, in drei Ausprägungen. */
+  const mit = Store.addDatabase(s.id, 'Mit Personen', {
+    title: { name: 'Aufgabe', type: 'title' }, wer: { name: 'Wer', type: 'person' },
+    fertig: { name: 'Fertig', type: 'checkbox' } });
+  const leerZelle = Store.addRow(mit.collectionId, { wer: '', fertig: false });
+  Store.updateBlock(leerZelle.id, { text: 'Niemandem zugeteilt' });
+  const fremd = Store.addRow(mit.collectionId, { wer: 'Sara', fertig: false });
+  Store.updateBlock(fremd.id, { text: 'Für Sara' });
+  const meine = Store.addRow(mit.collectionId, { wer: 'Redur', fertig: false });
+  Store.updateBlock(meine.id, { text: 'Für Redur' });
+  await Store.flush();
+
+  const titel = (): string[] => (B.meineAufgaben() || []).map((a: any) => String(a.titel || a.text || ''));
+  const alt = Store.getMeta('nutzer', '');
+  const ohneNamen = titel();
+  Store.setMeta('nutzer', 'Redur');
+  const alsRedur = titel();
+  Store.setMeta('nutzer', alt);
+  return {
+    ohneNamen: ohneNamen.filter((x: string) => /Eigene Zeile|zugeteilt|Sara|Redur/.test(x)),
+    alsRedur: alsRedur.filter((x: string) => /Eigene Zeile|zugeteilt|Sara|Redur/.test(x)),
+    /* Und der Vermerk, der bis zum 25. August fehlte. */
+    vermerk: String(Store.getBlock(z1.id)?.erstelltVon || '')
+  };
+});
+
+gleich('Ohne eigenen Namen gehören mir die zuteilungsfreien Zeilen',
+  besitz.ohneNamen.sort(), ['Eigene Zeile', 'Niemandem zugeteilt']);
+gleich('Mit dem Namen „Redur" kommt seine Zeile dazu — und die Liste bleibt',
+  besitz.alsRedur.sort(), ['Eigene Zeile', 'Für Redur', 'Niemandem zugeteilt']);
+p('Saras Zeile bleibt in beiden Fällen draussen',
+  !besitz.ohneNamen.includes('Für Sara') && !besitz.alsRedur.includes('Für Sara'),
+  JSON.stringify([besitz.ohneNamen, besitz.alsRedur]));
+p('Und eine neue Zeile vermerkt jetzt, wer sie angelegt hat',
+  !!besitz.vermerk, besitz.vermerk || '(leer)');
+
+/* ==========================================================================
+ * §9 · Und beide Aufgabenlisten antworten gleich
+ * --------------------------------------------------------------------------
+ * `bibliothek.ts` und `lebensbereiche.ts` entscheiden dieselbe Frage. Zwei
+ * Listen mit zwei Antworten sind schlimmer als eine schlechte (E147).
+ * ========================================================================*/
+console.log('\n9 · Und beide Aufgabenlisten antworten gleich');
+
+const quelltext = fs.readFileSync(
+  path.join(WURZEL, 'src/bereiche/wissen/lebensbereiche.ts'), 'utf8');
+p('Die zweite Liste vergleicht nicht mehr mit dem Anleger',
+  !/erstelltVon \|\| 'Ich'\), 160\)\.toLocaleLowerCase\('de-CH'\) === name/.test(quelltext));
+p('Sondern zählt die eingetragenen Personen',
+  /if \(!eingetragen\.length\) return true;/.test(quelltext));
+
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);
 if (fehler.length) console.log('Browserfehler:\n  ' + fehler.join('\n  '));
