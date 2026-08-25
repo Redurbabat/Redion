@@ -1334,7 +1334,7 @@ verschlüsselte Paket ist seitdem im Sicherheitsdialog erreichbar.
 
 ---
 
-## L49 · Was in der Lernwelt noch Fassade ist
+## L49 · ~~Was in der Lernwelt noch Fassade ist~~ — abgearbeitet
 
 **24. August 2026.** Beim Beheben von E128 mit acht Agenten durchgesehen und
 gegengeprüft. Was hier steht, ist NICHT von mir einzeln nachgemessen — die
@@ -1345,11 +1345,20 @@ zuerst nach.
 nicht ganz: die Tastatur scheiterte nicht am Neuzeichnen, sondern an der
 Richtung, in die Ereignisse steigen. Was bleibt:
 
-```txt
-Der Lernpfad ist eine geordnete Liste, kein Lernpfad im Sinne des
-Auftrags — und seine Reihenfolge ist auf elf deutsche Elektro-Stichwörter
-fest verdrahtet (:1127-1128).
-```
+**Auch der Lernpfad ist erledigt (E164, 25. August)** — und anders als
+hier stand. Die elf Stichwörter sind keine Nachlässigkeit: sie sind die
+Folge aus §9 des Auftrags, und test215 §2 hält sie fest. Sie zu ersetzen
+hiesse, eine Vorgabe zu brechen.
+
+Falsch war der Satz DANEBEN. Der Kopf der Seite sagte „Der Pfad ordnet den
+Stoff" auch dann, wenn keines der elf Wörter traf und die Sortierung auf
+das Alphabet zurückfiel — Stufe 1 Calvin-Zyklus, Stufe 2 Lichtreaktion,
+Stufe 3 Zellatmung, durchnummeriert und wie Didaktik aussehend.
+
+Der Kopf sagt jetzt nur, was in beiden Fällen stimmt, und ein Kasten
+darunter nennt die Reihenfolge oder sagt, dass es keine gibt. Eine
+allgemeine Reihenfolge wäre Raten: Abhängigkeiten zwischen Themen sind
+Daten, die Redion nicht hat. test215 §3 und §8.
 
 **Das fehlende Gedächtnis ist erledigt (E163, 25. August).** `wechseln()`
 setzte `zustand.simulation` auf null — wer eine Simulation beendete, das

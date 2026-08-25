@@ -1243,19 +1243,44 @@ const Lernwelt = (() => {
       '</div></div>';
   };
 
+  /**
+   * Die Reihenfolge des Lernpfads.
+   *
+   * Elf Stichwörter, und sie sind keine Erfindung: §9 des Auftrags gibt
+   * diese Folge für die Elektro-Grundlagen vor, und test215 §2 hält sie
+   * fest. Sie zu ändern hiesse, eine Vorgabe zu brechen.
+   *
+   * WAS SIE NICHT KANN, ist alles andere. Wer Biologie lernt, bekommt für
+   * jedes Thema denselben Rang, und der Pfad fällt auf die alphabetische
+   * Sortierung zurück. Das ist vertretbar — irgendeine Ordnung braucht es —,
+   * aber die Seite behauptete daneben „Der Pfad ordnet den Stoff", und das
+   * stimmte dann nicht (L49, E164).
+   *
+   * Redion errät keine Abhängigkeiten zwischen Themen. Es gibt keine Daten
+   * dafür, und eine geratene Reihenfolge wäre schlimmer als eine
+   * offensichtlich alphabetische: sie sähe aus wie Didaktik.
+   */
+  const PFAD_REIHENFOLGE = ['grundlagen', 'spannung', 'strom', 'widerstand', 'ohm', 'reihe',
+    'parallel', 'leistung', 'energie', 'lampe', 'prüfung'];
+
   const lernpfadAnsicht = (): string => {
     const themen = liste(statistik().topics);
-    const reihenfolge = ['grundlagen', 'spannung', 'strom', 'widerstand', 'ohm', 'reihe',
-      'parallel', 'leistung', 'energie', 'lampe', 'prüfung'];
     const rang = (thema: any): number => {
       const text = String(thema.label || '').toLowerCase();
-      const index = reihenfolge.findIndex(wort => text.includes(wort));
-      return index < 0 ? reihenfolge.length : index;
+      const index = PFAD_REIHENFOLGE.findIndex(wort => text.includes(wort));
+      return index < 0 ? PFAD_REIHENFOLGE.length : index;
     };
+    /* Trifft die Vorgabe überhaupt etwas? Davon hängt ab, was unten steht. */
+    const nachVorgabe = themen.filter(thema => rang(thema) < PFAD_REIHENFOLGE.length).length;
     const sortiert = [...themen].sort((a, b) => rang(a) - rang(b) ||
       String(a.label).localeCompare(String(b.label), 'de-CH'));
     return '<div class="lw-path-page"><header class="lw-page-head"><div><p>Lernpfad</p>' +
-      '<h2>Jedes Thema ist erreichbar</h2><span>Der Pfad ordnet den Stoff. Er sperrt nichts künstlich.</span></div>' +
+      /* „Der Pfad ordnet den Stoff" stand hier auch dann, wenn er es
+         nachweislich nicht konnte — direkt über dem Kasten, der genau das
+         verneint. Was in beiden Fällen stimmt, ist die Stufenform und die
+         fehlende Sperre; WAS geordnet hat, sagt der Kasten (E164). */
+      '<h2>Jedes Thema ist erreichbar</h2><span>Der Pfad zeigt den Stoff als Stufen. ' +
+      'Er sperrt nichts künstlich.</span></div>' +
       '<button type="button" data-lw-nav="fortschritt">Fortschritt erklären</button></header>' +
       (sortiert.length
         ? '<ol class="lw-path" aria-label="Lernpfad">' + sortiert.map((thema, index) => {
@@ -1272,6 +1297,26 @@ const Lernwelt = (() => {
         : leer('🧭', 'Dein Lernpfad ist noch leer',
             'Sobald Lernkarten Themen tragen, erscheinen sie hier als frei erreichbare Stufen.',
             'capture', 'Erste Karte erstellen')) +
+      /* WAS DIESEN PFAD GEORDNET HAT — und wo die Ordnung aufhört.
+         Die Lernzentrale hat für ihre Warteschlange längst einen Kasten
+         „Warum diese Reihenfolge?". Der Pfad hatte keinen und behauptete
+         trotzdem, er ordne den Stoff. Bei Themen ausserhalb der Vorgabe
+         war das eine Zuschreibung, die niemand geprüft hat (E164). */
+      (sortiert.length
+        ? '<aside class="lw-note lw-path-why"><strong>' +
+            (nachVorgabe
+              ? 'Diese Reihenfolge kommt aus den Elektro-Grundlagen.'
+              : 'Für diesen Stoff gibt es keine hinterlegte Reihenfolge.') +
+          '</strong><p>' +
+            (nachVorgabe
+              ? 'Grundlagen, Spannung, Strom, Widerstand, Ohm, Reihe, Parallel, Leistung, ' +
+                'Energie, Lampe, Prüfung. Was darin nicht vorkommt, steht danach in ' +
+                'alphabetischer Folge — Redion errät keine Abhängigkeiten zwischen Themen.'
+              : 'Die Stufen stehen alphabetisch. Redion errät keine Abhängigkeiten ' +
+                'zwischen Themen; eine geratene Reihenfolge sähe aus wie Didaktik und ' +
+                'wäre keine.') +
+          '</p></aside>'
+        : '') +
       '<aside class="lw-note"><strong>Fortschritt und Motivation bleiben getrennt.</strong>' +
         '<p>Die Prozentzahl kommt aus deinem persönlichen SM-2-Lernstand. XP und Level zeigen nur Aktivität.</p></aside>' +
       '</div>';

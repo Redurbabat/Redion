@@ -11001,3 +11001,94 @@ Zwei Berichtigungen daraus:
 Ein Punkt: der Lernpfad ist eine geordnete Liste, und seine Reihenfolge
 hängt an elf fest verdrahteten deutschen Elektro-Stichwörtern. Das ist kein
 Fehler, sondern eine Grenze — und die nächste eigene Aufgabe.
+
+
+## E164 · Ein Pfad, der ordnet — und einer, der nur so aussieht (L49)
+
+**25. August 2026.** Der letzte offene Punkt aus L49:
+
+> Der Lernpfad ist eine geordnete Liste, kein Lernpfad im Sinne des
+> Auftrags — und seine Reihenfolge ist auf elf deutsche Elektro-Stichwörter
+> fest verdrahtet.
+
+Nachgesehen, und die Sache liegt anders, als der Satz vermuten lässt.
+
+### Die elf Wörter sind keine Nachlässigkeit
+
+```txt
+grundlagen · spannung · strom · widerstand · ohm · reihe
+parallel · leistung · energie · lampe · prüfung
+```
+
+Das ist die Folge aus **§9 des Auftrags**, und `test215 §2` hält sie fest:
+vier durcheinander angelegte Themen müssen als Grundlagen → Ohmsches Gesetz
+→ Leistung und Energie → Lampenschaltungen dastehen. Sie zu ersetzen hiesse,
+eine Vorgabe zu brechen — und zwar eine, die für ihren Zweck richtig ist.
+
+Also bleiben sie. Was nicht bleiben konnte, ist etwas anderes.
+
+### Was wirklich falsch war
+
+Der Kopf der Seite sagte, unabhängig davon, was im Bestand liegt:
+
+> Der Pfad ordnet den Stoff. Er sperrt nichts künstlich.
+
+Bei Biologie trifft keines der elf Wörter. `rang()` gibt allen Themen
+denselben Wert, die Sortierung fällt auf den Alphabet-Vergleich zurück, und
+die Seite behauptet trotzdem, sie habe geordnet.
+
+Das ist die gefährlichere Sorte Fassade. Eine alphabetische Liste sieht wie
+Didaktik aus, wenn sie sich Lernpfad nennt und durchnummeriert ist — Stufe 1
+Calvin-Zyklus, Stufe 2 Lichtreaktion, Stufe 3 Zellatmung. Wer dem folgt,
+folgt dem Anfangsbuchstaben.
+
+### Was jetzt dasteht
+
+Der Kopf sagt nur noch, was in beiden Fällen stimmt:
+
+> Der Pfad zeigt den Stoff als Stufen. Er sperrt nichts künstlich.
+
+Und darunter steht, WAS geordnet hat — dieselbe Idee wie der Kasten „Warum
+diese Reihenfolge?" in der Lernzentrale, den es dort längst gibt:
+
+```txt
+mit Vorgabe   Diese Reihenfolge kommt aus den Elektro-Grundlagen.
+              Grundlagen, Spannung, Strom, … Was darin nicht vorkommt,
+              steht danach in alphabetischer Folge — Redion errät keine
+              Abhängigkeiten zwischen Themen.
+
+ohne Vorgabe  Für diesen Stoff gibt es keine hinterlegte Reihenfolge.
+              Die Stufen stehen alphabetisch. Redion errät keine
+              Abhängigkeiten zwischen Themen; eine geratene Reihenfolge
+              sähe aus wie Didaktik und wäre keine.
+```
+
+### Warum keine allgemeine Reihenfolge
+
+Weil es die Daten nicht gibt. Eine Reihenfolge zwischen Themen ist eine
+Abhängigkeitsangabe, und Redion hat keine — weder aus den Karten noch aus
+den Seiten. Sie zu erraten (nach Fehlerzahl, nach Fälligkeit, nach
+Anlagedatum) ergäbe eine Liste, die sich fachlich begründet gibt und es
+nicht ist. Das wäre schlechter als die offensichtlich alphabetische.
+
+Wenn es einmal Abhängigkeiten gibt, ordnet der Pfad danach. Bis dahin sagt
+er, was er hat.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · immer von Elektro-Grundlagen sprechen | 2 in §8 |
+| B · dem Kasten sein Kennzeichen nehmen | 6 (§3 und §8) |
+
+Und §8 ist selbst die Gegenrichtung zu §3: ohne ihn bestünde die Prüfung
+auch mit einem Kasten, der IMMER dasselbe sagt.
+
+### Damit ist L49 abgearbeitet
+
+```txt
+Rückfall auf alle Karten                E162
+Kein Gedächtnis der Prüfungszentrale    E163
+Elf verdrahtete Stichwörter             E164 — sie bleiben, die Behauptung
+                                        daneben nicht
+```

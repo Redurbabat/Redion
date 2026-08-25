@@ -155,6 +155,22 @@ gleich('Durchnummeriert von oben', pfad.map(x => x.stufe), ['1', '2', '3', '4'])
  * ========================================================================*/
 console.log('\n3 · Keine Sperre, und der Stand kommt aus SM-2');
 
+/* UND DER PFAD SAGT, WAS IHN GEORDNET HAT (E164). Die Reihenfolge oben ist
+   die Vorgabe aus §9 — hier steht, dass die Seite das auch dazuschreibt.
+   Ohne diesen Punkt behauptet sie „Der Pfad ordnet den Stoff" und lässt
+   offen, WAS geordnet hat und was passiert, wenn nichts passt. */
+const warum = await seite.evaluate(() =>
+  (document.querySelector('.lw-path-why')?.textContent || '').replace(/\s+/g, ' ').trim());
+p('Der Pfad nennt seine Reihenfolge', /Elektro-Grundlagen/.test(warum), warum.slice(0, 120));
+p('Und zählt sie auf', /Grundlagen, Spannung, Strom/.test(warum), warum.slice(0, 160));
+p('Und sagt, dass er nichts errät', /errät keine Abhängigkeiten/.test(warum), warum.slice(-120));
+
+/* Und die Überschrift behauptet nicht mehr, was der Kasten verneinen kann. */
+const kopfText = await seite.evaluate(() =>
+  (document.querySelector('.lw-path-page .lw-page-head span')?.textContent || '').trim());
+p('Die Überschrift verspricht keine Ordnung, die es nicht immer gibt',
+  !/ordnet den Stoff/.test(kopfText), kopfText);
+
 gleich('Keine Stufe ist gesperrt', pfad.filter(x => x.gesperrt).map(x => x.thema), []);
 gleich('Jede trägt ihren Stand in Prozent',
   pfad.map(x => x.prozent), [100, 100, 50, 0]);
@@ -294,6 +310,57 @@ const geoeffnet = await seite.evaluate(async (ids: any) => {
   return { offen: String(App.aktuelleSeite() || ''), soll: ids.projekt };
 }, arbeitDaten);
 gleich('Das Projekt ist danach offen', geoeffnet.offen, geoeffnet.soll);
+
+/* ==========================================================================
+ * §8 · Und bei fremdem Stoff sagt der Pfad, dass er nichts ordnen kann
+ * --------------------------------------------------------------------------
+ * DIE GEGENRICHTUNG ZU §3. Die elf Stichwörter aus §9 sind Elektrotechnik.
+ * Wer Biologie lernt, bekommt für jedes Thema denselben Rang, und der Pfad
+ * fällt auf die alphabetische Folge zurück.
+ *
+ * Das ist vertretbar — irgendeine Ordnung braucht es. Nicht vertretbar wäre,
+ * es zu verschweigen: die Seite sagte „Der Pfad ordnet den Stoff", und wer
+ * das bei alphabetischer Folge liest, hält sie für Didaktik.
+ *
+ * Ohne diesen Abschnitt bestünde §3 auch mit einem Kasten, der IMMER von
+ * Elektro-Grundlagen spricht.
+ * ========================================================================*/
+console.log('\n8 · Und bei fremdem Stoff sagt er, dass er nichts ordnen kann');
+
+const fremd = await seite.evaluate(async () => {
+  Object.values<any>(Store.cache.blocks)
+    .filter(b => b?.type === 'flashcard' && b.alive !== false)
+    .forEach(b => { Store.trashBlock(b.id); Store.purgeBlock(b.id); });
+  const s = Store.addPage(null, { text: 'Biologie', icon: '🌿' });
+  /* Absichtlich verkehrt herum: alphabetisch wäre Calvin, Lichtreaktion,
+     Zellatmung. */
+  for (const thema of ['Zellatmung', 'Lichtreaktion', 'Calvin-Zyklus'])
+    Store.addBlock(s.id, 'flashcard', {
+      text: thema + ' — Frage :: Antwort',
+      quiz: { topic: thema, options: ['a', 'b'], correct: 0 },
+      sr: { ease: 2.5, intervall: 6, wdh: 1, faellig: '2099-01-01T00:00:00.000Z' }
+    });
+  await Store.flush();
+  (globalThis as any).Produktwelten.lernen('lernweg');
+  await new Promise(r => setTimeout(r, 1000));
+  return {
+    warum: (document.querySelector('.lw-path-why')?.textContent || '').replace(/\s+/g, ' ').trim(),
+    stufen: [...document.querySelectorAll<HTMLElement>('.lw-path li')]
+      .map(li => (li.querySelector('.lw-path-copy strong')?.textContent || '').trim())
+  };
+});
+
+gleich('Drei Stufen stehen da', fremd.stufen.length, 3);
+gleich('Und zwar alphabetisch', fremd.stufen, ['Calvin-Zyklus', 'Lichtreaktion', 'Zellatmung']);
+p('Der Kasten ist überhaupt da', !!fremd.warum, fremd.warum.slice(0, 80));
+p('Er spricht NICHT von Elektro-Grundlagen',
+  !!fremd.warum && !/Elektro-Grundlagen/.test(fremd.warum), fremd.warum.slice(0, 120));
+p('Sondern sagt, dass es keine hinterlegte Reihenfolge gibt',
+  /keine hinterlegte Reihenfolge/.test(fremd.warum), fremd.warum.slice(0, 140));
+p('Und nennt die alphabetische Folge beim Namen',
+  /alphabetisch/.test(fremd.warum), fremd.warum.slice(0, 200));
+p('Und erklärt, warum nicht geraten wird',
+  /errät keine Abhängigkeiten/.test(fremd.warum), fremd.warum.slice(-140));
 
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);
