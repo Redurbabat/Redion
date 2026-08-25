@@ -967,11 +967,17 @@ const Blocks = (() => {
           ? 'PDF · Seite ' + nr
           : quelle.kind === 'blatt' ? 'A4-Blatt'
           : String(seite?.text || quelle.label || 'Quelle');
+        /* Und die Sekunde, wenn es eine gibt (§44, E161). `zeit` ist fertig
+           formatiert, weil der Editor `bereiche/verbinden` nicht kennen darf
+           (CLAUDE.md §5 Regel 1) — die Zahl daneben (`sek`) bleibt die
+           Wahrheit, der Text ist nur die Beschriftung. */
+        const zeit = String(quelle.zeit || '').trim();
         const knopf = document.createElement('button');
         knopf.className = 'quell-marke';
         knopf.type = 'button';
-        knopf.textContent = '↩ ' + wohin;
+        knopf.textContent = '↩ ' + wohin + (zeit ? ' · ' + zeit : '');
         knopf.title = 'Dorthin springen, woraus das hier entstanden ist' +
+          (zeit ? ' — bei ' + zeit : '') +
           (quelle.region ? ' — der Ausschnitt wird hervorgehoben' : '');
         knopf.addEventListener('click', e => {
           e.preventDefault();

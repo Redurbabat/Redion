@@ -1377,8 +1377,31 @@ Stellen ändern und wird die zweite vergessen.
 
 Zusammenlegen ist Arbeit mit Prüfungen dran, nicht nebenbei.
 
+**Nachgemessen am 25. August**, damit der nächste Durchgang nicht bei null
+anfängt. Die zwei Wege liefern nicht dieselbe Form, und das ist der Grund,
+warum „einfach den anderen aufrufen" nicht reicht:
 
-## L51 · ~~Die Hauptwelten stehen in keinem Register~~ — die Seitenleiste fehlt noch
+```txt
+Lebensbereiche.aufgaben()   art · erledigt · status · faellig ·
+                            ueberfaellig · collectionId  (+ AggregatBasis)
+
+arbeitswelt.ts              id · blockId · pageId · titel · quelle ·
+                            quelleName · status · datum · zeit ·
+                            fertig · bearbeitbar · bereichIds
+```
+
+Die Arbeitswelt trägt zwei Dinge, die der andere Weg nicht hat: die
+RECHTEPRÜFUNG (`lesbareIds`, `erlaubt('bearbeiten', …)` → `bearbeitbar`)
+und die Angabe, WOHER die Aufgabe kommt (`quelle`/`quelleName`:
+Datenbankzeile oder Todo-Block).
+
+Der Weg wäre also: einen Aggregatkern bauen, der beides kann, und die zwei
+vorhandenen Formen als dünne Sichten darauf. Nicht: den einen durch den
+anderen ersetzen — dabei fiele die Rechteprüfung weg, und das ist die
+gefährliche Richtung (§46).
+
+
+## L51 · ~~Die Hauptwelten stehen in keinem Register~~ — 36 Zeilen fehlen noch
 
 **24. August 2026.** CLAUDE.md §5 Regel 2: „Neuer Bereich = zwei
 Register-Einträge." `Register.module` kannte editor, datenbanken, wissen,
@@ -1665,8 +1688,18 @@ Karte    → PDF     → Seite 14 → Ausschnitt     seit E155 vollständig
 Aufgabe  → Meeting → 00:07                     nur bis „Meeting"
 ```
 
-Die Aufgabe findet ihre Besprechung — der Rücksprung steht, geprüft in
-test220 §3. Was fehlt, ist die **Sekunde**.
+**Berichtigung vom 25. August (E161).** Dieser Satz stand hier: „Die
+Aufgabe findet ihre Besprechung — der Rücksprung steht, geprüft in test220
+§3." Er war falsch, und zwar zu freundlich.
+
+test220 §3 baut sich seinen `sourceRef` VON HAND und prüft damit den
+Zeichner. `besprechung.ts` schrieb gar keinen — der Knopf wäre an einer
+echten Besprechungsaufgabe nie erschienen. Seit E161 schreibt das Produkt
+ihn, an den Aufgabenblock und an die Datenbankzeile, und test223 geht dafür
+den Produktweg statt eines Fixtures.
+
+Was fehlte, war also mehr als die **Sekunde** — und die fehlt jetzt nur
+noch halb.
 
 Der Grund ist kein Versäumnis, sondern eine fehlende Angabe: `auswerten()`
 lässt die KI Aufgaben aus dem Protokoll ziehen, und die Antwort enthält
@@ -1681,11 +1714,17 @@ manchmal spränge er an die falsche Stelle — und eine Zeitmarke, die an der
 falschen Stelle landet, ist schlechter als gar keine: man hört hin, hört
 etwas anderes und glaubt, die Aufnahme sei kaputt.
 
-**Der saubere Weg** wäre, die KI nach der Sekunde mitzufragen — das Protokoll
-trägt die Zeiten ja im Text (`[01:02] …`). Also: `{ was, wer, bis, sek }`,
-und `sek` nur übernehmen, wenn im Protokoll wirklich eine Zeile mit dieser
-Zeit steht. Das ist eine Änderung an der KI-Anweisung und braucht ein Modell
-zum Messen; ohne eines liesse sich nur behaupten, dass es geht.
+**Gebaut am 25. August (E161).** Die KI wird nach `sek` gefragt, und die
+Antwort wird nur übernommen, wenn im Protokoll wirklich eine Zeile mit
+dieser Zeit steht. Der Knopf zeigt sie dann an: „↩ Bauleitung KW 35 ·
+25.8.2026 · 00:07".
+
+**Was weiterhin offen ist**, und deshalb bleibt diese Lücke stehen: ob ein
+echtes Modell brauchbare Sekunden liefert. Geprüft ist die Hälfte, die Code
+ist — die Frage wird gestellt (test223 §1), und eine erfundene Zeitmarke
+wird verworfen (§3). Ob die Antworten taugen, lässt sich nur mit einem
+laufenden Modell messen, und ohne eines wäre jede Aussage darüber eine
+Behauptung.
 
 
 ## L58 · ~~Die Werkzeugzeile über dem Titel rollt, ohne es zu zeigen~~

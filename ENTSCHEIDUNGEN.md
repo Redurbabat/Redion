@@ -10723,3 +10723,107 @@ dieser Eintrag anfängt, ist jetzt einer, der auffällt.
 Werkzeuge, die Apps-Liste, die untere Gruppe. Sie haben grösstenteils nicht
 einmal eine Kennung im Markup. Das steht in L51 und ist der nächste Schritt,
 nicht dieser.
+
+
+## E161 · Der Weg zurück in die Besprechung — und drei Sachen, die dabei auffielen (L57, §44)
+
+**25. August 2026.** §44 des Auftrags nennt zwei Beispiele für den Weg
+zurück zur Quelle. Das erste steht seit E155:
+
+```txt
+Karte    → PDF     → Seite 14 → Ausschnitt     ✅ E155
+Aufgabe  → Meeting → 00:07                     hier
+```
+
+L57 hielt fest, was fehlt: die Sekunde. Und L57 schrieb dazu, der Rest sei
+erledigt — „die Aufgabe findet ihre Besprechung, geprüft in test220 §3".
+
+Das stimmte nicht.
+
+### Fund 1: das Produkt schrieb gar keine Herkunft
+
+test220 §3 baut sich seinen `sourceRef` von Hand und prüft damit den
+Zeichner: erscheint der Knopf, nennt er die Besprechung, springt er hin. Das
+ist richtig und beweist die halbe Sache.
+
+`besprechung.ts` legte Aufgabenblock und Datenbankzeile aber ohne jede
+Herkunft an. Der Knopf, den test220 prüft, wäre an einer echten
+Besprechungsaufgabe **nie erschienen**. Eine Prüfung mit selbstgebautem
+Fixture kann das nicht sehen — sie prüft den Zeichner, nicht den Erzeuger.
+
+Also schreibt `seiteAnlegen` jetzt beides: den `sourceRef` am Todo-Block auf
+der Besprechungsseite und denselben an der Zeile in „Aufgaben aus
+Besprechungen". Und test223 geht den PRODUKTWEG, nicht den Fixture-Weg.
+
+### Fund 2: das Ziel war da und unsichtbar
+
+Das volle Transkript steht in einer Aufklappzeile, die zu ist. Ihre Kinder
+werden gezeichnet und stehen auf `display:none`.
+
+`rolleZu` sucht `[data-bid=…]`, **findet** das Element, rollt hin, hebt es
+hervor und meldet Erfolg. Zu sehen ist nichts.
+
+Das betrifft jeden Tieflink in eine zugeklappte Zeile, nicht nur diesen.
+`zeigeBlock` klappt die Vorfahren jetzt auf, bevor es rollt.
+
+Die Prüfung dazu misst deshalb die HÖHE der Zielzeile und nicht ihr
+Vorhandensein — und die Gegenprobe zeigt genau, warum: ohne das Aufklappen
+bleibt „Die Zielzeile steht im Bild" **grün** und nur „Und sie ist wirklich
+zu sehen" wird rot.
+
+### Fund 3, der eigentliche Auftrag: die Sekunde
+
+Die KI wird jetzt danach gefragt:
+
+```txt
+"aufgaben":[{"was":…,"wer":…,"bis":…,"sek":0}]
+
+Bei „sek" trägst du die Zeitmarke der Zeile ein, in der die Aufgabe
+besprochen wird — die Zahl aus [mm:ss] am Zeilenanfang, umgerechnet in
+Sekunden. Bist du dir nicht sicher, lässt du „sek" weg.
+```
+
+Und geglaubt wird die Antwort nur, wenn das Protokoll wirklich eine Zeile
+mit dieser Zeit enthält. L57 hat den Grund schon aufgeschrieben: eine
+Zeitmarke, die an der falschen Stelle landet, ist schlechter als gar keine —
+man hört hin, hört etwas anderes und hält die Aufnahme für kaputt.
+
+Die Prüfung dafür braucht kein Modell. `Meeting.seiteAnlegen` bekommt ein
+Ergebnis mit drei Aufgaben: `sek: 7` (die Zeile gibt es), `sek: 999` (die
+gibt es nicht) und gar keine Angabe. Die erste bekommt Zeit und Ziel, die
+anderen beiden zeigen auf die Besprechungsseite und tragen keine Zeit.
+
+### Was der Knopf sagt
+
+```txt
+↩ Bauleitung KW 35 · 25.8.2026 · 00:07     mit Zeitmarke
+↩ Bauleitung KW 35 · 25.8.2026            ohne
+```
+
+Das Datum kommt aus dem Seitentitel, und der Editor nimmt bewusst den
+aktuellen Titel und nicht das eingefrorene Etikett — wer die Seite
+umbenennt, soll den neuen Namen sehen.
+
+`zeit` steht als fertiger Text im `sourceRef`, neben der Zahl `sek`. Der
+Editor darf `bereiche/verbinden` nicht kennen (CLAUDE.md §5 Regel 1), und
+eine zweite Formatierfunktion wäre genau die Abschrift, die E159 eben erst
+zusammengelegt hat.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · kein `sourceRef` am Aufgabenblock | 7 |
+| B · die genannte Sekunde ungeprüft glauben | 2 |
+| C · `klappeAuf` in `zeigeBlock` weglassen | 2 |
+| D · kein `sourceRef` an der Datenbankzeile | 3 |
+
+C ist die lehrreichste: „steht im Bild" bleibt grün, „ist wirklich zu sehen"
+wird rot. Genau dieser Unterschied war Fund 2.
+
+### Was offen bleibt
+
+Ob ein echtes Modell brauchbare Sekunden liefert, steht hier nicht. Geprüft
+ist die Hälfte, die Code ist: die Frage wird gestellt, und eine falsche
+Antwort wird verworfen. Die andere Hälfte braucht ein Modell zum Messen und
+bleibt in L57 stehen — kleiner als vorher, aber offen.

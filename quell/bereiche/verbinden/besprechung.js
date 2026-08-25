@@ -305,10 +305,19 @@ const Meeting = (() => {
             '{"titel":"kurzer Titel der Besprechung",' +
             '"zusammenfassung":["Punkt 1","Punkt 2"],' +
             '"entscheidungen":["Was beschlossen wurde"],' +
-            '"aufgaben":[{"was":"Aufgabe","wer":"Name oder leer","bis":"JJJJ-MM-TT oder leer"}],' +
+            '"aufgaben":[{"was":"Aufgabe","wer":"Name oder leer","bis":"JJJJ-MM-TT oder leer",' +
+            '"sek":0}],' +
             '"themen":["Thema"],"beteiligte":["Name"]}\n' +
             'Höchstens sechs Punkte je Liste. Alles auf Deutsch. ' +
-            'Erfinde nichts — was nicht im Text steht, lässt du weg.';
+            'Erfinde nichts — was nicht im Text steht, lässt du weg.\n' +
+            /* §44 will den Weg zurück bis auf die Sekunde. Die Zeiten stehen im
+               Protokoll ([mm:ss] am Zeilenanfang); welche Zeile zu welcher
+               Aufgabe gehört, weiss nur, wer den Text gelesen hat. Also fragen
+               wir danach — und glauben die Antwort nur, wenn es die Zeile
+               wirklich gibt (siehe `sekundeAusText`, E161). */
+            'Bei „sek" trägst du die Zeitmarke der Zeile ein, in der die Aufgabe ' +
+            'besprochen wird — die Zahl aus [mm:ss] am Zeilenanfang, umgerechnet ' +
+            'in Sekunden. Bist du dir nicht sicher, lässt du „sek" weg.';
         if (beiFortschritt)
             beiFortschritt('Die KI liest mit …');
         const roh = await KI.frageKurz('Das Protokoll:\n\n' + String(text).slice(0, 12000), anweisung);
@@ -339,11 +348,40 @@ const Meeting = (() => {
             Store.addBlock(p.id, 'h2', { text: 'Entscheidungen' });
             ergebnis.entscheidungen.forEach((x) => Store.addBlock(p.id, 'quote', { text: String(x) }));
         }
+        /* WELCHE SEKUNDEN ES IM PROTOKOLL WIRKLICH GIBT.
+           Die KI darf zu jeder Aufgabe eine Zeitmarke nennen. Geglaubt wird sie
+           nur, wenn eine Zeile mit genau dieser Zeit dasteht — geraten wäre
+           schlimmer als gar nichts: man springt hin, hört etwas anderes und
+           hält die Aufnahme für kaputt (L57).
+    
+           Dasselbe Muster wie unten beim Transkript, absichtlich Zeichen für
+           Zeichen: was hier nicht als Zeitmarke gilt, bekommt dort auch keinen
+           `audioRef`, und dann zeigte der Sprung ins Leere. */
+        const ZEITMARKE = /^\[(?:(\d+):)?(\d{1,2}):(\d{2})\]\s*/;
+        const sekundenImText = new Set();
+        String(transkript || '').split('\n').forEach(z => {
+            const m = ZEITMARKE.exec(z.trim());
+            if (m)
+                sekundenImText.add(Number(m[1] || 0) * 3600 + Number(m[2]) * 60 + Number(m[3]));
+        });
+        const sekundeAusText = (a) => {
+            const s = Math.round(Number(a?.sek));
+            if (!Number.isFinite(s) || s < 0)
+                return null;
+            return sekundenImText.has(s) ? s : null;
+        };
+        /* Die Aufgabenblöcke entstehen VOR dem Transkript, ihr Ziel liegt aber
+           darin. Also erst anlegen und merken, den `sourceRef` weiter unten
+           nachtragen — das ist billiger, als die Seite umzusortieren. */
+        const aufgabenBloecke = [];
         if ((ergebnis.aufgaben || []).length) {
             Store.addBlock(p.id, 'h2', { text: 'Aufgaben' });
-            ergebnis.aufgaben.forEach((a) => Store.addBlock(p.id, 'todo', {
-                text: String(a.was || a) + (a.wer ? ' — ' + a.wer : '') + (a.bis ? ' (bis ' + a.bis + ')' : '')
-            }));
+            ergebnis.aufgaben.forEach((a) => {
+                const b = Store.addBlock(p.id, 'todo', {
+                    text: String(a.was || a) + (a.wer ? ' — ' + a.wer : '') + (a.bis ? ' (bis ' + a.bis + ')' : '')
+                });
+                aufgabenBloecke.push({ id: b.id, sek: sekundeAusText(a) });
+            });
         }
         if ((ergebnis.themen || []).length) {
             Store.addBlock(p.id, 'h2', { text: 'Themen' });
@@ -374,32 +412,67 @@ const Meeting = (() => {
                 }));
             }
         }
+        /* Welche Zeile zu welcher Sekunde gehört — für den Rücksprung unten. */
+        const zeileZurSekunde = new Map();
         if (transkript && !E.transkriptLoeschen()) {
             const t = Store.addBlock(p.id, 'toggle', { text: 'Volles Transkript', open: false });
             String(transkript).split('\n').slice(0, 400).forEach(z => {
                 if (!z.trim())
                     return;
-                const m = /^\[(?:(\d+):)?(\d{1,2}):(\d{2})\]\s*/.exec(z.trim());
+                const m = ZEITMARKE.exec(z.trim());
                 const sek = m ? (Number(m[1] || 0) * 3600 + Number(m[2]) * 60 + Number(m[3])) : null;
-                Store.addBlock(t.id, 'text', Object.assign({ text: z }, audioBlock && sek !== null
+                const zeile = Store.addBlock(t.id, 'text', Object.assign({ text: z }, audioBlock && sek !== null
                     ? { audioRef: {
                             blockId: audioBlock.id,
                             dateiId: typeof audio === 'string' ? undefined : audio?.dateiId,
                             sek
                         } }
                     : {}));
+                if (sek !== null && !zeileZurSekunde.has(sek))
+                    zeileZurSekunde.set(sek, zeile.id);
             });
         }
+        /* DER WEG ZURÜCK (§44, E161).
+           Bis hierher schrieb `seiteAnlegen` gar keine Herkunft — eine Aufgabe
+           aus einer Besprechung wusste nicht, woher sie kam. Der Rücksprung im
+           Editor gab es zwar, aber nur für Blöcke, die anderswo einen
+           `sourceRef` bekamen; für Besprechungsaufgaben war er tote Mechanik.
+    
+           Mit Sekunde zeigt der Knopf sie an: „↩ Bauleitung KW 35 · 01:02".
+           `zeit` steht als fertiger Text daneben, damit der Editor die Zahl
+           nicht formatieren muss — er darf `bereiche/verbinden` nicht kennen
+           (CLAUDE.md §5 Regel 1), und eine zweite Formatierfunktion wäre genau
+           die Abschrift, die E159 gerade zusammengelegt hat. */
+        const quelleFuer = (sek) => {
+            const zielId = sek !== null ? zeileZurSekunde.get(sek) : undefined;
+            return Object.assign({
+                version: 1,
+                kind: zielId ? 'block' : 'seite',
+                pageId: p.id,
+                blockId: zielId || p.id,
+                label: String(p.text || 'Besprechung'),
+                createdAt: Store.now()
+            }, sek !== null ? { sek, zeit: zeitText(sek) } : {});
+        };
+        aufgabenBloecke.forEach(x => {
+            const quelle = quelleFuer(x.sek);
+            Store.updateBlock(x.id, { sourceRef: quelle, lernquelle: quelle });
+        });
         /* Aufgaben zusätzlich in eine Datenbank, damit sie nicht nur auf dieser
            Seite stehen — genau das macht Notion auch. */
         if ((ergebnis.aufgaben || []).length) {
             const db = aufgabenDatenbank();
-            ergebnis.aufgaben.forEach((a) => {
+            ergebnis.aufgaben.forEach((a, i) => {
                 const r = Store.addRow(db.id, {
                     wer: a.wer || '', bis: a.bis || '', status: 'Offen',
                     quelle: ergebnis.titel || 'Besprechung', seite: p.id
                 });
-                Store.updateBlock(r.id, { text: String(a.was || a) });
+                /* Die Zeile in der Datenbank ist dieselbe Aufgabe wie der Block auf
+                   der Seite — sie bekommt denselben Weg zurück. Ohne ihn steht in
+                   „Meine Aufgaben" eine Zeile ohne Herkunft, und die Spalte
+                   „quelle" nennt nur einen Titel, den man nicht anklicken kann. */
+                const quelle = quelleFuer(aufgabenBloecke[i]?.sek ?? null);
+                Store.updateBlock(r.id, { text: String(a.was || a), sourceRef: quelle });
             });
         }
         App.zeichneBaum();

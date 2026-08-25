@@ -2223,6 +2223,38 @@ const App = (() => {
   };
 
   /**
+   * Aufklappzeilen über einem Ziel öffnen.
+   *
+   * EIN ZIEL IN EINER ZUGEKLAPPTEN AUFKLAPPZEILE IST DA UND UNSICHTBAR.
+   * `.toggle-kids` steht auf `display:none`, die Kinder werden aber sehr
+   * wohl gezeichnet — `rolleZu` findet `[data-bid=…]`, meldet Erfolg, und
+   * auf dem Bildschirm passiert nichts.
+   *
+   * Aufgefallen beim Weg zurück in die Besprechung (E161): das volle
+   * Transkript steht in einer Aufklappzeile, die zu ist. Der Sprung auf
+   * „01:02" traf die richtige Zeile und zeigte sie nicht. Betroffen war
+   * jeder Tieflink dorthin, nicht nur dieser.
+   *
+   * Die Tiefe ist begrenzt: eine kaputte Elternkette darf hier nicht
+   * hängenbleiben.
+   */
+  const klappeAuf = (blockId: string): boolean => {
+    let geaendert = false;
+    let b = Store.getBlock(blockId);
+    let tiefe = 0;
+    while (b && b.parentTable === 'block' && b.parentId && tiefe++ < 64) {
+      const eltern = Store.getBlock(String(b.parentId));
+      if (!eltern) break;
+      if ((eltern.type === 'toggle' || eltern.toggleKopf) && !eltern.open) {
+        Store.updateBlock(eltern.id, { open: true });
+        geaendert = true;
+      }
+      b = eltern;
+    }
+    return geaendert;
+  };
+
+  /**
    * Zu einem Block springen — Seite öffnen, hinrollen, hervorheben.
    * Gibt zurück, ob es geklappt hat.
    */
@@ -2258,8 +2290,9 @@ const App = (() => {
     }
     /* Ist die Seite schon offen, NICHT neu öffnen: `oeffne` setzt den Lauf
        zurück auf null und zählt einen Aufruf mit. Rollen genügt. */
+    const aufgeklappt = klappeAuf(blockId);
     if (aktuelleSeite() !== seite.id) oeffne(seite.id);
-    else if (ansichtGeaendert) zeichneSeite();
+    else if (ansichtGeaendert || aufgeklappt) zeichneSeite();
     rolleZu(blockId);
     return true;
   };

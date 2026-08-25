@@ -66,7 +66,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 41 | Meetings | ✅ | `besprechung.ts` mit Aufnahme, Marken und Auswertung. NACHGESEHEN: test32 deckte nur den Seitenleisten-Abschnitt, test35 einen Menüeintrag. Der fehlende Lauf ist test218 (sieben Abschnitte, 43 Punkte) — er fand, dass die unverteilte Aufgabe in keiner Liste stand (E152) |
 | 42 | Wissen | ✅ | `verweise.ts`, test195 |
 | 43 | Obsidian / Vault | ✅ | Resolver für Titel, Aliasse, Vault-Pfade (E129). Der Rundlauf läuft jetzt einmal ganz durch: test219 (sechs Abschnitte, 31 Punkte) — Export, Einlesen, nochmal Einlesen, ohne Kennung, mit kaputter Kennung, und ein fremder Vault mit gleichem Titel (E154) |
-| 44 | Quellenwahrheit | ◐ | Jedes abgeleitete Objekt trägt seinen `sourceRef` (E129/E130) und findet seit E155 auch zurück: ein Knopf, der das Ziel benennt („↩ PDF · Seite 14"), test220 (21 Punkte), `bilder.mts quelle`. Offen bleibt die Sekunde bei Aufgaben aus Besprechungen — die Angabe existiert nicht (L57) |
+| 44 | Quellenwahrheit | ◐ | Jedes abgeleitete Objekt trägt seinen `sourceRef` (E129/E130) und findet seit E155 auch zurück: ein Knopf, der das Ziel benennt („↩ PDF · Seite 14"), test220 (21 Punkte), `bilder.mts quelle`. Seit E161 auch aus der Besprechung heraus, mit Sekunde: die KI wird danach gefragt, und eine Zeitmarke, die im Protokoll nicht vorkommt, wird verworfen (test223, 22 Punkte). Dabei fiel auf, dass das Produkt bis dahin gar keine Herkunft schrieb — test220 §3 prüfte den Zeichner an einem selbstgebauten Fixture. Offen bleibt nur noch, ob ein echtes Modell brauchbare Sekunden liefert (L57) |
 | 45 | Startseite | ✅ | Heute-Dashboard, test208 |
 | 46 | Schnellaktionen | ✅ | elf Wege im Neu-Blatt, test114 (E138/E139) |
 | 47 | Visuelle Qualität | ◐ | Laufende Arbeit, und sie hört nicht auf: E140 (Umlaute), E141 (PDF-Leiste am Telefon), E142 (Kontrast), E148 (abgeschnittene Zähler, Streifen über der Produktwelt, Platzhalter, 120 verlorene Pixel), E151 (Handlung über der Falz). Festgehalten in test214 und test217 — was gemessen ist, kann nicht zurückrutschen |
@@ -124,6 +124,7 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | CLAUDE.md §5 | E158, test222 | sechs Bereiche standen in keinem Katalog; **L51 halb zu** |
 | §47 | E159, test221/217 | ein schwarzer Schatten auf schwarzem Grund; **L58 zu** |
 | CLAUDE.md §5 | E160, test222 §5 | drei Registereinträge waren falsch, weil sie niemand las |
+| §44 | E161, test223 | Besprechungsaufgaben bekommen ihre Herkunft — und die Sekunde |
 
 Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
 test206, test218 und test86. Gezählt, nicht geschätzt:
