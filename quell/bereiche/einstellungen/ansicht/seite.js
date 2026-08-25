@@ -251,7 +251,7 @@ const Einstellungen = (() => {
             zeile('Systemmeldungen', 'Erlaubnis des Browsers einholen', knopf('benachr-erlauben', ('Notification' in window && Notification.permission === 'granted')
                 ? 'Bereits erlaubt' : 'Erlauben')) +
             zeile('Erinnerungen in der App', 'Der Streifen unten am Bildschirm', schalter('erinnernInApp', V('erinnernInApp', true))) +
-            zeile('Karteikarten', 'Beim Start melden, wenn Karten fällig sind', schalter('kartenMelden', V('kartenMelden', true))) +
+            zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind', schalter('kartenMelden', V('kartenMelden', true))) +
             zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter((e) => !e.erledigt).length} offen</span>`) +
             zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
         verbindungen: () => {
@@ -1090,12 +1090,30 @@ const Einstellungen = (() => {
         anwenden();
         if (V('seiteZu', false))
             document.getElementById('sidebar')?.classList.add('collapsed');
-        /* Fällige Karteikarten melden */
+        /* FÄLLIGE KARTEIKARTEN MELDEN — EINMAL AM TAG, NICHT BEI JEDEM START.
+         *
+         * Der Schalter dazu gibt es seit jeher („Karteikarten · Beim Start
+         * melden"), und er stand auf an. Nur meldete es bei JEDEM Öffnen und
+         * bei jedem Neuladen — wer an Redion arbeitet, sah den Streifen
+         * vierzigmal am Tag, und wer ihn wegdrücken wollte, musste die
+         * ganze Meldung abschalten.
+         *
+         * Eine Erinnerung, die man schon kennt, ist keine Erinnerung mehr.
+         * Also merkt sie sich den TAG, an dem sie gezeigt wurde.
+         *
+         * Der Merker wird nur gesetzt, wenn wirklich etwas gezeigt wurde. Sonst
+         * würde ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr
+         * verschlucken, wenn dann welche fällig sind. */
         if (V('kartenMelden', true)) {
-            const n = Werkzeuge.faellig().length;
-            if (n)
-                setTimeout(() => UI.toast('🎴 ' + n +
-                    (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
+            const heute3 = new Date().toISOString().slice(0, 10);
+            if (Store.getMeta('kartenGemeldet', '') !== heute3) {
+                const n = Werkzeuge.faellig().length;
+                if (n) {
+                    Store.setMeta('kartenGemeldet', heute3);
+                    setTimeout(() => UI.toast('🎴 ' + n +
+                        (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
+                }
+            }
         }
     };
     return { oeffne, start, anwenden, datum, wochenstart, V, S, GRUPPEN, BEREICHE };

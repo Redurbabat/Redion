@@ -428,17 +428,71 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 /* Dashboard-Ansicht */
 .dash{display:flex; flex-direction:column; gap:14px}
 .dash-zahlen{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px}
-.dash-karte{border:1px solid var(--line); border-radius:9px; padding:14px 16px;
-  display:flex; flex-direction:column; gap:3px}
+/* DER STREIFEN OBEN IST FÜR DIE GRIFFE, und er ist IMMER da (E185).
+   Erste Fassung: die Griffe lagen absolut oben rechts ÜBER dem Inhalt.
+   Gemessen sah das so aus — `408000` mit einem Knopf über der letzten
+   Null, also lesbar als `40800`. Beide Zahlen sind gültig, nur eine ist
+   die richtige: derselbe Fund wie in CLAUDE.md §55.2.
+
+   Der Platz wird deshalb RESERVIERT statt beim Darüberfahren geschaffen.
+   Ihn erst beim Zeigen zu nehmen hiesse, dass jede Kachel unter dem
+   Mauszeiger springt — und 18 px Streifen sind billiger als eine Zahl,
+   die etwas anderes behauptet, als sie ist. */
+.dash-karte{border:1px solid var(--line); border-radius:9px; padding:30px 16px 14px;
+  display:flex; flex-direction:column; gap:3px; position:relative}
+
+/* --- Die Griffe an einer Kachel (E185) ------------------------------------
+   Bis dahin gab es nur „Alle Kacheln entfernen": wer eine falsche
+   hinzugefügt hatte, musste alle wegwerfen. Sie sind unsichtbar, bis man
+   die Kachel berührt — und am Telefon IMMER da, weil es dort kein
+   Darüberfahren gibt (§37). 28 px sind unter den 44 px aus §38; das ist
+   vertretbar, weil es keine Kernfunktion ist und daneben nichts liegt, was
+   man versehentlich träfe. */
+.dk-griffe{position:absolute; top:4px; right:6px; display:flex; gap:2px; opacity:0;
+  transition:opacity .12s}
+.dash-karte:hover .dk-griffe, .dash-block:hover .dk-griffe,
+.dk-griffe:focus-within{opacity:1}
+.dk-griffe button{width:24px; height:22px; border:0; border-radius:6px; padding:0;
+  background:var(--bg-hover); color:var(--text-dim); font-size:13px; line-height:1; cursor:pointer}
+.dk-griffe button:hover{background:var(--bg-input); color:var(--text)}
+/* Am Telefon gibt es kein Darüberfahren — dort stehen sie immer da, und
+   dann brauchen sie auch mehr Streifen (§37). */
+@media (hover:none){
+  .dk-griffe{opacity:1}
+  .dk-griffe button{width:30px; height:28px}
+  .dash-karte{padding-top:36px}
+  .dash-block{padding-top:38px}
+  .dash-block.dash-kachel h4{padding-right:0} }
+
+/* --- Die Kennzahl mit Ziel (E185) -----------------------------------------
+   Eine Zahl allein ist keine Kennzahl: „48 000" sagt nichts, „48 000 von
+   60 000" sagt alles. Die Farbe kommt an den RAND und an den Balken, nicht
+   auf die Zahl — auf Farbe allein darf keine Information liegen (§38). Das
+   Zeichen ✓ ▴ ▾ trägt dieselbe Aussage ohne Farbe. */
+.dash-kpi{gap:5px}
+.dz-ziel{font-size:12px; color:var(--text-dim); font-variant-numeric:tabular-nums}
+.dz-balken{height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden; margin-top:2px}
+.dz-balken i{display:block; height:100%; border-radius:3px; background:var(--text-faint)}
+.dash-karte.kpi-gut{border-color:#3f8f5f}
+.dash-karte.kpi-gut .dz-balken i{background:#3f8f5f}
+.dash-karte.kpi-offen{border-color:#b07a2a}
+.dash-karte.kpi-offen .dz-balken i{background:#b07a2a}
 .dz-wert{font-size:26px; font-weight:600; line-height:1.1}
 .dz-name{font-size:12px; color:var(--text-faint)}
-.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px}
+.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px; position:relative}
+/* Die Überschrift darf umbrechen — eine Zahl darf das nicht. Deshalb hier
+   Platz zur Seite statt eines Streifens nach oben. */
+.dash-block.dash-kachel h4{padding-right:88px}
 .dash-block h4{font-size:13px; font-weight:500; color:var(--text-dim); margin:0 0 10px}
 .dash-balken{display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px}
 .db-name{width:120px; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .db-strich{flex:1; height:9px; background:var(--bg-input); border-radius:5px; overflow:hidden}
 .db-strich i{display:block; height:100%; border-radius:5px}
-.db-zahl{width:34px; text-align:right; color:var(--text-faint); font-size:12.5px}
+/* 34 px reichten für eine Anzahl. Seit die Verteilung auch SUMMEN zeigen
+   kann (E185), stehen dort Beträge — `min-width` statt `width`, sonst
+   endet „184 500" als „184 5". Genau der Fund aus CLAUDE.md §55.2. */
+.db-zahl{min-width:34px; flex:0 0 auto; text-align:right; color:var(--text-faint);
+  font-size:12.5px; font-variant-numeric:tabular-nums}
 .dash-zeile{display:flex; align-items:center; gap:12px; width:100%; padding:6px 4px;
   border-radius:6px; font-size:13.5px; text-align:left}
 .dash-zeile:hover{background:var(--bg-hover)}

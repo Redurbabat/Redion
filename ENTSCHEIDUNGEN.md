@@ -12742,3 +12742,158 @@ Prüfung, die nicht rot werden kann, ist keine (§55.2).
 Zwei Gegenproben, einzeln nachgewiesen: die senkrechte Achse auf die
 waagerechte zurückgedreht macht 2 Punkte rot, die Höhe zurück auf 56vh macht
 4 rot.
+
+---
+
+## E184 · Eine Erinnerung, die man schon kennt
+
+**25. August 2026.** Aus Redurs Mund, während er an etwas anderem arbeitete:
+
+> „kannst du die ‚1 Karte ist fällig'-Meldung weg machen, das kommt immer."
+
+Sie kam wirklich immer: bei jedem Öffnen und bei jedem Neuladen, 1,8
+Sekunden nach dem Start, quer über den unteren Bildschirmrand — auch über
+einen gerade geöffneten Dialog.
+
+Den Schalter dafür gab es seit jeher („Karteikarten · Beim Start melden"),
+und er stand auf an. Aber das war die einzige Wahl: alles oder nichts. Wer
+an Redion arbeitet und vierzigmal neu lädt, sah sie vierzigmal.
+
+**Falsch war nicht, dass es sie gibt, sondern wie oft.** Eine Erinnerung,
+die man schon kennt, ist keine Erinnerung mehr, sondern Lärm — und Lärm
+bringt einen dazu, auch das Nützliche abzuschalten. Sie merkt sich jetzt den
+Tag.
+
+Der Merker wird **nur gesetzt, wenn wirklich etwas gezeigt wurde.** Sonst
+verschluckte ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr,
+wenn dann welche fällig sind. Das ist der Punkt, den man beim Bauen leicht
+falsch macht, und `test236` §5 hält ihn fest.
+
+Prüflauf: `test236`, 16 Punkte. Die Gegenprobe — das alte „bei jedem Start"
+wieder eingebaut — macht genau die zwei Punkte rot, über die sich beschwert
+wurde.
+
+Beim Schreiben der Prüfung fiel noch etwas auf: der erste Wurf suchte
+`.toast`-Knoten. Die gibt es nicht — es gibt EIN Element `#toast`, dem
+`.show` angehängt wird. Alle „kein Streifen"-Punkte waren damit grün, ohne
+irgendetwas zu messen. Sie lesen jetzt `#toast` samt `.show`.
+
+---
+
+## E185 · Das Dashboard sieht über den eigenen Rand (L17)
+
+**25. August 2026.**
+
+L17 nannte vier fehlende Dinge, und beim Nachsehen hingen alle vier an
+derselben Stelle: daran, was in einer Kachel stehen darf.
+
+```txt
+mehrere Datenquellen   `quelle`   eine FREMDE Datenbank statt der eigenen
+KPI-Karten             `ziel`     eine Zahl gegen ein Ziel, mit Richtung
+Layout                 —          jede Kachel einzeln weg und verschieben
+Diagrammquellen        `wertKey`  die Verteilung SUMMIERT eine Spalte
+```
+
+### Die fremde Quelle
+
+Bis hierher zeigte ein Dashboard genau eine Datenbank: seine eigene. Jetzt
+kann eine Kachel sagen, woher sie ihre Zahlen nimmt — „Summe · Betrag aus
+Rechnungen" auf einem Dashboard über Aufträge.
+
+**Die fremden Zeilen kommen ungefiltert.** Ein Filter gehört zu einer
+Ansicht, und die fremde Datenbank hat ihre eigenen — welche davon gälte? Eine
+Kachel „Summe · Betrag aus Rechnungen" muss den Betrag ALLER Rechnungen
+nennen, sonst nennt sie eine Zahl, deren Bedeutung von einer Einstellung
+anderswo abhängt. Das ist die Sorte Zahl, der man nicht trauen kann. Unter
+der Karte steht der Name der Quelle, damit man weiss, woher sie kommt, und
+im Fuss steht, wie viele Kacheln von woanders sind.
+
+Eine Quelle, die es nicht mehr gibt, ergibt 0 statt eines Absturzes — eine
+gelöschte Datenbank ist ein normaler Fall.
+
+### Die Kennzahl mit Ziel
+
+Eine Zahl allein ist keine Kennzahl. „48 000" sagt nichts; „48 000 von
+60 000" sagt alles. Dazu die **Richtung**: bei Umsatz ist mehr besser, bei
+Fehlern und Kosten weniger. Ohne sie müsste die Farbe raten, und eine
+ratende Farbe ist schlimmer als keine — deshalb wird beim Anlegen gefragt.
+
+```txt
+200 von 400, Ziel erreichen     ▴ 50 %,  orange   noch nicht
+200 von 150, Ziel erreichen     ✓ 133 %, grün     geschafft
+200 von 400, Obergrenze         ✓,       grün     gehalten
+200 von 150, Obergrenze         ▾ 133 %, orange   gerissen
+ohne Ziel                       „Ohne Ziel"       kein Balken, keine Farbe
+```
+
+**Der Balken wird bei 100 % gekappt, die Zahl nicht.** Ohne den Deckel liefe
+er aus der Karte, und 340 % sähen aus wie 100 %. Die Zahl daneben sagt
+weiterhin die Wahrheit.
+
+**Und die Farbe trägt die Aussage nicht allein** (§38): ✓ ▴ ▾ stehen daneben,
+und die Farbe liegt am Rand und am Balken, nicht auf der Zahl.
+
+### Die Diagrammquelle
+
+Die Verteilung zählte immer nur ZEILEN: „12 Aufträge in Zürich". Was man
+wissen will, ist meistens „180 000 Umsatz in Zürich" — dieselbe Gruppierung,
+ein anderer Wert. `wertKey` nennt die Zahlenspalte; ohne ihn wird gezählt
+wie bisher.
+
+Bei einer Mehrfachauswahl zählt eine Zeile in JEDER ihrer Gruppen, und die
+Summe der Balken ist dann grösser als das Ganze. Das ist richtig so und
+steht als Kommentar im Code, damit es nicht später als Fehler „behoben" wird.
+
+### Das Layout
+
+Es gab „Alle Kacheln entfernen" und sonst nichts. Wer eine falsche
+hinzugefügt hatte, musste alle wegwerfen. Jetzt hat jede Kachel drei
+Griffe: nach vorn, nach hinten, weg. Die Reihenfolge steht in der Ansicht,
+nicht nur im Bild.
+
+Was Griffe trägt, bekommt die Klasse `dash-kachel`. „Zuletzt geändert" und
+„Als Nächstes" tragen dieselbe Klasse `dash-block`, sind aber feste Teile
+des Dashboards — ohne diese Marke kann weder die CSS noch ein Prüflauf die
+beiden auseinanderhalten.
+
+### Was das Hinsehen fand, und keine Prüfung hatte
+
+Die Griffe lagen absolut oben rechts **über dem Inhalt**. Im Bild stand:
+
+```txt
+408000
+   ⟵ und darüber, auf der letzten Null, der ✕-Knopf
+```
+
+Also lesbar als `40800`. Beide sind gültige Zahlen, nur eine ist die
+richtige — derselbe Fund wie in CLAUDE.md §55.2, wo `634.2166666667` als
+`34.2166666667` dastand.
+
+Der Platz wird jetzt **reserviert** statt beim Darüberfahren geschaffen. Ihn
+erst beim Zeigen zu nehmen hiesse, dass jede Kachel unter dem Mauszeiger
+springt; 18 px Streifen sind billiger als eine Zahl, die etwas anderes
+behauptet, als sie ist.
+
+Und: „Summe · Summe · Offene Rechnungen" stotterte, weil die Spalte wie die
+Rechenart heisst. Heissen sie gleich, steht es einmal da.
+
+### Drei Prüfungen, die zuerst nichts gemessen haben
+
+**§7 konnte nicht rot werden.** Die Messung nahm die vorhandenen Zeilen —
+Summe 200. Drei Zeichen stossen an nichts an, und die Gegenprobe blieb grün.
+Jetzt steht eine zehnstellige Zahl im Prüfstand.
+
+**Die Überschrift stösst erst am Telefon an.** Am Rechner ist der Block
+530 px breit; eine Überschrift von 254 px erreicht die Griffe gar nicht. Bei
+390 px Breite tut sie es — dort wird `padding-right` gebraucht, und dort
+wird es gemessen.
+
+**Und `browser.newPage()` öffnet einen neuen Kontext** mit eigener
+IndexedDB. Die erste Fassung der Telefonmessung stand deshalb vor einem
+leeren Arbeitsbereich. Dieselbe Falle wie in test231; jetzt wird die
+Fenstergrösse derselben Seite geändert.
+
+Prüflauf: `test237`, 55 Punkte, sieben Gegenproben — Quelle ignoriert (2
+rot), Richtung ignoriert (3), `wertKey` ignoriert (3), Verschieben ohne
+Wirkung (4), Balken ohne Deckel (1), Griffe zurück auf den Inhalt (3),
+Stottern zurück (1).

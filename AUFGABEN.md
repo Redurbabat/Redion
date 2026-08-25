@@ -35,7 +35,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**25. August 2026 · 200 Prüfläufe · LUECKEN.md ist abgearbeitet**
+**25. August 2026 · 202 Prüfläufe · LUECKEN.md ist abgearbeitet**
 
 > ### Die Lückenliste, zu Ende gegangen (E170–E182)
 >
@@ -1115,18 +1115,19 @@ inzwischen erledigt:
 §28 Suche verbreitern             L55, E147
 ```
 
-**Was jetzt oben liegt**, nach Nutzen sortiert — und alle drei sind
-Entscheidungen, keine Fleissarbeit:
+**Was jetzt oben liegt.** Hier standen zuerst drei Punkte, und zwei davon
+waren beim Nachsehen längst erledigt — ZIP64 seit E39, die Migration seit
+dem 6. August mit einer leeren `js-bestand.json`. Es bleibt einer:
 
 1. **Cloudflare wirklich aufsetzen** (L5–L8, Phase 9). Server, Konto und
    Sync sind geschrieben und geprüft, aber nie gegen echtes D1/R2 gelaufen.
    Solange das so ist, ist „optionaler Server" eine Absicht, keine Aussage.
-2. **ZIP64 entscheiden** (L14). Über 4 GB gibt es heute eine klare
-   Fehlermeldung statt eines kaputten Archivs. Das ist ehrlich, aber es ist
-   keine Lösung für den, der 5 GB sichern will.
-3. **Die Migration zu Ende bringen** (L1, L2). `pruefungen/js-bestand.json`
-   darf nur schrumpfen; die Reihenfolge steht in
-   `doku/TYPESCRIPT-MIGRATION.md`.
+   Das braucht Zugangsdaten und ein Konto — es ist der einzige verbliebene
+   Punkt, den kein Prüflauf im Container erledigen kann.
+
+Alles andere in LUECKEN.md ist entweder gebaut oder mit Begründung bewusst
+nicht gebaut. Das heisst nicht, dass Redion fertig ist — es heisst, dass die
+Liste ehrlich ist.
 
 ---
 

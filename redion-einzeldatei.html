@@ -5249,17 +5249,71 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 /* Dashboard-Ansicht */
 .dash{display:flex; flex-direction:column; gap:14px}
 .dash-zahlen{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px}
-.dash-karte{border:1px solid var(--line); border-radius:9px; padding:14px 16px;
-  display:flex; flex-direction:column; gap:3px}
+/* DER STREIFEN OBEN IST FÜR DIE GRIFFE, und er ist IMMER da (E185).
+   Erste Fassung: die Griffe lagen absolut oben rechts ÜBER dem Inhalt.
+   Gemessen sah das so aus — `408000` mit einem Knopf über der letzten
+   Null, also lesbar als `40800`. Beide Zahlen sind gültig, nur eine ist
+   die richtige: derselbe Fund wie in CLAUDE.md §55.2.
+
+   Der Platz wird deshalb RESERVIERT statt beim Darüberfahren geschaffen.
+   Ihn erst beim Zeigen zu nehmen hiesse, dass jede Kachel unter dem
+   Mauszeiger springt — und 18 px Streifen sind billiger als eine Zahl,
+   die etwas anderes behauptet, als sie ist. */
+.dash-karte{border:1px solid var(--line); border-radius:9px; padding:30px 16px 14px;
+  display:flex; flex-direction:column; gap:3px; position:relative}
+
+/* --- Die Griffe an einer Kachel (E185) ------------------------------------
+   Bis dahin gab es nur „Alle Kacheln entfernen": wer eine falsche
+   hinzugefügt hatte, musste alle wegwerfen. Sie sind unsichtbar, bis man
+   die Kachel berührt — und am Telefon IMMER da, weil es dort kein
+   Darüberfahren gibt (§37). 28 px sind unter den 44 px aus §38; das ist
+   vertretbar, weil es keine Kernfunktion ist und daneben nichts liegt, was
+   man versehentlich träfe. */
+.dk-griffe{position:absolute; top:4px; right:6px; display:flex; gap:2px; opacity:0;
+  transition:opacity .12s}
+.dash-karte:hover .dk-griffe, .dash-block:hover .dk-griffe,
+.dk-griffe:focus-within{opacity:1}
+.dk-griffe button{width:24px; height:22px; border:0; border-radius:6px; padding:0;
+  background:var(--bg-hover); color:var(--text-dim); font-size:13px; line-height:1; cursor:pointer}
+.dk-griffe button:hover{background:var(--bg-input); color:var(--text)}
+/* Am Telefon gibt es kein Darüberfahren — dort stehen sie immer da, und
+   dann brauchen sie auch mehr Streifen (§37). */
+@media (hover:none){
+  .dk-griffe{opacity:1}
+  .dk-griffe button{width:30px; height:28px}
+  .dash-karte{padding-top:36px}
+  .dash-block{padding-top:38px}
+  .dash-block.dash-kachel h4{padding-right:0} }
+
+/* --- Die Kennzahl mit Ziel (E185) -----------------------------------------
+   Eine Zahl allein ist keine Kennzahl: „48 000" sagt nichts, „48 000 von
+   60 000" sagt alles. Die Farbe kommt an den RAND und an den Balken, nicht
+   auf die Zahl — auf Farbe allein darf keine Information liegen (§38). Das
+   Zeichen ✓ ▴ ▾ trägt dieselbe Aussage ohne Farbe. */
+.dash-kpi{gap:5px}
+.dz-ziel{font-size:12px; color:var(--text-dim); font-variant-numeric:tabular-nums}
+.dz-balken{height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden; margin-top:2px}
+.dz-balken i{display:block; height:100%; border-radius:3px; background:var(--text-faint)}
+.dash-karte.kpi-gut{border-color:#3f8f5f}
+.dash-karte.kpi-gut .dz-balken i{background:#3f8f5f}
+.dash-karte.kpi-offen{border-color:#b07a2a}
+.dash-karte.kpi-offen .dz-balken i{background:#b07a2a}
 .dz-wert{font-size:26px; font-weight:600; line-height:1.1}
 .dz-name{font-size:12px; color:var(--text-faint)}
-.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px}
+.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px; position:relative}
+/* Die Überschrift darf umbrechen — eine Zahl darf das nicht. Deshalb hier
+   Platz zur Seite statt eines Streifens nach oben. */
+.dash-block.dash-kachel h4{padding-right:88px}
 .dash-block h4{font-size:13px; font-weight:500; color:var(--text-dim); margin:0 0 10px}
 .dash-balken{display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px}
 .db-name{width:120px; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .db-strich{flex:1; height:9px; background:var(--bg-input); border-radius:5px; overflow:hidden}
 .db-strich i{display:block; height:100%; border-radius:5px}
-.db-zahl{width:34px; text-align:right; color:var(--text-faint); font-size:12.5px}
+/* 34 px reichten für eine Anzahl. Seit die Verteilung auch SUMMEN zeigen
+   kann (E185), stehen dort Beträge — `min-width` statt `width`, sonst
+   endet „184 500" als „184 5". Genau der Fund aus CLAUDE.md §55.2. */
+.db-zahl{min-width:34px; flex:0 0 auto; text-align:right; color:var(--text-faint);
+  font-size:12.5px; font-variant-numeric:tabular-nums}
 .dash-zeile{display:flex; align-items:center; gap:12px; width:100%; padding:6px 4px;
   border-radius:6px; font-size:13.5px; text-align:left}
 .dash-zeile:hover{background:var(--bg-hover)}
@@ -36032,13 +36086,63 @@ const Datenbank = (() => {
      * einer Spalte und die letzten Einträge. Was gezeigt wird, stellt man
      * über „Kacheln" ein.
      * ------------------------------------------------------------------------*/
+    /* ==========================================================================
+     * DAS DASHBOARD (L17)
+     * --------------------------------------------------------------------------
+     * Bis E185 zeigte es EINE Datenbank: die eigene. Vier Dinge fehlten, und
+     * L17 nannte sie beim Namen — mehrere Datenquellen, KPI-Karten, Layout,
+     * Diagrammquellen. Alle vier hängen an derselben Stelle, nämlich daran,
+     * was in einer Kachel stehen darf:
+     *
+     *     { art: 'anzahl' }                          wie bisher
+     *     { art: 'summe',       key }                wie bisher
+     *     { art: 'verteilung',  key }                wie bisher
+     *
+     *     { art: 'kpi',         key, ziel, richtung } NEU — Wert gegen Ziel
+     *     { art: 'verteilung',  key, wertKey }        NEU — Summe statt Anzahl
+     *     { …,  quelle: <collectionId> }              NEU — aus einer FREMDEN
+     *                                                 Datenbank
+     *
+     * `quelle` ist der Schlüssel zu allem: eine Kachel ohne `quelle` meint die
+     * eigene Datenbank und die GEFILTERTEN Zeilen der Ansicht; eine Kachel mit
+     * `quelle` holt sich die Zeilen der genannten Datenbank frisch.
+     *
+     * WARUM DIE FREMDEN ZEILEN UNGEFILTERT KOMMEN. Ein Filter gehört zu einer
+     * Ansicht, und die fremde Datenbank hat ihre eigenen. Welche davon gälte?
+     * Eine Kachel „Summe · Betrag aus Rechnungen" muss den Betrag ALLER
+     * Rechnungen nennen, sonst nennt sie eine Zahl, deren Bedeutung von einer
+     * Einstellung anderswo abhängt — und das ist die Sorte Zahl, der man nicht
+     * trauen kann. Steht es unter der Karte, weiss man es.
+     * ========================================================================*/
+    /** Die Zeilen für eine Kachel: die eigenen gefilterten oder alle fremden. */
+    const dashZeilen = (kachel, coll, rows) => {
+        if (!kachel || !kachel.quelle || kachel.quelle === coll.id)
+            return rows;
+        const fremd = Store.getCollection(kachel.quelle);
+        return fremd ? Store.rowsOf(fremd.id) : [];
+    };
+    /** Die Datenbank für eine Kachel — für Schema und Beschriftung. */
+    const dashColl = (kachel, coll) => {
+        if (!kachel || !kachel.quelle || kachel.quelle === coll.id)
+            return coll;
+        return Store.getCollection(kachel.quelle) || coll;
+    };
+    /** Steht der Name der fremden Datenbank unter der Karte? Nur wenn fremd. */
+    const dashHerkunft = (kachel, coll) => {
+        const c = dashColl(kachel, coll);
+        return c && c.id !== coll.id ? (c.name || 'Andere Datenbank') : '';
+    };
     const alsDashboard = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'dash';
-        const zahlKeys = Object.keys(coll.schema)
-            .filter(k => ['number', 'formula', 'rollup', 'duration'].includes(coll.schema[k].type));
-        const gruppKeys = Object.keys(coll.schema)
-            .filter(k => ['select', 'status', 'multi', 'checkbox', 'person'].includes(coll.schema[k].type));
+        /* Die Spaltenlisten je Datenbank — auch für die fremden, weil das Menü
+           sie anbieten muss. */
+        const zahlKeysVon = (c) => Object.keys(c.schema)
+            .filter(k => ['number', 'formula', 'rollup', 'duration'].includes(c.schema[k].type));
+        const gruppKeysVon = (c) => Object.keys(c.schema)
+            .filter(k => ['select', 'status', 'multi', 'checkbox', 'person'].includes(c.schema[k].type));
+        const zahlKeys = zahlKeysVon(coll);
+        const gruppKeys = gruppKeysVon(coll);
         const datumKeys = Object.keys(coll.schema)
             .filter(k => ['date', 'created', 'edited'].includes(coll.schema[k].type));
         const kacheln = view.kacheln || [
@@ -36046,55 +36150,155 @@ const Datenbank = (() => {
             ...(zahlKeys.slice(0, 2).map(k => ({ art: 'summe', key: k }))),
             ...(gruppKeys.slice(0, 1).map(k => ({ art: 'verteilung', key: k })))
         ];
+        /* Eine Kachel ändern oder wegnehmen. Die Liste wird IMMER ganz neu
+           geschrieben — `view.kacheln` kann `undefined` sein (die Vorgabe oben),
+           und dann gäbe es nichts, worin man an Stelle i etwas ändern könnte. */
+        const kachelnSchreiben = (liste) => {
+            Store.updateView(view.id, { kacheln: liste });
+            App.zeichneSeite();
+        };
+        const kachelWeg = (i) => kachelnSchreiben(kacheln.filter((_, k) => k !== i));
+        const kachelSchieben = (i, um) => {
+            const ziel = i + um;
+            if (ziel < 0 || ziel >= kacheln.length)
+                return;
+            const liste = kacheln.slice();
+            const [x] = liste.splice(i, 1);
+            liste.splice(ziel, 0, x);
+            kachelnSchreiben(liste);
+        };
+        /* Die Griffe an einer Kachel — links, rechts, weg. Sie stehen an JEDER
+           Kachel, nicht nur an den neuen: bis E185 gab es „Alle Kacheln
+           entfernen" und sonst nichts, und wer eine falsche hinzugefügt hatte,
+           musste alle wegwerfen. */
+        const griffe = (d, i) => {
+            /* Was Griffe trägt, IST eine Kachel. „Zuletzt geändert" und „Als
+               Nächstes" tragen dieselbe Klasse `dash-block`, sind aber feste
+               Teile des Dashboards und keine Kacheln — ohne diese Marke kann
+               weder die CSS noch ein Prüflauf die beiden auseinanderhalten. */
+            d.classList.add('dash-kachel');
+            const g = document.createElement('div');
+            g.className = 'dk-griffe';
+            g.innerHTML =
+                `<button data-g="hoch" title="Nach vorn" aria-label="Kachel nach vorn">‹</button>` +
+                    `<button data-g="runter" title="Nach hinten" aria-label="Kachel nach hinten">›</button>` +
+                    `<button data-g="weg" title="Entfernen" aria-label="Kachel entfernen">✕</button>`;
+            g.addEventListener('click', e => {
+                const b = elVon(e)?.closest('[data-g]');
+                if (!b)
+                    return;
+                e.stopPropagation();
+                if (b.dataset.g === 'weg')
+                    kachelWeg(i);
+                else
+                    kachelSchieben(i, b.dataset.g === 'hoch' ? -1 : 1);
+            });
+            d.appendChild(g);
+        };
         /* --- Kennzahlen ------------------------------------------------------ */
         const oben = document.createElement('div');
         oben.className = 'dash-zahlen';
-        kacheln.filter((k) => k.art !== 'verteilung').forEach((k) => {
+        kacheln.forEach((k, i) => {
+            if (k.art === 'verteilung')
+                return;
+            const kc = dashColl(k, coll);
+            const kr = dashZeilen(k, coll, rows);
+            const woher = dashHerkunft(k, coll);
             const d = document.createElement('div');
             d.className = 'dash-karte';
             if (k.art === 'anzahl') {
-                d.innerHTML = `<span class="dz-wert">${rows.length}</span>` +
+                d.innerHTML = `<span class="dz-wert">${kr.length}</span>` +
                     `<span class="dz-name">Einträge</span>`;
             }
-            else {
-                const name = coll.schema[k.key]?.name || '?';
-                const art = k.art === 'summe' ? 'Summe' : k.art === 'schnitt' ? 'Durchschnitt' : 'Maximum';
-                const wert2 = zusammenfassen(art, rows.map((r) => wert(r, k.key, coll)), rows.length);
-                d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
-                    `<span class="dz-name">${esc(art)} · ${esc(name)}</span>`;
+            else if (k.art === 'kpi') {
+                /* DIE KPI-KARTE. Eine Zahl allein ist keine Kennzahl — „48 000" sagt
+                   nichts, „48 000 von 60 000" sagt alles. Dazu die Richtung: bei
+                   Umsatz ist mehr besser, bei Fehlern weniger. Ohne sie müsste die
+                   Farbe raten, und eine ratende Farbe ist schlimmer als keine. */
+                const name = kc.schema[k.key]?.name || '?';
+                const roh = zusammenfassen(k.summe === false ? 'Durchschnitt' : 'Summe', kr.map((r) => wert(r, k.key, kc)), kr.length);
+                const zahl = Number(roh) || 0;
+                const ziel = Number(k.ziel);
+                const runter = k.richtung === 'runter';
+                const hat = isFinite(ziel) && ziel !== 0;
+                const anteil = hat ? zahl / ziel : 0;
+                /* „Geschafft" heisst je nach Richtung etwas anderes. */
+                const gut = hat && (runter ? zahl <= ziel : zahl >= ziel);
+                const proz = hat ? Math.round(anteil * 100) : 0;
+                /* Der Balken wird bei 100 % gekappt — sonst läuft er aus der Karte,
+                   und 340 % sähen aus wie 100 %. Die ZAHL daneben sagt die Wahrheit. */
+                const breit = Math.max(0, Math.min(100, runter ? (hat ? 100 - proz : 0) : proz));
+                d.className = 'dash-karte dash-kpi ' + (hat ? (gut ? 'kpi-gut' : 'kpi-offen') : '');
+                d.innerHTML =
+                    `<span class="dz-wert">${esc(Formula.anzeige(zahl))}</span>` +
+                        (hat ? `<span class="dz-ziel">${gut ? '✓' : (runter ? '▾' : '▴')} ` +
+                            `${proz} % von ${esc(Formula.anzeige(ziel))}</span>` +
+                            `<span class="dz-balken"><i style="width:${breit}%"></i></span>`
+                            : `<span class="dz-ziel">Ohne Ziel</span>`) +
+                        `<span class="dz-name">${esc(name)}${woher ? ' · ' + esc(woher) : ''}</span>`;
             }
+            else {
+                const name = kc.schema[k.key]?.name || '?';
+                const art = k.art === 'summe' ? 'Summe' : k.art === 'schnitt' ? 'Durchschnitt' : 'Maximum';
+                const wert2 = zusammenfassen(art, kr.map((r) => wert(r, k.key, kc)), kr.length);
+                /* „Summe · Summe · Offene Rechnungen" stotterte: die Rechenart heisst
+                   wie die Spalte. Heisst sie gleich, steht sie einmal da. */
+                const bezeichnung = art.toLowerCase() === String(name).toLowerCase()
+                    ? esc(name) : esc(art) + ' · ' + esc(name);
+                d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
+                    `<span class="dz-name">${bezeichnung}` +
+                    `${woher ? ' · ' + esc(woher) : ''}</span>`;
+            }
+            griffe(d, i);
             oben.appendChild(d);
         });
         if (oben.children.length)
             w.appendChild(oben);
         /* --- Verteilung ------------------------------------------------------ */
-        kacheln.filter((k) => k.art === 'verteilung' && k.key).forEach((k) => {
-            const def = coll.schema[k.key];
+        kacheln.forEach((k, i) => {
+            if (k.art !== 'verteilung' || !k.key)
+                return;
+            const kc = dashColl(k, coll);
+            const kr = dashZeilen(k, coll, rows);
+            const def = kc.schema[k.key];
             if (!def)
                 return;
+            /* DIE DIAGRAMMQUELLE (L17). Bis E185 zählte die Verteilung immer nur
+               ZEILEN: „12 Aufträge in Zürich". Was man wissen will, ist meistens
+               „180 000 Umsatz in Zürich" — dieselbe Gruppierung, ein anderer Wert.
+               `wertKey` nennt die Zahlenspalte; ohne ihn wird gezählt wie bisher. */
+            const wertDef = k.wertKey ? kc.schema[k.wertKey] : null;
+            const beitrag = (r) => wertDef ? (Formula.zahl(wert(r, k.wertKey, kc)) || 0) : 1;
             const zaehler = new Map();
-            rows.forEach((r) => {
-                let v = wert(r, k.key, coll);
+            const dazu = (name, um) => zaehler.set(name, (zaehler.get(name) || 0) + um);
+            kr.forEach((r) => {
+                const v = wert(r, k.key, kc);
+                const um = beitrag(r);
+                /* Bei einer Mehrfachauswahl zählt die Zeile in JEDER ihrer Gruppen.
+                   Die Summe der Balken ist dann grösser als das Ganze — das ist bei
+                   Mehrfachauswahl richtig so und steht als Fussnote darunter. */
                 if (Array.isArray(v))
-                    v.forEach(x => zaehler.set(String(x), (zaehler.get(String(x)) || 0) + 1));
-                else {
-                    const s2 = def.type === 'checkbox' ? (v ? 'Ja' : 'Nein') : (Formula.anzeige(v) || '(leer)');
-                    zaehler.set(s2, (zaehler.get(s2) || 0) + 1);
-                }
+                    v.forEach(x => dazu(String(x), um));
+                else
+                    dazu(def.type === 'checkbox' ? (v ? 'Ja' : 'Nein')
+                        : (Formula.anzeige(v) || '(leer)'), um);
             });
             const paare = [...zaehler.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-            const hoechst = Math.max(1, ...paare.map(p2 => p2[1]));
+            const hoechst = Math.max(1, ...paare.map(p2 => Math.abs(p2[1])));
             const box = document.createElement('div');
             box.className = 'dash-block';
-            box.innerHTML = `<h4>Verteilung nach ${esc(def.name)}</h4>` +
-                paare.map(([n, anz]) => {
+            const woher = dashHerkunft(k, coll);
+            const titel = (wertDef ? esc(wertDef.name) + ' nach ' : 'Verteilung nach ') + esc(def.name);
+            box.innerHTML = `<h4>${titel}${woher ? ' · ' + esc(woher) : ''}</h4>` +
+                (paare.length ? paare.map(([n, anz]) => {
                     const opt = (def.options || []).find((o) => o.name === n);
                     return '<div class="dash-balken">' +
                         `<span class="db-name">${esc(n)}</span>` +
                         `<span class="db-strich"><i class="bg-${opt ? opt.color : 'blue'}" ` +
-                        `style="width:${Math.round(anz / hoechst * 100)}%"></i></span>` +
-                        `<span class="db-zahl">${anz}</span></div>`;
-                }).join('');
+                        `style="width:${Math.round(Math.abs(anz) / hoechst * 100)}%"></i></span>` +
+                        `<span class="db-zahl">${esc(Formula.anzeige(wertDef ? Math.round(anz * 100) / 100 : anz))}</span></div>`;
+                }).join('') : '<div class="db-leer">Noch keine Werte.</div>');
+            griffe(box, i);
             w.appendChild(box);
         });
         /* --- Zuletzt geändert ------------------------------------------------ */
@@ -36140,28 +36344,90 @@ const Datenbank = (() => {
         /* --- Kacheln einstellen ---------------------------------------------- */
         const fuss = document.createElement('div');
         fuss.className = 'cal-fuss';
-        fuss.innerHTML = '<span>Ein Überblick über diese Datenbank.</span>' +
-            '<button data-a="kacheln">Kacheln einstellen</button>';
+        /* Andere Datenbanken derselben Ablage — die Quellen, die eine Kachel
+           ausser der eigenen haben kann. Nach Namen sortiert, damit die Liste
+           nicht bei jedem Öffnen anders aussieht. */
+        const fremde = Object.values(Store.cache.collections)
+            .filter((c) => c && c.id !== coll.id)
+            .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        const anzahlWoher = kacheln.filter((k) => dashHerkunft(k, coll)).length;
+        fuss.innerHTML =
+            `<span>Ein Überblick${anzahlWoher ? ' — ' + anzahlWoher + ' Kachel' +
+                (anzahlWoher === 1 ? '' : 'n') + ' aus anderen Datenbanken' :
+                ' über diese Datenbank'}.</span>` +
+                '<button data-a="kacheln">Kachel hinzufügen</button>';
+        /* Das Menü für EINE Datenbank — die eigene oder eine fremde. `q` ist die
+           Kennung, die in die Kachel wandert; leer heisst „die eigene". */
+        const menueFuer = (c, q) => {
+            const zk = zahlKeysVon(c), gk = gruppKeysVon(c);
+            const p = q ? '@' + q : '';
+            return '<button data-neu="anzahl' + p + '">Anzahl der Einträge</button>' +
+                zk.map(k => `<button data-neu="summe:${k}${p}">Summe · ${esc(c.schema[k].name)}</button>` +
+                    `<button data-neu="schnitt:${k}${p}">Durchschnitt · ${esc(c.schema[k].name)}</button>` +
+                    `<button data-neu="kpi:${k}${p}">Kennzahl mit Ziel · ${esc(c.schema[k].name)}</button>`).join('') +
+                gk.map(k => `<button data-neu="verteilung:${k}${p}">Verteilung nach ${esc(c.schema[k].name)}</button>` +
+                    zk.map(z => `<button data-neu="verteilung:${k}:${z}${p}">` +
+                        `${esc(c.schema[z].name)} nach ${esc(c.schema[k].name)}</button>`).join('')).join('');
+        };
         fuss.addEventListener('click', e => {
             if (!elVon(e)?.closest('[data-a="kacheln"]'))
                 return;
             const r = (htmlVon(e) ?? document.body).getBoundingClientRect();
-            const m = UI.menu('<div class="grp">Kennzahl hinzufügen</div>' +
-                '<button data-neu="anzahl">Anzahl der Einträge</button>' +
-                zahlKeys.map(k => `<button data-neu="summe:${k}">Summe · ${esc(coll.schema[k].name)}</button>` +
-                    `<button data-neu="schnitt:${k}">Durchschnitt · ${esc(coll.schema[k].name)}</button>`).join('') +
-                '<div class="grp">Verteilung</div>' +
-                gruppKeys.map(k => `<button data-neu="verteilung:${k}">Nach ${esc(coll.schema[k].name)}</button>`).join('') +
+            const m = UI.menu(`<div class="grp">Aus dieser Datenbank</div>` + menueFuer(coll, '') +
+                (fremde.length
+                    ? fremde.map((c) => `<div class="grp">Aus „${esc(c.name || 'Ohne Namen')}"</div>` + menueFuer(c, c.id)).join('')
+                    : '') +
                 '<hr><button data-neu="leer">Alle Kacheln entfernen</button>', r.left - 160, r.top - 20);
             m.addEventListener('click', ev => {
                 const b = elVon(ev)?.closest('[data-neu]');
                 if (!b)
                     return;
-                const [art, key] = (b.dataset.neu ?? '').split(':');
-                const liste = art === 'leer' ? [] : [...kacheln, key ? { art, key } : { art }];
-                Store.updateView(view.id, { kacheln: liste });
+                /* `art:key:wertKey@quelle` — die Quelle steht hinten, weil eine
+                   Kennung Doppelpunkte enthalten könnte, ein `@` aber nicht. */
+                const [vorn, quelle] = (b.dataset.neu ?? '').split('@');
+                const [art, key, wertKey] = (vorn ?? '').split(':');
+                if (art === 'leer') {
+                    kachelnSchreiben([]);
+                    m.remove();
+                    return;
+                }
+                const neue = { art };
+                if (key)
+                    neue.key = key;
+                if (wertKey)
+                    neue.wertKey = wertKey;
+                if (quelle)
+                    neue.quelle = quelle;
                 m.remove();
-                App.zeichneSeite();
+                /* Eine Kennzahl ohne Ziel ist keine Kennzahl — also gleich fragen.
+                   Wer abbricht, bekommt trotzdem die Kachel, nur ohne Ziel: sie sagt
+                   dann „Ohne Ziel" und lässt sich später nachrüsten. */
+                if (art === 'kpi') {
+                    void (async () => {
+                        const c2 = quelle ? (Store.getCollection(quelle) || coll) : coll;
+                        const antwort = await UI.frage('Welches Ziel soll „' + (c2.schema[key ?? '']?.name || '?') + '" erreichen?', '');
+                        const zahl = Formula.zahl(antwort);
+                        if (zahl || zahl === 0) {
+                            neue.ziel = zahl;
+                            /* Ein Ziel, das man UNTERschreiten will — Fehler, Kosten,
+                               Rückstände. Ohne diese Frage müsste die Farbe raten. */
+                            neue.richtung = (await Dialog.wahl({
+                                titel: 'In welche Richtung ist gut?',
+                                text: 'Bei Umsatz ist mehr besser, bei Fehlern weniger. ' +
+                                    'Danach richtet sich, wann die Karte grün wird.',
+                                knoepfe: [
+                                    { id: 'hoch', text: 'Ziel erreichen',
+                                        hinweis: 'Grün, sobald der Wert das Ziel erreicht' },
+                                    { id: 'runter', text: 'Obergrenze halten',
+                                        hinweis: 'Grün, solange der Wert darunter bleibt' }
+                                ]
+                            })) === 'runter' ? 'runter' : 'hoch';
+                        }
+                        kachelnSchreiben([...kacheln, neue]);
+                    })();
+                    return;
+                }
+                kachelnSchreiben([...kacheln, neue]);
             });
         });
         w.appendChild(fuss);
@@ -49510,7 +49776,7 @@ const Einstellungen = (() => {
             zeile('Systemmeldungen', 'Erlaubnis des Browsers einholen', knopf('benachr-erlauben', ('Notification' in window && Notification.permission === 'granted')
                 ? 'Bereits erlaubt' : 'Erlauben')) +
             zeile('Erinnerungen in der App', 'Der Streifen unten am Bildschirm', schalter('erinnernInApp', V('erinnernInApp', true))) +
-            zeile('Karteikarten', 'Beim Start melden, wenn Karten fällig sind', schalter('kartenMelden', V('kartenMelden', true))) +
+            zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind', schalter('kartenMelden', V('kartenMelden', true))) +
             zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter((e) => !e.erledigt).length} offen</span>`) +
             zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
         verbindungen: () => {
@@ -50349,12 +50615,30 @@ const Einstellungen = (() => {
         anwenden();
         if (V('seiteZu', false))
             document.getElementById('sidebar')?.classList.add('collapsed');
-        /* Fällige Karteikarten melden */
+        /* FÄLLIGE KARTEIKARTEN MELDEN — EINMAL AM TAG, NICHT BEI JEDEM START.
+         *
+         * Der Schalter dazu gibt es seit jeher („Karteikarten · Beim Start
+         * melden"), und er stand auf an. Nur meldete es bei JEDEM Öffnen und
+         * bei jedem Neuladen — wer an Redion arbeitet, sah den Streifen
+         * vierzigmal am Tag, und wer ihn wegdrücken wollte, musste die
+         * ganze Meldung abschalten.
+         *
+         * Eine Erinnerung, die man schon kennt, ist keine Erinnerung mehr.
+         * Also merkt sie sich den TAG, an dem sie gezeigt wurde.
+         *
+         * Der Merker wird nur gesetzt, wenn wirklich etwas gezeigt wurde. Sonst
+         * würde ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr
+         * verschlucken, wenn dann welche fällig sind. */
         if (V('kartenMelden', true)) {
-            const n = Werkzeuge.faellig().length;
-            if (n)
-                setTimeout(() => UI.toast('🎴 ' + n +
-                    (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
+            const heute3 = new Date().toISOString().slice(0, 10);
+            if (Store.getMeta('kartenGemeldet', '') !== heute3) {
+                const n = Werkzeuge.faellig().length;
+                if (n) {
+                    Store.setMeta('kartenGemeldet', heute3);
+                    setTimeout(() => UI.toast('🎴 ' + n +
+                        (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
+                }
+            }
         }
     };
     return { oeffne, start, anwenden, datum, wochenstart, V, S, GRUPPEN, BEREICHE };

@@ -623,16 +623,45 @@ listete als fehlend, was teils längst gebaut war. Was das Nachsehen fand:
 laufen lassen" und liess die Automation **wirklich** laufen. Siehe E61;
 das war Priorität 1, nicht Feinschliff.
 
-## L17 · Dashboards und Pivot ausbauen
+## L17 · ~~Dashboards und Pivot ausbauen~~ — GESCHLOSSEN
 
-Fehlt: mehrere Datenquellen je Dashboard · KPI-Karten · Layout ·
-Diagrammquellen.
+**Stand — ✅ seit E185 (25. August 2026).** Die vier genannten Punkte hingen
+alle an derselben Stelle: daran, was in einer Kachel stehen darf.
+
+```txt
+mehrere Datenquellen   `quelle`   eine FREMDE Datenbank statt der eigenen
+KPI-Karten             `ziel`     eine Zahl gegen ein Ziel, mit Richtung
+Layout                 —          jede Kachel einzeln weg und verschieben
+Diagrammquellen        `wertKey`  die Verteilung SUMMIERT eine Spalte
+```
+
+**Die fremden Zeilen kommen ungefiltert**, und das ist Absicht: ein Filter
+gehört zu einer Ansicht, und die fremde Datenbank hat ihre eigenen — welche
+davon gälte? Eine Zahl, deren Bedeutung von einer Einstellung anderswo
+abhängt, ist eine Zahl, der man nicht trauen kann. Unter der Karte steht die
+Quelle, im Fuss steht, wie viele Kacheln von woanders kommen.
+
+**Die Diagrammquelle ist der Punkt, den man am ehesten übersieht und am
+meisten braucht.** Die Verteilung zählte immer nur Zeilen — „12 Aufträge in
+Zürich". Die Frage ist fast immer „180 000 Umsatz in Zürich": dieselbe
+Gruppierung, ein anderer Wert.
+
+**Was das Hinsehen fand:** die neuen Kachelgriffe lagen auf der Zahl.
+`408000` stand mit einem Knopf über der letzten Null da und las sich als
+`40800` — beide gültig, eine richtig. Derselbe Fund wie CLAUDE.md §55.2.
 
 Hier stand „Pivot mit Prozent von Gesamt" — den Modus gibt es seit dem
 Pivot-Bau (`pivotProzent: aus | zeile | spalte | gesamt`). Die Behauptung
 war falsch; beim Nachsehen fand sich stattdessen ein echter Fehler: die
 Quer-Ränder zeigten in den Modi Zeile/Spalte überall „0 %", auch in der
 CSV. Behoben und Zelle für Zelle geprüft (E92, test166).
+
+**Was NICHT gebaut ist:** ein freies Raster, in dem Kacheln beliebig breit
+und hoch gezogen werden. Die Kacheln fliessen; das reicht für einen
+Überblick und kostet keine Einstellung, die man pflegen muss. Wenn jemand
+das vermisst, ist es eine eigene Entscheidung wert.
+
+Prüflauf: `test237`, 55 Punkte, sieben einzeln nachgewiesene Gegenproben.
 
 ## L18 · XLSX und ODS
 
