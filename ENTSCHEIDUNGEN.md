@@ -9808,3 +9808,104 @@ ENOENT-Hinweis durch „Fehler."    → §6 rot, beide Punkte
 §6 nimmt zusätzlich das Ersatzprogramm wieder weg — die Lage von L53, eine
 Stufe weiter innen: der Dienst läuft, der Erkenner fehlt. Dann muss er
 sagen, was fehlt und wo es steht.
+
+
+---
+
+## E151 · Am Telefon stand der Startknopf 188 Pixel unter der Falz
+
+**25. August 2026.** §31 des Auftrags beschreibt die Telefonansicht nicht in
+Worten, sondern als Bild:
+
+```txt
+Elektrotechnik
+🔥 14 Tage
+
+18 Karten fällig
+5 neue
+2 Fehler
+
+[ Lernen starten ]
+
+Darunter: Nächste Prüfung · Aufgaben · Fortschritt
+```
+
+Alles davon gibt es. Nur in der falschen Reihenfolge. Gemessen auf 390 × 844:
+
+```txt
+Begrüssung, Datum, Lernziel      322 px, bevor etwas zur Lernrunde kam
+die vier Zahlen                  ab 713, zur Hälfte unter der Falz
+„Tagesrunde starten"             y = 1032  →  188 px UNTER der Falz
+```
+
+Wer die App am Telefon aufmacht, um zehn Minuten zu lernen, musste erst
+scrollen, um den Knopf zu finden. Am Rechner fiel das nie auf, weil dort
+nichts unter einer Falz liegt — der ganze Bildschirm ist die erste Seite.
+
+### Gedreht wird mit `order`, nicht mit einem zweiten Baum
+
+```css
+@media(max-width:760px){
+  .lernwelt .lw-today>*{order:5}
+  .lernwelt .lw-today>.lw-metrics{order:1}
+  .lernwelt .lw-today>.lw-primary-grid{order:2}
+  .lernwelt .lw-today>.lw-setup{order:3}
+  .lernwelt .lw-today>.lw-hero{order:4}
+}
+```
+
+Fünf Zeilen, und der Knopf steht bei y = 641 statt 1032. Wichtiger als die
+Kürze ist, was NICHT passiert ist: es gibt keine zweite Baumstruktur für das
+Telefon. Für ein Vorleseprogramm und für die Tastatur bleibt die Reihenfolge
+dieselbe, und es gibt keinen zweiten Bauplan, der auseinanderlaufen könnte
+(§52 des Auftrags: keine doppelte Architektur).
+
+Am Rechner bleibt alles, wie es war. Eine Umstellung, die überall gälte, wäre
+keine Antwort auf §31, sondern eine zweite Frage.
+
+### Und die Reiterleiste, die nicht sagte, dass es weitergeht
+
+Neben dem Startknopf fiel am selben Bild auf: von neun Reitern passen drei,
+die Leiste rollt seitwärts — und nichts zeigte das an. Gemessen: 883 px
+Inhalt in 364 px Breite, „Meine Fehler" endete mitten im Wort am Bildrand.
+
+Ein abgeschnittenes Wort sieht aus wie ein Fehler, nicht wie eine Einladung
+zum Wischen. Dieselbe Lösung wie bei der Markierungsleiste im PDF (E141): ein
+Datenmerkmal `data-mehr`, aus dem die CSS einen Schatten an der jeweiligen
+Kante macht. Kein Knopf und kein Pfeil — beides wäre etwas, woneben man
+tippen kann.
+
+### Und wieder ein Fehler in der Messung, nicht im Produkt
+
+Der Punkt „Drei fällige Karten werden gezählt" las den Text der Kachel als
+ein Stück: `3fälligSM-2-Wissensstand`. Zwei Sachen gingen dabei schief, und
+die zweite ist die gefährlichere:
+
+```txt
+/\b3\b.{0,20}fällig/   falsch ROT — zwischen „3" und „fällig" ist keine
+                       Wortgrenze, obwohl die Zahl stimmt
+/\b2\b.{0,20}neu/      falsch GRÜN — die „2" stammte aus
+                       „SM-2-Wissensstand", zwanzig Zeichen vor „3neu"
+```
+
+Ein Punkt, der aus dem falschen Grund grün ist, ist schlimmer als einer, der
+aus dem falschen Grund rot ist: der rote fällt auf.
+
+Gemessen wird jetzt `<strong>` und `<span>` getrennt — die Auszeichnung
+trennt beides ohnehin — und verglichen wird mit dem, was im Speicher steht,
+nicht mit einer Zahl aus der Prüfdatei.
+
+### Kann die Suite rot werden?
+
+**test217**, fünf Abschnitte, 24 Punkte. §1 und §2 waren vor dieser Änderung
+rot — das ist keine Behauptung, das ist die Messung oben. Dazu zwei
+Gegenproben, einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+die fünf `order`-Zeilen entfernt   → §1 und §2 rot (drei Punkte)
+`reiterRollstand()` entfernt       → §3 und §4 rot (drei Punkte)
+```
+
+§4 misst die Gegenrichtung: am Rechner darf die Reihenfolge NICHT gedreht
+sein und die Leiste keinen Hinweis tragen. §5 prüft, dass Telefon und
+Rechner denselben Baum haben.

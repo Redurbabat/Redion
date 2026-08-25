@@ -1596,7 +1596,35 @@ const Lernwelt = (() => {
             timerStarten();
         else
             timerStoppen();
+        reiterRollstand();
         ladeBereichsdaten();
+    };
+    /**
+     * Die Reiterleiste sagt, dass es weitergeht.
+     *
+     * Am Telefon passen von neun Reitern drei; die Leiste rollt seitwärts, aber
+     * NICHTS zeigte das an — gemessen am 25. August auf 390 px: 883 px Inhalt
+     * in 364 px Breite, und „Meine Fehler" endete mitten im Wort am Bildrand.
+     * Ein abgeschnittenes Wort sieht aus wie ein Fehler, nicht wie eine
+     * Einladung zum Wischen.
+     *
+     * Dieselbe Lösung wie bei der Markierungsleiste im PDF (E141): ein
+     * Datenmerkmal, aus dem die CSS einen Schatten an der jeweiligen Kante
+     * macht. Kein Knopf, kein Pfeil, nichts zum Danebentippen.
+     */
+    const reiterRollstand = () => {
+        const leiste = zustand.root?.querySelector('.lw-nav');
+        if (!leiste)
+            return;
+        const stand = () => {
+            const links = leiste.scrollLeft > 2;
+            const rechts = leiste.scrollLeft + leiste.clientWidth < leiste.scrollWidth - 2;
+            leiste.dataset['mehr'] = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+        };
+        leiste.addEventListener('scroll', stand, { passive: true });
+        if (typeof ResizeObserver === 'function')
+            new ResizeObserver(stand).observe(leiste);
+        stand();
     };
     const ansichtGueltig = (wert) => ANSICHTEN.some(item => item.id === wert);
     const wechseln = (ansicht) => {

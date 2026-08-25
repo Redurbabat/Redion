@@ -53,7 +53,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 28 | Globale Suche | ✅ | Seiten, Blöcke, Aliasse, PDF-Suchtext und OCR-Text; Aufgaben, Lernkarten, Wiki und Meetings kommen als Blocktext mit. Dateinamen aus dem Fach `dateien` und Quellenangaben (`quiz.source`, `learningPackage.license`) seit E147. Eine Funktion — `Store.durchsuchbar` — entscheidet für beide Suchen, was durchsuchbar ist. test195 (Index), test213 (Breite, 20 Punkte) |
 | 29 | Command Palette | ✅ | test206 §11 (E139) |
 | 30 | Mobile first (428 px) | ✅ | test114, test54, test209 §9, test210 §3 |
-| 31 | Mobile Lernen | ◐ | Lernwelt läuft am Telefon; Tastatur ist dort ohne Belang. Kein eigener Telefon-Prüflauf für die Lernrunde |
+| 31 | Mobile Lernen | ✅ | test217 (fünf Abschnitte, 24 Punkte): die vier Zahlen und „Tagesrunde starten" stehen am Telefon über der Falz — vorher lag der Knopf 188 px darunter (E151). Reiterleiste mit Rollhinweis. Am Rechner unverändert |
 | 32 | Mobile PDF | ✅ | test210 §3–§5 |
 | 33 | Mobile Workspace | ✅ | test209 §9, test206 §6 |
 | 34 | Responsive | ✅ | test114 misst 320–1440 px |
@@ -90,14 +90,13 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 
 Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 
-1. **§31 Telefon-Prüflauf** für die Lernrunde — die Lernwelt läuft dort,
-   aber nichts hält es fest.
-2. **§41 Meetings** — welcher Prüflauf sie deckt, ist nicht nachgesehen.
-3. **§43 Obsidian** — Resolver steht, kein Rundlauf-Prüflauf.
+1. **§41 Meetings** — welcher Prüflauf sie deckt, ist nicht nachgesehen.
+2. **§43 Obsidian** — Resolver steht, kein Rundlauf-Prüflauf.
+3. **§44 Quellenwahrheit** — Provenienz an Erkennung und Elektro, nicht überall.
 
 Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
 Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
-falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen).
+falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen). Und §31 (test217, E151).
 
 ---
 
