@@ -571,8 +571,16 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
       document.querySelector('.produkt-onboarding-lage')?.remove();
       document.getElementById('rg-willkommen')?.remove();
       document.getElementById('rg-einladung')?.remove();
+      /* `projekt: true` UND NICHT NUR EIN NAME. Die erste Fassung legte
+         „Umbau Halle 3" und „Wartungsplan 2026" an und erwartete sie unter
+         „Projekte" — `projekte()` sucht aber nach dem Merkmal `projekt`
+         oder nach dem WORT „Projekt" im Titel. Beides fehlte, und das Bild
+         zeigte monatelang „Noch kein laufendes Projekt zugeordnet" neben
+         einer vollen Aufgabenliste. Ein Bild von einer halb leeren App
+         zeigt nichts — genau davor warnt der Kopf dieser Datei. */
       ['Umbau Halle 3', 'Wartungsplan 2026'].forEach(name => {
         const s = Store.addPage(null, { text: name, icon: '💼' });
+        Store.updateBlock(s.id, { projekt: true, status: 'Laufendes Projekt' });
         Store.addBlock(s.id, 'todo', { text: 'Material bestellen für ' + name });
       });
       const bespr = Store.addPage(null, { text: 'Baustellenbesprechung KW 34', icon: '🎙' });
@@ -580,6 +588,9 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
       Store.addBlock(bespr.id, 'text', { text: 'Termin für die Abnahme steht.' });
       const wissen = Store.addPage(null, { text: 'Entscheidung: Kabeltyp NYM', icon: '💡' });
       Store.addBlock(wissen.id, 'text', { text: 'NYM-J 5×2,5 für alle Zuleitungen.' });
+      /* Und ein PDF, damit „Dokumente & PDFs" nicht leer bleibt. */
+      const plan = Store.addPage(null, { text: 'Schaltplan Halle 3', icon: '📕' });
+      Store.addBlock(plan.id, 'pdfseite', { nr: 1, suchtext: 'Verteiler UV3' });
       w.Produktwelten.lernen('arbeit');
       await new Promise(r => setTimeout(r, 1000));
     }
