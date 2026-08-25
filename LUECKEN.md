@@ -1530,7 +1530,17 @@ keine Vorschau — wer seine Karte an der Struktur erkennen will, findet sie
 dort nicht.
 
 
-## L55 · Die Suche findet keine Dateinamen
+## L55 · Die Suche findet keine Dateinamen — GESCHLOSSEN am 25. August 2026
+
+**Erledigt mit E147, geprüft mit test213 (20 Punkte).** Beim Bauen zeigte
+sich, dass die Überschrift zu weit ging: ein Anhang IST auffindbar, weil
+jeder Weg im Produkt den Dateinamen auch als Blocktext setzt. Verloren geht
+er erst, wenn jemand den Text überschreibt. Und der eigentliche Fehler lag
+tiefer als hier vermutet — im Beschleuniger `Kontext.kandidaten`, der aus
+einer zweiten Feldliste gebaut wurde. Der Rest dieses Eintrags bleibt als
+Aufnahme des Standes vom 24. August stehen.
+
+
 
 **24. August 2026.** Beim Schreiben von `doku/AUFTRAG-STAND.md` nachgesehen
 statt behauptet: §28 des Auftrags zählt zwölf Dinge auf, die die globale

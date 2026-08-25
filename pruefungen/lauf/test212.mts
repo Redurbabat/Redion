@@ -15,9 +15,21 @@
  * Berichtigung — sie führt den Weg wirklich aus, statt ihn zu behaupten.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
- * Die Gegenproben stehen bei den Abschnitten. Der Vorschlagsmodus wird
- * einmal AUS geprüft: ohne ihn darf nichts festgehalten werden, sonst wäre
- * jede Tippkorrektur ein Vorschlag.
+ * Nicht behauptet, sondern nachgemessen. Auf einem Abzug des Baums wurde je
+ * eine Zeile im Produkt entschärft und die Suite erneut gelaufen:
+ *
+ *   `alt` beim Festhalten durch `neu` ersetzt   → §3 rot („merkt sich den
+ *                                                  alten Text"), und §4 gleich
+ *                                                  mit
+ *   `Store.updateBlock(v.bid, …)` bei Verwerfen → §4 rot
+ *   `f.contentWindow.print()` weggelassen       → §6 rot (0 Aufrufe)
+ *   `role="heading"` weggelassen                → §1 rot (3 → 1)
+ *
+ * Und die fünfte kam von selbst: die erste Fassung legte die Blockart
+ * `tabelle` an statt `table` — §1 war rot, bis die Art stimmte.
+ *
+ * Der Vorschlagsmodus wird ausserdem einmal AUS geprüft: ohne ihn darf
+ * nichts festgehalten werden, sonst wäre jede Tippkorrektur ein Vorschlag.
  *
  *   node pruefungen/lauf/test212.mts
  * ==========================================================================*/
@@ -61,10 +73,14 @@ const fehler: string[] = [];
 seite.on('pageerror', e => fehler.push('PAGEERROR: ' + e.message.slice(0, 140)));
 await seite.goto(`http://localhost:${PORT}/index.html`);
 await seite.waitForTimeout(2700);
+/* AUCH DAS WILLKOMMENSFENSTER WEG. Es heisst `#rg-willkommen` und ist kein
+   `.overlay` — es blieb stehen und fing jeden Klick ab, sobald diese Suite
+   vom heimlichen `focus()` auf echtes Klicken umgestellt wurde. */
 await seite.evaluate(() => {
   Store.setMeta('rundgangGesehen', true);
   document.querySelector('.produkt-onboarding-lage')?.remove();
-  document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+  document.getElementById('rg-willkommen')?.remove();
+  document.querySelectorAll<HTMLElement>('.overlay, .rg-lage, .rg-tipp').forEach(o => o.remove());
 });
 
 /* ==========================================================================
@@ -83,7 +99,13 @@ const dokument = await seite.evaluate(async () => {
   Store.addBlock(s.id, 'bullet', { text: 'Erster Punkt' });
   Store.addBlock(s.id, 'number', { text: 'Erster Schritt' });
   Store.addBlock(s.id, 'h2', { text: 'Aufbau' });
-  Store.addBlock(s.id, 'tabelle', { rows: [['Teil', 'Anzahl'], ['Schraube', '4']] });
+  /* DIE BLOCKART HEISST `table`, NICHT `tabelle`. Mein erster Entwurf legte
+     `tabelle` an — `Store.addBlock` nimmt jede Zeichenkette, der Editor fiel
+     in seinen `default`-Zweig und zeichnete einen leeren Absatz. Die Prüfung
+     „alle Bausteine da“ war trotzdem grün, weil sie nur die Namen zählte.
+     Nachgesehen in `register/bloecke.ts`: `table` ist die einfache Tabelle,
+     `spreadsheet` die rechnende, `db-table` die Datenbankansicht. */
+  Store.addBlock(s.id, 'table', { rows: [['Teil', 'Anzahl'], ['Schraube', '4']] });
   Store.addBlock(s.id, 'h2', { text: 'Wartung' });
   Store.addBlock(s.id, 'toc', {});
   await Store.flush();
@@ -93,18 +115,23 @@ const dokument = await seite.evaluate(async () => {
   return {
     seite: s.id, absatz: absatz.id,
     arten: Store.childrenOf(s.id).map((b: any) => b.type),
-    ueberschriften: bereich?.querySelectorAll('h1, h2, h3').length || 0,
+    /* NICHT `h1, h2, h3`. Jeder Block ist ein `<div>`; eine Überschrift wird
+       sie durch `role="heading"` und `aria-level` auf dem Textfeld — genau
+       das, was ein Vorleseprogramm liest (`editor.ts`, `machText`). Mit den
+       Tag-Namen mass diese Zeile null, obwohl die Seite drei Überschriften
+       trägt. */
+    ueberschriften: bereich?.querySelectorAll('[role="heading"]').length || 0,
     /* NACHGESEHEN: die Klasse heisst `toc-liste`, nicht `toc`
        (`editor.ts`, `inhaltsverzeichnis`). Mit `.toc` hätte dieser Punkt
        eine leere Zeichenkette gemessen und wäre rot geworden, ohne dass am
        Produkt etwas fehlt. */
     verzeichnis: (bereich?.querySelector('.toc-liste')?.textContent || '')
       .replace(/\s+/g, ' ').trim(),
-    tabelle: bereich?.querySelectorAll('table, .tab-zelle, .tabelle').length || 0
+    tabelle: bereich?.querySelectorAll('table.stab').length || 0
   };
 });
 p('Die Seite trägt alle Bausteine',
-  ['h1', 'text', 'bullet', 'number', 'h2', 'tabelle', 'toc']
+  ['h1', 'text', 'bullet', 'number', 'h2', 'table', 'toc']
     .every(art => dokument.arten.includes(art)), dokument.arten.join(', '));
 p('Überschriften stehen als Überschriften da', dokument.ueberschriften >= 3,
   `${dokument.ueberschriften}`);
@@ -121,21 +148,32 @@ p('Und die Tabelle ist gezeichnet', dokument.tabelle >= 1, `${dokument.tabelle}`
  * ========================================================================*/
 console.log('\n2 · Ohne Vorschlagsmodus wird nichts festgehalten');
 
-const ohne = await seite.evaluate(async (ids: any) => {
-  const feld = document.querySelector<HTMLElement>(`[data-bid="${ids.absatz}"] .ct`);
-  if (!feld) return null;
-  feld.focus();
-  feld.textContent = 'Ohne Modus einfach geändert.';
-  feld.blur();
-  await new Promise(r => setTimeout(r, 400));
-  return {
-    vorschlaege: (Store.getBlock(ids.seite)?.vorschlaege || []).length,
-    modus: !!Store.getBlock(ids.seite)?.vorschlagModus
-  };
-}, dokument);
-p('Der Absatz ist beschreibbar', !!ohne, 'kein .ct gefunden');
-gleich('Der Modus ist aus', ohne?.modus, false);
-gleich('Und es wurde nichts als Vorschlag festgehalten', ohne?.vorschlaege, 0);
+/* MIT DER TASTATUR, NICHT MIT `textContent`. Der erste Entwurf setzte den
+   Text im Skript und rief `blur()`. Das sieht aus wie Tippen und ist keines:
+   der Editor sichert auf `input`, und ein zugewiesener `textContent` löst
+   kein `input` aus. Ergebnis: der Block behielt seinen alten Text, „nichts
+   festgehalten" war trivial wahr, und drei weitere Punkte massen Zahlen, die
+   nichts bedeuteten.
+   Jetzt klickt die Prüfung in den Absatz, wählt alles aus und tippt. */
+const tippe = async (bid: string, text: string): Promise<void> => {
+  const feld = seite.locator(`[data-bid="${bid}"] .ct`).first();
+  await feld.click();
+  await seite.keyboard.press('Control+a');
+  await seite.keyboard.type(text);
+  await seite.keyboard.press('Escape');
+  await seite.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await seite.waitForTimeout(450);
+};
+
+await tippe(dokument.absatz, 'Ohne Modus einfach geändert.');
+const ohne = await seite.evaluate((ids: any) => ({
+  vorschlaege: (Store.getBlock(ids.seite)?.vorschlaege || []).length,
+  modus: !!Store.getBlock(ids.seite)?.vorschlagModus,
+  text: String(Store.getBlock(ids.absatz)?.text || '')
+}), dokument);
+gleich('Der getippte Text steht wirklich im Block', ohne.text, 'Ohne Modus einfach geändert.');
+gleich('Der Modus ist aus', ohne.modus, false);
+gleich('Und es wurde nichts als Vorschlag festgehalten', ohne.vorschlaege, 0);
 
 /* ==========================================================================
  * §3 · Mit Vorschlagsmodus wird der alte Text festgehalten
@@ -145,42 +183,36 @@ gleich('Und es wurde nichts als Vorschlag festgehalten', ohne?.vorschlaege, 0);
  * ========================================================================*/
 console.log('\n3 · Mit Vorschlagsmodus wird der alte Text festgehalten');
 
-const mit = await seite.evaluate(async (ids: any) => {
+await seite.evaluate(async (ids: any) => {
   Store.updateBlock(ids.seite, { vorschlagModus: true });
   App.zeichneSeite();
   await new Promise(r => setTimeout(r, 500));
-  const feld = document.querySelector<HTMLElement>(`[data-bid="${ids.absatz}"] .ct`);
-  if (!feld) return null;
-  const vorher = feld.textContent || '';
-  feld.focus();
-  feld.textContent = 'Mit Modus vorgeschlagen.';
-  feld.blur();
-  await new Promise(r => setTimeout(r, 500));
+}, dokument);
+await tippe(dokument.absatz, 'Mit Modus vorgeschlagen.');
+const mit = await seite.evaluate((ids: any) => {
   const liste = Store.getBlock(ids.seite)?.vorschlaege || [];
   return {
-    vorher, anzahl: liste.length,
+    anzahl: liste.length,
     alt: String(liste[0]?.alt || ''), neu: String(liste[0]?.neu || ''),
-    von: String(liste[0]?.von || ''), bid: String(liste[0]?.bid || '')
+    von: String(liste[0]?.von || ''), bid: String(liste[0]?.bid || ''),
+    text: String(Store.getBlock(ids.absatz)?.text || '')
   };
 }, dokument);
-p('Der Absatz ist noch da', !!mit, 'kein .ct gefunden');
-gleich('Genau ein Vorschlag ist entstanden', mit?.anzahl, 1);
-gleich('Er merkt sich den alten Text', mit?.alt, 'Ohne Modus einfach geändert.');
-gleich('Und den neuen', mit?.neu, 'Mit Modus vorgeschlagen.');
-p('Er nennt, von wem er kommt', !!mit?.von, mit?.von);
-gleich('Und hängt am richtigen Block', mit?.bid, dokument.absatz);
+gleich('Genau ein Vorschlag ist entstanden', mit.anzahl, 1);
+gleich('Er merkt sich den alten Text', mit.alt, 'Ohne Modus einfach geändert.');
+gleich('Und den neuen', mit.neu, 'Mit Modus vorgeschlagen.');
+p('Er nennt, von wem er kommt', !!mit.von, mit.von);
+gleich('Und hängt am richtigen Block', mit.bid, dokument.absatz);
+/* Der Block trägt den neuen Text schon — der Vorschlag ist die Notiz
+   darüber, nicht ein Zwischenspeicher. Genau deshalb setzt „Verwerfen"
+   zurück und „Annehmen" lässt stehen. */
+gleich('Der Block zeigt bereits den neuen Text', mit.text, 'Mit Modus vorgeschlagen.');
 
 /* Zweimal ändern bleibt EIN Vorschlag — sonst hätte man nach fünf
    Tippfehlern fünf Einträge für denselben Satz. */
-const zweimal = await seite.evaluate(async (ids: any) => {
-  const feld = document.querySelector<HTMLElement>(`[data-bid="${ids.absatz}"] .ct`);
-  if (!feld) return -1;
-  feld.focus();
-  feld.textContent = 'Noch einmal geändert.';
-  feld.blur();
-  await new Promise(r => setTimeout(r, 500));
-  return (Store.getBlock(ids.seite)?.vorschlaege || []).length;
-}, dokument);
+await tippe(dokument.absatz, 'Noch einmal geändert.');
+const zweimal = await seite.evaluate((ids: any) =>
+  (Store.getBlock(ids.seite)?.vorschlaege || []).length, dokument);
 gleich('Zweimal tippen bleibt ein Vorschlag', zweimal, 1);
 
 /* ==========================================================================
@@ -221,13 +253,15 @@ gleich('Es zeigt den einen Vorschlag', verworfen.eintraege, 1);
 gleich('Verwerfen setzt den alten Text zurück', verworfen.text, 'Ohne Modus einfach geändert.');
 gleich('Und nimmt den Vorschlag aus der Liste', verworfen.rest, 0);
 
+/* WIEDER MIT DER TASTATUR. Der Unterschied zu §3 ist hier nicht Kosmetik:
+   „Annehmen“ schreibt bewusst KEINEN Text zurück, weil der Block ihn beim
+   Tippen längst bekommen hat — der Vorschlag ist die Notiz darüber, nicht der
+   Zwischenspeicher. Ein Test, der den Text im Skript setzt, hätte den Block
+   also leer gelassen und dem Produkt einen Fehler angehängt, den es nicht
+   hat. */
+await tippe(dokument.absatz, 'Diesmal angenommen.');
+
 const angenommen = await seite.evaluate(async (ids: any) => {
-  const feld = document.querySelector<HTMLElement>(`[data-bid="${ids.absatz}"] .ct`);
-  if (!feld) return null;
-  feld.focus();
-  feld.textContent = 'Diesmal angenommen.';
-  feld.blur();
-  await new Promise(r => setTimeout(r, 500));
   document.querySelectorAll<HTMLElement>('.overlay, .menu, .menu-grund').forEach(o => o.remove());
   App.seitenMenue(document.getElementById('btn-page-menu'), Store.getBlock(ids.seite));
   await new Promise(r => setTimeout(r, 350));
@@ -291,10 +325,24 @@ p('Er hängt am Absatz', kommentiert?.amBlock === true);
  * ========================================================================*/
 console.log('\n6 · Drucken nimmt das ganze Dokument mit');
 
+/* GEZÄHLT WIRD DER DRUCKRAHMEN, NICHT DAS FENSTER. Mein erster Entwurf
+   ersetzte `window.print` und bekam null Aufrufe — richtig so, denn `drucken`
+   ruft `f.contentWindow.print()` im eingehängten Rahmen auf, und der ist ein
+   eigener Bereich mit eigenem `print`. Ein Beobachter fängt den Rahmen im
+   Moment des Einhängens ab; `document.open()` behält dasselbe Fenster, die
+   Ersetzung überlebt das Beschreiben also. */
 const gedruckt = await seite.evaluate(async (ids: any) => {
   (window as any).__druckAufrufe = 0;
-  const echt = window.print;
-  (window as any).print = () => { (window as any).__druckAufrufe++; };
+  const beobachter = new MutationObserver(m => {
+    for (const s of m) for (const n of Array.from(s.addedNodes)) {
+      if (!(n instanceof HTMLIFrameElement)) continue;
+      const w = n.contentWindow as any;
+      if (!w || w.__gefangen) continue;
+      w.__gefangen = true;
+      w.print = () => { (window as any).__druckAufrufe++; };
+    }
+  });
+  beobachter.observe(document.body, { childList: true });
   try {
     await (globalThis as any).Werkzeuge.drucken(Store.getBlock(ids.seite));
     await new Promise(r => setTimeout(r, 700));
@@ -302,7 +350,7 @@ const gedruckt = await seite.evaluate(async (ids: any) => {
       .filter(f => (f as HTMLIFrameElement).style.position === 'fixed').pop() as HTMLIFrameElement | undefined;
     const inhalt = (rahmen?.contentDocument?.body?.textContent || '').replace(/\s+/g, ' ').trim();
     return { aufrufe: (window as any).__druckAufrufe, inhalt: inhalt.slice(0, 400) };
-  } finally { (window as any).print = echt; }
+  } finally { beobachter.disconnect(); }
 }, dokument);
 p('Der Druck wurde ausgelöst', gedruckt.aufrufe >= 1, `${gedruckt.aufrufe}`);
 p('Der Titel steht im Druckbild', /Betriebsanleitung/.test(gedruckt.inhalt),

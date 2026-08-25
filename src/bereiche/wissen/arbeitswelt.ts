@@ -1554,7 +1554,13 @@ const Arbeitswelt = (() => {
       const tabOpen = target.closest<HTMLElement>('[data-aw-open-tab]');
       if (tabOpen?.dataset.awOpenTab) { reiter.oeffnen(tabOpen.dataset.awOpenTab); return; }
       const split = target.closest<HTMLElement>('[data-aw-split]');
-      if (split?.dataset.awSplit) { reiter.teilen(split.dataset.awSplit); return; }
+      /* UND NEU ZEICHNEN. Die anderen drei Wege hier verlassen den Workspace
+         (`oeffnen`, `wechseln` und `schliessen` rufen alle `App.oeffne`), die
+         Teilung nicht: sie hängt sich in `#main` und lässt den Workspace
+         stehen. Ohne diesen Aufruf blieb das Feld daneben stumm — kein
+         „Geteilt: …“, und vor allem kein Knopf zum Schliessen. Gemessen am
+         25. August: `Fenster.geteilt()` gesetzt, `.aw-teilung` nicht da. */
+      if (split?.dataset.awSplit) { reiter.teilen(split.dataset.awSplit); zeichnen(); return; }
       const tabClose = target.closest<HTMLElement>('[data-aw-tab-close]');
       if (tabClose?.dataset.awTabClose) { reiter.schliessen(Number(tabClose.dataset.awTabClose)); return; }
       const tab = target.closest<HTMLElement>('[data-aw-tab]');

@@ -293,6 +293,16 @@ const Store = (() => {
         Reporter.warn('Suche', 'Der Suchindex war nicht lesbar und wird repariert', err);
     }
 
+    /* Und einmal die Dateinamen — aus demselben Grund getrennt gekapselt:
+       ohne sie sucht es sich schlechter, aber der Bestand steht. */
+    try {
+      (await all('dateien')).forEach(dateiNameMerken);
+    } catch (err) {
+      dateiNamen.clear();
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('Suche', 'Die Dateinamen waren nicht lesbar; die Suche findet sie diesmal nicht', err);
+    }
+
     /* --- Selbstheilung ---------------------------------------------------
        Ein Satz, dem ein Feld fehlt, bringt die Oberfläche zu Fall — und zwar
        an einer Stelle, die mit der Ursache nichts zu tun hat. Ein Import,
@@ -1306,6 +1316,37 @@ const Store = (() => {
    * ist ein Bild. Ihr Text steht seit E107 daneben, sonst wäre ein
    * eingelesenes Skript für die Suche stumm.
    */
+  /**
+   * Was an einem Block durchsucht wird.
+   *
+   * Drei Felder standen hier lange: `text`, `suchtext`, `ocrText`. §28 des
+   * Auftrags zählt zwölf Dinge auf, die auffindbar sein sollen, und zwei
+   * davon lagen ausserhalb:
+   *
+   * DER DATEINAME. Er steht im Fach `dateien`, nicht am Block. In der Praxis
+   * fiel das kaum auf, weil jeder Weg, der eine Datei anlegt, den Namen auch
+   * als Blocktext setzt — `recognition.ts`, `pdf/einlesen.ts`. Wer den Text
+   * aber überschreibt („Vertrag Wohnung"), verliert den Namen für die Suche.
+   * Gemessen am 25. August: Block mit Namen im Text gefunden, derselbe Block
+   * ohne Text nicht.
+   *
+   * DIE QUELLENANGABE. Lernkarten aus Paketen tragen sie unter
+   * `quiz.source.title`, die Lizenz unter `learningPackage.license`
+   * (`electrical.ts`). Beides ist am Block, nur eine Ebene tiefer — nachgesehen,
+   * nicht geraten.
+   *
+   * Die Reihenfolge ist Absicht: der eigene Text zuerst, damit der Schnipsel
+   * in der Trefferliste das zeigt, was der Mensch geschrieben hat.
+   */
+  const durchsuchbar = (b: any): string[] => {
+    const raus = [String(b.text || ''), String(b.suchtext || ''), String(b.ocrText || '')];
+    if (b.dateiId) raus.push(dateiNamen.get(String(b.dateiId)) || '');
+    const quelle = b.quiz && b.quiz.source;
+    if (quelle) raus.push(String(quelle.title || ''), String(quelle.edition || ''));
+    if (b.learningPackage) raus.push(String(b.learningPackage.license || ''));
+    return raus;
+  };
+
   const findInside = (pageId: any, needle: any, tiefe: number): any => {
     if (tiefe > 5) return null;
     for (const kid of childrenOf(pageId)) {
@@ -1313,8 +1354,7 @@ const Store = (() => {
          mit fremdem Inhalt in der Liste stehen. */
       if (kid.type === 'page') continue;
 
-      for (const feld of ['text', 'suchtext', 'ocrText']) {
-        const roh = String(kid[feld] || '');
+      for (const roh of durchsuchbar(kid)) {
         if (!roh) continue;
         const i = roh.toLowerCase().indexOf(needle);
         if (i < 0) continue;
@@ -1893,10 +1933,34 @@ const Store = (() => {
    * Schritten, wieder zusammensetzen, aufräumen — steht in dateien.js.
    * Hier steht nur, wie ein Stück hinein- und wieder herauskommt.
    * ======================================================================*/
-  const dateiPut   = (satz: any) => put('dateien', satz);
-  const dateiHolen = (id: string)   => get('dateien', id);
-  const dateiWeg   = (id: string)   => del('dateien', id);
-  const dateiAlle  = ()     => all('dateien');
+  /* --- Dateinamen für die Suche ----------------------------------------
+     NUR KENNUNG → NAME, sonst nichts. Die Sätze selbst bleiben in der
+     Datenbank; hier steht je Datei eine Zeichenkette.
+
+     Warum überhaupt: `search()` ist synchron — die Befehlspalette tippt mit,
+     und ein `await` je Tastendruck wäre spürbar. Das Fach `dateien` liegt
+     aber in IndexedDB. Ohne dieses kleine Verzeichnis könnte die Suche
+     Dateinamen nur mit einem Umbau auf asynchron erreichen.
+
+     Die Sätze sind leicht: Name, Grösse, Typ, Anzahl Stücke. Die Bytes
+     liegen im Fach `stuecke` und werden hier nie angefasst (§36). */
+  const dateiNamen = new Map<string, string>();
+  const dateiNameMerken = (satz: any): void => {
+    if (satz && satz.id) dateiNamen.set(String(satz.id), String(satz.name || ''));
+  };
+
+  const dateiPut   = (satz: any) => { dateiNameMerken(satz); return put('dateien', satz); };
+  const dateiHolen = async (id: string) => {
+    const satz = await get('dateien', id);
+    dateiNameMerken(satz);
+    return satz;
+  };
+  const dateiWeg   = (id: string) => { dateiNamen.delete(String(id)); return del('dateien', id); };
+  const dateiAlle  = async () => {
+    const alle = await all('dateien');
+    alle.forEach(dateiNameMerken);
+    return alle;
+  };
 
   /* --- Der letzte gemeinsame Stand (für den Abgleich) -------------------- */
 
@@ -2027,7 +2091,7 @@ const Store = (() => {
     setMeta, getMeta, flush, settled,
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
-    search, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
+    search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
     vorratPut, vorratHolen, vorratWeg, vorratAlle,

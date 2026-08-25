@@ -38,19 +38,19 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 13 | Uni | ◐ | Ansicht steht über vorhandenen Objekten. Semester und Module werden aus Titeln erkannt, nicht als eigene Struktur — so gewollt (§13: „nicht als komplett anderes Datensystem") |
 | 14 | Arbeit | ◐ | Ansicht steht, `bilder.mts arbeit`. Kein eigener Prüflauf |
 | 15 | Workspace | ✅ | `arbeitswelt.ts`, test206 |
-| 16 | Tabs und Arbeitsfluss | ◐ | Reiter und geteilte Ansicht stehen im Workspace-Panel. Kein eigener Prüflauf für das Teilen |
+| 16 | Tabs und Arbeitsfluss | ✅ | test206 §12 (elf Punkte): zwei Reiter, Wechseln, geteilt Öffnen, Teilung schliessen, Reiter schliessen. Der Prüflauf fand dabei, dass „Geteilt öffnen“ das Feld nicht neu zeichnete — E146 |
 | 17 | PDF-Arbeitsplatz | ✅ | test210 (sechs Abschnitte), test204 §2 (1366×768 und mobiler Drawer), `bilder.mts dokument` (E141) |
 | 18 | PDF → Lernen | ◐ | Ausschnitt, Erkennen, „Aus Inhalt" stehen im Inspector. „⌁ Erkennen" braucht einen Dienst, den Redion nicht mitliefert (L53) |
 | 19 | PDF → Notizen | ✅ | E104, test182 |
 | 20 | Ink V2 | ✅ | `marken.ts`; test204 §1 (übersteht einen echten Reload), test210 §2 und §4 (Beschriftung, rollende Leiste) |
 | 21 | Papiervorlagen | ✅ | test207, `bilder.mts papier` |
 | 22 | Whiteboard | ✅ | test209 (zehn Abschnitte, 55 Punkte), `bilder.mts whiteboard`/`whiteboards` (E138, E144). Offen nur noch: Verbindungen in der Miniatur — L54 |
-| 23 | Dokumente (Word-artig) | ◐ | Seitenansicht, Überschriften, Listen, Tabellen, Bilder, Druck/PDF stehen. Vorschlagsmodus fehlt |
+| 23 | Dokumente (Word-artig) | ✅ | test212 (sechs Abschnitte, 32 Punkte). Der Vorschlagsmodus stand hier als fehlend — falsch, er ist vollständig da: `schale.ts` (Band, Fenster, Annehmen/Verwerfen), `editor.ts` (Festhalten beim Verlassen eines Blocks). Berichtigt mit E145 |
 | 24 | Tabellen (Excel-artig) | ✅ | `spreadsheet/`, test110 (Kern), test111 (Block), test116 (ODS), test123, test130 |
 | 25 | Bibliothek | ✅ | `bibliothek.ts`, test33 (Bibliothek, Reiter, Spalten, Favoriten) |
 | 26 | Aufgaben | ✅ | `Bibliothek.meineAufgaben`, test33 (Gruppen, Filter, Quellen) |
 | 27 | Kalender / Planung | ✅ | `planen/`, test54 |
-| 28 | Globale Suche | ◐ | Seiten, Blöcke, Aliasse, PDF-Suchtext und OCR-Text sind im Index (`text`, `suchtext`, `ocrText`); Aufgaben, Lernkarten, Wiki und Meetings kommen als Blocktext mit. NACHGESEHEN: Dateinamen aus dem Fach `dateien` werden nicht durchsucht, Quellenangaben nur, soweit sie im Text stehen. test195 deckt den Index, nicht die Breite |
+| 28 | Globale Suche | ✅ | Seiten, Blöcke, Aliasse, PDF-Suchtext und OCR-Text; Aufgaben, Lernkarten, Wiki und Meetings kommen als Blocktext mit. Dateinamen aus dem Fach `dateien` und Quellenangaben (`quiz.source`, `learningPackage.license`) seit E147. Eine Funktion — `Store.durchsuchbar` — entscheidet für beide Suchen, was durchsuchbar ist. test195 (Index), test213 (Breite, 20 Punkte) |
 | 29 | Command Palette | ✅ | test206 §11 (E139) |
 | 30 | Mobile first (428 px) | ✅ | test114, test54, test209 §9, test210 §3 |
 | 31 | Mobile Lernen | ◐ | Lernwelt läuft am Telefon; Tastatur ist dort ohne Belang. Kein eigener Telefon-Prüflauf für die Lernrunde |
@@ -90,17 +90,15 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 
 Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 
-1. **§23 Vorschlagsmodus** — das einzige, was am Dokumentmodus noch fehlt.
-2. **§39 entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
+1. **§39 entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
    beschriften. Ein Knopf, hinter dem nichts ist, ist die schlechteste der
    drei Möglichkeiten.
-3. **§28 Suche verbreitern** (L55): Dateinamen und Quellenangaben.
-4. **§16 Reiter prüfen** — sie stehen, aber nichts hält sie fest.
-5. **§9/§14 Prüfläufe** für Lernpfad und Arbeit — beide stehen, beide
+2. **§9/§14 Prüfläufe** für Lernpfad und Arbeit — beide stehen, beide
    ungeprüft.
 
 Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
-Punkte) und der Rest von §22 (E144).
+Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
+falsch eingetragen (E145, test212), §16 (test206 §12, E146) und §28 (test213, E147 — L55 geschlossen).
 
 ---
 

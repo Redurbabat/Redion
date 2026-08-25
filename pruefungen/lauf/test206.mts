@@ -480,6 +480,109 @@ const ausgefuehrt = await seite.evaluate(async () => {
 });
 gleich('„Neue Lernkarte" legt wirklich eine an', ausgefuehrt.nachher, ausgefuehrt.vorher + 1);
 
+/* ==========================================================================
+ * §12 · Reiter und geteilte Ansicht (Auftrag §16)
+ * --------------------------------------------------------------------------
+ * Der Workspace zeigt rechts ein Feld „Reiter & geteilte Ansicht". Es stand
+ * da, seit die Arbeitswelt steht, und nichts hielt es fest.
+ *
+ * Geprüft wird über den Weg eines Menschen: zwei Seiten in Reitern öffnen,
+ * dazwischen wechseln, eine geteilt öffnen, eine schliessen.
+ *
+ * ─── Gegenproben, nachgemessen ─────────────────────────────────────────────
+ *   `zeichnen()` nach `reiter.teilen` weggelassen → „Und das Feld sagt es"
+ *      und „Die Teilung lässt sich schliessen" rot. Genau so war es vor
+ *      dem 25. August: `Fenster.geteilt()` gesetzt, `.aw-teilung` nicht da.
+ *   `Fenster.neuerReiter` aus der Rückgabe entfernt → dieser Abschnitt hält
+ *      an und meldet „Die Fenstersteuerung ist da" rot.
+ *
+ * Die erste Fassung dieses Kopfes behauptete, ohne `neuerReiter` melde der
+ * Vertrag `verfügbar: false`. Gemessen: er stürzt ab, weil die Sperre unten
+ * nur `F.reiter` prüfte. Jetzt prüft sie, was sie wirklich braucht.
+ * ========================================================================*/
+console.log('\n12 · Reiter und geteilte Ansicht');
+
+const fenster = await seite.evaluate(async () => {
+  const eins = Store.addPage(null, { text: 'Erste Seite', icon: '📄' });
+  const zwei = Store.addPage(null, { text: 'Zweite Seite', icon: '📗' });
+  await Store.flush();
+  const F = (globalThis as any).Fenster;
+  if (!F?.reiter || !F?.neuerReiter || !F?.schliessen) return null;
+  /* Sauber anfangen: was von früheren Abschnitten offen ist, zumachen. */
+  while ((F.reiter() || []).length > 1) F.schliessen(0);
+  F.neuerReiter(eins.id);
+  await new Promise(r => setTimeout(r, 400));
+  F.neuerReiter(zwei.id);
+  await new Promise(r => setTimeout(r, 400));
+  (globalThis as any).Produktwelten.workspace('start');
+  await new Promise(r => setTimeout(r, 900));
+  const wurzel = document.querySelector('.arbeitswelt');
+  return {
+    eins: eins.id, zwei: zwei.id,
+    anzahl: (F.reiter() || []).length,
+    titel: [...(wurzel?.querySelectorAll('.aw-reiter-wechsel') || [])]
+      .map(k => (k.textContent || '').trim()),
+    aktiv: Number(F.aktiv?.() ?? -1),
+    ausgewaehlt: [...(wurzel?.querySelectorAll('.aw-reiter-wechsel') || [])]
+      .map(k => k.getAttribute('aria-selected'))
+  };
+});
+p('Die Fenstersteuerung ist da', !!fenster, 'Fenster.reiter fehlt');
+if (fenster) {
+  p('Zwei Reiter stehen offen', fenster.anzahl >= 2, `${fenster.anzahl}`);
+  p('Der Workspace nennt sie beim Namen',
+    fenster.titel.some(t => /Erste Seite/.test(t)) &&
+    fenster.titel.some(t => /Zweite Seite/.test(t)), fenster.titel.join(' | '));
+  gleich('Genau einer ist ausgewählt',
+    fenster.ausgewaehlt.filter(w => w === 'true').length, 1);
+
+  const gewechselt = await seite.evaluate(async () => {
+    const knoepfe = [...document.querySelectorAll<HTMLElement>('.aw-reiter-wechsel')];
+    knoepfe[0]?.click();
+    await new Promise(r => setTimeout(r, 700));
+    return {
+      /* `?? -1`, NICHT `|| -1`. Der erste Reiter hat den Zähler 0, und 0 ist
+         falsch im Sinne von `||` — die Messung meldete −1 und behauptete, das
+         Wechseln gehe nicht. Es geht; nur meine Zeile ging nicht. */
+      aktiv: Number((globalThis as any).Fenster.aktiv?.() ?? -1),
+      offen: String(App.aktuelleSeite() || '')
+    };
+  });
+  gleich('Ein Klick wechselt auf den ersten Reiter', gewechselt.aktiv, 0);
+  p('Und die Seite darunter wechselt mit', !!gewechselt.offen, gewechselt.offen);
+
+  const geteilt = await seite.evaluate(async (ids: any) => {
+    (globalThis as any).Produktwelten.workspace('start');
+    await new Promise(r => setTimeout(r, 800));
+    const teilen = document.querySelector<HTMLElement>(`[data-aw-split="${ids.zwei}"]`);
+    teilen?.click();
+    await new Promise(r => setTimeout(r, 800));
+    const stand = (globalThis as any).Fenster.geteilt?.();
+    const text = (document.querySelector('.aw-teilung-text')?.textContent || '').trim();
+    return { knopfDa: !!teilen, id: String(stand?.id || ''), text };
+  }, fenster);
+  p('Es gibt einen Knopf „Geteilt öffnen"', geteilt.knopfDa);
+  gleich('Die zweite Seite steht geteilt', geteilt.id, fenster.zwei);
+  p('Und das Feld sagt es',
+    /Zweite Seite/.test(geteilt.text), geteilt.text || '(kein Text)');
+
+  const zu = await seite.evaluate(async () => {
+    const vorher = ((globalThis as any).Fenster.reiter() || []).length;
+    (document.querySelector('[data-aw-split-close]') as HTMLElement | null)?.click();
+    await new Promise(r => setTimeout(r, 600));
+    (globalThis as any).Produktwelten.workspace('start');
+    await new Promise(r => setTimeout(r, 800));
+    (document.querySelector('[data-aw-tab-close="0"]') as HTMLElement | null)?.click();
+    await new Promise(r => setTimeout(r, 700));
+    return {
+      geteiltWeg: !(globalThis as any).Fenster.geteilt?.(),
+      nachher: ((globalThis as any).Fenster.reiter() || []).length, vorher
+    };
+  });
+  p('Die Teilung lässt sich schliessen', zu.geteiltWeg);
+  gleich('Und ein Reiter auch', zu.nachher, zu.vorher - 1);
+}
+
 gleich('Kein Skriptfehler auf keiner Ansicht', fehler.join(' | '), '');
 
 console.log(`\n  Suite 172 — Die zwei Produktwelten tragen: ${ok} ok, ${weg} offen`);

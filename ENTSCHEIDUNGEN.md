@@ -9262,3 +9262,250 @@ Verschieben UND Radieren zurückgenommen, das Schreibfeld statt `prompt()`
 (gezählt, nicht vermutet), der Griff und das Vergrössern mit festgehaltener
 oberer Ecke. Vier Gegenproben einzeln zurückgenommen; die vierte — das
 Rechteck wieder ohne `pointer-events` — macht schon den ersten Punkt rot.
+
+
+---
+
+## E145 · Eine Lücke, die es nicht gab
+
+**25. August 2026.** In `doku/AUFTRAG-STAND.md` stand für §23:
+
+> ◐ Seitenansicht, Überschriften, Absätze, Listen, Tabellen, Bilder,
+> Druck/PDF stehen. **Vorschlagsmodus fehlt.**
+
+Er fehlt nicht. Er steht vollständig da, in zwei Dateien:
+
+```txt
+schale.ts   ein-/ausschalten, Band mit dem Namen dessen, der schreibt,
+            Fenster zum Annehmen und Verwerfen, Eintrag im Seitenmenü
+editor.ts   beim Verlassen eines Blocks den alten Text festhalten,
+            mehrfaches Tippen bleibt EIN Vorschlag
+```
+
+Ich hatte gegrept, nicht gelesen. Der Suchbegriff war „Vorschlag" in
+`src/bereiche/editor/` — und die Bedienung liegt in `src/schale/`.
+
+### Warum eine falsche Lücke schlimmer ist als eine übersehene
+
+Eine übersehene Lücke kostet, bis sie jemand findet. Eine falsche Lücke
+schickt den Nächsten los, etwas zu bauen, das es schon gibt — und dann steht
+es zweimal da, mit zwei Datenformen und zwei Fehlern. §52 des Auftrags
+verbietet genau das, und die Doku wäre der Anlass gewesen.
+
+Der Eintrag ist berichtigt, und weil eine Behauptung ohne Beleg genau das
+Problem war, steht der Beleg jetzt daneben: **test212**, sechs Abschnitte,
+32 Punkte.
+
+### Was die Prüfung mitnimmt
+
+Nicht nur die Vorschläge, sondern die ganze Liste aus §23 — Überschriften,
+Absätze, Listen, Tabellen, Inhaltsverzeichnis, Kommentare, Druck.
+
+Zwei Richtungen sind ihr wichtiger als alles andere:
+
+**Ohne Modus wird nichts festgehalten.** Wäre jede Tippkorrektur ein
+Vorschlag, wäre das Schreiben kaputt. Dieser Punkt steht VOR dem, der den
+Modus einschaltet.
+
+**Verwerfen setzt zurück, Annehmen lässt stehen.** Das ist der ganze Sinn,
+und beides geht über das Seitenmenü — nicht über eine innere Funktion.
+`vorschlaegeZeigen` steht bewusst nicht auf der öffentlichen Fläche von
+`App`; geprüft wird der Weg, den ein Mensch nimmt.
+
+### Vier Fehler, und alle vier waren meine
+
+Die falsche Lücke war der erste. Die Prüfung, die sie berichtigen sollte,
+brachte drei weitere mit — und jeder hätte für sich ausgereicht, dem Produkt
+einen Mangel anzuhängen, den es nicht hat.
+
+**Der Text wurde nie getippt.** Der erste Entwurf setzte `feld.textContent`
+und rief `blur()`. Das sieht aus wie Tippen und ist keines: der Editor
+sichert auf `input`, und ein zugewiesener `textContent` löst kein `input`
+aus. Der Block behielt seinen alten Text — womit „ohne Modus wird nichts
+festgehalten" trivial wahr war und „Annehmen lässt den neuen Text stehen"
+falsch rot wurde. Jetzt klickt die Prüfung hinein und tippt mit der Tastatur.
+
+**Die Blockart hiess `tabelle`.** `Store.addBlock` nimmt jede Zeichenkette;
+der Editor fiel in seinen `default`-Zweig und zeichnete einen leeren Absatz.
+Der Punkt „alle Bausteine da" blieb trotzdem grün, weil er nur Namen zählte.
+Die Art heisst `table` (`register/bloecke.ts`).
+
+**Überschriften sind keine `<h1>`.** Jeder Block ist ein `<div>`; zur
+Überschrift wird er durch `role="heading"` und `aria-level` auf dem Textfeld
+— genau das, was ein Vorleseprogramm liest. Eine Suche nach `h1, h2, h3`
+zählt null, auf jeder Seite, immer.
+
+**Gedruckt wird im Rahmen, nicht im Fenster.** `drucken` hängt ein
+`<iframe>` ein und ruft `f.contentWindow.print()`. Wer `window.print`
+ersetzt, zählt null Aufrufe und hält den Druck für kaputt. Ein Beobachter
+fängt den Rahmen jetzt im Moment des Einhängens ab.
+
+Dazu kam die Klasse des Inhaltsverzeichnisses: sie heisst `toc-liste`, nicht
+`toc`.
+
+Fünf Namen, fünfmal geraten statt nachgesehen — genau das, wovor E21 warnt,
+nur diesmal nicht bei Feldnamen, sondern bei Klassen, Rollen und Blockarten.
+
+### Kann die Suite rot werden?
+
+Nachgemessen, nicht behauptet. Auf einem Abzug des Baums wurde je eine Zeile
+im Produkt entschärft:
+
+```txt
+`alt` beim Festhalten durch `neu` ersetzt   → §3 rot, und §4 gleich mit
+Verwerfen schreibt nicht mehr zurück        → §4 rot
+`f.contentWindow.print()` weggelassen       → §6 rot (0 Aufrufe)
+`role="heading"` weggelassen                → §1 rot (3 → 1)
+```
+
+Die fünfte kam von selbst: mit der Blockart `tabelle` war §1 rot, bis die
+Art stimmte.
+
+**Geprüft:** test212, 32/32.
+
+
+---
+
+## E146 · Der Knopf „Geteilt öffnen" tat etwas, und man sah es nicht
+
+**25. August 2026.** §16 des Auftrags will Reiter und eine geteilte Ansicht.
+Beides steht seit langem: `reiter.ts` führt die Liste, der Workspace zeigt
+sie rechts in einem Feld „Reiter & geteilte Ansicht" — mit `⊞` zum geteilt
+Öffnen und `✕` zum Schliessen.
+
+Nichts hielt das fest. Die Prüfung dafür (test206 §12) fand beim ersten Lauf
+sofort etwas, und zwar genau die Sorte Fehler, die nur beim Ausführen
+auffällt.
+
+### Was gemessen wurde
+
+```txt
+⊞ geklickt
+Fenster.geteilt()   { id: "…", richtung: "quer", anteil: 50 }   gesetzt
+.arbeitswelt        da
+.aw-reiter-panel    da
+.aw-teilung         NICHT da
+```
+
+Der Zustand stimmte, das Bild nicht. Wer `⊞` drückte, sah nichts passieren —
+weder den Satz „Geteilt: Zweite Seite · quer" noch den Knopf, mit dem man es
+wieder zumacht.
+
+### Warum ausgerechnet dieser Weg
+
+Die vier Wege in diesem Feld sehen gleich aus, sind es aber nicht:
+
+```txt
+Reiter öffnen    → App.oeffne   verlässt den Workspace
+Reiter wechseln  → App.oeffne   verlässt den Workspace
+Reiter schliessen→ App.oeffne   verlässt den Workspace
+Geteilt öffnen   → hängt sich in #main und lässt den Workspace stehen
+```
+
+Drei brauchen kein Neuzeichnen, weil gleich eine andere Ansicht kommt. Der
+vierte braucht es — und war der einzige ohne. Ein `zeichnen()` mehr.
+
+### Und ein Fehler in meiner eigenen Messung
+
+Die Prüfung las den aktiven Reiter mit `Number(F.aktiv?.() || -1)`. Der erste
+Reiter hat den Zähler **0**, und 0 ist falsch im Sinne von `||`. Die Messung
+meldete −1 und behauptete, das Wechseln gehe nicht. Es geht. `?? -1` statt
+`|| -1`.
+
+Dieselbe Sorte wie in E145: nicht das Produkt war kaputt, sondern die Zeile,
+die es prüfen sollte. Bei Zählern, Grössen und Anzahlen ist `||` fast immer
+der falsche Operator.
+
+**Geprüft:** test206 §12, elf Punkte — zwei Reiter, Wechseln, geteilt Öffnen,
+Teilung schliessen, Reiter schliessen. Das `zeichnen()` wieder weggenommen
+macht zwei davon rot; `Fenster.neuerReiter` aus der Rückgabe entfernt lässt
+den Abschnitt gar nicht erst anlaufen.
+
+
+---
+
+## E147 · Die Suche findet Dateinamen und Quellenangaben — und beide Suchen dieselben
+
+**25. August 2026.** L55 hielt zwei Dinge fest, die §28 des Auftrags verlangt
+und die die Suche nicht fand: den **Dateinamen** und die **Quellenangabe**.
+
+### Erst nachgemessen, und L55 dabei halb widerlegt
+
+L55 hiess „Die Suche findet keine Dateinamen". Das war zu weit gegriffen.
+Gemessen:
+
+```txt
+Anhang, Blocktext = "Rechnung-2026-08.pdf"   gefunden
+Anhang, Blocktext = ""                       nicht gefunden
+```
+
+Jeder Weg im Produkt, der eine Datei anlegt, setzt den Namen auch als
+Blocktext — `recognition.ts`, `pdf/einlesen.ts`. Im Alltag fiel deshalb
+nichts auf. Verloren geht der Name erst, wenn jemand den Text überschreibt
+(„Der Vertrag von damals"), und dann ist er endgültig weg: die Datei liegt im
+Fach `dateien`, der Blocktext zeigt woandershin.
+
+Dieselbe Sorte Berichtigung wie E145, nur in die andere Richtung: dort stand
+etwas als fehlend da, das es gab; hier stand etwas als ganz fehlend da, das
+zu neun Zehnteln ging.
+
+### Was gebaut wurde
+
+**Ein Verzeichnis Kennung → Name.** `Store.search` ist synchron — die
+Befehlspalette tippt mit, und ein `await` je Tastendruck wäre spürbar. Das
+Fach `dateien` liegt aber in IndexedDB. Also hält `indexdb.ts` eine kleine
+`Map` mit Kennung und Name, gefüllt beim Hochfahren und bei jedem Schreiben,
+geleert beim Löschen. Die Bytes liegen weiter im Fach `stuecke` und werden
+nie angefasst (§36).
+
+**Eine Funktion entscheidet, was durchsuchbar ist.** `Store.durchsuchbar(b)`
+gibt zurück, was an einem Block Text ist:
+
+```txt
+b.text · b.suchtext · b.ocrText          wie bisher
+Dateiname zu b.dateiId                   neu
+b.quiz.source.title / .edition           neu
+b.learningPackage.license                neu
+```
+
+### Und der Teil, der ohne den vorigen nichts genützt hätte
+
+`Store.search` ist nicht die einzige Suche. Davor liegt ein Beschleuniger:
+`Kontext.kandidaten(wort)` grenzt auf jene Seiten ein, deren Wörter im Index
+stehen. Der Index wurde aus einer EIGENEN Feldliste gebaut — denselben drei
+Feldern wie früher.
+
+Der Fehler daran ist unscheinbar und trifft hart:
+
+```txt
+Wort im Index gar nicht    → kandidaten = null → alles prüfen → gefunden
+Wort im Index anderswo     → kandidaten = [jene Seiten] → Anhang fällt heraus
+```
+
+Solange „Mietvertrag" nirgends stand, fand die Suche den Anhang trotzdem.
+Sobald irgendeine Notiz das Wort enthält, verschwindet der Anhang aus den
+Ergebnissen — und zwar genau dann, wenn man ihn am ehesten sucht.
+
+Der Index baut jetzt auf derselben `durchsuchbar`-Funktion. Genau dieser
+Fehler ist bei den PDF-Texten schon einmal passiert (E124); der Kommentar
+dort sagt „Zwei Suchen mit zwei Antworten sind schlimmer als eine
+schlechte", und diesmal steht statt einer zweiten Liste ein Aufruf.
+
+### Kann die Suite rot werden?
+
+**test213**, fünf Abschnitte, 20 Punkte. Drei Gegenproben einzeln auf einem
+Abzug des Baums zurückgenommen:
+
+```txt
+Dateiname aus `durchsuchbar` weg     → §2 rot (3 Punkte)
+Quellenangabe weg                    → §3 rot (3 Punkte)
+Kontext-Index mit eigener Feldliste  → §2 UND §4 rot (5 Punkte)
+```
+
+§1 prüft die Gegenrichtung — ein erfundener Name und eine erfundene Quelle
+ergeben nichts —, und §5, dass ein gelöschter Anhang aus dem Verzeichnis
+verschwindet. Ein Verzeichnis, das nur wächst, schickt den Menschen sonst auf
+einen Block, an dem nichts mehr hängt.
+
+Mitgeprüft, weil `dateiHolen` und `dateiAlle` angefasst wurden: test96,
+test100, test107, test108, test124, test182, test183 — alle grün.

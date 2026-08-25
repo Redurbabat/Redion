@@ -149,7 +149,16 @@ const Kontext = (() => {
         geaendert = spaeter(geaendert, k.edited || k.created || '');
         /* `suchtext` gehört mit in die Signatur, sonst merkt der Index nicht,
            dass eine PDF-Seite ihren Text bekommen hat (E124). */
-        teile.push(k.id, k.type, k.edited, k.alive, k.text, k.suchtext, k.ocrText,
+        /* DIESELBE LISTE WIE `Store.search`, nicht eine zweite daneben. Was ein
+           Block an durchsuchbarem Text hat, entscheidet `Store.durchsuchbar` —
+           inzwischen auch der Dateiname aus dem Fach `dateien` und die
+           Quellenangabe an einer Lernkarte. Stünde die Liste hier ein zweites
+           Mal, hätten die beiden Suchen wieder zwei Antworten; genau das ist
+           bei den PDF-Texten schon einmal passiert (E124). */
+        const felderText = typeof Store.durchsuchbar === 'function'
+          ? Store.durchsuchbar(k).filter(Boolean)
+          : [k.text, k.suchtext, k.ocrText].filter(Boolean).map(String);
+        teile.push(k.id, k.type, k.edited, k.alive, felderText.join('\u0001'),
           Array.isArray(k.rows) ? JSON.stringify(k.rows) : '',
           Array.isArray(k.content) ? k.content.join(',') : '');
         if (k.type === 'database') {
@@ -160,14 +169,13 @@ const Kontext = (() => {
           }
           return;
         }
-        if (k.text) text.push(k.text);
         /* EINE PDF-SEITE HAT KEINEN `text` — sie ist ein Bild. Ihr Wortlaut
            steht seit E107 in `suchtext`, und `Store.search` liest ihn auch.
            Der Index hier tat es nicht: die Suche im Fenster fand ein
            eingelesenes Skript nicht mehr, während `Store.search` es fand.
-           Zwei Suchen mit zwei Antworten sind schlimmer als eine schlechte. */
-        if (k.suchtext) text.push(k.suchtext);
-        if (k.ocrText) text.push(k.ocrText);
+           Zwei Suchen mit zwei Antworten sind schlimmer als eine schlechte.
+           Deshalb kommt die Liste jetzt von dort. */
+        felderText.forEach((wert: string) => text.push(wert));
         if (Array.isArray(k.rows)) text.push(k.rows.flat().join(' '));
         if ((k.content || []).length) hinab(k.id, tiefe + 1);
       });
