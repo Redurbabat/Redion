@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sitemap.xml — die eine Adresse, die es ohne Server gibt.
+
+  Redion ohne Server ist EINE Seite: die App. Es gibt keine zweite Adresse,
+  weil es keine zweiten Inhalte gibt — die Notizen liegen im Browser.
+
+  Mit Server kommen veröffentlichte Seiten unter /p/<marke> dazu. Sie hier
+  von Hand einzutragen wäre eine zweite Wahrheit, die sofort altert; der
+  Server liefert stattdessen unter /sitemap.xml seine eigene, aus der
+  Datenbank gerechnete Fassung und überschreibt diese damit (CLOUDFLARE.md).
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

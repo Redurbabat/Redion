@@ -363,7 +363,10 @@ const PdfEinlesen = (() => {
                      fehlt, las man „Seite 80 von 1" (E116). */
                 melder.textContent = 'Seite ' + (fertig + 1) + ' von ' + offen.length +
                     ' wird gerechnet …';
-                const bild = await griff.alsBild(n);
+                /* Wer diese Seite einmal schärfer gerechnet hat, will sie nicht
+                   beim nächsten Zurückholen wieder grob haben. Die Breite steht am
+                   Block und kommt mit in die Sicherung (E173). */
+                const bild = await griff.alsBild(n, Number(b.bildBreite) || undefined);
                 const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
                 /* Fehlt der Suchtext noch — bei allem, was vor E107 eingelesen
                    wurde —, kommt er jetzt mit. Das Dokument ist ohnehin offen. */
@@ -397,6 +400,77 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    return { alsSeiten, neuBerechnen, ohneBild, OHNE_FRAGE };
+    /* ========================================================================
+     * EINE SEITE SCHÄRFER RECHNEN (L37, E173)
+     * ------------------------------------------------------------------------
+     * Seiten entstehen bei 1654 px Breite — bei A4 genau 200 dpi, Scan-
+     * Qualität. Wer stark hineinzoomt, sieht trotzdem Unschärfe, und L37 hielt
+     * das als offene Arbeit fest: eine Seite auf Wunsch feiner rechnen.
+     *
+     * Alles dafür war schon da und wurde nur nie gerufen: `alsBild` nimmt seit
+     * jeher eine Breite entgegen, das Original liegt in der Ablage (E103), und
+     * die Marken liegen in SEITENPUNKTEN und nicht in Bildpunkten (E100) —
+     * sie bleiben deshalb liegen, wo sie liegen. Das ist der Grund, warum das
+     * hier überhaupt gefahrlos geht.
+     *
+     * Die Grenze ist 3308 px, also 400 dpi bei A4. Darüber wird eine Seite als
+     * WebP schnell ein paar Megabyte, und das trägt ein Telefon nicht mehr
+     * (§36, §37).
+     * ======================================================================*/
+    const BREITE_MAX = 3308;
+    const schaerfer = async (block) => {
+        if (!block || block.type !== 'pdfseite')
+            return { ok: false, grund: 'keine PDF-Seite' };
+        if (!block.quelleId)
+            return { ok: false, grund: 'Ohne das Original lässt sich nichts neu rechnen.' };
+        const jetzt = Number(block.bildBreite) || PdfLeser.BREITE_PX;
+        if (jetzt >= BREITE_MAX)
+            return { ok: false, grund: 'Diese Seite ist schon so fein gerechnet, ' +
+                    'wie Redion es anbietet.' };
+        const ziel = Math.min(BREITE_MAX, jetzt * 2);
+        const roh = await Dateien.alsBlob(block.quelleId);
+        if (!roh)
+            return { ok: false, grund: 'Das Original fehlt in diesem Bestand — zieh ' +
+                    'die PDF-Datei noch einmal herein.' };
+        const melder = UI.toast('Seite wird feiner gerechnet …', 120000);
+        let griff = null;
+        try {
+            griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+            const n = Number(block.nr) || 1;
+            if (n > griff.seiten)
+                return { ok: false, grund: 'Diese Seite gibt es im Original nicht.' };
+            const bild = await griff.alsBild(n, ziel);
+            const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '-' + ziel + '.webp', { type: 'image/webp' }), { blockId: block.id, abgeleitet: true });
+            /* ERST DIE NEUE KENNUNG AN DEN BLOCK, DANN DIE ALTE DATEI WEG.
+               Andersherum stünde zwischen beiden Schritten eine Seite ohne Bild da,
+               und bricht es dazwischen ab, ist das Bild fort und das neue nicht da.
+               In dieser Reihenfolge ist der schlimmste Fall eine Datei zu viel —
+               die findet die Pflegeseite (E171). */
+            const alt = block.bildDateiId;
+            Store.updateBlock(block.id, { bildDateiId: satz.id, bildBreite: ziel });
+            if (alt && alt !== satz.id) {
+                try {
+                    await Dateien.weg(alt);
+                }
+                catch { }
+            }
+            melder.remove();
+            App.zeichneSeite();
+            UI.toast('Seite ' + n + ' ist jetzt bei ' +
+                Math.round(ziel * 72 / (Number(block.bw) || 595.28)) + ' dpi');
+            return { ok: true, breite: ziel };
+        }
+        catch (e) {
+            melder.remove();
+            const grund = e instanceof Error ? e.message : String(e);
+            UI.toast('Die Seite liess sich nicht feiner rechnen: ' + grund);
+            return { ok: false, grund };
+        }
+        finally {
+            if (griff)
+                griff.schliessen();
+        }
+    };
+    return { alsSeiten, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
 })();
 window.PdfEinlesen = PdfEinlesen;

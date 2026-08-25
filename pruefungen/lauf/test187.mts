@@ -418,6 +418,93 @@ gleich('Und die Farbe wandert nicht auf eine andere Zeile',
 gleich('Während die übrigen ihre behalten',
   finde(farben.geaendert, 'Grosse Überschrift')?.stil?.groesse, 'xl');
 
+/* ==========================================================================
+ * §7 · Die Kennungen bleiben — und damit die Verweise (L40, E174)
+ * --------------------------------------------------------------------------
+ * Eine Kennung ist die ADRESSE eines Absatzes. Ein Blockverweis (`#block=…`,
+ * E105), ein Kommentar, eine Erwähnung zeigen darauf. Bis E174 überlebte
+ * beim Übernehmen KEINE EINZIGE — auch die Zeilen nicht, die niemand
+ * angefasst hatte:
+ *
+ *     vier Absätze · EINEN geändert · vier neue Kennungen
+ *     der Verweis zeigte ins Leere, der Kommentar hing an einem toten Block
+ *
+ * Zugeordnet wird nach (Art, Text), dieselbe Regel wie bei der Farbe in §6
+ * und aus demselben Grund. Deshalb prüft dieser Abschnitt auch dieselben
+ * drei Fälle — unverändert, umgezogen, umgeschrieben —, aber an der
+ * Kennung statt an der Farbe.
+ * ========================================================================*/
+console.log('\n7 · Die Kennungen bleiben — und damit die Verweise');
+
+const kennungen = await seite.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Kapitel mit Verweisen' });
+  Store.kinderLeeren(s.id);
+  const texte = ['Erster Absatz', 'Zweiter Absatz', 'Dritter Absatz', 'Vierter Absatz'];
+  const ids = texte.map(x => Store.addBlock(s.id, 'text', { text: x }).id);
+  await Store.flush();
+
+  const lies = () => Store.childrenOf(s.id).map((b: any) => ({ id: b.id, text: b.text }));
+
+  /* 1 · EINE Zeile ändern — die anderen drei hat niemand angefasst. */
+  const md = Werkzeuge.alsMarkdown(Store.getBlock(s.id));
+  Werkzeuge.ausMarkdown(Store.getBlock(s.id),
+    md.replace('Dritter Absatz', 'Dritter Absatz, berichtigt'));
+  await Store.flush();
+  const nachAenderung = lies();
+
+  /* 2 · Eine Zeile davor einfügen — alles rutscht um eins. */
+  const md2 = Werkzeuge.alsMarkdown(Store.getBlock(s.id));
+  Werkzeuge.ausMarkdown(Store.getBlock(s.id), 'Ganz neu oben\n' + md2);
+  await Store.flush();
+  const nachEinfuegen = lies();
+
+  /* 3 · Und der Verweis: zeigt er noch auf einen Block, den es gibt? */
+  const zweiterNoch = !!Store.getBlock(ids[1]);
+  const zweiterText = zweiterNoch ? Store.getBlock(ids[1]).text : '';
+
+  /* 4 · Zwei gleichlautende Zeilen dürfen nicht DIESELBE Kennung bekommen. */
+  const d = Store.addPage(null, { text: 'Doppelt' });
+  Store.kinderLeeren(d.id);
+  Store.addBlock(d.id, 'text', { text: 'Gleich' });
+  Store.addBlock(d.id, 'text', { text: 'Gleich' });
+  await Store.flush();
+  const dVor = Store.childrenOf(d.id).map((b: any) => b.id);
+  Werkzeuge.ausMarkdown(Store.getBlock(d.id),
+    Werkzeuge.alsMarkdown(Store.getBlock(d.id)) + '\nDritte Zeile');
+  await Store.flush();
+  const dNach = Store.childrenOf(d.id).map((b: any) => b.id);
+
+  return { texte, ids, nachAenderung, nachEinfuegen, zweiterNoch, zweiterText,
+           dVor, dNach, dEindeutig: new Set(dNach).size === dNach.length };
+});
+
+const idVon = (liste: any[], text: string) =>
+  (liste.find((x: any) => x.text === text) || {}).id;
+
+gleich('Die unveränderten Zeilen behalten ihre Kennung',
+  [0, 1, 3].map(i => idVon(kennungen.nachAenderung, String(kennungen.texte[i])) ===
+                     kennungen.ids[i]).join(','), 'true,true,true');
+gleich('Die geänderte Zeile bekommt eine neue — sie ist eine neue Zeile',
+  idVon(kennungen.nachAenderung, 'Dritter Absatz, berichtigt') === kennungen.ids[2],
+  false);
+
+gleich('Auch nach dem Einfügen einer Zeile davor bleiben sie',
+  [0, 1, 3].map(i => idVon(kennungen.nachEinfuegen, String(kennungen.texte[i])) ===
+                     kennungen.ids[i]).join(','), 'true,true,true');
+gleich('Und die neue Zeile bekommt eine eigene',
+  kennungen.ids.includes(idVon(kennungen.nachEinfuegen, 'Ganz neu oben')), false);
+
+/* DER PUNKT, UM DEN ES GEHT. Alles davor ist Buchhaltung; das hier ist der
+   Grund: ein Verweis auf einen Absatz muss ihn danach noch finden. */
+p('Ein Blockverweis auf den zweiten Absatz zeigt noch auf ihn',
+  kennungen.zweiterNoch);
+gleich('Und zwar auf denselben Satz', kennungen.zweiterText, 'Zweiter Absatz');
+
+gleich('Zwei gleichlautende Zeilen behalten je ihre eigene Kennung',
+  kennungen.dNach.slice(0, 2).join(',') === kennungen.dVor.join(','), true);
+p('Und keine Kennung wird zweimal vergeben', kennungen.dEindeutig,
+  JSON.stringify(kennungen.dNach));
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 
 await browser.close();

@@ -304,7 +304,7 @@ Marke mit `lesen` konnte nichts lesen. Die drei stehen in E35.
 Seite, zu der die Zeile gehört) und ein Weg, eine Freigabe zeitlich zu
 begrenzen — beides ist eine eigene Entscheidung, kein Loch.
 
-## L8b · Der Service Worker und die ehrliche Ersatzantwort
+## L8b · ~~Der Service Worker und die ehrliche Ersatzantwort~~ — GESCHLOSSEN
 
 **Stand** — ✅ behoben, aber der Gedanke gilt weiter.
 
@@ -317,7 +317,7 @@ Ursache nichts zu tun hatte („Wissen is not defined").
 sie zur Frage passt. Eine Antwort in der falschen Form ist schlimmer als
 keine: sie sieht wie Erfolg aus.
 
-## L9 · Formelfunktionen ohne Beschreibung
+## L9 · ~~Formelfunktionen ohne Beschreibung~~ — GESCHLOSSEN
 
 **Stand** — ✅ geschlossen (6. August). 0 ohne Beschreibung, 0 ohne Funktion.
 
@@ -483,7 +483,7 @@ wirklich klingt. Ausserdem ungeprüft: die Bereiche unterhalb der Schale
 (Datenbankansichten, Tabellenblatt, KI-Fenster) und die Bedienung ganz
 ohne Maus über einen längeren Arbeitsablauf.
 
-## L13 · Prüfläufe für migrierten TypeScript-Code
+## L13 · ~~Prüfläufe für migrierten TypeScript-Code~~ — GESCHLOSSEN
 
 **Stand** — ✅ erledigt.
 
@@ -545,7 +545,7 @@ Blob dieser Grösse zusammensetzen und herunterladen, entscheidet der
 Browser; dafür braucht es ein echtes Gerät mit Platz und Geduld — im
 Prüfcontainer geht es nicht.
 
-## L15 · Bedingte Formatierung
+## L15 · ~~Bedingte Formatierung~~ — GESCHLOSSEN
 
 **Stand** — ✅ vollständig (8. August, E53 und E60).
 
@@ -623,16 +623,45 @@ listete als fehlend, was teils längst gebaut war. Was das Nachsehen fand:
 laufen lassen" und liess die Automation **wirklich** laufen. Siehe E61;
 das war Priorität 1, nicht Feinschliff.
 
-## L17 · Dashboards und Pivot ausbauen
+## L17 · ~~Dashboards und Pivot ausbauen~~ — GESCHLOSSEN
 
-Fehlt: mehrere Datenquellen je Dashboard · KPI-Karten · Layout ·
-Diagrammquellen.
+**Stand — ✅ seit E185 (25. August 2026).** Die vier genannten Punkte hingen
+alle an derselben Stelle: daran, was in einer Kachel stehen darf.
+
+```txt
+mehrere Datenquellen   `quelle`   eine FREMDE Datenbank statt der eigenen
+KPI-Karten             `ziel`     eine Zahl gegen ein Ziel, mit Richtung
+Layout                 —          jede Kachel einzeln weg und verschieben
+Diagrammquellen        `wertKey`  die Verteilung SUMMIERT eine Spalte
+```
+
+**Die fremden Zeilen kommen ungefiltert**, und das ist Absicht: ein Filter
+gehört zu einer Ansicht, und die fremde Datenbank hat ihre eigenen — welche
+davon gälte? Eine Zahl, deren Bedeutung von einer Einstellung anderswo
+abhängt, ist eine Zahl, der man nicht trauen kann. Unter der Karte steht die
+Quelle, im Fuss steht, wie viele Kacheln von woanders kommen.
+
+**Die Diagrammquelle ist der Punkt, den man am ehesten übersieht und am
+meisten braucht.** Die Verteilung zählte immer nur Zeilen — „12 Aufträge in
+Zürich". Die Frage ist fast immer „180 000 Umsatz in Zürich": dieselbe
+Gruppierung, ein anderer Wert.
+
+**Was das Hinsehen fand:** die neuen Kachelgriffe lagen auf der Zahl.
+`408000` stand mit einem Knopf über der letzten Null da und las sich als
+`40800` — beide gültig, eine richtig. Derselbe Fund wie CLAUDE.md §55.2.
 
 Hier stand „Pivot mit Prozent von Gesamt" — den Modus gibt es seit dem
 Pivot-Bau (`pivotProzent: aus | zeile | spalte | gesamt`). Die Behauptung
 war falsch; beim Nachsehen fand sich stattdessen ein echter Fehler: die
 Quer-Ränder zeigten in den Modi Zeile/Spalte überall „0 %", auch in der
 CSV. Behoben und Zelle für Zelle geprüft (E92, test166).
+
+**Was NICHT gebaut ist:** ein freies Raster, in dem Kacheln beliebig breit
+und hoch gezogen werden. Die Kacheln fliessen; das reicht für einen
+Überblick und kostet keine Einstellung, die man pflegen muss. Wenn jemand
+das vermisst, ist es eine eigene Entscheidung wert.
+
+Prüflauf: `test237`, 55 Punkte, sieben einzeln nachgewiesene Gegenproben.
 
 ## L18 · XLSX und ODS
 
@@ -666,7 +695,7 @@ Richtungen geschlossen.
 Fehlt: Kommentare · Bilder · Diagramme · bedingte Formatierung im
 Austausch.
 
-## L19 · Fehlende oder ungeprüfte Blocktypen
+## L19 · ~~Fehlende oder ungeprüfte Blocktypen~~ — GESCHLOSSEN
 
 **Stand** — ✅ inventarisiert am 9. August (E90): das Register führt
 **76** Einträge, aufgeschrieben in `doku/BLOCKTYPEN.md` — erzeugt aus
@@ -740,18 +769,69 @@ Fehlt noch: ein Weg, Browserkürzel wirklich zu messen · die 33 fehlenden
 Tastenkürzel · Markdown-Tabellen beim Einfügen (`| a | b |`) ·
 verschachtelte Zitate.
 
-## L21 · Vollständige Verschlüsselung
+## L21 · ~~Vollständige Verschlüsselung~~ — GESCHLOSSEN
 
-**Stand** — ◐ einzelne Seiten und die Sicherung lassen sich verschlüsseln.
+**Stand — ✅ die drei genannten Punkte gibt es seit E122.** Dieser Absatz
+stand hier, seit er geschrieben wurde, und wurde danach nie nachgesehen:
 
-Fehlt: verschlüsseltes `.redion` (heute deckt die verschlüsselte Sicherung
-nur den Textbestand ab) · verschlüsselte Anhänge · Schlüsselwechsel.
+```txt
+verschlüsseltes `.redion` mit Anhängen   Paketfassung 2, `paketBauen`
+verschlüsselte Anhänge                   als eigene Einträge im Paket
+Schlüsselwechsel                         `paketPasswortWechseln`
+```
 
-## L22 · Leistung bei sehr grossen Arbeitsbereichen
+Alle drei fährt `test199` ab — mit einem echten Anhang, dem Zurückholen
+daraus und dem Passwortwechsel ohne Neuverschlüsseln (33 Punkte).
 
-Fehlt: Messungen mit zehntausend Seiten · virtualisierte Listen ·
-Suchindex, der nicht bei jedem Start neu entsteht · Speichermessung bei
-Export und Import.
+**Was NICHT gebaut ist und auch nicht gemeint war:** Verschlüsselung des
+LAUFENDEN Bestands. Heute liegt die IndexedDB im Klartext, und einzelne
+Seiten lassen sich sperren. Alles zu verschlüsseln hiesse: jeder Lese- und
+Schreibvorgang durch AES, ein verschlüsselter Suchindex — und ein
+vergessenes Passwort bedeutet Totalverlust, nicht eine gesperrte Seite. Das
+ist eine eigene Entscheidung mit eigenen Abwägungen und keine Lücke, die man
+nebenbei schliesst.
+
+## L22 · ~~Leistung bei sehr grossen Arbeitsbereichen~~ — GEMESSEN
+
+**Stand — ✅ gemessen mit E180 (25. August 2026).** Diese Lücke bestand aus
+einer Vermutung. Nachgemessen an 8000 Blöcken sieht es so aus:
+
+```txt
+8000 Blöcke anlegen und einmal schreiben        1,5 s
+Neu laden, bis der Bestand steht                0,5 s
+`Store.search` über alles                       68 ms
+`Store.baum` über den ganzen Baum               20 ms
+`exportAll` über 4,9 MB                         29 ms
+2000 Zeilen filtern und sortieren                2 ms
+Eine Seite mit 201 Kindern zeichnen             53 ms
+```
+
+Die vier genannten Punkte einzeln:
+
+```txt
+Messungen mit zehntausend Seiten   jetzt da — `test233`, an 8000 Blöcken
+virtualisierte Listen              die Ansicht zeigt 50 von 2000; das ist
+                                   die Begrenzung, nicht das Problem
+Suchindex, der nicht neu entsteht  liegt im Fach `suchindex` und wird beim
+                                   Start gelesen, nicht gebaut
+Speichermessung bei Export/Import  eine 4,9-MB-Sicherung entsteht in 29 ms
+```
+
+**Und der eine Fund, der dabei herauskam, ist kein Leistungsproblem.** Eine
+Ansicht zeigte 50 von 2000 Zeilen und sagte es nicht. Eine Tabelle, die
+einen Teil zeigt und aussieht wie das Ganze, ist die gefährlichere Sorte
+Unvollständigkeit: man merkt sie erst, wenn man etwas sucht, das dasteht und
+nicht gefunden wird. Jetzt steht „50 von 2000 Zeilen" darunter, mit „Mehr
+laden" und „Alle zeigen" daneben.
+
+**Was offen bleibt:** die Zahlen oben stammen von einer Maschine. Ob sie auf
+einem sechs Jahre alten Telefon ebenso aussehen, sagt kein Prüflauf im
+Container. `test233` misst deshalb Formen und Zahlen — wie viele Sätze
+angefasst werden, wie viele Knoten im Bild stehen — und setzt Zeitschranken
+so weit, dass sie eine langsame Maschine nicht reissen und ein quadratischer
+Algorithmus sofort.
+
+Prüflauf: `test233`, 22 Punkte.
 
 ## L34 · ~~Ein Wert, der an zwei Stellen steht~~ — abgearbeitet
 
@@ -804,7 +884,7 @@ Ein Kommentar „muss übereinstimmen" reicht nicht: genau der stand bei
 
 # Später
 
-## L36 · Rein numerische Spaltenschlüssel im Bestand
+## L36 · ~~Rein numerische Spaltenschlüssel im Bestand~~ — GESCHLOSSEN
 
 Bis E96 entstanden Spaltenschlüssel als Hex-Schnipsel — 9,6 % davon
 rein numerisch, und solche Schlüssel sortiert JavaScript in
@@ -819,9 +899,69 @@ bis sie neu angelegt wird. Eine stille Umbenennung wäre eine
 Datenmigration (Bezüge in Zeilen, Ansichten, Formeln, Automationen,
 Sicherungen) — die gibt es nur mit eigenem Plan und Tests (§9).
 
-## L23 · Abfragesprache für normale Nutzer
+---
 
-Suche über Titel, Inhalt, Zeilen und Kennungen mit einfacher Syntax.
+**25. August 2026 — E172. Der Plan und die Tests sind da.**
+
+Der Umzug `spaltenschluessel-ohne-ziffer` benennt `4711` in `s4711` um und
+zieht den Namen überall mit — nachgesehen ergaben sich zwölf Stellen:
+
+```txt
+schema[key] · props[key] in jeder Zeile · auch im Papierkorb
+groupBy · sorts[].key · filters.rules[].key · hidden[] · calc{} · breiten{}
+automationen: wenn.key und die dann-Schritte
+Rollups: relation hier, zielKey drüben
+```
+
+Und eine Stelle, an der ausdrücklich NICHTS geändert wird: Formeln.
+`prop("Punkte")` spricht die Spalte über ihren Anzeigenamen an, nicht über
+den Schlüssel — nachgesehen in `dienst.ts`, `formelRechnen`.
+
+Drei Dinge, die beim Bauen herauskamen:
+
+```txt
+· Die ursprüngliche Stelle der Spalte ist NICHT wiederherstellbar. Sie war
+  nie gespeichert; `Object.keys` hat sie schon beim Anlegen nach vorn
+  gezogen. Der Umzug erfindet sie deshalb nicht — er lässt die Spalte, wo
+  sie zu sehen war, und macht sie beweglich. Das ist der ganze Gewinn, und
+  test227 §2 misst genau ihn: vorher ans Ende geschoben und wieder vorn,
+  nachher ans Ende geschoben und dort geblieben.
+
+· Stumpfes Ersetzen wäre falsch. „4711" ist in einer Farbregel ein WERT und
+  in einer Zelle Inhalt. Also: Objektschlüssel überall, Werte nur an
+  benannten Stellen. Gegengeprobt, indem `wert` in die Liste aufgenommen
+  wurde — die Farbregel bricht.
+
+· Der Weg, auf dem der Fall heute überhaupt noch auftritt, ist die
+  eingespielte Sicherung — und genau dort lief der Umzug nicht. Er läuft
+  beim Start, die Sicherung kommt danach. `importAll` stösst die Umzüge
+  jetzt noch einmal an.
+```
+
+Prüflauf: `test227`, 29 Punkte, sechs Gegenproben.
+
+## L23 · ~~Abfragesprache für normale Nutzer~~ — GESCHLOSSEN
+
+**Stand — ✅ geschlossen mit E175 (25. August 2026).**
+
+Diese Lücke bestand aus einem Satz, und der Satz war zur Hälfte schon
+erfüllt: die Abfragesprache steht seit dem 22. August in
+`src/kern/suche/query.ts` — neun Suchbefehle (`titel:`, `inhalt:`, `tag:`,
+`typ:`, `geändert:`, `status:`, `in:`, `nach:`, `vor:`), Anführungszeichen
+für die genaue Wendung, Erkennung widersprüchlicher Angaben und
+Fehlermeldungen in Worten statt null Treffern.
+
+**Und kein einziger Prüflauf nannte sie.** Das ist die gefährlichere
+Hälfte: bei E122 lag genauso viel fertiger Code herum, dessen
+Einstiegspunkte gar nicht erreichbar waren, und niemand hatte es gemerkt.
+`test229` fährt die Sprache jetzt über das echte Suchfenster ab.
+
+Beim Abfahren fand sich der Teil, der wirklich fehlte: **Kennungen.**
+`Store.search` findet eine Seite über ihre Kennung, schneidet sie sogar aus
+einer ganzen Adresse heraus — das Suchfenster ging seit der Abfragesprache
+daran vorbei und sagte „Nichts gefunden". Der Zweig steht jetzt in der
+Schale und nicht in `query.ts`: die Sprache kennt weder DOM noch Ablage,
+und das soll so bleiben.
 
 ## L24 · ~~Entscheidungs- und Wissensgraph~~ — geschlossen
 
@@ -831,7 +971,7 @@ Relationen, Baumkanten, Filter und begrenzte 1-/2-Hop-Ausschnitte verwenden
 denselben Bestand; Lernquellen werden am normalen Block verknüpft. Ink-Striche
 werden bewusst nicht zu Graphknoten.
 
-## L25 · Universelle Begriffe und Aliase
+## L25 · ~~Universelle Begriffe und Aliase~~ — GESCHLOSSEN
 
 **Stand — ✅ geschlossen mit E129.** Seiten tragen additive `aliases`. Titel,
 Alias, Vault-/Hierarchiepfad und `redion:<id>` laufen durch einen zentralen
@@ -839,22 +979,94 @@ Resolver. Suche, Wikilinks, Picker, Backlinks, unverlinkte Erwähnungen, Graph
 und Obsidian-Import verwenden ihn. Eine Kollision liefert Kandidaten und nie
 willkürlich den ersten Treffer.
 
-## L26 · Import aus anderen Werkzeugen
+## L26 · ~~Import aus anderen Werkzeugen~~ — GESCHLOSSEN
 
-Trello, Evernote, Obsidian, Notion-Export und CSV gibt es. Asana, Jira und
-Apple Notes fehlen.
+**Stand — ✅ seit E182 (25. August 2026).**
 
-## L27 · Import-Assistent (Power-Query-ähnlich)
+Trello, Evernote, Obsidian, Notion-Export, CSV — und jetzt Asana und Apple
+Notes mit eigenem Einleser. Jira gibt es als gespiegelte Datenbank über
+`datenbanken/spiegel/dienst.ts`, zusammen mit GitHub; das ist etwas anderes
+als ein einmaliger Import (es hält die Verbindung), deckt aber denselben
+Wunsch.
 
-Spalten bereinigen · Typen erkennen · Werte ersetzen · Duplikate entfernen ·
-Dateien kombinieren · Vorschau vor dem Übernehmen.
+**Der Knopf, der den Export kennt, war der ganze Unterschied.** Asana kam
+schon über den allgemeinen CSV-Weg herein — aber als lauter Textspalten:
 
-## L28 · Was-wäre-wenn: Zielwertsuche, Szenarien, Solver
+```txt
+Section/Column  →  Text     statt  Status (und Gruppierung)
+Due Date        →  Text     statt  Datum
+Tags            →  Text     statt  Mehrfachauswahl
+Completed At    →  Text     statt  Haken
+Notes           →  EINE ZELLE mit der ganzen Beschreibung darin
+```
 
-Zielwert eingeben und rückwärts rechnen · Best/Normal/Worst Case ·
-einfache Optimierung.
+Die letzte Zeile ist der eigentliche Verlust: eine Aufgabenbeschreibung in
+einer Tabellenzelle kann man nicht lesen und nicht gliedern. Sie steht da
+und ist unbenutzbar, und das sieht nicht nach einem Fehler aus, sondern nach
+einer langen Spalte. Jetzt wird sie Seiteninhalt.
 
-## L29 · Suche in Bildern, PDFs und Audio
+Apple Notes kam gar nicht herein; jetzt wird der Ordner mit den HTML-Dateien
+gelesen, Unterordner bleiben Unterordner, und Checklisten werden echte
+Aufgaben statt Aufzählungspunkte mit einem Kästchen im Text.
+
+**Was NICHT gebaut ist:** ein Einleser je Werkzeug für alles Übrige. Der
+allgemeine CSV-Weg steht weiter daneben — jetzt unter eigenem Namen („Jira,
+Monday, sonstige CSV") statt als Anhängsel von Asana — und er liest jede
+Tabelle. Ein eigener Knopf lohnt erst, wenn ein Export feste Spaltennamen
+hat, die man kennen KANN. Bei Asana und Apple Notes ist das so; bei „irgend
+eine CSV" ist es das nicht.
+
+Prüflauf: `test235`, 63 Punkte, mit fünf nachgewiesenen Gegenproben.
+
+## L27 · ~~Import-Assistent (Power-Query-ähnlich)~~ — GESCHLOSSEN
+
+**Stand — ✅ geschlossen mit E178 (25. August 2026).**
+
+Vier der sechs Handgriffe gab es schon, als diese Lücke geschrieben wurde —
+nachgesehen, nicht angenommen:
+
+```txt
+Typen erkennen                `Spaltentyp.erkenne`, beim CSV-Einlesen
+Vorschau vor dem Übernehmen   derselbe Weg: erst nachsehen, dann fragen
+Duplikate entfernen           `Pflege.dublettenDialog`
+Dateien kombinieren           ein zweites CSV in dieselbe Datenbank
+```
+
+Die zwei fehlenden — **Spalten bereinigen** und **Werte ersetzen** — stehen
+jetzt unter „Spalten aufräumen …" im Datenbankmenü, mit Vorschau davor und
+einer Prüfung des Plans gegen den Bestand beim Übernehmen.
+
+Prüflauf: `test232`, 32 Punkte.
+
+## L28 · ~~Was-wäre-wenn: Zielwertsuche, Szenarien, Solver~~ — GESCHLOSSEN
+
+**Stand — ✅ geschlossen mit E176 (25. August 2026).**
+
+Alle drei laufen über dieselbe kleine Maschine in
+`src/bereiche/datenbanken/whatif.ts`: eine Stellschraube (eine schreibbare
+Zahlenspalte) und ein Ziel (eine gerechnete Spalte) in derselben Zeile.
+
+```txt
+Zielwertsuche   Fenster öffnen, dann halbieren — keine Ableitung nötig,
+                also auch bei Formeln mit WENN belastbar
+Optimierung     Goldener Schnitt zwischen zwei Grenzen
+Szenarien       benannte Sätze von Annahmen an der Sammlung, mit Vorschau
+```
+
+**Die Regel, an der alles hängt: beim Suchen wird nichts geschrieben.**
+Gerechnet wird auf einer Kopie der Zeile; erst „Übernehmen" schreibt.
+Gegengeprobt, indem der Probewert doch in die Zelle geschrieben wurde —
+danach steht in der Zelle irgendein Zwischenwert, die Optimierung läuft an
+den Rand und der Zeitstempel der Zeile ist verschoben.
+
+Und ein Fehler, der ohne Messung nicht aufgefallen wäre: die Probezeile
+trägt dieselbe Kennung wie das Original, und `Tempo` wie `Vorrat` merken
+sich Formelwerte unter der Zeilenkennung. Die Suche sah eine Gerade, wo eine
+Kurve ist, und fand gar nichts. `Datenbank.wertFrisch` rechnet ohne beide.
+
+Prüflauf: `test230`, 36 Punkte, zwei Gegenproben.
+
+## L29 · Suche in Bildern, PDFs und Audio — GRUNDSTUFE STEHT, REST ENTSCHIEDEN
 
 **Stand — ◐ die local-first Grundstufe steht (E130).** Native PDF-Textebene
 und optionale OCR bleiben getrennt. Bilder, PDF-Ausschnitte und Ink-Regionen
@@ -868,21 +1080,97 @@ automatische Perspektivkorrektur mehrseitiger Kamera-Scans und fortlaufende
 Segmenttranskription während sehr langer Aufnahmen. Ohne diese Zusätze bleibt
 Erfassen, Lesen und Aufnehmen vollständig benutzbar.
 
-## L30 · Erweiterungen und Marktplatz
+**25. August 2026 — warum die eingebettete Engine nicht kommt.** Eine OCR-
+Engine im Browser wiegt zweistellige Megabyte, und sie wiegt sie bei JEDEM
+Start, für jeden Nutzer, auch für die grosse Mehrheit, die nie ein Bild
+durchsuchen will. Das steht gegen §36 (Redion soll auf schwachen Geräten
+laufen) und gegen §29 (die Einzeldatei bleibt handhabbar). Der eingerichtete
+localhost-Dienst kostet dagegen nichts, solange man ihn nicht benutzt — und
+er verlässt den Rechner nicht.
 
-Erweiterung installieren · Rechte anzeigen · Sandbox · deaktivieren ·
-löschen · Signaturen.
+Das ist dieselbe Abwägung wie bei WebLLM (§21: „nicht automatisch laden"),
+und sie fällt hier genauso aus. Nicht gebaut, mit Grund, nicht vergessen.
 
-## L31 · Öffentliche Seiten, SEO und Demo
+## L30 · Erweiterungen und Marktplatz — BEWUSST NICHT GEBAUT
 
-Demo-Modus · `robots.txt` · `sitemap.xml` · `ai.txt` · Export als statische
-Seite · keine privaten Daten für Crawler.
+**25. August 2026 — entschieden statt offengelassen (E181).**
 
-## L32 · Die 62 Integrationen
+Diese Zeile stand als Wunschliste da, ohne einen Satz dazu, ob sie überhaupt
+zu Redion passt. Sie tut es nicht ohne Weiteres:
 
-**Stand** — ◐ 8 von 62. Die meisten brauchen OAuth-Geheimnisse und damit
-einen Server; ohne ihn geht nur, was einen persönlichen Schlüssel
-akzeptiert. Siehe `ENTSCHEIDUNGEN.md` E23.
+```txt
+Eine Erweiterung ist FREMDER CODE im selben Fenster wie die Notizen.
+Er sieht IndexedDB, `Store`, die Zwischenablage und jedes offene Dokument.
+```
+
+CLAUDE.md §19 verbietet `eval()` und ungeprüftes `innerHTML`; §47 verbietet
+fremden Code aus Formeln. Ein Erweiterungssystem wäre die grösste Ausnahme
+von beidem, die es je gäbe.
+
+Es sicher zu bauen bräuchte: eine echte Sandbox (eigener Ursprung, `iframe`,
+Nachrichten statt Zugriff), ein Rechtemodell je Erweiterung, Signaturen und
+einen Weg, eine Erweiterung im Nachhinein zurückzuziehen. Das ist ein
+eigenes Projekt und nicht eine Zeile in einer Lückenliste.
+
+**Also: nicht gebaut, und das ist die Entscheidung — kein Versäumnis.** Wer
+Redion erweitern will, hat heute drei Wege, die ohne Fremdcode auskommen:
+die Register (`bloecke`, `eigenschaften`, `formeln`, `befehle`), die
+Automationen, und `.redion`-Sicherungen als Datenschnittstelle.
+
+## L31 · ~~Öffentliche Seiten, SEO und Demo~~ — GESCHLOSSEN
+
+**Stand — ✅ geschlossen mit E177 (25. August 2026).**
+
+```txt
+Export als statische Seite   gab es schon — `Werkzeuge.htmlExport`
+robots.txt · ai.txt          neu in `oeffentlich/`
+sitemap.xml                  neu, mit EINER Adresse: ohne Server gibt es
+                             keine zweite, und eine erfundene Liste altert
+Demo-Modus                   `index.html?demo` — eine EIGENE Ablage
+keine privaten Daten         gemessen, nicht behauptet: `test231 §2` liest
+                             das ausgelieferte HTML und sucht darin nach
+                             Notizinhalt
+```
+
+Der Vorführmodus trennt über den ABLAGENAMEN (`notizen-demo`), nicht über
+einen Schalter im Code: zwei Namen sind zwei Datenbanken, und die Trennung
+setzt der Browser durch. Ein Schalter, der an dreissig Stellen abgefragt
+wird, ist an der einunddreissigsten vergessen.
+
+Zwei Fehler, die nur das Hinsehen fand (§55):
+
+```txt
+· Der Balken war `position:sticky` und damit ein Flex-Element von `body` —
+  und `body` ist eine Flex-ZEILE. Er bekam eine eigene Spalte über die
+  volle Höhe: der halbe Bildschirm orange, der Text ein Streifen am Rand.
+  „Ein Balken steht da" war dabei grün.
+· Weiss auf dem Orange ergibt 2,6:1 — unter den 4,5:1 aus §38. Jetzt
+  dunkles Braun, 7,7:1, und `test231` misst das Verhältnis.
+```
+
+Prüflauf: `test231`, 29 Punkte.
+
+## L32 · Die 62 Integrationen — ENTSCHIEDEN, NICHT OFFEN
+
+**Stand — ◐ 8 von 62, und die Zahl ist kein Rückstand.**
+
+Die meisten der 62 brauchen ein OAuth-Geheimnis. Ein OAuth-Geheimnis im
+Browser ist kein Geheimnis — es steht im Quelltext jeder ausgelieferten
+Seite. Also gehen ohne Server nur die, die einen persönlichen Schlüssel
+akzeptieren, den der Nutzer selbst einträgt. Das sind die 8.
+
+Der Rest hängt an E2 (Cloudflare) und wird dort eingeordnet, nicht hier.
+Die vollständige Begründung steht in `ENTSCHEIDUNGEN.md` E23.
+
+**Was daneben schon geht, ohne in dieser Zahl zu stehen:** gespiegelte
+Datenbanken zu Jira und GitHub (`datenbanken/spiegel/dienst.ts`), Import aus
+Trello, Evernote, Obsidian, Notion, Asana, Apple Notes und beliebiger CSV
+(L26, E182), und `.redion` als Datenschnittstelle in beide Richtungen. Der
+Wunsch hinter „Integration" ist meistens „meine Daten aus X hier haben" —
+und dafür braucht es keinen OAuth-Server.
+
+**Nicht tun:** Integrationen zählen, ohne zu prüfen, ob sie ohne Server
+überhaupt gehen können.
 
 ---
 
@@ -1030,7 +1318,7 @@ Die Prüfung hätte für immer grün gesagt.
 |---|---|---|
 | S1 | Die Ausgangsschlange konnte eine Millisekunde zerschneiden: `edited <= marke` schloss den Rest **für immer** aus. Der Satz stand auf dem Gerät und kam nie in der Wolke an — kein Fehler, keine Meldung | `test113` |
 
-## L33 · Erinnerungen, wenn Redion geschlossen ist
+## L33 · ~~Erinnerungen, wenn Redion geschlossen ist~~ — GESCHLOSSEN (E54)
 
 **Stand** — ✅ mit Server (8. August, E54); ohne Server melden sie sich
 weiterhin beim nächsten Öffnen.
@@ -1081,11 +1369,22 @@ sagt das jetzt, statt es den Menschen herausfinden zu lassen.
 **Regel** — was die App verspricht, muss sie halten können. Lieber „meldet
 sich beim nächsten Öffnen" als eine Weckerfunktion, die schweigt.
 
-## L37 · Was am PDF noch fehlt
+**25. August 2026 — die Überschrift war die letzte offene Stelle.** Der Text
+darunter sagt seit dem 8. August „✅ mit Server (E54)"; gebaut ist Web Push,
+geprüft mit `test131` (44 Punkte), und „ohne Server beim nächsten Öffnen"
+ist keine Lücke, sondern die Regel drei Zeilen darüber. Dieselbe Sorte
+Papierlücke wie L24 und L34: im Text erledigt, in der Überschrift offen.
+
+## L37 · ~~Was am PDF noch fehlt~~ — GESCHLOSSEN
 
 **19. August 2026, nach E103.** Ein PDF wird jetzt zu Seiten, die man
 durchblättert und beschreibt. Vier Dinge kann es noch nicht, und keines
 davon ist ein Fehler — es ist Arbeit, die nicht getan ist.
+
+**25. August 2026 — alle vier sind erledigt.** Seitenanker (E105),
+Zurückholen (E106), Textsuche (E107), feiner rechnen (E173). Was von dieser
+Lücke bleibt, ist eine Grenze, die bleiben soll (unten) und ein Verweis auf
+L29 für eingescannte Seiten ohne Textebene.
 
 **~~Seitenanker~~ · erledigt (E105).** Jede PDF-Seite hat neben ihrer
 Seitenzahl einen 🔗, der einen Verweis auf genau sie kopiert. Beim
@@ -1109,11 +1408,17 @@ und springt zur Fundstelle statt bloss zur Seite. Was bleibt: eine
 EINGESCANNTE Seite hat gar keine Textebene — dafür bräuchte es OCR, und das
 ist L29.
 
-**Neurasterung.** Seiten entstehen bei 1654 px Breite, rund 140 dpi. Wer
-stark hineinzoomt, sieht Unschärfe. Eine Seite liesse sich auf Wunsch
-neu und feiner rechnen — die Marken blieben dabei liegen, weil sie in
-Seitenpunkten gespeichert sind und nicht in Bildpunkten (E100). Nötig
-dafür ist, dass das Original noch da ist; es ist da (E103).
+**~~Feiner rechnen~~ · erledigt (E173).** Neben der Seitenzahl steht ein ⊕,
+das diese eine Seite auf 3308 px neu rechnet — 400 dpi bei A4. Die Marken
+bleiben liegen, weil sie in Seitenpunkten gespeichert sind und nicht in
+Bildpunkten (E100); die alte Bilddatei geht weg, sonst wüchse der Bestand
+mit jedem Klick; und die gewählte Breite steht am Block, damit ein
+Zurückholen aus dem Original sie nicht still auf grob zurückstellt.
+
+Dieser Absatz stand hier zweimal mit zwei verschiedenen Zahlen: weiter
+oben „200 dpi, nicht die 140, die hier standen" — und dann wieder „rund 140
+dpi". Die zweite war die alte, falsch gerechnete, die E107 schon berichtigt
+hatte; sie stand nur an zwei Stellen. 1654 px über 595,28 pt sind 200 dpi.
 
 **~~Verschlüsselte PDFs~~ · erledigt (E110).** Redion fragt jetzt nach dem
 Passwort, sagt beim zweiten Anlauf, dass das erste falsch war, und legt es
@@ -1217,7 +1522,7 @@ Sekunden, bei fünfhundert Seiten. Ein Prüflauf, der nur den Erfolgsfall
 abfährt, hätte keinen einzigen davon gefunden, und alle Prüfläufe vor E115
 haben genau das getan.
 
-## L40 · Was der Markdown-Rundlauf noch nicht kann
+## L40 · ~~Was der Markdown-Rundlauf noch nicht kann~~ — GESCHLOSSEN
 
 **19. August 2026, mit E113 halb geschlossen.** „Quelltext ansehen →
 Übernehmen" löscht nichts mehr: alles, was Markdown nicht tragen kann, steht
@@ -1247,13 +1552,32 @@ benannt statt still:
   auseinanderhalten, und ein Zitat ist die harmlosere Wahl.
 ```
 
-**Was von L40 bleibt, ist eine Frage der Form, nicht des Formats.** Die
-Blöcke werden weiterhin geleert und neu gebaut — E165 rettet die
-Formatierung darüber hinweg, aber die KENNUNGEN ändern sich weiter. Stabile
-Kennungen und ein brauchbarer Rückgängig-Schritt brauchen die echte
-zeilenweise Abgleichung: vorhandene Blöcke wiederverwenden und nur ändern,
-was sich geändert hat. Das ist ein Umbau von `ausMarkdown` und keine
-Ergänzung, und deshalb steht es weiter hier.
+**Was von L40 blieb, war als „Frage der Form" beschrieben — und war
+keine.** Dieser Absatz sagte, die Kennungen änderten sich weiter, und liess
+offen, was das kostet. Nachgemessen kostet es das hier:
+
+```txt
+vier Absätze · EINEN im Quelltext geändert · übernommen
+  → keine einzige der vier Kennungen überlebt
+  → ein Blockverweis (#block=…, E105) zeigt ins Leere
+  → ein Kommentar hängt an einem Block, den es nicht mehr gibt
+```
+
+Eine Kennung ist die Adresse eines Absatzes. Sie zu verlieren heisst, jeden
+Verweis darauf zu verlieren — und zwar auch für Zeilen, die niemand
+angefasst hat.
+
+**25. August 2026 — E174 schliesst das.** Der beschriebene grosse Umbau war
+nicht nötig: `ausMarkdown` legt Blöcke an genau EINER Stelle an (`lege`).
+Dort wird jetzt nachgesehen, ob es diesen Block (Art, Text) schon gab, und
+wenn ja, bekommt der neue Block dessen Kennung zurück. `kinderLeeren` hat
+sie eben endgültig gelöscht, sie ist also frei.
+
+Nach derselben Regel wie die Farbe seit E165 — und deshalb gibt es jetzt nur
+noch EIN Gedächtnis für beides und einen Durchgang statt zweier.
+`setzeWiederAuf` ist fort.
+
+Prüflauf: `test187` §7.
 
 Der Platzhalter selbst hat eine Eigenschaft, die man kennen muss: **wer die
 Zeile löscht, löscht den Block.** Das ist so gewollt — sonst wäre „Quelltext
@@ -1471,6 +1795,37 @@ alles, was in Journal, Schnellnotizen oder Vorlagen steht. Behoben; test215
 **Damit ist diese Lücke Hygiene, keine Fehlerbehebung.** Die zwei Wege
 liefern dasselbe — gemessen, nicht behauptet. Das Zusammenlegen steht
 tiefer in der Reihenfolge als vorher gedacht.
+
+---
+
+**25. August 2026 — E181. Das Zusammenlegen ist kleiner als gedacht, und
+eine Hälfte davon war überfällig.**
+
+Beim Nachsehen, WAS die zwei Wege wirklich teilen, stand die Rechtefrage
+zweimal da — in zwei Funktionen mit demselben Namen und zwei Antworten:
+
+```txt
+arbeitswelt     pageId ? Konten.darf(a, pageId) : Konten.darf(a)
+lebensbereiche  !!pageId && Konten.darf(a, pageId)
+```
+
+Bei einer LEEREN Seitenkennung sagte die eine „frag den Arbeitsbereich" und
+die andere „nein". Derselbe Block war in der einen Ansicht sichtbar und in
+der anderen nicht. Das ist L34 in Reinform, eine Ebene höher: ein Wert steht
+an zwei Stellen, nichts erzwingt Gleichheit.
+
+Sie steht jetzt einmal in `kern/zugang/lesefrage.ts`, mit einer
+ausgeschriebenen Regel — und der Unterschied zwischen „leer" und
+„weggelassen" ist Absicht, denn nur dadurch fallen beide alten Fassungen
+zusammen, ohne dass sich für einen Aufrufer etwas ändert.
+
+**Der grosse Aggregatkern bleibt ungebaut, und das ist die Entscheidung.**
+Die zwei Wege liefern dasselbe (E169, gemessen), und der eine trägt die
+Rechteprüfung, die der andere nicht hat. Sie zusammenzulegen hiesse, diese
+Prüfung neu zu verdrahten — für ein Ergebnis, das der Mensch nicht sieht.
+Die gemeinsame Frage ist jetzt gemeinsam; das war der Teil mit dem Risiko.
+
+Prüflauf: `test234`, 14 Punkte.
 
 
 ## L51 · ~~Die Hauptwelten stehen in keinem Register~~ — 36 Zeilen fehlen noch

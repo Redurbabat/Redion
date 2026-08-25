@@ -428,6 +428,30 @@ const DatenbankDienst = (() => {
             return Array.isArray(v) ? v : (v ? String(v).split(',').map(s => s.trim()) : []);
         return v ?? '';
     };
+    /**
+     * Denselben Wert rechnen, aber OHNE die Zwischenspeicher (L28, E176).
+     *
+     * `Tempo` und `Vorrat` merken sich das Ergebnis unter der ZEILENKENNUNG.
+     * Eine Probezeile — ein Satz mit denselben Feldern und einem geänderten
+     * Wert darin, wie ihn `WhatIf` für die Zielwertsuche baut — trägt dieselbe
+     * Kennung wie das Original. Sie bekäme deshalb bei jedem Probewert
+     * denselben gespeicherten Wert zurück, und die Suche sähe eine Gerade, wo
+     * eine Kurve ist. Gemessen: die Zielwertsuche fand gar nichts, die
+     * Optimierung lief an den Rand.
+     *
+     * Beide Speicher stehen ohnehin still, solange `formelTiefe` über null
+     * ist — das ist der Weg, den eine Formel nimmt, die eine andere aufruft.
+     * Dieser Aufruf geht denselben Weg, absichtlich.
+     */
+    const wertFrisch = (row, key, coll) => {
+        formelTiefe++;
+        try {
+            return wert(row, key, coll);
+        }
+        finally {
+            formelTiefe--;
+        }
+    };
     /** Die eigentliche Formelrechnung — ohne Speicher davor. */
     const formelRechnen = (row, _key, coll, def) => {
         {
@@ -1053,7 +1077,7 @@ const DatenbankDienst = (() => {
         sortiert,
         spaltenLauf,
         trifftZu,
-        wert,
+        wert, wertFrisch,
         zeilen,
         zeilenGesamt,
         zelle,

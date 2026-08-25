@@ -210,8 +210,11 @@ const Arbeitswelt = (() => {
         }
         catch { /* Eine nicht speicherbare UI-Präferenz blockiert die Sicht nicht. */ }
     };
-    const rechteAktiv = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
-    const erlaubt = (aktion, pageId) => !rechteAktiv() || (pageId ? Konten.darf(aktion, pageId) : Konten.darf(aktion));
+    /* Die Rechtefrage steht seit E181 in `kern/zugang/lesefrage.ts` — sie war
+       hier und in `lebensbereiche.ts` je einmal ausgeschrieben, und die zwei
+       Fassungen antworteten bei leerer Seitenkennung verschieden (L50). */
+    const rechteAktiv = () => Lesefrage.aktiv();
+    const erlaubt = (aktion, pageId) => pageId === undefined ? Lesefrage.erlaubt(aktion) : Lesefrage.erlaubt(aktion, pageId);
     const hinweis = (text) => {
         if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
             UI.toast(text);

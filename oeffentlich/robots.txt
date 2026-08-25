@@ -1,0 +1,28 @@
+# ===========================================================================
+#  robots.txt — was ein Suchdienst von Redion sehen darf
+# ---------------------------------------------------------------------------
+#  Redion ist local-first: die Notizen liegen in der IndexedDB des Browsers,
+#  nicht auf diesem Server. Ein Crawler bekommt hier deshalb nur die leere
+#  App — es gibt buchstäblich nichts Privates zu holen, und `test231` misst
+#  das nach, statt es zu behaupten.
+#
+#  Trotzdem steht diese Datei hier, aus zwei Gründen:
+#
+#    1. Was ein Crawler NICHT anfassen soll, muss dastehen. `/quell/` ist der
+#       Quelltext der App — ein paar hundert Dateien, die in keinem Suchindex
+#       etwas verloren haben, und deren Abruf nur Bandbreite kostet.
+#    2. Sobald ein Server mit veröffentlichten Seiten dahintersteht (L31,
+#       CLOUDFLARE.md), liegen diese unter `/p/`. Sie SOLLEN gefunden werden;
+#       alles andere nicht.
+# ===========================================================================
+
+User-agent: *
+Allow: /$
+Allow: /p/
+Disallow: /quell/
+Disallow: /pruefungen/
+Disallow: /server/
+Disallow: /doku/
+Disallow: /redion-einzeldatei.html
+
+Sitemap: /sitemap.xml

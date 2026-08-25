@@ -49,14 +49,20 @@ const Rollrand = (() => {
      * ist.
      */
     const SPIEL = 2;
-    const schreibe = (ziel, art, links, rechts) => {
+    /** Die Wörter je Achse: [vor dem sichtbaren Teil, danach]. */
+    const WORTE = {
+        quer: ['links', 'rechts'],
+        hoch: ['oben', 'unten']
+    };
+    const schreibe = (ziel, art, achse, davor, danach) => {
+        const [a, b] = WORTE[achse];
         if (art === 'mehr') {
-            const wert = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+            const wert = davor && danach ? 'beides' : danach ? b : davor ? a : 'nein';
             if (ziel.dataset['mehr'] !== wert)
                 ziel.dataset['mehr'] = wert;
             return;
         }
-        const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
+        const wert = [davor ? a : '', danach ? b : ''].filter(Boolean).join(' ');
         /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
            Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
         if (wert) {
@@ -68,9 +74,12 @@ const Rollrand = (() => {
     };
     /** Setzt `data-rand` bzw. `data-mehr` nach dem aktuellen Rollstand. */
     const pruefe = (feld, wahl = {}) => {
-        const links = feld.scrollLeft > SPIEL;
-        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
-        schreibe(wahl.an || feld, wahl.art || 'rand', links, rechts);
+        const achse = wahl.achse || 'quer';
+        const hoch = achse === 'hoch';
+        const stand = hoch ? feld.scrollTop : feld.scrollLeft;
+        const sicht = hoch ? feld.clientHeight : feld.clientWidth;
+        const ganz = hoch ? feld.scrollHeight : feld.scrollWidth;
+        schreibe(wahl.an || feld, wahl.art || 'rand', achse, stand > SPIEL, stand + sicht < ganz - SPIEL);
     };
     /**
      * Ein Rollfeld beobachten. Gibt eine Funktion zurück, die das wieder
@@ -90,7 +99,8 @@ const Rollrand = (() => {
             beobachter = new ResizeObserver(nachsehen);
             beobachter.observe(feld);
             /* Auch der Inhalt zählt — eine neue Spalte macht `scrollWidth` grösser,
-               ohne dass sich am Feld selbst etwas ändert. */
+               beim Hochen eine neue Zeile `scrollHeight`, ohne dass sich am Feld
+               selbst etwas ändert. */
             const inhalt = feld.firstElementChild;
             if (inhalt)
                 beobachter.observe(inhalt);

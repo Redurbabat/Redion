@@ -5249,17 +5249,71 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 /* Dashboard-Ansicht */
 .dash{display:flex; flex-direction:column; gap:14px}
 .dash-zahlen{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px}
-.dash-karte{border:1px solid var(--line); border-radius:9px; padding:14px 16px;
-  display:flex; flex-direction:column; gap:3px}
+/* DER STREIFEN OBEN IST FÜR DIE GRIFFE, und er ist IMMER da (E185).
+   Erste Fassung: die Griffe lagen absolut oben rechts ÜBER dem Inhalt.
+   Gemessen sah das so aus — `408000` mit einem Knopf über der letzten
+   Null, also lesbar als `40800`. Beide Zahlen sind gültig, nur eine ist
+   die richtige: derselbe Fund wie in CLAUDE.md §55.2.
+
+   Der Platz wird deshalb RESERVIERT statt beim Darüberfahren geschaffen.
+   Ihn erst beim Zeigen zu nehmen hiesse, dass jede Kachel unter dem
+   Mauszeiger springt — und 18 px Streifen sind billiger als eine Zahl,
+   die etwas anderes behauptet, als sie ist. */
+.dash-karte{border:1px solid var(--line); border-radius:9px; padding:30px 16px 14px;
+  display:flex; flex-direction:column; gap:3px; position:relative}
+
+/* --- Die Griffe an einer Kachel (E185) ------------------------------------
+   Bis dahin gab es nur „Alle Kacheln entfernen": wer eine falsche
+   hinzugefügt hatte, musste alle wegwerfen. Sie sind unsichtbar, bis man
+   die Kachel berührt — und am Telefon IMMER da, weil es dort kein
+   Darüberfahren gibt (§37). 28 px sind unter den 44 px aus §38; das ist
+   vertretbar, weil es keine Kernfunktion ist und daneben nichts liegt, was
+   man versehentlich träfe. */
+.dk-griffe{position:absolute; top:4px; right:6px; display:flex; gap:2px; opacity:0;
+  transition:opacity .12s}
+.dash-karte:hover .dk-griffe, .dash-block:hover .dk-griffe,
+.dk-griffe:focus-within{opacity:1}
+.dk-griffe button{width:24px; height:22px; border:0; border-radius:6px; padding:0;
+  background:var(--bg-hover); color:var(--text-dim); font-size:13px; line-height:1; cursor:pointer}
+.dk-griffe button:hover{background:var(--bg-input); color:var(--text)}
+/* Am Telefon gibt es kein Darüberfahren — dort stehen sie immer da, und
+   dann brauchen sie auch mehr Streifen (§37). */
+@media (hover:none){
+  .dk-griffe{opacity:1}
+  .dk-griffe button{width:30px; height:28px}
+  .dash-karte{padding-top:36px}
+  .dash-block{padding-top:38px}
+  .dash-block.dash-kachel h4{padding-right:0} }
+
+/* --- Die Kennzahl mit Ziel (E185) -----------------------------------------
+   Eine Zahl allein ist keine Kennzahl: „48 000" sagt nichts, „48 000 von
+   60 000" sagt alles. Die Farbe kommt an den RAND und an den Balken, nicht
+   auf die Zahl — auf Farbe allein darf keine Information liegen (§38). Das
+   Zeichen ✓ ▴ ▾ trägt dieselbe Aussage ohne Farbe. */
+.dash-kpi{gap:5px}
+.dz-ziel{font-size:12px; color:var(--text-dim); font-variant-numeric:tabular-nums}
+.dz-balken{height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden; margin-top:2px}
+.dz-balken i{display:block; height:100%; border-radius:3px; background:var(--text-faint)}
+.dash-karte.kpi-gut{border-color:#3f8f5f}
+.dash-karte.kpi-gut .dz-balken i{background:#3f8f5f}
+.dash-karte.kpi-offen{border-color:#b07a2a}
+.dash-karte.kpi-offen .dz-balken i{background:#b07a2a}
 .dz-wert{font-size:26px; font-weight:600; line-height:1.1}
 .dz-name{font-size:12px; color:var(--text-faint)}
-.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px}
+.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px; position:relative}
+/* Die Überschrift darf umbrechen — eine Zahl darf das nicht. Deshalb hier
+   Platz zur Seite statt eines Streifens nach oben. */
+.dash-block.dash-kachel h4{padding-right:88px}
 .dash-block h4{font-size:13px; font-weight:500; color:var(--text-dim); margin:0 0 10px}
 .dash-balken{display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px}
 .db-name{width:120px; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .db-strich{flex:1; height:9px; background:var(--bg-input); border-radius:5px; overflow:hidden}
 .db-strich i{display:block; height:100%; border-radius:5px}
-.db-zahl{width:34px; text-align:right; color:var(--text-faint); font-size:12.5px}
+/* 34 px reichten für eine Anzahl. Seit die Verteilung auch SUMMEN zeigen
+   kann (E185), stehen dort Beträge — `min-width` statt `width`, sonst
+   endet „184 500" als „184 5". Genau der Fund aus CLAUDE.md §55.2. */
+.db-zahl{min-width:34px; flex:0 0 auto; text-align:right; color:var(--text-faint);
+  font-size:12.5px; font-variant-numeric:tabular-nums}
 .dash-zeile{display:flex; align-items:center; gap:12px; width:100%; padding:6px 4px;
   border-radius:6px; font-size:13.5px; text-align:left}
 .dash-zeile:hover{background:var(--bg-hover)}
@@ -6886,7 +6940,24 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-titel del{background:var(--b-red); color:var(--c-red)}
 
 /* Aus anderen Werkzeugen übernehmen */
-.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:56vh; overflow:auto}
+/* 62vh statt 56: am Rechner fehlten mit acht Quellen genau 28 px, und die
+   Höhe war ohne Grund knapper als der Platz im Fenster (E183). */
+.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:62vh; overflow:auto}
+/* Und wo es doch nicht reicht — am Telefon reicht es nie —, läuft die Kante
+   aus, statt scharf abzuschneiden. `Rollrand` setzt `data-rand` mit den
+   Wörtern der senkrechten Achse. Eine MASKE, kein aufgelegtes Element: ein
+   Pseudo-Element im Rollfeld rollte mit und wäre nach dem ersten Wisch weg. */
+.ax-liste[data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent)}
+.ax-liste[data-rand~="oben"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px)}
+.ax-liste[data-rand~="oben"][data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent)}
 .ax-liste button{display:flex; gap:12px; align-items:center; padding:10px 12px; border:0;
                  background:transparent; border-radius:8px; cursor:pointer; text-align:left; width:100%}
 .ax-liste button:hover{background:var(--bg-hover)}
@@ -8019,6 +8090,88 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     padding:14px 14px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
   .document-inspector button{min-height:44px}.document-inspector-heading button{min-width:44px}
 }
+
+/* --- Was wäre, wenn (L28, E176) ------------------------------------------
+   Der heutige Wert steht neben der Spalte, nicht über ihr; die Antwort steht
+   in Textfarbe, nicht in Hinweisgrau — sie ist das, wofür der Dialog da ist. */
+.ww-jetzt{ display:block; margin-top:4px; font-size:13px; color:var(--text-faint) }
+.ww-ergebnis{ min-height:20px; padding:10px 12px; border-radius:8px;
+  background:var(--bg-hover); color:var(--text); font-size:14px; line-height:1.5 }
+.ww-ergebnis:empty{ display:none }
+
+/* --- Vorführmodus (L31, E177) --------------------------------------------
+   Der Balken schiebt die App nach unten, statt sie zu überdecken: ein
+   Hinweis, der eine Werkzeugleiste verdeckt, wird weggeklickt und damit
+   nicht gelesen.
+
+   FEST UND NICHT KLEBEND. `position:sticky` machte ihn zu einem Flex-Element
+   von `body` — und `body` ist eine Flex-ZEILE (Seitenleiste | Inhalt). Der
+   Balken bekam damit eine eigene Spalte über die volle Höhe: der halbe
+   Bildschirm war orange, der Text stand als schmaler Streifen am Rand. Mit
+   Augen gesehen, von keiner Prüfung bemerkt — „Ein Balken steht da" war
+   grün (§55).
+
+   Die Höhe kommt aus der Messung, nicht aus einer Zahl: am Telefon bricht
+   der Satz auf zwei Zeilen um, und ein festes `42px` liesse ihn dann über
+   der App liegen.
+
+   UND DUNKLER TEXT AUF DEM ORANGE, nicht weisser. Gemessen: Weiss auf
+   `#f97316` ergibt 2,6:1 — unter den 4,5:1, die §38 für gewöhnlichen Text
+   verlangt, und auf dem Bild sah es genau danach aus. Sehr dunkles Braun
+   ergibt 7,7:1. */
+#demo-balken{ position:fixed; top:0; left:0; right:0; z-index:200;
+  display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  padding:8px 14px; font-size:14px; line-height:1.4;
+  background:var(--accent, #e8730a); color:#231000 }
+#demo-balken a{ color:#231000; text-decoration:underline }
+body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
+
+/* --- Spalten aufräumen (L27, E178) ---------------------------------------
+   Die Vorschau ist der Kern des Dialogs, nicht sein Beiwerk: sie zeigt
+   „vorher → nachher" und darf deshalb Platz haben. Das Alte durchgestrichen
+   wäre falsch — es wird ersetzt, nicht gelöscht. */
+.au-griffe{ display:grid; gap:6px }
+.au-griff{ display:flex; align-items:center; gap:8px; font-size:14px }
+.au-was{ color:var(--text-faint); font-size:12px }
+.au-ersetzen{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap }
+.au-ersetzen label{ display:flex; flex-direction:column; gap:4px; font-size:13px }
+.au-ersetzen input[type=text],.au-ersetzen input:not([type]){ min-width:150px }
+.au-ganz{ flex-direction:row !important; align-items:center; gap:6px }
+.au-vorschau{ max-height:240px; overflow:auto; padding:10px 12px;
+  border-radius:8px; background:var(--bg-hover); font-size:13px }
+.au-kopf{ font-weight:600; margin-bottom:6px }
+.au-zeile{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px;
+  align-items:baseline; padding:3px 0 }
+.au-alt{ color:var(--text-faint) }
+.au-pfeil{ color:var(--text-faint) }
+.au-neu{ color:var(--text) }
+.au-mehr,.au-nichts{ color:var(--text-faint); padding-top:6px }
+
+/* --- Die Blattleiste am Telefon (E179, §37) -------------------------------
+   `.blatt-reihe` ist eine Zeile: links die rollende Werkzeugleiste, rechts
+   der feste Teil (Seitenzahl, 🔗, und seit E173 das ⊕). Jeder Knopf rechts
+   nimmt links Platz weg — bei 390 px Fensterbreite kostete das ⊕ die
+   Werkzeugleiste 28 px und drückte sie von 290 auf 262. `test210 §4` hat
+   das gemeldet, und es hatte recht: eine Zeichenleiste, die ein Viertel
+   der Breite an eine Seitenzahl verliert, ist am Telefon keine.
+
+   Also umbrechen: unten die Angaben, oben die volle Breite zum Zeichnen. */
+@media (max-width:760px){
+  .blatt-reihe{ flex-wrap:wrap }
+  .blatt-werk{ flex:1 1 100%; min-width:100% }
+  .blatt-fest{ flex:1 1 100%; justify-content:flex-end;
+               padding:0 8px 6px; border-top:1px solid var(--rand) }
+}
+
+/* --- „50 von 300 Zeilen" (L22, E180) --------------------------------------
+   Unter der Ansicht, nicht im Tabellenfuss: `begrenzen` gilt für jede
+   Ansichtsart, und in den Tabellenfuss geschrieben hätten Board, Galerie
+   und Feed weiter stumm abgeschnitten. */
+.db-grenze{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:8px 4px 2px; font-size:13px; color:var(--text-faint) }
+.db-grenze button{ padding:3px 10px; border-radius:6px; font-size:13px;
+  color:var(--text); background:var(--bg-hover) }
+.db-grenze button:hover{ background:var(--rand) }
 
 </style>
 
@@ -12593,6 +12746,178 @@ const Umzuege = (() => {
      * Jeder Eintrag: eine Kennung, ein Satz, und eine Funktion, die einmal
      * über den Bestand läuft. Sie muss zweimal laufen können, ohne zu schaden.
      * ======================================================================*/
+    /* ------------------------------------------------------------------------
+     * Spaltenschlüssel ohne Ziffer am Anfang (L36, E172)
+     * ------------------------------------------------------------------------
+     * Ein Schlüssel ist nur ein Name für eine Spalte. Besteht er aus lauter
+     * Ziffern, behandelt JavaScript ihn als Feldindex: `Object.keys` gibt ihn
+     * VOR allen anderen zurück, aufsteigend sortiert. Die Spalte steht dann
+     * immer ganz links, und keine Bedienung der Welt schiebt sie weg.
+     *
+     * WO EIN SCHLÜSSEL ÜBERALL STEHT. Das ist die eigentliche Arbeit, und die
+     * Liste ist nachgesehen, nicht geraten:
+     *
+     *   schema[key]           die Spalte selbst
+     *   zeile.props[key]      jeder Wert in jeder Zeile
+     *   schema[x].relation    die Verknüpfung, auf der ein Rollup sitzt
+     *   schema[x].zielKey     die Spalte DRÜBEN, die er einsammelt
+     *   ansicht.groupBy       … und zwei Dutzend weitere Felder der Ansicht
+     *   ansicht.hidden[]      Listen von Schlüsseln
+     *   ansicht.calc{}        Objekte, deren SCHLÜSSEL Spaltenschlüssel sind
+     *   automationen          wenn.key, dann-Schritte, Filter und Sortierung
+     *
+     * WAS NICHT MITGEHT: Formeln. `prop("Name")` spricht die Spalte über ihren
+     * ANZEIGENAMEN an (`dienst.ts`, `formelRechnen`) — ein Schlüsselwechsel
+     * geht daran vorbei. Nachgesehen, nicht angenommen.
+     *
+     * UND WARUM NICHT EINFACH ALLES ERSETZEN. Ein Wert, der zufällig „4711"
+     * heisst, ist keine Spalte: eine Filterbedingung „Zahl ist gleich 4711",
+     * eine Auswahloption mit diesem Namen, eine Zelle mit dieser Zahl. Deshalb
+     * werden OBJEKTSCHLÜSSEL überall ersetzt — ein Feldname aus lauter Ziffern
+     * kommt im Code nicht vor —, WERTE aber nur an benannten Stellen.
+     * ----------------------------------------------------------------------*/
+    /** Ein Schlüssel, den `Object.keys` als Feldindex behandelt. */
+    const nurZiffern = (k) => /^\d+$/.test(k);
+    /** Feldnamen, deren WERT ein Spaltenschlüssel ist. */
+    const SCHLUESSELFELDER = new Set([
+        'key', 'groupBy', 'zielKey', 'relation', 'setzeKey', 'filterKey',
+        'bildKey', 'dateKey', 'datumKey', 'startKey', 'endeKey', 'ortKey',
+        'bahnKey', 'abhKey', 'titelKey', 'summeKey',
+        'pivotZeile', 'pivotSpalte', 'pivotWert',
+        'chartGruppe', 'chartWert', 'chartStufe'
+    ]);
+    /** Feldnamen, deren Wert eine LISTE von Spaltenschlüsseln ist. */
+    const SCHLUESSELLISTEN = new Set([
+        'hidden', 'pflicht', 'fixiert', 'zuGruppen', 'bahnenZu', 'spalten'
+    ]);
+    /**
+     * Einen Satz umschreiben. Gibt zurück, ob sich etwas geändert hat.
+     *
+     * Läuft rekursiv, weil Filter Gruppen enthalten können und Automationen
+     * Schritte, die wieder Filter enthalten. Ein flacher Durchgang hätte
+     * genau die Stellen ausgelassen, an denen es niemand nachsieht.
+     */
+    const satzUmschreiben = (wert, alt, neu) => {
+        if (!wert || typeof wert !== 'object')
+            return false;
+        let geaendert = false;
+        if (Array.isArray(wert)) {
+            for (const teil of wert)
+                if (satzUmschreiben(teil, alt, neu))
+                    geaendert = true;
+            return geaendert;
+        }
+        for (const feld of Object.keys(wert)) {
+            const inhalt = wert[feld];
+            if (SCHLUESSELFELDER.has(feld) && inhalt === alt) {
+                wert[feld] = neu;
+                geaendert = true;
+            }
+            else if (SCHLUESSELLISTEN.has(feld) && Array.isArray(inhalt)) {
+                for (let i = 0; i < inhalt.length; i++)
+                    if (inhalt[i] === alt) {
+                        inhalt[i] = neu;
+                        geaendert = true;
+                    }
+            }
+            else if (satzUmschreiben(inhalt, alt, neu))
+                geaendert = true;
+        }
+        /* Und die Objektschlüssel — `props`, `calc`, `breiten`, `schema`.
+           ZUM SCHLUSS und über eine neu gebaute Reihenfolge: `delete` und dann
+           `set` würde die Spalte ans Ende hängen, und dann stünde sie nach dem
+           Umzug woanders als vorher. Ein Umzug, den man sieht, ist ein Umzug,
+           den man für einen Fehler hält. */
+        if (Object.prototype.hasOwnProperty.call(wert, alt)) {
+            const neuerSatz = {};
+            for (const feld of Object.keys(wert))
+                neuerSatz[feld === alt ? neu : feld] = wert[feld];
+            for (const feld of Object.keys(wert))
+                delete wert[feld];
+            Object.assign(wert, neuerSatz);
+            geaendert = true;
+        }
+        return geaendert;
+    };
+    /** Ein freier Schlüssel, der wie der alte aussieht und keiner ist. */
+    const freierSchluessel = (schema, alt) => {
+        let neu = 's' + alt;
+        let n = 2;
+        while (Object.prototype.hasOwnProperty.call(schema, neu))
+            neu = 's' + alt + '-' + n++;
+        return neu;
+    };
+    const spaltenschluesselHeilen = () => {
+        let n = 0;
+        const sammlungen = Object.values(Store.cache.collections);
+        for (const coll of sammlungen) {
+            const betroffen = Object.keys(coll.schema || {}).filter(nurZiffern);
+            if (!betroffen.length)
+                continue;
+            for (const alt of betroffen) {
+                const neu = freierSchluessel(coll.schema, alt);
+                /* 1 · Die Sammlung selbst — Schema und alles, was drinsteckt
+                       (`relation` und `zielKey` an Rollups, die Automationen). */
+                if (satzUmschreiben(coll, alt, neu)) {
+                    Store.rohSetzen('collections', coll);
+                    n++;
+                }
+                /* 2 · Die Ansichten dieser Sammlung. */
+                for (const vid of coll.viewIds || []) {
+                    const view = Store.cache.views[vid];
+                    if (view && satzUmschreiben(view, alt, neu)) {
+                        Store.rohSetzen('views', view);
+                        n++;
+                    }
+                }
+                /* 3 · Die Zeilen. `rowsOf` gibt nur die lebenden zurück — der
+                       Papierkorb muss aber mit, sonst kommt eine zurückgeholte Zeile
+                       mit dem alten Schlüssel wieder. */
+                for (const block of Object.values(Store.cache.blocks)) {
+                    if (block && block.parentTable === 'collection' && block.parentId === coll.id
+                        && satzUmschreiben(block, alt, neu)) {
+                        Store.rohSetzen('blocks', block);
+                        n++;
+                    }
+                }
+                /* 4 · Und die FREMDEN Sammlungen: ein Rollup drüben sammelt über
+                       `zielKey` eine Spalte von HIER ein. Ohne diesen Durchgang
+                       zeigte er nach dem Umzug ins Leere.
+        
+                       NUR `zielKey`, nicht der ganze Satz. Die fremde Sammlung kann
+                       denselben Zifferschlüssel selbst tragen — dann ist das ihre
+                       eigene Spalte, sie bekommt ihren eigenen neuen Namen, wenn sie
+                       an der Reihe ist. Sie hier mitzuziehen hiesse, ihr einen
+                       Schlüssel zu geben, der in IHREM Schema schon vergeben sein
+                       kann. */
+                for (const fremd of sammlungen) {
+                    if (fremd.id === coll.id)
+                        continue;
+                    let fremdGeaendert = false;
+                    for (const sp of Object.values(fremd.schema || {})) {
+                        if (!sp || sp.type !== 'rollup' || sp.zielKey !== alt)
+                            continue;
+                        const rel = fremd.schema[sp.relation];
+                        if (!rel || rel.ziel !== coll.id)
+                            continue;
+                        sp.zielKey = neu;
+                        fremdGeaendert = true;
+                    }
+                    if (fremdGeaendert) {
+                        Store.rohSetzen('collections', fremd);
+                        n++;
+                    }
+                }
+                /* 5 · Die vorberechneten Werte dieser Sammlung sind nach Schlüssel
+                       abgelegt. Sie sind ABGELEITET — wegwerfen kostet eine
+                       Neuberechnung und kann nichts verlieren; sie umzuschreiben
+                       wäre eine weitere Stelle, die man vergessen kann. */
+                if (Store.vorratWeg)
+                    Store.vorratWeg(coll.id).catch(() => { });
+            }
+        }
+        return n;
+    };
     const INHALT = [
         {
             id: 'zeitstempel-an-sammlungen',
@@ -12616,6 +12941,16 @@ const Umzuege = (() => {
                 });
                 return n;
             }
+        },
+        {
+            id: 'spaltenschluessel-ohne-ziffer',
+            was: 'Spaltenschlüssel aus lauter Ziffern bekommen einen Buchstaben davor',
+            warum: 'JavaScript sortiert einen Schlüssel wie „4711" in `Object.keys` VOR ' +
+                'alle anderen. Die Spalte stand dadurch immer ganz links, egal wohin ' +
+                'man sie schob — nicht als Fehler zu erkennen, weil sie ja da war. ' +
+                'Seit E96 entstehen solche Schlüssel nicht mehr; der Bestand von ' +
+                'vorher blieb offen (L36).',
+            lauf: () => spaltenschluesselHeilen()
         },
         {
             id: 'alive-ergaenzen',
@@ -15947,7 +16282,20 @@ const Store = (() => {
     /* Name und Fassung stehen in kern/einstellung/konstanten.js beziehungsweise
        kern/ablage/umzuege.js — dort steht auch, warum es jedes Fach gibt.
        Hier nur der Rückfall, falls diese Datei einmal allein geladen wird. */
-    const NAME = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.ABLAGE_NAME : 'notizen';
+    /* DER VORFÜHRMODUS (L31, E177).
+       `index.html?demo` öffnet eine EIGENE Ablage. Wer Redion vorführen oder
+       ausprobieren will, soll das können, ohne dass danach fremde
+       Beispielseiten in seinen eigenen Notizen stehen — und vor allem, ohne
+       dass sein Bestand dabei überhaupt angefasst wird.
+  
+       EIN ANDERER NAME, KEIN SCHALTER IM CODE. Zwei Namen sind zwei
+       Datenbanken, und die Trennung setzt der Browser durch. Ein Schalter,
+       der an dreissig Stellen abgefragt wird, ist an der einunddreissigsten
+       vergessen — und dann steht die Vorführung in den echten Daten (§46). */
+    const DEMO = typeof location !== 'undefined' &&
+        /(^|[?&])demo(=|&|$)/.test(location.search || '');
+    const NAME = ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.ABLAGE_NAME : 'notizen') +
+        (DEMO ? '-demo' : '');
     const VERSION = (typeof Umzuege !== 'undefined') ? Umzuege.JETZIGE : 6;
     let db = null;
     /* Alle Änderungen laufen durch save(), das merkt sich Beobachter. */
@@ -16739,13 +17087,26 @@ const Store = (() => {
                 ] },
             [kurz(4)]: { name: 'Datum', type: 'date' }
         };
+        /* `edited` GLEICH MIT (E179). Es fehlte hier, und der Umzug
+           `zeitstempel-an-sammlungen` trug es beim nächsten Start nach — das
+           war für ALTE Sätze gedacht, nicht für neue. Seit E172 laufen die
+           Umzüge auch nach einer eingespielten Sicherung, und damit fiel es
+           auf: `test96` vergleicht den Bestand vor dem Export mit dem nach dem
+           Einspielen, Feld für Feld, und fand zwei geänderte `edited`.
+    
+           Der Umzug hatte recht — hier fehlte etwas. Ihn abzuschalten wäre die
+           falsche Richtung gewesen: dann käme eine Sicherung von 2025 wieder
+           ohne Zeitstempel herein, und der Abgleich hielte jede Schemaänderung
+           darin für nie geschehen. */
         cache.collections[colId] = {
-            id: colId, name, icon: '🗂️', schema: s, viewIds: [viewId], created: now()
+            id: colId, name, icon: '🗂️', schema: s, viewIds: [viewId],
+            created: now(), edited: now()
         };
         cache.views[viewId] = {
             id: viewId, collectionId: colId, name: 'Tabelle', layout,
             filters: { operator: 'and', rules: [] },
-            sorts: [], groupBy: '', hidden: [], calc: {}, created: now()
+            sorts: [], groupBy: '', hidden: [], calc: {},
+            created: now(), edited: now()
         };
         const blk = addBlock(parentId, 'database', { collectionId: colId, text: name });
         save('collections', cache.collections[colId]);
@@ -16814,7 +17175,8 @@ const Store = (() => {
             id: uid(), collectionId, layout,
             name: name || namen[layout] || 'Ansicht',
             filters: { operator: 'and', rules: [] },
-            sorts: [], groupBy: '', hidden: [], calc: {}, created: now()
+            sorts: [], groupBy: '', hidden: [], calc: {},
+            created: now(), edited: now() /* siehe `addDatabase` — E179 */
         };
         cache.views[v.id] = v;
         c.viewIds.push(v.id);
@@ -17647,6 +18009,28 @@ const Store = (() => {
             Object.assign(cache.views, neu.views);
             Object.assign(cache.meta, neu.meta);
         }
+        /* UND DIE UMZÜGE NOCH EINMAL.
+           Sie laufen beim Start, und beim Start stand hier ein anderer Bestand.
+           Eine eingespielte Sicherung kann jahrealt sein — sie bringt genau die
+           Formen mit, gegen die es die Umzüge gibt. Ohne diesen Aufruf wäre ein
+           Umzug für alles zuständig ausser für den einen Weg, auf dem alte Daten
+           heute wirklich hereinkommen (E172).
+    
+           `zuruecksetzen` davor, weil die Merkliste sagt „schon gelaufen" — für
+           den vorigen Bestand stimmte das. Jeder Umzug muss ohnehin zweimal
+           laufen können, ohne zu schaden; das ist die Regel, unter der sie
+           geschrieben sind. */
+        if (typeof Umzuege !== 'undefined') {
+            try {
+                Umzuege.zuruecksetzen();
+                Umzuege.laufen();
+            }
+            catch (e) {
+                if (typeof Reporter !== 'undefined')
+                    Reporter.error('Ablage', 'Umzug nach dem Einspielen: ' +
+                        (e instanceof Error ? e.message : String(e)), e);
+            }
+        }
         datenGeaendert();
         notify('import');
         /* Nach einer eingespielten Sicherung ist der ganze Bestand ein anderer.
@@ -18108,7 +18492,7 @@ const Store = (() => {
         return { benutzt: e.usage, verfuegbar: e.quota };
     };
     return {
-        load, uid, now, cache,
+        load, uid, now, cache, istDemo: () => DEMO,
         addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
         purgeAnhaenge, dateiAnspruch, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
         addPage, rootPages, trashed, favorites, pathOf,
@@ -24084,6 +24468,14 @@ const PdfSeite = (() => {
            auch nennt (§38). */
         '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
             'title="Verweis auf genau diese Seite kopieren">🔗</button>' +
+            /* SCHÄRFER RECHNEN (L37, E173). Nur wenn es überhaupt geht: ohne das
+               Original in der Ablage gibt es nichts, woraus man rechnen könnte,
+               und ein Knopf, der nur eine Entschuldigung zeigt, ist kein Knopf.
+               Auch nur dann, wenn noch Luft nach oben ist. */
+            (block.quelleId && (Number(block.bildBreite) || 1654) < 3308
+                ? '<button data-a="feiner" aria-label="Diese Seite feiner rechnen" ' +
+                    'title="Diese Seite feiner rechnen — schärfer beim Hineinzoomen">⊕</button>'
+                : '') +
             '<span class="blatt-trenn"></span>' +
             /* Beide Zahlen durch `Number` — `nr` war es schon, `vonSeiten` nicht.
                Der Text hier geht ueber `Marken.leiste` in ein `innerHTML`, und ein
@@ -24094,6 +24486,24 @@ const PdfSeite = (() => {
             '</span>');
         werk.addEventListener('click', e => {
             const k = e.target?.closest?.('button');
+            if (k?.dataset.a === 'feiner') {
+                /* Sperren, solange gerechnet wird — sonst startet ein zweiter Klick
+                   einen zweiten Lauf, und der legt für denselben Block eine zweite
+                   Datei ab (derselbe Fehler wie E116). */
+                k.setAttribute('disabled', 'disabled');
+                k.textContent = '…';
+                PdfEinlesen.schaerfer(block).then((erg) => {
+                    if (erg && erg.ok)
+                        return; /* neu gezeichnet, Knopf ist fort */
+                    if (!k.isConnected)
+                        return;
+                    k.removeAttribute('disabled');
+                    k.textContent = '⊕';
+                    if (erg && erg.grund)
+                        UI.toast(erg.grund);
+                });
+                return;
+            }
             if (k?.dataset.a !== 'anker')
                 return;
             /* `location.href` ohne Hash — dieselbe Form wie Strg + Umschalt + C,
@@ -24557,7 +24967,10 @@ const PdfEinlesen = (() => {
                      fehlt, las man „Seite 80 von 1" (E116). */
                 melder.textContent = 'Seite ' + (fertig + 1) + ' von ' + offen.length +
                     ' wird gerechnet …';
-                const bild = await griff.alsBild(n);
+                /* Wer diese Seite einmal schärfer gerechnet hat, will sie nicht
+                   beim nächsten Zurückholen wieder grob haben. Die Breite steht am
+                   Block und kommt mit in die Sicherung (E173). */
+                const bild = await griff.alsBild(n, Number(b.bildBreite) || undefined);
                 const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
                 /* Fehlt der Suchtext noch — bei allem, was vor E107 eingelesen
                    wurde —, kommt er jetzt mit. Das Dokument ist ohnehin offen. */
@@ -24591,7 +25004,78 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    return { alsSeiten, neuBerechnen, ohneBild, OHNE_FRAGE };
+    /* ========================================================================
+     * EINE SEITE SCHÄRFER RECHNEN (L37, E173)
+     * ------------------------------------------------------------------------
+     * Seiten entstehen bei 1654 px Breite — bei A4 genau 200 dpi, Scan-
+     * Qualität. Wer stark hineinzoomt, sieht trotzdem Unschärfe, und L37 hielt
+     * das als offene Arbeit fest: eine Seite auf Wunsch feiner rechnen.
+     *
+     * Alles dafür war schon da und wurde nur nie gerufen: `alsBild` nimmt seit
+     * jeher eine Breite entgegen, das Original liegt in der Ablage (E103), und
+     * die Marken liegen in SEITENPUNKTEN und nicht in Bildpunkten (E100) —
+     * sie bleiben deshalb liegen, wo sie liegen. Das ist der Grund, warum das
+     * hier überhaupt gefahrlos geht.
+     *
+     * Die Grenze ist 3308 px, also 400 dpi bei A4. Darüber wird eine Seite als
+     * WebP schnell ein paar Megabyte, und das trägt ein Telefon nicht mehr
+     * (§36, §37).
+     * ======================================================================*/
+    const BREITE_MAX = 3308;
+    const schaerfer = async (block) => {
+        if (!block || block.type !== 'pdfseite')
+            return { ok: false, grund: 'keine PDF-Seite' };
+        if (!block.quelleId)
+            return { ok: false, grund: 'Ohne das Original lässt sich nichts neu rechnen.' };
+        const jetzt = Number(block.bildBreite) || PdfLeser.BREITE_PX;
+        if (jetzt >= BREITE_MAX)
+            return { ok: false, grund: 'Diese Seite ist schon so fein gerechnet, ' +
+                    'wie Redion es anbietet.' };
+        const ziel = Math.min(BREITE_MAX, jetzt * 2);
+        const roh = await Dateien.alsBlob(block.quelleId);
+        if (!roh)
+            return { ok: false, grund: 'Das Original fehlt in diesem Bestand — zieh ' +
+                    'die PDF-Datei noch einmal herein.' };
+        const melder = UI.toast('Seite wird feiner gerechnet …', 120000);
+        let griff = null;
+        try {
+            griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+            const n = Number(block.nr) || 1;
+            if (n > griff.seiten)
+                return { ok: false, grund: 'Diese Seite gibt es im Original nicht.' };
+            const bild = await griff.alsBild(n, ziel);
+            const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '-' + ziel + '.webp', { type: 'image/webp' }), { blockId: block.id, abgeleitet: true });
+            /* ERST DIE NEUE KENNUNG AN DEN BLOCK, DANN DIE ALTE DATEI WEG.
+               Andersherum stünde zwischen beiden Schritten eine Seite ohne Bild da,
+               und bricht es dazwischen ab, ist das Bild fort und das neue nicht da.
+               In dieser Reihenfolge ist der schlimmste Fall eine Datei zu viel —
+               die findet die Pflegeseite (E171). */
+            const alt = block.bildDateiId;
+            Store.updateBlock(block.id, { bildDateiId: satz.id, bildBreite: ziel });
+            if (alt && alt !== satz.id) {
+                try {
+                    await Dateien.weg(alt);
+                }
+                catch { }
+            }
+            melder.remove();
+            App.zeichneSeite();
+            UI.toast('Seite ' + n + ' ist jetzt bei ' +
+                Math.round(ziel * 72 / (Number(block.bw) || 595.28)) + ' dpi');
+            return { ok: true, breite: ziel };
+        }
+        catch (e) {
+            melder.remove();
+            const grund = e instanceof Error ? e.message : String(e);
+            UI.toast('Die Seite liess sich nicht feiner rechnen: ' + grund);
+            return { ok: false, grund };
+        }
+        finally {
+            if (griff)
+                griff.schliessen();
+        }
+    };
+    return { alsSeiten, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
 })();
 window.PdfEinlesen = PdfEinlesen;
 
@@ -32346,6 +32830,30 @@ const DatenbankDienst = (() => {
             return Array.isArray(v) ? v : (v ? String(v).split(',').map(s => s.trim()) : []);
         return v ?? '';
     };
+    /**
+     * Denselben Wert rechnen, aber OHNE die Zwischenspeicher (L28, E176).
+     *
+     * `Tempo` und `Vorrat` merken sich das Ergebnis unter der ZEILENKENNUNG.
+     * Eine Probezeile — ein Satz mit denselben Feldern und einem geänderten
+     * Wert darin, wie ihn `WhatIf` für die Zielwertsuche baut — trägt dieselbe
+     * Kennung wie das Original. Sie bekäme deshalb bei jedem Probewert
+     * denselben gespeicherten Wert zurück, und die Suche sähe eine Gerade, wo
+     * eine Kurve ist. Gemessen: die Zielwertsuche fand gar nichts, die
+     * Optimierung lief an den Rand.
+     *
+     * Beide Speicher stehen ohnehin still, solange `formelTiefe` über null
+     * ist — das ist der Weg, den eine Formel nimmt, die eine andere aufruft.
+     * Dieser Aufruf geht denselben Weg, absichtlich.
+     */
+    const wertFrisch = (row, key, coll) => {
+        formelTiefe++;
+        try {
+            return wert(row, key, coll);
+        }
+        finally {
+            formelTiefe--;
+        }
+    };
     /** Die eigentliche Formelrechnung — ohne Speicher davor. */
     const formelRechnen = (row, _key, coll, def) => {
         {
@@ -32971,7 +33479,7 @@ const DatenbankDienst = (() => {
         sortiert,
         spaltenLauf,
         trifftZu,
-        wert,
+        wert, wertFrisch,
         zeilen,
         zeilenGesamt,
         zelle,
@@ -33046,7 +33554,7 @@ const Datenbank = (() => {
         if (el)
             el.style.display = ob ? wie : 'none';
     };
-    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, zeilen, zeilenGesamt, zelle, zusammenfassen } = DatenbankDienst;
+    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, zelle, zusammenfassen } = DatenbankDienst;
     /* ========================================================================
      * RENDERN
      * ======================================================================*/
@@ -33209,6 +33717,44 @@ const Datenbank = (() => {
         else
             koerper.appendChild(alsTabelle(coll, view, rows, block));
         w.appendChild(koerper);
+        /* ----------------------------------------------------------------------
+         * WAS NICHT DASTEHT, MUSS DASTEHEN (L22, E180)
+         * ----------------------------------------------------------------------
+         * `begrenzen` zeigt 50 Zeilen und nimmt die übrigen weg. Gemessen an
+         * 300 Zeilen: die Tabelle endet nach der fünfzigsten mit „+ Neu", und
+         * NICHTS sagt, dass zweihundertfünfzig fehlen. Eine Tabelle, die einen
+         * Teil zeigt und aussieht wie das Ganze, ist die gefährlichere Sorte
+         * Unvollständigkeit — man merkt sie erst, wenn man etwas sucht, das
+         * dasteht und nicht gefunden wird.
+         *
+         * HIER UND NICHT IN DER TABELLE: `begrenzen` gilt für jede Ansichtsart.
+         * In den Tabellenfuss geschrieben, hätten Board, Galerie und Feed
+         * weiter stumm abgeschnitten.
+         *
+         * Der Weg heraus steht daneben, nicht in einem Menü drei Ebenen tiefer:
+         * die Ladegrenze gibt es zwar unter „Layout", aber wer nicht weiss,
+         * dass abgeschnitten wird, sucht sie nicht.
+         * -------------------------------------------------------------------- */
+        const gesamt = zeilenGesamt(coll, view);
+        if (gesamt > rows.length) {
+            const fuss = document.createElement('div');
+            fuss.className = 'db-grenze';
+            fuss.innerHTML =
+                `<span>${rows.length} von ${gesamt} Zeilen</span>` +
+                    '<button data-a="mehr">Mehr laden</button>' +
+                    '<button data-a="alle">Alle zeigen</button>';
+            fuss.addEventListener('click', e => {
+                const b = elVon(e)?.closest('button[data-a]');
+                if (!b)
+                    return;
+                /* Die Grenze steht an der ANSICHT und bleibt damit stehen — wer
+                   einmal alle sehen wollte, will es beim nächsten Öffnen wieder. */
+                const jetzt = view.limit === 0 ? 0 : (view.limit || 50);
+                Store.updateView(view.id, { limit: b.dataset.a === 'alle' ? 0 : jetzt + 50 });
+                App.zeichneSeite();
+            });
+            w.appendChild(fuss);
+        }
         return w;
     };
     /* ========================================================================
@@ -35540,13 +36086,63 @@ const Datenbank = (() => {
      * einer Spalte und die letzten Einträge. Was gezeigt wird, stellt man
      * über „Kacheln" ein.
      * ------------------------------------------------------------------------*/
+    /* ==========================================================================
+     * DAS DASHBOARD (L17)
+     * --------------------------------------------------------------------------
+     * Bis E185 zeigte es EINE Datenbank: die eigene. Vier Dinge fehlten, und
+     * L17 nannte sie beim Namen — mehrere Datenquellen, KPI-Karten, Layout,
+     * Diagrammquellen. Alle vier hängen an derselben Stelle, nämlich daran,
+     * was in einer Kachel stehen darf:
+     *
+     *     { art: 'anzahl' }                          wie bisher
+     *     { art: 'summe',       key }                wie bisher
+     *     { art: 'verteilung',  key }                wie bisher
+     *
+     *     { art: 'kpi',         key, ziel, richtung } NEU — Wert gegen Ziel
+     *     { art: 'verteilung',  key, wertKey }        NEU — Summe statt Anzahl
+     *     { …,  quelle: <collectionId> }              NEU — aus einer FREMDEN
+     *                                                 Datenbank
+     *
+     * `quelle` ist der Schlüssel zu allem: eine Kachel ohne `quelle` meint die
+     * eigene Datenbank und die GEFILTERTEN Zeilen der Ansicht; eine Kachel mit
+     * `quelle` holt sich die Zeilen der genannten Datenbank frisch.
+     *
+     * WARUM DIE FREMDEN ZEILEN UNGEFILTERT KOMMEN. Ein Filter gehört zu einer
+     * Ansicht, und die fremde Datenbank hat ihre eigenen. Welche davon gälte?
+     * Eine Kachel „Summe · Betrag aus Rechnungen" muss den Betrag ALLER
+     * Rechnungen nennen, sonst nennt sie eine Zahl, deren Bedeutung von einer
+     * Einstellung anderswo abhängt — und das ist die Sorte Zahl, der man nicht
+     * trauen kann. Steht es unter der Karte, weiss man es.
+     * ========================================================================*/
+    /** Die Zeilen für eine Kachel: die eigenen gefilterten oder alle fremden. */
+    const dashZeilen = (kachel, coll, rows) => {
+        if (!kachel || !kachel.quelle || kachel.quelle === coll.id)
+            return rows;
+        const fremd = Store.getCollection(kachel.quelle);
+        return fremd ? Store.rowsOf(fremd.id) : [];
+    };
+    /** Die Datenbank für eine Kachel — für Schema und Beschriftung. */
+    const dashColl = (kachel, coll) => {
+        if (!kachel || !kachel.quelle || kachel.quelle === coll.id)
+            return coll;
+        return Store.getCollection(kachel.quelle) || coll;
+    };
+    /** Steht der Name der fremden Datenbank unter der Karte? Nur wenn fremd. */
+    const dashHerkunft = (kachel, coll) => {
+        const c = dashColl(kachel, coll);
+        return c && c.id !== coll.id ? (c.name || 'Andere Datenbank') : '';
+    };
     const alsDashboard = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'dash';
-        const zahlKeys = Object.keys(coll.schema)
-            .filter(k => ['number', 'formula', 'rollup', 'duration'].includes(coll.schema[k].type));
-        const gruppKeys = Object.keys(coll.schema)
-            .filter(k => ['select', 'status', 'multi', 'checkbox', 'person'].includes(coll.schema[k].type));
+        /* Die Spaltenlisten je Datenbank — auch für die fremden, weil das Menü
+           sie anbieten muss. */
+        const zahlKeysVon = (c) => Object.keys(c.schema)
+            .filter(k => ['number', 'formula', 'rollup', 'duration'].includes(c.schema[k].type));
+        const gruppKeysVon = (c) => Object.keys(c.schema)
+            .filter(k => ['select', 'status', 'multi', 'checkbox', 'person'].includes(c.schema[k].type));
+        const zahlKeys = zahlKeysVon(coll);
+        const gruppKeys = gruppKeysVon(coll);
         const datumKeys = Object.keys(coll.schema)
             .filter(k => ['date', 'created', 'edited'].includes(coll.schema[k].type));
         const kacheln = view.kacheln || [
@@ -35554,55 +36150,155 @@ const Datenbank = (() => {
             ...(zahlKeys.slice(0, 2).map(k => ({ art: 'summe', key: k }))),
             ...(gruppKeys.slice(0, 1).map(k => ({ art: 'verteilung', key: k })))
         ];
+        /* Eine Kachel ändern oder wegnehmen. Die Liste wird IMMER ganz neu
+           geschrieben — `view.kacheln` kann `undefined` sein (die Vorgabe oben),
+           und dann gäbe es nichts, worin man an Stelle i etwas ändern könnte. */
+        const kachelnSchreiben = (liste) => {
+            Store.updateView(view.id, { kacheln: liste });
+            App.zeichneSeite();
+        };
+        const kachelWeg = (i) => kachelnSchreiben(kacheln.filter((_, k) => k !== i));
+        const kachelSchieben = (i, um) => {
+            const ziel = i + um;
+            if (ziel < 0 || ziel >= kacheln.length)
+                return;
+            const liste = kacheln.slice();
+            const [x] = liste.splice(i, 1);
+            liste.splice(ziel, 0, x);
+            kachelnSchreiben(liste);
+        };
+        /* Die Griffe an einer Kachel — links, rechts, weg. Sie stehen an JEDER
+           Kachel, nicht nur an den neuen: bis E185 gab es „Alle Kacheln
+           entfernen" und sonst nichts, und wer eine falsche hinzugefügt hatte,
+           musste alle wegwerfen. */
+        const griffe = (d, i) => {
+            /* Was Griffe trägt, IST eine Kachel. „Zuletzt geändert" und „Als
+               Nächstes" tragen dieselbe Klasse `dash-block`, sind aber feste
+               Teile des Dashboards und keine Kacheln — ohne diese Marke kann
+               weder die CSS noch ein Prüflauf die beiden auseinanderhalten. */
+            d.classList.add('dash-kachel');
+            const g = document.createElement('div');
+            g.className = 'dk-griffe';
+            g.innerHTML =
+                `<button data-g="hoch" title="Nach vorn" aria-label="Kachel nach vorn">‹</button>` +
+                    `<button data-g="runter" title="Nach hinten" aria-label="Kachel nach hinten">›</button>` +
+                    `<button data-g="weg" title="Entfernen" aria-label="Kachel entfernen">✕</button>`;
+            g.addEventListener('click', e => {
+                const b = elVon(e)?.closest('[data-g]');
+                if (!b)
+                    return;
+                e.stopPropagation();
+                if (b.dataset.g === 'weg')
+                    kachelWeg(i);
+                else
+                    kachelSchieben(i, b.dataset.g === 'hoch' ? -1 : 1);
+            });
+            d.appendChild(g);
+        };
         /* --- Kennzahlen ------------------------------------------------------ */
         const oben = document.createElement('div');
         oben.className = 'dash-zahlen';
-        kacheln.filter((k) => k.art !== 'verteilung').forEach((k) => {
+        kacheln.forEach((k, i) => {
+            if (k.art === 'verteilung')
+                return;
+            const kc = dashColl(k, coll);
+            const kr = dashZeilen(k, coll, rows);
+            const woher = dashHerkunft(k, coll);
             const d = document.createElement('div');
             d.className = 'dash-karte';
             if (k.art === 'anzahl') {
-                d.innerHTML = `<span class="dz-wert">${rows.length}</span>` +
+                d.innerHTML = `<span class="dz-wert">${kr.length}</span>` +
                     `<span class="dz-name">Einträge</span>`;
             }
-            else {
-                const name = coll.schema[k.key]?.name || '?';
-                const art = k.art === 'summe' ? 'Summe' : k.art === 'schnitt' ? 'Durchschnitt' : 'Maximum';
-                const wert2 = zusammenfassen(art, rows.map((r) => wert(r, k.key, coll)), rows.length);
-                d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
-                    `<span class="dz-name">${esc(art)} · ${esc(name)}</span>`;
+            else if (k.art === 'kpi') {
+                /* DIE KPI-KARTE. Eine Zahl allein ist keine Kennzahl — „48 000" sagt
+                   nichts, „48 000 von 60 000" sagt alles. Dazu die Richtung: bei
+                   Umsatz ist mehr besser, bei Fehlern weniger. Ohne sie müsste die
+                   Farbe raten, und eine ratende Farbe ist schlimmer als keine. */
+                const name = kc.schema[k.key]?.name || '?';
+                const roh = zusammenfassen(k.summe === false ? 'Durchschnitt' : 'Summe', kr.map((r) => wert(r, k.key, kc)), kr.length);
+                const zahl = Number(roh) || 0;
+                const ziel = Number(k.ziel);
+                const runter = k.richtung === 'runter';
+                const hat = isFinite(ziel) && ziel !== 0;
+                const anteil = hat ? zahl / ziel : 0;
+                /* „Geschafft" heisst je nach Richtung etwas anderes. */
+                const gut = hat && (runter ? zahl <= ziel : zahl >= ziel);
+                const proz = hat ? Math.round(anteil * 100) : 0;
+                /* Der Balken wird bei 100 % gekappt — sonst läuft er aus der Karte,
+                   und 340 % sähen aus wie 100 %. Die ZAHL daneben sagt die Wahrheit. */
+                const breit = Math.max(0, Math.min(100, runter ? (hat ? 100 - proz : 0) : proz));
+                d.className = 'dash-karte dash-kpi ' + (hat ? (gut ? 'kpi-gut' : 'kpi-offen') : '');
+                d.innerHTML =
+                    `<span class="dz-wert">${esc(Formula.anzeige(zahl))}</span>` +
+                        (hat ? `<span class="dz-ziel">${gut ? '✓' : (runter ? '▾' : '▴')} ` +
+                            `${proz} % von ${esc(Formula.anzeige(ziel))}</span>` +
+                            `<span class="dz-balken"><i style="width:${breit}%"></i></span>`
+                            : `<span class="dz-ziel">Ohne Ziel</span>`) +
+                        `<span class="dz-name">${esc(name)}${woher ? ' · ' + esc(woher) : ''}</span>`;
             }
+            else {
+                const name = kc.schema[k.key]?.name || '?';
+                const art = k.art === 'summe' ? 'Summe' : k.art === 'schnitt' ? 'Durchschnitt' : 'Maximum';
+                const wert2 = zusammenfassen(art, kr.map((r) => wert(r, k.key, kc)), kr.length);
+                /* „Summe · Summe · Offene Rechnungen" stotterte: die Rechenart heisst
+                   wie die Spalte. Heisst sie gleich, steht sie einmal da. */
+                const bezeichnung = art.toLowerCase() === String(name).toLowerCase()
+                    ? esc(name) : esc(art) + ' · ' + esc(name);
+                d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
+                    `<span class="dz-name">${bezeichnung}` +
+                    `${woher ? ' · ' + esc(woher) : ''}</span>`;
+            }
+            griffe(d, i);
             oben.appendChild(d);
         });
         if (oben.children.length)
             w.appendChild(oben);
         /* --- Verteilung ------------------------------------------------------ */
-        kacheln.filter((k) => k.art === 'verteilung' && k.key).forEach((k) => {
-            const def = coll.schema[k.key];
+        kacheln.forEach((k, i) => {
+            if (k.art !== 'verteilung' || !k.key)
+                return;
+            const kc = dashColl(k, coll);
+            const kr = dashZeilen(k, coll, rows);
+            const def = kc.schema[k.key];
             if (!def)
                 return;
+            /* DIE DIAGRAMMQUELLE (L17). Bis E185 zählte die Verteilung immer nur
+               ZEILEN: „12 Aufträge in Zürich". Was man wissen will, ist meistens
+               „180 000 Umsatz in Zürich" — dieselbe Gruppierung, ein anderer Wert.
+               `wertKey` nennt die Zahlenspalte; ohne ihn wird gezählt wie bisher. */
+            const wertDef = k.wertKey ? kc.schema[k.wertKey] : null;
+            const beitrag = (r) => wertDef ? (Formula.zahl(wert(r, k.wertKey, kc)) || 0) : 1;
             const zaehler = new Map();
-            rows.forEach((r) => {
-                let v = wert(r, k.key, coll);
+            const dazu = (name, um) => zaehler.set(name, (zaehler.get(name) || 0) + um);
+            kr.forEach((r) => {
+                const v = wert(r, k.key, kc);
+                const um = beitrag(r);
+                /* Bei einer Mehrfachauswahl zählt die Zeile in JEDER ihrer Gruppen.
+                   Die Summe der Balken ist dann grösser als das Ganze — das ist bei
+                   Mehrfachauswahl richtig so und steht als Fussnote darunter. */
                 if (Array.isArray(v))
-                    v.forEach(x => zaehler.set(String(x), (zaehler.get(String(x)) || 0) + 1));
-                else {
-                    const s2 = def.type === 'checkbox' ? (v ? 'Ja' : 'Nein') : (Formula.anzeige(v) || '(leer)');
-                    zaehler.set(s2, (zaehler.get(s2) || 0) + 1);
-                }
+                    v.forEach(x => dazu(String(x), um));
+                else
+                    dazu(def.type === 'checkbox' ? (v ? 'Ja' : 'Nein')
+                        : (Formula.anzeige(v) || '(leer)'), um);
             });
             const paare = [...zaehler.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-            const hoechst = Math.max(1, ...paare.map(p2 => p2[1]));
+            const hoechst = Math.max(1, ...paare.map(p2 => Math.abs(p2[1])));
             const box = document.createElement('div');
             box.className = 'dash-block';
-            box.innerHTML = `<h4>Verteilung nach ${esc(def.name)}</h4>` +
-                paare.map(([n, anz]) => {
+            const woher = dashHerkunft(k, coll);
+            const titel = (wertDef ? esc(wertDef.name) + ' nach ' : 'Verteilung nach ') + esc(def.name);
+            box.innerHTML = `<h4>${titel}${woher ? ' · ' + esc(woher) : ''}</h4>` +
+                (paare.length ? paare.map(([n, anz]) => {
                     const opt = (def.options || []).find((o) => o.name === n);
                     return '<div class="dash-balken">' +
                         `<span class="db-name">${esc(n)}</span>` +
                         `<span class="db-strich"><i class="bg-${opt ? opt.color : 'blue'}" ` +
-                        `style="width:${Math.round(anz / hoechst * 100)}%"></i></span>` +
-                        `<span class="db-zahl">${anz}</span></div>`;
-                }).join('');
+                        `style="width:${Math.round(Math.abs(anz) / hoechst * 100)}%"></i></span>` +
+                        `<span class="db-zahl">${esc(Formula.anzeige(wertDef ? Math.round(anz * 100) / 100 : anz))}</span></div>`;
+                }).join('') : '<div class="db-leer">Noch keine Werte.</div>');
+            griffe(box, i);
             w.appendChild(box);
         });
         /* --- Zuletzt geändert ------------------------------------------------ */
@@ -35648,28 +36344,90 @@ const Datenbank = (() => {
         /* --- Kacheln einstellen ---------------------------------------------- */
         const fuss = document.createElement('div');
         fuss.className = 'cal-fuss';
-        fuss.innerHTML = '<span>Ein Überblick über diese Datenbank.</span>' +
-            '<button data-a="kacheln">Kacheln einstellen</button>';
+        /* Andere Datenbanken derselben Ablage — die Quellen, die eine Kachel
+           ausser der eigenen haben kann. Nach Namen sortiert, damit die Liste
+           nicht bei jedem Öffnen anders aussieht. */
+        const fremde = Object.values(Store.cache.collections)
+            .filter((c) => c && c.id !== coll.id)
+            .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        const anzahlWoher = kacheln.filter((k) => dashHerkunft(k, coll)).length;
+        fuss.innerHTML =
+            `<span>Ein Überblick${anzahlWoher ? ' — ' + anzahlWoher + ' Kachel' +
+                (anzahlWoher === 1 ? '' : 'n') + ' aus anderen Datenbanken' :
+                ' über diese Datenbank'}.</span>` +
+                '<button data-a="kacheln">Kachel hinzufügen</button>';
+        /* Das Menü für EINE Datenbank — die eigene oder eine fremde. `q` ist die
+           Kennung, die in die Kachel wandert; leer heisst „die eigene". */
+        const menueFuer = (c, q) => {
+            const zk = zahlKeysVon(c), gk = gruppKeysVon(c);
+            const p = q ? '@' + q : '';
+            return '<button data-neu="anzahl' + p + '">Anzahl der Einträge</button>' +
+                zk.map(k => `<button data-neu="summe:${k}${p}">Summe · ${esc(c.schema[k].name)}</button>` +
+                    `<button data-neu="schnitt:${k}${p}">Durchschnitt · ${esc(c.schema[k].name)}</button>` +
+                    `<button data-neu="kpi:${k}${p}">Kennzahl mit Ziel · ${esc(c.schema[k].name)}</button>`).join('') +
+                gk.map(k => `<button data-neu="verteilung:${k}${p}">Verteilung nach ${esc(c.schema[k].name)}</button>` +
+                    zk.map(z => `<button data-neu="verteilung:${k}:${z}${p}">` +
+                        `${esc(c.schema[z].name)} nach ${esc(c.schema[k].name)}</button>`).join('')).join('');
+        };
         fuss.addEventListener('click', e => {
             if (!elVon(e)?.closest('[data-a="kacheln"]'))
                 return;
             const r = (htmlVon(e) ?? document.body).getBoundingClientRect();
-            const m = UI.menu('<div class="grp">Kennzahl hinzufügen</div>' +
-                '<button data-neu="anzahl">Anzahl der Einträge</button>' +
-                zahlKeys.map(k => `<button data-neu="summe:${k}">Summe · ${esc(coll.schema[k].name)}</button>` +
-                    `<button data-neu="schnitt:${k}">Durchschnitt · ${esc(coll.schema[k].name)}</button>`).join('') +
-                '<div class="grp">Verteilung</div>' +
-                gruppKeys.map(k => `<button data-neu="verteilung:${k}">Nach ${esc(coll.schema[k].name)}</button>`).join('') +
+            const m = UI.menu(`<div class="grp">Aus dieser Datenbank</div>` + menueFuer(coll, '') +
+                (fremde.length
+                    ? fremde.map((c) => `<div class="grp">Aus „${esc(c.name || 'Ohne Namen')}"</div>` + menueFuer(c, c.id)).join('')
+                    : '') +
                 '<hr><button data-neu="leer">Alle Kacheln entfernen</button>', r.left - 160, r.top - 20);
             m.addEventListener('click', ev => {
                 const b = elVon(ev)?.closest('[data-neu]');
                 if (!b)
                     return;
-                const [art, key] = (b.dataset.neu ?? '').split(':');
-                const liste = art === 'leer' ? [] : [...kacheln, key ? { art, key } : { art }];
-                Store.updateView(view.id, { kacheln: liste });
+                /* `art:key:wertKey@quelle` — die Quelle steht hinten, weil eine
+                   Kennung Doppelpunkte enthalten könnte, ein `@` aber nicht. */
+                const [vorn, quelle] = (b.dataset.neu ?? '').split('@');
+                const [art, key, wertKey] = (vorn ?? '').split(':');
+                if (art === 'leer') {
+                    kachelnSchreiben([]);
+                    m.remove();
+                    return;
+                }
+                const neue = { art };
+                if (key)
+                    neue.key = key;
+                if (wertKey)
+                    neue.wertKey = wertKey;
+                if (quelle)
+                    neue.quelle = quelle;
                 m.remove();
-                App.zeichneSeite();
+                /* Eine Kennzahl ohne Ziel ist keine Kennzahl — also gleich fragen.
+                   Wer abbricht, bekommt trotzdem die Kachel, nur ohne Ziel: sie sagt
+                   dann „Ohne Ziel" und lässt sich später nachrüsten. */
+                if (art === 'kpi') {
+                    void (async () => {
+                        const c2 = quelle ? (Store.getCollection(quelle) || coll) : coll;
+                        const antwort = await UI.frage('Welches Ziel soll „' + (c2.schema[key ?? '']?.name || '?') + '" erreichen?', '');
+                        const zahl = Formula.zahl(antwort);
+                        if (zahl || zahl === 0) {
+                            neue.ziel = zahl;
+                            /* Ein Ziel, das man UNTERschreiten will — Fehler, Kosten,
+                               Rückstände. Ohne diese Frage müsste die Farbe raten. */
+                            neue.richtung = (await Dialog.wahl({
+                                titel: 'In welche Richtung ist gut?',
+                                text: 'Bei Umsatz ist mehr besser, bei Fehlern weniger. ' +
+                                    'Danach richtet sich, wann die Karte grün wird.',
+                                knoepfe: [
+                                    { id: 'hoch', text: 'Ziel erreichen',
+                                        hinweis: 'Grün, sobald der Wert das Ziel erreicht' },
+                                    { id: 'runter', text: 'Obergrenze halten',
+                                        hinweis: 'Grün, solange der Wert darunter bleibt' }
+                                ]
+                            })) === 'runter' ? 'runter' : 'hoch';
+                        }
+                        kachelnSchreiben([...kacheln, neue]);
+                    })();
+                    return;
+                }
+                kachelnSchreiben([...kacheln, neue]);
             });
         });
         w.appendChild(fuss);
@@ -39044,6 +39802,202 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
+    /* ========================================================================
+     * SPALTEN AUFRÄUMEN (L27, E178)
+     * ------------------------------------------------------------------------
+     * Die Rechnung steht in `cleanup.ts` und ändert nichts. Hier steht der
+     * Weg dorthin und — der eigentliche Punkt — die VORSCHAU: welche Zeile
+     * sähe danach wie aus. Erst dann gibt es einen Knopf, der schreibt.
+     * ======================================================================*/
+    const aufraeumenDialog = (coll) => {
+        const spalten = Aufraeumen.spalten(coll);
+        if (!spalten.length) {
+            UI.toast('In dieser Tabelle steht kein Text zum Aufräumen.');
+            return;
+        }
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML =
+            '<div class="finder" style="width:min(720px,95vw)">' +
+                '<div class="fh">Spalten aufräumen<button class="icon-btn" data-a="zu">✕</button></div>' +
+                '<div style="padding:14px; display:grid; gap:10px">' +
+                '<label>Spalte <select id="au-spalte">' +
+                spalten.map(k => `<option value="${esc(k)}">${esc(coll.schema[k].name)}</option>`).join('') +
+                '</select></label>' +
+                '<div class="au-griffe">' +
+                Aufraeumen.GRIFFE.map((g) => `<label class="au-griff"><input type="checkbox" data-griff="${esc(g.id)}"` +
+                    `${g.id === 'rand' ? ' checked' : ''}> ${esc(g.name)}` +
+                    `<span class="au-was">${esc(g.was)}</span></label>`).join('') +
+                '</div>' +
+                '<div class="au-ersetzen">' +
+                '<label>Ersetze <input id="au-suche" placeholder="Text, wörtlich"></label>' +
+                '<label>durch <input id="au-durch" placeholder="(leer = löschen)"></label>' +
+                '<label class="au-ganz"><input type="checkbox" id="au-ganz"> nur ganze Zelle</label>' +
+                '</div>' +
+                '<div id="au-vorschau" class="au-vorschau" role="status"></div>' +
+                '</div>' +
+                '<div class="fbtns">' +
+                '<button data-a="zu">Abbrechen</button>' +
+                '<button data-a="tu" class="prim" disabled>Übernehmen</button>' +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        let vorschau = null;
+        const knopf = o.querySelector('[data-a="tu"]');
+        const kasten = o.querySelector('#au-vorschau');
+        const rechne = () => {
+            const key = o.querySelector('#au-spalte').value;
+            const griffe = [...o.querySelectorAll('[data-griff]')]
+                .filter(x => x.checked).map(x => x.dataset.griff);
+            vorschau = Aufraeumen.plan(coll, key, {
+                griffe,
+                ersetze: o.querySelector('#au-suche').value,
+                durch: o.querySelector('#au-durch').value,
+                nurGanz: o.querySelector('#au-ganz').checked
+            });
+            knopf.disabled = vorschau.betroffen === 0;
+            if (!vorschau.betroffen) {
+                kasten.innerHTML = '<div class="au-nichts">Nichts zu tun — in „' +
+                    esc(vorschau.spalte) + '" ist keine Zeile betroffen.</div>';
+                return;
+            }
+            /* HÖCHSTENS ZEHN ZEILEN ZEIGEN, und sagen, dass es mehr sind. Eine
+               Vorschau mit dreihundert Zeilen liest niemand, und eine, die
+               schweigend abschneidet, verspricht dreihundert und zeigt zehn. */
+            const zeige = vorschau.zeilen.slice(0, 10);
+            kasten.innerHTML =
+                '<div class="au-kopf">' + vorschau.betroffen + ' von ' + vorschau.gesamt +
+                    ' Zeilen ändern sich</div>' +
+                    zeige.map((z) => '<div class="au-zeile"><span class="au-alt">' + esc(z.vorher || '(leer)') + '</span>' +
+                        '<span class="au-pfeil">→</span>' +
+                        '<span class="au-neu">' + esc(z.nachher || '(leer)') + '</span></div>').join('') +
+                    (vorschau.betroffen > zeige.length
+                        ? '<div class="au-mehr">… und ' + (vorschau.betroffen - zeige.length) +
+                            ' weitere</div>' : '');
+        };
+        o.addEventListener('input', rechne);
+        o.addEventListener('change', rechne);
+        rechne();
+        o.addEventListener('click', e => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="tu"]')) {
+                if (!vorschau || !vorschau.betroffen)
+                    return;
+                const erg = Aufraeumen.wende(vorschau);
+                App.zeichneSeite();
+                o.remove();
+                UI.toast(erg.geaendert + ' Zeile(n) aufgeräumt' +
+                    (erg.ausgelassen ? ', ' + erg.ausgelassen + ' inzwischen anders und ausgelassen' : ''));
+            }
+        });
+    };
+    /* ========================================================================
+     * WAS WÄRE, WENN (L28, E176)
+     * ------------------------------------------------------------------------
+     * Die Rechnung steht in `whatif.ts` und schreibt beim Suchen nichts. Hier
+     * steht nur der Weg dorthin: welche Zeile, welche Stellschraube, welches
+     * Ziel — und ein Knopf, der das Ergebnis übernimmt, wenn ein Mensch das
+     * will.
+     *
+     * DAS ERGEBNIS WIRD ANGEZEIGT, NICHT EINGETRAGEN. Eine Zielwertsuche ist
+     * eine Frage, keine Anweisung; wer sie stellt, will erst einmal die
+     * Antwort sehen. Excel schreibt sofort und bietet danach „Rückgängig" an
+     * — das ist einen Klick billiger und einen Gedanken teurer.
+     * ======================================================================*/
+    const wasWaereWenn = (coll, view) => {
+        const zeilen = Datenbank.zeilen ? Datenbank.zeilen(coll, view) : Store.rowsOf(coll.id);
+        if (!zeilen.length) {
+            UI.toast('Diese Tabelle hat noch keine Zeile.');
+            return;
+        }
+        const stellen = Object.keys(coll.schema).filter(k => WhatIf.stellbar(coll, k));
+        const ziele = Object.keys(coll.schema).filter(k => WhatIf.zielbar(coll, k));
+        if (!stellen.length) {
+            UI.toast('Dafür braucht es eine Zahlenspalte zum Verstellen.');
+            return;
+        }
+        if (!ziele.length) {
+            UI.toast('Dafür braucht es eine gerechnete Spalte als Ziel.');
+            return;
+        }
+        const auswahl = (id, keys) => `<select id="${id}">` + keys.map(k => `<option value="${esc(k)}">${esc(coll.schema[k].name)}</option>`).join('') + '</select>';
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML =
+            '<div class="finder" style="width:min(620px,95vw)">' +
+                '<div class="fh">Was wäre, wenn<button class="icon-btn" data-a="zu">✕</button></div>' +
+                '<div class="ww-form" style="padding:14px; display:grid; gap:10px">' +
+                '<label>Zeile ' +
+                '<select id="ww-zeile">' + zeilen.map((z, i) => `<option value="${esc(z.id)}"${i === 0 ? ' selected' : ''}>` +
+                `${esc(z.text || 'Ohne Titel')}</option>`).join('') + '</select></label>' +
+                /* Der heutige Wert gehört NEBEN die Spalte, um die es geht, nicht
+                   darüber: mit Augen gesehen stand „Ziel steht gerade bei 600"
+                   eine Zeile über der Auswahl und sagte etwas über eine Spalte,
+                   die man noch gar nicht gewählt hatte (§55). */
+                '<label>Diese Spalte soll … ' + auswahl('ww-ziel', ziele) +
+                '<span id="ww-jetzt" class="ww-jetzt"></span></label>' +
+                '<label>… diesen Wert erreichen <input id="ww-wunsch" type="number" step="any"></label>' +
+                '<label>… indem sich diese ändert ' + auswahl('ww-stell', stellen) + '</label>' +
+                /* Die Antwort auf die gestellte Frage — nicht in Hinweisgrau. */
+                '<div id="ww-ergebnis" class="ww-ergebnis" role="status"></div>' +
+                '</div>' +
+                '<div class="fbtns">' +
+                '<button data-a="rechne" class="prim">Ausrechnen</button>' +
+                '<button data-a="uebernimm" disabled>Übernehmen</button>' +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        const el = (id) => o.querySelector('#' + id);
+        const erg = o.querySelector('#ww-ergebnis');
+        const knopfUebernimm = o.querySelector('[data-a="uebernimm"]');
+        let gefunden = null;
+        const zeigeJetzt = () => {
+            const row = Store.getBlock(el('ww-zeile').value);
+            const w = row ? Datenbank.wert(row, el('ww-ziel').value, coll) : null;
+            o.querySelector('#ww-jetzt').textContent =
+                'steht gerade bei ' + (w === null || w === undefined || w === '' ? '—' : String(w));
+            gefunden = null;
+            knopfUebernimm.disabled = true;
+            erg.textContent = '';
+        };
+        ['ww-zeile', 'ww-ziel', 'ww-stell'].forEach(id => el(id).addEventListener('change', zeigeJetzt));
+        zeigeJetzt();
+        o.addEventListener('click', e => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            if (elVon(e)?.closest('[data-a="rechne"]')) {
+                const row = Store.getBlock(el('ww-zeile').value);
+                const r = WhatIf.zielwert(coll, row, el('ww-stell').value, el('ww-ziel').value, el('ww-wunsch').value);
+                if (!r.ok) {
+                    gefunden = null;
+                    knopfUebernimm.disabled = true;
+                    erg.textContent = r.grund;
+                    return;
+                }
+                gefunden = r.wert;
+                knopfUebernimm.disabled = false;
+                /* Gerundet ANGEZEIGT, ungerundet übernommen: „104,00000000001" liest
+                   sich falsch, und „104" wäre gelogen, wenn es 104,3 heissen müsste. */
+                erg.textContent = esc(coll.schema[el('ww-stell').value].name) + ' = ' +
+                    (Math.round(r.wert * 1e6) / 1e6) + ' — dann steht ' +
+                    esc(coll.schema[el('ww-ziel').value].name) + ' bei ' +
+                    (Math.round(r.erreicht * 1e6) / 1e6) + '.';
+            }
+            if (elVon(e)?.closest('[data-a="uebernimm"]')) {
+                if (gefunden === null)
+                    return;
+                Store.setProp(el('ww-zeile').value, el('ww-stell').value, gefunden);
+                App.zeichneSeite();
+                UI.toast('Übernommen');
+                o.remove();
+            }
+        });
+    };
     const dbMenue = (anker, coll, view, block) => {
         const r = anker.getBoundingClientRect();
         const m = UI.menu('<button data-a="rename"><span class="mi">✎</span>Datenbank umbenennen</button>' +
@@ -39085,6 +40039,15 @@ const Datenbank = (() => {
             '<button data-a="csvin"><span class="mi">⭱</span>CSV einlesen</button>' +
             '<button data-a="ai"><span class="mi">✨</span>Mit KI auswerten</button>' +
             '<button data-a="dubletten"><span class="mi">⧉</span>Dubletten finden</button>' +
+            /* Nur wo Text steht: eine Datenbank aus lauter Zahlen und Daten hat
+               keine Leerzeichen am Rand (L27, E178). */
+            (Aufraeumen.spalten(coll).length
+                ? '<button data-a="putzen"><span class="mi">🧹</span>Spalten aufräumen …</button>' : '') +
+            /* Nur wo es etwas zu rechnen gibt: ohne gerechnete Spalte hat eine
+               Zielwertsuche kein Ziel, und ein Eintrag, der nur eine Absage
+               zeigt, ist kein Eintrag (L28, E176). */
+            (Object.values(coll.schema).some((d) => d && (d.type === 'formula' || d.type === 'rollup'))
+                ? '<button data-a="wenn"><span class="mi">⚖</span>Was wäre, wenn …</button>' : '') +
             (typeof Pruefsatz !== 'undefined'
                 ? `<button data-a="pruefsaetze"><span class="mi">✔</span>Prüfsätze` +
                     `<span class="ms">${Pruefsatz.alle(coll).length || 'keine'}</span></button>` : '') +
@@ -39268,6 +40231,16 @@ const Datenbank = (() => {
             if (a === 'dubletten') {
                 m.remove();
                 Pflege.dublettenDialog(coll);
+                return;
+            }
+            if (a === 'putzen') {
+                m.remove();
+                aufraeumenDialog(coll);
+                return;
+            }
+            if (a === 'wenn') {
+                m.remove();
+                wasWaereWenn(coll, view);
                 return;
             }
             if (a === 'gsort') {
@@ -42253,7 +43226,7 @@ const Datenbank = (() => {
             .find((b) => b && b.collectionId && b.alive !== false);
         return kind ? kind.collectionId : null;
     };
-    return { render, sammlungAufSeite, spaltenMenue, TYPEN, propTyp, wert, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
+    return { render, sammlungAufSeite, spaltenMenue, TYPEN, propTyp, wert, wertFrisch, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
         /* `zelleBearbeiten` war nicht ausgeführt — der Mail-Bereich wollte
            es und griff deshalb ins Leere. */
         zelleBearbeiten,
@@ -42639,32 +43612,21 @@ const WissenDienst = (() => {
                     return;
                 const stil = b.stil && typeof b.stil === 'object' && Object.keys(b.stil).length
                     ? { ...b.stil } : null;
-                if (b.color || stil)
-                    gemerkt.push({ type: String(b.type || ''), text: String(b.text || ''),
-                        ...(b.color ? { color: String(b.color) } : {}),
-                        ...(stil ? { stil } : {}) });
+                gemerkt.push({ id: String(b.id), type: String(b.type || ''),
+                    text: String(b.text || ''),
+                    ...(b.color ? { color: String(b.color) } : {}),
+                    ...(stil ? { stil } : {}) });
                 merke(b.id);
             });
         };
         merke(p.id);
-        const setzeWiederAuf = (id) => {
-            Store.childrenOf(id).forEach((b) => {
-                if (!mdTraegt(b))
-                    return;
-                const i = gemerkt.findIndex(x => x.type === String(b.type || '') &&
-                    x.text === String(b.text || ''));
-                if (i >= 0) {
-                    const [treffer] = gemerkt.splice(i, 1);
-                    const aenderung = {};
-                    if (treffer && treffer.color)
-                        aenderung['color'] = treffer.color;
-                    if (treffer && treffer.stil)
-                        aenderung['stil'] = treffer.stil;
-                    if (Object.keys(aenderung).length)
-                        Store.updateBlock(b.id, aenderung);
-                }
-                setzeWiederAuf(b.id);
-            });
+        /** Was dieser Block einmal war — Kennung, Farbe, Schrift. Höchstens einmal. */
+        const holeGemerktes = (typ, text) => {
+            const i = gemerkt.findIndex(x => x.type === typ && x.text === String(text ?? ''));
+            if (i < 0)
+                return null;
+            const [treffer] = gemerkt.splice(i, 1);
+            return treffer ?? null;
         };
         try {
             Store.kinderLeeren(p.id);
@@ -42708,9 +43670,22 @@ const WissenDienst = (() => {
                 stapel.length = t + 1;
                 return stapel[t];
             };
-            /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken. */
+            /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken.
+               Die EINZIGE Stelle, an der beim Übernehmen ein Block entsteht —
+               deshalb steht die Wiederverwendung genau hier und nirgends sonst. */
             const lege = (roh, typ, felder) => {
-                const b = Store.addBlock(elternFuer(roh), typ, felder);
+                const alt = holeGemerktes(typ, felder ? felder['text'] : '');
+                const mit = { ...(felder || {}) };
+                if (alt) {
+                    /* Die Kennung des Blocks, der hier stand. `Store.kinderLeeren` hat
+                       ihn eben endgültig gelöscht, sie ist also frei. */
+                    mit['id'] = alt.id;
+                    if (alt.color)
+                        mit['color'] = alt.color;
+                    if (alt.stil)
+                        mit['stil'] = alt.stil;
+                }
+                const b = Store.addBlock(elternFuer(roh), typ, mit);
                 stapel.push(b.id);
                 return b;
             };
@@ -42866,10 +43841,11 @@ const WissenDienst = (() => {
         }
         finally {
             retteUebrige();
-            /* Erst NACH `retteUebrige`: die zurückgehängten Blöcke gehören zum
-               Baum, und ein Platzhalter kann ebenso gefärbt gewesen sein. */
-            if (gemerkt.length)
-                setzeWiederAuf(p.id);
+            /* Hier stand bis E174 ein zweiter Durchgang, der die Farben nachträglich
+               wieder aufsetzte. Er ist fort: `lege` gibt sie jetzt beim Anlegen mit,
+               zusammen mit der Kennung und nach derselben Regel. Ein Durchgang
+               statt zwei, und eine Zuordnung statt zweier, die auseinanderlaufen
+               können. */
         }
     };
     /* --------------------------------------------------------------------------
@@ -48800,7 +49776,7 @@ const Einstellungen = (() => {
             zeile('Systemmeldungen', 'Erlaubnis des Browsers einholen', knopf('benachr-erlauben', ('Notification' in window && Notification.permission === 'granted')
                 ? 'Bereits erlaubt' : 'Erlauben')) +
             zeile('Erinnerungen in der App', 'Der Streifen unten am Bildschirm', schalter('erinnernInApp', V('erinnernInApp', true))) +
-            zeile('Karteikarten', 'Beim Start melden, wenn Karten fällig sind', schalter('kartenMelden', V('kartenMelden', true))) +
+            zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind', schalter('kartenMelden', V('kartenMelden', true))) +
             zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter((e) => !e.erledigt).length} offen</span>`) +
             zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
         verbindungen: () => {
@@ -49639,12 +50615,30 @@ const Einstellungen = (() => {
         anwenden();
         if (V('seiteZu', false))
             document.getElementById('sidebar')?.classList.add('collapsed');
-        /* Fällige Karteikarten melden */
+        /* FÄLLIGE KARTEIKARTEN MELDEN — EINMAL AM TAG, NICHT BEI JEDEM START.
+         *
+         * Der Schalter dazu gibt es seit jeher („Karteikarten · Beim Start
+         * melden"), und er stand auf an. Nur meldete es bei JEDEM Öffnen und
+         * bei jedem Neuladen — wer an Redion arbeitet, sah den Streifen
+         * vierzigmal am Tag, und wer ihn wegdrücken wollte, musste die
+         * ganze Meldung abschalten.
+         *
+         * Eine Erinnerung, die man schon kennt, ist keine Erinnerung mehr.
+         * Also merkt sie sich den TAG, an dem sie gezeigt wurde.
+         *
+         * Der Merker wird nur gesetzt, wenn wirklich etwas gezeigt wurde. Sonst
+         * würde ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr
+         * verschlucken, wenn dann welche fällig sind. */
         if (V('kartenMelden', true)) {
-            const n = Werkzeuge.faellig().length;
-            if (n)
-                setTimeout(() => UI.toast('🎴 ' + n +
-                    (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
+            const heute3 = new Date().toISOString().slice(0, 10);
+            if (Store.getMeta('kartenGemeldet', '') !== heute3) {
+                const n = Werkzeuge.faellig().length;
+                if (n) {
+                    Store.setMeta('kartenGemeldet', heute3);
+                    setTimeout(() => UI.toast('🎴 ' + n +
+                        (n === 1 ? ' Karteikarte ist fällig' : ' Karteikarten sind fällig')), 1800);
+                }
+            }
         }
     };
     return { oeffne, start, anwenden, datum, wochenstart, V, S, GRUPPEN, BEREICHE };
@@ -63597,6 +64591,8 @@ window.Vergleich = Vergleich;
  *   AUSGEBEN  · .docx — eine echte Word-Datei, ohne fremde Pakete
  *             · .xlsx — eine echte Excel-Mappe, eine Tabelle je Ansicht
  *
+ *   EINLESEN  · Asana (CSV)        — Abschnitte werden Status, Notizen Seiten
+ *   EINLESEN  · Apple Notes (Ordner)— je HTML-Datei eine Seite, Ordner bleiben
  *   EINLESEN  · Trello (JSON)      — Listen werden Status, Karten Zeilen
  *             · Evernote (.enex)   — jede Notiz eine Seite
  *             · Obsidian (Ordner)  — [[Wikilinks]] werden echte Verweise
@@ -64526,6 +65522,49 @@ const Austausch = (() => {
         });
         return { seite, hinweis: n + ' Karten aus ' + listen.size + ' Listen übernommen' };
     };
+    /* --- HTML in Markdown, einmal fuer alle -------------------------------
+     * Evernote (ENML) und Apple Notes liefern beide HTML, und beide brauchen
+     * daraus dieselben Bloecke. Diese Funktion stand frueher IN `ausEvernote`;
+     * Apple Notes haette sie kopiert, und dann waere sie zweimal dagewesen —
+     * genau die Sorte doppelte Wahrheit, die L34 beschreibt.
+     *
+     * ABGEHAKTES bleibt abgehakt: Apple Notes schreibt Checklisten als
+     * `<li>` mit einem Datenattribut oder einem vorangestellten Kaestchen.
+     * Beides wird zu `- [ ]` / `- [x]`, und `ausMarkdown` macht daraus
+     * echte Aufgabenbloecke statt Strichlisten mit einem Kaestchen im Text.
+     * --------------------------------------------------------------------- */
+    const HAKEN_AN = /^\s*(?:\u2611|\u2612|\u2714|\u2713|\[x\]|\[X\])\s*/;
+    const HAKEN_AUS = /^\s*(?:\u2610|\[\s?\])\s*/;
+    const htmlZuMarkdown = (html) => {
+        const roh = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
+        if (!roh.body)
+            return '';
+        return [...roh.body.querySelectorAll('div, p, li, h1, h2, h3')]
+            .map(el => {
+            let t = (el.textContent || '').trim();
+            if (!t)
+                return '';
+            if (el.tagName === 'H1')
+                return '# ' + t;
+            if (el.tagName === 'H2')
+                return '## ' + t;
+            if (el.tagName === 'H3')
+                return '### ' + t;
+            if (el.tagName === 'LI') {
+                /* Apple Notes kennt drei Schreibweisen fuer denselben Haken. */
+                const attr = el.getAttribute('data-apple-checklist-item')
+                    || el.getAttribute('data-checked') || '';
+                if (HAKEN_AN.test(t))
+                    return '- [x] ' + t.replace(HAKEN_AN, '');
+                if (HAKEN_AUS.test(t))
+                    return '- [ ] ' + t.replace(HAKEN_AUS, '');
+                if (attr)
+                    return (attr === 'true' || attr === 'checked' ? '- [x] ' : '- [ ] ') + t;
+                return '- ' + t;
+            }
+            return t;
+        }).filter(Boolean).join('\n\n');
+    };
     /* --- Evernote (.enex) --------------------------------------------------
      * Eine XML-Datei mit <note>-Einträgen. Der Inhalt steckt in ENML, das
      * nah genug an HTML ist, um es über den HTML-Weg einzulesen.
@@ -64540,23 +65579,7 @@ const Austausch = (() => {
             const titel = (n.querySelector('title') || {}).textContent || 'Ohne Titel';
             const inhalt = (n.querySelector('content') || {}).textContent || '';
             const seite = Store.addBlock(wurzel.id, 'page', { text: titel });
-            /* ENML in einfachen Text mit Absätzen verwandeln */
-            const roh = new DOMParser().parseFromString(inhalt, 'text/html');
-            const md = [...roh.body.querySelectorAll('div, p, li, h1, h2, h3')]
-                .map(el => {
-                const t = el.textContent.trim();
-                if (!t)
-                    return '';
-                if (el.tagName === 'H1')
-                    return '# ' + t;
-                if (el.tagName === 'H2')
-                    return '## ' + t;
-                if (el.tagName === 'H3')
-                    return '### ' + t;
-                if (el.tagName === 'LI')
-                    return '- ' + t;
-                return t;
-            }).filter(Boolean).join('\n\n');
+            const md = htmlZuMarkdown(inhalt);
             if (md)
                 Werkzeuge.ausMarkdown(seite, md);
             const tags = [...n.querySelectorAll('tag')].map(t => t.textContent);
@@ -65274,6 +66297,233 @@ const Austausch = (() => {
         });
         return { werte, formeln, tabellen };
     };
+    /* --- Asana (.csv) ------------------------------------------------------
+     * Asana schreibt seinen Export als CSV mit festen Spaltennamen. Der
+     * allgemeine CSV-Weg liest das auch — aber er liest ALLES als Text:
+     *
+     *     Section/Column  ->  Text          statt  Status (und Gruppierung)
+     *     Due Date        ->  Text          statt  Datum
+     *     Tags            ->  Text          statt  Mehrfachauswahl
+     *     Completed At    ->  Text          statt  Haken
+     *     Notes           ->  eine Zelle mit vier Absaetzen darin
+     *
+     * Das Letzte ist das Schlimmste: die Beschreibung einer Aufgabe landet in
+     * einer Tabellenzelle, wo man sie nicht lesen und nicht gliedern kann.
+     * Hier wird sie zum Seiteninhalt, wo sie hingehört.
+     *
+     * WAS NICHT ERKANNT WIRD, GEHT TROTZDEM MIT. Asana hängt eigene Felder
+     * als weitere Spalten an, und die heissen bei jedem anders. Sie werden
+     * als Textspalten übernommen — lieber eine Spalte zu viel als ein
+     * verlorenes Feld.
+     * --------------------------------------------------------------------- */
+    /** Was Asana schreibt -> was Redion daraus macht. */
+    const ASANA_FELDER = [
+        /* Muster auf den Spaltennamen | Schlüssel | Anzeigename | Typ */
+        [/^name$|^task name$/i, 'title', 'Aufgabe', 'title'],
+        [/^section\/column$|^section$/i, 'abschnitt', 'Abschnitt', 'status'],
+        [/^assignee$/i, 'wer', 'Zuständig', 'text'],
+        [/^due date$/i, 'faellig', 'Fällig', 'date'],
+        [/^start date$/i, 'beginn', 'Beginn', 'date'],
+        [/^tags$/i, 'tags', 'Etiketten', 'multi'],
+        [/^projects$/i, 'projekt', 'Projekt', 'text'],
+        [/^parent task$/i, 'ueber', 'Gehört zu', 'text'],
+        [/^priority$/i, 'prio', 'Priorität', 'select'],
+    ];
+    /* Diese vier werden gelesen, aber NICHT zu Spalten: `Notes` wird der
+       Seiteninhalt, `Completed At` wird der Haken, die beiden Kennungen
+       interessieren niemanden mehr, sobald die Daten hier sind. */
+    const ASANA_STUMM = /^notes$|^completed at$|^task id$|^assignee email$|^created at$|^last modified$/i;
+    /** Ein Wert wie „a, b, c" wird zur Liste — Asana trennt Etiketten so. */
+    const asanaListe = (v) => String(v ?? '').split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
+    const ausAsana = (text, zielSeite, name) => {
+        const zeilen = (typeof Csv !== 'undefined')
+            ? Csv.zerlege(text).filter((z) => z.some(x => String(x).trim()))
+            : csvZerlegenNot(text);
+        if (zeilen.length < 2)
+            throw new Error('Die Datei enthält keine Zeilen');
+        const kopf = (zeilen[0] ?? []).map((x) => String(x ?? '').replace(/^﻿/, '').trim());
+        const saetze = zeilen.slice(1);
+        /* Erkennt Asana daran, dass „Name" ODER „Task Name" dasteht. Ohne das
+           wäre jede beliebige CSV ein Asana-Export, und die Zuordnung unten
+           würde raten statt lesen. */
+        const titelSpalte = kopf.findIndex(k => /^name$|^task name$/i.test(k));
+        if (titelSpalte < 0)
+            throw new Error('Das sieht nicht nach einem Asana-Export aus — die Spalte „Name" fehlt');
+        const zuordnung = [];
+        const schema = {};
+        let eigene = 0;
+        kopf.forEach((spaltenName, i) => {
+            if (!spaltenName)
+                return;
+            if (ASANA_STUMM.test(spaltenName))
+                return;
+            const treffer = ASANA_FELDER.find(([muster]) => muster.test(spaltenName));
+            if (treffer) {
+                const [, key, anzeige, typ] = treffer;
+                if (schema[key])
+                    return; /* zweimal dieselbe Spalte: die erste gewinnt */
+                schema[key] = { name: anzeige, type: typ };
+                zuordnung.push({ i, key, typ });
+            }
+            else {
+                /* Ein eigenes Feld von Asana. Der Schlüssel darf nicht rein
+                   numerisch sein — siehe E96/E172. */
+                const key = 'a' + eigene++;
+                schema[key] = { name: spaltenName, type: 'text' };
+                zuordnung.push({ i, key, typ: 'text' });
+            }
+        });
+        /* Der Haken kommt aus `Completed At`: dort steht ein Datum, wenn die
+           Aufgabe fertig ist, und nichts, wenn nicht. */
+        const fertigSpalte = kopf.findIndex(k => /^completed at$/i.test(k));
+        if (fertigSpalte >= 0)
+            schema['fertig'] = { name: 'Erledigt', type: 'checkbox' };
+        const notizSpalte = kopf.findIndex(k => /^notes$/i.test(k));
+        /* Die Auswahlspalten brauchen ihre Werte, bevor die erste Zeile da ist —
+           sonst steht die Zeile auf einer Option, die es nicht gibt. */
+        const werteVon = (i) => saetze.map((z) => String(z[i] ?? '').trim());
+        const FARBEN = ['gray', 'blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow'];
+        zuordnung.forEach(z => {
+            if (z.typ !== 'status' && z.typ !== 'select' && z.typ !== 'multi')
+                return;
+            const roh = werteVon(z.i);
+            const alle = z.typ === 'multi'
+                ? [...new Set(roh.flatMap(asanaListe))]
+                : [...new Set(roh.filter(Boolean))];
+            schema[z.key].options = alle.map((n, k) => ({ name: n, color: FARBEN[k % FARBEN.length] }));
+        });
+        const titel = name || 'Aus Asana';
+        const seite = Store.addBlock(zielSeite || null, 'page', { text: titel, icon: '✓' });
+        const hatAbschnitt = !!schema['abschnitt'];
+        const db = Store.addDatabase(seite.id, titel, schema, hatAbschnitt ? 'board' : 'table');
+        if (hatAbschnitt)
+            Store.updateView(db.viewId, { groupBy: 'abschnitt' });
+        let n = 0, mitText = 0;
+        saetze.forEach((z) => {
+            const props = {};
+            zuordnung.forEach(zu => {
+                const roh = String(z[zu.i] ?? '').trim();
+                if (zu.key === 'title') {
+                    props['title'] = roh || 'Ohne Titel';
+                    return;
+                }
+                if (!roh)
+                    return;
+                props[zu.key] = zu.typ === 'multi' ? asanaListe(roh)
+                    : zu.typ === 'date' ? roh.slice(0, 10)
+                        : roh;
+            });
+            if (fertigSpalte >= 0)
+                props['fertig'] = !!String(z[fertigSpalte] ?? '').trim();
+            if (props['title'] === undefined)
+                props['title'] = 'Ohne Titel';
+            const zeile = Store.addRow(db.collectionId, props);
+            n++;
+            /* Die Beschreibung wird Seiteninhalt, nicht Zellinhalt. */
+            const notiz = notizSpalte >= 0 ? String(z[notizSpalte] ?? '').trim() : '';
+            if (notiz) {
+                Werkzeuge.ausMarkdown(zeile, notiz);
+                mitText++;
+            }
+        });
+        return { seite, hinweis: n + ' Aufgaben übernommen, ' + mitText + ' mit Beschreibung' };
+    };
+    /* Der Not-Zerleger, falls `core/spreadsheet/csv.js` fehlt. Er trennt nur
+       bei Komma; das ist schlechter als `Csv.zerlege`, aber besser als nichts,
+       und es macht `ausAsana` nicht von einer zweiten Datei abhängig. */
+    const csvZerlegenNot = (text) => {
+        const raus = [];
+        let feld = '', zeile = [], inAnf = false;
+        for (let i = 0; i < text.length; i++) {
+            const c = text[i];
+            if (inAnf) {
+                if (c === '"' && text[i + 1] === '"') {
+                    feld += '"';
+                    i++;
+                }
+                else if (c === '"')
+                    inAnf = false;
+                else
+                    feld += c;
+            }
+            else if (c === '"')
+                inAnf = true;
+            else if (c === ',') {
+                zeile.push(feld);
+                feld = '';
+            }
+            else if (c === '\n') {
+                zeile.push(feld);
+                raus.push(zeile);
+                zeile = [];
+                feld = '';
+            }
+            else if (c !== '\r')
+                feld += c;
+        }
+        if (feld || zeile.length) {
+            zeile.push(feld);
+            raus.push(zeile);
+        }
+        return raus.filter(z => z.some(x => String(x).trim()));
+    };
+    /* --- Apple Notes (Ordner mit .html) ------------------------------------
+     * Apple Notes kann nicht selbst in einem Rutsch exportieren; die üblichen
+     * Wege liefern einen ORDNER mit einer HTML-Datei je Notiz, und die Ordner
+     * der App werden zu Unterordnern. Beides wird hier abgebildet:
+     *
+     *     Notizen/Rezepte/Brot.html   ->  Seite „Rezepte" > Seite „Brot"
+     *
+     * Der Titel kommt aus `<title>`, aus der ersten Überschrift oder aus dem
+     * Dateinamen — in dieser Reihenfolge, weil die ersten beiden Umlaute und
+     * Satzzeichen behalten, die der Dateiname verloren hat.
+     * --------------------------------------------------------------------- */
+    const ausAppleNotes = async (dateien, zielSeite) => {
+        const htmls = dateien.filter(d => /\.html?$/i.test(d.name || ''));
+        if (!htmls.length)
+            throw new Error('Keine .html-Dateien in diesem Ordner');
+        const wurzel = Store.addBlock(zielSeite || null, 'page', { text: 'Aus Apple Notes', icon: '📒' });
+        /* Ordnerpfad -> Seite. Wird beim ersten Bedarf angelegt, damit ein leerer
+           Ordner keine leere Seite hinterlaesst. */
+        const ordner = new Map();
+        const ordnerSeite = (pfad) => {
+            if (!pfad)
+                return wurzel;
+            const da = ordner.get(pfad);
+            if (da)
+                return da;
+            const teile = pfad.split('/');
+            const letzter = teile[teile.length - 1] || pfad;
+            const eltern = ordnerSeite(teile.slice(0, -1).join('/'));
+            const s = Store.addBlock(eltern.id, 'page', { text: letzter, icon: '📁' });
+            ordner.set(pfad, s);
+            return s;
+        };
+        let n = 0;
+        for (const d of htmls) {
+            const roh = await d.text();
+            const doc = new DOMParser().parseFromString(roh, 'text/html');
+            const ausDatei = String(d.name || '').replace(/\.html?$/i, '');
+            const titel = (doc.querySelector('title')?.textContent || '').trim()
+                || (doc.querySelector('h1, h2')?.textContent || '').trim()
+                || ausDatei;
+            /* Der Pfad OHNE das oberste Verzeichnis: das ist der Name des
+               gewählten Ordners und steht schon als Wurzelseite da. */
+            const voll = String(d.webkitRelativePath || d.name || '');
+            const teile = voll.split('/').slice(1, -1);
+            const seite = Store.addBlock(ordnerSeite(teile.join('/')).id, 'page', { text: titel });
+            /* Die Überschrift, die schon der Titel ist, nicht noch einmal. */
+            const erste = doc.querySelector('h1, h2');
+            if (erste && (erste.textContent || '').trim() === titel)
+                erste.remove();
+            const md = htmlZuMarkdown(doc.body ? doc.body.innerHTML : roh);
+            if (md)
+                Werkzeuge.ausMarkdown(seite, md);
+            n++;
+        }
+        Store.updateBlock(wurzel.id, { aufgeklappt: true });
+        return { seite: wurzel, hinweis: n + ' Notizen aus ' + (ordner.size || 1) + ' Ordnern übernommen' };
+    };
     /* ========================================================================
      * 5. DAS FENSTER
      * ======================================================================*/
@@ -65282,7 +66532,9 @@ const Austausch = (() => {
         ['evernote', '🐘', 'Evernote', 'Eine .enex-Datei — jede Notiz wird eine Seite', '.enex,.xml'],
         ['obsidian', '🔮', 'Obsidian', 'Ein ganzer Ordner mit .md-Dateien, Wikilinks werden aufgelöst', 'ordner'],
         ['notion', '📓', 'Notion-Export', 'Das ZIP aus Notions eigenem Export', '.zip'],
-        ['asana', '🗒', 'Asana / Jira / Monday', 'Der CSV-Export — wird zur Datenbank', '.csv'],
+        ['asana', '🗒', 'Asana', 'Der CSV-Export — Abschnitte werden Status, Notizen werden Seiten', '.csv'],
+        ['apple', '📒', 'Apple Notes', 'Der Ordner mit den HTML-Dateien — Unterordner bleiben Unterordner', 'ordner'],
+        ['csv', '📊', 'Jira, Monday, sonstige CSV', 'Irgendeine Tabelle — wird zur Datenbank', '.csv'],
         ['markdown', '📄', 'Einzelne Dateien',
             'Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB',
             '.md,.txt,.csv,.docx,.xlsx,.ods,.epub']
@@ -65301,6 +66553,12 @@ const Austausch = (() => {
                 '<div class="fbtns"><button data-a="zu">Schliessen</button></div>' +
                 '</div>';
         document.body.appendChild(o);
+        /* DIE LISTE ROLLT, UND MAN SOLL DAS SEHEN (E183). Mit acht Quellen passt
+           sie am Rechner um 28 px nicht mehr, am Telefon um 127. Erreichbar war
+           die letzte immer — sichtbar war nur, dass sie keine Beschreibung hat.
+           Dieselbe Antwort wie an der Tabelle: eine weiche Kante, kein Hinweis. */
+        if (typeof Rollrand !== 'undefined')
+            Rollrand.binde(o.querySelector('.ax-liste'), { achse: 'hoch' });
         o.addEventListener('click', async (e) => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
                 o.remove();
@@ -65344,7 +66602,11 @@ const Austausch = (() => {
                         erg = ausEvernote(await erste.text(), null);
                     else if (art === 'notion')
                         erg = await ausNotionZip(await erste.arrayBuffer(), null);
-                    else if (art === 'asana') {
+                    else if (art === 'apple')
+                        erg = await ausAppleNotes(dateien, null);
+                    else if (art === 'asana')
+                        erg = ausAsana(await erste.text(), null, erste.name.replace(/\.csv$/i, ''));
+                    else if (art === 'csv') {
                         const text = await erste.text();
                         const s = Store.addBlock(null, 'page', { text: erste.name.replace(/\.csv$/i, '') });
                         Einlesen.alsDatenbank(s.id, erste.name.replace(/\.csv$/i, ''), Datenbank.csvZerlegen(text));
@@ -65370,7 +66632,8 @@ const Austausch = (() => {
     };
     return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
         allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
-        ausTrello, ausEvernote, ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
+        ausTrello, ausEvernote, ausAsana, ausAppleNotes, htmlZuMarkdown,
+        ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
         dialog, QUELLEN,
         /* Nur für Prüfläufe — siehe die Erklärung bei `grenzen`. Wer sie
            im Betrieb verstellt, schreibt ZIP64, wo es keines braucht:
@@ -65958,14 +67221,20 @@ const Rollrand = (() => {
      * ist.
      */
     const SPIEL = 2;
-    const schreibe = (ziel, art, links, rechts) => {
+    /** Die Wörter je Achse: [vor dem sichtbaren Teil, danach]. */
+    const WORTE = {
+        quer: ['links', 'rechts'],
+        hoch: ['oben', 'unten']
+    };
+    const schreibe = (ziel, art, achse, davor, danach) => {
+        const [a, b] = WORTE[achse];
         if (art === 'mehr') {
-            const wert = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+            const wert = davor && danach ? 'beides' : danach ? b : davor ? a : 'nein';
             if (ziel.dataset['mehr'] !== wert)
                 ziel.dataset['mehr'] = wert;
             return;
         }
-        const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
+        const wert = [davor ? a : '', danach ? b : ''].filter(Boolean).join(' ');
         /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
            Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
         if (wert) {
@@ -65977,9 +67246,12 @@ const Rollrand = (() => {
     };
     /** Setzt `data-rand` bzw. `data-mehr` nach dem aktuellen Rollstand. */
     const pruefe = (feld, wahl = {}) => {
-        const links = feld.scrollLeft > SPIEL;
-        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
-        schreibe(wahl.an || feld, wahl.art || 'rand', links, rechts);
+        const achse = wahl.achse || 'quer';
+        const hoch = achse === 'hoch';
+        const stand = hoch ? feld.scrollTop : feld.scrollLeft;
+        const sicht = hoch ? feld.clientHeight : feld.clientWidth;
+        const ganz = hoch ? feld.scrollHeight : feld.scrollWidth;
+        schreibe(wahl.an || feld, wahl.art || 'rand', achse, stand > SPIEL, stand + sicht < ganz - SPIEL);
     };
     /**
      * Ein Rollfeld beobachten. Gibt eine Funktion zurück, die das wieder
@@ -65999,7 +67271,8 @@ const Rollrand = (() => {
             beobachter = new ResizeObserver(nachsehen);
             beobachter.observe(feld);
             /* Auch der Inhalt zählt — eine neue Spalte macht `scrollWidth` grösser,
-               ohne dass sich am Feld selbst etwas ändert. */
+               beim Hochen eine neue Zeile `scrollHeight`, ohne dass sich am Feld
+               selbst etwas ändert. */
             const inhalt = feld.firstElementChild;
             if (inhalt)
                 beobachter.observe(inhalt);
@@ -72608,6 +73881,68 @@ window.Feldrechte = Feldrechte;
 
 </script>
 <script>
+/* ===== quell/kern/zugang/lesefrage.js ===== */
+"use strict";
+/* ============================================================================
+ * lesefrage.ts — dieselbe Rechtefrage, einmal beantwortet (L50)
+ * ----------------------------------------------------------------------------
+ * `Arbeitswelt` und `Lebensbereiche` fragen beide dasselbe: darf ich diese
+ * Seite lesen, darf ich sie ändern. Beide hatten dafür eine eigene Funktion,
+ * beide hiessen `erlaubt` — und sie antworteten VERSCHIEDEN:
+ *
+ *     arbeitswelt     pageId ? Konten.darf(a, pageId) : Konten.darf(a)
+ *     lebensbereiche  !!pageId && Konten.darf(a, pageId)
+ *
+ * Bei einer LEEREN Seitenkennung sagte die eine „frag den Arbeitsbereich" und
+ * die andere „nein". Derselbe Block war in der einen Ansicht sichtbar und in
+ * der anderen nicht — genau die Sorte Abweichung, die E169 gekostet hat, nur
+ * eine Ebene höher. L34 nennt sie beim Namen: ein Wert steht an zwei Stellen,
+ * nichts erzwingt Gleichheit, und die Abweichung sieht man erst spät.
+ *
+ * DIE REGEL, EINMAL AUSGESCHRIEBEN:
+ *
+ *   Rechte aus            → alles erlaubt. Ohne Konten gibt es keine Rechte,
+ *                           und Redion ohne Server hat keine Konten.
+ *   Seitenkennung da      → die Seitenfrage: darf ich DIESE Seite.
+ *   Seitenkennung leer    → NEIN. Ein Block ohne Seite gehört zu keiner, und
+ *                           eine fremde Seite darf nicht für ihn antworten.
+ *   Kennung weggelassen   → die Werkstattfrage: darf ich hier überhaupt
+ *                           etwas ändern. `Konten.darf` fällt dafür auf die
+ *                           offene Seite zurück; das ist lose, aber es ist
+ *                           genau die Frage, die „Neue Seite anlegen" stellt.
+ *
+ * Der Unterschied zwischen „leer" und „weggelassen" ist Absicht: er ist der
+ * Grund, warum beide alten Fassungen zusammenfallen konnten, ohne dass sich
+ * für einen einzigen Aufrufer etwas ändert.
+ *
+ * WARUM NICHT `rechte.ts`: den Namen gibt es schon — dort wohnen die
+ * FELDrechte (Rechte je Spalte). Beim Schreiben dieser Datei wurde er beim
+ * ersten Versuch überschrieben; `npm run typecheck` hat es gemeldet, weil
+ * `Feldrechte` plötzlich unbekannt war.
+ * ==========================================================================*/
+const Lesefrage = (() => {
+    /** Gibt es überhaupt Konten? Ohne sie gibt es keine Rechte. */
+    const aktiv = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
+    /**
+     * Darf ich das?
+     *
+     * @param aktion  lesen, bearbeiten, …
+     * @param pageId  die Seite. WEGLASSEN heisst „im Arbeitsbereich überhaupt",
+     *                ein LEERER Text heisst „zu keiner Seite" und damit nein.
+     */
+    const erlaubt = (aktion, pageId) => {
+        if (!aktiv())
+            return true;
+        if (pageId === undefined)
+            return Konten.darf(aktion);
+        return !!pageId && Konten.darf(aktion, pageId);
+    };
+    return { aktiv, erlaubt };
+})();
+window.Lesefrage = Lesefrage;
+
+</script>
+<script>
 /* ===== quell/bereiche/datenbanken/probelauf/dienst.js ===== */
 "use strict";
 /* ============================================================================
@@ -73077,6 +74412,386 @@ const Probelauf = (() => {
         spalteWeg, spalteTyp, spalteName, seiteWeg, ansichtWeg, automation, passt };
 })();
 window.Probelauf = Probelauf;
+
+</script>
+<script>
+/* ===== quell/bereiche/datenbanken/whatif.js ===== */
+"use strict";
+/* ============================================================================
+ * whatif.ts — Was wäre, wenn (L28)
+ * ----------------------------------------------------------------------------
+ * Drei Fragen, die eine Tabelle beantworten können muss, sobald sie rechnet:
+ *
+ *   Zielwertsuche   „Der Gewinn soll 10 000 sein. Wie hoch muss der Preis?"
+ *   Szenarien       „Zeig mir dasselbe für schlecht, normal und gut."
+ *   Optimierung     „Bei welchem Preis ist der Gewinn am grössten?"
+ *
+ * Alle drei laufen über dieselbe kleine Maschine: eine Stellschraube (eine
+ * schreibbare Zahlenspalte) und ein Ziel (eine gerechnete Spalte), beide in
+ * DERSELBEN ZEILE.
+ *
+ * DIE WICHTIGSTE REGEL DIESER DATEI: sie schreibt beim Suchen NICHTS.
+ *
+ * Der naheliegende Weg wäre, den Probewert in die Zelle zu schreiben, die
+ * Formel lesen zu lassen und weiterzuprobieren. Damit stünden bei dreissig
+ * Schritten neunundzwanzig falsche Werte in den Daten, jeder davon einen
+ * Wimpernschlag lang sichtbar, jeder in einer Fassung, jeder im Abgleich —
+ * und bricht es in der Mitte ab, bleibt der letzte stehen. Bei einer Suche,
+ * die auch scheitern darf, ist das die gefährliche Richtung (§46).
+ *
+ * Gerechnet wird deshalb auf einer KOPIE der Zeile. `Datenbank.wert` liest
+ * `row.props` aus dem übergebenen Satz; ein Satz, den es im Bestand nicht
+ * gibt, rechnet genauso. Dasselbe Muster benutzt `dienst.ts` seit Langem für
+ * die Regelprüfung („die Zeile MIT dem neuen Wert"). Geschrieben wird erst,
+ * wenn ein Mensch das Ergebnis übernimmt.
+ * ==========================================================================*/
+const WhatIf = (() => {
+    /** Wie nah am Ziel „getroffen" heisst — relativ, damit es bei 10 000 000
+        genauso stimmt wie bei 0,5. */
+    const GENAU = 1e-7;
+    /** Wie oft höchstens geprobt wird. Dreissig Halbierungen verkleinern ein
+        Suchfenster um den Faktor 10^9 — mehr ist bei `double` nicht drin. */
+    const SCHRITTE = 60;
+    const zahl = (x) => {
+        if (typeof x === 'number')
+            return x;
+        const n = Number(String(x ?? '').replace(',', '.'));
+        return Number.isFinite(n) ? n : NaN;
+    };
+    /**
+     * Was die Zielspalte sagen würde, wenn die Stellschraube diesen Wert hätte.
+     * Ohne zu schreiben — siehe Kopf.
+     */
+    const probiere = (coll, row, stellKey, zielKey, wert) => {
+        const probe = { ...row, props: { ...(row.props || {}), [stellKey]: wert } };
+        /* `wertFrisch`, nicht `wert`: die Zwischenspeicher merken sich das
+           Ergebnis unter der Zeilenkennung, und die Probezeile trägt dieselbe.
+           Mit `wert` kam bei jedem Probewert derselbe Wert zurück — die Suche
+           sah eine Gerade, wo eine Kurve ist, und fand nichts (E176). */
+        return zahl(Datenbank.wertFrisch(probe, zielKey, coll));
+    };
+    /** Taugt diese Spalte als Stellschraube? */
+    const stellbar = (coll, key) => {
+        const def = coll && coll.schema ? coll.schema[key] : null;
+        return !!def && (def.type === 'number' || def.type === 'prozent');
+    };
+    /** Und diese als Ziel? Gerechnet muss sie sein — sonst gäbe es nichts zu suchen. */
+    const zielbar = (coll, key) => {
+        const def = coll && coll.schema ? coll.schema[key] : null;
+        return !!def && (def.type === 'formula' || def.type === 'rollup');
+    };
+    /* ========================================================================
+     * 1 · ZIELWERTSUCHE
+     * ------------------------------------------------------------------------
+     * Gesucht wird die Nullstelle von f(x) = Ziel(x) − Wunsch.
+     *
+     * ZUERST EIN FENSTER, DANN HALBIEREN. Excel nimmt Newton und scheitert
+     * daran regelmässig: eine Formel mit `WENN` hat Sprungstellen, und die
+     * Ableitung zeigt dort in die falsche Richtung. Halbieren braucht keine
+     * Ableitung — es braucht nur zwei Stellen mit verschiedenem Vorzeichen,
+     * und die sucht der erste Teil, indem er das Fenster verdoppelt.
+     *
+     * WARUM NICHT EINFACH VON 0 BIS 1000: weil niemand weiss, wo die Antwort
+     * liegt. Ausgegangen wird vom Wert, der HEUTE in der Zelle steht — der ist
+     * die beste Vermutung, die es gibt —, und von dort aus wird das Fenster
+     * geöffnet, bis das Vorzeichen kippt oder es zu gross wird.
+     * ======================================================================*/
+    const zielwert = (coll, row, stellKey, zielKey, wunsch) => {
+        const ziel = zahl(wunsch);
+        if (!Number.isFinite(ziel))
+            return { ok: false, grund: 'Der Zielwert ist keine Zahl.', schritte: 0 };
+        if (!coll || !row)
+            return { ok: false, grund: 'Zeile oder Tabelle fehlen.', schritte: 0 };
+        if (!stellbar(coll, stellKey))
+            return { ok: false, grund: 'Die Stellschraube muss eine Zahlenspalte sein.', schritte: 0 };
+        if (!zielbar(coll, zielKey))
+            return { ok: false, grund: 'Das Ziel muss eine gerechnete Spalte sein — ' +
+                    'eine Zahl, die man einfach hinschreibt, ist schon da.',
+                schritte: 0 };
+        let schritte = 0;
+        const f = (x) => { schritte++; return probiere(coll, row, stellKey, zielKey, x) - ziel; };
+        const start = zahl((row.props || {})[stellKey]);
+        const x0 = Number.isFinite(start) ? start : 0;
+        const f0 = f(x0);
+        if (!Number.isFinite(f0))
+            return { ok: false, grund: 'Die Zielspalte rechnet gerade nicht — ' +
+                    'sie gibt keine Zahl zurück.', schritte };
+        if (Math.abs(f0) <= Math.max(GENAU, Math.abs(ziel) * GENAU))
+            return { ok: true, wert: x0, erreicht: f0 + ziel, schritte };
+        /* Das Fenster öffnen. Die Schrittweite wächst, weil die Antwort auch
+           Millionen entfernt liegen kann; sie beginnt aber klein, damit eine
+           Antwort nebenan nicht übersprungen wird. */
+        let weite = Math.max(1, Math.abs(x0)) / 2;
+        let a = x0, fa = f0, b = x0;
+        let gefunden = false;
+        for (let i = 0; i < 60 && !gefunden; i++) {
+            weite *= 2;
+            const links = x0 - weite, rechts = x0 + weite;
+            const fl = f(links);
+            if (Number.isFinite(fl) && fl * f0 <= 0) {
+                a = links;
+                fa = fl;
+                b = x0;
+                gefunden = true;
+                break;
+            }
+            const fr = f(rechts);
+            if (Number.isFinite(fr) && fr * f0 <= 0) {
+                a = x0;
+                fa = f0;
+                b = rechts;
+                gefunden = true;
+                break;
+            }
+            if (weite > 1e12)
+                break;
+        }
+        if (!gefunden)
+            return { ok: false, grund: 'Kein Wert der Stellschraube führt zu diesem Ziel — ' +
+                    'auch nicht sehr grosse oder sehr kleine.', schritte };
+        /* Und jetzt halbieren — BIS DAS FENSTER ZU IST, nicht bis der Rest klein
+           genug ist.
+    
+           Der erste Anlauf hörte auf, sobald `|f|` unter der Toleranz lag. Die
+           ist relativ zum Ziel: bei 2000 sind das 2·10⁻⁴, und heraus kam
+           „Preis = 15.999999", wo 16 richtig ist. Rechnerisch einwandfrei und
+           für einen Menschen falsch — wer einen Preis sucht, will 16 lesen.
+    
+           Halbieren kostet nichts: sechzig Schritte verkleinern das Fenster um
+           den Faktor 10¹⁸, mehr als `double` überhaupt unterscheidet. Also
+           laufen sie. */
+        for (let i = 0; i < SCHRITTE; i++) {
+            const m = (a + b) / 2;
+            const fm = f(m);
+            if (!Number.isFinite(fm))
+                return { ok: false, grund: 'Die Zielspalte rechnet bei diesem Wert nicht mehr.', schritte };
+            if (fm === 0)
+                return { ok: true, wert: m, erreicht: ziel, schritte };
+            if (Math.abs(b - a) <= 1e-12 * Math.max(1, Math.abs(m)))
+                break;
+            if (fa * fm <= 0)
+                b = m;
+            else {
+                a = m;
+                fa = fm;
+            }
+        }
+        const m = (a + b) / 2;
+        return { ok: true, wert: m, erreicht: probiere(coll, row, stellKey, zielKey, m), schritte };
+    };
+    /* ========================================================================
+     * 2 · EINFACHE OPTIMIERUNG
+     * ------------------------------------------------------------------------
+     * „Bei welchem Preis ist der Gewinn am grössten?" — dieselbe Maschine, nur
+     * ohne Vorzeichenwechsel: gesucht wird der Hochpunkt zwischen zwei
+     * Grenzen, mit dem Goldenen Schnitt.
+     *
+     * ER BRAUCHT KEINE ABLEITUNG UND KEINE GLATTE KURVE, nur eine, die im
+     * Fenster genau einen Gipfel hat. Steht das nicht fest, ist das Ergebnis
+     * trotzdem ein Wert, an dem es besser ist als an den Rändern — und mehr
+     * verspricht die Oberfläche auch nicht.
+     * ======================================================================*/
+    const GOLD = (Math.sqrt(5) - 1) / 2;
+    const optimum = (coll, row, stellKey, zielKey, richtung, von, bis) => {
+        const u = zahl(von), o = zahl(bis);
+        if (!Number.isFinite(u) || !Number.isFinite(o) || u >= o)
+            return { ok: false, grund: 'Die Grenzen müssen zwei Zahlen sein, ' +
+                    'die untere kleiner als die obere.', schritte: 0 };
+        if (!stellbar(coll, stellKey))
+            return { ok: false, grund: 'Die Stellschraube muss eine Zahlenspalte sein.', schritte: 0 };
+        if (!zielbar(coll, zielKey))
+            return { ok: false, grund: 'Das Ziel muss eine gerechnete Spalte sein.', schritte: 0 };
+        let schritte = 0;
+        const vz = richtung === 'min' ? -1 : 1;
+        const f = (x) => { schritte++; return vz * probiere(coll, row, stellKey, zielKey, x); };
+        let a = u, b = o;
+        let c = b - GOLD * (b - a), d = a + GOLD * (b - a);
+        let fc = f(c), fd = f(d);
+        if (!Number.isFinite(fc) || !Number.isFinite(fd))
+            return { ok: false, grund: 'Die Zielspalte rechnet in diesem Bereich nicht.', schritte };
+        for (let i = 0; i < SCHRITTE && Math.abs(b - a) > 1e-9 * Math.max(1, Math.abs(a)); i++) {
+            if (fc > fd) {
+                b = d;
+                d = c;
+                fd = fc;
+                c = b - GOLD * (b - a);
+                fc = f(c);
+            }
+            else {
+                a = c;
+                c = d;
+                fc = fd;
+                d = a + GOLD * (b - a);
+                fd = f(d);
+            }
+        }
+        const x = (a + b) / 2;
+        return { ok: true, wert: x, erreicht: probiere(coll, row, stellKey, zielKey, x), schritte };
+    };
+    const szenarien = (coll) => Array.isArray(coll && coll.szenarien) ? coll.szenarien : [];
+    const merke = (coll, name, werte) => {
+        const sauber = {};
+        Object.keys(werte || {}).forEach(k => {
+            const n = zahl(werte[k]);
+            if (stellbar(coll, k) && Number.isFinite(n))
+                sauber[k] = n;
+        });
+        const ohne = szenarien(coll).filter(s => s.name !== name);
+        const liste = [...ohne, { name: String(name || 'Ohne Namen'), werte: sauber }];
+        Store.updateCollection(coll.id, { szenarien: liste });
+        return liste;
+    };
+    const vergiss = (coll, name) => {
+        const liste = szenarien(coll).filter(s => s.name !== name);
+        Store.updateCollection(coll.id, { szenarien: liste });
+        return liste;
+    };
+    /** Was die gerechneten Spalten sagen WÜRDEN. Schreibt nichts. */
+    const zeige = (coll, row, name) => {
+        const s = szenarien(coll).find(x => x.name === name);
+        if (!s || !row)
+            return null;
+        const probe = { ...row, props: { ...(row.props || {}), ...s.werte } };
+        const aus = {};
+        Object.keys(coll.schema || {}).forEach(k => {
+            if (zielbar(coll, k))
+                aus[k] = Datenbank.wertFrisch(probe, k, coll);
+        });
+        return aus;
+    };
+    /** Und jetzt wirklich hineinschreiben. */
+    const uebernimm = (coll, row, name) => {
+        const s = szenarien(coll).find(x => x.name === name);
+        if (!s || !row)
+            return false;
+        Object.keys(s.werte).forEach(k => Store.setProp(row.id, k, s.werte[k]));
+        return true;
+    };
+    return { zielwert, optimum, probiere, stellbar, zielbar,
+        szenarien, merke, vergiss, zeige, uebernimm, GENAU, SCHRITTE };
+})();
+window.WhatIf = WhatIf;
+
+</script>
+<script>
+/* ===== quell/bereiche/datenbanken/cleanup.js ===== */
+"use strict";
+/* ============================================================================
+ * cleanup.ts — Spalten aufräumen, bevor man mit ihnen rechnet (L27)
+ * ----------------------------------------------------------------------------
+ * L27 nennt sechs Handgriffe eines Import-Assistenten. Vier davon gab es
+ * schon, als die Lücke geschrieben wurde:
+ *
+ *   Typen erkennen              `Spaltentyp.erkenne`, beim CSV-Einlesen
+ *   Vorschau vor dem Übernehmen derselbe Weg — erst nachsehen, dann fragen
+ *   Duplikate entfernen         `Pflege.dublettenDialog`
+ *   Dateien kombinieren         ein zweites CSV in dieselbe Datenbank
+ *
+ * Zwei fehlten, und beide sind das, was man nach jedem Import als Erstes
+ * braucht:
+ *
+ *   Spalten bereinigen          Leerzeichen vorn und hinten, doppelte
+ *                               Leerzeichen, unsichtbare Zeichen
+ *   Werte ersetzen              „GmbH." → „GmbH" in dreihundert Zeilen
+ *
+ * DIE REGEL DIESER DATEI IST DIE VON `probelauf.ts`: erst zeigen, was
+ * passieren würde, dann erst tun. `plan()` ändert nichts und zählt echt
+ * nach; `wende` schreibt. Ein Aufräumen, das dreihundert Zeilen anfasst und
+ * erst danach zeigt, was es getan hat, ist kein Werkzeug, sondern ein
+ * Risiko (§46).
+ * ==========================================================================*/
+const Aufraeumen = (() => {
+    /* Unsichtbare Zeichen, die aus Tabellen mitkommen und alles verderben:
+       geschütztes Leerzeichen, Nullbreite, Byte-Reihenfolge-Marke. Sie sehen
+       aus wie nichts und sind nicht nichts — ein Filter „ist gleich Berlin"
+       greift bei einem geschützten Leerzeichen dahinter nicht, und niemand
+       sieht warum.
+  
+       ALS ESCAPE GESCHRIEBEN, NICHT ALS ZEICHEN. Eine Regex mit literalen
+       unsichtbaren Zeichen im Quelltext übersteht kein Kopieren und keine
+       Zeichensatzumstellung — und ob sie noch enthält, was sie enthalten
+       soll, sieht ihr niemand an. */
+    const UNSICHTBAR = /[\u00a0\u2007\u202f\u200b\u200c\u200d\ufeff]/g;
+    const GRIFFE = [
+        { id: 'rand', name: 'Leerzeichen am Rand entfernen',
+            was: 'vorn und hinten',
+            tu: (w) => w.replace(/^\s+|\s+$/g, '') },
+        { id: 'innen', name: 'Doppelte Leerzeichen zusammenziehen',
+            was: 'zwei oder mehr werden eines',
+            tu: (w) => w.replace(/[ \t]{2,}/g, ' ') },
+        { id: 'unsichtbar', name: 'Unsichtbare Zeichen entfernen',
+            was: 'geschütztes Leerzeichen, Nullbreite, BOM',
+            tu: (w) => w.replace(UNSICHTBAR, ' ') },
+        { id: 'gross', name: 'Erster Buchstabe gross',
+            was: 'nur der erste, der Rest bleibt',
+            tu: (w) => w ? w.charAt(0).toLocaleUpperCase('de-DE') + w.slice(1) : w }
+    ];
+    /**
+     * Was passieren WÜRDE. Ändert nichts.
+     *
+     * `ersetze` ist ein wörtlicher Text, kein Ausdruck: wer „(GmbH)" ersetzen
+     * will, tippt „(GmbH)" und nicht „\(GmbH\)". Ein Suchfeld, das heimlich
+     * ein regulärer Ausdruck ist, macht aus einem Punkt ein Jokerzeichen und
+     * ersetzt dann mehr als gemeint — bei dreihundert Zeilen fällt das erst
+     * hinterher auf.
+     */
+    const plan = (coll, key, wahl = {}) => {
+        const def = coll && coll.schema ? coll.schema[key] : null;
+        const spalte = def ? String(def.name || key) : String(key);
+        const griffe = GRIFFE.filter(g => (wahl.griffe || []).includes(g.id));
+        const suche = String(wahl.ersetze ?? '');
+        const durch = String(wahl.durch ?? '');
+        const zeilen = [];
+        const alle = Store.rowsOf(coll.id);
+        for (const row of alle) {
+            const roh = (row.props || {})[key];
+            /* Nur Text wird aufgeräumt. Eine Zahl hat keine Leerzeichen am Rand,
+               und aus ihr einen Text zu machen wäre der teurere Schaden. */
+            if (typeof roh !== 'string')
+                continue;
+            let neu = roh;
+            for (const g of griffe)
+                neu = g.tu(neu);
+            if (suche) {
+                neu = wahl.nurGanz
+                    ? (neu === suche ? durch : neu)
+                    : neu.split(suche).join(durch);
+            }
+            if (neu !== roh)
+                zeilen.push({ id: row.id, vorher: roh, nachher: neu });
+        }
+        return { key, spalte, zeilen, betroffen: zeilen.length, gesamt: alle.length };
+    };
+    /**
+     * Und jetzt wirklich. Gibt zurück, wie viele Zeilen sich geändert haben.
+     *
+     * Es wird DER PLAN geschrieben und nicht neu gerechnet: zwischen Vorschau
+     * und Zusage kann sich der Bestand geändert haben (zweites Fenster,
+     * Abgleich), und dann stünde in der Zelle etwas, das dem Menschen nie
+     * gezeigt wurde. Wessen Wert inzwischen ein anderer ist, bleibt in Ruhe.
+     */
+    const wende = (vorschau) => {
+        let geaendert = 0, ausgelassen = 0;
+        for (const z of vorschau.zeilen) {
+            const row = Store.getBlock(z.id);
+            if (!row || (row.props || {})[vorschau.key] !== z.vorher) {
+                ausgelassen++;
+                continue;
+            }
+            Store.setProp(z.id, vorschau.key, z.nachher);
+            geaendert++;
+        }
+        return { geaendert, ausgelassen };
+    };
+    /** Welche Spalten sich aufräumen lassen — die, in denen Text steht. */
+    const spalten = (coll) => Object.keys((coll && coll.schema) || {}).filter(k => {
+        const t = coll.schema[k].type;
+        return t === 'text' || t === 'title' || t === 'url' ||
+            t === 'email' || t === 'phone';
+    });
+    return { GRIFFE, plan, wende, spalten };
+})();
+window.Aufraeumen = Aufraeumen;
 
 </script>
 <script>
@@ -76599,8 +78314,10 @@ const Lebensbereiche = (() => {
     };
     const jetztIso = () => typeof Store.now === 'function'
         ? String(Store.now()) : new Date().toISOString();
-    const rightsActive = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
-    const erlaubt = (aktion, pageId) => !rightsActive() || (!!pageId && Konten.darf(aktion, pageId));
+    /* Siehe `kern/zugang/lesefrage.ts` — dieselbe Frage stand hier und in
+       `arbeitswelt.ts` je einmal, mit zwei Antworten (L50, E181). */
+    const rightsActive = () => Lesefrage.aktiv();
+    const erlaubt = (aktion, pageId) => Lesefrage.erlaubt(aktion, pageId);
     const globalBearbeitbar = (pageId = '') => {
         if (!rightsActive())
             return true;
@@ -80045,8 +81762,11 @@ const Arbeitswelt = (() => {
         }
         catch { /* Eine nicht speicherbare UI-Präferenz blockiert die Sicht nicht. */ }
     };
-    const rechteAktiv = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
-    const erlaubt = (aktion, pageId) => !rechteAktiv() || (pageId ? Konten.darf(aktion, pageId) : Konten.darf(aktion));
+    /* Die Rechtefrage steht seit E181 in `kern/zugang/lesefrage.ts` — sie war
+       hier und in `lebensbereiche.ts` je einmal ausgeschrieben, und die zwei
+       Fassungen antworteten bei leerer Seitenkennung verschieden (L50). */
+    const rechteAktiv = () => Lesefrage.aktiv();
+    const erlaubt = (aktion, pageId) => pageId === undefined ? Lesefrage.erlaubt(aktion) : Lesefrage.erlaubt(aktion, pageId);
     const hinweis = (text) => {
         if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
             UI.toast(text);
@@ -86965,6 +88685,37 @@ const App = (() => {
                 zuletzt();
                 return;
             }
+            /* EINE KENNUNG IST KEINE ABFRAGE (L23, E175).
+               L23 nennt ausdrücklich „Titel, Inhalt, Zeilen UND KENNUNGEN".
+               `Store.search` kann das seit Langem — es schneidet die Kennung sogar
+               aus einer ganzen Seitenadresse heraus und findet auch Blöcke im
+               Papierkorb, was bei einer Verwaltungssuche der Sinn der Sache ist.
+               Das Suchfenster ging seit der Abfragesprache daran vorbei: es fragt
+               `QueryLanguage.run` über die Dokumentenform, und die kennt nur
+               Titel, Inhalt, Schlagwörter und Status. Wer eine Kennung einfügte,
+               bekam „Nichts gefunden".
+      
+               Der Zweig steht hier und nicht in `query.ts`: die Sprache kennt
+               weder DOM noch Ablage, und das soll so bleiben.
+      
+               WAS IHN SICHER MACHT, ist nicht der Ausdruck, sondern die zweite
+               Bedingung: `Store.search` muss WIRKLICH über die Kennung gefunden
+               haben. Der Zweig geht an der Abfragesprache vorbei und damit an
+               ihren Filtern; griffe er schon, wenn der Text zufällig wie eine
+               Kennung aussieht, zeigte „nur Titel" plötzlich Inhaltstreffer
+               (test229 §4, gegengeprobt). Der Ausdruck davor spart nur den
+               Aufruf bei jedem Tastendruck. */
+            const alsKennung = roh.trim().replace(/^.*#block=/, '');
+            if (/^[0-9a-f]{8}-?[0-9a-f]{4}/i.test(alsKennung)) {
+                const gefunden = Store.search(alsKennung);
+                if (gefunden.length && gefunden[0].treffer === 'Seiten-ID') {
+                    queryError = '';
+                    treffer = gefunden;
+                    i = 0;
+                    zeichne();
+                    return;
+                }
+            }
             const parsed = QueryLanguage.parse(roh);
             if (!parsed.ok) {
                 queryError = parsed.issues.map(issue => issue.message).join(' ');
@@ -88391,6 +90142,28 @@ const App = (() => {
         return m && m[1] ? decodeURIComponent(m[1]) : '';
     };
     const start = async () => {
+        /* VORFÜHRMODUS: EIN BALKEN, DER NICHT ZU ÜBERSEHEN IST (L31, E177).
+           `?demo` öffnet eine eigene Ablage (`notizen-demo`) — die echten Notizen
+           liegen unberührt daneben. Genau das muss aber dastehen: eine App, die
+           aussieht wie die eigene und es nicht ist, ist die unangenehmste Sorte
+           Überraschung. Der Balken steht ganz oben, bleibt stehen und nennt den
+           Weg zurück. */
+        if (typeof Store !== 'undefined' && Store.istDemo && Store.istDemo()) {
+            const balken = document.createElement('div');
+            balken.id = 'demo-balken';
+            balken.setAttribute('role', 'status');
+            balken.innerHTML = '<b>Vorführung</b> — hier liegen Beispieldaten in ' +
+                'einer eigenen Ablage. Deine eigenen Notizen sind davon nicht ' +
+                'berührt. <a href="./index.html">Zu deinen Notizen</a>';
+            document.body.prepend(balken);
+            document.body.classList.add('hat-demo');
+            /* Die Höhe GEMESSEN, nicht geschätzt: am Telefon bricht der Satz um,
+               und eine feste Zahl läge dann über der App. */
+            const hoeheSetzen = () => document.documentElement.style
+                .setProperty('--demo-hoehe', balken.offsetHeight + 'px');
+            hoeheSetzen();
+            addEventListener('resize', hoeheSetzen);
+        }
         /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
            Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
            es `zeichneBaum`, und das läuft dann schon nach drüben. */

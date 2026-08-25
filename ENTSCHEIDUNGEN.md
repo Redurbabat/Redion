@@ -11791,3 +11791,1109 @@ Prüflauf: `test226`, 24 Punkte.
 `verwaist()` weiterhin nicht. Sie automatisch zu löschen wäre wieder die
 gefährliche Richtung — zwischen „abgelegt" und „verknüpft" liegen
 Millisekunden, in denen sie echt und herrenlos ist.
+
+---
+
+## E172 · Ein Spaltenschlüssel aus lauter Ziffern (L36)
+
+**25. August 2026.**
+
+Bis E96 entstanden Spaltenschlüssel als Hex-Schnipsel, und knapp jeder zehnte
+bestand nur aus Ziffern. JavaScript behandelt so einen Schlüssel als
+Feldindex: `Object.keys` gibt ihn VOR allen anderen zurück, aufsteigend
+sortiert. Die Spalte steht dann immer ganz links.
+
+Das ist nicht bloss unschön. `spalteEinordnen` — was beim Ziehen einer
+Tabellenüberschrift passiert — baut das Schema in der neuen Reihenfolge auf.
+Beim nächsten Lesen zieht `Object.keys` den Zifferschlüssel wieder nach vorn.
+**Die Spalte lässt sich nicht bewegen**, und nichts sagt warum.
+
+E96 hat dafür gesorgt, dass so ein Schlüssel nicht mehr entsteht. L36 hielt
+den Bestand offen, mit dem richtigen Grund: eine Umbenennung ist eine
+Datenmigration, und die gibt es nur mit eigenem Plan und eigenen Prüfungen
+(§9).
+
+### Wo ein Spaltenschlüssel überall steht
+
+Nachgesehen, nicht geraten — zwölf Stellen:
+
+```txt
+schema[key]                die Spalte selbst
+zeile.props[key]           jeder Wert in jeder Zeile
+                           … auch in den Zeilen im Papierkorb
+ansicht.groupBy            die Gruppierung
+ansicht.sorts[].key        die Sortierung
+ansicht.filters.rules[]    der Filter, auch in verschachtelten Gruppen
+ansicht.hidden[]           versteckte Spalten
+ansicht.calc{}             Zusammenfassung — der Schlüssel ist der Objektname
+ansicht.breiten{}          Spaltenbreite, ebenso
+automationen.wenn.key      worauf die Automation hört
+automationen.dann[]        worauf sie schreibt
+schema[x].relation         die Verknüpfung, auf der ein Rollup sitzt
+schema[x].zielKey          die Spalte DRÜBEN, die er einsammelt
+```
+
+Und eine Stelle, an der ausdrücklich nichts geändert wird: **Formeln.**
+`prop("Punkte")` spricht die Spalte über ihren Anzeigenamen an, nicht über
+den Schlüssel (`dienst.ts`, `formelRechnen`). Ein Schlüsselwechsel geht daran
+vorbei.
+
+### Warum nicht einfach alles ersetzen
+
+Weil „4711" nicht immer eine Spalte ist. In einer Farbregel ist es ein WERT
+(„Fach ist gleich 4711"), in einer Zelle ist es Inhalt, in einer Auswahlliste
+ein Optionsname. Also:
+
+```txt
+OBJEKTSCHLÜSSEL   überall ersetzt — ein Feldname aus lauter Ziffern kommt
+                  im Code nicht vor
+WERTE             nur an benannten Stellen: key, groupBy, zielKey, relation,
+                  setzeKey, filterKey, bildKey, dateKey, …
+```
+
+Gegengeprobt, indem `wert` in die Liste der Schlüsselfelder aufgenommen
+wurde: die Farbregel bricht, `test227 §4` wird rot.
+
+### Die Stelle, an der der Umzug nichts erfinden darf
+
+Wo die Spalte ursprünglich STAND, weiss niemand mehr. Die Reihenfolge war nie
+gespeichert; sie ergibt sich aus `Object.keys`, und das hat den
+Zifferschlüssel schon beim Anlegen nach vorn gezogen. Ein Umzug, der eine
+Stelle errät und die Spalte verschiebt, sieht für den Menschen aus wie ein
+Fehler.
+
+Also lässt er sie, wo sie zu sehen war — und macht sie beweglich. Das ist der
+ganze Gewinn, und `test227 §2` misst genau ihn:
+
+```txt
+vorher    ans Ende geschoben  →  ["4711","title","abc"]   wieder vorn
+nachher   ans Ende geschoben  →  ["title","abc","s4711"]  geblieben
+```
+
+### Und der Weg, auf dem der Fall heute überhaupt noch auftritt
+
+Wer Redion neu öffnet, hat keine Zifferschlüssel — die gibt es seit E96 nicht
+mehr. Wer eine Sicherung von damals einspielt, hat sie.
+
+Und genau dort lief der Umzug nicht: die Umzüge laufen beim Start, die
+Sicherung kommt danach, und die Merkliste sagt „schon gelaufen" — für den
+vorigen Bestand stimmte das ja. Der Umzug wäre für alles zuständig gewesen
+ausser für den einen Weg, auf dem sein Fall wirklich hereinkommt.
+
+`importAll` stösst die Umzüge jetzt noch einmal an, mit
+`zuruecksetzen()` davor. Das ist zulässig, weil jeder Inhaltsumzug ohnehin
+zweimal laufen können muss, ohne zu schaden — die Regel steht seit jeher im
+Kopf von `umzuege.ts`.
+
+### Der neue Name ist berechenbar, nicht zufällig
+
+`4711` wird `s4711`, und bei Kollision `s4711-2`. Das ist Absicht: zwei
+Geräte, die dieselbe Sammlung abgleichen, führen den Umzug jedes für sich
+aus und müssen beim GLEICHEN Namen ankommen. Ein zufälliger neuer Schlüssel
+hätte aus einem Abgleich zwei Spalten gemacht.
+
+Und geschrieben wird mit `rohSetzen`, nicht mit `updateCollection`: das
+setzt `edited` auf jetzt und schickte damit den ganzen Bestand in den
+nächsten Abgleich.
+
+### Was gemessen wird
+
+`test227` misst nicht Feldnamen, sondern VERHALTEN — vorher und nachher
+derselbe Zustand:
+
+```txt
+dieselben Spalten · dieselben Werte · dieselben gefilterten Zeilen (durch
+Datenbank.zeilen, die echte Strecke) · Gruppierung, Sortierung, Filter,
+versteckte Spalten, Zusammenfassung, Breite · die Automation · der Rollup
+drüben · die Zeile im Papierkorb
+```
+
+Dazu ein Durchgang, der den ganzen Bestand nach Resten absucht — nicht nach
+einer Liste von Feldnamen, sonst prüfte die Prüfung dieselbe Aufzählung, die
+auch der Umzug benutzt. Zurückgedreht meldet er die zwölf Stellen von oben
+namentlich.
+
+### Gegenproben
+
+```txt
+der Umzug tut gar nichts                     7 rot
+'key', 'groupBy', 'zielKey' fehlen           5 rot
+Schritt 4 (fremde Rollups) fehlt             2 rot
+der Papierkorb bleibt aussen vor             2 rot
+auch 'wert' würde ersetzt                    1 rot
+nach dem Import laufen die Umzüge nicht      2 rot
+```
+
+`test227`, 29 Punkte.
+
+---
+
+## E173 · Eine PDF-Seite feiner rechnen (L37)
+
+**25. August 2026.**
+
+Seiten entstehen bei 1654 px Breite — bei A4 genau 200 dpi, Scan-Qualität.
+Wer stark hineinzoomt, sieht trotzdem Unschärfe, und L37 hielt das als
+offene Arbeit fest.
+
+Beim Nachsehen war fast alles schon da und wurde nur nie gerufen:
+
+```txt
+PdfLeser.alsBild(nr, breitePx)     nimmt seit E103 eine Breite entgegen
+Dateien.alsBlob(quelleId)          das Original liegt in der Ablage
+Marken in SEITENPUNKTEN            E100 — sie hängen nicht am Bild
+```
+
+Der dritte Punkt ist der, an dem es hängt. Die Markenschicht ist ein SVG mit
+`viewBox: 0 0 bw bh`, und `bw`/`bh` sind PDF-Punkte. Unter den Strichen darf
+sich das Bild deshalb ändern, ohne dass sie wandern — ein Strich, der beim
+feineren Rechnen verrutscht, wäre schlimmer als Unschärfe. `test228 §4` misst
+genau das.
+
+### Was dazukam
+
+Neben der Seitenzahl steht ein ⊕, das die Breite verdoppelt: 1654 → 3308 px,
+also 400 dpi bei A4. Das ist die Grenze; darüber wird eine Seite als WebP
+schnell mehrere Megabyte, und das trägt ein Telefon nicht (§36, §37). Ist sie
+erreicht, verschwindet der Knopf — er hätte nichts mehr zu tun.
+
+Drei Dinge, die dabei nicht offensichtlich sind:
+
+```txt
+· ERST die neue Kennung an den Block, DANN die alte Datei weg. Andersherum
+  stünde dazwischen eine Seite ohne Bild, und bricht es dort ab, ist das
+  Bild fort und das neue nicht da. In dieser Reihenfolge ist der schlimmste
+  Fall eine Datei zu viel.
+
+· Die alte Bilddatei MUSS weg. Sie zeigt auf einen lebenden Block, also
+  findet `Dateien.verwaist()` sie grundsätzlich nie (E116) — sie wäre eine
+  Leiche, die niemand mehr wegräumen kann. Gemessen wird deshalb nicht
+  „nichts Herrenloses", sondern „diese Seite hat genau ein Bild".
+
+· Die gewählte Breite steht am Block (`bildBreite`) und kommt mit in die
+  Sicherung. Ohne sie käme die Seite beim Zurückholen aus dem Original
+  wieder grob zurück, und die Arbeit wäre still verloren — `.redion` lässt
+  die Seitenbilder ja bewusst draussen (E103).
+```
+
+Der Knopf sperrt sich, solange gerechnet wird. Zwei Klicks würden zwei Läufe
+starten, und beide legten für denselben Block eine Datei ab — derselbe
+Fehler, den E116 für das Zurückholen behoben hat.
+
+### Und eine Zahl, die zweimal in derselben Lücke stand
+
+L37 sagte weiter oben „200 dpi, nicht die 140, die hier und in E103 standen"
+— und ein paar Absätze tiefer wieder „rund 140 dpi". E107 hatte die falsche
+Rechnung berichtigt, aber nur an einer der beiden Stellen. Jetzt an keiner.
+
+### Gegenproben
+
+```txt
+der Knopf fehlt                              1 rot (und ein Klick ins Leere)
+die alte Bilddatei bleibt liegen             3 rot
+neuBerechnen vergisst die gemerkte Breite    1 rot
+```
+
+Mit Augen gesehen (§55): vorher steht das ⊕ neben dem 🔗, nachher ist es
+fort und die Meldung sagt „Seite 1 ist jetzt bei 400 dpi".
+
+`test228`, 24 Punkte.
+
+---
+
+## E174 · Die Kennungen überleben den Quelltext-Rundlauf (L40)
+
+**25. August 2026.**
+
+L40 hielt als Rest fest, die Blöcke würden beim Übernehmen weiterhin geleert
+und neu gebaut, also änderten sich die Kennungen — und beschrieb das als
+„Frage der Form, nicht des Formats". Nachgemessen ist es keine Formfrage:
+
+```txt
+vier Absätze · EINEN im Quelltext geändert · übernommen
+  → keine einzige der vier Kennungen überlebt
+  → ein Blockverweis (#block=…, E105) zeigt ins Leere
+  → ein Kommentar hängt an einem Block, den es nicht mehr gibt
+```
+
+Eine Kennung ist die ADRESSE eines Absatzes. Wer eine Zeile berichtigt,
+verliert die Verweise auf alle anderen mit.
+
+### Der Umbau war nicht nötig
+
+L40 nannte als Weg die „echte zeilenweise Abgleichung" und stufte sie als
+Umbau ein. Beim Nachsehen legt `ausMarkdown` Blöcke an **genau einer**
+Stelle an — `lege`, das den Stapel für die Einrückung führt (E120). Alles,
+was es brauchte, steht dort:
+
+```ts
+const alt = holeGemerktes(typ, felder ? felder['text'] : '');
+if (alt) { mit['id'] = alt.id; … }
+Store.addBlock(elternFuer(roh), typ, mit);
+```
+
+`Store.addBlock` nimmt seit jeher einen `patch` und legt ihn ÜBER die
+Vorgaben — eine mitgegebene Kennung gilt also. Und `kinderLeeren` hat den
+alten Block eben endgültig gelöscht, seine Kennung ist frei.
+
+### Ein Gedächtnis statt zweier
+
+E165 merkte sich die Blöcke MIT Farbe, um sie danach in einem zweiten
+Durchgang wieder aufzusetzen. Gemerkt wird jetzt jeder tragende Block, samt
+Kennung, Farbe und Schrift — und alles davon gibt `lege` beim Anlegen mit.
+
+```txt
+vorher   merke → bauen → setzeWiederAuf     zwei Durchgänge, zwei Zuordnungen
+nachher  merke → bauen (mit Kennung+Farbe)  ein Durchgang, eine Zuordnung
+```
+
+Zwei Zuordnungen nach derselben Regel sind eine Regel zu viel: sie können
+auseinanderlaufen, und dann bekäme ein Block die Kennung des einen und die
+Farbe des anderen.
+
+### Die Regel ist die von E165, und aus demselben Grund
+
+Zugeordnet wird nach **(Art, Text)**, nicht nach Position. Wer eine Zeile
+einfügt, verschiebt alle darunter; nach Position zugeordnet bekäme dann jede
+Zeile die Kennung ihrer Vorgängerin — ein Verweis zeigte danach auf den
+falschen Absatz, und das ist schlimmer als ein toter Verweis.
+
+Wer den Text ändert, bekommt eine neue Kennung. Das ist ehrlich: es ist ein
+neuer Satz.
+
+Und jeder gemerkte Eintrag wird **höchstens einmal** vergeben. Zwei Blöcke
+mit derselben Kennung wären ein kaputter Bestand, kein Merkmal —
+gegengeprobt: `splice` durch einen blossen Zugriff ersetzt, und die Prüfung
+zeigt dieselbe Kennung zweimal.
+
+### Gegenproben
+
+```txt
+die Kennung wird nicht wiederverwendet        5 rot
+ein Eintrag darf mehrfach vergeben werden     3 rot
+```
+
+`test187` §7, acht neue Punkte (55 → 63).
+
+---
+
+## E175 · Eine Kennung ist keine Abfrage (L23)
+
+**25. August 2026.**
+
+L23 stand als ein Satz in den Lücken: „Suche über Titel, Inhalt, Zeilen und
+Kennungen mit einfacher Syntax."
+
+Beim Nachsehen ist die Sprache **gebaut** — `src/kern/suche/query.ts`, seit
+dem 22. August, mit neun Suchbefehlen, Anführungszeichen für die genaue
+Wendung, Erkennung widersprüchlicher Angaben und Fehlermeldungen in Worten:
+
+```txt
+titel:"Projekt"   tag:arbeit   typ:seite   geändert:heute   status:offen
+in:Projekte       nach:2026-01   vor:2026-06   inhalt:Zebras
+```
+
+**Und kein einziger Prüflauf nannte sie.** Das ist die gefährlichere Hälfte
+und schon einmal dagewesen: bei E122 lagen 460 Zeilen für ein verschlüsseltes
+`.redion` herum, deren Einstiegspunkte nicht im `return` standen. Fertiger
+Code, den nie jemand ausgeführt hat, sieht von aussen genauso aus wie
+fertiger Code.
+
+`test229` fährt die Sprache jetzt über das ECHTE Suchfenster ab — nicht über
+`QueryLanguage.parse`: das prüfte den Parser und liesse die Verdrahtung offen
+(E93). Beim Schreiben der Prüfung fielen zwei eigene Fehler an:
+
+```txt
+· Die erste Fassung las `.f-item` als Treffer. Ein Treffer ist ein
+  `button[data-i]`. Vierzehn rote Punkte, kein einziger am geprüften Code —
+  und einer davon („typ:seite lässt die Zeile weg") war GRÜN, weil beide
+  Listen leer waren.
+· `Store.addRow(coll, { text: … })` gibt der Zeile keinen Titel. `addRow`
+  liest `props.title`; der Titel einer Zeile ist ihre Titelspalte.
+```
+
+### Und der Teil, der wirklich fehlte
+
+**Kennungen.** `Store.search` findet eine Seite über ihre Kennung und
+schneidet sie sogar aus einer ganzen Adresse heraus — das ist der Weg, auf
+dem ein Blockverweis aus der Zwischenablage wieder zu seiner Seite führt
+(E105). Das Suchfenster ging seit der Abfragesprache daran vorbei: es fragt
+`QueryLanguage.run` über eine Dokumentform, die Titel, Inhalt, Schlagwörter
+und Status kennt — und keine Kennungen. Wer eine einfügte, bekam „Nichts
+gefunden".
+
+Der Zweig steht in der Schale und nicht in `query.ts`: die Sprache kennt
+weder DOM noch Ablage, und das soll sie nicht lernen.
+
+**Was ihn sicher macht, ist nicht der Ausdruck davor**, sondern die zweite
+Bedingung: `Store.search` muss WIRKLICH über die Kennung gefunden haben. Der
+Zweig geht an der Abfragesprache vorbei und damit an ihren Filtern; griffe er
+schon, wenn ein Text zufällig wie eine Kennung aussieht, zeigte „nur Titel"
+plötzlich Inhaltstreffer. Genau so gegengeprobt.
+
+`test229`, 20 Punkte.
+
+---
+
+## E176 · Was wäre, wenn (L28)
+
+**25. August 2026.**
+
+L28 stand als drei Halbsätze da: „Zielwert eingeben und rückwärts rechnen ·
+Best/Normal/Worst Case · einfache Optimierung." Alle drei laufen über
+dieselbe kleine Maschine: eine **Stellschraube** (eine schreibbare
+Zahlenspalte) und ein **Ziel** (eine gerechnete Spalte) in derselben Zeile.
+
+```txt
+Zielwertsuche   „Der Gewinn soll 10 000 sein. Wie hoch muss der Preis?"
+Optimierung     „Bei welchem Preis ist der Erlös am grössten?"
+Szenarien       „Zeig mir dasselbe für schlecht, normal und gut."
+```
+
+### Die Regel, an der alles hängt
+
+**Beim Suchen wird nichts geschrieben.**
+
+Der naheliegende Weg wäre, den Probewert in die Zelle zu schreiben, die
+Formel lesen zu lassen und weiterzuprobieren. Damit stünden bei dreissig
+Schritten neunundzwanzig falsche Werte in den Daten, jeder in einer Fassung
+und im Abgleich — und bricht es in der Mitte ab, bleibt der letzte stehen.
+Bei einer Suche, die auch scheitern darf, ist das die gefährliche Richtung
+(§46).
+
+Gerechnet wird auf einer **Kopie** der Zeile. Dasselbe Muster benutzt
+`dienst.ts` seit Langem für die Regelprüfung („die Zeile MIT dem neuen
+Wert"). `test230 §5` misst es nicht am Wert — der wäre auch dann richtig,
+wenn zwischendurch dreissig andere darin standen —, sondern am Zeitstempel
+der Zeile und an der Zahl der Fassungen.
+
+### Der Fehler, den ohne Messung niemand gefunden hätte
+
+Die Probezeile trägt dieselbe Kennung wie das Original. `Tempo` und `Vorrat`
+merken sich Formelwerte **unter der Zeilenkennung** — also kam bei jedem
+Probewert derselbe gespeicherte Wert zurück. Die Suche sah eine Gerade, wo
+eine Kurve ist:
+
+```txt
+Zielwertsuche   fand gar nichts („Kein Wert führt zu diesem Ziel")
+Optimierung     lief an den Rand: Preis 50 statt 25
+```
+
+Beide Speicher stehen ohnehin still, solange `formelTiefe` über null ist —
+das ist der Weg, den eine Formel nimmt, die eine andere aufruft.
+`Datenbank.wertFrisch` geht denselben Weg, absichtlich.
+
+### Warum halbieren und nicht Newton
+
+Excel nimmt Newton und scheitert daran regelmässig: eine Formel mit `WENN`
+hat Sprungstellen, und die Ableitung zeigt dort in die falsche Richtung.
+Halbieren braucht keine Ableitung, nur zwei Stellen mit verschiedenem
+Vorzeichen — und die sucht der erste Teil, indem er das Fenster vom heutigen
+Wert aus verdoppelt.
+
+Und es halbiert **bis das Fenster zu ist**, nicht bis der Rest klein genug
+ist. Der erste Anlauf hörte bei der Toleranz auf; die ist relativ zum Ziel,
+bei 2000 also 2·10⁻⁴, und heraus kam „Preis = 15.999999", wo 16 richtig ist.
+Rechnerisch einwandfrei und für einen Menschen falsch.
+
+### Der Weg dorthin
+
+Datenbankmenü → „Was wäre, wenn …" — und nur dort, wo es eine gerechnete
+Spalte gibt; ein Eintrag, der nur eine Absage zeigt, ist kein Eintrag.
+
+Das Ergebnis wird **angezeigt, nicht eingetragen**. Eine Zielwertsuche ist
+eine Frage, keine Anweisung; wer sie stellt, will erst die Antwort sehen.
+Excel schreibt sofort und bietet danach „Rückgängig" an — das ist einen Klick
+billiger und einen Gedanken teurer.
+
+Mit Augen gesehen (§55): der heutige Wert stand zuerst eine Zeile ÜBER der
+Spaltenauswahl und sagte etwas über eine Spalte, die man noch nicht gewählt
+hatte. Er steht jetzt darunter. Und die Antwort stand in Hinweisgrau — sie
+ist das, wofür der Dialog da ist, und steht jetzt in Textfarbe.
+
+### Gegenproben
+
+```txt
+probiere() geht über den Zwischenspeicher     7 rot
+die Suche schreibt in die Zelle               7 rot
+```
+
+`test230`, 36 Punkte.
+
+---
+
+## E177 · Öffentlich, ohne dass Privates mitgeht (L31)
+
+**25. August 2026.**
+
+L31 nannte fünf Dinge und darüber die eigentliche Bedingung: keine privaten
+Daten für Crawler.
+
+```txt
+Export als statische Seite   gab es schon — `Werkzeuge.htmlExport`
+robots.txt · ai.txt          neu
+sitemap.xml                  neu
+Demo-Modus                   neu
+keine privaten Daten         war schon wahr, stand aber nirgends
+```
+
+### Die Bedingung wird gemessen, nicht behauptet
+
+Redion ist local-first: die Notizen liegen in der IndexedDB des Browsers. Ein
+Crawler bekommt die leere App — es gibt buchstäblich nichts Privates zu
+holen. Das ist leicht gesagt und genau die Sorte Satz, die durch eine
+Änderung still falsch wird: ein `<script>`, das eine Beispielnotiz einbettet,
+und niemand merkt es.
+
+`test231 §2` liest deshalb das AUSGELIEFERTE HTML und sucht darin nach
+gezeichneten Blöcken und nach Starterinhalt.
+
+Und ein Punkt, der ausdrücklich dasteht, weil er sonst missverstanden wird:
+`robots.txt` sperrt `/quell/` und `/pruefungen/` aus — und die Dateien sind
+trotzdem abrufbar. Eine `robots.txt` ist eine Bitte, kein Schloss. Die
+Prüfung hält das fest, damit niemand sie später für eine Sperre hält.
+
+### Der Vorführmodus trennt über den Namen
+
+`index.html?demo` öffnet eine EIGENE Ablage: `notizen-demo`.
+
+```txt
+Zwei Namen  = zwei Datenbanken, und die Trennung setzt der Browser durch.
+Ein Schalter = an dreissig Stellen abgefragt und an der einunddreissigsten
+               vergessen — und dann steht die Vorführung in den echten Daten.
+```
+
+`test231 §3` legt in der echten Ablage eine Seite an, öffnet danach die
+Vorführung und sieht nach, ob sie dort auftaucht. Und in der Gegenrichtung,
+ob die echte Seite danach noch da ist.
+
+**Und dabei fiel ein Messfehler auf, der die wichtigste Behauptung wertlos
+machte:** `browser.newPage()` legt in Playwright jedes Mal einen EIGENEN
+Kontext an, und ein eigener Kontext hat eine eigene IndexedDB. Die erste
+Fassung mass damit Playwrights Trennung statt Redions — die Gegenprobe
+(beide Ablagen gleich benannt) liess „Die eigene Seite ist dort NICHT zu
+sehen" grün stehen. Jetzt: ein Kontext, zwei Seiten.
+
+### Zwei Fehler, die nur das Hinsehen fand (§55)
+
+```txt
+· `position:sticky` machte den Balken zu einem Flex-Element von `body` —
+  und `body` ist eine Flex-ZEILE (Seitenleiste | Inhalt). Der Balken bekam
+  eine eigene Spalte über die volle Höhe: der halbe Bildschirm orange, der
+  Text ein schmaler Streifen am Rand. „Ein Balken steht da" war grün.
+· Weiss auf dem Orange (`#f97316`) ergibt 2,6:1 — unter den 4,5:1, die §38
+  für gewöhnlichen Text verlangt. Auf dem Bild sah es genau danach aus.
+  Jetzt dunkles Braun: 7,7:1.
+```
+
+Beides steht jetzt als Punkt in `test231`: die Lage (`position: fixed`, und
+`body` beginnt genau unter dem Balken) und das Kontrastverhältnis, gerechnet
+statt geschätzt. Die Höhe des Abstands wird gemessen und nicht gesetzt — am
+Telefon bricht der Satz um, und eine feste Zahl läge dann über der App.
+
+### Gegenproben
+
+```txt
+die Vorführung nutzt dieselbe Ablage    2 rot
+der Vorführbalken fehlt                 3 rot
+```
+
+`test231`, 29 Punkte.
+
+---
+
+## E178 · Spalten aufräumen, mit Vorschau (L27)
+
+**25. August 2026.**
+
+L27 nennt sechs Handgriffe eines Import-Assistenten. Vier gab es schon, als
+die Lücke geschrieben wurde — nachgesehen, nicht angenommen:
+
+```txt
+Typen erkennen                `Spaltentyp.erkenne`, beim CSV-Einlesen
+Vorschau vor dem Übernehmen   derselbe Weg: erst nachsehen, dann fragen
+Duplikate entfernen           `Pflege.dublettenDialog`
+Dateien kombinieren           ein zweites CSV in dieselbe Datenbank
+```
+
+Zwei fehlten, und beide braucht man nach jedem Import als Erstes: **Spalten
+bereinigen** und **Werte ersetzen**. Beides steht jetzt unter „Spalten
+aufräumen …" im Datenbankmenü.
+
+### Die Regel ist die von `probelauf.ts`
+
+Erst zeigen, was passieren würde, dann erst tun. `plan()` ändert nichts und
+zählt echt nach; `wende` schreibt. Ein Aufräumen, das dreihundert Zeilen
+anfasst und erst danach zeigt, was es getan hat, ist kein Werkzeug, sondern
+ein Risiko (§46).
+
+Die Vorschau zeigt höchstens zehn Zeilen und sagt, dass es mehr sind — eine
+mit dreihundert liest niemand, und eine, die schweigend abschneidet,
+verspricht dreihundert und zeigt zehn.
+
+### Und der Plan wird gegen den Bestand gehalten
+
+Zwischen Vorschau und Zusage kann ein zweites Fenster oder ein Abgleich
+dazwischenkommen. `wende` schreibt deshalb DEN PLAN und rechnet nicht neu —
+und lässt jede Zeile aus, deren Wert inzwischen ein anderer ist. Sonst
+stünde in der Zelle etwas, das dem Menschen nie gezeigt wurde.
+
+Gegengeprobt: die Prüfung weggenommen, und der von Hand geänderte Wert wird
+mit dem alten überschrieben.
+
+### Das Ersetzen ist wörtlich
+
+Wer „(GmbH)" ersetzen will, tippt „(GmbH)" und nicht „\(GmbH\)". Ein
+Suchfeld, das heimlich ein regulärer Ausdruck ist, macht aus einem Punkt ein
+Jokerzeichen — gegengeprobt: „." durch „" ersetzt, und statt einer Zelle
+sind alle sechs leer.
+
+### Und die unsichtbaren Zeichen stehen als Escape da
+
+` `, ` `, ` ` und die drei Nullbreiten plus BOM. Sie im
+Quelltext als Zeichen zu schreiben wäre eine Regex, der niemand ansieht, ob
+sie noch enthält, was sie enthalten soll — und die kein Kopieren übersteht.
+
+`test232`, 32 Punkte.
+
+---
+
+## E179 · Zwei Regressionen, die der volle Lauf gefunden hat
+
+**25. August 2026.** `voll92` war rot: `test96` und `test210`. Beide gehören
+zu Entscheidungen aus demselben Tag, und beide Prüfungen hatten recht.
+
+### `test96` · Ein Zeitstempel, den es beim Anlegen nie gab
+
+E172 lässt die Inhaltsumzüge nach einer eingespielten Sicherung noch einmal
+laufen. Der Umzug `zeitstempel-an-sammlungen` trägt `edited` nach, wo es
+fehlt — für ALTE Sätze gedacht. `test96` exportiert den Bestand, löscht
+alles, spielt ein und vergleicht Feld für Feld; danach standen zwei `edited`
+da, die vorher nicht da waren.
+
+Der Umzug hatte recht: **`addDatabase` und `addView` setzten `edited`
+schlicht nie.** Eine frisch angelegte Sammlung hatte keinen, bis irgendetwas
+sie änderte.
+
+Ihn abzuschalten wäre die falsche Richtung gewesen — dann käme eine
+Sicherung von 2025 wieder ohne Zeitstempel herein, und der Abgleich hielte
+jede Schemaänderung darin für nie geschehen. Also steht `edited` jetzt beim
+Anlegen da, und der Umzug ist für neue Daten ein Leerlauf.
+
+### `test210` · Ein Knopf, der einer Werkzeugleiste die Breite nimmt
+
+E173 hat der PDF-Seite ein ⊕ neben die Seitenzahl gestellt. `.blatt-reihe`
+ist eine Zeile: links die rollende Zeichenleiste, rechts der feste Teil.
+Jeder Knopf rechts nimmt links Platz weg.
+
+```txt
+390 px Fensterbreite · die Zeichenleiste vorher 290 px, nachher 262
+```
+
+`test210 §4` verlangt, dass sie mehr als ein Drittel bekommt, und hatte
+recht: eine Zeichenleiste, die ein Viertel ihrer Breite an eine Seitenzahl
+verliert, ist am Telefon keine. Unter 760 px bricht die Reihe jetzt um —
+oben die volle Breite zum Zeichnen, darunter Seitenzahl, 🔗 und ⊕.
+
+Mit Augen nachgesehen (§55): die Zeichenleiste läuft jetzt über die ganze
+Breite, die Angaben stehen rechtsbündig auf einer eigenen Zeile.
+
+### Was daran allgemein ist
+
+Beide Fehler waren unsichtbar, solange man nur die neuen Prüfungen laufen
+liess. Der volle Lauf ist der einzige Ort, an dem eine Änderung auf die
+Prüfungen trifft, an die niemand gedacht hat — und beide Male hat eine
+ältere Prüfung eine jüngere Entscheidung berichtigt.
+
+---
+
+## E180 · Was die Ansicht verschweigt (L22)
+
+**25. August 2026.**
+
+L22 bestand aus einer Vermutung: Redion könnte bei sehr grossen
+Arbeitsbereichen langsam sein. Nachgemessen an 8000 Blöcken — 200 Seiten mit
+je 20 Absätzen und eine Datenbank mit 2000 Zeilen — stimmt sie nicht:
+
+```txt
+8000 Blöcke anlegen und einmal schreiben        1,5 s
+Neu laden, bis der Bestand steht                0,5 s
+`Store.search` über alles                       68 ms
+`Store.baum` über den ganzen Baum               20 ms
+`exportAll` über 4,9 MB                         29 ms
+2000 Zeilen filtern und sortieren                2 ms
+```
+
+### Der Fund ist ein anderer
+
+Eine Datenbankansicht zeigt 50 Zeilen von 2000 — `begrenzen`, seit jeher,
+mit einer Ladegrenze im Layout-Menü. **Und sie sagte es nicht.** Die Tabelle
+endete nach der fünfzigsten Zeile mit „+ Neu", und nichts wies darauf hin,
+dass eintausendneunhundertfünfzig fehlen.
+
+Das ist kein Leistungsproblem, sondern die gefährlichere Sorte
+Unvollständigkeit: man merkt sie erst, wenn man etwas sucht, das dasteht und
+nicht gefunden wird. Der Weg heraus existierte — drei Ebenen tief unter
+„Layout" —, aber wer nicht weiss, dass abgeschnitten wird, sucht ihn nicht.
+
+Jetzt steht unter der Ansicht: **„50 von 2000 Zeilen · Mehr laden · Alle
+zeigen"**. Die Wahl bleibt an der Ansicht stehen; wer einmal alle sehen
+wollte, will es beim nächsten Öffnen wieder.
+
+**Unter der ANSICHT, nicht im Tabellenfuss.** `begrenzen` gilt für jede
+Ansichtsart; in den Tabellenfuss geschrieben hätten Board, Galerie und Feed
+weiter stumm abgeschnitten.
+
+### Was diese Prüfung misst und was nicht
+
+Keine Millisekunden als Schranke. Die hängen an der Maschine, und eine
+Prüfung, die auf einem langsamen Rechner rot wird, wird abgeschaltet statt
+gelesen. Gemessen werden **Zahlen und Formen**: wie viele Sätze angefasst
+werden, wie viele Knoten im Bild stehen, was die Ansicht über sich selbst
+sagt. Dazu ein paar sehr weite Zeitschranken — dreissig Sekunden für etwas,
+das 1,5 braucht —, die keine gesunde Maschine reisst und ein quadratischer
+Algorithmus sofort.
+
+### Und ein Messfehler beim Schreiben
+
+Nach `seite.reload()` wartete die Suite darauf, dass der BESTAND steht. Der
+steht früher als die Oberfläche; `App.oeffne` lief danach ins Leere, und die
+Seite hatte keinen einzigen Block. Das sah aus wie ein Fehler in der
+Ansicht und war einer in der Prüfung. Jetzt wird auch auf `#scroll`
+gewartet.
+
+Und §3a hat einen Wächter bekommen: fehlt der Hinweis, wird die Suite ROT
+statt abzustürzen — ein Absturz mitten im vollen Lauf ist schwerer zu lesen
+als ein roter Punkt.
+
+### Gegenprobe
+
+```txt
+kein Hinweis auf die Grenze     7 rot
+```
+
+`test233`, 22 Punkte.
+
+---
+
+## E181 · Dieselbe Frage, zwei Antworten (L50, L21, L30)
+
+**25. August 2026.**
+
+L50 stand seit E169 als „Hygiene, keine Fehlerbehebung" da: `Arbeitswelt`
+und `Lebensbereiche` sind zwei Wege zu denselben Blöcken, und gemessen
+liefern sie dasselbe. Beim Nachsehen, WAS die zwei Wege eigentlich teilen,
+stand eine Sache zweimal da, die nicht dasselbe lieferte.
+
+### Der Fund
+
+Beide hatten eine Funktion namens `erlaubt`. Beide beantworteten die
+Rechtefrage. Sie beantworteten sie verschieden:
+
+```txt
+arbeitswelt     pageId ? Konten.darf(a, pageId) : Konten.darf(a)
+lebensbereiche  !!pageId && Konten.darf(a, pageId)
+```
+
+Bei einer LEEREN Seitenkennung — ein Block, der zu keiner Seite gehört —
+sagte die eine „dann frag den Arbeitsbereich" und die andere „nein".
+Derselbe Block war in der einen Ansicht sichtbar und in der anderen nicht.
+
+Der Grund liegt in `Konten.darf` selbst:
+
+```ts
+const id = seiteId || App.aktuelleSeite();
+if (!id) return true;
+```
+
+Ein leerer Text fällt auf die gerade offene Seite zurück. Das ist für die
+Werkstattfrage richtig („darf ich hier überhaupt etwas ändern") und für die
+Seitenfrage falsch („darf ich DIESE Seite"). Die eine Fassung hat den
+Unterschied gesehen, die andere nicht.
+
+Das ist L34 in Reinform, nur eine Ebene höher: ein Wert steht an zwei
+Stellen, nichts erzwingt Gleichheit, und die Abweichung sieht man erst,
+wenn jemand sie sucht.
+
+### Die Antwort steht jetzt einmal da
+
+`kern/zugang/lesefrage.ts`, mit der Regel ausgeschrieben:
+
+```txt
+Rechte aus            → alles erlaubt (ohne Konten keine Rechte)
+Seitenkennung da      → die Seitenfrage
+Seitenkennung leer    → NEIN
+Kennung weggelassen   → die Werkstattfrage
+```
+
+Der Unterschied zwischen „leer" und „weggelassen" ist Absicht und nicht
+Zufall: nur dadurch fallen beide alten Fassungen zusammen, ohne dass sich
+für einen einzigen Aufrufer etwas ändert.
+
+**Nicht `rechte.ts`.** Den Namen gibt es schon — dort wohnen die Feldrechte.
+Der erste Versuch hat die Datei überschrieben; `npm run typecheck` hat es
+gemeldet, weil `Feldrechte` plötzlich unbekannt war. Der Vorfall steht im
+Kopf der neuen Datei, damit der nächste Versuch nicht dieselbe Stelle trifft.
+
+### Der grosse Kern bleibt ungebaut
+
+L50 wollte ursprünglich beide Bereiche auf einen gemeinsamen Aggregatkern
+stellen. Das passiert nicht, und das ist eine Entscheidung, kein Rückstand:
+die zwei Wege liefern dasselbe (E169, gemessen), und der eine trägt die
+Rechteprüfung, die der andere nicht braucht. Sie zusammenzulegen hiesse,
+diese Prüfung neu zu verdrahten — für ein Ergebnis, das der Mensch nicht
+sieht. Der Teil mit dem Risiko war die gemeinsame Frage, und die ist
+gemeinsam.
+
+### Zwei Lücken nebenbei, beide durch Hinsehen
+
+**L21 war seit E122 zu.** Der Eintrag verlangte drei Dinge —
+verschlüsseltes `.redion`, verschlüsselte Anhänge, Schlüsselwechsel — und
+alle drei gibt es seit Paketfassung 2; `test199` fährt sie mit 33 Punkten
+ab. Der Absatz wurde nach dem Schreiben nie wieder nachgesehen. Eine Lücke,
+die nur auf dem Papier steht, ist auch eine Art Falschaussage.
+
+**L30 war eine Wunschliste ohne Urteil.** „Erweiterungen und Marktplatz",
+sechs Stichworte, kein Satz dazu, ob das zu Redion passt. Es passt nicht
+ohne Weiteres: eine Erweiterung ist fremder Code im selben Fenster wie die
+Notizen und sieht IndexedDB, `Store` und jedes offene Dokument. §19 verbietet
+`eval()` und ungeprüftes `innerHTML`, §47 fremden Code aus Formeln — ein
+Erweiterungssystem wäre die grösste Ausnahme von beidem. Sicher gebaut
+bräuchte es eigenen Ursprung, `iframe`, Nachrichten statt Zugriff, ein
+Rechtemodell je Erweiterung, Signaturen und einen Rückruf. Das ist ein
+eigenes Projekt. Es steht jetzt als „bewusst nicht gebaut" da, mit den drei
+Wegen, die ohne Fremdcode auskommen: Register, Automationen, `.redion`.
+
+Prüflauf: `test234`, 14 Punkte, mit zwei Gegenproben — das `!!pageId &&`
+entfernt macht einen Punkt rot, `Lebensbereiche` wieder mit eigener Regel
+zwei.
+
+---
+
+## E182 · Der Knopf, der den Export kennt (L26)
+
+**25. August 2026.**
+
+L26 stand als „Asana und Apple Notes fehlen" da. Beim Nachsehen stimmte das
+nur halb, und die Hälfte, die stimmte, war die interessantere.
+
+**Asana kam schon herein** — über den allgemeinen CSV-Weg. Nur eben so:
+
+```txt
+Section/Column  →  Text     statt  Status (und Gruppierung)
+Due Date        →  Text     statt  Datum
+Tags            →  Text     statt  Mehrfachauswahl
+Completed At    →  Text     statt  Haken
+Notes           →  EINE ZELLE mit der ganzen Beschreibung darin
+```
+
+Die letzte Zeile ist der eigentliche Verlust. Eine Aufgabenbeschreibung in
+einer Tabellenzelle kann man nicht lesen, nicht gliedern, nicht durchsuchen
+wie eine Seite. Sie steht da, aber sie ist unbenutzbar — und das sieht nicht
+nach einem Fehler aus, sondern nach einer langen Spalte.
+
+Die vorletzte ist die zweitschlimmste: in einer Aufgabenliste ist „erledigt
+oder nicht" die Information, nach der man zuerst sucht. Asana schreibt sie
+nicht als Ja/Nein, sondern als Datum in `Completed At` — leer heisst offen.
+Wer das nicht weiss, bekommt eine Textspalte voller Zeitstempel.
+
+**Apple Notes kam gar nicht herein.** Es liefert einen ORDNER mit einer
+HTML-Datei je Notiz; die Ordner der App werden zu Unterordnern.
+
+### Was jetzt dasteht
+
+`ausAsana` liest die Spaltennamen und bildet sie typgerecht ab, `Notes` wird
+Seiteninhalt statt Zellinhalt, `Completed At` wird der Haken, und die Ansicht
+ist ein nach Abschnitt gruppiertes Board.
+
+**Was nicht erkannt wird, geht trotzdem mit.** Asana hängt eigene Felder als
+weitere Spalten an, und die heissen bei jedem anders. Sie werden Textspalten
+mit ihrem Namen aus der Datei — lieber eine Spalte zu viel als ein verlorenes
+Feld. Ihre Schlüssel sind `a0`, `a1`, … und nicht `0`, `1`, weil rein
+numerische Schlüssel seit E96/E172 kaputte Verweise machen.
+
+`ausAppleNotes` legt je HTML-Datei eine Seite an und behält die Ordner. Der
+Titel kommt aus `<title>`, sonst aus der ersten Überschrift, sonst aus dem
+Dateinamen — in dieser Reihenfolge, weil die ersten beiden Umlaute und
+Satzzeichen behalten haben, die der Dateiname verloren hat.
+
+### Eine Grenze, die es geben muss
+
+`ausAsana` verlangt eine Spalte `Name` oder `Task Name` und lehnt sonst ab.
+Ohne diese Grenze wäre jede beliebige CSV ein Asana-Export, und die
+Zuordnung würde raten statt lesen — aus „Betrag" würde ein Abschnitt. Der
+allgemeine CSV-Weg steht weiterhin daneben im Fenster, jetzt unter seinem
+eigenen Namen („Jira, Monday, sonstige CSV") statt als Anhängsel von Asana.
+
+### Ein HTML-Leser, nicht zwei
+
+Apple Notes braucht dasselbe wie Evernote: HTML zu Blöcken. Die Funktion
+stand IN `ausEvernote`; sie zu kopieren hiesse, sie zweimal zu haben — L34
+in Reinform. Sie heisst jetzt `htmlZuMarkdown` und gehört beiden.
+
+Dadurch bekam Evernote nebenbei etwas dazu: **Kästchen werden Aufgaben.**
+Apple Notes schreibt Checklisten auf drei Arten (`☑`, `[x]`, ein
+Datenattribut), und alle drei werden zu `- [x]` / `- [ ]`, aus denen
+`ausMarkdown` echte Aufgabenblöcke macht. Vorher wäre daraus ein
+Aufzählungspunkt geworden, in dessen Text ein Kästchen steht, das man nicht
+anklicken kann.
+
+### Was die Prüfung misst
+
+`test235`, 63 Punkte, mit fünf Gegenproben, die einzeln nachgewiesen sind:
+
+```txt
+alle Typen wieder auf Text            5 Punkte rot
+`Notes` nicht mehr als Seiteninhalt   3 Punkte rot
+Kästchen nicht mehr als Aufgabe       5 Punkte rot
+Unterordner flach                     1 Punkt  rot
+die stummen Spalten doch als Spalten  5 Punkte rot
+```
+
+Zwei Punkte mussten dabei berichtigt werden, und beide waren grün aus dem
+falschen Grund. „Eine Datei ohne Zeilen wird abgelehnt" prüfte nur, dass
+etwas geworfen wurde — das war auch dann grün, als `ausAsana` noch gar nicht
+existierte und der Aufruf an `undefined` scheiterte; jetzt wird die MELDUNG
+gelesen. Und „ein abgehakter Punkt wird eine erledigte Aufgabe" prüfte nur
+die Blockart, nicht den Haken — grün auch dann, wenn beide Punkte unerledigt
+ankommen, also genau im Verlustfall.
+
+`test49` zählte „Sechs Quellen zur Wahl". Eine Zahl allein ist auch dann
+grün, wenn zwei falsche Einträge dastehen; die Prüfung nennt jetzt die
+Namen.
+
+---
+
+## E183 · Die Liste rollte, ohne es zu zeigen
+
+**25. August 2026.**
+
+Zwei Quellen mehr im Einlesefenster (E182), und ein Bild später stand da:
+
+```txt
+📊 Jira, Monday, sonstige CSV
+   Irgendeine Tabelle — wird zur Datenbank
+📄 Einzelne Dateien
+   ⟵ hier hörte es auf
+```
+
+Die achte Quelle war 28 px unter der Kante. Erreichbar war sie immer — die
+Liste rollt. Aber sie sah aus wie ein Eintrag ohne Beschreibung, und nichts
+sagte, dass da noch etwas ist. Am Telefon fehlten 127 px statt 28.
+
+**Das ist E180 noch einmal, nur senkrecht.** Dort zeigte eine Tabelle 50 von
+2000 Zeilen und sagte es nicht; hier zeigt eine Liste sechs von acht
+Einträgen und sagt es nicht. Beide Male ist der Inhalt vollständig da, beide
+Male sieht der Ausschnitt aus wie das Ganze.
+
+Und keine Prüfung konnte es finden, weil keine danach sah. Gefunden hat es
+`node bilder.mts` — CLAUDE.md §55, wörtlich: *öffne die Seite wirklich,
+statt nur den Code zu lesen.*
+
+### Zwei Antworten, eine für jeden Fall
+
+**Am Rechner war die Höhe ohne Grund knapper als der Platz.** `max-height:
+56vh` liess 482 px zu, das Fenster hatte 753 von 860 zur Verfügung, gebraucht
+werden 518. Jetzt 62vh, und alle acht stehen da.
+
+**Am Telefon reicht es nie** — 608 px Inhalt in 523 px Fenster, und das
+bleibt so, egal welche Zahl dort steht. Dafür läuft die Kante aus, statt
+scharf abzuschneiden. Eine weiche Kante liest sich als „hier geht es weiter";
+eine scharfe liest sich als Ende.
+
+### Warum `Rollrand` und nicht eine zweite Rechnung
+
+Für die weiche Kante gibt es die Datei schon: `kern/helfer/rollrand.ts`, aus
+demselben Grund gebaut (E141, E151, E159). Sie mass nur die **Waagerechte** —
+Tabellen und Knopfleisten rollen zur Seite.
+
+Es wäre die kürzere Arbeit gewesen, für die Senkrechte vier Zeilen daneben zu
+schreiben. Genau das ist L34: ein Wert an zwei Stellen, nichts erzwingt
+Gleichheit, und die Abweichung sieht man erst spät. Also misst dieselbe
+Funktion jetzt beide Achsen:
+
+```ts
+const stand = hoch ? feld.scrollTop    : feld.scrollLeft;
+const sicht = hoch ? feld.clientHeight : feld.clientWidth;
+const ganz  = hoch ? feld.scrollHeight : feld.scrollWidth;
+```
+
+`quer` bleibt die Vorgabe, damit sich für keinen der sechs bisherigen
+Aufrufer etwas ändert — test210 und test221 laufen unverändert grün. Die
+Wörter sind je Achse andere (`links rechts` gegen `oben unten`), weil sie in
+der CSS stehen und dort etwas bedeuten.
+
+Eine Maske, kein aufgelegtes Element: ein Pseudo-Element im Rollfeld rollt
+mit dem Inhalt und wäre nach dem ersten Wisch weg.
+
+### Was die Prüfung misst
+
+`test235` §9, neun Punkte. Der wichtigste steht dort nicht wegen des
+Ergebnisses, sondern wegen der Messbarkeit:
+
+```ts
+p('Am Telefon rollt die Liste — sonst misst der Rest nichts', amHandy.rollt);
+```
+
+Passt eines Tages alles auch aufs Telefon, wird dieser Punkt rot — und das
+ist richtig, denn dann messen die zwei Punkte darunter nichts mehr. Eine
+Prüfung, die nicht rot werden kann, ist keine (§55.2).
+
+Zwei Gegenproben, einzeln nachgewiesen: die senkrechte Achse auf die
+waagerechte zurückgedreht macht 2 Punkte rot, die Höhe zurück auf 56vh macht
+4 rot.
+
+---
+
+## E184 · Eine Erinnerung, die man schon kennt
+
+**25. August 2026.** Aus Redurs Mund, während er an etwas anderem arbeitete:
+
+> „kannst du die ‚1 Karte ist fällig'-Meldung weg machen, das kommt immer."
+
+Sie kam wirklich immer: bei jedem Öffnen und bei jedem Neuladen, 1,8
+Sekunden nach dem Start, quer über den unteren Bildschirmrand — auch über
+einen gerade geöffneten Dialog.
+
+Den Schalter dafür gab es seit jeher („Karteikarten · Beim Start melden"),
+und er stand auf an. Aber das war die einzige Wahl: alles oder nichts. Wer
+an Redion arbeitet und vierzigmal neu lädt, sah sie vierzigmal.
+
+**Falsch war nicht, dass es sie gibt, sondern wie oft.** Eine Erinnerung,
+die man schon kennt, ist keine Erinnerung mehr, sondern Lärm — und Lärm
+bringt einen dazu, auch das Nützliche abzuschalten. Sie merkt sich jetzt den
+Tag.
+
+Der Merker wird **nur gesetzt, wenn wirklich etwas gezeigt wurde.** Sonst
+verschluckte ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr,
+wenn dann welche fällig sind. Das ist der Punkt, den man beim Bauen leicht
+falsch macht, und `test236` §5 hält ihn fest.
+
+Prüflauf: `test236`, 16 Punkte. Die Gegenprobe — das alte „bei jedem Start"
+wieder eingebaut — macht genau die zwei Punkte rot, über die sich beschwert
+wurde.
+
+Beim Schreiben der Prüfung fiel noch etwas auf: der erste Wurf suchte
+`.toast`-Knoten. Die gibt es nicht — es gibt EIN Element `#toast`, dem
+`.show` angehängt wird. Alle „kein Streifen"-Punkte waren damit grün, ohne
+irgendetwas zu messen. Sie lesen jetzt `#toast` samt `.show`.
+
+---
+
+## E185 · Das Dashboard sieht über den eigenen Rand (L17)
+
+**25. August 2026.**
+
+L17 nannte vier fehlende Dinge, und beim Nachsehen hingen alle vier an
+derselben Stelle: daran, was in einer Kachel stehen darf.
+
+```txt
+mehrere Datenquellen   `quelle`   eine FREMDE Datenbank statt der eigenen
+KPI-Karten             `ziel`     eine Zahl gegen ein Ziel, mit Richtung
+Layout                 —          jede Kachel einzeln weg und verschieben
+Diagrammquellen        `wertKey`  die Verteilung SUMMIERT eine Spalte
+```
+
+### Die fremde Quelle
+
+Bis hierher zeigte ein Dashboard genau eine Datenbank: seine eigene. Jetzt
+kann eine Kachel sagen, woher sie ihre Zahlen nimmt — „Summe · Betrag aus
+Rechnungen" auf einem Dashboard über Aufträge.
+
+**Die fremden Zeilen kommen ungefiltert.** Ein Filter gehört zu einer
+Ansicht, und die fremde Datenbank hat ihre eigenen — welche davon gälte? Eine
+Kachel „Summe · Betrag aus Rechnungen" muss den Betrag ALLER Rechnungen
+nennen, sonst nennt sie eine Zahl, deren Bedeutung von einer Einstellung
+anderswo abhängt. Das ist die Sorte Zahl, der man nicht trauen kann. Unter
+der Karte steht der Name der Quelle, damit man weiss, woher sie kommt, und
+im Fuss steht, wie viele Kacheln von woanders sind.
+
+Eine Quelle, die es nicht mehr gibt, ergibt 0 statt eines Absturzes — eine
+gelöschte Datenbank ist ein normaler Fall.
+
+### Die Kennzahl mit Ziel
+
+Eine Zahl allein ist keine Kennzahl. „48 000" sagt nichts; „48 000 von
+60 000" sagt alles. Dazu die **Richtung**: bei Umsatz ist mehr besser, bei
+Fehlern und Kosten weniger. Ohne sie müsste die Farbe raten, und eine
+ratende Farbe ist schlimmer als keine — deshalb wird beim Anlegen gefragt.
+
+```txt
+200 von 400, Ziel erreichen     ▴ 50 %,  orange   noch nicht
+200 von 150, Ziel erreichen     ✓ 133 %, grün     geschafft
+200 von 400, Obergrenze         ✓,       grün     gehalten
+200 von 150, Obergrenze         ▾ 133 %, orange   gerissen
+ohne Ziel                       „Ohne Ziel"       kein Balken, keine Farbe
+```
+
+**Der Balken wird bei 100 % gekappt, die Zahl nicht.** Ohne den Deckel liefe
+er aus der Karte, und 340 % sähen aus wie 100 %. Die Zahl daneben sagt
+weiterhin die Wahrheit.
+
+**Und die Farbe trägt die Aussage nicht allein** (§38): ✓ ▴ ▾ stehen daneben,
+und die Farbe liegt am Rand und am Balken, nicht auf der Zahl.
+
+### Die Diagrammquelle
+
+Die Verteilung zählte immer nur ZEILEN: „12 Aufträge in Zürich". Was man
+wissen will, ist meistens „180 000 Umsatz in Zürich" — dieselbe Gruppierung,
+ein anderer Wert. `wertKey` nennt die Zahlenspalte; ohne ihn wird gezählt
+wie bisher.
+
+Bei einer Mehrfachauswahl zählt eine Zeile in JEDER ihrer Gruppen, und die
+Summe der Balken ist dann grösser als das Ganze. Das ist richtig so und
+steht als Kommentar im Code, damit es nicht später als Fehler „behoben" wird.
+
+### Das Layout
+
+Es gab „Alle Kacheln entfernen" und sonst nichts. Wer eine falsche
+hinzugefügt hatte, musste alle wegwerfen. Jetzt hat jede Kachel drei
+Griffe: nach vorn, nach hinten, weg. Die Reihenfolge steht in der Ansicht,
+nicht nur im Bild.
+
+Was Griffe trägt, bekommt die Klasse `dash-kachel`. „Zuletzt geändert" und
+„Als Nächstes" tragen dieselbe Klasse `dash-block`, sind aber feste Teile
+des Dashboards — ohne diese Marke kann weder die CSS noch ein Prüflauf die
+beiden auseinanderhalten.
+
+### Was das Hinsehen fand, und keine Prüfung hatte
+
+Die Griffe lagen absolut oben rechts **über dem Inhalt**. Im Bild stand:
+
+```txt
+408000
+   ⟵ und darüber, auf der letzten Null, der ✕-Knopf
+```
+
+Also lesbar als `40800`. Beide sind gültige Zahlen, nur eine ist die
+richtige — derselbe Fund wie in CLAUDE.md §55.2, wo `634.2166666667` als
+`34.2166666667` dastand.
+
+Der Platz wird jetzt **reserviert** statt beim Darüberfahren geschaffen. Ihn
+erst beim Zeigen zu nehmen hiesse, dass jede Kachel unter dem Mauszeiger
+springt; 18 px Streifen sind billiger als eine Zahl, die etwas anderes
+behauptet, als sie ist.
+
+Und: „Summe · Summe · Offene Rechnungen" stotterte, weil die Spalte wie die
+Rechenart heisst. Heissen sie gleich, steht es einmal da.
+
+### Drei Prüfungen, die zuerst nichts gemessen haben
+
+**§7 konnte nicht rot werden.** Die Messung nahm die vorhandenen Zeilen —
+Summe 200. Drei Zeichen stossen an nichts an, und die Gegenprobe blieb grün.
+Jetzt steht eine zehnstellige Zahl im Prüfstand.
+
+**Die Überschrift stösst erst am Telefon an.** Am Rechner ist der Block
+530 px breit; eine Überschrift von 254 px erreicht die Griffe gar nicht. Bei
+390 px Breite tut sie es — dort wird `padding-right` gebraucht, und dort
+wird es gemessen.
+
+**Und `browser.newPage()` öffnet einen neuen Kontext** mit eigener
+IndexedDB. Die erste Fassung der Telefonmessung stand deshalb vor einem
+leeren Arbeitsbereich. Dieselbe Falle wie in test231; jetzt wird die
+Fenstergrösse derselben Seite geändert.
+
+Prüflauf: `test237`, 55 Punkte, sieben Gegenproben — Quelle ignoriert (2
+rot), Richtung ignoriert (3), `wertKey` ignoriert (3), Verschieben ohne
+Wirkung (4), Balken ohne Deckel (1), Griffe zurück auf den Inhalt (3),
+Stottern zurück (1).

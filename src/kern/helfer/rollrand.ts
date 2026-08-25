@@ -79,18 +79,45 @@ const Rollrand = (() => {
    */
   type Art = 'rand' | 'mehr';
 
+  /**
+   * QUER ODER HOCH.
+   *
+   * Bis E183 mass diese Datei nur die Waagerechte — Tabellen und
+   * Knopfleisten rollen zur Seite. Das Einlesefenster rollt nach UNTEN, und
+   * der Fund war derselbe wie bei der Tabelle: die achte Quelle stand 28 px
+   * unter der Kante, ihre Beschreibung war weg, und nichts sagte es.
+   *
+   * Es wäre leicht gewesen, dafür eine zweite kleine Rechnung neben diese zu
+   * schreiben. Genau das ist L34 — ein Wert an zwei Stellen, nichts erzwingt
+   * Gleichheit. Also misst dieselbe Funktion beide Achsen, und `quer` bleibt
+   * die Vorgabe, damit sich für keinen der sechs bisherigen Aufrufer etwas
+   * ändert.
+   *
+   * Die WÖRTER sind je Achse andere, weil sie in der CSS stehen und dort
+   * etwas bedeuten: `links rechts` beim Queren, `oben unten` beim Hochen.
+   */
+  type Achse = 'quer' | 'hoch';
+
   /** Wohin, und in welcher Sprache. `an` ist nötig, weil die
       Markierungsleiste im PDF das Merkmal an ihrem ELTERNTEIL trägt: gerollt
       wird `.blatt-tools`, den Schatten zeichnet `.blatt-reihe`. */
-  type Wahl = { art?: Art; an?: HTMLElement | null };
+  type Wahl = { art?: Art; an?: HTMLElement | null; achse?: Achse };
 
-  const schreibe = (ziel: HTMLElement, art: Art, links: boolean, rechts: boolean): void => {
+  /** Die Wörter je Achse: [vor dem sichtbaren Teil, danach]. */
+  const WORTE: Record<Achse, [string, string]> = {
+    quer: ['links', 'rechts'],
+    hoch: ['oben',  'unten']
+  };
+
+  const schreibe = (ziel: HTMLElement, art: Art, achse: Achse,
+                    davor: boolean, danach: boolean): void => {
+    const [a, b] = WORTE[achse];
     if (art === 'mehr') {
-      const wert = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+      const wert = davor && danach ? 'beides' : danach ? b : davor ? a : 'nein';
       if (ziel.dataset['mehr'] !== wert) ziel.dataset['mehr'] = wert;
       return;
     }
-    const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
+    const wert = [davor ? a : '', danach ? b : ''].filter(Boolean).join(' ');
     /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
        Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
     if (wert) { if (ziel.dataset['rand'] !== wert) ziel.dataset['rand'] = wert; }
@@ -99,9 +126,13 @@ const Rollrand = (() => {
 
   /** Setzt `data-rand` bzw. `data-mehr` nach dem aktuellen Rollstand. */
   const pruefe = (feld: HTMLElement, wahl: Wahl = {}): void => {
-    const links  = feld.scrollLeft > SPIEL;
-    const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
-    schreibe(wahl.an || feld, wahl.art || 'rand', links, rechts);
+    const achse = wahl.achse || 'quer';
+    const hoch  = achse === 'hoch';
+    const stand = hoch ? feld.scrollTop    : feld.scrollLeft;
+    const sicht = hoch ? feld.clientHeight : feld.clientWidth;
+    const ganz  = hoch ? feld.scrollHeight : feld.scrollWidth;
+    schreibe(wahl.an || feld, wahl.art || 'rand', achse,
+             stand > SPIEL, stand + sicht < ganz - SPIEL);
   };
 
   /**
@@ -122,7 +153,8 @@ const Rollrand = (() => {
       beobachter = new ResizeObserver(nachsehen);
       beobachter.observe(feld);
       /* Auch der Inhalt zählt — eine neue Spalte macht `scrollWidth` grösser,
-         ohne dass sich am Feld selbst etwas ändert. */
+         beim Hochen eine neue Zeile `scrollHeight`, ohne dass sich am Feld
+         selbst etwas ändert. */
       const inhalt = feld.firstElementChild;
       if (inhalt) beobachter.observe(inhalt);
     }

@@ -249,9 +249,16 @@ const pruef = (n: any, ist: any, soll: any) => {
     quellen: document.querySelectorAll('.ax-liste button').length,
     namen: [...document.querySelectorAll<HTMLElement>('.ax-text b')].map(x => x.textContent)
   }));
-  pruef('Sechs Quellen zur Wahl', dialog.quellen, 6);
-  pruef('Trello ist dabei',       (dialog.namen ?? '').includes('Trello'), true);
+  /* NICHT die Zahl allein: „acht Quellen" ist auch dann grün, wenn zwei
+     falsche dastehen. Gemessen werden die NAMEN — und die Zahl daneben nur
+     noch, damit ein stummes Verschwinden auffällt (E182). */
+  pruef('Jede Quelle hat einen Namen', dialog.quellen, (dialog.namen ?? []).length);
+  pruef('Trello ist dabei',        (dialog.namen ?? '').includes('Trello'), true);
   pruef('Notion-Export ist dabei', (dialog.namen ?? '').includes('Notion-Export'), true);
+  pruef('Asana ist dabei',         (dialog.namen ?? '').includes('Asana'), true);
+  pruef('Apple Notes ist dabei',   (dialog.namen ?? '').includes('Apple Notes'), true);
+  pruef('Der allgemeine CSV-Weg steht daneben',
+    (dialog.namen ?? []).some((n: any) => /sonstige CSV/.test(String(n))), true);
 
   console.log(`\n${ok}/${ok + bad} bestanden`);
   console.log(fehler.length ? 'JS-Fehler:\n' + fehler.join('\n') : 'Keine JS-Fehler.');

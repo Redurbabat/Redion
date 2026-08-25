@@ -428,17 +428,71 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 /* Dashboard-Ansicht */
 .dash{display:flex; flex-direction:column; gap:14px}
 .dash-zahlen{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px}
-.dash-karte{border:1px solid var(--line); border-radius:9px; padding:14px 16px;
-  display:flex; flex-direction:column; gap:3px}
+/* DER STREIFEN OBEN IST FÜR DIE GRIFFE, und er ist IMMER da (E185).
+   Erste Fassung: die Griffe lagen absolut oben rechts ÜBER dem Inhalt.
+   Gemessen sah das so aus — `408000` mit einem Knopf über der letzten
+   Null, also lesbar als `40800`. Beide Zahlen sind gültig, nur eine ist
+   die richtige: derselbe Fund wie in CLAUDE.md §55.2.
+
+   Der Platz wird deshalb RESERVIERT statt beim Darüberfahren geschaffen.
+   Ihn erst beim Zeigen zu nehmen hiesse, dass jede Kachel unter dem
+   Mauszeiger springt — und 18 px Streifen sind billiger als eine Zahl,
+   die etwas anderes behauptet, als sie ist. */
+.dash-karte{border:1px solid var(--line); border-radius:9px; padding:30px 16px 14px;
+  display:flex; flex-direction:column; gap:3px; position:relative}
+
+/* --- Die Griffe an einer Kachel (E185) ------------------------------------
+   Bis dahin gab es nur „Alle Kacheln entfernen": wer eine falsche
+   hinzugefügt hatte, musste alle wegwerfen. Sie sind unsichtbar, bis man
+   die Kachel berührt — und am Telefon IMMER da, weil es dort kein
+   Darüberfahren gibt (§37). 28 px sind unter den 44 px aus §38; das ist
+   vertretbar, weil es keine Kernfunktion ist und daneben nichts liegt, was
+   man versehentlich träfe. */
+.dk-griffe{position:absolute; top:4px; right:6px; display:flex; gap:2px; opacity:0;
+  transition:opacity .12s}
+.dash-karte:hover .dk-griffe, .dash-block:hover .dk-griffe,
+.dk-griffe:focus-within{opacity:1}
+.dk-griffe button{width:24px; height:22px; border:0; border-radius:6px; padding:0;
+  background:var(--bg-hover); color:var(--text-dim); font-size:13px; line-height:1; cursor:pointer}
+.dk-griffe button:hover{background:var(--bg-input); color:var(--text)}
+/* Am Telefon gibt es kein Darüberfahren — dort stehen sie immer da, und
+   dann brauchen sie auch mehr Streifen (§37). */
+@media (hover:none){
+  .dk-griffe{opacity:1}
+  .dk-griffe button{width:30px; height:28px}
+  .dash-karte{padding-top:36px}
+  .dash-block{padding-top:38px}
+  .dash-block.dash-kachel h4{padding-right:0} }
+
+/* --- Die Kennzahl mit Ziel (E185) -----------------------------------------
+   Eine Zahl allein ist keine Kennzahl: „48 000" sagt nichts, „48 000 von
+   60 000" sagt alles. Die Farbe kommt an den RAND und an den Balken, nicht
+   auf die Zahl — auf Farbe allein darf keine Information liegen (§38). Das
+   Zeichen ✓ ▴ ▾ trägt dieselbe Aussage ohne Farbe. */
+.dash-kpi{gap:5px}
+.dz-ziel{font-size:12px; color:var(--text-dim); font-variant-numeric:tabular-nums}
+.dz-balken{height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden; margin-top:2px}
+.dz-balken i{display:block; height:100%; border-radius:3px; background:var(--text-faint)}
+.dash-karte.kpi-gut{border-color:#3f8f5f}
+.dash-karte.kpi-gut .dz-balken i{background:#3f8f5f}
+.dash-karte.kpi-offen{border-color:#b07a2a}
+.dash-karte.kpi-offen .dz-balken i{background:#b07a2a}
 .dz-wert{font-size:26px; font-weight:600; line-height:1.1}
 .dz-name{font-size:12px; color:var(--text-faint)}
-.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px}
+.dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px; position:relative}
+/* Die Überschrift darf umbrechen — eine Zahl darf das nicht. Deshalb hier
+   Platz zur Seite statt eines Streifens nach oben. */
+.dash-block.dash-kachel h4{padding-right:88px}
 .dash-block h4{font-size:13px; font-weight:500; color:var(--text-dim); margin:0 0 10px}
 .dash-balken{display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px}
 .db-name{width:120px; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .db-strich{flex:1; height:9px; background:var(--bg-input); border-radius:5px; overflow:hidden}
 .db-strich i{display:block; height:100%; border-radius:5px}
-.db-zahl{width:34px; text-align:right; color:var(--text-faint); font-size:12.5px}
+/* 34 px reichten für eine Anzahl. Seit die Verteilung auch SUMMEN zeigen
+   kann (E185), stehen dort Beträge — `min-width` statt `width`, sonst
+   endet „184 500" als „184 5". Genau der Fund aus CLAUDE.md §55.2. */
+.db-zahl{min-width:34px; flex:0 0 auto; text-align:right; color:var(--text-faint);
+  font-size:12.5px; font-variant-numeric:tabular-nums}
 .dash-zeile{display:flex; align-items:center; gap:12px; width:100%; padding:6px 4px;
   border-radius:6px; font-size:13.5px; text-align:left}
 .dash-zeile:hover{background:var(--bg-hover)}
@@ -2065,7 +2119,24 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-titel del{background:var(--b-red); color:var(--c-red)}
 
 /* Aus anderen Werkzeugen übernehmen */
-.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:56vh; overflow:auto}
+/* 62vh statt 56: am Rechner fehlten mit acht Quellen genau 28 px, und die
+   Höhe war ohne Grund knapper als der Platz im Fenster (E183). */
+.ax-liste{display:flex; flex-direction:column; padding:8px 10px; gap:2px; max-height:62vh; overflow:auto}
+/* Und wo es doch nicht reicht — am Telefon reicht es nie —, läuft die Kante
+   aus, statt scharf abzuschneiden. `Rollrand` setzt `data-rand` mit den
+   Wörtern der senkrechten Achse. Eine MASKE, kein aufgelegtes Element: ein
+   Pseudo-Element im Rollfeld rollte mit und wäre nach dem ersten Wisch weg. */
+.ax-liste[data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, #000 calc(100% - 34px), transparent)}
+.ax-liste[data-rand~="oben"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px)}
+.ax-liste[data-rand~="oben"][data-rand~="unten"]{
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent);
+          mask-image:linear-gradient(to bottom, transparent, #000 34px,
+                     #000 calc(100% - 34px), transparent)}
 .ax-liste button{display:flex; gap:12px; align-items:center; padding:10px 12px; border:0;
                  background:transparent; border-radius:8px; cursor:pointer; text-align:left; width:100%}
 .ax-liste button:hover{background:var(--bg-hover)}
@@ -3198,3 +3269,85 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     padding:14px 14px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
   .document-inspector button{min-height:44px}.document-inspector-heading button{min-width:44px}
 }
+
+/* --- Was wäre, wenn (L28, E176) ------------------------------------------
+   Der heutige Wert steht neben der Spalte, nicht über ihr; die Antwort steht
+   in Textfarbe, nicht in Hinweisgrau — sie ist das, wofür der Dialog da ist. */
+.ww-jetzt{ display:block; margin-top:4px; font-size:13px; color:var(--text-faint) }
+.ww-ergebnis{ min-height:20px; padding:10px 12px; border-radius:8px;
+  background:var(--bg-hover); color:var(--text); font-size:14px; line-height:1.5 }
+.ww-ergebnis:empty{ display:none }
+
+/* --- Vorführmodus (L31, E177) --------------------------------------------
+   Der Balken schiebt die App nach unten, statt sie zu überdecken: ein
+   Hinweis, der eine Werkzeugleiste verdeckt, wird weggeklickt und damit
+   nicht gelesen.
+
+   FEST UND NICHT KLEBEND. `position:sticky` machte ihn zu einem Flex-Element
+   von `body` — und `body` ist eine Flex-ZEILE (Seitenleiste | Inhalt). Der
+   Balken bekam damit eine eigene Spalte über die volle Höhe: der halbe
+   Bildschirm war orange, der Text stand als schmaler Streifen am Rand. Mit
+   Augen gesehen, von keiner Prüfung bemerkt — „Ein Balken steht da" war
+   grün (§55).
+
+   Die Höhe kommt aus der Messung, nicht aus einer Zahl: am Telefon bricht
+   der Satz auf zwei Zeilen um, und ein festes `42px` liesse ihn dann über
+   der App liegen.
+
+   UND DUNKLER TEXT AUF DEM ORANGE, nicht weisser. Gemessen: Weiss auf
+   `#f97316` ergibt 2,6:1 — unter den 4,5:1, die §38 für gewöhnlichen Text
+   verlangt, und auf dem Bild sah es genau danach aus. Sehr dunkles Braun
+   ergibt 7,7:1. */
+#demo-balken{ position:fixed; top:0; left:0; right:0; z-index:200;
+  display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  padding:8px 14px; font-size:14px; line-height:1.4;
+  background:var(--accent, #e8730a); color:#231000 }
+#demo-balken a{ color:#231000; text-decoration:underline }
+body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
+
+/* --- Spalten aufräumen (L27, E178) ---------------------------------------
+   Die Vorschau ist der Kern des Dialogs, nicht sein Beiwerk: sie zeigt
+   „vorher → nachher" und darf deshalb Platz haben. Das Alte durchgestrichen
+   wäre falsch — es wird ersetzt, nicht gelöscht. */
+.au-griffe{ display:grid; gap:6px }
+.au-griff{ display:flex; align-items:center; gap:8px; font-size:14px }
+.au-was{ color:var(--text-faint); font-size:12px }
+.au-ersetzen{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap }
+.au-ersetzen label{ display:flex; flex-direction:column; gap:4px; font-size:13px }
+.au-ersetzen input[type=text],.au-ersetzen input:not([type]){ min-width:150px }
+.au-ganz{ flex-direction:row !important; align-items:center; gap:6px }
+.au-vorschau{ max-height:240px; overflow:auto; padding:10px 12px;
+  border-radius:8px; background:var(--bg-hover); font-size:13px }
+.au-kopf{ font-weight:600; margin-bottom:6px }
+.au-zeile{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px;
+  align-items:baseline; padding:3px 0 }
+.au-alt{ color:var(--text-faint) }
+.au-pfeil{ color:var(--text-faint) }
+.au-neu{ color:var(--text) }
+.au-mehr,.au-nichts{ color:var(--text-faint); padding-top:6px }
+
+/* --- Die Blattleiste am Telefon (E179, §37) -------------------------------
+   `.blatt-reihe` ist eine Zeile: links die rollende Werkzeugleiste, rechts
+   der feste Teil (Seitenzahl, 🔗, und seit E173 das ⊕). Jeder Knopf rechts
+   nimmt links Platz weg — bei 390 px Fensterbreite kostete das ⊕ die
+   Werkzeugleiste 28 px und drückte sie von 290 auf 262. `test210 §4` hat
+   das gemeldet, und es hatte recht: eine Zeichenleiste, die ein Viertel
+   der Breite an eine Seitenzahl verliert, ist am Telefon keine.
+
+   Also umbrechen: unten die Angaben, oben die volle Breite zum Zeichnen. */
+@media (max-width:760px){
+  .blatt-reihe{ flex-wrap:wrap }
+  .blatt-werk{ flex:1 1 100%; min-width:100% }
+  .blatt-fest{ flex:1 1 100%; justify-content:flex-end;
+               padding:0 8px 6px; border-top:1px solid var(--rand) }
+}
+
+/* --- „50 von 300 Zeilen" (L22, E180) --------------------------------------
+   Unter der Ansicht, nicht im Tabellenfuss: `begrenzen` gilt für jede
+   Ansichtsart, und in den Tabellenfuss geschrieben hätten Board, Galerie
+   und Feed weiter stumm abgeschnitten. */
+.db-grenze{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:8px 4px 2px; font-size:13px; color:var(--text-faint) }
+.db-grenze button{ padding:3px 10px; border-radius:6px; font-size:13px;
+  color:var(--text); background:var(--bg-hover) }
+.db-grenze button:hover{ background:var(--rand) }

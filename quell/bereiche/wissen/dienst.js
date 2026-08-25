@@ -356,32 +356,21 @@ const WissenDienst = (() => {
                     return;
                 const stil = b.stil && typeof b.stil === 'object' && Object.keys(b.stil).length
                     ? { ...b.stil } : null;
-                if (b.color || stil)
-                    gemerkt.push({ type: String(b.type || ''), text: String(b.text || ''),
-                        ...(b.color ? { color: String(b.color) } : {}),
-                        ...(stil ? { stil } : {}) });
+                gemerkt.push({ id: String(b.id), type: String(b.type || ''),
+                    text: String(b.text || ''),
+                    ...(b.color ? { color: String(b.color) } : {}),
+                    ...(stil ? { stil } : {}) });
                 merke(b.id);
             });
         };
         merke(p.id);
-        const setzeWiederAuf = (id) => {
-            Store.childrenOf(id).forEach((b) => {
-                if (!mdTraegt(b))
-                    return;
-                const i = gemerkt.findIndex(x => x.type === String(b.type || '') &&
-                    x.text === String(b.text || ''));
-                if (i >= 0) {
-                    const [treffer] = gemerkt.splice(i, 1);
-                    const aenderung = {};
-                    if (treffer && treffer.color)
-                        aenderung['color'] = treffer.color;
-                    if (treffer && treffer.stil)
-                        aenderung['stil'] = treffer.stil;
-                    if (Object.keys(aenderung).length)
-                        Store.updateBlock(b.id, aenderung);
-                }
-                setzeWiederAuf(b.id);
-            });
+        /** Was dieser Block einmal war — Kennung, Farbe, Schrift. Höchstens einmal. */
+        const holeGemerktes = (typ, text) => {
+            const i = gemerkt.findIndex(x => x.type === typ && x.text === String(text ?? ''));
+            if (i < 0)
+                return null;
+            const [treffer] = gemerkt.splice(i, 1);
+            return treffer ?? null;
         };
         try {
             Store.kinderLeeren(p.id);
@@ -425,9 +414,22 @@ const WissenDienst = (() => {
                 stapel.length = t + 1;
                 return stapel[t];
             };
-            /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken. */
+            /* Anlegen UND als möglichen Elternteil der nächsten Ebene merken.
+               Die EINZIGE Stelle, an der beim Übernehmen ein Block entsteht —
+               deshalb steht die Wiederverwendung genau hier und nirgends sonst. */
             const lege = (roh, typ, felder) => {
-                const b = Store.addBlock(elternFuer(roh), typ, felder);
+                const alt = holeGemerktes(typ, felder ? felder['text'] : '');
+                const mit = { ...(felder || {}) };
+                if (alt) {
+                    /* Die Kennung des Blocks, der hier stand. `Store.kinderLeeren` hat
+                       ihn eben endgültig gelöscht, sie ist also frei. */
+                    mit['id'] = alt.id;
+                    if (alt.color)
+                        mit['color'] = alt.color;
+                    if (alt.stil)
+                        mit['stil'] = alt.stil;
+                }
+                const b = Store.addBlock(elternFuer(roh), typ, mit);
                 stapel.push(b.id);
                 return b;
             };
@@ -583,10 +585,11 @@ const WissenDienst = (() => {
         }
         finally {
             retteUebrige();
-            /* Erst NACH `retteUebrige`: die zurückgehängten Blöcke gehören zum
-               Baum, und ein Platzhalter kann ebenso gefärbt gewesen sein. */
-            if (gemerkt.length)
-                setzeWiederAuf(p.id);
+            /* Hier stand bis E174 ein zweiter Durchgang, der die Farben nachträglich
+               wieder aufsetzte. Er ist fort: `lege` gibt sie jetzt beim Anlegen mit,
+               zusammen mit der Kennung und nach derselben Regel. Ein Durchgang
+               statt zwei, und eine Zuordnung statt zweier, die auseinanderlaufen
+               können. */
         }
     };
     /* --------------------------------------------------------------------------

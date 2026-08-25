@@ -224,11 +224,12 @@ const Lebensbereiche = (() => {
   const jetztIso = (): string => typeof Store.now === 'function'
     ? String(Store.now()) : new Date().toISOString();
 
-  const rightsActive = (): boolean =>
-    typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
+  /* Siehe `kern/zugang/lesefrage.ts` — dieselbe Frage stand hier und in
+     `arbeitswelt.ts` je einmal, mit zwei Antworten (L50, E181). */
+  const rightsActive = (): boolean => Lesefrage.aktiv();
 
   const erlaubt = (aktion: Aktion, pageId: string): boolean =>
-    !rightsActive() || (!!pageId && Konten.darf(aktion, pageId));
+    Lesefrage.erlaubt(aktion, pageId);
 
   const globalBearbeitbar = (pageId = ''): boolean => {
     if (!rightsActive()) return true;
