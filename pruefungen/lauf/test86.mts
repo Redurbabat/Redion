@@ -205,6 +205,7 @@ r = await seite.evaluate(() => ({
   vorlageName: (Register.vorlagen.eines('habit') || {}).name,
   fassung: Register.vorlagen.fassung('habit'),
   module: Register.module.anzahl(),
+  modulListe: Register.module.alle().length,
   modulUnbekannt: Register.module.oeffne('gibtsnicht'),
   navOben: Register.navigation.anPlatz('oben').map((x: any) => x.id),
   navUnten: Register.navigation.anPlatz('unten').length,
@@ -216,7 +217,14 @@ r = await seite.evaluate(() => ({
 }));
 p('Vorlagen sind da',           r.vorlagen >= 10 && r.vorlageName === 'Habit-Tracker', JSON.stringify(r));
 p('Mit Fassungsnummer',         r.fassung === 2, String(r.fassung));
-p('Acht Bereiche',              r.module === 8, String(r.module));
+/* Hier stand `r.module === 8` — eine festgeschriebene Zahl. Sie ging rot,
+   als L51 sechs vorhandene Module endlich eintrug: eine RICHTIGE Änderung
+   liess die Prüfung scheitern, und das ist der falsche Alarm, den niemand
+   zweimal ernst nimmt. Geprüft wird jetzt der Vertrag statt der Zahl —
+   `anzahl()` muss zur Liste passen, und die acht Ursprünglichen müssen
+   drin sein. Welche sechs dazugekommen sind, prüft test222 namentlich. */
+p('Der Bereichskatalog zählt sich richtig',
+  r.module === r.modulListe && r.module >= 8, `${r.module} gezählt, ${r.modulListe} in der Liste`);
 p('Ein unbekannter Bereich tut nichts', r.modulUnbekannt === false);
 p('Die Seitenleiste hat eine Ordnung',
   r.navOben[0] === 'suche' && r.navUnten >= 5, JSON.stringify(r.navOben));

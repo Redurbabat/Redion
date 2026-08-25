@@ -119,23 +119,32 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | §43 | E154, test219 | der Obsidian-Rundlauf, einmal ganz durchgelaufen |
 | §44 | E155, test220 | der Weg zurück zur Quelle; offen bleibt **L57** |
 | §47 | E148, test214 | vier Sachen, die nur das Hinsehen fand |
+| §47 | E156, test221 | „Volle Breite" gab am Telefon WENIGER Breite |
+| — | E157, alle.mts | ein Lauf, der wartet, sah aus wie einer, der rechnet |
+| CLAUDE.md §5 | E158, test222 | sechs Bereiche standen in keinem Katalog; **L51 halb zu** |
 
-Neun neue Prüfläufe (test212 bis test220), dazu neue Abschnitte in test181,
-test206 und test218. Gezählt, nicht geschätzt:
+Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
+test206, test218 und test86. Gezählt, nicht geschätzt:
 
 ```txt
-5   fanden einen Fehler im Produkt      E146 · E147 · E148 · E151 · E152/E153
+7   fanden einen Fehler im Produkt      E146 · E147 · E148 · E151 · E152/E153
+                                        E156 · E158
 2   bauten etwas, das fehlte            E150 (OCR-Dienst) · E155 (Rücksprung)
+1   fand einen Fehler an der Prüfseite  E157 (ein Lauf hing 25 Minuten, und
+                                        niemand sah es ihm an)
 2   fanden nichts — und das ist gut     test215, test219 hielten fest, was
                                         steht, damit es nicht wegrutscht
 ```
 
-Und in **sechs** davon steckte ein Fehler nicht im Produkt, sondern in meiner
+Und in **acht** davon steckte ein Fehler nicht im Produkt, sondern in meiner
 eigenen Messung: ein `textContent`, das kein Tippen ist (E145); ein `|| -1`
 auf einem Zähler, der bei 0 anfängt (E146); ein `clientWidth`, das die
 Innenabstände mitzählt (E148); ein Suchbereich, der die Notiz auch woanders
-fand (E149); ein `\b2\b`, das die 2 aus „SM-2" nahm (E151); und eine
-Zuordnung, auf der ich `.find()` aufrief (E155).
+fand (E149); ein `\b2\b`, das die 2 aus „SM-2" nahm (E151); eine Zuordnung,
+auf der ich `.find()` aufrief (E155); ein `getBoundingClientRect()`, das den
+Kasten misst und nicht die Schrift darin (E156); und ein `.toast`, das es
+gar nicht gibt — gesucht wurde eine Kachelliste, vorhanden ist EIN festes
+Element namens `#toast` (E158).
 
 Das ist die teurere Sorte, und deshalb steht sie bei jedem Eintrag dabei: ein
 Punkt, der aus dem falschen Grund grün ist, fällt niemandem auf.

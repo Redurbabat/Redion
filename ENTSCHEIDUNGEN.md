@@ -10402,3 +10402,107 @@ negativer Rand der Werkzeugzeile bleibt       → §5 rot: 408 auf 390 px
 „Volle Breite" deutlich mehr geben als die gewöhnliche Seite. Wer die Ränder
 überall gleichmacht, macht §4 rot. Und §5 prüft mit, dass die Arbeitsfläche
 selbst randlos BLEIBT — der Rand gehört dem Kopf, nicht dem Dokument.
+
+
+## E158 · Sechs Bereiche standen in keinem Katalog (L51, §5 Regel 2)
+
+CLAUDE.md §5 Regel 2 ist ein Satz lang: „Neuer Bereich = zwei
+Register-Einträge." L51 hielt am 24. August fest, dass sechs Module diese
+Regel nicht einhalten — Lernwelt, Arbeitswelt, Lebensbereiche, Electrical,
+Recognition und DocumentMode hingen ausschliesslich an `globalThis`.
+
+Im Betrieb war das kein Fehler. Es lief; jeder Knopf, der sie aufrief, rief
+sie auf. Der Preis stand woanders, und er ist unsichtbar, solange niemand
+danach fragt: **ein Modul ohne Eintrag ist für jede Übersicht unsichtbar.**
+Auch für die nächste Prüfung, die „alle Bereiche" durchgehen will. Auch für
+die Hilfe. Auch für den Menschen, der wissen will, was diese App eigentlich
+alles kann.
+
+Also stehen die sechs jetzt in `src/register/module.ts`, und
+`pruefungen/lauf/test222.mts` ist genau die Prüfung, die es vorher nicht
+geben konnte.
+
+### Was die Prüfung prüft — und warum nicht das Naheliegende
+
+Das Naheliegende wäre: sind die Einträge da? Das ist eine Liste, die sich
+selbst zählt, und sie beweist nichts. Geprüft wird deshalb, dass jeder
+Eintrag etwas TUT:
+
+    Register.module.oeffne(id)   muss true ergeben
+    ohne zu werfen
+    und danach muss sich am Bildschirm etwas geändert haben
+
+Die dritte Zeile ist die, auf die es ankommt. Sie hat beim ersten Lauf
+sofort einen Fehler gefunden, und zwar meinen eigenen.
+
+### Der Fund: ein Eintrag, der seinen Nachbarn nachspricht
+
+`lebensbereiche` rief `Produktwelten.workspace('uebersicht')` auf —
+dieselbe Zeile wie `arbeitswelt` direkt darüber. Da `arbeitswelt` in der
+Schleife unmittelbar davor lief, war die Arbeitswelt bereits offen, und der
+Bildschirm blieb, wie er war. Die Prüfung meldete `["lebensbereiche"]`.
+
+Das ist E118 mit einem anderen Namen: ein Katalogeintrag, der etwas
+verspricht und nichts aufmacht. Nur ist er hier schlimmer als ein toter
+Knopf, denn er behauptet zusätzlich, ein eigener Bereich zu sein.
+
+Der Grund war ein Denkfehler beim Eintragen. **Lebensbereiche sind kein
+Bildschirm.** Sie sind ein kleines Metafeld am schon vorhandenen Objekt
+(`bereiche/wissen/lebensbereiche.ts`, ausdrücklich „keine eigenen
+Speicher"). Der eine Ort, an dem man sie wirklich anfasst, ist die Zuordnung
+zur offenen Seite — dieselbe, die im Seitenmenü unter „Lebensbereiche
+zuordnen" hängt. Genau die macht der Eintrag jetzt auf. Ohne offene Seite
+sagt er, dass er eine braucht, statt zu schweigen.
+
+### Der zweite Fund: eine Meldung, die niemand messen konnte
+
+`dokumentmodus` sollte melden, warum er gerade nicht kann. Die Prüfung sah
+nie eine Meldung — und der Fehler lag bei der Prüfung, nicht am Produkt.
+Sie suchte `.toast` und `.toasts > *`. Beides gibt es nicht.
+
+`Hinweis.toast` schreibt in EIN festes Element, `#toast` in `index.html`,
+und blendet es über die Klasse `show` ein. Es wächst keine Kachelliste. Eine
+Prüfung, die nach einer Kachelliste sucht, findet nie etwas — und wäre bei
+einem stummen Modul genauso grün geblieben wie bei einem redenden. §55.2 in
+einem Satz: eine Prüfung, die immer „passt schon" sagt, ist keine Prüfung.
+
+Gemessen wird jetzt am `#toast`-Element, und zwar zweiteilig: erst leeren,
+dann auslösen, dann Text UND `show` lesen. Beides ist nötig. Ein alter Text,
+der stehenbleibt, wäre sonst ein falsches Grün; ein Text, der geschrieben
+aber nie gezeigt wird, ebenfalls.
+
+### Die Gegenproben (§55.2)
+
+Vier, einzeln an einem Abzug des Baums gesetzt und gemessen:
+
+| Gegenprobe | rot |
+|---|---|
+| A · die sechs Einträge wieder aus dem Register nehmen | 9 |
+| B · `lebensbereiche` zurück auf `workspace('uebersicht')` | 1 |
+| C · `dokumentmodus` steigt wortlos aus | 3 |
+| D · `Hinweis.toast` schreibt den Text, zeigt ihn aber nie | 2 |
+
+B ist der Fehler oben, rückwärts nachgestellt: genau ein Punkt, genau der
+richtige. D beweist, dass die `show`-Messung trägt und nicht Zierrat ist.
+
+### Und ein Kollateralschaden, der eine eigene Lehre ist
+
+test86 hatte die Zeile `p('Acht Bereiche', r.module === 8, …)`. Sie ging
+rot, weil sechs Module eingetragen wurden — also weil etwas RICHTIG gemacht
+wurde. Eine festgeschriebene Zahl prüft nichts als sich selbst; sie schlägt
+bei jeder legitimen Erweiterung an, und ein Alarm, der bei richtigen
+Änderungen losgeht, wird beim zweiten Mal weggeklickt.
+
+Geprüft wird dort jetzt der Vertrag statt der Zahl: `anzahl()` muss zur
+Länge von `alle()` passen, und die acht Ursprünglichen müssen drin sein.
+Gegenprobe: `anzahl: () => 8` fest verdrahten — rot, „8 gezählt, 14 in der
+Liste". Welche sechs dazugekommen sind, prüft test222 namentlich, und dort
+gehört es auch hin.
+
+### Was NICHT erledigt ist
+
+Die Seitenleiste. „Lernzentrum" und „Workspace" stehen als feste Zeilen in
+`index.html` (Zeilen 144 und 147), nicht in `Register.navigation`. Das ist
+der zweite Teil von L51 und ein eigener Umbau der Seitenleiste — hier
+absichtlich nicht mitgemacht, damit dieser Schritt eine Sache bleibt. L51
+bleibt deshalb offen und sagt jetzt genauer, was noch fehlt.

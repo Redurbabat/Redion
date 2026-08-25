@@ -1378,21 +1378,37 @@ Stellen ändern und wird die zweite vergessen.
 Zusammenlegen ist Arbeit mit Prüfungen dran, nicht nebenbei.
 
 
-## L51 · Die zwei Hauptwelten stehen in keinem Register
+## L51 · ~~Die Hauptwelten stehen in keinem Register~~ — die Seitenleiste fehlt noch
 
 **24. August 2026.** CLAUDE.md §5 Regel 2: „Neuer Bereich = zwei
-Register-Einträge." `Register.module` kennt editor, datenbanken, wissen, ki,
-verbinden, dateien — aber weder Lernwelt noch Arbeitswelt noch
-Lebensbereiche. Sie hängen ausschliesslich an `produktwelten.ts:63-64`, das
-sie über `globalThis` sucht.
+Register-Einträge." `Register.module` kannte editor, datenbanken, wissen,
+ki, verbinden, dateien — aber weder Lernwelt noch Arbeitswelt noch
+Lebensbereiche. Dasselbe galt für Electrical, Recognition und DocumentMode:
+kein Register-Eintrag, kein Befehl, kein Tastenkürzel.
 
-Dasselbe gilt für Electrical, Recognition und DocumentMode: kein
-Register-Eintrag, kein Befehl, kein Tastenkürzel.
+Kein Fehler im Betrieb — es lief. Der Preis stand woanders: ein Modul ohne
+Eintrag ist für jede Übersicht unsichtbar, auch für die nächste Prüfung, die
+„alle Bereiche" durchgehen will.
 
-Das ist kein Fehler im Betrieb — es läuft. Es ist eine Abweichung von der
-Architekturregel, und sie hat einen Preis: ein Modul ohne Register-Eintrag
-ist für jede Übersicht unsichtbar, auch für die nächste Prüfung, die „alle
-Bereiche" durchgehen will.
+**Erster Teil erledigt** (E158, 25. August): die sechs stehen in
+`src/register/module.ts`, und `pruefungen/lauf/test222.mts` ist genau die
+Prüfung, die es vorher nicht geben konnte. Sie prüft nicht, dass Einträge da
+sind — das wäre eine Liste, die sich selbst zählt —, sondern dass jeder
+etwas AUFMACHT. Beim ersten Lauf fand sie sofort einen: `lebensbereiche`
+rief dieselbe Zeile wie sein Nachbar auf, und auf dem Bildschirm änderte
+sich nichts.
+
+**Was offen bleibt: die Seitenleiste.** „Lernzentrum" und „Workspace" stehen
+als feste Zeilen in `index.html` (144 und 147), nicht in
+`Register.navigation`. Damit ist die zweite Hälfte von §5 Regel 2 —
+„navigation.js" — für die Hauptwelten weiter nicht erfüllt.
+
+Das ist kein Nachtrag von zwei Zeilen. `Register.navigation` ordnet nach
+Plätzen (oben, baum, unten), die festen Zeilen stehen in einer eigenen
+Gruppe mit eigenem Aussehen und eigener Markierung der aktiven Welt
+(`Produktwelten.markieren`). Wer sie ins Register hebt, baut die
+Seitenleisten-Reihenfolge um — und das will man nicht nebenbei tun,
+sondern als eine Sache, mit einem Bild vorher und einem nachher.
 
 
 ## L52 · ~~Zwei Willkommensdialoge~~ — die Prüfseite bleibt offen

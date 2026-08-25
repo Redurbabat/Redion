@@ -54,7 +54,66 @@ Register.module = (() => {
             oeffnen: () => (typeof Einstellungen !== 'undefined') && Einstellungen.oeffne() },
         { id: 'hilfe', name: 'Hilfe', icon: '?',
             was: 'Rundgang, Tastenkürzel, Wissensseiten, Umsetzungsstand.',
-            oeffnen: () => (typeof Rundgang !== 'undefined') && Rundgang.uebersicht() }
+            oeffnen: () => (typeof Rundgang !== 'undefined') && Rundgang.uebersicht() },
+        /* --- Was hier bis zum 25. August fehlte (L51) -------------------------
+           Sechs Module hingen ausschliesslich an `globalThis` und standen in
+           keinem Register. Im Betrieb war das kein Fehler — es lief. Der Preis
+           stand nur woanders: ein Modul ohne Eintrag ist für jede Übersicht
+           unsichtbar, auch für die nächste Prüfung, die „alle Bereiche"
+           durchgehen will. CLAUDE.md §5 Regel 2 meint genau das.
+    
+           `oeffnen` ist bei allen sechs ein GESCHÜTZTER Aufruf: fehlt das Modul,
+           passiert nichts, und `Register.oeffne` schreibt es in den Reporter.
+           Ein stiller Fehlschlag sähe aus wie ein toter Knopf (E118). */
+        { id: 'lernwelt', name: 'Lernen & Alltag', icon: '🎓',
+            was: 'Heute, Lernzentrale, Lernpfad, Fehler, Prüfungen, Schule, Uni, Arbeit.',
+            oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.lernen('heute') },
+        { id: 'arbeitswelt', name: 'Workspace', icon: '🧱',
+            was: 'Seiten, Bibliothek, Aufgaben, Kalender, Datenbanken, Whiteboards, Wiki, Vorlagen.',
+            oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.workspace('uebersicht') },
+        { id: 'lebensbereiche', name: 'Lebensbereiche', icon: '◎',
+            was: 'Schule, Arbeit, Privat — dieselbe Seite darf in mehreren stehen, ohne Kopie.',
+            /* KEIN EIGENER BILDSCHIRM, und der Eintrag darf das nicht behaupten.
+               Ein Lebensbereich ist ein kleines Metafeld am vorhandenen Objekt
+               (bereiche/wissen/lebensbereiche.ts), keine zweite Ablage. Der eine
+               Ort, an dem man ihn wirklich anfasst, ist die Zuordnung zur offenen
+               Seite — dieselbe, die im Seitenmenü unter „Lebensbereiche zuordnen“
+               hängt. Hier stand vorher `workspace('uebersicht')`: derselbe Aufruf
+               wie eine Zeile darüber. Auf dem Bildschirm änderte sich dann nichts,
+               und ein Eintrag, der nichts ändert, ist der tote Knopf aus E118 mit
+               einem anderen Namen. */
+            oeffnen: () => {
+                const id = (typeof App !== 'undefined' && App.aktuelleSeite) ? App.aktuelleSeite() : null;
+                const seite = id ? Store.getBlock(id) : null;
+                if (!seite || typeof Produktwelten === 'undefined') {
+                    if (typeof UI !== 'undefined')
+                        UI.toast('Lebensbereiche gehören zu einer Seite. Öffne zuerst eine Seite.');
+                    return;
+                }
+                Produktwelten.bereicheDialog(seite);
+            } },
+        { id: 'elektro', name: 'Elektrotechnik', icon: '⚡',
+            was: 'Rechnungen mit Quellenangabe und ein geprüftes Grundlagen-Lernpaket.',
+            oeffnen: () => (typeof Electrical !== 'undefined') && Electrical.open() },
+        { id: 'erkennung', name: 'Erfassen & Erkennen', icon: '📷',
+            was: 'Kamera und Dateien in den Eingang; Text aus Bild, PDF und Handschrift ' +
+                'über den mitgelieferten lokalen Dienst.',
+            oeffnen: () => (typeof Recognition !== 'undefined') && Recognition.scan() },
+        { id: 'dokumentmodus', name: 'Dokumentmodus', icon: '📖',
+            was: 'Eine PDF- oder Blattseite gross, mit den Objekten daneben.',
+            /* SAGT, WARUM ES NICHT GEHT, statt stumm nichts zu tun. `toggle`
+               steigt ohne geeignete Seite wortlos aus — aus einer Modulübersicht
+               aufgerufen wäre das genau der tote Knopf aus E118. */
+            oeffnen: () => {
+                const seite = (typeof App !== 'undefined' && App.aktuelleSeite)
+                    ? Store.getBlock(App.aktuelleSeite()) : null;
+                if (typeof DocumentMode === 'undefined' || !seite || !DocumentMode.available(seite)) {
+                    if (typeof UI !== 'undefined')
+                        UI.toast('Der Dokumentmodus braucht eine Seite mit PDF-Seiten oder A4-Blättern.');
+                    return;
+                }
+                DocumentMode.toggle(seite, true);
+            } }
     ];
     /* Eine Liste, und immer dieselbe — siehe register/bloecke.js. */
     const LISTE = EINGEBAUT.slice();
