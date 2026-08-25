@@ -1469,10 +1469,21 @@ Die oberste Gruppe hängt jetzt am Register: Aussehen in `index.html`,
 Handlung im Register, verbunden über `knopfId`. test222 §5 vergleicht beide
 Listen Zeile für Zeile — Anzahl, Folge, Beschriftung, Kürzel.
 
-**Was weiter offen ist.** 36 der 45 gezeichneten Zeilen stehen in keinem
-Register: die Werkzeuge-Gruppe, die Apps-Liste, die untere Gruppe. Die
-meisten haben nicht einmal eine Kennung im Markup, an der man sie fassen
-könnte.
+**Dritter Teil erledigt** (E166, 25. August): die zwanzig unter „Meine
+Apps" standen als Datentabelle in `seitenleiste.ts` und daneben als Kette
+aus zwanzig `if (a === '…')`. Sie stehen jetzt im Register, und die
+Seitenleiste zeichnet daraus. Gemessen: 45 gezeichnete Zeilen vorher wie
+nachher, Zeile für Zeile identisch; Registereinträge 17 → 37.
+
+**Was weiter offen ist**, und es ist weniger, als hier stand. Von den 45
+Zeilen stehen 29 im Register. Von den übrigen 16 sind 11 kein Katalog,
+sondern INHALT — sieben Systemseiten (Journal, Schnellnotizen, Vorlagen,
+Graph, Schlagwörter, Karteikarten, Umsetzungsstand), drei angeheftete
+Seiten und „Willkommen". Seiten gehören in den Baum, nicht in ein Register.
+
+Übrig bleiben fünf: „Neuer Agent" und „Neue Besprechungsnotiz" (Handlungen
+ohne Eintrag) sowie Importieren, Papierkorb und Tastenkürzel (haben
+Kennungen, hängen aber weiter fest in `schale.ts`).
 
 Und die Seitenleiste zeichnet weiterhin selbst, statt aus dem Register zu
 lesen. Das ist Absicht, kein Rest: Register und Leiste sind so weit

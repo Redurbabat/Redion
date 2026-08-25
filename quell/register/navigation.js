@@ -28,6 +28,9 @@
  *                     steht in index.html, die HANDLUNG hier — `schale.ts`
  *                     hängt sie über `knopfId` an. test222 §5 vergleicht
  *                     beide Listen Zeile für Zeile.
+ *     platz 'apps'    „Meine Apps". Die Seitenleiste zeichnet sie von hier;
+ *                     der Eintrag trägt Zeichen, Namen, Hinweistext und
+ *                     Handlung. test222 §6 vergleicht Liste und Bildschirm.
  *     platz 'baum'    die Überschriften des Baums.
  *     platz 'unten'   der Anhängepunkt für fremde Bereiche (`vonAussen`).
  *                     Die eingebauten unteren Zeilen zeichnet die
@@ -95,6 +98,55 @@ Register.navigation = (() => {
         { id: 'neu', name: 'Neue Seite', icon: '✚', platz: 'oben', rang: 90,
             knopfId: 'btn-new', kuerzel: 'Strg N',
             tun: () => App.neueSeite() },
+        /* MEINE APPS — die zwanzig aus der Seitenleiste (E166).
+           Sie standen als Datentabelle in `seitenleiste.ts`, direkt neben einer
+           Kette aus zwanzig `if (a === '…')`. Zwei Listen für dieselben zwanzig
+           Dinge, und wer eine Zeile hinzufügte, musste an beide denken — genau
+           die Lage, die E160 eine Gruppe weiter oben aufgelöst hat.
+    
+           `hinweis` ist der Text, der beim Darüberfahren erscheint. Er gehört
+           zum Eintrag und nicht zum Zeichner: wer die App beschreibt, beschreibt
+           sie hier. */
+        { id: 'app-kalender', name: 'Kalender', icon: '📅', platz: 'apps', rang: 10,
+            hinweis: 'Termine aus allen Quellen', tun: () => Kalender.dialog() },
+        { id: 'app-pwa', name: 'App installieren', icon: '📱', platz: 'apps', rang: 20,
+            hinweis: 'Auf dem Telefon oder Rechner ablegen', tun: () => PWA.installieren() },
+        { id: 'app-bib', name: 'Bibliothek', icon: '📚', platz: 'apps', rang: 30,
+            hinweis: 'Alle Seiten, sortierbar', tun: () => Bibliothek.oeffne() },
+        { id: 'app-aufgaben', name: 'Meine Aufgaben', icon: '☑', platz: 'apps', rang: 40,
+            hinweis: 'Was dir zugewiesen ist', tun: () => Bibliothek.aufgaben() },
+        { id: 'app-markt', name: 'Marktplatz', icon: '🛍', platz: 'apps', rang: 50,
+            hinweis: 'Fertige Vorlagen', tun: () => Werkzeuge.vorlagen() },
+        { id: 'app-wissen', name: 'Notion-Wissen', icon: '📖', platz: 'apps', rang: 60,
+            hinweis: 'Alles über Notion und Redion, in acht Teilen', tun: () => Wissen.oeffnen() },
+        { id: 'app-pflege', name: 'Erste Hilfe', icon: '🧰', platz: 'apps', rang: 70,
+            hinweis: 'Prüfen, reparieren, sichern', tun: () => Pflege.ersteHilfe() },
+        { id: 'app-modell', name: 'Datenmodell', icon: '🗺', platz: 'apps', rang: 80,
+            hinweis: 'Alle Datenbanken und ihre Verknüpfungen', tun: () => Schema.ansicht() },
+        { id: 'app-kennzahl', name: 'Kennzahlen', icon: '📊', platz: 'apps', rang: 90,
+            hinweis: 'Zahlen aus mehreren Datenbanken', tun: () => Schema.tafel() },
+        { id: 'app-krypto', name: 'Passwort', icon: '🔐', platz: 'apps', rang: 100,
+            hinweis: 'Verschlüsselte Sicherung und Sperre', tun: () => Krypto.dialog() },
+        { id: 'app-aussehen', name: 'Aussehen', icon: '🎨', platz: 'apps', rang: 110,
+            hinweis: 'Farben, Schrift und Tastenkürzel', tun: () => Aussehen.dialog() },
+        { id: 'app-tempo', name: 'Tempo', icon: '⏱', platz: 'apps', rang: 120,
+            hinweis: 'Wie schnell gezeichnet und gerechnet wird', tun: () => Tempo.dialog() },
+        { id: 'app-kann', name: 'Was Redion kann', icon: '⭐', platz: 'apps', rang: 130,
+            hinweis: 'Alles auf einen Blick, mit Führung', tun: () => Rundgang.uebersicht() },
+        { id: 'app-erweitern', name: 'Erweiterungen', icon: '🧩', platz: 'apps', rang: 140,
+            hinweis: 'Eigene Befehle, Knöpfe und Formeln', tun: () => Erweiterung.dialog() },
+        { id: 'app-eingang', name: 'Was hereinkommt', icon: '📨', platz: 'apps', rang: 150,
+            hinweis: 'Daten von aussen abholen und einwerfen', tun: () => Eingang.dialog() },
+        { id: 'app-tagesplan', name: 'Tagesplan', icon: '☀', platz: 'apps', rang: 160,
+            hinweis: 'Was heute ansteht', tun: () => Plan.tagesplan() },
+        { id: 'app-woche', name: 'Wochenrückblick', icon: '📅', platz: 'apps', rang: 170,
+            hinweis: 'Was lief, was blieb liegen', tun: () => Plan.wochenrueckblick() },
+        { id: 'app-spaeter', name: 'Zurückgestellt', icon: '⏰', platz: 'apps', rang: 180,
+            hinweis: 'Was später wieder hochkommt', tun: () => Plan.uebersicht() },
+        { id: 'app-hilfe', name: 'Hilfe', icon: '？', platz: 'apps', rang: 190,
+            hinweis: 'Tastenkürzel — Strg /', tun: () => Werkzeuge.tastenkuerzel() },
+        { id: 'app-papier', name: 'Papierkorb', icon: '🗑', platz: 'apps', rang: 200,
+            hinweis: 'Gelöschte Seiten', tun: () => App.papierkorb() },
         { id: 'favoriten', name: 'Favoriten', icon: '★', platz: 'baum', rang: 10 },
         { id: 'seiten', name: 'Seiten', icon: '📄', platz: 'baum', rang: 20 },
         { id: 'geteilt', name: 'Geteilt', icon: '👥', platz: 'baum', rang: 30,

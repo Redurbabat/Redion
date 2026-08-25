@@ -305,6 +305,69 @@ const einmal = await seite.evaluate(async () => {
 gleich('„Neue Seite" legt genau EINE Seite an',
   einmal.nachher - einmal.vorher, 1);
 
+/* ==========================================================================
+ * §6 · „Meine Apps" steht im Register und wird von dort gezeichnet (L58)
+ * --------------------------------------------------------------------------
+ * Zwanzig Zeilen standen als Datentabelle in `seitenleiste.ts`, und direkt
+ * darunter eine Kette aus zwanzig `if (a === '…')`. Zwei Listen für
+ * dieselben zwanzig Dinge: wer eine hinzufügte, musste an beide denken.
+ *
+ * Dieselbe Lage, die §5 eine Gruppe weiter oben aufgelöst hat — nur dass
+ * dort das Aussehen in index.html bleibt und hier die Seitenleiste WIRKLICH
+ * aus dem Register zeichnet. Beides ist richtig: dort steht das Markup
+ * fest, hier entsteht es ohnehin zur Laufzeit.
+ *
+ * ─── WAS DIESER ABSCHNITT NICHT PRÜFT ───────────────────────────────────────
+ * Anders als §5 vergleicht er nicht zwei Quellen, sondern eine Quelle mit
+ * ihrer eigenen Ausgabe. Wer im Register einen Namen ändert, ändert damit
+ * beides — die Gegenprobe dazu bleibt grün, und das ist richtig so.
+ *
+ * Was er prüft, ist der ZEICHNER: dass er nichts weglässt, nichts umordnet
+ * und den Hinweistext nicht verwechselt. Gegengeprüft mit `slice(0, 12)` —
+ * vier Punkte rot. Und dass keine der zwanzig Zeilen tot ist; gegengeprüft
+ * mit einem `return` vor der Handlung — zwanzig Kennungen in einer Zeile.
+ * ========================================================================*/
+console.log('\n6 · „Meine Apps" kommt aus dem Register');
+
+const apps = await seite.evaluate(() => {
+  const reg = Register.navigation.anPlatz('apps').map((x: any) => ({
+    id: String(x.id), name: String(x.name || ''),
+    hinweis: String(x.hinweis || ''), hatTun: typeof x.tun === 'function' }));
+  const gezeichnet = [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]
+    .map(b => ({ id: b.dataset['app'] || '',
+                 name: (b.children[1]?.textContent || '').trim(),
+                 hinweis: b.getAttribute('title') || '' }));
+  return { reg, gezeichnet };
+});
+
+p('Es gibt zwanzig Apps', apps.reg.length === 20, String(apps.reg.length));
+gleich('Und genauso viele stehen da', apps.gezeichnet.length, apps.reg.length);
+gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
+  apps.reg.map((x: any) => x.id));
+gleich('Mit denselben Namen', apps.gezeichnet.map((x: any) => x.name),
+  apps.reg.map((x: any) => x.name));
+gleich('Und denselben Hinweistexten', apps.gezeichnet.map((x: any) => x.hinweis),
+  apps.reg.map((x: any) => x.hinweis));
+gleich('Jeder Eintrag weiss, was er tut',
+  apps.reg.filter((x: any) => !x.hatTun).map((x: any) => x.id), []);
+
+/* Und keine der zwanzig Zeilen ist tot. Ein Katalog, dessen Einträge nichts
+   aufmachen, ist E118 mit zwanzig Knöpfen. */
+const totApps = await seite.evaluate(async () => {
+  const raus: string[] = [];
+  for (const b of [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]) {
+    document.querySelectorAll<HTMLElement>('.overlay, .menu').forEach(o => o.remove());
+    const vorher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
+    b.click();
+    await new Promise(r => setTimeout(r, 420));
+    const nachher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
+    if (vorher === nachher) raus.push(b.dataset['app'] || '(ohne)');
+    document.querySelectorAll<HTMLElement>('.overlay, .menu').forEach(o => o.remove());
+  }
+  return raus;
+});
+gleich('Und jede macht etwas auf', totApps, []);
+
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);
 if (fehler.length) console.log('Browserfehler:\n  ' + fehler.join('\n  '));

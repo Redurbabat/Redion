@@ -11175,3 +11175,105 @@ in einer Prüfung ist fast immer die falsche Frage.
 aussehende Felder sind darin nie gleich. Die erste Fassung gab Felder hinein
 und meldete „ist [...], soll [...]" mit identischem Text auf beiden Seiten.
 Jetzt als Zeichenkette.
+
+
+## E166 · Zwanzig Apps, zwei Listen (L58, CLAUDE.md §5 Regel 2)
+
+**25. August 2026.** E160 hat die oberste Gruppe der Seitenleiste ans
+Register gehängt und dabei festgehalten, was noch fehlt: 36 der 45
+gezeichneten Zeilen standen in keinem Katalog. Die grösste zusammenhängende
+Gruppe davon sind die zwanzig unter „Meine Apps".
+
+### Was dastand
+
+In `seitenleiste.ts` eine Datentabelle:
+
+```txt
+['kalender',  '📅', 'Kalender',        'Termine aus allen Quellen'],
+['pwa',       '📱', 'App installieren','Auf dem Telefon oder Rechner ablegen'],
+…zwanzig Zeilen…
+```
+
+Und vierzig Zeilen darunter eine Kette:
+
+```txt
+if (a === 'kalender') Kalender.dialog();
+if (a === 'pwa')      PWA.installieren();
+…zwanzig Zweige…
+```
+
+Zwei Listen für dieselben zwanzig Dinge. Wer eine App hinzufügte, musste an
+beide denken; wer eine umbenannte, an eine. Genau die Lage, die E160 eine
+Gruppe weiter oben aufgelöst hat — und dort hatte sie schon drei falsche
+Einträge erzeugt, weil eine der beiden Listen nie ausgeführt wurde.
+
+### Was jetzt dasteht
+
+Ein Eintrag je App in `Register.navigation`, mit Zeichen, Namen,
+Hinweistext und Handlung. Die Seitenleiste zeichnet daraus:
+
+```ts
+const appliste = Register.navigation.anPlatz('apps');
+apps.innerHTML = appliste.map(x => `<button data-app="${esc(x.id)}" …`).join('');
+```
+
+Und der Klick sucht seinen Eintrag, statt zwanzig `if` durchzugehen. Ein
+Fehler in einer Handlung geht in den Reporter, wie beim Anhängepunkt weiter
+unten — ohne ihn nähme ein Fehler die ganze Leiste mit.
+
+Der Unterschied zu §5 der Prüfung: dort bleibt das Markup in `index.html`
+und das Register liefert nur die Handlung. Hier zeichnet die Seitenleiste
+wirklich aus dem Register. Beides ist richtig — dort steht das Markup fest,
+hier entsteht es ohnehin zur Laufzeit.
+
+### Gemessen, dass sich nichts bewegt hat
+
+```txt
+gezeichnete Zeilen vorher   45
+gezeichnete Zeilen nachher  45      Zeile für Zeile identisch
+Registereinträge vorher     17
+Registereinträge nachher    37
+```
+
+Der Vergleich ist wörtlich: derselbe Durchgang durch `#sidebar .side-item`
+vor und nach der Änderung, `diff` ohne Ausgabe.
+
+### Was die Prüfung kann und was nicht
+
+test222 §6 vergleicht Register und Bildschirm. Anders als §5 sind das aber
+nicht zwei Quellen, sondern eine Quelle und ihre eigene Ausgabe — wer im
+Register einen Namen ändert, ändert beides, und die Gegenprobe dazu bleibt
+richtigerweise grün.
+
+Geprüft wird deshalb der ZEICHNER: dass er nichts weglässt, nichts umordnet
+und den Hinweistext nicht verwechselt. Und dass keine der zwanzig Zeilen
+tot ist. Beides steht so im Prüflauf, damit niemand mehr hineinliest.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · einen Namen im Register verstellen | 0 — und das ist richtig |
+| B · der Zeichner nimmt nur die ersten zwölf | 4 |
+| C · der Klick macht nichts mehr auf | 1, mit allen zwanzig Kennungen |
+
+A steht mit in der Tabelle, weil eine Gegenprobe, die NICHT beisst, genauso
+eine Aussage ist: sie sagt, was dieser Abschnitt nicht prüft.
+
+### Was von L58 bleibt
+
+Von 45 Zeilen stehen jetzt 29 im Register. Die übrigen 16 sind
+grösstenteils keine Katalogeinträge, sondern Inhalt:
+
+```txt
+7   Journal, Schnellnotizen, Vorlagen, Graph, Schlagwörter,
+    Karteikarten, Umsetzungsstand   — Systemseiten, also Nutzerdaten
+3   angeheftete Seiten              — Nutzerdaten
+1   Willkommen                      — eine Seite
+2   „Neuer Agent", „Neue Besprechungsnotiz"   — Handlungen, gehören ins Register
+3   Importieren, Papierkorb, Tastenkürzel     — haben Kennungen, hängen in schale.ts
+```
+
+Ein Register für Seiten wäre falsch: Seiten sind Daten und stehen im Baum.
+Offen bleiben damit fünf Zeilen, nicht 36 — und das ist eine Grössenordnung,
+die in einen Nachmittag passt statt in einen Plan.

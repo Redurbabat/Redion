@@ -82,7 +82,11 @@ const Seitenleiste = (() => {
   const kommendeTermine = braucht('kommendeTermine');
   const seitenMenue     = braucht('seitenMenue');
   const suche           = braucht('suche');
-  const papierkorb      = braucht('papierkorb');
+  /* `papierkorb` stand hier, solange die Apps-Kette ihn selbst aufrief. Der
+     Registereintrag ruft jetzt `App.papierkorb()`; die durchgereichte
+     Fassung wäre eine zweite Adresse für dieselbe Handlung (E166).
+     `binde` nimmt den Schlüssel weiterhin entgegen — er schadet nicht, und
+     ein Bereich, der ihn morgen wieder braucht, holt ihn mit `braucht`. */
 
   /* ========================================================================
    * SEITENLEISTE
@@ -509,31 +513,22 @@ const Seitenleiste = (() => {
     /* Meine Apps — bei Notion steht hier „Notion-Apps" ganz unten */
     if (!abschnittAn('apps')) return;
     baum.appendChild(abschnitt('Meine Apps', null, () => abschnitteAnpassen()));
+    /* AUS DEM REGISTER, NICHT AUS ZWEI LISTEN (L58, E166).
+       Hier standen die zwanzig Apps als Datentabelle und darunter eine Kette
+       aus zwanzig `if (a === '…')`. Zwei Listen für dieselben zwanzig Dinge:
+       wer eine hinzufügte, musste an beide denken, und wer eine umbenannte,
+       an eine. Dieselbe Lage, die E160 eine Gruppe weiter oben aufgelöst hat.
+
+       `esc` ist Pflicht, auch wenn heute nur eingebaute Einträge kommen:
+       `melde` steht jedem Bereich offen, und ein Erweiterungsname ist
+       Nutzertext (CLAUDE.md §19). */
     const apps = document.createElement('div');
     apps.className = 'wz-block apps-block';
-    apps.innerHTML = [
-      ['kalender',  '📅', 'Kalender',       'Termine aus allen Quellen'],
-      ['pwa',       '📱', 'App installieren','Auf dem Telefon oder Rechner ablegen'],
-      ['bib',       '📚', 'Bibliothek',     'Alle Seiten, sortierbar'],
-      ['aufgaben',  '☑',  'Meine Aufgaben', 'Was dir zugewiesen ist'],
-      ['markt',     '🛍', 'Marktplatz',     'Fertige Vorlagen'],
-      ['wissen',    '📖', 'Notion-Wissen',  'Alles über Notion und Redion, in acht Teilen'],
-      ['pflege',    '🧰', 'Erste Hilfe',    'Prüfen, reparieren, sichern'],
-      ['modell',    '🗺', 'Datenmodell',    'Alle Datenbanken und ihre Verknüpfungen'],
-      ['kennzahl',  '📊', 'Kennzahlen',     'Zahlen aus mehreren Datenbanken'],
-      ['krypto',    '🔐', 'Passwort',       'Verschlüsselte Sicherung und Sperre'],
-      ['aussehen',  '🎨', 'Aussehen',       'Farben, Schrift und Tastenkürzel'],
-      ['tempo',     '⏱', 'Tempo',          'Wie schnell gezeichnet und gerechnet wird'],
-      ['kann',      '⭐', 'Was Redion kann','Alles auf einen Blick, mit Führung'],
-      ['erweitern', '🧩', 'Erweiterungen',  'Eigene Befehle, Knöpfe und Formeln'],
-      ['eingang',   '📨', 'Was hereinkommt','Daten von aussen abholen und einwerfen'],
-      ['tagesplan', '☀',  'Tagesplan',      'Was heute ansteht'],
-      ['woche',     '📅', 'Wochenrückblick','Was lief, was blieb liegen'],
-      ['spaeter',   '⏰', 'Zurückgestellt', 'Was später wieder hochkommt'],
-      ['hilfe',     '？', 'Hilfe',          'Tastenkürzel — Strg /'],
-      ['papier',    '🗑', 'Papierkorb',     'Gelöschte Seiten']
-    ].map(([a, i, n, t]) =>
-      `<button class="side-item" data-app="${a}" title="${t}"><span>${i}</span><span>${n}</span></button>`
+    const appliste = (typeof Register !== 'undefined' && Register.navigation)
+      ? Register.navigation.anPlatz('apps') : [];
+    apps.innerHTML = appliste.map((x: any) =>
+      `<button class="side-item" data-app="${esc(x.id)}" title="${esc(x.hinweis || x.name)}">` +
+      `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`
     ).join('');
     /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
     setTimeout(() => {
@@ -548,30 +543,19 @@ const Seitenleiste = (() => {
       });
     }, 0);
 
+    /* Die Handlung steht am Eintrag. Ein Fehler darin darf die Leiste nicht
+       mitreissen — er gehört in den Reporter, wie beim Anhängepunkt unten. */
     apps.addEventListener('click', e => {
       const b = elVon(e)?.closest<HTMLElement>('[data-app]');
       if (!b) return;
-      const a = b.dataset.app;
-      if (a === 'kalender') Kalender.dialog();
-      if (a === 'pwa')      PWA.installieren();
-      if (a === 'bib')      Bibliothek.oeffne();
-      if (a === 'aufgaben') Bibliothek.aufgaben();
-      if (a === 'markt')    Werkzeuge.vorlagen();
-      if (a === 'wissen')   Wissen.oeffnen();
-      if (a === 'pflege')   Pflege.ersteHilfe();
-      if (a === 'modell')   Schema.ansicht();
-      if (a === 'kennzahl') Schema.tafel();
-      if (a === 'krypto')   Krypto.dialog();
-      if (a === 'aussehen') Aussehen.dialog();
-      if (a === 'tempo')    Tempo.dialog();
-      if (a === 'kann')      Rundgang.uebersicht();
-      if (a === 'erweitern') Erweiterung.dialog();
-      if (a === 'eingang')   Eingang.dialog();
-      if (a === 'tagesplan') Plan.tagesplan();
-      if (a === 'woche')     Plan.wochenrueckblick();
-      if (a === 'spaeter')   Plan.uebersicht();
-      if (a === 'hilfe')    Werkzeuge.tastenkuerzel();
-      if (a === 'papier')   papierkorb();
+      const eintrag = appliste.find((x: any) => x.id === b.dataset.app);
+      if (!eintrag?.tun) return;
+      try { eintrag.tun(); }
+      catch (fehler: unknown) {
+        if (typeof Reporter !== 'undefined')
+          Reporter.error('Seitenleiste', String(b.dataset.app) + ': ' +
+            (fehler instanceof Error ? fehler.message : String(fehler)), fehler);
+      }
     });
     baum.appendChild(apps);
 
