@@ -6500,7 +6500,7 @@ const Datenbank = (() => {
           <button id="fxfmt" style="padding:7px 14px; border-radius:6px">Formatieren</button>
           <button id="fxsteps" style="padding:7px 14px; border-radius:6px">Zwischenergebnisse</button>
           <button id="fxc" style="padding:7px 14px; border-radius:6px">Abbrechen</button>
-          <button id="fxs" style="padding:7px 14px; border-radius:6px; background:var(--accent); color:#fff">Speichern</button>
+          <button id="fxs" style="padding:7px 14px; border-radius:6px; background:var(--accent); color:var(--auf-accent)">Speichern</button>
         </div>
       </div>`;
         document.body.appendChild(overlay);

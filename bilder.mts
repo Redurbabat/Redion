@@ -545,6 +545,92 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Drei Ansichten, die §25 bis §27 tragen und in keinem Bilddurchgang
+     vorkamen. Nach E135, E141 und E143 ist das die Lage, in der Fehler
+     jahrelang stehenbleiben. */
+
+  bibliothek: {
+    titel: 'Die Bibliothek mit Reitern, Spalten und Quellen',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      [['Elektrotechnik Skript', '📕'], ['Wochenplan KW 35', '📅'],
+       ['Baustelle Halle 3', '💼'], ['Rezepte', '🍲'],
+       ['Prüfungsvorbereitung', '📝']].forEach(([name, icon], i) => {
+        const s = Store.addPage(null, { text: String(name), icon: String(icon) });
+        if (i < 2) Store.updateBlock(s.id, { favorite: true });
+        Store.addBlock(s.id, 'text', { text: 'Ein Satz auf ' + name + '.' });
+      });
+      await Store.flush();
+      w.Produktwelten.bibliothek();
+      await new Promise(r => setTimeout(r, 1100));
+    }
+  },
+
+  aufgaben: {
+    titel: 'Aufgaben aus mehreren Quellen in einer Liste',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const projekt = Store.addPage(null, { text: 'Umbau Halle 3', icon: '💼' });
+      const db = Store.addDatabase(projekt.id, 'Sprint', {
+        title: { name: 'Aufgabe', type: 'title' },
+        wann: { name: 'Fällig', type: 'date' },
+        status: { name: 'Status', type: 'select', options: [
+          { name: 'Offen', color: 'gray' }, { name: 'Erledigt', color: 'green' }] } });
+      const tage = (n: number): string => {
+        const d = new Date(); d.setDate(d.getDate() + n);
+        return d.toISOString().slice(0, 10);
+      };
+      [['Material bestellen', 1, 'Offen'], ['Kabelwege prüfen', 3, 'Offen'],
+       ['Abnahme vorbereiten', 8, 'Offen'], ['Angebot verschickt', -2, 'Erledigt']]
+        .forEach(([name, n, st]) => {
+          const z = Store.addRow(db.collectionId, { title: String(name) });
+          Store.setProp(z.id, 'wann', tage(Number(n)));
+          Store.setProp(z.id, 'status', String(st));
+        });
+      const notiz = Store.addPage(null, { text: 'Notizen', icon: '📝' });
+      Store.addBlock(notiz.id, 'todo', { text: 'Aufgabenblatt Elektrotechnik abgeben' });
+      Store.addBlock(notiz.id, 'todo', { text: 'Ollama installieren', erledigt: true });
+      await Store.flush();
+      w.Produktwelten.aufgaben();
+      await new Promise(r => setTimeout(r, 1100));
+    }
+  },
+
+  kalender: {
+    titel: 'Termine und Planung in der Wochenansicht',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const plan = Store.addPage(null, { text: 'Termine', icon: '📅' });
+      const db = Store.addDatabase(plan.id, 'Termine', {
+        title: { name: 'Was', type: 'title' },
+        wann: { name: 'Wann', type: 'date' } });
+      const tage = (n: number): string => {
+        const d = new Date(); d.setDate(d.getDate() + n);
+        return d.toISOString().slice(0, 10);
+      };
+      [['Berufsschule', 0], ['Baustellenbesprechung', 1], ['Klausur Elektrotechnik', 5],
+       ['Zahnarzt', 2], ['Abgabe Berichtsheft', 6]].forEach(([name, n]) => {
+        const z = Store.addRow(db.collectionId, { title: String(name) });
+        Store.setProp(z.id, 'wann', tage(Number(n)));
+      });
+      await Store.flush();
+      w.Produktwelten.workspace('kalender');
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  },
+
   elektro: {
     titel: 'Der Elektrotechnik-Rechner mit Annahme und Ergebnis',
     bauen: async () => {

@@ -205,6 +205,41 @@ Alle Inhalte bleiben normale Redion-Seiten und -Blöcke und laufen damit durch
 Offlinebetrieb, Papierkorb, Sicherung, Wiederherstellung und optionalen Sync.
 
 
+Zwei Hauptwelten, ein Bestand
+
+Redion hat zwei Oberflächen auf denselben Daten. Umgeschaltet wird oben
+links; nichts wird dabei kopiert.
+
+**Lernen & Alltag** — Heute mit Tagesrunde und Prüfungs-Countdown,
+Lernzentrum, Lernpfad, Fehlertraining, Prüfungszentrale mit Simulation, und
+je eine Sicht für Schule/Ausbildung, Uni, Arbeit und Fortschritt. Die
+Schulansicht zeigt auch dann etwas, wenn die Ausbildungsvorlage nie
+eingerichtet wurde — sie liest, was ohnehin da ist.
+
+**Workspace** — Übersicht, Bibliothek, Aufgaben, Kalender, Datenbanken,
+Whiteboards, Wiki und Vorlagen, dazu Reiter und geteilte Ansicht.
+
+
+Whiteboards
+
+Eine freie Fläche als Block auf einer gewöhnlichen Seite — keine zweite
+Datenhaltung:
+
+- schieben und zoomen (Hand, Rad, zwei Finger, 10 % bis 400 %,
+  „alles ins Bild")
+- Stift, Linie, Pfeil, Rechteck, Ellipse, Haftnotiz, Text
+- Bilder aus der Dateiablage, nicht als Data-URL in den Block
+- Verbindungen, die an den Formen hängen: sie gehen beim Verschieben mit
+  und beim Löschen weg
+- vierzig Schritte zurück und vorwärts; der Verlauf lebt nur im
+  Arbeitsspeicher und wird nicht mitgesichert
+- Text direkt auf der Fläche, zweimal tippen ändert ihn
+- Grösse ändern am Griff
+- als PNG speichern
+
+Im Workspace gibt es dafür einen eigenen Bereich mit Miniaturen.
+
+
 
 Variante 5: Prüfungen ausführen
 

@@ -1518,6 +1518,12 @@ Schritte zurück und vorwärts, Text auf der Fläche statt im Browserfenster
 gesucht hatte: ein Rechteck ohne Füllung nahm in SVG gar keine Klicks an,
 und ein Strich mit 2,5 px war mit dem Finger nicht zu treffen.
 
+**Und einer ist beim Bauen dazugekommen:** der Griff ändert Breite und Höhe
+unabhängig voneinander. Bei einem Bild verzerrt das — es gibt keine Taste,
+die das Seitenverhältnis festhält. Für Rechteck, Ellipse und Haftnotiz ist
+freies Ziehen richtig; beim Bild wäre gehaltenes Umschalten die gewohnte
+Geste.
+
 **Offen bleibt der erste Punkt:** die Miniatur im Whiteboard-Bereich
 zeichnet weiterhin keine Verbindungen. Sie ist ein Wiedererkennungszeichen,
 keine Vorschau — wer seine Karte an der Struktur erkennen will, findet sie
