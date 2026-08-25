@@ -959,7 +959,12 @@ Damit die Liste ehrlich bleibt:
   Organisation voraus, die es hier nicht gibt.
 - **Kein Abo, keine Grenzen.** Und auch keine Dienste, die eines bräuchten —
   Slack-Nachrichten etwa laufen über einen Webhook, den man selbst einträgt.
-- **Keine Suche in Bildern und Tonspuren.** Kein OCR, keine Transkripte.
+- **Bilder werden nur mit einem eigenen Dienst durchsuchbar.** Text aus
+  Bildern, PDF-Ausschnitten und Handschrift liest der Knopf „⌁ Erkennen“ —
+  aber ein Browser kann das nicht allein. Dafür läuft ein kleiner Dienst auf
+  demselben Rechner mit; er liegt bei und ist in `doku/OCR-DIENST.md`
+  beschrieben. Ohne ihn bleiben Bilder stumm. Tonspuren werden nicht
+  abgetippt.
 
 ---
 

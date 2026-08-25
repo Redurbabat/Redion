@@ -74,6 +74,28 @@ const Recognition = (() => {
             return null;
         }
         const current = configuredEndpoint() || 'http://127.0.0.1:8765/ocr';
+        /* ERST SAGEN, WAS ZU TUN IST, DANN FRAGEN.
+           Bis zum 25. August stand hier nur das Eingabefeld. Wer es zum ersten
+           Mal sah, bekam die Frage nach einer Adresse — und keinen Hinweis
+           darauf, dass dahinter ein Programm laufen muss, geschweige denn
+           welches. Der Knopf war damit eine Sackgasse (L53), obwohl der Code
+           dahinter vollständig war. Seit E150 liegt der Dienst bei; dieser
+           Absatz ist der Weg dorthin. */
+        if (typeof Dialog !== 'undefined' && Dialog.wahl && !configuredEndpoint()) {
+            const weiter = await Dialog.wahl({
+                titel: 'Lokale Erkennung einrichten',
+                text: 'Text aus Bildern liest ein kleiner Dienst auf DIESEM Rechner — ' +
+                    'nichts geht ins Netz. Redion liefert ihn mit. Einmal starten mit ' +
+                    '„node dienste/ocr.mts", dann hier seine Adresse eintragen. ' +
+                    'Die ganze Anleitung mit Installation steht in doku/OCR-DIENST.md.',
+                knoepfe: [
+                    { id: 'weiter', text: 'Adresse eintragen', hinweis: 'Vorgabe: ' + current },
+                    { id: '', text: 'Abbrechen', hinweis: 'Es wird nichts gespeichert' }
+                ]
+            });
+            if (weiter !== 'weiter')
+                return null;
+        }
         const answer = typeof Dialog !== 'undefined'
             ? await Dialog.frage('Lokalen OCR-Dienst einrichten', current)
             : window.prompt('Adresse des lokalen OCR-Diensts', current);

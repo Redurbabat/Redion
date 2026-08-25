@@ -40,7 +40,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 15 | Workspace | ✅ | `arbeitswelt.ts`, test206 |
 | 16 | Tabs und Arbeitsfluss | ✅ | test206 §12 (elf Punkte): zwei Reiter, Wechseln, geteilt Öffnen, Teilung schliessen, Reiter schliessen. Der Prüflauf fand dabei, dass „Geteilt öffnen“ das Feld nicht neu zeichnete — E146 |
 | 17 | PDF-Arbeitsplatz | ✅ | test210 (sechs Abschnitte), test204 §2 (1366×768 und mobiler Drawer), `bilder.mts dokument` (E141) |
-| 18 | PDF → Lernen | ◐ | Ausschnitt, Erkennen, „Aus Inhalt" stehen im Inspector. „⌁ Erkennen" braucht einen Dienst, den Redion nicht mitliefert (L53) |
+| 18 | PDF → Lernen | ✅ | Ausschnitt, Erkennen und „Aus Inhalt“ stehen im Inspector. Der Dienst hinter „⌁ Erkennen“ liegt seit E150 bei (`dienste/ocr.mts`, `doku/OCR-DIENST.md`, test216) |
 | 19 | PDF → Notizen | ✅ | E104, test182 |
 | 20 | Ink V2 | ✅ | `marken.ts`; test204 §1 (übersteht einen echten Reload), test210 §2 und §4 (Beschriftung, rollende Leiste) |
 | 21 | Papiervorlagen | ✅ | test207, `bilder.mts papier` |
@@ -61,7 +61,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 36 | Persönlicher Lernstand bei geteilten Karten | ✅ | `lebensbereiche.ts`, test204 §4 (übersteht Reload und Zweitgeräte-Merge) |
 | 37 | Elektro-Ausbildung | ✅ | test211 §5 und §6 (Paketprüfung, Einbau als gewöhnliche Karteikarten, Quarantäne bleibt draussen) |
 | 38 | Elektro-Rechner | ✅ | test211 §1–§4 (neun Rechnungen von Hand nachgerechnet, Fehlersätze statt NaN, Annahmen, Ergebnis als normaler Block), `bilder.mts elektro` |
-| 39 | OCR / Capture | ◐ | `recognition.ts` steht, der Dienst dahinter fehlt (L53) |
+| 39 | OCR / Capture | ✅ | `recognition.ts` steht, und der Dienst dahinter liegt seit E150 bei: `dienste/ocr.mts` (nur 127.0.0.1, `spawn` ohne Shell, geprüfte Sprachangabe), `doku/OCR-DIENST.md`, test216 (32 Punkte) |
 | 40 | Audio | ✅ | `besprechung.ts`, Anhänge statt Zeichenketten (E128) |
 | 41 | Meetings | ◐ | `besprechung.ts` steht mit Aufnahme, Marken und Auswertung. Welcher Prüflauf sie deckt, habe ich nicht nachgesehen — bis dahin gilt ◐ |
 | 42 | Wissen | ✅ | `verweise.ts`, test195 |
@@ -90,13 +90,14 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 
 Nach Nutzen sortiert, nicht nach Abschnittsnummer:
 
-1. **§39 entscheiden** (L53): Dienst mitliefern, ausbauen oder ehrlich
-   beschriften. Ein Knopf, hinter dem nichts ist, ist die schlechteste der
-   drei Möglichkeiten.
+1. **§31 Telefon-Prüflauf** für die Lernrunde — die Lernwelt läuft dort,
+   aber nichts hält es fest.
+2. **§41 Meetings** — welcher Prüflauf sie deckt, ist nicht nachgesehen.
+3. **§43 Obsidian** — Resolver steht, kein Rundlauf-Prüflauf.
 
 Erledigt seit der ersten Fassung dieser Datei: §37 und §38 (test211, 50
 Punkte), der Rest von §22 (E144) und §23 — das war nie offen, sondern
-falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149).
+falsch eingetragen (E145, test212), §16 (test206 §12, E146), §28 (test213, E147 — L55 geschlossen) sowie §9 und §14 (test215, E149). Und §18/§39: der OCR-Dienst liegt jetzt bei (E150, test216 — L53 geschlossen).
 
 ---
 

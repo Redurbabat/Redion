@@ -9510,6 +9510,25 @@ einen Block, an dem nichts mehr hängt.
 Mitgeprüft, weil `dateiHolen` und `dateiAlle` angefasst wurden: test96,
 test100, test107, test108, test124, test182, test183 — alle grün.
 
+### Nachtrag: eine Prüfung, die ich nicht auf dem Zettel hatte
+
+Der vollständige Durchlauf danach meldete **test181 §6** rot — drei Punkte,
+die den Quelltext lesen und die alte, doppelte Feldliste erwarteten
+(`['text', 'suchtext', 'ocrText']` in `findInside`, `if (k.suchtext)
+text.push(…)` in `kontext.ts`). Genau die beiden Stellen, die E147
+zusammengeführt hat.
+
+Am Verhalten fehlte nichts: die §1–§5 desselben Laufs, die die Suche wirklich
+benutzen, blieben grün. Rot war die Beschreibung.
+
+Die drei Punkte prüfen jetzt das Stärkere — dass es **eine** Stelle gibt, die
+sagt, was durchsuchbar ist, dass beide Suchen aus ihr lesen, und dass daneben
+keine zweite Liste mehr steht. test181 zählt damit 47 statt 43 Punkte.
+
+Die Lehre ist nicht neu, aber sie kostet jedes Mal: wer eine Stelle
+zusammenlegt, muss auch suchen, wer über ihre alte Form etwas behauptet.
+`grep 'suchtext' pruefungen/` hätte gereicht.
+
 
 ---
 
@@ -9692,3 +9711,100 @@ XP in `topicProgress` einfliessen lassen→ §3 rot, beide Richtungen
 Meeting-Eintrag auf eine Zweitschrift   → §6 rot
 Meeting-Abschnitt ganz entfernt         → §5 UND §6 rot
 ```
+
+
+---
+
+## E150 · Der Dienst hinter „⌁ Erkennen" liegt jetzt bei
+
+**25. August 2026.** L53 hielt fest: der Knopf „⌁ Erkennen" erwartet einen
+Dienst unter `http://127.0.0.1:8765/ocr`, und Redion lieferte keinen mit und
+beschrieb auch keinen. Der Eintrag nannte drei Möglichkeiten — mitliefern,
+ausbauen oder ehrlich beschriften — und den Satz: „Ein Knopf, hinter dem
+nichts ist, ist die schlechteste der drei."
+
+Es ist die erste geworden.
+
+### Warum nicht die dritte, die billigere
+
+Der Code hinter dem Knopf ist vollständig und sorgfältig: Ausschnitt statt
+ganzem Bild, Einwilligung bei jedem Mal, Grössen- und Zeitgrenzen, und eine
+Adressprüfung, die eine Cloud-Adresse gar nicht erst speichern lässt. Das
+alles wegzuwerfen, weil ein sechzig Zeilen langes Gegenstück fehlt, wäre die
+teuerste der drei Möglichkeiten gewesen.
+
+### Was dazugekommen ist
+
+```txt
+dienste/ocr.mts        der Dienst selbst
+doku/OCR-DIENST.md     Anleitung: einrichten, Grenzen, Fehlersuche, Vertrag
+recognition.ts         erklärt jetzt, BEVOR es nach einer Adresse fragt
+```
+
+Der Dienst nimmt `POST /ocr` mit einem Bild entgegen, ruft `tesseract` auf
+und gibt `{ text, language, engine, version, confidence }` zurück — genau
+das, was `recognition.ts` liest.
+
+Vier Entscheidungen darin sind erklärungsbedürftig:
+
+**Node, kein Paket.** `node dienste/ocr.mts` und sonst nichts — kein
+`npm install`, kein Bauschritt. Ein Dienst, der erst eingerichtet werden
+muss, wäre wieder das Problem, das er lösen soll (§6). Der multipart-Körper
+wird deshalb von Hand zerlegt; das sind dreissig Zeilen.
+
+**`spawn` ohne Shell.** Der Dateiname kommt aus dem Browser. Über eine Shell
+wäre er eine Zeichenkette, die etwas bedeuten kann; als Element einer
+Argumentliste ist er ein Dateiname und sonst nichts.
+
+**Die Sprachangabe wird geprüft, nicht durchgereicht.** Sie kommt ebenfalls
+aus dem Browser und landet in der Befehlszeile. Was nicht auf `^[a-z]{3}
+(\+[a-z]{3})*$` passt, wird verworfen und durch die Vorgabe ersetzt.
+
+**`listen(PORT, '127.0.0.1')`, nicht `listen(PORT)`.** Ohne die Adresse hört
+Node auf allen Netzwerkkarten — ein Erkenner, an den jeder im selben WLAN
+Bilder schicken kann.
+
+Und eine Nicht-Entscheidung: `confidence` ist `null`. `tesseract stdout`
+liefert keine Sicherheit mit, und eine hier hingeschriebene Zahl wäre eine
+Behauptung über eine Messung, die nie stattgefunden hat.
+
+### Der eigentliche Kern von L53 war nicht der fehlende Dienst
+
+Er war die fehlende Auskunft. Wer zum ersten Mal auf „⌁ Erkennen" klickte,
+bekam ein Eingabefeld mit der Frage nach einer Adresse — und keinen Hinweis
+darauf, dass dahinter überhaupt ein Programm laufen muss, geschweige denn
+welches. Selbst mit beiliegendem Dienst wäre das eine Sackgasse geblieben.
+
+Jetzt steht davor ein Satz: was der Dienst tut, dass nichts ins Netz geht,
+womit man ihn startet, und wo die Anleitung liegt.
+
+### Und die Doku, die dem Stand widersprach
+
+`doku/WAS-REDION-MEHR-KANN.md` sagte weiterhin „Kein OCR, keine
+Transkripte". Der Satz ist berichtigt — und zwar nicht in „Redion kann OCR",
+sondern in das, was stimmt: Bilder werden durchsuchbar, wenn der beiliegende
+Dienst läuft; Tonspuren werden nach wie vor nicht abgetippt.
+
+### Kann die Suite rot werden?
+
+**test216**, neun Abschnitte, 32 Punkte — und mit einem Kunstgriff, auf den
+es ankommt: die Prüfung legt ein eigenes `tesseract` in einen Ordner und
+setzt `PATH` darauf.
+
+Geprüft wird damit MEIN Dienst, nicht Tesseract. Die Suite läuft auf jedem
+Rechner, und — wichtiger — der gute Weg wird WIRKLICH durchlaufen statt
+übersprungen. Eine Prüfung, die sich selbst überspringt, wenn ein Programm
+fehlt, ist genau die Prüfung, die nie rot wird.
+
+Vier Gegenproben, alle auf einem Abzug des Baums zurückgenommen:
+
+```txt
+Sprachprüfung entfernt            → §3 rot, „deu; rm -rf /" kommt durch
+`listen(PORT)` ohne Adresse       → §5 rot, von aussen erreichbar
+ENOENT-Hinweis durch „Fehler."    → §6 rot, beide Punkte
+`confidence: 0.95` erfunden       → §2 rot
+```
+
+§6 nimmt zusätzlich das Ersatzprogramm wieder weg — die Lage von L53, eine
+Stufe weiter innen: der Dienst läuft, der Erkenner fehlt. Dann muss er
+sagen, was fehlt und wo es steht.

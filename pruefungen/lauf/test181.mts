@@ -373,8 +373,18 @@ p('Eine Seite ohne Textebene ist kein Fehler',
 
 const ablage = ohneKommentare(
   fs.readFileSync(path.join(WURZEL, 'src/kern/ablage/indexdb.ts'), 'utf8'));
-p('Die Suche sieht in `text` UND `suchtext`',
-  /\['text',\s*'suchtext'(?:,\s*'[^']+')*\]/.test(ablage));
+/* SEIT E147 STEHT DIE LISTE AN EINER STELLE. Vorher zählte `findInside`
+   seine Felder selbst auf, und dieser Punkt suchte genau diese Aufzählung.
+   Jetzt entscheidet `durchsuchbar()`, was an einem Block Text ist — und der
+   Punkt prüft das Stärkere: dass es die eine Funktion gibt UND dass die
+   Suche sie benutzt, statt daneben eine zweite Liste zu führen. */
+p('Es gibt eine Stelle, die sagt, was durchsuchbar ist',
+  /const durchsuchbar = \(b: any\): string\[\] =>/.test(ablage));
+p('Sie nennt `text`, `suchtext` und `ocrText`',
+  /String\(b\.text \|\| ''\), String\(b\.suchtext \|\| ''\), String\(b\.ocrText \|\| ''\)/.test(ablage));
+p('Und die Suche liest aus ihr, nicht aus einer eigenen Liste',
+  /for \(const roh of durchsuchbar\(kid\)\)/.test(ablage) &&
+  !/for \(const feld of \['text',/.test(ablage));
 
 /* ES GIBT DREI SUCHWEGE, UND SIE MÜSSEN DASSELBE SAGEN. `Store.search` las
    `suchtext` von Anfang an; das Suchfenster und sein Index taten es nicht.
@@ -383,10 +393,15 @@ p('Die Suche sieht in `text` UND `suchtext`',
    gefunden" (E124). §5 oben prüft das am Bild; hier steht, woran es lag. */
 const kontext = ohneKommentare(
   fs.readFileSync(path.join(WURZEL, 'src/bereiche/ki/kontext.ts'), 'utf8'));
-p('Der Suchindex nimmt `suchtext` mit auf',
-  /if \(k\.suchtext\) text\.push\(k\.suchtext\);/.test(kontext));
-p('… und merkt sich ihn auch in der Signatur, sonst fällt eine Änderung nicht auf',
-  /teile\.push\(k\.id, k\.type, k\.edited, k\.alive, k\.text, k\.suchtext,/.test(kontext));
+p('Der Suchindex fragt dieselbe Stelle',
+  /Store\.durchsuchbar\(k\)/.test(kontext));
+p('… und schreibt, was sie sagt, in den Text des Eintrags',
+  /felderText\.forEach\(\(wert: string\) => text\.push\(wert\)\)/.test(kontext));
+p('… und merkt sich es auch in der Signatur, sonst fällt eine Änderung nicht auf',
+  /teile\.push\(k\.id, k\.type, k\.edited, k\.alive, felderText\.join/.test(kontext));
+/* Und die Gegenrichtung: die alte, doppelte Liste darf NICHT zurückkommen. */
+p('Und führt daneben keine zweite Liste mehr',
+  !/if \(k\.suchtext\) text\.push\(k\.suchtext\);/.test(kontext));
 
 const schaleQuelle = ohneKommentare(
   fs.readFileSync(path.join(WURZEL, 'src/schale/aufbau/schale.ts'), 'utf8'));

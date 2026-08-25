@@ -1424,7 +1424,15 @@ fasst achtzig Dateien an, und dabei will man nichts anderes gleichzeitig
 ändern.
 
 
-## L53 · „⌁ Erkennen" braucht einen Dienst, den Redion nicht mitliefert
+## L53 · „⌁ Erkennen" braucht einen Dienst — GESCHLOSSEN am 25. August 2026
+
+**Erledigt mit E150, geprüft mit test216 (32 Punkte).** Von den drei
+Möglichkeiten ist es die erste geworden: der Dienst liegt jetzt bei
+(`dienste/ocr.mts`), die Anleitung steht in `doku/OCR-DIENST.md`, und der
+Einrichtungsdialog sagt, was zu tun ist, bevor er nach einer Adresse fragt.
+Der widersprechende Satz in `doku/WAS-REDION-MEHR-KANN.md` ist berichtigt.
+Der Rest dieses Eintrags bleibt als Aufnahme des Standes vom 24. August.
+
 
 **24. August 2026.** `recognition.ts:405-409` erwartet einen selbst
 betriebenen Dienst unter `http://127.0.0.1:8765/ocr`. Im Verzeichnis liegt
