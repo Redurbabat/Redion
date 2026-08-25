@@ -115,11 +115,39 @@ if (auswahl.length === 0) {
  * sagt. Die Ausgabe geht dabei weiter durch, Zeile für Zeile — `stdio:
  * 'inherit'` ginge nicht mehr, weil dann niemand mitliest.
  */
-const starte = (datei: string): Promise<{ code: number; rot: number }> =>
+/* Wie lange ein Lauf schweigen darf, bevor er als hängend gilt.
+   Nicht die Gesamtdauer — manche Läufe rechnen lange und melden dabei
+   fleissig. Gemessen wird die STILLE: kein Zeichen auf stdout oder stderr.
+   Der längste ehrliche Abstand zwischen zwei Zeilen liegt bei den grossen
+   Sicherungsläufen unter zwei Minuten. */
+const STILLE_MAX = 5 * 60 * 1000;
+
+const starte = (datei: string): Promise<{ code: number; rot: number; haenger: boolean }> =>
   new Promise(resolve => {
     const kind = spawn(process.execPath, [datei], { stdio: ['inherit', 'pipe', 'pipe'] });
     let rot = 0;
     let rest = '';
+    let haenger = false;
+
+    /* EIN LAUF, DER WARTET, SIEHT AUS WIE EINER, DER RECHNET.
+       Am 25. August hing `test202` 25 Minuten an einem Fenster, das auf einen
+       Klick wartete, der in einem Prüflauf nie kommt — und der ganze
+       Durchgang stand still, ohne eine einzige Meldung. Erst ein Blick auf
+       die Änderungszeit der Protokolldatei zeigte es (E157).
+
+       Jetzt gibt es eine Uhr: keine Ausgabe für fünf Minuten heisst hängen.
+       Der Lauf wird beendet, benannt und der Durchgang geht weiter. */
+    let uhr: NodeJS.Timeout;
+    const nachstellen = (): void => {
+      clearTimeout(uhr);
+      uhr = setTimeout(() => {
+        haenger = true;
+        process.stderr.write('\n  ⏳ ' + datei.split('/').pop() +
+          ' hat ' + (STILLE_MAX / 60000) + ' Minuten nichts gemeldet — wird beendet.\n');
+        kind.kill('SIGKILL');
+      }, STILLE_MAX);
+    };
+    nachstellen();
     const lesen = (stueck: Buffer, nach: NodeJS.WriteStream) => {
       const text = rest + stueck.toString();
       const zeilen = text.split('\n');
@@ -131,11 +159,13 @@ const starte = (datei: string): Promise<{ code: number; rot: number }> =>
         nach.write(z + '\n');
       }
     };
-    kind.stdout?.on('data', (d: Buffer) => lesen(d, process.stdout));
-    kind.stderr?.on('data', (d: Buffer) => lesen(d, process.stderr as NodeJS.WriteStream));
+    kind.stdout?.on('data', (d: Buffer) => { nachstellen(); lesen(d, process.stdout); });
+    kind.stderr?.on('data', (d: Buffer) => {
+      nachstellen(); lesen(d, process.stderr as NodeJS.WriteStream); });
     kind.on('close', code => {
+      clearTimeout(uhr);
       if (rest) { if (/^\s*(❌|✗)\s/.test(rest)) rot++; process.stdout.write(rest); }
-      resolve({ code: code ?? 1, rot });
+      resolve({ code: haenger ? 1 : (code ?? 1), rot, haenger });
     });
   });
 
@@ -153,8 +183,10 @@ for (const lauf of auswahl) {
   if (i > 0) await warte(3000);
   i++;
   console.log(`\n──── [${i}/${auswahl.length}] ${lauf.name} ────`);
-  const { code, rot } = await starte(lauf.datei);
-  if (code !== 0) gescheitert.push(lauf.name);
+  const { code, rot, haenger } = await starte(lauf.datei);
+  if (haenger) gescheitert.push(lauf.name + ' (hängt — nach ' +
+    (STILLE_MAX / 60000) + ' Minuten Stille beendet)');
+  else if (code !== 0) gescheitert.push(lauf.name);
   else if (rot > 0) {
     /* Ein Lauf, der rote Punkte druckt und trotzdem mit 0 endet. Beides
        gehört gesagt: dass er rot ist UND dass sein Rückgabewert lügt. */

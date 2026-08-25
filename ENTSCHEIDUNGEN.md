@@ -10238,3 +10238,74 @@ Sichern verlorengeht, ist keiner.
 **Angesehen** (§55): `node bilder.mts quelle` zeigt alle drei Fälle auf einer
 Seite — aus einem Skript, aus einer Besprechung, und einen getippten Absatz
 ohne Knopf.
+
+
+---
+
+## E157 · Ein Prüflauf, der wartet, sieht aus wie einer, der rechnet
+
+**25. August 2026.** Der vollständige Durchgang stand 25 Minuten still. Keine
+Meldung, kein Fehler, kein Abbruch — nur ein Lauf, der nicht weiterging.
+Gefunden erst durch einen Blick auf die Änderungszeit der Protokolldatei:
+
+```txt
+zuletzt geschrieben   03:05:40
+jetzt                 03:29:31
+```
+
+### Die Ursache war meine eigene Änderung von vorhin
+
+E150 hat `Recognition.configure()` einen Satz vorangestellt: bevor nach einer
+Adresse gefragt wird, erklärt ein Fenster, was zu tun ist — „starte
+`node dienste/ocr.mts`, die Anleitung steht in `doku/OCR-DIENST.md`". Das war
+der eigentliche Kern von L53, und es ist richtig so.
+
+`test202` ersetzt für seinen Abschnitt aber nur `Dialog.frage`, nicht
+`Dialog.wahl`. Die Erklärung öffnete deshalb ein ECHTES Fenster und wartete
+auf einen Klick, der in einem Prüflauf nie kommt. `page.evaluate` wartete
+mit.
+
+Dieselbe Lehre wie beim Nachtrag zu E147, und diesmal teurer: **wer eine
+Funktion ändert, muss suchen, wer sie prüft.** `grep -l "Recognition.configure"
+pruefungen/` hätte gereicht — zwei Sekunden gegen fünfundzwanzig Minuten.
+
+### Und die Lehre, die nicht bei mir liegt
+
+`pruefungen/alle.mts` hatte keine Uhr. Ein Lauf, der hängt, und einer, der
+rechnet, sahen für den Durchgang gleich aus — und für den Menschen davor
+auch. Das ist eine Eigenschaft der Werkzeugkette, nicht ein Ausrutscher.
+
+Der Durchgang misst jetzt die **Stille**, nicht die Gesamtdauer:
+
+```txt
+keine Ausgabe für 5 Minuten  →  beenden, benennen, weitermachen
+
+  ⏳ test202.mts hat 5 Minuten nichts gemeldet — wird beendet.
+  ✗ 1 von 186 Läufen gescheitert:
+      test202 (hängt — nach 5 Minuten Stille beendet)
+```
+
+Gemessen wird bewusst die Stille: manche Läufe rechnen lange und melden dabei
+fleissig. Der längste ehrliche Abstand zwischen zwei Zeilen liegt bei den
+grossen Sicherungsläufen unter zwei Minuten.
+
+### Kann die Uhr rot werden — und bleibt sie sonst still?
+
+Beides auf einem Abzug des Baums geprüft, mit der Grenze auf sechs Sekunden:
+
+```txt
+ein Lauf, der schweigt und die Ereignisschleife am Leben hält
+  → beendet, benannt, Durchgang läuft weiter          ✓
+
+ein Lauf, der 15 s rechnet und alle 3 s eine Zeile meldet
+  → überlebt vollständig                              ✓
+```
+
+Die erste Gegenprobe war beim ersten Versuch **wertlos**: ein `await new
+Promise(() => {})` allein lässt Node von selbst aussteigen („unsettled
+top-level await"), der Lauf endete also ohne die Uhr. Erst mit einem
+`setInterval` daneben hängt er wirklich. Eine Gegenprobe, die den Schaden
+nicht anrichtet, beweist nichts — dritter Fall an diesem Tag.
+
+Die zweite Richtung ist die wichtigere: eine Uhr, die gesunde langsame Läufe
+abschiesst, wäre schlimmer als keine.

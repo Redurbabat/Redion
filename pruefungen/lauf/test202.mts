@@ -686,13 +686,25 @@ if (ausbildung) {
       expectedParent: ausbildung.rootId });
 }
 
+/* AUCH `Dialog.wahl` MUSS ERSETZT WERDEN, nicht nur `Dialog.frage`.
+   Seit E150 erklärt `configure()` ZUERST, was zu tun ist — „starte
+   `node dienste/ocr.mts`, die Anleitung steht in doku/OCR-DIENST.md" —, und
+   fragt erst danach nach der Adresse. Dieser Abschnitt ersetzte nur die
+   Frage; die Erklärung öffnete darum ein echtes Fenster und wartete auf
+   einen Klick, der in einem Prüflauf nie kommt.
+
+   Der Lauf hing daraufhin 25 Minuten an dieser Zeile, ohne eine Meldung.
+   Ein Prüflauf, der wartet, sieht aus wie einer, der rechnet (E157). */
 const cloudRejected = await seite.evaluate(async () => {
   Store.setMeta('ocr:localEndpoint', '');
   const oldQuestion = Dialog.frage;
+  const oldChoiceCfg = Dialog.wahl;
   (Dialog as any).frage = async () => 'https://example.com/ocr';
+  (Dialog as any).wahl = async (options: any) =>
+    options?.titel === 'Lokale Erkennung einrichten' ? 'weiter' : '';
   let result: string | null = null;
   try { result = await Recognition.configure(); }
-  finally { (Dialog as any).frage = oldQuestion; }
+  finally { (Dialog as any).frage = oldQuestion; (Dialog as any).wahl = oldChoiceCfg; }
   return { result, stored: Store.getMeta('ocr:localEndpoint', '') };
 });
 gleich('Die OCR-Konfiguration lehnt einen Cloud-Endpunkt ab', cloudRejected,
