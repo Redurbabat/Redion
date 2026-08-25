@@ -36361,23 +36361,41 @@ const Datenbank = (() => {
         const menueFuer = (c, q) => {
             const zk = zahlKeysVon(c), gk = gruppKeysVon(c);
             const p = q ? '@' + q : '';
-            return '<button data-neu="anzahl' + p + '">Anzahl der Einträge</button>' +
-                zk.map(k => `<button data-neu="summe:${k}${p}">Summe · ${esc(c.schema[k].name)}</button>` +
-                    `<button data-neu="schnitt:${k}${p}">Durchschnitt · ${esc(c.schema[k].name)}</button>` +
-                    `<button data-neu="kpi:${k}${p}">Kennzahl mit Ziel · ${esc(c.schema[k].name)}</button>`).join('') +
-                gk.map(k => `<button data-neu="verteilung:${k}${p}">Verteilung nach ${esc(c.schema[k].name)}</button>` +
+            /* DER NAME DER FREMDEN DATENBANK GEHÖRT AN JEDEN EINTRAG, nicht nur in
+               die Gruppenüberschrift. Der Filter von `menuMitSuche` liest den
+               KNOPFTEXT — steht der Name nur oben, findet „Rechnung" null Einträge,
+               und das Suchfeld ist eine Zusage, die es nicht hält. Gemessen: 0 von
+               23 (E186).
+      
+               Er macht die Zeile ausserdem für sich lesbar. Wer weit gerollt hat,
+               sieht die Überschrift nicht mehr und weiss sonst nicht, aus welcher
+               Datenbank die Zeile unter dem Zeiger stammt. */
+            const woher = q ? ' · ' + esc(c.name || 'Ohne Namen') : '';
+            return '<button data-neu="anzahl' + p + '">Anzahl der Einträge' + woher + '</button>' +
+                zk.map(k => `<button data-neu="summe:${k}${p}">Summe · ${esc(c.schema[k].name)}${woher}</button>` +
+                    `<button data-neu="schnitt:${k}${p}">Durchschnitt · ${esc(c.schema[k].name)}${woher}</button>` +
+                    `<button data-neu="kpi:${k}${p}">Kennzahl mit Ziel · ${esc(c.schema[k].name)}${woher}</button>`).join('') +
+                gk.map(k => `<button data-neu="verteilung:${k}${p}">Verteilung nach ${esc(c.schema[k].name)}${woher}</button>` +
                     zk.map(z => `<button data-neu="verteilung:${k}:${z}${p}">` +
-                        `${esc(c.schema[z].name)} nach ${esc(c.schema[k].name)}</button>`).join('')).join('');
+                        `${esc(c.schema[z].name)} nach ${esc(c.schema[k].name)}${woher}</button>`).join('')).join('');
         };
         fuss.addEventListener('click', e => {
             if (!elVon(e)?.closest('[data-a="kacheln"]'))
                 return;
             const r = (htmlVon(e) ?? document.body).getBoundingClientRect();
-            const m = UI.menu(`<div class="grp">Aus dieser Datenbank</div>` + menueFuer(coll, '') +
+            /* MIT SUCHE, NICHT OHNE (E186). Das Menü wächst mit dem Arbeitsbereich:
+               je Datenbank eine Anzahl-Zeile, drei je Zahlenspalte und eine je
+               Paar aus Gruppen- und Zahlenspalte. Eine Datenbank mit drei Zahlen-
+               und zwei Gruppenspalten macht 18 Einträge; bei fünfzig Datenbanken
+               sind es neunhundert. Durch neunhundert Knöpfe rollt niemand.
+      
+               `menuMitSuche` gibt es dafür seit langem und steht in dieser Datei
+               schon dreimal. Ein zweiter Weg dafür wäre L34 in klein. */
+            const m = UI.menuMitSuche(`<div class="grp">Aus dieser Datenbank</div>` + menueFuer(coll, '') +
                 (fremde.length
                     ? fremde.map((c) => `<div class="grp">Aus „${esc(c.name || 'Ohne Namen')}"</div>` + menueFuer(c, c.id)).join('')
                     : '') +
-                '<hr><button data-neu="leer">Alle Kacheln entfernen</button>', r.left - 160, r.top - 20);
+                '<hr><button data-neu="leer">Alle Kacheln entfernen</button>', r.left - 160, r.top - 20, { platzhalter: 'Kachel oder Datenbank suchen …' });
             m.addEventListener('click', ev => {
                 const b = elVon(ev)?.closest('[data-neu]');
                 if (!b)

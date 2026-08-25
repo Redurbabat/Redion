@@ -12897,3 +12897,55 @@ Prüflauf: `test237`, 55 Punkte, sieben Gegenproben — Quelle ignoriert (2
 rot), Richtung ignoriert (3), `wertKey` ignoriert (3), Verschieben ohne
 Wirkung (4), Balken ohne Deckel (1), Griffe zurück auf den Inhalt (3),
 Stottern zurück (1).
+
+---
+
+## E186 · Ein Menü, das mit dem Arbeitsbereich wächst
+
+**25. August 2026.** Nachtrag zu E185, gefunden beim Nachrechnen statt beim
+Ansehen.
+
+Das Menü „Kachel hinzufügen" bietet je Datenbank an:
+
+```txt
+1                        Anzahl der Einträge
+3 je Zahlenspalte        Summe · Durchschnitt · Kennzahl mit Ziel
+1 je Gruppenspalte       Verteilung nach …
+1 je Paar aus beiden     <Zahl> nach <Gruppe>
+```
+
+Eine Datenbank mit drei Zahlen- und zwei Gruppenspalten macht 18 Einträge.
+Seit E185 stehen dort **alle** Datenbanken des Arbeitsbereichs, nicht nur die
+eigene. Bei fünfzig Datenbanken sind das neunhundert Knöpfe.
+
+Durch neunhundert Knöpfe rollt niemand. Das ist kein Fehler, der beim Prüfen
+auffällt — mit zwei Datenbanken im Prüfstand sind es sechsunddreissig, und
+die passen —, sondern einer, der erst bei einem echten Arbeitsbereich
+auftaucht. Genau die Sorte, die man beim Bauen mitdenken muss, weil man sie
+später nicht sieht.
+
+`UI.menuMitSuche` gibt es dafür seit langem und steht in derselben Datei
+schon dreimal. Ein zweiter Weg dafür wäre L34 in klein.
+
+### Ein Suchfeld allein war nicht genug
+
+Eingebaut, ausprobiert, gemessen: „Rechnung" fand **null von dreiundzwanzig**
+Einträgen. Der Filter liest den KNOPFTEXT, und der Datenbankname stand nur
+in der Gruppenüberschrift.
+
+Ein Suchfeld, das nicht findet, ist schlimmer als keines: es ist eine Zusage,
+die es nicht hält, und wer sie einmal glaubt, sucht beim nächsten Mal
+woanders. Der Name steht jetzt an jedem fremden Eintrag — 4 von 23 —, und
+das macht die Zeile nebenbei für sich lesbar: wer weit gerollt hat, sieht
+die Überschrift nicht mehr und weiss sonst nicht, woher die Zeile unter dem
+Zeiger stammt.
+
+Prüflauf: `test237` §8, sieben Punkte. Gegenproben: `UI.menu` statt
+`UI.menuMitSuche` macht vier rot, der Name zurück in die Überschrift zwei.
+
+**Und die README sagt jetzt, was es gibt.** Sie zählte acht Ansichten auf;
+es sind dreizehn, und Raster, Feed, Karte, Dashboard und Pivot fehlten ganz.
+Dazu kamen zwei Abschnitte, die es vorher nicht gab: was ein Dashboard kann,
+und aus welchen Werkzeugen Redion Daten übernimmt. §33 verlangt, dass die
+README wichtige Nutzerfunktionen nennt — eine README, die weniger verspricht
+als die App kann, ist auch eine falsche README, nur in die andere Richtung.
