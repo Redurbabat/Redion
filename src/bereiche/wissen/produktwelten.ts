@@ -45,6 +45,14 @@ const Produktwelten = (() => {
   };
 
   const weltSetzen = (welt: Welt): void => {
+    /* DEN GLIEDERUNGSSTREIFEN WEGNEHMEN. Er gehört zur zuletzt geöffneten
+       Seite und hängt an `#main`; eine Produktwelt legt sich darüber, ohne
+       ihn anzufassen. Gemessen am 25. August in der Bibliothek: vier Striche
+       am rechten Rand, die zu „Willkommen in Redion" gehörten. Ein Klick
+       darauf sprang zu einem Block, der gar nicht gezeichnet war — also
+       nichts. `streifenZeichnen` baut ihn beim nächsten Seitenaufruf neu
+       (`inhaltsflaeche.ts`), hier reicht das Wegnehmen. */
+    document.getElementById('rand-toc')?.remove();
     Store.setMeta(WELT_META, welt);
     markieren(welt);
     document.dispatchEvent(new CustomEvent('redion:produktwelt', { detail: { welt } }));

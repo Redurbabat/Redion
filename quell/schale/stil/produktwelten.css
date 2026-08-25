@@ -50,6 +50,17 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
 
 /* Gemeinsames Bühnengerüst. Die Module liefern nur Sichten und keine zweite
    Datenspur; deshalb teilen sie auch dieselbe visuelle Grammatik. */
+/* `#page.produkt-welt` UND NICHT NUR `.produkt-welt`.
+   Eine Produktwelt wird in `#page` gezeichnet, und `#page` trägt dabei auch
+   `wide`. In `aufbau.css` steht `#page.wide{padding:0 60px 40vh}` — eine
+   Kennung plus Klasse und damit gewichtiger als jede Klassenregel hier, ganz
+   gleich, welche Datei später geladen wird.
+
+   Am Telefon kostete das 120 der 390 Pixel. Gemessen am 25. August: der
+   Kalender hatte 240 px für seinen Inhalt, und der Platzhalter „Termin,
+   Datenbank oder Datumsfeld …" braucht 277. Die Regel mit `padding:10px 12px`
+   weiter unten stand längst da — sie verlor nur. */
+#page.produkt-welt,
 .produkt-welt{width:min(100%,1380px);margin:0 auto;padding:18px 24px 72px;color:var(--text)}
 .produkt-welt button,.produkt-welt input,.produkt-welt select,.produkt-welt textarea{font:inherit}
 .produkt-welt button{touch-action:manipulation}
@@ -62,6 +73,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
   #handy-oben #hl-seiten{order:3}
   #handy-oben #hl-bespr{order:4}
   #handy-oben #hl-mehr{order:5}
+  #page.produkt-welt,
   .produkt-welt{padding:10px 12px calc(112px + env(safe-area-inset-bottom))}
   .produkt-bereiche-dialog{width:100vw;max-height:82dvh;margin-top:auto;border-radius:18px 18px 0 0}
   .produkt-bereiche-fuss{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
@@ -70,6 +82,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
 
 @media(min-width:761px) and (max-width:1000px){
   .weltwechsel button b{font-size:10.5px}
+  #page.produkt-welt,
   .produkt-welt{padding-inline:18px}
 }
 

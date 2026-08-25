@@ -96,9 +96,27 @@
 }
 
 .arbeitswelt .aw-inhalt{display:grid;align-content:start;gap:var(--aw-gap)}
+/* `container-type` MACHT DEN KASTEN MESSBAR. Was hier drinsteht, richtet sich
+   nach SEINER Breite, nicht nach der des Fensters — und die beiden haben
+   wenig miteinander zu tun: bei 1280 px Fenster ist die Mittelspalte zwischen
+   Navigation und Reiterfeld gerade 366 px breit, bei 1680 px sind es 726.
+   Ein `@media`-Ausdruck kann diesen Unterschied gar nicht sehen. */
 .arbeitswelt .aw-bereich{
+  container-type:inline-size;
   padding:18px;border:1px solid var(--line);border-radius:var(--aw-radius-lg);
   background:var(--aw-card);box-shadow:0 8px 24px rgba(0,0,0,.035)
+}
+
+/* DIE SUCHZEILE BRICHT NACH DER EIGENEN BREITE UM.
+   Gemessen am 25. August bei 1280 px: das Feld war 195 px breit, und fünf der
+   sieben Platzhalter brauchten mehr — „Termin, Datenbank oder Datumsfeld …"
+   stand als „Termin, Datenbank oder D…" da. Ein Platzhalter, der abbricht,
+   sagt nicht mehr, wonach man suchen kann; er ist der einzige Hinweis darauf.
+   Bei 480 px Kastenbreite bleibt die Zeile einreihig, darunter bekommt das
+   Feld eine eigene Zeile über die ganze Breite. */
+@container (max-width: 480px){
+  .arbeitswelt .aw-suche{grid-template-columns:minmax(0,1fr) auto}
+  .arbeitswelt .aw-suche-eingabe{grid-column:1/-1}
 }
 .arbeitswelt .aw-bereich-kopf{
   display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;
@@ -134,8 +152,15 @@
 }
 .arbeitswelt .aw-aktion-text{overflow:hidden;text-overflow:ellipsis;font-weight:620}
 
+/* NACH DER EIGENEN BREITE, NICHT NACH DER DES FENSTERS. Drei feste Spalten
+   ergaben in der Bibliothek Karten von 114 px — die Zahl passte, die
+   Beschriftung darunter nicht: „Inhaltsblöcke“ braucht 67 px und bekam 46,
+   „PDF-Dokumente“ 86 und bekam 46. Drei von sechs Karten sagten damit nicht
+   mehr, was ihre Zahl bedeutet. Gemessen am 25. August bei 1280 px, wo die
+   Mittelspalte zwischen Navigation und Reiterfeld nur ~400 px breit ist —
+   ein Media Query auf die FENSTERbreite kann das gar nicht sehen. */
 .arbeitswelt .aw-zaehler-grid{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:9px
 }
 .arbeitswelt .aw-zaehler{
   display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;
@@ -399,7 +424,6 @@
 @media(max-width:900px){
   .arbeitswelt .aw-kopf{min-height:138px;padding:23px 24px}
   .arbeitswelt .aw-aktionen{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .arbeitswelt .aw-zaehler-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .arbeitswelt .aw-uebersicht-grid,
   .arbeitswelt .aw-bibliothek-grid{grid-template-columns:1fr}
   .arbeitswelt .aw-wiki-liste,.arbeitswelt .aw-vorlagen{grid-template-columns:1fr}
@@ -435,8 +459,16 @@
   .arbeitswelt .aw-aktionen{gap:7px}
   .arbeitswelt .aw-aktion{padding:7px 9px;font-size:12px}
   .arbeitswelt .aw-aktion-icon{flex-basis:28px;width:28px;height:28px}
-  .arbeitswelt .aw-zaehler-grid{gap:7px}
-  .arbeitswelt .aw-zaehler{min-height:68px;padding:9px}
+  /* AM TELEFON STEHT DIE BESCHRIFTUNG UNTER BEIDEM, nicht neben dem Zeichen.
+     Gemessen: das Zählerraster ist dort 240 px breit — nicht 362, wie der
+     Kartenrand vermuten lässt. Mit dem Zeichen in derselben Zeile blieben je
+     Karte 116 − 34 − 10 − 18 = 54 px für den Text, und „PDF-Dokumente"
+     braucht 86. Also entweder eine Spalte und sechsmal scrollen, oder die
+     Beschriftung über die ganze Kartenbreite — das sind 98 px, und es passt. */
+  .arbeitswelt .aw-zaehler-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .arbeitswelt .aw-zaehler{min-height:68px;padding:9px;gap:2px 8px}
+  .arbeitswelt .aw-zaehler-icon{grid-row:1;width:28px;height:28px;font-size:15px}
+  .arbeitswelt .aw-zaehler-label{grid-column:1/-1}
   .arbeitswelt .aw-suche{grid-template-columns:minmax(0,1fr) auto}
   .arbeitswelt .aw-suche-eingabe{grid-column:1/-1}
   .arbeitswelt .aw-suche-knopf,.arbeitswelt .aw-suche-leeren{width:100%}

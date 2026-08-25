@@ -9509,3 +9509,116 @@ einen Block, an dem nichts mehr hängt.
 
 Mitgeprüft, weil `dateiHolen` und `dateiAlle` angefasst wurden: test96,
 test100, test107, test108, test124, test182, test183 — alle grün.
+
+
+---
+
+## E148 · Vier Sachen, die nur das Hinsehen fand — und die Ursache darunter
+
+**25. August 2026.** §55 sagt: nach jeder Änderung ein Bild. Nach den
+Prüfläufen zu E145–E147 stand die Bibliothek zum ersten Mal als Bild da, und
+sie zeigte vier Sachen, die kein einziger der 180 Läufe sehen konnte.
+
+### 1. Drei von sechs Zählern sagten nicht, was ihre Zahl bedeutet
+
+```txt
+15    Seiten          67 px nötig, 46 da  →  „Inhalts…"
+1961  Inhaltsblöcke   86 px nötig, 46 da  →  „PDF-…"
+0     PDF-Dokumente   65 px nötig, 46 da  →  „White…"
+```
+
+Die Zahlen stimmten alle. Eine Zahl ohne lesbare Beschriftung ist trotzdem
+keine Auskunft — dieselbe Familie wie die abgeschnittene Zahl beim
+Tabellenblock (§55.1), nur eine Ebene daneben.
+
+Das Raster stand auf `repeat(3, minmax(0,1fr))`. Drei feste Spalten in einer
+Mittelspalte von 366 px ergeben Karten von 114 px, und davon gehen Zeichen
+(34), Abstand (10) und Innenrand (24) ab. Jetzt steht dort
+`repeat(auto-fit, minmax(152px,1fr))` — so viele Spalten, wie lesbar
+hineinpassen, und nicht eine mehr.
+
+### 2. Vier graue Striche, die zu einer unsichtbaren Seite gehörten
+
+Am rechten Rand stand der Gliederungsstreifen (`#rand-toc`) — der von
+Notion bekannte Satz kurzer Striche, einer je Überschrift. Er gehörte zur
+zuletzt geöffneten Seite und hängt an `#main`; eine Produktwelt legt sich
+darüber, ohne ihn anzufassen. Ein Klick sprang zu einem Block, der gar nicht
+gezeichnet war, also nirgendwohin.
+
+`weltSetzen` nimmt ihn jetzt weg. Neu gebaut wird er ohnehin bei jedem
+Seitenaufruf.
+
+### 3. Fünf von sieben Such-Platzhaltern brachen ab
+
+```txt
+1280 px Fenster → Feld 195 px
+
+  „Titel, Pfad oder Alias …"              167   passt
+  „Whiteboard oder Seite …"               180   bricht ab
+  „Datenbank oder Ansicht …"              191   bricht ab
+  „Vorlage oder Beschreibung …"           214   bricht ab
+  „Aufgabe, Status oder Quelle …"         222   bricht ab
+  „Termin, Datenbank oder Datumsfeld …"   277   bricht ab
+```
+
+Ein Platzhalter ist der einzige Hinweis darauf, wonach man in diesem Feld
+suchen kann. Bricht er ab, ist er weg.
+
+Die Suchzeile bricht jetzt um — aber nach der **eigenen** Breite, nicht nach
+der des Fensters. Das ist der Punkt: bei 1280 px Fenster ist die Mittelspalte
+366 px breit, bei 1680 px sind es 726. Ein `@media`-Ausdruck kann diesen
+Unterschied gar nicht sehen, und genau deshalb stand die richtige Regel
+(`grid-column:1/-1`) längst da — nur hinter `@media(max-width:760px)`, wo sie
+bei 1280 px nie greift. `.aw-bereich` ist jetzt ein `container-type:
+inline-size`, und die Regel hängt an `@container (max-width: 480px)`.
+
+Container-Abfragen sind gewöhnliches CSS. Kein Paket, kein Bauschritt, §6
+bleibt unberührt.
+
+### 4. Und darunter: 120 von 390 Pixeln, die es nie gab
+
+Die Ursache von 1 und 3 zusammen. Am Telefon blieben von 390 px genau 240
+für den Inhalt übrig:
+
+```txt
+#page.wide          padding: 0 60px        aufbau.css      (1 Kennung, 1 Klasse)
+.produkt-welt       padding: 10px 12px     produktwelten.css   (1 Klasse)
+```
+
+Beide gelten für dasselbe Element — eine Produktwelt wird in `#page`
+gezeichnet, und `#page` trägt dabei auch `wide`. Die Regel mit der Kennung
+gewinnt, ganz gleich, welche Datei später geladen wird. Die Telefonregel
+stand seit jeher da und hat nie etwas bewirkt.
+
+Die Produktwelt-Regeln sind jetzt ebenfalls mit `#page` geschrieben. Der
+Inhalt am Telefon wuchs von 240 auf 336 px — vierzig Prozent mehr, in jeder
+Ansicht, ohne dass eine einzige Ansicht angefasst wurde.
+
+### Und ein fünfter Fehler, wieder in meiner eigenen Messung
+
+Der Prüfpunkt, der Punkt 4 hätte finden sollen, mass `welt.clientWidth` —
+und `clientWidth` ZÄHLT DIE INNENABSTÄNDE MIT. Mit den 60 px, die er finden
+sollte, meldete er weiter 390 von 390 und blieb grün. Gemessen wird jetzt
+`.aw-shell`, das erste Element ohne eigenen Abstand.
+
+Dritter Fall in drei Tagen, in dem nicht das Produkt kaputt war, sondern die
+Zeile, die es prüfen sollte (E145 `textContent`, E146 `|| -1`, hier
+`clientWidth`). Der gemeinsame Nenner: eine Messung, die nur den grünen Fall
+gesehen hat, ist keine Messung.
+
+### Kann die Suite rot werden?
+
+**test214**, vier Abschnitte über acht Ansichten und zwei Bildschirme, 16
+Punkte. Vier Gegenproben einzeln auf einem Abzug des Baums zurückgenommen:
+
+```txt
+`#page.produkt-welt` wieder zu `.produkt-welt`  → §1 rot (270 von 390) UND §3
+Zählerraster zurück auf drei feste Spalten      → §2 rot
+`@container` auf 0px gesetzt                    → §3 rot
+`rand-toc`-Wegnahme entfernt                    → §4 rot, alle acht Ansichten
+```
+
+§1 misst zusätzlich die Gegenrichtung (nichts steht über den Rand hinaus),
+und §2/§3/§4 haben je einen Punkt davor, der prüft, dass überhaupt etwas zu
+messen da war — ein leerer Bestand macht „nichts ist abgeschnitten" sonst
+trivial wahr.
