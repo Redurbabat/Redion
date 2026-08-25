@@ -523,16 +523,11 @@ const Marken = (() => {
     
            Kein Dauerverlauf: der würde am Ende der Leiste eine Andeutung zeigen,
            wo nichts mehr kommt. Die zwei Kennzeichen stehen nur, solange es
-           wirklich etwas zu holen gibt. */
-        const rollstand = () => {
-            const links = tools.scrollLeft > 2;
-            const rechts = tools.scrollLeft + tools.clientWidth < tools.scrollWidth - 2;
-            row.dataset['mehr'] = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
-        };
-        tools.addEventListener('scroll', rollstand, { passive: true });
-        if (typeof ResizeObserver === 'function')
-            new ResizeObserver(rollstand).observe(tools);
-        setTimeout(rollstand, 0);
+           wirklich etwas zu holen gibt.
+           Die Rechnung selbst steht in `kern/helfer/rollrand.ts` (E159). Hier
+           ist nur zu merken, dass GEROLLT wird `tools`, gezeichnet aber an
+           `row` — deshalb `an: row`. */
+        Rollrand.binde(tools, { art: 'mehr', an: row });
         const updateState = (next) => {
             const undo = tools.querySelector('[data-act="undo"]');
             const redo = tools.querySelector('[data-act="redo"]');

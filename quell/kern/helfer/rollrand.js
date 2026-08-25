@@ -49,29 +49,38 @@ const Rollrand = (() => {
      * ist.
      */
     const SPIEL = 2;
-    /** Setzt `data-rand` auf „links", „rechts", „links rechts" oder nichts. */
-    const pruefe = (feld) => {
-        const links = feld.scrollLeft > SPIEL;
-        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
+    const schreibe = (ziel, art, links, rechts) => {
+        if (art === 'mehr') {
+            const wert = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+            if (ziel.dataset['mehr'] !== wert)
+                ziel.dataset['mehr'] = wert;
+            return;
+        }
         const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
         /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
            Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
         if (wert) {
-            if (feld.dataset['rand'] !== wert)
-                feld.dataset['rand'] = wert;
+            if (ziel.dataset['rand'] !== wert)
+                ziel.dataset['rand'] = wert;
         }
-        else if (feld.dataset['rand'] !== undefined)
-            delete feld.dataset['rand'];
+        else if (ziel.dataset['rand'] !== undefined)
+            delete ziel.dataset['rand'];
+    };
+    /** Setzt `data-rand` bzw. `data-mehr` nach dem aktuellen Rollstand. */
+    const pruefe = (feld, wahl = {}) => {
+        const links = feld.scrollLeft > SPIEL;
+        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
+        schreibe(wahl.an || feld, wahl.art || 'rand', links, rechts);
     };
     /**
      * Ein Rollfeld beobachten. Gibt eine Funktion zurück, die das wieder
      * löst — gebraucht wird sie bisher nicht, aber ein Beobachter ohne
      * Abmeldung ist ein Leck, das man erst bemerkt, wenn es zu spät ist.
      */
-    const binde = (feld) => {
+    const binde = (feld, wahl = {}) => {
         if (!feld)
             return () => { };
-        const nachsehen = () => pruefe(feld);
+        const nachsehen = () => pruefe(feld, wahl);
         feld.addEventListener('scroll', nachsehen, { passive: true });
         /* Die Breite ändert sich auch ohne Rollen: das Fenster dreht sich, eine
            Spalte wird breiter gezogen, die Seitenleiste klappt ein. Ohne diesen

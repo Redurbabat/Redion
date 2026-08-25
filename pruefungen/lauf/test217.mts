@@ -204,6 +204,32 @@ p('Sie ist am Telefon wirklich zu schmal', (t.leiste?.scroll || 0) > (t.leiste?.
   `${t.leiste?.scroll} in ${t.leiste?.klar}`);
 gleich('Und zeigt das an der rechten Kante an', t.leiste?.mehr, 'rechts');
 
+/* UND SIE ZEICHNET AUCH ETWAS. Hier stand bis zum 25. August nur die Zeile
+   darüber — das Merkmal. Auf dem Bildschirmfoto endete „Meine Fehler"
+   trotzdem an einer scharfen Kante: der Schatten aus E151 war
+   `rgba(0,0,0,.34)` über `--bg-side`, also schwarz auf #1a1a1a. Deckkraft 1,
+   Prüfung grün, Bild unverändert.
+
+   Was sich messen lässt, ist die ART der Kante. Ein Verlauf endet in der
+   Fläche, auf der er liegt, und trägt in beiden Themen; ein Schatten in
+   fester Farbe tut das nicht. Diese Prüfung geht also rot, wenn jemand zum
+   Schatten zurückkehrt — sie beweist nicht, dass man die Kante SIEHT. Das
+   bleibt eine Frage ans Bild (§55), und deshalb steht sie hier so
+   ausdrücklich. */
+const kante = await telefon.evaluate(() => {
+  const leiste = document.querySelector<HTMLElement>('.lw-nav');
+  if (!leiste) return null;
+  const s = getComputedStyle(leiste, '::after');
+  return { deckkraft: Number(s.opacity), bild: s.backgroundImage,
+           schatten: s.boxShadow, breite: s.width };
+});
+p('Die rechte Kante ist eingeblendet', (kante?.deckkraft ?? 0) > 0.9, JSON.stringify(kante));
+p('Sie zeichnet einen Verlauf, keinen Schatten in fester Farbe',
+  /gradient/.test(kante?.bild || '') && !/px/.test(kante?.schatten || ''),
+  JSON.stringify(kante));
+p('Und sie hat Breite, sonst wäre der Verlauf unsichtbar',
+  parseFloat(kante?.breite || '0') >= 8, String(kante?.breite));
+
 const gerollt = await telefon.evaluate(async () => {
   const leiste = document.querySelector<HTMLElement>('.lw-nav');
   if (!leiste) return null;

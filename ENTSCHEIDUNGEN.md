@@ -10506,3 +10506,220 @@ Die Seitenleiste. „Lernzentrum" und „Workspace" stehen als feste Zeilen in
 der zweite Teil von L51 und ein eigener Umbau der Seitenleiste — hier
 absichtlich nicht mitgemacht, damit dieser Schritt eine Sache bleibt. L51
 bleibt deshalb offen und sagt jetzt genauer, was noch fehlt.
+
+
+## E159 · Ein schwarzer Schatten auf schwarzem Grund (L58)
+
+**25. August 2026.** L58 hielt fest, dass die Werkzeugzeile über dem
+Seitentitel am Telefon rollt, ohne es zu zeigen — 617 px Inhalt in einem
+390 px breiten Kasten. Erreichbar war alles; sichtbar war nichts. Und L58
+schloss mit einem Satz, der sich als halb richtig herausstellte:
+
+> Dass die Lösung dreimal fast gleich aussieht, ist selbst ein Hinweis: es
+> gehört ein gemeinsamer Helfer daraus gemacht.
+
+### Erst der Helfer
+
+Es gab ihn schon: `kern/helfer/rollrand.ts`, gebaut für die Tabellen. Nur
+kannten ihn die zwei älteren Stellen nicht, und beide rechneten dieselben
+drei Zeilen noch einmal:
+
+```txt
+lernwelt.ts     scrollLeft > 2 …          data-mehr am Element selbst
+pdf/marken.ts   scrollLeft > 2 …          data-mehr am ELTERNTEIL
+rollrand.ts     scrollLeft > SPIEL …      data-rand, weiche Kante
+```
+
+Zusammengelegt wird jetzt die RECHNUNG, nicht die Darstellung. `binde` nimmt
+eine Wahl entgegen:
+
+```ts
+Rollrand.binde(leiste, { art: 'mehr' })            Knopfleisten
+Rollrand.binde(tools,  { art: 'mehr', an: row })   PDF: rollt tools, malt row
+Rollrand.binde(feld)                               Tabellen, weiche Kante
+```
+
+`an` ist kein Zierrat. Im PDF rollt `.blatt-tools`, gezeichnet wird an
+`.blatt-reihe` — nimmt man die Angabe weg, gehen drei Punkte in test210 rot.
+Gegengeprüft, nicht angenommen.
+
+### Und dann das Hinsehen
+
+Für die neue Stelle schrieb ich den Schatten ab, der bei `.lw-nav` steht:
+
+```css
+box-shadow:-14px 0 14px -8px rgba(0,0,0,.34)
+```
+
+Die neue Prüfung war grün. Sie mass die berechnete Deckkraft des
+Pseudo-Elements, fand 1, und meldete „der Schatten ist wirklich da".
+
+Auf dem Bildschirmfoto war nichts. Schwarz mit 34 % über einer Fläche von
+`#141414` ist kein Schatten, sondern eine Rechnung ohne Wirkung.
+
+Also nachgesehen, wie es an der Stelle aussieht, von der ich abgeschrieben
+hatte — und dort war es genauso. Die Reiterleiste der Lernwelt, dunkles
+Thema, 390 px:
+
+```txt
+☀ Heute   📕 Lernen   🧭 Lernpfad   🧩 Meine Fehle│
+```
+
+Eine scharfe Kante mitten im Wort. Genau der Zustand, den E151 beheben
+wollte, und die Prüfung dazu war seit dem 25. August grün — weil sie das
+Datenmerkmal las und nicht das Bild.
+
+### Was stattdessen dasteht
+
+Ein Verlauf in die Farbe der Fläche, auf der er liegt:
+
+```css
+background:linear-gradient(to left, var(--bg-side), transparent)
+```
+
+Er endet dort, wo er liegt, und trägt deshalb im hellen wie im dunklen
+Thema. Dieselbe Antwort steht seit E140 an der linken Kante von
+`.blatt-reihe` — mit `--bg-card` — und war dort von Anfang an richtig; sie
+war nur nie auf die zwei anderen Stellen übertragen worden.
+
+Die zwei Streifen sind `position:sticky` mit negativem Aussenabstand: sticky,
+damit sie nicht mit dem Inhalt wegrollen, und der negative Abstand, damit sie
+die Knöpfe nicht 26 px weit vor sich herschieben.
+
+### Was jetzt geprüft wird — und was nicht
+
+| Punkt | Prüfung |
+|---|---|
+| `data-mehr` folgt dem Rollstand | test221 §6, test217 §3, test210 |
+| Die Kante wird eingeblendet (Deckkraft) | test221 §6 |
+| Es ist ein VERLAUF, kein Schatten in fester Farbe | test221 §6, test217 §3 |
+| Und der Streifen hat Breite | test217 §3 |
+
+Die dritte Zeile ist die Lehre aus diesem Eintrag. Sie beweist nicht, dass
+man die Kante SIEHT — das kann keine dieser Zahlen. Sie hält fest, welche
+ART von Kante gebaut wurde, und geht rot, wenn jemand zum Schatten
+zurückkehrt. Ob man etwas sieht, bleibt eine Frage ans Bild (§55), und genau
+deshalb steht dieser Vorbehalt auch im Prüflauf selbst.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · `Rollrand.binde` an der Werkzeugzeile entfernen | 7 in test221 |
+| B · das Merkmal steht, die CSS blendet nichts ein | 3 in test221 |
+| C · `an: row` im PDF weglassen | 3 in test210 |
+| D · `.lw-nav` zurück auf den schwarzen Schatten | 2 in test217 |
+
+D ist die eine, die es vorher nicht geben konnte: der Fehler, mit dem dieser
+Eintrag anfing, ist jetzt einer, der auffällt.
+
+
+## E160 · Ein Katalog, den niemand liest, wird still falsch (L51 Teil 2)
+
+**25. August 2026.** E158 trug sechs Bereiche in `Register.module` ein. Der
+zweite Teil von L51 hiess: „Lernzentrum" und „Workspace" stehen als feste
+Zeilen in `index.html`, nicht in `Register.navigation`. Das klang nach zwei
+Zeilen Nachtrag. Nachgezählt war es etwas anderes.
+
+### Was dastand, und was stimmte
+
+Der Kopf von `register/navigation.ts` sagte:
+
+> Hier steht die Ordnung. Die Seitenleiste liest sie und zeichnet, was sie
+> findet — mehr nicht.
+
+Gemessen im Browser, nicht geschätzt:
+
+```txt
+45   Zeilen zeichnet die Seitenleiste
+12   Einträge kannte das Register
+ 1   Aufruf las davon:  anPlatz('unten').filter(x => x.tun && x.vonAussen)
+```
+
+Das Register war nicht die Ordnung. Es war ein Anhängepunkt für fremde
+Bereiche, mit einer Liste daneben, die aussah wie eine Wahrheit.
+
+### Und deshalb war es kaputt
+
+Ein Katalog, den niemand ausführt, verrottet ohne Geräusch. Drei Einträge:
+
+| Eintrag | rief auf | ist aber |
+|---|---|---|
+| `suche` | `Werkzeuge.palette()` | die Befehlspalette, eine Zeile tiefer |
+| `posteingang` | `Werkzeuge.meldungen()` | die Meldungsliste, nicht der Posteingang |
+| `ki` | `App.kiPanel()` | eine Zeile, die die Seitenleiste nirgends zeigt |
+
+Keiner dieser Fehler konnte auffallen. Der Knopf „Suchen" in der
+Seitenleiste rief seit jeher `suche` aus `schale.ts`; der Registereintrag
+daneben behauptete etwas anderes und wurde nie ausgeführt. Genau das ist der
+Preis, den L51 gemeint hat — nur teurer als dort vermutet.
+
+### Was jetzt gilt
+
+Das AUSSEHEN bleibt in `index.html`: neun Knöpfe, Reihenfolge, Beschriftung,
+Tastenkürzel. Die HANDLUNG steht im Register, einmal. `schale.ts` hängt sie
+über `knopfId` an:
+
+```ts
+Register.navigation.anPlatz('oben').forEach(e => {
+  if (e.knopfId && e.tun) an(e.knopfId, …e.tun…);
+});
+```
+
+Wo vorher acht Zeilen `an('btn-…', …)` standen, steht jetzt eine Schleife —
+und daneben kein zweites, abweichendes Verzeichnis mehr.
+
+`test222 §5` hält beide aneinander: gleiche Anzahl, gleiche Folge Knopf für
+Knopf, gleiche Beschriftung, gleiche Kürzel. Wer eine Zeile im Markup
+umbenennt und das Register vergisst, macht sie rot — und umgekehrt.
+
+### Warum die Seitenleiste NICHT aus dem Register zeichnet
+
+Das wäre der reinere Weg, und er ist heute der falsche. Register und
+Seitenleiste sind so weit auseinander, dass „ab jetzt zeichnet das Register"
+sechs Zeilen verschieben würde: `bibliothek` steht dort unter `unten` und
+wird oben gezeichnet, `vorlagen` steht unter `unten` und erscheint bei den
+Werkzeugen, `ki` stünde plötzlich in der Leiste.
+
+Das ist eine Umstellung der Seitenleiste, um die niemand gebeten hat. Erst
+muss der Katalog stimmen; dann kann er zeichnen. Der Reihenfolge halber:
+diese Entscheidung macht Schritt eins, und die Prüfung sorgt dafür, dass er
+stimmen BLEIBT.
+
+
+### Und noch ein Fund, diesmal von mir selbst gemacht
+
+Als die Handlung ins Register wanderte, blieb `an('btn-new', …)` in
+`schale.ts` stehen. Die neue Schleife hängte dieselbe Zeile ein zweites Mal
+an — ein Klick auf „Neue Seite" legte **zwei** Seiten an. Gemessen: 13
+Seiten vorher, 15 nachher.
+
+Alle acht Punkte von §5 blieben dabei grün. Die Listen stimmten ja, und
+„macht die Zeile etwas auf?" ist bei zwei Seiten genauso wahr wie bei einer.
+Ein doppelt angehängter Knopf ist nur zu sehen, wenn man ZÄHLT — also zählt
+§5 jetzt, und Gegenprobe D stellt die doppelte Zeile wieder her: rot,
+„ist 2, soll 1".
+
+Das ist die vierte Messung in diesem Durchgang, die aus dem falschen Grund
+grün war. Ein Punkt, der aus dem falschen Grund grün ist, fällt niemandem
+auf — das steht seit E145 in dieser Datei, und es stimmt jedes Mal wieder.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · das alte Register zurück (vier Einträge, `ki`, falsche Aufrufe) | 7 |
+| B · eine Zeile nur im Markup umbenennen | 1 |
+| C · die Schleife in `schale.ts` entfernen | 3 |
+| D · `an('btn-new', …)` wieder danebenstellen | 1 |
+
+A ist der Zustand von gestern, rückwärts nachgestellt. Er meldet unter
+anderem „Suchen öffnet die Suche — {suchfeld:false}": der Fehler, mit dem
+dieser Eintrag anfängt, ist jetzt einer, der auffällt.
+
+### Was offen bleibt
+
+36 der 45 gezeichneten Zeilen stehen weiter in keinem Register — die
+Werkzeuge, die Apps-Liste, die untere Gruppe. Sie haben grösstenteils nicht
+einmal eine Kennung im Markup. Das steht in L51 und ist der nächste Schritt,
+nicht dieser.

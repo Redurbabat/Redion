@@ -98,17 +98,30 @@
 }
 .lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
 
-/* Ein Schatten an der Kante, hinter der es weitergeht. Kein Knopf und kein
-   Pfeil: beides wäre etwas, woneben man tippen kann. Das Merkmal setzt
-   `reiterRollstand` in `lernwelt.ts`; steht es auf „nein", ist die Leiste
-   vollständig zu sehen und beide Schatten sind aus. */
+/* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
+   wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
+   in `lernwelt.ts`; steht es auf „nein", ist die Leiste vollständig zu sehen
+   und beide Kanten sind aus.
+
+   HIER STAND EIN SCHATTEN, UND ER WAR AUF DEM TELEFON NICHT ZU SEHEN
+   (E159). `rgba(0,0,0,.34)` über `--bg-side` heisst im dunklen Thema
+   schwarz auf #1a1a1a. Auf dem Bildschirmfoto vom 25. August endete
+   „Meine Fehler" mitten im Wort an einer scharfen Kante — genau der
+   Zustand, den E151 beheben wollte. Die Prüfung war grün, weil sie die
+   Deckkraft mass und nicht das Bild.
+
+   Ein Verlauf endet dagegen in der Fläche, auf der er liegt, und trägt in
+   beiden Themen. Die negativen Aussenabstände halten ihn layoutfrei. */
 .lernwelt .lw-nav::before,
 .lernwelt .lw-nav::after{
-  content:"";position:sticky;z-index:1;flex:0 0 0;align-self:stretch;width:0;
+  content:"";position:sticky;z-index:1;align-self:stretch;
+  flex:0 0 26px;width:26px;
   opacity:0;transition:opacity var(--motion-fast,130ms) ease;pointer-events:none
 }
-.lernwelt .lw-nav::before{left:0;box-shadow:14px 0 14px -8px rgba(0,0,0,.34)}
-.lernwelt .lw-nav::after{right:0;box-shadow:-14px 0 14px -8px rgba(0,0,0,.34)}
+.lernwelt .lw-nav::before{left:0;margin-right:-26px;
+  background:linear-gradient(to right, var(--bg-side), transparent)}
+.lernwelt .lw-nav::after{right:0;margin-left:-26px;
+  background:linear-gradient(to left,  var(--bg-side), transparent)}
 .lernwelt .lw-nav[data-mehr="links"]::before,
 .lernwelt .lw-nav[data-mehr="beides"]::before{opacity:1}
 .lernwelt .lw-nav[data-mehr="rechts"]::after,

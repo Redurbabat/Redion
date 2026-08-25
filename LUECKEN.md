@@ -1398,17 +1398,36 @@ etwas AUFMACHT. Beim ersten Lauf fand sie sofort einen: `lebensbereiche`
 rief dieselbe Zeile wie sein Nachbar auf, und auf dem Bildschirm änderte
 sich nichts.
 
-**Was offen bleibt: die Seitenleiste.** „Lernzentrum" und „Workspace" stehen
-als feste Zeilen in `index.html` (144 und 147), nicht in
-`Register.navigation`. Damit ist die zweite Hälfte von §5 Regel 2 —
-„navigation.js" — für die Hauptwelten weiter nicht erfüllt.
+**Zweiter Teil erledigt** (E160, 25. August) — und er war grösser als
+gedacht. Beim Nachzählen im Browser:
 
-Das ist kein Nachtrag von zwei Zeilen. `Register.navigation` ordnet nach
-Plätzen (oben, baum, unten), die festen Zeilen stehen in einer eigenen
-Gruppe mit eigenem Aussehen und eigener Markierung der aktiven Welt
-(`Produktwelten.markieren`). Wer sie ins Register hebt, baut die
-Seitenleisten-Reihenfolge um — und das will man nicht nebenbei tun,
-sondern als eine Sache, mit einem Bild vorher und einem nachher.
+```txt
+45   Zeilen zeichnet die Seitenleiste
+12   Einträge kannte das Register
+ 1   Aufruf las davon:  anPlatz('unten') mit `vonAussen`
+```
+
+Der Kopf von `register/navigation.ts` behauptete „Hier steht die Ordnung.
+Die Seitenleiste liest sie und zeichnet, was sie findet." Das war falsch,
+und weil es falsch war, war der Katalog auch inhaltlich verrottet: `suche`
+rief die Befehlspalette auf, `posteingang` die Meldungsliste, `ki` stand
+drin und wird nirgends gezeigt. Drei Fehler, die nie auffallen konnten.
+
+Die oberste Gruppe hängt jetzt am Register: Aussehen in `index.html`,
+Handlung im Register, verbunden über `knopfId`. test222 §5 vergleicht beide
+Listen Zeile für Zeile — Anzahl, Folge, Beschriftung, Kürzel.
+
+**Was weiter offen ist.** 36 der 45 gezeichneten Zeilen stehen in keinem
+Register: die Werkzeuge-Gruppe, die Apps-Liste, die untere Gruppe. Die
+meisten haben nicht einmal eine Kennung im Markup, an der man sie fassen
+könnte.
+
+Und die Seitenleiste zeichnet weiterhin selbst, statt aus dem Register zu
+lesen. Das ist Absicht, kein Rest: Register und Leiste sind so weit
+auseinander, dass „ab jetzt zeichnet das Register" heute sechs Zeilen
+verschieben würde — `bibliothek` steht unter `unten` und erscheint oben,
+`vorlagen` steht unter `unten` und erscheint bei den Werkzeugen, `ki`
+stünde plötzlich da. Erst muss der Katalog stimmen, dann darf er zeichnen.
 
 
 ## L52 · ~~Zwei Willkommensdialoge~~ — die Prüfseite bleibt offen
@@ -1669,7 +1688,7 @@ Zeit steht. Das ist eine Änderung an der KI-Anweisung und braucht ein Modell
 zum Messen; ohne eines liesse sich nur behaupten, dass es geht.
 
 
-## L58 · Die Werkzeugzeile über dem Titel rollt, ohne es zu zeigen
+## L58 · ~~Die Werkzeugzeile über dem Titel rollt, ohne es zu zeigen~~
 
 **25. August 2026.** Beim Bauen von E156 gemessen, nicht gesucht.
 
@@ -1684,14 +1703,22 @@ Erreichbar ist damit alles. Sichtbar ist es nicht: nichts zeigt an, dass es
 rechts weitergeht. Ein abgeschnittenes Wort sieht aus wie ein Fehler, nicht
 wie eine Einladung zum Wischen — genau der Satz aus E151.
 
-**Warum nicht sofort behoben.** Die Lösung ist bekannt und zweimal gebaut
-(E141 für die PDF-Markierungsleiste, E151 für die Reiterleiste der Lernwelt):
-ein Datenmerkmal `data-mehr`, aus dem die CSS einen Schatten an der jeweiligen
-Kante macht. Sie braucht aber einen JavaScript-Haken an der Stelle, an der
-`.pg-tools` gezeichnet wird, und die liegt in der Schale — ein anderer Ort als
-die drei Ränder, um die es in E156 ging. Ein Stapel, der immer weiter wächst,
-wird nicht besser.
+**Behoben am 25. August (E159)** — und der Weg dahin war lehrreicher als
+die Lücke.
 
-Dass die Lösung dreimal fast gleich aussieht, ist selbst ein Hinweis: es
-gehört ein gemeinsamer Helfer daraus gemacht, statt ein viertes Mal
-abzuschreiben.
+Den gemeinsamen Helfer gab es längst: `kern/helfer/rollrand.ts`, gebaut für
+die Tabellen. Nur kannten ihn die zwei älteren Stellen nicht. Zusammengelegt
+ist jetzt die RECHNUNG; die Darstellung darf verschieden bleiben, und `an`
+sagt, wo gemalt wird, wenn das nicht dasselbe Element ist wie das rollende.
+
+Der eigentliche Fund kam beim Hinsehen. Für die neue Stelle schrieb ich den
+Schatten von `.lw-nav` ab; die Prüfung mass Deckkraft 1 und war grün, und auf
+dem Bildschirmfoto war nichts. `rgba(0,0,0,.34)` über `#141414` ist kein
+Schatten. Dieselbe Stelle, von der ich abgeschrieben hatte, war seit E151
+genauso wirkungslos — mit grüner Prüfung.
+
+Was jetzt dasteht, ist ein Verlauf in die Farbe der Fläche, wie ihn
+`.blatt-reihe` seit E140 an der linken Kante hat. Er trägt in beiden Themen.
+Geprüft wird zusätzlich die ART der Kante (test221 §6, test217 §3): das geht
+rot, wenn jemand zum Schatten zurückkehrt. Dass man sie SIEHT, beweist keine
+dieser Zahlen — das bleibt eine Frage ans Bild (§55).

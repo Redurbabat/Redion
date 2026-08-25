@@ -122,6 +122,8 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | §47 | E156, test221 | „Volle Breite" gab am Telefon WENIGER Breite |
 | — | E157, alle.mts | ein Lauf, der wartet, sah aus wie einer, der rechnet |
 | CLAUDE.md §5 | E158, test222 | sechs Bereiche standen in keinem Katalog; **L51 halb zu** |
+| §47 | E159, test221/217 | ein schwarzer Schatten auf schwarzem Grund; **L58 zu** |
+| CLAUDE.md §5 | E160, test222 §5 | drei Registereinträge waren falsch, weil sie niemand las |
 
 Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
 test206, test218 und test86. Gezählt, nicht geschätzt:

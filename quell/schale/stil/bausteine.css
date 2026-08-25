@@ -1052,6 +1052,41 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   .pg-tools::-webkit-scrollbar{ display:none }
   .pg-tools button{ flex:0 0 auto }
 
+  /* UND SIE ZEIGT, DASS SIE ROLLT (L58, E159).
+     Gemessen auf 390 px: 617 px Inhalt in einem 390 px breiten Kasten.
+     Schiebbar war die Zeile schon; nur sagte es nichts, und ein
+     abgeschnittenes Wort liest sich als Fehler, nicht als Einladung.
+
+     EIN VERLAUF, KEIN SCHATTEN — und das ist der zweite Anlauf. Der erste
+     schrieb `box-shadow:14px 0 14px -8px rgba(0,0,0,.34)` ab, wie es bei
+     `.lw-nav` stand. Die Prüfung war grün (Deckkraft 1), und auf dem
+     Bildschirmfoto war NICHTS zu sehen: ein schwarzer Schatten auf einer
+     Fläche von #141414 ist kein Schatten. Genau §55 — hinsehen, nicht nur
+     messen.
+
+     Der Verlauf endet dagegen in der Fläche, auf der er liegt, und trägt
+     damit in beiden Themen. Dieselbe Antwort steht seit E140 an der linken
+     Kante von `.blatt-reihe`, dort mit `--bg-card`.
+
+     `position:sticky` statt eines aufgelegten Elements: ein gewöhnliches
+     Pseudo-Element würde MIT dem Inhalt wegrollen und wäre nach dem ersten
+     Wisch nicht mehr am Rand. Die negativen Aussenabstände halten den
+     Streifen dabei layoutfrei — er legt sich über den Knopf am Rand, statt
+     ihn 26 px weit zu schieben. */
+  .pg-tools::before,
+  .pg-tools::after{
+    content:""; position:sticky; z-index:1; align-self:stretch;
+    flex:0 0 26px; width:26px; opacity:0; pointer-events:none;
+    transition:opacity var(--motion-fast,130ms) ease }
+  .pg-tools::before{ left:0;  margin-right:-26px;
+    background:linear-gradient(to right, var(--bg), transparent) }
+  .pg-tools::after{  right:0; margin-left:-26px;
+    background:linear-gradient(to left,  var(--bg), transparent) }
+  .pg-tools[data-mehr="links"]::before,
+  .pg-tools[data-mehr="beides"]::before{ opacity:1 }
+  .pg-tools[data-mehr="rechts"]::after,
+  .pg-tools[data-mehr="beides"]::after{ opacity:1 }
+
   /* --- CODEBLOCK: die Werkzeuge STANDEN AUF DEM CODE ------------------- *
      Gemessen am 6. August bei 390 px: der Kasten mit ⧉ № ↩ lag von x=175
      bis 252, die Sprachwahl von 248 bis 362 — und die erste Codezeile

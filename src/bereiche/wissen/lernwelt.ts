@@ -1781,18 +1781,16 @@ const Lernwelt = (() => {
    * Dieselbe Lösung wie bei der Markierungsleiste im PDF (E141): ein
    * Datenmerkmal, aus dem die CSS einen Schatten an der jeweiligen Kante
    * macht. Kein Knopf, kein Pfeil, nichts zum Danebentippen.
+   *
+   * Die Rechnung stand hier einmal ausgeschrieben — dieselben drei Zeilen
+   * wie in `pdf/marken.ts`, und beim dritten Mal (der Werkzeugzeile über dem
+   * Seitentitel) wäre es eine Abschrift zu viel gewesen. Sie liegt jetzt in
+   * `kern/helfer/rollrand.ts`; `art: 'mehr'` wählt die Schattenfassung, und
+   * `data-mehr` steht danach genau wie vorher (E159).
    */
   const reiterRollstand = (): void => {
-    const leiste = zustand.root?.querySelector<HTMLElement>('.lw-nav');
-    if (!leiste) return;
-    const stand = (): void => {
-      const links = leiste.scrollLeft > 2;
-      const rechts = leiste.scrollLeft + leiste.clientWidth < leiste.scrollWidth - 2;
-      leiste.dataset['mehr'] = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
-    };
-    leiste.addEventListener('scroll', stand, { passive: true });
-    if (typeof ResizeObserver === 'function') new ResizeObserver(stand).observe(leiste);
-    stand();
+    Rollrand.binde(zustand.root?.querySelector<HTMLElement>('.lw-nav') || null,
+      { art: 'mehr' });
   };
 
   const ansichtGueltig = (wert: unknown): wert is LernweltAnsicht =>

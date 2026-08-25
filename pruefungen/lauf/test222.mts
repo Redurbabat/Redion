@@ -204,6 +204,107 @@ const mitDokument = await seite.evaluate(async () => {
 });
 p('Mit einem Dokument schaltet er um', mitDokument);
 
+/* ==========================================================================
+ * §5 · Die oberste Gruppe der Seitenleiste und ihr Register sagen dasselbe
+ * --------------------------------------------------------------------------
+ * L51 Teil 2. Der Kopf von `register/navigation.ts` behauptete: „Hier steht
+ * die Ordnung. Die Seitenleiste liest sie und zeichnet, was sie findet."
+ * Nachgezählt am 25. August: gezeichnet werden 45 Zeilen, im Register standen
+ * 12, und gelesen wurde davon einzig `anPlatz('unten')` mit `vonAussen`.
+ *
+ * DAS IST NICHT NUR UNORDENTLICH, SONDERN GEHT KAPUTT. Ein Katalog, den
+ * niemand ausführt, wird still falsch:
+ *
+ *     suche        rief `Werkzeuge.palette()`   das ist „Befehle"
+ *     posteingang  rief `Werkzeuge.meldungen()` das ist die Meldungsliste
+ *     ki           stand drin                   und wird nirgends gezeigt
+ *
+ * Drei falsche Einträge, jahrelang, ohne dass etwas rot wurde — weil sie
+ * niemand las. Jetzt hängt `schale.ts` die oberste Gruppe über `knopfId`
+ * aus dem Register, und diese Prüfung hält Markup und Register aneinander.
+ * ========================================================================*/
+console.log('\n5 · Seitenleiste und Register sagen dasselbe');
+
+const leiste = await seite.evaluate(() => {
+  const zeilen = [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]
+    .map(b => {
+      const teile = [...b.children] as HTMLElement[];
+      return { knopfId: b.id,
+               name: (teile[1]?.textContent || '').trim(),
+               kuerzel: (teile.find(x => x.classList.contains('k'))?.textContent || '').trim() };
+    });
+  const reg = Register.navigation.anPlatz('oben').map((x: any) => ({
+    knopfId: String(x.knopfId || ''), name: String(x.name || ''),
+    kuerzel: String(x.kuerzel || ''), hatTun: typeof x.tun === 'function' }));
+  return { zeilen, reg };
+});
+
+gleich('Gleich viele Zeilen wie Einträge',
+  leiste.reg.length, leiste.zeilen.length);
+gleich('Und in derselben Folge, Knopf für Knopf',
+  leiste.reg.map((x: any) => x.knopfId), leiste.zeilen.map((x: any) => x.knopfId));
+gleich('Mit denselben Beschriftungen',
+  leiste.reg.map((x: any) => x.name), leiste.zeilen.map((x: any) => x.name));
+gleich('Und denselben Tastenkürzeln',
+  leiste.reg.map((x: any) => x.kuerzel), leiste.zeilen.map((x: any) => x.kuerzel));
+gleich('Jeder Eintrag weiss, was er tut',
+  leiste.reg.filter((x: any) => !x.hatTun).map((x: any) => x.knopfId), []);
+
+/* Und die zwei, die falsch waren, sind es nicht mehr. Gemessen wird, WAS
+   aufgeht — nicht, dass irgendetwas aufgeht. Ein falscher Eintrag öffnete ja
+   durchaus etwas; nur eben das Falsche. */
+const zwei = await seite.evaluate(async () => {
+  const auf = async (id: string) => {
+    document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
+    document.getElementById(id)?.click();
+    await new Promise(r => setTimeout(r, 500));
+    const o = document.querySelector('.overlay');
+    const raus = { suchfeld: !!o?.querySelector('#q'), befehlsfeld: !!o?.querySelector('#cq') };
+    document.querySelectorAll<HTMLElement>('.overlay').forEach(x => x.remove());
+    return raus;
+  };
+  return { suchen: await auf('btn-search'), befehle: await auf('btn-cmd') };
+});
+p('„Suchen" öffnet die Suche', zwei.suchen.suchfeld && !zwei.suchen.befehlsfeld,
+  JSON.stringify(zwei.suchen));
+p('„Befehle" öffnet die Befehle', zwei.befehle.befehlsfeld && !zwei.befehle.suchfeld,
+  JSON.stringify(zwei.befehle));
+
+/* Und keine Zeile ist tot. */
+const tot = await seite.evaluate(async () => {
+  const raus: string[] = [];
+  for (const b of [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]) {
+    document.querySelectorAll<HTMLElement>('.overlay, .menu').forEach(o => o.remove());
+    const vorher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
+    b.click();
+    await new Promise(r => setTimeout(r, 450));
+    const nachher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
+    if (vorher === nachher) raus.push(b.id);
+    document.querySelectorAll<HTMLElement>('.overlay, .menu').forEach(o => o.remove());
+  }
+  return raus;
+});
+gleich('Und jede Zeile macht wirklich etwas auf', tot, []);
+
+/* GENAU EINMAL, NICHT ZWEIMAL. Als die Handlung ins Register wanderte,
+   blieb `an('btn-new', …)` in `schale.ts` stehen — die Schleife hängte
+   dieselbe Zeile ein zweites Mal an, und ein Klick auf „Neue Seite" legte
+   ZWEI Seiten an. Gemessen: 13 vorher, 15 nachher.
+
+   Alle Punkte oben blieben grün. „Macht die Zeile etwas auf?" ist bei zwei
+   Seiten genauso wahr wie bei einer, und die Listen stimmten ja. Ein
+   doppelt angehängter Knopf ist nur zu sehen, wenn man ZÄHLT. */
+const einmal = await seite.evaluate(async () => {
+  const zaehle = () => Object.values(Store.cache.blocks)
+    .filter((b: any) => b.type === 'page' && b.alive).length;
+  const vorher = zaehle();
+  document.getElementById('btn-new')?.click();
+  await new Promise(r => setTimeout(r, 900));
+  return { vorher, nachher: zaehle() };
+});
+gleich('„Neue Seite" legt genau EINE Seite an',
+  einmal.nachher - einmal.vorher, 1);
+
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);
 if (fehler.length) console.log('Browserfehler:\n  ' + fehler.join('\n  '));

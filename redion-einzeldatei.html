@@ -3911,17 +3911,30 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 }
 .lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
 
-/* Ein Schatten an der Kante, hinter der es weitergeht. Kein Knopf und kein
-   Pfeil: beides wäre etwas, woneben man tippen kann. Das Merkmal setzt
-   `reiterRollstand` in `lernwelt.ts`; steht es auf „nein", ist die Leiste
-   vollständig zu sehen und beide Schatten sind aus. */
+/* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
+   wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
+   in `lernwelt.ts`; steht es auf „nein", ist die Leiste vollständig zu sehen
+   und beide Kanten sind aus.
+
+   HIER STAND EIN SCHATTEN, UND ER WAR AUF DEM TELEFON NICHT ZU SEHEN
+   (E159). `rgba(0,0,0,.34)` über `--bg-side` heisst im dunklen Thema
+   schwarz auf #1a1a1a. Auf dem Bildschirmfoto vom 25. August endete
+   „Meine Fehler" mitten im Wort an einer scharfen Kante — genau der
+   Zustand, den E151 beheben wollte. Die Prüfung war grün, weil sie die
+   Deckkraft mass und nicht das Bild.
+
+   Ein Verlauf endet dagegen in der Fläche, auf der er liegt, und trägt in
+   beiden Themen. Die negativen Aussenabstände halten ihn layoutfrei. */
 .lernwelt .lw-nav::before,
 .lernwelt .lw-nav::after{
-  content:"";position:sticky;z-index:1;flex:0 0 0;align-self:stretch;width:0;
+  content:"";position:sticky;z-index:1;align-self:stretch;
+  flex:0 0 26px;width:26px;
   opacity:0;transition:opacity var(--motion-fast,130ms) ease;pointer-events:none
 }
-.lernwelt .lw-nav::before{left:0;box-shadow:14px 0 14px -8px rgba(0,0,0,.34)}
-.lernwelt .lw-nav::after{right:0;box-shadow:-14px 0 14px -8px rgba(0,0,0,.34)}
+.lernwelt .lw-nav::before{left:0;margin-right:-26px;
+  background:linear-gradient(to right, var(--bg-side), transparent)}
+.lernwelt .lw-nav::after{right:0;margin-left:-26px;
+  background:linear-gradient(to left,  var(--bg-side), transparent)}
 .lernwelt .lw-nav[data-mehr="links"]::before,
 .lernwelt .lw-nav[data-mehr="beides"]::before{opacity:1}
 .lernwelt .lw-nav[data-mehr="rechts"]::after,
@@ -5838,6 +5851,41 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   .pg-tools::-webkit-scrollbar{ display:none }
   .pg-tools button{ flex:0 0 auto }
+
+  /* UND SIE ZEIGT, DASS SIE ROLLT (L58, E159).
+     Gemessen auf 390 px: 617 px Inhalt in einem 390 px breiten Kasten.
+     Schiebbar war die Zeile schon; nur sagte es nichts, und ein
+     abgeschnittenes Wort liest sich als Fehler, nicht als Einladung.
+
+     EIN VERLAUF, KEIN SCHATTEN — und das ist der zweite Anlauf. Der erste
+     schrieb `box-shadow:14px 0 14px -8px rgba(0,0,0,.34)` ab, wie es bei
+     `.lw-nav` stand. Die Prüfung war grün (Deckkraft 1), und auf dem
+     Bildschirmfoto war NICHTS zu sehen: ein schwarzer Schatten auf einer
+     Fläche von #141414 ist kein Schatten. Genau §55 — hinsehen, nicht nur
+     messen.
+
+     Der Verlauf endet dagegen in der Fläche, auf der er liegt, und trägt
+     damit in beiden Themen. Dieselbe Antwort steht seit E140 an der linken
+     Kante von `.blatt-reihe`, dort mit `--bg-card`.
+
+     `position:sticky` statt eines aufgelegten Elements: ein gewöhnliches
+     Pseudo-Element würde MIT dem Inhalt wegrollen und wäre nach dem ersten
+     Wisch nicht mehr am Rand. Die negativen Aussenabstände halten den
+     Streifen dabei layoutfrei — er legt sich über den Knopf am Rand, statt
+     ihn 26 px weit zu schieben. */
+  .pg-tools::before,
+  .pg-tools::after{
+    content:""; position:sticky; z-index:1; align-self:stretch;
+    flex:0 0 26px; width:26px; opacity:0; pointer-events:none;
+    transition:opacity var(--motion-fast,130ms) ease }
+  .pg-tools::before{ left:0;  margin-right:-26px;
+    background:linear-gradient(to right, var(--bg), transparent) }
+  .pg-tools::after{  right:0; margin-left:-26px;
+    background:linear-gradient(to left,  var(--bg), transparent) }
+  .pg-tools[data-mehr="links"]::before,
+  .pg-tools[data-mehr="beides"]::before{ opacity:1 }
+  .pg-tools[data-mehr="rechts"]::after,
+  .pg-tools[data-mehr="beides"]::after{ opacity:1 }
 
   /* --- CODEBLOCK: die Werkzeuge STANDEN AUF DEM CODE ------------------- *
      Gemessen am 6. August bei 390 px: der Kasten mit ⧉ № ↩ lag von x=175
@@ -12784,8 +12832,27 @@ Register.module = (() => {
  * Genau deshalb darf sie keiner anfassen: sonst hängt ihre Reihenfolge davon
  * ab, welche Datei zuletzt geladen wurde.
  *
- * Hier steht die Ordnung. Die Seitenleiste liest sie und zeichnet, was sie
- * findet — mehr nicht.
+ * WAS HIER STEHT, UND WAS NICHT. Hier stand bis zum 25. August der Satz
+ * „Hier steht die Ordnung. Die Seitenleiste liest sie und zeichnet, was sie
+ * findet — mehr nicht." Er war falsch. Nachgezählt: die Seitenleiste
+ * zeichnet 45 Zeilen, dieses Register kannte 12, und gelesen wurde davon
+ * genau ein Teil — `anPlatz('unten')`, gefiltert auf `vonAussen`.
+ *
+ * Ein Katalog, den niemand liest, wird still falsch. Der Eintrag `suche`
+ * rief `Werkzeuge.palette()` auf, also das, was „Befehle" tut; `ki` stand
+ * drin, obwohl die Seitenleiste ihn nirgends zeigt. Beides fiel niemandem
+ * auf, weil beides nie ausgeführt wurde (E160).
+ *
+ * Heute gilt:
+ *
+ *     platz 'oben'    die neun Zeilen der obersten Gruppe. Das Aussehen
+ *                     steht in index.html, die HANDLUNG hier — `schale.ts`
+ *                     hängt sie über `knopfId` an. test222 §5 vergleicht
+ *                     beide Listen Zeile für Zeile.
+ *     platz 'baum'    die Überschriften des Baums.
+ *     platz 'unten'   der Anhängepunkt für fremde Bereiche (`vonAussen`).
+ *                     Die eingebauten unteren Zeilen zeichnet die
+ *                     Seitenleiste weiter selbst; das steht in L51.
  *
  *     id        eindeutig
  *     name      was dasteht
@@ -12815,16 +12882,39 @@ Register.navigation = (() => {
             }
         })();
     const EINGEBAUT = [
+        /* Die oberste Gruppe, in der Folge, in der sie in index.html steht.
+           `knopfId` ist der Knopf im Markup — `schale.ts` hängt `tun` daran.
+           Wer hier eine Zeile ändert, ändert damit wirklich die Seitenleiste;
+           wer sie in index.html ändert, ohne hier nachzuziehen, macht test222
+           §5 rot. Das ist der ganze Zweck der Übung. */
         { id: 'suche', name: 'Suchen', icon: '🔍', platz: 'oben', rang: 10,
+            knopfId: 'btn-search', kuerzel: 'Strg P',
+            /* Hier stand `Werkzeuge.palette()` — das ist „Befehle", eine Zeile
+               tiefer. Die Suche hat ihr eigenes Fenster (E160). */
+            tun: () => App.suche() },
+        { id: 'befehle', name: 'Befehle', icon: '⌘', platz: 'oben', rang: 20,
+            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ P',
             tun: () => Werkzeuge.palette() },
-        { id: 'ki', name: 'Redion-KI', icon: '✨', platz: 'oben', rang: 20,
-            /* Hier stand `KI.panel()` — die Funktion gibt es nicht. Anders als in
-               der Modulübersicht war der Aufruf ungeschützt: ein Klick auf
-               „Redion-KI" in der Seitenleiste warf. */
-            tun: () => App.kiPanel() },
-        { id: 'posteingang', name: 'Posteingang', icon: '📥', platz: 'oben', rang: 30,
-            tun: () => Werkzeuge.meldungen() },
-        { id: 'neu', name: 'Neue Seite', icon: '＋', platz: 'oben', rang: 40,
+        { id: 'heute', name: 'Heute', icon: '☀️', platz: 'oben', rang: 30,
+            knopfId: 'btn-home', tun: () => Produktwelten.lernen('heute') },
+        { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', platz: 'oben', rang: 40,
+            knopfId: 'btn-learning', tun: () => Produktwelten.lernen('lernen') },
+        { id: 'workspace', name: 'Workspace', icon: '🧱', platz: 'oben', rang: 50,
+            knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
+        { id: 'bibliothekOben', name: 'Bibliothek', icon: '📚', platz: 'oben', rang: 60,
+            /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
+               unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
+               weil `melde` über die Kennung dublettenfrei hält. */
+            knopfId: 'btn-library', tun: () => Produktwelten.bibliothek() },
+        { id: 'aufgaben', name: 'Aufgaben', icon: '☑', platz: 'oben', rang: 70,
+            knopfId: 'btn-tasks', tun: () => Produktwelten.aufgaben() },
+        { id: 'posteingang', name: 'Posteingang', icon: '📥', platz: 'oben', rang: 80,
+            /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
+               `Ansichten.posteingang()`; das eine ist die Meldungsliste, das
+               andere der Posteingang. Auch das fiel nie auf (E160). */
+            knopfId: 'btn-inbox', tun: () => Ansichten.posteingang() },
+        { id: 'neu', name: 'Neue Seite', icon: '✚', platz: 'oben', rang: 90,
+            knopfId: 'btn-new', kuerzel: 'Strg N',
             tun: () => App.neueSeite() },
         { id: 'favoriten', name: 'Favoriten', icon: '★', platz: 'baum', rang: 10 },
         { id: 'seiten', name: 'Seiten', icon: '📄', platz: 'baum', rang: 20 },
@@ -23549,16 +23639,11 @@ const Marken = (() => {
     
            Kein Dauerverlauf: der würde am Ende der Leiste eine Andeutung zeigen,
            wo nichts mehr kommt. Die zwei Kennzeichen stehen nur, solange es
-           wirklich etwas zu holen gibt. */
-        const rollstand = () => {
-            const links = tools.scrollLeft > 2;
-            const rechts = tools.scrollLeft + tools.clientWidth < tools.scrollWidth - 2;
-            row.dataset['mehr'] = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
-        };
-        tools.addEventListener('scroll', rollstand, { passive: true });
-        if (typeof ResizeObserver === 'function')
-            new ResizeObserver(rollstand).observe(tools);
-        setTimeout(rollstand, 0);
+           wirklich etwas zu holen gibt.
+           Die Rechnung selbst steht in `kern/helfer/rollrand.ts` (E159). Hier
+           ist nur zu merken, dass GEROLLT wird `tools`, gezeichnet aber an
+           `row` — deshalb `an: row`. */
+        Rollrand.binde(tools, { art: 'mehr', an: row });
         const updateState = (next) => {
             const undo = tools.querySelector('[data-act="undo"]');
             const redo = tools.querySelector('[data-act="redo"]');
@@ -65592,29 +65677,38 @@ const Rollrand = (() => {
      * ist.
      */
     const SPIEL = 2;
-    /** Setzt `data-rand` auf „links", „rechts", „links rechts" oder nichts. */
-    const pruefe = (feld) => {
-        const links = feld.scrollLeft > SPIEL;
-        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
+    const schreibe = (ziel, art, links, rechts) => {
+        if (art === 'mehr') {
+            const wert = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
+            if (ziel.dataset['mehr'] !== wert)
+                ziel.dataset['mehr'] = wert;
+            return;
+        }
         const wert = [links ? 'links' : '', rechts ? 'rechts' : ''].filter(Boolean).join(' ');
         /* Nur schreiben, wenn sich etwas ändert — ein Attribut bei jedem
            Rollereignis neu zu setzen lässt den Zeichner unnötig arbeiten. */
         if (wert) {
-            if (feld.dataset['rand'] !== wert)
-                feld.dataset['rand'] = wert;
+            if (ziel.dataset['rand'] !== wert)
+                ziel.dataset['rand'] = wert;
         }
-        else if (feld.dataset['rand'] !== undefined)
-            delete feld.dataset['rand'];
+        else if (ziel.dataset['rand'] !== undefined)
+            delete ziel.dataset['rand'];
+    };
+    /** Setzt `data-rand` bzw. `data-mehr` nach dem aktuellen Rollstand. */
+    const pruefe = (feld, wahl = {}) => {
+        const links = feld.scrollLeft > SPIEL;
+        const rechts = feld.scrollLeft + feld.clientWidth < feld.scrollWidth - SPIEL;
+        schreibe(wahl.an || feld, wahl.art || 'rand', links, rechts);
     };
     /**
      * Ein Rollfeld beobachten. Gibt eine Funktion zurück, die das wieder
      * löst — gebraucht wird sie bisher nicht, aber ein Beobachter ohne
      * Abmeldung ist ein Leck, das man erst bemerkt, wenn es zu spät ist.
      */
-    const binde = (feld) => {
+    const binde = (feld, wahl = {}) => {
         if (!feld)
             return () => { };
-        const nachsehen = () => pruefe(feld);
+        const nachsehen = () => pruefe(feld, wahl);
         feld.addEventListener('scroll', nachsehen, { passive: true });
         /* Die Breite ändert sich auch ohne Rollen: das Fenster dreht sich, eine
            Spalte wird breiter gezogen, die Seitenleiste klappt ein. Ohne diesen
@@ -78801,20 +78895,15 @@ const Lernwelt = (() => {
      * Dieselbe Lösung wie bei der Markierungsleiste im PDF (E141): ein
      * Datenmerkmal, aus dem die CSS einen Schatten an der jeweiligen Kante
      * macht. Kein Knopf, kein Pfeil, nichts zum Danebentippen.
+     *
+     * Die Rechnung stand hier einmal ausgeschrieben — dieselben drei Zeilen
+     * wie in `pdf/marken.ts`, und beim dritten Mal (der Werkzeugzeile über dem
+     * Seitentitel) wäre es eine Abschrift zu viel gewesen. Sie liegt jetzt in
+     * `kern/helfer/rollrand.ts`; `art: 'mehr'` wählt die Schattenfassung, und
+     * `data-mehr` steht danach genau wie vorher (E159).
      */
     const reiterRollstand = () => {
-        const leiste = zustand.root?.querySelector('.lw-nav');
-        if (!leiste)
-            return;
-        const stand = () => {
-            const links = leiste.scrollLeft > 2;
-            const rechts = leiste.scrollLeft + leiste.clientWidth < leiste.scrollWidth - 2;
-            leiste.dataset['mehr'] = links && rechts ? 'beides' : rechts ? 'rechts' : links ? 'links' : 'nein';
-        };
-        leiste.addEventListener('scroll', stand, { passive: true });
-        if (typeof ResizeObserver === 'function')
-            new ResizeObserver(stand).observe(leiste);
-        stand();
+        Rollrand.binde(zustand.root?.querySelector('.lw-nav') || null, { art: 'mehr' });
     };
     const ansichtGueltig = (wert) => ANSICHTEN.some(item => item.id === wert);
     const wechseln = (ansicht) => {
@@ -85092,6 +85181,14 @@ const Kopfleiste = (() => {
                     kiPanel(true);
             });
             wrap.appendChild(tools);
+            /* SIE ROLLT — UND SAGTE ES NICHT (L58, E159).
+               Am Telefon gemessen: 617 px Inhalt in einem 390 px breiten Kasten.
+               Erreichbar war damit alles; sichtbar war es nicht, und ein
+               abgeschnittenes Wort sieht aus wie ein Fehler statt wie eine
+               Einladung zum Wischen. Dieselbe Antwort wie bei der Reiterleiste
+               der Lernwelt und der Markierungsleiste im PDF — jetzt aus einer
+               Hand statt zum dritten Mal abgeschrieben. */
+            Rollrand.binde(tools, { art: 'mehr' });
         }
         return true;
     };
@@ -88173,14 +88270,29 @@ const App = (() => {
         Rundgang.vielleichtStarten();
         /* Seitenleiste und Kopfzeile */
         const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
-        an('btn-search', suche);
-        an('btn-cmd', () => Werkzeuge.palette());
-        an('btn-home', () => Produktwelten.lernen('heute'));
-        an('btn-learning', () => Produktwelten.lernen('lernen'));
-        an('btn-workspace', () => Produktwelten.workspace('start'));
-        an('btn-library', () => Produktwelten.bibliothek());
-        an('btn-tasks', () => Produktwelten.aufgaben());
-        an('btn-inbox', () => Ansichten.posteingang());
+        /* DIE OBERSTE GRUPPE HÄNGT AM REGISTER (L51, E160).
+           Hier standen acht Zeilen `an('btn-…', …)`, und daneben stand ein
+           Register, das dieselben Zeilen anders beschrieb — „Suchen" öffnete
+           dort die Befehlspalette, „Posteingang" die Meldungsliste. Beides fiel
+           nicht auf, weil das Register nie ausgeführt wurde.
+    
+           Jetzt gibt es die Handlung nur einmal. Das Aussehen bleibt in
+           index.html, wo es hingehört; `knopfId` verbindet beide, und test222
+           §5 vergleicht Markup und Register Zeile für Zeile. */
+        if (typeof Register !== 'undefined' && Register.navigation) {
+            Register.navigation.anPlatz('oben').forEach((e) => {
+                if (e.knopfId && e.tun)
+                    an(e.knopfId, () => {
+                        try {
+                            e.tun();
+                        }
+                        catch (fehler) {
+                            if (typeof Reporter !== 'undefined')
+                                Reporter.error('Seitenleiste', e.knopfId + ': ' + (fehler instanceof Error ? fehler.message : String(fehler)), fehler);
+                        }
+                    });
+            });
+        }
         an('btn-ai', () => kiPanel());
         an('btn-trash', papierkorb);
         an('btn-settings', einstellungen);
@@ -88189,7 +88301,14 @@ const App = (() => {
         /* Breite der Seitenleiste ziehen — Notion kann das, aber merkt sie sich
            nicht je Gerät; hier bleibt sie gespeichert. */
         seitenleisteBreite();
-        an('btn-new', () => neueSeite());
+        /* `btn-new` HING HIER EINMAL ZU VIEL. Die Schleife oben hängt jede Zeile
+           der obersten Gruppe an, „Neue Seite" eingeschlossen — die Zeile hier
+           kam dazu, und ein Klick legte ZWEI Seiten an. Gemessen: 13 Seiten
+           vorher, 15 nachher.
+    
+           Keine Prüfung sah das. „Macht die Zeile etwas auf?" ist bei zwei
+           Seiten genauso grün wie bei einer. test222 §5 zählt jetzt nach
+           (E160). `btn-new-bottom` bleibt: den kennt das Register nicht. */
         an('btn-new-bottom', () => neueSeite());
         an('btn-neuer-chat', () => { Seitenleiste.reiter('chat'); zeichneBaum(); KI.neuerChat(); });
         /* Leiste am unteren Rand — nur auf dem Telefon sichtbar */

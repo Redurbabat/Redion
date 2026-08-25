@@ -11,8 +11,27 @@
  * Genau deshalb darf sie keiner anfassen: sonst hängt ihre Reihenfolge davon
  * ab, welche Datei zuletzt geladen wurde.
  *
- * Hier steht die Ordnung. Die Seitenleiste liest sie und zeichnet, was sie
- * findet — mehr nicht.
+ * WAS HIER STEHT, UND WAS NICHT. Hier stand bis zum 25. August der Satz
+ * „Hier steht die Ordnung. Die Seitenleiste liest sie und zeichnet, was sie
+ * findet — mehr nicht." Er war falsch. Nachgezählt: die Seitenleiste
+ * zeichnet 45 Zeilen, dieses Register kannte 12, und gelesen wurde davon
+ * genau ein Teil — `anPlatz('unten')`, gefiltert auf `vonAussen`.
+ *
+ * Ein Katalog, den niemand liest, wird still falsch. Der Eintrag `suche`
+ * rief `Werkzeuge.palette()` auf, also das, was „Befehle" tut; `ki` stand
+ * drin, obwohl die Seitenleiste ihn nirgends zeigt. Beides fiel niemandem
+ * auf, weil beides nie ausgeführt wurde (E160).
+ *
+ * Heute gilt:
+ *
+ *     platz 'oben'    die neun Zeilen der obersten Gruppe. Das Aussehen
+ *                     steht in index.html, die HANDLUNG hier — `schale.ts`
+ *                     hängt sie über `knopfId` an. test222 §5 vergleicht
+ *                     beide Listen Zeile für Zeile.
+ *     platz 'baum'    die Überschriften des Baums.
+ *     platz 'unten'   der Anhängepunkt für fremde Bereiche (`vonAussen`).
+ *                     Die eingebauten unteren Zeilen zeichnet die
+ *                     Seitenleiste weiter selbst; das steht in L51.
  *
  *     id        eindeutig
  *     name      was dasteht
@@ -42,16 +61,39 @@ Register.navigation = (() => {
             }
         })();
     const EINGEBAUT = [
+        /* Die oberste Gruppe, in der Folge, in der sie in index.html steht.
+           `knopfId` ist der Knopf im Markup — `schale.ts` hängt `tun` daran.
+           Wer hier eine Zeile ändert, ändert damit wirklich die Seitenleiste;
+           wer sie in index.html ändert, ohne hier nachzuziehen, macht test222
+           §5 rot. Das ist der ganze Zweck der Übung. */
         { id: 'suche', name: 'Suchen', icon: '🔍', platz: 'oben', rang: 10,
+            knopfId: 'btn-search', kuerzel: 'Strg P',
+            /* Hier stand `Werkzeuge.palette()` — das ist „Befehle", eine Zeile
+               tiefer. Die Suche hat ihr eigenes Fenster (E160). */
+            tun: () => App.suche() },
+        { id: 'befehle', name: 'Befehle', icon: '⌘', platz: 'oben', rang: 20,
+            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ P',
             tun: () => Werkzeuge.palette() },
-        { id: 'ki', name: 'Redion-KI', icon: '✨', platz: 'oben', rang: 20,
-            /* Hier stand `KI.panel()` — die Funktion gibt es nicht. Anders als in
-               der Modulübersicht war der Aufruf ungeschützt: ein Klick auf
-               „Redion-KI" in der Seitenleiste warf. */
-            tun: () => App.kiPanel() },
-        { id: 'posteingang', name: 'Posteingang', icon: '📥', platz: 'oben', rang: 30,
-            tun: () => Werkzeuge.meldungen() },
-        { id: 'neu', name: 'Neue Seite', icon: '＋', platz: 'oben', rang: 40,
+        { id: 'heute', name: 'Heute', icon: '☀️', platz: 'oben', rang: 30,
+            knopfId: 'btn-home', tun: () => Produktwelten.lernen('heute') },
+        { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', platz: 'oben', rang: 40,
+            knopfId: 'btn-learning', tun: () => Produktwelten.lernen('lernen') },
+        { id: 'workspace', name: 'Workspace', icon: '🧱', platz: 'oben', rang: 50,
+            knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
+        { id: 'bibliothekOben', name: 'Bibliothek', icon: '📚', platz: 'oben', rang: 60,
+            /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
+               unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
+               weil `melde` über die Kennung dublettenfrei hält. */
+            knopfId: 'btn-library', tun: () => Produktwelten.bibliothek() },
+        { id: 'aufgaben', name: 'Aufgaben', icon: '☑', platz: 'oben', rang: 70,
+            knopfId: 'btn-tasks', tun: () => Produktwelten.aufgaben() },
+        { id: 'posteingang', name: 'Posteingang', icon: '📥', platz: 'oben', rang: 80,
+            /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
+               `Ansichten.posteingang()`; das eine ist die Meldungsliste, das
+               andere der Posteingang. Auch das fiel nie auf (E160). */
+            knopfId: 'btn-inbox', tun: () => Ansichten.posteingang() },
+        { id: 'neu', name: 'Neue Seite', icon: '✚', platz: 'oben', rang: 90,
+            knopfId: 'btn-new', kuerzel: 'Strg N',
             tun: () => App.neueSeite() },
         { id: 'favoriten', name: 'Favoriten', icon: '★', platz: 'baum', rang: 10 },
         { id: 'seiten', name: 'Seiten', icon: '📄', platz: 'baum', rang: 20 },

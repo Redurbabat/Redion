@@ -2623,14 +2623,27 @@ const App = (() => {
 
     /* Seitenleiste und Kopfzeile */
     const an = (id: any, fn: any) => document.getElementById(id)?.addEventListener('click', fn);
-    an('btn-search', suche);
-    an('btn-cmd', () => Werkzeuge.palette());
-    an('btn-home', () => Produktwelten.lernen('heute'));
-    an('btn-learning', () => Produktwelten.lernen('lernen'));
-    an('btn-workspace', () => Produktwelten.workspace('start'));
-    an('btn-library', () => Produktwelten.bibliothek());
-    an('btn-tasks', () => Produktwelten.aufgaben());
-    an('btn-inbox', () => Ansichten.posteingang());
+    /* DIE OBERSTE GRUPPE HÄNGT AM REGISTER (L51, E160).
+       Hier standen acht Zeilen `an('btn-…', …)`, und daneben stand ein
+       Register, das dieselben Zeilen anders beschrieb — „Suchen" öffnete
+       dort die Befehlspalette, „Posteingang" die Meldungsliste. Beides fiel
+       nicht auf, weil das Register nie ausgeführt wurde.
+
+       Jetzt gibt es die Handlung nur einmal. Das Aussehen bleibt in
+       index.html, wo es hingehört; `knopfId` verbindet beide, und test222
+       §5 vergleicht Markup und Register Zeile für Zeile. */
+    if (typeof Register !== 'undefined' && Register.navigation) {
+      Register.navigation.anPlatz('oben').forEach((e: any) => {
+        if (e.knopfId && e.tun) an(e.knopfId, () => {
+          try { e.tun(); }
+          catch (fehler: unknown) {
+            if (typeof Reporter !== 'undefined')
+              Reporter.error('Seitenleiste',
+                e.knopfId + ': ' + (fehler instanceof Error ? fehler.message : String(fehler)), fehler);
+          }
+        });
+      });
+    }
     an('btn-ai', () => kiPanel());
     an('btn-trash', papierkorb);
     an('btn-settings', einstellungen);
@@ -2640,7 +2653,14 @@ const App = (() => {
     /* Breite der Seitenleiste ziehen — Notion kann das, aber merkt sie sich
        nicht je Gerät; hier bleibt sie gespeichert. */
     seitenleisteBreite();
-    an('btn-new', () => neueSeite());
+    /* `btn-new` HING HIER EINMAL ZU VIEL. Die Schleife oben hängt jede Zeile
+       der obersten Gruppe an, „Neue Seite" eingeschlossen — die Zeile hier
+       kam dazu, und ein Klick legte ZWEI Seiten an. Gemessen: 13 Seiten
+       vorher, 15 nachher.
+
+       Keine Prüfung sah das. „Macht die Zeile etwas auf?" ist bei zwei
+       Seiten genauso grün wie bei einer. test222 §5 zählt jetzt nach
+       (E160). `btn-new-bottom` bleibt: den kennt das Register nicht. */
     an('btn-new-bottom', () => neueSeite());
     an('btn-neuer-chat', () => { Seitenleiste.reiter('chat'); zeichneBaum(); KI.neuerChat(); });
 
