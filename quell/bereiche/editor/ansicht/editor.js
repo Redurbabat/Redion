@@ -880,7 +880,30 @@ const Blocks = (() => {
                 w.appendChild(ct);
                 const vor = document.createElement('div');
                 vor.className = 'fk-vor';
-                vor.innerHTML = `<b>${inline(vorn)}</b><span>${inline(hinten)}</span>`;
+                /* Eine Karte kann ein BILD auf der Vorderseite tragen — so entsteht sie
+                   aus einem Ausschnitt einer PDF-Seite (Punkt 43). `inline()` kann
+                   keine Bilder (nachgesehen, nicht vermutet), also steht das Bild
+                   ausdrücklich hier und nicht im Text. Es liegt als gewöhnlicher
+                   Anhang und kommt damit in `.redion` mit. */
+                if (block.bildId && typeof Dateien !== 'undefined') {
+                    const bild = document.createElement('img');
+                    bild.className = 'fk-bild';
+                    bild.alt = 'Ausschnitt auf der Vorderseite';
+                    bild.decoding = 'async';
+                    const bekannt = Dateien.adresseBekannt ? Dateien.adresseBekannt(block.bildId) : null;
+                    if (bekannt)
+                        bild.src = bekannt;
+                    else
+                        Dateien.adresse(block.bildId)
+                            .then((u) => { if (u)
+                            bild.src = u; })
+                            .catch(() => { bild.replaceWith(document.createTextNode('Der Ausschnitt fehlt.')); });
+                    vor.appendChild(bild);
+                }
+                const zeilen = document.createElement('div');
+                zeilen.className = 'fk-zeilen';
+                zeilen.innerHTML = `<b>${inline(vorn)}</b><span>${inline(hinten)}</span>`;
+                vor.appendChild(zeilen);
                 w.appendChild(vor);
                 box.appendChild(w);
                 break;

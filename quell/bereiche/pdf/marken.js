@@ -48,6 +48,49 @@ const Marken = (() => {
         const width = strokeWidth(mark);
         const points = InkGeometry.points(mark.pts);
         let element = null;
+        /* --- Ein Fachzeichen auf der Seite (Punkt 42) -------------------------
+         * Das Symbol wird NICHT hier gezeichnet, sondern aus `register/fachzeichen`
+         * geholt — derselben Quelle, aus der die Palette im Schaltplan schöpft.
+         * Eine zweite Symbolliste für das PDF wäre L34: sie liefe auseinander,
+         * und niemand merkte es, bis ein Zeichen auf dem Plan anders aussieht als
+         * dasselbe Zeichen auf der PDF-Seite daneben.
+         * -------------------------------------------------------------------- */
+        if (art === 'zeichen') {
+            const point = InkGeometry.points([mark.point])[0];
+            const fz = (typeof Register !== 'undefined' && Register.fachzeichen)
+                ? Register.fachzeichen : null;
+            if (!point || !fz)
+                return null;
+            const roh = fz.alsSvg(String(mark.zeichenId || ''), {
+                farbe: color, drehung: Number(mark.drehung) || 0,
+                gespiegelt: !!mark.gespiegelt
+            });
+            if (!roh)
+                return null;
+            const mass = fz.masse(String(mark.zeichenId || ''), Number(mark.drehung) || 0);
+            const wunsch = Math.max(12, Number(mark.groesse) || 64);
+            const faktor = wunsch / Math.max(mass.w || 1, mass.h || 1);
+            const gruppe = svg('g', {
+                /* Der gesetzte Punkt ist die MITTE des Zeichens und nicht seine linke
+                   obere Ecke: man tippt dorthin, wo das Symbol sitzen soll. */
+                transform: `translate(${point[0] - (mass.w * faktor) / 2} ` +
+                    `${point[1] - (mass.h * faktor) / 2}) scale(${faktor.toFixed(4)})`,
+                fill: 'none', stroke: color,
+                'stroke-width': (2 / faktor).toFixed(3),
+                'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+            });
+            /* `alsSvg` liefert ein vollständiges <svg>; hier wird nur sein Inhalt
+               gebraucht, damit das Zeichen im Blattraum sitzt und mitskaliert. */
+            gruppe.innerHTML = roh.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+            /* Eine unsichtbare Fläche, damit das Zeichen auch in seinen Lücken
+               greifbar ist — ein Kontakt besteht fast nur aus Linien. */
+            const griff = svg('rect', { x: 0, y: 0, width: mass.w, height: mass.h,
+                fill: 'transparent', stroke: 'none' });
+            gruppe.insertBefore(griff, gruppe.firstChild);
+            gruppe.setAttribute('data-sid', idOf(mark));
+            gruppe.setAttribute('data-ink-art', art);
+            return gruppe;
+        }
         if (art === 'text') {
             const point = InkGeometry.points([mark.point])[0];
             if (!point)
@@ -103,6 +146,15 @@ const Marken = (() => {
         const fresh = zeichneMarke(mark);
         if (!fresh)
             return null;
+        /* Ein Knoten MIT Kindern wird ersetzt und nicht geflickt: unten werden
+           nur Attribute und `textContent` übertragen, und ein <g> voller Pfade
+           behielte damit seine alten Kinder. Beim Fachzeichen hiesse das: die
+           Kennung ändert sich, das Bild nicht. */
+        if (fresh.firstElementChild || node?.firstElementChild) {
+            if (node?.parentNode)
+                node.replaceWith(fresh);
+            return fresh;
+        }
         if (!node || node.tagName !== fresh.tagName) {
             if (node?.parentNode)
                 node.replaceWith(fresh);
@@ -332,6 +384,105 @@ const Marken = (() => {
             redraw();
             commit(before);
         };
+        /**
+         * Ein Fachzeichen setzen (Punkt 42).
+         *
+         * Die Palette kommt aus `Planflaeche.paletteHtml` — genau die, die auch
+         * im Schaltplan-Editor steht. Sie mitzubenutzen ist nicht Sparsamkeit,
+         * sondern die einzige Art, zwei Auswahllisten zu vermeiden, die
+         * auseinanderlaufen.
+         *
+         * Die zuletzt gewählte Kennung und die Grösse bleiben gemerkt: wer zehn
+         * Schalter auf einen Grundriss setzt, will die Palette nicht zehnmal
+         * durchsuchen.
+         */
+        const setzeZeichen = async (point, targetId = '') => {
+            /* Ein vorhandenes Zeichen antippen dreht es weiter — dieselbe Bewegung
+               wie im Planeditor, wo R dreht. Ohne das müsste man löschen und neu
+               setzen, nur um einen Schalter aufrecht zu stellen. */
+            const vorhanden = targetId
+                ? marks.find(mark => idOf(mark) === targetId && mark.art === 'zeichen') : null;
+            if (vorhanden) {
+                const before = snapshot();
+                vorhanden.drehung = ((Number(vorhanden.drehung) || 0) + 90) % 360;
+                redraw();
+                commit(before);
+                return;
+            }
+            const gewaehlt = await zeichenWaehlen();
+            if (!gewaehlt)
+                return;
+            const before = snapshot();
+            marks.push({
+                id: typeof Ids !== 'undefined' ? Ids.short(8) : String(marks.length + 1),
+                art: 'zeichen', zeichenId: gewaehlt, point,
+                groesse: letzteGroesse, drehung: 0, gespiegelt: false, farbe: color
+            });
+            redraw();
+            commit(before);
+        };
+        let letztesZeichen = '';
+        let letzteGroesse = 64;
+        const zeichenWaehlen = () => new Promise(fertig => {
+            if (typeof Planflaeche === 'undefined' || typeof Register === 'undefined'
+                || !Register.fachzeichen) {
+                fertig('');
+                return;
+            }
+            const o = document.createElement('div');
+            o.className = 'overlay';
+            o.innerHTML = '<div class="finder" style="width:min(560px,94vw)">' +
+                '<div class="fh">Fachzeichen setzen' +
+                '<button class="icon-btn" data-a="zu" aria-label="Schliessen">✕</button></div>' +
+                '<div class="mz-suche"><input type="search" placeholder="Symbol suchen …" ' +
+                'aria-label="Symbol suchen"></div>' +
+                '<div class="mz-groesse"><label>Grösse' +
+                `<input type="range" min="24" max="180" step="4" value="${letzteGroesse}" ` +
+                'aria-label="Grösse des Zeichens"></label>' +
+                `<b>${letzteGroesse} px</b></div>` +
+                /* Das zuletzt gesetzte Zeichen steht oben und ist einen Klick weit
+                   weg. Wer zehn Schalter auf einen Grundriss setzt, sucht sonst
+                   zehnmal dasselbe. */
+                (letztesZeichen
+                    ? '<div class="mz-zuletzt"><span>Zuletzt</span>' +
+                        `<button data-sym="${letztesZeichen}">` +
+                        Register.fachzeichen.alsSvg(letztesZeichen, { farbe: 'currentColor' }) +
+                        `<i>${(Register.fachzeichen.holen(letztesZeichen) || { name: '' }).name}</i>` +
+                        '</button></div>'
+                    : '') +
+                '<div class="mz-liste">' + Planflaeche.paletteHtml('installationsplan', '') + '</div>' +
+                '</div>';
+            document.body.appendChild(o);
+            const zu = (wert) => { o.remove(); fertig(wert); };
+            o.addEventListener('input', e => {
+                const f = e.target;
+                if (f.type === 'search') {
+                    const liste = o.querySelector('.mz-liste');
+                    if (liste)
+                        liste.innerHTML = Planflaeche.paletteHtml('installationsplan', f.value);
+                    return;
+                }
+                if (f.type === 'range') {
+                    letzteGroesse = Number(f.value) || 64;
+                    const marke = o.querySelector('.mz-groesse b');
+                    if (marke)
+                        marke.textContent = letzteGroesse + ' px';
+                }
+            });
+            o.addEventListener('click', e => {
+                const sym = e.target.closest('[data-sym]');
+                if (sym && sym.dataset.sym) {
+                    letztesZeichen = sym.dataset.sym;
+                    zu(sym.dataset.sym);
+                    return;
+                }
+                const b = e.target.closest('[data-a]');
+                if (e.target === o || (b && b.dataset.a === 'zu'))
+                    zu('');
+            });
+            const feld = o.querySelector('input[type=search]');
+            feld?.focus();
+        });
         flaeche.addEventListener('pointerdown', (event) => {
             const e = event;
             if (tool === 'schreiben' || !e.isPrimary || e.button !== 0)
@@ -356,6 +507,10 @@ const Marken = (() => {
             }
             if (tool === 'text') {
                 void editText(point, targetId);
+                return;
+            }
+            if (tool === 'zeichen') {
+                void setzeZeichen(point, targetId);
                 return;
             }
             if (tool === 'select') {
@@ -500,6 +655,7 @@ const Marken = (() => {
                 button('rectangle', '□', 'Rechteck', 'Rechteck') +
                 button('ellipse', '○', 'Ellipse', 'Ellipse') +
                 button('text', 'T', 'Text', 'Textanmerkung') +
+                button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
                 button('radierer', '⌫', 'Radieren', 'Eine Marke entfernen') +
                 '<span class="blatt-trenn"></span>' +
                 '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +

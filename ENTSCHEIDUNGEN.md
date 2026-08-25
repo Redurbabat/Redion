@@ -13345,3 +13345,70 @@ Eine Prüfung, die würfelt, was sie misst, misst nichts.
 
 Prüflauf: `test240` §10–§12, dreiunddreissig neue Punkte (97 gesamt);
 `test241` 95 Punkte.
+
+
+## E191 · Fachzeichen auf dem PDF, und ein Ausschnitt als Lernkarte
+
+*25. August 2026*
+
+Redur hat sein Lehrmittel als PDF. Zwei Dinge fehlten dafür, und beide sind
+absichtlich klein ausgefallen — sie benutzen, was schon da ist.
+
+### Punkt 42 — ein Symbol auf die Seite setzen
+
+Eine neue Markenart `zeichen` in `bereiche/pdf/marken.ts`, gezeichnet über
+`Register.fachzeichen.alsSvg`. **Dieselbe Quelle wie die Palette im
+Schaltplan-Editor**, und auch dieselbe Auswahl: das Werkzeug öffnet
+`Planflaeche.paletteHtml`. Eine zweite Symbolliste fürs PDF wäre L34 gewesen
+— sie liefe auseinander, und niemand merkte es, bis dasselbe Zeichen auf
+zwei Seiten verschieden aussieht. `test242` §2 vergleicht die Zahl in der
+Auswahl mit der im Register.
+
+Das Zeichen liegt als gewöhnliche Marke im Block und geht damit durch
+Rückgängig, Papierkorb, Druck und `.redion`-Sicherung wie ein Strich — ohne
+dass irgendwo ein Sonderfall dafür steht. Ein Tipp darauf dreht es um 90°,
+dieselbe Bewegung wie R im Planeditor.
+
+**Ein Haken, der beim Bauen sichtbar wurde.** `updateNode` überträgt nur
+Attribute und `textContent`. Ein `<g>` voller Pfade überlebt das nicht: bei
+gleichem Elementnamen blieben die alten Kinder stehen, und ein getauschtes
+Zeichen zeigte weiter das alte Bild. Knoten mit Kindern werden jetzt ersetzt
+statt geflickt. `test242` §3 tauscht deshalb ausdrücklich eine Kennung und
+sieht nach, ob sich das Bild mitändert.
+
+### Punkt 43 — ausschneiden und lernen
+
+Kein eigenes Gummiband: **das Rechteck-Werkzeug gibt es längst**, und ein
+gezeichnetes Rechteck ist zugleich die Auswahl und der bleibende Vermerk,
+was man aus dieser Seite herausgeschnitten hat. Ein zweites Ziehwerkzeug
+wäre eine zweite Bedienung für dieselbe Geste.
+
+Geschnitten wird aus dem `img`, das ohnehin auf der Seite steht. Es kommt aus
+einem `blob:`-Verweis derselben Herkunft, die Zeichenfläche wird dadurch
+nicht unrein, und `toBlob` darf lesen. Der Ausschnitt wird als gewöhnlicher
+Anhang abgelegt.
+
+Die Karteikarte trägt dafür ein neues Feld `bildId`. `inline()` kann keine
+Bilder — nachgesehen, nicht vermutet —, also steht das Bild ausdrücklich im
+Renderer und nicht im Text. Weisser Grund, weil ein Buchausschnitt auf Weiss
+gedruckt ist und im Dunkelmodus sonst als graues Rechteck erschiene.
+
+**Urheberrecht.** Ein Ausschnitt aus einem gekauften Lehrmittel in die eigene
+Karteikarte auf dem eigenen Rechner ist Privatgebrauch. Er geht an keinen
+Server und kommt nicht ins Verzeichnis. Redion liefert das Werkzeug, nicht
+den Inhalt — dieselbe Linie wie beim Formelheft (E188).
+
+### Und zwei Fehler in der Prüfung selbst
+
+Beide sahen aus wie kaputte Funktionen und waren keine.
+
+`test242` §2 tippte auf sechzig Prozent der Seitenhöhe. Die Seite ist
+1003 px hoch und beginnt bei y = 380 — der Klick landete unter dem
+Fensterrand und traf nichts. Im Bericht stand „Ein Tipp öffnet die
+Symbolauswahl ✗", und das Werkzeug war völlig in Ordnung.
+
+Und §4 legte die Blockkennungen auf `window`. §4 und §7 laden absichtlich
+neu, und ein Neuladen löscht alles, was am Fenster hängt. Die Kennungen
+bleiben jetzt im Prüfskript.
+
+Prüflauf: `test242`, 42 Punkte.
