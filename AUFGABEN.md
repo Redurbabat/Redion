@@ -35,6 +35,59 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**25. August 2026 · 184 Prüfläufe**
+
+> ### Stand vom 25. August — Zweig `codex-study-suite`
+>
+> Alle 60 Abschnitte des grossen Auftrags sind gebaut. 56 tragen einen
+> Prüflauf, der rot wird, wenn sie kaputtgehen; vier stehen halb, und bei
+> jedem steht dabei, warum. Kein `✗` und kein `?` mehr in
+> `doku/AUFTRAG-STAND.md`.
+>
+> **Was an diesem Tag entstand**
+>
+> ```txt
+> E145  §23 stand als fehlend da und war vollständig gebaut — falsche Lücke
+> E146  „Geteilt öffnen" setzte den Zustand, zeichnete das Feld aber nicht neu
+> E147  Dateinamen und Quellenangaben suchbar; EINE Funktion für beide Suchen
+> E148  Vier Sachen, die nur das Hinsehen fand — darunter 120 von 390 Pixeln,
+>       die am Telefon eine Kennung-vor-Klasse-Regel gefressen hat
+> E149  Lernpfad und Arbeitssicht festgehalten; XP bewegt kein Wissen
+> E150  Der OCR-Dienst liegt jetzt bei — dienste/ocr.mts, doku/OCR-DIENST.md
+> E151  Am Telefon stand „Tagesrunde starten" 188 px unter der Falz
+> E152  Die unverteilte Aufgabe aus einer Besprechung war für niemanden da
+> E153  Wer sich einen Namen gab, verlor SEINE GANZE Aufgabenliste
+> E154  Der Obsidian-Rundlauf, einmal ganz durchgelaufen
+> E155  Der Weg zurück zur Quelle: ↩ PDF · Seite 14
+> ```
+>
+> **Geschlossen:** L53 (Dienst fehlte), L55 (Suche fand keine Dateinamen),
+> L56 (benanntes Konto leerte die Liste). **Neu:** L57 (die Aufgabe findet
+> ihr Meeting, aber nicht die Minute).
+>
+> **Was offen ist**
+>
+> ```txt
+> 1. L57 — braucht eine Änderung an der KI-Anweisung und ein Modell zum
+>    Messen. Raten wäre schlechter als weglassen.
+>
+> 2. §13 Uni und §35 Gemeinsam bleiben halb, aber nicht aus Versäumnis:
+>    Semester aus Titeln zu erkennen ist so gewollt, und ohne Server ist
+>    Teilen nun einmal ein Export.
+>
+> 3. §47 Visuelle Qualität hört nicht auf. Der nächste Fund kommt, sobald
+>    wieder jemand hinsieht statt zu lesen (§55) — genau so kamen E148 und
+>    E151 zustande.
+> ```
+>
+> **Die teuerste Lehre des Tages** steht nicht im Produkt: in sechs von neun
+> neuen Prüfläufen war der erste Fehler MEINER, nicht der der App. Ein
+> `textContent`, das kein Tippen ist. Ein `|| -1` auf einem Zähler, der bei 0
+> anfängt. Ein `clientWidth`, das die Innenabstände mitzählt. Ein `\b2\b`,
+> das die 2 aus „SM-2" nahm — und damit einen Punkt aus dem falschen Grund
+> GRÜN machte. Der fällt niemandem auf; deshalb steht jede Gegenprobe
+> einzeln zurückgenommen in den Einträgen.
+
 **24. August 2026 · 174 Prüfläufe**
 
 > ### Stand vom 24. August, abends — Zweig `codex-study-suite`
