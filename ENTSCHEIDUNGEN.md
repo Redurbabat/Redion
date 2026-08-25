@@ -11092,3 +11092,86 @@ Kein Gedächtnis der Prüfungszentrale    E163
 Elf verdrahtete Stichwörter             E164 — sie bleiben, die Behauptung
                                         daneben nicht
 ```
+
+
+## E165 · Ein Knopf, der aussieht, als täte er nichts — und die Farbe mitnimmt (L40)
+
+**25. August 2026.** L40 nennt es seit dem 19. August als offenen Punkt:
+
+> Farbe, Schriftgrösse und Schriftart je Block (E101). Markdown kennt sie
+> nicht. Sie zu Platzhaltern zu machen hiesse, den Knopf abzuschaffen.
+
+Nachgesehen, wie das aussieht. Eine Seite mit Serif-Überschrift, roter
+Warnzeile, gelb hinterlegtem Punkt und einer grösseren Schlusszeile. Dann
+„Quelltext ansehen → Übernehmen", **ohne eine einzige Änderung**:
+
+```txt
+vorher    Serif · rot · gelb hinterlegt · gross
+nachher   grau  · grau · grau            · grau
+```
+
+Der Knopf sieht aus, als täte er nichts. Er nimmt etwas mit.
+
+### Warum das nicht am Format liegt
+
+`block.color` und `block.stil` (Grösse und Schriftart) haben keine
+Schreibweise in `# `, `- ` oder `> `. Daran ändert sich nichts. Aber sie
+müssen den Weg auch gar nicht mitgehen — sie liegen ja noch da, bis
+`Store.kinderLeeren` sie wegräumt.
+
+Also: vor dem Leeren merken, nach dem Bauen wieder aufsetzen.
+
+### Wonach zugeordnet wird, und warum nicht nach Position
+
+Nach **(Art, Text)**, und jeder gemerkte Eintrag wird höchstens einmal
+vergeben.
+
+Nach Position wäre einfacher und ist die falsche Antwort. Wer eine Zeile
+einfügt, verschiebt alle darunter; positionsweise zugeordnet bekäme dann
+jede Zeile die Farbe ihrer Vorgängerin. Das ist schlimmer als gar keine
+Farbe, weil es aussieht wie eine Entscheidung. Die Gegenprobe zeigt es
+wörtlich: „Und die neue Zeile bekommt KEINE fremde Farbe — ist `red`".
+
+Nach Text zugeordnet folgt die Formatierung ihrem Satz, auch wenn er
+umzieht. Und wer den Text ändert, verliert sie für diese Zeile — das ist
+ehrlich, denn es ist eine neue Zeile.
+
+Das „höchstens einmal" ist ebenfalls geprüft: zwei gleichlautende Sätze in
+verschiedenen Farben behalten jeder seine. Ohne die Sperre meldet die
+Prüfung `green,green` statt `green,orange`.
+
+### Was das NICHT ist
+
+Nicht der Umbau, den L40 beschreibt. Die Blöcke werden weiterhin geleert
+und neu gebaut, also **ändern sich die Kennungen**. Stabile Kennungen und
+ein brauchbarer Rückgängig-Schritt bleiben offen — sie brauchen die echte
+zeilenweise Abgleichung, und die ist ein Umbau von `ausMarkdown`.
+
+Was hier steht, ist der Datenverlust. Der ist weg.
+
+### Die Gegenproben (§55.2)
+
+| Gegenprobe | rot |
+|---|---|
+| A · nichts wiederherstellen | 6 |
+| B · nach Position statt nach Text zuordnen | 6 |
+| C · gemerkte Einträge nicht verbrauchen | 1 |
+
+### Und noch eine festgeschriebene Zahl
+
+test187 prüfte `mdTraegt(b)` auf **genau drei** Vorkommen im Quelltext. Sie
+ging rot, weil E165 zwei weitere hinzufügte — also weil etwas richtig
+gemacht wurde. Derselbe falsche Alarm wie „Acht Bereiche" in test86 (E158),
+und dieselbe Behebung: geprüft wird jetzt der Vertrag — die Liste steht
+einmal da, mehrere Stellen fragen dieselbe Funktion, und niemand schreibt
+eine zweite Blockart-Liste ab.
+
+Zwei feste Zahlen in zwei Tagen, beide aus demselben Grund rot. Eine Zahl
+in einer Prüfung ist fast immer die falsche Frage.
+
+### Und ein Messfehler von mir
+
+`gleich` in test187 vergleicht mit `===`, nicht über JSON — zwei gleich
+aussehende Felder sind darin nie gleich. Die erste Fassung gab Felder hinein
+und meldete „ist [...], soll [...]" mit identischem Text auf beiden Seiten.
+Jetzt als Zeichenkette.

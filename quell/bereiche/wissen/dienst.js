@@ -349,6 +349,40 @@ const WissenDienst = (() => {
                landen solche Bloecke sichtbar am Ende der Seite. */
             [...erhaltene.keys()].forEach(id => attachErhaltenen(id, p.id));
         };
+        const gemerkt = [];
+        const merke = (id) => {
+            Store.childrenOf(id).forEach((b) => {
+                if (!mdTraegt(b))
+                    return;
+                const stil = b.stil && typeof b.stil === 'object' && Object.keys(b.stil).length
+                    ? { ...b.stil } : null;
+                if (b.color || stil)
+                    gemerkt.push({ type: String(b.type || ''), text: String(b.text || ''),
+                        ...(b.color ? { color: String(b.color) } : {}),
+                        ...(stil ? { stil } : {}) });
+                merke(b.id);
+            });
+        };
+        merke(p.id);
+        const setzeWiederAuf = (id) => {
+            Store.childrenOf(id).forEach((b) => {
+                if (!mdTraegt(b))
+                    return;
+                const i = gemerkt.findIndex(x => x.type === String(b.type || '') &&
+                    x.text === String(b.text || ''));
+                if (i >= 0) {
+                    const [treffer] = gemerkt.splice(i, 1);
+                    const aenderung = {};
+                    if (treffer && treffer.color)
+                        aenderung['color'] = treffer.color;
+                    if (treffer && treffer.stil)
+                        aenderung['stil'] = treffer.stil;
+                    if (Object.keys(aenderung).length)
+                        Store.updateBlock(b.id, aenderung);
+                }
+                setzeWiederAuf(b.id);
+            });
+        };
         try {
             Store.kinderLeeren(p.id);
             let imCode = false, codeText = [], codeLang = '';
@@ -549,6 +583,10 @@ const WissenDienst = (() => {
         }
         finally {
             retteUebrige();
+            /* Erst NACH `retteUebrige`: die zurückgehängten Blöcke gehören zum
+               Baum, und ein Platzhalter kann ebenso gefärbt gewesen sein. */
+            if (gemerkt.length)
+                setzeWiederAuf(p.id);
         }
     };
     /* --------------------------------------------------------------------------

@@ -1227,9 +1227,11 @@ Drei Dinge gehen trotzdem verloren, und sie sind jetzt wenigstens im Dialog
 benannt statt still:
 
 ```txt
-⚠ Farbe, Schriftgrösse und Schriftart je Block (E101). Markdown kennt sie
-  nicht. Sie zu Platzhaltern zu machen hiesse, den Knopf abzuschaffen — von
-  einer Seite mit farbigen Absätzen bliebe kein lesbarer Text übrig.
+✅ E165 · Farbe, Schriftgrösse und Schriftart je Block (E101). Markdown
+  kennt sie weiterhin nicht — sie müssen den Weg aber auch nicht mitgehen.
+  Vor dem Leeren gemerkt, nach dem Bauen wieder aufgesetzt, zugeordnet über
+  Art UND Text (nicht über die Position: wer eine Zeile einfügt, bekäme
+  sonst überall die Farbe der Vorgängerin). test187 §6.
 
 ✅ E120 · Die Verschachtelung von Listen. `alsMarkdown` schrieb die
   Einrückung schon immer, `ausMarkdown` las sie nicht — jede Zeile wurde
@@ -1245,14 +1247,13 @@ benannt statt still:
   auseinanderhalten, und ein Zitat ist die harmlosere Wahl.
 ```
 
-**Was von L40 bleibt, ist eine Frage der Form, nicht des Formats.** Farbe,
-Schriftgrösse und Schriftart liessen sich nur retten, indem man beim
-Übernehmen die vorhandenen Blöcke WIEDERVERWENDET, statt sie zu leeren und
-neu zu bauen — Zeile für Zeile gegen den Bestand abgleichen und nur ändern,
-was sich geändert hat. Das brächte nebenbei stabile Kennungen und einen
-brauchbaren Rückgängig-Schritt. Es ist ein Umbau von `ausMarkdown` und
-keine Ergänzung, und deshalb steht es hier und nicht in einer Änderung
-nebenbei.
+**Was von L40 bleibt, ist eine Frage der Form, nicht des Formats.** Die
+Blöcke werden weiterhin geleert und neu gebaut — E165 rettet die
+Formatierung darüber hinweg, aber die KENNUNGEN ändern sich weiter. Stabile
+Kennungen und ein brauchbarer Rückgängig-Schritt brauchen die echte
+zeilenweise Abgleichung: vorhandene Blöcke wiederverwenden und nur ändern,
+was sich geändert hat. Das ist ein Umbau von `ausMarkdown` und keine
+Ergänzung, und deshalb steht es weiter hier.
 
 Der Platzhalter selbst hat eine Eigenschaft, die man kennen muss: **wer die
 Zeile löscht, löscht den Block.** Das ist so gewollt — sonst wäre „Quelltext

@@ -322,6 +322,65 @@ const WissenDienst = (() => {
       [...erhaltene.keys()].forEach(id => attachErhaltenen(id, p.id));
     };
 
+    /* ------------------------------------------------------------------------
+     * FARBE UND SCHRIFT ÜBERLEBEN (L40, E165)
+     * ------------------------------------------------------------------------
+     * Markdown kann sie nicht tragen: `block.color` (E-Farben) und
+     * `block.stil` mit Grösse und Schriftart (E101) haben keine Schreibweise
+     * in `# `, `- ` oder `> `. Bis hierher hiess das: „Quelltext ansehen →
+     * Übernehmen" ohne eine einzige Änderung machte aus einer farbigen Seite
+     * eine graue. Der Knopf sah aus, als täte er nichts, und nahm etwas mit.
+     *
+     * L40 nennt den sauberen Weg — die Blöcke WIEDERVERWENDEN statt sie zu
+     * leeren und neu zu bauen. Das ist ein Umbau von `ausMarkdown` und
+     * bringt nebenbei stabile Kennungen. Hier steht das Kleinere davon: die
+     * Formatierung wird gemerkt und danach wieder aufgesetzt, wo Art UND
+     * Text unverändert geblieben sind.
+     *
+     * WARUM (Art, Text) UND NICHT DIE POSITION. Wer eine Zeile einfügt,
+     * verschiebt alle darunter. Nach Position zugeordnet bekäme dann jede
+     * Zeile die Farbe ihrer Vorgängerin — schlimmer als keine Farbe, weil
+     * es aussieht wie eine Entscheidung. Nach Text zugeordnet folgt die
+     * Farbe ihrem Satz, auch wenn er umzieht. Wer den Text ändert, verliert
+     * die Formatierung dieser Zeile: das ist ehrlich, denn es ist eine neue
+     * Zeile.
+     *
+     * Jeder gemerkte Eintrag wird HÖCHSTENS EINMAL vergeben. Zwei gleiche
+     * Sätze mit verschiedenen Farben behalten so ihre eigene, statt beide
+     * die erste zu bekommen.
+     * ----------------------------------------------------------------------*/
+    type Formatgedaechtnis = { type: string; text: string; color?: string; stil?: any };
+    const gemerkt: Formatgedaechtnis[] = [];
+    const merke = (id: string): void => {
+      Store.childrenOf(id).forEach((b: any) => {
+        if (!mdTraegt(b)) return;
+        const stil = b.stil && typeof b.stil === 'object' && Object.keys(b.stil).length
+          ? { ...b.stil } : null;
+        if (b.color || stil)
+          gemerkt.push({ type: String(b.type || ''), text: String(b.text || ''),
+                         ...(b.color ? { color: String(b.color) } : {}),
+                         ...(stil ? { stil } : {}) });
+        merke(b.id);
+      });
+    };
+    merke(p.id);
+
+    const setzeWiederAuf = (id: string): void => {
+      Store.childrenOf(id).forEach((b: any) => {
+        if (!mdTraegt(b)) return;
+        const i = gemerkt.findIndex(x => x.type === String(b.type || '') &&
+                                         x.text === String(b.text || ''));
+        if (i >= 0) {
+          const [treffer] = gemerkt.splice(i, 1);
+          const aenderung: Record<string, unknown> = {};
+          if (treffer && treffer.color) aenderung['color'] = treffer.color;
+          if (treffer && treffer.stil) aenderung['stil'] = treffer.stil;
+          if (Object.keys(aenderung).length) Store.updateBlock(b.id, aenderung);
+        }
+        setzeWiederAuf(b.id);
+      });
+    };
+
     try {
       Store.kinderLeeren(p.id);
 
@@ -476,6 +535,9 @@ const WissenDienst = (() => {
       tabelleAbschliessen();   /* falls die Datei mit einer Tabelle endet */
     } finally {
       retteUebrige();
+      /* Erst NACH `retteUebrige`: die zurückgehängten Blöcke gehören zum
+         Baum, und ein Platzhalter kann ebenso gefärbt gewesen sein. */
+      if (gemerkt.length) setzeWiederAuf(p.id);
     }
   };
 

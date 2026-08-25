@@ -299,11 +299,124 @@ const code = roh.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 gleich('Die Liste steht GENAU EINMAL da',
   (code.match(/const MD_TRAEGT = /g) || []).length, 1);
-gleich('Beide Richtungen und der ID-erhaltende Vault-Weg fragen dieselbe Funktion',
-  (code.match(/mdTraegt\(b\)/g) || []).length, 3);
+/* Hier stand `=== 3` — eine festgeschriebene Zahl von Aufrufen. Sie ging
+   rot, als E165 zwei weitere hinzufügte, also weil etwas RICHTIG gemacht
+   wurde. Derselbe falsche Alarm wie „Acht Bereiche" in test86 (E158).
+   Geprüft wird jetzt der Vertrag: es gibt die Funktion, sie wird von
+   mehreren Stellen gefragt, und NIEMAND schreibt die Liste ein zweites
+   Mal ab. */
+p('Es fragen mehrere Stellen dieselbe Funktion',
+  (code.match(/mdTraegt\(b\)/g) || []).length >= 3,
+  String((code.match(/mdTraegt\(b\)/g) || []).length));
+p('Und niemand vergleicht am Vertrag vorbei mit einer eigenen Liste',
+  !/\[[^\]]*'whiteboard'[^\]]*\]\s*\.includes/.test(code.replace(/const MD_TRAEGT[\s\S]*?\];/, '')),
+  'eine zweite Blockart-Liste im Quelltext');
 p('Die alte namentliche Liste gibt es nicht mehr',
   !/\['database','whiteboard','chart','table'\]\.includes/.test(code),
   (code.match(/.{0,50}includes\(b\.type\).{0,20}/) || [''])[0]);
+
+/* ==========================================================================
+ * §6 · Farbe und Schrift überleben den Rundlauf (L40, E165)
+ * --------------------------------------------------------------------------
+ * Markdown kennt sie nicht: `block.color` und `block.stil` (Grösse und
+ * Schriftart, E101) haben keine Schreibweise in `# `, `- ` oder `> `.
+ * „Quelltext ansehen → Übernehmen" ohne eine einzige Änderung machte aus
+ * einer farbigen Seite eine graue — ein Knopf, der aussieht, als täte er
+ * nichts, und etwas mitnimmt.
+ *
+ * GEPRÜFT WERDEN DREI FÄLLE, und der dritte ist der wichtigste:
+ *
+ *   unverändert   Farbe und Stil müssen dastehen wie vorher
+ *   umgezogen     die Farbe folgt IHREM Satz, nicht der Position
+ *   umgeschrieben eine geänderte Zeile ist eine neue — keine Formatierung
+ *
+ * Ohne den dritten bestünde diese Prüfung auch, wenn die Formatierung
+ * stumpf nach Position verteilt würde. Dann bekäme nach einer eingefügten
+ * Zeile jeder Satz die Farbe seiner Vorgängerin — schlimmer als gar keine,
+ * weil es aussieht wie eine Entscheidung.
+ * ========================================================================*/
+console.log('\n6 · Farbe und Schrift überleben den Rundlauf');
+
+const farben = await seite.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Farbige Seite' });
+  const rot   = Store.addBlock(s.id, 'text', { text: 'Rote Zeile', color: 'red' });
+  const gross = Store.addBlock(s.id, 'h2',   { text: 'Grosse Überschrift',
+                                               stil: { groesse: 'xl', schrift: 'serif' } });
+  const grau  = Store.addBlock(s.id, 'text', { text: 'Ohne alles' });
+  const beide = Store.addBlock(s.id, 'bullet', { text: 'Punkt mit allem',
+                                                 color: 'bg-blue', stil: { groesse: 'gross' } });
+  /* ZWEIMAL DERSELBE SATZ, verschieden gefärbt. Jeder gemerkte Eintrag darf
+     nur EINMAL vergeben werden — sonst bekämen beide die erste Farbe, und
+     die zweite wäre still weg. */
+  Store.addBlock(s.id, 'text', { text: 'Doppelt', color: 'green' });
+  Store.addBlock(s.id, 'text', { text: 'Doppelt', color: 'orange' });
+  await Store.flush();
+
+  const lies = () => Store.childrenOf(s.id).map((b: any) => ({
+    type: b.type, text: b.text, color: b.color || '', stil: b.stil || null }));
+  const vorher = lies();
+
+  /* 1 · Rundlauf OHNE jede Änderung. */
+  const md = Werkzeuge.alsMarkdown(Store.getBlock(s.id));
+  Werkzeuge.ausMarkdown(Store.getBlock(s.id), md);
+  await Store.flush();
+  const unveraendert = lies();
+
+  /* 2 · Eine Zeile davor einfügen — alles rutscht um eins. */
+  const mitNeuer = 'Ganz neu oben\n' + Werkzeuge.alsMarkdown(Store.getBlock(s.id));
+  Werkzeuge.ausMarkdown(Store.getBlock(s.id), mitNeuer);
+  await Store.flush();
+  const verschoben = lies();
+
+  /* 3 · Und den Text einer gefärbten Zeile ändern. */
+  const umgeschrieben = Werkzeuge.alsMarkdown(Store.getBlock(s.id))
+    .replace('Rote Zeile', 'Ganz anderer Satz');
+  Werkzeuge.ausMarkdown(Store.getBlock(s.id), umgeschrieben);
+  await Store.flush();
+  const geaendert = lies();
+
+  return { vorher, unveraendert, verschoben, geaendert,
+           ids: { rot: rot.id, gross: gross.id, grau: grau.id, beide: beide.id } };
+});
+
+const finde = (liste: any[], text: string) => liste.find((x: any) => x.text === text);
+
+p('Die Ausgangsseite hat sechs Zeilen', farben.vorher.length === 6,
+  JSON.stringify(farben.vorher.map((x: any) => x.text)));
+
+gleich('Nach dem Rundlauf steht die Farbe noch da',
+  finde(farben.unveraendert, 'Rote Zeile')?.color, 'red');
+gleich('Und die Schriftgrösse',
+  finde(farben.unveraendert, 'Grosse Überschrift')?.stil?.groesse, 'xl');
+gleich('Und die Schriftart',
+  finde(farben.unveraendert, 'Grosse Überschrift')?.stil?.schrift, 'serif');
+/* `gleich` in dieser Suite vergleicht mit `===`, nicht über JSON — zwei
+   gleich aussehende Felder sind darin NIE gleich. Die erste Fassung gab
+   Felder hinein und meldete „ist [...], soll [...]" mit identischem Text.
+   Also als Zeichenkette. */
+gleich('Und beides zusammen an einem Punkt',
+  finde(farben.unveraendert, 'Punkt mit allem')?.color + '/' +
+  finde(farben.unveraendert, 'Punkt mit allem')?.stil?.groesse, 'bg-blue/gross');
+gleich('Die ungefärbte Zeile bleibt ungefärbt',
+  finde(farben.unveraendert, 'Ohne alles')?.color, '');
+/* Und die zwei gleichlautenden behalten JEDER seine eigene Farbe. */
+gleich('Zwei gleiche Sätze behalten je ihre Farbe',
+  farben.unveraendert.filter((x: any) => x.text === 'Doppelt')
+    .map((x: any) => x.color).join(','), 'green,orange');
+
+p('Nach dem Einfügen gibt es sieben Zeilen', farben.verschoben.length === 7,
+  JSON.stringify(farben.verschoben.map((x: any) => x.text)));
+gleich('Die Farbe folgt ihrem Satz, nicht der Position',
+  finde(farben.verschoben, 'Rote Zeile')?.color, 'red');
+gleich('Und die neue Zeile bekommt KEINE fremde Farbe',
+  finde(farben.verschoben, 'Ganz neu oben')?.color, '');
+
+gleich('Wer den Text ändert, bekommt eine neue Zeile ohne Formatierung',
+  finde(farben.geaendert, 'Ganz anderer Satz')?.color, '');
+gleich('Und die Farbe wandert nicht auf eine andere Zeile',
+  farben.geaendert.filter((x: any) => x.color === 'red').length, 0);
+gleich('Während die übrigen ihre behalten',
+  finde(farben.geaendert, 'Grosse Überschrift')?.stil?.groesse, 'xl');
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 

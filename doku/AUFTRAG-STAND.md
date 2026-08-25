@@ -128,6 +128,7 @@ steht dabei, warum. Was bleibt, ist klein und benannt:
 | §11 | E162, test224 | eine Prüfung zählte den ganzen Bestand als ihren Stoff |
 | §11 | E163, test224 §5 | Simulationsergebnisse überleben jetzt den Reiterwechsel |
 | §9 | E164, test215 §3/§8 | der Pfad sagt jetzt, was ihn geordnet hat — und wann nichts; **L49 zu** |
+| §43 | E165, test187 §6 | „Übernehmen" nahm Farbe und Schrift mit; jetzt überleben sie |
 
 Elf neue Prüfläufe (test212 bis test222), dazu neue Abschnitte in test181,
 test206, test218 und test86. Gezählt, nicht geschätzt:
