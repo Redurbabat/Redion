@@ -4935,13 +4935,42 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
   /* 28 px, nicht 18. Die Zahl steht auch in `ki.css`, aber DIESE Regel
      gewinnt (gleiche Spezifität, spätere Datei) — gemessen kamen 18 px
      heraus, während der Start-Bildschirm daneben mit 28 gebaut war. Zwei
-     Ränder in einer App sind einer zu viel. */
-  #page{ padding-left:max(var(--mobile-gutter), env(safe-area-inset-left));
+     Ränder in einer App sind einer zu viel.
+
+     UND `#page.wide` MUSS DANEBENSTEHEN. `#page` allein ist eine Kennung;
+     `#page.wide` aus `aufbau.css` ist eine Kennung PLUS eine Klasse und
+     gewinnt damit gegen die Zeile hier — auch am Telefon, auch wenn sie
+     später geladen wird. Gemessen am 25. August auf 390 px:
+
+         gewöhnliche Seite    28 px Rand   →  334 px Inhalt
+         „Volle Breite"       60 px Rand   →  270 px Inhalt
+
+     Der Modus, den man wählt, um MEHR Platz zu bekommen, gab weniger. Das
+     ist derselbe Fehler wie in E148 bei den Produktwelten, an derselben
+     Kennung, im selben Block — das dritte Mal in dieser Datei.
+
+     `:not(.produkt-welt)` IST KEIN SCHMUCK. Eine Produktwelt wird ebenfalls
+     in `#page` gezeichnet und trägt dabei auch `wide`. Ohne den Ausschluss
+     gewönne diese Zeile gegen `#page.produkt-welt{padding:10px 12px}` aus
+     E148 — gleiche Spezifität, spätere Datei — und die Produktwelten
+     bekämen 28 px statt 12 zurück. Genau die Pixel, die E148 geholt hat. */
+  #page,
+  #page.wide:not(.produkt-welt){
+         padding-left:max(var(--mobile-gutter), env(safe-area-inset-left));
          padding-right:max(var(--mobile-gutter), env(safe-area-inset-right));
          padding-bottom:calc(30vh + env(safe-area-inset-bottom)); }
+  /* Der Aufmacher zieht sich über den Rand hinaus — mit dem Rand, der hier
+     wirklich gilt, nicht mit den 96 bzw. 60 px vom Rechner. Vorher ragte er
+     um bis zu 68 px aus dem Bild. */
+  .cover, #page.wide .cover{
+    margin-inline:calc(-1 * max(var(--mobile-gutter), env(safe-area-inset-left))); }
   @media(max-width:380px){
-    #page{ padding-left:max(var(--mobile-gutter-small), env(safe-area-inset-left));
+    #page,
+    #page.wide:not(.produkt-welt){
+           padding-left:max(var(--mobile-gutter-small), env(safe-area-inset-left));
            padding-right:max(var(--mobile-gutter-small), env(safe-area-inset-right)); }
+    .cover, #page.wide .cover{
+      margin-inline:calc(-1 * max(var(--mobile-gutter-small), env(safe-area-inset-left))); }
   }
   #ai{ padding-bottom:env(safe-area-inset-bottom); }
 
@@ -7880,7 +7909,31 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .document-inspector.is-open{display:block}.document-inspector-heading button{display:block}
 }
 @media (max-width:760px){
-  .document-page{padding-inline:0!important}.document-workspace{height:calc(100dvh - 116px);
+  /* RANDLOS GILT FÜR DAS DOKUMENT, NICHT FÜR DEN KOPF DARÜBER.
+     `padding-inline:0` ist für die Arbeitsfläche richtig — eine PDF-Seite
+     soll am Telefon von Kante zu Kante gehen. Zeichen, Titel und
+     Werkzeugzeile stehen aber im selben Kasten und verloren ihren Rand mit.
+
+     Gemessen am 25. August auf 390 px: die Tinte des Titels begann bei x=0,
+     also am Bildschirmrand, und die Werkzeugzeile reichte bis 408 — achtzehn
+     Pixel über den rechten Rand hinaus, mit „Schrift" halb im Nichts. */
+  .document-page{padding-inline:0!important}
+  .document-page>.pg-icon,
+  .document-page>#title,
+  .document-page>.pg-tools{
+    padding-inline:max(var(--mobile-gutter), env(safe-area-inset-left)); }
+  /* Und was dann immer noch nicht hineinpasst, bleibt erreichbar statt
+     abgeschnitten — dieselbe Regel wie bei der Markierungsleiste (E141).
+
+     `margin-inline:0` GEHÖRT DAZU. Die gewöhnliche Regel gibt der Zeile
+     `margin-right:-18px`, damit sie beim Schieben in den Seitenrand
+     hineinlaufen darf statt an ihm abzuschneiden. Im Dokumentmodus gibt es
+     diesen Rand nicht — der Kasten ragte damit 18 px über den Bildschirm
+     hinaus (gemessen: 0..408 auf 390 px). */
+  .document-page>.pg-tools{
+    margin-inline:0;
+    overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
+  .document-workspace{height:calc(100dvh - 116px);
     min-height:420px;border-inline:0;border-radius:0}
   .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:44px;min-height:44px;padding:6px}
   .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}

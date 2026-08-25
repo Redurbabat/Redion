@@ -10309,3 +10309,96 @@ nicht anrichtet, beweist nichts — dritter Fall an diesem Tag.
 
 Die zweite Richtung ist die wichtigere: eine Uhr, die gesunde langsame Läufe
 abschiesst, wäre schlimmer als keine.
+
+
+---
+
+## E156 · Am Telefon fehlten die Ränder — an drei Stellen
+
+**25. August 2026.** Angefangen hat es mit einem Bildschirmfoto des
+Dokumentmodus (§55) und einem Verdacht, den ich zuerst für einen Lesefehler
+hielt: der Seitentitel schien am Bildrand zu kleben.
+
+### Erstens: „Volle Breite" gab weniger Breite
+
+```txt
+390 px Telefon
+  gewöhnliche Seite    28 px Rand   →  334 px Inhalt
+  „Volle Breite"       60 px Rand   →  270 px Inhalt
+```
+
+Der Modus, den man wählt, um MEHR Platz zu bekommen, gab ein Fünftel
+weniger — und man wählt ihn am Telefon eher als am Rechner.
+
+Die Ursache steht im selben Block wie die von E148:
+
+```txt
+aufbau.css      #page.wide{ padding:0 60px 40vh }     1 Kennung + 1 Klasse
+bausteine.css   #page{ padding-left: … }  (Telefon)   1 Kennung
+```
+
+Die Telefonregel verliert, obwohl ihre Datei später geladen wird. Im
+Kommentar direkt darüber steht bereits die Erinnerung an eine FRÜHERE
+Auseinandersetzung mit der Spezifität dieser Zeile. Dreimal dieselbe Falle an
+derselben Kennung ist kein Zufall mehr: `#page` mit Zustandsklassen darauf
+ist ein Ort, an dem jede spätere Regel nachweisen muss, dass sie gilt.
+
+**`:not(.produkt-welt)` ist dabei kein Schmuck.** Eine Produktwelt wird
+ebenfalls in `#page` gezeichnet und trägt auch `wide`. Ohne den Ausschluss
+hätte die neue Zeile gegen `#page.produkt-welt{padding:10px 12px}` aus E148
+gewonnen — gleiche Spezifität, spätere Datei — und den Produktwelten genau
+die Pixel zurückgenommen, die E148 ihnen geholt hat. Beim Vorbereiten
+aufgefallen, bevor es passiert ist; test221 §3 hält es fest.
+
+### Zweitens: der Aufmacher ragte aus dem Bild
+
+`.cover` zieht sich mit einem negativen Rand über die Seitenränder hinaus,
+damit das Bild bis an die Kante geht. Am Telefon standen dort weiter die
+Zahlen vom Rechner — 96 bzw. 60 px gegen einen Rand von 28. Gemessen: der
+Aufmacher begann bei −32 und endete bei 422 auf einem 390 px breiten Schirm.
+
+### Drittens: im Dokumentmodus fehlte der Rand ganz
+
+Und hier war das Bildschirmfoto im Recht, meine erste Messung dagegen nicht:
+sie nahm eine gewöhnliche Seite und fand brave 28 px. Der Dokumentmodus hat
+eine eigene Regel, `.document-page{padding-inline:0!important}`.
+
+Für die Arbeitsfläche ist das richtig — eine PDF-Seite soll am Telefon von
+Kante zu Kante gehen. Zeichen, Titel und Werkzeugzeile stehen aber im selben
+Kasten und verloren ihren Rand mit:
+
+```txt
+Tinte des Titels     x = 0     am Bildschirmrand
+Werkzeugzeile        0 .. 408  achtzehn Pixel über den rechten Rand hinaus
+```
+
+Die 408 kommen von `margin-right:-18px` — einem Kniff, mit dem die
+schiebbare Zeile in den Seitenrand hineinlaufen darf, statt an ihm
+abzuschneiden. Ohne Seitenrand läuft sie aus dem Bild. Im Dokumentmodus ist
+der Kniff jetzt aus.
+
+### Und die Messung, die es nicht gesehen hätte
+
+Mein erster Prüfpunkt las `getBoundingClientRect().left` und wäre grün
+geblieben: ein Innenabstand verschiebt den INHALT, nicht das Rechteck. Gemessen
+wird jetzt die Tinte — ein Bereich um das erste Zeichen. Dasselbe wie
+`clientWidth` in E148, nur andersherum, und der vierte Fall an diesem Tag, in
+dem die Messung und nicht das Produkt der Fehler war.
+
+### Kann die Suite rot werden?
+
+**test221**, fünf Abschnitte, 20 Punkte. Fünf Gegenproben, einzeln auf einem
+Abzug des Baums zurückgenommen:
+
+```txt
+alte Telefonregel (`#page` ohne `.wide`)      → §1 rot: 270 gegen 334
+`:not(.produkt-welt)` weggelassen             → §3 rot: E148 zurückgedreht
+Aufmacher wieder mit den Rechner-Zahlen       → §2 rot: −32 bis 422
+Kopf im Dokumentmodus ohne Rand               → §5 rot: drei Teile bei x=0
+negativer Rand der Werkzeugzeile bleibt       → §5 rot: 408 auf 390 px
+```
+
+§4 ist die Gegenrichtung und verhindert die faule Lösung: am RECHNER muss
+„Volle Breite" deutlich mehr geben als die gewöhnliche Seite. Wer die Ränder
+überall gleichmacht, macht §4 rot. Und §5 prüft mit, dass die Arbeitsfläche
+selbst randlos BLEIBT — der Rand gehört dem Kopf, nicht dem Dokument.

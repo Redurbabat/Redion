@@ -1651,3 +1651,31 @@ trägt die Zeiten ja im Text (`[01:02] …`). Also: `{ was, wer, bis, sek }`,
 und `sek` nur übernehmen, wenn im Protokoll wirklich eine Zeile mit dieser
 Zeit steht. Das ist eine Änderung an der KI-Anweisung und braucht ein Modell
 zum Messen; ohne eines liesse sich nur behaupten, dass es geht.
+
+
+## L58 · Die Werkzeugzeile über dem Titel rollt, ohne es zu zeigen
+
+**25. August 2026.** Beim Bauen von E156 gemessen, nicht gesucht.
+
+`.pg-tools` — die Zeile mit „Cover · Volle Breite · Normale Seite · Schrift ·
+Vorlage" — ist am Telefon breiter als der Bildschirm und schiebbar:
+
+```txt
+617 px Inhalt in 390 px Kasten
+```
+
+Erreichbar ist damit alles. Sichtbar ist es nicht: nichts zeigt an, dass es
+rechts weitergeht. Ein abgeschnittenes Wort sieht aus wie ein Fehler, nicht
+wie eine Einladung zum Wischen — genau der Satz aus E151.
+
+**Warum nicht sofort behoben.** Die Lösung ist bekannt und zweimal gebaut
+(E141 für die PDF-Markierungsleiste, E151 für die Reiterleiste der Lernwelt):
+ein Datenmerkmal `data-mehr`, aus dem die CSS einen Schatten an der jeweiligen
+Kante macht. Sie braucht aber einen JavaScript-Haken an der Stelle, an der
+`.pg-tools` gezeichnet wird, und die liegt in der Schale — ein anderer Ort als
+die drei Ränder, um die es in E156 ging. Ein Stapel, der immer weiter wächst,
+wird nicht besser.
+
+Dass die Lösung dreimal fast gleich aussieht, ist selbst ein Hinweis: es
+gehört ein gemeinsamer Helfer daraus gemacht, statt ein viertes Mal
+abzuschreiben.
