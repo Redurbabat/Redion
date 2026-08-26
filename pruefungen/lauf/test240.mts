@@ -130,7 +130,7 @@ p('Jede Grösse hat Zeichen, Name und ein Einheitenfeld',
    ist. Ihre Einheit steht nicht fest, weil sie von der Messung abhängt —
    und ein falscher fester Eintrag wäre schlimmer als ein leerer. */
 const EINHEITENLOS = ['AF_abs', 'MB', 'MW', 'N', 'N₁', 'N₂', 'cosφ', 'k', 'n', 'p',
-                      'sinφ', 'tanφ₁', 'tanφ₂', 'εᵣ', 'η', 'η_B', 'μ_r'];
+                      'sinφ', 'tanφ', 'tanφ₁', 'tanφ₂', 'εᵣ', 'η', 'η_B', 'μ_r'];
 p('Und einheitenlos sind nur die, die es sein dürfen',
   JSON.stringify(sammlung.einheitenlos) === JSON.stringify(EINHEITENLOS),
   `ist ${JSON.stringify(sammlung.einheitenlos)}`);

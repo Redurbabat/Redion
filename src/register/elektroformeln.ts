@@ -1093,6 +1093,102 @@ Register.elektroformeln = (() => {
 
     /* ---- Transformator --------------------------------------------------- */
     {
+      id: 'stern-spannung', kapitel: 'dreh', schreibweise: 'U_Str = U / √3',
+      groessen: [g('U_Str', 'Strangspannung', 'V', 'Über einem einzelnen Wicklungsstrang'),
+                 g('U', 'Aussenleiterspannung', 'V', 'Zwischen zwei Aussenleitern')],
+      loese: { U_Str: v => v.U! / WURZEL(3), U: v => WURZEL(3) * v.U_Str! },
+      annahme: 'Sternschaltung. Der Strom ist in beiden gleich: I = I_Str.',
+      erklaerung: 'Im Stern liegt an jedem Strang nur 230 V, obwohl zwischen den ' +
+        'Aussenleitern 400 V stehen.'
+    },
+    {
+      id: 'stern-strang', kapitel: 'dreh', schreibweise: 'U_Str = I · Z',
+      groessen: [g('U_Str', 'Strangspannung', 'V'), g('I', 'Aussenleiterstrom', 'A'),
+                 g('Z', 'Strangimpedanz', 'Ω')],
+      loese: { U_Str: v => v.I! * v.Z!, I: v => v.U_Str! / v.Z!, Z: v => v.U_Str! / v.I! },
+      annahme: 'Sternschaltung, wo Strangstrom und Aussenleiterstrom gleich sind. ' +
+        'Bei reiner Wirklast ist Z = R.',
+      erklaerung: 'Ohm am einzelnen Strang.'
+    },
+    {
+      id: 'dreieck-strom', kapitel: 'dreh', schreibweise: 'I_Str = I / √3',
+      groessen: [g('I_Str', 'Strangstrom', 'A', 'Durch einen einzelnen Wicklungsstrang'),
+                 g('I', 'Aussenleiterstrom', 'A')],
+      loese: { I_Str: v => v.I! / WURZEL(3), I: v => WURZEL(3) * v.I_Str! },
+      annahme: 'Dreieckschaltung. Die Spannung ist in beiden gleich: U = U_Str.',
+      erklaerung: 'Im Dreieck ist es umgekehrt zum Stern: die Spannung ist gleich, ' +
+        'der Strom teilt sich.'
+    },
+    {
+      id: 'dreieck-strang', kapitel: 'dreh', schreibweise: 'I_Str = U / Z',
+      groessen: [g('I_Str', 'Strangstrom', 'A'), g('U', 'Aussenleiterspannung', 'V'),
+                 g('Z', 'Strangimpedanz', 'Ω')],
+      loese: { I_Str: v => v.U! / v.Z!, U: v => v.I_Str! * v.Z!, Z: v => v.U! / v.I_Str! },
+      annahme: 'Dreieckschaltung, wo Strangspannung und Aussenleiterspannung gleich ' +
+        'sind. Bei reiner Wirklast ist Z = R.',
+      erklaerung: 'Ohm am einzelnen Strang — im Dreieck mit der vollen Aussenleiterspannung.'
+    },
+    {
+      id: 'dreh-blindleistung', kapitel: 'dreh',
+      schreibweise: 'Q = √3 · U · I · sin φ',
+      groessen: [g('Q', 'Blindleistung', 'var'), g('U', 'Aussenleiterspannung', 'V'),
+                 g('I', 'Aussenleiterstrom', 'A'), g('sinφ', 'Blindfaktor', '')],
+      loese: {
+        Q: v => WURZEL(3) * v.U! * v.I! * v['sinφ']!,
+        U: v => v.Q! / (WURZEL(3) * v.I! * v['sinφ']!),
+        I: v => v.Q! / (WURZEL(3) * v.U! * v['sinφ']!),
+        'sinφ': v => v.Q! / (WURZEL(3) * v.U! * v.I!)
+      },
+      erklaerung: 'Das Gegenstück zur Wirkleistung im Drehstrom.'
+    },
+    {
+      id: 'stern-scheinleistung', kapitel: 'dreh', schreibweise: 'S_Y = U² / Z',
+      groessen: [g('S_Y', 'Scheinleistung im Stern', 'VA'),
+                 g('U', 'Aussenleiterspannung', 'V'), g('Z', 'Strangimpedanz', 'Ω')],
+      loese: {
+        S_Y: v => v.U! * v.U! / v.Z!,
+        U:   v => WURZEL(v.S_Y! * v.Z!),
+        Z:   v => v.U! * v.U! / v.S_Y!
+      },
+      annahme: 'Sternschaltung, symmetrische Last.',
+      erklaerung: 'Die Leistung aus Spannung und Strangimpedanz, ohne Umweg über den Strom.'
+    },
+    {
+      id: 'dreieck-scheinleistung', kapitel: 'dreh', schreibweise: 'S_Δ = 3 · U² / Z',
+      groessen: [g('S_Δ', 'Scheinleistung im Dreieck', 'VA'),
+                 g('U', 'Aussenleiterspannung', 'V'), g('Z', 'Strangimpedanz', 'Ω')],
+      loese: {
+        'S_Δ': v => 3 * v.U! * v.U! / v.Z!,
+        U:     v => WURZEL(v['S_Δ']! * v.Z! / 3),
+        Z:     v => 3 * v.U! * v.U! / v['S_Δ']!
+      },
+      annahme: 'Dreieckschaltung, symmetrische Last.',
+      erklaerung: 'DREIMAL so viel wie im Stern — bei derselben Last und derselben ' +
+        'Netzspannung. Genau deshalb läuft ein Motor im Dreieck mit voller Leistung ' +
+        'und im Stern nur mit einem Drittel.'
+    },
+    {
+      id: 'stern-dreieck-vergleich', kapitel: 'dreh', schreibweise: 'P_Δ = 3 · P_Y',
+      groessen: [g('P_Δ', 'Leistung im Dreieck', 'W'),
+                 g('P_Y', 'Leistung im Stern', 'W')],
+      loese: { 'P_Δ': v => 3 * v.P_Y!, P_Y: v => v['P_Δ']! / 3 },
+      annahme: 'Gleiche Last, gleiches Netz. Für die Ströme gilt dasselbe: I_Δ = 3 · I_Y.',
+      erklaerung: 'Der Grund für die Stern-Dreieck-Anlaufschaltung: im Stern zieht der ' +
+        'Motor beim Anlauf nur ein Drittel.'
+    },
+    {
+      id: 'dreh-wirkleistung-q', kapitel: 'dreh', schreibweise: 'P = Q / tan φ',
+      groessen: [g('P', 'Wirkleistung', 'W'), g('Q', 'Blindleistung', 'var'),
+                 g('tanφ', 'Verhältnis Blind zu Wirk', '')],
+      loese: {
+        P: v => v.Q! / v['tanφ']!,
+        Q: v => v.P! * v['tanφ']!,
+        'tanφ': v => v.Q! / v.P!
+      },
+      erklaerung: 'Der Tangens ist Blindleistung durch Wirkleistung — die Zahl, mit der ' +
+        'die Kompensation rechnet.'
+    },
+    {
       id: 'trafo-uebersetzung', kapitel: 'trafo', schreibweise: 'U₁ / U₂ = N₁ / N₂ = ü',
       groessen: [g('U₁', 'Spannung primär', 'V'), g('U₂', 'Spannung sekundär', 'V'),
                  g('N₁', 'Windungen primär', ''), g('N₂', 'Windungen sekundär', '')],
@@ -1172,6 +1268,101 @@ Register.elektroformeln = (() => {
     },
 
     /* ---- Lichttechnik ---------------------------------------------------- */
+    {
+      id: 'motor-polpaare', kapitel: 'motor', schreibweise: 'p = f · 60 / n_s',
+      groessen: [g('p', 'Anzahl Polpaare', ''), g('f', 'Frequenz', 'Hz'),
+                 g('n_s', 'Drehfelddrehzahl', '1/min')],
+      loese: {
+        p:   v => v.f! * 60 / v.n_s!,
+        f:   v => v.p! * v.n_s! / 60,
+        n_s: v => v.f! * 60 / v.p!
+      },
+      annahme: 'Die Drehfelddrehzahl heisst auch Synchrondrehzahl.',
+      erklaerung: 'Bei 50 Hz: ein Polpaar gibt 3000 1/min, zwei geben 1500, drei geben 1000.'
+    },
+    {
+      id: 'motor-laeuferdrehzahl', kapitel: 'motor',
+      schreibweise: 'n = n_s · (100 % − s) / 100 %',
+      groessen: [g('n', 'Läuferdrehzahl', '1/min', 'Was die Welle wirklich dreht'),
+                 g('n_s', 'Drehfelddrehzahl', '1/min'),
+                 g('s', 'Schlupf', '%')],
+      loese: {
+        n:   v => v.n_s! * (100 - v.s!) / 100,
+        n_s: v => v.n! * 100 / (100 - v.s!),
+        s:   v => (v.n_s! - v.n!) * 100 / v.n_s!
+      },
+      erklaerung: 'Ein Asynchronmotor läuft immer etwas langsamer als das Drehfeld — ' +
+        'ohne diesen Unterschied gäbe es keinen Läuferstrom und kein Drehmoment.'
+    },
+    {
+      id: 'motor-aufnahme-dreh', kapitel: 'motor',
+      schreibweise: 'P₁ = √3 · U · I · cos φ',
+      groessen: [g('P₁', 'aufgenommene elektrische Leistung', 'W'),
+                 g('U', 'Aussenleiterspannung', 'V'), g('I', 'Aussenleiterstrom', 'A'),
+                 g('cosφ', 'Wirkleistungsfaktor', '')],
+      loese: {
+        'P₁': v => WURZEL(3) * v.U! * v.I! * v['cosφ']!,
+        U:    v => v['P₁']! / (WURZEL(3) * v.I! * v['cosφ']!),
+        I:    v => v['P₁']! / (WURZEL(3) * v.U! * v['cosφ']!),
+        'cosφ': v => v['P₁']! / (WURZEL(3) * v.U! * v.I!)
+      },
+      annahme: 'Drehstrommotor. Auf dem Leistungsschild steht P₂ — die ABGEGEBENE ' +
+        'mechanische Leistung, nicht diese.',
+      erklaerung: 'Was der Motor aus dem Netz zieht. Der häufigste Fehler ist, die ' +
+        'Schildleistung dafür zu halten.'
+    },
+    {
+      id: 'motor-abgabe', kapitel: 'motor', schreibweise: 'P₂ = P₁ · η',
+      groessen: [g('P₂', 'abgegebene mechanische Leistung', 'W', 'Das, was auf dem Schild steht'),
+                 g('P₁', 'aufgenommene elektrische Leistung', 'W'),
+                 g('η', 'Wirkungsgrad', '')],
+      loese: {
+        'P₂': v => v['P₁']! * v['η']!,
+        'P₁': v => v['P₂']! / v['η']!,
+        'η':  v => v['P₂']! / v['P₁']!
+      },
+      erklaerung: 'Der Unterschied wird Wärme. Bei einem guten Motor sind das unter 10 %.'
+    },
+    {
+      id: 'motor-aufnahme-wechsel', kapitel: 'motor',
+      schreibweise: 'P₁ = U · I · cos φ',
+      groessen: [g('P₁', 'aufgenommene elektrische Leistung', 'W'),
+                 g('U', 'Spannung', 'V'), g('I', 'Strom', 'A'),
+                 g('cosφ', 'Wirkleistungsfaktor', '')],
+      loese: {
+        'P₁': v => v.U! * v.I! * v['cosφ']!,
+        U:    v => v['P₁']! / (v.I! * v['cosφ']!),
+        I:    v => v['P₁']! / (v.U! * v['cosφ']!),
+        'cosφ': v => v['P₁']! / (v.U! * v.I!)
+      },
+      annahme: 'Wechselstrommotor — einphasig, ohne die Wurzel aus 3.',
+      erklaerung: 'Bohrmaschine, Handkreissäge: alles, was am gewöhnlichen Stecker hängt.'
+    },
+    {
+      id: 'hubarbeit', kapitel: 'motor', schreibweise: 'W₂ = m · g · h',
+      groessen: [g('W₂', 'mechanische Arbeit', 'Nm', '1 Nm = 1 Ws'),
+                 g('m', 'Masse', 'kg'),
+                 g('g', 'Fallbeschleunigung', 'm/s²'),
+                 g('h', 'Hubhöhe', 'm')],
+      loese: {
+        'W₂': v => v.m! * 9.81 * v.h!,
+        m:    v => v['W₂']! / (9.81 * v.h!),
+        h:    v => v['W₂']! / (9.81 * v.m!)
+      },
+      annahme: 'Mit g = 9,81 m/s².',
+      erklaerung: 'Was ein Aufzug oder eine Seilwinde an Arbeit leistet.'
+    },
+    {
+      id: 'hubzeit', kapitel: 'motor', schreibweise: 't = W₂ / P₂',
+      groessen: [g('t', 'Hubzeit', 's'), g('W₂', 'mechanische Arbeit', 'Nm'),
+                 g('P₂', 'mechanische Leistung', 'W')],
+      loese: {
+        t:    v => v['W₂']! / v['P₂']!,
+        'W₂': v => v.t! * v['P₂']!,
+        'P₂': v => v['W₂']! / v.t!
+      },
+      erklaerung: 'Wie lange die Winde für die Last braucht. 1 W = 1 Nm/s.'
+    },
     {
       id: 'beleuchtungsstaerke', kapitel: 'licht', schreibweise: 'E = Φ / A',
       groessen: [g('E', 'Beleuchtungsstärke', 'lx'), g('Φ', 'Lichtstrom', 'lm'),
