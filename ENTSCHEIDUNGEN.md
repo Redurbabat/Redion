@@ -13753,3 +13753,304 @@ Inhaltsverzeichnis des Hefts. Seine erste Fassung mass die viewBox mit
 einem doppelt geschützten Regex und las überall 0×0 — eine Prüfung, die
 nie rot werden kann, ist keine (§55.2), und diesmal traf es die Prüfung
 selbst.
+
+
+## E195 · Das ganze Heft, und warum der Abschnitt seine Zeilen selbst trägt
+
+**26. August 2026**
+
+E194 baute Redions eigenes Formelbuch: eigene Gestaltung, eigene Skizzen,
+die Seitenzahlen des gedruckten Hefts. Es standen 24 Seiten darin, und die
+Gliederung war meine.
+
+Redur hat das abgelehnt, und zu Recht: „du musst die Formeln neu schreiben
+mit neuem Design, aber die Seitennummer sollte gleich sein" — und dann,
+deutlicher: „1:1 wie im PDF, alle Seiten, wie die Struktur und alles
+gleich."
+
+Jetzt ist es das Heft. Seite 2 bis 34, 172 Abschnitte unter ihren eigenen
+Überschriften, 923 Zeilen in der gedruckten Reihenfolge.
+
+### Wie die Seiten hereingekommen sind
+
+Dreiunddreissig Seiten von Hand abzuschreiben wäre drei Tage Arbeit und
+hätte drei Tage Tippfehler gegeben. Stattdessen hat je ein Leser eine
+Seite gelesen und als Daten zurückgegeben, und je ein zweiter hat dieselbe
+Seite noch einmal angesehen und die Abschrift dagegengehalten. Sechsund-
+sechzig Durchgänge, zwei Beanstandungen — beide berechtigt, beide klein.
+
+Der Wert liegt im ZWEITEN Blick. Wer abschreibt, liest, was er erwartet;
+wer prüft, liest, was dasteht.
+
+### Der eigentliche Bau: die Zeile gehört dem Abschnitt
+
+In E194 sagte die Formel, in welchem Abschnitt sie steht — ein Feld
+`abschnitt` am Formeleintrag. Das ging nicht auf, und der Grund ist im
+Heft nachzulesen:
+
+    Seite 2   „Grundformeln Quickie"   P = U · I
+    Seite 8   „Gleichstromleistung"    P = U · I
+
+Dieselbe Formel, zwei Seiten. Ein einzelnes Feld kann das nicht sagen. Es
+hätte eine der beiden Stellen verschwiegen, und zwar stillschweigend.
+
+Also umgedreht: der ABSCHNITT führt seine Zeilen, jede mit dem Text, wie
+er im Heft steht, und mit einem Verweis auf den rechenbaren Eintrag, wenn
+es einen gibt. Das Feld an der Formel ist ersatzlos weg. `seitenVon()`
+nennt jetzt alle Seiten, auf denen eine Formel vorkommt.
+
+Damit ist auch das gelöst, was vorher nicht ging: das Heft schreibt jede
+Umstellung als eigene Zeile aus — `R = U / I` neben `U = R · I` —, und
+Redion braucht dafür keine zweite Formel, sondern nur eine zweite Zeile,
+die auf dieselbe zeigt. 422 der 923 Zeilen sind so rechenbar.
+
+### Was beim Zusammenführen wirklich schwierig war
+
+Nicht das Abschreiben. Das WIEDERERKENNEN. Der Zuordner musste sehen, dass
+diese Paare dasselbe meinen:
+
+    R_Ltg = ρ · 2 · l / A     und   R_Ltg = (ρ · 2 · l) / A
+    R = R₁ + R₂ + … + Rₙ      und   R = R₁ + R₂ + R₃
+    B = μ₀ · μ_r · H          und   B = µ₀ · µᵣ · H
+    n_s = f · 60 / p          und   nₛ = (f · 60 s/min) / p
+    η = P₂ / (P₂ + P_Cu + P_Fe)  und  η = P₂/P₁ = P₂/(P₂+P_Cu+P_Fe)
+
+Fünf verschiedene Ursachen, und jede einzeln:
+
+**Klammern.** Eine Klammer um ein reines Produkt darf weg. Steht ein `/`
+davor, darf sie NICHT weg — `a/(b·c)` und `a/b·c` sind verschiedene
+Zahlen. Genau solche stillen Verwechslungen sind das Einzige, was hier
+wirklich schaden kann.
+
+**Auslassungspunkte.** Ein Lauf gleichartiger Summanden wird
+zusammengefasst. Der erste Versuch scheiterte an zwei Stellen zugleich:
+die linke Seite lief als erster Summand mit (`R=R₁` gegen `R₂`), und NFKC
+zerlegt „…" in drei Punkte, sodass die Prüfung auf das eine Zeichen ins
+Leere ging.
+
+**µ ist nicht μ.** Das Mikro-Zeichen (U+00B5) und das griechische My
+(U+03BC) sehen gleich aus und sind verschiedene Zeichen. Das Heft setzt
+das eine, das Register das andere. Ohne NFKC stünde die Flussdichte
+zweimal im Buch — einmal rechenbar, einmal nicht, und niemand hätte
+gesehen, warum.
+
+**Einheiten in der Formel.** `60 s/min` erklärt, WOHER die 60 kommt. Für
+die Zuordnung ist es Beiwerk; die angezeigte Zeile bleibt trotzdem die des
+Hefts.
+
+**Kettengleichungen.** `η = P₂/P₁ = P₂/(P₂+P_Cu+P_Fe)` sind zwei Aussagen.
+Von vorn gelesen findet man immer nur die erste — den allgemeinen
+Wirkungsgrad, den es schon dreimal gibt. Von hinten findet man die
+besondere.
+
+Am Ende haben alle 182 rechenbaren Formeln ihre Stelle im Heft.
+
+### Drei Stellen, an denen das Heft genauer war als das Register
+
+· Der Plattenabstand heisst `l`, nicht `d`. Ein anderer Buchstabe für
+  dieselbe Grösse ist eine Stolperstelle, die man erst bemerkt, wenn man
+  sich schon vertan hat.
+· Die Beleuchtungsstärke rechnet mit dem NUTZlichtstrom Φ_N. Wer mit dem
+  blossen Lampenlichtstrom rechnet, plant den Raum zu hell und merkt es
+  auf der Baustelle.
+· `R₉` war eine tiefgestellte NEUN, die dem ϑ nur ähnlich sieht.
+
+### Die Bilder
+
+Sechzehn Abschnitte im Heft haben keine Formel — sie erklären mit Bildern.
+Die Messgerätekategorien, die Hysteresekurve, das Feldbild der Spule, die
+Kraft auf den stromdurchflossenen Leiter, und die zwölf Bauelemente auf
+Seite 23. Sie gehören zur Struktur und dürfen nicht wegfallen; eine
+Überschrift ohne alles wäre in Redion ein Fehler, den man für Absicht
+hält.
+
+Also gezeichnet. Für Seite 23 kam das Bauteilzeichen aus dem
+Fachzeichen-Register und die Kennlinie daneben als eigenes SVG. Sechs
+Zeichen fehlten dort noch — PTC, NTC, VDR, LDR, Optokoppler, Triac —, und
+die gehören ins Register und nicht in eine Skizze: damit stehen sie auch
+im Schaltplan-Editor zur Verfügung (§8 Regel 3).
+
+Die Kennlinie ist der eigentliche Inhalt dieser Seite. Das Zeichen sagt,
+wie das Bauteil heisst; die Kennlinie sagt, was es tut — und bei PTC und
+NTC ist das der einzige Unterschied. Die Z-Diode zeigt den Durchbruch bei
+U_Z, also genau das, wofür es sie gibt.
+
+### Zwei Fehler, die nur das Hinsehen fand (§55)
+
+· Das Bauteilzeichen wurde auf Spaltenbreite aufgeblasen. Die Regel
+  `.bs-skizze svg` erwischte auch das Symbol INNERHALB einer
+  zusammengesetzten Skizze, und ein 40 × 60 grosser PTC füllte die halbe
+  Seite. Ein direktes Kind zu meinen und alle Nachfahren zu treffen ist
+  ein Fehler, den keine Messung sieht.
+· Jedes Bauteil stand allein in einer Zeile, zwei Drittel der Seite
+  blieben weiss. Reine Bildabschnitte stehen jetzt zu zweit nebeneinander
+  — am Telefon wieder untereinander, weil zwei Bauteile auf 390 px zwei zu
+  schmale Bauteile sind.
+
+### Prüflauf
+
+`test244`, 64 Punkte, dazu die Nachbarn: test238 (77), test239 (68),
+test240 (100), test241 (105), test242 (42), test243 (71). 527 Punkte.
+
+Eine Prüfung ist dabei bewusst weicher geworden: „kein Abschnitt ohne
+Formel" hätte die sechzehn Bildabschnitte rot gemacht, obwohl sie richtig
+sind. Sie heisst jetzt „kein Abschnitt ohne ALLES" — ohne Formel, ohne
+Tabelle und ohne Skizze. Eine Prüfung, die Richtiges rot macht, wird
+irgendwann abgeschaltet, und dann fängt sie auch das Falsche nicht mehr.
+
+## E196 · Drei Dinge, die nur das Hinsehen fand
+
+**26. August 2026**
+
+Redur wollte Seite 13 und die Telefonansicht sehen. Das Bild zeigte drei
+Fehler, und keiner davon war rot.
+
+**Erstens: zwei Kurven, die sich nicht unterschieden.**
+
+Die Abbildung „Ummagnetisierungskennlinien" zeigt hartmagnetisch NEBEN
+weichmagnetisch. Der Unterschied zwischen beiden IST die Aussage — die
+eingeschlossene Fläche ist die Verlustarbeit je Ummagnetisierung, und
+deshalb nimmt man im Trafokern die schmale. Gezeichnet war zweimal
+dieselbe Linse mit leicht verschobenen Kontrollpunkten.
+
+Jetzt bestimmt die Koerzitivfeldstärke die Form: 24 für den Dauermagneten,
+5 für den Kern. Beide sehen aus wie eine Hystereseschleife, und man sieht
+auf einen Blick, welche welche ist.
+
+Eine Prüfung hätte das nie gefunden. Sie hätte gezählt: zwei Pfade da,
+beide im Rahmen, beide nicht leer — grün. Zwei Bilder, die dasselbe zeigen,
+obwohl sie Verschiedenes zeigen sollen, sind kein messbarer Zustand.
+
+**Zweitens: eine Beschriftung ohne Gegenstand.**
+
+Im Bild „Magnetfelder bei Spulen" stand ein `I` unter der Spule, aber es
+gab dort keine Leitung. Und benannt war nur der Nordpol, obwohl der ganze
+Sinn des Bildes ist, dass die Linien am einen Ende hinaus- und am anderen
+wieder hineingehen. Beides ist jetzt da: Zuleitungen mit Stromrichtung,
+S und N an ihren Enden. Nebenbei fiel auf, dass der gerade Teil der
+Feldlinie zweimal übereinander gezeichnet wurde, weil beide Linien ihn im
+selben `d` mitführten.
+
+**Drittens: die Fussknöpfe am Telefon waren leere Kästchen.**
+
+Und das ist der interessante Fall. Die Messung sagte gleichzeitig: 44 × 44,
+sichtbar, mit Text, innerhalb des Fensters. Alles stimmte. Über ihnen lag
+`#toast`.
+
+Der Toast versteckt sich mit `transform: translateY(80px)`. Am Rechner
+steht er bei `bottom:22px` — 80 px nach unten genügen, er ist aus dem Bild.
+Am Telefon steht er bei `bottom:104px`, weil dort die Aktionsleiste liegt.
+104 − 80 = 24, also blieb ein dunkler Streifen dauerhaft im Bild stehen,
+mit dem Text der letzten Meldung darin, quer über den Fussknöpfen.
+
+Eine Schiebestrecke muss die Höhe des Kastens erraten, und die hängt am
+Text. `opacity` muss nichts raten. Ausdrücklich NICHT `visibility:hidden`:
+`#toast` ist ein `aria-live`-Bereich, und ein unsichtbarer Bereich wird
+nicht vorgelesen — ein durchsichtiger schon.
+
+**Und die Prüfung dazu, die rot werden kann.**
+
+Der naheliegende Weg wäre `elementFromPoint` in der Mitte jedes Knopfes.
+Der hätte hier für immer grün gezeigt: `#toast` hat `pointer-events:none`,
+und die Treffersuche überspringt ihn. Genau der Fall aus CLAUDE.md §55.2 —
+eine Prüfung, die nicht rot werden kann, ist keine.
+
+Gemessen wird deshalb, was GEMALT wird: jedes Element ausserhalb des
+Heftfensters, das eigene Schichtung hat, eine höhere z-Zahl trägt als das
+Fenster, sichtbar ist und den Fuss überlappt. Vor der Berichtigung meldete
+sie `DIV#toast z900 798–820`, danach nichts. test244 hat damit 65 Prüfungen.
+
+## E197 · Der Durchgang durch alle 33 Seiten
+
+**26. August 2026**
+
+E196 fand drei Fehler auf einer einzigen Seite, und keiner davon war rot.
+Das ist keine Eigenschaft von Seite 13 — es ist eine Eigenschaft der Art,
+wie man ein Buch prüft. Also einmal durch alle 33 Seiten, jede angesehen
+und jede vermessen.
+
+**Der sichtbare Unterstrich — 42 Stellen.**
+
+`tief` verwandelt `X_L` in X mit tiefgestelltem L. Die Zeichenliste dafür
+war `[A-Za-zÄÖÜäöüß0-9]`: die deutsche Tastatur, nicht die Physik. Im Heft
+stehen `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ` (Scheinleistung im
+Dreieck) und `AF_%` (relativer Anzeigefehler). Bei allen dreien blieb der
+Unterstrich als Unterstrich stehen.
+
+Das ist kein Schönheitsfehler. `R_ϑ` liest sich als „R Unterstrich Theta",
+und eine solche Grösse gibt es nicht.
+
+Die Liste heisst jetzt `[\p{L}\p{N}%]` — jeder Buchstabe jeder Schrift, jede
+Ziffer, und Prozent ausdrücklich, weil es keins von beidem ist. Weil `esc`
+vorher läuft, kann durch die Erweiterung kein Zeichen hereinkommen, das
+vorher draussen war.
+
+Dieselbe Zeile stand an DREI Orten — Schaltplan, Skizzen, Buch. Genau so
+entsteht ein solcher Fehler und genau so überlebt er. test244 vergleicht
+die drei jetzt miteinander.
+
+Und drei Stellen liefen gar nicht durch `tief`: die Überschrift des
+Abschnitts, sein Hinweis und die Beschreibung einer Grösse. „Reihen-
+schaltung von R, X_L und X_C" stand mit zwei Unterstrichen in der
+auffälligsten Zeile der Seite; „Spannung an R_V" in der Erklärung einer
+Grösse, die sich damit selbst falsch schreibt.
+
+**Der Wächter, der die Annahme des Geprüften teilte.**
+
+Es gab längst eine Prüfung „Kein Unterstrich bleibt stehen". Sie suchte
+`/_[A-Za-z0-9]/` — DIESELBE zu kurze Liste. Sie konnte also genau das nicht
+finden, was schiefging, und sie sah nur auf Seite 11 nach, während `AF_%`
+auf 6 und 7 steht und `R_ϑ` auf 4.
+
+Jetzt gilt: in einer Formel hat ein Unterstrich NIE etwas zu suchen, also
+keiner, auf keiner der 35 Seiten, in Formel, Zeile, Legende, Überschrift,
+Hinweis, Tabelle und Skizzenbeschriftung. Ein Wächter, der die Annahme des
+Geprüften teilt, prüft nichts (CLAUDE.md §55.2).
+
+**Die Messung, die eine Lage mass, die es nicht gibt.**
+
+Die Prüfung „Keine Skizze läuft aus ihrem Blatt" rendert jede Skizze in
+einen Hilfskasten und vergleicht `getBBox` mit dem `viewBox`. Der Kasten war
+ein blankes `<div style="width:600px">`.
+
+Die Plan-Beschriftungen haben zwar `font-size="13"`, aber keine
+Schriftfamilie — die erben sie vom Umgebenden. Im blanken Kasten kam eine
+andere Schrift heraus als unter `.bs-skizze`, und mit ihr andere
+Buchstabenmasse: `s-teiler` mass dort 1 Punkt Überstand und auf der Seite 3,
+`b-reihe` 2 gegen 6. Bei zwei Punkten Nachsicht hiess das: grün, während im
+Bild ein `U` oben abgeschnitten stand.
+
+Der Kasten trägt jetzt dieselbe Klasse wie im Buch. Danach war die Prüfung
+sofort rot — und `s-teiler`, `b-reihe`, `b-innen` und `sp-mehrlagig` liessen
+sich berichtigen.
+
+**Vier Bilder, die etwas Falsches zeigten.**
+
+  · `s20-gleichstromleitung` war neu zu zeichnen. `ΔU` stand unter dem Bild
+    und zeigte auf nichts; die Länge `l` lag als gestrichelte Linie im
+    Inneren und war kürzer als die Leitung, die sie messen soll; und `I` und
+    `l` standen beide frei in derselben kursiven Schrift, in der sie
+    derselbe Strich sind. Jetzt sagt die Form, was gemeint ist: ein Pfeil in
+    Flussrichtung ist ein Strom, ein Doppelpfeil zwischen zwei Grenzen ist
+    ein Mass. Die Grössen kommen aus dem Register des Abschnitts — U₁ am
+    Netz, U₂ am Verbraucher, ΔU dazwischen —, und weil `R_Ltg` mit `2 · l`
+    rechnet, zeigt der Rückleiter seinen Strom mit.
+  · `mo-dreh` trug ein drittes `M` frei neben dem Motor. Das Zeichen hat
+    sein `M` und sein `3 ~` im Kreis, das Betriebsmittelkennzeichen `M1`
+    schreibt der Planzeichner daneben.
+  · `sp-einlagig` und `sp-mehrlagig`: `d` schwebte ohne Bezug über dem Bild,
+    `d₁` hatte kein Mass, und `d₁` und `d_m` lagen als zwei Beschriftungen
+    übereinander auf der Strichlinie und sahen durchgestrichen aus. Jetzt
+    hat `d` eine Linie zu seinem Draht, `d₁` einen eigenen Doppelpfeil über
+    den Kern, und beide Beschriftungen stehen frei.
+
+**Was der Durchgang NICHT fand.**
+
+Die Seiten 35 und 36 sind leer, und das ist richtig so: das gedruckte Heft
+hat 36 Seiten, geschrieben sind 33 davon. Redion sagt das auf der Seite —
+„Diese Seite gibt es im gedruckten Heft, in Redion noch nicht" — und zählt
+auf, welche es gibt. Eine bekannte Lücke ist besser als ein stiller Fehler
+(§35).
+
+Sechzehn Abschnitte haben weder Formel noch Tabelle noch Legende. Alle
+sechzehn sind Bildabschnitte, und alle sechzehn haben ihr Bild.

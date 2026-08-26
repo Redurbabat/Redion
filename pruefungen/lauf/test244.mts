@@ -96,16 +96,27 @@ const bau = await seite.evaluate(() => {
   const R = Register.elektroformeln;
   const abschnitte = R.abschnitte() as any[];
   const alle = R.alle() as any[];
-  const ids = new Set(abschnitte.map(a => a.id));
   return {
     abschnitte: abschnitte.length,
     formeln: alle.length,
     letzteSeite: R.letzteSeite(),
     seiten: R.seitenMitInhalt() as number[],
-    /* Eine Formel, deren Abschnitt es nicht gibt, steht im Buch nirgends. */
-    verwaist: alle.filter(f => !ids.has(f.abschnitt)).map(f => f.id),
-    /* Ein Abschnitt ohne Formeln ist eine Überschrift über nichts. */
-    leer: abschnitte.filter(a => !alle.some(f => f.abschnitt === a.id)).map(a => a.id),
+    /* Eine rechenbare Formel, die auf keiner Buchseite steht, ist im Heft
+       nicht zu finden — und dann nützt sie beim Lernen mit dem Heft nichts.
+       Gemessen wird über die ZEILEN der Abschnitte: sie sind seit E195 die
+       einzige Stelle, die sagt, was auf einer Seite steht. */
+    verwaist: alle.filter(f => !abschnitte.some(
+      a => (a.zeilen || []).some((z: any) => z.id === f.id))).map(f => f.id),
+    /* Ein Abschnitt darf ohne FORMEL sein: das Heft hat Überschriften, unter
+       denen nur ein Bild oder eine Tabelle steht — die Messgerätekategorien,
+       die Hysteresekurve, das Feldbild der Spule. Sie gehören zur Struktur
+       und dürfen nicht wegfallen.
+
+       Ohne ALLES darf keiner sein. Eine Überschrift, unter der nichts steht,
+       ist im Buch eine leere Zeile und in Redion ein Fehler, den man für
+       Absicht hält. */
+    leer: abschnitte.filter(a => !(a.zeilen || []).length && !(a.tabelle || []).length &&
+      !(typeof Elektroskizzen !== 'undefined' && Elektroskizzen.hat(a.id))).map(a => a.id),
     ohneTitel: abschnitte.filter(a => !a.titel).map(a => a.id),
     /* Die Seitenzahl muss im Buch liegen und ganzzahlig sein. */
     schiefeSeite: abschnitte
@@ -150,10 +161,10 @@ const stichprobe = await seite.evaluate(() => {
   return {
     s4: kapitelAuf(4), s11: kapitelAuf(11), s14: kapitelAuf(14),
     s18: kapitelAuf(18), s22: kapitelAuf(22),
-    ohm: R.seiteVon('ohm'),
-    trafo: R.seiteVon('trafo-uebersetzung'),
-    akku: R.seiteVon('akku-ladekapazitaet'),
-    resonanz: R.seiteVon('resonanzfrequenz')
+    ohm: R.seitenVon('ohm'),
+    trafo: R.seitenVon('trafo-uebersetzung'),
+    akku: R.seitenVon('akku-ladekapazitaet'),
+    resonanz: R.seitenVon('resonanzfrequenz')
   };
 });
 p('Seite 4 ist Kapitel 2, Grundlagen', JSON.stringify(stichprobe.s4) === '[2]',
@@ -166,10 +177,16 @@ p('Seite 18 ist Kapitel 13, Transformatoren',
   JSON.stringify(stichprobe.s18) === '[13]', JSON.stringify(stichprobe.s18));
 p('Seite 22 ist Kapitel 17, Beleuchtung',
   JSON.stringify(stichprobe.s22) === '[17]', JSON.stringify(stichprobe.s22));
-p('Das ohmsche Gesetz steht auf Seite 4', stichprobe.ohm === 4, `${stichprobe.ohm}`);
-p('Die Übersetzung steht auf Seite 18', stichprobe.trafo === 18, `${stichprobe.trafo}`);
-p('Die Ladekapazität steht auf Seite 11', stichprobe.akku === 11, `${stichprobe.akku}`);
-p('Die Resonanz steht auf Seite 15', stichprobe.resonanz === 15, `${stichprobe.resonanz}`);
+/* Das Heft führt seine wichtigen Formeln ZWEIMAL: einmal im Quickie ganz
+   vorn, einmal ausführlich im Fachkapitel. Der erste Entwurf dieser Prüfung
+   verlangte EINE Seitenzahl und wurde rot, sobald der Quickie dazukam —
+   obwohl gerade das der Beweis ist, dass die Seiten stimmen. */
+p('Das ohmsche Gesetz steht auf Seite 2 (Quickie) und 4',
+  stichprobe.ohm.includes(2) && stichprobe.ohm.includes(4), `${stichprobe.ohm}`);
+p('Die Übersetzung steht auf Seite 3 (Quickie) und 18',
+  stichprobe.trafo.includes(3) && stichprobe.trafo.includes(18), `${stichprobe.trafo}`);
+p('Die Ladekapazität steht auf Seite 11', stichprobe.akku.includes(11), `${stichprobe.akku}`);
+p('Die Resonanz steht auf Seite 15', stichprobe.resonanz.includes(15), `${stichprobe.resonanz}`);
 
 /* ==========================================================================
  * §2 · Das Fenster blättert
@@ -212,7 +229,7 @@ p('Eine Seitenzahl eintippen blättert hin',
 
 /* Eine Seite, die es im Heft gibt, in Redion aber noch nicht, sagt das —
    statt leer zu bleiben und wie ein Fehler auszusehen. */
-await seite.locator('.bs-nr').fill('2');
+await seite.locator('.bs-nr').fill('36');
 await seite.waitForTimeout(600);
 p('Eine noch nicht geschriebene Seite sagt es',
   await seite.locator('.bs-leer').count() === 1);
@@ -220,10 +237,18 @@ p('… und nennt, welche geschrieben sind',
   /Geschrieben sind/.test(await seite.locator('.bs-leer').innerText()));
 
 /* Die Doppelpfeile springen zur nächsten Seite MIT Inhalt. */
+/* Seite 36 ist das Stichwortverzeichnis — dahinter kommt nichts mehr. Der
+   Vorwärts-Doppelpfeil bleibt deshalb stehen; wer blättert und plötzlich
+   wieder vorn landet, hat den Faden verloren. Zurück muss er springen. */
 await seite.click('[data-a="naechsteVoll"]');
 await seite.waitForTimeout(600);
+p('Am Ende bleibt der Vorwärts-Doppelpfeil stehen',
+  (await seite.locator('.bs-blatt').getAttribute('data-seite')) === '36');
+await seite.click('[data-a="vorherVoll"]');
+await seite.waitForTimeout(600);
 const nachSprung = await seite.locator('.bs-blatt').getAttribute('data-seite');
-p('Der Doppelpfeil springt zur nächsten geschriebenen Seite', nachSprung === '4', `${nachSprung}`);
+p('Der Doppelpfeil springt zur vorigen geschriebenen Seite',
+  nachSprung === '34', `${nachSprung}`);
 
 /* Am Rand stehenbleiben statt umspringen. */
 await seite.locator('.bs-nr').fill('1');
@@ -252,8 +277,14 @@ const tief = await seite.evaluate(() => {
     /* Wie viele Formeln überhaupt eine Tiefstellung tragen. */
     mitSub: alle.filter(x => x.querySelector('sub')).length,
     gesamt: alle.length,
-    /* Kein Unterstrich darf STEHENBLEIBEN, wo eine Tiefstellung hingehört. */
-    nochUnterstrich: alle.filter(x => /_[A-Za-z0-9]/.test(x.textContent || ''))
+    /* Kein Unterstrich darf STEHENBLEIBEN, wo eine Tiefstellung hingehört.
+       Hier stand `/_[A-Za-z0-9]/` — DIESELBE zu kurze Zeichenliste wie in
+       `tief` selbst. Damit prüfte der Wächter genau das nicht, was schiefging:
+       `R_ϑ`, `S_Δ` und `AF_%` gingen an ihm vorbei, weil ϑ, Δ und % nicht in
+       seiner Liste standen. Ein Wächter, der die Annahme des Geprüften teilt,
+       prüft nichts (§55.2).
+       In einer Formel hat ein Unterstrich NIE etwas zu suchen. Also: keiner. */
+    nochUnterstrich: alle.filter(x => (x.textContent || '').includes('_'))
       .map(x => x.textContent),
     /* Und die Grössenliste genauso. */
     legendeSub: document.querySelectorAll('.bs-groessen sub').length
@@ -263,6 +294,58 @@ p('Die Formel trägt echte Tiefstellungen', tief.mitSub > 0, `${tief.mitSub}/${t
 p('Kein Unterstrich bleibt stehen',
   !tief.nochUnterstrich.length, tief.nochUnterstrich.slice(0, 3).join(' | '));
 p('Auch die Legende ist tiefgestellt', tief.legendeSub > 0, `${tief.legendeSub}`);
+
+/* UND ZWAR AUF JEDER SEITE, nicht nur auf der einen, die hier zufällig
+   offen ist. `AF_%` steht auf Seite 6 und 7, `R_ϑ` auf Seite 4 — keine
+   davon ist Seite 11. Eine Stichprobe hätte den Fehler nie gefunden. */
+const unterstriche: string[] = [];
+for (let nr = 2; nr <= 36; nr++) {
+  await seite.locator('.bs-nr').fill(String(nr));
+  await seite.waitForTimeout(140);
+  const fund = await seite.evaluate((n: number) => {
+    const treffer: string[] = [];
+    /* ALLE Textstellen einer Seite, nicht die, an die man zuerst denkt.
+       Der erste Wurf nahm `.bs-formel` und `h4`. `.bs-formel` ist aber nur
+       die ANKLICKBARE Zeile — die Zeilen ohne Rechner heissen `.bs-zeile`,
+       und auf Seite 32 sind das alle. Und die Überschrift ist ein `h3`.
+       Damit prüfte er auf mancher Seite buchstäblich nichts. */
+    document.querySelectorAll('.bs-formel, .bs-zeile, .bs-groessen span, ' +
+                              '.bs-abschnitt h3, .bs-hinweis, ' +
+                              '.bs-tabelle td, .bs-tabelle th, ' +
+                              '.bs-skizze text').forEach(e => {
+      const t = e.textContent || '';
+      if (t.includes('_')) treffer.push(`S${n}: ${t.trim().slice(0, 40)}`);
+    });
+    return treffer;
+  }, nr);
+  unterstriche.push(...fund);
+}
+p('Auf KEINER Seite bleibt ein Unterstrich stehen',
+  unterstriche.length === 0,
+  `${unterstriche.length} Stellen: ${unterstriche.slice(0, 4).join(' | ')}`);
+/* Zurück auf 11 — was danach kommt, misst die Formelzeile DIESER Seite. */
+await seite.locator('.bs-nr').fill('11');
+await seite.waitForTimeout(500);
+/* DIE DREI KOPIEN VON `tief` MÜSSEN ÜBEREINSTIMMEN.
+   Der Fehler entstand, weil dieselbe Zeile an drei Orten steht: im
+   Schaltplan-Zeichner, in den Skizzen und im Buch. Wer eine berichtigt und
+   die anderen vergisst, hat den Fehler nur verschoben. */
+const tiefQuellen = ['src/bereiche/bloecke/arten/schaltplan.ts',
+                     'src/bereiche/elektro/skizzen.ts',
+                     'src/bereiche/elektro/formelheft.ts']
+  .map(datei => {
+    const quelle = fs.readFileSync(path.join(WURZEL, datei), 'utf8');
+    const treffer = quelle.match(/esc\(wert\)\.replace\((\/_\(\[[^\]]*\]\+\)\/[a-z]*)/);
+    return { datei, muster: treffer?.[1] ?? '(nicht gefunden)' };
+  });
+p('Alle drei Tiefstellungen benutzen dasselbe Muster',
+  new Set(tiefQuellen.map(x => x.muster)).size === 1 &&
+  tiefQuellen[0]!.muster !== '(nicht gefunden)',
+  tiefQuellen.map(x => `${x.datei.split('/').pop()}: ${x.muster}`).join(' | '));
+p('Und dieses Muster nimmt auch griechische Zeichen und Prozent',
+  /\\p\{L\}/.test(tiefQuellen[0]!.muster) && tiefQuellen[0]!.muster.includes('%'),
+  tiefQuellen[0]!.muster);
+
 p('Der Text behält seine Leerzeichen',
   / = /.test(tief.text || '') && / · /.test(tief.text || ''), `${tief.text}`);
 
@@ -320,7 +403,20 @@ const skizzen = await seite.evaluate(() => {
 
     /* In ein unsichtbares Feld hängen und WIRKLICH messen — geraten wäre
        hier so gut wie gar nicht geprüft. */
+    /* IM ECHTEN KASTEN MESSEN, nicht in einem nackten `div`.
+     *
+     * Hier stand ein blankes `<div style="width:600px">`. Die Plan-Texte
+     * haben zwar `font-size="13"`, aber KEINE Schriftfamilie — die erben sie
+     * vom Umgebenden. Im nackten Kasten kam eine andere Schrift heraus als
+     * unter `.bs-skizze`, und mit ihr andere Buchstabenmasse: `s-teiler` mass
+     * hier 1 px Überstand und auf der Seite 3, `b-reihe` 2 gegen 6.
+     *
+     * Bei zwei Punkten Nachsicht hiess das: die Prüfung war grün, während im
+     * Bild ein `U` oben abgeschnitten stand. Sie mass eine Lage, die es
+     * nirgends gibt (§55.2). Jetzt bekommt der Kasten dieselbe Klasse wie im
+     * Buch, und damit dieselbe Schrift. */
     const kasten = document.createElement('div');
+    kasten.className = 'bs-skizze';
     kasten.style.cssText = 'position:fixed;left:-4000px;top:0;width:600px';
     kasten.innerHTML = s;
     document.body.appendChild(kasten);
@@ -366,7 +462,20 @@ const schleifen = await seite.evaluate(() => {
   const raus: string[] = [];
   (Elektroskizzen.alle() as string[]).forEach(n => {
     const s = Elektroskizzen.zu(n) as string;
+    /* IM ECHTEN KASTEN MESSEN, nicht in einem nackten `div`.
+     *
+     * Hier stand ein blankes `<div style="width:600px">`. Die Plan-Texte
+     * haben zwar `font-size="13"`, aber KEINE Schriftfamilie — die erben sie
+     * vom Umgebenden. Im nackten Kasten kam eine andere Schrift heraus als
+     * unter `.bs-skizze`, und mit ihr andere Buchstabenmasse: `s-teiler` mass
+     * hier 1 px Überstand und auf der Seite 3, `b-reihe` 2 gegen 6.
+     *
+     * Bei zwei Punkten Nachsicht hiess das: die Prüfung war grün, während im
+     * Bild ein `U` oben abgeschnitten stand. Sie mass eine Lage, die es
+     * nirgends gibt (§55.2). Jetzt bekommt der Kasten dieselbe Klasse wie im
+     * Buch, und damit dieselbe Schrift. */
     const kasten = document.createElement('div');
+    kasten.className = 'bs-skizze';
     kasten.style.cssText = 'position:fixed;left:-4000px;top:0;width:600px';
     kasten.innerHTML = s;
     document.body.appendChild(kasten);
@@ -490,7 +599,42 @@ const handy = await seite.evaluate(() => {
     skizzeBreit: skizze ? Math.round(skizze.getBoundingClientRect().width) : 0,
     /* Nichts darf seitlich hinauslaufen. */
     quer: (document.querySelector('.fh-inhalt') as HTMLElement).scrollWidth >
-          (document.querySelector('.fh-inhalt') as HTMLElement).clientWidth + 1
+          (document.querySelector('.fh-inhalt') as HTMLElement).clientWidth + 1,
+    /* UND NICHTS DARF ÜBER DEM FUSS LIEGEN.
+     *
+     * Gefunden wurde das mit den Augen, nicht mit einer Messung: im
+     * Bildschirmfoto vom Telefon waren die Fussknöpfe leere Kästchen ohne
+     * Zeichen. Die Messung sagte gleichzeitig 44 × 44, sichtbar, im Fenster
+     * — alles richtig. Über ihnen lag `#toast`.
+     *
+     * `elementFromPoint` hätte das NICHT gefunden: der Toast hat
+     * `pointer-events:none`, und die Treffersuche überspringt ihn. Eine
+     * Prüfung, die den Anfassbarkeitsstapel misst, wäre hier für immer grün
+     * geblieben (§55.2). Also wird gemessen, was GEMALT wird: ein Element
+     * ausserhalb des Heftfensters, das eigene Schichtung hat, eine höhere
+     * z-Zahl als das Fenster, sichtbar ist und den Fuss überlappt. */
+    ueberFuss: (() => {
+      const zFenster = Number(getComputedStyle(fenster).zIndex) || 0;
+      const fussK = document.querySelector('.fh-pdffuss') as HTMLElement;
+      const fk = fussK.getBoundingClientRect();
+      const treffer: string[] = [];
+      document.querySelectorAll<HTMLElement>('body *').forEach(e => {
+        if (fenster.contains(e)) return;
+        const st = getComputedStyle(e);
+        if (st.position === 'static') return;
+        const z = Number(st.zIndex);
+        if (!Number.isFinite(z) || z <= zFenster) return;
+        if (st.display === 'none' || st.visibility === 'hidden') return;
+        if (Number(st.opacity) === 0) return;
+        const r = e.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return;
+        if (r.right <= fk.left || r.left >= fk.right ||
+            r.bottom <= fk.top || r.top >= fk.bottom) return;
+        treffer.push(`${e.tagName}#${e.id || '?'} z${z} ` +
+          `${Math.round(r.top)}–${Math.round(r.bottom)}`);
+      });
+      return treffer;
+    })()
   };
 });
 p('Jeder Knopf im Fuss ist mit dem Finger zu treffen',
@@ -507,6 +651,8 @@ p('… und behält ihre Leerzeichen',
 p('Skizze und Formeln stehen untereinander',
   handy.koerperRichtung === 'column', handy.koerperRichtung);
 p('Die Seite läuft nicht seitlich hinaus', !handy.quer);
+p('Und nichts liegt über dem Fuss',
+  handy.ueberFuss.length === 0, handy.ueberFuss.join(', '));
 
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));

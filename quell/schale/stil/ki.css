@@ -57,13 +57,28 @@
 .prog i{display:block; height:100%; background:var(--accent); transition:width .3s}
 
 /* --- Toast ---------------------------------------------------------------- */
+/* VERSTECKT WIRD MIT `opacity`, NICHT MIT EINER SCHIEBESTRECKE.
+   Hier stand allein `translateY(80px)` — 80 px nach unten, und am Rechner
+   (bottom:22px) reicht das: der Kasten steht ausserhalb des Bildes.
+
+   Am Telefon steht er 104 px über der Unterkante, weil die Aktionsleiste
+   dort liegt (siehe unten). 104 − 80 = 24 px, also blieb ein dunkler
+   Streifen dauerhaft im Bild stehen — mit dem Text der letzten Meldung
+   darin, für immer. Im Bildschirmfoto vom Formelheft lag er quer über den
+   Fussknöpfen und schnitt deren Zeichen weg.
+
+   Eine Schiebestrecke muss die Höhe des Kastens erraten, und die hängt am
+   Text. `opacity` muss nichts raten. Die aria-live-Ansage bleibt: eine
+   durchsichtige Meldung wird vorgelesen, eine mit `visibility:hidden`
+   nicht — darum ausdrücklich NUR opacity. */
 #toast{
   position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(80px);
   background:var(--bg-side); border:1px solid var(--line); border-radius:8px;
   padding:10px 18px; font-size:14px; box-shadow:var(--shadow); z-index:900;
-  transition:transform .22s ease; pointer-events:none;
+  opacity:0; transition:transform .22s ease, opacity .22s ease;
+  pointer-events:none;
 }
-#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.show{transform:translateX(-50%) translateY(0); opacity:1}
 
 /* AM TELEFON STEHT DIE AKTIONSLEISTE UNTEN, und sie ist das Wichtigste auf
    dem Bild: Suche, KI fragen, Neue Seite. Ein Toast bei bottom:22px legte

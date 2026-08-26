@@ -64,7 +64,18 @@ nach, nicht mit dem des Aufgabenmoduls.
 
 ## 61–90 · Rechnen ✅
 
-49 Formeln in 14 Kapiteln: `src/register/elektroformeln.ts`.
+182 rechenbare Formeln in 22 Kapiteln: `src/register/elektroformeln.ts`.
+
+Dazu das ganze Formelbuch als Seiten: **33 Seiten, 172 Abschnitte,
+923 Zeilen** — Seite 2 bis 34, mit denselben Seitenzahlen wie das
+gedruckte Heft (E194, E195). 422 der Zeilen sind antippbar und rechnen;
+die übrigen stehen da wie im Heft.
+
+| Was | Wo | Prüflauf |
+|-----|-----|----------|
+| Buchansicht: blättern, Seitenzahl eintippen, Formel antippen | `formelheft.ts` (E194) | test244 |
+| Abschnitte mit Seitenzahl, Grössen, Zeilen, Tabellen | `register/elektroformeln.ts` (E195) | test244 |
+| 60 selbst gezeichnete Skizzen, keine aus dem PDF kopiert | `elektro/skizzen.ts` (E194, E195) | test244 |
 
 | Was | Wo | Prüflauf |
 |-----|-----|----------|

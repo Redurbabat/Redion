@@ -3664,12 +3664,31 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-seitenzahl span{font-weight:400; color:var(--text-faint)}
 
 .bs-abschnitt{margin:0 0 14px}
+/* Reine Bildabschnitte stehen zu zweit nebeneinander — so setzt das Heft
+   seine Bauelemente-Übersicht, und so passen zwölf davon auf eine Seite
+   statt auf drei Bildschirmlängen. */
+.bs-nurbild{display:inline-block; width:calc(50% - 7px); vertical-align:top}
+.bs-nurbild + .bs-nurbild{margin-left:10px}
+.bs-nurbild + .bs-nurbild + .bs-nurbild{margin-left:0}
+.bs-nurbild .bs-koerper{display:block}
 .bs-abschnitt:last-child{margin-bottom:0}
 .bs-abschnitt h3{margin:0 0 7px; font-size:12.5px; font-weight:700;
   color:var(--text); letter-spacing:.01em}
 .bs-koerper{display:flex; gap:12px; align-items:flex-start}
 .bs-skizze{flex:0 0 34%; max-width:240px; min-width:0}
-.bs-skizze svg{width:100%; height:auto; display:block; color:var(--text)}
+/* Nur das DIREKTE Kind wird auf Spaltenbreite gezogen. Hier stand
+   `.bs-skizze svg`, und damit erwischte die Regel auch das Bauteilzeichen
+   INNERHALB einer zusammengesetzten Skizze: ein 40 × 60 grosses PTC-Symbol
+   wurde auf 270 px aufgeblasen und füllte die halbe Seite. */
+.bs-skizze > svg{width:100%; height:auto; display:block; color:var(--text)}
+
+/* Ein Bauteil mit seiner Kennlinie: Zeichen links, Kurve rechts —
+   so, wie die Bauelemente-Seite es zeigt. */
+.sk-paar{display:flex; align-items:center; gap:14px; color:var(--text)}
+.sk-zeichen{flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+  min-width:56px}
+.sk-zeichen svg{width:auto; height:auto; max-height:72px; max-width:80px}
+.sk-paar > svg{flex:1 1 auto; min-width:0; height:auto}
 /* Die Beschriftungen IN der Skizze sind auf 13 px im Zeichenraum gesetzt.
    Bei 200 px Anzeige einer 390 px breiten Zeichnung werden daraus knapp
    sieben — lesbar für den, der weiss, was dasteht, und für sonst niemand.
@@ -3806,7 +3825,15 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      zu schmal zum Erkennen und die Formel zu schmal zum Lesen. Also
      untereinander — Skizze zuerst, weil man sie zuerst ansieht. */
   .bs-koerper{flex-direction:column}
-  .bs-skizze{flex:none; max-width:100%; width:100%; align-self:center}
+  /* Zwei Bauteile nebeneinander sind auf 390 px zwei zu schmale Bauteile. */
+  .bs-nurbild{display:block; width:100%}
+  .bs-nurbild + .bs-nurbild{margin-left:0}
+  /* Die Skizze bekommt NICHT die volle Breite. Bei 390 px wird aus einer
+     300 × 175 grossen Zeichnung eine 366 × 214 grosse, und damit füllt ein
+     einziges Bild die halbe sichtbare Höhe — die Grössen und die Formeln
+     darunter sieht man erst nach dem Rollen. Ein Formelbuch, in dem man zur
+     Formel scrollen muss, ist als Nachschlagewerk unbrauchbar. */
+  .bs-skizze{flex:none; width:100%; max-width:290px; align-self:center}
   .bs-groessen{flex:none; width:100%}
   /* KEIN `display:flex` an der Formel. Hier stand es, um sie auf 44 px zu
      bringen — und Flexbox macht aus `Q`, `<sub>L</sub>`, ` = `, `<sub>` …

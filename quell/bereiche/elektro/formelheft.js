@@ -55,7 +55,28 @@ const Formelheft = (() => {
      * Unicode-Tiefstellungen (U₀, Rᵢ, N₁) bleiben, wie sie sind — sie sehen
      * bereits richtig aus und haben keinen Unterstrich.
      */
-    const tief = (wert) => esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g, '<sub>$1</sub>');
+    /* WELCHE ZEICHEN TIEFGESTELLT WERDEN, und warum die alte Liste zu kurz war.
+     *
+     * Hier stand `[A-Za-zÄÖÜäöüß0-9]`. Das ist die deutsche Tastatur, nicht die
+     * Physik. Im Heft steht `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ`
+     * (Scheinleistung in Dreieckschaltung) und `AF_%` (relativer Anzeigefehler)
+     * — 42 Stellen, an denen der Unterstrich als Unterstrich stehen blieb.
+     *
+     * Ein sichtbarer Unterstrich in einer Formel ist kein Schönheitsfehler: er
+     * sieht aus wie ein Zeichen der Formel. `R_ϑ` liest sich als „R Unterstrich
+     * Theta", und es gibt keine solche Grösse.
+     *
+     * `\p{L}` nimmt jeden Buchstaben JEDER Schrift, `\p{N}` jede Ziffer, und
+     * `%` steht ausdrücklich dabei, weil es keins von beidem ist. Was nicht
+     * dazugehört — Leerzeichen, Klammern, Rechenzeichen — beendet die
+     * Tiefstellung weiterhin. Und weil `esc` VORHER läuft, kann durch die
+     * Erweiterung kein Zeichen hereinkommen, das vorher draussen war.
+     *
+     * Dieselbe Zeile steht in `schaltplan.ts`, `skizzen.ts` und
+     * `formelheft.ts`. test244 vergleicht die drei — auseinanderlaufen ist
+     * genau der Weg, auf dem dieser Fehler entstanden ist.
+     */
+    const tief = (wert) => esc(wert).replace(/_([\p{L}\p{N}%]+)/gu, '<sub>$1</sub>');
     /* Was sich das Heft über Sitzungen hinweg merkt. Alles in `Store.meta` —
        es gehört dem Menschen, nicht einem Dokument. */
     const M_ORT = 'elektro:heftOrt'; /* wo das Fenster stand */
@@ -189,30 +210,33 @@ const Formelheft = (() => {
      * steht. Zeilen ohne Rechenweg — Beziehungen wie `1 kWh = 3600 kWs` —
      * stehen als Text da: wahr, aber nichts zum Auflösen.
      */
-    const abschnittHtml = (a, formeln, fav) => {
+    const abschnittHtml = (a, zeilen, fav) => {
         const skizze = (typeof Elektroskizzen !== 'undefined') ? Elektroskizzen.zu(a.id) : '';
-        /* Die Grössenliste: die des Abschnitts, wenn er eine hat — sonst aus
-           den rechenbaren Formeln zusammengesetzt, jede Grösse einmal. */
-        let groessen = a.groessen || [];
+        /* Die Grössenliste steht im Heft neben dem Abschnitt und kommt von dort.
+           Fehlt sie, wird sie aus den rechenbaren Zeilen zusammengesetzt — jede
+           Grösse einmal, in der Reihenfolge ihres ersten Auftretens. */
+        const groessen = (a.groessen || []).slice();
         if (!groessen.length) {
             const gesehen = new Set();
-            formeln.forEach(f => (f.groessen || []).forEach((x) => {
-                if (gesehen.has(x.zeichen))
-                    return;
-                gesehen.add(x.zeichen);
-                groessen.push(x);
-            }));
+            zeilen.forEach(z => {
+                const f = z.id ? Register.elektroformeln.holen(z.id) : null;
+                (f ? f.groessen || [] : []).forEach((x) => {
+                    if (gesehen.has(x.zeichen))
+                        return;
+                    gesehen.add(x.zeichen);
+                    groessen.push(x);
+                });
+            });
         }
+        /* AUCH DIE BESCHREIBUNG WIRD TIEFGESTELLT, nicht nur das Zeichen.
+           „Spannung an R_V" stand mit sichtbarem Unterstrich in der Liste, weil
+           hier `esc` statt `tief` lief. Eine Grösse, die in ihrer eigenen
+           Erklärung falsch geschrieben ist, erklärt nichts.
+           Im `title` bleibt `esc`: ein Attribut verträgt keine Auszeichnung. */
         const legende = groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
-            `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
-        /* Die Formelzeilen: die des Abschnitts in Buchreihenfolge — oder, wenn
-           er keine führt, die rechenbaren Formeln. */
-        const zeilen = (a.zeilen && a.zeilen.length)
-            ? a.zeilen
-            : formeln.map(f => ({ f: f.schreibweise, id: f.id }));
+            `${tief(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
         const formelnHtml = zeilen.map(z => {
-            const eintrag = z.id ? formeln.find(f => f.id === z.id) ||
-                Register.elektroformeln.holen(z.id) : null;
+            const eintrag = z.id ? Register.elektroformeln.holen(z.id) : null;
             if (eintrag) {
                 return `<button type="button" class="bs-formel` +
                     `${fav.includes(eintrag.id) ? ' gemerkt' : ''}" ` +
@@ -228,9 +252,20 @@ const Formelheft = (() => {
                 `<tbody>` + a.tabelle.slice(1).map(reihe => `<tr>` + reihe.map(z => `<td>${tief(z)}</td>`).join('') + `</tr>`).join('') +
                 `</tbody></table></div>`
             : '';
-        return `<section class="bs-abschnitt" data-abschnitt="${esc(a.id)}">` +
-            `<h3>${esc(a.titel)}</h3>` +
-            (a.hinweis ? `<p class="bs-hinweis">${esc(a.hinweis)}</p>` : '') +
+        /* Ein Abschnitt, der NUR ein Bild zeigt — die Bauelemente-Seite hat
+           zwölf davon — braucht keine Formelspalte. Er bekommt eine eigene
+           Klasse und stellt sich zu zweit nebeneinander, wie im Heft. Ohne das
+           stand jedes Bauteil allein in einer Zeile und zwei Drittel der Seite
+           blieben weiss. */
+        const nurBild = !formelnHtml && !legende && !tabelle;
+        return `<section class="bs-abschnitt${nurBild ? ' bs-nurbild' : ''}" ` +
+            `data-abschnitt="${esc(a.id)}">` +
+            /* Auch die Überschrift und der Hinweis werden tiefgestellt. „Reihen-
+               schaltung von R, X_L und X_C" stand auf Seite 14 und 15 mit zwei
+               sichtbaren Unterstrichen in der Überschrift — der auffälligsten
+               Zeile des Abschnitts. */
+            `<h3>${tief(a.titel)}</h3>` +
+            (a.hinweis ? `<p class="bs-hinweis">${tief(a.hinweis)}</p>` : '') +
             `<div class="bs-koerper">` +
             (skizze ? `<div class="bs-skizze">${skizze}</div>` : '') +
             (legende ? `<div class="bs-groessen">${legende}</div>` : '') +
@@ -254,7 +289,7 @@ const Formelheft = (() => {
             `<div class="bs-seitenzahl">Seite ${nr} <span>von ${letzte}</span></div>` +
             `</div>` +
             (teile.length
-                ? teile.map(t => abschnittHtml(t.abschnitt, t.formeln, fav)).join('')
+                ? teile.map(t => abschnittHtml(t.abschnitt, t.zeilen, fav)).join('')
                 : `<div class="bs-leer">` +
                     `<p>Diese Seite gibt es im gedruckten Heft, in Redion noch nicht.</p>` +
                     `<p class="fh-klein">Geschrieben sind ${voll.length} Seiten: ` +
