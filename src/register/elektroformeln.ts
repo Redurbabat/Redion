@@ -634,6 +634,60 @@ Register.elektroformeln = (() => {
 
     /* ---- Leiter ---------------------------------------------------------- */
     {
+      id: 'spannungsteiler-belastet', kapitel: 'parallel',
+      schreibweise: 'U₂ = U · R₂₃ / (R₁ + R₂₃)',
+      groessen: [g('U₂', 'Teilspannung', 'V'), g('U', 'Gesamtspannung', 'V'),
+                 g('R₂₃', 'Ersatzwiderstand aus R₂ und R₃', 'Ω',
+                   'R₂ parallel zur Last R₃ — erst zusammenfassen, dann teilen'),
+                 g('R₁', 'oberer Teilwiderstand', 'Ω')],
+      loese: {
+        'U₂':  v => v.U! * v['R₂₃']! / (v['R₁']! + v['R₂₃']!),
+        U:     v => v['U₂']! * (v['R₁']! + v['R₂₃']!) / v['R₂₃']!,
+        'R₂₃': v => v['U₂']! * v['R₁']! / (v.U! - v['U₂']!),
+        'R₁':  v => v['R₂₃']! * (v.U! - v['U₂']!) / v['U₂']!
+      },
+      annahme: 'Belasteter Spannungsteiler. R₂₃ ist R₂ parallel zur Last R₃ — die ' +
+        'Parallelschaltungsformel steht als eigene Formel bereit.',
+      erklaerung: 'Sobald am Abgriff eine Last hängt, bricht die Teilspannung ein. ' +
+        'Wer mit dem unbelasteten Teiler rechnet, bekommt zu viel heraus.'
+    },
+    {
+      id: 'bruecke', kapitel: 'parallel', schreibweise: 'R_X = R₂ · R₃ / R₄',
+      groessen: [g('R_X', 'gesuchter Widerstand', 'Ω'),
+                 g('R₂', 'Teilwiderstand', 'Ω'), g('R₃', 'Teilwiderstand', 'Ω'),
+                 g('R₄', 'Teilwiderstand', 'Ω')],
+      loese: {
+        R_X:  v => v['R₂']! * v['R₃']! / v['R₄']!,
+        'R₂': v => v.R_X! * v['R₄']! / v['R₃']!,
+        'R₃': v => v.R_X! * v['R₄']! / v['R₂']!,
+        'R₄': v => v['R₂']! * v['R₃']! / v.R_X!
+      },
+      annahme: 'Gilt für die ABGEGLICHENE Brücke, also wenn die Brückenspannung ' +
+        'U_B = 0 V ist. Nur dann gilt R_X/R₂ = R₃/R₄.',
+      erklaerung: 'Die Wheatstone-Brücke misst einen Widerstand, ohne Strom oder ' +
+        'Spannung zu kennen — man gleicht ab, bis das Messgerät in der Mitte null zeigt.'
+    },
+    {
+      id: 'digital-anzeigefehler', kapitel: 'messen',
+      schreibweise: 'AF_abs = MW · k / 100 + z · a',
+      groessen: [g('AF_abs', 'absoluter Anzeigefehler', ''),
+                 g('MW', 'angezeigter Messwert', ''),
+                 g('k', 'Genauigkeitsklasse', '%'),
+                 g('z', 'Unsicherheit der letzten Stelle', 'Digit'),
+                 g('a', 'Stellenwert der letzten Anzeigestelle', '')],
+      loese: {
+        AF_abs: v => v.MW! * v.k! / 100 + v.z! * v.a!,
+        MW:     v => (v.AF_abs! - v.z! * v.a!) * 100 / v.k!,
+        k:      v => (v.AF_abs! - v.z! * v.a!) * 100 / v.MW!,
+        z:      v => (v.AF_abs! - v.MW! * v.k! / 100) / v.a!,
+        a:      v => (v.AF_abs! - v.MW! * v.k! / 100) / v.z!
+      },
+      annahme: 'DIGITALES Messgerät. Beim analogen hängt der Fehler am Messbereich, ' +
+        'beim digitalen am angezeigten WERT — plus den Digits der letzten Stelle.',
+      erklaerung: 'Ein Digitalgerät irrt sich zweimal: um einen Anteil des Messwerts ' +
+        'und um ein paar Schritte der letzten Ziffer. Beides zählt zusammen.'
+    },
+    {
       id: 'leiterwiderstand', kapitel: 'leiter', schreibweise: 'R = ρ · l / A',
       groessen: [g('R', 'Leiterwiderstand', 'Ω'),
                  g('ρ', 'spezifischer Widerstand', 'Ω·mm²/m', 'Kupfer 0,0178 · Aluminium 0,0286'),
@@ -764,6 +818,69 @@ Register.elektroformeln = (() => {
     },
 
     /* ---- Wechselstrom ---------------------------------------------------- */
+    {
+      id: 'kondensator-ladung', kapitel: 'konden', schreibweise: 'Q = C · U',
+      groessen: [g('Q', 'gespeicherte Ladung', 'As'), g('C', 'Kapazität', 'F'),
+                 g('U', 'Spannung am Kondensator', 'V')],
+      loese: { Q: v => v.C! * v.U!, C: v => v.Q! / v.U!, U: v => v.Q! / v.C! },
+      erklaerung: 'Was ein Kondensator fasst. 1 As = 1 Coulomb.'
+    },
+    {
+      id: 'kondensator-energie', kapitel: 'konden', schreibweise: 'W = ½ · C · U²',
+      groessen: [g('W', 'gespeicherte Energie', 'Ws'), g('C', 'Kapazität', 'F'),
+                 g('U', 'Spannung am Kondensator', 'V')],
+      loese: {
+        W: v => 0.5 * v.C! * v.U! * v.U!,
+        C: v => 2 * v.W! / (v.U! * v.U!),
+        U: v => WURZEL(2 * v.W! / v.C!)
+      },
+      erklaerung: 'Die Energie wächst im QUADRAT der Spannung — deshalb ist ein ' +
+        'geladener Kondensator auch nach dem Ausschalten gefährlich.'
+    },
+    {
+      id: 'feldstaerke-kondensator', kapitel: 'konden', schreibweise: 'E = U / l',
+      groessen: [g('E', 'elektrische Feldstärke', 'V/m'),
+                 g('U', 'Spannung am Kondensator', 'V'),
+                 g('l', 'Plattenabstand', 'm')],
+      loese: { E: v => v.U! / v.l!, U: v => v.E! * v.l!, l: v => v.U! / v.E! },
+      erklaerung: 'Wie stark das Feld zwischen den Platten ist. Wird sie zu gross, ' +
+        'schlägt es durch.'
+    },
+    {
+      id: 'zeitkonstante', kapitel: 'konden', schreibweise: 'τ = R · C',
+      groessen: [g('τ', 'Zeitkonstante', 's'), g('R', 'Widerstand', 'Ω'),
+                 g('C', 'Kapazität', 'F')],
+      loese: { 'τ': v => v.R! * v.C!, R: v => v['τ']! / v.C!, C: v => v['τ']! / v.R! },
+      erklaerung: 'Nach einer Zeitkonstanten ist der Kondensator auf 63 % geladen — ' +
+        'oder beim Entladen auf 37 % gefallen.'
+    },
+    {
+      id: 'ladezeit', kapitel: 'konden', schreibweise: 't = 5 · τ',
+      groessen: [g('t', 'Lade- bzw. Entladezeit', 's', 'Bis praktisch fertig'),
+                 g('τ', 'Zeitkonstante', 's')],
+      loese: { t: v => 5 * v['τ']!, 'τ': v => v.t! / 5 },
+      annahme: 'Nach fünf Zeitkonstanten sind über 99 % erreicht. Ganz fertig wird ' +
+        'ein Kondensator theoretisch nie — praktisch gilt er hier als geladen.',
+      erklaerung: 'Die Faustregel, mit der man rechnet.'
+    },
+    {
+      id: 'ladestrom-anfang', kapitel: 'konden', schreibweise: 'I₀ = U / R',
+      groessen: [g('I₀', 'Anfangswert des Lade- oder Entladestroms', 'A'),
+                 g('U', 'Spannung', 'V'), g('R', 'Widerstand', 'Ω')],
+      loese: { 'I₀': v => v.U! / v.R!, U: v => v['I₀']! * v.R!, R: v => v.U! / v['I₀']! },
+      erklaerung: 'Im ersten Augenblick ist der Kondensator noch leer und wirkt wie ' +
+        'ein Kurzschluss — nur der Widerstand begrenzt den Strom.'
+    },
+    {
+      id: 'kondensator-gleiche', kapitel: 'konden', schreibweise: 'C = n · C₁',
+      groessen: [g('C', 'Gesamtkapazität', 'F'), g('n', 'Anzahl Kondensatoren', ''),
+                 g('C₁', 'Kapazität eines einzelnen', 'F')],
+      loese: { C: v => v.n! * v['C₁']!, n: v => v.C! / v['C₁']!, 'C₁': v => v.C! / v.n! },
+      annahme: 'PARALLELSCHALTUNG von n GLEICHEN Kondensatoren. In Reihe geschaltet ' +
+        'gilt umgekehrt C = C₁ / n.',
+      erklaerung: 'Beim Kondensator ist es genau andersherum als beim Widerstand: ' +
+        'parallel addieren sich die Kapazitäten.'
+    },
     {
       id: 'scheitelwert', kapitel: 'wechsel', schreibweise: 'û = √2 · U',
       groessen: [g('û', 'Scheitelwert', 'V', 'Die höchste Spitze der Sinuskurve'),
