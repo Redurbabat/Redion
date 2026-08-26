@@ -13413,9 +13413,8 @@ bleiben jetzt im Prüfskript.
 
 Prüflauf: `test242`, 42 Punkte.
 
-## E192
+## E192 · Drei Aufgaben, die den Schaltplan lesen
 
-**Drei Aufgaben, die den Schaltplan lesen — und was die Bilder daran fanden**
 *(26. August 2026, Punkte 52, 53, 59)*
 
 Bisher wurden Aufgaben aus den Registern erzeugt: nimm ein Symbol, frag nach
@@ -13532,9 +13531,8 @@ Bauteil mit diesem Namen nimmt, greift die Spule und sucht dort vergeblich
 die Klemme 14; aufgelöst wird über die Klemme. Und `/\bV\b/` in einer
 Vorlagenzeichenkette ist kein Wortende, sondern ein Rückschritt-Zeichen.
 
-## E193
+## E193 · In den Plan tippen, und der einzige Massstab dafür
 
-**In den Plan tippen — und der einzige Massstab, den es dafür gibt**
 *(26. August 2026, Punkte 59 und 60)*
 
 Zwei Aufgabenarten kommen dazu, und damit sind alle hundert Elektro-Punkte
