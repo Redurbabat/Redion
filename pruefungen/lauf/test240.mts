@@ -129,7 +129,8 @@ p('Jede Grösse hat Zeichen, Name und ein Einheitenfeld',
    Messbereich ist 300 V oder 5 A, je nachdem, was am Gerät eingestellt
    ist. Ihre Einheit steht nicht fest, weil sie von der Messung abhängt —
    und ein falscher fester Eintrag wäre schlimmer als ein leerer. */
-const EINHEITENLOS = ['AF_abs', 'MB', 'MW', 'N', 'N₁', 'N₂', 'cosφ', 'k', 'n', 'p',
+const EINHEITENLOS = ['AF_abs', 'D_U', 'MB', 'MW', 'N', 'N₁', 'N₂', 'V_U',
+                      'cosφ', 'k', 'n', 'p',
                       'sinφ', 'tanφ', 'tanφ₁', 'tanφ₂', 'εᵣ', 'η', 'η_B', 'μ_r'];
 p('Und einheitenlos sind nur die, die es sein dürfen',
   JSON.stringify(sammlung.einheitenlos) === JSON.stringify(EINHEITENLOS),

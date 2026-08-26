@@ -95,7 +95,8 @@ Register.elektroformeln = (() => {
     ['kompen',    'Kompensation',           'φ'],
     ['messen',    'Messtechnik',            '⊕'],
     ['magnet',    'Magnetische Grössen',    '🧲'],
-    ['fall',      'Spannungsfall',          '↘']
+    ['fall',      'Spannungsfall',          '↘'],
+    ['antenne',   'Antenne und Pegel',      '📡']
   ];
 
   /* Hilfen, damit die Liste lesbar bleibt. */
@@ -1414,6 +1415,105 @@ Register.elektroformeln = (() => {
       },
       annahme: 'Gilt für eine punktförmige Lichtquelle.',
       erklaerung: 'Doppelter Abstand heisst nur noch ein Viertel Licht.'
+    },
+
+
+    /* ---- Antenneninstallation (Kapitel 16 des Heftes) --------------------
+       Der Grund, warum hier LOGARITHMEN stehen: eine Antennenanlage hat
+       Verstärker und Dämpfungen hintereinander, und deren Faktoren müsste
+       man multiplizieren. In Dezibel ADDIERT man sie stattdessen — und
+       Addieren geht im Kopf. */
+    {
+      id: 'verstaerkungsfaktor-u', kapitel: 'antenne', schreibweise: 'V_U = U₂ / U₁',
+      groessen: [g('V_U', 'Spannungsverstärkungsfaktor', ''),
+                 g('U₂', 'Ausgangsspannung', 'V'), g('U₁', 'Eingangsspannung', 'V')],
+      loese: {
+        V_U:  v => v['U₂']! / v['U₁']!,
+        'U₂': v => v.V_U! * v['U₁']!,
+        'U₁': v => v['U₂']! / v.V_U!
+      },
+      erklaerung: 'Wie oft grösser die Spannung hinter dem Verstärker ist.'
+    },
+    {
+      id: 'daempfungsfaktor-u', kapitel: 'antenne', schreibweise: 'D_U = U₁ / U₂',
+      groessen: [g('D_U', 'Spannungsdämpfungsfaktor', ''),
+                 g('U₁', 'Eingangsspannung', 'V'), g('U₂', 'Ausgangsspannung', 'V')],
+      loese: {
+        D_U:  v => v['U₁']! / v['U₂']!,
+        'U₁': v => v.D_U! * v['U₂']!,
+        'U₂': v => v['U₁']! / v.D_U!
+      },
+      erklaerung: 'Dasselbe umgekehrt — was ein Kabel oder ein Verteiler wegnimmt.'
+    },
+    {
+      id: 'verstaerkungsmass-u', kapitel: 'antenne',
+      schreibweise: 'G_U = 20 · log(U₂ / U₁)',
+      groessen: [g('G_U', 'Spannungsverstärkungsmass', 'dB'),
+                 g('U₂', 'Ausgangsspannung', 'V'), g('U₁', 'Eingangsspannung', 'V')],
+      loese: {
+        G_U:  v => 20 * Math.log10(v['U₂']! / v['U₁']!),
+        'U₂': v => v['U₁']! * Math.pow(10, v.G_U! / 20),
+        'U₁': v => v['U₂']! / Math.pow(10, v.G_U! / 20)
+      },
+      annahme: 'Bei SPANNUNGEN steht die 20 vor dem Logarithmus, bei LEISTUNGEN ' +
+        'die 10 — weil die Leistung mit dem Quadrat der Spannung geht.',
+      erklaerung: 'Verstärkung in Dezibel. 6 dB heissen ungefähr doppelte Spannung, ' +
+        '20 dB heissen zehnfache.'
+    },
+    {
+      id: 'daempfungsmass-u', kapitel: 'antenne',
+      schreibweise: 'A_U = 20 · log(U₁ / U₂)',
+      groessen: [g('A_U', 'Spannungsdämpfungsmass', 'dB'),
+                 g('U₁', 'Eingangsspannung', 'V'), g('U₂', 'Ausgangsspannung', 'V')],
+      loese: {
+        A_U:  v => 20 * Math.log10(v['U₁']! / v['U₂']!),
+        'U₁': v => v['U₂']! * Math.pow(10, v.A_U! / 20),
+        'U₂': v => v['U₁']! / Math.pow(10, v.A_U! / 20)
+      },
+      erklaerung: 'Dämpfung in Dezibel. Ein langes Kabel dämpft, ein Verteiler auch — ' +
+        'und beide zusammen: einfach addieren.'
+    },
+    {
+      id: 'verstaerkungsmass-p', kapitel: 'antenne',
+      schreibweise: 'G_P = 10 · log(P₂ / P₁)',
+      groessen: [g('G_P', 'Leistungsverstärkungsmass', 'dB'),
+                 g('P₂', 'abgegebene Leistung', 'W'), g('P₁', 'aufgenommene Leistung', 'W')],
+      loese: {
+        G_P:  v => 10 * Math.log10(v['P₂']! / v['P₁']!),
+        'P₂': v => v['P₁']! * Math.pow(10, v.G_P! / 10),
+        'P₁': v => v['P₂']! / Math.pow(10, v.G_P! / 10)
+      },
+      annahme: 'Bei LEISTUNGEN steht die 10 vor dem Logarithmus, bei Spannungen die 20.',
+      erklaerung: '3 dB heissen doppelte Leistung, 10 dB heissen zehnfache.'
+    },
+    {
+      id: 'spannungspegel', kapitel: 'antenne', schreibweise: 'L_U = 20 · log(U / U₀)',
+      groessen: [g('L_U', 'Spannungspegel', 'dBµV'), g('U', 'Spannung', 'µV'),
+                 g('U₀', 'Bezugsspannung', 'µV', 'Fest 1 µV — daher die Einheit dBµV')],
+      loese: {
+        L_U:  v => 20 * Math.log10(v.U! / v['U₀']!),
+        U:    v => v['U₀']! * Math.pow(10, v.L_U! / 20),
+        'U₀': v => v.U! / Math.pow(10, v.L_U! / 20)
+      },
+      annahme: 'Bezugsspannung 1 µV. Deshalb heisst die Einheit dBµV und nicht dB.',
+      erklaerung: 'Der Pegel an der Antennendose. In der Schweiz liegen die Sollwerte ' +
+        'je nach Dienst etwa zwischen 60 und 80 dBµV.'
+    },
+    {
+      id: 'gesamtdaempfung', kapitel: 'antenne', schreibweise: 'A_ges = A₁ + A₂ + A₃',
+      groessen: [g('A_ges', 'Gesamtdämpfungsmass', 'dB'),
+                 g('A₁', 'Einzeldämpfung 1', 'dB'),
+                 g('A₂', 'Einzeldämpfung 2', 'dB'),
+                 g('A₃', 'Einzeldämpfung 3', 'dB')],
+      loese: {
+        A_ges: v => v['A₁']! + v['A₂']! + v['A₃']!,
+        'A₁':  v => v.A_ges! - v['A₂']! - v['A₃']!,
+        'A₂':  v => v.A_ges! - v['A₁']! - v['A₃']!,
+        'A₃':  v => v.A_ges! - v['A₁']! - v['A₂']!
+      },
+      annahme: 'Wer weniger als drei Glieder hat, setzt für die übrigen 0 ein.',
+      erklaerung: 'DAS ist der Grund für Dezibel: Dämpfungen hintereinander werden ' +
+        'addiert statt multipliziert.'
     },
 
     /* ---- Kompensation ---------------------------------------------------- */
