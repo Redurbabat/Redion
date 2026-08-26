@@ -179,25 +179,57 @@
   --text-dim:      #a7a7a7;   /* 7.7:1 — Fliesstext erlaubt                */
   --text-faint:    #737373;   /* 3.9:1 — nur Beiwerk und Symbole           */
 
-  /* DER AKZENT IST ORANGE, NICHT ROT, und das ist keine Geschmacksfrage.
-     Die Vorgabe nennt #EF4444 gleichzeitig als Akzent UND als Gefahr —
-     dann sieht „Sichern" aus wie „Löschen". Und gemessen fällt Rot auf
-     einer Karte auf 4.33:1, also unter die Grenze für Text; Orange liegt
-     mit 5.8:1 überall darüber. Rot bleibt deshalb, was es sein muss: das
-     Zeichen für etwas Unwiderrufliches. */
-  --accent:        #f97316;
-  /* SCHRIFT AUF DER AKZENTFLÄCHE (E142). Im Dunkelmodus ist der Akzent
-     HELL (#f97316). Weiss darauf hat gemessen 2,80 zu 1 — unter der
-     WCAG-Grenze von 3,0 für Bedienelemente, und man sieht es: der Knopf
-     „Simulation starten" verschwamm mit seiner eigenen Fläche.
-     Dunkel auf demselben Orange sind 6,6 zu 1. */
-  --auf-accent:  #1a1a1a;
+  /* DER AKZENT IST VIOLETT (E199). Bis August 2026 war er orange (E44) —
+     gewählt, weil die damalige Vorgabe Rot gleichzeitig als Akzent UND als
+     Gefahr nannte, und dann sieht „Sichern" aus wie „Löschen". Der Grund
+     galt der Farbe Rot und gilt weiter: Rot bleibt das Zeichen für etwas
+     Unwiderrufliches. Nur der Akzent selbst ist ein anderer geworden.
+
+     Der Auftrag nennt #7C5CFF. Gemessen hat Weiss darauf 4,35 zu 1 und
+     liegt damit unter der Grenze von 4,5, die eine 13-px-Beschriftung
+     braucht — dieselbe Sorte Fehler, die E142 beim Orange fand. Der Ton
+     bleibt, der Wert geht einen Schritt tiefer:
+
+         #7C5CFF   Fläche 4,24   Weiss darauf 4,35   ✗ knapp darunter
+         #6D4AFF   Fläche 3,57   Weiss darauf 5,15   ✓
+
+     Fläche 3,57 reicht: für ein Bedienelement verlangt WCAG 3,0. */
+  --accent:        #6d4aff;
+  /* SCHRIFT AUF DER AKZENTFLÄCHE (E142). Beim Orange musste sie dunkel
+     sein, weil Weiss darauf nur 2,80 zu 1 hatte. Auf dem Violett sind es
+     5,15 — also Weiss, und die Regel dahinter bleibt dieselbe: nachmessen,
+     nicht annehmen. */
+  --auf-accent:  #ffffff;
+  /* Beim Überfahren HELLER, nicht dunkler: auf schwarzem Grund liest sich
+     „mehr Licht" als „aktiv". Gemessen 3,81 als Fläche, 4,83 für Weiss
+     darauf — beides über der Grenze. */
+  --accent-hover:  #7550ff;
+  /* DER AKZENT HAT ZWEI ROLLEN, UND SIE BRAUCHEN ZWEI WERTE (E199).
+     Er ist einmal FLÄCHE (der Knopf) und einmal TINTE (Text, Verweise,
+     Auswahlumrisse). Eine Fläche muss 3,0 erreichen, Text 4,5 — und zwar
+     auf dem Grund UND auf einer Karte.
+
+     Bis August 2026 fiel das nicht auf, weil Orange beides konnte. Violett
+     kann es nicht: #6D4AFF als Text hat auf der Karte 3,16. Gemessen für
+     die Tinte:
+
+         #8B6DFF   Grund 5,03   Karte 4,45   ✗ auf der Karte zu knapp
+         #9B87FF   Grund 6,41   Karte 5,67   ✓
+
+     122 Stellen im Stilblatt schrieben `color:var(--accent-text)`. Sie zeigen
+     jetzt auf die Tinte. */
+  --accent-text:   #9b87ff;
+  --accent-schwach: rgba(109,74,255,.16);
   --accent-warm:   #fb923c;
   --gefahr:        #ef4444;
   --erfolg:        #22c55e;
   --info:          #38bdf8;
   --warnung:       #f59e0b;
   --shadow:        0 8px 28px rgba(0,0,0,.45);
+  /* Schwebende Flächen (§16): durchscheinend, aber nie so weit, dass die
+     Schrift darauf um ihren Grund kämpfen muss. */
+  --bg-schwebend:  rgba(28,28,32,.72);
+  --schatten-schwebend: 0 12px 40px rgba(0,0,0,.55);
 
   /* Die zehn Notion-Textfarben */
   --c-default: #e9e9e7;
@@ -262,6 +294,11 @@ html[data-theme="light"]{
   --text-dim:  #66655f;
   --text-faint:#82817e;
   --shadow:    0 8px 28px rgba(15,15,15,.12);
+  --bg-schwebend: rgba(255,255,255,.74);
+  /* Auf hellem Grund ist der Innenrand dunkel, nicht weiss — sonst
+     verschwindet er auf der eigenen Fläche. */
+  --glas-rand:    inset 0 0 0 1px rgba(15,15,15,.10);
+  --schatten-schwebend: 0 12px 40px rgba(15,15,15,.16);
 
   /* ------------------------------------------------------------------------
    * NOCTURNE IM HELLMODUS (E44)
@@ -285,13 +322,30 @@ html[data-theme="light"]{
    * Zahl für beide Modi zu nehmen ist der häufigste Fehler bei dunkel
    * entworfenen Oberflächen.
    * --------------------------------------------------------------------- */
+  /* Die Fläche einer AKTIVEN Zeile in der Navigation. Im Dunkelmodus ein
+     Schleier aus Licht, im Hellmodus einer aus Schatten — dieselbe Marke,
+     entgegengesetzte Richtung. Sie fehlte hier, und damit wäre im
+     Hellmodus Weiss auf Weiss herausgekommen: die aktive Zeile hätte
+     nicht anders ausgesehen als die anderen. */
+  --bg-active:   rgba(15,15,15,.055);
   --bg-tief:     #f4f4f2;
   --bg-press:    #e6e6e4;
   --line-stark:  rgba(15,15,15,.22);
-  --accent:      #c2410c;
-  /* Schrift auf der Akzentfläche. Im Hellmodus ist der Akzent dunkel
-     (#c2410c) — Weiss darauf hat 5,9 zu 1. */
+  /* Derselbe Ton wie im Dunkelmodus, aber NICHT derselbe Wert (E199).
+     #6D4AFF auf Weiss hätte als Fläche 3,57 — genug für ein Bedienelement,
+     zu wenig für die ruhige Wirkung, die eine helle Oberfläche braucht.
+     #7C3AED hat 5,70, und Weiss darauf ebenfalls 5,70. */
+  --accent:      #7c3aed;
   --auf-accent:  #ffffff;
+  /* Beim Überfahren DUNKLER — die Gegenrichtung zum Dunkelmodus, aus
+     demselben Grund: auf weissem Grund liest sich „mehr Farbe" als aktiv.
+     Gemessen 7,10 für Fläche und Weiss darauf. */
+  --accent-hover: #6d28d9;
+  /* Im Hellmodus reicht derselbe Wert für Fläche und Tinte: 5,70 auf
+     Weiss, 5,31 auf der Karte. Dass er hier zusammenfällt und im
+     Dunkelmodus nicht, ist genau der Grund, warum es zwei Marken sind. */
+  --accent-text: #7c3aed;
+  --accent-schwach: rgba(124,58,237,.12);
   --accent-warm: #ea580c;
   --gefahr:      #dc2626;
   --erfolg:      #15803d;
@@ -322,6 +376,86 @@ html[data-theme="light"]{
  * Blockarten (`b-text`, `b-h1`, `b-callout`). Wer das vertauscht, färbt
  * Blöcke ein, die er nicht gemeint hat.
  * ==========================================================================*/
+
+/* ============================================================================
+ * DIE MASSE, DIE RADIEN UND DIE ZEITEN (E198)
+ * ----------------------------------------------------------------------------
+ * Farben hatte Redion schon als Marken (`dunkel.css`, `hell.css`). Masse,
+ * Radien und Bewegungsdauern hatte es NICHT — die standen als Zahlen im Text
+ * verstreut, und gezählt sah das so aus:
+ *
+ *     Radien       14 verschiedene Werte. 5px kam 71 mal vor, 7px 53 mal,
+ *                  9px 47 mal — genau die Zwischenwerte, die niemand
+ *                  entscheidet, sondern die beim Tippen entstehen.
+ *     Abstände     3px 85 mal, 5px 86 mal, 7px 89 mal, 9px 92 mal,
+ *                  11px 40 mal, 13px 17 mal.
+ *     Bewegung     zwölf Dauern in zwei Schreibweisen — `.12s` und `120ms`
+ *                  nebeneinander.
+ *
+ * Ein Auge sieht den Unterschied zwischen 8 und 9 Punkten nicht. Es sieht
+ * aber sehr wohl, dass etwas nicht ruhig ist, wenn zwanzig Elemente
+ * zwanzig knapp verschiedene Werte haben. Genau das ist der Unterschied
+ * zwischen „Webseite" und „Produkt".
+ *
+ * Diese Marken sind der Massstab. Sie hängen NICHT am Hell/Dunkel-Modus und
+ * stehen deshalb hier und nicht in `dunkel.css`.
+ * ==========================================================================*/
+
+:root{
+  /* --- Abstände. Zehn Stufen, mehr braucht es nicht. ---------------------- */
+  --space-1:  4px;
+  --space-2:  6px;
+  --space-3:  8px;
+  --space-4:  12px;
+  --space-5:  16px;
+  --space-6:  20px;
+  --space-7:  24px;
+  --space-8:  32px;
+  --space-9:  40px;
+  --space-10: 48px;
+
+  /* --- Radien. Nach Zweck benannt, nicht nach Zahl. ----------------------- */
+  --radius-sm:   6px;   /* Marken, kleine Felder, Chips                      */
+  --radius-md:   8px;   /* Knöpfe, Eingabefelder, Reihen                     */
+  --radius-lg:   12px;  /* Karten, Tafeln, Bereiche                          */
+  --radius-xl:   16px;  /* schwebende Leisten                                */
+  --radius-2xl:  20px;  /* grosse Dialoge und Blätter                        */
+  --radius-pill: 999px; /* Pillen und runde Symbolknöpfe                     */
+
+  /* --- Bewegung. Vier Stufen und EINE Kurve. -----------------------------
+   * Die Kurve ist überall dieselbe. Zwei Bewegungen mit verschiedenen
+   * Beschleunigungen nebeneinander wirken wie zwei verschiedene Programme.
+   * -------------------------------------------------------------------- */
+  --motion-instant: 80ms;   /* Druckpunkt eines Knopfes                      */
+  --motion-fast:    140ms;  /* Überfahren, kleine Umschalter                 */
+  --motion-normal:  200ms;  /* Seitenleiste, Popover, Reiter                 */
+  --motion-slow:    320ms;  /* Blätter, grosse Überlagerungen                */
+  --ease:           cubic-bezier(.2,.8,.3,1);
+
+  /* --- Schwebende Flächen (§16). --------------------------------------- */
+  --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
+  --glas-blur:    saturate(180%) blur(20px);
+}
+
+/* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder
+   einzelnen Stelle, sondern hier einmal: die vier Dauern werden auf nahezu
+   null gesetzt, und damit hört JEDE Überblendung auf, die sich aus ihnen
+   speist. Was sich trotzdem noch bewegt, benutzt eine feste Zahl statt der
+   Marke — und ist damit ein Fehler, den man suchen kann. */
+@media (prefers-reduced-motion: reduce){
+  :root{
+    --motion-instant: 1ms;
+    --motion-fast:    1ms;
+    --motion-normal:  1ms;
+    --motion-slow:    1ms;
+  }
+  *, *::before, *::after{
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* --- Farbklassen ---------------------------------------------------------- */
 .t-default{color:var(--c-default)} .t-gray{color:var(--c-gray)}
@@ -469,7 +603,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   display:flex; align-items:center; gap:5px;
 }
 .top-btn:hover{background:var(--bg-hover); color:var(--text)}
-.top-btn.on{color:var(--accent)}
+.top-btn.on{color:var(--accent-text)}
 
 #scroll{flex:1; overflow-y:auto}
 #page{max-width:900px; margin:0 auto; padding:0 96px 40vh}
@@ -533,7 +667,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .b-todo .mk{flex:0 0 24px; padding:5px 0; display:flex; justify-content:center}
 .b-todo input{
-  width:16px; height:16px; accent-color:var(--accent); cursor:pointer; margin:0;
+  width:16px; height:16px; accent-color:var(--accent-text); cursor:pointer; margin:0;
 }
 .b-todo.done .ct{color:var(--text-dim); text-decoration:line-through}
 .b-toggle .mk{
@@ -792,7 +926,7 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
   width:100%; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;
   padding:10px 12px; resize:none; outline:none; font-size:14px; min-height:44px; max-height:160px;
 }
-.ai-foot textarea:focus{border-color:var(--accent)}
+.ai-foot textarea:focus{border-color:var(--accent-text)}
 .ai-quick{display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px}
 .ai-quick button{
   font-size:12px; padding:4px 9px; border-radius:20px; border:1px solid var(--line);
@@ -911,7 +1045,7 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 .wz-block .side-item{width:100%}
 .side-fuss{border-top:1px solid var(--line); padding:6px 8px 10px}
 .side-fuss .side-item{width:100%}
-.side-item.neu{color:var(--accent)}
+.side-item.neu{color:var(--accent-text)}
 .side-hinweis{padding:8px 8px 2px; font-size:11.5px; color:var(--text-faint)}
 .row.drop{box-shadow:inset 0 -2px 0 var(--accent)}
 
@@ -949,7 +1083,7 @@ a.wl:hover{background:var(--bg-hover)}
 a.wl.neu{color:var(--text-dim); border-bottom-style:dashed}
 a.wl.tot{color:var(--c-red); border:none}
 a.tg{
-  color:var(--accent); text-decoration:none; cursor:pointer; font-size:.94em;
+  color:var(--accent-text); text-decoration:none; cursor:pointer; font-size:.94em;
   background:var(--bg-card); padding:1px 6px; border-radius:10px;
 }
 a.tg:hover{background:var(--bg-hover)}
@@ -996,7 +1130,7 @@ a.bl:hover{color:var(--text)}
   color:var(--text-dim); border:1px solid transparent;
 }
 .tagpill:hover{background:var(--bg-hover); color:var(--text)}
-.tagpill.on{border-color:var(--accent); color:var(--text)}
+.tagpill.on{border-color:var(--accent-text); color:var(--text)}
 .tagpill em{font-style:normal; color:var(--text-faint); font-size:11.5px; margin-left:3px}
 
 /* --- Schnellnotizen --------------------------------------------------------- */
@@ -1005,7 +1139,7 @@ a.bl:hover{color:var(--text)}
   flex:1; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;
   padding:9px 12px; outline:none; resize:vertical; font:14px/1.5 var(--font); color:var(--text);
 }
-.memo-neu textarea:focus{border-color:var(--accent)}
+.memo-neu textarea:focus{border-color:var(--accent-text)}
 .memo-neu .prim{background:var(--accent); color:var(--auf-accent); padding:9px 14px; border-radius:8px; font-weight:500}
 .heatmap{
   display:grid; grid-template-rows:repeat(7,10px); grid-auto-flow:column; gap:3px;
@@ -1029,7 +1163,7 @@ a.bl:hover{color:var(--text)}
 .karte hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 .k-hinten{font-size:16.5px; color:var(--text-dim); line-height:1.6}
 .k-quelle{margin-top:18px; font-size:12px; color:var(--text-faint); cursor:pointer}
-.k-quelle:hover{color:var(--accent)}
+.k-quelle:hover{color:var(--accent-text)}
 .lern-btns{justify-content:center}
 .fkarte{width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:6px 0}
 .fk-kopf{font-size:11.5px; color:var(--text-faint); display:flex; gap:8px; margin-bottom:5px}
@@ -1255,7 +1389,7 @@ a.bl:hover{color:var(--text)}
 }
 .auswahlleiste button{padding:5px 8px; border-radius:5px; color:var(--text-dim); min-width:28px}
 .auswahlleiste button:hover{background:var(--bg-hover); color:var(--text)}
-.auswahlleiste .ki{color:var(--accent); font-weight:500}
+.auswahlleiste .ki{color:var(--accent-text); font-weight:500}
 .auswahlleiste .tr{width:1px; height:18px; background:var(--line); margin:0 3px}
 /* Am Telefon (Hinsehen, 9. August): die Leiste war 442 px breit bei 390 px
    Bild — Farbe und Kommentar lagen AUSSERHALB, und 28×31-px-Knöpfe trifft
@@ -1275,7 +1409,7 @@ a.bl:hover{color:var(--text)}
 .komm-zitat{font-size:12.5px; color:var(--text-faint); border-left:2px solid var(--line); padding-left:8px; margin-bottom:5px}
 .komm-txt{font-size:14px; line-height:1.55}
 .komm-fuss{font-size:11.5px; color:var(--text-faint); margin-top:6px; display:flex; gap:10px; align-items:center}
-.komm-fuss button{font-size:11.5px; color:var(--accent); padding:1px 4px; border-radius:4px}
+.komm-fuss button{font-size:11.5px; color:var(--accent-text); padding:1px 4px; border-radius:4px}
 .komm-fuss button:first-of-type{margin-left:auto}
 .komm-marke{
   position:absolute; right:-30px; top:2px; font-size:11.5px; opacity:.75;
@@ -1296,7 +1430,7 @@ a.bl:hover{color:var(--text)}
   font-size:11.5px; white-space:nowrap;
   transition:color var(--motion-fast,130ms) ease, border-color var(--motion-fast,130ms) ease;
 }
-.quell-marke:hover,.quell-marke:focus-visible{color:var(--accent); border-color:var(--accent)}
+.quell-marke:hover,.quell-marke:focus-visible{color:var(--accent-text); border-color:var(--accent-text)}
 @media(max-width:760px){ .quell-marke{min-height:32px; padding-inline:10px} }
 
 /* --- Emoji-Auswahl ----------------------------------------------------------------------- */
@@ -1361,7 +1495,7 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
 .stab-wrap:hover .stab-tools{opacity:1}
 .stab-tools button{font-size:12px; padding:3px 9px; border-radius:5px; color:var(--text-dim); border:1px solid var(--line)}
 .stab-tools button:hover{background:var(--bg-hover); color:var(--text)}
-.stab-tools button.on{border-color:var(--accent); color:var(--text)}
+.stab-tools button.on{border-color:var(--accent-text); color:var(--text)}
 
 /* --- Formeln --------------------------------------------------------------------------------- */
 .eq{width:100%; margin:6px 0}
@@ -1391,7 +1525,7 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
 .pageref .pr-i{color:var(--text-faint); font-size:12px}
 .synced{width:100%; border-left:3px solid var(--c-purple); padding:4px 0 4px 12px; margin:6px 0}
 .sy-kopf{font-size:11.5px; color:var(--c-purple); margin-bottom:4px}
-.sy-waehl{font-size:13px; color:var(--accent); padding:4px 8px; border-radius:5px}
+.sy-waehl{font-size:13px; color:var(--accent-text); padding:4px 8px; border-radius:5px}
 .knopf-blk{display:flex; align-items:center; gap:6px; margin:6px 0}
 .knopf{
   background:var(--bg-card); border:1px solid var(--line); border-radius:7px;
@@ -1481,14 +1615,14 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 
 .kp-befehl{display:flex; align-items:center; gap:14px; min-height:50px;
            border-bottom:1px solid var(--line)}
-.kp-befehl code{flex:0 0 46px; font:600 15px var(--mono); color:var(--accent)}
+.kp-befehl code{flex:0 0 46px; font:600 15px var(--mono); color:var(--accent-text)}
 .kp-befehl > span:not(.kp-marke){flex:1; font-size:15px}
 
 /* DER STAND STEHT DABEI, und das ist Absicht: ein Wegweiser, der Geplantes
    wie Fertiges aussehen lässt, ist eine Enttäuschung mit Ansage. */
 .kp-marke{flex:none; font-size:12px; padding:3px 9px; border-radius:999px;
           white-space:nowrap}
-.kp-fertig{background:var(--bg-hover); color:var(--accent)}
+.kp-fertig{background:var(--bg-hover); color:var(--accent-text)}
 .kp-teilweise{border:1px solid var(--line); color:var(--text-dim)}
 .kp-geplant{color:var(--text-faint)}
 
@@ -1510,7 +1644,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .kp-karte div{font-size:14.5px; color:var(--text-dim); line-height:1.55}
 .kp-karte button{margin-top:16px; height:44px; padding:0 20px;
                  border-radius:999px; border:1px solid var(--accent);
-                 color:var(--accent); font-size:15px}
+                 color:var(--accent-text); font-size:15px}
 .kp-karte button:hover{background:var(--bg-hover)}
 
 /* Der Untertext in „Mehr" — er ist der ganze Unterschied zwischen einer
@@ -1610,7 +1744,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   margin-top:18px}
 .lz-knoepfe button{min-height:44px; padding:0 20px; border-radius:999px;
   border:1px solid var(--line); font-size:15px}
-.lz-knoepfe button.prim{border-color:var(--accent); color:var(--accent)}
+.lz-knoepfe button.prim{border-color:var(--accent-text); color:var(--accent-text)}
 .lz-knoepfe button:hover{background:var(--bg-hover)}
 @media(max-width:760px){
   .leer-zustand b{font-size:21px}
@@ -1794,13 +1928,13 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
   font-family:inherit; width:100%;
 }
 .form-feld textarea{resize:vertical; min-height:70px; line-height:1.5}
-.form-feld input[type="checkbox"]{width:17px; height:17px; accent-color:var(--accent)}
+.form-feld input[type="checkbox"]{width:17px; height:17px; accent-color:var(--accent-text)}
 .form-feld input[type="file"]{font-size:13px; color:var(--text-dim)}
-.form-feld input:focus, .form-feld select:focus, .form-feld textarea:focus{border-color:var(--accent)}
+.form-feld input:focus, .form-feld select:focus, .form-feld textarea:focus{border-color:var(--accent-text)}
 /* Mehrfachauswahl im Formular */
 .form-mehr{display:flex; flex-wrap:wrap; gap:7px}
 .form-mehr label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:13px}
-.form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent)}
+.form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent-text)}
 .form-fuss{display:flex; gap:10px; align-items:center; margin-top:18px}
 .form-fuss .prim{background:var(--accent); color:var(--auf-accent); padding:9px 20px; border-radius:7px; font-weight:500}
 .form-fuss button:not(.prim){font-size:13px; color:var(--text-dim); padding:6px 10px; border-radius:6px; border:1px solid var(--line)}
@@ -1935,7 +2069,7 @@ html[data-theme="light"] .banner{color:#37352f}
   padding:7px 10px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:7px; outline:none; color:var(--text); font-size:13.5px; min-width:150px;
 }
-.ez-steuer select:focus, .ez-steuer input:focus{border-color:var(--accent)}
+.ez-steuer select:focus, .ez-steuer input:focus{border-color:var(--accent-text)}
 .ez-grau{font-size:13px; color:var(--text-faint)}
 .ez-knopf{padding:6px 12px; border:1px solid var(--line); border-radius:7px; font-size:13.5px}
 .ez-knopf:hover{background:var(--bg-hover)}
@@ -1990,7 +2124,7 @@ body[data-dichte="weit"] .b-text .ct{padding:7px 2px; line-height:1.75}
 .wiki-kopf{display:flex; align-items:center; gap:12px; padding:11px 14px; background:var(--bg-card)}
 .wiki-kopf b{font-size:14px}
 .wiki-kopf span{font-size:12.5px; color:var(--text-dim); flex:1}
-.wiki-kopf button{font-size:13px; color:var(--accent); padding:4px 9px; border-radius:6px}
+.wiki-kopf button{font-size:13px; color:var(--accent-text); padding:4px 9px; border-radius:6px}
 .wiki-kopf button:hover{background:var(--bg-hover)}
 table.wiki-tab{width:100%; border-collapse:collapse; font-size:14px}
 table.wiki-tab th{
@@ -2011,12 +2145,12 @@ table.grid th.th-aus, table.grid td.td-aus{
 }
 table.grid td.td-aus{position:relative; color:var(--text-faint); font-size:11.5px}
 .zeilen-nr{display:inline}
-td.td-aus input.zeilen-aus{display:none; accent-color:var(--accent); cursor:pointer}
+td.td-aus input.zeilen-aus{display:none; accent-color:var(--accent-text); cursor:pointer}
 table.grid tr:hover td.td-aus .zeilen-nr{display:none}
 table.grid tr:hover td.td-aus input.zeilen-aus{display:inline}
 td.td-aus input.zeilen-aus:checked{display:inline}
 table.grid tr:has(input.zeilen-aus:checked) td{background:#2eaadc18}
-table.grid th.th-aus input{accent-color:var(--accent); cursor:pointer}
+table.grid th.th-aus input{accent-color:var(--accent-text); cursor:pointer}
 table.grid tr.zieht{opacity:.4}
 table.grid tr.ziel td{border-top:2px solid var(--accent)}
 table.grid th.ziel{box-shadow:inset 2px 0 0 var(--accent)}
@@ -2085,11 +2219,11 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
   text-align:left; border:1px solid var(--line); border-radius:10px; padding:14px 15px;
   display:flex; flex-direction:column; gap:5px;
 }
-.gal-karte:hover{background:var(--bg-hover); border-color:var(--accent)}
+.gal-karte:hover{background:var(--bg-hover); border-color:var(--accent-text)}
 .gal-ico{font-size:24px}
 .gal-karte b{font-size:14.5px}
 .gal-text{font-size:12.5px; color:var(--text-dim); line-height:1.5}
-.gal-quelle{font-size:11px; color:var(--accent); margin-top:3px}
+.gal-quelle{font-size:11px; color:var(--accent-text); margin-top:3px}
 
 /* --- Feed, Ring, Syntaxfarben ------------------------------------------------ */
 .feed{display:flex; flex-direction:column; gap:10px}
@@ -2136,7 +2270,7 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
 .vs-h2{font-size:14px; font-weight:600; margin:7px 0 3px}
 .vs-h3{font-size:13px; font-weight:600; margin:6px 0 2px}
 .vs-t{font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:3px}
-.vs-db{font-size:12.5px; color:var(--accent); margin:6px 0}
+.vs-db{font-size:12.5px; color:var(--accent-text); margin:6px 0}
 @media(max-width:820px){ .such-vorschau{display:none} }
 
 /* --- Schlüsselbereich --------------------------------------------------------- */
@@ -2217,7 +2351,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .kal-stufen button.on{background:var(--accent); color:var(--auf-accent)}
 .kal-stufen button.on:hover{background:var(--accent); color:var(--auf-accent)}
 .cal.woche .day{min-height:190px}
-.cal.woche .dow.jetzt{color:var(--accent); font-weight:600}
+.cal.woche .dow.jetzt{color:var(--accent-text); font-weight:600}
 /* Farbpunkt je Kalender */
 .kal-punkt{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; flex:0 0 auto}
 .cal .ev.q-green{border-left:3px solid var(--c-green)}
@@ -2257,7 +2391,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .verb-karte label{display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:9px}
 .verb-karte input{width:100%; margin-top:4px; padding:8px 11px; background:var(--bg-input);
   border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:13.5px}
-.verb-karte input:focus{border-color:var(--accent)}
+.verb-karte input:focus{border-color:var(--accent-text)}
 .verb-knoepfe{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
 .verb-knoepfe button{font-size:13px; padding:6px 13px; border-radius:6px;
   border:1px solid var(--line); color:var(--text-dim)}
@@ -2266,7 +2400,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .verb-warn{background:var(--b-yellow); color:var(--c-yellow); border-radius:8px;
   padding:11px 14px; font-size:13px; line-height:1.55; margin:12px 0}
 .verb-hilfe{margin-top:10px; font-size:12.5px; color:var(--text-dim)}
-.verb-hilfe summary{cursor:pointer; color:var(--accent)}
+.verb-hilfe summary{cursor:pointer; color:var(--accent-text)}
 .verb-hilfe ol{margin:8px 0 0 18px; line-height:1.7}
 .verb-hilfe code{background:var(--bg-card); padding:1px 5px; border-radius:4px; font-size:12px}
 .verb-hilfe p{margin-top:8px; line-height:1.55}
@@ -2437,7 +2571,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .einst-inhalt{ padding-left:16px; padding-right:16px }
   .einst-zurueck{
     display:flex; align-items:center; min-height:44px; margin:0 0 6px -6px;
-    padding:0 8px; font-size:15px; color:var(--accent); border-radius:8px;
+    padding:0 8px; font-size:15px; color:var(--accent-text); border-radius:8px;
   }
   .einst-zurueck:active{ background:var(--bg-hover) }
 
@@ -3130,7 +3264,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
   background:transparent;color:var(--text);text-align:left;cursor:pointer
 }
 .produkt-bereiche-liste>button:hover{background:var(--bg-hover)}
-.produkt-bereiche-liste>button[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.produkt-bereiche-liste>button[aria-checked="true"]{border-color:var(--accent-text);background:var(--accent-soft)}
 .produkt-bereiche-stand{font-size:11.5px;color:var(--text-dim);white-space:nowrap}
 .produkt-bereiche-leer{padding:26px 16px;text-align:center;color:var(--text-dim);line-height:1.55}
 .produkt-bereiche-fuss{display:flex;gap:7px;padding:10px 14px 14px;border-top:1px solid var(--line)}
@@ -3238,7 +3372,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
 }
 .arbeitswelt .aw-titelgruppe{max-width:760px}
 .arbeitswelt .aw-eyebrow{
-  margin:0 0 7px;color:var(--accent);font-size:11px;font-weight:800;
+  margin:0 0 7px;color:var(--accent-text);font-size:11px;font-weight:800;
   letter-spacing:.13em;text-transform:uppercase
 }
 .arbeitswelt .aw-titel{
@@ -3384,7 +3518,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
   min-height:var(--aw-touch);padding:8px 13px;border:1px solid var(--line);
   border-radius:var(--aw-radius-sm);background:var(--bg-side);font-size:12.5px;font-weight:650
 }
-.arbeitswelt .aw-suche-knopf{border-color:var(--accent);background:var(--accent);color:var(--auf-accent)}
+.arbeitswelt .aw-suche-knopf{border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent)}
 
 /* Nur visuell verborgen; Screenreader behalten Bezeichnung und Zusammenhang. */
 .arbeitswelt .aw-visuell-versteckt{
@@ -3560,7 +3694,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
   box-shadow:0 0 0 5px var(--bg);border-radius:9px
 }
 .arbeitswelt .aw-suche-eingabe:focus-visible{
-  border-color:var(--accent);box-shadow:0 0 0 3px var(--aw-accent-soft)
+  border-color:var(--accent-text);box-shadow:0 0 0 3px var(--aw-accent-soft)
 }
 
 @media(hover:hover){
@@ -3581,7 +3715,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
     border-color:var(--line-stark,var(--line));box-shadow:0 10px 28px rgba(0,0,0,.08)
   }
   .arbeitswelt .aw-aktion:hover{transform:translateY(-1px)}
-  .arbeitswelt .aw-ansicht:hover{border-color:var(--accent);background:var(--aw-accent-soft);color:var(--text)}
+  .arbeitswelt .aw-ansicht:hover{border-color:var(--accent-text);background:var(--aw-accent-soft);color:var(--text)}
   .arbeitswelt .aw-suche-knopf:hover,
   .arbeitswelt .aw-vorlage-nutzen:hover{filter:brightness(1.08)}
 }
@@ -3783,7 +3917,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   background-position:calc(100% - 16px) center,calc(100% - 11px) center;
   background-size:5px 5px,5px 5px;background-repeat:no-repeat
 }
-.arbeitswelt .aw-bereichsfilter-auswahl:hover{border-color:var(--accent)}
+.arbeitswelt .aw-bereichsfilter-auswahl:hover{border-color:var(--accent-text)}
 .arbeitswelt .aw-bereichsfilter-auswahl:focus-visible{
   outline:2px solid var(--accent);outline-offset:2px
 }
@@ -3901,7 +4035,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   box-shadow:0 7px 20px rgba(0,0,0,.08);font-size:21px
 }
 .lernwelt .lw-brand p{
-  margin:0 0 1px;color:var(--accent);font-size:10px;font-weight:850;
+  margin:0 0 1px;color:var(--accent-text);font-size:10px;font-weight:850;
   letter-spacing:.14em;text-transform:uppercase
 }
 .lernwelt .lw-brand h1{
@@ -4027,7 +4161,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 }
 .lernwelt .lw-page-head>div:first-child{min-width:0;max-width:780px}
 .lernwelt .lw-page-head p{
-  margin:0 0 4px;color:var(--accent);font-size:10.5px;font-weight:850;
+  margin:0 0 4px;color:var(--accent-text);font-size:10.5px;font-weight:850;
   letter-spacing:.12em;text-transform:uppercase
 }
 .lernwelt .lw-page-head h2{
@@ -4066,7 +4200,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 }
 .lernwelt .lw-hero>div:first-child{min-width:0;max-width:760px}
 .lernwelt .lw-hero>div:first-child>p{
-  margin:0 0 5px;color:var(--accent);font-size:12px;font-weight:820
+  margin:0 0 5px;color:var(--accent-text);font-size:12px;font-weight:820
 }
 .lernwelt .lw-hero h2{
   margin:0;font-size:clamp(29px,4vw,48px);line-height:1.04;
@@ -4094,7 +4228,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 /* --- Fortschrittsbalken ------------------------------------------------- */
 .lernwelt progress{
   overflow:hidden;display:block;width:100%;height:8px;border:0;border-radius:999px;
-  appearance:none;-webkit-appearance:none;background:var(--bg-hover);accent-color:var(--accent)
+  appearance:none;-webkit-appearance:none;background:var(--bg-hover);accent-color:var(--accent-text)
 }
 .lernwelt progress::-webkit-progress-bar{border-radius:999px;background:var(--bg-hover)}
 .lernwelt progress::-webkit-progress-value{
@@ -4186,7 +4320,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 .lernwelt .lw-actions button.is-primary,
 .lernwelt .lw-exam-list footer button.is-primary,
 .lernwelt .lw-rating button.is-primary{
-  border-color:var(--accent);background:var(--accent);color:var(--auf-accent);
+  border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);
   box-shadow:0 7px 18px rgba(0,0,0,.1)
 }
 
@@ -4231,7 +4365,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 }
 .lernwelt .lw-task-list button>span:first-child{color:var(--text-dim);font-size:17px;text-align:center}
 .lernwelt .lw-event-list time{
-  color:var(--accent);font-size:11.5px;font-weight:760;font-variant-numeric:tabular-nums
+  color:var(--accent-text);font-size:11.5px;font-weight:760;font-variant-numeric:tabular-nums
 }
 .lernwelt .lw-none{margin:0;padding:18px 6px;color:var(--text-dim);font-size:12px;line-height:1.5;text-align:center}
 
@@ -4299,7 +4433,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   width:100%;min-height:var(--lw-touch);padding:8px 10px;border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:11.5px;font-weight:680
 }
-.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent);background:var(--accent);color:var(--auf-accent)}
+.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent)}
 .lernwelt .lw-explanation{display:grid;gap:5px;margin:0;padding:0;list-style:none;counter-reset:lw-plan}
 .lernwelt .lw-explanation li{
   position:relative;display:grid;gap:2px;min-height:52px;padding:8px 8px 8px 43px;
@@ -4309,7 +4443,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 .lernwelt .lw-explanation li::before{
   content:counter(lw-plan);position:absolute;left:6px;top:9px;display:grid;place-items:center;
   width:27px;height:27px;border-radius:50%;background:var(--lw-accent-soft);
-  color:var(--accent);font-size:11px;font-weight:820
+  color:var(--accent-text);font-size:11px;font-weight:820
 }
 .lernwelt .lw-explanation strong{font-size:12.5px}
 .lernwelt .lw-explanation span{color:var(--text-dim);font-size:10.8px;line-height:1.4}
@@ -4359,7 +4493,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 }
 .lernwelt .lw-path-step{
   display:grid;place-items:center;width:50px;height:50px;border:2px solid var(--accent);
-  border-radius:50%;background:var(--lw-accent-soft);color:var(--accent);
+  border-radius:50%;background:var(--lw-accent-soft);color:var(--accent-text);
   box-shadow:0 0 0 7px var(--bg);font-size:15px;font-weight:840;font-variant-numeric:tabular-nums
 }
 .lernwelt .lw-path li.is-stable .lw-path-step{
@@ -4371,7 +4505,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 .lernwelt .lw-path li.is-new>button{border-style:dashed}
 .lernwelt .lw-path-copy{display:grid;min-width:0;gap:3px}
 .lernwelt .lw-path-copy>small{
-  color:var(--accent);font-size:9.5px;font-weight:820;letter-spacing:.08em;text-transform:uppercase
+  color:var(--accent-text);font-size:9.5px;font-weight:820;letter-spacing:.08em;text-transform:uppercase
 }
 .lernwelt .lw-path li.is-stable .lw-path-copy>small{color:var(--erfolg)}
 .lernwelt .lw-path-copy>strong{font-size:14.5px;line-height:1.3;font-weight:750}
@@ -4459,7 +4593,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   background:var(--lw-panel);box-shadow:0 20px 52px rgba(0,0,0,.1)
 }
 .lernwelt .lw-session-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.lernwelt .lw-session-head p{margin:0 0 3px;color:var(--accent);font-size:10.5px;font-weight:800;text-transform:uppercase}
+.lernwelt .lw-session-head p{margin:0 0 3px;color:var(--accent-text);font-size:10.5px;font-weight:800;text-transform:uppercase}
 .lernwelt .lw-session-head h2{margin:0;font-size:18px;line-height:1.3;font-weight:740}
 .lernwelt .lw-session-head>button{
   flex:none;min-height:var(--lw-touch);padding:8px 11px;border:1px solid var(--line);
@@ -4477,7 +4611,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
 }
 .lernwelt .lw-study-card>small{
   justify-self:center;padding:4px 9px;border-radius:999px;background:var(--lw-accent-soft);
-  color:var(--accent);font-size:10.5px;font-weight:750
+  color:var(--accent-text);font-size:10.5px;font-weight:750
 }
 .lernwelt .lw-study-card h3{
   max-width:720px;margin:0 auto;font-size:clamp(21px,3vw,31px);line-height:1.35;
@@ -4590,7 +4724,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   box-shadow:0 0 0 5px var(--bg);border-radius:10px
 }
 .lernwelt .lw-area select:focus-visible{
-  border-color:var(--accent);box-shadow:0 0 0 3px var(--lw-accent-soft)
+  border-color:var(--accent-text);box-shadow:0 0 0 3px var(--lw-accent-soft)
 }
 
 @media(hover:hover){
@@ -4610,7 +4744,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   }
   .lernwelt :where(button.is-primary,.lw-actions button.is-primary,
     .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
-    border-color:var(--accent);background:var(--accent);color:var(--auf-accent);filter:brightness(1.08)
+    border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);filter:brightness(1.08)
   }
   .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
     .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,
@@ -4618,7 +4752,7 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
     border-color:var(--line-stark,var(--line));box-shadow:0 12px 30px rgba(0,0,0,.07)
   }
   .lernwelt .lw-path li>button:hover{
-    z-index:1;border-color:var(--accent);box-shadow:0 15px 34px rgba(0,0,0,.1);transform:translateY(-2px)
+    z-index:1;border-color:var(--accent-text);box-shadow:0 15px 34px rgba(0,0,0,.1);transform:translateY(-2px)
   }
   .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
 }
@@ -4867,7 +5001,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .ki-quellschalter{display:flex; flex-wrap:wrap; gap:5px; padding:0 0 8px}
 .ki-quellschalter button{font-size:11.5px; padding:3px 9px; border-radius:20px;
   border:1px solid var(--line); color:var(--text-faint); background:none}
-.ki-quellschalter button.an{border-color:var(--accent); color:var(--accent);
+.ki-quellschalter button.an{border-color:var(--accent-text); color:var(--accent-text);
   background:var(--b-blue)}
 .ki-quellschalter button:hover{color:var(--text)}
 
@@ -4881,7 +5015,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .kq-art{color:var(--text-faint); font-size:11px; flex:0 0 auto}
 .kq-zeit{color:var(--text-faint); font-size:11px; flex:0 0 auto}
 .ki-antwortknoepfe{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
-.ki-antwortknoepfe button{font-size:12px; color:var(--accent); padding:3px 9px;
+.ki-antwortknoepfe button{font-size:12px; color:var(--accent-text); padding:3px 9px;
   border-radius:5px; border:1px solid var(--line)}
 .ki-antwortknoepfe button:hover{background:var(--bg-hover)}
 
@@ -4891,7 +5025,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .agent-karte{display:flex; flex-direction:column; gap:3px; padding:10px 12px; text-align:left;
   border:1px solid var(--line); border-radius:8px; background:none}
 .agent-karte:hover{background:var(--bg-hover)}
-.agent-karte.on{border-color:var(--accent); background:var(--b-blue)}
+.agent-karte.on{border-color:var(--accent-text); background:var(--b-blue)}
 .agent-ico{font-size:19px}
 
 /* DER STREIFEN MIT DEM NOTAUS (L11, E52). Er steht ganz oben im
@@ -4921,7 +5055,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .agent-karte em{font-size:11px; color:var(--text-faint); font-style:normal; margin-top:2px}
 #aa, #mtx{width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:8px; outline:none; color:var(--text); font:14px/1.55 inherit; resize:vertical}
-#aa:focus, #mtx:focus{border-color:var(--accent)}
+#aa:focus, #mtx:focus{border-color:var(--accent-text)}
 .agent-schritt{border-bottom:1px solid var(--line-soft); padding:9px 16px}
 .as-kopf{display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:4px}
 .as-nr{width:19px; height:19px; border-radius:50%; background:var(--accent); color:var(--auf-accent);
@@ -5183,7 +5317,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .schrift-kacheln button{display:flex; flex-direction:column; align-items:center; gap:2px;
   padding:8px 4px; border-radius:7px; border:1px solid transparent; background:none}
 .schrift-kacheln button:hover{background:var(--bg-hover)}
-.schrift-kacheln button.on{border-color:var(--accent); color:var(--accent)}
+.schrift-kacheln button.on{border-color:var(--accent-text); color:var(--accent-text)}
 .schrift-kacheln b{font-size:19px; font-weight:600; line-height:1}
 .schrift-kacheln span{font-size:11px; color:var(--text-faint)}
 .schrift-kacheln .sk-serif{font-family:Georgia,'Times New Roman',serif}
@@ -5192,7 +5326,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 /* Typ-Auswahl in zwei Spalten */
 .typ-gitter{display:grid; grid-template-columns:1fr 1fr; gap:1px 4px; padding:0 4px 4px}
 .typ-gitter button{padding:6px 8px; border-radius:5px; font-size:13px}
-.typ-gitter button.on{background:var(--b-blue); color:var(--accent)}
+.typ-gitter button.on{background:var(--b-blue); color:var(--accent-text)}
 .typ-gitter .mi{width:20px}
 
 /* Rechte Leiste für Layout und Farbregeln — wie Notions Einstellungsleiste */
@@ -5210,7 +5344,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
   color:var(--text-dim); background:none}
 .dl-kacheln button span{font-size:17px}
 .dl-kacheln button:hover{background:var(--bg-hover)}
-.dl-kacheln button.on{border-color:var(--accent); color:var(--accent); background:var(--b-blue)}
+.dl-kacheln button.on{border-color:var(--accent-text); color:var(--accent-text); background:var(--b-blue)}
 .dl-zeile{display:flex; align-items:center; gap:12px; padding:10px 2px;
   border-bottom:1px solid var(--line-soft); cursor:pointer}
 .dl-zeile:last-child{border-bottom:none}
@@ -5245,7 +5379,7 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
 .rg-neu input, .rg-neu select{
   padding:8px 10px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:7px; outline:none; color:var(--text); font-size:13.5px; min-height:38px}
-.rg-neu input:focus, .rg-neu select:focus{border-color:var(--accent)}
+.rg-neu input:focus, .rg-neu select:focus{border-color:var(--accent-text)}
 .rg-neu #rg-bereich{flex:1 1 140px; min-width:120px}
 .rg-neu button{padding:8px 14px; border-radius:7px; font-size:13.5px; min-height:38px}
 /* Der Farbverlauf als Zeichen für „Skala" oder „Balken" — dieselben drei
@@ -5417,7 +5551,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-kopfzeile > div{display:flex; align-items:center; gap:7px; cursor:pointer;
   padding:2px 4px; border-radius:5px}
 .bib-kopfzeile > div:hover{background:var(--bg-hover)}
-.bib-kopfzeile em{font-style:normal; color:var(--accent)}
+.bib-kopfzeile em{font-style:normal; color:var(--accent-text)}
 .bib-name{display:flex; align-items:center; gap:7px; min-width:0}
 .bib-pfeil{color:var(--text-faint); font-size:10px; width:11px; flex:none}
 .bib-pfeil.leer{visibility:hidden}
@@ -5449,9 +5583,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   background:var(--bg-hover); color:var(--text-dim)}
 .auf-leer{padding:80px 0; text-align:center; color:var(--text-faint)}
 .auf-leer-ico{font-size:44px; opacity:.5; margin-bottom:14px}
-.auf-link{background:none; color:var(--accent); font-size:14px; margin-top:14px;
+.auf-link{background:none; color:var(--accent-text); font-size:14px; margin-top:14px;
   text-decoration:none; padding:6px}
-.auf-link:hover{text-decoration:underline; color:var(--accent)}
+.auf-link:hover{text-decoration:underline; color:var(--accent-text)}
 @media(max-width:760px){
   .bib{padding:18px 16px 50px}
   .bib-titel{font-size:29px}
@@ -5487,7 +5621,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .sp-name{flex:1; min-width:0; background:var(--bg-hover); border:1px solid transparent;
   border-radius:5px; padding:5px 8px; font-size:14px; color:var(--text);
   outline:none; font-family:inherit}
-.sp-name:focus{border-color:var(--accent); background:var(--bg-card)}
+.sp-name:focus{border-color:var(--accent-text); background:var(--bg-card)}
 .sp-info{width:24px; height:24px; border-radius:5px; background:none; color:var(--text-faint);
   padding:0; flex:none}
 .sp-info:hover{background:var(--bg-hover); color:var(--text)}
@@ -5605,7 +5739,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .msg-tat button{background:none; color:var(--text-faint); font-size:13px;
   padding:2px 6px; border-radius:5px}
 .msg-tat button:hover{background:var(--bg-hover); color:var(--text)}
-.msg-tat button.an{color:var(--accent)}
+.msg-tat button.an{color:var(--accent-text)}
 
 /* KI personalisieren */
 .pers-kopf{display:flex; flex-direction:column; align-items:center; gap:12px; padding:14px}
@@ -5622,7 +5756,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .pers-anw textarea{width:100%; padding:9px 11px; border-radius:8px; background:var(--bg-hover);
   border:1px solid var(--line); color:var(--text); font-size:14px; font-family:inherit;
   resize:vertical; outline:none}
-.pers-anw textarea:focus{border-color:var(--accent)}
+.pers-anw textarea:focus{border-color:var(--accent-text)}
 
 /* Analysen */
 .an-kacheln{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
@@ -5695,7 +5829,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .av-name{flex:1; min-width:0; background:var(--bg-hover); border:1px solid transparent;
   border-radius:6px; padding:7px 9px; font-size:15px; color:var(--text);
   outline:none; font-family:inherit}
-.av-name:focus{border-color:var(--accent); background:var(--bg-card)}
+.av-name:focus{border-color:var(--accent-text); background:var(--bg-card)}
 .av-info{width:26px; height:26px; border-radius:50%; background:none; color:var(--text-faint);
   padding:0; flex:none; font-size:14px}
 .av-info:hover{background:var(--bg-hover); color:var(--text)}
@@ -6264,8 +6398,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .pe-gross{font-size:20px; font-weight:600; margin-bottom:8px}
 .pe-klein{font-size:14px; color:var(--text-faint); max-width:340px; margin:0 auto;
   line-height:1.5}
-.pe-link{background:none; color:var(--accent); font-size:15px; margin-top:18px; padding:6px}
-.pe-link:hover{text-decoration:underline; color:var(--accent)}
+.pe-link{background:none; color:var(--accent-text); font-size:15px; margin-top:18px; padding:6px}
+.pe-link:hover{text-decoration:underline; color:var(--accent-text)}
 /* AM TELEFON DIE EINZIGE HANDLUNG IM LEEREN ZUSTAND — und mit 6 px Polster
    war sie 32 px hoch. Gemessen am 6. August im Posteingang: „Filter ändern"
    stand als einziger Weg da und war der flachste Knopf der Ansicht.
@@ -6288,8 +6422,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .cb-kopf{display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:14px 16px; border-bottom:1px solid var(--line)}
 .cb-kopf b{font-size:15px; font-weight:600}
-.cb-links, .cb-rechts{background:none; color:var(--accent); font-size:15px; padding:4px 2px}
-.cb-links:hover, .cb-rechts:hover{color:var(--accent); text-decoration:underline}
+.cb-links, .cb-rechts{background:none; color:var(--accent-text); font-size:15px; padding:4px 2px}
+.cb-links:hover, .cb-rechts:hover{color:var(--accent-text); text-decoration:underline}
 .cb-reiter{display:flex; gap:18px; padding:10px 16px 0; border-bottom:1px solid var(--line)}
 .cb-reiter button{background:none; color:var(--text-faint); font-size:14.5px;
   padding:6px 2px 10px; border-bottom:2px solid transparent; border-radius:0}
@@ -6307,7 +6441,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 #cb-link{width:min(360px,90%); display:block; margin:0 auto 14px; padding:10px 12px;
   border-radius:8px; background:var(--bg-hover); border:1px solid var(--line);
   color:var(--text); font-size:16px; outline:none; font-family:inherit}
-#cb-link:focus{border-color:var(--accent)}
+#cb-link:focus{border-color:var(--accent-text)}
 .cb-hinweis{font-size:12.5px; color:var(--text-faint); margin-top:14px}
 @media(max-width:760px){
   .cover-overlay{align-items:flex-end}
@@ -6486,7 +6620,7 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
            border:1px solid var(--line); text-align:left; width:100%; }
 .eh-knopf b{ font-size:14px; font-weight:600; }
 .eh-knopf span{ font-size:12.5px; color:var(--text-dim); }
-.eh-knopf:hover{ border-color:var(--accent); }
+.eh-knopf:hover{ border-color:var(--accent-text); }
 .finder.such .hint code{ background:var(--bg-hover); padding:1px 5px; border-radius:4px;
                          font-family:var(--mono); font-size:11px; margin:0 1px; }
 
@@ -6553,7 +6687,7 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
             gap:12px; padding:14px 18px; }
 .sm-karte{ border:1px solid var(--line); border-radius:10px; overflow:hidden;
            background:var(--bg-card, var(--bg-hover)); cursor:pointer; }
-.sm-karte:hover{ border-color:var(--accent); }
+.sm-karte:hover{ border-color:var(--accent-text); }
 .sm-kopf{ padding:9px 12px; background:var(--bg-hover); border-bottom:1px solid var(--line);
           display:flex; flex-direction:column; gap:2px; }
 .sm-kopf b{ font-size:14px; }
@@ -6564,7 +6698,7 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .sm-typ{ width:16px; text-align:center; opacity:.7; }
 .sm-name{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .sm-regel{ color:var(--c-green, #4dab6d); font-size:11px; }
-.sm-pfeil{ font-size:11px; color:var(--accent); }
+.sm-pfeil{ font-size:11px; color:var(--accent-text); }
 .sm-fuell{ width:44px; height:5px; border-radius:3px; background:var(--line); overflow:hidden; }
 .sm-fuell i{ display:block; height:100%; background:var(--accent); }
 .sm-mehr{ padding:3px 12px; font-size:11.5px; color:var(--text-faint); }
@@ -6693,7 +6827,7 @@ td .proz i{ flex:0 0 auto; }
          border-right:1px solid var(--line)}
 .kw-kopf{background:var(--bg-sub); border-bottom:1px solid var(--line)}
 .kw-tag{padding:6px 4px; font-size:12px; color:var(--text-dim); text-align:center}
-.kw-tag.jetzt{color:var(--accent); font-weight:600}
+.kw-tag.jetzt{color:var(--accent-text); font-weight:600}
 .kw-gz{min-height:24px; border-left:1px solid var(--line); padding:2px}
 .kw-koerper{max-height:62vh; overflow-y:auto}
 .kw-zeile{border-top:1px solid var(--line); min-height:38px; position:relative}
@@ -6721,7 +6855,7 @@ td .proz i{ flex:0 0 auto; }
 .so-zeile button:hover{background:var(--bg-hover); color:var(--text)}
 .fr-vgl{border:1px solid var(--line); background:transparent; border-radius:5px;
         padding:2px 6px; cursor:pointer; color:var(--text-faint)}
-.fr-vgl.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.fr-vgl.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .fr-feld{border:1px solid var(--line); border-radius:5px; padding:3px 5px; font-size:12.5px;
          background:var(--bg-card); color:var(--text)}
 
@@ -6729,7 +6863,7 @@ td .proz i{ flex:0 0 auto; }
 .toc-liste a{display:block; padding:2px 0; cursor:pointer; color:var(--text-dim); font-size:14px;
              border-left:2px solid transparent; padding-left:8px}
 .toc-liste a:hover{color:var(--text); background:var(--bg-hover)}
-.toc-liste a.jetzt{color:var(--accent); border-left-color:var(--accent)}
+.toc-liste a.jetzt{color:var(--accent-text); border-left-color:var(--accent-text)}
 .toc-liste a.lvl2{padding-left:24px; font-size:13.5px}
 .toc-liste a.lvl3{padding-left:40px; font-size:13px}
 .toc-fuss{display:flex; gap:10px; align-items:center; margin-top:6px; padding-top:5px;
@@ -6748,7 +6882,7 @@ td .proz i{ flex:0 0 auto; }
 .code-werk{position:absolute; top:8px; right:120px; display:flex; gap:3px; z-index:2}
 .code-werk button{border:1px solid var(--line); background:var(--bg-input); color:var(--text-dim);
                   border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer}
-.code-werk button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.code-werk button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .code-werk button:hover{filter:brightness(1.1)}
 .code-nr{position:absolute; left:0; top:0; padding:12px 0; width:38px; text-align:right;
          font:12.5px/1.6 var(--mono); color:var(--text-faint); user-select:none; z-index:1}
@@ -6882,7 +7016,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-reiter{display:flex; gap:4px; padding:8px 18px 0; border-bottom:1px solid var(--line)}
 .au-reiter button{font-size:13px; padding:6px 12px; border:0; background:transparent;
                   color:var(--text-dim); border-bottom:2px solid transparent; cursor:pointer}
-.au-reiter button.an{color:var(--text); border-bottom-color:var(--accent)}
+.au-reiter button.an{color:var(--text); border-bottom-color:var(--accent-text)}
 .au-koerper{padding:14px 18px; max-height:60vh; overflow:auto}
 .au-titel{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px;
           color:var(--text-faint); margin:14px 0 8px; display:flex; gap:8px}
@@ -6891,7 +7025,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-schemata{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:9px}
 .au-karte{border:2px solid var(--line); border-radius:8px; padding:7px; background:transparent;
           cursor:pointer; display:flex; flex-direction:column; gap:6px; align-items:stretch}
-.au-karte.an{border-color:var(--accent)}
+.au-karte.an{border-color:var(--accent-text)}
 .au-karte:hover{border-color:var(--text-faint)}
 .au-probe{height:44px; border-radius:5px; position:relative; overflow:hidden; display:block;
           border:1px solid var(--line)}
@@ -6910,7 +7044,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-liste{display:flex; gap:7px; flex-wrap:wrap}
 .au-liste button{border:1px solid var(--line); border-radius:7px; padding:6px 13px;
                  background:transparent; color:var(--text-dim); cursor:pointer; font-size:13px}
-.au-liste button.an{border-color:var(--accent); color:var(--text); background:var(--bg-hover)}
+.au-liste button.an{border-color:var(--accent-text); color:var(--text); background:var(--bg-hover)}
 .au-hinweis{font-size:12px; color:var(--text-faint); line-height:1.6; margin-top:12px}
 .au-tasten{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:4px}
 .au-t{display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px}
@@ -6918,10 +7052,10 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-t button{font:12px var(--mono); border:1px solid var(--line); border-radius:5px;
              padding:3px 9px; background:var(--bg-card); color:var(--text); cursor:pointer;
              min-width:96px}
-.au-t button:hover{border-color:var(--accent)}
-.au-t button.geaendert{border-color:var(--accent); color:var(--accent)}
-.au-t button.faengt{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
-#au-inhalt input[type=range]{width:100%; accent-color:var(--accent)}
+.au-t button:hover{border-color:var(--accent-text)}
+.au-t button.geaendert{border-color:var(--accent-text); color:var(--accent-text)}
+.au-t button.faengt{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
+#au-inhalt input[type=range]{width:100%; accent-color:var(--accent-text)}
 body[data-abstand="eng"]   .ct{line-height:1.4}
 body[data-abstand="weit"]  .ct{line-height:2.05}
 body[data-breite="schmal"] #page{max-width:620px}
@@ -6952,7 +7086,7 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-inhalt{flex:1; word-break:break-word}
 .vg-zeile button{border:1px solid var(--line); background:transparent; color:var(--text-faint);
                  border-radius:5px; padding:1px 7px; cursor:pointer; font-size:12px}
-.vg-zeile button:hover{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.vg-zeile button:hover{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .vg-neu .vg-zeichen{color:var(--c-green)}
 .vg-weg .vg-zeichen{color:var(--c-red)}
 .vg-geaendert .vg-zeichen{color:var(--c-yellow)}
@@ -6996,7 +7130,7 @@ body[data-breite="voll"]   #page{max-width:none}
                padding:5px 11px; font-size:11.5px; color:var(--text-faint);
                box-shadow:var(--shadow)}
 #tempo-anzeige:hover{color:var(--text)}
-#tempo-anzeige b{color:var(--accent); font-weight:600}
+#tempo-anzeige b{color:var(--accent-text); font-weight:600}
 .tp-koerper{padding:14px 18px; max-height:62vh; overflow:auto}
 .tp-karten{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:9px}
 .tp-k{background:var(--bg-card); border-radius:8px; padding:11px 13px; display:flex;
@@ -7113,7 +7247,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .ue-pfeil{color:var(--text-faint)}
 .ue-w{display:flex; gap:5px; align-items:center; font-size:12.5px; color:var(--text-dim);
       background:var(--bg-card); border-radius:5px; padding:2px 8px; cursor:pointer}
-.ue-w input{width:auto; accent-color:var(--accent)}
+.ue-w input{width:auto; accent-color:var(--accent-text)}
 
 /* Kommentarfäden, Reaktionen, Erwähnungen */
 .komm-reak{display:flex; gap:4px; margin:5px 0 2px; flex-wrap:wrap}
@@ -7124,7 +7258,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .komm-faden{margin:7px 0 0 14px; padding-left:11px; border-left:2px solid var(--line)}
 .komm-antwort{padding:5px 0}
 .komm-antwort .komm-txt{font-size:13.5px}
-.komm-erw{color:var(--accent); cursor:pointer; font-weight:500}
+.komm-erw{color:var(--accent-text); cursor:pointer; font-weight:500}
 .komm-erw:hover{text-decoration:underline}
 .komm-erw.tot{color:var(--text-faint); cursor:default; font-weight:400}
 
@@ -7150,7 +7284,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .ew-beispiele button{border:1px solid var(--line); border-radius:8px; padding:9px 11px;
                      background:transparent; text-align:left; cursor:pointer;
                      display:flex; flex-direction:column; gap:3px}
-.ew-beispiele button:hover{background:var(--bg-hover); border-color:var(--accent)}
+.ew-beispiele button:hover{background:var(--bg-hover); border-color:var(--accent-text)}
 .ew-beispiele b{font-size:13px}
 .ew-beispiele span{font-size:11.5px; color:var(--text-faint); line-height:1.4}
 .ew-api{border:1px solid var(--line); border-radius:8px; overflow:hidden}
@@ -7180,7 +7314,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .fd-knoepfe{display:flex; gap:8px; margin-top:9px}
 .fd-knoepfe button{padding:7px 15px; border-radius:7px; border:1px solid var(--line);
                    font-size:13.5px}
-.fd-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.fd-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .fd-zahl{font-size:12px; color:var(--text-faint); margin-top:6px}
 
 /* Eingänge von aussen */
@@ -7238,7 +7372,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    border:1px solid var(--line); color:var(--text-dim)}
 .rg-knoepfe button:first-child{margin-right:auto; border-color:transparent;
                                color:var(--text-faint)}
-.rg-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.rg-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .rg-koerper{padding:14px 18px; max-height:64vh; overflow:auto}
 .rg-vorwort{font-size:13px; color:var(--text-faint); line-height:1.6; margin-bottom:14px}
 .rg-thema{margin-bottom:15px}
@@ -7257,7 +7391,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .rge-text span{font-size:11.5px; color:var(--text-faint)}
 #rg-einladung button{font-size:12.5px; padding:5px 11px; border-radius:6px;
                      border:1px solid var(--line); color:var(--text-dim)}
-#rg-einladung button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+#rg-einladung button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 #rg-einladung button[data-a="nie"]{border:0; padding:4px 6px; color:var(--text-faint)}
 @media(max-width:760px){ #rg-einladung{left:8px; right:8px; bottom:74px; max-width:none} }
 
@@ -7313,7 +7447,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    ist — es war nie die Farbe des Akzents, sondern eine der zehn
    Blockfarben, die der Mensch für seine eigenen Blöcke wählt. */
 .wk-weg.prim{
-  border-color:var(--accent);
+  border-color:var(--accent-text);
   background:color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .wk-ico{ font-size:20px; flex:0 0 26px; text-align:center }
@@ -7471,7 +7605,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                      text-align:left; padding:11px 14px; border:1px solid var(--line);
                      border-radius:8px; background:var(--bg-card); color:var(--text)}
 .wahl-knoepfe button:hover{background:var(--bg-hover)}
-.wahl-knoepfe button.prim{border-color:var(--accent)}
+.wahl-knoepfe button.prim{border-color:var(--accent-text)}
 .wahl-knoepfe button b{font-size:14.5px; font-weight:600}
 .wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
 
@@ -7729,7 +7863,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-trenn{width:1px; height:20px; background:var(--rand); margin:0 4px}
 .blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
              border:2px solid transparent}
-.blatt-farbe.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--bg-card) inset}
+.blatt-farbe.on{border-color:var(--accent-text); box-shadow:0 0 0 2px var(--bg-card) inset}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
 .blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
 
@@ -7805,7 +7939,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    gewählte Papierart leuchtete seit E100 immer blau, in keinem der beiden
    Themen in der Akzentfarbe. Ein Ersatzwert verdeckt einen Tippfehler, er
    behebt ihn nicht. */
-.blatt-papierwahl.on i{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
+.blatt-papierwahl.on i{border-color:var(--accent-text); box-shadow:0 0 0 1px var(--accent)}
 .blatt-papierwahl i[data-vorschau="liniert"]{
   background-image:linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:100% 4px}
@@ -7896,7 +8030,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .school-hero{display:flex;justify-content:space-between;gap:22px;padding:24px;
   border:1px solid var(--border);border-radius:16px;background:linear-gradient(135deg,var(--accent-soft),var(--bg-card))}
 .school-hero h1{margin:3px 0 6px;font-size:30px}.school-hero p{margin:0;color:var(--text-dim)}
-.school-hero>div>span{font-size:12px;font-weight:750;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.school-hero>div>span{font-size:12px;font-weight:750;color:var(--accent-text);text-transform:uppercase;letter-spacing:.08em}
 .school-quick{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-self:center}
 .school-quick button,.school-folder,.school-card button,.school-empty button,.electrical-actions button{
   border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);cursor:pointer}
@@ -8049,7 +8183,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .document-thumbnail{width:100%; display:flex; flex-direction:column; gap:4px; padding:7px;
   margin-bottom:8px; border:1px solid transparent; border-radius:9px; background:transparent;
   color:var(--text); text-align:left; cursor:pointer}
-.document-thumbnail:hover,.document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-soft)}
+.document-thumbnail:hover,.document-thumbnail.is-selected{border-color:var(--accent-text);background:var(--accent-soft)}
 .document-thumbnail-preview{display:flex; width:100%; aspect-ratio:210/297; align-items:center;
   justify-content:center; overflow:hidden; background:#fff; border:1px solid #cfd1d4;border-radius:4px}
 .document-thumbnail-preview img{width:100%;height:100%;object-fit:contain}
@@ -8147,11 +8281,19 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    `#f97316` ergibt 2,6:1 — unter den 4,5:1, die §38 für gewöhnlichen Text
    verlangt, und auf dem Bild sah es genau danach aus. Sehr dunkles Braun
    ergibt 7,7:1. */
+/* DIE SCHRIFT KOMMT AUS DER MARKE, NICHT AUS EINER ZAHL (E199).
+   Hier stand `color:#231000` — ein fast schwarzes Braun, gewählt für das
+   orange Akzent von damals, auf dem es 8,6:1 hatte. Als der Akzent violett
+   wurde, fiel derselbe Wert auf 3,56:1, und der Balken war nicht mehr zu
+   lesen. Gefunden hat es test231, nicht das Auge.
+   `--auf-accent` ist genau die Marke für diese Frage: welche Schrift auf
+   der Akzentfläche lesbar ist. Sie wird je Modus gemessen gesetzt und
+   ändert sich mit dem Akzent mit. */
 #demo-balken{ position:fixed; top:0; left:0; right:0; z-index:200;
-  display:flex; gap:8px; align-items:center; flex-wrap:wrap;
-  padding:8px 14px; font-size:14px; line-height:1.4;
-  background:var(--accent, #e8730a); color:#231000 }
-#demo-balken a{ color:#231000; text-decoration:underline }
+  display:flex; gap:var(--space-3); align-items:center; flex-wrap:wrap;
+  padding:var(--space-3) var(--space-5); font-size:14px; line-height:1.4;
+  background:var(--accent); color:var(--auf-accent) }
+#demo-balken a{ color:var(--auf-accent); text-decoration:underline }
 body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 /* --- Spalten aufräumen (L27, E178) ---------------------------------------
@@ -8251,12 +8393,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border:1px solid transparent; border-radius:7px; background:var(--bg);
   color:var(--text-dim); cursor:pointer}
 .sp-sym:hover{background:var(--bg-hover); border-color:var(--line)}
-.sp-sym.an{border-color:var(--accent); background:var(--bg-hover); color:var(--text)}
+.sp-sym.an{border-color:var(--accent-text); background:var(--bg-hover); color:var(--text)}
 .sp-sym-bild{height:42px; display:flex; align-items:center; justify-content:center}
 .sp-sym-bild svg{max-width:38px; max-height:40px; width:auto; height:auto}
 .sp-sym-name{font-size:9.5px; line-height:1.15; text-align:center;
   overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
-.sp-sym.sp-fav .sp-sym-name::before{content:'★ '; color:var(--accent)}
+.sp-sym.sp-fav .sp-sym-name::before{content:'★ '; color:var(--accent-text)}
 
 .sp-buehne{flex:1; overflow:auto; padding:14px; background:var(--bg);
   display:flex; align-items:flex-start; justify-content:center}
@@ -8421,7 +8563,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:20px; background:var(--bg); color:var(--text-dim);
   cursor:pointer; font-size:11.5px; white-space:nowrap; flex:0 0 auto}
 .fh-kapitel button.an{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 /* `min-height:0` ist hier keine Feinheit, sondern der Unterschied zwischen
    „die Fussleiste ist da" und „die Fussleiste steht unter dem Bildschirm".
    Ein Flex-Kind schrumpft von sich aus NICHT unter die Höhe seines Inhalts;
@@ -8437,7 +8579,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    Wichtigste im Kasten — sie steht gross und in der Akzentfarbe, damit man
    sie beim Durchblättern erkennt, ohne zu lesen. */
 .fh-formel header{display:block; padding-right:26px}
-.fh-formel header b{font-size:14px; font-weight:700; color:var(--accent);
+.fh-formel header b{font-size:14px; font-weight:700; color:var(--accent-text);
   font-family:ui-monospace, "SF Mono", Menlo, monospace; letter-spacing:.01em}
 .fh-erkl{margin:0; font-size:12px; color:var(--text-dim); line-height:1.5}
 .fh-groessen{display:flex; flex-wrap:wrap; gap:4px; font-size:11px;
@@ -8452,7 +8594,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border:0; border-radius:6px; background:transparent; cursor:pointer;
   color:var(--text-faint); font-size:13px; line-height:1}
 .fh-stern:hover{background:var(--bg-hover)}
-.fh-stern.an{color:var(--accent)}
+.fh-stern.an{color:var(--accent-text)}
 
 /* ---- Der Rechner in der Formel --------------------------------------- */
 .fh-rechner{border-top:1px dashed var(--line); margin-top:2px; padding-top:8px;
@@ -8463,17 +8605,17 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:16px; background:var(--bg-card); color:var(--text-dim);
   cursor:pointer; font-size:11.5px; font-weight:600}
 .fh-gesucht button.an{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 .fh-felder{display:grid; grid-template-columns:repeat(auto-fit, minmax(112px, 1fr));
   gap:6px}
 .fh-feld{display:flex; align-items:center; gap:5px; border:1px solid var(--line);
   border-radius:8px; padding:4px 7px; background:var(--bg-card)}
 /* Das gesuchte Feld wird NICHT ausgegraut, sondern gestrichelt umrandet:
    ausgegraut sieht aus wie kaputt, gestrichelt wie „das kommt heraus". */
-.fh-feld.gesucht{border-style:dashed; border-color:var(--accent);
+.fh-feld.gesucht{border-style:dashed; border-color:var(--accent-text);
   background:transparent}
 .fh-feld.gesucht input{color:var(--text-faint)}
-.fh-zeichen{font-weight:700; color:var(--accent); min-width:1.6em}
+.fh-zeichen{font-weight:700; color:var(--accent-text); min-width:1.6em}
 .fh-feld input{flex:1; min-width:0; border:0; background:transparent;
   color:var(--text); font-size:12.5px; font-variant-numeric:tabular-nums;
   -moz-appearance:textfield}
@@ -8503,7 +8645,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-kapitel{display:flex; gap:8px; flex-wrap:wrap; font-size:12px;
   font-weight:700; color:var(--text)}
 .bs-kapitel .bs-offen{font-weight:400; color:var(--text-faint)}
-.bs-seitenzahl{font-size:12px; font-weight:700; color:var(--accent);
+.bs-seitenzahl{font-size:12px; font-weight:700; color:var(--accent-text);
   white-space:nowrap; font-variant-numeric:tabular-nums}
 .bs-seitenzahl span{font-weight:400; color:var(--text-faint)}
 
@@ -8559,18 +8701,18 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-formel:hover{background:var(--bg-hover); border-color:var(--line)}
 .bs-formel:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
 .bs-formel.offen{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 /* Gemerkte Formeln bekommen einen Balken UND einen Stern-Punkt: Farbe
    allein wäre eine Information nur über Farbe (§38). */
 .bs-formel.gemerkt{border-left:3px solid var(--accent); padding-left:6px}
-.bs-formel.gemerkt::after{content:' ★'; color:var(--accent); font-size:10px}
+.bs-formel.gemerkt::after{content:' ★'; color:var(--accent-text); font-size:10px}
 
 /* Die Grössenliste steht wie im Heft ZWISCHEN Skizze und Formeln — eine
    Zeile je Grösse: Zeichen, Name, Einheit rechtsbündig gedacht. */
 .bs-groessen{flex:1 1 34%; min-width:0; display:flex; flex-direction:column;
   gap:3px; font-size:11px; color:var(--text-dim); padding-top:2px}
 .bs-groessen span{display:block; line-height:1.5}
-.bs-groessen i{font-style:normal; font-weight:700; color:var(--accent);
+.bs-groessen i{font-style:normal; font-weight:700; color:var(--accent-text);
   display:inline-block; min-width:2.6em}
 .bs-groessen em{font-style:normal; color:var(--text-faint); margin-left:4px}
 
@@ -8629,7 +8771,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .fh-favseiten button{min-width:26px; height:26px; padding:0 5px; font-size:11px;
   border-radius:14px}
 .fh-favseiten button.an{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 .fh-loesen{margin-left:4px}
 
 .fh-leer{flex:1; display:flex; flex-direction:column; align-items:center;
@@ -8731,7 +8873,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   background:var(--bg); color:var(--text-dim); cursor:pointer; font-size:11.5px;
   white-space:nowrap; flex:0 0 auto}
 .ea-art:hover{background:var(--bg-hover); color:var(--text)}
-.ea-art.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.ea-art.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 
 .ea-buehne{flex:1; overflow-y:auto; padding:20px; display:flex;
   justify-content:center; align-items:flex-start}
@@ -8752,7 +8894,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-artname{text-transform:uppercase; letter-spacing:.06em}
 /* Die Schwierigkeit steht als drei Punkte da, von denen einige blass sind —
    eine Zahl „2" beantwortet die Frage „von wie vielen?" nicht. */
-.ea-stufe{color:var(--accent); letter-spacing:2px}
+.ea-stufe{color:var(--accent-text); letter-spacing:2px}
 .ea-stufe-aus{color:var(--line-stark)}
 
 .ea-bild{display:flex; justify-content:center; padding:14px;
@@ -8859,7 +9001,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:9px; background:var(--bg); color:var(--text); cursor:pointer;
   font-size:13px; min-height:44px}
 .ea-eingabe button.prim{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent); font-weight:600}
+  border-color:var(--accent-text); font-weight:600}
 .ea-eingabe button:disabled{opacity:.45; cursor:default}
 
 .ea-aufloesung{padding:12px 14px; border-radius:10px; display:flex;
@@ -8882,7 +9024,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   background:var(--bg); color:var(--text); cursor:pointer; font-size:13px;
   min-height:40px}
 .ea-fuss button.prim{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent); font-weight:600}
+  border-color:var(--accent-text); font-weight:600}
 .ea-fuss button:disabled{opacity:.45; cursor:default}
 
 /* ---- Prüfung ------------------------------------------------------------ */
@@ -8997,7 +9139,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   background:var(--bg-card); color:var(--text-dim); cursor:pointer;
   font-size:12.5px; min-height:36px; font-family:ui-monospace, Menlo, monospace}
 .fd-knopf:hover{background:var(--bg-hover); color:var(--text)}
-.fd-knopf.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.fd-knopf.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .fd-bild{padding:8px}
 .fd-dreieck{color:var(--text)}
 /* Die Felder sind Knöpfe, auch wenn sie wie Buchstaben aussehen — der Zeiger
@@ -9007,7 +9149,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .fd-feld.verdeckt text{text-decoration:line-through}
 .fd-hinweis{margin:0; font-size:13px; color:var(--text-dim); text-align:center;
   max-width:44ch; line-height:1.55}
-.fd-hinweis b{color:var(--accent); font-family:ui-monospace, Menlo, monospace}
+.fd-hinweis b{color:var(--accent-text); font-family:ui-monospace, Menlo, monospace}
 .fd-alle{margin:0; padding:0; list-style:none; display:flex; gap:8px;
   flex-wrap:wrap; justify-content:center}
 .fd-alle li{background:var(--bg-card); padding:5px 11px; border-radius:7px;
@@ -9031,7 +9173,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .sk-regler{display:flex; flex-wrap:wrap; gap:14px; justify-content:center}
 .sk-regler label{display:flex; align-items:center; gap:8px; font-size:12.5px;
   color:var(--text-dim)}
-.sk-regler input[type=range]{width:min(220px, 46vw); accent-color:var(--accent);
+.sk-regler input[type=range]{width:min(220px, 46vw); accent-color:var(--accent-text);
   height:32px}
 .sk-regler input[type=number]{width:80px; padding:8px 9px; border:1px solid var(--line);
   border-radius:8px; background:var(--bg-input); color:var(--text);
@@ -9042,7 +9184,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   gap:8px}
 .sk-zahl{background:var(--bg-card); border-radius:9px; padding:10px 13px;
   display:flex; flex-direction:column; gap:3px}
-.sk-zahl b{font-size:17px; font-variant-numeric:tabular-nums; color:var(--accent)}
+.sk-zahl b{font-size:17px; font-variant-numeric:tabular-nums; color:var(--accent-text)}
 .sk-zahl span{font-size:11.5px; color:var(--text-dim); line-height:1.45}
 
 @media (max-width: 640px){
@@ -9060,7 +9202,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .mz-groesse{display:flex; align-items:center; gap:10px; padding:10px 16px 4px;
   font-size:12.5px; color:var(--text-dim)}
 .mz-groesse label{display:flex; align-items:center; gap:8px; flex:1}
-.mz-groesse input[type=range]{flex:1; accent-color:var(--accent); height:32px}
+.mz-groesse input[type=range]{flex:1; accent-color:var(--accent-text); height:32px}
 .mz-groesse b{color:var(--text); font-variant-numeric:tabular-nums; min-width:5em}
 .mz-zuletzt{display:flex; align-items:center; gap:10px; padding:6px 16px 0;
   font-size:11px; color:var(--text-faint); text-transform:uppercase;

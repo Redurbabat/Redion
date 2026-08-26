@@ -51,7 +51,19 @@ const pruef = (n: any, ist: any, soll: any) => {
   const zurueck = await p.evaluate(() => {
     Aussehen.setzen({ schema: 'standard', akzent: '' });
     const w = getComputedStyle(document.documentElement);
-    return { bg: w.getPropertyValue('--bg').trim(), akzent: w.getPropertyValue('--accent').trim() };
+    /* Der eigentliche Gegenstand der Prüfung: liegt auf `<html>` noch ein
+       eigener Wert? Wenn ja, gilt er für BEIDE Modi und die Trennung ist
+       hin. Wenn nein, entscheidet das Stilblatt — und das ist die Absicht. */
+    const eigen = document.documentElement.style.getPropertyValue('--accent').trim();
+    document.documentElement.dataset.theme = 'light';
+    const imHellen = getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent').trim();
+    document.documentElement.dataset.theme = 'dark';
+    const imDunklen = getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent').trim();
+    return { bg: w.getPropertyValue('--bg').trim(),
+             akzent: w.getPropertyValue('--accent').trim(),
+             eigen, imHellen, imDunklen };
   });
   /* DIE WERTE VON NOCTURNE (E44), nicht mehr Notions #191919/#2eaadc.
      Und sie kommen jetzt aus dem STILBLATT, nicht aus `SCHEMATA`: das
@@ -60,7 +72,19 @@ const pruef = (n: any, ist: any, soll: any) => {
      beide überschrieben und war genau der Grund, warum die neue Farbe
      zwar im Blatt stand, aber nie auf dem Bildschirm. */
   pruef('Standard hat wieder seinen Hintergrund', zurueck.bg, '#141414');
-  pruef('Standard hat wieder seinen Akzent',      zurueck.akzent, '#f97316');
+  /* HIER STAND EINE ZAHL — `#f97316`, der Akzent von damals. Sie ging kaputt,
+     als der Akzent violett wurde (E199), und zwar ohne dass irgendetwas
+     falsch war: die Prüfung wiederholte den Wert des Stilblatts, statt zu
+     prüfen, was der Kommentar darüber verspricht. Eine Prüfung, die eine
+     Farbe abschreibt, meldet jede Farbänderung als Fehler und die eine
+     Sache, um die es geht, gar nicht.
+     Um die geht es: nach dem Zurücksetzen liegt KEIN eigener Wert mehr auf
+     `<html>`, und deshalb dürfen Hell- und Dunkelmodus verschiedene Akzente
+     haben. Läge einer, wären beide gleich — und genau das war der Fehler,
+     den E44 gefunden hat. */
+  pruef('Standard lässt dem Stilblatt den Akzent', zurueck.eigen, '');
+  pruef('Und damit hat jeder Modus seinen eigenen',
+        zurueck.imHellen !== zurueck.imDunklen && !!zurueck.imHellen, true);
 
   /* Eigene Akzentfarbe */
   const akzent = await p.evaluate(() => {
@@ -196,11 +220,13 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.waitForTimeout(300);
   const reset = await p.evaluate(() => ({
     suche: Aussehen.kuerzelVon('suche'),
-    akzent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+    eigen: document.documentElement.style.getPropertyValue('--accent').trim(),
     groesse: document.body?.style.fontSize
   }));
   pruef('Kürzel zurückgesetzt', reset.suche, 'Ctrl+K');
-  pruef('Akzent zurückgesetzt', reset.akzent, '#f97316');   /* Nocturne, E44 */
+  /* Auch hier keine Zahl mehr, sondern die Frage dahinter: ist der eigene
+     Wert weg? Siehe oben. */
+  pruef('Akzent zurückgesetzt', reset.eigen, '');
   pruef('Grösse zurückgesetzt', reset.groesse, '100%');
 
   /* --- Wirkt ein umbelegtes Kürzel auch wirklich? ---------------------- */

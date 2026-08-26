@@ -106,7 +106,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   display:flex; align-items:center; gap:5px;
 }
 .top-btn:hover{background:var(--bg-hover); color:var(--text)}
-.top-btn.on{color:var(--accent)}
+.top-btn.on{color:var(--accent-text)}
 
 #scroll{flex:1; overflow-y:auto}
 #page{max-width:900px; margin:0 auto; padding:0 96px 40vh}
@@ -170,7 +170,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .b-todo .mk{flex:0 0 24px; padding:5px 0; display:flex; justify-content:center}
 .b-todo input{
-  width:16px; height:16px; accent-color:var(--accent); cursor:pointer; margin:0;
+  width:16px; height:16px; accent-color:var(--accent-text); cursor:pointer; margin:0;
 }
 .b-todo.done .ct{color:var(--text-dim); text-decoration:line-through}
 .b-toggle .mk{

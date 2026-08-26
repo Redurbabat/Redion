@@ -34,6 +34,11 @@ html[data-theme="light"]{
   --text-dim:  #66655f;
   --text-faint:#82817e;
   --shadow:    0 8px 28px rgba(15,15,15,.12);
+  --bg-schwebend: rgba(255,255,255,.74);
+  /* Auf hellem Grund ist der Innenrand dunkel, nicht weiss — sonst
+     verschwindet er auf der eigenen Fläche. */
+  --glas-rand:    inset 0 0 0 1px rgba(15,15,15,.10);
+  --schatten-schwebend: 0 12px 40px rgba(15,15,15,.16);
 
   /* ------------------------------------------------------------------------
    * NOCTURNE IM HELLMODUS (E44)
@@ -57,13 +62,30 @@ html[data-theme="light"]{
    * Zahl für beide Modi zu nehmen ist der häufigste Fehler bei dunkel
    * entworfenen Oberflächen.
    * --------------------------------------------------------------------- */
+  /* Die Fläche einer AKTIVEN Zeile in der Navigation. Im Dunkelmodus ein
+     Schleier aus Licht, im Hellmodus einer aus Schatten — dieselbe Marke,
+     entgegengesetzte Richtung. Sie fehlte hier, und damit wäre im
+     Hellmodus Weiss auf Weiss herausgekommen: die aktive Zeile hätte
+     nicht anders ausgesehen als die anderen. */
+  --bg-active:   rgba(15,15,15,.055);
   --bg-tief:     #f4f4f2;
   --bg-press:    #e6e6e4;
   --line-stark:  rgba(15,15,15,.22);
-  --accent:      #c2410c;
-  /* Schrift auf der Akzentfläche. Im Hellmodus ist der Akzent dunkel
-     (#c2410c) — Weiss darauf hat 5,9 zu 1. */
+  /* Derselbe Ton wie im Dunkelmodus, aber NICHT derselbe Wert (E199).
+     #6D4AFF auf Weiss hätte als Fläche 3,57 — genug für ein Bedienelement,
+     zu wenig für die ruhige Wirkung, die eine helle Oberfläche braucht.
+     #7C3AED hat 5,70, und Weiss darauf ebenfalls 5,70. */
+  --accent:      #7c3aed;
   --auf-accent:  #ffffff;
+  /* Beim Überfahren DUNKLER — die Gegenrichtung zum Dunkelmodus, aus
+     demselben Grund: auf weissem Grund liest sich „mehr Farbe" als aktiv.
+     Gemessen 7,10 für Fläche und Weiss darauf. */
+  --accent-hover: #6d28d9;
+  /* Im Hellmodus reicht derselbe Wert für Fläche und Tinte: 5,70 auf
+     Weiss, 5,31 auf der Karte. Dass er hier zusammenfällt und im
+     Dunkelmodus nicht, ist genau der Grund, warum es zwei Marken sind. */
+  --accent-text: #7c3aed;
+  --accent-schwach: rgba(124,58,237,.12);
   --accent-warm: #ea580c;
   --gefahr:      #dc2626;
   --erfolg:      #15803d;

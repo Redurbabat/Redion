@@ -46,25 +46,57 @@
   --text-dim:      #a7a7a7;   /* 7.7:1 — Fliesstext erlaubt                */
   --text-faint:    #737373;   /* 3.9:1 — nur Beiwerk und Symbole           */
 
-  /* DER AKZENT IST ORANGE, NICHT ROT, und das ist keine Geschmacksfrage.
-     Die Vorgabe nennt #EF4444 gleichzeitig als Akzent UND als Gefahr —
-     dann sieht „Sichern" aus wie „Löschen". Und gemessen fällt Rot auf
-     einer Karte auf 4.33:1, also unter die Grenze für Text; Orange liegt
-     mit 5.8:1 überall darüber. Rot bleibt deshalb, was es sein muss: das
-     Zeichen für etwas Unwiderrufliches. */
-  --accent:        #f97316;
-  /* SCHRIFT AUF DER AKZENTFLÄCHE (E142). Im Dunkelmodus ist der Akzent
-     HELL (#f97316). Weiss darauf hat gemessen 2,80 zu 1 — unter der
-     WCAG-Grenze von 3,0 für Bedienelemente, und man sieht es: der Knopf
-     „Simulation starten" verschwamm mit seiner eigenen Fläche.
-     Dunkel auf demselben Orange sind 6,6 zu 1. */
-  --auf-accent:  #1a1a1a;
+  /* DER AKZENT IST VIOLETT (E199). Bis August 2026 war er orange (E44) —
+     gewählt, weil die damalige Vorgabe Rot gleichzeitig als Akzent UND als
+     Gefahr nannte, und dann sieht „Sichern" aus wie „Löschen". Der Grund
+     galt der Farbe Rot und gilt weiter: Rot bleibt das Zeichen für etwas
+     Unwiderrufliches. Nur der Akzent selbst ist ein anderer geworden.
+
+     Der Auftrag nennt #7C5CFF. Gemessen hat Weiss darauf 4,35 zu 1 und
+     liegt damit unter der Grenze von 4,5, die eine 13-px-Beschriftung
+     braucht — dieselbe Sorte Fehler, die E142 beim Orange fand. Der Ton
+     bleibt, der Wert geht einen Schritt tiefer:
+
+         #7C5CFF   Fläche 4,24   Weiss darauf 4,35   ✗ knapp darunter
+         #6D4AFF   Fläche 3,57   Weiss darauf 5,15   ✓
+
+     Fläche 3,57 reicht: für ein Bedienelement verlangt WCAG 3,0. */
+  --accent:        #6d4aff;
+  /* SCHRIFT AUF DER AKZENTFLÄCHE (E142). Beim Orange musste sie dunkel
+     sein, weil Weiss darauf nur 2,80 zu 1 hatte. Auf dem Violett sind es
+     5,15 — also Weiss, und die Regel dahinter bleibt dieselbe: nachmessen,
+     nicht annehmen. */
+  --auf-accent:  #ffffff;
+  /* Beim Überfahren HELLER, nicht dunkler: auf schwarzem Grund liest sich
+     „mehr Licht" als „aktiv". Gemessen 3,81 als Fläche, 4,83 für Weiss
+     darauf — beides über der Grenze. */
+  --accent-hover:  #7550ff;
+  /* DER AKZENT HAT ZWEI ROLLEN, UND SIE BRAUCHEN ZWEI WERTE (E199).
+     Er ist einmal FLÄCHE (der Knopf) und einmal TINTE (Text, Verweise,
+     Auswahlumrisse). Eine Fläche muss 3,0 erreichen, Text 4,5 — und zwar
+     auf dem Grund UND auf einer Karte.
+
+     Bis August 2026 fiel das nicht auf, weil Orange beides konnte. Violett
+     kann es nicht: #6D4AFF als Text hat auf der Karte 3,16. Gemessen für
+     die Tinte:
+
+         #8B6DFF   Grund 5,03   Karte 4,45   ✗ auf der Karte zu knapp
+         #9B87FF   Grund 6,41   Karte 5,67   ✓
+
+     122 Stellen im Stilblatt schrieben `color:var(--accent-text)`. Sie zeigen
+     jetzt auf die Tinte. */
+  --accent-text:   #9b87ff;
+  --accent-schwach: rgba(109,74,255,.16);
   --accent-warm:   #fb923c;
   --gefahr:        #ef4444;
   --erfolg:        #22c55e;
   --info:          #38bdf8;
   --warnung:       #f59e0b;
   --shadow:        0 8px 28px rgba(0,0,0,.45);
+  /* Schwebende Flächen (§16): durchscheinend, aber nie so weit, dass die
+     Schrift darauf um ihren Grund kämpfen muss. */
+  --bg-schwebend:  rgba(28,28,32,.72);
+  --schatten-schwebend: 0 12px 40px rgba(0,0,0,.55);
 
   /* Die zehn Notion-Textfarben */
   --c-default: #e9e9e7;
