@@ -70,7 +70,7 @@ const farben = async (hell: boolean) => {
     };
     const werte: Record<string, [number, number, number]> = {};
     ['--bg', '--bg-card', '--text', '--text-dim', '--text-faint',
-     '--accent', '--gefahr', '--erfolg', '--info', '--warnung'].forEach(m => { werte[m] = lies(m); });
+     '--accent', '--accent-text', '--gefahr', '--erfolg', '--info', '--warnung'].forEach(m => { werte[m] = lies(m); });
     probe.remove();
     return werte;
   });
@@ -96,7 +96,16 @@ for (const [name, hell] of [['Dunkel', false], ['Hell', true]] as [string, boole
   /* `--text-faint` ist Beiwerk — Zeitstempel, Zähler. 3:1 ist die Grenze
      für Grosstext und Symbole, und mehr behauptet Redion davon auch nicht. */
   pruefe('--text-faint', 3, 'ist Beiwerk');
-  pruefe('--accent', 4.5, 'trägt Text und Knöpfe');
+  /* DER AKZENT HAT ZWEI ROLLEN (E199), und sie haben zwei Grenzen.
+     Hier stand eine Zeile für beides: `--accent` musste 4,5 erreichen, weil
+     er damals sowohl den Knopf färbte als auch den Text darauf. Das ging
+     nur, solange er orange war. Seit er violett ist, geht es nicht mehr —
+     und das ist kein Rückschritt, sondern der sichtbar gewordene Umstand,
+     dass eine Fläche und eine Schrift nicht dieselbe Farbe brauchen.
+     Eine Fläche ist ein Bedienelement: WCAG verlangt 3,0.
+     Eine Schrift ist eine Schrift: WCAG verlangt 4,5. */
+  pruefe('--accent', 3, 'ist als Fläche erkennbar');
+  pruefe('--accent-text', 4.5, 'trägt Text und Verweise');
   pruefe('--gefahr', 4, 'ist als Warnung lesbar');
   pruefe('--erfolg', 4, 'ist lesbar');
   pruefe('--info', 4, 'ist lesbar');

@@ -359,20 +359,34 @@ const Kopfleiste = (() => {
         c.querySelectorAll('a').forEach(a => a.addEventListener('click', () => oeffne(a.dataset['id'])));
         /* Stern und Kommentarzähler in der Kopfzeile */
         const p = Store.getBlock(seiteId);
+        /* HIER STAND `textContent = '★'` — UND DAS LÖSCHTE DAS ZEICHEN (E200).
+           Die drei Knöpfe der Kopfleiste tragen seit E200 ein SVG aus dem
+           Symbolregister. `textContent` ersetzt den ganzen Inhalt eines
+           Elements, also auch dieses SVG. Beim Start sahen die Knöpfe richtig
+           aus, und sobald eine Seite geöffnet wurde, standen wieder Emoji da —
+           ein gelbes Schloss mitten in einer Reihe grauer Striche.
+           Der Zustand wird jetzt über das ZEICHEN gesagt, nicht über zwei
+           verschiedene Bildchen: `star` und `star` mit Klasse `on`, `lock` und
+           `lockOpen`. */
+        const zeichen = (id) => (typeof Register !== 'undefined' && Register.symbole)
+            ? Register.symbole.alsSvg(id) : '';
         const stern = document.getElementById('btn-fav');
         if (stern && p) {
-            stern.textContent = p.favorite ? '★' : '☆';
+            stern.innerHTML = zeichen('star');
             stern.classList.toggle('on', !!p.favorite);
         }
         const kb = document.getElementById('btn-komm');
         if (kb && p) {
             const n = Kommentare.offeneAnzahl(p.id);
-            kb.textContent = n ? '💬 ' + n : '💬';
+            /* Die Zahl steht NEBEN dem Zeichen, nicht darin. `esc` ist Pflicht,
+               auch wenn es eine Zahl ist — die Regel gilt für die Stelle, nicht
+               für den heutigen Wert (§19). */
+            kb.innerHTML = zeichen('chat') + (n ? '<span class="zaehler">' + esc(n) + '</span>' : '');
         }
         /* Schloss zeigt den Zustand, nicht nur die Aktion */
         const schloss = document.getElementById('btn-lock');
         if (schloss && p) {
-            schloss.textContent = p.gesperrt ? '🔒' : '🔓';
+            schloss.innerHTML = zeichen(p.gesperrt ? 'lock' : 'lockOpen');
             schloss.classList.toggle('on', !!p.gesperrt);
             schloss.title = p.gesperrt ? 'Seite ist gesperrt — zum Entsperren klicken'
                 : 'Seite gegen Bearbeiten sperren';

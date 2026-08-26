@@ -102,13 +102,13 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
   font-family:inherit; width:100%;
 }
 .form-feld textarea{resize:vertical; min-height:70px; line-height:1.5}
-.form-feld input[type="checkbox"]{width:17px; height:17px; accent-color:var(--accent)}
+.form-feld input[type="checkbox"]{width:17px; height:17px; accent-color:var(--accent-text)}
 .form-feld input[type="file"]{font-size:13px; color:var(--text-dim)}
-.form-feld input:focus, .form-feld select:focus, .form-feld textarea:focus{border-color:var(--accent)}
+.form-feld input:focus, .form-feld select:focus, .form-feld textarea:focus{border-color:var(--accent-text)}
 /* Mehrfachauswahl im Formular */
 .form-mehr{display:flex; flex-wrap:wrap; gap:7px}
 .form-mehr label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:13px}
-.form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent)}
+.form-mehr input[type="checkbox"]{width:14px; height:14px; accent-color:var(--accent-text)}
 .form-fuss{display:flex; gap:10px; align-items:center; margin-top:18px}
 .form-fuss .prim{background:var(--accent); color:var(--auf-accent); padding:9px 20px; border-radius:7px; font-weight:500}
 .form-fuss button:not(.prim){font-size:13px; color:var(--text-dim); padding:6px 10px; border-radius:6px; border:1px solid var(--line)}

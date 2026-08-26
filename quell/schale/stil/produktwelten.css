@@ -41,7 +41,7 @@ body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);col
   background:transparent;color:var(--text);text-align:left;cursor:pointer
 }
 .produkt-bereiche-liste>button:hover{background:var(--bg-hover)}
-.produkt-bereiche-liste>button[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.produkt-bereiche-liste>button[aria-checked="true"]{border-color:var(--accent-text);background:var(--accent-soft)}
 .produkt-bereiche-stand{font-size:11.5px;color:var(--text-dim);white-space:nowrap}
 .produkt-bereiche-leer{padding:26px 16px;text-align:center;color:var(--text-dim);line-height:1.55}
 .produkt-bereiche-fuss{display:flex;gap:7px;padding:10px 14px 14px;border-top:1px solid var(--line)}

@@ -12,15 +12,19 @@
  * ==========================================================================*/
 const Lernwelt = (() => {
     const ANSICHTEN = [
-        { id: 'heute', icon: '☀️', name: 'Heute' },
-        { id: 'lernen', icon: '🎴', name: 'Lernen' },
-        { id: 'lernweg', icon: '🧭', name: 'Lernpfad' },
-        { id: 'fehler', icon: '🧩', name: 'Meine Fehler' },
-        { id: 'pruefungen', icon: '📝', name: 'Prüfungen' },
-        { id: 'schule', icon: '🎓', name: 'Schule / Ausbildung' },
-        { id: 'uni', icon: '🏛️', name: 'Uni' },
-        { id: 'arbeit', icon: '💼', name: 'Arbeit' },
-        { id: 'fortschritt', icon: '📈', name: 'Fortschritt' }
+        /* `icon` trägt seit E200 den NAMEN eines Zeichens aus `Register.symbole`,
+           nicht mehr ein Emoji. Der Feldname bleibt, weil daran Aufrufer hängen
+           (`Lernwelt.ansichten`) — und weil er weiterhin dasselbe bedeutet:
+           das Zeichen dieser Ansicht. */
+        { id: 'heute', icon: 'today', name: 'Heute' },
+        { id: 'lernen', icon: 'cards', name: 'Lernen' },
+        { id: 'lernweg', icon: 'compass', name: 'Lernpfad' },
+        { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler' },
+        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
+        { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung' },
+        { id: 'uni', icon: 'building', name: 'Uni' },
+        { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
+        { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' }
     ];
     const zustand = {
         root: null,
@@ -875,9 +879,12 @@ const Lernwelt = (() => {
             optionen.map(item => '<option value="' + esc(item.id) + '"' +
                 (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
             '</select></label></header>' +
+            /* Die Zeichen werden nach dem Einsetzen gefüllt — siehe `fuelleZeichen`
+               unten. Hier steht nur die Stelle. */
             '<nav class="lw-nav" aria-label="Lernen und Alltag">' + ANSICHTEN.map(item => '<button type="button" data-lw-nav="' + item.id + '"' +
             (zustand.ansicht === item.id ? ' aria-current="page" class="is-active"' : '') + '>' +
-            '<span aria-hidden="true">' + item.icon + '</span><span>' + esc(item.name) + '</span></button>').join('') +
+            '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) +
+            '</span></button>').join('') +
             '</nav>';
     };
     const heuteAnsicht = () => {
@@ -1679,6 +1686,12 @@ const Lernwelt = (() => {
         root.dataset.lwView = zustand.ansicht;
         root.innerHTML = kopf() + '<main class="lw-main" id="lernwelt-inhalt" tabindex="-1">' +
             ansichtsInhalt() + '</main>';
+        /* Die Zeichen der Reiter füllen (E200). Ohne das bleiben die Stellen
+           leer, und das sieht aus wie ein Ladefehler — die Namen stehen ja
+           daneben. Nur `root`, nicht das ganze Dokument (§73). */
+        if (typeof Register !== 'undefined' && Register.symbole) {
+            Register.symbole.fuelle(root);
+        }
         if (zustand.simulation && !zustand.simulation.fertig)
             timerStarten();
         else

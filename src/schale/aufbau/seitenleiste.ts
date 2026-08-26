@@ -372,15 +372,18 @@ const Seitenleiste = (() => {
     const wz = document.createElement('div');
     wz.className = 'wz-block';
     wz.innerHTML = [
-      ['journal', '📅', 'Journal', 'Tageseintrag — Strg Shift J'],
-      ['memos',   '⚡', 'Schnellnotizen', 'Kurze Gedanken — Strg Shift M'],
-      ['vorlagen','🧩', 'Vorlagen', 'Fertige Aufbauten und eigene Vorlagen'],
-      ['graph',   '🕸', 'Graph', 'Wie alles zusammenhängt — Strg Shift G'],
-      ['tags',    '🏷', 'Schlagwörter', 'Alle #Schlagwörter — Strg Shift T'],
-      ['lernen',  '🎴', 'Karteikarten', 'Wiederholen nach Plan'],
-      ['stand',   '✅', 'Umsetzungsstand', 'Alle 16 Teile der Notion-Doku, Punkt für Punkt']
+      /* ZEICHEN STATT EMOJI (E200). Die zweite Spalte ist der Name im
+         Symbolregister, nicht mehr ein Bildzeichen. Warum, steht in
+         `register/symbole.ts`. */
+      ['journal', 'calendar',    'Journal', 'Tageseintrag — Strg Shift J'],
+      ['memos',   'bolt',        'Schnellnotizen', 'Kurze Gedanken — Strg Shift M'],
+      ['vorlagen','puzzle',      'Vorlagen', 'Fertige Aufbauten und eigene Vorlagen'],
+      ['graph',   'graph',       'Graph', 'Wie alles zusammenhängt — Strg Shift G'],
+      ['tags',    'tag',         'Schlagwörter', 'Alle #Schlagwörter — Strg Shift T'],
+      ['lernen',  'cards',       'Karteikarten', 'Wiederholen nach Plan'],
+      ['stand',   'checkCircle', 'Umsetzungsstand', 'Alle 16 Teile der Notion-Doku, Punkt für Punkt']
     ].map(([a, i, n, t]) =>
-      `<button class="side-item" data-wz="${a}" title="${t}"><span>${i}</span><span>${n}</span>` +
+      `<button class="side-item" data-wz="${a}" title="${t}"><span data-sym="${i}"></span><span>${n}</span>` +
       (a === 'lernen' ? '<span class="k" id="lz"></span>' : '') + '</button>').join('');
     wz.addEventListener('click', e => {
       const b = elVon(e)?.closest<HTMLElement>('[data-wz]');
@@ -592,6 +595,16 @@ const Seitenleiste = (() => {
     abschnitteOrdnen(baum);
     /* Erweiterungsknöpfe wieder anhängen — zeichneBaum leert den Baum */
     if (typeof Erweiterung !== 'undefined' && Erweiterung.knoepfeAnhaengen) Erweiterung.knoepfeAnhaengen();
+    /* UND ZULETZT DIE ZEICHEN (E200). `zeichneBaum` leert den Baum und baut
+       ihn neu; die `<span data-sym>` darin sind danach wieder leer. Der Ruf
+       beim Start füllt nur, was zu diesem Zeitpunkt schon dasteht — alles
+       Spätere muss sich selbst darum kümmern.
+       Nur der Baum, nicht das ganze Dokument: was ausserhalb liegt, ist
+       schon gefüllt, und ein zweiter Durchlauf darüber kostet bei jedem
+       Neuzeichnen der Seitenleiste Zeit für nichts (§73). */
+    if (typeof Register !== 'undefined' && (Register as any).symbole) {
+      (Register as any).symbole.fuelle(baum);
+    }
   };
 
   /**

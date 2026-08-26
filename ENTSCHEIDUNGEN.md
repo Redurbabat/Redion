@@ -14054,3 +14054,154 @@ auf, welche es gibt. Eine bekannte Lücke ist besser als ein stiller Fehler
 
 Sechzehn Abschnitte haben weder Formel noch Tabelle noch Legende. Alle
 sechzehn sind Bildabschnitte, und alle sechzehn haben ihr Bild.
+
+## E200 · Zeichen statt Emoji — die Oberfläche gehört Redion
+
+**26. August 2026**
+
+Der Gestaltungs-Auftrag sagt in §71: „Professionelle Hauptoberfläche nicht
+mit Emojis bauen. Emoji nur wenn Nutzerdaten selbst Emoji-Icons enthalten."
+
+Gezählt standen 1794 Emoji in 82 Dateien. Die auffälligsten neunzehn davon
+trug die Seitenleiste: 🔍 ⌘ ☀️ 🎓 🧱 📚 ☑ 📥 ✚ ⭱ 🗑 ✨ ✎ 📅 ⚡ 🧩 🕸 🏷 🎴.
+
+**Warum das mehr ist als Geschmack.**
+
+  · Emoji sind BILDER, keine Zeichen. Sie tragen ihre eigene Farbe, ihre
+    eigene Strichstärke, ihre eigene Anmutung. Neben einer Schrift in
+    `--text-dim` sieht ein farbiges 🎓 aus wie ein Aufkleber.
+  · Sie sehen auf jedem System anders aus. Dasselbe ☑ ist auf Windows
+    schmal und grau, auf einem Apfelgerät blau und rund. Eine Oberfläche,
+    die auf zwei Rechnern verschieden aussieht, ist keine.
+  · Sie lassen sich nicht ausrichten. Ein 🔍 sitzt tiefer als ein ⌘, und
+    kein Abstand der Welt bringt beide auf eine Linie.
+
+**Was jetzt gilt.**
+
+`register/symbole.ts` — 45 Zeichen als Striche in `currentColor`, 24 × 24,
+Strichstärke 1,7, runde Enden. Sie nehmen die Farbe ihrer Zeile an, sie
+haben überall dieselbe Stärke, sie sitzen auf demselben Raster.
+
+`index.html` schreibt nur die Stelle — `<span data-sym="search">` —, und
+`Register.symbole.fuelle(wurzel)` setzt das Zeichen ein. Ein unbekannter
+Name lässt die Stelle LEER: ein Fragezeichen oder ein Kästchen sähe aus wie
+ein Zeichen und wäre keins. Der Prüflauf sucht nach leeren Stellen; das
+Auge übersieht sie.
+
+**Die Grenze, und warum sie namentlich gezogen ist.**
+
+Geprüft wird nur die SCHALE — Seitenleiste, Kopfleiste, Reiter —, und zwar
+Ort für Ort. Ein pauschales „nirgends ein Emoji" wäre schneller geschrieben
+und falsch: es würde jede Seite rot machen, die jemand mit 🧳 benannt hat.
+Das Zeichen einer Seite gehört dem Menschen, der sie angelegt hat.
+
+**Drei Stellen, die dabei auffielen.**
+
+  · `kopfleiste.ts` schrieb `stern.textContent = '★'`, `kb.textContent =
+    '💬 ' + n` und `schloss.textContent = '🔒'`. `textContent` ersetzt den
+    GANZEN Inhalt eines Elements — also auch das SVG, das kurz zuvor
+    eingesetzt worden war. Beim Start sahen die Knöpfe richtig aus, und
+    sobald eine Seite geöffnet wurde, stand wieder ein gelbes Schloss
+    mitten in einer Reihe grauer Striche.
+  · `zeichneBaum` leert die Seitenleiste und baut sie neu. Der Ruf beim
+    Start füllt nur, was zu diesem Zeitpunkt dasteht — die Werkzeuge-Gruppe
+    kommt danach. Sie füllt sich jetzt selbst.
+  · Der Kommentarzähler stand als Text IM Knopf („💬 3"). Jetzt steht er
+    neben dem Zeichen, mit Tabellenziffern: sonst wackelt die Kopfleiste,
+    wenn aus 1 eine 8 wird.
+
+**Was bewusst Emoji bleibt.**
+
+Vorlagen, Seitenzeichen, Blockmenüs, die Meldung „🎴 3 Karteikarten sind
+fällig". Das erste sind Nutzerdaten. Das letzte ist eine Meldung an einen
+Menschen, kein Bedienelement — und es steht in LUECKEN, nicht hier, weil
+ich es für einen Grenzfall halte und nicht für entschieden.
+
+**Der Wächter.** test245 §4, mit zwei Gegenbeweisen: ein Emoji zurück in
+die Seitenleiste macht ihn rot, ein unbekannter Zeichenname ebenso. Und
+davor steht eine Gegenprobe auf die Messung selbst — fände der Ausdruck
+keine Knöpfe, wäre er ewig grün.
+
+## E201 · Ein Knopf-System, und die Suche in die Mitte
+
+**26. August 2026**
+
+§14 und §79 des Auftrags verlangen EIN Bedienelement-System. Redion hatte
+schon Klassen — `.top-btn`, `.side-item`, `.sr`, `.ws-btn`, `.icon-btn` —,
+jede mit eigener Höhe, eigenem Radius, eigener Übergangszeit.
+
+Ein zweites System danebenzustellen hätte die Zahl der Systeme erhöht und
+nichts gelöst. Also andersherum: die BESTEHENDEN Klassen bekommen
+gemeinsames Verhalten, und wer eine neue Fläche baut, schreibt `.rb` dazu
+und erbt dasselbe.
+
+**Der Druckpunkt** ist 0,976 — nicht 0,95 und nicht 0,99. Bei 0,99 sieht man
+nichts, bei 0,95 springt der Knopf. Der Wert lässt einen 34 Punkte hohen
+Knopf um genau einen Punkt schrumpfen: sichtbar, aber nicht als Bewegung,
+sondern als Widerstand. Und er hängt an `:active`, nicht an `:hover` — am
+Telefon gibt es kein Überfahren, und dort ist das die einzige Rückmeldung,
+dass der Finger angekommen ist.
+
+**Die Suche steht jetzt in der Kopfleiste.** Sie war eine Zeile in der
+Seitenleiste. Das Wichtigste einer Wissens-App gehört dorthin, wo das Auge
+zuerst hinsieht — und es muss dort auch AUSSEHEN wie ein Feld.
+
+Es ist bewusst ein Knopf und kein `<input>`: getippt wird in der
+Suchüberlagerung, die Strg+P ohnehin öffnet. Ein Feld, das beim ersten
+Zeichen durch ein anderes Feld ersetzt wird, verliert den Anschlag.
+
+**Und dabei die lehrreichste Stelle dieses Passes.**
+
+Der Sucher klebte zuerst am Seitentitel. Ich schrieb die Berichtigung, den
+Kommentar dazu („zwei gleiche Federn") und einen Prüfpunkt „steht ungefähr
+in der Mitte, 90 Punkte Nachsicht". Alles grün.
+
+Dann der Gegenbeweis: die Berichtigung wieder herausgenommen — und der
+Prüfpunkt blieb GRÜN. Er liess genau den Fehler durch, den er verhindern
+sollte.
+
+Nachgemessen mit einem kurzen und einem 47 Zeichen langen Titel:
+
+    ohne Feder an der Krume   1366 px: Sucher bei 559 und bei 751
+                                        → 192 Punkte Unterschied
+                              1920 px: bis zu 339 Punkte aus der Mitte
+    mit Feder                 beides:  44 Punkte aus der Mitte, immer
+                                        dieselben 44
+
+Der Fehler ist also nicht „steht nicht mittig", sondern „WANDERT mit dem
+Titel". Gemessen wird jetzt die Bewegung, und der Unterschied ist nicht
+knapp, sondern 192 gegen 0.
+
+Zwei Dinge waren dabei zusätzlich falsch, und beide standen in meinem
+eigenen Kommentar: die Änderung am `.spacer` hat nichts bewirkt (er ist
+leer, seine Basis ist ohnehin null), und die 44 Punkte sind kein Rest,
+sondern richtig — rechts stehen acht Knöpfe, links zwei; genau mittig zum
+Fenster stünde der Sucher näher an den achten als an den zweien.
+
+**Die Seitenleiste ist 240 statt 260** (§5: 220–250). Auf 1366 × 768 sind
+zwanzig Punkte keine Kosmetik (§68). Das brach zwei Dinge, die vorher
+gerade so passten und die eine Messung sofort zeigte: „Heute" stand als
+„He…" in der aktiven Pille, und „Neuer Chat" brach in drei Zeilen um und
+machte den Knopf 60 statt 39 Punkte hoch. Beides berichtigt — die vier
+stummen Reiter geben 24 Punkte ab, der aktive nimmt sie.
+
+**Die Kopfleiste ist 54 statt 45** (§8: 52–58). Nicht weil höher besser
+wäre, sondern weil ein 36 Punkte hohes Suchfeld bei 45 Punkten oben und
+unten je viereinhalb übrig lässt und eingeklemmt aussieht.
+
+**Was aus Amdion kam.** Redur wies auf `Redurbabat/Amdion` als „Kopie von
+Redion" hin. Gezählt: Amdion 49 Dateien, 1 508 Zeilen TypeScript, 328
+Zeilen CSS, 3 Prüfungen — Redion 633 Dateien, 96 883 Zeilen, 9 149 Zeilen
+CSS, 210 Prüfungen. Gemeinsame Dateinamen sind `README.md`, `index.html`,
+`package.json`. Es ist keine Kopie, sondern ein eigener, viel kleinerer
+Neubau; seine eigene Doku nennt als nächste Schritte, PDF/Ink, Datenbanken,
+Formelmaschine und SM-2 AUS REDION zu übernehmen.
+
+Brauchbar waren daraus Muster, kein Code: die dreispaltige Schale als
+Gitter mit Marken für die Spaltenbreiten, die Kopfleiste als Dreiteilung
+mit der Suche in der Mitte, das Suchfeld mit Kürzelmarke, der Druckpunkt
+`scale(.976)`, und die aktive Zeile als linker Akzentbalken statt gefüllter
+Fläche. Seine Farben nicht: `#7C5CFF` fällt gemessen durch (E199). Und
+seine Handy-Lösung nicht: gestauchte Desktopansicht per Umbruchpunkt ist
+genau das, was §55 verbietet, und Redion hat dort längst einen eigenen
+Modus.

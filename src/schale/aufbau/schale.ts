@@ -2336,6 +2336,17 @@ const App = (() => {
   };
 
   const start = async () => {
+    /* DIE ZEICHEN DER OBERFLÄCHE ZUERST (E200).
+       `index.html` schreibt nur die Stellen — `<span data-sym="search">` —,
+       und hier werden sie gefüllt. Das steht ganz vorn, weil sonst zwischen
+       Aufbau und Füllung ein Bild mit leeren Kästchen stünde; auf einem
+       langsamen Gerät sieht man das.
+       Fehlt das Register, bleibt es bei leeren Stellen: die Zeilen tragen
+       ihren Namen als Text, also fehlt Bedeutung, nicht Bedienbarkeit. */
+    if (typeof Register !== 'undefined' && (Register as any).symbole) {
+      (Register as any).symbole.fuelle(document);
+    }
+
     /* VORFÜHRMODUS: EIN BALKEN, DER NICHT ZU ÜBERSEHEN IST (L31, E177).
        `?demo` öffnet eine eigene Ablage (`notizen-demo`) — die echten Notizen
        liegen unberührt daneben. Genau das muss aber dastehen: eine App, die
@@ -2820,6 +2831,11 @@ const App = (() => {
     an('hl-mehr', () => { PWA.schubladeZu && PWA.schubladeZu();
                           Seitenleiste.reiter('mehr'); Ansichten.mehr(); handyLeiste(); });
     an('btn-suche-handy', () => suche());
+    /* Der Sucher in der Mitte der Kopfleiste (E201). Er öffnet dieselbe
+       Überlagerung wie Strg+P und die Zeile in der Seitenleiste — drei
+       Wege, ein Ziel. Drei Wege zu DREI verschiedenen Suchen wären der
+       Fehler; das war bei `suche` und `palette` schon einmal so (E160). */
+    an('btn-suche-mitte', () => suche());
     an('btn-neu-handy',   () => neueSeite());
     handyLeiste();
 

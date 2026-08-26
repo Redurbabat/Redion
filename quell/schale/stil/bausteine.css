@@ -23,7 +23,7 @@
 .ki-quellschalter{display:flex; flex-wrap:wrap; gap:5px; padding:0 0 8px}
 .ki-quellschalter button{font-size:11.5px; padding:3px 9px; border-radius:20px;
   border:1px solid var(--line); color:var(--text-faint); background:none}
-.ki-quellschalter button.an{border-color:var(--accent); color:var(--accent);
+.ki-quellschalter button.an{border-color:var(--accent-text); color:var(--accent-text);
   background:var(--b-blue)}
 .ki-quellschalter button:hover{color:var(--text)}
 
@@ -37,7 +37,7 @@
 .kq-art{color:var(--text-faint); font-size:11px; flex:0 0 auto}
 .kq-zeit{color:var(--text-faint); font-size:11px; flex:0 0 auto}
 .ki-antwortknoepfe{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
-.ki-antwortknoepfe button{font-size:12px; color:var(--accent); padding:3px 9px;
+.ki-antwortknoepfe button{font-size:12px; color:var(--accent-text); padding:3px 9px;
   border-radius:5px; border:1px solid var(--line)}
 .ki-antwortknoepfe button:hover{background:var(--bg-hover)}
 
@@ -47,7 +47,7 @@
 .agent-karte{display:flex; flex-direction:column; gap:3px; padding:10px 12px; text-align:left;
   border:1px solid var(--line); border-radius:8px; background:none}
 .agent-karte:hover{background:var(--bg-hover)}
-.agent-karte.on{border-color:var(--accent); background:var(--b-blue)}
+.agent-karte.on{border-color:var(--accent-text); background:var(--b-blue)}
 .agent-ico{font-size:19px}
 
 /* DER STREIFEN MIT DEM NOTAUS (L11, E52). Er steht ganz oben im
@@ -77,7 +77,7 @@
 .agent-karte em{font-size:11px; color:var(--text-faint); font-style:normal; margin-top:2px}
 #aa, #mtx{width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:8px; outline:none; color:var(--text); font:14px/1.55 inherit; resize:vertical}
-#aa:focus, #mtx:focus{border-color:var(--accent)}
+#aa:focus, #mtx:focus{border-color:var(--accent-text)}
 .agent-schritt{border-bottom:1px solid var(--line-soft); padding:9px 16px}
 .as-kopf{display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:4px}
 .as-nr{width:19px; height:19px; border-radius:50%; background:var(--accent); color:var(--auf-accent);
@@ -339,7 +339,7 @@
 .schrift-kacheln button{display:flex; flex-direction:column; align-items:center; gap:2px;
   padding:8px 4px; border-radius:7px; border:1px solid transparent; background:none}
 .schrift-kacheln button:hover{background:var(--bg-hover)}
-.schrift-kacheln button.on{border-color:var(--accent); color:var(--accent)}
+.schrift-kacheln button.on{border-color:var(--accent-text); color:var(--accent-text)}
 .schrift-kacheln b{font-size:19px; font-weight:600; line-height:1}
 .schrift-kacheln span{font-size:11px; color:var(--text-faint)}
 .schrift-kacheln .sk-serif{font-family:Georgia,'Times New Roman',serif}
@@ -348,7 +348,7 @@
 /* Typ-Auswahl in zwei Spalten */
 .typ-gitter{display:grid; grid-template-columns:1fr 1fr; gap:1px 4px; padding:0 4px 4px}
 .typ-gitter button{padding:6px 8px; border-radius:5px; font-size:13px}
-.typ-gitter button.on{background:var(--b-blue); color:var(--accent)}
+.typ-gitter button.on{background:var(--b-blue); color:var(--accent-text)}
 .typ-gitter .mi{width:20px}
 
 /* Rechte Leiste für Layout und Farbregeln — wie Notions Einstellungsleiste */
@@ -366,7 +366,7 @@
   color:var(--text-dim); background:none}
 .dl-kacheln button span{font-size:17px}
 .dl-kacheln button:hover{background:var(--bg-hover)}
-.dl-kacheln button.on{border-color:var(--accent); color:var(--accent); background:var(--b-blue)}
+.dl-kacheln button.on{border-color:var(--accent-text); color:var(--accent-text); background:var(--b-blue)}
 .dl-zeile{display:flex; align-items:center; gap:12px; padding:10px 2px;
   border-bottom:1px solid var(--line-soft); cursor:pointer}
 .dl-zeile:last-child{border-bottom:none}
@@ -401,7 +401,7 @@
 .rg-neu input, .rg-neu select{
   padding:8px 10px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:7px; outline:none; color:var(--text); font-size:13.5px; min-height:38px}
-.rg-neu input:focus, .rg-neu select:focus{border-color:var(--accent)}
+.rg-neu input:focus, .rg-neu select:focus{border-color:var(--accent-text)}
 .rg-neu #rg-bereich{flex:1 1 140px; min-width:120px}
 .rg-neu button{padding:8px 14px; border-radius:7px; font-size:13.5px; min-height:38px}
 /* Der Farbverlauf als Zeichen für „Skala" oder „Balken" — dieselben drei
@@ -573,7 +573,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-kopfzeile > div{display:flex; align-items:center; gap:7px; cursor:pointer;
   padding:2px 4px; border-radius:5px}
 .bib-kopfzeile > div:hover{background:var(--bg-hover)}
-.bib-kopfzeile em{font-style:normal; color:var(--accent)}
+.bib-kopfzeile em{font-style:normal; color:var(--accent-text)}
 .bib-name{display:flex; align-items:center; gap:7px; min-width:0}
 .bib-pfeil{color:var(--text-faint); font-size:10px; width:11px; flex:none}
 .bib-pfeil.leer{visibility:hidden}
@@ -605,9 +605,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   background:var(--bg-hover); color:var(--text-dim)}
 .auf-leer{padding:80px 0; text-align:center; color:var(--text-faint)}
 .auf-leer-ico{font-size:44px; opacity:.5; margin-bottom:14px}
-.auf-link{background:none; color:var(--accent); font-size:14px; margin-top:14px;
+.auf-link{background:none; color:var(--accent-text); font-size:14px; margin-top:14px;
   text-decoration:none; padding:6px}
-.auf-link:hover{text-decoration:underline; color:var(--accent)}
+.auf-link:hover{text-decoration:underline; color:var(--accent-text)}
 @media(max-width:760px){
   .bib{padding:18px 16px 50px}
   .bib-titel{font-size:29px}
@@ -643,7 +643,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .sp-name{flex:1; min-width:0; background:var(--bg-hover); border:1px solid transparent;
   border-radius:5px; padding:5px 8px; font-size:14px; color:var(--text);
   outline:none; font-family:inherit}
-.sp-name:focus{border-color:var(--accent); background:var(--bg-card)}
+.sp-name:focus{border-color:var(--accent-text); background:var(--bg-card)}
 .sp-info{width:24px; height:24px; border-radius:5px; background:none; color:var(--text-faint);
   padding:0; flex:none}
 .sp-info:hover{background:var(--bg-hover); color:var(--text)}
@@ -703,12 +703,26 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
-.sr{display:flex; align-items:center; gap:6px; padding:6px 9px; border-radius:8px;
+/* Die vier stummen Reiter enger: 6 Punkte Rand statt 9. Gemessen bringt das
+   24 Punkte, und genau die braucht der aktive, damit „Heute" ganz dasteht
+   statt als „He…". Am Telefon ist diese Leiste ausgeblendet, hier gilt also
+   nur der Zeiger — 30 Punkte sind dort genug (§37 spricht von 44 für den
+   Finger). */
+.sr{display:flex; align-items:center; gap:6px; padding:6px 6px; border-radius:8px;
   background:none; color:var(--text-dim); font-size:13px; white-space:nowrap; min-width:0}
 .sr span{font-size:14px; flex:none}
-.sr b{font-weight:500; overflow:hidden; text-overflow:ellipsis}
+/* DER AKTIVE REITER NIMMT SICH DEN REST (E201).
+   Als die Seitenleiste von 260 auf 240 ging, stand in der aktiven Pille
+   „He…" — der Name passte nicht mehr neben sein Zeichen. Er stand dort
+   nicht zu breit, sondern zu SCHMAL: die vier stummen Reiter nahmen ihre
+   feste Breite, und der aktive bekam, was übrig blieb.
+   `flex:1` dreht das um: die vier stummen behalten ihre 35 Punkte, und was
+   danach frei ist, gehört dem einen, der etwas zu sagen hat. */
+.sr{ flex:none }
+.sr.on{ flex:1 1 auto; min-width:0 }
+.sr b{font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sr:hover{background:var(--bg-hover); color:var(--text)}
-.sr.on{background:var(--bg-hover); color:var(--text); font-weight:600}
+.sr.on{background:var(--bg-hover); color:var(--text); font-weight:600; padding:6px 10px}
 .side-reiter.ohne-namen .sr b{display:none}
 .side-reiter.ohne-namen .sr{padding:7px 8px}
 .side-reiter:not(.ohne-namen) .sr:not(.on) b{display:none}
@@ -723,9 +737,18 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 
 /* Fuss der Seitenleiste: Neuer Chat + Schreibknopf */
 .side-unten{display:flex; gap:8px; align-items:center; padding:6px 10px 4px}
-.side-chat{flex:1; display:flex; align-items:center; gap:8px; padding:9px 12px;
+/* „Neuer Chat" brach auf 240 Punkten in DREI Zeilen um — „Neuer", „Chat",
+   „Strg O" —, und der Knopf wurde 60 statt 38 Punkte hoch. Ein Knopf, der
+   seine Höhe nach dem Fensterrand richtet, ist keiner.
+   Der Name bleibt in einer Zeile; das Kürzel darf verschwinden, wenn es eng
+   wird. Ein Kürzel, das man nicht liest, kostet nichts — ein umgebrochener
+   Name kostet die Form des Knopfes. */
+.side-chat{flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden;
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
   border-radius:22px; background:var(--bg-hover); color:var(--text); font-size:14px}
 .side-chat:hover{background:var(--line)}
+.side-chat > span:not(.k){overflow:hidden; text-overflow:ellipsis}
+@media (max-width:1500px){ .side-chat .k{display:none} }
 .side-chat .k{margin-left:auto; font-size:11px; color:var(--text-faint)}
 .side-schreib{width:38px; height:38px; border-radius:50%; background:var(--bg-hover);
   color:var(--text); font-size:15px; flex:none}
@@ -761,7 +784,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .msg-tat button{background:none; color:var(--text-faint); font-size:13px;
   padding:2px 6px; border-radius:5px}
 .msg-tat button:hover{background:var(--bg-hover); color:var(--text)}
-.msg-tat button.an{color:var(--accent)}
+.msg-tat button.an{color:var(--accent-text)}
 
 /* KI personalisieren */
 .pers-kopf{display:flex; flex-direction:column; align-items:center; gap:12px; padding:14px}
@@ -778,7 +801,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .pers-anw textarea{width:100%; padding:9px 11px; border-radius:8px; background:var(--bg-hover);
   border:1px solid var(--line); color:var(--text); font-size:14px; font-family:inherit;
   resize:vertical; outline:none}
-.pers-anw textarea:focus{border-color:var(--accent)}
+.pers-anw textarea:focus{border-color:var(--accent-text)}
 
 /* Analysen */
 .an-kacheln{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
@@ -851,7 +874,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .av-name{flex:1; min-width:0; background:var(--bg-hover); border:1px solid transparent;
   border-radius:6px; padding:7px 9px; font-size:15px; color:var(--text);
   outline:none; font-family:inherit}
-.av-name:focus{border-color:var(--accent); background:var(--bg-card)}
+.av-name:focus{border-color:var(--accent-text); background:var(--bg-card)}
 .av-info{width:26px; height:26px; border-radius:50%; background:none; color:var(--text-faint);
   padding:0; flex:none; font-size:14px}
 .av-info:hover{background:var(--bg-hover); color:var(--text)}
@@ -1420,8 +1443,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .pe-gross{font-size:20px; font-weight:600; margin-bottom:8px}
 .pe-klein{font-size:14px; color:var(--text-faint); max-width:340px; margin:0 auto;
   line-height:1.5}
-.pe-link{background:none; color:var(--accent); font-size:15px; margin-top:18px; padding:6px}
-.pe-link:hover{text-decoration:underline; color:var(--accent)}
+.pe-link{background:none; color:var(--accent-text); font-size:15px; margin-top:18px; padding:6px}
+.pe-link:hover{text-decoration:underline; color:var(--accent-text)}
 /* AM TELEFON DIE EINZIGE HANDLUNG IM LEEREN ZUSTAND — und mit 6 px Polster
    war sie 32 px hoch. Gemessen am 6. August im Posteingang: „Filter ändern"
    stand als einziger Weg da und war der flachste Knopf der Ansicht.
@@ -1444,8 +1467,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 .cb-kopf{display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:14px 16px; border-bottom:1px solid var(--line)}
 .cb-kopf b{font-size:15px; font-weight:600}
-.cb-links, .cb-rechts{background:none; color:var(--accent); font-size:15px; padding:4px 2px}
-.cb-links:hover, .cb-rechts:hover{color:var(--accent); text-decoration:underline}
+.cb-links, .cb-rechts{background:none; color:var(--accent-text); font-size:15px; padding:4px 2px}
+.cb-links:hover, .cb-rechts:hover{color:var(--accent-text); text-decoration:underline}
 .cb-reiter{display:flex; gap:18px; padding:10px 16px 0; border-bottom:1px solid var(--line)}
 .cb-reiter button{background:none; color:var(--text-faint); font-size:14.5px;
   padding:6px 2px 10px; border-bottom:2px solid transparent; border-radius:0}
@@ -1463,7 +1486,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 #cb-link{width:min(360px,90%); display:block; margin:0 auto 14px; padding:10px 12px;
   border-radius:8px; background:var(--bg-hover); border:1px solid var(--line);
   color:var(--text); font-size:16px; outline:none; font-family:inherit}
-#cb-link:focus{border-color:var(--accent)}
+#cb-link:focus{border-color:var(--accent-text)}
 .cb-hinweis{font-size:12.5px; color:var(--text-faint); margin-top:14px}
 @media(max-width:760px){
   .cover-overlay{align-items:flex-end}
@@ -1642,7 +1665,7 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
            border:1px solid var(--line); text-align:left; width:100%; }
 .eh-knopf b{ font-size:14px; font-weight:600; }
 .eh-knopf span{ font-size:12.5px; color:var(--text-dim); }
-.eh-knopf:hover{ border-color:var(--accent); }
+.eh-knopf:hover{ border-color:var(--accent-text); }
 .finder.such .hint code{ background:var(--bg-hover); padding:1px 5px; border-radius:4px;
                          font-family:var(--mono); font-size:11px; margin:0 1px; }
 
@@ -1709,7 +1732,7 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
             gap:12px; padding:14px 18px; }
 .sm-karte{ border:1px solid var(--line); border-radius:10px; overflow:hidden;
            background:var(--bg-card, var(--bg-hover)); cursor:pointer; }
-.sm-karte:hover{ border-color:var(--accent); }
+.sm-karte:hover{ border-color:var(--accent-text); }
 .sm-kopf{ padding:9px 12px; background:var(--bg-hover); border-bottom:1px solid var(--line);
           display:flex; flex-direction:column; gap:2px; }
 .sm-kopf b{ font-size:14px; }
@@ -1720,7 +1743,7 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .sm-typ{ width:16px; text-align:center; opacity:.7; }
 .sm-name{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .sm-regel{ color:var(--c-green, #4dab6d); font-size:11px; }
-.sm-pfeil{ font-size:11px; color:var(--accent); }
+.sm-pfeil{ font-size:11px; color:var(--accent-text); }
 .sm-fuell{ width:44px; height:5px; border-radius:3px; background:var(--line); overflow:hidden; }
 .sm-fuell i{ display:block; height:100%; background:var(--accent); }
 .sm-mehr{ padding:3px 12px; font-size:11.5px; color:var(--text-faint); }
@@ -1849,7 +1872,7 @@ td .proz i{ flex:0 0 auto; }
          border-right:1px solid var(--line)}
 .kw-kopf{background:var(--bg-sub); border-bottom:1px solid var(--line)}
 .kw-tag{padding:6px 4px; font-size:12px; color:var(--text-dim); text-align:center}
-.kw-tag.jetzt{color:var(--accent); font-weight:600}
+.kw-tag.jetzt{color:var(--accent-text); font-weight:600}
 .kw-gz{min-height:24px; border-left:1px solid var(--line); padding:2px}
 .kw-koerper{max-height:62vh; overflow-y:auto}
 .kw-zeile{border-top:1px solid var(--line); min-height:38px; position:relative}
@@ -1877,7 +1900,7 @@ td .proz i{ flex:0 0 auto; }
 .so-zeile button:hover{background:var(--bg-hover); color:var(--text)}
 .fr-vgl{border:1px solid var(--line); background:transparent; border-radius:5px;
         padding:2px 6px; cursor:pointer; color:var(--text-faint)}
-.fr-vgl.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.fr-vgl.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .fr-feld{border:1px solid var(--line); border-radius:5px; padding:3px 5px; font-size:12.5px;
          background:var(--bg-card); color:var(--text)}
 
@@ -1885,7 +1908,7 @@ td .proz i{ flex:0 0 auto; }
 .toc-liste a{display:block; padding:2px 0; cursor:pointer; color:var(--text-dim); font-size:14px;
              border-left:2px solid transparent; padding-left:8px}
 .toc-liste a:hover{color:var(--text); background:var(--bg-hover)}
-.toc-liste a.jetzt{color:var(--accent); border-left-color:var(--accent)}
+.toc-liste a.jetzt{color:var(--accent-text); border-left-color:var(--accent-text)}
 .toc-liste a.lvl2{padding-left:24px; font-size:13.5px}
 .toc-liste a.lvl3{padding-left:40px; font-size:13px}
 .toc-fuss{display:flex; gap:10px; align-items:center; margin-top:6px; padding-top:5px;
@@ -1904,7 +1927,7 @@ td .proz i{ flex:0 0 auto; }
 .code-werk{position:absolute; top:8px; right:120px; display:flex; gap:3px; z-index:2}
 .code-werk button{border:1px solid var(--line); background:var(--bg-input); color:var(--text-dim);
                   border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer}
-.code-werk button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.code-werk button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .code-werk button:hover{filter:brightness(1.1)}
 .code-nr{position:absolute; left:0; top:0; padding:12px 0; width:38px; text-align:right;
          font:12.5px/1.6 var(--mono); color:var(--text-faint); user-select:none; z-index:1}
@@ -2038,7 +2061,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-reiter{display:flex; gap:4px; padding:8px 18px 0; border-bottom:1px solid var(--line)}
 .au-reiter button{font-size:13px; padding:6px 12px; border:0; background:transparent;
                   color:var(--text-dim); border-bottom:2px solid transparent; cursor:pointer}
-.au-reiter button.an{color:var(--text); border-bottom-color:var(--accent)}
+.au-reiter button.an{color:var(--text); border-bottom-color:var(--accent-text)}
 .au-koerper{padding:14px 18px; max-height:60vh; overflow:auto}
 .au-titel{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px;
           color:var(--text-faint); margin:14px 0 8px; display:flex; gap:8px}
@@ -2047,7 +2070,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-schemata{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:9px}
 .au-karte{border:2px solid var(--line); border-radius:8px; padding:7px; background:transparent;
           cursor:pointer; display:flex; flex-direction:column; gap:6px; align-items:stretch}
-.au-karte.an{border-color:var(--accent)}
+.au-karte.an{border-color:var(--accent-text)}
 .au-karte:hover{border-color:var(--text-faint)}
 .au-probe{height:44px; border-radius:5px; position:relative; overflow:hidden; display:block;
           border:1px solid var(--line)}
@@ -2066,7 +2089,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-liste{display:flex; gap:7px; flex-wrap:wrap}
 .au-liste button{border:1px solid var(--line); border-radius:7px; padding:6px 13px;
                  background:transparent; color:var(--text-dim); cursor:pointer; font-size:13px}
-.au-liste button.an{border-color:var(--accent); color:var(--text); background:var(--bg-hover)}
+.au-liste button.an{border-color:var(--accent-text); color:var(--text); background:var(--bg-hover)}
 .au-hinweis{font-size:12px; color:var(--text-faint); line-height:1.6; margin-top:12px}
 .au-tasten{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:4px}
 .au-t{display:flex; align-items:center; gap:10px; padding:4px 0; font-size:13px}
@@ -2074,10 +2097,10 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-t button{font:12px var(--mono); border:1px solid var(--line); border-radius:5px;
              padding:3px 9px; background:var(--bg-card); color:var(--text); cursor:pointer;
              min-width:96px}
-.au-t button:hover{border-color:var(--accent)}
-.au-t button.geaendert{border-color:var(--accent); color:var(--accent)}
-.au-t button.faengt{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
-#au-inhalt input[type=range]{width:100%; accent-color:var(--accent)}
+.au-t button:hover{border-color:var(--accent-text)}
+.au-t button.geaendert{border-color:var(--accent-text); color:var(--accent-text)}
+.au-t button.faengt{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
+#au-inhalt input[type=range]{width:100%; accent-color:var(--accent-text)}
 body[data-abstand="eng"]   .ct{line-height:1.4}
 body[data-abstand="weit"]  .ct{line-height:2.05}
 body[data-breite="schmal"] #page{max-width:620px}
@@ -2108,7 +2131,7 @@ body[data-breite="voll"]   #page{max-width:none}
 .vg-inhalt{flex:1; word-break:break-word}
 .vg-zeile button{border:1px solid var(--line); background:transparent; color:var(--text-faint);
                  border-radius:5px; padding:1px 7px; cursor:pointer; font-size:12px}
-.vg-zeile button:hover{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.vg-zeile button:hover{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .vg-neu .vg-zeichen{color:var(--c-green)}
 .vg-weg .vg-zeichen{color:var(--c-red)}
 .vg-geaendert .vg-zeichen{color:var(--c-yellow)}
@@ -2152,7 +2175,7 @@ body[data-breite="voll"]   #page{max-width:none}
                padding:5px 11px; font-size:11.5px; color:var(--text-faint);
                box-shadow:var(--shadow)}
 #tempo-anzeige:hover{color:var(--text)}
-#tempo-anzeige b{color:var(--accent); font-weight:600}
+#tempo-anzeige b{color:var(--accent-text); font-weight:600}
 .tp-koerper{padding:14px 18px; max-height:62vh; overflow:auto}
 .tp-karten{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:9px}
 .tp-k{background:var(--bg-card); border-radius:8px; padding:11px 13px; display:flex;
@@ -2269,7 +2292,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .ue-pfeil{color:var(--text-faint)}
 .ue-w{display:flex; gap:5px; align-items:center; font-size:12.5px; color:var(--text-dim);
       background:var(--bg-card); border-radius:5px; padding:2px 8px; cursor:pointer}
-.ue-w input{width:auto; accent-color:var(--accent)}
+.ue-w input{width:auto; accent-color:var(--accent-text)}
 
 /* Kommentarfäden, Reaktionen, Erwähnungen */
 .komm-reak{display:flex; gap:4px; margin:5px 0 2px; flex-wrap:wrap}
@@ -2280,7 +2303,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .komm-faden{margin:7px 0 0 14px; padding-left:11px; border-left:2px solid var(--line)}
 .komm-antwort{padding:5px 0}
 .komm-antwort .komm-txt{font-size:13.5px}
-.komm-erw{color:var(--accent); cursor:pointer; font-weight:500}
+.komm-erw{color:var(--accent-text); cursor:pointer; font-weight:500}
 .komm-erw:hover{text-decoration:underline}
 .komm-erw.tot{color:var(--text-faint); cursor:default; font-weight:400}
 
@@ -2306,7 +2329,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .ew-beispiele button{border:1px solid var(--line); border-radius:8px; padding:9px 11px;
                      background:transparent; text-align:left; cursor:pointer;
                      display:flex; flex-direction:column; gap:3px}
-.ew-beispiele button:hover{background:var(--bg-hover); border-color:var(--accent)}
+.ew-beispiele button:hover{background:var(--bg-hover); border-color:var(--accent-text)}
 .ew-beispiele b{font-size:13px}
 .ew-beispiele span{font-size:11.5px; color:var(--text-faint); line-height:1.4}
 .ew-api{border:1px solid var(--line); border-radius:8px; overflow:hidden}
@@ -2336,7 +2359,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .fd-knoepfe{display:flex; gap:8px; margin-top:9px}
 .fd-knoepfe button{padding:7px 15px; border-radius:7px; border:1px solid var(--line);
                    font-size:13.5px}
-.fd-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.fd-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .fd-zahl{font-size:12px; color:var(--text-faint); margin-top:6px}
 
 /* Eingänge von aussen */
@@ -2394,7 +2417,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    border:1px solid var(--line); color:var(--text-dim)}
 .rg-knoepfe button:first-child{margin-right:auto; border-color:transparent;
                                color:var(--text-faint)}
-.rg-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.rg-knoepfe button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .rg-koerper{padding:14px 18px; max-height:64vh; overflow:auto}
 .rg-vorwort{font-size:13px; color:var(--text-faint); line-height:1.6; margin-bottom:14px}
 .rg-thema{margin-bottom:15px}
@@ -2413,7 +2436,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .rge-text span{font-size:11.5px; color:var(--text-faint)}
 #rg-einladung button{font-size:12.5px; padding:5px 11px; border-radius:6px;
                      border:1px solid var(--line); color:var(--text-dim)}
-#rg-einladung button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+#rg-einladung button.prim{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 #rg-einladung button[data-a="nie"]{border:0; padding:4px 6px; color:var(--text-faint)}
 @media(max-width:760px){ #rg-einladung{left:8px; right:8px; bottom:74px; max-width:none} }
 
@@ -2469,7 +2492,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    ist — es war nie die Farbe des Akzents, sondern eine der zehn
    Blockfarben, die der Mensch für seine eigenen Blöcke wählt. */
 .wk-weg.prim{
-  border-color:var(--accent);
+  border-color:var(--accent-text);
   background:color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .wk-ico{ font-size:20px; flex:0 0 26px; text-align:center }
@@ -2627,7 +2650,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                      text-align:left; padding:11px 14px; border:1px solid var(--line);
                      border-radius:8px; background:var(--bg-card); color:var(--text)}
 .wahl-knoepfe button:hover{background:var(--bg-hover)}
-.wahl-knoepfe button.prim{border-color:var(--accent)}
+.wahl-knoepfe button.prim{border-color:var(--accent-text)}
 .wahl-knoepfe button b{font-size:14.5px; font-weight:600}
 .wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
 
@@ -2885,7 +2908,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-trenn{width:1px; height:20px; background:var(--rand); margin:0 4px}
 .blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
              border:2px solid transparent}
-.blatt-farbe.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--bg-card) inset}
+.blatt-farbe.on{border-color:var(--accent-text); box-shadow:0 0 0 2px var(--bg-card) inset}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
 .blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
 
@@ -2961,7 +2984,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    gewählte Papierart leuchtete seit E100 immer blau, in keinem der beiden
    Themen in der Akzentfarbe. Ein Ersatzwert verdeckt einen Tippfehler, er
    behebt ihn nicht. */
-.blatt-papierwahl.on i{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
+.blatt-papierwahl.on i{border-color:var(--accent-text); box-shadow:0 0 0 1px var(--accent)}
 .blatt-papierwahl i[data-vorschau="liniert"]{
   background-image:linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:100% 4px}
@@ -3052,7 +3075,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .school-hero{display:flex;justify-content:space-between;gap:22px;padding:24px;
   border:1px solid var(--border);border-radius:16px;background:linear-gradient(135deg,var(--accent-soft),var(--bg-card))}
 .school-hero h1{margin:3px 0 6px;font-size:30px}.school-hero p{margin:0;color:var(--text-dim)}
-.school-hero>div>span{font-size:12px;font-weight:750;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.school-hero>div>span{font-size:12px;font-weight:750;color:var(--accent-text);text-transform:uppercase;letter-spacing:.08em}
 .school-quick{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-self:center}
 .school-quick button,.school-folder,.school-card button,.school-empty button,.electrical-actions button{
   border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);cursor:pointer}
@@ -3205,7 +3228,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .document-thumbnail{width:100%; display:flex; flex-direction:column; gap:4px; padding:7px;
   margin-bottom:8px; border:1px solid transparent; border-radius:9px; background:transparent;
   color:var(--text); text-align:left; cursor:pointer}
-.document-thumbnail:hover,.document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-soft)}
+.document-thumbnail:hover,.document-thumbnail.is-selected{border-color:var(--accent-text);background:var(--accent-soft)}
 .document-thumbnail-preview{display:flex; width:100%; aspect-ratio:210/297; align-items:center;
   justify-content:center; overflow:hidden; background:#fff; border:1px solid #cfd1d4;border-radius:4px}
 .document-thumbnail-preview img{width:100%;height:100%;object-fit:contain}
@@ -3303,11 +3326,19 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    `#f97316` ergibt 2,6:1 — unter den 4,5:1, die §38 für gewöhnlichen Text
    verlangt, und auf dem Bild sah es genau danach aus. Sehr dunkles Braun
    ergibt 7,7:1. */
+/* DIE SCHRIFT KOMMT AUS DER MARKE, NICHT AUS EINER ZAHL (E199).
+   Hier stand `color:#231000` — ein fast schwarzes Braun, gewählt für das
+   orange Akzent von damals, auf dem es 8,6:1 hatte. Als der Akzent violett
+   wurde, fiel derselbe Wert auf 3,56:1, und der Balken war nicht mehr zu
+   lesen. Gefunden hat es test231, nicht das Auge.
+   `--auf-accent` ist genau die Marke für diese Frage: welche Schrift auf
+   der Akzentfläche lesbar ist. Sie wird je Modus gemessen gesetzt und
+   ändert sich mit dem Akzent mit. */
 #demo-balken{ position:fixed; top:0; left:0; right:0; z-index:200;
-  display:flex; gap:8px; align-items:center; flex-wrap:wrap;
-  padding:8px 14px; font-size:14px; line-height:1.4;
-  background:var(--accent, #e8730a); color:#231000 }
-#demo-balken a{ color:#231000; text-decoration:underline }
+  display:flex; gap:var(--space-3); align-items:center; flex-wrap:wrap;
+  padding:var(--space-3) var(--space-5); font-size:14px; line-height:1.4;
+  background:var(--accent); color:var(--auf-accent) }
+#demo-balken a{ color:var(--auf-accent); text-decoration:underline }
 body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 /* --- Spalten aufräumen (L27, E178) ---------------------------------------
@@ -3407,12 +3438,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border:1px solid transparent; border-radius:7px; background:var(--bg);
   color:var(--text-dim); cursor:pointer}
 .sp-sym:hover{background:var(--bg-hover); border-color:var(--line)}
-.sp-sym.an{border-color:var(--accent); background:var(--bg-hover); color:var(--text)}
+.sp-sym.an{border-color:var(--accent-text); background:var(--bg-hover); color:var(--text)}
 .sp-sym-bild{height:42px; display:flex; align-items:center; justify-content:center}
 .sp-sym-bild svg{max-width:38px; max-height:40px; width:auto; height:auto}
 .sp-sym-name{font-size:9.5px; line-height:1.15; text-align:center;
   overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
-.sp-sym.sp-fav .sp-sym-name::before{content:'★ '; color:var(--accent)}
+.sp-sym.sp-fav .sp-sym-name::before{content:'★ '; color:var(--accent-text)}
 
 .sp-buehne{flex:1; overflow:auto; padding:14px; background:var(--bg);
   display:flex; align-items:flex-start; justify-content:center}
@@ -3577,7 +3608,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:20px; background:var(--bg); color:var(--text-dim);
   cursor:pointer; font-size:11.5px; white-space:nowrap; flex:0 0 auto}
 .fh-kapitel button.an{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 /* `min-height:0` ist hier keine Feinheit, sondern der Unterschied zwischen
    „die Fussleiste ist da" und „die Fussleiste steht unter dem Bildschirm".
    Ein Flex-Kind schrumpft von sich aus NICHT unter die Höhe seines Inhalts;
@@ -3593,7 +3624,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    Wichtigste im Kasten — sie steht gross und in der Akzentfarbe, damit man
    sie beim Durchblättern erkennt, ohne zu lesen. */
 .fh-formel header{display:block; padding-right:26px}
-.fh-formel header b{font-size:14px; font-weight:700; color:var(--accent);
+.fh-formel header b{font-size:14px; font-weight:700; color:var(--accent-text);
   font-family:ui-monospace, "SF Mono", Menlo, monospace; letter-spacing:.01em}
 .fh-erkl{margin:0; font-size:12px; color:var(--text-dim); line-height:1.5}
 .fh-groessen{display:flex; flex-wrap:wrap; gap:4px; font-size:11px;
@@ -3608,7 +3639,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border:0; border-radius:6px; background:transparent; cursor:pointer;
   color:var(--text-faint); font-size:13px; line-height:1}
 .fh-stern:hover{background:var(--bg-hover)}
-.fh-stern.an{color:var(--accent)}
+.fh-stern.an{color:var(--accent-text)}
 
 /* ---- Der Rechner in der Formel --------------------------------------- */
 .fh-rechner{border-top:1px dashed var(--line); margin-top:2px; padding-top:8px;
@@ -3619,17 +3650,17 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:16px; background:var(--bg-card); color:var(--text-dim);
   cursor:pointer; font-size:11.5px; font-weight:600}
 .fh-gesucht button.an{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 .fh-felder{display:grid; grid-template-columns:repeat(auto-fit, minmax(112px, 1fr));
   gap:6px}
 .fh-feld{display:flex; align-items:center; gap:5px; border:1px solid var(--line);
   border-radius:8px; padding:4px 7px; background:var(--bg-card)}
 /* Das gesuchte Feld wird NICHT ausgegraut, sondern gestrichelt umrandet:
    ausgegraut sieht aus wie kaputt, gestrichelt wie „das kommt heraus". */
-.fh-feld.gesucht{border-style:dashed; border-color:var(--accent);
+.fh-feld.gesucht{border-style:dashed; border-color:var(--accent-text);
   background:transparent}
 .fh-feld.gesucht input{color:var(--text-faint)}
-.fh-zeichen{font-weight:700; color:var(--accent); min-width:1.6em}
+.fh-zeichen{font-weight:700; color:var(--accent-text); min-width:1.6em}
 .fh-feld input{flex:1; min-width:0; border:0; background:transparent;
   color:var(--text); font-size:12.5px; font-variant-numeric:tabular-nums;
   -moz-appearance:textfield}
@@ -3659,7 +3690,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-kapitel{display:flex; gap:8px; flex-wrap:wrap; font-size:12px;
   font-weight:700; color:var(--text)}
 .bs-kapitel .bs-offen{font-weight:400; color:var(--text-faint)}
-.bs-seitenzahl{font-size:12px; font-weight:700; color:var(--accent);
+.bs-seitenzahl{font-size:12px; font-weight:700; color:var(--accent-text);
   white-space:nowrap; font-variant-numeric:tabular-nums}
 .bs-seitenzahl span{font-weight:400; color:var(--text-faint)}
 
@@ -3715,18 +3746,18 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-formel:hover{background:var(--bg-hover); border-color:var(--line)}
 .bs-formel:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
 .bs-formel.offen{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 /* Gemerkte Formeln bekommen einen Balken UND einen Stern-Punkt: Farbe
    allein wäre eine Information nur über Farbe (§38). */
 .bs-formel.gemerkt{border-left:3px solid var(--accent); padding-left:6px}
-.bs-formel.gemerkt::after{content:' ★'; color:var(--accent); font-size:10px}
+.bs-formel.gemerkt::after{content:' ★'; color:var(--accent-text); font-size:10px}
 
 /* Die Grössenliste steht wie im Heft ZWISCHEN Skizze und Formeln — eine
    Zeile je Grösse: Zeichen, Name, Einheit rechtsbündig gedacht. */
 .bs-groessen{flex:1 1 34%; min-width:0; display:flex; flex-direction:column;
   gap:3px; font-size:11px; color:var(--text-dim); padding-top:2px}
 .bs-groessen span{display:block; line-height:1.5}
-.bs-groessen i{font-style:normal; font-weight:700; color:var(--accent);
+.bs-groessen i{font-style:normal; font-weight:700; color:var(--accent-text);
   display:inline-block; min-width:2.6em}
 .bs-groessen em{font-style:normal; color:var(--text-faint); margin-left:4px}
 
@@ -3785,7 +3816,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .fh-favseiten button{min-width:26px; height:26px; padding:0 5px; font-size:11px;
   border-radius:14px}
 .fh-favseiten button.an{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent)}
+  border-color:var(--accent-text)}
 .fh-loesen{margin-left:4px}
 
 .fh-leer{flex:1; display:flex; flex-direction:column; align-items:center;
@@ -3887,7 +3918,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   background:var(--bg); color:var(--text-dim); cursor:pointer; font-size:11.5px;
   white-space:nowrap; flex:0 0 auto}
 .ea-art:hover{background:var(--bg-hover); color:var(--text)}
-.ea-art.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.ea-art.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 
 .ea-buehne{flex:1; overflow-y:auto; padding:20px; display:flex;
   justify-content:center; align-items:flex-start}
@@ -3908,7 +3939,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-artname{text-transform:uppercase; letter-spacing:.06em}
 /* Die Schwierigkeit steht als drei Punkte da, von denen einige blass sind —
    eine Zahl „2" beantwortet die Frage „von wie vielen?" nicht. */
-.ea-stufe{color:var(--accent); letter-spacing:2px}
+.ea-stufe{color:var(--accent-text); letter-spacing:2px}
 .ea-stufe-aus{color:var(--line-stark)}
 
 .ea-bild{display:flex; justify-content:center; padding:14px;
@@ -4015,7 +4046,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:9px; background:var(--bg); color:var(--text); cursor:pointer;
   font-size:13px; min-height:44px}
 .ea-eingabe button.prim{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent); font-weight:600}
+  border-color:var(--accent-text); font-weight:600}
 .ea-eingabe button:disabled{opacity:.45; cursor:default}
 
 .ea-aufloesung{padding:12px 14px; border-radius:10px; display:flex;
@@ -4038,7 +4069,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   background:var(--bg); color:var(--text); cursor:pointer; font-size:13px;
   min-height:40px}
 .ea-fuss button.prim{background:var(--accent); color:var(--auf-accent);
-  border-color:var(--accent); font-weight:600}
+  border-color:var(--accent-text); font-weight:600}
 .ea-fuss button:disabled{opacity:.45; cursor:default}
 
 /* ---- Prüfung ------------------------------------------------------------ */
@@ -4153,7 +4184,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   background:var(--bg-card); color:var(--text-dim); cursor:pointer;
   font-size:12.5px; min-height:36px; font-family:ui-monospace, Menlo, monospace}
 .fd-knopf:hover{background:var(--bg-hover); color:var(--text)}
-.fd-knopf.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.fd-knopf.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent-text)}
 .fd-bild{padding:8px}
 .fd-dreieck{color:var(--text)}
 /* Die Felder sind Knöpfe, auch wenn sie wie Buchstaben aussehen — der Zeiger
@@ -4163,7 +4194,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .fd-feld.verdeckt text{text-decoration:line-through}
 .fd-hinweis{margin:0; font-size:13px; color:var(--text-dim); text-align:center;
   max-width:44ch; line-height:1.55}
-.fd-hinweis b{color:var(--accent); font-family:ui-monospace, Menlo, monospace}
+.fd-hinweis b{color:var(--accent-text); font-family:ui-monospace, Menlo, monospace}
 .fd-alle{margin:0; padding:0; list-style:none; display:flex; gap:8px;
   flex-wrap:wrap; justify-content:center}
 .fd-alle li{background:var(--bg-card); padding:5px 11px; border-radius:7px;
@@ -4187,7 +4218,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .sk-regler{display:flex; flex-wrap:wrap; gap:14px; justify-content:center}
 .sk-regler label{display:flex; align-items:center; gap:8px; font-size:12.5px;
   color:var(--text-dim)}
-.sk-regler input[type=range]{width:min(220px, 46vw); accent-color:var(--accent);
+.sk-regler input[type=range]{width:min(220px, 46vw); accent-color:var(--accent-text);
   height:32px}
 .sk-regler input[type=number]{width:80px; padding:8px 9px; border:1px solid var(--line);
   border-radius:8px; background:var(--bg-input); color:var(--text);
@@ -4198,7 +4229,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   gap:8px}
 .sk-zahl{background:var(--bg-card); border-radius:9px; padding:10px 13px;
   display:flex; flex-direction:column; gap:3px}
-.sk-zahl b{font-size:17px; font-variant-numeric:tabular-nums; color:var(--accent)}
+.sk-zahl b{font-size:17px; font-variant-numeric:tabular-nums; color:var(--accent-text)}
 .sk-zahl span{font-size:11.5px; color:var(--text-dim); line-height:1.45}
 
 @media (max-width: 640px){
@@ -4216,7 +4247,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .mz-groesse{display:flex; align-items:center; gap:10px; padding:10px 16px 4px;
   font-size:12.5px; color:var(--text-dim)}
 .mz-groesse label{display:flex; align-items:center; gap:8px; flex:1}
-.mz-groesse input[type=range]{flex:1; accent-color:var(--accent); height:32px}
+.mz-groesse input[type=range]{flex:1; accent-color:var(--accent-text); height:32px}
 .mz-groesse b{color:var(--text); font-variant-numeric:tabular-nums; min-width:5em}
 .mz-zuletzt{display:flex; align-items:center; gap:10px; padding:6px 16px 0;
   font-size:11px; color:var(--text-faint); text-transform:uppercase;
