@@ -17061,7 +17061,10 @@ Register.elektroformeln = (() => {
         ['trafo', 'Transformator', '⊙'],
         ['motor', 'Motor', 'M'],
         ['licht', 'Lichttechnik', '☀'],
-        ['kompen', 'Kompensation', 'φ']
+        ['kompen', 'Kompensation', 'φ'],
+        ['messen', 'Messtechnik', '⊕'],
+        ['magnet', 'Magnetische Grössen', '🧲'],
+        ['fall', 'Spannungsfall', '↘']
     ];
     /* Hilfen, damit die Liste lesbar bleibt. */
     const g = (zeichen, name, einheit, was) => was === undefined ? { zeichen, name, einheit } : { zeichen, name, einheit, was };
@@ -17121,6 +17124,377 @@ Register.elektroformeln = (() => {
                 g('W', 'Energie', 'kWh')],
             loese: { K: v => v.k * v.W, k: v => v.K / v.W, W: v => v.K / v.k },
             erklaerung: 'Was der Verbrauch kostet.'
+        },
+        /* ---- Messtechnik (Kapitel 4 des Heftes) ------------------------------
+           Die Messbereicherweiterung ist das Stück Messtechnik, das man im
+           Beruf wirklich rechnet: ein Messwerk verträgt Milliampere, gemessen
+           werden sollen Ampere. Der Rest ist Ohm. */
+        {
+            id: 'mess-vorwiderstand', kapitel: 'messen', schreibweise: 'R_V = (n − 1) · R_m',
+            groessen: [g('R_V', 'Vorwiderstand', 'Ω', 'Kommt VOR das Messwerk, in Reihe'),
+                g('n', 'Faktor der Messbereicherweiterung', '', 'Wie oft grösser der neue Bereich ist'),
+                g('R_m', 'Messwerkwiderstand', 'Ω')],
+            loese: {
+                R_V: v => (v.n - 1) * v.R_m,
+                n: v => v.R_V / v.R_m + 1,
+                R_m: v => v.R_V / (v.n - 1)
+            },
+            weg: {
+                R_V: (v, e) => [`R_V = (n − 1) · R_m`,
+                    `R_V = (${v.n} − 1) · ${v.R_m} Ω`, `R_V = ${e} Ω`]
+            },
+            erklaerung: 'Ein Voltmeter misst mehr, wenn ein Widerstand in Reihe davor liegt. ' +
+                'Der Rest der Spannung fällt an ihm ab.'
+        },
+        {
+            id: 'mess-vorwiderstand-u', kapitel: 'messen',
+            schreibweise: 'R_V = R_m · (U − U_m) / U_m',
+            groessen: [g('R_V', 'Vorwiderstand', 'Ω'), g('R_m', 'Messwerkwiderstand', 'Ω'),
+                g('U', 'erweiterter Messbereich', 'V'),
+                g('U_m', 'Messwerkspannung bei Vollausschlag', 'V')],
+            loese: {
+                R_V: v => v.R_m * (v.U - v.U_m) / v.U_m,
+                R_m: v => v.R_V * v.U_m / (v.U - v.U_m),
+                U: v => v.U_m * (1 + v.R_V / v.R_m),
+                U_m: v => v.U / (1 + v.R_V / v.R_m)
+            },
+            erklaerung: 'Dieselbe Sache aus den Spannungen statt aus dem Faktor.'
+        },
+        {
+            id: 'mess-faktor-v', kapitel: 'messen', schreibweise: 'n = U / U_m',
+            groessen: [g('n', 'Faktor der Messbereicherweiterung', ''),
+                g('U', 'erweiterter Messbereich', 'V'),
+                g('U_m', 'Messwerkspannung bei Vollausschlag', 'V')],
+            loese: { n: v => v.U / v.U_m, U: v => v.n * v.U_m, U_m: v => v.U / v.n },
+            erklaerung: 'Um wie viel der Bereich wächst.'
+        },
+        {
+            id: 'mess-shunt', kapitel: 'messen', schreibweise: 'R_p = R_m / (n − 1)',
+            groessen: [g('R_p', 'Parallelwiderstand (Shunt)', 'Ω', 'Liegt PARALLEL zum Messwerk'),
+                g('R_m', 'Messwerkwiderstand', 'Ω'),
+                g('n', 'Faktor der Messbereicherweiterung', '')],
+            loese: {
+                R_p: v => v.R_m / (v.n - 1),
+                R_m: v => v.R_p * (v.n - 1),
+                n: v => v.R_m / v.R_p + 1
+            },
+            weg: {
+                R_p: (v, e) => [`R_p = R_m ÷ (n − 1)`,
+                    `R_p = ${v.R_m} Ω ÷ (${v.n} − 1)`, `R_p = ${e} Ω`]
+            },
+            erklaerung: 'Ein Amperemeter misst mehr, wenn ein Widerstand PARALLEL liegt. ' +
+                'Der Rest des Stroms geht an ihm vorbei — der Shunt.'
+        },
+        {
+            id: 'mess-shunt-i', kapitel: 'messen',
+            schreibweise: 'R_p = R_m · I_m / (I − I_m)',
+            groessen: [g('R_p', 'Parallelwiderstand (Shunt)', 'Ω'),
+                g('R_m', 'Messwerkwiderstand', 'Ω'),
+                g('I_m', 'Messwerkstromstärke bei Vollausschlag', 'A'),
+                g('I', 'erweiterter Messbereich', 'A')],
+            loese: {
+                R_p: v => v.R_m * v.I_m / (v.I - v.I_m),
+                R_m: v => v.R_p * (v.I - v.I_m) / v.I_m,
+                I: v => v.I_m * (1 + v.R_m / v.R_p),
+                I_m: v => v.I / (1 + v.R_m / v.R_p)
+            },
+            erklaerung: 'Derselbe Shunt aus den Strömen statt aus dem Faktor.'
+        },
+        {
+            id: 'mess-faktor-a', kapitel: 'messen', schreibweise: 'n = I / I_m',
+            groessen: [g('n', 'Faktor der Messbereicherweiterung', ''),
+                g('I', 'erweiterter Messbereich', 'A'),
+                g('I_m', 'Messwerkstromstärke bei Vollausschlag', 'A')],
+            loese: { n: v => v.I / v.I_m, I: v => v.n * v.I_m, I_m: v => v.I / v.n },
+            erklaerung: 'Um wie viel der Strombereich wächst.'
+        },
+        {
+            id: 'mess-spannungsfehler', kapitel: 'messen', schreibweise: 'R = U / I − R_A',
+            groessen: [g('R', 'Verbraucherwiderstand', 'Ω'), g('U', 'gemessene Spannung', 'V'),
+                g('I', 'gemessene Stromstärke', 'A'),
+                g('R_A', 'Innenwiderstand des A-Meters', 'Ω')],
+            loese: {
+                R: v => v.U / v.I - v.R_A,
+                U: v => (v.R + v.R_A) * v.I,
+                I: v => v.U / (v.R + v.R_A),
+                R_A: v => v.U / v.I - v.R
+            },
+            annahme: 'Spannungsfehlerschaltung: das Voltmeter misst über Verbraucher UND ' +
+                'Amperemeter. Geeignet für HOCHOHMIGE Verbraucher — dort fällt am A-Meter kaum etwas ab.',
+            erklaerung: 'Das Amperemeter liegt im Messkreis und hat selbst einen Widerstand. ' +
+                'Wer ihn nicht abzieht, misst den Verbraucher zu gross.'
+        },
+        {
+            id: 'mess-stromfehler', kapitel: 'messen', schreibweise: 'R = U / (I − I_V)',
+            groessen: [g('R', 'Verbraucherwiderstand', 'Ω'), g('U', 'gemessene Spannung', 'V'),
+                g('I', 'gemessene Stromstärke', 'A'),
+                g('I_V', 'Strom durch das V-Meter', 'A')],
+            loese: {
+                R: v => v.U / (v.I - v.I_V),
+                U: v => v.R * (v.I - v.I_V),
+                I: v => v.U / v.R + v.I_V,
+                I_V: v => v.I - v.U / v.R
+            },
+            annahme: 'Stromfehlerschaltung: das Amperemeter misst den Strom durch Verbraucher ' +
+                'UND Voltmeter. Geeignet für NIEDEROHMIGE Verbraucher.',
+            erklaerung: 'Das Voltmeter zieht selbst Strom. Wer ihn nicht abzieht, misst den ' +
+                'Verbraucherwiderstand zu klein.'
+        },
+        {
+            id: 'mess-vmeter-strom', kapitel: 'messen', schreibweise: 'I_V = U / R_V',
+            groessen: [g('I_V', 'Strom durch das V-Meter', 'A'), g('U', 'gemessene Spannung', 'V'),
+                g('R_V', 'Innenwiderstand des V-Meters', 'Ω')],
+            loese: { I_V: v => v.U / v.R_V, U: v => v.I_V * v.R_V, R_V: v => v.U / v.I_V },
+            erklaerung: 'Was das Voltmeter selbst zieht — der Fehler der Stromfehlerschaltung.'
+        },
+        {
+            id: 'mess-anzeigefehler', kapitel: 'messen', schreibweise: 'AF_abs = MB · k / 100',
+            groessen: [g('AF_abs', 'absoluter Anzeigefehler', '', 'In der Einheit des Messwerts'),
+                g('MB', 'Messbereich (Skalenendwert)', ''),
+                g('k', 'Genauigkeitsklasse', '', 'Steht auf dem Gerät: 1,5 heisst 1,5 %')],
+            loese: {
+                AF_abs: v => v.MB * v.k / 100,
+                MB: v => v.AF_abs * 100 / v.k,
+                k: v => v.AF_abs * 100 / v.MB
+            },
+            erklaerung: 'Der absolute Anzeigefehler ist über die GANZE Skala gleich gross — ' +
+                'er hängt am Messbereich, nicht am Messwert.'
+        },
+        {
+            id: 'mess-anzeigefehler-prozent', kapitel: 'messen',
+            schreibweise: 'AF_% = MB · k / MW',
+            groessen: [g('AF_%', 'relativer Anzeigefehler', '%'),
+                g('MB', 'Messbereich (Skalenendwert)', ''),
+                g('k', 'Genauigkeitsklasse', ''),
+                g('MW', 'Messwert', '')],
+            loese: {
+                'AF_%': v => v.MB * v.k / v.MW,
+                MB: v => v['AF_%'] * v.MW / v.k,
+                k: v => v['AF_%'] * v.MW / v.MB,
+                MW: v => v.MB * v.k / v['AF_%']
+            },
+            erklaerung: 'Der relative Fehler ist im UNTEREN Teil der Skala am grössten. ' +
+                'Deshalb misst man möglichst im oberen Drittel des Bereichs.'
+        },
+        {
+            id: 'mess-innenwiderstand', kapitel: 'messen', schreibweise: 'R_m = MB · r_k',
+            groessen: [g('R_m', 'Innenwiderstand des V-Meters', 'Ω'),
+                g('MB', 'Messbereich', 'V'),
+                g('r_k', 'Kennwiderstand', 'Ω/V', 'Steht auf dem Gerät, z. B. 5 kΩ/V')],
+            loese: { R_m: v => v.MB * v.r_k, MB: v => v.R_m / v.r_k, r_k: v => v.R_m / v.MB },
+            erklaerung: 'Wie hochohmig ein analoges Voltmeter im gewählten Bereich ist.'
+        },
+        /* ---- Magnetische Grössen (Kapitel 9 des Heftes) ---------------------- */
+        {
+            id: 'magnet-durchflutung', kapitel: 'magnet', schreibweise: 'Θ = I · N',
+            groessen: [g('Θ', 'Durchflutung', 'A'), g('I', 'Strom', 'A'),
+                g('N', 'Windungszahl', '')],
+            loese: { 'Θ': v => v.I * v.N, I: v => v['Θ'] / v.N, N: v => v['Θ'] / v.I },
+            erklaerung: 'Was das Magnetfeld antreibt. Zehn Windungen mit einem Ampere ' +
+                'wirken wie eine Windung mit zehn.'
+        },
+        {
+            id: 'magnet-feldstaerke', kapitel: 'magnet', schreibweise: 'H = I · N / l_m',
+            groessen: [g('H', 'Feldstärke', 'A/m'), g('I', 'Strom', 'A'),
+                g('N', 'Windungszahl', ''),
+                g('l_m', 'mittlere Feldlinienlänge', 'm')],
+            loese: {
+                H: v => v.I * v.N / v.l_m,
+                I: v => v.H * v.l_m / v.N,
+                N: v => v.H * v.l_m / v.I,
+                l_m: v => v.I * v.N / v.H
+            },
+            erklaerung: 'Die Durchflutung auf die Länge verteilt.'
+        },
+        {
+            id: 'magnet-flussdichte', kapitel: 'magnet', schreibweise: 'B = μ₀ · μ_r · H',
+            groessen: [g('B', 'Flussdichte', 'T', 'Tesla — 1 T = 1 Vs/m²'),
+                g('μ_r', 'relative Permeabilität', '', 'Luft ≈ 1, Eisen bis mehrere tausend'),
+                g('H', 'Feldstärke', 'A/m')],
+            loese: {
+                B: v => 1.257e-6 * v['μ_r'] * v.H,
+                'μ_r': v => v.B / (1.257e-6 * v.H),
+                H: v => v.B / (1.257e-6 * v['μ_r'])
+            },
+            annahme: 'Mit der Feldkonstanten μ₀ = 1,257 · 10⁻⁶ Vs/Am.',
+            erklaerung: 'Wie dicht das Feld im Material wird. Eisen bündelt es tausendfach.'
+        },
+        {
+            id: 'magnet-fluss', kapitel: 'magnet', schreibweise: 'Φ = B · A',
+            groessen: [g('Φ', 'magnetischer Fluss', 'Wb', 'Weber — 1 Wb = 1 Vs'),
+                g('B', 'Flussdichte', 'T'), g('A', 'Polfläche', 'm²')],
+            loese: { 'Φ': v => v.B * v.A, B: v => v['Φ'] / v.A, A: v => v['Φ'] / v.B },
+            erklaerung: 'Der ganze Fluss durch die Fläche.'
+        },
+        {
+            id: 'magnet-widerstand', kapitel: 'magnet',
+            schreibweise: 'R_m = l_m / (μ₀ · μ_r · A)',
+            groessen: [g('R_m', 'magnetischer Widerstand', 'A/Vs'),
+                g('l_m', 'mittlere Feldlinienlänge', 'm'),
+                g('μ_r', 'relative Permeabilität', ''),
+                g('A', 'Polfläche', 'm²')],
+            loese: {
+                R_m: v => v.l_m / (1.257e-6 * v['μ_r'] * v.A),
+                l_m: v => v.R_m * 1.257e-6 * v['μ_r'] * v.A,
+                'μ_r': v => v.l_m / (1.257e-6 * v.R_m * v.A),
+                A: v => v.l_m / (1.257e-6 * v['μ_r'] * v.R_m)
+            },
+            annahme: 'Mit der Feldkonstanten μ₀ = 1,257 · 10⁻⁶ Vs/Am.',
+            erklaerung: 'Das Gegenstück zum elektrischen Widerstand: derselbe Bau, ' +
+                'Länge durch Leitfähigkeit mal Fläche.'
+        },
+        {
+            id: 'magnet-selbstinduktion', kapitel: 'magnet', schreibweise: 'u_i = L · ΔI / Δt',
+            groessen: [g('u_i', 'Selbstinduktionsspannung', 'V', 'Ihr Vorzeichen ist negativ — sie wirkt entgegen'),
+                g('L', 'Induktivität', 'H'),
+                g('ΔI', 'Stromänderung', 'A'),
+                g('Δt', 'Zeitspanne', 's')],
+            loese: {
+                u_i: v => v.L * v['ΔI'] / v['Δt'],
+                L: v => v.u_i * v['Δt'] / v['ΔI'],
+                'ΔI': v => v.u_i * v['Δt'] / v.L,
+                'Δt': v => v.L * v['ΔI'] / v.u_i
+            },
+            annahme: 'Der Betrag. Das Minuszeichen der Lenzschen Regel sagt die RICHTUNG: ' +
+                'die Spannung wirkt der Änderung entgegen.',
+            erklaerung: 'Warum eine Spule beim Ausschalten Funken zieht — und warum eine ' +
+                'Freilaufdiode danebengehört.'
+        },
+        /* ---- Spannungsfall und Leistungsverlust (Kapitel 15 des Heftes) ------
+           DER ENTSCHEIDENDE PUNKT STEHT IN DEN FORMELN, NICHT DANEBEN: bei
+           Gleich- und Wechselstrom zählt die Leitung ZWEIMAL — hin und zurück.
+           Bei Drehstrom nur einmal. Wer das verwechselt, rechnet den halben oder
+           den doppelten Spannungsfall. */
+        {
+            id: 'fall-leitungswiderstand', kapitel: 'fall',
+            schreibweise: 'R_Ltg = ρ · 2 · l / A',
+            groessen: [g('R_Ltg', 'Leitungswiderstand', 'Ω', 'Hin- UND Rückleiter zusammen'),
+                g('ρ', 'spezifischer Widerstand', 'Ω·mm²/m', 'Kupfer 0,0175'),
+                g('l', 'Leitungslänge', 'm', 'Einfache Länge — die 2 steht schon in der Formel'),
+                g('A', 'Leiterquerschnitt', 'mm²')],
+            loese: {
+                R_Ltg: v => v['ρ'] * 2 * v.l / v.A,
+                'ρ': v => v.R_Ltg * v.A / (2 * v.l),
+                l: v => v.R_Ltg * v.A / (2 * v['ρ']),
+                A: v => v['ρ'] * 2 * v.l / v.R_Ltg
+            },
+            weg: {
+                R_Ltg: (v, e) => [`R_Ltg = ρ · 2 · l ÷ A`,
+                    `R_Ltg = ${v['ρ']} · 2 · ${v.l} m ÷ ${v.A} mm²`,
+                    `R_Ltg = ${e} Ω`],
+                A: (v, e) => [`A = ρ · 2 · l ÷ R_Ltg`,
+                    `A = ${v['ρ']} · 2 · ${v.l} m ÷ ${v.R_Ltg} Ω`,
+                    `A = ${e} mm²`]
+            },
+            annahme: 'Für Gleichstrom und einphasigen Wechselstrom. Bei Drehstrom zählt die ' +
+                'Länge nur EINFACH — dafür gibt es die eigene Formel.',
+            erklaerung: 'Der Strom muss hin und zurück. Deshalb die 2 — der häufigste Fehler ' +
+                'beim Querschnitt ist, sie zu vergessen.'
+        },
+        {
+            id: 'fall-leitungswiderstand-dreh', kapitel: 'fall',
+            schreibweise: 'R_Ltg = ρ · l / A',
+            groessen: [g('R_Ltg', 'Leitungswiderstand', 'Ω', 'Je Aussenleiter'),
+                g('ρ', 'spezifischer Widerstand', 'Ω·mm²/m'),
+                g('l', 'Leitungslänge', 'm'),
+                g('A', 'Leiterquerschnitt', 'mm²')],
+            loese: {
+                R_Ltg: v => v['ρ'] * v.l / v.A,
+                'ρ': v => v.R_Ltg * v.A / v.l,
+                l: v => v.R_Ltg * v.A / v['ρ'],
+                A: v => v['ρ'] * v.l / v.R_Ltg
+            },
+            annahme: 'Für Drehstrom. Bei symmetrischer Last fliesst über den Neutralleiter ' +
+                'nichts zurück — deshalb zählt die Länge nur einfach.',
+            erklaerung: 'Beim Drehstrom gibt es keinen Rückleiter im selben Sinn.'
+        },
+        {
+            id: 'fall-gleich', kapitel: 'fall', schreibweise: 'ΔU = I · R_Ltg',
+            groessen: [g('ΔU', 'Spannungsfall', 'V'), g('I', 'Strom', 'A'),
+                g('R_Ltg', 'Leitungswiderstand', 'Ω')],
+            loese: {
+                'ΔU': v => v.I * v.R_Ltg,
+                I: v => v['ΔU'] / v.R_Ltg,
+                R_Ltg: v => v['ΔU'] / v.I
+            },
+            annahme: 'Gleichstrom, oder Wechselstrom mit rein ohmscher Last.',
+            erklaerung: 'Ohm auf der Leitung. Was hier verlorengeht, kommt beim Verbraucher nicht an.'
+        },
+        {
+            id: 'fall-wechsel', kapitel: 'fall', schreibweise: 'ΔU = I · R_Ltg · cos φ',
+            groessen: [g('ΔU', 'Spannungsfall', 'V'), g('I', 'Strom', 'A'),
+                g('R_Ltg', 'Leitungswiderstand', 'Ω'),
+                g('cosφ', 'Leistungsfaktor', '')],
+            loese: {
+                'ΔU': v => v.I * v.R_Ltg * v['cosφ'],
+                I: v => v['ΔU'] / (v.R_Ltg * v['cosφ']),
+                R_Ltg: v => v['ΔU'] / (v.I * v['cosφ']),
+                'cosφ': v => v['ΔU'] / (v.I * v.R_Ltg)
+            },
+            erklaerung: 'Beim Wechselstrom zählt nur der Wirkanteil des Stroms für den ' +
+                'ohmschen Spannungsfall.'
+        },
+        {
+            id: 'fall-dreh', kapitel: 'fall', schreibweise: 'ΔU = √3 · I · R_Ltg · cos φ',
+            groessen: [g('ΔU', 'Spannungsfall', 'V', 'Zwischen den Aussenleitern'),
+                g('I', 'Strom', 'A'), g('R_Ltg', 'Leitungswiderstand', 'Ω'),
+                g('cosφ', 'Leistungsfaktor', '')],
+            loese: {
+                'ΔU': v => WURZEL(3) * v.I * v.R_Ltg * v['cosφ'],
+                I: v => v['ΔU'] / (WURZEL(3) * v.R_Ltg * v['cosφ']),
+                R_Ltg: v => v['ΔU'] / (WURZEL(3) * v.I * v['cosφ']),
+                'cosφ': v => v['ΔU'] / (WURZEL(3) * v.I * v.R_Ltg)
+            },
+            erklaerung: 'Der Spannungsfall zwischen zwei Aussenleitern — daher die Wurzel aus 3.'
+        },
+        {
+            id: 'fall-prozent', kapitel: 'fall', schreibweise: 'Δu = ΔU / U · 100 %',
+            groessen: [g('Δu', 'Spannungsfall prozentual', '%'),
+                g('ΔU', 'Spannungsfall', 'V'),
+                g('U', 'Netzspannung', 'V')],
+            loese: {
+                'Δu': v => v['ΔU'] / v.U * 100,
+                'ΔU': v => v['Δu'] * v.U / 100,
+                U: v => v['ΔU'] * 100 / v['Δu']
+            },
+            erklaerung: 'Die Zahl, nach der die Installation beurteilt wird — nicht die Volt, ' +
+                'sondern ihr Anteil an der Netzspannung.'
+        },
+        {
+            id: 'fall-verlust', kapitel: 'fall', schreibweise: 'P_V = I² · R_Ltg',
+            groessen: [g('P_V', 'Verlustleistung der Leitung', 'W'),
+                g('I', 'Strom', 'A'), g('R_Ltg', 'Leitungswiderstand', 'Ω')],
+            loese: {
+                P_V: v => v.I * v.I * v.R_Ltg,
+                I: v => WURZEL(v.P_V / v.R_Ltg),
+                R_Ltg: v => v.P_V / (v.I * v.I)
+            },
+            erklaerung: 'Die Leitung wird warm. Doppelter Strom heisst VIERFACHER Verlust.'
+        },
+        {
+            id: 'fall-verlust-dreh', kapitel: 'fall', schreibweise: 'P_V = 3 · I² · R_Ltg',
+            groessen: [g('P_V', 'Verlustleistung der Leitung', 'W'),
+                g('I', 'Strom je Aussenleiter', 'A'),
+                g('R_Ltg', 'Leitungswiderstand je Aussenleiter', 'Ω')],
+            loese: {
+                P_V: v => 3 * v.I * v.I * v.R_Ltg,
+                I: v => WURZEL(v.P_V / (3 * v.R_Ltg)),
+                R_Ltg: v => v.P_V / (3 * v.I * v.I)
+            },
+            erklaerung: 'Drei Aussenleiter, jeder mit seinem Verlust.'
+        },
+        {
+            id: 'fall-verlust-prozent', kapitel: 'fall',
+            schreibweise: 'P_V% = P_V / P · 100 %',
+            groessen: [g('P_V%', 'Verlustleistung prozentual', '%'),
+                g('P_V', 'Verlustleistung der Leitung', 'W'),
+                g('P', 'Nennleistung des Verbrauchers', 'W')],
+            loese: {
+                'P_V%': v => v.P_V / v.P * 100,
+                P_V: v => v['P_V%'] * v.P / 100,
+                P: v => v.P_V * 100 / v['P_V%']
+            },
+            erklaerung: 'Wie viel von der Leistung unterwegs verlorengeht.'
         },
         {
             id: 'wirkungsgrad', kapitel: 'leistung', schreibweise: 'η = P_ab / P_zu',
@@ -17600,7 +17974,9 @@ Register.elektroformeln = (() => {
                 n: v => v.E * v.A * v.p / (v['Φ_L'] * v['η_B']),
                 E: v => v.n * v['Φ_L'] * v['η_B'] / (v.A * v.p),
                 A: v => v.n * v['Φ_L'] * v['η_B'] / (v.E * v.p),
-                'Φ_L': v => v.E * v.A * v.p / (v.n * v['η_B'])
+                'Φ_L': v => v.E * v.A * v.p / (v.n * v['η_B']),
+                p: v => v.n * v['Φ_L'] * v['η_B'] / (v.E * v.A),
+                'η_B': v => v.E * v.A * v.p / (v.n * v['Φ_L'])
             },
             annahme: 'Der Betriebswirkungsgrad hängt vom Raum ab und wird angenommen.',
             erklaerung: 'Wie viele Leuchten ein Raum braucht — aufgerundet, nie abgerundet.'
@@ -17623,7 +17999,8 @@ Register.elektroformeln = (() => {
             loese: {
                 'E₂': v => v['E₁'] * (v['r₁'] / v['r₂']) * (v['r₁'] / v['r₂']),
                 'E₁': v => v['E₂'] * (v['r₂'] / v['r₁']) * (v['r₂'] / v['r₁']),
-                'r₂': v => v['r₁'] * WURZEL(v['E₁'] / v['E₂'])
+                'r₂': v => v['r₁'] * WURZEL(v['E₁'] / v['E₂']),
+                'r₁': v => v['r₂'] * WURZEL(v['E₂'] / v['E₁'])
             },
             annahme: 'Gilt für eine punktförmige Lichtquelle.',
             erklaerung: 'Doppelter Abstand heisst nur noch ein Viertel Licht.'
@@ -17635,7 +18012,9 @@ Register.elektroformeln = (() => {
                 g('tanφ₁', 'tan φ vorher', ''), g('tanφ₂', 'tan φ nachher', '')],
             loese: {
                 Q_C: v => v.P * (v['tanφ₁'] - v['tanφ₂']),
-                P: v => v.Q_C / (v['tanφ₁'] - v['tanφ₂'])
+                P: v => v.Q_C / (v['tanφ₁'] - v['tanφ₂']),
+                'tanφ₁': v => v.Q_C / v.P + v['tanφ₂'],
+                'tanφ₂': v => v['tanφ₁'] - v.Q_C / v.P
             },
             erklaerung: 'Wie viel Kondensatorleistung nötig ist, um den cos φ zu verbessern.'
         },
@@ -17646,7 +18025,8 @@ Register.elektroformeln = (() => {
             loese: {
                 C: v => v.Q_C / (2 * PI * v.f * v.U * v.U),
                 Q_C: v => v.C * 2 * PI * v.f * v.U * v.U,
-                U: v => WURZEL(v.Q_C / (2 * PI * v.f * v.C))
+                U: v => WURZEL(v.Q_C / (2 * PI * v.f * v.C)),
+                f: v => v.Q_C / (2 * PI * v.C * v.U * v.U)
             },
             erklaerung: 'Aus der Blindleistung die Kapazität des Kondensators.'
         }

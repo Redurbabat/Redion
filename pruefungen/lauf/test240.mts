@@ -116,11 +116,21 @@ p('Jede erklärt sich in einem Satz', !sammlung.ohneErklaerung.length,
 p('Jede nennt ihre Grössen', !sammlung.ohneGroessen.length, sammlung.ohneGroessen.join(', '));
 p('Jede Grösse hat Zeichen, Name und ein Einheitenfeld',
   !sammlung.ohnePflicht.length, sammlung.ohnePflicht.slice(0, 5).join(', '));
-/* Genau diese sind Verhältnisse, Faktoren oder Stückzahlen. Wer eine Grösse
-   hinzufügt und die Einheit vergisst, muss diese Zeile anfassen — und dabei
-   merken, dass er sie vergessen hat. */
-const EINHEITENLOS = ['N₁', 'N₂', 'cosφ', 'n', 'p', 'sinφ', 'tanφ₁', 'tanφ₂',
-                      'εᵣ', 'η', 'η_B'];
+/* Wer eine Grösse hinzufügt und die Einheit vergisst, muss diese Zeile
+   anfassen — und dabei merken, dass er sie vergessen hat.
+
+   ZWEI SORTEN stehen hier, und der Unterschied gehört benannt:
+
+   Verhältnisse, Faktoren und Stückzahlen sind WIRKLICH einheitenlos —
+   cos φ, der Wirkungsgrad, die Windungszahlen, die relative Permeabilität.
+   Da gibt es nichts zu vergessen.
+
+   `MB`, `MW` und `AF_abs` aus der Messtechnik sind es NICHT: ein
+   Messbereich ist 300 V oder 5 A, je nachdem, was am Gerät eingestellt
+   ist. Ihre Einheit steht nicht fest, weil sie von der Messung abhängt —
+   und ein falscher fester Eintrag wäre schlimmer als ein leerer. */
+const EINHEITENLOS = ['AF_abs', 'MB', 'MW', 'N', 'N₁', 'N₂', 'cosφ', 'k', 'n', 'p',
+                      'sinφ', 'tanφ₁', 'tanφ₂', 'εᵣ', 'η', 'η_B', 'μ_r'];
 p('Und einheitenlos sind nur die, die es sein dürfen',
   JSON.stringify(sammlung.einheitenlos) === JSON.stringify(EINHEITENLOS),
   `ist ${JSON.stringify(sammlung.einheitenlos)}`);
@@ -654,6 +664,86 @@ p('Mit Angabe genau eines', markiert.mit === 1, `${markiert.mit}`);
 p('… und zwar das genannte', markiert.amRichtigen);
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' · '));
+
+/* ==========================================================================
+ * §13 · Jede Formel rechnet hin und zurück
+ * --------------------------------------------------------------------------
+ * Eine Formelsammlung im Code hat einen Vorteil gegenüber einem gescannten
+ * Heft: man kann sie NACHRECHNEN. Also wird sie nachgerechnet.
+ *
+ * Für jede Formel werden Werte eingesetzt, nach jeder Grösse aufgelöst, und
+ * mit dem Ergebnis rückwärts wieder auf eine der eingesetzten Grössen
+ * gerechnet. Kommt dabei nicht heraus, was hineinging, ist eine der
+ * Umstellungen falsch — und das sieht man einer Formelzeile nicht an.
+ *
+ * WAS DIESE PRÜFUNG BEIM ERSTEN LAUF FAND: bei vier Formeln fehlten
+ * Umstellungen ganz — `leuchtenzahl` liess sich nicht nach dem
+ * Planungsfaktor auflösen, `abstandsgesetz` nicht nach dem ersten Abstand,
+ * `kompensation-q` nach keinem der beiden Tangenswerte, `kompensation-c`
+ * nicht nach der Frequenz. Wer danach fragte, bekam nichts.
+ *
+ * UND EIN FEHLER IN DER PRÜFUNG SELBST, der hierher gehört: die ersten
+ * Testwerte waren 2, 3,7, 5,4 der Reihe nach. Bei Z = √(R²+X²) hiess das
+ * Z kleiner als R, und √(Z²−R²) war zu Recht NaN. Die Meldung sagte etwas
+ * über die Testwerte und nichts über die Formel. Jetzt wird die erste
+ * Grösse — das Ergebnis — aus den übrigen GERECHNET statt gesetzt.
+ * ========================================================================*/
+console.log('\n13 · Jede Formel rechnet hin und zurück');
+
+const rundlauf = await seite.evaluate(() => {
+  const F = Register.elektroformeln;
+  const alle = F.alle();
+  const schlecht: string[] = [];
+  let umstellungen = 0;
+  /* Naturkonstanten müssen nicht auflösbar sein — nach der Erdbeschleunigung
+     oder der elektrischen Feldkonstanten fragt niemand. */
+  const KONSTANT = ['g', 'ε₀', 'μ₀'];
+
+  for (const f of alle as any[]) {
+    const zeichen = f.groessen.map((x: any) => x.zeichen);
+    umstellungen += Object.keys(f.loese || {}).length;
+    for (const z of zeichen)
+      if (!f.loese[z] && !KONSTANT.includes(z))
+        schlecht.push(`${f.id}: ${z} nicht auflösbar`);
+
+    const werte: Record<string, number> = {};
+    zeichen.slice(1).forEach((z: string, i: number) => { werte[z] = 2 + i * 1.7; });
+    let erste: number;
+    try { erste = f.loese[zeichen[0]] ? f.loese[zeichen[0]](werte) : NaN; }
+    catch { erste = NaN; }
+    if (!Number.isFinite(erste)) { schlecht.push(`${f.id}: Startwerte gehen nicht`); continue; }
+    werte[zeichen[0]] = erste;
+
+    for (const ziel of zeichen) {
+      if (KONSTANT.includes(ziel)) continue;
+      const rest: Record<string, number> = {};
+      zeichen.forEach((z: string) => { if (z !== ziel) rest[z] = werte[z]!; });
+      let e: number;
+      try { e = f.loese[ziel](rest); } catch { schlecht.push(`${f.id}/${ziel}: wirft`); continue; }
+      if (!Number.isFinite(e)) { schlecht.push(`${f.id}/${ziel}: ${e}`); continue; }
+      for (const zweit of zeichen) {
+        if (zweit === ziel || KONSTANT.includes(zweit)) continue;
+        const r2: Record<string, number> = { ...rest };
+        r2[ziel] = e; delete r2[zweit];
+        let e2: number;
+        try { e2 = f.loese[zweit](r2); } catch { continue; }
+        if (!Number.isFinite(e2)) { schlecht.push(`${f.id}: ${ziel}→${zweit} gibt ${e2}`); continue; }
+        const soll = werte[zweit]!;
+        if (Math.abs(e2 - soll) > Math.abs(soll) * 1e-6 + 1e-9)
+          schlecht.push(`${f.id}: ${ziel}→${zweit} ${e2.toPrecision(6)} statt ${soll}`);
+      }
+    }
+  }
+  return { formeln: alle.length, umstellungen, schlecht: [...new Set(schlecht)] };
+});
+
+p('Jede Grösse jeder Formel ist auflösbar',
+  !rundlauf.schlecht.some((x: string) => /nicht auflösbar/.test(x)),
+  rundlauf.schlecht.filter((x: string) => /nicht auflösbar/.test(x)).slice(0, 3).join(' | '));
+p('Und jede Umstellung rechnet hin und zurück dasselbe',
+  !rundlauf.schlecht.length, rundlauf.schlecht.slice(0, 3).join(' | '));
+p('Es sind auch wirklich viele', rundlauf.umstellungen >= 250,
+  `${rundlauf.formeln} Formeln, ${rundlauf.umstellungen} Umstellungen`);
 
 console.log(`\n${ok} bestanden, ${weg} gescheitert`);
 await browser.close();
