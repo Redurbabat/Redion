@@ -313,7 +313,85 @@ p('Ein unbekannter Name gibt nichts zurück statt eines Kästchens',
   symbole?.leerBeiUnbekannt === true);
 p('Die Zeichen nehmen die Farbe ihrer Zeile', symbole?.hatStrich === true);
 
-console.log('\n5 · Wer keine Bewegung will, bekommt keine');
+console.log('\n5 · Die Schale: Masse, Druckpunkt, Suche');
+
+const schaleMass = await seite.evaluate(() => {
+  const b = (s: string) => document.querySelector<HTMLElement>(s);
+  const seitenleiste = b('#sidebar');
+  const sucher = b('#topbar .sucher');
+  const kopf = b('#topbar');
+  const fenster = window.innerWidth;
+  const sr = sucher?.getBoundingClientRect();
+  return {
+    seite: seitenleiste ? Math.round(seitenleiste.getBoundingClientRect().width) : 0,
+    kopfHoehe: kopf ? Math.round(kopf.getBoundingClientRect().height) : 0,
+    sucherDa: !!sucher,
+    sucherBreite: sr ? Math.round(sr.width) : 0,
+    /* Wie weit sitzt die Mitte des Suchers von der Fenstermitte weg? */
+    ausDerMitte: sr ? Math.abs(Math.round((sr.left + sr.width / 2) - fenster / 2)) : 9999,
+    /* Der Druckpunkt: steht an den Knöpfen eine Übergangszeit für `transform`? */
+    druck: (() => {
+      const k = b('#sidebar .side-item');
+      if (!k) return '';
+      return getComputedStyle(k).transitionProperty;
+    })()
+  };
+});
+
+/* §5 DES AUFTRAGS: 220–250. Sie war 260 — und auf 1366 × 768 sind zwanzig
+   Punkte keine Kosmetik, sondern zwanzig Punkte Arbeitsfläche (§68). */
+p('Die Seitenleiste liegt zwischen 220 und 250',
+  schaleMass.seite >= 220 && schaleMass.seite <= 250, `${schaleMass.seite}`);
+/* §8: 52–58. */
+p('Die Kopfleiste ist 52 bis 58 hoch',
+  schaleMass.kopfHoehe >= 52 && schaleMass.kopfHoehe <= 58, `${schaleMass.kopfHoehe}`);
+p('Die Suche steht in der Kopfleiste', schaleMass.sucherDa);
+/* NICHT „STEHT MITTIG", SONDERN „STEHT STILL".
+ *
+ * Der erste Anlauf prüfte den Abstand zur Fenstermitte mit 90 Punkten
+ * Nachsicht. Der Gegenbeweis blieb grün: auch die kaputte Lage lag bei
+ * einem der beiden Titel innerhalb der 90. Eine Prüfung, die den Fehler
+ * durchlässt, den sie verhindern soll, ist keine (§55.2).
+ *
+ * Gemessen ist der Fehler etwas anderes: der Sucher WANDERT mit dem
+ * Seitentitel. Kurzer Titel 559, langer Titel 751 — 192 Punkte. Mit der
+ * Feder an der Krume: beide Male dieselbe Stelle.
+ *
+ * Also wird genau das gemessen, und der Unterschied ist nicht knapp,
+ * sondern 192 gegen 0. */
+const wandert = await seite.evaluate(() => {
+  const k = document.querySelector('#topbar .crumb') as HTMLElement;
+  const s = document.querySelector('#topbar .sucher') as HTMLElement;
+  if (!k || !s) return -1;
+  const alt = k.textContent;
+  const wo = () => Math.round(s.getBoundingClientRect().left);
+  k.textContent = 'Kurz';                    const a = wo();
+  k.textContent = 'Ein ziemlich langer Seitentitel für den Versuch'; const b = wo();
+  k.textContent = alt;
+  return Math.abs(a - b);
+});
+p('Die Suche wandert nicht mit dem Seitentitel', wandert === 0,
+  `${wandert} Punkte Unterschied`);
+p('… und steht dabei ungefähr in der Mitte', schaleMass.ausDerMitte <= 60,
+  `${schaleMass.ausDerMitte} Punkte daneben`);
+p('Sie ist breit genug, um sie zu sehen', schaleMass.sucherBreite >= 260,
+  `${schaleMass.sucherBreite}`);
+/* §15: der Druckpunkt. Geprüft wird, dass `transform` überhaupt überblendet
+   wird — ohne das springt der Knopf statt nachzugeben. */
+p('Die Knöpfe blenden ihren Druckpunkt über',
+  /transform/.test(schaleMass.druck), schaleMass.druck.slice(0, 60));
+
+/* UND SIE TUT ETWAS. Ein Suchfeld, das nichts öffnet, ist die schlimmste
+   Sorte Attrappe — es sieht aus wie das Wichtigste der App. */
+await seite.click('#topbar .sucher');
+await seite.waitForTimeout(500);
+const suchDa = await seite.evaluate(() =>
+  !!document.querySelector('#suche-overlay, .suche-fenster, [data-suche], .overlay input'));
+p('Ein Klick darauf öffnet die Suche', suchDa);
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(300);
+
+console.log('\n6 · Wer keine Bewegung will, bekommt keine');
 
 await seite.emulateMedia({ reducedMotion: 'reduce' });
 await seite.waitForTimeout(150);

@@ -530,6 +530,177 @@ input,textarea,select{font:inherit; color:inherit}
    (§38). */
 #topbar .top-btn.on{ color:var(--accent-text) }
 
+/* ============================================================================
+ * DAS KNOPF-SYSTEM (E201)
+ * ----------------------------------------------------------------------------
+ * §14 und §79 des Gestaltungs-Auftrags verlangen EIN System, nicht zwei. Redion
+ * hatte schon Klassen — `.top-btn`, `.side-item`, `.sr`, `.icon-btn`,
+ * `.ws-btn` —, jede mit eigener Höhe, eigenem Radius, eigener Übergangszeit.
+ * Ein zweites System danebenzustellen hätte die Zahl der Systeme erhöht und
+ * nichts gelöst.
+ *
+ * Also andersherum: die BESTEHENDEN Klassen bekommen gemeinsames Verhalten.
+ * Wer eine neue Fläche baut, schreibt `.rb` dazu und erbt dasselbe.
+ *
+ * `rb` steht für Redion-Bedienelement. Zwei Buchstaben, weil die Klasse an
+ * sehr vielen Stellen steht.
+ * ==========================================================================*/
+
+.rb,
+#topbar .top-btn,
+#sidebar .side-item,
+#sidebar .sr,
+#sidebar .ws-btn,
+#sidebar .side-chat,
+.icon-btn{
+  /* EINE Kurve und EINE Zeit für alle. Zwei Bewegungen mit verschiedenen
+     Beschleunigungen nebeneinander wirken wie zwei verschiedene Programme. */
+  transition:
+    transform     var(--motion-instant) var(--ease),
+    background    var(--motion-fast)    var(--ease),
+    border-color  var(--motion-fast)    var(--ease),
+    color         var(--motion-fast)    var(--ease),
+    box-shadow    var(--motion-fast)    var(--ease);
+}
+
+/* DER DRUCKPUNKT (§15).
+ *
+ * 0,976 — nicht 0,95 und nicht 0,99. Bei 0,99 sieht man nichts, bei 0,95
+ * springt der Knopf. Der Wert ist so gewählt, dass ein 34 px hoher Knopf um
+ * genau einen Punkt schrumpft: sichtbar, aber nicht als Bewegung, sondern
+ * als Widerstand unter dem Finger.
+ *
+ * `:active` und nicht `:hover`: ein Zeiger, der nur darüberfährt, hat noch
+ * nichts getan. Am Telefon gibt es kein Überfahren, und dort ist das hier
+ * die EINZIGE Rückmeldung, dass der Finger angekommen ist. */
+.rb:active,
+#topbar .top-btn:active,
+#sidebar .side-item:active,
+#sidebar .sr:active,
+#sidebar .ws-btn:active,
+#sidebar .side-chat:active,
+.icon-btn:active{ transform:scale(.976) }
+
+/* Ein abgeschalteter Knopf drückt sich nicht. Er sähe sonst aus, als hätte
+   er reagiert, und die Enttäuschung kommt eine Zehntelsekunde später. */
+.rb:disabled:active,
+#topbar .top-btn:disabled:active,
+#sidebar .side-item:disabled:active,
+.icon-btn:disabled:active{ transform:none }
+
+/* --- Die Ausprägungen (§14) ---------------------------------------------
+ * Nur die, die es wirklich gibt. Ein System mit zehn Arten, von denen drei
+ * benutzt werden, ist kein System, sondern ein Katalog.
+ * -----------------------------------------------------------------------*/
+
+/* Die Grundform: ruhige Fläche, dezenter Rand. */
+.rb{
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:var(--space-2);
+  height:34px; padding:0 var(--space-4);
+  border:1px solid var(--line); border-radius:var(--radius-md);
+  background:var(--bg-card); color:var(--text);
+  font-size:13px; font-weight:600; white-space:nowrap;
+}
+.rb:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
+.rb:disabled{ opacity:.45; cursor:not-allowed }
+
+/* HAUPTHANDLUNG. Genau eine je Bild — mehr macht keine wichtig.
+   Die Schriftfarbe kommt aus `--auf-accent`, nicht aus Weiss: welche Farbe
+   auf dem Akzent lesbar ist, wird je Modus gemessen (E142, E199). */
+.rb.haupt{
+  background:var(--accent); color:var(--auf-accent); border-color:transparent;
+}
+.rb.haupt:hover{ background:var(--accent-hover); border-color:transparent }
+
+/* LEISE. Kein Rand, keine Fläche — bis man hinfasst. Für Handlungen, die
+   danebenstehen dürfen: „Abbrechen", „Später". */
+.rb.leise{ background:transparent; border-color:transparent; color:var(--text-dim) }
+.rb.leise:hover{ background:var(--bg-hover); color:var(--text) }
+
+/* UNWIDERRUFLICH. Rot, und nur hier. Der Akzent ist violett, damit „Sichern"
+   nicht aussieht wie „Löschen" — das war der ganze Grund für E44. */
+.rb.gefahr{ background:transparent; border-color:var(--gefahr); color:var(--gefahr) }
+.rb.gefahr:hover{ background:var(--gefahr); color:#fff; border-color:var(--gefahr) }
+
+/* NUR EIN ZEICHEN. Quadratisch. 34 am Rechner, 44 am Finger (§37, §69). */
+.rb.zeichen{ width:34px; padding:0 }
+@media (pointer:coarse){
+  .rb.zeichen{ width:44px; height:44px }
+}
+
+/* SCHWEBEND (§16). Durchscheinend über dem, was darunter liegt — für
+   Leisten, die auf der Arbeitsfläche liegen, nicht neben ihr. */
+.rb.glas{
+  background:var(--bg-schwebend);
+  backdrop-filter:var(--glas-blur); -webkit-backdrop-filter:var(--glas-blur);
+  box-shadow:var(--glas-rand); border-color:transparent;
+}
+
+/* ============================================================================
+ * DIE SUCHE IN DER MITTE (E201, §8/§10)
+ * ----------------------------------------------------------------------------
+ * Die Kopfleiste war eine Reihe: Krume links, Knöpfe rechts, dazwischen ein
+ * Dehnstück. Der Auftrag will die Suche in der MITTE, und „Mitte" heisst
+ * hier: mittig zum FENSTER, nicht mittig zwischen zwei Nachbarn, die je nach
+ * Seitentitel verschieden breit sind.
+ *
+ * Deshalb keine zweite Flexzeile mit `margin:auto`, sondern zwei
+ * Dehnstücke: die Krume schiebt von links, `.spacer` von rechts, und der
+ * Sucher steht dazwischen mit fester Höchstbreite. Wandert der Titel, wandert
+ * der Sucher mit — und genau das soll er NICHT, also bekommt die Krume eine
+ * Höchstbreite dazu.
+ * ==========================================================================*/
+#topbar .sucher{
+  flex:1 1 auto; min-width:0; max-width:520px;
+  justify-content:flex-start;
+  height:36px; padding:0 var(--space-3);
+  background:var(--bg-input); border-color:var(--line);
+  color:var(--text-faint); font-weight:500;
+}
+#topbar .sucher:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
+#topbar .sucher .sucher-text{
+  flex:1 1 auto; min-width:0; text-align:left;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+#topbar .sucher kbd{
+  flex:none; font-size:10px; font-family:inherit;
+  padding:2px var(--space-2); border-radius:var(--radius-sm);
+  border:1px solid var(--line); border-bottom-color:var(--line-stark);
+  background:var(--bg-card); color:var(--text-faint);
+}
+/* DIE FEDER GEHÖRT AN DIE KRUME, und das ist der ganze Kniff.
+ *
+ * Rechts gab es längst eine (`.spacer{flex:1}`), links keine. Der Sucher
+ * begann also dort, wo der Seitentitel endete — und wanderte mit ihm.
+ * GEMESSEN, mit einem kurzen und einem 47 Zeichen langen Titel:
+ *
+ *     ohne Feder an der Krume    1366 px: Mitte bei 559 und bei 751
+ *                                          → 192 Punkte Unterschied
+ *                                1920 px: bis zu 339 Punkte aus der Mitte
+ *     mit Feder                  beides:  44 Punkte aus der Mitte, und
+ *                                          zwar IMMER dieselben 44
+ *
+ * `flex:1 1 0` heisst: Basis null, dann wachsen. Damit teilen sich Krume und
+ * Dehnstück den Rest zu gleichen Teilen, egal wie lang der Titel ist.
+ *
+ * Die 44 Punkte bleiben, und das ist Absicht: rechts stehen acht Knöpfe,
+ * links zwei. Genau mittig zum Fenster stünde der Sucher NÄHER an den acht
+ * als an den zweien, und das sieht schiefer aus als diese 44.
+ *
+ * Am `.spacer` musste dafür nichts geändert werden — er ist leer, also ist
+ * seine Basis ohnehin null. Ich hatte ihn zuerst mitgeändert und behauptet,
+ * das sei die Hälfte der Lösung. Der Gegenbeweis sagte nein. */
+#topbar .crumb{ flex:1 1 0; min-width:0; overflow:hidden }
+
+/* AM TELEFON GIBT ES DEN SUCHER NICHT. Dort liegt die Suche in der
+   Aktionsleiste unten, und eine zweite Suche oben wäre kein zweiter Weg,
+   sondern eine zweite Frage („welche von beiden?"). */
+@media (max-width:760px){
+  #topbar .sucher{ display:none }
+  #topbar .crumb{ max-width:none }
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/aufbau.css ===== */
@@ -550,11 +721,15 @@ input,textarea,select{font:inherit; color:inherit}
    SEITENLEISTE
    ========================================================================== */
 #sidebar{
-  width:260px; flex:0 0 260px; background:var(--bg-side);
+  /* 240 STATT 260 (§5, §68 des Gestaltungs-Auftrags). Der Auftrag nennt
+     220–250, und der Grund steht in §68: auf 1366 × 768 arbeitet man
+     nicht in der Seitenleiste, sondern daneben. Zwanzig Punkte sind
+     dort keine Kosmetik — sie sind zwanzig Punkte Arbeitsfläche. */
+  width:240px; flex:0 0 240px; background:var(--bg-side);
   border-right:1px solid var(--line); display:flex; flex-direction:column;
   transition:margin-left .18s ease;
 }
-#sidebar.collapsed{margin-left:calc(-1 * var(--side-w, 260px))}
+#sidebar.collapsed{margin-left:calc(-1 * var(--side-w, 240px))}
 .side-griff{position:absolute; right:-3px; top:0; bottom:0; width:6px; cursor:col-resize;
             z-index:30}
 .side-griff:hover{background:var(--accent); opacity:.4}
@@ -625,9 +800,17 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    ========================================================================== */
 #main{flex:1; display:flex; flex-direction:column; min-width:0; position:relative}
 
+/* 54 STATT 45 (§8 des Gestaltungs-Auftrags: 52–58).
+   Nicht, weil höher besser wäre — höher heisst weniger Arbeitsfläche, und
+   §68 besteht auf der. Sondern weil die Kopfleiste seit E201 ein 36 Punkte
+   hohes Suchfeld trägt: bei 45 Punkten blieben darüber und darunter je
+   viereinhalb, und ein Feld, das seinen Rahmen berührt, sieht eingeklemmt
+   aus. Neun Punkte oben und unten sind der Unterschied zwischen „sitzt" und
+   „passt gerade noch". */
 #topbar{
-  height:45px; flex:0 0 45px; display:flex; align-items:center; gap:4px;
-  padding:0 12px; border-bottom:1px solid var(--line-soft);
+  height:54px; flex:0 0 54px; display:flex; align-items:center;
+  gap:var(--space-1); padding:0 var(--space-4);
+  border-bottom:1px solid var(--line-soft);
 }
 .crumb{font-size:14px; color:var(--text-dim); display:flex; align-items:center; gap:4px; min-width:0}
 .crumb a{color:inherit; text-decoration:none; padding:3px 6px; border-radius:4px; cursor:pointer;
@@ -5719,12 +5902,26 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
-.sr{display:flex; align-items:center; gap:6px; padding:6px 9px; border-radius:8px;
+/* Die vier stummen Reiter enger: 6 Punkte Rand statt 9. Gemessen bringt das
+   24 Punkte, und genau die braucht der aktive, damit „Heute" ganz dasteht
+   statt als „He…". Am Telefon ist diese Leiste ausgeblendet, hier gilt also
+   nur der Zeiger — 30 Punkte sind dort genug (§37 spricht von 44 für den
+   Finger). */
+.sr{display:flex; align-items:center; gap:6px; padding:6px 6px; border-radius:8px;
   background:none; color:var(--text-dim); font-size:13px; white-space:nowrap; min-width:0}
 .sr span{font-size:14px; flex:none}
-.sr b{font-weight:500; overflow:hidden; text-overflow:ellipsis}
+/* DER AKTIVE REITER NIMMT SICH DEN REST (E201).
+   Als die Seitenleiste von 260 auf 240 ging, stand in der aktiven Pille
+   „He…" — der Name passte nicht mehr neben sein Zeichen. Er stand dort
+   nicht zu breit, sondern zu SCHMAL: die vier stummen Reiter nahmen ihre
+   feste Breite, und der aktive bekam, was übrig blieb.
+   `flex:1` dreht das um: die vier stummen behalten ihre 35 Punkte, und was
+   danach frei ist, gehört dem einen, der etwas zu sagen hat. */
+.sr{ flex:none }
+.sr.on{ flex:1 1 auto; min-width:0 }
+.sr b{font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sr:hover{background:var(--bg-hover); color:var(--text)}
-.sr.on{background:var(--bg-hover); color:var(--text); font-weight:600}
+.sr.on{background:var(--bg-hover); color:var(--text); font-weight:600; padding:6px 10px}
 .side-reiter.ohne-namen .sr b{display:none}
 .side-reiter.ohne-namen .sr{padding:7px 8px}
 .side-reiter:not(.ohne-namen) .sr:not(.on) b{display:none}
@@ -5739,9 +5936,18 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 
 /* Fuss der Seitenleiste: Neuer Chat + Schreibknopf */
 .side-unten{display:flex; gap:8px; align-items:center; padding:6px 10px 4px}
-.side-chat{flex:1; display:flex; align-items:center; gap:8px; padding:9px 12px;
+/* „Neuer Chat" brach auf 240 Punkten in DREI Zeilen um — „Neuer", „Chat",
+   „Strg O" —, und der Knopf wurde 60 statt 38 Punkte hoch. Ein Knopf, der
+   seine Höhe nach dem Fensterrand richtet, ist keiner.
+   Der Name bleibt in einer Zeile; das Kürzel darf verschwinden, wenn es eng
+   wird. Ein Kürzel, das man nicht liest, kostet nichts — ein umgebrochener
+   Name kostet die Form des Knopfes. */
+.side-chat{flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden;
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
   border-radius:22px; background:var(--bg-hover); color:var(--text); font-size:14px}
 .side-chat:hover{background:var(--line)}
+.side-chat > span:not(.k){overflow:hidden; text-overflow:ellipsis}
+@media (max-width:1500px){ .side-chat .k{display:none} }
 .side-chat .k{margin-left:auto; font-size:11px; color:var(--text-faint)}
 .side-schreib{width:38px; height:38px; border-radius:50%; background:var(--bg-hover);
   color:var(--text); font-size:15px; flex:none}
@@ -9444,6 +9650,21 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
          die vier Bereiche stehen. Am PC sind sie in der Seitenleiste. -->
     <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen" aria-label="Suchen"><span data-sym="search"></span></button>
     <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite" aria-label="Neue Seite"><span data-sym="pencil"></span></button>
+    <!-- DIE SUCHE IN DIE MITTE (§8, §10 des Gestaltungs-Auftrags).
+         Sie stand bisher als Zeile in der Seitenleiste. Eine Suche, die das
+         Wichtigste einer Wissens-App ist, gehört dorthin, wo das Auge zuerst
+         hinsieht — und sie muss dort auch AUSSEHEN wie ein Feld, nicht wie
+         ein Menüeintrag.
+         Es ist ein KNOPF und kein `<input>`: getippt wird in der
+         Suchüberlagerung, die Strg+P ohnehin öffnet. Ein Feld, das beim
+         ersten Zeichen durch ein anderes Feld ersetzt wird, verliert den
+         Anschlag — genau das passiert, wenn man es „richtig" macht. -->
+    <button class="rb sucher" id="btn-suche-mitte"
+            title="Suchen (Strg + P)" aria-label="In Redion suchen">
+      <span data-sym="search"></span>
+      <span class="sucher-text">Suchen in Redion …</span>
+      <kbd>Strg P</kbd>
+    </button>
     <div class="spacer"></div>
     <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>
@@ -105495,6 +105716,11 @@ const App = (() => {
             handyLeiste();
         });
         an('btn-suche-handy', () => suche());
+        /* Der Sucher in der Mitte der Kopfleiste (E201). Er öffnet dieselbe
+           Überlagerung wie Strg+P und die Zeile in der Seitenleiste — drei
+           Wege, ein Ziel. Drei Wege zu DREI verschiedenen Suchen wären der
+           Fehler; das war bei `suche` und `palette` schon einmal so (E160). */
+        an('btn-suche-mitte', () => suche());
         an('btn-neu-handy', () => neueSeite());
         handyLeiste();
         /* Reiterleiste oben in der Seitenleiste */

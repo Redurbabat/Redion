@@ -2831,6 +2831,11 @@ const App = (() => {
     an('hl-mehr', () => { PWA.schubladeZu && PWA.schubladeZu();
                           Seitenleiste.reiter('mehr'); Ansichten.mehr(); handyLeiste(); });
     an('btn-suche-handy', () => suche());
+    /* Der Sucher in der Mitte der Kopfleiste (E201). Er öffnet dieselbe
+       Überlagerung wie Strg+P und die Zeile in der Seitenleiste — drei
+       Wege, ein Ziel. Drei Wege zu DREI verschiedenen Suchen wären der
+       Fehler; das war bei `suche` und `palette` schon einmal so (E160). */
+    an('btn-suche-mitte', () => suche());
     an('btn-neu-handy',   () => neueSeite());
     handyLeiste();
 

@@ -15,11 +15,15 @@
    SEITENLEISTE
    ========================================================================== */
 #sidebar{
-  width:260px; flex:0 0 260px; background:var(--bg-side);
+  /* 240 STATT 260 (§5, §68 des Gestaltungs-Auftrags). Der Auftrag nennt
+     220–250, und der Grund steht in §68: auf 1366 × 768 arbeitet man
+     nicht in der Seitenleiste, sondern daneben. Zwanzig Punkte sind
+     dort keine Kosmetik — sie sind zwanzig Punkte Arbeitsfläche. */
+  width:240px; flex:0 0 240px; background:var(--bg-side);
   border-right:1px solid var(--line); display:flex; flex-direction:column;
   transition:margin-left .18s ease;
 }
-#sidebar.collapsed{margin-left:calc(-1 * var(--side-w, 260px))}
+#sidebar.collapsed{margin-left:calc(-1 * var(--side-w, 240px))}
 .side-griff{position:absolute; right:-3px; top:0; bottom:0; width:6px; cursor:col-resize;
             z-index:30}
 .side-griff:hover{background:var(--accent); opacity:.4}
@@ -90,9 +94,17 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    ========================================================================== */
 #main{flex:1; display:flex; flex-direction:column; min-width:0; position:relative}
 
+/* 54 STATT 45 (§8 des Gestaltungs-Auftrags: 52–58).
+   Nicht, weil höher besser wäre — höher heisst weniger Arbeitsfläche, und
+   §68 besteht auf der. Sondern weil die Kopfleiste seit E201 ein 36 Punkte
+   hohes Suchfeld trägt: bei 45 Punkten blieben darüber und darunter je
+   viereinhalb, und ein Feld, das seinen Rahmen berührt, sieht eingeklemmt
+   aus. Neun Punkte oben und unten sind der Unterschied zwischen „sitzt" und
+   „passt gerade noch". */
 #topbar{
-  height:45px; flex:0 0 45px; display:flex; align-items:center; gap:4px;
-  padding:0 12px; border-bottom:1px solid var(--line-soft);
+  height:54px; flex:0 0 54px; display:flex; align-items:center;
+  gap:var(--space-1); padding:0 var(--space-4);
+  border-bottom:1px solid var(--line-soft);
 }
 .crumb{font-size:14px; color:var(--text-dim); display:flex; align-items:center; gap:4px; min-width:0}
 .crumb a{color:inherit; text-decoration:none; padding:3px 6px; border-radius:4px; cursor:pointer;

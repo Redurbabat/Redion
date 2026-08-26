@@ -250,6 +250,21 @@
          die vier Bereiche stehen. Am PC sind sie in der Seitenleiste. -->
     <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen" aria-label="Suchen"><span data-sym="search"></span></button>
     <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite" aria-label="Neue Seite"><span data-sym="pencil"></span></button>
+    <!-- DIE SUCHE IN DIE MITTE (§8, §10 des Gestaltungs-Auftrags).
+         Sie stand bisher als Zeile in der Seitenleiste. Eine Suche, die das
+         Wichtigste einer Wissens-App ist, gehört dorthin, wo das Auge zuerst
+         hinsieht — und sie muss dort auch AUSSEHEN wie ein Feld, nicht wie
+         ein Menüeintrag.
+         Es ist ein KNOPF und kein `<input>`: getippt wird in der
+         Suchüberlagerung, die Strg+P ohnehin öffnet. Ein Feld, das beim
+         ersten Zeichen durch ein anderes Feld ersetzt wird, verliert den
+         Anschlag — genau das passiert, wenn man es „richtig" macht. -->
+    <button class="rb sucher" id="btn-suche-mitte"
+            title="Suchen (Strg + P)" aria-label="In Redion suchen">
+      <span data-sym="search"></span>
+      <span class="sucher-text">Suchen in Redion …</span>
+      <kbd>Strg P</kbd>
+    </button>
     <div class="spacer"></div>
     <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>

@@ -163,3 +163,174 @@ input,textarea,select{font:inherit; color:inherit}
    Farbe UND die Form (`lock` gegen `lockOpen`) — nie die Farbe allein
    (§38). */
 #topbar .top-btn.on{ color:var(--accent-text) }
+
+/* ============================================================================
+ * DAS KNOPF-SYSTEM (E201)
+ * ----------------------------------------------------------------------------
+ * §14 und §79 des Gestaltungs-Auftrags verlangen EIN System, nicht zwei. Redion
+ * hatte schon Klassen — `.top-btn`, `.side-item`, `.sr`, `.icon-btn`,
+ * `.ws-btn` —, jede mit eigener Höhe, eigenem Radius, eigener Übergangszeit.
+ * Ein zweites System danebenzustellen hätte die Zahl der Systeme erhöht und
+ * nichts gelöst.
+ *
+ * Also andersherum: die BESTEHENDEN Klassen bekommen gemeinsames Verhalten.
+ * Wer eine neue Fläche baut, schreibt `.rb` dazu und erbt dasselbe.
+ *
+ * `rb` steht für Redion-Bedienelement. Zwei Buchstaben, weil die Klasse an
+ * sehr vielen Stellen steht.
+ * ==========================================================================*/
+
+.rb,
+#topbar .top-btn,
+#sidebar .side-item,
+#sidebar .sr,
+#sidebar .ws-btn,
+#sidebar .side-chat,
+.icon-btn{
+  /* EINE Kurve und EINE Zeit für alle. Zwei Bewegungen mit verschiedenen
+     Beschleunigungen nebeneinander wirken wie zwei verschiedene Programme. */
+  transition:
+    transform     var(--motion-instant) var(--ease),
+    background    var(--motion-fast)    var(--ease),
+    border-color  var(--motion-fast)    var(--ease),
+    color         var(--motion-fast)    var(--ease),
+    box-shadow    var(--motion-fast)    var(--ease);
+}
+
+/* DER DRUCKPUNKT (§15).
+ *
+ * 0,976 — nicht 0,95 und nicht 0,99. Bei 0,99 sieht man nichts, bei 0,95
+ * springt der Knopf. Der Wert ist so gewählt, dass ein 34 px hoher Knopf um
+ * genau einen Punkt schrumpft: sichtbar, aber nicht als Bewegung, sondern
+ * als Widerstand unter dem Finger.
+ *
+ * `:active` und nicht `:hover`: ein Zeiger, der nur darüberfährt, hat noch
+ * nichts getan. Am Telefon gibt es kein Überfahren, und dort ist das hier
+ * die EINZIGE Rückmeldung, dass der Finger angekommen ist. */
+.rb:active,
+#topbar .top-btn:active,
+#sidebar .side-item:active,
+#sidebar .sr:active,
+#sidebar .ws-btn:active,
+#sidebar .side-chat:active,
+.icon-btn:active{ transform:scale(.976) }
+
+/* Ein abgeschalteter Knopf drückt sich nicht. Er sähe sonst aus, als hätte
+   er reagiert, und die Enttäuschung kommt eine Zehntelsekunde später. */
+.rb:disabled:active,
+#topbar .top-btn:disabled:active,
+#sidebar .side-item:disabled:active,
+.icon-btn:disabled:active{ transform:none }
+
+/* --- Die Ausprägungen (§14) ---------------------------------------------
+ * Nur die, die es wirklich gibt. Ein System mit zehn Arten, von denen drei
+ * benutzt werden, ist kein System, sondern ein Katalog.
+ * -----------------------------------------------------------------------*/
+
+/* Die Grundform: ruhige Fläche, dezenter Rand. */
+.rb{
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:var(--space-2);
+  height:34px; padding:0 var(--space-4);
+  border:1px solid var(--line); border-radius:var(--radius-md);
+  background:var(--bg-card); color:var(--text);
+  font-size:13px; font-weight:600; white-space:nowrap;
+}
+.rb:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
+.rb:disabled{ opacity:.45; cursor:not-allowed }
+
+/* HAUPTHANDLUNG. Genau eine je Bild — mehr macht keine wichtig.
+   Die Schriftfarbe kommt aus `--auf-accent`, nicht aus Weiss: welche Farbe
+   auf dem Akzent lesbar ist, wird je Modus gemessen (E142, E199). */
+.rb.haupt{
+  background:var(--accent); color:var(--auf-accent); border-color:transparent;
+}
+.rb.haupt:hover{ background:var(--accent-hover); border-color:transparent }
+
+/* LEISE. Kein Rand, keine Fläche — bis man hinfasst. Für Handlungen, die
+   danebenstehen dürfen: „Abbrechen", „Später". */
+.rb.leise{ background:transparent; border-color:transparent; color:var(--text-dim) }
+.rb.leise:hover{ background:var(--bg-hover); color:var(--text) }
+
+/* UNWIDERRUFLICH. Rot, und nur hier. Der Akzent ist violett, damit „Sichern"
+   nicht aussieht wie „Löschen" — das war der ganze Grund für E44. */
+.rb.gefahr{ background:transparent; border-color:var(--gefahr); color:var(--gefahr) }
+.rb.gefahr:hover{ background:var(--gefahr); color:#fff; border-color:var(--gefahr) }
+
+/* NUR EIN ZEICHEN. Quadratisch. 34 am Rechner, 44 am Finger (§37, §69). */
+.rb.zeichen{ width:34px; padding:0 }
+@media (pointer:coarse){
+  .rb.zeichen{ width:44px; height:44px }
+}
+
+/* SCHWEBEND (§16). Durchscheinend über dem, was darunter liegt — für
+   Leisten, die auf der Arbeitsfläche liegen, nicht neben ihr. */
+.rb.glas{
+  background:var(--bg-schwebend);
+  backdrop-filter:var(--glas-blur); -webkit-backdrop-filter:var(--glas-blur);
+  box-shadow:var(--glas-rand); border-color:transparent;
+}
+
+/* ============================================================================
+ * DIE SUCHE IN DER MITTE (E201, §8/§10)
+ * ----------------------------------------------------------------------------
+ * Die Kopfleiste war eine Reihe: Krume links, Knöpfe rechts, dazwischen ein
+ * Dehnstück. Der Auftrag will die Suche in der MITTE, und „Mitte" heisst
+ * hier: mittig zum FENSTER, nicht mittig zwischen zwei Nachbarn, die je nach
+ * Seitentitel verschieden breit sind.
+ *
+ * Deshalb keine zweite Flexzeile mit `margin:auto`, sondern zwei
+ * Dehnstücke: die Krume schiebt von links, `.spacer` von rechts, und der
+ * Sucher steht dazwischen mit fester Höchstbreite. Wandert der Titel, wandert
+ * der Sucher mit — und genau das soll er NICHT, also bekommt die Krume eine
+ * Höchstbreite dazu.
+ * ==========================================================================*/
+#topbar .sucher{
+  flex:1 1 auto; min-width:0; max-width:520px;
+  justify-content:flex-start;
+  height:36px; padding:0 var(--space-3);
+  background:var(--bg-input); border-color:var(--line);
+  color:var(--text-faint); font-weight:500;
+}
+#topbar .sucher:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
+#topbar .sucher .sucher-text{
+  flex:1 1 auto; min-width:0; text-align:left;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+#topbar .sucher kbd{
+  flex:none; font-size:10px; font-family:inherit;
+  padding:2px var(--space-2); border-radius:var(--radius-sm);
+  border:1px solid var(--line); border-bottom-color:var(--line-stark);
+  background:var(--bg-card); color:var(--text-faint);
+}
+/* DIE FEDER GEHÖRT AN DIE KRUME, und das ist der ganze Kniff.
+ *
+ * Rechts gab es längst eine (`.spacer{flex:1}`), links keine. Der Sucher
+ * begann also dort, wo der Seitentitel endete — und wanderte mit ihm.
+ * GEMESSEN, mit einem kurzen und einem 47 Zeichen langen Titel:
+ *
+ *     ohne Feder an der Krume    1366 px: Mitte bei 559 und bei 751
+ *                                          → 192 Punkte Unterschied
+ *                                1920 px: bis zu 339 Punkte aus der Mitte
+ *     mit Feder                  beides:  44 Punkte aus der Mitte, und
+ *                                          zwar IMMER dieselben 44
+ *
+ * `flex:1 1 0` heisst: Basis null, dann wachsen. Damit teilen sich Krume und
+ * Dehnstück den Rest zu gleichen Teilen, egal wie lang der Titel ist.
+ *
+ * Die 44 Punkte bleiben, und das ist Absicht: rechts stehen acht Knöpfe,
+ * links zwei. Genau mittig zum Fenster stünde der Sucher NÄHER an den acht
+ * als an den zweien, und das sieht schiefer aus als diese 44.
+ *
+ * Am `.spacer` musste dafür nichts geändert werden — er ist leer, also ist
+ * seine Basis ohnehin null. Ich hatte ihn zuerst mitgeändert und behauptet,
+ * das sei die Hälfte der Lösung. Der Gegenbeweis sagte nein. */
+#topbar .crumb{ flex:1 1 0; min-width:0; overflow:hidden }
+
+/* AM TELEFON GIBT ES DEN SUCHER NICHT. Dort liegt die Suche in der
+   Aktionsleiste unten, und eine zweite Suche oben wäre kein zweiter Weg,
+   sondern eine zweite Frage („welche von beiden?"). */
+@media (max-width:760px){
+  #topbar .sucher{ display:none }
+  #topbar .crumb{ max-width:none }
+}

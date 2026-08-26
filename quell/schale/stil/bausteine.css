@@ -703,12 +703,26 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
-.sr{display:flex; align-items:center; gap:6px; padding:6px 9px; border-radius:8px;
+/* Die vier stummen Reiter enger: 6 Punkte Rand statt 9. Gemessen bringt das
+   24 Punkte, und genau die braucht der aktive, damit „Heute" ganz dasteht
+   statt als „He…". Am Telefon ist diese Leiste ausgeblendet, hier gilt also
+   nur der Zeiger — 30 Punkte sind dort genug (§37 spricht von 44 für den
+   Finger). */
+.sr{display:flex; align-items:center; gap:6px; padding:6px 6px; border-radius:8px;
   background:none; color:var(--text-dim); font-size:13px; white-space:nowrap; min-width:0}
 .sr span{font-size:14px; flex:none}
-.sr b{font-weight:500; overflow:hidden; text-overflow:ellipsis}
+/* DER AKTIVE REITER NIMMT SICH DEN REST (E201).
+   Als die Seitenleiste von 260 auf 240 ging, stand in der aktiven Pille
+   „He…" — der Name passte nicht mehr neben sein Zeichen. Er stand dort
+   nicht zu breit, sondern zu SCHMAL: die vier stummen Reiter nahmen ihre
+   feste Breite, und der aktive bekam, was übrig blieb.
+   `flex:1` dreht das um: die vier stummen behalten ihre 35 Punkte, und was
+   danach frei ist, gehört dem einen, der etwas zu sagen hat. */
+.sr{ flex:none }
+.sr.on{ flex:1 1 auto; min-width:0 }
+.sr b{font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sr:hover{background:var(--bg-hover); color:var(--text)}
-.sr.on{background:var(--bg-hover); color:var(--text); font-weight:600}
+.sr.on{background:var(--bg-hover); color:var(--text); font-weight:600; padding:6px 10px}
 .side-reiter.ohne-namen .sr b{display:none}
 .side-reiter.ohne-namen .sr{padding:7px 8px}
 .side-reiter:not(.ohne-namen) .sr:not(.on) b{display:none}
@@ -723,9 +737,18 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 
 /* Fuss der Seitenleiste: Neuer Chat + Schreibknopf */
 .side-unten{display:flex; gap:8px; align-items:center; padding:6px 10px 4px}
-.side-chat{flex:1; display:flex; align-items:center; gap:8px; padding:9px 12px;
+/* „Neuer Chat" brach auf 240 Punkten in DREI Zeilen um — „Neuer", „Chat",
+   „Strg O" —, und der Knopf wurde 60 statt 38 Punkte hoch. Ein Knopf, der
+   seine Höhe nach dem Fensterrand richtet, ist keiner.
+   Der Name bleibt in einer Zeile; das Kürzel darf verschwinden, wenn es eng
+   wird. Ein Kürzel, das man nicht liest, kostet nichts — ein umgebrochener
+   Name kostet die Form des Knopfes. */
+.side-chat{flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden;
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
   border-radius:22px; background:var(--bg-hover); color:var(--text); font-size:14px}
 .side-chat:hover{background:var(--line)}
+.side-chat > span:not(.k){overflow:hidden; text-overflow:ellipsis}
+@media (max-width:1500px){ .side-chat .k{display:none} }
 .side-chat .k{margin-left:auto; font-size:11px; color:var(--text-faint)}
 .side-schreib{width:38px; height:38px; border-radius:50%; background:var(--bg-hover);
   color:var(--text); font-size:15px; flex:none}
