@@ -13657,3 +13657,99 @@ eingebaut war: wo eine Beschriftung landet, hängt am Startwert. Sie geht
 jetzt zwölf Aufgaben durch. §55.2 in einem Satz: wer eine neue Prüfung
 schreibt, baut den Fehler absichtlich wieder ein und sieht nach, ob sie rot
 wird.
+
+---
+
+## E194 · Redions eigenes Formelbuch, mit den Seitenzahlen des gedruckten
+
+**Stand: 26. August 2026** · `register/elektroformeln.ts`,
+`bereiche/elektro/formelheft.ts`, `bereiche/elektro/skizzen.ts`, `test244`
+
+### Die Frage
+
+Redur lernt mit einem gedruckten Formelbuch und wollte es in Redion haben —
+zuerst als „Hast du von dem PDF alles gemacht?", dann deutlicher: alle
+Seiten, dieselbe Struktur, er will die Seiten wechseln können und im
+Programm dasselbe finden wie im Heft auf dem Tisch.
+
+Der naheliegende Weg wäre gewesen, das PDF anzuzeigen. Ein Anfang dazu war
+schon gebaut — Zoom, Blättern, Vollbild für die eingescannten Seiten — und
+wurde auf halber Strecke verworfen, von Redur selbst: **nicht das PDF
+zeigen, sondern die Formeln neu schreiben.** Eigene Gestaltung, eigene
+Skizzen, aber dieselben Seitenzahlen.
+
+### Die Entscheidung
+
+Redion führt das Formelbuch als eigene Struktur im Register:
+
+**Abschnitte statt Seiten als kleinste Einheit.** Ein `Abschnitt` ist eine
+Überschrift im Heft — „Reihenschaltung", „Messbereicherweiterung von
+V-Metern" — und trägt Seitenzahl, Buchkapitel, Grössenliste und seine
+Formelzeilen in Buchreihenfolge. Die Seitenzahl steht NUR am Abschnitt.
+Formeln hängen am Abschnitt; wo eine Seite im Buch wandert, ändert sich
+eine Zeile.
+
+**Zwei Sorten Zeilen.** Eine Zeile mit `id` zeigt auf einen RECHENBAREN
+Eintrag — antippen öffnet den Rechner mit Rechenweg. Eine Zeile ohne `id`
+steht als Text da: `1 kWh = 3600 kWs` ist wahr, aber keine Gleichung, nach
+deren Grössen man auflöst. So ist jede Heftseite VOLLSTÄNDIG, ohne dass
+für jede Umstellung ein eigener Rechenweg erfunden werden muss — die
+Umstellungen einer Gleichung zeigen ohnehin auf denselben Rechner, und der
+lässt jede Grösse als gesuchte wählen.
+
+**Wertetabellen als Tabellen.** Konstanten, Werkstoffwerte, Zehnerpotenzen
+(Seiten 32–34) sind keine Formeln und werden nicht als solche verkleidet.
+
+**Die Seite sieht aus wie eine Heftseite.** Überschrift, links die Skizze,
+in der Mitte die Grössenliste, rechts die Formeln. Diese Anordnung ist die
+jedes Formelbuchs dieses Fachs und trägt das Mitlesen: die dritte Formel
+von oben ist hier die dritte Zeile.
+
+### Was DAVON bewusst nicht übernommen wird
+
+Das gedruckte Buch ist ein gekauftes Werk. Seine Formeln, Grössennamen,
+Einheiten und Materialwerte sind freie Fakten — `U = R · I` gehört
+niemandem, seit Ohm es 1826 aufgeschrieben hat. Sein SATZ, seine
+ZEICHNUNGEN und seine SÄTZE sind es nicht. Deshalb:
+
+· Die Skizzen sind selbst gezeichnet — die Schaltbilder aus Redions
+  eigenen Fachzeichen über `Schaltplan.alsSvg`, die Diagramme als eigenes
+  SVG. Kein Bild ist aus dem PDF kopiert.
+· Die Erklärsätze sind selbst geschrieben, in Redions Ton.
+· Die Gestaltung ist Redions eigene: Farben, Schrift, hell und dunkel.
+· Das PDF selbst kommt nicht ins Verzeichnis (wie E188/E191).
+
+Übernommen werden die Fakten und die GLIEDERUNG — Kapitelfolge und
+Seitenzahlen —, denn genau sie machen das Nebeneinander von Heft und
+Programm benutzbar, und die Kapitelfolge ist die übliche dieses Fachs.
+
+### Warum eigene Seiten besser sind als ein Scan
+
+· **Rechenbar.** Jede Formel lässt sich antippen und mit Werten füllen.
+  Ein Scan ist ein Bild.
+· **Durchsuchbar.** „resonanz" findet die Formel und nennt ihre Seite;
+  ein Tipp blättert hin und klappt den Rechner auf.
+· **Scharf und thematisch.** Vektoren statt Fotos, hell und dunkel ohne
+  zweiten Bildersatz, am Telefon anders angeordnet statt kleiner.
+
+### Vier Fehler, die nur das Hinsehen fand (§55)
+
+· Fünf Skizzen liefen aus ihrem Blatt — ein Bauteil an der Kante wird halb
+  abgeschnitten, und „da" waren sie alle.
+· Die Motorzuleitungen liefen von einem Anschluss zu DEMSELBEN Anschluss
+  zurück und sahen wie Diagonalen durch den Motor aus.
+· Flexbox frass die Leerzeichen: `Q_L = I_L · t_L` stand am Telefon als
+  `Q_L= I_L· t_L` da. Der TEXT war die ganze Zeit richtig — nur das Bild
+  nicht. §55.2, zum dritten Mal.
+· Die Blätterknöpfe standen unter dem Bildschirmrand: ein Flex-Kind ohne
+  `min-height:0` schrumpft nicht unter seinen Inhalt.
+
+### Prüflauf
+
+`test244`, 63 Punkte. Er misst die Skizzen wirklich (getBBox gegen die
+viewBox), stellt den Flexbox-Fehler absichtlich her und sieht nach, dass
+die Messung rot wird, und prüft die Seitenzahlen gegen das
+Inhaltsverzeichnis des Hefts. Seine erste Fassung mass die viewBox mit
+einem doppelt geschützten Regex und las überall 0×0 — eine Prüfung, die
+nie rot werden kann, ist keine (§55.2), und diesmal traf es die Prüfung
+selbst.

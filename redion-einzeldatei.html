@@ -8497,7 +8497,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-abschnitt h3{margin:0 0 7px; font-size:12.5px; font-weight:700;
   color:var(--text); letter-spacing:.01em}
 .bs-koerper{display:flex; gap:12px; align-items:flex-start}
-.bs-skizze{flex:0 0 44%; max-width:270px; min-width:0}
+.bs-skizze{flex:0 0 34%; max-width:240px; min-width:0}
 .bs-skizze svg{width:100%; height:auto; display:block; color:var(--text)}
 /* Die Beschriftungen IN der Skizze sind auf 13 px im Zeichenraum gesetzt.
    Bei 200 px Anzeige einer 390 px breiten Zeichnung werden daraus knapp
@@ -8514,8 +8514,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 /* `<sub>` verschiebt sonst die Grundlinie und macht jede Formelzeile ein
    paar Pixel höher als die daneben. `line-height:0` an der Tiefstellung
    nimmt ihr diesen Einfluss. */
-.bs-formel sub, .fh-formel header sub, .bs-treffer-zeile sub,
-.fh-groessen sub, .bs-legende sub, .fh-zeichen sub, .fh-gesucht sub,
+.bs-formel sub, .bs-zeile sub, .fh-formel header sub, .bs-treffer-zeile sub,
+.fh-groessen sub, .bs-groessen sub, .bs-tabelle sub, .fh-zeichen sub, .fh-gesucht sub,
 .fh-ergebnis sub{font-size:.7em; line-height:0; vertical-align:baseline;
   position:relative; bottom:-.28em}
 .bs-formel{max-width:100%; padding:4px 8px; border:1px solid transparent;
@@ -8531,11 +8531,31 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-formel.gemerkt{border-left:3px solid var(--accent); padding-left:6px}
 .bs-formel.gemerkt::after{content:' ★'; color:var(--accent); font-size:10px}
 
-.bs-legende{display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:8px;
-  padding-top:7px; border-top:1px dashed var(--line);
-  font-size:11px; color:var(--text-dim)}
-.bs-legende i{font-style:normal; font-weight:700; color:var(--accent)}
-.bs-legende em{font-style:normal; color:var(--text-faint)}
+/* Die Grössenliste steht wie im Heft ZWISCHEN Skizze und Formeln — eine
+   Zeile je Grösse: Zeichen, Name, Einheit rechtsbündig gedacht. */
+.bs-groessen{flex:1 1 34%; min-width:0; display:flex; flex-direction:column;
+  gap:3px; font-size:11px; color:var(--text-dim); padding-top:2px}
+.bs-groessen span{display:block; line-height:1.5}
+.bs-groessen i{font-style:normal; font-weight:700; color:var(--accent);
+  display:inline-block; min-width:2.6em}
+.bs-groessen em{font-style:normal; color:var(--text-faint); margin-left:4px}
+
+/* Ein eigener Merksatz unter der Überschrift. */
+.bs-hinweis{margin:-3px 0 7px; font-size:11.5px; color:var(--text-dim);
+  line-height:1.5}
+
+/* Eine Zeile ohne Rechenweg: steht da wie eine Formel, ist aber kein Knopf. */
+.bs-zeile{max-width:100%; padding:4px 8px; color:var(--text);
+  font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums;
+  line-height:1.5; word-break:break-word}
+
+/* Wertetabellen (Konstanten, Werkstoffe): quer rollbar, nie über den Rand. */
+.bs-tabelle{margin-top:8px; overflow-x:auto}
+.bs-tabelle table{border-collapse:collapse; font-size:11.5px; min-width:60%}
+.bs-tabelle th{text-align:left; font-weight:700; color:var(--text);
+  border-bottom:2px solid var(--accent); padding:3px 12px 3px 0}
+.bs-tabelle td{padding:3px 12px 3px 0; border-bottom:1px solid var(--line);
+  color:var(--text-dim); font-variant-numeric:tabular-nums; white-space:nowrap}
 
 .bs-rechner{margin-top:9px; padding:9px 10px; border:1px solid var(--accent);
   border-radius:9px; background:var(--bg)}
@@ -8616,6 +8636,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      untereinander — Skizze zuerst, weil man sie zuerst ansieht. */
   .bs-koerper{flex-direction:column}
   .bs-skizze{flex:none; max-width:100%; width:100%; align-self:center}
+  .bs-groessen{flex:none; width:100%}
   /* KEIN `display:flex` an der Formel. Hier stand es, um sie auf 44 px zu
      bringen — und Flexbox macht aus `Q`, `<sub>L</sub>`, ` = `, `<sub>` …
      lauter Flex-Elemente und SCHLUCKT die Leerzeichen dazwischen. Auf dem
@@ -17169,7 +17190,10 @@ Register.elektroformeln = (() => {
         ['messen', 'Messtechnik', '⊕'],
         ['magnet', 'Magnetische Grössen', '🧲'],
         ['fall', 'Spannungsfall', '↘'],
-        ['antenne', 'Antenne und Pegel', '📡']
+        ['antenne', 'Antenne und Pegel', '📡'],
+        ['gleichrichter', 'Gleichrichter', '⇉'],
+        ['elektronik', 'Elektronische Schaltungen', '▷'],
+        ['spulen', 'Drahtlängen von Spulen', '◎']
     ];
     /* ==========================================================================
      * DAS BUCH: ABSCHNITTE UND SEITENZAHLEN
@@ -17225,6 +17249,8 @@ Register.elektroformeln = (() => {
         { id: 'g-ohm', seite: 4, buch: 2, titel: 'Ohmsches Gesetz' },
         { id: 'g-leiter', seite: 4, buch: 2, titel: 'Leiterwiderstand' },
         { id: 'g-temperatur', seite: 4, buch: 2, titel: 'Widerstand und Temperatur' },
+        { id: 'g-leitwert', seite: 4, buch: 2, titel: 'Widerstand und Leitwert' },
+        { id: 'g-stromdichte', seite: 4, buch: 2, titel: 'Stromdichte' },
         { id: 's-reihe', seite: 5, buch: 3, titel: 'Reihenschaltung' },
         { id: 's-parallel', seite: 5, buch: 3, titel: 'Parallelschaltung' },
         { id: 's-teiler', seite: 6, buch: 3, titel: 'Unbelasteter Spannungsteiler' },
@@ -17281,6 +17307,15 @@ Register.elektroformeln = (() => {
         { id: 'l-abstand', seite: 22, buch: 17, titel: 'Beleuchtungsstärke abhängig vom Leuchtenabstand' },
         { id: 'l-lichtstaerke', seite: 22, buch: 17, titel: 'Lichtstärke' },
         { id: 'l-leuchtdichte', seite: 22, buch: 17, titel: 'Leuchtdichte' },
+        { id: 'gr-einweg', seite: 23, buch: 19, titel: 'Einweg-Schaltung' },
+        { id: 'gr-mittel', seite: 23, buch: 19, titel: 'Mittelpunktschaltung' },
+        { id: 'gr-bruecke', seite: 23, buch: 19, titel: 'Brückenschaltung (Grätzschaltung)' },
+        { id: 'gr-dreh', seite: 23, buch: 19, titel: 'Drehstrom-Brückenschaltung' },
+        { id: 'el-diode', seite: 24, buch: 20, titel: 'Diodenschaltung (Leuchtdioden)' },
+        { id: 'el-zener', seite: 24, buch: 20, titel: 'Spannungsbegrenzung mit Z-Diode' },
+        { id: 'el-transistor', seite: 24, buch: 20, titel: 'Transistor als Schalter und Verstärker' },
+        { id: 'sp-einlagig', seite: 27, buch: 23, titel: 'Einlagige Spulen' },
+        { id: 'sp-mehrlagig', seite: 27, buch: 23, titel: 'Mehrlagige Spulen' },
         { id: 'p-arbeit', seite: 29, buch: 24, titel: 'Arbeit, Energie' },
         { id: 'p-leistung', seite: 30, buch: 24, titel: 'Leistung' },
         { id: 'p-drehmoment', seite: 30, buch: 24, titel: 'Leistung aus Drehmoment und Drehzahl' },
@@ -19129,7 +19164,404 @@ Register.elektroformeln = (() => {
                 f: v => v.Q_C / (2 * PI * v.C * v.U * v.U)
             },
             erklaerung: 'Aus der Blindleistung die Kapazität des Kondensators.'
-        }
+        },
+        /* ---- Leitwert, Stromdichte, Querschnitt (Seite 4) -------------------- */
+        {
+            id: 'leitwert', kapitel: 'leiter', abschnitt: 'g-leitwert',
+            schreibweise: 'G = 1 / R',
+            groessen: [g('G', 'Leitwert', 'S', 'Wie gut etwas leitet — der Kehrwert des Widerstands'),
+                g('R', 'Widerstand', 'Ω')],
+            loese: { G: v => 1 / v.R, R: v => 1 / v.G },
+            erklaerung: 'Derselbe Sachverhalt von der anderen Seite: 1 S ist 1/Ω. Bei Parallelschaltungen rechnet es sich damit ohne Doppelbruch.'
+        },
+        {
+            id: 'stromdichte', kapitel: 'leiter', abschnitt: 'g-stromdichte',
+            schreibweise: 'J = I / A',
+            groessen: [g('J', 'Stromdichte', 'A/mm²'), g('I', 'Stromstärke', 'A'),
+                g('A', 'Leiterquerschnitt', 'mm²')],
+            loese: {
+                J: v => v.I / v.A,
+                I: v => v.J * v.A,
+                A: v => v.I / v.J
+            },
+            erklaerung: 'Wie viel Strom sich durch einen Quadratmillimeter drängt. Sie entscheidet über die Erwärmung — nicht der Strom allein.'
+        },
+        {
+            id: 'leiterquerschnitt-d', kapitel: 'leiter', abschnitt: 'g-leiter',
+            schreibweise: 'A = d² · π / 4',
+            groessen: [g('A', 'Leiterquerschnitt', 'mm²'), g('d', 'Leiterdurchmesser', 'mm')],
+            loese: {
+                A: v => v.d * v.d * PI / 4,
+                d: v => WURZEL(4 * v.A / PI)
+            },
+            erklaerung: 'Am Draht misst man den Durchmesser, gerechnet wird mit der Fläche. Der Faktor ist π/4 und nicht π.'
+        },
+        {
+            id: 'leitfaehigkeit', kapitel: 'leiter', abschnitt: 'g-leiter',
+            schreibweise: 'γ = 1 / ρ',
+            groessen: [g('γ', 'Leitfähigkeit', 'm/(Ω·mm²)'),
+                g('ρ', 'spezifischer Widerstand', 'Ω·mm²/m')],
+            loese: { 'γ': v => 1 / v['ρ'], 'ρ': v => 1 / v['γ'] },
+            erklaerung: 'Kupfer hat 56, Aluminium 36. Manche Tabellen geben das eine, manche das andere — hier ist der Weg dazwischen.'
+        },
+        /* ---- Gleichrichter (Seite 23) ---------------------------------------
+         * Die Faktoren stehen fest und sind keine gerundeten Messwerte: 0,45 ist
+         * √2/π, 0,9 ist 2·√2/π, 1,35 ist 3·√2/π. Was gerundet IST, sind die
+         * Werte mit Ladekondensator — sie hängen von der Welligkeit ab, und die
+         * Angabe gilt für 5 %.
+         * -------------------------------------------------------------------*/
+        {
+            id: 'gleich-einweg-u', kapitel: 'gleichrichter', abschnitt: 'gr-einweg',
+            schreibweise: 'U₂ ≈ 0,45 · U₁',
+            groessen: [g('U₂', 'Gleichspannung (Mittelwert)', 'V'),
+                g('U₁', 'Wechselspannung (Effektivwert)', 'V')],
+            loese: { 'U₂': v => 0.45 * v['U₁'], 'U₁': v => v['U₂'] / 0.45 },
+            annahme: 'Ohne Ladekondensator, sinusförmige Spannung.',
+            erklaerung: 'Eine Diode lässt nur die halbe Welle durch. Aus 230 V werden rund 104 V — und die Hälfte der Zeit fliesst gar nichts.'
+        },
+        {
+            id: 'gleich-einweg-i', kapitel: 'gleichrichter', abschnitt: 'gr-einweg',
+            schreibweise: 'I₂ ≈ 0,64 · I₁',
+            groessen: [g('I₂', 'Gleichstrom (Mittelwert)', 'A'),
+                g('I₁', 'Wechselstrom (Effektivwert)', 'A')],
+            loese: { 'I₂': v => 0.64 * v['I₁'], 'I₁': v => v['I₂'] / 0.64 },
+            annahme: 'Ohne Ladekondensator, sinusförmige Spannung.',
+            erklaerung: 'Der Strommittelwert der Einweggleichrichtung.'
+        },
+        {
+            id: 'gleich-einweg-u-c', kapitel: 'gleichrichter', abschnitt: 'gr-einweg',
+            schreibweise: 'U₂ ≈ 1,18 · U₁',
+            groessen: [g('U₂', 'Gleichspannung mit Ladekondensator', 'V'),
+                g('U₁', 'Wechselspannung (Effektivwert)', 'V')],
+            loese: { 'U₂': v => 1.18 * v['U₁'], 'U₁': v => v['U₂'] / 1.18 },
+            annahme: 'Mit Ladekondensator, Welligkeit 5 %.',
+            erklaerung: 'Mit Kondensator lädt sich der Ausgang auf den Scheitelwert — aus 0,45 wird 1,18, also mehr als das Doppelte.'
+        },
+        {
+            id: 'gleich-einweg-i-c', kapitel: 'gleichrichter', abschnitt: 'gr-einweg',
+            schreibweise: 'I₂ ≈ 0,48 · I₁',
+            groessen: [g('I₂', 'Gleichstrom mit Ladekondensator', 'A'),
+                g('I₁', 'Wechselstrom (Effektivwert)', 'A')],
+            loese: { 'I₂': v => 0.48 * v['I₁'], 'I₁': v => v['I₂'] / 0.48 },
+            annahme: 'Mit Ladekondensator, Welligkeit 5 %.',
+            erklaerung: 'Der Kondensator wird in kurzen Stromspitzen nachgeladen; der Effektivwert im Wechselstromkreis steigt.'
+        },
+        {
+            id: 'gleich-mittel-u', kapitel: 'gleichrichter', abschnitt: 'gr-mittel',
+            schreibweise: 'U₂ ≈ 0,9 · U₁',
+            groessen: [g('U₂', 'Gleichspannung (Mittelwert)', 'V'),
+                g('U₁', 'Wechselspannung (Effektivwert)', 'V')],
+            loese: { 'U₂': v => 0.9 * v['U₁'], 'U₁': v => v['U₂'] / 0.9 },
+            annahme: 'Ohne Ladekondensator, sinusförmige Spannung.',
+            erklaerung: 'Zwei Dioden an einer Mittelanzapfung nutzen beide Halbwellen: doppelt so viel wie die Einwegschaltung.'
+        },
+        {
+            id: 'gleich-mittel-i', kapitel: 'gleichrichter', abschnitt: 'gr-mittel',
+            schreibweise: 'I₂ ≈ 1,26 · I₁',
+            groessen: [g('I₂', 'Gleichstrom (Mittelwert)', 'A'),
+                g('I₁', 'Wechselstrom (Effektivwert)', 'A')],
+            loese: { 'I₂': v => 1.26 * v['I₁'], 'I₁': v => v['I₂'] / 1.26 },
+            annahme: 'Ohne Ladekondensator, sinusförmige Spannung.',
+            erklaerung: 'Der Gleichstrom ist grösser als der Strangstrom — jede Wicklungshälfte führt nur die halbe Zeit.'
+        },
+        {
+            id: 'gleich-mittel-u-c', kapitel: 'gleichrichter', abschnitt: 'gr-mittel',
+            schreibweise: 'U₂ ≈ 1,27 · U₁',
+            groessen: [g('U₂', 'Gleichspannung mit Ladekondensator', 'V'),
+                g('U₁', 'Wechselspannung (Effektivwert)', 'V')],
+            loese: { 'U₂': v => 1.27 * v['U₁'], 'U₁': v => v['U₂'] / 1.27 },
+            annahme: 'Mit Ladekondensator, Welligkeit 5 %.',
+            erklaerung: 'Fast der Scheitelwert: √2 sind 1,414, und bei 5 % Welligkeit bleiben davon 1,27.'
+        },
+        {
+            id: 'gleich-mittel-i-c', kapitel: 'gleichrichter', abschnitt: 'gr-mittel',
+            schreibweise: 'I₂ ≈ 0,9 · I₁',
+            groessen: [g('I₂', 'Gleichstrom mit Ladekondensator', 'A'),
+                g('I₁', 'Wechselstrom (Effektivwert)', 'A')],
+            loese: { 'I₂': v => 0.9 * v['I₁'], 'I₁': v => v['I₂'] / 0.9 },
+            annahme: 'Mit Ladekondensator, Welligkeit 5 %.',
+            erklaerung: 'Der Strommittelwert der Mittelpunktschaltung mit Kondensator.'
+        },
+        {
+            id: 'gleich-bruecke-u', kapitel: 'gleichrichter', abschnitt: 'gr-bruecke',
+            schreibweise: 'U₂ ≈ 0,9 · U₁',
+            groessen: [g('U₂', 'Gleichspannung (Mittelwert)', 'V'),
+                g('U₁', 'Wechselspannung (Effektivwert)', 'V')],
+            loese: { 'U₂': v => 0.9 * v['U₁'], 'U₁': v => v['U₂'] / 0.9 },
+            annahme: 'Ohne Ladekondensator, sinusförmige Spannung.',
+            erklaerung: 'Die Grätzschaltung nutzt beide Halbwellen ohne Mittelanzapfung — vier Dioden statt zwei, dafür der ganze Trafo.'
+        },
+        {
+            id: 'gleich-bruecke-i', kapitel: 'gleichrichter', abschnitt: 'gr-bruecke',
+            schreibweise: 'I₂ ≈ 1,0 · I₁',
+            groessen: [g('I₂', 'Gleichstrom (Mittelwert)', 'A'),
+                g('I₁', 'Wechselstrom (Effektivwert)', 'A')],
+            loese: { 'I₂': v => v['I₁'], 'I₁': v => v['I₂'] },
+            annahme: 'Ohne Ladekondensator, sinusförmige Spannung.',
+            erklaerung: 'Hier sind beide gleich gross: die ganze Wicklung führt die ganze Zeit Strom.'
+        },
+        {
+            id: 'gleich-bruecke-u-c', kapitel: 'gleichrichter', abschnitt: 'gr-bruecke',
+            schreibweise: 'U₂ ≈ 1,27 · U₁',
+            groessen: [g('U₂', 'Gleichspannung mit Ladekondensator', 'V'),
+                g('U₁', 'Wechselspannung (Effektivwert)', 'V')],
+            loese: { 'U₂': v => 1.27 * v['U₁'], 'U₁': v => v['U₂'] / 1.27 },
+            annahme: 'Mit Ladekondensator, Welligkeit 5 %.',
+            erklaerung: 'Das übliche Netzteil: 12 V Trafospannung geben rund 15 V Gleichspannung — wer mit 12 rechnet, liegt daneben.'
+        },
+        {
+            id: 'gleich-bruecke-i-c', kapitel: 'gleichrichter', abschnitt: 'gr-bruecke',
+            schreibweise: 'I₂ ≈ 0,64 · I₁',
+            groessen: [g('I₂', 'Gleichstrom mit Ladekondensator', 'A'),
+                g('I₁', 'Wechselstrom (Effektivwert)', 'A')],
+            loese: { 'I₂': v => 0.64 * v['I₁'], 'I₁': v => v['I₂'] / 0.64 },
+            annahme: 'Mit Ladekondensator, Welligkeit 5 %.',
+            erklaerung: 'Der Trafo muss mehr Strom liefern, als hinten herauskommt — daran scheitern zu knapp gewählte Trafos.'
+        },
+        {
+            id: 'gleich-dreh-u', kapitel: 'gleichrichter', abschnitt: 'gr-dreh',
+            schreibweise: 'U₂ ≈ 1,3 · U₁₂',
+            groessen: [g('U₂', 'Gleichspannung', 'V'),
+                g('U₁₂', 'Aussenleiterspannung (Effektivwert)', 'V')],
+            loese: { 'U₂': v => 1.3 * v['U₁₂'], 'U₁₂': v => v['U₂'] / 1.3 },
+            annahme: 'Gilt mit und ohne Ladekondensator — die Welligkeit ist ohnehin klein.',
+            erklaerung: 'Sechs Dioden an drei Aussenleitern: die Spannung wird so glatt, dass ein Kondensator kaum noch etwas ändert.'
+        },
+        {
+            id: 'gleich-dreh-i', kapitel: 'gleichrichter', abschnitt: 'gr-dreh',
+            schreibweise: 'I₂ ≈ 1,2 · I₁',
+            groessen: [g('I₂', 'Gleichstrom', 'A'), g('I₁', 'Aussenleiterstrom (Effektivwert)', 'A')],
+            loese: { 'I₂': v => 1.2 * v['I₁'], 'I₁': v => v['I₂'] / 1.2 },
+            annahme: 'Gilt mit und ohne Ladekondensator.',
+            erklaerung: 'Der Strommittelwert der Drehstrom-Brückenschaltung.'
+        },
+        /* ---- Elektronische Schaltungen (Seite 24) ---------------------------- */
+        {
+            id: 'diode-vorwiderstand', kapitel: 'elektronik', abschnitt: 'el-diode',
+            schreibweise: 'R_V = (U₁ − U_F) / I_F',
+            groessen: [g('R_V', 'Vorwiderstand', 'Ω'), g('U₁', 'Eingangsspannung', 'V'),
+                g('U_F', 'Durchlassspannung', 'V'), g('I_F', 'Durchlassstrom', 'A')],
+            loese: {
+                R_V: v => (v['U₁'] - v.U_F) / v.I_F,
+                'U₁': v => v.U_F + v.R_V * v.I_F,
+                U_F: v => v['U₁'] - v.R_V * v.I_F,
+                I_F: v => (v['U₁'] - v.U_F) / v.R_V
+            },
+            annahme: 'Silizium-Diode rund 0,7 V; Leuchtdiode je nach Farbe: rot ≈ 1,7 V, grün ≈ 2,1 V, blau ≈ 2,9 V.',
+            erklaerung: 'Eine Diode hat keinen Widerstand, den man einstellt — sie hat eine feste Durchlassspannung. Was übrig bleibt, muss der Vorwiderstand aufnehmen, und der bestimmt den Strom.'
+        },
+        {
+            id: 'diode-spannung-rv', kapitel: 'elektronik', abschnitt: 'el-diode',
+            schreibweise: 'U_V = U₁ − U_F',
+            groessen: [g('U_V', 'Spannung am Vorwiderstand', 'V'),
+                g('U₁', 'Eingangsspannung', 'V'), g('U_F', 'Durchlassspannung', 'V')],
+            loese: {
+                U_V: v => v['U₁'] - v.U_F,
+                'U₁': v => v.U_V + v.U_F,
+                U_F: v => v['U₁'] - v.U_V
+            },
+            erklaerung: 'Die Maschenregel an der einfachsten Schaltung, die es gibt.'
+        },
+        {
+            id: 'diode-leistung-rv', kapitel: 'elektronik', abschnitt: 'el-diode',
+            schreibweise: 'P_V = U_V · I_F',
+            groessen: [g('P_V', 'Leistung am Vorwiderstand', 'W'),
+                g('U_V', 'Spannung am Vorwiderstand', 'V'), g('I_F', 'Durchlassstrom', 'A')],
+            loese: {
+                P_V: v => v.U_V * v.I_F,
+                U_V: v => v.P_V / v.I_F,
+                I_F: v => v.P_V / v.U_V
+            },
+            erklaerung: 'Wonach der Widerstand ausgesucht wird. Ein 1/4-W-Typ an 12 V und 20 mA reicht — an 230 V nicht mehr.'
+        },
+        {
+            id: 'diode-leistung', kapitel: 'elektronik', abschnitt: 'el-diode',
+            schreibweise: 'P_D = U_F · I_F',
+            groessen: [g('P_D', 'Leistung der Diode', 'W'), g('U_F', 'Durchlassspannung', 'V'),
+                g('I_F', 'Durchlassstrom', 'A')],
+            loese: {
+                P_D: v => v.U_F * v.I_F,
+                U_F: v => v.P_D / v.I_F,
+                I_F: v => v.P_D / v.U_F
+            },
+            erklaerung: 'Was in der Diode selbst zu Wärme wird.'
+        },
+        {
+            id: 'zener-vorwiderstand', kapitel: 'elektronik', abschnitt: 'el-zener',
+            schreibweise: 'R_V = (U₁ − U_Z) / I₁',
+            groessen: [g('R_V', 'Vorwiderstand', 'Ω'), g('U₁', 'Eingangsspannung', 'V'),
+                g('U_Z', 'Zenerspannung', 'V'), g('I₁', 'Gesamtstrom', 'A')],
+            loese: {
+                R_V: v => (v['U₁'] - v.U_Z) / v['I₁'],
+                'U₁': v => v.U_Z + v.R_V * v['I₁'],
+                U_Z: v => v['U₁'] - v.R_V * v['I₁'],
+                'I₁': v => (v['U₁'] - v.U_Z) / v.R_V
+            },
+            erklaerung: 'Die Z-Diode hält die Spannung; der Vorwiderstand nimmt den Rest auf und begrenzt den Strom.'
+        },
+        {
+            id: 'zener-laststrom', kapitel: 'elektronik', abschnitt: 'el-zener',
+            schreibweise: 'I_L = U_L / R_L',
+            groessen: [g('I_L', 'Laststrom', 'A'), g('U_L', 'Lastspannung', 'V'),
+                g('R_L', 'Lastwiderstand', 'Ω')],
+            loese: {
+                I_L: v => v.U_L / v.R_L,
+                U_L: v => v.I_L * v.R_L,
+                R_L: v => v.U_L / v.I_L
+            },
+            annahme: 'Die Lastspannung ist die Zenerspannung — dafür ist die Schaltung da.',
+            erklaerung: 'Das ohmsche Gesetz an der Last. Steht hier eigens, weil U_L die Zenerspannung IST.'
+        },
+        {
+            id: 'zener-strom', kapitel: 'elektronik', abschnitt: 'el-zener',
+            schreibweise: 'I_Z = I₁ − I_L',
+            groessen: [g('I_Z', 'Zenerstrom', 'A'), g('I₁', 'Gesamtstrom', 'A'),
+                g('I_L', 'Laststrom', 'A')],
+            loese: {
+                I_Z: v => v['I₁'] - v.I_L,
+                'I₁': v => v.I_Z + v.I_L,
+                I_L: v => v['I₁'] - v.I_Z
+            },
+            erklaerung: 'Was die Last nicht nimmt, nimmt die Z-Diode. Fällt die Last weg, geht ALLES durch die Diode — daran sterben sie.'
+        },
+        {
+            id: 'transistor-basisvorwiderstand', kapitel: 'elektronik', abschnitt: 'el-transistor',
+            schreibweise: 'R_V = (U₁ − 0,7 V) / I_B',
+            groessen: [g('R_V', 'Basisvorwiderstand', 'Ω'), g('U₁', 'Eingangsspannung', 'V'),
+                g('I_B', 'Basisstrom', 'A')],
+            loese: {
+                R_V: v => (v['U₁'] - 0.7) / v.I_B,
+                'U₁': v => 0.7 + v.R_V * v.I_B,
+                I_B: v => (v['U₁'] - 0.7) / v.R_V
+            },
+            annahme: 'U_BE ist bei Silizium rund 0,7 V und ändert sich kaum.',
+            erklaerung: 'Die Basis-Emitter-Strecke ist eine Diode. Die 0,7 V fallen dort ab, egal wie hoch die Eingangsspannung ist.'
+        },
+        {
+            id: 'transistor-basisstrom', kapitel: 'elektronik', abschnitt: 'el-transistor',
+            schreibweise: 'I_B = I_C / B',
+            groessen: [g('I_B', 'Basisstrom', 'A'), g('I_C', 'Kollektorstrom', 'A'),
+                g('B', 'Stromverstärkung', '')],
+            loese: {
+                I_B: v => v.I_C / v.B,
+                I_C: v => v.I_B * v.B,
+                B: v => v.I_C / v.I_B
+            },
+            erklaerung: 'Ein kleiner Basisstrom steuert einen grossen Kollektorstrom. B liegt je nach Typ zwischen 100 und 500.'
+        },
+        {
+            id: 'transistor-uebersteuerung', kapitel: 'elektronik', abschnitt: 'el-transistor',
+            schreibweise: 'I_B = ü · I_C / B',
+            groessen: [g('I_B', 'Basisstrom', 'A'), g('ü', 'Übersteuerungsfaktor', ''),
+                g('I_C', 'Kollektorstrom', 'A'), g('B', 'Stromverstärkung', '')],
+            loese: {
+                I_B: v => v['ü'] * v.I_C / v.B,
+                'ü': v => v.I_B * v.B / v.I_C,
+                I_C: v => v.I_B * v.B / v['ü'],
+                B: v => v['ü'] * v.I_C / v.I_B
+            },
+            annahme: 'ü liegt beim Schalten zwischen 2 und 5.',
+            erklaerung: 'Als SCHALTER bekommt der Transistor mehr Basisstrom als nötig — sonst bleibt er im linearen Bereich hängen und wird heiss.'
+        },
+        {
+            id: 'transistor-kollektorstrom', kapitel: 'elektronik', abschnitt: 'el-transistor',
+            schreibweise: 'I_C = U_L / R_L',
+            groessen: [g('I_C', 'Kollektorstrom', 'A'), g('U_L', 'Lastspannung', 'V'),
+                g('R_L', 'Lastwiderstand', 'Ω')],
+            loese: {
+                I_C: v => v.U_L / v.R_L,
+                U_L: v => v.I_C * v.R_L,
+                R_L: v => v.U_L / v.I_C
+            },
+            erklaerung: 'Der Kollektorstrom ist der Laststrom — im durchgeschalteten Zustand liegt fast die ganze Betriebsspannung an der Last.'
+        },
+        {
+            id: 'transistor-ce', kapitel: 'elektronik', abschnitt: 'el-transistor',
+            schreibweise: 'U_CE = U_b − U_L',
+            groessen: [g('U_CE', 'Kollektor-Emitter-Spannung', 'V'),
+                g('U_b', 'Betriebsspannung', 'V'), g('U_L', 'Lastspannung', 'V')],
+            loese: {
+                U_CE: v => v.U_b - v.U_L,
+                U_b: v => v.U_CE + v.U_L,
+                U_L: v => v.U_b - v.U_CE
+            },
+            erklaerung: 'Was am Transistor übrig bleibt. Beim Schalten sind das fast 0 V — und darum bleibt er kühl.'
+        },
+        /* ---- Drahtlängen von Spulen (Seite 27) ------------------------------- */
+        {
+            id: 'spule-drahtlaenge', kapitel: 'spulen', abschnitt: 'sp-einlagig',
+            schreibweise: 'l = d_m · π · N',
+            groessen: [g('l', 'Drahtlänge', 'm'), g('d_m', 'mittlerer Durchmesser', 'm'),
+                g('N', 'Windungszahl', '')],
+            loese: {
+                l: v => v.d_m * PI * v.N,
+                d_m: v => v.l / (PI * v.N),
+                N: v => v.l / (PI * v.d_m)
+            },
+            erklaerung: 'Jede Windung ist ein Kreis. Wie viel Draht auf eine Spule geht, ist die Summe dieser Kreise.'
+        },
+        {
+            id: 'spule-windungen', kapitel: 'spulen', abschnitt: 'sp-einlagig',
+            schreibweise: 'N = b / d',
+            groessen: [g('N', 'Windungszahl', ''), g('b', 'Spulenbreite', 'mm'),
+                g('d', 'Drahtdurchmesser', 'mm')],
+            loese: {
+                N: v => v.b / v.d,
+                b: v => v.N * v.d,
+                d: v => v.b / v.N
+            },
+            annahme: 'Einlagig und dicht gewickelt — jede Windung liegt neben der vorigen.',
+            erklaerung: 'Wie viele Windungen nebeneinander passen: die Breite geteilt durch die Drahtdicke.'
+        },
+        {
+            id: 'spule-mittel-einlagig', kapitel: 'spulen', abschnitt: 'sp-einlagig',
+            schreibweise: 'd_m = d₁ + d',
+            groessen: [g('d_m', 'mittlerer Durchmesser', 'mm'),
+                g('d₁', 'Innendurchmesser', 'mm'), g('d', 'Drahtdurchmesser', 'mm')],
+            loese: {
+                d_m: v => v['d₁'] + v.d,
+                'd₁': v => v.d_m - v.d,
+                d: v => v.d_m - v['d₁']
+            },
+            erklaerung: 'Die Drahtmitte liegt einen halben Drahtdurchmesser über dem Kern — auf beiden Seiten, also einen ganzen im Durchmesser.'
+        },
+        {
+            id: 'spule-mittel-mehrlagig', kapitel: 'spulen', abschnitt: 'sp-mehrlagig',
+            schreibweise: 'd_m = (d₁ + d₂) / 2',
+            groessen: [g('d_m', 'mittlerer Durchmesser', 'mm'),
+                g('d₁', 'Innendurchmesser', 'mm'), g('d₂', 'Aussendurchmesser', 'mm')],
+            loese: {
+                d_m: v => (v['d₁'] + v['d₂']) / 2,
+                'd₁': v => 2 * v.d_m - v['d₂'],
+                'd₂': v => 2 * v.d_m - v['d₁']
+            },
+            erklaerung: 'Bei mehreren Lagen liegt die mittlere Windung in der Mitte zwischen innen und aussen.'
+        },
+        {
+            id: 'spule-windungen-total', kapitel: 'spulen', abschnitt: 'sp-mehrlagig',
+            schreibweise: 'N = N₁ · N₂',
+            groessen: [g('N', 'Windungszahl gesamt', ''), g('N₁', 'Windungen je Lage', ''),
+                g('N₂', 'Anzahl Lagen', '')],
+            loese: {
+                N: v => v['N₁'] * v['N₂'],
+                'N₁': v => v.N / v['N₂'],
+                'N₂': v => v.N / v['N₁']
+            },
+            erklaerung: 'Windungen je Lage mal Lagen.'
+        },
+        {
+            id: 'spule-lagen', kapitel: 'spulen', abschnitt: 'sp-mehrlagig',
+            schreibweise: 'N₂ = (d₂ − d₁) / (2 · d)',
+            groessen: [g('N₂', 'Anzahl Lagen', ''), g('d₂', 'Aussendurchmesser', 'mm'),
+                g('d₁', 'Innendurchmesser', 'mm'), g('d', 'Drahtdurchmesser', 'mm')],
+            loese: {
+                'N₂': v => (v['d₂'] - v['d₁']) / (2 * v.d),
+                'd₂': v => v['d₁'] + 2 * v.d * v['N₂'],
+                'd₁': v => v['d₂'] - 2 * v.d * v['N₂'],
+                d: v => (v['d₂'] - v['d₁']) / (2 * v['N₂'])
+            },
+            erklaerung: 'Der Wickel wächst nach aussen — aber der Durchmesser wächst je Lage um ZWEI Drahtdicken, oben und unten.'
+        },
     ];
     const LISTE = EINGEBAUT.slice();
     const alle = () => LISTE;
@@ -32241,30 +32673,68 @@ const Formelheft = (() => {
            plötzlich auf Seite 4 landet, hat den Faden verloren. */
         return treffer ?? von;
     };
-    /** Ein Abschnitt mit Überschrift, Skizze und seinen Formeln. */
+    /**
+     * Ein Abschnitt, aufgebaut wie eine Zeile im gedruckten Heft: die
+     * Überschrift darüber, links die Skizze, in der Mitte die Grössenliste,
+     * rechts die Formelzeilen — ALLE, in Buchreihenfolge.
+     *
+     * Die Anordnung ist die des Hefts, weil sie das Mitlesen trägt: wer im
+     * gedruckten Heft die dritte Formel von oben sucht, findet sie hier als
+     * dritte Zeile wieder. Gestaltung — Farben, Schrift, eigene Skizzen,
+     * eigene Erklärsätze — bleibt Redions eigene (E194).
+     *
+     * Antippbar ist eine Zeile, wenn hinter ihr ein RECHENBARER Eintrag
+     * steht. Zeilen ohne Rechenweg — Beziehungen wie `1 kWh = 3600 kWs` —
+     * stehen als Text da: wahr, aber nichts zum Auflösen.
+     */
     const abschnittHtml = (a, formeln, fav) => {
         const skizze = (typeof Elektroskizzen !== 'undefined') ? Elektroskizzen.zu(a.id) : '';
-        /* Die Grössen EINMAL für den ganzen Abschnitt, nicht je Formel: im Buch
-           steht die Legende auch einmal neben der Gruppe. Doppelte Zeilen sind
-           hier kein Fehler, sondern Lärm. */
-        const gesehen = new Set();
-        const legende = [];
-        formeln.forEach(f => (f.groessen || []).forEach((x) => {
-            if (gesehen.has(x.zeichen))
-                return;
-            gesehen.add(x.zeichen);
-            legende.push(`<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
-                `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`);
-        }));
+        /* Die Grössenliste: die des Abschnitts, wenn er eine hat — sonst aus
+           den rechenbaren Formeln zusammengesetzt, jede Grösse einmal. */
+        let groessen = a.groessen || [];
+        if (!groessen.length) {
+            const gesehen = new Set();
+            formeln.forEach(f => (f.groessen || []).forEach((x) => {
+                if (gesehen.has(x.zeichen))
+                    return;
+                gesehen.add(x.zeichen);
+                groessen.push(x);
+            }));
+        }
+        const legende = groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
+            `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
+        /* Die Formelzeilen: die des Abschnitts in Buchreihenfolge — oder, wenn
+           er keine führt, die rechenbaren Formeln. */
+        const zeilen = (a.zeilen && a.zeilen.length)
+            ? a.zeilen
+            : formeln.map(f => ({ f: f.schreibweise, id: f.id }));
+        const formelnHtml = zeilen.map(z => {
+            const eintrag = z.id ? formeln.find(f => f.id === z.id) ||
+                Register.elektroformeln.holen(z.id) : null;
+            if (eintrag) {
+                return `<button type="button" class="bs-formel` +
+                    `${fav.includes(eintrag.id) ? ' gemerkt' : ''}" ` +
+                    `data-buchformel="${esc(eintrag.id)}" ` +
+                    `title="${esc(eintrag.erklaerung)}">${tief(z.f)}</button>`;
+            }
+            return `<span class="bs-zeile">${tief(z.f)}</span>`;
+        }).join('');
+        /* Eine Wertetabelle (Konstanten, Werkstoffe): erste Zeile ist der Kopf. */
+        const tabelle = (a.tabelle && a.tabelle.length)
+            ? `<div class="bs-tabelle"><table>` +
+                `<thead><tr>` + a.tabelle[0].map((z) => `<th>${tief(z)}</th>`).join('') + `</tr></thead>` +
+                `<tbody>` + a.tabelle.slice(1).map(reihe => `<tr>` + reihe.map(z => `<td>${tief(z)}</td>`).join('') + `</tr>`).join('') +
+                `</tbody></table></div>`
+            : '';
         return `<section class="bs-abschnitt" data-abschnitt="${esc(a.id)}">` +
             `<h3>${esc(a.titel)}</h3>` +
+            (a.hinweis ? `<p class="bs-hinweis">${esc(a.hinweis)}</p>` : '') +
             `<div class="bs-koerper">` +
             (skizze ? `<div class="bs-skizze">${skizze}</div>` : '') +
-            `<div class="bs-formeln">` + formeln.map(f => `<button type="button" class="bs-formel${fav.includes(f.id) ? ' gemerkt' : ''}" ` +
-            `data-buchformel="${esc(f.id)}" ` +
-            `title="${esc(f.erklaerung)}">${tief(f.schreibweise)}</button>`).join('') +
-            `</div></div>` +
-            `<div class="bs-legende">${legende.join('')}</div>` +
+            (legende ? `<div class="bs-groessen">${legende}</div>` : '') +
+            `<div class="bs-formeln">${formelnHtml}</div>` +
+            `</div>` +
+            tabelle +
             `</section>`;
     };
     const buchseiteHtml = (nr, fav) => {
@@ -35730,6 +36200,11 @@ const Elektroskizzen = (() => {
                 w.linie({ x: Math.min(...xs), y }, { x: Math.max(...xs), y });
                 klemmen.forEach(([t, nr], i) => {
                     const o = orte[i];
+                    /* Liegt der Anschluss SCHON auf der Sammelhöhe, gibt es keinen
+                       Stummel — eine Leitung von einem Punkt zu demselben Punkt ist
+                       keine, und der Prüflauf hält das zu Recht für einen Fehler. */
+                    if (Math.abs(o.y - y) < 0.5)
+                        return;
                     plan.leitungen.push({
                         id: 'l' + (++z), ebene: 'plan',
                         punkte: [o, { x: o.x, y }],
@@ -36218,6 +36693,123 @@ const Elektroskizzen = (() => {
             txt('U₁', 48, 128, 'middle', BETONT, 12) +
             txt('U₂', 262, 128, 'middle', BETONT, 12) +
             txt('dB', 161, 81, 'middle', STRICH, 12)),
+        /* --- Seite 4 · Stromdichte ------------------------------------------ */
+        'g-stromdichte': () => svg(300, 165, `<path d="M70,55 L230,55 L230,105 L70,105 Z" stroke="${STRICH}" stroke-width="1.6"/>` +
+            `<ellipse cx="70" cy="80" rx="11" ry="25" stroke="${BETONT}" stroke-width="2" ` +
+            `fill="var(--bg-hover)"/>` +
+            `<ellipse cx="230" cy="80" rx="11" ry="25" stroke="${STRICH}" stroke-width="1.6" ` +
+            `fill="none"/>` +
+            pfeil(110, 80, 200, 80, BETONT, 2) +
+            txt('I', 155, 74, 'middle', BETONT) +
+            txt('A', 48, 84, 'end', BETONT) +
+            txt('J = I / A', 150, 142, 'middle', BLASS, 12)),
+        /* --- Seite 23 · Gleichrichter ---------------------------------------- */
+        'gr-einweg': () => planSvg(420, 230, w => {
+            const g = w.teil('wechselspannung', 'G', 20, 85);
+            const d = w.teil('diode', 'V1', 150, 20, 90);
+            const c = w.teil('kondensator', 'C', 260, 85);
+            const r = w.teil('widerstand', 'RL', 350, 85);
+            w.draht(g, 'L', d, 'A', { x: 50, y: 55 });
+            w.draht(d, 'K', c, '1', { x: 280, y: 55 });
+            w.steg(c, '1', r, '1', 55);
+            w.steg(g, 'N', c, '2', 200);
+            w.steg(c, '2', r, '2', 200);
+            w.text('U₁', 60, 30);
+            w.text('U₂', 306, 130);
+        }),
+        'gr-bruecke': () => planSvg(420, 300, w => {
+            /* Die Grätzschaltung: vier Dioden im Quadrat, die Wechselspannung an
+               der einen Diagonale, die Gleichspannung an der anderen. */
+            const g = w.teil('wechselspannung', 'G', 20, 115);
+            const d1 = w.teil('diode', 'V1', 140, 40, 90);
+            const d2 = w.teil('diode', 'V2', 240, 40, 90);
+            const d3 = w.teil('diode', 'V3', 140, 190, 90);
+            const d4 = w.teil('diode', 'V4', 240, 190, 90);
+            const c = w.teil('kondensator', 'C', 340, 115);
+            w.sammel(20, [d1, 'K'], [d2, 'K'], [c, '1']);
+            w.sammel(280, [d3, 'A'], [d4, 'A'], [c, '2']);
+            w.draht(g, 'L', d1, 'A', { x: 50, y: 150 }, { x: 130, y: 150 });
+            w.ab(d3, 'K', { x: 130, y: 150 });
+            w.draht(g, 'N', d2, 'A', { x: 50, y: 262 }, { x: 300, y: 262 }, { x: 300, y: 150 }, { x: 230, y: 150 });
+            w.ab(d4, 'K', { x: 230, y: 150 });
+            w.text('U₁', 60, 90);
+            w.text('U₂', 384, 160);
+        }),
+        /* --- Seite 24 · Elektronische Schaltungen ---------------------------- */
+        'el-diode': () => planSvg(360, 240, w => {
+            const g = w.teil('gleichspannung', 'U1', 20, 90);
+            const rv = w.teil('widerstand', 'Rv', 150, 20, 90);
+            const d = w.teil('led', 'V1', 280, 85);
+            w.draht(g, '+', rv, '2', { x: 50, y: 50 });
+            w.draht(rv, '1', d, 'A', { x: 300, y: 50 });
+            w.steg(g, '−', d, 'K', 215);
+            w.text('U_V', 158, 40);
+            w.text('U_F', 244, 130);
+            w.text('I_F', 100, 208);
+        }),
+        'el-zener': () => planSvg(410, 250, w => {
+            const g = w.teil('gleichspannung', 'U1', 20, 95);
+            const rv = w.teil('widerstand', 'Rv', 140, 20, 90);
+            const z = w.teil('zenerdiode', 'V1', 250, 95);
+            const rl = w.teil('widerstand', 'RL', 340, 95);
+            w.draht(g, '+', rv, '2', { x: 50, y: 50 });
+            w.sammel(50, [rv, '1'], [z, 'K'], [rl, '1']);
+            w.sammel(225, [g, '−'], [z, 'A'], [rl, '2']);
+            w.text('U_V', 148, 40);
+            w.text('U_Z', 204, 140);
+            w.text('U_L', 300, 140);
+            w.text('I_Z', 290, 92);
+        }),
+        'el-transistor': () => planSvg(360, 280, w => {
+            const g = w.teil('gleichspannung', 'Ub', 20, 105);
+            const rl = w.teil('widerstand', 'RL', 260, 30);
+            const t = w.teil('transistor-npn', 'V1', 250, 140);
+            const rv = w.teil('widerstand', 'Rv', 130, 140, 90);
+            w.draht(g, '+', rl, '1', { x: 50, y: 18 }, { x: 280, y: 18 });
+            w.draht(rl, '2', t, 'C');
+            w.steg(g, '−', t, 'E', 260);
+            w.draht(rv, '1', t, 'B');
+            w.ab(rv, '2', { x: 40, y: 170 }, { x: 40, y: 230 });
+            w.text('U_L', 300, 70);
+            w.text('U_CE', 300, 190);
+            w.text('U₁', 46, 200);
+            w.text('I_B', 150, 132);
+        }),
+        /* --- Seite 27 · Drahtlängen von Spulen ------------------------------- */
+        'sp-einlagig': () => {
+            /* Ein Schnitt durch die Spule: der Kern in der Mitte, oben und unten
+               je eine Reihe Drahtquerschnitte. */
+            const draht = (x, y) => `<circle cx="${x}" cy="${y}" r="6" stroke="${BETONT}" stroke-width="1.4" ` +
+                `fill="var(--bg-hover)"/>`;
+            const reihe = (y) => Array.from({ length: 14 }, (_, i) => draht(70 + i * 12.5, y)).join('');
+            return svg(320, 190, `<rect x="58" y="66" width="204" height="46" stroke="${STRICH}" ` +
+                `stroke-width="1.6" fill="none"/>` +
+                reihe(58) + reihe(120) +
+                strichel(50, 89, 280, 89) +
+                pfeil(292, 52, 292, 126, BLASS, 1.2) + pfeil(292, 126, 292, 52, BLASS, 1.2) +
+                txt('d₂', 302, 92, 'start', BLASS, 12) +
+                txt('d₁', 150, 100, 'middle', BLASS, 12) +
+                txt('d_m', 150, 82, 'middle', BETONT, 12) +
+                pfeil(70, 158, 245, 158, BLASS, 1.2) + pfeil(245, 158, 70, 158, BLASS, 1.2) +
+                txt('b', 158, 178, 'middle', BLASS, 12) +
+                txt('d', 62, 40, 'middle', BETONT, 12));
+        },
+        'sp-mehrlagig': () => {
+            const draht = (x, y) => `<circle cx="${x}" cy="${y}" r="5.5" stroke="${BETONT}" stroke-width="1.3" ` +
+                `fill="var(--bg-hover)"/>`;
+            const block = (y0) => [0, 1, 2].map(l => Array.from({ length: 13 }, (_, i) => draht(72 + i * 12, y0 + l * 11)).join('')).join('');
+            return svg(320, 200, `<rect x="60" y="82" width="200" height="36" stroke="${STRICH}" ` +
+                `stroke-width="1.6" fill="none"/>` +
+                block(48) + block(126) +
+                strichel(48, 100, 286, 100) +
+                pfeil(296, 44, 296, 156, BLASS, 1.2) + pfeil(296, 156, 296, 44, BLASS, 1.2) +
+                txt('d₂', 306, 104, 'start', BLASS, 12) +
+                txt('d₁', 150, 112, 'middle', BLASS, 12) +
+                txt('d_m', 150, 94, 'middle', BETONT, 12) +
+                pfeil(72, 180, 216, 180, BLASS, 1.2) + pfeil(216, 180, 72, 180, BLASS, 1.2) +
+                txt('b', 144, 197, 'middle', BLASS, 12) +
+                txt('N₂ Lagen', 40, 36, 'start', BETONT, 12));
+        },
         /* --- Seite 22 · Beleuchtung ------------------------------------------ */
         'l-abstand': () => svg(300, 195, `<path d="M120,26 L180,26 L194,48 L106,48 Z" stroke="${STRICH}" stroke-width="1.8" ` +
             `fill="var(--bg-hover)"/>` +

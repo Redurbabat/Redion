@@ -86,6 +86,11 @@ const Elektroskizzen = (() => {
                 w.linie({ x: Math.min(...xs), y }, { x: Math.max(...xs), y });
                 klemmen.forEach(([t, nr], i) => {
                     const o = orte[i];
+                    /* Liegt der Anschluss SCHON auf der Sammelhöhe, gibt es keinen
+                       Stummel — eine Leitung von einem Punkt zu demselben Punkt ist
+                       keine, und der Prüflauf hält das zu Recht für einen Fehler. */
+                    if (Math.abs(o.y - y) < 0.5)
+                        return;
                     plan.leitungen.push({
                         id: 'l' + (++z), ebene: 'plan',
                         punkte: [o, { x: o.x, y }],
@@ -574,6 +579,123 @@ const Elektroskizzen = (() => {
             txt('U₁', 48, 128, 'middle', BETONT, 12) +
             txt('U₂', 262, 128, 'middle', BETONT, 12) +
             txt('dB', 161, 81, 'middle', STRICH, 12)),
+        /* --- Seite 4 · Stromdichte ------------------------------------------ */
+        'g-stromdichte': () => svg(300, 165, `<path d="M70,55 L230,55 L230,105 L70,105 Z" stroke="${STRICH}" stroke-width="1.6"/>` +
+            `<ellipse cx="70" cy="80" rx="11" ry="25" stroke="${BETONT}" stroke-width="2" ` +
+            `fill="var(--bg-hover)"/>` +
+            `<ellipse cx="230" cy="80" rx="11" ry="25" stroke="${STRICH}" stroke-width="1.6" ` +
+            `fill="none"/>` +
+            pfeil(110, 80, 200, 80, BETONT, 2) +
+            txt('I', 155, 74, 'middle', BETONT) +
+            txt('A', 48, 84, 'end', BETONT) +
+            txt('J = I / A', 150, 142, 'middle', BLASS, 12)),
+        /* --- Seite 23 · Gleichrichter ---------------------------------------- */
+        'gr-einweg': () => planSvg(420, 230, w => {
+            const g = w.teil('wechselspannung', 'G', 20, 85);
+            const d = w.teil('diode', 'V1', 150, 20, 90);
+            const c = w.teil('kondensator', 'C', 260, 85);
+            const r = w.teil('widerstand', 'RL', 350, 85);
+            w.draht(g, 'L', d, 'A', { x: 50, y: 55 });
+            w.draht(d, 'K', c, '1', { x: 280, y: 55 });
+            w.steg(c, '1', r, '1', 55);
+            w.steg(g, 'N', c, '2', 200);
+            w.steg(c, '2', r, '2', 200);
+            w.text('U₁', 60, 30);
+            w.text('U₂', 306, 130);
+        }),
+        'gr-bruecke': () => planSvg(420, 300, w => {
+            /* Die Grätzschaltung: vier Dioden im Quadrat, die Wechselspannung an
+               der einen Diagonale, die Gleichspannung an der anderen. */
+            const g = w.teil('wechselspannung', 'G', 20, 115);
+            const d1 = w.teil('diode', 'V1', 140, 40, 90);
+            const d2 = w.teil('diode', 'V2', 240, 40, 90);
+            const d3 = w.teil('diode', 'V3', 140, 190, 90);
+            const d4 = w.teil('diode', 'V4', 240, 190, 90);
+            const c = w.teil('kondensator', 'C', 340, 115);
+            w.sammel(20, [d1, 'K'], [d2, 'K'], [c, '1']);
+            w.sammel(280, [d3, 'A'], [d4, 'A'], [c, '2']);
+            w.draht(g, 'L', d1, 'A', { x: 50, y: 150 }, { x: 130, y: 150 });
+            w.ab(d3, 'K', { x: 130, y: 150 });
+            w.draht(g, 'N', d2, 'A', { x: 50, y: 262 }, { x: 300, y: 262 }, { x: 300, y: 150 }, { x: 230, y: 150 });
+            w.ab(d4, 'K', { x: 230, y: 150 });
+            w.text('U₁', 60, 90);
+            w.text('U₂', 384, 160);
+        }),
+        /* --- Seite 24 · Elektronische Schaltungen ---------------------------- */
+        'el-diode': () => planSvg(360, 240, w => {
+            const g = w.teil('gleichspannung', 'U1', 20, 90);
+            const rv = w.teil('widerstand', 'Rv', 150, 20, 90);
+            const d = w.teil('led', 'V1', 280, 85);
+            w.draht(g, '+', rv, '2', { x: 50, y: 50 });
+            w.draht(rv, '1', d, 'A', { x: 300, y: 50 });
+            w.steg(g, '−', d, 'K', 215);
+            w.text('U_V', 158, 40);
+            w.text('U_F', 244, 130);
+            w.text('I_F', 100, 208);
+        }),
+        'el-zener': () => planSvg(410, 250, w => {
+            const g = w.teil('gleichspannung', 'U1', 20, 95);
+            const rv = w.teil('widerstand', 'Rv', 140, 20, 90);
+            const z = w.teil('zenerdiode', 'V1', 250, 95);
+            const rl = w.teil('widerstand', 'RL', 340, 95);
+            w.draht(g, '+', rv, '2', { x: 50, y: 50 });
+            w.sammel(50, [rv, '1'], [z, 'K'], [rl, '1']);
+            w.sammel(225, [g, '−'], [z, 'A'], [rl, '2']);
+            w.text('U_V', 148, 40);
+            w.text('U_Z', 204, 140);
+            w.text('U_L', 300, 140);
+            w.text('I_Z', 290, 92);
+        }),
+        'el-transistor': () => planSvg(360, 280, w => {
+            const g = w.teil('gleichspannung', 'Ub', 20, 105);
+            const rl = w.teil('widerstand', 'RL', 260, 30);
+            const t = w.teil('transistor-npn', 'V1', 250, 140);
+            const rv = w.teil('widerstand', 'Rv', 130, 140, 90);
+            w.draht(g, '+', rl, '1', { x: 50, y: 18 }, { x: 280, y: 18 });
+            w.draht(rl, '2', t, 'C');
+            w.steg(g, '−', t, 'E', 260);
+            w.draht(rv, '1', t, 'B');
+            w.ab(rv, '2', { x: 40, y: 170 }, { x: 40, y: 230 });
+            w.text('U_L', 300, 70);
+            w.text('U_CE', 300, 190);
+            w.text('U₁', 46, 200);
+            w.text('I_B', 150, 132);
+        }),
+        /* --- Seite 27 · Drahtlängen von Spulen ------------------------------- */
+        'sp-einlagig': () => {
+            /* Ein Schnitt durch die Spule: der Kern in der Mitte, oben und unten
+               je eine Reihe Drahtquerschnitte. */
+            const draht = (x, y) => `<circle cx="${x}" cy="${y}" r="6" stroke="${BETONT}" stroke-width="1.4" ` +
+                `fill="var(--bg-hover)"/>`;
+            const reihe = (y) => Array.from({ length: 14 }, (_, i) => draht(70 + i * 12.5, y)).join('');
+            return svg(320, 190, `<rect x="58" y="66" width="204" height="46" stroke="${STRICH}" ` +
+                `stroke-width="1.6" fill="none"/>` +
+                reihe(58) + reihe(120) +
+                strichel(50, 89, 280, 89) +
+                pfeil(292, 52, 292, 126, BLASS, 1.2) + pfeil(292, 126, 292, 52, BLASS, 1.2) +
+                txt('d₂', 302, 92, 'start', BLASS, 12) +
+                txt('d₁', 150, 100, 'middle', BLASS, 12) +
+                txt('d_m', 150, 82, 'middle', BETONT, 12) +
+                pfeil(70, 158, 245, 158, BLASS, 1.2) + pfeil(245, 158, 70, 158, BLASS, 1.2) +
+                txt('b', 158, 178, 'middle', BLASS, 12) +
+                txt('d', 62, 40, 'middle', BETONT, 12));
+        },
+        'sp-mehrlagig': () => {
+            const draht = (x, y) => `<circle cx="${x}" cy="${y}" r="5.5" stroke="${BETONT}" stroke-width="1.3" ` +
+                `fill="var(--bg-hover)"/>`;
+            const block = (y0) => [0, 1, 2].map(l => Array.from({ length: 13 }, (_, i) => draht(72 + i * 12, y0 + l * 11)).join('')).join('');
+            return svg(320, 200, `<rect x="60" y="82" width="200" height="36" stroke="${STRICH}" ` +
+                `stroke-width="1.6" fill="none"/>` +
+                block(48) + block(126) +
+                strichel(48, 100, 286, 100) +
+                pfeil(296, 44, 296, 156, BLASS, 1.2) + pfeil(296, 156, 296, 44, BLASS, 1.2) +
+                txt('d₂', 306, 104, 'start', BLASS, 12) +
+                txt('d₁', 150, 112, 'middle', BLASS, 12) +
+                txt('d_m', 150, 94, 'middle', BETONT, 12) +
+                pfeil(72, 180, 216, 180, BLASS, 1.2) + pfeil(216, 180, 72, 180, BLASS, 1.2) +
+                txt('b', 144, 197, 'middle', BLASS, 12) +
+                txt('N₂ Lagen', 40, 36, 'start', BETONT, 12));
+        },
         /* --- Seite 22 · Beleuchtung ------------------------------------------ */
         'l-abstand': () => svg(300, 195, `<path d="M120,26 L180,26 L194,48 L106,48 Z" stroke="${STRICH}" stroke-width="1.8" ` +
             `fill="var(--bg-hover)"/>` +

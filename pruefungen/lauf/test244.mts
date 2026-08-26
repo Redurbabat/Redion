@@ -255,8 +255,8 @@ const tief = await seite.evaluate(() => {
     /* Kein Unterstrich darf STEHENBLEIBEN, wo eine Tiefstellung hingehört. */
     nochUnterstrich: alle.filter(x => /_[A-Za-z0-9]/.test(x.textContent || ''))
       .map(x => x.textContent),
-    /* Und die Legende genauso. */
-    legendeSub: document.querySelectorAll('.bs-legende sub').length
+    /* Und die Grössenliste genauso. */
+    legendeSub: document.querySelectorAll('.bs-groessen sub').length
   };
 });
 p('Die Formel trägt echte Tiefstellungen', tief.mitSub > 0, `${tief.mitSub}/${tief.gesamt}`);

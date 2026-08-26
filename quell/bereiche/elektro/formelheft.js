@@ -175,30 +175,68 @@ const Formelheft = (() => {
            plötzlich auf Seite 4 landet, hat den Faden verloren. */
         return treffer ?? von;
     };
-    /** Ein Abschnitt mit Überschrift, Skizze und seinen Formeln. */
+    /**
+     * Ein Abschnitt, aufgebaut wie eine Zeile im gedruckten Heft: die
+     * Überschrift darüber, links die Skizze, in der Mitte die Grössenliste,
+     * rechts die Formelzeilen — ALLE, in Buchreihenfolge.
+     *
+     * Die Anordnung ist die des Hefts, weil sie das Mitlesen trägt: wer im
+     * gedruckten Heft die dritte Formel von oben sucht, findet sie hier als
+     * dritte Zeile wieder. Gestaltung — Farben, Schrift, eigene Skizzen,
+     * eigene Erklärsätze — bleibt Redions eigene (E194).
+     *
+     * Antippbar ist eine Zeile, wenn hinter ihr ein RECHENBARER Eintrag
+     * steht. Zeilen ohne Rechenweg — Beziehungen wie `1 kWh = 3600 kWs` —
+     * stehen als Text da: wahr, aber nichts zum Auflösen.
+     */
     const abschnittHtml = (a, formeln, fav) => {
         const skizze = (typeof Elektroskizzen !== 'undefined') ? Elektroskizzen.zu(a.id) : '';
-        /* Die Grössen EINMAL für den ganzen Abschnitt, nicht je Formel: im Buch
-           steht die Legende auch einmal neben der Gruppe. Doppelte Zeilen sind
-           hier kein Fehler, sondern Lärm. */
-        const gesehen = new Set();
-        const legende = [];
-        formeln.forEach(f => (f.groessen || []).forEach((x) => {
-            if (gesehen.has(x.zeichen))
-                return;
-            gesehen.add(x.zeichen);
-            legende.push(`<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
-                `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`);
-        }));
+        /* Die Grössenliste: die des Abschnitts, wenn er eine hat — sonst aus
+           den rechenbaren Formeln zusammengesetzt, jede Grösse einmal. */
+        let groessen = a.groessen || [];
+        if (!groessen.length) {
+            const gesehen = new Set();
+            formeln.forEach(f => (f.groessen || []).forEach((x) => {
+                if (gesehen.has(x.zeichen))
+                    return;
+                gesehen.add(x.zeichen);
+                groessen.push(x);
+            }));
+        }
+        const legende = groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
+            `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
+        /* Die Formelzeilen: die des Abschnitts in Buchreihenfolge — oder, wenn
+           er keine führt, die rechenbaren Formeln. */
+        const zeilen = (a.zeilen && a.zeilen.length)
+            ? a.zeilen
+            : formeln.map(f => ({ f: f.schreibweise, id: f.id }));
+        const formelnHtml = zeilen.map(z => {
+            const eintrag = z.id ? formeln.find(f => f.id === z.id) ||
+                Register.elektroformeln.holen(z.id) : null;
+            if (eintrag) {
+                return `<button type="button" class="bs-formel` +
+                    `${fav.includes(eintrag.id) ? ' gemerkt' : ''}" ` +
+                    `data-buchformel="${esc(eintrag.id)}" ` +
+                    `title="${esc(eintrag.erklaerung)}">${tief(z.f)}</button>`;
+            }
+            return `<span class="bs-zeile">${tief(z.f)}</span>`;
+        }).join('');
+        /* Eine Wertetabelle (Konstanten, Werkstoffe): erste Zeile ist der Kopf. */
+        const tabelle = (a.tabelle && a.tabelle.length)
+            ? `<div class="bs-tabelle"><table>` +
+                `<thead><tr>` + a.tabelle[0].map((z) => `<th>${tief(z)}</th>`).join('') + `</tr></thead>` +
+                `<tbody>` + a.tabelle.slice(1).map(reihe => `<tr>` + reihe.map(z => `<td>${tief(z)}</td>`).join('') + `</tr>`).join('') +
+                `</tbody></table></div>`
+            : '';
         return `<section class="bs-abschnitt" data-abschnitt="${esc(a.id)}">` +
             `<h3>${esc(a.titel)}</h3>` +
+            (a.hinweis ? `<p class="bs-hinweis">${esc(a.hinweis)}</p>` : '') +
             `<div class="bs-koerper">` +
             (skizze ? `<div class="bs-skizze">${skizze}</div>` : '') +
-            `<div class="bs-formeln">` + formeln.map(f => `<button type="button" class="bs-formel${fav.includes(f.id) ? ' gemerkt' : ''}" ` +
-            `data-buchformel="${esc(f.id)}" ` +
-            `title="${esc(f.erklaerung)}">${tief(f.schreibweise)}</button>`).join('') +
-            `</div></div>` +
-            `<div class="bs-legende">${legende.join('')}</div>` +
+            (legende ? `<div class="bs-groessen">${legende}</div>` : '') +
+            `<div class="bs-formeln">${formelnHtml}</div>` +
+            `</div>` +
+            tabelle +
             `</section>`;
     };
     const buchseiteHtml = (nr, fav) => {

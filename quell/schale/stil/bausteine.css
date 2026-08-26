@@ -3668,7 +3668,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-abschnitt h3{margin:0 0 7px; font-size:12.5px; font-weight:700;
   color:var(--text); letter-spacing:.01em}
 .bs-koerper{display:flex; gap:12px; align-items:flex-start}
-.bs-skizze{flex:0 0 44%; max-width:270px; min-width:0}
+.bs-skizze{flex:0 0 34%; max-width:240px; min-width:0}
 .bs-skizze svg{width:100%; height:auto; display:block; color:var(--text)}
 /* Die Beschriftungen IN der Skizze sind auf 13 px im Zeichenraum gesetzt.
    Bei 200 px Anzeige einer 390 px breiten Zeichnung werden daraus knapp
@@ -3685,8 +3685,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 /* `<sub>` verschiebt sonst die Grundlinie und macht jede Formelzeile ein
    paar Pixel höher als die daneben. `line-height:0` an der Tiefstellung
    nimmt ihr diesen Einfluss. */
-.bs-formel sub, .fh-formel header sub, .bs-treffer-zeile sub,
-.fh-groessen sub, .bs-legende sub, .fh-zeichen sub, .fh-gesucht sub,
+.bs-formel sub, .bs-zeile sub, .fh-formel header sub, .bs-treffer-zeile sub,
+.fh-groessen sub, .bs-groessen sub, .bs-tabelle sub, .fh-zeichen sub, .fh-gesucht sub,
 .fh-ergebnis sub{font-size:.7em; line-height:0; vertical-align:baseline;
   position:relative; bottom:-.28em}
 .bs-formel{max-width:100%; padding:4px 8px; border:1px solid transparent;
@@ -3702,11 +3702,31 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .bs-formel.gemerkt{border-left:3px solid var(--accent); padding-left:6px}
 .bs-formel.gemerkt::after{content:' ★'; color:var(--accent); font-size:10px}
 
-.bs-legende{display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:8px;
-  padding-top:7px; border-top:1px dashed var(--line);
-  font-size:11px; color:var(--text-dim)}
-.bs-legende i{font-style:normal; font-weight:700; color:var(--accent)}
-.bs-legende em{font-style:normal; color:var(--text-faint)}
+/* Die Grössenliste steht wie im Heft ZWISCHEN Skizze und Formeln — eine
+   Zeile je Grösse: Zeichen, Name, Einheit rechtsbündig gedacht. */
+.bs-groessen{flex:1 1 34%; min-width:0; display:flex; flex-direction:column;
+  gap:3px; font-size:11px; color:var(--text-dim); padding-top:2px}
+.bs-groessen span{display:block; line-height:1.5}
+.bs-groessen i{font-style:normal; font-weight:700; color:var(--accent);
+  display:inline-block; min-width:2.6em}
+.bs-groessen em{font-style:normal; color:var(--text-faint); margin-left:4px}
+
+/* Ein eigener Merksatz unter der Überschrift. */
+.bs-hinweis{margin:-3px 0 7px; font-size:11.5px; color:var(--text-dim);
+  line-height:1.5}
+
+/* Eine Zeile ohne Rechenweg: steht da wie eine Formel, ist aber kein Knopf. */
+.bs-zeile{max-width:100%; padding:4px 8px; color:var(--text);
+  font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums;
+  line-height:1.5; word-break:break-word}
+
+/* Wertetabellen (Konstanten, Werkstoffe): quer rollbar, nie über den Rand. */
+.bs-tabelle{margin-top:8px; overflow-x:auto}
+.bs-tabelle table{border-collapse:collapse; font-size:11.5px; min-width:60%}
+.bs-tabelle th{text-align:left; font-weight:700; color:var(--text);
+  border-bottom:2px solid var(--accent); padding:3px 12px 3px 0}
+.bs-tabelle td{padding:3px 12px 3px 0; border-bottom:1px solid var(--line);
+  color:var(--text-dim); font-variant-numeric:tabular-nums; white-space:nowrap}
 
 .bs-rechner{margin-top:9px; padding:9px 10px; border:1px solid var(--accent);
   border-radius:9px; background:var(--bg)}
@@ -3787,6 +3807,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      untereinander — Skizze zuerst, weil man sie zuerst ansieht. */
   .bs-koerper{flex-direction:column}
   .bs-skizze{flex:none; max-width:100%; width:100%; align-self:center}
+  .bs-groessen{flex:none; width:100%}
   /* KEIN `display:flex` an der Formel. Hier stand es, um sie auf 44 px zu
      bringen — und Flexbox macht aus `Q`, `<sub>L</sub>`, ` = `, `<sub>` …
      lauter Flex-Elemente und SCHLUCKT die Leerzeichen dazwischen. Auf dem
