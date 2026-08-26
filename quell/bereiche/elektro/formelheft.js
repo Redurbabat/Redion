@@ -55,7 +55,28 @@ const Formelheft = (() => {
      * Unicode-Tiefstellungen (U₀, Rᵢ, N₁) bleiben, wie sie sind — sie sehen
      * bereits richtig aus und haben keinen Unterstrich.
      */
-    const tief = (wert) => esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g, '<sub>$1</sub>');
+    /* WELCHE ZEICHEN TIEFGESTELLT WERDEN, und warum die alte Liste zu kurz war.
+     *
+     * Hier stand `[A-Za-zÄÖÜäöüß0-9]`. Das ist die deutsche Tastatur, nicht die
+     * Physik. Im Heft steht `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ`
+     * (Scheinleistung in Dreieckschaltung) und `AF_%` (relativer Anzeigefehler)
+     * — 42 Stellen, an denen der Unterstrich als Unterstrich stehen blieb.
+     *
+     * Ein sichtbarer Unterstrich in einer Formel ist kein Schönheitsfehler: er
+     * sieht aus wie ein Zeichen der Formel. `R_ϑ` liest sich als „R Unterstrich
+     * Theta", und es gibt keine solche Grösse.
+     *
+     * `\p{L}` nimmt jeden Buchstaben JEDER Schrift, `\p{N}` jede Ziffer, und
+     * `%` steht ausdrücklich dabei, weil es keins von beidem ist. Was nicht
+     * dazugehört — Leerzeichen, Klammern, Rechenzeichen — beendet die
+     * Tiefstellung weiterhin. Und weil `esc` VORHER läuft, kann durch die
+     * Erweiterung kein Zeichen hereinkommen, das vorher draussen war.
+     *
+     * Dieselbe Zeile steht in `schaltplan.ts`, `skizzen.ts` und
+     * `formelheft.ts`. test244 vergleicht die drei — auseinanderlaufen ist
+     * genau der Weg, auf dem dieser Fehler entstanden ist.
+     */
+    const tief = (wert) => esc(wert).replace(/_([\p{L}\p{N}%]+)/gu, '<sub>$1</sub>');
     /* Was sich das Heft über Sitzungen hinweg merkt. Alles in `Store.meta` —
        es gehört dem Menschen, nicht einem Dokument. */
     const M_ORT = 'elektro:heftOrt'; /* wo das Fenster stand */
@@ -207,8 +228,13 @@ const Formelheft = (() => {
                 });
             });
         }
+        /* AUCH DIE BESCHREIBUNG WIRD TIEFGESTELLT, nicht nur das Zeichen.
+           „Spannung an R_V" stand mit sichtbarem Unterstrich in der Liste, weil
+           hier `esc` statt `tief` lief. Eine Grösse, die in ihrer eigenen
+           Erklärung falsch geschrieben ist, erklärt nichts.
+           Im `title` bleibt `esc`: ein Attribut verträgt keine Auszeichnung. */
         const legende = groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
-            `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
+            `${tief(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
         const formelnHtml = zeilen.map(z => {
             const eintrag = z.id ? Register.elektroformeln.holen(z.id) : null;
             if (eintrag) {
@@ -234,8 +260,12 @@ const Formelheft = (() => {
         const nurBild = !formelnHtml && !legende && !tabelle;
         return `<section class="bs-abschnitt${nurBild ? ' bs-nurbild' : ''}" ` +
             `data-abschnitt="${esc(a.id)}">` +
-            `<h3>${esc(a.titel)}</h3>` +
-            (a.hinweis ? `<p class="bs-hinweis">${esc(a.hinweis)}</p>` : '') +
+            /* Auch die Überschrift und der Hinweis werden tiefgestellt. „Reihen-
+               schaltung von R, X_L und X_C" stand auf Seite 14 und 15 mit zwei
+               sichtbaren Unterstrichen in der Überschrift — der auffälligsten
+               Zeile des Abschnitts. */
+            `<h3>${tief(a.titel)}</h3>` +
+            (a.hinweis ? `<p class="bs-hinweis">${tief(a.hinweis)}</p>` : '') +
             `<div class="bs-koerper">` +
             (skizze ? `<div class="bs-skizze">${skizze}</div>` : '') +
             (legende ? `<div class="bs-groessen">${legende}</div>` : '') +

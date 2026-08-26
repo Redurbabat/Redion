@@ -54,8 +54,29 @@ const Schaltplan = (() => {
    * aus einer Beschriftung kein Element werden. Umgekehrt wäre es ein Loch,
    * durch das jeder Plantext beliebiges SVG einschleusen könnte.
    */
+  /* WELCHE ZEICHEN TIEFGESTELLT WERDEN, und warum die alte Liste zu kurz war.
+   *
+   * Hier stand `[A-Za-zÄÖÜäöüß0-9]`. Das ist die deutsche Tastatur, nicht die
+   * Physik. Im Heft steht `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ`
+   * (Scheinleistung in Dreieckschaltung) und `AF_%` (relativer Anzeigefehler)
+   * — 42 Stellen, an denen der Unterstrich als Unterstrich stehen blieb.
+   *
+   * Ein sichtbarer Unterstrich in einer Formel ist kein Schönheitsfehler: er
+   * sieht aus wie ein Zeichen der Formel. `R_ϑ` liest sich als „R Unterstrich
+   * Theta", und es gibt keine solche Grösse.
+   *
+   * `\p{L}` nimmt jeden Buchstaben JEDER Schrift, `\p{N}` jede Ziffer, und
+   * `%` steht ausdrücklich dabei, weil es keins von beidem ist. Was nicht
+   * dazugehört — Leerzeichen, Klammern, Rechenzeichen — beendet die
+   * Tiefstellung weiterhin. Und weil `esc` VORHER läuft, kann durch die
+   * Erweiterung kein Zeichen hereinkommen, das vorher draussen war.
+   *
+   * Dieselbe Zeile steht in `schaltplan.ts`, `skizzen.ts` und
+   * `formelheft.ts`. test244 vergleicht die drei — auseinanderlaufen ist
+   * genau der Weg, auf dem dieser Fehler entstanden ist.
+   */
   const tief = (wert: unknown): string =>
-    esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g,
+    esc(wert).replace(/_([\p{L}\p{N}%]+)/gu,
       '<tspan baseline-shift="sub" font-size="0.72em">$1</tspan>');
 
   const R = (): number => (typeof Register !== 'undefined' && Register.fachzeichen)

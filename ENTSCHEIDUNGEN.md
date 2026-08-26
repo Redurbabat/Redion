@@ -13959,3 +13959,98 @@ Gemessen wird deshalb, was GEMALT wird: jedes Element ausserhalb des
 Heftfensters, das eigene Schichtung hat, eine höhere z-Zahl trägt als das
 Fenster, sichtbar ist und den Fuss überlappt. Vor der Berichtigung meldete
 sie `DIV#toast z900 798–820`, danach nichts. test244 hat damit 65 Prüfungen.
+
+## E197 · Der Durchgang durch alle 33 Seiten
+
+**26. August 2026**
+
+E196 fand drei Fehler auf einer einzigen Seite, und keiner davon war rot.
+Das ist keine Eigenschaft von Seite 13 — es ist eine Eigenschaft der Art,
+wie man ein Buch prüft. Also einmal durch alle 33 Seiten, jede angesehen
+und jede vermessen.
+
+**Der sichtbare Unterstrich — 42 Stellen.**
+
+`tief` verwandelt `X_L` in X mit tiefgestelltem L. Die Zeichenliste dafür
+war `[A-Za-zÄÖÜäöüß0-9]`: die deutsche Tastatur, nicht die Physik. Im Heft
+stehen `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ` (Scheinleistung im
+Dreieck) und `AF_%` (relativer Anzeigefehler). Bei allen dreien blieb der
+Unterstrich als Unterstrich stehen.
+
+Das ist kein Schönheitsfehler. `R_ϑ` liest sich als „R Unterstrich Theta",
+und eine solche Grösse gibt es nicht.
+
+Die Liste heisst jetzt `[\p{L}\p{N}%]` — jeder Buchstabe jeder Schrift, jede
+Ziffer, und Prozent ausdrücklich, weil es keins von beidem ist. Weil `esc`
+vorher läuft, kann durch die Erweiterung kein Zeichen hereinkommen, das
+vorher draussen war.
+
+Dieselbe Zeile stand an DREI Orten — Schaltplan, Skizzen, Buch. Genau so
+entsteht ein solcher Fehler und genau so überlebt er. test244 vergleicht
+die drei jetzt miteinander.
+
+Und drei Stellen liefen gar nicht durch `tief`: die Überschrift des
+Abschnitts, sein Hinweis und die Beschreibung einer Grösse. „Reihen-
+schaltung von R, X_L und X_C" stand mit zwei Unterstrichen in der
+auffälligsten Zeile der Seite; „Spannung an R_V" in der Erklärung einer
+Grösse, die sich damit selbst falsch schreibt.
+
+**Der Wächter, der die Annahme des Geprüften teilte.**
+
+Es gab längst eine Prüfung „Kein Unterstrich bleibt stehen". Sie suchte
+`/_[A-Za-z0-9]/` — DIESELBE zu kurze Liste. Sie konnte also genau das nicht
+finden, was schiefging, und sie sah nur auf Seite 11 nach, während `AF_%`
+auf 6 und 7 steht und `R_ϑ` auf 4.
+
+Jetzt gilt: in einer Formel hat ein Unterstrich NIE etwas zu suchen, also
+keiner, auf keiner der 35 Seiten, in Formel, Zeile, Legende, Überschrift,
+Hinweis, Tabelle und Skizzenbeschriftung. Ein Wächter, der die Annahme des
+Geprüften teilt, prüft nichts (CLAUDE.md §55.2).
+
+**Die Messung, die eine Lage mass, die es nicht gibt.**
+
+Die Prüfung „Keine Skizze läuft aus ihrem Blatt" rendert jede Skizze in
+einen Hilfskasten und vergleicht `getBBox` mit dem `viewBox`. Der Kasten war
+ein blankes `<div style="width:600px">`.
+
+Die Plan-Beschriftungen haben zwar `font-size="13"`, aber keine
+Schriftfamilie — die erben sie vom Umgebenden. Im blanken Kasten kam eine
+andere Schrift heraus als unter `.bs-skizze`, und mit ihr andere
+Buchstabenmasse: `s-teiler` mass dort 1 Punkt Überstand und auf der Seite 3,
+`b-reihe` 2 gegen 6. Bei zwei Punkten Nachsicht hiess das: grün, während im
+Bild ein `U` oben abgeschnitten stand.
+
+Der Kasten trägt jetzt dieselbe Klasse wie im Buch. Danach war die Prüfung
+sofort rot — und `s-teiler`, `b-reihe`, `b-innen` und `sp-mehrlagig` liessen
+sich berichtigen.
+
+**Vier Bilder, die etwas Falsches zeigten.**
+
+  · `s20-gleichstromleitung` war neu zu zeichnen. `ΔU` stand unter dem Bild
+    und zeigte auf nichts; die Länge `l` lag als gestrichelte Linie im
+    Inneren und war kürzer als die Leitung, die sie messen soll; und `I` und
+    `l` standen beide frei in derselben kursiven Schrift, in der sie
+    derselbe Strich sind. Jetzt sagt die Form, was gemeint ist: ein Pfeil in
+    Flussrichtung ist ein Strom, ein Doppelpfeil zwischen zwei Grenzen ist
+    ein Mass. Die Grössen kommen aus dem Register des Abschnitts — U₁ am
+    Netz, U₂ am Verbraucher, ΔU dazwischen —, und weil `R_Ltg` mit `2 · l`
+    rechnet, zeigt der Rückleiter seinen Strom mit.
+  · `mo-dreh` trug ein drittes `M` frei neben dem Motor. Das Zeichen hat
+    sein `M` und sein `3 ~` im Kreis, das Betriebsmittelkennzeichen `M1`
+    schreibt der Planzeichner daneben.
+  · `sp-einlagig` und `sp-mehrlagig`: `d` schwebte ohne Bezug über dem Bild,
+    `d₁` hatte kein Mass, und `d₁` und `d_m` lagen als zwei Beschriftungen
+    übereinander auf der Strichlinie und sahen durchgestrichen aus. Jetzt
+    hat `d` eine Linie zu seinem Draht, `d₁` einen eigenen Doppelpfeil über
+    den Kern, und beide Beschriftungen stehen frei.
+
+**Was der Durchgang NICHT fand.**
+
+Die Seiten 35 und 36 sind leer, und das ist richtig so: das gedruckte Heft
+hat 36 Seiten, geschrieben sind 33 davon. Redion sagt das auf der Seite —
+„Diese Seite gibt es im gedruckten Heft, in Redion noch nicht" — und zählt
+auf, welche es gibt. Eine bekannte Lücke ist besser als ein stiller Fehler
+(§35).
+
+Sechzehn Abschnitte haben weder Formel noch Tabelle noch Legende. Alle
+sechzehn sind Bildabschnitte, und alle sechzehn haben ihr Bild.

@@ -193,8 +193,29 @@ const Elektroskizzen = (() => {
    * demselben Grund und mit derselben Reihenfolge: erst escapen, dann
    * auszeichnen (§19).
    */
+  /* WELCHE ZEICHEN TIEFGESTELLT WERDEN, und warum die alte Liste zu kurz war.
+   *
+   * Hier stand `[A-Za-zÄÖÜäöüß0-9]`. Das ist die deutsche Tastatur, nicht die
+   * Physik. Im Heft steht `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ`
+   * (Scheinleistung in Dreieckschaltung) und `AF_%` (relativer Anzeigefehler)
+   * — 42 Stellen, an denen der Unterstrich als Unterstrich stehen blieb.
+   *
+   * Ein sichtbarer Unterstrich in einer Formel ist kein Schönheitsfehler: er
+   * sieht aus wie ein Zeichen der Formel. `R_ϑ` liest sich als „R Unterstrich
+   * Theta", und es gibt keine solche Grösse.
+   *
+   * `\p{L}` nimmt jeden Buchstaben JEDER Schrift, `\p{N}` jede Ziffer, und
+   * `%` steht ausdrücklich dabei, weil es keins von beidem ist. Was nicht
+   * dazugehört — Leerzeichen, Klammern, Rechenzeichen — beendet die
+   * Tiefstellung weiterhin. Und weil `esc` VORHER läuft, kann durch die
+   * Erweiterung kein Zeichen hereinkommen, das vorher draussen war.
+   *
+   * Dieselbe Zeile steht in `schaltplan.ts`, `skizzen.ts` und
+   * `formelheft.ts`. test244 vergleicht die drei — auseinanderlaufen ist
+   * genau der Weg, auf dem dieser Fehler entstanden ist.
+   */
   const tief = (wert: unknown): string =>
-    esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g,
+    esc(wert).replace(/_([\p{L}\p{N}%]+)/gu,
       '<tspan baseline-shift="sub" font-size="0.72em">$1</tspan>');
 
   const txt = (t: string, x: number, y: number,
@@ -297,14 +318,19 @@ const Elektroskizzen = (() => {
       const g  = w.teil('gleichspannung', 'G', 20, 90);
       const r1 = w.teil('widerstand', 'R1', 170, 30);
       const r2 = w.teil('widerstand', 'R2', 170, 150);
-      w.steg(g, '+', r1, '1', 15);
+      /* Der obere Steg lag auf y = 15 und das `U` darüber auf y = 11 — und
+         eine 13 px hohe Grossbuchstabenzeile braucht über ihrer Grundlinie
+         etwa 14. Das `U` stand also mit dem Kopf ausserhalb des Blattes und
+         war oben abgeschnitten. Steg und Beschriftung rücken 7 px nach
+         unten; die Bauteile bleiben, wo sie sind. */
+      w.steg(g, '+', r1, '1', 22);
       w.draht(r1, '2', r2, '1');
       w.steg(r2, '2', g, '−', 248);
       /* Der Abgriff: zwischen den beiden Widerständen heraus und unten
          heraus — dazwischen steht U₂. */
       w.linie({ x: 190, y: 120 }, { x: 265, y: 120 });
       w.linie({ x: 190, y: 248 }, { x: 265, y: 248 });
-      w.text('U', 92, 11);
+      w.text('U', 92, 18);
       w.text('U₂', 272, 188);
     }),
 
@@ -440,14 +466,19 @@ const Elektroskizzen = (() => {
       const ri = w.teil('widerstand', 'Ri', 50, 30);
       const rl = w.teil('widerstand', 'RL', 300, 110);
       w.draht(g, '+', ri, '2');
-      w.steg(ri, '1', rl, '1', 16);
+      /* Wie beim Spannungsteiler: das `I` sass auf y = 12 und stiess mit
+         seinem Kopf über die Blattkante. Steg und Beschriftung 6 px tiefer. */
+      w.steg(ri, '1', rl, '1', 22);
       w.steg(g, '−', rl, '2', 230);
       w.text('U', 190, 160);
-      w.text('I', 190, 12);
+      w.text('I', 190, 18);
       w.text('U_Ri', 100, 62);
     }),
 
-    'b-reihe': () => planSvg(250, 310, w => {
+    /* 270 statt 250 breit: das Betriebsmittelkennzeichen „RL" steht 6 px
+       rechts neben dem Widerstand, und der endet bei 230. Mit 250 lag die
+       Beschriftung des rechten Bauteils ausserhalb des Blattes. */
+    'b-reihe': () => planSvg(270, 310, w => {
       const b1 = w.teil('batterie', 'G1', 50, 15);
       const b2 = w.teil('batterie', 'G2', 50, 105);
       const b3 = w.teil('batterie', 'G3', 50, 195);
@@ -775,23 +806,59 @@ const Elektroskizzen = (() => {
       w.text('L1', 16, 44);
       w.text('L2', 16, 66);
       w.text('L3', 16, 88);
-      w.text('M', 238, 142);
+      /* Hier stand noch ein freies `M` rechts neben dem Motor. Das Zeichen
+         trägt sein `M` und sein `3 ~` bereits im Kreis, und das Betriebs-
+         mittelkennzeichen `M1` schreibt der Planzeichner daneben. Ein
+         drittes M erklärte nichts und stand nur im Weg. */
     }),
 
     /* --- Seite 20 · Spannungsfall ---------------------------------------- */
 
-    's20-gleichstromleitung': () => svg(330, 180,
-      lin(28, 52, 252, 52, STRICH, 2) +
-      lin(28, 124, 252, 124, STRICH, 2) +
-      `<rect x="252" y="52" width="42" height="72" stroke="${STRICH}" stroke-width="1.8" ` +
-      `fill="var(--bg-hover)"/>` +
-      lin(28, 52, 28, 124, BETONT, 2.4) +
-      pfeil(70, 42, 150, 42, BETONT, 1.4) +
-      txt('I', 110, 36, 'middle', BETONT, 12) +
-      strichel(70, 88, 220, 88) +
-      txt('l', 145, 84, 'middle', BLASS, 12) +
-      txt('ΔU', 150, 154, 'middle', STRICH, 12) +
-      txt('U', 18, 92, 'end', BETONT, 12)),
+    's20-gleichstromleitung': () => {
+      /* NEU GEZEICHNET, weil das alte Bild drei Dinge falsch machte.
+       *
+       *  · `ΔU` stand unter dem Bild und zeigte auf nichts. Der Spannungs-
+       *    fall entsteht AUF der Leitung, also gehört er an die Leitung.
+       *  · Die Länge `l` lag als gestrichelte Linie INNERHALB des Kastens
+       *    und war kürzer als die Leitung, die sie messen soll.
+       *  · `I` und `l` standen beide frei in derselben kursiven Schrift, in
+       *    der sie derselbe Strich sind. Jetzt sagt die Form, was gemeint
+       *    ist: ein Pfeil in Flussrichtung ist ein Strom, ein Doppelpfeil
+       *    zwischen zwei Grenzen ist ein Mass.
+       *
+       * Die Grössen kommen aus dem Register des Abschnitts: U₁ am Netz,
+       * U₂ am Verbraucher, ΔU dazwischen. Und weil `R_Ltg = ρ · 2 · l / A`
+       * rechnet, zeigt der Rückleiter seinen Strom mit: `l` ist die einfache
+       * Länge, gezählt wird zweimal.
+       */
+      const HIN = 54, ZURUECK = 134, LINKS = 46, RECHTS = 252;
+      /* Ein Mass: Doppelpfeil zwischen zwei Grenzstrichen. */
+      const mass = (x1: number, x2: number, y: number): string =>
+        strichel(x1, y - 8, x1, y + 6) + strichel(x2, y - 8, x2, y + 6) +
+        pfeil(x1, y, x2, y, BLASS, 1.2) + pfeil(x2, y, x1, y, BLASS, 1.2);
+      return svg(340, 210,
+        /* Die beiden Leiter und der Verbraucher am Ende. */
+        lin(LINKS, HIN, RECHTS, HIN, STRICH, 2) +
+        lin(LINKS, ZURUECK, RECHTS, ZURUECK, STRICH, 2) +
+        `<rect x="${RECHTS}" y="${HIN}" width="46" height="${ZURUECK - HIN}" ` +
+        `stroke="${STRICH}" stroke-width="1.8" fill="var(--bg-hover)"/>` +
+        /* Netzspannung links, als Pfeil zwischen den Leitern. */
+        pfeil(LINKS, ZURUECK, LINKS, HIN, BETONT, 2.2) +
+        txt('U₁', LINKS - 8, 98, 'end', BETONT, 12) +
+        /* Verbraucherspannung rechts, vor dem Kasten. */
+        pfeil(RECHTS - 12, ZURUECK, RECHTS - 12, HIN, BETONT, 1.8) +
+        txt('U₂', RECHTS - 18, 98, 'end', BETONT, 12) +
+        /* Der Strom: hin oben, zurück unten. */
+        pfeil(92, HIN - 12, 196, HIN - 12, BETONT, 1.5) +
+        txt('I', 144, HIN - 20, 'middle', BETONT, 12) +
+        pfeil(196, ZURUECK + 14, 92, ZURUECK + 14, BETONT, 1.5) +
+        /* Der Spannungsfall LÄNGS der Leitung, nicht darunter. */
+        pfeil(LINKS + 14, HIN + 18, RECHTS - 14, HIN + 18, STRICH, 1.4) +
+        txt('ΔU', 150, HIN + 34, 'middle', STRICH, 12) +
+        /* Und die einfache Leitungslänge als Mass. */
+        mass(LINKS, RECHTS, 176) +
+        txt('l', 149, 196, 'middle', BLASS, 12));
+    },
 
     /* --- Seite 21 · Antenne ---------------------------------------------- */
 
@@ -917,13 +984,26 @@ const Elektroskizzen = (() => {
         `stroke-width="1.6" fill="none"/>` +
         reihe(58) + reihe(120) +
         strichel(50, 89, 280, 89) +
+        /* d₂ misst von Draht zu Draht, d₁ den Kern dazwischen — jedes mit
+           eigenem Doppelpfeil. Vorher hatte nur d₂ einen; d₁ und d_m
+           standen als zwei Beschriftungen übereinander in der Mitte und
+           berührten sich fast. */
         pfeil(292, 52, 292, 126, BLASS, 1.2) + pfeil(292, 126, 292, 52, BLASS, 1.2) +
         txt('d₂', 302, 92, 'start', BLASS, 12) +
-        txt('d₁', 150, 100, 'middle', BLASS, 12) +
-        txt('d_m', 150, 82, 'middle', BETONT, 12) +
+        pfeil(96, 66, 96, 112, BLASS, 1.2) + pfeil(96, 112, 96, 66, BLASS, 1.2) +
+        /* Beide Beschriftungen weg von der Strichlinie: auf ihr sahen sie
+           durchgestrichen aus. d₁ nach unten in den Kern, d_m darüber —
+           und weit genug, dass die Tiefstellung von d_m die Linie nicht
+           mehr berührt. */
+        txt('d₁', 104, 106, 'start', BLASS, 12) +
+        txt('d_m', 196, 79, 'middle', BETONT, 12) +
         pfeil(70, 158, 245, 158, BLASS, 1.2) + pfeil(245, 158, 70, 158, BLASS, 1.2) +
         txt('b', 158, 178, 'middle', BLASS, 12) +
-        txt('d', 62, 40, 'middle', BETONT, 12));
+        /* Der Drahtdurchmesser braucht eine Linie zu dem Draht, den er
+           meint — sonst schwebt das `d` über dem Bild und könnte alles
+           bedeuten. */
+        lin(70, 52, 84, 38, BETONT, 1.2) +
+        txt('d', 88, 36, 'start', BETONT, 12));
     },
 
     'sp-mehrlagig': () => {
@@ -934,15 +1014,25 @@ const Elektroskizzen = (() => {
         [0, 1, 2].map(l =>
           Array.from({ length: 13 }, (_, i) => draht(72 + i * 12, y0 + l * 11)).join('')
         ).join('');
-      return svg(320, 200,
+      /* 334 × 210 statt 320 × 200: das `d₂` rechts und das `b` unten standen
+         je einen Punkt über der Kante. Ein Punkt ist unsichtbar — aber ein
+         Blatt, das seinen Inhalt gerade so nicht fasst, hat beim nächsten
+         Zeichen keinen Platz mehr. (Beim ersten Anlauf habe ich dafür den
+         einlagigen Zwilling verbreitert — der lief nie hinaus. Die Zahlen
+         320 × 200 gehören diesem hier.) */
+      return svg(334, 210,
         `<rect x="60" y="82" width="200" height="36" stroke="${STRICH}" ` +
         `stroke-width="1.6" fill="none"/>` +
         block(48) + block(126) +
         strichel(48, 100, 286, 100) +
+        /* Derselbe Umbau wie beim einlagigen Zwilling: d₁ bekommt einen
+           eigenen Doppelpfeil über den Kern, und beide Beschriftungen
+           rücken von der Strichlinie weg. */
         pfeil(296, 44, 296, 156, BLASS, 1.2) + pfeil(296, 156, 296, 44, BLASS, 1.2) +
         txt('d₂', 306, 104, 'start', BLASS, 12) +
-        txt('d₁', 150, 112, 'middle', BLASS, 12) +
-        txt('d_m', 150, 94, 'middle', BETONT, 12) +
+        pfeil(96, 82, 96, 118, BLASS, 1.2) + pfeil(96, 118, 96, 82, BLASS, 1.2) +
+        txt('d₁', 104, 114, 'start', BLASS, 12) +
+        txt('d_m', 196, 92, 'middle', BETONT, 12) +
         pfeil(72, 180, 216, 180, BLASS, 1.2) + pfeil(216, 180, 72, 180, BLASS, 1.2) +
         txt('b', 144, 197, 'middle', BLASS, 12) +
         txt('N₂ Lagen', 40, 36, 'start', BETONT, 12));

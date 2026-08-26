@@ -277,8 +277,14 @@ const tief = await seite.evaluate(() => {
     /* Wie viele Formeln überhaupt eine Tiefstellung tragen. */
     mitSub: alle.filter(x => x.querySelector('sub')).length,
     gesamt: alle.length,
-    /* Kein Unterstrich darf STEHENBLEIBEN, wo eine Tiefstellung hingehört. */
-    nochUnterstrich: alle.filter(x => /_[A-Za-z0-9]/.test(x.textContent || ''))
+    /* Kein Unterstrich darf STEHENBLEIBEN, wo eine Tiefstellung hingehört.
+       Hier stand `/_[A-Za-z0-9]/` — DIESELBE zu kurze Zeichenliste wie in
+       `tief` selbst. Damit prüfte der Wächter genau das nicht, was schiefging:
+       `R_ϑ`, `S_Δ` und `AF_%` gingen an ihm vorbei, weil ϑ, Δ und % nicht in
+       seiner Liste standen. Ein Wächter, der die Annahme des Geprüften teilt,
+       prüft nichts (§55.2).
+       In einer Formel hat ein Unterstrich NIE etwas zu suchen. Also: keiner. */
+    nochUnterstrich: alle.filter(x => (x.textContent || '').includes('_'))
       .map(x => x.textContent),
     /* Und die Grössenliste genauso. */
     legendeSub: document.querySelectorAll('.bs-groessen sub').length
@@ -288,6 +294,58 @@ p('Die Formel trägt echte Tiefstellungen', tief.mitSub > 0, `${tief.mitSub}/${t
 p('Kein Unterstrich bleibt stehen',
   !tief.nochUnterstrich.length, tief.nochUnterstrich.slice(0, 3).join(' | '));
 p('Auch die Legende ist tiefgestellt', tief.legendeSub > 0, `${tief.legendeSub}`);
+
+/* UND ZWAR AUF JEDER SEITE, nicht nur auf der einen, die hier zufällig
+   offen ist. `AF_%` steht auf Seite 6 und 7, `R_ϑ` auf Seite 4 — keine
+   davon ist Seite 11. Eine Stichprobe hätte den Fehler nie gefunden. */
+const unterstriche: string[] = [];
+for (let nr = 2; nr <= 36; nr++) {
+  await seite.locator('.bs-nr').fill(String(nr));
+  await seite.waitForTimeout(140);
+  const fund = await seite.evaluate((n: number) => {
+    const treffer: string[] = [];
+    /* ALLE Textstellen einer Seite, nicht die, an die man zuerst denkt.
+       Der erste Wurf nahm `.bs-formel` und `h4`. `.bs-formel` ist aber nur
+       die ANKLICKBARE Zeile — die Zeilen ohne Rechner heissen `.bs-zeile`,
+       und auf Seite 32 sind das alle. Und die Überschrift ist ein `h3`.
+       Damit prüfte er auf mancher Seite buchstäblich nichts. */
+    document.querySelectorAll('.bs-formel, .bs-zeile, .bs-groessen span, ' +
+                              '.bs-abschnitt h3, .bs-hinweis, ' +
+                              '.bs-tabelle td, .bs-tabelle th, ' +
+                              '.bs-skizze text').forEach(e => {
+      const t = e.textContent || '';
+      if (t.includes('_')) treffer.push(`S${n}: ${t.trim().slice(0, 40)}`);
+    });
+    return treffer;
+  }, nr);
+  unterstriche.push(...fund);
+}
+p('Auf KEINER Seite bleibt ein Unterstrich stehen',
+  unterstriche.length === 0,
+  `${unterstriche.length} Stellen: ${unterstriche.slice(0, 4).join(' | ')}`);
+/* Zurück auf 11 — was danach kommt, misst die Formelzeile DIESER Seite. */
+await seite.locator('.bs-nr').fill('11');
+await seite.waitForTimeout(500);
+/* DIE DREI KOPIEN VON `tief` MÜSSEN ÜBEREINSTIMMEN.
+   Der Fehler entstand, weil dieselbe Zeile an drei Orten steht: im
+   Schaltplan-Zeichner, in den Skizzen und im Buch. Wer eine berichtigt und
+   die anderen vergisst, hat den Fehler nur verschoben. */
+const tiefQuellen = ['src/bereiche/bloecke/arten/schaltplan.ts',
+                     'src/bereiche/elektro/skizzen.ts',
+                     'src/bereiche/elektro/formelheft.ts']
+  .map(datei => {
+    const quelle = fs.readFileSync(path.join(WURZEL, datei), 'utf8');
+    const treffer = quelle.match(/esc\(wert\)\.replace\((\/_\(\[[^\]]*\]\+\)\/[a-z]*)/);
+    return { datei, muster: treffer?.[1] ?? '(nicht gefunden)' };
+  });
+p('Alle drei Tiefstellungen benutzen dasselbe Muster',
+  new Set(tiefQuellen.map(x => x.muster)).size === 1 &&
+  tiefQuellen[0]!.muster !== '(nicht gefunden)',
+  tiefQuellen.map(x => `${x.datei.split('/').pop()}: ${x.muster}`).join(' | '));
+p('Und dieses Muster nimmt auch griechische Zeichen und Prozent',
+  /\\p\{L\}/.test(tiefQuellen[0]!.muster) && tiefQuellen[0]!.muster.includes('%'),
+  tiefQuellen[0]!.muster);
+
 p('Der Text behält seine Leerzeichen',
   / = /.test(tief.text || '') && / · /.test(tief.text || ''), `${tief.text}`);
 
@@ -345,7 +403,20 @@ const skizzen = await seite.evaluate(() => {
 
     /* In ein unsichtbares Feld hängen und WIRKLICH messen — geraten wäre
        hier so gut wie gar nicht geprüft. */
+    /* IM ECHTEN KASTEN MESSEN, nicht in einem nackten `div`.
+     *
+     * Hier stand ein blankes `<div style="width:600px">`. Die Plan-Texte
+     * haben zwar `font-size="13"`, aber KEINE Schriftfamilie — die erben sie
+     * vom Umgebenden. Im nackten Kasten kam eine andere Schrift heraus als
+     * unter `.bs-skizze`, und mit ihr andere Buchstabenmasse: `s-teiler` mass
+     * hier 1 px Überstand und auf der Seite 3, `b-reihe` 2 gegen 6.
+     *
+     * Bei zwei Punkten Nachsicht hiess das: die Prüfung war grün, während im
+     * Bild ein `U` oben abgeschnitten stand. Sie mass eine Lage, die es
+     * nirgends gibt (§55.2). Jetzt bekommt der Kasten dieselbe Klasse wie im
+     * Buch, und damit dieselbe Schrift. */
     const kasten = document.createElement('div');
+    kasten.className = 'bs-skizze';
     kasten.style.cssText = 'position:fixed;left:-4000px;top:0;width:600px';
     kasten.innerHTML = s;
     document.body.appendChild(kasten);
@@ -391,7 +462,20 @@ const schleifen = await seite.evaluate(() => {
   const raus: string[] = [];
   (Elektroskizzen.alle() as string[]).forEach(n => {
     const s = Elektroskizzen.zu(n) as string;
+    /* IM ECHTEN KASTEN MESSEN, nicht in einem nackten `div`.
+     *
+     * Hier stand ein blankes `<div style="width:600px">`. Die Plan-Texte
+     * haben zwar `font-size="13"`, aber KEINE Schriftfamilie — die erben sie
+     * vom Umgebenden. Im nackten Kasten kam eine andere Schrift heraus als
+     * unter `.bs-skizze`, und mit ihr andere Buchstabenmasse: `s-teiler` mass
+     * hier 1 px Überstand und auf der Seite 3, `b-reihe` 2 gegen 6.
+     *
+     * Bei zwei Punkten Nachsicht hiess das: die Prüfung war grün, während im
+     * Bild ein `U` oben abgeschnitten stand. Sie mass eine Lage, die es
+     * nirgends gibt (§55.2). Jetzt bekommt der Kasten dieselbe Klasse wie im
+     * Buch, und damit dieselbe Schrift. */
     const kasten = document.createElement('div');
+    kasten.className = 'bs-skizze';
     kasten.style.cssText = 'position:fixed;left:-4000px;top:0;width:600px';
     kasten.innerHTML = s;
     document.body.appendChild(kasten);
