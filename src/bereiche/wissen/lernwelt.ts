@@ -47,6 +47,11 @@ type LernweltTermin = {
 
 type LernweltEintrag = {
   id: string;
+  /* Die Seite, auf der der Eintrag steht — falls er selbst keine ist.
+     Ein Eintrag aus den Lebensbereichen kann eine DATEI sein; dann ist
+     `id` eine Dateikennung, und `App.oeffne` kann damit nichts anfangen
+     (E205). `pageId` ist der Weg dorthin, wo die Datei liegt. */
+  pageId?: string;
   titel: string;
   icon: string;
   zeit: string;
@@ -687,20 +692,31 @@ const Lernwelt = (() => {
 
   const externeId = (item: any): string => String(item?.id || item?.ref?.id || item?.pageId || '');
 
+  /* DIE SEITE GEWINNT IMMER (E205).
+     Bisher entschied ein Zusatzwert `seiteBevorzugen`, den nur die PDF-Liste
+     setzte. Für „Zuletzt geöffnet" und „Laufende Projekte" stand er auf nein
+     — und dort steht `id` bei einem DATEI-Eintrag auf einer Dateikennung.
+     `App.oeffne` bekam sie, fand keinen Block und tat nichts: ein Knopf, der
+     sich drücken lässt und nichts macht. Wenn eine Seite bekannt ist, ist sie
+     das Ziel; wenn nicht, ändert sich nichts. Damit braucht es den Zusatzwert
+     nicht mehr. */
   const externeEintraege = (
     items: any[],
     icon: string,
-    untertitel: string,
-    seiteBevorzugen = false
+    untertitel: string
   ): LernweltEintrag[] =>
-    items.map(item => ({
-      id: String(seiteBevorzugen && item?.pageId ? item.pageId : externeId(item)),
-      titel: String(item?.titel || item?.text || item?.name || untertitel),
-      icon: String(item?.icon || icon),
-      zeit: String(item?.zeit || item?.edited || item?.datum || ''),
-      untertitel: String(item?.untertitel || item?.quelle || untertitel),
-      bereichIds: textListe(item?.bereichIds)
-    })).filter(item => item.id);
+    items.map(item => {
+      const seite = String(item?.pageId || item?.ref?.pageId || '');
+      return {
+        id: seite || externeId(item),
+        ...(seite ? { pageId: seite } : {}),
+        titel: String(item?.titel || item?.text || item?.name || untertitel),
+        icon: String(item?.icon || icon),
+        zeit: String(item?.zeit || item?.edited || item?.datum || ''),
+        untertitel: String(item?.untertitel || item?.quelle || untertitel),
+        bereichIds: textListe(item?.bereichIds)
+      };
+    }).filter(item => item.id);
 
   const bereichOptionen = (): any => zustand.bereichId === 'alle'
     ? { limit: 24 }
@@ -843,7 +859,7 @@ const Lernwelt = (() => {
     : projekte();
 
   const sichtbarePdfs = (): LernweltEintrag[] => zustand.extern?.pdfs.length
-    ? externeEintraege(zustand.extern.pdfs, 'book', 'PDF', true).slice(0, 12)
+    ? externeEintraege(zustand.extern.pdfs, 'book', 'PDF').slice(0, 12)
     : pdfs();
 
   const fortschreibung = (card: any, note: number): { sr: any; reviewVerlauf: Record<string, any> } => {
@@ -1019,16 +1035,180 @@ const Lernwelt = (() => {
       (aktion && label ? '<button type="button" data-lw-action="' + esc(aktion) + '">' + esc(label) + '</button>' : '') +
       '</div>';
 
+  /* Ein Untertitel soll sagen, was die Liste NICHT zeigt.
+     „Aufgaben heute" trug „1 heute", „Überfällig" trug „alles im Plan" — und
+     darunter stand „Keine überfällige Aufgabe." Zweimal dasselbe ist einmal
+     zu viel. Interessant ist allein, was die Liste WEGLÄSST, denn sie ist
+     abgeschnitten und sagt es sonst nirgends. */
+  const mehrAls = (gesamt: number, gezeigt: number): string =>
+    gesamt > gezeigt ? gezeigt + ' von ' + gesamt : '';
+
   const sektion = (titel: string, inhalt: string, zusatz = ''): string =>
     '<section class="lw-section"><header><div><h2>' + esc(titel) + '</h2>' +
       (zusatz ? '<p>' + esc(zusatz) + '</p>' : '') + '</div></header>' + inhalt + '</section>';
 
+  /**
+   * Der Anfang einer Seite als EINE Zeile.
+   *
+   * Auf dem Heute-Bild vom 26. August standen neun Zeilen untereinander, und
+   * jede sagte „Zuletzt geöffnet · gerade eben". Der Untertitel wiederholte
+   * die Überschrift der Sektion, und die Zeit war überall dieselbe, weil
+   * dieselbe Sitzung alle neun geöffnet hatte. Neun Zeilen, kein Unterschied
+   * — und genau das Eine fehlte, woran man eine Seite wiedererkennt: was
+   * draufsteht.
+   *
+   * `Store.childrenOf` ist gleichläufig und liest den Spiegel im Arbeits-
+   * speicher: kein Warten, kein zweiter Speicherweg, kein Ladezustand. Drei
+   * Ebenen tief wie `Kontext.textVonSeite` wäre genauer und für eine Zeile
+   * zu teuer — die erste Ebene ist der Anfang der Seite, und mehr wird
+   * ohnehin nicht angezeigt.
+   */
+  /**
+   * Auszeichnungen weg, Text bleibt.
+   *
+   * Der Anriss kommt aus `block.text`, und dort steht Redions Markdown so,
+   * wie es getippt wurde. Auf dem Bild vom 26. August stand deshalb
+   * „Alles hier liegt **lokal** in dein…" — mit Sternen. Eine Vorschau ist
+   * eine Vorschau und keine Quelltextzeile.
+   *
+   * Die Muster sind dieselben wie in `inline()` im Editor, nur behalten sie
+   * den Inhalt statt ihn einzuwickeln. Wer dort eine Auszeichnung ergänzt,
+   * muss sie hier ergänzen — sonst steht ihr Zeichen wieder im Anriss. Die
+   * Reihenfolge ist nicht beliebig: das Bild vor dem Link (sonst bleibt ein
+   * „!" stehen) und `**` vor `*` (sonst frisst der eine Stern den anderen).
+   */
+  const klartext = (roh: string): string => roh
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/\[\[([^\]]+)\]\]/g, '$1')
+    .replace(/\(\(([^)]+)\)\)/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`([^`]+?)`/g, '$1')
+    .replace(/^\s{0,3}[-*+]\s+/gm, '')
+    .replace(/^\s{0,3}>\s?/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const vorschau = (seiteId: string, titel = '', laenge = 90): string => {
+    if (!seiteId || typeof Store?.childrenOf !== 'function') return '';
+    let text = '';
+    try {
+      for (const kind of Store.childrenOf(seiteId) as any[]) {
+        const stueck = klartext(String(kind?.text || ''));
+        if (!stueck) continue;
+        /* DIE ERSTE ZEILE IST OFT DIE ÜBERSCHRIFT NOCH EINMAL. Auf dem Bild
+           stand über „Willkommen" der Anriss „Willkommen in Redion Alles hier
+           liegt …" und über „Was Redion mehr kann" der Anriss „Was Redion
+           mehr kann als Notion …". Zweimal dasselbe in zwei Zeilen ist genau
+           der Zustand, den die Vorschau beheben sollte.
+
+           ABER NUR, WENN DER REST FÜR SICH STEHT. Der erste Versuch schnitt
+           blind ab und machte aus „Willkommen in Redion. Alles hier liegt
+           lokal …" den Anriss „in Redion Alles hier liegt lokal …" — er begann
+           mitten im Satz mit einem kleinen „in". Der Titel war da nicht die
+           Überschrift, sondern der Anfang des Satzes. Erkennbar ist das am
+           nächsten Zeichen: geht es gross oder mit einer Ziffer weiter, war
+           es eine Überschrift; geht es klein weiter, war es ein Satz. */
+        if (!text && titel && stueck.toLowerCase().startsWith(titel.toLowerCase())) {
+          const rest = stueck.slice(titel.length).replace(/^[\s—–:·.,;-]+/, '');
+          if (!rest) continue;
+          if (/^[A-ZÄÖÜ0-9„"«]/.test(rest)) { text = rest; continue; }
+        }
+        /* Zwei Blöcke sind zwei Absätze. Mit einem Leerzeichen aneinander-
+           gehängt werden sie ein Satz, den so niemand geschrieben hat —
+           „Willkommen in Redion Alles hier liegt lokal". Ein Trennpunkt sagt,
+           dass hier etwas Neues anfängt; nach einem Satzzeichen braucht es
+           ihn nicht. */
+        text += (text ? (/[.!?:…]$/.test(text) ? ' ' : ' · ') : '') + stueck;
+        if (text.length >= laenge) break;
+      }
+    } catch { return ''; }
+    return text.length > laenge ? text.slice(0, laenge - 1).trimEnd() + '…' : text;
+  };
+
+  /**
+   * Eine Seite als kleines Abbild ihrer selbst.
+   *
+   * Nicht ein Anriss in einer Zeile, sondern die ersten Blöcke so, wie sie
+   * auf der Seite stehen: eine Überschrift ist fett, ein Haken ist ein
+   * Kästchen, ein Listenpunkt hat seinen Punkt. Das ist der Unterschied
+   * zwischen „ich erkenne die Seite wieder" und „ich lese fünf Titel und
+   * muss raten".
+   *
+   * Ein echtes Vorschaubild wäre besser und gibt es nicht: Redion legt zu
+   * keiner Seite eines an. Das steht in LUECKEN.md und nicht hier.
+   *
+   * ALLES HIER IST SATZINHALT und darf es auch sein: die Karte ist ein
+   * `<button>`, und ein Knopf darf keine Absätze enthalten. Ein `<hr>` wäre
+   * schon zu viel — deshalb ist die Trennlinie ein `<span>` mit Rand.
+   */
+  const miniatur = (seiteId: string, zeilen = 5): string => {
+    if (!seiteId || typeof Store?.childrenOf !== 'function') return '';
+    let kinder: any[] = [];
+    try { kinder = Store.childrenOf(seiteId) as any[]; } catch { return ''; }
+    const raus: string[] = [];
+    for (const block of kinder) {
+      if (raus.length >= zeilen) break;
+      const art = String(block?.type || 'text');
+      if (art === 'divider') { raus.push('<span class="lw-mini-hr"></span>'); continue; }
+      const text = klartext(String(block?.text || ''));
+      if (!text) continue;
+      const kurz = esc(text.length > 120 ? text.slice(0, 119) + '…' : text);
+      if (art === 'h1' || art === 'h2' || art === 'h3' || art.startsWith('toggle-h')) {
+        raus.push('<b>' + kurz + '</b>'); continue;
+      }
+      if (art === 'todo') {
+        raus.push('<span class="lw-mini-todo">' +
+          zeichenSpan(block?.checked ? 'boxChecked' : 'box') + kurz + '</span>'); continue;
+      }
+      if (art === 'bullet' || art === 'number' || art === 'toggle') {
+        raus.push('<span class="lw-mini-li">' + kurz + '</span>'); continue;
+      }
+      if (art === 'code' || art === 'equation') {
+        raus.push('<code>' + kurz + '</code>'); continue;
+      }
+      if (art === 'quote' || art === 'callout') {
+        raus.push('<span class="lw-mini-q">' + kurz + '</span>'); continue;
+      }
+      raus.push('<span>' + kurz + '</span>');
+    }
+    return raus.join('');
+  };
+
+  /* Eine Karte für „Weiter wo du warst". Der Knopf öffnet weiterhin
+     `item.id` — die Miniatur liest von `pageId`, falls der Eintrag selbst
+     eine Datei ist und auf einer Seite liegt (E205). */
+  const weiterKarte = (item: LernweltEintrag): string => {
+    const bild = miniatur(item.pageId || item.id);
+    return '<button type="button" class="lw-continue-card" data-lw-open="' + esc(item.id) + '">' +
+      '<span class="lw-mini' + (bild ? '' : ' is-leer') + '">' +
+        (bild || '<span>Diese Seite ist noch leer.</span>') + '</span>' +
+      '<span class="lw-continue-foot">' + zeichenSpan(item.icon, 'lw-object-icon') +
+        '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.untertitel) +
+        (item.zeit ? ' · ' + esc(relativText(item.zeit)) : '') + '</small></span></span>' +
+      '</button>';
+  };
+
+  /* Die Zeit steht in einer eigenen Spalte, damit der Anriss die ganze
+     Zeile hat. Vorher stand dort ein „›" — ein Zeichen, das dem Auge
+     mitteilt, dass ein Knopf ein Knopf ist. Das weiss es schon. */
   const eintragListe = (werte: LernweltEintrag[], leerText: string): string => werte.length
-    ? '<ul class="lw-object-list">' + werte.map(item =>
-        '<li><button type="button" data-lw-open="' + esc(item.id) + '">' +
-          zeichenSpan(item.icon, 'lw-object-icon') + '<span><strong>' + esc(item.titel) + '</strong><small>' +
-          esc(item.untertitel) + (item.zeit ? ' · ' + esc(relativText(item.zeit)) : '') +
-          '</small></span><span aria-hidden="true">›</span></button></li>').join('') + '</ul>'
+    ? '<ul class="lw-object-list">' + werte.map(item => {
+        const seite = item.pageId || item.id;
+        const anriss = vorschau(seite, item.titel);
+        return '<li><button type="button" data-lw-open="' + esc(item.id) + '">' +
+          zeichenSpan(item.icon, 'lw-object-icon') +
+          '<span><strong>' + esc(item.titel) + '</strong><small>' +
+          esc(anriss || item.untertitel) + '</small></span>' +
+          (item.zeit ? '<time datetime="' + esc(item.zeit) + '">' +
+            esc(relativText(item.zeit)) + '</time>' : '') +
+          '</button></li>';
+      }).join('') + '</ul>'
     : '<p class="lw-none">' + esc(leerText) + '</p>';
 
   const aufgabenListe = (werte: LernweltAufgabe[], leerText: string): string => werte.length
@@ -1098,6 +1278,10 @@ const Lernwelt = (() => {
       (datum(item.datum)?.getTime() || 0) < heute.getTime());
     const heutigeTermine = sichtbareTermine().filter(item =>
       item.datum.getTime() >= heute.getTime() && item.datum.getTime() < morgen.getTime()).slice(0, 6);
+    const alleZuletzt = sichtbareZuletzt();
+    const weiterKarten = alleZuletzt.slice(0, 3);
+    const alleProjekte = sichtbareProjekte();
+    const projekteGezeigt = alleProjekte.slice(0, 5);
     const naechstePruefung = pruefungen().find(item => item.tage === null || item.tage >= 0) || null;
     const pruefungText = naechstePruefung
       ? naechstePruefung.tage === 0 ? 'heute'
@@ -1122,21 +1306,54 @@ const Lernwelt = (() => {
 
     return '<div class="lw-today">' +
       einrichtung +
+      /* DREIMAL DERSELBE BEREICH WAR ZWEIMAL ZU VIEL (E205).
+         Hier stand „◎ Alle Bereiche" als Marke — dieselbe Auskunft, die 300 px
+         weiter oben schon im Auswahlfeld steht und die man dort auch ändern
+         kann. Eine Marke, die nur wiederholt, was daneben steht, kostet Höhe
+         und sagt nichts; über der Falz ist Höhe das Knappe. */
       '<section class="lw-hero"><div><p>' + esc(gruss + ', ' + aktor().name) + '</p><h2>' +
         esc(new Date().toLocaleDateString('de-CH', {
           weekday: 'long', day: 'numeric', month: 'long'
-        })) + '</h2><span>' + esc(aktiverBereich().icon + ' ' + aktiverBereich().name) +
-        '</span></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
+        })) + '</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
         '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
         '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
+      /* WEITER WO DU WARST — DIE ERSTE FRAGE DES TAGES (E205).
+         Hier stand bisher nichts, und unten in der Übersicht stand
+         „Zuletzt geöffnet": neun Zeilen, jede mit demselben Untertitel und
+         derselben Zeit. Wer morgens aufmacht, sucht keine Titelliste,
+         sondern die Seite, an der er gestern aufgehört hat — und die
+         erkennt man an dem, was draufsteht. Drei Karten mit dem echten
+         Anfang der Seite sagen das, was neun Titel nicht sagen konnten.
+
+         Die Liste unten entfällt damit; sie war dieselbe Auskunft in
+         schlechterer Form. */
+      (weiterKarten.length
+        ? '<section class="lw-continue"><header><div><h2>Weiter wo du warst</h2>' +
+            '<p>Die Seiten, an denen du zuletzt gearbeitet hast</p></div>' +
+            (alleZuletzt.length > weiterKarten.length
+              ? '<button type="button" data-lw-action="library">Alle ' +
+                  alleZuletzt.length + ' ansehen</button>'
+              : '') +
+            '</header><div class="lw-continue-grid">' +
+            weiterKarten.map(weiterKarte).join('') + '</div></section>'
+        : '') +
       '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
-        kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'SM-2-Wissensstand') +
-        kennzahl(String(queue.newCards.length), 'neu', 'maximal 20 in der Runde') +
+        kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
+        kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
         kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
-        kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung?.titel || '') + '</section>' +
+        /* VIER ZAHLEN, ALSO AUCH HIER EINE ZAHL. Ohne geplante Prüfung stand
+           in der vierten Kachel „keine geplant" in Zahlengrösse — ein Satz
+           dort, wo daneben dreimal eine Ziffer steht, und die Reihe las sich
+           nicht mehr als Reihe. Was fehlt, ist ein Strich; der Satz erklärt
+           ihn eine Zeile tiefer. */
+        (naechstePruefung
+          ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
+          : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>' +
       '<div class="lw-primary-grid">' +
         '<section class="lw-focus-card"><header><div><p>Deine Tagesrunde</p><h2>' +
-          (queue.all.length ? queue.all.length + ' Karten warten' : 'Alles für heute erledigt') +
+          (queue.all.length === 1 ? '1 Karte wartet'
+            : queue.all.length ? queue.all.length + ' Karten warten'
+            : 'Alles für heute erledigt') +
           '</h2></div><span class="lw-card-icon" data-sym="cards" aria-hidden="true"></span></header><p>' +
           (queue.all.length
             ? 'Zuerst Fehler, danach fällige Karten und zum Schluss neue Inhalte.'
@@ -1155,24 +1372,39 @@ const Lernwelt = (() => {
                 'school-setup', 'Prüfungen öffnen')) + '</section>' +
       '</div>' +
       '<div class="lw-dashboard-grid">' +
-        sektion('Aufgaben heute', aufgabenListe(heutigeAufgaben.slice(0, 6), 'Heute ist keine Aufgabe fällig.'),
-          heutigeAufgaben.length + ' heute') +
-        sektion('Überfällig', aufgabenListe(ueberfaellige.slice(0, 6), 'Keine überfällige Aufgabe.'),
-          ueberfaellige.length ? ueberfaellige.length + ' brauchen Aufmerksamkeit' : 'alles im Plan') +
+        /* VIER KACHELN, NICHT SECHS (E205).
+           Sechs Sektionen mit sehr unterschiedlich langen Listen ergaben in
+           zwei Spalten ein weisses Loch von fast 400 px: „Termine" mit einer
+           Zeile stand neben „Zuletzt geöffnet" mit acht.
+
+           „Aufgaben heute" und „Überfällig" sind ausserdem dieselbe Frage —
+           was ist offen. Die Antwort steht in der ZEILE („heute", „Do",
+           „26. Aug."), nicht in zwei Überschriften; überfällig kommt zuerst,
+           weil es zuerst dran ist. „Zuletzt geöffnet" ist nach oben gewandert
+           und dort etwas geworden, das man ansehen kann. */
+        sektion('Offen', aufgabenListe([...ueberfaellige, ...heutigeAufgaben].slice(0, 6),
+          'Nichts offen — heute ist keine Aufgabe fällig.'),
+          mehrAls(ueberfaellige.length + heutigeAufgaben.length, 6)) +
         sektion('Termine', terminListe(heutigeTermine, 'Heute steht kein Termin an.'), 'Unterricht, Arbeit und Meetings') +
-        sektion('Zuletzt geöffnet', eintragListe(sichtbareZuletzt(), 'Noch keine zuletzt geöffnete Seite.'),
-          'dieselben Dateien wie im Workspace') +
-        sektion('Laufende Projekte', eintragListe(sichtbareProjekte(), 'Noch kein Projekt zugeordnet.'),
-          'ohne Kopien') +
         sektion('Themenfortschritt', themenListe(liste(stats.topics), 5), 'fachlicher SM-2-Stand') +
+        sektion('Laufende Projekte', eintragListe(projekteGezeigt, 'Noch kein Projekt zugeordnet.'),
+          mehrAls(alleProjekte.length, 5) || 'ohne Kopien') +
       '</div>' +
       '<section class="lw-engagement"><header><div><p>Aktivität &amp; Motivation</p><h2>Deine Lernroutine</h2></div>' +
         '<span>Getrennt vom Wissensstand</span></header><div class="lw-metrics">' +
+        /* VIER UND NICHT FÜNF (E204). Fünf Karten in vier Spalten liessen
+           „Level" allein in einer zweiten Reihe stehen, daneben drei Viertel
+           weisse Fläche — bei JEDER Breite, denn fünf teilt sich durch nichts.
+           XP und Level sind ohnehin dieselbe Zahl zweimal: das eine ist die
+           Rechnung, das andere ihr Ergebnis. Damit vier, und vier geht auf.
+
+           Drei Entschuldigungen standen auf derselben Karte — die Marke oben,
+           „kein Wissensstand" und „Motivation, nicht Fachfortschritt". Es
+           bleibt die oben; sie gilt für die ganze Karte. */
         kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', 'aus Lernaktivitäten geschätzt') +
         kennzahl(spiel.woche + ' / ' + ziel * 7, 'Wochenziel') +
-        kennzahl(spiel.streak + ' Tage', 'Streak') +
-        kennzahl(String(spiel.xp), 'Aktivitäts-XP', 'kein Wissensstand') +
-        kennzahl(String(spiel.level), 'Level', 'Motivation, nicht Fachfortschritt') +
+        kennzahl(spiel.streak + (spiel.streak === 1 ? ' Tag' : ' Tage'), 'Streak') +
+        kennzahl('Level ' + spiel.level, 'Aktivität', spiel.xp + ' XP') +
       '</div>' + fortschritt(spiel.wochenProzent, 'Wochenfortschritt') + '</section>' +
       '<div class="lw-quick" aria-label="Schnellzugriff">' +
         '<button type="button" data-lw-action="tasks">' + zeichenSpan('tasks') + 'Alle Aufgaben</button>' +

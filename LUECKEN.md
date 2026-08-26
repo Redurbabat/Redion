@@ -2302,3 +2302,26 @@ schlimmer als ein zu kleines Ziel, weil man nicht sieht, warum. `test243`
 prüft jetzt für zwölf Aufgaben nacheinander, dass über keinem Griff etwas
 anderes liegt; mit EINER Aufgabe blieb die Prüfung grün, obwohl der Fehler
 noch drin war.
+
+
+--------------------------------------------------------------------------------
+L61 — Es gibt kein Vorschaubild zu einer Seite
+--------------------------------------------------------------------------------
+
+„Weiter wo du warst" (E205) zeigt den Anfang einer Seite als TEXT nach: Über-
+schriften fett, Haken als Kästchen, Listenpunkte mit Punkt. Das reicht zum
+Wiedererkennen und ist ehrlich — aber es ist kein Bild.
+
+Was fehlt: Redion legt zu keiner Seite ein Vorschaubild an. Eine Seite, die
+hauptsächlich aus einem Schaltplan, einer PDF-Seite oder einer Zeichnung
+besteht, hat kaum Text — und ihre Miniatur ist deshalb fast leer, obwohl die
+Seite voll ist. Genau die Seiten, die man am Bild am schnellsten wiedererkennt,
+zeigen am wenigsten.
+
+Am nächsten dran ist `page.cover` (gesetzt über `Kopfleiste.coverWaehlen`);
+das ist ein vom Nutzer gewähltes Titelbild und keine Vorschau des Inhalts.
+
+Ein Weg wäre, beim Speichern einer Seite mit Zeichenschicht oder PDF-Seite ein
+kleines Bild mitzuschreiben — stückweise und in die Dateiablage, nicht als
+Data-URL (§14). Das ist eine Speicheränderung und braucht deshalb einen
+eigenen Plan mit Prüflauf (§9, §30).

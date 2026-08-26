@@ -8,11 +8,16 @@
  * ==========================================================================*/
 
 .lernwelt{
-  --lw-radius-xl:24px;
-  --lw-radius-lg:18px;
-  --lw-radius-md:14px;
-  --lw-radius-sm:10px;
-  --lw-gap:18px;
+  /* DIE MASSE KOMMEN AUS DER LEITER (E198/E204). Hier standen fünf eigene
+     Zahlen — 24, 18, 14, 10, 18 — und KEINE traf eine Sprosse. `--lw-gap:18px`
+     stand drei Zeilen über einem `gap:18px`, das dieselbe Zahl noch einmal von
+     Hand schrieb. Eine zweite Leiter neben der ersten ist keine Leiter, sondern
+     der Zustand, den E198 beheben wollte. */
+  --lw-radius-xl:var(--radius-2xl);   /* 20 */
+  --lw-radius-lg:var(--radius-xl);    /* 16 */
+  --lw-radius-md:var(--radius-lg);    /* 12 */
+  --lw-radius-sm:var(--radius-md);    /*  8 */
+  --lw-gap:var(--space-5);            /* 16 */
   --lw-touch:var(--touch-min,44px);
   --lw-panel:var(--bg-card);
   --lw-surface:var(--bg-side);
@@ -39,6 +44,31 @@
   }
 }
 
+/* ============================================================================
+ * DIE GRÖSSE DER ZEICHEN (E204)
+ * ----------------------------------------------------------------------------
+ * Seit E202 sind die Zeichen SVG und kein Text mehr. `font-size` erreicht ein
+ * `<svg width="18" height="18">` aber nicht — die Zahl stand in der Datei, das
+ * Bild zeigte 18. Drei Stellen logen dadurch still:
+ *
+ *     .lw-card-icon    font-size:28px  →  gezeichnet wurden 18
+ *     .lw-object-icon  font-size:15px  →  gezeichnet wurden 18
+ *     .lw-leer-icon    font-size:24px  →  gezeichnet wurden 18
+ *
+ * Die `font-size` bleibt trotzdem stehen und ist keine Leiche: wer seiner
+ * Seite ein 🚀 gibt, bekommt weiterhin ein 🚀 — und das IST Text. Die eine
+ * Zeile gilt für den Fall, die andere für den Regelfall.
+ * ==========================================================================*/
+.lernwelt svg.sym{display:block;flex:none}
+.lernwelt .lw-brand-icon>svg{width:17px;height:17px}
+.lernwelt .lw-nav button>span:first-child>svg{width:15px;height:15px}
+.lernwelt .lw-card-icon>svg{width:20px;height:20px}
+.lernwelt .lw-object-icon>svg{width:16px;height:16px}
+.lernwelt .lw-leer-icon>svg{width:22px;height:22px}
+.lernwelt .lw-task-list button>span:first-child>svg{width:18px;height:18px}
+.lernwelt .lw-quick button>svg,
+.lernwelt .lw-study-actions article>span>svg{width:17px;height:17px}
+
 .lernwelt [hidden]{display:none!important}
 .lernwelt :where(button,input,select){font:inherit}
 .lernwelt button{
@@ -54,22 +84,21 @@
 
 /* --- Produktkopf und Bereichsauswahl ------------------------------------ */
 .lernwelt .lw-head{
-  display:flex;align-items:center;justify-content:space-between;gap:18px;
-  width:100%;margin-bottom:12px;padding:8px 4px;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--space-5);
+  width:100%;margin-bottom:var(--space-4);padding:var(--space-3) var(--space-1);
 }
-.lernwelt .lw-brand{display:flex;align-items:center;gap:11px;min-width:0}
+.lernwelt .lw-brand{display:flex;align-items:center;gap:var(--space-4);min-width:0}
 .lernwelt .lw-brand-icon{
-  display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;
-  border:1px solid var(--line-stark,var(--line));border-radius:13px;
-  background:linear-gradient(145deg,var(--lw-accent-soft),var(--bg-card));
-  box-shadow:0 7px 20px rgba(0,0,0,.08);font-size:21px
+  display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;
+  border:1px solid var(--line);border-radius:var(--radius-md);
+  background:var(--lw-accent-soft);color:var(--accent-text);font-size:17px
 }
 .lernwelt .lw-brand p{
   margin:0 0 1px;color:var(--accent-text);font-size:10px;font-weight:850;
   letter-spacing:.14em;text-transform:uppercase
 }
 .lernwelt .lw-brand h1{
-  margin:0;font-size:19px;line-height:1.2;font-weight:760;letter-spacing:-.025em
+  margin:0;font-size:16px;line-height:1.2;font-weight:760;letter-spacing:-.025em
 }
 .lernwelt .lw-area{
   display:grid;grid-template-columns:auto minmax(150px,230px);align-items:center;gap:8px;
@@ -83,18 +112,18 @@
 
 /* --- Hauptnavigation ---------------------------------------------------- */
 .lernwelt .lw-nav{
-  position:relative;display:flex;align-items:center;gap:5px;width:100%;
-  margin-bottom:var(--lw-gap);padding:6px;border:1px solid var(--line);
-  border-radius:15px;background:var(--bg-side);overflow-x:auto;
+  position:relative;display:flex;align-items:center;gap:var(--space-1);width:100%;
+  margin-bottom:var(--lw-gap);padding:var(--space-2);border:1px solid var(--line);
+  border-radius:var(--radius-lg);background:var(--bg-side);overflow-x:auto;
   overscroll-behavior-inline:contain;scrollbar-width:thin
 }
 .lernwelt .lw-nav button{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1 0 auto;
-  min-width:max-content;min-height:var(--lw-touch);padding:8px 11px;
-  border:1px solid transparent;border-radius:10px;color:var(--text-dim);
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);flex:1 0 auto;
+  min-width:max-content;min-height:var(--lw-touch);padding:var(--space-3) var(--space-4);
+  border:1px solid transparent;border-radius:var(--radius-md);color:var(--text-dim);
   font-size:12px;font-weight:620;white-space:nowrap;
-  transition:background var(--motion-fast,130ms) ease,color var(--motion-fast,130ms) ease,
-    border-color var(--motion-fast,130ms) ease,transform var(--motion-fast,130ms) ease
+  transition:background var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease),
+    border-color var(--motion-fast) var(--ease),transform var(--motion-fast) var(--ease)
 }
 .lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
 
@@ -116,7 +145,7 @@
 .lernwelt .lw-nav::after{
   content:"";position:sticky;z-index:1;align-self:stretch;
   flex:0 0 26px;width:26px;
-  opacity:0;transition:opacity var(--motion-fast,130ms) ease;pointer-events:none
+  opacity:0;transition:opacity var(--motion-fast) var(--ease);pointer-events:none
 }
 .lernwelt .lw-nav::before{left:0;margin-right:-26px;
   background:linear-gradient(to right, var(--bg-side), transparent)}
@@ -148,16 +177,6 @@
   padding:4px 2px;min-height:var(--lw-touch);display:flex;align-items:center}
 .lernwelt .lw-sim-history details ul{margin-top:6px}
 
-/* Die Einrichtungskarte auf dem Heute-Bild: ein Angebot, kein Sperrschirm.
-   Sie öffnete sich früher von selbst über alles (E137). */
-.lernwelt .lw-setup{display:flex;align-items:center;justify-content:space-between;
-  gap:14px;flex-wrap:wrap;margin-bottom:var(--lw-gap)}
-.lernwelt .lw-setup p{margin:4px 0 0;color:var(--text-dim);font-size:13px}
-.lernwelt .lw-setup button{flex:0 0 auto;min-height:var(--lw-touch);padding:9px 16px;
-  border-radius:10px;border:1px solid var(--line);font-weight:620;
-  background:var(--bg-side);color:var(--text)}
-.lernwelt .lw-setup button:hover{background:var(--bg-hover,#f1f2f5)}
-
 /* AM RECHNER STEHEN ALLE NEUN REITER DA, statt zu scrollen.
    Mit Augen gesehen (§55): auf dem Heute-Bild hing „Schule / Ausbildung"
    halb ausserhalb der Leiste, und die drei dahinter — Uni, Arbeit,
@@ -168,8 +187,23 @@
    Am Telefon bleibt es beim Scrollen — dort ist eine waagerechte Reiter-
    leiste die vertraute Form, und zwei Reihen kosteten zu viel Höhe. */
 @media (min-width:900px){
-  .lernwelt .lw-nav{flex-wrap:wrap;overflow-x:visible;row-gap:5px}
+  .lernwelt .lw-nav{flex-wrap:wrap;overflow-x:visible;row-gap:var(--space-1)}
   .lernwelt .lw-nav button{flex:0 1 auto}
+}
+
+/* 44 PX SIND EINE FINGERREGEL (§37), KEINE MAUSREGEL (E205).
+   Gemessen am 26. August auf 1400 × 1000: die Leiste umbrach auf zwei
+   Reihen und war damit 106 px hoch — der grösste einzelne Block über der
+   Falz, und auf ihm steht nichts als zehn Wörter. Zusammen mit dem
+   Markenblock gingen 166 px verloren, bevor der erste Inhalt anfing; der
+   Knopf „Tagesrunde starten" lag dadurch bei y = 993 von 1000 (test217).
+
+   Ein Mauszeiger trifft 34 px sicher. Für den Finger gilt weiterhin 44 —
+   das setzt `@media(pointer:coarse)` weiter unten, und zwar unabhängig von
+   der Fensterbreite. Ein Tablet mit 1200 px Breite bekommt also nach wie
+   vor die grosse Fläche. */
+@media (hover:hover) and (pointer:fine){
+  .lernwelt .lw-nav button{min-height:34px}
 }
 .lernwelt .lw-nav button.is-active,
 .lernwelt .lw-nav button[aria-current="page"]{
@@ -182,12 +216,16 @@
   .lw-school,.lw-subject,.lw-domain,.lw-progress-page){display:grid;gap:var(--lw-gap)}
 
 /* --- Gemeinsamer Seitenkopf -------------------------------------------- */
+/* DAS BLATT BEHERRSCHT, DIE HÜLLE TRITT ZURÜCK.
+   Der Seitenkopf war eine getönte Karte mit Rand und Schatten — auf dem
+   Bild vom 26. August die vierte solche Fläche von oben, und die einzige
+   ohne Inhalt. Was hier steht, ist Überschrift und Datum; das braucht
+   keinen Kasten, sondern Platz. Der Kasten kostete 2 × 1 px Rand, 24 px
+   Innenabstand und einen Schatten, um zu sagen, was die Schriftgrösse
+   ohnehin sagt. */
 .lernwelt .lw-page-head{
-  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
-  padding:22px 24px;border:1px solid var(--line-stark,var(--line));
-  border-radius:var(--lw-radius-lg);
-  background:linear-gradient(135deg,var(--lw-accent-soft),var(--bg-card) 58%,var(--bg-side));
-  box-shadow:0 12px 32px rgba(0,0,0,.055)
+  display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-6);
+  padding:var(--space-2) var(--space-1) var(--space-4)
 }
 .lernwelt .lw-page-head>div:first-child{min-width:0;max-width:780px}
 .lernwelt .lw-page-head p{
@@ -215,45 +253,49 @@
 }
 
 /* --- Heute: Begrüssung und Tagesziel ----------------------------------- */
+/* DIE BEGRÜSSUNG IST EINE ZEILE, KEIN PLAKAT (E205)
+   ----------------------------------------------------------------------
+   Gemessen am 26. August auf 1440 × 900: der Kasten war 178 px hoch, und
+   das Grösste darauf war „Mittwoch, 26. August" in 48 px — das Einzige auf
+   der ganzen Seite, das man nicht nachschlagen muss und nicht anklicken
+   kann. Darunter begann bei y = 690 die erste Karte, auf der etwas zu tun
+   war; ihr Knopf lag ausserhalb des Bildes.
+
+   Der Entwurf, den Redur abgenommen hat, zeigt hier zwei kleine Zeilen und
+   sonst nichts. Genau das steht jetzt hier: dieselbe Auskunft, ein Fünftel
+   der Höhe, und der Platz geht an das, was man damit tun kann. */
 .lernwelt .lw-hero{
-  position:relative;isolation:isolate;overflow:hidden;
-  display:flex;align-items:center;justify-content:space-between;gap:28px;
-  min-height:178px;padding:28px 30px;border:1px solid var(--line-stark,var(--line));
-  border-radius:var(--lw-radius-xl);
-  background:linear-gradient(125deg,var(--lw-accent-soft),var(--bg-card) 52%,var(--lw-info-soft));
-  box-shadow:0 18px 46px rgba(0,0,0,.075)
-}
-.lernwelt .lw-hero::after{
-  content:"";position:absolute;z-index:-1;right:-82px;bottom:-138px;
-  width:300px;height:300px;border:56px solid var(--line-soft);
-  border-radius:50%;opacity:.65;pointer-events:none
+  display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-6);
+  flex-wrap:wrap;padding:var(--space-2) var(--space-1) var(--space-4)
 }
 .lernwelt .lw-hero>div:first-child{min-width:0;max-width:760px}
+.lernwelt .lw-hero>div:first-child{display:grid;justify-items:start;gap:2px;min-width:0}
 .lernwelt .lw-hero>div:first-child>p{
-  margin:0 0 5px;color:var(--accent-text);font-size:12px;font-weight:820
+  margin:0;color:var(--text-dim);font-size:11.5px;font-weight:640
 }
 .lernwelt .lw-hero h2{
-  margin:0;font-size:clamp(29px,4vw,48px);line-height:1.04;
-  letter-spacing:-.045em;font-weight:790;text-wrap:balance
+  margin:0;font-size:clamp(21px,2.2vw,26px);line-height:1.2;
+  letter-spacing:-.025em;font-weight:750;text-wrap:balance
 }
 .lernwelt .lw-hero>div:first-child>span{
-  display:inline-flex;align-items:center;min-height:30px;margin-top:13px;padding:4px 10px;
-  border:1px solid var(--line);border-radius:999px;background:var(--bg-side);
-  color:var(--text-dim);font-size:11.5px;font-weight:650
+  display:inline-flex;align-items:center;margin-top:var(--space-1);padding:2px var(--space-3);
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--bg-side);
+  color:var(--text-dim);font-size:11px;font-weight:650
 }
 .lernwelt .lw-goal{
-  display:grid;justify-items:center;flex:0 0 176px;gap:9px;padding:17px;
-  border:1px solid var(--line-stark,var(--line));border-radius:19px;
-  background:var(--bg-side);box-shadow:0 10px 28px rgba(0,0,0,.08)
+  display:grid;flex:0 0 auto;gap:var(--space-2);width:200px;
+  padding:var(--space-3) var(--space-4);
+  border:1px solid var(--line);border-radius:var(--lw-radius-md);background:var(--bg-side)
 }
 .lernwelt .lw-goal button{
-  display:grid;justify-items:center;width:100%;min-height:64px;padding:5px;
-  border-radius:12px;text-align:center
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);
+  width:100%;min-height:0;padding:0;border-radius:var(--radius-md);text-align:left
 }
 .lernwelt .lw-goal button span{
-  color:var(--text);font-size:26px;line-height:1;font-weight:820;font-variant-numeric:tabular-nums
+  color:var(--text);font-size:17px;line-height:1.2;font-weight:780;font-variant-numeric:tabular-nums
 }
-.lernwelt .lw-goal button small{margin-top:7px;color:var(--text-dim);font-size:11.5px;font-weight:650}
+.lernwelt .lw-goal button small{color:var(--text-dim);font-size:11px;font-weight:650}
+.lernwelt .lw-goal>progress{height:5px}
 
 /* --- Fortschrittsbalken ------------------------------------------------- */
 .lernwelt progress{
@@ -263,25 +305,100 @@
 .lernwelt progress::-webkit-progress-bar{border-radius:999px;background:var(--bg-hover)}
 .lernwelt progress::-webkit-progress-value{
   border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));
-  transition:width var(--motion-normal,220ms) ease
+  transition:width var(--motion-normal) var(--ease)
 }
 .lernwelt progress::-moz-progress-bar{
   border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-warm))
 }
-.lernwelt .lw-goal>progress{height:10px}
 .lernwelt .lw-progress{display:grid;gap:6px;min-width:0}
 .lernwelt .lw-progress>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .lernwelt .lw-progress span{min-width:0;color:var(--text-dim);font-size:11.5px}
 .lernwelt .lw-progress strong{flex:none;font-size:11.5px;font-variant-numeric:tabular-nums}
 
+/* ============================================================================
+ * WEITER WO DU WARST (E205)
+ * ----------------------------------------------------------------------------
+ * Drei Karten, und jede zeigt den ANFANG ihrer Seite: Überschriften fett,
+ * Haken als Kästchen, Listenpunkte mit Punkt. Kein Bild — Redion legt zu
+ * keiner Seite ein Vorschaubild an (LUECKEN.md) — sondern der echte Text in
+ * klein. Das reicht zum Wiedererkennen und kostet nichts: `Store.childrenOf`
+ * liest den Spiegel im Arbeitsspeicher.
+ *
+ * Der Ausschnitt ist eine feste Höhe mit einer Blende nach unten. Ohne die
+ * Blende hört der Text an einer harten Kante mitten im Wort auf und sieht
+ * kaputt aus statt abgeschnitten.
+ * ==========================================================================*/
+.lernwelt .lw-continue>header{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);
+  margin-bottom:var(--space-4)
+}
+.lernwelt .lw-continue h2{margin:0;font-size:15px;line-height:1.3;font-weight:750;letter-spacing:-.015em}
+.lernwelt .lw-continue>header p{margin:3px 0 0;color:var(--text-dim);font-size:10.5px;line-height:1.35}
+.lernwelt .lw-continue>header button{
+  flex:none;min-height:var(--lw-touch);padding:var(--space-2) var(--space-4);
+  border:1px solid var(--line);border-radius:var(--lw-radius-sm);
+  background:var(--bg-side);color:var(--text-dim);font-size:12px;font-weight:650
+}
+.lernwelt .lw-continue-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-4)
+}
+.lernwelt .lw-continue-card{
+  display:grid;grid-template-rows:1fr auto;min-width:0;
+  overflow:hidden;padding:0;border:1px solid var(--line);
+  border-radius:var(--lw-radius-lg);background:var(--lw-panel);
+  box-shadow:var(--shadow-1);text-align:left;
+  transition:border-color var(--motion-fast) var(--ease),
+    box-shadow var(--motion-fast) var(--ease),transform var(--motion-fast) var(--ease)
+}
+.lernwelt .lw-mini{
+  position:relative;display:grid;align-content:start;gap:var(--space-2);
+  overflow:hidden;height:112px;padding:var(--space-4) var(--space-5) 0;
+  color:var(--text-dim);font-size:10.5px;line-height:1.45
+}
+.lernwelt .lw-mini::after{
+  /* Die Blende war für einen 132 px hohen Ausschnitt gemacht; er ist jetzt
+     112 px hoch, und 38 px davon sind anderthalb Zeilen. Auf dem Telefonbild
+     war die vorletzte Zeile schon halb weg — das sah nach Fehler aus und
+     nicht nach „hier geht es weiter". */
+  content:"";position:absolute;right:0;bottom:0;left:0;height:28px;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,var(--lw-panel))
+}
+.lernwelt .lw-mini>*{overflow:hidden;min-width:0;text-overflow:ellipsis;white-space:nowrap}
+.lernwelt .lw-mini>b{color:var(--text);font-size:12px;font-weight:720;letter-spacing:-.01em}
+.lernwelt .lw-mini>code{
+  padding:1px var(--space-1);border-radius:var(--radius-sm);background:var(--bg-hover);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px
+}
+.lernwelt .lw-mini-li{position:relative;padding-left:var(--space-4)}
+.lernwelt .lw-mini-li::before{content:"•";position:absolute;left:var(--space-1);color:var(--text-faint)}
+.lernwelt .lw-mini-q{padding-left:var(--space-3);border-left:2px solid var(--line-stark,var(--line))}
+.lernwelt .lw-mini-todo{display:flex;align-items:center;gap:var(--space-2)}
+.lernwelt .lw-mini-todo>svg{flex:none;width:12px;height:12px}
+.lernwelt .lw-mini-hr{height:1px;background:var(--line)}
+.lernwelt .lw-mini.is-leer{align-content:center;justify-items:center;color:var(--text-faint);font-style:italic}
+.lernwelt .lw-mini.is-leer::after{display:none}
+.lernwelt .lw-continue-foot{
+  display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--space-3);
+  padding:var(--space-3) var(--space-5);border-top:1px solid var(--line-soft)
+}
+.lernwelt .lw-continue-foot>span:last-child{display:grid;min-width:0;gap:1px}
+.lernwelt .lw-continue-foot strong{
+  overflow:hidden;font-size:12.8px;line-height:1.35;font-weight:680;
+  text-overflow:ellipsis;white-space:nowrap
+}
+.lernwelt .lw-continue-foot small{
+  overflow:hidden;color:var(--text-dim);font-size:10.8px;line-height:1.35;
+  text-overflow:ellipsis;white-space:nowrap
+}
+
 /* --- Kennzahlen --------------------------------------------------------- */
 .lernwelt .lw-metrics{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4)
 }
 .lernwelt .lw-metrik{
-  display:grid;align-content:center;min-height:90px;padding:14px 15px;
+  display:grid;align-content:center;min-height:90px;padding:var(--space-5);
   border:1px solid var(--line);border-radius:var(--lw-radius-md);
-  background:var(--lw-surface);box-shadow:0 6px 18px rgba(0,0,0,.025)
+  background:var(--lw-surface);box-shadow:var(--shadow-1)
 }
 .lernwelt .lw-metrik strong{
   overflow:hidden;color:var(--text);font-size:clamp(19px,2vw,25px);line-height:1.15;
@@ -294,14 +411,42 @@
 .lernwelt .lw-primary-grid{
   display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:var(--lw-gap)
 }
+/* DIE FARBE ZIEHT IN DAS ZEICHEN (E204)
+   ----------------------------------------------------------------------
+   Auf dem Heute-Bild vom 26. August lagen VIER getönte Verläufe
+   nebeneinander, jeder mit eigenem Winkel und eigener Tönung:
+
+       .lw-setup       fliederfarben, links ein Balken
+       .lw-hero        125°, Akzent → Karte → Blau
+       .lw-focus-card  135°, Grün → Karte
+       .lw-exam-card   145°, Gelb → Karte
+       .lw-engagement  135°, Blau → Karte
+
+   Fünf Flächen, die alle „schau hier" sagen, sagen zusammen gar nichts —
+   und die eine Fläche, auf der wirklich etwas zu tun ist, geht darin unter.
+
+   Ein Banner darf tönen; es ist eins. Die Karten darunter liegen auf
+   derselben Ebene und bekommen dieselbe Fläche. Ihre Farbe steht dort, wo
+   das Auge ohnehin zuerst hinsieht: im Zeichen. Das ist WENIGER Farbe an
+   der gleichen Stelle und nicht weniger Unterscheidung — und §38 ist
+   gewahrt, weil über jedem Zeichen sein Name steht.
+
+   Der Verlauf hier war ausserdem tot: Zeile für Zeile drei Regeln, von
+   denen die erste ihre eigene `background` sofort wieder verlor. */
 .lernwelt .lw-focus-card,
 .lernwelt .lw-exam-card{
-  display:grid;align-content:start;min-width:0;min-height:224px;padding:22px;
-  border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-lg);
-  background:var(--lw-panel);box-shadow:0 10px 30px rgba(0,0,0,.045)
+  display:grid;align-content:start;min-width:0;min-height:224px;
+  padding:var(--space-6);
+  border:1px solid var(--line);border-radius:var(--lw-radius-lg);
+  background:var(--lw-panel);box-shadow:var(--shadow-1)
 }
-.lernwelt .lw-focus-card{background:linear-gradient(135deg,var(--lw-success-soft),var(--bg-card) 68%)}
-.lernwelt .lw-exam-card{background:linear-gradient(145deg,var(--lw-warning-soft),var(--bg-card) 72%)}
+.lernwelt .lw-card-icon{
+  display:grid;place-items:center;flex:none;width:38px;height:38px;
+  border-radius:var(--radius-lg);background:var(--lw-accent-soft);
+  color:var(--accent-text);font-size:20px;line-height:1
+}
+.lernwelt .lw-focus-card .lw-card-icon{background:var(--lw-success-soft);color:var(--erfolg)}
+.lernwelt .lw-exam-card  .lw-card-icon{background:var(--lw-warning-soft);color:var(--warnung)}
 .lernwelt :where(.lw-focus-card,.lw-exam-card)>header{
   display:flex;align-items:flex-start;justify-content:space-between;gap:14px
 }
@@ -309,7 +454,6 @@
   margin:0 0 4px;color:var(--text-dim);font-size:10.5px;font-weight:780;
   letter-spacing:.08em;text-transform:uppercase
 }
-.lernwelt :where(.lw-focus-card,.lw-exam-card)>header>span{font-size:28px}
 .lernwelt .lw-focus-card h2,.lernwelt .lw-exam-card h2{
   margin:0;font-size:clamp(20px,2.4vw,29px);line-height:1.15;font-weight:770;letter-spacing:-.03em
 }
@@ -331,7 +475,7 @@
 .lernwelt .lw-rating button,
 .lernwelt .lw-error-list footer button,
 .lernwelt .lw-exam-list footer button{
-  min-height:var(--lw-touch);padding:9px 13px;border:1px solid var(--line);
+  min-height:var(--lw-touch);padding:var(--space-3) var(--space-4);border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:12.5px;font-weight:680
 }
 /* WEISSE SCHRIFT AUF WEISSEM GRUND (E142). `.lw-exam-list footer button`
@@ -351,7 +495,7 @@
 .lernwelt .lw-exam-list footer button.is-primary,
 .lernwelt .lw-rating button.is-primary{
   border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);
-  box-shadow:0 7px 18px rgba(0,0,0,.1)
+  box-shadow:var(--shadow-1)
 }
 
 /* --- Dashboard-Sektionen und Objektlisten ------------------------------ */
@@ -359,12 +503,12 @@
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:var(--lw-gap)
 }
 .lernwelt .lw-section{
-  overflow:hidden;padding:17px;border:1px solid var(--line);
+  overflow:hidden;padding:var(--space-5);border:1px solid var(--line);
   border-radius:var(--lw-radius-lg);background:var(--lw-panel);
-  box-shadow:0 8px 24px rgba(0,0,0,.035)
+  box-shadow:var(--shadow-1)
 }
 .lernwelt .lw-section>header{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px
+  display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-4)
 }
 .lernwelt .lw-section>header h2{margin:0;font-size:15px;line-height:1.3;font-weight:750;letter-spacing:-.015em}
 .lernwelt .lw-section>header p{margin:3px 0 0;color:var(--text-dim);font-size:10.5px;line-height:1.35}
@@ -376,11 +520,11 @@
 .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list)>li:first-child{border-top:0}
 .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button{
   display:grid;align-items:center;width:100%;min-width:0;min-height:54px;
-  padding:7px 5px;border-radius:9px;text-align:left
+  padding:var(--space-2) var(--space-1);border-radius:var(--radius-md);text-align:left
 }
-.lernwelt .lw-object-list button{grid-template-columns:auto minmax(0,1fr) auto;gap:9px}
-.lernwelt .lw-task-list button{grid-template-columns:24px minmax(0,1fr);gap:8px}
-.lernwelt .lw-event-list button{grid-template-columns:66px minmax(0,1fr);gap:10px}
+.lernwelt .lw-object-list button{grid-template-columns:auto minmax(0,1fr) auto;gap:var(--space-3)}
+.lernwelt .lw-task-list button{grid-template-columns:24px minmax(0,1fr);gap:var(--space-3)}
+.lernwelt .lw-event-list button{grid-template-columns:66px minmax(0,1fr);gap:var(--space-4)}
 .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button>span:nth-child(2){display:grid;min-width:0;gap:1px}
 .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) strong{
   overflow:hidden;font-size:12.8px;line-height:1.35;font-weight:680;text-overflow:ellipsis;white-space:nowrap
@@ -388,23 +532,29 @@
 .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) small{
   overflow:hidden;color:var(--text-dim);font-size:10.8px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap
 }
-.lernwelt .lw-object-list button>span:last-child{color:var(--text-faint);font-size:18px}
+/* Die Zeit als eigene Spalte (E205). Hier stand ein „›" in 18 px — ein
+   Zeichen, das dem Auge mitteilt, dass ein Knopf ein Knopf ist. Das weiss
+   es schon. Die Zeit weiss es nicht. */
+.lernwelt .lw-object-list button>time{
+  align-self:center;color:var(--text-faint);font-size:10.5px;
+  font-variant-numeric:tabular-nums;white-space:nowrap
+}
 .lernwelt .lw-object-icon{
-  display:grid;place-items:center;width:32px;height:32px;border-radius:9px;
-  background:var(--bg-hover);font-size:15px
+  display:grid;place-items:center;width:32px;height:32px;border-radius:var(--radius-md);
+  background:var(--bg-hover);color:var(--text-dim);font-size:15px
 }
 .lernwelt .lw-task-list button>span:first-child{color:var(--text-dim);font-size:17px;text-align:center}
 .lernwelt .lw-event-list time{
   color:var(--accent-text);font-size:11.5px;font-weight:760;font-variant-numeric:tabular-nums
 }
-.lernwelt .lw-none{margin:0;padding:18px 6px;color:var(--text-dim);font-size:12px;line-height:1.5;text-align:center}
+.lernwelt .lw-none{margin:0;padding:var(--space-6) var(--space-2);color:var(--text-dim);font-size:12px;line-height:1.5;text-align:center}
 
 /* --- Themenfortschritt -------------------------------------------------- */
-.lernwelt .lw-topic-list{display:grid;gap:7px}
+.lernwelt .lw-topic-list{display:grid;gap:var(--space-2)}
 .lernwelt .lw-topic-list>button{
   display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 12px;
-  width:100%;min-height:58px;padding:9px 10px;border:1px solid var(--line-soft);
-  border-radius:11px;background:var(--bg-side);text-align:left
+  width:100%;min-height:58px;padding:var(--space-3) var(--space-4);border:1px solid var(--line-soft);
+  border-radius:var(--radius-lg);background:var(--bg-side);text-align:left
 }
 .lernwelt .lw-topic-list>button>span:first-child{display:grid;min-width:0;gap:2px}
 .lernwelt .lw-topic-list strong{
@@ -417,10 +567,9 @@
 /* --- Lernroutine und Schnellzugriff ------------------------------------ */
 .lernwelt .lw-engagement,
 .lernwelt .lw-knowledge{
-  display:grid;gap:15px;padding:20px;border:1px solid var(--line-stark,var(--line));
-  border-radius:var(--lw-radius-lg);background:linear-gradient(135deg,var(--lw-info-soft),var(--bg-card) 70%)
+  display:grid;gap:var(--space-5);padding:var(--space-6);border:1px solid var(--line);
+  border-radius:var(--lw-radius-lg);background:var(--lw-panel);box-shadow:var(--shadow-1)
 }
-.lernwelt .lw-knowledge{background:linear-gradient(135deg,var(--lw-success-soft),var(--bg-card) 70%)}
 .lernwelt :where(.lw-engagement,.lw-knowledge)>header{
   display:flex;align-items:flex-start;justify-content:space-between;gap:16px
 }
@@ -434,13 +583,13 @@
   background:var(--bg-side);color:var(--text-dim);font-size:10.5px
 }
 .lernwelt .lw-knowledge>header>strong{font-size:28px;font-variant-numeric:tabular-nums}
-.lernwelt .lw-engagement .lw-metrik,.lernwelt .lw-knowledge .lw-metrik{min-height:78px;background:var(--bg-side)}
+.lernwelt .lw-engagement .lw-metrik,.lernwelt .lw-knowledge .lw-metrik{min-height:78px}
 .lernwelt .lw-quick{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3)
 }
 .lernwelt .lw-quick button{
-  display:flex;align-items:center;justify-content:center;gap:8px;min-height:var(--lw-touch);
-  padding:9px 11px;border:1px solid var(--line);border-radius:var(--lw-radius-sm);
+  display:flex;align-items:center;justify-content:center;gap:var(--space-3);min-height:var(--lw-touch);
+  padding:var(--space-3) var(--space-4);border:1px solid var(--line);border-radius:var(--lw-radius-sm);
   background:var(--bg-side);color:var(--text-dim);font-size:12px;font-weight:650
 }
 
@@ -516,10 +665,10 @@
 .lernwelt .lw-path li>button{
   display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:13px;
   width:100%;min-height:108px;padding:14px 15px;border:1px solid var(--line-stark,var(--line));
-  border-radius:20px;background:var(--lw-panel);box-shadow:0 10px 28px rgba(0,0,0,.055);
+  border-radius:20px;background:var(--lw-panel);box-shadow:var(--shadow-2);
   text-align:left;
-  transition:transform var(--motion-normal,180ms) var(--ease-standard,ease),
-    border-color var(--motion-fast,130ms) ease,box-shadow var(--motion-fast,130ms) ease
+  transition:transform var(--motion-normal) var(--ease),
+    border-color var(--motion-fast) var(--ease),box-shadow var(--motion-fast) var(--ease)
 }
 .lernwelt .lw-path-step{
   display:grid;place-items:center;width:50px;height:50px;border:2px solid var(--accent);
@@ -552,9 +701,9 @@
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:var(--lw-gap)
 }
 .lernwelt .lw-error-list>article{
-  overflow:hidden;display:grid;gap:14px;min-width:0;padding:18px;
-  border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-lg);
-  background:var(--lw-panel);box-shadow:0 8px 25px rgba(0,0,0,.04)
+  overflow:hidden;display:grid;gap:var(--space-4);min-width:0;padding:var(--space-6);
+  border:1px solid var(--line);border-radius:var(--lw-radius-lg);
+  background:var(--lw-panel);box-shadow:var(--shadow-1)
 }
 .lernwelt .lw-error-list>article.is-open{background:linear-gradient(145deg,var(--lw-danger-soft),var(--bg-card) 52%)}
 .lernwelt .lw-error-list>article.is-stable{background:linear-gradient(145deg,var(--lw-success-soft),var(--bg-card) 52%)}
@@ -582,9 +731,9 @@
 /* --- Prüfungszentrale --------------------------------------------------- */
 .lernwelt .lw-exam-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:var(--lw-gap)}
 .lernwelt .lw-exam-list>article{
-  display:grid;gap:13px;min-width:0;padding:19px;border:1px solid var(--line-stark,var(--line));
-  border-radius:var(--lw-radius-lg);background:linear-gradient(145deg,var(--lw-warning-soft),var(--bg-card) 48%);
-  box-shadow:0 9px 28px rgba(0,0,0,.04)
+  display:grid;gap:var(--space-4);min-width:0;padding:var(--space-6);
+  border:1px solid var(--line);border-radius:var(--lw-radius-lg);
+  background:var(--lw-panel);box-shadow:var(--shadow-1)
 }
 .lernwelt .lw-exam-list article>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .lernwelt .lw-exam-list article>header>div{min-width:0}
@@ -620,7 +769,7 @@
 .lernwelt :where(.lw-training,.lw-simulation){
   display:grid;gap:16px;width:min(100%,900px);margin:10px auto;padding:20px;
   border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-xl);
-  background:var(--lw-panel);box-shadow:0 20px 52px rgba(0,0,0,.1)
+  background:var(--lw-panel);box-shadow:var(--shadow-3)
 }
 .lernwelt .lw-session-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .lernwelt .lw-session-head p{margin:0 0 3px;color:var(--accent-text);font-size:10.5px;font-weight:800;text-transform:uppercase}
@@ -666,7 +815,7 @@
   display:grid;justify-items:center;gap:11px;width:min(100%,820px);margin:18px auto;padding:42px 26px;
   border:1px solid var(--line-stark,var(--line));border-radius:var(--lw-radius-xl);
   background:linear-gradient(145deg,var(--lw-success-soft),var(--bg-card) 58%);
-  box-shadow:0 18px 50px rgba(0,0,0,.08);text-align:center
+  box-shadow:var(--shadow-3);text-align:center
 }
 .lernwelt .lw-training-result>span{font-size:42px}
 .lernwelt .lw-training-result>p,
@@ -726,13 +875,13 @@
 
 /* --- Leere Zustände und Erklärhinweise --------------------------------- */
 .lernwelt .lw-leer{
-  display:grid;justify-items:center;align-content:center;gap:8px;min-height:190px;padding:24px;
+  display:grid;justify-items:center;align-content:center;gap:var(--space-3);min-height:190px;padding:var(--space-7);
   border:1px dashed var(--line-stark,var(--line));border-radius:var(--lw-radius-md);
   background:var(--bg-side);text-align:center
 }
 .lernwelt .lw-leer-icon{
-  display:grid;place-items:center;width:48px;height:48px;border-radius:15px;
-  background:var(--lw-accent-soft);font-size:24px
+  display:grid;place-items:center;width:48px;height:48px;border-radius:var(--radius-xl);
+  background:var(--lw-accent-soft);color:var(--accent-text);font-size:24px
 }
 .lernwelt .lw-leer h3{margin:0;font-size:15px;font-weight:740}
 .lernwelt .lw-leer p{max-width:520px;margin:0;color:var(--text-dim);font-size:12px;line-height:1.5}
@@ -747,6 +896,33 @@
 }
 .lernwelt .lw-note strong{font-size:12.5px}
 .lernwelt .lw-note p{margin:0;color:var(--text-dim);font-size:11.5px;line-height:1.5}
+
+/* Die Einrichtungskarte auf dem Heute-Bild: ein Angebot, kein Sperrschirm.
+   Sie öffnete sich früher von selbst über alles (E137).
+
+   SIE STAND HIER NIE SO DA (E204). Das Markup ist `class="lw-note lw-setup"`,
+   beide Regeln wiegen gleich viel (eine Klasse), und `.lw-setup` stand VOR
+   `.lw-note`. Bei Gleichstand gewinnt die spätere — also `display:grid` statt
+   `display:flex`, und der Knopf „Einrichten" lag über die volle Breite unter
+   dem Text statt rechts daneben. Auf dem Bildschirmfoto vom 26. August war er
+   der auffälligste Gegenstand der ganzen Seite, obwohl er das Angebot ist und
+   nicht die Aufgabe. Gefunden hat es das Auge, keine Prüfung.
+
+   Der Weg ist nicht `!important`, sondern die Reihenfolge: was gewinnen soll,
+   steht hinten. */
+.lernwelt .lw-setup{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--lw-gap);
+  /* Sie trug die Fläche von `.lw-note` — flieder, über die ganze Breite, und
+     damit das Auffälligste auf dem Bild. Ein Angebot darf sichtbar sein und
+     nicht lauter als der Tag. Der Akzentbalken links bleibt; er ist genug. */
+  background:var(--bg-side)}
+.lernwelt .lw-setup>div{display:grid;gap:var(--space-1);min-width:0}
+.lernwelt .lw-setup p{margin:0;color:var(--text-dim);font-size:13px}
+.lernwelt .lw-setup button{flex:0 0 auto;min-height:var(--lw-touch);
+  padding:var(--space-2) var(--space-5);
+  border-radius:var(--lw-radius-sm);border:1px solid var(--line);font-weight:620;
+  background:var(--bg-card);color:var(--text)}
+.lernwelt .lw-setup button:hover{background:var(--bg-hover)}
 
 /* --- Interaktion und Fokus --------------------------------------------- */
 .lernwelt :where(button,select):focus-visible{
@@ -778,24 +954,27 @@
   }
   .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
     .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,
-    .lw-subject-grid>button):hover{
-    border-color:var(--line-stark,var(--line));box-shadow:0 12px 30px rgba(0,0,0,.07)
+    .lw-continue-card,.lw-subject-grid>button):hover{
+    border-color:var(--line-stark,var(--line));box-shadow:var(--shadow-2)
   }
   .lernwelt .lw-path li>button:hover{
-    z-index:1;border-color:var(--accent-text);box-shadow:0 15px 34px rgba(0,0,0,.1);transform:translateY(-2px)
+    z-index:1;border-color:var(--accent-text);box-shadow:var(--shadow-3);transform:translateY(-2px)
   }
   .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
 }
 
 .lernwelt :where(.lw-nav button,.lw-actions button,.lw-rating button,.lw-quick button,
   .lw-study-actions button,.lw-object-list button,.lw-task-list button,.lw-event-list button,
-  .lw-topic-list>button,.lw-path li>button,.lw-subject-grid>button):active{
+  .lw-topic-list>button,.lw-path li>button,.lw-continue-card,
+  .lw-subject-grid>button):active{
   transform:scale(var(--press-scale,.97))
 }
 
 /* --- Breite Desktops: drei ruhige Dashboard-Spalten -------------------- */
 @container (min-width:1180px){
-  .lernwelt .lw-dashboard-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* Die Übersicht bleibt bei ZWEI Spalten: vier Kacheln in drei Spalten
+     liessen eine allein in der zweiten Reihe stehen — dieselbe Waise wie
+     bei den fünf Kennzahlen, nur breiter. */
   .lernwelt .lw-error-list,.lernwelt .lw-exam-list{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
@@ -806,13 +985,13 @@
 /* --- Tablet quer und kleinere Desktopfenster --------------------------- */
 @media(max-width:1120px){
   .lernwelt .lw-nav button{flex:0 0 auto}
-  .lernwelt .lw-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
   .lernwelt .lw-study-actions,.lernwelt .lw-subject-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lernwelt .lw-continue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lernwelt .lw-exam-list dl{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
 @media(max-width:900px){
-  .lernwelt{--lw-gap:14px;--lw-radius-xl:20px;--lw-radius-lg:16px}
+  .lernwelt{--lw-gap:var(--space-4)}   /* 16 → 12 */
   .lernwelt .lw-hero{min-height:158px;padding:23px 24px}
   .lernwelt .lw-goal{flex-basis:154px;padding:14px}
   .lernwelt .lw-primary-grid{grid-template-columns:1fr 1fr;gap:14px}
@@ -825,10 +1004,7 @@
 
 /* --- 760 × 900 und Telefonklasse --------------------------------------- */
 @media(max-width:760px){
-  .lernwelt{
-    --lw-gap:12px;--lw-radius-xl:18px;--lw-radius-lg:15px;--lw-radius-md:13px;
-    overflow-x:hidden
-  }
+  .lernwelt{overflow-x:hidden}
   .lernwelt .lw-head{align-items:flex-start;margin-bottom:8px;padding:4px 1px}
   .lernwelt .lw-brand-icon{flex-basis:39px;width:39px;height:39px;border-radius:12px;font-size:19px}
   .lernwelt .lw-brand h1{font-size:17px}
@@ -837,7 +1013,7 @@
   .lernwelt .lw-area select{min-height:44px;padding-block:7px;font-size:11.5px}
   .lernwelt .lw-nav{
     position:sticky;z-index:5;top:0;margin-bottom:12px;padding:5px;border-radius:13px;
-    box-shadow:0 8px 20px rgba(0,0,0,.07)
+    box-shadow:var(--shadow-2)
   }
   .lernwelt .lw-nav button{min-height:44px;padding:7px 10px;font-size:11.5px}
   .lernwelt .lw-page-head{align-items:flex-start;flex-direction:column;gap:14px;padding:18px 16px}
@@ -868,13 +1044,11 @@
   .lernwelt .lw-goal{align-self:center;flex-basis:142px;padding:12px}
   .lernwelt .lw-goal button span{font-size:23px}
   .lernwelt .lw-primary-grid{grid-template-columns:1fr}
-  .lernwelt .lw-focus-card,.lernwelt .lw-exam-card{min-height:0;padding:17px}
+  .lernwelt .lw-continue-grid{grid-template-columns:1fr}
+  .lernwelt .lw-focus-card,.lernwelt .lw-exam-card{min-height:0;padding:var(--space-5)}
   .lernwelt .lw-dashboard-grid{grid-template-columns:1fr}
   .lernwelt .lw-section{padding:14px}
   .lernwelt .lw-engagement,.lernwelt .lw-knowledge{padding:16px}
-  .lernwelt .lw-engagement .lw-metrics,.lernwelt .lw-knowledge .lw-metrics{
-    grid-template-columns:repeat(2,minmax(0,1fr))
-  }
   .lernwelt .lw-quick{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lernwelt .lw-study-actions{gap:8px}
   .lernwelt .lw-study-actions article{min-height:196px;padding:14px}
@@ -960,7 +1134,7 @@
 
 /* 1366 × 768: oberhalb des Falzes mehr Inhalt zeigen, ohne Touchziele zu kürzen. */
 @media(max-height:780px) and (min-width:761px){
-  .lernwelt{--lw-gap:14px}
+  .lernwelt{--lw-gap:var(--space-4)}
   .lernwelt .lw-head{padding-block:3px;margin-bottom:7px}
   .lernwelt .lw-nav{margin-bottom:14px}
   .lernwelt .lw-hero{min-height:146px;padding-block:22px}

@@ -11,8 +11,11 @@
   --accent-soft:color-mix(in srgb,var(--accent) 14%,transparent);
   --bg-sub:var(--bg-side);
   --bg-subtle:var(--bg-side);
-  --shadow-sm:0 2px 10px rgba(0,0,0,.14);
-  --shadow-lg:var(--shadow)
+  /* Sprossen der Schattenleiter (E204), nicht mehr eigene Zahlen.
+     `0 2px 10px rgba(0,0,0,.14)` war themenblind: dieselbe schwarze
+     Deckkraft auf Weiss wie auf #1a1a1a. Genau der Fehler aus E159. */
+  --shadow-sm:var(--shadow-2);
+  --shadow-lg:var(--shadow-3)
 }
 
 .weltwechsel{

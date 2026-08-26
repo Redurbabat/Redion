@@ -66,6 +66,17 @@
   --motion-slow:    320ms;  /* Blätter, grosse Überlagerungen                */
   --ease:           cubic-bezier(.2,.8,.3,1);
 
+  /* --- Die zwei alten Schattennamen (E204). ----------------------------
+   * Die vier Sprossen `--shadow-1` … `--shadow-4` stehen in `hell.css` und
+   * `dunkel.css`, denn ein Schatten ist Farbe. Diese beiden hier sind nur
+   * noch Namen für zwei davon — und ein Name ist modusfrei. Sie zweimal zu
+   * schreiben hiesse, ihn zweimal zu pflegen, ohne etwas davon zu haben
+   * (test245 §1). Sie bleiben bestehen, weil 21 Stellen `var(--shadow)`
+   * benutzen; wer neu schreibt, nimmt die Sprosse.
+   * -------------------------------------------------------------------- */
+  --shadow:             var(--shadow-3);
+  --schatten-schwebend: var(--shadow-4);
+
   /* --- Schwebende Flächen (§16). --------------------------------------- */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);

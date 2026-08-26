@@ -14300,3 +14300,156 @@ Grundlinie, also zwei Punkte tiefer als der Text daneben. `ki.css` richtet die
 Zeichen in den KI-Knöpfen deshalb mit `vertical-align:-3px` aus; die
 Kopfzeile wird zu `inline-flex`, weil dort Zeichen und Wort gleich hoch
 stehen sollen.
+
+
+================================================================================
+E204 — Die Heute-Ansicht bekommt eine Schattenleiter, und drei Regeln logen
+================================================================================
+
+`lernwelt.css` war 1004 Zeilen alt und hatte E198 nie mitbekommen. Gezählt
+sah das so aus:
+
+    var(--space-*)     0 Verwendungen
+    var(--radius-*)    0 Verwendungen
+    eigene Leiter      --lw-radius-xl:24px, -lg:18px, -md:14px, -sm:10px,
+                       --lw-gap:18px — keine einzige Zahl trifft eine Sprosse
+    feste px-Werte     328 Stück, davon 195 zwischen zwei Sprossen
+    Schatten           16 handgeschriebene rgba(0,0,0,…) von .025 bis .12
+
+`--lw-gap:18px` stand drei Zeilen über einem `gap:18px`, das dieselbe Zahl
+noch einmal von Hand schrieb. Eine zweite Leiter neben der ersten ist keine
+Leiter, sondern genau der Zustand, den E198 beheben wollte.
+
+**Die vier Sprossen.** Farben, Masse und Zeiten hatte Redion; Schatten nicht.
+Vier reichen, und sie bedeuten etwas: 1 liegt auf, 2 ist angehoben, 3
+schwebt, 4 überlagert. Sie stehen in `hell.css` und `dunkel.css` und nicht
+in `grund.css`, denn ein Schatten ist Farbe — `rgba(15,15,15,.06)` ist auf
+Weiss eine zarte Kante und auf #1a1a1a nichts. E159 hat genau das einmal
+gekostet.
+
+`--shadow` und `--schatten-schwebend` bleiben als Namen und zeigen
+wertgleich auf Sprosse 3 und 4, damit die 21 Stellen mit `var(--shadow)`
+sich nicht ändern. Sie stehen jetzt in `grund.css`: als reine Namen sind sie
+modusfrei, und `test245` besteht zu Recht darauf, dass eine Marke mit
+gleichem Wert in beiden Modi nicht zweimal gepflegt wird. Der Punkt ging rot,
+als die Aliasse noch in den Modusdateien standen — die Prüfung hat den Umbau
+selbst zu Ende geführt.
+
+**Drei Regeln logen, und nur das Auge sah es.**
+
+*Der Einrichten-Knopf stand falsch.* Das Markup ist `class="lw-note lw-setup"`.
+Beide Regeln wiegen gleich viel — eine Klasse —, und `.lw-setup` stand VOR
+`.lw-note`. Bei Gleichstand gewinnt die spätere. Also galt `display:grid`
+statt `display:flex`, und der Knopf lag über die volle Breite unter dem Text
+statt rechts daneben. Auf dem Bild vom 26. August war er der auffälligste
+Gegenstand der ganzen Seite, obwohl er das Angebot ist und nicht die Aufgabe.
+Der Weg ist nicht `!important`, sondern die Reihenfolge.
+
+*Drei Zeichengrössen waren erfunden.* Seit E202 sind die Zeichen SVG. Eine
+`font-size:28px` erreicht ein `<svg width="18">` nicht — `.lw-card-icon` sagte
+28, `.lw-object-icon` 15, `.lw-leer-icon` 24, und gezeichnet wurden überall
+18. Die `font-size` bleibt trotzdem stehen: wer seiner Seite ein 🚀 gibt,
+bekommt ein 🚀, und das IST Text. Die eine Zeile gilt für den Fall, die
+andere für den Regelfall.
+
+*Die fünfte Kennzahl stand allein.* Fünf Karten in vier Spalten liessen
+„Level" in einer zweiten Reihe stehen, daneben drei Viertel weisse Fläche —
+bei JEDER Breite, denn fünf teilt sich durch nichts. XP und Level sind
+ohnehin dieselbe Zahl zweimal: das eine ist die Rechnung, das andere ihr
+Ergebnis. Vier geht auf. Im selben Zug standen drei Entschuldigungen auf
+einer Karte („Getrennt vom Wissensstand", „kein Wissensstand", „Motivation,
+nicht Fachfortschritt"); es bleibt die oberste, sie gilt für die ganze Karte.
+
+**Fünf getönte Flächen auf einem Bild.** Einrichtungskarte, Begrüssung,
+Fokuskarte, Prüfungskarte, Lernroutine — jede mit eigenem Winkel und eigener
+Tönung. Fünf Flächen, die alle „schau hier" sagen, sagen zusammen gar nichts,
+und die eine Fläche mit wirklicher Arbeit geht darin unter. Ein Banner darf
+tönen; es ist eins. Die Karten darunter liegen auf derselben Ebene, bekommen
+dieselbe Fläche, und ihre Farbe steht dort, wo das Auge ohnehin zuerst
+hinsieht: im Zeichen. §38 bleibt gewahrt, weil über jedem Zeichen sein Name
+steht.
+
+Tote Regeln, die dabei auffielen: `.lw-focus-card` setzte eine `background`,
+die zwei Zeilen später überschrieben wurde. `.lw-engagement .lw-metrik` setzte
+die Farbe, die es schon hatte (`--lw-surface` IST `--bg-side`). Und der
+760er-Umbruch wiederholte ein Raster, das der 900er schon gesetzt hatte.
+
+
+================================================================================
+E205 — „Weiter wo du warst": neun gleiche Zeilen werden drei Seiten
+================================================================================
+
+Unten in der Übersicht stand „Zuletzt geöffnet", und darunter neun Zeilen.
+Jede sagte dasselbe: der Untertitel wiederholte die Überschrift der Sektion,
+und „gerade eben" stand an jeder, weil dieselbe Sitzung sie alle geöffnet
+hatte. Neun Zeilen, kein Unterschied — und genau das Eine fehlte, woran man
+eine Seite wiedererkennt: was draufsteht.
+
+**Die Miniatur.** Jede Karte zeigt jetzt den Anfang ihrer Seite, so wie er
+dort steht: Überschriften fett, Haken als Kästchen, Listenpunkte mit Punkt,
+Code in fester Schrift. `Store.childrenOf` ist gleichläufig und liest den
+Spiegel im Arbeitsspeicher — kein Warten, kein zweiter Speicherweg, kein
+Ladezustand. Drei Ebenen tief wie `Kontext.textVonSeite` wäre genauer und für
+fünf Zeilen zu teuer.
+
+Ein echtes Vorschaubild wäre besser und gibt es nicht: Redion legt zu keiner
+Seite eines an. Das steht in LUECKEN.md.
+
+**Zwei Fehler auf dem Weg, beide vom Bild gefunden.**
+
+Der erste Anriss zeigte Redions Markdown so, wie es getippt wurde: „Alles
+hier liegt **lokal** in dein…", mit Sternen. Eine Vorschau ist eine Vorschau
+und keine Quelltextzeile. `klartext()` nimmt dieselben Muster wie `inline()`
+im Editor, behält aber den Inhalt statt ihn einzuwickeln. Die Reihenfolge ist
+nicht beliebig: das Bild vor dem Link, sonst bleibt ein „!" stehen, und `**`
+vor `*`, sonst frisst der eine Stern den anderen.
+
+Der zweite: die erste Zeile einer Seite wiederholt oft ihre Überschrift, also
+schnitt ich sie ab. Aus „Willkommen in Redion. Alles hier liegt lokal …"
+wurde damit „in Redion Alles hier liegt lokal …" — der Anriss begann mitten
+im Satz mit einem kleinen „in". Der Titel war dort nicht die Überschrift,
+sondern der Anfang des Satzes. Erkennbar am nächsten Zeichen: geht es gross
+oder mit einer Ziffer weiter, war es eine Überschrift; geht es klein weiter,
+war es ein Satz.
+
+**Ein Knopf, der sich drücken liess und nichts tat.** `externeEintraege` hatte
+einen Zusatzwert `seiteBevorzugen`, den nur die PDF-Liste setzte. Für „Zuletzt
+geöffnet" und „Laufende Projekte" stand er auf nein — und dort steht `id` bei
+einem DATEI-Eintrag auf einer Dateikennung. `App.oeffne` bekam sie, fand
+keinen Block und tat nichts. Wenn eine Seite bekannt ist, ist sie das Ziel;
+wenn nicht, ändert sich nichts. Damit braucht es den Zusatzwert nicht mehr.
+
+**Die Begrüssung war ein Plakat.** Gemessen auf 1440 × 900: der Kasten war
+178 px hoch, und das Grösste darauf war „Mittwoch, 26. August" in 48 px — das
+Einzige auf der ganzen Seite, das man nicht nachschlagen muss und nicht
+anklicken kann. Die erste Karte mit wirklicher Arbeit begann bei y = 690, ihr
+Knopf lag ausserhalb des Bildes. Der abgenommene Entwurf zeigt dort zwei
+kleine Zeilen und sonst nichts.
+
+**Und 166 px gingen für Zierrat drauf, bevor Inhalt anfing.** Gemessen auf
+1400 × 1000, nachdem die Karten eingebaut waren: `test217` ging rot, der
+Startknopf lag bei y = 993 von 1000. Die Messung zeigte, wo die Höhe
+hingeht — Markenblock 60 px, Reiterleiste 106 px, weil sie auf zwei Reihen
+umbrach. Auf ihr steht nichts als zehn Wörter.
+
+Gekürzt wurde deshalb die Hülle und nicht der Inhalt:
+
+    Reiterleiste   44 px sind eine FINGERregel (§37), keine Mausregel.
+                   `@media(hover:hover) and (pointer:fine)` setzt 34 px;
+                   `@media(pointer:coarse)` behält 44 — unabhängig von der
+                   Fensterbreite, ein 1200-px-Tablet bekommt also weiterhin
+                   die grosse Fläche.
+    Markenblock    Zeichen 40 → 32, Überschrift 19 → 16 px.
+    Bereichsmarke  „◎ Alle Bereiche" stand in der Begrüssung ein zweites Mal
+                   — dieselbe Auskunft, die 300 px höher im Auswahlfeld steht
+                   und dort auch geändert werden kann.
+
+Knopf danach bei y = 920, 80 px Luft, `test217` wieder 27/27.
+
+**Vier Kacheln statt sechs.** Sechs Sektionen mit sehr verschieden langen
+Listen ergaben in zwei Spalten ein weisses Loch von fast 400 px: „Termine"
+mit einer Zeile stand neben „Zuletzt geöffnet" mit acht. „Aufgaben heute" und
+„Überfällig" sind ausserdem dieselbe Frage — was ist offen. Die Antwort steht
+in der Zeile („heute", „Do", „26. Aug."), nicht in zwei Überschriften;
+überfällig kommt zuerst, weil es zuerst dran ist. Die Übersicht bleibt bei
+ZWEI Spalten: vier Kacheln in drei Spalten liessen wieder eine allein.
