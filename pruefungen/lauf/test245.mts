@@ -290,6 +290,22 @@ const mitEmoji = schale.treffer.filter(t => EMOJI.test(t));
 p('Kein Emoji in Seitenleiste und Kopfleiste', mitEmoji.length === 0,
   mitEmoji.slice(0, 4).join(' | '));
 
+/* --- E202: DIE SCHALE IST QUELLTEXT, ALSO PRÜFT MAN DEN QUELLTEXT -------
+   Die Messung am Bildschirm findet nur, was gerade sichtbar ist. In
+   `index.html` steht aber ausschliesslich Redions eigene Oberfläche — dort
+   kann per Bauart kein Nutzerzeichen liegen. Also ist die Datei selbst die
+   schärfere Prüfung: sie erwischt auch, was hinter einem geschlossenen Feld
+   steht (das KI-Feld hatte zwölf Emoji, die kein Bild je zeigte, solange
+   niemand es aufklappte).
+
+   Gefunden am 26. August: 🎓 in der Handy-Leiste, ✨ im KI-Knopf, 🔗 und ☑ in
+   der Tastenleiste, dazu ✒️🤖🎙📖🗂📄🧾⚙🧩🎤 im KI-Feld. */
+const quelltext = fs.readFileSync(path.join(WURZEL, 'index.html'), 'utf8');
+const imQuelltext = [...quelltext.matchAll(
+  /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu)].map(m => m[0]);
+p('Kein Emoji in index.html — der Schale', imQuelltext.length === 0,
+  [...new Set(imQuelltext)].slice(0, 8).join(' '));
+
 /* --- E202: DIE LERNWELT GEHÖRT AUCH REDION -----------------------------
    Die Prüfung oben deckte nur Seitenleiste und Kopfleiste ab. In der
    Lernwelt standen deshalb bis zum 26. August fünfzig Emoji: 🎓 im Kopf,

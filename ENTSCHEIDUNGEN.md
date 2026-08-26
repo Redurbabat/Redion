@@ -14262,3 +14262,41 @@ er rot (`✗ … — 📷`).
 Die Lehre ist dieselbe wie in §55.2, nur eine Ebene höher: **eine Gegenprobe
 muss selbst nachweisen, dass sie etwas verändert hat.** Sonst prüft man das
 Prüfen nicht, sondern glaubt es.
+
+
+## E203 · Und die Schale selbst — sechzehn Emoji, die kein Bild je zeigte
+
+**26. August 2026, gleicher Tag.** E202 hat die Lernwelt aufgeräumt. Beim
+Nachsehen am Telefon standen aber immer noch zwei Emoji: 🎓 in der obersten
+Pillenreihe und ✨ in der „KI fragen"-Pille. Beide kommen nicht aus
+TypeScript, sondern direkt aus `index.html`.
+
+Dort waren es insgesamt **sechzehn** — und zwölf davon hat nie ein Bild
+gezeigt, weil sie im zugeklappten KI-Feld standen: ✒️ Schreiben, 🤖 Agent,
+🎙 Besprechung, 📖 Nachschlagen, 🗂 Datenbank bauen, 📄 Seite aufbauen,
+🧾 Protokoll, ⚙, 🧩, 🎤 — dazu 🔗 und ☑ in der Tastenleiste über der
+Telefontastatur.
+
+**Zwei Zeichen kamen dazu:** `robot` und `database`.
+
+### Die schärfere Prüfung ist die Datei, nicht der Bildschirm
+
+`test245` mass bisher am laufenden Browser. Das findet nur, was gerade
+sichtbar ist — und genau deshalb sind die zwölf im KI-Feld so lange stehen
+geblieben. `index.html` enthält per Bauart ausschliesslich Redions eigene
+Oberfläche; dort kann kein Nutzerzeichen liegen. Also prüft der Lauf jetzt
+zusätzlich **den Quelltext**:
+
+    p('Kein Emoji in index.html — der Schale', imQuelltext.length === 0, …)
+
+Gegengeprobt mit einem eingesetzten 🤖: der Punkt wird rot.
+
+Die SVG-Pfade holt das Ersetzungsskript aus `quell/register/symbole.js` —
+`index.html` und Register können damit nicht auseinanderlaufen, weil beide
+denselben Ursprung haben.
+
+**Eine CSS-Zeile war nötig.** Ein SVG ist ein Ersatzelement und steht auf der
+Grundlinie, also zwei Punkte tiefer als der Text daneben. `ki.css` richtet die
+Zeichen in den KI-Knöpfen deshalb mit `vertical-align:-3px` aus; die
+Kopfzeile wird zu `inline-flex`, weil dort Zeichen und Wort gleich hoch
+stehen sollen.

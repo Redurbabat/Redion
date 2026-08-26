@@ -140,3 +140,16 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   #topbar .top-btn.schmal{padding:0 6px}
   .kt-std{width:58px}
 }
+
+
+/* --- E202: Zeichen statt Emoji im KI-Feld -----------------------------------
+   Emoji sassen auf der Grundlinie und brachten ihre eigene Farbe mit. Die
+   Strichzeichen nehmen `currentColor`, müssen dafür aber ausgerichtet werden:
+   ein SVG ist ein Ersatzelement und stünde sonst auf der Grundlinie, also
+   zwei Punkte zu tief neben dem Text. */
+#ai .ai-quick button > svg,
+#ai .ai-leiste button > svg,
+#ai .ai-head b > svg,
+#ai .ai-head .icon-btn > svg{ vertical-align:-3px }
+#ai .ai-head b{ display:inline-flex; align-items:center; gap:6px }
+#ai .ai-head b > svg{ vertical-align:0 }

@@ -1242,6 +1242,19 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   .kt-std{width:58px}
 }
 
+
+/* --- E202: Zeichen statt Emoji im KI-Feld -----------------------------------
+   Emoji sassen auf der Grundlinie und brachten ihre eigene Farbe mit. Die
+   Strichzeichen nehmen `currentColor`, müssen dafür aber ausgerichtet werden:
+   ein SVG ist ein Ersatzelement und stünde sonst auf der Grundlinie, also
+   zwei Punkte zu tief neben dem Text. */
+#ai .ai-quick button > svg,
+#ai .ai-leiste button > svg,
+#ai .ai-head b > svg,
+#ai .ai-head .icon-btn > svg{ vertical-align:-3px }
+#ai .ai-head b{ display:inline-flex; align-items:center; gap:6px }
+#ai .ai-head b > svg{ vertical-align:0 }
+
 </style>
 <style>
 /* ===== quell/schale/stil/werkzeuge.css ===== */
@@ -9599,7 +9612,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
        fünf Dinge. -->
   <i id="ho-pille" class="stumm" aria-hidden="true"></i>
   <button id="hl-konto" class="ho-konto" title="Arbeitsbereich"><span>R</span></button>
-  <button id="hl-lernen" role="tab" title="Lernen"><span class="ho-z">🎓</span><b>Lernen</b></button>
+  <button id="hl-lernen" role="tab" title="Lernen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 8.5 12 13l9.5-4.5z"/><path d="M6.5 10.8v4.4c0 .5 2.5 2.3 5.5 2.3s5.5-1.8 5.5-2.3v-4.4"/><path d="M21.5 8.5v5"/></svg></span><b>Lernen</b></button>
   <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
   <button id="hl-seiten" role="tab" title="Seiten"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h7L18.5 8v12.5h-12z"/><path d="M13.5 3.5V8h5"/><path d="M9.5 12.5h6M9.5 16h4"/></svg></span><b>Seiten</b></button>
   <button id="hl-bespr" role="tab" title="Besprechungen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
@@ -9617,7 +9630,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 <div id="handy-unten" aria-label="Schnellzugriff">
   <button id="hu-suche" title="Suchen"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></button>
   <button id="hu-ki" title="KI fragen">
-    <span class="hu-av">✨</span><b>KI fragen</b><i class="hu-mik"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9.25" y="3" width="5.5" height="10" rx="2.75"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></i>
+    <span class="hu-av"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2l-1.7-5.8L4.5 10.7 10.3 9z"/><path d="M18.6 3v3.2M17 4.6h3.2"/></svg></span><b>KI fragen</b><i class="hu-mik"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9.25" y="3" width="5.5" height="10" rx="2.75"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></i>
   </button>
   <button id="hu-neu" title="Neue Seite"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12v6.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6.5"/><path d="M17.5 3.5 21 7l-8.5 8.5H9v-3.5z"/></svg></button>
 </div>
@@ -9630,8 +9643,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   <button data-t="kursiv" title="Kursiv"><i>I</i></button>
   <button data-t="unter"  title="Unterstrichen"><u>U</u></button>
   <button data-t="code"   title="Code">&lt;/&gt;</button>
-  <button data-t="link"   title="Link">🔗</button>
-  <button data-t="todo"   title="Aufgabe">☑</button>
+  <button data-t="link"   title="Link"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 13.7a4.2 4.2 0 0 0 6.1.35l2.6-2.6a4.2 4.2 0 0 0-5.94-5.94l-1.5 1.5"/><path d="M13.7 10.3a4.2 4.2 0 0 0-6.1-.35L5 12.55a4.2 4.2 0 0 0 5.94 5.94l1.5-1.5"/></svg></button>
+  <button data-t="todo"   title="Aufgabe"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/><path d="m8.2 12.2 2.6 2.6 5-5.4"/></svg></button>
   <button data-t="raus"   title="Ausrücken">⇤</button>
   <button data-t="rein"   title="Einrücken">⇥</button>
   <button data-t="fertig" title="Tastatur schliessen">⌄</button>
@@ -9688,11 +9701,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      ====================================================================== -->
 <aside id="ai">
   <div class="ai-head">
-    <b>✨ KI</b>
+    <b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2l-1.7-5.8L4.5 10.7 10.3 9z"/><path d="M18.6 3v3.2M17 4.6h3.2"/></svg> KI</b>
     <button class="model-btn" title="Modell wechseln">
       <span class="dot"></span><span class="model-name">Suche …</span><span style="opacity:.5">▾</span>
     </button>
-    <button class="icon-btn" id="ai-clear" title="Neuer Chat">✚</button>
+    <button class="icon-btn" id="ai-clear" title="Neuer Chat"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
 
   <div id="chat"></div>
@@ -9704,23 +9717,23 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
       <button data-p="Formuliere den Text dieser Seite klarer, ohne den Sinn zu ändern.">Umschreiben</button>
       <button data-p="Übersetze diese Seite ins Englische.">Übersetzen</button>
       <button data-p="Mache aus dieser Seite Karteikarten. Je Zeile: Frage :: Antwort.">Karteikarten</button>
-      <button id="ai-schreiben" title="Schreiben und bearbeiten — 16 Befehle">✒️ Schreiben</button>
-      <button id="ai-agent" title="Mehrstufige Aufgaben">🤖 Agent</button>
-      <button id="ai-meeting" title="Aufnehmen, mitschreiben, auswerten">🎙 Besprechung</button>
-      <button id="ai-wiki" title="Kostenlos, ohne Schlüssel">📖 Nachschlagen</button>
-      <button id="ai-db" title="Die KI legt eine echte Datenbank an">🗂 Datenbank bauen</button>
-      <button id="ai-seite" title="Die KI baut den Seitenaufbau">📄 Seite aufbauen</button>
-      <button id="ai-log" title="Was die KI gebaut hat">🧾 Protokoll</button>
+      <button id="ai-schreiben" title="Schreiben und bearbeiten — 16 Befehle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 3.9a2.1 2.1 0 0 1 3 3L8.9 17.5l-4 1 1-4z"/><path d="M14.6 5.8l3 3"/></svg> Schreiben</button>
+      <button id="ai-agent" title="Mehrstufige Aufgaben"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.6" y="7.6" width="16.8" height="12.8" rx="3.2"/><path d="M12 3.2v4.4"/><circle cx="12" cy="2.6" r="1.2"/><path d="M8.6 12.6v1.6M15.4 12.6v1.6M9.4 17h5.2"/></svg> Agent</button>
+      <button id="ai-meeting" title="Aufnehmen, mitschreiben, auswerten"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg> Besprechung</button>
+      <button id="ai-wiki" title="Kostenlos, ohne Schlüssel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 4.6A1.6 1.6 0 0 1 6 3h5.2v18H6a1.6 1.6 0 0 1-1.6-1.6z"/><path d="M12.8 3H18a1.6 1.6 0 0 1 1.6 1.6v14.8A1.6 1.6 0 0 1 18 21h-5.2z"/></svg> Nachschlagen</button>
+      <button id="ai-db" title="Die KI legt eine echte Datenbank an"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.8" rx="7.6" ry="2.9"/><path d="M4.4 5.8v12.4c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9V5.8"/><path d="M4.4 12c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9"/></svg> Datenbank bauen</button>
+      <button id="ai-seite" title="Die KI baut den Seitenaufbau"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.2h7.4L19 8.8v12a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6V4.8" /><path d="M13.4 3.2v5.6H19"/><path d="M8 13h8M8 17h5"/></svg> Seite aufbauen</button>
+      <button id="ai-log" title="Was die KI gebaut hat"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/><path d="M12 7.6V12l3 1.8"/></svg> Protokoll</button>
     </div>
     <textarea id="ai-input" rows="1" placeholder="Mach alles mit KI …"></textarea>
     <!-- Zeile unter dem Eingabefeld, wie bei Notion -->
     <div class="ai-leiste">
       <button id="ai-plus" title="Anhängen und erwähnen">＋</button>
-      <button id="ai-quellen" title="Quellen, Modus und Personalisierung">⚙</button>
-      <button id="ai-faehig" title="Fähigkeiten">🧩</button>
+      <button id="ai-quellen" title="Quellen, Modus und Personalisierung"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.5 14.6a1.5 1.5 0 0 0 .3 1.7l.06.05a1.8 1.8 0 1 1-2.6 2.6l-.05-.06a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.37v.14a1.8 1.8 0 1 1-3.6 0v-.07a1.5 1.5 0 0 0-1-1.37 1.5 1.5 0 0 0-1.7.3l-.05.06a1.8 1.8 0 1 1-2.6-2.6l.06-.05a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.37-.9H4.5a1.8 1.8 0 1 1 0-3.6h.07a1.5 1.5 0 0 0 1.37-1 1.5 1.5 0 0 0-.3-1.7l-.06-.05a1.8 1.8 0 1 1 2.6-2.6l.05.06a1.5 1.5 0 0 0 1.7.3h.07a1.5 1.5 0 0 0 .9-1.37V4.5a1.8 1.8 0 1 1 3.6 0v.07a1.5 1.5 0 0 0 .9 1.37 1.5 1.5 0 0 0 1.7-.3l.05-.06a1.8 1.8 0 1 1 2.6 2.6l-.06.05a1.5 1.5 0 0 0-.3 1.7v.07a1.5 1.5 0 0 0 1.37.9h.14a1.8 1.8 0 1 1 0 3.6h-.07a1.5 1.5 0 0 0-1.37.9z"/></svg></button>
+      <button id="ai-faehig" title="Fähigkeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.4 3.2h2.1a1.9 1.9 0 0 1 1.9 1.9 1.4 1.4 0 0 0 2.8 0 1.9 1.9 0 0 1 1.9-1.9h1.5v4.2a1.4 1.4 0 0 0 0 2.8v4.2h-4.2a1.4 1.4 0 0 1-2.8 0H8.4v-4.2a1.4 1.4 0 0 0 0-2.8z"/></svg></button>
       <span class="ai-luecke"></span>
       <button id="ai-modus" title="Standard darf ändern, Fragen nur antworten (Shift + Tab)">Standard</button>
-      <button id="ai-diktat" title="Diktieren">🎤</button>
+      <button id="ai-diktat" title="Diktieren"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg></button>
       <button id="ai-senden" title="Senden">↑</button>
     </div>
   </div>
@@ -14454,6 +14467,12 @@ Register.symbole = (() => {
         box: '<rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/>',
         boxChecked: '<rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/>' +
             '<path d="m8.2 12.2 2.6 2.6 5-5.4"/>',
+        robot: '<rect x="3.6" y="7.6" width="16.8" height="12.8" rx="3.2"/>' +
+            '<path d="M12 3.2v4.4"/><circle cx="12" cy="2.6" r="1.2"/>' +
+            '<path d="M8.6 12.6v1.6M15.4 12.6v1.6M9.4 17h5.2"/>',
+        database: '<ellipse cx="12" cy="5.8" rx="7.6" ry="2.9"/>' +
+            '<path d="M4.4 5.8v12.4c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9V5.8"/>' +
+            '<path d="M4.4 12c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9"/>',
         /* --- Kopfleiste ------------------------------------------------------ */
         share: '<path d="M4 12v6.6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12"/>' +
             '<path d="M12 15.2V3.6"/><path d="m8 7.4 4-3.8 4 3.8"/>',
