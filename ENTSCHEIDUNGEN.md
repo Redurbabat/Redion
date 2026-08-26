@@ -13531,3 +13531,108 @@ drin: Ein Schütz heisst mit Spule und Kontakt BEIDE `K1` — wer das erste
 Bauteil mit diesem Namen nimmt, greift die Spule und sucht dort vergeblich
 die Klemme 14; aufgelöst wird über die Klemme. Und `/\bV\b/` in einer
 Vorlagenzeichenkette ist kein Wortende, sondern ein Rückschritt-Zeichen.
+
+## E193
+
+**In den Plan tippen — und der einzige Massstab, den es dafür gibt**
+*(26. August 2026, Punkte 59 und 60)*
+
+Zwei Aufgabenarten kommen dazu, und damit sind alle hundert Elektro-Punkte
+abgearbeitet.
+
+    plan-stromweg    Tippe die Leitungen an, die am Stromweg beteiligt sind.
+    kreis-zuordnen   Gehört K1 in den Steuer- oder in den Hauptstromkreis?
+
+`plan-stromweg` ist die erste Aufgabe, bei der man IN die Zeichnung tippt
+statt eine von vier Möglichkeiten anzukreuzen. Und die erste, bei der Raten
+nichts bringt: bei vier Möglichkeiten trifft man mit einem Viertel
+Wahrscheinlichkeit, bei sieben Leitungen mit einem Hundertachtundzwanzigstel.
+
+### Der Strom durch eine einzelne Leitung ist gar nicht bestimmt
+
+Der erste Bau las ab, was der Schaltplan-Block auch zum Malen benutzt:
+`netzStrom` über `leitungNetz` (E187). Nachgemessen kam bei ELF von zwölf
+Schaltungen „alles oder nichts" heraus — übrig blieb eine einzige Schaltung,
+und die stand dann in jeder Aufgabe.
+
+Der Grund steht in `simulation.ts`: `netzStrom[netz]` ist der GRÖSSTE Strom
+irgendeines Bauteils, das dieses Netz berührt. Ein toter Abzweig, der mit
+einem Ende an einem stromführenden Knoten hängt, liest denselben Wert.
+
+Und tiefer: der Strom durch eine einzelne ideale Leitung ist physikalisch
+nicht bestimmt. Zwei ideale Leitungen zwischen denselben zwei Knoten teilen
+sich den Strom in einem Verhältnis, das aus den Knotenspannungen nicht folgt.
+Das ist keine Lücke der Rechnung, sondern eine Eigenschaft der Aufgabe.
+
+Bestimmt ist dagegen: **liegt die Leitung auf dem Weg?** Schneide sie durch
+und sieh nach, ob sich etwas ändert. Genau das meint ein Elektriker mit
+Stromweg, und genau das rechnet die Aufgabe — ein Durchgang je Leitung.
+
+Dabei fiel ein zweiter Fehler auf, und er ist der lehrreichere. Der Vergleich
+lief über alle Bauteilströme auf vier Stellen — und verglich damit
+RECHENRAUSCHEN. Die Matrix bekommt zwischen jedem Knoten und Masse einen
+winzigen Leitwert, sonst wäre sie bei einem offenen Kontakt nicht lösbar;
+heraus kommen Ströme wie 4,184e-10 A. Beim Treppenhausautomaten galten so
+vier Leitungen als „beteiligt", obwohl die Leuchte in jeder Stellung dunkel
+blieb. Jetzt gilt dieselbe Schwelle wie in `simulation.ts`: unter einem
+Nanoampere ist nichts.
+
+### Ein Tippziel für den Finger — und was daran nicht geht
+
+§37 verlangt 44 px. Der erste Versuch verbreiterte die Leitung selbst mit
+einem durchsichtigen Fangstrich. Das kann nicht funktionieren: zwei
+Leitungsbahnen liegen 16 Einheiten auseinander, am Bildschirm gemessene 7 px.
+Ein 44-px-Strich hätte sechs Nachbarn mitgefangen — man tippt auf eine
+Leitung und markiert eine andere, und das sieht nicht nach einem Fehler aus.
+
+Getippt wird deshalb auf einen RING je Leitung. Die Ringe stehen weit
+auseinander, sie sind sichtbar (man weiss also, wohin), und sie werden nach
+der gemessenen Verkleinerung nachgestellt — CSS kennt den viewBox-Faktor
+nicht, und der Zeichner kennt beim Erzeugen die spätere Grösse nicht.
+
+Drei Dinge daran hat erst ein Bildschirmfoto gezeigt (§55):
+
+  · Die Ringe waren zuerst gefüllte Scheiben und deckten die Zeichnung zu —
+    die man doch gerade lesen soll. Jetzt scheint sie durch.
+  · Zwei Ringe standen halb ausserhalb des Blattes. Das Blatt war beim Bauen
+    auf seinen Inhalt geschrumpft und wusste nichts von ihnen.
+  · Bei 560 px Spaltenbreite ist ein 44-px-Ring 96 Planeinheiten breit,
+    grösser als ein Bauteil. Die Spalte ist für diese Aufgabenart jetzt
+    1100 px breit, und am Telefon wird der Plan nicht kleiner, sondern
+    SCHIEBBAR — wie in jedem PDF-Betrachter.
+
+### Zwei Fehler, die es schon vorher gab
+
+**Jeder Klick in die Aufgabe würfelte sie neu.** Die Aufgabe trägt
+`data-art` als ANGABE (`<article class="ea-aufgabe" data-art="plan-fehler">`),
+die Knöpfe der Artenleiste tragen es als BEFEHL. Der eine Zuhörer suchte
+`closest('[data-art]')` und sah beide gleich: ein Klick irgendwo in die
+Aufgabe würfelte sie neu UND stellte den geübten Bereich still auf ihre Art
+um. Vorher gab es in einer Aufgabe nichts zum Anklicken, deshalb ist es
+niemandem aufgefallen.
+
+**Der Prüfen-Knopf sah aus wie Text.** Die Knopfgestaltung stand nur unter
+`.ea-fuss button`. Der Prüfen-Knopf einer Zahlenaufgabe steht in
+`.ea-eingabe`, und dort griff keine Regel — kein Rand, kein Grund, und
+`class="prim"` blieb wirkungslos. Seit E189 so, und keine Prüfung konnte es
+melden: der Knopf WAR ja da.
+
+### Eine Schaltung mehr, und eine Prüfung, die weniger fordert
+
+`SCHALTUNGEN` bekommt „Zwei Leuchten, je ein eigener Schalter". Fast alle
+bisherigen sind eine einzige Reihe, und in einer Reihe liegt entweder jede
+Leitung auf dem Weg oder keine — mit zwei Zweigen gibt es endlich den Fall,
+an dem sich zeigt, ob jemand einen Plan liest.
+
+Und `test241` verlangte von jeder Wahlaufgabe genau vier Möglichkeiten.
+„Steuerstromkreis oder Hauptstromkreis?" hat zwei, und eine dritte
+dazuzuerfinden wäre gelogen. Verlangt ist jetzt: mindestens zwei, höchstens
+sechs — und dass eine Art bei ihrer Zahl BLEIBT. Wer heute vier und morgen
+drei anbietet, hat einen Fehler; das ist der Satz, der vorher fehlte.
+
+### Prüflauf
+
+`test243` wächst auf 70 Punkte. §6 schneidet jede Leitung selbst durch und
+vergleicht mit einem ANDEREN Massstab als die Aufgabe: nicht Zahlenreihen,
+sondern welche Bauteile arbeiten und wie hell die Leuchten sind. Dass beide
+Massstäbe übereinstimmen, ist mehr wert als zweimal dasselbe.

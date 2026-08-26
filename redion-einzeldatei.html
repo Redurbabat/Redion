@@ -8570,6 +8570,17 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-buehne{flex:1; overflow-y:auto; padding:20px; display:flex;
   justify-content:center; align-items:flex-start}
 .ea-aufgabe{width:min(560px, 100%); display:flex; flex-direction:column; gap:12px}
+/* Eine Tippaufgabe braucht mehr Platz als eine Frage mit vier Knöpfen.
+   -------------------------------------------------------------------
+   560 px Spaltenbreite bedeuten für einen Plan von 1700 Einheiten eine
+   Verkleinerung auf 0,46. Ein Griff, der nach §37 44 px messen muss, ist
+   dann 96 Einheiten breit — grösser als ein Bauteilsymbol, und er deckt die
+   Zeichnung zu, die man doch gerade lesen soll. Auf einem Bildschirmfoto
+   war davon nichts mehr zu erkennen (§55).
+   Deshalb: bei `plan-stromweg` die Spalte auf die volle Fensterbreite. Die
+   Verkleinerung geht damit auf gut 0,8, der Griff auf rund 55 Einheiten, und
+   der Plan bleibt lesbar. */
+.ea-aufgabe[data-art="plan-stromweg"]{width:min(1100px, 100%)}
 .ea-kopfzeile{display:flex; align-items:center; justify-content:space-between;
   font-size:11px; color:var(--text-faint)}
 .ea-artname{text-transform:uppercase; letter-spacing:.06em}
@@ -8583,6 +8594,9 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-bild svg{max-width:100%; height:auto}
 .ea-bild:not(.ea-plan) svg{width:96px; height:96px}
 .ea-plan svg{max-height:260px}
+/* Beim Antippen gilt die Höhenschranke nicht: der Plan soll so gross sein,
+   wie die Spalte hergibt, sonst nützt die breitere Spalte nichts. */
+.ea-plan.ea-tippbar svg{max-height:min(560px, 52vh); width:100%}
 
 .ea-frage{margin:0; font-size:17px; line-height:1.45; font-weight:600;
   white-space:pre-wrap}
@@ -8624,6 +8638,56 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:10px; background:var(--bg-input); color:var(--text);
   font-size:16px; font-variant-numeric:tabular-nums}
 .ea-einheit{color:var(--text-dim); font-size:14px; min-width:3em}
+
+/* ---- Den Stromweg im Plan antippen (Punkt 59, E193) ---------------------
+   Getippt wird auf einen PUNKT je Leitung, nicht auf die Leitung selbst.
+   Der Grund steht in `schaltplan.ts` bei `sp-griff`: zwei Leitungsbahnen
+   liegen am Bildschirm gemessene 7 px auseinander, und ein Fangstrich mit
+   den 44 px aus §37 würde die Nachbarn mitfangen.
+
+   `vector-effect: non-scaling-stroke` löst den Rand vom Massstab des Plans;
+   die Fläche dahinter kommt aus dem Radius mal Verkleinerung. Damit der
+   Punkt in JEDER Plangrösse gross genug bleibt, setzt `arbeitsplatz.ts` den
+   Radius nach der gemessenen Verkleinerung — CSS allein kann das nicht,
+   weil es den viewBox-Faktor nicht kennt. */
+/* Ein RING, keine Scheibe. Die gefüllte Scheibe deckte die Leitung und das
+   Bauteil darunter zu — und die Zeichnung zu lesen ist die ganze Aufgabe.
+   Der Ring lässt sie durchscheinen und ist trotzdem eindeutig zu sehen. */
+.ea-tippbar .sp-griff{cursor:pointer; pointer-events:all;
+  fill:color-mix(in srgb, var(--bg-card) 55%, transparent);
+  stroke:var(--accent); stroke-width:2; vector-effect:non-scaling-stroke}
+.ea-tippbar .sp-griff:hover{fill:color-mix(in srgb, var(--accent) 25%, transparent)}
+/* Gewählt: gefüllt UND dicker umrandet. Zwei Merkmale, nicht nur Farbe (§38). */
+.ea-tippbar .sp-griff.sp-gewaehlt{
+  fill:color-mix(in srgb, var(--accent) 45%, transparent);
+  stroke:var(--accent); stroke-width:4}
+.ea-tippbar .sp-leitung,
+.ea-tippbar .sp-fluss,
+.ea-tippbar .sp-teil,
+.ea-tippbar .sp-knoten{pointer-events:none}
+.ea-tippbar svg{touch-action:manipulation}
+/* Ausserhalb einer Tippaufgabe gibt es die Griffe gar nicht — aber falls
+   doch einmal, sollen sie nichts abfangen. */
+.sp-griff{pointer-events:none}
+.ea-planhinweis{margin:6px 0 0; font-size:12.5px; color:var(--text-dim)}
+.ea-wege{flex-wrap:wrap; gap:10px}
+.ea-zaehler{flex:1; min-width:9em; font-size:14px; color:var(--text-dim);
+  font-variant-numeric:tabular-nums}
+
+/* Knöpfe IM Aufgabenfeld sahen nach gar nichts aus.
+   -----------------------------------------------------------------------
+   Die Knopfgestaltung stand nur unter `.ea-fuss button` — der Fussleiste.
+   Der Prüfen-Knopf einer Zahlenaufgabe steht aber in `.ea-eingabe`, und dort
+   griff keine einzige Regel: kein Rand, kein Grund, und `class="prim"` war
+   wirkungslos, weil auch die Vorrangregel unter `.ea-fuss` hing. Auf dem
+   Bildschirm stand da blosser Text neben dem Eingabefeld. Aufgefallen ist es
+   beim Bild zur Tippaufgabe (§55); betroffen war es seit E189. */
+.ea-eingabe button{padding:9px 16px; border:1px solid var(--line);
+  border-radius:9px; background:var(--bg); color:var(--text); cursor:pointer;
+  font-size:13px; min-height:44px}
+.ea-eingabe button.prim{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent); font-weight:600}
+.ea-eingabe button:disabled{opacity:.45; cursor:default}
 
 .ea-aufloesung{padding:12px 14px; border-radius:10px; display:flex;
   flex-direction:column; gap:7px}
@@ -8722,6 +8786,20 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .ea-antwort{min-height:48px}
   .ea-overlay .ea-fenster{width:100vw; height:100vh; max-width:none;
     border-radius:0}
+
+  /* Der Plan zum Antippen wird am Telefon NICHT kleiner, sondern SCHIEBBAR.
+     -------------------------------------------------------------------
+     In 340 px Breite ist ein Plan mit sieben Leitungen so klein, dass die
+     Griffe — die nach §37 44 px messen müssen — die ganze Zeichnung
+     zudecken. Auf dem Bildschirmfoto war vom Schaltplan nichts mehr zu
+     sehen, und genau ihn soll man lesen.
+     Statt beides zu verkleinern, bleibt der Plan gross und man schiebt ihn
+     seitwärts — wie jeder PDF-Betrachter es auch macht. Die auslaufende
+     Kante zeigt, dass es weitergeht (`Rollrand`, E141/E151/E159). */
+  .ea-plan.ea-tippbar{overflow-x:auto; justify-content:flex-start;
+    -webkit-overflow-scrolling:touch}
+  .ea-plan.ea-tippbar svg{width:auto; min-width:640px; height:270px;
+    max-height:none; max-width:none; flex:0 0 auto}
 }
 
 /* Das gesuchte Bauteil (Punkt 80). Ein Ring, kein Farbwechsel: die Zeichnung
@@ -29252,6 +29330,70 @@ const Schaltplan = (() => {
         });
         /* Verbindungspunkte (Punkt 15) */
         verbindungspunkte(plan).forEach(p => teile.push(`<circle class="sp-knoten" cx="${p.x}" cy="${p.y}" r="4" fill="currentColor"/>`));
+        /* Griffe zum Antippen (Punkt 59) — je Leitung EIN Punkt auf ihrer Mitte,
+           nicht ein breiter Strich über ihrer ganzen Länge.
+           ------------------------------------------------------------------
+           Der Strich war der erste Versuch, und er kann nicht funktionieren:
+           zwei Leitungsbahnen liegen 16 Einheiten auseinander, am Bildschirm
+           sind das gemessene 7 px. Ein Fangstrich, der §37 mit seinen 44 px
+           genügt, würde sechs Nachbarn mitfangen — und dann tippt man auf eine
+           Leitung und markiert eine andere. Das ist schlimmer als ein zu
+           kleines Ziel, denn es sieht nicht nach einem Fehler aus.
+           Die Punkte stehen dagegen weit auseinander, sie sind SICHTBAR (man
+           weiss also, wohin zu tippen ist), und ihre Grösse hängt über
+           `vector-effect` nicht am Massstab des Plans. */
+        if (opt.tippbar) {
+            const gesetzt = [];
+            plan.leitungen.forEach(l => {
+                if (!sichtbar(l.ebene))
+                    return;
+                const pkte = l.punkte || [];
+                if (pkte.length < 2)
+                    return;
+                /* Die LÄNGSTE Teilstrecke — nicht der Mittelpunkt der Punktliste.
+                   Bei einer Leitung, die kurz absteigt und dann weit quer läuft,
+                   sässe der Griff sonst in der Ecke. */
+                let best = 0, laenge = -1;
+                for (let i = 0; i + 1 < pkte.length; i++) {
+                    const a = pkte[i], b = pkte[i + 1];
+                    const d2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+                    if (d2 > laenge) {
+                        laenge = d2;
+                        best = i;
+                    }
+                }
+                const a = pkte[best], b = pkte[best + 1];
+                /* Und jetzt eine Stelle AUF dieser Strecke suchen, die weit genug
+                   von allen bisherigen Griffen weg ist. Zuerst sass jeder auf der
+                   Mitte, und nachgemessen lagen dann drei Griffe auf 7 px beisammen
+                   — man tippt auf den einen und trifft den anderen. Das ist
+                   schlimmer als ein zu kleines Ziel, weil es nicht nach einem Fehler
+                   aussieht.
+                   Probiert werden elf Stellen von einem Ende zum anderen, und
+                   genommen wird die mit dem grössten Abstand zum nächsten Nachbarn. */
+                let wahlX = (a.x + b.x) / 2, wahlY = (a.y + b.y) / 2, weiteste = -1;
+                for (let k = 0; k <= 10; k++) {
+                    const t = 0.12 + k * 0.076; /* 0,12 bis 0,88 — nie ganz am Ende */
+                    const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t;
+                    let naechster = Infinity;
+                    gesetzt.forEach(g => {
+                        const d = Math.hypot(g.x - x, g.y - y);
+                        if (d < naechster)
+                            naechster = d;
+                    });
+                    if (naechster > weiteste) {
+                        weiteste = naechster;
+                        wahlX = x;
+                        wahlY = y;
+                    }
+                }
+                gesetzt.push({ x: wahlX, y: wahlY });
+                const gewaehlt = opt.auswahl && opt.auswahl.has(l.id);
+                teile.push(`<circle class="sp-griff${gewaehlt ? ' sp-gewaehlt' : ''}" ` +
+                    `data-id="${esc(l.id)}" cx="${Math.round(wahlX)}" cy="${Math.round(wahlY)}" ` +
+                    `r="9"><title>Leitung antippen</title></circle>`);
+            });
+        }
         /* Symbole */
         plan.teile.forEach(t => {
             if (!sichtbar(t.ebene))
@@ -31573,6 +31715,20 @@ const Elektroaufgaben = (() => {
             wozu: 'Zwei Leuchten parallel — jede bekommt die volle Spannung.', stufe: 2,
             teile: [['wechselspannung', 'G1'], ['lampe', 'E1'], ['lampe', 'E2']],
             draehte: [[0, 'L', 1, 'X1'], [0, 'L', 2, 'X1'], [1, 'X2', 0, 'N'], [2, 'X2', 0, 'N']] },
+        /* Zwei Zweige, jeder mit eigenem Schalter. Der Fall, an dem sich zeigt,
+           ob jemand einen Plan liest oder nur die Umrisse erkennt: bei einem
+           offenen und einem geschlossenen Schalter ist der halbe Plan ohne
+           Wirkung, und man sieht es ihm nicht an.
+           Dazugekommen, weil `plan-stromweg` sonst nur zwei Schaltungen ergab:
+           fast alle anderen sind eine einzige Reihe, und in einer Reihe liegt
+           entweder jede Leitung auf dem Weg oder keine. */
+        { name: 'Zwei Leuchten, je ein eigener Schalter',
+            wozu: 'Zwei Zweige nebeneinander — jeder Schalter bedient nur seinen.',
+            stufe: 2,
+            teile: [['wechselspannung', 'G1'], ['ch-schema0', 'S1'], ['lampe', 'E1'],
+                ['ch-schema0', 'S2'], ['lampe', 'E2']],
+            draehte: [[0, 'L', 1, '3'], [1, '4', 2, 'X1'], [2, 'X2', 0, 'N'],
+                [0, 'L', 3, '3'], [3, '4', 4, 'X1'], [4, 'X2', 0, 'N']] },
         { name: 'Wechselschaltung (Schema 3)',
             wozu: 'Eine Leuchte von zwei Stellen schalten.', stufe: 2,
             teile: [['wechselspannung', 'G1'], ['ch-schema3', 'S1'], ['ch-schema3', 'S2'],
@@ -32335,6 +32491,185 @@ const Elektroaufgaben = (() => {
         }
         return null;
     };
+    /**
+     * Den Stromweg selbst markieren (Punkt 59).
+     *
+     * Die einzige Aufgabenart, bei der man IN den Plan tippt statt eine
+     * Möglichkeit anzukreuzen. Und die einzige, bei der Raten nichts bringt:
+     * bei vier Möglichkeiten trifft man mit einem Viertel Wahrscheinlichkeit,
+     * bei acht Leitungen mit einem Zweihundertsechsundfünfzigstel.
+     *
+     * WIE DIE LÖSUNG ENTSTEHT — und warum nicht so, wie zuerst gedacht.
+     *
+     * Der erste Bau las `netzStrom` über `leitungNetz` ab, also genau die
+     * Zahlen, mit denen der Schaltplan-Block die Striche wandern lässt (E187).
+     * Nachgemessen kam bei ELF von zwölf Schaltungen „alles oder nichts"
+     * heraus, und übrig blieb eine einzige Schaltung — dieselbe Zeichnung in
+     * jeder Aufgabe.
+     *
+     * Der Grund steht in `simulation.ts`: `netzStrom[netz]` ist der GRÖSSTE
+     * Strom irgendeines Bauteils, das dieses Netz berührt, nicht der Strom
+     * durch eine bestimmte Leitung. Ein toter Abzweig, der mit einem Ende an
+     * einem stromführenden Knoten hängt, liegt im selben Netz und liest
+     * denselben Wert.
+     *
+     * Und der Strom durch eine EINZELNE Leitung ist gar nicht bestimmt: zwei
+     * ideale Leitungen zwischen denselben zwei Knoten teilen sich den Strom in
+     * einem Verhältnis, das aus den Knotenspannungen nicht folgt. Das ist
+     * Physik und kein Mangel der Rechnung.
+     *
+     * Bestimmt ist dagegen, ob eine Leitung AUF dem Weg liegt: schneide sie
+     * durch, und sieh nach, ob sich etwas ändert. Genau das meint ein
+     * Elektriker mit Stromweg, und genau das rechnet diese Funktion — ein
+     * Durchgang je Leitung, bei höchstens zehn Leitungen keine Frage von
+     * Rechenzeit.
+     */
+    const planStromweg = (w, saat) => {
+        if (typeof Schaltplan === 'undefined' || !SF())
+            return null;
+        for (let versuch = 0; versuch < 14; versuch++) {
+            const v = w.aus(SCHALTUNGEN);
+            const plan = planBauen(v.teile, v.draehte);
+            if (!plan)
+                continue;
+            const alle = plan.leitungen.map(l => String(l.id));
+            /* Unter drei Leitungen ist die Aufgabe zu klein, über zehn wird das
+               Antippen zur Fleissarbeit. */
+            if (alle.length < 3 || alle.length > 10)
+                continue;
+            const schalter = plan.teile.filter(t => {
+                const vh = SF().verhalten(t.zeichen);
+                return vh && vh.art === 'schalter' && !vh.folgtSpule;
+            });
+            const stellung = {};
+            const beschreibung = [];
+            schalter.forEach(t => {
+                const st = SF().stellungenVon(t.zeichen);
+                const nr = w.bis(st.length);
+                stellung[t.id] = nr;
+                beschreibung.push(`${t.bmk}: ${st[nr].name}`);
+            });
+            const wirkung = (p) => {
+                const e = SF().rechne(p, stellung);
+                if (!e || !e.ok)
+                    return 'x';
+                /* Was die Schaltung TUT: der Strom durch jedes Bauteil, gerundet.
+                   Zwei Pläne mit demselben Abdruck verhalten sich gleich.
+        
+                   UNTER EINEM NANOAMPERE IST NICHTS. Die Rechnung setzt zwischen
+                   jeden Knoten und Masse einen winzigen Leitwert (GMIN), sonst wäre
+                   die Matrix bei einem offenen Kontakt nicht lösbar. Heraus kommen
+                   dann Ströme wie 4,184e-10 A — Rechenrauschen, kein Strom.
+                   Ohne diese Schwelle verglich der Abdruck genau dieses Rauschen:
+                   beim Treppenhausautomaten mit offenem Automaten galten VIER
+                   Leitungen als „am Stromweg beteiligt", obwohl die Leuchte in
+                   jedem Fall dunkel blieb und nirgends etwas floss. Dieselbe
+                   Schwelle benutzt `simulation.ts` selbst. */
+                const SCHWELLE = 1e-9;
+                return p.teile.map(t => {
+                    const x = e.werte[t.id];
+                    if (!x)
+                        return '-';
+                    const i = Math.abs(x.I);
+                    return i < SCHWELLE ? '0' : i.toPrecision(4);
+                }).join('|');
+            };
+            const heil = wirkung(plan);
+            if (heil === 'x')
+                continue;
+            const aufDemWeg = alle.filter(id => {
+                const ohne = { ...plan,
+                    leitungen: plan.leitungen.filter(l => String(l.id) !== id) };
+                return wirkung(ohne) !== heil;
+            });
+            /* Weder „alles" noch „nichts" ist eine Aufgabe: im ersten Fall tippt
+               man einfach alles an, im zweiten gar nichts, und beides wäre ohne
+               Nachdenken richtig.
+               Und eine EINZELNE Leitung ist auch keine: dann tippt man irgendwo
+               hin und hat mit einiger Wahrscheinlichkeit recht. Nachgemessen war
+               das bei 66 von 120 Würfelungen der Fall — die Bedingung „nicht
+               alles, nicht nichts" allein ist zu schwach. Verlangt sind mindestens
+               zwei auf dem Weg und zwei daneben; erst dann ist es eine
+               Unterscheidung. */
+            const daneben = alle.length - aufDemWeg.length;
+            if (aufDemWeg.length < 2 || daneben < 2)
+                continue;
+            /* Rand für die Griffe. Das Blatt wurde beim Bauen auf seinen Inhalt
+               geschrumpft; die Griffe sitzen zwar AUF den Leitungen, ragen aber mit
+               ihrem Radius darüber hinaus, und zwei standen halb ausserhalb des
+               Bildes. Gesehen auf einem Bildschirmfoto, nicht in einer Zahl. */
+            plan.breite = (Number(plan.breite) || 0) + 70;
+            plan.hoehe = (Number(plan.hoehe) || 0) + 70;
+            plan.teile.forEach(t => { t.x += 35; t.y += 35; });
+            plan.leitungen.forEach(l => l.punkte.forEach(pt => { pt.x += 35; pt.y += 35; }));
+            return {
+                art: 'plan-stromweg', antwortart: 'wege',
+                frage: `${v.name}\nStellungen: ${beschreibung.join(', ')}\n` +
+                    `Tippe die Leitungen an, die am Stromweg beteiligt sind.`,
+                plan, stellungen: stellung,
+                loesung: aufDemWeg.slice().sort().join(','),
+                erklaerung: `${v.wozu} Von ${alle.length} Leitungen liegen ` +
+                    `${aufDemWeg.length} auf dem Weg: schneidet man eine davon durch, ` +
+                    `ändert sich etwas. Die übrigen hängen an einem offenen Kontakt ` +
+                    `oder in einem Zweig, der nirgends hinführt — Spannung kann dort ` +
+                    `anliegen, für die Wirkung der Schaltung zählen sie nicht.`,
+                stufe: schalter.length > 1 ? 3 : 2, saat
+            };
+        }
+        return null;
+    };
+    /**
+     * Steuerstromkreis und Hauptstromkreis auseinanderhalten (Punkt 60).
+     *
+     * In der Praxis sind das zwei Blätter: der Steuerstromkreis mit Tastern,
+     * Spulen und Hilfskontakten, der Hauptstromkreis mit Schützhauptkontakten
+     * und dem Motor. Wer beides für dasselbe hält, sucht den Motorfehler in
+     * der Steuerung.
+     *
+     * Gefragt wird nach EINEM Betriebsmittel, damit die Antwort eine
+     * Entscheidung ist und keine Aufzählung. Zugeordnet wird nach dem, was das
+     * Bauteil TUT — nicht nach seinem Namen: eine Spule steuert, ein Motor
+     * arbeitet, ein Hilfskontakt meldet.
+     */
+    const kreisZuordnen = (w, saat) => {
+        if (!SF())
+            return null;
+        const STEUER = ['spule', 'schalter'];
+        for (let versuch = 0; versuch < 14; versuch++) {
+            const v = w.aus(SCHALTUNGEN);
+            const plan = planBauen(v.teile, v.draehte);
+            if (!plan)
+                continue;
+            const teile = plan.teile.filter(t => {
+                const vh = SF().verhalten(t.zeichen);
+                return vh && vh.art !== 'quelle';
+            });
+            if (teile.length < 2)
+                continue;
+            const t = w.aus(teile);
+            const vh = SF().verhalten(t.zeichen);
+            const z = Register.fachzeichen.holen(t.zeichen);
+            const steuert = STEUER.includes(String(vh.art));
+            const antwort = steuert ? 'Steuerstromkreis' : 'Hauptstromkreis';
+            return {
+                art: 'kreis-zuordnen', antwortart: 'wahl',
+                frage: `${v.name}\nWohin gehört ${t.bmk}` +
+                    (z ? ` (${z.name})` : '') + `?`,
+                plan, stellungen: {},
+                optionen: w.misch(['Steuerstromkreis', 'Hauptstromkreis']),
+                loesung: antwort,
+                erklaerung: steuert
+                    ? `${t.bmk} schaltet oder hält — es entscheidet, WANN etwas ` +
+                        `passiert, und trägt selbst keine Arbeitsleistung. Solche ` +
+                        `Betriebsmittel stehen im Steuerstromkreis.`
+                    : `${t.bmk} setzt Leistung um — hier fliesst der Strom, der die ` +
+                        `Arbeit macht. Das ist der Hauptstromkreis; die Steuerung ` +
+                        `entscheidet nur, ob er fliessen darf.`,
+                stufe: 2, saat
+            };
+        }
+        return null;
+    };
     /** Alle Arten, die es gibt. Neue tragen sich hier ein (§8). */
     const ARTEN = [
         { id: 'zeichen-name', name: 'Zeichen benennen', gruppe: 'Fachzeichen', mach: zeichenName },
@@ -32350,6 +32685,8 @@ const Elektroaufgaben = (() => {
         { id: 'plan-leitung', name: 'Fehlende Leitung', gruppe: 'Schaltungen', mach: planLeitung },
         { id: 'plan-fehler', name: 'Fehler suchen', gruppe: 'Schaltungen', mach: planFehler },
         { id: 'plan-leuchtet', name: 'Leuchtet es?', gruppe: 'Schaltungen', mach: planLeuchtet },
+        { id: 'plan-stromweg', name: 'Stromweg markieren', gruppe: 'Schaltungen', mach: planStromweg },
+        { id: 'kreis-zuordnen', name: 'Steuern oder arbeiten', gruppe: 'Schaltungen', mach: kreisZuordnen },
         { id: 'messen-wo', name: 'Richtig messen', gruppe: 'Messen', mach: messenWo }
     ];
     const artVon = (id) => ARTEN.find(a => a.id === id) || null;
@@ -32440,6 +32777,25 @@ const Elektroaufgaben = (() => {
         const roh = String(antwort ?? '').trim();
         if (!roh)
             return { richtig: false, hinweis: 'Da steht noch nichts.' };
+        /* Eine Menge von Leitungen. Verglichen wird als MENGE, nicht als Text:
+           die Reihenfolge des Antippens bedeutet nichts. Und der Hinweis nennt
+           beide Sorten Fehler getrennt — wer drei Leitungen vergessen hat, hat
+           ein anderes Missverständnis als wer drei zu viel angetippt hat. */
+        if (aufgabe.antwortart === 'wege') {
+            const menge = (x) => new Set(x.split(',').map(y => y.trim()).filter(Boolean));
+            const soll = menge(String(aufgabe.loesung));
+            const ist = menge(roh);
+            const fehlen = [...soll].filter(x => !ist.has(x)).length;
+            const zuviel = [...ist].filter(x => !soll.has(x)).length;
+            if (!fehlen && !zuviel)
+                return { richtig: true, hinweis: 'Richtig.' };
+            const teile = [];
+            if (fehlen)
+                teile.push(`${fehlen} ${fehlen === 1 ? 'Leitung fehlt' : 'Leitungen fehlen'}`);
+            if (zuviel)
+                teile.push(`${zuviel} zu viel`);
+            return { richtig: false, hinweis: teile.join(', ') + '.' };
+        }
         if (aufgabe.antwortart === 'zahl') {
             const zahl = Number(roh.replace(',', '.').replace(/\s/g, ''));
             if (!Number.isFinite(zahl))
@@ -32582,9 +32938,33 @@ const Elektroarbeitsplatz = (() => {
             bild = `<div class="ea-bild">${fz.alsSvg(a.zeichen, { farbe: 'currentColor' })}</div>`;
         }
         else if (a.plan && typeof Schaltplan !== 'undefined') {
-            bild = `<div class="ea-bild ea-plan">${Schaltplan.alsSvg(a.plan, {
-                raster: false, anschluesse: false, nummern: false
-            })}</div>`;
+            /* Beim Stromweg wird IN den Plan getippt. Die angetippten Leitungen
+               gehen als `auswahl` an denselben Zeichner, der sie auch im Editor
+               hervorhebt — keine zweite Darstellung für dieselbe Sache. */
+            const wege = a.antwortart === 'wege';
+            /* Vor dem Antworten zeigt die Hervorhebung, was ANGETIPPT wurde.
+               Danach zeigt sie, was RICHTIG gewesen wäre — sonst sähe man sein
+               eigenes Kreuz und wüsste immer noch nicht, wo der Strom fliesst.
+               Dass die Bedeutung wechselt, steht als Zeile darunter; eine
+               Hervorhebung, die zwei Dinge heissen kann, ohne es zu sagen, ist
+               schlimmer als keine. */
+            const menge = (x) => new Set(String(x ?? '').split(',').map(y => y.trim()).filter(Boolean));
+            const zeigen = !wege ? new Set()
+                : opt.beantwortet ? menge(a.loesung) : menge(opt.antwort);
+            const tippbar = wege && !opt.beantwortet;
+            const svg = Schaltplan.alsSvg(a.plan, {
+                raster: false, anschluesse: false, nummern: false,
+                ...(wege ? { auswahl: zeigen } : {}),
+                ...(tippbar ? { tippbar: true } : {})
+            });
+            bild = `<div class="ea-bild ea-plan${tippbar ? ' ea-tippbar' : ''}"` +
+                (tippbar ? ` role="group" aria-label="Leitungen antippen"` : '') +
+                `>${svg}</div>` +
+                (wege ? `<p class="ea-planhinweis">` +
+                    (opt.beantwortet
+                        ? 'Hervorgehoben: der Weg, den der Strom wirklich nimmt.'
+                        : 'Hervorgehoben: was du angetippt hast.') +
+                    `</p>` : '');
         }
         /* Die Frage kann mehrzeilig sein (Rechenaufgaben haben Gegeben/Gesucht). */
         const frage = String(a.frage).split('\n')
@@ -32609,6 +32989,24 @@ const Elektroarbeitsplatz = (() => {
                     (svg ? `<span class="ea-optionbild">${svg}</span>` : '') +
                     `<span class="ea-optiontext">${esc(o)}</span></button>`;
             }).join('') + `</div>`;
+        }
+        else if (a.antwortart === 'wege') {
+            /* Kein Eingabefeld — die Antwort steht im Plan. Hier stehen nur der
+               Zähler und der Knopf.
+               Der Zähler nennt NICHT, wie viele es sein müssen: das wäre die halbe
+               Lösung. Er sagt nur, wie viele man bisher angetippt hat, damit man
+               weiss, dass ein Tipp angekommen ist. */
+            const wieViele = String(opt.antwort ?? '')
+                .split(',').map(x => x.trim()).filter(Boolean).length;
+            antwortfeld =
+                `<div class="ea-eingabe ea-wege">` +
+                    `<span class="ea-zaehler" aria-live="polite">` +
+                    (wieViele === 1 ? '1 Leitung markiert' : `${wieViele} Leitungen markiert`) +
+                    `</span>` +
+                    (opt.beantwortet ? ''
+                        : `<button data-a="wege-leeren"${wieViele ? '' : ' disabled'}>Zurücksetzen</button>` +
+                            `<button class="prim" data-a="wege-pruefen"${wieViele ? '' : ' disabled'}>Prüfen</button>`) +
+                    `</div>`;
         }
         else {
             antwortfeld =
@@ -32638,6 +33036,32 @@ const Elektroarbeitsplatz = (() => {
             `<span class="ea-stufe" title="Schwierigkeit">${'●'.repeat(a.stufe)}` +
             `<span class="ea-stufe-aus">${'●'.repeat(3 - a.stufe)}</span></span></div>` +
             bild + frage + antwortfeld + aufloesung + `</article>`;
+    };
+    /**
+     * Die Griffe im Plan auf Fingergrösse bringen (§37, Punkt 59).
+     *
+     * Ein SVG wird auf die Breite seines Kastens verkleinert; ein Radius von
+     * neun Planeinheiten wird dabei zu vier Bildschirmpixeln. Wie stark
+     * verkleinert wird, steht erst fest, wenn das Bild im Baum hängt — CSS
+     * kann es deshalb nicht wissen, und der Zeichner beim Erzeugen auch nicht.
+     * Also wird hier gemessen und der Radius nachgestellt.
+     *
+     * `ZIEL` ist der Durchmesser in Bildschirmpixeln. 44 ist die Zahl aus §37.
+     */
+    const griffeGross = (wo) => {
+        const ZIEL = 44;
+        wo.querySelectorAll('.ea-tippbar svg').forEach(el => {
+            const svg = el;
+            const vb = (svg.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+            const breite = svg.getBoundingClientRect().width;
+            if (!breite || !vb[2])
+                return;
+            const faktor = breite / vb[2];
+            if (faktor <= 0)
+                return;
+            const r = Math.max(9, (ZIEL / 2) / faktor);
+            svg.querySelectorAll('.sp-griff').forEach(g => g.setAttribute('r', String(Math.round(r * 10) / 10)));
+        });
     };
     /* ------------------------------------------------------------------------
      * DIE ÜBUNGSFLÄCHE
@@ -32722,9 +33146,32 @@ const Elektroarbeitsplatz = (() => {
             const aktiv = band?.querySelector('.an');
             if (aktiv)
                 aktiv.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            /* Zweimal: einmal jetzt (für jedes Neuzeichnen im eingehängten Baum)
+               und einmal im nächsten Bild. Beim ERSTEN Durchgang hängt `wurzel`
+               noch nicht im Dokument — `uebung()` zeichnet, bevor `zeigeAls` das
+               Ergebnis einsetzt —, und dann ist die gemessene Breite null. */
+            griffeGross(wurzel);
+            requestAnimationFrame(() => griffeGross(wurzel));
+            /* Am Telefon ist der Tippplan breiter als das Fenster und wird
+               geschoben. Ohne auslaufende Kante sieht ein abgeschnittener
+               Schaltplan nach einem Fehler aus und nicht nach einer Einladung
+               zum Wischen (E151, E159). */
+            const tippfeld = wurzel.querySelector('.ea-plan.ea-tippbar');
+            if (tippfeld && typeof Rollrand !== 'undefined')
+                Rollrand.binde(tippfeld, { art: 'mehr' });
         };
         wurzel.addEventListener('click', e => {
-            const b = e.target.closest('[data-a],[data-wahl],[data-art]');
+            /* `.ea-art` und nicht bloss `[data-art]`.
+               ------------------------------------------------------------------
+               Die Aufgabe selbst trägt `data-art` als ANGABE — `<article
+               class="ea-aufgabe" data-art="plan-fehler">` —, die Knöpfe der
+               Artenleiste tragen es als BEFEHL. `closest('[data-art]')` sieht
+               beide gleich, und damit landete jeder Klick irgendwo in die Aufgabe
+               hinein beim Artenknopf: die Aufgabe wurde neu gewürfelt UND der
+               gewählte Übungsbereich stillschweigend auf ihre Art umgestellt.
+               Aufgefallen ist es beim Antippen einer Leitung (Punkt 59) — vorher
+               gab es in der Aufgabe nichts, worauf man klickt. */
+            const b = e.target.closest('[data-a],[data-wahl],.ea-art');
             if (!b)
                 return;
             if (b.dataset.art !== undefined) {
@@ -32748,12 +33195,43 @@ const Elektroarbeitsplatz = (() => {
                 naechste();
                 return;
             }
+            if (b.dataset.a === 'wege-leeren') {
+                antwort = '';
+                male();
+                return;
+            }
+            if (b.dataset.a === 'wege-pruefen') {
+                antworte(antwort);
+                return;
+            }
             if (b.dataset.a === 'pruefen') {
                 const f = wurzel.querySelector('.ea-antwort');
                 if (f)
                     antworte(f.value);
                 return;
             }
+        });
+        /* Tippen auf eine Leitung im Plan (Punkt 59).
+           Eigener Zuhörer, weil der obere nur auf `[data-a]`, `[data-wahl]` und
+           `[data-art]` hört — eine Leitung trägt keines davon, sondern die
+           Kennung, die auch der Editor benutzt. */
+        wurzel.addEventListener('click', e => {
+            if (!jetzt || jetzt.antwortart !== 'wege' || beantwortet)
+                return;
+            const feld = e.target.closest('.ea-tippbar');
+            if (!feld)
+                return;
+            const griff = e.target.closest('.sp-griff');
+            const id = griff ? griff.dataset.id : '';
+            if (!id)
+                return;
+            const bisher = new Set(antwort.split(',').map(x => x.trim()).filter(Boolean));
+            if (bisher.has(id))
+                bisher.delete(id);
+            else
+                bisher.add(id);
+            antwort = [...bisher].sort().join(',');
+            male();
         });
         wurzel.addEventListener('keydown', e => {
             if (e.key !== 'Enter')

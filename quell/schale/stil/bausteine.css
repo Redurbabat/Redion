@@ -3741,6 +3741,17 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-buehne{flex:1; overflow-y:auto; padding:20px; display:flex;
   justify-content:center; align-items:flex-start}
 .ea-aufgabe{width:min(560px, 100%); display:flex; flex-direction:column; gap:12px}
+/* Eine Tippaufgabe braucht mehr Platz als eine Frage mit vier Knöpfen.
+   -------------------------------------------------------------------
+   560 px Spaltenbreite bedeuten für einen Plan von 1700 Einheiten eine
+   Verkleinerung auf 0,46. Ein Griff, der nach §37 44 px messen muss, ist
+   dann 96 Einheiten breit — grösser als ein Bauteilsymbol, und er deckt die
+   Zeichnung zu, die man doch gerade lesen soll. Auf einem Bildschirmfoto
+   war davon nichts mehr zu erkennen (§55).
+   Deshalb: bei `plan-stromweg` die Spalte auf die volle Fensterbreite. Die
+   Verkleinerung geht damit auf gut 0,8, der Griff auf rund 55 Einheiten, und
+   der Plan bleibt lesbar. */
+.ea-aufgabe[data-art="plan-stromweg"]{width:min(1100px, 100%)}
 .ea-kopfzeile{display:flex; align-items:center; justify-content:space-between;
   font-size:11px; color:var(--text-faint)}
 .ea-artname{text-transform:uppercase; letter-spacing:.06em}
@@ -3754,6 +3765,9 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-bild svg{max-width:100%; height:auto}
 .ea-bild:not(.ea-plan) svg{width:96px; height:96px}
 .ea-plan svg{max-height:260px}
+/* Beim Antippen gilt die Höhenschranke nicht: der Plan soll so gross sein,
+   wie die Spalte hergibt, sonst nützt die breitere Spalte nichts. */
+.ea-plan.ea-tippbar svg{max-height:min(560px, 52vh); width:100%}
 
 .ea-frage{margin:0; font-size:17px; line-height:1.45; font-weight:600;
   white-space:pre-wrap}
@@ -3795,6 +3809,56 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   border-radius:10px; background:var(--bg-input); color:var(--text);
   font-size:16px; font-variant-numeric:tabular-nums}
 .ea-einheit{color:var(--text-dim); font-size:14px; min-width:3em}
+
+/* ---- Den Stromweg im Plan antippen (Punkt 59, E193) ---------------------
+   Getippt wird auf einen PUNKT je Leitung, nicht auf die Leitung selbst.
+   Der Grund steht in `schaltplan.ts` bei `sp-griff`: zwei Leitungsbahnen
+   liegen am Bildschirm gemessene 7 px auseinander, und ein Fangstrich mit
+   den 44 px aus §37 würde die Nachbarn mitfangen.
+
+   `vector-effect: non-scaling-stroke` löst den Rand vom Massstab des Plans;
+   die Fläche dahinter kommt aus dem Radius mal Verkleinerung. Damit der
+   Punkt in JEDER Plangrösse gross genug bleibt, setzt `arbeitsplatz.ts` den
+   Radius nach der gemessenen Verkleinerung — CSS allein kann das nicht,
+   weil es den viewBox-Faktor nicht kennt. */
+/* Ein RING, keine Scheibe. Die gefüllte Scheibe deckte die Leitung und das
+   Bauteil darunter zu — und die Zeichnung zu lesen ist die ganze Aufgabe.
+   Der Ring lässt sie durchscheinen und ist trotzdem eindeutig zu sehen. */
+.ea-tippbar .sp-griff{cursor:pointer; pointer-events:all;
+  fill:color-mix(in srgb, var(--bg-card) 55%, transparent);
+  stroke:var(--accent); stroke-width:2; vector-effect:non-scaling-stroke}
+.ea-tippbar .sp-griff:hover{fill:color-mix(in srgb, var(--accent) 25%, transparent)}
+/* Gewählt: gefüllt UND dicker umrandet. Zwei Merkmale, nicht nur Farbe (§38). */
+.ea-tippbar .sp-griff.sp-gewaehlt{
+  fill:color-mix(in srgb, var(--accent) 45%, transparent);
+  stroke:var(--accent); stroke-width:4}
+.ea-tippbar .sp-leitung,
+.ea-tippbar .sp-fluss,
+.ea-tippbar .sp-teil,
+.ea-tippbar .sp-knoten{pointer-events:none}
+.ea-tippbar svg{touch-action:manipulation}
+/* Ausserhalb einer Tippaufgabe gibt es die Griffe gar nicht — aber falls
+   doch einmal, sollen sie nichts abfangen. */
+.sp-griff{pointer-events:none}
+.ea-planhinweis{margin:6px 0 0; font-size:12.5px; color:var(--text-dim)}
+.ea-wege{flex-wrap:wrap; gap:10px}
+.ea-zaehler{flex:1; min-width:9em; font-size:14px; color:var(--text-dim);
+  font-variant-numeric:tabular-nums}
+
+/* Knöpfe IM Aufgabenfeld sahen nach gar nichts aus.
+   -----------------------------------------------------------------------
+   Die Knopfgestaltung stand nur unter `.ea-fuss button` — der Fussleiste.
+   Der Prüfen-Knopf einer Zahlenaufgabe steht aber in `.ea-eingabe`, und dort
+   griff keine einzige Regel: kein Rand, kein Grund, und `class="prim"` war
+   wirkungslos, weil auch die Vorrangregel unter `.ea-fuss` hing. Auf dem
+   Bildschirm stand da blosser Text neben dem Eingabefeld. Aufgefallen ist es
+   beim Bild zur Tippaufgabe (§55); betroffen war es seit E189. */
+.ea-eingabe button{padding:9px 16px; border:1px solid var(--line);
+  border-radius:9px; background:var(--bg); color:var(--text); cursor:pointer;
+  font-size:13px; min-height:44px}
+.ea-eingabe button.prim{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent); font-weight:600}
+.ea-eingabe button:disabled{opacity:.45; cursor:default}
 
 .ea-aufloesung{padding:12px 14px; border-radius:10px; display:flex;
   flex-direction:column; gap:7px}
@@ -3893,6 +3957,20 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .ea-antwort{min-height:48px}
   .ea-overlay .ea-fenster{width:100vw; height:100vh; max-width:none;
     border-radius:0}
+
+  /* Der Plan zum Antippen wird am Telefon NICHT kleiner, sondern SCHIEBBAR.
+     -------------------------------------------------------------------
+     In 340 px Breite ist ein Plan mit sieben Leitungen so klein, dass die
+     Griffe — die nach §37 44 px messen müssen — die ganze Zeichnung
+     zudecken. Auf dem Bildschirmfoto war vom Schaltplan nichts mehr zu
+     sehen, und genau ihn soll man lesen.
+     Statt beides zu verkleinern, bleibt der Plan gross und man schiebt ihn
+     seitwärts — wie jeder PDF-Betrachter es auch macht. Die auslaufende
+     Kante zeigt, dass es weitergeht (`Rollrand`, E141/E151/E159). */
+  .ea-plan.ea-tippbar{overflow-x:auto; justify-content:flex-start;
+    -webkit-overflow-scrolling:touch}
+  .ea-plan.ea-tippbar svg{width:auto; min-width:640px; height:270px;
+    max-height:none; max-width:none; flex:0 0 auto}
 }
 
 /* Das gesuchte Bauteil (Punkt 80). Ein Ring, kein Farbwechsel: die Zeichnung

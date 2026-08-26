@@ -106,9 +106,33 @@ const Elektroarbeitsplatz = (() => {
             bild = `<div class="ea-bild">${fz.alsSvg(a.zeichen, { farbe: 'currentColor' })}</div>`;
         }
         else if (a.plan && typeof Schaltplan !== 'undefined') {
-            bild = `<div class="ea-bild ea-plan">${Schaltplan.alsSvg(a.plan, {
-                raster: false, anschluesse: false, nummern: false
-            })}</div>`;
+            /* Beim Stromweg wird IN den Plan getippt. Die angetippten Leitungen
+               gehen als `auswahl` an denselben Zeichner, der sie auch im Editor
+               hervorhebt — keine zweite Darstellung für dieselbe Sache. */
+            const wege = a.antwortart === 'wege';
+            /* Vor dem Antworten zeigt die Hervorhebung, was ANGETIPPT wurde.
+               Danach zeigt sie, was RICHTIG gewesen wäre — sonst sähe man sein
+               eigenes Kreuz und wüsste immer noch nicht, wo der Strom fliesst.
+               Dass die Bedeutung wechselt, steht als Zeile darunter; eine
+               Hervorhebung, die zwei Dinge heissen kann, ohne es zu sagen, ist
+               schlimmer als keine. */
+            const menge = (x) => new Set(String(x ?? '').split(',').map(y => y.trim()).filter(Boolean));
+            const zeigen = !wege ? new Set()
+                : opt.beantwortet ? menge(a.loesung) : menge(opt.antwort);
+            const tippbar = wege && !opt.beantwortet;
+            const svg = Schaltplan.alsSvg(a.plan, {
+                raster: false, anschluesse: false, nummern: false,
+                ...(wege ? { auswahl: zeigen } : {}),
+                ...(tippbar ? { tippbar: true } : {})
+            });
+            bild = `<div class="ea-bild ea-plan${tippbar ? ' ea-tippbar' : ''}"` +
+                (tippbar ? ` role="group" aria-label="Leitungen antippen"` : '') +
+                `>${svg}</div>` +
+                (wege ? `<p class="ea-planhinweis">` +
+                    (opt.beantwortet
+                        ? 'Hervorgehoben: der Weg, den der Strom wirklich nimmt.'
+                        : 'Hervorgehoben: was du angetippt hast.') +
+                    `</p>` : '');
         }
         /* Die Frage kann mehrzeilig sein (Rechenaufgaben haben Gegeben/Gesucht). */
         const frage = String(a.frage).split('\n')
@@ -133,6 +157,24 @@ const Elektroarbeitsplatz = (() => {
                     (svg ? `<span class="ea-optionbild">${svg}</span>` : '') +
                     `<span class="ea-optiontext">${esc(o)}</span></button>`;
             }).join('') + `</div>`;
+        }
+        else if (a.antwortart === 'wege') {
+            /* Kein Eingabefeld — die Antwort steht im Plan. Hier stehen nur der
+               Zähler und der Knopf.
+               Der Zähler nennt NICHT, wie viele es sein müssen: das wäre die halbe
+               Lösung. Er sagt nur, wie viele man bisher angetippt hat, damit man
+               weiss, dass ein Tipp angekommen ist. */
+            const wieViele = String(opt.antwort ?? '')
+                .split(',').map(x => x.trim()).filter(Boolean).length;
+            antwortfeld =
+                `<div class="ea-eingabe ea-wege">` +
+                    `<span class="ea-zaehler" aria-live="polite">` +
+                    (wieViele === 1 ? '1 Leitung markiert' : `${wieViele} Leitungen markiert`) +
+                    `</span>` +
+                    (opt.beantwortet ? ''
+                        : `<button data-a="wege-leeren"${wieViele ? '' : ' disabled'}>Zurücksetzen</button>` +
+                            `<button class="prim" data-a="wege-pruefen"${wieViele ? '' : ' disabled'}>Prüfen</button>`) +
+                    `</div>`;
         }
         else {
             antwortfeld =
@@ -162,6 +204,32 @@ const Elektroarbeitsplatz = (() => {
             `<span class="ea-stufe" title="Schwierigkeit">${'●'.repeat(a.stufe)}` +
             `<span class="ea-stufe-aus">${'●'.repeat(3 - a.stufe)}</span></span></div>` +
             bild + frage + antwortfeld + aufloesung + `</article>`;
+    };
+    /**
+     * Die Griffe im Plan auf Fingergrösse bringen (§37, Punkt 59).
+     *
+     * Ein SVG wird auf die Breite seines Kastens verkleinert; ein Radius von
+     * neun Planeinheiten wird dabei zu vier Bildschirmpixeln. Wie stark
+     * verkleinert wird, steht erst fest, wenn das Bild im Baum hängt — CSS
+     * kann es deshalb nicht wissen, und der Zeichner beim Erzeugen auch nicht.
+     * Also wird hier gemessen und der Radius nachgestellt.
+     *
+     * `ZIEL` ist der Durchmesser in Bildschirmpixeln. 44 ist die Zahl aus §37.
+     */
+    const griffeGross = (wo) => {
+        const ZIEL = 44;
+        wo.querySelectorAll('.ea-tippbar svg').forEach(el => {
+            const svg = el;
+            const vb = (svg.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+            const breite = svg.getBoundingClientRect().width;
+            if (!breite || !vb[2])
+                return;
+            const faktor = breite / vb[2];
+            if (faktor <= 0)
+                return;
+            const r = Math.max(9, (ZIEL / 2) / faktor);
+            svg.querySelectorAll('.sp-griff').forEach(g => g.setAttribute('r', String(Math.round(r * 10) / 10)));
+        });
     };
     /* ------------------------------------------------------------------------
      * DIE ÜBUNGSFLÄCHE
@@ -246,9 +314,32 @@ const Elektroarbeitsplatz = (() => {
             const aktiv = band?.querySelector('.an');
             if (aktiv)
                 aktiv.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            /* Zweimal: einmal jetzt (für jedes Neuzeichnen im eingehängten Baum)
+               und einmal im nächsten Bild. Beim ERSTEN Durchgang hängt `wurzel`
+               noch nicht im Dokument — `uebung()` zeichnet, bevor `zeigeAls` das
+               Ergebnis einsetzt —, und dann ist die gemessene Breite null. */
+            griffeGross(wurzel);
+            requestAnimationFrame(() => griffeGross(wurzel));
+            /* Am Telefon ist der Tippplan breiter als das Fenster und wird
+               geschoben. Ohne auslaufende Kante sieht ein abgeschnittener
+               Schaltplan nach einem Fehler aus und nicht nach einer Einladung
+               zum Wischen (E151, E159). */
+            const tippfeld = wurzel.querySelector('.ea-plan.ea-tippbar');
+            if (tippfeld && typeof Rollrand !== 'undefined')
+                Rollrand.binde(tippfeld, { art: 'mehr' });
         };
         wurzel.addEventListener('click', e => {
-            const b = e.target.closest('[data-a],[data-wahl],[data-art]');
+            /* `.ea-art` und nicht bloss `[data-art]`.
+               ------------------------------------------------------------------
+               Die Aufgabe selbst trägt `data-art` als ANGABE — `<article
+               class="ea-aufgabe" data-art="plan-fehler">` —, die Knöpfe der
+               Artenleiste tragen es als BEFEHL. `closest('[data-art]')` sieht
+               beide gleich, und damit landete jeder Klick irgendwo in die Aufgabe
+               hinein beim Artenknopf: die Aufgabe wurde neu gewürfelt UND der
+               gewählte Übungsbereich stillschweigend auf ihre Art umgestellt.
+               Aufgefallen ist es beim Antippen einer Leitung (Punkt 59) — vorher
+               gab es in der Aufgabe nichts, worauf man klickt. */
+            const b = e.target.closest('[data-a],[data-wahl],.ea-art');
             if (!b)
                 return;
             if (b.dataset.art !== undefined) {
@@ -272,12 +363,43 @@ const Elektroarbeitsplatz = (() => {
                 naechste();
                 return;
             }
+            if (b.dataset.a === 'wege-leeren') {
+                antwort = '';
+                male();
+                return;
+            }
+            if (b.dataset.a === 'wege-pruefen') {
+                antworte(antwort);
+                return;
+            }
             if (b.dataset.a === 'pruefen') {
                 const f = wurzel.querySelector('.ea-antwort');
                 if (f)
                     antworte(f.value);
                 return;
             }
+        });
+        /* Tippen auf eine Leitung im Plan (Punkt 59).
+           Eigener Zuhörer, weil der obere nur auf `[data-a]`, `[data-wahl]` und
+           `[data-art]` hört — eine Leitung trägt keines davon, sondern die
+           Kennung, die auch der Editor benutzt. */
+        wurzel.addEventListener('click', e => {
+            if (!jetzt || jetzt.antwortart !== 'wege' || beantwortet)
+                return;
+            const feld = e.target.closest('.ea-tippbar');
+            if (!feld)
+                return;
+            const griff = e.target.closest('.sp-griff');
+            const id = griff ? griff.dataset.id : '';
+            if (!id)
+                return;
+            const bisher = new Set(antwort.split(',').map(x => x.trim()).filter(Boolean));
+            if (bisher.has(id))
+                bisher.delete(id);
+            else
+                bisher.add(id);
+            antwort = [...bisher].sort().join(',');
+            male();
         });
         wurzel.addEventListener('keydown', e => {
             if (e.key !== 'Enter')

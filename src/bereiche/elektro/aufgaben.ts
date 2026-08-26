@@ -87,7 +87,13 @@ const Elektroaufgaben = (() => {
   /* ------------------------------------------------------------------------
    * WAS EINE AUFGABE IST
    * ----------------------------------------------------------------------*/
-  type Antwortart = 'wahl' | 'text' | 'zahl' | 'zeichnen' | 'zeigen';
+  /**
+ * `wege` ist die einzige Antwortart, bei der IN den Plan getippt wird: die
+ * Antwort ist eine MENGE von Leitungskennungen, aufsteigend sortiert und mit
+ * Komma verbunden. Sortiert, weil die Reihenfolge des Antippens keine
+ * Bedeutung hat und ein Vergleich sonst von ihr abhinge.
+ */
+type Antwortart = 'wahl' | 'text' | 'zahl' | 'zeichnen' | 'zeigen' | 'wege';
 
   type Aufgabe = {
     /** Woher sie kommt — für den Prüfungsmodus und die Statistik. */
@@ -691,6 +697,20 @@ const Elektroaufgaben = (() => {
       wozu: 'Zwei Leuchten parallel — jede bekommt die volle Spannung.', stufe: 2,
       teile: [['wechselspannung', 'G1'], ['lampe', 'E1'], ['lampe', 'E2']],
       draehte: [[0, 'L', 1, 'X1'], [0, 'L', 2, 'X1'], [1, 'X2', 0, 'N'], [2, 'X2', 0, 'N']] },
+    /* Zwei Zweige, jeder mit eigenem Schalter. Der Fall, an dem sich zeigt,
+       ob jemand einen Plan liest oder nur die Umrisse erkennt: bei einem
+       offenen und einem geschlossenen Schalter ist der halbe Plan ohne
+       Wirkung, und man sieht es ihm nicht an.
+       Dazugekommen, weil `plan-stromweg` sonst nur zwei Schaltungen ergab:
+       fast alle anderen sind eine einzige Reihe, und in einer Reihe liegt
+       entweder jede Leitung auf dem Weg oder keine. */
+    { name: 'Zwei Leuchten, je ein eigener Schalter',
+      wozu: 'Zwei Zweige nebeneinander — jeder Schalter bedient nur seinen.',
+      stufe: 2,
+      teile: [['wechselspannung', 'G1'], ['ch-schema0', 'S1'], ['lampe', 'E1'],
+              ['ch-schema0', 'S2'], ['lampe', 'E2']],
+      draehte: [[0, 'L', 1, '3'], [1, '4', 2, 'X1'], [2, 'X2', 0, 'N'],
+                [0, 'L', 3, '3'], [3, '4', 4, 'X1'], [4, 'X2', 0, 'N']] },
     { name: 'Wechselschaltung (Schema 3)',
       wozu: 'Eine Leuchte von zwei Stellen schalten.', stufe: 2,
       teile: [['wechselspannung', 'G1'], ['ch-schema3', 'S1'], ['ch-schema3', 'S2'],
@@ -1436,6 +1456,183 @@ const Elektroaufgaben = (() => {
     return null;
   };
 
+  /**
+   * Den Stromweg selbst markieren (Punkt 59).
+   *
+   * Die einzige Aufgabenart, bei der man IN den Plan tippt statt eine
+   * Möglichkeit anzukreuzen. Und die einzige, bei der Raten nichts bringt:
+   * bei vier Möglichkeiten trifft man mit einem Viertel Wahrscheinlichkeit,
+   * bei acht Leitungen mit einem Zweihundertsechsundfünfzigstel.
+   *
+   * WIE DIE LÖSUNG ENTSTEHT — und warum nicht so, wie zuerst gedacht.
+   *
+   * Der erste Bau las `netzStrom` über `leitungNetz` ab, also genau die
+   * Zahlen, mit denen der Schaltplan-Block die Striche wandern lässt (E187).
+   * Nachgemessen kam bei ELF von zwölf Schaltungen „alles oder nichts"
+   * heraus, und übrig blieb eine einzige Schaltung — dieselbe Zeichnung in
+   * jeder Aufgabe.
+   *
+   * Der Grund steht in `simulation.ts`: `netzStrom[netz]` ist der GRÖSSTE
+   * Strom irgendeines Bauteils, das dieses Netz berührt, nicht der Strom
+   * durch eine bestimmte Leitung. Ein toter Abzweig, der mit einem Ende an
+   * einem stromführenden Knoten hängt, liegt im selben Netz und liest
+   * denselben Wert.
+   *
+   * Und der Strom durch eine EINZELNE Leitung ist gar nicht bestimmt: zwei
+   * ideale Leitungen zwischen denselben zwei Knoten teilen sich den Strom in
+   * einem Verhältnis, das aus den Knotenspannungen nicht folgt. Das ist
+   * Physik und kein Mangel der Rechnung.
+   *
+   * Bestimmt ist dagegen, ob eine Leitung AUF dem Weg liegt: schneide sie
+   * durch, und sieh nach, ob sich etwas ändert. Genau das meint ein
+   * Elektriker mit Stromweg, und genau das rechnet diese Funktion — ein
+   * Durchgang je Leitung, bei höchstens zehn Leitungen keine Frage von
+   * Rechenzeit.
+   */
+  const planStromweg: Macher = (w, saat) => {
+    if (typeof Schaltplan === 'undefined' || !SF()) return null;
+    for (let versuch = 0; versuch < 14; versuch++) {
+      const v = w.aus(SCHALTUNGEN);
+      const plan = planBauen(v.teile, v.draehte);
+      if (!plan) continue;
+      const alle = (plan.leitungen as any[]).map(l => String(l.id));
+      /* Unter drei Leitungen ist die Aufgabe zu klein, über zehn wird das
+         Antippen zur Fleissarbeit. */
+      if (alle.length < 3 || alle.length > 10) continue;
+
+      const schalter = (plan.teile as any[]).filter(t => {
+        const vh = SF()!.verhalten(t.zeichen);
+        return vh && vh.art === 'schalter' && !vh.folgtSpule;
+      });
+      const stellung: Record<string, number> = {};
+      const beschreibung: string[] = [];
+      schalter.forEach(t => {
+        const st = SF()!.stellungenVon(t.zeichen);
+        const nr = w.bis(st.length);
+        stellung[t.id] = nr;
+        beschreibung.push(`${t.bmk}: ${st[nr]!.name}`);
+      });
+
+      const wirkung = (p: any): string => {
+        const e = SF()!.rechne(p, stellung);
+        if (!e || !e.ok) return 'x';
+        /* Was die Schaltung TUT: der Strom durch jedes Bauteil, gerundet.
+           Zwei Pläne mit demselben Abdruck verhalten sich gleich.
+
+           UNTER EINEM NANOAMPERE IST NICHTS. Die Rechnung setzt zwischen
+           jeden Knoten und Masse einen winzigen Leitwert (GMIN), sonst wäre
+           die Matrix bei einem offenen Kontakt nicht lösbar. Heraus kommen
+           dann Ströme wie 4,184e-10 A — Rechenrauschen, kein Strom.
+           Ohne diese Schwelle verglich der Abdruck genau dieses Rauschen:
+           beim Treppenhausautomaten mit offenem Automaten galten VIER
+           Leitungen als „am Stromweg beteiligt", obwohl die Leuchte in
+           jedem Fall dunkel blieb und nirgends etwas floss. Dieselbe
+           Schwelle benutzt `simulation.ts` selbst. */
+        const SCHWELLE = 1e-9;
+        return (p.teile as any[]).map(t => {
+          const x = e.werte[t.id];
+          if (!x) return '-';
+          const i = Math.abs(x.I);
+          return i < SCHWELLE ? '0' : i.toPrecision(4);
+        }).join('|');
+      };
+
+      const heil = wirkung(plan);
+      if (heil === 'x') continue;
+      const aufDemWeg = alle.filter(id => {
+        const ohne = { ...plan,
+          leitungen: (plan.leitungen as any[]).filter(l => String(l.id) !== id) };
+        return wirkung(ohne) !== heil;
+      });
+      /* Weder „alles" noch „nichts" ist eine Aufgabe: im ersten Fall tippt
+         man einfach alles an, im zweiten gar nichts, und beides wäre ohne
+         Nachdenken richtig.
+         Und eine EINZELNE Leitung ist auch keine: dann tippt man irgendwo
+         hin und hat mit einiger Wahrscheinlichkeit recht. Nachgemessen war
+         das bei 66 von 120 Würfelungen der Fall — die Bedingung „nicht
+         alles, nicht nichts" allein ist zu schwach. Verlangt sind mindestens
+         zwei auf dem Weg und zwei daneben; erst dann ist es eine
+         Unterscheidung. */
+      const daneben = alle.length - aufDemWeg.length;
+      if (aufDemWeg.length < 2 || daneben < 2) continue;
+
+      /* Rand für die Griffe. Das Blatt wurde beim Bauen auf seinen Inhalt
+         geschrumpft; die Griffe sitzen zwar AUF den Leitungen, ragen aber mit
+         ihrem Radius darüber hinaus, und zwei standen halb ausserhalb des
+         Bildes. Gesehen auf einem Bildschirmfoto, nicht in einer Zahl. */
+      plan.breite = (Number(plan.breite) || 0) + 70;
+      plan.hoehe = (Number(plan.hoehe) || 0) + 70;
+      (plan.teile as any[]).forEach(t => { t.x += 35; t.y += 35; });
+      (plan.leitungen as any[]).forEach(l =>
+        (l.punkte as any[]).forEach(pt => { pt.x += 35; pt.y += 35; }));
+
+      return {
+        art: 'plan-stromweg', antwortart: 'wege',
+        frage: `${v.name}\nStellungen: ${beschreibung.join(', ')}\n` +
+          `Tippe die Leitungen an, die am Stromweg beteiligt sind.`,
+        plan, stellungen: stellung,
+        loesung: aufDemWeg.slice().sort().join(','),
+        erklaerung: `${v.wozu} Von ${alle.length} Leitungen liegen ` +
+          `${aufDemWeg.length} auf dem Weg: schneidet man eine davon durch, ` +
+          `ändert sich etwas. Die übrigen hängen an einem offenen Kontakt ` +
+          `oder in einem Zweig, der nirgends hinführt — Spannung kann dort ` +
+          `anliegen, für die Wirkung der Schaltung zählen sie nicht.`,
+        stufe: schalter.length > 1 ? 3 : 2, saat
+      };
+    }
+    return null;
+  };
+
+  /**
+   * Steuerstromkreis und Hauptstromkreis auseinanderhalten (Punkt 60).
+   *
+   * In der Praxis sind das zwei Blätter: der Steuerstromkreis mit Tastern,
+   * Spulen und Hilfskontakten, der Hauptstromkreis mit Schützhauptkontakten
+   * und dem Motor. Wer beides für dasselbe hält, sucht den Motorfehler in
+   * der Steuerung.
+   *
+   * Gefragt wird nach EINEM Betriebsmittel, damit die Antwort eine
+   * Entscheidung ist und keine Aufzählung. Zugeordnet wird nach dem, was das
+   * Bauteil TUT — nicht nach seinem Namen: eine Spule steuert, ein Motor
+   * arbeitet, ein Hilfskontakt meldet.
+   */
+  const kreisZuordnen: Macher = (w, saat) => {
+    if (!SF()) return null;
+    const STEUER = ['spule', 'schalter'];
+    for (let versuch = 0; versuch < 14; versuch++) {
+      const v = w.aus(SCHALTUNGEN);
+      const plan = planBauen(v.teile, v.draehte);
+      if (!plan) continue;
+      const teile = (plan.teile as any[]).filter(t => {
+        const vh = SF()!.verhalten(t.zeichen);
+        return vh && vh.art !== 'quelle';
+      });
+      if (teile.length < 2) continue;
+      const t = w.aus(teile);
+      const vh = SF()!.verhalten(t.zeichen)!;
+      const z = Register.fachzeichen.holen(t.zeichen);
+      const steuert = STEUER.includes(String(vh.art));
+      const antwort = steuert ? 'Steuerstromkreis' : 'Hauptstromkreis';
+      return {
+        art: 'kreis-zuordnen', antwortart: 'wahl',
+        frage: `${v.name}\nWohin gehört ${t.bmk}` +
+          (z ? ` (${z.name})` : '') + `?`,
+        plan, stellungen: {},
+        optionen: w.misch(['Steuerstromkreis', 'Hauptstromkreis']),
+        loesung: antwort,
+        erklaerung: steuert
+          ? `${t.bmk} schaltet oder hält — es entscheidet, WANN etwas ` +
+            `passiert, und trägt selbst keine Arbeitsleistung. Solche ` +
+            `Betriebsmittel stehen im Steuerstromkreis.`
+          : `${t.bmk} setzt Leistung um — hier fliesst der Strom, der die ` +
+            `Arbeit macht. Das ist der Hauptstromkreis; die Steuerung ` +
+            `entscheidet nur, ob er fliessen darf.`,
+        stufe: 2, saat
+      };
+    }
+    return null;
+  };
+
   /** Alle Arten, die es gibt. Neue tragen sich hier ein (§8). */
   const ARTEN: Array<{ id: string; name: string; gruppe: string; mach: Macher }> = [
     { id: 'zeichen-name',   name: 'Zeichen benennen',      gruppe: 'Fachzeichen', mach: zeichenName },
@@ -1451,6 +1648,8 @@ const Elektroaufgaben = (() => {
     { id: 'plan-leitung',   name: 'Fehlende Leitung',      gruppe: 'Schaltungen', mach: planLeitung },
     { id: 'plan-fehler',    name: 'Fehler suchen',         gruppe: 'Schaltungen', mach: planFehler },
     { id: 'plan-leuchtet',  name: 'Leuchtet es?',          gruppe: 'Schaltungen', mach: planLeuchtet },
+    { id: 'plan-stromweg',  name: 'Stromweg markieren',   gruppe: 'Schaltungen', mach: planStromweg },
+    { id: 'kreis-zuordnen', name: 'Steuern oder arbeiten', gruppe: 'Schaltungen', mach: kreisZuordnen },
     { id: 'messen-wo',      name: 'Richtig messen',        gruppe: 'Messen',      mach: messenWo }
   ];
 
@@ -1540,6 +1739,24 @@ const Elektroaufgaben = (() => {
     if (!aufgabe) return { richtig: false, hinweis: 'Keine Aufgabe.' };
     const roh = String(antwort ?? '').trim();
     if (!roh) return { richtig: false, hinweis: 'Da steht noch nichts.' };
+
+    /* Eine Menge von Leitungen. Verglichen wird als MENGE, nicht als Text:
+       die Reihenfolge des Antippens bedeutet nichts. Und der Hinweis nennt
+       beide Sorten Fehler getrennt — wer drei Leitungen vergessen hat, hat
+       ein anderes Missverständnis als wer drei zu viel angetippt hat. */
+    if (aufgabe.antwortart === 'wege') {
+      const menge = (x: string) =>
+        new Set(x.split(',').map(y => y.trim()).filter(Boolean));
+      const soll = menge(String(aufgabe.loesung));
+      const ist = menge(roh);
+      const fehlen = [...soll].filter(x => !ist.has(x)).length;
+      const zuviel = [...ist].filter(x => !soll.has(x)).length;
+      if (!fehlen && !zuviel) return { richtig: true, hinweis: 'Richtig.' };
+      const teile: string[] = [];
+      if (fehlen) teile.push(`${fehlen} ${fehlen === 1 ? 'Leitung fehlt' : 'Leitungen fehlen'}`);
+      if (zuviel) teile.push(`${zuviel} zu viel`);
+      return { richtig: false, hinweis: teile.join(', ') + '.' };
+    }
 
     if (aufgabe.antwortart === 'zahl') {
       const zahl = Number(roh.replace(',', '.').replace(/\s/g, ''));

@@ -446,6 +446,70 @@ const Schaltplan = (() => {
         });
         /* Verbindungspunkte (Punkt 15) */
         verbindungspunkte(plan).forEach(p => teile.push(`<circle class="sp-knoten" cx="${p.x}" cy="${p.y}" r="4" fill="currentColor"/>`));
+        /* Griffe zum Antippen (Punkt 59) — je Leitung EIN Punkt auf ihrer Mitte,
+           nicht ein breiter Strich über ihrer ganzen Länge.
+           ------------------------------------------------------------------
+           Der Strich war der erste Versuch, und er kann nicht funktionieren:
+           zwei Leitungsbahnen liegen 16 Einheiten auseinander, am Bildschirm
+           sind das gemessene 7 px. Ein Fangstrich, der §37 mit seinen 44 px
+           genügt, würde sechs Nachbarn mitfangen — und dann tippt man auf eine
+           Leitung und markiert eine andere. Das ist schlimmer als ein zu
+           kleines Ziel, denn es sieht nicht nach einem Fehler aus.
+           Die Punkte stehen dagegen weit auseinander, sie sind SICHTBAR (man
+           weiss also, wohin zu tippen ist), und ihre Grösse hängt über
+           `vector-effect` nicht am Massstab des Plans. */
+        if (opt.tippbar) {
+            const gesetzt = [];
+            plan.leitungen.forEach(l => {
+                if (!sichtbar(l.ebene))
+                    return;
+                const pkte = l.punkte || [];
+                if (pkte.length < 2)
+                    return;
+                /* Die LÄNGSTE Teilstrecke — nicht der Mittelpunkt der Punktliste.
+                   Bei einer Leitung, die kurz absteigt und dann weit quer läuft,
+                   sässe der Griff sonst in der Ecke. */
+                let best = 0, laenge = -1;
+                for (let i = 0; i + 1 < pkte.length; i++) {
+                    const a = pkte[i], b = pkte[i + 1];
+                    const d2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+                    if (d2 > laenge) {
+                        laenge = d2;
+                        best = i;
+                    }
+                }
+                const a = pkte[best], b = pkte[best + 1];
+                /* Und jetzt eine Stelle AUF dieser Strecke suchen, die weit genug
+                   von allen bisherigen Griffen weg ist. Zuerst sass jeder auf der
+                   Mitte, und nachgemessen lagen dann drei Griffe auf 7 px beisammen
+                   — man tippt auf den einen und trifft den anderen. Das ist
+                   schlimmer als ein zu kleines Ziel, weil es nicht nach einem Fehler
+                   aussieht.
+                   Probiert werden elf Stellen von einem Ende zum anderen, und
+                   genommen wird die mit dem grössten Abstand zum nächsten Nachbarn. */
+                let wahlX = (a.x + b.x) / 2, wahlY = (a.y + b.y) / 2, weiteste = -1;
+                for (let k = 0; k <= 10; k++) {
+                    const t = 0.12 + k * 0.076; /* 0,12 bis 0,88 — nie ganz am Ende */
+                    const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t;
+                    let naechster = Infinity;
+                    gesetzt.forEach(g => {
+                        const d = Math.hypot(g.x - x, g.y - y);
+                        if (d < naechster)
+                            naechster = d;
+                    });
+                    if (naechster > weiteste) {
+                        weiteste = naechster;
+                        wahlX = x;
+                        wahlY = y;
+                    }
+                }
+                gesetzt.push({ x: wahlX, y: wahlY });
+                const gewaehlt = opt.auswahl && opt.auswahl.has(l.id);
+                teile.push(`<circle class="sp-griff${gewaehlt ? ' sp-gewaehlt' : ''}" ` +
+                    `data-id="${esc(l.id)}" cx="${Math.round(wahlX)}" cy="${Math.round(wahlY)}" ` +
+                    `r="9"><title>Leitung antippen</title></circle>`);
+            });
+        }
         /* Symbole */
         plan.teile.forEach(t => {
             if (!sichtbar(t.ebene))

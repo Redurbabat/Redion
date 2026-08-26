@@ -106,6 +106,7 @@ const proben = await seite.evaluate(() => {
   const raus: Record<string, any> = {};
   for (const art of Elektroaufgaben.ARTEN) {
     const maengel: string[] = [];
+    const anzahlen = new Set<number>();
     let erzeugt = 0;
     for (let i = 0; i < 40; i++) {
       const a = Elektroaufgaben.erzeuge(art.id, 3000 + i * 13);
@@ -118,7 +119,17 @@ const proben = await seite.evaluate(() => {
       if (a.art !== art.id) maengel.push('falsche Art: ' + a.art);
       if (a.antwortart === 'wahl') {
         const o: string[] = a.optionen || [];
-        if (o.length !== 4) maengel.push(o.length + ' Möglichkeiten');
+        /* NICHT „genau vier".
+           ------------------------------------------------------------
+           Eine Frage kann sachlich zweiwertig sein: „Steuerstromkreis
+           oder Hauptstromkreis?" hat zwei Antworten, und eine dritte
+           dazuzuerfinden wäre gelogen. Verlangt ist deshalb nur, dass es
+           mindestens zwei sind — und dass eine Art bei ihrer Zahl BLEIBT.
+           Wer heute vier und morgen drei anbietet, hat einen Fehler; wer
+           immer zwei anbietet, hat eine Ja-Nein-Frage. */
+        if (o.length < 2) maengel.push(o.length + ' Möglichkeiten');
+        if (o.length > 6) maengel.push(o.length + ' Möglichkeiten — zu viele');
+        anzahlen.add(o.length);
         if (!o.includes(a.loesung)) maengel.push('Lösung fehlt in den Möglichkeiten');
         if (new Set(o).size !== o.length) maengel.push('zwei gleiche Möglichkeiten');
         if (a.optionZeichen && a.optionZeichen.length !== o.length)
@@ -129,7 +140,10 @@ const proben = await seite.evaluate(() => {
         if (!a.einheit && a.art === 'umrechnen') maengel.push('ohne Einheit');
       }
     }
-    raus[art.id] = { erzeugt, maengel: [...new Set(maengel)] };
+    if (anzahlen.size > 1)
+      maengel.push('mal ' + [...anzahlen].join(', mal ') + ' Möglichkeiten');
+    raus[art.id] = { erzeugt, maengel: [...new Set(maengel)],
+                     anzahlen: [...anzahlen] };
   }
   return raus;
 });

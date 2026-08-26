@@ -467,6 +467,295 @@ p('… und sie enthält keine Zahl über tausend',
     .map(m => Number(String(m[0]).replace(/'/g, '')))
     .some(z => Number.isFinite(z) && z > 1000), aufl.slice(0, 90));
 
+/* ==========================================================================
+ * §6 · Den Stromweg antippen (Punkt 59)
+ * ========================================================================*/
+console.log('\n6 · Stromweg antippen');
+
+const stromweg = await seite.evaluate(`(() => {
+  ${WERKZEUG}
+  const aus = { erzeugt: 0, schaltungen: {}, groessen: {}, falschDrin: [],
+                falschDraussen: [], trivial: [], pruefFehler: [] };
+  for (let s = 1; s <= 150; s++) {
+    const a = Elektroaufgaben.erzeuge('plan-stromweg', s);
+    if (!a) continue;
+    aus.erzeugt++;
+    const nm = a.frage.split('\\n')[0];
+    aus.schaltungen[nm] = (aus.schaltungen[nm] || 0) + 1;
+    const soll = a.loesung.split(',').filter(Boolean);
+    const alle = a.plan.leitungen.map(l => String(l.id));
+    aus.groessen[soll.length] = (aus.groessen[soll.length] || 0) + 1;
+    if (soll.length < 2 || alle.length - soll.length < 2)
+      aus.trivial.push(s + ': ' + soll.length + ' von ' + alle.length);
+
+    /* SELBST nachschneiden — und mit einem ANDEREN Massstab als die Aufgabe.
+       Die Aufgabe vergleicht alle Bauteilströme als Zahlenreihe; hier wird
+       verglichen, WELCHE Bauteile arbeiten und wie hell die Leuchten sind.
+       Zuerst stand hier nur die grösste Helligkeit und der grösste Strom,
+       und das war zu grob: bei zwei Leuchten nebeneinander geht eine aus
+       und die grösste Helligkeit bleibt dieselbe. Der Lauf meldete dann,
+       eine Leitung ändere nichts, obwohl sie eine halbe Schaltung
+       abschaltet. */
+    const sicht = (p) => {
+      const e = Stromfluss.rechne(p, a.stellungen);
+      if (!e || !e.ok) return 'x';
+      return p.teile.map(t => {
+        const w = e.werte[t.id];
+        if (!w) return (t.bmk || '?') + ':-';
+        const h = (typeof w.helligkeit === 'number')
+          ? Math.round(w.helligkeit * 20) : (Math.abs(w.I) > 1e-9 ? 1 : 0);
+        return (t.bmk || '?') + ':' + h;
+      }).sort().join(' ');
+    };
+    const heil = sicht(a.plan);
+    for (const id of alle) {
+      const ohne = { ...a.plan,
+        leitungen: a.plan.leitungen.filter(l => String(l.id) !== id) };
+      const anders = sicht(ohne) !== heil;
+      if (soll.includes(id) && !anders)
+        aus.falschDrin.push(s + ': ' + id + ' gilt als Weg, ändert aber nichts');
+      if (!soll.includes(id) && anders)
+        aus.falschDraussen.push(s + ': ' + id + ' fehlt, ändert aber etwas');
+    }
+
+    /* Und die Prüfung der Antwort. */
+    const r1 = Elektroaufgaben.pruefe(a, a.loesung);
+    const r2 = Elektroaufgaben.pruefe(a, alle.slice().sort().join(','));
+    const r3 = Elektroaufgaben.pruefe(a, soll.slice(0, 1).join(','));
+    const r4 = Elektroaufgaben.pruefe(a, soll.slice().reverse().join(','));
+    if (!r1.richtig) aus.pruefFehler.push(s + ': eigene Lösung gilt nicht');
+    if (r2.richtig) aus.pruefFehler.push(s + ': alles antippen gilt auch');
+    if (r3.richtig) aus.pruefFehler.push(s + ': eine einzige gilt auch');
+    if (!r4.richtig) aus.pruefFehler.push(s + ': Reihenfolge zählt mit');
+  }
+  return aus;
+})()`) as any;
+
+p('Aus hundertfünfzig Startwerten kommen Aufgaben', stromweg.erzeugt >= 140,
+  `${stromweg.erzeugt}/150`);
+p('Sie kommen aus mehr als einer Schaltung',
+  Object.keys(stromweg.schaltungen).length >= 3,
+  JSON.stringify(stromweg.schaltungen));
+p('Keine ist trivial — mindestens zwei drauf, zwei daneben',
+  !stromweg.trivial.length, stromweg.trivial.slice(0, 3).join(' | '));
+p('Jede genannte Leitung ändert beim Durchschneiden wirklich etwas',
+  !stromweg.falschDrin.length, stromweg.falschDrin.slice(0, 3).join(' | '));
+p('Und jede nicht genannte ändert nichts',
+  !stromweg.falschDraussen.length, stromweg.falschDraussen.slice(0, 3).join(' | '));
+p('Die Antwortprüfung ist eine Mengenprüfung', !stromweg.pruefFehler.length,
+  stromweg.pruefFehler.slice(0, 3).join(' | '));
+
+/* Und jetzt wirklich antippen. */
+await seite.evaluate(() => {
+  Store.setMeta('elektro:uebungsarten', ['plan-stromweg']);
+  document.querySelectorAll('.overlay').forEach(x => x.remove());
+});
+await seite.evaluate(() =>
+  Elektroarbeitsplatz.zeigeAls('Üben', Elektroarbeitsplatz.uebung()));
+await seite.waitForTimeout(700);
+
+p('Die Aufgabe steht', await seite.locator('.ea-tippbar svg').count() > 0);
+const faenge = await seite.locator('.ea-tippbar .sp-griff').count();
+p('Jede Leitung hat eine Fangfläche', faenge > 0, `${faenge} Fangpfade`);
+
+/* §37: 44 px. Gemessen wird die Fangfläche auf dem BILDSCHIRM, nicht im
+   Planraster — dazwischen liegt die Verkleinerung, und nur die erste Zahl
+   trifft der Finger. */
+/* §37: 44 px. Gemessen wird am BILDSCHIRM, nicht im Planraster — dazwischen
+   liegt die Verkleinerung, und nur die erste Zahl trifft der Finger.
+   `boundingBox` liefert genau diese Zahl. */
+const griffe = await seite.locator('.ea-tippbar .sp-griff').all();
+const kaesten = (await Promise.all(griffe.map(g => g.boundingBox())))
+  .filter(Boolean) as Array<{ x: number; y: number; width: number; height: number }>;
+const kleinster = Math.min(...kaesten.map(k => Math.min(k.width, k.height)));
+p('Und jeder ist mit dem Finger zu treffen (§37)', kleinster >= 44,
+  `kleinster ${kleinster.toFixed(1)} px bei ${kaesten.length} Griffen`);
+/* Und sie dürfen einander nicht überdecken — sonst tippt man auf den einen
+   und trifft den anderen, was schlimmer ist als ein zu kleines Ziel. */
+let ueberlappt = 0;
+for (let i = 0; i < kaesten.length; i++)
+  for (let j = i + 1; j < kaesten.length; j++) {
+    const a = kaesten[i]!, b = kaesten[j]!;
+    if (a.x < b.x + b.width && b.x < a.x + a.width &&
+        a.y < b.y + b.height && b.y < a.y + a.height) ueberlappt++;
+  }
+p('… ohne sich gegenseitig zu überdecken', ueberlappt === 0,
+  `${ueberlappt} Überschneidungen`);
+
+const zaehlerVor = await seite.locator('.ea-zaehler').innerText();
+p('Der Zähler steht bei null', /^0 /.test(zaehlerVor), zaehlerVor);
+p('Und „Prüfen" ist noch gesperrt',
+  await seite.locator('[data-a="wege-pruefen"]').isDisabled());
+
+await seite.locator('.ea-tippbar .sp-griff').first().click({ force: true });
+await seite.waitForTimeout(300);
+p('Ein Tipp markiert die Leitung',
+  await seite.locator('.sp-leitung.sp-gewaehlt').count() === 1);
+p('… und der Griff sieht gewählt aus',
+  await seite.locator('.sp-griff.sp-gewaehlt').count() === 1);
+p('Der Zähler zählt mit',
+  /^1 Leitung/.test(await seite.locator('.ea-zaehler').innerText()));
+p('Jetzt lässt sich prüfen',
+  !(await seite.locator('[data-a="wege-pruefen"]').isDisabled()));
+
+/* Die Knöpfe im Aufgabenfeld müssen wie Knöpfe AUSSEHEN. Die Gestaltung
+   stand nur unter `.ea-fuss button`, und der Prüfen-Knopf steht in
+   `.ea-eingabe` — dort sah er aus wie blosser Text neben dem Eingabefeld.
+   Eine Prüfung auf „ist da ein <button>" hätte das nie gemerkt. */
+const knopfGrund = await seite.evaluate(() => {
+  const b = document.querySelector('[data-a="wege-pruefen"]') as HTMLElement | null;
+  if (!b) return null;
+  const st = getComputedStyle(b);
+  return { grund: st.backgroundColor, rand: st.borderTopWidth,
+           hoch: b.getBoundingClientRect().height };
+});
+p('Der Prüfen-Knopf sieht wie ein Knopf aus',
+  !!knopfGrund && !/rgba\(0, 0, 0, 0\)|transparent/.test(knopfGrund.grund),
+  JSON.stringify(knopfGrund));
+p('… und ist hoch genug für den Finger (§37)',
+  !!knopfGrund && knopfGrund.hoch >= 44, JSON.stringify(knopfGrund));
+
+
+/* Noch einmal auf dieselbe: das nimmt sie wieder weg. */
+await seite.locator('.ea-tippbar .sp-griff').first().click({ force: true });
+await seite.waitForTimeout(300);
+p('Noch ein Tipp nimmt sie wieder weg',
+  await seite.locator('.sp-leitung.sp-gewaehlt').count() === 0);
+
+/* Die richtige Antwort tippen und prüfen.
+   EINZELN und mit frischer Abfrage: jeder Tipp zeichnet die Fläche neu, und
+   die vorher eingesammelten Knoten hängen danach nicht mehr im Baum. Wer
+   alle auf einmal einsammelt und dann der Reihe nach anklickt, trifft ab
+   dem zweiten ins Leere — und die Prüfung meldet fehlende Leitungen, die
+   in Wahrheit nie angetippt wurden. */
+const sollWege: string[] = await seite.evaluate(() => {
+  const k = document.querySelector('.ea-aufgabe');
+  if (!k) return [];
+  const a = Elektroaufgaben.erzeuge(k.getAttribute('data-art'),
+                                    Number(k.getAttribute('data-saat')));
+  return String(a.loesung).split(',').filter(Boolean);
+});
+let getroffen = 0;
+for (const id of sollWege) {
+  const g = seite.locator(`.ea-tippbar .sp-griff[data-id="${id}"]`);
+  if (!(await g.count())) continue;
+  await g.first().click();
+  await seite.waitForTimeout(120);
+  getroffen++;
+}
+await seite.waitForTimeout(300);
+p('Alle richtigen lassen sich antippen', getroffen === sollWege.length && getroffen >= 2,
+  `${getroffen} von ${sollWege.length}`);
+await seite.locator('[data-a="wege-pruefen"]').click();
+await seite.waitForTimeout(400);
+const stromwegAufl = await seite.locator('.ea-aufloesung').innerText().catch(() => '');
+p('Und die Antwort gilt als richtig', /Richtig/.test(stromwegAufl), stromwegAufl.slice(0, 70));
+p('Danach ist nichts mehr antippbar',
+  await seite.locator('.ea-tippbar').count() === 0);
+p('Und der Hinweis sagt, was jetzt hervorgehoben ist',
+  /wirklich nimmt/.test(await seite.locator('.ea-planhinweis').innerText()));
+
+/* ==========================================================================
+ * §7 · Steuern oder arbeiten (Punkt 60)
+ * ========================================================================*/
+console.log('\n7 · Steuerstromkreis und Hauptstromkreis');
+
+const kreis = await seite.evaluate(`(() => {
+  ${WERKZEUG}
+  const aus = { erzeugt: 0, loesungen: {}, mittel: {}, falsch: [], ohneName: [] };
+  for (let s = 1; s <= 150; s++) {
+    const a = Elektroaufgaben.erzeuge('kreis-zuordnen', s);
+    if (!a) continue;
+    aus.erzeugt++;
+    aus.loesungen[a.loesung] = (aus.loesungen[a.loesung] || 0) + 1;
+    const bmk = (a.frage.match(/gehört (\\S+)/) || [])[1] || '';
+    aus.mittel[bmk] = (aus.mittel[bmk] || 0) + 1;
+    if (!bmk) aus.ohneName.push(s);
+
+    /* Selbst zuordnen, an der Art des Bauteils. Was schaltet oder hält,
+       gehört in die Steuerung; was Leistung umsetzt, in den Hauptkreis. */
+    const t = a.plan.teile.find(x => String(x.bmk) === bmk);
+    if (!t) { aus.falsch.push(s + ': ' + bmk + ' steht nicht im Plan'); continue; }
+    const vh = Stromfluss.verhalten(t.zeichen);
+    const soll = (vh && (vh.art === 'spule' || vh.art === 'schalter'))
+      ? 'Steuerstromkreis' : 'Hauptstromkreis';
+    if (soll !== a.loesung)
+      aus.falsch.push(s + ': ' + bmk + ' (' + (vh && vh.art) + ') → ' + a.loesung);
+  }
+  return aus;
+})()`) as any;
+
+p('Aus hundertfünfzig Startwerten kommen Aufgaben', kreis.erzeugt >= 140,
+  `${kreis.erzeugt}/150`);
+p('Beide Kreise kommen vor',
+  (kreis.loesungen['Steuerstromkreis'] || 0) >= 20 &&
+  (kreis.loesungen['Hauptstromkreis'] || 0) >= 20,
+  JSON.stringify(kreis.loesungen));
+p('Und es sind nicht immer dieselben zwei Betriebsmittel',
+  Object.keys(kreis.mittel).length >= 5, JSON.stringify(kreis.mittel));
+p('Jede Frage nennt ein Betriebsmittel', !kreis.ohneName.length,
+  kreis.ohneName.slice(0, 3).join(', '));
+p('Die Zuordnung passt zu dem, was das Bauteil TUT', !kreis.falsch.length,
+  kreis.falsch.slice(0, 3).join(' | '));
+
+/* ==========================================================================
+ * §8 · Am Telefon
+ * ------------------------------------------------------------------------
+ * In 390 px Breite passen ein lesbarer Schaltplan und sieben fingergrosse
+ * Griffe nicht nebeneinander. Der Plan wird deshalb NICHT kleiner, sondern
+ * schiebbar. Genau das misst dieser Abschnitt: bleibt er gross, und bleiben
+ * die Griffe trotzdem treffbar?
+ * ========================================================================*/
+console.log('\n8 · Am Telefon');
+
+await seite.setViewportSize({ width: 390, height: 844 });
+await seite.evaluate(() => {
+  Store.setMeta('elektro:uebungsarten', ['plan-stromweg']);
+  document.querySelectorAll('.overlay').forEach(x => x.remove());
+});
+await seite.evaluate(() =>
+  Elektroarbeitsplatz.zeigeAls('Üben', Elektroarbeitsplatz.uebung()));
+await seite.waitForTimeout(800);
+
+const handy = await seite.evaluate(() => {
+  const feld = document.querySelector('.ea-plan.ea-tippbar') as HTMLElement | null;
+  const svg = feld ? feld.querySelector('svg') as SVGSVGElement | null : null;
+  if (!feld || !svg) return null;
+  return { svgBreit: svg.getBoundingClientRect().width,
+           feldBreit: feld.getBoundingClientRect().width,
+           schiebbar: feld.scrollWidth > feld.clientWidth + 4,
+           rollrand: !!feld.className.match(/rollrand|rr-/) ||
+                     !!feld.querySelector('.rr-kante') ||
+                     getComputedStyle(feld).overflowX === 'auto' };
+});
+p('Der Plan bleibt gross statt zu schrumpfen',
+  !!handy && handy.svgBreit >= 600, JSON.stringify(handy));
+p('Und er lässt sich seitwärts schieben', !!handy && handy.schiebbar,
+  JSON.stringify(handy));
+
+const hGriffe = await seite.locator('.ea-tippbar .sp-griff').all();
+const hKaesten = (await Promise.all(hGriffe.map(g => g.boundingBox())))
+  .filter(Boolean) as Array<{ x: number; y: number; width: number; height: number }>;
+p('Die Griffe sind auch hier fingergross',
+  hKaesten.length > 0 && Math.min(...hKaesten.map(k => k.width)) >= 44,
+  `${hKaesten.length} Griffe, kleinster ${
+    hKaesten.length ? Math.min(...hKaesten.map(k => k.width)).toFixed(1) : '—'} px`);
+
+/* Und ein Tipp muss auch am Telefon ankommen. */
+const vorher = await seite.locator('.sp-griff.sp-gewaehlt').count();
+await seite.locator('.ea-tippbar .sp-griff').first().click();
+await seite.waitForTimeout(300);
+p('Ein Tipp kommt auch am Telefon an',
+  await seite.locator('.sp-griff.sp-gewaehlt').count() === vorher + 1);
+p('Der Prüfen-Knopf ist erreichbar', await seite.evaluate(() => {
+  const b = document.querySelector('[data-a="wege-pruefen"]');
+  if (!b) return false;
+  const r = b.getBoundingClientRect();
+  return r.top >= 0 && r.bottom <= window.innerHeight + 1;
+}));
+
+await seite.setViewportSize({ width: 1400, height: 900 });
+
 p('Keine Fehler auf der Seite', !fehler.length, fehler.slice(0, 2).join(' | '));
 
 console.log(`\n${ok} bestanden, ${weg} gescheitert`);
