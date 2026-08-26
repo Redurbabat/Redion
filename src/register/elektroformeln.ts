@@ -86,6 +86,7 @@ Register.elektroformeln = (() => {
     ['leiter',    'Leiter und Widerstand',  '▬'],
     ['waerme',    'Elektrowärme',           '🌡'],
     ['quelle',    'Spannungsquellen',       '⎔'],
+    ['akku',      'Akkumulator und Batterie', '▮'],
     ['konden',    'Kondensator',            '⊣⊢'],
     ['wechsel',   'Wechselstrom',           '∿'],
     ['dreh',      'Drehstrom',              '⌇'],
@@ -777,6 +778,142 @@ Register.elektroformeln = (() => {
         'Rᵢ': v => v['U₀']! / v.I! - v.R_L!
       },
       erklaerung: 'Der Strom im geschlossenen Kreis, mit dem Innenwiderstand in Reihe.'
+    },
+
+    {
+      id: 'quelle-innerer-abfall', kapitel: 'quelle', schreibweise: 'U_Ri = U₀ − U',
+      groessen: [g('U_Ri', 'Spannungsabfall am Innenwiderstand', 'V'),
+                 g('U₀', 'Leerlaufspannung', 'V'), g('U', 'Klemmenspannung', 'V')],
+      loese: {
+        U_Ri: v => v['U₀']! - v.U!,
+        'U₀': v => v.U! + v.U_Ri!,
+        U: v => v['U₀']! - v.U_Ri!
+      },
+      erklaerung: 'Was an den Klemmen fehlt, ist im Inneren geblieben. Die Differenz ist messbar, der Innenwiderstand selbst nicht.'
+    },
+    {
+      id: 'quelle-kurzschlussstrom', kapitel: 'quelle', schreibweise: 'I_KS = U₀ / Rᵢ',
+      groessen: [g('I_KS', 'Kurzschlussstrom', 'A'), g('U₀', 'Leerlaufspannung', 'V'),
+                 g('Rᵢ', 'Innenwiderstand', 'Ω')],
+      loese: {
+        I_KS: v => v['U₀']! / v['Rᵢ']!,
+        'U₀': v => v.I_KS! * v['Rᵢ']!,
+        'Rᵢ': v => v['U₀']! / v.I_KS!
+      },
+      erklaerung: 'Sind die Klemmen kurzgeschlossen, begrenzt nur noch der Innenwiderstand. Bei einem Autoakku sind das mehrere hundert Ampere — und darum ist der Kurzschluss dort gefährlich, nicht bloss ärgerlich.'
+    },
+    {
+      id: 'elemente-reihe-spannung', kapitel: 'quelle', schreibweise: 'U₀ = n · U₀₁',
+      groessen: [g('U₀', 'gesamte Leerlaufspannung', 'V'), g('n', 'Anzahl Elemente', ''),
+                 g('U₀₁', 'Leerlaufspannung eines Elements', 'V')],
+      loese: {
+        'U₀': v => v.n! * v['U₀₁']!,
+        n: v => v['U₀']! / v['U₀₁']!,
+        'U₀₁': v => v['U₀']! / v.n!
+      },
+      erklaerung: 'In Reihe addieren sich die Spannungen. Sechs Zellen zu 2 V ergeben die 12 V der Autobatterie.'
+    },
+    {
+      id: 'elemente-reihe-widerstand', kapitel: 'quelle', schreibweise: 'Rᵢ = n · Rᵢ₁',
+      groessen: [g('Rᵢ', 'gesamter Innenwiderstand', 'Ω'), g('n', 'Anzahl Elemente', ''),
+                 g('Rᵢ₁', 'Innenwiderstand eines Elements', 'Ω')],
+      loese: {
+        'Rᵢ': v => v.n! * v['Rᵢ₁']!,
+        n: v => v['Rᵢ']! / v['Rᵢ₁']!,
+        'Rᵢ₁': v => v['Rᵢ']! / v.n!
+      },
+      erklaerung: 'Mit der Spannung wächst auch der Innenwiderstand — die Zellen liegen ja hintereinander.'
+    },
+    {
+      id: 'elemente-parallel-widerstand', kapitel: 'quelle', schreibweise: 'Rᵢ = Rᵢ₁ / n',
+      groessen: [g('Rᵢ', 'gesamter Innenwiderstand', 'Ω'),
+                 g('Rᵢ₁', 'Innenwiderstand eines Elements', 'Ω'),
+                 g('n', 'Anzahl Elemente', '')],
+      loese: {
+        'Rᵢ': v => v['Rᵢ₁']! / v.n!,
+        'Rᵢ₁': v => v['Rᵢ']! * v.n!,
+        n: v => v['Rᵢ₁']! / v['Rᵢ']!
+      },
+      erklaerung: 'Parallel bleibt die Spannung, aber der Innenwiderstand sinkt. Darum werden Zellen parallel geschaltet, wenn viel Strom gebraucht wird.'
+    },
+    {
+      id: 'elemente-parallel-strom', kapitel: 'quelle', schreibweise: 'I = n · I₁',
+      groessen: [g('I', 'Laststrom', 'A'), g('n', 'Anzahl Elemente', ''),
+                 g('I₁', 'Strom eines Elements', 'A')],
+      loese: {
+        I: v => v.n! * v['I₁']!,
+        n: v => v.I! / v['I₁']!,
+        'I₁': v => v.I! / v.n!
+      },
+      erklaerung: 'Bei gleichen Elementen teilt sich der Laststrom zu gleichen Teilen auf. Sind sie ungleich, stimmt das nicht mehr — und die stärkere Zelle lädt die schwächere.'
+    },
+
+    /* ---- Akkumulator und Batterie ---------------------------------------- */
+    {
+      id: 'akku-ladekapazitaet', kapitel: 'akku', schreibweise: 'Q_L = I_L · t_L',
+      groessen: [g('Q_L', 'Ladekapazität', 'Ah'), g('I_L', 'Ladestrom', 'A'),
+                 g('t_L', 'Ladezeit', 'h')],
+      loese: {
+        Q_L: v => v.I_L! * v.t_L!,
+        I_L: v => v.Q_L! / v.t_L!,
+        t_L: v => v.Q_L! / v.I_L!
+      },
+      erklaerung: 'Ladung ist Strom mal Zeit. Beim Akku wird in Stunden gerechnet, nicht in Sekunden — darum Ah und nicht As.'
+    },
+    {
+      id: 'akku-entladekapazitaet', kapitel: 'akku', schreibweise: 'Q_E = I_E · t_E',
+      groessen: [g('Q_E', 'Entladekapazität', 'Ah'), g('I_E', 'Entladestrom', 'A'),
+                 g('t_E', 'Entladezeit', 'h')],
+      loese: {
+        Q_E: v => v.I_E! * v.t_E!,
+        I_E: v => v.Q_E! / v.t_E!,
+        t_E: v => v.Q_E! / v.I_E!
+      },
+      erklaerung: 'Dieselbe Rechnung in der anderen Richtung. Sie kommt nie ganz auf die Ladekapazität heraus.'
+    },
+    {
+      id: 'akku-ladeenergie', kapitel: 'akku', schreibweise: 'W_L = Q_L · U_L',
+      groessen: [g('W_L', 'Ladeenergie', 'Wh'), g('Q_L', 'Ladekapazität', 'Ah'),
+                 g('U_L', 'Ladespannung', 'V')],
+      loese: {
+        W_L: v => v.Q_L! * v.U_L!,
+        Q_L: v => v.W_L! / v.U_L!,
+        U_L: v => v.W_L! / v.Q_L!
+      },
+      erklaerung: 'Aus Ladung wird Energie, sobald die Spannung dazukommt: Ah mal V ergibt Wh.'
+    },
+    {
+      id: 'akku-entladeenergie', kapitel: 'akku', schreibweise: 'W_E = Q_E · U_E',
+      groessen: [g('W_E', 'Entladeenergie', 'Wh'), g('Q_E', 'Entladekapazität', 'Ah'),
+                 g('U_E', 'Entladespannung', 'V')],
+      loese: {
+        W_E: v => v.Q_E! * v.U_E!,
+        Q_E: v => v.W_E! / v.U_E!,
+        U_E: v => v.W_E! / v.Q_E!
+      },
+      erklaerung: 'Was der Akku wirklich abgibt. Die Entladespannung liegt unter der Ladespannung, und darum ist W_E kleiner als W_L.'
+    },
+    {
+      id: 'akku-ladungswirkungsgrad', kapitel: 'akku', schreibweise: 'η_Ah = Q_E / Q_L',
+      groessen: [g('η_Ah', 'Ladungswirkungsgrad', ''), g('Q_E', 'Entladekapazität', 'Ah'),
+                 g('Q_L', 'Ladekapazität', 'Ah')],
+      loese: {
+        'η_Ah': v => v.Q_E! / v.Q_L!,
+        Q_E: v => v.Q_L! * v['η_Ah']!,
+        Q_L: v => v.Q_E! / v['η_Ah']!
+      },
+      erklaerung: 'Wie viel Ladung wieder herauskommt. Immer unter eins — ein Teil geht in Wärme und Nebenreaktionen.'
+    },
+    {
+      id: 'akku-energiewirkungsgrad', kapitel: 'akku', schreibweise: 'η_Wh = W_E / W_L',
+      groessen: [g('η_Wh', 'Energiewirkungsgrad', ''), g('W_E', 'Entladeenergie', 'Wh'),
+                 g('W_L', 'Ladeenergie', 'Wh')],
+      loese: {
+        'η_Wh': v => v.W_E! / v.W_L!,
+        W_E: v => v.W_L! * v['η_Wh']!,
+        W_L: v => v.W_E! / v['η_Wh']!
+      },
+      erklaerung: 'Der schlechtere der beiden Wirkungsgrade — weil die Entladespannung tiefer liegt als die Ladespannung, geht neben der Ladung auch noch Spannung verloren.'
     },
 
     /* ---- Kondensator ----------------------------------------------------- */
