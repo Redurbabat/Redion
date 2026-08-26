@@ -34,9 +34,21 @@ import { chromium } from 'playwright';
   const reiter = await p.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('#side-reiter .sr')].map(x => ({ id: x.dataset.reiter, txt: x.textContent })));
   console.log('   Reiter:', JSON.stringify(reiter.map(r => r.id)));
-  ok('Fünf Reiter wie bei Notion', reiter.length === 5);
-  ok('Start, Chat, Besprechungen, Posteingang, Suchen',
-     ['start', 'chat', 'bespr', 'inbox', 'suche'].every((x, i) => reiter[i]?.id === x));
+  /* DREI, NICHT FÜNF (E206).
+     Fünf waren es, und zwei davon waren keine Reiter: `suche` rief `suche()`
+     und sprang sofort auf `start` zurück, `inbox` rief `Ansichten.posteingang()`
+     und ebenso — wortwörtlich dasselbe wie die Zeilen „Suchen" und
+     „Posteingang" acht Zeilen tiefer, nur als Zeichen.
+
+     Ein Reiter ist hier etwas, das den BAUM darunter umschaltet. Das tun
+     genau drei: `start` den Seitenbaum, `chat` die Agentenliste
+     (`KI.seitenleiste`), `bespr` die Besprechungen (`Meeting.seitenleiste`).
+     Genau das prüft der zweite Punkt jetzt auch — vorher stand dort nur eine
+     Namensliste, die auch dann grün geblieben wäre, wenn ein Reiter gar
+     nichts mehr umschaltet. */
+  ok('Drei Reiter, und jeder schaltet den Baum um', reiter.length === 3);
+  ok('Start, Chat, Besprechungen',
+     ['start', 'chat', 'bespr'].every((x, i) => reiter[i]?.id === x));
   ok('Start ist zuerst aktiv', await p.evaluate(() =>
     !!document.querySelector('.sr[data-reiter="start"]')?.classList.contains('on')));
 
@@ -560,7 +572,12 @@ import { chromium } from 'playwright';
     geprueft: Object.values(Store.cache.blocks).filter(b2 => b2.geprueft).length
   }));
   console.log('   Nach Neuladen:', JSON.stringify(danach));
-  ok('Reiterleiste ist wieder da', danach.reiter === 5);
+  /* Auch hier drei statt fünf (E206) — die Zahl steht an ZWEI Stellen in
+     dieser Datei, und die erste zu ändern hätte gereicht, um die zweite zu
+     übersehen. Der Punkt prüft, dass die Leiste ein Neuladen übersteht,
+     nicht wie viele Reiter es gibt; die Zahl bleibt trotzdem fest, weil
+     `> 0` auch dann grün wäre, wenn zwei davon verschwinden. */
+  ok('Reiterleiste ist wieder da', danach.reiter === 3);
   ok('Die KI heisst weiterhin Ada', danach.persona.name === 'Ada');
   ok('Chats überleben', danach.chats === 2);
   ok('Unter-Elemente und Abhängigkeiten bleiben an', danach.unter && danach.abh);

@@ -342,7 +342,15 @@ const apps = await seite.evaluate(() => {
   return { reg, gezeichnet };
 });
 
-p('Es gibt zwanzig Apps', apps.reg.length === 20, String(apps.reg.length));
+/* SIEBZEHN, NICHT MEHR ZWANZIG (E206). Drei Zeilen standen hier und stehen
+   woanders schon: „Bibliothek" (= btn-library), „Papierkorb" (= btn-trash)
+   und „Hilfe" (= btn-hilfe, gleicher Aufruf `Werkzeuge.tastenkuerzel`).
+   Redur hat dem Entfernen der Kopien ausdrücklich zugestimmt; kein Ziel
+   wurde dadurch unerreichbar.
+
+   Die Zahl steht hier weiterhin fest und nicht als `> 0`: eine Prüfung, die
+   jede Zahl durchlässt, merkt nicht, wenn die Hälfte der Liste wegfällt. */
+p('Es gibt siebzehn Apps', apps.reg.length === 17, String(apps.reg.length));
 gleich('Und genauso viele stehen da', apps.gezeichnet.length, apps.reg.length);
 gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
   apps.reg.map((x: any) => x.id));
@@ -350,10 +358,18 @@ gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
    umbenannt; der volle Prüflauf fand drei Zeilen in test33 und test61, die
    die Knöpfe über `[data-app="bib"]` anfassen. Ein solcher Wert ist eine
    Adresse nach aussen — eigenes CSS und eigene Erweiterungen dürfen darauf
-   zeigen (E167). */
-gleich('Und die Marken sind die kurzen, unveränderten',
-  apps.gezeichnet.slice(0, 4).map((x: any) => x.id),
-  ['kalender', 'pwa', 'bib', 'aufgaben']);
+   zeigen (E167).
+
+   HIER STANDEN VIER FESTE NAMEN, und drei davon prüften nur, in welcher
+   REIHENFOLGE die Liste steht — nicht, was die Behauptung sagt. Als E206
+   die Gruppen einführte, ging der Punkt rot, obwohl keine Marke sich
+   geändert hatte. Geprüft wird jetzt die Behauptung selbst: keine Marke
+   trägt das Präfix, das E166 verursacht und E167 zurückgenommen hat. */
+const mitPraefix = apps.gezeichnet.filter((x: any) => /^app-/.test(x.id)).map((x: any) => x.id);
+p('Keine Marke trägt das `app-`-Präfix aus E166', mitPraefix.length === 0, mitPraefix.join(', '));
+p('Und die kurzen Marken sind noch da',
+  ['kalender', 'pwa', 'aufgaben'].every(m => apps.gezeichnet.some((x: any) => x.id === m)),
+  apps.gezeichnet.map((x: any) => x.id).join(', '));
 gleich('Mit denselben Namen', apps.gezeichnet.map((x: any) => x.name),
   apps.reg.map((x: any) => x.name));
 gleich('Und denselben Hinweistexten', apps.gezeichnet.map((x: any) => x.hinweis),

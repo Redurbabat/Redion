@@ -703,6 +703,36 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
+
+/* ============================================================================
+ * DIE SCHUBLADEN IN „MEINE APPS" (E206)
+ * ----------------------------------------------------------------------------
+ * Zwanzig gleichrangige Zeilen ganz unten in der Seitenleiste sind keine
+ * Liste, sondern eine Wand: man liest sie nicht, man sucht darin — und um
+ * überhaupt hinzusehen, muss man an allem anderen vorbeirollen.
+ *
+ * Vier Schubladen mit drei bis fünf Zeilen liest man. Gelöscht ist nichts;
+ * jede App steht weiterhin da, nur eine Ebene tiefer. Der Zähler rechts sagt
+ * vorher, wie viele drin sind — ohne ihn öffnet man eine Schublade, um zu
+ * sehen, ob sich das Öffnen lohnt.
+ * ==========================================================================*/
+/* Zähler und Pfeil stehen NEBENEINANDER am rechten Rand. Der erste Entwurf
+   gab beiden `margin-left:auto` — dann schob der Zähler sich in die Mitte
+   und der Pfeil an den Rand, und die vier Zeilen sahen aus wie zwei
+   Spalten, die nicht zueinander gehören. Mit Augen gesehen. */
+.app-gruppe > .k{
+  margin-left:auto; opacity:.55; font-size:11px; font-variant-numeric:tabular-nums
+}
+.app-gruppe > .app-pfeil{
+  flex:none; opacity:.45;
+  transition:transform var(--motion-fast) var(--ease)
+}
+.app-gruppe > .app-pfeil > svg{ width:13px; height:13px; display:block }
+.app-gruppe.auf > .app-pfeil{ transform:rotate(180deg) }
+/* Eingerückt, damit man sieht, wozu die Zeile gehört — und mit einer Linie,
+   damit man es auch dann sieht, wenn zwei Schubladen offen sind. */
+.app-unter{ margin-left:14px; padding-left:8px; border-left:1px solid var(--line-soft) }
+.app-unter[hidden]{ display:none }
 /* Die vier stummen Reiter enger: 6 Punkte Rand statt 9. Gemessen bringt das
    24 Punkte, und genau die braucht der aktive, damit „Heute" ganz dasteht
    statt als „He…". Am Telefon ist diese Leiste ausgeblendet, hier gilt also

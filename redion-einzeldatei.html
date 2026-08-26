@@ -3521,20 +3521,12 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   --shadow-lg:var(--shadow-3)
 }
 
-.weltwechsel{
-  display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:2px 10px 7px;
-  padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg-sub)
-}
-.weltwechsel button{
-  min-width:0;min-height:34px;display:flex;align-items:center;justify-content:center;
-  gap:6px;padding:6px 8px;border:0;border-radius:8px;background:transparent;
-  color:var(--text-dim);cursor:pointer;font:inherit
-}
-.weltwechsel button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
-.weltwechsel button:hover{background:var(--bg-hover);color:var(--text)}
-.weltwechsel button.an,.weltwechsel button[aria-pressed="true"]{
-  color:var(--text);background:var(--bg-card);box-shadow:0 1px 5px rgba(0,0,0,.13)
-}
+/* HIER STAND DER WELT-UMSCHALTER (E206).
+   Seine Auszeichnung ist aus `index.html` verschwunden, weil seine zwei
+   Knöpfe nachweislich dasselbe taten wie zwei Zeilen darunter. Übrig
+   bleiben die zwei Zeilen unten: sie sagen weiterhin, in welcher Welt man
+   gerade ist — und zwar dort, wo man hinklickt, statt an einer dritten
+   Stelle darüber. */
 body[data-produktwelt="lernen"] #btn-learning,
 body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);color:var(--text)}
 
@@ -4379,6 +4371,53 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
     border-color var(--motion-fast) var(--ease),transform var(--motion-fast) var(--ease)
 }
 .lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
+
+/* ============================================================================
+ * DIE ZWEITE REIHE (E206)
+ * ----------------------------------------------------------------------------
+ * Aus neun Reitern wurden vier. Drei von ihnen sind Gruppen und tragen ein
+ * kleines „⌄"; wer darin ist, bekommt darunter eine ZWEITE, kurze Reihe mit
+ * genau den Ansichten dieser Gruppe.
+ *
+ * Sie ist bewusst kein Aufklappmenü: ein Menü versteckt, wo man ist, und man
+ * muss es öffnen, um zu sehen, ob es sich lohnt. Die Reihe steht da, solange
+ * sie gebraucht wird, und verschwindet, sobald man die Gruppe verlässt —
+ * dasselbe Verhalten, das Word und VS Code für ihre Registerkarten benutzen.
+ *
+ * Ohne Rahmen und ohne Fläche: sie gehört zur Leiste darüber und soll nicht
+ * wie eine zweite Leiste aussehen.
+ * ==========================================================================*/
+.lernwelt .lw-nav-mehr{ flex:none; opacity:.5; margin-left:2px }
+.lernwelt .lw-nav-mehr>svg{ width:11px; height:11px; display:block }
+.lernwelt .lw-nav button.is-active .lw-nav-mehr{ opacity:.75 }
+
+.lernwelt .lw-subnav{
+  display:flex; align-items:center; gap:var(--space-1); flex-wrap:wrap;
+  margin:calc(var(--lw-gap) * -1 + var(--space-2)) 0 var(--lw-gap);
+  padding:0 var(--space-2)
+}
+.lernwelt .lw-subnav button{
+  min-height:32px; padding:var(--space-1) var(--space-3);
+  border:1px solid transparent; border-radius:var(--radius-md);
+  color:var(--text-dim); font-size:12px; font-weight:620; white-space:nowrap;
+  transition:background var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease)
+}
+.lernwelt .lw-subnav button.is-active{
+  background:var(--lw-accent-soft); color:var(--text); font-weight:720
+}
+@media(hover:hover){
+  .lernwelt .lw-subnav button:hover{ background:var(--bg-hover); color:var(--text) }
+}
+/* Am Telefon bleibt die zweite Reihe eine Zeile zum Schieben — umbrochen
+   kostet sie zwei Zeilen Höhe, und darauf stehen vier Wörter. */
+@media(max-width:760px){
+  .lernwelt .lw-subnav{
+    flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-inline:contain;
+    scrollbar-width:none
+  }
+  .lernwelt .lw-subnav button{ flex:0 0 auto; min-height:36px }
+}
+@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:40px } }
 
 /* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
    wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
@@ -6138,6 +6177,36 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
+
+/* ============================================================================
+ * DIE SCHUBLADEN IN „MEINE APPS" (E206)
+ * ----------------------------------------------------------------------------
+ * Zwanzig gleichrangige Zeilen ganz unten in der Seitenleiste sind keine
+ * Liste, sondern eine Wand: man liest sie nicht, man sucht darin — und um
+ * überhaupt hinzusehen, muss man an allem anderen vorbeirollen.
+ *
+ * Vier Schubladen mit drei bis fünf Zeilen liest man. Gelöscht ist nichts;
+ * jede App steht weiterhin da, nur eine Ebene tiefer. Der Zähler rechts sagt
+ * vorher, wie viele drin sind — ohne ihn öffnet man eine Schublade, um zu
+ * sehen, ob sich das Öffnen lohnt.
+ * ==========================================================================*/
+/* Zähler und Pfeil stehen NEBENEINANDER am rechten Rand. Der erste Entwurf
+   gab beiden `margin-left:auto` — dann schob der Zähler sich in die Mitte
+   und der Pfeil an den Rand, und die vier Zeilen sahen aus wie zwei
+   Spalten, die nicht zueinander gehören. Mit Augen gesehen. */
+.app-gruppe > .k{
+  margin-left:auto; opacity:.55; font-size:11px; font-variant-numeric:tabular-nums
+}
+.app-gruppe > .app-pfeil{
+  flex:none; opacity:.45;
+  transition:transform var(--motion-fast) var(--ease)
+}
+.app-gruppe > .app-pfeil > svg{ width:13px; height:13px; display:block }
+.app-gruppe.auf > .app-pfeil{ transform:rotate(180deg) }
+/* Eingerückt, damit man sieht, wozu die Zeile gehört — und mit einer Linie,
+   damit man es auch dann sieht, wenn zwei Schubladen offen sind. */
+.app-unter{ margin-left:14px; padding-left:8px; border-left:1px solid var(--line-soft) }
+.app-unter[hidden]{ display:none }
 /* Die vier stummen Reiter enger: 6 Punkte Rand statt 9. Gemessen bringt das
    24 Punkte, und genau die braucht der aktive, damit „Heute" ganz dasteht
    statt als „He…". Am Telefon ist diese Leiste ausgeblendet, hier gilt also
@@ -9746,24 +9815,38 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     <button class="icon-btn" id="btn-side"  title="Seitenleiste (Strg + \)">‹‹</button>
   </div>
 
-  <!-- Zwei Produktwelten, ein gemeinsamer Datenbestand. Der Wechsel ordnet
-       vorhandene Objekte neu; er erzeugt keine Kopien. -->
-  <nav id="weltwechsel" class="weltwechsel" aria-label="Produktwelt">
-    <button id="btn-welt-lernen" data-welt="lernen" aria-pressed="true">
-      <span data-sym="learn"></span><b>Lernen &amp; Alltag</b>
-    </button>
-    <button id="btn-welt-workspace" data-welt="workspace" aria-pressed="false">
-      <span data-sym="workspace"></span><b>Workspace</b>
-    </button>
-  </nav>
+  <!-- HIER STAND EIN WELT-UMSCHALTER (E206).
+       Zwei Knöpfe, „Lernen & Alltag" und „Workspace", und beide taten
+       nachweislich nichts anderes als `Produktwelten.lernen('heute')` und
+       `Produktwelten.workspace()` — also genau das, was die Zeilen „Heute"
+       und „Workspace" acht Zeilen weiter unten schon tun. Ein dritter Weg
+       zu zwei Orten, ganz oben, in der auffälligsten Zeile der Leiste.
 
-  <!-- Reiterleiste wie in Notion: Start, Chat, Besprechungen, Posteingang, Suchen -->
+       Die zwei Welten selbst bleiben, wie sie sind: derselbe Bestand,
+       dieselben Ansichten, derselbe `WELT_META`-Speicher. Weg ist nur der
+       Umschalter, nicht die Welt. Wo man gerade ist, sagt die Markierung
+       an der Zeile — dort, wo man hinklickt.
+
+       `Produktwelten.markieren()` läuft weiter über `[data-welt]`; findet
+       es keins, geht `forEach` über eine leere Liste, und das ist der
+       ganze Umbau an der Logik. -->
+
+  <!-- DIE REITER SIND MODI DES BAUMS, KEINE ZIELE (E206).
+       Hier standen fünf. Zwei davon waren keine Modi: `suche` rief
+       `suche()` und sprang sofort auf `start` zurück, `inbox` rief
+       `Ansichten.posteingang()` und ebenso — wortwörtlich dasselbe wie die
+       Zeilen „Suchen" und „Posteingang" darunter, nur als Zeichen.
+
+       Die drei, die bleiben, schalten wirklich um, was unten steht:
+       `start` den Seitenbaum, `chat` die Agentenliste (`KI.seitenleiste`),
+       `bespr` die Besprechungen (`Meeting.seitenleiste`). `start` ist
+       ausserdem der einzige Weg aus dem Chat-Modus zurück — ihn zu den
+       Doppelungen zu zählen wäre der Fehler gewesen, den diese Aufräumung
+       fast gemacht hätte. -->
   <nav class="side-reiter" id="side-reiter">
     <button class="sr" data-reiter="start"  title="Start"><span data-sym="home"></span><b>Start</b></button>
     <button class="sr" data-reiter="chat"   title="Chat mit der KI (Strg + O)"><span data-sym="chat"></span><b>Chat</b></button>
     <button class="sr" data-reiter="bespr"  title="Besprechungen"><span data-sym="mic"></span><b>Besprechungen</b></button>
-    <button class="sr" data-reiter="inbox"  title="Posteingang"><span data-sym="inbox"></span><b>Posteingang</b></button>
-    <button class="sr" data-reiter="suche"  title="Suchen (Strg + P)"><span data-sym="search"></span><b>Suchen</b></button>
   </nav>
 
   <nav class="side-nav">
@@ -15053,46 +15136,72 @@ Register.navigation = (() => {
            `hinweis` ist der Text, der beim Darüberfahren erscheint. Er gehört
            zum Eintrag und nicht zum Zeichner: wer die App beschreibt, beschreibt
            sie hier. */
-        { id: 'app-kalender', marke: 'kalender', name: 'Kalender', icon: '📅', platz: 'apps', rang: 10,
+        /* DER RANG LÄUFT DURCH, ER FÄNGT NICHT JE GRUPPE NEU AN (E206).
+           Der erste Entwurf gab jeder Gruppe 10, 20, 30 … — und `anPlatz('apps')`
+           sortiert nach `rang`, ohne die Gruppe zu kennen. Heraus kam eine Liste,
+           in der erst alle Ersten jeder Gruppe standen, dann alle Zweiten: eine
+           Reihenfolge, die auf dem Bildschirm nirgends vorkommt. test222 §6
+           vergleicht Register und Bild und ging deshalb rot — zu Recht.
+    
+           Durchlaufend heisst: Registerreihenfolge IST Bildschirmreihenfolge,
+           und die Gruppen sind nur die Schnitte darin. */
+        { id: 'app-kalender', marke: 'kalender', name: 'Kalender', icon: '📅', platz: 'apps', gruppe: 'planen', rang: 10,
             hinweis: 'Termine aus allen Quellen', tun: () => Kalender.dialog() },
-        { id: 'app-pwa', marke: 'pwa', name: 'App installieren', icon: '📱', platz: 'apps', rang: 20,
-            hinweis: 'Auf dem Telefon oder Rechner ablegen', tun: () => PWA.installieren() },
-        { id: 'app-bib', marke: 'bib', name: 'Bibliothek', icon: '📚', platz: 'apps', rang: 30,
-            hinweis: 'Alle Seiten, sortierbar', tun: () => Bibliothek.oeffne() },
-        { id: 'app-aufgaben', marke: 'aufgaben', name: 'Meine Aufgaben', icon: '☑', platz: 'apps', rang: 40,
-            hinweis: 'Was dir zugewiesen ist', tun: () => Bibliothek.aufgaben() },
-        { id: 'app-markt', marke: 'markt', name: 'Marktplatz', icon: '🛍', platz: 'apps', rang: 50,
-            hinweis: 'Fertige Vorlagen', tun: () => Werkzeuge.vorlagen() },
-        { id: 'app-wissen', marke: 'wissen', name: 'Notion-Wissen', icon: '📖', platz: 'apps', rang: 60,
-            hinweis: 'Alles über Notion und Redion, in acht Teilen', tun: () => Wissen.oeffnen() },
-        { id: 'app-pflege', marke: 'pflege', name: 'Erste Hilfe', icon: '🧰', platz: 'apps', rang: 70,
-            hinweis: 'Prüfen, reparieren, sichern', tun: () => Pflege.ersteHilfe() },
-        { id: 'app-modell', marke: 'modell', name: 'Datenmodell', icon: '🗺', platz: 'apps', rang: 80,
-            hinweis: 'Alle Datenbanken und ihre Verknüpfungen', tun: () => Schema.ansicht() },
-        { id: 'app-kennzahl', marke: 'kennzahl', name: 'Kennzahlen', icon: '📊', platz: 'apps', rang: 90,
-            hinweis: 'Zahlen aus mehreren Datenbanken', tun: () => Schema.tafel() },
-        { id: 'app-krypto', marke: 'krypto', name: 'Passwort', icon: '🔐', platz: 'apps', rang: 100,
-            hinweis: 'Verschlüsselte Sicherung und Sperre', tun: () => Krypto.dialog() },
-        { id: 'app-aussehen', marke: 'aussehen', name: 'Aussehen', icon: '🎨', platz: 'apps', rang: 110,
-            hinweis: 'Farben, Schrift und Tastenkürzel', tun: () => Aussehen.dialog() },
-        { id: 'app-tempo', marke: 'tempo', name: 'Tempo', icon: '⏱', platz: 'apps', rang: 120,
-            hinweis: 'Wie schnell gezeichnet und gerechnet wird', tun: () => Tempo.dialog() },
-        { id: 'app-kann', marke: 'kann', name: 'Was Redion kann', icon: '⭐', platz: 'apps', rang: 130,
-            hinweis: 'Alles auf einen Blick, mit Führung', tun: () => Rundgang.uebersicht() },
-        { id: 'app-erweitern', marke: 'erweitern', name: 'Erweiterungen', icon: '🧩', platz: 'apps', rang: 140,
-            hinweis: 'Eigene Befehle, Knöpfe und Formeln', tun: () => Erweiterung.dialog() },
-        { id: 'app-eingang', marke: 'eingang', name: 'Was hereinkommt', icon: '📨', platz: 'apps', rang: 150,
-            hinweis: 'Daten von aussen abholen und einwerfen', tun: () => Eingang.dialog() },
-        { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan', icon: '☀', platz: 'apps', rang: 160,
+        { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan', icon: '☀', platz: 'apps', gruppe: 'planen', rang: 20,
             hinweis: 'Was heute ansteht', tun: () => Plan.tagesplan() },
-        { id: 'app-woche', marke: 'woche', name: 'Wochenrückblick', icon: '📅', platz: 'apps', rang: 170,
+        { id: 'app-woche', marke: 'woche', name: 'Wochenrückblick', icon: '📅', platz: 'apps', gruppe: 'planen', rang: 30,
             hinweis: 'Was lief, was blieb liegen', tun: () => Plan.wochenrueckblick() },
-        { id: 'app-spaeter', marke: 'spaeter', name: 'Zurückgestellt', icon: '⏰', platz: 'apps', rang: 180,
+        { id: 'app-spaeter', marke: 'spaeter', name: 'Zurückgestellt', icon: '⏰', platz: 'apps', gruppe: 'planen', rang: 40,
             hinweis: 'Was später wieder hochkommt', tun: () => Plan.uebersicht() },
-        { id: 'app-hilfe', marke: 'hilfe', name: 'Hilfe', icon: '？', platz: 'apps', rang: 190,
-            hinweis: 'Tastenkürzel — Strg /', tun: () => Werkzeuge.tastenkuerzel() },
-        { id: 'app-papier', marke: 'papier', name: 'Papierkorb', icon: '🗑', platz: 'apps', rang: 200,
-            hinweis: 'Gelöschte Seiten', tun: () => App.papierkorb() },
+        /* NICHT dasselbe wie die Zeile „Aufgaben" in der obersten Gruppe.
+           Die ruft `Produktwelten.aufgaben()`, also `workspace('aufgaben')`;
+           diese hier ruft `Bibliothek.aufgaben()`. Zwei Ansichten auf zwei
+           verschiedene Fragen — beim Aufräumen (E206) sah es nach einer
+           Doppelung aus und war keine. */
+        { id: 'app-aufgaben', marke: 'aufgaben', name: 'Meine Aufgaben', icon: '☑', platz: 'apps', gruppe: 'planen', rang: 50,
+            hinweis: 'Was dir zugewiesen ist', tun: () => Bibliothek.aufgaben() },
+        { id: 'app-modell', marke: 'modell', name: 'Datenmodell', icon: '🗺', platz: 'apps', gruppe: 'daten', rang: 60,
+            hinweis: 'Alle Datenbanken und ihre Verknüpfungen', tun: () => Schema.ansicht() },
+        { id: 'app-kennzahl', marke: 'kennzahl', name: 'Kennzahlen', icon: '📊', platz: 'apps', gruppe: 'daten', rang: 70,
+            hinweis: 'Zahlen aus mehreren Datenbanken', tun: () => Schema.tafel() },
+        { id: 'app-eingang', marke: 'eingang', name: 'Was hereinkommt', icon: '📨', platz: 'apps', gruppe: 'daten', rang: 80,
+            hinweis: 'Daten von aussen abholen und einwerfen', tun: () => Eingang.dialog() },
+        { id: 'app-markt', marke: 'markt', name: 'Marktplatz', icon: '🛍', platz: 'apps', gruppe: 'daten', rang: 90,
+            hinweis: 'Fertige Vorlagen', tun: () => Werkzeuge.vorlagen() },
+        { id: 'app-aussehen', marke: 'aussehen', name: 'Aussehen', icon: '🎨', platz: 'apps', gruppe: 'einrichten', rang: 100,
+            hinweis: 'Farben, Schrift und Tastenkürzel', tun: () => Aussehen.dialog() },
+        { id: 'app-tempo', marke: 'tempo', name: 'Tempo', icon: '⏱', platz: 'apps', gruppe: 'einrichten', rang: 110,
+            hinweis: 'Wie schnell gezeichnet und gerechnet wird', tun: () => Tempo.dialog() },
+        { id: 'app-krypto', marke: 'krypto', name: 'Passwort', icon: '🔐', platz: 'apps', gruppe: 'einrichten', rang: 120,
+            hinweis: 'Verschlüsselte Sicherung und Sperre', tun: () => Krypto.dialog() },
+        { id: 'app-erweitern', marke: 'erweitern', name: 'Erweiterungen', icon: '🧩', platz: 'apps', gruppe: 'einrichten', rang: 130,
+            hinweis: 'Eigene Befehle, Knöpfe und Formeln', tun: () => Erweiterung.dialog() },
+        { id: 'app-pwa', marke: 'pwa', name: 'App installieren', icon: '📱', platz: 'apps', gruppe: 'einrichten', rang: 140,
+            hinweis: 'Auf dem Telefon oder Rechner ablegen', tun: () => PWA.installieren() },
+        /* NICHT die Seite „Notion-Wissen" im Baum. Das hier ist das Modul mit
+           den acht Teilen; die Seite ist eine Seite. Auch das sah beim
+           Aufräumen nach einer Doppelung aus (E206). */
+        { id: 'app-wissen', marke: 'wissen', name: 'Notion-Wissen', icon: '📖', platz: 'apps', gruppe: 'hilfe', rang: 150,
+            hinweis: 'Alles über Notion und Redion, in acht Teilen', tun: () => Wissen.oeffnen() },
+        { id: 'app-kann', marke: 'kann', name: 'Was Redion kann', icon: '⭐', platz: 'apps', gruppe: 'hilfe', rang: 160,
+            hinweis: 'Alles auf einen Blick, mit Führung', tun: () => Rundgang.uebersicht() },
+        { id: 'app-pflege', marke: 'pflege', name: 'Erste Hilfe', icon: '🧰', platz: 'apps', gruppe: 'hilfe', rang: 170,
+            hinweis: 'Prüfen, reparieren, sichern', tun: () => Pflege.ersteHilfe() },
+        /* DREI EINTRÄGE STANDEN HIER UND STEHEN WOANDERS SCHON (E206).
+           Redur: „Links habe ich so viel Bereiche, reduziere es — aber wichtig
+           nichts löschen." Gelöscht ist auch nichts: alle drei Ziele bleiben,
+           nur eben je einmal statt zweimal.
+    
+               app-bib     „Bibliothek"    →  `Bibliothek.oeffne()`
+                                              = btn-library, oberste Gruppe
+               app-papier  „Papierkorb"    →  `App.papierkorb()`
+                                              = btn-trash, im Fuss
+               app-hilfe   „Hilfe"         →  `Werkzeuge.tastenkuerzel()`
+                                              = btn-hilfe, im Fuss
+    
+           Wer eine davon über `Register.navigation.eines('app-bib')` gesucht
+           hat, findet sie nicht mehr — das ist der einzige Bruch, und er trifft
+           nur Code, den es hier nicht gibt. */
         { id: 'favoriten', name: 'Favoriten', icon: '★', platz: 'baum', rang: 10 },
         { id: 'seiten', name: 'Seiten', icon: '📄', platz: 'baum', rang: 20 },
         { id: 'geteilt', name: 'Geteilt', icon: '👥', platz: 'baum', rang: 30,
@@ -94602,6 +94711,49 @@ const Lernwelt = (() => {
         { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
         { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' }
     ];
+    /**
+     * NEUN REITER WAREN ZU VIELE (E206).
+     *
+     * Redur am 26. August: „es sollte nicht so viele Bereiche haben, z. B. wie
+     * Uni / Schule Ausbildung usw." Gemessen stimmt das auch ohne Auge: neun
+     * Reiter brauchen 1016 px, am Rechner umbrachen sie auf ZWEI Reihen und
+     * kosteten damit 106 px über der Falz — mehr als jede Karte darunter, und
+     * darauf stehen zehn Wörter.
+     *
+     * Vier Gruppen, und keine Ansicht geht verloren: was zusammengehört, steht
+     * unter einem Namen und klappt als zweite, kurze Reihe auf, sobald man
+     * darin ist. `ANSICHTEN` bleibt unverändert die Wahrheit über die neun —
+     * `Lernwelt.ansichten` gibt weiterhin alle neun heraus, Routen wie
+     * `#welt-lernen-uni` funktionieren weiter, und wer eine zehnte Ansicht
+     * anlegt und hier nicht einträgt, bekommt sie als eigenen Reiter statt
+     * gar nicht.
+     *
+     * `unter[0]` ist das, was der Gruppenkopf selbst öffnet.
+     */
+    const REITER = [
+        { id: 'heute', icon: 'today', name: 'Heute' },
+        { id: 'lernen', icon: 'cards', name: 'Lernen',
+            unter: ['lernen', 'lernweg', 'fehler', 'fortschritt'] },
+        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
+        { id: 'schule', icon: 'learn', name: 'Wo du lernst',
+            unter: ['schule', 'uni', 'arbeit'] }
+    ];
+    /**
+     * Wie eine Ansicht in der ZWEITEN Reihe heisst.
+     *
+     * Auf dem Bild vom 26. August stand „Lernen › Lernen": die Gruppe heisst
+     * wie ihr erster Eintrag, und untereinander gelesen sieht das aus wie ein
+     * Fehler. In der Gruppe ist der Name aber ohnehin schon gesagt — was der
+     * Unterreiter braucht, ist nur noch, WELCHER Teil davon.
+     *
+     * `ANSICHTEN` bleibt unangetastet: dort heisst die Ansicht weiterhin
+     * „Lernen", und `Lernwelt.ansichten` gibt das auch so heraus. Umbenannt
+     * wird die Beschriftung, nicht die Ansicht.
+     */
+    const KURZ = { lernen: 'Übersicht' };
+    const ansichtName = (id) => KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
+    /** Zu welcher Gruppe gehört die Ansicht, in der wir gerade sind? */
+    const gruppeVon = (ansicht) => REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht)) || null;
     const zustand = {
         root: null,
         ansicht: 'heute',
@@ -95676,11 +95828,36 @@ const Lernwelt = (() => {
             '</select></label></header>' +
             /* Die Zeichen werden nach dem Einsetzen gefüllt — siehe `fuelleZeichen`
                unten. Hier steht nur die Stelle. */
-            '<nav class="lw-nav" aria-label="Lernen und Alltag">' + ANSICHTEN.map(item => '<button type="button" data-lw-nav="' + item.id + '"' +
-            (zustand.ansicht === item.id ? ' aria-current="page" class="is-active"' : '') + '>' +
-            '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) +
-            '</span></button>').join('') +
-            '</nav>';
+            /* Eine Ansicht, die in KEINER Gruppe steht, bekommt ihren eigenen
+               Reiter angehängt. So verschwindet nichts, wenn jemand `ANSICHTEN`
+               erweitert und `REITER` vergisst. */
+            (() => {
+                const bekannt = new Set(REITER.flatMap(r => [r.id, ...(r.unter || [])]));
+                const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
+                    .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
+                const reihe = [...REITER, ...zusatz];
+                const hier = gruppeVon(zustand.ansicht);
+                const haupt = '<nav class="lw-nav" aria-label="Lernen und Alltag">' + reihe.map(item => {
+                    const drin = item.id === zustand.ansicht ||
+                        (item.unter || []).includes(zustand.ansicht);
+                    return '<button type="button" data-lw-nav="' +
+                        (item.unter ? item.unter[0] : item.id) + '"' +
+                        (drin ? ' aria-current="page" class="is-active"' : '') + '>' +
+                        '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) + '</span>' +
+                        (item.unter
+                            ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
+                        '</button>';
+                }).join('') + '</nav>';
+                /* Die zweite Reihe steht nur da, wenn man in einer Gruppe IST — und
+                   dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
+                   zeigt, ist wieder die alte. */
+                if (!hier?.unter)
+                    return haupt;
+                return haupt + '<nav class="lw-subnav" aria-label="' + esc(hier.name) + '">' +
+                    hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
+                        (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
+                        esc(ansichtName(id)) + '</button>').join('') + '</nav>';
+            })();
     };
     const heuteAnsicht = () => {
         const queue = warteschlange();
@@ -101744,6 +101921,24 @@ const Seitenleiste = (() => {
         ['privat', 'Privat'],
         ['apps', 'Meine Apps']
     ];
+    /**
+     * Die Schubladen in „Meine Apps" (E206).
+     *
+     * Kennung, Name, Zeichen. Die Reihenfolge hier ist die Reihenfolge auf dem
+     * Bildschirm; die Reihenfolge INNERHALB einer Schublade steht als `rang`
+     * am Registereintrag.
+     *
+     * Wer eine fünfte Gruppe braucht, trägt sie hier ein und setzt `gruppe`
+     * am Eintrag. Wer nur einen Eintrag anmeldet und keine Gruppe nennt,
+     * bekommt „Sonstiges" — die Zeile geht nicht verloren, und niemand muss
+     * zwei Stellen pflegen.
+     */
+    const APP_GRUPPEN = [
+        ['planen', 'Planen', 'calendar'],
+        ['daten', 'Daten', 'database'],
+        ['einrichten', 'Einrichten', 'settings'],
+        ['hilfe', 'Hilfe & Pflege', 'help']
+    ];
     const abschnittAn = (id) => !(Store.getMeta('sidebarAus', []) || []).includes(id);
     /** Die Abschnitte in der selbst gewählten Reihenfolge. Notion lässt sie
         nur ein- und ausblenden, nicht umsortieren. */
@@ -102199,8 +102394,56 @@ const Seitenleiste = (() => {
         apps.className = 'wz-block apps-block';
         const appliste = (typeof Register !== 'undefined' && Register.navigation)
             ? Register.navigation.anPlatz('apps') : [];
-        apps.innerHTML = appliste.map((x) => `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
-            `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`).join('');
+        /* VIER GRUPPEN STATT ZWANZIG ZEILEN (E206).
+           Redur am 26. August: „Links habe ich so viel Bereiche, reduziere es."
+           Zwanzig gleichrangige Zeilen untereinander sind keine Liste, sondern
+           eine Wand — man liest sie nicht, man sucht darin. Und weil sie ganz
+           unten steht, scrollt man an allem anderen vorbei, um sie zu sehen.
+    
+           Gelöscht wird dabei nichts: jede App bleibt, sie steht nur in einer
+           Schublade. Zu ist die Voreinstellung, aufgeklappt merkt sich der
+           Speicher — wer „Einrichten" offen lässt, findet es offen wieder.
+    
+           Ein Eintrag ohne `gruppe` fällt nicht heraus, sondern landet unter
+           „Sonstiges". Eine Erweiterung, die sich über `melde` anhängt, kennt
+           diese Gruppennamen nicht und darf trotzdem erscheinen. */
+        const offeneGruppen = () => {
+            const g = Store.getMeta('appGruppenAuf', []);
+            return Array.isArray(g) ? g : [];
+        };
+        const gruppeAuf = (id) => offeneGruppen().includes(id);
+        const gruppeSchalten = (id) => {
+            const auf = offeneGruppen();
+            Store.setMeta('appGruppenAuf', auf.includes(id) ? auf.filter(x => x !== id) : [...auf, id]);
+            zeichneBaum();
+        };
+        const inGruppe = (id) => appliste.filter((x) => id === 'sonstiges' ? !APP_GRUPPEN.some(([g]) => g === x.gruppe) : x.gruppe === id);
+        /* „Sonstiges" steht ausdrücklich in derselben Form wie die vier echten
+           Gruppen, damit die Schleife eine Schleife bleibt und keine Sonderzeile
+           darunter braucht. */
+        const alleGruppen = [...APP_GRUPPEN, ['sonstiges', 'Sonstiges', 'dots']];
+        apps.innerHTML = alleGruppen
+            .map(([id, name, zeichen]) => {
+            const drin = inGruppe(id);
+            if (!drin.length)
+                return '';
+            const auf = gruppeAuf(id);
+            return `<button class="side-item app-gruppe${auf ? ' auf' : ''}" data-app-gruppe="${esc(id)}"` +
+                ` aria-expanded="${auf ? 'true' : 'false'}">` +
+                `<span data-sym="${esc(zeichen)}" aria-hidden="true"></span>` +
+                `<span>${esc(name)}</span>` +
+                `<span class="k">${drin.length}</span>` +
+                `<span class="app-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>` +
+                `<div class="app-unter"${auf ? '' : ' hidden'}>` + drin.map((x) => `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
+                `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`).join('') + '</div>';
+        }).join('');
+        apps.addEventListener('click', e => {
+            const g = elVon(e)?.closest('[data-app-gruppe]');
+            if (g?.dataset.appGruppe) {
+                gruppeSchalten(g.dataset.appGruppe);
+                return;
+            }
+        });
         /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
         setTimeout(() => {
             let versteckt = false;

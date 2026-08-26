@@ -26,6 +26,49 @@ const Lernwelt = (() => {
         { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
         { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' }
     ];
+    /**
+     * NEUN REITER WAREN ZU VIELE (E206).
+     *
+     * Redur am 26. August: „es sollte nicht so viele Bereiche haben, z. B. wie
+     * Uni / Schule Ausbildung usw." Gemessen stimmt das auch ohne Auge: neun
+     * Reiter brauchen 1016 px, am Rechner umbrachen sie auf ZWEI Reihen und
+     * kosteten damit 106 px über der Falz — mehr als jede Karte darunter, und
+     * darauf stehen zehn Wörter.
+     *
+     * Vier Gruppen, und keine Ansicht geht verloren: was zusammengehört, steht
+     * unter einem Namen und klappt als zweite, kurze Reihe auf, sobald man
+     * darin ist. `ANSICHTEN` bleibt unverändert die Wahrheit über die neun —
+     * `Lernwelt.ansichten` gibt weiterhin alle neun heraus, Routen wie
+     * `#welt-lernen-uni` funktionieren weiter, und wer eine zehnte Ansicht
+     * anlegt und hier nicht einträgt, bekommt sie als eigenen Reiter statt
+     * gar nicht.
+     *
+     * `unter[0]` ist das, was der Gruppenkopf selbst öffnet.
+     */
+    const REITER = [
+        { id: 'heute', icon: 'today', name: 'Heute' },
+        { id: 'lernen', icon: 'cards', name: 'Lernen',
+            unter: ['lernen', 'lernweg', 'fehler', 'fortschritt'] },
+        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
+        { id: 'schule', icon: 'learn', name: 'Wo du lernst',
+            unter: ['schule', 'uni', 'arbeit'] }
+    ];
+    /**
+     * Wie eine Ansicht in der ZWEITEN Reihe heisst.
+     *
+     * Auf dem Bild vom 26. August stand „Lernen › Lernen": die Gruppe heisst
+     * wie ihr erster Eintrag, und untereinander gelesen sieht das aus wie ein
+     * Fehler. In der Gruppe ist der Name aber ohnehin schon gesagt — was der
+     * Unterreiter braucht, ist nur noch, WELCHER Teil davon.
+     *
+     * `ANSICHTEN` bleibt unangetastet: dort heisst die Ansicht weiterhin
+     * „Lernen", und `Lernwelt.ansichten` gibt das auch so heraus. Umbenannt
+     * wird die Beschriftung, nicht die Ansicht.
+     */
+    const KURZ = { lernen: 'Übersicht' };
+    const ansichtName = (id) => KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
+    /** Zu welcher Gruppe gehört die Ansicht, in der wir gerade sind? */
+    const gruppeVon = (ansicht) => REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht)) || null;
     const zustand = {
         root: null,
         ansicht: 'heute',
@@ -1100,11 +1143,36 @@ const Lernwelt = (() => {
             '</select></label></header>' +
             /* Die Zeichen werden nach dem Einsetzen gefüllt — siehe `fuelleZeichen`
                unten. Hier steht nur die Stelle. */
-            '<nav class="lw-nav" aria-label="Lernen und Alltag">' + ANSICHTEN.map(item => '<button type="button" data-lw-nav="' + item.id + '"' +
-            (zustand.ansicht === item.id ? ' aria-current="page" class="is-active"' : '') + '>' +
-            '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) +
-            '</span></button>').join('') +
-            '</nav>';
+            /* Eine Ansicht, die in KEINER Gruppe steht, bekommt ihren eigenen
+               Reiter angehängt. So verschwindet nichts, wenn jemand `ANSICHTEN`
+               erweitert und `REITER` vergisst. */
+            (() => {
+                const bekannt = new Set(REITER.flatMap(r => [r.id, ...(r.unter || [])]));
+                const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
+                    .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
+                const reihe = [...REITER, ...zusatz];
+                const hier = gruppeVon(zustand.ansicht);
+                const haupt = '<nav class="lw-nav" aria-label="Lernen und Alltag">' + reihe.map(item => {
+                    const drin = item.id === zustand.ansicht ||
+                        (item.unter || []).includes(zustand.ansicht);
+                    return '<button type="button" data-lw-nav="' +
+                        (item.unter ? item.unter[0] : item.id) + '"' +
+                        (drin ? ' aria-current="page" class="is-active"' : '') + '>' +
+                        '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) + '</span>' +
+                        (item.unter
+                            ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
+                        '</button>';
+                }).join('') + '</nav>';
+                /* Die zweite Reihe steht nur da, wenn man in einer Gruppe IST — und
+                   dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
+                   zeigt, ist wieder die alte. */
+                if (!hier?.unter)
+                    return haupt;
+                return haupt + '<nav class="lw-subnav" aria-label="' + esc(hier.name) + '">' +
+                    hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
+                        (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
+                        esc(ansichtName(id)) + '</button>').join('') + '</nav>';
+            })();
     };
     const heuteAnsicht = () => {
         const queue = warteschlange();

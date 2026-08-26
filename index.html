@@ -110,24 +110,38 @@
     <button class="icon-btn" id="btn-side"  title="Seitenleiste (Strg + \)">‹‹</button>
   </div>
 
-  <!-- Zwei Produktwelten, ein gemeinsamer Datenbestand. Der Wechsel ordnet
-       vorhandene Objekte neu; er erzeugt keine Kopien. -->
-  <nav id="weltwechsel" class="weltwechsel" aria-label="Produktwelt">
-    <button id="btn-welt-lernen" data-welt="lernen" aria-pressed="true">
-      <span data-sym="learn"></span><b>Lernen &amp; Alltag</b>
-    </button>
-    <button id="btn-welt-workspace" data-welt="workspace" aria-pressed="false">
-      <span data-sym="workspace"></span><b>Workspace</b>
-    </button>
-  </nav>
+  <!-- HIER STAND EIN WELT-UMSCHALTER (E206).
+       Zwei Knöpfe, „Lernen & Alltag" und „Workspace", und beide taten
+       nachweislich nichts anderes als `Produktwelten.lernen('heute')` und
+       `Produktwelten.workspace()` — also genau das, was die Zeilen „Heute"
+       und „Workspace" acht Zeilen weiter unten schon tun. Ein dritter Weg
+       zu zwei Orten, ganz oben, in der auffälligsten Zeile der Leiste.
 
-  <!-- Reiterleiste wie in Notion: Start, Chat, Besprechungen, Posteingang, Suchen -->
+       Die zwei Welten selbst bleiben, wie sie sind: derselbe Bestand,
+       dieselben Ansichten, derselbe `WELT_META`-Speicher. Weg ist nur der
+       Umschalter, nicht die Welt. Wo man gerade ist, sagt die Markierung
+       an der Zeile — dort, wo man hinklickt.
+
+       `Produktwelten.markieren()` läuft weiter über `[data-welt]`; findet
+       es keins, geht `forEach` über eine leere Liste, und das ist der
+       ganze Umbau an der Logik. -->
+
+  <!-- DIE REITER SIND MODI DES BAUMS, KEINE ZIELE (E206).
+       Hier standen fünf. Zwei davon waren keine Modi: `suche` rief
+       `suche()` und sprang sofort auf `start` zurück, `inbox` rief
+       `Ansichten.posteingang()` und ebenso — wortwörtlich dasselbe wie die
+       Zeilen „Suchen" und „Posteingang" darunter, nur als Zeichen.
+
+       Die drei, die bleiben, schalten wirklich um, was unten steht:
+       `start` den Seitenbaum, `chat` die Agentenliste (`KI.seitenleiste`),
+       `bespr` die Besprechungen (`Meeting.seitenleiste`). `start` ist
+       ausserdem der einzige Weg aus dem Chat-Modus zurück — ihn zu den
+       Doppelungen zu zählen wäre der Fehler gewesen, den diese Aufräumung
+       fast gemacht hätte. -->
   <nav class="side-reiter" id="side-reiter">
     <button class="sr" data-reiter="start"  title="Start"><span data-sym="home"></span><b>Start</b></button>
     <button class="sr" data-reiter="chat"   title="Chat mit der KI (Strg + O)"><span data-sym="chat"></span><b>Chat</b></button>
     <button class="sr" data-reiter="bespr"  title="Besprechungen"><span data-sym="mic"></span><b>Besprechungen</b></button>
-    <button class="sr" data-reiter="inbox"  title="Posteingang"><span data-sym="inbox"></span><b>Posteingang</b></button>
-    <button class="sr" data-reiter="suche"  title="Suchen (Strg + P)"><span data-sym="search"></span><b>Suchen</b></button>
   </nav>
 
   <nav class="side-nav">

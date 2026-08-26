@@ -98,6 +98,24 @@ const Seitenleiste = (() => {
         ['privat', 'Privat'],
         ['apps', 'Meine Apps']
     ];
+    /**
+     * Die Schubladen in „Meine Apps" (E206).
+     *
+     * Kennung, Name, Zeichen. Die Reihenfolge hier ist die Reihenfolge auf dem
+     * Bildschirm; die Reihenfolge INNERHALB einer Schublade steht als `rang`
+     * am Registereintrag.
+     *
+     * Wer eine fünfte Gruppe braucht, trägt sie hier ein und setzt `gruppe`
+     * am Eintrag. Wer nur einen Eintrag anmeldet und keine Gruppe nennt,
+     * bekommt „Sonstiges" — die Zeile geht nicht verloren, und niemand muss
+     * zwei Stellen pflegen.
+     */
+    const APP_GRUPPEN = [
+        ['planen', 'Planen', 'calendar'],
+        ['daten', 'Daten', 'database'],
+        ['einrichten', 'Einrichten', 'settings'],
+        ['hilfe', 'Hilfe & Pflege', 'help']
+    ];
     const abschnittAn = (id) => !(Store.getMeta('sidebarAus', []) || []).includes(id);
     /** Die Abschnitte in der selbst gewählten Reihenfolge. Notion lässt sie
         nur ein- und ausblenden, nicht umsortieren. */
@@ -553,8 +571,56 @@ const Seitenleiste = (() => {
         apps.className = 'wz-block apps-block';
         const appliste = (typeof Register !== 'undefined' && Register.navigation)
             ? Register.navigation.anPlatz('apps') : [];
-        apps.innerHTML = appliste.map((x) => `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
-            `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`).join('');
+        /* VIER GRUPPEN STATT ZWANZIG ZEILEN (E206).
+           Redur am 26. August: „Links habe ich so viel Bereiche, reduziere es."
+           Zwanzig gleichrangige Zeilen untereinander sind keine Liste, sondern
+           eine Wand — man liest sie nicht, man sucht darin. Und weil sie ganz
+           unten steht, scrollt man an allem anderen vorbei, um sie zu sehen.
+    
+           Gelöscht wird dabei nichts: jede App bleibt, sie steht nur in einer
+           Schublade. Zu ist die Voreinstellung, aufgeklappt merkt sich der
+           Speicher — wer „Einrichten" offen lässt, findet es offen wieder.
+    
+           Ein Eintrag ohne `gruppe` fällt nicht heraus, sondern landet unter
+           „Sonstiges". Eine Erweiterung, die sich über `melde` anhängt, kennt
+           diese Gruppennamen nicht und darf trotzdem erscheinen. */
+        const offeneGruppen = () => {
+            const g = Store.getMeta('appGruppenAuf', []);
+            return Array.isArray(g) ? g : [];
+        };
+        const gruppeAuf = (id) => offeneGruppen().includes(id);
+        const gruppeSchalten = (id) => {
+            const auf = offeneGruppen();
+            Store.setMeta('appGruppenAuf', auf.includes(id) ? auf.filter(x => x !== id) : [...auf, id]);
+            zeichneBaum();
+        };
+        const inGruppe = (id) => appliste.filter((x) => id === 'sonstiges' ? !APP_GRUPPEN.some(([g]) => g === x.gruppe) : x.gruppe === id);
+        /* „Sonstiges" steht ausdrücklich in derselben Form wie die vier echten
+           Gruppen, damit die Schleife eine Schleife bleibt und keine Sonderzeile
+           darunter braucht. */
+        const alleGruppen = [...APP_GRUPPEN, ['sonstiges', 'Sonstiges', 'dots']];
+        apps.innerHTML = alleGruppen
+            .map(([id, name, zeichen]) => {
+            const drin = inGruppe(id);
+            if (!drin.length)
+                return '';
+            const auf = gruppeAuf(id);
+            return `<button class="side-item app-gruppe${auf ? ' auf' : ''}" data-app-gruppe="${esc(id)}"` +
+                ` aria-expanded="${auf ? 'true' : 'false'}">` +
+                `<span data-sym="${esc(zeichen)}" aria-hidden="true"></span>` +
+                `<span>${esc(name)}</span>` +
+                `<span class="k">${drin.length}</span>` +
+                `<span class="app-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>` +
+                `<div class="app-unter"${auf ? '' : ' hidden'}>` + drin.map((x) => `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
+                `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`).join('') + '</div>';
+        }).join('');
+        apps.addEventListener('click', e => {
+            const g = elVon(e)?.closest('[data-app-gruppe]');
+            if (g?.dataset.appGruppe) {
+                gruppeSchalten(g.dataset.appGruppe);
+                return;
+            }
+        });
         /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
         setTimeout(() => {
             let versteckt = false;

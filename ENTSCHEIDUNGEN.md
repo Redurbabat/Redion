@@ -14453,3 +14453,162 @@ mit einer Zeile stand neben „Zuletzt geöffnet" mit acht. „Aufgaben heute" u
 in der Zeile („heute", „Do", „26. Aug."), nicht in zwei Überschriften;
 überfällig kommt zuerst, weil es zuerst dran ist. Die Übersicht bleibt bei
 ZWEI Spalten: vier Kacheln in drei Spalten liessen wieder eine allein.
+
+
+================================================================================
+E206 — Links weniger Bereiche, und die zwei Welten haben nur noch einen Weg
+================================================================================
+
+Redur am 26. August, wörtlich:
+
+    „Links habe ich so viel Bereiche, reduziere es — aber wichtig nichts
+    löschen. Dann mache die Workspace und Lernbereich zu nur einer. […] Es
+    sollte nicht so viele Bereiche haben, z. B. wie Uni / Schule Ausbildung
+    usw. […] Wenn du etwas löschen willst oder musst, immer mich fragen."
+
+Gezählt, bevor irgendetwas angefasst wurde: **70 Knöpfe** in der Seitenleiste,
+**neun Reiter** in der Lernwelt.
+
+
+ERST NACHSEHEN, DANN AUFRÄUMEN
+--------------------------------------------------------------------------------
+
+Zwölf Knöpfe sahen nach Doppelungen aus. Fünf davon waren keine, und das kam
+erst beim Nachlesen des Codes heraus — nicht beim Zählen der Namen:
+
+    side-reiter „Chat"      `KI.seitenleiste(baum)` — ersetzt den BAUM durch
+                            Agenten und Verlauf. Kein zweiter Weg dorthin.
+    side-reiter „Bespr."    `Meeting.seitenleiste(baum)` — dasselbe für
+                            Besprechungen.
+    side-reiter „Start"     schaltet den Baum ZURÜCK. Ohne ihn käme man aus
+                            dem Chat-Modus nicht mehr heraus; ein Doppelklick
+                            öffnet ausserdem „Abschnitte anpassen".
+    Apps „Meine Aufgaben"   `Bibliothek.aufgaben()` gegen `workspace('aufgaben')`
+                            an der Zeile „Aufgaben" — zwei Ansichten, zwei Fragen.
+    Apps „Notion-Wissen"    `Wissen.oeffnen()`, das Modul mit den acht Teilen.
+                            Die gleichnamige Zeile im Baum ist eine Seite.
+
+Die Reiterleiste ist also kein Navigationsstreifen, sondern ein Umschalter für
+das, was unter ihr steht. Hätte ich nach Namen aufgeräumt statt nach Verhalten,
+wäre der Weg aus dem Chat-Modus verschwunden.
+
+Sieben waren echte Doppelungen, und bei denen steht es wörtlich im Code:
+
+    reiterWechseln('suche')  { suche(); reiter = 'start'; … }
+    reiterWechseln('inbox')  { Ansichten.posteingang(); reiter = 'start'; … }
+
+Das ist Zeichen für Zeichen dasselbe, was `btn-search` und `btn-inbox` acht
+Zeilen tiefer tun. Der Welt-Umschalter oben rief `Produktwelten.lernen('heute')`
+und `Produktwelten.workspace()` — dasselbe wie die Zeilen „Heute" und
+„Workspace" darunter. Und drei Apps standen zusätzlich in der obersten Gruppe
+oder im Fuss: Bibliothek, Papierkorb, Hilfe.
+
+
+DIE ZWEI WELTEN BLEIBEN, IHR UMSCHALTER GEHT
+--------------------------------------------------------------------------------
+
+„Workspace und Lernbereich zu nur einer" heisst nicht, eine Welt zu löschen —
+das wäre ein Datenumbau und niemand hat danach gefragt. Es heisst: EIN Weg
+statt drei. Derselbe Bestand, dieselben Ansichten, derselbe `WELT_META`;
+weg ist die auffälligste Zeile der Leiste, die nichts anderes tat als die
+zwei Zeilen darunter.
+
+Wo man ist, sagt jetzt die Markierung an der Zeile selbst — die Regel dafür
+(`body[data-produktwelt="lernen"] #btn-learning`) gab es schon, sie stand nur
+neben einem zweiten Anzeiger. `Produktwelten.markieren()` läuft weiter über
+`[data-welt]`; findet es keins, geht `forEach` über eine leere Liste.
+
+
+ZWANZIG ZEILEN WERDEN VIER SCHUBLADEN
+--------------------------------------------------------------------------------
+
+Zwanzig gleichrangige Zeilen ganz unten in der Leiste sind keine Liste,
+sondern eine Wand: man liest sie nicht, man sucht darin — und um überhaupt
+hinzusehen, muss man an allem anderen vorbeirollen.
+
+    Planen          Kalender, Tagesplan, Wochenrückblick, Zurückgestellt,
+                    Meine Aufgaben
+    Daten           Datenmodell, Kennzahlen, Was hereinkommt, Marktplatz
+    Einrichten      Aussehen, Tempo, Passwort, Erweiterungen, App installieren
+    Hilfe & Pflege  Notion-Wissen, Was Redion kann, Erste Hilfe
+
+Gelöscht ist nichts; jede App steht weiterhin da, nur eine Ebene tiefer. Der
+Zähler rechts sagt vorher, wie viele drin sind — ohne ihn öffnet man eine
+Schublade, um zu sehen, ob sich das Öffnen lohnt. Ein Eintrag ohne `gruppe`
+fällt nicht heraus, sondern landet unter „Sonstiges": eine Erweiterung, die
+sich über `melde` anhängt, kennt diese Namen nicht und darf trotzdem
+erscheinen.
+
+**Und dabei ein Fehler, den erst die Prüfung fand.** Der erste Entwurf gab
+jeder Gruppe die Ränge 10, 20, 30 — aber `anPlatz('apps')` sortiert nach
+`rang`, ohne die Gruppe zu kennen. Heraus kam eine Liste, in der erst alle
+Ersten jeder Gruppe standen, dann alle Zweiten: eine Reihenfolge, die auf dem
+Bildschirm nirgends vorkommt. `test222` §6 vergleicht Register und Bild und
+ging zu Recht rot. Der Rang läuft jetzt durch, 10 bis 170, und die Gruppen
+sind nur die Schnitte darin.
+
+Gemessen: **70 Knöpfe → 67 im Baum, davon 50 sichtbar.** Aufgeklappt sind
+wieder alle 67 da.
+
+
+NEUN REITER WERDEN VIER
+--------------------------------------------------------------------------------
+
+    Heute · Lernen ⌄ · Prüfungen · Wo du lernst ⌄
+
+Neun Reiter brauchen 1016 px; am Rechner umbrachen sie auf ZWEI Reihen und
+kosteten 106 px über der Falz — mehr als jede Karte darunter, und darauf
+stehen zehn Wörter.
+
+Drei der vier sind Gruppen und tragen ein kleines „⌄". Wer darin ist, bekommt
+eine ZWEITE, kurze Reihe mit genau den Ansichten dieser Gruppe. Bewusst kein
+Aufklappmenü: ein Menü versteckt, wo man ist, und man muss es öffnen, um zu
+sehen, ob es sich lohnt. Die Reihe steht da, solange sie gebraucht wird —
+dasselbe Verhalten, das Word und VS Code für ihre Registerkarten benutzen.
+
+`ANSICHTEN` bleibt unverändert die Wahrheit über die neun. `Lernwelt.ansichten`
+gibt weiterhin alle neun heraus, Routen wie `#welt-lernen-uni` funktionieren
+weiter, und wer eine zehnte Ansicht anlegt und in `REITER` nicht einträgt,
+bekommt sie als eigenen Reiter statt gar nicht.
+
+Nachgemessen statt behauptet — alle neun Ansichten, einzeln geöffnet:
+
+    heute        1 Reihe  gefüllt  Heute*
+    lernen       1 Reihe  gefüllt  Lernen*      ↳ Übersicht* Lernpfad Fehler Fortschritt
+    lernweg      1 Reihe  gefüllt  Lernen*      ↳ Übersicht Lernpfad* Fehler Fortschritt
+    fehler       1 Reihe  gefüllt  Lernen*      ↳ … Meine Fehler* …
+    pruefungen   1 Reihe  gefüllt  Prüfungen*
+    schule       1 Reihe  gefüllt  Wo du lernst* ↳ Schule / Ausbildung* Uni Arbeit
+    uni          1 Reihe  gefüllt  Wo du lernst* ↳ … Uni* …
+    arbeit       1 Reihe  gefüllt  Wo du lernst* ↳ … Arbeit*
+    fortschritt  1 Reihe  gefüllt  Lernen*      ↳ … Fortschritt*
+
+Keine Seitenfehler, keine leere Ansicht, nie zwei Reihen.
+
+Mit Augen gefunden: „Lernen › Lernen" — die Gruppe hiess wie ihr erster
+Eintrag, und untereinander gelesen sah das aus wie ein Fehler. In der Gruppe
+ist der Name ohnehin schon gesagt; der Unterreiter heisst jetzt „Übersicht".
+`ANSICHTEN` blieb dabei unangetastet: umbenannt ist die Beschriftung, nicht
+die Ansicht.
+
+
+ZWEI PRÜFLÄUFE MUSSTEN GEÄNDERT WERDEN, UND ZWAR EHRLICH
+--------------------------------------------------------------------------------
+
+`test34` behauptete „Fünf Reiter wie bei Notion". Die Zahl stand an ZWEI
+Stellen, und die erste zu ändern hätte gereicht, um die zweite zu übersehen —
+sie ging auch prompt einzeln rot. Der Punkt heisst jetzt „Drei Reiter, und
+jeder schaltet den Baum um", weil das die Behauptung ist.
+
+`test222` prüfte „die Marken sind die kurzen, unveränderten" anhand der ersten
+vier Einträge. Drei dieser vier prüften in Wahrheit nur die REIHENFOLGE, nicht
+die Behauptung; als die Gruppen die Reihenfolge änderten, ging der Punkt rot,
+obwohl keine Marke sich geändert hatte. Geprüft wird jetzt, was dasteht:
+keine Marke trägt das `app-`-Präfix aus E166, und die kurzen sind noch da.
+
+Gegenprobe (§55.2): eine Doppelung künstlich wieder eingebaut — vier Punkte
+gingen rot, und einer davon zeigte zusätzlich, dass ein Rang, der nicht zur
+Gruppe passt, ebenfalls auffällt.
+
+Prüfläufe: test34 76/76, test222 48/48, test217 27/27, test128 50/50,
+test245 52/52, test215 44/44.
