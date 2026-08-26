@@ -779,15 +779,19 @@ Register.elektroformeln = (() => {
             erklaerung: 'Je länger und dünner, desto mehr Widerstand — und desto mehr Spannungsfall.'
         },
         {
-            id: 'temperatur', kapitel: 'leiter', abschnitt: 'g-temperatur', schreibweise: 'R₉ = R₂₀ · (1 + α · Δϑ)',
-            groessen: [g('R₉', 'Widerstand warm', 'Ω'), g('R₂₀', 'Widerstand bei 20 °C', 'Ω'),
+            /* Hier stand `R₉` — eine tiefgestellte NEUN, die wie das kleine Theta
+               aussieht, aber keines ist. Wer im Heft R mit tiefem ϑ liest und hier
+               R neun sucht, findet nichts. Unicode hat kein tiefgestelltes ϑ,
+               darum die Unterstrich-Schreibweise wie bei R_V und X_L. */
+            id: 'temperatur', kapitel: 'leiter', abschnitt: 'g-temperatur', schreibweise: 'R_ϑ = R₂₀ · (1 + α · Δϑ)',
+            groessen: [g('R_ϑ', 'Widerstand warm', 'Ω'), g('R₂₀', 'Widerstand bei 20 °C', 'Ω'),
                 g('α', 'Temperaturbeiwert', '1/K', 'Kupfer 0,0039'),
                 g('Δϑ', 'Temperaturänderung', 'K')],
             loese: {
-                'R₉': v => v['R₂₀'] * (1 + v['α'] * v['Δϑ']),
-                'R₂₀': v => v['R₉'] / (1 + v['α'] * v['Δϑ']),
-                'Δϑ': v => (v['R₉'] / v['R₂₀'] - 1) / v['α'],
-                'α': v => (v['R₉'] / v['R₂₀'] - 1) / v['Δϑ']
+                'R_ϑ': v => v['R₂₀'] * (1 + v['α'] * v['Δϑ']),
+                'R₂₀': v => v['R_ϑ'] / (1 + v['α'] * v['Δϑ']),
+                'Δϑ': v => (v['R_ϑ'] / v['R₂₀'] - 1) / v['α'],
+                'α': v => (v['R_ϑ'] / v['R₂₀'] - 1) / v['Δϑ']
             },
             annahme: 'α gilt für den Bereich, in dem der Zusammenhang linear ist.',
             erklaerung: 'Metall wird bei Wärme hochohmiger. Deshalb zieht ein kalter Motor mehr Strom.'
