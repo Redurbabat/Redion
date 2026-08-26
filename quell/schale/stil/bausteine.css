@@ -3578,7 +3578,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   cursor:pointer; font-size:11.5px; white-space:nowrap; flex:0 0 auto}
 .fh-kapitel button.an{background:var(--accent); color:var(--auf-accent);
   border-color:var(--accent)}
-.fh-inhalt{flex:1; overflow-y:auto; padding:0 10px 12px;
+/* `min-height:0` ist hier keine Feinheit, sondern der Unterschied zwischen
+   „die Fussleiste ist da" und „die Fussleiste steht unter dem Bildschirm".
+   Ein Flex-Kind schrumpft von sich aus NICHT unter die Höhe seines Inhalts;
+   ohne diese Zeile drückt eine lange Buchseite die Blätterknöpfe aus dem
+   Fenster hinaus, und am Telefon sieht man von ihnen die obere Hälfte. */
+.fh-inhalt{flex:1 1 auto; min-height:0; overflow-y:auto; padding:0 10px 12px;
   display:flex; flex-direction:column; gap:8px}
 
 .fh-formel{border:1px solid var(--line); border-radius:10px; padding:10px 12px;
@@ -3640,6 +3645,87 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   color:var(--text-dim); font-weight:400; line-height:1.7}
 .fh-weg li{font-variant-numeric:tabular-nums}
 
+/* ---- Die Buchseite: Redions eigenes Formelbuch (E194) ------------------
+   Eine Seite soll wie eine SEITE aussehen und nicht wie eine Liste: heller
+   Grund, Kopfzeile mit Kapitel und Seitenzahl, Abschnitte mit Linie
+   darunter, Skizze links neben den Formeln. Auf dem Telefon rutscht die
+   Skizze über die Formeln, weil nebeneinander dort nichts mehr ist. */
+.bs-inhalt{background:var(--bg-tief); padding:0}
+.bs-blatt{background:var(--bg-card); border-radius:8px; margin:8px;
+  padding:12px 14px 16px; box-shadow:0 1px 4px rgba(0,0,0,.16)}
+.bs-kopf{display:flex; align-items:baseline; justify-content:space-between;
+  gap:10px; flex-wrap:wrap; padding-bottom:8px; margin-bottom:10px;
+  border-bottom:2px solid var(--accent)}
+.bs-kapitel{display:flex; gap:8px; flex-wrap:wrap; font-size:12px;
+  font-weight:700; color:var(--text)}
+.bs-kapitel .bs-offen{font-weight:400; color:var(--text-faint)}
+.bs-seitenzahl{font-size:12px; font-weight:700; color:var(--accent);
+  white-space:nowrap; font-variant-numeric:tabular-nums}
+.bs-seitenzahl span{font-weight:400; color:var(--text-faint)}
+
+.bs-abschnitt{margin:0 0 14px}
+.bs-abschnitt:last-child{margin-bottom:0}
+.bs-abschnitt h3{margin:0 0 7px; font-size:12.5px; font-weight:700;
+  color:var(--text); letter-spacing:.01em}
+.bs-koerper{display:flex; gap:12px; align-items:flex-start}
+.bs-skizze{flex:0 0 44%; max-width:270px; min-width:0}
+.bs-skizze svg{width:100%; height:auto; display:block; color:var(--text)}
+/* Die Beschriftungen IN der Skizze sind auf 13 px im Zeichenraum gesetzt.
+   Bei 200 px Anzeige einer 390 px breiten Zeichnung werden daraus knapp
+   sieben — lesbar für den, der weiss, was dasteht, und für sonst niemand.
+   Darum ist die Spalte breiter, und die Schrift wird mitskaliert statt
+   fest zu bleiben. */
+.bs-skizze text{font-size:15px}
+.bs-formeln{flex:1 1 auto; min-width:0; display:flex; flex-direction:column;
+  gap:5px; align-items:flex-start}
+
+/* Eine Formel ist ein Knopf, weil sie einer ist: antippen öffnet den
+   Rechner. Sie sieht trotzdem wie gesetzte Formel aus und nicht wie eine
+   Schaltfläche — der Rahmen kommt erst beim Zeigen. */
+/* `<sub>` verschiebt sonst die Grundlinie und macht jede Formelzeile ein
+   paar Pixel höher als die daneben. `line-height:0` an der Tiefstellung
+   nimmt ihr diesen Einfluss. */
+.bs-formel sub, .fh-formel header sub, .bs-treffer-zeile sub,
+.fh-groessen sub, .bs-legende sub, .fh-zeichen sub, .fh-gesucht sub,
+.fh-ergebnis sub{font-size:.7em; line-height:0; vertical-align:baseline;
+  position:relative; bottom:-.28em}
+.bs-formel{max-width:100%; padding:4px 8px; border:1px solid transparent;
+  border-radius:7px; background:transparent; color:var(--text);
+  font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums;
+  text-align:left; cursor:pointer; line-height:1.5; word-break:break-word}
+.bs-formel:hover{background:var(--bg-hover); border-color:var(--line)}
+.bs-formel:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.bs-formel.offen{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent)}
+/* Gemerkte Formeln bekommen einen Balken UND einen Stern-Punkt: Farbe
+   allein wäre eine Information nur über Farbe (§38). */
+.bs-formel.gemerkt{border-left:3px solid var(--accent); padding-left:6px}
+.bs-formel.gemerkt::after{content:' ★'; color:var(--accent); font-size:10px}
+
+.bs-legende{display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:8px;
+  padding-top:7px; border-top:1px dashed var(--line);
+  font-size:11px; color:var(--text-dim)}
+.bs-legende i{font-style:normal; font-weight:700; color:var(--accent)}
+.bs-legende em{font-style:normal; color:var(--text-faint)}
+
+.bs-rechner{margin-top:9px; padding:9px 10px; border:1px solid var(--accent);
+  border-radius:9px; background:var(--bg)}
+.bs-rechner .fh-erkl{margin:0 0 8px}
+
+.bs-treffer{padding:8px}
+.bs-treffer-zeile{display:flex; align-items:center; justify-content:space-between;
+  gap:10px; width:100%; padding:9px 11px; margin-bottom:5px;
+  border:1px solid var(--line); border-radius:8px; background:var(--bg-card);
+  color:var(--text); cursor:pointer; text-align:left}
+.bs-treffer-zeile:hover{background:var(--bg-hover)}
+.bs-treffer-zeile b{font-size:13px; font-weight:600; min-width:0;
+  word-break:break-word}
+.bs-treffer-zeile span{flex:0 0 auto; font-size:11px; color:var(--text-faint);
+  font-variant-numeric:tabular-nums}
+
+.bs-leer{padding:26px 20px; text-align:center; color:var(--text-dim)}
+.bs-leer p{margin:0 0 8px; line-height:1.6}
+
 /* ---- Das eigene Heft als PDF ------------------------------------------ */
 .fh-pdf{flex:1; overflow:auto; padding:10px; display:flex;
   align-items:flex-start; justify-content:center; background:var(--bg-tief)}
@@ -3696,6 +3782,23 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .fh-kapitel{padding:8px 10px}
   .fh-kapitel button{min-height:44px; padding:0 14px; font-size:12.5px}
   .fh-favseiten button{min-width:44px; height:44px; border-radius:22px}
+  /* Nebeneinander ist auf 390 px kein Nebeneinander mehr: die Skizze wird
+     zu schmal zum Erkennen und die Formel zu schmal zum Lesen. Also
+     untereinander — Skizze zuerst, weil man sie zuerst ansieht. */
+  .bs-koerper{flex-direction:column}
+  .bs-skizze{flex:none; max-width:100%; width:100%; align-self:center}
+  /* KEIN `display:flex` an der Formel. Hier stand es, um sie auf 44 px zu
+     bringen — und Flexbox macht aus `Q`, `<sub>L</sub>`, ` = `, `<sub>` …
+     lauter Flex-Elemente und SCHLUCKT die Leerzeichen dazwischen. Auf dem
+     Bildschirm stand dann `Q_L= I_L· t_L`, im HTML aber die richtige Zeile
+     mit allen Zwischenräumen. Wer den Text prüft, findet das nie; wer
+     hinsieht, sofort (§55.2, derselbe Mechanismus wie bei der gestauchten
+     Zelle im Tabellenblock).
+
+     Die Höhe kommt jetzt aus der Polsterung, und die stört keine Leerzeichen. */
+  .bs-formel{min-height:44px; padding-top:11px; padding-bottom:11px}
+  .bs-treffer-zeile{min-height:44px}
+  .bs-blatt{margin:6px; padding:10px 11px 14px}
   /* Der Stern wächst mit — und die Überschrift macht ihm Platz, statt sich
      von ihm überdecken zu lassen. */
   .fh-stern{width:44px; height:44px; top:2px; right:2px; font-size:16px}

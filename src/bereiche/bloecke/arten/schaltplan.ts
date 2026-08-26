@@ -40,6 +40,24 @@ const Schaltplan = (() => {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+  /**
+   * `U_L` wird zu U mit tiefgestelltem L.
+   *
+   * Eine Beschriftung im Plan ist eine Zeichenkette, und eine Zeichenkette
+   * hat keine Tiefstellung — der Unterstrich steht seit jeher dafür. Im Bild
+   * soll er aber nicht dastehen: `X_L − X_C` liest sich als vier Zeichen mit
+   * Strichen dazwischen, `X` mit tiefem `L` minus `X` mit tiefem `C` als
+   * eine Differenz zweier Grössen.
+   *
+   * ERST ESCAPEN, DANN AUSZEICHNEN — in dieser Reihenfolge liegt die ganze
+   * Sicherheit (§19). Das `<tspan>` kommt NACH dem Escapen hinein, also kann
+   * aus einer Beschriftung kein Element werden. Umgekehrt wäre es ein Loch,
+   * durch das jeder Plantext beliebiges SVG einschleusen könnte.
+   */
+  const tief = (wert: unknown): string =>
+    esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g,
+      '<tspan baseline-shift="sub" font-size="0.72em">$1</tspan>');
+
   const R = (): number => (typeof Register !== 'undefined' && Register.fachzeichen)
     ? Register.fachzeichen.RASTER : 10;
 
@@ -641,7 +659,7 @@ const Schaltplan = (() => {
     plan.texte.forEach(x => {
       if (!sichtbar(x.ebene)) return;
       teile.push(`<text class="sp-text" data-id="${esc(x.id)}" x="${x.x}" y="${x.y}" ` +
-        `font-size="13" fill="${farbeVon(x.ebene)}" stroke="none">${esc(x.t)}</text>`);
+        `font-size="13" fill="${farbeVon(x.ebene)}" stroke="none">${tief(x.t)}</text>`);
     });
 
     return `<svg class="sp-flaeche" viewBox="0 0 ${plan.breite} ${plan.hoehe}" ` +

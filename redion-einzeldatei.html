@@ -8407,7 +8407,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   cursor:pointer; font-size:11.5px; white-space:nowrap; flex:0 0 auto}
 .fh-kapitel button.an{background:var(--accent); color:var(--auf-accent);
   border-color:var(--accent)}
-.fh-inhalt{flex:1; overflow-y:auto; padding:0 10px 12px;
+/* `min-height:0` ist hier keine Feinheit, sondern der Unterschied zwischen
+   „die Fussleiste ist da" und „die Fussleiste steht unter dem Bildschirm".
+   Ein Flex-Kind schrumpft von sich aus NICHT unter die Höhe seines Inhalts;
+   ohne diese Zeile drückt eine lange Buchseite die Blätterknöpfe aus dem
+   Fenster hinaus, und am Telefon sieht man von ihnen die obere Hälfte. */
+.fh-inhalt{flex:1 1 auto; min-height:0; overflow-y:auto; padding:0 10px 12px;
   display:flex; flex-direction:column; gap:8px}
 
 .fh-formel{border:1px solid var(--line); border-radius:10px; padding:10px 12px;
@@ -8469,6 +8474,87 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   color:var(--text-dim); font-weight:400; line-height:1.7}
 .fh-weg li{font-variant-numeric:tabular-nums}
 
+/* ---- Die Buchseite: Redions eigenes Formelbuch (E194) ------------------
+   Eine Seite soll wie eine SEITE aussehen und nicht wie eine Liste: heller
+   Grund, Kopfzeile mit Kapitel und Seitenzahl, Abschnitte mit Linie
+   darunter, Skizze links neben den Formeln. Auf dem Telefon rutscht die
+   Skizze über die Formeln, weil nebeneinander dort nichts mehr ist. */
+.bs-inhalt{background:var(--bg-tief); padding:0}
+.bs-blatt{background:var(--bg-card); border-radius:8px; margin:8px;
+  padding:12px 14px 16px; box-shadow:0 1px 4px rgba(0,0,0,.16)}
+.bs-kopf{display:flex; align-items:baseline; justify-content:space-between;
+  gap:10px; flex-wrap:wrap; padding-bottom:8px; margin-bottom:10px;
+  border-bottom:2px solid var(--accent)}
+.bs-kapitel{display:flex; gap:8px; flex-wrap:wrap; font-size:12px;
+  font-weight:700; color:var(--text)}
+.bs-kapitel .bs-offen{font-weight:400; color:var(--text-faint)}
+.bs-seitenzahl{font-size:12px; font-weight:700; color:var(--accent);
+  white-space:nowrap; font-variant-numeric:tabular-nums}
+.bs-seitenzahl span{font-weight:400; color:var(--text-faint)}
+
+.bs-abschnitt{margin:0 0 14px}
+.bs-abschnitt:last-child{margin-bottom:0}
+.bs-abschnitt h3{margin:0 0 7px; font-size:12.5px; font-weight:700;
+  color:var(--text); letter-spacing:.01em}
+.bs-koerper{display:flex; gap:12px; align-items:flex-start}
+.bs-skizze{flex:0 0 44%; max-width:270px; min-width:0}
+.bs-skizze svg{width:100%; height:auto; display:block; color:var(--text)}
+/* Die Beschriftungen IN der Skizze sind auf 13 px im Zeichenraum gesetzt.
+   Bei 200 px Anzeige einer 390 px breiten Zeichnung werden daraus knapp
+   sieben — lesbar für den, der weiss, was dasteht, und für sonst niemand.
+   Darum ist die Spalte breiter, und die Schrift wird mitskaliert statt
+   fest zu bleiben. */
+.bs-skizze text{font-size:15px}
+.bs-formeln{flex:1 1 auto; min-width:0; display:flex; flex-direction:column;
+  gap:5px; align-items:flex-start}
+
+/* Eine Formel ist ein Knopf, weil sie einer ist: antippen öffnet den
+   Rechner. Sie sieht trotzdem wie gesetzte Formel aus und nicht wie eine
+   Schaltfläche — der Rahmen kommt erst beim Zeigen. */
+/* `<sub>` verschiebt sonst die Grundlinie und macht jede Formelzeile ein
+   paar Pixel höher als die daneben. `line-height:0` an der Tiefstellung
+   nimmt ihr diesen Einfluss. */
+.bs-formel sub, .fh-formel header sub, .bs-treffer-zeile sub,
+.fh-groessen sub, .bs-legende sub, .fh-zeichen sub, .fh-gesucht sub,
+.fh-ergebnis sub{font-size:.7em; line-height:0; vertical-align:baseline;
+  position:relative; bottom:-.28em}
+.bs-formel{max-width:100%; padding:4px 8px; border:1px solid transparent;
+  border-radius:7px; background:transparent; color:var(--text);
+  font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums;
+  text-align:left; cursor:pointer; line-height:1.5; word-break:break-word}
+.bs-formel:hover{background:var(--bg-hover); border-color:var(--line)}
+.bs-formel:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.bs-formel.offen{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent)}
+/* Gemerkte Formeln bekommen einen Balken UND einen Stern-Punkt: Farbe
+   allein wäre eine Information nur über Farbe (§38). */
+.bs-formel.gemerkt{border-left:3px solid var(--accent); padding-left:6px}
+.bs-formel.gemerkt::after{content:' ★'; color:var(--accent); font-size:10px}
+
+.bs-legende{display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:8px;
+  padding-top:7px; border-top:1px dashed var(--line);
+  font-size:11px; color:var(--text-dim)}
+.bs-legende i{font-style:normal; font-weight:700; color:var(--accent)}
+.bs-legende em{font-style:normal; color:var(--text-faint)}
+
+.bs-rechner{margin-top:9px; padding:9px 10px; border:1px solid var(--accent);
+  border-radius:9px; background:var(--bg)}
+.bs-rechner .fh-erkl{margin:0 0 8px}
+
+.bs-treffer{padding:8px}
+.bs-treffer-zeile{display:flex; align-items:center; justify-content:space-between;
+  gap:10px; width:100%; padding:9px 11px; margin-bottom:5px;
+  border:1px solid var(--line); border-radius:8px; background:var(--bg-card);
+  color:var(--text); cursor:pointer; text-align:left}
+.bs-treffer-zeile:hover{background:var(--bg-hover)}
+.bs-treffer-zeile b{font-size:13px; font-weight:600; min-width:0;
+  word-break:break-word}
+.bs-treffer-zeile span{flex:0 0 auto; font-size:11px; color:var(--text-faint);
+  font-variant-numeric:tabular-nums}
+
+.bs-leer{padding:26px 20px; text-align:center; color:var(--text-dim)}
+.bs-leer p{margin:0 0 8px; line-height:1.6}
+
 /* ---- Das eigene Heft als PDF ------------------------------------------ */
 .fh-pdf{flex:1; overflow:auto; padding:10px; display:flex;
   align-items:flex-start; justify-content:center; background:var(--bg-tief)}
@@ -8525,6 +8611,23 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .fh-kapitel{padding:8px 10px}
   .fh-kapitel button{min-height:44px; padding:0 14px; font-size:12.5px}
   .fh-favseiten button{min-width:44px; height:44px; border-radius:22px}
+  /* Nebeneinander ist auf 390 px kein Nebeneinander mehr: die Skizze wird
+     zu schmal zum Erkennen und die Formel zu schmal zum Lesen. Also
+     untereinander — Skizze zuerst, weil man sie zuerst ansieht. */
+  .bs-koerper{flex-direction:column}
+  .bs-skizze{flex:none; max-width:100%; width:100%; align-self:center}
+  /* KEIN `display:flex` an der Formel. Hier stand es, um sie auf 44 px zu
+     bringen — und Flexbox macht aus `Q`, `<sub>L</sub>`, ` = `, `<sub>` …
+     lauter Flex-Elemente und SCHLUCKT die Leerzeichen dazwischen. Auf dem
+     Bildschirm stand dann `Q_L= I_L· t_L`, im HTML aber die richtige Zeile
+     mit allen Zwischenräumen. Wer den Text prüft, findet das nie; wer
+     hinsieht, sofort (§55.2, derselbe Mechanismus wie bei der gestauchten
+     Zelle im Tabellenblock).
+
+     Die Höhe kommt jetzt aus der Polsterung, und die stört keine Leerzeichen. */
+  .bs-formel{min-height:44px; padding-top:11px; padding-bottom:11px}
+  .bs-treffer-zeile{min-height:44px}
+  .bs-blatt{margin:6px; padding:10px 11px 14px}
   /* Der Stern wächst mit — und die Überschrift macht ihm Platz, statt sich
      von ihm überdecken zu lassen. */
   .fh-stern{width:44px; height:44px; top:2px; right:2px; font-size:16px}
@@ -17068,6 +17171,120 @@ Register.elektroformeln = (() => {
         ['fall', 'Spannungsfall', '↘'],
         ['antenne', 'Antenne und Pegel', '📡']
     ];
+    /* ==========================================================================
+     * DAS BUCH: ABSCHNITTE UND SEITENZAHLEN
+     * --------------------------------------------------------------------------
+     * Redion schreibt sein Formelbuch SELBST — eigene Gestaltung, eigene
+     * Skizzen, eigene Erklärungen. Aber die SEITENZAHLEN sind dieselben wie im
+     * gedruckten Heft, mit dem gelernt wird. Wer beides nebeneinander liegen
+     * hat, blättert in beiden auf 14 und findet beide Male die
+     * Wechselstromwiderstände.
+     *
+     * Das ist der ganze Zweck: nicht abschreiben, sondern mitblättern können.
+     *
+     * DIE SEITENZAHL STEHT NUR HIER. An der Formel steht nur, in welchem
+     * ABSCHNITT sie liegt; auf welcher Seite der Abschnitt steht, sagt diese
+     * Liste. Zwei Stellen mit derselben Seitenzahl wären zwei Wahrheiten, und
+     * eine davon wäre irgendwann falsch.
+     * ========================================================================*/
+    /** Die Kapitel des Buchs, so nummeriert und benannt wie im Inhaltsverzeichnis. */
+    const BUCHKAPITEL = [
+        [1, 'Grundformeln Quickie'],
+        [2, 'Grundlagen Elektrotechnik'],
+        [3, 'Schaltungen von Widerständen'],
+        [4, 'Messtechnik'],
+        [5, 'Elektrische Energie, Leistung, Wirkungsgrad'],
+        [6, 'Kompensation der Blindleistung'],
+        [7, 'Chemische Spannungsquellen (Batterien)'],
+        [8, 'Kondensator'],
+        [9, 'Magnetische Grössen'],
+        [10, 'Grundlagen der Wechselstromtechnik'],
+        [11, 'Wechselstromwiderstände'],
+        [12, 'Dreiphasenwechselstrom (Drehstrom)'],
+        [13, 'Transformatoren'],
+        [14, 'Motoren'],
+        [15, 'Spannungsfall und Leistungsverlust'],
+        [16, 'Antenneninstallation'],
+        [17, 'Beleuchtungstechnik'],
+        [18, 'Elektronische Bauelemente'],
+        [19, 'Gleichrichter'],
+        [20, 'Elektronische Schaltungen'],
+        [21, 'Logische Verknüpfungen'],
+        [22, 'Mathematik'],
+        [23, 'Drahtlängen von Spulen'],
+        [24, 'Physik'],
+        [25, 'Wichtige Konstanten'],
+        [26, 'Beziehungen zwischen Einheiten'],
+        [27, 'Zehnerpotenzen und Einheitsvorsätze'],
+        [28, 'Werkstoffwerte'],
+        [29, 'Grössen und Einheiten'],
+    ];
+    /** Die letzte Seite mit Inhalt. Das Stichwortverzeichnis steht auf 36. */
+    const LETZTE_SEITE = 36;
+    const ABSCHNITTE = [
+        { id: 'g-ohm', seite: 4, buch: 2, titel: 'Ohmsches Gesetz' },
+        { id: 'g-leiter', seite: 4, buch: 2, titel: 'Leiterwiderstand' },
+        { id: 'g-temperatur', seite: 4, buch: 2, titel: 'Widerstand und Temperatur' },
+        { id: 's-reihe', seite: 5, buch: 3, titel: 'Reihenschaltung' },
+        { id: 's-parallel', seite: 5, buch: 3, titel: 'Parallelschaltung' },
+        { id: 's-teiler', seite: 6, buch: 3, titel: 'Unbelasteter Spannungsteiler' },
+        { id: 's-teiler-last', seite: 6, buch: 3, titel: 'Belasteter Spannungsteiler' },
+        { id: 's-bruecke', seite: 6, buch: 3, titel: 'Brückenschaltung' },
+        { id: 'm-digital', seite: 6, buch: 4, titel: 'Digitale Messgeräte' },
+        { id: 'm-vmeter', seite: 7, buch: 4, titel: 'Messbereicherweiterung von V-Metern' },
+        { id: 'm-ameter', seite: 7, buch: 4, titel: 'Messbereicherweiterung von A-Metern' },
+        { id: 'm-spannungsfehler', seite: 7, buch: 4, titel: 'Spannungsfehlerschaltung' },
+        { id: 'm-stromfehler', seite: 7, buch: 4, titel: 'Stromfehlerschaltung' },
+        { id: 'm-analog', seite: 7, buch: 4, titel: 'Analoge Messgeräte' },
+        { id: 'a-arbeit', seite: 8, buch: 5, titel: 'Elektrische Arbeit (Energie) und Energiekosten' },
+        { id: 'a-gleich', seite: 8, buch: 5, titel: 'Gleichstromleistung' },
+        { id: 'a-wechsel', seite: 8, buch: 5, titel: 'Wechselstromleistung' },
+        { id: 'a-wirkungsgrad', seite: 9, buch: 5, titel: 'Wirkungsgrad' },
+        { id: 'a-waerme', seite: 9, buch: 5, titel: 'Elektrowärme' },
+        { id: 'k-blind', seite: 10, buch: 6, titel: 'Kompensation der Blindleistung' },
+        { id: 'b-kapazitaet', seite: 11, buch: 7, titel: 'Kapazität von Akkumulatoren' },
+        { id: 'b-innen', seite: 11, buch: 7, titel: 'Einfluss des Innenwiderstandes' },
+        { id: 'b-reihe', seite: 11, buch: 7, titel: 'Reihenschaltung' },
+        { id: 'b-parallel', seite: 11, buch: 7, titel: 'Parallelschaltung' },
+        { id: 'c-kapazitaet', seite: 12, buch: 8, titel: 'Kapazität' },
+        { id: 'c-parallel', seite: 12, buch: 8, titel: 'Parallelschaltung' },
+        { id: 'c-reihe', seite: 12, buch: 8, titel: 'Reihenschaltung' },
+        { id: 'c-laden', seite: 12, buch: 8, titel: 'Laden und Entladen' },
+        { id: 'mag-feld', seite: 13, buch: 9, titel: 'Feldstärke und Flussdichte' },
+        { id: 'mag-induktion', seite: 13, buch: 9, titel: 'Selbstinduktion' },
+        { id: 'w-frequenz', seite: 13, buch: 10, titel: 'Frequenz, Momentanwert' },
+        { id: 'w-effektiv', seite: 13, buch: 10, titel: 'Spitzenwert, Effektivwert' },
+        { id: 'wx-induktiv', seite: 14, buch: 11, titel: 'Induktiver Blindwiderstand' },
+        { id: 'wx-kapazitiv', seite: 14, buch: 11, titel: 'Kapazitiver Blindwiderstand' },
+        { id: 'wx-reihe', seite: 14, buch: 11, titel: 'Reihenschaltung von Wirk- und Blindwiderstand' },
+        { id: 'wx-reihe-rlc', seite: 14, buch: 11, titel: 'Reihenschaltung von R, X_L und X_C' },
+        { id: 'wx-parallel', seite: 15, buch: 11, titel: 'Parallelschaltung von Wirk- und Blindwiderstand' },
+        { id: 'wx-resonanz', seite: 15, buch: 11, titel: 'Resonanz' },
+        { id: 'd-stern', seite: 16, buch: 12, titel: 'Spannungen und Ströme bei Sternschaltung' },
+        { id: 'd-dreieck', seite: 16, buch: 12, titel: 'Spannungen und Ströme bei Dreieckschaltung' },
+        { id: 'd-leistung', seite: 16, buch: 12, titel: 'Leistung bei Stern- und Dreieckschaltung' },
+        { id: 't-einphasen', seite: 18, buch: 13, titel: 'Einphasentransformator' },
+        { id: 't-spar', seite: 18, buch: 13, titel: 'Spartransformator' },
+        { id: 't-dreh', seite: 18, buch: 13, titel: 'Drehstromtransformator' },
+        { id: 'mo-schlupf', seite: 19, buch: 14, titel: 'Drehzahl und Schlupf bei Asynchronmotoren' },
+        { id: 'mo-dreh', seite: 19, buch: 14, titel: 'Drehstrommotoren' },
+        { id: 'mo-wechsel', seite: 19, buch: 14, titel: 'Wechselstrommotoren' },
+        { id: 'sf-leitung', seite: 20, buch: 15, titel: 'Leitungswiderstand' },
+        { id: 'sf-fall', seite: 20, buch: 15, titel: 'Spannungsfall' },
+        { id: 'sf-verlust', seite: 20, buch: 15, titel: 'Leistungsverlust' },
+        { id: 'an-faktor', seite: 21, buch: 16, titel: 'Verstärkungsfaktor, Dämpfungsfaktor' },
+        { id: 'an-mass', seite: 21, buch: 16, titel: 'Verstärkungsmass, Dämpfungsmass' },
+        { id: 'an-pegel', seite: 21, buch: 16, titel: 'Pegel' },
+        { id: 'l-ausbeute', seite: 22, buch: 17, titel: 'Lichtausbeute' },
+        { id: 'l-staerke', seite: 22, buch: 17, titel: 'Beleuchtungsstärke' },
+        { id: 'l-anlage', seite: 22, buch: 17, titel: 'Berechnung einer Beleuchtungsanlage' },
+        { id: 'l-abstand', seite: 22, buch: 17, titel: 'Beleuchtungsstärke abhängig vom Leuchtenabstand' },
+        { id: 'l-lichtstaerke', seite: 22, buch: 17, titel: 'Lichtstärke' },
+        { id: 'l-leuchtdichte', seite: 22, buch: 17, titel: 'Leuchtdichte' },
+        { id: 'p-arbeit', seite: 29, buch: 24, titel: 'Arbeit, Energie' },
+        { id: 'p-leistung', seite: 30, buch: 24, titel: 'Leistung' },
+        { id: 'p-drehmoment', seite: 30, buch: 24, titel: 'Leistung aus Drehmoment und Drehzahl' },
+    ];
     /* Hilfen, damit die Liste lesbar bleibt. */
     const g = (zeichen, name, einheit, was) => was === undefined ? { zeichen, name, einheit } : { zeichen, name, einheit, was };
     const WURZEL = Math.sqrt;
@@ -17075,7 +17292,7 @@ Register.elektroformeln = (() => {
     const EINGEBAUT = [
         /* ---- Grundformeln ---------------------------------------------------- */
         {
-            id: 'ohm', kapitel: 'grund', schreibweise: 'U = R · I',
+            id: 'ohm', kapitel: 'grund', abschnitt: 'g-ohm', schreibweise: 'U = R · I',
             groessen: [g('U', 'Spannung', 'V', 'Wie stark die Ladung getrieben wird'),
                 g('R', 'Widerstand', 'Ω', 'Wie sehr sich der Leiter wehrt'),
                 g('I', 'Strom', 'A', 'Wie viel Ladung je Sekunde fliesst')],
@@ -17092,7 +17309,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Das ohmsche Gesetz. Die eine Formel, aus der fast alles andere folgt.'
         },
         {
-            id: 'leistung-ui', kapitel: 'leistung', schreibweise: 'P = U · I',
+            id: 'leistung-ui', kapitel: 'leistung', abschnitt: 'a-gleich', schreibweise: 'P = U · I',
             groessen: [g('P', 'Leistung', 'W'), g('U', 'Spannung', 'V'), g('I', 'Strom', 'A')],
             loese: { P: v => v.U * v.I, U: v => v.P / v.I, I: v => v.P / v.U },
             weg: {
@@ -17103,25 +17320,25 @@ Register.elektroformeln = (() => {
             erklaerung: 'Leistung ist Spannung mal Strom — was in jedem Moment umgesetzt wird.'
         },
         {
-            id: 'leistung-ur', kapitel: 'leistung', schreibweise: 'P = U² / R',
+            id: 'leistung-ur', kapitel: 'leistung', abschnitt: 'a-gleich', schreibweise: 'P = U² / R',
             groessen: [g('P', 'Leistung', 'W'), g('U', 'Spannung', 'V'), g('R', 'Widerstand', 'Ω')],
             loese: { P: v => (v.U * v.U) / v.R, U: v => WURZEL(v.P * v.R), R: v => (v.U * v.U) / v.P },
             erklaerung: 'Wenn der Strom unbekannt ist, aber Spannung und Widerstand da sind.'
         },
         {
-            id: 'leistung-ir', kapitel: 'leistung', schreibweise: 'P = I² · R',
+            id: 'leistung-ir', kapitel: 'leistung', abschnitt: 'a-gleich', schreibweise: 'P = I² · R',
             groessen: [g('P', 'Leistung', 'W'), g('I', 'Strom', 'A'), g('R', 'Widerstand', 'Ω')],
             loese: { P: v => v.I * v.I * v.R, I: v => WURZEL(v.P / v.R), R: v => v.P / (v.I * v.I) },
             erklaerung: 'Die Verlustleistung in einer Leitung — sie wächst im QUADRAT mit dem Strom.'
         },
         {
-            id: 'arbeit', kapitel: 'leistung', schreibweise: 'W = P · t',
+            id: 'arbeit', kapitel: 'leistung', abschnitt: 'a-arbeit', schreibweise: 'W = P · t',
             groessen: [g('W', 'Arbeit', 'Wh'), g('P', 'Leistung', 'W'), g('t', 'Zeit', 'h')],
             loese: { W: v => v.P * v.t, P: v => v.W / v.t, t: v => v.W / v.P },
             erklaerung: 'Was über die Zeit zusammenkommt. Der Zähler misst genau das.'
         },
         {
-            id: 'kosten', kapitel: 'leistung', schreibweise: 'K = k · W',
+            id: 'kosten', kapitel: 'leistung', abschnitt: 'a-arbeit', schreibweise: 'K = k · W',
             groessen: [g('K', 'Kosten', 'CHF'), g('k', 'Preis je kWh', 'CHF/kWh'),
                 g('W', 'Energie', 'kWh')],
             loese: { K: v => v.k * v.W, k: v => v.K / v.W, W: v => v.K / v.k },
@@ -17132,7 +17349,7 @@ Register.elektroformeln = (() => {
            Beruf wirklich rechnet: ein Messwerk verträgt Milliampere, gemessen
            werden sollen Ampere. Der Rest ist Ohm. */
         {
-            id: 'mess-vorwiderstand', kapitel: 'messen', schreibweise: 'R_V = (n − 1) · R_m',
+            id: 'mess-vorwiderstand', kapitel: 'messen', abschnitt: 'm-vmeter', schreibweise: 'R_V = (n − 1) · R_m',
             groessen: [g('R_V', 'Vorwiderstand', 'Ω', 'Kommt VOR das Messwerk, in Reihe'),
                 g('n', 'Faktor der Messbereicherweiterung', '', 'Wie oft grösser der neue Bereich ist'),
                 g('R_m', 'Messwerkwiderstand', 'Ω')],
@@ -17149,7 +17366,7 @@ Register.elektroformeln = (() => {
                 'Der Rest der Spannung fällt an ihm ab.'
         },
         {
-            id: 'mess-vorwiderstand-u', kapitel: 'messen',
+            id: 'mess-vorwiderstand-u', kapitel: 'messen', abschnitt: 'm-vmeter',
             schreibweise: 'R_V = R_m · (U − U_m) / U_m',
             groessen: [g('R_V', 'Vorwiderstand', 'Ω'), g('R_m', 'Messwerkwiderstand', 'Ω'),
                 g('U', 'erweiterter Messbereich', 'V'),
@@ -17163,7 +17380,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Dieselbe Sache aus den Spannungen statt aus dem Faktor.'
         },
         {
-            id: 'mess-faktor-v', kapitel: 'messen', schreibweise: 'n = U / U_m',
+            id: 'mess-faktor-v', kapitel: 'messen', abschnitt: 'm-vmeter', schreibweise: 'n = U / U_m',
             groessen: [g('n', 'Faktor der Messbereicherweiterung', ''),
                 g('U', 'erweiterter Messbereich', 'V'),
                 g('U_m', 'Messwerkspannung bei Vollausschlag', 'V')],
@@ -17171,7 +17388,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Um wie viel der Bereich wächst.'
         },
         {
-            id: 'mess-shunt', kapitel: 'messen', schreibweise: 'R_p = R_m / (n − 1)',
+            id: 'mess-shunt', kapitel: 'messen', abschnitt: 'm-ameter', schreibweise: 'R_p = R_m / (n − 1)',
             groessen: [g('R_p', 'Parallelwiderstand (Shunt)', 'Ω', 'Liegt PARALLEL zum Messwerk'),
                 g('R_m', 'Messwerkwiderstand', 'Ω'),
                 g('n', 'Faktor der Messbereicherweiterung', '')],
@@ -17188,7 +17405,7 @@ Register.elektroformeln = (() => {
                 'Der Rest des Stroms geht an ihm vorbei — der Shunt.'
         },
         {
-            id: 'mess-shunt-i', kapitel: 'messen',
+            id: 'mess-shunt-i', kapitel: 'messen', abschnitt: 'm-ameter',
             schreibweise: 'R_p = R_m · I_m / (I − I_m)',
             groessen: [g('R_p', 'Parallelwiderstand (Shunt)', 'Ω'),
                 g('R_m', 'Messwerkwiderstand', 'Ω'),
@@ -17203,7 +17420,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Derselbe Shunt aus den Strömen statt aus dem Faktor.'
         },
         {
-            id: 'mess-faktor-a', kapitel: 'messen', schreibweise: 'n = I / I_m',
+            id: 'mess-faktor-a', kapitel: 'messen', abschnitt: 'm-ameter', schreibweise: 'n = I / I_m',
             groessen: [g('n', 'Faktor der Messbereicherweiterung', ''),
                 g('I', 'erweiterter Messbereich', 'A'),
                 g('I_m', 'Messwerkstromstärke bei Vollausschlag', 'A')],
@@ -17211,7 +17428,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Um wie viel der Strombereich wächst.'
         },
         {
-            id: 'mess-spannungsfehler', kapitel: 'messen', schreibweise: 'R = U / I − R_A',
+            id: 'mess-spannungsfehler', kapitel: 'messen', abschnitt: 'm-spannungsfehler', schreibweise: 'R = U / I − R_A',
             groessen: [g('R', 'Verbraucherwiderstand', 'Ω'), g('U', 'gemessene Spannung', 'V'),
                 g('I', 'gemessene Stromstärke', 'A'),
                 g('R_A', 'Innenwiderstand des A-Meters', 'Ω')],
@@ -17227,7 +17444,7 @@ Register.elektroformeln = (() => {
                 'Wer ihn nicht abzieht, misst den Verbraucher zu gross.'
         },
         {
-            id: 'mess-stromfehler', kapitel: 'messen', schreibweise: 'R = U / (I − I_V)',
+            id: 'mess-stromfehler', kapitel: 'messen', abschnitt: 'm-stromfehler', schreibweise: 'R = U / (I − I_V)',
             groessen: [g('R', 'Verbraucherwiderstand', 'Ω'), g('U', 'gemessene Spannung', 'V'),
                 g('I', 'gemessene Stromstärke', 'A'),
                 g('I_V', 'Strom durch das V-Meter', 'A')],
@@ -17243,14 +17460,14 @@ Register.elektroformeln = (() => {
                 'Verbraucherwiderstand zu klein.'
         },
         {
-            id: 'mess-vmeter-strom', kapitel: 'messen', schreibweise: 'I_V = U / R_V',
+            id: 'mess-vmeter-strom', kapitel: 'messen', abschnitt: 'm-stromfehler', schreibweise: 'I_V = U / R_V',
             groessen: [g('I_V', 'Strom durch das V-Meter', 'A'), g('U', 'gemessene Spannung', 'V'),
                 g('R_V', 'Innenwiderstand des V-Meters', 'Ω')],
             loese: { I_V: v => v.U / v.R_V, U: v => v.I_V * v.R_V, R_V: v => v.U / v.I_V },
             erklaerung: 'Was das Voltmeter selbst zieht — der Fehler der Stromfehlerschaltung.'
         },
         {
-            id: 'mess-anzeigefehler', kapitel: 'messen', schreibweise: 'AF_abs = MB · k / 100',
+            id: 'mess-anzeigefehler', kapitel: 'messen', abschnitt: 'm-analog', schreibweise: 'AF_abs = MB · k / 100',
             groessen: [g('AF_abs', 'absoluter Anzeigefehler', '', 'In der Einheit des Messwerts'),
                 g('MB', 'Messbereich (Skalenendwert)', ''),
                 g('k', 'Genauigkeitsklasse', '', 'Steht auf dem Gerät: 1,5 heisst 1,5 %')],
@@ -17263,7 +17480,7 @@ Register.elektroformeln = (() => {
                 'er hängt am Messbereich, nicht am Messwert.'
         },
         {
-            id: 'mess-anzeigefehler-prozent', kapitel: 'messen',
+            id: 'mess-anzeigefehler-prozent', kapitel: 'messen', abschnitt: 'm-analog',
             schreibweise: 'AF_% = MB · k / MW',
             groessen: [g('AF_%', 'relativer Anzeigefehler', '%'),
                 g('MB', 'Messbereich (Skalenendwert)', ''),
@@ -17279,7 +17496,7 @@ Register.elektroformeln = (() => {
                 'Deshalb misst man möglichst im oberen Drittel des Bereichs.'
         },
         {
-            id: 'mess-innenwiderstand', kapitel: 'messen', schreibweise: 'R_m = MB · r_k',
+            id: 'mess-innenwiderstand', kapitel: 'messen', abschnitt: 'm-analog', schreibweise: 'R_m = MB · r_k',
             groessen: [g('R_m', 'Innenwiderstand des V-Meters', 'Ω'),
                 g('MB', 'Messbereich', 'V'),
                 g('r_k', 'Kennwiderstand', 'Ω/V', 'Steht auf dem Gerät, z. B. 5 kΩ/V')],
@@ -17288,7 +17505,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Magnetische Grössen (Kapitel 9 des Heftes) ---------------------- */
         {
-            id: 'magnet-durchflutung', kapitel: 'magnet', schreibweise: 'Θ = I · N',
+            id: 'magnet-durchflutung', kapitel: 'magnet', abschnitt: 'mag-feld', schreibweise: 'Θ = I · N',
             groessen: [g('Θ', 'Durchflutung', 'A'), g('I', 'Strom', 'A'),
                 g('N', 'Windungszahl', '')],
             loese: { 'Θ': v => v.I * v.N, I: v => v['Θ'] / v.N, N: v => v['Θ'] / v.I },
@@ -17296,7 +17513,7 @@ Register.elektroformeln = (() => {
                 'wirken wie eine Windung mit zehn.'
         },
         {
-            id: 'magnet-feldstaerke', kapitel: 'magnet', schreibweise: 'H = I · N / l_m',
+            id: 'magnet-feldstaerke', kapitel: 'magnet', abschnitt: 'mag-feld', schreibweise: 'H = I · N / l_m',
             groessen: [g('H', 'Feldstärke', 'A/m'), g('I', 'Strom', 'A'),
                 g('N', 'Windungszahl', ''),
                 g('l_m', 'mittlere Feldlinienlänge', 'm')],
@@ -17309,7 +17526,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Durchflutung auf die Länge verteilt.'
         },
         {
-            id: 'magnet-flussdichte', kapitel: 'magnet', schreibweise: 'B = μ₀ · μ_r · H',
+            id: 'magnet-flussdichte', kapitel: 'magnet', abschnitt: 'mag-feld', schreibweise: 'B = μ₀ · μ_r · H',
             groessen: [g('B', 'Flussdichte', 'T', 'Tesla — 1 T = 1 Vs/m²'),
                 g('μ_r', 'relative Permeabilität', '', 'Luft ≈ 1, Eisen bis mehrere tausend'),
                 g('H', 'Feldstärke', 'A/m')],
@@ -17322,14 +17539,14 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie dicht das Feld im Material wird. Eisen bündelt es tausendfach.'
         },
         {
-            id: 'magnet-fluss', kapitel: 'magnet', schreibweise: 'Φ = B · A',
+            id: 'magnet-fluss', kapitel: 'magnet', abschnitt: 'mag-feld', schreibweise: 'Φ = B · A',
             groessen: [g('Φ', 'magnetischer Fluss', 'Wb', 'Weber — 1 Wb = 1 Vs'),
                 g('B', 'Flussdichte', 'T'), g('A', 'Polfläche', 'm²')],
             loese: { 'Φ': v => v.B * v.A, B: v => v['Φ'] / v.A, A: v => v['Φ'] / v.B },
             erklaerung: 'Der ganze Fluss durch die Fläche.'
         },
         {
-            id: 'magnet-widerstand', kapitel: 'magnet',
+            id: 'magnet-widerstand', kapitel: 'magnet', abschnitt: 'mag-feld',
             schreibweise: 'R_m = l_m / (μ₀ · μ_r · A)',
             groessen: [g('R_m', 'magnetischer Widerstand', 'A/Vs'),
                 g('l_m', 'mittlere Feldlinienlänge', 'm'),
@@ -17346,7 +17563,7 @@ Register.elektroformeln = (() => {
                 'Länge durch Leitfähigkeit mal Fläche.'
         },
         {
-            id: 'magnet-selbstinduktion', kapitel: 'magnet', schreibweise: 'u_i = L · ΔI / Δt',
+            id: 'magnet-selbstinduktion', kapitel: 'magnet', abschnitt: 'mag-induktion', schreibweise: 'u_i = L · ΔI / Δt',
             groessen: [g('u_i', 'Selbstinduktionsspannung', 'V', 'Ihr Vorzeichen ist negativ — sie wirkt entgegen'),
                 g('L', 'Induktivität', 'H'),
                 g('ΔI', 'Stromänderung', 'A'),
@@ -17368,7 +17585,7 @@ Register.elektroformeln = (() => {
            Bei Drehstrom nur einmal. Wer das verwechselt, rechnet den halben oder
            den doppelten Spannungsfall. */
         {
-            id: 'fall-leitungswiderstand', kapitel: 'fall',
+            id: 'fall-leitungswiderstand', kapitel: 'fall', abschnitt: 'sf-leitung',
             schreibweise: 'R_Ltg = ρ · 2 · l / A',
             groessen: [g('R_Ltg', 'Leitungswiderstand', 'Ω', 'Hin- UND Rückleiter zusammen'),
                 g('ρ', 'spezifischer Widerstand', 'Ω·mm²/m', 'Kupfer 0,0175'),
@@ -17394,7 +17611,7 @@ Register.elektroformeln = (() => {
                 'beim Querschnitt ist, sie zu vergessen.'
         },
         {
-            id: 'fall-leitungswiderstand-dreh', kapitel: 'fall',
+            id: 'fall-leitungswiderstand-dreh', kapitel: 'fall', abschnitt: 'sf-leitung',
             schreibweise: 'R_Ltg = ρ · l / A',
             groessen: [g('R_Ltg', 'Leitungswiderstand', 'Ω', 'Je Aussenleiter'),
                 g('ρ', 'spezifischer Widerstand', 'Ω·mm²/m'),
@@ -17411,7 +17628,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Beim Drehstrom gibt es keinen Rückleiter im selben Sinn.'
         },
         {
-            id: 'fall-gleich', kapitel: 'fall', schreibweise: 'ΔU = I · R_Ltg',
+            id: 'fall-gleich', kapitel: 'fall', abschnitt: 'sf-fall', schreibweise: 'ΔU = I · R_Ltg',
             groessen: [g('ΔU', 'Spannungsfall', 'V'), g('I', 'Strom', 'A'),
                 g('R_Ltg', 'Leitungswiderstand', 'Ω')],
             loese: {
@@ -17423,7 +17640,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Ohm auf der Leitung. Was hier verlorengeht, kommt beim Verbraucher nicht an.'
         },
         {
-            id: 'fall-wechsel', kapitel: 'fall', schreibweise: 'ΔU = I · R_Ltg · cos φ',
+            id: 'fall-wechsel', kapitel: 'fall', abschnitt: 'sf-fall', schreibweise: 'ΔU = I · R_Ltg · cos φ',
             groessen: [g('ΔU', 'Spannungsfall', 'V'), g('I', 'Strom', 'A'),
                 g('R_Ltg', 'Leitungswiderstand', 'Ω'),
                 g('cosφ', 'Leistungsfaktor', '')],
@@ -17437,7 +17654,7 @@ Register.elektroformeln = (() => {
                 'ohmschen Spannungsfall.'
         },
         {
-            id: 'fall-dreh', kapitel: 'fall', schreibweise: 'ΔU = √3 · I · R_Ltg · cos φ',
+            id: 'fall-dreh', kapitel: 'fall', abschnitt: 'sf-fall', schreibweise: 'ΔU = √3 · I · R_Ltg · cos φ',
             groessen: [g('ΔU', 'Spannungsfall', 'V', 'Zwischen den Aussenleitern'),
                 g('I', 'Strom', 'A'), g('R_Ltg', 'Leitungswiderstand', 'Ω'),
                 g('cosφ', 'Leistungsfaktor', '')],
@@ -17450,7 +17667,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Der Spannungsfall zwischen zwei Aussenleitern — daher die Wurzel aus 3.'
         },
         {
-            id: 'fall-prozent', kapitel: 'fall', schreibweise: 'Δu = ΔU / U · 100 %',
+            id: 'fall-prozent', kapitel: 'fall', abschnitt: 'sf-fall', schreibweise: 'Δu = ΔU / U · 100 %',
             groessen: [g('Δu', 'Spannungsfall prozentual', '%'),
                 g('ΔU', 'Spannungsfall', 'V'),
                 g('U', 'Netzspannung', 'V')],
@@ -17463,7 +17680,7 @@ Register.elektroformeln = (() => {
                 'sondern ihr Anteil an der Netzspannung.'
         },
         {
-            id: 'fall-verlust', kapitel: 'fall', schreibweise: 'P_V = I² · R_Ltg',
+            id: 'fall-verlust', kapitel: 'fall', abschnitt: 'sf-verlust', schreibweise: 'P_V = I² · R_Ltg',
             groessen: [g('P_V', 'Verlustleistung der Leitung', 'W'),
                 g('I', 'Strom', 'A'), g('R_Ltg', 'Leitungswiderstand', 'Ω')],
             loese: {
@@ -17474,7 +17691,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Leitung wird warm. Doppelter Strom heisst VIERFACHER Verlust.'
         },
         {
-            id: 'fall-verlust-dreh', kapitel: 'fall', schreibweise: 'P_V = 3 · I² · R_Ltg',
+            id: 'fall-verlust-dreh', kapitel: 'fall', abschnitt: 'sf-verlust', schreibweise: 'P_V = 3 · I² · R_Ltg',
             groessen: [g('P_V', 'Verlustleistung der Leitung', 'W'),
                 g('I', 'Strom je Aussenleiter', 'A'),
                 g('R_Ltg', 'Leitungswiderstand je Aussenleiter', 'Ω')],
@@ -17486,7 +17703,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Drei Aussenleiter, jeder mit seinem Verlust.'
         },
         {
-            id: 'fall-verlust-prozent', kapitel: 'fall',
+            id: 'fall-verlust-prozent', kapitel: 'fall', abschnitt: 'sf-verlust',
             schreibweise: 'P_V% = P_V / P · 100 %',
             groessen: [g('P_V%', 'Verlustleistung prozentual', '%'),
                 g('P_V', 'Verlustleistung der Leitung', 'W'),
@@ -17499,7 +17716,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie viel von der Leistung unterwegs verlorengeht.'
         },
         {
-            id: 'wirkungsgrad', kapitel: 'leistung', schreibweise: 'η = P_ab / P_zu',
+            id: 'wirkungsgrad', kapitel: 'leistung', abschnitt: 'a-wirkungsgrad', schreibweise: 'η = P_ab / P_zu',
             groessen: [g('η', 'Wirkungsgrad', '', 'Zwischen 0 und 1 — mal 100 gibt Prozent'),
                 g('P_ab', 'abgegebene Leistung', 'W'),
                 g('P_zu', 'zugeführte Leistung', 'W')],
@@ -17512,7 +17729,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Reihenschaltung ------------------------------------------------- */
         {
-            id: 'reihe-r', kapitel: 'reihe', schreibweise: 'R = R₁ + R₂ + … + Rₙ',
+            id: 'reihe-r', kapitel: 'reihe', abschnitt: 's-reihe', schreibweise: 'R = R₁ + R₂ + … + Rₙ',
             groessen: [g('R', 'Gesamtwiderstand', 'Ω'), g('R₁', 'Widerstand 1', 'Ω'),
                 g('R₂', 'Widerstand 2', 'Ω')],
             loese: {
@@ -17524,7 +17741,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'In Reihe addieren sich die Widerstände. Der Strom ist überall gleich.'
         },
         {
-            id: 'reihe-teiler', kapitel: 'reihe', schreibweise: 'U₁ / U₂ = R₁ / R₂',
+            id: 'reihe-teiler', kapitel: 'reihe', abschnitt: 's-reihe', schreibweise: 'U₁ / U₂ = R₁ / R₂',
             groessen: [g('U₁', 'Teilspannung 1', 'V'), g('U₂', 'Teilspannung 2', 'V'),
                 g('R₁', 'Widerstand 1', 'Ω'), g('R₂', 'Widerstand 2', 'Ω')],
             loese: {
@@ -17536,7 +17753,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Spannungen verhalten sich wie die Widerstände — der Spannungsteiler.'
         },
         {
-            id: 'spannungsteiler', kapitel: 'reihe', schreibweise: 'U₂ = U · R₂ / (R₁ + R₂)',
+            id: 'spannungsteiler', kapitel: 'reihe', abschnitt: 's-teiler', schreibweise: 'U₂ = U · R₂ / (R₁ + R₂)',
             groessen: [g('U₂', 'Teilspannung', 'V'), g('U', 'Gesamtspannung', 'V'),
                 g('R₁', 'Widerstand 1', 'Ω'), g('R₂', 'Widerstand 2', 'Ω')],
             loese: {
@@ -17555,7 +17772,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Parallelschaltung ----------------------------------------------- */
         {
-            id: 'parallel-r2', kapitel: 'parallel', schreibweise: 'R = (R₁ · R₂) / (R₁ + R₂)',
+            id: 'parallel-r2', kapitel: 'parallel', abschnitt: 's-parallel', schreibweise: 'R = (R₁ · R₂) / (R₁ + R₂)',
             groessen: [g('R', 'Gesamtwiderstand', 'Ω'), g('R₁', 'Widerstand 1', 'Ω'),
                 g('R₂', 'Widerstand 2', 'Ω')],
             loese: {
@@ -17572,7 +17789,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Faustformel für ZWEI parallele Widerstände. Für mehr gilt die Kehrwertformel.'
         },
         {
-            id: 'parallel-i', kapitel: 'parallel', schreibweise: 'I = I₁ + I₂ + … + Iₙ',
+            id: 'parallel-i', kapitel: 'parallel', abschnitt: 's-parallel', schreibweise: 'I = I₁ + I₂ + … + Iₙ',
             groessen: [g('I', 'Gesamtstrom', 'A'), g('I₁', 'Teilstrom 1', 'A'), g('I₂', 'Teilstrom 2', 'A')],
             loese: {
                 I: v => v['I₁'] + v['I₂'],
@@ -17582,7 +17799,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Parallel addieren sich die Ströme. Die Spannung ist überall gleich.'
         },
         {
-            id: 'stromteiler', kapitel: 'parallel', schreibweise: 'I₁ / I₂ = R₂ / R₁',
+            id: 'stromteiler', kapitel: 'parallel', abschnitt: 's-parallel', schreibweise: 'I₁ / I₂ = R₂ / R₁',
             groessen: [g('I₁', 'Teilstrom 1', 'A'), g('I₂', 'Teilstrom 2', 'A'),
                 g('R₁', 'Widerstand 1', 'Ω'), g('R₂', 'Widerstand 2', 'Ω')],
             loese: {
@@ -17595,7 +17812,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Leiter ---------------------------------------------------------- */
         {
-            id: 'spannungsteiler-belastet', kapitel: 'parallel',
+            id: 'spannungsteiler-belastet', kapitel: 'parallel', abschnitt: 's-teiler-last',
             schreibweise: 'U₂ = U · R₂₃ / (R₁ + R₂₃)',
             groessen: [g('U₂', 'Teilspannung', 'V'), g('U', 'Gesamtspannung', 'V'),
                 g('R₂₃', 'Ersatzwiderstand aus R₂ und R₃', 'Ω', 'R₂ parallel zur Last R₃ — erst zusammenfassen, dann teilen'),
@@ -17612,7 +17829,7 @@ Register.elektroformeln = (() => {
                 'Wer mit dem unbelasteten Teiler rechnet, bekommt zu viel heraus.'
         },
         {
-            id: 'bruecke', kapitel: 'parallel', schreibweise: 'R_X = R₂ · R₃ / R₄',
+            id: 'bruecke', kapitel: 'parallel', abschnitt: 's-bruecke', schreibweise: 'R_X = R₂ · R₃ / R₄',
             groessen: [g('R_X', 'gesuchter Widerstand', 'Ω'),
                 g('R₂', 'Teilwiderstand', 'Ω'), g('R₃', 'Teilwiderstand', 'Ω'),
                 g('R₄', 'Teilwiderstand', 'Ω')],
@@ -17628,7 +17845,7 @@ Register.elektroformeln = (() => {
                 'Spannung zu kennen — man gleicht ab, bis das Messgerät in der Mitte null zeigt.'
         },
         {
-            id: 'digital-anzeigefehler', kapitel: 'messen',
+            id: 'digital-anzeigefehler', kapitel: 'messen', abschnitt: 'm-digital',
             schreibweise: 'AF_abs = MW · k / 100 + z · a',
             groessen: [g('AF_abs', 'absoluter Anzeigefehler', ''),
                 g('MW', 'angezeigter Messwert', ''),
@@ -17648,7 +17865,7 @@ Register.elektroformeln = (() => {
                 'und um ein paar Schritte der letzten Ziffer. Beides zählt zusammen.'
         },
         {
-            id: 'leiterwiderstand', kapitel: 'leiter', schreibweise: 'R = ρ · l / A',
+            id: 'leiterwiderstand', kapitel: 'leiter', abschnitt: 'g-leiter', schreibweise: 'R = ρ · l / A',
             groessen: [g('R', 'Leiterwiderstand', 'Ω'),
                 g('ρ', 'spezifischer Widerstand', 'Ω·mm²/m', 'Kupfer 0,0178 · Aluminium 0,0286'),
                 g('l', 'Länge', 'm', 'Bei Hin- und Rückleiter die DOPPELTE Strecke'),
@@ -17669,7 +17886,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Je länger und dünner, desto mehr Widerstand — und desto mehr Spannungsfall.'
         },
         {
-            id: 'temperatur', kapitel: 'leiter', schreibweise: 'R₉ = R₂₀ · (1 + α · Δϑ)',
+            id: 'temperatur', kapitel: 'leiter', abschnitt: 'g-temperatur', schreibweise: 'R₉ = R₂₀ · (1 + α · Δϑ)',
             groessen: [g('R₉', 'Widerstand warm', 'Ω'), g('R₂₀', 'Widerstand bei 20 °C', 'Ω'),
                 g('α', 'Temperaturbeiwert', '1/K', 'Kupfer 0,0039'),
                 g('Δϑ', 'Temperaturänderung', 'K')],
@@ -17684,7 +17901,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Elektrowärme ---------------------------------------------------- */
         {
-            id: 'waermemenge', kapitel: 'waerme', schreibweise: 'Q = m · c · Δϑ',
+            id: 'waermemenge', kapitel: 'waerme', abschnitt: 'a-waerme', schreibweise: 'Q = m · c · Δϑ',
             groessen: [g('Q', 'Wärmemenge', 'J'), g('m', 'Masse', 'kg'),
                 g('c', 'spezifische Wärmekapazität', 'J/(kg·K)', 'Wasser 4186'),
                 g('Δϑ', 'Temperaturänderung', 'K')],
@@ -17697,7 +17914,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Was es kostet, etwas zu erwärmen — unabhängig davon, womit.'
         },
         {
-            id: 'waerme-elektrisch', kapitel: 'waerme', schreibweise: 'P · t · η = m · c · Δϑ',
+            id: 'waerme-elektrisch', kapitel: 'waerme', abschnitt: 'a-waerme', schreibweise: 'P · t · η = m · c · Δϑ',
             groessen: [g('P', 'Leistung', 'W'), g('t', 'Zeit', 's'), g('η', 'Wirkungsgrad', ''),
                 g('m', 'Masse', 'kg'), g('c', 'Wärmekapazität', 'J/(kg·K)'),
                 g('Δϑ', 'Temperaturänderung', 'K')],
@@ -17713,7 +17930,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Spannungsquellen ------------------------------------------------ */
         {
-            id: 'klemmenspannung', kapitel: 'quelle', schreibweise: 'U = U₀ − Rᵢ · I',
+            id: 'klemmenspannung', kapitel: 'quelle', abschnitt: 'b-innen', schreibweise: 'U = U₀ − Rᵢ · I',
             groessen: [g('U', 'Klemmenspannung', 'V'), g('U₀', 'Leerlaufspannung', 'V'),
                 g('Rᵢ', 'Innenwiderstand', 'Ω'), g('I', 'Strom', 'A')],
             loese: {
@@ -17725,7 +17942,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Unter Last bricht die Spannung ein — um genau den Anteil am Innenwiderstand.'
         },
         {
-            id: 'quellstrom', kapitel: 'quelle', schreibweise: 'I = U₀ / (Rᵢ + R_L)',
+            id: 'quellstrom', kapitel: 'quelle', abschnitt: 'b-innen', schreibweise: 'I = U₀ / (Rᵢ + R_L)',
             groessen: [g('I', 'Strom', 'A'), g('U₀', 'Leerlaufspannung', 'V'),
                 g('Rᵢ', 'Innenwiderstand', 'Ω'), g('R_L', 'Lastwiderstand', 'Ω')],
             loese: {
@@ -17737,7 +17954,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Der Strom im geschlossenen Kreis, mit dem Innenwiderstand in Reihe.'
         },
         {
-            id: 'quelle-innerer-abfall', kapitel: 'quelle', schreibweise: 'U_Ri = U₀ − U',
+            id: 'quelle-innerer-abfall', kapitel: 'quelle', abschnitt: 'b-innen', schreibweise: 'U_Ri = U₀ − U',
             groessen: [g('U_Ri', 'Spannungsabfall am Innenwiderstand', 'V'),
                 g('U₀', 'Leerlaufspannung', 'V'), g('U', 'Klemmenspannung', 'V')],
             loese: {
@@ -17748,7 +17965,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Was an den Klemmen fehlt, ist im Inneren geblieben. Die Differenz ist messbar, der Innenwiderstand selbst nicht.'
         },
         {
-            id: 'quelle-kurzschlussstrom', kapitel: 'quelle', schreibweise: 'I_KS = U₀ / Rᵢ',
+            id: 'quelle-kurzschlussstrom', kapitel: 'quelle', abschnitt: 'b-innen', schreibweise: 'I_KS = U₀ / Rᵢ',
             groessen: [g('I_KS', 'Kurzschlussstrom', 'A'), g('U₀', 'Leerlaufspannung', 'V'),
                 g('Rᵢ', 'Innenwiderstand', 'Ω')],
             loese: {
@@ -17759,7 +17976,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Sind die Klemmen kurzgeschlossen, begrenzt nur noch der Innenwiderstand. Bei einem Autoakku sind das mehrere hundert Ampere — und darum ist der Kurzschluss dort gefährlich, nicht bloss ärgerlich.'
         },
         {
-            id: 'elemente-reihe-spannung', kapitel: 'quelle', schreibweise: 'U₀ = n · U₀₁',
+            id: 'elemente-reihe-spannung', kapitel: 'quelle', abschnitt: 'b-reihe', schreibweise: 'U₀ = n · U₀₁',
             groessen: [g('U₀', 'gesamte Leerlaufspannung', 'V'), g('n', 'Anzahl Elemente', ''),
                 g('U₀₁', 'Leerlaufspannung eines Elements', 'V')],
             loese: {
@@ -17770,7 +17987,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'In Reihe addieren sich die Spannungen. Sechs Zellen zu 2 V ergeben die 12 V der Autobatterie.'
         },
         {
-            id: 'elemente-reihe-widerstand', kapitel: 'quelle', schreibweise: 'Rᵢ = n · Rᵢ₁',
+            id: 'elemente-reihe-widerstand', kapitel: 'quelle', abschnitt: 'b-reihe', schreibweise: 'Rᵢ = n · Rᵢ₁',
             groessen: [g('Rᵢ', 'gesamter Innenwiderstand', 'Ω'), g('n', 'Anzahl Elemente', ''),
                 g('Rᵢ₁', 'Innenwiderstand eines Elements', 'Ω')],
             loese: {
@@ -17781,7 +17998,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Mit der Spannung wächst auch der Innenwiderstand — die Zellen liegen ja hintereinander.'
         },
         {
-            id: 'elemente-parallel-widerstand', kapitel: 'quelle', schreibweise: 'Rᵢ = Rᵢ₁ / n',
+            id: 'elemente-parallel-widerstand', kapitel: 'quelle', abschnitt: 'b-parallel', schreibweise: 'Rᵢ = Rᵢ₁ / n',
             groessen: [g('Rᵢ', 'gesamter Innenwiderstand', 'Ω'),
                 g('Rᵢ₁', 'Innenwiderstand eines Elements', 'Ω'),
                 g('n', 'Anzahl Elemente', '')],
@@ -17793,7 +18010,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Parallel bleibt die Spannung, aber der Innenwiderstand sinkt. Darum werden Zellen parallel geschaltet, wenn viel Strom gebraucht wird.'
         },
         {
-            id: 'elemente-parallel-strom', kapitel: 'quelle', schreibweise: 'I = n · I₁',
+            id: 'elemente-parallel-strom', kapitel: 'quelle', abschnitt: 'b-parallel', schreibweise: 'I = n · I₁',
             groessen: [g('I', 'Laststrom', 'A'), g('n', 'Anzahl Elemente', ''),
                 g('I₁', 'Strom eines Elements', 'A')],
             loese: {
@@ -17805,7 +18022,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Akkumulator und Batterie ---------------------------------------- */
         {
-            id: 'akku-ladekapazitaet', kapitel: 'akku', schreibweise: 'Q_L = I_L · t_L',
+            id: 'akku-ladekapazitaet', kapitel: 'akku', abschnitt: 'b-kapazitaet', schreibweise: 'Q_L = I_L · t_L',
             groessen: [g('Q_L', 'Ladekapazität', 'Ah'), g('I_L', 'Ladestrom', 'A'),
                 g('t_L', 'Ladezeit', 'h')],
             loese: {
@@ -17816,7 +18033,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Ladung ist Strom mal Zeit. Beim Akku wird in Stunden gerechnet, nicht in Sekunden — darum Ah und nicht As.'
         },
         {
-            id: 'akku-entladekapazitaet', kapitel: 'akku', schreibweise: 'Q_E = I_E · t_E',
+            id: 'akku-entladekapazitaet', kapitel: 'akku', abschnitt: 'b-kapazitaet', schreibweise: 'Q_E = I_E · t_E',
             groessen: [g('Q_E', 'Entladekapazität', 'Ah'), g('I_E', 'Entladestrom', 'A'),
                 g('t_E', 'Entladezeit', 'h')],
             loese: {
@@ -17827,7 +18044,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Dieselbe Rechnung in der anderen Richtung. Sie kommt nie ganz auf die Ladekapazität heraus.'
         },
         {
-            id: 'akku-ladeenergie', kapitel: 'akku', schreibweise: 'W_L = Q_L · U_L',
+            id: 'akku-ladeenergie', kapitel: 'akku', abschnitt: 'b-kapazitaet', schreibweise: 'W_L = Q_L · U_L',
             groessen: [g('W_L', 'Ladeenergie', 'Wh'), g('Q_L', 'Ladekapazität', 'Ah'),
                 g('U_L', 'Ladespannung', 'V')],
             loese: {
@@ -17838,7 +18055,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Aus Ladung wird Energie, sobald die Spannung dazukommt: Ah mal V ergibt Wh.'
         },
         {
-            id: 'akku-entladeenergie', kapitel: 'akku', schreibweise: 'W_E = Q_E · U_E',
+            id: 'akku-entladeenergie', kapitel: 'akku', abschnitt: 'b-kapazitaet', schreibweise: 'W_E = Q_E · U_E',
             groessen: [g('W_E', 'Entladeenergie', 'Wh'), g('Q_E', 'Entladekapazität', 'Ah'),
                 g('U_E', 'Entladespannung', 'V')],
             loese: {
@@ -17849,7 +18066,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Was der Akku wirklich abgibt. Die Entladespannung liegt unter der Ladespannung, und darum ist W_E kleiner als W_L.'
         },
         {
-            id: 'akku-ladungswirkungsgrad', kapitel: 'akku', schreibweise: 'η_Ah = Q_E / Q_L',
+            id: 'akku-ladungswirkungsgrad', kapitel: 'akku', abschnitt: 'b-kapazitaet', schreibweise: 'η_Ah = Q_E / Q_L',
             groessen: [g('η_Ah', 'Ladungswirkungsgrad', ''), g('Q_E', 'Entladekapazität', 'Ah'),
                 g('Q_L', 'Ladekapazität', 'Ah')],
             loese: {
@@ -17860,7 +18077,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie viel Ladung wieder herauskommt. Immer unter eins — ein Teil geht in Wärme und Nebenreaktionen.'
         },
         {
-            id: 'akku-energiewirkungsgrad', kapitel: 'akku', schreibweise: 'η_Wh = W_E / W_L',
+            id: 'akku-energiewirkungsgrad', kapitel: 'akku', abschnitt: 'b-kapazitaet', schreibweise: 'η_Wh = W_E / W_L',
             groessen: [g('η_Wh', 'Energiewirkungsgrad', ''), g('W_E', 'Entladeenergie', 'Wh'),
                 g('W_L', 'Ladeenergie', 'Wh')],
             loese: {
@@ -17872,7 +18089,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Kondensator ----------------------------------------------------- */
         {
-            id: 'kondensator-parallel', kapitel: 'konden', schreibweise: 'C = C₁ + C₂ + … + Cₙ',
+            id: 'kondensator-parallel', kapitel: 'konden', abschnitt: 'c-parallel', schreibweise: 'C = C₁ + C₂ + … + Cₙ',
             groessen: [g('C', 'Gesamtkapazität', 'µF'), g('C₁', 'Kapazität 1', 'µF'),
                 g('C₂', 'Kapazität 2', 'µF')],
             loese: {
@@ -17883,7 +18100,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Bei Kondensatoren ist es UMGEKEHRT: parallel addieren sie sich.'
         },
         {
-            id: 'kondensator-reihe', kapitel: 'konden', schreibweise: 'C = (C₁ · C₂) / (C₁ + C₂)',
+            id: 'kondensator-reihe', kapitel: 'konden', abschnitt: 'c-reihe', schreibweise: 'C = (C₁ · C₂) / (C₁ + C₂)',
             groessen: [g('C', 'Gesamtkapazität', 'µF'), g('C₁', 'Kapazität 1', 'µF'),
                 g('C₂', 'Kapazität 2', 'µF')],
             loese: {
@@ -17894,7 +18111,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'In Reihe wird die Gesamtkapazität kleiner als die kleinste einzelne.'
         },
         {
-            id: 'plattenkondensator', kapitel: 'konden', schreibweise: 'C = ε₀ · εᵣ · A / d',
+            id: 'plattenkondensator', kapitel: 'konden', abschnitt: 'c-kapazitaet', schreibweise: 'C = ε₀ · εᵣ · A / d',
             groessen: [g('C', 'Kapazität', 'F'),
                 g('ε₀', 'elektrische Feldkonstante', 'F/m', 'fest: 8,854·10⁻¹²'),
                 g('εᵣ', 'Dielektrizitätszahl', '', 'Luft 1, Papier ≈ 2,3'),
@@ -17909,14 +18126,14 @@ Register.elektroformeln = (() => {
         },
         /* ---- Wechselstrom ---------------------------------------------------- */
         {
-            id: 'kondensator-ladung', kapitel: 'konden', schreibweise: 'Q = C · U',
+            id: 'kondensator-ladung', kapitel: 'konden', abschnitt: 'c-kapazitaet', schreibweise: 'Q = C · U',
             groessen: [g('Q', 'gespeicherte Ladung', 'As'), g('C', 'Kapazität', 'F'),
                 g('U', 'Spannung am Kondensator', 'V')],
             loese: { Q: v => v.C * v.U, C: v => v.Q / v.U, U: v => v.Q / v.C },
             erklaerung: 'Was ein Kondensator fasst. 1 As = 1 Coulomb.'
         },
         {
-            id: 'kondensator-energie', kapitel: 'konden', schreibweise: 'W = ½ · C · U²',
+            id: 'kondensator-energie', kapitel: 'konden', abschnitt: 'c-kapazitaet', schreibweise: 'W = ½ · C · U²',
             groessen: [g('W', 'gespeicherte Energie', 'Ws'), g('C', 'Kapazität', 'F'),
                 g('U', 'Spannung am Kondensator', 'V')],
             loese: {
@@ -17928,7 +18145,7 @@ Register.elektroformeln = (() => {
                 'geladener Kondensator auch nach dem Ausschalten gefährlich.'
         },
         {
-            id: 'feldstaerke-kondensator', kapitel: 'konden', schreibweise: 'E = U / l',
+            id: 'feldstaerke-kondensator', kapitel: 'konden', abschnitt: 'c-kapazitaet', schreibweise: 'E = U / l',
             groessen: [g('E', 'elektrische Feldstärke', 'V/m'),
                 g('U', 'Spannung am Kondensator', 'V'),
                 g('l', 'Plattenabstand', 'm')],
@@ -17937,7 +18154,7 @@ Register.elektroformeln = (() => {
                 'schlägt es durch.'
         },
         {
-            id: 'zeitkonstante', kapitel: 'konden', schreibweise: 'τ = R · C',
+            id: 'zeitkonstante', kapitel: 'konden', abschnitt: 'c-laden', schreibweise: 'τ = R · C',
             groessen: [g('τ', 'Zeitkonstante', 's'), g('R', 'Widerstand', 'Ω'),
                 g('C', 'Kapazität', 'F')],
             loese: { 'τ': v => v.R * v.C, R: v => v['τ'] / v.C, C: v => v['τ'] / v.R },
@@ -17945,7 +18162,7 @@ Register.elektroformeln = (() => {
                 'oder beim Entladen auf 37 % gefallen.'
         },
         {
-            id: 'ladezeit', kapitel: 'konden', schreibweise: 't = 5 · τ',
+            id: 'ladezeit', kapitel: 'konden', abschnitt: 'c-laden', schreibweise: 't = 5 · τ',
             groessen: [g('t', 'Lade- bzw. Entladezeit', 's', 'Bis praktisch fertig'),
                 g('τ', 'Zeitkonstante', 's')],
             loese: { t: v => 5 * v['τ'], 'τ': v => v.t / 5 },
@@ -17954,7 +18171,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Faustregel, mit der man rechnet.'
         },
         {
-            id: 'ladestrom-anfang', kapitel: 'konden', schreibweise: 'I₀ = U / R',
+            id: 'ladestrom-anfang', kapitel: 'konden', abschnitt: 'c-laden', schreibweise: 'I₀ = U / R',
             groessen: [g('I₀', 'Anfangswert des Lade- oder Entladestroms', 'A'),
                 g('U', 'Spannung', 'V'), g('R', 'Widerstand', 'Ω')],
             loese: { 'I₀': v => v.U / v.R, U: v => v['I₀'] * v.R, R: v => v.U / v['I₀'] },
@@ -17962,7 +18179,7 @@ Register.elektroformeln = (() => {
                 'ein Kurzschluss — nur der Widerstand begrenzt den Strom.'
         },
         {
-            id: 'kondensator-gleiche', kapitel: 'konden', schreibweise: 'C = n · C₁',
+            id: 'kondensator-gleiche', kapitel: 'konden', abschnitt: 'c-parallel', schreibweise: 'C = n · C₁',
             groessen: [g('C', 'Gesamtkapazität', 'F'), g('n', 'Anzahl Kondensatoren', ''),
                 g('C₁', 'Kapazität eines einzelnen', 'F')],
             loese: { C: v => v.n * v['C₁'], n: v => v.C / v['C₁'], 'C₁': v => v.C / v.n },
@@ -17972,7 +18189,7 @@ Register.elektroformeln = (() => {
                 'parallel addieren sich die Kapazitäten.'
         },
         {
-            id: 'scheitelwert', kapitel: 'wechsel', schreibweise: 'û = √2 · U',
+            id: 'scheitelwert', kapitel: 'wechsel', abschnitt: 'w-effektiv', schreibweise: 'û = √2 · U',
             groessen: [g('û', 'Scheitelwert', 'V', 'Die höchste Spitze der Sinuskurve'),
                 g('U', 'Effektivwert', 'V', 'Der Wert, den das Messgerät anzeigt')],
             loese: { 'û': v => WURZEL(2) * v.U, U: v => v['û'] / WURZEL(2) },
@@ -17983,7 +18200,7 @@ Register.elektroformeln = (() => {
             erklaerung: '230 V aus der Steckdose sind der Effektivwert — die Spitze liegt bei 325 V.'
         },
         {
-            id: 'periodendauer', kapitel: 'wechsel', schreibweise: 'T = 1 / f',
+            id: 'periodendauer', kapitel: 'wechsel', abschnitt: 'w-frequenz', schreibweise: 'T = 1 / f',
             groessen: [g('T', 'Periodendauer', 's'), g('f', 'Frequenz', 'Hz')],
             loese: { T: v => 1 / v.f, f: v => 1 / v.T },
             weg: {
@@ -17993,7 +18210,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Bei 50 Hz dauert eine volle Schwingung 20 ms.'
         },
         {
-            id: 'blindwiderstand-l', kapitel: 'wechsel', schreibweise: 'X_L = 2 · π · f · L',
+            id: 'blindwiderstand-l', kapitel: 'wechsel', abschnitt: 'wx-induktiv', schreibweise: 'X_L = 2 · π · f · L',
             groessen: [g('X_L', 'induktiver Blindwiderstand', 'Ω'), g('f', 'Frequenz', 'Hz'),
                 g('L', 'Induktivität', 'H')],
             loese: {
@@ -18004,7 +18221,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Eine Spule bremst Wechselstrom — und zwar umso mehr, je höher die Frequenz.'
         },
         {
-            id: 'blindwiderstand-c', kapitel: 'wechsel', schreibweise: 'X_C = 1 / (2 · π · f · C)',
+            id: 'blindwiderstand-c', kapitel: 'wechsel', abschnitt: 'wx-kapazitiv', schreibweise: 'X_C = 1 / (2 · π · f · C)',
             groessen: [g('X_C', 'kapazitiver Blindwiderstand', 'Ω'), g('f', 'Frequenz', 'Hz'),
                 g('C', 'Kapazität', 'F')],
             loese: {
@@ -18015,13 +18232,13 @@ Register.elektroformeln = (() => {
             erklaerung: 'Ein Kondensator lässt hohe Frequenzen durch und sperrt Gleichstrom ganz.'
         },
         {
-            id: 'impedanz', kapitel: 'wechsel', schreibweise: 'Z = U / I',
+            id: 'impedanz', kapitel: 'wechsel', abschnitt: 'wx-reihe', schreibweise: 'Z = U / I',
             groessen: [g('Z', 'Scheinwiderstand', 'Ω'), g('U', 'Spannung', 'V'), g('I', 'Strom', 'A')],
             loese: { Z: v => v.U / v.I, U: v => v.Z * v.I, I: v => v.U / v.Z },
             erklaerung: 'Das ohmsche Gesetz für Wechselstrom — Wirk- und Blindanteil zusammen.'
         },
         {
-            id: 'impedanz-reihe', kapitel: 'wechsel', schreibweise: 'Z = √(R² + X²)',
+            id: 'impedanz-reihe', kapitel: 'wechsel', abschnitt: 'wx-reihe', schreibweise: 'Z = √(R² + X²)',
             groessen: [g('Z', 'Scheinwiderstand', 'Ω'), g('R', 'Wirkwiderstand', 'Ω'),
                 g('X', 'Blindwiderstand', 'Ω')],
             loese: {
@@ -18038,14 +18255,14 @@ Register.elektroformeln = (() => {
             erklaerung: 'In Reihe addieren sich Wirk- und Blindwiderstand nach Pythagoras, nicht direkt.'
         },
         {
-            id: 'kreisfrequenz', kapitel: 'wechsel', schreibweise: 'ω = 2 · π · f',
+            id: 'kreisfrequenz', kapitel: 'wechsel', abschnitt: 'w-frequenz', schreibweise: 'ω = 2 · π · f',
             groessen: [g('ω', 'Kreisfrequenz', '1/s'), g('f', 'Frequenz', 'Hz')],
             loese: { 'ω': v => 2 * PI * v.f, f: v => v['ω'] / (2 * PI) },
             erklaerung: 'Bei 50 Hz sind das 314 1/s — die Zahl, die in jeder ' +
                 'Wechselstromrechnung wieder auftaucht.'
         },
         {
-            id: 'momentanwert', kapitel: 'wechsel', schreibweise: 'u = û · sin α',
+            id: 'momentanwert', kapitel: 'wechsel', abschnitt: 'w-frequenz', schreibweise: 'u = û · sin α',
             groessen: [g('u', 'Momentanwert der Spannung', 'V', 'Der Wert GERADE JETZT'),
                 g('û', 'Scheitelwert', 'V'),
                 g('α', 'Phasenwinkel', '°')],
@@ -18057,7 +18274,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Sinuslinie in einer Zeile. Bei 90° steht der Scheitel, bei 0° und 180° die Null.'
         },
         {
-            id: 'impedanz-reihe-rlc', kapitel: 'wechsel',
+            id: 'impedanz-reihe-rlc', kapitel: 'wechsel', abschnitt: 'wx-reihe-rlc',
             schreibweise: 'Z = √(R² + (X_L − X_C)²)',
             groessen: [g('Z', 'Scheinwiderstand', 'Ω'), g('R', 'Wirkwiderstand', 'Ω'),
                 g('X_L', 'induktiver Blindwiderstand', 'Ω'),
@@ -18077,7 +18294,7 @@ Register.elektroformeln = (() => {
                 'bleibt nur R übrig — das ist Resonanz.'
         },
         {
-            id: 'cosphi-reihe', kapitel: 'wechsel', schreibweise: 'cos φ = R / Z',
+            id: 'cosphi-reihe', kapitel: 'wechsel', abschnitt: 'wx-reihe', schreibweise: 'cos φ = R / Z',
             groessen: [g('cosφ', 'Leistungsfaktor', ''), g('R', 'Wirkwiderstand', 'Ω'),
                 g('Z', 'Scheinwiderstand', 'Ω')],
             loese: {
@@ -18090,7 +18307,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Der Leistungsfaktor aus dem Widerstandsdreieck.'
         },
         {
-            id: 'impedanz-parallel', kapitel: 'wechsel',
+            id: 'impedanz-parallel', kapitel: 'wechsel', abschnitt: 'wx-parallel',
             schreibweise: 'Z = 1 / √(1/R² + 1/X²)',
             groessen: [g('Z', 'Scheinwiderstand', 'Ω'), g('R', 'Wirkwiderstand', 'Ω'),
                 g('X', 'Blindwiderstand', 'Ω')],
@@ -18104,7 +18321,7 @@ Register.elektroformeln = (() => {
                 'einzelne — genau umgekehrt zur Reihe.'
         },
         {
-            id: 'cosphi-parallel', kapitel: 'wechsel', schreibweise: 'cos φ = Z / R',
+            id: 'cosphi-parallel', kapitel: 'wechsel', abschnitt: 'wx-parallel', schreibweise: 'cos φ = Z / R',
             groessen: [g('cosφ', 'Leistungsfaktor', ''), g('Z', 'Scheinwiderstand', 'Ω'),
                 g('R', 'Wirkwiderstand', 'Ω')],
             loese: {
@@ -18118,7 +18335,7 @@ Register.elektroformeln = (() => {
                 'Parallel haben dieselben Buchstaben und die umgekehrte Formel.'
         },
         {
-            id: 'resonanzfrequenz', kapitel: 'wechsel',
+            id: 'resonanzfrequenz', kapitel: 'wechsel', abschnitt: 'wx-resonanz',
             schreibweise: 'f_r = 1 / (2 · π · √(L · C))',
             groessen: [g('f_r', 'Resonanzfrequenz', 'Hz'), g('L', 'Induktivität', 'H'),
                 g('C', 'Kapazität', 'F')],
@@ -18131,7 +18348,7 @@ Register.elektroformeln = (() => {
                 'und cos φ = 1 — die Schaltung verhält sich rein ohmsch.'
         },
         {
-            id: 'spannung-reihe-ac', kapitel: 'wechsel', schreibweise: 'U = √(U_w² + U_b²)',
+            id: 'spannung-reihe-ac', kapitel: 'wechsel', abschnitt: 'wx-reihe', schreibweise: 'U = √(U_w² + U_b²)',
             groessen: [g('U', 'Gesamtspannung', 'V'), g('U_w', 'Wirkspannung', 'V'),
                 g('U_b', 'Blindspannung', 'V')],
             loese: {
@@ -18144,7 +18361,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Warum 60 V plus 80 V hier 100 V ergeben und nicht 140.'
         },
         {
-            id: 'strom-parallel-ac', kapitel: 'wechsel', schreibweise: 'I = √(I_w² + I_b²)',
+            id: 'strom-parallel-ac', kapitel: 'wechsel', abschnitt: 'wx-parallel', schreibweise: 'I = √(I_w² + I_b²)',
             groessen: [g('I', 'Gesamtstrom', 'A'), g('I_w', 'Wirkstrom', 'A'),
                 g('I_b', 'Blindstrom', 'A')],
             loese: {
@@ -18157,14 +18374,14 @@ Register.elektroformeln = (() => {
                 'bei der Reihe die Spannungen aufteilen.'
         },
         {
-            id: 'scheinleitwert', kapitel: 'wechsel', schreibweise: 'Y = 1 / Z',
+            id: 'scheinleitwert', kapitel: 'wechsel', abschnitt: 'wx-parallel', schreibweise: 'Y = 1 / Z',
             groessen: [g('Y', 'Scheinleitwert', 'S'), g('Z', 'Scheinwiderstand', 'Ω')],
             loese: { Y: v => 1 / v.Z, Z: v => 1 / v.Y },
             erklaerung: 'Bei Parallelschaltungen rechnet es sich mit Leitwerten leichter — ' +
                 'sie addieren sich einfach.'
         },
         {
-            id: 'scheinleistung-z', kapitel: 'wechsel', schreibweise: 'S = U² / Z',
+            id: 'scheinleistung-z', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'S = U² / Z',
             groessen: [g('S', 'Scheinleistung', 'VA'), g('U', 'Spannung', 'V'),
                 g('Z', 'Scheinwiderstand', 'Ω')],
             loese: {
@@ -18175,7 +18392,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wenn der Strom unbekannt ist, aber Spannung und Impedanz da sind.'
         },
         {
-            id: 'cosphi-leistung', kapitel: 'wechsel', schreibweise: 'cos φ = P / S',
+            id: 'cosphi-leistung', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'cos φ = P / S',
             groessen: [g('cosφ', 'Leistungsfaktor', ''), g('P', 'Wirkleistung', 'W'),
                 g('S', 'Scheinleistung', 'VA')],
             loese: {
@@ -18187,7 +18404,7 @@ Register.elektroformeln = (() => {
                 'aus dem Widerstandsdreieck, anderer Weg.'
         },
         {
-            id: 'sinphi-leistung', kapitel: 'wechsel', schreibweise: 'sin φ = Q / S',
+            id: 'sinphi-leistung', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'sin φ = Q / S',
             groessen: [g('sinφ', 'Blindfaktor', ''), g('Q', 'Blindleistung', 'var'),
                 g('S', 'Scheinleistung', 'VA')],
             loese: {
@@ -18198,7 +18415,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie viel von der Scheinleistung blind ist.'
         },
         {
-            id: 'wirkleistung-dreieck', kapitel: 'wechsel', schreibweise: 'P = √(S² − Q²)',
+            id: 'wirkleistung-dreieck', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'P = √(S² − Q²)',
             groessen: [g('P', 'Wirkleistung', 'W'), g('S', 'Scheinleistung', 'VA'),
                 g('Q', 'Blindleistung', 'var')],
             loese: {
@@ -18209,13 +18426,13 @@ Register.elektroformeln = (() => {
             erklaerung: 'Das Leistungsdreieck von der anderen Seite: was wirklich arbeitet.'
         },
         {
-            id: 'scheinleistung', kapitel: 'wechsel', schreibweise: 'S = U · I',
+            id: 'scheinleistung', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'S = U · I',
             groessen: [g('S', 'Scheinleistung', 'VA'), g('U', 'Spannung', 'V'), g('I', 'Strom', 'A')],
             loese: { S: v => v.U * v.I, U: v => v.S / v.I, I: v => v.S / v.U },
             erklaerung: 'Was die Leitung tragen muss — auch der Teil, der keine Arbeit leistet.'
         },
         {
-            id: 'wirkleistung-cos', kapitel: 'wechsel', schreibweise: 'P = U · I · cos φ',
+            id: 'wirkleistung-cos', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'P = U · I · cos φ',
             groessen: [g('P', 'Wirkleistung', 'W'), g('U', 'Spannung', 'V'), g('I', 'Strom', 'A'),
                 g('cosφ', 'Leistungsfaktor', '', 'Zwischen 0 und 1')],
             loese: {
@@ -18231,7 +18448,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Nur der Wirkanteil zählt für die Rechnung — cos φ sagt, wie gross er ist.'
         },
         {
-            id: 'blindleistung', kapitel: 'wechsel', schreibweise: 'Q = U · I · sin φ',
+            id: 'blindleistung', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'Q = U · I · sin φ',
             groessen: [g('Q', 'Blindleistung', 'var'), g('U', 'Spannung', 'V'), g('I', 'Strom', 'A'),
                 g('sinφ', 'Blindfaktor', '')],
             loese: {
@@ -18243,7 +18460,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Pendelt zwischen Netz und Verbraucher hin und her, ohne Arbeit zu leisten.'
         },
         {
-            id: 'leistungsdreieck', kapitel: 'wechsel', schreibweise: 'S = √(P² + Q²)',
+            id: 'leistungsdreieck', kapitel: 'wechsel', abschnitt: 'a-wechsel', schreibweise: 'S = √(P² + Q²)',
             groessen: [g('S', 'Scheinleistung', 'VA'), g('P', 'Wirkleistung', 'W'),
                 g('Q', 'Blindleistung', 'var')],
             loese: {
@@ -18255,7 +18472,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Drehstrom ------------------------------------------------------- */
         {
-            id: 'dreh-schein', kapitel: 'dreh', schreibweise: 'S = √3 · U · I',
+            id: 'dreh-schein', kapitel: 'dreh', abschnitt: 'd-leistung', schreibweise: 'S = √3 · U · I',
             groessen: [g('S', 'Scheinleistung', 'VA'), g('U', 'Aussenleiterspannung', 'V'),
                 g('I', 'Aussenleiterstrom', 'A')],
             loese: {
@@ -18269,7 +18486,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Beim Drehstrom kommt der Faktor √3 dazu — er stammt aus der 120°-Verschiebung.'
         },
         {
-            id: 'dreh-wirk', kapitel: 'dreh', schreibweise: 'P = √3 · U · I · cos φ',
+            id: 'dreh-wirk', kapitel: 'dreh', abschnitt: 'd-leistung', schreibweise: 'P = √3 · U · I · cos φ',
             groessen: [g('P', 'Wirkleistung', 'W'), g('U', 'Spannung', 'V'), g('I', 'Strom', 'A'),
                 g('cosφ', 'Leistungsfaktor', '')],
             loese: {
@@ -18286,20 +18503,20 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die wichtigste Formel am Motor: aus der Leistung den Strom für die Absicherung.'
         },
         {
-            id: 'stern', kapitel: 'dreh', schreibweise: 'U = √3 · U_Str  ·  I = I_Str',
+            id: 'stern', kapitel: 'dreh', abschnitt: 'd-stern', schreibweise: 'U = √3 · U_Str  ·  I = I_Str',
             groessen: [g('U', 'Aussenleiterspannung', 'V'), g('U_Str', 'Strangspannung', 'V')],
             loese: { U: v => WURZEL(3) * v.U_Str, U_Str: v => v.U / WURZEL(3) },
             erklaerung: 'Sternschaltung: 400 V zwischen den Aussenleitern, 230 V am einzelnen Strang.'
         },
         {
-            id: 'dreieck', kapitel: 'dreh', schreibweise: 'U = U_Str  ·  I = √3 · I_Str',
+            id: 'dreieck', kapitel: 'dreh', abschnitt: 'd-dreieck', schreibweise: 'U = U_Str  ·  I = √3 · I_Str',
             groessen: [g('I', 'Aussenleiterstrom', 'A'), g('I_Str', 'Strangstrom', 'A')],
             loese: { I: v => WURZEL(3) * v.I_Str, I_Str: v => v.I / WURZEL(3) },
             erklaerung: 'Dreieckschaltung: volle Spannung am Strang, dafür teilt sich der Strom auf.'
         },
         /* ---- Transformator --------------------------------------------------- */
         {
-            id: 'stern-spannung', kapitel: 'dreh', schreibweise: 'U_Str = U / √3',
+            id: 'stern-spannung', kapitel: 'dreh', abschnitt: 'd-stern', schreibweise: 'U_Str = U / √3',
             groessen: [g('U_Str', 'Strangspannung', 'V', 'Über einem einzelnen Wicklungsstrang'),
                 g('U', 'Aussenleiterspannung', 'V', 'Zwischen zwei Aussenleitern')],
             loese: { U_Str: v => v.U / WURZEL(3), U: v => WURZEL(3) * v.U_Str },
@@ -18308,7 +18525,7 @@ Register.elektroformeln = (() => {
                 'Aussenleitern 400 V stehen.'
         },
         {
-            id: 'stern-strang', kapitel: 'dreh', schreibweise: 'U_Str = I · Z',
+            id: 'stern-strang', kapitel: 'dreh', abschnitt: 'd-stern', schreibweise: 'U_Str = I · Z',
             groessen: [g('U_Str', 'Strangspannung', 'V'), g('I', 'Aussenleiterstrom', 'A'),
                 g('Z', 'Strangimpedanz', 'Ω')],
             loese: { U_Str: v => v.I * v.Z, I: v => v.U_Str / v.Z, Z: v => v.U_Str / v.I },
@@ -18317,7 +18534,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Ohm am einzelnen Strang.'
         },
         {
-            id: 'dreieck-strom', kapitel: 'dreh', schreibweise: 'I_Str = I / √3',
+            id: 'dreieck-strom', kapitel: 'dreh', abschnitt: 'd-dreieck', schreibweise: 'I_Str = I / √3',
             groessen: [g('I_Str', 'Strangstrom', 'A', 'Durch einen einzelnen Wicklungsstrang'),
                 g('I', 'Aussenleiterstrom', 'A')],
             loese: { I_Str: v => v.I / WURZEL(3), I: v => WURZEL(3) * v.I_Str },
@@ -18326,7 +18543,7 @@ Register.elektroformeln = (() => {
                 'der Strom teilt sich.'
         },
         {
-            id: 'dreieck-strang', kapitel: 'dreh', schreibweise: 'I_Str = U / Z',
+            id: 'dreieck-strang', kapitel: 'dreh', abschnitt: 'd-dreieck', schreibweise: 'I_Str = U / Z',
             groessen: [g('I_Str', 'Strangstrom', 'A'), g('U', 'Aussenleiterspannung', 'V'),
                 g('Z', 'Strangimpedanz', 'Ω')],
             loese: { I_Str: v => v.U / v.Z, U: v => v.I_Str * v.Z, Z: v => v.U / v.I_Str },
@@ -18335,7 +18552,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Ohm am einzelnen Strang — im Dreieck mit der vollen Aussenleiterspannung.'
         },
         {
-            id: 'dreh-blindleistung', kapitel: 'dreh',
+            id: 'dreh-blindleistung', kapitel: 'dreh', abschnitt: 'd-leistung',
             schreibweise: 'Q = √3 · U · I · sin φ',
             groessen: [g('Q', 'Blindleistung', 'var'), g('U', 'Aussenleiterspannung', 'V'),
                 g('I', 'Aussenleiterstrom', 'A'), g('sinφ', 'Blindfaktor', '')],
@@ -18348,7 +18565,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Das Gegenstück zur Wirkleistung im Drehstrom.'
         },
         {
-            id: 'stern-scheinleistung', kapitel: 'dreh', schreibweise: 'S_Y = U² / Z',
+            id: 'stern-scheinleistung', kapitel: 'dreh', abschnitt: 'd-leistung', schreibweise: 'S_Y = U² / Z',
             groessen: [g('S_Y', 'Scheinleistung im Stern', 'VA'),
                 g('U', 'Aussenleiterspannung', 'V'), g('Z', 'Strangimpedanz', 'Ω')],
             loese: {
@@ -18360,7 +18577,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Leistung aus Spannung und Strangimpedanz, ohne Umweg über den Strom.'
         },
         {
-            id: 'dreieck-scheinleistung', kapitel: 'dreh', schreibweise: 'S_Δ = 3 · U² / Z',
+            id: 'dreieck-scheinleistung', kapitel: 'dreh', abschnitt: 'd-leistung', schreibweise: 'S_Δ = 3 · U² / Z',
             groessen: [g('S_Δ', 'Scheinleistung im Dreieck', 'VA'),
                 g('U', 'Aussenleiterspannung', 'V'), g('Z', 'Strangimpedanz', 'Ω')],
             loese: {
@@ -18374,7 +18591,7 @@ Register.elektroformeln = (() => {
                 'und im Stern nur mit einem Drittel.'
         },
         {
-            id: 'stern-dreieck-vergleich', kapitel: 'dreh', schreibweise: 'P_Δ = 3 · P_Y',
+            id: 'stern-dreieck-vergleich', kapitel: 'dreh', abschnitt: 'd-leistung', schreibweise: 'P_Δ = 3 · P_Y',
             groessen: [g('P_Δ', 'Leistung im Dreieck', 'W'),
                 g('P_Y', 'Leistung im Stern', 'W')],
             loese: { 'P_Δ': v => 3 * v.P_Y, P_Y: v => v['P_Δ'] / 3 },
@@ -18383,7 +18600,7 @@ Register.elektroformeln = (() => {
                 'Motor beim Anlauf nur ein Drittel.'
         },
         {
-            id: 'dreh-wirkleistung-q', kapitel: 'dreh', schreibweise: 'P = Q / tan φ',
+            id: 'dreh-wirkleistung-q', kapitel: 'dreh', abschnitt: 'd-leistung', schreibweise: 'P = Q / tan φ',
             groessen: [g('P', 'Wirkleistung', 'W'), g('Q', 'Blindleistung', 'var'),
                 g('tanφ', 'Verhältnis Blind zu Wirk', '')],
             loese: {
@@ -18395,7 +18612,7 @@ Register.elektroformeln = (() => {
                 'die Kompensation rechnet.'
         },
         {
-            id: 'trafo-uebersetzung', kapitel: 'trafo', schreibweise: 'U₁ / U₂ = N₁ / N₂ = ü',
+            id: 'trafo-uebersetzung', kapitel: 'trafo', abschnitt: 't-einphasen', schreibweise: 'U₁ / U₂ = N₁ / N₂ = ü',
             groessen: [g('U₁', 'Spannung primär', 'V'), g('U₂', 'Spannung sekundär', 'V'),
                 g('N₁', 'Windungen primär', ''), g('N₂', 'Windungen sekundär', '')],
             loese: {
@@ -18408,7 +18625,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Spannungen verhalten sich wie die Windungszahlen.'
         },
         {
-            id: 'trafo-strom', kapitel: 'trafo', schreibweise: 'I₁ / I₂ = U₂ / U₁ = N₂ / N₁',
+            id: 'trafo-strom', kapitel: 'trafo', abschnitt: 't-einphasen', schreibweise: 'I₁ / I₂ = U₂ / U₁ = N₂ / N₁',
             groessen: [g('I₁', 'Strom primär', 'A'), g('I₂', 'Strom sekundär', 'A'),
                 g('U₁', 'Spannung primär', 'V'), g('U₂', 'Spannung sekundär', 'V')],
             loese: {
@@ -18422,7 +18639,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Motor ----------------------------------------------------------- */
         {
-            id: 'trafo-nennleistung', kapitel: 'trafo', schreibweise: 'S_N = U₂N · I₂N',
+            id: 'trafo-nennleistung', kapitel: 'trafo', abschnitt: 't-einphasen', schreibweise: 'S_N = U₂N · I₂N',
             groessen: [g('S_N', 'Nennleistung', 'VA'),
                 g('U₂N', 'Sekundärnennspannung', 'V'),
                 g('I₂N', 'Sekundärnennstrom', 'A')],
@@ -18437,7 +18654,7 @@ Register.elektroformeln = (() => {
                 'Wirkleistung in W. Wie viel davon Wirkleistung wird, hängt an der Last.'
         },
         {
-            id: 'trafo-nennleistung-dreh', kapitel: 'trafo',
+            id: 'trafo-nennleistung-dreh', kapitel: 'trafo', abschnitt: 't-dreh',
             schreibweise: 'S_N = √3 · U₂N · I₂N',
             groessen: [g('S_N', 'Nennleistung', 'VA'),
                 g('U₂N', 'Sekundärnennspannung', 'V', 'Aussenleiterspannung'),
@@ -18451,7 +18668,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Dasselbe für den Drehstromtransformator.'
         },
         {
-            id: 'trafo-wirkungsgrad', kapitel: 'trafo',
+            id: 'trafo-wirkungsgrad', kapitel: 'trafo', abschnitt: 't-einphasen',
             schreibweise: 'η = P₂ / (P₂ + P_Cu + P_Fe)',
             groessen: [g('η', 'Wirkungsgrad', ''),
                 g('P₂', 'Sekundärwirkleistung', 'W'),
@@ -18468,7 +18685,7 @@ Register.elektroformeln = (() => {
                 'einen unbenutzten Trafo vom Netz zu nehmen.'
         },
         {
-            id: 'trafo-induzierte-spannung', kapitel: 'trafo',
+            id: 'trafo-induzierte-spannung', kapitel: 'trafo', abschnitt: 't-einphasen',
             schreibweise: 'u_i = N · ΔΦ / Δt',
             groessen: [g('u_i', 'induzierte Spannung', 'V'),
                 g('N', 'Windungszahl', ''),
@@ -18486,7 +18703,7 @@ Register.elektroformeln = (() => {
                 'ÄNDERUNG des Flusses wird nichts induziert.'
         },
         {
-            id: 'spartrafo-bauleistung', kapitel: 'trafo',
+            id: 'spartrafo-bauleistung', kapitel: 'trafo', abschnitt: 't-spar',
             schreibweise: 'S_B = S_D · (U₁ − U₂) / U₁',
             groessen: [g('S_B', 'Bauleistung', 'VA', 'Wonach der Trafo dimensioniert wird'),
                 g('S_D', 'Durchgangsleistung', 'VA', 'Was durchgereicht wird — die Nennleistung'),
@@ -18505,7 +18722,7 @@ Register.elektroformeln = (() => {
                 'ist die Bauleistung nur ein Zwanzigstel der Durchgangsleistung.'
         },
         {
-            id: 'synchrondrehzahl', kapitel: 'motor', schreibweise: 'n_s = f · 60 / p',
+            id: 'synchrondrehzahl', kapitel: 'motor', abschnitt: 'mo-schlupf', schreibweise: 'n_s = f · 60 / p',
             groessen: [g('n_s', 'Synchrondrehzahl', '1/min'), g('f', 'Frequenz', 'Hz'),
                 g('p', 'Polpaarzahl', '', '1 Polpaar = 3000/min bei 50 Hz')],
             loese: {
@@ -18519,7 +18736,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Die Drehzahl des Drehfelds. Der Läufer bleibt immer etwas dahinter.'
         },
         {
-            id: 'schlupf', kapitel: 'motor', schreibweise: 's = (n_s − n) / n_s · 100 %',
+            id: 'schlupf', kapitel: 'motor', abschnitt: 'mo-schlupf', schreibweise: 's = (n_s − n) / n_s · 100 %',
             groessen: [g('s', 'Schlupf', '%'), g('n_s', 'Synchrondrehzahl', '1/min'),
                 g('n', 'Läuferdrehzahl', '1/min')],
             loese: {
@@ -18530,7 +18747,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie weit der Läufer dem Drehfeld nachhinkt. Ohne Schlupf kein Drehmoment.'
         },
         {
-            id: 'motorleistung', kapitel: 'motor', schreibweise: 'P = M · 2 · π · n',
+            id: 'motorleistung', kapitel: 'motor', abschnitt: 'p-drehmoment', schreibweise: 'P = M · 2 · π · n',
             groessen: [g('P', 'mechanische Leistung', 'W'), g('M', 'Drehmoment', 'Nm'),
                 g('n', 'Drehzahl', '1/s')],
             loese: {
@@ -18542,7 +18759,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Aus Drehmoment und Drehzahl die abgegebene Leistung an der Welle.'
         },
         {
-            id: 'hubleistung', kapitel: 'motor', schreibweise: 'P = m · g · h / t',
+            id: 'hubleistung', kapitel: 'motor', abschnitt: 'p-leistung', schreibweise: 'P = m · g · h / t',
             groessen: [g('P', 'Hubleistung', 'W'), g('m', 'Masse', 'kg'),
                 g('g', 'Fallbeschleunigung', 'm/s²', 'fest: 9,81'),
                 g('h', 'Höhe', 'm'), g('t', 'Zeit', 's')],
@@ -18556,7 +18773,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Lichttechnik ---------------------------------------------------- */
         {
-            id: 'motor-polpaare', kapitel: 'motor', schreibweise: 'p = f · 60 / n_s',
+            id: 'motor-polpaare', kapitel: 'motor', abschnitt: 'mo-schlupf', schreibweise: 'p = f · 60 / n_s',
             groessen: [g('p', 'Anzahl Polpaare', ''), g('f', 'Frequenz', 'Hz'),
                 g('n_s', 'Drehfelddrehzahl', '1/min')],
             loese: {
@@ -18568,7 +18785,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Bei 50 Hz: ein Polpaar gibt 3000 1/min, zwei geben 1500, drei geben 1000.'
         },
         {
-            id: 'motor-laeuferdrehzahl', kapitel: 'motor',
+            id: 'motor-laeuferdrehzahl', kapitel: 'motor', abschnitt: 'mo-schlupf',
             schreibweise: 'n = n_s · (100 % − s) / 100 %',
             groessen: [g('n', 'Läuferdrehzahl', '1/min', 'Was die Welle wirklich dreht'),
                 g('n_s', 'Drehfelddrehzahl', '1/min'),
@@ -18582,7 +18799,7 @@ Register.elektroformeln = (() => {
                 'ohne diesen Unterschied gäbe es keinen Läuferstrom und kein Drehmoment.'
         },
         {
-            id: 'motor-aufnahme-dreh', kapitel: 'motor',
+            id: 'motor-aufnahme-dreh', kapitel: 'motor', abschnitt: 'mo-dreh',
             schreibweise: 'P₁ = √3 · U · I · cos φ',
             groessen: [g('P₁', 'aufgenommene elektrische Leistung', 'W'),
                 g('U', 'Aussenleiterspannung', 'V'), g('I', 'Aussenleiterstrom', 'A'),
@@ -18599,7 +18816,7 @@ Register.elektroformeln = (() => {
                 'Schildleistung dafür zu halten.'
         },
         {
-            id: 'motor-abgabe', kapitel: 'motor', schreibweise: 'P₂ = P₁ · η',
+            id: 'motor-abgabe', kapitel: 'motor', abschnitt: 'mo-dreh', schreibweise: 'P₂ = P₁ · η',
             groessen: [g('P₂', 'abgegebene mechanische Leistung', 'W', 'Das, was auf dem Schild steht'),
                 g('P₁', 'aufgenommene elektrische Leistung', 'W'),
                 g('η', 'Wirkungsgrad', '')],
@@ -18611,7 +18828,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Der Unterschied wird Wärme. Bei einem guten Motor sind das unter 10 %.'
         },
         {
-            id: 'motor-aufnahme-wechsel', kapitel: 'motor',
+            id: 'motor-aufnahme-wechsel', kapitel: 'motor', abschnitt: 'mo-wechsel',
             schreibweise: 'P₁ = U · I · cos φ',
             groessen: [g('P₁', 'aufgenommene elektrische Leistung', 'W'),
                 g('U', 'Spannung', 'V'), g('I', 'Strom', 'A'),
@@ -18626,7 +18843,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Bohrmaschine, Handkreissäge: alles, was am gewöhnlichen Stecker hängt.'
         },
         {
-            id: 'hubarbeit', kapitel: 'motor', schreibweise: 'W₂ = m · g · h',
+            id: 'hubarbeit', kapitel: 'motor', abschnitt: 'p-arbeit', schreibweise: 'W₂ = m · g · h',
             groessen: [g('W₂', 'mechanische Arbeit', 'Nm', '1 Nm = 1 Ws'),
                 g('m', 'Masse', 'kg'),
                 g('g', 'Fallbeschleunigung', 'm/s²'),
@@ -18640,7 +18857,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Was ein Aufzug oder eine Seilwinde an Arbeit leistet.'
         },
         {
-            id: 'hubzeit', kapitel: 'motor', schreibweise: 't = W₂ / P₂',
+            id: 'hubzeit', kapitel: 'motor', abschnitt: 'p-leistung', schreibweise: 't = W₂ / P₂',
             groessen: [g('t', 'Hubzeit', 's'), g('W₂', 'mechanische Arbeit', 'Nm'),
                 g('P₂', 'mechanische Leistung', 'W')],
             loese: {
@@ -18651,7 +18868,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie lange die Winde für die Last braucht. 1 W = 1 Nm/s.'
         },
         {
-            id: 'beleuchtungsstaerke', kapitel: 'licht', schreibweise: 'E = Φ / A',
+            id: 'beleuchtungsstaerke', kapitel: 'licht', abschnitt: 'l-staerke', schreibweise: 'E = Φ / A',
             groessen: [g('E', 'Beleuchtungsstärke', 'lx'), g('Φ', 'Lichtstrom', 'lm'),
                 g('A', 'Fläche', 'm²')],
             loese: {
@@ -18662,7 +18879,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie hell es auf der Fläche wird. Büro etwa 500 lx.'
         },
         {
-            id: 'leuchtenzahl', kapitel: 'licht', schreibweise: 'n = E · A · p / (Φ_L · η_B)',
+            id: 'leuchtenzahl', kapitel: 'licht', abschnitt: 'l-anlage', schreibweise: 'n = E · A · p / (Φ_L · η_B)',
             groessen: [g('n', 'Anzahl Leuchten', ''), g('E', 'Beleuchtungsstärke', 'lx'),
                 g('A', 'Fläche', 'm²'), g('p', 'Planungsfaktor', '', 'Alterung und Schmutz, etwa 1,25'),
                 g('Φ_L', 'Lichtstrom je Leuchte', 'lm'),
@@ -18679,7 +18896,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie viele Leuchten ein Raum braucht — aufgerundet, nie abgerundet.'
         },
         {
-            id: 'lichtausbeute', kapitel: 'licht', schreibweise: 'η = Φ_L / P_L',
+            id: 'lichtausbeute', kapitel: 'licht', abschnitt: 'l-ausbeute', schreibweise: 'η = Φ_L / P_L',
             groessen: [g('η', 'Lichtausbeute', 'lm/W'), g('Φ_L', 'Lichtstrom', 'lm'),
                 g('P_L', 'Leistung', 'W')],
             loese: {
@@ -18690,7 +18907,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie viel Licht je Watt. LED etwa 100 lm/W, Glühlampe etwa 12.'
         },
         {
-            id: 'abstandsgesetz', kapitel: 'licht', schreibweise: 'E₂ = E₁ · (r₁ / r₂)²',
+            id: 'abstandsgesetz', kapitel: 'licht', abschnitt: 'l-abstand', schreibweise: 'E₂ = E₁ · (r₁ / r₂)²',
             groessen: [g('E₂', 'Beleuchtungsstärke neu', 'lx'), g('E₁', 'Beleuchtungsstärke alt', 'lx'),
                 g('r₁', 'Abstand alt', 'm'), g('r₂', 'Abstand neu', 'm')],
             loese: {
@@ -18703,7 +18920,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Doppelter Abstand heisst nur noch ein Viertel Licht.'
         },
         {
-            id: 'gesamtlichtstrom', kapitel: 'licht', schreibweise: 'Φ = n · Φ_L',
+            id: 'gesamtlichtstrom', kapitel: 'licht', abschnitt: 'l-ausbeute', schreibweise: 'Φ = n · Φ_L',
             groessen: [g('Φ', 'gesamter Lichtstrom', 'lm'),
                 g('n', 'Anzahl Leuchten', ''),
                 g('Φ_L', 'Lichtstrom einer Leuchte', 'lm')],
@@ -18715,7 +18932,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Alle Leuchten zusammen.'
         },
         {
-            id: 'nutzlichtstrom', kapitel: 'licht', schreibweise: 'Φ_N = Φ · η_B',
+            id: 'nutzlichtstrom', kapitel: 'licht', abschnitt: 'l-anlage', schreibweise: 'Φ_N = Φ · η_B',
             groessen: [g('Φ_N', 'Nutzlichtstrom', 'lm', 'Was unten auf der Fläche ankommt'),
                 g('Φ', 'gesamter Lichtstrom', 'lm'),
                 g('η_B', 'Beleuchtungswirkungsgrad', '')],
@@ -18728,7 +18945,7 @@ Register.elektroformeln = (() => {
                 'Rest zählt für die Beleuchtungsstärke.'
         },
         {
-            id: 'betriebswirkungsgrad', kapitel: 'licht', schreibweise: 'η_B = η_LB · η_R',
+            id: 'betriebswirkungsgrad', kapitel: 'licht', abschnitt: 'l-anlage', schreibweise: 'η_B = η_LB · η_R',
             groessen: [g('η_B', 'Beleuchtungswirkungsgrad', ''),
                 g('η_LB', 'Leuchtenwirkungsgrad', '', 'Wie viel die Leuchte selbst durchlässt'),
                 g('η_R', 'Raumwirkungsgrad', '', 'Wie hell Wände und Decke sind')],
@@ -18741,7 +18958,7 @@ Register.elektroformeln = (() => {
                 'der Raum. Ein weisser Raum bringt spürbar mehr als ein dunkler.'
         },
         {
-            id: 'planungsfaktor', kapitel: 'licht', schreibweise: 'p = 1 / WF',
+            id: 'planungsfaktor', kapitel: 'licht', abschnitt: 'l-anlage', schreibweise: 'p = 1 / WF',
             groessen: [g('p', 'Planungsfaktor', '', 'Normal 1,25, bei erhöhter Verschmutzung 1,43'),
                 g('WF', 'Wartungsfaktor', '', 'Normal 0,8, bei erhöhter Verschmutzung 0,7')],
             loese: { p: v => 1 / v.WF, WF: v => 1 / v.p },
@@ -18749,7 +18966,7 @@ Register.elektroformeln = (() => {
                 'an mehr geplant, als am ersten Tag nötig wäre.'
         },
         {
-            id: 'lichtstaerke', kapitel: 'licht', schreibweise: 'I_V = Φ / Ω',
+            id: 'lichtstaerke', kapitel: 'licht', abschnitt: 'l-lichtstaerke', schreibweise: 'I_V = Φ / Ω',
             groessen: [g('I_V', 'Lichtstärke', 'cd', 'Candela — 1 cd = 1 lm/sr'),
                 g('Φ', 'Lichtstrom', 'lm'),
                 g('Ω', 'Raumwinkel', 'sr', 'Steradiant')],
@@ -18762,7 +18979,7 @@ Register.elektroformeln = (() => {
                 'dieselbe Leistung wie eine Kugellampe, aber viel mehr Lichtstärke.'
         },
         {
-            id: 'leuchtdichte', kapitel: 'licht', schreibweise: 'L_V = I_V / A',
+            id: 'leuchtdichte', kapitel: 'licht', abschnitt: 'l-leuchtdichte', schreibweise: 'L_V = I_V / A',
             groessen: [g('L_V', 'Leuchtdichte', 'cd/m²'),
                 g('I_V', 'Lichtstärke', 'cd'),
                 g('A', 'leuchtende Fläche', 'm²')],
@@ -18775,7 +18992,7 @@ Register.elektroformeln = (() => {
                 'Eine kleine helle Fläche blendet mehr als eine grosse mit demselben Licht.'
         },
         {
-            id: 'abstandsgesetz-band', kapitel: 'licht', schreibweise: 'E₂ = E₁ · r₁ / r₂',
+            id: 'abstandsgesetz-band', kapitel: 'licht', abschnitt: 'l-abstand', schreibweise: 'E₂ = E₁ · r₁ / r₂',
             groessen: [g('E₂', 'Beleuchtungsstärke neu', 'lx'),
                 g('E₁', 'Beleuchtungsstärke alt', 'lx'),
                 g('r₁', 'Abstand alt', 'm'), g('r₂', 'Abstand neu', 'm')],
@@ -18797,7 +19014,7 @@ Register.elektroformeln = (() => {
            man multiplizieren. In Dezibel ADDIERT man sie stattdessen — und
            Addieren geht im Kopf. */
         {
-            id: 'verstaerkungsfaktor-u', kapitel: 'antenne', schreibweise: 'V_U = U₂ / U₁',
+            id: 'verstaerkungsfaktor-u', kapitel: 'antenne', abschnitt: 'an-faktor', schreibweise: 'V_U = U₂ / U₁',
             groessen: [g('V_U', 'Spannungsverstärkungsfaktor', ''),
                 g('U₂', 'Ausgangsspannung', 'V'), g('U₁', 'Eingangsspannung', 'V')],
             loese: {
@@ -18808,7 +19025,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie oft grösser die Spannung hinter dem Verstärker ist.'
         },
         {
-            id: 'daempfungsfaktor-u', kapitel: 'antenne', schreibweise: 'D_U = U₁ / U₂',
+            id: 'daempfungsfaktor-u', kapitel: 'antenne', abschnitt: 'an-faktor', schreibweise: 'D_U = U₁ / U₂',
             groessen: [g('D_U', 'Spannungsdämpfungsfaktor', ''),
                 g('U₁', 'Eingangsspannung', 'V'), g('U₂', 'Ausgangsspannung', 'V')],
             loese: {
@@ -18819,7 +19036,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Dasselbe umgekehrt — was ein Kabel oder ein Verteiler wegnimmt.'
         },
         {
-            id: 'verstaerkungsmass-u', kapitel: 'antenne',
+            id: 'verstaerkungsmass-u', kapitel: 'antenne', abschnitt: 'an-mass',
             schreibweise: 'G_U = 20 · log(U₂ / U₁)',
             groessen: [g('G_U', 'Spannungsverstärkungsmass', 'dB'),
                 g('U₂', 'Ausgangsspannung', 'V'), g('U₁', 'Eingangsspannung', 'V')],
@@ -18834,7 +19051,7 @@ Register.elektroformeln = (() => {
                 '20 dB heissen zehnfache.'
         },
         {
-            id: 'daempfungsmass-u', kapitel: 'antenne',
+            id: 'daempfungsmass-u', kapitel: 'antenne', abschnitt: 'an-mass',
             schreibweise: 'A_U = 20 · log(U₁ / U₂)',
             groessen: [g('A_U', 'Spannungsdämpfungsmass', 'dB'),
                 g('U₁', 'Eingangsspannung', 'V'), g('U₂', 'Ausgangsspannung', 'V')],
@@ -18847,7 +19064,7 @@ Register.elektroformeln = (() => {
                 'und beide zusammen: einfach addieren.'
         },
         {
-            id: 'verstaerkungsmass-p', kapitel: 'antenne',
+            id: 'verstaerkungsmass-p', kapitel: 'antenne', abschnitt: 'an-mass',
             schreibweise: 'G_P = 10 · log(P₂ / P₁)',
             groessen: [g('G_P', 'Leistungsverstärkungsmass', 'dB'),
                 g('P₂', 'abgegebene Leistung', 'W'), g('P₁', 'aufgenommene Leistung', 'W')],
@@ -18860,7 +19077,7 @@ Register.elektroformeln = (() => {
             erklaerung: '3 dB heissen doppelte Leistung, 10 dB heissen zehnfache.'
         },
         {
-            id: 'spannungspegel', kapitel: 'antenne', schreibweise: 'L_U = 20 · log(U / U₀)',
+            id: 'spannungspegel', kapitel: 'antenne', abschnitt: 'an-pegel', schreibweise: 'L_U = 20 · log(U / U₀)',
             groessen: [g('L_U', 'Spannungspegel', 'dBµV'), g('U', 'Spannung', 'µV'),
                 g('U₀', 'Bezugsspannung', 'µV', 'Fest 1 µV — daher die Einheit dBµV')],
             loese: {
@@ -18873,7 +19090,7 @@ Register.elektroformeln = (() => {
                 'je nach Dienst etwa zwischen 60 und 80 dBµV.'
         },
         {
-            id: 'gesamtdaempfung', kapitel: 'antenne', schreibweise: 'A_ges = A₁ + A₂ + A₃',
+            id: 'gesamtdaempfung', kapitel: 'antenne', abschnitt: 'an-mass', schreibweise: 'A_ges = A₁ + A₂ + A₃',
             groessen: [g('A_ges', 'Gesamtdämpfungsmass', 'dB'),
                 g('A₁', 'Einzeldämpfung 1', 'dB'),
                 g('A₂', 'Einzeldämpfung 2', 'dB'),
@@ -18890,7 +19107,7 @@ Register.elektroformeln = (() => {
         },
         /* ---- Kompensation ---------------------------------------------------- */
         {
-            id: 'kompensation-q', kapitel: 'kompen', schreibweise: 'Q_C = P · (tan φ₁ − tan φ₂)',
+            id: 'kompensation-q', kapitel: 'kompen', abschnitt: 'k-blind', schreibweise: 'Q_C = P · (tan φ₁ − tan φ₂)',
             groessen: [g('Q_C', 'Kondensatorleistung', 'var'), g('P', 'Wirkleistung', 'W'),
                 g('tanφ₁', 'tan φ vorher', ''), g('tanφ₂', 'tan φ nachher', '')],
             loese: {
@@ -18902,7 +19119,7 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie viel Kondensatorleistung nötig ist, um den cos φ zu verbessern.'
         },
         {
-            id: 'kompensation-c', kapitel: 'kompen', schreibweise: 'C = Q_C / (2 · π · f · U²)',
+            id: 'kompensation-c', kapitel: 'kompen', abschnitt: 'k-blind', schreibweise: 'C = Q_C / (2 · π · f · U²)',
             groessen: [g('C', 'Kapazität', 'F'), g('Q_C', 'Kondensatorleistung', 'var'),
                 g('f', 'Frequenz', 'Hz'), g('U', 'Spannung', 'V')],
             loese: {
@@ -18920,6 +19137,32 @@ Register.elektroformeln = (() => {
     const imKapitel = (k) => LISTE.filter(f => f.kapitel === k);
     const kapitel = () => KAPITEL.slice();
     const kapitelName = (id) => (KAPITEL.find(k => k[0] === id) || [id, id, ''])[1];
+    /* ---- Der Weg durchs Buch --------------------------------------------- */
+    const abschnitte = () => ABSCHNITTE.map(a => ({ ...a }));
+    const abschnitt = (id) => {
+        const a = ABSCHNITTE.find(x => x.id === id);
+        return a ? { ...a } : undefined;
+    };
+    const buchkapitel = () => BUCHKAPITEL.slice();
+    const buchkapitelName = (nr) => (BUCHKAPITEL.find(k => k[0] === nr) || [nr, ''])[1];
+    const letzteSeite = () => LETZTE_SEITE;
+    /**
+     * Was auf einer Buchseite steht: die Abschnitte in Buchreihenfolge, jeder
+     * mit seinen Formeln.
+     *
+     * Eine Seite OHNE Abschnitte gibt eine leere Liste zurück und keinen
+     * Fehler — es gibt Seiten im Buch, die Redion (noch) nicht geschrieben
+     * hat, und eine leere Seite ist eine ehrliche Antwort darauf.
+     */
+    const aufSeite = (nr) => ABSCHNITTE.filter(a => a.seite === nr)
+        .map(a => ({ abschnitt: { ...a }, formeln: LISTE.filter(f => f.abschnitt === a.id) }));
+    /** Die Seitenzahlen, auf denen wirklich etwas steht. */
+    const seitenMitInhalt = () => [...new Set(ABSCHNITTE.map(a => a.seite))].sort((a, b) => a - b);
+    /** Auf welcher Seite eine Formel steht. 0, wenn ihr Abschnitt fehlt. */
+    const seiteVon = (formelId) => {
+        const f = LISTE.find(x => x.id === formelId);
+        return f ? (ABSCHNITTE.find(a => a.id === f.abschnitt)?.seite ?? 0) : 0;
+    };
     /** Eine eigene Formel anmelden — für spätere Erweiterungen. */
     const melde = (f) => {
         if (!f || !f.id || LISTE.some(x => x.id === f.id))
@@ -18989,7 +19232,9 @@ Register.elektroformeln = (() => {
         return { ok: true, wert, einheit, weg };
     };
     return { KAPITEL, alle, holen, imKapitel, kapitel, kapitelName, suche,
-        loesbarNach, rechne, melde };
+        loesbarNach, rechne, melde,
+        BUCHKAPITEL, ABSCHNITTE, abschnitte, abschnitt, buchkapitel,
+        buchkapitelName, letzteSeite, aufSeite, seitenMitInhalt, seiteVon };
 })();
 
 </script>
@@ -30192,6 +30437,21 @@ const Schaltplan = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /**
+     * `U_L` wird zu U mit tiefgestelltem L.
+     *
+     * Eine Beschriftung im Plan ist eine Zeichenkette, und eine Zeichenkette
+     * hat keine Tiefstellung — der Unterstrich steht seit jeher dafür. Im Bild
+     * soll er aber nicht dastehen: `X_L − X_C` liest sich als vier Zeichen mit
+     * Strichen dazwischen, `X` mit tiefem `L` minus `X` mit tiefem `C` als
+     * eine Differenz zweier Grössen.
+     *
+     * ERST ESCAPEN, DANN AUSZEICHNEN — in dieser Reihenfolge liegt die ganze
+     * Sicherheit (§19). Das `<tspan>` kommt NACH dem Escapen hinein, also kann
+     * aus einer Beschriftung kein Element werden. Umgekehrt wäre es ein Loch,
+     * durch das jeder Plantext beliebiges SVG einschleusen könnte.
+     */
+    const tief = (wert) => esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g, '<tspan baseline-shift="sub" font-size="0.72em">$1</tspan>');
     const R = () => (typeof Register !== 'undefined' && Register.fachzeichen)
         ? Register.fachzeichen.RASTER : 10;
     /** Auf das Raster runden — die eine Stelle, an der das passiert. */
@@ -30734,7 +30994,7 @@ const Schaltplan = (() => {
             if (!sichtbar(x.ebene))
                 return;
             teile.push(`<text class="sp-text" data-id="${esc(x.id)}" x="${x.x}" y="${x.y}" ` +
-                `font-size="13" fill="${farbeVon(x.ebene)}" stroke="none">${esc(x.t)}</text>`);
+                `font-size="13" fill="${farbeVon(x.ebene)}" stroke="none">${tief(x.t)}</text>`);
         });
         return `<svg class="sp-flaeche" viewBox="0 0 ${plan.breite} ${plan.hoehe}" ` +
             `width="${plan.breite}" height="${plan.hoehe}">` + teile.join('') + '</svg>';
@@ -31844,6 +32104,24 @@ const Formelheft = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /**
+     * `R_V` wird zu R mit tiefgestelltem V.
+     *
+     * Im Register steht `R_V`, weil eine Zeichenkette keine Tiefstellung hat
+     * und der Unterstrich seit jeher dafür steht. Im gedruckten Heft steht
+     * dort ein tiefgestelltes V — und der Unterschied ist nicht Schönheit,
+     * sondern Lesbarkeit: `X_L − X_C` liest sich als drei Zeichen mit
+     * Strichen dazwischen, `X` mit tiefem `L` minus `X` mit tiefem `C` liest
+     * sich als eine Differenz zweier Grössen.
+     *
+     * ERST ESCAPEN, DANN AUSZEICHNEN. Die Reihenfolge ist die ganze Sicherheit
+     * dieser Funktion (§19): das `<sub>` kommt NACH dem Escapen hinein, also
+     * kann aus dem Inhalt kein Tag werden. Umgekehrt wäre es eine Lücke.
+     *
+     * Unicode-Tiefstellungen (U₀, Rᵢ, N₁) bleiben, wie sie sind — sie sehen
+     * bereits richtig aus und haben keinen Unterstrich.
+     */
+    const tief = (wert) => esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g, '<sub>$1</sub>');
     /* Was sich das Heft über Sitzungen hinweg merkt. Alles in `Store.meta` —
        es gehört dem Menschen, nicht einem Dokument. */
     const M_ORT = 'elektro:heftOrt'; /* wo das Fenster stand */
@@ -31852,6 +32130,8 @@ const Formelheft = (() => {
     const M_PDF = 'elektro:heftPdf'; /* Kennung des eigenen Hefts */
     const M_PDFSEITE = 'elektro:heftPdfSeite'; /* welche Seite zuletzt offen */
     const M_PDFFAV = 'elektro:heftPdfFavoriten'; /* gemerkte PDF-Seiten */
+    const M_ANSICHT = 'elektro:heftAnsicht'; /* 'kapitel' oder 'buch' */
+    const M_SEITE = 'elektro:heftSeite'; /* welche Buchseite offen war */
     const merke = (schluessel, wert) => {
         if (typeof Store !== 'undefined')
             Store.setMeta(schluessel, wert);
@@ -31905,11 +32185,11 @@ const Formelheft = (() => {
         const loesbar = Register.elektroformeln.loesbarNach(id);
         return `<div class="fh-rechner" data-formel="${esc(id)}">` +
             `<div class="fh-gesucht"><span>Gesucht</span>` +
-            loesbar.map((z, i) => `<button data-gesucht="${esc(z)}"${i === 0 ? ' class="an"' : ''}>${esc(z)}</button>`).join('') +
+            loesbar.map((z, i) => `<button data-gesucht="${esc(z)}"${i === 0 ? ' class="an"' : ''}>${tief(z)}</button>`).join('') +
             `</div>` +
             `<div class="fh-felder">` +
             f.groessen.map((x) => `<label class="fh-feld" data-fuer="${esc(x.zeichen)}">` +
-                `<span class="fh-zeichen">${esc(x.zeichen)}</span>` +
+                `<span class="fh-zeichen">${tief(x.zeichen)}</span>` +
                 `<input type="text" inputmode="decimal" data-g="${esc(x.zeichen)}" ` +
                 `placeholder="${esc(x.name)}" aria-label="${esc(x.name)}">` +
                 `<span class="fh-einheit">${esc(x.einheit)}</span></label>`).join('') +
@@ -31919,13 +32199,96 @@ const Formelheft = (() => {
             `</div>`;
     };
     const formelHtml = (f, fav) => `<article class="fh-formel" data-id="${esc(f.id)}">` +
-        `<header><b>${esc(f.schreibweise)}</b>` +
+        `<header><b>${tief(f.schreibweise)}</b>` +
         `<button class="fh-stern${fav.includes(f.id) ? ' an' : ''}" data-fav="${esc(f.id)}" ` +
         `title="Merken" aria-label="Formel merken">★</button></header>` +
         `<p class="fh-erkl">${esc(f.erklaerung)}</p>` +
-        `<div class="fh-groessen">` + f.groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${esc(x.zeichen)}</i> ${esc(x.name)}` +
+        `<div class="fh-groessen">` + f.groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ${esc(x.name)}` +
         (x.einheit ? ` <em>${esc(x.einheit)}</em>` : '') + `</span>`).join('') + `</div>` +
         rechnerHtml(f.id) + `</article>`;
+    /* ========================================================================
+     * DIE BUCHSEITE (E194)
+     * ------------------------------------------------------------------------
+     * Redion schreibt sein Formelbuch selbst — eigene Gestaltung, eigene
+     * Skizzen — aber mit DENSELBEN SEITENZAHLEN wie das gedruckte Heft. Wer
+     * beides nebeneinander liegen hat, blättert in beiden auf 14 und findet
+     * beide Male die Wechselstromwiderstände.
+     *
+     * Das ist der ganze Zweck, und er ist nicht dasselbe wie „das PDF
+     * anzeigen": ein Scan ist ein Bild und bleibt eines. Eine Buchseite in
+     * Redion ist RECHENBAR — jede Formel darauf lässt sich antippen und mit
+     * Werten füllen —, sie ist durchsuchbar, sie folgt Hell und Dunkel, und
+     * sie wird auf dem Telefon nicht kleiner, sondern anders angeordnet.
+     *
+     * WAS DIE SEITE ZEIGT, KOMMT AUS DEM REGISTER. Die Abschnitte, ihre
+     * Reihenfolge und ihre Seitenzahl stehen in `Register.elektroformeln`;
+     * hier wird nur gesetzt. Eine Seite, die Redion noch nicht geschrieben
+     * hat, sagt das — statt leer zu bleiben und wie ein Fehler auszusehen.
+     * ======================================================================*/
+    const seiteJetzt = () => {
+        const n = Number(gemerkt(M_SEITE, 4)) || 4;
+        return Math.max(1, Math.min(Register.elektroformeln.letzteSeite(), Math.round(n)));
+    };
+    /** Die nächste Seite in `richtung`, auf der wirklich etwas steht. */
+    const naechsteVolle = (von, richtung) => {
+        const voll = Register.elektroformeln.seitenMitInhalt();
+        if (!voll.length)
+            return von;
+        const treffer = richtung > 0
+            ? voll.find(n => n > von)
+            : [...voll].reverse().find(n => n < von);
+        /* Am Ende stehenbleiben statt umzuspringen: wer vorwärts blättert und
+           plötzlich auf Seite 4 landet, hat den Faden verloren. */
+        return treffer ?? von;
+    };
+    /** Ein Abschnitt mit Überschrift, Skizze und seinen Formeln. */
+    const abschnittHtml = (a, formeln, fav) => {
+        const skizze = (typeof Elektroskizzen !== 'undefined') ? Elektroskizzen.zu(a.id) : '';
+        /* Die Grössen EINMAL für den ganzen Abschnitt, nicht je Formel: im Buch
+           steht die Legende auch einmal neben der Gruppe. Doppelte Zeilen sind
+           hier kein Fehler, sondern Lärm. */
+        const gesehen = new Set();
+        const legende = [];
+        formeln.forEach(f => (f.groessen || []).forEach((x) => {
+            if (gesehen.has(x.zeichen))
+                return;
+            gesehen.add(x.zeichen);
+            legende.push(`<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
+                `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`);
+        }));
+        return `<section class="bs-abschnitt" data-abschnitt="${esc(a.id)}">` +
+            `<h3>${esc(a.titel)}</h3>` +
+            `<div class="bs-koerper">` +
+            (skizze ? `<div class="bs-skizze">${skizze}</div>` : '') +
+            `<div class="bs-formeln">` + formeln.map(f => `<button type="button" class="bs-formel${fav.includes(f.id) ? ' gemerkt' : ''}" ` +
+            `data-buchformel="${esc(f.id)}" ` +
+            `title="${esc(f.erklaerung)}">${tief(f.schreibweise)}</button>`).join('') +
+            `</div></div>` +
+            `<div class="bs-legende">${legende.join('')}</div>` +
+            `</section>`;
+    };
+    const buchseiteHtml = (nr, fav) => {
+        const R = Register.elektroformeln;
+        const teile = R.aufSeite(nr);
+        const kapitel = [...new Set(teile.map(t => t.abschnitt.buch))]
+            .map(k => `${k} · ${R.buchkapitelName(k)}`);
+        const letzte = R.letzteSeite();
+        const voll = R.seitenMitInhalt();
+        return `<div class="bs-blatt" data-seite="${nr}">` +
+            `<div class="bs-kopf">` +
+            `<div class="bs-kapitel">${kapitel.length
+                ? kapitel.map(k => `<span>${esc(k)}</span>`).join('')
+                : '<span class="bs-offen">noch nicht geschrieben</span>'}</div>` +
+            `<div class="bs-seitenzahl">Seite ${nr} <span>von ${letzte}</span></div>` +
+            `</div>` +
+            (teile.length
+                ? teile.map(t => abschnittHtml(t.abschnitt, t.formeln, fav)).join('')
+                : `<div class="bs-leer">` +
+                    `<p>Diese Seite gibt es im gedruckten Heft, in Redion noch nicht.</p>` +
+                    `<p class="fh-klein">Geschrieben sind ${voll.length} Seiten: ` +
+                    `${esc(voll.join(', '))}.</p></div>`) +
+            `</div>`;
+    };
     /* ------------------------------------------------------------------------
      * DAS EIGENE PDF
      * ------------------------------------------------------------------------
@@ -32032,6 +32395,13 @@ const Formelheft = (() => {
         /* --- Inhalt ---------------------------------------------------------- */
         let suchtext = '';
         let pdfModus = false;
+        /* Welche der beiden eigenen Ansichten offen ist. Sie überlebt das
+           Schliessen: wer im Buch liest, liest beim nächsten Öffnen weiter. */
+        let buchModus = String(gemerkt(M_ANSICHT, 'kapitel')) === 'buch';
+        /* Welche Formel nach dem nächsten Malen aufgeklappt werden soll — der
+           Weg von einem Suchtreffer zur Formel auf ihrer Seite. Wird nach dem
+           Malen wieder geleert, sonst klappt sie bei jedem Blättern erneut auf. */
+        let buchOeffnen = '';
         const male = async () => {
             const kapitel = String(gemerkt(M_KAPITEL, 'grund'));
             const fav = favoriten();
@@ -32039,6 +32409,8 @@ const Formelheft = (() => {
             const kopf = `<div class="fh-kopf" data-griff>` +
                 `<span class="fh-titel">📐 Formelheft</span>` +
                 `<div class="fh-kopfknoepfe">` +
+                `<button data-a="buch" class="${buchModus && !pdfModus ? 'an' : ''}" ` +
+                `title="Nach Buchseiten" aria-label="Nach Buchseiten blättern">📖</button>` +
                 `<button data-a="pdf" class="${pdfModus ? 'an' : ''}" ` +
                 `title="Mein eigenes Heft" aria-label="Mein eigenes Heft">📕</button>` +
                 `<button data-a="zu" title="Schliessen" aria-label="Schliessen">✕</button>` +
@@ -32085,6 +32457,52 @@ const Formelheft = (() => {
                 }
                 return;
             }
+            /* Redions eigenes Buch, Seite für Seite (E194).
+      
+               Die Suche gilt AUCH hier: wer etwas sucht, will es finden und nicht
+               erst die richtige Seite raten. Ein Treffer sagt dann, auf welcher
+               Seite er steht — und ein Tipp darauf blättert hin. */
+            if (buchModus) {
+                const nr = seiteJetzt();
+                const R = Register.elektroformeln;
+                const letzte = R.letzteSeite();
+                if (suchtext) {
+                    const treffer = R.suche(suchtext);
+                    f.innerHTML = kopf +
+                        `<div class="fh-suche"><input type="search" ` +
+                        `placeholder="Formel oder Grösse suchen …" ` +
+                        `value="${esc(suchtext)}" aria-label="Formel suchen"></div>` +
+                        `<div class="fh-inhalt bs-treffer">` +
+                        (treffer.length
+                            ? treffer.map(x => {
+                                const seite = R.seiteVon(x.id);
+                                return `<button type="button" class="bs-treffer-zeile" ` +
+                                    `data-buchseite="${seite}" data-buchformel="${esc(x.id)}">` +
+                                    `<b>${tief(x.schreibweise)}</b>` +
+                                    `<span>Seite ${seite || '–'}</span></button>`;
+                            }).join('')
+                            : `<div class="fh-leer"><p>Nichts gefunden.</p></div>`) +
+                        `</div>`;
+                    return;
+                }
+                f.innerHTML = kopf +
+                    `<div class="fh-suche"><input type="search" ` +
+                    `placeholder="Formel oder Grösse suchen …" ` +
+                    `value="" aria-label="Formel suchen"></div>` +
+                    `<div class="fh-inhalt bs-inhalt">${buchseiteHtml(nr, fav)}</div>` +
+                    `<div class="fh-pdffuss">` +
+                    `<button data-a="zurueckSeite" aria-label="Vorige Seite"${nr <= 1 ? ' disabled' : ''}>‹</button>` +
+                    `<input class="fh-nr bs-nr" type="number" min="1" max="${letzte}" value="${nr}" ` +
+                    `aria-label="Buchseite">` +
+                    `<span class="fh-von">von ${letzte}</span>` +
+                    `<button data-a="vorSeite" aria-label="Nächste Seite"${nr >= letzte ? ' disabled' : ''}>›</button>` +
+                    `<button data-a="vorherVoll" title="Vorige geschriebene Seite" ` +
+                    `aria-label="Vorige geschriebene Seite">«</button>` +
+                    `<button data-a="naechsteVoll" title="Nächste geschriebene Seite" ` +
+                    `aria-label="Nächste geschriebene Seite">»</button>` +
+                    `</div>`;
+                return;
+            }
             /* Die eigene Sammlung */
             const kapitelListe = Register.elektroformeln.kapitel();
             const treffer = suchtext
@@ -32129,7 +32547,15 @@ const Formelheft = (() => {
                     aktiv.scrollIntoView({ block: 'nearest', inline: 'nearest' });
             }
         };
-        neuMalen = () => { void male(); };
+        neuMalen = () => {
+            void male().then(() => {
+                if (!buchOeffnen)
+                    return;
+                const ziel = f.querySelector(`[data-buchformel="${CSS.escape(buchOeffnen)}"]`);
+                buchOeffnen = '';
+                ziel?.click();
+            });
+        };
         /* --- Verschieben und Grösse ändern ------------------------------------ */
         let zieht = null;
         f.addEventListener('pointerdown', e => {
@@ -32177,14 +32603,65 @@ const Formelheft = (() => {
         f.addEventListener('pointercancel', zugEnde);
         /* --- Klicks ----------------------------------------------------------- */
         f.addEventListener('click', e => {
-            const b = e.target.closest('[data-a],[data-k],[data-fav],[data-gesucht],[data-springe]');
+            const b = e.target.closest('[data-a],[data-k],[data-fav],[data-gesucht],[data-springe],' +
+                '[data-buchformel],[data-buchseite]');
             if (!b)
                 return;
             if (b.dataset.a === 'zu')
                 return schliessen();
+            if (b.dataset.a === 'buch') {
+                buchModus = !buchModus;
+                pdfModus = false;
+                merke(M_ANSICHT, buchModus ? 'buch' : 'kapitel');
+                return neuMalen();
+            }
             if (b.dataset.a === 'pdf') {
                 pdfModus = !pdfModus;
                 return neuMalen();
+            }
+            if (b.dataset.a === 'zurueckSeite' || b.dataset.a === 'vorSeite') {
+                merke(M_SEITE, seiteJetzt() + (b.dataset.a === 'vorSeite' ? 1 : -1));
+                return neuMalen();
+            }
+            if (b.dataset.a === 'vorherVoll' || b.dataset.a === 'naechsteVoll') {
+                merke(M_SEITE, naechsteVolle(seiteJetzt(), b.dataset.a === 'naechsteVoll' ? 1 : -1));
+                return neuMalen();
+            }
+            /* Ein Treffer aus der Suche: erst hinblättern, dann die Formel öffnen. */
+            if (b.dataset.buchseite) {
+                const seite = Number(b.dataset.buchseite);
+                if (seite > 0)
+                    merke(M_SEITE, seite);
+                suchtext = '';
+                buchOeffnen = b.dataset.buchformel || '';
+                return neuMalen();
+            }
+            /* Eine Formel auf der Buchseite antippen: der Rechner klappt darunter
+               auf. Nur einer zur Zeit — zwei offene Rechner sind zwei Zustände,
+               und man verliert, welcher gerade gemeint ist. */
+            if (b.dataset.buchformel) {
+                const id = b.dataset.buchformel;
+                const abschnitt = b.closest('.bs-abschnitt');
+                const schon = abschnitt?.querySelector('.bs-rechner');
+                const warEs = schon?.dataset.fuer === id;
+                f.querySelectorAll('.bs-rechner').forEach(x => x.remove());
+                f.querySelectorAll('.bs-formel.offen').forEach(x => x.classList.remove('offen'));
+                if (warEs)
+                    return;
+                b.classList.add('offen');
+                const kasten = document.createElement('div');
+                kasten.className = 'bs-rechner';
+                kasten.dataset.fuer = id;
+                const formel = Register.elektroformeln.holen(id);
+                kasten.innerHTML =
+                    `<p class="fh-erkl">${esc(formel ? formel.erklaerung : '')}</p>` +
+                        rechnerHtml(id);
+                b.closest('.bs-koerper')?.insertAdjacentElement('afterend', kasten);
+                const r = kasten.querySelector('.fh-rechner');
+                if (r)
+                    rechne(r);
+                kasten.scrollIntoView({ block: 'nearest' });
+                return;
             }
             if (b.dataset.a === 'laden')
                 return void pdfLaden();
@@ -32225,6 +32702,10 @@ const Formelheft = (() => {
             const feld = e.target;
             if (feld.type === 'search') {
                 suchtext = feld.value;
+                return neuMalen();
+            }
+            if (feld.classList.contains('bs-nr')) {
+                merke(M_SEITE, Math.max(1, Number(feld.value) || 1));
                 return neuMalen();
             }
             if (feld.classList.contains('fh-nr')) {
@@ -32273,7 +32754,7 @@ const Formelheft = (() => {
             const gerundet = Math.round(erg.wert * 10000) / 10000;
             anzeige.className = 'fh-ergebnis fh-fertig';
             anzeige.innerHTML =
-                `<b>${esc(gesucht)} = ${esc(zahlText(gerundet))} ${esc(erg.einheit)}</b>` +
+                `<b>${tief(gesucht)} = ${esc(zahlText(gerundet))} ${esc(erg.einheit)}</b>` +
                     `<ol class="fh-weg">` + erg.weg.map((s) => `<li>${esc(s)}</li>`).join('') + `</ol>`;
             const feld = rechner.querySelector(`[data-g="${CSS.escape(gesucht)}"]`);
             if (feld)
@@ -35157,6 +35638,628 @@ const Elektrolernbilder = (() => {
         werte, kurveSvg, sinusFlaeche };
 })();
 window.Elektrolernbilder = Elektrolernbilder;
+
+</script>
+<script>
+/* ===== quell/bereiche/elektro/skizzen.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/elektro/skizzen.ts — die Bilder im Formelbuch, selbst gezeichnet
+ * ----------------------------------------------------------------------------
+ * WARUM SELBST ZEICHNEN UND NICHT ABFOTOGRAFIEREN
+ *
+ * Ein gedrucktes Formelbuch lebt von seinen Skizzen. Neben `U = R · I` steht
+ * ein Stromkreis, neben `Z = √(R² + X²)` ein Dreieck, neben dem
+ * Spannungsteiler zwei Widerstände mit einem Abgriff dazwischen. Ohne diese
+ * Bilder ist eine Formelsammlung eine Liste; mit ihnen ist sie ein Lehrmittel.
+ *
+ * Redion zeichnet sie SELBST. Nicht aus Vorsicht allein — obwohl der Satz und
+ * die Zeichnungen eines gekauften Buchs fremdes Werk sind und bleiben —,
+ * sondern weil selbst gezeichnete Bilder etwas können, was ein Scan nie kann:
+ *
+ *   · Sie sind Vektoren. Sie werden mit dem Fenster gross und bleiben scharf.
+ *   · Sie folgen dem Farbschema. Hell und dunkel, ohne zweiten Satz Bilder.
+ *   · Sie kommen aus DENSELBEN Fachzeichen wie der Schaltplan-Editor. Was
+ *     im Buch steht, lässt sich im Editor genauso hinsetzen — dasselbe
+ *     Symbol, dieselben Anschlussnummern.
+ *   · Sie kosten fast nichts. Neunzig Bilder als PNG wären ein Vielfaches
+ *     der ganzen App.
+ *
+ * ZWEI SORTEN, UND DER UNTERSCHIED IST WICHTIG
+ *
+ *   SCHALTBILDER entstehen aus einem echten `Schaltplan`-Plan und werden von
+ *   `Schaltplan.alsSvg` gezeichnet. Kein zweiter Zeichner, keine zweite
+ *   Symbolsammlung: wird morgen das Widerstandssymbol geändert, ändert es
+ *   sich hier mit.
+ *
+ *   DIAGRAMME — Dreiecke, Kennlinien, Kurven — sind eigenes SVG. Für sie gibt
+ *   es keine Fachzeichen, und ein Zeigerdreieck aus Bauteilen zu bauen wäre
+ *   ein Umweg über drei Ecken.
+ *
+ * KEINE ZAHL WIRD HIER GERECHNET. Die Skizze zeigt die GESTALT einer
+ * Schaltung, nicht ihr Ergebnis. Wer rechnen will, tippt die Formel darunter
+ * an — dort steht der Rechner, und dort kommt die Zahl aus
+ * `Register.elektroformeln` und nicht aus einer zweiten, stillen Quelle.
+ * ==========================================================================*/
+const Elektroskizzen = (() => {
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const planSvg = (breite, hoehe, bauen) => {
+        if (typeof Schaltplan === 'undefined')
+            return '';
+        const plan = Schaltplan.neuerPlan('stromlauf-aufgeloest');
+        plan.breite = breite;
+        plan.hoehe = hoehe;
+        plan.teile = [];
+        plan.leitungen = [];
+        plan.texte = [];
+        let z = 0;
+        const w = {
+            teil: (zeichen, bmk, x, y, drehung = 0) => {
+                const t = { id: 't' + (++z), zeichen, x, y, drehung, gespiegelt: false,
+                    bmk, nummern: {}, gruppe: '', ebene: 'plan' };
+                plan.teile.push(t);
+                return t;
+            },
+            an: (teil, nr) => {
+                const a = Schaltplan.anschluesseVon(teil)
+                    .find(x => String(x.nr) === nr);
+                /* Ein fehlender Anschluss wäre ein Tippfehler in der Skizze, kein
+                   Laufzeitfall — aber ein Absturz im Formelbuch wäre schlimmer als
+                   eine Leitung, die in der Bauteilmitte beginnt. Der Prüflauf sucht
+                   genau danach. */
+                return a ? { x: a.x, y: a.y } : { x: teil.x, y: teil.y };
+            },
+            draht: (a, aNr, b, bNr, ...knicke) => {
+                plan.leitungen.push({
+                    id: 'l' + (++z), ebene: 'plan',
+                    punkte: [w.an(a, aNr), ...knicke, w.an(b, bNr)],
+                    vonTeil: a.id, vonNr: aNr, nachTeil: b.id, nachNr: bNr
+                });
+            },
+            steg: (a, aNr, b, bNr, y) => {
+                const p = w.an(a, aNr), q = w.an(b, bNr);
+                w.draht(a, aNr, b, bNr, { x: p.x, y }, { x: q.x, y });
+            },
+            sammel: (y, ...klemmen) => {
+                if (klemmen.length < 2)
+                    return;
+                const orte = klemmen.map(([t, nr]) => w.an(t, nr));
+                const xs = orte.map(o => o.x);
+                w.linie({ x: Math.min(...xs), y }, { x: Math.max(...xs), y });
+                klemmen.forEach(([t, nr], i) => {
+                    const o = orte[i];
+                    plan.leitungen.push({
+                        id: 'l' + (++z), ebene: 'plan',
+                        punkte: [o, { x: o.x, y }],
+                        vonTeil: t.id, vonNr: nr
+                    });
+                });
+            },
+            ab: (teil, nr, ...punkte) => {
+                plan.leitungen.push({
+                    id: 'l' + (++z), ebene: 'plan',
+                    punkte: [w.an(teil, nr), ...punkte],
+                    vonTeil: teil.id, vonNr: nr
+                });
+            },
+            linie: (...punkte) => {
+                plan.leitungen.push({ id: 'l' + (++z), ebene: 'plan', punkte });
+            },
+            text: (t, x, y) => {
+                plan.texte.push({ id: 'x' + (++z), x, y, t, ebene: 'plan' });
+            }
+        };
+        bauen(w);
+        return Schaltplan.alsSvg(plan, { raster: false, anschluesse: false, bmk: true });
+    };
+    /* ------------------------------------------------------------------------
+     * 2. DIAGRAMME — eigenes SVG
+     * ------------------------------------------------------------------------
+     * Farben kommen aus den Stil-Variablen, damit hell und dunkel ohne einen
+     * zweiten Satz Bilder auskommen (§39).
+     * ----------------------------------------------------------------------*/
+    const STRICH = 'var(--text)';
+    const BETONT = 'var(--accent)';
+    const BLASS = 'var(--text-faint)';
+    const svg = (breite, hoehe, inhalt) => `<svg class="sk-bild" viewBox="0 0 ${breite} ${hoehe}" ` +
+        `preserveAspectRatio="xMidYMid meet" role="img" aria-hidden="true">` +
+        `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${inhalt}</g></svg>`;
+    const lin = (x1, y1, x2, y2, farbe = STRICH, breit = 1.6) => `<path d="M${x1},${y1} L${x2},${y2}" stroke="${farbe}" stroke-width="${breit}"/>`;
+    const strichel = (x1, y1, x2, y2) => `<path d="M${x1},${y1} L${x2},${y2}" stroke="${BLASS}" stroke-width="1" ` +
+        `stroke-dasharray="4 3"/>`;
+    const pfeil = (x1, y1, x2, y2, farbe = STRICH, breit = 1.6) => {
+        const dx = x2 - x1, dy = y2 - y1;
+        const l = Math.hypot(dx, dy) || 1;
+        const ex = dx / l, ey = dy / l;
+        const s = 7;
+        const p1x = x2 - ex * s - ey * s * 0.45, p1y = y2 - ey * s + ex * s * 0.45;
+        const p2x = x2 - ex * s + ey * s * 0.45, p2y = y2 - ey * s - ex * s * 0.45;
+        return lin(x1, y1, x2, y2, farbe, breit) +
+            `<path d="M${x2},${y2} L${p1x.toFixed(1)},${p1y.toFixed(1)} ` +
+            `L${p2x.toFixed(1)},${p2y.toFixed(1)} Z" fill="${farbe}" stroke="none"/>`;
+    };
+    /**
+     * `X_L` wird zu X mit tiefgestelltem L — wie im Schaltplan-Zeichner, aus
+     * demselben Grund und mit derselben Reihenfolge: erst escapen, dann
+     * auszeichnen (§19).
+     */
+    const tief = (wert) => esc(wert).replace(/_([A-Za-zÄÖÜäöüß0-9]+)/g, '<tspan baseline-shift="sub" font-size="0.72em">$1</tspan>');
+    const txt = (t, x, y, anker = 'middle', farbe = STRICH, groesse = 13) => `<text x="${x}" y="${y}" text-anchor="${anker}" fill="${farbe}" stroke="none" ` +
+        `font-size="${groesse}" font-style="italic">${tief(t)}</text>`;
+    /** Achsenkreuz mit Beschriftung an den Spitzen. */
+    const achsen = (x0, y0, breite, hoehe, wLabel, hLabel) => pfeil(x0, y0, x0 + breite, y0, BLASS, 1.3) +
+        pfeil(x0, y0, x0, y0 - hoehe, BLASS, 1.3) +
+        txt(wLabel, x0 + breite, y0 + 17, 'end', BLASS, 12) +
+        txt(hLabel, x0 - 7, y0 - hoehe + 5, 'end', BLASS, 12);
+    /** Ein rechtwinkliges Dreieck mit drei Beschriftungen — S/P/Q und Z/R/X. */
+    const dreieck = (unten, rechts, schraeg) => svg(300, 175, pfeil(50, 135, 230, 135, STRICH, 2) +
+        pfeil(230, 135, 230, 48, STRICH, 2) +
+        pfeil(50, 135, 230, 48, BETONT, 2.4) +
+        `<path d="M50,135 A38,38 0 0,0 87,123" stroke="${BLASS}" stroke-width="1.2"/>` +
+        txt(unten, 140, 156, 'middle', STRICH) +
+        txt(rechts, 246, 96, 'start', STRICH) +
+        txt(schraeg, 128, 82, 'middle', BETONT) +
+        txt('φ', 77, 129, 'middle', BLASS, 12));
+    /* ------------------------------------------------------------------------
+     * 3. DIE SKIZZEN
+     * ------------------------------------------------------------------------
+     * Der Schlüssel ist die Abschnittskennung aus `Register.elektroformeln`.
+     * Ein Abschnitt ohne Eintrag bekommt kein Bild — das ist eine Lücke, kein
+     * Fehler, und sie fällt beim Durchblättern auf.
+     * ----------------------------------------------------------------------*/
+    const SKIZZEN = {
+        /* --- Seite 4 · Grundlagen Elektrotechnik ---------------------------- */
+        'g-ohm': () => planSvg(300, 190, w => {
+            const g = w.teil('gleichspannung', 'G', 40, 60);
+            const r = w.teil('widerstand', 'R', 210, 60);
+            w.steg(g, '+', r, '1', 25);
+            w.steg(g, '−', r, '2', 160);
+            w.text('U', 145, 20);
+            w.text('I', 145, 180);
+        }),
+        'g-leiter': () => svg(300, 165, `<path d="M60,50 L240,50 L240,110 L60,110 Z" stroke="${STRICH}" stroke-width="1.6"/>` +
+            `<ellipse cx="60" cy="80" rx="12" ry="30" stroke="${STRICH}" stroke-width="1.6" ` +
+            `fill="var(--bg-hover)"/>` +
+            `<ellipse cx="240" cy="80" rx="12" ry="30" stroke="${STRICH}" stroke-width="1.6" fill="none"/>` +
+            pfeil(150, 136, 240, 136, BETONT, 1.4) + pfeil(150, 136, 60, 136, BETONT, 1.4) +
+            txt('l', 150, 156, 'middle', BETONT) +
+            txt('A', 38, 84, 'end', BETONT) +
+            txt('ρ', 150, 86, 'middle', BLASS)),
+        'g-temperatur': () => svg(300, 165, achsen(45, 132, 215, 105, 'ϑ', 'R') +
+            lin(45, 108, 250, 46, BETONT, 2) +
+            strichel(45, 108, 250, 108) + strichel(250, 46, 250, 108) +
+            txt('R₂₀', 39, 112, 'end', BLASS, 12) +
+            txt('ΔR', 258, 80, 'start', BETONT, 12) +
+            txt('Δϑ', 148, 126, 'middle', BLASS, 12)),
+        /* --- Seite 5 · Schaltungen von Widerständen ------------------------- */
+        's-reihe': () => planSvg(320, 310, w => {
+            const g = w.teil('gleichspannung', 'G', 30, 115);
+            const r1 = w.teil('widerstand', 'R1', 220, 30);
+            const r2 = w.teil('widerstand', 'R2', 220, 105);
+            const r3 = w.teil('widerstand', 'R3', 220, 180);
+            w.steg(g, '+', r1, '1', 22);
+            w.draht(r1, '2', r2, '1');
+            w.draht(r2, '2', r3, '1');
+            w.steg(r3, '2', g, '−', 278);
+            w.text('U', 120, 18);
+            w.text('I', 120, 296);
+        }),
+        's-parallel': () => planSvg(410, 215, w => {
+            const g = w.teil('gleichspannung', 'G', 20, 70);
+            const r1 = w.teil('widerstand', 'R1', 140, 70);
+            const r2 = w.teil('widerstand', 'R2', 240, 70);
+            const r3 = w.teil('widerstand', 'R3', 340, 70);
+            w.sammel(28, [g, '+'], [r1, '1'], [r2, '1'], [r3, '1']);
+            w.sammel(188, [g, '−'], [r1, '2'], [r2, '2'], [r3, '2']);
+            w.text('U', 88, 24);
+            w.text('I', 88, 205);
+            w.text('I₁', 166, 62);
+            w.text('I₂', 266, 62);
+            w.text('I₃', 366, 62);
+        }),
+        /* --- Seite 6 · Spannungsteiler und Brücke --------------------------- */
+        's-teiler': () => planSvg(300, 265, w => {
+            const g = w.teil('gleichspannung', 'G', 20, 90);
+            const r1 = w.teil('widerstand', 'R1', 170, 30);
+            const r2 = w.teil('widerstand', 'R2', 170, 150);
+            w.steg(g, '+', r1, '1', 15);
+            w.draht(r1, '2', r2, '1');
+            w.steg(r2, '2', g, '−', 248);
+            /* Der Abgriff: zwischen den beiden Widerständen heraus und unten
+               heraus — dazwischen steht U₂. */
+            w.linie({ x: 190, y: 120 }, { x: 265, y: 120 });
+            w.linie({ x: 190, y: 248 }, { x: 265, y: 248 });
+            w.text('U', 92, 11);
+            w.text('U₂', 272, 188);
+        }),
+        's-bruecke': () => planSvg(370, 300, w => {
+            const g = w.teil('gleichspannung', 'G', 20, 110);
+            const rx = w.teil('widerstand', 'Rx', 140, 40);
+            const r2 = w.teil('widerstand', 'R2', 140, 180);
+            const r3 = w.teil('widerstand', 'R3', 290, 40);
+            const r4 = w.teil('widerstand', 'R4', 290, 180);
+            const v = w.teil('voltmeter', 'UB', 200, 110);
+            w.sammel(20, [g, '+'], [rx, '1'], [r3, '1']);
+            w.draht(rx, '2', r2, '1');
+            w.draht(r3, '2', r4, '1');
+            w.sammel(280, [g, '−'], [r2, '2'], [r4, '2']);
+            w.draht(v, '+', rx, '2', { x: 160, y: 140 });
+            w.draht(v, '−', r3, '2', { x: 310, y: 140 });
+            w.text('U', 90, 16);
+        }),
+        /* --- Seite 7 · Messtechnik ------------------------------------------ */
+        'm-vmeter': () => planSvg(390, 170, w => {
+            /* Vorwiderstand in REIHE zum Messwerk: was zu viel ist, fällt an ihm ab. */
+            const rv = w.teil('widerstand', 'Rv', 130, 30, 90);
+            const v = w.teil('voltmeter', 'V', 230, 30);
+            w.ab(rv, '2', { x: 30, y: 60 });
+            w.draht(rv, '1', v, '+');
+            w.ab(v, '−', { x: 360, y: 60 });
+            w.text('U_V', 132, 26);
+            w.text('U_m', 244, 26);
+            w.text('U', 190, 148);
+            w.linie({ x: 30, y: 60 }, { x: 30, y: 120 });
+            w.linie({ x: 360, y: 60 }, { x: 360, y: 120 });
+            w.linie({ x: 30, y: 120 }, { x: 360, y: 120 });
+        }),
+        'm-ameter': () => planSvg(390, 210, w => {
+            /* Shunt PARALLEL zum Messwerk: was zu viel ist, fliesst daran vorbei. */
+            const a = w.teil('amperemeter', 'A', 160, 30);
+            const rp = w.teil('widerstand', 'Rp', 190, 130, 90);
+            w.ab(a, '+', { x: 40, y: 60 });
+            w.ab(a, '−', { x: 350, y: 60 });
+            w.ab(rp, '2', { x: 110, y: 160 }, { x: 110, y: 60 });
+            w.ab(rp, '1', { x: 290, y: 160 }, { x: 290, y: 60 });
+            w.text('I', 44, 50);
+            w.text('I_m', 172, 24);
+            w.text('I_p', 186, 200);
+        }),
+        'm-spannungsfehler': () => planSvg(400, 215, w => {
+            /* A vor V: das Amperemeter misst nur den Verbraucherstrom, aber die
+               Spannung enthält den Abfall am Amperemeter. */
+            const g = w.teil('gleichspannung', 'G', 20, 75);
+            const a = w.teil('amperemeter', 'A', 110, 5);
+            const v = w.teil('voltmeter', 'V', 210, 75);
+            const r = w.teil('widerstand', 'R', 340, 75);
+            w.draht(g, '+', a, '+', { x: 50, y: 35 });
+            w.draht(a, '−', r, '1', { x: 360, y: 35 });
+            w.steg(g, '−', r, '2', 195);
+            w.draht(v, '+', a, '−', { x: 190, y: 105 }, { x: 190, y: 35 });
+            w.linie({ x: 270, y: 105 }, { x: 360, y: 105 });
+            w.text('U_A', 122, 70);
+            w.text('U_R', 288, 70);
+        }),
+        'm-stromfehler': () => planSvg(400, 215, w => {
+            /* V vor A: das Voltmeter misst nur die Verbraucherspannung, aber der
+               Strom enthält den Strom durch das Voltmeter. */
+            const g = w.teil('gleichspannung', 'G', 20, 75);
+            const v = w.teil('voltmeter', 'V', 100, 5);
+            const a = w.teil('amperemeter', 'A', 220, 5);
+            const r = w.teil('widerstand', 'R', 340, 75);
+            w.draht(g, '+', v, '+', { x: 50, y: 35 });
+            w.draht(v, '−', a, '+');
+            w.draht(a, '−', r, '1', { x: 360, y: 35 });
+            w.steg(g, '−', r, '2', 195);
+            w.linie({ x: 160, y: 35 }, { x: 160, y: 120 });
+            w.linie({ x: 160, y: 120 }, { x: 360, y: 120 });
+            w.text('I_V', 166, 100);
+            w.text('I_R', 286, 70);
+        }),
+        /* --- Seite 8 · Leistung --------------------------------------------- */
+        'a-gleich': () => planSvg(390, 215, w => {
+            const g = w.teil('gleichspannung', 'G', 20, 75);
+            const a = w.teil('amperemeter', 'A', 120, 5);
+            const v = w.teil('voltmeter', 'V', 230, 75);
+            const r = w.teil('widerstand', 'R', 330, 75);
+            w.draht(g, '+', a, '+', { x: 50, y: 35 });
+            w.draht(a, '−', r, '1', { x: 350, y: 35 });
+            w.steg(g, '−', r, '2', 195);
+            w.draht(v, '+', a, '−', { x: 210, y: 105 }, { x: 210, y: 35 });
+            w.linie({ x: 290, y: 105 }, { x: 350, y: 105 });
+        }),
+        'a-wechsel': () => dreieck('P', 'Q', 'S'),
+        /* --- Seite 9 · Wirkungsgrad und Wärme -------------------------------- */
+        'a-wirkungsgrad': () => svg(320, 155, `<rect x="112" y="48" width="96" height="58" rx="6" stroke="${STRICH}" ` +
+            `stroke-width="1.6" fill="var(--bg-hover)"/>` +
+            pfeil(22, 77, 108, 77, BETONT, 2.4) +
+            pfeil(212, 77, 292, 77, BETONT, 1.8) +
+            pfeil(160, 46, 160, 14, BLASS, 1.6) +
+            txt('P₁', 62, 68, 'middle', BETONT) +
+            txt('P₂', 254, 68, 'middle', BETONT) +
+            txt('P_v', 170, 28, 'start', BLASS, 12) +
+            txt('η', 160, 84, 'middle', STRICH, 16) +
+            txt('P₁ = P₂ + P_v', 160, 140, 'middle', BLASS, 12)),
+        'a-waerme': () => svg(280, 196, `<path d="M72,72 L188,72 L188,132 Q188,144 176,144 L84,144 Q72,144 72,132 Z" ` +
+            `fill="var(--bg-hover)" stroke="none"/>` +
+            `<path d="M72,48 L72,132 Q72,144 84,144 L176,144 Q188,144 188,132 L188,48" ` +
+            `stroke="${STRICH}" stroke-width="1.8"/>` +
+            `<path d="M58,154 L202,154" stroke="${STRICH}" stroke-width="3"/>` +
+            lin(130, 154, 130, 170, STRICH, 1.6) +
+            lin(152, 32, 152, 100, BETONT, 2.2) +
+            `<circle cx="152" cy="106" r="6" fill="${BETONT}" stroke="none"/>` +
+            txt('m, c', 106, 116, 'middle', STRICH, 12) +
+            txt('Δϑ', 166, 36, 'start', BETONT, 12) +
+            txt('Q', 130, 180, 'middle', BLASS, 12)),
+        /* --- Seite 11 · Batterien ------------------------------------------- */
+        'b-innen': () => planSvg(390, 250, w => {
+            /* Der Innenwiderstand steckt IN der Quelle — darum der gestrichelte
+               Kasten im Buch. Hier steht er sichtbar daneben, denn genau das ist
+               der Denkfehler, den die Formel auflöst: man misst ihn nie direkt. */
+            const g = w.teil('gleichspannung', 'U0', 40, 110);
+            const ri = w.teil('widerstand', 'Ri', 50, 30);
+            const rl = w.teil('widerstand', 'RL', 300, 110);
+            w.draht(g, '+', ri, '2');
+            w.steg(ri, '1', rl, '1', 16);
+            w.steg(g, '−', rl, '2', 230);
+            w.text('U', 190, 160);
+            w.text('I', 190, 12);
+            w.text('U_Ri', 100, 62);
+        }),
+        'b-reihe': () => planSvg(250, 310, w => {
+            const b1 = w.teil('batterie', 'G1', 50, 15);
+            const b2 = w.teil('batterie', 'G2', 50, 105);
+            const b3 = w.teil('batterie', 'G3', 50, 195);
+            const r = w.teil('widerstand', 'RL', 190, 105);
+            w.draht(b1, '−', b2, '+');
+            w.draht(b2, '−', b3, '+');
+            w.steg(b1, '+', r, '1', 6);
+            w.steg(b3, '−', r, '2', 290);
+            w.text('U₀', 118, 160);
+            w.text('U₀₁', 22, 60);
+        }),
+        'b-parallel': () => planSvg(390, 225, w => {
+            const b1 = w.teil('batterie', 'G1', 40, 75);
+            const b2 = w.teil('batterie', 'G2', 120, 75);
+            const b3 = w.teil('batterie', 'G3', 200, 75);
+            const r = w.teil('widerstand', 'RL', 320, 75);
+            w.sammel(30, [b1, '+'], [b2, '+'], [b3, '+'], [r, '1']);
+            w.sammel(200, [b1, '−'], [b2, '−'], [b3, '−'], [r, '2']);
+            w.text('I₁', 66, 70);
+            w.text('I', 270, 24);
+        }),
+        /* --- Seite 12 · Kondensator ----------------------------------------- */
+        'c-parallel': () => planSvg(410, 215, w => {
+            const g = w.teil('gleichspannung', 'G', 20, 70);
+            const c1 = w.teil('kondensator', 'C1', 140, 70);
+            const c2 = w.teil('kondensator', 'C2', 240, 70);
+            const c3 = w.teil('kondensator', 'C3', 340, 70);
+            w.sammel(28, [g, '+'], [c1, '1'], [c2, '1'], [c3, '1']);
+            w.sammel(188, [g, '−'], [c1, '2'], [c2, '2'], [c3, '2']);
+            w.text('U', 88, 24);
+        }),
+        'c-reihe': () => planSvg(300, 310, w => {
+            const g = w.teil('gleichspannung', 'G', 20, 115);
+            const c1 = w.teil('kondensator', 'C1', 210, 30);
+            const c2 = w.teil('kondensator', 'C2', 210, 105);
+            const c3 = w.teil('kondensator', 'C3', 210, 180);
+            w.steg(g, '+', c1, '1', 22);
+            w.draht(c1, '2', c2, '1');
+            w.draht(c2, '2', c3, '1');
+            w.steg(c3, '2', g, '−', 278);
+            w.text('U', 115, 18);
+        }),
+        'c-laden': () => planSvg(390, 230, w => {
+            /* Schalter und Widerstand liegen WAAGRECHT in der oberen Leitung —
+               so wie man einen Ladekreis zeichnet, wenn man ihn erklärt. Gedreht
+               wandern die Anschlüsse mit; `w.an` weiss davon, die Skizze muss es
+               nicht wissen. */
+            const g = w.teil('gleichspannung', 'G', 20, 90);
+            const s = w.teil('schliesser', 'S1', 130, 20, 90);
+            const r = w.teil('widerstand', 'R', 240, 20, 90);
+            const c = w.teil('kondensator', 'C', 330, 90);
+            w.draht(g, '+', s, '4', { x: 50, y: 50 });
+            w.draht(s, '3', r, '2');
+            w.draht(r, '1', c, '1', { x: 350, y: 50 });
+            w.steg(g, '−', c, '2', 200);
+            w.text('U_C', 250, 140);
+        }),
+        /* --- Seite 13 · Magnetische Grössen --------------------------------- */
+        'mag-feld': () => svg(300, 180, 
+        /* Der Kern als geschlossener Rahmen, die Wicklung UM den linken
+           Schenkel: vier Bögen, die links davon herausstehen. Lagen sie
+           daneben statt darum, sah es aus wie eine Spule neben einem Kasten
+           — und genau so sah es aus, bis jemand hingesehen hat. */
+        `<rect x="72" y="40" width="168" height="96" rx="4" stroke="${STRICH}" ` +
+            `stroke-width="2" fill="none"/>` +
+            `<rect x="98" y="66" width="116" height="44" rx="3" stroke="${STRICH}" ` +
+            `stroke-width="2" fill="none"/>` +
+            [0, 1, 2, 3].map(i => `<path d="M85,${52 + i * 20} A11,10 0 1,0 85,${72 + i * 20}" ` +
+                `stroke="${BETONT}" stroke-width="2" fill="none"/>`).join('') +
+            pfeil(150, 32, 200, 32, BETONT, 1.5) +
+            txt('Φ', 208, 36, 'start', BETONT, 12) +
+            txt('N · I', 40, 32, 'start', BETONT, 12) +
+            txt('l_m', 156, 160, 'middle', BLASS, 12) +
+            txt('A', 250, 92, 'start', BLASS, 12)),
+        /* --- Seite 13 · Wechselstrom-Grundlagen ------------------------------ */
+        'w-effektiv': () => {
+            const links = 46, rechts = 275, mitte = 92, hoch = 58;
+            let d = `M${links},${mitte}`;
+            for (let i = 1; i <= 120; i++) {
+                const x = links + (rechts - links) * i / 120;
+                const y = mitte - hoch * Math.sin(2 * Math.PI * i / 60);
+                d += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+            }
+            return svg(300, 175, pfeil(links, mitte, rechts + 16, mitte, BLASS, 1.3) +
+                pfeil(links, mitte, links, mitte - hoch - 22, BLASS, 1.3) +
+                `<path d="${d}" stroke="${BETONT}" stroke-width="2" fill="none"/>` +
+                `<path d="M${links},${mitte - hoch} L${rechts},${mitte - hoch}" ` +
+                `stroke="${STRICH}" stroke-width="1" stroke-dasharray="5 4"/>` +
+                `<path d="M${links},${(mitte - hoch * 0.707).toFixed(1)} ` +
+                `L${rechts},${(mitte - hoch * 0.707).toFixed(1)}" ` +
+                `stroke="${STRICH}" stroke-width="1" stroke-dasharray="2 3"/>` +
+                txt('û', links - 7, mitte - hoch + 5, 'end', STRICH, 12) +
+                txt('U', links - 7, mitte - hoch * 0.707 + 5, 'end', STRICH, 12) +
+                txt('T', links + (rechts - links) / 4, mitte + 22, 'middle', BLASS, 12) +
+                txt('t', rechts + 14, mitte + 20, 'end', BLASS, 12));
+        },
+        /* --- Seite 14/15 · Wechselstromwiderstände --------------------------- */
+        'wx-induktiv': () => planSvg(280, 200, w => {
+            const g = w.teil('wechselspannung', 'G', 30, 70);
+            const l = w.teil('spule-induktivitaet', 'L', 200, 70);
+            w.steg(g, 'L', l, '1', 28);
+            w.steg(g, 'N', l, '2', 172);
+            w.text('U_L', 122, 24);
+            w.text('X_L', 236, 105);
+        }),
+        'wx-kapazitiv': () => planSvg(280, 200, w => {
+            const g = w.teil('wechselspannung', 'G', 30, 70);
+            const c = w.teil('kondensator', 'C', 200, 70);
+            w.steg(g, 'L', c, '1', 28);
+            w.steg(g, 'N', c, '2', 172);
+            w.text('U_C', 122, 24);
+            w.text('X_C', 236, 105);
+        }),
+        'wx-reihe': () => dreieck('R', 'X', 'Z'),
+        'wx-reihe-rlc': () => planSvg(300, 330, w => {
+            const g = w.teil('wechselspannung', 'G', 20, 130);
+            const r = w.teil('widerstand', 'R', 210, 35);
+            const l = w.teil('spule-induktivitaet', 'L', 210, 105);
+            const c = w.teil('kondensator', 'C', 210, 185);
+            w.steg(g, 'L', r, '1', 24);
+            w.draht(r, '2', l, '1');
+            w.draht(l, '2', c, '1');
+            w.steg(c, '2', g, 'N', 296);
+            w.text('U', 118, 18);
+            w.text('I', 118, 314);
+        }),
+        'wx-parallel': () => planSvg(380, 220, w => {
+            const g = w.teil('wechselspannung', 'G', 20, 75);
+            const r = w.teil('widerstand', 'R', 180, 75);
+            const l = w.teil('spule-induktivitaet', 'L', 290, 75);
+            w.sammel(30, [g, 'L'], [r, '1'], [l, '1']);
+            w.sammel(192, [g, 'N'], [r, '2'], [l, '2']);
+            w.text('I_w', 206, 68);
+            w.text('I_b', 316, 68);
+            w.text('U', 88, 26);
+        }),
+        'wx-resonanz': () => svg(300, 175, achsen(48, 134, 212, 108, 'f', 'X') +
+            lin(52, 132, 240, 44, BETONT, 2) +
+            `<path d="M58,44 Q76,112 112,124 T242,131" stroke="${STRICH}" stroke-width="2" ` +
+            `fill="none"/>` +
+            `<circle cx="124" cy="98" r="4.5" fill="var(--accent)" stroke="none"/>` +
+            strichel(124, 98, 124, 134) +
+            txt('X_L', 246, 48, 'start', BETONT, 12) +
+            txt('X_C', 66, 40, 'start', STRICH, 12) +
+            txt('f_r', 124, 152, 'middle', BLASS, 12)),
+        /* --- Seite 16 · Drehstrom ------------------------------------------- */
+        'd-stern': () => svg(300, 215, lin(150, 112, 150, 44, STRICH, 2) +
+            lin(150, 112, 92, 170, STRICH, 2) +
+            lin(150, 112, 208, 170, STRICH, 2) +
+            `<circle cx="150" cy="112" r="4.5" fill="${STRICH}" stroke="none"/>` +
+            lin(150, 44, 150, 20, BETONT, 2) +
+            lin(92, 170, 72, 190, BETONT, 2) +
+            lin(208, 170, 228, 190, BETONT, 2) +
+            lin(150, 112, 272, 112, BLASS, 1.4) +
+            txt('L1', 150, 16, 'middle', BETONT, 12) +
+            txt('L2', 62, 202, 'middle', BETONT, 12) +
+            txt('L3', 238, 202, 'middle', BETONT, 12) +
+            txt('N', 280, 116, 'start', BLASS, 12) +
+            txt('U_Str', 118, 82, 'end', STRICH, 12) +
+            txt('U', 196, 78, 'start', BLASS, 12)),
+        'd-dreieck': () => svg(300, 215, lin(150, 46, 74, 168, STRICH, 2) +
+            lin(74, 168, 226, 168, STRICH, 2) +
+            lin(226, 168, 150, 46, STRICH, 2) +
+            lin(150, 46, 150, 22, BETONT, 2) +
+            lin(74, 168, 54, 188, BETONT, 2) +
+            lin(226, 168, 246, 188, BETONT, 2) +
+            txt('L1', 150, 18, 'middle', BETONT, 12) +
+            txt('L2', 46, 200, 'middle', BETONT, 12) +
+            txt('L3', 254, 200, 'middle', BETONT, 12) +
+            txt('I_Str', 104, 102, 'end', STRICH, 12) +
+            txt('I', 150, 194, 'middle', BLASS, 12)),
+        /* --- Seite 18 · Transformator --------------------------------------- */
+        't-einphasen': () => planSvg(350, 215, w => {
+            const t = w.teil('transformator', 'T1', 140, 70);
+            w.draht(t, '1U', t, '1V', { x: 55, y: 70 }, { x: 55, y: 140 });
+            w.draht(t, '2U', t, '2V', { x: 300, y: 70 }, { x: 300, y: 140 });
+            /* Die Beschriftungen unter die Schleifen, nicht hinein — dort lagen
+               sie auf der Wicklung und liessen beide schlechter lesen. */
+            w.text('U₁, N₁', 34, 172);
+            w.text('U₂, N₂', 258, 172);
+        }),
+        /* --- Seite 19 · Motoren --------------------------------------------- */
+        'mo-dreh': () => planSvg(340, 215, w => {
+            /* Hier stand `draht(m,'U1', m,'U1', …)` — eine Leitung von einem
+               Anschluss zu DEMSELBEN Anschluss. Sie lief hin und wieder zurück,
+               und im Bild sah das aus wie drei Diagonalen quer durch den Motor.
+               Eine Leitung, die frei endet, ist `ab` und nicht `draht`. */
+            const m = w.teil('motor-drehstrom', 'M1', 140, 95);
+            w.ab(m, 'U1', { x: 150, y: 40 }, { x: 45, y: 40 });
+            w.ab(m, 'V1', { x: 170, y: 62 }, { x: 45, y: 62 });
+            w.ab(m, 'W1', { x: 190, y: 84 }, { x: 45, y: 84 });
+            w.text('L1', 16, 44);
+            w.text('L2', 16, 66);
+            w.text('L3', 16, 88);
+            w.text('M', 238, 142);
+        }),
+        /* --- Seite 20 · Spannungsfall ---------------------------------------- */
+        'sf-leitung': () => svg(330, 180, lin(28, 52, 252, 52, STRICH, 2) +
+            lin(28, 124, 252, 124, STRICH, 2) +
+            `<rect x="252" y="52" width="42" height="72" stroke="${STRICH}" stroke-width="1.8" ` +
+            `fill="var(--bg-hover)"/>` +
+            lin(28, 52, 28, 124, BETONT, 2.4) +
+            pfeil(70, 42, 150, 42, BETONT, 1.4) +
+            txt('I', 110, 36, 'middle', BETONT, 12) +
+            strichel(70, 88, 220, 88) +
+            txt('l', 145, 84, 'middle', BLASS, 12) +
+            txt('ΔU', 150, 154, 'middle', STRICH, 12) +
+            txt('U', 18, 92, 'end', BETONT, 12)),
+        /* --- Seite 21 · Antenne ---------------------------------------------- */
+        'an-mass': () => svg(330, 155, `<path d="M42,46 L42,106 L78,76 Z" stroke="${STRICH}" stroke-width="1.8" ` +
+            `fill="var(--bg-hover)"/>` +
+            lin(78, 76, 132, 76, STRICH, 1.8) +
+            `<rect x="132" y="56" width="58" height="40" rx="4" stroke="${STRICH}" ` +
+            `stroke-width="1.8" fill="none"/>` +
+            lin(190, 76, 244, 76, STRICH, 1.8) +
+            `<path d="M244,46 L244,106 L280,76 Z" stroke="${STRICH}" stroke-width="1.8" ` +
+            `fill="var(--bg-hover)"/>` +
+            txt('U₁', 48, 128, 'middle', BETONT, 12) +
+            txt('U₂', 262, 128, 'middle', BETONT, 12) +
+            txt('dB', 161, 81, 'middle', STRICH, 12)),
+        /* --- Seite 22 · Beleuchtung ------------------------------------------ */
+        'l-abstand': () => svg(300, 195, `<path d="M120,26 L180,26 L194,48 L106,48 Z" stroke="${STRICH}" stroke-width="1.8" ` +
+            `fill="var(--bg-hover)"/>` +
+            lin(106, 48, 42, 152, BETONT, 1.4) +
+            lin(194, 48, 258, 152, BETONT, 1.4) +
+            lin(42, 152, 258, 152, STRICH, 2) +
+            strichel(150, 48, 150, 152) +
+            txt('r', 158, 104, 'start', BLASS, 12) +
+            txt('Φ', 150, 20, 'middle', BETONT, 12) +
+            txt('A', 150, 174, 'middle', BLASS, 12))
+    };
+    /* ------------------------------------------------------------------------
+     * 4. ZUGRIFF
+     * ----------------------------------------------------------------------*/
+    /** Gibt es zu diesem Abschnitt eine Skizze? */
+    const hat = (abschnitt) => Object.prototype.hasOwnProperty.call(SKIZZEN, abschnitt);
+    /**
+     * Die Skizze zu einem Abschnitt. Leere Zeichenkette heisst „gibt es nicht" —
+     * und das ist eine Antwort, kein Fehler: das Buch wird Abschnitt für
+     * Abschnitt bebildert, und ein Abschnitt ohne Bild soll trotzdem lesbar
+     * sein.
+     */
+    const zu = (abschnitt) => {
+        const bauen = SKIZZEN[abschnitt];
+        if (!bauen)
+            return '';
+        try {
+            return bauen();
+        }
+        catch (e) {
+            /* Eine kaputte Skizze darf die Seite nicht mitreissen. Sie fehlt dann
+               eben — sichtbar, aber ohne Schaden. */
+            console.warn('Skizze ' + abschnitt + ' liess sich nicht zeichnen:', e);
+            return '';
+        }
+    };
+    /** Welche Abschnitte bebildert sind — für den Prüflauf und die Doku. */
+    const alle = () => Object.keys(SKIZZEN).sort();
+    return { hat, zu, alle };
+})();
+/* Im Browser sichtbar machen — das Formelheft und der Prüflauf greifen darauf zu. */
+globalThis.Elektroskizzen = Elektroskizzen;
 
 </script>
 <script>
