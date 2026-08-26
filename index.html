@@ -114,61 +114,61 @@
        vorhandene Objekte neu; er erzeugt keine Kopien. -->
   <nav id="weltwechsel" class="weltwechsel" aria-label="Produktwelt">
     <button id="btn-welt-lernen" data-welt="lernen" aria-pressed="true">
-      <span>🎓</span><b>Lernen &amp; Alltag</b>
+      <span data-sym="learn"></span><b>Lernen &amp; Alltag</b>
     </button>
     <button id="btn-welt-workspace" data-welt="workspace" aria-pressed="false">
-      <span>🧱</span><b>Workspace</b>
+      <span data-sym="workspace"></span><b>Workspace</b>
     </button>
   </nav>
 
   <!-- Reiterleiste wie in Notion: Start, Chat, Besprechungen, Posteingang, Suchen -->
   <nav class="side-reiter" id="side-reiter">
-    <button class="sr" data-reiter="start"  title="Start"><span>🏠</span><b>Start</b></button>
-    <button class="sr" data-reiter="chat"   title="Chat mit der KI (Strg + O)"><span>💬</span><b>Chat</b></button>
-    <button class="sr" data-reiter="bespr"  title="Besprechungen"><span>🎙</span><b>Besprechungen</b></button>
-    <button class="sr" data-reiter="inbox"  title="Posteingang"><span>📥</span><b>Posteingang</b></button>
-    <button class="sr" data-reiter="suche"  title="Suchen (Strg + P)"><span>🔍</span><b>Suchen</b></button>
+    <button class="sr" data-reiter="start"  title="Start"><span data-sym="home"></span><b>Start</b></button>
+    <button class="sr" data-reiter="chat"   title="Chat mit der KI (Strg + O)"><span data-sym="chat"></span><b>Chat</b></button>
+    <button class="sr" data-reiter="bespr"  title="Besprechungen"><span data-sym="mic"></span><b>Besprechungen</b></button>
+    <button class="sr" data-reiter="inbox"  title="Posteingang"><span data-sym="inbox"></span><b>Posteingang</b></button>
+    <button class="sr" data-reiter="suche"  title="Suchen (Strg + P)"><span data-sym="search"></span><b>Suchen</b></button>
   </nav>
 
   <nav class="side-nav">
     <button class="side-item" id="btn-search">
-      <span>🔍</span><span>Suchen</span><span class="k">Strg P</span>
+      <span data-sym="search"></span><span>Suchen</span><span class="k">Strg P</span>
     </button>
     <button class="side-item" id="btn-cmd">
-      <span>⌘</span><span>Befehle</span><span class="k">Strg ⇧ P</span>
+      <span data-sym="command"></span><span>Befehle</span><span class="k">Strg ⇧ P</span>
     </button>
     <button class="side-item" id="btn-home">
-      <span>☀️</span><span>Heute</span>
+      <span data-sym="today"></span><span>Heute</span>
     </button>
     <button class="side-item" id="btn-learning">
-      <span>🎓</span><span>Lernzentrum</span>
+      <span data-sym="learn"></span><span>Lernzentrum</span>
     </button>
     <button class="side-item" id="btn-workspace">
-      <span>🧱</span><span>Workspace</span>
+      <span data-sym="workspace"></span><span>Workspace</span>
     </button>
     <button class="side-item" id="btn-library">
-      <span>📚</span><span>Bibliothek</span>
+      <span data-sym="library"></span><span>Bibliothek</span>
     </button>
     <button class="side-item" id="btn-tasks">
-      <span>☑</span><span>Aufgaben</span>
+      <span data-sym="tasks"></span><span>Aufgaben</span>
     </button>
     <button class="side-item" id="btn-inbox">
-      <span>📥</span><span>Posteingang</span>
+      <span data-sym="inbox"></span><span>Posteingang</span>
     </button>
     <button class="side-item" id="btn-new">
-      <span>✚</span><span>Neue Seite</span><span class="k">Strg N</span>
+      <span data-sym="plus"></span><span>Neue Seite</span><span class="k">Strg N</span>
     </button>
   </nav>
 
   <div id="tree"></div>
 
   <div class="side-fuss">
-    <button class="side-item" id="btn-import"><span>⭱</span><span>Importieren</span></button>
-    <button class="side-item" id="btn-trash"><span>🗑</span><span>Papierkorb</span></button>
-    <button class="side-item" id="btn-hilfe"><span>?</span><span>Tastenkürzel</span><span class="k">Strg /</span></button>
+    <button class="side-item" id="btn-import"><span data-sym="upload"></span><span>Importieren</span></button>
+    <button class="side-item" id="btn-trash"><span data-sym="trash"></span><span>Papierkorb</span></button>
+    <button class="side-item" id="btn-hilfe"><span data-sym="help"></span><span>Tastenkürzel</span><span class="k">Strg /</span></button>
     <div class="side-unten">
-      <button class="side-chat" id="btn-neuer-chat"><span>✨</span><span>Neuer Chat</span><span class="k">Strg O</span></button>
-      <button class="side-schreib" id="btn-new-bottom" title="Neue Seite (Strg + N)">✎</button>
+      <button class="side-chat" id="btn-neuer-chat"><span data-sym="sparkle"></span><span>Neuer Chat</span><span class="k">Strg O</span></button>
+      <button class="side-schreib" id="btn-new-bottom" title="Neue Seite (Strg + N)" aria-label="Neue Seite"><span data-sym="pencil"></span></button>
     </div>
     <div class="side-hinweis">Alles bleibt auf diesem Gerät.</div>
   </div>
@@ -243,23 +243,23 @@
 <main id="main" role="main">
 
   <header id="topbar" role="toolbar" aria-label="Seitenwerkzeuge">
-    <button class="top-btn schmal" id="btn-back" title="Zurück (Strg + [)">‹</button>
-    <button class="top-btn schmal" id="btn-fwd"  title="Vorwärts (Strg + ])">›</button>
+    <button class="top-btn schmal" id="btn-back" title="Zurück (Strg + [)" aria-label="Zurück"><span data-sym="arrowL"></span></button>
+    <button class="top-btn schmal" id="btn-fwd"  title="Vorwärts (Strg + ])" aria-label="Vorwärts"><span data-sym="arrowR"></span></button>
     <div class="crumb" id="crumb"></div>
     <!-- Nur am Telefon: Suchen und Neu wandern in die Kopfzeile, weil unten
          die vier Bereiche stehen. Am PC sind sie in der Seitenleiste. -->
-    <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen">🔍</button>
-    <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite">✎</button>
+    <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen" aria-label="Suchen"><span data-sym="search"></span></button>
+    <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite" aria-label="Neue Seite"><span data-sym="pencil"></span></button>
     <div class="spacer"></div>
-    <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben">Teilen</button>
-    <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)">✨ KI</button>
-    <button class="top-btn schmal" id="btn-komm"    title="Kommentare">💬</button>
-    <button class="top-btn schmal" id="btn-verlauf" title="Aktualisierungen und Versionsverlauf">🕘</button>
-    <button class="top-btn schmal" id="btn-auto"    title="Automationen der Datenbank">⚡</button>
-    <button class="top-btn schmal" id="btn-link"    title="Link zur Seite kopieren">🔗</button>
-    <button class="top-btn schmal" id="btn-lock"    title="Seite gegen Bearbeiten sperren">🔓</button>
-    <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten">☆</button>
-    <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen">⋯</button>
+    <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
+    <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>
+    <button class="top-btn schmal" id="btn-komm"    title="Kommentare" aria-label="Kommentare"><span data-sym="chat"></span></button>
+    <button class="top-btn schmal" id="btn-verlauf" title="Aktualisierungen und Versionsverlauf" aria-label="Versionsverlauf"><span data-sym="history"></span></button>
+    <button class="top-btn schmal" id="btn-auto"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
+    <button class="top-btn schmal" id="btn-link"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
+    <button class="top-btn schmal" id="btn-lock"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
+    <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
+    <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
 
   <div id="scroll">
@@ -349,6 +349,9 @@
 <script src="quell/kern/sicherheit/pruefen.js"></script>
 <script src="quell/kern/ablage/formen.js"></script>
 <script src="quell/kern/ablage/umzuege.js"></script>
+<!-- Die Zeichen der Oberfläche. Steht VOR den anderen Registern, weil
+     Navigation und Schale sie beim Zeichnen schon brauchen. -->
+<script src="quell/register/symbole.js"></script>
 <script src="quell/register/module.js"></script>
 <script src="quell/register/navigation.js"></script>
 <script src="quell/register/bloecke.js"></script>

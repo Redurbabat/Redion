@@ -14054,3 +14054,70 @@ auf, welche es gibt. Eine bekannte Lücke ist besser als ein stiller Fehler
 
 Sechzehn Abschnitte haben weder Formel noch Tabelle noch Legende. Alle
 sechzehn sind Bildabschnitte, und alle sechzehn haben ihr Bild.
+
+## E200 · Zeichen statt Emoji — die Oberfläche gehört Redion
+
+**26. August 2026**
+
+Der Gestaltungs-Auftrag sagt in §71: „Professionelle Hauptoberfläche nicht
+mit Emojis bauen. Emoji nur wenn Nutzerdaten selbst Emoji-Icons enthalten."
+
+Gezählt standen 1794 Emoji in 82 Dateien. Die auffälligsten neunzehn davon
+trug die Seitenleiste: 🔍 ⌘ ☀️ 🎓 🧱 📚 ☑ 📥 ✚ ⭱ 🗑 ✨ ✎ 📅 ⚡ 🧩 🕸 🏷 🎴.
+
+**Warum das mehr ist als Geschmack.**
+
+  · Emoji sind BILDER, keine Zeichen. Sie tragen ihre eigene Farbe, ihre
+    eigene Strichstärke, ihre eigene Anmutung. Neben einer Schrift in
+    `--text-dim` sieht ein farbiges 🎓 aus wie ein Aufkleber.
+  · Sie sehen auf jedem System anders aus. Dasselbe ☑ ist auf Windows
+    schmal und grau, auf einem Apfelgerät blau und rund. Eine Oberfläche,
+    die auf zwei Rechnern verschieden aussieht, ist keine.
+  · Sie lassen sich nicht ausrichten. Ein 🔍 sitzt tiefer als ein ⌘, und
+    kein Abstand der Welt bringt beide auf eine Linie.
+
+**Was jetzt gilt.**
+
+`register/symbole.ts` — 45 Zeichen als Striche in `currentColor`, 24 × 24,
+Strichstärke 1,7, runde Enden. Sie nehmen die Farbe ihrer Zeile an, sie
+haben überall dieselbe Stärke, sie sitzen auf demselben Raster.
+
+`index.html` schreibt nur die Stelle — `<span data-sym="search">` —, und
+`Register.symbole.fuelle(wurzel)` setzt das Zeichen ein. Ein unbekannter
+Name lässt die Stelle LEER: ein Fragezeichen oder ein Kästchen sähe aus wie
+ein Zeichen und wäre keins. Der Prüflauf sucht nach leeren Stellen; das
+Auge übersieht sie.
+
+**Die Grenze, und warum sie namentlich gezogen ist.**
+
+Geprüft wird nur die SCHALE — Seitenleiste, Kopfleiste, Reiter —, und zwar
+Ort für Ort. Ein pauschales „nirgends ein Emoji" wäre schneller geschrieben
+und falsch: es würde jede Seite rot machen, die jemand mit 🧳 benannt hat.
+Das Zeichen einer Seite gehört dem Menschen, der sie angelegt hat.
+
+**Drei Stellen, die dabei auffielen.**
+
+  · `kopfleiste.ts` schrieb `stern.textContent = '★'`, `kb.textContent =
+    '💬 ' + n` und `schloss.textContent = '🔒'`. `textContent` ersetzt den
+    GANZEN Inhalt eines Elements — also auch das SVG, das kurz zuvor
+    eingesetzt worden war. Beim Start sahen die Knöpfe richtig aus, und
+    sobald eine Seite geöffnet wurde, stand wieder ein gelbes Schloss
+    mitten in einer Reihe grauer Striche.
+  · `zeichneBaum` leert die Seitenleiste und baut sie neu. Der Ruf beim
+    Start füllt nur, was zu diesem Zeitpunkt dasteht — die Werkzeuge-Gruppe
+    kommt danach. Sie füllt sich jetzt selbst.
+  · Der Kommentarzähler stand als Text IM Knopf („💬 3"). Jetzt steht er
+    neben dem Zeichen, mit Tabellenziffern: sonst wackelt die Kopfleiste,
+    wenn aus 1 eine 8 wird.
+
+**Was bewusst Emoji bleibt.**
+
+Vorlagen, Seitenzeichen, Blockmenüs, die Meldung „🎴 3 Karteikarten sind
+fällig". Das erste sind Nutzerdaten. Das letzte ist eine Meldung an einen
+Menschen, kein Bedienelement — und es steht in LUECKEN, nicht hier, weil
+ich es für einen Grenzfall halte und nicht für entschieden.
+
+**Der Wächter.** test245 §4, mit zwei Gegenbeweisen: ein Emoji zurück in
+die Seitenleiste macht ihn rot, ein unbekannter Zeichenname ebenso. Und
+davor steht eine Gegenprobe auf die Messung selbst — fände der Ausdruck
+keine Knöpfe, wäre er ewig grün.

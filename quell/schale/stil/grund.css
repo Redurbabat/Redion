@@ -125,3 +125,41 @@ input,textarea,select{font:inherit; color:inherit}
 ::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px; border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-faint)}
 ::-webkit-scrollbar-track{background:transparent}
+
+/* ============================================================================
+ * DIE ZEICHEN DER OBERFLÄCHE (E200)
+ * ----------------------------------------------------------------------------
+ * `Register.symbole` liefert `<svg class="sym">`. Was hier steht, gilt für
+ * jedes davon — und der wichtigste Teil ist `flex:none`.
+ *
+ * Ein SVG in einer Flexzeile ist ein Flex-Element wie jedes andere und wird
+ * gestaucht, sobald der Text daneben zu lang wird. Ein gestauchtes Zeichen
+ * sieht nicht kleiner aus, sondern falsch: der Kreis der Lupe wird zum Ei.
+ * Genau diese Sorte Fehler fand §55 beim Tabellenblock.
+ * ==========================================================================*/
+.sym{
+  flex:none;
+  display:block;
+  color:inherit;          /* die Farbe kommt aus der Zeile, nicht aus dem Zeichen */
+  vertical-align:-0.18em; /* auf die Grundlinie der Schrift daneben */
+}
+/* Die Hülle, in der ein Zeichen steckt, hat oft eine feste Spaltenbreite aus
+   der Zeit der Emoji. Sie darf das Zeichen nicht verschieben. */
+[data-sym]{
+  display:inline-flex; align-items:center; justify-content:center;
+  flex:none; line-height:0;
+}
+
+/* Der Zähler am Kommentarknopf. Er stand früher als Text IM Knopf
+   („💬 3"); jetzt steht er neben dem Zeichen und darf deshalb seine eigene
+   Grösse haben. Tabellenziffern, damit die Breite bei 1 und 8 gleich ist —
+   sonst wackelt die ganze Kopfleiste beim Zählen. */
+.zaehler{
+  font-size:11px; font-variant-numeric:tabular-nums;
+  color:var(--text-dim); margin-left:var(--space-1);
+}
+/* Ein aktiver Zustand färbt das ZEICHEN, nicht den Knopf. Vorher sagten
+   zwei verschiedene Bildchen den Zustand (🔓/🔒, ☆/★); jetzt sagt ihn die
+   Farbe UND die Form (`lock` gegen `lockOpen`) — nie die Farbe allein
+   (§38). */
+#topbar .top-btn.on{ color:var(--accent-text) }

@@ -2571,6 +2571,16 @@ const App = (() => {
         return m && m[1] ? decodeURIComponent(m[1]) : '';
     };
     const start = async () => {
+        /* DIE ZEICHEN DER OBERFLÄCHE ZUERST (E200).
+           `index.html` schreibt nur die Stellen — `<span data-sym="search">` —,
+           und hier werden sie gefüllt. Das steht ganz vorn, weil sonst zwischen
+           Aufbau und Füllung ein Bild mit leeren Kästchen stünde; auf einem
+           langsamen Gerät sieht man das.
+           Fehlt das Register, bleibt es bei leeren Stellen: die Zeilen tragen
+           ihren Namen als Text, also fehlt Bedeutung, nicht Bedienbarkeit. */
+        if (typeof Register !== 'undefined' && Register.symbole) {
+            Register.symbole.fuelle(document);
+        }
         /* VORFÜHRMODUS: EIN BALKEN, DER NICHT ZU ÜBERSEHEN IST (L31, E177).
            `?demo` öffnet eine eigene Ablage (`notizen-demo`) — die echten Notizen
            liegen unberührt daneben. Genau das muss aber dastehen: eine App, die

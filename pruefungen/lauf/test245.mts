@@ -239,7 +239,81 @@ for (const modus of ['dark', 'light'] as const) {
     tonAbstand >= 40, `${Math.round(tonAbstand)}°`);
 }
 
-console.log('\n4 · Wer keine Bewegung will, bekommt keine');
+console.log('\n4 · Die Oberfläche trägt Zeichen, keine Emoji');
+
+/* §71 DES AUFTRAGS: „Professionelle Hauptoberfläche nicht mit Emojis bauen.
+   Emoji nur wenn Nutzerdaten selbst Emoji-Icons enthalten."
+ *
+ * Die Grenze verläuft zwischen SCHALE und INHALT:
+ *
+ *   Schale   Seitenleiste, Kopfleiste, Reiter, Werkzeugleisten. Das ist
+ *            Redions Oberfläche, und sie gehört Redion.
+ *   Inhalt   das Zeichen einer Seite, das Symbol einer Vorlage, was ein
+ *            Mensch selbst gesetzt hat. Das gehört ihm.
+ *
+ * Geprüft wird deshalb NUR die Schale — namentlich, nicht pauschal. Ein
+ * pauschales „nirgends ein Emoji" wäre schnell geschrieben und falsch: es
+ * würde jede Seite rot machen, die jemand mit 🧳 benannt hat. */
+const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
+
+await seite.evaluate(() => {
+  /* Der Rundgang legt sich sonst über alles. */
+  document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove());
+});
+await seite.waitForTimeout(400);
+
+const schale = await seite.evaluate(() => {
+  const orte = ['#sidebar .side-nav', '#sidebar .side-fuss', '#sidebar .side-reiter',
+                '#sidebar .side-top', '#topbar'];
+  const treffer: string[] = [];
+  let knoepfe = 0, mitZeichen = 0;
+  for (const ort of orte) {
+    const wurzel = document.querySelector(ort);
+    if (!wurzel) { treffer.push(`${ort}: gibt es nicht`); continue; }
+    wurzel.querySelectorAll('button').forEach(b => {
+      knoepfe++;
+      if (b.querySelector('svg.sym')) mitZeichen++;
+      const t = (b.textContent || '').trim();
+      if (t) treffer.push(`${ort} → ${t.slice(0, 24)}`);
+    });
+  }
+  return { treffer, knoepfe, mitZeichen };
+});
+
+/* Erst die Gegenprobe, dass überhaupt etwas gemessen wurde: fände der
+   Ausdruck keine Knöpfe, wäre er ewig grün. */
+p('Die Schale hat Knöpfe zum Messen', schale.knoepfe >= 20, `${schale.knoepfe}`);
+p('Und fast alle tragen ein Zeichen aus dem Register',
+  schale.mitZeichen >= schale.knoepfe * 0.7,
+  `${schale.mitZeichen} von ${schale.knoepfe}`);
+const mitEmoji = schale.treffer.filter(t => EMOJI.test(t));
+p('Kein Emoji in Seitenleiste und Kopfleiste', mitEmoji.length === 0,
+  mitEmoji.slice(0, 4).join(' | '));
+
+/* UND DIE ZEICHEN SIND WIRKLICH DA. Ein `data-sym`, das niemand gefüllt
+   hat, ist eine leere Stelle — und die sieht man im Bild nicht, weil da
+   ohnehin nichts steht. Genau deshalb wird sie gezählt. */
+const leere = await seite.evaluate(() =>
+  [...document.querySelectorAll('[data-sym]')]
+    .filter(e => !e.querySelector('svg'))
+    .map(e => (e as HTMLElement).dataset.sym || '?'));
+p('Keine Stelle bleibt ohne Zeichen', leere.length === 0,
+  leere.slice(0, 6).join(', '));
+
+const symbole = await seite.evaluate(() => {
+  const R = (globalThis as any).Register;
+  if (!R || !R.symbole) return null;
+  return { anzahl: R.symbole.alle().length,
+           leerBeiUnbekannt: R.symbole.alsSvg('gibtesnicht') === '',
+           hatStrich: R.symbole.alsSvg('search').includes('currentColor') };
+});
+p('Das Symbolregister ist da', !!symbole);
+p('Es kennt genug Zeichen', (symbole?.anzahl ?? 0) >= 30, `${symbole?.anzahl}`);
+p('Ein unbekannter Name gibt nichts zurück statt eines Kästchens',
+  symbole?.leerBeiUnbekannt === true);
+p('Die Zeichen nehmen die Farbe ihrer Zeile', symbole?.hatStrich === true);
+
+console.log('\n5 · Wer keine Bewegung will, bekommt keine');
 
 await seite.emulateMedia({ reducedMotion: 'reduce' });
 await seite.waitForTimeout(150);

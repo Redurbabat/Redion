@@ -722,7 +722,13 @@ const PWA = (() => {
             b.className = 'top-btn schmal nur-telefon';
             b.id = 'btn-menu';
             b.title = 'Seitenleiste';
-            b.textContent = '☰';
+            b.setAttribute('aria-label', 'Seitenleiste öffnen');
+            /* Das Zeichen aus dem Register (E200), nicht `☰` als Schriftzeichen:
+               das war in jeder Schrift anders breit und sass anders hoch als die
+               SVG-Zeichen daneben. Fehlt das Register, bleibt der Knopf leer —
+               aber `aria-label` und `title` sagen weiterhin, was er tut. */
+            b.innerHTML = (typeof Register !== 'undefined' && Register.symbole)
+                ? Register.symbole.alsSvg('menu') : '';
             b.addEventListener('click', () => document.body.classList.contains('side-offen') ? schubladeZu() : schubladeAuf());
             document.getElementById('topbar')?.prepend(b);
         }
