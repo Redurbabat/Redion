@@ -3832,9 +3832,16 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-tippbar .sp-griff.sp-gewaehlt{
   fill:color-mix(in srgb, var(--accent) 45%, transparent);
   stroke:var(--accent); stroke-width:4}
+/* Alles ausser dem Griff nimmt keine Tipps an — auch die Beschriftungen
+   nicht. „geschlossen" neben S1 lag über einem Griff und schluckte den
+   Klick: man tippt, und es passiert nichts. Das ist schlimmer als ein zu
+   kleines Ziel, weil man nicht sieht, warum. Gefunden hat es der Prüflauf,
+   und zwar nur bei bestimmten Startwerten — je nachdem, wo die
+   Beschriftung landet. */
 .ea-tippbar .sp-leitung,
 .ea-tippbar .sp-fluss,
 .ea-tippbar .sp-teil,
+.ea-tippbar .sp-text,
 .ea-tippbar .sp-knoten{pointer-events:none}
 .ea-tippbar svg{touch-action:manipulation}
 /* Ausserhalb einer Tippaufgabe gibt es die Griffe gar nicht — aber falls

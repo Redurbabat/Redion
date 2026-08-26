@@ -13628,9 +13628,32 @@ dazuzuerfinden wäre gelogen. Verlangt ist jetzt: mindestens zwei, höchstens
 sechs — und dass eine Art bei ihrer Zahl BLEIBT. Wer heute vier und morgen
 drei anbietet, hat einen Fehler; das ist der Satz, der vorher fehlte.
 
+### Und die Stellung steht jetzt am Schalter (L59)
+
+Geplant war, jedem der achtundzwanzig Schaltersymbole einen zweiten Pfad für
+die geschlossene Lage zu geben. Beim Nachdenken darüber fiel auf, dass genau
+das falsch gewesen wäre: **ein Kontakt wird im Schaltplan in seiner RUHELAGE
+gezeichnet.** Ein Schliesser ist offen, auch während er geschlossen ist. Wer
+ihn geschlossen zeichnet, zeichnet keinen Schaltplan mehr.
+
+Die Lücke war also nicht „das Symbol ist falsch", sondern „die Stellung steht
+nur im Fragetext". Sie steht jetzt zusätzlich neben dem Bauteil — über
+`plan.texte`, dieselbe Beschriftung, die es für Punkt 47 ohnehin gibt.
+
+Und prompt ein neuer Fehler: „geschlossen" landete bei manchen Startwerten
+AUF einem Tippgriff und schluckte den Klick. Man tippt, und es passiert
+nichts — schlimmer als ein zu kleines Ziel, weil man nicht sieht, warum.
+
 ### Prüflauf
 
-`test243` wächst auf 70 Punkte. §6 schneidet jede Leitung selbst durch und
+`test243` wächst auf 71 Punkte. §6 schneidet jede Leitung selbst durch und
 vergleicht mit einem ANDEREN Massstab als die Aufgabe: nicht Zahlenreihen,
 sondern welche Bauteile arbeiten und wie hell die Leuchten sind. Dass beide
 Massstäbe übereinstimmen, ist mehr wert als zweimal dasselbe.
+
+Der verdeckte Griff hat dabei noch etwas gezeigt. Die erste Prüfung sah nur
+die Aufgabe, die gerade dastand — und blieb grün, obwohl der Fehler wieder
+eingebaut war: wo eine Beschriftung landet, hängt am Startwert. Sie geht
+jetzt zwölf Aufgaben durch. §55.2 in einem Satz: wer eine neue Prüfung
+schreibt, baut den Fehler absichtlich wieder ein und sieht nach, ob sie rot
+wird.

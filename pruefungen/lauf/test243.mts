@@ -582,6 +582,37 @@ for (let i = 0; i < kaesten.length; i++)
 p('… ohne sich gegenseitig zu überdecken', ueberlappt === 0,
   `${ueberlappt} Überschneidungen`);
 
+/* UND ÜBER JEDEM GRIFF DARF NICHTS ANDERES LIEGEN.
+   Die Beschriftung „geschlossen" neben einem Schalter landete auf einem
+   Griff und schluckte den Klick — man tippt, und es passiert nichts. Ob
+   sich zwei Griffe überschneiden, sagt darüber gar nichts; gefragt ist,
+   was an dieser Stelle wirklich getroffen wird.
+
+   ÜBER MEHRERE AUFGABEN, nicht nur die eine, die gerade dasteht. Wo eine
+   Beschriftung landet, hängt am Startwert: mit einer einzigen Aufgabe blieb
+   diese Prüfung auch dann grün, als der Fehler absichtlich wieder eingebaut
+   war (§55.2). Zwölf Durchgänge treffen ihn zuverlässig. */
+const verdeckt: string[] = [];
+for (let runde = 0; runde < 12; runde++) {
+  verdeckt.push(...(await seite.evaluate(() => {
+    const raus: string[] = [];
+    document.querySelectorAll('.ea-tippbar .sp-griff').forEach(g => {
+      const r = g.getBoundingClientRect();
+      const oben = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      if (oben !== g)
+        raus.push(((g as HTMLElement).dataset.id || '?') + ' verdeckt von ' +
+          (oben ? oben.getAttribute('class') || oben.nodeName : 'nichts'));
+    });
+    return raus;
+  }) as string[]));
+  const weiter = seite.locator('[data-a="weiter"]').first();
+  if (!(await weiter.count())) break;
+  await weiter.click();
+  await seite.waitForTimeout(200);
+}
+p('Und über keinem liegt etwas anderes — über zwölf Aufgaben',
+  !verdeckt.length, verdeckt.slice(0, 3).join(' | '));
+
 const zaehlerVor = await seite.locator('.ea-zaehler').innerText();
 p('Der Zähler steht bei null', /^0 /.test(zaehlerVor), zaehlerVor);
 p('Und „Prüfen" ist noch gesperrt',

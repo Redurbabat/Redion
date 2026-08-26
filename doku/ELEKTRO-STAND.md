@@ -96,10 +96,11 @@ Note nach Schweizer Skala: `1 + 5 · richtig / gesamt`.
 
 ## Was bewusst NICHT gebaut ist
 
-**Schalter werden immer in derselben Stellung gezeichnet** (L59). Die Frage
-sagt „S1: geschlossen", das Bild zeigt S1 offen. Gedruckte Lehrmittel machen
-es genauso — mit einer Stellungstabelle neben dem Plan —, aber schön ist es
-nicht. Was es kostet, steht in L59.
+**Schalter werden weiter in ihrer Ruhelage gezeichnet** — ein Schliesser
+offen, auch während er geschlossen ist. Das ist die Norm und kein Mangel:
+wer ihn geschlossen zeichnete, zeichnete keinen Schaltplan mehr. Damit die
+Stellung trotzdem dort steht, wo man sie braucht, schreibt Redion sie ans
+Bauteil (E193, L59).
 
 **Keine KI im Elektro-Bereich.** Ausdrücklich ausgenommen. Die Aufgaben
 werden gewürfelt und gerechnet, nicht erzeugt; die Lösungen kommen aus

@@ -1337,6 +1337,19 @@ type Antwortart = 'wahl' | 'text' | 'zahl' | 'zeichnen' | 'zeigen' | 'wege';
         const nr = w.bis(st.length);
         stellung[t.id] = nr;
         beschreibung.push(`${t.bmk}: ${st[nr]!.name}`);
+        /* Und dieselbe Angabe NEBEN das Symbol.
+           ---------------------------------------------------------------
+           Ein Kontakt wird im Schaltplan in seiner RUHELAGE gezeichnet —
+           ein Schliesser also offen, auch wenn er gerade geschlossen ist.
+           Das ist die Norm und kein Mangel: wer ihn geschlossen zeichnete,
+           zeichnete etwas anderes als einen Schaltplan.
+           Damit stand die Stellung aber nur im Fragetext, und im Bild
+           daneben sah S1 offen aus, obwohl „S1: geschlossen" dabeistand
+           (L59). Ein Widerspruch, den der Lernende nicht auflösen kann.
+           Gedruckte Lehrmittel lösen ihn mit einer Stellungstabelle neben
+           dem Plan; hier steht die Angabe direkt am Bauteil, wo sie
+           gebraucht wird. */
+        anschreiben(plan, t, st[nr]!.name, `st-${t.id}`);
       });
       /* In jedem vierten Fall wird der Verbraucher überbrückt. Dann IST die
          richtige Antwort „die Sicherung löst aus" — und sie steht nicht mehr
@@ -1511,6 +1524,19 @@ type Antwortart = 'wahl' | 'text' | 'zahl' | 'zeichnen' | 'zeigen' | 'wege';
         const nr = w.bis(st.length);
         stellung[t.id] = nr;
         beschreibung.push(`${t.bmk}: ${st[nr]!.name}`);
+        /* Und dieselbe Angabe NEBEN das Symbol.
+           ---------------------------------------------------------------
+           Ein Kontakt wird im Schaltplan in seiner RUHELAGE gezeichnet —
+           ein Schliesser also offen, auch wenn er gerade geschlossen ist.
+           Das ist die Norm und kein Mangel: wer ihn geschlossen zeichnete,
+           zeichnete etwas anderes als einen Schaltplan.
+           Damit stand die Stellung aber nur im Fragetext, und im Bild
+           daneben sah S1 offen aus, obwohl „S1: geschlossen" dabeistand
+           (L59). Ein Widerspruch, den der Lernende nicht auflösen kann.
+           Gedruckte Lehrmittel lösen ihn mit einer Stellungstabelle neben
+           dem Plan; hier steht die Angabe direkt am Bauteil, wo sie
+           gebraucht wird. */
+        anschreiben(plan, t, st[nr]!.name, `st-${t.id}`);
       });
 
       const wirkung = (p: any): string => {

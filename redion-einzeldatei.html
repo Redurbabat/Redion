@@ -8661,9 +8661,16 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .ea-tippbar .sp-griff.sp-gewaehlt{
   fill:color-mix(in srgb, var(--accent) 45%, transparent);
   stroke:var(--accent); stroke-width:4}
+/* Alles ausser dem Griff nimmt keine Tipps an — auch die Beschriftungen
+   nicht. „geschlossen" neben S1 lag über einem Griff und schluckte den
+   Klick: man tippt, und es passiert nichts. Das ist schlimmer als ein zu
+   kleines Ziel, weil man nicht sieht, warum. Gefunden hat es der Prüflauf,
+   und zwar nur bei bestimmten Startwerten — je nachdem, wo die
+   Beschriftung landet. */
 .ea-tippbar .sp-leitung,
 .ea-tippbar .sp-fluss,
 .ea-tippbar .sp-teil,
+.ea-tippbar .sp-text,
 .ea-tippbar .sp-knoten{pointer-events:none}
 .ea-tippbar svg{touch-action:manipulation}
 /* Ausserhalb einer Tippaufgabe gibt es die Griffe gar nicht — aber falls
@@ -32372,6 +32379,19 @@ const Elektroaufgaben = (() => {
                 const nr = w.bis(st.length);
                 stellung[t.id] = nr;
                 beschreibung.push(`${t.bmk}: ${st[nr].name}`);
+                /* Und dieselbe Angabe NEBEN das Symbol.
+                   ---------------------------------------------------------------
+                   Ein Kontakt wird im Schaltplan in seiner RUHELAGE gezeichnet —
+                   ein Schliesser also offen, auch wenn er gerade geschlossen ist.
+                   Das ist die Norm und kein Mangel: wer ihn geschlossen zeichnete,
+                   zeichnete etwas anderes als einen Schaltplan.
+                   Damit stand die Stellung aber nur im Fragetext, und im Bild
+                   daneben sah S1 offen aus, obwohl „S1: geschlossen" dabeistand
+                   (L59). Ein Widerspruch, den der Lernende nicht auflösen kann.
+                   Gedruckte Lehrmittel lösen ihn mit einer Stellungstabelle neben
+                   dem Plan; hier steht die Angabe direkt am Bauteil, wo sie
+                   gebraucht wird. */
+                anschreiben(plan, t, st[nr].name, `st-${t.id}`);
             });
             /* In jedem vierten Fall wird der Verbraucher überbrückt. Dann IST die
                richtige Antwort „die Sicherung löst aus" — und sie steht nicht mehr
@@ -32548,6 +32568,19 @@ const Elektroaufgaben = (() => {
                 const nr = w.bis(st.length);
                 stellung[t.id] = nr;
                 beschreibung.push(`${t.bmk}: ${st[nr].name}`);
+                /* Und dieselbe Angabe NEBEN das Symbol.
+                   ---------------------------------------------------------------
+                   Ein Kontakt wird im Schaltplan in seiner RUHELAGE gezeichnet —
+                   ein Schliesser also offen, auch wenn er gerade geschlossen ist.
+                   Das ist die Norm und kein Mangel: wer ihn geschlossen zeichnete,
+                   zeichnete etwas anderes als einen Schaltplan.
+                   Damit stand die Stellung aber nur im Fragetext, und im Bild
+                   daneben sah S1 offen aus, obwohl „S1: geschlossen" dabeistand
+                   (L59). Ein Widerspruch, den der Lernende nicht auflösen kann.
+                   Gedruckte Lehrmittel lösen ihn mit einer Stellungstabelle neben
+                   dem Plan; hier steht die Angabe direkt am Bauteil, wo sie
+                   gebraucht wird. */
+                anschreiben(plan, t, st[nr].name, `st-${t.id}`);
             });
             const wirkung = (p) => {
                 const e = SF().rechne(p, stellung);
