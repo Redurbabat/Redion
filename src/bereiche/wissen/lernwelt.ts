@@ -626,7 +626,7 @@ const Lernwelt = (() => {
     return seiten.filter(page => darfLesen(page) && imBereich(page)).slice(0, 8).map(page => ({
       id: String(page.id),
       titel: String(page.text || 'Ohne Titel'),
-      icon: String(page.icon || '📄'),
+      icon: String(page.icon || 'page'),
       zeit: String(page.zuletztGeoeffnet || page.edited || page.created || ''),
       untertitel: 'Zuletzt geöffnet',
       bereichIds: direkteBereichIds(page)
@@ -645,7 +645,7 @@ const Lernwelt = (() => {
       .slice(0, 8).map(page => ({
         id: String(page.id),
         titel: String(page.text || 'Projekt'),
-        icon: String(page.icon || '🚀'),
+        icon: String(page.icon || 'rocket'),
         zeit: String(page.edited || page.created || ''),
         untertitel: String(page.status || 'Laufendes Projekt'),
         bereichIds: direkteBereichIds(page)
@@ -664,7 +664,7 @@ const Lernwelt = (() => {
         ausgabe.push({
           id: String(page.id),
           titel: String(page.text || 'PDF'),
-          icon: '📕',
+          icon: 'book',
           zeit: String(page.edited || block.edited || block.created || ''),
           untertitel: 'PDF · Seite ' + String(block.nr || 1),
           bereichIds: direkteBereichIds(page)
@@ -679,7 +679,7 @@ const Lernwelt = (() => {
     .slice(0, 16).map(page => ({
       id: String(page.id),
       titel: String(page.text || 'Ohne Titel'),
-      icon: String(page.icon || '📄'),
+      icon: String(page.icon || 'page'),
       zeit: String(page.edited || page.created || ''),
       untertitel: page.besprechung ? 'Meeting-Notiz' : 'Dokument',
       bereichIds: direkteBereichIds(page)
@@ -835,15 +835,15 @@ const Lernwelt = (() => {
   };
 
   const sichtbareZuletzt = (): LernweltEintrag[] => zustand.extern?.zuletzt.length
-    ? externeEintraege(zustand.extern.zuletzt, '📄', 'Zuletzt geöffnet').slice(0, 8)
+    ? externeEintraege(zustand.extern.zuletzt, 'page', 'Zuletzt geöffnet').slice(0, 8)
     : zuletzt();
 
   const sichtbareProjekte = (): LernweltEintrag[] => zustand.extern?.projekte.length
-    ? externeEintraege(zustand.extern.projekte, '🚀', 'Laufendes Projekt').slice(0, 8)
+    ? externeEintraege(zustand.extern.projekte, 'rocket', 'Laufendes Projekt').slice(0, 8)
     : projekte();
 
   const sichtbarePdfs = (): LernweltEintrag[] => zustand.extern?.pdfs.length
-    ? externeEintraege(zustand.extern.pdfs, '📕', 'PDF', true).slice(0, 12)
+    ? externeEintraege(zustand.extern.pdfs, 'book', 'PDF', true).slice(0, 12)
     : pdfs();
 
   const fortschreibung = (card: any, note: number): { sr: any; reviewVerlauf: Record<string, any> } => {
@@ -982,6 +982,28 @@ const Lernwelt = (() => {
 
   const prozent = (wert: unknown): number => Math.max(0, Math.min(100, Math.round(zahl(wert))));
 
+  /**
+   * Ein Zeichen — oder eben ein Text.
+   *
+   * Redions eigene Oberfläche trägt Strichzeichen aus `Register.symbole`
+   * (E200 für die Schale, E202 hier für die Lernwelt). Emoji sehen auf jedem
+   * System anders aus, tragen ihre eigene Farbe und lassen sich nicht auf
+   * `currentColor` stellen — in einer Fläche, die hell und dunkel kann, ist
+   * das ein Fleck, der bei jedem Wechsel gleich bleibt.
+   *
+   * Was der NUTZER gesetzt hat, bleibt aber, wie er es gesetzt hat: wer
+   * seiner Seite ein 🚀 gibt, soll ein 🚀 sehen. Deshalb entscheidet der
+   * NAME und nicht der Ort — ist er ein bekanntes Zeichen, wird gezeichnet,
+   * sonst steht da, was dasteht.
+   */
+  const zeichenSpan = (icon: string, klasse = ''): string => {
+    const reg = (globalThis as any).Register;
+    const k = klasse ? ' class="' + klasse + '"' : '';
+    return reg?.symbole?.hat?.(icon)
+      ? '<span' + k + ' data-sym="' + esc(icon) + '" aria-hidden="true"></span>'
+      : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
+  };
+
   const kennzahl = (wert: string, name: string, zusatz = ''): string =>
     '<article class="lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
       (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
@@ -992,7 +1014,7 @@ const Lernwelt = (() => {
       esc(label) + '">' + prozent(wert) + ' %</progress></div>';
 
   const leer = (icon: string, titel: string, text: string, aktion = '', label = ''): string =>
-    '<div class="lw-leer"><span class="lw-leer-icon" aria-hidden="true">' + esc(icon) + '</span>' +
+    '<div class="lw-leer">' + zeichenSpan(icon, 'lw-leer-icon') +
       '<h3>' + esc(titel) + '</h3><p>' + esc(text) + '</p>' +
       (aktion && label ? '<button type="button" data-lw-action="' + esc(aktion) + '">' + esc(label) + '</button>' : '') +
       '</div>';
@@ -1003,16 +1025,17 @@ const Lernwelt = (() => {
 
   const eintragListe = (werte: LernweltEintrag[], leerText: string): string => werte.length
     ? '<ul class="lw-object-list">' + werte.map(item =>
-        '<li><button type="button" data-lw-open="' + esc(item.id) + '"><span class="lw-object-icon" aria-hidden="true">' +
-          esc(item.icon) + '</span><span><strong>' + esc(item.titel) + '</strong><small>' +
+        '<li><button type="button" data-lw-open="' + esc(item.id) + '">' +
+          zeichenSpan(item.icon, 'lw-object-icon') + '<span><strong>' + esc(item.titel) + '</strong><small>' +
           esc(item.untertitel) + (item.zeit ? ' · ' + esc(relativText(item.zeit)) : '') +
           '</small></span><span aria-hidden="true">›</span></button></li>').join('') + '</ul>'
     : '<p class="lw-none">' + esc(leerText) + '</p>';
 
   const aufgabenListe = (werte: LernweltAufgabe[], leerText: string): string => werte.length
     ? '<ul class="lw-task-list">' + werte.map(item =>
-        '<li><button type="button" data-lw-open="' + esc(item.id) + '"><span aria-hidden="true">' +
-          (item.fertig ? '☑' : '☐') + '</span><span><strong>' + esc(item.titel) + '</strong><small>' +
+        '<li><button type="button" data-lw-open="' + esc(item.id) + '">' +
+          zeichenSpan(item.fertig ? 'boxChecked' : 'box', 'lw-task-box') +
+          '<span><strong>' + esc(item.titel) + '</strong><small>' +
           esc(item.quelle) + (item.datum ? ' · ' + esc(datumText(item.datum)) : '') +
           '</small></span></button></li>').join('') + '</ul>'
     : '<p class="lw-none">' + esc(leerText) + '</p>';
@@ -1034,14 +1057,14 @@ const Lernwelt = (() => {
           '<span class="lw-topic-score">' + prozent(thema.progress) + ' %</span><progress max="100" value="' +
           prozent(thema.progress) + '" aria-label="Fortschritt ' + esc(thema.label) + '"></progress></button>')
         .join('') + '</div>'
-    : leer('🎴', 'Noch keine Themen', 'Themen entstehen automatisch aus deinen Lernkarten.',
+    : leer('cards', 'Noch keine Themen', 'Themen entstehen automatisch aus deinen Lernkarten.',
         'capture', 'Lernmaterial erfassen');
 
   const kopf = (): string => {
     const optionen = bereiche();
     const aktiv = aktiverBereich();
     return '<header class="lw-head">' +
-      '<div class="lw-brand"><span class="lw-brand-icon" aria-hidden="true">🎓</span><div>' +
+      '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
         '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
       '<label class="lw-area"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
         optionen.map(item => '<option value="' + esc(item.id) + '"' +
@@ -1114,7 +1137,7 @@ const Lernwelt = (() => {
       '<div class="lw-primary-grid">' +
         '<section class="lw-focus-card"><header><div><p>Deine Tagesrunde</p><h2>' +
           (queue.all.length ? queue.all.length + ' Karten warten' : 'Alles für heute erledigt') +
-          '</h2></div><span aria-hidden="true">🎴</span></header><p>' +
+          '</h2></div><span class="lw-card-icon" data-sym="cards" aria-hidden="true"></span></header><p>' +
           (queue.all.length
             ? 'Zuerst Fehler, danach fällige Karten und zum Schluss neue Inhalte.'
             : stats.total ? 'Die nächste Wiederholung erscheint automatisch zum geplanten Zeitpunkt.'
@@ -1122,12 +1145,13 @@ const Lernwelt = (() => {
           '<button type="button" class="is-primary" data-lw-train="today"' +
             (queue.all.length ? '' : ' disabled') + '>Tagesrunde starten</button>' +
           '<button type="button" data-lw-nav="lernen">Plan ansehen</button></div></section>' +
-        '<section class="lw-exam-card"><header><p>Nächste Prüfung</p><span aria-hidden="true">📝</span></header>' +
+        '<section class="lw-exam-card"><header><p>Nächste Prüfung</p>' +
+          '<span class="lw-card-icon" data-sym="clipboard" aria-hidden="true"></span></header>' +
           (naechstePruefung
             ? '<h2>' + esc(naechstePruefung.titel) + '</h2><strong>' + esc(pruefungText) + '</strong><p>' +
                 esc(naechstePruefung.fach || naechstePruefung.lernstoff || 'Lernstoff noch nicht zugeordnet') +
                 '</p><button type="button" data-lw-exam="' + esc(naechstePruefung.id) + '">Vorbereitung öffnen</button>'
-            : leer('🗓️', 'Keine Prüfung geplant', 'Lege einen Termin in deiner Prüfungsdatenbank an.',
+            : leer('calendar', 'Keine Prüfung geplant', 'Lege einen Termin in deiner Prüfungsdatenbank an.',
                 'school-setup', 'Prüfungen öffnen')) + '</section>' +
       '</div>' +
       '<div class="lw-dashboard-grid">' +
@@ -1151,10 +1175,10 @@ const Lernwelt = (() => {
         kennzahl(String(spiel.level), 'Level', 'Motivation, nicht Fachfortschritt') +
       '</div>' + fortschritt(spiel.wochenProzent, 'Wochenfortschritt') + '</section>' +
       '<div class="lw-quick" aria-label="Schnellzugriff">' +
-        '<button type="button" data-lw-action="tasks"><span aria-hidden="true">✅</span>Alle Aufgaben</button>' +
-        '<button type="button" data-lw-action="calendar"><span aria-hidden="true">📅</span>Kalender</button>' +
-        '<button type="button" data-lw-action="library"><span aria-hidden="true">📚</span>Bibliothek</button>' +
-        '<button type="button" data-lw-action="capture"><span aria-hidden="true">📷</span>Erfassen</button>' +
+        '<button type="button" data-lw-action="tasks">' + zeichenSpan('tasks') + 'Alle Aufgaben</button>' +
+        '<button type="button" data-lw-action="calendar">' + zeichenSpan('calendar') + 'Kalender</button>' +
+        '<button type="button" data-lw-action="library">' + zeichenSpan('library') + 'Bibliothek</button>' +
+        '<button type="button" data-lw-action="capture">' + zeichenSpan('camera') + 'Erfassen</button>' +
       '</div></div>';
   };
 
@@ -1206,14 +1230,14 @@ const Lernwelt = (() => {
         kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächste Wiederholung') +
       '</section>' +
       '<div class="lw-study-actions">' +
-        '<article><span aria-hidden="true">☀️</span><h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
+        '<article>' + zeichenSpan('sun') + '<h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
           '<button type="button" class="is-primary" data-lw-train="today"' +
           (queue.all.length ? '' : ' disabled') + '>Starten · ' + queue.all.length + '</button></article>' +
-        '<article><span aria-hidden="true">🧩</span><h3>Fehlertraining</h3><p>Alle instabilen Fehler gezielt festigen.</p>' +
+        '<article>' + zeichenSpan('puzzle') + '<h3>Fehlertraining</h3><p>Alle instabilen Fehler gezielt festigen.</p>' +
           '<button type="button" data-lw-train="errors"' +
           (fehlerListe().some(item => !item.stabil) ? '' : ' disabled') + '>Trainieren · ' +
           fehlerListe().filter(item => !item.stabil).length + '</button></article>' +
-        '<article><span aria-hidden="true">✨</span><h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
+        '<article>' + zeichenSpan('sparkle') + '<h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
           '<button type="button" data-lw-train="new"' +
           (queue.newCards.length ? '' : ' disabled') + '>Lernen · ' + queue.newCards.length + '</button></article>' +
         /* DIE KACHEL TUT JETZT, WAS AUF IHR STEHT (E136). Sie versprach
@@ -1225,7 +1249,7 @@ const Lernwelt = (() => {
           const naechste = pruefungen().find(item => item.tage !== null && item.tage >= 0)
             || pruefungen().find(item => item.tage === null) || null;
           const passend = naechste ? nurPassendeKarten(naechste) : [];
-          return '<article><span aria-hidden="true">📝</span><h3>Prüfungsfokus</h3><p>' +
+          return '<article>' + zeichenSpan('clipboard') + '<h3>Prüfungsfokus</h3><p>' +
             (naechste
               ? esc('Karten passend zu „' + naechste.titel + '" mischen.')
               : 'Sobald eine Prüfung eingetragen ist, wird hier gezielt geübt.') +
@@ -1301,7 +1325,7 @@ const Lernwelt = (() => {
                 prozent(thema.progress) + '" aria-label="' + esc(thema.label) + ': ' + prozent(thema.progress) +
                 ' Prozent"></progress></span><span class="lw-path-open">Lernen</span></button></li>';
           }).join('') + '</ol>'
-        : leer('🧭', 'Dein Lernpfad ist noch leer',
+        : leer('compass', 'Dein Lernpfad ist noch leer',
             'Sobald Lernkarten Themen tragen, erscheinen sie hier als frei erreichbare Stufen.',
             'capture', 'Erste Karte erstellen')) +
       /* WAS DIESEN PFAD GEORDNET HAT — und wo die Ordnung aufhört.
@@ -1356,7 +1380,7 @@ const Lernwelt = (() => {
               '</dd></div></dl><footer><button type="button" data-lw-card-source="' + esc(item.card.id) +
               '">Quelle öffnen</button><button type="button" data-lw-train-card="' + esc(item.card.id) +
               '">Diese Karte üben</button></footer></article>').join('') + '</div>'
-        : leer('🎉', 'Noch keine Fehler', 'Bewertete Fehler erscheinen hier mit Antwort, Thema und Quelle.',
+        : leer('party', 'Noch keine Fehler', 'Bewertete Fehler erscheinen hier mit Antwort, Thema und Quelle.',
             'nav-lernen', 'Lernen starten')) + '</div>';
   };
 
@@ -1436,7 +1460,7 @@ const Lernwelt = (() => {
               (karten.length ? 'Simulation starten' : 'Simulation aus allen Karten') +
               '</button></footer></article>';
           }).join('') + '</div>'
-        : leer('🗓️', 'Keine Prüfung geplant',
+        : leer('calendar', 'Keine Prüfung geplant',
             'Prüfungen bleiben normale Datenbankzeilen. Lege einen Termin in der Ausbildung an.',
             'school-setup', 'Ausbildung einrichten')) +
       simulationsVerlauf() +
@@ -1465,7 +1489,7 @@ const Lernwelt = (() => {
         if (!item.richtig) wert.fehler++;
         themen.set(item.thema, wert);
       });
-      return '<div class="lw-simulation lw-simulation-result"><header><span aria-hidden="true">🏁</span>' +
+      return '<div class="lw-simulation lw-simulation-result"><header>' + zeichenSpan('flag') +
         '<p>Simulation beendet</p><h2>' + esc(simulation.titel) + '</h2><strong>' + quote + ' %</strong></header>' +
         '<section class="lw-metrics">' + kennzahl(richtig + ' / ' + gesamt, 'richtig') +
           kennzahl(String(gesamt - richtig), 'Fehler') +
@@ -1505,7 +1529,7 @@ const Lernwelt = (() => {
     const training = zustand.training;
     if (!training) return '';
     if (training.index >= training.karten.length) {
-      return '<div class="lw-training-result"><span aria-hidden="true">🎉</span><p>Runde abgeschlossen</p><h2>' +
+      return '<div class="lw-training-result">' + zeichenSpan('party') + '<p>Runde abgeschlossen</p><h2>' +
         esc(training.titel) + '</h2><strong>' + training.bewertet + ' Karten bewertet</strong><div class="lw-actions">' +
         '<button type="button" data-lw-action="training-close">Zur Übersicht</button>' +
         '<button type="button" class="is-primary" data-lw-train="today">Nächste Runde</button></div></div>';
@@ -1616,7 +1640,7 @@ const Lernwelt = (() => {
         sektion('PDFs & Material', eintragListe(fachPdfs.slice(0, 8), 'Noch kein PDF diesem Fach zugeordnet.')) +
         sektion('Aufgaben', aufgabenListe(fachAufgaben.slice(0, 8), 'Keine Fachaufgabe gefunden.')) +
         sektion('Prüfungen', fachPruefungen.length ? '<ul class="lw-object-list">' + fachPruefungen.map(item =>
-          '<li><button type="button" data-lw-exam="' + esc(item.id) + '"><span class="lw-object-icon">📝</span>' +
+          '<li><button type="button" data-lw-exam="' + esc(item.id) + '">' + zeichenSpan('clipboard', 'lw-object-icon') +
           '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.datum ? datumText(item.datum) :
             'Termin offen') + '</small></span><span>›</span></button></li>').join('') + '</ul>' :
           '<p class="lw-none">Keine Prüfung für dieses Fach gefunden.</p>') +
@@ -1650,7 +1674,7 @@ const Lernwelt = (() => {
        einzeln hat es gezeigt. */
     const schonDa = !root && (schulSammlungen().some(sammlung => sammlung?.schoolKind) ||
       pruefungen().length > 0 || lernkarten().length > 0 || fachZeilen().length > 0);
-    if (!root && !schonDa) return '<div class="lw-school">' + leer('🎓', 'Ausbildung noch nicht eingerichtet',
+    if (!root && !schonDa) return '<div class="lw-school">' + leer('learn', 'Ausbildung noch nicht eingerichtet',
       'Die additive Vorlage erstellt normale Seiten und Datenbanken für Fächer, Prüfungen, Noten und Material.',
       'school-install', 'Ausbildung einrichten') + '</div>';
     const faecher = fachZeilen();
@@ -1659,9 +1683,9 @@ const Lernwelt = (() => {
     const tasks = sichtbareAufgaben().filter(item => !item.fertig).slice(0, 8);
     const exams = pruefungen().filter(item => item.tage === null || item.tage >= 0).slice(0, 6);
     const themen = liste(statistik().topics).slice(0, 8);
-    const gradeEntries = sammlungsEintraege('grades', '🏅', 6);
-    const reportEntries = sammlungsEintraege('reports', '📓', 6);
-    const materialEntries = sammlungsEintraege('materials', '📚', 8);
+    const gradeEntries = sammlungsEintraege('grades', 'medal', 6);
+    const reportEntries = sammlungsEintraege('reports', 'clipboard', 6);
+    const materialEntries = sammlungsEintraege('materials', 'library', 8);
     /* Ohne Ausbildungsseite gibt es nichts zu öffnen — dort steht statt des
        Knopfes das Angebot, die Vorlage nachzuziehen. */
     return '<div class="lw-school"><header class="lw-page-head"><div><p>Schule / Ausbildung</p><h2>' +
@@ -1690,7 +1714,7 @@ const Lernwelt = (() => {
             ? Math.round(cards.reduce((summe, card) => summe + Math.min(2, zahl(card?.sr?.wdh)), 0) /
               (cards.length * 2) * 100)
             : 0;
-          return '<button type="button" data-lw-subject="' + esc(item.row.id) + '"><span aria-hidden="true">📘</span>' +
+          return '<button type="button" data-lw-subject="' + esc(item.row.id) + '">' + zeichenSpan('book') +
             '<strong>' + esc(item.titel) + '</strong><small>' + cards.length + ' Karten · ' + progress +
             ' %</small><progress max="100" value="' + progress + '" aria-label="Fortschritt ' +
             esc(item.titel) + '"></progress></button>';
@@ -1701,7 +1725,7 @@ const Lernwelt = (() => {
         sektion('Aktuelle Themen', themenListe(themen, 8), 'aus deinen Lernkarten') +
         sektion('Aufgaben', aufgabenListe(tasks, 'Keine offene Ausbildungsaufgabe.')) +
         sektion('Prüfungen', exams.length ? '<ul class="lw-object-list">' + exams.map(item =>
-          '<li><button type="button" data-lw-exam="' + esc(item.id) + '"><span class="lw-object-icon">📝</span>' +
+          '<li><button type="button" data-lw-exam="' + esc(item.id) + '">' + zeichenSpan('clipboard', 'lw-object-icon') +
           '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.datum ? datumText(item.datum) :
           'Termin offen') + '</small></span><span>›</span></button></li>').join('') + '</ul>' :
           '<p class="lw-none">Keine Prüfung geplant.</p>') +
@@ -1710,9 +1734,9 @@ const Lernwelt = (() => {
         sektion('Noten', eintragListe(gradeEntries, 'Noch keine Note eingetragen.')) +
         sektion('Berichtsheft', eintragListe(reportEntries, 'Noch kein Berichtsheft-Eintrag.')) +
       '</div><div class="lw-quick">' +
-        (root ? '<button type="button" data-lw-open="' + esc(root.id) + '">📅 Stundenplan</button>' : '') +
-        '<button type="button" data-lw-nav="lernen">🎴 Lernkarten</button>' +
-        '<button type="button" data-lw-nav="fortschritt">📈 Lernfortschritt</button></div></div>';
+        (root ? '<button type="button" data-lw-open="' + esc(root.id) + '">' + zeichenSpan('calendar') + 'Stundenplan</button>' : '') +
+        '<button type="button" data-lw-nav="lernen">' + zeichenSpan('cards') + 'Lernkarten</button>' +
+        '<button type="button" data-lw-nav="fortschritt">' + zeichenSpan('chart') + 'Lernfortschritt</button></div></div>';
   };
 
   const passendeBereiche = (art: string): LernweltBereich[] => bereiche().filter(item => {
@@ -1753,7 +1777,7 @@ const Lernwelt = (() => {
 
   const uniAnsicht = (): string => {
     const uniBereiche = passendeBereiche('uni');
-    const module = domainingEintraege(/semester|modul|vorlesung|übung|uebung|literatur|studium/i, '🏛️');
+    const module = domainingEintraege(/semester|modul|vorlesung|übung|uebung|literatur|studium/i, 'building');
     const tasks = sichtbareAufgaben().filter(item => !item.fertig).slice(0, 8);
     const exams = pruefungen().filter(item => item.tage === null || item.tage >= 0).slice(0, 6);
     return '<div class="lw-domain"><header class="lw-page-head"><div><p>Uni</p><h2>Studium im selben Workspace</h2>' +
@@ -1769,7 +1793,7 @@ const Lernwelt = (() => {
           'zuletzt bearbeitet') +
         sektion('Übungen & Aufgaben', aufgabenListe(tasks, 'Keine offene Übung oder Aufgabe.')) +
         sektion('Prüfungen', exams.length ? '<ul class="lw-object-list">' + exams.map(item =>
-          '<li><button type="button" data-lw-exam="' + esc(item.id) + '"><span class="lw-object-icon">📝</span>' +
+          '<li><button type="button" data-lw-exam="' + esc(item.id) + '">' + zeichenSpan('clipboard', 'lw-object-icon') +
           '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.fach || datumText(item.datum)) +
           '</small></span><span>›</span></button></li>').join('') + '</ul>' : '<p class="lw-none">Keine Prüfung geplant.</p>') +
         sektion('Literatur & PDFs', eintragListe(sichtbarePdfs(), 'Noch keine Literatur oder PDF zugeordnet.')) +
@@ -1782,10 +1806,10 @@ const Lernwelt = (() => {
     const meetings = alleBloecke().filter(block => block.type === 'page' && block.besprechung && imBereich(block))
       .sort((a, b) => String(b.created || '').localeCompare(String(a.created || ''))).slice(0, 8)
       .map(page => ({
-        id: String(page.id), titel: String(page.text || 'Meeting'), icon: String(page.icon || '🎙'),
+        id: String(page.id), titel: String(page.text || 'Meeting'), icon: String(page.icon || 'mic'),
         zeit: String(page.created || ''), untertitel: 'Meeting-Notiz', bereichIds: direkteBereichIds(page)
       } as LernweltEintrag));
-    const wissen = domainingEintraege(/entscheidung|wissensbasis|knowledge|offene punkte|projekt/i, '💼');
+    const wissen = domainingEintraege(/entscheidung|wissensbasis|knowledge|offene punkte|projekt/i, 'briefcase');
     return '<div class="lw-domain"><header class="lw-page-head"><div><p>Arbeit</p><h2>Projekte, Meetings und Wissen</h2>' +
       '<span>Professionelle Arbeitssicht auf dieselben Seiten, Aufgaben, Termine und Dateien.</span></div>' +
       '<div class="lw-actions"><button type="button" data-lw-action="meeting">Meeting-Notiz</button>' +
@@ -2154,7 +2178,7 @@ const Lernwelt = (() => {
     }
     if (aktion === 'new-page') {
       const titel = zustand.ansicht === 'uni' ? 'Studiennotiz' : 'Arbeitsnotiz';
-      const icon = zustand.ansicht === 'uni' ? '🏛️' : '💼';
+      const icon = zustand.ansicht === 'uni' ? 'building' : 'briefcase';
       const page = Store.addPage(null, { text: titel, icon });
       await neuZuordnen(page);
       externOeffnen(page.id);

@@ -36,7 +36,7 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v23';
+const VERSION = 'notizen-v24';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -66,6 +66,11 @@ const GRUNDSTOCK = [
   './quell/kern/sicherheit/pruefen.js',
   './quell/kern/ablage/formen.js',
   './quell/kern/ablage/umzuege.js',
+  /* Die Zeichen zuerst — Navigation und Schale zeichnen als erstes damit.
+     Fehlte die Zeile, kam die Datei offline nicht aus dem Vorrat, der
+     Arbeiter antwortete mit 504, und `Register.symbole` blieb undefiniert:
+     eine Seitenleiste ohne Zeichen, nur ohne Netz (test143). */
+  './quell/register/symbole.js',
   './quell/register/module.js',
   './quell/register/navigation.js',
   './quell/register/bloecke.js',

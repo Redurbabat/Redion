@@ -2057,9 +2057,13 @@ const App = (() => {
       addEventListener('pointermove', zug);
       addEventListener('pointerup', stop);
     });
+    /* 240, nicht 260: die Startbreite steht seit §68 in `aufbau.css` auf 240,
+       und `test245` verlangt 220–250. Der Rücksetzer sprang trotzdem auf 260 —
+       also auf einen Wert, den die App selbst verbietet. Wer zurücksetzt,
+       landet jetzt dort, wo er ohne Zutun auch stünde. */
     griff.addEventListener('dblclick', () => {
-      setze(260);
-      Store.setMeta('seiteBreite', 260);
+      setze(240);
+      Store.setMeta('seiteBreite', 240);
       UI.toast('Breite zurückgesetzt');
     });
   };

@@ -290,6 +290,38 @@ const mitEmoji = schale.treffer.filter(t => EMOJI.test(t));
 p('Kein Emoji in Seitenleiste und Kopfleiste', mitEmoji.length === 0,
   mitEmoji.slice(0, 4).join(' | '));
 
+/* --- E202: DIE LERNWELT GEHÖRT AUCH REDION -----------------------------
+   Die Prüfung oben deckte nur Seitenleiste und Kopfleiste ab. In der
+   Lernwelt standen deshalb bis zum 26. August fünfzig Emoji: 🎓 im Kopf,
+   🎴 auf der Tagesrunde, 📝 auf der Prüfung, ✅📅📚📷 in der Schnellwahl.
+   Sie tragen ihre eigene Farbe — beim Wechsel von hell nach dunkel blieben
+   sie stehen, wie sie waren.
+
+   Dieselbe Grenze wie oben: `.lw-object-icon` bleibt AUSSEN VOR, denn dort
+   steht das Zeichen einer Seite, und das hat ein Mensch gesetzt. Ebenso die
+   Auswahlliste der Bereiche — in einem `<option>` kann kein SVG stehen. */
+await seite.evaluate(() => { (globalThis as any).Lernwelt?.oeffnen?.('heute'); });
+await seite.waitForTimeout(1400);
+
+const lernwelt = await seite.evaluate(() => {
+  const wurzel = document.querySelector('.lernwelt');
+  if (!wurzel) return { da: false, treffer: [] as string[], zeichen: 0 };
+  const treffer: string[] = [];
+  wurzel.querySelectorAll('*').forEach(el => {
+    /* Nur Elemente ohne Kinder — sonst zählte jeder Vorfahr denselben Text. */
+    if (el.children.length) return;
+    if (el.closest('.lw-object-icon, select, option')) return;
+    const text = (el.textContent || '').trim();
+    if (text) treffer.push(text.slice(0, 40));
+  });
+  return { da: true, treffer, zeichen: wurzel.querySelectorAll('svg.sym').length };
+});
+p('Die Lernwelt ist offen und messbar', lernwelt.da);
+const lwEmoji = lernwelt.treffer.filter(t => EMOJI.test(t));
+p('Kein Emoji in Redions eigener Lernwelt', lwEmoji.length === 0,
+  lwEmoji.slice(0, 5).join(' | '));
+p('Und sie trägt eigene Zeichen', lernwelt.zeichen >= 10, `${lernwelt.zeichen} Zeichen`);
+
 /* UND DIE ZEICHEN SIND WIRKLICH DA. Ein `data-sym`, das niemand gefüllt
    hat, ist eine leere Stelle — und die sieht man im Bild nicht, weil da
    ohnehin nichts steht. Genau deshalb wird sie gezählt. */

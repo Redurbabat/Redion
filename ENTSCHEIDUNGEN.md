@@ -14205,3 +14205,60 @@ Fläche. Seine Farben nicht: `#7C5CFF` fällt gemessen durch (E199). Und
 seine Handy-Lösung nicht: gestauchte Desktopansicht per Umbruchpunkt ist
 genau das, was §55 verbietet, und Redion hat dort längst einen eigenen
 Modus.
+
+
+## E202 · Die Lernwelt bekommt Redions Zeichen — und zwei rote Läufe waren schon rot
+
+**26. August 2026.** E200 hat Seitenleiste und Kopfleiste von Emoji befreit.
+Die Lernwelt blieb aussen vor, und dort standen noch **fünfzig** davon: 🎓 im
+Kopf, 🎴 auf der Tagesrunde, 📝 auf der Prüfung, ✅📅📚📷 in der Schnellwahl,
+dazu 🏛️💼🎉🏁🏅🧭🧩✨☀️ in den übrigen Ansichten.
+
+Emoji sind fremde Zeichen. Sie sehen auf jedem System anders aus, tragen ihre
+eigene Farbe und lassen sich nicht auf `currentColor` stellen — beim Wechsel
+von hell nach dunkel bleiben sie stehen, wie sie sind, und wirken wie ein
+Fleck auf einer Fläche, die sich gerade gedreht hat.
+
+**Die Grenze bleibt dieselbe wie in E200.** Redions eigene Oberfläche gehört
+Redion; was ein Mensch selbst gesetzt hat, gehört ihm. Wer seiner Seite ein 🚀
+gibt, bekommt ein 🚀. Deshalb entscheidet nicht der Ort, sondern der Name:
+`zeichenSpan()` zeichnet ein Strichzeichen, wenn `Register.symbole.hat(name)`
+zutrifft, und schreibt sonst hin, was dasteht. Die Rückfallzeichen für Seiten
+ohne eigenes Symbol wurden dabei von `'📄'` auf `'page'` umgestellt — sie sind
+Redions Vorschlag, nicht die Wahl des Nutzers.
+
+**Zehn Zeichen kamen ins Register** (§5 Regel 3): `page`, `book`, `camera`,
+`flag`, `medal`, `party`, `sun`, `rocket`, `box`, `boxChecked`. Die letzten
+zwei ersetzen ☐/☑ vor jeder Aufgabe.
+
+### Zwei Läufe waren rot, bevor irgendetwas angefasst wurde
+
+**`test143` — die Zeichendatei fehlte im Vorrat des Dienst-Arbeiters.**
+`quell/register/symbole.js` steht seit E200 in `index.html`, aber nicht in
+`GRUNDSTOCK` von `src/dienst/sw.ts`. Ohne Netz kam sie damit nicht aus dem
+Vorrat, der Arbeiter antwortete mit 504, und `Register.symbole` blieb
+undefiniert — eine Seitenleiste ohne Zeichen, aber nur offline. Eingetragen,
+Fassung auf `notizen-v24`.
+
+**`test52`/`test143` — 260 gegen 240.** §68 hat die Seitenleiste auf 240
+gesetzt, `test52` erwartete weiter 260, und der Doppelklick auf den Ziehgriff
+sprang auf 260 zurück — also auf einen Wert, den `test245` (220–250) selbst
+verbietet. Der Rücksetzer geht jetzt auf 240.
+
+In `test143` steht statt der festen Zahl die eigentliche Behauptung:
+*Zurücksetzen muss dorthin führen, wo der erste Start auch steht*, plus das
+Band 220–250. Die Zahl selbst hütet `test245` — sie zweimal festzunageln hiess
+nur, dass eine Änderung zwei Läufe rot macht, ohne dass etwas kaputt ist.
+Gegengeprobt mit 300 px: beide Punkte werden rot.
+
+### Und eine Gegenprobe, die nichts geprüft hat
+
+Der neue Wächter in `test245` („Kein Emoji in Redions eigener Lernwelt") blieb
+grün, als ich zum Beleg ein 📷 einsetzen wollte. Das sah nach einem Lauf aus,
+der nicht rot werden kann. Er war es nicht — mein `sed` hatte schlicht nicht
+gegriffen, es stand nie ein Emoji da. Mit einem echt eingesetzten Zeichen wird
+er rot (`✗ … — 📷`).
+
+Die Lehre ist dieselbe wie in §55.2, nur eine Ebene höher: **eine Gegenprobe
+muss selbst nachweisen, dass sie etwas verändert hat.** Sonst prüft man das
+Prüfen nicht, sondern glaubt es.

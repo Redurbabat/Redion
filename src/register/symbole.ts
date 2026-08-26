@@ -114,6 +114,31 @@ Register.symbole = (() => {
                '<path d="M2.8 12.6h18.4"/>',
     chart:     '<path d="M3.6 20.4h16.8"/><path d="M6.6 20.4v-6M11 20.4V7.6M15.4 20.4v-4M19.8 20.4V11"/>',
 
+    /* --- Was die Lernwelt bisher mit Emoji sagte (E202) --------------------
+       Emoji sind fremde Zeichen: sie sehen auf jedem System anders aus, tragen
+       ihre eigene Farbe und lassen sich nicht auf die Textfarbe stellen. Für
+       INHALTE des Nutzers bleiben sie richtig — wer seiner Seite ein 🚀 gibt,
+       bekommt ein 🚀. Für Redions EIGENE Oberfläche nicht. */
+    page:      '<path d="M6 3.2h7.4L19 8.8v12a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6V4.8"' +
+               ' /><path d="M13.4 3.2v5.6H19"/><path d="M8 13h8M8 17h5"/>',
+    book:      '<path d="M4.4 4.6A1.6 1.6 0 0 1 6 3h5.2v18H6a1.6 1.6 0 0 1-1.6-1.6z"/>' +
+               '<path d="M12.8 3H18a1.6 1.6 0 0 1 1.6 1.6v14.8A1.6 1.6 0 0 1 18 21h-5.2z"/>',
+    camera:    '<path d="M3.4 8.6A1.6 1.6 0 0 1 5 7h2.6l1.5-2.4h5.8L16.4 7H19a1.6 1.6 0 0 1 1.6 1.6v9.8' +
+               'A1.6 1.6 0 0 1 19 20H5a1.6 1.6 0 0 1-1.6-1.6z"/><circle cx="12" cy="13.2" r="3.8"/>',
+    flag:      '<path d="M5.4 21V3.4"/><path d="M5.4 4.2h11.4l-2 3.6 2 3.6H5.4"/>',
+    medal:     '<circle cx="12" cy="15" r="5.6"/><path d="m9 9.6-2.8-6.2M15 9.6l2.8-6.2"/>' +
+               '<path d="M8.6 3.4h6.8"/>',
+    party:     '<path d="m3.4 20.6 4.2-11.2 7 7z"/><path d="m11.6 9.4 3-3"/>' +
+               '<path d="M15.6 3.4v.01M20 7.6v.01M18.4 12.6v.01M20.4 2.6v.01"/>',
+    sun:       '<circle cx="12" cy="12" r="4.2"/>' +
+               '<path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7' +
+               'M18.7 5.3 17 7M7 17l-1.7 1.7"/>',
+    rocket:    '<path d="M12 2.6c3 2.2 4.6 5.5 4.6 9.2L14.4 17H9.6L7.4 11.8C7.4 8.1 9 4.8 12 2.6z"/>' +
+               '<circle cx="12" cy="10" r="1.9"/><path d="M9.6 17 7 21l3.6-1.4M14.4 17 17 21l-3.6-1.4"/>',
+    box:       '<rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/>',
+    boxChecked:'<rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/>' +
+               '<path d="m8.2 12.2 2.6 2.6 5-5.4"/>',
+
     /* --- Kopfleiste ------------------------------------------------------ */
     share:     '<path d="M4 12v6.6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12"/>' +
                '<path d="M12 15.2V3.6"/><path d="m8 7.4 4-3.8 4 3.8"/>',
