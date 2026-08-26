@@ -200,32 +200,31 @@ const Formelheft = (() => {
    * steht. Zeilen ohne Rechenweg — Beziehungen wie `1 kWh = 3600 kWs` —
    * stehen als Text da: wahr, aber nichts zum Auflösen.
    */
-  const abschnittHtml = (a: any, formeln: any[], fav: string[]): string => {
+  const abschnittHtml = (a: any, zeilen: Array<{ f: string; id?: string }>,
+                         fav: string[]): string => {
     const skizze = (typeof Elektroskizzen !== 'undefined') ? Elektroskizzen.zu(a.id) : '';
 
-    /* Die Grössenliste: die des Abschnitts, wenn er eine hat — sonst aus
-       den rechenbaren Formeln zusammengesetzt, jede Grösse einmal. */
-    let groessen: any[] = a.groessen || [];
+    /* Die Grössenliste steht im Heft neben dem Abschnitt und kommt von dort.
+       Fehlt sie, wird sie aus den rechenbaren Zeilen zusammengesetzt — jede
+       Grösse einmal, in der Reihenfolge ihres ersten Auftretens. */
+    const groessen: any[] = (a.groessen || []).slice();
     if (!groessen.length) {
       const gesehen = new Set<string>();
-      formeln.forEach(f => (f.groessen || []).forEach((x: any) => {
-        if (gesehen.has(x.zeichen)) return;
-        gesehen.add(x.zeichen);
-        groessen.push(x);
-      }));
+      zeilen.forEach(z => {
+        const f = z.id ? Register.elektroformeln.holen(z.id) : null;
+        (f ? f.groessen || [] : []).forEach((x: any) => {
+          if (gesehen.has(x.zeichen)) return;
+          gesehen.add(x.zeichen);
+          groessen.push(x);
+        });
+      });
     }
     const legende = groessen.map((x: any) =>
       `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
       `${esc(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
 
-    /* Die Formelzeilen: die des Abschnitts in Buchreihenfolge — oder, wenn
-       er keine führt, die rechenbaren Formeln. */
-    const zeilen: Array<{ f: string; id?: string }> = (a.zeilen && a.zeilen.length)
-      ? a.zeilen
-      : formeln.map(f => ({ f: f.schreibweise, id: f.id }));
     const formelnHtml = zeilen.map(z => {
-      const eintrag = z.id ? formeln.find(f => f.id === z.id) ||
-        Register.elektroformeln.holen(z.id) : null;
+      const eintrag = z.id ? Register.elektroformeln.holen(z.id) : null;
       if (eintrag) {
         return `<button type="button" class="bs-formel` +
           `${fav.includes(eintrag.id) ? ' gemerkt' : ''}" ` +
@@ -245,7 +244,14 @@ const Formelheft = (() => {
         `</tbody></table></div>`
       : '';
 
-    return `<section class="bs-abschnitt" data-abschnitt="${esc(a.id)}">` +
+    /* Ein Abschnitt, der NUR ein Bild zeigt — die Bauelemente-Seite hat
+       zwölf davon — braucht keine Formelspalte. Er bekommt eine eigene
+       Klasse und stellt sich zu zweit nebeneinander, wie im Heft. Ohne das
+       stand jedes Bauteil allein in einer Zeile und zwei Drittel der Seite
+       blieben weiss. */
+    const nurBild = !formelnHtml && !legende && !tabelle;
+    return `<section class="bs-abschnitt${nurBild ? ' bs-nurbild' : ''}" ` +
+      `data-abschnitt="${esc(a.id)}">` +
       `<h3>${esc(a.titel)}</h3>` +
       (a.hinweis ? `<p class="bs-hinweis">${esc(a.hinweis)}</p>` : '') +
       `<div class="bs-koerper">` +
@@ -259,7 +265,7 @@ const Formelheft = (() => {
 
   const buchseiteHtml = (nr: number, fav: string[]): string => {
     const R = Register.elektroformeln;
-    const teile = R.aufSeite(nr) as Array<{ abschnitt: any; formeln: any[] }>;
+    const teile = R.aufSeite(nr) as Array<{ abschnitt: any; zeilen: any[] }>;
     const kapitel = [...new Set(teile.map(t => t.abschnitt.buch))]
       .map(k => `${k} · ${R.buchkapitelName(k)}`);
     const letzte = R.letzteSeite();
@@ -272,7 +278,7 @@ const Formelheft = (() => {
       `<div class="bs-seitenzahl">Seite ${nr} <span>von ${letzte}</span></div>` +
       `</div>` +
       (teile.length
-        ? teile.map(t => abschnittHtml(t.abschnitt, t.formeln, fav)).join('')
+        ? teile.map(t => abschnittHtml(t.abschnitt, t.zeilen, fav)).join('')
         : `<div class="bs-leer">` +
           `<p>Diese Seite gibt es im gedruckten Heft, in Redion noch nicht.</p>` +
           `<p class="fh-klein">Geschrieben sind ${voll.length} Seiten: ` +

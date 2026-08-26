@@ -96,16 +96,27 @@ const bau = await seite.evaluate(() => {
   const R = Register.elektroformeln;
   const abschnitte = R.abschnitte() as any[];
   const alle = R.alle() as any[];
-  const ids = new Set(abschnitte.map(a => a.id));
   return {
     abschnitte: abschnitte.length,
     formeln: alle.length,
     letzteSeite: R.letzteSeite(),
     seiten: R.seitenMitInhalt() as number[],
-    /* Eine Formel, deren Abschnitt es nicht gibt, steht im Buch nirgends. */
-    verwaist: alle.filter(f => !ids.has(f.abschnitt)).map(f => f.id),
-    /* Ein Abschnitt ohne Formeln ist eine Überschrift über nichts. */
-    leer: abschnitte.filter(a => !alle.some(f => f.abschnitt === a.id)).map(a => a.id),
+    /* Eine rechenbare Formel, die auf keiner Buchseite steht, ist im Heft
+       nicht zu finden — und dann nützt sie beim Lernen mit dem Heft nichts.
+       Gemessen wird über die ZEILEN der Abschnitte: sie sind seit E195 die
+       einzige Stelle, die sagt, was auf einer Seite steht. */
+    verwaist: alle.filter(f => !abschnitte.some(
+      a => (a.zeilen || []).some((z: any) => z.id === f.id))).map(f => f.id),
+    /* Ein Abschnitt darf ohne FORMEL sein: das Heft hat Überschriften, unter
+       denen nur ein Bild oder eine Tabelle steht — die Messgerätekategorien,
+       die Hysteresekurve, das Feldbild der Spule. Sie gehören zur Struktur
+       und dürfen nicht wegfallen.
+
+       Ohne ALLES darf keiner sein. Eine Überschrift, unter der nichts steht,
+       ist im Buch eine leere Zeile und in Redion ein Fehler, den man für
+       Absicht hält. */
+    leer: abschnitte.filter(a => !(a.zeilen || []).length && !(a.tabelle || []).length &&
+      !(typeof Elektroskizzen !== 'undefined' && Elektroskizzen.hat(a.id))).map(a => a.id),
     ohneTitel: abschnitte.filter(a => !a.titel).map(a => a.id),
     /* Die Seitenzahl muss im Buch liegen und ganzzahlig sein. */
     schiefeSeite: abschnitte
@@ -150,10 +161,10 @@ const stichprobe = await seite.evaluate(() => {
   return {
     s4: kapitelAuf(4), s11: kapitelAuf(11), s14: kapitelAuf(14),
     s18: kapitelAuf(18), s22: kapitelAuf(22),
-    ohm: R.seiteVon('ohm'),
-    trafo: R.seiteVon('trafo-uebersetzung'),
-    akku: R.seiteVon('akku-ladekapazitaet'),
-    resonanz: R.seiteVon('resonanzfrequenz')
+    ohm: R.seitenVon('ohm'),
+    trafo: R.seitenVon('trafo-uebersetzung'),
+    akku: R.seitenVon('akku-ladekapazitaet'),
+    resonanz: R.seitenVon('resonanzfrequenz')
   };
 });
 p('Seite 4 ist Kapitel 2, Grundlagen', JSON.stringify(stichprobe.s4) === '[2]',
@@ -166,10 +177,16 @@ p('Seite 18 ist Kapitel 13, Transformatoren',
   JSON.stringify(stichprobe.s18) === '[13]', JSON.stringify(stichprobe.s18));
 p('Seite 22 ist Kapitel 17, Beleuchtung',
   JSON.stringify(stichprobe.s22) === '[17]', JSON.stringify(stichprobe.s22));
-p('Das ohmsche Gesetz steht auf Seite 4', stichprobe.ohm === 4, `${stichprobe.ohm}`);
-p('Die Übersetzung steht auf Seite 18', stichprobe.trafo === 18, `${stichprobe.trafo}`);
-p('Die Ladekapazität steht auf Seite 11', stichprobe.akku === 11, `${stichprobe.akku}`);
-p('Die Resonanz steht auf Seite 15', stichprobe.resonanz === 15, `${stichprobe.resonanz}`);
+/* Das Heft führt seine wichtigen Formeln ZWEIMAL: einmal im Quickie ganz
+   vorn, einmal ausführlich im Fachkapitel. Der erste Entwurf dieser Prüfung
+   verlangte EINE Seitenzahl und wurde rot, sobald der Quickie dazukam —
+   obwohl gerade das der Beweis ist, dass die Seiten stimmen. */
+p('Das ohmsche Gesetz steht auf Seite 2 (Quickie) und 4',
+  stichprobe.ohm.includes(2) && stichprobe.ohm.includes(4), `${stichprobe.ohm}`);
+p('Die Übersetzung steht auf Seite 3 (Quickie) und 18',
+  stichprobe.trafo.includes(3) && stichprobe.trafo.includes(18), `${stichprobe.trafo}`);
+p('Die Ladekapazität steht auf Seite 11', stichprobe.akku.includes(11), `${stichprobe.akku}`);
+p('Die Resonanz steht auf Seite 15', stichprobe.resonanz.includes(15), `${stichprobe.resonanz}`);
 
 /* ==========================================================================
  * §2 · Das Fenster blättert
@@ -212,7 +229,7 @@ p('Eine Seitenzahl eintippen blättert hin',
 
 /* Eine Seite, die es im Heft gibt, in Redion aber noch nicht, sagt das —
    statt leer zu bleiben und wie ein Fehler auszusehen. */
-await seite.locator('.bs-nr').fill('2');
+await seite.locator('.bs-nr').fill('36');
 await seite.waitForTimeout(600);
 p('Eine noch nicht geschriebene Seite sagt es',
   await seite.locator('.bs-leer').count() === 1);
@@ -220,10 +237,18 @@ p('… und nennt, welche geschrieben sind',
   /Geschrieben sind/.test(await seite.locator('.bs-leer').innerText()));
 
 /* Die Doppelpfeile springen zur nächsten Seite MIT Inhalt. */
+/* Seite 36 ist das Stichwortverzeichnis — dahinter kommt nichts mehr. Der
+   Vorwärts-Doppelpfeil bleibt deshalb stehen; wer blättert und plötzlich
+   wieder vorn landet, hat den Faden verloren. Zurück muss er springen. */
 await seite.click('[data-a="naechsteVoll"]');
 await seite.waitForTimeout(600);
+p('Am Ende bleibt der Vorwärts-Doppelpfeil stehen',
+  (await seite.locator('.bs-blatt').getAttribute('data-seite')) === '36');
+await seite.click('[data-a="vorherVoll"]');
+await seite.waitForTimeout(600);
 const nachSprung = await seite.locator('.bs-blatt').getAttribute('data-seite');
-p('Der Doppelpfeil springt zur nächsten geschriebenen Seite', nachSprung === '4', `${nachSprung}`);
+p('Der Doppelpfeil springt zur vorigen geschriebenen Seite',
+  nachSprung === '34', `${nachSprung}`);
 
 /* Am Rand stehenbleiben statt umspringen. */
 await seite.locator('.bs-nr').fill('1');

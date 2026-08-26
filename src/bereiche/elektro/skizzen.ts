@@ -533,7 +533,7 @@ const Elektroskizzen = (() => {
 
     /* --- Seite 13 · Wechselstrom-Grundlagen ------------------------------ */
 
-    'w-effektiv': () => {
+    'w-frequenz': () => {
       const links = 46, rechts = 275, mitte = 92, hoch = 58;
       let d = `M${links},${mitte}`;
       for (let i = 1; i <= 120; i++) {
@@ -554,6 +554,80 @@ const Elektroskizzen = (() => {
         txt('U', links - 7, mitte - hoch * 0.707 + 5, 'end', STRICH, 12) +
         txt('T', links + (rechts - links) / 4, mitte + 22, 'middle', BLASS, 12) +
         txt('t', rechts + 14, mitte + 20, 'end', BLASS, 12));
+    },
+
+
+    /* --- Seite 13 · die drei Bild-Abschnitte des Magnetkapitels ---------
+     * Das Heft hat hier drei Überschriften OHNE Formeln — sie erklären mit
+     * Bildern. Ohne Zeichnung stünde in Redion eine Überschrift über nichts,
+     * und die Seite wäre gerade dort dünn, wo das Heft anschaulich wird.
+     * -------------------------------------------------------------------*/
+
+    's13-ummagnetisierungskennlinien': () => {
+      /* Zwei B-H-Schleifen nebeneinander: breit für hartmagnetisch (der
+         Dauermagnet behält sein Feld), schmal für weichmagnetisch (der
+         Trafokern gibt es wieder her). Die Fläche IST der Verlust je
+         Ummagnetisierung — darum ist die schmale die für den Kern. */
+      const schleife = (x0: number, breit: number): string => {
+        const y0 = 96, h = 46;
+        return `<path d="M${x0 - 60},${y0 + h * 0.15} ` +
+          `C${x0 - 60 + breit},${y0 - h} ${x0 + 20},${y0 - h} ${x0 + 60},${y0 - h} ` +
+          `C${x0 + 60 - breit},${y0 + h} ${x0 - 20},${y0 + h} ${x0 - 60},${y0 + h * 0.15} Z" ` +
+          `stroke="${BETONT}" stroke-width="2" fill="none"/>`;
+      };
+      return svg(340, 180,
+        achsen(80, 96, 0, 0, '', '') +
+        lin(20, 96, 150, 96, BLASS, 1.2) + lin(80, 150, 80, 42, BLASS, 1.2) +
+        schleife(80, 46) +
+        lin(190, 96, 320, 96, BLASS, 1.2) + lin(250, 150, 250, 42, BLASS, 1.2) +
+        schleife(250, 12) +
+        txt('B', 74, 40, 'end', BLASS, 11) + txt('H', 152, 110, 'end', BLASS, 11) +
+        txt('B', 244, 40, 'end', BLASS, 11) + txt('H', 322, 110, 'end', BLASS, 11) +
+        txt('hartmagnetisch', 80, 172, 'middle', STRICH, 11) +
+        txt('weichmagnetisch', 250, 172, 'middle', STRICH, 11));
+    },
+
+    's13-magnetfelder-bei-spulen': () => {
+      /* Feldlinien um eine Spule im Längsschnitt: innen dicht und gerade,
+         aussen weit ausholend und geschlossen. Dass sie GESCHLOSSEN sind,
+         ist der ganze Unterschied zum elektrischen Feld. */
+      const wick = [0, 1, 2, 3, 4].map(i =>
+        `<path d="M${112 + i * 24},74 A12,12 0 1,1 ${112 + i * 24},106" ` +
+        `stroke="${STRICH}" stroke-width="2" fill="none"/>`).join('');
+      const linie = (dy: number): string =>
+        `<path d="M118,90 L214,90 M214,90 C${254 + dy},90 ${254 + dy},${30 - dy} 166,${30 - dy} ` +
+        `C${78 - dy},${30 - dy} ${78 - dy},90 118,90" stroke="${BETONT}" ` +
+        `stroke-width="1.5" fill="none"/>`;
+      return svg(340, 175,
+        linie(0) + linie(16) +
+        wick +
+        pfeil(150, 90, 186, 90, BETONT, 1.8) +
+        txt('I', 108, 128, 'middle', STRICH, 12) +
+        txt('Φ', 194, 84, 'start', BETONT, 12) +
+        txt('N', 240, 96, 'start', STRICH, 12) +
+        txt('Die Feldlinien sind geschlossen.', 170, 164, 'middle', BLASS, 11));
+    },
+
+    's13-kraefte-auf-strom-durchflossene': () => {
+      /* Ein Leiter im Feld zwischen Nord und Süd: Strom in die Zeichenebene
+         (das ⊗), Feld von oben nach unten, Kraft nach rechts. Die drei
+         stehen senkrecht aufeinander — das ist die ganze Aussage. */
+      const feldpfeil = (x: number): string => pfeil(x, 52, x, 128, BLASS, 1.3);
+      return svg(320, 190,
+        `<rect x="60" y="30" width="200" height="22" rx="3" stroke="${STRICH}" ` +
+        `stroke-width="1.6" fill="var(--bg-hover)"/>` +
+        `<rect x="60" y="128" width="200" height="22" rx="3" stroke="${STRICH}" ` +
+        `stroke-width="1.6" fill="var(--bg-hover)"/>` +
+        txt('N', 160, 47, 'middle', STRICH, 13) +
+        txt('S', 160, 145, 'middle', STRICH, 13) +
+        [90, 130, 210, 250].map(feldpfeil).join('') +
+        `<circle cx="160" cy="90" r="13" stroke="${BETONT}" stroke-width="2" fill="none"/>` +
+        lin(151, 81, 169, 99, BETONT, 2) + lin(169, 81, 151, 99, BETONT, 2) +
+        pfeil(178, 90, 240, 90, BETONT, 2.2) +
+        txt('I', 160, 118, 'middle', BETONT, 12) +
+        txt('F', 248, 86, 'start', BETONT, 13) +
+        txt('B', 84, 96, 'end', BLASS, 12) +
+        txt('F = B · I · l', 160, 180, 'middle', BLASS, 11));
     },
 
     /* --- Seite 14/15 · Wechselstromwiderstände --------------------------- */
@@ -675,7 +749,7 @@ const Elektroskizzen = (() => {
 
     /* --- Seite 20 · Spannungsfall ---------------------------------------- */
 
-    'sf-leitung': () => svg(330, 180,
+    's20-gleichstromleitung': () => svg(330, 180,
       lin(28, 52, 252, 52, STRICH, 2) +
       lin(28, 124, 252, 124, STRICH, 2) +
       `<rect x="252" y="52" width="42" height="72" stroke="${STRICH}" stroke-width="1.8" ` +
@@ -842,6 +916,106 @@ const Elektroskizzen = (() => {
         txt('b', 144, 197, 'middle', BLASS, 12) +
         txt('N₂ Lagen', 40, 36, 'start', BETONT, 12));
     },
+
+
+    /* --- Seite 23 · Elektronische Bauelemente ---------------------------
+     * Das Heft zeigt hier zwölf Bauteile, jedes mit seinem Zeichen und
+     * seiner Kennlinie. Genau dafür gibt es das Fachzeichen-Register: das
+     * Symbol kommt von dort, die Kennlinie daneben ist eigenes SVG.
+     *
+     * Die Kennlinie ist der eigentliche Inhalt der Seite. Das Zeichen sagt,
+     * WIE das Bauteil heisst; die Kennlinie sagt, WAS es tut — und bei PTC
+     * und NTC ist das der einzige Unterschied.
+     * -------------------------------------------------------------------*/
+
+    /** Ein Bauteil links, seine Kennlinie rechts. */
+    ...(() => {
+      /**
+       * `mitte` entscheidet über das Achsenkreuz, und das ist keine
+       * Geschmacksfrage:
+       *
+       *   false — der Ursprung sitzt unten links. Für Kennlinien, die nur
+       *           im ersten Quadranten leben: R über ϑ, R über E.
+       *   true  — der Ursprung sitzt in der MITTE. Für Strom über Spannung
+       *           bei Bauteilen, die auch rückwärts etwas tun. Ohne den
+       *           dritten Quadranten sieht die Z-Diode aus wie eine Diode,
+       *           und genau der Unterschied ist ihr Zweck.
+       */
+      const bauteil = (zeichen: string, kurve: string, wLabel: string,
+                       hLabel: string, mitte = false): (() => string) => () => {
+        const sym = (typeof Register !== 'undefined' && Register.fachzeichen)
+          ? Register.fachzeichen.alsSvg(zeichen, { strich: 1.8 }) : '';
+        const kreuz = mitte
+          ? pfeil(20, 74, 178, 74, BLASS, 1.3) + pfeil(100, 142, 100, 12, BLASS, 1.3) +
+            txt(wLabel, 176, 90, 'end', BLASS, 11) + txt(hLabel, 92, 20, 'end', BLASS, 11)
+          : achsen(30, 118, 142, 96, wLabel, hLabel);
+        return `<div class="sk-paar">` +
+          `<div class="sk-zeichen">${sym}</div>` +
+          svg(190, 150, kreuz + kurve) +
+          `</div>`;
+      };
+
+      /* Ursprung unten links (30,118), nach rechts oben. */
+      const steigend = `<path d="M36,112 C70,110 96,96 118,66 C134,44 146,36 164,32" ` +
+                       `stroke="${BETONT}" stroke-width="2.2" fill="none"/>`;
+      const fallend  = `<path d="M36,34 C58,66 76,94 104,106 C126,114 146,116 164,117" ` +
+                       `stroke="${BETONT}" stroke-width="2.2" fill="none"/>`;
+
+      /* Ursprung in der Mitte (100,74). */
+      /* Diode: vorwärts ab der Schwelle steil, rückwärts fast nichts. */
+      const diodeKurve = `<path d="M26,73 L112,73 C120,72 124,56 128,26" ` +
+                         `stroke="${BETONT}" stroke-width="2.2" fill="none"/>`;
+      /* Z-Diode: vorwärts wie eine Diode, RÜCKWÄRTS ab U_Z ebenso steil —
+         das ist der Unterschied, und er ist der Grund für das Bauteil. */
+      const zenerKurve = `<path d="M112,73 C120,72 124,56 128,26" stroke="${BETONT}" ` +
+                         `stroke-width="2.2" fill="none"/>` +
+                         `<path d="M112,75 L48,75 C42,76 40,92 38,124" stroke="${BETONT}" ` +
+                         `stroke-width="2.2" fill="none"/>` +
+                         strichel(48, 74, 48, 124) +
+                         txt('U_Z', 46, 138, 'middle', BLASS, 11);
+      /* Punktsymmetrisch: in beide Richtungen dasselbe. */
+      const beidseitig = `<path d="M100,74 C112,72 120,56 126,24" stroke="${BETONT}" ` +
+                         `stroke-width="2.2" fill="none"/>` +
+                         `<path d="M100,74 C88,76 80,92 74,124" stroke="${BETONT}" ` +
+                         `stroke-width="2.2" fill="none"/>`;
+      /* Ein Kennlinienfeld: je Steuerstrom eine Kurve. */
+      const schar = [0, 1, 2, 3].map(i =>
+        `<path d="M36,${106 - i * 19} C50,${106 - i * 19} 56,${92 - i * 19} ` +
+        `64,${88 - i * 19} C94,${84 - i * 19} 132,${82 - i * 19} 164,${80 - i * 19}" ` +
+        `stroke="${BETONT}" stroke-width="1.7" fill="none"/>`).join('');
+
+      return {
+        's23-ptc-oder-kaltleiter':  bauteil('ptc',  steigend, 'ϑ', 'R'),
+        's23-ntc-oder-heissleiter': bauteil('ntc',  fallend,  'ϑ', 'R'),
+        's23-vdr':                  bauteil('vdr',  beidseitig, 'U', 'I', true),
+        's23-ldr':                  bauteil('ldr',  fallend,  'E', 'R'),
+        's23-diode':                bauteil('diode', diodeKurve, 'U', 'I', true),
+        's23-zenerdiode':           bauteil('zenerdiode', zenerKurve, 'U', 'I', true),
+        's23-led-leuchtdiode':      bauteil('led', diodeKurve, 'U_F', 'I_F', true),
+        's23-optokoppler':          bauteil('optokoppler', schar, 'U_CE', 'I_C'),
+        's23-npn-transistor':       bauteil('transistor-npn', schar, 'U_CE', 'I_C'),
+        's23-pnp-transistor':       bauteil('transistor-pnp', schar, 'U_CE', 'I_C'),
+        's23-thyristor':            bauteil('thyristor', diodeKurve, 'U', 'I', true),
+        's23-triac':                bauteil('triac', beidseitig, 'U', 'I', true)
+      };
+    })(),
+
+    /* --- Seite 17 · Neutralleiterstrom ----------------------------------- */
+
+    's17-neutralleiterstrom-bei-unsymmetr': () => svg(320, 210,
+      /* Drei Strangströme als Zeiger im 120-Grad-Stern; bei GLEICHER Last
+         heben sie sich auf und der Neutralleiter führt nichts. Sind sie
+         verschieden lang, bleibt eine Summe übrig — und genau die fliesst
+         durch den Neutralleiter. */
+      pfeil(150, 110, 150, 34, BETONT, 2.2) +
+      pfeil(150, 110, 84, 156, BETONT, 2.2) +
+      pfeil(150, 110, 202, 148, BETONT, 2.2) +
+      pfeil(150, 110, 196, 76, STRICH, 2.6) +
+      txt('I_L1', 150, 26, 'middle', BETONT, 12) +
+      txt('I_L2', 74, 172, 'middle', BETONT, 12) +
+      txt('I_L3', 212, 164, 'middle', BETONT, 12) +
+      txt('I_N', 204, 66, 'start', STRICH, 12) +
+      txt('Bei gleicher Last ist I_N = 0.', 160, 198, 'middle', BLASS, 11)),
 
     /* --- Seite 22 · Beleuchtung ------------------------------------------ */
 

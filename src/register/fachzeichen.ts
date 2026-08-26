@@ -584,6 +584,75 @@ Register.fachzeichen = (() => {
       erklaerung: 'Leitet rückwärts ab einer bestimmten Spannung — hält sie damit konstant.'
     },
     {
+      id: 'ptc', name: 'PTC / Kaltleiter', gruppe: 'halbleiter', kennbuchstabe: 'R',
+      w: 40, h: 60,
+      pfad: [senkrecht(20, 0, 15), senkrecht(20, 45, 60), 'M8,15 H32 V45 H8 Z',
+             /* Der schräge Strich mit dem ϑ und den beiden Pfeilen nach oben:
+                Temperatur hinauf, Widerstand hinauf. */
+             'M4,48 L36,12', 'M28,12 H36 V20'],
+      anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 60 }],
+      erklaerung: 'Wird er warm, wird er hochohmig. Begrenzt Einschaltströme und schützt Motoren.'
+    },
+    {
+      id: 'ntc', name: 'NTC / Heissleiter', gruppe: 'halbleiter', kennbuchstabe: 'R',
+      w: 40, h: 60,
+      pfad: [senkrecht(20, 0, 15), senkrecht(20, 45, 60), 'M8,15 H32 V45 H8 Z',
+             /* Derselbe Strich, aber der Haken sitzt am UNTEREN Ende und
+                zeigt nach unten: Temperatur hinauf, Widerstand hinunter.
+                Beim PTC sitzt er oben. Das ist der ganze Unterschied im
+                Zeichen — und im Bauteil auch. */
+             'M4,48 L36,12', 'M4,40 V48 H12'],
+      anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 60 }],
+      erklaerung: 'Wird er warm, wird er niederohmig. Als Temperaturfühler und zur Strombegrenzung.'
+    },
+    {
+      id: 'vdr', name: 'VDR / Varistor', gruppe: 'halbleiter', kennbuchstabe: 'R',
+      w: 40, h: 60,
+      pfad: [senkrecht(20, 0, 15), senkrecht(20, 45, 60), 'M8,15 H32 V45 H8 Z',
+             'M4,48 L36,12', 'M28,12 H36 V20'],
+      anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 60 }],
+      erklaerung: 'Sein Widerstand hängt von der SPANNUNG ab. Über der Schwelle leitet er und schluckt Überspannungen.'
+    },
+    {
+      id: 'ldr', name: 'LDR / Fotowiderstand', gruppe: 'halbleiter', kennbuchstabe: 'R',
+      w: 50, h: 60,
+      pfad: [senkrecht(20, 0, 15), senkrecht(20, 45, 60), 'M8,15 H32 V45 H8 Z',
+             /* Zwei Pfeile, die auf das Bauteil ZEIGEN — Licht fällt ein.
+                Bei der Leuchtdiode zeigen sie hinaus. */
+             'M48,18 L36,26', 'M36,26 L42,26 M36,26 L36,20',
+             'M48,30 L36,38', 'M36,38 L42,38 M36,38 L36,32'],
+      anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 60 }],
+      erklaerung: 'Im Hellen niederohmig, im Dunkeln hochohmig. In Dämmerungsschaltern.'
+    },
+    {
+      id: 'optokoppler', name: 'Optokoppler', gruppe: 'halbleiter', kennbuchstabe: 'V',
+      w: 80, h: 70,
+      pfad: ['M4,4 H76 V66 H4 Z',
+             /* Links die Leuchtdiode, rechts der Fototransistor, dazwischen
+                zwei Lichtpfeile — und keine elektrische Verbindung. */
+             senkrecht(20, 0, 14), senkrecht(20, 56, 70),
+             'M12,26 H28 L20,42 Z', 'M12,42 H28',
+             'M40,30 L48,30 M40,40 L48,40',
+             senkrecht(60, 0, 20), senkrecht(60, 50, 70),
+             'M56,22 V48', 'M56,30 L68,20', 'M56,40 L68,50'],
+      anschluesse: [{ nr: 'A', x: 20, y: 0 }, { nr: 'K', x: 20, y: 70 },
+                    { nr: 'C', x: 60, y: 0 }, { nr: 'E', x: 60, y: 70 }],
+      erklaerung: 'Steuert über Licht statt über Draht. Beide Seiten bleiben galvanisch getrennt — der Grund, warum es ihn gibt.'
+    },
+    {
+      id: 'triac', name: 'Triac', gruppe: 'halbleiter', kennbuchstabe: 'V',
+      w: 60, h: 60,
+      pfad: [senkrecht(20, 0, 18), senkrecht(20, 42, 60),
+             /* Zwei gegeneinander geschaltete Thyristoren in einem Gehäuse:
+                zwei Dreiecke, die in verschiedene Richtungen zeigen. */
+             'M8,18 H32 L20,34 Z', 'M8,42 H32 L20,26 Z',
+             waagrecht(18, 8, 32), waagrecht(42, 8, 32),
+             'M32,42 H60 V30'],
+      anschluesse: [{ nr: 'A1', x: 20, y: 60 }, { nr: 'A2', x: 20, y: 0 },
+                    { nr: 'G', x: 60, y: 30 }],
+      erklaerung: 'Ein Schalter für BEIDE Halbwellen. In Dimmern und Motorstellern.'
+    },
+    {
       id: 'transistor-npn', name: 'Transistor NPN', gruppe: 'halbleiter', kennbuchstabe: 'V',
       w: 60, h: 60,
       kreise: [{ cx: 30, cy: 30, r: 22 }],
