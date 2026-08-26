@@ -1113,122 +1113,23 @@ const Lernwelt = (() => {
    * zu teuer — die erste Ebene ist der Anfang der Seite, und mehr wird
    * ohnehin nicht angezeigt.
    */
-  /**
-   * Auszeichnungen weg, Text bleibt.
-   *
-   * Der Anriss kommt aus `block.text`, und dort steht Redions Markdown so,
-   * wie es getippt wurde. Auf dem Bild vom 26. August stand deshalb
-   * „Alles hier liegt **lokal** in dein…" — mit Sternen. Eine Vorschau ist
-   * eine Vorschau und keine Quelltextzeile.
-   *
-   * Die Muster sind dieselben wie in `inline()` im Editor, nur behalten sie
-   * den Inhalt statt ihn einzuwickeln. Wer dort eine Auszeichnung ergänzt,
-   * muss sie hier ergänzen — sonst steht ihr Zeichen wieder im Anriss. Die
-   * Reihenfolge ist nicht beliebig: das Bild vor dem Link (sonst bleibt ein
-   * „!" stehen) und `**` vor `*` (sonst frisst der eine Stern den anderen).
-   */
-  const klartext = (roh: string): string => roh
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/\[\[([^\]]+)\]\]/g, '$1')
-    .replace(/\(\(([^)]+)\)\)/g, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/__(.+?)__/g, '$1')
-    .replace(/~~(.+?)~~/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/`([^`]+?)`/g, '$1')
-    .replace(/^\s{0,3}[-*+]\s+/gm, '')
-    .replace(/^\s{0,3}>\s?/gm, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  /* DIESE DREI STANDEN HIER UND STEHEN JETZT IM KERN (E207).
+     `klartext`, `vorschau` und `miniatur` kamen mit E205 hierher, und mit
+     der Bibliothek brauchte sie ein ZWEITER Bereich. CLAUDE.md §5, Regel 1
+     ist da eindeutig: ein Bereich importiert nicht aus einem anderen, und
+     was beide brauchen, gehört nach `kern/`.
 
-  const vorschau = (seiteId: string, titel = '', laenge = 90): string => {
-    if (!seiteId || typeof Store?.childrenOf !== 'function') return '';
-    let text = '';
-    try {
-      for (const kind of Store.childrenOf(seiteId) as any[]) {
-        const stueck = klartext(String(kind?.text || ''));
-        if (!stueck) continue;
-        /* DIE ERSTE ZEILE IST OFT DIE ÜBERSCHRIFT NOCH EINMAL. Auf dem Bild
-           stand über „Willkommen" der Anriss „Willkommen in Redion Alles hier
-           liegt …" und über „Was Redion mehr kann" der Anriss „Was Redion
-           mehr kann als Notion …". Zweimal dasselbe in zwei Zeilen ist genau
-           der Zustand, den die Vorschau beheben sollte.
+     Der bequeme Weg wäre gewesen, die dreissig Zeilen dort noch einmal
+     hinzuschreiben. Dann gäbe es zwei Anrisse, die sich das erste Mal
+     unterscheiden, sobald jemand eine Auszeichnung ergänzt — und gemerkt
+     hätte man es an der Stelle, die man gerade nicht ansieht.
 
-           ABER NUR, WENN DER REST FÜR SICH STEHT. Der erste Versuch schnitt
-           blind ab und machte aus „Willkommen in Redion. Alles hier liegt
-           lokal …" den Anriss „in Redion Alles hier liegt lokal …" — er begann
-           mitten im Satz mit einem kleinen „in". Der Titel war da nicht die
-           Überschrift, sondern der Anfang des Satzes. Erkennbar ist das am
-           nächsten Zeichen: geht es gross oder mit einer Ziffer weiter, war
-           es eine Überschrift; geht es klein weiter, war es ein Satz. */
-        if (!text && titel && stueck.toLowerCase().startsWith(titel.toLowerCase())) {
-          const rest = stueck.slice(titel.length).replace(/^[\s—–:·.,;-]+/, '');
-          if (!rest) continue;
-          if (/^[A-ZÄÖÜ0-9„"«]/.test(rest)) { text = rest; continue; }
-        }
-        /* Zwei Blöcke sind zwei Absätze. Mit einem Leerzeichen aneinander-
-           gehängt werden sie ein Satz, den so niemand geschrieben hat —
-           „Willkommen in Redion Alles hier liegt lokal". Ein Trennpunkt sagt,
-           dass hier etwas Neues anfängt; nach einem Satzzeichen braucht es
-           ihn nicht. */
-        text += (text ? (/[.!?:…]$/.test(text) ? ' ' : ' · ') : '') + stueck;
-        if (text.length >= laenge) break;
-      }
-    } catch { return ''; }
-    return text.length > laenge ? text.slice(0, laenge - 1).trimEnd() + '…' : text;
-  };
-
-  /**
-   * Eine Seite als kleines Abbild ihrer selbst.
-   *
-   * Nicht ein Anriss in einer Zeile, sondern die ersten Blöcke so, wie sie
-   * auf der Seite stehen: eine Überschrift ist fett, ein Haken ist ein
-   * Kästchen, ein Listenpunkt hat seinen Punkt. Das ist der Unterschied
-   * zwischen „ich erkenne die Seite wieder" und „ich lese fünf Titel und
-   * muss raten".
-   *
-   * Ein echtes Vorschaubild wäre besser und gibt es nicht: Redion legt zu
-   * keiner Seite eines an. Das steht in LUECKEN.md und nicht hier.
-   *
-   * ALLES HIER IST SATZINHALT und darf es auch sein: die Karte ist ein
-   * `<button>`, und ein Knopf darf keine Absätze enthalten. Ein `<hr>` wäre
-   * schon zu viel — deshalb ist die Trennlinie ein `<span>` mit Rand.
-   */
-  const miniatur = (seiteId: string, zeilen = 5): string => {
-    if (!seiteId || typeof Store?.childrenOf !== 'function') return '';
-    let kinder: any[] = [];
-    try { kinder = Store.childrenOf(seiteId) as any[]; } catch { return ''; }
-    const raus: string[] = [];
-    for (const block of kinder) {
-      if (raus.length >= zeilen) break;
-      const art = String(block?.type || 'text');
-      if (art === 'divider') { raus.push('<span class="lw-mini-hr"></span>'); continue; }
-      const text = klartext(String(block?.text || ''));
-      if (!text) continue;
-      const kurz = esc(text.length > 120 ? text.slice(0, 119) + '…' : text);
-      if (art === 'h1' || art === 'h2' || art === 'h3' || art.startsWith('toggle-h')) {
-        raus.push('<b>' + kurz + '</b>'); continue;
-      }
-      if (art === 'todo') {
-        raus.push('<span class="lw-mini-todo">' +
-          zeichenSpan(block?.checked ? 'boxChecked' : 'box') + kurz + '</span>'); continue;
-      }
-      if (art === 'bullet' || art === 'number' || art === 'toggle') {
-        raus.push('<span class="lw-mini-li">' + kurz + '</span>'); continue;
-      }
-      if (art === 'code' || art === 'equation') {
-        raus.push('<code>' + kurz + '</code>'); continue;
-      }
-      if (art === 'quote' || art === 'callout') {
-        raus.push('<span class="lw-mini-q">' + kurz + '</span>'); continue;
-      }
-      raus.push('<span>' + kurz + '</span>');
-    }
-    return raus.join('');
-  };
+     Die Namen bleiben hier stehen, damit die Aufrufer unten unverändert
+     lesbar sind; sie zeigen nur woandershin. */
+  const vorschau = (seiteId: string, titel = '', laenge = 90): string =>
+    Vorschau.anriss(seiteId, titel, laenge);
+  const miniatur = (seiteId: string, zeilen = 5): string =>
+    Vorschau.miniatur(seiteId, zeilen);
 
   /* Eine Karte für „Weiter wo du warst". Der Knopf öffnet weiterhin
      `item.id` — die Miniatur liest von `pageId`, falls der Eintrag selbst
@@ -1236,7 +1137,7 @@ const Lernwelt = (() => {
   const weiterKarte = (item: LernweltEintrag): string => {
     const bild = miniatur(item.pageId || item.id);
     return '<button type="button" class="lw-continue-card" data-lw-open="' + esc(item.id) + '">' +
-      '<span class="lw-mini' + (bild ? '' : ' is-leer') + '">' +
+      '<span class="lw-mini mini-zeilen' + (bild ? '' : ' is-leer') + '">' +
         (bild || '<span>Diese Seite ist noch leer.</span>') + '</span>' +
       '<span class="lw-continue-foot">' + zeichenSpan(item.icon, 'lw-object-icon') +
         '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.untertitel) +

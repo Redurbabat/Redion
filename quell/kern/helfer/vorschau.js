@@ -1,0 +1,211 @@
+"use strict";
+/* ============================================================================
+ * vorschau.js — Eine Seite so zeigen, dass man sie wiedererkennt
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/helfer/vorschau.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/kern/helfer/vorschau.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * DER GRUND, WARUM ES DIESE DATEI GIBT
+ *
+ * E205 hat der Lernwelt beigebracht, eine Seite als kleines Abbild ihrer
+ * selbst zu zeigen: Überschriften fett, Haken als Kästchen, Listenpunkte mit
+ * Punkt. Das war die Antwort auf neun Zeilen, die alle „Zuletzt geöffnet ·
+ * gerade eben" sagten und damit nichts.
+ *
+ * Die Bibliothek stellt dieselbe Frage — welche Seite ist das? — und ihre
+ * Antwort war eine Tabelle mit einer Titelspalte. Zwei Bereiche, eine
+ * Aufgabe. CLAUDE.md §5, Regel 1 ist an dieser Stelle eindeutig: ein Bereich
+ * darf nicht aus einem anderen importieren, und was beide brauchen, gehört
+ * nach `kern/`.
+ *
+ * Der bequeme Weg wäre gewesen, die dreissig Zeilen in `bibliothek.ts` noch
+ * einmal hinzuschreiben. Dann gäbe es zwei Anrisse, die sich das erste Mal
+ * unterscheiden, sobald jemand eine Markdown-Auszeichnung ergänzt — und
+ * gemerkt hätte man es an der Stelle, die man gerade nicht ansieht.
+ *
+ * WAS HIER STEHT
+ *
+ *     klartext(roh)              Auszeichnungen weg, Text bleibt
+ *     anriss(seiteId, titel)     der Anfang der Seite als EINE Zeile
+ *     miniatur(seiteId, zeilen)  der Anfang der Seite als kleines Abbild
+ *
+ * Alle drei sind gleichläufig. `Store.childrenOf` liest den Spiegel im
+ * Arbeitsspeicher; es gibt kein Warten, keinen zweiten Speicherweg und
+ * keinen Ladezustand, den ein Aufrufer zeichnen müsste.
+ *
+ * WAS HIER NICHT STEHT: ein Vorschau-BILD. Redion legt zu keiner Seite eines
+ * an, und eine Seite, die vor allem aus einem Schaltplan besteht, hat kaum
+ * Text — genau die Seiten, die man am Bild am schnellsten wiedererkennt,
+ * zeigen hier am wenigsten. Das steht als L61 in LUECKEN.md und wird nicht
+ * dadurch besser, dass man es verschweigt.
+ * ==========================================================================*/
+const Vorschau = (() => {
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /**
+     * Auszeichnungen weg, Text bleibt.
+     *
+     * Der Anriss kommt aus `block.text`, und dort steht Redions Markdown so,
+     * wie es getippt wurde. Auf dem Bild vom 26. August stand deshalb „Alles
+     * hier liegt **lokal** in dein…" — mit Sternen. Eine Vorschau ist eine
+     * Vorschau und keine Quelltextzeile.
+     *
+     * Die Muster sind dieselben wie in `inline()` im Editor, nur behalten sie
+     * den Inhalt statt ihn einzuwickeln. Wer dort eine Auszeichnung ergänzt,
+     * muss sie hier ergänzen — sonst steht ihr Zeichen wieder im Anriss.
+     *
+     * Die Reihenfolge ist nicht beliebig: das Bild VOR dem Link, sonst bleibt
+     * ein „!" stehen, und `**` vor `*`, sonst frisst der eine Stern den anderen.
+     */
+    const klartext = (roh) => String(roh ?? '')
+        .replace(/```[\s\S]*?```/g, ' ')
+        .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+        .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/\[\[([^\]]+)\]\]/g, '$1')
+        .replace(/\(\(([^)]+)\)\)/g, '')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/__(.+?)__/g, '$1')
+        .replace(/~~(.+?)~~/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/`([^`]+?)`/g, '$1')
+        .replace(/^\s{0,3}[-*+]\s+/gm, '')
+        .replace(/^\s{0,3}>\s?/gm, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    /**
+     * Die lebenden Kindblöcke einer Seite — oder nichts, wenn es sie nicht gibt.
+     *
+     * `Store` STEHT NICHT AN `window`, und das hat diese Datei einmal still
+     * kaputtgemacht. Hier stand `const store = (globalThis as any).Store`, und
+     * damit war `store` immer `undefined`: `Store` ist ein `const` auf oberster
+     * Ebene im gemeinsamen Skript-Bereich (`module: "none"`), kein Feld am
+     * Fenster. `typeof undefined?.childrenOf !== 'function'` ist wahr, also kam
+     * ein leeres Feld zurück — kein Wurf, keine Meldung in der Konsole, nur
+     * überall die Zeile „Dieses Heft ist noch leer".
+     *
+     * Gemessen: 16 Kinder mit Text, 0 Zeichen Miniatur. Gefunden hat es das
+     * Bild und keine Prüfung (§55) — eine Vorschau, die nichts zeigt, sieht
+     * aus wie ein leerer Bestand und nicht wie ein Fehler.
+     *
+     * `typeof Store` fängt den Fall ab, dass die Datei ohne die Ablage geladen
+     * wird (Einzeldatei im Aufbau, Prüfläufe ohne Schale).
+     */
+    const kinder = (seiteId) => {
+        if (!seiteId || typeof Store === 'undefined' ||
+            typeof Store.childrenOf !== 'function')
+            return [];
+        try {
+            return Store.childrenOf(seiteId);
+        }
+        catch {
+            return [];
+        }
+    };
+    /**
+     * Der Anfang einer Seite als EINE Zeile.
+     *
+     * `titel` ist bewusst dabei: die erste Zeile einer Seite wiederholt oft
+     * ihre Überschrift, und zweimal dasselbe in zwei Zeilen ist genau der
+     * Zustand, den ein Anriss beheben soll.
+     *
+     * ABER NUR, WENN DER REST FÜR SICH STEHT. Der erste Versuch schnitt blind
+     * ab und machte aus „Willkommen in Redion. Alles hier liegt lokal …" den
+     * Anriss „in Redion Alles hier liegt lokal …" — er begann mitten im Satz
+     * mit einem kleinen „in". Der Titel war dort nicht die Überschrift,
+     * sondern der Anfang des Satzes. Erkennbar am nächsten Zeichen: geht es
+     * gross oder mit einer Ziffer weiter, war es eine Überschrift; geht es
+     * klein weiter, war es ein Satz.
+     */
+    const anriss = (seiteId, titel = '', laenge = 90) => {
+        let text = '';
+        for (const kind of kinder(seiteId)) {
+            const stueck = klartext(String(kind?.text || ''));
+            if (!stueck)
+                continue;
+            if (!text && titel && stueck.toLowerCase().startsWith(titel.toLowerCase())) {
+                const rest = stueck.slice(titel.length).replace(/^[\s—–:·.,;-]+/, '');
+                if (!rest)
+                    continue;
+                if (/^[A-ZÄÖÜ0-9„"«]/.test(rest)) {
+                    text = rest;
+                    continue;
+                }
+            }
+            /* Zwei Blöcke sind zwei Absätze. Mit einem Leerzeichen aneinander-
+               gehängt werden sie ein Satz, den so niemand geschrieben hat —
+               „Willkommen in Redion Alles hier liegt lokal". Ein Trennpunkt sagt,
+               dass hier etwas Neues anfängt; nach einem Satzzeichen braucht es
+               ihn nicht. */
+            text += (text ? (/[.!?:…]$/.test(text) ? ' ' : ' · ') : '') + stueck;
+            if (text.length >= laenge)
+                break;
+        }
+        return text.length > laenge ? text.slice(0, laenge - 1).trimEnd() + '…' : text;
+    };
+    /** Ein Zeichen aus dem Register, oder nichts.
+        `Register` hängt sich mit `(window as any).Register = … || {}` wirklich
+        ans Fenster an — anders als `Store`, siehe oben. */
+    const zeichen = (id) => {
+        const reg = globalThis.Register;
+        return reg?.symbole?.alsSvg ? reg.symbole.alsSvg(id, 12) : '';
+    };
+    /**
+     * Eine Seite als kleines Abbild ihrer selbst.
+     *
+     * Nicht ein Anriss in einer Zeile, sondern die ersten Blöcke so, wie sie
+     * auf der Seite stehen. Das ist der Unterschied zwischen „ich erkenne die
+     * Seite wieder" und „ich lese fünf Titel und muss raten".
+     *
+     * ALLES HIER IST SATZINHALT und darf es auch sein: die Karte, in der das
+     * landet, ist gelegentlich ein `<button>`, und ein Knopf darf keine
+     * Absätze enthalten. Ein `<hr>` wäre schon zu viel — deshalb ist die
+     * Trennlinie ein `<span>` mit Rand.
+     */
+    const miniatur = (seiteId, zeilen = 5) => {
+        const raus = [];
+        for (const block of kinder(seiteId)) {
+            if (raus.length >= zeilen)
+                break;
+            const art = String(block?.type || 'text');
+            if (art === 'divider') {
+                raus.push('<span class="mini-hr"></span>');
+                continue;
+            }
+            const text = klartext(String(block?.text || ''));
+            if (!text)
+                continue;
+            const kurz = esc(text.length > 120 ? text.slice(0, 119) + '…' : text);
+            if (art === 'h1' || art === 'h2' || art === 'h3' || art.startsWith('toggle-h')) {
+                raus.push('<b>' + kurz + '</b>');
+                continue;
+            }
+            if (art === 'todo') {
+                raus.push('<span class="mini-todo">' +
+                    zeichen(block?.checked ? 'boxChecked' : 'box') + kurz + '</span>');
+                continue;
+            }
+            if (art === 'bullet' || art === 'number' || art === 'toggle') {
+                raus.push('<span class="mini-li">' + kurz + '</span>');
+                continue;
+            }
+            if (art === 'code' || art === 'equation') {
+                raus.push('<code>' + kurz + '</code>');
+                continue;
+            }
+            if (art === 'quote' || art === 'callout') {
+                raus.push('<span class="mini-q">' + kurz + '</span>');
+                continue;
+            }
+            raus.push('<span>' + kurz + '</span>');
+        }
+        return raus.join('');
+    };
+    /** Wie viele lebende Blöcke hängen an dieser Seite? Eine Ebene, gezählt. */
+    const umfang = (seiteId) => kinder(seiteId).length;
+    return { klartext, anriss, miniatur, umfang };
+})();
+window.Vorschau = Vorschau;

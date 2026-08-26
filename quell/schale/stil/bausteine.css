@@ -541,7 +541,156 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
  * Notion zeigt beide als eigene Seiten, nicht als Fenster.
  * ======================================================================== */
 .bib{max-width:1100px; margin:0 auto; padding:26px 46px 60px}
-.bib-titel{font-size:38px; font-weight:700; margin:0 0 18px; letter-spacing:-.02em}
+.bib-titel{font-size:38px; font-weight:700; margin:0 0 var(--space-1); letter-spacing:-.02em}
+
+/* ============================================================================
+ * DAS REGAL (E207)
+ * ----------------------------------------------------------------------------
+ * Die Bibliothek war eine Tabelle: dreizehn Zeilen, in jeder ein Titel und
+ * dreimal dieselbe Auskunft. Man liest darin nicht, man sucht — und man muss
+ * den Titel schon kennen, um ihn zu finden.
+ *
+ * Das Regal zeigt je Heft eine Karte, und auf jeder steht der ANFANG der
+ * Seite, an der zuletzt gearbeitet wurde. Die Zeilen darin kommen aus
+ * `Vorschau.miniatur()` und tragen die `.mini-*`-Klassen weiter oben — die
+ * Lernwelt zeichnet dieselben, und dieselbe Seite soll an beiden Orten gleich
+ * aussehen.
+ *
+ * Die Tabelle ist nicht weg: der Umschalter oben führt hin und zurück, und
+ * sie kann nach wie vor sortieren und Spalten zeigen. Zwei Formen für zwei
+ * Fragen — „welche Seite war das?" und „welche Seiten gibt es?".
+ * ==========================================================================*/
+.bib-zahlen{
+  margin:0 0 var(--space-5); color:var(--text-dim); font-size:13px
+}
+.bib-form{
+  display:inline-flex; gap:2px; margin-bottom:var(--space-5); padding:3px;
+  border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--bg-side)
+}
+.bib-form button{
+  display:inline-flex; align-items:center; gap:var(--space-2); min-height:32px;
+  padding:var(--space-1) var(--space-4); border:0; border-radius:var(--radius-md);
+  background:transparent; color:var(--text-dim); font:inherit; font-size:12.5px;
+  font-weight:620; cursor:pointer
+}
+.bib-form button > svg{ width:14px; height:14px; display:block }
+.bib-form button:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-form button.on{ background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1) }
+
+.bib-regal{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:var(--space-5); align-items:start
+}
+.bib-heft{
+  display:grid; grid-template-rows:auto 1fr auto; min-width:0; overflow:hidden;
+  padding:0; border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-side); box-shadow:var(--shadow-1); text-align:left;
+  cursor:pointer;
+  transition:border-color var(--motion-fast) var(--ease),
+    box-shadow var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease)
+}
+.bib-heft:hover{ border-color:var(--line-stark,var(--line)); box-shadow:var(--shadow-2) }
+.bib-heft:active{ transform:scale(var(--press-scale,.985)) }
+.bib-heft-marke{
+  overflow:hidden; padding:var(--space-3) var(--space-5) 0;
+  color:var(--text-dim); font-size:10.5px; font-weight:750;
+  letter-spacing:.06em; text-transform:uppercase;
+  text-overflow:ellipsis; white-space:nowrap
+}
+/* DAS BLATT. Es soll aussehen wie Papier und nicht wie ein Textfeld: heller
+   Grund, feine Zeilen, und unten läuft es aus statt an einer harten Kante
+   mitten im Wort aufzuhören. */
+.bib-heft-blatt{
+  position:relative; display:grid; align-content:start; gap:var(--space-2);
+  overflow:hidden; height:150px; margin:var(--space-3) var(--space-4) 0;
+  padding:var(--space-4) var(--space-4) 0;
+  /* DAS BLATT MUSS SICH ABHEBEN, SONST IST ES KEINS. Erst stand hier
+     `--bg` auf einer Karte in `--bg-card` — im Hellmodus Weiss auf fast
+     Weiss, und der Rand war `--line-soft`. Auf dem Bild sah man kein Blatt,
+     sondern Text, der im Nichts anfing. Die Karte liegt jetzt auf der
+     Nebenfläche, das Blatt darauf ist die Kartenfläche, und der Rand ist
+     der normale. */
+  border:1px solid var(--line); border-bottom:0;
+  border-radius:var(--radius-md) var(--radius-md) 0 0;
+  background:var(--bg-card); color:var(--text-dim); font-size:10.5px; line-height:1.5
+}
+.bib-heft-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:34px;
+  pointer-events:none; background:linear-gradient(to bottom,transparent,var(--bg-card))
+}
+.bib-heft-blatt.is-leer{
+  align-content:center; justify-items:center; color:var(--text-faint); font-style:italic
+}
+.bib-heft-blatt.is-leer::after{ display:none }
+.bib-heft-fuss{
+  display:grid; gap:1px; min-width:0; padding:var(--space-4) var(--space-5)
+}
+.bib-heft-fuss strong{
+  overflow:hidden; font-size:13.5px; font-weight:680; line-height:1.35;
+  text-overflow:ellipsis; white-space:nowrap
+}
+.bib-heft-fuss small{ color:var(--text-dim); font-size:11px }
+
+/* --- Zuletzt in der Hand ------------------------------------------------- */
+.bib-abschnitt{ margin-top:var(--space-9) }
+.bib-abschnitt > header{ margin-bottom:var(--space-4) }
+.bib-abschnitt h2{ margin:0; font-size:15px; font-weight:750; letter-spacing:-.015em }
+.bib-abschnitt > header p{ margin:2px 0 0; color:var(--text-dim); font-size:11px }
+.bib-hand-reihe{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:var(--space-4); align-items:start
+}
+.bib-hand{
+  display:grid; grid-template-rows:1fr auto; min-width:0; overflow:hidden; padding:0;
+  border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-card); text-align:left; cursor:pointer;
+  transition:border-color var(--motion-fast) var(--ease), box-shadow var(--motion-fast) var(--ease)
+}
+.bib-hand:hover{ border-color:var(--line-stark,var(--line)); box-shadow:var(--shadow-1) }
+.bib-hand-blatt{
+  position:relative; display:grid; align-content:start; gap:var(--space-1);
+  overflow:hidden; height:84px; padding:var(--space-3) var(--space-4) 0;
+  color:var(--text-dim); font-size:10px; line-height:1.45
+}
+.bib-hand-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:22px;
+  pointer-events:none; background:linear-gradient(to bottom,transparent,var(--bg-card))
+}
+.bib-hand-blatt.is-leer{ align-content:center; justify-items:center; color:var(--text-faint) }
+.bib-hand-blatt.is-leer::after{ display:none }
+.bib-hand-fuss{
+  display:grid; gap:1px; min-width:0; padding:var(--space-3) var(--space-4);
+  border-top:1px solid var(--line-soft)
+}
+.bib-hand-fuss strong{
+  overflow:hidden; font-size:12px; font-weight:680; text-overflow:ellipsis; white-space:nowrap
+}
+.bib-hand-fuss small{
+  overflow:hidden; color:var(--text-dim); font-size:10px;
+  text-overflow:ellipsis; white-space:nowrap
+}
+
+@media(max-width:760px){
+  .bib-regal{ grid-template-columns:1fr; gap:var(--space-4) }
+  .bib-heft-blatt{ height:130px }
+  .bib-hand-reihe{ grid-template-columns:1fr 1fr }
+}
+/* AM TELEFON EINE ZEILE ZUM SCHIEBEN, NICHT ZWEI ZUM UMBRECHEN.
+   Gesehen auf 390 × 844: die vier Reiter plus „3 mehr …" brachen um, der
+   Umschalter rutschte darunter, und zusammen kosteten sie 150 px, bevor das
+   erste Heft anfing. Derselbe Griff wie bei der Reiterleiste der Lernwelt —
+   und dieselbe Begründung: eine waagerechte Leiste ist am Telefon die
+   vertraute Form, zwei Reihen kosten zu viel Höhe. */
+@media(max-width:760px){
+  .bib-kopf{ display:grid; gap:var(--space-3) }
+  .bib-reiter{
+    flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-inline:contain;
+    scrollbar-width:none
+  }
+  .bib-reiter > button{ flex:0 0 auto }
+  .bib-form{ justify-self:start; margin-bottom:var(--space-3) }
+}
+@media(pointer:coarse){ .bib-form button{ min-height:40px } }
 .bib-kopf{display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line);
   padding-bottom:8px; margin-bottom:2px; flex-wrap:wrap}
 .bib-reiter{display:flex; gap:4px; flex:1; flex-wrap:wrap}
@@ -703,6 +852,34 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
+
+/* ============================================================================
+ * DIE ZEILEN EINER SEITENVORSCHAU (E207)
+ * ----------------------------------------------------------------------------
+ * `Vorschau.miniatur()` im Kern gibt den Anfang einer Seite als Satzinhalt
+ * zurück: Überschriften fett, Haken als Kästchen, Listenpunkte mit Punkt.
+ * ZWEI Bereiche zeichnen das — die Lernwelt in „Weiter wo du warst", die
+ * Bibliothek im Regal. Der Stil dafür steht deshalb hier und nicht in einem
+ * der beiden Bereichsblätter (CLAUDE.md §5).
+ *
+ * Was der jeweilige Bereich beisteuert, ist der AUSSCHNITT: wie hoch er ist,
+ * wo die Blende endet, auf welcher Fläche er liegt. Was darin steht, sieht
+ * überall gleich aus — sonst erkennt man dieselbe Seite an zwei Orten
+ * unterschiedlich wieder, und das ist genau das, was eine Vorschau
+ * verhindern soll.
+ * ==========================================================================*/
+.mini-zeilen > *{ overflow:hidden; min-width:0; text-overflow:ellipsis; white-space:nowrap }
+.mini-zeilen > b{ color:var(--text); font-size:12px; font-weight:720; letter-spacing:-.01em }
+.mini-zeilen > code{
+  padding:1px var(--space-1); border-radius:var(--radius-sm); background:var(--bg-hover);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10px
+}
+.mini-li{ position:relative; padding-left:var(--space-4) }
+.mini-li::before{ content:"•"; position:absolute; left:var(--space-1); color:var(--text-faint) }
+.mini-q{ padding-left:var(--space-3); border-left:2px solid var(--line-stark,var(--line)) }
+.mini-todo{ display:flex; align-items:center; gap:var(--space-2) }
+.mini-todo > svg{ flex:none; width:12px; height:12px }
+.mini-hr{ height:1px; background:var(--line) }
 
 /* ============================================================================
  * DIE SCHUBLADEN IN „MEINE APPS" (E206)

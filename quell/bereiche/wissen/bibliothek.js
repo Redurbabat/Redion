@@ -114,6 +114,35 @@ const Bibliothek = (() => {
         { id: 'quelle', icon: '📍', name: 'Quelle', breit: '1.2fr' },
         { id: 'wann', icon: '🕘', name: 'Zuletzt bearbeitet', breit: '1fr' }
     ];
+    /* REGAL ODER LISTE (E207).
+       Die Bibliothek war eine Tabelle: dreizehn Zeilen, in jeder ein Titel und
+       dreimal dieselbe Auskunft („Ich", „gerade eben"). Man liest darin nicht,
+       man sucht — und man muss den Titel schon kennen, um ihn zu finden.
+  
+       Der abgenommene Entwurf zeigt stattdessen ein Regal: je Heft eine Karte,
+       und auf jeder Karte steht der ANFANG der Seite, an der zuletzt gearbeitet
+       wurde. Das ist dieselbe Antwort wie in „Weiter wo du warst" (E205), nur
+       für den ganzen Bestand.
+  
+       Die Tabelle bleibt vollständig erhalten und ist einen Klick entfernt.
+       Sie kann etwas, das das Regal nicht kann — nach Spalten sortieren,
+       Eigenschaften ein- und ausblenden, viele Zeilen auf einmal überblicken.
+       Was gebraucht wird, entscheidet nicht die Form, sondern die Frage. */
+    /**
+     * Welche Form ist gewählt?
+     *
+     * DIESER WERT WIRD BEIM ZEICHNEN GELESEN UND NICHT BEIM LADEN. Der erste
+     * Entwurf legte ihn als `zustand.form = formLesen()` an — und diese Zeile
+     * läuft, während die Datei geladen wird, also lange bevor IndexedDB
+     * ausgelesen ist. `getMeta` gab damals brav den Standard zurück, und die
+     * gemerkte Wahl war beim nächsten Start weg: wer „Liste" wählte, bekam
+     * wieder das Regal.
+     *
+     * Gefunden hat es das Bild — ich hatte im Bildskript ausdrücklich „liste"
+     * gesetzt und bekam ein Regal. Kein Wurf, keine Meldung; dieselbe Sorte
+     * stiller Fehler wie `Store` an `window` (E207, `vorschau.ts`).
+     */
+    const form = () => Store.getMeta('bibForm', 'regal') === 'liste' ? 'liste' : 'regal';
     let zustand = { reiter: 'kuerzlich', sortier: 'wann', richtung: 'ab',
         suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id) };
     /** Eine zusammengefuehrte Sicht auf bestehende Redion-Daten. Sie speichert
@@ -268,9 +297,192 @@ const Bibliothek = (() => {
         }
         return liste;
     };
+    const hefte = (liste) => {
+        const nach = new Map();
+        for (const p of liste) {
+            const q = quelleVon(p);
+            /* Der Schlüssel ist die Kennung, wenn es eine gibt — zwei Datenbanken
+               dürfen gleich heissen. Ohne Kennung (Privat, Direkt freigegeben)
+               trägt der Name. */
+            const schluessel = q.id || ('name:' + q.text);
+            let h = nach.get(schluessel);
+            if (!h) {
+                h = { id: q.id, icon: q.icon, name: q.text, seiten: [],
+                    zuletzt: null, wann: 0 };
+                nach.set(schluessel, h);
+            }
+            h.seiten.push(p);
+            const wann = zeitZahl(p.edited || p.created);
+            if (wann >= h.wann) {
+                h.wann = wann;
+                h.zuletzt = p;
+            }
+        }
+        /* DIE NEUESTE SEITE IST NICHT IMMER DIE, DIE MAN ZEIGEN WILL.
+           Auf dem Bild vom 26. August stand „Meine Aufgaben" als leerer Kasten
+           neben zwei vollen — obwohl das Heft drei Seiten hat. Seine neueste
+           Seite („Ollama installieren") ist bloss eine Zeile ohne Inhalt, und
+           damit sah das ganze Heft leer aus. Ein Heft mit drei Seiten ist nicht
+           leer; nur eine davon ist es.
+    
+           Gezeigt wird deshalb die neueste Seite, die überhaupt etwas ZU zeigen
+           hat. Hat keine etwas, bleibt es bei der neuesten — dann stimmt „leer"
+           auch. */
+        for (const h of nach.values()) {
+            if (Vorschau.umfang(h.zuletzt?.id || ''))
+                continue;
+            const mitInhalt = h.seiten
+                .filter(x => Vorschau.umfang(x.id))
+                .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))[0];
+            if (mitInhalt)
+                h.zuletzt = mitInhalt;
+        }
+        return [...nach.values()].sort((a, b) => b.wann - a.wann);
+    };
+    /**
+     * WAS EINE DATENBANKZEILE ZU ZEIGEN HAT, STEHT NICHT IN IHREN KINDERN.
+     *
+     * Auf dem Bild vom 26. August stand „Meine Aufgaben" als leerer Kasten
+     * neben zwei vollen — obwohl das Heft drei Seiten hat. Die drei sind
+     * Zeilen einer Datenbank; ihr Inhalt steckt in den SPALTEN, nicht in
+     * Kindblöcken, und `Vorschau.miniatur` findet dort zu Recht nichts.
+     *
+     * „Dieses Heft ist noch leer" war damit keine Vorsicht, sondern eine
+     * falsche Aussage über einen vollen Bestand — dieselbe Sorte stiller
+     * Fehler wie die abgeschnittene Zahl aus §55.2: plausibel und falsch.
+     *
+     * Was ein solches Heft zu zeigen hat, sind seine Seiten. Das ist keine
+     * Notlösung: bei einer Aufgabenliste ist die Liste der Aufgaben genau
+     * das, was man sehen will.
+     */
+    const inhaltsListe = (h) => h.seiten.slice()
+        .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
+        .slice(0, 6)
+        .map(x => '<span class="mini-li">' + esc(x.text || 'Ohne Titel') + '</span>')
+        .join('');
+    /** Ein Blatt aus dem Regal: die Miniatur der zuletzt bearbeiteten Seite. */
+    const heftKarte = (h) => {
+        const seite = h.zuletzt;
+        const bild = (seite ? Vorschau.miniatur(seite.id, 6) : '') || inhaltsListe(h);
+        return `<button class="bib-heft" data-id="${esc(seite?.id || '')}" ` +
+            `title="${esc(h.name)}">` +
+            `<span class="bib-heft-marke">${esc(h.icon)} ${esc(h.name)}</span>` +
+            `<span class="bib-heft-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            (bild || '<span>Dieses Heft ist noch leer.</span>') + '</span>' +
+            '<span class="bib-heft-fuss"><strong>' +
+            esc(seite?.text || h.name) + '</strong><small>' +
+            h.seiten.length + (h.seiten.length === 1 ? ' Seite' : ' Seiten') +
+            (h.wann ? ' · ' + esc(wannText(h.wann)) : '') +
+            '</small></span></button>';
+    };
+    /** Eine kleine Karte für „Zuletzt in der Hand" — quer über alle Hefte. */
+    const handKarte = (p) => {
+        const q = quelleVon(p);
+        /* Eine Zeile ohne Kindblöcke hat hier nichts zu zeigen — anders als beim
+           Heft gibt es auch keine Geschwister, die einspringen könnten. Dann
+           steht „noch leer", und das stimmt dann auch. */
+        const bild = Vorschau.miniatur(p.id, 4);
+        return `<button class="bib-hand" data-id="${esc(p.id)}">` +
+            `<span class="bib-hand-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            (bild || '<span>noch leer</span>') + '</span>' +
+            '<span class="bib-hand-fuss"><strong>' + esc(p.text || 'Ohne Titel') +
+            '</strong><small>' + esc(q.text) + ' · ' +
+            esc(wannText(p.edited || p.created)) + '</small></span></button>';
+    };
+    /* Der Kopf gehört BEIDEN Formen. Zwei Köpfe wären zwei Orte, an denen
+       dieselbe Zahl steht — und einer davon wird irgendwann falsch. */
+    /* DIE REITER GEHÖREN IN BEIDE FORMEN, und der erste Entwurf hatte sie nur
+       in der Tabelle. `test202` fand es: es sucht `[data-r="mehr"]`, um über
+       „Ausbildung" ins Schul-Dashboard zu kommen, und im Regal gab es den
+       Knopf nicht. Damit war ein ganzer Bereich von dort aus unerreichbar —
+       genau das, was Redurs „nichts löschen" ausschliesst.
+  
+       Der Grund für den Fehler ist einfach zu benennen: die Reiter FILTERN den
+       Bestand, sie stellen ihn nicht dar. Was gefiltert wird, hat mit der Form
+       nichts zu tun. Sie stehen deshalb im gemeinsamen Kopf und nicht in einer
+       der beiden Zeichenfunktionen. */
+    const bibKopf = (liste, anzahlHefte) => '<h1 class="bib-titel">Bibliothek</h1>' +
+        '<p class="bib-zahlen">' + anzahlHefte +
+        (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' + liste.length +
+        (liste.length === 1 ? ' Seite' : ' Seiten') + ' auf diesem Gerät</p>' +
+        '<div class="bib-kopf">' +
+        '<div class="bib-reiter">' +
+        REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
+            `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
+        `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
+        '</div>' +
+        '<div class="bib-form" role="group" aria-label="Darstellung">' +
+        `<button data-form="regal"${form() === 'regal' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+        '<span data-sym="library" aria-hidden="true"></span>Regal</button>' +
+        `<button data-form="liste"${form() === 'liste' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+        '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
+        '</div>' +
+        '</div>';
+    const zeichneRegal = (wrap) => {
+        const liste = gefiltert();
+        const regal = hefte(liste);
+        /* „Zuletzt in der Hand" ist bewusst NICHT dasselbe wie das Regal: dort
+           steht je Heft die neueste Seite, hier die neuesten Seiten überhaupt.
+           Wer den ganzen Tag in einem Heft war, sieht hier seinen Tag. */
+        const hand = liste.slice()
+            .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
+            /* VIER, NICHT FÜNF. Dieselbe Waise wie bei den Kennzahlen in E204:
+               fünf Karten in einem Vierspalter lassen eine allein in der zweiten
+               Reihe stehen, daneben drei Viertel weisse Fläche. */
+            .slice(0, 4);
+        wrap.innerHTML =
+            '<div class="bib bib-regal-seite">' +
+                bibKopf(liste, regal.length) +
+                (regal.length
+                    ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
+                    : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
+                (hand.length > 1
+                    ? '<section class="bib-abschnitt"><header><h2>Zuletzt in der Hand</h2>' +
+                        '<p>heftübergreifend</p></header>' +
+                        '<div class="bib-hand-reihe">' + hand.map(handKarte).join('') + '</div></section>'
+                    : '') +
+                '</div>';
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+    };
+    /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
+    const binde = (wrap) => {
+        wrap.querySelectorAll('.bib-reiter [data-r]').forEach(b => b.addEventListener('click', () => {
+            if (b.dataset['r'] === 'mehr') {
+                const r = b.getBoundingClientRect();
+                const m = UI.menu(REITER.slice(4).map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''), r.left, r.bottom + 4);
+                m.addEventListener('click', ev => {
+                    const x = elVon(ev)?.closest('[data-x]');
+                    if (!x)
+                        return;
+                    zustand.reiter = x.dataset['x'] ?? zustand.reiter;
+                    m.remove();
+                    App.zeichneSeite();
+                });
+                return;
+            }
+            zustand.reiter = b.dataset['r'] ?? zustand.reiter;
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('[data-form]').forEach(b => b.addEventListener('click', () => {
+            const f = b.dataset['form'] === 'liste' ? 'liste' : 'regal';
+            Store.setMeta('bibForm', f);
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('.bib-heft[data-id], .bib-hand[data-id]').forEach(k => k.addEventListener('click', () => {
+            const id = k.dataset['id'];
+            if (id)
+                App.oeffne(id);
+        }));
+    };
     const zeichnen = (wrap) => {
         if (zustand.reiter === 'schule') {
             zeichneSchule(wrap);
+            return;
+        }
+        if (form() === 'regal') {
+            zeichneRegal(wrap);
             return;
         }
         const liste = gefiltert();
@@ -278,13 +490,12 @@ const Bibliothek = (() => {
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
             '<div class="bib">' +
-                '<h1 class="bib-titel">Bibliothek</h1>' +
-                '<div class="bib-kopf">' +
-                '<div class="bib-reiter">' +
-                REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
-                    `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
-                `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
-                '</div>' +
+                bibKopf(liste, hefte(liste).length) +
+                /* Eigene Klasse: `bib-kopf` trägt seit E207 Reiter und Umschalter und
+                   steht in BEIDEN Formen. Zwei Elemente mit demselben Namen auf einer
+                   Seite sind zwei Dinge, die gleich aussehen sollen und es beim
+                   nächsten Stilzusatz nicht mehr tun. */
+                '<div class="bib-kopf bib-kopf-liste">' +
                 '<div class="bib-werkzeuge">' +
                 '<button data-a="filter" title="Filtern">⚟</button>' +
                 '<button data-a="suche" title="Suchen">🔍</button>' +
@@ -326,24 +537,12 @@ const Bibliothek = (() => {
                 '</div>' +
                 `<div class="bib-fuss">${liste.length} ${liste.length === 1 ? 'Seite' : 'Seiten'}</div>` +
                 '</div>';
-        /* Reiter */
-        wrap.querySelectorAll('[data-r]').forEach((b) => b.addEventListener('click', () => {
-            if (b.dataset.r === 'mehr') {
-                const r = b.getBoundingClientRect();
-                const m = UI.menu(REITER.slice(4).map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''), r.left, r.bottom + 4);
-                m.addEventListener('click', ev => {
-                    const x = elVon(ev)?.closest('[data-x]');
-                    if (!x)
-                        return;
-                    zustand.reiter = x.dataset.x ?? zustand.reiter;
-                    m.remove();
-                    App.zeichneSeite();
-                });
-                return;
-            }
-            zustand.reiter = b.dataset.r;
-            App.zeichneSeite();
-        }));
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+        /* Die Reiter bindet `binde()` — sie stehen jetzt im gemeinsamen Kopf
+           und gehören beiden Formen. Hier stand dieselbe Schleife ein zweites
+           Mal; zwei Bindungen an einem Knopf hätten ihn doppelt ausgelöst. */
         /* Sortieren durch Klick auf den Spaltenkopf */
         wrap.querySelectorAll('.bib-kopfzeile [data-s]').forEach((d) => d.addEventListener('click', () => {
             if (zustand.sortier === d.dataset.s)

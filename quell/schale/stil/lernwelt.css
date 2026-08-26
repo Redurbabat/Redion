@@ -410,18 +410,9 @@
   content:"";position:absolute;right:0;bottom:0;left:0;height:28px;pointer-events:none;
   background:linear-gradient(to bottom,transparent,var(--lw-panel))
 }
-.lernwelt .lw-mini>*{overflow:hidden;min-width:0;text-overflow:ellipsis;white-space:nowrap}
-.lernwelt .lw-mini>b{color:var(--text);font-size:12px;font-weight:720;letter-spacing:-.01em}
-.lernwelt .lw-mini>code{
-  padding:1px var(--space-1);border-radius:var(--radius-sm);background:var(--bg-hover);
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px
-}
-.lernwelt .lw-mini-li{position:relative;padding-left:var(--space-4)}
-.lernwelt .lw-mini-li::before{content:"•";position:absolute;left:var(--space-1);color:var(--text-faint)}
-.lernwelt .lw-mini-q{padding-left:var(--space-3);border-left:2px solid var(--line-stark,var(--line))}
-.lernwelt .lw-mini-todo{display:flex;align-items:center;gap:var(--space-2)}
-.lernwelt .lw-mini-todo>svg{flex:none;width:12px;height:12px}
-.lernwelt .lw-mini-hr{height:1px;background:var(--line)}
+/* Was IN der Miniatur steht, steht in `bausteine.css` unter `.mini-*` —
+   die Bibliothek zeichnet dieselben Zeilen (E207). Hier bleibt nur, was den
+   Ausschnitt der Lernwelt-Karte betrifft. */
 .lernwelt .lw-mini.is-leer{align-content:center;justify-items:center;color:var(--text-faint);font-style:italic}
 .lernwelt .lw-mini.is-leer::after{display:none}
 .lernwelt .lw-continue-foot{

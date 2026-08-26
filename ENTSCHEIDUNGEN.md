@@ -14612,3 +14612,169 @@ Gruppe passt, ebenfalls auffällt.
 
 Prüfläufe: test34 76/76, test222 48/48, test217 27/27, test128 50/50,
 test245 52/52, test215 44/44.
+
+
+================================================================================
+E207 — Die Bibliothek bekommt ein Regal, und die Vorschau zieht in den Kern
+================================================================================
+
+Redur am 26. August: „Die Bibliothek Bilder waren perfekt, so will ich es
+haben." Gemeint ist der abgenommene Entwurf: ein Regal, in dem jedes Heft
+eine Karte ist und auf jeder Karte der ANFANG der Seite steht, an der zuletzt
+gearbeitet wurde.
+
+Die echte Bibliothek war eine Tabelle. Dreizehn Zeilen, in jeder ein Titel und
+dreimal dieselbe Auskunft — „Ich", „Notion-Wissen", „gerade eben". Man liest
+darin nicht, man sucht; und man muss den Titel schon kennen, um ihn zu finden.
+
+
+EIN HEFT IST KEINE NEUE DATENART
+--------------------------------------------------------------------------------
+
+Der Entwurf nennt sie Hefte, der Bestand nennt sie Quellen — es ist dasselbe.
+`quelleVon()` rechnet für jede Seite ohnehin schon aus, wo sie herkommt: die
+Datenbank, die Elternseite, der Lebensbereich, oder „Privat". Damit braucht
+das Regal keine Migration, keinen zweiten Speicher und keinen Umzug (§9).
+
+Die Tabelle bleibt vollständig und ist einen Klick entfernt. Sie kann etwas,
+das das Regal nicht kann — nach Spalten sortieren, Eigenschaften ein- und
+ausblenden, viele Zeilen auf einmal überblicken. Zwei Formen für zwei Fragen:
+„welche Seite war das?" und „welche Seiten gibt es?".
+
+
+DIE VORSCHAU GEHÖRT IN DEN KERN
+--------------------------------------------------------------------------------
+
+E205 hat der Lernwelt beigebracht, eine Seite als kleines Abbild zu zeigen.
+Die Bibliothek stellt dieselbe Frage. CLAUDE.md §5, Regel 1 ist eindeutig: ein
+Bereich importiert nicht aus einem anderen, und was beide brauchen, gehört
+nach `kern/`.
+
+    src/kern/helfer/vorschau.ts
+        klartext(roh)              Auszeichnungen weg, Text bleibt
+        anriss(seiteId, titel)     der Anfang als EINE Zeile
+        miniatur(seiteId, zeilen)  der Anfang als kleines Abbild
+        umfang(seiteId)            hat die Seite überhaupt etwas?
+
+Der bequeme Weg wäre gewesen, die dreissig Zeilen in `bibliothek.ts` noch
+einmal hinzuschreiben. Dann gäbe es zwei Anrisse, die sich das erste Mal
+unterscheiden, sobald jemand eine Auszeichnung ergänzt — gemerkt hätte man es
+an der Stelle, die man gerade nicht ansieht. Der Stil der Zeilen (`.mini-*`)
+ist aus `lernwelt.css` nach `bausteine.css` mitgezogen: dieselbe Seite soll an
+beiden Orten gleich aussehen.
+
+`vorschau.js` steht in `index.html` UND im Vorrat des Arbeiters, VERSION auf
+v25. Fehlte die Zeile, wäre `Vorschau` offline undefiniert — und dann hätten
+BEIDE Ansichten leere Karten, nicht nur eine.
+
+
+VIER FEHLER, UND DREI DAVON FAND DAS BILD
+--------------------------------------------------------------------------------
+
+**Erstens: `Store` steht nicht an `window`.** Im Kernmodul stand
+`const store = (globalThis as any).Store`, und damit war `store` immer
+`undefined`: `Store` ist ein `const` auf oberster Ebene im gemeinsamen
+Skript-Bereich (`module: "none"`), kein Feld am Fenster. `typeof
+undefined?.childrenOf !== 'function'` ist wahr, also kam ein leeres Feld
+zurück — kein Wurf, keine Meldung, nur überall „Dieses Heft ist noch leer".
+
+Gemessen: 16 Kinder mit Text, 0 Zeichen Miniatur. Genau die Sorte, vor der
+§55.2 warnt — eine Vorschau, die nichts zeigt, sieht aus wie ein leerer
+Bestand und nicht wie ein Fehler.
+
+**Zweitens: die Form wurde zu früh gelesen.** `zustand.form = formLesen()`
+läuft, während die Datei geladen wird — lange bevor IndexedDB ausgelesen ist.
+`getMeta` gab den Standard, und die gemerkte Wahl war beim nächsten Start weg.
+Ich hatte im Bildskript ausdrücklich „liste" gesetzt und bekam ein Regal.
+
+**Drittens: „leer" war eine falsche Aussage über einen vollen Bestand.**
+„Meine Aufgaben" stand als leerer Kasten neben zwei vollen, obwohl das Heft
+drei Seiten hat. Die drei sind Zeilen einer Datenbank; ihr Inhalt steckt in
+den SPALTEN, nicht in Kindblöcken. Was ein solches Heft zu zeigen hat, sind
+seine Seiten — bei einer Aufgabenliste ist die Liste der Aufgaben genau das,
+was man sehen will.
+
+**Viertens, und das fand die Prüfung: im Regal fehlten die Reiter.**
+`test202` sucht `[data-r="mehr"]`, um über „Ausbildung" ins Schul-Dashboard zu
+kommen — im Regal gab es den Knopf nicht. Damit war ein ganzer Bereich von
+dort aus unerreichbar. Der Grund ist einfach zu benennen: die Reiter FILTERN
+den Bestand, sie stellen ihn nicht dar. Was gefiltert wird, hat mit der Form
+nichts zu tun. Sie stehen jetzt im gemeinsamen Kopf.
+
+
+UND EIN LÖSCHEN AUS E206 MUSSTE ZURÜCKGENOMMEN WERDEN
+--------------------------------------------------------------------------------
+
+E206 hat „Bibliothek" aus „Meine Apps" entfernt, weil in der obersten Gruppe
+eine Zeile „Bibliothek" steht. Beim Nachlesen der Aufrufe stimmte das auch —
+nur habe ich eine Ebene zu früh aufgehört:
+
+    app-bib      → `Bibliothek.oeffne()`
+                   die Seitenübersicht mit Reitern und Spalten
+    btn-library  → `Produktwelten.bibliothek()` → `workspace('bibliothek')`
+                   die Bibliothek der ARBEITSWELT
+
+Zwei Namen, zwei Ansichten. `test33` fand es: der ersetzte Weg landete im
+Workspace — Krume „🧱 Workspace", null Reiter, null Zeilen. Der Eintrag ist
+unter „Alle Seiten" zurück; der neue Name musste sein, weil zwei gleich
+benannte Knöpfe zu zwei Ansichten schlimmer sind als ein ungewohnter Name.
+
+Die Lehre ist nicht „Panne", sondern eine Regel: ich habe nach dem NAMEN der
+aufgerufenen Funktion verglichen und nicht danach, wohin sie führt. Bei
+`suche`/`inbox` reichte das, weil dort wörtlich derselbe Aufruf steht; hier
+heissen beide Wege „Bibliothek" und meinen Verschiedenes. Redurs Bedingung
+war „nichts löschen", und das hier war ein Löschen.
+
+
+DREI PRÜFLÄUFE NACHGEZOGEN, UND ZWEI NEUE PUNKTE
+--------------------------------------------------------------------------------
+
+`test33` prüft jetzt beide Formen: das Regal (fasst es zu Heften zusammen,
+zeigt es echten Inhalt, führt jede Karte auf eine Seite, überlebt die Wahl
+einen Neuaufbau) und danach wie bisher die Liste. Es öffnet die App-Schubladen
+über den Speicher statt über Klicks — der Baum wird bei jedem Ansichtswechsel
+neu gezeichnet, und ein vorher gegriffener Knopf ist danach ein anderer.
+
+`test222` bekam den Punkt, den `test33` gebraucht hätte: ein Klick öffnet die
+Schublade, und sie sagt es auch dem Vorleseprogramm (`aria-expanded`). Ohne
+ihn wären die Apps im Baum, ein Vorleseprogramm fände sie, und niemand käme
+hin.
+
+Zwei alte Punkte prüften nicht, was sie behaupteten. „Papierkorb dabei" hiess
+in Wahrheit „er steht in dieser Liste" und wäre auch grün geblieben, wenn der
+Knopf ins Leere geführt hätte; er heisst jetzt „Zum Papierkorb führt ein Weg".
+„Bibliothek dabei" prüfte den sichtbaren Text statt der Marke `bib`, die eine
+Adresse nach aussen ist (E167).
+
+UND DIE ERSTE GEGENPROBE BLIEB GRÜN
+--------------------------------------------------------------------------------
+
+Den `window`-Fehler wieder eingebaut, gebaut, `test33` gelaufen — 84/84, und
+`mitInhalt` stand weiter auf 3. Nachgemessen war `Vorschau.miniatur()` dabei
+nachweislich leer: 0 Zeichen bei einer Seite mit 16 Kindern, und
+`window.Store` war wirklich `undefined`. Die Änderung war also da und wirkte;
+der Punkt hat sie bloss nicht gesehen.
+
+Der Grund ist MEIN EIGENER RÜCKFALL. Hat ein Heft keine Miniatur, zeigt die
+Karte stattdessen die Titel ihrer Seiten (`inhaltsListe`) — richtig für
+Datenbankzeilen, und genau damit ist das Blatt immer gefüllt, egal ob die
+Vorschau lebt. Ein Punkt, der „das Blatt trägt Text" misst, kann nicht mehr
+rot werden.
+
+E202 sagt es genau so: eine Gegenprobe muss selbst beweisen, dass sie etwas
+geändert hat. Hier kam eine zweite Lehre dazu — ein Rückfall, der eine
+Anzeige rettet, macht die Prüfung darüber blind. Wer einen einbaut, muss die
+Schicht darunter eigens prüfen.
+
+`test33` prüft deshalb jetzt die Behauptung des Kernmoduls direkt: hat eine
+Seite Kinder mit Text, muss `miniatur()` etwas liefern und `anriss()` auch.
+Damit geht die Gegenprobe rot — gemessen, mit dem Beweis daneben, dass der
+Fehler in der gebauten Datei stand:
+
+    mit Fehler:   kinder=16   zeichen=0    anriss=0   →  2 Punkte rot, 85/87
+    ohne Fehler:  kinder=16   zeichen=412  anriss=90  →  87/87
+
+Zweite Gegenprobe: die Schublade lahmgelegt — beide neuen Punkte in test222
+gehen rot (`{"vorher":0,"nachher":0,"offen":"false"}`).
+
+test33 87/87, test222 50/50, test202 84 ok, test54 63/63.

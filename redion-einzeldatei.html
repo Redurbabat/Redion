@@ -4655,18 +4655,9 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   content:"";position:absolute;right:0;bottom:0;left:0;height:28px;pointer-events:none;
   background:linear-gradient(to bottom,transparent,var(--lw-panel))
 }
-.lernwelt .lw-mini>*{overflow:hidden;min-width:0;text-overflow:ellipsis;white-space:nowrap}
-.lernwelt .lw-mini>b{color:var(--text);font-size:12px;font-weight:720;letter-spacing:-.01em}
-.lernwelt .lw-mini>code{
-  padding:1px var(--space-1);border-radius:var(--radius-sm);background:var(--bg-hover);
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px
-}
-.lernwelt .lw-mini-li{position:relative;padding-left:var(--space-4)}
-.lernwelt .lw-mini-li::before{content:"•";position:absolute;left:var(--space-1);color:var(--text-faint)}
-.lernwelt .lw-mini-q{padding-left:var(--space-3);border-left:2px solid var(--line-stark,var(--line))}
-.lernwelt .lw-mini-todo{display:flex;align-items:center;gap:var(--space-2)}
-.lernwelt .lw-mini-todo>svg{flex:none;width:12px;height:12px}
-.lernwelt .lw-mini-hr{height:1px;background:var(--line)}
+/* Was IN der Miniatur steht, steht in `bausteine.css` unter `.mini-*` —
+   die Bibliothek zeichnet dieselben Zeilen (E207). Hier bleibt nur, was den
+   Ausschnitt der Lernwelt-Karte betrifft. */
 .lernwelt .lw-mini.is-leer{align-content:center;justify-items:center;color:var(--text-faint);font-style:italic}
 .lernwelt .lw-mini.is-leer::after{display:none}
 .lernwelt .lw-continue-foot{
@@ -6015,7 +6006,156 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
  * Notion zeigt beide als eigene Seiten, nicht als Fenster.
  * ======================================================================== */
 .bib{max-width:1100px; margin:0 auto; padding:26px 46px 60px}
-.bib-titel{font-size:38px; font-weight:700; margin:0 0 18px; letter-spacing:-.02em}
+.bib-titel{font-size:38px; font-weight:700; margin:0 0 var(--space-1); letter-spacing:-.02em}
+
+/* ============================================================================
+ * DAS REGAL (E207)
+ * ----------------------------------------------------------------------------
+ * Die Bibliothek war eine Tabelle: dreizehn Zeilen, in jeder ein Titel und
+ * dreimal dieselbe Auskunft. Man liest darin nicht, man sucht — und man muss
+ * den Titel schon kennen, um ihn zu finden.
+ *
+ * Das Regal zeigt je Heft eine Karte, und auf jeder steht der ANFANG der
+ * Seite, an der zuletzt gearbeitet wurde. Die Zeilen darin kommen aus
+ * `Vorschau.miniatur()` und tragen die `.mini-*`-Klassen weiter oben — die
+ * Lernwelt zeichnet dieselben, und dieselbe Seite soll an beiden Orten gleich
+ * aussehen.
+ *
+ * Die Tabelle ist nicht weg: der Umschalter oben führt hin und zurück, und
+ * sie kann nach wie vor sortieren und Spalten zeigen. Zwei Formen für zwei
+ * Fragen — „welche Seite war das?" und „welche Seiten gibt es?".
+ * ==========================================================================*/
+.bib-zahlen{
+  margin:0 0 var(--space-5); color:var(--text-dim); font-size:13px
+}
+.bib-form{
+  display:inline-flex; gap:2px; margin-bottom:var(--space-5); padding:3px;
+  border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--bg-side)
+}
+.bib-form button{
+  display:inline-flex; align-items:center; gap:var(--space-2); min-height:32px;
+  padding:var(--space-1) var(--space-4); border:0; border-radius:var(--radius-md);
+  background:transparent; color:var(--text-dim); font:inherit; font-size:12.5px;
+  font-weight:620; cursor:pointer
+}
+.bib-form button > svg{ width:14px; height:14px; display:block }
+.bib-form button:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-form button.on{ background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1) }
+
+.bib-regal{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:var(--space-5); align-items:start
+}
+.bib-heft{
+  display:grid; grid-template-rows:auto 1fr auto; min-width:0; overflow:hidden;
+  padding:0; border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-side); box-shadow:var(--shadow-1); text-align:left;
+  cursor:pointer;
+  transition:border-color var(--motion-fast) var(--ease),
+    box-shadow var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease)
+}
+.bib-heft:hover{ border-color:var(--line-stark,var(--line)); box-shadow:var(--shadow-2) }
+.bib-heft:active{ transform:scale(var(--press-scale,.985)) }
+.bib-heft-marke{
+  overflow:hidden; padding:var(--space-3) var(--space-5) 0;
+  color:var(--text-dim); font-size:10.5px; font-weight:750;
+  letter-spacing:.06em; text-transform:uppercase;
+  text-overflow:ellipsis; white-space:nowrap
+}
+/* DAS BLATT. Es soll aussehen wie Papier und nicht wie ein Textfeld: heller
+   Grund, feine Zeilen, und unten läuft es aus statt an einer harten Kante
+   mitten im Wort aufzuhören. */
+.bib-heft-blatt{
+  position:relative; display:grid; align-content:start; gap:var(--space-2);
+  overflow:hidden; height:150px; margin:var(--space-3) var(--space-4) 0;
+  padding:var(--space-4) var(--space-4) 0;
+  /* DAS BLATT MUSS SICH ABHEBEN, SONST IST ES KEINS. Erst stand hier
+     `--bg` auf einer Karte in `--bg-card` — im Hellmodus Weiss auf fast
+     Weiss, und der Rand war `--line-soft`. Auf dem Bild sah man kein Blatt,
+     sondern Text, der im Nichts anfing. Die Karte liegt jetzt auf der
+     Nebenfläche, das Blatt darauf ist die Kartenfläche, und der Rand ist
+     der normale. */
+  border:1px solid var(--line); border-bottom:0;
+  border-radius:var(--radius-md) var(--radius-md) 0 0;
+  background:var(--bg-card); color:var(--text-dim); font-size:10.5px; line-height:1.5
+}
+.bib-heft-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:34px;
+  pointer-events:none; background:linear-gradient(to bottom,transparent,var(--bg-card))
+}
+.bib-heft-blatt.is-leer{
+  align-content:center; justify-items:center; color:var(--text-faint); font-style:italic
+}
+.bib-heft-blatt.is-leer::after{ display:none }
+.bib-heft-fuss{
+  display:grid; gap:1px; min-width:0; padding:var(--space-4) var(--space-5)
+}
+.bib-heft-fuss strong{
+  overflow:hidden; font-size:13.5px; font-weight:680; line-height:1.35;
+  text-overflow:ellipsis; white-space:nowrap
+}
+.bib-heft-fuss small{ color:var(--text-dim); font-size:11px }
+
+/* --- Zuletzt in der Hand ------------------------------------------------- */
+.bib-abschnitt{ margin-top:var(--space-9) }
+.bib-abschnitt > header{ margin-bottom:var(--space-4) }
+.bib-abschnitt h2{ margin:0; font-size:15px; font-weight:750; letter-spacing:-.015em }
+.bib-abschnitt > header p{ margin:2px 0 0; color:var(--text-dim); font-size:11px }
+.bib-hand-reihe{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:var(--space-4); align-items:start
+}
+.bib-hand{
+  display:grid; grid-template-rows:1fr auto; min-width:0; overflow:hidden; padding:0;
+  border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-card); text-align:left; cursor:pointer;
+  transition:border-color var(--motion-fast) var(--ease), box-shadow var(--motion-fast) var(--ease)
+}
+.bib-hand:hover{ border-color:var(--line-stark,var(--line)); box-shadow:var(--shadow-1) }
+.bib-hand-blatt{
+  position:relative; display:grid; align-content:start; gap:var(--space-1);
+  overflow:hidden; height:84px; padding:var(--space-3) var(--space-4) 0;
+  color:var(--text-dim); font-size:10px; line-height:1.45
+}
+.bib-hand-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:22px;
+  pointer-events:none; background:linear-gradient(to bottom,transparent,var(--bg-card))
+}
+.bib-hand-blatt.is-leer{ align-content:center; justify-items:center; color:var(--text-faint) }
+.bib-hand-blatt.is-leer::after{ display:none }
+.bib-hand-fuss{
+  display:grid; gap:1px; min-width:0; padding:var(--space-3) var(--space-4);
+  border-top:1px solid var(--line-soft)
+}
+.bib-hand-fuss strong{
+  overflow:hidden; font-size:12px; font-weight:680; text-overflow:ellipsis; white-space:nowrap
+}
+.bib-hand-fuss small{
+  overflow:hidden; color:var(--text-dim); font-size:10px;
+  text-overflow:ellipsis; white-space:nowrap
+}
+
+@media(max-width:760px){
+  .bib-regal{ grid-template-columns:1fr; gap:var(--space-4) }
+  .bib-heft-blatt{ height:130px }
+  .bib-hand-reihe{ grid-template-columns:1fr 1fr }
+}
+/* AM TELEFON EINE ZEILE ZUM SCHIEBEN, NICHT ZWEI ZUM UMBRECHEN.
+   Gesehen auf 390 × 844: die vier Reiter plus „3 mehr …" brachen um, der
+   Umschalter rutschte darunter, und zusammen kosteten sie 150 px, bevor das
+   erste Heft anfing. Derselbe Griff wie bei der Reiterleiste der Lernwelt —
+   und dieselbe Begründung: eine waagerechte Leiste ist am Telefon die
+   vertraute Form, zwei Reihen kosten zu viel Höhe. */
+@media(max-width:760px){
+  .bib-kopf{ display:grid; gap:var(--space-3) }
+  .bib-reiter{
+    flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-inline:contain;
+    scrollbar-width:none
+  }
+  .bib-reiter > button{ flex:0 0 auto }
+  .bib-form{ justify-self:start; margin-bottom:var(--space-3) }
+}
+@media(pointer:coarse){ .bib-form button{ min-height:40px } }
 .bib-kopf{display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line);
   padding-bottom:8px; margin-bottom:2px; flex-wrap:wrap}
 .bib-reiter{display:flex; gap:4px; flex:1; flex-wrap:wrap}
@@ -6177,6 +6317,34 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
+
+/* ============================================================================
+ * DIE ZEILEN EINER SEITENVORSCHAU (E207)
+ * ----------------------------------------------------------------------------
+ * `Vorschau.miniatur()` im Kern gibt den Anfang einer Seite als Satzinhalt
+ * zurück: Überschriften fett, Haken als Kästchen, Listenpunkte mit Punkt.
+ * ZWEI Bereiche zeichnen das — die Lernwelt in „Weiter wo du warst", die
+ * Bibliothek im Regal. Der Stil dafür steht deshalb hier und nicht in einem
+ * der beiden Bereichsblätter (CLAUDE.md §5).
+ *
+ * Was der jeweilige Bereich beisteuert, ist der AUSSCHNITT: wie hoch er ist,
+ * wo die Blende endet, auf welcher Fläche er liegt. Was darin steht, sieht
+ * überall gleich aus — sonst erkennt man dieselbe Seite an zwei Orten
+ * unterschiedlich wieder, und das ist genau das, was eine Vorschau
+ * verhindern soll.
+ * ==========================================================================*/
+.mini-zeilen > *{ overflow:hidden; min-width:0; text-overflow:ellipsis; white-space:nowrap }
+.mini-zeilen > b{ color:var(--text); font-size:12px; font-weight:720; letter-spacing:-.01em }
+.mini-zeilen > code{
+  padding:1px var(--space-1); border-radius:var(--radius-sm); background:var(--bg-hover);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10px
+}
+.mini-li{ position:relative; padding-left:var(--space-4) }
+.mini-li::before{ content:"•"; position:absolute; left:var(--space-1); color:var(--text-faint) }
+.mini-q{ padding-left:var(--space-3); border-left:2px solid var(--line-stark,var(--line)) }
+.mini-todo{ display:flex; align-items:center; gap:var(--space-2) }
+.mini-todo > svg{ flex:none; width:12px; height:12px }
+.mini-hr{ height:1px; background:var(--line) }
 
 /* ============================================================================
  * DIE SCHUBLADEN IN „MEINE APPS" (E206)
@@ -15160,6 +15328,27 @@ Register.navigation = (() => {
            Doppelung aus und war keine. */
         { id: 'app-aufgaben', marke: 'aufgaben', name: 'Meine Aufgaben', icon: '☑', platz: 'apps', gruppe: 'planen', rang: 50,
             hinweis: 'Was dir zugewiesen ist', tun: () => Bibliothek.aufgaben() },
+        /* ZURÜCKGEHOLT — ES WAR KEINE DOPPELUNG (E207).
+           E206 hat diesen Eintrag entfernt, weil in der obersten Gruppe eine
+           Zeile „Bibliothek" steht. Beim Nachlesen der Aufrufe stimmte das auch
+           — nur habe ich EINE Ebene zu früh aufgehört:
+    
+               app-bib      → `Bibliothek.oeffne()`
+                              die Seitenübersicht mit Reitern und Spalten
+               btn-library  → `Produktwelten.bibliothek()` → `workspace('bibliothek')`
+                              die Bibliothek der Arbeitswelt
+    
+           Zwei Namen, zwei Ansichten. `test33` fand es: es klickte auf den
+           ersetzten Weg und landete im Workspace — Krume „🧱 Workspace",
+           null Reiter, null Zeilen.
+    
+           Der Fehler ist eine Lehre und keine Panne: ich habe nach dem NAMEN der
+           aufgerufenen Funktion verglichen und nicht danach, wohin sie führt.
+           Bei `suche`/`inbox` reichte das, weil dort wörtlich derselbe Aufruf
+           steht; hier heissen beide Wege „Bibliothek" und meinen Verschiedenes.
+           Redurs Bedingung war „nichts löschen", und das hier war ein Löschen. */
+        { id: 'app-bib', marke: 'bib', name: 'Alle Seiten', icon: '📚', platz: 'apps', gruppe: 'daten', rang: 55,
+            hinweis: 'Jede Seite, mit Reitern und Spalten', tun: () => Bibliothek.oeffne() },
         { id: 'app-modell', marke: 'modell', name: 'Datenmodell', icon: '🗺', platz: 'apps', gruppe: 'daten', rang: 60,
             hinweis: 'Alle Datenbanken und ihre Verknüpfungen', tun: () => Schema.ansicht() },
         { id: 'app-kennzahl', marke: 'kennzahl', name: 'Kennzahlen', icon: '📊', platz: 'apps', gruppe: 'daten', rang: 70,
@@ -82687,6 +82876,221 @@ window.Rollrand = Rollrand;
 
 </script>
 <script>
+/* ===== quell/kern/helfer/vorschau.js ===== */
+"use strict";
+/* ============================================================================
+ * vorschau.js — Eine Seite so zeigen, dass man sie wiedererkennt
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/helfer/vorschau.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/kern/helfer/vorschau.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * DER GRUND, WARUM ES DIESE DATEI GIBT
+ *
+ * E205 hat der Lernwelt beigebracht, eine Seite als kleines Abbild ihrer
+ * selbst zu zeigen: Überschriften fett, Haken als Kästchen, Listenpunkte mit
+ * Punkt. Das war die Antwort auf neun Zeilen, die alle „Zuletzt geöffnet ·
+ * gerade eben" sagten und damit nichts.
+ *
+ * Die Bibliothek stellt dieselbe Frage — welche Seite ist das? — und ihre
+ * Antwort war eine Tabelle mit einer Titelspalte. Zwei Bereiche, eine
+ * Aufgabe. CLAUDE.md §5, Regel 1 ist an dieser Stelle eindeutig: ein Bereich
+ * darf nicht aus einem anderen importieren, und was beide brauchen, gehört
+ * nach `kern/`.
+ *
+ * Der bequeme Weg wäre gewesen, die dreissig Zeilen in `bibliothek.ts` noch
+ * einmal hinzuschreiben. Dann gäbe es zwei Anrisse, die sich das erste Mal
+ * unterscheiden, sobald jemand eine Markdown-Auszeichnung ergänzt — und
+ * gemerkt hätte man es an der Stelle, die man gerade nicht ansieht.
+ *
+ * WAS HIER STEHT
+ *
+ *     klartext(roh)              Auszeichnungen weg, Text bleibt
+ *     anriss(seiteId, titel)     der Anfang der Seite als EINE Zeile
+ *     miniatur(seiteId, zeilen)  der Anfang der Seite als kleines Abbild
+ *
+ * Alle drei sind gleichläufig. `Store.childrenOf` liest den Spiegel im
+ * Arbeitsspeicher; es gibt kein Warten, keinen zweiten Speicherweg und
+ * keinen Ladezustand, den ein Aufrufer zeichnen müsste.
+ *
+ * WAS HIER NICHT STEHT: ein Vorschau-BILD. Redion legt zu keiner Seite eines
+ * an, und eine Seite, die vor allem aus einem Schaltplan besteht, hat kaum
+ * Text — genau die Seiten, die man am Bild am schnellsten wiedererkennt,
+ * zeigen hier am wenigsten. Das steht als L61 in LUECKEN.md und wird nicht
+ * dadurch besser, dass man es verschweigt.
+ * ==========================================================================*/
+const Vorschau = (() => {
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /**
+     * Auszeichnungen weg, Text bleibt.
+     *
+     * Der Anriss kommt aus `block.text`, und dort steht Redions Markdown so,
+     * wie es getippt wurde. Auf dem Bild vom 26. August stand deshalb „Alles
+     * hier liegt **lokal** in dein…" — mit Sternen. Eine Vorschau ist eine
+     * Vorschau und keine Quelltextzeile.
+     *
+     * Die Muster sind dieselben wie in `inline()` im Editor, nur behalten sie
+     * den Inhalt statt ihn einzuwickeln. Wer dort eine Auszeichnung ergänzt,
+     * muss sie hier ergänzen — sonst steht ihr Zeichen wieder im Anriss.
+     *
+     * Die Reihenfolge ist nicht beliebig: das Bild VOR dem Link, sonst bleibt
+     * ein „!" stehen, und `**` vor `*`, sonst frisst der eine Stern den anderen.
+     */
+    const klartext = (roh) => String(roh ?? '')
+        .replace(/```[\s\S]*?```/g, ' ')
+        .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+        .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/\[\[([^\]]+)\]\]/g, '$1')
+        .replace(/\(\(([^)]+)\)\)/g, '')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/__(.+?)__/g, '$1')
+        .replace(/~~(.+?)~~/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/`([^`]+?)`/g, '$1')
+        .replace(/^\s{0,3}[-*+]\s+/gm, '')
+        .replace(/^\s{0,3}>\s?/gm, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    /**
+     * Die lebenden Kindblöcke einer Seite — oder nichts, wenn es sie nicht gibt.
+     *
+     * `Store` STEHT NICHT AN `window`, und das hat diese Datei einmal still
+     * kaputtgemacht. Hier stand `const store = (globalThis as any).Store`, und
+     * damit war `store` immer `undefined`: `Store` ist ein `const` auf oberster
+     * Ebene im gemeinsamen Skript-Bereich (`module: "none"`), kein Feld am
+     * Fenster. `typeof undefined?.childrenOf !== 'function'` ist wahr, also kam
+     * ein leeres Feld zurück — kein Wurf, keine Meldung in der Konsole, nur
+     * überall die Zeile „Dieses Heft ist noch leer".
+     *
+     * Gemessen: 16 Kinder mit Text, 0 Zeichen Miniatur. Gefunden hat es das
+     * Bild und keine Prüfung (§55) — eine Vorschau, die nichts zeigt, sieht
+     * aus wie ein leerer Bestand und nicht wie ein Fehler.
+     *
+     * `typeof Store` fängt den Fall ab, dass die Datei ohne die Ablage geladen
+     * wird (Einzeldatei im Aufbau, Prüfläufe ohne Schale).
+     */
+    const kinder = (seiteId) => {
+        if (!seiteId || typeof Store === 'undefined' ||
+            typeof Store.childrenOf !== 'function')
+            return [];
+        try {
+            return Store.childrenOf(seiteId);
+        }
+        catch {
+            return [];
+        }
+    };
+    /**
+     * Der Anfang einer Seite als EINE Zeile.
+     *
+     * `titel` ist bewusst dabei: die erste Zeile einer Seite wiederholt oft
+     * ihre Überschrift, und zweimal dasselbe in zwei Zeilen ist genau der
+     * Zustand, den ein Anriss beheben soll.
+     *
+     * ABER NUR, WENN DER REST FÜR SICH STEHT. Der erste Versuch schnitt blind
+     * ab und machte aus „Willkommen in Redion. Alles hier liegt lokal …" den
+     * Anriss „in Redion Alles hier liegt lokal …" — er begann mitten im Satz
+     * mit einem kleinen „in". Der Titel war dort nicht die Überschrift,
+     * sondern der Anfang des Satzes. Erkennbar am nächsten Zeichen: geht es
+     * gross oder mit einer Ziffer weiter, war es eine Überschrift; geht es
+     * klein weiter, war es ein Satz.
+     */
+    const anriss = (seiteId, titel = '', laenge = 90) => {
+        let text = '';
+        for (const kind of kinder(seiteId)) {
+            const stueck = klartext(String(kind?.text || ''));
+            if (!stueck)
+                continue;
+            if (!text && titel && stueck.toLowerCase().startsWith(titel.toLowerCase())) {
+                const rest = stueck.slice(titel.length).replace(/^[\s—–:·.,;-]+/, '');
+                if (!rest)
+                    continue;
+                if (/^[A-ZÄÖÜ0-9„"«]/.test(rest)) {
+                    text = rest;
+                    continue;
+                }
+            }
+            /* Zwei Blöcke sind zwei Absätze. Mit einem Leerzeichen aneinander-
+               gehängt werden sie ein Satz, den so niemand geschrieben hat —
+               „Willkommen in Redion Alles hier liegt lokal". Ein Trennpunkt sagt,
+               dass hier etwas Neues anfängt; nach einem Satzzeichen braucht es
+               ihn nicht. */
+            text += (text ? (/[.!?:…]$/.test(text) ? ' ' : ' · ') : '') + stueck;
+            if (text.length >= laenge)
+                break;
+        }
+        return text.length > laenge ? text.slice(0, laenge - 1).trimEnd() + '…' : text;
+    };
+    /** Ein Zeichen aus dem Register, oder nichts.
+        `Register` hängt sich mit `(window as any).Register = … || {}` wirklich
+        ans Fenster an — anders als `Store`, siehe oben. */
+    const zeichen = (id) => {
+        const reg = globalThis.Register;
+        return reg?.symbole?.alsSvg ? reg.symbole.alsSvg(id, 12) : '';
+    };
+    /**
+     * Eine Seite als kleines Abbild ihrer selbst.
+     *
+     * Nicht ein Anriss in einer Zeile, sondern die ersten Blöcke so, wie sie
+     * auf der Seite stehen. Das ist der Unterschied zwischen „ich erkenne die
+     * Seite wieder" und „ich lese fünf Titel und muss raten".
+     *
+     * ALLES HIER IST SATZINHALT und darf es auch sein: die Karte, in der das
+     * landet, ist gelegentlich ein `<button>`, und ein Knopf darf keine
+     * Absätze enthalten. Ein `<hr>` wäre schon zu viel — deshalb ist die
+     * Trennlinie ein `<span>` mit Rand.
+     */
+    const miniatur = (seiteId, zeilen = 5) => {
+        const raus = [];
+        for (const block of kinder(seiteId)) {
+            if (raus.length >= zeilen)
+                break;
+            const art = String(block?.type || 'text');
+            if (art === 'divider') {
+                raus.push('<span class="mini-hr"></span>');
+                continue;
+            }
+            const text = klartext(String(block?.text || ''));
+            if (!text)
+                continue;
+            const kurz = esc(text.length > 120 ? text.slice(0, 119) + '…' : text);
+            if (art === 'h1' || art === 'h2' || art === 'h3' || art.startsWith('toggle-h')) {
+                raus.push('<b>' + kurz + '</b>');
+                continue;
+            }
+            if (art === 'todo') {
+                raus.push('<span class="mini-todo">' +
+                    zeichen(block?.checked ? 'boxChecked' : 'box') + kurz + '</span>');
+                continue;
+            }
+            if (art === 'bullet' || art === 'number' || art === 'toggle') {
+                raus.push('<span class="mini-li">' + kurz + '</span>');
+                continue;
+            }
+            if (art === 'code' || art === 'equation') {
+                raus.push('<code>' + kurz + '</code>');
+                continue;
+            }
+            if (art === 'quote' || art === 'callout') {
+                raus.push('<span class="mini-q">' + kurz + '</span>');
+                continue;
+            }
+            raus.push('<span>' + kurz + '</span>');
+        }
+        return raus.join('');
+    };
+    /** Wie viele lebende Blöcke hängen an dieser Seite? Eine Ebene, gezählt. */
+    const umfang = (seiteId) => kinder(seiteId).length;
+    return { klartext, anriss, miniatur, umfang };
+})();
+window.Vorschau = Vorschau;
+
+</script>
+<script>
 /* ===== quell/bereiche/planen/dienst.js ===== */
 "use strict";
 /* ============================================================================
@@ -93029,6 +93433,35 @@ const Bibliothek = (() => {
         { id: 'quelle', icon: '📍', name: 'Quelle', breit: '1.2fr' },
         { id: 'wann', icon: '🕘', name: 'Zuletzt bearbeitet', breit: '1fr' }
     ];
+    /* REGAL ODER LISTE (E207).
+       Die Bibliothek war eine Tabelle: dreizehn Zeilen, in jeder ein Titel und
+       dreimal dieselbe Auskunft („Ich", „gerade eben"). Man liest darin nicht,
+       man sucht — und man muss den Titel schon kennen, um ihn zu finden.
+  
+       Der abgenommene Entwurf zeigt stattdessen ein Regal: je Heft eine Karte,
+       und auf jeder Karte steht der ANFANG der Seite, an der zuletzt gearbeitet
+       wurde. Das ist dieselbe Antwort wie in „Weiter wo du warst" (E205), nur
+       für den ganzen Bestand.
+  
+       Die Tabelle bleibt vollständig erhalten und ist einen Klick entfernt.
+       Sie kann etwas, das das Regal nicht kann — nach Spalten sortieren,
+       Eigenschaften ein- und ausblenden, viele Zeilen auf einmal überblicken.
+       Was gebraucht wird, entscheidet nicht die Form, sondern die Frage. */
+    /**
+     * Welche Form ist gewählt?
+     *
+     * DIESER WERT WIRD BEIM ZEICHNEN GELESEN UND NICHT BEIM LADEN. Der erste
+     * Entwurf legte ihn als `zustand.form = formLesen()` an — und diese Zeile
+     * läuft, während die Datei geladen wird, also lange bevor IndexedDB
+     * ausgelesen ist. `getMeta` gab damals brav den Standard zurück, und die
+     * gemerkte Wahl war beim nächsten Start weg: wer „Liste" wählte, bekam
+     * wieder das Regal.
+     *
+     * Gefunden hat es das Bild — ich hatte im Bildskript ausdrücklich „liste"
+     * gesetzt und bekam ein Regal. Kein Wurf, keine Meldung; dieselbe Sorte
+     * stiller Fehler wie `Store` an `window` (E207, `vorschau.ts`).
+     */
+    const form = () => Store.getMeta('bibForm', 'regal') === 'liste' ? 'liste' : 'regal';
     let zustand = { reiter: 'kuerzlich', sortier: 'wann', richtung: 'ab',
         suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id) };
     /** Eine zusammengefuehrte Sicht auf bestehende Redion-Daten. Sie speichert
@@ -93183,9 +93616,192 @@ const Bibliothek = (() => {
         }
         return liste;
     };
+    const hefte = (liste) => {
+        const nach = new Map();
+        for (const p of liste) {
+            const q = quelleVon(p);
+            /* Der Schlüssel ist die Kennung, wenn es eine gibt — zwei Datenbanken
+               dürfen gleich heissen. Ohne Kennung (Privat, Direkt freigegeben)
+               trägt der Name. */
+            const schluessel = q.id || ('name:' + q.text);
+            let h = nach.get(schluessel);
+            if (!h) {
+                h = { id: q.id, icon: q.icon, name: q.text, seiten: [],
+                    zuletzt: null, wann: 0 };
+                nach.set(schluessel, h);
+            }
+            h.seiten.push(p);
+            const wann = zeitZahl(p.edited || p.created);
+            if (wann >= h.wann) {
+                h.wann = wann;
+                h.zuletzt = p;
+            }
+        }
+        /* DIE NEUESTE SEITE IST NICHT IMMER DIE, DIE MAN ZEIGEN WILL.
+           Auf dem Bild vom 26. August stand „Meine Aufgaben" als leerer Kasten
+           neben zwei vollen — obwohl das Heft drei Seiten hat. Seine neueste
+           Seite („Ollama installieren") ist bloss eine Zeile ohne Inhalt, und
+           damit sah das ganze Heft leer aus. Ein Heft mit drei Seiten ist nicht
+           leer; nur eine davon ist es.
+    
+           Gezeigt wird deshalb die neueste Seite, die überhaupt etwas ZU zeigen
+           hat. Hat keine etwas, bleibt es bei der neuesten — dann stimmt „leer"
+           auch. */
+        for (const h of nach.values()) {
+            if (Vorschau.umfang(h.zuletzt?.id || ''))
+                continue;
+            const mitInhalt = h.seiten
+                .filter(x => Vorschau.umfang(x.id))
+                .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))[0];
+            if (mitInhalt)
+                h.zuletzt = mitInhalt;
+        }
+        return [...nach.values()].sort((a, b) => b.wann - a.wann);
+    };
+    /**
+     * WAS EINE DATENBANKZEILE ZU ZEIGEN HAT, STEHT NICHT IN IHREN KINDERN.
+     *
+     * Auf dem Bild vom 26. August stand „Meine Aufgaben" als leerer Kasten
+     * neben zwei vollen — obwohl das Heft drei Seiten hat. Die drei sind
+     * Zeilen einer Datenbank; ihr Inhalt steckt in den SPALTEN, nicht in
+     * Kindblöcken, und `Vorschau.miniatur` findet dort zu Recht nichts.
+     *
+     * „Dieses Heft ist noch leer" war damit keine Vorsicht, sondern eine
+     * falsche Aussage über einen vollen Bestand — dieselbe Sorte stiller
+     * Fehler wie die abgeschnittene Zahl aus §55.2: plausibel und falsch.
+     *
+     * Was ein solches Heft zu zeigen hat, sind seine Seiten. Das ist keine
+     * Notlösung: bei einer Aufgabenliste ist die Liste der Aufgaben genau
+     * das, was man sehen will.
+     */
+    const inhaltsListe = (h) => h.seiten.slice()
+        .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
+        .slice(0, 6)
+        .map(x => '<span class="mini-li">' + esc(x.text || 'Ohne Titel') + '</span>')
+        .join('');
+    /** Ein Blatt aus dem Regal: die Miniatur der zuletzt bearbeiteten Seite. */
+    const heftKarte = (h) => {
+        const seite = h.zuletzt;
+        const bild = (seite ? Vorschau.miniatur(seite.id, 6) : '') || inhaltsListe(h);
+        return `<button class="bib-heft" data-id="${esc(seite?.id || '')}" ` +
+            `title="${esc(h.name)}">` +
+            `<span class="bib-heft-marke">${esc(h.icon)} ${esc(h.name)}</span>` +
+            `<span class="bib-heft-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            (bild || '<span>Dieses Heft ist noch leer.</span>') + '</span>' +
+            '<span class="bib-heft-fuss"><strong>' +
+            esc(seite?.text || h.name) + '</strong><small>' +
+            h.seiten.length + (h.seiten.length === 1 ? ' Seite' : ' Seiten') +
+            (h.wann ? ' · ' + esc(wannText(h.wann)) : '') +
+            '</small></span></button>';
+    };
+    /** Eine kleine Karte für „Zuletzt in der Hand" — quer über alle Hefte. */
+    const handKarte = (p) => {
+        const q = quelleVon(p);
+        /* Eine Zeile ohne Kindblöcke hat hier nichts zu zeigen — anders als beim
+           Heft gibt es auch keine Geschwister, die einspringen könnten. Dann
+           steht „noch leer", und das stimmt dann auch. */
+        const bild = Vorschau.miniatur(p.id, 4);
+        return `<button class="bib-hand" data-id="${esc(p.id)}">` +
+            `<span class="bib-hand-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            (bild || '<span>noch leer</span>') + '</span>' +
+            '<span class="bib-hand-fuss"><strong>' + esc(p.text || 'Ohne Titel') +
+            '</strong><small>' + esc(q.text) + ' · ' +
+            esc(wannText(p.edited || p.created)) + '</small></span></button>';
+    };
+    /* Der Kopf gehört BEIDEN Formen. Zwei Köpfe wären zwei Orte, an denen
+       dieselbe Zahl steht — und einer davon wird irgendwann falsch. */
+    /* DIE REITER GEHÖREN IN BEIDE FORMEN, und der erste Entwurf hatte sie nur
+       in der Tabelle. `test202` fand es: es sucht `[data-r="mehr"]`, um über
+       „Ausbildung" ins Schul-Dashboard zu kommen, und im Regal gab es den
+       Knopf nicht. Damit war ein ganzer Bereich von dort aus unerreichbar —
+       genau das, was Redurs „nichts löschen" ausschliesst.
+  
+       Der Grund für den Fehler ist einfach zu benennen: die Reiter FILTERN den
+       Bestand, sie stellen ihn nicht dar. Was gefiltert wird, hat mit der Form
+       nichts zu tun. Sie stehen deshalb im gemeinsamen Kopf und nicht in einer
+       der beiden Zeichenfunktionen. */
+    const bibKopf = (liste, anzahlHefte) => '<h1 class="bib-titel">Bibliothek</h1>' +
+        '<p class="bib-zahlen">' + anzahlHefte +
+        (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' + liste.length +
+        (liste.length === 1 ? ' Seite' : ' Seiten') + ' auf diesem Gerät</p>' +
+        '<div class="bib-kopf">' +
+        '<div class="bib-reiter">' +
+        REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
+            `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
+        `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
+        '</div>' +
+        '<div class="bib-form" role="group" aria-label="Darstellung">' +
+        `<button data-form="regal"${form() === 'regal' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+        '<span data-sym="library" aria-hidden="true"></span>Regal</button>' +
+        `<button data-form="liste"${form() === 'liste' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+        '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
+        '</div>' +
+        '</div>';
+    const zeichneRegal = (wrap) => {
+        const liste = gefiltert();
+        const regal = hefte(liste);
+        /* „Zuletzt in der Hand" ist bewusst NICHT dasselbe wie das Regal: dort
+           steht je Heft die neueste Seite, hier die neuesten Seiten überhaupt.
+           Wer den ganzen Tag in einem Heft war, sieht hier seinen Tag. */
+        const hand = liste.slice()
+            .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
+            /* VIER, NICHT FÜNF. Dieselbe Waise wie bei den Kennzahlen in E204:
+               fünf Karten in einem Vierspalter lassen eine allein in der zweiten
+               Reihe stehen, daneben drei Viertel weisse Fläche. */
+            .slice(0, 4);
+        wrap.innerHTML =
+            '<div class="bib bib-regal-seite">' +
+                bibKopf(liste, regal.length) +
+                (regal.length
+                    ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
+                    : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
+                (hand.length > 1
+                    ? '<section class="bib-abschnitt"><header><h2>Zuletzt in der Hand</h2>' +
+                        '<p>heftübergreifend</p></header>' +
+                        '<div class="bib-hand-reihe">' + hand.map(handKarte).join('') + '</div></section>'
+                    : '') +
+                '</div>';
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+    };
+    /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
+    const binde = (wrap) => {
+        wrap.querySelectorAll('.bib-reiter [data-r]').forEach(b => b.addEventListener('click', () => {
+            if (b.dataset['r'] === 'mehr') {
+                const r = b.getBoundingClientRect();
+                const m = UI.menu(REITER.slice(4).map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''), r.left, r.bottom + 4);
+                m.addEventListener('click', ev => {
+                    const x = elVon(ev)?.closest('[data-x]');
+                    if (!x)
+                        return;
+                    zustand.reiter = x.dataset['x'] ?? zustand.reiter;
+                    m.remove();
+                    App.zeichneSeite();
+                });
+                return;
+            }
+            zustand.reiter = b.dataset['r'] ?? zustand.reiter;
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('[data-form]').forEach(b => b.addEventListener('click', () => {
+            const f = b.dataset['form'] === 'liste' ? 'liste' : 'regal';
+            Store.setMeta('bibForm', f);
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('.bib-heft[data-id], .bib-hand[data-id]').forEach(k => k.addEventListener('click', () => {
+            const id = k.dataset['id'];
+            if (id)
+                App.oeffne(id);
+        }));
+    };
     const zeichnen = (wrap) => {
         if (zustand.reiter === 'schule') {
             zeichneSchule(wrap);
+            return;
+        }
+        if (form() === 'regal') {
+            zeichneRegal(wrap);
             return;
         }
         const liste = gefiltert();
@@ -93193,13 +93809,12 @@ const Bibliothek = (() => {
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
             '<div class="bib">' +
-                '<h1 class="bib-titel">Bibliothek</h1>' +
-                '<div class="bib-kopf">' +
-                '<div class="bib-reiter">' +
-                REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
-                    `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
-                `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
-                '</div>' +
+                bibKopf(liste, hefte(liste).length) +
+                /* Eigene Klasse: `bib-kopf` trägt seit E207 Reiter und Umschalter und
+                   steht in BEIDEN Formen. Zwei Elemente mit demselben Namen auf einer
+                   Seite sind zwei Dinge, die gleich aussehen sollen und es beim
+                   nächsten Stilzusatz nicht mehr tun. */
+                '<div class="bib-kopf bib-kopf-liste">' +
                 '<div class="bib-werkzeuge">' +
                 '<button data-a="filter" title="Filtern">⚟</button>' +
                 '<button data-a="suche" title="Suchen">🔍</button>' +
@@ -93241,24 +93856,12 @@ const Bibliothek = (() => {
                 '</div>' +
                 `<div class="bib-fuss">${liste.length} ${liste.length === 1 ? 'Seite' : 'Seiten'}</div>` +
                 '</div>';
-        /* Reiter */
-        wrap.querySelectorAll('[data-r]').forEach((b) => b.addEventListener('click', () => {
-            if (b.dataset.r === 'mehr') {
-                const r = b.getBoundingClientRect();
-                const m = UI.menu(REITER.slice(4).map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''), r.left, r.bottom + 4);
-                m.addEventListener('click', ev => {
-                    const x = elVon(ev)?.closest('[data-x]');
-                    if (!x)
-                        return;
-                    zustand.reiter = x.dataset.x ?? zustand.reiter;
-                    m.remove();
-                    App.zeichneSeite();
-                });
-                return;
-            }
-            zustand.reiter = b.dataset.r;
-            App.zeichneSeite();
-        }));
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+        /* Die Reiter bindet `binde()` — sie stehen jetzt im gemeinsamen Kopf
+           und gehören beiden Formen. Hier stand dieselbe Schleife ein zweites
+           Mal; zwei Bindungen an einem Knopf hätten ihn doppelt ausgelöst. */
         /* Sortieren durch Klick auf den Spaltenkopf */
         wrap.querySelectorAll('.bib-kopfzeile [data-s]').forEach((d) => d.addEventListener('click', () => {
             if (zustand.sortier === d.dataset.s)
@@ -95625,153 +96228,28 @@ const Lernwelt = (() => {
      * zu teuer — die erste Ebene ist der Anfang der Seite, und mehr wird
      * ohnehin nicht angezeigt.
      */
-    /**
-     * Auszeichnungen weg, Text bleibt.
-     *
-     * Der Anriss kommt aus `block.text`, und dort steht Redions Markdown so,
-     * wie es getippt wurde. Auf dem Bild vom 26. August stand deshalb
-     * „Alles hier liegt **lokal** in dein…" — mit Sternen. Eine Vorschau ist
-     * eine Vorschau und keine Quelltextzeile.
-     *
-     * Die Muster sind dieselben wie in `inline()` im Editor, nur behalten sie
-     * den Inhalt statt ihn einzuwickeln. Wer dort eine Auszeichnung ergänzt,
-     * muss sie hier ergänzen — sonst steht ihr Zeichen wieder im Anriss. Die
-     * Reihenfolge ist nicht beliebig: das Bild vor dem Link (sonst bleibt ein
-     * „!" stehen) und `**` vor `*` (sonst frisst der eine Stern den anderen).
-     */
-    const klartext = (roh) => roh
-        .replace(/```[\s\S]*?```/g, ' ')
-        .replace(/^\s{0,3}#{1,6}\s+/gm, '')
-        .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-        .replace(/\[\[([^\]]+)\]\]/g, '$1')
-        .replace(/\(\(([^)]+)\)\)/g, '')
-        .replace(/\*\*(.+?)\*\*/g, '$1')
-        .replace(/__(.+?)__/g, '$1')
-        .replace(/~~(.+?)~~/g, '$1')
-        .replace(/\*(.+?)\*/g, '$1')
-        .replace(/`([^`]+?)`/g, '$1')
-        .replace(/^\s{0,3}[-*+]\s+/gm, '')
-        .replace(/^\s{0,3}>\s?/gm, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    const vorschau = (seiteId, titel = '', laenge = 90) => {
-        if (!seiteId || typeof Store?.childrenOf !== 'function')
-            return '';
-        let text = '';
-        try {
-            for (const kind of Store.childrenOf(seiteId)) {
-                const stueck = klartext(String(kind?.text || ''));
-                if (!stueck)
-                    continue;
-                /* DIE ERSTE ZEILE IST OFT DIE ÜBERSCHRIFT NOCH EINMAL. Auf dem Bild
-                   stand über „Willkommen" der Anriss „Willkommen in Redion Alles hier
-                   liegt …" und über „Was Redion mehr kann" der Anriss „Was Redion
-                   mehr kann als Notion …". Zweimal dasselbe in zwei Zeilen ist genau
-                   der Zustand, den die Vorschau beheben sollte.
-        
-                   ABER NUR, WENN DER REST FÜR SICH STEHT. Der erste Versuch schnitt
-                   blind ab und machte aus „Willkommen in Redion. Alles hier liegt
-                   lokal …" den Anriss „in Redion Alles hier liegt lokal …" — er begann
-                   mitten im Satz mit einem kleinen „in". Der Titel war da nicht die
-                   Überschrift, sondern der Anfang des Satzes. Erkennbar ist das am
-                   nächsten Zeichen: geht es gross oder mit einer Ziffer weiter, war
-                   es eine Überschrift; geht es klein weiter, war es ein Satz. */
-                if (!text && titel && stueck.toLowerCase().startsWith(titel.toLowerCase())) {
-                    const rest = stueck.slice(titel.length).replace(/^[\s—–:·.,;-]+/, '');
-                    if (!rest)
-                        continue;
-                    if (/^[A-ZÄÖÜ0-9„"«]/.test(rest)) {
-                        text = rest;
-                        continue;
-                    }
-                }
-                /* Zwei Blöcke sind zwei Absätze. Mit einem Leerzeichen aneinander-
-                   gehängt werden sie ein Satz, den so niemand geschrieben hat —
-                   „Willkommen in Redion Alles hier liegt lokal". Ein Trennpunkt sagt,
-                   dass hier etwas Neues anfängt; nach einem Satzzeichen braucht es
-                   ihn nicht. */
-                text += (text ? (/[.!?:…]$/.test(text) ? ' ' : ' · ') : '') + stueck;
-                if (text.length >= laenge)
-                    break;
-            }
-        }
-        catch {
-            return '';
-        }
-        return text.length > laenge ? text.slice(0, laenge - 1).trimEnd() + '…' : text;
-    };
-    /**
-     * Eine Seite als kleines Abbild ihrer selbst.
-     *
-     * Nicht ein Anriss in einer Zeile, sondern die ersten Blöcke so, wie sie
-     * auf der Seite stehen: eine Überschrift ist fett, ein Haken ist ein
-     * Kästchen, ein Listenpunkt hat seinen Punkt. Das ist der Unterschied
-     * zwischen „ich erkenne die Seite wieder" und „ich lese fünf Titel und
-     * muss raten".
-     *
-     * Ein echtes Vorschaubild wäre besser und gibt es nicht: Redion legt zu
-     * keiner Seite eines an. Das steht in LUECKEN.md und nicht hier.
-     *
-     * ALLES HIER IST SATZINHALT und darf es auch sein: die Karte ist ein
-     * `<button>`, und ein Knopf darf keine Absätze enthalten. Ein `<hr>` wäre
-     * schon zu viel — deshalb ist die Trennlinie ein `<span>` mit Rand.
-     */
-    const miniatur = (seiteId, zeilen = 5) => {
-        if (!seiteId || typeof Store?.childrenOf !== 'function')
-            return '';
-        let kinder = [];
-        try {
-            kinder = Store.childrenOf(seiteId);
-        }
-        catch {
-            return '';
-        }
-        const raus = [];
-        for (const block of kinder) {
-            if (raus.length >= zeilen)
-                break;
-            const art = String(block?.type || 'text');
-            if (art === 'divider') {
-                raus.push('<span class="lw-mini-hr"></span>');
-                continue;
-            }
-            const text = klartext(String(block?.text || ''));
-            if (!text)
-                continue;
-            const kurz = esc(text.length > 120 ? text.slice(0, 119) + '…' : text);
-            if (art === 'h1' || art === 'h2' || art === 'h3' || art.startsWith('toggle-h')) {
-                raus.push('<b>' + kurz + '</b>');
-                continue;
-            }
-            if (art === 'todo') {
-                raus.push('<span class="lw-mini-todo">' +
-                    zeichenSpan(block?.checked ? 'boxChecked' : 'box') + kurz + '</span>');
-                continue;
-            }
-            if (art === 'bullet' || art === 'number' || art === 'toggle') {
-                raus.push('<span class="lw-mini-li">' + kurz + '</span>');
-                continue;
-            }
-            if (art === 'code' || art === 'equation') {
-                raus.push('<code>' + kurz + '</code>');
-                continue;
-            }
-            if (art === 'quote' || art === 'callout') {
-                raus.push('<span class="lw-mini-q">' + kurz + '</span>');
-                continue;
-            }
-            raus.push('<span>' + kurz + '</span>');
-        }
-        return raus.join('');
-    };
+    /* DIESE DREI STANDEN HIER UND STEHEN JETZT IM KERN (E207).
+       `klartext`, `vorschau` und `miniatur` kamen mit E205 hierher, und mit
+       der Bibliothek brauchte sie ein ZWEITER Bereich. CLAUDE.md §5, Regel 1
+       ist da eindeutig: ein Bereich importiert nicht aus einem anderen, und
+       was beide brauchen, gehört nach `kern/`.
+  
+       Der bequeme Weg wäre gewesen, die dreissig Zeilen dort noch einmal
+       hinzuschreiben. Dann gäbe es zwei Anrisse, die sich das erste Mal
+       unterscheiden, sobald jemand eine Auszeichnung ergänzt — und gemerkt
+       hätte man es an der Stelle, die man gerade nicht ansieht.
+  
+       Die Namen bleiben hier stehen, damit die Aufrufer unten unverändert
+       lesbar sind; sie zeigen nur woandershin. */
+    const vorschau = (seiteId, titel = '', laenge = 90) => Vorschau.anriss(seiteId, titel, laenge);
+    const miniatur = (seiteId, zeilen = 5) => Vorschau.miniatur(seiteId, zeilen);
     /* Eine Karte für „Weiter wo du warst". Der Knopf öffnet weiterhin
        `item.id` — die Miniatur liest von `pageId`, falls der Eintrag selbst
        eine Datei ist und auf einer Seite liegt (E205). */
     const weiterKarte = (item) => {
         const bild = miniatur(item.pageId || item.id);
         return '<button type="button" class="lw-continue-card" data-lw-open="' + esc(item.id) + '">' +
-            '<span class="lw-mini' + (bild ? '' : ' is-leer') + '">' +
+            '<span class="lw-mini mini-zeilen' + (bild ? '' : ' is-leer') + '">' +
             (bild || '<span>Diese Seite ist noch leer.</span>') + '</span>' +
             '<span class="lw-continue-foot">' + zeichenSpan(item.icon, 'lw-object-icon') +
             '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.untertitel) +

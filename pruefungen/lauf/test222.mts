@@ -342,15 +342,23 @@ const apps = await seite.evaluate(() => {
   return { reg, gezeichnet };
 });
 
-/* SIEBZEHN, NICHT MEHR ZWANZIG (E206). Drei Zeilen standen hier und stehen
-   woanders schon: „Bibliothek" (= btn-library), „Papierkorb" (= btn-trash)
-   und „Hilfe" (= btn-hilfe, gleicher Aufruf `Werkzeuge.tastenkuerzel`).
-   Redur hat dem Entfernen der Kopien ausdrücklich zugestimmt; kein Ziel
-   wurde dadurch unerreichbar.
+/* ACHTZEHN (E206, berichtigt in E207). Zwanzig waren es; drei sahen nach
+   Doppelungen aus, und eine davon war keine:
+
+       Papierkorb   `App.papierkorb()`            = btn-trash, im Fuss   ✓ weg
+       Hilfe        `Werkzeuge.tastenkuerzel()`   = btn-hilfe, im Fuss   ✓ weg
+       Bibliothek   `Bibliothek.oeffne()` — und `btn-library` ruft
+                    `Produktwelten.bibliothek()`, also die Bibliothek der
+                    ARBEITSWELT. Zwei Namen, zwei Ansichten. `test33` fand
+                    es: der ersetzte Weg landete im Workspace. Der Eintrag
+                    ist unter „Alle Seiten" zurück.
+
+   Redur hat dem Entfernen der Kopien zugestimmt; ein Löschen war nur die
+   erste Fassung, und die Prüfung hat sie zurückgeholt.
 
    Die Zahl steht hier weiterhin fest und nicht als `> 0`: eine Prüfung, die
    jede Zahl durchlässt, merkt nicht, wenn die Hälfte der Liste wegfällt. */
-p('Es gibt siebzehn Apps', apps.reg.length === 17, String(apps.reg.length));
+p('Es gibt achtzehn Apps', apps.reg.length === 18, String(apps.reg.length));
 gleich('Und genauso viele stehen da', apps.gezeichnet.length, apps.reg.length);
 gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
   apps.reg.map((x: any) => x.id));
@@ -367,6 +375,32 @@ gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
    trägt das Präfix, das E166 verursacht und E167 zurückgenommen hat. */
 const mitPraefix = apps.gezeichnet.filter((x: any) => /^app-/.test(x.id)).map((x: any) => x.id);
 p('Keine Marke trägt das `app-`-Präfix aus E166', mitPraefix.length === 0, mitPraefix.join(', '));
+
+/* DIE SCHUBLADEN MÜSSEN AUFGEHEN (E206/E207).
+   Seit E206 liegen die Apps in vier Gruppen, und zugeklappt ist die
+   Voreinstellung. Das ist genau dann eine gute Idee, wenn ein Klick sie
+   wieder öffnet — und genau dann eine schlechte, wenn nicht: die Einträge
+   stehen im Baum, ein Vorleseprogramm findet sie, und niemand kommt hin.
+   `test33` lief prompt in einen Zeitablauf, weil es auf einen versteckten
+   Knopf klickte.
+
+   Geprüft wird die BEDIENUNG und nicht der Speicher: erst zählen, was zu
+   sehen ist, dann klicken, dann wieder zählen. */
+const schublade = await seite.evaluate(async () => {
+  const sichtbar = () => [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]
+    .filter(b => b.offsetParent !== null).length;
+  const vorher = sichtbar();
+  const kopf = document.querySelector<HTMLElement>('[data-app-gruppe]');
+  const name = kopf?.dataset['appGruppe'] || '';
+  kopf?.click();
+  await new Promise(r => setTimeout(r, 260));
+  const neuerKopf = document.querySelector<HTMLElement>(`[data-app-gruppe="${name}"]`);
+  return { vorher, nachher: sichtbar(), name,
+           offen: neuerKopf?.getAttribute('aria-expanded') };
+});
+p('Ein Klick öffnet die Schublade', schublade.nachher > schublade.vorher,
+  JSON.stringify(schublade));
+gleich('Und sie sagt es auch dem Vorleseprogramm', schublade.offen, 'true');
 p('Und die kurzen Marken sind noch da',
   ['kalender', 'pwa', 'aufgaben'].every(m => apps.gezeichnet.some((x: any) => x.id === m)),
   apps.gezeichnet.map((x: any) => x.id).join(', '));

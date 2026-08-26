@@ -31,10 +31,31 @@ import { chromium } from 'playwright';
     [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));
   console.log('   Meine Apps:', JSON.stringify(apps));
   ok('Abschnitt Meine Apps hat neun Einträge', apps.length >= 9);
-  ok('Bibliothek dabei', apps.some(x => (x ?? '').includes('Bibliothek')));
+  /* HIESS „BIBLIOTHEK", HEISST „ALLE SEITEN" (E207).
+     Der Name musste sich ändern, weil daneben eine Zeile „Bibliothek" in der
+     obersten Gruppe steht, die etwas ANDERES öffnet — die Bibliothek der
+     Arbeitswelt. Zwei gleich benannte Knöpfe zu zwei Ansichten sind
+     schlimmer als ein ungewohnter Name.
+
+     Geprüft wird über die Marke und nicht über den Text: `bib` ist eine
+     Adresse nach aussen und bleibt (E167), der sichtbare Name darf sich
+     ändern. Der erste Entwurf dieses Punktes prüfte den Text und ging
+     deshalb rot, obwohl der Knopf unverändert dasteht. */
+  const marken = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]
+      .map(x => x.dataset['app'] || ''));
+  ok('Die Seitenübersicht ist dabei', marken.includes('bib'));
   ok('Meine Aufgaben dabei', apps.some(x => (x ?? '').includes('Meine Aufgaben')));
   ok('Marktplatz dabei', apps.some(x => (x ?? '').includes('Marktplatz')));
-  ok('Papierkorb dabei', apps.some(x => (x ?? '').includes('Papierkorb')));
+  /* DER PAPIERKORB STEHT NICHT MEHR IN „MEINE APPS" (E206) — er stand dort
+     UND im Fuss, und beide riefen `App.papierkorb()`. Redur hat dem
+     Entfernen der Kopie zugestimmt.
+
+     Die Behauptung dahinter war nie „er steht in dieser Liste", sondern „man
+     kommt hin". Genau das steht jetzt hier. Der alte Punkt wäre auch grün
+     geblieben, wenn der Knopf ins Leere geführt hätte. */
+  const papierkorbDa = await p.evaluate(() => !!document.getElementById('btn-trash'));
+  ok('Zum Papierkorb führt ein Weg', papierkorbDa);
   ok('Abschnittsüberschrift steht darüber', await p.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('.side-section span')].some(x => (x.textContent ?? '').startsWith('Meine Apps'))));
 
@@ -49,8 +70,139 @@ import { chromium } from 'playwright';
   });
   await p.waitForTimeout(500);
 
+  /* DIE APPS LIEGEN SEIT E206 IN SCHUBLADEN, und zugeklappt ist die
+     Voreinstellung. Ein Klick auf ein verstecktes Element wartet, bis die
+     Zeit abläuft — die Schublade muss also erst auf.
+
+     Das ist kein Umweg um die Prüfung herum, sondern der Weg, den ein
+     Mensch auch geht. Und er prüft im selben Zug, dass die Schublade
+     überhaupt aufgeht: bliebe sie zu, liefe der Klick danach in denselben
+     Zeitablauf.
+
+     `[data-app="bib"]` heisst seit E207 „Alle Seiten" und nicht mehr
+     „Bibliothek" — die Marke bleibt, weil sie eine Adresse nach aussen ist
+     (E167). Der Weg über `#btn-library` wäre FALSCH: der führt in die
+     Bibliothek der Arbeitswelt, nicht in diese hier. Genau daran ist der
+     erste Versuch gescheitert.
+
+     Geöffnet werden ALLE Schubladen und nicht die eine, in der „bib" heute
+     liegt: sonst wäre dieser Lauf an eine Gruppenzuordnung gebunden, die
+     eine Gestaltungsfrage ist und keine Zusage. Wer eine App umsortiert,
+     soll dafür keine Prüfung anfassen müssen. */
+  const schubladenAuf = async () => {
+    /* Über den Speicher und nicht über Klicks: der Baum wird bei jedem
+       Ansichtswechsel neu gezeichnet, und ein Knopf, den man vorher
+       gegriffen hat, ist danach ein anderer — der zweite Aufruf lief prompt
+       in „element is not attached".
+
+       Dass die Schublade sich mit einem Klick öffnet, prüft `test222` §6.
+       Hier wird nur der Zustand hergestellt, den dieser Lauf braucht; eine
+       Prüfung, die nebenbei etwas anderes mitprüft, ist bei einem Fehler
+       schwerer zu lesen, nicht leichter. */
+    await p.evaluate(() => {
+      const alle = [...document.querySelectorAll<HTMLElement>('[data-app-gruppe]')]
+        .map(b => b.dataset['appGruppe'] || '').filter(Boolean);
+      Store.setMeta('appGruppenAuf', alle);
+      App.zeichneBaum();
+    });
+    await p.waitForTimeout(300);
+  };
+  await schubladenAuf();
   await p.click('[data-app="bib"]');
   await p.waitForTimeout(600);
+
+  /* DIE BIBLIOTHEK HAT SEIT E207 ZWEI FORMEN, und das Regal ist die
+     Voreinstellung. Was hier geprüft wird — Spalten, Sortieren, Zeilen —
+     gehört der LISTE; im Regal gibt es keinen Spaltenkopf, und ein Klick
+     darauf wartet, bis die Zeit abläuft.
+
+     Umgeschaltet wird über den Knopf und nicht über `Store.setMeta`: so
+     prüft dieser Schritt nebenbei, dass der Umschalter überhaupt umschaltet.
+     Die Wahl bleibt gemerkt, deshalb steht sie hier einmal und nicht vor
+     jedem Punkt. */
+  /* ================================================================== *
+   * DAS REGAL (E207) — geprüft, BEVOR auf die Liste geschaltet wird
+   * ------------------------------------------------------------------ *
+   * Es ist die Voreinstellung und war bis hierher ungeprüft. Die drei
+   * Punkte sind die drei Behauptungen, die es aufstellt: es fasst nach
+   * Heften zusammen, es zeigt echten Inhalt, und ein Klick führt hin.
+   * ================================================================== */
+  const regal = await p.evaluate(() => {
+    const karten = [...document.querySelectorAll<HTMLElement>('.bib-heft')];
+    return {
+      hefte: karten.length,
+      zahlen: document.querySelector('.bib-zahlen')?.textContent || '',
+      /* Die entscheidende Zahl: wie viele Blätter tragen wirklich Text?
+         Ein Regal, in dem überall „Dieses Heft ist noch leer" steht, hätte
+         alle anderen Punkte ebenfalls bestanden — genau so sah es aus,
+         als `Vorschau` den Speicher über `window` suchte. */
+      mitInhalt: karten.filter(k =>
+        (k.querySelector('.bib-heft-blatt')?.textContent || '').trim().length > 20).length,
+      ziele: karten.map(k => k.dataset['id'] || '').filter(Boolean).length,
+      quellenImBestand: new Set(Object.values<any>(Store.cache.blocks)
+        .filter(b => b.type === 'page' && b.alive !== false && !b.system)
+        .map(b => b.parentTable === 'collection' ? 'c:' + b.parentId : 'p')).size
+    };
+  });
+  console.log('   Regal:', JSON.stringify(regal));
+  ok('Das Regal fasst die Seiten zu Heften zusammen', regal.hefte > 0);
+
+  /* ------------------------------------------------------------------ *
+   * UND DIE VORSCHAU SELBST — sonst prüft `mitInhalt` das Falsche.
+   * ------------------------------------------------------------------ *
+   * Erster Versuch der Gegenprobe: den Fehler „Store über window suchen"
+   * wieder eingebaut, gebaut, geprüft, und `mitInhalt` blieb bei 3.
+   * Nachgemessen war `Vorschau.miniatur()` dabei nachweislich leer — 0
+   * Zeichen bei einer Seite mit 16 Kindern.
+   *
+   * Der Grund ist MEIN EIGENER RÜCKFALL: hat ein Heft keine Miniatur, zeigt
+   * die Karte stattdessen die Titel ihrer Seiten (`inhaltsListe`). Das ist
+   * für Datenbankzeilen richtig und macht die Prüfung darüber blind — das
+   * Blatt ist gefüllt, egal ob die Vorschau lebt.
+   *
+   * Geprüft wird deshalb die Behauptung des Kernmoduls direkt: hat eine
+   * Seite Kinder mit Text, muss `miniatur()` etwas liefern. E202 sagt es
+   * genau so — eine Gegenprobe muss selbst beweisen, dass sie etwas
+   * geändert hat, und dieser Punkt ist der Beweis.
+   */
+  const vorschauKern = await p.evaluate(() => {
+    const seiten = Object.values<any>(Store.cache.blocks)
+      .filter(b => b.type === 'page' && b.alive !== false)
+      .filter(b => Store.childrenOf(b.id).some((k: any) => (k.text || '').trim()));
+    const probe = seiten.slice(0, 5).map((b: any) => ({
+      kinder: Store.childrenOf(b.id).length,
+      zeichen: Vorschau.miniatur(b.id, 6).length,
+      anriss: Vorschau.anriss(b.id, b.text || '').length
+    }));
+    return { gepruefte: probe.length, stumm: probe.filter(x => !x.zeichen).length,
+             ohneAnriss: probe.filter(x => !x.anriss).length, probe };
+  });
+  console.log('   Vorschau:', JSON.stringify(vorschauKern.probe));
+  ok('Es gibt überhaupt Seiten mit Inhalt zu prüfen', vorschauKern.gepruefte >= 3);
+  ok('Keine Seite mit Text liefert eine stumme Miniatur', vorschauKern.stumm === 0);
+  ok('Und auch keinen leeren Anriss', vorschauKern.ohneAnriss === 0);
+  ok('Und sagt, wie viele Hefte und Seiten es sind', /Hefte? · \d+ Seiten?/.test(regal.zahlen));
+  ok('Jedes Heft zeigt echten Inhalt, keinen leeren Kasten',
+     regal.mitInhalt === regal.hefte);
+  ok('Und jedes führt auf eine Seite', regal.ziele === regal.hefte);
+
+  /* DIE GEMERKTE WAHL MUSS EINEN NEUAUFBAU ÜBERLEBEN.
+     Der erste Entwurf las die Form beim SKRIPTLADEN — da ist IndexedDB noch
+     nicht ausgelesen, `getMeta` gab den Standard, und die Wahl war beim
+     nächsten Start weg. Kein Wurf, keine Meldung. Diese Prüfung geht rot,
+     wenn jemand den Wert wieder zu früh liest. */
+  await p.click('[data-form="liste"]');
+  await p.waitForTimeout(400);
+  await p.evaluate(() => { App.zeichneSeite(); });
+  await p.waitForTimeout(400);
+  const merktSich = await p.evaluate(() => ({
+    gemerkt: Store.getMeta('bibForm', 'regal'),
+    gezeigt: document.querySelector('.bib-tab') ? 'liste' : 'regal'
+  }));
+  ok('Die Wahl „Liste" wird gemerkt', merktSich.gemerkt === 'liste');
+  ok('… und beim nächsten Zeichnen auch gezeigt', merktSich.gezeigt === 'liste');
+
+  await p.waitForTimeout(500);
 
   const bib = await p.evaluate(() => ({
     titel: document.querySelector('.bib-titel')?.textContent,
@@ -130,6 +282,7 @@ import { chromium } from 'playwright';
     Store.updateBlock(c2.id, { text: 'Fremde Aufgabe', props: { wer: 'Jemand anderes', fertig: false } });
   });
   await p.waitForTimeout(400);
+  await schubladenAuf();
   await p.click('[data-app="aufgaben"]');
   await p.waitForTimeout(600);
 

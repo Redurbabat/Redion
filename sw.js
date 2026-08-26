@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v24';
+const VERSION = 'notizen-v25';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -150,6 +150,12 @@ const GRUNDSTOCK = [
     './quell/kern/helfer/tempo.js',
     './quell/kern/helfer/ablage.js',
     './quell/kern/helfer/rollrand.js',
+    /* Die Seitenvorschau (E207). Sie hängt an KEINEM Bereich — Lernwelt und
+       Bibliothek zeichnen beide damit. Fehlte die Zeile, käme sie offline
+       nicht aus dem Vorrat, `Vorschau` bliebe undefiniert, und beide Ansichten
+       hätten leere Karten: derselbe Fehler wie bei `symbole.js` in test143,
+       nur an zwei Stellen gleichzeitig. */
+    './quell/kern/helfer/vorschau.js',
     './quell/bereiche/planen/dienst.js',
     './quell/bereiche/einstellungen/erweiterungen.js',
     './quell/bereiche/verbinden/eingang.js',

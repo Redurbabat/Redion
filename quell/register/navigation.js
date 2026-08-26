@@ -133,6 +133,27 @@ Register.navigation = (() => {
            Doppelung aus und war keine. */
         { id: 'app-aufgaben', marke: 'aufgaben', name: 'Meine Aufgaben', icon: '☑', platz: 'apps', gruppe: 'planen', rang: 50,
             hinweis: 'Was dir zugewiesen ist', tun: () => Bibliothek.aufgaben() },
+        /* ZURÜCKGEHOLT — ES WAR KEINE DOPPELUNG (E207).
+           E206 hat diesen Eintrag entfernt, weil in der obersten Gruppe eine
+           Zeile „Bibliothek" steht. Beim Nachlesen der Aufrufe stimmte das auch
+           — nur habe ich EINE Ebene zu früh aufgehört:
+    
+               app-bib      → `Bibliothek.oeffne()`
+                              die Seitenübersicht mit Reitern und Spalten
+               btn-library  → `Produktwelten.bibliothek()` → `workspace('bibliothek')`
+                              die Bibliothek der Arbeitswelt
+    
+           Zwei Namen, zwei Ansichten. `test33` fand es: es klickte auf den
+           ersetzten Weg und landete im Workspace — Krume „🧱 Workspace",
+           null Reiter, null Zeilen.
+    
+           Der Fehler ist eine Lehre und keine Panne: ich habe nach dem NAMEN der
+           aufgerufenen Funktion verglichen und nicht danach, wohin sie führt.
+           Bei `suche`/`inbox` reichte das, weil dort wörtlich derselbe Aufruf
+           steht; hier heissen beide Wege „Bibliothek" und meinen Verschiedenes.
+           Redurs Bedingung war „nichts löschen", und das hier war ein Löschen. */
+        { id: 'app-bib', marke: 'bib', name: 'Alle Seiten', icon: '📚', platz: 'apps', gruppe: 'daten', rang: 55,
+            hinweis: 'Jede Seite, mit Reitern und Spalten', tun: () => Bibliothek.oeffne() },
         { id: 'app-modell', marke: 'modell', name: 'Datenmodell', icon: '🗺', platz: 'apps', gruppe: 'daten', rang: 60,
             hinweis: 'Alle Datenbanken und ihre Verknüpfungen', tun: () => Schema.ansicht() },
         { id: 'app-kennzahl', marke: 'kennzahl', name: 'Kennzahlen', icon: '📊', platz: 'apps', gruppe: 'daten', rang: 70,
