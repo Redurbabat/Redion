@@ -3828,7 +3828,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   /* Zwei Bauteile nebeneinander sind auf 390 px zwei zu schmale Bauteile. */
   .bs-nurbild{display:block; width:100%}
   .bs-nurbild + .bs-nurbild{margin-left:0}
-  .bs-skizze{flex:none; max-width:100%; width:100%; align-self:center}
+  /* Die Skizze bekommt NICHT die volle Breite. Bei 390 px wird aus einer
+     300 × 175 grossen Zeichnung eine 366 × 214 grosse, und damit füllt ein
+     einziges Bild die halbe sichtbare Höhe — die Grössen und die Formeln
+     darunter sieht man erst nach dem Rollen. Ein Formelbuch, in dem man zur
+     Formel scrollen muss, ist als Nachschlagewerk unbrauchbar. */
+  .bs-skizze{flex:none; width:100%; max-width:290px; align-self:center}
   .bs-groessen{flex:none; width:100%}
   /* KEIN `display:flex` an der Formel. Hier stand es, um sie auf 44 px zu
      bringen — und Flexbox macht aus `Q`, `<sub>L</sub>`, ` = `, `<sub>` …

@@ -564,27 +564,38 @@ const Elektroskizzen = (() => {
      * -------------------------------------------------------------------*/
 
     's13-ummagnetisierungskennlinien': () => {
-      /* Zwei B-H-Schleifen nebeneinander: breit für hartmagnetisch (der
-         Dauermagnet behält sein Feld), schmal für weichmagnetisch (der
-         Trafokern gibt es wieder her). Die Fläche IST der Verlust je
-         Ummagnetisierung — darum ist die schmale die für den Kern. */
-      const schleife = (x0: number, breit: number): string => {
-        const y0 = 96, h = 46;
-        return `<path d="M${x0 - 60},${y0 + h * 0.15} ` +
-          `C${x0 - 60 + breit},${y0 - h} ${x0 + 20},${y0 - h} ${x0 + 60},${y0 - h} ` +
-          `C${x0 + 60 - breit},${y0 + h} ${x0 - 20},${y0 + h} ${x0 - 60},${y0 + h * 0.15} Z" ` +
-          `stroke="${BETONT}" stroke-width="2" fill="none"/>`;
+      /* Eine echte Hystereseschleife, nicht ein Blatt.
+       *
+       * Der erste Versuch änderte nur die Kontrollpunkte einer Linse — und
+       * die breite sah aus wie die schmale. Damit war das Bild wertlos: es
+       * zeigt ZWEI Kurven, und ihr Unterschied IST die Aussage.
+       *
+       * Jetzt bestimmt `hc` die Koerzitivfeldstärke — wie weit man das Feld
+       * umkehren muss, bis der Werkstoff seine Magnetisierung aufgibt. Beim
+       * Dauermagneten weit, beim Trafokern fast nicht. Die eingeschlossene
+       * FLÄCHE ist die Verlustarbeit je Ummagnetisierung; darum will man im
+       * Kern die schmale.
+       */
+      const schleife = (cx: number, hc: number): string => {
+        const cy = 88, hx = 50, by = 40;
+        const d =
+          `M${cx - hx},${cy + by} ` +
+          `C${cx - hc * 2},${cy + by} ${cx - hc},${cy + by * 0.2} ${cx - hc},${cy} ` +
+          `C${cx - hc},${cy - by * 0.8} ${cx + hx * 0.4},${cy - by} ${cx + hx},${cy - by} ` +
+          `C${cx + hc * 2},${cy - by} ${cx + hc},${cy - by * 0.2} ${cx + hc},${cy} ` +
+          `C${cx + hc},${cy + by * 0.8} ${cx - hx * 0.4},${cy + by} ${cx - hx},${cy + by} Z`;
+        return `<path d="${d}" stroke="${BETONT}" stroke-width="2.1" fill="none"/>`;
       };
+      const kreuz = (cx: number): string =>
+        pfeil(cx - 62, 88, cx + 62, 88, BLASS, 1.2) +
+        pfeil(cx, 142, cx, 34, BLASS, 1.2) +
+        txt('B', cx - 8, 42, 'end', BLASS, 11) +
+        txt('H', cx + 60, 104, 'end', BLASS, 11);
       return svg(340, 180,
-        achsen(80, 96, 0, 0, '', '') +
-        lin(20, 96, 150, 96, BLASS, 1.2) + lin(80, 150, 80, 42, BLASS, 1.2) +
-        schleife(80, 46) +
-        lin(190, 96, 320, 96, BLASS, 1.2) + lin(250, 150, 250, 42, BLASS, 1.2) +
-        schleife(250, 12) +
-        txt('B', 74, 40, 'end', BLASS, 11) + txt('H', 152, 110, 'end', BLASS, 11) +
-        txt('B', 244, 40, 'end', BLASS, 11) + txt('H', 322, 110, 'end', BLASS, 11) +
-        txt('hartmagnetisch', 80, 172, 'middle', STRICH, 11) +
-        txt('weichmagnetisch', 250, 172, 'middle', STRICH, 11));
+        kreuz(86) + schleife(86, 24) +
+        kreuz(254) + schleife(254, 5) +
+        txt('hartmagnetisch', 86, 170, 'middle', STRICH, 11) +
+        txt('weichmagnetisch', 254, 170, 'middle', STRICH, 11));
     },
 
     's13-magnetfelder-bei-spulen': () => {
