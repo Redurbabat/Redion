@@ -700,29 +700,49 @@ const rundlauf = await seite.evaluate(() => {
   const KONSTANT = ['g', 'ε₀', 'μ₀'];
 
   for (const f of alle as any[]) {
+    /* Grössen, nach denen die Formel selbst sagt, dass sie nicht eindeutig
+       auflösbar ist — dann muss sie es auch begründen. */
+    const MEHRDEUTIG: string[] = f.mehrdeutig || [];
     const zeichen = f.groessen.map((x: any) => x.zeichen);
     umstellungen += Object.keys(f.loese || {}).length;
     for (const z of zeichen)
-      if (!f.loese[z] && !KONSTANT.includes(z))
+      if (!f.loese[z] && !KONSTANT.includes(z) && !MEHRDEUTIG.includes(z))
         schlecht.push(`${f.id}: ${z} nicht auflösbar`);
+    if (MEHRDEUTIG.length && !f.annahme)
+      schlecht.push(`${f.id}: mehrdeutig, aber ohne Begründung`);
 
-    const werte: Record<string, number> = {};
-    zeichen.slice(1).forEach((z: string, i: number) => { werte[z] = 2 + i * 1.7; });
-    let erste: number;
-    try { erste = f.loese[zeichen[0]] ? f.loese[zeichen[0]](werte) : NaN; }
-    catch { erste = NaN; }
-    if (!Number.isFinite(erste)) { schlecht.push(`${f.id}: Startwerte gehen nicht`); continue; }
-    werte[zeichen[0]] = erste;
+    /* MEHRERE WERTESÄTZE PROBIEREN, den ersten nehmen, der geht.
+       Bei P = √(S²−Q²) muss S grösser als Q sein; steigende Werte der Reihe
+       nach verletzen das, und die Meldung sagte dann etwas über die
+       Testwerte statt über die Formel. */
+    const SAETZE = [
+      (i: number) => 2 + i * 1.7,
+      (i: number) => 9 - i * 1.7,
+      (i: number) => 3 + i * 0.3,
+      (i: number) => 12 - i * 0.9
+    ];
+    let werte: Record<string, number> | null = null;
+    for (const satz of SAETZE) {
+      const w: Record<string, number> = {};
+      zeichen.slice(1).forEach((z: string, i: number) => { w[z] = satz(i); });
+      let erste: number;
+      try { erste = f.loese[zeichen[0]] ? f.loese[zeichen[0]](w) : NaN; }
+      catch { erste = NaN; }
+      if (!Number.isFinite(erste) || erste === 0) continue;
+      w[zeichen[0]] = erste;
+      werte = w; break;
+    }
+    if (!werte) { schlecht.push(`${f.id}: kein Wertesatz geht`); continue; }
 
     for (const ziel of zeichen) {
-      if (KONSTANT.includes(ziel)) continue;
+      if (KONSTANT.includes(ziel) || MEHRDEUTIG.includes(ziel)) continue;
       const rest: Record<string, number> = {};
       zeichen.forEach((z: string) => { if (z !== ziel) rest[z] = werte[z]!; });
       let e: number;
       try { e = f.loese[ziel](rest); } catch { schlecht.push(`${f.id}/${ziel}: wirft`); continue; }
       if (!Number.isFinite(e)) { schlecht.push(`${f.id}/${ziel}: ${e}`); continue; }
       for (const zweit of zeichen) {
-        if (zweit === ziel || KONSTANT.includes(zweit)) continue;
+        if (zweit === ziel || KONSTANT.includes(zweit) || MEHRDEUTIG.includes(zweit)) continue;
         const r2: Record<string, number> = { ...rest };
         r2[ziel] = e; delete r2[zweit];
         let e2: number;
@@ -737,9 +757,10 @@ const rundlauf = await seite.evaluate(() => {
   return { formeln: alle.length, umstellungen, schlecht: [...new Set(schlecht)] };
 });
 
-p('Jede Grösse jeder Formel ist auflösbar',
-  !rundlauf.schlecht.some((x: string) => /nicht auflösbar/.test(x)),
-  rundlauf.schlecht.filter((x: string) => /nicht auflösbar/.test(x)).slice(0, 3).join(' | '));
+const nichtLoesbar = rundlauf.schlecht.filter(
+  (x: string) => /nicht auflösbar|ohne Begründung/.test(x));
+p('Jede Grösse ist auflösbar — oder sagt begründet, warum nicht',
+  !nichtLoesbar.length, nichtLoesbar.slice(0, 3).join(' | '));
 p('Und jede Umstellung rechnet hin und zurück dasselbe',
   !rundlauf.schlecht.length, rundlauf.schlecht.slice(0, 3).join(' | '));
 p('Es sind auch wirklich viele', rundlauf.umstellungen >= 250,

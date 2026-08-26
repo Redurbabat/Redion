@@ -17786,6 +17786,177 @@ Register.elektroformeln = (() => {
             erklaerung: 'In Reihe addieren sich Wirk- und Blindwiderstand nach Pythagoras, nicht direkt.'
         },
         {
+            id: 'kreisfrequenz', kapitel: 'wechsel', schreibweise: 'ω = 2 · π · f',
+            groessen: [g('ω', 'Kreisfrequenz', '1/s'), g('f', 'Frequenz', 'Hz')],
+            loese: { 'ω': v => 2 * PI * v.f, f: v => v['ω'] / (2 * PI) },
+            erklaerung: 'Bei 50 Hz sind das 314 1/s — die Zahl, die in jeder ' +
+                'Wechselstromrechnung wieder auftaucht.'
+        },
+        {
+            id: 'momentanwert', kapitel: 'wechsel', schreibweise: 'u = û · sin α',
+            groessen: [g('u', 'Momentanwert der Spannung', 'V', 'Der Wert GERADE JETZT'),
+                g('û', 'Scheitelwert', 'V'),
+                g('α', 'Phasenwinkel', '°')],
+            loese: {
+                u: v => v['û'] * Math.sin(v['α'] * PI / 180),
+                'û': v => v.u / Math.sin(v['α'] * PI / 180),
+                'α': v => Math.asin(v.u / v['û']) * 180 / PI
+            },
+            erklaerung: 'Die Sinuslinie in einer Zeile. Bei 90° steht der Scheitel, bei 0° und 180° die Null.'
+        },
+        {
+            id: 'impedanz-reihe-rlc', kapitel: 'wechsel',
+            schreibweise: 'Z = √(R² + (X_L − X_C)²)',
+            groessen: [g('Z', 'Scheinwiderstand', 'Ω'), g('R', 'Wirkwiderstand', 'Ω'),
+                g('X_L', 'induktiver Blindwiderstand', 'Ω'),
+                g('X_C', 'kapazitiver Blindwiderstand', 'Ω')],
+            loese: {
+                Z: v => WURZEL(v.R * v.R + (v.X_L - v.X_C) * (v.X_L - v.X_C)),
+                R: v => WURZEL(v.Z * v.Z - (v.X_L - v.X_C) * (v.X_L - v.X_C))
+            },
+            mehrdeutig: ['X_L', 'X_C'],
+            annahme: 'Reihenschaltung. Die beiden Blindwiderstände heben sich gegenseitig ' +
+                'auf — deshalb die DIFFERENZ und nicht die Summe. Nach X_L oder X_C ' +
+                'lässt sich nicht auflösen: aus Z, R und dem anderen Blindwiderstand ' +
+                'folgt nur der BETRAG der Differenz, nicht ihr Vorzeichen. Die ' +
+                'Schaltung kann induktiv oder kapazitiv überwiegen, und beides passt ' +
+                'zur selben Impedanz.',
+            erklaerung: 'Spule und Kondensator wirken gegeneinander. Sind sie gleich gross, ' +
+                'bleibt nur R übrig — das ist Resonanz.'
+        },
+        {
+            id: 'cosphi-reihe', kapitel: 'wechsel', schreibweise: 'cos φ = R / Z',
+            groessen: [g('cosφ', 'Leistungsfaktor', ''), g('R', 'Wirkwiderstand', 'Ω'),
+                g('Z', 'Scheinwiderstand', 'Ω')],
+            loese: {
+                'cosφ': v => v.R / v.Z,
+                R: v => v['cosφ'] * v.Z,
+                Z: v => v.R / v['cosφ']
+            },
+            annahme: 'Gilt für die REIHENSCHALTUNG. Bei der Parallelschaltung ist es ' +
+                'umgekehrt: cos φ = Z / R.',
+            erklaerung: 'Der Leistungsfaktor aus dem Widerstandsdreieck.'
+        },
+        {
+            id: 'impedanz-parallel', kapitel: 'wechsel',
+            schreibweise: 'Z = 1 / √(1/R² + 1/X²)',
+            groessen: [g('Z', 'Scheinwiderstand', 'Ω'), g('R', 'Wirkwiderstand', 'Ω'),
+                g('X', 'Blindwiderstand', 'Ω')],
+            loese: {
+                Z: v => 1 / WURZEL(1 / (v.R * v.R) + 1 / (v.X * v.X)),
+                R: v => 1 / WURZEL(1 / (v.Z * v.Z) - 1 / (v.X * v.X)),
+                X: v => 1 / WURZEL(1 / (v.Z * v.Z) - 1 / (v.R * v.R))
+            },
+            annahme: 'Parallelschaltung. Hier addieren sich die LEITWERTE, nicht die Widerstände.',
+            erklaerung: 'Bei der Parallelschaltung ist der Scheinwiderstand KLEINER als jeder ' +
+                'einzelne — genau umgekehrt zur Reihe.'
+        },
+        {
+            id: 'cosphi-parallel', kapitel: 'wechsel', schreibweise: 'cos φ = Z / R',
+            groessen: [g('cosφ', 'Leistungsfaktor', ''), g('Z', 'Scheinwiderstand', 'Ω'),
+                g('R', 'Wirkwiderstand', 'Ω')],
+            loese: {
+                'cosφ': v => v.Z / v.R,
+                Z: v => v['cosφ'] * v.R,
+                R: v => v.Z / v['cosφ']
+            },
+            annahme: 'Gilt für die PARALLELSCHALTUNG. Bei der Reihenschaltung ist es ' +
+                'umgekehrt: cos φ = R / Z.',
+            erklaerung: 'Der häufigste Verwechslungsfehler im ganzen Kapitel: Reihe und ' +
+                'Parallel haben dieselben Buchstaben und die umgekehrte Formel.'
+        },
+        {
+            id: 'resonanzfrequenz', kapitel: 'wechsel',
+            schreibweise: 'f_r = 1 / (2 · π · √(L · C))',
+            groessen: [g('f_r', 'Resonanzfrequenz', 'Hz'), g('L', 'Induktivität', 'H'),
+                g('C', 'Kapazität', 'F')],
+            loese: {
+                f_r: v => 1 / (2 * PI * WURZEL(v.L * v.C)),
+                L: v => 1 / (4 * PI * PI * v.f_r * v.f_r * v.C),
+                C: v => 1 / (4 * PI * PI * v.f_r * v.f_r * v.L)
+            },
+            erklaerung: 'Bei dieser Frequenz sind X_L und X_C gleich gross. Dann ist Z = R ' +
+                'und cos φ = 1 — die Schaltung verhält sich rein ohmsch.'
+        },
+        {
+            id: 'spannung-reihe-ac', kapitel: 'wechsel', schreibweise: 'U = √(U_w² + U_b²)',
+            groessen: [g('U', 'Gesamtspannung', 'V'), g('U_w', 'Wirkspannung', 'V'),
+                g('U_b', 'Blindspannung', 'V')],
+            loese: {
+                U: v => WURZEL(v.U_w * v.U_w + v.U_b * v.U_b),
+                U_w: v => WURZEL(v.U * v.U - v.U_b * v.U_b),
+                U_b: v => WURZEL(v.U * v.U - v.U_w * v.U_w)
+            },
+            annahme: 'Reihenschaltung. Die Teilspannungen addieren sich NICHT einfach — ' +
+                'sie stehen senkrecht aufeinander.',
+            erklaerung: 'Warum 60 V plus 80 V hier 100 V ergeben und nicht 140.'
+        },
+        {
+            id: 'strom-parallel-ac', kapitel: 'wechsel', schreibweise: 'I = √(I_w² + I_b²)',
+            groessen: [g('I', 'Gesamtstrom', 'A'), g('I_w', 'Wirkstrom', 'A'),
+                g('I_b', 'Blindstrom', 'A')],
+            loese: {
+                I: v => WURZEL(v.I_w * v.I_w + v.I_b * v.I_b),
+                I_w: v => WURZEL(v.I * v.I - v.I_b * v.I_b),
+                I_b: v => WURZEL(v.I * v.I - v.I_w * v.I_w)
+            },
+            annahme: 'Parallelschaltung. Das Gegenstück zur Spannung bei der Reihe.',
+            erklaerung: 'Bei der Parallelschaltung teilen sich die Ströme so auf, wie sich ' +
+                'bei der Reihe die Spannungen aufteilen.'
+        },
+        {
+            id: 'scheinleitwert', kapitel: 'wechsel', schreibweise: 'Y = 1 / Z',
+            groessen: [g('Y', 'Scheinleitwert', 'S'), g('Z', 'Scheinwiderstand', 'Ω')],
+            loese: { Y: v => 1 / v.Z, Z: v => 1 / v.Y },
+            erklaerung: 'Bei Parallelschaltungen rechnet es sich mit Leitwerten leichter — ' +
+                'sie addieren sich einfach.'
+        },
+        {
+            id: 'scheinleistung-z', kapitel: 'wechsel', schreibweise: 'S = U² / Z',
+            groessen: [g('S', 'Scheinleistung', 'VA'), g('U', 'Spannung', 'V'),
+                g('Z', 'Scheinwiderstand', 'Ω')],
+            loese: {
+                S: v => v.U * v.U / v.Z,
+                U: v => WURZEL(v.S * v.Z),
+                Z: v => v.U * v.U / v.S
+            },
+            erklaerung: 'Wenn der Strom unbekannt ist, aber Spannung und Impedanz da sind.'
+        },
+        {
+            id: 'cosphi-leistung', kapitel: 'wechsel', schreibweise: 'cos φ = P / S',
+            groessen: [g('cosφ', 'Leistungsfaktor', ''), g('P', 'Wirkleistung', 'W'),
+                g('S', 'Scheinleistung', 'VA')],
+            loese: {
+                'cosφ': v => v.P / v.S,
+                P: v => v['cosφ'] * v.S,
+                S: v => v.P / v['cosφ']
+            },
+            erklaerung: 'Der Leistungsfaktor aus dem Leistungsdreieck — dieselbe Zahl wie ' +
+                'aus dem Widerstandsdreieck, anderer Weg.'
+        },
+        {
+            id: 'sinphi-leistung', kapitel: 'wechsel', schreibweise: 'sin φ = Q / S',
+            groessen: [g('sinφ', 'Blindfaktor', ''), g('Q', 'Blindleistung', 'var'),
+                g('S', 'Scheinleistung', 'VA')],
+            loese: {
+                'sinφ': v => v.Q / v.S,
+                Q: v => v['sinφ'] * v.S,
+                S: v => v.Q / v['sinφ']
+            },
+            erklaerung: 'Wie viel von der Scheinleistung blind ist.'
+        },
+        {
+            id: 'wirkleistung-dreieck', kapitel: 'wechsel', schreibweise: 'P = √(S² − Q²)',
+            groessen: [g('P', 'Wirkleistung', 'W'), g('S', 'Scheinleistung', 'VA'),
+                g('Q', 'Blindleistung', 'var')],
+            loese: {
+                P: v => WURZEL(v.S * v.S - v.Q * v.Q),
+                S: v => WURZEL(v.P * v.P + v.Q * v.Q),
+                Q: v => WURZEL(v.S * v.S - v.P * v.P)
+            },
+            erklaerung: 'Das Leistungsdreieck von der anderen Seite: was wirklich arbeitet.'
+        },
+        {
             id: 'scheinleistung', kapitel: 'wechsel', schreibweise: 'S = U · I',
             groessen: [g('S', 'Scheinleistung', 'VA'), g('U', 'Spannung', 'V'), g('I', 'Strom', 'A')],
             loese: { S: v => v.U * v.I, U: v => v.S / v.I, I: v => v.S / v.U },
