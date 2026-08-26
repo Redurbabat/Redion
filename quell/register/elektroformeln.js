@@ -1269,6 +1269,89 @@ Register.elektroformeln = (() => {
         },
         /* ---- Motor ----------------------------------------------------------- */
         {
+            id: 'trafo-nennleistung', kapitel: 'trafo', schreibweise: 'S_N = U₂N · I₂N',
+            groessen: [g('S_N', 'Nennleistung', 'VA'),
+                g('U₂N', 'Sekundärnennspannung', 'V'),
+                g('I₂N', 'Sekundärnennstrom', 'A')],
+            loese: {
+                S_N: v => v['U₂N'] * v['I₂N'],
+                'U₂N': v => v.S_N / v['I₂N'],
+                'I₂N': v => v.S_N / v['U₂N']
+            },
+            annahme: 'Einphasentransformator. Beim Drehstromtransformator kommt die ' +
+                'Wurzel aus 3 dazu — dafür gibt es die eigene Formel.',
+            erklaerung: 'Was auf dem Typenschild steht: SCHEINleistung in VA, nicht ' +
+                'Wirkleistung in W. Wie viel davon Wirkleistung wird, hängt an der Last.'
+        },
+        {
+            id: 'trafo-nennleistung-dreh', kapitel: 'trafo',
+            schreibweise: 'S_N = √3 · U₂N · I₂N',
+            groessen: [g('S_N', 'Nennleistung', 'VA'),
+                g('U₂N', 'Sekundärnennspannung', 'V', 'Aussenleiterspannung'),
+                g('I₂N', 'Sekundärnennstrom', 'A')],
+            loese: {
+                S_N: v => WURZEL(3) * v['U₂N'] * v['I₂N'],
+                'U₂N': v => v.S_N / (WURZEL(3) * v['I₂N']),
+                'I₂N': v => v.S_N / (WURZEL(3) * v['U₂N'])
+            },
+            annahme: 'Drehstromtransformator.',
+            erklaerung: 'Dasselbe für den Drehstromtransformator.'
+        },
+        {
+            id: 'trafo-wirkungsgrad', kapitel: 'trafo',
+            schreibweise: 'η = P₂ / (P₂ + P_Cu + P_Fe)',
+            groessen: [g('η', 'Wirkungsgrad', ''),
+                g('P₂', 'Sekundärwirkleistung', 'W'),
+                g('P_Cu', 'Kupferverluste', 'W', 'In den Wicklungen — steigen mit dem Strom'),
+                g('P_Fe', 'Eisenverluste', 'W', 'Im Kern — bleiben auch im Leerlauf')],
+            loese: {
+                'η': v => v['P₂'] / (v['P₂'] + v.P_Cu + v.P_Fe),
+                'P₂': v => v['η'] * (v.P_Cu + v.P_Fe) / (1 - v['η']),
+                P_Cu: v => v['P₂'] / v['η'] - v['P₂'] - v.P_Fe,
+                P_Fe: v => v['P₂'] / v['η'] - v['P₂'] - v.P_Cu
+            },
+            erklaerung: 'Ein Transformator hat zwei Sorten Verluste. Die Eisenverluste ' +
+                'entstehen auch dann, wenn nichts angeschlossen ist — deshalb lohnt es sich, ' +
+                'einen unbenutzten Trafo vom Netz zu nehmen.'
+        },
+        {
+            id: 'trafo-induzierte-spannung', kapitel: 'trafo',
+            schreibweise: 'u_i = N · ΔΦ / Δt',
+            groessen: [g('u_i', 'induzierte Spannung', 'V'),
+                g('N', 'Windungszahl', ''),
+                g('ΔΦ', 'Flussänderung', 'Wb'),
+                g('Δt', 'Zeitspanne', 's')],
+            loese: {
+                u_i: v => v.N * v['ΔΦ'] / v['Δt'],
+                N: v => v.u_i * v['Δt'] / v['ΔΦ'],
+                'ΔΦ': v => v.u_i * v['Δt'] / v.N,
+                'Δt': v => v.N * v['ΔΦ'] / v.u_i
+            },
+            annahme: 'Der Betrag. Das Minuszeichen sagt die RICHTUNG — die induzierte ' +
+                'Spannung wirkt der Änderung entgegen.',
+            erklaerung: 'Warum ein Transformator nur mit Wechselstrom funktioniert: ohne ' +
+                'ÄNDERUNG des Flusses wird nichts induziert.'
+        },
+        {
+            id: 'spartrafo-bauleistung', kapitel: 'trafo',
+            schreibweise: 'S_B = S_D · (U₁ − U₂) / U₁',
+            groessen: [g('S_B', 'Bauleistung', 'VA', 'Wonach der Trafo dimensioniert wird'),
+                g('S_D', 'Durchgangsleistung', 'VA', 'Was durchgereicht wird — die Nennleistung'),
+                g('U₁', 'Primärspannung', 'V'),
+                g('U₂', 'Sekundärspannung', 'V')],
+            loese: {
+                S_B: v => v.S_D * (v['U₁'] - v['U₂']) / v['U₁'],
+                S_D: v => v.S_B * v['U₁'] / (v['U₁'] - v['U₂']),
+                'U₁': v => v['U₂'] / (1 - v.S_B / v.S_D),
+                'U₂': v => v['U₁'] * (1 - v.S_B / v.S_D)
+            },
+            annahme: 'Spartransformator mit U₁ > U₂. Für U₁ < U₂ steht (U₂ − U₁) / U₂ ' +
+                'im Zähler — die andere Formel.',
+            erklaerung: 'DAS ist der Vorteil des Spartransformators: er muss nur für den ' +
+                'UNTERSCHIED gebaut werden, nicht für die ganze Leistung. Bei 400 V auf 380 V ' +
+                'ist die Bauleistung nur ein Zwanzigstel der Durchgangsleistung.'
+        },
+        {
             id: 'synchrondrehzahl', kapitel: 'motor', schreibweise: 'n_s = f · 60 / p',
             groessen: [g('n_s', 'Synchrondrehzahl', '1/min'), g('f', 'Frequenz', 'Hz'),
                 g('p', 'Polpaarzahl', '', '1 Polpaar = 3000/min bei 50 Hz')],
@@ -1465,6 +1548,95 @@ Register.elektroformeln = (() => {
             },
             annahme: 'Gilt für eine punktförmige Lichtquelle.',
             erklaerung: 'Doppelter Abstand heisst nur noch ein Viertel Licht.'
+        },
+        {
+            id: 'gesamtlichtstrom', kapitel: 'licht', schreibweise: 'Φ = n · Φ_L',
+            groessen: [g('Φ', 'gesamter Lichtstrom', 'lm'),
+                g('n', 'Anzahl Leuchten', ''),
+                g('Φ_L', 'Lichtstrom einer Leuchte', 'lm')],
+            loese: {
+                'Φ': v => v.n * v['Φ_L'],
+                n: v => v['Φ'] / v['Φ_L'],
+                'Φ_L': v => v['Φ'] / v.n
+            },
+            erklaerung: 'Alle Leuchten zusammen.'
+        },
+        {
+            id: 'nutzlichtstrom', kapitel: 'licht', schreibweise: 'Φ_N = Φ · η_B',
+            groessen: [g('Φ_N', 'Nutzlichtstrom', 'lm', 'Was unten auf der Fläche ankommt'),
+                g('Φ', 'gesamter Lichtstrom', 'lm'),
+                g('η_B', 'Beleuchtungswirkungsgrad', '')],
+            loese: {
+                'Φ_N': v => v['Φ'] * v['η_B'],
+                'Φ': v => v['Φ_N'] / v['η_B'],
+                'η_B': v => v['Φ_N'] / v['Φ']
+            },
+            erklaerung: 'Ein Teil des Lichts verschwindet an Decke und Wänden. Nur der ' +
+                'Rest zählt für die Beleuchtungsstärke.'
+        },
+        {
+            id: 'betriebswirkungsgrad', kapitel: 'licht', schreibweise: 'η_B = η_LB · η_R',
+            groessen: [g('η_B', 'Beleuchtungswirkungsgrad', ''),
+                g('η_LB', 'Leuchtenwirkungsgrad', '', 'Wie viel die Leuchte selbst durchlässt'),
+                g('η_R', 'Raumwirkungsgrad', '', 'Wie hell Wände und Decke sind')],
+            loese: {
+                'η_B': v => v['η_LB'] * v['η_R'],
+                'η_LB': v => v['η_B'] / v['η_R'],
+                'η_R': v => v['η_B'] / v['η_LB']
+            },
+            erklaerung: 'Der Beleuchtungswirkungsgrad hat zwei Ursachen: die Leuchte und ' +
+                'der Raum. Ein weisser Raum bringt spürbar mehr als ein dunkler.'
+        },
+        {
+            id: 'planungsfaktor', kapitel: 'licht', schreibweise: 'p = 1 / WF',
+            groessen: [g('p', 'Planungsfaktor', '', 'Normal 1,25, bei erhöhter Verschmutzung 1,43'),
+                g('WF', 'Wartungsfaktor', '', 'Normal 0,8, bei erhöhter Verschmutzung 0,7')],
+            loese: { p: v => 1 / v.WF, WF: v => 1 / v.p },
+            erklaerung: 'Lampen altern und Leuchten verschmutzen. Deshalb wird von Anfang ' +
+                'an mehr geplant, als am ersten Tag nötig wäre.'
+        },
+        {
+            id: 'lichtstaerke', kapitel: 'licht', schreibweise: 'I_V = Φ / Ω',
+            groessen: [g('I_V', 'Lichtstärke', 'cd', 'Candela — 1 cd = 1 lm/sr'),
+                g('Φ', 'Lichtstrom', 'lm'),
+                g('Ω', 'Raumwinkel', 'sr', 'Steradiant')],
+            loese: {
+                I_V: v => v['Φ'] / v['Ω'],
+                'Φ': v => v.I_V * v['Ω'],
+                'Ω': v => v['Φ'] / v.I_V
+            },
+            erklaerung: 'Wie viel Licht in eine bestimmte RICHTUNG geht. Ein Spot hat ' +
+                'dieselbe Leistung wie eine Kugellampe, aber viel mehr Lichtstärke.'
+        },
+        {
+            id: 'leuchtdichte', kapitel: 'licht', schreibweise: 'L_V = I_V / A',
+            groessen: [g('L_V', 'Leuchtdichte', 'cd/m²'),
+                g('I_V', 'Lichtstärke', 'cd'),
+                g('A', 'leuchtende Fläche', 'm²')],
+            loese: {
+                L_V: v => v.I_V / v.A,
+                I_V: v => v.L_V * v.A,
+                A: v => v.I_V / v.L_V
+            },
+            erklaerung: 'Was das Auge als Helligkeit empfindet — und woran Blendung hängt. ' +
+                'Eine kleine helle Fläche blendet mehr als eine grosse mit demselben Licht.'
+        },
+        {
+            id: 'abstandsgesetz-band', kapitel: 'licht', schreibweise: 'E₂ = E₁ · r₁ / r₂',
+            groessen: [g('E₂', 'Beleuchtungsstärke neu', 'lx'),
+                g('E₁', 'Beleuchtungsstärke alt', 'lx'),
+                g('r₁', 'Abstand alt', 'm'), g('r₂', 'Abstand neu', 'm')],
+            loese: {
+                'E₂': v => v['E₁'] * v['r₁'] / v['r₂'],
+                'E₁': v => v['E₂'] * v['r₂'] / v['r₁'],
+                'r₁': v => v['E₂'] * v['r₂'] / v['E₁'],
+                'r₂': v => v['E₁'] * v['r₁'] / v['E₂']
+            },
+            annahme: 'Gilt für eine BANDFÖRMIGE Lichtquelle, etwa eine lange Lichtleiste. ' +
+                'Bei einer punktförmigen geht es mit dem QUADRAT — dafür gibt es die ' +
+                'eigene Formel.',
+            erklaerung: 'Eine Lichtleiste verliert langsamer mit dem Abstand als ein Punkt: ' +
+                'doppelter Abstand heisst hier die HÄLFTE, nicht ein Viertel.'
         },
         /* ---- Antenneninstallation (Kapitel 16 des Heftes) --------------------
            Der Grund, warum hier LOGARITHMEN stehen: eine Antennenanlage hat
