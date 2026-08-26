@@ -13753,3 +13753,147 @@ Inhaltsverzeichnis des Hefts. Seine erste Fassung mass die viewBox mit
 einem doppelt geschützten Regex und las überall 0×0 — eine Prüfung, die
 nie rot werden kann, ist keine (§55.2), und diesmal traf es die Prüfung
 selbst.
+
+
+## E195 · Das ganze Heft, und warum der Abschnitt seine Zeilen selbst trägt
+
+**26. August 2026**
+
+E194 baute Redions eigenes Formelbuch: eigene Gestaltung, eigene Skizzen,
+die Seitenzahlen des gedruckten Hefts. Es standen 24 Seiten darin, und die
+Gliederung war meine.
+
+Redur hat das abgelehnt, und zu Recht: „du musst die Formeln neu schreiben
+mit neuem Design, aber die Seitennummer sollte gleich sein" — und dann,
+deutlicher: „1:1 wie im PDF, alle Seiten, wie die Struktur und alles
+gleich."
+
+Jetzt ist es das Heft. Seite 2 bis 34, 172 Abschnitte unter ihren eigenen
+Überschriften, 923 Zeilen in der gedruckten Reihenfolge.
+
+### Wie die Seiten hereingekommen sind
+
+Dreiunddreissig Seiten von Hand abzuschreiben wäre drei Tage Arbeit und
+hätte drei Tage Tippfehler gegeben. Stattdessen hat je ein Leser eine
+Seite gelesen und als Daten zurückgegeben, und je ein zweiter hat dieselbe
+Seite noch einmal angesehen und die Abschrift dagegengehalten. Sechsund-
+sechzig Durchgänge, zwei Beanstandungen — beide berechtigt, beide klein.
+
+Der Wert liegt im ZWEITEN Blick. Wer abschreibt, liest, was er erwartet;
+wer prüft, liest, was dasteht.
+
+### Der eigentliche Bau: die Zeile gehört dem Abschnitt
+
+In E194 sagte die Formel, in welchem Abschnitt sie steht — ein Feld
+`abschnitt` am Formeleintrag. Das ging nicht auf, und der Grund ist im
+Heft nachzulesen:
+
+    Seite 2   „Grundformeln Quickie"   P = U · I
+    Seite 8   „Gleichstromleistung"    P = U · I
+
+Dieselbe Formel, zwei Seiten. Ein einzelnes Feld kann das nicht sagen. Es
+hätte eine der beiden Stellen verschwiegen, und zwar stillschweigend.
+
+Also umgedreht: der ABSCHNITT führt seine Zeilen, jede mit dem Text, wie
+er im Heft steht, und mit einem Verweis auf den rechenbaren Eintrag, wenn
+es einen gibt. Das Feld an der Formel ist ersatzlos weg. `seitenVon()`
+nennt jetzt alle Seiten, auf denen eine Formel vorkommt.
+
+Damit ist auch das gelöst, was vorher nicht ging: das Heft schreibt jede
+Umstellung als eigene Zeile aus — `R = U / I` neben `U = R · I` —, und
+Redion braucht dafür keine zweite Formel, sondern nur eine zweite Zeile,
+die auf dieselbe zeigt. 422 der 923 Zeilen sind so rechenbar.
+
+### Was beim Zusammenführen wirklich schwierig war
+
+Nicht das Abschreiben. Das WIEDERERKENNEN. Der Zuordner musste sehen, dass
+diese Paare dasselbe meinen:
+
+    R_Ltg = ρ · 2 · l / A     und   R_Ltg = (ρ · 2 · l) / A
+    R = R₁ + R₂ + … + Rₙ      und   R = R₁ + R₂ + R₃
+    B = μ₀ · μ_r · H          und   B = µ₀ · µᵣ · H
+    n_s = f · 60 / p          und   nₛ = (f · 60 s/min) / p
+    η = P₂ / (P₂ + P_Cu + P_Fe)  und  η = P₂/P₁ = P₂/(P₂+P_Cu+P_Fe)
+
+Fünf verschiedene Ursachen, und jede einzeln:
+
+**Klammern.** Eine Klammer um ein reines Produkt darf weg. Steht ein `/`
+davor, darf sie NICHT weg — `a/(b·c)` und `a/b·c` sind verschiedene
+Zahlen. Genau solche stillen Verwechslungen sind das Einzige, was hier
+wirklich schaden kann.
+
+**Auslassungspunkte.** Ein Lauf gleichartiger Summanden wird
+zusammengefasst. Der erste Versuch scheiterte an zwei Stellen zugleich:
+die linke Seite lief als erster Summand mit (`R=R₁` gegen `R₂`), und NFKC
+zerlegt „…" in drei Punkte, sodass die Prüfung auf das eine Zeichen ins
+Leere ging.
+
+**µ ist nicht μ.** Das Mikro-Zeichen (U+00B5) und das griechische My
+(U+03BC) sehen gleich aus und sind verschiedene Zeichen. Das Heft setzt
+das eine, das Register das andere. Ohne NFKC stünde die Flussdichte
+zweimal im Buch — einmal rechenbar, einmal nicht, und niemand hätte
+gesehen, warum.
+
+**Einheiten in der Formel.** `60 s/min` erklärt, WOHER die 60 kommt. Für
+die Zuordnung ist es Beiwerk; die angezeigte Zeile bleibt trotzdem die des
+Hefts.
+
+**Kettengleichungen.** `η = P₂/P₁ = P₂/(P₂+P_Cu+P_Fe)` sind zwei Aussagen.
+Von vorn gelesen findet man immer nur die erste — den allgemeinen
+Wirkungsgrad, den es schon dreimal gibt. Von hinten findet man die
+besondere.
+
+Am Ende haben alle 182 rechenbaren Formeln ihre Stelle im Heft.
+
+### Drei Stellen, an denen das Heft genauer war als das Register
+
+· Der Plattenabstand heisst `l`, nicht `d`. Ein anderer Buchstabe für
+  dieselbe Grösse ist eine Stolperstelle, die man erst bemerkt, wenn man
+  sich schon vertan hat.
+· Die Beleuchtungsstärke rechnet mit dem NUTZlichtstrom Φ_N. Wer mit dem
+  blossen Lampenlichtstrom rechnet, plant den Raum zu hell und merkt es
+  auf der Baustelle.
+· `R₉` war eine tiefgestellte NEUN, die dem ϑ nur ähnlich sieht.
+
+### Die Bilder
+
+Sechzehn Abschnitte im Heft haben keine Formel — sie erklären mit Bildern.
+Die Messgerätekategorien, die Hysteresekurve, das Feldbild der Spule, die
+Kraft auf den stromdurchflossenen Leiter, und die zwölf Bauelemente auf
+Seite 23. Sie gehören zur Struktur und dürfen nicht wegfallen; eine
+Überschrift ohne alles wäre in Redion ein Fehler, den man für Absicht
+hält.
+
+Also gezeichnet. Für Seite 23 kam das Bauteilzeichen aus dem
+Fachzeichen-Register und die Kennlinie daneben als eigenes SVG. Sechs
+Zeichen fehlten dort noch — PTC, NTC, VDR, LDR, Optokoppler, Triac —, und
+die gehören ins Register und nicht in eine Skizze: damit stehen sie auch
+im Schaltplan-Editor zur Verfügung (§8 Regel 3).
+
+Die Kennlinie ist der eigentliche Inhalt dieser Seite. Das Zeichen sagt,
+wie das Bauteil heisst; die Kennlinie sagt, was es tut — und bei PTC und
+NTC ist das der einzige Unterschied. Die Z-Diode zeigt den Durchbruch bei
+U_Z, also genau das, wofür es sie gibt.
+
+### Zwei Fehler, die nur das Hinsehen fand (§55)
+
+· Das Bauteilzeichen wurde auf Spaltenbreite aufgeblasen. Die Regel
+  `.bs-skizze svg` erwischte auch das Symbol INNERHALB einer
+  zusammengesetzten Skizze, und ein 40 × 60 grosser PTC füllte die halbe
+  Seite. Ein direktes Kind zu meinen und alle Nachfahren zu treffen ist
+  ein Fehler, den keine Messung sieht.
+· Jedes Bauteil stand allein in einer Zeile, zwei Drittel der Seite
+  blieben weiss. Reine Bildabschnitte stehen jetzt zu zweit nebeneinander
+  — am Telefon wieder untereinander, weil zwei Bauteile auf 390 px zwei zu
+  schmale Bauteile sind.
+
+### Prüflauf
+
+`test244`, 64 Punkte, dazu die Nachbarn: test238 (77), test239 (68),
+test240 (100), test241 (105), test242 (42), test243 (71). 527 Punkte.
+
+Eine Prüfung ist dabei bewusst weicher geworden: „kein Abschnitt ohne
+Formel" hätte die sechzehn Bildabschnitte rot gemacht, obwohl sie richtig
+sind. Sie heisst jetzt „kein Abschnitt ohne ALLES" — ohne Formel, ohne
+Tabelle und ohne Skizze. Eine Prüfung, die Richtiges rot macht, wird
+irgendwann abgeschaltet, und dann fängt sie auch das Falsche nicht mehr.
