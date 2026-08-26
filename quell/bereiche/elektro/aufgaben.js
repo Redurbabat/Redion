@@ -417,61 +417,123 @@ const Elektroaufgaben = (() => {
      * Vorlage, aus der ein Stück entfernt wird. Die Musterlösung ist das, was
      * entfernt wurde; auch hier gibt es keine zweite Wahrheit.
      * ----------------------------------------------------------------------*/
-    /** Baut einen kleinen Stromlaufplan aus einer Bauteilliste. */
+    /**
+     * Baut einen kleinen Stromlaufplan aus einer Bauteilliste.
+     *
+     * DER WEG DER LEITUNGEN IST DAS GANZE PROBLEM.
+     * -------------------------------------------------------------------------
+     * Der erste Entwurf legte jede Leitung in einen eigenen waagrechten Korridor
+     * bei `y = 20 + i · 12` und die Bauteile in ein Raster darüber und darunter.
+     * Das sah auf dem Bild ordentlich aus — und war elektrisch Unsinn: die
+     * Korridore liefen mitten durch die Bauteilreihe, und eine Leitung, die
+     * durch einen Anschluss läuft, IST mit ihm verbunden.
+     *
+     * Nachgemessen mit `Stromfluss` waren ZEHN von zwölf Schaltungen an der
+     * Quelle kurzgeschlossen und zwei überbrückt. Aufgefallen ist es erst, als
+     * eine Aufgabenart die Schaltung wirklich rechnen musste: „Leuchtet es?"
+     * sagte bei einer richtig gestellten Wechselschaltung Nein.
+     *
+     * Deshalb jetzt eine Führung, die es nicht KANN:
+     *
+     *   · Alle Bauteile stehen in EINER Reihe, 200 px auseinander. Damit hat
+     *     kein Anschluss dieselbe x-Stelle wie ein anderer — ein Bauteil ist
+     *     höchstens 60 breit.
+     *   · Über der Reihe und unter ihr liegt je ein BAND, in dem kein Bauteil
+     *     steht. Jede Leitung bekommt darin ihre eigene Höhe.
+     *   · Ein Anschluss OBEN am Bauteil wird nach oben herausgeführt, einer
+     *     UNTEN nach unten. Nie durch das eigene Bauteil hindurch — das war
+     *     der zweite Weg, auf dem ein Schalter überbrückt wurde.
+     *   · Muss eine Leitung von oben nach unten, geht sie über eine freie
+     *     Spalte rechts neben allen Bauteilen.
+     *
+     * Zwei Leitungen kreuzen sich dabei durchaus. Das ist erlaubt und richtig:
+     * `Stromfluss` verbindet nur, wo ein PUNKT auf einer Strecke liegt, nicht
+     * wo sich zwei Strecken schneiden — genau der Unterschied zwischen
+     * Verbindungspunkt und Kreuzung, den jeder Schaltplan kennt.
+     */
     const planBauen = (teile, draehte) => {
         const SP = (typeof Schaltplan !== 'undefined') ? Schaltplan : null;
         if (!SP)
             return null;
         const plan = SP.neuerPlan('stromlauf-aufgeloest');
-        plan.breite = 620;
-        plan.hoehe = 360;
         plan.teile = [];
         plan.leitungen = [];
         plan.texte = [];
-        /* Senkrecht gelesen: die Bauteile stehen in einer Spalte übereinander,
-           weil dann jede Leitung eine gerade Strecke ist und keine zufällig
-           durch einen fremden Anschluss läuft. Genau der Fehler ist beim ersten
-           Bau von test239 §11 passiert. */
+        const REIHE_Y = 260; /* Oberkante der Bauteilreihe */
+        const ABSTAND = 200; /* zwischen zwei Bauteilen */
         teile.forEach(([zeichen, bmk], i) => {
             plan.teile.push({
                 id: 't' + (i + 1), zeichen, bmk,
-                x: 60 + (i % 3) * 180, y: 40 + Math.floor(i / 3) * 140,
+                x: 60 + i * ABSTAND, y: REIHE_Y,
                 drehung: 0, gespiegelt: false, nummern: {}, gruppe: '', ebene: 'plan'
             });
         });
+        /* Wie hoch ist das höchste Bauteil? Darunter beginnt das untere Band. */
+        let maxH = 60;
+        plan.teile.forEach(t => {
+            const m = (typeof Register !== 'undefined' && Register.fachzeichen)
+                ? Register.fachzeichen.masse(t.zeichen, 0) : { w: 60, h: 60 };
+            if (m.h > maxH)
+                maxH = m.h;
+        });
+        const UNTEN_Y = REIHE_Y + maxH;
+        const rechts = 60 + teile.length * ABSTAND + 40; /* freie Spalte */
         const ort = (i, nr) => {
             const t = plan.teile[i];
             if (!t)
-                return { x: 0, y: 0 };
-            const a = SP.anschluesseVon(t).find((x) => x.nr === nr);
-            return a ? { x: a.x, y: a.y } : { x: t.x, y: t.y };
+                return { x: 0, y: 0, obenDran: true };
+            const a = SP.anschluesseVon(t).find(x => x.nr === nr);
+            if (!a)
+                return { x: t.x, y: t.y, obenDran: true };
+            /* Sitzt der Anschluss in der oberen oder in der unteren Hälfte? Danach
+               richtet sich, wohin er herausgeführt wird. */
+            return { x: a.x, y: a.y, obenDran: (a.y - t.y) < maxH / 2 };
         };
         draehte.forEach(([a, an, b, bn], i) => {
             const A = ort(a, an), B = ort(b, bn);
-            /* Ein eigener Korridor je Leitung — sonst überlappen sich zwei und
-               sind damit EINE. Die Simulation meldet das („überbrückt"), aber eine
-               Aufgabe mit dieser Meldung ist eine kaputte Aufgabe. */
-            const y = 20 + i * 12;
             const ta = plan.teile[a], tb = plan.teile[b];
             if (!ta || !tb)
                 return;
+            /* Eigene Höhe je Leitung, damit sich zwei nie überlagern — und mit
+               Abstand von der Reihe, damit keine an einem Bauteil entlangläuft. */
+            const obenBahn = REIHE_Y - 40 - i * 16;
+            const untenBahn = UNTEN_Y + 40 + i * 16;
+            let punkte;
+            if (A.x === B.x && A.obenDran === B.obenDran) {
+                punkte = [{ x: A.x, y: A.y }, { x: B.x, y: B.y }];
+            }
+            else if (A.obenDran && B.obenDran) {
+                punkte = [{ x: A.x, y: A.y }, { x: A.x, y: obenBahn },
+                    { x: B.x, y: obenBahn }, { x: B.x, y: B.y }];
+            }
+            else if (!A.obenDran && !B.obenDran) {
+                punkte = [{ x: A.x, y: A.y }, { x: A.x, y: untenBahn },
+                    { x: B.x, y: untenBahn }, { x: B.x, y: B.y }];
+            }
+            else {
+                /* Von oben nach unten: aussen herum, über die freie Spalte rechts. */
+                const oben = A.obenDran ? A : B;
+                const unten = A.obenDran ? B : A;
+                const spalte = rechts + i * 16;
+                punkte = [
+                    { x: oben.x, y: oben.y }, { x: oben.x, y: obenBahn },
+                    { x: spalte, y: obenBahn }, { x: spalte, y: untenBahn },
+                    { x: unten.x, y: untenBahn }, { x: unten.x, y: unten.y }
+                ];
+            }
             plan.leitungen.push({
-                id: 'l' + (i + 1), ebene: 'plan',
-                punkte: (A.x === B.x) ? [A, B] : [A, { x: A.x, y }, { x: B.x, y }, B],
+                id: 'l' + (i + 1), ebene: 'plan', punkte,
                 vonTeil: ta.id, vonNr: an, nachTeil: tb.id, nachNr: bn
             });
         });
         /* Und jetzt die Blattgrösse auf das ZUSAMMENSCHRUMPFEN, was wirklich
            darauf steht.
            -----------------------------------------------------------------
-           Ohne das ist der Plan 620 × 360 gross, egal ob drei Bauteile darauf
-           stehen oder zehn. In der Aufgabenspalte des Arbeitsplatzes — 280 px
-           breit — wird daraus ein Bild, auf dem die Betriebsmittelkennzeichen
-           drei Pixel hoch sind. Und die Frage lautet ausgerechnet „welches
-           Betriebsmittel ist das?".
-    
-           Gemessen beim ersten Bild: die Zeichnung nutzte etwa ein Drittel der
-           Fläche, der Rest war Luft, und die Luft wurde mitskaliert. */
+           Ohne das ist der Plan so gross wie das Vorgabeblatt, egal ob drei
+           Bauteile darauf stehen oder zehn. In der Aufgabenspalte des
+           Arbeitsplatzes — 280 px breit — wird daraus ein Bild, auf dem die
+           Betriebsmittelkennzeichen drei Pixel hoch sind. Und die Frage lautet
+           ausgerechnet „welches Betriebsmittel ist das?". */
         let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
         const dazu = (x, y) => {
             if (x < x1)
@@ -502,6 +564,53 @@ const Elektroaufgaben = (() => {
             plan.hoehe = Math.max(120, Math.round(y2 - y1 + rand * 2));
         }
         return plan;
+    };
+    /**
+     * Eine Brücke über zwei Klemmen desselben Bauteils — SICHTBAR gezeichnet.
+     *
+     * Warum das eine eigene Funktion ist und nicht drei Zeilen an drei Stellen:
+     * weil es an allen drei Stellen zuerst falsch war. Die Brücke wurde mit
+     * Punkten weit ausserhalb des Blattes eingetragen — {-900,-900} —, weil die
+     * Simulation über die KLEMMENANGABE verbindet und die Geometrie dafür nicht
+     * braucht. Gerechnet stimmte alles. Nur im Bild war nichts zu sehen.
+     *
+     * Eine Aufgabe „diese Leuchte ist überbrückt — leuchtet sie?" über einen
+     * Plan, in dem die Brücke fehlt, ist nicht schwer, sondern unlösbar. Kein
+     * Prüflauf konnte das melden: er las dieselbe Netzliste wie die Simulation,
+     * und die war richtig. Gesehen hat es erst ein Bildschirmfoto (§55).
+     *
+     * Der Weg führt unter dem Bauteil herum, auf einer Bahn UNTERHALB aller
+     * Bahnen, die `planBauen` vergeben hat. Eine reine Kreuzung verbindet in
+     * `Stromfluss.netze` nichts; nur ein Knick auf einer fremden Strecke tut
+     * es, und den kann es dort unten nicht geben.
+     */
+    const bruecke = (plan, teil, vonNr, nachNr, id) => {
+        if (typeof Schaltplan === 'undefined')
+            return false;
+        const kl = Schaltplan.anschluesseVon(teil);
+        const a = kl.find(k => String(k.nr) === vonNr);
+        const b = kl.find(k => String(k.nr) === nachNr);
+        if (!a || !b)
+            return false;
+        let tiefste = 0;
+        plan.leitungen.forEach(l => l.punkte.forEach(pt => { if (pt.y > tiefste)
+            tiefste = pt.y; }));
+        const bahn = Math.max(tiefste, a.y, b.y) + 26;
+        plan.leitungen.push({ id, ebene: 'plan',
+            punkte: [{ x: a.x, y: a.y }, { x: a.x, y: bahn },
+                { x: b.x, y: bahn }, { x: b.x, y: b.y }],
+            vonTeil: teil.id, vonNr, nachTeil: teil.id, nachNr });
+        /* Das Blatt wurde beim Bauen auf seinen Inhalt geschrumpft. Wächst der
+           Inhalt danach, muss das Blatt mitwachsen — sonst wird genau die neue
+           Leitung abgeschnitten. */
+        plan.hoehe = Math.max(Number(plan.hoehe) || 0, Math.round(bahn + 24));
+        return true;
+    };
+    /** Eine Beschriftung an ein Bauteil schreiben (nutzt Punkt 47). */
+    const anschreiben = (plan, teil, text, id) => {
+        if (!Array.isArray(plan.texte))
+            plan.texte = [];
+        plan.texte.push({ id, ebene: 'plan', x: teil.x, y: teil.y - 10, t: text });
     };
     /** Vorlagen für Schaltungsaufgaben — Bauteile, Drähte, Text. */
     const SCHALTUNGEN = [
@@ -570,15 +679,20 @@ const Elektroaufgaben = (() => {
                 [3, 'A2', 0, 'N'], [0, 'L', 4, '13'], [4, '14', 5, 'X1'],
                 [5, 'X2', 0, 'N']] },
         /* --- Und zwei aus dem Schweizer Bauplan (Punkte 91, 97) --------------- */
+        /* Der erste Entwurf führte L ZUSÄTZLICH direkt auf Klemme 1 der Minuterie.
+           Damit lagen die Taster zwischen L und L und schalteten nichts — die
+           Simulation meldete es als „überbrückt", und sie hatte recht. Der
+           Treppenhausautomat wird hier deshalb so gezeichnet, wie er ist: die
+           Taster SIND der einzige Weg zur Minuterie. */
         { name: 'Treppenhausautomat',
             wozu: 'Von mehreren Stellen drücken, das Licht geht nach einer Zeit von selbst aus.',
             stufe: 2,
             teile: [['wechselspannung', 'G1'], ['bp-minuterie', 'K1'],
                 ['taster-schliesser', 'S1'], ['taster-schliesser', 'S2'],
                 ['lampe', 'E1']],
-            draehte: [[0, 'L', 1, '1'], [1, '2', 4, 'X1'], [4, 'X2', 0, 'N'],
-                [0, 'L', 2, '3'], [0, 'L', 3, '3'], [2, '4', 1, '1'],
-                [3, '4', 1, '1']] },
+            draehte: [[0, 'L', 2, '3'], [0, 'L', 3, '3'],
+                [2, '4', 1, '1'], [3, '4', 1, '1'],
+                [1, '2', 4, 'X1'], [4, 'X2', 0, 'N']] },
         { name: 'Sonnerie mit Drucktaster',
             wozu: 'Die Türklingel — der einfachste Kreis, den es im Haus gibt.', stufe: 1,
             teile: [['wechselspannung', 'G1'], ['taster-schliesser', 'S1'],
@@ -727,6 +841,552 @@ const Elektroaufgaben = (() => {
             stufe: 2, saat
         };
     };
+    /* ------------------------------------------------------------------------
+     * AUFGABEN, DIE DIE SIMULATION BEANTWORTET (Punkte 52, 53, 59)
+     * ------------------------------------------------------------------------
+     * Bis hierher kam die Musterlösung aus dem Register. Bei diesen drei kommt
+     * sie aus `Stromfluss` — und das ist eine Stufe stärker: die Aufgabe wird
+     * GEBAUT, dann GERECHNET, und was herauskommt, ist die Antwort. Es gibt
+     * keine Stelle, an der jemand eine falsche Lösung hätte hinschreiben
+     * können, weil niemand eine hinschreibt.
+     *
+     * Und mehr noch: eine Aufgabe, die nicht funktioniert, wird verworfen. Ein
+     * eingebauter Fehler, der die Schaltung nicht kaputtmacht, ist kein Fehler
+     * — und wird nicht gestellt.
+     * ----------------------------------------------------------------------*/
+    const SF = () => (typeof Stromfluss !== 'undefined') ? Stromfluss : null;
+    /**
+     * Die Schalterstellung suchen, bei der die Schaltung TUT, was sie soll.
+     *
+     * „Alle Schalter auf die letzte Stellung" klingt wie „alle zu" und ist es
+     * nicht: bei einem Öffner ist die letzte Stellung OFFEN, und ein
+     * Steuerstromkreis mit gedrücktem Not-Halt leuchtet zu Recht nicht. Eine
+     * Aufgabe, die daraufhin verworfen wird, ist eine Aufgabe zu wenig.
+     *
+     * Gesucht wird deshalb gierig: jeden Schalter der Reihe nach durchprobieren
+     * und die Stellung behalten, die es heller macht. Zwei Durchgänge, weil
+     * eine Selbsthaltung erst zündet, wenn zwei Schalter zugleich stimmen.
+     */
+    const besteStellung = (plan) => {
+        const sf = SF();
+        const stand = {};
+        if (!sf)
+            return stand;
+        const schalter = plan.teile.filter(t => sf.stellungenVon(t.zeichen).length > 1);
+        /* Bewertet wird die WIRKUNG, nicht die Helligkeit: sonst fände die Suche
+           bei einer Selbsthaltung nie eine Stellung, weil dort nichts leuchtet. */
+        const hellMit = (s) => {
+            const e = leuchtet(plan, s);
+            if (!e.ok)
+                return -1;
+            return e.hell + Math.min(1, e.strom * 10);
+        };
+        for (let runde = 0; runde < 2; runde++) {
+            schalter.forEach(t => {
+                const st = sf.stellungenVon(t.zeichen);
+                let beste = stand[t.id] ?? 0;
+                let bestHell = hellMit(Object.assign({}, stand, { [t.id]: beste }));
+                for (let i = 0; i < st.length; i++) {
+                    const h = hellMit(Object.assign({}, stand, { [t.id]: i }));
+                    if (h > bestHell) {
+                        bestHell = h;
+                        beste = i;
+                    }
+                }
+                stand[t.id] = beste;
+            });
+        }
+        return stand;
+    };
+    /**
+     * Tut diese Schaltung etwas, bei diesen Schalterstellungen?
+     *
+     * „Leuchtet es" ist die anschauliche Frage, aber nicht die allgemeine: eine
+     * Selbsthaltung treibt eine Spule, ein Motorabgang einen Motor, und beide
+     * haben keine Helligkeit. Zurückgegeben wird deshalb BEIDES — die grösste
+     * Helligkeit und der grösste Strom durch einen Verbraucher. `wirkt` fasst
+     * es zusammen: die Schaltung tut etwas.
+     */
+    const leuchtet = (plan, stellung) => {
+        const sf = SF();
+        if (!sf)
+            return { ok: false, hell: 0, strom: 0, quellStrom: 0, wirkt: false, warnungen: 0, texte: [] };
+        const e = sf.rechne(plan, stellung);
+        if (!e || !e.ok)
+            return { ok: false, hell: 0, strom: 0, quellStrom: 0, wirkt: false,
+                warnungen: 1, texte: [String((e && e.fehler) || '')] };
+        let hell = 0, strom = 0, quellStrom = 0;
+        plan.teile.forEach(t => {
+            const vh = sf.verhalten(t.zeichen);
+            if (!vh || vh.art !== 'quelle')
+                return;
+            const w3 = e.werte[t.id];
+            if (w3)
+                quellStrom = Math.max(quellStrom, Math.abs(w3.I));
+        });
+        plan.teile.forEach(t => {
+            const vh = sf.verhalten(t.zeichen);
+            if (!vh || (vh.art !== 'widerstand' && vh.art !== 'spule'))
+                return;
+            const w2 = e.werte[t.id];
+            if (!w2)
+                return;
+            if (typeof w2.helligkeit === 'number' && w2.helligkeit > hell)
+                hell = w2.helligkeit;
+            const i = Math.abs(w2.I);
+            if (i > strom)
+                strom = i;
+        });
+        return { ok: true, hell, strom, quellStrom,
+            wirkt: hell > 0.02 || strom > 1e-4,
+            warnungen: (e.warnungen || []).length,
+            texte: (e.warnungen || []).slice() };
+    };
+    /**
+     * Wie sich eine Schaltung über ALLE Schalterstellungen verhält, als kurze
+     * Zeichenkette: `H` volle Helligkeit, `h` schwach, `s` es fliesst etwas,
+     * `.` nichts, `x` nicht rechenbar.
+     *
+     * Warum nicht einfach „leuchtet es?": weil das zu wenig ist. Bei einer
+     * Wechselschaltung leuchtet die Lampe auch dann noch, wenn ein Draht
+     * fehlt — man muss nur den anderen Schalter umlegen. Die Schaltung ist
+     * trotzdem kaputt: sie lässt sich nicht mehr von beiden Stellen bedienen.
+     * Und beim Zeitrelais brachte ein falscher Draht die Leuchte zum Brennen,
+     * nur eben dauernd statt verzögert.
+     *
+     * Zwei Pläne mit demselben Muster sind für den Lernenden dieselbe
+     * Schaltung. Genau das ist der Massstab, den eine Aufgabe „welche Leitung
+     * fehlt" braucht — sonst hat sie zwei richtige Antworten.
+     */
+    const muster = (plan) => {
+        const sf = SF();
+        if (!sf)
+            return '';
+        const schalter = plan.teile.filter(t => {
+            const vh = sf.verhalten(t.zeichen);
+            return vh && vh.art === 'schalter' && !vh.folgtSpule;
+        });
+        let liste = [{}];
+        for (const t of schalter) {
+            const st = sf.stellungenVon(t.zeichen);
+            const neu = [];
+            for (const bisher of liste)
+                for (let i = 0; i < st.length; i++)
+                    neu.push({ ...bisher, [t.id]: i });
+            liste = neu;
+            if (liste.length > 64)
+                break; /* Deckel gegen zu viele Schalter */
+        }
+        return liste.map(st => {
+            const e = leuchtet(plan, st);
+            return !e.ok ? 'x' : e.hell > 0.8 ? 'H' : e.hell > 0.02 ? 'h'
+                : e.strom > 1e-4 ? 's' : '.';
+        }).join('');
+    };
+    /** Welche Leitung fehlt (Punkt 52). */
+    const planLeitung = (w, saat) => {
+        if (typeof Schaltplan === 'undefined' || !SF())
+            return null;
+        for (let versuch = 0; versuch < 14; versuch++) {
+            const v = w.aus(SCHALTUNGEN);
+            const ganz = planBauen(v.teile, v.draehte);
+            if (!ganz || ganz.leitungen.length < 3)
+                continue;
+            /* Erst nachsehen, ob der VOLLSTÄNDIGE Plan überhaupt leuchtet — sonst
+               beweist das Fehlen der Leitung nichts. */
+            const alleZu = besteStellung(ganz);
+            const vorher = leuchtet(ganz, alleZu);
+            if (!vorher.ok || !vorher.wirkt)
+                continue;
+            const raus = w.aus(ganz.leitungen);
+            if (!raus.vonTeil || !raus.nachTeil)
+                continue;
+            const kaputt = planBauen(v.teile, v.draehte);
+            kaputt.leitungen = kaputt.leitungen.filter((l) => l.id !== raus.id);
+            /* Die Leitung muss WIRKLICH nötig sein — und zwar über alle Stellungen,
+               nicht nur bei der einen, die vorhin am besten war. Zuerst stand hier
+               der Vergleich bei EINER Stellung, und bei drei von zweihundert
+               Würfelungen kam damit eine Wechselschaltung heraus, bei der man den
+               fehlenden Draht durch Umlegen des anderen Schalters ersetzen konnte.
+               Die Aufgabe zeigte dann einen Plan, dem nichts anzusehen war. */
+            const sollMuster = muster(ganz);
+            const kaputtMuster = muster(kaputt);
+            if (kaputtMuster === sollMuster)
+                continue;
+            const name = (id) => (kaputt.teile.concat(ganz.teile)
+                .find((t) => t.id === id) || { bmk: id }).bmk;
+            const richtig = `${name(raus.vonTeil)}:${raus.vonNr} — ${name(raus.nachTeil)}:${raus.nachNr}`;
+            /* Ablenker: andere Klemmenpaare aus demselben Plan, die es so nicht gibt.
+               Eine Leitung hat KEINE Richtung. „G1:L — E1:X1" und „E1:X1 — G1:L"
+               sind derselbe Draht, und standen sie beide da, gäbe es zwei richtige
+               Antworten — eine davon mit rotem Kreuz. Nachgemessen betraf das 56
+               von 600 Würfelungen. Der Schlüssel für die Menge ist deshalb das
+               SORTIERTE Paar; angezeigt wird die Schreibweise der Aufgabe. */
+            const klemmen = [];
+            ganz.teile.forEach(t => {
+                const liste = Schaltplan.anschluesseVon(t);
+                liste.forEach(a => klemmen.push(`${t.bmk}:${a.nr}`));
+            });
+            const schluessel = (x, y) => [x, y].slice().sort().join(' ');
+            const paare = new Map();
+            paare.set(schluessel(`${name(raus.vonTeil)}:${raus.vonNr}`, `${name(raus.nachTeil)}:${raus.nachNr}`), richtig);
+            /* Ein Ablenker darf die Schaltung NICHT wiederherstellen. Beim
+               Zeitrelais tat einer genau das: er verband die Leuchte mit der
+               Spulenklemme, sie leuchtete, und das Verhaltensmuster war dasselbe
+               wie beim heilen Plan — also eine zweite richtige Antwort, die ein
+               rotes Kreuz bekommen hätte.
+               Die Klemme wird dabei über die KLEMME gesucht, nicht über den Namen:
+               bei einem Schütz heissen Spule und Kontakt beide K1, und nur eines
+               von beiden hat die Klemme 14. */
+            const klemmeFinden = (text) => {
+                const bmk = text.split(':')[0];
+                const nr = text.split(':').slice(1).join(':');
+                const gleiche = kaputt.teile.filter(t => String(t.bmk) === bmk);
+                const passt = gleiche.find(t => Schaltplan.anschluesseVon(t).some(a => String(a.nr) === nr));
+                return passt ? { teil: passt, nr } : null;
+            };
+            const stelltWiederHer = (text) => {
+                const [a, b] = text.split(' — ');
+                if (!a || !b)
+                    return false;
+                const ka = klemmeFinden(a), kb = klemmeFinden(b);
+                if (!ka || !kb)
+                    return false;
+                const probe = JSON.parse(JSON.stringify(kaputt));
+                probe.leitungen.push({ id: 'probe', ebene: 'plan',
+                    punkte: [{ x: -2000, y: -2000 }, { x: -1980, y: -2000 }],
+                    vonTeil: ka.teil.id, vonNr: ka.nr, nachTeil: kb.teil.id, nachNr: kb.nr });
+                return muster(probe) === sollMuster;
+            };
+            for (const a of w.misch(klemmen)) {
+                if (paare.size >= 4)
+                    break;
+                for (const b of w.misch(klemmen)) {
+                    if (paare.size >= 4)
+                        break;
+                    if (a === b || a.split(':')[0] === b.split(':')[0])
+                        continue;
+                    const s = schluessel(a, b);
+                    if (paare.has(s))
+                        continue;
+                    if (stelltWiederHer(`${a} — ${b}`))
+                        continue;
+                    paare.set(s, `${a} — ${b}`);
+                }
+            }
+            if (paare.size < 4)
+                continue;
+            /* Einmal mischen, einmal verwenden. Zweimal `w.misch` — einmal in der
+               Bedingung, einmal im Zweig — prüft eine ANDERE Reihenfolge als die,
+               die herauskommt; derselbe Fehler hat in dieser Datei schon einmal
+               eine Aufgabe ohne ihre eigene Lösung erzeugt. */
+            const auswahl = w.misch([...paare.values()]);
+            return {
+                art: 'plan-leitung', antwortart: 'wahl',
+                frage: `${v.name}: ${v.wozu}\nEine Leitung fehlt. Welche?`,
+                plan: kaputt, stellungen: alleZu,
+                optionen: auswahl.includes(richtig)
+                    ? auswahl
+                    : [richtig, ...auswahl.filter(x => x !== richtig).slice(0, 3)],
+                loesung: richtig,
+                /* Was ohne die Leitung noch geht, steht in den beiden Mustern — und
+                   es ist nicht immer „gar nichts". Bei einer Wechselschaltung fehlt
+                   ein Draht, und die Lampe leuchtet trotzdem: man muss nur den
+                   ANDEREN Schalter umlegen. Hier stand zuerst pauschal „der
+                   Stromkreis ist offen", und bei drei von zweihundert Würfelungen
+                   war das schlicht falsch — nachprüfbar falsch, denn wer im Plan
+                   umschaltet, sieht die Lampe angehen. Eine Erklärung, die der
+                   Lernende widerlegen kann, ist schlimmer als keine. */
+                erklaerung: (() => {
+                    const geht = (m) => [...m].filter(c => c !== '.' && c !== 'x').length;
+                    const a = geht(sollMuster), b = geht(kaputtMuster);
+                    if (b === 0)
+                        return `Ohne die Verbindung ${richtig} ist der Stromkreis offen — ` +
+                            `nachgerechnet: mit ihr leuchtet es, ohne sie nicht.`;
+                    return `Ohne die Verbindung ${richtig} arbeitet die Schaltung nicht ` +
+                        `mehr vollständig: nachgerechnet führen statt ${a} nur noch ` +
+                        `${b} von ${sollMuster.length} Schalterstellungen zum Ziel. ` +
+                        `Dass es überhaupt noch leuchtet, heisst nicht, dass alles ` +
+                        `stimmt.`;
+                })(),
+                stufe: 3, saat
+            };
+        }
+        return null;
+    };
+    /** Was stimmt hier nicht (Punkt 53). */
+    const planFehler = (w, saat) => {
+        if (typeof Schaltplan === 'undefined' || !SF())
+            return null;
+        for (let versuch = 0; versuch < 14; versuch++) {
+            const v = w.aus(SCHALTUNGEN);
+            const heil = planBauen(v.teile, v.draehte);
+            if (!heil)
+                continue;
+            const alleZu = besteStellung(heil);
+            const vorher = leuchtet(heil, alleZu);
+            if (!vorher.ok || !vorher.wirkt)
+                continue;
+            const bmkVon = (plan, id) => {
+                const t = plan.teile.find(x => x.id === id);
+                return t ? String(t.bmk || t.zeichen) : '?';
+            };
+            const schaeden = [
+                { name: 'Eine Leitung ist unterbrochen.', tun: plan => {
+                        const l = plan.leitungen;
+                        if (l.length < 2)
+                            return null;
+                        const weg = l.splice(Math.floor(l.length / 2), 1)[0];
+                        return `zwischen ${bmkVon(plan, weg.vonTeil)}:${weg.vonNr} und ` +
+                            `${bmkVon(plan, weg.nachTeil)}:${weg.nachNr} fehlt die Leitung`;
+                    } },
+                { name: 'Der Verbraucher ist überbrückt.', tun: plan => {
+                        const last = plan.teile.find(t => {
+                            const vh = SF().verhalten(t.zeichen);
+                            return vh && vh.art === 'widerstand';
+                        });
+                        if (!last)
+                            return null;
+                        const vh = SF().verhalten(last.zeichen);
+                        if (!bruecke(plan, last, String(vh.von), String(vh.nach), 'kurz'))
+                            return null;
+                        return `über ${last.bmk} liegt eine Leitung von ${vh.von} nach ${vh.nach}`;
+                    } },
+                { name: 'Der Schalter ist überbrückt und schaltet nichts mehr.', tun: plan => {
+                        const sch = plan.teile.find(t => {
+                            const vh = SF().verhalten(t.zeichen);
+                            return vh && vh.art === 'schalter' && !vh.folgtSpule;
+                        });
+                        if (!sch)
+                            return null;
+                        const st = SF().stellungenVon(sch.zeichen);
+                        const paar = st.find(x => x.zu.length)?.zu[0];
+                        if (!paar)
+                            return null;
+                        if (!bruecke(plan, sch, String(paar[0]), String(paar[1]), 'kurz'))
+                            return null;
+                        return `über ${sch.bmk} liegt eine Leitung von ${paar[0]} nach ${paar[1]}`;
+                    } },
+                /* Der vierte Schaden ist erst hier dazugekommen. Vorher stand
+                   „Die Quelle liefert zu wenig Spannung" nur als Möglichkeit da und
+                   war in 120 Startwerten kein einziges Mal die Lösung — wer das
+                   merkt, hat geschenkt eine von vier Möglichkeiten weniger. Jetzt
+                   gibt es den Fall wirklich: halbe Spannung, und die Leuchte
+                   bekommt ein Viertel der Leistung. */
+                { name: 'Die Quelle liefert zu wenig Spannung.', tun: plan => {
+                        const q = plan.teile.find(t => {
+                            const vh = SF().verhalten(t.zeichen);
+                            return vh && vh.art === 'quelle';
+                        });
+                        if (!q)
+                            return null;
+                        const vh = SF().verhalten(q.zeichen);
+                        const soll = typeof vh.wert === 'number' ? vh.wert : 230;
+                        const ist = Math.round(soll * 0.4);
+                        q.werte = { ...(q.werte || {}), U: ist };
+                        /* Und das MUSS im Plan stehen. Ohne die Beschriftung sah die
+                           Zeichnung völlig heil aus, und „die Quelle liefert zu wenig
+                           Spannung" war aus ihr nicht abzulesen — nur durch Ausschluss
+                           zu erraten. Aufgefallen ist es auf einem Bildschirmfoto, nicht
+                           in einer Prüfung: gerechnet stimmte ja alles. */
+                        anschreiben(plan, q, `${ist} V (Soll ${soll} V)`, 'spannung');
+                        return `${q.bmk} führt statt ${soll} V nur ${ist} V`;
+                    } }
+            ];
+            const schaden = w.aus(schaeden);
+            const kaputt = planBauen(v.teile, v.draehte);
+            const ort = schaden.tun(kaputt);
+            if (!ort)
+                continue;
+            const nachher = leuchtet(kaputt, alleZu);
+            /* NUR wenn der Schaden wirklich einer ist. Ein „Fehler", nach dem alles
+               weiterläuft, ist keiner — und eine Aufgabe darüber wäre eine Falle
+               ohne Lösung. Das prüft die Simulation, nicht ein Kommentar. */
+            const wirklichKaputt = !nachher.ok
+                || !nachher.wirkt
+                || nachher.hell < vorher.hell * 0.5
+                || nachher.strom < vorher.strom * 0.5
+                || nachher.warnungen > vorher.warnungen;
+            if (!wirklichKaputt)
+                continue;
+            /* Alle vier Schäden stehen zur Wahl, keiner davon nur zum Ausschliessen:
+               jeder ist in irgendeinem Startwert wirklich die Lösung. */
+            const auswahl = schaeden.map(x => x.name);
+            /* Was die Simulation zum Nachher sagt, in einem Satz. Eine Zahl steht
+               nur da, wo sie etwas bedeutet — beim Kurzschluss nicht, siehe die
+               Begründung weiter unten bei planLeuchtet.
+               Der Satz wird an den WARNUNGSTEXTEN abgelesen, nicht an ihrer Zahl.
+               Zuerst stand hier nur `warnungen > vorher.warnungen`, und damit
+               bekam auch die fehlende Leitung den Satz „der Strom findet einen
+               Weg an der Last vorbei" — eine entfernte Leitung kann gar keinen
+               Weg schaffen. Gemeldet worden war „Anschluss hängt an keiner
+               Leitung", also das genaue Gegenteil. */
+            const neu = nachher.texte.filter(t => !vorher.texte.includes(t));
+            const folge = !nachher.ok
+                ? 'der Plan lässt sich gar nicht mehr durchrechnen'
+                : neu.some(t => /überbrückt/.test(t))
+                    ? 'der Strom findet einen Weg an der Last vorbei'
+                    : neu.some(t => /an keiner Leitung/.test(t))
+                        ? 'ein Anschluss hängt jetzt frei und der Kreis ist offen'
+                        : nachher.hell < 0.02
+                            ? 'es fliesst kein Strom mehr durch die Leuchte'
+                            : `die Leuchte bekommt noch ${Math.round(nachher.hell * 100)} % ` +
+                                `statt ${Math.round(vorher.hell * 100)} % der Nennleistung`;
+            return {
+                art: 'plan-fehler', antwortart: 'wahl',
+                frage: `${v.name}: ${v.wozu}\nDiese Schaltung tut nicht, was sie soll. Woran liegt es?`,
+                plan: kaputt, stellungen: alleZu,
+                optionen: w.misch(auswahl),
+                loesung: schaden.name,
+                erklaerung: `Sieh hin: ${ort}. Nachgerechnet heisst das — ${folge}.`,
+                stufe: 3, saat
+            };
+        }
+        return null;
+    };
+    /** Leuchtet es bei diesen Schalterstellungen (Punkte 59, 60)? */
+    const planLeuchtet = (w, saat) => {
+        if (typeof Schaltplan === 'undefined' || !SF())
+            return null;
+        for (let versuch = 0; versuch < 14; versuch++) {
+            const v = w.aus(SCHALTUNGEN);
+            const plan = planBauen(v.teile, v.draehte);
+            if (!plan)
+                continue;
+            /* Nur Pläne mit von Hand schaltbaren Bauteilen — sonst gibt es nichts
+               zu stellen und die Frage hat nur eine mögliche Antwort. */
+            const schalter = plan.teile.filter(t => {
+                const vh = SF().verhalten(t.zeichen);
+                return vh && vh.art === 'schalter' && !vh.folgtSpule;
+            });
+            if (!schalter.length)
+                continue;
+            const stellung = {};
+            const beschreibung = [];
+            schalter.forEach(t => {
+                const st = SF().stellungenVon(t.zeichen);
+                const nr = w.bis(st.length);
+                stellung[t.id] = nr;
+                beschreibung.push(`${t.bmk}: ${st[nr].name}`);
+            });
+            /* In jedem vierten Fall wird der Verbraucher überbrückt. Dann IST die
+               richtige Antwort „die Sicherung löst aus" — und sie steht nicht mehr
+               als Möglichkeit da, die nie zutrifft. Eine Antwort, die es nie gibt,
+               ist eine geschenkte Ausschlussmöglichkeit; und schlimmer: sie
+               verspricht einen Fall, den die App gar nicht kennt.
+               Ob es wirklich ein Kurzschluss ist, sagt der gerechnete Quellstrom
+               und nicht die Absicht. */
+            let kurz = false;
+            if (w.bis(4) === 0) {
+                const last = plan.teile.find(t => {
+                    const vh = SF().verhalten(t.zeichen);
+                    return vh && vh.art === 'widerstand' && /X1/.test(String(vh.von || ''));
+                });
+                const vh = last ? SF().verhalten(last.zeichen) : null;
+                if (last && vh)
+                    kurz = bruecke(plan, last, String(vh.von), String(vh.nach), 'kurz');
+            }
+            /* Und in jedem fünften der übrigen Fälle liegt zu wenig Spannung an.
+               Aus demselben Grund wie oben: „Ja, aber schwächer als normal" stand
+               als vierte Möglichkeit da und war in 120 Würfelungen NIE die Lösung.
+               Auffallen konnte das keiner Zählung — es fiel auf, weil ein
+               absichtlich verstellter Schwellwert (0,8 auf 0,4) den Prüflauf NICHT
+               rot machte. Eine Schwelle, die nichts trennt, trennt nichts, weil
+               zwischen ihren Seiten kein einziger Fall liegt.
+               Eine Lampe an halber Spannung leuchtet mit einem Viertel der
+               Leistung — sichtbar dunkler, aber sie brennt. */
+            let schwach = false;
+            if (!kurz && w.bis(5) === 0) {
+                const q = plan.teile.find(t => {
+                    const vh = SF().verhalten(t.zeichen);
+                    return vh && vh.art === 'quelle';
+                });
+                const vh = q ? SF().verhalten(q.zeichen) : null;
+                if (q && vh) {
+                    const soll = typeof vh.wert === 'number' ? vh.wert : 230;
+                    /* Zwischen 40 % und 65 % der Nennspannung — das ergibt 16 % bis
+                       42 % Licht. Der Abstand zur Schwelle bei 80 % ist ABSICHT und
+                       kein Zufall: bei 79 % gegen 81 % wäre die Frage „voll oder
+                       schwächer?" ein Münzwurf, und eine Aufgabe, die man nicht
+                       entscheiden KANN, ist keine Aufgabe. Der Prüflauf misst genau
+                       diesen Abstand mit. */
+                    const teil = 0.40 + w.bis(6) * 0.05;
+                    q.werte = { ...(q.werte || {}), U: Math.round(soll * teil) };
+                    q.spannungSoll = soll;
+                    anschreiben(plan, q, `${Math.round(soll * teil)} V (Soll ${soll} V)`, 'spannung');
+                    schwach = true;
+                }
+            }
+            const e = leuchtet(plan, stellung);
+            if (kurz) {
+                /* Ein Kurzschluss zählt erst als einer, wenn der Quellstrom wirklich
+                   über der grössten üblichen Sicherung liegt. */
+                if (!e.ok || e.quellStrom < 16)
+                    continue;
+                return {
+                    art: 'plan-leuchtet', antwortart: 'wahl',
+                    frage: `${v.name}\nStellungen: ${beschreibung.join(', ')}\n` +
+                        `Leuchtet die Leuchte?`,
+                    plan, stellungen: stellung,
+                    optionen: w.misch(['Ja, mit voller Helligkeit.', 'Ja, aber schwächer als normal.',
+                        'Nein, es bleibt dunkel.', 'Die Sicherung löst aus.']),
+                    loesung: 'Die Sicherung löst aus.',
+                    /* Hier steht bewusst KEINE Amperezahl. Die Simulation rechnet mit
+                       einer idealen Quelle ohne Innenwiderstand; heraus kommen dann
+                       Hunderttausende Ampere. Das ist kein Messwert, sondern das, was
+                       eine Division durch fast Null eben ergibt. Einem Lernenden diese
+                       Zahl zu nennen wäre schlimmer, als gar keine zu nennen — er
+                       würde sie sich merken. Was wirklich gilt: den Strom begrenzt
+                       nur noch die Leitung, und der Wert hängt an der Schleifen-
+                       impedanz der Anlage, nicht am Plan. */
+                    erklaerung: 'Die Leuchte ist überbrückt — der Strom nimmt den Weg ' +
+                        'daran vorbei und findet keinen Widerstand mehr vor. Begrenzt ' +
+                        'wird er dann nur noch vom Leitungswiderstand, und er steigt ' +
+                        'weit über jeden Nennstrom. Abschalten kann das nur die ' +
+                        'Sicherung.',
+                    stufe: 3, saat
+                };
+            }
+            if (!e.ok)
+                continue;
+            /* Nur fragen, wo es überhaupt etwas zu leuchten GIBT. Bei einer
+               Selbsthaltung wäre „Leuchtet die Leuchte?" eine Fangfrage über ein
+               Bauteil, das gar nicht im Plan steht. */
+            const hatLeuchte = plan.teile.some(t => {
+                const vh = SF().verhalten(t.zeichen);
+                return vh && vh.art === 'widerstand' && /X1/.test(String(vh.von || ''));
+            });
+            if (!hatLeuchte)
+                continue;
+            const antwort = e.hell > 0.8 ? 'Ja, mit voller Helligkeit.'
+                : e.hell > 0.02 ? 'Ja, aber schwächer als normal.'
+                    : 'Nein, es bleibt dunkel.';
+            /* Wenn die Spannung abgesenkt wurde, MUSS auch etwas dazwischen
+               herauskommen. Tut es das nicht — weil der Schalter offen ist und die
+               Leuchte ohnehin dunkel bleibt —, ist die Absenkung nicht zu sehen,
+               und die Aufgabe würde eine Besonderheit behaupten, die keine ist. */
+            if (schwach && antwort !== 'Ja, aber schwächer als normal.')
+                continue;
+            const q = plan.teile.find(t => t.spannungSoll);
+            return {
+                art: 'plan-leuchtet', antwortart: 'wahl',
+                frage: `${v.name}\nStellungen: ${beschreibung.join(', ')}` +
+                    (schwach && q ? `\nDie Quelle führt nur ${q.werte.U} V statt ${q.spannungSoll} V.` : '') +
+                    `\nLeuchtet die Leuchte?`,
+                plan, stellungen: stellung,
+                optionen: w.misch(['Ja, mit voller Helligkeit.', 'Ja, aber schwächer als normal.',
+                    'Nein, es bleibt dunkel.', 'Die Sicherung löst aus.']),
+                loesung: antwort,
+                erklaerung: `${v.wozu} Nachgerechnet ergibt sich ` +
+                    (e.hell > 0.02 ? `${Math.round(e.hell * 100)} % der Nennleistung.`
+                        : 'kein Strom durch die Leuchte.') +
+                    (schwach ? ' Die Leistung geht mit dem QUADRAT der Spannung: halbe ' +
+                        'Spannung heisst ein Viertel Licht, nicht die Hälfte.' : ''),
+                stufe: schalter.length > 1 ? 3 : 2, saat
+            };
+        }
+        return null;
+    };
     /** Alle Arten, die es gibt. Neue tragen sich hier ein (§8). */
     const ARTEN = [
         { id: 'zeichen-name', name: 'Zeichen benennen', gruppe: 'Fachzeichen', mach: zeichenName },
@@ -739,6 +1399,9 @@ const Elektroaufgaben = (() => {
         { id: 'plan-luecke', name: 'Fehlendes Bauteil', gruppe: 'Schaltungen', mach: planLuecke },
         { id: 'plan-funktion', name: 'Schaltung erkennen', gruppe: 'Schaltungen', mach: planFunktion },
         { id: 'bmk-benennen', name: 'Betriebsmittel finden', gruppe: 'Schaltungen', mach: bmkBenennen },
+        { id: 'plan-leitung', name: 'Fehlende Leitung', gruppe: 'Schaltungen', mach: planLeitung },
+        { id: 'plan-fehler', name: 'Fehler suchen', gruppe: 'Schaltungen', mach: planFehler },
+        { id: 'plan-leuchtet', name: 'Leuchtet es?', gruppe: 'Schaltungen', mach: planLeuchtet },
         { id: 'messen-wo', name: 'Richtig messen', gruppe: 'Messen', mach: messenWo }
     ];
     const artVon = (id) => ARTEN.find(a => a.id === id) || null;

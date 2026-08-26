@@ -2268,3 +2268,33 @@ Was jetzt dasteht, ist ein Verlauf in die Farbe der Fläche, wie ihn
 Geprüft wird zusätzlich die ART der Kante (test221 §6, test217 §3): das geht
 rot, wenn jemand zum Schatten zurückkehrt. Dass man sie SIEHT, beweist keine
 dieser Zahlen — das bleibt eine Frage ans Bild (§55).
+
+## L59
+
+**Ein Schalter sieht offen und geschlossen gleich aus**
+
+`Register.fachzeichen` hält je Symbol EINEN Pfad. Ein Schliesser wird immer
+in derselben Lage gezeichnet, egal welche Stellung gemeint ist. `alsSvg`
+kennt darum auch keinen Parameter dafür — weder im Symbolregister noch im
+Planzeichner.
+
+Zu sehen ist das bei `plan-leuchtet` (E192): die Frage sagt „S1:
+geschlossen", und im Bild daneben steht S1 offen. Der Widerspruch verwirrt,
+auch wenn die Angabe im Text eindeutig ist — gedruckte Lehrmittel machen es
+genauso, mit einer Stellungstabelle neben dem Plan.
+
+Beim Simulieren im Schaltplan-Block (E187) fällt es weniger auf, weil der
+fliessende Strom die Leitungen einfärbt und man daran sieht, was leitet. Bei
+einer Aufgabe ohne laufende Simulation fehlt dieser Hinweis.
+
+**Was es kostet.** Jedes Schaltersymbol bräuchte einen zweiten Pfad, und die
+Stellung müsste durch beide Zeichner durchgereicht werden — `fachzeichen`
+und `schaltplan`. Das sind rund zwanzig Symbole. Es ist keine grosse
+Schwierigkeit, aber auch keine Zeile, und es gehört in einen eigenen Schritt
+mit eigenen Prüfungen; im Zug der Aufgabenarten wäre es ein zweites Thema
+gewesen.
+
+**Was inzwischen dagegen hilft.** Die Stellungen stehen als Daten am
+Aufgabenobjekt (`stellungen`), nicht nur im Fragetext. Wer die Zeichnung
+später stellungsabhängig macht, findet dort, was gemeint ist, ohne den
+Fragetext zerpflücken zu müssen.

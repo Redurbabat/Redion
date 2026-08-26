@@ -13412,3 +13412,122 @@ neu, und ein Neuladen löscht alles, was am Fenster hängt. Die Kennungen
 bleiben jetzt im Prüfskript.
 
 Prüflauf: `test242`, 42 Punkte.
+
+## E192
+
+**Drei Aufgaben, die den Schaltplan lesen — und was die Bilder daran fanden**
+*(26. August 2026, Punkte 52, 53, 59)*
+
+Bisher wurden Aufgaben aus den Registern erzeugt: nimm ein Symbol, frag nach
+seinem Namen. Die drei neuen fragen etwas, das in keinem Register steht.
+
+    plan-leitung   Eine Leitung fehlt. Welche?
+    plan-fehler    Die Schaltung tut nicht, was sie soll. Woran liegt es?
+    plan-leuchtet  Leuchtet die Leuchte bei diesen Stellungen?
+
+Die Antwort kommt aus `Stromfluss.rechne`. Sie steht nirgends geschrieben und
+kann deshalb auch nicht veralten: ändert sich die Simulation, ändert sich die
+Lösung mit. Das ist der ganze Grund, warum diese drei so gebaut sind.
+
+### Was der Massstab sein muss: das Verhalten, nicht die Helligkeit
+
+Der erste Bau fragte „leuchtet es überhaupt?", und daran war fast alles
+falsch, was falsch sein konnte.
+
+Bei einer **Wechselschaltung** fehlte ein Draht, und die Lampe leuchtete
+trotzdem — man musste nur den anderen Schalter umlegen. Nach dem alten
+Massstab war der Plan heil. Er war es nicht: von zwei bedienbaren Stellen
+blieb eine übrig, und genau das ist der Fehler, den die Aufgabe zeigt.
+
+Beim **Zeitrelais** brachte ein ABLENKER die Leuchte zum Brennen — dauernd
+statt verzögert. Zwei richtige Antworten, eine davon mit rotem Kreuz.
+
+Beides misst jetzt dasselbe: ein Muster über ALLE Schalterstellungen,
+`H` volle Helligkeit, `h` schwach, `s` es fliesst etwas, `.` nichts. Zwei
+Pläne mit gleichem Muster sind dieselbe Schaltung. Der fehlende Draht muss
+das Muster ändern; kein Ablenker darf es wiederherstellen.
+
+### Eine Leitung hat keine Richtung
+
+`G1:L — E1:X1` und `E1:X1 — G1:L` sind derselbe Draht. Beide standen zur
+Wahl, in 56 von 600 Würfelungen. Die Prüfung auf doppelte Möglichkeiten sah
+nichts, weil die beiden Texte wirklich verschieden SIND. Der Schlüssel der
+Ablenkermenge ist jetzt das sortierte Paar.
+
+Und im selben Zug ein zweites Mal derselbe alte Fehler: `w.misch` stand in
+der Bedingung UND im Zweig. Jeder Aufruf dreht den Würfel weiter, geprüft
+wurde also eine andere Reihenfolge als die zurückgegebene. Hier trug es
+nichts aus — die Menge hatte immer genau vier Einträge —, aber es war eine
+Änderung davon entfernt, eine Aufgabe ohne ihre eigene Lösung zu erzeugen.
+
+### Eine Möglichkeit, die nie stimmt, ist geschenkt
+
+Zwei standen da, und beide waren nie die Lösung.
+
+`plan-fehler` bot „Die Quelle liefert zu wenig Spannung" an — in 120
+Würfelungen kein einziges Mal richtig. `plan-leuchtet` bot „Ja, aber
+schwächer als normal" an — dasselbe. Wer das bemerkt, hat von vier
+Möglichkeiten nur noch drei, und lernt nebenbei, dass es diesen Fall nicht
+gibt. Beide sind jetzt echte Fälle: die Quelle wird abgesenkt, und die
+Simulation muss die schwächere Helligkeit bestätigen, sonst gilt der Fall
+nicht.
+
+Wie der zweite auffiel, ist der Teil, der es wert ist, aufgeschrieben zu
+werden. Nicht durch Zählen. Ich verstellte die Schwelle für „volle
+Helligkeit" von 0,8 auf 0,4, um zu sehen, ob der Prüflauf das merkt — und er
+blieb grün. Eine Schwelle, die nichts trennt, trennt nichts, weil zwischen
+ihren Seiten kein einziger Fall liegt. §55.2 sagt, eine Prüfung muss rot
+werden KÖNNEN; hier zeigte dieselbe Probe, dass die Aufgabe eine Antwort
+anbot, die es nicht gab.
+
+Der Abstand ist jetzt Absicht: abgesenkt wird auf 40 bis 65 Prozent, das
+ergibt 16 bis 42 Prozent Licht, und zur Schwelle bei 80 bleibt Luft. Bei
+79 gegen 81 Prozent wäre „voll oder schwächer?" ein Münzwurf.
+
+### Keine Zahl, die nichts bedeutet
+
+Beim Kurzschluss stand in der Erklärung: *„Nachgerechnet fliessen 460000 A."*
+
+Die Simulation rechnet mit einer idealen Quelle ohne Innenwiderstand. Die
+Zahl ist keine Messung, sondern das Ergebnis einer Division durch fast Null.
+Ein Lernender merkt sie sich trotzdem. Jetzt steht da, was wirklich gilt:
+den Strom begrenzt nur noch die Leitung, und er steigt weit über jeden
+Nennstrom. Der Prüflauf lässt keine Zahl über tausend in einer Erklärung zu.
+
+### Und der Fund, den nur die Bilder machen konnten
+
+Die Brücke über ein Bauteil wurde mit Punkten weit ausserhalb des Blattes
+eingetragen — `{-900,-900}` —, weil `Stromfluss` über die Klemmenangabe
+verbindet und die Geometrie dafür nicht braucht. Gerechnet stimmte alles.
+**Im Bild war nichts zu sehen.**
+
+Eine Aufgabe „diese Leuchte ist überbrückt — leuchtet sie?" über einen Plan,
+in dem die Brücke fehlt, ist nicht schwer, sondern unlösbar. Und die zu
+niedrige Spannung stand überhaupt nirgends: die Zeichnung sah heil aus, und
+„die Quelle liefert zu wenig Spannung" war nur durch Ausschluss zu erraten.
+
+Kein Prüflauf konnte das melden. Er las dieselbe Netzliste wie die
+Simulation, und die war richtig. Gesehen hat es ein Bildschirmfoto (§55).
+
+Die Brücke läuft jetzt sichtbar unter dem Bauteil herum, auf einer Bahn
+unterhalb aller Bahnen, die `planBauen` vergeben hat — eine reine Kreuzung
+verbindet in `Stromfluss.netze` nichts, nur ein Knick auf fremder Strecke.
+Und das Blatt wächst mit, sonst würde genau die neue Leitung abgeschnitten.
+Die Spannung steht als Beschriftung im Plan, über `plan.texte` (Punkt 47) —
+kein neues Feld im Renderer für etwas, das es schon gibt.
+
+Geprüft wird das am gezeichneten SVG, nicht am Datenmodell. Ein Prüflauf,
+der das Modell befragt, hätte beide Fehler bestätigt.
+
+### Prüflauf
+
+`test243`, 37 Punkte. Er rechnet die Antworten mit EIGENEM Werkzeug nach —
+eigene Netzliste, eigene vollständige Stellungssuche —, nicht mit
+`besteStellung` aus dem Aufgabenmodul. Ein Lauf, der die Lösung aus derselben
+Funktion holt wie die Aufgabe, prüft nur, dass zweimal dasselbe herauskommt.
+
+Zwei Fehler im Lauf selbst sind dabei aufgefallen und stehen als Kommentar
+drin: Ein Schütz heisst mit Spule und Kontakt BEIDE `K1` — wer das erste
+Bauteil mit diesem Namen nimmt, greift die Spule und sucht dort vergeblich
+die Klemme 14; aufgelöst wird über die Klemme. Und `/\bV\b/` in einer
+Vorlagenzeichenkette ist kein Wortende, sondern ein Rückschritt-Zeichen.
