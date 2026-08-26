@@ -515,7 +515,42 @@ const handy = await seite.evaluate(() => {
     skizzeBreit: skizze ? Math.round(skizze.getBoundingClientRect().width) : 0,
     /* Nichts darf seitlich hinauslaufen. */
     quer: (document.querySelector('.fh-inhalt') as HTMLElement).scrollWidth >
-          (document.querySelector('.fh-inhalt') as HTMLElement).clientWidth + 1
+          (document.querySelector('.fh-inhalt') as HTMLElement).clientWidth + 1,
+    /* UND NICHTS DARF ÜBER DEM FUSS LIEGEN.
+     *
+     * Gefunden wurde das mit den Augen, nicht mit einer Messung: im
+     * Bildschirmfoto vom Telefon waren die Fussknöpfe leere Kästchen ohne
+     * Zeichen. Die Messung sagte gleichzeitig 44 × 44, sichtbar, im Fenster
+     * — alles richtig. Über ihnen lag `#toast`.
+     *
+     * `elementFromPoint` hätte das NICHT gefunden: der Toast hat
+     * `pointer-events:none`, und die Treffersuche überspringt ihn. Eine
+     * Prüfung, die den Anfassbarkeitsstapel misst, wäre hier für immer grün
+     * geblieben (§55.2). Also wird gemessen, was GEMALT wird: ein Element
+     * ausserhalb des Heftfensters, das eigene Schichtung hat, eine höhere
+     * z-Zahl als das Fenster, sichtbar ist und den Fuss überlappt. */
+    ueberFuss: (() => {
+      const zFenster = Number(getComputedStyle(fenster).zIndex) || 0;
+      const fussK = document.querySelector('.fh-pdffuss') as HTMLElement;
+      const fk = fussK.getBoundingClientRect();
+      const treffer: string[] = [];
+      document.querySelectorAll<HTMLElement>('body *').forEach(e => {
+        if (fenster.contains(e)) return;
+        const st = getComputedStyle(e);
+        if (st.position === 'static') return;
+        const z = Number(st.zIndex);
+        if (!Number.isFinite(z) || z <= zFenster) return;
+        if (st.display === 'none' || st.visibility === 'hidden') return;
+        if (Number(st.opacity) === 0) return;
+        const r = e.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return;
+        if (r.right <= fk.left || r.left >= fk.right ||
+            r.bottom <= fk.top || r.top >= fk.bottom) return;
+        treffer.push(`${e.tagName}#${e.id || '?'} z${z} ` +
+          `${Math.round(r.top)}–${Math.round(r.bottom)}`);
+      });
+      return treffer;
+    })()
   };
 });
 p('Jeder Knopf im Fuss ist mit dem Finger zu treffen',
@@ -532,6 +567,8 @@ p('… und behält ihre Leerzeichen',
 p('Skizze und Formeln stehen untereinander',
   handy.koerperRichtung === 'column', handy.koerperRichtung);
 p('Die Seite läuft nicht seitlich hinaus', !handy.quer);
+p('Und nichts liegt über dem Fuss',
+  handy.ueberFuss.length === 0, handy.ueberFuss.join(', '));
 
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));

@@ -493,20 +493,40 @@ const Elektroskizzen = (() => {
         },
         's13-magnetfelder-bei-spulen': () => {
             /* Feldlinien um eine Spule im Längsschnitt: innen dicht und gerade,
-               aussen weit ausholend und geschlossen. Dass sie GESCHLOSSEN sind,
-               ist der ganze Unterschied zum elektrischen Feld. */
-            const wick = [0, 1, 2, 3, 4].map(i => `<path d="M${112 + i * 24},74 A12,12 0 1,1 ${112 + i * 24},106" ` +
+             * aussen weit ausholend und geschlossen. Dass sie GESCHLOSSEN sind,
+             * ist der ganze Unterschied zum elektrischen Feld.
+             *
+             * Beim Hinsehen fielen drei Dinge auf, die kein Prüflauf sehen kann:
+             *
+             *  · Das `I` stand über einer Stelle, an der gar keine Leitung war.
+             *    Eine Beschriftung ohne Gegenstand ist schlimmer als keine.
+             *  · Nur der Nordpol war benannt. Eine Spule hat zwei Pole, und der
+             *    Südpol ist der, an dem die Linien wieder hineingehen — genau die
+             *    Aussage, die das Bild machen soll.
+             *  · Der gerade Teil der Feldlinie wurde zweimal übereinander
+             *    gezeichnet, weil beide Linien ihn im selben `d` mitführten.
+             */
+            const wick = [0, 1, 2, 3, 4].map(i => `<path d="M${116 + i * 22},72 A14,14 0 1,1 ${116 + i * 22},108" ` +
                 `stroke="${STRICH}" stroke-width="2" fill="none"/>`).join('');
-            const linie = (dy) => `<path d="M118,90 L214,90 M214,90 C${254 + dy},90 ${254 + dy},${30 - dy} 166,${30 - dy} ` +
-                `C${78 - dy},${30 - dy} ${78 - dy},90 118,90" stroke="${BETONT}" ` +
+            /* Der gerade Teil liegt innen und gehört beiden Linien — einmal. */
+            const kern = `<path d="M120,90 L218,90" stroke="${BETONT}" ` +
                 `stroke-width="1.5" fill="none"/>`;
-            return svg(340, 175, linie(0) + linie(16) +
+            const bogen = (dy) => `<path d="M218,90 C${262 + dy},90 ${262 + dy},${52 - dy} 169,${52 - dy} ` +
+                `C${76 - dy},${52 - dy} ${76 - dy},90 120,90" stroke="${BETONT}" ` +
+                `stroke-width="1.5" fill="none"/>`;
+            return svg(340, 196, bogen(0) + bogen(14) + kern +
                 wick +
-                pfeil(150, 90, 186, 90, BETONT, 1.8) +
-                txt('I', 108, 128, 'middle', STRICH, 12) +
-                txt('Φ', 194, 84, 'start', BETONT, 12) +
-                txt('N', 240, 96, 'start', STRICH, 12) +
-                txt('Die Feldlinien sind geschlossen.', 170, 164, 'middle', BLASS, 11));
+                /* Zuleitungen, damit das `I` etwas hat, woran es steht. */
+                lin(116, 108, 116, 152, STRICH, 1.6) +
+                pfeil(64, 152, 116, 152, STRICH, 1.6) +
+                lin(204, 108, 204, 152, STRICH, 1.6) +
+                lin(204, 152, 256, 152, STRICH, 1.6) +
+                pfeil(146, 90, 184, 90, BETONT, 1.8) +
+                txt('I', 60, 148, 'end', STRICH, 12) +
+                txt('Φ', 169, 30, 'middle', BETONT, 12) +
+                txt('S', 112, 80, 'end', STRICH, 12) +
+                txt('N', 226, 80, 'start', STRICH, 12) +
+                txt('Die Feldlinien sind geschlossen.', 170, 184, 'middle', BLASS, 11));
         },
         's13-kraefte-auf-strom-durchflossene': () => {
             /* Ein Leiter im Feld zwischen Nord und Süd: Strom in die Zeichenebene

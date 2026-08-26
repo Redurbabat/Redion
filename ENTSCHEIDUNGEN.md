@@ -13897,3 +13897,65 @@ Formel" hätte die sechzehn Bildabschnitte rot gemacht, obwohl sie richtig
 sind. Sie heisst jetzt „kein Abschnitt ohne ALLES" — ohne Formel, ohne
 Tabelle und ohne Skizze. Eine Prüfung, die Richtiges rot macht, wird
 irgendwann abgeschaltet, und dann fängt sie auch das Falsche nicht mehr.
+
+## E196 · Drei Dinge, die nur das Hinsehen fand
+
+**26. August 2026**
+
+Redur wollte Seite 13 und die Telefonansicht sehen. Das Bild zeigte drei
+Fehler, und keiner davon war rot.
+
+**Erstens: zwei Kurven, die sich nicht unterschieden.**
+
+Die Abbildung „Ummagnetisierungskennlinien" zeigt hartmagnetisch NEBEN
+weichmagnetisch. Der Unterschied zwischen beiden IST die Aussage — die
+eingeschlossene Fläche ist die Verlustarbeit je Ummagnetisierung, und
+deshalb nimmt man im Trafokern die schmale. Gezeichnet war zweimal
+dieselbe Linse mit leicht verschobenen Kontrollpunkten.
+
+Jetzt bestimmt die Koerzitivfeldstärke die Form: 24 für den Dauermagneten,
+5 für den Kern. Beide sehen aus wie eine Hystereseschleife, und man sieht
+auf einen Blick, welche welche ist.
+
+Eine Prüfung hätte das nie gefunden. Sie hätte gezählt: zwei Pfade da,
+beide im Rahmen, beide nicht leer — grün. Zwei Bilder, die dasselbe zeigen,
+obwohl sie Verschiedenes zeigen sollen, sind kein messbarer Zustand.
+
+**Zweitens: eine Beschriftung ohne Gegenstand.**
+
+Im Bild „Magnetfelder bei Spulen" stand ein `I` unter der Spule, aber es
+gab dort keine Leitung. Und benannt war nur der Nordpol, obwohl der ganze
+Sinn des Bildes ist, dass die Linien am einen Ende hinaus- und am anderen
+wieder hineingehen. Beides ist jetzt da: Zuleitungen mit Stromrichtung,
+S und N an ihren Enden. Nebenbei fiel auf, dass der gerade Teil der
+Feldlinie zweimal übereinander gezeichnet wurde, weil beide Linien ihn im
+selben `d` mitführten.
+
+**Drittens: die Fussknöpfe am Telefon waren leere Kästchen.**
+
+Und das ist der interessante Fall. Die Messung sagte gleichzeitig: 44 × 44,
+sichtbar, mit Text, innerhalb des Fensters. Alles stimmte. Über ihnen lag
+`#toast`.
+
+Der Toast versteckt sich mit `transform: translateY(80px)`. Am Rechner
+steht er bei `bottom:22px` — 80 px nach unten genügen, er ist aus dem Bild.
+Am Telefon steht er bei `bottom:104px`, weil dort die Aktionsleiste liegt.
+104 − 80 = 24, also blieb ein dunkler Streifen dauerhaft im Bild stehen,
+mit dem Text der letzten Meldung darin, quer über den Fussknöpfen.
+
+Eine Schiebestrecke muss die Höhe des Kastens erraten, und die hängt am
+Text. `opacity` muss nichts raten. Ausdrücklich NICHT `visibility:hidden`:
+`#toast` ist ein `aria-live`-Bereich, und ein unsichtbarer Bereich wird
+nicht vorgelesen — ein durchsichtiger schon.
+
+**Und die Prüfung dazu, die rot werden kann.**
+
+Der naheliegende Weg wäre `elementFromPoint` in der Mitte jedes Knopfes.
+Der hätte hier für immer grün gezeigt: `#toast` hat `pointer-events:none`,
+und die Treffersuche überspringt ihn. Genau der Fall aus CLAUDE.md §55.2 —
+eine Prüfung, die nicht rot werden kann, ist keine.
+
+Gemessen wird deshalb, was GEMALT wird: jedes Element ausserhalb des
+Heftfensters, das eigene Schichtung hat, eine höhere z-Zahl trägt als das
+Fenster, sichtbar ist und den Fuss überlappt. Vor der Berichtigung meldete
+sie `DIV#toast z900 798–820`, danach nichts. test244 hat damit 65 Prüfungen.
