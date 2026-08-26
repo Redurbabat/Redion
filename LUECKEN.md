@@ -2268,3 +2268,37 @@ Was jetzt dasteht, ist ein Verlauf in die Farbe der Fläche, wie ihn
 Geprüft wird zusätzlich die ART der Kante (test221 §6, test217 §3): das geht
 rot, wenn jemand zum Schatten zurückkehrt. Dass man sie SIEHT, beweist keine
 dieser Zahlen — das bleibt eine Frage ans Bild (§55).
+
+## L59
+
+**Ein Schalter sieht offen und geschlossen gleich aus**
+
+`Register.fachzeichen` hält je Symbol EINEN Pfad. Ein Schliesser wird immer
+in derselben Lage gezeichnet, egal welche Stellung gemeint ist. `alsSvg`
+kennt darum auch keinen Parameter dafür — weder im Symbolregister noch im
+Planzeichner.
+
+Zu sehen war das bei `plan-leuchtet` (E192): die Frage sagte „S1:
+geschlossen", und im Bild daneben stand S1 offen.
+
+**Behoben am 26. August (E193) — aber anders als hier zuerst geplant.**
+
+Der Plan war, jedem Schaltersymbol einen zweiten Pfad zu geben. Beim
+Nachdenken über die achtundzwanzig Symbole fiel auf, dass das der falsche
+Weg gewesen wäre: **ein Kontakt wird im Schaltplan in seiner RUHELAGE
+gezeichnet.** Ein Schliesser ist offen, auch während er geschlossen ist. Wer
+ihn geschlossen zeichnet, zeichnet keinen Schaltplan mehr.
+
+Die Lücke war also nicht „das Symbol ist falsch", sondern „die Stellung steht
+nur im Fragetext und nicht dort, wo man sie braucht". Gedruckte Lehrmittel
+lösen das mit einer Stellungstabelle neben dem Plan. Redion schreibt sie
+direkt ans Bauteil — über `plan.texte`, dieselbe Beschriftungsart, die es
+für Punkt 47 ohnehin gibt.
+
+Dabei ist prompt ein neuer Fehler entstanden und im selben Zug gefunden
+worden: die Beschriftung „geschlossen" landete bei manchen Startwerten auf
+einem Tippgriff und schluckte den Klick. Man tippt, und es passiert nichts —
+schlimmer als ein zu kleines Ziel, weil man nicht sieht, warum. `test243`
+prüft jetzt für zwölf Aufgaben nacheinander, dass über keinem Griff etwas
+anderes liegt; mit EINER Aufgabe blieb die Prüfung grün, obwohl der Fehler
+noch drin war.

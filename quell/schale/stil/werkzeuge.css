@@ -145,6 +145,14 @@ a.bl:hover{color:var(--text)}
 .fk-vor{margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:14px}
 .fk-vor b{display:block; margin-bottom:3px}
 .fk-vor span{color:var(--text-dim)}
+/* Eine Karte, die aus einem PDF-Ausschnitt entstanden ist (E191, Punkt 43).
+   Das Bild steht ÜBER dem Text: es ist die Frage, der Text ist die Antwort.
+   Weisser Grund, weil ein Buchausschnitt auf Weiss gedruckt ist und im
+   Dunkelmodus sonst als graues Rechteck erschiene. */
+.fk-bild{display:block; max-width:100%; height:auto; max-height:320px;
+  border-radius:6px; margin-bottom:8px; background:#fff;
+  border:1px solid var(--line)}
+.fk-zeilen{min-width:0}
 
 /* --- Sperre ------------------------------------------------------------------ */
 .gesperrt{text-align:center; padding:12vh 0}

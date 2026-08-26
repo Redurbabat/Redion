@@ -12949,3 +12949,807 @@ Dazu kamen zwei Abschnitte, die es vorher nicht gab: was ein Dashboard kann,
 und aus welchen Werkzeugen Redion Daten übernimmt. §33 verlangt, dass die
 README wichtige Nutzerfunktionen nennt — eine README, die weniger verspricht
 als die App kann, ist auch eine falsche README, nur in die andere Richtung.
+
+
+## E187 · Der Strom fliesst wirklich — eine Simulation, die rechnet
+
+*25. August 2026*
+
+Redur hat es in einem Satz gesagt: „es sollte bei der Zeichnungen die strom
+direkt flissen könenn wie echte simulationen". Die Frage war, was „echt"
+heisst.
+
+**Die billige Antwort wäre eine Wegsuche gewesen.** Schauen, ob es von L nach
+N einen durchgängigen Pfad gibt, und auf diesem Pfad gestrichelte Linien
+laufen lassen. Das ist in einer Stunde gebaut, sieht in einer Vorführung gut
+aus — und beantwortet keine einzige Frage, die im Unterricht gestellt wird.
+Was fällt an der Lampe ab, wenn zwei in Reihe hängen? Warum wird der
+Vorwiderstand warm? Was zeigt das Amperemeter, wenn es an der falschen Stelle
+sitzt? Eine Animation weiss das nicht. Sie weiss nur, dass es leuchtet.
+
+Deshalb steht in `src/bereiche/elektro/simulation.ts` eine
+**Knotenpotentialanalyse**. Sie stellt aus der Zeichnung ein lineares
+Gleichungssystem auf, löst es mit Gauss und Spaltenpivot und liefert für
+jedes Bauteil Spannung, Strom und Leistung. Zwei gleiche Lampen in Reihe an
+230 V ergeben 115 V und ein Viertel der Helligkeit — nicht, weil das
+irgendwo einprogrammiert wäre, sondern weil es herauskommt.
+
+### Die Netzliste steht nirgends — sie ergibt sich
+
+Was mit was verbunden ist, wird nicht gespeichert. Es wird aus der Zeichnung
+GELESEN: eine Leitung, die an einer Klemme endet, verbindet sie; zwei
+Leitungen, die sich an einem Punkt berühren, sind ein Netz; eine Klemme
+mitten auf einer Leitung zapft sie an. Eine Verbandsuche fasst das zusammen.
+
+Genau deshalb muss man den Plan malen und nicht tippen — und genau deshalb
+ist ein Zeichenfehler auch ein Schaltungsfehler. Das ist keine Härte,
+sondern der Beruf.
+
+### Der Kontakt, der einen Widerstand hat
+
+Zuerst stand hier der Lehrbuchweg: eine ideale Leitung als Spannungsquelle
+mit 0 V, damit 1/0 die Matrix nicht sprengt. Exakt, elegant — und an der
+**Selbsthaltung** gescheitert, dem meistgezeichneten Steuerstromkreis
+überhaupt. Sobald der Haltekontakt zumacht, liegen zwei ideale Kurzschlüsse
+parallel, und dann ist nicht bestimmt, wie sich der Strom auf sie verteilt:
+zwei Zeilen der Matrix sind identisch, das System hat keine eindeutige
+Lösung. Das war kein Rechenfehler, sondern eine ehrliche Auskunft über ein
+zu ideales Modell.
+
+Ein geschlossener Kontakt bekommt jetzt **1 mΩ**. Keine Notlösung, sondern
+die Wirklichkeit: ein Relaiskontakt liegt bei etwa 5 mΩ, ein Schalter bei 10,
+ein Meter Draht mit 1,5 mm² bei 12. Der Strom teilt sich damit auf zwei
+parallele Kontakte so auf, wie er es in der Schaltung auch tut, und der
+Spannungsabfall bleibt bei 0,2 A unter einem Zehntel Millivolt.
+
+Das Amperemeter bleibt die 0-V-Quelle — der Strom durch eine Spannungsquelle
+ist eine Unbekannte des Systems, und ihr Wert IST damit der Messwert.
+
+### Ein Nanoampere von nirgendwo
+
+Jedes Netz bekommt zusätzlich 1 TΩ nach Masse. Ohne das ist jede Schaltung
+mit einem freischwebenden Netz unlösbar, und freischwebende Netze sind der
+Normalfall: bei einer Wechselschaltung führt IMMER eine der beiden
+Korrespondierenden ins Leere. Denselben Weg geht SPICE, und aus demselben
+Grund.
+
+Der Preis stand danach im Fuss der Fläche: „grösster Strom 4.71e-10 A",
+während die Lampe aus war. Eine Behauptung, die niemand widerlegen kann.
+Alles unter einem Nanoampere ist jetzt eine glatte Null — auch für ein gutes
+Messgerät ist dort Schluss.
+
+### Die Schaltung hat ein Gedächtnis
+
+Ein Schütz, das anzieht, schliesst seine Hilfskontakte, und die verändern die
+Schaltung, die gerade gerechnet wurde. Also wird gerechnet, nachgeführt und
+wieder gerechnet, bis sich nichts mehr ändert. Ein Blinkrelais ist der Fall,
+in dem sich nie etwas beruhigt — er wird als „kommt nicht zur Ruhe" gemeldet
+statt endlos gerechnet.
+
+Und zwischen zwei Bedienschritten wird der Spulenzustand MITGENOMMEN. Ohne
+das fiele das Schütz beim Loslassen des Startknopfs sofort wieder ab, und die
+Selbsthaltung — der erste Steuerstromkreis, den jeder lernt — ginge nicht.
+
+### Was die Zeichnung zeigt
+
+Über jeder stromführenden Leitung liegt ein zweiter, laufender Strich; die
+Geschwindigkeit folgt dem Logarithmus des Stroms, weil zwischen einer
+Meldeleuchte mit 10 mA und einem Motor mit 10 A drei Grössenordnungen
+liegen und linear die eine stillstünde, während die andere flimmert. Wer
+„weniger Bewegung" eingestellt hat, sieht die Strichelung trotzdem — §38
+verlangt, dass die Aussage nicht nur in der Farbe steckt.
+
+Leuchten bekommen einen Schein, dessen Stärke der LEISTUNG folgt, nicht dem
+Strom: eine Lampe an halber Spannung ist ein Viertel so hell, und genau das
+soll man an der Reihenschaltung sehen.
+
+Solange der Strom läuft, ist die Fläche eine Schalttafel und kein
+Zeichenbrett: ein Tipp schaltet, nichts wird verschoben, nichts gelöscht.
+Die Schalterstellungen landen **nicht** im Block. Ein Plan ist eine
+Zeichnung, kein Zustand — wer ihn morgen öffnet, will ihn so sehen, wie er
+gezeichnet ist, und nicht mit dem Licht an, das gestern jemand angelassen
+hat.
+
+### Und was das Hinsehen gefunden hat
+
+Vier Dinge, von denen drei keine Prüfung hatte (§55):
+
+* Der Knopf „▶ Strom" erbte die 34 px der Icon-Knöpfe und zeigte „Stron".
+  Gemessen: `scrollWidth` 40 gegen `clientWidth` 34. Derselbe Fehler wie die
+  abgeschnittene Zahl in §55.1, nur in Buchstaben.
+* Der Fuss meldete „0 leuchteten" statt „0 leuchten".
+* Der Leckstrom stand als Messwert da (oben).
+* Und der wichtigste: im ersten Bild führten **alle fünf** Leitungen der
+  Wechselschaltung Strom, obwohl nur vier dürfen. Die Rechnung stimmte —
+  drei Leitungen lagen auf derselben Höhe und ÜBERLAPPTEN sich, waren also
+  eine einzige. Die Lampe brannte aus dem falschen Grund.
+
+Der letzte Punkt hat eine Meldung nach sich gezogen, die es vorher nicht
+gab: liegen zwei Anschlüsse DESSELBEN Bauteils im selben Netz, ist es
+überbrückt, und die Fläche sagt es. Diese Meldung hat sich sofort bezahlt
+gemacht — sie hat beim Schreiben von `test239` §11 zweimal eine Prüfung
+davor bewahrt, grün über eine kaputte Schaltung zu berichten.
+
+### Grenzen, die benannt werden
+
+Gleichstrom, eingeschwungen, linear. Ein Kondensator ist eine Unterbrechung,
+eine Spule eine Verbindung, eine Zeitverzögerung gibt es nicht. Wo eine
+Annahme getroffen wird, steht sie in `annahmen` und ist im Fuss antippbar —
+statt einer Zahl, die niemand nachprüfen kann.
+
+Prüflauf: `test239`, 68 Punkte. Darunter die Wahrheitstafel der
+Wechselschaltung (alle vier Zeilen), alle acht Stellungen der
+Kreuzschaltung, die Selbsthaltung über sechs Bedienschritte und die
+Wheatstone-Brücke — abgeglichen und verstimmt. Die Brücke steht dort nicht
+zur Zierde: sie lässt sich nicht in Reihe und Parallel zerlegen, und eine
+Simulation, die nur das kann, muss dort unauffällig falsch liegen.
+
+
+## E188 · Ein Formelheft, das offen bleibt, während man zeichnet
+
+*25. August 2026*
+
+Redur hat es genau beschrieben: „wenn ich zeichne und dort bei einfügen
+Formelheft klicke, sollte das Formelheft dort kommen, und ich es bewegen
+können, und auf alle Seiten gehen können und die Seiten auch in Favoriten
+speichern können."
+
+Das entscheidende Wort ist **während**. Ein Nachschlagewerk, das die Arbeit
+ersetzt, statt daneben zu stehen, ist keines: man schlägt nach, schliesst es,
+merkt sich die Formel — und merkt sie sich falsch. Deshalb ist das Heft ein
+schwebendes Fenster und kein Dialog. Kein abdunkelnder Hintergrund, kein
+Überlagerungsschleier; der Plan darunter bleibt sichtbar und nimmt weiter
+Klicks entgegen. `test240` §3 prüft genau das, mit `elementFromPoint`.
+
+### Zwei Hefte in einem
+
+**Redions eigene Sammlung** — rund fünfzig Formeln in vierzehn Kapiteln, von
+Grundformeln bis Kompensation. Jede erklärt sich in einem Satz, nennt ihre
+Grössen mit Zeichen und Einheit, und rechnet: Gesuchte wählen, Werte
+eintippen, Ergebnis ablesen — samt Rechenweg, weil im Unterricht der Weg
+bewertet wird und nicht die Zahl.
+
+**Das eigene PDF** — einmal geladen, danach durchblättert, Seiten merkbar. Es
+liegt als gewöhnlicher Redion-Anhang in der IndexedDB und geht damit durch
+`.redion`-Sicherung und Wiederherstellung wie jede andere Datei.
+
+Warum kein Heft mitgeliefert wird: eine gescannte Formelsammlung ist fremdes
+Lehrmaterial mit eigenem Urheberrecht. Redion liefert die FÄHIGKEIT, ein Heft
+zu benutzen, und eine eigene, selbst geschriebene Sammlung dazu. Die Formeln
+selbst gehören niemandem; die Auswahl und der Satz eines fremden Hefts schon.
+
+### Kein eval()
+
+§20 verbietet es, und die Formeln lösen deshalb über echte Funktionen —
+`loese: { I: v => v.U / v.R }` statt einer Zeichenkette, die jemand auswertet.
+`test240` §6 durchsucht die drei erzeugten Dateien und hat eine Gegenprobe
+dabei, damit die Regel nicht stumm wird.
+
+### Vier Fehler, gefunden durch Hinsehen und Messen
+
+* **Das Heft öffnete das falsche Kapitel.** Beim Zeichnen eines gewöhnlichen
+  Stromkreises schlug es die *Beleuchtungsstärke* auf — weil eine Lampe im
+  Plan stand und `lampe` auf „Lichttechnik" zeigte. Eine Lampe im
+  Stromlaufplan ist ein Verbraucher; Lichttechnik gehört zum Bauplan. Nach
+  dem Symbol richtig geraten, nach der Frage falsch.
+* **Die Kapitelnamen brachen scharf am Fensterrand ab** — „Leistung und E".
+  Dasselbe Bild wie E159, wo „Meine Fehler" mitten im Wort endete. Der Rand
+  läuft jetzt aus, über `Rollrand` und nicht über eine vierte abgeschriebene
+  Rechnung.
+* **Das aktive Kapitel stand ausserhalb des Bildes.** Es war hervorgehoben,
+  aber man sah es nicht — und wer nicht weiss, wo er ist, blättert nicht
+  weiter, sondern sucht.
+* **Das Heft vergass seinen Platz, wenn man es an den linken oder oberen
+  Rand geschoben hatte.** `ort.x || vorgabe`: die Null ist im Sinne von
+  JavaScript falsch und im Sinne des Menschen richtig. Derselbe Fehler wie
+  eine Zahl, die zu einer anderen Zahl wird — er sieht aus wie Absicht.
+
+### Und zwei Fehler in den Prüfungen selbst
+
+Sie sind hier festgehalten, weil beide dieselbe Versuchung hatten.
+
+`test240` §9 mass die Knopfgrössen am Telefon und fand den Stern bei 43×27
+und die Kapitelknöpfe bei 27 hoch. §37 nennt 44 px. Die bequeme Lösung wäre
+gewesen, die Prüfung auf 30 zu setzen — sie wäre grün geworden, und der
+Knopf wäre weiter zu klein. Stattdessen steht 44 in der Prüfung und die
+Knöpfe sind gewachsen.
+
+`test240` §1 verlangte für jede Grösse eine Einheit und machte damit fünf
+RICHTIGE Einträge rot: Wirkungsgrad, cos φ, Dielektrizitätszahl,
+Windungszahl und Polpaarzahl sind Verhältnisse und haben keine. Die Prüfung
+verlangt jetzt das Feld (vergessen fällt auf) und führt daneben die Liste
+der vierzehn einheitenlosen Grössen. Wer eine hinzufügt und die Einheit
+vergisst, muss diese Zeile anfassen — und merkt es dabei.
+
+### Der zweite Weg hinein
+
+Der Knopf in der Planfläche ist der wichtigere, aber eine Formel braucht man
+auch beim Schreiben einer Aufgabe und beim Nachrechnen. Deshalb steht das
+Heft zusätzlich in der Befehlspalette unter der Gruppe „Elektro". Beide
+Eingänge zeigen dasselbe Fenster — es gibt nur eines.
+
+Prüflauf: `test240`, 65 Punkte.
+
+
+## E189 · Aufgaben, die sich selbst erzeugen
+
+*25. August 2026*
+
+Der Elektro-Modus brauchte Übungen. Der naheliegende Weg wäre eine Sammlung
+gewesen: dreihundert Fragen, von Hand geschrieben, mit den Antworten daneben.
+Sie hat drei Nachteile, und der dritte ist der schlimme.
+
+Sie ist nach zwei Wochen durch — wer sie zweimal gemacht hat, kennt die
+Reihenfolge und nicht den Stoff. Sie veraltet — kommt ein Symbol ins Register,
+fehlt es in den Aufgaben, und niemand merkt es, denn es fehlt ja nur eine
+Frage, die es nie gab. **Und sie kann falsch sein.** Eine von Hand
+geschriebene Antwort ist eine zweite Wahrheit neben der im Register. Zwei
+Wahrheiten laufen auseinander, und dann lernt jemand etwas Falsches und
+bekommt dafür einen Haken.
+
+Deshalb ERZEUGT `bereiche/elektro/aufgaben.ts` die Aufgaben aus dem, was
+ohnehin da ist: den hundert Symbolen, den fünfzig Formeln und einem Dutzend
+Schaltungen. Elf Arten in vier Gruppen — Fachzeichen, Rechnen, Schaltungen,
+Messen. Eine Frage nach dem Namen eines Symbols kann damit nicht falsch sein:
+die Antwort kommt aus derselben Zeile, aus der auch die Palette den Namen
+nimmt. Und bei einer Rechenaufgabe wird die Musterlösung nicht
+danebengeschrieben, sondern GERECHNET — mit demselben Code, der auch im
+Formelheft rechnet.
+
+### Der Zufall ist gesät
+
+`Math.random()` wäre bequem und würde jede Prüfung wertlos machen: eine
+Aufgabe, die bei jedem Lauf anders ist, lässt sich nicht nachrechnen. Der
+Zufall kommt aus einem Startwert (mulberry32). Derselbe Startwert gibt
+dieselbe Aufgabe — im Prüflauf, im Unterricht für alle gleich, und beim
+Nachbesprechen wieder Wort für Wort dieselbe. Der Startwert steht deshalb
+nach jeder Prüfung sichtbar da.
+
+### Fünf Fehler, die beim Messen herausfielen
+
+Alle fünf sahen im Bild völlig normal aus.
+
+**Zwei gleiche Antwortmöglichkeiten.** Zwei Bauteile können dieselbe
+Anschlussliste haben — „1, 2" gibt es ein Dutzend Mal. Standen sie
+nebeneinander, war die Frage keine mehr: wer die zweite anklickte, bekam ein
+rotes Kreuz für dieselbe Antwort.
+
+**Eine Aufgabe mit 320 000 Volt.** 82 kΩ ist ein plausibler Widerstand,
+3,9 A ein plausibler Strom — ihre KOMBINATION ist es nicht. Wer so etwas
+rechnet, gewöhnt sich ab, das Ergebnis anzusehen, und genau das Ansehen ist
+im Beruf die einzige Sicherung gegen einen Zahlendreher. Jetzt muss auch das
+Ergebnis in seinem Bereich liegen, geprüft erst nach dem Formelzeichen und
+sonst nach der EINHEIT: `I` stand in der Tabelle, `I₁` und `I_N` nicht, und
+über die kam ein Strom von 254 A herein. Negative Ergebnisse fallen ganz weg.
+
+**„120 µA sind wie viel kA?"** Neun Zehnerpotenzen sind keine Aufgabe aus dem
+Beruf. Umgerechnet wird jetzt höchstens zwei Stufen weit — und der Fehler,
+der etwas kostet, passiert ohnehin bei einem Schritt.
+
+**Drei von vier Möglichkeiten waren Beischriften.** Gefragt war, welches
+Bauteil im Plan fehlt; zur Auswahl standen „Betätigung: Drücken", „Betätigung:
+Drehen" und „Betätigung: Schlüssel" — Symbole ohne einen einzigen Anschluss.
+Sie stammten aus derselben Gruppe wie der gesuchte Schalter. Wer weiss, dass
+ein Bauteil Klemmen braucht, hatte die Antwort ohne Nachdenken. Ablenker
+brauchen jetzt mindestens zwei Anschlüsse.
+
+**Und einer im Code selbst.** Die Auswahl der Betriebsmittel rief `w.misch`
+in der Bedingung und noch einmal im Zweig — und weil jeder Aufruf den Würfel
+weiterdreht, prüfte die Bedingung eine andere Mischung als die
+zurückgegebene. Die richtige Antwort hätte fehlen können.
+
+### Der Arbeitsplatz (Punkt 100)
+
+Drei Spalten: links Aufgaben, in der Mitte der Plan, rechts Notizen und der
+Weg zum Formelheft. Der Grund für drei Spalten ist nicht Platz, sondern ZEIT.
+Eine Aufgabe lösen heisst lesen, zeichnen, nachschlagen, rechnen,
+aufschreiben — und dazwischen springt man ein Dutzend Mal hin und her. Wer
+dafür die Ansicht wechseln muss, liest die Aufgabe am Ende dreimal.
+
+Die Mitte ist ein gewöhnlicher Redion-Block. Ein zweiter Schaltplaneditor
+„für den Arbeitsplatz" wäre L34 in gross gewesen.
+
+### Und was das Hinsehen fand
+
+**Der Weiter-Knopf stand unter dem Bildschirmrand.** `.overlay` setzt
+`padding-top:14vh` — richtig für einen Suchdialog. Bei 900 px Höhe fing das
+Fenster damit bei 126 an, war 800 hoch und endete bei 926. Eine Übung, deren
+Weiter-Knopf man nicht sieht, ist zu Ende.
+
+**Die Antwortmöglichkeiten standen zur Hälfte draussen.** Im Arbeitsplatz ist
+die Aufgabenspalte 280 px breit, während das Fenster 1180 hat. Zwei Spalten
+ergaben dort 140 px je Möglichkeit. Eine Medienabfrage nach Bildschirmbreite
+hätte das nie gesehen — der Bildschirm war ja breit. `auto-fit` bricht nach
+der Breite der SPALTE um.
+
+**Der Plan war unlesbar.** Er wurde immer 620 × 360 gross gezeichnet, egal
+wie viel darauf stand — und in der schmalen Spalte waren die
+Betriebsmittelkennzeichen drei Pixel hoch. Die Frage lautete ausgerechnet
+„welches Betriebsmittel ist das?". Die Blattgrösse folgt jetzt dem Inhalt.
+
+**Und die Prosa stand in Schreibmaschinenschrift.** Die Zusatzzeile ist für
+„Gegeben/Gesucht" gedacht; bei Schaltungsaufgaben trägt sie einen
+gewöhnlichen Satz, und der sah aus wie Quelltext.
+
+Prüflauf: `test241`, 91 Punkte. Darunter für jede der elf Arten vierzig
+Würfelungen und die Frage, ob die Aufgabe ihre EIGENE Lösung als richtig
+durchgehen lässt — mit Gegenproben, damit ein `pruefe`, das immer Ja sagt,
+nicht alles grün macht.
+
+
+## E190 · Zwei Bilder, die mehr erklären als ein Absatz
+
+*25. August 2026*
+
+Aus der Liste der hundert Elektro-Funktionen blieben in der Rechner-Hälfte
+drei Punkte offen, die keine Rechnung sind, sondern eine Ansicht.
+
+### Das Formeldreieck (Punkt 65)
+
+Die älteste Merkhilfe der Elektrotechnik und immer noch die beste: oben die
+Grösse, die aus den beiden unteren hervorgeht, und wer eine davon zuhält,
+sieht die Formel für sie. U zuhalten ergibt R · I, R zuhalten ergibt U / I.
+Dreissig Sekunden zum Lernen, und man vergisst es nicht mehr.
+
+Es wird nicht von Hand gezeichnet, sondern aus der SCHREIBWEISE der Formel
+gelesen. `U = R · I` und `I = U / R` beschreiben dasselbe Dreieck — das Modul
+erkennt beide Formen und legt sie über die sortierte Menge der drei Grössen
+zusammen. Aus dem Register kommen so sieben Dreiecke, und wenn morgen eine
+Produktformel dazukommt, gibt es morgen ihr Dreieck.
+
+Alles, was nicht die Form `A = B · C` oder `A = B / C` hat, bekommt **kein**
+Dreieck. Das ist der wichtigere Teil: für `X_C = 1 / (2 · π · f · C)` eines zu
+erfinden wäre eine Merkhilfe, die falsch merkt. `test240` §10 prüft beide
+Richtungen — dass die richtigen erkannt werden UND dass fünf ungeeignete
+Schreibweisen abgelehnt werden.
+
+### Die Sinuskurve (Punkt 90)
+
+Sie beantwortet die Frage, an der im Wechselstrom die meisten hängenbleiben:
+warum sind 230 V nicht 230 V. Der Scheitelwert ist 325, der Effektivwert 230,
+der Momentanwert irgendwas dazwischen — drei Zahlen für dieselbe Spannung,
+und in einer Zeichnung sind sie in einem Blick auseinander.
+
+Der Effektivwert steht als LINIE da und nicht als Zahl am Rand: dass er unter
+dem Scheitel liegt, ist die ganze Aussage, und eine Zahl daneben zeigt das
+nicht.
+
+Bewegt wird mit einem `input[type=range]` und nicht mit einem gezogenen Punkt
+im SVG. Das ist keine Bequemlichkeit: ein Schieber lässt sich mit der Tastatur
+bedienen, hat einen Namen für den Screenreader und braucht am Telefon keine
+Zielgenauigkeit (§37, §38).
+
+Ein schöner Prüfstein steckt in der Sache selbst: bei 45° ist sin = 1/√2, und
+û/√2 ist genau der Effektivwert. Der Momentanwert liegt dort also exakt auf
+der Effektivwertlinie — kein Zufall, sondern die Definition, und damit eine
+Prüfung, die eine falsche Formel sofort auffliegen lässt.
+
+### Der gesuchte Wert im Plan (Punkt 80)
+
+In einer Aufgabe steht „gesucht: der Strom durch R2", und dann muss man R2 im
+Plan auch finden. Ohne Hervorhebung fängt die Aufgabe mit einer Suchübung an,
+die niemand gestellt hat. `alsSvg` nimmt jetzt `hervor` und legt einen
+gestrichelten Ring um das genannte Bauteil — einen Ring und keinen Farbwechsel,
+denn ein zweiter Farbton heisst in dieser Zeichnung schon „führt Strom".
+
+### Und ein Fehler in einer Prüfung
+
+`test241` §6 war bei etwa jedem zweiten Lauf rot, an einer Stelle, die nichts
+mit dem Fehler zu tun hatte: die Übungsfläche würfelt die Aufgabenart, und
+bei „Rechnen" oder „Einheiten umrechnen" gibt es gar keine
+Antwortmöglichkeiten zum Anklicken. Die Art wird jetzt vorgegeben — und der
+Zahlenweg bekam gleich drei eigene Prüfpunkte, denn vorher prüfte §6 nur die
+eine Hälfte.
+
+Eine Prüfung, die würfelt, was sie misst, misst nichts.
+
+Prüflauf: `test240` §10–§12, dreiunddreissig neue Punkte (97 gesamt);
+`test241` 95 Punkte.
+
+
+## E191 · Fachzeichen auf dem PDF, und ein Ausschnitt als Lernkarte
+
+*25. August 2026*
+
+Redur hat sein Lehrmittel als PDF. Zwei Dinge fehlten dafür, und beide sind
+absichtlich klein ausgefallen — sie benutzen, was schon da ist.
+
+### Punkt 42 — ein Symbol auf die Seite setzen
+
+Eine neue Markenart `zeichen` in `bereiche/pdf/marken.ts`, gezeichnet über
+`Register.fachzeichen.alsSvg`. **Dieselbe Quelle wie die Palette im
+Schaltplan-Editor**, und auch dieselbe Auswahl: das Werkzeug öffnet
+`Planflaeche.paletteHtml`. Eine zweite Symbolliste fürs PDF wäre L34 gewesen
+— sie liefe auseinander, und niemand merkte es, bis dasselbe Zeichen auf
+zwei Seiten verschieden aussieht. `test242` §2 vergleicht die Zahl in der
+Auswahl mit der im Register.
+
+Das Zeichen liegt als gewöhnliche Marke im Block und geht damit durch
+Rückgängig, Papierkorb, Druck und `.redion`-Sicherung wie ein Strich — ohne
+dass irgendwo ein Sonderfall dafür steht. Ein Tipp darauf dreht es um 90°,
+dieselbe Bewegung wie R im Planeditor.
+
+**Ein Haken, der beim Bauen sichtbar wurde.** `updateNode` überträgt nur
+Attribute und `textContent`. Ein `<g>` voller Pfade überlebt das nicht: bei
+gleichem Elementnamen blieben die alten Kinder stehen, und ein getauschtes
+Zeichen zeigte weiter das alte Bild. Knoten mit Kindern werden jetzt ersetzt
+statt geflickt. `test242` §3 tauscht deshalb ausdrücklich eine Kennung und
+sieht nach, ob sich das Bild mitändert.
+
+### Punkt 43 — ausschneiden und lernen
+
+Kein eigenes Gummiband: **das Rechteck-Werkzeug gibt es längst**, und ein
+gezeichnetes Rechteck ist zugleich die Auswahl und der bleibende Vermerk,
+was man aus dieser Seite herausgeschnitten hat. Ein zweites Ziehwerkzeug
+wäre eine zweite Bedienung für dieselbe Geste.
+
+Geschnitten wird aus dem `img`, das ohnehin auf der Seite steht. Es kommt aus
+einem `blob:`-Verweis derselben Herkunft, die Zeichenfläche wird dadurch
+nicht unrein, und `toBlob` darf lesen. Der Ausschnitt wird als gewöhnlicher
+Anhang abgelegt.
+
+Die Karteikarte trägt dafür ein neues Feld `bildId`. `inline()` kann keine
+Bilder — nachgesehen, nicht vermutet —, also steht das Bild ausdrücklich im
+Renderer und nicht im Text. Weisser Grund, weil ein Buchausschnitt auf Weiss
+gedruckt ist und im Dunkelmodus sonst als graues Rechteck erschiene.
+
+**Urheberrecht.** Ein Ausschnitt aus einem gekauften Lehrmittel in die eigene
+Karteikarte auf dem eigenen Rechner ist Privatgebrauch. Er geht an keinen
+Server und kommt nicht ins Verzeichnis. Redion liefert das Werkzeug, nicht
+den Inhalt — dieselbe Linie wie beim Formelheft (E188).
+
+### Und zwei Fehler in der Prüfung selbst
+
+Beide sahen aus wie kaputte Funktionen und waren keine.
+
+`test242` §2 tippte auf sechzig Prozent der Seitenhöhe. Die Seite ist
+1003 px hoch und beginnt bei y = 380 — der Klick landete unter dem
+Fensterrand und traf nichts. Im Bericht stand „Ein Tipp öffnet die
+Symbolauswahl ✗", und das Werkzeug war völlig in Ordnung.
+
+Und §4 legte die Blockkennungen auf `window`. §4 und §7 laden absichtlich
+neu, und ein Neuladen löscht alles, was am Fenster hängt. Die Kennungen
+bleiben jetzt im Prüfskript.
+
+Prüflauf: `test242`, 42 Punkte.
+
+## E192 · Drei Aufgaben, die den Schaltplan lesen
+
+*(26. August 2026, Punkte 52, 53, 59)*
+
+Bisher wurden Aufgaben aus den Registern erzeugt: nimm ein Symbol, frag nach
+seinem Namen. Die drei neuen fragen etwas, das in keinem Register steht.
+
+    plan-leitung   Eine Leitung fehlt. Welche?
+    plan-fehler    Die Schaltung tut nicht, was sie soll. Woran liegt es?
+    plan-leuchtet  Leuchtet die Leuchte bei diesen Stellungen?
+
+Die Antwort kommt aus `Stromfluss.rechne`. Sie steht nirgends geschrieben und
+kann deshalb auch nicht veralten: ändert sich die Simulation, ändert sich die
+Lösung mit. Das ist der ganze Grund, warum diese drei so gebaut sind.
+
+### Was der Massstab sein muss: das Verhalten, nicht die Helligkeit
+
+Der erste Bau fragte „leuchtet es überhaupt?", und daran war fast alles
+falsch, was falsch sein konnte.
+
+Bei einer **Wechselschaltung** fehlte ein Draht, und die Lampe leuchtete
+trotzdem — man musste nur den anderen Schalter umlegen. Nach dem alten
+Massstab war der Plan heil. Er war es nicht: von zwei bedienbaren Stellen
+blieb eine übrig, und genau das ist der Fehler, den die Aufgabe zeigt.
+
+Beim **Zeitrelais** brachte ein ABLENKER die Leuchte zum Brennen — dauernd
+statt verzögert. Zwei richtige Antworten, eine davon mit rotem Kreuz.
+
+Beides misst jetzt dasselbe: ein Muster über ALLE Schalterstellungen,
+`H` volle Helligkeit, `h` schwach, `s` es fliesst etwas, `.` nichts. Zwei
+Pläne mit gleichem Muster sind dieselbe Schaltung. Der fehlende Draht muss
+das Muster ändern; kein Ablenker darf es wiederherstellen.
+
+### Eine Leitung hat keine Richtung
+
+`G1:L — E1:X1` und `E1:X1 — G1:L` sind derselbe Draht. Beide standen zur
+Wahl, in 56 von 600 Würfelungen. Die Prüfung auf doppelte Möglichkeiten sah
+nichts, weil die beiden Texte wirklich verschieden SIND. Der Schlüssel der
+Ablenkermenge ist jetzt das sortierte Paar.
+
+Und im selben Zug ein zweites Mal derselbe alte Fehler: `w.misch` stand in
+der Bedingung UND im Zweig. Jeder Aufruf dreht den Würfel weiter, geprüft
+wurde also eine andere Reihenfolge als die zurückgegebene. Hier trug es
+nichts aus — die Menge hatte immer genau vier Einträge —, aber es war eine
+Änderung davon entfernt, eine Aufgabe ohne ihre eigene Lösung zu erzeugen.
+
+### Eine Möglichkeit, die nie stimmt, ist geschenkt
+
+Zwei standen da, und beide waren nie die Lösung.
+
+`plan-fehler` bot „Die Quelle liefert zu wenig Spannung" an — in 120
+Würfelungen kein einziges Mal richtig. `plan-leuchtet` bot „Ja, aber
+schwächer als normal" an — dasselbe. Wer das bemerkt, hat von vier
+Möglichkeiten nur noch drei, und lernt nebenbei, dass es diesen Fall nicht
+gibt. Beide sind jetzt echte Fälle: die Quelle wird abgesenkt, und die
+Simulation muss die schwächere Helligkeit bestätigen, sonst gilt der Fall
+nicht.
+
+Wie der zweite auffiel, ist der Teil, der es wert ist, aufgeschrieben zu
+werden. Nicht durch Zählen. Ich verstellte die Schwelle für „volle
+Helligkeit" von 0,8 auf 0,4, um zu sehen, ob der Prüflauf das merkt — und er
+blieb grün. Eine Schwelle, die nichts trennt, trennt nichts, weil zwischen
+ihren Seiten kein einziger Fall liegt. §55.2 sagt, eine Prüfung muss rot
+werden KÖNNEN; hier zeigte dieselbe Probe, dass die Aufgabe eine Antwort
+anbot, die es nicht gab.
+
+Der Abstand ist jetzt Absicht: abgesenkt wird auf 40 bis 65 Prozent, das
+ergibt 16 bis 42 Prozent Licht, und zur Schwelle bei 80 bleibt Luft. Bei
+79 gegen 81 Prozent wäre „voll oder schwächer?" ein Münzwurf.
+
+### Keine Zahl, die nichts bedeutet
+
+Beim Kurzschluss stand in der Erklärung: *„Nachgerechnet fliessen 460000 A."*
+
+Die Simulation rechnet mit einer idealen Quelle ohne Innenwiderstand. Die
+Zahl ist keine Messung, sondern das Ergebnis einer Division durch fast Null.
+Ein Lernender merkt sie sich trotzdem. Jetzt steht da, was wirklich gilt:
+den Strom begrenzt nur noch die Leitung, und er steigt weit über jeden
+Nennstrom. Der Prüflauf lässt keine Zahl über tausend in einer Erklärung zu.
+
+### Und der Fund, den nur die Bilder machen konnten
+
+Die Brücke über ein Bauteil wurde mit Punkten weit ausserhalb des Blattes
+eingetragen — `{-900,-900}` —, weil `Stromfluss` über die Klemmenangabe
+verbindet und die Geometrie dafür nicht braucht. Gerechnet stimmte alles.
+**Im Bild war nichts zu sehen.**
+
+Eine Aufgabe „diese Leuchte ist überbrückt — leuchtet sie?" über einen Plan,
+in dem die Brücke fehlt, ist nicht schwer, sondern unlösbar. Und die zu
+niedrige Spannung stand überhaupt nirgends: die Zeichnung sah heil aus, und
+„die Quelle liefert zu wenig Spannung" war nur durch Ausschluss zu erraten.
+
+Kein Prüflauf konnte das melden. Er las dieselbe Netzliste wie die
+Simulation, und die war richtig. Gesehen hat es ein Bildschirmfoto (§55).
+
+Die Brücke läuft jetzt sichtbar unter dem Bauteil herum, auf einer Bahn
+unterhalb aller Bahnen, die `planBauen` vergeben hat — eine reine Kreuzung
+verbindet in `Stromfluss.netze` nichts, nur ein Knick auf fremder Strecke.
+Und das Blatt wächst mit, sonst würde genau die neue Leitung abgeschnitten.
+Die Spannung steht als Beschriftung im Plan, über `plan.texte` (Punkt 47) —
+kein neues Feld im Renderer für etwas, das es schon gibt.
+
+Geprüft wird das am gezeichneten SVG, nicht am Datenmodell. Ein Prüflauf,
+der das Modell befragt, hätte beide Fehler bestätigt.
+
+### Prüflauf
+
+`test243`, 37 Punkte. Er rechnet die Antworten mit EIGENEM Werkzeug nach —
+eigene Netzliste, eigene vollständige Stellungssuche —, nicht mit
+`besteStellung` aus dem Aufgabenmodul. Ein Lauf, der die Lösung aus derselben
+Funktion holt wie die Aufgabe, prüft nur, dass zweimal dasselbe herauskommt.
+
+Zwei Fehler im Lauf selbst sind dabei aufgefallen und stehen als Kommentar
+drin: Ein Schütz heisst mit Spule und Kontakt BEIDE `K1` — wer das erste
+Bauteil mit diesem Namen nimmt, greift die Spule und sucht dort vergeblich
+die Klemme 14; aufgelöst wird über die Klemme. Und `/\bV\b/` in einer
+Vorlagenzeichenkette ist kein Wortende, sondern ein Rückschritt-Zeichen.
+
+## E193 · In den Plan tippen, und der einzige Massstab dafür
+
+*(26. August 2026, Punkte 59 und 60)*
+
+Zwei Aufgabenarten kommen dazu, und damit sind alle hundert Elektro-Punkte
+abgearbeitet.
+
+    plan-stromweg    Tippe die Leitungen an, die am Stromweg beteiligt sind.
+    kreis-zuordnen   Gehört K1 in den Steuer- oder in den Hauptstromkreis?
+
+`plan-stromweg` ist die erste Aufgabe, bei der man IN die Zeichnung tippt
+statt eine von vier Möglichkeiten anzukreuzen. Und die erste, bei der Raten
+nichts bringt: bei vier Möglichkeiten trifft man mit einem Viertel
+Wahrscheinlichkeit, bei sieben Leitungen mit einem Hundertachtundzwanzigstel.
+
+### Der Strom durch eine einzelne Leitung ist gar nicht bestimmt
+
+Der erste Bau las ab, was der Schaltplan-Block auch zum Malen benutzt:
+`netzStrom` über `leitungNetz` (E187). Nachgemessen kam bei ELF von zwölf
+Schaltungen „alles oder nichts" heraus — übrig blieb eine einzige Schaltung,
+und die stand dann in jeder Aufgabe.
+
+Der Grund steht in `simulation.ts`: `netzStrom[netz]` ist der GRÖSSTE Strom
+irgendeines Bauteils, das dieses Netz berührt. Ein toter Abzweig, der mit
+einem Ende an einem stromführenden Knoten hängt, liest denselben Wert.
+
+Und tiefer: der Strom durch eine einzelne ideale Leitung ist physikalisch
+nicht bestimmt. Zwei ideale Leitungen zwischen denselben zwei Knoten teilen
+sich den Strom in einem Verhältnis, das aus den Knotenspannungen nicht folgt.
+Das ist keine Lücke der Rechnung, sondern eine Eigenschaft der Aufgabe.
+
+Bestimmt ist dagegen: **liegt die Leitung auf dem Weg?** Schneide sie durch
+und sieh nach, ob sich etwas ändert. Genau das meint ein Elektriker mit
+Stromweg, und genau das rechnet die Aufgabe — ein Durchgang je Leitung.
+
+Dabei fiel ein zweiter Fehler auf, und er ist der lehrreichere. Der Vergleich
+lief über alle Bauteilströme auf vier Stellen — und verglich damit
+RECHENRAUSCHEN. Die Matrix bekommt zwischen jedem Knoten und Masse einen
+winzigen Leitwert, sonst wäre sie bei einem offenen Kontakt nicht lösbar;
+heraus kommen Ströme wie 4,184e-10 A. Beim Treppenhausautomaten galten so
+vier Leitungen als „beteiligt", obwohl die Leuchte in jeder Stellung dunkel
+blieb. Jetzt gilt dieselbe Schwelle wie in `simulation.ts`: unter einem
+Nanoampere ist nichts.
+
+### Ein Tippziel für den Finger — und was daran nicht geht
+
+§37 verlangt 44 px. Der erste Versuch verbreiterte die Leitung selbst mit
+einem durchsichtigen Fangstrich. Das kann nicht funktionieren: zwei
+Leitungsbahnen liegen 16 Einheiten auseinander, am Bildschirm gemessene 7 px.
+Ein 44-px-Strich hätte sechs Nachbarn mitgefangen — man tippt auf eine
+Leitung und markiert eine andere, und das sieht nicht nach einem Fehler aus.
+
+Getippt wird deshalb auf einen RING je Leitung. Die Ringe stehen weit
+auseinander, sie sind sichtbar (man weiss also, wohin), und sie werden nach
+der gemessenen Verkleinerung nachgestellt — CSS kennt den viewBox-Faktor
+nicht, und der Zeichner kennt beim Erzeugen die spätere Grösse nicht.
+
+Drei Dinge daran hat erst ein Bildschirmfoto gezeigt (§55):
+
+  · Die Ringe waren zuerst gefüllte Scheiben und deckten die Zeichnung zu —
+    die man doch gerade lesen soll. Jetzt scheint sie durch.
+  · Zwei Ringe standen halb ausserhalb des Blattes. Das Blatt war beim Bauen
+    auf seinen Inhalt geschrumpft und wusste nichts von ihnen.
+  · Bei 560 px Spaltenbreite ist ein 44-px-Ring 96 Planeinheiten breit,
+    grösser als ein Bauteil. Die Spalte ist für diese Aufgabenart jetzt
+    1100 px breit, und am Telefon wird der Plan nicht kleiner, sondern
+    SCHIEBBAR — wie in jedem PDF-Betrachter.
+
+### Zwei Fehler, die es schon vorher gab
+
+**Jeder Klick in die Aufgabe würfelte sie neu.** Die Aufgabe trägt
+`data-art` als ANGABE (`<article class="ea-aufgabe" data-art="plan-fehler">`),
+die Knöpfe der Artenleiste tragen es als BEFEHL. Der eine Zuhörer suchte
+`closest('[data-art]')` und sah beide gleich: ein Klick irgendwo in die
+Aufgabe würfelte sie neu UND stellte den geübten Bereich still auf ihre Art
+um. Vorher gab es in einer Aufgabe nichts zum Anklicken, deshalb ist es
+niemandem aufgefallen.
+
+**Der Prüfen-Knopf sah aus wie Text.** Die Knopfgestaltung stand nur unter
+`.ea-fuss button`. Der Prüfen-Knopf einer Zahlenaufgabe steht in
+`.ea-eingabe`, und dort griff keine Regel — kein Rand, kein Grund, und
+`class="prim"` blieb wirkungslos. Seit E189 so, und keine Prüfung konnte es
+melden: der Knopf WAR ja da.
+
+### Eine Schaltung mehr, und eine Prüfung, die weniger fordert
+
+`SCHALTUNGEN` bekommt „Zwei Leuchten, je ein eigener Schalter". Fast alle
+bisherigen sind eine einzige Reihe, und in einer Reihe liegt entweder jede
+Leitung auf dem Weg oder keine — mit zwei Zweigen gibt es endlich den Fall,
+an dem sich zeigt, ob jemand einen Plan liest.
+
+Und `test241` verlangte von jeder Wahlaufgabe genau vier Möglichkeiten.
+„Steuerstromkreis oder Hauptstromkreis?" hat zwei, und eine dritte
+dazuzuerfinden wäre gelogen. Verlangt ist jetzt: mindestens zwei, höchstens
+sechs — und dass eine Art bei ihrer Zahl BLEIBT. Wer heute vier und morgen
+drei anbietet, hat einen Fehler; das ist der Satz, der vorher fehlte.
+
+### Und die Stellung steht jetzt am Schalter (L59)
+
+Geplant war, jedem der achtundzwanzig Schaltersymbole einen zweiten Pfad für
+die geschlossene Lage zu geben. Beim Nachdenken darüber fiel auf, dass genau
+das falsch gewesen wäre: **ein Kontakt wird im Schaltplan in seiner RUHELAGE
+gezeichnet.** Ein Schliesser ist offen, auch während er geschlossen ist. Wer
+ihn geschlossen zeichnet, zeichnet keinen Schaltplan mehr.
+
+Die Lücke war also nicht „das Symbol ist falsch", sondern „die Stellung steht
+nur im Fragetext". Sie steht jetzt zusätzlich neben dem Bauteil — über
+`plan.texte`, dieselbe Beschriftung, die es für Punkt 47 ohnehin gibt.
+
+Und prompt ein neuer Fehler: „geschlossen" landete bei manchen Startwerten
+AUF einem Tippgriff und schluckte den Klick. Man tippt, und es passiert
+nichts — schlimmer als ein zu kleines Ziel, weil man nicht sieht, warum.
+
+### Prüflauf
+
+`test243` wächst auf 71 Punkte. §6 schneidet jede Leitung selbst durch und
+vergleicht mit einem ANDEREN Massstab als die Aufgabe: nicht Zahlenreihen,
+sondern welche Bauteile arbeiten und wie hell die Leuchten sind. Dass beide
+Massstäbe übereinstimmen, ist mehr wert als zweimal dasselbe.
+
+Der verdeckte Griff hat dabei noch etwas gezeigt. Die erste Prüfung sah nur
+die Aufgabe, die gerade dastand — und blieb grün, obwohl der Fehler wieder
+eingebaut war: wo eine Beschriftung landet, hängt am Startwert. Sie geht
+jetzt zwölf Aufgaben durch. §55.2 in einem Satz: wer eine neue Prüfung
+schreibt, baut den Fehler absichtlich wieder ein und sieht nach, ob sie rot
+wird.
+
+---
+
+## E194 · Redions eigenes Formelbuch, mit den Seitenzahlen des gedruckten
+
+**Stand: 26. August 2026** · `register/elektroformeln.ts`,
+`bereiche/elektro/formelheft.ts`, `bereiche/elektro/skizzen.ts`, `test244`
+
+### Die Frage
+
+Redur lernt mit einem gedruckten Formelbuch und wollte es in Redion haben —
+zuerst als „Hast du von dem PDF alles gemacht?", dann deutlicher: alle
+Seiten, dieselbe Struktur, er will die Seiten wechseln können und im
+Programm dasselbe finden wie im Heft auf dem Tisch.
+
+Der naheliegende Weg wäre gewesen, das PDF anzuzeigen. Ein Anfang dazu war
+schon gebaut — Zoom, Blättern, Vollbild für die eingescannten Seiten — und
+wurde auf halber Strecke verworfen, von Redur selbst: **nicht das PDF
+zeigen, sondern die Formeln neu schreiben.** Eigene Gestaltung, eigene
+Skizzen, aber dieselben Seitenzahlen.
+
+### Die Entscheidung
+
+Redion führt das Formelbuch als eigene Struktur im Register:
+
+**Abschnitte statt Seiten als kleinste Einheit.** Ein `Abschnitt` ist eine
+Überschrift im Heft — „Reihenschaltung", „Messbereicherweiterung von
+V-Metern" — und trägt Seitenzahl, Buchkapitel, Grössenliste und seine
+Formelzeilen in Buchreihenfolge. Die Seitenzahl steht NUR am Abschnitt.
+Formeln hängen am Abschnitt; wo eine Seite im Buch wandert, ändert sich
+eine Zeile.
+
+**Zwei Sorten Zeilen.** Eine Zeile mit `id` zeigt auf einen RECHENBAREN
+Eintrag — antippen öffnet den Rechner mit Rechenweg. Eine Zeile ohne `id`
+steht als Text da: `1 kWh = 3600 kWs` ist wahr, aber keine Gleichung, nach
+deren Grössen man auflöst. So ist jede Heftseite VOLLSTÄNDIG, ohne dass
+für jede Umstellung ein eigener Rechenweg erfunden werden muss — die
+Umstellungen einer Gleichung zeigen ohnehin auf denselben Rechner, und der
+lässt jede Grösse als gesuchte wählen.
+
+**Wertetabellen als Tabellen.** Konstanten, Werkstoffwerte, Zehnerpotenzen
+(Seiten 32–34) sind keine Formeln und werden nicht als solche verkleidet.
+
+**Die Seite sieht aus wie eine Heftseite.** Überschrift, links die Skizze,
+in der Mitte die Grössenliste, rechts die Formeln. Diese Anordnung ist die
+jedes Formelbuchs dieses Fachs und trägt das Mitlesen: die dritte Formel
+von oben ist hier die dritte Zeile.
+
+### Was DAVON bewusst nicht übernommen wird
+
+Das gedruckte Buch ist ein gekauftes Werk. Seine Formeln, Grössennamen,
+Einheiten und Materialwerte sind freie Fakten — `U = R · I` gehört
+niemandem, seit Ohm es 1826 aufgeschrieben hat. Sein SATZ, seine
+ZEICHNUNGEN und seine SÄTZE sind es nicht. Deshalb:
+
+· Die Skizzen sind selbst gezeichnet — die Schaltbilder aus Redions
+  eigenen Fachzeichen über `Schaltplan.alsSvg`, die Diagramme als eigenes
+  SVG. Kein Bild ist aus dem PDF kopiert.
+· Die Erklärsätze sind selbst geschrieben, in Redions Ton.
+· Die Gestaltung ist Redions eigene: Farben, Schrift, hell und dunkel.
+· Das PDF selbst kommt nicht ins Verzeichnis (wie E188/E191).
+
+Übernommen werden die Fakten und die GLIEDERUNG — Kapitelfolge und
+Seitenzahlen —, denn genau sie machen das Nebeneinander von Heft und
+Programm benutzbar, und die Kapitelfolge ist die übliche dieses Fachs.
+
+### Warum eigene Seiten besser sind als ein Scan
+
+· **Rechenbar.** Jede Formel lässt sich antippen und mit Werten füllen.
+  Ein Scan ist ein Bild.
+· **Durchsuchbar.** „resonanz" findet die Formel und nennt ihre Seite;
+  ein Tipp blättert hin und klappt den Rechner auf.
+· **Scharf und thematisch.** Vektoren statt Fotos, hell und dunkel ohne
+  zweiten Bildersatz, am Telefon anders angeordnet statt kleiner.
+
+### Vier Fehler, die nur das Hinsehen fand (§55)
+
+· Fünf Skizzen liefen aus ihrem Blatt — ein Bauteil an der Kante wird halb
+  abgeschnitten, und „da" waren sie alle.
+· Die Motorzuleitungen liefen von einem Anschluss zu DEMSELBEN Anschluss
+  zurück und sahen wie Diagonalen durch den Motor aus.
+· Flexbox frass die Leerzeichen: `Q_L = I_L · t_L` stand am Telefon als
+  `Q_L= I_L· t_L` da. Der TEXT war die ganze Zeit richtig — nur das Bild
+  nicht. §55.2, zum dritten Mal.
+· Die Blätterknöpfe standen unter dem Bildschirmrand: ein Flex-Kind ohne
+  `min-height:0` schrumpft nicht unter seinen Inhalt.
+
+### Prüflauf
+
+`test244`, 63 Punkte. Er misst die Skizzen wirklich (getBBox gegen die
+viewBox), stellt den Flexbox-Fehler absichtlich her und sieht nach, dass
+die Messung rot wird, und prüft die Seitenzahlen gegen das
+Inhaltsverzeichnis des Hefts. Seine erste Fassung mass die viewBox mit
+einem doppelt geschützten Regex und las überall 0×0 — eine Prüfung, die
+nie rot werden kann, ist keine (§55.2), und diesmal traf es die Prüfung
+selbst.

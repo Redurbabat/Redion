@@ -88,6 +88,7 @@ Register.bloecke = (() => {
         { id: 'flashcard', name: 'Karteikarte', icon: '🎴', gruppe: 'Wissen', cmd: ['karteikarte', 'flashcard', 'lernen'], ph: 'Frage :: Antwort' },
         { id: 'blatt', name: 'A4-Blatt', icon: '📄', gruppe: 'Wissen', cmd: ['blatt', 'a4', 'papier', 'schreiben', 'malen'] },
         { id: 'whiteboard', name: 'Whiteboard', icon: '🖍', gruppe: 'Wissen', cmd: ['whiteboard', 'zeichnen', 'canvas', 'skizze'] },
+        { id: 'schaltplan', name: 'Schaltplan', icon: '⚡', gruppe: 'Wissen', cmd: ['schaltplan', 'elektro', 'stromlauf', 'fachzeichen', 'schema'] },
         { id: 'chart', name: 'Diagramm', icon: '📊', gruppe: 'Wissen', cmd: ['diagramm', 'chart', 'balken', 'torte'] },
         { id: 'backlinks', name: 'Rückverweise', icon: '🔙', gruppe: 'Wissen', cmd: ['rueckverweise', 'backlinks'] },
         /* --- KI --------------------------------------------------------------- */

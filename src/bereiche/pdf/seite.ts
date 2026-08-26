@@ -59,6 +59,13 @@ const PdfSeite = (() => {
         ? '<button data-a="feiner" aria-label="Diese Seite feiner rechnen" ' +
             'title="Diese Seite feiner rechnen — schärfer beim Hineinzoomen">⊕</button>'
         : '') +
+      /* AUSSCHNEIDEN ALS LERNKARTE (Punkt 43).
+         Kein eigenes Gummiband: das RECHTECK-Werkzeug gibt es längst, und ein
+         gezeichnetes Rechteck ist zugleich die Auswahl und der bleibende
+         Vermerk, was man aus dieser Seite herausgeschnitten hat. Ein zweites
+         Ziehwerkzeug daneben wäre eine zweite Bedienung für dieselbe Geste. */
+      '<button data-a="karte" aria-label="Rechteck als Lernkarte ausschneiden" ' +
+        'title="Das zuletzt gezeichnete Rechteck als Karteikarte ausschneiden">✂</button>' +
       '<span class="blatt-trenn"></span>' +
       /* Beide Zahlen durch `Number` — `nr` war es schon, `vonSeiten` nicht.
          Der Text hier geht ueber `Marken.leiste` in ein `innerHTML`, und ein
@@ -84,6 +91,7 @@ const PdfSeite = (() => {
         });
         return;
       }
+      if (k?.dataset.a === 'karte') { void alsLernkarte(); return; }
       if (k?.dataset.a !== 'anker') return;
       /* `location.href` ohne Hash — dieselbe Form wie Strg + Umschalt + C,
          und die einzige, die auch als Datei über `file://` stimmt. */
@@ -169,6 +177,81 @@ const PdfSeite = (() => {
     } else {
       wegZeigen('Für diese Seite gibt es noch kein Bild.');
     }
+
+    /* ------------------------------------------------------------------------
+     * EIN AUSSCHNITT WIRD EINE LERNKARTE (Punkt 43)
+     * ------------------------------------------------------------------------
+     * Das zuletzt gezeichnete Rechteck bestimmt den Ausschnitt. Geschnitten
+     * wird aus dem `img`, das ohnehin schon auf der Seite steht — es kommt
+     * aus einem `blob:`-Verweis derselben Herkunft, die Zeichenfläche wird
+     * dadurch nicht unrein, und `toBlob` darf lesen.
+     *
+     * Der Ausschnitt wird als gewöhnlicher Anhang abgelegt. Damit geht er
+     * durch Papierkorb, `.redion`-Sicherung und Wiederherstellung wie jedes
+     * andere Bild — ohne dass irgendwo ein Sonderfall dafür stehen müsste.
+     *
+     * URHEBERRECHT: Ein Ausschnitt aus einem gekauften Lehrmittel in die
+     * eigene Karteikarte auf dem eigenen Rechner ist Privatgebrauch. Er geht
+     * an keinen Server. Redion liefert das Werkzeug, nicht den Inhalt.
+     * ----------------------------------------------------------------------*/
+    const alsLernkarte = async (): Promise<void> => {
+      const rechtecke = (schicht.marken as any[])
+        .filter(m => m && m.art === 'rectangle' && Array.isArray(m.pts) && m.pts.length >= 2);
+      const letztes = rechtecke[rechtecke.length - 1];
+      if (!letztes) {
+        UI.toast('Zeichne zuerst ein Rechteck um das, was du ausschneiden willst.');
+        return;
+      }
+      if (!bild.naturalWidth || !bild.isConnected) {
+        UI.toast('Das Seitenbild ist noch nicht da.');
+        return;
+      }
+      const pts = InkGeometry.points(letztes.pts);
+      const a = pts[0]!, b = pts[1]!;
+      /* Blattkoordinaten in Bildpunkte: das Bild kann feiner gerechnet sein
+         als das Blatt gross ist (E173, „schärfer rechnen"). */
+      const jeX = bild.naturalWidth / breite;
+      const jeY = bild.naturalHeight / hoehe;
+      const x = Math.max(0, Math.min(a[0], b[0]) * jeX);
+      const y = Math.max(0, Math.min(a[1], b[1]) * jeY);
+      const w2 = Math.min(bild.naturalWidth - x, Math.abs(b[0] - a[0]) * jeX);
+      const h2 = Math.min(bild.naturalHeight - y, Math.abs(b[1] - a[1]) * jeY);
+      if (w2 < 8 || h2 < 8) {
+        UI.toast('Das Rechteck ist zu klein für einen Ausschnitt.');
+        return;
+      }
+
+      const frage = await UI.frage('Was steht auf der Rückseite der Karte?', '');
+      if (frage === null) return;
+
+      const tafel = document.createElement('canvas');
+      tafel.width = Math.round(w2);
+      tafel.height = Math.round(h2);
+      const stift = tafel.getContext('2d');
+      if (!stift) { UI.toast('Der Ausschnitt lässt sich nicht zeichnen.'); return; }
+      stift.drawImage(bild, x, y, w2, h2, 0, 0, tafel.width, tafel.height);
+
+      const brocken: Blob | null = await new Promise(fertig =>
+        tafel.toBlob(b3 => fertig(b3), 'image/png'));
+      if (!brocken) { UI.toast('Der Ausschnitt liess sich nicht speichern.'); return; }
+
+      try {
+        const name = 'ausschnitt-seite-' + (Number(block.nr) || 1) + '.png';
+        const datei = await Dateien.ablegen(
+          new File([brocken], name, { type: 'image/png' }), null);
+        const ziel = App.aktuelleSeite();
+        if (!ziel) { UI.toast('Keine Seite offen.'); return; }
+        const karte = Store.addBlock(ziel, 'flashcard', {
+          text: 'Was ist das? :: ' + (frage || '')
+        });
+        Store.updateBlock(karte.id, { bildId: datei.id });
+        App.zeichneSeite();
+        UI.toast('✅ Karteikarte angelegt');
+      } catch (e: unknown) {
+        UI.toast('Der Ausschnitt liess sich nicht ablegen: ' +
+          (e instanceof Error ? e.message : String(e)));
+      }
+    };
 
     papier.appendChild(schicht.flaeche);
     return w;

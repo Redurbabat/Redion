@@ -19,11 +19,26 @@ await seite.waitForFunction(() => typeof App !== 'undefined' && typeof Register 
   null, { timeout: 20000 });
 await seite.waitForTimeout(1200);
 
-console.log('\n— Alle elf sind da —');
+/* Hier stand `r.length === 11`. Eine gepinnte Zahl misst nicht, WELCHE
+   Register da sind, sondern nur, dass es zufällig elf sind — und sie wird
+   rot, sobald ein Register dazukommt, obwohl genau das nach CLAUDE.md §8
+   der vorgesehene Weg ist (mit `fachzeichen` und `elektroformeln` ist es
+   dreizehn geworden).
+
+   Geprüft wird jetzt eine INVENTUR: jedes genannte Register muss da sein.
+   Verschwindet eines, wird es rot — und das ist der Fall, der wehtut. Ein
+   neues fällt nicht mehr rot aus, muss aber unten eingetragen werden, und
+   dabei sieht man, dass man eines angelegt hat. */
+console.log('\n— Die Register sind vollzählig —');
+const PFLICHT = ['ansichten', 'befehle', 'bloecke', 'eigenschaften', 'einstellungen',
+                 'elektroformeln', 'fachzeichen', 'formeln', 'module', 'navigation',
+                 'tasten', 'verbindungen', 'vorlagen'];
 let r = await seite.evaluate(() => Object.keys(Register).sort());
-p('Elf Register',
-  r.length === 11 && (r ?? '').includes('bloecke') && (r ?? '').includes('tasten') && (r ?? '').includes('verbindungen'),
-  JSON.stringify(r));
+const fehlend = PFLICHT.filter(x => !(r ?? []).includes(x));
+const zusaetzlich = (r ?? []).filter((x: string) => !PFLICHT.includes(x));
+p('Kein Register fehlt', fehlend.length === 0, 'fehlt: ' + fehlend.join(', '));
+p('Und keines ist unangekündigt dazugekommen', zusaetzlich.length === 0,
+  'neu: ' + zusaetzlich.join(', ') + ' — bitte oben eintragen');
 
 console.log('\n— Blöcke —');
 r = await seite.evaluate(() => ({

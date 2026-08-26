@@ -136,10 +136,31 @@ console.log('\n2 · visualViewport hält ein langes Blatt über der Tastatur');
   const { kontext, seite } = await vorbereiten(390, 844);
   const lage = await seite.evaluate(async () => {
     const lang = Array.from({ length: 30 }, (_, i) => `<button>Aktion ${i + 1}</button>`).join('');
+    /* Auf die LAGE warten, nicht auf die Uhr.
+       -----------------------------------------------------------------
+       Hier standen zweimal 100 ms. Allein gemessen reicht das, und im
+       vollen Durchlauf mit zweihundert Suiten reicht es nicht: das Blatt
+       endete bei 509 statt 508, also einen Pixel daneben, weil die Messung
+       eine Zwischenlage erwischte. Ein Pixel sieht nach Rundung aus und war
+       eine Wettlaufbedingung — dieselbe Lehre wie bei test114, wo die
+       Pillenmessung auf Bilder statt auf Millisekunden wartet.
+
+       Gewartet wird jetzt darauf, dass sich die Unterkante über drei
+       Einzelbilder NICHT mehr ändert. Das ist nicht dasselbe wie „sie ist
+       508" — die Prüfung bliebe sonst zirkulär und ginge immer auf. */
+    const ruhe = async (el: HTMLElement): Promise<void> => {
+      let gleich = 0, vorher = NaN;
+      for (let i = 0; i < 180 && gleich < 3; i++) {
+        await new Promise(r => requestAnimationFrame(() => r(null)));
+        const jetzt = el.getBoundingClientRect().bottom;
+        gleich = (jetzt === vorher) ? gleich + 1 : 0;
+        vorher = jetzt;
+      }
+    };
     Menue.menu(lang, 0, 0, { titel: 'Lange Liste' });
-    await new Promise(r => setTimeout(r, 100));
+    await ruhe(document.querySelector<HTMLElement>('.menu.blatt')!);
     (window as any).__sichtbar(508);             /* 336 px Softwaretastatur */
-    await new Promise(r => setTimeout(r, 100));
+    await ruhe(document.querySelector<HTMLElement>('.menu.blatt')!);
     const m = document.querySelector<HTMLElement>('.menu.blatt')!;
     const liste = m.querySelector<HTMLElement>('.menu-liste')!;
     const r = m.getBoundingClientRect();
@@ -156,6 +177,33 @@ console.log('\n2 · visualViewport hält ein langes Blatt über der Tastatur');
   pruefe('Die lange Liste rollt und ihre letzte Aktion bleibt erreichbar',
     lage.rollt && lage.letzterDrin, JSON.stringify(lage));
   gleich('Der gemeinsame Viewportwert nennt 336 px', lage.cssUnten, '336px');
+
+  /* Und dieselbe Messung mit einer ANDEREN Tastaturhöhe. Sie beweist zweierlei:
+     dass das Blatt der Tastatur wirklich FOLGT (und nicht zufällig auf einer
+     Zahl steht), und dass die Prüfung darüber überhaupt rot werden kann. Eine
+     Prüfung, die nur einen einzigen Wert kennt, könnte auch dann grün sein,
+     wenn die Unterkante festgenagelt wäre. */
+  const zweite = await seite.evaluate(async () => {
+    const ruhe = async (el: HTMLElement): Promise<void> => {
+      let gleich = 0, vorher = NaN;
+      for (let i = 0; i < 180 && gleich < 3; i++) {
+        await new Promise(r => requestAnimationFrame(() => r(null)));
+        const jetzt = el.getBoundingClientRect().bottom;
+        gleich = (jetzt === vorher) ? gleich + 1 : 0;
+        vorher = jetzt;
+      }
+    };
+    const m = document.querySelector<HTMLElement>('.menu.blatt')!;
+    (window as any).__sichtbar(660);            /* nur noch 184 px Tastatur */
+    await ruhe(m);
+    return {
+      unten: Math.round(m.getBoundingClientRect().bottom),
+      cssUnten: getComputedStyle(document.documentElement)
+        .getPropertyValue('--visual-bottom').trim()
+    };
+  });
+  gleich('Bei kleinerer Tastatur wächst das Blatt mit', zweite.unten, 660);
+  gleich('… und der Viewportwert auch', zweite.cssUnten, '184px');
   await kontext.close();
 }
 

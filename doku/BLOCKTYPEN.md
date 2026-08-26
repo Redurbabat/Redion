@@ -4,7 +4,7 @@ Diese Liste ist aus dem laufenden Register erzeugt (`Register.bloecke`),
 nicht abgetippt. `pruefungen/lauf/test164.mts` vergleicht sie bei jedem
 Lauf mit dem Register — wächst das eine, muss das andere nachziehen.
 
-Stand: 77 Einträge. Darunter sind drei Sorten:
+Stand: 78 Einträge. Darunter sind drei Sorten:
 
 - **Blöcke** legen etwas auf die Seite (Text, Bild, Tabelle, …).
 - **Aktionen** (Gruppe „Aktionen") stehen im Slash-Menü, wirken auf den
@@ -72,13 +72,14 @@ Stand: 77 Einträge. Darunter sind drei Sorten:
 | `button` | Knopf |
 | `html` | HTML |
 
-## Wissen (5)
+## Wissen (6)
 
 | Kennung | Name |
 |---|---|
 | `blatt` | A4-Blatt |
 | `flashcard` | Karteikarte |
 | `whiteboard` | Whiteboard |
+| `schaltplan` | Schaltplan |
 | `chart` | Diagramm |
 | `backlinks` | Rückverweise |
 
