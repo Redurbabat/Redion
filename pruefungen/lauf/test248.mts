@@ -244,7 +244,12 @@ p('Und sonst nur noch „Mehr"',
   fuenf.namen.filter((n: string) => !SOLL.includes(n) && n !== 'Mehr').length === 0,
   fuenf.namen.filter((n: string) => !SOLL.includes(n) && n !== 'Mehr').join(' | '));
 
-/* „Elektro" war vorher gar kein Eintrag — es ist eines der 14 Module. */
+/* „Elektro" war vorher gar kein Eintrag — es ist eines der 14 Module.
+   ZWEI STUFEN, und die zweite ist die, auf die es ankommt: dass die
+   Handlung eine Funktion IST, sagt nichts darüber, ob sie etwas tut.
+   Genau daran wäre der Knopf vorbeigekommen — beim Durchklicken aller
+   fünf Wege sah es aus, als führe er ins Leere (er öffnet einen Dialog,
+   und der Rundgang hatte Dialoge vorher weggeräumt). */
 const elektroWirkt = await seite.evaluate(() => {
   const e = document.getElementById('btn-elektro');
   if (!e) return 'kein Knopf';
@@ -253,6 +258,28 @@ const elektroWirkt = await seite.evaluate(() => {
   return reg ? (typeof reg.tun === 'function' ? 'ok' : 'ohne Handlung') : 'nicht im Register';
 });
 p('„Elektro" hängt am Register und hat eine Handlung', elektroWirkt === 'ok', elektroWirkt);
+
+const vorKlick = await seite.evaluate(() => ({
+  krume: (document.getElementById('crumb')?.textContent || '').trim(),
+  overlays: document.querySelectorAll('.overlay,[role=dialog]').length,
+  seite: (document.getElementById('page')?.textContent || '').slice(0, 120)
+}));
+await seite.click('#btn-elektro');
+await seite.waitForTimeout(1200);
+const nachKlick = await seite.evaluate(() => ({
+  krume: (document.getElementById('crumb')?.textContent || '').trim(),
+  overlays: document.querySelectorAll('.overlay,[role=dialog]').length,
+  seite: (document.getElementById('page')?.textContent || '').slice(0, 120)
+}));
+const passiert = nachKlick.krume !== vorKlick.krume
+  || nachKlick.overlays > vorKlick.overlays
+  || nachKlick.seite !== vorKlick.seite;
+p('Und der Klick bewirkt wirklich etwas — nicht nur „ist eine Funktion"',
+  passiert,
+  `Krume ${vorKlick.krume} → ${nachKlick.krume}, Überlagerungen ` +
+  `${vorKlick.overlays} → ${nachKlick.overlays}`);
+await seite.evaluate(() => document.querySelectorAll('.overlay,[role=dialog]').forEach(x => x.remove()));
+await seite.waitForTimeout(300);
 
 /* ==========================================================================
  * §5 Die fünf Zeichen aus der Kopfzeile stehen im ⋯-Menü

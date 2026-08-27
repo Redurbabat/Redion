@@ -2415,3 +2415,34 @@ zuletzt berührte Fläche ist die gemeinte. Elf Werkzeuge plus Zurück, Vor und
 Löschen stehen im Reiter „Zeichnen" und erscheinen nur, wenn es eine Fläche
 gibt. Beide Richtungen sind geprüft (test247 §11) — Band → Leiste und Leiste
 → Band, jeder Punkt einzeln als rot-fähig belegt.
+
+
+L65 — „Elektro" öffnet einen Dialog, keine Seite
+--------------------------------------------------------------------------------
+Seit E219 steht „Elektro" als fünfter Weg in der Seitenleiste, neben Heute,
+Lernzentrum, Bibliothek und Aufgaben. Vier davon führen an einen ORT: die
+Pfadnavigation ändert sich, man ist woanders, der Zurück-Pfeil bringt einen
+zurück.
+
+„Elektro" nicht. Es ruft `Electrical.open()`, und das ist eine Überlagerung —
+ein Rechner mit Modusauswahl und den Lernpaket-Knöpfen. Der Rechner
+funktioniert; das ist keine Lücke im Sinn von „kaputt". Die Lücke ist, dass
+ein Eintrag zwischen vier Zielen steht und als einziger keines ist.
+
+Aufgefallen ist es beim Durchklicken aller fünf Wege nach E219: der Rundgang
+räumte Überlagerungen weg, bevor er das Bild machte, und danach sah es aus,
+als führe der Knopf ins Leere. Er tut es nicht — aber die Verwechslung war
+möglich, und das sagt etwas über die Sache selbst.
+
+Was fehlt: Elektrotechnik hat viel mehr als den Rechner — Fachzeichen,
+Schaltplan mit Simulation, Formelheft, Prüfung, Werkstatt (Elektro A bis E).
+Es gibt nur keine Seite, die das zusammen zeigt. Der Menüband-Reiter
+„Elektro" mit acht Einträgen ist bisher das Nächste dazu.
+
+Was es bräuchte: eine Elektro-Startseite in derselben Form wie „Heute" —
+weiter wo du warst, was ansteht, die Werkzeuge als Kacheln. Dann wäre der
+fünfte Weg ein Ort wie die anderen vier, und der Rechner einer seiner
+Knöpfe statt seiner Vordertür.
+
+Bis dahin ist es ehrlicher, es hier stehen zu haben, als so zu tun, als
+wären die fünf Wege gleichartig.

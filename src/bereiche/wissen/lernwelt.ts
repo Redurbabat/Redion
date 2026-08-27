@@ -1287,7 +1287,15 @@ const Lernwelt = (() => {
          weiter oben schon im Auswahlfeld steht und die man dort auch ändern
          kann. Eine Marke, die nur wiederholt, was daneben steht, kostet Höhe
          und sagt nichts; über der Falz ist Höhe das Knappe. */
-      '<section class="lw-hero"><div><p>' + esc(gruss + ', ' + aktor().name) + '</p><h2>' +
+      /* „Guten Abend, Ich" — so stand es da, solange kein Konto einen Namen
+         trägt. „Ich" ist der Rückfallwert der AKTOR-Kennung, nicht ein Name,
+         mit dem man jemanden anspricht; im Deutschen grüsst man sich nicht
+         mit dem eigenen Pronomen. Ohne Namen bleibt es beim blossen Gruss.
+         Der Aktor selbst bleibt unberührt — er wird an anderer Stelle
+         gebraucht, und dort ist „Ich" richtig. */
+      '<section class="lw-hero"><div><p>' +
+        esc(aktor().name && aktor().name !== 'Ich' ? gruss + ', ' + aktor().name : gruss) +
+      '</p><h2>' +
         esc(new Date().toLocaleDateString('de-CH', {
           weekday: 'long', day: 'numeric', month: 'long'
         })) + '</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
