@@ -186,6 +186,72 @@ import { chromium } from 'playwright';
      regal.mitInhalt === regal.hefte);
   ok('Und jedes führt auf eine Seite', regal.ziele === regal.hefte);
 
+  /* ------------------------------------------------------------------ *
+   * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+   * ------------------------------------------------------------------ *
+   * Nach §46 ist Priorität 1, keine Daten zu verlieren. Was hier steht,
+   * darf deshalb nichts beschönigen — eine Ansicht, die „gesichert" sagt,
+   * wo nichts gesichert ist, ist schlimmer als gar keine Ansicht.
+   * ------------------------------------------------------------------ */
+  const pflege = await p.evaluate(async () => {
+    /* Ausgangslage herstellen: kein Zeitstempel. Danach MUSS gewarnt
+       werden — der erste Zustand jedes neuen Geräts. */
+    Store.setMeta('sicherung:zuletzt', '');
+    Store.setMeta('sicherung:art', '');
+    App.zeichneSeite();
+    await new Promise(r => setTimeout(r, 350));
+    const karte = () => document.querySelector<HTMLElement>('[class*="bib-sicher-"]');
+    const stufeVon = (el: HTMLElement | null) =>
+      (el?.className.match(/bib-sicher-(\w+)/) || [])[1] || '';
+    const ohne = { stufe: stufeVon(karte()), text: (karte()?.textContent || '').trim() };
+
+    /* Und nach einer Sicherung von heute muss es gut sein. */
+    Sicherung.merken('redion');
+    App.zeichneSeite();
+    await new Promise(r => setTimeout(r, 350));
+    const mit = { stufe: stufeVon(karte()), text: (karte()?.textContent || '').trim() };
+
+    /* Vor 40 Tagen — das ist die Warnstufe. */
+    Store.setMeta('sicherung:zuletzt',
+      new Date(Date.now() - 40 * 86400000).toISOString());
+    App.zeichneSeite();
+    await new Promise(r => setTimeout(r, 350));
+    const alt40 = { stufe: stufeVon(karte()), text: (karte()?.textContent || '').trim() };
+
+    /* Und die eine Frage, für die der Kern-Umzug überhaupt gemacht wurde:
+       rechnen Bibliothek und Kern dasselbe? `dienst.ts` liest jetzt
+       `Sicherung.stand()` — zwei Fassungen wären zwei Wahrheiten über die
+       Frage, ob die Daten sicher sind. */
+    const kern = Sicherung.stand();
+    return { ohne, mit, alt40, kernStufe: kern.stufe, kernTage: kern.tage,
+             platzDa: !!document.querySelector('[data-bib-platz]') };
+  });
+  console.log('   Pflege:', JSON.stringify(pflege));
+  ok('Ohne Sicherung wird gewarnt', pflege.ohne.stufe === 'warnen');
+  ok('Und der Satz sagt es, nicht nur die Farbe (§38)',
+     /noch keine/i.test(pflege.ohne.text));
+  ok('Nach einer Sicherung heute ist es gut', pflege.mit.stufe === 'gut');
+  ok('Und der Satz sagt „heute"', /heute/i.test(pflege.mit.text));
+  ok('Nach 40 Tagen wird wieder gewarnt', pflege.alt40.stufe === 'warnen');
+  ok('Der Satz nennt die Tage', /40 Tagen/.test(pflege.alt40.text));
+  ok('Bibliothek und Kern rechnen dasselbe',
+     pflege.kernStufe === pflege.alt40.stufe && pflege.kernTage === 40);
+  ok('Und der Platz bekommt seine Stelle', pflege.platzDa);
+
+  /* DER PLATZ DARF NICHTS ERFINDEN. Ohne `estimate()` steht dort keine
+     Zahl — danach richtet jemand seine Entscheidung aus, ob er noch ein
+     Video einfügt. Geprüft wird mit abgeschaltetem `estimate`. */
+  const ohneMessung = await p.evaluate(async () => {
+    const echt = navigator.storage?.estimate;
+    try {
+      (navigator.storage as any).estimate = undefined;
+      const p2 = await Sicherung.platz();
+      return { bekannt: p2.bekannt, gesamt: p2.gesamt };
+    } finally { if (echt) (navigator.storage as any).estimate = echt; }
+  });
+  ok('Ohne Messung behauptet der Platz nichts',
+     ohneMessung.bekannt === false && ohneMessung.gesamt === 0);
+
   /* DIE GEMERKTE WAHL MUSS EINEN NEUAUFBAU ÜBERLEBEN.
      Der erste Entwurf las die Form beim SKRIPTLADEN — da ist IndexedDB noch
      nicht ausgelesen, `getMeta` gab den Standard, und die Wahl war beim

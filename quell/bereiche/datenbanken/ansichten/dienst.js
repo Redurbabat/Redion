@@ -34,36 +34,18 @@ const Ansichten = (() => {
         const teil = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
         return teil + (name && name !== 'Ich' ? ', ' + name : '');
     };
-    /* --------------------------------------------------------------------------
-     * SICHERUNGSSTAND auf dem Start-Bildschirm
-     * ---------------------------------------------------------------------------
-     * Der Zeitstempel lag bisher im Verschlüsselungs-Dialog, drei Klicks tief in
-     * den Einstellungen. Dort sieht ihn, wer ohnehin ans Sichern denkt. Wer
-     * nicht daran denkt — und das ist der Fall, für den die Anzeige da ist —
-     * kommt nie dorthin. Also steht er jetzt da, wo man jeden Morgen hinschaut.
-     *
-     * Abgestuft, und das ist der eigentliche Punkt. Eine Warnung, die immer
-     * gleich laut ist, wird zur Tapete. Frisch gesichert heisst deshalb: eine
-     * ruhige Zeile. Länger her heisst: ein Hinweis mit Knopf. Nie gesichert
-     * heisst: ein Hinweis, den man nicht überliest. Die Stelle auf der Seite
-     * bleibt in allen drei Fällen dieselbe, damit nichts springt.
-     * ------------------------------------------------------------------------ */
-    const TAG = 86400000;
-    /** Ab hier erinnern (eine Woche) bzw. warnen (ein Monat). */
-    const SICHERUNG_ERINNERN = 7;
-    const SICHERUNG_WARNEN = 30;
-    const sicherungsstand = () => {
-        const wann = String(Store.getMeta('sicherung:zuletzt', '') || '');
-        const art = String(Store.getMeta('sicherung:art', '') || '');
-        const zeit = wann ? Date.parse(wann) : NaN;
-        /* Ein unlesbarer Zeitstempel ist wie keiner — nicht wie ein frischer. */
-        if (!wann || Number.isNaN(zeit))
-            return { stufe: 'warnen', tage: null, art, wann: '' };
-        const tage = Math.max(0, Math.floor((Date.now() - zeit) / TAG));
-        const stufe = tage >= SICHERUNG_WARNEN ? 'warnen'
-            : tage >= SICHERUNG_ERINNERN ? 'erinnern' : 'gut';
-        return { stufe, tage, art, wann };
-    };
+    /* DIE RECHNUNG STEHT IM KERN (E208).
+       Hier stand sie ausgeschrieben, und die Bibliothek brauchte sie auch —
+       ein Bereich darf aber nicht aus einem anderen importieren (§5, Regel 1).
+       Abschreiben wäre hier schlimmer als anderswo: bei einem Anriss fällt es
+       auf, wenn zwei Fassungen auseinanderlaufen, bei einer FRIST nicht. Eine
+       Ansicht, die „gesichert" sagt, während die andere warnt, ist genau die
+       Sorte Fehler, die §46 meint.
+  
+       `SICHERUNG_ERINNERN` und `SICHERUNG_WARNEN` stehen weiter unten noch als
+       Zahlen — sie sind jetzt eine Kopie der Kernwerte, und deshalb liest der
+       Text unten sie auch nicht mehr; er nimmt die Stufe. */
+    const sicherungsstand = () => Sicherung.stand();
     const sicherungBand = () => {
         const s = sicherungsstand();
         const wieLang = s.tage === null ? ''

@@ -1626,10 +1626,10 @@ const App = (() => {
    * JSON gesichert hat, hat seine Bilder nicht gesichert — das darf die
    * Anzeige nicht verschweigen.
    */
-  const sicherungGemerkt = (art: 'json' | 'redion'): void => {
-    Store.setMeta('sicherung:zuletzt', new Date().toISOString());
-    Store.setMeta('sicherung:art', art);
-  };
+  /* Der Zeitpunkt wird im Kern festgehalten (E208) — dieselbe Stelle, die
+     ihn auch wieder ausliest. Zwei Schreiber auf einer Marke sind zwei
+     Gelegenheiten, den Namen zu vertippen. */
+  const sicherungGemerkt = (art: 'json' | 'redion'): void => Sicherung.merken(art);
 
   /**
    * Gibt zurück, ob die Sicherung wirklich zustande kam.

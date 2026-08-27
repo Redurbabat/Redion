@@ -631,6 +631,79 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-heft-fuss small{ color:var(--text-dim); font-size:11px }
 
+/* ============================================================================
+ * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+ * ----------------------------------------------------------------------------
+ * Nach §46 ist Priorität 1, keine Daten zu verlieren. Deshalb steht das hier
+ * und nicht in einem Einstellungsdialog, den niemand aufmacht: wer die
+ * Bibliothek ansieht, sieht auch, wie alt seine letzte Sicherung ist.
+ *
+ * Die Stufe steht NICHT nur in der Farbe (§38) — sie steht im Satz
+ * („Gesichert heute" / „das ist lange her"). Die Farbe ist der zweite Weg,
+ * nicht der einzige.
+ * ==========================================================================*/
+.bib-pflege{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:var(--space-4)
+}
+.bib-pflege-karte{
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center;
+  gap:var(--space-4); padding:var(--space-4) var(--space-5);
+  border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--bg-card)
+}
+.bib-pflege-karte > span:nth-child(2){ display:grid; gap:2px; min-width:0 }
+.bib-pflege-karte strong{ font-size:13px; font-weight:680; line-height:1.35 }
+.bib-pflege-karte small{ color:var(--text-dim); font-size:11px; line-height:1.4 }
+.bib-pflege-karte > button{
+  flex:none; min-height:var(--lw-touch,44px); padding:var(--space-2) var(--space-4);
+  border:1px solid var(--line); border-radius:var(--radius-md);
+  background:var(--bg-side); color:var(--text); font:inherit; font-size:12px;
+  font-weight:650; cursor:pointer; white-space:nowrap
+}
+.bib-pflege-karte > button:hover{ background:var(--bg-hover) }
+.bib-pflege-zeichen{ display:grid; place-items:center; flex:none; color:var(--text-dim) }
+.bib-pflege-zeichen > svg{ width:18px; height:18px; display:block }
+.bib-sicher-gut .bib-pflege-zeichen{ color:var(--erfolg) }
+.bib-sicher-erinnern .bib-pflege-zeichen{ color:var(--warnung) }
+.bib-sicher-warnen .bib-pflege-zeichen{ color:var(--gefahr) }
+.bib-sicher-warnen{ border-color:var(--gefahr) }
+.bib-sicher-erinnern{ border-color:var(--warnung) }
+
+/* --- Platz auf dem Gerät -------------------------------------------------- */
+.bib-platz-balken{
+  overflow:hidden; height:10px; border-radius:var(--radius-pill);
+  background:var(--bg-hover)
+}
+.bib-platz-balken > i{
+  display:block; height:100%; border-radius:var(--radius-pill);
+  background:var(--accent-text)
+}
+/* Die Anhänge sind der ERSTE Teil des belegten Balkens, nicht ein zweiter
+   daneben: sie liegen im selben Platz und nicht neben ihm. */
+.bib-platz-balken > i > b{
+  display:block; height:100%; border-radius:var(--radius-pill) 0 0 var(--radius-pill);
+  background:var(--accent-warm)
+}
+.bib-platz-teile{
+  display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-2) var(--space-5);
+  margin:var(--space-3) 0 0; color:var(--text-dim); font-size:11.5px
+}
+.bib-platz-teile > span{
+  width:9px; height:9px; margin-right:var(--space-2); border-radius:50%
+}
+.bib-platz-anhang{ background:var(--accent-warm) }
+.bib-platz-rest{ background:var(--accent-text) }
+.bib-platz-hinweis,.bib-platz-unbekannt{
+  margin:var(--space-2) 0 0; color:var(--text-faint); font-size:10.5px; line-height:1.5
+}
+.bib-platz-unbekannt{ font-size:12px; color:var(--text-dim) }
+
+@media(max-width:760px){
+  .bib-pflege{ grid-template-columns:1fr }
+  .bib-pflege-karte{ grid-template-columns:auto minmax(0,1fr); row-gap:var(--space-3) }
+  .bib-pflege-karte > button{ grid-column:1/-1 }
+}
+
 /* --- Zuletzt in der Hand ------------------------------------------------- */
 .bib-abschnitt{ margin-top:var(--space-9) }
 .bib-abschnitt > header{ margin-bottom:var(--space-4) }

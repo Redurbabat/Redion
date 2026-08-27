@@ -14778,3 +14778,101 @@ Zweite Gegenprobe: die Schublade lahmgelegt — beide neuen Punkte in test222
 gehen rot (`{"vorher":0,"nachher":0,"offen":"false"}`).
 
 test33 87/87, test222 50/50, test202 84 ok, test54 63/63.
+
+
+================================================================================
+E208 — Sicherung, Papierkorb und Platz: der Rest des Bibliothek-Entwurfs
+================================================================================
+
+Der letzte Teil des abgenommenen Entwurfs, und kein Beiwerk. Nach §46 ist
+Priorität 1, keine Daten zu verlieren; wer beim Öffnen der Bibliothek sieht,
+wann er zuletzt gesichert hat, verliert seltener etwas. Deshalb steht es hier
+und nicht in einem Einstellungsdialog, den niemand aufmacht.
+
+
+DER SICHERUNGSSTAND GEHÖRT IN DEN KERN
+--------------------------------------------------------------------------------
+
+`sicherungsstand()` stand in `bereiche/datenbanken/ansichten/dienst.ts`. Die
+Bibliothek stellt dieselbe Frage — und ein Bereich darf nicht aus einem
+anderen importieren (§5, Regel 1).
+
+Abschreiben wäre hier schlimmer gewesen als bei der Vorschau (E207). Bei einem
+Anriss fällt es auf, wenn zwei Fassungen auseinanderlaufen; bei einer FRIST
+nicht. Eine Ansicht, die „gesichert" sagt, während die andere warnt, ist genau
+die Sorte Fehler, die §46 meint.
+
+    src/kern/helfer/sicherung.ts
+        stand()       wie alt ist die letzte Sicherung, und ist das noch gut?
+        merken(art)   den Zeitpunkt festhalten — nach einer ECHTEN Sicherung
+        papierkorb()  wieviel liegt weg, und wann läuft die nächste Frist ab?
+        platz()       wieviel belegt Redion auf dem Gerät?
+        groesse(b)    Bytes als Text, den ein Mensch liest
+
+`dienst.ts` liest jetzt `Sicherung.stand()`, `schale.ts` schreibt über
+`Sicherung.merken()`. Die drei Zahlen `TAG`, `SICHERUNG_ERINNERN` und
+`SICHERUNG_WARNEN` sind aus `dienst.ts` verschwunden: sie stehenzulassen
+hiesse, zwei Zahlenpaare zu pflegen, von denen nur eines wirkt.
+
+`sicherung.js` steht in `index.html` UND im Vorrat des Arbeiters, VERSION
+auf v26.
+
+
+ALLE ZAHLEN SIND ECHT, UND WO KEINE IST, STEHT KEINE
+--------------------------------------------------------------------------------
+
+Der Entwurf zeigte „41,2 MB von 2 GB" und „12 Seiten · 30 Tage Frist". Das
+sind Entwurfszahlen; die App zeigt gemessene:
+
+    Sicherung    `sicherung:zuletzt` — schreibt `schale.ts` erst NACH dem
+                 Klick auf den Herunterladen-Verweis. Wer es vorher schriebe,
+                 beruhigte jemanden über eine Datei, die es nicht gibt.
+    Papierkorb   `Store.trashed()` und `papierkorbTage` (30). Angezeigt wird
+                 nicht die Frist, sondern wieviel Zeit für das bleibt, was am
+                 längsten liegt — das ist die Zahl, die zählt.
+    Platz        `navigator.storage.estimate()`. Gibt der Browser sie nicht
+                 heraus, steht dort ein Satz und kein Balken. Eine erfundene
+                 Zahl über den freien Platz wäre schlimmer als keine: danach
+                 richtet jemand aus, ob er noch ein Video einfügt.
+
+Die Aufteilung in Anhänge und Rest kommt aus dem Bestand, nicht vom Browser,
+und heisst deshalb auf dem Bild „geschätzt" — der Browser rechnet seinen
+eigenen Verwaltungsaufwand mit, die beiden Zahlen müssen nicht aufgehen.
+
+§38 ist gewahrt: die Stufe steht im SATZ und nicht nur in der Farbe —
+„Gesichert heute", „Zuletzt gesichert vor 40 Tagen — das ist lange her",
+„Noch keine vollständige Sicherung auf diesem Gerät".
+
+
+ZWEI FEHLER BEIM BAUEN
+--------------------------------------------------------------------------------
+
+Der erste Entwurf las die Anhangsgrössen aus `Store.cache.dateien` — das gibt
+es nicht. Der Spiegel im Arbeitsspeicher führt Blöcke, Sammlungen, Ansichten
+und Marken, sonst nichts. Die Summe wäre still 0 geblieben, und der Balken
+hätte behauptet, Anhänge kosteten keinen Platz. `Store.dateiAlle()` fragt die
+Ablage.
+
+Der zweite war beinahe eine Verschlimmbesserung: „7.9 MB von 1 GB · 0.7 %"
+sah nach englischer Zahlenschreibweise aus. Nachgemessen schreibt **de-CH den
+Dezimaltrenner als Punkt** und den Tausendertrenner als Apostroph — „7.9 MB"
+und „14'091 Wörter" sind für die Schweiz richtig. Gemessen statt korrigiert.
+
+
+DER PRÜFLAUF, UND WAS ER WIRKLICH PRÜFT
+--------------------------------------------------------------------------------
+
+`test33` fährt jetzt die drei Zustände durch: kein Zeitstempel → warnen,
+Sicherung von heute → gut, vor 40 Tagen → warnen. Es prüft dabei den SATZ und
+nicht die Klasse, weil §38 den Satz verlangt.
+
+Und es prüft die eine Frage, für die der Kern-Umzug gemacht wurde: rechnen
+Bibliothek und Kern dasselbe? Zwei Fassungen wären zwei Wahrheiten über die
+Frage, ob die Daten sicher sind.
+
+Dazu: ohne `estimate()` darf der Platz nichts behaupten — geprüft mit
+abgeschaltetem `estimate`.
+
+Gegenprobe (§55.2), mit dem Beweis daneben, dass der Fehler in der gebauten
+Datei stand: der fehlende Zeitstempel auf `gut` gesetzt — zwei Punkte rot,
+94/96. Zurückgenommen 96/96.

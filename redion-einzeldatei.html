@@ -6096,6 +6096,79 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-heft-fuss small{ color:var(--text-dim); font-size:11px }
 
+/* ============================================================================
+ * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+ * ----------------------------------------------------------------------------
+ * Nach §46 ist Priorität 1, keine Daten zu verlieren. Deshalb steht das hier
+ * und nicht in einem Einstellungsdialog, den niemand aufmacht: wer die
+ * Bibliothek ansieht, sieht auch, wie alt seine letzte Sicherung ist.
+ *
+ * Die Stufe steht NICHT nur in der Farbe (§38) — sie steht im Satz
+ * („Gesichert heute" / „das ist lange her"). Die Farbe ist der zweite Weg,
+ * nicht der einzige.
+ * ==========================================================================*/
+.bib-pflege{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:var(--space-4)
+}
+.bib-pflege-karte{
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center;
+  gap:var(--space-4); padding:var(--space-4) var(--space-5);
+  border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--bg-card)
+}
+.bib-pflege-karte > span:nth-child(2){ display:grid; gap:2px; min-width:0 }
+.bib-pflege-karte strong{ font-size:13px; font-weight:680; line-height:1.35 }
+.bib-pflege-karte small{ color:var(--text-dim); font-size:11px; line-height:1.4 }
+.bib-pflege-karte > button{
+  flex:none; min-height:var(--lw-touch,44px); padding:var(--space-2) var(--space-4);
+  border:1px solid var(--line); border-radius:var(--radius-md);
+  background:var(--bg-side); color:var(--text); font:inherit; font-size:12px;
+  font-weight:650; cursor:pointer; white-space:nowrap
+}
+.bib-pflege-karte > button:hover{ background:var(--bg-hover) }
+.bib-pflege-zeichen{ display:grid; place-items:center; flex:none; color:var(--text-dim) }
+.bib-pflege-zeichen > svg{ width:18px; height:18px; display:block }
+.bib-sicher-gut .bib-pflege-zeichen{ color:var(--erfolg) }
+.bib-sicher-erinnern .bib-pflege-zeichen{ color:var(--warnung) }
+.bib-sicher-warnen .bib-pflege-zeichen{ color:var(--gefahr) }
+.bib-sicher-warnen{ border-color:var(--gefahr) }
+.bib-sicher-erinnern{ border-color:var(--warnung) }
+
+/* --- Platz auf dem Gerät -------------------------------------------------- */
+.bib-platz-balken{
+  overflow:hidden; height:10px; border-radius:var(--radius-pill);
+  background:var(--bg-hover)
+}
+.bib-platz-balken > i{
+  display:block; height:100%; border-radius:var(--radius-pill);
+  background:var(--accent-text)
+}
+/* Die Anhänge sind der ERSTE Teil des belegten Balkens, nicht ein zweiter
+   daneben: sie liegen im selben Platz und nicht neben ihm. */
+.bib-platz-balken > i > b{
+  display:block; height:100%; border-radius:var(--radius-pill) 0 0 var(--radius-pill);
+  background:var(--accent-warm)
+}
+.bib-platz-teile{
+  display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-2) var(--space-5);
+  margin:var(--space-3) 0 0; color:var(--text-dim); font-size:11.5px
+}
+.bib-platz-teile > span{
+  width:9px; height:9px; margin-right:var(--space-2); border-radius:50%
+}
+.bib-platz-anhang{ background:var(--accent-warm) }
+.bib-platz-rest{ background:var(--accent-text) }
+.bib-platz-hinweis,.bib-platz-unbekannt{
+  margin:var(--space-2) 0 0; color:var(--text-faint); font-size:10.5px; line-height:1.5
+}
+.bib-platz-unbekannt{ font-size:12px; color:var(--text-dim) }
+
+@media(max-width:760px){
+  .bib-pflege{ grid-template-columns:1fr }
+  .bib-pflege-karte{ grid-template-columns:auto minmax(0,1fr); row-gap:var(--space-3) }
+  .bib-pflege-karte > button{ grid-column:1/-1 }
+}
+
 /* --- Zuletzt in der Hand ------------------------------------------------- */
 .bib-abschnitt{ margin-top:var(--space-9) }
 .bib-abschnitt > header{ margin-bottom:var(--space-4) }
@@ -64315,36 +64388,18 @@ const Ansichten = (() => {
         const teil = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
         return teil + (name && name !== 'Ich' ? ', ' + name : '');
     };
-    /* --------------------------------------------------------------------------
-     * SICHERUNGSSTAND auf dem Start-Bildschirm
-     * ---------------------------------------------------------------------------
-     * Der Zeitstempel lag bisher im Verschlüsselungs-Dialog, drei Klicks tief in
-     * den Einstellungen. Dort sieht ihn, wer ohnehin ans Sichern denkt. Wer
-     * nicht daran denkt — und das ist der Fall, für den die Anzeige da ist —
-     * kommt nie dorthin. Also steht er jetzt da, wo man jeden Morgen hinschaut.
-     *
-     * Abgestuft, und das ist der eigentliche Punkt. Eine Warnung, die immer
-     * gleich laut ist, wird zur Tapete. Frisch gesichert heisst deshalb: eine
-     * ruhige Zeile. Länger her heisst: ein Hinweis mit Knopf. Nie gesichert
-     * heisst: ein Hinweis, den man nicht überliest. Die Stelle auf der Seite
-     * bleibt in allen drei Fällen dieselbe, damit nichts springt.
-     * ------------------------------------------------------------------------ */
-    const TAG = 86400000;
-    /** Ab hier erinnern (eine Woche) bzw. warnen (ein Monat). */
-    const SICHERUNG_ERINNERN = 7;
-    const SICHERUNG_WARNEN = 30;
-    const sicherungsstand = () => {
-        const wann = String(Store.getMeta('sicherung:zuletzt', '') || '');
-        const art = String(Store.getMeta('sicherung:art', '') || '');
-        const zeit = wann ? Date.parse(wann) : NaN;
-        /* Ein unlesbarer Zeitstempel ist wie keiner — nicht wie ein frischer. */
-        if (!wann || Number.isNaN(zeit))
-            return { stufe: 'warnen', tage: null, art, wann: '' };
-        const tage = Math.max(0, Math.floor((Date.now() - zeit) / TAG));
-        const stufe = tage >= SICHERUNG_WARNEN ? 'warnen'
-            : tage >= SICHERUNG_ERINNERN ? 'erinnern' : 'gut';
-        return { stufe, tage, art, wann };
-    };
+    /* DIE RECHNUNG STEHT IM KERN (E208).
+       Hier stand sie ausgeschrieben, und die Bibliothek brauchte sie auch —
+       ein Bereich darf aber nicht aus einem anderen importieren (§5, Regel 1).
+       Abschreiben wäre hier schlimmer als anderswo: bei einem Anriss fällt es
+       auf, wenn zwei Fassungen auseinanderlaufen, bei einer FRIST nicht. Eine
+       Ansicht, die „gesichert" sagt, während die andere warnt, ist genau die
+       Sorte Fehler, die §46 meint.
+  
+       `SICHERUNG_ERINNERN` und `SICHERUNG_WARNEN` stehen weiter unten noch als
+       Zahlen — sie sind jetzt eine Kopie der Kernwerte, und deshalb liest der
+       Text unten sie auch nicht mehr; er nimmt die Stufe. */
+    const sicherungsstand = () => Sicherung.stand();
     const sicherungBand = () => {
         const s = sicherungsstand();
         const wieLang = s.tage === null ? ''
@@ -83091,6 +83146,181 @@ window.Vorschau = Vorschau;
 
 </script>
 <script>
+/* ===== quell/kern/helfer/sicherung.js ===== */
+"use strict";
+/* ============================================================================
+ * sicherung.js — Wann wurde zuletzt gesichert, und wieviel Platz ist noch da
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/helfer/sicherung.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/kern/helfer/sicherung.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * DER GRUND, WARUM ES DIESE DATEI GIBT
+ *
+ * `sicherungsstand()` stand in `bereiche/datenbanken/ansichten/dienst.ts` und
+ * rechnete dort aus, wie alt die letzte Sicherung ist. Die Bibliothek stellt
+ * jetzt dieselbe Frage — und ein Bereich darf nicht aus einem anderen
+ * importieren (CLAUDE.md §5, Regel 1).
+ *
+ * Es abzuschreiben wäre schlimmer als bei der Vorschau. Bei einem Anriss
+ * fällt es auf, wenn zwei Fassungen auseinanderlaufen; bei einer Frist nicht.
+ * Eine Ansicht, die „gesichert" sagt, während die andere warnt, ist genau die
+ * Sorte Fehler, die §46 meint: Priorität 1 ist, keine Daten zu verlieren, und
+ * dazu gehört, ehrlich zu sagen, wie alt die letzte Sicherung ist.
+ *
+ * Und es handelt ohnehin von der Ablage, nicht von einem Bereich.
+ *
+ * WAS HIER STEHT
+ *
+ *     stand()     wie alt ist die letzte Sicherung, und ist das noch gut?
+ *     merken(art) den Zeitpunkt festhalten — nach einer echten Sicherung
+ *     papierkorb() wieviel liegt weg, und wann läuft die Frist ab?
+ *     platz()     wieviel Platz belegt Redion auf dem Gerät? (gleichläufig
+ *                 nicht möglich — der Browser gibt ihn nur als Versprechen)
+ * ==========================================================================*/
+const Sicherung = (() => {
+    const TAG = 86400000;
+    /** Ab hier erinnern (eine Woche) bzw. warnen (ein Monat). */
+    const ERINNERN = 7;
+    const WARNEN = 30;
+    const meta = (name, standard) => {
+        if (typeof Store === 'undefined' || typeof Store.getMeta !== 'function')
+            return standard;
+        try {
+            return Store.getMeta(name, standard);
+        }
+        catch {
+            return standard;
+        }
+    };
+    /**
+     * Wie alt ist die letzte Sicherung?
+     *
+     * `tage: null` heisst „keine bekannt" und nicht „null Tage alt". Die Stufe
+     * ist dann `warnen` — ein unlesbarer oder fehlender Zeitstempel ist wie
+     * keine Sicherung und nicht wie eine frische. Das stand schon in
+     * `dienst.ts` so und ist der wichtigste Satz dieser Datei.
+     */
+    const stand = () => {
+        const wann = String(meta('sicherung:zuletzt', '') || '');
+        const art = String(meta('sicherung:art', '') || '');
+        const zeit = wann ? Date.parse(wann) : NaN;
+        if (!wann || Number.isNaN(zeit))
+            return { stufe: 'warnen', tage: null, art, wann: '' };
+        const tage = Math.max(0, Math.floor((Date.now() - zeit) / TAG));
+        const stufe = tage >= WARNEN ? 'warnen'
+            : tage >= ERINNERN ? 'erinnern' : 'gut';
+        return { stufe, tage, art, wann };
+    };
+    /**
+     * Den Zeitpunkt festhalten.
+     *
+     * NUR NACH EINER SICHERUNG, DIE WIRKLICH ZUSTANDE KAM. `schale.ts` ruft es
+     * erst nach dem Klick auf den Herunterladen-Verweis; wer es vorher ruft,
+     * beruhigt jemanden über eine Datei, die es nicht gibt.
+     */
+    const merken = (art) => {
+        if (typeof Store === 'undefined' || typeof Store.setMeta !== 'function')
+            return;
+        Store.setMeta('sicherung:zuletzt', new Date().toISOString());
+        Store.setMeta('sicherung:art', art);
+    };
+    /** Wie lange dauert es noch, bis der Papierkorb sich selbst leert? */
+    const papierkorb = () => {
+        const tage = Number(meta('papierkorbTage', 30)) || 0;
+        let weg = [];
+        if (typeof Store !== 'undefined' && typeof Store.trashed === 'function') {
+            try {
+                weg = Store.trashed();
+            }
+            catch {
+                weg = [];
+            }
+        }
+        /* Wann läuft die NÄCHSTE Frist ab — also für das, was am längsten liegt?
+           Das ist die Zahl, die zählt: sie sagt, wieviel Zeit noch bleibt, um
+           etwas zurückzuholen. Ohne Frist (0 Tage) gibt es keine. */
+        let naechste = null;
+        if (tage) {
+            for (const b of weg) {
+                const t = Date.parse(String(b?.trashedAt || ''));
+                if (Number.isNaN(t))
+                    continue;
+                const restTage = Math.max(0, Math.ceil((t + tage * TAG - Date.now()) / TAG));
+                if (naechste === null || restTage < naechste)
+                    naechste = restTage;
+            }
+        }
+        return { anzahl: weg.length, tage, naechste };
+    };
+    /** Bytes als Text, den ein Mensch liest. */
+    const groesse = (bytes) => {
+        if (!bytes || bytes < 0)
+            return '0 B';
+        if (bytes < 1024)
+            return bytes + ' B';
+        const einheiten = ['KB', 'MB', 'GB', 'TB'];
+        let wert = bytes / 1024, i = 0;
+        while (wert >= 1024 && i < einheiten.length - 1) {
+            wert /= 1024;
+            i++;
+        }
+        return (wert >= 10 ? Math.round(wert) : Math.round(wert * 10) / 10)
+            .toLocaleString('de-CH') + ' ' + einheiten[i];
+    };
+    /**
+     * Wieviel Platz belegt Redion auf diesem Gerät?
+     *
+     * `navigator.storage.estimate()` gibt ein VERSPRECHEN und keine Zahl — es
+     * geht deshalb nicht gleichläufig, anders als alles andere hier. Wer es
+     * zeichnet, zeichnet erst ohne und trägt es nach.
+     *
+     * Die Aufteilung in Seiten und Anhänge kommt nicht vom Browser, sondern aus
+     * dem Bestand: die Summe der Dateigrössen ist das, was die Anhänge belegen;
+     * der Rest ist alles andere. Das ist eine SCHÄTZUNG und heisst hier auch
+     * so — der Browser rechnet seinen eigenen Verwaltungsaufwand mit, und die
+     * beiden Zahlen müssen deshalb nicht aufgehen.
+     *
+     * Kein `estimate` heisst kein Balken. Eine erfundene Zahl über den freien
+     * Platz wäre schlimmer als keine: danach richtet jemand seine Entscheidung
+     * aus, ob er noch ein Video einfügt.
+     */
+    const platz = async () => {
+        /* Die Anhänge liegen NICHT im Spiegel im Arbeitsspeicher — `Store.cache`
+           führt Blöcke, Sammlungen, Ansichten und Marken, sonst nichts. Der erste
+           Entwurf las `Store.cache.dateien` und bekam `undefined`; die Summe wäre
+           still 0 geblieben und der Balken hätte behauptet, Anhänge kosteten
+           keinen Platz. `dateiAlle()` fragt die Ablage — asynchron, aber das ist
+           diese Funktion ohnehin. */
+        let anhaenge = 0;
+        if (typeof Store !== 'undefined' && typeof Store.dateiAlle === 'function') {
+            try {
+                for (const d of await Store.dateiAlle())
+                    anhaenge += Number(d?.groesse) || 0;
+            }
+            catch {
+                anhaenge = 0;
+            }
+        }
+        try {
+            const schaetzung = await navigator.storage?.estimate?.();
+            const belegt = Number(schaetzung?.usage) || 0;
+            const gesamt = Number(schaetzung?.quota) || 0;
+            if (!gesamt)
+                return { belegt, frei: 0, gesamt: 0, anhaenge, bekannt: false };
+            return { belegt, frei: Math.max(0, gesamt - belegt), gesamt, anhaenge, bekannt: true };
+        }
+        catch {
+            return { belegt: 0, frei: 0, gesamt: 0, anhaenge, bekannt: false };
+        }
+    };
+    return { stand, merken, papierkorb, platz, groesse, TAG, ERINNERN, WARNEN };
+})();
+window.Sicherung = Sicherung;
+
+</script>
+<script>
 /* ===== quell/bereiche/planen/dienst.js ===== */
 "use strict";
 /* ============================================================================
@@ -93737,6 +93967,101 @@ const Bibliothek = (() => {
         '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
         '</div>' +
         '</div>';
+    /* ====================================================================== *
+     * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+     * ---------------------------------------------------------------------- *
+     * Der letzte Teil des abgenommenen Entwurfs. Er ist kein Beiwerk: nach §46
+     * ist Priorität 1, keine Daten zu verlieren, und wer auf einen Blick sieht,
+     * wann er zuletzt gesichert hat, verliert seltener etwas.
+     *
+     * ALLE ZAHLEN HIER SIND ECHT. Es gibt keine erfundene Grösse, keinen
+     * geschätzten Prozentsatz und keinen Balken ohne Messung — der Entwurf
+     * zeigte „41,2 MB von 2 GB", und wenn der Browser diese Zahl nicht
+     * herausgibt, steht hier keine. Danach richtet jemand seine Entscheidung
+     * aus, ob er noch ein Video einfügt.
+     * ====================================================================== */
+    const sicherungsKarte = () => {
+        const st = Sicherung.stand();
+        const pk = Sicherung.papierkorb();
+        const wieLang = st.tage === null ? 'noch nie'
+            : st.tage === 0 ? 'heute'
+                : st.tage === 1 ? 'gestern'
+                    : 'vor ' + st.tage + ' Tagen';
+        /* Die Stufe steht NICHT nur in der Farbe (§38): sie steht im Satz. */
+        const satz = st.tage === null
+            ? 'Noch keine vollständige Sicherung auf diesem Gerät'
+            : st.stufe === 'gut' ? 'Gesichert ' + wieLang
+                : st.stufe === 'erinnern' ? 'Zuletzt gesichert ' + wieLang + ' — Zeit für eine neue'
+                    : 'Zuletzt gesichert ' + wieLang + ' — das ist lange her';
+        const art = st.art === 'json'
+            ? 'JSON · ohne Anhänge'
+            : st.art === 'redion' ? '.redion · mit Anhängen' : '';
+        const frist = !pk.anzahl ? 'nichts weggelegt'
+            : !pk.tage ? pk.anzahl + (pk.anzahl === 1 ? ' Sache liegt weg' : ' Sachen liegen weg') +
+                ' · keine Frist'
+                : pk.anzahl + (pk.anzahl === 1 ? ' Sache liegt weg' : ' Sachen liegen weg') +
+                    (pk.naechste === null ? '' :
+                        pk.naechste === 0 ? ' · die nächste läuft heute ab'
+                            : pk.naechste === 1 ? ' · die nächste läuft morgen ab'
+                                : ' · noch ' + pk.naechste + ' Tage für die nächste');
+        return '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
+            '<p>alles auf diesem Gerät</p></header><div class="bib-pflege">' +
+            `<div class="bib-pflege-karte bib-sicher-${esc(st.stufe)}">` +
+            `<span class="bib-pflege-zeichen" data-sym="${st.stufe === 'gut' ? 'checkCircle' : 'bell'}" aria-hidden="true"></span>` +
+            '<span><strong>' + esc(satz) + '</strong><small>' +
+            (art || 'Eine vollständige Sicherung nimmt Seiten UND Anhänge mit') +
+            '</small></span>' +
+            '<button type="button" data-a="sichern">Jetzt sichern</button></div>' +
+            '<div class="bib-pflege-karte">' +
+            '<span class="bib-pflege-zeichen" data-sym="trash" aria-hidden="true"></span>' +
+            '<span><strong>Papierkorb</strong><small>' + esc(frist) + '</small></span>' +
+            '<button type="button" data-a="papierkorb">Öffnen</button></div>' +
+            '</div></section>';
+    };
+    /* Der Platz kommt als Versprechen und wird deshalb NACHGETRAGEN. Die Stelle
+       steht sofort da und sagt, dass gerechnet wird — ein Kasten, der aus dem
+       Nichts erscheint, verschiebt alles darunter, während man liest. */
+    const platzKarte = () => '<section class="bib-abschnitt" data-bib-platz><header><h2>Platz auf dem Gerät</h2>' +
+        '<p>wird gemessen …</p></header></section>';
+    const platzNachtragen = (wrap) => {
+        const stelle = wrap.querySelector('[data-bib-platz]');
+        if (!stelle)
+            return;
+        void Sicherung.platz().then(p => {
+            if (!stelle.isConnected)
+                return;
+            if (!p.bekannt) {
+                /* KEINE ERFUNDENE ZAHL. Manche Browser geben `estimate()` nicht
+                   heraus; dann steht hier, was bekannt ist, und sonst nichts. */
+                stelle.innerHTML = '<header><h2>Platz auf dem Gerät</h2></header>' +
+                    '<p class="bib-platz-unbekannt">Dieser Browser sagt nicht, wieviel Platz ' +
+                    'Redion belegt.' + (p.anhaenge
+                    ? ' Die Anhänge allein sind ' + esc(Sicherung.groesse(p.anhaenge)) + '.'
+                    : '') + '</p>';
+                return;
+            }
+            const anteil = Math.min(100, Math.round(p.belegt / p.gesamt * 1000) / 10);
+            const anhangAnteil = p.belegt ? Math.min(100, p.anhaenge / p.belegt * 100) : 0;
+            stelle.innerHTML = '<header><h2>Platz auf dem Gerät</h2>' +
+                '<p>' + esc(Sicherung.groesse(p.belegt)) + ' von ' +
+                esc(Sicherung.groesse(p.gesamt)) + ' · ' +
+                anteil.toLocaleString('de-CH') + ' %</p></header>' +
+                '<div class="bib-platz-balken" role="img" aria-label="' +
+                esc(Sicherung.groesse(p.belegt) + ' von ' + Sicherung.groesse(p.gesamt) + ' belegt') + '">' +
+                '<i style="width:' + anteil + '%"><b style="width:' + anhangAnteil + '%"></b></i>' +
+                '</div>' +
+                '<p class="bib-platz-teile">' +
+                '<span class="bib-platz-anhang"></span>Anhänge ' +
+                esc(Sicherung.groesse(p.anhaenge)) +
+                '<span class="bib-platz-rest"></span>Seiten und Verwaltung ' +
+                esc(Sicherung.groesse(Math.max(0, p.belegt - p.anhaenge))) +
+                '</p>' +
+                /* Der Browser rechnet seinen eigenen Verwaltungsaufwand mit; die
+                   beiden Zahlen müssen nicht aufgehen, und das steht hier auch. */
+                '<p class="bib-platz-hinweis">Geschätzt — der Browser meldet die ' +
+                'Gesamtgrösse, die Aufteilung kommt aus dem Bestand.</p>';
+        });
+    };
     const zeichneRegal = (wrap) => {
         const liste = gefiltert();
         const regal = hefte(liste);
@@ -93760,10 +94085,13 @@ const Bibliothek = (() => {
                         '<p>heftübergreifend</p></header>' +
                         '<div class="bib-hand-reihe">' + hand.map(handKarte).join('') + '</div></section>'
                     : '') +
+                sicherungsKarte() +
+                platzKarte() +
                 '</div>';
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(wrap);
         binde(wrap);
+        platzNachtragen(wrap);
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
@@ -93788,6 +94116,17 @@ const Bibliothek = (() => {
             const f = b.dataset['form'] === 'liste' ? 'liste' : 'regal';
             Store.setMeta('bibForm', f);
             App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('.bib-pflege [data-a]').forEach(b => b.addEventListener('click', ereignis => {
+            ereignis.stopPropagation();
+            if (b.dataset['a'] === 'papierkorb') {
+                App.papierkorb();
+                return;
+            }
+            /* Gesichert wird über denselben Weg wie im Menü — ein zweiter
+               Sicherungspfad wäre ein zweiter, der schiefgehen kann, und nur
+               einer von beiden hält den Zeitpunkt fest. */
+            void App.sicherungSpeichern();
         }));
         wrap.querySelectorAll('.bib-heft[data-id], .bib-hand[data-id]').forEach(k => k.addEventListener('click', () => {
             const id = k.dataset['id'];
@@ -105668,10 +106007,10 @@ const App = (() => {
      * JSON gesichert hat, hat seine Bilder nicht gesichert — das darf die
      * Anzeige nicht verschweigen.
      */
-    const sicherungGemerkt = (art) => {
-        Store.setMeta('sicherung:zuletzt', new Date().toISOString());
-        Store.setMeta('sicherung:art', art);
-    };
+    /* Der Zeitpunkt wird im Kern festgehalten (E208) — dieselbe Stelle, die
+       ihn auch wieder ausliest. Zwei Schreiber auf einer Marke sind zwei
+       Gelegenheiten, den Namen zu vertippen. */
+    const sicherungGemerkt = (art) => Sicherung.merken(art);
     /**
      * Gibt zurück, ob die Sicherung wirklich zustande kam.
      *

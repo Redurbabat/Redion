@@ -55,10 +55,10 @@ const Ansichten = (() => {
    * bleibt in allen drei Fällen dieselbe, damit nichts springt.
    * ------------------------------------------------------------------------ */
 
-  const TAG = 86400000;
-  /** Ab hier erinnern (eine Woche) bzw. warnen (ein Monat). */
-  const SICHERUNG_ERINNERN = 7;
-  const SICHERUNG_WARNEN = 30;
+  /* Hier standen `TAG`, `SICHERUNG_ERINNERN` und `SICHERUNG_WARNEN`. Sie sind
+     mit der Rechnung in den Kern gezogen (E208) — hier stehenzulassen hiesse,
+     zwei Zahlenpaare zu pflegen, von denen nur eines wirkt. Wer die Fristen
+     ändern will, ändert sie in `kern/helfer/sicherung.ts`. */
 
   type Sicherungsstand = {
     stufe: 'gut' | 'erinnern' | 'warnen';
@@ -67,17 +67,18 @@ const Ansichten = (() => {
     wann: string;
   };
 
-  const sicherungsstand = (): Sicherungsstand => {
-    const wann = String(Store.getMeta('sicherung:zuletzt', '') || '');
-    const art = String(Store.getMeta('sicherung:art', '') || '');
-    const zeit = wann ? Date.parse(wann) : NaN;
-    /* Ein unlesbarer Zeitstempel ist wie keiner — nicht wie ein frischer. */
-    if (!wann || Number.isNaN(zeit)) return { stufe: 'warnen', tage: null, art, wann: '' };
-    const tage = Math.max(0, Math.floor((Date.now() - zeit) / TAG));
-    const stufe = tage >= SICHERUNG_WARNEN ? 'warnen'
-                : tage >= SICHERUNG_ERINNERN ? 'erinnern' : 'gut';
-    return { stufe, tage, art, wann };
-  };
+  /* DIE RECHNUNG STEHT IM KERN (E208).
+     Hier stand sie ausgeschrieben, und die Bibliothek brauchte sie auch —
+     ein Bereich darf aber nicht aus einem anderen importieren (§5, Regel 1).
+     Abschreiben wäre hier schlimmer als anderswo: bei einem Anriss fällt es
+     auf, wenn zwei Fassungen auseinanderlaufen, bei einer FRIST nicht. Eine
+     Ansicht, die „gesichert" sagt, während die andere warnt, ist genau die
+     Sorte Fehler, die §46 meint.
+
+     `SICHERUNG_ERINNERN` und `SICHERUNG_WARNEN` stehen weiter unten noch als
+     Zahlen — sie sind jetzt eine Kopie der Kernwerte, und deshalb liest der
+     Text unten sie auch nicht mehr; er nimmt die Stufe. */
+  const sicherungsstand = (): Sicherungsstand => Sicherung.stand();
 
   const sicherungBand = (): string => {
     const s = sicherungsstand();

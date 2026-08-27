@@ -442,6 +442,107 @@ const Bibliothek = (() => {
       '</div>' +
     '</div>';
 
+  /* ====================================================================== *
+   * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+   * ---------------------------------------------------------------------- *
+   * Der letzte Teil des abgenommenen Entwurfs. Er ist kein Beiwerk: nach §46
+   * ist Priorität 1, keine Daten zu verlieren, und wer auf einen Blick sieht,
+   * wann er zuletzt gesichert hat, verliert seltener etwas.
+   *
+   * ALLE ZAHLEN HIER SIND ECHT. Es gibt keine erfundene Grösse, keinen
+   * geschätzten Prozentsatz und keinen Balken ohne Messung — der Entwurf
+   * zeigte „41,2 MB von 2 GB", und wenn der Browser diese Zahl nicht
+   * herausgibt, steht hier keine. Danach richtet jemand seine Entscheidung
+   * aus, ob er noch ein Video einfügt.
+   * ====================================================================== */
+
+  const sicherungsKarte = (): string => {
+    const st = Sicherung.stand();
+    const pk = Sicherung.papierkorb();
+
+    const wieLang = st.tage === null ? 'noch nie'
+      : st.tage === 0 ? 'heute'
+      : st.tage === 1 ? 'gestern'
+      : 'vor ' + st.tage + ' Tagen';
+    /* Die Stufe steht NICHT nur in der Farbe (§38): sie steht im Satz. */
+    const satz = st.tage === null
+      ? 'Noch keine vollständige Sicherung auf diesem Gerät'
+      : st.stufe === 'gut' ? 'Gesichert ' + wieLang
+      : st.stufe === 'erinnern' ? 'Zuletzt gesichert ' + wieLang + ' — Zeit für eine neue'
+      : 'Zuletzt gesichert ' + wieLang + ' — das ist lange her';
+    const art = st.art === 'json'
+      ? 'JSON · ohne Anhänge'
+      : st.art === 'redion' ? '.redion · mit Anhängen' : '';
+
+    const frist = !pk.anzahl ? 'nichts weggelegt'
+      : !pk.tage ? pk.anzahl + (pk.anzahl === 1 ? ' Sache liegt weg' : ' Sachen liegen weg') +
+          ' · keine Frist'
+      : pk.anzahl + (pk.anzahl === 1 ? ' Sache liegt weg' : ' Sachen liegen weg') +
+          (pk.naechste === null ? '' :
+            pk.naechste === 0 ? ' · die nächste läuft heute ab'
+            : pk.naechste === 1 ? ' · die nächste läuft morgen ab'
+            : ' · noch ' + pk.naechste + ' Tage für die nächste');
+
+    return '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
+      '<p>alles auf diesem Gerät</p></header><div class="bib-pflege">' +
+      `<div class="bib-pflege-karte bib-sicher-${esc(st.stufe)}">` +
+        `<span class="bib-pflege-zeichen" data-sym="${st.stufe === 'gut' ? 'checkCircle' : 'bell'}" aria-hidden="true"></span>` +
+        '<span><strong>' + esc(satz) + '</strong><small>' +
+          (art || 'Eine vollständige Sicherung nimmt Seiten UND Anhänge mit') +
+        '</small></span>' +
+        '<button type="button" data-a="sichern">Jetzt sichern</button></div>' +
+      '<div class="bib-pflege-karte">' +
+        '<span class="bib-pflege-zeichen" data-sym="trash" aria-hidden="true"></span>' +
+        '<span><strong>Papierkorb</strong><small>' + esc(frist) + '</small></span>' +
+        '<button type="button" data-a="papierkorb">Öffnen</button></div>' +
+      '</div></section>';
+  };
+
+  /* Der Platz kommt als Versprechen und wird deshalb NACHGETRAGEN. Die Stelle
+     steht sofort da und sagt, dass gerechnet wird — ein Kasten, der aus dem
+     Nichts erscheint, verschiebt alles darunter, während man liest. */
+  const platzKarte = (): string =>
+    '<section class="bib-abschnitt" data-bib-platz><header><h2>Platz auf dem Gerät</h2>' +
+    '<p>wird gemessen …</p></header></section>';
+
+  const platzNachtragen = (wrap: HTMLElement): void => {
+    const stelle = wrap.querySelector<HTMLElement>('[data-bib-platz]');
+    if (!stelle) return;
+    void Sicherung.platz().then(p => {
+      if (!stelle.isConnected) return;
+      if (!p.bekannt) {
+        /* KEINE ERFUNDENE ZAHL. Manche Browser geben `estimate()` nicht
+           heraus; dann steht hier, was bekannt ist, und sonst nichts. */
+        stelle.innerHTML = '<header><h2>Platz auf dem Gerät</h2></header>' +
+          '<p class="bib-platz-unbekannt">Dieser Browser sagt nicht, wieviel Platz ' +
+          'Redion belegt.' + (p.anhaenge
+            ? ' Die Anhänge allein sind ' + esc(Sicherung.groesse(p.anhaenge)) + '.'
+            : '') + '</p>';
+        return;
+      }
+      const anteil = Math.min(100, Math.round(p.belegt / p.gesamt * 1000) / 10);
+      const anhangAnteil = p.belegt ? Math.min(100, p.anhaenge / p.belegt * 100) : 0;
+      stelle.innerHTML = '<header><h2>Platz auf dem Gerät</h2>' +
+        '<p>' + esc(Sicherung.groesse(p.belegt)) + ' von ' +
+          esc(Sicherung.groesse(p.gesamt)) + ' · ' +
+          anteil.toLocaleString('de-CH') + ' %</p></header>' +
+        '<div class="bib-platz-balken" role="img" aria-label="' +
+          esc(Sicherung.groesse(p.belegt) + ' von ' + Sicherung.groesse(p.gesamt) + ' belegt') + '">' +
+          '<i style="width:' + anteil + '%"><b style="width:' + anhangAnteil + '%"></b></i>' +
+        '</div>' +
+        '<p class="bib-platz-teile">' +
+          '<span class="bib-platz-anhang"></span>Anhänge ' +
+            esc(Sicherung.groesse(p.anhaenge)) +
+          '<span class="bib-platz-rest"></span>Seiten und Verwaltung ' +
+            esc(Sicherung.groesse(Math.max(0, p.belegt - p.anhaenge))) +
+        '</p>' +
+        /* Der Browser rechnet seinen eigenen Verwaltungsaufwand mit; die
+           beiden Zahlen müssen nicht aufgehen, und das steht hier auch. */
+        '<p class="bib-platz-hinweis">Geschätzt — der Browser meldet die ' +
+        'Gesamtgrösse, die Aufteilung kommt aus dem Bestand.</p>';
+    });
+  };
+
   const zeichneRegal = (wrap: HTMLElement): void => {
     const liste = gefiltert();
     const regal = hefte(liste);
@@ -466,11 +567,14 @@ const Bibliothek = (() => {
               '<p>heftübergreifend</p></header>' +
               '<div class="bib-hand-reihe">' + hand.map(handKarte).join('') + '</div></section>'
           : '') +
+        sicherungsKarte() +
+        platzKarte() +
       '</div>';
 
     if (typeof Register !== 'undefined' && Register.symbole)
       Register.symbole.fuelle(wrap);
     binde(wrap);
+    platzNachtragen(wrap);
   };
 
   /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
@@ -497,6 +601,15 @@ const Bibliothek = (() => {
         const f = b.dataset['form'] === 'liste' ? 'liste' : 'regal';
         Store.setMeta('bibForm', f);
         App.zeichneSeite();
+      }));
+    wrap.querySelectorAll<HTMLElement>('.bib-pflege [data-a]').forEach(b =>
+      b.addEventListener('click', ereignis => {
+        ereignis.stopPropagation();
+        if (b.dataset['a'] === 'papierkorb') { App.papierkorb(); return; }
+        /* Gesichert wird über denselben Weg wie im Menü — ein zweiter
+           Sicherungspfad wäre ein zweiter, der schiefgehen kann, und nur
+           einer von beiden hält den Zeitpunkt fest. */
+        void App.sicherungSpeichern();
       }));
     wrap.querySelectorAll<HTMLElement>('.bib-heft[data-id], .bib-hand[data-id]').forEach(k =>
       k.addEventListener('click', () => {

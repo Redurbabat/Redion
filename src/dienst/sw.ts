@@ -36,7 +36,7 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v25';
+const VERSION = 'notizen-v26';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -159,6 +159,7 @@ const GRUNDSTOCK = [
      hätten leere Karten: derselbe Fehler wie bei `symbole.js` in test143,
      nur an zwei Stellen gleichzeitig. */
   './quell/kern/helfer/vorschau.js',
+  './quell/kern/helfer/sicherung.js',
   './quell/bereiche/planen/dienst.js',
   './quell/bereiche/einstellungen/erweiterungen.js',
   './quell/bereiche/verbinden/eingang.js',
