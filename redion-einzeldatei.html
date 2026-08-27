@@ -748,39 +748,47 @@ input,textarea,select{font:inherit; color:inherit}
 }
 
 /* ============================================================================
- * DIE SUCHE BLEIBT IN DER MITTE, AUCH MIT WENIGER KNÖPFEN (E223)
+ * DIE MITTE IST DIE MITTE DES ARBEITSBEREICHS, NICHT DES FENSTERS (E224)
  * ----------------------------------------------------------------------------
- * Der Sucher steht mittig, weil links die Krume und rechts die Knöpfe ihn
- * dorthin schieben — zwei Dehnstücke, die sich die Waage halten. Das hält,
- * solange rechts gleich viel steht.
+ * E223 stellte den Sucher `fixed` in die FENSTERmitte. Das war falsch, und
+ * ein Bildschirmfoto der Dokumentseite hat es gezeigt: der Seitentitel lief
+ * unter das Suchfeld.
  *
- * Seit E219 gibt die Kopfzeile in der ruhigen Fassung fünf Zeichen ans
- * ⋯-Menü ab. Gemessen: der Sucher rutschte 91 px nach rechts. test245 hat
- * es gemeldet, und zwar zu Recht — mittig war er nicht mehr.
+ * GEMESSEN, 1280 px, ruhige Fassung, Seite „Lernen & Alltag":
  *
- * Das Kommentarfeld oben sagt, was gemeint IST: „mittig zum FENSTER, nicht
- * mittig zwischen zwei Nachbarn". Die Waage war immer nur eine Annäherung
- * daran. Hier steht es jetzt wörtlich — und weil der Sucher damit aus dem
- * Fluss geht, hält ein gleich breites Platzhalterstück die Lücke offen, in
- * die er gehört. Sonst rückten Krume und Knöpfe zusammen und die Zeile
- * sähe leer aus.
+ *     Krume        x 328 … 435
+ *     Sucher       x 380 … 900
+ *                    ^^^^^^^^^  55 Punkte Überdeckung
+ *
+ * Und es ist kein Zufall, den man wegschieben könnte. Die Rechnung:
+ *
+ *     Seitenleiste            240
+ *     zwei Pfeilknöpfe         88   → die Krume beginnt bei 328
+ *     Sucher 520 breit, mittig zum Fenster → seine linke Kante bei 380
+ *     ------------------------------------------------------------
+ *     für den Titel bleiben    36 Punkte
+ *
+ * Sechsunddreissig Punkte sind kein Titel, sondern ein Auslassungszeichen.
+ * Bei einer 240 px breiten Seitenleiste ist Fensterzentrierung nicht eng,
+ * sondern unmöglich.
+ *
+ * Also zurück in den Fluss — und zwar mit der Waage, die vor E223 schon da
+ * war: Krume und Dehnstück wachsen beide aus der Basis null, der Sucher
+ * steht dazwischen. Damit steht er mittig zur KOPFLEISTE, und die Kopfleiste
+ * beginnt hinter der Seitenleiste. Gemessen liegt seine Mitte dann rund
+ * 20 Punkte neben der Mitte des Arbeitsbereichs — und das ist die Mitte,
+ * die ein Mensch sieht: die Seitenleiste hat einen eigenen Hintergrund und
+ * ist optisch eine Spalte für sich, kein Teil der Seite.
+ *
+ * Überdecken kann hier nichts mehr etwas, weil alle drei Stücke Nachbarn in
+ * derselben Zeile sind. Ein langer Titel macht den Sucher schmaler, nicht
+ * unlesbar.
  * ==========================================================================*/
 @media (min-width:761px){
-  /* `fixed`, nicht `absolute`. Die Kopfzeile beginnt erst hinter der
-     Seitenleiste; mittig ZU IHR wäre 120 px neben der Fenstermitte, und
-     die Seitenleiste ist ausserdem breitenverstellbar. `fixed` misst am
-     Fenster — das ist es, was gemeint war, und es hält auch, wenn jemand
-     die Leiste breiter zieht. Die Kopfzeile scrollt nicht, also ist
-     `fixed` hier kein Bruch. */
-  body[data-ruhig="an"] #topbar .sucher{
-    position:fixed; left:50%; transform:translateX(-50%);
-    width:min(520px, 42vw); max-width:520px; flex:none; z-index:3;
-  }
-  /* Der Platzhalter: derselbe Raum, nur unsichtbar. `aria-hidden`, damit
-     kein Vorleseprogramm eine leere Fläche ansagt. */
-  body[data-ruhig="an"] #topbar .sucher-platz{
-    flex:1 1 auto; min-width:0; max-width:520px; height:36px; pointer-events:none;
-  }
+  /* Der Platzhalter aus E223 hielt die Lücke für ein Stück offen, das jetzt
+     wieder selbst in der Zeile steht. Er bleibt im HTML (er kostet nichts
+     und `aria-hidden` schweigt), nimmt aber keinen Raum mehr ein. */
+  #topbar .sucher-platz{ display:none }
 }
 
 </style>

@@ -375,8 +375,25 @@ const schaleMass = await seite.evaluate(() => {
     kopfHoehe: kopf ? Math.round(kopf.getBoundingClientRect().height) : 0,
     sucherDa: !!sucher,
     sucherBreite: sr ? Math.round(sr.width) : 0,
-    /* Wie weit sitzt die Mitte des Suchers von der Fenstermitte weg? */
-    ausDerMitte: sr ? Math.abs(Math.round((sr.left + sr.width / 2) - fenster / 2)) : 9999,
+    /* WELCHE MITTE? Die des ARBEITSBEREICHS, nicht die des Fensters (E224).
+       Die Seitenleiste hat einen eigenen Hintergrund; sie ist optisch eine
+       Spalte für sich. Gemessen wird darum ab ihrer rechten Kante. */
+    ausDerMitte: (() => {
+      if (!sr) return 9999;
+      const links = seitenleiste ? seitenleiste.getBoundingClientRect().right : 0;
+      return Math.abs(Math.round((sr.left + sr.width / 2) - (links + (fenster - links) / 2)));
+    })(),
+    /* UND DAS, WAS KEINE PRÜFUNG FRAGTE: läuft der Seitentitel unter das
+       Suchfeld? E223 stellte den Sucher mittig zum FENSTER; auf 1280 blieben
+       der Krume damit 36 Punkte, und im Bildschirmfoto stand „Elek…" unter
+       dem Feld. Gemessen wurde nichts, weil niemand danach fragte. */
+    krumeUnterSucher: (() => {
+      const k = b('#topbar .crumb');
+      if (!k || !sr) return -1;
+      const kr = k.getBoundingClientRect();
+      if (kr.width === 0) return 0;
+      return Math.max(0, Math.round(kr.right - sr.left));
+    })(),
     /* Der Druckpunkt: steht an den Knöpfen eine Übergangszeit für `transform`? */
     druck: (() => {
       const k = b('#sidebar .side-item');
@@ -420,8 +437,15 @@ const wandert = await seite.evaluate(() => {
 });
 p('Die Suche wandert nicht mit dem Seitentitel', wandert === 0,
   `${wandert} Punkte Unterschied`);
-p('… und steht dabei ungefähr in der Mitte', schaleMass.ausDerMitte <= 60,
-  `${schaleMass.ausDerMitte} Punkte daneben`);
+p('… und steht dabei ungefähr in der Mitte des Arbeitsbereichs',
+  schaleMass.ausDerMitte <= 45, `${schaleMass.ausDerMitte} Punkte daneben`);
+/* DER GEGENBEWEIS ZU DIESER ZEILE, weil sie sonst nur eine Zahl bestätigt:
+   mit `position:fixed; left:50%` — genau der Fassung aus E223 — misst
+   dieselbe Zeile 120 statt 29. Sie kann also rot werden.
+   Und die Zeile darunter ist die, die E223 gar nicht erst gestellt hat. */
+p('Der Seitentitel läuft nicht unter das Suchfeld',
+  schaleMass.krumeUnterSucher === 0,
+  `${schaleMass.krumeUnterSucher} Punkte Überdeckung`);
 p('Sie ist breit genug, um sie zu sehen', schaleMass.sucherBreite >= 260,
   `${schaleMass.sucherBreite}`);
 /* §15: der Druckpunkt. Geprüft wird, dass `transform` überhaupt überblendet
